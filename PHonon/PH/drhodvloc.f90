@@ -59,7 +59,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
      enddo
 
   enddo
-#ifdef __PARA
+#ifdef __MPI
   !
   ! collect contributions from nodes of a pool (sum over G & R space)
   !

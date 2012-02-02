@@ -25,7 +25,7 @@ subroutine el_opt
   USE control_ph, ONLY : nbnd_occ
   USE ramanm,     ONLY : eloptns, jab, lrchf, iuchf, done_elop
   USE io_global, ONLY: ionode_id
-#ifdef __PARA
+#ifdef __MPI
   USE mp, ONLY: mp_bcast, mp_sum
   USE mp_global, ONLY: my_pool_id, inter_pool_comm, intra_pool_comm, &
                       intra_image_comm
@@ -83,7 +83,7 @@ subroutine el_opt
      enddo
   enddo
 
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum( elop_ , intra_pool_comm)
   call mp_sum( elop_ , inter_pool_comm)
 #endif
@@ -100,7 +100,7 @@ subroutine el_opt
   do ipa = 1, 3
      call davcio_drho (aux3 (1, ipa), lrdrho, iudrho, ipa, -1)
   enddo
-#ifdef __PARA
+#ifdef __MPI
   if (my_pool_id .ne. 0) goto 100
 #endif
 
@@ -123,7 +123,7 @@ subroutine el_opt
      enddo
   enddo
 
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum ( ps3, intra_pool_comm )
 100 continue
   call mp_bcast(ps3, ionode_id, intra_image_comm)

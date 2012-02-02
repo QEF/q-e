@@ -237,7 +237,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
         endif
      enddo
   enddo
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum ( dynwrk, intra_pool_comm )
 #endif
   wdyn (:,:) = wdyn (:,:) + dynwrk (:,:)

@@ -109,7 +109,7 @@ SUBROUTINE force_hub(forceh)
       END DO
    END DO
 
-#ifdef __PARA
+#ifdef __MPI
    CALL mp_sum( forceh, inter_pool_comm )
 #endif
    DEALLOCATE(dns, spsi)
@@ -353,7 +353,7 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
 
       DEALLOCATE ( dwfc ) 
    END IF
-#ifdef __PARA
+#ifdef __MPI
    CALL mp_sum( dproj, intra_pool_comm )
 #endif
 
@@ -506,7 +506,7 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
       DEALLOCATE ( dwfc ) 
    END IF
 
-#ifdef __PARA
+#ifdef __MPI
    CALL mp_sum( dproj, intra_pool_comm )
 #endif
    jkb2 = 0

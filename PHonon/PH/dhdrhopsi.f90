@@ -197,7 +197,7 @@ subroutine dhdrhopsi
                          evc (1, jbnd), 1, ev_sw (1, ibnd), 1)
                  enddo
               enddo
-#ifdef __PARA
+#ifdef __MPI
               call mp_sum ( ps1, intra_pool_comm )
 #endif
               tmpc = DBLE (isg) * itdba
@@ -245,7 +245,7 @@ subroutine dhdrhopsi
            enddo
         enddo
      enddo
-#ifdef __PARA
+#ifdef __MPI
      call mp_sum ( ps2, intra_pool_comm )
 #endif
      do ipa = 1, 3
@@ -280,7 +280,7 @@ subroutine dhdrhopsi
               ps0 (jbnd) = -zdotc (npw, evc (1, jbnd), 1, &
                                      chif (1, ibnd, ipa), 1)
            enddo
-#ifdef __PARA
+#ifdef __MPI
            call mp_sum ( ps0, intra_pool_comm )
 #endif
            do jbnd = 1, nbnd_occ (ik)
@@ -298,7 +298,7 @@ subroutine dhdrhopsi
      enddo
   enddo
 
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum ( avg_iter1, inter_pool_comm )
   call mp_sum ( avg_iter2, inter_pool_comm )
 #endif

@@ -105,7 +105,7 @@ subroutine zstar_eu_us
      end do
   end do
 
-#ifdef __PARA
+#ifdef __MPI
      IF (noncolin) THEN
         call mp_sum ( dbecsum_nc, intra_pool_comm )
      ELSE
@@ -129,7 +129,7 @@ subroutine zstar_eu_us
 
   call addusddense (dvscf, dbecsum)
 
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum ( dvscf, inter_pool_comm )
 #endif
 
@@ -150,7 +150,7 @@ subroutine zstar_eu_us
      !
      call dv_of_drho (0, dvscf (1, 1, ipol), .false.)
   enddo
-#ifdef __PARA
+#ifdef __MPI
   call psyme (dvscf)
 #else
   call syme (dvscf)
@@ -212,7 +212,7 @@ subroutine zstar_eu_us
               !
               pdsp = (0.d0,0.d0)
               call psidspsi (ik, u (1, mode), pdsp,npw)
-#ifdef __PARA
+#ifdef __MPI
               call mp_sum( pdsp, intra_pool_comm )
 #endif
               !
@@ -266,7 +266,7 @@ subroutine zstar_eu_us
   deallocate (aux1)
 
   fact=1.0_DP
-#ifdef __PARA
+#ifdef __MPI
   fact=1.0_DP/nproc_pool
 #endif
   IF (okpaw) THEN

@@ -84,7 +84,7 @@ PROGRAM pw2wannier90
   !
   ! initialise environment
   !
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'PW2WANNIER' )
@@ -1567,7 +1567,7 @@ SUBROUTINE write_plot
    COMPLEX(DP),ALLOCATABLE :: psic_small(:)
    !-------------------------------------------!
 
-#ifdef __PARA
+#ifdef __MPI
    INTEGER nxxs
    COMPLEX(DP),ALLOCATABLE :: psic_all(:)
    nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
@@ -1627,7 +1627,7 @@ SUBROUTINE write_plot
          IF (gamma_only)  psic(nlsm(igk (1:npw) ) ) = conjg(evc (1:npw, ibnd))
          CALL invfft ('Wave', psic, dffts)
          IF (reduce_unk) pos=0
-#ifdef __PARA
+#ifdef __MPI
          CALL cgather_smooth(psic,psic_all)
          IF (reduce_unk) THEN
             DO k=1,dffts%nr3,2
@@ -1689,7 +1689,7 @@ SUBROUTINE write_plot
 
    IF (reduce_unk) DEALLOCATE(psic_small)
 
-#ifdef __PARA
+#ifdef __MPI
    DEALLOCATE( psic_all )
 #endif
    RETURN

@@ -887,7 +887,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                isa=1
 
                DO is=1,nvb
-#ifdef __PARA
+#ifdef __MPI
                   DO ia=1,na(is)
                      nfft=1
                      IF ( ( dfftb%np3( isa ) <= 0 ) ) THEN
@@ -1000,7 +1000,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                isa=1
                DO is=1,nvb
                   DO ia=1,na(is)
-#ifdef __PARA
+#ifdef __MPI
                      IF ( dfftb%np3( isa ) <= 0 ) go to 25
 #endif
                      DO iss=1,2
@@ -1176,7 +1176,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 
          DO is = 1, nvb
 
-#ifdef __PARA
+#ifdef __MPI
 
             DO ia = 1, na(is)
                nfft = 1
@@ -1321,7 +1321,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          isa=1
          DO is=1,nvb
             DO ia=1,na(is)
-#ifdef __PARA
+#ifdef __MPI
                IF ( dfftb%np3( isa ) <= 0 ) go to 25
 #endif
                DO iss=1,2

@@ -117,7 +117,7 @@ SUBROUTINE orthoatwfc
            CALL zgemm ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0), &
              wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0), overlap, natomwfc)
         END IF
-#ifdef __PARA
+#ifdef __MPI
 #ifdef __BANDS
         CALL mp_sum(  overlap, intra_bgrp_comm )
 #else

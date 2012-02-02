@@ -94,7 +94,7 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
           npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
   ENDIF
   ps (:,:) = ps(:,:) * alpha_pv
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum (ps, intra_pool_comm)
 #endif
 

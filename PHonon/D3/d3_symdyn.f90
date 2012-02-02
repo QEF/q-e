@@ -79,7 +79,7 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
         enddo
      enddo
   enddo
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum( phi, inter_pool_comm )
 #endif
   !

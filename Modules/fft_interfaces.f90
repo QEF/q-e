@@ -139,7 +139,7 @@
          call errore( ' invfft ', ' unknown grid: '//grid_type , 1 )
       END IF
 
-#if defined __PARA && !defined __USE_3D_FFT
+#if defined __MPI && !defined __USE_3D_FFT
 
       IF( grid_type == 'Dense' ) THEN
          call tg_cft3s( f, dfftp, 1 )
@@ -172,7 +172,7 @@
          call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, &
                          dffts%nr1x, dffts%nr2x, dffts%nr3x, 1)
       ELSE IF( grid_type == 'Wave' ) THEN
-#if defined __PARA && defined __USE_3D_FFT
+#if defined __MPI && defined __USE_3D_FFT
          call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, &
                          dffts%nr1x, dffts%nr2x, dffts%nr3x, 1)
 #else
@@ -193,7 +193,7 @@
          CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
               dfft%nr1x, dfft%nr2x, dfft%nr3x, 1)
       ELSE IF( grid_type == 'CustomWave' ) THEN
-#if defined __PARA && defined __USE_3D_FFT
+#if defined __MPI && defined __USE_3D_FFT
          CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
               dfft%nr1x, dfft%nr2x, dfft%nr3x, 1)
 #else
@@ -284,7 +284,7 @@
          call errore( ' fwfft ', ' unknown grid: '//grid_type , 1 )
       END IF
 
-#if defined __PARA && !defined __USE_3D_FFT
+#if defined __MPI && !defined __USE_3D_FFT
 
       IF( grid_type == 'Dense' ) THEN
          call tg_cft3s(f,dfftp,-1)
@@ -307,7 +307,7 @@
          call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, &
                          dffts%nr1x, dffts%nr2x, dffts%nr3x, -1)
       ELSE IF( grid_type == 'Wave' ) THEN
-#if defined __PARA && defined __USE_3D_FFT
+#if defined __MPI && defined __USE_3D_FFT
          call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, &
                          dffts%nr1x, dffts%nr2x, dffts%nr3x, -1)
 #else
@@ -319,7 +319,7 @@
          CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
               dfft%nr1x, dfft%nr2x, dfft%nr3x, -1)
       ELSE IF( grid_type == 'CustomWave' ) THEN
-#if defined __PARA && defined __USE_3D_FFT
+#if defined __MPI && defined __USE_3D_FFT
          CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
               dfft%nr1x, dfft%nr2x, dfft%nr3x, -1)
 #else

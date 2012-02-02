@@ -342,7 +342,7 @@ SUBROUTINE setup()
   nbndx = nbnd
   IF ( isolve == 0 ) nbndx = david * nbnd
   !
-#ifdef __PARA
+#ifdef __MPI
   use_para_diag = check_para_diag( nbnd )
 #else
   use_para_diag = .FALSE.
@@ -539,7 +539,7 @@ SUBROUTINE setup()
   !
   IF ( nkstot > npk ) CALL errore( 'setup', 'too many k points', nkstot )
   !
-#ifdef __PARA
+#ifdef __MPI
   !
   !
   ! ... distribute k-points (and their weights and spin indices)

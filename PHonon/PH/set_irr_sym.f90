@@ -170,7 +170,7 @@ subroutine set_irr_sym (nat, at, bg, xq, s, rtau, irt, &
 
   enddo
 
-#ifdef __PARA
+#ifdef __MPI
 !
 ! parallel stuff: first node broadcasts everything to all nodes
 !

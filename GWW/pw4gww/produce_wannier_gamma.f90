@@ -80,7 +80,7 @@ SUBROUTINE produce_wannier_gamma
   if (lda_plus_u) allocate(e_u(nbnd))
 
 !setup parallel environment
-#ifndef __PARA
+#ifndef __MPI
          l_pmatrix=.false.
 #endif
 #ifndef __SCALAPACK

@@ -291,7 +291,7 @@ subroutine phq_setup
         emin = min (emin, et (ibnd, ik) )
      enddo
   enddo
-#ifdef __PARA
+#ifdef __MPI
   ! find the minimum across pools
   call mp_min( emin, inter_pool_comm )
 #endif
@@ -305,7 +305,7 @@ subroutine phq_setup
            emax = max (emax, et (ibnd, ik) )
         enddo
      enddo
-#ifdef __PARA
+#ifdef __MPI
      ! find the maximum across pools
      call mp_max( emax, inter_pool_comm )
 #endif

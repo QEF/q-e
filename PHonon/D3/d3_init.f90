@@ -79,7 +79,7 @@ SUBROUTINE d3_init
         CALL davcio_drho2 (drhoscf(1,ipert), lrdrho, iud0rho, &
                            imode0+ipert, - 1)
      ENDDO
-#ifdef __PARA
+#ifdef __MPI
      CALL psymd0rho (npertg0(irr), irr, drhoscf)
 #else
      CALL symd0rho (npertx, npertg0(irr), irr, drhoscf, s, ftau, nsymg0, &
@@ -108,7 +108,7 @@ SUBROUTINE d3_init
            CALL davcio_drho (drhoscf2(1,1,ipert), lrdrho, iudrho, &
                               imode0+ipert, -1)
         ENDDO
-#ifdef __PARA
+#ifdef __MPI
         CALL psymdvscf (npert(irr), irr, drhoscf2)
 #else
         CALL symdvscf (npert(irr), irr, drhoscf2)

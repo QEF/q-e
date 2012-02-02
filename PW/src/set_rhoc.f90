@@ -121,7 +121,7 @@ subroutine set_rhoc
   enddo
   rhoneg = rhoneg / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
   rhoima = rhoima / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum(  rhoneg, intra_pool_comm )
   call mp_sum(  rhoima, intra_pool_comm )
 #endif

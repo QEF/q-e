@@ -168,7 +168,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
      enddo
   enddo
 100 continue
-#ifdef __PARA
+#ifdef __MPI
 #ifdef __BANDS
   CALL mp_sum( forceion, intra_bgrp_comm )
 #else

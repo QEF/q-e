@@ -16,7 +16,7 @@ subroutine bcast_ph_input ( )
   !     the other processors
   !
   !
-#ifdef __PARA
+#ifdef __MPI
 
   use mp, only: mp_bcast
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &

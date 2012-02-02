@@ -27,7 +27,7 @@ SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
   !
   INTEGER :: iunit, lrec, nrec, isw
   COMPLEX(DP) :: drho (dfftp%nnr)
-#ifdef __PARA
+#ifdef __MPI
   !
   ! local variables
   !

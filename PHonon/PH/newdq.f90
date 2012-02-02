@@ -143,7 +143,7 @@ subroutine newdq (dvscf, npe)
      enddo
 
   enddo
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum ( int3, intra_pool_comm )
 #endif
   IF (noncolin) CALL set_int3_nc(npe)

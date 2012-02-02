@@ -108,7 +108,7 @@ SUBROUTINE addusdens1d (plan, prho)
   ELSE
      qg(:) = (0.d0, 0.d0)
   ENDIF
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_sum(  qg, intra_pool_comm )
 #endif
   dimz = alat * celldm (3)

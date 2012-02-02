@@ -812,7 +812,7 @@ CONTAINS
            
       end do
 
-#ifdef __PARA
+#ifdef __MPI
       call mp_sum(  sigma, intra_pool_comm )
 #endif
 
@@ -893,7 +893,7 @@ CONTAINS
          
       enddo
 
-#ifdef __PARA
+#ifdef __MPI
       call mp_sum(  sigma, intra_pool_comm )
 #endif
       

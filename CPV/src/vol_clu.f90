@@ -34,7 +34,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
      &                       posv, xc0, weight, volclu, stress_vol,     &
      &                       surfclu, n_ele, jellium, R_j, h_j, e_j,    &
      &                       nelect, P_ext
-#ifdef __PARA
+#ifdef __MPI
       use mp_global, only: nproc, mpime
       use io_global, only: ionode
       USE mp,                 ONLY: mp_bcast, mp_sum
@@ -43,7 +43,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
 
       implicit none
 
-#ifdef __PARA
+#ifdef __MPI
       include 'mpif.h'
 #endif
 
@@ -72,7 +72,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       integer ir, ir1, ir2, ir3, is, iss, ia, flag, ierr
       integer i, j, k, l, ig, cnt, nmin, nmax, n_at
 
-#ifdef __PARA
+#ifdef __MPI
       real(kind=8) maxr_p(nproc), minr_p(nproc), maxr_pp, minr_pp
       integer shift(nproc), incr(nproc),  ppp(nproc) 
       integer displs(nproc), ip, me
@@ -88,7 +88,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
 
       ci = (0.d0,1.d0)
 
-#ifdef __PARA
+#ifdef __MPI
       me = mpime + 1
       do ip=1,nproc
          ppp(ip) =  dfftp%nnp  * ( dfftp%npp(ip) )
@@ -281,7 +281,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
          v_vol(ir) = 0.d0
 
          if (jellium) then
-#ifdef __PARA
+#ifdef __MPI
             do j = 1,3
                pos_aux(j) = posv(j,ir+shift(me))
             end do
@@ -391,7 +391,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
 
       end do
 
-#ifdef __PARA
+#ifdef __MPI
       call mp_sum(volclu,intra_bgrp_comm)
       call mp_sum(n_ele,intra_bgrp_comm)
       if (jellium) call mp_sum(e_j,intra_bgrp_comm)

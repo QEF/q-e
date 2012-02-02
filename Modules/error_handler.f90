@@ -49,7 +49,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
   WRITE( UNIT = *, FMT = '(5X,A)' ) message
   WRITE( UNIT = *, FMT = '(1X,78("%"),/)' )
   !
-#if defined (__PARA) && defined (__AIX)
+#if defined (__MPI) && defined (__AIX)
   !
   ! ... in the case of ibm machines it is also written on the "0" unit
   ! ... which is automatically connected to stderr
@@ -66,7 +66,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !
   CALL flush_unit( stdout )
   !
-#if defined (__PARA) && defined (__MPI)
+#if defined (__MPI)
   !
   mpime = 0
   !

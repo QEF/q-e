@@ -204,7 +204,7 @@ IMPLICIT NONE
 
       temp_gamma = 2.D0*DDOT(2*npw_k(1),x(:),1,x(:),1)
        IF (gstart==2) temp_gamma = temp_gamma - dble(x(1))*dble(x(1))
-#ifdef __PARA
+#ifdef __MPI
        CALL mp_sum(temp_gamma, intra_pool_comm)
 #endif
       WRITE(stdout,'("<x> = ",E15.8)') temp_gamma
@@ -230,7 +230,7 @@ IMPLICIT NONE
   COMPLEX(kind=dp), EXTERNAL    :: ZDOTC
 
       temp_f = ZDOTC(npw_k(1),x(:),1,x(:),1)
-#ifdef __PARA
+#ifdef __MPI
        CALL mp_sum(temp_f, intra_pool_comm)
 #endif
       WRITE(stdout,'("<x> = ",2E15.8,1X)') temp_f
@@ -259,7 +259,7 @@ IMPLICIT NONE
        !
       temp_gamma = 2.D0*DDOT(2*npw_k(1),x(:,ibnd),1,sx(:,jbnd),1)
        IF (gstart==2) temp_gamma = temp_gamma - dble(x(1,ibnd))*dble(sx(1,jbnd))
-#ifdef __PARA
+#ifdef __MPI
        CALL mp_sum(temp_gamma, intra_pool_comm)
 #endif
       WRITE(stdout,'("<x,",I02,"|S|x,",I02,"> =",E15.8)') ibnd,jbnd,temp_gamma
@@ -297,7 +297,7 @@ IMPLICIT NONE
        ENDIF
        temp_gamma=sum(w1*dble(rx(1:dfftp%nnr,ibnd))*dble(rx(1:dfftp%nnr,ibnd))&
                +w2*aimag(rx(1:dfftp%nnr,ibnd))*aimag(rx(1:dfftp%nnr,ibnd)))
-#ifdef __PARA
+#ifdef __MPI
        CALL mp_sum(temp_gamma, intra_pool_comm)
 #endif
       WRITE(stdout,'("Contribution of bands ",I02," and ",I02," to total density",E15.8)') ibnd,ibnd+1,temp_gamma

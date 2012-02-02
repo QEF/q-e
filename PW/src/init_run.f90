@@ -18,7 +18,7 @@ SUBROUTINE init_run()
   USE dynamics_module,    ONLY : allocate_dyn_vars
   USE paw_variables,      ONLY : okpaw
   USE paw_init,           ONLY : paw_init_onecenter, allocate_paw_internals
-#ifdef __PARA
+#ifdef __MPI
   USE paw_init,           ONLY : paw_post_init
 #endif
   USE bp,                 ONLY : allocate_bp_efield, bp_global_map
@@ -92,7 +92,7 @@ SUBROUTINE init_run()
   !
   IF(use_wannier) CALL wannier_init()
   !
-#ifdef __PARA
+#ifdef __MPI
   ! Cleanup PAW arrays that are only used for init
   IF (okpaw) CALL paw_post_init() ! only parallel!
 #endif

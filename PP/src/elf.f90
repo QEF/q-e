@@ -94,7 +94,7 @@ SUBROUTINE do_elf (elf)
      ENDDO
      ! ik
   ENDDO
-#ifdef __PARA
+#ifdef __MPI
   !
   ! reduce local kinetic energy across pools
   !

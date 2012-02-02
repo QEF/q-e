@@ -243,7 +243,7 @@ SUBROUTINE PAW_symmetrize(becsum)
       END DO
    END IF
 
-#ifdef __PARA
+#ifdef __MPI
     IF( mykey /= 0 ) becsym = 0.0_dp
     CALL mp_sum(becsym, intra_image_comm)
 #endif
@@ -472,7 +472,7 @@ SUBROUTINE PAW_symmetrize_ddd(ddd)
       END DO
    END IF
 
-#ifdef __PARA
+#ifdef __MPI
     IF( mykey /= 0 ) dddsym = 0.0_dp
     CALL mp_sum(dddsym, intra_image_comm)
 #endif
@@ -737,7 +737,7 @@ SUBROUTINE PAW_desymmetrize(dbecsum)
       END DO
    ENDIF
 
-#ifdef __PARA
+#ifdef __MPI
     IF( mykey /= 0 ) becsym = 0.0_dp
     CALL mp_sum(becsym, intra_image_comm)
 #endif
@@ -1027,7 +1027,7 @@ SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,irgq,rtau,xq,t)
 
 
 
-#ifdef __PARA
+#ifdef __MPI
     IF( mykey /= 0 ) becsym = 0.0_dp
     CALL mp_sum(becsym, intra_image_comm)
 #endif
@@ -1200,7 +1200,7 @@ SUBROUTINE PAW_dumqsymmetrize(dbecsum,npe,irr,npertx,isymq,rtau,xq,tmq)
     ENDDO atoms ! nat
     ENDDO ! nspin
 
-#ifdef __PARA
+#ifdef __MPI
     IF( mykey /= 0 ) becsym = 0.0_dp
     CALL mp_sum(becsym, intra_image_comm)
 #endif

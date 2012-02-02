@@ -109,7 +109,7 @@ subroutine dpsidpsidv
                        endif
                     enddo
                  enddo
-#ifdef __PARA
+#ifdef __MPI
                  call mp_sum(  wrk, intra_pool_comm )
 #endif
                  wrk = wrk + wrk0
@@ -171,7 +171,7 @@ subroutine dpsidpsidv
                           endif
                        enddo
                     enddo
-#ifdef __PARA
+#ifdef __MPI
                     call mp_sum(  wrk, intra_pool_comm )
 #endif
                     wrk = wrk + wrk0
@@ -186,7 +186,7 @@ subroutine dpsidpsidv
         enddo
      endif
   enddo
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum( d3dyn1, inter_pool_comm )
   if (.not.allmodes) then
      call mp_sum( d3dyn2, inter_pool_comm )

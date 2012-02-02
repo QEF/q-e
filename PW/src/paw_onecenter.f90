@@ -248,7 +248,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
          !
       ENDIF ifpaw
    ENDDO atoms
-#ifdef __PARA
+#ifdef __MPI
    ! recollect D coeffs and total one-center energy
    IF( mykey /= 0 ) energy_tot = 0.0d0
    CALL mp_sum(energy_tot, intra_image_comm)
@@ -393,7 +393,7 @@ FUNCTION PAW_ddot(bec1,bec2)
     ENDIF ifpaw
     ENDDO atoms
 
-#ifdef __PARA
+#ifdef __MPI
     IF( mykey /= 0 ) PAW_ddot = 0.0_dp
     CALL mp_sum(PAW_ddot, intra_image_comm)
 #endif
@@ -1522,7 +1522,7 @@ SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe)
       ENDIF ifpaw
    ENDDO atoms
 
-#ifdef __PARA
+#ifdef __MPI
     IF( mykey /= 0 ) int3 = 0.0_dp
     CALL mp_sum(int3, intra_image_comm)
 #endif
@@ -1975,7 +1975,7 @@ DO ix = ix_s, ix_e
 ENDDO   
 CALL PAW_rad2lm(i, rhoout_rad, rhoout_lm, i%l, nspin_gga)
 
-#ifdef __PARA
+#ifdef __MPI
 CALL mp_sum( segni_rad, paw_comm )
 #endif
 

@@ -44,7 +44,7 @@ SUBROUTINE drhodv(nu_i)
         dynel(nu_j) = dynel(nu_j) + 2.0d0*wk(kpoint)*work(ibnd)
      ENDDO
   ENDDO
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_sum( dynel, intra_pool_comm )
 #endif
   !

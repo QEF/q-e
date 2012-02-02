@@ -241,7 +241,7 @@ subroutine solve_head
            CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
                 (1.d0,0.d0), evc(1,1), npwx, dvpsi(1,1), npwx, (0.d0,0.d0), &
                 ps(1,1), nbnd )
-#ifdef __PARA
+#ifdef __MPI
            call mp_sum(ps)
            !!!call reduce (2 * nbnd * nbnd_occ (ik), ps)
 #endif
@@ -269,7 +269,7 @@ subroutine solve_head
               enddo
               eprec (ibnd) = 1.35d0*ZDOTC(npwq,evc(1,ibnd),1,auxg,1)
            enddo ! do ibnd = 1, nbnd_occ (ik)
-#ifdef __PARA
+#ifdef __MPI
            call mp_sum(eprec)
            !!!call reduce (nbnd_occ (ik), eprec)
 #endif
@@ -339,7 +339,7 @@ subroutine solve_head
      !
      !      fft trasform to g space
      !      extract terms
-#ifdef __PARA
+#ifdef __MPI
      call mp_sum ( pola_charge, inter_pool_comm )
      !!!call poolreduce (2 * 3 * dfftp%nnr *nspin, pola_charge)
      call psyme (pola_charge)
@@ -365,7 +365,7 @@ subroutine solve_head
         enddo
      enddo ! do ipol=1,3
      !
-#ifdef __PARA
+#ifdef __MPI
      call mp_sum (epsilon_g(:,:,i), intra_pool_comm)
      !!!call reduce (9, epsilon_g(:,:,i))
      call mp_sum ( epsilon_g(:,:,i), inter_pool_comm )

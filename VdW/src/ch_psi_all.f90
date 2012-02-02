@@ -87,7 +87,7 @@ SUBROUTINE ch_psi_all_vdw (n, h, ah, e, ik, m)
   CALL zgemm ('C', 'N', nbnd_occ (ikq) , m, n, (1.d0, 0.d0) , evq, &
        npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
   ps (:,:) = ps(:,:) * alpha_pv
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_sum ( ps, intra_pool_comm )
 #endif
 

@@ -170,7 +170,7 @@ subroutine solve_e2
                             dbecsum (1, 1), dpsi)
            enddo   ! on perturbations
         enddo      ! on k points
-#ifdef __PARA
+#ifdef __MPI
      call mp_sum ( dbecsum, intra_pool_comm )
 #endif
      if (doublegrid) then
@@ -188,14 +188,14 @@ subroutine solve_e2
      !   After the loop over the perturbations we have the change of the pote
      !   for all the modes, and we symmetrize this potential
      !
-#ifdef __PARA
+#ifdef __MPI
      call mp_sum ( dvscfout, inter_pool_comm )
 #endif
      do ipol = 1, 6
         call dv_of_drho (0, dvscfout (1, 1, ipol), .false.)
      enddo
 
-#ifdef __PARA
+#ifdef __MPI
      call psyme2(dvscfout)
 #else
      call syme2(dvscfout)

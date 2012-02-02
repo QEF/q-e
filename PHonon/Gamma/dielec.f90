@@ -107,7 +107,7 @@ SUBROUTINE dielec(do_zstar)
      ENDDO
   ENDDO
   !     end do
-#ifdef __PARA
+#ifdef __MPI
   IF (do_zstar) CALL mp_sum( zstar, intra_pool_comm )
   CALL mp_sum( epsilon0, intra_pool_comm )
 #endif

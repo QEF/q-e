@@ -30,7 +30,7 @@ SUBROUTINE el_ph_collect( el_ph_mat, el_ph_mat_collect, nksqtot, nksq )
     ! electron-phonon matrix elements
     ! collected electron-phonon matrix elements
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: nbase, rest, nks1
   !

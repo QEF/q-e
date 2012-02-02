@@ -206,7 +206,7 @@ CONTAINS
               ALPHA = AP( IL(I+1), I ) 
             END IF                                                             
 
-#if defined (__PARA) 
+#if defined __MPI 
             CALL BCAST_REAL( ALPHA, 2, OW(I+1), comm )
 #endif
 
@@ -226,7 +226,7 @@ CONTAINS
                 ELSE
                    XNORM = 0.0_DP
                 END IF
-#if defined __PARA
+#if defined __MPI
                 XNORM = XNORM ** 2 
                 CALL reduce_base_real( 1, xnorm, comm, -1 )
                 XNORM = SQRT( xnorm )
@@ -259,7 +259,7 @@ CONTAINS
 
                   IF((N-I-1).GT.0) THEN
                     XNORM = DZNRM2( NI1, AP( I2, I ), 1 )
-#if defined __PARA
+#if defined __MPI
                     XNORM = XNORM ** 2 
                     CALL reduce_base_real( 1, xnorm, comm, -1 )
                     XNORM = SQRT( XNORM )
@@ -317,7 +317,7 @@ CONTAINS
                  I1 = IL(I+1) + 1          ! I+2
                ENDIF
 
-#if defined __PARA
+#if defined __MPI
                DO J = I+1, N
                  CTMPV(J) = ZERO
                END DO
@@ -354,7 +354,7 @@ CONTAINS
                END DO
 
 
-#if defined __PARA
+#if defined __MPI
                ! ... parallel sum TAU
                CALL reduce_base_real( 2*(n - i + 1), tau( i ), comm, -1 )
 #endif
@@ -382,12 +382,12 @@ CONTAINS
                   ALPHA = 0.0_DP
                END IF
 
-#if defined __PARA
+#if defined __MPI
                CALL reduce_base_real( 2, alpha, comm, -1 )
 #endif
 
 
-#if defined __PARA
+#if defined __MPI
                IF ( NI1 > 0 ) CALL zaxpy(NI1,ALPHA,AP(I1,I),1,TAUL(1),1)
                
                JL = 1
@@ -414,7 +414,7 @@ CONTAINS
                  I1 = IL(I+1) + 1          ! I+2
                ENDIF
 
-#if defined __PARA
+#if defined __MPI
                DO J = I+1, N
                  CTMPV(J) = ZERO
                END DO
@@ -444,7 +444,7 @@ CONTAINS
             IF(OW(I).EQ.ME) THEN
               D( I ) = DBLE(AP( IL(I),I ))
             END IF
-#if defined __PARA 
+#if defined __MPI 
             CALL BCAST_REAL(D(I),1,OW(I),comm)
 #endif
             TAU( I ) = TAUI
@@ -452,7 +452,7 @@ CONTAINS
          IF(OW(I).EQ.ME) THEN
             D( N ) = DBLE(AP( IL(I),I ))
          END IF
-#if defined __PARA
+#if defined __MPI
          CALL BCAST_REAL(D(N),1,OW(I),comm)
 #endif
 !
@@ -678,7 +678,7 @@ CONTAINS
                   END DO 
               END IF
 
-#if defined __PARA
+#if defined __MPI
               CALL reduce_base_real( 2*(n - 1 - i), work, comm, -1 )
 #endif
               !
@@ -1155,7 +1155,7 @@ CONTAINS
             D( L ) = D( L ) - P
             E( L ) = G
          END IF
-#if defined __PARA
+#if defined __MPI
          CALL BCAST_REAL( d( L ), m - l + 1, 0, comm )
          CALL BCAST_REAL( e( L ), m - l + 1, 0, comm )
 #endif
@@ -1163,7 +1163,7 @@ CONTAINS
 !        If eigenvectors are desired, then apply saved rotations.
 !
          IF( ICOMPZ.GT.0 ) THEN
-#if defined __PARA
+#if defined __MPI
            CALL BCAST_REAL( work, 2*n, 0, comm )
 #endif
            DO J = M - L + 1 - 1, 1, -1
@@ -1291,7 +1291,7 @@ CONTAINS
             D( L ) = D( L ) - P
             E( LM1 ) = G
          END IF
-#if defined __PARA
+#if defined __MPI
          CALL BCAST_REAL( d(M), L - M + 1, 0, comm)
          CALL BCAST_REAL( e(M), L - M + 1, 0, comm )
 #endif
@@ -1299,7 +1299,7 @@ CONTAINS
 !        If eigenvectors are desired, then apply saved rotations.
 !
          IF( ICOMPZ.GT.0 ) THEN
-#if defined __PARA
+#if defined __MPI
            CALL BCAST_REAL(work,2*n,0,comm)
 #endif
             DO J = 1, L - M

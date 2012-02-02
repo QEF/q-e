@@ -43,7 +43,7 @@ SUBROUTINE read_wT_beta_gamma_z()
 
  CALL start_clock( 'post-processing' )
  IF (lr_verbosity > 5) WRITE(stdout,'("<read_wT_beta_gamma_z>")')
-#ifdef __PARA
+#ifdef __MPI
   IF (ionode) THEN
 #endif
 
@@ -93,7 +93,7 @@ SUBROUTINE read_wT_beta_gamma_z()
          CLOSE(158)
          !
          !print *, "starting broadcast"
-#ifdef __PARA
+#ifdef __MPI
          ENDIF
          CALL mp_barrier()
          CALL mp_bcast (w_T_beta_store(:), ionode_id)
@@ -352,7 +352,7 @@ SUBROUTINE lr_dump_rho_tot_compat1()
   INTEGER ir,i,j,k
  CALL start_clock( 'post-processing' )
  IF (lr_verbosity > 5) WRITE(stdout,'("<lr_dump_rho_tot_compat1>")')
-#ifdef __PARA
+#ifdef __MPI
      IF (ionode) THEN
 #endif
     !
@@ -411,7 +411,7 @@ SUBROUTINE lr_dump_rho_tot_compat1()
      DEALLOCATE( rho_sum_resp_y )
      DEALLOCATE( rho_sum_resp_z )
     !
-#ifdef __PARA
+#ifdef __MPI
      ENDIF
 #endif
 CALL stop_clock( 'post-processing' )
@@ -459,7 +459,7 @@ SUBROUTINE lr_dump_rho_tot_cube(rho,identifier)
  IF (lr_verbosity > 5) WRITE(stdout,'("<lr_dump_rho_tot_cube>")')
   !
  six_count=0
-#ifdef __PARA
+#ifdef __MPI
    ALLOCATE( rho_temp(dfftp%npp(1)+1) )
    IF (ionode) THEN
        filename = trim(prefix) // "-" // identifier // "-pol" //trim(int_to_char(LR_polarization))// ".cube"
@@ -706,7 +706,7 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
  IF (lr_verbosity > 5) WRITE(stdout,'("<lr_dump_rho_tot_xyzd>")')
   !
 
-#ifdef __PARA
+#ifdef __MPI
       !Derived From Modules/xml_io_base.f90
         ALLOCATE( rho_plane( dfftp%nr1*dfftp%nr2 ) )
         ALLOCATE( kowner( dfftp%nr3 ) )
@@ -909,7 +909,7 @@ SUBROUTINE lr_dump_rho_tot_xcrys(rho, identifier)
   six_count=0
  CALL start_clock( 'post-processing' )
  IF (lr_verbosity > 5) WRITE(stdout,'("<lr_dump_rho_tot_xsf>")')
-#ifdef __PARA
+#ifdef __MPI
      IF (ionode) THEN
          !
            !
@@ -1159,7 +1159,7 @@ SUBROUTINE lr_dump_rho_tot_pxyd(rho,identifier)
   ENDDO
   !
 
-#ifdef __PARA
+#ifdef __MPI
      IF (ionode) THEN
 #endif
    !
@@ -1186,7 +1186,7 @@ SUBROUTINE lr_dump_rho_tot_pxyd(rho,identifier)
   CLOSE(158)
      !
      !
-#ifdef __PARA
+#ifdef __MPI
      ENDIF
      CALL mp_barrier()
 #endif
@@ -1331,7 +1331,7 @@ IMPLICIT NONE
       IF (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*dble(evc1(1,ibnd_occ,1))*dble(evc0_virt(1,ibnd_virt,1)))
       !US contribution
       SSUM=SSUM+scal
-#ifdef __PARA
+#ifdef __MPI
        CALL mp_sum(SSUM, intra_pool_comm)
 #endif
        IF(nspin/=2) SSUM=SSUM/2.0D0
@@ -1380,7 +1380,7 @@ IMPLICIT NONE
       ! the dot  product <evc0|sd0psi> taken from lr_dot
       SSUM=(2.D0*wg(ibnd_occ,1)*DDOT(2*npw_k(1),evc0_virt(:,ibnd_virt,1),1,d0psi(:,ibnd_occ,1,ipol),1))
       IF (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*dble(d0psi(1,ibnd_occ,1,ipol))*dble(evc0_virt(1,ibnd_virt,1)))
-#ifdef __PARA
+#ifdef __MPI
        CALL mp_sum(SSUM, intra_pool_comm)
 #endif
        IF(nspin/=2) SSUM=SSUM/2.0D0

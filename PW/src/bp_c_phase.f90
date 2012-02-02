@@ -543,7 +543,7 @@ SUBROUTINE c_phase
                      end if
                   end do
                end do
-#ifdef __PARA
+#ifdef __MPI
                call mp_sum( mat, intra_pool_comm )
 #endif
                DO nb=1,nbnd

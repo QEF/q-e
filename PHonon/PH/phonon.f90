@@ -71,7 +71,7 @@ PROGRAM phonon
   !
   ! Initialize MPI, clocks, print initial messages
   !
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_startup ( )
   IF (nimage>1) CALL io_image_start()
 #endif

@@ -173,7 +173,7 @@
        write(stdout,*) 'Number of excluded conduction states', ggwin%nc_minus
     endif
 
-#ifdef __PARA
+#ifdef __MPI
 
     call mp_bcast(ggwin%n,ionode_id)
     call mp_bcast(ggwin%tau,ionode_id)

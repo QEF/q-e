@@ -88,7 +88,7 @@ subroutine dpsidvdpsi (nu_q0)
               wrk = wrk + 2.d0 * wg1 * &
                    zdotc (npwq, dqpsi (1, ibnd), 1, dvpsi (1, ibnd), 1)
            enddo
-#ifdef __PARA
+#ifdef __MPI
            call mp_sum(  wrk, intra_pool_comm )
 #endif
            d3dyn1 (nu_z, nu_j, nu_i) = d3dyn1 (nu_z, nu_j, nu_i) + wrk
@@ -139,7 +139,7 @@ subroutine dpsidvdpsi (nu_q0)
                  wrk = wrk + 2.d0 * wg1 * &
                       zdotc (npwq, dvpsi (1, ibnd), 1, dqpsi (1, ibnd), 1)
               enddo
-#ifdef __PARA
+#ifdef __MPI
               call mp_sum(  wrk, intra_pool_comm )
 #endif
               d3dyn2 (nu_i, nu_z, nu_j) = d3dyn2 (nu_i, nu_z, nu_j) + wrk
@@ -149,7 +149,7 @@ subroutine dpsidvdpsi (nu_q0)
      enddo
   endif
 
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum( d3dyn1, inter_pool_comm )
   if (.not.allmodes) then
      call mp_sum( d3dyn2, inter_pool_comm )

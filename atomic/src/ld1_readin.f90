@@ -664,7 +664,7 @@ subroutine bcast_input()
 
 
 implicit none
-#ifdef __PARA
+#ifdef __MPI
    call mp_bcast( zed, ionode_id )
    call mp_bcast( beta, ionode_id )
    call mp_bcast( tr2, ionode_id )
@@ -702,7 +702,7 @@ subroutine bcast_inputp()
                          rmatch_augfun_nc, & 
                          use_paw_as_gipaw !EMINE
 implicit none
-#ifdef __PARA
+#ifdef __MPI
   call mp_bcast( pseudotype, ionode_id )
   call mp_bcast( tm,  ionode_id ) 
   call mp_bcast( rho0,  ionode_id )
@@ -740,7 +740,7 @@ subroutine bcast_test()
                          frozen_core, lsdts
 
 implicit none
-#ifdef __PARA
+#ifdef __MPI
    call mp_bcast( nconf, ionode_id ) 
    call mp_bcast( file_pseudo, ionode_id )
    call mp_bcast( ecutmin, ionode_id ) 
@@ -759,7 +759,7 @@ subroutine bcast_config()
   USE ld1inc,     ONLY : nwf, el, nn, ll, oc, isw, jj
 
 implicit none
-#ifdef __PARA
+#ifdef __MPI
   call mp_bcast( nwf, ionode_id )
   call mp_bcast( el, ionode_id )
   call mp_bcast( nn, ionode_id )
@@ -778,7 +778,7 @@ subroutine bcast_psconfig()
                          rcutus
 
 implicit none
-#ifdef __PARA
+#ifdef __MPI
   call mp_bcast( nwfs, ionode_id )
   call mp_bcast( els, ionode_id )
   call mp_bcast( nns, ionode_id )
@@ -800,7 +800,7 @@ subroutine bcast_pstsconfig()
                          rcutustsc
 
 implicit none
-#ifdef __PARA
+#ifdef __MPI
   call mp_bcast( nwftsc, ionode_id )
   call mp_bcast( nntsc, ionode_id )
   call mp_bcast( lltsc, ionode_id )

@@ -107,7 +107,7 @@ SUBROUTINE lr_init_nfo()
         emin = min (emin, et (ibnd, ik) )
      ENDDO
   ENDDO
-#ifdef __PARA
+#ifdef __MPI
   ! find the minimum across pools
   CALL mp_min( emin, inter_pool_comm )
 #endif
@@ -121,7 +121,7 @@ SUBROUTINE lr_init_nfo()
            emax = max (emax, et (ibnd, ik) )
         ENDDO
      ENDDO
-#ifdef __PARA
+#ifdef __MPI
      ! find the maximum across pools
      CALL mp_max( emax, inter_pool_comm )
 #endif

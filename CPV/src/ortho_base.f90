@@ -226,7 +226,7 @@ END SUBROUTINE diagonalize_parallel
 
       CALL mp_max( tser, intra_bgrp_comm )
 
-#if defined __PARA
+#if defined __MPI
 
       IF( ionode ) THEN
          use_parallel_diag = .FALSE.
@@ -337,7 +337,7 @@ END SUBROUTINE diagonalize_parallel
       DEALLOCATE( a, c, b )
 
 
-#if defined __PARA
+#if defined __MPI
 
       IF( ionode ) THEN
          !
@@ -354,7 +354,7 @@ END SUBROUTINE diagonalize_parallel
 
 #endif
 
-#if defined __PARA
+#if defined __MPI
       IF( ionode ) THEN
          WRITE( stdout, '(/,3X,"Constraints matrixes will be distributed block like on")' )
          WRITE( stdout, '(3X,"ortho sub-group = ", I4, "*", I4, " procs",/)' ) np_ortho(1), np_ortho(2)

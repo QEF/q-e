@@ -27,7 +27,7 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
     ! the potential to symmetrize
     !-local variable
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: i, is, iper, npp0
 

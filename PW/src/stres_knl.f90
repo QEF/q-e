@@ -88,7 +88,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   ! add the US term from augmentation charge derivatives
   !
   call addusstres (sigmanlc)
-#ifdef __PARA
+#ifdef __MPI
 #ifdef __BANDS
   call mp_sum( sigmakin, intra_bgrp_comm )
   call mp_sum( sigmanlc, intra_bgrp_comm )

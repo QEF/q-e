@@ -106,7 +106,7 @@ subroutine force_cc (forcecc)
         enddo
      endif
   enddo
-#ifdef __PARA
+#ifdef __MPI
 #ifdef __BANDS
   call mp_sum(  forcecc, intra_bgrp_comm )
 #else

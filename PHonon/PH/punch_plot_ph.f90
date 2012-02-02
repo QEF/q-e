@@ -60,7 +60,7 @@ SUBROUTINE punch_plot_ph()
   ! scalar product function
   ! auxiliary space to rotate the
   ! induced charge
-#if defined (__PARA)
+#if defined (__MPI)
   ! auxiliary vector
   REAL(DP), ALLOCATABLE :: raux1 (:)
 #endif
@@ -86,7 +86,7 @@ SUBROUTINE punch_plot_ph()
            CALL davcio_drho (aux (1, 1, ipert), lrdrho, iudrho, imode0 + &
                 ipert, - 1)
         ENDDO
-#if defined (__PARA)
+#if defined (__MPI)
         CALL psymdvscf (npert (irr), irr, aux)
 #else
         CALL symdvscf (npert (irr), irr, aux)
@@ -133,7 +133,7 @@ SUBROUTINE punch_plot_ph()
 
   IF (lsda) CALL daxpy (dfftp%nnr, 1.d0, aux1 (1, 2), 2, raux, 1)
 
-#if defined (__PARA)
+#if defined (__MPI)
   ALLOCATE (raux1( dfftp%nr1x * dfftp%nr2x * dfftp%nr3x))
   CALL grid_gather (raux, raux1)
   IF ( ionode ) WRITE (iunplot, * ) (raux1 (ir), ir = 1, dfftp%nr1x * dfftp%nr2x * dfftp%nr3x)

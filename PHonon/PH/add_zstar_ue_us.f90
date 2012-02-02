@@ -72,7 +72,7 @@ subroutine add_zstar_ue_us(imode0,npe)
            !
            pdsp = (0.d0,0.d0)
            call psidspsi (ik, u (1, mode), pdsp,npw)
-#ifdef __PARA
+#ifdef __MPI
            call mp_sum(pdsp, intra_pool_comm )
 #endif
            !

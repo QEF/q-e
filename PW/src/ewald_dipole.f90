@@ -92,7 +92,7 @@ subroutine ewald_dipole (tens,dipole)
   ewaldg = e2 / 2.d0 * fpi / omega * ewaldg !Temp to compare with paratec
 !  ewaldg = e2 * fpi / omega * ewaldg
 
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum(  ewaldg, intra_pool_comm ) !2 because ewaldg is complex
 #endif
   !
@@ -135,7 +135,7 @@ subroutine ewald_dipole (tens,dipole)
     enddo
  endif
 ewaldr = e2 *  ewaldr
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum(  ewaldr, intra_pool_comm ) !2 because ewaldr is complex
 #endif
 

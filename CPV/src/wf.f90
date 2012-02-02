@@ -88,7 +88,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   
   COMPLEX(DP), EXTERNAL :: boxdotgridcplx
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: proc, ntot, ncol, mc, ngpwpp(nproc_bgrp)
   INTEGER :: ncol1,nz1, nz_1 
@@ -130,7 +130,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      !
   END IF
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   ! Compute the number of states to each processor
   !
@@ -187,7 +187,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   END IF
   !
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   !   Step 3. do the translation of the 2-d array to get the transtalted
   !   arrays psitot_pl and psittot_mi, corresponding to G+G' and -G+G'
@@ -323,7 +323,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                  qv(npb(ig))=eigrb(ig,isa)*qgb(ig,ijv,is)
                  qv(nmb(ig))=CONJG(eigrb(ig,isa)*qgb(ig,ijv,is))
               END DO
-#ifdef __PARA
+#ifdef __MPI
               irb3=irb(3,isa)
 #endif
               CALL invfft('Box',qv,dfftb,isa)
@@ -331,7 +331,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
               qvt=(0.D0,0.D0)
               qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
 
-#ifdef __PARA
+#ifdef __MPI
               CALL mp_sum( qvt, intra_bgrp_comm )
 #endif
               !
@@ -371,7 +371,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                  iqv=1
                  qvt=0.D0
                  qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
-#ifdef __PARA
+#ifdef __MPI
                  CALL mp_sum( qvt, intra_bgrp_comm )
 #endif
                  !
@@ -465,7 +465,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         !           cwf(:,:)=c(:,:,1,1)
         CALL zgemm('C','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
         CALL zgemm('T','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
-#ifdef __PARA
+#ifdef __MPI
         CALL mp_sum ( Xsp, intra_bgrp_comm )
 #endif
         DO i=1,nupdwn(1)
@@ -492,7 +492,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         !           cwf(:,:)=c(:,:,1,1)
         CALL zgemm('C','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
         CALL zgemm('T','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
-#ifdef __PARA
+#ifdef __MPI
         CALL mp_sum ( Xsp, intra_bgrp_comm )
 #endif
         DO i=iupdwn(2),nbsp
@@ -507,7 +507,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
 
   END DO
 
-#ifdef __PARA
+#ifdef __MPI
   DEALLOCATE(ns)
 #endif
 
@@ -724,7 +724,7 @@ COMB:   DO k=3**nw-1,0,-1
   !
   DEALLOCATE( wr, W, gr, EW, f3, f4, mt0, mt )
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   DEALLOCATE( psitot )
   DEALLOCATE( psitot_pl )
@@ -1031,7 +1031,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   !
   REAL(DP), INTENT(in) :: b1(3),b2(3),b3(3)
   INTEGER,  INTENT(in) :: clwf, ibrav
-#ifdef __PARA
+#ifdef __MPI
   INTEGER :: ntot, proc, ierr, i,j,inw,ngppp(nproc_bgrp)
   INTEGER :: ii,ig,displs(nproc_bgrp)
 #else
@@ -1067,7 +1067,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
      gnn(3,i)=mill(3,i)
   END DO
 
-#ifdef __PARA
+#ifdef __MPI
 
   ntot=0
   DO i=1,nproc_bgrp
@@ -1129,7 +1129,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   !
   IF(nvb.GT.0) CALL small_box_wf(i_1, j_1, k_1, nw1)
 
-#ifdef __PARA
+#ifdef __MPI
   !
   CALL mp_barrier( intra_bgrp_comm )
   !
@@ -1143,7 +1143,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 
   IF(me.EQ.1) THEN
      IF(clwf.EQ.5) THEN
-#ifdef __PARA
+#ifdef __MPI
         DO ii=1,ntot
            WRITE(21,*) bigg(:,ii)
         END DO
@@ -1211,7 +1211,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
         END DO
         WRITE( stdout, * ) "Translation", inw, "for", ngw, "G vectors"
      ELSE
-#ifdef __PARA
+#ifdef __MPI
         IF(me.EQ.1) THEN   
 #endif
            DO ig=1,ntot
@@ -1294,13 +1294,13 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 213           CONTINUE
            END DO
            WRITE( stdout, * ) "Translation", inw, "for", ntot, "G vectors"
-#ifdef __PARA
+#ifdef __MPI
         END IF
 #endif
      END IF
   END DO
 
-#ifdef __PARA
+#ifdef __MPI
 
   CALL mp_barrier( intra_bgrp_comm )
   !
@@ -1312,7 +1312,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 #endif
   DEALLOCATE(bigg)
   DEALLOCATE(bign)
-#ifdef __PARA
+#ifdef __MPI
 
 #endif
   DEALLOCATE(i_1,j_1,k_1)
@@ -1347,7 +1347,7 @@ SUBROUTINE grid_map()
   nr3sx = dffts%nr3x
   nr3s = dffts%nr3
   DO ir3=1,nr3s
-#ifdef __PARA
+#ifdef __MPI
      ibig3 = ir3 - dffts%ipp( me )
      IF(ibig3.GT.0.AND.ibig3.LE.dffts%npp(me)) THEN
 #else
@@ -1364,7 +1364,7 @@ SUBROUTINE grid_map()
               !         
            END DO
         END DO
-#ifdef __PARA
+#ifdef __MPI
      END IF
 #endif
   END DO
@@ -1941,7 +1941,7 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
      WRITE( stdout, * ) inw ,":", i_1(inw), j_1(inw), k_1(inw)
 
      DO ir3=1,dfftp%nr3
-#ifdef __PARA
+#ifdef __MPI
         ibig3 = ir3 - dfftp%ipp( me )
         IF(ibig3.GT.0.AND.ibig3.LE.dfftp%npp(me)) THEN
 #else
@@ -1955,7 +1955,7 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
                  expo(ir1+(ir2-1)*dfftp%nr1x+(ibig3-1)*dfftp%nr1x*dfftp%nr2x,inw) = CMPLX(COS(x), -SIN(x),kind=DP)
               END DO
            END DO
-#ifdef __PARA
+#ifdef __MPI
         END IF
 #endif
      END DO
@@ -1993,7 +1993,7 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   DO ir3=1,dfftb%nr3
      ibig3=irb(3)+ir3-1
      ibig3=1+MOD(ibig3-1,dfftp%nr3)
-#ifdef __PARA
+#ifdef __MPI
      ibig3 = ibig3 - dfftp%ipp( me )
      IF (ibig3.GT.0.AND.ibig3.LE.dfftp%npp(me)) THEN
 #endif
@@ -2008,7 +2008,7 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
               boxdotgridcplx = boxdotgridcplx + qv(ir)*vr(ibig)
            END DO
         END DO
-#ifdef __PARA
+#ifdef __MPI
      ENDIF
 #endif
   END DO
@@ -2038,7 +2038,7 @@ SUBROUTINE write_rho_g( rhog )
   COMPLEX(DP),ALLOCATABLE :: bigrho(:)
   COMPLEX(DP) :: rhotmp_g(ngm)
   INTEGER           :: ntot, i, j, me
-#ifdef __PARA
+#ifdef __MPI
   INTEGER proc, ierr, ngdens(nproc_bgrp), displs(nproc_bgrp)
 #endif
   CHARACTER (LEN=6)  :: name
@@ -2054,7 +2054,7 @@ SUBROUTINE write_rho_g( rhog )
      gnx(3,i)=g(3,i)
   END DO
 
-#ifdef __PARA
+#ifdef __MPI
 
   DO i=1,nproc_bgrp
      ngdens(i)=(dfftp%ngl(i)+1)/2
@@ -2171,7 +2171,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   COMPLEX(DP), ALLOCATABLE :: rhotmp_g(:)
   INTEGER ntot, i, j, ngz, l, isa
   INTEGER ,ALLOCATABLE :: g_red(:,:)
-#ifdef __PARA
+#ifdef __MPI
   INTEGER proc, ierr, ngdens(nproc_bgrp), displs( nproc_bgrp )
 #endif
   REAL(DP) zlen,vtot, pos(3,nax,nsp), a_direct(3,3),a_trans(3,3), e_slp, e_int
@@ -2192,7 +2192,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
      gnx(3,i)=g(3,i)
   END DO
 
-#ifdef __PARA
+#ifdef __MPI
 
   DO i=1,nproc_bgrp
      ngdens(i)=(dfftp%ngl(i)+1)/2
@@ -2210,7 +2210,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   ALLOCATE (bigrho(ntot))
   ALLOCATE (bigrhog(2*ntot-1))
 
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_barrier( intra_bgrp_comm )
   !
   CALL mp_gather( gnx, bigg, ngdens, displs, root_bgrp,intra_bgrp_comm )
@@ -2811,7 +2811,7 @@ SUBROUTINE write_psi( c, jw )
   INTEGER ::displs(nproc_bgrp)
   COMPLEX(DP), ALLOCATABLE:: psitot(:)
 
-#if defined (__PARA)
+#if defined (__MPI)
   !
   DO proc=1,nproc_bgrp
      ngpwpp(proc)=(dfftp%nwl(proc)+1)/2

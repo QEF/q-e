@@ -94,7 +94,7 @@ ENDIF
 !     To form local potential on the real space mesh
 !
 !
-#ifdef __PARA
+#ifdef __MPI
   allocate ( allv(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x) )
 #endif
 
@@ -112,7 +112,7 @@ DO ispin=1,nspin_eff
 !
 ! To collect the potential from different CPUs
 !
-#ifdef __PARA
+#ifdef __MPI
   call grid_gather( auxr, allv )
   CALL mp_bcast( allv, ionode_id )
   aux(:) = CMPLX(allv(:), 0.d0,kind=DP)
@@ -186,7 +186,7 @@ ENDIF
   DEALLOCATE(auxr)
   DEALLOCATE(amat)
   DEALLOCATE(amat0)
-#ifdef __PARA
+#ifdef __MPI
   deallocate(allv)
 #endif
 

@@ -64,7 +64,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
 
   tmpexp2(:,:)=(0.d0,0.d0)
 
-#ifndef __PARA
+#ifndef __MPI
   iqq=0
   do ix=1,dffts%nr1
      do iy=1,dffts%nr2
@@ -188,7 +188,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
     expgsave(:,:,:,:)=0.d0
    do mdir=1,3
 
-#ifndef __PARA
+#ifndef __MPI
       if(mdir==1) then
          do ix=1,dfftp%nr1
             ee=exp(cmplx(0.d0,1.d0)*tpi*real(ix)/real(dfftp%nr1))
@@ -301,7 +301,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
 
      expgsave(:,:,:,mdir)=expgsave(:,:,:,mdir)*omega/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
 
-#ifdef __PARA
+#ifdef __MPI
      !!!call reduce (2  *maxval(nh) *maxval(nh)* nat, expgsave(:,:,:,mdir))
      call mp_sum(expgsave(:,:,:,mdir))
 #endif

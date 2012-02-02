@@ -41,7 +41,7 @@ subroutine iweights (nks, wk, nbnd, nelec, et, Ef, wg, is, isk)
         endif
      enddo
   enddo
-#ifdef __PARA
+#ifdef __MPI
   !
   ! find max across pools
   !

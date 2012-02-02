@@ -189,7 +189,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
            if (isw_sl /= 2) then
               do jbnd = 1, nbnd
                  psidvpsi = zdotc(npwq, evq (1, jbnd), 1, dvpsi (1, ibnd),1)
-#ifdef __PARA
+#ifdef __MPI
                  call mp_sum ( psidvpsi, intra_pool_comm )
 #endif
                  psidqvpsi (jbnd, ibnd) = psidvpsi
@@ -302,7 +302,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
         call cinterpolate (drhoscf (1, ipert), drhoscf (1, ipert), 1)
      enddo
   endif
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum( drhoscf, inter_pool_comm )
 #endif
 

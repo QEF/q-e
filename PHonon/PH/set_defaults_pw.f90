@@ -74,7 +74,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   nbndx = david*nbnd
   natomwfc = n_atom_wfc( nat, ityp, noncolin )
   !
-#ifdef __PARA
+#ifdef __MPI
   IF ( use_para_diag )  CALL check_para_diag( nbnd )
 #else
   use_para_diag = .FALSE.
@@ -192,7 +192,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   !
   qnorm = sqrt(xq(1)**2 + xq(2)**2 + xq(3)**2)
   !
-#ifdef __PARA
+#ifdef __MPI
   !
   ! ... set the granularity for k-point distribution
   !

@@ -63,7 +63,7 @@ SUBROUTINE polariz_vdw ( iu )
         ENDDO
      ENDDO
   ENDDO
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_sum ( epsilon, intra_pool_comm )
   CALL mp_sum ( epsilon, inter_pool_comm )
 #endif

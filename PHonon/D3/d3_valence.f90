@@ -227,7 +227,7 @@ subroutine d3_valence
         endif
      enddo
   endif
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum( aux1, inter_pool_comm )
   call mp_sum( aux2, inter_pool_comm )
   if (lgamma) then

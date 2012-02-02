@@ -449,7 +449,7 @@ CONTAINS
     !
     no_rho_sym = gamma_only .OR. (nsym==1)
     IF (no_rho_sym) RETURN
-#ifdef __PARA
+#ifdef __MPI
     CALL sym_rho_init_para ( )
 #else
     CALL sym_rho_init_shells( ngm, g )
@@ -457,7 +457,7 @@ CONTAINS
     !
   END SUBROUTINE sym_rho_init
    !
-#ifdef __PARA
+#ifdef __MPI
   !
   SUBROUTINE sym_rho_init_para ( )
     !-----------------------------------------------------------------------
@@ -668,7 +668,7 @@ gloop:    DO jg=iig,ngm_
     !
     USE constants,            ONLY : eps8, eps6
     USE gvect,                ONLY : ngm, g
-#ifdef __PARA
+#ifdef __MPI
     USE parallel_include
     USE mp_global,            ONLY : nproc_pool, me_pool, intra_pool_comm
 #endif
@@ -684,7 +684,7 @@ gloop:    DO jg=iig,ngm_
     INTEGER :: is, ig, igl, np, ierr, ngm_
     !
     IF ( no_rho_sym) RETURN
-#ifndef __PARA
+#ifndef __MPI
     !
     CALL sym_rho_serial ( ngm, g, nspin, rhog )
     !

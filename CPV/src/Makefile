@@ -41,6 +41,7 @@ exx_psi.o \
 exx_setup.o \
 exx_vofr.o \
 fft.o \
+fft_box.o \
 forces.o \
 fromscra.o \
 gradrho.o \

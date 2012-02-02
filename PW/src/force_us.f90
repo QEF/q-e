@@ -159,7 +159,7 @@ SUBROUTINE force_us( forcenl )
        !
        CALL addusforce( forcenl )
        !
-#ifdef __PARA
+#ifdef __MPI
        !
        ! ... collect contributions across pools
        !
@@ -332,7 +332,7 @@ SUBROUTINE force_us( forcenl )
           END DO ! nbnd
        END DO ! nks
        !
-#ifdef __PARA
+#ifdef __MPI
        CALL mp_sum(  forcenl , intra_pool_comm )
 #endif
        !
@@ -351,7 +351,7 @@ SUBROUTINE force_us( forcenl )
        !
        CALL addusforce( forcenl )
        !
-#ifdef __PARA
+#ifdef __MPI
        !
        ! ... collect contributions across pools
        !

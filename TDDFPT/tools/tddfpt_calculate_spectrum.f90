@@ -116,7 +116,7 @@ PROGRAM lr_calculate_spectrum
   test=0.0d0
   !
 
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_startup ( )
 IF (ionode) THEN
    WRITE(*,*) "Warning: Only a single cpu will be used!"
@@ -565,7 +565,7 @@ CLOSE(17)
   CALL environment_end( 'TDDFPT_PP' )
   !
 ENDIF
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_barrier ()
   CALL mp_global_end ()
 #endif

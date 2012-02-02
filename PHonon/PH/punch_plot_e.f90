@@ -54,7 +54,7 @@ SUBROUTINE punch_plot_e()
   ! auxiliary space to rotate the
   ! induced charge
 
-#if defined (__PARA)
+#if defined (__MPI)
   ! auxiliary vector
   REAL(DP), ALLOCATABLE :: raux1 (:)
 #endif
@@ -122,7 +122,7 @@ SUBROUTINE punch_plot_e()
      raux (:) =  DBLE (aux1 (:,1, ipol) )
      IF (lsda) CALL daxpy (dfftp%nnr, 1.d0, aux1 (1,2, ipol), 2, raux, 1)
      !
-#if defined (__PARA)
+#if defined (__MPI)
      ALLOCATE (raux1( dfftp%nr1x * dfftp%nr2x * dfftp%nr3x))
      CALL grid_gather (raux, raux1)
      IF ( ionode ) WRITE (iunplot, '(5(1pe17.9))') &

@@ -30,7 +30,7 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   INTEGER          :: iunit, lrec, nrec, isw
   COMPLEX(DP) :: drho(dfftp%nnr,nspin_mag)
   !
-#ifdef __PARA
+#ifdef __MPI
   !
   ! ... local variables
   !

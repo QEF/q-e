@@ -306,7 +306,7 @@ subroutine init_us_1
            ! l
         enddo
         qrad (:, :, :, nt) = qrad (:, :, :, nt)*prefr
-#ifdef __PARA
+#ifdef __MPI
         call mp_sum ( qrad (:, :, :, nt), intra_pool_comm )
 #endif
      endif
@@ -316,7 +316,7 @@ subroutine init_us_1
   !   and finally we compute the qq coefficients by integrating the Q.
   !   q are the g=0 components of Q.
   !
-#ifdef __PARA
+#ifdef __MPI
   if (gg (1) > 1.0d-8) goto 100
 #endif
   call ylmr2 (lmaxq * lmaxq, 1, g, gg, ylmk0)
@@ -361,7 +361,7 @@ subroutine init_us_1
       endif
     endif
   enddo
-#ifdef __PARA
+#ifdef __MPI
 100 continue
   if (lspinorb) then
     call mp_sum(  qq_so , intra_pool_comm )
@@ -391,7 +391,7 @@ subroutine init_us_1
      enddo
   enddo
 
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum(  tab, intra_pool_comm )
 #endif
 

@@ -105,7 +105,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
         endif
      enddo
   enddo
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum (ps1,intra_pool_comm)
 #endif
   dpsi (:,:) = (0.d0, 0.d0)

@@ -35,7 +35,7 @@ SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )
     ! input  ( contains values for all k-point )
     ! output ( only for k-points of mypool )
   !
-#if defined (__PARA)  
+#if defined (__MPI)  
   !
   INTEGER :: rest, nbase
     ! the rest of the integer division nkstot / npo
@@ -89,7 +89,7 @@ SUBROUTINE poolrecover( vec, length, nkstot, nks )
   INTEGER  :: length, nks, nkstot
   REAL(DP) :: vec(length,nkstot)
   !
-#if defined (__PARA)  
+#if defined (__MPI)  
   !
   INTEGER :: status(MPI_STATUS_SIZE)
   INTEGER :: i, nks1, rest, fine, nbase, info
@@ -164,7 +164,7 @@ SUBROUTINE ipoolrecover( ivec, length, nkstot, nks )
   INTEGER :: length, nks, nkstot
   INTEGER :: ivec(length,nkstot)
   !
-#if defined (__PARA)  
+#if defined (__MPI)  
   !
   INTEGER :: status(MPI_STATUS_SIZE)
   INTEGER :: i, nks1, rest, fine, nbase, info

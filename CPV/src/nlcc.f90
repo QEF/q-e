@@ -238,7 +238,7 @@
             cycle
          end if 
 
-#ifdef __PARA
+#ifdef __MPI
 
          do ia = 1, na(is)
             nfft = 1
@@ -378,7 +378,7 @@
             cycle
          end if
          !
-#ifdef __PARA
+#ifdef __MPI
          do ia=1,na(is)
             nfft=1
             if ( dfftb%np3( ia + isa ) <= 0 ) cycle

@@ -66,7 +66,7 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   call ZGEMM( 'C', 'N', nstart, nstart, kdim, ( 1.D0, 0.D0 ), psi, kdmx, &
               aux, kdmx, ( 0.D0, 0.D0 ), hc, nstart )
   !            
-#if defined (__PARA)
+#if defined (__MPI)
 #ifdef __BANDS
   CALL mp_sum(  hc , intra_bgrp_comm )
 #else
@@ -88,7 +88,7 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
      !  
   END IF
   !
-#if defined (__PARA)
+#if defined (__MPI)
 #ifdef __BANDS
   CALL mp_sum(  sc , intra_bgrp_comm )
 #else

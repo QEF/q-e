@@ -42,7 +42,7 @@ SUBROUTINE ortho_wfc(lda,ldb,wfc,ierr)
   CALL ZGEMM ('n', 'c', lda, lda, ldb, (1.d0, 0.d0), &
        wfc, lda, wfc, lda, (0.d0, 0.d0), overlap, lda)
     
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_sum(  overlap, intra_pool_comm )
 #endif
 

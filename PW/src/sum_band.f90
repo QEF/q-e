@@ -127,7 +127,7 @@ SUBROUTINE sum_band()
      rho%bec(:,:,:) = becsum(:,:,:) ! becsum is filled in sum_band_{k|gamma}
      ! rho%bec has to be recollected and symmetrized, becsum must not, otherwise
      ! it will break stress routines.
-#ifdef __PARA
+#ifdef __MPI
      CALL mp_sum(rho%bec, inter_pool_comm )
 #endif
      CALL PAW_symmetrize(rho%bec)
@@ -156,7 +156,7 @@ SUBROUTINE sum_band()
   !
   CALL mp_sum( eband, inter_pool_comm )
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   ! ... reduce charge density across pools
   !

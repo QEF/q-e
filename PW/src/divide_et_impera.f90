@@ -36,7 +36,7 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
     ! k-points
     ! k-point weights
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: ik, nbase, rest
   !

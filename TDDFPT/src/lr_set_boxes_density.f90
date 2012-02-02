@@ -32,7 +32,7 @@ SUBROUTINE lr_set_boxes_density()
   !
   index0 = 0
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   DO i = 1, me_pool
      index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)

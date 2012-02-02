@@ -103,7 +103,7 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
   INTEGER :: istop
 
   max_array=max_array2
-#ifndef __PARA
+#ifndef __MPI
   !dfftp%npp(1)= nr3 ! not needed - PG
   !dffts%npp(1)= dffts%nr3 ! not needed - PG
   nr3s_start=1

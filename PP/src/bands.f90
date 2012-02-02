@@ -38,7 +38,7 @@ PROGRAM do_bands
   !
   ! initialise environment
   !
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'BANDS' )
@@ -432,7 +432,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
         ENDDO
      ENDIF
   ENDDO
-#ifdef __PARA
+#ifdef __MPI
   IF (noncolin) CALL poolrecover(sigma_avg,4*nbnd,nkstot,nks)
   CALL ipoolrecover(il,nbnd,nkstot,nks)
 #endif

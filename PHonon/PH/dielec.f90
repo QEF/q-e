@@ -63,7 +63,7 @@ subroutine dielec()
         enddo
      enddo
   enddo
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum ( epsilon, intra_pool_comm )
   call mp_sum ( epsilon, inter_pool_comm )
 #endif

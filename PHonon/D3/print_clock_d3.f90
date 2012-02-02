@@ -21,7 +21,7 @@ subroutine print_clock_d3
   call print_clock ('cgsolve')
   call print_clock ('incdrhoscf')
   call print_clock ('dv_of_drho')
-#ifdef __PARA
+#ifdef __MPI
   call print_clock ('psymdvscf')
   call print_clock ('psymd0rho')
 #else
@@ -52,7 +52,7 @@ subroutine print_clock_d3
   call print_clock ('cinterpolate')
   call print_clock ('davcio')
   WRITE( stdout, * )
-#ifdef __PARA
+#ifdef __MPI
   WRITE( stdout,  * ) '     Parallel routines'
   call print_clock ('reduce')
 #endif

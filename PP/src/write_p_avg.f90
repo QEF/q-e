@@ -132,7 +132,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
      ENDDO
      DEALLOCATE(ppsi)
      IF (okvan) DEALLOCATE(ppsi_us)
-#ifdef __PARA
+#ifdef __MPI
      CALL mp_sum(matp, intra_pool_comm)
 #endif
 

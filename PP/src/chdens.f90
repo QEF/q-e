@@ -368,7 +368,7 @@ SUBROUTINE chdens (filplot,plot_num)
         ENDIF
         !
      ENDIF
-#ifdef __PARA
+#ifdef __MPI
      ALLOCATE(aux(dfftp%nnr))
      CALL grid_scatter(rhor, aux)
      psic(:) = cmplx(aux(:), 0.d0,kind=DP)

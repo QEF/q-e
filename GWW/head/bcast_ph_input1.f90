@@ -10,7 +10,7 @@
 subroutine bcast_ph_input1
   !-----------------------------------------------------------------------
   !
-#ifdef __PARA
+#ifdef __MPI
 
   use partial, only : nat_todo, atomo
   use mp, only: mp_bcast

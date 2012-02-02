@@ -237,7 +237,7 @@ subroutine dvanqq
         enddo
      endif
   enddo
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum(  int1, intra_pool_comm )
   call mp_sum(  int2, intra_pool_comm )
   call mp_sum(  int4, intra_pool_comm )

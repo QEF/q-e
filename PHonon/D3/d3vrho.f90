@@ -81,7 +81,7 @@ subroutine d3vrho()
         enddo
      enddo
   enddo
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum ( d3dynwrk, intra_pool_comm )
 #endif
   !
@@ -137,7 +137,7 @@ subroutine d3vrho()
                              alpha (6) = zdotc (npw,vkb0(1,jkb),1,work2(1, 2),1)
                              alpha (7) = zdotc (npw,work1(1, 3),1,vkb0(1,jkb),1)
                              alpha (8) = zdotc (npw,vkb0(1,jkb),1,work2(1, 3),1)
-#ifdef __PARA
+#ifdef __MPI
                              call mp_sum ( alpha, intra_pool_comm )
 #endif
                              d3dynwrk (na_k, na_i, na_j) = d3dynwrk (na_k, na_i, na_j) - &
@@ -153,7 +153,7 @@ subroutine d3vrho()
         enddo
      enddo
   enddo
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum( d3dynwrk, inter_pool_comm )
 #endif
   !
@@ -179,7 +179,7 @@ subroutine d3vrho()
         enddo
      endif
   enddo
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum( d3dynwrk2, inter_pool_comm )
 #endif
   d3dyn (:,:,:) = d3dyn (:,:,:) +  d3dynwrk2 (:,:,:)

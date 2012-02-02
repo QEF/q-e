@@ -710,7 +710,7 @@ SUBROUTINE c_bands_nscf( ik_ )
      ! ... check is performed only if not interfering with phonon calc.
      !
      IF ( lbands) THEN
-#ifdef __PARA
+#ifdef __MPI
         ! ... beware: with pools, if the number of k-points on different
         ! ... pools differs, make sure that all processors are still in
         ! ... the loop on k-points before checking for stop condition

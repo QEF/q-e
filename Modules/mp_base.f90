@@ -207,7 +207,7 @@ SUBROUTINE reduce_base_real( dim, ps, comm, root )
   INTEGER,  INTENT(IN)    :: root    ! if root <  0 perform a reduction to all procs
                                      ! if root >= 0 perform a reduce only to root proc.
   !
-#if defined (__PARA)  
+#if defined (__MPI)  
   !
   INTEGER            :: info, n, nbuf, nproc, myid
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
@@ -306,7 +306,7 @@ SUBROUTINE reduce_base_integer( dim, ps, comm, root )
   INTEGER,  INTENT(IN)    :: root    ! if root <  0 perform a reduction to all procs
                                      ! if root >= 0 perform a reduce only to root proc.
   !
-#if defined (__PARA)  
+#if defined (__MPI)  
   !
   INTEGER            :: info, n, nbuf, nproc, myid
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
@@ -407,7 +407,7 @@ SUBROUTINE reduce_base_real_to( dim, ps, psout, comm, root )
   INTEGER,  INTENT(IN)  :: root    ! if root <  0 perform a reduction to all procs
                                    ! if root >= 0 perform a reduce only to root proc.
   !
-#if defined (__PARA)  
+#if defined (__MPI)  
   !
   INTEGER            :: info, n, nbuf, nproc, myid
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
@@ -495,7 +495,7 @@ SUBROUTINE reduce_base_integer_to( dim, ps, psout, comm, root )
   INTEGER,  INTENT(IN)  :: root    ! if root <  0 perform a reduction to all procs
                                      ! if root >= 0 perform a reduce only to root proc.
   !
-#if defined (__PARA)  
+#if defined (__MPI)  
   !
   INTEGER            :: info, n, nbuf, nproc, myid
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
@@ -583,7 +583,7 @@ SUBROUTINE parallel_min_integer( dim, ps, comm, root )
   INTEGER,  INTENT(IN)    :: root    ! if root <  0 perform a reduction to all procs
                                      ! if root >= 0 perform a reduce only to root proc.
   !
-#if defined (__PARA)  
+#if defined (__MPI)  
   !
   INTEGER            :: info, n, nbuf, nproc, myid
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
@@ -680,7 +680,7 @@ SUBROUTINE parallel_max_integer( dim, ps, comm, root )
   INTEGER,  INTENT(IN)    :: root    ! if root <  0 perform a reduction to all procs
                                      ! if root >= 0 perform a reduce only to root proc.
   !
-#if defined (__PARA)  
+#if defined (__MPI)  
   !
   INTEGER            :: info, n, nbuf, nproc, myid
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
@@ -775,7 +775,7 @@ SUBROUTINE parallel_min_real( dim, ps, comm, root )
   INTEGER,  INTENT(IN)    :: root    ! if root <  0 perform a reduction to all procs
                                      ! if root >= 0 perform a reduce only to root proc.
   !
-#if defined (__PARA)  
+#if defined (__MPI)  
   !
   INTEGER            :: info, n, nbuf, nproc, myid
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
@@ -870,7 +870,7 @@ SUBROUTINE parallel_max_real( dim, ps, comm, root )
   INTEGER,  INTENT(IN)    :: root    ! if root <  0 perform a reduction to all procs
                                      ! if root >= 0 perform a reduce only to root proc.
   !
-#if defined (__PARA)  
+#if defined (__MPI)  
   !
   INTEGER            :: info, n, nbuf, nproc, myid
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX

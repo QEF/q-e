@@ -156,7 +156,7 @@ subroutine drho
      enddo
 
   enddo
-#ifdef __PARA
+#ifdef __MPI
   !
   ! collect contributions from all pools (sum over k-points)
   !
@@ -183,7 +183,7 @@ subroutine drho
   !
   allocate (drhoust(dfftp%nnr, nspin_mag , npertx))
   drhoust=(0.d0,0.d0)
-#ifdef __PARA
+#ifdef __MPI
   !
   !  The calculation of dbecsum is distributed across processors (see addusdbec)
   !  Sum over processors the contributions coming from each slice of bands
@@ -220,7 +220,7 @@ subroutine drho
      enddo
      mode = mode+npe
   enddo
-#ifdef __PARA
+#ifdef __MPI
    !
    !  Collect the sum over k points in different pools.
    !

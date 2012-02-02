@@ -271,7 +271,7 @@ subroutine solve_e
            ENDIF
         enddo   ! on polarizations
      enddo      ! on k points
-#ifdef __PARA
+#ifdef __MPI
      !
      !  The calculation of dbecsum is distributed across processors
      !  (see addusdbec) - we sum over processors the contributions
@@ -299,11 +299,11 @@ subroutine solve_e
      !   dvscfout contains the (unsymmetrized) linear charge response
      !   for the three polarizations - symmetrize it
      !
-#ifdef __PARA
+#ifdef __MPI
      call mp_sum ( dvscfout, inter_pool_comm )
 #endif
      if (.not.lgamma_gamma) then
-#ifdef __PARA
+#ifdef __MPI
         call psyme (dvscfout)
         IF ( noncolin.and.domag ) CALL psym_dmage(dvscfout)
 #else

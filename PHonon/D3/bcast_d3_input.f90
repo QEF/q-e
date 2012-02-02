@@ -13,7 +13,7 @@ subroutine bcast_d3_input
   !     the other processors
   !
   !
-#ifdef __PARA
+#ifdef __MPI
   use pwcom
   use phcom
   use d3com

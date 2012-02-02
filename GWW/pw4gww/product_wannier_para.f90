@@ -100,7 +100,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
 
    INTEGER :: nbnd_max
 
-#ifndef __PARA
+#ifndef __MPI
   !dfftp%npp(1) = nr3  ! not needed - PG
   nr3_start=1
   nr3_end=dfftp%nr3

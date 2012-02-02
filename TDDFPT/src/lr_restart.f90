@@ -99,7 +99,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   !
   ! Note Ionode file io is done in tmp_dir
   !
-#ifdef __PARA
+#ifdef __MPI
   IF (ionode) THEN
 #endif
   !
@@ -122,7 +122,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   ENDDO
   !
   CLOSE(158)
-#ifdef __PARA
+#ifdef __MPI
   ENDIF
   CALL mp_bcast (iter_restart, ionode_id)
   CALL mp_bcast (norm0(pol_index), ionode_id)
@@ -135,7 +135,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   ! Read projection
   !
   IF (project) THEN
-#ifdef __PARA
+#ifdef __MPI
   IF (ionode) THEN
 #endif
     filename = trim(prefix) // ".projection." // trim(int_to_char(LR_polarization))
@@ -163,7 +163,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
     ENDDO
     !
     CLOSE(158)
-#ifdef __PARA
+#ifdef __MPI
   ENDIF
   CALL mp_bcast (F, ionode_id)
 #endif

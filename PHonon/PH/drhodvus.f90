@@ -82,7 +82,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
      mode0 = mode0 + npert (irr1)
   enddo
   deallocate (drhous)
-#ifdef __PARA
+#ifdef __MPI
   !
   ! collect contributions from all pools (sum over k-points)
   !

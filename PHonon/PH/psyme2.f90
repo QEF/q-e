@@ -11,7 +11,7 @@ subroutine psyme2 (dvtosym)
   !-----------------------------------------------------------------------
   !  p-symmetrize the second derivative of charge density.
   !
-#ifdef __PARA
+#ifdef __MPI
 
   use kinds, only : DP
   USE mp_global, ONLY: me_pool

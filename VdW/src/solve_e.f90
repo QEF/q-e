@@ -259,7 +259,7 @@ SUBROUTINE solve_e_vdw ( iu )
               DO jbnd = 1, nbnd_occ (ik)
                  ps(jbnd)=-zdotc(npw,evc(1,jbnd),1,dvpsi(1,ibnd),1)
               ENDDO
-#ifdef __PARA
+#ifdef __MPI
               CALL mp_sum( ps, intra_pool_comm )
 #endif
               DO jbnd = 1, nbnd_occ (ik)
@@ -283,7 +283,7 @@ SUBROUTINE solve_e_vdw ( iu )
               ENDDO
               eprec1 (ibnd) = 1.35d0*zdotc(npwq,evc(1,ibnd),1,auxg,1)
            ENDDO
-#ifdef __PARA
+#ifdef __MPI
            CALL mp_sum( eprec1( 1 : nbnd_occ(ik) ), intra_pool_comm )
 #endif
            DO ibnd = 1, nbnd_occ (ik)
@@ -326,7 +326,7 @@ SUBROUTINE solve_e_vdw ( iu )
      !
 !  call delta_rho()
 !  stop
-#ifdef __PARA
+#ifdef __MPI
      !
      !  The calculation of dbecsum is distributed across processors (see addusdbec)
      !  Sum over processors the contributions coming from each slice of bands
@@ -348,7 +348,7 @@ SUBROUTINE solve_e_vdw ( iu )
      !   After the loop over the perturbations we have the change of the pote
      !   for all the modes of this representation. We symmetrize this potenti
      !
-#ifdef __PARA
+#ifdef __MPI
      CALL mp_sum ( dvscfout, inter_pool_comm )
 #endif
      fildrho = ' '
@@ -357,7 +357,7 @@ SUBROUTINE solve_e_vdw ( iu )
              iudrho,ipol,+1)
         CALL dv_of_drho_vdw (0, dvscfout (1, 1, ipol), .false.)
      ENDDO
-#ifdef __PARA
+#ifdef __MPI
      CALL psyme (dvscfout)
 #else
      CALL syme (dvscfout)

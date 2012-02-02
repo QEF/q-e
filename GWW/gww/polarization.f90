@@ -884,7 +884,7 @@
 
      allocate(op%on_mat(op%numpw,l_blk*nproc))
 
-#ifdef __PARA
+#ifdef __MPI
       call MPI_ALLGATHER(opd%on_mat,l_blk*op%numpw,MPI_DOUBLE_PRECISION, op%on_mat, &
            &    l_blk*op%numpw, MPI_DOUBLE_PRECISION, world_comm, ierr)
 #else
@@ -1472,7 +1472,7 @@
 
      allocate(vp%vmat(vp%numpw,l_blk*nproc))
 
-#ifdef __PARA
+#ifdef __MPI
       call MPI_ALLGATHER(vpd%vmat,l_blk*vp%numpw,MPI_DOUBLE_PRECISION, vp%vmat, &
            &    l_blk*vp%numpw, MPI_DOUBLE_PRECISION, world_comm, ierr)
 #else

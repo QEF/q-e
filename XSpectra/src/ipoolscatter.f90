@@ -31,7 +31,7 @@ SUBROUTINE ipoolscatter( nsize, nkstot, f_in, nks, f_out )
     ! input  ( contains values for all k-point )
     ! output ( only for k-points of mypool )
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: rest, nbase
     ! the rest of the integer division nkstot / npo

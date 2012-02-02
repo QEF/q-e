@@ -150,7 +150,7 @@ CONTAINS
       ENDIF
       nbnd_eff=nbnd_occ(ikk)
    ENDIF
-#ifdef __PARA
+#ifdef __MPI
    CALL mp_sum(ps(:,1:nbnd_eff),intra_pool_comm)
 #endif
    !!
@@ -232,7 +232,7 @@ CONTAINS
      ENDIF
      ENDIF
   ENDIF
-#ifdef __PARA
+#ifdef __MPI
    CALL mp_sum(ps(:,:),intra_pool_comm)
 #endif
   ! in the original dpsi was used as a storage for sevc, since in
@@ -332,7 +332,7 @@ CONTAINS
                 (0.d0,0.d0), ps, nbnd )
       nbnd_eff=nbnd_occ(ikk)
    ENDIF
-#ifdef __PARA
+#ifdef __MPI
    CALL mp_sum(ps(:,1:nbnd_eff),intra_pool_comm)
 #endif
    ! in the original dpsi was used as a storage for sevc, since in

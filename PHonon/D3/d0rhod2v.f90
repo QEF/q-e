@@ -171,7 +171,7 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
                           alpha (6) = zdotc (npw, vkb0(1,jkb), 1, dpsi (1,ibnd), 1)
                           alpha (7) = zdotc (npw,  evc (1,ibnd), 1, vkb0(1,jkb), 1)
                           alpha (8) = zdotc (npw, vkb0(1,jkb), 1, work6, 1)
-#ifdef __PARA
+#ifdef __MPI
                           CALL mp_sum(  alpha, intra_pool_comm )
 #endif
                           d3dywrk (na_icart, na_jcart) = d3dywrk (na_icart, na_jcart) &

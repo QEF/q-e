@@ -359,7 +359,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         enddo
         ! on k-points
      enddo
-#ifdef __PARA
+#ifdef __MPI
      !
      !  The calculation of dbecsum is distributed across processors (see addusdbec)
      !  Sum over processors the contributions coming from each slice of bands
@@ -388,7 +388,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !    Now we compute for all perturbations the total charge and potential
      !
      call addusddens (drhoscfh, dbecsum, imode0, npe, 0)
-#ifdef __PARA
+#ifdef __MPI
      !
      !   Reduce the delta rho across pools
      !
@@ -418,7 +418,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !   Here we symmetrize them ...
      !
      IF (.not.lgamma_gamma) THEN
-#ifdef __PARA
+#ifdef __MPI
         call psymdvscf (npe, irr, drhoscfh)
         IF ( noncolin.and.domag ) &
            CALL psym_dmag( npe, irr, drhoscfh)
@@ -486,7 +486,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !     of the change of potential and Q
      !
      call newdq (dvscfin, npe)
-#ifdef __PARA
+#ifdef __MPI
      aux_avg (1) = DBLE (ltaver)
      aux_avg (2) = DBLE (lintercall)
      call mp_sum ( aux_avg, inter_pool_comm )
@@ -574,7 +574,7 @@ ELSE
    dvscfout(1:in1)=mix(1:in1)
    dbecsum=(0.0_DP,0.0_DP)
    dbecsum(startb:lastb)=mix(in1+1:in1+ndim)
-#ifdef __PARA
+#ifdef __MPI
    CALL mp_sum(dbecsum, intra_pool_comm)
 #endif
 ENDIF

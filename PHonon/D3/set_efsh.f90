@@ -60,7 +60,7 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
            dos_ef = dos_ef + weight * wdelta
         enddo
      enddo
-#ifdef __PARA
+#ifdef __MPI
      call mp_sum( dos_ef, inter_pool_comm )
 #endif
   endif
@@ -70,7 +70,7 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
   WRITE( stdout, * )
   do ipert = 1, npe
      CALL fwfft ('Dense', drhoscf (:, ipert), dfftp)
-#ifdef __PARA
+#ifdef __MPI
      delta_n = (0.d0, 0.d0)
      if (gg (1) < 1.0d-8) delta_n = omega * drhoscf (nl (1), ipert)
      call mp_sum ( delta_n, intra_pool_comm )

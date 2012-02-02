@@ -75,7 +75,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   enddo
   dr2 = dnrm2 (ndim, vout, 1) **2
   ndimtot = ndim
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum (dr2, intra_pool_comm)
   call mp_sum (ndimtot, intra_pool_comm)
 #endif
@@ -138,7 +138,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
         dv (n, ipos) = vin (n) - dv (n, ipos)
      enddo
      norm = (dnrm2 (ndim, df (1, ipos), 1) ) **2
-#ifdef __PARA
+#ifdef __MPI
      call mp_sum (norm, intra_pool_comm)
 #endif
      norm = sqrt (norm)
@@ -166,7 +166,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   do i = 1, iter_used
      do j = i + 1, iter_used
         beta (i, j) = w (i) * w (j) * ddot (ndim, df (1, j), 1, df (1, i), 1)
-#ifdef __PARA
+#ifdef __MPI
         call mp_sum ( beta (i, j), intra_pool_comm )
 #endif
      enddo
@@ -187,7 +187,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   do i = 1, iter_used
      work (i) = ddot (ndim, df (1, i), 1, vout, 1)
   enddo
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum ( work(1:iter_used), intra_pool_comm )
 #endif
   !

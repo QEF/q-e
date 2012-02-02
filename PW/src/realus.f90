@@ -309,7 +309,7 @@ MODULE realus
       !
       ! ... now we find the points
       !
-#if defined (__PARA)
+#if defined (__MPI)
 #ifdef __BANDS
       idx0 = dfftp%nr1x*dfftp%nr2x * sum ( dfftp%npp(1:me_bgrp) )
 #else
@@ -763,7 +763,7 @@ MODULE realus
       ! ... now we find the points
       !
       ! The beta functions are treated on smooth grid
-#if defined (__PARA)
+#if defined (__MPI)
 #ifdef __BANDS
       index0 = dffts%nr1x*dffts%nr2x * sum ( dffts%npp(1:me_bgrp) )
 #else

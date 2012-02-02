@@ -260,7 +260,7 @@ CONTAINS
        DO ik1 = 1,nks
           CALL init_us_2(npw_k(ik1),igk_k(:,ik1),xk(1,ik1),vkb)
           CALL zgemm('C','N',nkb,nkb,npw_k(ik1),(1.d0,0.d0),vkb,lda,vkb,lda,(0.d0,0.d0),BB_(1,1,ik1),nkb)
-#ifdef __PARA
+#ifdef __MPI
           !CALL reduce( 2 * nkb * nkb, BB_(:,:,ik1) )
           CALL mp_sum(BB_(:,:,ik1), intra_pool_comm)
 #endif

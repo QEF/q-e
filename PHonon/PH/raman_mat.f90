@@ -132,7 +132,7 @@ subroutine raman_mat
            enddo
         enddo
      enddo
-#ifdef __PARA
+#ifdef __MPI
      call mp_sum ( ps, intra_pool_comm )
 #endif
      do ipa = 1, 6
@@ -218,7 +218,7 @@ subroutine raman_mat
 
   enddo
 
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum( wrk, intra_pool_comm )
   call mp_sum( wrk, inter_pool_comm )
 #endif

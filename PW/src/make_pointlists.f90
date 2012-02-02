@@ -48,7 +48,7 @@ SUBROUTINE make_pointlists
   ! treated by other procs
 
   idx0 = 0
-#ifdef __PARA
+#ifdef __MPI
   DO indproc=1,me_pool
      idx0 = idx0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(indproc)
   ENDDO

@@ -293,7 +293,7 @@ PROGRAM pw_export
   !
   ! initialise environment
   !
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'PW_EXPORT' )
@@ -351,7 +351,7 @@ PROGRAM pw_export
   CALL openfil_pp
   !
 
-#if defined __PARA
+#if defined __MPI
   kunittmp = kunit
 #else
   kunittmp = 1
@@ -734,7 +734,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   DEALLOCATE( itmp_g )
 
 
-#ifdef __PARA
+#ifdef __MPI
   CALL poolrecover (et, nbnd, nkstot, nks)
 #endif
 

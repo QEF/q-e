@@ -113,7 +113,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   !call stop_clock('lrcd_usdens')
   !
   !print *, "rho_1 after addusdens",SUM(rho_1)
-#ifdef __PARA
+#ifdef __MPI
   !call poolreduce(nrxx,rho_1)
   CALL mp_sum(rho_1, inter_pool_comm)
 #endif
@@ -126,7 +126,7 @@ IF (lr_verbosity > 0) THEN
    rho_sum=0.0d0
    rho_sum=sum(rho_1(:,ispin))
    !
-#ifdef __PARA
+#ifdef __MPI
    CALL mp_sum(rho_sum, intra_pool_comm )
 #endif
    !
@@ -176,7 +176,7 @@ ENDIF
         !
      ENDDO
      !
-#ifdef __PARA
+#ifdef __MPI
      CALL mp_sum(rho_sum_resp_x, intra_pool_comm)
      CALL mp_sum(rho_sum_resp_y, intra_pool_comm)
      CALL mp_sum(rho_sum_resp_z, intra_pool_comm)
@@ -217,7 +217,7 @@ ENDIF
      !
      CLOSE(158)
      !
-#ifdef __PARA
+#ifdef __MPI
      ENDIF
 #endif
      !

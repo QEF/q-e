@@ -57,7 +57,7 @@ PROGRAM lr_main
   !
   !
   !CALL startup (nd_nmbr, code, version_number)
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'TDDFPT' )
@@ -415,7 +415,7 @@ CONTAINS
  ENDIF !for test_this = 2
 
   !print *,"temp_restart",temp_restart
-#ifdef __PARA
+#ifdef __MPI
     CALL mp_sum(temp_restart)
 #endif
   !print *, "current temp_restart", temp_restart

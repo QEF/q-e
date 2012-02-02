@@ -262,7 +262,7 @@ SUBROUTINE check_v_eff ( veff, charge )
           ! compute the weight
           !
           nelecr = sum(rho_fft) * omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
-#ifdef __PARA
+#ifdef __MPI
           CALL mp_sum( nelecr, intra_pool_comm )
 #endif
           w1 =  nelecr  / omega
@@ -277,7 +277,7 @@ SUBROUTINE check_v_eff ( veff, charge )
              !
           ENDDO
           nelecr = sum(rho_veff) * omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
-#ifdef __PARA
+#ifdef __MPI
           CALL mp_sum( nelecr, intra_pool_comm )
 #endif
           !
@@ -290,7 +290,7 @@ SUBROUTINE check_v_eff ( veff, charge )
           charge = charge + abs( rho_fft(ir,nspin) - rho_veff(ir,nspin) )
        ENDDO
        charge = charge * omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3) / nelecr
-#ifdef __PARA
+#ifdef __MPI
           CALL mp_sum( charge, intra_pool_comm )
 #endif
        !

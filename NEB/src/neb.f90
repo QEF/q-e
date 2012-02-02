@@ -68,7 +68,7 @@ PROGRAM neb
   unit_tmp = 45
   xmlinputunit = 45
   !
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_start(nproc,mpime,neb_comm)
   CALL mp_image_startup (root,neb_comm)
   CALL engine_mp_start()

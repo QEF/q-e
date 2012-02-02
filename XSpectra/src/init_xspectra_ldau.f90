@@ -180,7 +180,7 @@ SUBROUTINE init_xanes_ldau_2(ik)
          CALL zgemm ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0), &
              wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0), overlap, natomwfc)
      END IF
-#ifdef __PARA
+#ifdef __MPI
      CALL mp_sum(  overlap, intra_pool_comm )
 #endif
      IF (U_projection=="norm-atomic") THEN

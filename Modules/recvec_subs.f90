@@ -66,7 +66,7 @@ CONTAINS
    ! when compiling with __LOWMEM only g vectors for the current processor are stored
    INTEGER, ALLOCATABLE :: igsrt(:)
    !
-#ifdef __PARA
+#ifdef __MPI
    INTEGER :: m1, m2, mc
 #endif
    INTEGER :: ni, nj, nk, i, j, k, ipol, ng, igl, indsw
@@ -126,7 +126,7 @@ CONTAINS
          !
          IF ( gamma_only .and. i == 0 .and. j < 0) CYCLE jloop
 
-#if defined (__PARA) && defined (__LOWMEM)
+#if defined (__MPI) && defined (__LOWMEM)
          m1 = mod (i, dfftp%nr1) + 1
          IF (m1 < 1) m1 = m1 + dfftp%nr1
          m2 = mod (j, dfftp%nr2) + 1
@@ -209,7 +209,7 @@ CONTAINS
       j = mill_g(2, ng)
       k = mill_g(3, ng)
 
-#if defined (__PARA) && !defined (__LOWMEM)
+#if defined (__MPI) && !defined (__LOWMEM)
       m1 = mod (i, dfftp%nr1) + 1
       IF (m1 < 1) m1 = m1 + dfftp%nr1
       m2 = mod (j, dfftp%nr2) + 1
@@ -271,7 +271,7 @@ CONTAINS
       IF (n1>dfftp%nr1 .or. n2>dfftp%nr2 .or. n3>dfftp%nr3) &
          CALL errore('ggen','Mesh too small?',ng)
 
-#if defined (__PARA) && !defined (__USE_3D_FFT)
+#if defined (__MPI) && !defined (__USE_3D_FFT)
       nl (ng) = n3 + ( dfftp%isind (n1 + (n2 - 1) * dfftp%nr1x) - 1) * dfftp%nr3x
       IF (ng <= ngms) &
          nls (ng) = n3s + ( dffts%isind (n1s+(n2s-1)*dffts%nr1x) - 1 ) * dffts%nr3x
@@ -330,7 +330,7 @@ CONTAINS
          CALL errore('index_minusg','Mesh too small?',ng)
       ENDIF
 
-#if defined (__PARA) && !defined (__USE_3D_FFT)
+#if defined (__MPI) && !defined (__USE_3D_FFT)
       nlm(ng) = n3 + (dfftp%isind (n1 + (n2 - 1) * dfftp%nr1x) - 1) * dfftp%nr3x
       IF (ng<=ngms) &
          nlsm(ng) = n3s + (dffts%isind (n1s+(n2s-1) * dffts%nr1x) - 1) * dffts%nr3x

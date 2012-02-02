@@ -172,7 +172,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
         sigmaewa (l, m) = - sigmaewa (l, m)
      enddo
   enddo
-#ifdef __PARA
+#ifdef __MPI
 #ifdef __BANDS
   call mp_sum(  sigmaewa, intra_bgrp_comm )
 #else

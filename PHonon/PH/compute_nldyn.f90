@@ -319,7 +319,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
         enddo
      enddo
   enddo
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum ( dynwrk, intra_pool_comm )
 #endif
   do nu_i = 1, 3 * nat

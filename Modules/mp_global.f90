@@ -387,7 +387,7 @@ CONTAINS
     INTEGER :: parent_nproc = 1
     INTEGER :: parent_mype  = 0
     !
-#if defined (__PARA)
+#if defined (__MPI)
     !
     parent_nproc = mp_size( parent_comm )
     parent_mype  = mp_rank( parent_comm )
@@ -443,7 +443,7 @@ CONTAINS
     INTEGER :: parent_nproc = 1
     INTEGER :: parent_mype  = 0
     !
-#if defined (__PARA)
+#if defined (__MPI)
     !
     parent_nproc = mp_size( parent_comm )
     parent_mype  = mp_rank( parent_comm )
@@ -502,7 +502,7 @@ CONTAINS
     INTEGER :: parent_nproc = 1
     INTEGER :: parent_mype  = 0
     !
-#if defined (__PARA)
+#if defined (__MPI)
     !
     parent_nproc = mp_size( parent_comm )
     parent_mype  = mp_rank( parent_comm )

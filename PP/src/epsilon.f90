@@ -173,7 +173,7 @@ PROGRAM epsilon
 !
   ! initialise environment
   !
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'epsilon' )

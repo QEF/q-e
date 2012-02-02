@@ -30,7 +30,7 @@ SUBROUTINE xk_wk_collect( xk_collect, wk_collect, xk, wk, nkstot, nks )
     ! k-points
     ! k-point weights
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: nbase, rest, nks1
   !
@@ -92,7 +92,7 @@ SUBROUTINE wg_all(wg_collect, wg, nkstot, nks )
     ! distributed weights of the k points of this pool
     ! collected weights of all k points
     !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: nbase, rest, nks1
   !
@@ -146,7 +146,7 @@ INTEGER FUNCTION find_current_k(ik, nkstot, nks)
   INTEGER :: ik
     ! k-points
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: nbase, rest, nks1
   !

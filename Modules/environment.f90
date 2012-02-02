@@ -57,7 +57,7 @@ CONTAINS
 
     ! ... for compatibility with PWSCF
 
-#ifdef __PARA
+#ifdef __MPI
     nd_nmbr = TRIM ( int_to_char( me_image+1 ))
 #else
     nd_nmbr = ' '
@@ -92,7 +92,7 @@ CONTAINS
     END IF
     !
     CALL opening_message( code_version )
-#ifdef __PARA
+#ifdef __MPI
     CALL parallel_info ( )
 #else
     CALL serial_info()

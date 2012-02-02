@@ -211,7 +211,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
                        ENDIF
                     ENDDO
                     who_calculate=1
-#ifdef __PARA
+#ifdef __MPI
                     CALL mp_sum(maxmod,intra_pool_comm)
                     DO iproc=2,nproc_pool
                        IF (maxmod(iproc)>maxmod(who_calculate)) &
@@ -223,7 +223,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
                     IF (me_pool+1==who_calculate) &
                           phase = psic(irm)/maxmod(who_calculate)
                     DEALLOCATE(maxmod)
-#ifdef __PARA
+#ifdef __MPI
                     CALL mp_bcast(phase,who_calculate-1,intra_pool_comm)
 #endif
                     segno(1:dffts%nnr) = dble( psic(1:dffts%nnr)*conjg(phase) )
@@ -403,7 +403,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
      dos(:) = dos(:) * segno(:)
      DEALLOCATE(segno)
   ENDIF
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_sum( dos, inter_pool_comm )
 #endif
 

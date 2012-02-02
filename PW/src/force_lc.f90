@@ -98,7 +98,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
      CALL esm_force_lc ( aux, forcelc )
   ENDIF
 
-#ifdef __PARA
+#ifdef __MPI
 #ifdef __BANDS
   call mp_sum(  forcelc, intra_bgrp_comm )
 #else

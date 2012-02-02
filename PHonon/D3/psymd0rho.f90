@@ -12,7 +12,7 @@ subroutine psymd0rho (nper, irr, dvtosym)
   !  p-symmetrize the charge density.
   !
 
-#ifdef __PARA
+#ifdef __MPI
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat
   USE symm_base, ONLY : s, ftau

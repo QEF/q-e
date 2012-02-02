@@ -101,7 +101,7 @@ CONTAINS
     evalue = efield 
 !set up for parallel calculations
 
-#ifdef __PARA
+#ifdef __MPI
     call find_whose_is_g
     call gtable_missing
     call gtable_missing_inv

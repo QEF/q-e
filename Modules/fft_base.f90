@@ -94,7 +94,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg
   !  If optional argument "use_tg" is true the subroutines performs
   !  the trasposition using the Task Groups distribution
   !
-#ifdef __PARA
+#ifdef __MPI
   USE parallel_include
 #endif
   USE kinds,       ONLY : DP
@@ -107,7 +107,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg
   COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
   LOGICAL, OPTIONAL, INTENT(in) :: use_tg
 
-#ifdef __PARA
+#ifdef __MPI
 
   INTEGER :: dest, from, k, ip, proc, ierr, me, ipoffset, nprocp, gproc, gcomm, i, kdest, kfrom
   INTEGER :: sendcount(dfft%nproc), sdispls(dfft%nproc), recvcount(dfft%nproc), rdispls(dfft%nproc)
@@ -465,7 +465,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg
   !  If optional argument "use_tg" is true the subroutines performs
   !  the trasposition using the Task Groups distribution
   !
-#ifdef __PARA
+#ifdef __MPI
   USE parallel_include
 #endif
   USE kinds,       ONLY : DP
@@ -477,7 +477,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg
   COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
   LOGICAL, OPTIONAL, INTENT(in) :: use_tg
 
-#ifdef __PARA
+#ifdef __MPI
 
   INTEGER :: dest, from, k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
   INTEGER :: sendcount (dfft%nproc), sdispls (dfft%nproc), recvcount (dfft%nproc), rdispls (dfft%nproc)
@@ -687,7 +687,7 @@ SUBROUTINE grid_gather( f_in, f_out )
   !
   REAL(DP) :: f_in( : ), f_out( : )
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: proc, info
   INTEGER :: displs(0:dfftp%nproc-1), recvcount(0:dfftp%nproc-1)
@@ -751,7 +751,7 @@ SUBROUTINE grid_scatter( f_in, f_out )
   !
   REAL(DP) :: f_in( : ), f_out( : )
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: proc, info
   INTEGER :: displs(0:dfftp%nproc-1), sendcount(0:dfftp%nproc-1)
@@ -817,7 +817,7 @@ SUBROUTINE cgather_sym( f_in, f_out )
   !
   COMPLEX(DP) :: f_in( : ), f_out(:)
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: proc, info
   INTEGER :: displs(0:dfftp%nproc-1), recvcount(0:dfftp%nproc-1)
@@ -878,7 +878,7 @@ SUBROUTINE cgather_smooth ( f_in, f_out )
   !
   COMPLEX(DP) :: f_in(:), f_out(:)
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: proc, info
   INTEGER :: displs(0:dfftp%nproc-1), recvcount(0:dfftp%nproc-1)
@@ -937,7 +937,7 @@ SUBROUTINE cscatter_sym( f_in, f_out )
   !
   COMPLEX(DP) :: f_in(:), f_out(:)
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: proc, info
   INTEGER :: displs(0:dfftp%nproc-1), sendcount(0:dfftp%nproc-1)
@@ -997,7 +997,7 @@ SUBROUTINE cscatter_smooth( f_in, f_out )
   !
   COMPLEX(DP) :: f_in(:), f_out(:)
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: proc, info
   INTEGER :: displs(0:dfftp%nproc-1), sendcount(0:dfftp%nproc-1)
@@ -1060,7 +1060,7 @@ SUBROUTINE gather_smooth ( f_in, f_out )
   !
   REAL(DP) :: f_in(:), f_out(:)
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: proc, info
   INTEGER :: displs(0:dffts%nproc-1), recvcount(0:dffts%nproc-1)
@@ -1118,7 +1118,7 @@ SUBROUTINE scatter_smooth( f_in, f_out )
   !
   REAL(DP) :: f_in(:), f_out(:)
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: proc, info
   INTEGER :: displs(0:dffts%nproc-1), sendcount(0:dffts%nproc-1)
@@ -1209,7 +1209,7 @@ SUBROUTINE tg_gather( dffts, v, tg_v )
       tg_v( i ) = 0.0d0
    ENDDO
 
-#if defined (__PARA) && defined (__MPI)
+#if defined (__MPI)
 
    CALL MPI_Allgatherv( v(1), nsiz, MPI_DOUBLE_PRECISION, &
         tg_v(1), recv_cnt, recv_displ, MPI_DOUBLE_PRECISION, dffts%ogrp_comm, IERR)

@@ -38,7 +38,7 @@ PROGRAM pw2gw
   !
   ! initialise environment
   !
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'PW2GW' )
@@ -76,7 +76,7 @@ PROGRAM pw2gw
   CALL openfil_pp
   !
   CALL mp_bcast(spline_ps, ionode_id)
-#if defined __PARA
+#if defined __MPI
   kunittmp = kunit
 #else
   kunittmp = 1
@@ -162,7 +162,7 @@ SUBROUTINE compute_gw( use_gmaps )
   !
   ! REAL(kind=DP) :: norma ! Variable needed only for DEBUG
   !
-#if defined __PARA
+#if defined __MPI
   INTEGER :: istatus( MPI_STATUS_SIZE )
 #endif
   !
@@ -349,7 +349,7 @@ SUBROUTINE compute_gw( use_gmaps )
         in3_tmp( ig_l2g(ig) ) = in3(ig)
      ENDDO
      !
-#if defined __PARA
+#if defined __MPI
      ALLOCATE( ig_l2g_rcv( igwxx ) )
      ALLOCATE( inx_rcv( igwxx ) )
      !
@@ -376,7 +376,7 @@ SUBROUTINE compute_gw( use_gmaps )
      !
   ELSE
      !
-#if defined __PARA
+#if defined __MPI
      CALL MPI_SEND( ig_l2g, igwx, MPI_INTEGER, 0, mpime+1,         intra_image_comm, IERR )
      CALL MPI_SEND( in1(1), igwx, MPI_INTEGER, 0, mpime+1+NPROC,   intra_image_comm, IERR )
      CALL MPI_SEND( in2(1), igwx, MPI_INTEGER, 0, mpime+1+2*NPROC, intra_image_comm, IERR )

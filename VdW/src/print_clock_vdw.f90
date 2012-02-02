@@ -48,7 +48,7 @@ SUBROUTINE print_clock_vdw
   CALL print_clock ('fftw')
   CALL print_clock ('davcio')
   WRITE( stdout, * )
-#ifdef __PARA
+#ifdef __MPI
   WRITE( stdout,  * ) '    Parallel routines'
   CALL print_clock ('reduce')
   WRITE( stdout, * )

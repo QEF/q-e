@@ -99,7 +99,7 @@ subroutine d3dyn_cc
         enddo
      enddo
   enddo
-#ifdef __PARA
+#ifdef __MPI
   do nu_i = 1, 3 * nat
      call davcio_drho (aux, lrdrho, iud0rho, nu_i, - 1)
   enddo
@@ -132,7 +132,7 @@ subroutine d3dyn_cc
      enddo
 
   enddo
-#ifdef __PARA
+#ifdef __MPI
   do nu_i = npert_f + 1, 3 * nat
      call davcio_drho (aux, lrdrho, iud0rho, nu_i, - 1)
   enddo
@@ -147,7 +147,7 @@ subroutine d3dyn_cc
         drc_exp (ig, na) = drc (ig, nta) * exc
      enddo
   enddo
-#ifdef __PARA
+#ifdef __MPI
   do nu_i = 1, 3 * nat
      call davcio_drho (aux, lrdrho, iudrho, nu_i, - 1)
   enddo
@@ -182,7 +182,7 @@ subroutine d3dyn_cc
      enddo
   enddo
 
-#ifdef __PARA
+#ifdef __MPI
   do nu_i = npert_f + 1, 3 * nat
      call davcio_drho (aux, lrdrho, iudrho, nu_i, - 1)
   enddo
@@ -246,7 +246,7 @@ subroutine d3dyn_cc
         enddo
      endif
   enddo
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum( d3dyn4, inter_pool_comm )
 #endif
   d3dyn (:,:,:) = d3dyn(:,:,:) + d3dyn4(:,:,:)

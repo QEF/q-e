@@ -166,7 +166,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
 
 
 
-#ifdef __PARA
+#ifdef __MPI
 
 
 #ifdef __BANDS

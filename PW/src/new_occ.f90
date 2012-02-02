@@ -94,7 +94,7 @@ SUBROUTINE new_evc()
            ENDIF
         ENDDO
      ENDDO
-#ifdef __PARA
+#ifdef __MPI
      CALL mp_sum ( proj, intra_pool_comm )
 #endif
 

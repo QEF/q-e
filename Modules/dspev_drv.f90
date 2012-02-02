@@ -144,7 +144,7 @@ CONTAINS
               SCALEF = SCALEF + DABS( A(K,I) )
            END DO
 
-#if defined __PARA
+#if defined __MPI
            CALL reduce_base_real( 1, scalef, comm, -1 )
 #endif
 
@@ -185,7 +185,7 @@ CONTAINS
                UL(kl)    = A(kl,I)
              END DO
 
-#if defined __PARA
+#if defined __MPI
              vtmp( l + 1 ) = sigma
              vtmp( l + 2 ) = f
              CALL reduce_base_real_to( L + 2, vtmp, u, comm, -1 )
@@ -229,7 +229,7 @@ CONTAINS
 
              KAPPA = 0.5_DP * ONE_OVER_H * ddot( l, vtmp, 1, u, 1 )
 
-#if defined __PARA
+#if defined __MPI
              vtmp( l + 1 ) = kappa
              CALL reduce_base_real_to( L + 1, vtmp, p, comm, -1 )
              kappa = p( l + 1 )
@@ -249,7 +249,7 @@ CONTAINS
              G = A(is(l),I)
            END IF
 
-#if defined __PARA
+#if defined __MPI
            CALL bcast_real( g, 1, ri( L ), comm )
 #endif
            E(I) = G
@@ -286,7 +286,7 @@ CONTAINS
             END IF
            
 
-#if defined __PARA
+#if defined __MPI
             CALL reduce_base_real_to( L, p, vtmp, comm, -1 )
 #else
             vtmp(1:l) = p(1:l)
@@ -310,7 +310,7 @@ CONTAINS
         END IF
       END DO
 
-#if defined __PARA
+#if defined __MPI
       CALL reduce_base_real_to( n, u, d, comm, -1 )
 #else
       D(1:N) = U(1:N)
@@ -481,7 +481,7 @@ CONTAINS
              e(l)=g
              e(m)=0.0_DP
            end if
-#if defined __PARA
+#if defined __MPI
            CALL bcast_real( cv, 2*(m-l), 0, comm )
            CALL bcast_real( d(l), m-l+1, 0, comm )
            CALL bcast_real( e(l), m-l+1, 0, comm )

@@ -93,7 +93,7 @@ SUBROUTINE eff_pot (rho, nspin, alat, omega, charge, vstart, thresh_veff)
      END DO
   ENDDO
   charge = charge * omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3) / nelec
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_sum( charge, intra_pool_comm )
 #endif
   WRITE( stdout, '(/,10x,"Charge difference due to FFT   ",f10.8)' ) charge
@@ -153,7 +153,7 @@ SUBROUTINE eff_pot (rho, nspin, alat, omega, charge, vstart, thresh_veff)
            nnn = nnn + 1
         ENDIF
      ENDDO
-#ifdef __PARA
+#ifdef __MPI
      CALL mp_sum( avg1, intra_pool_comm )
      CALL mp_sum( avg2, intra_pool_comm )
      CALL mp_sum(nnn, intra_pool_comm)
@@ -196,7 +196,7 @@ vstart=20000
      !
      CALL check_v_eff(vv, charge)
      nite = nite + 1
-!#ifdef __PARA
+!#ifdef __MPI
 !     call ireduce(1, nite)
 !#endif
      WRITE( stdout, '(10x,"iter #   ", i3, "   charge diff.   ", f10.8, &
@@ -248,7 +248,7 @@ vstart=20000
         S(ir) = psi_smooth(ir) * DBLE (aux(ir)) + vv(ir,1)*psi_smooth(ir)
         s2 = s2 + S(ir)**2
      ENDDO
-#ifdef __PARA
+#ifdef __MPI
      CALL mp_sum( s2, intra_pool_comm )
 #endif
      !
@@ -270,7 +270,7 @@ vstart=20000
            s2r  = s2r  + ( S(ir)**2) * psi_smooth(ir)**2
            sr   = sr   +   S(ir) * psi_smooth(ir)**2
         ENDDO
-#ifdef __PARA
+#ifdef __MPI
         CALL mp_sum( r2, intra_pool_comm )
         CALL mp_sum( s2r2, intra_pool_comm )
         CALL mp_sum( sr2, intra_pool_comm )
@@ -313,7 +313,7 @@ vstart=20000
         DO ir = 1, dfftp%nnr
            s2 = s2 + S(ir)**2
         ENDDO
-#ifdef __PARA
+#ifdef __MPI
         CALL mp_sum( s2, intra_pool_comm )
 #endif
         !

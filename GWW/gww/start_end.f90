@@ -16,7 +16,7 @@ CONTAINS
   CHARACTER(5) :: name_proc
   INTEGER :: gid
 
-#ifdef __PARA
+#ifdef __MPI
 
 
   CALL mp_start( nproc, mpime, gid )
@@ -47,7 +47,7 @@ CONTAINS
 
     IMPLICIT NONE
 
-#ifdef __PARA
+#ifdef __MPI
 
     if(ionode) write(stdout,*) 'Stopping MPI environment'
     call mp_global_end()

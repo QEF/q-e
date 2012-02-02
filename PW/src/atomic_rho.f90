@@ -159,7 +159,7 @@ subroutine atomic_rho (rhoa, nspina)
      enddo
      rhoneg = omega * rhoneg / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
      rhoima = omega * rhoima / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
-#ifdef __PARA
+#ifdef __MPI
 #ifdef __BANDS
      call mp_sum(  rhoneg, intra_bgrp_comm )
      call mp_sum(  rhoima, intra_bgrp_comm )

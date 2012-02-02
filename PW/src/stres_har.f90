@@ -51,7 +51,7 @@ subroutine stres_har (sigmahar)
         enddo
      enddo
   enddo
-#ifdef __PARA
+#ifdef __MPI
 #ifdef __BANDS
   call mp_sum(  sigmahar, intra_bgrp_comm )
 #else

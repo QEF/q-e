@@ -45,7 +45,7 @@ SUBROUTINE lr_write_restart()
   pol_index=1 !if there is only one polarization dir, storage is one rank less
   IF ( n_ipol /= 1 ) pol_index=LR_polarization
 
-#ifdef __PARA
+#ifdef __MPI
   IF (ionode) THEN
 #endif
   !
@@ -99,7 +99,7 @@ SUBROUTINE lr_write_restart()
     CLOSE(158)
   ENDIF
   !
-#ifdef __PARA
+#ifdef __MPI
   ENDIF
 #endif
     !

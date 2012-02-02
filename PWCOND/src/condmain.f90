@@ -21,7 +21,7 @@ program pwcond
 
   call do_cond (alldone)
 
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_global_end()
 #endif
 

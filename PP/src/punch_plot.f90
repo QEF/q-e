@@ -46,7 +46,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   REAL(DP) :: emin, emax, wf, charge, epsilon
 
   INTEGER :: is, ipol
-#ifdef __PARA
+#ifdef __MPI
   ! auxiliary vector (parallel case)
   REAL(DP), ALLOCATABLE :: raux1 (:)
 
@@ -56,7 +56,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
 
   IF (filplot == ' ') RETURN
-#ifdef __PARA
+#ifdef __MPI
   ALLOCATE (raux1(  dfftp%nr1x *  dfftp%nr2x *  dfftp%nr3x))
 #endif
 
@@ -135,7 +135,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
      IF (noncolin) CALL errore('punch_plot','not implemented yet',1)
      CALL work_function (wf)
-#ifdef __PARA
+#ifdef __MPI
      CALL stm (wf, sample_bias, z, dz, raux1)
 #else
      CALL stm (wf, sample_bias, z, dz, raux)
@@ -253,7 +253,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ENDIF
 
-#ifdef __PARA
+#ifdef __MPI
   IF (.not. (plot_num == 5 ) ) CALL grid_gather (raux, raux1)
   IF ( ionode ) &
      CALL plot_io (filplot, title,  dfftp%nr1x,  dfftp%nr2x,  dfftp%nr3x, &

@@ -214,7 +214,7 @@ SUBROUTINE d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   ENDDO loop_a !a_1
   ENDDO        !na_1
   !
-#ifdef __PARA
+#ifdef __MPI
   ! in the parallel case, recollect the modes
   CALL mp_sum( d3dion, intra_pool_comm )
   CALL mp_sum( d3dion, inter_pool_comm )
@@ -254,7 +254,7 @@ SUBROUTINE d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
     !
   ENDDO
   !
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_sum ( d3dy2, inter_pool_comm )
 #endif
   !

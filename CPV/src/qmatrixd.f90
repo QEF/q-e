@@ -96,7 +96,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
 
         
 
-#ifdef __PARA
+#ifdef __MPI
 
           if(ipol /= 3) then
              !

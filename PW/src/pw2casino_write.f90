@@ -431,7 +431,7 @@ CONTAINS
          ENDDO
       ENDDO
 
-#ifdef __PARA
+#ifdef __MPI
       CALL mp_sum( eloc,  intra_pool_comm )
       CALL mp_sum( ek,    intra_pool_comm )
       CALL mp_sum( ek,    inter_pool_comm )

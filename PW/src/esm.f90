@@ -393,7 +393,7 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
      endif
   endif
   ehart = ehart *omega*0.5d0
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum( ehart, intra_pool_comm )
 #endif
 
@@ -1345,7 +1345,7 @@ SUBROUTINE esm_printpot ()
            work4(1:5,izz) = (/dble(k3)/dble(dfftp%nr3)*L*bohr_radius_angs, &
                               z1, z3*rytoev,z4*rytoev, z2*rytoev/)
         enddo
-#ifdef __PARA
+#ifdef __MPI
         call mp_sum(work4, intra_pool_comm)
 #endif
 

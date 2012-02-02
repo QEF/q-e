@@ -147,7 +147,7 @@ PROGRAM X_Spectra
   !    initialising MPI environment, clocks, a few other things
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'XSPECTRA' )
@@ -838,7 +838,7 @@ SUBROUTINE stop_xspectra
   USE mp_global, ONLY: mp_global_end
   USE parallel_include
   !
-#ifdef __PARA
+#ifdef __MPI
 
   INTEGER :: info
   LOGICAL :: op
@@ -2361,7 +2361,7 @@ SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
   !  CALL poolreduce( nspin*xnepoint, Intensity_coord )
 
   !<CG>  replaces poolreduce
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_sum ( Intensity_coord, inter_pool_comm )
 #endif
   !</CG>
@@ -2630,7 +2630,7 @@ SUBROUTINE plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
   !  CALL poolreduce( nspin*xnepoint, Intensity_tot )
 
   !<CG>  replaces poolreduce
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_sum ( Intensity_tot, inter_pool_comm )
 #endif
   !</CG>
@@ -3165,7 +3165,7 @@ SUBROUTINE read_save_file(a,b,xnorm,ncalcv,x_save_file,core_energy)
      READ(10,*) (ncalcv_all(i,j),j=1,nkstot)
      READ(10,*) ((a_all(j,k),j=1,ncalcv_max),k=1,nkstot)
      READ(10,*) ((b_all(j,k),j=1,ncalcv_max),k=1,nkstot)
-#ifdef __PARA
+#ifdef __MPI
      CALL poolscatter(xnitermax,nkstot,a_all,nks,aux)
      a(1:xnitermax,i,1:nks)=aux(1:xnitermax,1:nks)
      CALL poolscatter(xnitermax,nkstot,b_all,nks,aux)
@@ -3178,7 +3178,7 @@ SUBROUTINE read_save_file(a,b,xnorm,ncalcv,x_save_file,core_energy)
   ENDDO
   close(10)
 
-#ifdef __PARA 
+#ifdef __MPI 
   CALL poolscatter(n_lanczos,nkstot,xnorm_all,nks,xnorm)
   CALL ipoolscatter(n_lanczos,nkstot,ncalcv_all,nks,ncalcv)
   CALL ipoolscatter(n_lanczos,nkstot,calculated_all,nks,calculated)
@@ -3277,7 +3277,7 @@ SUBROUTINE write_save_file(a,b,xnorm,ncalcv,x_save_file)
   xnorm_all(1:n_lanczos,1:nks)=xnorm(1:n_lanczos,1:nks)
   calculated_all(1:n_lanczos,1:nks)=calculated(1:n_lanczos,1:nks)
 
-#ifdef __PARA
+#ifdef __MPI
   CALL poolrecover(xnorm_all,n_lanczos,nkstot,nks)
   CALL ipoolrecover(ncalcv_all,n_lanczos,nkstot,nks)
   CALL ipoolrecover(calculated_all,n_lanczos,nkstot,nks)
@@ -3313,7 +3313,7 @@ SUBROUTINE write_save_file(a,b,xnorm,ncalcv,x_save_file)
      b_all(:,:)=0.d0
      a_all(1:xnitermax,1:nks)=  a(1:xnitermax,i,1:nks)
      b_all(1:xnitermax,1:nks)=  b(1:xnitermax,i,1:nks)
-#ifdef __PARA
+#ifdef __MPI
      CALL poolrecover(a_all,xnitermax,nkstot,nks)
      CALL poolrecover(b_all,xnitermax,nkstot,nks)
 #endif

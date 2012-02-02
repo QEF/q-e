@@ -187,7 +187,7 @@
 
           ! ...   Allocate and Set fft data layout descriptors
 
-#if defined __PARA
+#if defined __MPI
 
           CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, nogrp_ , dfftp%nr1x,  dfftp%nr2x )
           CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, nogrp_ , dffts%nr1x, dffts%nr2x )

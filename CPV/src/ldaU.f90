@@ -204,7 +204,7 @@ end function set_Hubbard_l
       USE cp_interfaces,      only: nlsm1, nlsm2_bgrp
 !
       implicit none
-#ifdef __PARA
+#ifdef __MPI
       include 'mpif.h'
 #endif
       complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat), betae(ngw,nhsa)

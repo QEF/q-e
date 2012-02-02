@@ -82,7 +82,7 @@ subroutine ch_psi_all2 (n, h, ah, e, ik, m)
   call zgemm ('C', 'N', nbnd, m, n, (1.d0, 0.d0) , evq, npwx, spsi, &
        npwx, (0.d0, 0.d0) , ps, nbnd)
   ps = ps * alpha_pv
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum(  ps, intra_pool_comm )
 #endif
 

@@ -18,7 +18,7 @@ subroutine stop_pp
   use io_files, only: iunwfc
   use mp_global,only: mp_global_end
   USE parallel_include
-#ifdef __PARA
+#ifdef __MPI
 
   integer :: info
   logical :: op

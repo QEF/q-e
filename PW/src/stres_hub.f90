@@ -233,7 +233,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
       END DO
    END DO                 ! on k-points
 
-#ifdef __PARA
+#ifdef __MPI
    CALL mp_sum( dns, inter_pool_comm )
 #endif
    !
@@ -403,7 +403,7 @@ SUBROUTINE dprojdepsilon_k ( wfcatom, spsi, ik, ipol, jpol, dproj )
                   wfatdbeta(iwf,ih)= zdotc(npw,wfcatom(1,iwf),1,dbeta(1,jkb2),1)
                END DO
             END DO
-#ifdef __PARA
+#ifdef __MPI
             CALL mp_sum( dbetapsi, intra_pool_comm )
             CALL mp_sum( wfatbeta, intra_pool_comm )
             CALL mp_sum( wfatdbeta, intra_pool_comm )
@@ -581,7 +581,7 @@ SUBROUTINE dprojdepsilon_gamma ( wfcatom, spsi, ipol, jpol, dproj )
                       wfatdbeta(iwf,ih) - wfcatom(1,iwf)*dbeta(1,jkb2)
                END DO
             END DO
-#ifdef __PARA
+#ifdef __MPI
             CALL mp_sum( dbetapsi, intra_pool_comm )
             CALL mp_sum( wfatbeta, intra_pool_comm )
             CALL mp_sum( wfatdbeta, intra_pool_comm )

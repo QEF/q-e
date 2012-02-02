@@ -94,7 +94,7 @@ SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
   !
   index0 = 0
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
 #ifdef __BANDS
   DO i = 1, me_bgrp
@@ -544,7 +544,7 @@ SUBROUTINE compute_pol_dipole( x0, pol_dipole, pol_quadrupole )
   !
   index0 = 0
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
 #ifdef __BANDS
   DO i = 1, me_bgrp

@@ -101,7 +101,7 @@ SUBROUTINE PAW_make_ae_charge(rho)
          ENDDO
          DEALLOCATE(d1y, d2y)
          !
-#if defined (__PARA)
+#if defined (__MPI)
          idx0 =  dfftp%nr1x* dfftp%nr2x * sum ( dfftp%npp(1:me_pool) )
 #else
          idx0 = 0

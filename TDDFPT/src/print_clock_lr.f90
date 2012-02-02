@@ -91,7 +91,7 @@ SUBROUTINE print_clock_lr()
    !
    WRITE( stdout, * )
    !
-#if defined (__PARA)
+#if defined (__MPI)
    WRITE( stdout, '(5X,"Parallel routines")' )
    !
    !CALL print_clock( 'reduce' )

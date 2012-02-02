@@ -65,7 +65,7 @@ SUBROUTINE lr_readin
   NAMELIST / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int
   !
   auto_rs = .TRUE.
-#ifdef __PARA
+#ifdef __MPI
   IF (ionode) THEN
 #endif
      !
@@ -168,7 +168,7 @@ SUBROUTINE lr_readin
         lr_io_level = 1
      END SELECT
      
-#ifdef __PARA
+#ifdef __MPI
   ENDIF
   !
   CALL bcast_lr_input
@@ -236,7 +236,7 @@ SUBROUTINE lr_readin
   !
   !Scalapack related stuff, 
   !
-#ifdef __PARA
+#ifdef __MPI
   use_para_diag = .TRUE.
   CALL check_para_diag( nbnd )
 #else

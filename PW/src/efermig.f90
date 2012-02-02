@@ -40,7 +40,7 @@ FUNCTION efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   enddo
   Eup = Eup + 2 * Degauss
   Elw = Elw - 2 * Degauss
-#ifdef __PARA
+#ifdef __MPI
   !
   ! find min and max across pools
   !

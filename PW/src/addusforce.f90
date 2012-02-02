@@ -115,7 +115,7 @@ subroutine addusforce (forcenl)
      endif
 
   enddo
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum ( ddeeq, intra_pool_comm )
 #endif
   !            WRITE( stdout,'( "dmatrix atom ",i4)') na

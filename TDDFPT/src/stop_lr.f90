@@ -42,7 +42,7 @@ SUBROUTINE stop_lr( )
   ENDIF
   ! I write the beta gamma and z coefficents to output directory for
   ! easier post processing. These can also be read from the output log file
-#ifdef __PARA
+#ifdef __MPI
   IF (ionode) THEN
 #endif
   !
@@ -72,7 +72,7 @@ SUBROUTINE stop_lr( )
   CLOSE(158)
   !
   ENDDO
-#ifdef __PARA
+#ifdef __MPI
   ENDIF
 #endif
   !

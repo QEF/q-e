@@ -24,7 +24,7 @@ SUBROUTINE makov_payne(etot)
   USE parallel_include
   USE gvecw ,            ONLY : ngw
   USE fft_base,          ONLY : dfftp
-#if defined __PARA
+#if defined __MPI
   USE mp_global,         ONLY : me_bgrp, nproc_bgrp, intra_bgrp_comm
   USE mp,                ONLY : mp_barrier
 #endif
@@ -44,7 +44,7 @@ REAL(DP) :: corr1, corr2, etot
 REAL(DP), ALLOCATABLE, DIMENSION(:) :: rgx,rgy,rgz
 INTEGER :: ir, is
 INTEGER :: ierr
-#if defined __PARA
+#if defined __MPI
 INTEGER :: proc
 INTEGER, ALLOCATABLE:: displs(:), recvcount(:)
 #endif
@@ -75,7 +75,7 @@ REAL(KIND=DP), ALLOCATABLE:: rhodist2(:)
 !--------------------------------------------------------------------
 ALLOCATE(rhodist1(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
 IF (nspin.EQ.2) ALLOCATE(rhodist2(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
-#if defined __PARA
+#if defined __MPI
 ALLOCATE( displs( nproc_bgrp ), recvcount( nproc_bgrp ) )
 !
       do proc=1,nproc_bgrp
@@ -107,7 +107,7 @@ ENDIF
  IF(nspin .eq. 2) rhodist2=rhor(:,2)
 #endif
 !
-#if defined __PARA
+#if defined __MPI
 IF ( ionode ) THEN
 #endif
  DO k = 1, dfftp%nr3x
@@ -260,13 +260,13 @@ IF ( ionode ) THEN
    WRITE( stdout,'(/5X,"corrected Total energy = ",F14.8," a.u.")' ) &
        etot - corr1 - corr2
 !
-#if defined __PARA
+#if defined __MPI
 ENDIF ! ionode
 #endif
 !
 IF ( ALLOCATED( rhodist1 ) )   DEALLOCATE( rhodist1 )
 IF ( ALLOCATED( rhodist2 ) )   DEALLOCATE( rhodist2 )
-#if defined __PARA
+#if defined __MPI
 IF ( ALLOCATED( displs ) )     DEALLOCATE( displs )
 IF ( ALLOCATED( recvcount ) )  DEALLOCATE( recvcount )
 #endif

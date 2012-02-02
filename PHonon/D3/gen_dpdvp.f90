@@ -77,7 +77,7 @@ subroutine gen_dpdvp
                       zdotc (npwq, dpsi (1,ibnd), 1, dvpsi (1,jbnd), 1)
               enddo
            enddo
-#ifdef __PARA
+#ifdef __MPI
            call mp_sum(  dpsidvpsi, intra_pool_comm )
 #endif
            nrec = nu_i + (nu_j - 1) * 3 * nat + (ik - 1) * 9 * nat * nat
@@ -94,7 +94,7 @@ subroutine gen_dpdvp
                          zdotc (npwq, dpsi (1, ibnd), 1, dvpsi (1, jbnd), 1)
                  enddo
               enddo
-#ifdef __PARA
+#ifdef __MPI
               call mp_sum(  dpsidvpsi, intra_pool_comm )
 #endif
               nrec = nu_i + (nu_j - 1) * 3 * nat + (ik - 1) * 9 * nat * nat
@@ -122,7 +122,7 @@ subroutine gen_dpdvp
                          zdotc (npwq, dpsi (1,ibnd), 1, dvpsi(1,jbnd), 1)
                  enddo
               enddo
-#ifdef __PARA
+#ifdef __MPI
               call mp_sum(  dpsidvpsi, intra_pool_comm )
 #endif
               nrec = nu_i + (nu_j - 1) * 3 * nat + (ik - 1) * 9 * nat * nat

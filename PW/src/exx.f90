@@ -551,7 +551,7 @@ CONTAINS
     integer :: h_ibnd, half_nbnd
     COMPLEX(DP),allocatable :: temppsic(:), psic(:), tempevc(:,:)
     integer :: nxxs, nrxxs
-#ifdef __PARA
+#ifdef __MPI
     COMPLEX(DP),allocatable :: temppsic_all(:), psic_all(:)
 #endif
     INTEGER :: current_ik
@@ -565,7 +565,7 @@ CONTAINS
     ! Beware: not the same as nrxxs in parallel case
     nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
     nrxxs= dffts%nnr
-#ifdef __PARA
+#ifdef __MPI
     allocate(psic_all(nxxs), temppsic_all(nxxs) )
 #ifdef __BANDS
     CALL init_index_over_band(inter_bgrp_comm,nbnd)
@@ -593,7 +593,7 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
        call start_exx
     endif
 
-#ifdef __PARA
+#ifdef __MPI
     IF (pool_para) THEN
        IF ( .NOT.ALLOCATED (wg_collect) ) ALLOCATE(wg_collect(nbnd,nkstot))
        CALL wg_all(wg_collect, wg, nkstot, nks)
@@ -681,7 +681,7 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
                 if (index_xk(ikq) .ne. current_ik) cycle
 
                 isym = abs(index_sym(ikq) )
-#ifdef __PARA
+#ifdef __MPI
                 call cgather_smooth(temppsic,temppsic_all)
 #ifdef __BANDS
                 IF ( me_bgrp == 0 ) &
@@ -713,7 +713,7 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
                 if (index_xk(ikq) .ne. current_ik) cycle
 
                 isym = abs(index_sym(ikq) )
-#ifdef __PARA
+#ifdef __MPI
                 call cgather_smooth(temppsic,temppsic_all)
 #ifdef __BANDS
                 IF ( me_bgrp == 0 ) &
@@ -740,7 +740,7 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
 
     deallocate(temppsic, psic,tempevc)
     deallocate(present,rir)
-#ifdef __PARA
+#ifdef __MPI
     deallocate(temppsic_all, psic_all)
 #endif 
 

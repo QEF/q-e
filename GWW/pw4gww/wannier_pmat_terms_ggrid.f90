@@ -134,7 +134,7 @@
   write(stdout,*) 'ATTENZIONE2'
    call flush_unit(stdout)
 
-#ifdef __PARA
+#ifdef __MPI
   do iw=1,numw_prod
      call mp_bcast(w_prod(iw)%i,ionode_id)
      call mp_bcast(w_prod(iw)%j,ionode_id)

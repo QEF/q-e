@@ -13,7 +13,7 @@ subroutine divide (ntodiv, startn, lastn)
   !
   USE mp_global, ONLY : me_pool, nproc_pool
   !
-#ifdef __PARA
+#ifdef __MPI
   !
   implicit none
 

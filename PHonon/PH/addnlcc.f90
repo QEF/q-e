@@ -120,7 +120,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   DO is=1,nspin_lsda
      rho%of_r(:,is) = rho%of_r(:,is) - fac * rho_core(:)
   ENDDO
-#ifdef __PARA
+#ifdef __MPI
   !
   ! collect contributions from all r/G points.
   !

@@ -42,7 +42,7 @@ PROGRAM plan_avg
   !
   ! initialise environment
   !
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'plan-avg' )
@@ -277,7 +277,7 @@ SUBROUTINE do_plan_avg (averag, plan, ninter)
      ENDDO
   ENDDO
   CALL deallocate_bec_type (becp)
-#ifdef __PARA
+#ifdef __MPI
   CALL poolrecover (plan, dfftp%nr3 * nbnd, nkstot, nks)
   CALL poolrecover (averag, nat * nbnd, nkstot, nks)
   CALL poolrecover (xk, 3, nkstot, nks)

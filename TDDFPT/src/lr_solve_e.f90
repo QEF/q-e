@@ -74,7 +74,7 @@ SUBROUTINE lr_solve_e
 !     !
 !     emin=minval(et(:,:))
 !     !
-!#ifdef __PARA
+!#ifdef __MPI
 !     !   Find the minimum across pools
 !     !call poolextreme(emin,-1)
 !     call mp_min(emin, inter_pool_comm)
@@ -82,7 +82,7 @@ SUBROUTINE lr_solve_e
 !     !
 !     emax=maxval(et(:,:))
 !     !
-!#ifdef __PARA
+!#ifdef __MPI
 !     !   Find the maximum across pools
 !     !call poolextreme(emax,+1)
 !     call mp_max(emax, inter_pool_comm)

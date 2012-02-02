@@ -70,7 +70,7 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
      call DGER( nstart, nstart, -1.D0, psi, 2 * npwx, aux, &
                 2 * npwx, hr, nstart )
   !     
-#if defined (__PARA)
+#if defined (__MPI)
 #ifdef __BANDS
   CALL mp_sum(  hr , intra_bgrp_comm )
 #else
@@ -114,7 +114,7 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
      !
   END IF
   !
-#if defined (__PARA)
+#if defined (__MPI)
 #ifdef __BANDS
   CALL mp_sum(  sr , intra_bgrp_comm )
 #else

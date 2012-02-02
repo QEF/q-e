@@ -95,7 +95,7 @@
    REAL(kind=DP) :: cutoff_product
 
 
-#ifndef __PARA
+#ifndef __MPI
   !dfftp%npp(1) = nr3 ! no longer needed - PG
   nr3_start=1
   nr3_end=dfftp%nr3

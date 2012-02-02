@@ -23,7 +23,7 @@ SUBROUTINE psym_dmage (dvtosym)
     ! the potential to symmetrize
     !-local variable
   !
-#if defined (__PARA)
+#if defined (__MPI)
   !
   INTEGER :: i, is, iper, npp0
 

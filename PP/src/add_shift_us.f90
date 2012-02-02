@@ -123,7 +123,7 @@ SUBROUTINE add_shift_us( shift_nl )
           ENDDO
        ENDDO
        !
-#ifdef __PARA
+#ifdef __MPI
        !
        ! ... collect contributions across pools
        !
@@ -215,7 +215,7 @@ SUBROUTINE add_shift_us( shift_nl )
           ENDDO
        ENDDO
        !
-#ifdef __PARA
+#ifdef __MPI
        !
        ! ... collect contributions across pools
        !

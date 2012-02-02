@@ -88,7 +88,7 @@ SUBROUTINE rhod2vkb(dyn0)
 #ifdef GAMMA
   dynloc(:,:) = 2.d0 * dynloc(:,:)
 #endif
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_sum( dynloc, intra_pool_comm )
 #endif
   !

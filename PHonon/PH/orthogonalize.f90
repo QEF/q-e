@@ -125,7 +125,7 @@ ELSE
    END IF
    nbnd_eff=nbnd_occ(ikk)
 END IF
-#ifdef __PARA
+#ifdef __MPI
 IF (gamma_only) THEN
    call mp_sum(ps_r(:,:),intra_pool_comm)
 ELSE

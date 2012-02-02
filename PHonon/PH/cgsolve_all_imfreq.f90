@@ -159,7 +159,7 @@ subroutine cgsolve_all_imfreq (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         endif
      enddo
      kter_eff = kter_eff + DBLE (lbnd) / DBLE (nbnd)
-#ifdef __PARA
+#ifdef __MPI
      call mp_sum(rho)
      !!!call reduce (lbnd, rho )
 #endif
@@ -221,7 +221,7 @@ subroutine cgsolve_all_imfreq (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            c(lbnd) = ZDOTC (ndim, h(1,ibnd), 1, t(1,lbnd), 1)
         end if
      end do
-#ifdef __PARA
+#ifdef __MPI
      call mp_sum(a)
      call mp_sum(c)
      !!!call reduce (lbnd, a)

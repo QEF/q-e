@@ -114,7 +114,7 @@ CONTAINS
      force(:,na) = - force(:,na) * zv(ityp(na))  * tpiba
   end do
   deallocate ( v )
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum(  force, intra_pool_comm )
 #endif
 
@@ -166,7 +166,7 @@ CONTAINS
   ! Index for parallel summation
   !
   index0 = 0
-#if defined (__PARA)
+#if defined (__MPI)
   DO i = 1, me_pool
      index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
   END DO

@@ -66,7 +66,7 @@ SUBROUTINE compute_becsum(iflag)
   !
   IF( okpaw )  THEN
      rho%bec(:,:,:) = becsum(:,:,:)
-#ifdef __PARA
+#ifdef __MPI
      CALL mp_sum(rho%bec, inter_pool_comm)
 #endif
      CALL PAW_symmetrize(rho%bec)

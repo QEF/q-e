@@ -66,7 +66,7 @@ MODULE london_module
       !
       USE io_global,           ONLY : ionode, ionode_id, stdout
       !
-#if defined __PARA
+#if defined __MPI
       USE mp,                  ONLY : mp_bcast
 #endif
       !
@@ -261,7 +261,7 @@ MODULE london_module
          !
       END IF
       !
-#if defined __PARA
+#if defined __MPI
       ! broadcast data to all processors
       !
       CALL mp_bcast ( C6_ij,  ionode_id )
@@ -293,7 +293,7 @@ MODULE london_module
     !
     ! and scal6 is a global scaling factor
     !
-#if defined __PARA
+#if defined __MPI
     USE mp_global,    ONLY : me_image , nproc_image, intra_image_comm
     USE mp,           ONLY : mp_sum
 #endif
@@ -335,7 +335,7 @@ MODULE london_module
     !
     energy_london = 0.d0
     !
-#if defined __PARA
+#if defined __MPI
       !
       ! parallelization: divide atoms across processors of this image
       ! (different images have different atomic positions)
@@ -393,7 +393,7 @@ MODULE london_module
       energy_london = scal6 * 0.5d0 * energy_london
       !
       !
-#if defined (__PARA)
+#if defined (__MPI)
 999 CALL mp_sum ( energy_london , intra_image_comm )
 #endif
     !
@@ -408,7 +408,7 @@ MODULE london_module
    FUNCTION force_london ( alat , nat , ityp , at , bg , tau )
     !
     !
-#if defined __PARA
+#if defined __MPI
     USE mp_global,    ONLY : me_image , nproc_image , intra_image_comm
     USE mp,           ONLY : mp_sum
 #endif
@@ -457,7 +457,7 @@ MODULE london_module
     !
     force_london ( : , : ) = 0.d0
     !
-#if defined __PARA
+#if defined __MPI
       !
       ! parallelization: divide atoms across processors of this image
       ! (different images have different atomic positions)
@@ -532,7 +532,7 @@ MODULE london_module
         !
       END DO
       !
-#if defined (__PARA)
+#if defined (__MPI)
 999 CALL mp_sum ( force_london , intra_image_comm )
 #endif
     !
@@ -548,7 +548,7 @@ MODULE london_module
    FUNCTION stres_london ( alat , nat , ityp , at , bg , tau , omega )
     !
     !
-#if defined __PARA
+#if defined __MPI
     USE mp_global,    ONLY : me_image , nproc_image , intra_image_comm
     USE mp,           ONLY : mp_sum
 #endif
@@ -600,7 +600,7 @@ MODULE london_module
     first=0
     last=0
     !
-#if defined __PARA
+#if defined __MPI
       !
       ! parallelization: divide atoms across processors of this image
       ! (different images have different atomic positions)
@@ -688,7 +688,7 @@ MODULE london_module
       !
       stres_london ( : , : ) = - stres_london ( : , : ) / ( 2.d0 * omega )
       !
-#if defined (__PARA)
+#if defined (__MPI)
 999 CALL mp_sum ( stres_london , intra_image_comm )
 #endif
     !

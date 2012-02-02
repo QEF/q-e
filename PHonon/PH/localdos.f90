@@ -230,7 +230,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   END IF
 
   call addusldos (ldos, becsum1)
-#ifdef __PARA
+#ifdef __MPI
   !
   !    Collects partial sums on k-points from all pools
   !
@@ -481,7 +481,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   END IF
 
   call addusldos (ldos, becsum1)
-#ifdef __PARA
+#ifdef __MPI
   !
   !    Collects partial sums on k-points from all pools
   !

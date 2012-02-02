@@ -85,7 +85,7 @@ subroutine zstar_eu
   !
   if (okvan) call zstar_eu_us
 
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum ( zstareu0, intra_pool_comm )
   call mp_sum ( zstareu0, inter_pool_comm )
 #endif

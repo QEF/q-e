@@ -116,7 +116,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
     
      tot_dipole  = -e_dipole + ion_dipole
 
-#ifdef __PARA
+#ifdef __MPI
      CALL mp_bcast(tot_dipole, 0, intra_image_comm)
 #endif
   !  
@@ -226,7 +226,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   ! Index for parallel summation
   !
   index0 = 0
-#if defined (__PARA)
+#if defined (__MPI)
   !
   DO i = 1, me_pool
      index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)

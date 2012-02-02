@@ -173,7 +173,7 @@ SUBROUTINE dvpsi_e_vdw (kpoint, ipol)
      DO jbnd = 1, nbnd_occ (kpoint)
         ps (1, jbnd) = - zdotc(npw,evc(1,jbnd),1,dpsi(1, ibnd),1)
      ENDDO
-#ifdef __PARA
+#ifdef __MPI
      CALL mp_sum( ps, intra_pool_comm )
 #endif
      DO jbnd = 1, nbnd_occ (kpoint)
@@ -196,7 +196,7 @@ SUBROUTINE dvpsi_e_vdw (kpoint, ipol)
      ENDDO
      eprec1 (ibnd) = 1.35d0 * zdotc (npwq, evc (1, ibnd), 1, work, 1)
   ENDDO
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_sum( eprec1( 1 : nbnd_occ(kpoint) ), intra_pool_comm )
 #endif
   DO ibnd = 1, nbnd_occ (kpoint)

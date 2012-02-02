@@ -83,7 +83,7 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
      allocate(qq_op(nhm,nhm,nat))
   endif
 
-#ifndef __PARA
+#ifndef __MPI
   nr3s_start=1
   nr3s_end=dffts%nr3
   nr3_start=1

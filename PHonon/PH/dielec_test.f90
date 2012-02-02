@@ -58,7 +58,7 @@ subroutine dielec_test
         if (i1.ne.i2 ) epsilon (i2, i1) = epsilon (i2, i1) + tmp
      enddo
   enddo
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum ( epsilon, intra_pool_comm )
   call mp_sum ( epsilon, inter_pool_comm )
 #endif

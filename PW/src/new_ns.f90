@@ -105,7 +105,7 @@ SUBROUTINE new_ns(ns)
 
   ENDDO
   CALL deallocate_bec_type (proj) 
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_sum( nr, inter_pool_comm )
 #endif
   IF (nspin.EQ.1) nr = 0.5d0 * nr

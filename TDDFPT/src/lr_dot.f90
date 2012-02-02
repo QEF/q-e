@@ -77,7 +77,7 @@ CONTAINS
        !
     ENDDO
     !
-#ifdef __PARA
+#ifdef __MPI
     !call reduce(1,temp_gamma)
     CALL mp_sum(temp_gamma, intra_pool_comm)
 #endif
@@ -94,7 +94,7 @@ CONTAINS
           !
        ENDDO
     ENDDO
-#ifdef __PARA
+#ifdef __MPI
     !call poolreduce(2,temp_k)
     CALL mp_sum(temp_k,inter_pool_comm)
     !call reduce(2,temp_k)

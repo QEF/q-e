@@ -67,7 +67,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   CALL zgemm( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
        (1.d0,0.d0), evc(1,1), npwx, dvpsi(1,1), npwx, (0.d0,0.d0), &
        ps(1,1), nbnd )
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum( ps( :, 1:nbnd_occ(ik) ), intra_pool_comm )
 #endif
   !

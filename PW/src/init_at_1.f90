@@ -59,7 +59,7 @@ subroutine init_at_1()
         endif
      enddo
  enddo
-#ifdef __PARA
+#ifdef __MPI
   call mp_sum ( tab_at, intra_pool_comm )
 #endif
 

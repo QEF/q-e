@@ -52,7 +52,7 @@ MODULE realus_scatt
    IF (ALLOCATED(orig_or_copy)) DEALLOCATE( orig_or_copy )
    ALLOCATE( orig_or_copy( roughestimate, nat ) )
 
-#if defined (__PARA)
+#if defined (__MPI)
    idx0 = dfftp%nr1x*dfftp%nr2x * SUM ( dfftp%npp(1:me_pool) )
 #else
    idx0 = 0

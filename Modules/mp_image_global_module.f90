@@ -133,7 +133,7 @@ CONTAINS
     IMPLICIT NONE
     INTEGER :: ierr = 0
     !
-#if defined (__PARA)
+#if defined (__MPI)
     !
     IF ( nimage < 1 .OR. nimage > nproc ) &
        CALL errore( 'init_images', 'invalid number of images, out of range', 1 )

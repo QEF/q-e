@@ -14,7 +14,7 @@ MODULE paw_init
   PUBLIC :: PAW_atomic_becsum
   PUBLIC :: PAW_init_onecenter
   !PUBLIC :: PAW_increase_lm ! <-- unused
-#ifdef __PARA
+#ifdef __MPI
   PUBLIC :: PAW_post_init
 #endif
 
@@ -73,7 +73,7 @@ MODULE paw_init
   END SUBROUTINE deallocate_paw_internals
 
 
-#ifdef __PARA
+#ifdef __MPI
 ! Deallocate variables that are used only at init and then no more necessary.
 ! This is only useful in parallel, as each node only does a limited number of atoms
 SUBROUTINE PAW_post_init()

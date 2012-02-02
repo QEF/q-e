@@ -83,7 +83,7 @@
 
       DO is = 1, nvb
 
-#ifdef __PARA
+#ifdef __MPI
 
          DO ia=1,na(is)
              nfft = 1
@@ -189,7 +189,7 @@
 
          DO is = 1, nvb
 
-#ifdef __PARA
+#ifdef __MPI
             DO ia=1,na(is)
                nfft=1
                IF ( ( dfftb%np3( isa ) <= 0 ) .OR. ( my_bgrp_id /= MOD( ia, nbgrp ) ) ) THEN
@@ -281,7 +281,7 @@
          isa=1
          DO is=1,nvb
             DO ia=1,na(is)
-#ifdef __PARA
+#ifdef __MPI
                IF ( dfftb%np3( isa ) <= 0 ) go to 25
 #endif
                DO ik=1,3

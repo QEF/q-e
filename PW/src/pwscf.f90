@@ -36,7 +36,7 @@ PROGRAM pwscf
   !
   CHARACTER(len=256) :: dirname
   !
-#ifdef __PARA
+#ifdef __MPI
   !
   CALL mp_startup ( )
   ! reset IO nodes

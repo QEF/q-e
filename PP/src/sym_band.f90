@@ -134,7 +134,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
 100  CONTINUE
   ENDDO
 
-#ifdef __PARA
+#ifdef __MPI
   !
   !  Only the symmetry of a set of k points is calculated by this
   !  processor with pool. Here we collect the results into ionode
@@ -477,7 +477,7 @@ SUBROUTINE rotate_psi(evc,evcr,s,ftau,gk,nl,igk,nr1,nr2,nr3, &
   REAL(DP) :: arg
   INTEGER :: i, j, k, ri, rj, rk, ir, rir, ipol
   LOGICAL :: zone_border
-#if defined  (__PARA)
+#if defined  (__MPI)
   !
   COMPLEX (DP), ALLOCATABLE :: psir_collect(:)
   COMPLEX (DP), ALLOCATABLE :: psic_collect(:)
@@ -495,7 +495,7 @@ SUBROUTINE rotate_psi(evc,evcr,s,ftau,gk,nl,igk,nr1,nr2,nr3, &
   !
   CALL invfft ('Dense', psic, dfftp)
   !
-#if defined  (__PARA)
+#if defined  (__MPI)
   !
   ALLOCATE (psic_collect(nr1x*nr2x*nr3x))
   ALLOCATE (psir_collect(nr1x*nr2x*nr3x))
@@ -811,7 +811,7 @@ SUBROUTINE rotate_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk,nl,igk,npol, &
   INTEGER :: i, j, k, ri, rj, rk, ir, rir, ipol, jpol
   LOGICAL :: zone_border
   !
-#if defined  (__PARA)
+#if defined  (__MPI)
   !
   COMPLEX (DP), ALLOCATABLE :: psir_collect(:)
   COMPLEX (DP), ALLOCATABLE :: psic_collect(:)
@@ -834,7 +834,7 @@ SUBROUTINE rotate_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk,nl,igk,npol, &
      psic(nl(igk(1:npw)),ipol) = evc_nc(1:npw,ipol)
      CALL invfft ('Dense', psic(:,ipol), dfftp)
      !
-#if defined  (__PARA)
+#if defined  (__MPI)
      !
      !
      CALL cgather_sym( psic(:,ipol), psic_collect )
@@ -916,7 +916,7 @@ SUBROUTINE rotate_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk,nl,igk,npol, &
   DEALLOCATE(evcr_save)
   DEALLOCATE(psic)
   DEALLOCATE(psir)
-#if defined (__PARA)
+#if defined (__MPI)
   DEALLOCATE (psic_collect)
   DEALLOCATE (psir_collect)
 #endif
@@ -951,7 +951,7 @@ SUBROUTINE find_nks1nks2(firstk,lastk,nks1tot,nks1,nks2tot,nks2,spin_component)
   ENDIF
   IF (nks1tot>nks2tot) CALL errore('findnks1nks2','wrong nks1tot or nks2tot',1)
 
-#ifdef __PARA
+#ifdef __MPI
   nks  = kunit * ( nkstot / kunit / npool )
   rest = ( nkstot - nks * npool ) / kunit
   IF ( ( my_pool_id + 1 ) <= rest ) nks = nks + kunit

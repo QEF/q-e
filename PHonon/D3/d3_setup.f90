@@ -82,7 +82,7 @@ SUBROUTINE d3_setup()
   ! the symmetry operations
   REAL (DP) :: mdum(3)
   CHARACTER(LEN=256) :: tmp_dir_save
-#ifdef __PARA
+#ifdef __MPI
   INTEGER :: nlength_w, nlength (npool), nresto
 #endif
   CALL start_clock ('d3_setup')
@@ -305,7 +305,7 @@ SUBROUTINE d3_setup()
   !
   npert_i = 1
   npert_f = 3 * nat
-#ifdef __PARA
+#ifdef __MPI
   nlength_w = (3 * nat) / npool
   nresto = 3 * nat - nlength_w * npool
   DO ii = 1, npool

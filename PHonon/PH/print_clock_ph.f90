@@ -104,7 +104,7 @@ subroutine print_clock_ph
   call print_clock ('mix_pot')
   call print_clock ('ef_shift')
   call print_clock ('localdos')
-#ifdef __PARA
+#ifdef __MPI
   call print_clock ('psymdvscf')
 #else
   call print_clock ('symdvscf')

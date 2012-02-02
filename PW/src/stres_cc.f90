@@ -99,7 +99,7 @@ subroutine stres_cc (sigmaxcc)
   do l = 1, 3
      sigmaxcc (l, l) = sigmaxcc (l, l) + sigmadiag
   enddo
-#ifdef __PARA
+#ifdef __MPI
 #ifdef __BANDS
   call mp_sum(  sigmaxcc, intra_bgrp_comm )
 #else

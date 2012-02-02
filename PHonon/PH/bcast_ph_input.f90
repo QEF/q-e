@@ -13,7 +13,7 @@ subroutine bcast_ph_input ( )
   !     the other processors
   !
   !
-#ifdef __PARA
+#ifdef __MPI
 
   use mp, only: mp_bcast
   USE mp_global, only : intra_image_comm

@@ -137,7 +137,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
      enddo
 
   enddo
-#ifdef __PARA
+#ifdef __MPI
   !
   ! collect contributions from all pools (sum over k-points)
   !

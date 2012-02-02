@@ -101,7 +101,7 @@
 
       END DO
 
-#elif ! defined __PARA
+#elif ! defined __MPI
 
       DO I = 1, ngwl
         ! WRITE( stdout,*) 'MW ', ig_l2g(i), i
@@ -197,7 +197,7 @@
         CALL MPI_BARRIER(gid, IERR)
       END DO
 
-#elif ! defined __PARA
+#elif ! defined __MPI
 
       DO I = 1, ngwl
         pw(i) = pwt( ig_l2g(i) )
@@ -286,7 +286,7 @@
 
       END DO
 
-#elif ! defined __PARA
+#elif ! defined __MPI
 
       DO I = 1, ngl
         rhot( ig_l2g(i) ) = rho(i)
@@ -366,7 +366,7 @@
         CALL MPI_BARRIER(MPI_COMM_WORLD, ierr)
       END DO
 
-#elif ! defined __PARA
+#elif ! defined __MPI
 
       DO i = 1, ngl
          rho(i) = rhot( ig_l2g(i) ) 
@@ -462,7 +462,7 @@
 
       END DO
 
-#elif ! defined __PARA
+#elif ! defined __MPI
 
       igtot( 1:ngl ) = igl( 1:ngl )
 
@@ -552,7 +552,7 @@
 
       END DO
 
-#elif ! defined __PARA
+#elif ! defined __MPI
 
       igl( 1:ngl ) = igtot( 1:ngl )
 

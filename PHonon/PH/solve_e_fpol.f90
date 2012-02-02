@@ -207,7 +207,7 @@ subroutine solve_e_fpol ( iw )
            CALL zgemm( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
                 (1.d0,0.d0), evc(1,1), npwx, dvpsi(1,1), npwx, (0.d0,0.d0), &
                 ps(1,1), nbnd )
-#ifdef __PARA
+#ifdef __MPI
            call mp_sum ( ps( :, 1:nbnd_occ(ik) ), intra_pool_comm )
 #endif
            ! dpsi is used as work space to store S|evc>
@@ -289,7 +289,7 @@ subroutine solve_e_fpol ( iw )
                             ik, dbecsum(1,1,current_spin,ipol), dpsi)
         enddo   ! on polarizations
      enddo      ! on k points
-#ifdef __PARA
+#ifdef __MPI
      !
      !  The calculation of dbecsum is distributed across processors
      !  (see addusdbec) - we sum over processors the contributions
@@ -311,7 +311,7 @@ subroutine solve_e_fpol ( iw )
      !   dvscfout contains the (unsymmetrized) linear charge response
      !   for the three polarizations - symmetrize it
      !
-#ifdef __PARA
+#ifdef __MPI
      call mp_sum ( dvscfout, inter_pool_comm )
      call psyme (dvscfout)
 #else

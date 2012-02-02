@@ -171,7 +171,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   enddo
   !
   !  Then there is also a part in real space which is computed here.
-#ifdef __PARA
+#ifdef __MPI
   !   ... only by the node that contains  G=0
   !
   if (gg (1) > 1.d-8) goto 100
@@ -224,7 +224,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
      enddo
 
   enddo
-#ifdef __PARA
+#ifdef __MPI
 100 continue
   call mp_sum ( dy3, intra_pool_comm )
 #endif

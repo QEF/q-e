@@ -65,7 +65,7 @@ FUNCTION cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
   COMPLEX(DP) :: scal, zdotc
   !
   scal = zdotc (npw, psi1, 1, psi2, 1)
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_sum(  scal, intra_pool_comm )
 #endif
   ijkb0 = 0
@@ -153,7 +153,7 @@ FUNCTION cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
   COMPLEX(DP) :: scal, zdotc
   !
   scal = zdotc (npw*npol, psi1, 1, psi2, 1)
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_sum(  scal, intra_pool_comm )
 #endif
   ijkb0 = 0

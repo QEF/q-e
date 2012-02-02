@@ -258,7 +258,7 @@ SUBROUTINE open_dvscf_star_q( q_index )
 ! for several pe cancel line below
 !     dvrot(:,:,1:npert(irr))=dvscfin(:,:,1:npert(irr))
 
-#if defined (__PARA)
+#if defined (__MPI)
 
 
      DO ipert = 1, npert(irr)
