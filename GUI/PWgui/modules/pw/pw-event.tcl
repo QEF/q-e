@@ -149,14 +149,16 @@ tracevar ibrav w {
 	"Hexagonal and Trigonal P" -
 	"Tetragonal P (st)"        -       
 	"Tetragonal I (bct)"      { set uses {1 3} }
-	"Trigonal R"              { set uses {1 4} }
+	"Trigonal R, 3fold axis c" -
+	"Trigonal R, 3fold axis <111>" { set uses {1 4} }
 
 	"Orthorhombic P"                  -
 	"Orthorhombic base-centered(bco)" - 
 	"Orthorhombic face-centered"      -
 	"Orthorhombic body-centered"     { set uses {1 2 3} }
 
-	"Monoclinic P"              -
+	"Monoclinic P, unique axis c" -
+	"Monoclinic P, unique axis b" -
 	"Monoclinic base-centered" { set uses {1 2 3 4} }
 	"Triclinic P" { set uses { 1 2 3 4 5 6 } }
 	default {

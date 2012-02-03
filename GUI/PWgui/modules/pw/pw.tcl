@@ -258,18 +258,20 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			"Cubic F (fcc)"
 			"Cubic I (bcc)"
 			"Hexagonal and Trigonal P"
-			"Trigonal R"
+			"Trigonal R, 3fold axis c"
+			"Trigonal R, 3fold axis <111>"
 			"Tetragonal P (st)"
 			"Tetragonal I (bct)"
 			"Orthorhombic P"
 			"Orthorhombic base-centered(bco)"
 			"Orthorhombic face-centered"
 			"Orthorhombic body-centered"
-			"Monoclinic P"
+			"Monoclinic P, unique axis c"
+			"Monoclinic P, unique axis b"
 			"Monoclinic base-centered"
 			"Triclinic P"
 		    }
-		    -value {0 1 2 3 4 5 6 7 8 9 10 11 12 13 14}
+		    -value {0 1 2 3 4 5 -5 6 7 8 9 10 11 12 -12 13 14}
 		}
 
 		group lattice_spec -name "Lattice specification:" -decor normal {
