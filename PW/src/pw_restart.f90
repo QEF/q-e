@@ -113,7 +113,8 @@ MODULE pw_restart
                                        nproc_image, nproc_bgrp, me_bgrp, &
                                        root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm, &
                                        root_bgrp, intra_bgrp_comm, inter_bgrp_comm, nbgrp
-      USE funct,                ONLY : get_exx_fraction, get_screening_parameter, exx_is_active
+      USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
+                                       get_screening_parameter, exx_is_active
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
       USE cellmd,               ONLY : lmovecell, cell_factor 
@@ -400,7 +401,8 @@ MODULE pw_restart
                         HUBBARD_U = Hubbard_U, HUBBARD_ALPHA = Hubbard_alpha, &
                         INLC = inlc, VDW_TABLE_NAME = vdw_table_name, &
                         PSEUDO_DIR = pseudo_dir, DIRNAME = dirname)
-         CALL write_exx( x_gamma_extrapolation, nq1, nq2, nq3, &
+         IF ( dft_is_hybrid() ) CALL write_exx &
+                         ( x_gamma_extrapolation, nq1, nq2, nq3, &
                          exxdiv_treatment, yukawa, ecutvcut, &
                          get_exx_fraction(), &
                          get_screening_parameter(), exx_is_active() )
@@ -3295,9 +3297,8 @@ MODULE pw_restart
       !
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
-      CHARACTER(LEN=80) :: dft_name
       REAL(DP) :: exx_fraction, screening_parameter
-      LOGICAL :: exx_is_active
+      LOGICAL :: exx_is_active, found
       !
       IF ( ionode ) THEN
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
@@ -3306,24 +3307,28 @@ MODULE pw_restart
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       IF ( ierr > 0 ) RETURN
       IF ( ionode ) THEN
-         CALL iotk_scan_begin( iunpun, "EXCHANGE_CORRELATION" )
-         call iotk_scan_dat(iunpun, "DFT", dft_name)
-         CALL iotk_scan_end( iunpun, "EXCHANGE_CORRELATION" )
-         CALL iotk_scan_begin( iunpun, "EXACT_EXCHANGE" )
-         call iotk_scan_dat(iunpun, "x_gamma_extrapolation", x_gamma_extrapolation)
-         call iotk_scan_dat(iunpun, "nqx1", nq1)
-         call iotk_scan_dat(iunpun, "nqx2", nq2)
-         call iotk_scan_dat(iunpun, "nqx3", nq3)
-         call iotk_scan_dat(iunpun, "exxdiv_treatment", exxdiv_treatment)
-         call iotk_scan_dat(iunpun, "yukawa", yukawa)
-         call iotk_scan_dat(iunpun, "ecutvcut", ecutvcut)
-         call iotk_scan_dat(iunpun, "exx_fraction", exx_fraction)
-         call iotk_scan_dat(iunpun, "screening_parameter", screening_parameter)
-         call iotk_scan_dat(iunpun, "exx_is_active", exx_is_active)
+         CALL iotk_scan_begin( iunpun, "EXACT_EXCHANGE", FOUND = found )
+      END IF
+      CALL mp_bcast( found, ionode_id, intra_image_comm )
+      IF ( ionode ) THEN
+         IF ( found ) THEN
+            CALL iotk_scan_dat(iunpun, "x_gamma_extrapolation", x_gamma_extrapolation)
+            CALL iotk_scan_dat(iunpun, "nqx1", nq1)
+            CALL iotk_scan_dat(iunpun, "nqx2", nq2)
+            CALL iotk_scan_dat(iunpun, "nqx3", nq3)
+            CALL iotk_scan_dat(iunpun, "exxdiv_treatment", exxdiv_treatment)
+            CALL iotk_scan_dat(iunpun, "yukawa", yukawa)
+            CALL iotk_scan_dat(iunpun, "ecutvcut", ecutvcut)
+            CALL iotk_scan_dat(iunpun, "exx_fraction", exx_fraction)
+            CALL iotk_scan_dat(iunpun, "screening_parameter", screening_parameter)
+            call iotk_scan_dat(iunpun, "exx_is_active", exx_is_active)
+         END IF
          CALL iotk_scan_end( iunpun, "EXACT_EXCHANGE" )
          CALL iotk_close_read( iunpun )
       END IF
-      CALL mp_bcast( dft_name, ionode_id, intra_image_comm )
+      !
+      IF ( .NOT. found ) RETURN
+      !
       CALL mp_bcast( x_gamma_extrapolation, ionode_id, intra_image_comm )
       CALL mp_bcast( nq1, ionode_id, intra_image_comm )
       CALL mp_bcast( nq2, ionode_id, intra_image_comm )
@@ -3334,10 +3339,11 @@ MODULE pw_restart
       CALL mp_bcast( exx_fraction, ionode_id, intra_image_comm )
       CALL mp_bcast( screening_parameter, ionode_id, intra_image_comm )
       CALL mp_bcast( exx_is_active, ionode_id, intra_image_comm )
-      call enforce_input_dft(dft_name)
+      !
       call set_exx_fraction(exx_fraction)
       call set_screening_parameter(screening_parameter)
       if (exx_is_active) call start_exx
+      !
       RETURN
       !
     END SUBROUTINE read_exx
