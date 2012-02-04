@@ -63,6 +63,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
     ! counter on the reduced basis vectors
     ! do-loop counters
     ! counter on the bands
+  INTEGER :: ierr
   REAL(DP), ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:), ew(:)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
@@ -98,16 +99,30 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
   !
-  ALLOCATE( psi(  npwx, nvecx ) )
-  ALLOCATE( hpsi( npwx, nvecx ) )
+  ALLOCATE( psi(  npwx, nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( 'regterg ',' cannot allocate psi ', ABS(ierr) )
+  ALLOCATE( hpsi( npwx, nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( 'regterg ',' cannot allocate hpsi ', ABS(ierr) )
   !
   IF ( uspp ) ALLOCATE( spsi( npwx, nvecx ) )
   !
-  ALLOCATE( sr( nvecx, nvecx ) )
-  ALLOCATE( hr( nvecx, nvecx ) )
-  ALLOCATE( vr( nvecx, nvecx ) )
-  ALLOCATE( ew( nvecx ) )
-  ALLOCATE( conv( nvec ) )
+  ALLOCATE( sr( nvecx, nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( 'regterg ',' cannot allocate sr ', ABS(ierr) )
+  ALLOCATE( hr( nvecx, nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( 'regterg ',' cannot allocate hr ', ABS(ierr) )
+  ALLOCATE( vr( nvecx, nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( 'regterg ',' cannot allocate vr ', ABS(ierr) )
+  ALLOCATE( ew( nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( 'regterg ',' cannot allocate ew ', ABS(ierr) )
+  ALLOCATE( conv( nvec ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( 'regterg ',' cannot allocate conv ', ABS(ierr) )
   !
   npw2  = 2*npw
   npwx2  = 2*npwx
@@ -520,6 +535,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
     ! dimension of the reduced basis
     ! counter on the reduced basis vectors
     ! do-loop counters
+  INTEGER :: ierr
   REAL(DP), ALLOCATABLE :: ew(:)
   REAL(DP), ALLOCATABLE :: hl(:,:), sl(:,:), vl(:,:)
     ! Hamiltonian on the reduced basis
@@ -568,18 +584,32 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
   !
-  ALLOCATE( psi(  npwx, nvecx ) )
-  ALLOCATE( hpsi( npwx, nvecx ) )
+  ALLOCATE( psi(  npwx, nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( 'pregterg ',' cannot allocate psi ', ABS(ierr) )
+  ALLOCATE( hpsi( npwx, nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( 'pregterg ',' cannot allocate hpsi ', ABS(ierr) )
   !
   IF ( uspp ) ALLOCATE( spsi( npwx, nvecx ) )
   !
   ! ... Initialize the matrix descriptor
   !
-  ALLOCATE( ic_notcnv( np_ortho(2) ) )
-  ALLOCATE( notcnv_ip( np_ortho(2) ) )
-  ALLOCATE( irc_ip( np_ortho(1) ) )
-  ALLOCATE( nrc_ip( np_ortho(1) ) )
-  ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
+  ALLOCATE( ic_notcnv( np_ortho(2) ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( 'pregterg ',' cannot allocate ic_notcnv ', ABS(ierr) )
+  ALLOCATE( notcnv_ip( np_ortho(2) ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( 'pregterg ',' cannot allocate notcnv_ip ', ABS(ierr) )
+  ALLOCATE( irc_ip( np_ortho(1) ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( 'pregterg ',' cannot allocate irc_ip ', ABS(ierr) )
+  ALLOCATE( nrc_ip( np_ortho(1) ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( 'pregterg ',' cannot allocate nrc_ip ', ABS(ierr) )
+  ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( 'pregterg ',' cannot allocate rank_ip ', ABS(ierr) )
   !
   CALL desc_init( nvec, desc, irc_ip, nrc_ip  )
   !
@@ -588,20 +618,36 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
      ! only procs involved in the diagonalization need to allocate local 
      ! matrix block.
      !
-     ALLOCATE( vl( nx , nx ) )
-     ALLOCATE( sl( nx , nx ) )
-     ALLOCATE( hl( nx , nx ) )
+     ALLOCATE( vl( nx , nx ), STAT=ierr )
+     IF( ierr /= 0 ) &
+        CALL errore( 'pregterg ',' cannot allocate vl ', ABS(ierr) )
+     ALLOCATE( sl( nx , nx ), STAT=ierr )
+     IF( ierr /= 0 ) &
+        CALL errore( 'pregterg ',' cannot allocate sl ', ABS(ierr) )
+     ALLOCATE( hl( nx , nx ), STAT=ierr )
+     IF( ierr /= 0 ) &
+        CALL errore( 'pregterg ',' cannot allocate hl ', ABS(ierr) )
      !
   ELSE
      !
-     ALLOCATE( vl( 1 , 1 ) )
-     ALLOCATE( sl( 1 , 1 ) )
-     ALLOCATE( hl( 1 , 1 ) )
+     ALLOCATE( vl( 1 , 1 ), STAT=ierr )
+     IF( ierr /= 0 ) &
+        CALL errore( 'pregterg ',' cannot allocate vl ', ABS(ierr) )
+     ALLOCATE( sl( 1 , 1 ), STAT=ierr )
+     IF( ierr /= 0 ) &
+        CALL errore( 'pregterg ',' cannot allocate sl ', ABS(ierr) )
+     ALLOCATE( hl( 1 , 1 ), STAT=ierr )
+     IF( ierr /= 0 ) &
+        CALL errore( 'pregterg ',' cannot allocate hl ', ABS(ierr) )
      !
   END IF
   !
-  ALLOCATE( ew( nvecx ) )
-  ALLOCATE( conv( nvec ) )
+  ALLOCATE( ew( nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( 'pregterg ',' cannot allocate ew ', ABS(ierr) )
+  ALLOCATE( conv( nvec ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( 'pregterg ',' cannot allocate conv ', ABS(ierr) )
   !
   npw2  = 2*npw
   npwx2  = 2*npwx
@@ -730,16 +776,22 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
         !
         vl = hl
         DEALLOCATE( hl )
-        ALLOCATE( hl( nx , nx ) )
+        ALLOCATE( hl( nx , nx ), STAT=ierr )
+        IF( ierr /= 0 ) &
+           CALL errore( 'pregterg ',' cannot allocate hl ', ABS(ierr) )
         CALL dsqmred( nbase, vl, desc_old%nrcx, desc_old, nbase+notcnv, hl, nx, desc )
 
         vl = sl
         DEALLOCATE( sl )
-        ALLOCATE( sl( nx , nx ) )
+        ALLOCATE( sl( nx , nx ), STAT=ierr )
+        IF( ierr /= 0 ) &
+           CALL errore( 'pregterg ',' cannot allocate sl ', ABS(ierr) )
         CALL dsqmred( nbase, vl, desc_old%nrcx, desc_old, nbase+notcnv, sl, nx, desc )
 
         DEALLOCATE( vl )
-        ALLOCATE( vl( nx , nx ) )
+        ALLOCATE( vl( nx , nx ), STAT=ierr )
+        IF( ierr /= 0 ) &
+           CALL errore( 'pregterg ',' cannot allocate vl ', ABS(ierr) )
 
      END IF
      !
@@ -839,9 +891,15 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
            ! we need to re-alloc with the new size.
            !
            DEALLOCATE( vl, hl, sl )
-           ALLOCATE( vl( nx, nx ) )
-           ALLOCATE( hl( nx, nx ) )
-           ALLOCATE( sl( nx, nx ) )
+           ALLOCATE( vl( nx, nx ), STAT=ierr )
+           IF( ierr /= 0 ) &
+              CALL errore( 'pregterg ',' cannot allocate vl ', ABS(ierr) )
+           ALLOCATE( hl( nx, nx ), STAT=ierr )
+           IF( ierr /= 0 ) &
+              CALL errore( 'pregterg ',' cannot allocate hl ', ABS(ierr) )
+           ALLOCATE( sl( nx, nx ), STAT=ierr )
+           IF( ierr /= 0 ) &
+              CALL errore( 'pregterg ',' cannot allocate sl ', ABS(ierr) )
            !
         END IF
         !
