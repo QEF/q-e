@@ -21,7 +21,7 @@ MODULE wrappers
   IMPLICIT NONE
   !
   ! C std library functions fortran wrappers:
-  PUBLIC  f_remove, f_rename, f_chdir, f_chmod, f_mkdir, f_rmdir, f_getcwd
+  PUBLIC  f_remove, f_rename, f_chdir, f_mkdir, f_rmdir, f_getcwd
   ! more stuff:
   PUBLIC  feval_infix, md5_from_file
   !
@@ -63,22 +63,26 @@ MODULE wrappers
       CHARACTER(kind=c_char),INTENT(in) :: output(*)
       INTEGER(c_int)        :: r
     END FUNCTION
-    FUNCTION chmod(filename,mode) BIND(C,name="chmod") RESULT(r)
-      USE iso_c_binding
-      CHARACTER(kind=c_char),INTENT(in)  :: filename(*)
-      INTEGER(c_int),VALUE  ,INTENT(in)  :: mode
-      INTEGER(c_int)        :: r
-    END FUNCTION
+!    FUNCTION chmod(filename,mode) BIND(C,name="chmod") RESULT(r)
+!      USE iso_c_binding
+!      CHARACTER(kind=c_char),INTENT(in)  :: filename(*)
+!      INTEGER(c_int),VALUE  ,INTENT(in)  :: mode
+!      INTEGER(c_int)        :: r
+!    END FUNCTION
     FUNCTION chdir(filename) BIND(C,name="chdir") RESULT(r)
       USE iso_c_binding
       CHARACTER(kind=c_char),INTENT(in)  :: filename(*)
       INTEGER(c_int)        :: r
     END FUNCTION
-    !FUNCTION mkdir(dirname,mode) BIND(C,name="mkdir") RESULT(r)
-    FUNCTION mkdir(dirname,mode) BIND(C,name="c_mkdir_safe") RESULT(r)
+!    FUNCTION mkdir(dirname,mode) BIND(C,name="c_mkdir") RESULT(r)
+!      USE iso_c_binding
+!      CHARACTER(kind=c_char),INTENT(in)  :: dirname(*)
+!      INTEGER(c_int),VALUE  ,INTENT(in)  :: mode
+!      INTEGER(c_int)        :: r
+!    END FUNCTION
+    FUNCTION mkdir_safe(dirname) BIND(C,name="c_mkdir_safe") RESULT(r)
       USE iso_c_binding
       CHARACTER(kind=c_char),INTENT(in)  :: dirname(*)
-      INTEGER(c_int),VALUE  ,INTENT(in)  :: mode
       INTEGER(c_int)        :: r
     END FUNCTION
     FUNCTION rmdir(dirname) BIND(C,name="rmdir") RESULT(r)
@@ -123,24 +127,20 @@ CONTAINS
     r= chdir(TRIM(dirname)//C_NULL_CHAR)
   END FUNCTION
 
-  FUNCTION f_mkdir(dirname, mode) RESULT(r)
+  FUNCTION f_mkdir(dirname) RESULT(r)
     CHARACTER(*),INTENT(in)  :: dirname
-    INTEGER,INTENT(in),OPTIONAL :: mode
     INTEGER(c_int) :: r
-    INTEGER(c_int) :: c_mode
-    c_mode = 777
-    IF(present(mode)) c_mode = INT(mode, kind=c_int)
-    r= mkdir(TRIM(dirname)//C_NULL_CHAR, c_mode)
+    r= mkdir_safe(TRIM(dirname)//C_NULL_CHAR)
   END FUNCTION
   
-  FUNCTION f_chmod(filename, mode) RESULT(r)
-    CHARACTER(*),INTENT(in)  :: filename
-    INTEGER,INTENT(in) :: mode
-    INTEGER(c_int) :: r
-    INTEGER(c_int) :: c_mode
-    c_mode = INT(mode, kind=c_int)
-    r= chmod(TRIM(filename)//C_NULL_CHAR, c_mode)
-  END FUNCTION
+!  FUNCTION f_chmod(filename, mode) RESULT(r)
+!    CHARACTER(*),INTENT(in)  :: filename
+!    INTEGER,INTENT(in) :: mode
+!    INTEGER(c_int) :: r
+!    INTEGER(c_int) :: c_mode
+!    c_mode = INT(mode, kind=c_int)
+!    r= chmod(TRIM(filename)//C_NULL_CHAR, c_mode)
+!  END FUNCTION
 
   FUNCTION f_rmdir(dirname) RESULT(r)
     CHARACTER(*),INTENT(in)  :: dirname
