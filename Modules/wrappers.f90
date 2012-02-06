@@ -10,6 +10,8 @@
 ! NOTE: by default the following macro is DISABLED: the default version of the 
 !       subroutines and functions is in the second half of the file.
 !
+! NOTE: the mkdir function is NOT called directly as it return error on directory
+!       already existing, we are instead using a c wrapper (c_mkdir_safe)
 #ifdef __ISO_C_BINDING
 !
 MODULE wrappers
@@ -72,7 +74,8 @@ MODULE wrappers
       CHARACTER(kind=c_char),INTENT(in)  :: filename(*)
       INTEGER(c_int)        :: r
     END FUNCTION
-    FUNCTION mkdir(dirname,mode) BIND(C,name="mkdir") RESULT(r)
+    !FUNCTION mkdir(dirname,mode) BIND(C,name="mkdir") RESULT(r)
+    FUNCTION mkdir(dirname,mode) BIND(C,name="c_mkdir_safe") RESULT(r)
       USE iso_c_binding
       CHARACTER(kind=c_char),INTENT(in)  :: dirname(*)
       INTEGER(c_int),VALUE  ,INTENT(in)  :: mode
