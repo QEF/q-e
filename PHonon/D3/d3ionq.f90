@@ -402,9 +402,6 @@ CONTAINS
         prefG = fpi * e2 * (tpi/alat)**3 / omega
         !
 #ifdef _D3_EWALD_G_SPACE
-#ifndef _D3_EWALD_REAL_SPACE
-#warning ****** compiling only g-space term ******
-#endif
         !
         sum_on_G : &
         DO ng = 1, ngm
@@ -434,9 +431,6 @@ CONTAINS
 #endif
 !         print*, "  nrm",nrm
 #ifdef _D3_EWALD_REAL_SPACE
-#ifndef _D3_EWALD_G_SPACE
-#warning ****** compiling only real-space term ******
-#endif
         !
         ! Second part: the real space term
         !
