@@ -7,9 +7,6 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
-# function to test the exit status of a job
-. ../../../examples/check_failure.sh
-
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -17,9 +14,7 @@ $ECHO "This example tests effective charges and dielectric constant"
 $ECHO "together with the noncollinear or the spin-orbit part of the code"
 
 # set the needed environment variables
-cd ../
-. ../../examples/environment_variables
-cd example10
+. ../../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x "

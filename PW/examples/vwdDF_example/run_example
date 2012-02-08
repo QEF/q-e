@@ -7,9 +7,6 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
-# function to test the exit status of a job
-. ../../../examples/check_failure.sh
-
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -20,9 +17,7 @@ $ECHO "Optionally, at the end, you can see how to set up a force relaxation"
 $ECHO "of an Argon dimer, not activated by default in the distribution."
 
 # set the needed environment variables
-cd ../
-. ../../examples/environment_variables
-cd vwdDF_example
+. ../../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x generate_vdW_kernel_table.x"

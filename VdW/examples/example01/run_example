@@ -7,9 +7,6 @@ EXAMPLE_DIR=`pwd`
 # check whether ECHO has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
-# function to test the exit status of a job
-. ../../../examples/check_failure.sh
-
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -19,9 +16,7 @@ $ECHO "polarizability of methane molecule in simplified version
        and von Weizsaecker approximation"
 
 # set the needed environment variables
-cd ../
-. ../../examples/environment_variables
-cd example01
+. ../../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x vdw.x"

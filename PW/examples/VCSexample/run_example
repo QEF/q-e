@@ -16,9 +16,7 @@ $ECHO "As relax to different structures, sc and A7."
 $ECHO "Two strategies are used: Wentzcovitch damped dynamics and bfgs."
 
 # set the needed environment variables
-cd ../ 
-. ../../examples/environment_variables
-cd VCSexample
+. ../../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x"

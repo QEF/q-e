@@ -12,9 +12,6 @@ EXAMPLE_DIR=`pwd`
 # check whether ECHO has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
-# function to test the exit status of a job
-. ../../../examples/check_failure.sh
-
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -22,9 +19,7 @@ $ECHO "This example shows how to use pw.x, pw4gww.x and gww.x to compute"
 $ECHO "the quasi-particle energies in C6H6 (benzene) molecule"
 
 # set the needed environment variables
-cd ../
-. ../../example01/environment_variables
-cd example01
+. ../../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x pw4gww.x gww.x"

@@ -7,9 +7,6 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
-# function to test the exit status of a job
-. ../../../examples/check_failure.sh
-
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -17,9 +14,7 @@ $ECHO "This example shows how to use cp.x and to perform SCF"
 $ECHO "simulation of C4H6 with TPSS metaGGA Exc."
 
 # set the needed environment variables
-cd ../
-. ../../examples/environment_variables
-cd example07
+. ../../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="cp.x "

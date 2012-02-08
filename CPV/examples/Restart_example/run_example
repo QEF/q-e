@@ -13,9 +13,7 @@ $ECHO
 $ECHO "This example shows how pw.x can restart from cp.x data and viceversa."
 
 # set the needed environment variables 
-cd ../
-. ../../examples/environment_variables
-cd Restart_example
+. ../../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x cp.x"

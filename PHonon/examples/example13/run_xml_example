@@ -13,9 +13,6 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
-# function to test the exit status of a job
-. ../../../examples/check_failure.sh
-
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -23,9 +20,7 @@ $ECHO "This example shows how to use pw.x, ph.x and d3.x to calculate the"
 $ECHO "third-order expansion coefficients of the total energy of Si."
 
 # set the needed environment variables
-cd ../
-. ../../examples/environment_variables
-cd example13
+. ../../../environment_variables
 
 # required executables and pseudopotentials
 

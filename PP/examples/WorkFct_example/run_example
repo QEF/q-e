@@ -28,9 +28,7 @@ $ECHO "The work functions will be written in a file Al100.wf.data"
 $ECHO "If gnuplot is detected, a plot will be generated Al100.wf.eps"
 
 # set the needed environment variables
-cd ../
-. ../../examples/environment_variables
-cd WorkFct_example
+. ../../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x pp.x average.x"

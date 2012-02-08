@@ -15,7 +15,7 @@
 
 # The following should be good in many cases 
 
-PREFIX=`cd ../.. ; pwd`
+PREFIX=`cd ../../.. ; pwd`
 BIN_DIR=$PREFIX/bin
 PSEUDO_DIR=$PREFIX/pseudo
 # Beware: everything in $TMP_DIR will be destroyed !
@@ -48,4 +48,16 @@ fi
 
 #PARA_PREFIX="mpirun -np 2"
 PARA_PREFIX=" "
-PARA_POSTFIX=
+PARA_POSTFIX=" "
+
+# function to test the exit status of a job
+check_failure () {
+    # usage: check_failure $?
+    if test $1 != 0
+    then
+        $ECHO "Error condition encountered during test: exit status = $1"
+        $ECHO "Aborting"
+        exit 1
+    fi
+}
+

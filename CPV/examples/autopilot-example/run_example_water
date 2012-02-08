@@ -19,9 +19,7 @@ $ECHO "(send a signal to a running cp.x process to change some parameter"
 $ECHO "on the fly) or Pause please consult the AUTOPILOT documentation."
 
 # set the needed environment variables 
-cd ../
-. ../../examples/environment_variables
-cd autopilot-example
+. ../../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="cp.x"

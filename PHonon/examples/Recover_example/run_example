@@ -7,18 +7,13 @@ EXAMPLE_DIR=`pwd`
 # check whether ECHO has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
-# function to test the exit status of a job
-. ../../../examples/check_failure.sh
-
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use the recover feature of ph.x "
 
 # set the needed environment variables
-cd ../
-. ../../examples/environment_variables
-cd Recover_example
+. ../../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x"
