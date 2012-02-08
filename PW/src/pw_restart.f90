@@ -3322,8 +3322,8 @@ MODULE pw_restart
             CALL iotk_scan_dat(iunpun, "exx_fraction", exx_fraction)
             CALL iotk_scan_dat(iunpun, "screening_parameter", screening_parameter)
             call iotk_scan_dat(iunpun, "exx_is_active", exx_is_active)
+            CALL iotk_scan_end( iunpun, "EXACT_EXCHANGE" )
          END IF
-         CALL iotk_scan_end( iunpun, "EXACT_EXCHANGE" )
          CALL iotk_close_read( iunpun )
       END IF
       !
