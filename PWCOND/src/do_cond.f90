@@ -343,11 +343,11 @@ ELSE
   IF (ikind==2.and.((lso_l.neqv.lso_s).or.(lso_r.neqv.lso_s))) &
      CALL errore('pwcond',&
      'Spin-orbit flag in left, right lead and scattering region do not match',1)
-  IF (ikind>0.and.((ecutwfc_l.ne.ecutwfc_s).or.(ecutrho_l.ne.ecutrho_l)))  &
+  IF (ikind>0.and.((ecutwfc_l.ne.ecutwfc_s).or.(ecutrho_l.ne.ecutrho_s)))  &
      CALL errore('do_cond',&
             'different cut-offs on left lead and scattering region',1)
   IF ((ecutwfc_r>0.0_DP)) THEN
-     IF ((ecutwfc_r.ne.ecutwfc_s).or.(ecutrho_r.ne.ecutrho_l))  &
+     IF ((ecutwfc_r.ne.ecutwfc_s).or.(ecutrho_r.ne.ecutrho_s))  &
      CALL errore('do_cond',&
         'different cut-offs on right lead and scattering region',1)
   ENDIF
