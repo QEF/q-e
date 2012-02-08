@@ -18,7 +18,9 @@ SUBROUTINE do_cond(done)
   USE klist,      ONLY : npk, xk, two_fermi_energies
   USE ldaU,       ONLY : lda_plus_U
   USE spin_orb,   ONLY : lspinorb, domag
-  USE uspp,       ONLY: okvan
+  USE uspp,       ONLY : okvan
+  USE gvect,      ONLY : ecutrho
+  USE wvfct,      ONLY : ecutwfc
   USE symm_base,  ONLY: nsym, s, t_rev, time_reversal
   USE cond
   USE io_files,   ONLY: outdir, tmp_dir, prefix
@@ -44,6 +46,9 @@ SUBROUTINE do_cond(done)
   REAL(DP) :: wtot, tk
   INTEGER :: ik, ipol, ien, ios
   LOGICAL :: lso_l, lso_s, lso_r, skip_equivalence = .FALSE.
+  REAL(DP) :: ecutwfc_l, ecutwfc_s, ecutwfc_r
+  REAL(DP) :: ecutrho_l, ecutrho_s, ecutrho_r
+
   !!! RECOVER
   LOGICAL :: tran_save
   !!!
@@ -282,6 +287,12 @@ ELSE
   lso_l=.false.
   lso_s=.false.
   lso_r=.false.
+  ecutwfc_l=0.0_DP
+  ecutwfc_s=0.0_DP
+  ecutwfc_r=0.0_DP
+  ecutrho_l=0.0_DP
+  ecutrho_s=0.0_DP
+  ecutrho_r=0.0_DP
   IF (prefixt.ne.' ') then
     prefix = prefixt
 
@@ -299,6 +310,8 @@ ELSE
     prefix = prefixl
     call read_file
     lso_l=lspinorb
+    ecutwfc_l=ecutwfc
+    ecutrho_l=ecutrho
     CALL init_cond(1,'l')
   ENDIF
   IF (prefixs.ne.' ') then
@@ -306,6 +319,8 @@ ELSE
     prefix = prefixs
     call read_file
     lso_s=lspinorb
+    ecutwfc_s=ecutwfc
+    ecutrho_s=ecutrho
     CALL init_cond(1,'s')
   ENDIF
   IF (prefixr.ne.' ') then
@@ -313,6 +328,8 @@ ELSE
     prefix = prefixr
     call read_file
     lso_r=lspinorb
+    ecutwfc_r=ecutwfc
+    ecutrho_r=ecutrho
     CALL init_cond(1,'r')
     CALL clean_pw(.true.)
   ENDIF
@@ -326,6 +343,14 @@ ELSE
   IF (ikind==2.and.((lso_l.neqv.lso_s).or.(lso_r.neqv.lso_s))) &
      CALL errore('pwcond',&
      'Spin-orbit flag in left, right lead and scattering region do not match',1)
+  IF (ikind>0.and.((ecutwfc_l.ne.ecutwfc_s).or.(ecutrho_l.ne.ecutrho_l)))  &
+     CALL errore('do_cond',&
+            'different cut-offs on left lead and scattering region',1)
+  IF ((ecutwfc_r>0.0_DP)) THEN
+     IF ((ecutwfc_r.ne.ecutwfc_s).or.(ecutrho_r.ne.ecutrho_l))  &
+     CALL errore('do_cond',&
+        'different cut-offs on right lead and scattering region',1)
+  ENDIF
 ENDIF
 
 IF (lwrite_cond) then
