@@ -21,9 +21,7 @@
 !                            issues warning if "label" has never been started
 ! ... and the following function (real(kind=dp):
 !     get_clock( label )     return wall time measured by clock "label"
-!                            issues warning if "label" has never been started
-!                            (due to the presence of such warning, do not use
-!                            it as argument of a "write" command)
+!                            returns -1 if "label" has never been started
 ! ... All output and warnings are written to stdout
 ! ... Clocks should be started, read, stopped either on all processors, or 
 ! ... only on one, but not half and half! For parallel debugging, uncomment:
@@ -476,8 +474,6 @@ FUNCTION get_clock( label )
   ! ... clock not found
   !
   get_clock = notrunning
-  !
-  WRITE( stdout, '("get_clock: no clock for ",A12," found !")', iostat=n) label
   !
   RETURN
   !
