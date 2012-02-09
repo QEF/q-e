@@ -14,13 +14,14 @@ IMPLICIT NONE
 
 CHARACTER(LEN=*), INTENT(INOUT) :: inp_string
 
-INTEGER :: leng 
+INTEGER :: leng, start 
 CHARACTER(LEN=4) :: aux
 LOGICAL, EXTERNAL :: matches
 
 has_xml=.FALSE.
 leng=LEN_TRIM(inp_string)
-aux=inp_string(leng-3:leng)
+start=MAX(leng-3,1)
+aux=inp_string(start:leng)
 
 IF (matches(aux,'.xml').OR.matches(aux,'.XML')) THEN
    has_xml=.TRUE.
