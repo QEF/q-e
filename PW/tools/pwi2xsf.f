@@ -71,8 +71,7 @@ c maximage: maximum number of images
      $     ounit,               ! output unit     
      $     i, j, ipol,          ! dummies
      $     inat, iim, iim_old,  ! counters
-     $     i_trimleft_white_space, ! string whitespace-triming function
-     $     len                  ! length of string
+     $     len, string_length   ! length of string
 
       real*8
      $     x,y,z,               ! Cartesian coordinates & weights
@@ -131,7 +130,7 @@ c     read the rest of the input
 c
  990  continue
       read(5,'(a120)',end=999) line
-      len = i_trimleft_white_space(line)
+      len = string_length(line)
 
 c     
 c     CELL_PARAMETERS
@@ -149,7 +148,7 @@ c
       elseif ( line(1:16) .eq. 'ATOMIC_POSITIONS' ) then
 c     find out the length-unit
          line = line(17:len)
-         len  = i_trimleft_white_space(line)
+         len  = string_length(line)
          atomic_posunit = ALAT_UNIT         
          if (len.gt.0 ) then
             if ( matches('ALAT',line) ) then
@@ -405,7 +404,7 @@ c     ------------------------------------------------------------------------
       integer
      $     nat,                 ! number of atoms
      $     ipol,inat,len,       ! counters
-     $     i_trimleft_white_space ! integer-function
+     $     string_length        ! integer-function
       character
      $     line*120             ! line of input
       character*3
@@ -416,7 +415,7 @@ c     ------------------------------------------------------------------------
       do inat=1,nat
  10      continue
          read (5,'(a120)') line
-         len = i_trimleft_white_space(line)
+         len = string_length(line)
          
          if (len.eq.0) then
 c     an empty line, read again
@@ -468,25 +467,14 @@ c     ------------------------------------------------------------------------
       return
       end
 
-c     -------------------------------------------------
-      integer function i_trimleft_white_space(word)
-c     trim left white spaces out of word
-c     -------------------------------------------------
-      character word*(*), auxword*80
- 
-      ilen=len(word)
-      auxword=word
-      do i=1,ilen
-         if ( word(i:i) .eq. ' ' ) then
-            auxword=word(i+1:ilen)
-         else
-            goto 1
-         endif
-      enddo
- 1    continue
-      i_trimleft_white_space=len(word)
-      word=auxword(1:i_trimleft_white_space)
-      return
+c     ----------------------------------------------------------------
+      INTEGER function string_length(word)
+c     trims the string from both sides and returns its trimmed length
+c     ----------------------------------------------------------------
+      CHARACTER word*(*)
+      word          = adjustl(word)
+      string_length = len_trim(word)
+      RETURN
       END
 
 
