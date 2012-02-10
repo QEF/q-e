@@ -140,7 +140,7 @@ SUBROUTINE open_input_file_x(lxmlinput,attr,unit)
      ELSE
          WRITE(stdout, '(5x,a)') "Reading input from standard input"
      END IF
-     OPEN ( UNIT = unit_loc, FILE = "input_tmp.in" , FORM = 'FORMATTED', &
+     OPEN ( UNIT = unit_loc, FILE = TRIM(input_file), FORM = 'FORMATTED', &
             STATUS = 'OLD', IOSTAT = ierr )
   ENDIF
   !

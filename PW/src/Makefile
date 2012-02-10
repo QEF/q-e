@@ -234,7 +234,7 @@ LIBOBJS	= ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src
 
 all : tldeps pw.x generate_vdW_kernel_table.x
 
-pw.x : $(PWOBJS) libpw.a $(LIBOBJS) 
+pw.x : $(PWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 	   $(PWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin; ln -fs ../PW/src/$@ . )

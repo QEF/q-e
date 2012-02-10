@@ -15,7 +15,7 @@ $ECHO "contour plot in the [110] plane of the charge density for Si, and to"
 $ECHO "plot the band structure of Si."
 
 # set the needed environment variables
-. ../../../examples/environment_variables
+. ../../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x pp.x plotrho.x bands.x plotband.x"
