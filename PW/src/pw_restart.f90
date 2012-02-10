@@ -3321,7 +3321,7 @@ MODULE pw_restart
             CALL iotk_scan_dat(iunpun, "ecutvcut", ecutvcut)
             CALL iotk_scan_dat(iunpun, "exx_fraction", exx_fraction)
             CALL iotk_scan_dat(iunpun, "screening_parameter", screening_parameter)
-            call iotk_scan_dat(iunpun, "exx_is_active", exx_is_active)
+            CALL iotk_scan_dat(iunpun, "exx_is_active", exx_is_active)
             CALL iotk_scan_end( iunpun, "EXACT_EXCHANGE" )
          END IF
          CALL iotk_close_read( iunpun )
@@ -3340,9 +3340,9 @@ MODULE pw_restart
       CALL mp_bcast( screening_parameter, ionode_id, intra_image_comm )
       CALL mp_bcast( exx_is_active, ionode_id, intra_image_comm )
       !
-      call set_exx_fraction(exx_fraction)
-      call set_screening_parameter(screening_parameter)
-      if (exx_is_active) call start_exx
+      CALL set_exx_fraction(exx_fraction)
+      CALL set_screening_parameter(screening_parameter)
+      IF (exx_is_active) CALL start_exx( ) 
       !
       RETURN
       !

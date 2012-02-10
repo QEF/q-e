@@ -252,8 +252,8 @@ SUBROUTINE read_file()
      rho%of_g(:,is) = psic(nl(:))
      !
   END DO
-
-  call pw_readfile('exx', ierr)
+  !
+  CALL pw_readfile('exx', ierr)
   !
   ! ... recalculate the potential
   !

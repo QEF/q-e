@@ -40,6 +40,7 @@ do_cond.o : ../../Modules/ions_base.o
 do_cond.o : ../../Modules/mp.o
 do_cond.o : ../../Modules/mp_global.o
 do_cond.o : ../../Modules/paw_variables.o
+do_cond.o : ../../Modules/recvec.o
 do_cond.o : ../../Modules/uspp.o
 do_cond.o : ../../PW/src/noncol.o
 do_cond.o : ../../PW/src/paw_onecenter.o

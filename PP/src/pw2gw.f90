@@ -1231,7 +1231,6 @@ subroutine gen_us_vkb0 (ik,npw,vkb0,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   integer :: iq
   real(DP), allocatable :: xdata(:)
 
-
   allocate ( gk(3,npw) )
   allocate ( q(npw) )
 

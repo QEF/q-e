@@ -180,7 +180,7 @@ SUBROUTINE add_bfield (v,rho)
        ! rho (i.e. the input rho for the next scf iteration), as all the other
        ! contributions to the potential for the next iteration, it will differ
        ! from the magnetization written on the output, since that is calculated
-       ! with the output rho of the current iteration. At convergenge the two
+       ! with the output rho of the current iteration. At convergence the two
        ! magnetizations will coincide (and so will do the polar angles).
        write(stdout,'(5x,"theta (target): ",F10.5,"     (",F10.5,")")') &
              ACOS(m1(3)/ma)*180.d0/pi, mcons(3,1)

@@ -27,8 +27,8 @@ MODULE bp
   INTEGER :: &
        gdir,        &! G-vector for polarization calculation
        nppstr,      &! number of k-points (parallel vector)
-       nberrycyc     !numer of cycles for cobergence in electric field 
-                     !without changing the selfconsistent charge
+       nberrycyc     ! number of cycles for convergence in electric field 
+                     ! without changing the selfconsistent charge
   REAL(DP) :: efield ! electric field intensity in a.u.
   COMPLEX(DP), ALLOCATABLE , TARGET :: evcel(:,:) 
                      ! wavefunctions for calculating the electric field operator

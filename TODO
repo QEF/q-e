@@ -50,14 +50,13 @@ TODO LIST - January 2012
 3) Pseudopotentials 
 
 3.1 Set up standard tests for all PPs
-3.2 Verify conversion of Goedecker PPs to UPF
 3.3 Implement OEP PPs
 3.4 Standard recipe for generating reasonable PPs:
     - Set of prescriptions for generation
     - Criteria for portability
     - Update PP table with PPs that follow the recipe
-3.5 Extend documentation in pseudo-gen.tex to the case of multiple
-    projectors and to USPP (eventually to PAW) - add *.pdf
+3.5 Extend documentation in pseudo-gen.tex to the case of USPP
+    (eventually to PAW) - add *.pdf
 3.6 Add default cutoff values as well as radii of augmented charge
     in pseudopotential files (they are present in recent PP only)
 3.7 The intermediate hard NCPP is useless for PAW and should not be 
@@ -74,8 +73,6 @@ TODO LIST - January 2012
   4.0.2 Better-structured relaxation and molecular dynamics (including the
         variable-cell case), with more extensive integration of PW and CP
         (langevin code)
-  4.0.3 Image parallelization on k-points of EXX (no longer working) should
-        be replaced by pool parallelization.
   4.0.4 Accurate cleaning of exx.f90. "If" loop in Vexx is confusing. 
         Exx_divergence is confusing and contains some suspect values.
   4.0.5 Martyna-Tuckerman has to be extended to any system dimensionality and 
@@ -99,7 +96,6 @@ TODO LIST - January 2012
         - ifort+acml
         - ifort+mkl+scalapack troubles
         - add search for -lfftw3xf_intel 
-        - remove obsolete stuff: next is macppc
   4.2.2 constraints should be implemented in all cases;
         a check should be added if constraints break the symmetry
   4.2.3 inversion symmetry should allow real hamiltonian and wavefunctions
@@ -159,8 +155,6 @@ TODO LIST - January 2012
         dt=sqrt(2) dt_default and emass should be increased so to keep
         emass^2/dt constant
       - defaults for the Nose thermostat
-  4.2.14 -DEXX should be removed, or at least it should be confined to just
-         some specialized parts of the code.
 
 4.3 Performance enhancements/Parallelization:
   4.3.1 make hpsi/spsi/CG  faster
@@ -238,11 +232,9 @@ TODO LIST - January 2012
          it makes easier to find memory leaks. Currently most variables
          are deallocated, but a few (mostly in ffts and in pseudopotential
          reading) aren't
-  4.4.15 __PARA and __MPI are redundant: one of them is sufficient
   4.4.16 add_efield must be rewritten from scratch: it is a mess beyond control
-  4.4.17 Replace generic &inputpp namelist with code-specific namelist in
-         postprocessing (Tone). Maybe at least some postprocessing codes 
-         could be used with command-line options instead of fortran input?
+  4.4.17 Some postprocessing codes could be used with command-line 
+         options instead of fortran input
   4.4.18 What about transforming 'bands'/'nscf' into a postprocessing
          code?
 

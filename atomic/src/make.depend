@@ -81,6 +81,7 @@ compute_relpert.o : ld1inc.o
 compute_solution.o : ../../Modules/io_global.o
 compute_solution.o : ../../Modules/kind.o
 compute_solution.o : ../../Modules/radial_grids.o
+default_conf.o : ../../Modules/kind.o
 descreening.o : ../../Modules/io_global.o
 descreening.o : ../../Modules/kind.o
 descreening.o : ../../Modules/mp.o
