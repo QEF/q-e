@@ -303,7 +303,7 @@ subroutine phq_summary
      ENDIF
 
      if (iverbosity.eq.1) then
-        WRITE( stdout, '(5x,"Phonon polarizations are as follows:",/)')
+        WRITE( stdout, '(5x,"Irreps are as follows:",/)')
         if (npert (irr) .eq.1) then
            WRITE( stdout, '(20x," mode # ",i3)') imode0 + 1
            WRITE( stdout, '(20x," (",2f10.5,"   ) ")')  ( (u (mu, nu) ,&
