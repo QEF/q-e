@@ -46,7 +46,7 @@ neb.o : ../../Modules/image_io_routines.o
 neb.o : ../../Modules/io_global.o
 neb.o : ../../Modules/mp_global.o
 neb.o : ../../Modules/mp_image_global_module.o
-neb.o : ../../Modules/open_close_input_file_interf.o
+neb.o : ../../Modules/open_close_input_file.o
 neb.o : ../../Modules/parameters.o
 neb.o : ../../Modules/read_cards.o
 neb.o : ../../Modules/read_namelists.o

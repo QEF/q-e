@@ -113,9 +113,6 @@ mp_wave.o : parallel_include.o
 open_close_input_file.o : ../iotk/src/iotk_module.o
 open_close_input_file.o : io_global.o
 open_close_input_file.o : kind.o
-open_close_input_file_interf.o : ../iotk/src/iotk_module.o
-open_close_input_file_interf.o : io_global.o
-open_close_input_file_interf.o : kind.o
 parser.o : io_global.o
 parser.o : kind.o
 parser.o : mp.o
@@ -151,7 +148,7 @@ read_input.o : io_global.o
 read_input.o : kind.o
 read_input.o : mp.o
 read_input.o : mp_global.o
-read_input.o : open_close_input_file_interf.o
+read_input.o : open_close_input_file.o
 read_input.o : read_cards.o
 read_input.o : read_namelists.o
 read_input.o : read_xml.o

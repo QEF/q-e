@@ -26,7 +26,7 @@ PROGRAM neb
   USE mp_image_global_module, ONLY : me_image, nimage
   USE mp_global,             ONLY : mp_start
   USE iotk_module,           ONLY : iotk_attlenx
-  USE open_close_input_file_interf, ONLY : open_input_file, close_input_file
+  USE open_close_input_file, ONLY : open_input_file, close_input_file
   USE read_xml_module,       ONLY : read_xml
   USE read_cards_module,     ONLY : read_cards
   USE read_namelists_module, ONLY : read_namelists

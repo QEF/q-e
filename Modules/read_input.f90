@@ -33,24 +33,23 @@ MODULE read_input
      USE mp,                    ONLY : mp_bcast
      USE mp_global,             ONLY : intra_image_comm
      USE iotk_module,           ONLY : iotk_attlenx
-     USE open_close_input_file_interf, ONLY : open_input_file, close_input_file
+     USE open_close_input_file, ONLY : open_input_file, close_input_file
      !
      IMPLICIT NONE
      !
      CHARACTER(LEN=2), INTENT (IN) :: prog
      CHARACTER(LEN=iotk_attlenx) :: attr
      LOGICAL :: xmlinput
+     INTEGER :: ierr
      !
      !
      IF ( ionode ) THEN
         IF ( prog == 'CP' ) CALL xml_input_dump()
-        CALL open_input_file( xmlinput, attr) 
+        ierr = open_input_file( xmlinput, attr) 
      END IF
      !
-     ! bcast of xmlinput and attr is needed because
-     ! it is only the open statement inside read_cards 
-     ! and read_namelist (in Modules) that has if(ionode)
-     !
+     CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+     IF ( ierr > 0 ) CALL errore('read_input', 'opening input file',ierr)
      CALL mp_bcast( xmlinput, ionode_id, intra_image_comm )
      CALL mp_bcast( attr, ionode_id, intra_image_comm )
      !
@@ -69,7 +68,7 @@ MODULE read_input
         CALL read_cards ( prog )
         !
      END IF
-     IF ( ionode) CALL close_input_file( xmlinput )
+     IF ( ionode) ierr = close_input_file( )
      !
      has_been_read = .TRUE.
      !
