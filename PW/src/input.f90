@@ -1428,8 +1428,12 @@ SUBROUTINE iosys()
   output_drho = ' '
   !
   IF (real_space ) THEN
-   WRITE( stdout, '(5x,"Real space treatment of Beta functions, &
+     IF ( gamma_only ) THEN
+        WRITE( stdout, '(5x,"Real space treatment of Beta functions, &
          &V.1 (BE SURE TO CHECK MANUAL!)",/)' )
+     ELSE
+        CALL errore ('iosys', 'Real space only with Gamma point', 1)
+     END IF
   ENDIF
   !
   ! Deallocation of temp input arrays
