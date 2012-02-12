@@ -145,12 +145,12 @@ MODULE cp_restart
       REAL(DP)              :: omega, htm1(3,3), h(3,3)
       REAL(DP)              :: a1(3), a2(3), a3(3)
       REAL(DP)              :: b1(3), b2(3), b3(3)
-      REAL(DP)              :: natomwfc, nelec
+      REAL(DP)              :: nelec
       REAL(DP)              :: scalef
       LOGICAL               :: lsda
       REAL(DP)              :: s0, s1, cclock
       INTEGER               :: nbnd_tot
-      INTEGER               :: nbnd_
+      INTEGER               :: natomwfc, nbnd_
       REAL(DP), ALLOCATABLE :: mrepl(:,:)
       CHARACTER(LEN=256)    :: tmp_dir_save
       LOGICAL               :: exst
