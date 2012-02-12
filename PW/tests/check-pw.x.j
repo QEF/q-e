@@ -2,7 +2,7 @@
 
 # Automated checks for pw.x - PG 2007-2012
 #
-. ../../examples/environment_variables
+. ../../environment_variables
 #
 # You shouldn't need to modify anything below this line.
 #
