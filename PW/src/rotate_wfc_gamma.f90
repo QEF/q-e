@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-
 !----------------------------------------------------------------------------
 SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
                              psi, overlap, evc, e )
@@ -20,9 +19,6 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   USE control_flags, ONLY : gamma_only 
   USE mp_global,     ONLY : intra_pool_comm, intra_bgrp_comm
   USE mp,            ONLY : mp_sum 
-  USE realus,        ONLY : real_space, fft_orbital_gamma, bfft_orbital_gamma, &
-                             calbec_rs_gamma, s_psir_gamma, initialisation_level
-
   !
   IMPLICIT NONE
   !
@@ -79,22 +75,8 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
 #endif
   !     
   IF ( overlap ) THEN 
-  ! 
-     if (real_space) then
-            !if (.not. initialisation_level == 15) CALL errore ('rotate_wfc_gamma', 'improper initialisation of real space routines' , 4)
-            !print *, "rotate_wfc_gamma s_psi rolling the real space!" 
-            do ibnd = 1 , nstart , 2
-             !call check_fft_orbital_gamma(psi,ibnd,m)
-             call fft_orbital_gamma(psi,ibnd,nstart) !transform the orbital to real space
-             !call calbec_rs_gamma(ibnd,nbnd,rbecp) !put the rbecp to betapsi (also global rbecp is updated)
-             !print *,"spsir ibnd=",ibnd
-             call s_psir_gamma(ibnd,nstart)
-             call bfft_orbital_gamma(aux,ibnd,nstart)
-            enddo
-      else
-       CALL s_psi( npwx, npw, nstart, psi, aux )
-      endif
-     !
+     ! 
+     CALL s_psi( npwx, npw, nstart, psi, aux )
      !
      CALL DGEMM( 'T', 'N', nstart, nstart, 2 * npw, 2.D0 , psi, &
                  2 * npwx, aux, 2 * npwx, 0.D0, sr, nstart )
@@ -165,8 +147,6 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
   USE descriptors,      ONLY : la_descriptor, descla_init
   USE parallel_toolkit, ONLY : dsqmred, dsqmdst, dsqmsym
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
-  USE realus,        ONLY : real_space, fft_orbital_gamma, bfft_orbital_gamma, &
-                             calbec_rs_gamma, s_psir_gamma, initialisation_level
 
 
   !
@@ -230,21 +210,7 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
   !
   IF ( overlap ) THEN
      !
-     if (real_space) then
-            !if (.not. initialisation_level == 15) CALL errore ('rotate_wfc_gamma', 'improper initialisation of real space routines' , 4)
-            !print *, "rotate_wfc_gamma s_psi rolling the real space!" 
-            do ibnd = 1 , nstart , 2
-             !call check_fft_orbital_gamma(psi,ibnd,m)
-             call fft_orbital_gamma(psi,ibnd,nstart) !transform the orbital to real space
-             !call calbec_rs_gamma(ibnd,nbnd,rbecp) !put the rbecp to betapsi (also global rbecp is updated)
-             !print *,"spsir ibnd=",ibnd
-             call s_psir_gamma(ibnd,nstart)
-             call bfft_orbital_gamma(aux,ibnd,nstart)
-            enddo
-      else
-       CALL s_psi( npwx, npw, nstart, psi, aux )
-      endif
-     !
+     CALL s_psi( npwx, npw, nstart, psi, aux )
      CALL compute_distmat( sr, psi, aux )
      !              
   ELSE

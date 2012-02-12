@@ -70,29 +70,38 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   ! ... the local potential V_Loc psi
   !
   CALL start_clock( 'h_psi:vloc' )
+  !
   IF ( gamma_only ) THEN
      ! 
-     IF ( dffts%have_task_groups .AND. ( m >= dffts%nogrp )) then 
-      incr = 2 * dffts%nogrp
-     else
-      incr = 2
-     endif
-
-        IF (  real_space .and. nkb > 0  ) then !fixme: real_space without beta functions does not make sense
-         do ibnd = 1 , m , incr
-          call fft_orbital_gamma(psi,ibnd,m,.true.) !transform the psi real space, saved in temporary memory
-          call calbec_rs_gamma(ibnd,m,becp%r) !becp%r on psi
-          call fft_orbital_gamma(hpsi,ibnd,m) ! psi is now replaced by hpsi
-          call v_loc_psir(ibnd,m) ! hpsi -> hpsi + psi*vrs  (psi read from temporary memory)
-          call add_vuspsir_gamma(ibnd,m) ! hpsi -> hpsi + vusp
-          call bfft_orbital_gamma(hpsi,ibnd,m,.true.) !transform back hpsi, clear psi in temporary memory
-         enddo
-         !
+     IF ( real_space .and. nkb > 0  ) then 
+        !
+        ! ... real-space algorithm
+        ! ... fixme: real_space without beta functions does not make sense
+        !
+        IF ( dffts%have_task_groups .AND. ( m >= dffts%nogrp )) then 
+           incr = 2 * dffts%nogrp
         ELSE
-         !not real space
-         !CALL vloc_psi( lda, n, m, psi, vrs(1,current_spin), hpsi )
-         CALL vloc_psi_gamma ( lda, n, m, psi, vrs(1,current_spin), hpsi ) 
-        ENDIF 
+           incr = 2
+        ENDIF
+        DO ibnd = 1, m, incr
+           ! ... transform psi to real space, saved in temporary memory
+           CALL fft_orbital_gamma(psi,ibnd,m,.true.) 
+           ! ... becp%r = < beta|psi> on psi in real space
+           CALL calbec_rs_gamma(ibnd,m,becp%r) 
+           ! ... psi is now replaced by hpsi ??? WHAT FOR ???
+           CALL fft_orbital_gamma(hpsi,ibnd,m)
+           ! ... hpsi -> hpsi + psi*vrs  (psi read from temporary memory)
+           CALL v_loc_psir(ibnd,m) 
+           ! ... hpsi -> hpsi + vusp
+           CALL  add_vuspsir_gamma(ibnd,m)
+           ! ... transform back hpsi, clear psi in temporary memory
+           CALL bfft_orbital_gamma(hpsi,ibnd,m,.true.) 
+        END DO
+        !
+     ELSE
+        ! ... usual reciprocal-space algorithm
+        CALL vloc_psi_gamma ( lda, n, m, psi, vrs(1,current_spin), hpsi ) 
+     ENDIF 
      !
   ELSE IF ( noncolin ) THEN 
      !
@@ -106,8 +115,9 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   CALL stop_clock( 'h_psi:vloc' )
   !
   ! ... Here the product with the non local potential V_NL psi
+  ! ... (not in the real-space case: it is done together with V_loc)
   !
-  IF ( nkb > 0 .and. .not. real_space) THEN !since the real space stuff has to be treated differently
+  IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
      CALL start_clock( 'h_psi:vnl' )
      CALL calbec ( n, vkb, psi, becp, m )
