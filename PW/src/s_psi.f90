@@ -99,13 +99,15 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        !
        ! ... here the local variables
        !
-       INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd
+       INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd, ierr
          ! counters
        REAL(DP), ALLOCATABLE :: ps(:,:)
          ! the product vkb and psi
        !
        !
-       ALLOCATE( ps( nkb, m ) )
+       ALLOCATE( ps( nkb, m ), STAT=ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( ' s_psi_gamma ', ' cannot allocate memory (ps) ', ABS(ierr) )
        !    
        ps(:,:) = 0.D0
        !
@@ -164,12 +166,14 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        !
        ! ... local variables
        !
-       INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd
+       INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd, ierr
          ! counters
        COMPLEX(DP), ALLOCATABLE :: ps(:,:)
          ! the product vkb and psi
        !
-       ALLOCATE( ps( nkb, m ) )    
+       ALLOCATE( ps( nkb, m ), STAT=ierr )    
+       IF( ierr /= 0 ) &
+          CALL errore( ' s_psi_k ', ' cannot allocate memory (ps) ', ABS(ierr) )
        !
        ps(:,:) = ( 0.D0, 0.D0 )
        !
@@ -228,12 +232,14 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        !
        !    here the local variables
        !
-       INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd, ipol
+       INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd, ipol, ierr
        ! counters
        COMPLEX (DP), ALLOCATABLE :: ps (:,:,:)
        ! the product vkb and psi
        !
-       ALLOCATE (ps(nkb,npol,m))    
+       ALLOCATE (ps(nkb,npol,m),STAT=ierr)    
+       IF( ierr /= 0 ) &
+          CALL errore( ' s_psi_nc ', ' cannot allocate memory (ps) ', ABS(ierr) )
        ps(:,:,:) = (0.D0,0.D0)
        !
        ijkb0 = 0
