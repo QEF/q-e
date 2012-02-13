@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE h_psiq (lda, n, m, psi, hpsi, spsi)
+SUBROUTINE h_psiq (lda, n, m, psi, hpsi, spsi, igkq)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the product of the Hamiltonian
@@ -31,41 +31,36 @@ SUBROUTINE h_psiq (lda, n, m, psi, hpsi, spsi)
   USE spin_orb, ONLY : domag
   USE scf,    ONLY : vrs
   USE uspp,   ONLY : vkb
-  USE wvfct,  ONLY : g2kin
-  USE qpoint, ONLY : igkq
+  USE wvfct,  ONLY : g2kin, npwx
 
   !Needed only for TDDFPT
   USE control_flags,         ONLY : gamma_only, tddfpt
-  USE wvfct,  ONLY : igk
 
   IMPLICIT NONE
-  !
-  !     Here the local variables
-  !
-  INTEGER :: ibnd
-  ! counter on bands
 
-  INTEGER :: lda, n, m
+  INTEGER,INTENT(IN) :: lda, n, m
   ! input: the leading dimension of the array psi
   ! input: the real dimension of psi
   ! input: the number of psi to compute
-  INTEGER :: j
-  ! do loop index
-
+  INTEGER,INTENT(IN) :: igkq(npwx)
+  ! input: map of wavefunctions of hpsi (e.g. at k+q in phonon)
   COMPLEX(DP), INTENT(INOUT)  :: psi (lda*npol, m)
   COMPLEX(DP), INTENT(OUT) :: hpsi (lda*npol, m), spsi (lda*npol, m)
-  COMPLEX(DP) :: sup, sdwn
   ! input: the functions where to apply H and S
   ! output: H times psi
   ! output: S times psi (Us PP's only)
 
-  CALL start_clock ('h_psiq')
+  !
+  !     Here the local variables
+  !
+  COMPLEX(DP) :: sup, sdwn
+  INTEGER :: ibnd
+  ! counter on bands
+  INTEGER :: j
+  ! do loop index
 
-  IF (tddfpt) THEN
-     igkq => igk
-  ENDIF
-  ! if the calling program is turbo_lanczos pointer igkq needs
-  ! to be given a valid target.
+
+  CALL start_clock ('h_psiq')
 
   IF (gamma_only) THEN
 
@@ -75,10 +70,6 @@ SUBROUTINE h_psiq (lda, n, m, psi, hpsi, spsi)
 
    CALL h_psiq_k()
 
-  ENDIF
-
-  IF (tddfpt) THEN
-     NULLIFY(igkq)
   ENDIF
 
   CALL stop_clock ('h_psiq')

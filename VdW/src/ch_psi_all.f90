@@ -20,6 +20,7 @@ SUBROUTINE ch_psi_all_vdw (n, h, ah, e, ik, m)
   USE phcom
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
+  USE wvfct,      ONLY : igk
 
   IMPLICIT NONE
 
@@ -56,7 +57,7 @@ SUBROUTINE ch_psi_all_vdw (n, h, ah, e, ik, m)
   !
   !   compute the product of the hamiltonian with the h vector
   !
-  CALL h_psiq_vdw (npwx, n, m, h, hpsi, spsi)
+  CALL h_psiq_vdw (npwx, n, m, h, hpsi, spsi, igk)
   !
   CALL start_clock ('last')
   !

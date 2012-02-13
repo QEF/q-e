@@ -22,7 +22,7 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
 
   USE control_ph, ONLY : alpha_pv, nbnd_occ
   USE eqv,  ONLY : evq
-  USE qpoint, ONLY : ikqs
+  USE qpoint, ONLY : ikqs, igkq
 
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
@@ -62,7 +62,7 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
   !
   !   compute the product of the hamiltonian with the h vector
   !
-  call h_psiq (npwx, n, m, h, hpsi, spsi)
+  call h_psiq (npwx, n, m, h, hpsi, spsi, igkq)
 
   call start_clock ('last')
   !
