@@ -13,6 +13,21 @@
   input_dft="pbe0" will force the usage of PBE0 irrespective of the 
   functional used in the pseudopotential generation.
 
+ HOW DOES THE ALGORITHM WORK ?
+  The algorithm is quite standard: see for instance Chawla and Voth, 
+  JCP {bf 108}, 4697 (1998); Sorouri, Foulkes and Hine, JCP {\bf 124}, 
+  064105 (2006); Spencer and Alavi, PRB {\bf 77}, 193110 (2008). 
+  Basically, one generates auxiliary densities $\rho_{-q}=\phi^{*}_{k+q}*\psi_k$
+  in real space and transforms them to reciprocal space using FFT;
+  the Poisson equation is solved and the resulting potential is transformed 
+  back to real space using FFT, then multiplied by $\phi_{k+q}$ and the
+  results are accumulated.
+  The only tricky point is the treatment of the $q\rightarrow 0$ limit,
+  which is described below, and in the Appendix A.5 of the QE paper 
+  (note the reference to the Gygi and Baldereschi paper). 
+  See J. Comp. Chem. {\bf 29}, 2098 (2008); JACS {\bf 129}, 10402 (2007)
+  for examples of applications.
+
  HOW DOES SELF-CONSISTENCY WORK ? 
   The usage of hybrid functionals is VERY expensive (see later). Moreover
   self-consistency should be reached on the density-matrix, instead of the
@@ -110,17 +125,10 @@
   more efficently. So far I did not think to much to this point.
 
  PARALLEL IMPLEMENTATION ?
-  yes (and no). 
-  At present, R-and-G parallelization has been implemented. This is what
-  is mostly needed for large systems ... 
-  For metals k-point parallelization is often useful but the need
-  in hybrid functionals for the BZ integration prevent its simple
-  implementation (if the scratch area is common to all processors,
-  it could be feasible, but one would need a VERY BIG direct-access
-  file that all processors can see ... ). When the q-integration reduces
-  to Gamma, however, the k-point parallelization should work. If it 
-  doesn't, an experimental parallelization on the grid of q-points, 
-  using "images" (pwx -nimage N), is available.
+  At present, both plane-wave and k-point parallelization have been
+  implemented. This is what is mostly needed for large systems.
+  An experimental parallelization on the band structure is also available
+  (pw.x -nbgrp N)
 
  WHAT PROPERTIES CAN I COMPUTE ?
   Energy and forces (thanks to Hellmann-Feynman theorem forces do not

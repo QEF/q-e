@@ -350,7 +350,6 @@ common to all packages:
 \texttt{install/} &  installation scripts and utilities\\
 \texttt{pseudo}/  &  pseudopotential files used by examples\\
 \texttt{upftools/}&  converters to unified pseudopotential format (UPF)\\
-\texttt{examples/}&  sample input and output files\\
 \texttt{Doc/}     &  general documentation\\
 \texttt{archive/} &  contains plug-ins in .tar.gz form\\
 \end{tabular}
@@ -423,7 +422,6 @@ Symlinks to executable programs will be placed in the
 \texttt{bin/}
 subdirectory. Note that both C and Fortran compilers must be in your execution
 path, as specified in the PATH environment variable.
-
 Additional instructions for special machines:
 
 \begin{tabular}{ll}
@@ -432,8 +430,8 @@ Additional instructions for special machines:
     \texttt{./configure ARCH=ppc64-mn}& PowerPC Linux + xlf (Marenostrum) \\
     \texttt{./configure ARCH=ppc64-bg}& IBM BG/P (BlueGene)
 \end{tabular}
-    
-\configure\ Generates the following files:
+
+\noindent \configure\ generates the following files:
 
 \begin{tabular}{ll}
 \texttt{make.sys} &      compilation rules and flags (used by \texttt{Makefile})\\
@@ -496,7 +494,8 @@ but not the specialized compilation environment of those
 machines. In some cases, cross-compilation requires to specify the target machine with the
 \texttt{--host} option. This feature has not been extensively
 tested, but we had at least one successful report (compilation 
-for NEC SX6 on a PC). Currently supported architectures are:\\
+for NEC SX6 on a PC). Currently supported architectures are:
+
 \begin{tabular}{ll}
 \texttt{ia32}&    Intel 32-bit machines (x86) running Linux\\
 \texttt{ia64}&    Intel 64-bit (Itanium) running Linux\\
@@ -628,7 +627,7 @@ happen, especially on PC clusters, see Sec.\ref{SubSec:LinuxPCMPI}.
 \qe\ can use the MASS vector math
 library from IBM, if available (only on AIX).
 
-\subsubsection{If optimized libraries are not found}
+\paragraph{If optimized libraries are not found}
 The \configure\ script attempts to find optimized libraries, but may fail
 if they have been installed in non-standard places. You should examine
 the final value of \texttt{BLAS\_LIBS, LAPACK\_LIBS, FFT\_LIBS, MPI\_LIBS} (if needed),
@@ -695,24 +694,19 @@ X.Y.Z stands for the version number of the GUI (should be the same as the
 general version number). If you are using the SVN sources, see
 the \texttt{GUI/README} file instead.
    
-\subsection{Running examples}
+\subsection{Running tests and examples}
 \label{SubSec:Examples}
+
+% You should first of all ensure that you have downloaded 
+% and correctly unpacked the package containing examples (since v.4.1 in a
+% separate package):
+% \begin{verbatim}
+%      tar -zxvf /path/to/package/espresso-X.Y.Z-examples.tar.gz
+% \end{verbatim}
+% will unpack several subdirectories into \texttt{espresso-X.Y.Z/}. 
+
 As a final check that compilation was successful, you may want to run some or
-all of the examples. 
-
-{\bf BEGIN section to be verified}
-
-You should first of all ensure that you have downloaded 
-and correctly unpacked the package containing examples (since v.4.1 in a
-separate package):
-\begin{verbatim}
-     tar -zxvf /path/to/package/espresso-X.Y.Z-examples.tar.gz
-\end{verbatim}
-will unpack several subdirectories into \texttt{espresso-X.Y.Z/}. 
-
-{\bf END section to be verified}
-
-There are two different types of examples: 
+all of the examples. There are two different types of examples: 
 \begin{itemize}
 \item automated tests. Quick and exhaustive, but not
 meant to be realistic, implemented only for \PWscf\ and \CP.
@@ -720,10 +714,20 @@ meant to be realistic, implemented only for \PWscf\ and \CP.
 Cover many more programs and features of the \qe\ distribution,
 but they require manual inspection of the results. 
 \end{itemize}
-
-To run the examples, you should edit file
-\texttt{environment\_variables}, 
-setting the following variables as needed: 
+Instructions for the impatient:
+\begin{verbatim}
+   cd PW/tests/
+   ./check_pw.x.j
+\end{verbatim}
+for \PWscf;
+\texttt{PW/tests/README} contains a list of what is tested.
+For \CP:
+\begin{verbatim}
+   cd CPV/tests/
+   ./check_cp.x.j
+\end{verbatim}
+Instructions for all others: edit file \texttt{environment\_variables},
+setting the following variables as needed.
 \begin{quote}
    BIN\_DIR: directory where executables reside\\
    PSEUDO\_DIR: directory where pseudopotential files reside\\
@@ -735,12 +739,12 @@ must be a directory where you have read and write access to, with
 enough available space to host the temporary files produced by the 
 example runs, and possibly offering high I/O performance (i.e., don't 
 use an NFS-mounted directory). NOTA BENE: do not use a
-directory containing other data, the examples will clean it!
+directory containing other data: the examples will clean it!
 
 If you have compiled the parallel version of \qe\ (this
 is the default if parallel libraries are detected), you will usually
-have to specify a driver program (such as \texttt{mpirun} or \texttt{mpiexec}) 
-and the number of processors: see Sec.\ref{SubSec:para} for
+have to specify a launcher program (such as \texttt{mpirun} or 
+\texttt{mpiexec}) and the number of processors: see Sec.\ref{SubSec:para} for
 details. In order to do that, edit again the \texttt{environment\_variables} 
 file
 and set the PARA\_PREFIX and PARA\_POSTFIX variables as needed. 
@@ -756,13 +760,10 @@ you should set PARA\_PREFIX="poe", PARA\_POSTFIX="-procs
 4". Furthermore, if your machine does not support interactive use, you
 must run the commands specified below through the batch queuing
 system installed on that machine. Ask your system administrator for
-instructions. 
+instructions. For execution using OpenMP on N threads, 
+you should set PARA\_PREFIX to \texttt{"env OMP\_NUM\_THREADS=N ... "}.
 
-For execution using OpenMP on N threads, 
-set  PARA\_PREFIX to \texttt{env OMP\_NUM\_THREADS=N}.
-
-To run an example, go to the corresponding
-directory (e.g.
+To run an example, go to the corresponding directory (e.g.
  \texttt{PW/examples/example01}) and execute: 
 \begin{verbatim}
       ./run_example
@@ -782,8 +783,6 @@ doesn't work, or at least, it requires human inspection of the results.
 
 The example scripts stop if an error is detected. You should look INSIDE
 the last written output file to understand why.
-
-{\bf BEGIN section to be verified}
 
 \subsection{Installation tricks and problems}
 
@@ -1369,7 +1368,7 @@ ScaLAPACK; alternative built-in algorithms are anyway available.
 Note however that not all parallelization levels 
 are implemented in all codes! 
 
-\paragraph{Communications}
+\paragraph{About communications}
 Images and pools are loosely coupled and processors communicate
 between different images and pools only once in a while, whereas
 processors within each pool are tightly coupled and communications
@@ -1403,17 +1402,11 @@ it is set to the square integer smaller than or equal to  half the number
 of processors of each pool.
 
 \paragraph{Massively parallel calculations}
-For very large jobs (i.e. O(1000) atoms or more) or for very long jobs
+For very large jobs (i.e. O(1000) atoms or more) or for very long jobs,
 to be run on massively parallel  machines (e.g. IBM BlueGene) it is
-crucial to use in an effective way both the "task group" and the
-"linear-algebra" parallelization. Without a judicious choice of
+crucial to use in an effective way all available parallelization levels. Without a judicious choice of
 parameters, large jobs will find a stumbling block in either memory or 
-CPU requirements. In particular, the linear-algebra parallelization is
-used in the diagonalization  of matrices in the subspace of Kohn-Sham
-states (whose dimension is as a strict minimum equal to the number of
-occupied states). These are stored as block-distributed matrices
-(distributed across processors) and diagonalized using custom-tailored
-diagonalization algorithms that work on block-distributed matrices.
+CPU requirements.
 
 Since v.4.1, ScaLAPACK can be used to diagonalize block distributed
 matrices, yielding better speed-up than the internal algorithms for
@@ -1587,7 +1580,7 @@ instructions to compile and install MPI libraries
 can be found in the following post by Javier Antonio Montoya:\\
 \texttt{http://www.democritos.it/pipermail/pw\_forum/2008-April/008818.htm}.
 
-section{Performances}
+\section{Performances}
 
 \subsection{Execution time}
 

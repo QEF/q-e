@@ -85,7 +85,7 @@ People who want to modify or contribute to
 
 \subsection{What can \PWscf\ do}
 
-\PWscf performs many different kinds of
+\PWscf\ performs many different kinds of
 self-consistent calculations of electronic-structure
 properties within
 Density-Functional Theory (DFT), using a Plane-Wave (PW) basis set and pseudopotentials (PP).
@@ -214,9 +214,10 @@ in \texttt{PW/tools}:
 \item  \texttt{PW/tools/kpoints.x} produces lists of k-points
 \item  \texttt{PW/tools/pwi2xsf.sh},  \texttt{pwo2xsf.sh} process respectively input and output
   files (not data files!) for \pwx and produce an XSF-formatted file
-  suitable for plotting with XCrySDen, a powerful crystalline and
-  molecular structure visualization program
-  ( \texttt{http://www.xcrysden.org/}). BEWARE: the  \texttt{pwi2xsf.sh} shell script
+  suitable for plotting with XCrySDen:
+  \texttt{http://www.xcrysden.org/},  powerful crystalline and
+  molecular structure visualization program.
+  BEWARE: the  \texttt{pwi2xsf.sh} shell script
   requires the  \texttt{pwi2xsf.x} executables to be located somewhere in your PATH. 
 \item  \texttt{PW/tools/band\_plot.x}: undocumented and possibly obsolete 
 \item  \texttt{PW/tools/bs.awk},  \texttt{PW/tools/mv.awk} are scripts that process the output of \pwx\ (not
@@ -232,397 +233,7 @@ X-windows utility to display molecules, available at:\\
   using XCrySDen
 \end{itemize}
 
-\subsection{Running examples}
-\label{SubSec:Examples}
-As a final check that compilation was successful, you may want to run some or
-all of the examples. You should first of all ensure that you have downloaded 
-and correctly unpacked the package containing examples (since v.4.1 in a
-separate package):
-\begin{verbatim}
-     tar -zxvf /path/to/package/espresso-X.Y.Z-examples.tar.gz
-\end{verbatim}
-will unpack several subdirectories into \texttt{espresso-X.Y.Z/}.
-There are two different types of examples: 
-\begin{itemize}
-\item automated tests (in directories \texttt{PW/tests/})
-Quick and exhaustive, but not
-meant to be realistic, implemented only for \pwx.
-\item examples (in directory \texttt{examples/}).
-Cover many more programs and features of the \qe\ distribution,
-but they require manual inspection of the results. 
-\end{itemize}
-
-Let us first consider the tests. Automated tests for \pwx\ are in directory 
-\texttt{PW/tests/}. File \texttt{PW/tests/README} contains a list of what is tested.
-To run tests, follow the directions in the header if file 
-\texttt{check\_pw.x.j}, edit variables PARA\_PREFIX, PARA\_POSTFIX 
-if needed (see below). 
-
-Let us now consider examples. A list of examples and of what each example
-does is contained in \texttt{examples/README}. 
-For details, see the \texttt{README} file in each example's directory. 
-If you find that any relevant feature isn't being tested, please contact us 
-(or even better, write and send us a new example yourself !).
-
-To run the examples, you should follow this procedure:
-\begin{enumerate}   
-\item Go to the \texttt{examples/} directory and edit the 
-  \texttt{environment\_variables} file, setting the following variables as needed: 
-\begin{quote}
-   BIN\_DIR: directory where executables reside\\
-   PSEUDO\_DIR: directory where pseudopotential files reside\\
-   TMP\_DIR: directory to be used as temporary storage area
-\end{quote}
-The default values of BIN\_DIR and PSEUDO\_DIR should be fine, 
-unless you have installed things in nonstandard places. TMP\_DIR 
-must be a directory where you have read and write access to, with 
-enough available space to host the temporary files produced by the 
-example runs, and possibly offering high I/O performance (i.e., don't 
-use an NFS-mounted directory). NOTA BENE: do not use a
-directory containing other data, the examples will clean it!
-\item If you have compiled the parallel version of \qe\ (this
-is the default if parallel libraries are detected), you will usually
-have to specify a driver program (such as \texttt{mpirun} or \texttt{mpiexec}) 
-and the number of processors: see Sec.\ref{SubSec:para} for
-details. In order to do that, edit again the \texttt{environment\_variables} 
-file
-and set the PARA\_PREFIX and PARA\_POSTFIX variables as needed. 
-Parallel executables will be run by a command like this: 
-\begin{verbatim}
-      $PARA_PREFIX pw.x $PARA_POSTFIX < file.in > file.out
-\end{verbatim}
-For example, if the command line is like this (as for an IBM SP):
-\begin{verbatim}
-      poe pw.x -procs 4 < file.in > file.out
-\end{verbatim}
-you should set PARA\_PREFIX="poe", PARA\_POSTFIX="-procs
-4". Furthermore, if your machine does not support interactive use, you
-must run the commands specified below through the batch queuing
-system installed on that machine. Ask your system administrator for
-instructions. 
-\item To run a single example, go to the corresponding directory (e.g.
- \texttt{example/example01}) and execute: 
-\begin{verbatim}
-      ./run_example
-\end{verbatim}
-This will create a subdirectory results, containing the input and
-output files generated by the calculation. Some examples take only a
-few seconds to run, while others may require several minutes depending
-on your system. To run all the examples in one go, execute:
-\begin{verbatim}
-      ./run_all_examples
-\end{verbatim}
-from the examples directory. On a single-processor machine, this
-typically takes a few hours. The \texttt{make\_clean} script cleans the
-examples tree, by removing all the results subdirectories. However, if
-additional subdirectories have been created, they aren't deleted. 
-
-\item In each example's directory, the \texttt{reference/} subdirectory contains
-verified output files, that you can check your results against. They
-were generated on a Linux PC using the Intel compiler. On different
-architectures the precise numbers could be slightly different, in
-particular if different FFT dimensions are automatically selected. For
-this reason, a plain diff of your results against the reference data
-doesn't work, or at least, it requires human inspection of the
-results. 
-\end{enumerate}
-
-\newpage
-
-\section{Parallelism}
-\label{Sec:para}
-
-Two different parallelization paradigms are currently implemented 
-in \PWscf:
-\begin{enumerate}
-\item {\em Message-Passing (MPI)}.  
-\item {\em OpenMP}. 
-\end{enumerate}
-
-In \PWscf\ several parallelization levels, specified at run-time
-via command-line options to the executable, are implemented
-with MPI. This is your first choice for execution on a parallel 
-machine.
-
-\subsection{Running on parallel machines}
-\label{SubSec:para}
-
-Parallel execution is strongly system- and installation-dependent. 
-Typically one has to specify:
-\begin{enumerate}
-\item a launcher program (not always needed), 
-such as \texttt{poe}, \texttt{mpirun}, \texttt{mpiexec},
-  with the  appropriate options (if any);
-\item the number of processors, typically as an option to the launcher
-  program, but in some cases to be specified after the name of the
-  program to be
-  executed; 
-\item the program to be executed, with the proper path if needed: for
-  instance, \pwx, or \texttt{./pw.x}, or \texttt{\$HOME/bin/pw.x}, or
-  whatever applies; 
-\item other \qe-specific parallelization options, to be
-  read and interpreted by the running code: 
-\begin{itemize}
-\item the number of ``pools'' into which processors are to be grouped
-  ;
-\item the number of ``task groups'' into which processors are to be
-  grouped;
-\item the number of processors performing iterative diagonalization.
-\end{itemize}
-\end{enumerate}
-Items 1) and 2) are machine- and installation-dependent, and may be 
-different for interactive and batch execution. Note that large
-parallel machines are  often configured so as to disallow interactive
-execution: if in doubt, ask your system administrator.
-Item 3) also depend on your specific configuration (shell, execution
-path, etc). 
-Item 4) is optional but may be important: see the following section
-for the meaning of the various options.
-
-For illustration, here is how to run \pwx\ on 16 processors partitioned into
-8 pools (2 processors each), for several typical cases. 
-
-IBM SP machines, batch:
-\begin{verbatim}
-   pw.x -npool 8 < input
-\end{verbatim}
-This should also work interactively, with environment variables NPROC
-set to 16, MP\_HOSTFILE set to the file containing a list of processors.
-
-IBM SP machines, interactive, using \texttt{poe}:
-\begin{verbatim}
-   poe pw.x -procs 16 -npool 8 < input
-\end{verbatim}
-PC clusters using \texttt{mpiexec}:
-\begin{verbatim}
-   mpiexec -n 16 pw.x -npool 8 < input
-\end{verbatim}
-SGI Altix and PC clusters using \texttt{mpirun}:
-\begin{verbatim}   mpirun -np 16 pw.x -npool 8 < input
-\end{verbatim}
-IBM BlueGene using \texttt{mpirun}:
- \begin{verbatim}
-  mpirun -np 16 -exe /path/to/executable/pw.x -args "-npool 8" \
-    -in /path/to/input -cwd /path/to/work/directory
-\end{verbatim}
-If you want to run in parallel the examples distributed with \qe\
-(see Sec.\ref{SubSec:Examples}), set PARA\_PREFIX to everything
-before the executable (\pwx\ in the above examples),
-PARA\_POSTFIX to what follows it until the first redirection sign 
-($<, >, |,..$), if any. For execution using OpenMP on N threads, 
-set  PARA\_PREFIX to \texttt{env OMP\_NUM\_THREADS=N}.
-
-\subsection{Parallelization levels}
-
-Data structures are distributed across processors.
-Processors are organized in a hierarchy of groups, 
-which are identified by different MPI communicators level.
-The groups hierarchy is as follow:
-\begin{verbatim}
-            /  pools _ task   groups
-  world 
-            \ linear-algebra  groups
-\end{verbatim}
-
-{\bf world}: is the group of all processors (MPI\_COMM\_WORLD).
-
-{\bf pools}: When k-point sampling is used, "world" can be 
-subpartitioned into "pools", and k-points can distributed to pools.
-Within each pool, reciprocal space basis set (PWs)
-and real-space grids are distributed across processors.
-This is usually referred to as "PW parallelization".
-All linear-algebra operations on array of  PW / 
-real-space grids are automatically and effectively parallelized.
-3D FFT is used to transform electronic wave functions from
-reciprocal to real space and vice versa. The 3D FFT is
-parallelized by distributing planes of the 3D grid in real
-space to processors (in reciprocal space, it is columns of
-G-vectors that are distributed to processors). 
-
-{\bf task groups}: 
-In order to allow good parallelization of the 3D FFT when 
-the number of processors exceeds the number of FFT planes,
-data can be redistributed to "task groups" so that each group 
-can process several wavefunctions at the same time.
-
-{\bf linear-algebra group}:
-A further level of parallelization, independent on
-PW or k-point parallelization, is the parallelization of
-subspace diagonalization (\pwx).
-Both operations required the diagonalization of 
-arrays whose dimension is the number of Kohn-Sham states
-(or a small multiple). All such arrays are distributed block-like
-across the ``linear-algebra group'', a subgroup of the pool of processors,
-organized in a square 2D grid. As a consequence the number of processors
-in the linear-algebra group is given by $n^2$, where $n$ is an integer;
-$n^2$ must be smaller than the number of processors of a single pool.
-The diagonalization is then performed
-in parallel using standard linear algebra operations.
-(This diagonalization is used by, but should not be confused with,
-the iterative Davidson algorithm). One can choose to compile
-ScaLAPACK if available, internal built-in algorithms otherwise.
-
-{\bf Communications}:
-Images and pools are loosely coupled and processors communicate
-between different images and pools only once in a while, whereas
-processors within each pool are tightly coupled and communications
-are significant. This means that Gigabit ethernet (typical for
-cheap PC clusters) is ok up to 4-8 processors per pool, but {\em fast}
-communication hardware (e.g. Mirynet or comparable) is absolutely 
-needed beyond 8 processors per pool.
-
-{\bf Choosing parameters}:
-To control the number of processors in each group,
-command line switches: \texttt{-npools},
-\texttt{-ntg}, \texttt{-northo} are used.
-As an example consider the following command line:
-\begin{verbatim}
-mpirun -np 4096 ./pw.x -nimage 8 -npool 2 -ntg 8 -northo 144 -input my.input
-\end{verbatim}
-This executes \PWscf\ on 4096 processors, to simulate a system
-with 8 images, each of which is distributed across 512 processors.
-k-points are distributed across 2 pools of 256 processors each, 
-3D FFT is performed using 8 task groups (64 processors each, so
-the 3D real-space grid is cut into 64 slices), and the diagonalization
-of the subspace Hamiltonian is distributed to a square grid of 144
-processors (12x12).
-
-Default values are: \texttt{-npool 1 -ntg 1} ; 
-\texttt{ndiag} is set to 1 if ScaLAPACK is not compiled,
-it is set to the square integer smaller than or equal to  half the number 
-of processors of each pool.
-
-\paragraph{Massively parallel calculations}
-For very large jobs (i.e. O(1000) atoms or so) or for very long jobs
-to be run on massively parallel  machines (e.g. IBM BlueGene) it is
-crucial to use in an effective way both the "task group" and the
-"linear-algebra" parallelization. Without a judicious choice of
-parameters, large jobs will find a stumbling block in either memory or 
-CPU requirements. In particular, the linear-algebra parallelization is
-used in the diagonalization  of matrices in the subspace of Kohn-Sham
-states (whose dimension is as a strict minimum equal to the number of
-occupied states). These are stored as block-distributed matrices
-(distributed across processors) and diagonalized using custom-tailored
-diagonalization algorithms that work on block-distributed matrices.
-
-Since v.4.1, ScaLAPACK can be used to diagonalize block distributed
-matrices, yielding better speed-up than the default algorithms for
-large ($ > 1000$) matrices, when using a large number of processors 
-($> 512$). If you want to test ScaLAPACK,
-use \texttt{configure --with-scalapack}. This
-will add
-\texttt{-D\_\_SCALAPACK} to DFLAGS in \texttt{make.sys} and set LAPACK\_LIBS to something
-like:
-\begin{verbatim}
-    LAPACK_LIBS = -lscalapack -lblacs -lblacsF77init -lblacs -llapack
-\end{verbatim}
-The repeated \texttt{-lblacs} is not an error, it is needed! If \configure\ does not recognize
-ScaLAPACK, inquire with your system manager
-on the correct way to link them.
-
-A further possibility to expand scalability, especially on machines
-like IBM BlueGene, is to use mixed MPI-OpenMP. The idea is to have
-one (or more) MPI process(es) per multicore node, with OpenMP
-parallelization inside a same node. This option is activated by  \texttt{configure --with-openmp},
-which adds preprocessing flag -D\_\_OPENMP
-and one  of the following compiler options:
-\begin{quote}
- ifort: \texttt{-openmp}\\
- xlf:   \texttt{-qsmp=omp}\\
- PGI:   \texttt{-mp}\\
- ftn:   \texttt{-mp=nonuma}
-\end{quote}
-OpenMP parallelization is currently implemented and tested for the following combinations of FFTs
-and libraries:
-\begin{quote}
- internal FFTW copy: \texttt{-D\_\_FFTW}\\
- ESSL: \texttt{-D\_\_ESSL} or \texttt{-D\_\_LINUX\_ESSL}, link 
- with \texttt{-lesslsmp}\\
- ACML: \texttt{-D\_\_ACML}, link with \texttt{-lacml\_mp}.
-\end{quote}
-Currently, ESSL (when available) are faster than internal FFTW,
-which in turn are faster than ACML.
-
-\subsubsection{Understanding parallel I/O}
-In parallel execution, each processor has its own slice of wavefunctions, 
-to be written to temporary files during the calculation. The way wavefunctions 
-are written by \pwx\ is governed by variable \texttt{wf\_collect}, 
-in namelist \&CONTROL 
-If \texttt{wf\_collect=.true.}, the final wavefunctions are collected into a single 
-directory, written by a single processor, whose format is independent on 
-the number of processors. If \texttt{wf\_collect=.false.} (default) each processor
-writes its own slice of the final 
-wavefunctions to disk in the internal format used by \PWscf. 
-
-The former case requires more
-disk I/O and disk space, but produces portable data files; the latter case
-requires less I/O and disk space, but the data so produced can be read only
-by a job running on the same number of processors and pools, and if
-all files are on a file system that is visible to all processors
-(i.e., you cannot use local scratch directories: there is presently no
-way to ensure that the distribution of processes on processors will
-follow the same pattern for different jobs).
-
-\cpx\ instead always collects the final wavefunctions into a single directory.
-Files written by \pwx\ can be read by \cpx\ only if \texttt{wf\_collect=.true.} (and if
-produced for $k=0$ case). 
-The directory for data is specified in input variables
-\texttt{outdir} and \texttt{prefix} (the former can be specified
-as well in environment variable ESPRESSO\_TMPDIR):
-\texttt{outdir/prefix.save}. A copy of pseudopotential files
-is also written there. If some processor cannot access the
-data directory, the pseudopotential files are read instead
-from the pseudopotential directory specified in input data.
-Unpredictable results may follow if those files
-are not the same as those in the data directory!
-
-{\em IMPORTANT:}
-Avoid I/O to network-mounted disks (via NFS) as much as you can! 
-Ideally the scratch directory \texttt{outdir} should be a modern 
-Parallel File System. If you do not have any, you can use local
-scratch disks (i.e. each node is physically connected to a disk
-and writes to it) but you may run into trouble anyway if you 
-need to access your files that are scattered in an unpredictable
-way across disks residing on different nodes.
-
-You can use input variable \texttt{disk\_io='minimal'}, or even 
-\texttt{'none'}, if you run
-into trouble (or into angry system managers) with excessive I/O with \pwx. 
-The code will store wavefunctions into RAM during the calculation.
-Note however that this will increase your memory usage and may limit 
-or prevent restarting from interrupted runs.
-\paragraph{Cray XT3}
-On the cray xt3 there is a special hack to keep files in
-memory instead of writing them without changes to the code.
-You have to do a: 
-module load iobuf
-before compiling and then add liobuf at link time.
-If you run a job you set the environment variable 
-IOBUF\_PARAMS to proper numbers and you can gain a lot.
-Here is one example:
-\begin{verbatim}
-env IOBUF_PARAMS='*.wfc*:noflush:count=1:size=15M:verbose,\
-*.dat:count=2:size=50M:lazyflush:lazyclose:verbose,\
-*.UPF*.xml:count=8:size=8M:verbose' pbsyod =\
-\~{}/espresso/bin/pw.x npool 4 in si64pw2x2x2.inp > & \
-si64pw2x2x232moreiobuf.out &
-\end{verbatim}
-This will ignore all flushes on the *wfc* (scratch files) using a
-single i/o buffer large enough to contain the whole file ($\sim 12$ Mb here).
-this way they are actually never(!) written to disk.
-The *.dat files are part of the restart, so needed, but you can be
-'lazy' since they are writeonly. .xml files have a lot of accesses
-(due to iotk), but with a few rather small buffers, this can be
-handled as well. You have to pay attention not to make the buffers
-too large, if the code needs a lot of memory, too and in this example
-there is a lot of room for improvement. After you have tuned those
-parameters, you can remove the 'verboses' and enjoy the fast execution.
-Apart from the i/o issues the cray xt3 is a really nice and fast machine.
-(Info by Axel Kohlmeyer, maybe obsolete)
-
-\newpage
-
-\section{Using \PWscf}
+\newpage\section{Using \PWscf}
 
 Input files for \texttt{pw.x} may be either written by hand 
 or produced via the \texttt{PWgui} graphical interface by Anton Kokalj, 
@@ -630,13 +241,12 @@ included in the \qe\ distribution. See \texttt{PWgui-x.y.z/INSTALL}
 (where x.y.z is the version number) for more info on \texttt{PWgui}, 
 or \texttt{GUI/README} if you are using SVN sources.
     
-You may take the examples distributed with \qe\ as
-templates for writing your own input files: see Sec.\ref{SubSec:Examples}.
+You may take the tests and examples distributed 
+with \qe\ as templates for writing your own input files.
 In the following, whenever we mention "Example N", we refer to those. 
 Input files are those in the \texttt{results/} subdirectories, with names ending
 with \texttt{.in} 
 (they will appear after you have run the examples).
-    
 
 \subsection{Input data}
 
@@ -652,7 +262,8 @@ introduced by keywords. The namelists are
       \&CELL (optional): &variable-cell optimization or dynamics\\
 \end{tabular}    \\
 Optional namelist may be omitted if the calculation to be performed
-does not require them. This depends on the value of variable calculation
+does not require them. This depends on the value of variable 
+\texttt{calculation}
 in namelist \&CONTROL. Most variables in namelists have default values. Only
 the following variables in \&SYSTEM must always be specified:
 
@@ -667,17 +278,17 @@ For metallic systems, you have to specify how metallicity is treated
 in
 variable \texttt{occupations}. If you choose \texttt{occupations='smearing'},
 you have
-to specify the smearing width \texttt{degauss} and optionally the smearing
-type
-\texttt{smearing}. Spin-polarized systems must be treated as metallic system, except the 
-special case of a single k-point, for which occupation numbers can be fixed
+to specify the smearing type \texttt{smearing} and the smearing width 
+\texttt{degauss}. Spin-polarized systems are as a rule treated as metallic 
+system, unless the total magnetization, \texttt{tot\_magnetization}
+is set to a fixed value, or if occupation numbers are fixed
 (\texttt{occupations='from input'} and card OCCUPATIONS).
     
 Explanations for the meaning of variables \texttt{ibrav} and \texttt{celldm},
 as well as on alternative ways to input structural data,
-are in files \texttt{Doc/INPUT\_PW.*} (for \pwx) and \texttt{Doc/INPUT\_CP.*}
-(for \cpx). These files are the reference for input data and describe 
-a large number of other variables as well. Almost all variables have default 
+are in files \texttt{PW/Doc/INPUT\_PW.txt} and \texttt{PW/Doc/INPUT\_PW.html}. 
+These files are the reference for input data and describe a large number
+of other variables as well. Almost all variables have default 
 values, which may or may not fit your needs.
     
 After the namelists, you have several fields (``cards'')
@@ -697,16 +308,18 @@ Note about k points: The k-point grid can be either automatically generated
 or manually provided as a list of k-points and a weight in the Irreducible
 Brillouin Zone only of the Bravais lattice of the crystal. The code will 
 generate (unless instructed not to do so: see variable \texttt{nosym}) all
-required k-point 
+required k-points
 and weights if the symmetry of the system is lower than the symmetry of the
 Bravais lattice. The automatic generation of k-points follows the convention
 of Monkhorst and Pack.
 
 \subsection{Data files}
 
-The output data files are written in the directory specified by variable
-\texttt{outdir}, with names specified by variable \texttt{prefix} (a string that is prepended
-to all file names, whose default value is: \texttt{prefix='pwscf'}). The \texttt{iotk}
+The output data files are written in the directory \texttt{outdir/prefix.save}, as specified by variables
+\texttt{outdir} and \texttt{prefix} 
+(a string that is prepended
+to all file names, whose default value is: \texttt{prefix='pwscf'}). \texttt{outdir} can be specified
+as well in environment variable ESPRESSO\_TMPDIR. The \texttt{iotk}
 toolkit is used to write the file in a XML format, whose definition can
 be found in the Developer Manual. In order to use the data directory
 on a different machine, you need to convert the binary files to formatted
@@ -742,11 +355,10 @@ together with an automatically generated uniform k-point grid
 Specify \texttt{nosym=.true.} to avoid generation of additional k-points in
 low symmetry cases. Variables \texttt{prefix} and \texttt{outdir}, which determine
 the names of input or output files, should be the same in the two runs.
-See Examples 01, 05, 08,
+See Examples 01, 06, 07,
 
-NOTA BENE: until v.4.0, atomic positions for a non scf calculations 
-were read from input, while the scf potential was read from the data file
-of the scf calculation. Since v.4.1, both atomic positions and the scf
+NOTA BENE:  Since v.4.1, both atomic positions
+and the scf
 potential are read from the data file so that consistency is guaranteed.
 
 \paragraph{Noncolinear magnetization, spin-orbit interactions}
@@ -776,19 +388,19 @@ think that spin-orbit interaction is large. If all the pseudopotentials
 are scalar
 relativistic the calculation becomes equivalent to a noncolinear
 calculation without spin orbit. (Andrea Dal Corso, 2007-07-27)
-See Example 13 for non-collinear magnetism, Example 22
+See Example 06 for non-collinear magnetism, Example 07
 for spin-orbit interactions.
 
 \paragraph{DFT+U}
 DFT+U (formerly known as LDA+U) calculation can be
 performed within a simplified rotationally invariant form 
-of the $U$ Hubbard correction. See Example 25 and references 
-quoted therein.
+of the $U$ Hubbard correction. See Example 08 
+and its README.
 
 \paragraph{Dispersion Interactions (DFT-D)}
 For DFT-D (DFT + semiempirical dispersion interactions), see the
 description of input variables \texttt{london*}, sample files
-\texttt{tests/vdw.*}, and the comments in source file
+\texttt{PW/tests/vdw.*}, and the comments in source file
 \texttt{Modules/mm\_dispersion.f90}.
 
 \paragraph{Hartree-Fock and Hybrid functionals}
@@ -796,28 +408,17 @@ description of input variables \texttt{london*}, sample files
 Since v.5.0, calculations in the Hartree-Fock approximation, or using 
 hybrid XC functionals that include some Hartree-Fock exchange, no longer
 require a special preprocessing before compilation.
-
-The algorithm is quite standard: see for instance Chawla and Voth, 
-JCP {bf 108}, 4697 (1998); Sorouri, Foulkes and Hine, JCP {\bf 124}, 
-064105 (2006); Spencer and Alavi, PRB {\bf 77}, 193110 (2008). 
-Basically, one generates auxiliary densities $\rho_{-q}=\phi^{*}_{k+q}*\psi_k$
-in real space and transforms them to reciprocal space using FFT;
-the Poisson equation is solved and the resulting potential is transformed 
-back to real space using FFT, then multiplied by $\phi_{k+q}$ and the
-results are accumulated.
-The only tricky point is the treatment of the $q\rightarrow 0$ limit,
-which is described in the Appendix A.5 of the \qe\ paper mentioned 
-in the Introduction (note the reference to the Gygi and Baldereschi paper). 
-See also J. Comp. Chem. {\bf 29}, 2098 (2008);
-JACS {\bf 129}, 10402 (2007) for examples of applications.
+See \texttt{EXX\_example/} and its README file.
 
 \paragraph{Dispersion interaction with non-local functional (vdwDF)}
-See example \texttt{examples/example\_vwdDF/} and references
+See example \texttt{vwdDF\_example} 
+and references
 quoted in file \texttt{README} therein.
 
 \paragraph{Polarization via Berry Phase}
-See Example 10, file \texttt{example10/README}, and the documentation 
-in the header of \texttt{PW/bp\_c\_phase.f90}. 
+See Example 04, its file README, 
+the documentation in the header of 
+\texttt{PW/src/bp\_c\_phase.f90}. 
 
 \paragraph{Finite electric fields}
 There are two different implementations of macroscopic electric fields
@@ -828,7 +429,7 @@ The former is useful for surfaces, especially in conjunction
 with dipolar corrections (\texttt{dipfield=.true.}):
 see \texttt{examples/dipole\_example} for an example of application. 
 Electric fields via modern theory of polarization are documented in
-example 31. The exact meaning of the related variables, for both
+example 10. The exact meaning of the related variables, for both
 cases, is explained in the general input documentation.
 
 \subsection{Optimization and dynamics}
@@ -840,7 +441,7 @@ plus a few others. You
 may follow a structural optimization with a non-SCF band-structure
 calculation (since v.4.1, you do not need any longer to update the 
 atomic positions in the input file for non scf calculation).\\
-See Example 03.
+See Example 02.
 
 \paragraph{Molecular Dynamics} 
 Specify \texttt{calculation='md'}, the time step \texttt{dt}, and possibly the number of MD stops \texttt{nstep}.
@@ -849,7 +450,7 @@ of the kind of dynamics. Other options for setting the initial
 temperature and for thermalization using velocity rescaling are
 available. Remember: this is MD on the electronic ground state, not
 Car-Parrinello MD.
-See Example 04.
+See Example 03.
 
 \paragraph{Free-energy surface calculations}
 
