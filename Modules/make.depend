@@ -112,7 +112,6 @@ mp_wave.o : kind.o
 mp_wave.o : parallel_include.o
 open_close_input_file.o : ../iotk/src/iotk_module.o
 open_close_input_file.o : io_global.o
-open_close_input_file.o : kind.o
 parser.o : io_global.o
 parser.o : kind.o
 parser.o : mp.o

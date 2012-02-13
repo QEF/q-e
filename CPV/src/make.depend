@@ -136,6 +136,7 @@ cp_restart.o : ../../iotk/src/iotk_module.o
 cp_restart.o : cp_interfaces.o
 cp_restart.o : energies.o
 cp_restart.o : gvecw.o
+cp_restart.o : ldaU.o
 cp_restart.o : mainvar.o
 cp_restart.o : wannier_base.o
 cplib.o : ../../Modules/atom.o

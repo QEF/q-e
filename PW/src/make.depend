@@ -1,3 +1,4 @@
+a2fmod.o : ../../Modules/io_files.o
 a2fmod.o : ../../Modules/io_global.o
 a2fmod.o : ../../Modules/ions_base.o
 a2fmod.o : ../../Modules/kind.o
@@ -1298,7 +1299,6 @@ rotate_wfc_gamma.o : ../../Modules/kind.o
 rotate_wfc_gamma.o : ../../Modules/mp.o
 rotate_wfc_gamma.o : ../../Modules/mp_global.o
 rotate_wfc_gamma.o : ../../Modules/ptoolkit.o
-rotate_wfc_gamma.o : realus.o
 rotate_wfc_k.o : ../../Modules/descriptors.o
 rotate_wfc_k.o : ../../Modules/kind.o
 rotate_wfc_k.o : ../../Modules/mp.o
@@ -1366,8 +1366,6 @@ scf_mod.o : ../../Modules/uspp.o
 scf_mod.o : ../../Modules/wavefunctions.o
 scf_mod.o : paw_onecenter.o
 scf_mod.o : pwcom.o
-seqopn.o : ../../Modules/io_files.o
-seqopn.o : ../../Modules/kind.o
 set_hubbard_l.o : ../../Modules/io_global.o
 set_kplusq.o : ../../Modules/kind.o
 set_kup_and_kdw.o : ../../Modules/kind.o

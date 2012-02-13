@@ -520,6 +520,7 @@ wfdd.o : ../../Modules/constants.o
 work_function.o : ../../Modules/cell_base.o
 work_function.o : ../../Modules/constants.o
 work_function.o : ../../Modules/fft_base.o
+work_function.o : ../../Modules/io_files.o
 work_function.o : ../../Modules/io_global.o
 work_function.o : ../../Modules/mp.o
 work_function.o : ../../Modules/recvec.o
