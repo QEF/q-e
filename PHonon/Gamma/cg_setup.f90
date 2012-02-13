@@ -67,7 +67,7 @@ SUBROUTINE cg_setup
   !  compute drhocore/dtau for each atom type (if needed)
   !
   nlcc_any = any  ( upf(1:ntyp)%nlcc )
-  !!! if (nlcc_any) call set_drhoc(xq)
+  !!! if (nlcc_any) call set_drhoc(xq, drc)
   !
   !  local potential
   !

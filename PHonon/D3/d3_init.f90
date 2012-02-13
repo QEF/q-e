@@ -18,6 +18,7 @@ SUBROUTINE d3_init
   USE d3com
   USE mp,         ONLY : mp_barrier
   USE symm_base,  ONLY : s, ftau
+  USE nlcc_ph,    ONLY : nlcc_any, drc
 
   IMPLICIT NONE
 
@@ -40,7 +41,7 @@ SUBROUTINE d3_init
 
         ALLOCATE (d0rc( ngm, ntyp))
         work = 0.d0
-        CALL set_drhoc (work)
+        CALL set_drhoc (work, drc)
         d0rc (:,:) = drc (:,:)
      ELSE
         d0rc => drc

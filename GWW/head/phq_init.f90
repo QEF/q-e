@@ -53,7 +53,7 @@ SUBROUTINE phq_init()
   USE uspp_param,           ONLY : upf
   USE eqv,                  ONLY : vlocq, evq, eprec
   USE phus,                 ONLY : becp1, alphap, dpqq, dpqq_so
-  USE nlcc_ph,              ONLY : nlcc_any
+  USE nlcc_ph,              ONLY : nlcc_any, drc
   USE control_ph,           ONLY : zue, epsil, lgamma, all_done, nbnd_occ
   USE units_ph,             ONLY : lrwfc, iuwfc
   USE qpoint,               ONLY : xq, igkq, npwq, nksq, eigqts, ikks, ikqs
@@ -104,7 +104,7 @@ SUBROUTINE phq_init()
   !
   ! ... a0) compute rhocore for each atomic-type if needed for nlcc
   !
-  IF ( nlcc_any ) CALL set_drhoc( xq )
+  IF ( nlcc_any ) CALL set_drhoc( xq, drc )
   !
   ! ... b) the fourier components of the local potential at q+G
   !

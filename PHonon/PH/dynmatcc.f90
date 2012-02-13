@@ -70,7 +70,7 @@ subroutine dynmatcc
   ! vxc is the spin-averaged XC potential (in G-space)
   !
   q0 = 0.d0
-  call set_drhoc (q0)
+  call set_drhoc (q0, drc)
   !
   ! set_drhoc produces drc=Drho_core(G)/DG , without struct.fact.
   !
@@ -104,7 +104,7 @@ subroutine dynmatcc
   !
   ! calculate drc for later use in calculation of non diagonal term
   !
-  call set_drhoc (xq)
+  call set_drhoc (xq, drc)
   !
   ! rotate in the pattern basis and add to dynmat
   !
