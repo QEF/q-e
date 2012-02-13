@@ -151,6 +151,7 @@ bcast_ph_input.o : ../../Modules/ions_base.o
 bcast_ph_input.o : ../../Modules/mp.o
 bcast_ph_input.o : ../../Modules/mp_global.o
 bcast_ph_input.o : ../../Modules/run_info.o
+bcast_ph_input.o : dfile_star.o
 bcast_ph_input.o : elph.o
 bcast_ph_input.o : phcom.o
 bcast_ph_input.o : ramanm.o
@@ -208,6 +209,7 @@ check_initial_status.o : ph_restart.o
 check_initial_status.o : phcom.o
 check_initial_status.o : save_ph_input.o
 check_q_points_sym.o : ../../Modules/kind.o
+check_restart_recover.o : ../../Modules/io_files.o
 chi_test.o : ../../Modules/fft_base.o
 chi_test.o : ../../Modules/kind.o
 chi_test.o : ../../Modules/wavefunctions.o
@@ -325,6 +327,26 @@ deallocate_phq.o : ../../PW/src/noncol.o
 deallocate_phq.o : elph.o
 deallocate_phq.o : phcom.o
 deallocate_phq.o : ramanm.o
+dfile_autoname.o : ../../Modules/cell_base.o
+dfile_autoname.o : ../../Modules/io_files.o
+dfile_autoname.o : ../../Modules/io_global.o
+dfile_autoname.o : ../../Modules/kind.o
+dfile_star.o : ../../Modules/cell_base.o
+dfile_star.o : ../../Modules/constants.o
+dfile_star.o : ../../Modules/fft_base.o
+dfile_star.o : ../../Modules/io_files.o
+dfile_star.o : ../../Modules/io_global.o
+dfile_star.o : ../../Modules/ions_base.o
+dfile_star.o : ../../Modules/kind.o
+dfile_star.o : ../../Modules/mp.o
+dfile_star.o : ../../Modules/mp_global.o
+dfile_star.o : ../../Modules/xml_io_base.o
+dfile_star.o : ../../PW/src/noncol.o
+dfile_star.o : ../../PW/src/pwcom.o
+dfile_star.o : ../../PW/src/symm_base.o
+dfile_star.o : dfile_autoname.o
+dfile_star.o : phcom.o
+dfile_star.o : save_ph_input.o
 dgradcorr.o : ../../Modules/constants.o
 dgradcorr.o : ../../Modules/control_flags.o
 dgradcorr.o : ../../Modules/fft_base.o
@@ -556,6 +578,7 @@ dynmatrix.o : ../../Modules/kind.o
 dynmatrix.o : ../../Modules/run_info.o
 dynmatrix.o : ../../PW/src/noncol.o
 dynmatrix.o : ../../PW/src/symm_base.o
+dynmatrix.o : dfile_star.o
 dynmatrix.o : io_dyn_mat.o
 dynmatrix.o : ph_restart.o
 dynmatrix.o : phcom.o
@@ -655,7 +678,6 @@ h_psiq.o : ../../PW/src/noncol.o
 h_psiq.o : ../../PW/src/pwcom.o
 h_psiq.o : ../../PW/src/realus.o
 h_psiq.o : ../../PW/src/scf_mod.o
-h_psiq.o : phcom.o
 hdiag.o : ../../Modules/cell_base.o
 hdiag.o : ../../Modules/kind.o
 hdiag.o : ../../Modules/recvec.o
@@ -732,8 +754,10 @@ io_dyn_mat.o : ../../Modules/kind.o
 io_dyn_mat.o : ../../Modules/mp.o
 io_dyn_mat.o : ../../Modules/mp_global.o
 io_dyn_mat.o : ../../iotk/src/iotk_module.o
+io_pattern.o : ../../Modules/io_files.o
 io_pattern.o : ../../Modules/io_global.o
 io_pattern.o : ../../Modules/kind.o
+io_pattern.o : dfile_autoname.o
 localdos.o : ../../Modules/cell_base.o
 localdos.o : ../../Modules/fft_base.o
 localdos.o : ../../Modules/fft_interfaces.o
@@ -893,6 +917,7 @@ phq_readin.o : ../../Modules/xml_io_base.o
 phq_readin.o : ../../PW/src/noncol.o
 phq_readin.o : ../../PW/src/pwcom.o
 phq_readin.o : ../../PW/src/start_k.o
+phq_readin.o : dfile_star.o
 phq_readin.o : elph.o
 phq_readin.o : ph_restart.o
 phq_readin.o : phcom.o
@@ -908,6 +933,7 @@ phq_setup.o : ../../Modules/constants.o
 phq_setup.o : ../../Modules/control_flags.o
 phq_setup.o : ../../Modules/fft_base.o
 phq_setup.o : ../../Modules/funct.o
+phq_setup.o : ../../Modules/io_files.o
 phq_setup.o : ../../Modules/io_global.o
 phq_setup.o : ../../Modules/ions_base.o
 phq_setup.o : ../../Modules/kind.o
@@ -1235,8 +1261,10 @@ solve_linter.o : ../../PW/src/paw_onecenter.o
 solve_linter.o : ../../PW/src/paw_symmetry.o
 solve_linter.o : ../../PW/src/pwcom.o
 solve_linter.o : ../../PW/src/scf_mod.o
+solve_linter.o : dfile_autoname.o
 solve_linter.o : elph.o
 solve_linter.o : phcom.o
+solve_linter.o : save_ph_input.o
 solve_linter.o : write_rec.o
 star_q.o : ../../Modules/io_global.o
 star_q.o : ../../Modules/kind.o
@@ -1341,6 +1369,7 @@ write_ramtns.o : ../../Modules/ions_base.o
 write_ramtns.o : ../../Modules/kind.o
 write_ramtns.o : phcom.o
 write_rec.o : ../../Modules/fft_base.o
+write_rec.o : ../../Modules/io_files.o
 write_rec.o : ../../Modules/ions_base.o
 write_rec.o : ../../Modules/kind.o
 write_rec.o : ../../Modules/recvec.o

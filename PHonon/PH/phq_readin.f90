@@ -40,8 +40,7 @@ SUBROUTINE phq_readin()
                             nmix_ph, ldisp, recover, lrpa, lnoloc, start_irr, &
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
                             ext_recover, ext_restart, u_from_file, ldiag, &
-                            search_sym, lqdir, dvscf_star, dvscf_dir, &
-                            electron_phonon
+                            search_sym, lqdir, electron_phonon
   USE save_ph,       ONLY : tmp_dir_save
   USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
@@ -60,9 +59,10 @@ SUBROUTINE phq_readin()
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
   USE freq_ph,       ONLY : fpol, fiu, nfs, nfsmax
   USE ph_restart,    ONLY : ph_readfile
-  USE xml_io_base, ONLY : create_directory
-  USE el_phon, ONLY : elph,elph_mat,elph_simple,elph_nbnd_min, elph_nbnd_max, &
-        el_ph_sigma, el_ph_nsigma, el_ph_ngauss,auxdvscf
+  USE xml_io_base,   ONLY : create_directory
+  USE el_phon,       ONLY : elph,elph_mat,elph_simple,elph_nbnd_min, elph_nbnd_max, &
+                            el_ph_sigma, el_ph_nsigma, el_ph_ngauss,auxdvscf
+  USE dfile_star,    ONLY : drho_star, dvscf_star
   !
   IMPLICIT NONE
   !
@@ -91,12 +91,13 @@ SUBROUTINE phq_readin()
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
                        nat_todo, iverbosity, outdir, epsil,  &
                        trans,  zue, zeu, max_seconds, reduce_io, &
-                       modenum, prefix, fildyn, fildvscf, fildrho,   &
+                       modenum, prefix, fildyn, fildvscf, fildrho, &
                        ldisp, nq1, nq2, nq3, &
                        eth_rps, eth_ns, lraman, elop, dek, recover,  &
                        fpol, asr, lrpa, lnoloc, start_irr, last_irr, &
                        start_q, last_q, nogg, ldiag, search_sym, lqdir, &
-                       nk1, nk2, nk3, k1, k2, k3, dvscf_star, dvscf_dir, &
+                       nk1, nk2, nk3, k1, k2, k3, &
+                       drho_star, dvscf_star, &
                        elph_nbnd_min, elph_nbnd_max, el_ph_ngauss,el_ph_nsigma, el_ph_sigma,  &
                        electron_phonon
 !
@@ -127,6 +128,7 @@ SUBROUTINE phq_readin()
   ! fildyn       : output file for the dynamical matrix
   ! fildvscf     : output file containing deltavsc
   ! fildrho      : output file containing deltarho
+  ! fildrho_dir  : directory where fildrho files will be stored (default: outdir or ESPRESSO_FILDRHO_DIR variable)
   ! eth_rps      : threshold for calculation of  Pc R |psi> (Raman)
   ! eth_ns       : threshold for non-scf wavefunction calculation (Raman)
   ! dek          : delta_xk used for wavefunctions derivation (Raman)
@@ -240,9 +242,20 @@ SUBROUTINE phq_readin()
   k1       = 0
   k2       = 0
   k3       = 0
-  dvscf_star =.FALSE.
-  dvscf_dir=' '
-
+  !
+  drho_star%open = .FALSE.
+  drho_star%basis = 'modes'
+  drho_star%basename = 'drho'
+  CALL get_env( 'ESPRESSO_FILDRHO_DIR', drho_star%directory)
+  IF ( TRIM( drho_star%directory ) == ' ' ) &
+      drho_star%directory = TRIM(outdir)//"/Rotated_DRHO/"
+  !
+  dvscf_star%open = .FALSE.
+  dvscf_star%basis = 'cartesian'
+  dvscf_star%basename = 'dvscf'
+  CALL get_env( 'ESPRESSO_FILDVSCF_DIR', dvscf_star%directory)
+  IF ( TRIM( dvscf_star%directory ) == ' ' ) &
+      dvscf_star%directory = TRIM(outdir)//"/Rotated_DVSCF/"
   !
   ! ...  reading the namelist inputph
   !
@@ -254,7 +267,8 @@ SUBROUTINE phq_readin()
   !
   IF (ionode) tmp_dir = trimcheck (outdir)
 
-  dvscf_dir=trim(dvscf_dir)
+  dvscf_star%directory=trim(dvscf_star%directory)
+  drho_star%directory=trim(drho_star%directory)
 
   CALL bcast_ph_input ( )
   CALL mp_bcast(nogg, ionode_id )
@@ -281,7 +295,10 @@ SUBROUTINE phq_readin()
   IF (modenum < 0) CALL errore ('phq_readin', ' Wrong modenum ', 1)
   IF (dek <= 0.d0) CALL errore ( 'phq_readin', ' Wrong dek ', 1)
   epsil = epsil .OR. lraman .OR. elop
-  IF ( (lraman.OR.elop) .AND. fildrho == ' ') fildrho = 'drho'
+  !
+  ! Set default value for fildrho and fildvscf if they are required
+  IF ( (lraman.OR.elop.OR.drho_star%open) .AND. fildrho == ' ') fildrho = 'drho'
+  IF ( (elph_mat.OR.dvscf_star%open) .AND. fildvscf == ' ') fildvscf = 'dvscf'
   !
   !  We can calculate  dielectric, raman or elop tensors and no Born effective
   !  charges dF/dE, but we cannot calculate Born effective charges dF/dE
@@ -456,10 +473,10 @@ SUBROUTINE phq_readin()
   
   IF (elph.OR.fildvscf /= ' ') lqdir=.TRUE.
 
-  IF(dvscf_star.and.nimage>1) CALL errore('phq_readin',&
+  IF(dvscf_star%open.and.nimage>1) CALL errore('phq_readin',&
        'dvscf_star with image parallelization is not yet available',1)
-
-
+  IF(drho_star%open.and.nimage>1) CALL errore('phq_readin',&
+       'drho_star with image parallelization is not yet available',1)
 
   IF (.NOT.ldisp) lqdir=.FALSE.
 
@@ -524,11 +541,8 @@ SUBROUTINE phq_readin()
   !
   IF (elph.AND..NOT.lgauss) CALL errore ('phq_readin', 'Electron-&
        &phonon only for metals', 1)
-  IF (elph.AND.fildvscf.EQ.' ') CALL errore ('phq_readin', 'El-ph needs &
-       &a DeltaVscf file', 1)
-  IF (dvscf_star.AND.fildvscf.EQ.' ') CALL errore ('phq_readin', 'dvscf_star needs &
-       &a DeltaVscf file', 1)
-  !
+!  IF (elph.AND.fildvscf.EQ.' ') CALL errore ('phq_readin', 'El-ph needs &
+!       &a DeltaVscf file', 1)
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here
   !

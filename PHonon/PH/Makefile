@@ -53,6 +53,8 @@ deallocate_part.o \
 deallocate_phq.o \
 d2ionq.o \
 davcio_drho.o \
+dfile_autoname.o \
+dfile_star.o \
 dgradcorr.o \
 dielec.o \
 drho.o \

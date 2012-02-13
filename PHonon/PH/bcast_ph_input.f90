@@ -20,8 +20,7 @@ subroutine bcast_ph_input ( )
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &
                          niter_ph, lnoloc, alpha_mix, tr2_ph, lrpa, recover, &
                          ldisp, reduce_io, zue, zeu, epsil, trans, &
-                         lgamma, ldiag, lqdir, search_sym, dvscf_star, dvscf_dir, &
-                         electron_phonon
+                         lgamma, ldiag, lqdir, search_sym,  electron_phonon
   USE gamma_gamma, ONLY : asr
   USE disp, ONLY : nq1, nq2, nq3
   USE partial, ONLY : nat_todo
@@ -33,9 +32,10 @@ subroutine bcast_ph_input ( )
   USE input_parameters, ONLY: max_seconds
   USE input_parameters, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE ions_base,     ONLY : amass
-  USE io_global, ONLY : ionode_id
-  USE run_info, ONLY : title
-  USE el_phon, ONLY : elph_nbnd_min,elph_nbnd_max,el_ph_ngauss, el_ph_nsigma, el_ph_sigma
+  USE io_global,   ONLY : ionode_id
+  USE run_info,   ONLY : title
+  USE el_phon,    ONLY : elph_nbnd_min,elph_nbnd_max,el_ph_ngauss, el_ph_nsigma, el_ph_sigma
+  USE dfile_star, ONLY : drho_star, dvscf_star
 
   implicit none
   !
@@ -58,7 +58,6 @@ subroutine bcast_ph_input ( )
   call mp_bcast (ldiag, ionode_id )
   call mp_bcast (lqdir, ionode_id )
   call mp_bcast (search_sym, ionode_id)
-  call mp_bcast (dvscf_star, ionode_id )
   !
   ! integers
   !
@@ -105,8 +104,20 @@ subroutine bcast_ph_input ( )
   call mp_bcast (fildrho, ionode_id )
   call mp_bcast (tmp_dir, ionode_id )
   call mp_bcast (prefix, ionode_id )
-  call mp_bcast (dvscf_dir, ionode_id )
   call mp_bcast (electron_phonon, ionode_id )
+  !
+  ! derived type (one bit at a time)
+  !
+  call mp_bcast (drho_star%open, ionode_id)
+  call mp_bcast (drho_star%directory, ionode_id)
+  call mp_bcast (drho_star%basename, ionode_id)
+  call mp_bcast (drho_star%basis, ionode_id)
+  !
+  call mp_bcast (dvscf_star%open, ionode_id)
+  call mp_bcast (dvscf_star%directory, ionode_id)
+  call mp_bcast (dvscf_star%basename, ionode_id)
+  call mp_bcast (dvscf_star%basis, ionode_id)
+  
 #endif
   return
 end subroutine bcast_ph_input

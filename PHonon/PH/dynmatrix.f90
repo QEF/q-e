@@ -38,9 +38,12 @@ subroutine dynmatrix
   USE partial,       ONLY : all_comp, comp_irr, done_irr, nat_todo_input
   USE units_ph,      ONLY : iudyn
   USE noncollin_module, ONLY : m_loc, nspin_mag
-  USE output,        ONLY : fildyn
+  USE output,        ONLY : fildyn, fildrho, fildvscf
   USE io_dyn_mat,    ONLY : write_dyn_mat_header
   USE ramanm,        ONLY: lraman, ramtns
+  USE dfile_star,    ONLY : write_dfile_star, drho_star, dvscf_star !write_dfile_mq
+  USE units_ph,             ONLY : iudrho
+
   implicit none
   ! local variables
   !
@@ -54,7 +57,7 @@ subroutine dynmatrix
   ! list of vectors in the star of q
   real(DP), allocatable :: zstar(:,:,:)
   integer :: icart, jcart
-  logical :: ldiag_loc
+  logical :: ldiag_loc, opnd
   !
   call start_clock('dynmatrix')
   ldiag_loc=ldiag.OR.(nat_todo_input > 0).OR.all_comp
@@ -161,6 +164,15 @@ subroutine dynmatrix
   !
   call q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
        nq, sxq, isq, imq, iudyn)
+
+  ! Rotates and write drho_q* (to be improved)
+  IF (nsym>1) THEN
+    INQUIRE (UNIT = iudrho, OPENED = opnd)
+     IF (opnd) CLOSE(UNIT = iudrho, STATUS='keep')
+     CALL write_dfile_star(drho_star, fildrho, nsym, xq, u, nq, sxq, isq, s, sr, invs, irt, ntyp, ityp,(imq==0) )
+  ELSE
+!     CALL write_drho_mq(xq, u)
+  ENDIF
   !
   !   Writes (if the case) results for quantities involving electric field
   !
