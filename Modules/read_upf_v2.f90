@@ -69,7 +69,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    if(found) CALL iotk_scan_end(u,'PP_INFO')
    !
    ! Read machine-readable header
-   CALL read_header(u, upf)
+   CALL read_upf_header(u, upf)
    IF(upf%tpawp .and. .not. present(grid)) &
       CALL errore('read_upf_v2', 'PAW requires a radial_grid_type.', 1)
    !
@@ -81,7 +81,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
                   & regenerate pseudopotential file for '//TRIM(upf%psd), 1)
 
    ! Read radial grid mesh
-   CALL read_mesh(u, upf, grid)
+   CALL read_upf_mesh(u, upf, grid)
    ! Read non-linear core correction charge
    ALLOCATE( upf%rho_atc(upf%mesh) )
    IF(upf%nlcc) THEN
@@ -97,21 +97,21 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       CALL iotk_scan_dat(u, 'PP_LOCAL', upf%vloc)
    ENDIF
    ! Read nonlocal components: projectors, augmentation, hamiltonian elements
-   CALL read_nonlocal(u, upf)
+   CALL read_upf_nonlocal(u, upf)
    ! Read initial pseudo wavefunctions
    ! (usually only wfcs with occupancy > 0)
-   CALL read_pswfc(u, upf)
+   CALL read_upf_pswfc(u, upf)
    ! Read all-electron and pseudo wavefunctions
-   CALL read_full_wfc(u, upf)
+   CALL read_upf_full_wfc(u, upf)
    ! Read valence atomic density (used for initial density)
    ALLOCATE( upf%rho_at(upf%mesh) )
    CALL iotk_scan_dat(u, 'PP_RHOATOM', upf%rho_at)
    ! Read additional info for full-relativistic calculation
-   CALL read_spin_orb(u, upf)
+   CALL read_upf_spin_orb(u, upf)
    ! Read additional data for PAW (All-electron charge, wavefunctions, vloc..)
-   CALL read_paw(u, upf)
+   CALL read_upf_paw(u, upf)
    ! Read data for gipaw reconstruction
-   CALL read_gipaw(u, upf)
+   CALL read_upf_gipaw(u, upf)
    !
    ! Close the file (not the unit!)
    CALL iotk_close_read(u)
@@ -122,7 +122,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
 
    CONTAINS
    !
-   SUBROUTINE read_header(u, upf)
+   SUBROUTINE read_upf_header(u, upf)
       IMPLICIT NONE
       INTEGER,INTENT(IN)             :: u    ! i/o unit
       TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
@@ -181,9 +181,9 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       !CALL debug_pseudo_upf(upf)
       !
       RETURN
-   END SUBROUTINE read_header
+   END SUBROUTINE read_upf_header
    !
-   SUBROUTINE read_mesh(u, upf, grid)
+   SUBROUTINE read_upf_mesh(u, upf, grid)
       USE radial_grids, ONLY: allocate_radial_grid
       IMPLICIT NONE
       INTEGER,INTENT(IN)             :: u    ! i/o unit
@@ -232,9 +232,9 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       CALL iotk_scan_end(u, 'PP_MESH')
       !
       RETURN
-   END SUBROUTINE read_mesh
+   END SUBROUTINE read_upf_mesh
    !
-   SUBROUTINE read_nonlocal(u, upf)
+   SUBROUTINE read_upf_nonlocal(u, upf)
       IMPLICIT NONE
       INTEGER,INTENT(IN)             :: u    ! i/o unit
       TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
@@ -388,9 +388,9 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       CALL iotk_scan_end(u, 'PP_NONLOCAL')
       !
       RETURN
-   END SUBROUTINE read_nonlocal
+   END SUBROUTINE read_upf_nonlocal
    !
-   SUBROUTINE read_pswfc(u, upf)
+   SUBROUTINE read_upf_pswfc(u, upf)
       IMPLICIT NONE
       INTEGER,INTENT(IN)           :: u    ! i/o unit
       TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
@@ -426,9 +426,9 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       CALL iotk_scan_end(u, 'PP_PSWFC')
       !
       RETURN
-   END SUBROUTINE read_pswfc
+   END SUBROUTINE read_upf_pswfc
 
-   SUBROUTINE read_full_wfc(u, upf)
+   SUBROUTINE read_upf_full_wfc(u, upf)
       IMPLICIT NONE
       INTEGER,INTENT(IN)           :: u    ! i/o unit
       TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
@@ -467,10 +467,10 @@ nb_loop: DO nb = 1,upf%nbeta
       ENDDO
       CALL iotk_scan_end(u, 'PP_FULL_WFC')
       !
-   END SUBROUTINE read_full_wfc
+   END SUBROUTINE read_upf_full_wfc
 
    !
-   SUBROUTINE read_spin_orb(u, upf)
+   SUBROUTINE read_upf_spin_orb(u, upf)
       IMPLICIT NONE
       INTEGER,INTENT(IN)           :: u    ! i/o unit
       TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
@@ -509,9 +509,9 @@ nb_loop: DO nb = 1,upf%nbeta
       CALL iotk_scan_end(u, 'PP_SPIN_ORB')
       !
       RETURN
-   END SUBROUTINE read_spin_orb
+   END SUBROUTINE read_upf_spin_orb
    !
-   SUBROUTINE read_paw(u, upf)
+   SUBROUTINE read_upf_paw(u, upf)
       IMPLICIT NONE
       INTEGER,INTENT(IN)           :: u    ! i/o unit
       TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
@@ -527,7 +527,7 @@ nb_loop: DO nb = 1,upf%nbeta
       CALL iotk_scan_begin(u, 'PP_PAW', attr=attr)
       CALL iotk_scan_attr(attr, 'paw_data_format', upf%paw_data_format)
       IF(upf%paw_data_format /= 2) &
-         CALL errore('read_upf_v1::read_paw',&
+         CALL errore('read_upf_v2::paw',&
                      'Unknown format of PAW data.',1)
       CALL iotk_scan_attr(attr, 'core_energy', upf%paw%core_energy, default=0._dp)
       !
@@ -591,9 +591,9 @@ nb_loop: DO nb = 1,upf%nbeta
       CALL iotk_scan_end(u, 'PP_PAW')
 
       RETURN
-   END SUBROUTINE read_paw
+   END SUBROUTINE read_upf_paw
 !
-   SUBROUTINE read_gipaw(u, upf)
+   SUBROUTINE read_upf_gipaw(u, upf)
       IMPLICIT NONE
       INTEGER,INTENT(IN)           :: u    ! i/o unit
       TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
@@ -607,7 +607,7 @@ nb_loop: DO nb = 1,upf%nbeta
       CALL iotk_scan_begin(u, 'PP_GIPAW', attr=attr)
          CALL iotk_scan_attr(attr, 'gipaw_data_format', upf%gipaw_data_format)
       IF(upf%gipaw_data_format /= 2) &
-         CALL infomsg('read_upf_v2::read_gipaw','Unknown format version')
+         CALL infomsg('read_upf_v2::gipaw','Unknown format version')
       !
       CALL iotk_scan_begin(u, 'PP_GIPAW_CORE_ORBITALS', attr=attr)
          CALL iotk_scan_attr(attr, 'number_of_core_orbitals', upf%gipaw_ncore_orbitals)
@@ -711,7 +711,7 @@ nb_loop: DO nb = 1,upf%nbeta
       ENDIF
       CALL iotk_scan_end(u, 'PP_GIPAW')
       RETURN
-   END SUBROUTINE read_gipaw
+   END SUBROUTINE read_upf_gipaw
 !
 END SUBROUTINE read_upf_v2
 !
