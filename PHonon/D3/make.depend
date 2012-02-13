@@ -72,6 +72,7 @@ d3_readin.o : ../../PHonon/PH/phcom.o
 d3_readin.o : ../../PW/src/noncol.o
 d3_readin.o : ../../PW/src/pwcom.o
 d3_readin.o : d3com.o
+d3_recover.o : ../../Modules/io_files.o
 d3_recover.o : ../../Modules/io_global.o
 d3_recover.o : ../../Modules/mp.o
 d3_recover.o : ../../PHonon/PH/phcom.o
@@ -292,6 +293,7 @@ read_ef.o : d3com.o
 rotate_and_add_d3.o : ../../Modules/constants.o
 rotate_and_add_d3.o : ../../Modules/kind.o
 set_d3irr.o : ../../Modules/control_flags.o
+set_d3irr.o : ../../Modules/io_files.o
 set_d3irr.o : ../../Modules/ions_base.o
 set_d3irr.o : ../../Modules/kind.o
 set_d3irr.o : ../../PHonon/PH/phcom.o

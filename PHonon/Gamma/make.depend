@@ -53,6 +53,7 @@ dgradcorr.o : ../../Modules/constants.o
 dgradcorr.o : ../../Modules/fft_base.o
 dgradcorr.o : ../../Modules/fft_interfaces.o
 dgradcorr.o : ../../Modules/kind.o
+dielec.o : ../../Modules/io_files.o
 dielec.o : ../../Modules/ions_base.o
 dielec.o : ../../Modules/mp.o
 dielec.o : ../../Modules/mp_global.o
@@ -117,6 +118,7 @@ h_h.o : ../../PW/src/becmod.o
 h_h.o : ../../PW/src/pwcom.o
 h_h.o : ../../PW/src/scf_mod.o
 h_h.o : cgcom.o
+macro.o : ../../Modules/io_files.o
 macro.o : ../../PW/src/pwcom.o
 macro.o : cgcom.o
 phcg.o : ../../Modules/check_stop.o
@@ -154,6 +156,7 @@ rhod2vkb.o : ../../PW/src/becmod.o
 rhod2vkb.o : ../../PW/src/pwcom.o
 rhod2vkb.o : ../../PW/src/scf_mod.o
 rhod2vkb.o : cgcom.o
+solve_e.o : ../../Modules/io_files.o
 solve_e.o : ../../Modules/io_global.o
 solve_e.o : ../../Modules/uspp.o
 solve_e.o : ../../Modules/wavefunctions.o
