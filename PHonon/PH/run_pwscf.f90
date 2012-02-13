@@ -15,7 +15,7 @@ SUBROUTINE run_pwscf(do_band)
   !
   USE control_flags,   ONLY : conv_ions, twfcollect
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
-  USE io_files,        ONLY : prefix, tmp_dir
+  USE io_files,        ONLY : prefix, tmp_dir, seqopn
   USE lsda_mod,        ONLY : nspin
   USE control_flags,   ONLY : restart
   USE qpoint,          ONLY : xq

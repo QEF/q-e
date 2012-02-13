@@ -35,7 +35,7 @@ MODULE io_rho_xml
       USE paw_variables, ONLY : okpaw
       USE ldaU,          ONLY : lda_plus_u
       USE funct,         ONLY : dft_is_meta
-      USE io_files,      ONLY : iunocc, iunpaw
+      USE io_files,      ONLY : iunocc, iunpaw, seqopn
       USE io_global,     ONLY : ionode, ionode_id, stdout
       USE scf,           ONLY : scf_type
       USE mp_global,     ONLY : intra_image_comm
@@ -93,7 +93,7 @@ MODULE io_rho_xml
       USE paw_variables, ONLY : okpaw
       USE ldaU,          ONLY : lda_plus_u
       USE funct,         ONLY : dft_is_meta
-      USE io_files,      ONLY : iunocc, iunpaw
+      USE io_files,      ONLY : iunocc, iunpaw, seqopn
       USE io_global,     ONLY : ionode, ionode_id, stdout
       USE scf,           ONLY : scf_type
       USE mp_global,     ONLY : intra_image_comm

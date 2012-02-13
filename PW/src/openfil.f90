@@ -23,7 +23,7 @@ SUBROUTINE openfil()
   USE ldaU,             ONLY : lda_plus_U
   USE io_files,         ONLY : prefix, iunpun, iunat, iunsat, iunwfc, iunigk, &
                                nwordwfc, nwordatwfc, iunefield, diropn, &
-                               tmp_dir, wfc_dir, iunefieldm, iunefieldp
+                               tmp_dir, wfc_dir, iunefieldm, iunefieldp, seqopn
   USE pw_restart,       ONLY : pw_readfile
   USE noncollin_module, ONLY : npol
   USE bp,               ONLY : lelfield

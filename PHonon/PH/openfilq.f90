@@ -18,7 +18,7 @@ SUBROUTINE openfilq()
                              iudrhous, iuebar, iudrho, iudyn, iudvscf, &
                              lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
                              lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw
-  USE io_files,       ONLY : tmp_dir, diropn
+  USE io_files,       ONLY : tmp_dir, diropn, seqopn
   USE control_ph,     ONLY : epsil, zue, ext_recover, trans, lgamma, &
                              tmp_dir_phq, start_irr, last_irr, xmldyn, dvscf_dir
   USE save_ph,        ONLY : tmp_dir_save

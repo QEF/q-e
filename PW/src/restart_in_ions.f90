@@ -10,7 +10,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   !-----------------------------------------------------------------------
   USE kinds,      ONLY: DP
   USE io_global,  ONLY : stdout
-  USE io_files,   ONLY : iunwfc, nwordwfc, iunres, prefix
+  USE io_files,   ONLY : iunwfc, nwordwfc, iunres, prefix, seqopn
   USE cell_base,  ONLY: omega, alat
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp
   USE ener,       ONLY: etot, ehart, etxc, vtxc, epaw

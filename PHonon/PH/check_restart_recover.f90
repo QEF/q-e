@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 SUBROUTINE check_restart_recover(exst_recover, exst_restart)
+USE io_files, ONLY : seqopn
 IMPLICIT NONE
 INTEGER :: iunrec, iunres
 LOGICAL :: exst_recover, exst_restart

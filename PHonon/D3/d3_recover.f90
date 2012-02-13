@@ -18,6 +18,7 @@ SUBROUTINE d3_recover (ilab, isw)
   USE d3com
   USE io_global, ONLY : ionode
   USE mp,        ONLY: mp_bcast
+  USE io_files,  ONLY : seqopn
   !
   IMPLICIT NONE
   !

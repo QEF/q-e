@@ -16,7 +16,7 @@ SUBROUTINE close_phq( flag )
   ! ... Called at the end of the run with flag=.TRUE. (removes 'recover')
   ! ... or during execution with flag=.FALSE. (does not remove 'recover')
   !
-  USE io_files,      ONLY : iunigk
+  USE io_files,      ONLY : iunigk, seqopn
   USE control_flags, ONLY : twfcollect
   USE mp_global,     ONLY : me_pool
   USE uspp,          ONLY : okvan

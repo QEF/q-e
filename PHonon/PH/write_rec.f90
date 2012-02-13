@@ -41,6 +41,7 @@ CONTAINS
     USE control_ph, ONLY : where_rec, rec_code, reduce_io
     USE ph_restart, ONLY : ph_writefile
     USE efield_mod, ONLY : zstareu0, zstarue0
+    USE io_files, ONLY : seqopn
 
     IMPLICIT NONE
     CHARACTER(LEN=10), INTENT(IN) :: where
@@ -99,6 +100,7 @@ CONTAINS
     USE eqv,   ONLY : drhoscfs
     USE efield_mod, ONLY : zstareu0, zstarue0
     USE phus, ONLY : int1, int2, int3
+    USE io_files, ONLY : seqopn
 
     IMPLICIT NONE
     INTEGER, INTENT(OUT) :: iter0
@@ -143,6 +145,8 @@ CONTAINS
   END SUBROUTINE read_rec
 
   SUBROUTINE clean_recover()
+    !
+    USE io_files, ONLY : seqopn
     !
     IMPLICIT NONE
     LOGICAL :: exst

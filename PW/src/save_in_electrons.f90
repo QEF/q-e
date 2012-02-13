@@ -9,7 +9,7 @@
 subroutine save_in_electrons (iter, dr2)
   !-----------------------------------------------------------------------
   USE kinds,         ONLY: DP
-  USE io_files,      ONLY: iunres, prefix
+  USE io_files,      ONLY: iunres, prefix, seqopn
   USE ener,          ONLY: etot
   USE klist,         ONLY: nks
   USE control_flags, ONLY: io_level, conv_elec, tr2, ethr

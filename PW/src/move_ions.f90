@@ -20,7 +20,7 @@ SUBROUTINE move_ions()
   !
   USE constants,              ONLY : e2, eps8, ry_kbar
   USE io_global,              ONLY : stdout
-  USE io_files,               ONLY : tmp_dir, iunupdate
+  USE io_files,               ONLY : tmp_dir, iunupdate, seqopn
   USE kinds,                  ONLY : DP
   USE cell_base,              ONLY : alat, at, bg, omega, cell_force, fix_volume
   USE cellmd,                 ONLY : omega_old, at_old, press, lmovecell, calc

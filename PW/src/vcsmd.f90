@@ -40,7 +40,7 @@ SUBROUTINE vcsmd()
   USE control_flags,   ONLY : nstep, istep, tolp, conv_ions 
   USE parameters,      ONLY : ntypx
   USE ener,            ONLY : etot
-  USE io_files,        ONLY : prefix, delete_if_present
+  USE io_files,        ONLY : prefix, delete_if_present, seqopn
 
   !
   IMPLICIT NONE

@@ -162,7 +162,10 @@ CONTAINS
     !
     CLOSE( UNIT = 4, STATUS = 'DELETE' )
     !
+    !-----------------------------------------------------------------------
   END FUNCTION check_writable 
+!-----------------------------------------------------------------------
+!
 !-----------------------------------------------------------------------
 subroutine diropn (unit, extension, recl, exst, tmp_dir_)
   !-----------------------------------------------------------------------
@@ -235,22 +238,97 @@ subroutine diropn (unit, extension, recl, exst, tmp_dir_)
   unf_recl = DIRECT_IO_FACTOR * int(recl, kind=kind(unf_recl))
   if (unf_recl <= 0) call errore ('diropn', 'wrong record length', 3)
   !
+  print*, "diropn", trim(adjustl(tempfile))
   open (unit, file = trim(adjustl(tempfile)), iostat = ios, form = 'unformatted', &
        status = 'unknown', access = 'direct', recl = unf_recl)
 
-  if (ios /= 0) call errore ('diropn', 'error opening '//trim(adjustl(filename)), unit)
+  if (ios /= 0) call errore ('diropn', 'error opening '//trim(tempfile), unit)
   return
+  !-----------------------------------------------------------------------
 end subroutine diropn
+!-----------------------------------------------------------------------
+!
+!-----------------------------------------------------------------------
+subroutine seqopn (unit, extension, formatt, exst, tmp_dir_)
+  !-----------------------------------------------------------------------
+  !
+  !     this routine opens a file named "prefix"."extension"
+  !     in tmp_dir for sequential I/O access
+  !     If appropriate, the node number is added to the file name
+  !
+  implicit none
+  !
+  !    first the dummy variables
+  !
+  character(len=*) :: formatt, extension
+  ! input: name of the file to connect
+  ! input: 'formatted' or 'unformatted'
+  character(len=*), optional :: tmp_dir_
+  ! optional variable, if present it is used as tmp_dir
+  integer :: unit
+  ! input: unit to connect
+  logical :: exst
+  ! output: true if the file already exist
+  !
+  !    here the local variables
+  !
+  character(len=256) :: tempfile, filename
+  ! complete file name
+  integer :: ios
+  ! integer variable to test I/O status
+  logical :: opnd
+  ! true if the file is already opened
+
+
+  if (unit < 1) call errore ('seqopn', 'wrong unit', 1)
+  !
+  !    test if the file is already opened
+  !
+  ios = 0
+  inquire (unit = unit, opened = opnd)
+  if (opnd) call errore ('seqopn', "can't open a connected unit", &
+       abs (unit) )
+  !
+  !      then we check the extension of the filename
+  !
+  if (extension.eq.' ') call errore ('seqopn','filename extension  not given',2)
+  filename = trim(prefix) // "." // trim(extension)
+  ! Use the tmp_dir from input, if available
+  if ( present(tmp_dir_) ) then
+    tempfile = trim(tmp_dir_) // trim(filename)
+  else
+    tempfile = trim(tmp_dir) // trim(filename)
+  end if
+  if ( trim(nd_nmbr) == '1' .or. trim(nd_nmbr) == '01'.or. &
+       trim(nd_nmbr) == '001' .or. trim(nd_nmbr) == '0001'.or. &
+       trim(nd_nmbr) == '00001' .or. trim(nd_nmbr) == '000001' ) then
+     !
+     ! do not add processor number to files opened by processor 1
+     ! in parallel execution: if only the first processor writes,
+     ! we do not want the filename to be dependent on the number
+     ! of processors
+     !
+     !tempfile = tempfile
+  else
+     tempfile = trim(tempfile) // nd_nmbr
+  end if
+  inquire (file = tempfile, exist = exst)
+  !
+  !    Open the file
+  !
+
+  open (unit = unit, file = tempfile, form = formatt, status = &
+       'unknown', iostat = ios)
+
+  if (ios /= 0) call errore ('seqopn', 'error opening '//trim(tempfile), unit)
+  return
+  !-----------------------------------------------------------------------
+end subroutine seqopn
+!-----------------------------------------------------------------------
+!
 !=----------------------------------------------------------------------------=!
 END MODULE io_files
 !=----------------------------------------------------------------------------=!
-
-!
-! Copyright (C) 2001-2006 Quantum ESPRESSO group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
 SUBROUTINE davcio( vect, nword, unit, nrec, io )
@@ -312,3 +390,4 @@ SUBROUTINE davcio( vect, nword, unit, nrec, io )
   RETURN
   !
 END SUBROUTINE davcio
+

@@ -32,7 +32,7 @@ SUBROUTINE openfilq()
   USE fft_base,       ONLY : dfftp
   USE lsda_mod,       ONLY : nspin
   USE uspp,           ONLY : nkb, okvan
-  USE io_files,       ONLY : prefix, iunigk
+  USE io_files,       ONLY : prefix, iunigk, seqopn
   USE noncollin_module, ONLY : npol
   USE control_flags,  ONLY : twfcollect
   USE mp_global,      ONLY : me_pool

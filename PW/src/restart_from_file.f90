@@ -10,7 +10,7 @@ SUBROUTINE restart_from_file
   !----------------------------------------------------------------------------
   !
   USE io_global,     ONLY : stdout, ionode, ionode_id
-  USE io_files,      ONLY : iunres, tmp_dir, prefix, delete_if_present
+  USE io_files,      ONLY : iunres, tmp_dir, prefix, delete_if_present, seqopn
   USE control_flags, ONLY : restart
   USE mp,            ONLY : mp_bcast
   !

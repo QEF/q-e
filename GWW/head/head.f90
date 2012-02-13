@@ -31,7 +31,7 @@ PROGRAM head
   USE start_k,         ONLY : xk_start, wk_start, nks_start
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE force_mod,       ONLY : force
-  USE io_files,        ONLY : prefix, tmp_dir
+  USE io_files,        ONLY : prefix, tmp_dir, seqopn
   USE input_parameters,ONLY : pseudo_dir
   USE ions_base,       ONLY : nat
   USE noncollin_module,ONLY : noncolin

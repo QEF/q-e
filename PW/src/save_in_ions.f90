@@ -9,7 +9,7 @@
 subroutine save_in_ions
   !-----------------------------------------------------------------------
   USE kinds,         ONLY: DP
-  USE io_files,      ONLY: iunres, prefix
+  USE io_files,      ONLY: iunres, prefix, seqopn
   USE klist,         ONLY: nks
   USE control_flags, ONLY: io_level, lscf, tr2, ethr
   USE wvfct,         ONLY: nbnd, et

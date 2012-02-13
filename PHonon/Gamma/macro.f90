@@ -12,6 +12,7 @@ SUBROUTINE macro
   !
   USE pwcom
   USE cgcom
+  USE io_files,   ONLY : seqopn
   !
   IMPLICIT NONE
   INTEGER:: kpoint, ipol

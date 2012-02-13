@@ -11,7 +11,7 @@ SUBROUTINE solve_ph ( )
   !-----------------------------------------------------------------------
   !
   USE io_global,             ONLY : stdout, ionode
-  USE io_files,              ONLY : iunres
+  USE io_files,              ONLY : iunres, seqopn
   USE pwcom
   USE uspp,                  ONLY : nkb
   USE wavefunctions_module,  ONLY : evc

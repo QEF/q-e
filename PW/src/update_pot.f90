@@ -62,7 +62,7 @@ SUBROUTINE update_pot()
   !
   USE kinds,         ONLY : DP
   USE control_flags, ONLY : pot_order, wfc_order, history, alpha0, beta0
-  USE io_files,      ONLY : prefix, iunupdate, wfc_dir, tmp_dir, nd_nmbr
+  USE io_files,      ONLY : prefix, iunupdate, wfc_dir, tmp_dir, nd_nmbr, seqopn
   USE io_global,     ONLY : ionode, ionode_id
   USE cell_base,     ONLY : bg
   USE ions_base,     ONLY : nat, tau, nsp, ityp

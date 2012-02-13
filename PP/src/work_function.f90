@@ -13,6 +13,7 @@ SUBROUTINE work_function (wf)
   !
   USE constants, ONLY : rytoev, e2
   USE io_global, ONLY : stdout, ionode, ionode_id
+  USE io_files,  ONLY : seqopn
   USE ener,      ONLY : ef
   USE lsda_mod,  ONLY : nspin, current_spin
   USE scf,       ONLY : rho, vltot, v, rho_core, rhog_core

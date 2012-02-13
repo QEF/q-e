@@ -9,7 +9,7 @@
 subroutine restart_in_electrons (iter, ik_, dr2)
   !-----------------------------------------------------------------------
   USE io_global,  ONLY : stdout
-  USE io_files,   ONLY : iunwfc, nwordwfc, iunres, prefix
+  USE io_files,   ONLY : iunwfc, nwordwfc, iunres, prefix, seqopn
   USE kinds, ONLY: DP
   USE klist, ONLY: nks
   USE control_flags, ONLY: restart, tr2, ethr

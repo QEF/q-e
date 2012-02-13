@@ -17,6 +17,7 @@ SUBROUTINE dielec(do_zstar)
   USE cgcom
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
+  USE io_files,   ONLY : seqopn
 
   IMPLICIT NONE
   LOGICAL :: do_zstar

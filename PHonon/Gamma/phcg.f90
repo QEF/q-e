@@ -14,6 +14,7 @@ PROGRAM phcg
   USE cgcom
   USE ions_base,     ONLY : nat, tau
   USE io_global,     ONLY : ionode
+  USE io_files,      ONLY : seqopn
   USE check_stop,    ONLY : check_stop_init
   USE mp_global,     ONLY: mp_startup, mp_global_end
   USE environment,   ONLY: environment_start
@@ -104,7 +105,7 @@ SUBROUTINE cg_dchi(dchi_dtau)
   USE constants,  ONLY : bohr_radius_angs
   USE ions_base,  ONLY : nat, tau
   USE io_global,  ONLY : stdout, ionode
-  USE io_files,   ONLY : iunres
+  USE io_files,   ONLY : iunres, seqopn
   USE pwcom
   USE cgcom
 
@@ -257,7 +258,7 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
   USE constants,  ONLY : bohr_radius_angs
   USE ions_base,  ONLY : nat, tau, ityp, amass
   USE io_global,  ONLY : stdout, ionode
-  USE io_files,   ONLY : iunres
+  USE io_files,   ONLY : iunres, seqopn
   USE pwcom
   USE symm_base,  ONLY : nsym, s, invs, irt
   USE cgcom
@@ -565,7 +566,7 @@ SUBROUTINE raman_cs2(w2,dynout)
   USE constants,  ONLY : bohr_radius_angs, ry_to_thz, ry_to_cmm1, amu_ry
   USE ions_base,  ONLY : nat, tau
   USE io_global,  ONLY :  stdout, ionode
-  USE io_files,   ONLY : iunres
+  USE io_files,   ONLY : iunres, seqopn
   USE pwcom
   USE cgcom
   !

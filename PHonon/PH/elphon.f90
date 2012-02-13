@@ -322,7 +322,7 @@ SUBROUTINE elphsum ( )
   USE mp,          ONLY : mp_bcast
   USE control_ph,  ONLY : lgamma, tmp_dir_phq, xmldyn
   USE save_ph,     ONLY : tmp_dir_save
-  USE io_files,    ONLY : prefix, tmp_dir
+  USE io_files,    ONLY : prefix, tmp_dir, seqopn
   !
   IMPLICIT NONE
   ! epsw = 20 cm^-1, in Ry

@@ -16,6 +16,7 @@ SUBROUTINE solve_e
   USE wavefunctions_module,  ONLY: evc
   USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE cgcom
+  USE io_files,   ONLY : seqopn
   !
   IMPLICIT NONE
   !
