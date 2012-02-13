@@ -54,6 +54,7 @@ subroutine phq_setup
   USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp, amass
   USE cell_base,     ONLY : at, bg
   USE io_global,     ONLY : stdout
+  USE io_files,      ONLY : tmp_dir
   USE ener,          ONLY : ef, ef_up, ef_dw
   USE klist,         ONLY : xk, lgauss, degauss, ngauss, nks, nelec, nelup, &
                             neldw, two_fermi_energies, wk
@@ -404,7 +405,7 @@ subroutine phq_setup
   END IF
 
 
-  if (fildrho.ne.' ') call io_pattern (nat,fildrho,nirr,npert,u,+1)
+  if (fildrho.ne.' ') call io_pattern (nat,fildrho,nirr,npert,u,xq,tmp_dir,+1)
 
   if (start_irr < 0) call errore('phq_setup', 'wrong start_irr', 1)
   last_irr_eff=last_irr

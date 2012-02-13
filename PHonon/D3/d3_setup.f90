@@ -65,7 +65,7 @@ SUBROUTINE d3_setup()
   IMPLICIT NONE
   !
   REAL (DP) :: rhotot, rhoup, rhodw, TARGET, small, fac, xmax, emin, &
-       emax, wrk
+       emax, wrk, xqck(3)
   ! total charge
   ! total up charge
   ! total down charge
@@ -224,13 +224,15 @@ SUBROUTINE d3_setup()
           npert, nirr, gi, gimq, iverbosity, modenum)
   ELSE
      IF (nsym > 1) THEN
-        CALL io_pattern ( nat, fildrho, nirr, npert, u, -1 )
+        CALL io_pattern ( nat, fildrho, nirr, npert, u, xqck, tmp_dir, -1 )
+           IF(SUM(ABS(xqck(:)-xq(:))) > 1.d-4) CALL errore('d3_setup', 'Wrong drho for q', 1)
         npertx = 0
         DO irr = 1, nirr
            npertx = max (npertx, npert (irr) )
         ENDDO
         IF (.not.lgamma) THEN
-           call io_pattern ( nat, fild0rho, nirrg0, npertg0, ug0, -1 )
+           call io_pattern ( nat, fild0rho, nirrg0, npertg0, ug0, xqck, tmp_dir, -1 )
+           IF(SUM(ABS(xqck(:))) > 1.d-4) CALL errore('d3_setup', 'Wrong drho for Gamma', 2)
            DO irr = 1, nirrg0
               npertx = max (npertx, npertg0 (irr) )
            ENDDO

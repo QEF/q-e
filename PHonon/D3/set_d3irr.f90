@@ -30,13 +30,14 @@ subroutine set_d3irr
   USE control_flags, ONLY : iverbosity
   use phcom
   use d3com
+  use io_files, only: tmp_dir
 
   implicit none
   integer :: w_nsymq, w_irotmq
   ! work array
   ! work array
 
-  real (DP) :: zero (3), w_gi (3, 48), w_gimq (3)
+  real (DP) :: zero (3), w_gi (3, 48), w_gimq (3), xqck(3)
   ! a null vector
   ! work array
   complex (DP) :: w_tmq (npertx, npertx, 3 * nat)
@@ -49,7 +50,7 @@ subroutine set_d3irr
 
   w_minus_q = .true.
   if (nsymg0.gt.1) then
-     call io_pattern(nat,fild0rho,nirrg0,npertg0,ug0,-1)
+     call io_pattern(nat,fild0rho,nirrg0,npertg0,ug0,xqck,tmp_dir,-1)
      call set_sym_irr (nat, at, bg, zero, s, invs, nsymg0, rtau, irt, &
           irgq, w_nsymq, w_minus_q, w_irotmq, tg0, w_tmq, npertx, &
           ug0, npertg0, nirrg0, w_gi, w_gimq, iverbosity)
