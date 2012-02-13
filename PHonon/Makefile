@@ -3,6 +3,7 @@
 
 default: all
 
+#all: phonon phgamma_only third_order third_order_q
 all: phonon phgamma_only third_order
 
 phonon:
@@ -17,8 +18,12 @@ third_order:
 	if test -d D3; then \
 	( cd D3 ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all; \
 	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+#third_order_q:
+#	if test -d D3q; then \
+#	( cd D3q ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all; \
+#	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
 
-clean: phonon_clean phgamma_only_clean third_order_clean
+clean: phonon_clean phgamma_only_clean third_order_clean third_order_q_clean
 
 phonon_clean:
 	if test -d src ; then \
@@ -34,6 +39,11 @@ third_order_clean:
 	if test -d D3 ; then \
 	( cd D3 ; if test "$(MAKE)" = ""; then make clean; \
 	else $(MAKE) clean ; fi ) ; fi
+
+#third_order_q_clean:
+#	if test -d D3q ; then \
+#	( cd D3q ; if test "$(MAKE)" = ""; then make clean; \
+#	else $(MAKE) clean ; fi ) ; fi
 
 doc:
 	if test -d Doc ; then \
