@@ -32,7 +32,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE ener,                 ONLY : ef
   USE klist,                ONLY : lgauss, degauss, ngauss, xk, wk
   USE gvect,                ONLY : g
-  USE gvecs,              ONLY : doublegrid
+  USE gvecs,                ONLY : doublegrid
   USE fft_base,             ONLY : dfftp, dffts
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,             ONLY : domag
@@ -60,7 +60,9 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE modes,                ONLY : npertx, npert, u, t, irotmq, tmq, &
                                    minus_q, irgq, nsymq, rtau
   USE recover_mod,          ONLY : read_rec, write_rec
-
+  ! used to write fildrho:
+  USE dfile_autoname,       ONLY : dfile_choose_name
+  USE save_ph,              ONLY : tmp_dir_save
   ! used oly to write the restart file
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum
@@ -127,6 +129,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
              mode          ! mode index
 
   real(DP) :: tcpu, get_clock ! timing variables
+  character(len=256) :: filename
 
   external ch_psi_all, cg_psi
   !
@@ -170,7 +173,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   IF (ionode .AND. fildrho /= ' ') THEN
      INQUIRE (UNIT = iudrho, OPENED = exst)
      IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
-     CALL diropn (iudrho, TRIM(fildrho)//'.u', lrdrho, exst)
+     filename = TRIM( dfile_choose_name(xq, fildrho, TRIM(tmp_dir_save)//prefix, .true.) )
+     CALL diropn (iudrho, filename, lrdrho, exst)
   END IF
 
   IF (convt) GOTO 155
@@ -438,8 +442,11 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !   compute the corresponding change in scf potential
      !
      do ipert = 1, npe
-        if (fildrho.ne.' ') call davcio_drho (drhoscfh(1,1,ipert), lrdrho, &
-                                              iudrho, imode0+ipert, +1)
+        if (fildrho.ne.' ') then 
+           call davcio_drho (drhoscfh(1,1,ipert), lrdrho, iudrho, imode0+ipert, +1)
+!           close(iudrho)
+        endif
+        
         call zcopy (dfftp%nnr*nspin_mag,drhoscfh(1,1,ipert),1,dvscfout(1,1,ipert),1)
         call dv_of_drho (imode0+ipert, dvscfout(1,1,ipert), .true.)
      enddo
