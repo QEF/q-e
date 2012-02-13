@@ -2789,56 +2789,64 @@ MODULE pw_restart
                isk(ik) = 1
                !
                IF (lkpoint_dir) THEN
-                  CALL iotk_scan_begin(iunpun, "DATAFILE"//TRIM(iotk_index(1)))
+                  CALL iotk_scan_begin(iunpun, "DATAFILE"//TRIM(iotk_index(1)) &
+                                             , FOUND = found)
+                  IF (.NOT. found ) GO TO 10 ! workaround: PW-CP compatibility
                   CALL iotk_scan_dat  ( iunpun, "EIGENVALUES", et(:,ik)  )
                   CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", wg(:,ik) )
                   CALL iotk_scan_end(iunpun, "DATAFILE"//TRIM(iotk_index(1)) )
                ELSE
                   CALL iotk_scan_begin( iunout, &
-                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_UP")
+                  "DATA_EIG"//TRIM( iotk_index(ik) )//"_SPIN_UP", FOUND=found )
+                  IF (.NOT. found ) GO TO 10 ! workaround: PW-CP compatibility
                   CALL iotk_scan_dat  ( iunout, "EIGENVALUES", et(:,ik)  )
                   CALL iotk_scan_dat  ( iunout, "OCCUPATIONS", wg(:,ik) )
                   CALL iotk_scan_end( iunout, &
                              "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_UP")
                ENDIF
                !
+  10           CONTINUE
                ik_eff = ik + num_k_points
-               !
                isk(ik_eff) = 2
                !
                IF (lkpoint_dir) THEN
-                  CALL iotk_scan_begin(iunpun,"DATAFILE"//TRIM(iotk_index(2)) )
+                  CALL iotk_scan_begin(iunpun,"DATAFILE"//TRIM(iotk_index(2)) &
+                                             , FOUND = found)
+                  IF (.NOT. found ) GO TO 20 ! workaround: PW-CP compatibility
                   CALL iotk_scan_dat  ( iunpun, "EIGENVALUES", et(:,ik_eff) )
                   CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", wg(:,ik_eff) )
                   CALL iotk_scan_end( iunpun, "DATAFILE"//TRIM(iotk_index(2)) )
                ELSE
                   CALL iotk_scan_begin( iunout, &
-                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_DW")
+                  "DATA_EIG"//TRIM( iotk_index(ik) )//"_SPIN_DW", FOUND=found )
+                  IF (.NOT. found ) GO TO 20 ! workaround: PW-CP compatibility
                   CALL iotk_scan_dat  ( iunout, "EIGENVALUES", et(:,ik_eff) )
                   CALL iotk_scan_dat  ( iunout, "OCCUPATIONS", wg(:,ik_eff) )
                   CALL iotk_scan_end( iunout, &
                              "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_DW")
                ENDIF
-               !
+  20           CONTINUE
                !
             ELSE
                !
                isk(ik) = 1
                !
                IF (lkpoint_dir) THEN
-                  CALL iotk_scan_begin( iunpun, "DATAFILE" )
+                  CALL iotk_scan_begin( iunpun, "DATAFILE" , FOUND = found)
+                  IF (.NOT. found ) GO TO 15 ! workaround: PW-CP compatibility
                   CALL iotk_scan_dat  ( iunpun, "EIGENVALUES", et(:,ik) )
                   CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", wg(:,ik) )
                   CALL iotk_scan_end  ( iunpun, "DATAFILE" )
                ELSE
                   CALL iotk_scan_begin( iunout, &
-                             "DATA_EIG"//TRIM( iotk_index( ik ) ))
+                  "DATA_EIG"//TRIM( iotk_index(ik) ), FOUND = found )
+                  IF (.NOT. found ) GO TO 15 ! workaround: PW-CP compatibility
                   CALL iotk_scan_dat  ( iunout, "EIGENVALUES", et(:,ik) )
                   CALL iotk_scan_dat  ( iunout, "OCCUPATIONS", wg(:,ik) )
                   CALL iotk_scan_end( iunout, &
                              "DATA_EIG"//TRIM( iotk_index( ik ) ))
                ENDIF
-               !
+  15           CONTINUE
                !
             END IF
             !
