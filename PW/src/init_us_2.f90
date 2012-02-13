@@ -11,28 +11,29 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   !----------------------------------------------------------------------
   !
   !   Calculates beta functions (Kleinman-Bylander projectors), with
-  !   structure factor, for all atoms, in reciprocal space
+  !   structure factor, for all atoms, in reciprocal space. On input:
+  !      npw_       : number of PWs 
+  !      igk_(npw_) : indices of G in the list of q+G vectors
+  !      q_(3)      : q vector (2pi/a units)
+  !  On output:
+  !      vkb_(npwx,nkb) : beta functions (npw_ <= npwx)
   !
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE cell_base,  ONLY : tpiba
   USE constants,  ONLY : tpi
   USE gvect,      ONLY : eigts1, eigts2, eigts3, mill, g
-  USE wvfct,      ONLY : npw, npwx, igk
+  USE wvfct,      ONLY : npwx
   USE us,         ONLY : nqx, dq, tab, tab_d2y, spline_ps
   USE splinelib
-  USE uspp,       ONLY : nkb, vkb, nhtol, nhtolm, indv
+  USE uspp,       ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param, ONLY : upf, lmaxkb, nhm, nh
   !
   implicit none
   !
-  integer :: npw_, igk_ (npw_)
-  ! input: number of PW's
-  ! input: indices of q+G
-  real(DP) :: q_(3)
-  ! input: q vector
-  complex(DP) :: vkb_ (npwx, nkb)
-  ! output: beta functions
+  INTEGER, INTENT (IN) :: npw_, igk_ (npw_)
+  REAL(dp), INTENT(IN) :: q_(3)
+  COMPLEX(dp), INTENT(OUT) :: vkb_ (npwx, nkb)
   !
   !     Local variables
   !
