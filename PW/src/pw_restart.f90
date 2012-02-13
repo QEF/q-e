@@ -476,12 +476,11 @@ MODULE pw_restart
          CALL iotk_write_attr ( attr, "UNITS", "Hartree", FIRST = .TRUE. )
          CALL iotk_write_empty( iunpun, "UNITS_FOR_ENERGIES", ATTR = attr )
          !
-         CALL iotk_write_dat(iunpun,"TWO_FERMI_ENERGIES",two_fermi_energies)
+         ! Fermi energy units in Hartree
          !
          IF (two_fermi_energies) THEN
              !
-             ! all the energy units in Hartree
-             !
+             CALL iotk_write_dat(iunpun,"TWO_FERMI_ENERGIES",two_fermi_energies)
              CALL iotk_write_dat( iunpun, "ELECTRONS_UP", nelup )
              CALL iotk_write_dat( iunpun, "ELECTRONS_DOWN", neldw )
              CALL iotk_write_dat( iunpun, "FERMI_ENERGY_UP", ef_up / e2 )
@@ -2201,7 +2200,9 @@ MODULE pw_restart
                !
             ENDIF
             !
-            CALL iotk_scan_dat(iunpun,"TWO_FERMI_ENERGIES",two_fermi_energies)
+            CALL iotk_scan_dat(iunpun,"TWO_FERMI_ENERGIES", &
+                 two_fermi_energies, FOUND = found)
+            IF ( .not. found ) two_fermi_energies=.FALSE.
             !
             IF (two_fermi_energies) THEN
                 !
@@ -2752,7 +2753,9 @@ MODULE pw_restart
             ef = 0.d0
          END IF
          !
-         CALL iotk_scan_dat( iunpun, "TWO_FERMI_ENERGIES", two_fermi_energies_ )
+         CALL iotk_scan_dat( iunpun, "TWO_FERMI_ENERGIES", &
+                 two_fermi_energies_, FOUND = found)
+         IF ( .not. found ) two_fermi_energies_=.FALSE.
          !
          IF ( two_fermi_energies_ ) THEN
              !
