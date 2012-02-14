@@ -85,10 +85,6 @@ SUBROUTINE data_structure( gamma_only )
   call gvect_init ( ngm_ , intra_comm )
   call gvecs_init ( ngs_ , intra_comm );
   !
-#ifdef __SOLVENT
-  CALL solvent_initgrid( dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, &
-               dfftp%nr2x, dfftp%nr3x, me, nproc, dfftp%npp )
-#endif
 
 END SUBROUTINE data_structure
 
