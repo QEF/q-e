@@ -39,8 +39,8 @@ SUBROUTINE forces()
   USE extfield,      ONLY : tefield, forcefield
   USE control_flags, ONLY : gamma_only, remove_rigid_rot, textfor, &
                             iverbosity, llondon
-#ifdef __SOLVENT
-  USE solvent_base,  ONLY : do_solvent, epszero, eps_mode, rhopol
+#ifdef __ENVIRON
+  USE environ_base,  ONLY : do_environ, env_static_permittivity, eps_mode, rhopol
 #endif
   USE bp,            ONLY : lelfield, gdir, l3dstring, efield_cart, &
                             efield_cry,efield
@@ -61,8 +61,8 @@ SUBROUTINE forces()
                            forces_bp_efield(:,:), &
                            forceh(:,:)
     ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
-#ifdef __SOLVENT
-  REAL(DP), ALLOCATABLE :: force_solvent(:,:)
+#ifdef __ENVIRON
+  REAL(DP), ALLOCATABLE :: force_environ(:,:)
 #endif
 
   REAL(DP) :: sumfor, sumscf, sum_mm
@@ -127,23 +127,25 @@ SUBROUTINE forces()
                         nspin, rho%of_g, force_mt )
 
   END IF
-#ifdef __SOLVENT
-  IF (do_solvent) THEN
+#ifdef __ENVIRON
+  IF (do_environ) THEN
+    !
+    ! ... The external environment contribution
     !
     CALL start_clock('calc_fsolv')
     !
-    ALLOCATE ( force_solvent ( 3 , nat ) )
+    ALLOCATE ( force_environ ( 3 , nat ) )
     !
-    force_solvent = 0.0_DP
+    force_environ = 0.0_DP
     !
-    IF ( epszero .GT. 1.D0 ) THEN
+    IF ( env_static_permittivity .GT. 1.D0 ) THEN
       !
       IF ( TRIM(eps_mode) .NE. 'ionic' ) THEN
         CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
                        g, rhopol, nl, 1, gstart, gamma_only, vloc, &
-                       force_solvent )
+                       force_environ )
       ELSE
-        CALL calc_fsolvent( dfftp%nnr, force_solvent )
+        CALL calc_fsolvent( dfftp%nnr, force_environ )
       END IF
       !
     END IF
@@ -196,8 +198,8 @@ SUBROUTINE forces()
         IF (do_comp_mt)force(ipol,na) = force(ipol,na) + force_mt(ipol,na) 
 ! DCC
 !        IF (do_comp) force(ipol,na) = force(ipol,na) + force_vcorr(ipol,na)
-#ifdef __SOLVENT
-        IF (do_solvent) force(ipol,na) = force(ipol,na) + force_solvent(ipol,na)
+#ifdef __ENVIRON
+        IF (do_environ) force(ipol,na) = force(ipol,na) + force_environ(ipol,na)
 #endif
 
         sumfor = sumfor + force(ipol,na)
@@ -284,11 +286,11 @@ SUBROUTINE forces()
      DO na = 1, nat
         WRITE( stdout, 9035) na, ityp(na), ( forcescc(ipol,na), ipol = 1, 3 )
      END DO
-#ifdef __SOLVENT
-     IF ( do_solvent ) THEN
-        WRITE( stdout, '(5x,"The continuum solvent correction to forces")')
+#ifdef __ENVIRON
+     IF ( do_environ ) THEN
+        WRITE( stdout, '(5x,"The external environment correction to forces")')
         DO na = 1, nat
-           WRITE( stdout, 9035) na, ityp(na), ( force_solvent(ipol,na), ipol = 1, 3 )
+           WRITE( stdout, 9035) na, ityp(na), ( force_environ(ipol,na), ipol = 1, 3 )
         END DO
      END IF  
 #endif
@@ -343,8 +345,8 @@ SUBROUTINE forces()
                    &  "reduce conv_thr to get better values")')
   !
   IF(ALLOCATED(force_mt))   DEALLOCATE( force_mt )
-#ifdef __SOLVENT
-  IF(ALLOCATED(force_solvent)) DEALLOCATE( force_solvent )
+#ifdef __ENVIRON
+  IF(ALLOCATED(force_environ)) DEALLOCATE( force_environ )
 #endif
 
   RETURN

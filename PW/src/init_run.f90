@@ -22,9 +22,9 @@ SUBROUTINE init_run()
   USE paw_init,           ONLY : paw_post_init
 #endif
   USE bp,                 ONLY : allocate_bp_efield, bp_global_map
-#ifdef __SOLVENT
+#ifdef __ENVIRON
   USE fft_base,           ONLY : dfftp
-  USE solvent_base,       ONLY : do_solvent
+  USE environ_base,       ONLY : do_environ
 #endif
   USE recvec_subs,        ONLY : ggen
   USE wannier_new,        ONLY : use_wannier    
@@ -67,8 +67,8 @@ SUBROUTINE init_run()
   CALL allocate_wfc()
   CALL allocate_bp_efield()
   CALL bp_global_map()
-#ifdef __SOLVENT
-  IF ( do_solvent ) CALL solvent_initbase( dfftp%nnr )
+#ifdef __ENVIRON
+  IF ( do_environ ) CALL environ_initbase( dfftp%nnr )
 #endif
   !
   CALL memory_report()

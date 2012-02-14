@@ -16,8 +16,8 @@ SUBROUTINE print_clock_pw()
    USE control_flags,      ONLY : isolve, iverbosity, gamma_only
    USE paw_variables,      ONLY : okpaw
    USE realus,             ONLY : real_space
-#ifdef __SOLVENT
-   USE solvent_base,       ONLY : do_solvent, epszero, gamma, extpressure
+#ifdef __ENVIRON
+   USE environ_base,       ONLY : do_environ
 #endif
    !
    IMPLICIT NONE
@@ -198,30 +198,8 @@ SUBROUTINE print_clock_pw()
       CALL print_clock ('PAW_grad')
    END IF
    !
-#ifdef __SOLVENT
-   IF ( do_solvent ) THEN
-      WRITE( stdout, * )
-      WRITE( stdout, '(5X,"Solvent routines")' )
-      ! dielectric subroutines
-      IF ( epszero .GT. 1.D0 ) THEN
-         CALL print_clock ('calc_esolv')
-         CALL print_clock ('calc_vsolv')
-         CALL print_clock ('dielectric') 
-         CALL print_clock ('get_rhopol')
-         CALL print_clock ('calc_veps' )
-         CALL print_clock ('calc_fsolv') 
-      END IF 
-      ! cavitation subroutines
-      IF ( gamma .GT. 0.D0 ) THEN
-         CALL print_clock ('calc_ecav')
-         CALL print_clock ('calc_vcav')
-      END IF
-      ! PV subroutines
-      IF ( extpressure .NE. 0.D0 ) THEN
-         CALL print_clock ('calc_epre')
-         CALL print_clock ('calc_vpre')
-      END IF
-   ENDIF
+#ifdef __ENVIRON
+   IF ( do_environ ) call environ_clock( stdout )
 #endif
    !
    RETURN

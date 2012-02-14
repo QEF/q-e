@@ -35,7 +35,7 @@ default :
 ###########################################################
 # Main targets
 ###########################################################
-pw : bindir mods liblapack libblas libs libiotk libsolvent
+pw : bindir mods liblapack libblas libs libiotk libenviron
 	if test -d PW ; then \
 	( cd PW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
@@ -127,8 +127,8 @@ libs : mods
 	( cd flib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= $(FLIB_TARGETS) ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= $(FLIB_TARGETS) ; fi )
 
-libsolvent :  mods
-	( if test -d Solvent ; then cd Solvent ; if test "$(MAKE)" = "" ;  \
+libenviron :  mods
+	( if test -d Environ ; then cd Environ ; if test "$(MAKE)" = "" ;  \
 	then make $(MFLAGS) TLDEPS= all; else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ; fi )
 
 bindir :
@@ -202,7 +202,7 @@ clean :
 		CPV PHonon/D3 PHonon/Gamma Modules PHonon/PH PP PW PWCOND \
 		NEB VdW ACFDT EE \
 		atomic/src clib flib pwtools upftools iotk GIPAW XSpectra \
-		dev-tools GWW extlibs TDDFPT Solvent EPW \
+		dev-tools GWW extlibs TDDFPT Environ EPW \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \

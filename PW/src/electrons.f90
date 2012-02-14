@@ -71,12 +71,12 @@ SUBROUTINE electrons()
   USE paw_onecenter,        ONLY : PAW_potential
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
-#ifdef __SOLVENT
-  USE scf,                  ONLY : vltot_zero
-  USE control_flags,        ONLY : save_vltot
-  USE solvent_base,         ONLY : do_solvent, update_vsolvent, solvent_thr, &
-                                   epszero, gamma, extpressure,              &
-                                   desolvent, esolvent, ecavity, epressure
+#ifdef __ENVIRON
+  USE environ_base,         ONLY : do_environ, update_venviron,             &
+                                   vltot_zero, environ_thr,                 &
+                                   env_static_permittivity,                 & 
+                                   env_surface_tension, env_pressure,       &
+                                   deenviron, esolvent, ecavity, epressure
 #endif
   USE dfunct,                 only : newd
   USE esm,                  ONLY : do_comp_esm, esm_printpot
@@ -177,15 +177,14 @@ SUBROUTINE electrons()
      CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
   end if
   !  
-#ifdef __SOLVENT
-  IF ( do_solvent ) THEN
-    CALL solvent_initions( nat, nsp, ityp, zv, tau ) 
-    CALL solvent_initcell( at, bg, alat, omega, tpiba2 ) 
+#ifdef __ENVIRON
+  IF ( do_environ ) THEN
+    vltot_zero = vltot
+    CALL environ_initions( nat, nsp, ityp, zv, tau ) 
+    CALL environ_initcell( dfftp%nr1*dfftp%nr2*dfftp%nr3, omega ) 
   END IF
-  !  
-  IF ( save_vltot ) vltot_zero = vltot
 #endif
-  !
+  !  
   CALL flush_unit( stdout )
   !
   ! ... calculates the ewald contribution to total energy
@@ -434,21 +433,21 @@ SUBROUTINE electrons()
         !
      END DO scf_step
      !
-#ifdef __SOLVENT
-     IF ( save_vltot ) vltot = vltot_zero
+#ifdef __ENVIRON
+     ! ... computes the external environment contribution to energy and potential
      !
-     ! ... computes the solvation contribution to energy and potential
-     !
-     IF ( do_solvent  )  THEN
+     IF ( do_environ  )  THEN
        !
-       CALL calc_esolvent( dfftp%nnr, nspin, rhoin%of_r, vltot_zero, &
-                           desolvent, esolvent, ecavity, epressure )
+       vltot = vltot_zero
        !
-       update_vsolvent = .NOT. conv_elec .AND. dr2 .LT. solvent_thr
+       CALL calc_eenviron( dfftp%nnr, nspin, rhoin%of_r, vltot_zero, &
+                           deenviron, esolvent, ecavity, epressure )
        !
-       IF ( update_vsolvent ) WRITE( stdout, 9200 )
+       update_venviron = .NOT. conv_elec .AND. dr2 .LT. environ_thr
        !
-       CALL calc_vsolvent( update_vsolvent, dfftp%nnr, nspin, rhoin%of_r, vltot )
+       IF ( update_venviron ) WRITE( stdout, 9200 )
+       !
+       CALL calc_venviron( update_venviron, dfftp%nnr, nspin, rhoin%of_r, vltot )
        !
      END IF
 #endif
@@ -569,11 +568,11 @@ SUBROUTINE electrons()
         hwf_energy = hwf_energy + etotefield
      END IF
      !
-#ifdef __SOLVENT
+#ifdef __ENVIRON
      !
-     ! ... adds the solvation contribution to the energy
+     ! ... adds the external environment contribution to the energy
      !
-     IF ( do_solvent ) etot = etot + desolvent + esolvent + ecavity + epressure
+     IF ( do_environ ) etot = etot + deenviron + esolvent + ecavity + epressure
 #endif
      !
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
@@ -624,11 +623,11 @@ SUBROUTINE electrons()
         END IF
      END IF
      !
-#ifdef __SOLVENT
-     IF ( do_solvent )  THEN
-        IF ( epszero .GT. 1.D0 ) WRITE( stdout, 9201 ) esolvent
-        IF ( gamma .GT. 0.D0 ) WRITE( stdout, 9202 ) ecavity
-        IF ( extpressure .NE. 0.D0 ) WRITE( stdout, 9203 ) epressure
+#ifdef __ENVIRON
+     IF ( do_environ )  THEN
+        IF ( env_static_permittivity .GT. 1.D0 ) WRITE( stdout, 9201 ) esolvent
+        IF ( env_surface_tension .GT. 0.D0 ) WRITE( stdout, 9202 ) ecavity
+        IF ( env_pressure .NE. 0.D0 ) WRITE( stdout, 9203 ) epressure
      ENDIF
 #endif
      !
@@ -749,8 +748,8 @@ SUBROUTINE electrons()
 9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
 9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
 9121 FORMAT(/'     scf convergence threshold =',1PE17.1,' Ry' )
-#ifdef __SOLVENT
-9200 FORMAT(/'     add solvent contribution to local potential')
+#ifdef __ENVIRON
+9200 FORMAT(/'     add environment contribution to local potential')
 9201 FORMAT( '     solvation energy          =',F17.8,' Ry' ) 
 9202 FORMAT( '     cavitation energy         =',F17.8,' Ry' ) 
 9203 FORMAT( '     PV energy                 =',F17.8,' Ry' ) 

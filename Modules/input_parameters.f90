@@ -450,9 +450,9 @@ MODULE input_parameters
           ! other DFT-D parameters ( see PW/mm_dispersion.f90 )
         REAL ( DP ) :: london_s6   =   0.75_DP , & ! default global scaling parameter for PBE
                        london_rcut = 200.00_DP
-#ifdef __SOLVENT
+#ifdef __ENVIRON
 !
-        LOGICAL   :: do_solvent = .false.
+        LOGICAL   :: do_environ = .false.
 #endif
 !
         CHARACTER(LEN=3) :: esm_bc = 'pbc'
@@ -489,8 +489,8 @@ MODULE input_parameters
              nqx1, nqx2, nqx3,                                                &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
              exx_fraction, screening_parameter,                               &
-#ifdef __SOLVENT
-             do_solvent,                                                      &
+#ifdef __ENVIRON
+             do_environ,                                                      &
 #endif
              noncolin, lspinorb, starting_spin_angle, lambda, angle1, angle2, &
              report,              &
@@ -500,10 +500,10 @@ MODULE input_parameters
              spline_ps, one_atom_occupations, london, london_s6, london_rcut, &
              step_pen, A_pen, sigma_pen, alpha_pen, no_t_rev,                 &
              esm_bc, esm_efield, esm_w, esm_nfit, esm_debug, esm_debug_gpmax
-#ifdef __SOLVENT
+#ifdef __ENVIRON
 !
 !=----------------------------------------------------------------------------=!
-!  SOLVENT Namelist Input Parameters
+!  ENVIRON Namelist Input Parameters
 !=----------------------------------------------------------------------------=!
 !
 ! Global parameters
@@ -512,7 +512,7 @@ MODULE input_parameters
         ! verbosity  0: only prints summary of polarization charge calculation; 
         !    1: prints an extra file with details of iterative convergence;
         !    2: prints 3D cube files of physical properties
-        REAL(DP) :: solvent_thr = 1.d-1
+        REAL(DP) :: environ_thr = 1.d-1
         ! how early in scf should the corrective pot start being calculated
 !
 ! Switching function parameters
@@ -531,7 +531,7 @@ MODULE input_parameters
 !
 ! Dielectric solvent parameters
 !
-        REAL(DP) :: epszero = 78.D0
+        REAL(DP) :: env_static_permittivity = 78.D0
         ! static dielectric permittivity of the solvation model. If set equal
         ! to one (=vacuum) no dielectric effects
         CHARACTER( LEN = 256 ) :: eps_mode = 'electronic'
@@ -570,24 +570,25 @@ MODULE input_parameters
 !
 ! Cavitation energy parameters
 !
-        REAL(DP) :: gamma = 0.D0
+        REAL(DP) :: env_surface_tension = 0.D0
         ! solvent surface tension, if equal to zero no cavitation term 
         REAL(DP) :: delta = 0.00001D0
         ! finite difference parameter to compute the molecular surface
 !
 ! PV energy parameters
 !
-        REAL(DP) :: extpressure = 0.D0
+        REAL(DP) :: env_pressure = 0.D0
         ! external pressure for PV energy, if equal to zero no pressure term 
 
-        NAMELIST / solvent /                                           &
-             verbose, solvent_thr,                                     &
+        NAMELIST / environ /                                           &
+             verbose, environ_thr,                                     &
              stype, rhomax, rhomin, tbeta,                             &
-             epszero, eps_mode, solvationrad, atomicspread,            &
+             env_static_permittivity, eps_mode,                        &
+             solvationrad, atomicspread,                               &
              ifdtype, nfdpoint,                                        &
              mixrhopol, tolrhopol,                                     &
-             gamma, delta,                                             &
-             extpressure
+             env_surface_tension, delta,                               &
+             env_pressure
 #endif
 !
 !=----------------------------------------------------------------------------=!

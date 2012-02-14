@@ -19,8 +19,8 @@ SUBROUTINE makov_payne( etot )
   USE io_global, ONLY : stdout
   USE ions_base, ONLY : nat, tau, ityp, zv
   USE cell_base, ONLY : at, bg
-#ifdef __SOLVENT
-  USE solvent_base, ONLY : do_solvent, pol_dipole, pol_quadrupole
+#ifdef __ENVIRON
+  USE environ_base, ONLY : do_environ, pol_dipole, pol_quadrupole
 #endif
   !
   IMPLICIT NONE
@@ -47,9 +47,9 @@ SUBROUTINE makov_payne( etot )
   x0(:) = x0(:) / zvtot
   !
   CALL compute_e_dipole( x0, e_dipole, e_quadrupole )
-#ifdef __SOLVENT
+#ifdef __ENVIRON
   !
-  IF ( do_solvent ) CALL compute_pol_dipole( x0, pol_dipole, pol_quadrupole )
+  IF ( do_environ ) CALL compute_pol_dipole( x0, pol_dipole, pol_quadrupole )
 #endif  
   !
   CALL write_dipole( etot, x0, e_dipole, e_quadrupole, qq )
@@ -182,8 +182,8 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   USE ions_base,  ONLY : nat, ityp, tau, zv
   USE cell_base,  ONLY : at, bg, omega, alat, ibrav
   USE io_global,  ONLY : ionode
-#ifdef __SOLVENT
-  USE solvent_base, ONLY : do_solvent, pol_dipole, pol_quadrupole
+#ifdef __ENVIRON
+  USE environ_base, ONLY : do_environ, pol_dipole, pol_quadrupole
 #endif
   !
   IMPLICIT NONE
@@ -235,8 +235,8 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   !
   dipole(:)  = -dipole_el(1:3) + dipole_ion(:)
   quadrupole = -quadrupole_el  + quadrupole_ion
-#ifdef __SOLVENT
-  IF ( do_solvent ) THEN 
+#ifdef __ENVIRON
+  IF ( do_environ ) THEN 
     qq = qq - pol_dipole(0)
     dipole(:)  = dipole(:) - pol_dipole(1:3) 
     quadrupole = quadrupole - pol_quadrupole  
@@ -256,8 +256,8 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
       (-dipole_el(ip), ip = 1, 3), (-dipole_el(ip)*au_debye, ip = 1, 3 )
   WRITE( stdout, '( 5X,"Ionic",3F9.4," au (Ha),", 3F9.4," Debye")' ) &
       ( dipole_ion(ip),ip = 1, 3), ( dipole_ion(ip)*au_debye,ip = 1, 3 )
-#ifdef __SOLVENT
-  IF ( do_solvent ) &
+#ifdef __ENVIRON
+  IF ( do_environ ) &
     WRITE( stdout, '( 5X,"Diele",3F9.4," au (Ha),", 3F9.4," Debye")' ) &
       (-pol_dipole(ip),ip = 1, 3), (-pol_dipole(ip)*au_debye,ip = 1, 3 )
 #endif
@@ -270,8 +270,8 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
       -quadrupole_el
   WRITE( stdout, '( 5X,"     Ions quadrupole moment",F20.8," a.u. (Ha)")' ) &
       quadrupole_ion
-#ifdef __SOLVENT
-  IF ( do_solvent ) &
+#ifdef __ENVIRON
+  IF ( do_environ ) &
     WRITE( stdout, '( 5X,"Dielectr. quadrupole moment",F20.8," a.u. (Ha)")' )  &
       -pol_quadrupole
 #endif
@@ -508,7 +508,7 @@ SUBROUTINE vacuum_level( x0, zion )
   !
 END SUBROUTINE vacuum_level
 
-#ifdef __SOLVENT
+#ifdef __ENVIRON
 !---------------------------------------------------------------------------
 SUBROUTINE compute_pol_dipole( x0, pol_dipole, pol_quadrupole )
   !---------------------------------------------------------------------------
@@ -517,7 +517,7 @@ SUBROUTINE compute_pol_dipole( x0, pol_dipole, pol_quadrupole )
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat, tau
   USE cell_base,  ONLY : at, bg, omega, alat
-  USE solvent_base, ONLY : epszero, rhopol
+  USE environ_base, ONLY : env_static_permittivity, rhopol
   USE fft_base,   ONLY : dfftp
   USE mp_global,  ONLY : me_pool, intra_pool_comm, &
                          me_bgrp, intra_bgrp_comm
@@ -540,7 +540,7 @@ SUBROUTINE compute_pol_dipole( x0, pol_dipole, pol_quadrupole )
   pol_dipole(:)  = 0.D0
   pol_quadrupole = 0.D0
   !
-  IF ( epszero .LE. 1.D0 ) RETURN
+  IF ( env_static_permittivity .LE. 1.D0 ) RETURN
   !
   index0 = 0
   !

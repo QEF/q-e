@@ -13,7 +13,7 @@ if test $# = 0
 then
     dirs=" Modules clib PW/src CPV/src flib PW/tools upftools PP/src PWCOND/src \
            PHonon/Gamma PHonon/PH PHonon/D3 atomic/src VdW/src XSpectra/src \
-	   GWW/gww GWW/pw4gww GWW/head ACFDT NEB/src Solvent TDDFPT/src" 
+	   GWW/gww GWW/pw4gww GWW/head ACFDT NEB/src Environ/src TDDFPT/src" 
           
 else
     dirs=$*
@@ -34,7 +34,7 @@ for dir in $dirs; do
     LEVEL2=../..
     DEPENDS="$LEVEL1/include $LEVEL1/iotk/src"
     case $DIR in 
-        EE | flib | upftools | Solvent )
+        EE | flib | upftools )
              DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/Modules" ;;
 	PP/src  )
              DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
@@ -46,7 +46,7 @@ for dir in $dirs; do
              DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/Modules \
                       $LEVEL1/PW/src $LEVEL1/PHonon/PH" ;;
 
-	PW/src )
+	PW/src | Environ/src )
 	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules" ;;
 	PW/tools | PWCOND/src )
 	     DEPENDS="$LEVEL2/include $LEVEL2/PW/src $LEVEL2/iotk/src $LEVEL2/Modules" ;;
@@ -89,7 +89,7 @@ for dir in $dirs; do
         if test "$DIR" = "PW/src"
         then
             mv make.depend make.depend.tmp
-            sed '/@solvent_base@/d' make.depend.tmp > make.depend
+            sed '/@environ_base@/d' make.depend.tmp > make.depend
         fi
 
         rm -f make.depend.tmp

@@ -234,10 +234,10 @@ MODULE read_namelists_module
        london_s6   = 0.75_DP
        london_rcut = 200.00_DP
        !
-#ifdef __SOLVENT
-       ! ... Solvent
+#ifdef __ENVIRON
+       ! ... Environ
        !
-       do_solvent = .false. 
+       do_environ = .false. 
        !
 #endif
        ! ... ESM
@@ -253,15 +253,15 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
 
-#ifdef __SOLVENT
+#ifdef __ENVIRON
      !=----------------------------------------------------------------------=!
      !
-     !  Variables initialization for Namelist SOLVENT
+     !  Variables initialization for Namelist ENVIRON
      !
      !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE solvent_defaults( prog )
+     SUBROUTINE environ_defaults( prog )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
@@ -269,15 +269,15 @@ MODULE read_namelists_module
        CHARACTER(LEN=2) :: prog   ! ... specify the calling program
        !
        !
-       verbose     = 0
-       solvent_thr = 1.D-1
+       verbose         = 0
+       environ_thr = 1.D-1
        !
        stype   = 1
        rhomax  = 0.005
        rhomin  = 0.0001
        tbeta   = 4.8
        !
-       epszero         = 78.D0
+       env_static_permittivity = 78.D0
        eps_mode        = 'electronic'
        solvationrad(:) = 3.D0
        atomicspread(:) = 0.5D0
@@ -288,10 +288,10 @@ MODULE read_namelists_module
        mixrhopol = 0.5
        tolrhopol = 1.D-10
        !
-       gamma = 50.D0
+       env_surface_tension = 50.D0
        delta = 0.00001D0
        !
-       extpressure = -0.35D0
+       env_pressure = -0.35D0
        !
        RETURN
        !
@@ -866,8 +866,8 @@ MODULE read_namelists_module
        CALL mp_bcast( london_rcut,               ionode_id )
        !
        CALL mp_bcast( no_t_rev,                  ionode_id )
-#ifdef __SOLVENT
-       CALL mp_bcast( do_solvent,                ionode_id )
+#ifdef __ENVIRON
+       CALL mp_bcast( do_environ,                ionode_id )
 #endif
        !
        ! ... ESM method broadcast
@@ -882,15 +882,15 @@ MODULE read_namelists_module
        RETURN
        !
      END SUBROUTINE
-#ifdef __SOLVENT
+#ifdef __ENVIRON
      !=----------------------------------------------------------------------=!
      !
-     !  Broadcast variables values for Namelist SOLVENT
+     !  Broadcast variables values for Namelist ENVIRON
      !
      !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE solvent_bcast()
+     SUBROUTINE environ_bcast()
        !-----------------------------------------------------------------------
        !
        USE io_global, ONLY : ionode_id
@@ -899,14 +899,14 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        CALL mp_bcast( verbose,                    ionode_id )
-       CALL mp_bcast( solvent_thr,                ionode_id )
+       CALL mp_bcast( environ_thr,                ionode_id )
        !
        CALL mp_bcast( stype,                      ionode_id )
-       CALL mp_bcast( rhomax,                    ionode_id )
+       CALL mp_bcast( rhomax,                     ionode_id )
        CALL mp_bcast( rhomin,                     ionode_id )
        CALL mp_bcast( tbeta,                      ionode_id )
        !
-       CALL mp_bcast( epszero,                    ionode_id )
+       CALL mp_bcast( env_static_permittivity,    ionode_id )
        CALL mp_bcast( eps_mode,                   ionode_id )
        CALL mp_bcast( solvationrad,               ionode_id )
        CALL mp_bcast( atomicspread,               ionode_id )
@@ -917,10 +917,10 @@ MODULE read_namelists_module
        CALL mp_bcast( mixrhopol,                  ionode_id )
        CALL mp_bcast( tolrhopol,                  ionode_id )
        !
-       CALL mp_bcast( gamma,                      ionode_id )
+       CALL mp_bcast( env_surface_tension,        ionode_id )
        CALL mp_bcast( delta,                      ionode_id )
        !
-       CALL mp_bcast( extpressure,                ionode_id )
+       CALL mp_bcast( env_pressure,               ionode_id )
        !
       RETURN
        !
@@ -1869,8 +1869,8 @@ MODULE read_namelists_module
          CALL electrons_defaults( prog )
          CALL ions_defaults( prog )
          CALL cell_defaults( prog )
-#ifdef __SOLVENT
-         CALL solvent_defaults( prog )
+#ifdef __ENVIRON
+         CALL environ_defaults( prog )
 #endif
          CALL ee_defaults( prog )
        ENDIF
@@ -1991,18 +1991,18 @@ MODULE read_namelists_module
        END IF
        !
        CALL press_ai_bcast()
-#ifdef __SOLVENT
+#ifdef __ENVIRON
        !
-       ! ... SOLVENT namelist
+       ! ... ENVIRON namelist
        !
-       IF ( do_solvent ) THEN
+       IF ( do_environ ) THEN
           ios = 0
-          IF( ionode ) READ( 5, solvent, iostat = ios )
+          IF( ionode ) READ( 5, environ, iostat = ios )
           CALL mp_bcast( ios, ionode_id )
           IF( ios /= 0 ) CALL errore( ' read_namelists ', &
-                                    & ' reading namelist solvent ', ABS(ios) )
+                                    & ' reading namelist environ ', ABS(ios) )
        END IF
-       CALL solvent_bcast()
+       CALL environ_bcast()
 #endif
        !
        ! ... EE namelist

@@ -102,27 +102,26 @@ SUBROUTINE iosys()
                             niter_with_fixed_ns, starting_ns, U_projection
   !
   USE martyna_tuckerman, ONLY: do_comp_mt
-#ifdef __SOLVENT
-  USE control_flags, ONLY : save_vltot
-  USE constants,     ONLY : rydberg_si, bohr_radius_si
-  USE solvent_base,  ONLY : do_solvent_ => do_solvent,        &
-                            verbose_ => verbose,              &
-                            solvent_thr_ => solvent_thr,      &
-                            stype_ => stype,                  &
-                            rhomax_ => rhomax,                &
-                            rhomin_ => rhomin,                &
-                            tbeta_ => tbeta,                  &
-                            epszero_ => epszero,              &
-                            eps_mode_ => eps_mode,            &
-                            solvationrad_ => solvationrad,    &
-                            atomicspread_ => atomicspread,    &
-                            ifdtype_ => ifdtype,              &
-                            nfdpoint_ => nfdpoint,            &
-                            mixrhopol_ => mixrhopol,          &
-                            tolrhopol_ => tolrhopol,          &
-                            gamma_ => gamma,                  &
-                            delta_ => delta,                  &
-                            extpressure_ => extpressure
+#ifdef __ENVIRON
+  USE constants,    ONLY : rydberg_si, bohr_radius_si
+  USE environ_base, ONLY : do_environ_ => do_environ,                           &
+                           verbose_ => verbose,                                 &
+                           environ_thr_ => environ_thr,                         &
+                           stype_ => stype,                                     &
+                           rhomax_ => rhomax,                                   &
+                           rhomin_ => rhomin,                                   &
+                           tbeta_ => tbeta,                                     &
+                           env_static_permittivity_ => env_static_permittivity, &
+                           eps_mode_ => eps_mode,                               &
+                           solvationrad_ => solvationrad,                       &
+                           atomicspread_ => atomicspread,                       &
+                           ifdtype_ => ifdtype,                                 &
+                           nfdpoint_ => nfdpoint,                               &
+                           mixrhopol_ => mixrhopol,                             &
+                           tolrhopol_ => tolrhopol,                             &
+                           env_surface_tension_ => env_surface_tension,         &
+                           delta_ => delta,                                     &
+                           env_pressure_ => env_pressure
 #endif
   !
   USE esm,           ONLY: do_comp_esm, &
@@ -240,8 +239,8 @@ SUBROUTINE iosys()
                                x_gamma_extrapolation, nqx1, nqx2, nqx3,     &
                                exxdiv_treatment, yukawa, ecutvcut,          &
                                exx_fraction, screening_parameter,           &
-#ifdef __SOLVENT
-                               do_solvent,                                  &
+#ifdef __ENVIRON
+                               do_environ,                                  &
 #endif
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
@@ -250,17 +249,18 @@ SUBROUTINE iosys()
                                assume_isolated, spline_ps, london, london_s6, &
                                london_rcut, one_atom_occupations, &
                                esm_bc, esm_efield, esm_w, esm_nfit
-#ifdef __SOLVENT
+#ifdef __ENVIRON
   !
-  ! ... SOLVENT namelist
+  ! ... ENVIRON namelist
   !
-  USE input_parameters, ONLY : verbose, solvent_thr,                          &
-                               stype, rhomax, rhomin, tbeta,                  &
-                               epszero, eps_mode, solvationrad, atomicspread, &
-                               ifdtype, nfdpoint,                             &
-                               mixrhopol, tolrhopol,                          &
-                               gamma, delta,                                  &
-                               extpressure 
+  USE input_parameters, ONLY : verbose, environ_thr,              &
+                               stype, rhomax, rhomin, tbeta,      &
+                               env_static_permittivity, eps_mode, &
+                               solvationrad, atomicspread,        &
+                               ifdtype, nfdpoint,                 &
+                               mixrhopol, tolrhopol,              &
+                               env_surface_tension, delta,        &
+                               env_pressure 
 #endif
   !
   ! ... ELECTRONS namelist
@@ -1185,15 +1185,13 @@ SUBROUTINE iosys()
   w_1_              = w_1
   w_2_              = w_2
   !
-#ifdef __SOLVENT
+#ifdef __ENVIRON
   !
-  ! ...  Solvent
+  ! ...  Environ
   !
-  do_solvent_ = do_solvent
-  save_vltot = .false.
-  IF ( do_solvent ) save_vltot = .true.
-  verbose_  = verbose
-  solvent_thr_  = solvent_thr
+  do_environ_   = do_environ
+  verbose_      = verbose
+  environ_thr_  = environ_thr
   !
   stype_    = stype
   rhomax_   = rhomax
@@ -1203,7 +1201,7 @@ SUBROUTINE iosys()
     tbeta_  = LOG( rhomax / rhomin )
   END IF
   !
-  epszero_ = epszero
+  env_static_permittivity_ = env_static_permittivity
   eps_mode_ = eps_mode
   ALLOCATE( solvationrad_( ntyp ) )
   solvationrad_( 1:ntyp ) = solvationrad( 1:ntyp )
@@ -1216,10 +1214,11 @@ SUBROUTINE iosys()
   mixrhopol_ = mixrhopol
   tolrhopol_ = tolrhopol
   !
-  gamma_      = gamma*1.D-3*bohr_radius_si**2/rydberg_si
+  env_surface_tension_ = &
+    env_surface_tension*1.D-3*bohr_radius_si**2/rydberg_si
   delta_      = delta
   !
-  extpressure_ = extpressure*1.D9/rydberg_si*bohr_radius_si**3
+  env_pressure_ = env_pressure*1.D9/rydberg_si*bohr_radius_si**3
   !
 #endif
   !
