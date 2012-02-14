@@ -267,8 +267,8 @@ SUBROUTINE phq_readin()
   !
   IF (ionode) tmp_dir = trimcheck (outdir)
 
-  dvscf_star%directory=trim(dvscf_star%directory)
   drho_star%directory=trim(drho_star%directory)
+  dvscf_star%directory=trim(dvscf_star%directory)
 
   CALL bcast_ph_input ( )
   CALL mp_bcast(nogg, ionode_id )

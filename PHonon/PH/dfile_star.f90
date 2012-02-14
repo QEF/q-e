@@ -256,7 +256,6 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
   USE lsda_mod,         ONLY : nspin
   USE modes,            ONLY : nirr, npert, npertx, rtau
   USE units_ph,         ONLY : lrdrho
-  USE output,           ONLY : fildrho
   USE io_global,        ONLY : stdout , ionode, ionode_id
   use io_files,         ONLY : find_free_unit, diropn, prefix
   USE constants,        ONLY : tpi
@@ -421,7 +420,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
   ! Now I rotate the dvscf
   !
   ALLOCATE(phase_sxq(nat))
-  IF (descr%basis == 'modes') CALL allocate_rotated_pattern_repr(rpat, nat, npertx)
+  CALL allocate_rotated_pattern_repr(rpat, nat, npertx)
   ! 
   Q_IN_THE_STAR : &
   DO iq=1,nq
@@ -563,7 +562,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
     ! Also store drho(-q) if necessary
     MINUS_Q : &
     IF  (dfile_minus_q .and. xq(1)**2+xq(2)**2+xq(3)**2 > 1.d-5 )  THEN
-        dfile_rot_name = dfile_choose_name(-sxq(:,iq), TRIM(fildrho), &
+        dfile_rot_name = dfile_choose_name(-sxq(:,iq), TRIM(descr%basename), &
                                           TRIM(descr%directory)//prefix, generate=.true.)
         iudfile_rot = find_free_unit()
         CALL diropn (iudfile_rot, TRIM(dfile_rot_name), lrdrho, exst, descr%directory)
@@ -591,7 +590,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
   !
   DEALLOCATE(dfile_rot, dfile_rot_scr, dfile_at)
   DEALLOCATE(phase_sxq)
-  IF (descr%basis == 'modes') CALL deallocate_rotated_pattern_repr(rpat)
+  CALL deallocate_rotated_pattern_repr(rpat)
   !
   RETURN
   !----------------------------------------------------------------------------

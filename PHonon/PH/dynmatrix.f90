@@ -40,9 +40,9 @@ subroutine dynmatrix
   USE noncollin_module, ONLY : m_loc, nspin_mag
   USE output,        ONLY : fildyn, fildrho, fildvscf
   USE io_dyn_mat,    ONLY : write_dyn_mat_header
-  USE ramanm,        ONLY: lraman, ramtns
+  USE ramanm,        ONLY : lraman, ramtns
   USE dfile_star,    ONLY : write_dfile_star, drho_star, dvscf_star !write_dfile_mq
-  USE units_ph,             ONLY : iudrho
+  USE units_ph,      ONLY : iudrho, iudvscf
 
   implicit none
   ! local variables
@@ -166,12 +166,17 @@ subroutine dynmatrix
        nq, sxq, isq, imq, iudyn)
 
   ! Rotates and write drho_q* (to be improved)
-  IF (nsym>1) THEN
+  IF(drho_star%open) THEN
     INQUIRE (UNIT = iudrho, OPENED = opnd)
-     IF (opnd) CLOSE(UNIT = iudrho, STATUS='keep')
-     CALL write_dfile_star(drho_star, fildrho, nsym, xq, u, nq, sxq, isq, s, sr, invs, irt, ntyp, ityp,(imq==0) )
-  ELSE
-!     CALL write_drho_mq(xq, u)
+    IF (opnd) CLOSE(UNIT = iudrho, STATUS='keep')
+    CALL write_dfile_star(drho_star, fildrho, nsym, xq, u, nq, sxq, isq, &
+                          s, sr, invs, irt, ntyp, ityp,(imq==0) )
+  ENDIF
+  IF(dvscf_star%open) THEN
+    INQUIRE (UNIT = iudvscf, OPENED = opnd)
+    IF (opnd) CLOSE(UNIT = iudvscf, STATUS='keep')
+    CALL write_dfile_star(dvscf_star, fildvscf, nsym, xq, u, nq, sxq, isq, &
+                          s, sr, invs, irt, ntyp, ityp,(imq==0) )
   ENDIF
   !
   !   Writes (if the case) results for quantities involving electric field

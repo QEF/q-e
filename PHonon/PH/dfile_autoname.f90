@@ -10,7 +10,7 @@
 MODULE dfile_autoname
 !----------------------------------------------------------------------
   !
-  PUBLIC :: dfile_choose_name, dfile_generate_name
+  PUBLIC :: dfile_choose_name, dfile_generate_name, dfile_get_qlist
   !
   PRIVATE
   CHARACTER(len=12),PARAMETER :: dfile_directory_basename='.dfile_dir'
@@ -173,6 +173,53 @@ END FUNCTION dfile_choose_name
 !----------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
+SUBROUTINE dfile_get_qlist(xqs, nqs, name, prefix)
+  !----------------------------------------------------------------------
+  ! automatically generate a name for fildrho file
+  USE kinds,        ONLY : DP
+  USE io_global,    ONLY : ionode
+  IMPLICIT NONE
+  ! input variables:
+  INTEGER,INTENT(in)          :: nqs      ! max number of points
+  REAL(DP),INTENT(out)        :: xqs(3,nqs)! the q point in cartesian axes
+  CHARACTER(len=*),INTENT(in) :: prefix     ! directory where to operate
+  CHARACTER(len=*),INTENT(in) :: name       ! input fildrho
+  !
+  INTEGER :: iunit = -1, ios, iq
+  CHARACTER(len=256) :: basename
+  !
+  ! Only ionode scans for the filename, and does NOT broadcast. The broadcast
+  ! must be done outside, because here we do not know which processors are
+  ! calling this subroutine!
+  !
+  IF (.not. ionode) THEN
+   xqs = 0._dp
+   RETURN
+  ENDIF
+  !
+  IF(name(1:5) == 'auto:') THEN
+    basename = TRIM(name(6:))
+  ELSE
+    basename = TRIM(name)
+  ENDIF
+  !
+  iunit = open_dfile_directory(basename, prefix)
+  !
+  GET_Q_LOOP : &
+  DO iq = 1,nqs
+     READ(iunit,*,iostat=ios) xqs(:,iq)
+     IF(ios/=0) THEN
+       CALL errore('dfile_get_qlist', 'Error while reading q point', iq)
+     ENDIF
+  ENDDO &
+  GET_Q_LOOP
+
+  RETURN
+  !----------------------------------------------------------------------
+END SUBROUTINE dfile_get_qlist
+!----------------------------------------------------------------------
+!
+!----------------------------------------------------------------------
 FUNCTION dfile_generate_name(xq, name, atx)
   !----------------------------------------------------------------------
   ! automatically generate a name for fildrho file
@@ -212,7 +259,9 @@ END FUNCTION dfile_generate_name
 ! 0.25 --> "1o4"
 ! -1.66666666667 -> "-5/3"
 ! 
+!----------------------------------------------------------------------
 FUNCTION real2frac(r) RESULT (f)
+  !----------------------------------------------------------------------
   USE kinds, ONLY : DP
   IMPLICIT NONE
   REAL(DP),INTENT(in) :: r
@@ -251,57 +300,9 @@ FUNCTION real2frac(r) RESULT (f)
   !
   RETURN
   !
+  !----------------------------------------------------------------------
 END FUNCTION real2frac
-!
-#define dfile_generate_name dfile_generate_name2
 !----------------------------------------------------------------------
-FUNCTION dfile_generate_name(xq, name)
-  !----------------------------------------------------------------------
-  ! automatically generate a name for fildrho file
-  USE kinds,        ONLY : DP
-  USE cell_base,    ONLY : at
-  IMPLICIT NONE
-  ! function:
-  CHARACTER(len=256) :: dfile_generate_name
-  ! input variables:
-  REAL(DP),INTENT(in)         :: xq(3) ! the q point in cartesian axes
-  CHARACTER(len=*),INTENT(in) :: name  ! input fildrho
-  ! local variables:
-  REAL(DP):: aq(3) ! xq in crystal axes
-  INTEGER :: iq(3) ! aq*max_finesse, expressed as integers
-  CHARACTER(len=16) :: n1, n2, n3 ! aux
-  ! parameters:
-  INTEGER,PARAMETER :: max_finesse = 2**6 * 3**3 * 5**2 * 7 ! = 302400
-  REAL(DP),PARAMETER :: accep = 1.e-5_dp
-  ! this constants allows grids up to 64*64*64, or 27*27*27 or ... or combinations
-  ! this works as long as max_finesse is a multiple of nq1, nq2 and nq3 (separately)
-!   IF(name(1:5) /= 'auto:') THEN
-!     dfile_generate_name = name
-!     RETURN
-!   ENDIF
-  !
-  ! take xq to crystalline coordinates
-  aq(:) = xq(1)*at(1,:) + xq(2)*at(2,:) + xq(3)*at(3,:)
-  !
-  iq(:) = NINT(max_finesse * aq(:))
-  IF(SUM(ABS(DBLE(iq)-aq*max_finesse)) > DBLE(max_finesse)*accep ) THEN
-    WRITE(*,*) iq, aq*max_finesse, DBLE(max_finesse)*accep
-    CALL errore('dfile_generate_name', 'Your grid is too fine for dfile_generate_name: '//&
-                                         'increase max_finesse in PH/dfile_autoname.f90', 1)
-  ENDIF
-  !
-  WRITE(n1, '(i16)') iq(1)
-  WRITE(n2, '(i16)') iq(2)
-  WRITE(n3, '(i16)') iq(3)
-  !
-  WRITE(dfile_generate_name, '(a,".{",a,"}{",a,"}{",a,"}")') TRIM(name), &
-        TRIM(ADJUSTL(n1)), TRIM(ADJUSTL(n2)), TRIM(ADJUSTL(n3))
-  !
-  RETURN
-  !----------------------------------------------------------------------
-END FUNCTION dfile_generate_name
-!----------------------------------------------------------------------
-#undef dfile_generate_name 
 !
 !----------------------------------------------------------------------
 END MODULE dfile_autoname

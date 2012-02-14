@@ -16,6 +16,8 @@ SUBROUTINE q_points_wannier ( )
   USE output, ONLY : fildyn
   USE control_ph, ONLY : dvscf_dir
   USE el_phon, ONLY : wan_index_dyn
+  USE dfile_autoname, ONLY : dfile_get_qlist
+  USE dfile_star, ONLY : dvscf_star
 
   implicit none
 
@@ -40,17 +42,18 @@ SUBROUTINE q_points_wannier ( )
   allocate (x_q(3,nqmax))
   allocate(wan_index_dyn(nqs))
 
-  !here read q_points
-  IF (ionode) inquire (file =TRIM(dvscf_dir)//'Q_POINTS.D', exist = exst)
-  if(.not.exst) call errore('q_points_wannier','Q_POINTS.D not existing in dvscf_dir ',1)
+!  !here read q_points
+  CALL dfile_get_qlist(x_q, nqs, dvscf_star%basename, dvscf_star%directory)
+!  IF (ionode) inquire (file =TRIM(dvscf_dir)//'Q_POINTS.D', exist = exst)
+!  if(.not.exst) call errore('q_points_wannier','Q_POINTS.D not existing in dvscf_dir ',1)
 
-  iq_unit = find_free_unit()
-  OPEN (unit = iq_unit, file = trim(dvscf_dir)//'Q_POINTS.D', status = 'unknown')
-  rewind(iq_unit) 
-
-  do i=1,nqs
-     read(iq_unit,*) x_q(1,i), x_q(2,i), x_q(3,i), idum, wan_index_dyn(i)
-  enddo
+!  iq_unit = find_free_unit()
+!  OPEN (unit = iq_unit, file = trim(dvscf_dir)//'Q_POINTS.D', status = 'unknown')
+!  rewind(iq_unit) 
+  
+!  do i=1,nqs
+!     read(iq_unit,*) x_q(1,i), x_q(2,i), x_q(3,i), idum, wan_index_dyn(i)
+!  enddo
 
   close(iq_unit)
   !

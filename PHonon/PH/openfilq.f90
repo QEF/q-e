@@ -155,25 +155,25 @@ SUBROUTINE openfilq()
   !
   !   An optional file for electron-phonon calculations containing deltaVscf
   !
-400 IF (fildvscf.NE.' ') THEN
+400 IF (trim(fildvscf).NE.' ') THEN
      iudvscf = 27
      IF ( me_pool == 0 ) THEN
-        IF(dvscf_dir.NE.' ') then
-           write(stdout,*) 'Reading dvscf file ',trim(adjustl(fildvscf))
-           write(stdout,*) 'in directory ',trim(adjustl(dvscf_dir))
-           CALL diropn (iudvscf, fildvscf, lrdrho, exst, dvscf_dir)
-        ELSE
+!        IF(trim(dvscf_dir).NE.' ') then
+!           write(stdout,*) 'Reading dvscf file ',trim(adjustl(fildvscf))
+!           write(stdout,*) 'in directory ',trim(adjustl(dvscf_dir))
+!           CALL diropn (iudvscf, fildvscf, lrdrho, exst, dvscf_dir)
+!        ELSE
            CALL diropn (iudvscf, fildvscf, lrdrho, exst )
-        ENDIF
+!        ENDIF
         IF (okpaw) THEN
            filint=TRIM(fildvscf)//'_paw'
            lint3paw = 2 * nhm * nhm * 3 * nat * nspin_mag
            iuint3paw=34
-           IF(dvscf_dir.NE.' ') then
-              CALL diropn (iuint3paw, filint, lint3paw, exst, dvscf_dir)
-           ELSE
+!           IF(dvscf_dir.NE.' ') then
+!              CALL diropn (iuint3paw, filint, lint3paw, exst, dvscf_dir)
+!           ELSE
               CALL diropn (iuint3paw, filint, lint3paw, exst)
-           ENDIF
+!           ENDIF
         ENDIF
      END IF
   END IF

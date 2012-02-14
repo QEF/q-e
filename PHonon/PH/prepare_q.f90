@@ -72,6 +72,14 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !
   IF ( ldisp ) THEN
      !
+     ! ... set the q point
+     !
+     xq(1:3)  = x_q(1:3,iq)
+     !
+     !  Check if it is lgamma
+     !
+     lgamma = ( xq(1) == 0.D0 .AND. xq(2) == 0.D0 .AND. xq(3) == 0.D0 )
+     !
      ! ... set the name for the output file
      !
      if(elph_mat) then
@@ -80,14 +88,6 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
      else
         fildyn = TRIM( auxdyn ) // TRIM( int_to_char( iq ) )
      endif
-     !
-     ! ... set the q point
-     !
-     xq(1:3)  = x_q(1:3,iq)
-     !
-     !  Check if it is lgamma
-     !
-     lgamma = ( xq(1) == 0.D0 .AND. xq(2) == 0.D0 .AND. xq(3) == 0.D0 )
      !
      ! ... each q /= gamma is saved on a different directory
      !
