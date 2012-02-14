@@ -46,6 +46,11 @@ environment.o : version.o
 error_handler.o : io_files.o
 error_handler.o : io_global.o
 error_handler.o : parallel_include.o
+fd_gradient.o : cell_base.o
+fd_gradient.o : fft_base.o
+fd_gradient.o : kind.o
+fd_gradient.o : mp.o
+fd_gradient.o : mp_global.o
 fft_base.o : fft_types.o
 fft_base.o : kind.o
 fft_base.o : mp.o
@@ -66,6 +71,11 @@ funct.o : control_flags.o
 funct.o : io_global.o
 funct.o : kind.o
 funct.o : xc_vdW_DF.o
+generate_function.o : cell_base.o
+generate_function.o : constants.o
+generate_function.o : fft_base.o
+generate_function.o : kind.o
+generate_function.o : mp_global.o
 griddim.o : fft_scalar.o
 griddim.o : fft_types.o
 griddim.o : io_global.o
