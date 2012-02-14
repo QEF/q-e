@@ -1314,7 +1314,7 @@ Optional Features:
   --disable-wrappers      disable C to fortran wrapper check (default:
                           enabled)
   --enable-signals        enable signal trapping (default: no)
-  --enable-environment    compile with exact exchange enabled (default: no)
+  --enable-environment    compile solvent-related stuff (default: no)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]

@@ -110,7 +110,7 @@ AC_ARG_WITH(internal-lapack,
 
 AC_ARG_ENABLE(environment,
    [AS_HELP_STRING([--enable-environment],
-       [compile with exact exchange enabled (default: no)])],
+       [compile solvent-related stuff (default: no)])],
     [if   test "$enableval" = "yes" ; then
       enable_environment=1
    else
