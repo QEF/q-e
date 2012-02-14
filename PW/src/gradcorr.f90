@@ -491,14 +491,12 @@ SUBROUTINE grad_dot( nrxx, a, ngm, g, nl, alat, da )
   RETURN
   !
 END SUBROUTINE grad_dot
-
-#ifdef __SOLVENT
 !--------------------------------------------------------------------
-SUBROUTINE ggradient( nrxx, a, ngm, g, nl, ga, gga )
+SUBROUTINE hessian( nrxx, a, ngm, g, nl, ga, ha )
 !--------------------------------------------------------------------
   !
   ! ... Calculates ga = \grad a in R-space 
-  ! ... and gga = \grad \grad a in R-space (a is also in R-space)
+  ! ... and ha = \hessian a in R-space (a is also in R-space)
   !
   USE constants, ONLY : tpi
   USE cell_base, ONLY : tpiba
@@ -514,15 +512,15 @@ SUBROUTINE ggradient( nrxx, a, ngm, g, nl, ga, gga )
   INTEGER,  INTENT(IN)  :: ngm, nl(ngm)
   REAL(DP), INTENT(IN)  :: a(nrxx), g(3,ngm)
   REAL(DP), INTENT(OUT) :: ga( 3, nrxx )
-  REAL(DP), INTENT(OUT) :: gga( 3, 3, nrxx )
+  REAL(DP), INTENT(OUT) :: ha( 3, 3, nrxx )
   !
   INTEGER                  :: ipol, jpol
-  COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:), ggaux(:)
+  COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:), haux(:)
   !
   !
   ALLOCATE(  aux( nrxx ) )
   ALLOCATE( gaux( nrxx ) )
-  ALLOCATE( ggaux( nrxx ) )
+  ALLOCATE( haux( nrxx ) )
   !
   aux = CMPLX( a(:), 0.D0 ,kind=DP)
   !
@@ -557,41 +555,38 @@ SUBROUTINE ggradient( nrxx, a, ngm, g, nl, ga, gga )
      !
      DO jpol = 1, ipol
         !
-        ggaux(:) = CMPLX(0.d0,0.d0, kind=dp)
+        haux(:) = CMPLX(0.d0,0.d0, kind=dp)
         !
-        ggaux(nl(:)) = - g(ipol,:) * g(jpol,:) * &
+        haux(nl(:)) = - g(ipol,:) * g(jpol,:) * &
                        CMPLX( REAL( aux(nl(:)) ), AIMAG( aux(nl(:)) ) ,kind=DP)
         !
         IF ( gamma_only ) THEN
            !
-           ggaux(nlm(:)) = CMPLX( REAL( ggaux(nl(:)) ), -AIMAG( ggaux(nl(:)) ) ,kind=DP)
+           haux(nlm(:)) = CMPLX( REAL( haux(nl(:)) ), -AIMAG( haux(nl(:)) ) ,kind=DP)
            !
         END IF
         !
         ! ... bring back to R-space, (\grad_ipol a)(r) ...
         !
-        CALL invfft ('Dense', ggaux, dfftp)
+        CALL invfft ('Dense', haux, dfftp)
         !
         ! ...and add the factor 2\pi/a  missing in the definition of G
         !
-        gga(ipol, jpol, :) = tpiba * tpiba * DBLE( ggaux(:) )
+        ha(ipol, jpol, :) = tpiba * tpiba * DBLE( haux(:) )
         !
-        gga(jpol, ipol, :) = gga(ipol, jpol, :) 
+        ha(jpol, ipol, :) = ha(ipol, jpol, :) 
         !
      END DO
      !
   END DO
   !
-  DEALLOCATE( ggaux )
+  DEALLOCATE( haux )
   DEALLOCATE( gaux )
   DEALLOCATE( aux )
   !
   RETURN
   !
-END SUBROUTINE ggradient
-#endif
-
-#ifdef __SOLVENT
+END SUBROUTINE hessian
 !--------------------------------------------------------------------
 SUBROUTINE external_gradient( a, grada )
 !--------------------------------------------------------------------
@@ -614,14 +609,11 @@ SUBROUTINE external_gradient( a, grada )
   RETURN
 
 END SUBROUTINE external_gradient
-#endif
-
-#ifdef __SOLVENT
 !--------------------------------------------------------------------
-SUBROUTINE external_ggradient( a, grada, ggrada )
+SUBROUTINE external_hessian( a, grada, hessa )
 !--------------------------------------------------------------------
   ! 
-  ! Interface for computing gradients in real space, to be called by
+  ! Interface for computing hessian in real space, to be called by
   ! an external module
   !
   USE kinds,            ONLY : DP
@@ -632,13 +624,12 @@ SUBROUTINE external_ggradient( a, grada, ggrada )
   !
   REAL, INTENT(IN)         :: a( dfftp%nnr )
   REAL( DP ), INTENT(OUT)  :: grada( 3, dfftp%nnr )
-  REAL( DP ), INTENT(OUT)  :: ggrada( 3, 3, dfftp%nnr )
+  REAL( DP ), INTENT(OUT)  :: hessa( 3, 3, dfftp%nnr )
 
-! A in real space, grad(A) and ggrad(A) in real space
-  CALL ggradient( dfftp%nnr, a, ngm, g, nl, grada, ggrada )
+! A in real space, grad(A) and hess(A) in real space
+  CALL hessian( dfftp%nnr, a, ngm, g, nl, grada, hessa )
 
   RETURN
 
-END SUBROUTINE external_ggradient
-#endif
+END SUBROUTINE external_hessian
 !----------------------------------------------------------------------------
