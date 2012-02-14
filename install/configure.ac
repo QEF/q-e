@@ -105,8 +105,18 @@ AC_ARG_WITH(internal-lapack,
    fi],
    [use_internal_lapack=0])
 # -----------------------------
-# more options (currently none)
+# more options 
 # ----------------------------
+
+AC_ARG_ENABLE(environment,
+   [AS_HELP_STRING([--enable-environment],
+       [compile with exact exchange enabled (default: no)])],
+    [if   test "$enableval" = "yes" ; then
+      enable_environment=1
+   else
+      enable_environment=0
+   fi],
+   [enable_environment=0])
 
 # store variables from the environment, if set (may be or not be set)
 # If set, they take precedence over configure internal choice.
@@ -267,6 +277,11 @@ ppc64-bg )
         AC_MSG_WARN($arch : unsupported architecture?)
         ;;
 esac
+
+if test "$enable_environment" -eq 1 ;
+then
+        try_dflags="$try_dflags -D__ENVIRONMENT"
+fi
 
 # check serial Fortran 90 compiler. This must be done before performing
 # the check for the parallel compiler (section below) because option
