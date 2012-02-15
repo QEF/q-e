@@ -48,7 +48,7 @@ CONTAINS
   CHARACTER (len=50) :: arg
   !
   INTEGER :: stdin=5, stdtmp
-  CHARACTER(LEN=256) :: dummy
+  CHARACTER(LEN=512) :: dummy
   !
 #if defined(__ABSOFT)
 #   define getarg getarg_
@@ -108,7 +108,7 @@ CONTAINS
      dummy=' '
      WRITE(stdout, '(5x,a)') "Waiting for input..."
      DO WHILE ( TRIM(dummy) .NE. "MAGICALME" )
-        READ (stdin,fmt='(A256)',END=20) dummy
+        READ (stdin,fmt='(A512)',END=20) dummy
         WRITE (stdtmp,'(A)') trim(dummy)
      END DO
      !
