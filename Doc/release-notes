@@ -12,11 +12,14 @@ Incompatible changes in 5.0 version:
    * Options 'cubic'/'hexagonal' to CELL_PARAMETERS removed: it is no 
      longer useful, the code will anyway find the correct sym.ops.
    * Options 'bohr'/'angstrom'/'alat' to CELL_PARAMETERS implemented
-   * -DEXX no longer required for exact exchaneg or hybrid functionals
+   * -DEXX no longer required for exact exchange or hybrid functionals
    * PHonon: input variable 'elph' replaced by 'electron_phonon'
 
 Fixed in 5.0 version
 
+   * VERY NASTY bug: PW91 was incorrect (PZ LDA instead of PW)
+     in all 4.3.x versions
+   * A few glitches when the standard input is copied to file
    * PW: LDA+U crash in the final step of a vc-relax run, due to a
      premature deallocation of a variable
    * PW: constraint 'atomic direction' on noncolinear magnetization

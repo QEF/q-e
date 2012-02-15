@@ -83,7 +83,7 @@ module funct
   ! one of the following keywords ("dft_shortname"):
   !              "pz"    = "sla+pz"            = Perdew-Zunger LDA
   !              "bp"    = "b88+p86"           = Becke-Perdew grad.corr.
-  !              "pw91"  = "pw +ggx+ggc"       = PW91 (aka GGA)
+  !              "pw91"  = "sla+pw+ggx+ggc"    = PW91 (aka GGA)
   !              "blyp"  = "sla+b88+lyp+blyp"  = BLYP
   !              "pbe"   = "sla+pw+pbx+pbc"    = PBE
   !              "revpbe"= "sla+pw+rpb+pbc"    = revPBE (Zhang-Yang)
@@ -422,7 +422,7 @@ CONTAINS
     ! special case : PW91 = GGX + GGC
     else if ('PW91'.EQ. TRIM(dftout) ) then
        call set_dft_value (iexch,1) !Default
-       call set_dft_value (icorr,1) !Default
+       call set_dft_value (icorr,4) 
        call set_dft_value (igcx, 2)
        call set_dft_value (igcc, 2)
        call set_dft_value (inlc,0) !Default    

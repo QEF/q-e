@@ -249,7 +249,7 @@ SUBROUTINE convert_fhi (upf)
   upf%nlcc = nlcc_
   !
   IF (pspxc == 7) THEN
-     upf%dft = 'PW'
+     upf%dft = 'SLA-PW'
   ELSE IF (pspxc == 11) THEN
      upf%dft = 'PBE'
   ELSE 
