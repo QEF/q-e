@@ -69,6 +69,7 @@ MODULE cp_restart
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            amass, iforce, ind_bck
       USE funct,                    ONLY : get_dft_name, get_inlc
+      USE ldaU_cp,                  ONLY : lda_plus_U, ns, ldmx
       USE energies,                 ONLY : enthal, ekin, eht, esr, eself, &
                                            epseu, enl, exc, vave
       USE mp,                       ONLY : mp_sum
@@ -452,6 +453,27 @@ MODULE cp_restart
          !
       END IF ! write_charge_density
       !
+!-------------------------------------------------------------------------------
+! ... LDA+U OCCUPATIONS (compatibility with PWscf)
+!-------------------------------------------------------------------------------
+      !
+      IF ( lda_plus_u ) THEN
+         !
+         IF ( ionode ) THEN
+            i = LEN_TRIM( dirname )
+            ! ugly hack to remove .save from dirname
+            filename = dirname (1:i-4) // 'occup'
+            OPEN (UNIT=iunout,FILE=filename,FORM ='formatted',STATUS='unknown')
+            WRITE( iunout, * , iostat = ierr) & 
+               ((( (ns(ia,is,i,j), i=1,ldmx), j=1,ldmx), is=1,nspin), ia=1,nat)
+         END IF
+         CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+         IF ( ierr/=0 ) CALL errore('cp_writefile', 'Writing ldaU ns', 1)
+         IF ( ionode ) THEN
+            CLOSE( UNIT = iunout, STATUS = 'KEEP' )
+         ENDIF
+         !
+      END IF
 !-------------------------------------------------------------------------------
 ! ... TIMESTEPS
 !-------------------------------------------------------------------------------

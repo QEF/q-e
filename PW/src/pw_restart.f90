@@ -2890,13 +2890,12 @@ MODULE pw_restart
       USE control_flags,        ONLY : twfcollect, lkpoint_dir
       USE cell_base,            ONLY : tpiba2
       USE lsda_mod,             ONLY : nspin, isk
-      USE klist,                ONLY : nkstot, wk, nelec, nks, xk, ngk
+      USE klist,                ONLY : nkstot, wk, nks, xk, ngk
       USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, nbnd, ecutwfc
       USE wavefunctions_module, ONLY : evc
-      USE gvect,   ONLY : ig_l2g
       USE io_files,             ONLY : nwordwfc, iunwfc
       USE buffers,              ONLY : save_buffer
-      USE gvect,                ONLY : ngm, ngm_g, g
+      USE gvect,                ONLY : ngm, ngm_g, g, ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
       USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool, me_bgrp, &
                                        root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm, &
@@ -2911,7 +2910,7 @@ MODULE pw_restart
       INTEGER              :: ik, ipol, ik_eff, num_k_points
       INTEGER, ALLOCATABLE :: kisort(:)
       INTEGER              :: npool, nkbl, nkl, nkr, npwx_g, nbgrp
-      INTEGER              :: ike, iks, npw_g, ispin
+      INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
       INTEGER, ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:)
       LOGICAL              :: opnd

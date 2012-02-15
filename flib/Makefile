@@ -34,6 +34,7 @@ radial_gradients.o \
 rgen.o \
 recips.o \
 remove_tot_torque.o \
+set_hubbard_l.o \
 simpsn.o \
 sort.o \
 sph_bes.o \

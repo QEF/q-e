@@ -113,7 +113,7 @@ end module ldaU_cp
       !
       implicit none
       integer is, nb, l
-      integer, external :: set_Hubbard_l
+      integer, external :: set_hubbard_l
 
       IF ( .NOT.lda_plus_u ) RETURN
 ! allocate vupsi
@@ -132,7 +132,7 @@ end module ldaU_cp
       Hubbard_lmax = -1
       do is=1,nsp
          if (Hubbard_U(is).ne.0.d0) then 
-            Hubbard_l(is) = set_Hubbard_l( atm(is) )
+            Hubbard_l(is) = set_hubbard_l( upf(is)%psd )
             Hubbard_lmax = max(Hubbard_lmax,Hubbard_l(is))
             write (6,*) ' HUBBARD L FOR TYPE ',atm(is),' IS ', Hubbard_l(is)
          end if
@@ -146,38 +146,6 @@ end module ldaU_cp
       !
       return
       end subroutine ldaU_init
-!
-!-----------------------------------------------------------------------
-integer function set_Hubbard_l(psd) result (hubbard_l)
-!-----------------------------------------------------------------------
-!
-implicit none
-character*3 :: psd
-!
-! TRANSITION METALS
-!
-if (psd.eq.'V'  .or. psd.eq.'Cr' .or. psd .eq.'Mn' .or. psd.eq.'Fe' .or. &
-    psd.eq.'Co' .or. psd.eq.'Ni' .or. psd .eq.'Cu'.or. psd .eq.'Fe1'.or. &
-    psd .eq.'Fe2' ) then
-    hubbard_l = 2
-!
-! RARE EARTHS
-!
-elseif (psd .eq.'Ce') then
-   hubbard_l =  3
-!
-! OTHER ELEMENTS
-!
-elseif (psd .eq.'H') then
-   hubbard_l =  0
-elseif (psd .eq.'O') then
-   hubbard_l = 1
-else
-   hubbard_l = -1
-   call errore ('set_Hubbard_l','pseudopotential not yet inserted', 1)
-endif
-return
-end function set_Hubbard_l
 !
 !-----------------------------------------------------------------------
       subroutine new_ns( c, eigr, betae, hpsi, forceh )
