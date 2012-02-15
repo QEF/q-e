@@ -288,7 +288,6 @@ CONTAINS
     do l = 1, len
        dftout (l:l) = capital (dft_(l:l) )
     enddo
-
     !
     ! ----------------------------------------------
     ! FIRST WE CHECK ALL THE SPECIAL NAMES
@@ -296,7 +295,6 @@ CONTAINS
     !       not using function "matches"
     ! ----------------------------------------------
     !
-
     if ( 'REVPBE' .EQ. TRIM(dftout) ) then
     ! special case : revPBE
        call set_dft_value (iexch,1) !Default
@@ -405,7 +403,7 @@ CONTAINS
     ! special case : PBC  = PW + PBC 
        call set_dft_value (iexch,1) !Default
        call set_dft_value (icorr,4)
-       call set_dft_value (igcx,0) !Default       
+       call set_dft_value (igcx, 0) !Default       
        call set_dft_value (igcc, 4)
        call set_dft_value (inlc,0) !Default    
        dft_defined = .true.
@@ -428,30 +426,21 @@ CONTAINS
        call set_dft_value (inlc,0) !Default    
        dft_defined = .true.
        
-    ! special case : HCTH already contains LDA exchange and correlation
+    ! special case : HCTH 
     else if ('HCTH'.EQ. TRIM(dftout)) then
-       call set_dft_value(iexch,0)
-       call set_dft_value(icorr,0)
-       call set_dft_value (igcx, 0) !Default    
-       call set_dft_value (igcc, 0) !Default    
-       call set_dft_value (inlc,0) !Default    
-       dft_defined = .true.
-              
-    ! special case : OPTX already contains LDA exchange
-    else if ('OPTX'.EQ. TRIM(dftout)) then
-       call set_dft_value(iexch,0)
-       call set_dft_value(icorr,0) !Default    
-       call set_dft_value (igcx, 0) !Default    
-       call set_dft_value (igcc, 0) !Default    
+       call set_dft_value(iexch,0) ! contained in hcth
+       call set_dft_value(icorr,0) ! contained in hcth
+       call set_dft_value (igcx,5)
+       call set_dft_value (igcc,5)
        call set_dft_value (inlc,0) !Default    
        dft_defined = .true.
               
     ! special case : OLYP = OPTX + LYP
     else if ('OLYP'.EQ. TRIM(dftout)) then
-       call set_dft_value(iexch,0)
+       call set_dft_value(iexch,0) ! contained in optx
        call set_dft_value(icorr,3)
-       call set_dft_value(igcx,6)
-       call set_dft_value(igcc,3)
+       call set_dft_value(igcx, 6)
+       call set_dft_value(igcc, 3)
        call set_dft_value (inlc,0) !Default    
        dft_defined = .true.
        
