@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE h_psiq (lda, n, m, psi, hpsi, spsi, igkq)
+SUBROUTINE h_psiq (lda, n, m, psi, hpsi, spsi)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the product of the Hamiltonian
@@ -32,9 +32,8 @@ SUBROUTINE h_psiq (lda, n, m, psi, hpsi, spsi, igkq)
   USE scf,    ONLY : vrs
   USE uspp,   ONLY : vkb
   USE wvfct,  ONLY : g2kin, npwx
-
-  !Needed only for TDDFPT
-  USE control_flags,         ONLY : gamma_only, tddfpt
+  USE qpoint, ONLY: igkq
+  USE control_flags, ONLY : gamma_only ! Needed only for TDDFPT
 
   IMPLICIT NONE
 
@@ -42,8 +41,6 @@ SUBROUTINE h_psiq (lda, n, m, psi, hpsi, spsi, igkq)
   ! input: the leading dimension of the array psi
   ! input: the real dimension of psi
   ! input: the number of psi to compute
-  INTEGER,INTENT(IN) :: igkq(npwx)
-  ! input: map of wavefunctions of hpsi (e.g. at k+q in phonon)
   COMPLEX(DP), INTENT(INOUT)  :: psi (lda*npol, m)
   COMPLEX(DP), INTENT(OUT) :: hpsi (lda*npol, m), spsi (lda*npol, m)
   ! input: the functions where to apply H and S

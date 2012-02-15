@@ -1,5 +1,4 @@
 # Makefile for PW
-# Adapted from TDDFPT main Makefile
 
 default: all
 

@@ -7,7 +7,6 @@
 !
 !----------------------------------------------------------------------
 !
-!
 ! Modified by Osman Baris Malcioglu (2009)
 ! Rebased wrt PHONON routines. S J Binnie (2011)
 
@@ -38,6 +37,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   USE realus,               ONLY : npw_k
   USE lr_variables,         ONLY : lr_verbosity
   USE io_global,            ONLY : stdout
+  USE qpoint,               ONLY : igkq
   !
   !
   IMPLICIT NONE
@@ -107,7 +107,6 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   !   d0psi contains P^+_c [H-eS,x] psi_v for the polarization direction ipol
   !   Now solve the linear systems (H-e_vS)*P_c(x*psi_v)=P_c^+ [H-e_vS,x]*psi_v
   !
-
   ! eprec is now calculated on the fly for each k point
   ALLOCATE(eprec(nbnd))
   CALL lr_calc_eprec(eprec)
@@ -126,6 +125,8 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   !OBM!!! upto here, the dvpsi was used as a scratch
   !
   dvpsi(:,:) = (0.d0, 0.d0)
+  !
+  igkq => igk ! PG: needed by h_psiq, called by ch_psi_all
   !
   CALL cgsolve_all (ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
        h_diag, npwx, npw_k(ik), thresh, ik, lter, conv_root, anorm, &

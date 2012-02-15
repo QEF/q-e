@@ -1,5 +1,4 @@
 # Makefile for PH
-# Adapted from TDDFPT main Makefile
 
 default: all
 

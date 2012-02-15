@@ -41,7 +41,6 @@ cdiaghg.o \
 cegterg.o \
 clean_pw.o \
 close_files.o \
-commutator_Hx_psi.o \
 compute_becsum.o \
 compute_deff.o \
 compute_dip.o \

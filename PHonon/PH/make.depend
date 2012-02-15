@@ -231,6 +231,17 @@ close_phq.o : elph.o
 close_phq.o : phcom.o
 close_phq.o : ramanm.o
 close_phq.o : write_rec.o
+commutator_Hx_psi.o : ../../Modules/cell_base.o
+commutator_Hx_psi.o : ../../Modules/control_flags.o
+commutator_Hx_psi.o : ../../Modules/io_global.o
+commutator_Hx_psi.o : ../../Modules/ions_base.o
+commutator_Hx_psi.o : ../../Modules/kind.o
+commutator_Hx_psi.o : ../../Modules/recvec.o
+commutator_Hx_psi.o : ../../Modules/uspp.o
+commutator_Hx_psi.o : ../../Modules/wavefunctions.o
+commutator_Hx_psi.o : ../../PW/src/becmod.o
+commutator_Hx_psi.o : ../../PW/src/noncol.o
+commutator_Hx_psi.o : ../../PW/src/pwcom.o
 compute_alphasum.o : ../../Modules/ions_base.o
 compute_alphasum.o : ../../Modules/kind.o
 compute_alphasum.o : ../../Modules/paw_variables.o
@@ -678,6 +689,7 @@ h_psiq.o : ../../PW/src/noncol.o
 h_psiq.o : ../../PW/src/pwcom.o
 h_psiq.o : ../../PW/src/realus.o
 h_psiq.o : ../../PW/src/scf_mod.o
+h_psiq.o : phcom.o
 hdiag.o : ../../Modules/cell_base.o
 hdiag.o : ../../Modules/kind.o
 hdiag.o : ../../Modules/recvec.o
@@ -1068,6 +1080,8 @@ q_points.o : phcom.o
 q_points_wannier.o : ../../Modules/io_global.o
 q_points_wannier.o : ../../Modules/kind.o
 q_points_wannier.o : ../../Modules/mp_global.o
+q_points_wannier.o : dfile_autoname.o
+q_points_wannier.o : dfile_star.o
 q_points_wannier.o : elph.o
 q_points_wannier.o : phcom.o
 qdipol_cryst.o : ../../Modules/cell_base.o

@@ -248,17 +248,6 @@ close_files.o : ../../Modules/wannier_new.o
 close_files.o : bp_mod.o
 close_files.o : buffers.o
 close_files.o : pwcom.o
-commutator_Hx_psi.o : ../../Modules/cell_base.o
-commutator_Hx_psi.o : ../../Modules/control_flags.o
-commutator_Hx_psi.o : ../../Modules/io_global.o
-commutator_Hx_psi.o : ../../Modules/ions_base.o
-commutator_Hx_psi.o : ../../Modules/kind.o
-commutator_Hx_psi.o : ../../Modules/recvec.o
-commutator_Hx_psi.o : ../../Modules/uspp.o
-commutator_Hx_psi.o : ../../Modules/wavefunctions.o
-commutator_Hx_psi.o : becmod.o
-commutator_Hx_psi.o : noncol.o
-commutator_Hx_psi.o : pwcom.o
 compute_becsum.o : ../../Modules/cell_base.o
 compute_becsum.o : ../../Modules/control_flags.o
 compute_becsum.o : ../../Modules/io_files.o
