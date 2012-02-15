@@ -10,7 +10,6 @@ atom.o \
 autopilot.o \
 basic_algebra_routines.o \
 bfgs_module.o \
-fd_gradient.o  \
 cell_base.o  \
 check_stop.o  \
 clocks.o \
