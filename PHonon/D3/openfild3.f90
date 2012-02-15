@@ -101,7 +101,7 @@ SUBROUTINE openfild3
   !
   IF ( me_pool == root_pool ) THEN
      !
-     filint = TRIM(fildrho)//".u"
+     filint = TRIM(fildrho) !//".u"
      ! FIXME: workaround for filename mess
      tmp_dir_save=tmp_dir
      if ( lgamma) tmp_dir=TRIM(tmp_dir)//'_ph0/'
@@ -115,7 +115,7 @@ SUBROUTINE openfild3
      ! Not needed if q=0
      !
      IF (.NOT.lgamma) THEN
-        filint = TRIM(fild0rho)//".u"
+        filint = TRIM(fild0rho) !//".u"
         CALL diropn (iud0rho, filint, lrdrho, exst)
      ENDIF
      !
