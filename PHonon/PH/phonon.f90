@@ -118,8 +118,6 @@ PROGRAM phonon
         CALL phqscf()
         CALL dynmatrix()
         !
-        IF ( fildrho /= ' ' ) CALL punch_plot_ph()
-        !
      END IF
      !
      !  calculates dvscf_q' for q' belonging to star{q}

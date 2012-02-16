@@ -80,7 +80,7 @@ subroutine phq_setup
                             done_epsil, zeu, done_zeu, current_iq, u_from_file
   USE el_phon,       ONLY : elph
   USE output,        ONLY : fildrho
-  USE modes,         ONLY : u, ubar, npertx, npert, gi, gimq, nirr, &
+  USE modes,         ONLY : u, npertx, npert, gi, gimq, nirr, &
                             t, tmq, irotmq, irgq, minus_q, &
                             nsymq, nmodes, rtau, name_rap_mode, num_rap_mode
   USE dynmat,        ONLY : dyn, dyn_rec, dyn00
@@ -428,15 +428,7 @@ subroutine phq_setup
   !
   ! 8) Set the ubar
   !
-
-  ubar(:) =( 0.d0,0.d0)
-  !
-  !   NB: the following instructions are for testing purposes of delta rho
-  !       the user must know how many atoms there are in the system
-  !
-  !      ubar(1)=(1.d-3,0.d0)
-  !      ubar(5)=(1.d0,0.d0)
-  !      ubar(6)=(1.d0,0.d0)
+  ! ubar removed on 16/02/2012, used only for debugging
   !
   !  9) set the variables needed for the partial computation:
   !     nat_todo, atomo, comp_irr
