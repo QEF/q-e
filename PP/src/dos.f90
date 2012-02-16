@@ -34,8 +34,8 @@ PROGRAM do_dos
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   CHARACTER(len=256) :: fildos, outdir
-  REAL(DP) :: E, DOSofE (2), DOSint, Elw, Eup, DeltaE, Emin, Emax, &
-                   degauss1
+  REAL(DP) :: E, DOSofE (2), DOSint, DeltaE, Emin, Emax, &
+              degauss1, E_unset=1000000.d0
   INTEGER :: ik, n, ndos, ngauss1, ios
   NAMELIST /dos/ outdir, prefix, fildos, degauss, ngauss, &
        Emin, Emax, DeltaE
@@ -57,8 +57,8 @@ PROGRAM do_dos
      IF ( trim( outdir ) == ' ' ) outdir = './'
      prefix ='pwscf'
      fildos =' '
-     Emin   =-1000000.d0
-     Emax   = 1000000.d0
+     Emin   =-E_unset
+     Emax   = E_unset
      DeltaE = 0.01d0
      ngauss = 0
      degauss= 0.d0
@@ -112,21 +112,21 @@ PROGRAM do_dos
         lgauss=.true.
      ENDIF
      !
-     ! find band extrema
+     ! find min and max energy for plot (band extrema if not set)
      !
-     Elw = et (1, 1)
-     Eup = et (nbnd, 1)
-     DO ik = 2, nks
-        Elw = min (Elw, et (1, ik) )
-        Eup = max (Eup, et (nbnd, ik) )
-     ENDDO
-     IF (degauss/=0.d0) THEN
-        Eup = Eup + 3.d0 * degauss
-        Elw = Elw - 3.d0 * degauss
-     ENDIF
+     IF ( Emin == -E_unset ) THEN
+        Emin = MINVAL ( et(1, 1:nks) )
+        IF ( degauss > 0.0_dp ) Emin = Emin - 3.0_dp * degauss
+     ELSE
+        Emin = Emin/rytoev
+     END IF
+     IF ( Emax  == E_unset ) THEN
+        Emax = MINVAL ( et(nbnd, 1:nks) )
+        IF ( degauss > 0.0_dp ) Emax = Emax + 3.0_dp * degauss
+     ELSE 
+        Emax = Emax/rytoev
+     END IF
      !
-     Emin=max(Emin/rytoev,Elw)
-     Emax=min(Emax/rytoev,Eup)
      DeltaE = DeltaE / rytoev
      ndos = nint ( (Emax - Emin) / DeltaE+0.500001d0)
      DOSint = 0.d0

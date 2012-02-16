@@ -5,9 +5,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dos.x
     intro {
 	Purpose of dos.x:
 	    calculates the Density of States (DOS) 
-	    (separated into up and down components for lSDA)
-
-	    See the header of file PP/dos.90 for more info.
+	    (separated into up and down components for DSDA)
 
 
 	Structure of the input data:
@@ -16,6 +14,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dos.x
 	   &DOS
 	     ...
 	   /
+        IMPORTANT: since v.5 namelist name is &dos and no longer &inputpp
     }
 
     namelist DOS {
@@ -62,7 +61,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dos.x
 	    var Emax    
 	    default { band extrema }
 	    info {
-		min, max energy (eV) for DOS plot
+		min, max energy (eV) for DOS plot. If unspecified, the
+                lower and/or upper band value, plus/minus 3 times the
+                value of the gaussian smearing if present, will be used.
+                
 	    }
 	}
 	
