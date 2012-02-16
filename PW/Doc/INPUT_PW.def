@@ -1571,7 +1571,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 		    if ion_temperature='reduce-T':
 		           every 'nraise' steps the instantaneous temperature is
-		           reduced by -delta_T (.e. delta_t is added to the temperature)
+		           reduced by -delta_T (i.e. delta_t < 0 is added to T)
 
 		    The instantaneous temperature is calculated at the end of
 		    every ionic move and BEFORE rescaling. This is the temperature

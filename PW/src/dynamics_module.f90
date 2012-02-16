@@ -571,7 +571,7 @@ CONTAINS
                !
                WRITE( UNIT = stdout, &
                      FMT = '(/,5X,"Thermalization: T (",F6.1,"K) reduced ",&
-                                 & "by ",F6.3)' ) temp_new, delta_t
+                                 & "by ",F6.3)' ) temp_new, -delta_t
                !
                CALL thermalize( 0, temp_new, temperature )
                !
