@@ -2557,15 +2557,16 @@ SUBROUTINE radialpart(ng, q, alfa, rvalue, lmax, radial)
   IF (rvalue==1) func_r(:) = 2.d0 * alfa**(3.d0/2.d0) * exp(-alfa*r(:))
   IF (rvalue==2) func_r(:) = 1.d0/sqrt(8.d0) * alfa**(3.d0/2.d0) * &
                      (2.0d0 - alfa*r(:)) * exp(-alfa*r(:)*0.5d0)
-  IF (rvalue==3) func_r(:) = sqrt(4.d0/27.d0) * alfa**(2.0d0/3.0d0) * &
-                     (1.d0 - 1.5d0*alfa*r(:) + 2.d0*(alfa*r(:))**2/27.d0) * &
+  IF (rvalue==3) func_r(:) = sqrt(4.d0/27.d0) * alfa**(3.0d0/2.0d0) * &
+                     (1.d0 - 2.0d0/3.0d0*alfa*r(:) + 2.d0*(alfa*r(:))**2/27.d0) * &
                                            exp(-alfa*r(:)/3.0d0)
   pref = fpi/sqrt(omega)
   !
   DO l = 0, lmax
      DO ig=1,ng
        CALL sph_bes (mesh_r, r(1), q(ig), l, bes)
-       aux(:) = bes(:) * func_r(:) * r(:)
+       aux(:) = bes(:) * func_r(:) * r(:) * r(:)
+       ! second r factor added upo suggestion by YY Liang
        CALL simpson (mesh_r, aux, rij, rad_int)
        radial(ig,l) = rad_int * pref
      ENDDO
