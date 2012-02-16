@@ -469,10 +469,8 @@ CONTAINS
       WRITE (stdout,*) 'Ewald energy     ', ewld/e2, ' au  =  ', ewld, ' Ry'
       WRITE (stdout,*) 'xc contribution  ',(etxc-etxcc)/e2, ' au  =  ', etxc-etxcc, ' Ry'
       WRITE (stdout,*) 'hartree energy   ', ehart/e2, ' au  =  ', ehart, ' Ry'
-#ifdef EXX
       IF(dft_is_hybrid()) & 
            WRITE (stdout,*) 'EXX energy       ', fock2/e2, ' au  =  ', fock2, ' Ry' 
-#endif
       IF( degauss > 0.0_dp ) &
          WRITE (stdout,*) 'Smearing (-TS)   ', demet/e2, ' au  =  ', demet, ' Ry'
       WRITE (stdout,*) 'Total energy     ', etot/e2, ' au  =  ', etot, ' Ry'
