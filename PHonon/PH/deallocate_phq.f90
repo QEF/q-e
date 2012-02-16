@@ -16,7 +16,7 @@ subroutine deallocate_phq
   USE wavefunctions_module,  ONLY: evc
 
   USE ramanm, ONLY: ramtns
-  USE modes, ONLY : tmq, t, npert, u, ubar, rtau, name_rap_mode, num_rap_mode
+  USE modes, ONLY : tmq, t, npert, u, rtau, name_rap_mode, num_rap_mode
   USE qpoint, ONLY : eigqts, igkq, ikks, ikqs, nksq
   USE efield_mod, ONLY : zstareu, zstarue, zstarue0, zstareu0, &
                          zstarue0_rec
@@ -59,7 +59,6 @@ subroutine deallocate_phq
   if(allocated(eigqts)) deallocate (eigqts)
   if(allocated(rtau)) deallocate (rtau)
   if(associated(u)) deallocate (u)
-  if(associated(ubar)) deallocate (ubar)
   if(allocated(name_rap_mode)) deallocate (name_rap_mode)
   if(allocated(num_rap_mode)) deallocate (num_rap_mode)
   if(allocated(dyn)) deallocate (dyn)

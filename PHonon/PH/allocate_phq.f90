@@ -39,7 +39,7 @@ subroutine allocate_phq
   USE eqv, ONLY : dpsi, evq, vlocq, dmuxc, dvpsi, eprec
   USE units_ph, ONLY : this_pcxpsi_is_on_file, this_dvkb3_is_on_file
   USE dynmat, ONLY : dyn00, dyn, dyn_rec, w2
-  USE modes, ONLY : u, ubar, rtau, npert, name_rap_mode, num_rap_mode
+  USE modes, ONLY : u, rtau, npert, name_rap_mode, num_rap_mode
   USE control_ph, ONLY :  lgamma
   USE el_phon, ONLY : el_ph_mat, elph
 
@@ -73,7 +73,6 @@ subroutine allocate_phq
   allocate (eigqts ( nat))
   allocate (rtau ( 3, 48, nat))
   allocate (u ( 3 * nat, 3 * nat))
-  allocate (ubar ( 3 * nat))
   allocate (dyn ( 3 * nat, 3 * nat))
   allocate (dyn_rec ( 3 * nat, 3 * nat))
   allocate (dyn00 ( 3 * nat, 3 * nat))

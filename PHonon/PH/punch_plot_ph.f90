@@ -53,6 +53,8 @@ SUBROUTINE punch_plot_ph()
   REAL(DP), ALLOCATABLE :: raux (:)
   ! auxiliary vector
 
+
+  COMPLEX(DP),ALLOCATABLE ::  ubar(:)
   COMPLEX(DP) :: ps
   COMPLEX(DP), EXTERNAL :: zdotc
   COMPLEX(DP), ALLOCATABLE :: aux (:,:,:), aux1 (:,:)
@@ -69,6 +71,11 @@ SUBROUTINE punch_plot_ph()
   WRITE( stdout, '(/5x,"Calling punch_plot_ph" )')
   WRITE( stdout, '(5x,"Writing on file  ",a)') fildrho
   !
+  ! Set up the mode on which to plot the charge
+  ALLOCATE(ubar(3*nat))
+  ubar = 0._dp
+  ubar(1) = 1._dp
+  !
   !    reads drho from the file
   !
   ALLOCATE (aux  (  dfftp%nnr,nspin,npertx))
@@ -83,8 +90,7 @@ SUBROUTINE punch_plot_ph()
   DO irr = 1, nirr
      IF (comp_irr (irr) .EQ.1) THEN
         DO ipert = 1, npert (irr)
-           CALL davcio_drho (aux (1, 1, ipert), lrdrho, iudrho, imode0 + &
-                ipert, - 1)
+           CALL davcio_drho (aux (1, 1, ipert), lrdrho, iudrho, imode0+ipert, - 1)
         ENDDO
 #if defined (__MPI)
         CALL psymdvscf (npert (irr), irr, aux)
@@ -93,7 +99,7 @@ SUBROUTINE punch_plot_ph()
 #endif
         DO ipert = 1, npert (irr)
            ps = zdotc (3 * nat, ubar, 1, u (1, imode0 + ipert), 1)
-           CALL zaxpy (dfftp%nnr * nspin, ps, aux (1, 1, ipert), 1, aux1, 1)
+           CALL zaxpy (dfftp%nnr * nspin, ps, aux(1, 1, ipert), 1, aux1, 1)
         ENDDO
      ENDIF
      imode0 = imode0 + npert (irr)
@@ -129,7 +135,7 @@ SUBROUTINE punch_plot_ph()
   !
   !      plot of the charge density
   !
-  CALL dcopy (dfftp%nnr, aux1 (1, 1), 2, raux, 1)
+  CALL dcopy (dfftp%nnr, aux1(1, 1), 2, raux, 1)
 
   IF (lsda) CALL daxpy (dfftp%nnr, 1.d0, aux1 (1, 2), 2, raux, 1)
 
@@ -143,6 +149,7 @@ SUBROUTINE punch_plot_ph()
 #endif
 
   IF (ionode) CLOSE (unit = iunplot)
+  DEALLOCATE (ubar)
   DEALLOCATE (raux)
   DEALLOCATE (aux1)
   DEALLOCATE (aux)

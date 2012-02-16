@@ -34,7 +34,6 @@ MODULE modes
   ! the G associated to the symmetry q<->-q+G
   COMPLEX (DP), POINTER :: &
        u(:,:),                     &!  3 * nat, 3 * nat),
-       ubar(:),                    &!  3 * nat), &
        t(:,:,:,:),                 &! npertx, npertx, 48,3 * nat),
        tmq(:,:,:)                   ! npertx, npertx, 3 * nat)
   ! the transformation modes patterns
