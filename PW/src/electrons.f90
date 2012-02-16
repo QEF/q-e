@@ -813,10 +813,10 @@ SUBROUTINE electrons()
           END DO
           !
 #ifdef __BANDS
-          CALL mp_sum( magtot, intra_bgrp_comm )
+          CALL mp_sum( magtot_nc, intra_bgrp_comm )
           CALL mp_sum( absmag, intra_bgrp_comm )
 #else
-          CALL mp_sum( magtot, intra_pool_comm )
+          CALL mp_sum( magtot_nc, intra_pool_comm )
           CALL mp_sum( absmag, intra_pool_comm )
 #endif
           !
