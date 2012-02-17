@@ -29,11 +29,15 @@ PROGRAM q2r
   !  Input data: Namelist "input"
   !     fildyn     :  input file name (character, must be specified)
   !                   "fildyn"0 contains information on the q-point grid
-  !                   "fildyn"1-N contain force constans C_n = C(q_n)
+  !                   "fildyn"1-N contain force constants C_n = C(q_n)
   !                   for n=1,...N, where N is the number of q-points
   !                   in the irreducible brillouin zone
   !                   Normally this should be the same as specified
   !                   on input to the phonon code
+  !                   In the non collinear/spin-orbit case the files 
+  !                   produced by ph.x are in .xml format. In this case 
+  !                   fildyn is the same as in the phonon code + the .xml 
+  !                   extension.
   !     flfrc      :  output file containing the IFC in real space
   !                   (character, must be specified)
   !     zasr       :  Indicates type of Acoustic Sum Rules used for the Born
