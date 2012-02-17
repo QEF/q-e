@@ -1416,12 +1416,6 @@ MODULE input_parameters
           !  number that gives the number of points between the present point
           !  and the next. The weight of the last point is not used.
 !
-!    NEWNFI
-!
-        LOGICAL :: tnewnfi_card = .false.
-        INTEGER :: newnfi_card = 0
-
-!
 !    OCCUPATIONS
 !
         REAL(DP), ALLOCATABLE :: f_inp(:,:)

@@ -33,7 +33,7 @@ MODULE control_flags
   END TYPE convergence_criteria
   !
   PUBLIC :: tbeg, nomore, nbeg, isave, iprint, tv0rd, nv0rd, tzeroc, tzerop, &
-            newnfi, tnewnfi, tfor, tpre, tzeroe, tsde, tsdp, tsdc, taurdr,   &
+            tfor, tpre, tzeroe, tsde, tsdp, tsdc, taurdr,                    &
             ndr, ndw, tortho, ortho_eps, ortho_max, tstress, tprnfor,        &
             timing, memchk, tprnsfac, tcarpar,                               &
             trane,dt_old,ampre, tranp, amprp, tdipole, t_diis, t_diis_simple,&
@@ -113,9 +113,6 @@ MODULE control_flags
   ! ... .TRUE. if only gamma point is used
   !
   LOGICAL :: gamma_only = .TRUE.
-  !
-  LOGICAL :: tnewnfi = .FALSE.
-  INTEGER :: newnfi  = 0
   !
   ! This variable is used whenever a timestep change is requested
   !

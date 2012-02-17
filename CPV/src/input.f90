@@ -133,8 +133,6 @@ MODULE input
                                tprnsfac_   => tprnsfac, &
                                ampre_      => ampre, &
                                trane_      => trane, &
-                               newnfi_     => newnfi, &
-                               tnewnfi_    => tnewnfi, &
                                tdipole_    => tdipole, &
                                nomore_     => nomore, &
                                memchk_     => memchk, &
@@ -220,12 +218,11 @@ MODULE input
         tapos, tavel, ecutwfc, emass, emass_cutoff, taspc, trd_ht, ibrav,      &
         ortho_eps, ortho_max, ntyp, tolp, calculation, disk_io, dt,            &
         tcg, ndr, ndw, iprint, isave, tstress, k_points, tprnfor, verbosity,   &
-        tdipole_card, tnewnfi_card, newnfi_card,                               &
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
         orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr_inp, vhrmax_inp, vhrmin_inp, tvhmean_inp, vhasse_inp, saverho,    &
-        rd_for, assume_isolated, wf_collect
+        tdipole_card, rd_for, assume_isolated, wf_collect
      !
      IMPLICIT NONE
      !
@@ -362,8 +359,6 @@ MODULE input
      END SELECT
      !
      tdipole_  = tdipole_card
-     newnfi_   = newnfi_card
-     tnewnfi_  = tnewnfi_card
      !
      ! ... set the restart flags
      !

@@ -7,11 +7,9 @@
 !-------------------------------------------------------------!
 !
 ! cards not yet implemented:
-! SETNFI
 ! KSOUT
 ! AUTOPILOT
 ! ATOMIC_FORCES
-! COLLECTIVE_VARS
 ! PLOT_WANNIER
 ! WANNIER_AC
 ! VHMEAN
@@ -149,11 +147,6 @@ CONTAINS
     CASE ('ION_VELOCITIES')
        ! ... not yet implemented in xml reading
        tavel = .false.
-       !
-    CASE ('SETNFI')
-       ! ... not yet implemented in xml reading
-       newnfi_card  = -1
-       tnewnfi_card = .FALSE.
        !
     CASE DEFAULT
        CALL errore ( 'card_default', 'You want to initialize a card that does &
