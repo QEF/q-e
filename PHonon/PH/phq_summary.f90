@@ -313,10 +313,15 @@ subroutine phq_summary
                 imode0 + 2
            WRITE( stdout, '(2(10x," (",2f10.5,"   ) "))')  ( (u (mu, nu) , nu &
                 &= imode0 + 1, imode0 + npert (irr) ) , mu = 1, 3 * nat)
-        else
+        elseif (npert (irr) .eq.3) then
            WRITE( stdout, '(4x,3(" mode # ",i3,13x))') imode0 + 1, imode0 &
                 + 2, imode0 + 3
            WRITE( stdout, '((5x,3("(",2f10.5," ) ")))') ( (u (mu, nu) , &
+                nu = imode0 + 1, imode0 + npert (irr) ) , mu = 1, 3 * nat)
+        else
+           WRITE( stdout, '(4x,4(" mode # ",i3,13x))') imode0 + 1, imode0 &
+                + 2, imode0 + 4
+           WRITE( stdout, '((5x,4("(",2f10.5," ) ")))') ( (u (mu, nu) , &
                 nu = imode0 + 1, imode0 + npert (irr) ) , mu = 1, 3 * nat)
         endif
         imode0 = imode0 + npert (irr)
