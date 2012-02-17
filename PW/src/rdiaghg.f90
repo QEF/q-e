@@ -18,7 +18,6 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_bcast
-  USE mp_global,        ONLY : me_pool, root_pool, intra_pool_comm
   USE mp_global,        ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
   !
   IMPLICIT NONE
@@ -51,11 +50,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... only the first processor diagonalize the matrix
   !
-#ifdef __BANDS
   IF ( me_bgrp == root_bgrp ) THEN
-#else
-  IF ( me_pool == root_pool ) THEN
-#endif
      !
      ! ... save the diagonal of input S (it will be overwritten)
      !
@@ -161,13 +156,8 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... broadcast eigenvectors and eigenvalues to all other processors
   !
-#ifdef __BANDS
   CALL mp_bcast( e, root_bgrp, intra_bgrp_comm )
   CALL mp_bcast( v, root_bgrp, intra_bgrp_comm )
-#else
-  CALL mp_bcast( e, root_pool, intra_pool_comm )
-  CALL mp_bcast( v, root_pool, intra_pool_comm )
-#endif
   !
   CALL stop_clock( 'rdiaghg' )
   !
@@ -187,7 +177,6 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_bcast
-  USE mp_global,        ONLY : root_pool, intra_pool_comm
   USE mp_global,        ONLY : root_bgrp, intra_bgrp_comm
   USE descriptors,      ONLY : la_descriptor
 #if defined __SCALAPACK
@@ -327,11 +316,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      !
   END IF
   !
-#ifdef __BANDS
   CALL mp_bcast( e, root_bgrp, intra_bgrp_comm )
-#else
-  CALL mp_bcast( e, root_pool, intra_pool_comm )
-#endif
   !
   CALL stop_clock( 'rdiaghg:paragemm' )
   !

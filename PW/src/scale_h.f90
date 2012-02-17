@@ -25,7 +25,7 @@ subroutine scale_h
   USE start_k,   ONLY : nks_start, xk_start
 #ifdef __MPI
   USE mp,         ONLY : mp_max
-  USE mp_global,  ONLY : intra_pool_comm
+  USE mp_global,  ONLY : intra_bgrp_comm
 #endif
   !
   implicit none
@@ -62,7 +62,7 @@ subroutine scale_h
      gg_max = max(gg(ig), gg_max)
   enddo
 #ifdef __MPI
-  CALL mp_max (gg_max, intra_pool_comm)
+  CALL mp_max (gg_max, intra_bgrp_comm)
 #endif
   if(nqxq < int(sqrt(gg_max)/dq)+4) then
      call errore('scale_h', 'Not enough space allocated for radial FFT: '//&

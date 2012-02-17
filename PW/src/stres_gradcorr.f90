@@ -146,13 +146,7 @@ subroutine stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
      enddo
 
   enddo
-#ifdef __MPI
-#ifdef __BANDS
   call mp_sum(  sigma_gradcorr, intra_bgrp_comm )
-#else
-  call mp_sum(  sigma_gradcorr, intra_pool_comm )
-#endif
-#endif
 
   call dscal (9, 1.d0 / (nr1 * nr2 * nr3), sigma_gradcorr, 1)
 

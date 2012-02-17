@@ -20,7 +20,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
   USE constants, ONLY : pi
   USE kinds,     ONLY : DP
   USE gvect,     ONLY : gstart
-  USE mp_global, ONLY : intra_pool_comm, intra_bgrp_comm
+  USE mp_global, ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -88,11 +88,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
      !
      IF ( gstart == 2 ) lagrange(1:m) = lagrange(1:m) - psi(1,1:m) * spsi(1)
      !
-#ifdef __BANDS
      CALL mp_sum( lagrange( 1:m ), intra_bgrp_comm )
-#else
-     CALL mp_sum( lagrange( 1:m ), intra_pool_comm )
-#endif
      !
      psi_norm = lagrange(m)
      !
@@ -122,11 +118,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
      !
      IF ( gstart == 2 ) e(m) = e(m) - psi(1,m) * hpsi(1)
      !
-#ifdef __BANDS
      CALL mp_sum( e(m), intra_bgrp_comm )
-#else
-     CALL mp_sum( e(m), intra_pool_comm )
-#endif
      !
      ! ... start iteration for this band
      !
@@ -150,11 +142,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
            !
         END IF
         !
-#ifdef __BANDS
         CALL mp_sum(  es , intra_bgrp_comm )
-#else
-        CALL mp_sum(  es , intra_pool_comm )
-#endif
         !
         es(1) = es(1) / es(2)
         !
@@ -175,11 +163,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         IF ( gstart == 2 ) &
            lagrange(1:m-1) = lagrange(1:m-1) - psi(1,1:m-1) * scg(1)
         !
-#ifdef __BANDS
         CALL mp_sum( lagrange( 1 : m-1 ), intra_bgrp_comm )
-#else
-        CALL mp_sum( lagrange( 1 : m-1 ), intra_pool_comm )
-#endif
         !
         DO j = 1, ( m - 1 )
            !
@@ -196,11 +180,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
            !
            IF ( gstart == 2 ) gg1 = gg1 - g(1) * g0(1)
            !
-#ifdef __BANDS
            CALL mp_sum(  gg1 , intra_bgrp_comm )
-#else
-           CALL mp_sum(  gg1 , intra_pool_comm )
-#endif
            !
         END IF
         !
@@ -214,11 +194,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         !
         IF ( gstart == 2 ) gg = gg - g(1) * g0(1)
         !
-#ifdef __BANDS
         CALL mp_sum(  gg , intra_bgrp_comm )
-#else
-        CALL mp_sum(  gg , intra_pool_comm )
-#endif
         !
         IF ( iter == 1 ) THEN
            !
@@ -262,11 +238,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         !
         IF ( gstart == 2 ) cg0 = cg0 - cg(1) * scg(1)
         !
-#ifdef __BANDS
         CALL mp_sum(  cg0 , intra_bgrp_comm )
-#else
-        CALL mp_sum(  cg0 , intra_pool_comm )
-#endif
         !
         cg0 = SQRT( cg0 )
         !
@@ -284,11 +256,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         !
         a0 = a0 / cg0
         !
-#ifdef __BANDS
         CALL mp_sum(  a0 , intra_bgrp_comm )
-#else
-        CALL mp_sum(  a0 , intra_pool_comm )
-#endif
         !
         b0 = 2.D0 * ddot( npw2, cg(1), 1, ppsi(1), 1 )
         !
@@ -296,11 +264,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         !
         b0 = b0 / cg0**2
         !
-#ifdef __BANDS
         CALL mp_sum(  b0 , intra_bgrp_comm )
-#else
-        CALL mp_sum(  b0 , intra_pool_comm )
-#endif
         !
         e0 = e(m)
         !

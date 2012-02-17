@@ -30,7 +30,7 @@ SUBROUTINE new_ns(ns)
   USE wavefunctions_module, ONLY : evc
   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
   USE buffers,              ONLY : get_buffer
-  USE mp_global,            ONLY : intra_pool_comm, inter_pool_comm
+  USE mp_global,            ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE becmod,               ONLY : bec_type, calbec, &
                                    allocate_bec_type, deallocate_bec_type
@@ -104,10 +104,10 @@ SUBROUTINE new_ns(ns)
 ! on k-points
 
   ENDDO
-  CALL deallocate_bec_type (proj) 
-#ifdef __MPI
+  CALL deallocate_bec_type (proj)
+  ! 
   CALL mp_sum( nr, inter_pool_comm )
-#endif
+  ! 
   IF (nspin.EQ.1) nr = 0.5d0 * nr
   !
   ! impose hermiticity of n_{m1,m2}

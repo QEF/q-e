@@ -86,7 +86,7 @@ CONTAINS
   SUBROUTINE wg_corr_force( omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, nspin, rho, force )
 !----------------------------------------------------------------------------
   USE cell_base, ONLY : tpiba
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_global, ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   INTEGER, INTENT(IN) :: nat, ntyp, ityp(nat), ngm, nspin
   REAL(DP), INTENT(IN) :: omega, zv(ntyp), tau(3,nat), g(3,ngm)
@@ -114,17 +114,15 @@ CONTAINS
      force(:,na) = - force(:,na) * zv(ityp(na))  * tpiba
   end do
   deallocate ( v )
-#ifdef __MPI
-  call mp_sum(  force, intra_pool_comm )
-#endif
-
-
+  !
+  call mp_sum(  force, intra_bgrp_comm )
+  !
   RETURN
   END SUBROUTINE wg_corr_force
 !----------------------------------------------------------------------------
   SUBROUTINE init_wg_corr
 !----------------------------------------------------------------------------
-  USE mp_global,     ONLY : me_pool
+  USE mp_global,     ONLY : me_bgrp
   USE fft_base,      ONLY : dfftp
   USE fft_interfaces,ONLY : fwfft, invfft
   USE control_flags, ONLY : gamma_only_ => gamma_only
@@ -167,7 +165,7 @@ CONTAINS
   !
   index0 = 0
 #if defined (__MPI)
-  DO i = 1, me_pool
+  DO i = 1, me_bgrp
      index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
   END DO
 #endif

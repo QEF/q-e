@@ -51,13 +51,9 @@ subroutine stres_har (sigmahar)
         enddo
      enddo
   enddo
-#ifdef __MPI
-#ifdef __BANDS
+  !
   call mp_sum(  sigmahar, intra_bgrp_comm )
-#else
-  call mp_sum(  sigmahar, intra_pool_comm )
-#endif
-#endif
+  !
   if (gamma_only) then
      sigmahar(:,:) =       fpi * e2 * sigmahar(:,:)
   else

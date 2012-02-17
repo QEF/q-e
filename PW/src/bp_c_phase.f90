@@ -166,7 +166,7 @@ SUBROUTINE c_phase
    USE wavefunctions_module, ONLY : evc
    USE bp,                   ONLY : gdir, nppstr
    USE becmod,               ONLY : calbec
-   USE mp_global,            ONLY : intra_pool_comm
+   USE mp_global,            ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
 
 !  --- Avoid implicit definitions ---
@@ -543,9 +543,9 @@ SUBROUTINE c_phase
                      end if
                   end do
                end do
-#ifdef __MPI
-               call mp_sum( mat, intra_pool_comm )
-#endif
+               !
+               call mp_sum( mat, intra_bgrp_comm )
+               !
                DO nb=1,nbnd
                   DO mb=1,nbnd
 !                    --- Calculate the augmented part: ij=KB projectors, ---

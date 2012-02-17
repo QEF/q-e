@@ -164,7 +164,7 @@ MODULE io_rho_xml
       USE fft_base, ONLY : dfftp
       USE spin_orb, ONLY : domag
       USE io_global, ONLY : ionode
-      USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, intra_bgrp_comm, inter_bgrp_comm
+      USE mp_global, ONLY : intra_bgrp_comm, inter_bgrp_comm
       !
       IMPLICIT NONE
       !
@@ -189,15 +189,9 @@ MODULE io_rho_xml
       !
       IF ( nspin == 1 ) THEN
          !
-#ifdef __BANDS
          CALL write_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
                   ionode, intra_bgrp_comm, inter_bgrp_comm )
-#else
-         CALL write_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_pool_comm, inter_pool_comm )
-#endif
          !
       ELSE IF ( nspin == 2 ) THEN
          !
@@ -205,80 +199,44 @@ MODULE io_rho_xml
          !
          rhoaux(:) = rho(:,1) + rho(:,2)
          !
-#ifdef __BANDS
          CALL write_rho_xml( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
                   ionode, intra_bgrp_comm, inter_bgrp_comm )
-#else
-         CALL write_rho_xml( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_pool_comm, inter_pool_comm )
-#endif
          !
          file_base = TRIM( dirname ) // '/spin-polarization' // TRIM( ext )
          !
          rhoaux(:) = rho(:,1) - rho(:,2)
          !
-#ifdef __BANDS
          CALL write_rho_xml( file_base, rhoaux,  dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
                   ionode, intra_bgrp_comm, inter_bgrp_comm )
-#else
-         CALL write_rho_xml( file_base, rhoaux,  dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_pool_comm, inter_pool_comm )
-#endif
          !
          DEALLOCATE( rhoaux )
          !
       ELSE IF ( nspin == 4 ) THEN
          !
-#ifdef __BANDS
          CALL write_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
                   ionode, intra_bgrp_comm, inter_bgrp_comm )
-#else
-         CALL write_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_pool_comm, inter_pool_comm )
-#endif
          !
          IF (domag) THEN
             file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
             !
-#ifdef __BANDS
             CALL write_rho_xml( file_base, rho(:,2), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
                   ionode, intra_bgrp_comm, inter_bgrp_comm )
-#else
-            CALL write_rho_xml( file_base, rho(:,2), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_pool_comm, inter_pool_comm )
-#endif
             !
             file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
             !
-#ifdef __BANDS
             CALL write_rho_xml( file_base, rho(:,3), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
                   ionode, intra_bgrp_comm, inter_bgrp_comm )
-#else
-            CALL write_rho_xml( file_base, rho(:,3), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_pool_comm, inter_pool_comm )
-#endif
             !
             file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
             !
-#ifdef __BANDS
             CALL write_rho_xml( file_base, rho(:,4), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
                   ionode, intra_bgrp_comm, inter_bgrp_comm )
-#else
-            CALL write_rho_xml( file_base, rho(:,4), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_pool_comm, inter_pool_comm )
-#endif
          END IF
       END IF
       !
@@ -297,7 +255,7 @@ MODULE io_rho_xml
       USE fft_base, ONLY : dfftp
       USE spin_orb, ONLY : domag
       USE io_global, ONLY : ionode
-      USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, intra_bgrp_comm, inter_bgrp_comm
+      USE mp_global, ONLY : intra_bgrp_comm, inter_bgrp_comm
       !
       IMPLICIT NONE
       !
@@ -320,44 +278,26 @@ MODULE io_rho_xml
       !
       IF ( nspin == 1 ) THEN
          !
-#ifdef __BANDS
          CALL read_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
                   ionode, intra_bgrp_comm, inter_bgrp_comm ) 
-#else
-         CALL read_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_pool_comm, inter_pool_comm ) 
-#endif
          !
       ELSE IF ( nspin == 2 ) THEN
          !
          ALLOCATE( rhoaux( dfftp%nnr ) )
          !
-#ifdef __BANDS
          CALL read_rho_xml( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, & 
                   ionode, intra_bgrp_comm, inter_bgrp_comm ) 
-#else
-         CALL read_rho_xml( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, & 
-                  ionode, intra_pool_comm, inter_pool_comm ) 
-#endif
          !
          rho(:,1) = rhoaux(:)
          rho(:,2) = rhoaux(:)
          !
          file_base = TRIM( dirname ) // '/spin-polarization' // TRIM( ext )
          !
-#ifdef __BANDS
          CALL read_rho_xml( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
                   ionode, intra_bgrp_comm, inter_bgrp_comm )
-#else
-         CALL read_rho_xml( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_pool_comm, inter_pool_comm )
-#endif
          !
          rho(:,1) = 0.5D0*( rho(:,1) + rhoaux(:) )
          rho(:,2) = 0.5D0*( rho(:,2) - rhoaux(:) )
@@ -366,53 +306,29 @@ MODULE io_rho_xml
          !
       ELSE IF ( nspin == 4 ) THEN
          !
-#ifdef __BANDS
          CALL read_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
                   ionode, intra_bgrp_comm, inter_bgrp_comm )
-#else
-         CALL read_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_pool_comm, inter_pool_comm )
-#endif
          !
          IF ( domag ) THEN
             !
             file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
             !
-#ifdef __BANDS
             CALL read_rho_xml( file_base, rho(:,2), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
                   ionode, intra_bgrp_comm, inter_bgrp_comm )
-#else
-            CALL read_rho_xml( file_base, rho(:,2), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_pool_comm, inter_pool_comm )
-#endif
             !
             file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
             !
-#ifdef __BANDS
             CALL read_rho_xml( file_base, rho(:,3), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
                   ionode, intra_bgrp_comm, inter_bgrp_comm )
-#else
-            CALL read_rho_xml( file_base, rho(:,3), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_pool_comm, inter_pool_comm )
-#endif
             !
             file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
             !
-#ifdef __BANDS
             CALL read_rho_xml( file_base, rho(:,4), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
                   ionode, intra_bgrp_comm, inter_bgrp_comm )
-#else
-            CALL read_rho_xml( file_base, rho(:,4), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_pool_comm, inter_pool_comm )
-#endif
             !
          ELSE
             !

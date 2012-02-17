@@ -17,7 +17,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   !
   USE kinds
   USE constants, ONLY : tpi, e2
-  USE mp_global, ONLY : intra_pool_comm, intra_bgrp_comm
+  USE mp_global, ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE martyna_tuckerman, ONLY : wg_corr_ewald, do_comp_mt
   USE esm,       ONLY : do_comp_esm, esm_bc, esm_ewald
@@ -163,20 +163,10 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   endif
   ewald = 0.5d0 * e2 * (ewaldg + ewaldr)
   if ( do_comp_mt ) ewald =  ewald + wg_corr_ewald ( omega, ntyp, ngm, zv, strf )
-
-
-
-#ifdef __MPI
-
-
-#ifdef __BANDS
+  !
   call mp_sum(  ewald, intra_bgrp_comm )
-#else
-  call mp_sum(  ewald, intra_pool_comm )
-#endif
-#endif
-  !      call mp_sum( ewaldr, intra_pool_comm )
-  !      call mp_sum( ewaldg, intra_pool_comm )
+  !      call mp_sum( ewaldr, intra_bgrp_comm )
+  !      call mp_sum( ewaldg, intra_bgrp_comm )
   !      WRITE( stdout,'(/5x,"alpha used in ewald term: ",f4.2/
   !     + 5x,"R-space term: ",f12.7,5x,"G-space term: ",f12.7/)')
   !     + alpha, ewaldr, ewaldg

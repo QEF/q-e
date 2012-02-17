@@ -30,7 +30,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
   USE wavefunctions_module, ONLY : psic
   USE spin_orb,             ONLY : lspinorb, domag
   USE noncollin_module,     ONLY : nspin_mag
-  USE mp_global,            ONLY : intra_pool_comm, intra_bgrp_comm
+  USE mp_global,            ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -172,11 +172,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
      !
   END DO
   !
-#ifdef __BANDS
   CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), intra_bgrp_comm )
-#else
-  CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), intra_pool_comm )
-#endif
   !
   DEALLOCATE( aux, qgm, qmod, ylmk0 )
   !

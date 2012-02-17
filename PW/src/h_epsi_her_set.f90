@@ -37,7 +37,7 @@ subroutine h_epsi_her_set(pdir, e_field)
   USE constants, ONLY : e2, pi, tpi, fpi
   USE fixed_occ
   USE mp,        ONLY : mp_sum
-  USE mp_global, ONLY : intra_pool_comm, intra_bgrp_comm
+  USE mp_global, ONLY : intra_bgrp_comm
   USE becmod,    ONLY : calbec
   !
   implicit none
@@ -396,11 +396,9 @@ subroutine h_epsi_her_set(pdir, e_field)
                end if
             END DO
          END DO
-#ifdef __BANDS
-        call mp_sum( mat, intra_bgrp_comm )
-#else
-         call  mp_sum( mat, intra_pool_comm )
-#endif
+         !
+         call mp_sum( mat, intra_bgrp_comm )
+         !
          DO nb=1,nbnd
             DO mb=1,nbnd
                IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
@@ -612,11 +610,9 @@ subroutine h_epsi_her_set(pdir, e_field)
                endif
             END DO
          END DO
-#ifdef __BANDS
-        call mp_sum( mat, intra_bgrp_comm )
-#else
-         call mp_sum( mat, intra_pool_comm )
-#endif
+         !
+         call mp_sum( mat, intra_bgrp_comm )
+         !
          DO nb=1,nbnd
             DO mb=1,nbnd
                IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
@@ -795,11 +791,9 @@ subroutine h_epsi_her_set(pdir, e_field)
             endif
          END DO
       END DO
-#ifdef __BANDS
-     call mp_sum( mat, intra_bgrp_comm )
-#else
-      call mp_sum( mat, intra_pool_comm )
-#endif
+      !
+      call mp_sum( mat, intra_bgrp_comm )
+      !
       DO nb=1,nbnd
          DO mb=1,nbnd
             IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
@@ -1005,11 +999,9 @@ subroutine h_epsi_her_set(pdir, e_field)
             endif
          END DO
       END DO
-#ifdef __BANDS
+      ! 
       call mp_sum( mat, intra_bgrp_comm )
-#else
-      call mp_sum(  mat, intra_pool_comm )
-#endif
+      !
       DO nb=1,nbnd
          DO mb=1,nbnd
             IF ( l_cal(nb) .AND. l_cal(mb) ) THEN

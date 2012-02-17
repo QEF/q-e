@@ -71,8 +71,7 @@ SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
   USE scf,        ONLY : rho
   USE lsda_mod,   ONLY : nspin
   USE fft_base,   ONLY : dfftp
-  USE mp_global,  ONLY : me_pool, intra_pool_comm, &
-                         me_bgrp, intra_bgrp_comm
+  USE mp_global,  ONLY : me_bgrp, intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -96,15 +95,9 @@ SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
   !
 #if defined (__MPI)
   !
-#ifdef __BANDS
   DO i = 1, me_bgrp
      index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
   END DO
-#else
-  DO i = 1, me_pool
-     index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
-  END DO
-#endif
   !
 #endif
   !
@@ -152,13 +145,8 @@ SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
      !
   END DO
   !
-#ifdef __BANDS
   CALL mp_sum(  e_dipole(0:3) , intra_bgrp_comm )
   CALL mp_sum(  e_quadrupole  , intra_bgrp_comm )
-#else
-  CALL mp_sum(  e_dipole(0:3) , intra_pool_comm )
-  CALL mp_sum(  e_quadrupole  , intra_pool_comm )
-#endif
   !
   e_dipole(0) = e_dipole(0)*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
@@ -329,7 +317,7 @@ SUBROUTINE vacuum_level( x0, zion )
   USE cell_base, ONLY : at, alat, tpiba, tpiba2
   USE ions_base, ONLY : nsp
   USE vlocal,    ONLY : strf, vloc
-  USE mp_global, ONLY : intra_pool_comm, intra_bgrp_comm
+  USE mp_global, ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE control_flags, ONLY : gamma_only
   USE basic_algebra_routines, ONLY : norm
@@ -476,15 +464,9 @@ SUBROUTINE vacuum_level( x0, zion )
         !
      END DO
      !
-#ifdef __BANDS
      CALL mp_sum( vsph, intra_bgrp_comm )
      CALL mp_sum( qsph, intra_bgrp_comm )
      CALL mp_sum( qqr,  intra_bgrp_comm )
-#else
-     CALL mp_sum( vsph, intra_pool_comm )
-     CALL mp_sum( qsph, intra_pool_comm )
-     CALL mp_sum( qqr,  intra_pool_comm )
-#endif
      !
      qq = ( zion - qqr )
      !
@@ -519,8 +501,7 @@ SUBROUTINE compute_pol_dipole( x0, pol_dipole, pol_quadrupole )
   USE cell_base,  ONLY : at, bg, omega, alat
   USE environ_base, ONLY : env_static_permittivity, rhopol
   USE fft_base,   ONLY : dfftp
-  USE mp_global,  ONLY : me_pool, intra_pool_comm, &
-                         me_bgrp, intra_bgrp_comm
+  USE mp_global,  ONLY : me_bgrp, intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -546,15 +527,9 @@ SUBROUTINE compute_pol_dipole( x0, pol_dipole, pol_quadrupole )
   !
 #if defined (__MPI)
   !
-#ifdef __BANDS
   DO i = 1, me_bgrp
      index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
   END DO
-#else
-  DO i = 1, me_pool
-     index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
-  END DO
-#endif
   !
 #endif
   !
@@ -600,13 +575,8 @@ SUBROUTINE compute_pol_dipole( x0, pol_dipole, pol_quadrupole )
      !
   END DO
   !
-#ifdef __BANDS
   CALL mp_sum(  pol_dipole(0:3) , intra_bgrp_comm )
   CALL mp_sum(  pol_quadrupole  , intra_bgrp_comm )
-#else
-  CALL mp_sum(  pol_dipole(0:3) , intra_pool_comm )
-  CALL mp_sum(  pol_quadrupole  , intra_pool_comm )
-#endif
   !
   pol_dipole(0) = pol_dipole(0)*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !

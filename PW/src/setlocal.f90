@@ -72,11 +72,8 @@ subroutine setlocal
   !
   v_of_0=0.0_DP
   if (gg(1) < eps8) v_of_0 = DBLE ( aux (nl(1)) )
-#ifdef __BANDS
+  !
   call mp_sum( v_of_0, intra_bgrp_comm )
-#else
-  call mp_sum( v_of_0, intra_pool_comm )
-#endif
   !
   ! ... aux = potential in G-space . FFT to real space
   !

@@ -54,7 +54,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   USE io_global,     ONLY : stdout,ionode
   USE control_flags, ONLY : mixing_beta
   USE lsda_mod,      ONLY : nspin
-  USE mp_global,     ONLY : intra_image_comm, me_pool, intra_pool_comm
+  USE mp_global,     ONLY : intra_image_comm, me_bgrp, intra_bgrp_comm
   USE fft_base,      ONLY : dfftp
   USE mp,            ONLY : mp_bcast, mp_sum
   USE control_flags, ONLY : iverbosity
@@ -228,7 +228,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   index0 = 0
 #if defined (__MPI)
   !
-  DO i = 1, me_pool
+  DO i = 1, me_bgrp
      index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
   END DO
   !

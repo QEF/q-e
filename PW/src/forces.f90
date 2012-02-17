@@ -45,7 +45,6 @@ SUBROUTINE forces()
   USE bp,            ONLY : lelfield, gdir, l3dstring, efield_cart, &
                             efield_cry,efield
   USE uspp,          ONLY : okvan
-  USE mp_global,     ONLY : me_pool
   USE martyna_tuckerman, ONLY: do_comp_mt, wg_corr_force
   USE london_module, ONLY : force_london
   !

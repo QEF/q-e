@@ -113,7 +113,7 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
   USE cell_base, ONLY : omega, alat, tpiba, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
   USE fft_scalar,       ONLY : cft_1z
-  USE mp_global,        ONLY : intra_pool_comm, me_pool
+  USE mp_global,        ONLY : intra_bgrp_comm, me_bgrp
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
   !
@@ -393,10 +393,9 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
      endif
   endif
   ehart = ehart *omega*0.5d0
-#ifdef __MPI
-  call mp_sum( ehart, intra_pool_comm )
-#endif
-
+  !
+  call mp_sum( ehart, intra_bgrp_comm )
+  !
 ! Map to FFT mesh (dfftp%nnr)
   aux=0.0d0
   do ng=1,ngm
@@ -604,7 +603,7 @@ subroutine esm_local (aux)
   USE lsda_mod,         ONLY : nspin
   USE fft_scalar,       ONLY : cft_1z
   USE fft_base,         ONLY : dfftp
-  USE mp_global,        ONLY : me_pool
+  USE mp_global,        ONLY : me_bgrp
   !
   implicit none
   COMPLEX(DP)             :: aux( dfftp%nnr )     ! aux contains v_loc_short(G) (input) and v_loc(G) (output)
@@ -823,8 +822,6 @@ subroutine esm_force_ew ( alpha, forceion )
   USE ions_base,        ONLY : nat, tau, ityp
   USE uspp_param,       ONLY : upf
   USE fft_base,         ONLY : dfftp
-  USE mp_global,        ONLY : intra_pool_comm, me_pool
-  USE mp,               ONLY : mp_sum
   USE gvect,            ONLY : gstart
 
   implicit none
@@ -1063,8 +1060,6 @@ subroutine esm_force_lc ( aux, forcelc )
   USE control_flags,    ONLY : gamma_only
   USE ions_base,        ONLY : nat, tau, ityp
   USE uspp_param,       ONLY : upf
-  USE mp,               ONLY : mp_sum
-  USE mp_global,        ONLY : intra_pool_comm
   USE fft_scalar,       ONLY : cft_1z
   USE fft_base,         ONLY : dfftp
 
@@ -1296,7 +1291,7 @@ SUBROUTINE esm_printpot ()
   USE scf,                  ONLY : rho, vltot
   USE lsda_mod,             ONLY : nspin
   USE mp,                   ONLY : mp_sum
-  USE mp_global,            ONLY : intra_pool_comm
+  USE mp_global,            ONLY : intra_bgrp_comm
   USE fft_base,             ONLY : dfftp
   USE io_global,            ONLY : ionode, stdout
   USE constants,            ONLY : rytoev, bohr_radius_angs
@@ -1345,10 +1340,9 @@ SUBROUTINE esm_printpot ()
            work4(1:5,izz) = (/dble(k3)/dble(dfftp%nr3)*L*bohr_radius_angs, &
                               z1, z3*rytoev,z4*rytoev, z2*rytoev/)
         enddo
-#ifdef __MPI
-        call mp_sum(work4, intra_pool_comm)
-#endif
-
+        !
+        call mp_sum(work4, intra_bgrp_comm)
+        !
         IF ( ionode ) then
            write(stdout,                                             &
                  FMT = '(/,5x, "ESM Charge and Potential",&

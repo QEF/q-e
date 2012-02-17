@@ -25,7 +25,7 @@ subroutine force_cc (forcecc)
   USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin
   USE wavefunctions_module, ONLY : psic
-  USE mp_global,            ONLY : intra_pool_comm, intra_bgrp_comm
+  USE mp_global,            ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
   implicit none
@@ -106,13 +106,9 @@ subroutine force_cc (forcecc)
         enddo
      endif
   enddo
-#ifdef __MPI
-#ifdef __BANDS
+  !
   call mp_sum(  forcecc, intra_bgrp_comm )
-#else
-  call mp_sum(  forcecc, intra_pool_comm )
-#endif
-#endif
+  !
   deallocate (rhocg)
   !
   return

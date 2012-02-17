@@ -30,7 +30,7 @@ SUBROUTINE force_us( forcenl )
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE buffers,              ONLY : get_buffer
   USE becmod,               ONLY : bec_type, becp, allocate_bec_type, deallocate_bec_type
-  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -159,12 +159,10 @@ SUBROUTINE force_us( forcenl )
        !
        CALL addusforce( forcenl )
        !
-#ifdef __MPI
        !
        ! ... collect contributions across pools
        !
        CALL mp_sum( forcenl, inter_pool_comm )
-#endif
        !
        ! ... Since our summation over k points was only on the irreducible 
        ! ... BZ we have to symmetrize the forces
@@ -332,9 +330,7 @@ SUBROUTINE force_us( forcenl )
           END DO ! nbnd
        END DO ! nks
        !
-#ifdef __MPI
-       CALL mp_sum(  forcenl , intra_pool_comm )
-#endif
+       CALL mp_sum(  forcenl , intra_bgrp_comm )
        !
        DEALLOCATE( vkb1 )
        IF (noncolin) THEN
@@ -351,12 +347,10 @@ SUBROUTINE force_us( forcenl )
        !
        CALL addusforce( forcenl )
        !
-#ifdef __MPI
        !
        ! ... collect contributions across pools
        !
        CALL mp_sum( forcenl, inter_pool_comm )
-#endif
        !
        ! ... Since our summation over k points was only on the irreducible 
        ! ... BZ we have to symmetrize the forces.

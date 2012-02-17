@@ -97,13 +97,9 @@ subroutine stres_loc (sigmaloc)
         sigmaloc (m, l) = sigmaloc (l, m)
      enddo
   enddo
-#ifdef __MPI
-#ifdef __BANDS
+  !
   call mp_sum(  sigmaloc, intra_bgrp_comm )
-#else
-  call mp_sum(  sigmaloc, intra_pool_comm )
-#endif
-#endif
+  !
   deallocate(dvloc)
   return
 end subroutine stres_loc

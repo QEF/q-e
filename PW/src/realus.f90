@@ -212,7 +212,7 @@ MODULE realus
       USE uspp_param, ONLY : upf, lmaxq, nh, nhm
       USE atom,       ONLY : rgrid
       USE fft_base,   ONLY : dfftp
-      USE mp_global,  ONLY : me_pool, me_bgrp
+      USE mp_global,  ONLY : me_bgrp
       USE splinelib,  ONLY : spline, splint
       !
       IMPLICIT NONE
@@ -310,11 +310,7 @@ MODULE realus
       ! ... now we find the points
       !
 #if defined (__MPI)
-#ifdef __BANDS
       idx0 = dfftp%nr1x*dfftp%nr2x * sum ( dfftp%npp(1:me_bgrp) )
-#else
-      idx0 = dfftp%nr1x*dfftp%nr2x * sum ( dfftp%npp(1:me_pool) )
-#endif
 #else
       idx0 = 0
 #endif
@@ -664,7 +660,7 @@ MODULE realus
       USE atom,       ONLY : rgrid
       !USE pffts,      ONLY : npps
       USE fft_base,   ONLY : dffts
-      USE mp_global,  ONLY : me_pool, me_bgrp
+      USE mp_global,  ONLY : me_bgrp
       USE splinelib,  ONLY : spline, splint
       USE ions_base,             ONLY : ntyp => nsp
       !
@@ -764,11 +760,7 @@ MODULE realus
       !
       ! The beta functions are treated on smooth grid
 #if defined (__MPI)
-#ifdef __BANDS
       index0 = dffts%nr1x*dffts%nr2x * sum ( dffts%npp(1:me_bgrp) )
-#else
-      index0 = dffts%nr1x*dffts%nr2x * sum ( dffts%npp(1:me_pool) )
-#endif
 #else
       index0 = 0
 #endif
@@ -1008,7 +1000,7 @@ MODULE realus
       USE control_flags,    ONLY : tqr
       USE noncollin_module, ONLY : nspin_mag
       USE scf,              ONLY : vltot
-      USE mp_global,            ONLY : intra_pool_comm, intra_bgrp_comm
+      USE mp_global,            ONLY : intra_bgrp_comm
       USE mp,                   ONLY : mp_sum
 
           IMPLICIT NONE
@@ -1070,11 +1062,7 @@ MODULE realus
       !
       DEALLOCATE( aux )
       !
-#ifdef __BANDS
       CALL mp_sum(  deeq(:,:,:,1:nspin_mag) , intra_bgrp_comm )
-#else
-      CALL mp_sum(  deeq(:,:,:,1:nspin_mag) , intra_pool_comm )
-#endif
     END SUBROUTINE newq_r
     !------------------------------------------------------------------------
     SUBROUTINE newd_r()
@@ -1451,7 +1439,7 @@ MODULE realus
       USE uspp_param,       ONLY : upf, nh
       USE noncollin_module, ONLY : noncolin, nspin_mag, nspin_lsda
       USE spin_orb,         ONLY : domag
-      USE mp_global,        ONLY : intra_pool_comm, inter_pool_comm, intra_bgrp_comm, inter_bgrp_comm
+      USE mp_global,        ONLY : inter_pool_comm, intra_bgrp_comm, inter_bgrp_comm
       USE mp,               ONLY : mp_sum
 
       !
@@ -1516,11 +1504,7 @@ MODULE realus
       IF (rescale) THEN
       !OBM, RHO IS NOT NECESSARILY GROUND STATE CHARGE DENSITY, thus rescaling is optional
        charge = sum( rho_1(:,1:nspin_lsda) )*omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
-#ifdef __BANDS
        CALL mp_sum(  charge , intra_bgrp_comm )
-#else
-       CALL mp_sum(  charge , intra_pool_comm )
-#endif
        CALL mp_sum(  charge , inter_pool_comm )
 
        IF ( abs( charge - nelec ) / charge > tolerance ) THEN
@@ -1571,7 +1555,7 @@ MODULE realus
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
     USE uspp_param,            ONLY : nh, nhm
     USE fft_base,              ONLY : tg_gather, dffts
-    USE mp_global,             ONLY : me_pool, intra_pool_comm, me_bgrp, intra_bgrp_comm
+    USE mp_global,             ONLY : me_bgrp, intra_bgrp_comm
     USE mp,        ONLY : mp_sum
     !
     IMPLICIT NONE
@@ -1659,13 +1643,8 @@ MODULE realus
        !
        !
     ENDIF
-#ifdef __BANDS
     CALL mp_sum( becp_r( :, ibnd ), intra_bgrp_comm )
     IF ( ibnd+1 .le. m ) CALL mp_sum( becp_r( :, ibnd+1 ), intra_bgrp_comm )
-#else
-    CALL mp_sum( becp_r( :, ibnd ), intra_pool_comm )
-    IF ( ibnd+1 .le. m ) CALL mp_sum( becp_r( :, ibnd+1 ), intra_pool_comm )
-#endif
     CALL stop_clock( 'calbec_rs' )
     !
     RETURN
@@ -1684,7 +1663,7 @@ MODULE realus
     USE uspp_param,            ONLY : nh, nhm
     USE becmod,                ONLY : bec_type, becp
     USE fft_base,              ONLY : tg_gather, dffts
-    USE mp_global,             ONLY : me_pool, me_bgrp
+    USE mp_global,             ONLY : me_bgrp
     !
     IMPLICIT NONE
     !
@@ -1769,7 +1748,7 @@ MODULE realus
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : tg_gather, dffts
-      USE mp_global,              ONLY : me_pool, me_bgrp
+      USE mp_global,              ONLY : me_bgrp
       !
       IMPLICIT NONE
       !
@@ -1869,7 +1848,7 @@ MODULE realus
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : tg_gather, dffts
-      USE mp_global,              ONLY : me_pool, me_bgrp
+      USE mp_global,              ONLY : me_bgrp
       !
       IMPLICIT NONE
       !
@@ -1971,7 +1950,7 @@ MODULE realus
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : tg_gather, dffts
-  USE mp_global,              ONLY : me_pool, me_bgrp
+  USE mp_global,              ONLY : me_bgrp
   !
   IMPLICIT NONE
   !
@@ -2074,7 +2053,7 @@ MODULE realus
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : tg_gather, dffts
-  USE mp_global,              ONLY : me_pool, me_bgrp
+  USE mp_global,              ONLY : me_bgrp
   !
   IMPLICIT NONE
   !
@@ -2169,7 +2148,7 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts, tg_gather
     USE fft_interfaces,ONLY : invfft
-    USE mp_global,     ONLY : me_pool, me_bgrp
+    USE mp_global,     ONLY : me_bgrp
 
     IMPLICIT NONE
 
@@ -2333,7 +2312,7 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts, tg_gather
     USE fft_interfaces,ONLY : fwfft
-    USE mp_global,     ONLY : me_pool, me_bgrp
+    USE mp_global,     ONLY : me_bgrp
 
     IMPLICIT NONE
 
@@ -2382,11 +2361,7 @@ MODULE realus
               ENDDO
            ENDIF
            !
-#ifdef __BANDS
            ioff = ioff + dffts%nr3x * dffts%nsw( me_bgrp + 1 )
-#else
-           ioff = ioff + dffts%nr3x * dffts%nsw( me_pool + 1 )
-#endif
            !
         ENDDO
         !
@@ -2474,7 +2449,7 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : invfft
-    USE mp_global,     ONLY : me_pool, me_bgrp
+    USE mp_global,     ONLY : me_bgrp
     USE wvfct,         ONLY : igk
 
     IMPLICIT NONE
@@ -2551,7 +2526,7 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : fwfft
-    USE mp_global,     ONLY : me_pool, me_bgrp
+    USE mp_global,     ONLY : me_bgrp
     USE wvfct,         ONLY : igk
 
     IMPLICIT NONE
@@ -2582,11 +2557,7 @@ MODULE realus
              orbital (:, ibnd+idx-1) = tg_psic( nls(igk(:)) + ioff )
           ENDIF
           !
-#ifdef __BANDS
           ioff = ioff + dffts%nr3x * dffts%nsw( me_bgrp + 1 )
-#else
-          ioff = ioff + dffts%nr3x * dffts%nsw( me_pool + 1 )
-#endif
           !
        ENDDO
        IF (present(conserved)) THEN
@@ -2621,7 +2592,7 @@ MODULE realus
     USE gvecs,       ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts, tg_gather
-    USE mp_global,     ONLY : me_pool, me_bgrp
+    USE mp_global,     ONLY : me_bgrp
     USE scf,           ONLY : vrs
     USE lsda_mod,      ONLY : current_spin
 
@@ -2647,11 +2618,7 @@ MODULE realus
           CALL tg_gather( dffts, vrs(:,current_spin), tg_v ) !if ibnd==1 this is a new calculation, and tg_v should be distributed.
         ENDIF
         !
-#ifdef __BANDS
         DO j = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
-#else
-        DO j = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_pool + 1 )
-#endif
            tg_psic (j) = tg_psic (j) + tg_psic_temp (j) * tg_v(j)
         ENDDO
         !
@@ -2697,7 +2664,7 @@ MODULE realus
   USE io_global,            ONLY : stdout
   USE cell_base,            ONLY : omega
   !
-  USE mp_global,        ONLY : intra_pool_comm, intra_bgrp_comm
+  USE mp_global,        ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -2895,7 +2862,7 @@ MODULE realus
   USE wavefunctions_module, ONLY : psic
   USE cell_base,            ONLY : omega
   !
-  USE mp_global,            ONLY : intra_pool_comm, intra_bgrp_comm
+  USE mp_global,            ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE

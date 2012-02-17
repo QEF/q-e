@@ -186,7 +186,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE becmod,               ONLY : bec_type, becp, calbec, &
                                    allocate_bec_type, deallocate_bec_type
   USE klist,                ONLY : nks
-  USE mp_global,            ONLY : nproc_pool
+  USE mp_global,            ONLY : nproc_bgrp
   !
   IMPLICIT NONE
   !
@@ -215,7 +215,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   ! ... allocate space for <beta_i|psi_j> - used in h_psi and s_psi
   !
-  IF ( nbndx > npwx*nproc_pool ) &
+  IF ( nbndx > npwx*nproc_bgrp ) &
      CALL errore ( 'diag_bands', 'too many bands, or too few plane waves',1)
   !
   CALL allocate_bec_type ( nkb, nbnd, becp )

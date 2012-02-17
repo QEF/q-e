@@ -14,8 +14,6 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
   ! ... simmetric matrix H . On output, the matrix is unchanged
   !
   USE kinds,            ONLY : DP
-  USE mp_global,        ONLY : nproc, npool, nproc_pool, me_pool, &
-                               root_pool, intra_pool_comm
   USE mp_global,        ONLY : nbgrp, nproc_bgrp, me_bgrp, &
                                root_bgrp, intra_bgrp_comm
   USE mp,               ONLY : mp_bcast
@@ -83,23 +81,14 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
       !
       ! ... only the first processor diagonalize the matrix
       !
-#ifdef __BANDS
       IF ( me_bgrp == root_bgrp ) THEN
-#else
-      IF ( me_pool == root_pool ) THEN
-#endif
          !
          CALL DSPEV( 21, hp, e, v, ldh, n, aux, naux )
          !
       END IF
       !
-#ifdef __BANDS
       CALL mp_bcast( e, root_bgrp, intra_bgrp_comm )
       CALL mp_bcast( v, root_bgrp, intra_bgrp_comm )
-#else
-      CALL mp_bcast( e, root_pool, intra_pool_comm )
-      CALL mp_bcast( v, root_pool, intra_pool_comm )
-#endif
       !
       DEALLOCATE( aux )
       DEALLOCATE( hp )
@@ -140,11 +129,7 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
       !
       ! ... only the first processor diagonalize the matrix
       !
-#ifdef __BANDS
       IF ( me_bgrp == root_bgrp ) THEN
-#else
-      IF ( me_pool == root_pool ) THEN
-#endif
          !
          ! ... allocate workspace
          !
@@ -162,13 +147,8 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
          !
       END IF
       !
-#ifdef __BANDS
       CALL mp_bcast( e, root_bgrp, intra_bgrp_comm )
       CALL mp_bcast( v, root_bgrp, intra_bgrp_comm )      
-#else
-      CALL mp_bcast( e, root_pool, intra_pool_comm )
-      CALL mp_bcast( v, root_pool, intra_pool_comm )      
-#endif
       !
       RETURN
       !

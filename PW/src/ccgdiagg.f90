@@ -22,7 +22,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
   !
   USE constants,        ONLY : pi
   USE kinds,            ONLY : DP
-  USE mp_global,        ONLY : intra_pool_comm, intra_bgrp_comm
+  USE mp_global,        ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -117,11 +117,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
      !
      CALL ZGEMV( 'C', kdim, m, ONE, psi, kdmx, spsi, 1, ZERO, lagrange, 1 )
      !
-#ifdef __BANDS
      CALL mp_sum( lagrange( 1:m ), intra_bgrp_comm )
-#else	
-     CALL mp_sum( lagrange( 1:m ), intra_pool_comm )
-#endif
      !
      psi_norm = DBLE( lagrange(m) )
      !
@@ -148,11 +144,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
      !
      e(m) = ddot( kdim2, psi(1,m), 1, hpsi, 1 )
      !
-#ifdef __BANDS
      CALL mp_sum( e(m), intra_bgrp_comm )
-#else
-     CALL mp_sum( e(m), intra_pool_comm )
-#endif
      !
      ! ... start iteration for this band
      !
@@ -169,11 +161,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         es(1) = ddot( kdim2, spsi(1), 1, g(1), 1 )
         es(2) = ddot( kdim2, spsi(1), 1, ppsi(1), 1 )
         !
-#ifdef __BANDS
         CALL mp_sum( es , intra_bgrp_comm )
-#else
-        CALL mp_sum(  es , intra_pool_comm )
-#endif
         !
         es(1) = es(1) / es(2)
         !
@@ -190,11 +178,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         CALL ZGEMV( 'C', kdim, ( m - 1 ), ONE, psi, &
                     kdmx, scg, 1, ZERO, lagrange, 1  )
         !
-#ifdef __BANDS
         CALL mp_sum( lagrange( 1:m-1 ), intra_bgrp_comm )
-#else
-        CALL mp_sum( lagrange( 1:m-1 ), intra_pool_comm )
-#endif
         !
         DO j = 1, ( m - 1 )
            !
@@ -209,11 +193,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
            !
            gg1 = ddot( kdim2, g(1), 1, g0(1), 1 )
            !
-#ifdef __BANDS
            CALL mp_sum( gg1, intra_bgrp_comm )
-#else
-           CALL mp_sum(  gg1 , intra_pool_comm )
-#endif
            !
         END IF
         !
@@ -225,11 +205,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         !
         gg = ddot( kdim2, g(1), 1, g0(1), 1 )
         !
-#ifdef __BANDS
         CALL mp_sum( gg, intra_bgrp_comm )
-#else
-        CALL mp_sum(  gg , intra_pool_comm )
-#endif
         !
         IF ( iter == 1 ) THEN
            !
@@ -269,11 +245,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         !
         cg0 = ddot( kdim2, cg(1), 1, scg(1), 1 )
         !
-#ifdef __BANDS
         CALL mp_sum(  cg0 , intra_bgrp_comm )
-#else
-        CALL mp_sum(  cg0 , intra_pool_comm )
-#endif
         !
         cg0 = SQRT( cg0 )
         !
@@ -287,19 +259,11 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         !
         a0 = 2.D0 * ddot( kdim2, psi(1,m), 1, ppsi(1), 1 ) / cg0
         !
-#ifdef __BANDS
         CALL mp_sum(  a0 , intra_bgrp_comm )
-#else
-        CALL mp_sum(  a0 , intra_pool_comm )
-#endif
         !
         b0 = ddot( kdim2, cg(1), 1, ppsi(1), 1 ) / cg0**2
         !
-#ifdef __BANDS
         CALL mp_sum(  b0 , intra_bgrp_comm )
-#else
-        CALL mp_sum(  b0 , intra_pool_comm )
-#endif
         !
         e0 = e(m)
         !

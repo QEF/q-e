@@ -48,21 +48,12 @@ SUBROUTINE print_ks_energies()
   !
   ngk_g(1:nks) = ngk(:)
   !
-#ifdef __BANDS
   CALL mp_sum( ngk_g(1:nks), intra_bgrp_comm )
-#else
-  CALL mp_sum( ngk_g(1:nks), intra_pool_comm )
-#endif
   !
   CALL ipoolrecover( ngk_g, 1, nkstot, nks )
   !
-#ifdef __BANDS
   CALL mp_bcast( ngk_g, root_bgrp, intra_bgrp_comm )
   CALL mp_bcast( ngk_g, root_bgrp, inter_bgrp_comm )
-#else
-  CALL mp_bcast( ngk_g, root_pool, intra_pool_comm )
-  CALL mp_bcast( ngk_g, root_pool, inter_pool_comm )
-#endif
   !
   DO ik = 1, nkstot
   !

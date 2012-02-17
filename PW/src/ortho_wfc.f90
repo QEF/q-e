@@ -13,7 +13,7 @@ SUBROUTINE ortho_wfc(lda,ldb,wfc,ierr)
 
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
-  USE mp_global,  ONLY : intra_pool_comm
+  USE mp_global,  ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   USE noncollin_module, ONLY : noncolin, npol
   
@@ -43,7 +43,7 @@ SUBROUTINE ortho_wfc(lda,ldb,wfc,ierr)
        wfc, lda, wfc, lda, (0.d0, 0.d0), overlap, lda)
     
 #ifdef __MPI
-  CALL mp_sum(  overlap, intra_pool_comm )
+  CALL mp_sum(  overlap, intra_bgrp_comm )
 #endif
 
   ! find O^-.5
@@ -91,8 +91,6 @@ SUBROUTINE check_ortho(lda,ldb,wfc)
 
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
-  USE mp_global,  ONLY : intra_pool_comm
-  USE mp,         ONLY : mp_sum
   USE noncollin_module, ONLY : noncolin, npol
   
   implicit none

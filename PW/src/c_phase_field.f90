@@ -42,7 +42,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    USE fixed_occ
    USE gvect,   ONLY : ig_l2g
    USE mp,                   ONLY : mp_sum
-   USE mp_global,            ONLY : intra_pool_comm
+   USE mp_global,            ONLY : intra_bgrp_comm
    USE becmod,               ONLY : calbec
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE
@@ -445,7 +445,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
                         
                         if(kpar /= (nppstr_3d(pdir)+1).or..not. l_para) then
                            mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)                           
-                           call mp_sum( mat(nb,mb), intra_pool_comm )
+                           call mp_sum( mat(nb,mb), intra_bgrp_comm )
                         endif
 !                    --- Calculate the augmented part: ij=KB projectors, ---
 !                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---

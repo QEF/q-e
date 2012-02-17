@@ -27,7 +27,7 @@ SUBROUTINE force_hub(forceh)
    USE control_flags,        ONLY : gamma_only
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE scf,                  ONLY : v
-   USE mp_global,            ONLY : me_pool, inter_pool_comm, intra_pool_comm
+   USE mp_global,            ONLY : inter_pool_comm
    USE mp,                   ONLY : mp_sum
    USE basis,                ONLY : natomwfc
    USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
@@ -108,10 +108,9 @@ SUBROUTINE force_hub(forceh)
          END DO
       END DO
    END DO
-
-#ifdef __MPI
+   !
    CALL mp_sum( forceh, inter_pool_comm )
-#endif
+   !
    DEALLOCATE(dns, spsi)
    call deallocate_bec_type (proj)
    call deallocate_bec_type (becp)
@@ -298,7 +297,7 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
    USE uspp_param,           ONLY : nhm, nh
    USE wavefunctions_module, ONLY : evc
    USE becmod,               ONLY : bec_type, becp, calbec
-   USE mp_global,            ONLY : intra_pool_comm
+   USE mp_global,            ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
    
    IMPLICIT NONE
@@ -353,10 +352,9 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
 
       DEALLOCATE ( dwfc ) 
    END IF
-#ifdef __MPI
-   CALL mp_sum( dproj, intra_pool_comm )
-#endif
-
+   !
+   CALL mp_sum( dproj, intra_bgrp_comm )
+   !
    jkb2 = 0
    DO nt=1,ntyp
       DO na=1,nat
@@ -450,7 +448,7 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
    USE uspp_param,           ONLY : nhm, nh
    USE wavefunctions_module, ONLY : evc
    USE becmod,               ONLY : bec_type, becp, calbec
-   USE mp_global,            ONLY : intra_pool_comm
+   USE mp_global,            ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
    
    IMPLICIT NONE
@@ -505,10 +503,9 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
                   dproj(offset+1,1), natomwfc)
       DEALLOCATE ( dwfc ) 
    END IF
-
-#ifdef __MPI
-   CALL mp_sum( dproj, intra_pool_comm )
-#endif
+   !
+   CALL mp_sum( dproj, intra_bgrp_comm )
+   ! 
    jkb2 = 0
    DO nt=1,ntyp
       DO na=1,nat

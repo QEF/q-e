@@ -279,13 +279,8 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   vtxc = omega * (vtxc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 ))
   etxc = omega * etxc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
   !
-#ifdef __BANDS
   CALL mp_sum(  vtxc , intra_bgrp_comm )
   CALL mp_sum(  etxc , intra_bgrp_comm )
-#else
-  CALL mp_sum(  vtxc , intra_pool_comm )
-  CALL mp_sum(  etxc , intra_pool_comm )
-#endif
   DEALLOCATE(grho)
   DEALLOCATE(h)
   DEALLOCATE(rhoout)
@@ -467,11 +462,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
      !
   END IF
   !
-#ifdef __BANDS
   CALL mp_sum(  rhoneg , intra_bgrp_comm )
-#else
-  CALL mp_sum(  rhoneg , intra_pool_comm )
-#endif
   !
   rhoneg(:) = rhoneg(:) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
@@ -492,13 +483,8 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !
   CALL nonloccorr(rho%of_r, rho_core, etxc, vtxc, v)
   !
-#ifdef __BANDS
   CALL mp_sum(  vtxc , intra_bgrp_comm )
   CALL mp_sum(  etxc , intra_bgrp_comm )
-#else
-  CALL mp_sum(  vtxc , intra_pool_comm )
-  CALL mp_sum(  etxc , intra_pool_comm )
-#endif
   !
   CALL stop_clock( 'v_xc' )
   !
@@ -551,11 +537,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
      !
   END IF
   !
-#ifdef __BANDS
   CALL mp_sum(  charge , intra_bgrp_comm )
-#else
-  CALL mp_sum(  charge , intra_pool_comm )
-#endif
   !
   ! ... calculate hartree potential in G-space (NB: V(G=0)=0 )
   !
@@ -620,11 +602,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
         DEALLOCATE( rgtot, vaux )
      end if
      !
-#ifdef __BANDS
      CALL mp_sum(  ehart , intra_bgrp_comm )
-#else
-     CALL mp_sum(  ehart , intra_bgrp_comm )
-#endif
      ! 
      aux(:) = 0.D0
      !

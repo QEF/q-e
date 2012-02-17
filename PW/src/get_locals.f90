@@ -19,7 +19,7 @@
       USE ions_base,  ONLY : nat
       USE cell_base,  ONLY : omega
       USE lsda_mod,   ONLY : nspin
-      USE mp_global,  ONLY : intra_pool_comm, intra_bgrp_comm
+      USE mp_global,  ONLY : intra_bgrp_comm
       USE mp,         ONLY : mp_sum
       USE fft_base,   ONLY : dfftp
       USE noncollin_module, ONLY : pointlist, factlist, noncolin
@@ -45,12 +45,9 @@
          auxrholoc(pointlist(i),1:nspin) = auxrholoc(pointlist(i),1:nspin) + &
                                            rho(i,1:nspin) * factlist(i)
       end do
-#ifdef __BANDS
-     call mp_sum( auxrholoc( 0:nat, 1:nspin), intra_bgrp_comm )
-#else
-      call mp_sum( auxrholoc( 0:nat, 1:nspin ), intra_pool_comm )
-#endif
-!
+      !
+      call mp_sum( auxrholoc( 0:nat, 1:nspin), intra_bgrp_comm )
+      !     
       fact =  omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
       if (nspin.eq.2) then
          rholoc(1:nat)   = (auxrholoc(1:nat,1)+auxrholoc(1:nat,2)) * fact

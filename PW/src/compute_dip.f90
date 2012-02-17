@@ -81,7 +81,7 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg, omega, alat, saw
   USE fft_base,   ONLY : dfftp
-  USE mp_global,  ONLY : me_pool, intra_pool_comm
+  USE mp_global,  ONLY : me_bgrp, intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -124,7 +124,7 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   !
 #if defined (__MPI)
   !
-  DO i = 1, me_pool
+  DO i = 1, me_bgrp
      index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
   END DO
   !
@@ -160,7 +160,7 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
 
   END DO
 
-  CALL mp_sum(  e_dipole , intra_pool_comm )
+  CALL mp_sum(  e_dipole , intra_bgrp_comm )
   
   RETURN
   
