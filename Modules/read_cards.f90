@@ -690,8 +690,8 @@ CONTAINS
                   ('card_kpoints', 'invalid offsets: must be 0 or 1', 1)
          IF ( nk1 <= 0 .or. nk2 <= 0 .or. nk3 <= 0 ) CALL errore &
                   ('card_kpoints', 'invalid values for nk1, nk2, nk3', 1)
-
-         !
+         ALLOCATE ( xk(3,1), wk(1) ) ! prevents problems with debug flags
+         !                           ! when init_startk is called in iosys
       ELSEIF ( ( k_points == 'tpiba' ) .or. ( k_points == 'crystal' ) ) THEN
          !
          ! ... input k-points are in 2pi/a units

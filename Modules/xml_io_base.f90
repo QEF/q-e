@@ -251,7 +251,7 @@ MODULE xml_io_base
       ! ... keep the line below ( this is the old style RESTARTXX ) !!!
       !
       ! dirname = 'RESTART' // int_to_char( runit )
-      ! the next line is to have seperate RESTART for each image
+      ! the next line is to have separate RESTART for each image
       ! KNK_nimage
       ! if (my_image_id > 0) dirname = trim(dirname) // '_' // trim(int_to_char( my_image_id ))
       !
