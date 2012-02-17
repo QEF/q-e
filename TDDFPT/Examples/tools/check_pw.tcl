@@ -104,6 +104,18 @@ global lc_pos
   	  }
         #puts $bands_ref_raw
 
+       set lc_pos [regexp -nocase -all  -line -inline -indices  {End of self-consistent calculation} $bands_ref_raw] 
+       set lc_pos [lindex [lindex $lc_pos end] 1]
+       set bands_ref_raw  [regexp -inline -start $lc_pos {.*} $bands_ref_raw]
+
+       #puts $bands_ref_raw
+
+       set lc_pos [regexp -nocase -all  -line -inline -indices  {End of self-consistent calculation} $bands_out_raw] 
+       set lc_pos [lindex [lindex $lc_pos end] 1]
+       set bands_out_raw  [regexp -inline -start $lc_pos {.*} $bands_out_raw]
+       
+       #puts $bands_out_raw
+
          foreach {lc_pos} [regexp -all -line -inline -indices {k =} $bands_out_raw] {
   		set lc_pos [lindex [split $lc_pos] 1]
                 #puts $lc_pos
