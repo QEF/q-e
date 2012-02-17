@@ -1360,7 +1360,6 @@ MODULE input_parameters
         LOGICAL   :: tocc = .false.
         LOGICAL   :: tcell = .false.
         LOGICAL   :: tdipole = .false.
-        LOGICAL   :: tsetnfi = .false.
         LOGICAL   :: tionvel = .false.
         LOGICAL   :: tconstr = .false.
         LOGICAL   :: tesr = .false.

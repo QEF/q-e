@@ -15,8 +15,7 @@ SUBROUTINE init_run()
   !
   USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : nbeg, nomore, lwf, iverbosity, iprint, &
-                                       ndr, tfor, tprnfor, tpre, &
-                                       force_pairing, newnfi, tnewnfi, ndw
+                                       ndr, ndw, tfor, tprnfor, tpre, force_pairing
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, ityp, cdms
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
@@ -321,8 +320,6 @@ SUBROUTINE init_run()
   END IF
   !
   IF ( .NOT. tfor .AND. .NOT. tprnfor ) fion(:,:) = 0.D0
-  !
-  IF ( tnewnfi ) nfi = newnfi 
   !
   nomore = nomore + nfi
   !

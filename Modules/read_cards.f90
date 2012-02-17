@@ -104,11 +104,6 @@ CONTAINS
       !
       tavel = .false.
       !
-      ! ... setnfi
-      !
-      newnfi_card  = -1
-      tnewnfi_card = .false.
-      !
       CALL init_autopilot()
       !
       RETURN
@@ -167,12 +162,6 @@ CONTAINS
       ELSEIF ( trim(card) == 'ATOMIC_FORCES' ) THEN
          !
          CALL card_atomic_forces( input_line, prog )
-         !
-      ELSEIF ( trim(card) == 'SETNFI' ) THEN
-         !
-         CALL card_setnfi( input_line )
-         IF ( ( prog == 'PW' .or. prog == 'CP' ) .and. ionode ) &
-            WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
          !
       ELSEIF ( trim(card) == 'CONSTRAINTS' ) THEN
          !
@@ -777,52 +766,6 @@ CONTAINS
             & // trim(k_points) // ' k points', 1)
       !
    END SUBROUTINE card_kpoints
-   !
-   !------------------------------------------------------------------------
-   !    BEGIN manual
-   !----------------------------------------------------------------------
-   !
-   ! SETNFI
-   !
-   !   Reset the step counter to the specified value
-   !
-   ! Syntax:
-   !
-   !  SETNFI
-   !     nfi
-   !
-   ! Example:
-   !
-   !  SETNFI
-   !     100
-   !
-   ! Where:
-   !
-   !    nfi (integer) new value for the step counter
-   !
-   !----------------------------------------------------------------------
-   !    END manual
-   !------------------------------------------------------------------------
-   !
-   SUBROUTINE card_setnfi( input_line )
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(len=256) :: input_line
-      !
-      !
-      IF ( tsetnfi ) THEN
-         CALL errore( ' card_setnfi ', ' two occurrences', 2 )
-      ENDIF
-      CALL read_line( input_line )
-      READ(input_line,*) newnfi_card
-      tnewnfi_card = .true.
-      tsetnfi = .true.
-      !
-      RETURN
-      !
-   END SUBROUTINE card_setnfi
-   !
    !
    !------------------------------------------------------------------------
    !    BEGIN manual

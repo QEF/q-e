@@ -120,9 +120,6 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                 'reset_counters' : continue a previous simulation,
                                    performs  "nstep" new steps, resetting
                                    the counter and averages
-                'upto'           : continue a previous simulation and stops
-                                   when the counter value is equal "nstep"
-
 	    }
 	}
 	
