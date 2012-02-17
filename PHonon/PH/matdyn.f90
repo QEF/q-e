@@ -37,6 +37,9 @@ PROGRAM matdyn
   !
   !  Input cards: namelist &input
   !     flfrc     file produced by q2r containing force constants (needed)
+  !               It is the same as in the input of q2r.x (+ the .xml extension
+  !               if the dynamical matrices produced by ph.x were in xml
+  !               format).
   !      asr      (character) indicates the type of Acoustic Sum Rule imposed
   !               - 'no': no Acoustic Sum Rules imposed (default)
   !               - 'simple':  previous implementation of the asr used
