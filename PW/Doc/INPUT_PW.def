@@ -6,7 +6,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	Input data format: { } = optional, [ ] = it depends, | = or
 	
 	All quantities whose dimensions are not explicitly specified are in
-	RYDBERG ATOMIC UNITS
+	RYDBERG ATOMIC UNITS. Charge is "number" charge (i.e. not multiplied 
+        by e); potentials are in energy units (i.e. they are multiplied by e)
 
         BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE 
 
