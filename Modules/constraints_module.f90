@@ -88,12 +88,9 @@ CONTAINS
       ! ... input variables)
       !
       USE input_parameters, ONLY : nconstr_inp, constr_tol_inp, &
-                                 ncolvar_inp, colvar_tol_inp, &
                                  constr_type_inp, constr_inp, &
-                                 colvar_type_inp, colvar_inp, &
                                  constr_target_inp, &
-                                 constr_target_set, colvar_target_inp, &
-                                 colvar_target_set, nc_fields
+                                 constr_target_set, nc_fields
       !
       IMPLICIT NONE
       !
@@ -117,18 +114,8 @@ CONTAINS
       CHARACTER(len=6), EXTERNAL :: int_to_char
       !
       !
-      nconstr    = ncolvar_inp + nconstr_inp
-      !
-      ! Be careful about what tolerance we want
-      !
-      IF ( nconstr_inp == 0) THEN
-         constr_tol = colvar_tol_inp
-      ELSEIF ( ncolvar_inp == 0 ) THEN
-         constr_tol = constr_tol_inp
-      ELSE
-         constr_tol = max( constr_tol_inp, colvar_tol_inp )
-      ENDIF
-      !
+      nconstr    = nconstr_inp
+      constr_tol = constr_tol_inp
       WRITE(stdout,'(5x,a,i4,a,f12.6)') &
          'Setting up ',nconstr,' constraints; tolerance:', constr_tol
       !
@@ -145,22 +132,10 @@ CONTAINS
       !
       constr(:,:) = 0.0_DP
       !
-      ! ... NB: the first "ncolvar" constraints are collective variables (used
-      ! ...     for meta-dynamics and free-energy smd), the remaining are real
-      ! ...     constraints
-      !
-      IF (ncolvar_inp > 0) THEN
-         constr(:,1:ncolvar_inp)       = colvar_inp(:,1:ncolvar_inp)
-         tmp_type_inp(1:ncolvar_inp)   = colvar_type_inp(1:ncolvar_inp)
-         tmp_target_set(1:ncolvar_inp) = colvar_target_set(1:ncolvar_inp)
-         tmp_target_inp(1:ncolvar_inp) = colvar_target_inp(1:ncolvar_inp)
-      ENDIF
-      IF (nconstr_inp > 0) THEN
-         constr(:,ncolvar_inp+1:nconstr)       = constr_inp(:,1:nconstr_inp)
-         tmp_type_inp(ncolvar_inp+1:nconstr)   = constr_type_inp(1:nconstr_inp)
-         tmp_target_set(ncolvar_inp+1:nconstr) = constr_target_set(1:nconstr_inp)
-         tmp_target_inp(ncolvar_inp+1:nconstr) = constr_target_inp(1:nconstr_inp)
-      ENDIF
+      constr(:,1:nconstr)       = constr_inp(:,1:nconstr_inp)
+      tmp_type_inp(1:nconstr)   = constr_type_inp(1:nconstr_inp)
+      tmp_target_set(1:nconstr) = constr_target_set(1:nconstr_inp)
+      tmp_target_inp(1:nconstr) = constr_target_inp(1:nconstr_inp)
       !
       ! ... set the largest possible distance among two atoms within
       ! ... the supercell
@@ -220,16 +195,9 @@ CONTAINS
                WRITE( stdout, '(/,5X,"target = ",F12.8,/, &
                               &  5X,"dmax   = ",F12.8)' ) &
                   constr_target(ia), dmax
-               !
-               IF(ia <= ncolvar_inp)THEN
-                  CALL errore( 'init_constraint', 'the target for coll.var. '  //&
-                           & trim( int_to_char( ia ) ) // ' is larger than ' //&
+               CALL errore( 'init_constraint', 'the target for constraint ' //&
+                           & trim( int_to_char( ia ) ) // ' is larger than '  //&
                            & 'the largest possible value', 1 )
-               ELSE
-                  CALL errore( 'init_constraint', 'the target for constraint ' //&
-                           & trim( int_to_char( ia-ncolvar_inp ) ) // ' is larger than '  //&
-                           & 'the largest possible value', 1 )
-               ENDIF
                !
             ENDIF
             !

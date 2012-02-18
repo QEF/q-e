@@ -297,8 +297,7 @@ SUBROUTINE iosys()
   !
   USE input_parameters,   ONLY : k_points, xk, wk, nk1, nk2, nk3,  &
                                  k1, k2, k3, nkstot
-  USE input_parameters, ONLY : nconstr_inp, ncolvar_inp, trd_ht, rd_ht, &
-                               cell_units
+  USE input_parameters, ONLY : nconstr_inp, trd_ht, rd_ht, cell_units
   !
   USE constraints_module,    ONLY : init_constraint
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
@@ -1395,7 +1394,7 @@ SUBROUTINE iosys()
   !
   ! ... variables for constrained dynamics are set here
   !
-  lconstrain = ( ncolvar_inp + nconstr_inp > 0 )
+  lconstrain = ( nconstr_inp > 0 )
   !
   IF ( lconstrain ) THEN
      IF ( lbfgs .OR. lmovecell ) CALL errore( 'iosys', &

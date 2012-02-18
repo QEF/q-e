@@ -1452,17 +1452,6 @@ MODULE input_parameters
       LOGICAL,           ALLOCATABLE :: constr_target_set(:)
 
 !
-!    COLLECTIVE_VARS
-!
-      INTEGER  :: ncolvar_inp    = 0
-      REAL(DP) :: colvar_tol_inp = 1.E-6_DP
-      !
-      CHARACTER(len=20), ALLOCATABLE :: colvar_type_inp(:)
-      REAL(DP),          ALLOCATABLE :: colvar_inp(:,:)
-      REAL(DP),          ALLOCATABLE :: colvar_target_inp(:)
-      LOGICAL,           ALLOCATABLE :: colvar_target_set(:)
-
-!
 !    KOHN_SHAM
 !
       INTEGER, ALLOCATABLE :: iprnks( :, : )
@@ -1555,28 +1544,6 @@ CONTAINS
     !
   END SUBROUTINE allocate_input_constr
 
-  SUBROUTINE allocate_input_colvar()
-    !
-    IF ( allocated( colvar_type_inp ) )   DEALLOCATE( colvar_type_inp )
-    IF ( allocated( colvar_inp ) )        DEALLOCATE( colvar_inp )
-    IF ( allocated( colvar_target_inp ) ) DEALLOCATE( colvar_target_inp )
-    IF ( allocated( colvar_target_set ) ) DEALLOCATE( colvar_target_set )
-    !
-    ALLOCATE( colvar_type_inp(   ncolvar_inp ) )
-    ALLOCATE( colvar_target_inp(     ncolvar_inp ) )
-    ALLOCATE( colvar_target_set( ncolvar_inp ) )
-    !
-    ALLOCATE( colvar_inp( nc_fields, ncolvar_inp ) )
-    !
-    colvar_type_inp   = ' '
-    colvar_inp        = 0.0_DP
-    colvar_target_inp     = 0.0_DP
-    colvar_target_set = .false.
-    !
-    RETURN
-    !
-  END SUBROUTINE allocate_input_colvar
-  !
   SUBROUTINE allocate_input_iprnks( nksx, nspin )
     !
     INTEGER, INTENT(in) :: nksx, nspin
@@ -1610,11 +1577,6 @@ CONTAINS
     IF ( allocated( constr_inp ) )        DEALLOCATE( constr_inp )
     IF ( allocated( constr_target_inp ) ) DEALLOCATE( constr_target_inp )
     IF ( allocated( constr_target_set ) ) DEALLOCATE( constr_target_set )
-    !
-    IF ( allocated( colvar_type_inp ) )   DEALLOCATE( colvar_type_inp )
-    IF ( allocated( colvar_inp ) )        DEALLOCATE( colvar_inp )
-    IF ( allocated( colvar_target_inp ) ) DEALLOCATE( colvar_target_inp )
-    IF ( allocated( colvar_target_set ) ) DEALLOCATE( colvar_target_set )
     !
     IF ( allocated( iprnks ) )       DEALLOCATE( iprnks )
     !
