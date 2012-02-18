@@ -94,6 +94,10 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        ! ... gamma version
        !
        USE becmod, ONLY : bec_type, becp
+#if defined __SCALAPACK
+       USE mp_global, ONLY: nproc_bgrp, intra_bgrp_comm, me_bgrp
+       USE mp, ONLY: mp_circular_shift_left
+#endif
        !
        IMPLICIT NONE  
        !
@@ -101,11 +105,33 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        !
        INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd, ierr
          ! counters
+#if defined __SCALAPACK
+       INTEGER :: m_loc, m_begin, ibnd_loc, icyc, icur_blk, m_max
+         ! data distribution indexes
+       INTEGER, EXTERNAL :: ldim_block, lind_block, gind_block
+         ! data distribution functions
+#endif
        REAL(DP), ALLOCATABLE :: ps(:,:)
          ! the product vkb and psi
        !
+#if defined __SCALAPACK
+       IF( m == 1 ) THEN
+          m_loc   = 1
+          m_begin = 1
+          m_max   = 1
+       ELSE
+          m_loc   = ldim_block( m , nproc_bgrp, me_bgrp )
+          m_begin = gind_block( 1,  m, nproc_bgrp, me_bgrp )
+          m_max   = m / nproc_bgrp
+          IF( MOD( m, nproc_bgrp ) /= 0 ) m_max = m_max + 1
+       END IF
+#else
+       m_loc   = m
+       m_begin = 1
+       m_max   = m
+#endif
        !
-       ALLOCATE( ps( nkb, m ), STAT=ierr )
+       ALLOCATE( ps( nkb, m_max ), STAT=ierr )
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_gamma ', ' cannot allocate memory (ps) ', ABS(ierr) )
        !    
@@ -116,12 +142,13 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
           IF ( upf(nt)%tvanp ) THEN
              DO na = 1, nat
                 IF ( ityp(na) == nt ) THEN
-                   DO ibnd = 1, m
+                   DO ibnd_loc = 1, m_loc
+                      ibnd = ibnd_loc + m_begin - 1
                       DO jh = 1, nh(nt)
                          jkb = ijkb0 + jh
                          DO ih = 1, nh(nt)
                             ikb = ijkb0 + ih
-                            ps(ikb,ibnd) = ps(ikb,ibnd) + &
+                            ps(ikb,ibnd_loc) = ps(ikb,ibnd_loc) + &
                                            qq(ih,jh,nt) * becp%r(jkb,ibnd)
                          END DO
                       END DO
@@ -143,8 +170,32 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
           !
        ELSE
           !
+#if defined __SCALAPACK
+          !
+          ! parallel block multiplication of vkb and ps
+          !
+          icur_blk = me_bgrp
+          !
+          DO icyc = 0, nproc_bgrp - 1
+
+             m_loc   = ldim_block( m , nproc_bgrp, icur_blk )
+             m_begin = gind_block( 1,  m, nproc_bgrp, icur_blk )
+
+             CALL DGEMM( 'N', 'N', 2 * n, m_loc, nkb, 1.D0, vkb, &
+                         2 * lda, ps, nkb, 1.D0, spsi( 1, m_begin ), 2 * lda )
+
+             ! block rotation
+             !
+             CALL mp_circular_shift_left( ps, icyc, intra_bgrp_comm )
+
+             icur_blk = icur_blk + 1
+             IF( icur_blk == nproc_bgrp ) icur_blk = 0
+
+          END DO
+#else
           CALL DGEMM( 'N', 'N', 2 * n, m, nkb, 1.D0, vkb, &
                       2 * lda, ps, nkb, 1.D0, spsi, 2 * lda )
+#endif
           !
        END IF
        !
