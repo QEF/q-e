@@ -73,7 +73,12 @@ subroutine addusforce (forcenl)
   !
   call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
   !
-  qmod (:) = sqrt (gg (:) )
+  !qmod (:) = sqrt (gg (:) )
+!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig)
+  do ig = 1, ngm
+     qmod (ig) = sqrt (gg (ig) )
+  enddo
+!$OMP END PARALLEL DO
   !
   ! here we compute the integral Q*V for each atom,
   !       I = sum_G i G_a exp(-iR.G) Q_nm v^*
@@ -90,6 +95,7 @@ subroutine addusforce (forcenl)
                     ! The product of potential, structure factor and iG
                     !
                     do is = 1, nspin_mag
+!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig, cfac)
                        do ig = 1, ngm
                           cfac = aux (ig, is) * CONJG(eigts1 (mill(1,ig), na) *&
                                                       eigts2 (mill(2,ig), na) *&
@@ -98,6 +104,7 @@ subroutine addusforce (forcenl)
                           aux1 (ig, 2) = g (2, ig) * cfac
                           aux1 (ig, 3) = g (3, ig) * cfac
                        enddo
+!$OMP END PARALLEL DO
                        !
                        !    and the product with the Q functions
                        !    G=0 term gives no contribution

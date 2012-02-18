@@ -64,9 +64,11 @@ subroutine addusstres (sigmanlc)
   sus(:,:) = 0.d0
   !
   call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
+!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig)
   do ig = 1, ngm
      qmod (ig) = sqrt (gg (ig) )
   enddo
+!$OMP END PARALLEL DO
   !
   ! fourier transform of the total effective potential
   !
@@ -103,6 +105,7 @@ subroutine addusstres (sigmanlc)
                        !
                        do is = 1, nspin
                           do jpol = 1, ipol
+!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig, cfac)
                              do ig = 1, ngm
                                 cfac = aux (ig, is) * &
                                        CONJG( eigts1 (mill (1,ig), na) * &
@@ -110,6 +113,7 @@ subroutine addusstres (sigmanlc)
                                               eigts3 (mill (3,ig), na) )
                                 aux1 (ig) = cfac * g (jpol, ig)
                              enddo
+!$OMP END PARALLEL DO
                              !
                              !    and the product with the Q functions
                              !

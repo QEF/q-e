@@ -119,11 +119,14 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
      !
      qm1 = -1.0_dp !  any number smaller than qmod(1)
      !
+!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(qm,px,ux,vx,wx,i0,i1,i2,i3,uvx,pwx,work,work1)
      do ig = 1, ngy
         !
         ! calculate quantites depending on the module of G only when needed
         !
-        if (abs (qmod (ig) - qm1) > 1.0d-6) then
+#if !defined(__OPENMP)
+        IF ( ABS( qmod(ig) - qm1 ) > 1.0D-6 ) THEN
+#endif
            qm = qmod (ig) * dqi
            px = qm - int (qm)
            ux = 1.d0 - px
@@ -147,13 +150,18 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
                    + qrad(i3, ijv, l, np) * (ux*vx - px*ux - px*vx) * sixth
 
            work1 = work1 * dqi
-           qm1= qmod (ig)
-        end if
+
+#if !defined(__OPENMP)
+           qm1 = qmod(ig)
+        END IF
+#endif
 
         dqg (ig) = dqg (ig) + sig * dylmk0 (ig, lp) * work
         if (qmod (ig) > 1.d-9) dqg (ig) = dqg (ig) + &
             sig * ylmk0 (ig, lp) * work1 * g (ipol, ig) / qmod (ig)
      enddo
+!$OMP END PARALLEL DO
+
   enddo
   return
 

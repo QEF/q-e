@@ -43,38 +43,49 @@ subroutine dylmr2 (nylm, ngy, g, gg, dylm, ipol)
   !
   allocate ( gx(3,ngy), ggx(ngy), dg(ngy), dgi(ngy), ylmaux(ngy,nylm) )
 
+!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig)
   do ig = 1, ngy
      dg (ig) = delta * sqrt (gg (ig) )
-     if (gg (ig) .gt.1.d-9) then
+     if (gg (ig) .gt. 1.d-9) then
         dgi (ig) = 1.d0 / dg (ig)
      else
         dgi (ig) = 0.d0
      endif
   enddo
+!$OMP END PARALLEL DO
 
   call dcopy (3 * ngy, g, 1, gx, 1)
+
+!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig)
   do ig = 1, ngy
      gx (ipol, ig) = g (ipol, ig) + dg (ig)
      ggx (ig) = gx (1, ig) * gx (1, ig) + &
                 gx (2, ig) * gx (2, ig) + &
                 gx (3, ig) * gx (3, ig)
   enddo
+!$OMP END PARALLEL DO
 
   call ylmr2 (nylm, ngy, gx, ggx, dylm)
+
+!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig)
   do ig = 1, ngy
      gx (ipol, ig) = g (ipol, ig) - dg (ig)
      ggx (ig) = gx (1, ig) * gx (1, ig) + &
                 gx (2, ig) * gx (2, ig) + &
                 gx (3, ig) * gx (3, ig)
   enddo
+!$OMP END PARALLEL DO
 
   call ylmr2 (nylm, ngy, gx, ggx, ylmaux)
 
   call daxpy (ngy * nylm, - 1.d0, ylmaux, 1, dylm, 1)
+
   do lm = 1, nylm
+!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig)
      do ig = 1, ngy
         dylm (ig, lm) = dylm (ig, lm) * 0.5d0 * dgi (ig)
      enddo
+!$OMP END PARALLEL DO
   enddo
 
   deallocate ( gx, ggx, dg, dgi, ylmaux )
