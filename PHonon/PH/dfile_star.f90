@@ -13,19 +13,19 @@ MODULE dfile_star
 
   TYPE open_star_descriptor
      LOGICAL            :: open
-     CHARACTER(len=256) :: directory
+     CHARACTER(len=256) :: dir
      CHARACTER(len=10)  :: basis
-     CHARACTER(len=256) :: basename
+     CHARACTER(len=256) :: ext
   END TYPE open_star_descriptor
 
   TYPE(open_star_descriptor) :: &
       drho_star, & ! 
       dvscf_star   !
 
-  DATA  drho_star%open, drho_star%directory, drho_star%basis, drho_star%basename &
+  DATA  drho_star%open, drho_star%dir, drho_star%basis, drho_star%ext &
       / .false.,         ' ',                 'modes',        'fildrho' /
   !
-  DATA dvscf_star%open, dvscf_star%directory, dvscf_star%basis, dvscf_star%basename &
+  DATA dvscf_star%open, dvscf_star%dir, dvscf_star%basis, dvscf_star%ext &
       / .false.,         ' ',                 'cartesian',      'fildvscf' /
 
 
@@ -266,7 +266,8 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
   USE noncollin_module, ONLY : nspin_mag
   USE mp_global,        ONLY : intra_image_comm
   USE mp,               ONLY : mp_bcast
-  USE xml_io_base,      ONLY : create_directory
+  !USE xml_io_base,      ONLY : create_directory
+  USE wrappers,         ONLY : f_mkdir
 
   !
   IMPLICIT NONE
@@ -319,22 +320,26 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
   CHARACTER(len=256),EXTERNAL :: trimcheck
   !
   IF ( .not. descr%open ) RETURN
-  IF (descr%basename(1:5) /= 'auto:') descr%basename = 'auto:'//descr%basename
+  IF (descr%ext(1:5) /= 'auto:') descr%ext = 'auto:'//descr%ext
   !
   IF(nsym==1) &
     CALL errore('write_dfile_star', 'this subroutine produces random garbage without symmetry!', 1)
   !
-  IF(.not. ionode) RETURN
   !
   ! create a directory to store the files
-  IF (TRIM(descr%directory) ==' ') CALL errore('dfile_star', 'directory not specified', 1)
-  is = len(descr%directory)
+  IF (TRIM(descr%dir) ==' ') CALL errore('dfile_star', 'directory not specified', 1)
   ! the next line is not needed in phonon, but may be needed if this code is reused
-  descr%directory = trimcheck(descr%directory)
+  descr%dir = trimcheck(descr%dir)
   !
-  IF (ionode) INQUIRE(file=TRIM(descr%directory)//'.', exist = exst)
+  IF (ionode) INQUIRE(file=trimcheck(descr%dir)//'.', exist = exst)
   CALL mp_bcast( exst, ionode_id, intra_image_comm )
-  if(.not.exst) CALL create_directory(descr%directory)
+  !if(.not.exst) CALL create_directory(descr%dir)
+  if(.not.exst) is = f_mkdir(descr%dir)
+  !
+  ! ionode does all the work from here on, the other nodes are aly required for
+  ! calling set_irr which includes a mp broadcast
+  !print*, "dfile", 10
+  ONLY_IONODE_1 : IF (ionode) THEN
   !
   !  Between all the possible symmetries I chose the first one
   !        (all of them lead to the same rotated dwhatever)
@@ -356,6 +361,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
   ALLOCATE(     dfile_at(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x, nspin, 3*nat))
   ALLOCATE(    dfile_rot(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x, nspin, 3*nat))
   ALLOCATE(dfile_rot_scr(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x, nspin, 3*nat))
+  !print*, "dfile", 20
   !
   dfile_at = (0._dp,0._dp)
   !
@@ -363,9 +369,8 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
 !  INQUIRE (UNIT = iudfile, OPENED = opnd)
 !  IF (opnd) CLOSE(UNIT = iudfile, STATUS='keep')
   iudfile = 90334 !find_free_unit()
-!  CALL diropn (iudfile, TRIM(dfile_choose_name(xq, descr%basename, &
+!  CALL diropn (iudfile, TRIM(dfile_choose_name(xq, descr%ext, &
 !               TRIM(tmp_dir_save)//prefix, .false.))//'.u', lrdrho, exst)
-  print*, "file:", trim(source)
   CALL diropn(iudfile, source, lrdrho, exst)
   !
   imode0 = 0
@@ -373,7 +378,6 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
     ! read in drho for all the irreps
     DO is = 1, nspin
       DO ipert = 1, npert(irr)
-        print*, "read...", irr, is, ipert, imode0, imode0+ipert
         CALL davcio( dfile_at(:,:,imode0+ipert), lrdrho, iudfile, imode0 + ipert, -1 )
       END DO
     ENDDO
@@ -381,7 +385,8 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
     imode0 = imode0 + npert(irr)
     !
   ENDDO
-  CLOSE(iudfile)
+  CLOSE(iudfile) 
+  !print*, "dfile", 30
   !
   ! Transform from the basis of the patterns to cartesian basis
   dfile_rot = (0._dp,0._dp)
@@ -401,6 +406,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
                            dfile_rot(:,:,na+3)*at(3,j)
      ENDDO
   ENDDO
+  !print*, "dfile", 40
   !
   ! take away the phase due to the q-point
   dfile_rot = (0._dp,0._dp)
@@ -420,10 +426,16 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
   ! Now I rotate the dvscf
   !
   ALLOCATE(phase_sxq(nat))
+  !print*, "dfile",50
+  !
+  ENDIF ONLY_IONODE_1 
   CALL allocate_rotated_pattern_repr(rpat, nat, npertx)
+  !print*, "dfile",110
   ! 
   Q_IN_THE_STAR : &
   DO iq=1,nq
+  !print*, "dfile",120
+    ONLY_IONODE_2 : IF (ionode) THEN
     dfile_rot = (0._dp,0._dp)
     !
     ! note that below isym is S and isym_inv refers to S^-1
@@ -484,6 +496,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
       ENDDO KLOOP
       !
     ENDDO
+  !print*, "dfile",130
     !
     ! Add back the phase factor for the new q-point
     !
@@ -506,7 +519,11 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
     ENDDO
     !
     !
+    ENDIF ONLY_IONODE_2
+  !print*, "dfile",210
+    ! 
     IF (descr%basis=='modes') THEN
+  !print*, "dfile",220
       !
       ! Transform to the basis of the patterns at the new q...
       !
@@ -515,6 +532,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
                     rpat%nirr, rpat%gi, rpat%gimq, 0, .false., rpat%eigen, search_sym,&
                     nspin_mag, t_rev, amass, rpat%num_rap_mode, rpat%name_rap_mode)
       !
+      ONLY_IONODE_2b : IF (ionode) THEN
       dfile_rot_scr = (0._dp, 0._dp)
       DO i=1,3*nat
         DO j=1,3*nat
@@ -522,8 +540,10 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
         ENDDO
       ENDDO
       dfile_rot = dfile_rot_scr
+      ENDIF ONLY_IONODE_2b
     !
     ELSE IF (descr%basis=='cartesian') THEN
+  !print*, "dfile",230
       !
       ! ...or leave in the basis of cartesian displacements
       !
@@ -541,10 +561,13 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
     !
     !  Opening files and writing
     !
-    dfile_rot_name = dfile_choose_name(sxq(:,iq), TRIM(descr%basename), &
-                                  TRIM(descr%directory)//prefix, generate=.true.)
+  !print*, "dfile",240
+    ONLY_IONODE_3 : IF (ionode) THEN
+    !
+    dfile_rot_name = dfile_choose_name(sxq(:,iq), TRIM(descr%ext), &
+                                  TRIM(descr%dir)//prefix, generate=.true.)
     iudfile_rot = find_free_unit()
-    CALL diropn (iudfile_rot, TRIM(dfile_rot_name), lrdrho, exst, descr%directory)
+    CALL diropn (iudfile_rot, TRIM(dfile_rot_name), lrdrho, exst, descr%dir)
     WRITE(stdout, '(7x,a,3f10.6,3a)') "Writing drho for q = (",sxq(:,iq),') on file "',&
                           TRIM(dfile_rot_name),'"'
     !
@@ -555,41 +578,44 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
       ENDDO
     ENDDO
     !
-    CALL io_pattern(nat, dfile_rot_name, rpat%nirr, rpat%npert, rpat%u, sxq(:,iq), descr%directory, +1)
+    CALL io_pattern(nat, dfile_rot_name, rpat%nirr, rpat%npert, rpat%u, sxq(:,iq), descr%dir, +1)
     !
     CLOSE(iudfile_rot)
     !
     ! Also store drho(-q) if necessary
     MINUS_Q : &
     IF  (dfile_minus_q .and. xq(1)**2+xq(2)**2+xq(3)**2 > 1.d-5 )  THEN
-        dfile_rot_name = dfile_choose_name(-sxq(:,iq), TRIM(descr%basename), &
-                                          TRIM(descr%directory)//prefix, generate=.true.)
+        dfile_rot_name = dfile_choose_name(-sxq(:,iq), TRIM(descr%ext), &
+                                          TRIM(descr%dir)//prefix, generate=.true.)
         iudfile_rot = find_free_unit()
-        CALL diropn (iudfile_rot, TRIM(dfile_rot_name), lrdrho, exst, descr%directory)
+        CALL diropn (iudfile_rot, TRIM(dfile_rot_name), lrdrho, exst, descr%dir)
         WRITE(stdout, '(7x,a,3f10.6,3a)') "Writing drho for q = (",-sxq(:,iq),') on file "',&
                               TRIM(dfile_rot_name),'"'
         !
         DO na=1,nat
           DO ipol=1,3
             imode0=(na-1)*3+ipol
-!             IF( ionode ) &
                 CALL davcio( CONJG(dfile_rot(:,:,imode0)), lrdrho, iudfile_rot, imode0, + 1 )
           ENDDO
         ENDDO
         !
-        CALL io_pattern(nat, dfile_rot_name, rpat%nirr, rpat%npert, CONJG(rpat%u), -sxq(:,iq), descr%directory, +1)
+        CALL io_pattern(nat, dfile_rot_name, rpat%nirr, rpat%npert, CONJG(rpat%u), -sxq(:,iq), descr%dir, +1)
         !
         CLOSE(iudfile_rot)
     ENDIF &
     MINUS_Q
-
+    !
+    ENDIF ONLY_IONODE_3
+  !print*, "dfile",310
     !
     !
   ENDDO &
   Q_IN_THE_STAR
   !
-  DEALLOCATE(dfile_rot, dfile_rot_scr, dfile_at)
-  DEALLOCATE(phase_sxq)
+  IF (ionode) THEN
+    DEALLOCATE(dfile_rot, dfile_rot_scr, dfile_at)
+    DEALLOCATE(phase_sxq)
+  ENDIF
   CALL deallocate_rotated_pattern_repr(rpat)
   !
   RETURN

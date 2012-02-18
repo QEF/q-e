@@ -109,13 +109,13 @@ subroutine bcast_ph_input ( )
   ! derived type (one bit at a time)
   !
   call mp_bcast (drho_star%open, ionode_id)
-  call mp_bcast (drho_star%directory, ionode_id)
-  call mp_bcast (drho_star%basename, ionode_id)
+  call mp_bcast (drho_star%dir, ionode_id)
+  call mp_bcast (drho_star%ext, ionode_id)
   call mp_bcast (drho_star%basis, ionode_id)
   !
   call mp_bcast (dvscf_star%open, ionode_id)
-  call mp_bcast (dvscf_star%directory, ionode_id)
-  call mp_bcast (dvscf_star%basename, ionode_id)
+  call mp_bcast (dvscf_star%dir, ionode_id)
+  call mp_bcast (dvscf_star%ext, ionode_id)
   call mp_bcast (dvscf_star%basis, ionode_id)
   
 #endif

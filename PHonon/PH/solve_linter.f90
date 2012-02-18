@@ -173,7 +173,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   IF (ionode .AND. fildrho /= ' ') THEN
      INQUIRE (UNIT = iudrho, OPENED = exst)
      IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
-     filename = TRIM( dfile_choose_name(xq, fildrho, TRIM(tmp_dir_save)//prefix, .true.) )
+     filename = dfile_choose_name(xq, fildrho, TRIM(tmp_dir_save)//prefix, generate=.true.)
      CALL diropn (iudrho, filename, lrdrho, exst)
   END IF
 

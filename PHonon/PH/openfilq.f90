@@ -12,40 +12,42 @@ SUBROUTINE openfilq()
   ! ... This subroutine opens all the files necessary for the phononq
   ! ... calculation.
   !
-  USE kinds,          ONLY : DP
-  USE control_flags, ONLY : modenum
-  USE units_ph,       ONLY : iuwfc, iudwf, iubar, iucom, iudvkb3, &
-                             iudrhous, iuebar, iudrho, iudyn, iudvscf, &
-                             lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
-                             lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw
-  USE io_files,       ONLY : tmp_dir, diropn, seqopn
-  USE control_ph,     ONLY : epsil, zue, ext_recover, trans, lgamma, &
-                             tmp_dir_phq, start_irr, last_irr, xmldyn, dvscf_dir
-  USE save_ph,        ONLY : tmp_dir_save
-  USE ions_base,      ONLY : nat
-  USE qpoint,         ONLY : nksq
-  USE output,         ONLY : fildyn, fildvscf
-  USE wvfct,          ONLY : nbnd, npwx
-  USE fft_base,       ONLY : dfftp
-  USE lsda_mod,       ONLY : nspin
-  USE uspp,           ONLY : nkb, okvan
-  USE uspp_param,     ONLY : nhm
-  USE io_files,       ONLY : prefix, iunigk
-  USE noncollin_module, ONLY : npol, nspin_mag
-  USE paw_variables,  ONLY : okpaw
-  USE control_flags,  ONLY : twfcollect
-  USE mp_global,      ONLY : me_pool
-  USE io_global,      ONLY : ionode,stdout
-  USE ramanm,         ONLY: lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
-  USE acfdtest,       ONLY : acfdt_is_active, acfdt_num_der
-  USE input_parameters,ONLY: nk1, nk2, nk3
-  USE el_phon , ONLY     : elph, elph_mat, iunwfcwann
+  USE kinds,           ONLY : DP
+  USE control_flags,   ONLY : modenum
+  USE units_ph,        ONLY : iuwfc, iudwf, iubar, iucom, iudvkb3, &
+                              iudrhous, iuebar, iudrho, iudyn, iudvscf, &
+                              lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
+                              lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw
+  USE io_files,        ONLY : tmp_dir, diropn, seqopn
+  USE control_ph,      ONLY : epsil, zue, ext_recover, trans, lgamma, &
+                              tmp_dir_phq, start_irr, last_irr, xmldyn
+  USE save_ph,         ONLY : tmp_dir_save
+  USE ions_base,       ONLY : nat
+  USE qpoint,          ONLY : xq, nksq
+  USE output,          ONLY : fildyn, fildvscf
+  USE wvfct,           ONLY : nbnd, npwx
+  USE fft_base,        ONLY : dfftp
+  USE lsda_mod,        ONLY : nspin
+  USE uspp,            ONLY : nkb, okvan
+  USE uspp_param,      ONLY : nhm
+  USE io_files,        ONLY : prefix, iunigk
+  USE noncollin_module,ONLY : npol, nspin_mag
+  USE paw_variables,   ONLY : okpaw
+  USE control_flags,   ONLY : twfcollect
+  USE mp_global,       ONLY : me_pool
+  USE io_global,       ONLY : ionode,stdout
+  USE ramanm,          ONLY : lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
+  USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der
+  USE input_parameters,ONLY : nk1, nk2, nk3
+  USE el_phon,         ONLY : elph, elph_mat, iunwfcwann
+  USE dfile_star,      ONLY : dvscf_star
+  USE dfile_autoname,  ONLY : dfile_choose_name
   !
   IMPLICIT NONE
   !
   INTEGER :: ios
   ! integer variable for I/O control
-  CHARACTER (len=256) :: filint
+  CHARACTER (len=256) :: filint, fildvscf_rot
   ! the name of the file
   LOGICAL :: exst
   ! logical variable to check file existe
@@ -82,7 +84,7 @@ SUBROUTINE openfilq()
   END IF
   IF (elph_mat) then
      iunwfcwann=733
-     CALL diropn (iunwfcwann, 'wfc', lrwfc, exst, dvscf_dir)
+     CALL diropn (iunwfcwann, 'wfc', lrwfc, exst, dvscf_star%dir)
      IF (.NOT.exst) THEN
         CALL errore ('elphel_refolded', 'file '//trim(prefix)//'.wfc not found in Rotated_DVSCF', 1)
      END IF
@@ -158,13 +160,17 @@ SUBROUTINE openfilq()
 400 IF (trim(fildvscf).NE.' ') THEN
      iudvscf = 27
      IF ( me_pool == 0 ) THEN
-!        IF(trim(dvscf_dir).NE.' ') then
-!           write(stdout,*) 'Reading dvscf file ',trim(adjustl(fildvscf))
-!           write(stdout,*) 'in directory ',trim(adjustl(dvscf_dir))
-!           CALL diropn (iudvscf, fildvscf, lrdrho, exst, dvscf_dir)
-!        ELSE
+           IF(trim(dvscf_star%ext).NE.' ' .and. elph_mat) THEN
+           fildvscf_rot = dfile_choose_name(xq, TRIM(dvscf_star%ext), &
+                                            TRIM(dvscf_star%dir)//prefix, &
+                                            generate=.false., equiv=.false. )
+           WRITE(stdout,'(5x,5a)') "Opening dvscf file '",TRIM(fildvscf_rot), &
+                                   "' (for reading) in directory '",trim(dvscf_star%dir),"'"
+           
+           CALL diropn (iudvscf, fildvscf_rot, lrdrho, exst, dvscf_star%dir)
+        ELSE
            CALL diropn (iudvscf, fildvscf, lrdrho, exst )
-!        ENDIF
+        ENDIF
         IF (okpaw) THEN
            filint=TRIM(fildvscf)//'_paw'
            lint3paw = 2 * nhm * nhm * 3 * nat * nspin_mag

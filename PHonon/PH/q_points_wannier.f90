@@ -14,7 +14,6 @@ SUBROUTINE q_points_wannier ( )
   USE mp_global, ONLY : me_pool, root_pool
   USE disp,  ONLY : nqmax, nq1, nq2, nq3, x_q, nqs
   USE output, ONLY : fildyn
-  USE control_ph, ONLY : dvscf_dir
   USE el_phon, ONLY : wan_index_dyn
   USE dfile_autoname, ONLY : dfile_get_qlist
   USE dfile_star, ONLY : dvscf_star
@@ -43,7 +42,7 @@ SUBROUTINE q_points_wannier ( )
   allocate(wan_index_dyn(nqs))
 
 !  !here read q_points
-  CALL dfile_get_qlist(x_q, nqs, dvscf_star%basename, dvscf_star%directory)
+  CALL dfile_get_qlist(x_q, nqs, dvscf_star%ext, dvscf_star%dir)
 !  IF (ionode) inquire (file =TRIM(dvscf_dir)//'Q_POINTS.D', exist = exst)
 !  if(.not.exst) call errore('q_points_wannier','Q_POINTS.D not existing in dvscf_dir ',1)
 
@@ -55,7 +54,7 @@ SUBROUTINE q_points_wannier ( )
 !     read(iq_unit,*) x_q(1,i), x_q(2,i), x_q(3,i), idum, wan_index_dyn(i)
 !  enddo
 
-  close(iq_unit)
+!  close(iq_unit)
   !
   ! Check if the Gamma point is one of the points and put
   ! 

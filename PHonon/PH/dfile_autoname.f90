@@ -40,13 +40,13 @@ FUNCTION open_dfile_directory(basename, prefix)
   INTEGER :: open_dfile_directory
   INTEGER :: ios
   CHARACTER(len=256) :: filename
-  LOGICAL :: exst
+!  LOGICAL :: exst
   !
   filename = dfile_directory_file(basename, prefix)
   !print*, "opening dir:", TRIM(filename)
   open_dfile_directory = find_free_unit()
   !
-  INQUIRE( FILE = TRIM(filename), EXIST = exst )
+!  INQUIRE( FILE = TRIM(filename), EXIST = exst )
   !IF(.not.exst) print*, "does not exist: >",TRIM(filename),"<"
 #ifdef __XLF
   OPEN(UNIT  = open_dfile_directory, &
@@ -69,7 +69,7 @@ END FUNCTION open_dfile_directory
 !----------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
-FUNCTION scan_dfile_directory(iunit, xq, found)
+FUNCTION scan_dfile_directory(iunit, xq, found, equiv)
   !----------------------------------------------------------------------
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : at
@@ -79,16 +79,22 @@ FUNCTION scan_dfile_directory(iunit, xq, found)
   REAL(DP),INTENT(in) :: xq(3)
   INTEGER,INTENT(in)  :: iunit
   LOGICAL,INTENT(out) :: found
+  LOGICAL,INTENT(in),OPTIONAL :: equiv ! if .false. only look for exactly q
+                                       ! if .true. any q+G is ok (default)
   !
   INTEGER  :: ios
   REAL(DP) :: xp(3), aq(3), ap(3)
   CHARACTER(len=256) :: xp_name
-  REAL(DP),PARAMETER :: gam(3) = (/ 0._dp, 0._dp, 0._dp /)
+  REAL(DP),PARAMETER :: gam(3) = (/ 0._dp, 0._dp, 0._dp /), accept = 1.e-5_dp
   !
+  LOGICAL :: equiv_
   LOGICAL,EXTERNAL :: eqvect
   !
   found=.false.
   scan_dfile_directory = ''
+  !
+  equiv_ = .true.
+  IF(present(equiv)) equiv_ = equiv
   ! xq in crystal coordinates:
   aq(:) = xq(1)*at(1,:) + xq(2)*at(2,:) + xq(3)*at(3,:)
   !
@@ -101,10 +107,18 @@ FUNCTION scan_dfile_directory(iunit, xq, found)
     ap(:) = xp(1)*at(1,:) + xp(2)*at(2,:) + xp(3)*at(3,:)
     !
     !
-    IF (eqvect(aq,ap,gam) .and. ios==0) THEN
-      found=.true.
-      scan_dfile_directory = TRIM(ADJUSTL(xp_name))
-      EXIT SCAN_FILE
+    IF (equiv_) THEN
+      IF (eqvect(aq,ap,gam) .and. ios==0) THEN
+        found=.true.
+        scan_dfile_directory = TRIM(ADJUSTL(xp_name))
+        EXIT SCAN_FILE
+      ENDIF
+    ELSE
+      IF ( ALL(ABS(ap-aq)<accept) ) THEN
+        found=.true.
+        scan_dfile_directory = TRIM(ADJUSTL(xp_name))
+        EXIT SCAN_FILE
+      ENDIF
     ENDIF
   ENDDO SCAN_FILE
   !
@@ -114,7 +128,7 @@ END FUNCTION scan_dfile_directory
 !----------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
-FUNCTION dfile_choose_name(xq, name, prefix, generate)
+FUNCTION dfile_choose_name(xq, name, prefix, generate, equiv)
   !----------------------------------------------------------------------
   ! automatically generate a name for fildrho file
   USE kinds,        ONLY : DP
@@ -127,6 +141,8 @@ FUNCTION dfile_choose_name(xq, name, prefix, generate)
   CHARACTER(len=*),INTENT(in) :: prefix   ! directory where to operate
   CHARACTER(len=*),INTENT(in) :: name     ! input fildrho
   LOGICAL,INTENT(in)          :: generate ! make a new name if not found
+  LOGICAL,INTENT(in),OPTIONAL :: equiv    ! accept an equivalent point q+G instead of q
+                                          ! (only used when generate=.false.)
   !
   INTEGER :: iunit = -1, ios
   LOGICAL :: found
@@ -146,12 +162,13 @@ FUNCTION dfile_choose_name(xq, name, prefix, generate)
   basename = TRIM(name(6:))
   !
   iunit = open_dfile_directory(basename, prefix)
-  dfile_choose_name = scan_dfile_directory(iunit, xq, found)
+  dfile_choose_name = scan_dfile_directory(iunit, xq, found, equiv)
   CLOSE(iunit)
   !
   ! Return here if point was found
   !IF(found) print*, "xq found as ", TRIM(dfile_choose_name)
   IF(found) RETURN
+  !
   IF(.not.generate) THEN
     WRITE(*,'(7x,"Error: ",3f12.6)') xq
     WRITE(*,'(7x,"Error: ",a,2x,a)') TRIM(name), TRIM(prefix)

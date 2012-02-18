@@ -300,7 +300,6 @@ MODULE control_ph
   CHARACTER(LEN=10)  :: where_rec='no_recover'! where the ph run recovered
   CHARACTER(LEN=12) :: electron_phonon
   CHARACTER(LEN=256) :: flmixdpot, tmp_dir_ph, tmp_dir_phq
-  CHARACTER(LEN=256)  :: dvscf_dir
   INTEGER :: rec_code,    &! code for recover
              rec_code_read=-1000 ! code for recover. Not changed during the run
   LOGICAL :: lgamma,      &! if .TRUE. this is a q=0 computation
@@ -333,7 +332,6 @@ MODULE control_ph
              lqdir=.FALSE.,        & ! if true each q writes in its directory
              xmldyn=.FALSE.,   & ! if true the dynamical matrix is in xml form
              all_done, &      ! if .TRUE. all representations have been done
-             dvscf_star,&     ! if .TRUE. obtain dvscf_q' for q' belonging by star{q} (in cart. coord.)
              newgrid=.FALSE.  ! if .TRUE. use new k-point grid nk1,nk2,nk3
   !
 END MODULE control_ph

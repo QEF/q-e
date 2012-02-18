@@ -838,6 +838,8 @@ openfilq.o : ../../Modules/uspp.o
 openfilq.o : ../../PW/src/noncol.o
 openfilq.o : ../../PW/src/pwcom.o
 openfilq.o : acfdtest.o
+openfilq.o : dfile_autoname.o
+openfilq.o : dfile_star.o
 openfilq.o : elph.o
 openfilq.o : phcom.o
 openfilq.o : ramanm.o

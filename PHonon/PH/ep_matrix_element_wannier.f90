@@ -21,7 +21,7 @@ SUBROUTINE ep_matrix_element_wannier()
   USE dynmat, ONLY : dyn, w2
   USE qpoint, ONLY : xq, nksq, ikks
   USE modes,  ONLY : npert, nirr
-  USE control_ph, ONLY : trans, dvscf_dir
+  USE control_ph, ONLY : trans
   USE units_ph, ONLY : iudyn, lrdrho, iudvscf
   USE io_global, ONLY : stdout
   USE mp_global, ONLY : me_pool, root_pool
@@ -306,7 +306,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE units_ph, ONLY : iubar, lrbar, lrwfc, iuwfc
   USE eqv,      ONLY : dvpsi!, evq
   USE qpoint,   ONLY : igkq, npwq, nksq, ikks, ikqs
-  USE control_ph, ONLY : trans, lgamma, dvscf_dir
+  USE control_ph, ONLY : trans, lgamma
   USE mp_global, ONLY: intra_pool_comm, me_pool, root_pool
   USE mp,        ONLY: mp_sum
   USE ions_base, ONLY : nat

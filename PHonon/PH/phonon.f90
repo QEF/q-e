@@ -51,7 +51,7 @@ PROGRAM phonon
 
   USE io_global,       ONLY : stdout
   USE disp,            ONLY : nqs
-  USE control_ph,      ONLY : epsil, trans, bands_computed, dvscf_star
+  USE control_ph,      ONLY : epsil, trans, bands_computed
   USE el_phon,         ONLY : elph, elph_mat, elph_simple
   USE output,          ONLY : fildrho
   USE check_stop,      ONLY : check_stop_init

@@ -145,10 +145,13 @@ SUBROUTINE phq_readin()
   ! nk1,nk2,nk3,
   ! ik1, ik2, ik3: when specified in input it uses for the phonon run
   !                a different mesh than that used for the charge density.
-  ! dvscf_star   : if .true. write in a directory the dvscf_q' for all q' in the
-  !                star of q. The dvscf_q' is written in cartesian coordinates
-  ! dvscf_dir    : if present the dvscf file is read not from tmp_dir but from dvscf_dir
   !
+  ! dvscf_star%open : if .true. write in dvscf_star%dir the dvscf_q' for all q' in the
+  !                   star of q with suffix dvscf_star%ext. The dvscf_q' is written in the basis dvscf_star%basis
+  ! dvscf_star%dir, dvscf_star%ext, dvscf_star%basis : see dvscf_star%open
+  ! drho_star%open  : like dvscf_star%open but for drho_q
+  ! drho_star%dir, drho_star%ext, drho_star%basis : see drho_star%open
+   !
   ! elph_nbnd_min,
   ! elph_nbnd_max: if (elph_mat=.true.) it dumps the eph matrix element from elph_nbnd_min
   !                  to elph_nbnd_max 
@@ -245,17 +248,17 @@ SUBROUTINE phq_readin()
   !
   drho_star%open = .FALSE.
   drho_star%basis = 'modes'
-  drho_star%basename = 'drho'
-  CALL get_env( 'ESPRESSO_FILDRHO_DIR', drho_star%directory)
-  IF ( TRIM( drho_star%directory ) == ' ' ) &
-      drho_star%directory = TRIM(outdir)//"/Rotated_DRHO/"
+  drho_star%ext = 'drho'
+  CALL get_env( 'ESPRESSO_FILDRHO_DIR', drho_star%dir)
+  IF ( TRIM( drho_star%dir ) == ' ' ) &
+      drho_star%dir = TRIM(outdir)//"/Rotated_DRHO/"
   !
   dvscf_star%open = .FALSE.
   dvscf_star%basis = 'cartesian'
-  dvscf_star%basename = 'dvscf'
-  CALL get_env( 'ESPRESSO_FILDVSCF_DIR', dvscf_star%directory)
-  IF ( TRIM( dvscf_star%directory ) == ' ' ) &
-      dvscf_star%directory = TRIM(outdir)//"/Rotated_DVSCF/"
+  dvscf_star%ext = 'dvscf'
+  CALL get_env( 'ESPRESSO_FILDVSCF_DIR', dvscf_star%dir)
+  IF ( TRIM( dvscf_star%dir ) == ' ' ) &
+      dvscf_star%dir = TRIM(outdir)//"/Rotated_DVSCF/"
   !
   ! ...  reading the namelist inputph
   !
@@ -267,8 +270,11 @@ SUBROUTINE phq_readin()
   !
   IF (ionode) tmp_dir = trimcheck (outdir)
 
-  drho_star%directory=trim(drho_star%directory)
-  dvscf_star%directory=trim(dvscf_star%directory)
+  drho_star%dir=trimcheck(drho_star%dir)
+  dvscf_star%dir=trimcheck(dvscf_star%dir)
+  ! filename for the star must always be automatically generated:
+  IF(drho_star%ext(1:5)/='auto:')  drho_star%ext  = 'auto:'//drho_star%ext
+  IF(dvscf_star%ext(1:5)/='auto:') dvscf_star%ext = 'auto:'//dvscf_star%ext
 
   CALL bcast_ph_input ( )
   CALL mp_bcast(nogg, ionode_id )
