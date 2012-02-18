@@ -107,7 +107,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE cp_interfaces,            ONLY : writefile, eigs, strucf, phfacs
   USE cp_interfaces,            ONLY : ortho, elec_fakekine, calbec_bgrp, calbec, caldbec_bgrp
   USE constraints_module,       ONLY : check_constraint, remove_constr_force
-!  USE metadyn_base,             ONLY : set_target, mean_force
   USE cp_autopilot,             ONLY : pilot
   USE ions_nose,                ONLY : ions_nose_allocate, ions_nose_shiftvar
   USE orthogonalize_base,       ONLY : updatc

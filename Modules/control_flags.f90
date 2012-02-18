@@ -285,19 +285,11 @@ MODULE control_flags
   !
   INTEGER, PUBLIC :: iesr = 1
   !
-  ! ... Parameter for plotting Vh average
+  ! ... Real-sapce algorithms
   !
-  LOGICAL,          PUBLIC :: tvhmean = .FALSE.
-                              !  if TRUE save Vh average to file Vh_mean.out
-  REAL(DP),         PUBLIC :: vhrmin = 0.0_DP
-                              !  starting "radius" for plotting
-  REAL(DP),         PUBLIC :: vhrmax = 1.0_DP
-                              !  maximum "radius" for plotting
-  CHARACTER(LEN=1), PUBLIC :: vhasse = 'Z'
-                              !  averaging axis
   LOGICAL,          PUBLIC :: tqr=.FALSE. ! if true the Q are in real space
 
-  !LOGICAL,          PUBLIC :: real_space=.false. ! if true, the beta functions are treated in real space
+  !LOGICAL,          PUBLIC :: real_space=.false. ! beta functions in real space
   !
   ! ... External Forces on Ions
   !

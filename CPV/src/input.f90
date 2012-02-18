@@ -184,7 +184,7 @@ MODULE input
                                forc_maxiter_  => forc_maxiter
      USE control_flags, ONLY : force_pairing_ => force_pairing
      USE control_flags, ONLY : remove_rigid_rot_ => remove_rigid_rot
-     USE control_flags, ONLY : iesr, tvhmean, vhrmin, vhrmax, vhasse
+     USE control_flags, ONLY : iesr
      USE control_flags, ONLY : textfor
      USE control_flags, ONLY : do_makov_payne, twfcollect
      USE control_flags, ONLY : lwf, lwfnscf, lwfpbe0, lwfpbe0nscf ! Lingzhu Kong
@@ -221,8 +221,7 @@ MODULE input
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
         orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
-        iesr_inp, vhrmax_inp, vhrmin_inp, tvhmean_inp, vhasse_inp, saverho,    &
-        tdipole_card, rd_for, assume_isolated, wf_collect
+        iesr_inp, saverho, tdipole_card, rd_for, assume_isolated, wf_collect
      !
      IMPLICIT NONE
      !
@@ -244,11 +243,6 @@ MODULE input
      forc_conv_thr_ = forc_conv_thr
      ekin_maxiter_  = electron_maxstep
      iesr           = iesr_inp
-     !
-     tvhmean = tvhmean_inp
-     vhrmin  = vhrmin_inp
-     vhrmax  = vhrmax_inp
-     vhasse  = vhasse_inp
      !
      remove_rigid_rot_ = remove_rigid_rot
      twfcollect = wf_collect

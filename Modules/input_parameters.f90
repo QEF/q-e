@@ -1365,7 +1365,6 @@ MODULE input_parameters
         LOGICAL   :: tesr = .false.
         LOGICAL   :: tksout = .false.
         LOGICAL   :: ttemplate = .false.
-        LOGICAL   :: tvhmean = .false.
         LOGICAL   :: twannier = .false.
 
 !
@@ -1420,15 +1419,6 @@ MODULE input_parameters
 !
         REAL(DP), ALLOCATABLE :: f_inp(:,:)
         LOGICAL   :: tf_inp = .false.
-
-!
-!    VHMEAN
-!
-! ...   card planar mean of the Hartree potential
-        LOGICAL :: tvhmean_inp = .false.
-        INTEGER :: vhnr_inp = 0, vhiunit_inp = 0
-        REAL(DP)  :: vhrmin_inp = 0.0_dP, vhrmax_inp = 0.0_DP
-        CHARACTER :: vhasse_inp = 'X'
 
 !
 !    DIPOLE

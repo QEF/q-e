@@ -12,7 +12,6 @@
 ! ATOMIC_FORCES
 ! PLOT_WANNIER
 ! WANNIER_AC
-! VHMEAN
 ! DIPOLE
 ! ESR
 !
@@ -134,15 +133,6 @@ CONTAINS
     CASE ('ESR')
        ! ... not yet implemented in xml reading
        iesr_inp = 1
-       !
-    CASE ('VHMEAN')
-       ! ... not yet implemented in xml reading
-       tvhmean_inp = .false.
-       vhnr_inp    = 0
-       vhiunit_inp = 0
-       vhrmin_inp  = 0.0_DP
-       vhrmax_inp  = 0.0_DP
-       vhasse_inp  = 'K'
        !
     CASE ('ION_VELOCITIES')
        ! ... not yet implemented in xml reading

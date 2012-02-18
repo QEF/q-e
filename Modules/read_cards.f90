@@ -91,15 +91,6 @@ CONTAINS
       !
       tf_inp = .false.
       !
-      ! ... Hartree planar mean
-      !
-      tvhmean_inp = .false.
-      vhnr_inp    = 0
-      vhiunit_inp = 0
-      vhrmin_inp  = 0.0_DP
-      vhrmax_inp  = 0.0_DP
-      vhasse_inp  = 'K'
-      !
       ! ... ion_velocities
       !
       tavel = .false.
@@ -150,6 +141,8 @@ CONTAINS
       IF ( trim(card) == 'AUTOPILOT' ) THEN
          !
          CALL card_autopilot( input_line )
+         IF ( prog == 'PW' .and. ionode ) &
+            WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
          !
       ELSEIF ( trim(card) == 'ATOMIC_SPECIES' ) THEN
          !
@@ -167,26 +160,16 @@ CONTAINS
          !
          CALL card_constraints( input_line )
          !
-!      ELSEIF ( trim(card) == 'COLLECTIVE_VARS' ) THEN
-         !
-!         CALL card_collective_vars( input_line )
-         !
-      ELSEIF ( trim(card) == 'VHMEAN' ) THEN
-         !
-         CALL card_vhmean( input_line )
-         IF ( ( prog == 'PW' .or. prog == 'CP' ) .and. ionode ) &
-            WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
-         !
       ELSEIF ( trim(card) == 'DIPOLE' ) THEN
          !
          CALL card_dipole( input_line )
-         IF ( ( prog == 'PW' .or. prog == 'CP' ) .and. ionode ) &
+         IF ( prog == 'PW' .and. ionode ) &
             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
          !
       ELSEIF ( trim(card) == 'ESR' ) THEN
          !
          CALL card_esr( input_line )
-         IF ( ( prog == 'PW' .or. prog == 'CP' ) .and. ionode ) &
+         IF ( prog == 'PW' .and. ionode ) &
             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
          !
       ELSEIF ( trim(card) == 'K_POINTS' ) THEN
@@ -859,55 +842,6 @@ CONTAINS
       RETURN
       !
    END SUBROUTINE card_occupations
-   !
-   !
-   !------------------------------------------------------------------------
-   !    BEGIN manual
-   !----------------------------------------------------------------------
-   !
-   ! VHMEAN
-   !
-   !   Calculation of potential average along a given axis
-   !
-   ! Syntax:
-   !
-   !   VHMEAN
-   !   unit nr rmin rmax asse
-   !
-   ! Example:
-   !
-   !   ????
-   !
-   ! Where:
-   !
-   !   ????
-   !
-   !----------------------------------------------------------------------
-   !    END manual
-   !------------------------------------------------------------------------
-   !
-   SUBROUTINE card_vhmean( input_line )
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(len=256) :: input_line
-      !
-      !
-      IF ( tvhmean ) THEN
-         CALL errore( ' card_vhmean ', ' two occurrences', 2 )
-      ENDIF
-      !
-      tvhmean_inp = .true.
-      CALL read_line( input_line )
-      READ(input_line,*) &
-         vhiunit_inp, vhnr_inp, vhrmin_inp, vhrmax_inp, vhasse_inp
-      tvhmean = .true.
-      !
-      RETURN
-      !
-   END SUBROUTINE card_vhmean
-   !
-   !
    !
    !------------------------------------------------------------------------
    !    BEGIN manual
