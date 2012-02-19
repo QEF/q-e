@@ -105,9 +105,9 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        !
        INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd, ierr
          ! counters
-#if defined __SCALAPACK
        INTEGER :: m_loc, m_begin, ibnd_loc, icyc, icur_blk, m_max
          ! data distribution indexes
+#if defined __SCALAPACK
        INTEGER, EXTERNAL :: ldim_block, lind_block, gind_block
          ! data distribution functions
 #endif
