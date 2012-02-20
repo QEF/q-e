@@ -464,7 +464,7 @@ CONTAINS
     !
     !  Initialize arrays needed for parallel symmetrization
     ! 
-    USE mp_global, ONLY : nproc_pool, me_pool, intra_pool_comm
+    USE mp_global, ONLY : nproc_bgrp, me_bgrp, intra_bgrp_comm
     USE parallel_include
     USE gvect, ONLY : ngm, gcutm, g, gg
     !
@@ -474,22 +474,22 @@ CONTAINS
     REAL(DP), ALLOCATABLE :: gcut_(:), g_(:,:)
     INTEGER :: np, ig, ngloc, ngpos, ierr, ngm_
     !
-    ALLOCATE ( sendcnt(nproc_pool), recvcnt(nproc_pool), &
-               sdispls(nproc_pool), rdispls(nproc_pool) )
-    ALLOCATE ( gcut_(nproc_pool) )
+    ALLOCATE ( sendcnt(nproc_bgrp), recvcnt(nproc_bgrp), &
+               sdispls(nproc_bgrp), rdispls(nproc_bgrp) )
+    ALLOCATE ( gcut_(nproc_bgrp) )
     !
     ! the gcut_ cutoffs are estimated in such a way that there is an similar
     ! number of G-vectors in each shell gcut_(i) < G^2 < gcut_(i+1)
     !
-    DO np = 1, nproc_pool
-       gcut_(np) = gcutm * np**twothirds/nproc_pool**twothirds
+    DO np = 1, nproc_bgrp
+       gcut_(np) = gcutm * np**twothirds/nproc_bgrp**twothirds
     END DO
     !
     ! find the number of G-vectors in each shell (defined as above)
     ! beware: will work only if G-vectors are in order of increasing |G|
     !
     ngpos=0
-    DO np = 1, nproc_pool
+    DO np = 1, nproc_bgrp
        sdispls(np) = ngpos
        ngloc=0
        DO ig=ngpos+1,ngm
@@ -513,10 +513,10 @@ CONTAINS
   ! we need the number and positions of G-vector shells for other processors
   !
     CALL mpi_alltoall( sendcnt, 1, MPI_INTEGER, recvcnt, 1, MPI_INTEGER, &
-         intra_pool_comm, ierr)
+         intra_bgrp_comm, ierr)
     !
     rdispls(1) = 0
-    DO np = 2, nproc_pool
+    DO np = 2, nproc_bgrp
        rdispls(np) = rdispls(np-1)+ recvcnt(np-1)
     END DO
     !
@@ -534,7 +534,7 @@ CONTAINS
     rdispls(:) = 3*rdispls(:)
     CALL mpi_alltoallv ( g , sendcnt, sdispls, MPI_DOUBLE_PRECISION, &
                          g_, recvcnt, rdispls, MPI_DOUBLE_PRECISION, &
-                         intra_pool_comm, ierr)
+                         intra_bgrp_comm, ierr)
     sendcnt(:) = sendcnt(:)/3
     recvcnt(:) = recvcnt(:)/3
     sdispls(:) = sdispls(:)/3
@@ -556,7 +556,7 @@ CONTAINS
     !  Initialize G-vector shells needed for symmetrization
     ! 
     USE constants, ONLY : eps8
-    USE mp_global, ONLY : nproc_pool
+    USE mp_global, ONLY : nproc_bgrp
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: ngm_
@@ -589,7 +589,7 @@ CONTAINS
 !   g vectors are not ordered in increasing order. This happens 
 !   in the parallel case.
 !
-    IF (nproc_pool > 1 .AND. ngm_ > 20000) THEN
+    IF (nproc_bgrp > 1 .AND. ngm_ > 20000) THEN
        ALLOCATE ( g2sort_g(ngm_))
        g2sort_g(:)=g_(1,:)*g_(1,:)+g_(2,:)*g_(2,:)+g_(3,:)*g_(3,:)
        igsort(1) = 0
@@ -670,7 +670,7 @@ gloop:    DO jg=iig,ngm_
     USE gvect,                ONLY : ngm, g
 #ifdef __MPI
     USE parallel_include
-    USE mp_global,            ONLY : nproc_pool, me_pool, intra_pool_comm
+    USE mp_global,            ONLY : intra_bgrp_comm
 #endif
     !
     IMPLICIT NONE
@@ -697,7 +697,7 @@ gloop:    DO jg=iig,ngm_
     DO is=1,nspin
        CALL mpi_alltoallv (rhog (1,is) , sendcnt, sdispls, MPI_DOUBLE_COMPLEX,&
             rhog_(1,is), recvcnt, rdispls, MPI_DOUBLE_COMPLEX, &
-            intra_pool_comm, ierr)
+            intra_bgrp_comm, ierr)
     END DO
     ! remember that G-vectors have 3 components
     sendcnt(:) = 3*sendcnt(:)
@@ -706,7 +706,7 @@ gloop:    DO jg=iig,ngm_
     rdispls(:) = 3*rdispls(:)
     CALL mpi_alltoallv ( g , sendcnt, sdispls, MPI_DOUBLE_PRECISION, &
          g_, recvcnt, rdispls, MPI_DOUBLE_PRECISION, &
-         intra_pool_comm, ierr)
+         intra_bgrp_comm, ierr)
     !
     !   Now symmetrize
     !
@@ -723,7 +723,7 @@ gloop:    DO jg=iig,ngm_
     DO is = 1, nspin
        CALL mpi_alltoallv (rhog_(1,is), recvcnt, rdispls, MPI_DOUBLE_COMPLEX, &
             rhog (1,is), sendcnt, sdispls, MPI_DOUBLE_COMPLEX, &
-            intra_pool_comm, ierr)
+            intra_bgrp_comm, ierr)
     END DO
     DEALLOCATE ( rhog_ )
 #endif

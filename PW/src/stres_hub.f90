@@ -142,7 +142,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
                                     iunat, iunsat, nwordatwfc
    USE buffers,              ONLY : get_buffer
-   USE mp_global,            ONLY : intra_pool_comm, inter_pool_comm
+   USE mp_global,            ONLY : inter_pool_comm
    USE mp,                   ONLY : mp_sum
 
    IMPLICIT NONE
@@ -234,10 +234,8 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
          END IF
       END DO
    END DO                 ! on k-points
-
-#ifdef __MPI
+   !
    CALL mp_sum( dns, inter_pool_comm )
-#endif
    !
    ! In nspin.eq.1 k-point weight wg is normalized to 2 el/band 
    ! in the whole BZ but we are interested in dns of one spin component
@@ -286,7 +284,7 @@ SUBROUTINE dprojdepsilon_k ( wfcatom, spsi, ik, ipol, jpol, dproj )
    USE uspp_param,           ONLY : upf, nhm, nh
    USE wavefunctions_module, ONLY : evc
    USE becmod,               ONLY : bec_type, becp, calbec
-   USE mp_global,            ONLY : intra_pool_comm
+   USE mp_global,            ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
 
    IMPLICIT NONE
@@ -405,11 +403,11 @@ SUBROUTINE dprojdepsilon_k ( wfcatom, spsi, ik, ipol, jpol, dproj )
                   wfatdbeta(iwf,ih)= zdotc(npw,wfcatom(1,iwf),1,dbeta(1,jkb2),1)
                END DO
             END DO
-#ifdef __MPI
-            CALL mp_sum( dbetapsi, intra_pool_comm )
-            CALL mp_sum( wfatbeta, intra_pool_comm )
-            CALL mp_sum( wfatdbeta, intra_pool_comm )
-#endif
+            !
+            CALL mp_sum( dbetapsi, intra_bgrp_comm )
+            CALL mp_sum( wfatbeta, intra_bgrp_comm )
+            CALL mp_sum( wfatdbeta, intra_bgrp_comm )
+            !
             DO ibnd = 1,nbnd
                DO ih=1,nh(nt)
                   DO jh = 1,nh(nt)
@@ -455,7 +453,7 @@ SUBROUTINE dprojdepsilon_gamma ( wfcatom, spsi, ipol, jpol, dproj )
    USE uspp_param,           ONLY : upf, nhm, nh
    USE wavefunctions_module, ONLY : evc
    USE becmod,               ONLY : bec_type, becp, calbec
-   USE mp_global,            ONLY : intra_pool_comm
+   USE mp_global,            ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
 
    IMPLICIT NONE
@@ -583,11 +581,11 @@ SUBROUTINE dprojdepsilon_gamma ( wfcatom, spsi, ipol, jpol, dproj )
                       wfatdbeta(iwf,ih) - wfcatom(1,iwf)*dbeta(1,jkb2)
                END DO
             END DO
-#ifdef __MPI
-            CALL mp_sum( dbetapsi, intra_pool_comm )
-            CALL mp_sum( wfatbeta, intra_pool_comm )
-            CALL mp_sum( wfatdbeta, intra_pool_comm )
-#endif
+            !
+            CALL mp_sum( dbetapsi, intra_bgrp_comm )
+            CALL mp_sum( wfatbeta, intra_bgrp_comm )
+            CALL mp_sum( wfatdbeta, intra_bgrp_comm )
+            !
             DO ibnd = 1,nbnd
                DO ih=1,nh(nt)
                   DO jh = 1,nh(nt)

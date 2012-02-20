@@ -45,7 +45,7 @@ SUBROUTINE summary()
   USE uspp_param,      ONLY : upf
   USE wvfct,           ONLY : nbnd, ecutwfc, qcutz, ecfixed, q2sigma
   USE lsda_mod,        ONLY : nspin
-  USE mp_global,       ONLY : intra_pool_comm
+  USE mp_global,       ONLY : intra_bgrp_comm
   USE mp,              ONLY : mp_sum
 #ifdef __ENVIRON
   USE environ_base,    ONLY : do_environ
@@ -339,7 +339,7 @@ SUBROUTINE summary()
   IF (doublegrid) THEN
      !
      ngmtot = ngms
-     CALL mp_sum (ngmtot, intra_pool_comm)
+     CALL mp_sum (ngmtot, intra_bgrp_comm)
      !
      WRITE( stdout, '(/5x,"Smooth grid: ",i8," G-vectors", 5x, &
        &               "FFT dimensions: (",i4,",",i4,",",i4,")")') &

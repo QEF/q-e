@@ -27,7 +27,7 @@ subroutine set_rhoc
   USE lsda_mod,  ONLY : nspin
   USE vlocal,    ONLY : strf
   USE control_flags, ONLY : gamma_only
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_global, ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   !
   implicit none
@@ -121,10 +121,10 @@ subroutine set_rhoc
   enddo
   rhoneg = rhoneg / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
   rhoima = rhoima / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
-#ifdef __MPI
-  call mp_sum(  rhoneg, intra_pool_comm )
-  call mp_sum(  rhoima, intra_pool_comm )
-#endif
+  !
+  call mp_sum(  rhoneg, intra_bgrp_comm )
+  call mp_sum(  rhoima, intra_bgrp_comm )
+  !
   IF (rhoneg < -1.0d-6 .OR. rhoima > 1.0d-6) &
        WRITE( stdout, '(/5x,"Check: negative/imaginary core charge=",2f12.6)')&
        rhoneg, rhoima
