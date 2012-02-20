@@ -71,7 +71,7 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   !
   !  Band parallelization: each processor takes care of its slice of bands
   !
-  call divide (nbnd_occ (ikk), startb, lastb, intra_pool_comm)
+  call divide (intra_pool_comm, nbnd_occ (ikk), startb, lastb)
   !
   ijkb0 = 0
   do nt = 1, ntyp

@@ -89,14 +89,14 @@ SUBROUTINE local
 !
   nrzps = 0
   nrzpr = 0
-  call divide(nrzl, kin, kfin, intra_pool_comm)
+  call divide(intra_pool_comm, nrzl, kin, kfin)
   nrzpl = kfin - kin + 1
   if(ikind.gt.0) then
-    call divide(nrzs, kin, kfin, intra_pool_comm)
+    call divide(intra_pool_comm, nrzs, kin, kfin)
     nrzps = kfin - kin + 1
   endif
   if(ikind.gt.1) then
-    call divide(nrzr, kin, kfin, intra_pool_comm)
+    call divide(intra_pool_comm, nrzr, kin, kfin)
     nrzpr = kfin - kin + 1
   endif
 
@@ -338,7 +338,7 @@ subroutine local_2(nrz, nrzp, vppot, psiper, zkr)
     enddo
   enddo
 
-  call divide(nrz, kin, kfin, intra_pool_comm)
+  call divide(intra_pool_comm, nrz, kin, kfin)
 
 ! for reduced basis set H'_{ab}=e*^i_aH_{ij}e^j_b
   do k = kin, kfin

@@ -1,6 +1,8 @@
 New in 5.0 version
 
    * More ways of calculating electron-phonon coefficients
+   * Full DFT+U scheme (with J and additinal parameters) implemented.
+     Should work also for fully-relativistic calculations
 
 Incompatible changes in 5.0 version:
 
@@ -17,8 +19,8 @@ Incompatible changes in 5.0 version:
 
 Fixed in 5.0 version
 
-   * VERY NASTY bug: PW91 was incorrect (PZ LDA instead of PW)
-     in all 4.3.x versions
+   * VERY NASTY bug: exchange-correlation 'PW91' was incorrectly 
+     interpreted (PZ LDA instead of PW) in all 4.3.x versions
    * A few glitches when the standard input is copied to file
    * PW: LDA+U crash in the final step of a vc-relax run, due to a
      premature deallocation of a variable
@@ -29,8 +31,8 @@ Fixed in 5.0 version
    * Velocity rescaling in variable-cell MD wasn't really working
    * Workaround for frequent crashes in PAW with vc-relax
    * In some cases spin-polarized HSE was yielding NaN's
-   * PHonon: an array not always allocated was passed as variable to 
-     routine dynmatrix.f90 - harmless but not nice
+   * Two instances of an array not always allocated passed as variable to
+     routine (init_start_k and dynmatrix.f90) - harmless but not nice
    * disk_io='low' or 'none' wasn't working if a wavefunction file from a
      previous run was found
    * CP + OpenMP without MPI wasn't working with ultrasoft pseudopotentials

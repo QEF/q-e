@@ -114,7 +114,6 @@ MODULE io_rho_xml
 
       ! Use the equivalent routine to write real space density
       CALL read_rho_only( rho%of_r, nspin, extension )
-
       ! The occupations ns also need to be read in order to build up
       ! the potential
       IF ( lda_plus_u ) THEN

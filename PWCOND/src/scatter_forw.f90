@@ -26,6 +26,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
   use radial_grids, only: ndmx
   USE cell_base, ONLY : tpiba
   USE noncollin_module, ONLY : npol
+  USE mp_global, ONLY : intra_pool_comm
   USE cond
   !
   IMPLICIT NONE
@@ -76,7 +77,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 !
 ! Divide the slabs among CPU
 !
-  call divide(nrz,kin,kfin)
+  call divide(intra_pool_comm,nrz,kin,kfin)
 
   ALLOCATE( psigper( ngper*npol, n2d ) )
   ALLOCATE( w0( nz1, ngper, 5 ) )

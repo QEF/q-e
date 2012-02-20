@@ -238,7 +238,7 @@ subroutine init_us_1
   !   here for the US types we compute the Fourier transform of the
   !   Q functions.
   !   
-  call divide (nqxq, startq, lastq, intra_bgrp_comm)
+  call divide (intra_bgrp_comm, nqxq, startq, lastq)
   !
   do nt = 1, ntyp
      if ( upf(nt)%tvanp ) then
@@ -374,7 +374,7 @@ subroutine init_us_1
   !     fill the interpolation table tab
   !
   pref = fpi / sqrt (omega)
-  call divide (nqx, startq, lastq, intra_bgrp_comm)
+  call divide (intra_bgrp_comm, nqx, startq, lastq)
   tab (:,:,:) = 0.d0
   do nt = 1, ntyp
      do nb = 1, upf(nt)%nbeta

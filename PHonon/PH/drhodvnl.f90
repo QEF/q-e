@@ -69,7 +69,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
 
   dynwrk (:, :) = (0.d0, 0.d0)
 
-  call divide (nbnd, startb, lastb, intra_pool_comm)
+  call divide (intra_pool_comm, nbnd, startb, lastb)
   !
   !   Here we prepare the two terms
   !
