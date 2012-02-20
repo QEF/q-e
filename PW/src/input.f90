@@ -97,8 +97,10 @@ SUBROUTINE iosys()
   USE start_k,       ONLY : init_start_k
   !
   USE ldaU,          ONLY : Hubbard_U_     => hubbard_u, &
+                            Hubbard_J_ => hubbard_j, &
                             Hubbard_alpha_ => hubbard_alpha, &
                             lda_plus_u_    => lda_plus_u, &
+                            lda_plus_u_kind_    => lda_plus_u_kind, &
                             niter_with_fixed_ns, starting_ns, U_projection
   !
   USE martyna_tuckerman, ONLY: do_comp_mt
@@ -234,7 +236,8 @@ SUBROUTINE iosys()
                                starting_magnetization,                      &
                                occupations, degauss, smearing, nspin,       &
                                ecfixed, qcutz, q2sigma, lda_plus_U,         &
-                               Hubbard_U, Hubbard_alpha, input_dft, la2F,   &
+                               lda_plus_U_kind, Hubbard_U, Hubbard_J,       &
+                               Hubbard_alpha, input_dft, la2F,              &
                                starting_ns_eigenvalue, U_projection_type,   &
                                x_gamma_extrapolation, nqx1, nqx2, nqx3,     &
                                exxdiv_treatment, yukawa, ecutvcut,          &
@@ -587,8 +590,8 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-  IF ( noncolin .and. lda_plus_u ) CALL errore('iosys', &
-       'LDA+U not implemented with noncollinear magnetization', 1)
+  IF (lda_plus_u.and.lda_plus_u_kind.eq.0.and.noncolin) CALL errore('iosys', &
+       'simplified LDA+U not implemented with noncol. magnetism, use lda_plus_u_kind = 1', 1)
   !
   two_fermi_energies = ( tot_magnetization /= -1._DP)
   IF ( two_fermi_energies .and. tot_magnetization < 0._DP) &
@@ -831,6 +834,7 @@ SUBROUTINE iosys()
   END SELECT
   !
   Hubbard_U(:)    = Hubbard_U(:) / rytoev
+  Hubbard_J(:,:)  = Hubbard_J(:,:) / rytoev
   Hubbard_alpha(:)= Hubbard_alpha(:) / rytoev
   !
   ethr = diago_thr_init
@@ -1131,8 +1135,10 @@ SUBROUTINE iosys()
   spline_ps_ = spline_ps
   !
   Hubbard_U_(1:ntyp)      = hubbard_u(1:ntyp)
+  Hubbard_J_(1:3,1:ntyp)  = hubbard_j(1:3,1:ntyp)
   Hubbard_alpha_(1:ntyp)  = hubbard_alpha(1:ntyp)
   lda_plus_u_             = lda_plus_u
+  lda_plus_u_kind_        = lda_plus_u_kind
   la2F_                   = la2F
   nspin_                  = nspin
   starting_magnetization_ = starting_magnetization

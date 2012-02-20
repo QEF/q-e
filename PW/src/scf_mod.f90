@@ -48,6 +48,7 @@ MODULE scf
      REAL(DP),   POINTER :: kin_r(:,:) ! the kinetic energy density in R-space
      COMPLEX(DP),POINTER :: kin_g(:,:) ! the kinetic energy density in G-space
      REAL(DP),   POINTER :: ns(:,:,:,:)! the LDA+U occupation matrix
+     COMPLEX(DP),POINTER :: ns_nc(:,:,:,:)!         ---       noncollinear case
      REAL(DP),   POINTER :: bec(:,:,:) ! the PAW hamiltonian elements
   END TYPE scf_type
   !
@@ -55,6 +56,7 @@ MODULE scf
      COMPLEX(DP), POINTER :: of_g(:,:)  ! the charge density in G-space
      COMPLEX(DP), POINTER :: kin_g(:,:) ! the charge density in G-space
      REAL(DP),    POINTER :: ns(:,:,:,:)! the LDA+U occupation matrix 
+     COMPLEX(DP), POINTER :: ns_nc(:,:,:,:)!    ---      noncollinear case 
      REAL(DP),    POINTER :: bec(:,:,:) ! PAW corrections to hamiltonian
      REAL(DP)                   :: el_dipole  ! electrons dipole
   END TYPE mix_type
@@ -65,6 +67,7 @@ MODULE scf
      REAL(DP),   ALLOCATABLE :: kin_r(:,:) ! the kinetic energy density in R-space
      COMPLEX(DP),ALLOCATABLE :: kin_g(:,:) ! the kinetic energy density in G-space
      REAL(DP),   ALLOCATABLE :: ns(:,:,:,:)! the LDA+U occupation matrix
+     COMPLEX(DP),ALLOCATABLE :: ns_nc(:,:,:,:)!     ---       noncollinear case
      REAL(DP),   ALLOCATABLE :: bec(:,:,:) ! the PAW hamiltonian elements
   END TYPE scf_type
   !
@@ -72,6 +75,7 @@ MODULE scf
      COMPLEX(DP), ALLOCATABLE :: of_g(:,:)  ! the charge density in G-space
      COMPLEX(DP), ALLOCATABLE :: kin_g(:,:) ! the charge density in G-space
      REAL(DP),    ALLOCATABLE :: ns(:,:,:,:)! the LDA+U occupation matrix 
+     COMPLEX(DP), ALLOCATABLE :: ns_nc(:,:,:,:)!     ---     noncollinear case 
      REAL(DP),    ALLOCATABLE :: bec(:,:,:) ! PAW corrections to hamiltonian
      REAL(DP)                   :: el_dipole  ! electrons dipole
   END TYPE mix_type
@@ -107,7 +111,7 @@ CONTAINS
    allocate ( rho%of_r( dfftp%nnr, nspin) )
    allocate ( rho%of_g( ngm, nspin ) )
 #ifdef __STD_F95
- nullify (rho%kin_r, rho%kin_g, rho%ns, rho%bec)
+ nullify (rho%kin_r, rho%kin_g, rho%ns, rho%ns_nc, rho%bec)
 #endif
    if (dft_is_meta()) then
       allocate ( rho%kin_r( dfftp%nnr, nspin) )
@@ -116,7 +120,12 @@ CONTAINS
       allocate ( rho%kin_r(1,1) )
       allocate ( rho%kin_g(1,1) )
    endif
-   if (lda_plus_u) allocate (rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
+
+   if (lda_plus_u) then
+     allocate (rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
+     allocate (rho%ns_nc(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
+   endif 
+
    if (okpaw) then ! See the top of the file for clarification
       if(present(do_not_allocate_becsum)) then
          allocate_becsum = .not. do_not_allocate_becsum
@@ -138,6 +147,7 @@ CONTAINS
    if (ASSOCIATED(rho%kin_r)) deallocate(rho%kin_r)
    if (ASSOCIATED(rho%kin_g)) deallocate(rho%kin_g)
    if (ASSOCIATED(rho%ns))    deallocate(rho%ns)
+   if (ASSOCIATED(rho%ns_nc))    deallocate(rho%ns_nc)
    if (ASSOCIATED(rho%bec))   deallocate(rho%bec)
 #else
    if (ALLOCATED(rho%of_r))  deallocate(rho%of_r)
@@ -145,6 +155,7 @@ CONTAINS
    if (ALLOCATED(rho%kin_r)) deallocate(rho%kin_r)
    if (ALLOCATED(rho%kin_g)) deallocate(rho%kin_g)
    if (ALLOCATED(rho%ns))    deallocate(rho%ns)
+   if (ALLOCATED(rho%ns_nc))    deallocate(rho%ns_nc)
    if (ALLOCATED(rho%bec))   deallocate(rho%bec)
 #endif
    return
@@ -156,15 +167,21 @@ CONTAINS
    TYPE (mix_type) :: rho
    allocate ( rho%of_g( ngms, nspin ) )
 #ifdef __STD_F95
-   nullify (rho%kin_g, rho%ns, rho%bec)
+   nullify (rho%kin_g, rho%ns, rho%ns_nc, rho%bec)
 #endif
    if (dft_is_meta()) allocate (rho%kin_g( ngms, nspin ) )
-   if (lda_plus_u)    allocate (rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
+   if (lda_plus_u) then
+    allocate (rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
+    allocate (rho%ns_nc(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
+   endif
    if (okpaw)         allocate (rho%bec(nhm*(nhm+1)/2,nat,nspin))
 
    rho%of_g = 0._dp
    if (dft_is_meta()) rho%kin_g = 0._dp
-   if (lda_plus_u)    rho%ns    = 0._dp
+   if (lda_plus_u) then
+     rho%ns       = 0._dp
+     rho%ns_nc    = 0._dp
+   endif
    if (okpaw)         rho%bec   = 0._dp
    if (dipfield)      rho%el_dipole =  0._dp
    
@@ -178,11 +195,13 @@ CONTAINS
    if (ASSOCIATED(rho%of_g))  deallocate(rho%of_g)
    if (ASSOCIATED(rho%kin_g)) deallocate(rho%kin_g)
    if (ASSOCIATED(rho%ns))    deallocate(rho%ns)
+   if (ASSOCIATED(rho%ns_nc))    deallocate(rho%ns_nc)
    if (ASSOCIATED(rho%bec))   deallocate(rho%bec)
 #else
    if (ALLOCATED(rho%of_g))  deallocate(rho%of_g)
    if (ALLOCATED(rho%kin_g)) deallocate(rho%kin_g)
    if (ALLOCATED(rho%ns))    deallocate(rho%ns)
+   if (ALLOCATED(rho%ns_nc))    deallocate(rho%ns_nc)
    if (ALLOCATED(rho%bec))   deallocate(rho%bec)
 #endif
    return
@@ -197,7 +216,10 @@ CONTAINS
    rho_m%of_g(1:ngms,:) = rho_s%of_g(1:ngms,:)
    
    if (dft_is_meta()) rho_m%kin_g(1:ngms,:) = rho_s%kin_g(1:ngms,:)
-   if (lda_plus_u)    rho_m%ns  = rho_s%ns
+   if (lda_plus_u) then
+     rho_m%ns     = rho_s%ns
+     rho_m%ns_nc  = rho_s%ns_nc
+   endif
    if (okpaw)         rho_m%bec = rho_s%bec
    
    if (dipfield) then
@@ -240,7 +262,10 @@ CONTAINS
       END DO
    end if
 
-   if (lda_plus_u) rho_s%ns(:,:,:,:) = rho_m%ns(:,:,:,:)
+   if (lda_plus_u) then
+     rho_s%ns(:,:,:,:)    = rho_m%ns(:,:,:,:)
+     rho_s%ns_nc(:,:,:,:) = rho_m%ns_nc(:,:,:,:)
+   endif 
    if (okpaw)      rho_s%bec(:,:,:)  = rho_m%bec(:,:,:)
        
    return
@@ -260,7 +285,10 @@ CONTAINS
      Y%kin_r = X%kin_r
      Y%kin_g = X%kin_g
   end if
-  if (lda_plus_u) Y%ns = X%ns
+  if (lda_plus_u) then
+    Y%ns    = X%ns
+    Y%ns_nc = X%ns_nc
+  endif
   if (okpaw)      Y%bec = X%bec
   !
   RETURN
@@ -278,7 +306,10 @@ CONTAINS
   TYPE(mix_type), INTENT(INOUT) :: Y
   Y%of_g  = Y%of_g  + A * X%of_g
   if (dft_is_meta()) Y%kin_g = Y%kin_g + A * X%kin_g
-  if (lda_plus_u) Y%ns = Y%ns + A * X%ns
+  if (lda_plus_u) then
+    Y%ns    = Y%ns    + A * X%ns
+    Y%ns_nc = Y%ns_nc + A * X%ns_nc
+  endif
   if (okpaw)     Y%bec = Y%bec + A * X%bec
   if (dipfield)  Y%el_dipole =  Y%el_dipole + A * X%el_dipole
   !
@@ -295,7 +326,10 @@ CONTAINS
   TYPE(mix_type), INTENT(INOUT) :: Y
   Y%of_g  = X%of_g
   if (dft_is_meta()) Y%kin_g = X%kin_g
-  if (lda_plus_u) Y%ns  = X%ns
+  if (lda_plus_u) then
+    Y%ns     = X%ns
+    Y%ns_nc  = X%ns_nc
+  endif
   if (okpaw)      Y%bec = X%bec
   if (dipfield)   Y%el_dipole =  X%el_dipole
   !
@@ -313,7 +347,10 @@ CONTAINS
   TYPE(mix_type), INTENT(INOUT) :: X
   X%of_g(:,:)  = A * X%of_g(:,:)
   if (dft_is_meta()) X%kin_g = A * X%kin_g
-  if (lda_plus_u) X%ns = A * X%ns
+  if (lda_plus_u) then
+    X%ns    = A * X%ns
+    X%ns_nc = A * X%ns_nc
+  endif
   if (okpaw)      X%bec= A * X%bec
   if (dipfield)   X%el_dipole =  A * X%el_dipole
   !
@@ -361,7 +398,10 @@ CONTAINS
          rhoin%kin_r(:,:)= 0.d0
       endif
    endif
-   if (lda_plus_u) rhoin%ns(:,:,:,:) = 0.d0
+   if (lda_plus_u) then
+     rhoin%ns(:,:,:,:)    = 0.d0
+     rhoin%ns_nc(:,:,:,:) = 0.d0
+   endif
    return
  end subroutine high_frequency_mixing 
 
@@ -409,6 +449,7 @@ CONTAINS
       call DCOPY(rlen_rho,rho%of_g,1,io_buffer(start_rho),1)
       if (dft_is_meta()) call DCOPY(rlen_kin, rho%kin_g,1,io_buffer(start_kin),1)
       if (lda_plus_u)    call DCOPY(rlen_ldaU,rho%ns,   1,io_buffer(start_ldaU),1)
+      if (lda_plus_u)    call DCOPY(rlen_ldaU,rho%ns_nc, 1,io_buffer(start_ldaU),1)
       if (okpaw)         call DCOPY(rlen_bec, rho%bec,  1,io_buffer(start_bec),1)
       if (dipfield)      call DCOPY(1, rho%el_dipole,  1,io_buffer(start_dipole),1)
       
@@ -419,6 +460,7 @@ CONTAINS
       call DCOPY(rlen_rho,io_buffer(start_rho),1,rho%of_g,1)
       if (dft_is_meta()) call DCOPY(start_kin,io_buffer(start_kin), 1,rho%kin_g,1)
       if (lda_plus_u)    call DCOPY(rlen_ldaU,io_buffer(start_ldaU),1,rho%ns,1)
+      if (lda_plus_u)    call DCOPY(rlen_ldaU,io_buffer(start_ldaU),1,rho%ns_nc,1)
       if (okpaw)         call DCOPY(rlen_bec, io_buffer(start_bec), 1,rho%bec,1)
       if (dipfield)      call DCOPY(1, io_buffer(start_dipole), 1, rho%el_dipole, 1)
 
@@ -692,8 +734,15 @@ FUNCTION ns_ddot( rho1, rho2 )
      IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 ) THEN
         m1 = 2 * Hubbard_l(nt) + 1
         m2 = 2 * Hubbard_l(nt) + 1
-        ns_ddot = ns_ddot + 0.5D0 * Hubbard_U(nt) * &
+
+        if (nspin.eq.4) then
+          ns_ddot = ns_ddot + 0.5D0 * Hubbard_U(nt) * &
+                  SUM( CONJG(rho1%ns_nc(:m1,:m2,:nspin,na))*rho2%ns_nc(:m1,:m2,:nspin,na) )
+        else
+          ns_ddot = ns_ddot + 0.5D0 * Hubbard_U(nt) * &
                   SUM( rho1%ns(:m1,:m2,:nspin,na)*rho2%ns(:m1,:m2,:nspin,na) )
+        endif
+
      END IF
   END DO
   !

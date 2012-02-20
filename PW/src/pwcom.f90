@@ -335,16 +335,20 @@ MODULE ldaU
   !
   INTEGER, PARAMETER :: nspinx=2
   COMPLEX(DP), ALLOCATABLE :: &
-       swfcatom(:,:)           ! orthogonalized atomic wfcs
-!  REAL(DP), ALLOCATABLE :: &
-!       v_hub(:,:,:,:)         ! the hubbard contribution to the potential
+       swfcatom(:,:),         &! orthogonalized atomic wfcs
+       d_spin_ldau(:,:,:)      ! the rotations in spin space for all the symmetries
   REAL(DP) :: &
        eth,                  &! the Hubbard contribution to the energy
        Hubbard_U(ntypx),     &! the Hubbard U
+       Hubbard_J(3,ntypx),   &! extra Hubbard parameters:  
+                              !     p: J(1) = J
+                              !     d: J(1) = J, J(2) =  B 
+                              !     f: J(1) = J, J(2) = E2, J(3) = E3 
        Hubbard_alpha(ntypx), &! the Hubbard alpha (used to calculate U)
        starting_ns(lqmax,nspinx,ntypx) !
   INTEGER :: &
        niter_with_fixed_ns,  &! no. of iterations with fixed ns
+       lda_plus_u_kind,      &! 1/0 --> full/simplified(old) LDA+U calculation  
        Hubbard_l(ntypx),     &! the angular momentum of Hubbard states
        Hubbard_lmax = 0       ! maximum angular momentum of Hubbard states
   LOGICAL :: &

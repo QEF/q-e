@@ -32,14 +32,15 @@ MODULE io_rho_xml
   CONTAINS
 
     SUBROUTINE write_rho_general( rho, nspin, extension )
-      USE paw_variables, ONLY : okpaw
-      USE ldaU,          ONLY : lda_plus_u
-      USE funct,         ONLY : dft_is_meta
-      USE io_files,      ONLY : iunocc, iunpaw, seqopn
-      USE io_global,     ONLY : ionode, ionode_id, stdout
-      USE scf,           ONLY : scf_type
-      USE mp_global,     ONLY : intra_image_comm
-      USE mp,            ONLY : mp_bcast
+      USE paw_variables,    ONLY : okpaw
+      USE ldaU,             ONLY : lda_plus_u
+      USE funct,            ONLY : dft_is_meta
+      USE noncollin_module, ONLY : noncolin
+      USE io_files,         ONLY : iunocc, iunpaw, seqopn
+      USE io_global,        ONLY : ionode, ionode_id, stdout
+      USE scf,              ONLY : scf_type
+      USE mp_global,        ONLY : intra_image_comm
+      USE mp,               ONLY : mp_bcast
 
       !
       IMPLICIT NONE
@@ -58,7 +59,11 @@ MODULE io_rho_xml
          !
          IF ( ionode ) THEN
             CALL seqopn( iunocc, 'occup', 'FORMATTED', lexist )
-            WRITE( iunocc, * , iostat = ierr) rho%ns
+            if (noncolin) then
+              WRITE( iunocc, * , iostat = ierr) rho%ns_nc
+            else
+              WRITE( iunocc, * , iostat = ierr) rho%ns
+            endif
          END IF
          CALL mp_bcast( ierr, ionode_id, intra_image_comm )
          IF ( ierr/=0 ) CALL errore('write_rho_general', 'Writing ldaU ns', 1)
@@ -90,14 +95,15 @@ MODULE io_rho_xml
     END SUBROUTINE write_rho_general
 
     SUBROUTINE read_rho_general( rho, nspin, extension )
-      USE paw_variables, ONLY : okpaw
-      USE ldaU,          ONLY : lda_plus_u
-      USE funct,         ONLY : dft_is_meta
-      USE io_files,      ONLY : iunocc, iunpaw, seqopn
-      USE io_global,     ONLY : ionode, ionode_id, stdout
-      USE scf,           ONLY : scf_type
-      USE mp_global,     ONLY : intra_image_comm
-      USE mp,            ONLY : mp_bcast, mp_sum
+      USE paw_variables,    ONLY : okpaw
+      USE ldaU,             ONLY : lda_plus_u
+      USE noncollin_module, ONLY : noncolin
+      USE funct,            ONLY : dft_is_meta
+      USE io_files,         ONLY : iunocc, iunpaw, seqopn
+      USE io_global,        ONLY : ionode, ionode_id, stdout
+      USE scf,              ONLY : scf_type
+      USE mp_global,        ONLY : intra_image_comm
+      USE mp,               ONLY : mp_bcast, mp_sum
       !
       IMPLICIT NONE
       TYPE(scf_type),   INTENT(INOUT)        :: rho
@@ -115,7 +121,11 @@ MODULE io_rho_xml
          !
          IF ( ionode ) THEN
             CALL seqopn( iunocc, 'occup', 'FORMATTED', lexist )
-            READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns
+            if (noncolin) then
+              READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns_nc
+            else
+              READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns
+            endif
          END IF
          CALL mp_bcast( ierr, ionode_id, intra_image_comm )
          IF ( ierr/=0 ) CALL errore('read_rho_general', 'Reading ldaU ns', 1)
@@ -123,9 +133,13 @@ MODULE io_rho_xml
             CLOSE( UNIT = iunocc, STATUS = 'KEEP')
          ELSE
             rho%ns(:,:,:,:) = 0.D0
+            rho%ns_nc(:,:,:,:) = 0.D0
          END IF
-         CALL mp_sum(rho%ns, intra_image_comm)
-         !
+         if (noncolin) then
+           CALL mp_sum(rho%ns_nc, intra_image_comm)
+         else
+           CALL mp_sum(rho%ns, intra_image_comm)
+         endif
       END IF
       ! Also the PAW coefficients are needed:
       IF ( okpaw ) THEN

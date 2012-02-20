@@ -370,9 +370,11 @@ MODULE input_parameters
 
         LOGICAL :: lda_plus_u = .false.
           ! Use DFT+U method - following are the needed parameters
+        INTEGER :: lda_plus_u_kind = 0
         INTEGER, PARAMETER :: nspinx=2
         REAL(DP) :: starting_ns_eigenvalue(lqmax,nspinx,nsx) = -1.0_DP
         REAL(DP) :: hubbard_u(nsx) = 0.0_DP
+        REAL(DP) :: hubbard_j(3,nsx) = 0.0_DP
         REAL(DP) :: hubbard_alpha(nsx) = 0.0_DP
         CHARACTER(len=80) :: U_projection_type = 'atomic'
 
@@ -483,7 +485,8 @@ MODULE input_parameters
              nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv, use_all_frac,   &
              force_symmorphic, starting_magnetization,                        &
              occupations, degauss, nspin, ecfixed,                            &
-             qcutz, q2sigma, lda_plus_U, Hubbard_U, Hubbard_alpha,            &
+             qcutz, q2sigma, lda_plus_U, lda_plus_u_kind,                     &
+             Hubbard_U, Hubbard_J, Hubbard_alpha,                             &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
              nqx1, nqx2, nqx3,                                                &

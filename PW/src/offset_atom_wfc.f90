@@ -40,10 +40,13 @@ SUBROUTINE offset_atom_wfc( nat, offset )
         IF ( upf(nt)%oc(n) >= 0.D0 ) THEN
            !
            IF ( noncolin ) THEN
-              ! N.B.: presently LDA+U not yet implemented for noncolin
               !
               IF ( upf(nt)%has_so ) THEN
                  !
+
+                IF (upf(nt)%oc(n)>0.D0.AND.upf(nt)%lchi(n)==Hubbard_l(nt).and.offset(na).eq.-99) &
+                 offset(na) = counter
+
                  counter = counter + 2 * upf(nt)%lchi(n)
                  !
                  IF ( ABS( upf(nt)%jchi(n)-upf(nt)%lchi(n) - 0.5D0 ) < 1.D-6 ) &
@@ -51,6 +54,8 @@ SUBROUTINE offset_atom_wfc( nat, offset )
                  !
               ELSE
                  !
+                IF (upf(nt)%oc(n)>0.D0.AND.upf(nt)%lchi(n)==Hubbard_l(nt)) &
+                 offset(na) = counter
                  counter = counter + 2 * ( 2 * upf(nt)%lchi(n) + 1 )
                  !
               END IF

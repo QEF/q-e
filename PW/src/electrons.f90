@@ -301,15 +301,29 @@ SUBROUTINE electrons()
            !
            hwf_energy = hwf_energy + eth
            !
-           IF ( iverbosity > 0 .OR. first ) CALL write_ns()
+           IF ( iverbosity > 0 .OR. first ) THEN
+            IF (noncolin) THEN
+              CALL write_ns_nc()
+            ELSE
+              CALL write_ns()
+            ENDIF
+           ENDIF
            !
            IF ( first .AND. istep == 0 .AND. starting_pot == 'atomic' ) THEN
               CALL ns_adj()
-               rhoin%ns = rho%ns
+              IF (noncolin) THEN
+                rhoin%ns_nc = rho%ns_nc
+              ELSE
+                rhoin%ns = rho%ns
+              ENDIF
            END IF
            IF ( iter <= niter_with_fixed_ns ) THEN
               WRITE( stdout, '(/,5X,"RESET ns to initial values (iter <= mixing_fixed_ns)",/)')
-              rho%ns = rhoin%ns
+              IF (noncolin) THEN
+                rho%ns_nc = rhoin%ns_nc
+              ELSE
+                rho%ns = rhoin%ns
+              ENDIF
            END IF
            !
         END IF
@@ -492,7 +506,13 @@ SUBROUTINE electrons()
      !
      IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
         !
-        IF ( lda_plus_U .AND. iverbosity < 1 ) CALL write_ns ( )
+        IF ( lda_plus_U .AND. iverbosity == 0 ) THEN
+          IF (noncolin) THEN
+            CALL write_ns_nc()
+          ELSE
+            CALL write_ns()
+          ENDIF
+        ENDIF
         CALL print_ks_energies()
         !
      END IF
@@ -865,9 +885,14 @@ SUBROUTINE electrons()
        CALL mp_sum( delta_e, intra_bgrp_comm )
        !
        if (lda_plus_u) then
-          delta_e_hub = - SUM (rho%ns(:,:,:,:)*v%ns(:,:,:,:))
-          if (nspin==1) delta_e_hub = 2.d0 * delta_e_hub
-          delta_e = delta_e + delta_e_hub
+         if (noncolin) then
+           delta_e_hub = - SUM (rho%ns_nc(:,:,:,:)*v%ns_nc(:,:,:,:))
+           delta_e = delta_e + delta_e_hub
+         else
+           delta_e_hub = - SUM (rho%ns(:,:,:,:)*v%ns(:,:,:,:))
+           if (nspin==1) delta_e_hub = 2.d0 * delta_e_hub
+           delta_e = delta_e + delta_e_hub
+         endif
        end if
        !
        IF (okpaw) delta_e = delta_e - SUM(ddd_paw(:,:,:)*rho%bec(:,:,:))
@@ -901,9 +926,14 @@ SUBROUTINE electrons()
        CALL mp_sum( delta_escf, intra_bgrp_comm )
        !
        if (lda_plus_u) then
-          delta_escf_hub = - SUM((rhoin%ns(:,:,:,:)-rho%ns(:,:,:,:))*v%ns(:,:,:,:))
-          if (nspin==1) delta_escf_hub = 2.d0 * delta_escf_hub
-          delta_escf = delta_escf + delta_escf_hub
+         if (noncolin) then
+           delta_escf_hub = - SUM((rhoin%ns_nc(:,:,:,:)-rho%ns_nc(:,:,:,:))*v%ns_nc(:,:,:,:))
+           delta_escf = delta_escf + delta_escf_hub
+         else
+           delta_escf_hub = - SUM((rhoin%ns(:,:,:,:)-rho%ns(:,:,:,:))*v%ns(:,:,:,:))
+           if (nspin==1) delta_escf_hub = 2.d0 * delta_escf_hub
+           delta_escf = delta_escf + delta_escf_hub
+         endif
        end if
 
        IF (okpaw) delta_escf = delta_escf - &

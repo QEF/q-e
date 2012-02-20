@@ -94,8 +94,8 @@ MODULE pw_restart
                                        igk, nbnd, ecutwfc
       USE ener,                 ONLY : ef, ef_up, ef_dw
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
-      USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
-                                       Hubbard_U, Hubbard_alpha
+      USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax,  &
+                                       Hubbard_l, Hubbard_U, Hubbard_J, Hubbard_alpha
       USE spin_orb,             ONLY : lspinorb, domag
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev
@@ -387,10 +387,10 @@ MODULE pw_restart
          dft_name = get_dft_name()
          inlc = get_inlc()
          !
-         CALL write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = lda_plus_u, &
-                        HUBBARD_LMAX = Hubbard_lmax, HUBBARD_L = Hubbard_l, &
-                        HUBBARD_U = Hubbard_U, HUBBARD_ALPHA = Hubbard_alpha, &
-                        INLC = inlc, VDW_TABLE_NAME = vdw_table_name, &
+         CALL write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = lda_plus_u,                  &
+                        LDA_PLUS_U_KIND = lda_plus_u_kind, HUBBARD_LMAX = Hubbard_lmax,      &
+                        HUBBARD_L = Hubbard_l, HUBBARD_U = Hubbard_U, HUBBARD_J = Hubbard_J, &
+                        HUBBARD_ALPHA = Hubbard_alpha, INLC = inlc, VDW_TABLE_NAME = vdw_table_name, &
                         PSEUDO_DIR = pseudo_dir, DIRNAME = dirname)
          IF ( dft_is_hybrid() ) CALL write_exx &
                          ( x_gamma_extrapolation, nq1, nq2, nq3, &
@@ -2219,8 +2219,8 @@ MODULE pw_restart
       !
       USE ions_base, ONLY : nsp
       USE funct,     ONLY : enforce_input_dft
-      USE ldaU,      ONLY : lda_plus_u, Hubbard_lmax, &
-                            Hubbard_l, Hubbard_U, Hubbard_alpha
+      USE ldaU,      ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, &
+                            Hubbard_l, Hubbard_U, Hubbard_J, Hubbard_alpha
       USE kernel_table, ONLY : vdw_table_name
       !
       IMPLICIT NONE
@@ -2260,11 +2260,15 @@ MODULE pw_restart
             !
             CALL iotk_scan_dat( iunpun, "NUMBER_OF_SPECIES", nsp_ )
             !
+            CALL iotk_scan_dat( iunpun, "LDA_PLUS_U_KIND", lda_plus_u_kind )
+            !
             CALL iotk_scan_dat( iunpun, "HUBBARD_LMAX", Hubbard_lmax )
             !
             CALL iotk_scan_dat( iunpun, "HUBBARD_L", Hubbard_l(1:nsp_) )
             !
             CALL iotk_scan_dat( iunpun, "HUBBARD_U", Hubbard_U(1:nsp_) )
+            !
+            CALL iotk_scan_dat( iunpun, "HUBBARD_J", Hubbard_J(1:3,1:nsp_) )
             !
             CALL iotk_scan_dat( iunpun, "HUBBARD_ALPHA", Hubbard_alpha(1:nsp_) )
             !
@@ -2297,9 +2301,11 @@ MODULE pw_restart
       !
       IF ( lda_plus_u ) THEN
          !
+         CALL mp_bcast( lda_plus_u_kind, ionode_id, intra_image_comm )
          CALL mp_bcast( Hubbard_lmax,  ionode_id, intra_image_comm )
          CALL mp_bcast( Hubbard_l ,    ionode_id, intra_image_comm )
          CALL mp_bcast( Hubbard_U,     ionode_id, intra_image_comm )
+         CALL mp_bcast( Hubbard_J,     ionode_id, intra_image_comm )
          CALL mp_bcast( Hubbard_alpha, ionode_id, intra_image_comm )
          !
       END IF

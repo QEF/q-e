@@ -14,6 +14,13 @@ SUBROUTINE new_ns(ns)
   ! ortogonalized atomic wfcs).
   ! These quantities are defined as follows: ns_{I,s,m1,m2} = \sum_{k,v}
   ! f_{kv} <\fi^{at}_{I,m1}|\psi_{k,v,s}><\psi_{k,v,s}|\fi^{at}_{I,m2}>
+
+  !  It seems that the order of {m1, m2} in the definition should be opposite. 
+  !  Hovewer, since ns is symmetric (and real for collinear case, due to time reversal) 
+  !  it does not matter.  
+  !  (A.Smogunov) 
+
+
   !
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
@@ -104,10 +111,10 @@ SUBROUTINE new_ns(ns)
 ! on k-points
 
   ENDDO
-  CALL deallocate_bec_type (proj)
-  ! 
+  CALL deallocate_bec_type (proj) 
+  !
   CALL mp_sum( nr, inter_pool_comm )
-  ! 
+  !
   IF (nspin.EQ.1) nr = 0.5d0 * nr
   !
   ! impose hermiticity of n_{m1,m2}
@@ -192,4 +199,257 @@ SUBROUTINE new_ns(ns)
 
   RETURN
 
-END SUBROUTINE new_ns
+END SUBROUTINE new_ns 
+
+
+SUBROUTINE new_ns_nc(ns)
+  !-----------------------------------------------------------------------
+  !
+  ! Noncollinear version (A. Smogunov). 
+  !
+
+  USE io_global,            ONLY : stdout
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : nat, ityp
+  USE basis,                ONLY : natomwfc
+  USE klist,                ONLY : nks, ngk
+  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, oatwfc, &
+                                   Hubbard_U, Hubbard_alpha, swfcatom, d_spin_ldau
+  USE symm_base,            ONLY : d1, d2, d3
+  USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
+  USE noncollin_module, ONLY : noncolin, npol
+  USE symm_base,            ONLY : nsym, irt, time_reversal, t_rev
+  USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg
+  USE control_flags,        ONLY : gamma_only
+  USE wavefunctions_module, ONLY : evc
+  USE gvect,                ONLY : gstart
+  USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
+  USE buffers,              ONLY : get_buffer
+  USE mp_global,            ONLY : intra_pool_comm, inter_pool_comm
+  USE mp,                   ONLY : mp_sum
+
+  IMPLICIT NONE
+  !
+  ! I/O variables
+  !
+  COMPLEX(DP) :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+  INTEGER :: ik, ibnd, is, js, i, j, sigmay2, na, nb, nt, isym,  &
+             m1, m2, m3, m4, is1, is2, is3, is4, m0, m00, ldim
+
+  COMPLEX(DP) , ALLOCATABLE :: nr (:,:,:,:,:), nr1 (:,:,:,:,:), proj(:,:) 
+
+  COMPLEX(DP) :: z, zdotc
+
+  REAL(DP) :: psum
+
+
+  CALL start_clock('new_ns')
+  ldim = 2 * Hubbard_lmax + 1
+
+  ALLOCATE( nr(ldim,ldim,npol,npol,nat), nr1(ldim,ldim,npol,npol,nat) )  
+  ALLOCATE( proj(natomwfc,nbnd) )
+
+  nr  (:,:,:,:,:) = 0.d0
+  nr1 (:,:,:,:,:) = 0.d0
+  ns  (:,:,:,:)   = 0.d0
+
+!--
+!    loop on k points
+!
+  IF (nks > 1) REWIND (iunigk)
+  DO ik = 1, nks
+
+     npw = ngk (ik)
+     IF (nks > 1) THEN
+        READ (iunigk) igk
+        CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
+     END IF
+     CALL davcio (swfcatom, nwordatwfc, iunsat, ik, - 1)
+     !
+     ! make the projection
+     !
+     DO ibnd = 1, nbnd
+       DO i = 1, natomwfc
+         proj(i, ibnd) = zdotc (npwx*npol, swfcatom (1, i), 1, evc (1, ibnd), 1)
+       ENDDO
+     ENDDO
+#ifdef __MPI
+     CALL mp_sum ( proj, intra_pool_comm )
+#endif
+     !
+     ! compute the occupation matrix
+     !
+     do na = 1, nat  
+        nt = ityp (na)  
+        if (Hubbard_U(nt).ne.0.d0) then  
+          ldim = 2 * Hubbard_l(nt) + 1
+
+          do m1 = 1, 2 * Hubbard_l(nt) + 1
+            do m2 = 1, 2 * Hubbard_l(nt) + 1
+              do is1 = 1, npol
+                do is2 = 1, npol
+
+                  do ibnd = 1, nbnd
+                    nr(m1,m2,is1,is2,na) = nr(m1,m2,is1,is2,na) + &
+                            wg(ibnd,ik) * CONJG( proj(oatwfc(na)+m1+ldim*(is1-1),ibnd) ) * &
+                                           proj(oatwfc(na)+m2+ldim*(is2-1),ibnd)
+                  enddo
+
+                enddo
+              enddo
+            enddo
+          enddo
+
+        endif
+     enddo
+
+  enddo
+!---
+
+  CALL mp_sum( nr, inter_pool_comm )
+
+!--  symmetrize: nr  -->  nr1
+!
+  do na = 1, nat  
+    nt = ityp (na)  
+    if (Hubbard_U(nt).ne.0.d0) then  
+
+      do m1 = 1, 2 * Hubbard_l(nt) + 1  
+        do m2 = 1, 2 * Hubbard_l(nt) + 1  
+          do is1 = 1, npol
+            do is2 = 1, npol
+
+loopisym:     do isym = 1, nsym  
+                nb = irt (isym, na)  
+
+                do m3 = 1, 2 * Hubbard_l(nt) + 1
+                  do m4 = 1, 2 * Hubbard_l(nt) + 1
+                    do is3 = 1, npol
+                      do is4 = 1, npol
+  
+                        if (Hubbard_l(nt).eq.0) then
+                          if (t_rev(isym).eq.1) then
+                            nr1(m1,m2,is1,is2,na) = nr1(m1,m2,is1,is2,na) +      &
+                              CONJG( d_spin_ldau(is1,is3,isym) )*                &
+                                     nr(m4,m3,is4,is3,nb)/nsym  *                &
+                                     d_spin_ldau(is2,is4,isym)  
+                          else
+                            nr1(m1,m2,is1,is2,na) = nr1(m1,m2,is1,is2,na) +      &
+                              CONJG( d_spin_ldau(is1,is3,isym) )*                &
+                                     nr(m3,m4,is3,is4,nb)/nsym  *                &
+                                     d_spin_ldau(is2,is4,isym)  
+                          endif
+                        elseif (Hubbard_l(nt).eq.1) then
+                          if (t_rev(isym).eq.1) then
+                            nr1(m1,m2,is1,is2,na) = nr1(m1,m2,is1,is2,na) +      &
+                              CONJG( d_spin_ldau(is1,is3,isym) )*d1(m1,m3,isym)* &
+                                     nr(m4,m3,is4,is3,nb)/nsym  *                &
+                                     d_spin_ldau(is2,is4,isym)  *d1(m2,m4,isym)
+                          else
+                            nr1(m1,m2,is1,is2,na) = nr1(m1,m2,is1,is2,na) +      &
+                              CONJG( d_spin_ldau(is1,is3,isym) )*d1(m1,m3,isym)* &
+                                     nr(m3,m4,is3,is4,nb)/nsym  *                &
+                                     d_spin_ldau(is2,is4,isym)  *d1(m2,m4,isym)
+                          endif
+                        elseif (Hubbard_l(nt).eq.2) then
+                          if (t_rev(isym).eq.1) then
+                            nr1(m1,m2,is1,is2,na) = nr1(m1,m2,is1,is2,na) +      &
+                              CONJG( d_spin_ldau(is1,is3,isym) )*d2(m1,m3,isym)* &
+                                     nr(m4,m3,is4,is3,nb)/nsym  *                &
+                                     d_spin_ldau(is2,is4,isym)  *d2(m2,m4,isym)
+                          else
+                            nr1(m1,m2,is1,is2,na) = nr1(m1,m2,is1,is2,na) +      &
+                              CONJG( d_spin_ldau(is1,is3,isym) )*d2(m1,m3,isym)* &
+                                     nr(m3,m4,is3,is4,nb)/nsym  *                &
+                                     d_spin_ldau(is2,is4,isym)  *d2(m2,m4,isym)
+                          endif
+                        elseif (Hubbard_l(nt).eq.3) then
+                          if (t_rev(isym).eq.1) then
+                            nr1(m1,m2,is1,is2,na) = nr1(m1,m2,is1,is2,na) +      &
+                              CONJG( d_spin_ldau(is1,is3,isym) )*d3(m1,m3,isym)* &
+                                     nr(m4,m3,is4,is3,nb)/nsym  *                &
+                                     d_spin_ldau(is2,is4,isym)  *d3(m2,m4,isym)
+                          else
+                            nr1(m1,m2,is1,is2,na) = nr1(m1,m2,is1,is2,na) +      &
+                              CONJG( d_spin_ldau(is1,is3,isym) )*d3(m1,m3,isym)* &
+                                     nr(m3,m4,is3,is4,nb)/nsym  *                &
+                                     d_spin_ldau(is2,is4,isym)  *d3(m2,m4,isym)
+                          endif
+                        else
+                          CALL errore ('new_ns', &
+                                         'angular momentum not implemented', &
+                                          ABS(Hubbard_l(nt)) )
+                        endif
+
+                      enddo
+                    enddo
+                  enddo
+                enddo
+
+              enddo  loopisym 
+
+            enddo
+          enddo
+        enddo
+      enddo 
+
+    endif
+  enddo
+!--
+
+!-- Setup the output matrix ns with combined spin index 
+!
+  DO na = 1, nat
+     nt = ityp (na)
+     IF (Hubbard_U(nt).NE.0.d0) THEN
+        DO is1 = 1, npol
+         do is2 = 1, npol
+           i = npol*(is1-1) + is2
+           DO m1 = 1, 2 * Hubbard_l(nt) + 1
+              DO m2 = 1, 2 * Hubbard_l(nt) + 1
+                ns(m1,m2,i,na) = nr1(m1,m2,is1,is2,na)
+              ENDDO
+           ENDDO
+         enddo
+        ENDDO
+     ENDIF
+  ENDDO
+!--
+
+!-- make the matrix ns strictly hermitean
+!
+  DO na = 1, nat  
+     nt = ityp (na)  
+     IF (Hubbard_U(nt).NE.0.d0 .OR. Hubbard_alpha(nt).NE.0.d0) THEN  
+        DO is1 = 1, npol  
+         do is2 = 1, npol
+           i = npol*(is1-1) + is2
+           j = is1 + npol*(is2-1)
+           DO m1 = 1, 2 * Hubbard_l(nt) + 1  
+              DO m2 = 1, 2 * Hubbard_l(nt) + 1  
+                 psum = ABS ( ns(m1,m2,i,na) - CONJG(ns(m2,m1,j,na)) )  
+                 IF (psum.GT.1.d-10) THEN  
+                    WRITE( stdout, * ) na, m1, m2, is1, is2  
+                    WRITE( stdout, * ) ns (m1, m2, i, na)  
+                    WRITE( stdout, * ) ns (m2, m1, j, na)  
+                    CALL errore ('new_ns', 'non hermitean matrix', 1)  
+                 ELSE  
+                    ns (m2, m1, j, na) = CONJG( ns(m1, m2, i, na))
+                 ENDIF
+              ENDDO
+           ENDDO
+         enddo
+        ENDDO
+     ENDIF 
+  ENDDO
+!--
+
+
+  DEALLOCATE ( nr, nr1 )
+
+  RETURN
+
+END SUBROUTINE new_ns_nc
+
+
+

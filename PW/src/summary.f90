@@ -19,7 +19,7 @@ SUBROUTINE summary()
   USE io_global,       ONLY : stdout
   USE kinds,           ONLY : DP
   USE run_info,        ONLY: title
-  USE constants,       ONLY : amconv
+  USE constants,       ONLY : amconv, rytoev
   USE cell_base,       ONLY : alat, ibrav, omega, at, bg, celldm
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
   USE cellmd,          ONLY : calc, cmass
@@ -29,8 +29,8 @@ SUBROUTINE summary()
   USE fft_base,        ONLY : dfftp
   USE fft_base,        ONLY : dffts
   USE lsda_mod,        ONLY : lsda, starting_magnetization
-  USE ldaU,            ONLY : lda_plus_U, Hubbard_u, Hubbard_alpha, &
-                              Hubbard_l, Hubbard_lmax
+  USE ldaU,            ONLY : lda_plus_U, Hubbard_u, Hubbard_j, Hubbard_alpha, &
+                              Hubbard_l, lda_plus_u_kind, Hubbard_lmax
   USE klist,           ONLY : degauss, smearing, lgauss, nkstot, xk, wk, &
                               nelec, nelup, neldw, two_fermi_energies
   USE ktetra,          ONLY : ltetra
@@ -214,16 +214,45 @@ SUBROUTINE summary()
         WRITE( stdout, '(5x,a6,9x,f6.3)') atm(nt), starting_magnetization(nt)
      ENDDO
   ENDIF
+  !
+  ! Some output for LDA+U
+  !
   IF ( lda_plus_U ) THEN
-     WRITE( stdout, '(/5x,"LDA+U calculation, Hubbard_lmax = ",i1)') &
-                    Hubbard_lmax
-     WRITE( stdout, '(5x,"atomic species  L   Hubbard U  Hubbard alpha")' ) 
+   WRITE( stdout,*) '-----'
+   IF (lda_plus_u_kind == 0) THEN
+     WRITE( stdout, '(5x,"simplified LDA+U calculation, Hubbard_lmax = ",i1)') Hubbard_lmax
+     WRITE( stdout, '(5x,"atomic species  L   Hubbard U  Hubbard alpha")' )
      DO nt = 1, ntyp
         IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 ) THEN
            WRITE( stdout,'(5x,a6,5x,i6,2f12.6)') &
-             atm(nt), Hubbard_L(nt), Hubbard_U(nt), Hubbard_alpha(nt)
+             atm(nt), Hubbard_L(nt), Hubbard_U(nt)*rytoev, Hubbard_alpha(nt)*rytoev
         END IF
      END DO
+   ELSEIF(lda_plus_u_kind == 1) THEN
+     WRITE( stdout, '(5x,"full LDA+U calculation, Hubbard_lmax = ",i1)') Hubbard_lmax
+     WRITE( stdout, '(5x,"Hubbard parameters for +U species:")' )
+     DO nt = 1, ntyp
+       IF (Hubbard_U(nt) /= 0.d0) THEN
+         IF (Hubbard_l(nt) == 0) THEN
+           WRITE (stdout,'(5x,a,i2,a,f12.8)') 'U(',nt,') =', Hubbard_U(nt) * rytoev
+         ELSEIF (Hubbard_l(nt) == 1) THEN
+           WRITE (stdout,'(5x,2(a,i3,a,f9.4,3x))') 'U(',nt,') =', Hubbard_U(nt)*rytoev,   &
+                                                   'J(',nt,') =', Hubbard_J(1,nt)*rytoev
+         ELSEIF (Hubbard_l(nt) == 2) THEN
+           WRITE (stdout,'(5x,3(a,i3,a,f9.4,3x))') 'U(',nt,') =', Hubbard_U(nt)*rytoev,   &
+                                                   'J(',nt,') =', Hubbard_J(1,nt)*rytoev, &
+                                                   'B(',nt,') =', Hubbard_J(2,nt)*rytoev
+         ELSEIF (Hubbard_l(nt) == 3) THEN
+           WRITE (stdout,'(5x,4(a,i3,a,f9.4,3x))') 'U (',nt,') =', Hubbard_U(nt)*rytoev,   &
+                                                   'J (',nt,') =', Hubbard_J(1,nt)*rytoev, &
+                                                   'E2(',nt,') =', Hubbard_J(2,nt)*rytoev, &
+                                                   'E3(',nt,') =', Hubbard_J(3,nt)*rytoev
+         END IF
+       END IF
+     ENDDO
+     IF (lspinorb) WRITE(stdout, '(5x,"LDA+U on averaged j=l+1/2,l-1/2 radial WFs")')
+   END IF
+   WRITE( stdout,*) '-----'
   END IF
   !
   !   description of symmetries

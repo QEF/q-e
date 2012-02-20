@@ -121,8 +121,16 @@ SUBROUTINE potinit()
             FMT = '(/5X,"Initial potential from superposition of free atoms")' )
      !
      CALL atomic_rho( rho%of_r, nspin )
+
      ! ... in the lda+U case set the initial value of ns
-     IF ( lda_plus_u ) CALL init_ns()
+     IF (lda_plus_u) THEN
+        IF (noncolin) THEN
+          CALL init_ns_nc()
+        ELSE
+          CALL init_ns()
+        ENDIF
+     ENDIF
+
      ! ... in the paw case uses atomic becsum
      IF ( okpaw )      CALL PAW_atomic_becsum()
      !
@@ -212,12 +220,15 @@ SUBROUTINE potinit()
   !
   IF ( lda_plus_u ) THEN
      !
-     WRITE( stdout, '(/5X,"Parameters of the lda+U calculation:")')
-     WRITE( stdout, '(5X,"Number of iteration with fixed ns =",I3)') &
+     WRITE( stdout, '(5X,"Number of +U iterations with fixed ns =",I3)') &
          niter_with_fixed_ns
-     WRITE( stdout, '(5X,"Starting ns and Hubbard U :")')
+     WRITE( stdout, '(5X,"Starting occupations:")')
      !
-     CALL write_ns()
+     IF (noncolin) THEN
+       CALL write_ns_nc()
+     ELSE
+       CALL write_ns()
+     ENDIF
      !
   END IF
   !

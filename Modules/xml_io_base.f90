@@ -1202,17 +1202,18 @@ MODULE xml_io_base
     END SUBROUTINE write_magnetization
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_xc( dft, nsp, lda_plus_u, &
-                         Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
+    SUBROUTINE write_xc( dft, nsp, lda_plus_u, lda_plus_u_kind, Hubbard_lmax, &
+                         Hubbard_l, Hubbard_U, Hubbard_J, Hubbard_alpha,      &
                          inlc, vdw_table_name, pseudo_dir, dirname )
       !------------------------------------------------------------------------
       !
       CHARACTER(LEN=*),   INTENT(IN) :: dft
       LOGICAL,            INTENT(IN) :: lda_plus_u
+      INTEGER,  OPTIONAL, INTENT(IN) :: lda_plus_u_kind
       INTEGER,  OPTIONAL, INTENT(IN) :: nsp
       INTEGER,  OPTIONAL, INTENT(IN) :: Hubbard_lmax
       INTEGER,  OPTIONAL, INTENT(IN) :: Hubbard_l(:)
-      REAL(DP), OPTIONAL, INTENT(IN) :: Hubbard_U(:), Hubbard_alpha(:)
+      REAL(DP), OPTIONAL, INTENT(IN) :: Hubbard_U(:), Hubbard_J(:,:), Hubbard_alpha(:)
       INTEGER,  OPTIONAL, INTENT(IN) :: inlc
       CHARACTER(LEN=*), OPTIONAL,   INTENT(IN) :: vdw_table_name, pseudo_dir, dirname
       !
@@ -1230,6 +1231,7 @@ MODULE xml_io_base
          IF ( .NOT. PRESENT( Hubbard_lmax ) .OR. &
               .NOT. PRESENT( Hubbard_l )    .OR. & 
               .NOT. PRESENT( Hubbard_U )    .OR. &
+              .NOT. PRESENT( Hubbard_J )    .OR. &
               .NOT. PRESENT( nsp )          .OR. &
               .NOT. PRESENT( Hubbard_alpha ) ) &
             CALL errore( 'write_exchange_correlation', &
@@ -1237,12 +1239,16 @@ MODULE xml_io_base
          !
          CALL iotk_write_dat( iunpun, "NUMBER_OF_SPECIES", nsp )
          !
+         CALL iotk_write_dat( iunpun, "LDA_PLUS_U_KIND", lda_plus_u_kind )
+         ! 
          CALL iotk_write_dat( iunpun, "HUBBARD_LMAX", Hubbard_lmax )
          !
          CALL iotk_write_dat( iunpun, "HUBBARD_L", &
                               Hubbard_l(1:nsp) )
          !
          CALL iotk_write_dat( iunpun, "HUBBARD_U", Hubbard_U(1:nsp) )
+         !
+         CALL iotk_write_dat( iunpun, "HUBBARD_J", Hubbard_J(1:3,1:nsp), COLUMNS = 3 )
          !
          CALL iotk_write_dat( iunpun, "HUBBARD_ALPHA", Hubbard_alpha(1:nsp) )
          !

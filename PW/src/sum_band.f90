@@ -104,7 +104,13 @@ SUBROUTINE sum_band()
   !
   ! ... Needed for LDA+U
   !
-  IF ( lda_plus_u ) CALL new_ns(rho%ns)
+  IF (lda_plus_u) THEN
+   IF(noncolin) THEN
+    CALL new_ns_nc(rho%ns_nc)
+   ELSE
+    CALL new_ns(rho%ns)
+   ENDIF
+  ENDIF
   !
   IF ( okvan.OR.one_atom_occupations ) CALL allocate_bec_type (nkb,nbnd, becp)
   !

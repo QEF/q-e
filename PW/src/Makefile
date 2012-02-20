@@ -136,6 +136,7 @@ paw_onecenter.o \
 paw_symmetry.o \
 plugin_initialization.o \
 plugin_forces.o \
+plus_u_full.o \
 potinit.o \
 print_clock_pw.o \
 print_ks_energies.o \

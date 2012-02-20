@@ -20,7 +20,7 @@ SUBROUTINE force_hub(forceh)
    USE cell_base,            ONLY : at, bg
    USE ldaU,                 ONLY : hubbard_lmax, hubbard_l, hubbard_u, &
                                     hubbard_alpha, U_projection, &
-                                    swfcatom, oatwfc
+                                    swfcatom, lda_plus_u_kind, oatwfc
    USE symme,                ONLY : symvector
    USE io_files,             ONLY : prefix, iunocc
    USE wvfct,                ONLY : nbnd, npwx, npw, igk
@@ -53,6 +53,8 @@ SUBROUTINE force_hub(forceh)
 
    IF (U_projection .NE. "atomic") CALL errore("force_hub", &
                    " forces for this U_projection_type not implemented",1)
+   IF (lda_plus_u_kind.eq.1) CALL errore("force_hub", &
+                   " forces in full LDA+U scheme are not yet implemented",1)
 
    call start_clock('force_hub')
    ldim= 2 * Hubbard_lmax + 1

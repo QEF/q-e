@@ -19,7 +19,7 @@ SUBROUTINE stres_hub ( sigmah )
    USE ions_base, ONLY : nat, ityp
    USE cell_base, ONLY : omega, at, bg
    USE ldaU,      ONLY : hubbard_lmax, hubbard_l, hubbard_u, &
-                         hubbard_alpha, U_projection
+                         hubbard_alpha, lda_plus_u_kind, U_projection
    USE scf,       ONLY : v
    USE lsda_mod,  ONLY : nspin
    USE symme,     ONLY : symmatrix
@@ -40,6 +40,8 @@ SUBROUTINE stres_hub ( sigmah )
 #endif
    IF (U_projection .NE. "atomic") CALL errore("stres_hub", &
                    " stress for this U_projection_type not implemented",1)
+   IF (lda_plus_u_kind.eq.1) CALL errore("stres_hub", &
+                   " stress in full LDA+U scheme is not yet implemented",1)
 
    sigmah(:,:) = 0.d0
 

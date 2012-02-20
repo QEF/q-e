@@ -65,7 +65,14 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   !
   ! ... Here we add the Hubbard potential times psi
   !
-  IF ( lda_plus_u ) CALL vhpsi( lda, n, m, psi, hpsi )
+  if (lda_plus_u) then
+   if(noncolin) then
+    call vhpsi_nc( lda, n, m, psi, hpsi )
+   else
+    call vhpsi( lda, n, m, psi, hpsi )
+   endif
+  endif
+  !
   !
   ! ... the local potential V_Loc psi
   !
