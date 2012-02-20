@@ -70,7 +70,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   allocate (dpsir( dffts%nnr))
   allocate (ps1  ( nbnd , nbnd))
 
-  call divide (nbnd, startb, lastb)
+  call divide (nbnd, startb, lastb, intra_pool_comm)
   ps1 (:,:) = (0.d0, 0.d0)
   ikk=ikks(ik)
   !

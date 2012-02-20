@@ -20,6 +20,9 @@ SUBROUTINE local
   USE noncollin_module, ONLY : npol
   USE io_files
   USE cond
+  !
+  USE mp_global, ONLY : intra_pool_comm
+  !
 
   IMPLICIT NONE
 
@@ -86,14 +89,14 @@ SUBROUTINE local
 !
   nrzps = 0
   nrzpr = 0
-  call divide(nrzl, kin, kfin)
+  call divide(nrzl, kin, kfin, intra_pool_comm)
   nrzpl = kfin - kin + 1
   if(ikind.gt.0) then
-    call divide(nrzs, kin, kfin)
+    call divide(nrzs, kin, kfin, intra_pool_comm)
     nrzps = kfin - kin + 1
   endif
   if(ikind.gt.1) then
-    call divide(nrzr, kin, kfin)
+    call divide(nrzr, kin, kfin, intra_pool_comm)
     nrzpr = kfin - kin + 1
   endif
 
@@ -163,7 +166,9 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
   USE io_global, ONLY : ionode, ionode_id
   USE parallel_include
   use cond, only : nrx, nry, ngper, gper, ewind, epsproj
-
+  !
+  USE mp_global, ONLY : intra_pool_comm
+  !
   IMPLICIT NONE
 
   INTEGER :: nrz, n2d
@@ -296,6 +301,9 @@ subroutine local_2(nrz, nrzp, vppot, psiper, zkr)
   USE mp,         ONLY : mp_barrier
   USE noncollin_module, ONLY : npol
   use cond, only : nrx, nry, ngper, n2d, gper, newbg
+  !
+  USE mp_global, ONLY : intra_pool_comm
+  !
 
   IMPLICIT NONE
 
@@ -330,7 +338,7 @@ subroutine local_2(nrz, nrzp, vppot, psiper, zkr)
     enddo
   enddo
 
-  call divide(nrz, kin, kfin)
+  call divide(nrz, kin, kfin, intra_pool_comm)
 
 ! for reduced basis set H'_{ab}=e*^i_aH_{ij}e^j_b
   do k = kin, kfin

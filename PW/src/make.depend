@@ -311,7 +311,7 @@ data_structure.o : ../../Modules/stick_set.o
 data_structure.o : pwcom.o
 deriv_drhoc.o : ../../Modules/constants.o
 deriv_drhoc.o : ../../Modules/kind.o
-divide.o : ../../Modules/mp_global.o
+divide.o : ../../Modules/mp.o
 divide_class.o : ../../Modules/kind.o
 divide_class_so.o : ../../Modules/constants.o
 divide_class_so.o : ../../Modules/io_global.o
@@ -506,7 +506,6 @@ forces.o : ../../Modules/io_global.o
 forces.o : ../../Modules/ions_base.o
 forces.o : ../../Modules/kind.o
 forces.o : ../../Modules/mm_dispersion.o
-forces.o : ../../Modules/mp_global.o
 forces.o : ../../Modules/recvec.o
 forces.o : ../../Modules/uspp.o
 forces.o : bp_mod.o
@@ -1304,6 +1303,8 @@ s_1psi.o : realus.o
 s_psi.o : ../../Modules/control_flags.o
 s_psi.o : ../../Modules/ions_base.o
 s_psi.o : ../../Modules/kind.o
+s_psi.o : ../../Modules/mp.o
+s_psi.o : ../../Modules/mp_global.o
 s_psi.o : ../../Modules/uspp.o
 s_psi.o : becmod.o
 s_psi.o : noncol.o

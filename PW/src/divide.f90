@@ -7,38 +7,49 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine divide (ntodiv, startn, lastn)
+subroutine divide (ntodiv, startn, lastn, comm)
   !-----------------------------------------------------------------------
   ! Divide the bands among processors in the phonon code
   !
-  USE mp_global, ONLY : me_bgrp, nproc_bgrp
+  USE mp, ONLY : mp_size, mp_rank
   !
 #ifdef __MPI
   !
   implicit none
-
+  !
+  integer :: comm
+  !
   integer :: ntodiv, startn, lastn
   ! input: the number to divide
   ! output: the first band of this processor
   ! output: the last band of this processor
-
+  !
+  integer :: me_comm, nproc_comm
+  !
   integer :: nb, resto, idx, ip
   ! number of bands per processor
   ! one additional band if me_pool+1 <= resto
   ! counter on bands
   ! counter on processors
-  nb = ntodiv / nproc_bgrp
-  resto = ntodiv - nb * nproc_bgrp
+  !
+  nproc_comm = mp_size(comm)
+  me_comm = mp_rank(comm)
+  !
+  write(0,*) "nproc_comm: ", nproc_comm
+   write(0,*) "me_comm: ", me_comm
+  !
+  nb = ntodiv / nproc_comm
+  resto = ntodiv - nb * nproc_comm
   idx = 0
-  do ip = 1, nproc_bgrp
+  do ip = 1, nproc_comm
      if (ip.le.resto) then
-        if (me_bgrp+1.eq.ip) then
+        if (me_comm+1.eq.ip) then
            startn = idx + 1
            lastn = startn + nb
         endif
         idx = idx + nb + 1
      else
-        if (me_bgrp+1.eq.ip) then
+        if (me_comm+1.eq.ip) then
            startn = idx + 1
            lastn = startn + nb - 1
         endif

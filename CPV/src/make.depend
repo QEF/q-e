@@ -785,7 +785,6 @@ potentials.o : ../../Modules/constants.o
 potentials.o : ../../Modules/control_flags.o
 potentials.o : ../../Modules/fft_base.o
 potentials.o : ../../Modules/fft_interfaces.o
-potentials.o : ../../Modules/io_files.o
 potentials.o : ../../Modules/io_global.o
 potentials.o : ../../Modules/ions_base.o
 potentials.o : ../../Modules/kind.o
@@ -795,7 +794,6 @@ potentials.o : ../../Modules/recvec.o
 potentials.o : ../../Modules/sic.o
 potentials.o : atoms_type.o
 potentials.o : gvecw.o
-potentials.o : mainvar.o
 pres_ai_mod.o : ../../Modules/constants.o
 pres_ai_mod.o : ../../Modules/kind.o
 pres_ai_mod.o : ../../Modules/parameters.o

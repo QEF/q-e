@@ -25,7 +25,9 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
   USE qpoint,  ONLY : npwq, ikks
   USE phus,    ONLY : becp1
   USE control_ph, ONLY : nbnd_occ
-
+  !
+  USE mp_global, ONLY : intra_pool_comm
+  !
   implicit none
   !
   !   the dummy variables
@@ -71,7 +73,7 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
   !
   !  Band parallelization: each processor takes care of its slice of bands
   !
-  call divide (nbnd_occ (ikk), startb, lastb)
+  call divide (nbnd_occ (ikk), startb, lastb, intra_pool_comm)
   !
   ijkb0 = 0
   do nt = 1, ntyp

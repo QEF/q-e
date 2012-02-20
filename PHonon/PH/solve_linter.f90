@@ -571,7 +571,7 @@ IMPLICIT NONE
 INTEGER :: in1, in2, flag, ndim, startb, lastb
 COMPLEX(DP) :: mix(in1+in2), dvscfout(in1), dbecsum(in2)
 
-CALL divide (in2, startb, lastb)
+CALL divide (in2, startb, lastb, intra_pool_comm)
 ndim=lastb-startb+1
 
 IF (flag==-1) THEN
