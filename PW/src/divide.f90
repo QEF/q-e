@@ -35,9 +35,6 @@ subroutine divide (ntodiv, startn, lastn, comm)
   nproc_comm = mp_size(comm)
   me_comm = mp_rank(comm)
   !
-  write(0,*) "nproc_comm: ", nproc_comm
-   write(0,*) "me_comm: ", me_comm
-  !
   nb = ntodiv / nproc_comm
   resto = ntodiv - nb * nproc_comm
   idx = 0
