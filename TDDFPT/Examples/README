@@ -1,10 +1,10 @@
 Time Dependent Density Functional Perturbation Theory (TDDFPT)
 
-Run examples after compiling by running "make" 
+To run all examples do "make normal_test" 
 
 "make clean" resets the tests 
 
-"make small_test" runs a short test
+"make small_test" runs a short test, useful for checking compilation
 
 each example can be run separately by running "make" in its designated directory
 
@@ -15,6 +15,7 @@ Benzene: Benzene molecule, Tests the real_space and tqr implementations
 CH4: Tests Norm Conserving PP implementation
 CH4-PR: Tests charge response algorithm
 SiH4: Tests Ultrasoft PP implementation
+CH4-BOND: This is an example that shows visual analysis of a softened bond in a set of degenerate bonds. 
 tools: Tools to compare data. 
 
 

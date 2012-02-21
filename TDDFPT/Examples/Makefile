@@ -1,12 +1,12 @@
 # Makefile for TDDFPT Examples
 #Modified for v4.0 by obm
 
-default: all
+default: small_test
 
 
-all:	
+normal_test:	
 	for dir in \
-		CH4 SiH4 CH4-PR Benzene\
+		CH4 SiH4 CH4-PR Benzene CH4-BOND\
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \

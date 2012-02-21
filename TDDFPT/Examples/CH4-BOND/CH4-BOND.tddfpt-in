@@ -1,0 +1,10 @@
+&lr_input
+    prefix='ch4-bond'
+    outdir='./out',
+    restart_step=500,
+/
+&lr_control
+    itermax=1500,
+    ipol=4
+/
+
