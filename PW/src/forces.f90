@@ -40,7 +40,7 @@ SUBROUTINE forces()
   USE control_flags, ONLY : gamma_only, remove_rigid_rot, textfor, &
                             iverbosity, llondon
 #ifdef __ENVIRON
-  USE environ_base,  ONLY : do_environ, env_static_permittivity, eps_mode, rhopol
+  USE environ_base,  ONLY : do_environ, env_static_permittivity, rhopol
 #endif
   USE bp,            ONLY : lelfield, gdir, l3dstring, efield_cart, &
                             efield_cry,efield
@@ -131,29 +131,23 @@ SUBROUTINE forces()
     !
     ! ... The external environment contribution
     !
-    CALL start_clock('calc_fsolv')
-    !
     ALLOCATE ( force_environ ( 3 , nat ) )
-    !
     force_environ = 0.0_DP
+    ! 
+    ! ... Computes here the solvent contribution
     !
-    IF ( env_static_permittivity .GT. 1.D0 ) THEN
-      !
-      IF ( TRIM(eps_mode) .NE. 'ionic' ) THEN
-        CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
-                       g, rhopol, nl, 1, gstart, gamma_only, vloc, &
-                       force_environ )
-      ELSE
-        CALL calc_fsolvent( dfftp%nnr, force_environ )
-      END IF
-      !
-    END IF
+    IF ( env_static_permittivity .GT. 1.D0 ) & 
+    CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
+                   g, rhopol, nl, 1, gstart, gamma_only, vloc, &
+                   force_environ )
     !
-    CALL stop_clock('calc_fsolv')
+    ! ... Add the other environment contributions
+    !
+    CALL calc_fenviron( dfftp%nnr, nat, force_environ )
     !
   END IF
+  !
 #endif
-
   !
   ! Berry's phase electric field terms
   !
