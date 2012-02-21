@@ -271,15 +271,16 @@ MODULE read_namelists_module
        CHARACTER(LEN=2) :: prog   ! ... specify the calling program
        !
        !
-       verbose         = 0
-       environ_thr = 1.D-1
+       verbose      = 0
+       environ_thr  = 1.D-1
+       environ_type = 'input'
        !
        stype   = 1
        rhomax  = 0.005
        rhomin  = 0.0001
        tbeta   = 4.8
        !
-       env_static_permittivity = 78.D0
+       env_static_permittivity = 1.D0
        eps_mode        = 'electronic'
        solvationrad(:) = 3.D0
        atomicspread(:) = 0.5D0
@@ -290,10 +291,10 @@ MODULE read_namelists_module
        mixrhopol = 0.5
        tolrhopol = 1.D-10
        !
-       env_surface_tension = 50.D0
+       env_surface_tension = 0.D0
        delta = 0.00001D0
        !
-       env_pressure = -0.35D0
+       env_pressure = 0.D0
        !
        RETURN
        !
@@ -904,6 +905,7 @@ MODULE read_namelists_module
        !
        CALL mp_bcast( verbose,                    ionode_id )
        CALL mp_bcast( environ_thr,                ionode_id )
+       CALL mp_bcast( environ_type,               ionode_id )
        !
        CALL mp_bcast( stype,                      ionode_id )
        CALL mp_bcast( rhomax,                     ionode_id )

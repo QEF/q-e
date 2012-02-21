@@ -8,7 +8,7 @@
 !
 !
 !----------------------------------------------------------------------
-! Module to finite differences gradients on dense real space grid
+! Module to compute finite differences gradients on dense real space grid
 ! Written by Oliviero Andreussi
 !----------------------------------------------------------------------
 !

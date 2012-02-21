@@ -517,6 +517,12 @@ MODULE input_parameters
         !    2: prints 3D cube files of physical properties
         REAL(DP) :: environ_thr = 1.d-1
         ! how early in scf should the corrective pot start being calculated
+        CHARACTER( LEN = 256 ) :: environ_type = 'input'
+        ! keyword to set up all the environment parameters at once to a specific set
+        ! vacuum = all the flags are off (perm=1.d0, surf=0.0, pres=0.0)
+        ! water = parameters optimized for water solutions in Andreussi et al. 
+        !         J. Chem. Phys. 136, 064102 (perm=78, surf=50, pres=-0.35)
+        ! input = do not use any predefined set, use paramters from input
 !
 ! Switching function parameters
 !
@@ -534,7 +540,7 @@ MODULE input_parameters
 !
 ! Dielectric solvent parameters
 !
-        REAL(DP) :: env_static_permittivity = 78.D0
+        REAL(DP) :: env_static_permittivity = 1.D0
         ! static dielectric permittivity of the solvation model. If set equal
         ! to one (=vacuum) no dielectric effects
         CHARACTER( LEN = 256 ) :: eps_mode = 'electronic'
@@ -584,7 +590,7 @@ MODULE input_parameters
         ! external pressure for PV energy, if equal to zero no pressure term 
 
         NAMELIST / environ /                                           &
-             verbose, environ_thr,                                     &
+             verbose, environ_thr, environ_type,                       &
              stype, rhomax, rhomin, tbeta,                             &
              env_static_permittivity, eps_mode,                        &
              solvationrad, atomicspread,                               &

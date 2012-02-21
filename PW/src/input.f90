@@ -256,13 +256,13 @@ SUBROUTINE iosys()
   !
   ! ... ENVIRON namelist
   !
-  USE input_parameters, ONLY : verbose, environ_thr,              &
-                               stype, rhomax, rhomin, tbeta,      &
-                               env_static_permittivity, eps_mode, &
-                               solvationrad, atomicspread,        &
-                               ifdtype, nfdpoint,                 &
-                               mixrhopol, tolrhopol,              &
-                               env_surface_tension, delta,        &
+  USE input_parameters, ONLY : verbose, environ_thr, environ_type,  &
+                               stype, rhomax, rhomin, tbeta,        &
+                               env_static_permittivity, eps_mode,   &
+                               solvationrad, atomicspread,          &
+                               ifdtype, nfdpoint,                   &
+                               mixrhopol, tolrhopol,                &
+                               env_surface_tension, delta,          &
                                env_pressure 
 #endif
   !
@@ -1206,24 +1206,41 @@ SUBROUTINE iosys()
     tbeta_  = LOG( rhomax / rhomin )
   END IF
   !
-  env_static_permittivity_ = env_static_permittivity
   eps_mode_ = eps_mode
   ALLOCATE( solvationrad_( ntyp ) )
   solvationrad_( 1:ntyp ) = solvationrad( 1:ntyp )
   ALLOCATE( atomicspread_( ntyp ) )
   atomicspread_( 1:ntyp ) = atomicspread( 1:ntyp )
   !
-  ifdtype_ = ifdtype
-  nfdpoint_ = nfdpoint
+  ifdtype_   = ifdtype
+  nfdpoint_  = nfdpoint
   !
   mixrhopol_ = mixrhopol
   tolrhopol_ = tolrhopol
   !
-  env_surface_tension_ = &
-    env_surface_tension*1.D-3*bohr_radius_si**2/rydberg_si
-  delta_      = delta
+  delta_     = delta
   !
-  env_pressure_ = env_pressure*1.D9/rydberg_si*bohr_radius_si**3
+  SELECT CASE (TRIM(environ_type))
+  ! if a specific environ is selected use hardcoded parameters
+  CASE ('vacuum')
+    ! vacuum, all flags off
+    env_static_permittivity_ = 1.D0
+    env_surface_tension_ = 0.D0
+    env_pressure_ = 0.D0
+  CASE ('water')
+    ! water, experimental and SCCS tuned parameters
+    env_static_permittivity_ = 78.3D0
+    env_surface_tension_ = 50.D0*1.D-3*bohr_radius_si**2/rydberg_si
+    env_pressure_ = -0.35D0*1.D9/rydberg_si*bohr_radius_si**3
+  CASE ('input')
+    ! take values from input, this is the default option
+    env_static_permittivity_ = env_static_permittivity
+    env_surface_tension_ = &
+      env_surface_tension*1.D-3*bohr_radius_si**2/rydberg_si
+    env_pressure_ = env_pressure*1.D9/rydberg_si*bohr_radius_si**3
+  CASE DEFAULT
+    call errore ('iosys','unrecognized value for environ_type',1) 
+  END SELECT    
   !
 #endif
   !
