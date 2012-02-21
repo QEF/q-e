@@ -23,7 +23,8 @@ SUBROUTINE makov_payne( etot )
   USE scf,       ONLY : rho
   USE lsda_mod,  ONLY : nspin
 #ifdef __ENVIRON
-  USE environ_base, ONLY : do_environ, pol_dipole, pol_quadrupole, rhopol
+  USE environ_base, ONLY : do_environ, env_static_permittivity, &
+                           pol_dipole, pol_quadrupole, rhopol
 #endif
   !
   IMPLICIT NONE
@@ -52,7 +53,7 @@ SUBROUTINE makov_payne( etot )
   CALL compute_dipole( dfftp%nnr, nspin, rho%of_r, x0, e_dipole, e_quadrupole )
   !
 #ifdef __ENVIRON
-  IF ( do_environ ) &
+  IF ( do_environ .AND. env_static_permittivity .GT. 1.D0 ) &
     CALL compute_dipole( dfftp%nnr, 1, rhopol, x0, pol_dipole, pol_quadrupole )
 #endif  
   !
