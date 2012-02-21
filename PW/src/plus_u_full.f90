@@ -460,8 +460,6 @@ CONTAINS
       lm = l**2 + m
       n_starting_wfc = n_starting_wfc + 1
 
-   write(6,*) m, n_starting_wfc, natomwfc
-
       if (n_starting_wfc + 2*l+1 > natomwfc) call errore &
             ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
       do ig=1,npw
