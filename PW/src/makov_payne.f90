@@ -19,8 +19,11 @@ SUBROUTINE makov_payne( etot )
   USE io_global, ONLY : stdout
   USE ions_base, ONLY : nat, tau, ityp, zv
   USE cell_base, ONLY : at, bg
+  USE fft_base,  ONLY : dfftp
+  USE scf,       ONLY : rho
+  USE lsda_mod,  ONLY : nspin
 #ifdef __ENVIRON
-  USE environ_base, ONLY : do_environ, pol_dipole, pol_quadrupole
+  USE environ_base, ONLY : do_environ, pol_dipole, pol_quadrupole, rhopol
 #endif
   !
   IMPLICIT NONE
@@ -46,10 +49,11 @@ SUBROUTINE makov_payne( etot )
   !
   x0(:) = x0(:) / zvtot
   !
-  CALL compute_e_dipole( x0, e_dipole, e_quadrupole )
-#ifdef __ENVIRON
+  CALL compute_dipole( dfftp%nnr, nspin, rho%of_r, x0, e_dipole, e_quadrupole )
   !
-  IF ( do_environ ) CALL compute_pol_dipole( x0, pol_dipole, pol_quadrupole )
+#ifdef __ENVIRON
+  IF ( do_environ ) &
+    CALL compute_dipole( dfftp%nnr, 1, rhopol, x0, pol_dipole, pol_quadrupole )
 #endif  
   !
   CALL write_dipole( etot, x0, e_dipole, e_quadrupole, qq )
@@ -59,106 +63,6 @@ SUBROUTINE makov_payne( etot )
   RETURN
   !
 END SUBROUTINE makov_payne
-!
-!---------------------------------------------------------------------------
-SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
-  !---------------------------------------------------------------------------
-  !
-  USE io_global,  ONLY : stdout
-  USE kinds,      ONLY : DP
-  USE ions_base,  ONLY : nat, tau
-  USE cell_base,  ONLY : at, bg, omega, alat
-  USE scf,        ONLY : rho
-  USE lsda_mod,   ONLY : nspin
-  USE fft_base,   ONLY : dfftp
-  USE mp_global,  ONLY : me_bgrp, intra_bgrp_comm
-  USE mp,         ONLY : mp_sum
-  !
-  IMPLICIT NONE
-  !
-  REAL(DP), INTENT(IN)  :: x0(3)
-  REAL(DP), INTENT(OUT) :: e_dipole(0:3), e_quadrupole
-  !
-  REAL(DP) :: r(3), rhoir
-  INTEGER  :: i, j, k, ip, ir, index, index0
-  REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
-  !
-  !
-  inv_nr1 = 1.D0 / DBLE( dfftp%nr1 )
-  inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
-  inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
-  !
-  e_dipole(:)  = 0.D0
-  e_quadrupole = 0.D0
-  !
-  index0 = 0
-  !
-#if defined (__MPI)
-  !
-  DO i = 1, me_bgrp
-     index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
-  END DO
-  !
-#endif
-  !
-  DO ir = 1, dfftp%nnr
-     !
-     ! ... three dimensional indexes
-     !
-     index = index0 + ir - 1
-     k     = index / (dfftp%nr1x*dfftp%nr2x)
-     index = index - (dfftp%nr1x*dfftp%nr2x)*k
-     j     = index / dfftp%nr1x
-     index = index - dfftp%nr1x*j
-     i     = index
-     !
-     DO ip = 1, 3
-        r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
-                DBLE( j )*inv_nr2*at(ip,2) + &
-                DBLE( k )*inv_nr3*at(ip,3)
-     END DO
-     !
-     r(:) = r(:) - x0(:)
-     !
-     ! ... minimum image convenction
-     !
-     CALL cryst_to_cart( 1, r, bg, -1 )
-     !
-     r(:) = r(:) - ANINT( r(:) )
-     !
-     CALL cryst_to_cart( 1, r, at, 1 )
-     !
-     rhoir = rho%of_r(ir,1)
-     !
-     IF ( nspin == 2 ) rhoir = rhoir + rho%of_r(ir,2)
-     !
-     ! ... dipole(0) = charge density
-     !
-     e_dipole(0) = e_dipole(0) + rhoir
-     !
-     DO ip = 1, 3
-        !
-        e_dipole(ip) = e_dipole(ip) + rhoir*r(ip)
-        e_quadrupole = e_quadrupole + rhoir*r(ip)**2
-        !
-     END DO
-     !
-  END DO
-  !
-  CALL mp_sum(  e_dipole(0:3) , intra_bgrp_comm )
-  CALL mp_sum(  e_quadrupole  , intra_bgrp_comm )
-  !
-  e_dipole(0) = e_dipole(0)*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
-  !
-  DO ip = 1, 3
-     e_dipole(ip) = e_dipole(ip)*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) * alat
-  END DO
-  !
-  e_quadrupole = e_quadrupole*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) * alat**2
-  !
-  RETURN
-  !
-END SUBROUTINE compute_e_dipole
 !
 !---------------------------------------------------------------------------
 SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
@@ -490,104 +394,3 @@ SUBROUTINE vacuum_level( x0, zion )
   !
 END SUBROUTINE vacuum_level
 
-#ifdef __ENVIRON
-!---------------------------------------------------------------------------
-SUBROUTINE compute_pol_dipole( x0, pol_dipole, pol_quadrupole )
-  !---------------------------------------------------------------------------
-  !
-  USE io_global,  ONLY : stdout
-  USE kinds,      ONLY : DP
-  USE ions_base,  ONLY : nat, tau
-  USE cell_base,  ONLY : at, bg, omega, alat
-  USE environ_base, ONLY : env_static_permittivity, rhopol
-  USE fft_base,   ONLY : dfftp
-  USE mp_global,  ONLY : me_bgrp, intra_bgrp_comm
-  USE mp,         ONLY : mp_sum
-  !
-  IMPLICIT NONE
-  !
-  REAL(DP), INTENT(IN)  :: x0(3)
-  REAL(DP), INTENT(OUT) :: pol_dipole(0:3), pol_quadrupole
-  !
-  REAL(DP) :: r(3), rhoir
-  INTEGER  :: i, j, k, ip, ir, index, index0
-  REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
-  !
-  !
-  inv_nr1 = 1.D0 / DBLE( dfftp%nr1 )
-  inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
-  inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
-  !
-  pol_dipole(:)  = 0.D0
-  pol_quadrupole = 0.D0
-  !
-  IF ( env_static_permittivity .LE. 1.D0 ) RETURN
-  !
-  index0 = 0
-  !
-#if defined (__MPI)
-  !
-  DO i = 1, me_bgrp
-     index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
-  END DO
-  !
-#endif
-  !
-  DO ir = 1, dfftp%nnr
-     !
-     ! ... three dimensional indexes
-     !
-     index = index0 + ir - 1
-     k     = index / (dfftp%nr1x*dfftp%nr2x)
-     index = index - (dfftp%nr1x*dfftp%nr2x)*k
-     j     = index / dfftp%nr1x
-     index = index - dfftp%nr1x*j
-     i     = index
-     !
-     DO ip = 1, 3
-        r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
-                DBLE( j )*inv_nr2*at(ip,2) + &
-                DBLE( k )*inv_nr3*at(ip,3)
-     END DO
-     !
-     r(:) = r(:) - x0(:)
-     !
-     ! ... minimum image convenction
-     !
-     CALL cryst_to_cart( 1, r, bg, -1 )
-     !
-     r(:) = r(:) - ANINT( r(:) )
-     !
-     CALL cryst_to_cart( 1, r, at, 1 )
-     !
-     rhoir = rhopol(ir)
-     !
-     ! ... dipole(0) = charge density
-     !
-     pol_dipole(0) = pol_dipole(0) + rhoir
-     !
-     DO ip = 1, 3
-        !
-        pol_dipole(ip) = pol_dipole(ip) + rhoir*r(ip)
-        pol_quadrupole = pol_quadrupole + rhoir*r(ip)**2
-        !
-     END DO
-     !
-  END DO
-  !
-  CALL mp_sum(  pol_dipole(0:3) , intra_bgrp_comm )
-  CALL mp_sum(  pol_quadrupole  , intra_bgrp_comm )
-  !
-  pol_dipole(0) = pol_dipole(0)*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
-  !
-  DO ip = 1, 3
-     pol_dipole(ip) = pol_dipole(ip)*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) * alat
-  END DO
-  !
-  pol_quadrupole = pol_quadrupole*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) * alat**2
-  !
-  RETURN
-  !
-END SUBROUTINE compute_pol_dipole
-!
-#endif

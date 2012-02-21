@@ -13,6 +13,7 @@ bfgs_module.o \
 cell_base.o  \
 check_stop.o  \
 clocks.o \
+compute_dipole.o \
 constants.o \
 constraints_module.o \
 control_flags.o \

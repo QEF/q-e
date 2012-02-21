@@ -24,6 +24,11 @@ check_stop.o : set_signal.o
 clocks.o : io_global.o
 clocks.o : kind.o
 clocks.o : mp_global.o
+compute_dipole.o : cell_base.o
+compute_dipole.o : fft_base.o
+compute_dipole.o : kind.o
+compute_dipole.o : mp.o
+compute_dipole.o : mp_global.o
 constants.o : kind.o
 constraints_module.o : basic_algebra_routines.o
 constraints_module.o : cell_base.o
