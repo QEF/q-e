@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine dv_of_drho (mode, dvscf, flag)
+subroutine dv_of_drho (mode, dvscf, add_nlcc)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the change of the self consistent potential
@@ -39,7 +39,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   ! input: the change of the charge,
   ! output: change of the potential
 
-  logical :: flag
+  logical :: add_nlcc
   ! input: if true add core charge
 
   integer :: ir, is, is1, ig
@@ -58,13 +58,13 @@ subroutine dv_of_drho (mode, dvscf, flag)
   call start_clock ('dv_of_drho')
   allocate (dvaux( dfftp%nnr,  nspin_mag))
   dvaux (:,:) = (0.d0, 0.d0)
-  if (flag) allocate (drhoc( dfftp%nnr))
+  if (add_nlcc) allocate (drhoc( dfftp%nnr))
   !
   ! the exchange-correlation contribution is computed in real space
   !
   if (lrpa) goto 111
   fac = 1.d0 / DBLE (nspin_lsda)
-  if (nlcc_any.and.flag) then
+  if (nlcc_any.and.add_nlcc) then
      if (mode > 0) call addcore (mode, drhoc)
      do is = 1, nspin_lsda
         rho%of_r(:, is) = rho%of_r(:, is) + fac * rho_core (:)
@@ -87,7 +87,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   if ( dft_is_gradient() ) call dgradcorr &
        (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
        dvscf, dfftp%nnr, nspin_mag, nspin_gga, nl, ngm, g, alat, dvaux)
-  if (nlcc_any.and.flag) then
+  if (nlcc_any.and.add_nlcc) then
      do is = 1, nspin_lsda
         rho%of_r(:, is) = rho%of_r(:, is) - fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) - fac * drhoc (:)
@@ -149,7 +149,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
     dvscf (:,:) = dvaux (:,:)
   endif
   !
-  if (flag) deallocate (drhoc)
+  if (add_nlcc) deallocate (drhoc)
   deallocate (dvaux)
   call stop_clock ('dv_of_drho')
   return
