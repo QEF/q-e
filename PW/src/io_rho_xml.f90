@@ -267,8 +267,7 @@ MODULE io_rho_xml
       USE io_files, ONLY : tmp_dir, prefix
       USE fft_base, ONLY : dfftp
       USE spin_orb, ONLY : domag
-      USE io_global, ONLY : ionode
-      USE mp_global, ONLY : intra_bgrp_comm, inter_bgrp_comm
+      USE mp_global, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_pool, me_pool
       !
       IMPLICIT NONE
       !
@@ -280,6 +279,9 @@ MODULE io_rho_xml
       CHARACTER(LEN=256)    :: ext
       REAL(DP), ALLOCATABLE :: rhoaux(:)
       !
+      LOGICAL :: my_ionode=.false.
+      !
+      if(me_pool==root_pool) my_ionode=.true.
       !
       ext = ' '
       !
@@ -293,7 +295,7 @@ MODULE io_rho_xml
          !
          CALL read_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_bgrp_comm, inter_bgrp_comm ) 
+                  my_ionode, intra_bgrp_comm, inter_bgrp_comm ) 
          !
       ELSE IF ( nspin == 2 ) THEN
          !
@@ -301,7 +303,7 @@ MODULE io_rho_xml
          !
          CALL read_rho_xml( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, & 
-                  ionode, intra_bgrp_comm, inter_bgrp_comm ) 
+                  my_ionode, intra_bgrp_comm, inter_bgrp_comm ) 
          !
          rho(:,1) = rhoaux(:)
          rho(:,2) = rhoaux(:)
@@ -310,7 +312,7 @@ MODULE io_rho_xml
          !
          CALL read_rho_xml( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_bgrp_comm, inter_bgrp_comm )
+                  my_ionode, intra_bgrp_comm, inter_bgrp_comm )
          !
          rho(:,1) = 0.5D0*( rho(:,1) + rhoaux(:) )
          rho(:,2) = 0.5D0*( rho(:,2) - rhoaux(:) )
@@ -321,7 +323,7 @@ MODULE io_rho_xml
          !
          CALL read_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_bgrp_comm, inter_bgrp_comm )
+                  my_ionode, intra_bgrp_comm, inter_bgrp_comm )
          !
          IF ( domag ) THEN
             !
@@ -329,19 +331,19 @@ MODULE io_rho_xml
             !
             CALL read_rho_xml( file_base, rho(:,2), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_bgrp_comm, inter_bgrp_comm )
+                  my_ionode, intra_bgrp_comm, inter_bgrp_comm )
             !
             file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
             !
             CALL read_rho_xml( file_base, rho(:,3), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_bgrp_comm, inter_bgrp_comm )
+                  my_ionode, intra_bgrp_comm, inter_bgrp_comm )
             !
             file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
             !
             CALL read_rho_xml( file_base, rho(:,4), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  ionode, intra_bgrp_comm, inter_bgrp_comm )
+                  my_ionode, intra_bgrp_comm, inter_bgrp_comm )
             !
          ELSE
             !
