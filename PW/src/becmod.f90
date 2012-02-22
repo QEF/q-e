@@ -26,12 +26,16 @@ MODULE becmod
      REAL(DP),   POINTER :: r(:,:)    ! appropriate for gammaonly
      COMPLEX(DP),POINTER :: k(:,:)    ! appropriate for generic k
      COMPLEX(DP),POINTER :: nc(:,:,:)   ! appropriate for noncolin
+     INTEGER :: comm
+     INTEGER :: nbnd
   END TYPE bec_type
 #else
   TYPE bec_type
      REAL(DP),   ALLOCATABLE :: r(:,:)    ! appropriate for gammaonly
      COMPLEX(DP),ALLOCATABLE :: k(:,:)    ! appropriate for generic k
      COMPLEX(DP),ALLOCATABLE :: nc(:,:,:)   ! appropriate for noncolin
+     INTEGER :: comm
+     INTEGER :: nbnd
   END TYPE bec_type
 #endif
   !
@@ -65,6 +69,8 @@ CONTAINS
   SUBROUTINE calbec_bec_type ( npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
     !
+    USE mp, ONLY: mp_size, mp_rank, mp_get_comm_null
+    !
     IMPLICIT NONE
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
     TYPE (bec_type), INTENT (inout) :: betapsi ! NB: must be INOUT otherwise
@@ -73,6 +79,10 @@ CONTAINS
     INTEGER, OPTIONAL :: nbnd
     !
     INTEGER :: local_nbnd
+    INTEGER, EXTERNAL :: ldim_block, lind_block, gind_block
+    INTEGER :: nproc, mype, m_loc, m_begin, m_max, ip
+    INTEGER :: ibnd, ibnd_loc
+    REAL(DP), ALLOCATABLE :: dtmp(:,:)
     !
     IF ( present (nbnd) ) THEN
         local_nbnd = nbnd
@@ -81,7 +91,38 @@ CONTAINS
     ENDIF
 
     IF ( gamma_only ) THEN
-       CALL calbec_gamma ( npw, beta, psi, betapsi%r, local_nbnd )
+       !
+       IF( betapsi%comm == mp_get_comm_null() ) THEN
+          !
+          CALL calbec_gamma ( npw, beta, psi, betapsi%r, local_nbnd )
+          !
+       ELSE
+
+          nproc = mp_size( betapsi%comm ) 
+          mype  = mp_rank( betapsi%comm )
+          m_max   = betapsi%nbnd / nproc
+          IF( MOD( betapsi%nbnd, nproc ) /= 0 ) m_max = m_max + 1
+          m_loc   = ldim_block( betapsi%nbnd , nproc, mype )
+          m_begin = gind_block( 1,  betapsi%nbnd, nproc, mype )
+          IF( ( m_begin + m_loc - 1 ) > local_nbnd ) m_loc = local_nbnd - m_begin + 1
+          !
+          ALLOCATE( dtmp( SIZE( betapsi%r, 1 ), m_max ) )
+          !
+          DO ip = 0, nproc - 1
+             m_loc   = ldim_block( betapsi%nbnd , nproc, ip )
+             m_begin = gind_block( 1,  betapsi%nbnd, nproc, ip )
+             IF( ( m_begin + m_loc - 1 ) > local_nbnd ) m_loc = local_nbnd - m_begin + 1
+             IF( m_loc > 0 ) THEN
+                CALL calbec_gamma ( npw, beta, psi(:,m_begin:m_begin+m_loc-1), dtmp, m_loc )
+                IF( ip == mype ) THEN
+                   betapsi%r(:,1:m_loc) = dtmp(:,1:m_loc)
+                END IF
+             END IF
+          END DO
+
+          DEALLOCATE( dtmp )
+          !
+       END IF
        !
     ELSEIF ( noncolin) THEN
        !
@@ -266,21 +307,37 @@ CONTAINS
   END SUBROUTINE calbec_nc
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE allocate_bec_type ( nkb, nbnd, bec )
+  SUBROUTINE allocate_bec_type ( nkb, nbnd, bec, comm )
     !-----------------------------------------------------------------------
+    USE :: mp, ONLY: mp_size, mp_get_comm_null
     IMPLICIT NONE
     TYPE (bec_type) :: bec
     INTEGER, INTENT (in) :: nkb, nbnd
-    INTEGER :: ierr
+    INTEGER, INTENT (in), OPTIONAL :: comm
+    INTEGER :: ierr, nbnd_siz, nproc
     !
 #ifdef __STD_F95
     NULLIFY(bec%r)
     NULLIFY(bec%nc)
     NULLIFY(bec%k)
 #endif
+    !
+    nbnd_siz = nbnd
+    bec%comm = mp_get_comm_null()
+    bec%nbnd = nbnd
+    !
+    IF( PRESENT( comm ) ) THEN
+       bec%comm = comm
+       nproc = mp_size( comm )
+       IF( nproc > 1 ) THEN
+          nbnd_siz   = nbnd / nproc
+          IF( MOD( nbnd, nproc ) /= 0 ) nbnd_siz = nbnd_siz + 1
+       END IF
+    END IF
+    !
     IF ( gamma_only ) THEN
        !
-       ALLOCATE( bec%r( nkb, nbnd ), STAT=ierr )
+       ALLOCATE( bec%r( nkb, nbnd_siz ), STAT=ierr )
        IF( ierr /= 0 ) &
           CALL errore( ' allocate_bec_type ', ' cannot allocate bec%r ', ABS(ierr) )
        !
@@ -288,7 +345,7 @@ CONTAINS
        !
     ELSEIF ( noncolin) THEN
        !
-       ALLOCATE( bec%nc( nkb, npol, nbnd ), STAT=ierr )
+       ALLOCATE( bec%nc( nkb, npol, nbnd_siz ), STAT=ierr )
        IF( ierr /= 0 ) &
           CALL errore( ' allocate_bec_type ', ' cannot allocate bec%nc ', ABS(ierr) )
        !
@@ -296,7 +353,7 @@ CONTAINS
        !
     ELSE
        !
-       ALLOCATE( bec%k( nkb, nbnd ), STAT=ierr )
+       ALLOCATE( bec%k( nkb, nbnd_siz ), STAT=ierr )
        IF( ierr /= 0 ) &
           CALL errore( ' allocate_bec_type ', ' cannot allocate bec%k ', ABS(ierr) )
        !
@@ -312,8 +369,12 @@ CONTAINS
   SUBROUTINE deallocate_bec_type (bec)
     !-----------------------------------------------------------------------
     !
+    USE :: mp, ONLY: mp_get_comm_null
     IMPLICIT NONE
     TYPE (bec_type) :: bec
+    !
+    bec%comm = mp_get_comm_null()
+    bec%nbnd = 0
     !
 #ifdef __STD_F95
     IF (associated(bec%r))  DEALLOCATE(bec%r)

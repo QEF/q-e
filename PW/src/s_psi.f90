@@ -94,10 +94,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        ! ... gamma version
        !
        USE becmod, ONLY : bec_type, becp
-#if defined __SCALAPACK
-       USE mp_global, ONLY: nproc_bgrp, intra_bgrp_comm, me_bgrp
-       USE mp, ONLY: mp_circular_shift_left
-#endif
+       USE mp, ONLY: mp_size, mp_rank, mp_get_comm_null, mp_circular_shift_left
        !
        IMPLICIT NONE  
        !
@@ -105,31 +102,28 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        !
        INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd, ierr
          ! counters
-       INTEGER :: m_loc, m_begin, ibnd_loc, icyc, icur_blk, m_max
+       INTEGER :: nproc, mype, m_loc, m_begin, ibnd_loc, icyc, icur_blk, m_max
          ! data distribution indexes
-#if defined __SCALAPACK
        INTEGER, EXTERNAL :: ldim_block, lind_block, gind_block
          ! data distribution functions
-#endif
        REAL(DP), ALLOCATABLE :: ps(:,:)
          ! the product vkb and psi
        !
-#if defined __SCALAPACK
-       IF( m == 1 ) THEN
-          m_loc   = 1
-          m_begin = 1
-          m_max   = 1
-       ELSE
-          m_loc   = ldim_block( m , nproc_bgrp, me_bgrp )
-          m_begin = gind_block( 1,  m, nproc_bgrp, me_bgrp )
-          m_max   = m / nproc_bgrp
-          IF( MOD( m, nproc_bgrp ) /= 0 ) m_max = m_max + 1
-       END IF
-#else
        m_loc   = m
        m_begin = 1
        m_max   = m
-#endif
+       nproc   = 1
+       mype    = 0
+       !
+       IF( becp%comm /= mp_get_comm_null() ) THEN
+          nproc = mp_size( becp%comm ) 
+          mype  = mp_rank( becp%comm )
+          m_loc   = ldim_block( becp%nbnd , nproc, mype )
+          m_begin = gind_block( 1,  becp%nbnd, nproc, mype )
+          m_max   = becp%nbnd / nproc
+          IF( MOD( becp%nbnd, nproc ) /= 0 ) m_max = m_max + 1
+          IF( ( m_begin + m_loc - 1 ) > m ) m_loc = m - m_begin + 1
+       END IF
        !
        ALLOCATE( ps( nkb, m_max ), STAT=ierr )
        IF( ierr /= 0 ) &
@@ -149,7 +143,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
                          DO ih = 1, nh(nt)
                             ikb = ijkb0 + ih
                             ps(ikb,ibnd_loc) = ps(ikb,ibnd_loc) + &
-                                           qq(ih,jh,nt) * becp%r(jkb,ibnd)
+                                           qq(ih,jh,nt) * becp%r(jkb,ibnd_loc)
                          END DO
                       END DO
                    END DO
@@ -163,39 +157,42 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
           END IF
        END DO
        !
-       IF ( m == 1 ) THEN
+       IF( becp%comm /= mp_get_comm_null() ) THEN
+          !
+          ! parallel block multiplication of vkb and ps
+          !
+          icur_blk = mype
+          !
+          DO icyc = 0, nproc - 1
+
+             m_loc   = ldim_block( becp%nbnd , nproc, icur_blk )
+             m_begin = gind_block( 1,  becp%nbnd, nproc, icur_blk )
+
+             IF( ( m_begin + m_loc - 1 ) > m ) m_loc = m - m_begin + 1
+
+             IF( m_loc > 0 ) THEN
+                CALL DGEMM( 'N', 'N', 2 * n, m_loc, nkb, 1.D0, vkb, &
+                            2 * lda, ps, nkb, 1.D0, spsi( 1, m_begin ), 2 * lda )
+             END IF
+
+             ! block rotation
+             !
+             CALL mp_circular_shift_left( ps, icyc, becp%comm )
+
+             icur_blk = icur_blk + 1
+             IF( icur_blk == nproc ) icur_blk = 0
+
+          END DO
+          !
+       ELSE IF ( m == 1 ) THEN
           !
           CALL DGEMV( 'N', 2 * n, nkb, 1.D0, vkb, &
                       2 * lda, ps, 1, 1.D0, spsi, 1 )
           !
        ELSE
           !
-#if defined __SCALAPACK
-          !
-          ! parallel block multiplication of vkb and ps
-          !
-          icur_blk = me_bgrp
-          !
-          DO icyc = 0, nproc_bgrp - 1
-
-             m_loc   = ldim_block( m , nproc_bgrp, icur_blk )
-             m_begin = gind_block( 1,  m, nproc_bgrp, icur_blk )
-
-             CALL DGEMM( 'N', 'N', 2 * n, m_loc, nkb, 1.D0, vkb, &
-                         2 * lda, ps, nkb, 1.D0, spsi( 1, m_begin ), 2 * lda )
-
-             ! block rotation
-             !
-             CALL mp_circular_shift_left( ps, icyc, intra_bgrp_comm )
-
-             icur_blk = icur_blk + 1
-             IF( icur_blk == nproc_bgrp ) icur_blk = 0
-
-          END DO
-#else
           CALL DGEMM( 'N', 'N', 2 * n, m, nkb, 1.D0, vkb, &
                       2 * lda, ps, nkb, 1.D0, spsi, 2 * lda )
-#endif
           !
        END IF
        !

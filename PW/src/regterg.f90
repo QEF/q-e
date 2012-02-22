@@ -570,7 +570,11 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
   IF( ierr /= 0 ) &
      CALL errore( 'pregterg ',' cannot allocate hpsi ', ABS(ierr) )
   !
-  IF ( uspp ) ALLOCATE( spsi( npwx, nvecx ) )
+  IF ( uspp ) THEN
+     ALLOCATE( spsi( npwx, nvecx ), STAT=ierr )
+     IF( ierr /= 0 ) &
+        CALL errore( 'pregterg ',' cannot allocate spsi ', ABS(ierr) )
+  END IF
   !
   ! ... Initialize the matrix descriptor
   !
