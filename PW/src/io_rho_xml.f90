@@ -281,6 +281,12 @@ MODULE io_rho_xml
       !
       LOGICAL :: my_ionode=.false.
       !
+      ! The first processor of each k-point pool reads the charge
+      ! density. This will be distributed to the group of processors
+      ! specified as  arguments to read_rho_xml, i.e. the band group
+      ! Note that this means that there will be concurrent read of the
+      ! same file from different processors, unlike in v.<5.0
+      !
       if(me_pool==root_pool) my_ionode=.true.
       !
       ext = ' '
