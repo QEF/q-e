@@ -1,7 +1,7 @@
 New in 5.0 version
 
    * More ways of calculating electron-phonon coefficients
-   * Full DFT+U scheme (with J and additinal parameters) implemented.
+   * Full DFT+U scheme (with J and additional parameters) implemented.
      Should work also for fully-relativistic calculations
 
 Incompatible changes in 5.0 version:

@@ -114,7 +114,6 @@ make_pointlists.o \
 makov_payne.o \
 martyna_tuckerman.o \
 memory_report.o \
-mix_pot.o \
 mix_rho.o \
 move_ions.o \
 ms2.o \

@@ -160,6 +160,7 @@ scat_states_plot.o : condcom.o
 scat_states_plot.o : realus_scatt.o
 scatter_forw.o : ../../Modules/cell_base.o
 scatter_forw.o : ../../Modules/constants.o
+scatter_forw.o : ../../Modules/mp_global.o
 scatter_forw.o : ../../Modules/parameters.o
 scatter_forw.o : ../../Modules/radial_grids.o
 scatter_forw.o : ../../PW/src/noncol.o

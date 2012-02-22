@@ -1,10 +1,9 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
 !
 !-----------------------------------------------------------------------
 subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
@@ -30,7 +29,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !    vout      vout-vin
   !    conv      true if dr2.le.tr2
   USE kinds, only : DP
-  USE mp_global,       ONLY : intra_bgrp_comm
+  USE mp_global,       ONLY : intra_pool_comm
   USE mp,              ONLY : mp_sum
   USE io_files,        ONLY : diropn
   implicit none
@@ -75,10 +74,10 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   enddo
   dr2 = dnrm2 (ndim, vout, 1) **2
   ndimtot = ndim
-#ifdef __MPI
-  call mp_sum (dr2, intra_bgrp_comm)
-  call mp_sum (ndimtot, intra_bgrp_comm)
-#endif
+  !
+  call mp_sum (dr2, intra_pool_comm)
+  call mp_sum (ndimtot, intra_pool_comm)
+  !
   dr2 = (sqrt (dr2) / ndimtot) **2
 
   conv = dr2.lt.tr2
@@ -138,9 +137,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
         dv (n, ipos) = vin (n) - dv (n, ipos)
      enddo
      norm = (dnrm2 (ndim, df (1, ipos), 1) ) **2
-#ifdef __MPI
-     call mp_sum (norm, intra_bgrp_comm)
-#endif
+     call mp_sum (norm, intra_pool_comm)
      norm = sqrt (norm)
      call dscal (ndim, 1.d0 / norm, df (1, ipos), 1)
      call dscal (ndim, 1.d0 / norm, dv (1, ipos), 1)
@@ -166,9 +163,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   do i = 1, iter_used
      do j = i + 1, iter_used
         beta (i, j) = w (i) * w (j) * ddot (ndim, df (1, j), 1, df (1, i), 1)
-#ifdef __MPI
-        call mp_sum ( beta (i, j), intra_bgrp_comm )
-#endif
+        call mp_sum ( beta (i, j), intra_pool_comm )
      enddo
      beta (i, i) = w0**2 + w (i) **2
   enddo
@@ -187,9 +182,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   do i = 1, iter_used
      work (i) = ddot (ndim, df (1, i), 1, vout, 1)
   enddo
-#ifdef __MPI
-  call mp_sum ( work(1:iter_used), intra_bgrp_comm )
-#endif
+  call mp_sum ( work(1:iter_used), intra_pool_comm )
   !
   do n = 1, ndim
      vin (n) = vin (n) + alphamix * vout (n)

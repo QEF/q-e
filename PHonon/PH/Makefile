@@ -94,6 +94,7 @@ init_representations.o \
 io_dyn_mat.o \
 io_pattern.o \
 localdos.o \
+mix_pot.o \
 mode_group.o \
 newdq.o \
 openfilq.o \

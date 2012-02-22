@@ -798,6 +798,10 @@ matdyn.o : ../../Modules/parameters.o
 matdyn.o : ../../PW/src/pwcom.o
 matdyn.o : ../../PW/src/symm_base.o
 matdyn.o : io_dyn_mat.o
+mix_pot.o : ../../Modules/io_files.o
+mix_pot.o : ../../Modules/kind.o
+mix_pot.o : ../../Modules/mp.o
+mix_pot.o : ../../Modules/mp_global.o
 mode_group.o : ../../Modules/constants.o
 mode_group.o : ../../Modules/kind.o
 newdq.o : ../../Modules/cell_base.o

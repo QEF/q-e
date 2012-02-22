@@ -689,6 +689,7 @@ init_at_1.o : pwcom.o
 init_ns.o : ../../Modules/ions_base.o
 init_ns.o : ../../Modules/kind.o
 init_ns.o : ../../Modules/uspp.o
+init_ns.o : noncol.o
 init_ns.o : pwcom.o
 init_ns.o : scf_mod.o
 init_run.o : ../../Modules/cell_base.o
@@ -784,6 +785,7 @@ io_rho_xml.o : ../../Modules/mp.o
 io_rho_xml.o : ../../Modules/mp_global.o
 io_rho_xml.o : ../../Modules/paw_variables.o
 io_rho_xml.o : ../../Modules/xml_io_base.o
+io_rho_xml.o : noncol.o
 io_rho_xml.o : pwcom.o
 io_rho_xml.o : scf_mod.o
 irrek.o : ../../Modules/kind.o
@@ -836,10 +838,6 @@ memory_report.o : ../../Modules/recvec.o
 memory_report.o : ../../Modules/uspp.o
 memory_report.o : noncol.o
 memory_report.o : pwcom.o
-mix_pot.o : ../../Modules/io_files.o
-mix_pot.o : ../../Modules/kind.o
-mix_pot.o : ../../Modules/mp.o
-mix_pot.o : ../../Modules/mp_global.o
 mix_rho.o : ../../Modules/cell_base.o
 mix_rho.o : ../../Modules/constants.o
 mix_rho.o : ../../Modules/control_flags.o
@@ -885,9 +883,11 @@ new_ns.o : ../../Modules/ions_base.o
 new_ns.o : ../../Modules/kind.o
 new_ns.o : ../../Modules/mp.o
 new_ns.o : ../../Modules/mp_global.o
+new_ns.o : ../../Modules/recvec.o
 new_ns.o : ../../Modules/wavefunctions.o
 new_ns.o : becmod.o
 new_ns.o : buffers.o
+new_ns.o : noncol.o
 new_ns.o : pwcom.o
 new_ns.o : symm_base.o
 new_occ.o : ../../Modules/constants.o
@@ -940,6 +940,7 @@ nonloccorr.o : pwcom.o
 ns_adj.o : ../../Modules/io_global.o
 ns_adj.o : ../../Modules/ions_base.o
 ns_adj.o : ../../Modules/kind.o
+ns_adj.o : noncol.o
 ns_adj.o : pwcom.o
 ns_adj.o : scf_mod.o
 offset_atom_wfc.o : ../../Modules/ions_base.o
@@ -1032,6 +1033,16 @@ plugin_initialization.o : ../../Modules/io_files.o
 plugin_initialization.o : ../../Modules/io_global.o
 plugin_initialization.o : ../../Modules/kind.o
 plugin_initialization.o : ../../Modules/plugin_flags.o
+plus_u_full.o : ../../Modules/cell_base.o
+plus_u_full.o : ../../Modules/constants.o
+plus_u_full.o : ../../Modules/ions_base.o
+plus_u_full.o : ../../Modules/kind.o
+plus_u_full.o : ../../Modules/random_numbers.o
+plus_u_full.o : ../../Modules/recvec.o
+plus_u_full.o : ../../Modules/uspp.o
+plus_u_full.o : noncol.o
+plus_u_full.o : pwcom.o
+plus_u_full.o : symm_base.o
 potinit.o : ../../Modules/cell_base.o
 potinit.o : ../../Modules/constants.o
 potinit.o : ../../Modules/control_flags.o
@@ -1672,8 +1683,8 @@ vhpsi.o : ../../Modules/ions_base.o
 vhpsi.o : ../../Modules/kind.o
 vhpsi.o : ../../Modules/mp.o
 vhpsi.o : ../../Modules/mp_global.o
-vhpsi.o : ../../Modules/recvec.o
 vhpsi.o : becmod.o
+vhpsi.o : noncol.o
 vhpsi.o : pwcom.o
 vhpsi.o : scf_mod.o
 vloc_of_g.o : ../../Modules/constants.o
@@ -1758,6 +1769,7 @@ write_ns.o : ../../Modules/constants.o
 write_ns.o : ../../Modules/io_global.o
 write_ns.o : ../../Modules/ions_base.o
 write_ns.o : ../../Modules/kind.o
+write_ns.o : noncol.o
 write_ns.o : pwcom.o
 write_ns.o : scf_mod.o
 wsweight.o : ../../Modules/kind.o
