@@ -34,6 +34,7 @@ add_paw_to_deeq.o : pwcom.o
 add_vuspsi.o : ../../Modules/control_flags.o
 add_vuspsi.o : ../../Modules/ions_base.o
 add_vuspsi.o : ../../Modules/kind.o
+add_vuspsi.o : ../../Modules/mp.o
 add_vuspsi.o : ../../Modules/uspp.o
 add_vuspsi.o : becmod.o
 add_vuspsi.o : noncol.o
@@ -1315,7 +1316,6 @@ s_psi.o : ../../Modules/control_flags.o
 s_psi.o : ../../Modules/ions_base.o
 s_psi.o : ../../Modules/kind.o
 s_psi.o : ../../Modules/mp.o
-s_psi.o : ../../Modules/mp_global.o
 s_psi.o : ../../Modules/uspp.o
 s_psi.o : becmod.o
 s_psi.o : noncol.o

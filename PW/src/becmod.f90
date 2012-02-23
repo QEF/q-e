@@ -309,7 +309,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE allocate_bec_type ( nkb, nbnd, bec, comm )
     !-----------------------------------------------------------------------
-    USE :: mp, ONLY: mp_size, mp_get_comm_null
+    USE mp, ONLY: mp_size, mp_get_comm_null
     IMPLICIT NONE
     TYPE (bec_type) :: bec
     INTEGER, INTENT (in) :: nkb, nbnd
@@ -369,7 +369,7 @@ CONTAINS
   SUBROUTINE deallocate_bec_type (bec)
     !-----------------------------------------------------------------------
     !
-    USE :: mp, ONLY: mp_get_comm_null
+    USE mp, ONLY: mp_get_comm_null
     IMPLICIT NONE
     TYPE (bec_type) :: bec
     !
