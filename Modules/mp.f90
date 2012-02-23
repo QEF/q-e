@@ -2222,6 +2222,27 @@ SUBROUTINE mp_circular_shift_left_d2d( buf, itag, gid )
    RETURN
 END SUBROUTINE mp_circular_shift_left_d2d
 
+
+      FUNCTION mp_get_comm_null( )
+        IMPLICIT NONE
+        INTEGER :: mp_get_comm_null
+#if defined(__MPI)
+           mp_get_comm_null = MPI_COMM_NULL
+#else
+           mp_get_comm_null = 0
+#endif
+      END FUNCTION mp_get_comm_null
+
+      FUNCTION mp_get_comm_self( )
+        IMPLICIT NONE
+        INTEGER :: mp_get_comm_self
+#if defined(__MPI)
+           mp_get_comm_self = MPI_COMM_SELF
+#else
+           mp_get_comm_self = 0
+#endif
+      END FUNCTION mp_get_comm_self
+
 !------------------------------------------------------------------------------!
     END MODULE mp
 !------------------------------------------------------------------------------!
