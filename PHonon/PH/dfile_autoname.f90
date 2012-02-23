@@ -280,7 +280,6 @@ END FUNCTION dfile_generate_name
 FUNCTION real2frac(r) RESULT (f)
   !----------------------------------------------------------------------
   USE kinds,    ONLY : DP
-  USE wrappers, ONLY : md5_from_char
   IMPLICIT NONE
   REAL(DP),INTENT(in) :: r
   CHARACTER(len=64) :: f
@@ -307,25 +306,14 @@ FUNCTION real2frac(r) RESULT (f)
     IF( ABS(r*d-NINT(r*d)) < accept ) EXIT
   ENDDO
   !
-#ifdef __ISO_C_BINDING__USE_MD5_HERE
-  IF (d > max_denominator) THEN
-     WRITE(*, '("WARNING from real2frac:",e25.15," is not a fraction, falling back to md5." )') r
-!     CALL md5_from_char(TRANSFER(r,f), f)
-     WRITE(nc,'(e64.20)') r
-!     WRITE(nc,'(b64)') TRANSFER(r,d)
-     CALL md5_from_char(nc, f)
-     RETURN
-  ENDIF
-#else
 !  IF (d > max_denominator) CALL errore('real2frac', 'not a fraction', 1)
-  ! this other method is less elegant, but works as well and produces shorter names
+  ! 
   IF (d > max_denominator) THEN
      WRITE(*, '("WARNING from real2frac:",e25.15," is not a fraction, falling back to hex." )') r
      WRITE(f,'(Z64)') r
      f='0x'//TRIM(ADJUSTL(f))
      RETURN
   ENDIF
-#endif
   !
   n = NINT(r*d)
   !
