@@ -250,8 +250,6 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
   USE fft_base,         ONLY : dfftp, cgather_sym
   USE cell_base,        ONLY : at, bg
   USE ions_base,        ONLY : nat, tau, amass
-!  USE gvect,            ONLY : dfftp%nnr
-!  USE gvect,            ONLY : nr1, nr2, nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x
   USE symm_base,        ONLY : ftau, t_rev
   USE lsda_mod,         ONLY : nspin
   USE modes,            ONLY : nirr, npert, npertx, rtau
@@ -260,15 +258,12 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
   use io_files,         ONLY : find_free_unit, diropn, prefix
   USE constants,        ONLY : tpi
   USE dfile_autoname,   ONLY : dfile_choose_name
-!   USE control_flags,    ONLY : iverbosity, modenum
   USE save_ph,          ONLY : tmp_dir_save
   USE control_ph,       ONLY : search_sym
   USE noncollin_module, ONLY : nspin_mag
   USE mp_global,        ONLY : intra_image_comm
   USE mp,               ONLY : mp_bcast
-  !USE xml_io_base,      ONLY : create_directory
   USE wrappers,         ONLY : f_mkdir
-
   !
   IMPLICIT NONE
   ! input variables:

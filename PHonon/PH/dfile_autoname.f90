@@ -178,7 +178,7 @@ FUNCTION dfile_choose_name(xq, name, prefix, generate, equiv)
   ! Make up a new name
   dfile_choose_name = dfile_generate_name(xq, basename)
   !
-  ! Append the new name to the file
+  ! Append the new name to the list
   iunit = open_dfile_directory(basename, prefix)
   WRITE(iunit,*,iostat=ios) dfile_choose_name, xq
   IF(ios/=0) CALL errore('dfile_choose_name','Cannot write dfile_directory',1)
@@ -279,17 +279,18 @@ END FUNCTION dfile_generate_name
 !----------------------------------------------------------------------
 FUNCTION real2frac(r) RESULT (f)
   !----------------------------------------------------------------------
-  USE kinds, ONLY : DP
+  USE kinds,    ONLY : DP
+  USE wrappers, ONLY : md5_from_char
   IMPLICIT NONE
   REAL(DP),INTENT(in) :: r
   CHARACTER(len=64) :: f
   !
   INTEGER :: d, n
   INTEGER,PARAMETER :: max_denominator = 48000
-  REAL(DP),PARAMETER :: accept = 1.d-5
+  REAL(DP),PARAMETER :: accept = 1.d-6
   CHARACTER(len=64) :: nc,dc
   !
-  IF(max_denominator*accept*2>1._dp) &
+  IF(max_denominator*accept*20>1._dp) &
     CALL errore('real2frac', 'incompatible parameters', 2)
   ! Threat zero and integers separately:
   IF (ABS(r)<accept) THEN
@@ -306,7 +307,25 @@ FUNCTION real2frac(r) RESULT (f)
     IF( ABS(r*d-NINT(r*d)) < accept ) EXIT
   ENDDO
   !
-  IF (d > max_denominator) CALL errore('real2frac', 'not a fraction', 1)
+#ifdef __ISO_C_BINDING__USE_MD5_HERE
+  IF (d > max_denominator) THEN
+     WRITE(*, '("WARNING from real2frac:",e25.15," is not a fraction, falling back to md5." )') r
+!     CALL md5_from_char(TRANSFER(r,f), f)
+     WRITE(nc,'(e64.20)') r
+!     WRITE(nc,'(b64)') TRANSFER(r,d)
+     CALL md5_from_char(nc, f)
+     RETURN
+  ENDIF
+#else
+!  IF (d > max_denominator) CALL errore('real2frac', 'not a fraction', 1)
+  ! this other method is less elegant, but works as well and produces shorter names
+  IF (d > max_denominator) THEN
+     WRITE(*, '("WARNING from real2frac:",e25.15," is not a fraction, falling back to hex." )') r
+     WRITE(f,'(Z64)') r
+     f='0x'//TRIM(ADJUSTL(f))
+     RETURN
+  ENDIF
+#endif
   !
   n = NINT(r*d)
   !
