@@ -475,6 +475,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         if (lmetq0.and.convt) &
             call ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, .true.)
      ENDIF
+     ! check that convergent have been reached on ALL processors in this image
+     CALL check_all_convt(convt)
 
      if (doublegrid) then
         do ipert = 1, npe
@@ -587,3 +589,31 @@ ELSE
 ENDIF
 END SUBROUTINE setmixout
 
+SUBROUTINE check_all_convt(convt)
+  USE mp,        ONLY : mp_sum
+  USE mp_global, ONLY : nproc_image, me_image, intra_image_comm
+  IMPLICIT NONE
+  LOGICAL,INTENT(in) :: convt
+  INTEGER,ALLOCATABLE :: convt_check(:)
+  !
+  IF(nproc_image==1) RETURN
+  !
+  ALLOCATE(convt_check(nproc_image+1))
+  !
+  convt_check = 1
+  IF(convt) convt_check(me_image+1) = 0
+  !
+  CALL mp_sum(convt_check, intra_image_comm)
+  !CALL mp_sum(ios, inter_pool_comm)
+  !CALL mp_sum(ios, intra_pool_com)
+  !
+!  convt = ALL(convt_check==0)
+  IF(ANY(convt_check==0).and..not.ALL(convt_check==0) ) THEN
+    CALL errore('check_all_convt', 'Only some processors converged: '&
+               &' something is wrong with solve_linter', 1)
+  ENDIF
+  !
+  DEALLOCATE(convt_check)
+  RETURN
+  !
+END SUBROUTINE
