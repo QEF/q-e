@@ -36,6 +36,10 @@ SUBROUTINE stop_d3 (flag)
      !
      CLOSE (unit = iudrho, status = 'keep')
      IF (.NOT.lgamma) CLOSE (unit = iud0rho, status = 'keep')
+     IF(nlcc_any) THEN
+       CLOSE (unit = iudrho+1000, status = 'keep')
+       IF (.NOT.lgamma) CLOSE (unit = iud0rho+1000, status = 'keep')
+     ENDIF
      !
   END IF
 

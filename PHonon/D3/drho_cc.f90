@@ -32,7 +32,9 @@ subroutine drho_cc (iflag)
 
   if (.not.nlcc_any) return
   if (iflag.eq. - 1) then
-     scalef = - 1.d0
+     iudrho = iudrho-1000
+     iud0rho=iud0rho-1000
+     RETURN
   else
      scalef = 1.d0
   end if

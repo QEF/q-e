@@ -107,6 +107,7 @@ SUBROUTINE openfild3
      if ( lgamma) tmp_dir=TRIM(tmp_dir)//'_ph0/'
      !
      CALL diropn (iudrho, filint, lrdrho, exst)
+     IF(nlcc_any) CALL diropn (iudrho+1000, trim(filint)//"_cc", lrdrho, exst)
      !
      tmp_dir=tmp_dir_save
      ! FIXME END
@@ -117,6 +118,7 @@ SUBROUTINE openfild3
      IF (.NOT.lgamma) THEN
         filint = TRIM(fild0rho) !//".u"
         CALL diropn (iud0rho, filint, lrdrho, exst)
+        IF(nlcc_any) CALL diropn (iud0rho+1000, trim(filint)//"_cc", lrdrho, exst)
      ENDIF
      !
   END IF

@@ -34,11 +34,13 @@ SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scalef)
   !input: the transformation modes patterns
   !input: contain the rhoc (without structu
 
-  INTEGER :: ipert, na, mu, nt, ig, errcode
+  INTEGER :: ipert, na, mu, nt, ig, errcode, iudrho_tmp
   REAL (DP) :: gtau
   COMPLEX (DP) :: guexp
   COMPLEX (DP), ALLOCATABLE :: drhoc (:), drhov (:), uact (:)
 
+  iudrho_tmp = iudrho_x
+  iudrho_x = iudrho_tmp+1000 ! this must be already opened, see openfild3
 
   ALLOCATE  (drhoc( dfftp%nnr))
   ALLOCATE  (drhov( dfftp%nnr))
@@ -69,7 +71,7 @@ SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scalef)
      ENDDO
 
      CALL invfft ('Dense', drhoc, dfftp)
-     CALL davcio_drho2 (drhov, lrdrho, iudrho_x, ipert, - 1)
+     CALL davcio_drho2 (drhov, lrdrho, iudrho_tmp, ipert, - 1)
      drhov(:) = drhov(:) + scalef * drhoc(:)
      CALL davcio_drho2 (drhov, lrdrho, iudrho_x, ipert, + 1)
   ENDDO
