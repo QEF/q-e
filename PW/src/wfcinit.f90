@@ -156,6 +156,8 @@ SUBROUTINE init_wfc ( ik )
   USE noncollin_module,     ONLY : npol
   USE wavefunctions_module, ONLY : evc
   USE random_numbers,       ONLY : randy
+  USE mp_global,            ONLY : intra_bgrp_comm
+  USE control_flags,        ONLY : gamma_only
   !
   IMPLICIT NONE
   !
@@ -254,7 +256,7 @@ SUBROUTINE init_wfc ( ik )
   !
   ! ... Allocate space for <beta|psi>
   !
-  CALL allocate_bec_type ( nkb, n_starting_wfc, becp )
+  CALL allocate_bec_type ( nkb, n_starting_wfc, becp, intra_bgrp_comm )
   !
   ! ... the following trick is for electric fields with Berry's phase:
   ! ... by setting lelfield = .false. one prevents the calculation of

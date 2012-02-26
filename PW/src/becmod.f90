@@ -36,6 +36,10 @@ MODULE becmod
      COMPLEX(DP),ALLOCATABLE :: nc(:,:,:)   ! appropriate for noncolin
      INTEGER :: comm
      INTEGER :: nbnd
+     INTEGER :: nproc
+     INTEGER :: mype
+     INTEGER :: nbnd_loc
+     INTEGER :: ibnd_begin
   END TYPE bec_type
 #endif
   !
@@ -51,7 +55,7 @@ MODULE becmod
   !
   INTERFACE calbec
      !
-     MODULE PROCEDURE calbec_k, calbec_gamma, calbec_nc, calbec_bec_type
+     MODULE PROCEDURE calbec_k, calbec_gamma, calbec_gamma_nocomm, calbec_nc, calbec_bec_type
      !
   END INTERFACE
 
@@ -68,7 +72,8 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE calbec_bec_type ( npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
-    !
+    !_
+    USE mp_global, ONLY: intra_bgrp_comm
     USE mp, ONLY: mp_size, mp_rank, mp_get_comm_null
     !
     IMPLICIT NONE
@@ -94,27 +99,19 @@ CONTAINS
        !
        IF( betapsi%comm == mp_get_comm_null() ) THEN
           !
-          CALL calbec_gamma ( npw, beta, psi, betapsi%r, local_nbnd )
+          CALL calbec_gamma ( npw, beta, psi, betapsi%r, local_nbnd, intra_bgrp_comm )
           !
        ELSE
-
-          nproc = mp_size( betapsi%comm ) 
-          mype  = mp_rank( betapsi%comm )
-          m_max   = betapsi%nbnd / nproc
-          IF( MOD( betapsi%nbnd, nproc ) /= 0 ) m_max = m_max + 1
-          m_loc   = ldim_block( betapsi%nbnd , nproc, mype )
-          m_begin = gind_block( 1,  betapsi%nbnd, nproc, mype )
-          IF( ( m_begin + m_loc - 1 ) > local_nbnd ) m_loc = local_nbnd - m_begin + 1
           !
-          ALLOCATE( dtmp( SIZE( betapsi%r, 1 ), m_max ) )
+          ALLOCATE( dtmp( SIZE( betapsi%r, 1 ), SIZE( betapsi%r, 2 ) ) )
           !
-          DO ip = 0, nproc - 1
-             m_loc   = ldim_block( betapsi%nbnd , nproc, ip )
-             m_begin = gind_block( 1,  betapsi%nbnd, nproc, ip )
+          DO ip = 0, betapsi%nproc - 1
+             m_loc   = ldim_block( betapsi%nbnd , betapsi%nproc, ip )
+             m_begin = gind_block( 1,  betapsi%nbnd, betapsi%nproc, ip )
              IF( ( m_begin + m_loc - 1 ) > local_nbnd ) m_loc = local_nbnd - m_begin + 1
              IF( m_loc > 0 ) THEN
-                CALL calbec_gamma ( npw, beta, psi(:,m_begin:m_begin+m_loc-1), dtmp, m_loc )
-                IF( ip == mype ) THEN
+                CALL calbec_gamma ( npw, beta, psi(:,m_begin:m_begin+m_loc-1), dtmp, m_loc, betapsi%comm )
+                IF( ip == betapsi%mype ) THEN
                    betapsi%r(:,1:m_loc) = dtmp(:,1:m_loc)
                 END IF
              END IF
@@ -138,23 +135,44 @@ CONTAINS
     !
   END SUBROUTINE calbec_bec_type
   !-----------------------------------------------------------------------
-  SUBROUTINE calbec_gamma ( npw, beta, psi, betapsi, nbnd )
+  SUBROUTINE calbec_gamma_nocomm ( npw, beta, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    USE mp_global, ONLY: intra_bgrp_comm
+    IMPLICIT NONE
+    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
+    REAL (DP), INTENT (out) :: betapsi(:,:)
+    INTEGER, INTENT (in) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    INTEGER :: m
+    IF ( present (nbnd) ) THEN
+        m = nbnd
+    ELSE
+        m = size ( psi, 2)
+    ENDIF
+    CALL calbec_gamma ( npw, beta, psi, betapsi, m, intra_bgrp_comm )
+    RETURN
+    !
+  END SUBROUTINE calbec_gamma_nocomm
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_gamma ( npw, beta, psi, betapsi, nbnd, comm )
     !-----------------------------------------------------------------------
     !
     ! ... matrix times matrix with summation index (k=1,npw) running on
     ! ... half of the G-vectors or PWs - assuming k=0 is the G=0 component:
     ! ... betapsi(i,j) = 2Re(\sum_k beta^*(i,k)psi(k,j)) + beta^*(i,0)psi(0,j)
     !
-    USE mp_global, ONLY : intra_bgrp_comm
     USE mp,        ONLY : mp_sum
 
     IMPLICIT NONE
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
     REAL (DP), INTENT (out) :: betapsi(:,:)
     INTEGER, INTENT (in) :: npw
-    INTEGER, OPTIONAL :: nbnd
+    INTEGER, INTENT (in) :: nbnd
+    INTEGER, INTENT (in) :: comm 
     !
     INTEGER :: nkb, npwx, m
+    !
+    m = nbnd
     !
     nkb = size (beta, 2)
     IF ( nkb == 0 ) RETURN
@@ -163,11 +181,6 @@ CONTAINS
     npwx= size (beta, 1)
     IF ( npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
     IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
-    IF ( present (nbnd) ) THEN
-        m = nbnd
-    ELSE
-        m = size ( psi, 2)
-    ENDIF
 #ifdef DEBUG
     WRITE (*,*) 'calbec gamma'
     WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 2)
@@ -190,7 +203,7 @@ CONTAINS
         !
      ENDIF
      !
-     CALL mp_sum( betapsi( :, 1:m ), intra_bgrp_comm )
+     CALL mp_sum( betapsi( :, 1:m ), comm )
      !
      CALL stop_clock( 'calbec' )
      !
@@ -309,12 +322,13 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE allocate_bec_type ( nkb, nbnd, bec, comm )
     !-----------------------------------------------------------------------
-    USE mp, ONLY: mp_size, mp_get_comm_null
+    USE mp, ONLY: mp_size, mp_rank, mp_get_comm_null
     IMPLICIT NONE
     TYPE (bec_type) :: bec
     INTEGER, INTENT (in) :: nkb, nbnd
     INTEGER, INTENT (in), OPTIONAL :: comm
-    INTEGER :: ierr, nbnd_siz, nproc
+    INTEGER :: ierr, nbnd_siz
+    INTEGER, EXTERNAL :: ldim_block, lind_block, gind_block
     !
 #ifdef __STD_F95
     NULLIFY(bec%r)
@@ -325,16 +339,24 @@ CONTAINS
     nbnd_siz = nbnd
     bec%comm = mp_get_comm_null()
     bec%nbnd = nbnd
+    bec%mype = 0
+    bec%nproc = 1
+    bec%nbnd_loc = nbnd
+    bec%ibnd_begin = 1
     !
-    IF( PRESENT( comm ) ) THEN
+#ifdef __SCALAPACK
+    IF( PRESENT( comm ) .AND. gamma_only ) THEN
        bec%comm = comm
-       nproc = mp_size( comm )
-       IF( nproc > 1 ) THEN
-          nbnd_siz   = nbnd / nproc
-          IF( MOD( nbnd, nproc ) /= 0 ) nbnd_siz = nbnd_siz + 1
+       bec%nproc = mp_size( comm )
+       IF( bec%nproc > 1 ) THEN
+          nbnd_siz   = nbnd / bec%nproc
+          IF( MOD( nbnd, bec%nproc ) /= 0 ) nbnd_siz = nbnd_siz + 1
+          bec%mype  = mp_rank( bec%comm )
+          bec%nbnd_loc   = ldim_block( becp%nbnd , bec%nproc, bec%mype )
+          bec%ibnd_begin = gind_block( 1,  becp%nbnd, bec%nproc, bec%mype )
        END IF
     END IF
-    !
+#endif
     IF ( gamma_only ) THEN
        !
        ALLOCATE( bec%r( nkb, nbnd_siz ), STAT=ierr )

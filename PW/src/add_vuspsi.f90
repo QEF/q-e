@@ -69,7 +69,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
      SUBROUTINE add_vuspsi_gamma()
        !-----------------------------------------------------------------------
        !
-       USE mp, ONLY: mp_size, mp_rank, mp_get_comm_null, mp_circular_shift_left
+       USE mp, ONLY: mp_get_comm_null, mp_circular_shift_left
        !
        IMPLICIT NONE
        INTEGER, EXTERNAL :: ldim_block, lind_block, gind_block
@@ -86,12 +86,11 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        mype    = 0
        !
        IF( becp%comm /= mp_get_comm_null() ) THEN
-          nproc = mp_size( becp%comm )
-          mype  = mp_rank( becp%comm )
-          m_loc   = ldim_block( becp%nbnd , nproc, mype )
-          m_begin = gind_block( 1,  becp%nbnd, nproc, mype )
-          m_max   = becp%nbnd / nproc
-          IF( MOD( becp%nbnd, nproc ) /= 0 ) m_max = m_max + 1
+          nproc   = becp%nproc
+          mype    = becp%mype
+          m_loc   = becp%nbnd_loc
+          m_begin = becp%ibnd_begin
+          m_max   = SIZE( becp%r, 2 )
           IF( ( m_begin + m_loc - 1 ) > m ) m_loc = m - m_begin + 1
        END IF
        !

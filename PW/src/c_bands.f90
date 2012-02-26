@@ -218,11 +218,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   IF ( nbndx > npwx*nproc_bgrp ) &
      CALL errore ( 'diag_bands', 'too many bands, or too few plane waves',1)
   !
-#ifdef __SCALAPACK
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm )
-#else
-  CALL allocate_bec_type ( nkb, nbnd, becp )
-#endif
   !
   IF ( gamma_only ) THEN
      !

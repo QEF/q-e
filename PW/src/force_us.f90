@@ -31,7 +31,7 @@ SUBROUTINE force_us( forcenl )
   USE buffers,              ONLY : get_buffer
   USE becmod,               ONLY : bec_type, becp, allocate_bec_type, deallocate_bec_type
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
-  USE mp,                   ONLY : mp_sum
+  USE mp,                   ONLY : mp_sum, mp_get_comm_null
   !
   IMPLICIT NONE
   !
@@ -40,7 +40,7 @@ SUBROUTINE force_us( forcenl )
   REAL(DP) :: forcenl(3,nat)
   ! output: the nonlocal contribution
   !
-  CALL allocate_bec_type ( nkb, nbnd, becp )   
+  CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm )   
   !
   IF ( gamma_only ) THEN
      !
@@ -68,18 +68,20 @@ SUBROUTINE force_us( forcenl )
        IMPLICIT NONE
        !
        REAL(DP) :: forcenl(3,nat)
-       REAL(DP), ALLOCATABLE    :: rdbecp (:,:,:)
+       TYPE(bec_type) :: rdbecp (3)
        ! auxiliary variable, contains <dbeta|psi>
        COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)
        ! auxiliary variable contains g*|beta>
        REAL(DP) :: ps
-       INTEGER       :: ik, ipol, ibnd, ig, ih, jh, na, nt, ikb, jkb, ijkb0
+       INTEGER       :: ik, ipol, ibnd, ibnd_loc, ig, ih, jh, na, nt, ikb, jkb, ijkb0
        ! counters
        !
        !
        forcenl(:,:) = 0.D0
        !
-       ALLOCATE( rdbecp( nkb, nbnd, 3 ) )    
+       DO ipol = 1, 3
+          CALL allocate_bec_type ( nkb, nbnd, rdbecp(ipol), intra_bgrp_comm )   
+       END DO
        ALLOCATE( vkb1(  npwx, nkb ) ) 
        !   
        IF ( nks > 1 ) REWIND iunigk
@@ -106,7 +108,7 @@ SUBROUTINE force_us( forcenl )
                 END DO
              END DO
              !
-             CALL calbec ( npw, vkb1, evc, rdbecp(:,:,ipol) )
+             CALL calbec ( npw, vkb1, evc, rdbecp(ipol) )
              !
           END DO
           !
@@ -116,13 +118,14 @@ SUBROUTINE force_us( forcenl )
                 IF ( ityp(na) == nt ) THEN
                    DO ih = 1, nh(nt)
                       ikb = ijkb0 + ih
-                      DO ibnd = 1, nbnd
+                      DO ibnd_loc = 1, becp%nbnd_loc
+                         ibnd = ibnd_loc + becp%ibnd_begin - 1
                          ps = deeq(ih,ih,na,current_spin) - &
                               et(ibnd,ik) * qq(ih,ih,nt)
                          DO ipol = 1, 3
                             forcenl(ipol,na) = forcenl(ipol,na) - &
                                        ps * wg(ibnd,ik) * 2.D0 * tpiba * &
-                                       rdbecp(ikb,ibnd,ipol) *becp%r(ikb,ibnd)
+                                       rdbecp(ipol)%r(ikb,ibnd_loc) *becp%r(ikb,ibnd_loc)
                          END DO
                       END DO
                       !
@@ -134,14 +137,15 @@ SUBROUTINE force_us( forcenl )
                          !
                          DO jh = ( ih + 1 ), nh(nt)
                             jkb = ijkb0 + jh
-                            DO ibnd = 1, nbnd
+                            DO ibnd_loc = 1, becp%nbnd_loc
+                               ibnd = ibnd_loc + becp%ibnd_begin - 1
                                ps = deeq(ih,jh,na,current_spin) - &
                                     et(ibnd,ik) * qq(ih,jh,nt)
                                DO ipol = 1, 3
                                   forcenl(ipol,na) = forcenl(ipol,na) - &
                                      ps * wg(ibnd,ik) * 2.d0 * tpiba * &
-                                     (rdbecp(ikb,ibnd,ipol) *becp%r(jkb,ibnd) + &
-                                      rdbecp(jkb,ibnd,ipol) *becp%r(ikb,ibnd) )
+                                     (rdbecp(ipol)%r(ikb,ibnd_loc) *becp%r(jkb,ibnd_loc) + &
+                                      rdbecp(ipol)%r(jkb,ibnd_loc) *becp%r(ikb,ibnd_loc) )
                                END DO
                             END DO
                          END DO
@@ -152,6 +156,8 @@ SUBROUTINE force_us( forcenl )
              END DO
           END DO
        END DO
+       !
+       IF( becp%comm /= mp_get_comm_null() ) CALL mp_sum( forcenl, becp%comm )
        !
        ! ... The total D matrix depends on the ionic position via the
        ! ... augmentation part \int V_eff Q dr, the term deriving from the 
@@ -170,7 +176,9 @@ SUBROUTINE force_us( forcenl )
        CALL symvector ( nat, forcenl )
        !
        DEALLOCATE( vkb1 )
-       DEALLOCATE(rdbecp ) 
+       DO ipol = 1, 3
+          CALL deallocate_bec_type ( rdbecp(ipol) )   
+       END DO
        !
        RETURN
        !

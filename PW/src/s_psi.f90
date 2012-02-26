@@ -94,7 +94,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        ! ... gamma version
        !
        USE becmod, ONLY : bec_type, becp
-       USE mp, ONLY: mp_size, mp_rank, mp_get_comm_null, mp_circular_shift_left
+       USE mp, ONLY: mp_get_comm_null, mp_circular_shift_left
        !
        IMPLICIT NONE  
        !
@@ -116,12 +116,11 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        mype    = 0
        !
        IF( becp%comm /= mp_get_comm_null() ) THEN
-          nproc = mp_size( becp%comm ) 
-          mype  = mp_rank( becp%comm )
-          m_loc   = ldim_block( becp%nbnd , nproc, mype )
-          m_begin = gind_block( 1,  becp%nbnd, nproc, mype )
-          m_max   = becp%nbnd / nproc
-          IF( MOD( becp%nbnd, nproc ) /= 0 ) m_max = m_max + 1
+          nproc   = becp%nproc
+          mype    = becp%mype
+          m_loc   = becp%nbnd_loc
+          m_begin = becp%ibnd_begin
+          m_max   = SIZE(becp%r,2)
           IF( ( m_begin + m_loc - 1 ) > m ) m_loc = m - m_begin + 1
        END IF
        !
@@ -137,7 +136,6 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
              DO na = 1, nat
                 IF ( ityp(na) == nt ) THEN
                    DO ibnd_loc = 1, m_loc
-                      ibnd = ibnd_loc + m_begin - 1
                       DO jh = 1, nh(nt)
                          jkb = ijkb0 + jh
                          DO ih = 1, nh(nt)
