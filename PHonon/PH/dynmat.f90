@@ -435,14 +435,14 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
     !   Raman cross sections are in units of bohr^4/(Ry mass unit)
  end do
  !
- write (6,'(/5x,"IR cross sections are in (D/A)^2/amu units")')
+ write (6,'(/5x,"IR activities are in (D/A)^2/amu units")')
  if (noraman) then
-    write (6,'(/"#  mode   [cm-1]     [THz]       IR")')
+    write (6,'(/"# mode   [cm-1]    [THz]      IR")')
  else
-    write (6,'(5x,"Raman cross sections are in A^4/amu units")')
+    write (6,'(5x,"Raman activities are in A^4/amu units")')
     write (6,'(5x,"multiply Raman by",f9.6," for Clausius-Mossotti", &
          & " correction")') cmfac**2
-    write (6,'(/"#  mode   [cm-1]     [THz]      IR           Raman     depol")')
+    write (6,'(/"# mode   [cm-1]    [THz]      IR          Raman   depol.fact")')
  end if
  !
  do nu = 1,3*nat
