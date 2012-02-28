@@ -449,6 +449,8 @@ subroutine phq_setup
      !
      ifat = 0
      DO na = 1, nat_todo
+        IF(atomo(na)>nat .or. atomo(na)<1) &
+        CALL errore('phq_setup', 'one of atoms to do (nat_todo) is < 0 or > nat', 1)
         ifat (atomo (na) ) = 1
         DO isym = 1, nsymq
            irot = irgq (isym)
