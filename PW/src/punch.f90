@@ -14,6 +14,7 @@ SUBROUTINE punch( what )
   !
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : prefix, iunpun
+  USE control_flags,        ONLY : io_level
   USE pw_restart,           ONLY : pw_writefile
   USE a2F,                  ONLY : la2F, a2Fsave
   !
@@ -21,6 +22,8 @@ SUBROUTINE punch( what )
   !
   CHARACTER(LEN=*) :: what
   !
+  !
+  IF (io_level < 0 ) RETURN
   !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
       TRIM( prefix ) // '.save'
