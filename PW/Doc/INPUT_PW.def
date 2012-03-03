@@ -263,7 +263,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
                'none':    do not save wfc, not even at the end
                           (guaranteed to work only for 'scf', 'nscf', 
-                           'band' calculations)
+                           'bands' calculations)
 
                If restarting from an interrupted calculation, the code
                will try to figure out what is available on disk. The
