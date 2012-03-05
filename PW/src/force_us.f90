@@ -103,9 +103,11 @@ SUBROUTINE force_us( forcenl )
           !
           DO ipol = 1, 3
              DO jkb = 1, nkb
+!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig)
                 DO ig = 1, npw
                    vkb1(ig,jkb) = vkb(ig,jkb) * (0.D0,-1.D0) * g(ipol,igk(ig))
                 END DO
+!$OMP END PARALLEL DO
              END DO
              !
              CALL calbec ( npw, vkb1, evc, rdbecp(ipol) )
@@ -235,9 +237,11 @@ SUBROUTINE force_us( forcenl )
           !
           DO ipol = 1, 3
              DO jkb = 1, nkb
+!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig)
                 DO ig = 1, npw
                    vkb1(ig,jkb) = vkb(ig,jkb)*(0.D0,-1.D0)*g(ipol,igk(ig))
                 END DO
+!$OMP END PARALLEL DO
              END DO
              !
              IF (noncolin) THEN
