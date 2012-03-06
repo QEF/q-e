@@ -19,7 +19,7 @@
          ! this is only for symmetry with respect to the serial build
          LOGICAL :: tparallel = .true.
 #else
-         ! an empty module can broke compilation when it is used by other modules
+         ! an empty module can break compilation when it is used by other modules
          LOGICAL :: tparallel = .false.
 #endif
 
