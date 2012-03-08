@@ -54,7 +54,8 @@ all : tldeps average.x bands.x dos.x epsilon.x initial_state.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x wfdd.x \
       pw2wannier90.x pw_export.x pw2gw.x \
-      wannier_ham.x wannier_plot.x
+      wannier_ham.x wannier_plot.x \
+      pw2bgw.x bgw2pw.x
 
 qexml.x: qexml.o qexml_example.o
 	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(QEOBJS) $(LIBOBJS)
@@ -165,7 +166,17 @@ wannier_plot.x : wannier_plot.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 	wannier_plot.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
- 
+
+pw2bgw.x : pw2bgw.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		pw2bgw.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+bgw2pw.x : bgw2pw.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		bgw2pw.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
 tldeps:
 	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 

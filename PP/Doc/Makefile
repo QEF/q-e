@@ -5,7 +5,9 @@ HTMLS = INPUT_PP.html \
 	INPUT_PROJWFC.html \
 	INPUT_DOS.html \
 	INPUT_BANDS.html \
-	INPUT_pw_export.html
+	INPUT_pw_export.html \
+        INPUT_pw2bgw.html \
+        INPUT_bgw2pw.html
 
 PDFS = eps_man.pdf
 AUXS = $(PDFS:.pdf=.aux)

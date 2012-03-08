@@ -1,0 +1,92 @@
+input_description -distribution {Quantum Espresso} -package PWscf -program bgw2pw.x {
+
+    toc {}
+
+    intro {
+	Converts BerkeleyGW WFN and RHO files to the format of pw.x.
+	This can be useful, for example, if you generate the plane waves
+	on top of the valence bands and want to diagonalize them in pw.x.
+	Look at the documentation for SAPO code in BerkeleyGW for more information.
+
+	bgw2pw.x reads common parameters from file prefix.save/data-file.xml and
+	writes files prefix.save/charge-density.dat (charge density in R-space),
+	prefix.save/gvectors.dat (G-vectors for charge density and potential),
+	prefix.save/K$n/eigenval.xml (eigenvalues and occupations for nth k-point),
+	prefix.save/K$n/evc.dat (wavefunctions in G-space for nth k-point), and
+	prefix.save/K$n/gkvectors.dat (G-vectors for nth k-point).
+
+	bgw2pw.x doesn't modify file prefix.save/data-file.xml so make changes to this
+	file manually (for example, you will need to change the number of bands if you
+	are using bgw2pw.x in conjunction with SAPO code in BerkeleyGW).
+
+	Structure of the input data:
+	============================
+
+	   &INPUT_BGW2PW
+	     ...
+	   /
+    }
+
+    namelist INPUT_BGW2PW {
+
+	var prefix -type STRING {
+	    status { MANDATORY }
+	    info {
+		prefix of files saved by program pw.x
+	    }
+	}
+
+	var outdir -type STRING {
+	    default { './' }
+	    info {
+		the scratch directory where the massive data-files are written
+	    }
+	}
+
+	var real_or_complex -type INTEGER {
+	    default { 2 }
+	    info {
+		1 | 2
+		1 for real flavor of BerkeleyGW (for systems with inversion symmetry and
+		time-reversal symmetry) or 2 for complex flavor of BerkeleyGW (for systems
+		without inversion symmetry and time-reversal symmetry)
+	    }
+	}
+
+	var wfng_flag -type LOGICAL {
+	    default { .FALSE. }
+	    info {
+		read wavefunctions in G-space from BerkeleyGW WFN file
+	    }
+	}
+
+	var wfng_file -type STRING {
+	    default { 'WFN' }
+	    info {
+		name of BerkeleyGW WFN input file. Not used if wfng_flag = .FALSE.
+	    }
+	}
+
+	var wfng_nband -type INTEGER {
+	    default { 0 }
+	    info {
+		number of bands to write (0 = all). Not used if wfng_flag = .FALSE.
+	    }
+	}
+
+	var rhog_flag -type LOGICAL {
+	    default { .FALSE. }
+	    info {
+		read charge density in G-space from BerkeleyGW RHO file
+	    }
+	}
+
+	var rhog_file -type STRING {
+	    default { 'RHO' }
+	    info {
+		name of BerkeleyGW RHO input file. Not used if rhog_flag = .FALSE.
+	    }
+	}
+
+    }
+}

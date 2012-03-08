@@ -1,0 +1,308 @@
+input_description -distribution {Quantum Espresso} -package PWscf -program pw2bgw.x {
+
+    toc {}
+
+    intro {
+	Converts the output files produced by pw.x to the input files for BerkeleyGW.
+
+	You cannot use USPP, PAW, or spinors in a pw.x run for BerkeleyGW.
+
+	You cannot use "K_POINTS gamma" in a pw.x run for BerkeleyGW.
+	Use "K_POINTS { tpiba | automatic | crystal }" even for the
+	Gamma-point calculation.
+
+	It is recommended to run a pw.x nscf calculation with "K_POINTS crystal"
+	and a list of k-points produced by kgrid.x, which is a part of BerkeleyGW
+	package (see BerkeleyGW documentation for details).
+
+	Sometimes pw.x adds more k-points when they are specified manually.
+	Always check if this is the case in the output. If this is the case
+	then there are several ways to go around this issue:
+
+	(1) You can apply the patch provided with BerkeleyGW. This will prevent
+	    pw.x from producing more k-points if they are supplied manually.
+	(2) Do not supply atomic positions in the input file of kgrid.x (set 
+	    number of atoms = 0). Then pw.x will generate additional k-points
+	    which are the correct ones. Do not forget to use noinv = .true. if
+	    time-reversal symmetry is not used in the generation of k-points.
+	(3) You can do "bands" calculation instead of "nscf" but in this case
+	    you have to explicitly specify occupations in the input file of
+	    pw2bgw.x.
+
+	Choose the option that best fits your needs.
+
+	Structure of the input data:
+	============================
+
+	   &INPUT_PW2BGW
+	     ...
+	   /
+    }
+
+    namelist INPUT_PW2BGW {
+
+	var prefix -type STRING {
+	    status { MANDATORY }
+	    info {
+		prefix of files saved by program pw.x
+	    }
+	}
+
+	var outdir -type STRING {
+	    default { './' }
+	    info {
+		the scratch directory where the massive data-files are written
+	    }
+	}
+
+	var real_or_complex -type INTEGER {
+	    default { 2 }
+	    info {
+		1 | 2
+		1 for real flavor of BerkeleyGW (for systems with inversion symmetry and
+		time-reversal symmetry) or 2 for complex flavor of BerkeleyGW (for systems
+		without inversion symmetry and time-reversal symmetry)
+	    }
+	}
+
+	var symm_type -type STRING {
+	    default { 'cubic' }
+	    info {
+		'cubic' | 'hexagonal'
+		type of crystal system, 'cubic' for space groups 1 ... 142 and 195 ... 230
+		and 'hexagonal' for space groups 143 ... 194. Only used if ibrav = 0 in a
+		pw.x run
+	    }
+	}
+
+	var wfng_flag -type LOGICAL {
+	    default { .FALSE. }
+	    info {
+		write wavefunctions in G-space to BerkeleyGW WFN file
+	    }
+	}
+
+	var wfng_file -type STRING {
+	    default { 'WFN' }
+	    info {
+		name of BerkeleyGW WFN output file. Not used if wfng_flag = .FALSE.
+	    }
+	}
+
+	var wfng_kgrid -type LOGICAL {
+	    default { .FALSE. }
+	    info {
+		overwrite k-grid parameters in BerkeleyGW WFN file.
+		If pw.x input file contains the manual list of k-points,
+		the k-grid parameters in the output of pw.x will be set to zero.
+		Since sigma and absorption in BerkeleyGW both need to know the
+		k-grid dimensions, we patch these parameters into BerkeleyGW WFN file
+	    }
+	}
+
+	var wfng_nk1 -type INTEGER {
+	    default { 0 }
+	    info {
+		number of k-points along b_1 reciprocal lattice vector.
+		Not used if wfng_kgrid = .FALSE.
+	    }
+	}
+
+	var wfng_nk2 -type INTEGER {
+	    default { 0 }
+	    info {
+		number of k-points along b_2 reciprocal lattice vector.
+		Not used if wfng_kgrid = .FALSE.
+	    }
+	}
+
+	var wfng_nk3 -type INTEGER {
+	    default { 0 }
+	    info {
+		number of k-points along b_3 reciprocal lattice vector.
+		Not used if wfng_kgrid = .FALSE.
+	    }
+	}
+
+	var wfng_dk1 -type REAL {
+	    default { 0.0 }
+	    info {
+		k-grid offset (0.0 unshifted, 0.5 shifted by half a grid step)
+		along b_1 reciprocal lattice vector. Not used if wfng_kgrid = .FALSE.
+	    }
+	}
+
+	var wfng_dk2 -type REAL {
+	    default { 0.0 }
+	    info {
+		k-grid offset (0.0 unshifted, 0.5 shifted by half a grid step)
+		along b_2 reciprocal lattice vector. Not used if wfng_kgrid = .FALSE.
+	    }
+	}
+
+	var wfng_dk3 -type REAL {
+	    default { 0.0 }
+	    info {
+		k-grid offset (0.0 unshifted, 0.5 shifted by half a grid step)
+		along b_3 reciprocal lattice vector. Not used if wfng_kgrid = .FALSE.
+	    }
+	}
+
+	var wfng_occupation -type LOGICAL {
+	    default { .FALSE. }
+	    info {
+		overwrite occupations in BerkeleyGW WFN file
+	    }
+	}
+
+	var wfng_nvmin -type INTEGER {
+	    default { 0 }
+	    info {
+		index of the lowest occupied band (normally = 1).
+		Not used if wfng_occupation = .FALSE.
+	    }
+	}
+
+	var wfng_nvmax -type INTEGER {
+	    default { 0 }
+	    info {
+		index of the highest occupied band (normally = number of occupied bands).
+		Not used if wfng_occupation = .FALSE.
+	    }
+	}
+
+	var rhog_flag -type LOGICAL {
+	    default { .FALSE. }
+	    info {
+		write charge density in G-space to BerkeleyGW RHO file.
+		Only used for the GPP model in sigma code in BerkeleyGW
+	    }
+	}
+
+	var rhog_file -type STRING {
+	    default { 'RHO' }
+	    info {
+		name of BerkeleyGW RHO output file. Only used for the GPP model in sigma
+		code in BerkeleyGW. Not used if rhog_flag = .FALSE.
+	    }
+	}
+
+	var vxcg_flag -type LOGICAL {
+	    default { .FALSE. }
+	    info {
+		write local part of exchange-correlation potential in G-space to
+		BerkeleyGW VXC file. Only used in sigma code in BerkeleyGW, it is
+		recommended to use vxc_flag instead
+	    }
+	}
+
+	var vxcg_file -type STRING {
+	    default { 'VXC' }
+	    info {
+		name of BerkeleyGW VXC output file. Only used in sigma code in BerkeleyGW,
+		it is recommended to use vxc_flag instead. Not used if vxcg_flag = .FALSE.
+	    }
+	}
+
+	var vxc0_flag -type LOGICAL {
+	    default { .FALSE. }
+	    info {
+		write Vxc(G = 0) to text file. Only for testing, not required for BerkeleyGW
+	    }
+	}
+
+	var vxc0_file -type STRING {
+	    default { 'vxc0.dat' }
+	    info {
+		name of output text file for Vxc(G = 0). Only for testing, not required for
+		BerkeleyGW. Not used if vxc0_flag = .FALSE.
+	    }
+	}
+
+	var vxc_flag -type LOGICAL {
+	    default { .FALSE. }
+	    info {
+		write matrix elements of exchange-correlation potential to text file.
+		Only used in sigma code in BerkeleyGW
+	    }
+	}
+
+	var vxc_file -type STRING {
+	    default { 'vxc.dat' }
+	    info {
+		name of output text file for Vxc matrix elements. Only used in sigma code
+		in BerkeleyGW. Not used if vxc_flag = .FALSE.
+	    }
+	}
+
+	var vxc_integral -type STRING {
+	    default { 'g' }
+	    info {
+		'g' | 'r'
+		'g' to compute matrix elements of exchange-correlation potential in G-space.
+		'r' to compute matrix elements of the local part of exchange-correlation
+		potential in R-space. It is recommended to use 'g'. Not used if vxc_flag = .FALSE.
+	    }
+	}
+
+	var vxc_diag_nmin -type INTEGER {
+	    default { 0 }
+	    info {
+		minimum band index for diagonal Vxc matrix elements. Not used if vxc_flag = .FALSE.
+	    }
+	}
+
+	var vxc_diag_nmax -type INTEGER {
+	    default { 0 }
+	    info {
+		maximum band index for diagonal Vxc matrix elements. Not used if vxc_flag = .FALSE.
+	    }
+	}
+
+	var vxc_offdiag_nmin -type INTEGER {
+	    default { 0 }
+	    info {
+		minimum band index for off-diagonal Vxc matrix elements. Not used if vxc_flag = .FALSE.
+	    }
+	}
+
+	var vxc_offdiag_nmax -type INTEGER {
+	    default { 0 }
+	    info {
+		maximum band index for off-diagonal Vxc matrix elements. Not used if vxc_flag = .FALSE.
+	    }
+	}
+
+	var input_dft -type STRING {
+	    default { 'sla+pz' }
+	    info {
+		exchange-correlation functional, same as in pw.x. Not used if vxcg_flag = .FALSE. and
+		vxc_flag = .FALSE.
+	    }
+	}
+
+	var exx_flag -type LOGICAL {
+	    default { .FALSE. }
+	    info {
+		set to .TRUE. when using EXX. Not used if vxcg_flag = .FALSE. and vxc_flag = .FALSE.
+	    }
+	}
+
+	var vnlg_flag -type LOGICAL {
+	    default { .FALSE. }
+	    info {
+		write Kleinman-Bylander projectors in G-space to BerkeleyGW VNL file.
+		Only used in SAPO code in BerkeleyGW
+	    }
+	}
+
+	var vnlg_file -type STRING {
+	    default { 'VNL' }
+	    info {
+		name of BerkeleyGW VNL output file. Only used in SAPO code in BerkeleyGW.
+		Not used if vnlg_flag = .FALSE.
+	    }
+	}
+
+    }
+}
