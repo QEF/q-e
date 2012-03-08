@@ -28,6 +28,10 @@ MODULE becmod
      COMPLEX(DP),POINTER :: nc(:,:,:)   ! appropriate for noncolin
      INTEGER :: comm
      INTEGER :: nbnd
+     INTEGER :: nproc
+     INTEGER :: mype
+     INTEGER :: nbnd_loc
+     INTEGER :: ibnd_begin
   END TYPE bec_type
 #else
   TYPE bec_type
