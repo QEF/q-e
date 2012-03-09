@@ -1739,7 +1739,7 @@ MODULE read_namelists_module
 !Lingzhu Kong
           CASE ( 'cp-wf-nscf','cp-wf-pbe0','pbe0-nscf' )
              IF( prog == 'CP' ) THEN
-                occupations       = 'bogus'
+                occupations       = 'fixed'
                 electron_dynamics = 'damp'
                 ion_dynamics      = 'damp'
              END IF
