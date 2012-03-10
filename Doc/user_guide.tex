@@ -518,8 +518,8 @@ since v.4.2; PowerPC Macs are no longer
 supported since v.5.0.
 Finally, \configure\ recognizes the following command-line options:\\
 \begin{tabular}{ll}
-\texttt{--enable-parallel}&     compile for parallel execution if possible (default: yes)\\
-\texttt{--enable-openmp}&       compile for openmp execution if possible (default: no)\\
+\texttt{--enable-parallel}&     compile for parallel (MPI) execution if possible (default: yes)\\
+\texttt{--enable-openmp}&       compile for OpenMP execution if possible (default: no)\\
 \texttt{--enable-shared}&       use shared libraries if available (default: yes;\\
                         &       "no" is implemented, untested, in only a few cases)\\
 \texttt{--enable-debug}&        compile with debug flags (only for selected cases; default: no)\\
@@ -661,29 +661,29 @@ At your choice, you may compile the complete \qe\ suite of programs
 \begin{itemize}
 \item \texttt{make pw}  compiles the self-consistent-field package \PWscf
 \item \texttt{make cp}  compiles the Car-Parrinello package \CP
-\item \texttt{make neb} compiles the \NEB\ package.
-\item \texttt{make ph}  compiles the \PHonon\
-package
+\item \texttt{make neb} compiles the \NEB\ package
+\item \texttt{make ph}  compiles the \PHonon\ package
 \item \texttt{make pp}  compiles the postprocessing package \PostProc
 \item \texttt{make pwcond} compiles the ballistic conductance package 
                            \texttt{PWcond}
 \item \texttt{make pwall} produces all of the above.
-\item \texttt{make ld1} compiles the pseudopotential package \texttt{atomic} s
+\item \texttt{make ld1} compiles the pseudopotential package \texttt{atomic}
 \item \texttt{make upf} produces utilities for pseudopotential conversion in
-                        directory \texttt{upftools/}.
-\item \texttt{make all} produces all of the above.
+                        directory \texttt{upftools/}
+\item \texttt{make all} produces all of the above
 \item \texttt{make plumed} unpacks \texttt{PLUMED}, patches several routines
                            in \texttt{PW/}, \texttt{CPV/} and \texttt{clib/},
-                           recompiles \PWscf\ and \CP\ with \texttt{PLUMED} support.
+                           recompiles \PWscf\ and \CP\ with \texttt{PLUMED}
+                           support
 \item \texttt{make w90} unpacks \texttt{wannier90}, copies an appropriate
                        \texttt{make.sys} file,  produces all executables
-                       in \texttt{W90/wannier90.x} and in \texttt{bin/}.
+                       in \texttt{W90/wannier90.x} and in \texttt{bin/}
 \item \texttt{make want} unpacks \texttt{WanT}, runs its \configure,
                          produces all executables for \texttt{WanT} in 
                          \texttt{WANT/bin}.
 \item \texttt{make yambo} unpacks \texttt{yambo}, runs its \configure,
                           produces all \texttt{yambo} executables in 
-                          \texttt{YAMBO/bin}.
+                          \texttt{YAMBO/bin}
 \item \texttt{make gipaw} downloads \texttt{GIPAW} from \texttt{qe-forge},
                           unpacks it, runs its \configure,
                           produces all \texttt{GIPAW} executables in 
@@ -758,7 +758,7 @@ For example, if the command line is like this (as for an IBM SP):
 \end{verbatim}
 you should set PARA\_PREFIX="poe", PARA\_POSTFIX="-procs
 4". Furthermore, if your machine does not support interactive use, you
-must run the commands specified below through the batch queuing
+must run the commands specified above through the batch queuing
 system installed on that machine. Ask your system administrator for
 instructions. For execution using OpenMP on N threads, 
 you should set PARA\_PREFIX to \texttt{"env OMP\_NUM\_THREADS=N ... "}.
@@ -781,13 +781,14 @@ particular if different FFT dimensions are automatically selected. For
 this reason, a plain diff of your results against the reference data
 doesn't work, or at least, it requires human inspection of the results. 
 
-The example scripts stop if an error is detected. You should look INSIDE
+The example scripts stop if an error is detected. You should look {\em inside}
 the last written output file to understand why.
 
 \subsection{Installation tricks and problems}
 
 \subsubsection{All architectures}
-
+\begin{itemize}
+\item
 Working Fortran-95 and C compilers are needed in order
 to compile \qe. Most ``Fortran-90'' compilers actually
 implement the Fortran-95 standard, but older versions 
@@ -796,7 +797,7 @@ C and Fortran compilers must be in your PATH.
 If \configure\ says that you have no working compiler, well,
 you have no working compiler, at least not in your PATH, and
 not among those recognized by \configure.
-
+\item
 If you get {\em Compiler Internal Error} or similar messages: your
 compiler version is buggy. Try to lower the optimization level, or to
 remove optimization just for the routine that has problems. If it
@@ -804,7 +805,7 @@ doesn't work, or if you experience weird problems at run time, try to
 install patches for your version of the compiler (most vendors release
 at least a few patches for free), or to upgrade to a more recent
 compiler version.
-
+\item
 If you get error messages at the loading phase that look like 
 {\em file XYZ.o: unknown / not recognized/ invalid / wrong
 file type / file format / module version},
@@ -826,13 +827,14 @@ you have the correct C-to-Fortran bindings, defined in
 Note that \qe\ is self-contained (with the exception of MPI libraries for 
 parallel compilation): if system libraries are missing, the problem is in
 your compiler/library combination or in their usage, not in \qe.
-
+\item
 If you get mysterious errors in the provided tests and examples:
 your compiler, or your mathematical libraries, or MPI libraries,
 or a combination thereof, is very likely buggy. Although the 
 presence of subtle bugs in \qe\ that are not revealed during 
 the testing phase can never be ruled out, it is very unlikely
 that this happens on the provided tests and examples. 
+\end{itemize}
 
 \subsubsection{Cray XT machines}
 
@@ -1138,18 +1140,16 @@ fortran BLAS are linked instead of system Atlas libraries. Use:
 \paragraph{Detailed installation instructions for Mac OS X 10.6}
 
 (Instructions for 10.6.3 by Osman Baris Malcioglu, tested as of May 2010)
-
 Summary for the hasty: 
-
-GNU:
+\begin{itemize}
+\item GNU fortran:
 Install macports compilers, 
 Install MPI environment,
 Configure \qe\  using
 \begin{verbatim}
   ./configure CC=gcc-mp-4.3 CPP=cpp-mp-4.3 CXX=g++-mp-4.3 F77=g95 FC=g95
 \end{verbatim}
-
-Intel:
+\item Intel compiler:
 Use Version $>11.1.088$,
 Use 32 bit compilers,
 Install MPI environment,
@@ -1158,9 +1158,9 @@ Configure \qe\ using
 \begin{verbatim}
  ./configure CC=icc CXX=icpc F77=ifort F90=ifort FC=ifort CPP=cpp-mp-4.3
 \end{verbatim}
+\end{itemize}
 
-Compilation with GNU compilers:
-
+\paragraph{Compilation with GNU compilers}.
 The following instructions use macports version of gnu compilers due to some
 issues in mixing gnu supplied fortran compilers with apple modified gnu compiler
 collection. For more information regarding macports please refer to:
@@ -1186,10 +1186,10 @@ libraries tend to misbehave under different tests, and it is much safer to
 use internal libraries. The minimum recommended configuration
 line is (presuming the environment is set correctly):
 \begin{verbatim}
-  ./configure CC=gcc-mp-4.3 CXX=g++-mp-4.3 F77=g95 F90=g95 FC=g95 CPP=cpp-mp-4.3 --with-internal-blas --with-internal-lapack
+  ./configure CC=gcc-mp-4.3 CXX=g++-mp-4.3 F77=g95 F90=g95 FC=g95 \
+              CPP=cpp-mp-4.3 --with-internal-blas --with-internal-lapack
 \end{verbatim}
-
-Compilation with Intel compilers:
+\paragraph{Compilation with Intel compilers}.
 Newer versions of Intel compiler (>11.1.067) support Mac OS X 10.6, and furthermore they are
 bundled with intel MKL. 32 bit binaries obtained using 11.1.088 are tested and no problems
 have been encountered so far. Sadly, as of 11.1.088 the 64 bit binary misbehave 
@@ -1197,7 +1197,6 @@ under some tests. Any attempt to compile 64 bit binary using v.$<11.1.088$ will 
 very strange compilation errors.   
 
 Like the previous section, I would recommend installing macports compiler suite. 
-
 First, make sure that you are using the 32 bit version of the compilers,
 i.e.  
 \begin{verbatim}
@@ -1487,7 +1486,7 @@ codes running on a different  number of processors.
 
 In addition to the above, other restrictions to file
 interoperability apply: e.g., \CP\ can read only files
-produced by \PWscf for the $k=0$ case. 
+produced by \PWscf\ for the $k=0$ case. 
 
 The directory for data is specified in input variables
 \texttt{outdir} and \texttt{prefix} (the former can be specified
@@ -1524,7 +1523,7 @@ mysterious errors when reading data. If this happens, use the option
 \texttt{-in} (or \texttt{-inp} or \texttt{-input}), followed by the input file name. 
 Example:
 \begin{verbatim}
-   pw.x -in inputfile npool 4 > outputfile
+   pw.x -in inputfile -npool 4 > outputfile
 \end{verbatim} 
 Of course the 
 input file must be accessible by the processor that must read it
@@ -1580,227 +1579,5 @@ instructions to compile and install MPI libraries
 can be found in the following post by Javier Antonio Montoya:\\
 \texttt{http://www.democritos.it/pipermail/pw\_forum/2008-April/008818.htm}.
 
-\section{Performances}
-
-\subsection{Execution time}
-
-Since v.4.2 \qe\ prints real (wall) time instead of CPU time.
-
-The following is a rough estimate of the complexity of a plain
-scf calculation with \pwx, for Norm-Conserving pseudopotentials. Ultrasoft pseudopotentials
-nd PAW 
-give raise additional terms to be calculated, that may add from a 
-few percent 
-up to 30-40\% to execution time. For phonon calculations, each of the
-$3N_{at}$ modes requires a time of the same order of magnitude of
-self-consistent calculation in the same system (possibly times a small multiple). 
-For \cpx, each time step takes something in the order of
-$T_h + T_{orth} + T_{sub}$ defined below.
-
-The time required for the self-consistent solution at fixed ionic
-positions, $T_{scf}$ , is:
-$$T_{scf} = N_{iter} T_{iter} + T_{init}$$
-where $N_{iter}$  = number of self-consistency iterations (\texttt{niter}), 
-$T_{iter}$ =
-time for a single iteration, $T_{init}$ = initialization time
-(usually much smaller than the first term).
-
-The time required for a single self-consistency iteration $T_{iter}$ is:
-$$T_{iter} = N_k T_{diag} +T_{rho} + T_{scf}$$
-where $N_k$ = number of k-points, $T_{diag}$ = time per 
-Hamiltonian iterative diagonalization, $T_{rho}$ = time for charge density 
-calculation, $T_{scf}$ = time for Hartree and XC potential
-calculation.
-    
-The time for a Hamiltonian iterative diagonalization $T_{diag}$ is:
-$$T_{diag} = N_h T_h + T_{orth} + T_{sub}$$
-where $N_h$ = number of $H\psi$ products needed by iterative diagonalization,
-$T_h$ = time per $H\psi$ product, $T_{orth}$ = CPU time for 
-orthonormalization, $T_{sub}$ = CPU time for subspace diagonalization.
-    
-The time $T_h$ required for a $H\psi$ product is
-$$T_h = a_1 M N + a_2 M N_1 N_2 N_3 log(N_1 N_2 N_3 ) + a_3 M P N. $$
-The first term comes from the kinetic term and is usually much smaller
-than the others. The second and third terms come respectively from local
-and nonlocal potential. $a_1, a_2, a_3$ are prefactors (i.e.
-small numbers ${\cal O}(1)$), M = number of valence
-bands (\texttt{nbnd}), N = number of PW (basis set dimension: \texttt{npw}), $N_1, N_2, N_3$ =
-dimensions of the FFT grid for wavefunctions (\texttt{nr1s}, \texttt{nr2s},
-\texttt{nr3s}; $N_1 N_2 N_3 \sim 8N$ ), 
-P = number of pseudopotential projectors, summed on all atoms, on all values of the
-angular momentum $l$, and $m = 1, . . . , 2l + 1$.
-
-The time $T_{orth}$ required by orthonormalization is
-$$T_{orth} = b_1 N M_x^2$$ 
-and the time $T_{sub}$ required by subspace diagonalization is
-$$T_{sub} = b_2 M_x^3$$
-where $b_1$ and $b_2$ are prefactors, $M_x$ = number of trial wavefunctions 
-(this will vary between $M$ and $2\div4 M$, depending on the algorithm).
-    
-The time $T_{rho}$ for the calculation of charge density from wavefunctions is
-$$T_{rho} = c_1 M N_{r1} N_{r2}N_{r3} log(N_{r1} N_{r2} N_{r3}) + 
-            c_2 M N_{r1} N_{r2} N_{r3} + T_{us}$$
-where $c_1, c_2, c_3$ are prefactors, $N_{r1}, N_{r2}, N_{r3}$ =
-dimensions of the FFT grid for charge density (\texttt{nr1},
-\texttt{nr2}, \texttt{nr3}; $N_{r1} N_{r2} N_r3 \sim 8N_g$,
-where $N_g$ = number of G-vectors for the charge density,
-\texttt{ngm}), and 
-$T_{us}$ = time required by PAW/Ultrasoft contribution (if any).
-Note that for Norm-Conserving pseudopotentials
-the FFT grids for charge and
-wavefunctions are the same.
- 
-The time $T_{scf}$ for calculation of potential from charge density is
-$$T_{scf} = d_2 N_{r1} N_{r2} N_{r3} + d_3 N_{r1} N_{r2} N_{r3} 
-            log(N_{r1} N_{r2} N_{r3} )$$
-where $d_1, d_2$ are prefactors.
-
-The above estimates are for serial execution. In parallel execution,
-each contribution may scale in a different manner with the number of processors (see below).
-
-\subsection{Memory requirements}
-
-A typical self-consistency or molecular-dynamics run requires a maximum
-memory in the order of $O$ double precision complex numbers, where
-$$ O = m M N + P N + p N_1 N_2 N_3 + q N_{r1} N_{r2} N_{r3}$$
-with $m, p, q$ = small factors; all other variables have the same meaning as
-above. Note that if the $\Gamma-$point only ($k=0$) is used to sample the 
-Brillouin Zone, the value of N will be cut into half.
-
-The memory required by the phonon code follows the same patterns, with
-somewhat larger factors $m, p, q$.
-
-\subsection{File space requirements}
-
-A typical \pwx\ run will require an amount of temporary disk space in the
-order of O double precision complex numbers:
-$$O = N_k M N + q N_{r1} N_{r2}N_{r3}$$
-where $q = 2\times$ \texttt{mixing\_ndim} (number of iterations used in 
-self-consistency, default value = 8) if \texttt{disk\_io} is set to 'high'; q = 0 
-otherwise.
-
-\subsection{Parallelization issues}
-\label{SubSec:badpara}
-
-\pwx\ and \cpx\ can run in principle on any number of processors.
-The effectiveness of parallelization is ultimately judged by the 
-''scaling'', i.e. how the time needed to perform a job scales
- with the number of processors, and depends upon:
-\begin{itemize}
-\item the size and type of the system under study;
-\item the judicious choice of the various levels of parallelization 
-(detailed in Sec.\ref{SubSec:para});
-\item the availability of fast interprocess communications (or lack of it).
-\end{itemize}
-Ideally one would like to have linear scaling, i.e. $T \sim T_0/N_p$ for 
-$N_p$ processors, where $T_0$ is the estimated time for serial execution.
- In addition, one would like to have linear scaling of
-the RAM per processor: $O_N \sim O_0/N_p$, so that large-memory systems
-fit into the RAM of each processor.
-
-As a general rule, image parallelization:
-\begin{itemize}
-\item  may give good scaling, but the slowest image will determine
-the overall performances (''load balancing'' may be a problem);
-\item requires very little communications (suitable for ethernet 
-communications);
-\item does not reduce the required memory per processor (unsuitable for 
-large-memory jobs).
-\end{itemize}
-Parallelization on k-points:
-\begin{itemize}
-\item guarantees (almost) linear scaling if the number of k-points
-is a multiple of the number of pools;
-\item requires little communications (suitable for ethernet communications);
-\item does not reduce the required memory per processor (unsuitable for 
-large-memory jobs).
-\end{itemize}
-Parallelization on PWs:
-\begin{itemize}
-\item yields good to very good scaling, especially if the number of processors
-in a pool is a divisor of $N_3$ and $N_{r3}$ (the dimensions along the z-axis 
-of the FFT grids, \texttt{nr3} and \texttt{nr3s}, which coincide for Norm-Conserving pseudopotentials);
-\item requires heavy communications (suitable for Gigabit ethernet up to 
-4, 8 CPUs at most, specialized communication hardware needed for 8 or more
-processors );
-\item yields almost linear reduction of memory per processor with the number
-of processors in the pool.
-\end{itemize}
-
-A note on scaling: optimal serial performances are achieved when the data are
-as much as possible kept into the cache. As a side effect, PW
-parallelization may yield superlinear (better than linear) scaling,
-thanks to the increase in serial speed coming from the reduction of data size 
-(making it easier for the machine to keep data in the cache).
-
-VERY IMPORTANT: For each system there is an optimal range of number of processors on which to 
-run the job.  A too large number of processors will yield performance 
-degradation. If the size of pools is especially delicate: $N_p$ should not 
-exceed $N_3$ and $N_{r3}$, and should ideally be no larger than
-$1/2\div1/4 N_3$ and/or $N_{r3}$. In order to increase scalability,
-it is often convenient to 
-further subdivide a pool of processors into ''task groups''.
-When the number of processors exceeds the number of FFT planes, 
-data can be redistributed to "task groups" so that each group 
-can process several wavefunctions at the same time.
-
-The optimal number of processors for "linear-algebra"
-parallelization, taking care of multiplication and diagonalization 
-of $M\times M$ matrices, should be determined by observing the
-performances of \texttt{cdiagh/rdiagh} (\pwx) or \texttt{ortho} (\cpx)
-for different numbers of processors in the linear-algebra group
-(must be a square integer).
-
-Actual parallel performances will also depend on the available software 
-(MPI libraries) and on the available communication hardware. For
-PC clusters, OpenMPI (\texttt{http://www.openmpi.org/}) seems to yield better 
-performances than other implementations (info by Kostantin Kudin). 
-Note however that you need a decent communication hardware (at least 
-Gigabit ethernet) in order to have acceptable performances with 
-PW parallelization. Do not expect good scaling with cheap hardware: 
-PW calculations are by no means an "embarrassing parallel" problem.
-   
-Also note that multiprocessor motherboards for Intel Pentium CPUs typically 
-have just one memory bus for all processors. This dramatically
-slows down any code doing massive access to memory (as most codes 
-in the \qe\ distribution do) that runs on processors of the same
-motherboard.
-
 \end{document}
 
-\begin{itemize}
-\item the number of ``images'' used by NEB or phonon calculations;
-\item the number of ``pools'' into which processors are to be grouped
-  (\pwx\ only);
-\item the number of ``task groups'' into which processors are to be
-  grouped;
-\item the number of processors performing iterative diagonalization
-  (for \pwx) or orthonormalization (for \cpx).
-\end{itemize}
-
-For illustration, here is how to run \pwx\ on 16 processors partitioned into
-8 pools (2 processors each), for several typical cases. 
-
-IBM SP machines, batch:
-\begin{verbatim}
-   pw.x -npool 8 -in input
-\end{verbatim}
-This should also work interactively, with environment variables NPROC
-set to 16, MP\_HOSTFILE set to the file containing a list of processors.
-
-IBM SP machines, interactive, using \texttt{poe}:
-\begin{verbatim}
-   poe pw.x -procs 16 -npool 8 < input
-\end{verbatim}
-PC clusters using \texttt{mpiexec}:
-\begin{verbatim}
-   mpiexec -n 16 pw.x -npool 8 -in input
-\end{verbatim}
-SGI Altix and PC clusters using \texttt{mpirun}:
-\begin{verbatim}   mpirun -np 16 pw.x -npool 8 -in input
-\end{verbatim}
-IBM BlueGene using \texttt{mpirun}:
- \begin{verbatim}
-  mpirun -np 16 -exe /path/to/executable/pw.x -args "-npool 8" \
-    -in /path/to/input -cwd /path/to/work/directory
-\end{verbatim}
