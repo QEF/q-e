@@ -126,56 +126,15 @@ under the main \qe\ directory, or in web site
 Once \qe\ is correctly configured, \PostProc\ can be compiled by
 just typing \texttt{make pp}, from the main \qe\ directory;
 or typing \make\ from the \texttt{PP/} subdirectory.
-The executable codes that are produced in \texttt{PP/bin} are:
-\begin{itemize}
-\item  \texttt{pp.x} extracts the specified data from data files,
-  produced by \PWscf\ (\pwx\ executable) or \CP\ (\cpx\ executable);
-  prepares data for plotting by writing them into formats that can be
-  read by several plotting programs. 
-\item  \texttt{bands.x} extracts and reorders eigenvalues from files 
-  produced by \pwx\ for band structure plotting 
-\item  \texttt{plotband.x} reads the output of  \texttt{bands.x}, produces 
-  PostScript plots of the band structure
-\item  \texttt{projwfc.x} calculates projections of wavefunction over atomic
-  orbitals, performs L\"owdin population analysis and calculates
-  projected density of states. Data produced by this code can be further 
- analysed using auxilary codes \texttt{sumpdos.x} and \texttt{plotproj.x} . 
-\item  \texttt{plotrho.x} produces PostScript 2-d contour plots
-\item  \texttt{pawplot.x} produces 1-d plots of the all-electron charge
-       for PAW calculations
-\item  \texttt{average.x} calculates planar averages of quantities produced by
-   \texttt{pp.x} (potentials, charge, magnetization densities,...) 
-\item  \texttt{plan_avg.x} calculates planar averages of Kohn-Sham orbitals
-\item  \texttt{dos.x} calculates electronic Density of States (DOS)
-\item \texttt{epsilon.x} calculates RPA frequency-dependent complex dielectric function
-\item  \texttt{pw2wannier.x}: interface with Wannier90 package
-\item  \texttt{wannier\_ham.x}: generate a model Hamiltonian 
-in Wannier functions basis
-\item  \texttt{pmw.x} generates Poor Man's Wannier functions, to be used in
-  DFT+U calculations 
-\item  \texttt{initial\_state.x} calculates the initial state contribution
-       to the core-level shift
-\end{itemize}
-Note about Bader's analysis: on
-\texttt{http://theory.cm.utexas.edu/bader/} one can find a software that performs
-Bader's analysis starting from charge on a regular grid. The required 
-"cube" format can be produced by \qe\ using  \texttt{pp.x} (info by G. Lapenna
-who has successfully used this technique, but adds: ``Problems occur with polar 
-X-H bonds or in all cases where the zero-flux of density comes too close to 
-atoms described with pseudo-potentials"). This code should perform 
-decomposition into Voronoi polyhedra as well, in place of obsolete
-code  \texttt{voronoy.x} (removed from distribution since v.4.2).
+Several executable codes are produced in \texttt{PP/bin}
+and linked to \texttt{bin/}.
 
-\section{Post-processing}
+\section{Usage}
 
-There are a number of auxiliary codes performing postprocessing tasks such
-as plotting, averaging, and so on, on the various quantities calculated by
-\pwx. Such quantities are saved by \pwx\ into the output data file(s). 
-Postprocessing codes are in the \texttt{PP/} directory. All codes for 
-which input documentation is not explicitly mentioned have documentation
-in the header of the fortran sources.
-
-\subsection{Units}
+All codes for which input documentation is not explicitly mentioned below
+havesome documentation in the header of the fortran sources.
+In the following, ``Example N'' standes for subdirectory 
+\texttt{examples/exampleN/}.
 
 All quantities whose dimensions are not explicitly specified are in
 RYDBERG ATOMIC UNITS. Charge is "number" charge (i.e. not multiplied 
@@ -184,8 +143,10 @@ $e$).
 
 \subsection{Plotting selected quantities}
   
-The main postprocessing code \texttt{pp.x} reads data file(s), extracts or calculates 
-the selected quantity, writes it into a format that is suitable for plotting.
+The main postprocessing code \texttt{pp.x} extracts the specified data
+from the data files produced by \PWscf\ (\pwx\ executable) or \CP\ 
+(\cpx\ executable); prepares data for plotting by writing them into 
+formats that can be read by several plotting programs.
 
 Quantities that can be read or calculated are:
 \begin{quote}
@@ -198,35 +159,63 @@ Quantities that can be read or calculated are:
       selected squared wavefunction\\
       ELF (electron localization function)\\
       RDG (reduced density gradient)\\
-      planar averages\\
       integrated local density of states
 \end{quote}
 Various types of plotting (along a line, on a plane, three-dimensional, polar)
 and output formats (including the popular cube format) can be specified.
+Moreover data can be saved to an intermediate (formatted) file so that
+more data set can be summed or subracted in a later run.
 The output files can be directly read by the free plotting system Gnuplot
-(1D or 2D plots), or by code \texttt{plotrho.x} that comes with \PostProc\ (2D plots),
+(1D or 2D plots), or by code \texttt{plotrho.x} that comes with \PostProc\ 
+and produces PostScript 2D plots,
 or by advanced plotting software XCrySDen and gOpenMol (3D plots).
 
-See file \texttt{Doc/INPUT\_PP.*} for a detailed description of the input for code \texttt{pp.x}.
-See Example 05 for an example of a charge density plot, Example 16
+See file \texttt{Doc/INPUT\_PP.*} for a detailed description of the input
+for code \texttt{pp.x}.
+See Example 01 for an example of a charge density plot, Example 03
 for an example of STM image simulation.
+
+\paragraph{Planar averages}
+Code \texttt{plan\_avg.x} calculates planar averages of Kohn-Sham orbitals.
+Code \texttt{average.x} calculates planar averages of quantities calculated
+by \texttt{pp.x} (e.g. potentials, charge, magnetization densities).
+Note that \texttt{average.x} reads the intermediate file produced
+by \texttt{pp.x}, not data files produced by \pwx. Examples of usage 
+of \texttt{average.x} can be found in \texttt{examples/WorcFct\_example/} 
+and in \texttt{examples/dipole\_example/}.
+
+\paragraph{All-electron charge}
+\texttt{pawplot.x} produces plots of the all-electron charge
+for PAW calculations.
+
+\paragraph{About Bader's analysis}
+In \texttt{http://theory.cm.utexas.edu/bader/} one can find a software 
+that performs
+Bader's analysis starting from charge on a regular grid. The required 
+"cube" format can be produced by \qe\ using  \texttt{pp.x} (info by G. Lapenna
+who has successfully used this technique, but adds: ``Problems occur with polar 
+X-H bonds or in all cases where the zero-flux of density comes too close to 
+atoms described with pseudo-potentials"). This code should perform 
+decomposition into Voronoi polyhedra as well, in place of obsolete
+code  \texttt{voronoy.x} (removed from distribution since v.4.2).
 
 \subsection{Band structure, Fermi surface}
 
 The code \texttt{bands.x} reads data file(s), extracts eigenvalues,
 regroups them into bands (the algorithm used to order bands and to resolve
 crossings may not work in all circumstances, though). The output is written
-to a file in a simple format that can be directly read by plotting program
-\texttt{plotband.x}. Unpredictable plots may results if k-points are not in sequence
-along lines. See Example 05 directory for a simple band plot.
-
-The code \texttt{bands.x} performs as well a symmetry analysis of the band structure:
-see Example 01. 
+to a file in a simple format that can be directly read and converted to
+plottable format by auxiliary code
+\texttt{plotband.x}. Unpredictable plots may results if k-points are not 
+in sequence along lines. The code \texttt{bands.x} performs as well a 
+symmetry analysis of the band structure. For a complete input description,
+see\texttt{Doc/INPUT\_bands.*}. See Example 01, Example 04 and Example 06 
+for simple band plots.
 
 The calculation of Fermi surface can be performed using 
 \texttt{kvecs\_FS.x} and
 \texttt{bands\_FS.x}. The resulting file in .xsf format can be read and plotted
-using XCrySDen. See Example 08 for an example of Fermi surface 
+using XCrySDen. See Example 02 for an example of Fermi surface 
 visualization (Ni, including the spin-polarized case).
 
 \subsection{Projection over atomic states, DOS}
@@ -246,37 +235,59 @@ $P_{0,0}(t)$, $P_{1,0}(t)$, $P_{1,1}(t)cos\phi$, $P_{1,1}(t)sin\phi$,
 and so on, where $P_{l,m}$=Legendre Polynomials, 
 $t = cos\theta = z/r$, $\phi= atan(y /x)$.
 
-The total electronic DOS is instead calculated by code
-\texttt{dos.x}. See Example 08 for total and projected 
-electronic DOS calculations.
+Data produced by code \texttt{projwfc.x} can be further 
+analysed using auxiliary codes \texttt{sumpdos.x} (sums selected PDOS
+by specifying the names of files containing the desired PDOS: type 
+\texttt{sumpdos.x -h} or look into the source code for more details) 
+and \texttt{plotproj.x} . 
+
+The total electronic DOS can also be calculated by code \texttt{dos.x},
+whose complete input documentation is in \texttt{Doc/INPUT\_DOS.*}
+See Example 02 for total and projected electronic DOS calculations;
+see Example 03 for projected and local DOS calculations.
 
 \subsection{Wannier functions}
 
 There are several Wannier-related utilities in \PostProc:
 \begin{enumerate}
 \item The "Poor Man Wannier" code \texttt{pmw.x}, to be used
-in conjunction with DFT+U calculations (see Example 25)
+in conjunction with DFT+U calculations (see Example 05)
 \item The interface with Wannier90 code, \texttt{pw2wannier.x}:
 see the documentation in \texttt{W90/} (you have to install the 
 Wannier90 plug-in)
 \item The \texttt{wannier\_ham.x} code generates a model Hamiltonian 
 in Wannier functions basis: see \texttt{examples/WannierHam\_example/}.
 \end{enumerate}
+Note that the \texttt{wfdd.x} code has been moved to \CP.
+
+\subsection{Interfaces to/from other code}
+
+Codes \texttt{pw2bgw.x} and \texttt{bgw2pw.x} convert data files from
+\pwx\ to a format suitable for usage by the Berkeley GW code, and vice
+versa. See files \texttt{Doc/INPUT\_pw2bgw.*} and \texttt{Doc/INPUT\_bgw2pw.*}
+for input data documentation.
+
+Undocumented code \texttt{pw2gw.x} converts data files from \pwx\ to
+a format suitable for usage by another GW code.
+
+Code \texttt{pw\_export.x}, not compiled by default, is an interface
+to other codes, documented in \texttt{Doc/INPUT\_pw\_export.*}
+Code \texttt{qexml.x}, not compiled by default, is a template that
+is useful to follow when wrting interfaces.
 
 \subsection{Other tools}
 
-Code \texttt{sumpdos.x} can be used to sum selected PDOS, produced by
-\texttt{projwfc.x}, by specifying the names of files
-containing the desired PDOS. Type \texttt{sumpdos.x -h} or look into the source
-code for more details. 
-
 Code \texttt{epsilon.x} calculates RPA frequency-dependent complex dielectric 
-function. Documentation is in file \texttt{eps\_man.tex}.
+function. Documentation is in file \texttt{Doc/eps\_man.tex}.
+
+Code \texttt{initial\_state.x} calculates the initial state contribution
+to the Core-level shift. See \texttt{examples/CLS\_IS\_example/} for
+an example, and \texttt{examples/CLS\_FS\_example/} for the corrsponding
+final state calculation of Core-level shifts.
 
 \section{Troubleshooting}
 
-Almost all problems in \qe\ arise from incorrect input data 
-and result in
+Almost all problems in \qe\ arise from incorrect input data and result in
 error stops. Error messages should be self-explanatory, but unfortunately
 this is not always true. If the code issues a warning messages and continues,
 pay attention to it but do not assume that something is necessarily wrong in
