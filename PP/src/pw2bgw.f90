@@ -57,35 +57,35 @@
 !
 !-------------------------------------------------------------------------------
 !
-!   pw2bgw subroutines:
+! pw2bgw subroutines:
 !
-!   write_wfng  - generates complex wavefunctions in G-space (normalized to 1)
-!   real_wfng   - constructs real wavefunctions by applying the Gram-Schmidt
-!                 process (called from write_wfng)
-!   write_rhog  - generates complex charge density in G-space
-!                 (units of the number of electronic states per unit cell)
-!   write_vxcg  - generates complex exchange-correlation potential in G-space
-!                 (units of Rydberg) [only local part of Vxc]
-!   write_vxc0  - prints complex exchange-correlation potential at G=0
-!                 (units of eV) [only local part of Vxc]
-!   write_vxc_r - calculates matrix elements of exchange-correlation potential
-!                 in R-space (units of eV) [only local part of Vxc]
-!   write_vxc_g - calculates matrix elements of exchange-correlation potential
-!                 in G-space (units of eV) [supports non-local Vxc]
-!   write_vnlg  - generates Kleinman-Bylander projectors in G-space
-!                 (units of Rydberg)
-!   check_inversion - checks whether real/complex version is appropriate
+! write_wfng  - generates complex wavefunctions in G-space (normalized to 1)
+! real_wfng   - constructs real wavefunctions by applying the Gram-Schmidt
+!               process (called from write_wfng)
+! write_rhog  - generates complex charge density in G-space
+!               (units of the number of electronic states per unit cell)
+! write_vxcg  - generates complex exchange-correlation potential in G-space
+!               (units of Rydberg) [only local part of Vxc]
+! write_vxc0  - prints complex exchange-correlation potential at G=0
+!               (units of eV) [only local part of Vxc]
+! write_vxc_r - calculates matrix elements of exchange-correlation potential
+!               in R-space (units of eV) [only local part of Vxc]
+! write_vxc_g - calculates matrix elements of exchange-correlation potential
+!               in G-space (units of eV) [supports non-local Vxc]
+! write_vnlg  - generates Kleinman-Bylander projectors in G-space
+!               (units of Rydberg)
+! check_inversion - checks whether real/complex version is appropriate
 !
-!   Quantum ESPRESSO stores the wavefunctions in is-ik-ib-ig order
-!   BerkeleyGW stores the wavefunctions in ik-ib-is-ig order
-!   the outer loop is over is(QE)/ik(BGW) and the inner loop is over ig
-!   ik = k-point index, is = spin index, ib = band index, ig = G-vector index
+! Quantum ESPRESSO stores the wavefunctions in is-ik-ib-ig order
+! BerkeleyGW stores the wavefunctions in ik-ib-is-ig order
+! the outer loop is over is(QE)/ik(BGW) and the inner loop is over ig
+! ik = k-point index, is = spin index, ib = band index, ig = G-vector index
 !
-!   write_wfng reverts the order of is and ik using smap and kmap arrays,
-!   distributes wavefunctions over processors by ig (either real case or
-!   spin-polarized case), calls real_wfng that applies the Gram-Schmidt
-!   process (real case), reverts the order of is and ib (spin-polarized
-!   case), and writes wavefunctions to disk
+! write_wfng reverts the order of is and ik using smap and kmap arrays,
+! distributes wavefunctions over processors by ig (either real case or
+! spin-polarized case), calls real_wfng that applies the Gram-Schmidt
+! process (real case), reverts the order of is and ib (spin-polarized
+! case), and writes wavefunctions to disk
 !
 !-------------------------------------------------------------------------------
 
@@ -337,10 +337,8 @@ PROGRAM pw2bgw
   IF ( vxcg_flag ) CALL print_clock ( 'write_vxcg' )
   IF ( vxc0_flag ) CALL print_clock ( 'write_vxc0' )
   IF ( vxc_flag ) THEN
-    IF ( vxc_integral .EQ. 'r' ) &
-      CALL print_clock ( 'write_vxc_r' )
-    IF ( vxc_integral .EQ. 'g' ) &
-      CALL print_clock ( 'write_vxc_g' )
+    IF ( vxc_integral .EQ. 'r' ) CALL print_clock ( 'write_vxc_r' )
+    IF ( vxc_integral .EQ. 'g' ) CALL print_clock ( 'write_vxc_g' )
   ENDIF
   IF ( vnlg_flag ) CALL print_clock ( 'write_vnlg' )
   IF ( wfng_flag .AND. real_or_complex .EQ. 1 ) THEN

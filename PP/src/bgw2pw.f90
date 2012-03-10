@@ -57,11 +57,11 @@
 !
 !-------------------------------------------------------------------------------
 !
-!   bgw2pw subroutines:
+! bgw2pw subroutines:
 !
-!   write_evc - generates eigenvalues and wavefunctions in espresso format
-!   write_cd  - generates charge density in espresso format
-!   check_inversion - checks whether real/complex version is appropriate
+! write_evc - generates eigenvalues and wavefunctions in espresso format
+! write_cd  - generates charge density in espresso format
+! check_inversion - checks whether real/complex version is appropriate
 !
 !-------------------------------------------------------------------------------
 
@@ -949,7 +949,8 @@ subroutine check_inversion(real_or_complex, ntran, mtrx, nspin, warn, real_need_
       endif
     endif
     if(nspin .eq. 2) then
-      call errore('check_inversion', 'Time-reversal symmetry is absent in spin-polarized calculation. Complex version must be used.', -2)
+      call errore('check_inversion', &
+        'Time-reversal symmetry is absent in spin-polarized calculation. Complex version must be used.', -2)
     endif
   endif
 

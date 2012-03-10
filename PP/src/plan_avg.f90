@@ -123,10 +123,14 @@ PROGRAM plan_avg
         ENDDO
      ENDDO
      !
+     CLOSE (UNIT = iunplot, STATUS = 'keep')
+     !
   ENDIF
   !
   DEALLOCATE (plan)
   DEALLOCATE (averag)
+  !
+  CALL stop_pp ( )
 
 CONTAINS
 !
