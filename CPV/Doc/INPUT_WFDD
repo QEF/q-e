@@ -17,7 +17,7 @@
 ! make sure that the parameters (Q and DT) give the same answer as the SD !
 ! or CG. This code requires as input, the overlap matrix. This can be     !
 ! calculated from the CP code by setting CALWF to 2 in the &WANNIER       !
-! namelist (The defaukt value is 3, for Wannier dynamics. This option     !
+! namelist (The default value is 3, for Wannier dynamics. This option     !
 ! outputs the overlap matrix to unit 38, and wfdd.x reads it from the same!
 ! file.  								  !
 ! In addition to that, you need an input file of the following form.      !
@@ -49,7 +49,7 @@
 !          end of the last run and continues from there.                  !
 !									  !
 ! The other  are used for the Damped dynamics and are  defined            !
-! in the INPUT_CP file in the Doc/ directory under NAMELIST &WANNIER.     !
+! in the INPUT_CP.* file in the Doc/ directory under NAMELIST &WANNIER.     !
 !								  	  !
 ! The program may be compiled by make wfdd.x and then run as follows      !
 !       ./wfdd.x < [input-filename] > [output-filename] &                 !

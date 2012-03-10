@@ -1066,3 +1066,4 @@ wf.o : printout_base.o
 wf.o : smallbox_gvec.o
 wf.o : wannier.o
 wf.o : wannier_base.o
+wfdd.o : ../../Modules/constants.o

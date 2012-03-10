@@ -52,8 +52,7 @@ LIBOBJS = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src
 
 all : tldeps average.x bands.x dos.x epsilon.x initial_state.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
-      pawplot.x sumpdos.x wfdd.x \
-      pw2wannier90.x pw_export.x pw2gw.x \
+      pawplot.x sumpdos.x pw2wannier90.x pw_export.x pw2gw.x \
       wannier_ham.x wannier_plot.x \
       pw2bgw.x bgw2pw.x
 
@@ -141,10 +140,6 @@ pw2gw.x : pw2gw.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 pw_export.x : pw_export.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		pw_export.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
-
-wfdd.x : wfdd.o
-	$(LD) $(LDFLAGS) -o $@ wfdd.o $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 sumpdos.x : sumpdos.o 

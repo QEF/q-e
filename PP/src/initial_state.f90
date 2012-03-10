@@ -9,7 +9,7 @@
 PROGRAM initial_state
   !-----------------------------------------------------------------------
   !
-  !  compute forces on atoms as a post-process
+  !  compute initial-state contribution to core level shift
   !
   ! input: namelist "&inputpp", with variables
   !   prefix      prefix of input files saved by program pwscf

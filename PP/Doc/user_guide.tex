@@ -92,7 +92,9 @@ Stefano de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi
 \begin{itemize}
 \item Andrea Benassi (SISSA) for the \texttt{epsilon} utility;
 \item Dmitry Korotin (Inst. Met. Phys. Ekaterinburg) for the
-\texttt{wannier\_ham} utility.
+\texttt{wannier\_ham} utility;
+\item Boris Kozinsky and Georgy Samsonidze (Bosch Research) for the
+      interface with the Berkeley GW code.
 \end{itemize}
 
 \PostProc\ is free software, released under the 
@@ -132,15 +134,18 @@ The executable codes that are produced in \texttt{PP/bin} are:
   read by several plotting programs. 
 \item  \texttt{bands.x} extracts and reorders eigenvalues from files 
   produced by \pwx\ for band structure plotting 
-\item  \texttt{projwfc.x} calculates projections of wavefunction over atomic
-  orbitals, performs L\"owdin population analysis and calculates
-  projected density of states. These can be summed using auxiliary
-  code  \texttt{sumpdos.x}. 
-\item  \texttt{plotrho.x} produces PostScript 2-d contour plots
 \item  \texttt{plotband.x} reads the output of  \texttt{bands.x}, produces 
   PostScript plots of the band structure
+\item  \texttt{projwfc.x} calculates projections of wavefunction over atomic
+  orbitals, performs L\"owdin population analysis and calculates
+  projected density of states. Data produced by this code can be further 
+ analysed using auxilary codes \texttt{sumpdos.x} and \texttt{plotproj.x} . 
+\item  \texttt{plotrho.x} produces PostScript 2-d contour plots
+\item  \texttt{pawplot.x} produces 1-d plots of the all-electron charge
+       for PAW calculations
 \item  \texttt{average.x} calculates planar averages of quantities produced by
    \texttt{pp.x} (potentials, charge, magnetization densities,...) 
+\item  \texttt{plan_avg.x} calculates planar averages of Kohn-Sham orbitals
 \item  \texttt{dos.x} calculates electronic Density of States (DOS)
 \item \texttt{epsilon.x} calculates RPA frequency-dependent complex dielectric function
 \item  \texttt{pw2wannier.x}: interface with Wannier90 package
@@ -148,6 +153,8 @@ The executable codes that are produced in \texttt{PP/bin} are:
 in Wannier functions basis
 \item  \texttt{pmw.x} generates Poor Man's Wannier functions, to be used in
   DFT+U calculations 
+\item  \texttt{initial\_state.x} calculates the initial state contribution
+       to the core-level shift
 \end{itemize}
 Note about Bader's analysis: on
 \texttt{http://theory.cm.utexas.edu/bader/} one can find a software that performs

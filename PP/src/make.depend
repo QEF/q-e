@@ -516,7 +516,6 @@ wannier_u_matrix.o : ../../Modules/io_files.o
 wannier_u_matrix.o : ../../Modules/io_global.o
 wannier_u_matrix.o : ../../Modules/kind.o
 wannier_u_matrix.o : ../../Modules/wannier_new.o
-wfdd.o : ../../Modules/constants.o
 work_function.o : ../../Modules/cell_base.o
 work_function.o : ../../Modules/constants.o
 work_function.o : ../../Modules/fft_base.o

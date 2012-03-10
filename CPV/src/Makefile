@@ -111,7 +111,7 @@ TLDEPS= bindir mods libs libiotk
 LIBOBJS        = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
 
 all : cp
-cp : tldeps libcp.a cp.x cppp.x
+cp : tldeps libcp.a cp.x cppp.x wfdd.x
 
 cp.x : cprstart.o libcp.a $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o cp.x cprstart.o \
@@ -131,6 +131,11 @@ cpver.h :
 cppp.x : fpmdpp.o $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(QEMODS) $(LIBOBJS) $(LIBS)
 	- (cd ../../bin ; ln -fs ../CPV/src/cppp.x . )
+
+wfdd.x : wfdd.o
+	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
 
 tldeps:
 	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
