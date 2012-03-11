@@ -87,14 +87,14 @@ of the main \qe\ tree:
 \begin{tabular}{ll}
 \texttt{Doc/} & : contains the user\_guide and input data description \\
 \texttt{examples/} & : some running examples \\
-\texttt{PH/}      & : source files for phonon calculations (\texttt{ph.x})
+\texttt{PH/}      & : source files for phonon calculations 
                    and analysis\\
-\texttt{Gamma/}  & : source files for Gamma-only phonon calculation
-                  (\texttt{phcg.x})\\
+\texttt{Gamma/}  & : source files for Gamma-only phonon calculation\\
 \texttt{D3/}     & : source files for third-order derivative
-                  calculations (\texttt{d3.x})\\
+                  calculations \\
 \end{tabular}\\
-The codes availables inside \PHonon\ can perform the following types of calculations:
+The codes available in the \PHonon\ package can perform the following 
+types of calculations:
 \begin{itemize}
   \item phonon frequencies and eigenvectors at a generic wave vector,
   using Density-Functional Perturbation Theory;
@@ -105,13 +105,9 @@ The codes availables inside \PHonon\ can perform the following types of calculat
   \item Infrared and Raman (nonresonant) cross section.
 \end{itemize}
 
-\texttt{ph.x} can be used whenever \PWscf\ can be 
-used, with the exceptions of DFT+U, nonlocal VdW and hybrid functionals. 
-USPP and PAW are not implemented for higher-order response calculations.
-See the header of file \texttt{PHonon/PH/phonon.f90} for a complete and
-updated list of what \PHonon\ can and cannot do.
-Calculations, in the Quasi-Harmonic approximations, of the vibrational 
-free energy can be performed using the \texttt{QHA}  package.
+Phonons can be plotted using the \texttt{PlotPhon} package.
+Calculations of the vibrational free energy in the Quasi-Harmonic 
+approximations can be performed using the \texttt{QHA}  package.
 
 \section{People}
 The \PHonon\ package
@@ -124,9 +120,10 @@ We quote in particular:
   cross section calculation with 2nd-order response;
  \item Andrea Dal Corso for USPP, noncolinear, spin-orbit
  extensions to \PHonon.
- \end{itemize}
+\end{itemize}
 
-This guide was mostly written by Paolo Giannozzi. \\
+The \texttt{PlotPhon} and \texttt{QHA} packages were contribute by the
+late Prof. Eyvaz Isaev.
 
 We shall greatly appreciate if scientific work done using this code will 
 contain an explicit acknowledgment and the following reference:
@@ -164,6 +161,8 @@ from the \PHonon\ directory, produces the following codes:
     the electron-phonon coefficient $\lambda$, the function $\alpha^2F(\omega)$
 \item \texttt{PH/lambda.x}: also calculates $\lambda$ and $\alpha^2F(\omega)$,
    plus $T_c$ for  superconductivity using the McMillan formula
+\item \texttt{PH/fqha.x}: a sinple code to calculate vibrational entropy with
+   the quasi-harmonic approximation
 \item \texttt{D3/d3.x}:
   calculates anharmonic phonon lifetimes (third-order derivatives
   of the energy), using data produced by \pwx\ and \phx\ (USPP 
@@ -177,54 +176,6 @@ from the \PHonon\ directory, produces the following codes:
 \end{itemize}
 Links to the main \qe\ \texttt{bin/} directory are automatically generated.
    
-\subsection{Running examples}
-\label{SubSec:Examples}
-
-\section{Parallelism}
-\label{Sec:para}
-
-We refer to the corresponding section of the \PWscf\ guide for
-an explanation of how parallelism work. 
-
-\phx\ may take advantage 
-of MPI parallelization on plane waves (PW) and on k-points (''pools''). 
-Moreover.
-it may take advantage of another parallelization level on 
-``images''. All other MPI and explicit OpenMP parallelizations
-have very limited to nonexistent implementation.
-\texttt{phcg.x} implements only PW parallelization.
-All other codes may be launched in parallel, but will execute 
-on a single processor.
-
-In  ``image'' parallelization, processors can be divided into different 
-"images", corresponding to one (or more than one) "irrep" or wave-vector 
-in phonon calculations. Images are loosely coupled: processors communicate
-between different images only once in a while, so image parallelization
-is suitable for cheap communication hardware (e.g. Gigabit Ethernet).
-Image parallelization is activated by specifying option 
-\texttt{-nimage N} to \phx. Inside an image, PW and k-point parallelization
-can be performed: for instance,
-\begin{verbatim}
-   mpirun -np 64 ph.x -nimage 8 -npool 2 ...
-\end{verbatim}
-will run 8 images on 8 processors each, subdivided into 2 pools of 4
-processors.
-
-A different paradigm is the usage of the GRID concept, instead of MPI,
-to achieve parallelization over irreps and wave-vectors.
-Complete phonon dispersion calculation can be quite long and
-expensive, but it can be split into a number of semi-independent
-calculations, using options \texttt{start\_q}, \texttt{last\_q},
-\texttt{start\_irr}, \texttt{last\_irr}. An example on how to
-distribute the calculations and collect the results can be found
-in \texttt{examples/GRID\_example}. Reference:\\
-{\it Calculation of Phonon Dispersions on the GRID using Quantum
-     ESPRESSO},
-     R. di Meo, A. Dal Corso, P. Giannozzi, and S. Cozzini, in
-     {\it Chemistry and Material Science Applications on Grid Infrastructures},
-     editors: S. Cozzini, A. Lagan\`a, ICTP Lecture Notes Series,
-     Vol. 24, pp.165-183 (2009).
-
 \section{Using \PHonon}
 
 Phonon calculation is presently a two-step process.
@@ -235,11 +186,18 @@ electric field and impose Acoustic Sum Rules at q=0 may be needed.
 In the following, we will indicate by $q$ the phonon wavevectors, 
 while $k$ will indicate Bloch vectors used for summing over the Brillouin Zone.
 
-Since version 4.0 it is possible to safely stop execution of 
-\phx\ code using
-the same mechanism of the \pwx\ code, i.e. by creating a file \texttt{prefix.EXIT} in the 
-working directory. Execution can be resumed by setting \texttt{recover=.true.} 
-in the subsequent input data.
+The main code \phx\ can be used whenever \PWscf\ can be 
+used, with the exceptions of DFT+U, nonlocal VdW and hybrid functionals. 
+USPP and PAW are not implemented for higher-order response calculations.
+See the header of file \texttt{PHonon/PH/phonon.f90} for a complete and
+updated list of what \PHonon\ can and cannot do.
+
+Since version 4.0 it is possible to safely stop execution of \phx\ code using
+the same mechanism of the \pwx\ code, i.e. by creating a file 
+\texttt{prefix.EXIT} in the working directory. Execution can be resumed by 
+setting \texttt{recover=.true.} in the subsequent input data.
+Moreover the execution can be (cleanly) stopped after a given time is elapsed,
+using variable \texttt{max\_seconds}. See \texttt{example/Recover\_example/}.
 
 \subsection{Single-q calculation}
 
@@ -281,7 +239,9 @@ If \phx\ was instructed to calculate Raman coefficients,
 for a typical experimental setup.
 Input documentation in the header of \texttt{PHonon/PH/dynmat.f90}.
 
-A sample phonon calculation is performed in Example 02.
+See Example 01 for a simple phonon calculations in Si, Example 06 for 
+fully-relativistic calculations (LDA) on Pt, Example 07 for 
+fully-relativistic GGA calculations.
 
 \subsection{Calculation of interatomic force constants in real space}
 
@@ -304,7 +264,14 @@ Program \texttt{matdyn.x} may be used to produce phonon modes and
 frequencies at any q using the Interatomic Force Constants file as input.
 Input documentation in the header of \texttt{PHonon/PH/matdyn.f90}.
 
+See Example 02 for a complete calculation of phonon dispersions in AlAs.
+
 \subsection{Calculation of electron-phonon interaction coefficients}
+
+Since v.5.0, there are two ways of calculating electron-phonon
+coefficients, distinguished according to the value of variable 
+\texttt{electron\_phonon}. The following holds for case
+\texttt{electron\_phonon='interpolated'} (see also Example 03).
 
 The calculation of electron-phonon coefficients in metals is made difficult 
 by the slow convergence of the sum at the Fermi energy. It is convenient to 
@@ -319,7 +286,8 @@ the eigenvalues on the dense k-point grid. The latter MUST contain
 all k and k+q grid points used in the subsequent electron-phonon 
 calculation. All grids MUST be unshifted, i.e. include $k=0$.
 \item a normal scf + phonon dispersion calculation on the coarse k-point
-grid, specifying option \texttt{elph=.true.}. and the file name where
+grid, specifying option \texttt{electron\_paononh='interpolated'}. and 
+the file name where
 the self-consistent first-order variation of the potential is to be 
 stored: variable \texttt{fildvscf}).
 The electron-phonon coefficients are calculated using several
@@ -331,6 +299,49 @@ and Gaussian broadening.
 to get the $\alpha^2F(\omega)$ function, the electron-phonon coefficient
 $\lambda$, and an estimate of the critical temperature $T_c$.
 \end{enumerate}
+
+\section{Parallelism}
+\label{Sec:para}
+
+We refer to the corresponding section of the \PWscf\ guide for
+an explanation of how parallelism work. 
+
+\phx\ may take advantage of MPI parallelization on images, plane waves (PW) 
+and on k-points (''pools''). Currently all other MPI and explicit OpenMP 
+parallelizations have very limited to nonexistent implementation.
+\texttt{phcg.x} implements only PW parallelization.
+All other codes may be launched in parallel, but will execute 
+on a single processor.
+
+In  ``image'' parallelization, processors can be divided into different 
+"images", corresponding to one (or more than one) "irrep" or wave-vector 
+in phonon calculations. Images are loosely coupled: processors communicate
+between different images only once in a while, so image parallelization
+is suitable for cheap communication hardware (e.g. Gigabit Ethernet).
+Image parallelization is activated by specifying option 
+\texttt{-nimage N} to \phx. Inside an image, PW and k-point parallelization
+can be performed: for instance,
+\begin{verbatim}
+   mpirun -np 64 ph.x -nimage 8 -npool 2 ...
+\end{verbatim}
+will run 8 images on 8 processors each, subdivided into 2 pools of 4
+processors for k-point parallelization.
+
+A different paradigm is the usage of the GRID concept, instead of MPI,
+to achieve parallelization over irreps and wave-vectors.
+Complete phonon dispersion calculation can be quite long and
+expensive, but it can be split into a number of semi-independent
+calculations, using options \texttt{start\_q}, \texttt{last\_q},
+\texttt{start\_irr}, \texttt{last\_irr}. An example on how to
+distribute the calculations and collect the results can be found
+in \texttt{examples/GRID\_example}. Reference:\\
+{\it Calculation of Phonon Dispersions on the GRID using Quantum
+     ESPRESSO},
+     R. di Meo, A. Dal Corso, P. Giannozzi, and S. Cozzini, in
+     {\it Chemistry and Material Science Applications on Grid Infrastructures},
+     editors: S. Cozzini, A. Lagan\`a, ICTP Lecture Notes Series,
+     Vol. 24, pp.165-183 (2009).
+
 
 \section{Troubleshooting}
 
