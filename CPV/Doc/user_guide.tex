@@ -127,7 +127,9 @@ or \make\ from the \texttt{CPV/} subdirectory produces the following codes in \t
 \begin{itemize}
 \item \cpx: Car-Parrinello Molecular Dynamics
 code
-\item \texttt{cppp.x}: postprocessing code for \cpx.
+\item \texttt{cppp.x}: postprocessing code for \cpx
+\item \texttt{wfdd.x}: utility code for finding maximally
+localized Wannier functions using damped dynamics.
 \end{itemize}
 Symlinks to executable programs will be placed in the \texttt{bin/} subdirectory. 
 
@@ -141,7 +143,7 @@ You may take the tests and examples distributed
 with \CP\ as templates for writing your own input
 files. Input files for tests are contained
 in \texttt{tests/} subdirectory with file type 
-{\texttt *.in1, *.in2, ...}/ Input file for examples
+\texttt{*.in1}, \texttt{*.in2}, ... . Input file for examples
 are produced if you run the examples in the 
 \texttt{results/} subdirectories, with names ending
 with \texttt{.in}.
@@ -151,6 +153,117 @@ to run in parallel execution, please see the general User's Guide. \CP\  current
 of both MPI and OpenMP parallelization. The
 ``plane-wave'', ``linear-algebra'' and ``task-group''
 parallelization levels are implemented.
+  
+\section{Input data}
+
+Input data for \cpx\ is organized into several namelists, followed by other fields
+introduced by keywords. The namelists are
+
+\begin{tabular}{ll}
+      \&CONTROL:& general variables controlling the run\\
+      \&SYSTEM: &structural information on the system under investigation\\
+      \&ELECTRONS: &electronic variables, electron dynamics\\
+      \&IONS : &ionic variables, ionic dynamics\\
+      \&CELL (optional): &variable-cell  dynamics\\
+\end{tabular}
+ \\
+The \texttt{\&CELL} namelist may be omitted for
+fixed-cell calculations. This depends on the value of variable \texttt{calculation}
+in namelist \&CONTROL. Most variables in namelists have default values. Only
+the following variables in \&SYSTEM must always be specified:
+
+\begin{tabular}{lll}
+      \texttt{ibrav} & (integer)& Bravais-lattice index\\
+      \texttt{celldm} &(real, dimension 6)& crystallographic constants\\
+      \texttt{nat} &(integer)& number of atoms in the unit cell\\
+      \texttt{ntyp} &(integer)& number of types of atoms in the unit cell\\
+      \texttt{ecutwfc} &(real)& kinetic energy cutoff (Ry) for wavefunctions.
+\end{tabular}    \\).
+    
+Explanations for the meaning of variables \texttt{ibrav} and \texttt{celldm},
+as well as on alternative ways to input structural data,
+are contained in files \texttt{Doc/INPUT\_CP.*}. These files are the reference for input data and describe 
+a large number of other variables as well. Almost all variables have default 
+values, which may or may not fit your needs.
+    
+After the namelists, you have several fields (``cards'')
+introduced by keywords with self-explanatory names:
+\begin{quote}
+       ATOMIC\_SPECIES\\
+       ATOMIC\_POSITIONS\\
+       CELL\_PARAMETERS (optional)\\
+       OCCUPATIONS (optional)\\
+\end{quote}
+The keywords may be followed on the same line by an option. Unknown
+fields are ignored. 
+See the files mentioned above for details on the available ``cards''.
+ 
+\subsection{Data files}
+
+The output data files are written in the directory specified by variable
+\texttt{outdir}, with names specified by variable \texttt{prefix} (a string that is prepended
+to all file names, whose default value is: \texttt{prefix='pwscf'}). The \texttt{iotk}
+toolkit is used to write the file in a XML format, whose definition can
+be found in the Developer Manual. In order to use the data directory
+on a different machine, you need to convert the binary files to formatted
+and back, using the \texttt{bin/iotk} script.
+
+The execution stops if you create a file \texttt{prefix.EXIT} in the working 
+directory. NOTA BENE: this is the directory where the program 
+is executed, NOT the directory \texttt{outdir} defined in input, where files 
+are written. Note that with some versions of MPI, the working directory 
+is the directory where the \pwx\ executable is! The advantage of this 
+procedure is that all files are properly closed, whereas  just killing 
+the process may leave data and output files in unusable state.
+
+\subsection{Format of arrays containing charge density, potential, etc.}
+
+The index of arrays used to store functions defined on 3D meshes is
+actually a shorthand for three indices, following the FORTRAN convention 
+("leftmost index runs faster"). An example will explain this better. 
+Suppose you have a 3D array \texttt{psi(nr1x,nr2x,nr3x)}. FORTRAN 
+compilers store this array sequentially  in the computer RAM in the following way:
+\begin{verbatim}
+        psi(   1,   1,   1)
+        psi(   2,   1,   1)
+        ...
+        psi(nr1x,   1,   1)
+        psi(   1,   2,   1)
+        psi(   2,   2,   1)
+        ...
+        psi(nr1x,   2,   1)
+        ...
+        ...
+        psi(nr1x,nr2x,   1)
+        ...
+        psi(nr1x,nr2x,nr3x)
+etc
+\end{verbatim}
+Let \texttt{ind} be the position of the \texttt{(i,j,k)} element in the above list: 
+the following relation
+\begin{verbatim}
+        ind = i + (j - 1) * nr1x + (k - 1) *  nr2x * nr1x
+\end{verbatim}
+holds. This should clarify the relation between 1D and 3D indexing. In real
+space, the \texttt{(i,j,k)} point of the FFT grid with dimensions 
+\texttt{nr1} ($\le$\texttt{nr1x}), 
+\texttt{nr2}  ($\le$\texttt{nr2x}), , \texttt{nr3} ($\le$\texttt{nr3x}), is
+$$
+r_{ijk}=\frac{i-1}{nr1} \tau_1  +  \frac{j-1}{nr2} \tau_2 +
+\frac{k-1}{nr3} \tau_3 
+$$
+where the $\tau_i$ are the basis vectors of the Bravais lattice. 
+The latter are stored row-wise in the \texttt{at} array:
+$\tau_1 = $ \texttt{at(:, 1)}, 
+$\tau_2 = $ \texttt{at(:, 2)}, 
+$\tau_3 = $ \texttt{at(:, 3)}.
+
+The distinction between the dimensions of the FFT grid,
+\texttt{(nr1,nr2,nr3)} and the physical dimensions of the array,
+\texttt{(nr1x,nr2x,nr3x)} is done only because it is computationally
+convenient in some cases that the two sets are not the same.
+In particular, it is often convenient to have \texttt{nrx1}=\texttt{nr1}+1
+to reduce memory conflicts.
 
 \section{Using \CP}
 
@@ -235,139 +348,7 @@ An example of input file (Benzene Molecule):
 \end{verbatim} 
 You can find the description of the input variables in file 
 \texttt{Doc/INPUT\_CP.*}.
-   
-
-\subsection{Input data}
-
-Input data for \cpx,
-is organized as several namelists, followed by other fields
-introduced by keywords. The namelists are
-
-\begin{tabular}{ll}
-      \&CONTROL:& general variables controlling the run\\
-      \&SYSTEM: &structural information on the system under investigation\\
-      \&ELECTRONS: &electronic variables: self-consistency, smearing\\
-      \&IONS (optional): &ionic variables: relaxation, dynamics\\
-      \&CELL (optional): &variable-cell optimization or dynamics\\
-\end{tabular}    \\
-Optional namelist may be omitted if the calculation to be performed
-does not require them. This depends on the value of variable calculation
-in namelist \&CONTROL. Most variables in namelists have default values. Only
-the following variables in \&SYSTEM must always be specified:
-
-\begin{tabular}{lll}
-      \texttt{ibrav} & (integer)& Bravais-lattice index\\
-      \texttt{celldm} &(real, dimension 6)& crystallographic constants\\
-      \texttt{nat} &(integer)& number of atoms in the unit cell\\
-      \texttt{ntyp} &(integer)& number of types of atoms in the unit cell\\
-      \texttt{ecutwfc} &(real)& kinetic energy cutoff (Ry) for wavefunctions.
-\end{tabular}    \\
-For metallic systems, you have to specify how metallicity is treated
-in
-variable \texttt{occupations}. If you choose \texttt{occupations='smearing'},
-you have
-to specify the smearing width \texttt{degauss} and optionally the smearing
-type
-\texttt{smearing}. Spin-polarized systems must be treated as metallic system, except the 
-special case of a single k-point, for which occupation numbers can be fixed
-(\texttt{occupations='from input'} and card OCCUPATIONS).
-    
-Explanations for the meaning of variables \texttt{ibrav} and \texttt{celldm},
-as well as on alternative ways to input structural data,
-are in files \texttt{Doc/INPUT\_PW.*} (for \pwx) and \texttt{Doc/INPUT\_CP.*}
-(for \cpx). These files are the reference for input data and describe 
-a large number of other variables as well. Almost all variables have default 
-values, which may or may not fit your needs.
-    
-After the namelists, you have several fields (``cards'')
-introduced by keywords with self-explanatory names:
-\begin{quote}
-       ATOMIC\_SPECIES\\
-       ATOMIC\_POSITIONS\\
-       K\_POINTS\\
-       CELL\_PARAMETERS (optional)\\
-       OCCUPATIONS (optional)\\
-\end{quote}
-The keywords may be followed on the same line by an option. Unknown
-fields are ignored by. 
-See the files mentioned above for details on the available ``cards''.
  
-Note about k points: The k-point grid can be either automatically generated 
-or manually provided as a list of k-points and a weight in the Irreducible
-Brillouin Zone only of the Bravais lattice of the crystal. The code will 
-generate (unless instructed not to do so: see variable \texttt{nosym}) all
-required k-point 
-and weights if the symmetry of the system is lower than the symmetry of the
-Bravais lattice. The automatic generation of k-points follows the convention
-of Monkhorst and Pack.
-
-\subsection{Data files}
-
-The output data files are written in the directory specified by variable
-\texttt{outdir}, with names specified by variable \texttt{prefix} (a string that is prepended
-to all file names, whose default value is: \texttt{prefix='pwscf'}). The \texttt{iotk}
-toolkit is used to write the file in a XML format, whose definition can
-be found in the Developer Manual. In order to use the data directory
-on a different machine, you need to convert the binary files to formatted
-and back, using the \texttt{bin/iotk} script.
-
-The execution stops if you create a file \texttt{prefix.EXIT} in the working 
-directory. NOTA BENE: this is the directory where the program 
-is executed, NOT the directory \texttt{outdir} defined in input, where files 
-are written. Note that with some versions of MPI, the working directory 
-is the directory where the \pwx\ executable is! The advantage of this 
-procedure is that all files are properly closed, whereas  just killing 
-the process may leave data and output files in unusable state.
-
-\subsection{Format of arrays containing charge density, potential, etc.}
-
-The index of arrays used to store functions defined on 3D meshes is
-actually a shorthand for three indices, following the FORTRAN convention 
-("leftmost index runs faster"). An example will explain this better. 
-Suppose you have a 3D array \texttt{psi(nr1x,nr2x,nr3x)}. FORTRAN 
-compilers store this array sequentially  in the computer RAM in the following way:
-\begin{verbatim}
-        psi(   1,   1,   1)
-        psi(   2,   1,   1)
-        ...
-        psi(nr1x,   1,   1)
-        psi(   1,   2,   1)
-        psi(   2,   2,   1)
-        ...
-        psi(nr1x,   2,   1)
-        ...
-        ...
-        psi(nr1x,nr2x,   1)
-        ...
-        psi(nr1x,nr2x,nr3x)
-etc
-\end{verbatim}
-Let \texttt{ind} be the position of the \texttt{(i,j,k)} element in the above list: 
-the following relation
-\begin{verbatim}
-        ind = i + (j - 1) * nr1x + (k - 1) *  nr2x * nr1x
-\end{verbatim}
-holds. This should clarify the relation between 1D and 3D indexing. In real
-space, the \texttt{(i,j,k)} point of the FFT grid with dimensions 
-\texttt{nr1} ($\le$\texttt{nr1x}), 
-\texttt{nr2}  ($\le$\texttt{nr2x}), , \texttt{nr3} ($\le$\texttt{nr3x}), is
-$$
-r_{ijk}=\frac{i-1}{nr1} \tau_1  +  \frac{j-1}{nr2} \tau_2 +
-\frac{k-1}{nr3} \tau_3 
-$$
-where the $\tau_i$ are the basis vectors of the Bravais lattice. 
-The latter are stored row-wise in the \texttt{at} array:
-$\tau_1 = $ \texttt{at(:, 1)}, 
-$\tau_2 = $ \texttt{at(:, 2)}, 
-$\tau_3 = $ \texttt{at(:, 3)}.
-
-The distinction between the dimensions of the FFT grid,
-\texttt{(nr1,nr2,nr3)} and the physical dimensions of the array,
-\texttt{(nr1x,nr2x,nr3x)} is done only because it is computationally
-convenient in some cases that the two sets are not the same.
-In particular, it is often convenient to have \texttt{nrx1}=\texttt{nr1}+1
-to reduce memory conflicts.
-
 \subsection{Reaching the electronic ground state}
 
 The first run, when starting from scratch, is always an electronic 
