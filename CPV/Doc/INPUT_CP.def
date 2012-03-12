@@ -284,11 +284,8 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	var tefield -type LOGICAL { 
 	    default { .FALSE. }
 	    info {
-		If .TRUE. a sawlike potential simulating an electric field
-		is added to the bare ionic potential. See variables
-		edir, eamp, emaxpos, eopreg for the form and size of
-		the added potential.
-
+                If .TRUE. a homogeneous finite electric field described
+                through the modern theory of the polarization is applied.
 	    }
 	}
 

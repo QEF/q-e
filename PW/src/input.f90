@@ -1364,6 +1364,9 @@ SUBROUTINE iosys()
   CALL init_start_k ( nk1, nk2, nk3, k1, k2, k3, k_points, nkstot, xk, wk )
   gamma_only = ( k_points == 'gamma' )
   !
+  IF ( lelfield .AND. gamma_only ) &
+      CALL errore( 'iosys', 'electric fields not available for k=0 only', 1 )
+  !
   CALL convert_tau ( tau_format, nat_, tau)
   !
   IF ( wmass == 0.D0 ) THEN
