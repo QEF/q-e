@@ -14,7 +14,7 @@
   !
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : lelfield, lberry
-  USE control_flags,        ONLY : lbands, io_level
+  USE control_flags,        ONLY : io_level
   USE ener,                 ONLY : ef
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunwfc, nwordwfc, iunefield
@@ -62,7 +62,7 @@
   ! ... calculate weights of Kohn-Sham orbitals 
   ! ... may be needed in further calculations such as phonon
   !
-  IF ( .NOT. lbands ) CALL weights  ( )
+  CALL weights  ( )
   !
   ! ... Note that if you want to use more k-points for the phonon
   ! ... calculation then those needed for self-consistency, you can,

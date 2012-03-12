@@ -86,7 +86,7 @@ SUBROUTINE setup()
   !
   INTEGER  :: na, nt, is, ierr, ibnd, ik
   LOGICAL  :: magnetic_sym, skip_equivalence=.FALSE.
-  REAL(DP) :: iocc, ionic_charge
+  REAL(DP) :: iocc, ionic_charge, one
   !
   LOGICAL, EXTERNAL  :: check_para_diag
   INTEGER, EXTERNAL :: set_Hubbard_l
@@ -473,8 +473,13 @@ SUBROUTINE setup()
   ! ... If some symmetries of the lattice are missing in the crystal,
   ! ... "irreducible_BZ" computes the missing k-points.
   !
-  IF ( .NOT. lbands ) CALL irreducible_BZ (nrot, s, nsym, time_reversal, &
-                            magnetic_sym, at, bg, npk, nkstot, xk, wk, t_rev)
+  IF ( .NOT. lbands ) THEN
+     CALL irreducible_BZ (nrot, s, nsym, time_reversal, &
+                          magnetic_sym, at, bg, npk, nkstot, xk, wk, t_rev)
+  ELSE
+     one = SUM (wk(1:nkstot))
+     IF ( one > 0.0_dp ) wk(1:nkstot) = wk(1:nkstot) / one
+  END IF
   !
   ! ... if dynamics is done the system should have no symmetries
   ! ... (inversion symmetry alone is allowed)
