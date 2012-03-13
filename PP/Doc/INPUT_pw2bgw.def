@@ -11,28 +11,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	Use "K_POINTS { tpiba | automatic | crystal }" even for the
 	Gamma-point calculation.
 
-	It is recommended to run a pw.x "nscf" calculation with "K_POINTS crystal"
+	It is recommended to run a pw.x "bands" calculation with "K_POINTS crystal"
 	and a list of k-points produced by kgrid.x, which is a part of BerkeleyGW
 	package (see BerkeleyGW documentation for details).
 
-	You can also run a pw.x "bands" calculation but in this case you have to
-	explicitly specify the occupations in the input file of pw2bgw.x (note that
-	this only works for insulators) and to normalize the weights of k-points
-	to one in the input file of pw.x.
+	You can also run a pw.x "nscf" calculation instead of "bands", but in this
+	case pw.x may generate more k-points than provided in the input file of pw.x.
+	If this is the case for your calculation you will get errors in BerkeleyGW.
 
-	Sometimes pw.x generates additional k-points in a "nscf" run with an explicit
-	list of k-points. If this is the case for your calculation, there are several
-	ways to go around this problem:
-
-	(1) You can apply the patch provided with BerkeleyGW. It will prevent pw.x
-	    from generating additional k-points if they are provided explicitly,
-	    and take care of the normalization of the weights of k-points in a "bands"
-	    calculation.
-	(2) Do not specify the atomic positions in the input file of kgrid.x (set
-	    number of atoms = 0). Then pw.x will generate additional k-points which
-	    are the correct ones. Also set noinv = .true. in the input file of pw.x
-	    if time-reversal symmetry was not used in kgrid.x.
-	(3) You can do "bands" calculation instead of "nscf" (see above).
+	Examples showing how to run BerkeleyGW on top of Quantum ESPRESSO including
+	the input files for pw.x and pw2bgw.x are distributed together with the
+	BerkeleyGW package.
 
 	Structure of the input data:
 	============================
