@@ -127,7 +127,7 @@ SUBROUTINE readpp ( input_dft, printout )
      END IF
      !
      ! try the original location pseudo_dir, as set in input
-     ! (it should already conatin a slash at the end)
+     ! (it should already contain a slash at the end)
      !
      IF ( ios /= 0 ) THEN
         file_pseudo = TRIM (pseudo_dir) // TRIM (psfile(nt))

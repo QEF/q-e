@@ -19,7 +19,10 @@ Incompatible changes in 5.0 version:
 
 Fixed in 5.0 version
 
-   * VERY NASTY bug: exchange-correlation 'PW91' was incorrectly 
+   * Missing checks for unimplemented cases with electric fields
+   * CP with electric fields wasn't working any longer in parallel
+     due to an unallocated variable
+   * VERY NASTY bug: exchange-correlation keyword 'PW91' was incorrectly 
      interpreted (PZ LDA instead of PW) in all 4.3.x versions
    * A few glitches when the standard input is copied to file
    * PW: LDA+U crash in the final step of a vc-relax run, due to a
