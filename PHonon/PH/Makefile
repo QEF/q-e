@@ -92,6 +92,7 @@ incdrhous_nc.o \
 initialize_ph.o \
 init_representations.o \
 io_dyn_mat.o \
+io_dyn_mat_old.o \
 io_pattern.o \
 localdos.o \
 mix_pot.o \
@@ -163,7 +164,6 @@ transform_dbecsum_so.o \
 transform_dbecsum_nc.o \
 tra_write_matrix.o \
 trntnsc.o \
-write_dyn_on_file.o \
 write_epsilon_and_zeu.o \
 write_matrix.o \
 write_rec.o \
@@ -198,7 +198,7 @@ LIBOBJS        = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../i
 
 TLDEPS= bindir mods libs pw
 
-all : tldeps libph.a ph.x dynmat.x matdyn.x q2r.x lambda.x fqha.x
+all : tldeps libph.a ph.x dynmat.x matdyn.x q2r.x lambda.x fqha.x q2qstar.x
 
 ph.x : phonon.o libph.a $(PWOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o ph.x phonon.o libph.a \
@@ -217,6 +217,11 @@ matdyn.x : matdyn.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
 
 q2r.x : q2r.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ q2r.o rigid.o libph.a \
+		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
+
+q2qstar.x : q2qstar.o q2r.o libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ q2qstar.o libph.a \
 		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 

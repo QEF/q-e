@@ -157,7 +157,7 @@ subroutine dynmatrix
              celldm, at, bg, omega, atm, amass, tau,ityp,m_loc,nqq)
      ENDIF
   ELSE
-     CALL write_old_dyn_mat(iudyn)
+     CALL write_old_dyn_mat_head(iudyn)
   ENDIF
   !
   !   Rotates and writes on iudyn the dynamical matrices of the star of q
@@ -242,36 +242,3 @@ subroutine dynmatrix
   call stop_clock('dynmatrix')
   return
 end subroutine dynmatrix
-
-  SUBROUTINE write_old_dyn_mat(iudyn)
-!
-!  This routine is here for compatibility with the old code.
-!  It will be removed when the xml file format of the dynamical matrix
-!  will be tested.
-!
-  USE constants, ONLY: amconv
-  USE ions_base, ONLY : ntyp => nsp, nat, ityp, tau, atm, amass
-  USE cell_base, ONLY : ibrav, celldm, at
-  USE run_info, ONLY : title
-
-  IMPLICIT NONE
-  INTEGER, INTENT(IN) :: iudyn
-  INTEGER :: nt, na, i, j
-
-  WRITE (iudyn, '("Dynamical matrix file")')
-  WRITE (iudyn, '(a)') title
-  WRITE (iudyn, '(i3,i5,i3,6f11.7)') ntyp, nat, ibrav, celldm
-  IF (ibrav==0) THEN
-     WRITE (iudyn,'("Basis vectors")')
-     WRITE (iudyn,'(2x,3f15.9)') ((at(i,j),i=1,3),j=1,3)
-  END IF
-  DO nt = 1, ntyp
-     WRITE (iudyn, * ) nt, ' ''', atm (nt) , ' '' ', amconv*amass(nt)
-  ENDDO
-  DO na = 1, nat
-     WRITE (iudyn, '(2i5,3f15.7)') na, ityp (na) , (tau (j, na) , j = 1, 3)
-  ENDDO
-
-  RETURN
-  END SUBROUTINE write_old_dyn_mat
-!
