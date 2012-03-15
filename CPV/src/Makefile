@@ -134,7 +134,7 @@ cppp.x : fpmdpp.o $(QEMODS) $(LIBOBJS)
 
 wfdd.x : wfdd.o
 	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+	- ( cd ../../bin ; ln -fs ../CPV/src/$@ . )
 
 
 tldeps:
