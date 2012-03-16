@@ -299,6 +299,7 @@ and Gaussian broadening.
 to get the $\alpha^2F(\omega)$ function, the electron-phonon coefficient
 $\lambda$, and an estimate of the critical temperature $T_c$.
 \end{enumerate}
+See the appendix for the relevant formulae.
 
 \section{Parallelism}
 \label{Sec:para}
@@ -421,5 +422,67 @@ the code compares $q$ and the rotated $q$, with an acceptance tolerance of
 $10^{-5}$ (set in routine \texttt{PW/eqvect.f90}). You may run into trouble if
 your q-vector differs from a high-symmetry point by an amount in that
 order of magnitude.
+
+\appendix
+\section{Appendix: Electron-phonon coefficients}
+
+\def\r{{\bf r}}
+\def\d{{\bf d}}
+\def\k{{\bf k}}
+\def\q{{\bf q}}
+\def\G{{\bf G}}
+\def\R{{\bf R}}
+
+\noindent The electron-phonon coefficients $g$
+are defined as
+\begin{equation}
+g_{\q\nu}(\k,i,j) =\left({\hbar\over 2M\omega_{\q\nu}}\right)^{1/2}
+\langle\psi_{i,\k}| {dV_{SCF}\over d {\hat u}_{\q\nu} }\cdot
+                   \hat \epsilon_{\q\nu}|\psi_{j,\k+\q}\rangle.
+\end{equation}
+The phonon linewidth $\gamma_{\q\nu}$ is defined by
+\begin{equation}
+\gamma_{\q\nu} = 2\pi\omega_{\q\nu} \sum_{ij}
+                \int {d^3k\over \Omega_{BZ}}  |g_{\q\nu}(\k,i,j)|^2
+                    \delta(e_{\q,i} - e_F)  \delta(e_{\k+\q,j} - e_F), 
+\end{equation}
+while the electron-phonon coupling constant $\lambda_{\q\nu}$ for
+mode $\nu$ at wavevector $\q$ is defined as
+\begin{equation}
+\lambda_{\q\nu} ={\gamma_{\q\nu} \over \pi\hbar N(e_F)\omega^2_{\q\nu}}
+\end{equation}
+where $N(e_F)$ is the DOS at the Fermi level.
+The spectral function is defined as
+\begin{equation}
+\alpha^2F(\omega) = {1\over 2\pi N(e_F)}\sum_{\q\nu} 
+                    \delta(\omega-\omega_{\q\nu})
+                    {\gamma_{\q\nu}\over\hbar\omega_{\q\nu}}.
+\end{equation}
+The electron-phonon mass enhancement parameter $\lambda$
+can also be defined as the first reciprocal momentum of 
+the spectral function:
+\begin{equation}
+\lambda = \sum_{\q\nu} \lambda_{\q\nu} = 
+2 \int {\alpha^2F(\omega) \over \omega} d\omega.
+\end{equation}
+
+Note that a factor $M^{-1/2}$ is hidden in the definition of
+normal modes as used in the code.
+
+McMillan:
+\begin{equation}
+T_c = {\Theta_D \over 1.45} \mbox{exp} \left [ 
+         {-1.04(1+\lambda)\over \lambda(1-0.62\mu^*)-\mu^*}\right ]
+\end{equation}
+or (better?)
+\begin{equation}
+T_c = {\omega_{log}\over 1.2} \mbox{exp} \left [ 
+         {-1.04(1+\lambda)\over \lambda(1-0.62\mu^*)-\mu^*}\right ]
+\end{equation}
+where
+\begin{equation}
+\omega_{log} = \mbox{exp} \left [ {2\over\lambda} \int {d\omega\over\omega}
+                                  \alpha^2F(\omega) \mbox{log}\omega \right ]
+\end{equation}
 
 \end{document}
