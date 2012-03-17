@@ -1,4 +1,4 @@
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -168,12 +168,15 @@ PROGRAM matdyn
   INTEGER, ALLOCATABLE :: num_rap_mode(:,:)
   LOGICAL, ALLOCATABLE :: high_sym(:)
   LOGICAL :: q_in_band_form
-
+  ! .... variables for band plotting based on similarity of eigenvalues
+  COMPLEX(DP), ALLOCATABLE :: tmp_z(:,:), last_z(:,:)
+  REAL(DP), ALLOCATABLE :: abs_similarity(:,:), tmp_w2(:)
+  INTEGER :: location(1)
+  LOGICAL, ALLOCATABLE :: mask(:)
   !
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, at, dos,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, &
                    la2F, ndos, DeltaE, q_in_band_form
-  !
   !
   CALL mp_startup()
   CALL environment_start('MATDYN')
@@ -308,9 +311,8 @@ PROGRAM matdyn
      !
      nat = nat_blk * nsc
      nax = nat
-     !!!
      nax_blk = nat_blk
-     !!!
+     !
      ALLOCATE ( tau (3, nat), ityp(nat), itau_blk(nat) )
      !
      IF (readtau) THEN
@@ -408,6 +410,8 @@ PROGRAM matdyn
 
      ALLOCATE ( dyn(3,3,nat,nat), dyn_blk(3,3,nat_blk,nat_blk) )
      ALLOCATE ( z(3*nat,3*nat), w2(3*nat,nq) )
+     ALLOCATE ( tmp_z(3*nat,3*nat), tmp_w2(3*nat), &
+                abs_similarity(3*nat,3*nat), mask(3*nat) )
 
      if(la2F.and.ionode) open(300,file='dyna2F',status='unknown')
      IF (xmlifc) CALL set_sym(nat, tau, ityp, nspin_mag, m_loc, 6, 6, 6 )
@@ -478,8 +482,25 @@ PROGRAM matdyn
             IF (code_group==code_group_old.OR.high_sym(n-1)) high_sym(n)=.FALSE.
             code_group_old=code_group
             DEALLOCATE(name_rap_mode)
-         ENDIF
-
+        ENDIF
+        ! ... order phonon dispersions using similarity of eigenvalues
+        ! ... Courtesy of Takeshi Nishimatsu, IMR, Tohoku University 
+        IF (.NOT.ALLOCATED(last_z)) THEN
+           ALLOCATE(last_z(3*nat,3*nat))
+        ELSE
+           abs_similarity = ABS ( MATMUL ( CONJG( TRANSPOSE(z)), last_z ) )
+           mask(:) = .true.
+           DO na=1,3*nat
+              location = maxloc( abs_similarity(:,na), mask(:) )
+              mask(location(1)) = .false.
+              tmp_w2(na) = w2(location(1),n)
+              tmp_z(:,na) = z(:,location(1))
+            END DO
+            w2(:,n) = tmp_w2(:)
+            z(:,:) = tmp_z(:,:)
+        END IF
+        last_z(:,:) = z(:,:)
+        !
         if(la2F.and.ionode) then
            write(300,*) n
            do na=1,3*nat
@@ -556,6 +577,7 @@ PROGRAM matdyn
         END DO
         IF (ionode) CLOSE(unit=2)
      END IF  !dos
+     DEALLOCATE (tmp_z, tmp_w2, abs_similarity, mask)
      DEALLOCATE (z, w2, dyn, dyn_blk)
      !
      !    for a2F
