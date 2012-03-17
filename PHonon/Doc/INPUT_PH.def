@@ -280,9 +280,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    info {
 		If .true. ph.x creates inside outdir a separate subdirectory 
                 for each q vector. The flag is set to .true. when ldisp=
-                .true. and fildvscf /= ' ' or when elph is true. The induced
-                potential is saved separately for each q inside the 
-                subdirectories.
+                .true. and fildvscf /= ' ' or when an electron-phonon 
+                calculation is performed. The induced potential is saved 
+                separately for each q inside the subdirectories.
 	    }
 	}
 
