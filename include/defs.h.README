@@ -80,7 +80,6 @@ Parallel execution:
 Libraries:
       __FFTW      FFT routines from internal FFTW library
       __FFTW3     FFT routines from external FFTW v.3 library
-      __ACML      FFT routines from ACML for AMD CPUs
       __SCSL      FFT routines from SGI SCSL scientific library
       __SUNPERF   FFT routines from SUN sunperf scientific library
       __ESSL      use blas/lapack/fft routines from IBM ESSL library

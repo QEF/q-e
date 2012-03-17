@@ -601,8 +601,7 @@ can use the following vendor-specific FFT libraries:
       IBM ESSL\\
       SGI SCSL\\
       SUN sunperf\\
-      NEC ASL\\
-      AMD ACML
+      NEC ASL
 \end{quote}
 \configure\ will first search for vendor-specific FFT libraries;
 if none is found, it will search for an external FFTW v.3 library;
@@ -1442,11 +1441,9 @@ and libraries:
  internal FFTW copy &requires \texttt{-D\_\_FFTW}\\
  ESSL& requires \texttt{-D\_\_ESSL} or \texttt{-D\_\_LINUX\_ESSL}, link 
  with \texttt{-lesslsmp}\\
- ACML& requires \texttt{-D\_\_ACML}, link with \texttt{-lacml\_mp}.
 \end{tabular}
 
-Currently, ESSL (when available) are faster than internal FFTW,
-which in turn are faster than ACML.
+Currently, ESSL (when available) are faster than internal FFTW.
 
 \subsubsection{Understanding parallel I/O}
 In parallel execution, each processor has its own slice of data

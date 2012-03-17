@@ -1023,7 +1023,6 @@ CONTAINS
       !
       DEALLOCATE( dgp )
       DEALLOCATE( dg0 )
-!       DEALLOCATE( gp )
       DEALLOCATE( ltest )
       !
       RETURN
