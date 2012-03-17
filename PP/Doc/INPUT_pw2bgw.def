@@ -63,7 +63,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 		'cubic' | 'hexagonal'
 		type of crystal system, 'cubic' for space groups 1 ... 142 and 195 ... 230
 		and 'hexagonal' for space groups 143 ... 194. Only used if ibrav = 0 in a
-		pw.x run
+		pw.x run. Written to BerkeleyGW WFN, RHO, VXC and VNL files but no longer
+		used (except in SAPO code in BerkeleyGW). You can use the default value for
+		all systems. Don't set to different values in different files for the same
+		system or you will get errors in BerkeleyGW.
 	    }
 	}
 
