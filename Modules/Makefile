@@ -25,6 +25,7 @@ environment.o \
 error_handler.o \
 fd_gradient.o \
 fft_base.o \
+fft_custom.o \
 fft_interfaces.o \
 fft_parallel.o \
 fft_scalar.o \

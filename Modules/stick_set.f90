@@ -25,7 +25,7 @@
       PRIVATE
       SAVE
 
-      PUBLIC :: pstickset
+      PUBLIC :: pstickset, pstickset_custom
 
 !=----------------------------------------------------------------------=
    CONTAINS
@@ -273,6 +273,249 @@
           RETURN
         END SUBROUTINE pstickset
 
+!----------------------------------------------------------------------
+
+      SUBROUTINE pstickset_custom( gamma_only, bg, gcut, gkcut, &
+          dfftp, ngw, ngm, mype, root, nproc, comm, nogrp_ )
+
+          LOGICAL, INTENT(in) :: gamma_only
+! ...     bg(:,1), bg(:,2), bg(:,3) reciprocal space base vectors.
+          REAL(DP), INTENT(in) :: bg(3,3)
+          REAL(DP), INTENT(in) :: gcut, gkcut
+          TYPE(fft_dlay_descriptor), INTENT(inout) :: dfftp
+          INTEGER, INTENT(out) :: ngw, ngm
+
+          INTEGER, INTENT(IN) :: mype, root, nproc, comm
+          INTEGER, INTENT(IN) :: nogrp_
+
+
+          LOGICAL :: tk
+
+          INTEGER :: ub(3), lb(3)
+! ...     ub(i), lb(i) upper and lower miller indexes
+
+!
+! ...     Plane Waves
+!
+        INTEGER, ALLOCATABLE :: stw(:,:)
+! ...   stick map (wave functions), stw(i,j) = number of G-vector in the
+! ...     stick whose x and y miller index are i and j
+
+        INTEGER, ALLOCATABLE :: nstpw(:)
+! ...   number of sticks (wave functions), nstpw(ip) = number of stick
+! ...     for processor ip
+
+        INTEGER, ALLOCATABLE :: sstpw(:)
+! ...   number of G-vectors (wave functions), sstpw(ip) = sum of the
+! ...     sticks length for processor ip = number of G-vectors
+! ...     owned by the processor ip
+
+        INTEGER :: nstw, nstpwx
+! ...   nstw     local number of sticks (wave functions)
+! ...   nstpwx   maximum among all processors of nstw
+
+!
+! ...     Potentials
+!
+
+        INTEGER, ALLOCATABLE :: st(:,:)
+! ...   stick map (potentials), st(i,j) = number of G-vector in the
+! ...     stick whose x and y miller index are i and j
+
+        INTEGER, ALLOCATABLE :: nstp(:)
+! ...   number of sticks (potentials), nstp(ip) = number of stick
+! ...     for processor ip
+
+        INTEGER, ALLOCATABLE :: sstp(:)
+! ...   number of G-vectors (potentials), sstp(ip) = sum of the
+! ...     sticks length for processor ip = number of G-vectors
+! ...     owned by the processor ip
+
+        INTEGER :: nst, nstpx
+! ...   nst      local number of sticks (potentials)
+! ...   nstpx    maximum among all processors of nst
+
+!
+! ...     Smooth Mesh
+!
+
+        INTEGER, ALLOCATABLE :: sts(:,:)
+! ...   stick map (smooth mesh), sts(i,j) = number of G-vector in the
+! ...     stick whose x and y miller index are i and j
+
+        INTEGER, ALLOCATABLE :: nstps(:)
+! ...   number of sticks (smooth mesh), nstp(ip) = number of stick
+! ...     for processor ip
+
+        INTEGER, ALLOCATABLE :: sstps(:)
+! ...   number of G-vectors (smooth mesh), sstps(ip) = sum of the
+! ...     sticks length for processor ip = number of G-vectors
+! ...     owned by the processor ip
+
+        INTEGER :: nsts
+! ...   nsts      local number of sticks (smooth mesh)
+
+
+        INTEGER, ALLOCATABLE :: ist(:,:)    ! sticks indices ordered
+          INTEGER :: ip, ngm_ , ngs_
+          INTEGER, ALLOCATABLE :: idx(:)
+
+          tk    = .not. gamma_only
+          ub(1) = ( dfftp%nr1 - 1 ) / 2
+          ub(2) = ( dfftp%nr2 - 1 ) / 2
+          ub(3) = ( dfftp%nr3 - 1 ) / 2
+          lb    = - ub
+
+          ! ...       Allocate maps
+
+          ALLOCATE( stw ( lb(1):ub(1), lb(2):ub(2) ) )
+          ALLOCATE( st  ( lb(1):ub(1), lb(2):ub(2) ) )
+          ALLOCATE( sts ( lb(1):ub(1), lb(2):ub(2) ) )
+
+          st  = 0
+          stw = 0
+          sts = 0
+
+! ...       Fill in the stick maps, for given g-space base and cut-off
+
+          CALL sticks_maps( tk, ub, lb, bg(:,1), bg(:,2), bg(:,3), &
+                            gcut, gkcut, gcut, st, stw, sts, mype, &
+                            nproc, comm )
+
+! ...       Now count the number of stick nst and nstw
+
+          nst  = count( st  > 0 )
+          nstw = count( stw > 0 )
+          nsts = count( sts > 0 )
+
+          ALLOCATE(ist(nst,5))
+
+          ALLOCATE(nstp(nproc))
+          ALLOCATE(sstp(nproc))
+
+          ALLOCATE(nstpw(nproc))
+          ALLOCATE(sstpw(nproc))
+
+          ALLOCATE(nstps(nproc))
+          ALLOCATE(sstps(nproc))
+
+! ...       initialize the sticks indexes array ist
+
+          CALL sticks_countg( tk, ub, lb, st, stw, sts, &
+            ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5) )
+
+! ...       Sorts the sticks according to their length
+
+          ALLOCATE( idx( nst ) )
+
+          CALL sticks_sort( ist(:,4), ist(:,3), ist(:,5), nst, idx, nproc )
+
+          ! ... Set as first stick the stick containing the G=0
+          !
+          !  DO iss = 1, nst
+          !    IF( ist( idx( iss ), 1 ) == 0 .AND. ist( idx( iss ), 2 ) == 0 )  EXIT
+          !  END DO
+          !  itmp         = idx( 1 )
+          !  idx( 1 )   = idx( iss )
+          !  idx( iss ) = itmp
+
+          CALL sticks_dist( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
+             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, nproc )
+
+          ngw = sstpw( mype + 1 )
+          ngm = sstp( mype + 1 )
+!          ngs = sstps( mype + 1 )
+
+          CALL sticks_pairup( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
+             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, nproc )
+
+          ! ...   Allocate and Set fft data layout descriptors
+
+#if defined __MPI
+
+          CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, nogrp_ , dfftp%nr1x,  dfftp%nr2x )
+!          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, nogrp_ , dffts%nr1x, dffts%nr2x )
+
+          CALL fft_dlay_set( dfftp, tk, nst, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
+            ub, lb, idx, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
+!          CALL fft_dlay_set( dffts, tk, nsts, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, &
+!            ub, lb, idx, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
+
+#else
+
+          DEALLOCATE( stw )
+          ALLOCATE( stw( lb(2) : ub(2), lb(3) : ub(3) ) )
+
+          CALL sticks_maps_scalar( (.not.tk), ub, lb, bg(:,1),bg(:,2),bg(:,3),&
+                                    gcut, gkcut, gcut, stw, ngm_ , ngs_ )
+
+          IF( ngm_ /= ngm ) CALL errore( ' pstickset ', ' inconsistent ngm ', abs( ngm - ngm_ ) )
+!          IF( ngs_ /= ngs ) CALL errore( ' pstickset ', ' inconsistent ngs ', abs( ngs - ngs_ ) )
+
+          CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, 1, max(dfftp%nr1x, dfftp%nr3x),  dfftp%nr2x  )
+!          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, 1, max(dffts%nr1x, dffts%nr3x), dffts%nr2x )
+
+          CALL fft_dlay_scalar( dfftp, ub, lb, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, stw )
+!          CALL fft_dlay_scalar( dffts, ub, lb, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, stw )
+
+#endif
+
+! ...     Maximum number of sticks (potentials)
+          nstpx  = maxval( nstp )
+! ...     Maximum number of sticks (wave func.)
+          nstpwx = maxval( nstpw  )
+
+!          IF( dffts%have_task_groups ) THEN
+            !
+            !  Initialize task groups.
+            !  Note that this call modify dffts adding task group data.
+            !
+!            CALL task_groups_init( dffts )
+            !
+!          END IF
+
+!!$          IF (ionode) THEN
+!!$             WRITE( stdout,*)
+!!$             IF ( nproc > 1 ) THEN
+!!$                WRITE( stdout, '(5X,"Parallelization info")')
+!!$             ELSE
+!!$                WRITE( stdout, '(5X,"G-vector sticks info")')
+!!$             ENDIF
+!!$             WRITE( stdout, '(5X,"--------------------")')
+!!$             WRITE( stdout, '(5X,"sticks:   dense  smooth     PW", &
+!!$                            & 5X,"G-vecs:    dense   smooth      PW")') 
+!!$             IF ( nproc > 1 ) THEN
+!!$                WRITE( stdout,'(5X,"Min",4X,2I8,I7,12X,2I9,I8)') &
+!!$                   minval(nstp), minval(nstps), minval(nstpw), &
+!!$                   minval(sstp), minval(sstps), minval(sstpw)
+!!$                WRITE( stdout,'(5X,"Max",4X,2I8,I7,12X,2I9,I8)') &
+!!$                   maxval(nstp), maxval(nstps), maxval(nstpw), &
+!!$                   maxval(sstp), maxval(sstps), maxval(sstpw)
+!!$             END IF
+!!$             WRITE( stdout,'(5X,"Sum",4X,2I8,I7,12X,2I9,I8)') &
+!!$                sum(nstp), sum(nstps), sum(nstpw), &
+!!$                sum(sstp), sum(sstps), sum(sstpw)
+!!$             ! in the case k=0, the lines above and below differ:
+!!$             ! above all sticks, below only those in the half sphere
+!!$             IF ( .NOT. tk ) &
+!!$                 WRITE( stdout,'(5X,"Tot",4X,2I8,I7)') nst, nsts, nstw
+!!$          ENDIF
+
+          DEALLOCATE( ist )
+          DEALLOCATE( idx )
+
+          DEALLOCATE( st, stw, sts )
+          DEALLOCATE( sstp )
+          DEALLOCATE( nstp )
+          DEALLOCATE( sstpw )
+          DEALLOCATE( nstpw )
+          DEALLOCATE( sstps )
+          DEALLOCATE( nstps )
+
+          IF(ionode) WRITE( stdout,*)
+
+          RETURN
+        END SUBROUTINE pstickset_custom
 
 !-----------------------------------------
 ! Task groups Contributed by C. Bekas, October 2005

@@ -60,6 +60,13 @@ fft_base.o : fft_types.o
 fft_base.o : kind.o
 fft_base.o : mp.o
 fft_base.o : parallel_include.o
+fft_custom.o : cell_base.o
+fft_custom.o : constants.o
+fft_custom.o : control_flags.o
+fft_custom.o : fft_scalar.o
+fft_custom.o : fft_types.o
+fft_custom.o : kind.o
+fft_custom.o : parallel_include.o
 fft_interfaces.o : fft_base.o
 fft_interfaces.o : fft_parallel.o
 fft_interfaces.o : fft_scalar.o

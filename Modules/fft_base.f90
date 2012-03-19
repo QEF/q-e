@@ -46,7 +46,8 @@
 
         PUBLIC :: fft_scatter, grid_gather, grid_scatter
         PUBLIC :: dfftp, dffts, dfftb, fft_dlay_descriptor
-        PUBLIC :: cgather_sym, cgather_smooth, cscatter_sym, cscatter_smooth
+        PUBLIC :: cgather_sym, cgather_smooth, cgather_custom
+        PUBLIC :: cscatter_sym, cscatter_smooth, cscatter_custom
         PUBLIC :: gather_smooth, scatter_smooth
         PUBLIC :: tg_gather
 
@@ -918,6 +919,66 @@ SUBROUTINE cgather_smooth ( f_in, f_out )
   !
 END SUBROUTINE cgather_smooth
 !
+!----------------------------------------------------------------------------
+SUBROUTINE cgather_custom ( f_in, f_out, dfftt )
+  !----------------------------------------------------------------------------
+  !
+  ! ... gathers data on the custom AND complex fft grid
+  !
+  ! ... gathers nproc distributed data on the first processor of every pool
+  !
+  ! ... COMPLEX*16  f_in  = distributed variable ( dfftt%nnr )
+  ! ... COMPLEX*16  f_out = gathered variable (nr1sx*nr2sx*nr3sx)
+  !
+  USE mp,        ONLY : mp_barrier
+  USE kinds,     ONLY : DP
+  USE parallel_include
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP) :: f_in(:), f_out(:)
+  TYPE ( fft_dlay_descriptor ), INTENT(IN) :: dfftt 
+  !
+#if defined (__MPI)
+  !
+  INTEGER :: proc, info
+  INTEGER :: displs(0:dfftp%nproc-1), recvcount(0:dfftp%nproc-1)
+  !
+  !
+  CALL start_clock( 'gather' )
+  !
+  DO proc = 0, ( dfftp%nproc - 1 )
+     !
+     recvcount(proc) = 2 * dfftt%nnp * dfftt%npp(proc+1)
+     !
+     IF ( proc == 0 ) THEN
+        !
+        displs(proc) = 0
+        !
+     ELSE
+        !
+        displs(proc) = displs(proc-1) + recvcount(proc-1)
+        !
+     ENDIF
+     !
+  ENDDO
+  !
+  CALL mp_barrier( dfftp%comm )
+  !
+  CALL MPI_GATHERV( f_in, recvcount(dfftp%mype), MPI_DOUBLE_PRECISION, f_out, &
+                    recvcount, displs, MPI_DOUBLE_PRECISION, dfftp%root,    &
+                    dfftp%comm, info )
+  !
+  CALL errore( 'gather', 'info<>0', info )
+  !
+  CALL stop_clock( 'gather' )
+  !
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE cgather_custom
+!
 ! ... "scatter"-like subroutines
 !
 !----------------------------------------------------------------------------
@@ -1038,9 +1099,68 @@ SUBROUTINE cscatter_smooth( f_in, f_out )
   RETURN
   !
 END SUBROUTINE cscatter_smooth
-
-
-
+!
+!----------------------------------------------------------------------------
+SUBROUTINE cscatter_custom( f_in, f_out, dfftt )
+  !----------------------------------------------------------------------------
+  !
+  ! ... scatters data on the custom AND complex fft grid
+  ! ... scatters data from the first processor of every pool
+  !
+  ! ... COMPLEX*16  f_in  = gathered variable (nr1sx*nr2sx*nr3sx)
+  ! ... COMPLEX*16  f_out = distributed variable ( dfftt%nnr)
+  !
+  USE mp,        ONLY : mp_barrier
+  USE kinds,     ONLY : DP
+  USE parallel_include
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP) :: f_in(:), f_out(:)
+  TYPE ( fft_dlay_descriptor ), INTENT(IN) :: dfftt 
+  !
+#if defined (__MPI)
+  !
+  INTEGER :: proc, info
+  INTEGER :: displs(0:dfftp%nproc-1), sendcount(0:dfftp%nproc-1)
+  !
+  !
+  CALL start_clock( 'scatter' )
+  !
+  DO proc = 0, ( dfftp%nproc - 1 )
+     !
+     sendcount(proc) = 2 * dfftt%nnp * dfftt%npp(proc+1)
+     !
+     IF ( proc == 0 ) THEN
+        !
+        displs(proc) = 0
+        !
+     ELSE
+        !
+        displs(proc) = displs(proc-1) + sendcount(proc-1)
+        !
+     ENDIF
+     !
+  ENDDO
+  !
+  CALL mp_barrier( dfftp%comm )
+  !
+  CALL MPI_SCATTERV( f_in, sendcount, displs, MPI_DOUBLE_PRECISION,   &
+                     f_out, sendcount(dfftp%mype), MPI_DOUBLE_PRECISION, &
+                     dfftp%root, dfftp%comm, info )
+  !
+  CALL errore( 'scatter', 'info<>0', info )
+  !
+  IF ( sendcount(dfftp%mype) /=  dfftt%nnr  ) f_out(sendcount(dfftp%mype)+1: dfftt%nnr ) = 0.D0
+  !
+  CALL stop_clock( 'scatter' )
+  !
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE cscatter_custom
+!
 !----------------------------------------------------------------------------
 SUBROUTINE gather_smooth ( f_in, f_out )
   !----------------------------------------------------------------------------

@@ -18,6 +18,7 @@ addusdens.o \
 addusforce.o \
 addusstress.o \
 allocate_fft.o \
+allocate_fft_custom.o \
 allocate_locpot.o \
 allocate_nlpot.o \
 allocate_wfc.o \
@@ -51,6 +52,7 @@ compute_ux.o \
 coset.o \
 d_matrix.o \
 data_structure.o \
+data_structure_custom.o \
 deriv_drhoc.o \
 divide_class.o \
 divide_class_so.o \

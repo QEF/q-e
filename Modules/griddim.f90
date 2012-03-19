@@ -20,7 +20,7 @@
      SAVE
 
      PRIVATE
-     PUBLIC :: realspace_grids_init, realspace_grids_info
+     PUBLIC :: realspace_grids_init, realspace_grid_init_custom, realspace_grids_info
 
    CONTAINS
 
@@ -103,6 +103,51 @@
        RETURN
 
      END SUBROUTINE realspace_grids_init
+
+!=----------------------------------------------------------------------------=!
+
+     SUBROUTINE realspace_grid_init_custom( dfftp, at, bg, gcutm )
+       !
+       USE fft_scalar, only: good_fft_dimension, good_fft_order
+       USE io_global, only: stdout
+       !
+       IMPLICIT NONE
+       !
+       REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
+       REAL(DP), INTENT(IN) :: gcutm
+       TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfftp
+       !
+       IF( dfftp%nr1 == 0 .OR. dfftp%nr2 == 0 .OR. dfftp%nr3 == 0 ) THEN
+         !
+         ! ... calculate the size of the real-space dense grid for FFT
+         ! ... first, an estimate of nr1,nr2,nr3, based on the max values
+         ! ... of n_i indices in:   G = i*b_1 + j*b_2 + k*b_3   
+         ! ... We use G*a_i = n_i => n_i .le. |Gmax||a_i|
+         !
+         dfftp%nr1 = int ( sqrt (gcutm) * &
+               sqrt (at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2) ) + 1
+         dfftp%nr2 = int ( sqrt (gcutm) * &
+               sqrt (at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2) ) + 1
+         dfftp%nr3 = int ( sqrt (gcutm) * &
+               sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
+         !
+         CALL grid_set( bg, gcutm, dfftp%nr1, dfftp%nr2, dfftp%nr3 )
+         !
+       ELSE
+         WRITE( stdout, '( /, 3X,"Info: using nr1, nr2, nr3 values from input" )' )
+       END IF
+
+       dfftp%nr1 = good_fft_order( dfftp%nr1 )
+       dfftp%nr2 = good_fft_order( dfftp%nr2 )
+       dfftp%nr3 = good_fft_order( dfftp%nr3 )
+
+       dfftp%nr1x  = good_fft_dimension( dfftp%nr1 )
+       dfftp%nr2x  = dfftp%nr2
+       dfftp%nr3x  = good_fft_dimension( dfftp%nr3 )
+
+       RETURN
+
+     END SUBROUTINE realspace_grid_init_custom
 
 !=----------------------------------------------------------------------------=!
 

@@ -141,7 +141,8 @@ SUBROUTINE iosys()
                             nqx3_ => nq3, &
                             exxdiv_treatment_ => exxdiv_treatment, &
                             yukawa_           => yukawa, &
-                            ecutvcut_         => ecutvcut
+                            ecutvcut_         => ecutvcut, &
+                            ecutfock_         => ecutfock
   !
   !
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
@@ -242,7 +243,7 @@ SUBROUTINE iosys()
                                starting_ns_eigenvalue, U_projection_type,   &
                                x_gamma_extrapolation, nqx1, nqx2, nqx3,     &
                                exxdiv_treatment, yukawa, ecutvcut,          &
-                               exx_fraction, screening_parameter,           &
+                               exx_fraction, screening_parameter, ecutfock, &
 #ifdef __ENVIRON
                                do_environ,                                  &
 #endif
@@ -1155,6 +1156,7 @@ SUBROUTINE iosys()
   exxdiv_treatment_ = trim(exxdiv_treatment)
   yukawa_   = yukawa
   ecutvcut_ = ecutvcut
+  ecutfock_ = ecutfock
   !
   vdw_table_name_  = vdw_table_name
   !
