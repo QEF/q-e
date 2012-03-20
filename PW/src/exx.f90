@@ -960,6 +960,7 @@ endif
        temppsic(:) = ( 0.D0, 0.D0 )
 
        IF(gamma_only) THEN
+          prod_tot(:) = (0.d0,0.d0)
           CALL exx_grid_convert( psi(:,im), npw, exx_fft_g2r, psi_t,&
             & 1, igkt )
           temppsic(exx_fft_g2r%nlt(1:exx_fft_g2r%npwt)) =&
@@ -973,7 +974,7 @@ endif
           CALL invfft ('Wave', temppsic, dffts)
        ENDIF
 
-       prod_tot(:) = (0.d0,0.d0)
+
        result(:)   = (0.d0,0.d0)
 
        DO iqi=1,nqi
