@@ -72,7 +72,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                         nbnd_max, icur_blk, icyc, ibnd_begin, &
                                         nbands
        INTEGER, EXTERNAL :: ldim_block, lind_block, gind_block
-       INTEGER :: istatus( mpi_status_size )
        REAL(DP)                 :: fac, xyz(3,3), q, evps, ddot
        REAL(DP), ALLOCATABLE    :: qm1(:)
        COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
