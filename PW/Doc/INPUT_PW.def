@@ -1770,8 +1770,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                xyz     = only v1_x, v2_x, v_3z are moved
                shape   = all axis and angles, keeping the volume fixed
 
-               Beware: if axis are not orthogonal, some of the above options
-                       will break symmetry
+               BEWARE: if axis are not orthogonal, some of these options do not
+                work (symmetry is broken). If you are not happy with them, 
+                edit subroutine init_dofree in file Module/cell_base.f90
 	    }
 	}
     }

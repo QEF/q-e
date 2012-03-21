@@ -635,6 +635,9 @@ END FUNCTION saw
               iforceh      = 0
               iforceh(1,1) = 1
               iforceh(2,2) = 1
+              ! ... if you want the entire xy plane to be free, uncomment:
+              ! iforceh(1,2) = 1
+              ! iforceh(2,1) = 1
             CASE ('xz')
               iforceh      = 0
               iforceh(1,1) = 1
