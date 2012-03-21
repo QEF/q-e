@@ -1523,10 +1523,10 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 #if defined __FFTW
              call FFTW_INPLACE_DRV_1D( bw_plan( 2, ip), m, f( ii ), incx1, incx2 )
 #elif defined __FFTW3
-             call dfftw_execute_dft( bw_plan( 1, ip), f( ii: ), f( ii: ) )
+             call dfftw_execute_dft( bw_plan( 2, ip), f( ii: ), f( ii: ) )
 #elif defined __ESSL || defined __LINUX_ESSL
              call dcft (0, f (ii), incx1, incx2, f (ii), incx1, incx2, nx, m, &
-               -isign, 1.0_DP, bw_table ( 1, 1,  ip ), ltabl, work( 1 ), lwork)
+               -isign, 1.0_DP, bw_table ( 1, 2,  ip ), ltabl, work( 1 ), lwork)
 #else
              call errore(' cfft3ds ',' no scalar fft driver specified ', 3)
 #endif
