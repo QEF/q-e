@@ -25,9 +25,10 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE spin_orb,             ONLY : lspinorb
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : noncolin, npol
-  USE mp_global,            ONLY : me_pool, root_pool
+  USE mp_global,            ONLY : me_pool, root_pool, intra_bgrp_comm,inter_bgrp_comm, mpime
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp, calbec
+  USE mp,                   ONLY : mp_sum, mp_get_comm_null, mp_circular_shift_left 
   !
   IMPLICIT NONE
   !
@@ -36,7 +37,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   INTEGER       :: ik
   REAL(DP) :: sigmanlc(3,3), gk(3,npw)
   !
-  CALL allocate_bec_type ( nkb, nbnd, becp ) 
+  CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm ) 
+  
   !
   IF ( gamma_only ) THEN
      !
@@ -65,7 +67,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        ! ... local variables
        !
        INTEGER                       :: na, np, ibnd, ipol, jpol, l, i, &
-                                        ikb, jkb, ih, jh, ijkb0
+                                        ikb, jkb, ih, jh, ijkb0, ibnd_loc, &
+                                        nproc, mype, nbnd_loc, nbnd_begin, &
+                                        nbnd_max, icur_blk, icyc, ibnd_begin, &
+                                        nbands
+       INTEGER, EXTERNAL :: ldim_block, lind_block, gind_block
+       INTEGER :: istatus( mpi_status_size )
        REAL(DP)                 :: fac, xyz(3,3), q, evps, ddot
        REAL(DP), ALLOCATABLE    :: qm1(:)
        COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
@@ -76,13 +83,29 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        !
        IF ( nkb == 0 ) RETURN
-       !
+       IF( becp%comm /= mp_get_comm_null() ) THEN
+          nproc   = becp%nproc
+          mype    = becp%mype
+          nbnd_loc   = becp%nbnd_loc
+          nbnd_begin = becp%ibnd_begin
+          nbnd_max   = SIZE(becp%r,2)
+          nbands = nbnd_loc
+          
+          IF( ( nbnd_begin + nbnd_loc - 1 ) > nbnd ) nbnd_loc = nbnd - nbnd_begin + 1
+       ELSE
+          nproc = 1
+          nbnd_loc = nbnd
+          nbnd_begin = 1
+          nbnd_max = SIZE(becp%r,2)
+          nbands = nbnd 
+       END IF
+
        IF ( lsda ) current_spin = isk(ik)
        IF ( nks > 1 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
        !
        CALL calbec( npw, vkb, evc, becp )
        !
-       ALLOCATE( work1( npwx ), work2( npwx ), qm1( npwx ) )
+       ALLOCATE( work1( npwx ), work2( npwx ), qm1( npwx )) 
        !
        DO i = 1, npw
           q = SQRT( gk(1,i)**2 + gk(2,i)**2 + gk(3,i)**2 )
@@ -97,12 +120,18 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        evps = 0.D0
        !
+            
+             
+             
+
+
+ 
+       
        IF ( me_pool /= root_pool ) GO TO 100
-       !
-       ! ... the contribution is calculated only on one processor because
-       ! ... partial results are later summed over all processors
-       !
-       DO ibnd = 1, nbnd
+ 
+          
+       DO ibnd_loc = 1, nbands
+          ibnd = ibnd_loc + becp%ibnd_begin - 1 
           fac = wg(ibnd,ik)
           ijkb0 = 0
           DO np = 1, ntyp
@@ -112,92 +141,51 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                       ikb = ijkb0 + ih
                       ps = deeq(ih,ih,na,current_spin) - &
                            et(ibnd,ik) * qq(ih,ih,np)
-                      evps = evps + fac * ps * ABS( becp%r(ikb,ibnd) )**2
+                      evps = evps + fac * ps * ABS( becp%r(ikb,ibnd_loc) )**2
                       !
                       IF ( upf(np)%tvanp .OR. newpseudo(np) ) THEN
                          !
                          ! ... only in the US case there is a contribution 
                          ! ... for jh<>ih
                          ! ... we use here the symmetry in the interchange of 
-                         ! ... ih and jh
+                            ! ... ih and jh
                          !
                          DO jh = ( ih + 1 ), nh(np)
                             jkb = ijkb0 + jh
                             ps = deeq(ih,jh,na,current_spin) - &
                                  et(ibnd,ik) * qq(ih,jh,np)
                             evps = evps + ps * fac * 2.D0 * &
-                                   becp%r(ikb,ibnd) * becp%r(jkb,ibnd)
+                                 becp%r(ikb,ibnd_loc) * becp%r(jkb,ibnd_loc)
                          END DO
-                       END IF
+                      END IF
                    END DO
                    ijkb0 = ijkb0 + nh(np)
                 END IF
              END DO
           END DO
        END DO
-       !
+       
+          
+      
 100    CONTINUE
+      
+
+
        !
        ! ... non diagonal contribution - derivative of the bessel function
-       !
+       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        ALLOCATE( dvkb( npwx, nkb ) )
        !
        CALL gen_us_dj( ik, dvkb )
        !
-       DO ibnd = 1, nbnd
-          work2(:) = (0.D0,0.D0)
-          ijkb0 = 0
-          DO np = 1, ntyp
-             DO na = 1, nat
-                IF ( ityp(na) == np ) THEN
-                   DO ih = 1, nh(np)
-                      ikb = ijkb0 + ih
-                      IF ( .NOT. ( upf(np)%tvanp .OR. newpseudo(np) ) ) THEN
-                         ps = becp%r(ikb,ibnd) * &
-                              ( deeq(ih,ih,na,current_spin) - &
-                                et(ibnd,ik) * qq(ih,ih,np) )
-                      ELSE
-                         !
-                         ! ... in the US case there is a contribution 
-                         ! ... also for jh<>ih
-                         !
-                         ps = (0.D0,0.D0)
-                         DO jh = 1, nh(np)
-                            jkb = ijkb0 + jh
-                            ps = ps + becp%r(jkb,ibnd) * &
-                                 ( deeq(ih,jh,na,current_spin) - &
-                                   et(ibnd,ik) * qq(ih,jh,np) )
-                         END DO
-                      END IF
-                      CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
-                   END DO
-                   ijkb0 = ijkb0 + nh(np)
-                END IF
-             END DO
-          END DO
-          !
-          ! ... a factor 2 accounts for the other half of the G-vector sphere
-          !
-          DO ipol = 1, 3
-             DO jpol = 1, ipol
-                DO i = 1, npw
-                   work1(i) = evc(i,ibnd) * gk(ipol,i) * gk(jpol,i) * qm1(i)
-                END DO
-                sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                                      4.D0 * wg(ibnd,ik) * &
-                                      ddot( 2 * npw, work1, 1, work2, 1 )
-             END DO
-          END DO
-       END DO
-       !
-       ! ... non diagonal contribution - derivative of the spherical harmonics
-       ! ... (no contribution from l=0)
-       !
-       IF ( lmaxkb == 0 ) GO TO 10
-       !
-       DO ipol = 1, 3
-          CALL gen_us_dy( ik, xyz(1,ipol), dvkb )
-          DO ibnd = 1, nbnd
+       ibnd_begin = becp%ibnd_begin 
+       
+       DO icyc = 0, nproc -1
+          
+          
+          DO ibnd_loc = 1, nbands
+             
+             ibnd = ibnd_loc + ibnd_begin - 1 
              work2(:) = (0.D0,0.D0)
              ijkb0 = 0
              DO np = 1, ntyp
@@ -206,10 +194,10 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                       DO ih = 1, nh(np)
                          ikb = ijkb0 + ih
                          IF ( .NOT. ( upf(np)%tvanp .OR. newpseudo(np) ) ) THEN
-                            ps = becp%r(ikb,ibnd) * &
+                            ps = becp%r(ikb,ibnd_loc) * &
                                  ( deeq(ih,ih,na,current_spin) - &
-                                   et(ibnd,ik) * qq(ih,ih,np ) )
-                         ELSE 
+                                 et(ibnd,ik) * qq(ih,ih,np) )
+                         ELSE
                             !
                             ! ... in the US case there is a contribution 
                             ! ... also for jh<>ih
@@ -217,9 +205,9 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                             ps = (0.D0,0.D0)
                             DO jh = 1, nh(np)
                                jkb = ijkb0 + jh
-                               ps = ps + becp%r(jkb,ibnd) * &
+                               ps = ps + becp%r(jkb,ibnd_loc) * &
                                     ( deeq(ih,jh,na,current_spin) - &
-                                      et(ibnd,ik) * qq(ih,jh,np) )
+                                    et(ibnd,ik) * qq(ih,jh,np) )
                             END DO
                          END IF
                          CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
@@ -231,17 +219,105 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              !
              ! ... a factor 2 accounts for the other half of the G-vector sphere
              !
-             DO jpol = 1, ipol
-                DO i = 1, npw
-                   work1(i) = evc(i,ibnd) * gk(jpol,i)
+             DO ipol = 1, 3
+                DO jpol = 1, ipol
+                   DO i = 1, npw
+                      work1(i) = evc(i,ibnd) * gk(ipol,i) * gk(jpol,i) * qm1(i)
+                   END DO
+                   sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
+                        4.D0 * wg(ibnd,ik) * &
+                        ddot( 2 * npw, work1, 1, work2, 1 )
                 END DO
-                sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                                      4.D0 * wg(ibnd,ik) * &
-                                      ddot( 2 * npw, work1, 1, work2, 1 )
              END DO
           END DO
+          IF(nproc>1)then
+             call mp_circular_shift_left(becp%r, icyc, becp%comm)
+             call mp_circular_shift_left(ibnd_begin, icyc, becp%comm)
+          END IF
        END DO
+       
        !
+       ! ... non diagonal contribution - derivative of the spherical harmonics
+       ! ... (no contribution from l=0)
+       !
+       IF ( lmaxkb == 0 ) GO TO 10
+       !
+       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+       DO ipol = 1, 3
+          CALL gen_us_dy( ik, xyz(1,ipol), dvkb )
+             icur_blk = mype
+             ibnd_begin = becp%ibnd_begin 
+             DO icyc = 0, nproc -1
+                
+                
+                
+                
+                
+                
+                
+                
+                DO ibnd_loc = 1, nbands
+                   ibnd = ibnd_loc + ibnd_begin - 1 
+                   work2(:) = (0.D0,0.D0)
+                   ijkb0 = 0
+                   DO np = 1, ntyp
+                      DO na = 1, nat
+                         IF ( ityp(na) == np ) THEN
+                            DO ih = 1, nh(np)
+                               ikb = ijkb0 + ih
+                               IF ( .NOT. ( upf(np)%tvanp .OR. newpseudo(np) ) ) THEN
+                                  ps = becp%r(ikb,ibnd_loc) * &
+                                          ( deeq(ih,ih,na,current_spin) - &
+                                          et(ibnd,ik) * qq(ih,ih,np ) )
+                               ELSE 
+                                  !
+                                  ! ... in the US case there is a contribution 
+                                  ! ... also for jh<>ih
+                                  !
+                                  ps = (0.D0,0.D0)
+                                  DO jh = 1, nh(np)
+                                     jkb = ijkb0 + jh
+                                     ps = ps + becp%r(jkb,ibnd_loc) * &
+                                          ( deeq(ih,jh,na,current_spin) - &
+                                          et(ibnd,ik) * qq(ih,jh,np) )
+                                  END DO
+                               END IF
+                               CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
+                            END DO
+                            ijkb0 = ijkb0 + nh(np)
+                         END IF
+                      END DO
+                   END DO
+                   !
+                   ! ... a factor 2 accounts for the other half of the G-vector sphere
+                   !
+                   DO jpol = 1, ipol
+                      DO i = 1, npw
+                         work1(i) = evc(i,ibnd) * gk(jpol,i)
+                      END DO
+                      sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
+                           4.D0 * wg(ibnd,ik) * &
+                           ddot( 2 * npw, work1, 1, work2, 1 )
+                   END DO
+                END DO
+
+
+                if(nproc>1)then
+                   call mp_circular_shift_left(becp%r, icyc, becp%comm)
+                   call mp_circular_shift_left(ibnd_begin, icyc, becp%comm)
+                end if
+                
+
+             ENDDO
+       END DO
+       
+
+
+
+
+
+
+
 10     CONTINUE
        !
        DO l = 1, 3
@@ -275,7 +351,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
        REAL(DP), ALLOCATABLE :: deff(:,:,:)
        ! dvkb contains the derivatives of the kb potential
-       COMPLEX(DP)              :: ps, ps_nc(2), psc
+       COMPLEX(DP)              :: ps, ps_nc(2)
        ! xyz are the three unit vectors in the x,y,z directions
        DATA xyz / 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0 /
        !
