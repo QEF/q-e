@@ -399,12 +399,12 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
 
   character :: cdate*9, ctime*9, sdate*32, stime*32, stitle*32
   logical :: proc_wf, bad_kgrid
-  integer :: u, i, j, k, cell_symmetry, nrecord
+  integer :: unit, i, j, k, cell_symmetry, nrecord
   integer :: id, ib, ik, iks, ike, is, ig, ierr
   integer :: nd, ntran, nb, nk_l, nk_g, ns, ng_l, ng_g
   integer :: nkbl, nkl, nkr, ngg, npw_g, npwx_g
   integer :: local_pw, ipsour, igwx, ngkdist_g, ngkdist_l
-  real (DP) :: occ, alat2, recvol, dr1, t1 ( 3 ), t2 ( 3 )
+  real (DP) :: alat2, recvol, dr1, t1 ( 3 ), t2 ( 3 )
   real (DP) :: r1 ( 3, 3 ), r2 ( 3, 3 ), adot ( 3, 3 )
   real (DP) :: bdot ( 3, 3 ), translation ( 3, 48 )
   integer, allocatable :: kmap ( : )
@@ -456,7 +456,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
     WRITE ( stitle, '("WFN-Complex",21X)' )
   ENDIF
 
-  u = 4
+  unit = 4
   nrecord = 1
   nd = 3
 
@@ -589,39 +589,12 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   ALLOCATE ( ifmin ( nk_g ) )
   ALLOCATE ( ifmax ( nk_g ) )
 
-  DO ik = 1, nk_l
-    DO ib = 1, nb
-      wg_g ( ib, ik ) = wg ( ib, ik ) * dble ( ns ) / 2.0D0
-    ENDDO
-  ENDDO
-#ifdef __PARA
-  CALL poolrecover ( wg_g, nb, nk_g, nk_l )
-#endif
-  DO ik = 1, nk_g
-    ifmin ( ik ) = 0
-  ENDDO
-  DO ik = 1, nk_g
-    ifmax ( ik ) = 0
-  ENDDO
-  DO ik = 1, nk_g
-    DO ib = 1, nb
-      IF ( abs ( wk ( ik ) * dble ( ns ) / 2.0D0 ) .LT. eps6 ) THEN
-        occ = wg_g ( ib, ik )
-      ELSE
-        occ = wg_g ( ib, ik ) / ( wk ( ik ) * dble ( ns ) / 2.0D0 )
-      ENDIF
-      IF ( occ .GT. 0.5D0 ) THEN
-        IF ( ifmin ( ik ) .EQ. 0 ) ifmin ( ik ) = ib
-        ifmax ( ik ) = ib
-      ENDIF
-    ENDDO
-  ENDDO
-
   IF ( wfng_occupation ) THEN
-    DO ik = 1, nk_l
+
+    DO ik = 1, nk_g
       DO ib = 1, nb
         IF ( ib .GE. wfng_nvmin .AND. ib .LE. wfng_nvmax ) THEN
-          wg_g ( ib, ik ) = dble ( ns ) / 2.0D0
+          wg_g ( ib, ik ) = 1.0D0
         ELSE
           wg_g ( ib, ik ) = 0.0D0
         ENDIF
@@ -633,6 +606,35 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
     DO ik = 1, nk_g
       ifmax ( ik ) = wfng_nvmax
     ENDDO
+
+  ELSE
+
+    DO ik = 1, nk_l
+      DO ib = 1, nb
+        wg_g ( ib, ik ) = wg ( ib, ik ) 
+        IF ( abs ( wk ( ik ) ) .GT. eps6 ) THEN
+          wg_g ( ib, ik ) = wg_g ( ib, ik ) / wk ( ik ) 
+        ENDIF
+      ENDDO
+    ENDDO
+#ifdef __PARA
+    CALL poolrecover ( wg_g, nb, nk_g, nk_l )
+#endif
+    DO ik = 1, nk_g
+      ifmin ( ik ) = 0
+    ENDDO
+    DO ik = 1, nk_g
+      ifmax ( ik ) = 0
+    ENDDO
+    DO ik = 1, nk_g
+      DO ib = 1, nb
+        IF ( wg_g( ib, ik ) .GT. 0.5D0 ) THEN
+          IF ( ifmin ( ik ) .EQ. 0 ) ifmin ( ik ) = ib
+          ifmax ( ik ) = ib
+        ENDIF
+      ENDDO
+    ENDDO
+
   ENDIF
 
   ALLOCATE ( g_g ( nd, ng_g ) )
@@ -687,35 +689,35 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   CALL cryst_to_cart ( nk_g / ns, xk, at, - 1 )
 
   IF ( ionode ) THEN
-    OPEN ( unit = u, file = TRIM ( output_file_name ), &
+    OPEN ( unit = unit, file = TRIM ( output_file_name ), &
       form = 'unformatted', status = 'replace' )
-    WRITE ( u ) stitle, sdate, stime
-    WRITE ( u ) ns, ng_g, ntran, cell_symmetry, nat, ecutrho, &
+    WRITE ( unit ) stitle, sdate, stime
+    WRITE ( unit ) ns, ng_g, ntran, cell_symmetry, nat, ecutrho, &
       nk_g / ns, nb, npwx_g, ecutwfc
     IF ( wfng_kgrid ) THEN
-      WRITE ( u ) dfftp%nr1, dfftp%nr2, dfftp%nr3, wfng_nk1, wfng_nk2, wfng_nk3, &
+      WRITE ( unit ) dfftp%nr1, dfftp%nr2, dfftp%nr3, wfng_nk1, wfng_nk2, wfng_nk3, &
         wfng_dk1, wfng_dk2, wfng_dk3
     ELSE
-      WRITE ( u ) dfftp%nr1, dfftp%nr2, dfftp%nr3, nk1, nk2, nk3, &
+      WRITE ( unit ) dfftp%nr1, dfftp%nr2, dfftp%nr3, nk1, nk2, nk3, &
         0.5D0 * dble ( k1 ), 0.5D0 * dble ( k2 ), 0.5D0 * dble ( k3 )
     ENDIF
-    WRITE ( u ) omega, alat, ( ( at ( j, i ), j = 1, nd ), i = 1, nd ), &
+    WRITE ( unit ) omega, alat, ( ( at ( j, i ), j = 1, nd ), i = 1, nd ), &
       ( ( adot ( j, i ), j = 1, nd ), i = 1, nd )
-    WRITE ( u ) recvol, tpiba, ( ( bg ( j, i ), j = 1, nd ), i = 1, nd ), &
+    WRITE ( unit ) recvol, tpiba, ( ( bg ( j, i ), j = 1, nd ), i = 1, nd ), &
       ( ( bdot ( j, i ), j = 1, nd ), i = 1, nd )
-    WRITE ( u ) ( ( ( s ( k, j, i ), k = 1, nd ), j = 1, nd ), i = 1, ntran )
-    WRITE ( u ) ( ( translation ( j, i ), j = 1, nd ), i = 1, ntran )
-    WRITE ( u ) ( ( tau ( j, i ), j = 1, nd ), atomic_number ( atm ( ityp ( i ) ) ), i = 1, nat )
-    WRITE ( u ) ( ngk_g ( ik ), ik = 1, nk_g / ns )
-    WRITE ( u ) ( wk ( ik ) * dble ( ns ) / 2.0D0, ik = 1, nk_g / ns )
-    WRITE ( u ) ( ( xk ( id, ik ), id = 1, nd ), ik = 1, nk_g / ns )
-    WRITE ( u ) ( ifmin ( ik ), ik = 1, nk_g )
-    WRITE ( u ) ( ifmax ( ik ), ik = 1, nk_g )
-    WRITE ( u ) ( ( et_g ( ib, ik ), ib = 1, nb ), ik = 1, nk_g )
-    WRITE ( u ) ( ( wg_g ( ib, ik ), ib = 1, nb ), ik = 1, nk_g )
-    WRITE ( u ) nrecord
-    WRITE ( u ) ng_g
-    WRITE ( u ) ( ( g_g ( id, ig ), id = 1, nd ), ig = 1, ng_g )
+    WRITE ( unit ) ( ( ( s ( k, j, i ), k = 1, nd ), j = 1, nd ), i = 1, ntran )
+    WRITE ( unit ) ( ( translation ( j, i ), j = 1, nd ), i = 1, ntran )
+    WRITE ( unit ) ( ( tau ( j, i ), j = 1, nd ), atomic_number ( atm ( ityp ( i ) ) ), i = 1, nat )
+    WRITE ( unit ) ( ngk_g ( ik ), ik = 1, nk_g / ns )
+    WRITE ( unit ) ( wk ( ik ) * dble ( ns ) / 2.0D0, ik = 1, nk_g / ns )
+    WRITE ( unit ) ( ( xk ( id, ik ), id = 1, nd ), ik = 1, nk_g / ns )
+    WRITE ( unit ) ( ifmin ( ik ), ik = 1, nk_g )
+    WRITE ( unit ) ( ifmax ( ik ), ik = 1, nk_g )
+    WRITE ( unit ) ( ( et_g ( ib, ik ), ib = 1, nb ), ik = 1, nk_g )
+    WRITE ( unit ) ( ( wg_g ( ib, ik ), ib = 1, nb ), ik = 1, nk_g )
+    WRITE ( unit ) nrecord
+    WRITE ( unit ) ng_g
+    WRITE ( unit ) ( ( g_g ( id, ig ), id = 1, nd ), ig = 1, ng_g )
   ENDIF
 
   CALL cryst_to_cart ( nk_g / ns, xk, bg, 1 )
@@ -774,9 +776,9 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
 
     IF ( ionode ) THEN
       IF ( is .EQ. 1 ) THEN
-        WRITE ( u ) nrecord
-        WRITE ( u ) ngk_g ( ik )
-        WRITE ( u ) ( ( g_g ( id, igwk ( ig ) ), id = 1, nd ), &
+        WRITE ( unit ) nrecord
+        WRITE ( unit ) ngk_g ( ik )
+        WRITE ( unit ) ( ( g_g ( id, igwk ( ig ) ), id = 1, nd ), &
           ig = 1, ngk_g ( ik ) )
       ENDIF
     ENDIF
@@ -874,9 +876,9 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
 #endif
       ELSE
         IF ( ionode ) THEN
-          WRITE ( u ) nrecord
-          WRITE ( u ) ngk_g ( ik )
-          WRITE ( u ) ( wfng ( ig ), ig = 1, igwx )
+          WRITE ( unit ) nrecord
+          WRITE ( unit ) ngk_g ( ik )
+          WRITE ( unit ) ( wfng ( ig ), ig = 1, igwx )
         ENDIF
       ENDIF
 
@@ -907,13 +909,13 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
 #endif
         ENDDO
         IF ( ionode ) THEN
-          WRITE ( u ) nrecord
-          WRITE ( u ) ngk_g ( ik )
+          WRITE ( unit ) nrecord
+          WRITE ( unit ) ngk_g ( ik )
           IF ( real_or_complex .EQ. 1 ) THEN
-            WRITE ( u ) ( ( dble ( wfng_buf ( ig, is ) ), &
+            WRITE ( unit ) ( ( dble ( wfng_buf ( ig, is ) ), &
               ig = 1, igwx ), is = 1, ns )
           ELSE
-            WRITE ( u ) ( ( wfng_buf ( ig, is ), &
+            WRITE ( unit ) ( ( wfng_buf ( ig, is ), &
               ig = 1, igwx ), is = 1, ns )
           ENDIF
         ENDIF
@@ -935,7 +937,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   ENDIF
 
   IF ( ionode ) THEN
-    CLOSE ( unit = u, status = 'keep' )
+    CLOSE ( unit = unit, status = 'keep' )
   ENDIF
 
   DEALLOCATE ( g_g )
@@ -1184,7 +1186,7 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type )
   character ( len = 9 ), intent (in) :: symm_type
 
   character :: cdate*9, ctime*9, sdate*32, stime*32, stitle*32
-  integer :: u, id, is, ig, i, j, k, ierr
+  integer :: unit, id, is, ig, i, j, k, ierr
   integer :: nd, ns, ng_l, ng_g
   integer :: ntran, cell_symmetry, nrecord
   real (DP) :: alat2, recvol, dr1, t1 ( 3 ), t2 ( 3 )
@@ -1206,7 +1208,7 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type )
     WRITE ( stitle, '("RHO-Complex",21X)' )
   ENDIF
 
-  u = 4
+  unit = 4
   nrecord = 1
   nd = 3
 
@@ -1327,31 +1329,31 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type )
   ENDDO
 
   IF ( ionode ) THEN
-    OPEN ( unit = u, file = TRIM ( output_file_name ), &
+    OPEN ( unit = unit, file = TRIM ( output_file_name ), &
       form = 'unformatted', status = 'replace' )
-    WRITE ( u ) stitle, sdate, stime
-    WRITE ( u ) ns, ng_g, ntran, cell_symmetry, nat, ecutrho
-    WRITE ( u ) dfftp%nr1, dfftp%nr2, dfftp%nr3
-    WRITE ( u ) omega, alat, ( ( at ( j, i ), j = 1, nd ), i = 1, nd ), &
+    WRITE ( unit ) stitle, sdate, stime
+    WRITE ( unit ) ns, ng_g, ntran, cell_symmetry, nat, ecutrho
+    WRITE ( unit ) dfftp%nr1, dfftp%nr2, dfftp%nr3
+    WRITE ( unit ) omega, alat, ( ( at ( j, i ), j = 1, nd ), i = 1, nd ), &
       ( ( adot ( j, i ), j = 1, nd ), i = 1, nd )
-    WRITE ( u ) recvol, tpiba, ( ( bg ( j, i ), j = 1, nd ), i = 1, nd ), &
+    WRITE ( unit ) recvol, tpiba, ( ( bg ( j, i ), j = 1, nd ), i = 1, nd ), &
       ( ( bdot ( j, i ), j = 1, nd ), i = 1, nd )
-    WRITE ( u ) ( ( ( s ( k, j, i ), k = 1, nd ), j = 1, nd ), i = 1, ntran )
-    WRITE ( u ) ( ( translation ( j, i ), j = 1, nd ), i = 1, ntran )
-    WRITE ( u ) ( ( tau ( j, i ), j = 1, nd ), atomic_number ( atm ( ityp ( i ) ) ), i = 1, nat )
-    WRITE ( u ) nrecord
-    WRITE ( u ) ng_g
-    WRITE ( u ) ( ( g_g ( id, ig ), id = 1, nd ), ig = 1, ng_g )
-    WRITE ( u ) nrecord
-    WRITE ( u ) ng_g
+    WRITE ( unit ) ( ( ( s ( k, j, i ), k = 1, nd ), j = 1, nd ), i = 1, ntran )
+    WRITE ( unit ) ( ( translation ( j, i ), j = 1, nd ), i = 1, ntran )
+    WRITE ( unit ) ( ( tau ( j, i ), j = 1, nd ), atomic_number ( atm ( ityp ( i ) ) ), i = 1, nat )
+    WRITE ( unit ) nrecord
+    WRITE ( unit ) ng_g
+    WRITE ( unit ) ( ( g_g ( id, ig ), id = 1, nd ), ig = 1, ng_g )
+    WRITE ( unit ) nrecord
+    WRITE ( unit ) ng_g
     IF ( real_or_complex .EQ. 1 ) THEN
-      WRITE ( u ) ( ( dble ( rhog_g ( ig, is ) ), &
+      WRITE ( unit ) ( ( dble ( rhog_g ( ig, is ) ), &
         ig = 1, ng_g ), is = 1, ns )
     ELSE
-      WRITE ( u ) ( ( rhog_g ( ig, is ), &
+      WRITE ( unit ) ( ( rhog_g ( ig, is ), &
         ig = 1, ng_g ), is = 1, ns )
     ENDIF
-    CLOSE ( unit = u, status = 'keep' )
+    CLOSE ( unit = unit, status = 'keep' )
   ENDIF
 
   DEALLOCATE ( rhog_g )
@@ -1395,7 +1397,7 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
   logical, intent (in) :: exx_flag
 
   character :: cdate*9, ctime*9, sdate*32, stime*32, stitle*32
-  integer :: u, id, is, ir, ig, i, j, k, ierr
+  integer :: unit, id, is, ir, ig, i, j, k, ierr
   integer :: nd, ns, nr, ng_l, ng_g
   integer :: ntran, cell_symmetry, nrecord
   real (DP) :: alat2, recvol, dr1, t1 ( 3 ), t2 ( 3 )
@@ -1418,7 +1420,7 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
     WRITE ( stitle, '("VXC-Complex",21X)' )
   ENDIF
 
-  u = 4
+  unit = 4
   nrecord = 1
   nd = 3
 
@@ -1555,31 +1557,31 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
   CALL mp_sum ( vxcg_g, intra_pool_comm )
 
   IF ( ionode ) THEN
-    OPEN ( unit = u, file = TRIM ( output_file_name ), &
+    OPEN ( unit = unit, file = TRIM ( output_file_name ), &
       form = 'unformatted', status = 'replace' )
-    WRITE ( u ) stitle, sdate, stime
-    WRITE ( u ) ns, ng_g, ntran, cell_symmetry, nat, ecutrho
-    WRITE ( u ) dfftp%nr1, dfftp%nr2, dfftp%nr3
-    WRITE ( u ) omega, alat, ( ( at ( j, i ), j = 1, nd ), i = 1, nd ), &
+    WRITE ( unit ) stitle, sdate, stime
+    WRITE ( unit ) ns, ng_g, ntran, cell_symmetry, nat, ecutrho
+    WRITE ( unit ) dfftp%nr1, dfftp%nr2, dfftp%nr3
+    WRITE ( unit ) omega, alat, ( ( at ( j, i ), j = 1, nd ), i = 1, nd ), &
       ( ( adot ( j, i ), j = 1, nd ), i = 1, nd )
-    WRITE ( u ) recvol, tpiba, ( ( bg ( j, i ), j = 1, nd ), i = 1, nd ), &
+    WRITE ( unit ) recvol, tpiba, ( ( bg ( j, i ), j = 1, nd ), i = 1, nd ), &
       ( ( bdot ( j, i ), j = 1, nd ), i = 1, nd )
-    WRITE ( u ) ( ( ( s ( k, j, i ), k = 1, nd ), j = 1, nd ), i = 1, ntran )
-    WRITE ( u ) ( ( translation ( j, i ), j = 1, nd ), i = 1, ntran )
-    WRITE ( u ) ( ( tau ( j, i ), j = 1, nd ), atomic_number ( atm ( ityp ( i ) ) ), i = 1, nat )
-    WRITE ( u ) nrecord
-    WRITE ( u ) ng_g
-    WRITE ( u ) ( ( g_g ( id, ig ), id = 1, nd ), ig = 1, ng_g )
-    WRITE ( u ) nrecord
-    WRITE ( u ) ng_g
+    WRITE ( unit ) ( ( ( s ( k, j, i ), k = 1, nd ), j = 1, nd ), i = 1, ntran )
+    WRITE ( unit ) ( ( translation ( j, i ), j = 1, nd ), i = 1, ntran )
+    WRITE ( unit ) ( ( tau ( j, i ), j = 1, nd ), atomic_number ( atm ( ityp ( i ) ) ), i = 1, nat )
+    WRITE ( unit ) nrecord
+    WRITE ( unit ) ng_g
+    WRITE ( unit ) ( ( g_g ( id, ig ), id = 1, nd ), ig = 1, ng_g )
+    WRITE ( unit ) nrecord
+    WRITE ( unit ) ng_g
     IF ( real_or_complex .EQ. 1 ) THEN
-      WRITE ( u ) ( ( dble ( vxcg_g ( ig, is ) ), &
+      WRITE ( unit ) ( ( dble ( vxcg_g ( ig, is ) ), &
         ig = 1, ng_g ), is = 1, ns )
     ELSE
-      WRITE ( u ) ( ( vxcg_g ( ig, is ), &
+      WRITE ( unit ) ( ( vxcg_g ( ig, is ), &
         ig = 1, ng_g ), is = 1, ns )
     ENDIF
-    CLOSE ( unit = u, status = 'keep' )
+    CLOSE ( unit = unit, status = 'keep' )
   ENDIF
 
   DEALLOCATE ( vxcg_g )
@@ -1617,13 +1619,13 @@ SUBROUTINE write_vxc0 ( output_file_name, input_dft, exx_flag )
   character ( len = 20 ), intent (in) :: input_dft
   logical, intent (in) :: exx_flag
 
-  integer :: u
+  integer :: unit
   integer :: is, ir, ig
   integer :: nd, ns, nr, ng_l
   real (DP), allocatable :: vxcr_g ( :, : )
   complex (DP), allocatable :: vxc0_g ( : )
 
-  u = 4
+  unit = 4
   nd = 3
 
   ns = nspin
@@ -1671,14 +1673,14 @@ SUBROUTINE write_vxc0 ( output_file_name, input_dft, exx_flag )
   ENDDO
 
   IF ( ionode ) THEN
-    OPEN (unit = u, file = TRIM (output_file_name), &
+    OPEN (unit = unit, file = TRIM (output_file_name), &
       form = 'formatted', status = 'replace')
-    WRITE ( u, 101 )
+    WRITE ( unit, 101 )
     DO is = 1, ns
-      WRITE ( u, 102 ) is, vxc0_g ( is )
+      WRITE ( unit, 102 ) is, vxc0_g ( is )
     ENDDO
-    WRITE ( u, 103 )
-    CLOSE (unit = u, status = 'keep')
+    WRITE ( unit, 103 )
+    CLOSE (unit = unit, status = 'keep')
   ENDIF
 
   DEALLOCATE ( vxcr_g )
@@ -1731,7 +1733,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   character (len = 20), intent (in) :: input_dft
   logical, intent (in) :: exx_flag
 
-  integer :: ik, is, ib, ig, ir, u, nkbl, nkl, nkr, iks, ike, &
+  integer :: ik, is, ib, ig, ir, unit, nkbl, nkl, nkr, iks, ike, &
     ndiag, noffdiag, ib2
   real (DP) :: dummyr
   complex (DP) :: dummyc
@@ -1754,7 +1756,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   noffdiag = MAX (offdiag_nmax - offdiag_nmin + 1, 0)
   IF (ndiag .EQ. 0 .AND. noffdiag .EQ. 0) RETURN
 
-  u = 4
+  unit = 4
 
   nkbl = nkstot / kunit
   nkl = kunit * (nkbl / npool)
@@ -1853,15 +1855,15 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   CALL cryst_to_cart (nkstot, xk, at, -1)
 
   IF (ionode) THEN
-    OPEN (unit = u, file = TRIM (output_file_name), &
+    OPEN (unit = unit, file = TRIM (output_file_name), &
       form = 'formatted', status = 'replace')
     DO ik = 1, nkstot / nspin
-      WRITE (u, 101) xk(:, ik), nspin * ndiag, &
+      WRITE (unit, 101) xk(:, ik), nspin * ndiag, &
         nspin * noffdiag **2
       DO is = 1, nspin
         IF (ndiag .GT. 0) THEN
           DO ib = diag_nmin, diag_nmax
-            WRITE (u, 102) is, ib, mtxeld &
+            WRITE (unit, 102) is, ib, mtxeld &
               (ib - diag_nmin + 1, ik + (is - 1) * nkstot / nspin), &
               0.0D0
           ENDDO
@@ -1869,7 +1871,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
         IF (noffdiag .GT. 0) THEN
           DO ib = offdiag_nmin, offdiag_nmax
             DO ib2 = offdiag_nmin, offdiag_nmax
-              WRITE (u, 103) is, ib2, ib, mtxelo &
+              WRITE (unit, 103) is, ib2, ib, mtxelo &
                 (ib2 - offdiag_nmin + 1, ib - offdiag_nmin + 1, &
                 ik + (is - 1) * nkstot / nspin)
             ENDDO
@@ -1877,7 +1879,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
         ENDIF
       ENDDO
     ENDDO
-    CLOSE (unit = u, status = 'keep')
+    CLOSE (unit = unit, status = 'keep')
   ENDIF
 
   CALL cryst_to_cart (nkstot, xk, bg, 1)
@@ -1931,7 +1933,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   character (len = 20), intent (in) :: input_dft
   logical, intent (in) :: exx_flag
 
-  integer :: ik, is, ib, ig, ir, u, nkbl, nkl, nkr, iks, ike, &
+  integer :: ik, is, ib, ig, ir, unit, nkbl, nkl, nkr, iks, ike, &
     ndiag, noffdiag, ib2
   complex (DP) :: dummy
   complex (DP), allocatable :: mtxeld (:, :)
@@ -1948,7 +1950,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   noffdiag = MAX (offdiag_nmax - offdiag_nmin + 1, 0)
   IF (ndiag .EQ. 0 .AND. noffdiag .EQ. 0) RETURN
 
-  u = 4
+  unit = 4
 
   nkbl = nkstot / kunit
   nkl = kunit * (nkbl / npool)
@@ -2077,22 +2079,22 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   CALL cryst_to_cart (nkstot, xk, at, -1)
 
   IF (ionode) THEN
-    OPEN (unit = u, file = TRIM (output_file_name), &
+    OPEN (unit = unit, file = TRIM (output_file_name), &
       form = 'formatted', status = 'replace')
     DO ik = 1, nkstot / nspin
-      WRITE (u, 101) xk(:, ik), nspin * ndiag, &
+      WRITE (unit, 101) xk(:, ik), nspin * ndiag, &
         nspin * noffdiag **2
       DO is = 1, nspin
         IF (ndiag .GT. 0) THEN
           DO ib = diag_nmin, diag_nmax
-            WRITE (u, 102) is, ib, mtxeld &
+            WRITE (unit, 102) is, ib, mtxeld &
               (ib - diag_nmin + 1, ik + (is - 1) * nkstot / nspin)
           ENDDO
         ENDIF
         IF (noffdiag .GT. 0) THEN
           DO ib = offdiag_nmin, offdiag_nmax
             DO ib2 = offdiag_nmin, offdiag_nmax
-              WRITE (u, 103) is, ib2, ib, mtxelo &
+              WRITE (unit, 103) is, ib2, ib, mtxelo &
                 (ib2 - offdiag_nmin + 1, ib - offdiag_nmin + 1, &
                 ik + (is - 1) * nkstot / nspin)
             ENDDO
@@ -2100,7 +2102,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
         ENDIF
       ENDDO
     ENDDO
-    CLOSE (unit = u, status = 'keep')
+    CLOSE (unit = unit, status = 'keep')
   ENDIF
 
   CALL cryst_to_cart (nkstot, xk, bg, 1)
@@ -2154,7 +2156,7 @@ SUBROUTINE write_vnlg (output_file_name, symm_type, wfng_kgrid, &
 
   character :: cdate*9, ctime*9, sdate*32, stime*32, stitle*32
   integer :: i, j, k, ierr, ik, is, ig, ikb, iat, isp, ih, jh, &
-    u, nkbl, nkl, nkr, iks, ike, npw_g, npwx_g, ngg, ipsour, &
+    unit, nkbl, nkl, nkr, iks, ike, npw_g, npwx_g, ngg, ipsour, &
     igwx, local_pw, id, nd, ntran, cell_symmetry, nrecord
   real (DP) :: alat2, recvol, dr1, t1 ( 3 ), t2 ( 3 )
   real (DP) :: r1 ( 3, 3 ), r2 ( 3, 3 ), adot ( 3, 3 )
@@ -2179,7 +2181,7 @@ SUBROUTINE write_vnlg (output_file_name, symm_type, wfng_kgrid, &
   WRITE ( stime, '(A8,24X)' ) ctime(1:8)
   WRITE ( stitle, '("VKB-Complex",21X)' )
 
-  u = 4
+  unit = 4
   nrecord = 1
   nd = 3
 
@@ -2323,35 +2325,35 @@ SUBROUTINE write_vnlg (output_file_name, symm_type, wfng_kgrid, &
   npwx_g = MAXVAL ( ngk_g ( : ) )
 
   IF (ionode) THEN
-    OPEN (unit = u, file = TRIM (output_file_name), &
+    OPEN (unit = unit, file = TRIM (output_file_name), &
       form = 'unformatted', status = 'replace')
-    WRITE ( u ) stitle, sdate, stime
-    WRITE ( u ) nspin, ngm_g, ntran, cell_symmetry, nat, ecutrho, &
+    WRITE ( unit ) stitle, sdate, stime
+    WRITE ( unit ) nspin, ngm_g, ntran, cell_symmetry, nat, ecutrho, &
       nkstot / nspin, nsp, nkb, nhm, npwx_g, ecutwfc
     IF ( wfng_kgrid ) THEN
-      WRITE ( u ) dfftp%nr1, dfftp%nr2, dfftp%nr3, wfng_nk1, wfng_nk2, wfng_nk3, &
+      WRITE ( unit ) dfftp%nr1, dfftp%nr2, dfftp%nr3, wfng_nk1, wfng_nk2, wfng_nk3, &
         wfng_dk1, wfng_dk2, wfng_dk3
     ELSE
-      WRITE ( u ) dfftp%nr1, dfftp%nr2, dfftp%nr3, nk1, nk2, nk3, &
+      WRITE ( unit ) dfftp%nr1, dfftp%nr2, dfftp%nr3, nk1, nk2, nk3, &
         0.5D0 * dble ( k1 ), 0.5D0 * dble ( k2 ), 0.5D0 * dble ( k3 )
     ENDIF
-    WRITE ( u ) omega, alat, ( ( at ( j, i ), j = 1, nd ), i = 1, nd ), &
+    WRITE ( unit ) omega, alat, ( ( at ( j, i ), j = 1, nd ), i = 1, nd ), &
       ( ( adot ( j, i ), j = 1, nd ), i = 1, nd )
-    WRITE ( u ) recvol, tpiba, ( ( bg ( j, i ), j = 1, nd ), i = 1, nd ), &
+    WRITE ( unit ) recvol, tpiba, ( ( bg ( j, i ), j = 1, nd ), i = 1, nd ), &
       ( ( bdot ( j, i ), j = 1, nd ), i = 1, nd )
-    WRITE ( u ) ( ( ( s ( k, j, i ), k = 1, nd ), j = 1, nd ), i = 1, ntran )
-    WRITE ( u ) ( ( translation ( j, i ), j = 1, nd ), i = 1, ntran )
-    WRITE ( u ) ( ( tau ( j, i ), j = 1, nd ), atomic_number ( atm ( ityp ( i ) ) ), i = 1, nat )
-    WRITE ( u ) ( ngk_g ( ik ), ik = 1, nkstot / nspin )
-    WRITE ( u ) ( wk ( ik ) * dble ( nspin ) / 2.0D0, ik = 1, nkstot / nspin )
-    WRITE ( u ) ( ( xk ( id, ik ), id = 1, nd ), ik = 1, nkstot / nspin )
-    WRITE ( u ) ( ityp ( iat ), iat = 1, nat )
-    WRITE ( u ) ( nh ( isp ), isp = 1, nsp )
-    WRITE ( u ) ( ( ( ( deeq ( jh, ih, iat, is ), &
+    WRITE ( unit ) ( ( ( s ( k, j, i ), k = 1, nd ), j = 1, nd ), i = 1, ntran )
+    WRITE ( unit ) ( ( translation ( j, i ), j = 1, nd ), i = 1, ntran )
+    WRITE ( unit ) ( ( tau ( j, i ), j = 1, nd ), atomic_number ( atm ( ityp ( i ) ) ), i = 1, nat )
+    WRITE ( unit ) ( ngk_g ( ik ), ik = 1, nkstot / nspin )
+    WRITE ( unit ) ( wk ( ik ) * dble ( nspin ) / 2.0D0, ik = 1, nkstot / nspin )
+    WRITE ( unit ) ( ( xk ( id, ik ), id = 1, nd ), ik = 1, nkstot / nspin )
+    WRITE ( unit ) ( ityp ( iat ), iat = 1, nat )
+    WRITE ( unit ) ( nh ( isp ), isp = 1, nsp )
+    WRITE ( unit ) ( ( ( ( deeq ( jh, ih, iat, is ), &
       jh = 1, nhm ), ih = 1, nhm ), iat = 1, nat ), is = 1, nspin )
-    WRITE ( u ) nrecord
-    WRITE ( u ) ngm_g
-    WRITE ( u ) ( ( gvec ( id, ig ), id = 1, nd ), ig = 1, ngm_g )
+    WRITE ( unit ) nrecord
+    WRITE ( unit ) ngm_g
+    WRITE ( unit ) ( ( gvec ( id, ig ), id = 1, nd ), ig = 1, ngm_g )
   ENDIF
 
   ALLOCATE ( igwk ( npwx_g ) )
@@ -2382,9 +2384,9 @@ SUBROUTINE write_vnlg (output_file_name, symm_type, wfng_kgrid, &
 
     IF ( ionode ) THEN
       IF ( is .EQ. 1 ) THEN
-        WRITE ( u ) nrecord
-        WRITE ( u ) ngk_g ( ik )
-        WRITE ( u ) ( ( gvec ( j, igwk ( ig ) ), j = 1, 3 ), &
+        WRITE ( unit ) nrecord
+        WRITE ( unit ) ngk_g ( ik )
+        WRITE ( unit ) ( ( gvec ( j, igwk ( ig ) ), j = 1, 3 ), &
           ig = 1, ngk_g ( ik ) )
       ENDIF
     ENDIF
@@ -2460,9 +2462,9 @@ SUBROUTINE write_vnlg (output_file_name, symm_type, wfng_kgrid, &
       ENDIF
 
       IF ( ionode ) THEN
-        WRITE ( u ) nrecord
-        WRITE ( u ) igwx
-        WRITE ( u ) ( vkb_g ( ig ), ig = 1, igwx )
+        WRITE ( unit ) nrecord
+        WRITE ( unit ) igwx
+        WRITE ( unit ) ( vkb_g ( ig ), ig = 1, igwx )
       ENDIF
 
     ENDDO
@@ -2473,7 +2475,7 @@ SUBROUTINE write_vnlg (output_file_name, symm_type, wfng_kgrid, &
   ENDDO
 
   IF ( ionode ) THEN
-    CLOSE ( unit = u, status = 'keep' )
+    CLOSE ( unit = unit, status = 'keep' )
   ENDIF
 
   DEALLOCATE ( igwk )
