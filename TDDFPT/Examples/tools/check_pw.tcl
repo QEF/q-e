@@ -102,16 +102,20 @@ global lc_pos
 		puts stderr "Error reading bands from reference file"
                 exit 5
   	  }
-        #puts $bands_ref_raw
+       #puts $bands_ref_raw
 
-       set lc_pos [regexp -nocase -all  -line -inline -indices  {End of self-consistent calculation} $bands_ref_raw] 
-       set lc_pos [lindex [lindex $lc_pos end] 1]
+       if {![regexp -nocase -all  -line  -indices  {End of self-consistent calculation} $bands_ref_raw lc_pos] } {
+	       set lc_pos 1
+	   }
+       set lc_pos [lindex $lc_pos end]
        set bands_ref_raw  [regexp -inline -start $lc_pos {.*} $bands_ref_raw]
 
        #puts $bands_ref_raw
 
-       set lc_pos [regexp -nocase -all  -line -inline -indices  {End of self-consistent calculation} $bands_out_raw] 
-       set lc_pos [lindex [lindex $lc_pos end] 1]
+       if {![regexp -nocase -all  -line  -indices  {End of self-consistent calculation} $bands_out_raw lc_pos] } {
+	       set lc_pos 1
+	   }
+       set lc_pos [lindex $lc_pos end]
        set bands_out_raw  [regexp -inline -start $lc_pos {.*} $bands_out_raw]
        
        #puts $bands_out_raw
