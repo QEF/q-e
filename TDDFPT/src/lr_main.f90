@@ -36,7 +36,8 @@ PROGRAM lr_main
   USE control_ph,            ONLY : nbnd_occ
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions_module,  ONLY : psic
-  USE control_flags,          ONLY : tddfpt
+  USE control_flags,         ONLY : tddfpt
+  USE check_stop,            ONLY : check_stop_now, check_stop_init
   !Debugging
   USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,check_vector_gamma
   !
@@ -86,6 +87,7 @@ PROGRAM lr_main
   !   Reading input file and PWSCF xml, some initialisation
   !
   CALL lr_readin ( )
+  CALL check_stop_init()
   !
   WRITE(stdout,'(/,5X,"Lanczos linear response spectrum calculation")')
   WRITE(stdout,'(5x,"Number of Lanczos iterations = ",i6)') itermax
@@ -218,9 +220,27 @@ PROGRAM lr_main
         IF ( lr_io_level > 0 .and. (mod(LR_iteration,restart_step)==0 .or. &
                               LR_iteration==itermax .or. LR_iteration==1) )&
            CALL lr_write_restart()
+        !
+        ! Check to see if the wall time limit has been exceeded.
+        ! if it has exit gracefully saving the last set of Lanczos
+        ! iterations.
+        !
+        IF ( check_stop_now() ) THEN
+           CALL lr_write_restart()
+           !
+           !   Deallocate pw variables
+           !
+           CALL clean_pw( .FALSE. )
+           !
+           CALL stop_clock('lr_main')
+           !
+           CALL print_clock_lr()
+           !
+           CALL stop_lr( .FALSE. )
+           !
+        ENDIF
      ENDDO lancz_loop1
      !
-
     IF (charge_response == 1 ) THEN
       IF (resonance_condition) THEN
        !response charge density, absorbtive
@@ -296,7 +316,7 @@ PROGRAM lr_main
   !
   CALL print_clock_lr()
   !
-  CALL stop_lr()
+  CALL stop_lr( .TRUE. )
   !
   IF (lr_verbosity > 5) THEN
    WRITE(stdout,'("<end of lr_main>")')

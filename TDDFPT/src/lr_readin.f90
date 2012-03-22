@@ -28,7 +28,8 @@ SUBROUTINE lr_readin
   USE io_global,           ONLY : ionode, ionode_id
   USE klist,               ONLY : nks, wk, nelec
   USE fixed_occ,           ONLY : tfixed_occ
-  USE input_parameters,    ONLY : degauss, nosym, wfcdir, outdir
+  USE input_parameters,    ONLY : degauss, nosym, wfcdir, outdir,&
+                                  & max_seconds
   USE ktetra,              ONLY : ltetra
   USE realus,              ONLY : real_space, real_space_debug,&
                                   & init_realspace_vars, qpointlist,&
@@ -59,7 +60,7 @@ SUBROUTINE lr_readin
   LOGICAL :: auto_rs
   !
   NAMELIST / lr_input / restart, restart_step, lr_verbosity, prefix, outdir,&
-       & test_case_no, wfcdir, disk_io 
+       & test_case_no, wfcdir, disk_io, max_seconds 
   NAMELIST / lr_control / itermax, ipol, ltammd, real_space, real_space_debug,&
        & charge_response, tqr, auto_rs, no_hxc, n_ipol, project
   NAMELIST / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int
@@ -93,6 +94,7 @@ SUBROUTINE lr_readin
      w_T_npol = 1
      plot_type = 1
      project = .FALSE.
+     max_seconds = 0.D0
      !
      !   Reading the namelist lr_input
      !

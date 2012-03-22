@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE stop_lr( )
+SUBROUTINE stop_lr( full_run  )
   !----------------------------------------------------------------------------
   !
   ! ... Synchronize processes before stopping.
@@ -29,6 +29,8 @@ SUBROUTINE stop_lr( )
   !
   IMPLICIT NONE
   !
+  LOGICAL, INTENT(IN) :: full_run
+  !
   CHARACTER(len=6), EXTERNAL :: int_to_char
   !
   CHARACTER(len=256) :: filename
@@ -42,6 +44,7 @@ SUBROUTINE stop_lr( )
   ENDIF
   ! I write the beta gamma and z coefficents to output directory for
   ! easier post processing. These can also be read from the output log file
+  IF(full_run) THEN
 #ifdef __MPI
   IF (ionode) THEN
 #endif
@@ -75,6 +78,7 @@ SUBROUTINE stop_lr( )
 #ifdef __MPI
   ENDIF
 #endif
+  ENDIF
   !
   !   Deallocate lr variables
   !
