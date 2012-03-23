@@ -31,7 +31,9 @@ MODULE noncollin_module
                             !  atom it is assigned (0 if no atom is selected)
   !
   LOGICAL :: &
-      noncolin              !  true if noncollinear magnetism is allowed
+      noncolin, &           !  true if noncollinear magnetism is allowed
+      lsign=.FALSE.         !  if true use the sign feature to calculate
+                            !  rhoup and rhodw
   !
   REAL (DP) :: &
       angle1(ntypx),       &!  Define the polar coordinates of the starting
