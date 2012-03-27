@@ -22,11 +22,11 @@ MODULE dfile_star
       drho_star, & ! 
       dvscf_star   !
 
-  DATA  drho_star%open, drho_star%dir, drho_star%basis, drho_star%ext &
-      / .false.,         ' ',                 'modes',        'fildrho' /
+  !DATA  drho_star%open, drho_star%dir, drho_star%basis, drho_star%ext &
+  !    / .false.,         ' ',                 'modes',        'fildrho' /
   !
-  DATA dvscf_star%open, dvscf_star%dir, dvscf_star%basis, dvscf_star%ext &
-      / .false.,         ' ',                 'cartesian',      'fildvscf' /
+  !DATA dvscf_star%open, dvscf_star%dir, dvscf_star%basis, dvscf_star%ext &
+  !    / .false.,         ' ',                 'cartesian',      'fildvscf' /
 
 
 !  CHARACTER(len=256) :: dfile_dir = ' '
