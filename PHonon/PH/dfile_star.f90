@@ -18,26 +18,10 @@ MODULE dfile_star
      CHARACTER(len=256) :: ext
   END TYPE open_star_descriptor
 
+  ! NOTE: default values are set in phq_readin
   TYPE(open_star_descriptor) :: &
       drho_star, & ! 
       dvscf_star   !
-
-  !DATA  drho_star%open, drho_star%dir, drho_star%basis, drho_star%ext &
-  !    / .false.,         ' ',                 'modes',        'fildrho' /
-  !
-  !DATA dvscf_star%open, dvscf_star%dir, dvscf_star%basis, dvscf_star%ext &
-  !    / .false.,         ' ',                 'cartesian',      'fildvscf' /
-
-
-!  CHARACTER(len=256) :: dfile_dir = ' '
-!  CHARACTER(len=256) :: fildvscf_dir = ' '
-!  !
-!  LOGICAL :: dfile_star
-!  LOGICAL :: dvscf_star
-!  !
-!  CHARACTER(len=) :: dfile_star_basis = 'modes'
-!  CHARACTER(len=) :: dvscf_star_basis = 'modes'
-
 
   TYPE rotated_pattern_repr
     INTEGER,ALLOCATABLE ::  npert (:), irgq (:)
