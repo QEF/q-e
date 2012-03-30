@@ -169,7 +169,7 @@ PROGRAM matdyn
   LOGICAL, ALLOCATABLE :: high_sym(:)
   LOGICAL :: q_in_band_form
   ! .... variables for band plotting based on similarity of eigenvalues
-  COMPLEX(DP), ALLOCATABLE :: tmp_z(:,:), last_z(:,:)
+  COMPLEX(DP), ALLOCATABLE :: tmp_z(:,:)
   REAL(DP), ALLOCATABLE :: abs_similarity(:,:), tmp_w2(:)
   INTEGER :: location(1)
   LOGICAL, ALLOCATABLE :: mask(:)
@@ -410,8 +410,7 @@ PROGRAM matdyn
 
      ALLOCATE ( dyn(3,3,nat,nat), dyn_blk(3,3,nat_blk,nat_blk) )
      ALLOCATE ( z(3*nat,3*nat), w2(3*nat,nq) )
-     ALLOCATE ( tmp_z(3*nat,3*nat), tmp_w2(3*nat), &
-                abs_similarity(3*nat,3*nat), mask(3*nat) )
+     ALLOCATE ( tmp_w2(3*nat), abs_similarity(3*nat,3*nat), mask(3*nat) )
 
      if(la2F.and.ionode) open(300,file='dyna2F',status='unknown')
      IF (xmlifc) CALL set_sym(nat, tau, ityp, nspin_mag, m_loc, 6, 6, 6 )
@@ -485,10 +484,10 @@ PROGRAM matdyn
         ENDIF
         ! ... order phonon dispersions using similarity of eigenvalues
         ! ... Courtesy of Takeshi Nishimatsu, IMR, Tohoku University 
-        IF (.NOT.ALLOCATED(last_z)) THEN
-           ALLOCATE(last_z(3*nat,3*nat))
+        IF (.NOT.ALLOCATED(tmp_z)) THEN
+           ALLOCATE(tmp_z(3*nat,3*nat))
         ELSE
-           abs_similarity = ABS ( MATMUL ( CONJG( TRANSPOSE(z)), last_z ) )
+           abs_similarity = ABS ( MATMUL ( CONJG( TRANSPOSE(z)), tmp_z ) )
            mask(:) = .true.
            DO na=1,3*nat
               location = maxloc( abs_similarity(:,na), mask(:) )
@@ -499,7 +498,7 @@ PROGRAM matdyn
             w2(:,n) = tmp_w2(:)
             z(:,:) = tmp_z(:,:)
         END IF
-        last_z(:,:) = z(:,:)
+        tmp_z(:,:) = z(:,:)
         !
         if(la2F.and.ionode) then
            write(300,*) n
@@ -511,6 +510,7 @@ PROGRAM matdyn
         IF (ionode) CALL writemodes(nax,nat,q(1,n),w2(1,n),z,iout)
         !
      END DO  !nq
+     DEALLOCATE (tmp_z, tmp_w2, abs_similarity, mask)
      if(la2F.and.ionode) close(300)
      !
      IF(iout .NE. stdout.and.ionode) CLOSE(unit=iout)
@@ -577,7 +577,6 @@ PROGRAM matdyn
         END DO
         IF (ionode) CLOSE(unit=2)
      END IF  !dos
-     DEALLOCATE (tmp_z, tmp_w2, abs_similarity, mask)
      DEALLOCATE (z, w2, dyn, dyn_blk)
      !
      !    for a2F
@@ -1964,7 +1963,8 @@ SUBROUTINE a2Fdos &
               !
            enddo
            lambda = lambda + 2.d0 * dos_tot/E * DeltaE
-           write (ifn, 1050) E, dos_tot, (dos_a2F(j),j=1,nmodes)
+           write (ifn, '(3X,2F12.6)') E, dos_tot
+           write (ifn, '(6F16,8)') (dos_a2F(j),j=1,nmodes)
         enddo  !ndos
         write(ifn,*) " lambda =",lambda,'   Delta = ',DeltaE
         close (ifn)
@@ -1977,10 +1977,12 @@ SUBROUTINE a2Fdos &
      !
      if(.not.dos.and.ionode) then
         write(20,'(" Broadening ",F8.4)')  deg(isig)
-        write(6,'(" Broadening ",F8.4)')  deg(isig)
+        write( 6,'(" Broadening ",F8.4)')  deg(isig)
         do n=1, nq
-           write(20,1030) n,(gamma(i,n)*RY_TO_THZ,i=1,3*nat)
-           write(6,1040) n, (gamma(i,n),i=1,3*nat)
+           write(20,'(3x,i5)') n
+           write( 6,'(3x,i5)') n
+           write(20,'(9F8.4)')  (gamma(i,n)*RY_TO_THZ,i=1,3*nat)
+           write( 6,'(6F12.9)') (gamma(i,n),i=1,3*nat)
         end do
      endif
      !
@@ -1993,9 +1995,6 @@ SUBROUTINE a2Fdos &
      close(20)
   ENDIF
   !
-1030 FORMAT( 3x,I5,'  ',9F8.4 )
-1040 FORMAT( 3x,I5,'  ',6F12.9 )
-1050 FORMAT( 3x,F12.6,6F16.8 )
   !
   RETURN
 END SUBROUTINE a2Fdos
