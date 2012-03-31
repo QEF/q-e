@@ -228,18 +228,19 @@ SUBROUTINE compute_becsum(iflag)
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
-             !write(6,*) 'trying to reqinw', iunigk
+       REWIND( iunigk )
        !
        k_loop: DO ik = 1, nks
           !
           IF ( lsda ) current_spin = isk(ik)
           npw = ngk (ik)
           !
-          CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, &
-               igk, g2kin)
-
-          !
-          CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+          IF ( nks > 1 ) THEN
+             !
+             READ( iunigk ) igk
+             CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+             !
+          END IF
           !
           IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk, xk(1,ik), vkb )
