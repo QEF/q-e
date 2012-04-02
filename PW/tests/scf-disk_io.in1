@@ -1,5 +1,6 @@
  &control
     calculation = 'bands'
+    disk_io='none'
  /
  &system
     ibrav=2, celldm(1) =10.20, 
