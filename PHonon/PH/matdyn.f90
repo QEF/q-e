@@ -1964,7 +1964,7 @@ SUBROUTINE a2Fdos &
            enddo
            lambda = lambda + 2.d0 * dos_tot/E * DeltaE
            write (ifn, '(3X,2F12.6)') E, dos_tot
-           write (ifn, '(6F16,8)') (dos_a2F(j),j=1,nmodes)
+           write (ifn, '(6F16.8)') (dos_a2F(j),j=1,nmodes)
         enddo  !ndos
         write(ifn,*) " lambda =",lambda,'   Delta = ',DeltaE
         close (ifn)
