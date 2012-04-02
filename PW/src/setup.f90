@@ -105,8 +105,8 @@ SUBROUTINE setup()
                          'HYBRID XC not implemented for USPP or PAW', 1 )
      IF ( noncolin ) CALL errore( 'setup ', &
                       'HYBRID XC not implemented for noncolinear magnetism', 1 )
-     IF ( ANY (upf(1:ntyp)%nlcc) ) CALL errore( 'setup ', &
-                  'HYBRID XC not implemented for nonlinear core corrections',1)
+     IF ( ANY (upf(1:ntyp)%nlcc) ) CALL infomsg( 'setup ', 'BEWARE:' // &
+               & ' nonlinear core correction is not consistent with hybrid XC')
   END IF
   !
   ! ... Compute the ionic charge for each atom type and the total ionic charge
