@@ -947,14 +947,14 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
        current_ik = current_k
     ENDIF
 
-if(my_bgrp_id>0) then
-  hpsi=0.D0
-  psi=0.D0
-endif
-if(nbgrp>1) then
-  call mp_sum(hpsi,inter_bgrp_comm)
-  call mp_sum(psi,inter_bgrp_comm)
-endif
+    if(my_bgrp_id>0) then
+      hpsi=(0.0_DP,0.0_DP)
+      psi=(0.0_DP,0.0_DP)
+    endif
+    if (nbgrp>1) then
+       call mp_sum(hpsi,inter_bgrp_comm)
+       call mp_sum(psi,inter_bgrp_comm)
+    endif
 
     DO im=1,m !for each band of psi (the k cycle is outside band)
        temppsic(:) = ( 0.D0, 0.D0 )
