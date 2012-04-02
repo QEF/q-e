@@ -675,9 +675,10 @@ CONTAINS
        nr3x = dffts%nr3x
     ENDIF
 #ifdef __MPI
-    ALLOCATE(temppsic(nrxxs), psic_all(nxxs), temppsic_all(nxxs) )
-    CALL init_index_over_band(inter_bgrp_comm,nbnd)
+    ALLOCATE(psic_all(nxxs), temppsic_all(nxxs) )
 #endif
+    CALL init_index_over_band(inter_bgrp_comm,nbnd)
+    ALLOCATE(temppsic(nrxxs))
     allocate(present(nsym),rir(nxxs,nsym))
     allocate( psic(nrxxs),tempevc( npwx, nbnd ))
 
