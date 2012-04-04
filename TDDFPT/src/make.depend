@@ -137,6 +137,7 @@ lr_lanczos.o : ../../PW/src/pwcom.o
 lr_lanczos.o : ../../PW/src/realus.o
 lr_lanczos.o : lr_charg_resp.o
 lr_lanczos.o : lr_variables.o
+lr_main.o : ../../Modules/check_stop.o
 lr_main.o : ../../Modules/control_flags.o
 lr_main.o : ../../Modules/environment.o
 lr_main.o : ../../Modules/io_files.o

@@ -66,6 +66,7 @@ fft_custom.o : control_flags.o
 fft_custom.o : fft_scalar.o
 fft_custom.o : fft_types.o
 fft_custom.o : kind.o
+fft_custom.o : mp.o
 fft_custom.o : parallel_include.o
 fft_interfaces.o : fft_base.o
 fft_interfaces.o : fft_parallel.o
