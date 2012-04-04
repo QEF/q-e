@@ -50,7 +50,7 @@ MODULE exx
   INTEGER, ALLOCATABLE :: index_xk(:)    ! index_xk(nkqs)  
   INTEGER, ALLOCATABLE :: index_sym(:)   ! index_sym(nkqs)
 !
-!  Used for k points pool parallelization. All pools needs these quantities.
+!  Used for k points pool parallelization. All pools need these quantities.
 !  They are allocated only if needed.
 !
   REAL(DP),    ALLOCATABLE :: xk_collect(:,:)
