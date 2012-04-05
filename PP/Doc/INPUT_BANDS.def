@@ -56,7 +56,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
 	    }
 	}
 
-	dimension lsigma(i)  -start 1 -end 3 -type LOGICAL { 
+	dimension lsigma  -start 1 -end 3 -type LOGICAL { 
 	    info {
 		If true writes a file filband.i with the expectation
 		values of the spin operator on the spinor wave-functions.
