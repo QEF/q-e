@@ -66,7 +66,7 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   !
   !     compute the indices which correspond to ih,jh
   !
-  dqi = 1 / dq
+  dqi = 1.0_DP / dq
   nb = indv (ih, np)
   mb = indv (jh, np)
   if (nb.ge.mb) then
