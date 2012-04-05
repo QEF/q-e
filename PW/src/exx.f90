@@ -213,7 +213,8 @@ CONTAINS
   !
   USE symm_base,  ONLY : nsym, s
   USE cell_base,  ONLY : bg, at, alat
-  USE lsda_mod,   ONLY : nspin, domag
+  USE lsda_mod,   ONLY : nspin
+  USE spin_orb,   ONLY : domag
   USE noncollin_module, ONLY : nspin_lsda
   USE klist,      ONLY : xk, wk, nkstot, nks
   USE wvfct,      ONLY : nbnd
