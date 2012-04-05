@@ -59,7 +59,7 @@ SUBROUTINE setup()
   USE ktetra,             ONLY : tetra, ntetra, ltetra
   USE symm_base,          ONLY : s, t_rev, irt, nrot, nsym, invsym, nosym, &
                                  d1,d2,d3, time_reversal, sname, set_sym_bl, &
-                                 find_sym, inverse_s
+                                 find_sym, inverse_s, no_t_rev
   USE wvfct,              ONLY : nbnd, nbndx, ecutwfc
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, david, lecrpa,  &
                                  isolve, niter, noinv, &
@@ -103,10 +103,9 @@ SUBROUTINE setup()
                          'HYBRID XC not allowed in non-scf calculations', 1 )
      IF ( okvan .OR. okpaw ) CALL errore( 'setup ', &
                          'HYBRID XC not implemented for USPP or PAW', 1 )
-     IF ( noncolin ) CALL errore( 'setup ', &
-                      'HYBRID XC not implemented for noncolinear magnetism', 1 )
      IF ( ANY (upf(1:ntyp)%nlcc) ) CALL infomsg( 'setup ', 'BEWARE:' // &
                & ' nonlinear core correction is not consistent with hybrid XC')
+     IF (noncolin) no_t_rev=.true.
   END IF
   !
   ! ... Compute the ionic charge for each atom type and the total ionic charge

@@ -12,6 +12,7 @@ MODULE exx
   USE kinds,                ONLY : DP
   USE coulomb_vcut_module,  ONLY : vcut_init, vcut_type, vcut_info, &
                                    vcut_get,  vcut_spheric_get
+  USE noncollin_module,     ONLY : noncolin, npol
   USE io_global,            ONLY : ionode, stdout
   USE fft_custom,           ONLY : fft_cus
   !
@@ -38,6 +39,9 @@ MODULE exx
                                          ! auxiliary functions in the density matrix
   COMPLEX(DP), ALLOCATABLE :: exxbuff(:,:,:)
                                          ! temporay buffer to store wfc 
+  COMPLEX(DP), ALLOCATABLE :: exxbuff_nc(:,:,:,:)
+                                         ! temporay buffer to store wfc in the
+                                         ! noncollinear case
 
   !
   ! let xk(:,ik) + xq(:,iq) = xkq(:,ikq) = S(isym)*xk(ik') + G
@@ -191,6 +195,7 @@ CONTAINS
   IF ( ALLOCATED (x_occupation) ) DEALLOCATE (x_occupation)
   IF ( ALLOCATED (xkq) ) DEALLOCATE (xkq)
   IF ( ALLOCATED (exxbuff) ) DEALLOCATE (exxbuff)
+  IF ( ALLOCATED (exxbuff_nc) ) DEALLOCATE (exxbuff_nc)
   !
   CALL exx_fft_destroy()
   !
@@ -208,7 +213,7 @@ CONTAINS
   !
   USE symm_base,  ONLY : nsym, s
   USE cell_base,  ONLY : bg, at, alat
-  USE lsda_mod,   ONLY : nspin
+  USE lsda_mod,   ONLY : nspin, domag
   USE noncollin_module, ONLY : nspin_lsda
   USE klist,      ONLY : xk, wk, nkstot, nks
   USE wvfct,      ONLY : nbnd
@@ -312,7 +317,7 @@ CONTAINS
                    abs(dxk(3)).le.eps ) xk_not_found = .false.
            end if
         end do
-        if (xk_not_found) then
+        if (xk_not_found .and. .not. (noncolin.and.domag) ) then
            temp_nkqs                 = temp_nkqs + 1
            temp_xkq(:,temp_nkqs)     = sxk(:)
            temp_index_xk(temp_nkqs)  = ik
@@ -622,7 +627,7 @@ CONTAINS
     USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
     USE control_flags,        ONLY : gamma_only
     USE klist,                ONLY : wk, ngk, nks, nkstot
-    USE symm_base,            ONLY : nsym, s, ftau
+    USE symm_base,            ONLY : nsym, s, sr, ftau
 
     use mp_global,            ONLY : nproc_pool, me_pool, nproc_bgrp, me_bgrp, &
                                      init_index_over_band, inter_bgrp_comm, &
@@ -637,11 +642,15 @@ CONTAINS
     implicit none
     integer :: ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq
     integer :: h_ibnd, half_nbnd
+    integer :: ipol, jpol
     COMPLEX(DP),allocatable :: temppsic(:), psic(:), tempevc(:,:)
+    COMPLEX(DP), ALLOCATABLE :: temppsic_nc(:,:), psic_nc(:,:)
     INTEGER :: nxxs, nrxxs, nr1x,nr2x,nr3x,nr1,nr2,nr3
 #ifdef __MPI
     COMPLEX(DP),allocatable :: temppsic_all(:), psic_all(:)
+    COMPLEX(DP), ALLOCATABLE :: temppsic_all_nc(:,:), psic_all_nc(:,:)
 #endif
+    COMPLEX(DP) :: d_spin(2,2,48)
     INTEGER :: current_ik
     logical, allocatable :: present(:)
     logical :: exst
@@ -652,6 +661,15 @@ CONTAINS
 
 
     call start_clock ('exxinit')
+
+    !
+    !  prepare the symmetry matrices for the spin part
+    !
+    IF (noncolin) THEN
+       DO isym=1,nsym
+          CALL find_u(sr(:,:,isym), d_spin(:,:,isym))
+       ENDDO
+    ENDIF
 
     ! Beware: not the same as nrxxs in parallel case
     IF(gamma_only) THEN
@@ -675,14 +693,24 @@ CONTAINS
        nr3x = dffts%nr3x
     ENDIF
 #ifdef __MPI
-    ALLOCATE(psic_all(nxxs), temppsic_all(nxxs) )
+    IF (noncolin) THEN
+       ALLOCATE(psic_all_nc(nxxs,npol), temppsic_all_nc(nxxs,npol) )
+    ELSE
+       ALLOCATE(psic_all(nxxs), temppsic_all(nxxs) )
+    ENDIF
 #endif
     CALL init_index_over_band(inter_bgrp_comm,nbnd)
-    ALLOCATE(temppsic(nrxxs))
-    allocate(present(nsym),rir(nxxs,nsym))
-    allocate( psic(nrxxs),tempevc( npwx, nbnd ))
+    IF (noncolin) THEN
+       ALLOCATE(temppsic_nc(nrxxs, npol), psic_nc(nrxxs, npol))
+       IF (.NOT. ALLOCATED(exxbuff_nc)) ALLOCATE( &
+                                         exxbuff_nc(nrxxs,npol,nkqs,nbnd))
+    ELSE
+       ALLOCATE(temppsic(nrxxs), psic(nrxxs))
+       if( .not. allocated( exxbuff ) ) allocate( exxbuff( nrxxs, nkqs, nbnd ) )
+    ENDIF
 
-    if( .not. allocated( exxbuff ) ) allocate( exxbuff( nrxxs, nkqs, nbnd ) )
+    allocate(present(nsym),rir(nxxs,nsym))
+    allocate(tempevc( npwx*npol, nbnd ))
 
 
     !write(*,*) 'debug: exxbuff size=',size(exxbuff)
@@ -741,7 +769,11 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
        end if
     end do
 
-    exxbuff=(0.0_DP,0.0_DP)
+    IF (noncolin) THEN
+       exxbuff_nc=(0.0_DP,0.0_DP)
+    ELSE
+       exxbuff=(0.0_DP,0.0_DP)
+    ENDIF
     ! set appropriately the x_occupation
     do ik =1,nkstot
        IF (pool_para) THEN
@@ -759,7 +791,7 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
           READ( iunigk ) igk
           CALL get_buffer (tempevc, nwordwfc, iunwfc, ik)
        ELSE
-          tempevc(1:npwx,1:nbnd) = evc(1:npwx,1:nbnd)
+          tempevc(1:npwx*npol,1:nbnd) = evc(1:npwx*npol,1:nbnd)
        ENDIF
        IF (pool_para) THEN
           current_ik=find_current_k(ik, nkstot, nks)
@@ -818,14 +850,53 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
           DEALLOCATE(state_fc_t, evc_g)
        else
           do ibnd =1, nbnd     
-             temppsic(:) = ( 0.D0, 0.D0 )
-             temppsic(nls(igk(1:npw))) = tempevc(1:npw,ibnd)
-             CALL invfft ('Wave', temppsic, dffts)
+             IF (noncolin) THEN
+                temppsic_nc(:,:) = ( 0.D0, 0.D0 )
+                temppsic_nc(nls(igk(1:npw)),1) = tempevc(1:npw,ibnd)
+                CALL invfft ('Wave', temppsic_nc(:,1), dffts)
+                temppsic_nc(nls(igk(1:npw)),2) = tempevc(npwx+1:npwx+npw,ibnd)
+                CALL invfft ('Wave', temppsic_nc(:,2), dffts)
+             ELSE
+                temppsic(:) = ( 0.D0, 0.D0 )
+                temppsic(nls(igk(1:npw))) = tempevc(1:npw,ibnd)
+                CALL invfft ('Wave', temppsic, dffts)
+             ENDIF
 
              do ikq=1,nkqs
                 if (index_xk(ikq) .ne. current_ik) cycle
 
                 isym = abs(index_sym(ikq) )
+                IF (noncolin) THEN
+#ifdef __MPI
+                   DO ipol=1,npol
+                      CALL cgather_smooth(temppsic_nc(:,ipol),&
+                                    temppsic_all_nc(:,ipol))
+                   ENDDO
+                   IF ( me_bgrp == 0 ) THEN
+                      psic_all_nc(:,:) = (0.0_DP, 0.0_DP)
+                      DO ipol=1,npol
+                         DO jpol=1,npol
+                            psic_all_nc(:,ipol)=psic_all_nc(:,ipol) &
+                              +  CONJG(d_spin(jpol,ipol,isym))* &
+                                 temppsic_all_nc(rir(:,isym),jpol)
+                         ENDDO
+                      ENDDO
+                   ENDIF
+                   DO ipol=1,npol
+                      CALL cscatter_smooth(psic_all_nc(:,ipol), psic_nc(:,ipol))
+                   ENDDO
+#else
+                   psic_nc(:,:) = (0.d0, 0.d0)
+                   DO ipol=1,npol
+                      DO jpol=1,npol
+                         psic_nc(:,ipol) = psic_nc(:,ipol) + &
+                              CONJG(d_spin(jpol,ipol,isym))* &
+                                        temppsic_nc(rir(:,isym),jpol)
+                      END DO
+                   END DO
+#endif
+                   exxbuff_nc(:,:,ikq,ibnd)=psic_nc(:,:)
+                ELSE
 #ifdef __MPI
                 call cgather_smooth(temppsic,temppsic_all)
                 IF ( me_bgrp == 0 ) &
@@ -840,18 +911,35 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
                    
                 enddo
                 !CALL davcio(psic,exx_nwordwfc,iunexx,(ikq-1)*nbnd+ibnd,1)
+                ENDIF
              end do
           end do
        end if
     end do
+!
+!   All pools have the complete set of wavefunctions
+!
+    IF (pool_para) THEN
+       IF (noncolin) THEN
+          CALL mp_sum(exxbuff_nc, inter_pool_comm)
+       ELSE
+          CALL mp_sum(exxbuff, inter_pool_comm)
+       END IF
+    END IF
 
-    IF (pool_para) CALL mp_sum(exxbuff, inter_pool_comm)
-
-    deallocate(temppsic, psic,tempevc)
+    deallocate(tempevc)
     deallocate(present,rir)
+    IF (noncolin) THEN
+       DEALLOCATE(temppsic_nc, psic_nc)
 #ifdef __MPI
-    deallocate(temppsic_all, psic_all)
+       DEALLOCATE(temppsic_all_nc, psic_all_nc)
 #endif 
+    ELSE
+       deallocate(temppsic, psic)
+#ifdef __MPI
+       deallocate(temppsic_all, psic_all)
+#endif 
+    ENDIF
 
     call stop_clock ('exxinit')  
 
@@ -898,16 +986,19 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
     IMPLICIT NONE
 
     INTEGER                     :: lda, n, m
-    COMPLEX(DP)                 :: psi(lda,m) 
-    COMPLEX(DP)                 :: hpsi(lda,m)
+    COMPLEX(DP)                 :: psi(lda*npol,m) 
+    COMPLEX(DP)                 :: hpsi(lda*npol,m)
 
     INTEGER          :: nqi, myrank, mysize
 
     ! local variables
     COMPLEX(DP), allocatable :: tempphic(:), temppsic(:), result(:)
+    COMPLEX(DP), ALLOCATABLE :: tempphic_nc(:,:), temppsic_nc(:,:), &
+                                result_nc(:,:)
+
     COMPLEX(DP), allocatable :: rhoc(:), vc(:)
     REAL (DP),   ALLOCATABLE :: fac(:)
-    INTEGER          :: ibnd, ik, im , ig, ikq, iq, isym, iqi
+    INTEGER          :: ibnd, ik, im , ig, ikq, iq, isym, iqi, ipol
     INTEGER          :: h_ibnd, half_nbnd, ierr, nrxxs
     INTEGER          :: current_ik
     REAL(DP) :: x1, x2
@@ -932,8 +1023,14 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
        nrxxs = dffts%nnr
     ENDIF
 
-    ALLOCATE (tempphic(nrxxs), temppsic(nrxxs), result(nrxxs), &
-              rhoc(nrxxs), vc(nrxxs))
+    IF (noncolin) THEN
+       ALLOCATE (tempphic_nc(nrxxs,npol), temppsic_nc(nrxxs,npol), &
+                                          result_nc(nrxxs,npol))
+    ELSE
+       ALLOCATE ( tempphic(nrxxs), temppsic(nrxxs), result(nrxxs) )
+    ENDIF
+
+    ALLOCATE (rhoc(nrxxs), vc(nrxxs))
 
     ! write (*,*) exx_nwordwfc,lda,n,m, lda*n
 !
@@ -957,7 +1054,11 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
     endif
 
     DO im=1,m !for each band of psi (the k cycle is outside band)
-       temppsic(:) = ( 0.D0, 0.D0 )
+       IF (noncolin) THEN
+          temppsic_nc = ( 0.D0, 0.D0 )
+       ELSE
+          temppsic(:) = ( 0.D0, 0.D0 )
+       ENDIF
 
        IF(gamma_only) THEN
           prod_tot(:) = (0.d0,0.d0)
@@ -970,12 +1071,22 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
           CALL invfft ('CustomWave', temppsic, exx_fft_g2r%dfftt)
 
        ELSE
-          temppsic(nls(igk(1:npw))) = psi(1:npw,im)
-          CALL invfft ('Wave', temppsic, dffts)
+          IF (noncolin) THEN
+             temppsic_nc(nls(igk(1:npw)),1) = psi(1:npw,im)
+             CALL invfft ('Wave', temppsic_nc(:,1), dffts)
+             temppsic_nc(nls(igk(1:npw)),2) = psi(npwx+1:npwx+npw,im)
+             CALL invfft ('Wave', temppsic_nc(:,2), dffts)
+           ELSE
+             temppsic(nls(igk(1:npw))) = psi(1:npw,im)
+             CALL invfft ('Wave', temppsic, dffts)
+           ENDIF
        ENDIF
 
-
-       result(:)   = (0.d0,0.d0)
+       IF (noncolin) THEN
+          result_nc(:,:) = (0.0_DP,0.0_DP)
+       ELSE
+          result(:)   = (0.d0,0.d0)
+       ENDIF
 
        DO iqi=1,nqi
 !
@@ -1083,14 +1194,21 @@ if(allocated(tempphic)) write(stdout,*) "tempphic allcated"
 if(allocated(exxbuff)) write(stdout,*) "exxbuff allocated"
 call flush_unit(stdout)
 #endif
-              DO ji=1, nrxxs
-                 tempphic(ji)=exxbuff(ji,ikq,ibnd)                
-              ENDDO
+              IF (noncolin) THEN
+                 tempphic_nc(:,:)=exxbuff_nc(:,:,ikq,ibnd)
+              ELSE
+                 tempphic(:)=exxbuff(:,ikq,ibnd)
+              ENDIF
                 
               !CALL davcio ( tempphic, exx_nwordwfc, iunexx, &
               !                        (ikq-1)*nbnd+ibnd, -1 )
               !calculate rho in real space
-              rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
+              IF (noncolin) THEN
+                 rhoc(:) = ( CONJG(tempphic_nc(:,1))*temppsic_nc(:,1) + &
+                             CONJG(tempphic_nc(:,2))*temppsic_nc(:,2) )/omega
+              ELSE
+                 rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
+              ENDIF
               !brings it to G-space
               CALL fwfft ('Smooth', rhoc, dffts)
    
@@ -1103,7 +1221,14 @@ call flush_unit(stdout)
               CALL invfft ('Smooth', vc, dffts) 
                 
               !accumulates over bands and k points
-              result(1:nrxxs)=result(1:nrxxs)+vc(1:nrxxs)*tempphic(1:nrxxs)
+              IF (noncolin) THEN
+                 DO ipol=1,npol
+                    result_nc(:,ipol)=result_nc(:,ipol)+vc(:)* &
+                                             tempphic_nc(:,ipol)
+                 ENDDO
+              ELSE
+                 result(1:nrxxs)=result(1:nrxxs)+vc(1:nrxxs)*tempphic(1:nrxxs)
+              END IF
            END DO
         END IF
      END DO
@@ -1112,7 +1237,11 @@ call flush_unit(stdout)
      IF(gamma_only) THEN
         CALL mp_sum( prod_tot(1:nrxxs), inter_bgrp_comm)
      ELSE
-        CALL mp_sum( result(1:nrxxs), inter_bgrp_comm)
+        IF (noncolin) THEN
+           CALL mp_sum( result_nc(1:nrxxs,1:npol), inter_bgrp_comm)
+        ELSE
+           CALL mp_sum( result(1:nrxxs), inter_bgrp_comm)
+        END IF
      ENDIF
 
      !
@@ -1128,13 +1257,29 @@ call flush_unit(stdout)
            CALL exx_grid_convert(psic,npw, exx_fft_g2r, result, -1)
            hpsi(1:npw,im)=hpsi(1:npw,im) - exxalfa*result(1:npw)
         ELSE
-           CALL fwfft ('Wave', result, dffts)
-           !adds it to hpsi
-           hpsi(1:npw,im)=hpsi(1:npw,im) - exxalfa*result(nls(igk(1:npw)))
+           IF (noncolin) THEN
+             !brings back result in G-space
+              CALL fwfft ('Wave', result_nc(:,1), dffts)
+              CALL fwfft ('Wave', result_nc(:,2), dffts)
+             !adds it to hpsi
+              hpsi(1:n,im)=hpsi(1:n,im)-exxalfa*result_nc(nls(igk(1:n)),1)
+              hpsi(lda+1:lda+n,im) = hpsi(lda+1:lda+n,im) - &
+                                      exxalfa*result_nc(nls(igk(1:n)),2)
+           ELSE
+              CALL fwfft ('Wave', result, dffts)
+              !adds it to hpsi
+              hpsi(1:npw,im)=hpsi(1:npw,im) - exxalfa*result(nls(igk(1:npw)))
+           ENDIF
         ENDIF
   END DO
     
-  DEALLOCATE (tempphic,temppsic, result, rhoc, vc, fac )
+  IF (noncolin) THEN
+     DEALLOCATE (tempphic_nc, temppsic_nc, result_nc) 
+  ELSE
+     DEALLOCATE (tempphic, temppsic, result) 
+  END IF
+
+  DEALLOCATE (rhoc, vc, fac )
 
   IF(gamma_only) DEALLOCATE( psi_t, prod_tot, igkt )
 
@@ -1234,7 +1379,7 @@ END SUBROUTINE g2_convolution
     implicit none
     REAL (DP)   :: exxenergy,  energy
     INTEGER          :: ibnd, ik
-    COMPLEX(DP) :: vxpsi ( npwx, nbnd ), psi(npwx,nbnd)
+    COMPLEX(DP) :: vxpsi ( npwx*npol, nbnd ), psi(npwx*npol,nbnd)
     COMPLEX(DP) :: zdotc
 
     call start_clock ('exxenergy')
@@ -1249,13 +1394,15 @@ END SUBROUTINE g2_convolution
           READ( iunigk ) igk
           call get_buffer  (psi, nwordwfc, iunwfc, ik)
        ELSE
-          psi(1:npwx,1:nbnd) = evc(1:npwx,1:nbnd)
+          psi(1:npwx*npol,1:nbnd) = evc(1:npwx*npol,1:nbnd)
        END IF
        vxpsi(:,:) = (0.d0, 0.d0)
        call vexx(npwx,npw,nbnd,psi,vxpsi)
        do ibnd=1,nbnd
           energy = energy + &
                    wg(ibnd,ik) * zdotc(npw,psi(1,ibnd),1,vxpsi(1,ibnd),1)
+          IF (noncolin) energy = energy + &
+              wg(ibnd,ik) * zdotc(npw,psi(npwx+1,ibnd),1,vxpsi(npwx+1,ibnd),1)
        end do
        if (gamma_only .and. gstart == 2) then
            do ibnd=1,nbnd
@@ -1304,6 +1451,7 @@ END SUBROUTINE g2_convolution
 
     ! local variables
     COMPLEX(DP), allocatable :: tempphic(:), temppsic(:)
+    COMPLEX(DP), ALLOCATABLE :: tempphic_nc(:,:), temppsic_nc(:,:)
     COMPLEX(DP), ALLOCATABLE :: rhoc(:)
     REAL (DP),   ALLOCATABLE :: fac(:)
     integer          :: jbnd, ibnd, ik, ikk, ig, ikq, iq, isym
@@ -1332,7 +1480,12 @@ END SUBROUTINE g2_convolution
        ALLOCATE( fac(ngm) )
     ENDIF
 
-    ALLOCATE (tempphic(nrxxs), temppsic(nrxxs), rhoc(nrxxs) )
+    IF (noncolin) THEN
+       ALLOCATE (tempphic_nc(nrxxs,npol), temppsic_nc(nrxxs,npol))
+    ELSE
+       ALLOCATE (tempphic(nrxxs), temppsic(nrxxs)) 
+    ENDIF
+    ALLOCATE ( rhoc(nrxxs) )
 
     energy=0.d0
 
@@ -1355,7 +1508,11 @@ END SUBROUTINE g2_convolution
           call get_buffer (evc, nwordwfc, iunwfc, ikk)
        END IF
        do jbnd=ibnd_start, ibnd_end !for each band of psi (the k cycle is outside band)
+       IF (noncolin) THEN
+          temppsic_nc(:,:) = ( 0.D0, 0.D0 )
+       ELSE
           temppsic(:) = ( 0.D0, 0.D0 )
+       ENDIF
        IF(gamma_only) THEN
           CALL exx_grid_convert( evc(:,jbnd), npw, exx_fft_g2r, psi_t,&
             & 1, igkt )
@@ -1365,8 +1522,15 @@ END SUBROUTINE g2_convolution
                & CONJG(psi_t(1:exx_fft_g2r%npwt))
           CALL invfft ('CustomWave', temppsic, exx_fft_g2r%dfftt)
        ELSE
-          temppsic(nls(igk(1:npw))) = evc(1:npw,jbnd)
-          CALL invfft ('Wave', temppsic, dffts)
+          IF (noncolin) THEN
+             temppsic_nc(nls(igk(1:npw)),1) = evc(1:npw,jbnd)
+             CALL invfft ('Wave', temppsic_nc(:,1), dffts)
+             temppsic_nc(nls(igk(1:npw)),2) = evc(npwx+1:npwx+npw,jbnd)
+             CALL invfft ('Wave', temppsic_nc(:,2), dffts)
+          ELSE
+             temppsic(nls(igk(1:npw))) = evc(1:npw,jbnd)
+             CALL invfft ('Wave', temppsic, dffts)
+          ENDIF
        ENDIF
        
           do iqi=1,nqi
@@ -1457,15 +1621,18 @@ END SUBROUTINE g2_convolution
                    !
                    !loads the phi from file
                    !
-                   do ji=1, nrxxs
-                      tempphic(ji)=exxbuff(ji,ikq,ibnd)
+                   IF (noncolin) THEN
+                      tempphic_nc(:,:)=exxbuff_nc(:,:,ikq,ibnd)
+                      rhoc(:)=(CONJG(tempphic_nc(:,1))*temppsic_nc(:,1) + &
+                               CONJG(tempphic_nc(:,2))*temppsic_nc(:,2) )/omega
+                   ELSE
+                      tempphic(:)=exxbuff(:,ikq,ibnd)
 
-                   enddo
-
-                   !CALL davcio (tempphic, exx_nwordwfc, iunexx, &
-                   !                       (ikq-1)*nbnd+ibnd, -1 )
-                   !calculate rho in real space
-                   rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
+                      !CALL davcio (tempphic, exx_nwordwfc, iunexx, &
+                      !                       (ikq-1)*nbnd+ibnd, -1 )
+                      !calculate rho in real space
+                      rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
+                   ENDIF
                    !brings it to G-space
                    CALL fwfft ('Smooth', rhoc, dffts)
    
@@ -1482,7 +1649,13 @@ END SUBROUTINE g2_convolution
        end do
     end do
 
-    DEALLOCATE (tempphic, temppsic, rhoc, fac )
+    IF (noncolin) THEN
+       DEALLOCATE (tempphic_nc, temppsic_nc) 
+    ELSE
+       DEALLOCATE (tempphic, temppsic) 
+    ENDIF
+
+    DEALLOCATE (rhoc, fac )
     IF(gamma_only) DEALLOCATE( psi_t, prod_tot, igkt )
 !
 ! Was used for image parallelization
@@ -1670,6 +1843,8 @@ END SUBROUTINE g2_convolution
   call start_clock ('exx_stress')
 
   IF (pool_para) call errore('exx_stress','stress not available with pools',1)
+  IF (noncolin) CALL errore('exx_stress','stress not available with noncolin',1)
+
   nrxxs = dffts%nnr
   delta = reshape( (/1.d0,0.d0,0.d0, 0.d0,1.d0,0.d0, 0.d0,0.d0,1.d0/), (/3,3/))
   exx_stress_ = 0.d0
