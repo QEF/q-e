@@ -643,7 +643,7 @@ SUBROUTINE setup()
                    & 'Hubbard_l should not be > 3 ', 1 )
 
    ! compute index of atomic wfcs used as projectors
-   ALLOCATE ( oatwfc(nat) )
+   if(.not.allocated(oatwfc)) ALLOCATE ( oatwfc(nat) )
    CALL offset_atom_wfc ( nat, oatwfc )
 
   ELSE
