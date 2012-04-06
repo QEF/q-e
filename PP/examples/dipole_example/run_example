@@ -82,7 +82,7 @@ $ECHO " done"
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 PP_COMMAND="$PARA_PREFIX $BIN_DIR/pp.x $PARA_POSTFIX"
-AVERAGE_COMMAND="$PARA_PREFIX $BIN_DIR/average.x $PARA_POSTFIX"
+AVERAGE_COMMAND="$BIN_DIR/average.x"
 $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO "  running pp.x as: $PP_COMMAND"
@@ -185,7 +185,7 @@ ni+co.vpot
 3.000000
 EOF
 $ECHO
-$ECHO "  running average.x to obtain the potantial along Z...\c"
+$ECHO "  running average.x to obtain the potential along Z...\c"
 $AVERAGE_COMMAND < ni+co.avg.in > ni+co.vpot-z
 check_failure $?
 $ECHO " done"
@@ -341,7 +341,7 @@ water.vpot
 3.000000
 EOF
 $ECHO
-$ECHO "  running average.x to obtain the potantial along Z...\c"
+$ECHO "  running average.x to obtain the potential along Z...\c"
 $AVERAGE_COMMAND < water.avg.in > water.vpot-z
 check_failure $?
 $ECHO " done"
