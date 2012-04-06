@@ -106,7 +106,7 @@ hybrid functionals), for
 norm-conserving (Hamann-Schluter-Chiang) PPs (NCPPs) in 
 separable form or Ultrasoft (Vanderbilt) PPs (USPPs)
 or Projector Augmented Waves (PAW) method.
-Non-collinear magnetism and spin-orbit interactions 
+Noncollinear magnetism and spin-orbit interactions 
 are also implemented.  An implementation of finite electric 
 fields with a sawtooth potential in a supercell is also available.
 
@@ -122,7 +122,7 @@ We quote in particular:
   \item David Vanderbilt's group at Rutgers for Berry's phase
   calculations;
   \item Ralph Gebauer (ICTP, Trieste) and Adriano Mosca Conte
-  (SISSA, Trieste) for noncolinear magnetism;
+  (SISSA, Trieste) for noncollinear magnetism;
   \item Andrea Dal Corso for spin-orbit interactions;
   \item Carlo Sbraccia (Princeton) for improvements to structural
   optimization and to many other parts;
@@ -136,7 +136,7 @@ We quote in particular:
  free boundary conditions;
  \item Norbert Nemec and Mike Towler (U.Cambridge) for interface with 
  \texttt{CASINO};
-  \item Alexander Smogunov (CEA) for extended and non-colnear DFT+U
+  \item Alexander Smogunov (CEA) for extended and noncollinear DFT+U
   implementation.
 \end{itemize}
 
@@ -363,9 +363,9 @@ NOTA BENE:  Since v.4.1, both atomic positions
 and the scf
 potential are read from the data file so that consistency is guaranteed.
 
-\paragraph{Noncolinear magnetization, spin-orbit interactions}
+\paragraph{Noncollinear magnetization, spin-orbit interactions}
 
-The following input variables are relevant for noncolinear and
+The following input variables are relevant for noncollinear and
 spin-orbit calculations: 
 \begin{quote}
       \texttt{noncolin}\\
@@ -379,8 +379,8 @@ the code makes a spin-orbit calculation without spin magnetization
 the magnetization). The states are still two-component spinors but the
 total magnetization is zero. 
 
-If \texttt{starting\_magnetization} is different from zero, it makes a non
-collinear spin polarized calculation with spin-orbit interaction. The 
+If \texttt{starting\_magnetization} is different from zero, it makes a 
+noncollinear spin polarized calculation with spin-orbit interaction. The 
 final spin magnetization might be zero or different from zero depending 
 on the system. 
 
@@ -388,9 +388,9 @@ Furthermore to make a spin-orbit calculation you must use fully
 relativistic pseudopotentials at least for the atoms in which you
 think that spin-orbit interaction is large. If all the pseudopotentials 
 are scalar
-relativistic the calculation becomes equivalent to a noncolinear
+relativistic the calculation becomes equivalent to a noncollinear
 calculation without spin orbit. (Andrea Dal Corso, 2007-07-27)
-See Example 06 for non-collinear magnetism, Example 07
+See Example 06 for noncollinear magnetism, Example 07
 for spin-orbit interactions.
 
 \paragraph{DFT+U}
