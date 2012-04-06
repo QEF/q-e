@@ -123,6 +123,8 @@ subroutine read_upf_v1 (iunps, upf, grid, ierr, header_only)
      call read_pseudo_nl (upf, iunps)  
      call scan_end (iunps, "NONLOCAL")  
   !--------
+  else
+     call set_coulomb_nonlocal(upf)
   end if
   !-------->Search for atomic wavefunctions
   call scan_begin (iunps, "PSWFC", .true.)  
@@ -826,6 +828,30 @@ subroutine read_pseudo_ppinfo (upf, iunps)
   ENDDO
 100  RETURN
   END SUBROUTINE read_pseudo_ppinfo
+
+  SUBROUTINE set_coulomb_nonlocal(upf)
+  USE pseudo_types, ONLY : pseudo_upf
+  IMPLICIT NONE
+  TYPE(pseudo_upf) :: upf
+
+  upf%nqf = 0
+  upf%nqlc= 0
+  upf%qqq_eps= -1._dp
+  upf%kkbeta = 0
+  ALLOCATE( upf%kbeta(1),         &
+            upf%lll(1),           &
+            upf%beta(upf%mesh,1), &
+            upf%dion(1,1),        &
+            upf%rinner(1),        &
+            upf%qqq(1,1),         &
+            upf%qfunc(upf%mesh,1),&
+            upf%qfcoef(1,1,1,1),  &
+            upf%rcut(1),          &
+            upf%rcutus(1),        &
+            upf%els_beta(1) )
+   RETURN
+   END SUBROUTINE set_coulomb_nonlocal
+
 
 !=----------------------------------------------------------------------------=!
       END MODULE read_upf_v1_module
