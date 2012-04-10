@@ -176,6 +176,7 @@ MODULE read_namelists_module
        qcutz   = 0.0_DP
        q2sigma = 0.01_DP
        input_dft = 'none'
+       ecutfock  = -1.0_DP
 !
 ! ... set starting_magnetization to an invalid value:
 ! ... in PW starting_magnetization MUST be set for at least one atomic type
@@ -450,7 +451,6 @@ MODULE read_namelists_module
        adaptive_thr   =  .false.
        conv_thr_init  =  0.1E-2_DP
        conv_thr_multi =  0.1_DP
-       ecutfock       =  -1.0_DP
        !
        RETURN
        !
@@ -1073,7 +1073,6 @@ MODULE read_namelists_module
        CALL mp_bcast( adaptive_thr,       ionode_id )
        CALL mp_bcast( conv_thr_init,      ionode_id )
        CALL mp_bcast( conv_thr_multi,     ionode_id )
-       CALL mp_bcast( ecutfock,           ionode_id )
        RETURN
        !
      END SUBROUTINE

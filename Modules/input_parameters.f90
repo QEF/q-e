@@ -489,7 +489,7 @@ MODULE input_parameters
              Hubbard_U, Hubbard_J, Hubbard_alpha,                             &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
-             nqx1, nqx2, nqx3,                                                &
+             nqx1, nqx2, nqx3, ecutfock,                                      &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
              exx_fraction, screening_parameter,                               &
 #ifdef __ENVIRON
@@ -957,7 +957,7 @@ MODULE input_parameters
           mixing_mode, mixing_beta, mixing_ndim, mixing_fixed_ns,      &
           tqr, diago_cg_maxiter, diago_david_ndim, diagonalization ,   &
           startingpot, startingwfc , conv_thr,                         &
-          adaptive_thr, conv_thr_init, conv_thr_multi, ecutfock,       &
+          adaptive_thr, conv_thr_init, conv_thr_multi,                 &
           diago_thr_init, n_inner, fermi_energy, rotmass, occmass,     &
           rotation_damping, occupation_damping, rotation_dynamics,     &
           occupation_dynamics, tcg, maxiter, etresh, passop, epol,     &
