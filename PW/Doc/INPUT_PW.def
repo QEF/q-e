@@ -827,35 +827,62 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 	var lda_plus_u        -type LOGICAL { 
 	    default { .FALSE. }
-	    see { Hubbard_U } 
+	    status {
+		DFT+U (formerly known as LDA+U) currently works only for 
+                a few selected elements. Modify PW/set_hubbard_l.f90 and 
+                PW/tabd.f90 if you plan to use DFT+U with an element that 
+                is not configured there.
+	    }
+	    info { 
+		Specify lda_plus_u = .TRUE. to enable DFT+U calculations
+		See: Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991); 
+                     Anisimov et al., PRB 48, 16929 (1993); 
+                     Liechtenstein, Anisimov, and Zaanen, PRB 52, R5467 (1994).
+                You must specify, for each species with a U term, the value of
+                U and (optionally) alpha, J of the Hubbard model (all in eV):
+                see lda_plus_u_kind, Hubbard_U, Hubbard_alpha, Hubbard_J
+            }
+	}
+	var lda_plus_u_kind -type INTEGER { 
+	    default { 0 }
+	    info { Specifies the type of DFT+U calculation:
+                   0   simplified version of Cococcioni and de Gironcoli, 
+                       PRB 71, 035105 (2005), using Hubbard_U and Hubbard_alpha
+                   1   rotationally invariant scheme of Liechtenstein et al., 
+                       using Hubbard_U and Hubbard_J
+            }
+        }
+	dimension Hubbard_U -start 1 -end ntyp -type REAL {      
+	    default { 0.D0 for all species }
+	    info {
+		Hubbard_U(i): U parameter (eV) for species i, DFT+U calculation 
+	    }
 	}
 	dimension Hubbard_alpha -start 1 -end ntyp -type REAL { 
 	    default { 0.D0 for all species }
-	    see { Hubbard_U } 
-	}
-	dimension Hubbard_U -start 1 -end ntyp -type REAL {      
-	    default { 0.D0 for all species }
-	    status {
-		LDA+U works only for a few selected elements. Modify
-		PW/set_hubbard_l.f90 and PW/tabd.f90 if you plan to use LDA+U with an
-		element that is not configured there.
-	    }
 	    info {
-		lda_plus_u, Hubbard_alpha(i), Hubbard_U(i): parameters for LDA+U calculations 
-
-		If lda_plus_u = .TRUE. you must specify, for species i,
-		the parameters U and (optionally) alpha of the Hubbard model (both in eV). 
-
-		See: Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991); Anisimov
-		et al., PRB 48, 16929 (1993); Liechtenstein, Anisimov, and Zaanen, PRB
-		52, R5467 (1994); Cococcioni and de Gironcoli, PRB 71, 035105 (2005).
+		Hubbard_alpha(i): alpha parameter (eV) for species i, 
+                used in DFT+U calculations (only for lda_plus_u_kind=0)
+	    }
+	}
+	dimension Hubbard_J(ntyp) -start 1 -end 3 -type REAL { 
+	    default { 0.D0 for all species }
+	    info {
+		Hubbard_J(i,ityp): J parameters (eV) for species ityp, 
+                used in DFT+U calculations (only for lda_plus_u_kind=1)
+                For p orbitals:  J = Hubbard_J(1,ityp);
+                For d orbitals:  J = Hubbard_J(1,ityp), B = Hubbard_J(2,ityp);
+                For f orbitals:  J = Hubbard_J(1,ityp), E2 = Hubbard_J(2,ityp),
+                                 E3= Hubbard_J(3,ityp).
+                If B or E2 or E3 are not specified or set to 0 they will be
+                calculated from J using atomic ratios.
 	    }
 	}
 	
 	var starting_ns_eigenvalue(m,ispin,I) -type REAL { 
 	    default { -1.d0 that means NOT SET }
 	    info {
-		In the first iteration of an LDA+U run it overwrites
+		In the first iteration of an DFT+U run it overwrites
 		the m-th eigenvalue of the ns occupation matrix for the
 		ispin component of atomic species I. Leave unchanged
 		eigenvalues that are not set. This is useful to suggest
@@ -868,7 +895,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    default { 'atomic' }
 	    info {
 		Only active when lda_plus_U is .true., specifies the type
-		of projector on localized orbital to be used in the LDA+U
+		of projector on localized orbital to be used in the DFT+U
 		scheme.
 
 		Currently available choices:
@@ -1250,7 +1277,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var mixing_fixed_ns -type INTEGER { 
 	    default { 0 }
 	    info {
-		For LDA+U : number of iterations with fixed ns ( ns is the
+		For DFT+U : number of iterations with fixed ns ( ns is the
   	        atomic density appearing in the Hubbard term ).
 	    }
 	}
