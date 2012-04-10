@@ -839,7 +839,7 @@ MODULE pw_restart
              CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
                              evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
                              ngk(ik-iks+1), filename, 1.D0, &
-                             ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_image_comm )
+                             ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
              !
              ik_eff = ik + num_k_points
              !
@@ -867,7 +867,7 @@ MODULE pw_restart
              CALL write_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
                              evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik_eff-iks+1), &
                              ngk(ik_eff-iks+1), filename, 1.D0, &
-                             ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_image_comm )
+                             ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
              !
            ELSE
              !
@@ -901,7 +901,7 @@ MODULE pw_restart
                                    evc(nkl:nkr,:), npw_g, gamma_only, nbnd, &
                                    igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1), &
                                    filename, 1.D0, &
-                                   ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_image_comm )
+                                   ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
                    !
                 END DO
                 !
@@ -925,7 +925,7 @@ MODULE pw_restart
                                 evc, npw_g, gamma_only, nbnd,            &
                                 igk_l2g_kdip(:,ik-iks+1),                &
                                 ngk(ik-iks+1), filename, 1.D0, &
-                                ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_image_comm )
+                                ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
                 !
              END IF
              !
