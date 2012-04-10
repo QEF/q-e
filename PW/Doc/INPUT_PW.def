@@ -847,7 +847,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    default { 0 }
 	    info { Specifies the type of DFT+U calculation:
                    0   simplified version of Cococcioni and de Gironcoli, 
-                       PRB 71, 035105 (2005), using Hubbard_U and Hubbard_alpha
+                       PRB 71, 035105 (2005), using Hubbard_U
                    1   rotationally invariant scheme of Liechtenstein et al., 
                        using Hubbard_U and Hubbard_J
             }
@@ -861,8 +861,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	dimension Hubbard_alpha -start 1 -end ntyp -type REAL { 
 	    default { 0.D0 for all species }
 	    info {
-		Hubbard_alpha(i): alpha parameter (eV) for species i, 
-                used in DFT+U calculations (only for lda_plus_u_kind=0)
+		Hubbard_alpha(i) is the perturbation (on atom i, in eV)
+                used to compute U with the linear-response method of
+                Cococcioni and de Gironcoli, PRB 71, 35105 (2005)
+                (only for lda_plus_u_kind=0)
 	    }
 	}
 	dimension Hubbard_J(ntyp) -start 1 -end 3 -type REAL { 
