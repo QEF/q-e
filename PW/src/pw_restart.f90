@@ -3415,7 +3415,6 @@ MODULE pw_restart
          !
       END DO
       !
-print*, 'ngk_g', ngk_g
       IF ( ngg /= ngk_g ) &
          CALL errore( 'igk_l2g_kdip', 'unexpected dimension in ngg', 1 )
       !
