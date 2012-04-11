@@ -2864,7 +2864,7 @@ MODULE pw_restart
       USE buffers,              ONLY : save_buffer
       USE gvect,                ONLY : ngm, ngm_g, g, ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
-      USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool, me_bgrp, &
+      USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool, me_bgrp, nbgrp, &
                                        root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm, &
                                        root_bgrp, intra_bgrp_comm, inter_bgrp_comm
       !
@@ -2876,7 +2876,7 @@ MODULE pw_restart
       CHARACTER(LEN=256)   :: filename
       INTEGER              :: ik, ipol, ik_eff, num_k_points
       INTEGER, ALLOCATABLE :: kisort(:)
-      INTEGER              :: npool, nkbl, nkl, nkr, npwx_g, nbgrp
+      INTEGER              :: npool, nkbl, nkl, nkr, npwx_g
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
       INTEGER, ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:)
@@ -2975,6 +2975,9 @@ MODULE pw_restart
       ngk_g(iks:ike) = ngk(1:nks)
       !
       CALL mp_sum( ngk_g, intra_image_comm )
+#ifdef __BANDS
+      ngk_g = ngk_g / nbgrp
+#endif
       !
       ! ... compute the Maximum G vector index among all G+k an processors
       !
@@ -3412,6 +3415,7 @@ MODULE pw_restart
          !
       END DO
       !
+print*, 'ngk_g', ngk_g
       IF ( ngg /= ngk_g ) &
          CALL errore( 'igk_l2g_kdip', 'unexpected dimension in ngg', 1 )
       !
