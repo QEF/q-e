@@ -71,10 +71,6 @@ MODULE becmod
   !
   PUBLIC :: bec_type, becp, allocate_bec_type, deallocate_bec_type, calbec, &
             beccopy, becscal
-#ifdef __BANDS
-  PUBLIC :: calbec_bands
-#endif
-
   !
 CONTAINS
   !-----------------------------------------------------------------------
@@ -326,66 +322,6 @@ CONTAINS
     RETURN
     !
   END SUBROUTINE calbec_nc
-
-#ifdef __BANDS
-  !-----------------------------------------------------------------------
-  SUBROUTINE calbec_bands ( npw, beta, psi, betapsi, nbnd, ibnd_start, ibnd_end)
-    !-----------------------------------------------------------------------
-    !
-    ! ... matrix times matrix with summation index (k=1,npw) running on
-    ! ... G-vectors or PWs : betapsi(i,j) = \sum_k beta^*(i,k) psi(k,j)
-    !
-    USE mp_global, ONLY : intra_bgrp_comm, intra_pool_comm
-    USE mp,        ONLY : mp_sum
-
-    IMPLICIT NONE
-    COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
-    COMPLEX (DP), INTENT (out) :: betapsi(:,:)
-    INTEGER, INTENT (in) :: npw
-    INTEGER, OPTIONAL :: nbnd, ibnd_start, ibnd_end
-    
-    INTEGER :: nkb, npwx, m
-    !
-    nkb = size (beta, 2)
-    IF ( nkb == 0 ) RETURN
-    !
-    CALL start_clock( 'calbec' )
-    npwx= size (beta, 1)
-    IF ( npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
-    IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
-    IF ( present (nbnd) ) THEN
-        m = nbnd
-    ELSE
-        m = size ( psi, 2)
-    ENDIF
-#ifdef DEBUG
-    WRITE (*,*) 'calbec bands'
-    WRITE (*,*)  nkb, size(betapsi,1), m, size (betapsi, 2), ibnd_start, ibnd_end
-#endif
-    IF ( nkb /= size (betapsi,1) .or. m > size (betapsi, 2) ) &
-      CALL errore ('calbec', 'size mismatch', 3)
-    !
-    IF ( m == 1 ) THEN
-       !
-       CALL ZGEMV( 'C', npw, nkb, (1.0_DP,0.0_DP), beta, npwx, psi, 1, &
-                   (0.0_DP, 0.0_DP), betapsi, 1 )
-       !
-    ELSE
-       !
-       CALL ZGEMM( 'C', 'N', nkb, ibnd_end-ibnd_start+1, npw, (1.0_DP,0.0_DP), &
-                 beta, npwx, psi(1,ibnd_start), npwx, (0.0_DP,0.0_DP), betapsi(1,ibnd_start), nkb )
-       !
-    ENDIF
-    !
-    CALL mp_sum( betapsi( :, 1:m ), intra_bgrp_comm )
-    !
-    CALL stop_clock( 'calbec' )
-    !
-    RETURN
-    !
-  END SUBROUTINE calbec_bands
-#endif
-
   !
   !-----------------------------------------------------------------------
   SUBROUTINE allocate_bec_type ( nkb, nbnd, bec, comm )

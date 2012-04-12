@@ -2975,9 +2975,7 @@ MODULE pw_restart
       ngk_g(iks:ike) = ngk(1:nks)
       !
       CALL mp_sum( ngk_g, intra_image_comm )
-#ifdef __BANDS
       ngk_g = ngk_g / nbgrp
-#endif
       !
       ! ... compute the Maximum G vector index among all G+k an processors
       !

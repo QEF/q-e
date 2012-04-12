@@ -76,7 +76,6 @@ Parallel execution:
       __PARA      Parallel execution 
       __MPI       Use MPI library
       __OPENMP    OpenMP parallelization
-      __BANDS     Experimental band parallelization
 Libraries:
       __FFTW      FFT routines from internal FFTW library
       __FFTW3     FFT routines from external FFTW v.3 library
