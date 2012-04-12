@@ -3064,7 +3064,7 @@ MODULE pw_restart
             CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
                            ngk(ik-iks+1), filename, scalef, &
-                           ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_image_comm )
+                           ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
             !
             IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                !
@@ -3089,7 +3089,7 @@ MODULE pw_restart
             CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:,ik_eff-iks+1),   &
                            ngk(ik_eff-iks+1), filename, scalef, &
-                           ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_image_comm )
+                           ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
             !
             IF ( ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
                !
@@ -3121,7 +3121,7 @@ MODULE pw_restart
                                  npol, evc(nkl:nkr,:), npw_g, nbnd,         &
                                  igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1),   &
                                  filename, scalef, & 
-                                 ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_image_comm )
+                                 ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
                   !
                END DO
                !
@@ -3137,7 +3137,7 @@ MODULE pw_restart
                CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,         &
                               evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),      &
                               ngk(ik-iks+1), filename, scalef, &
-                              ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_image_comm )
+                              ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
                !
             END IF
             !
