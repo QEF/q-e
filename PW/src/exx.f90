@@ -111,8 +111,7 @@ CONTAINS
   SUBROUTINE exx_grid_convert( psi, npw, fft, psi_t, sign, igkt )
   !------------------------------------------------------------------------
 
-    USE io_global,  ONLY : ionode_id
-    USE mp_global,  ONLY : mpime, nproc, intra_bgrp_comm
+    USE mp_global,  ONLY : me_bgrp, nproc_bgrp, intra_bgrp_comm, root_bgrp
     USE mp_wave,    ONLY : mergewf, splitwf
     USE gvect, ONLY : ig_l2g
 
@@ -140,15 +139,15 @@ CONTAINS
        psi_t(1:fft%npwt)=psi(1:fft%npwt)
     ELSE
        IF (sign > 0 ) THEN
-          CALL mergewf(psi, evc_g, npw, ig_l2g, mpime, nproc,&
-               & ionode_id, intra_bgrp_comm)  
-          CALL splitwf(psi_t(:), evc_g, fft%npwt, fft%ig_l2gt, mpime,&
-               & nproc, ionode_id, intra_bgrp_comm)  
+          CALL mergewf(psi, evc_g, npw, ig_l2g, me_bgrp, nproc_bgrp,&
+               & root_bgrp, intra_bgrp_comm)  
+          CALL splitwf(psi_t(:), evc_g, fft%npwt, fft%ig_l2gt, me_bgrp,&
+               & nproc_bgrp, root_bgrp, intra_bgrp_comm)  
        ELSE
-          CALL mergewf(psi, evc_g, fft%npwt, fft%ig_l2gt, mpime,&
-               & nproc, ionode_id, intra_bgrp_comm)  
-          CALL splitwf(psi_t, evc_g, npw, ig_l2g, mpime, nproc,&
-               & ionode_id, intra_bgrp_comm)  
+          CALL mergewf(psi, evc_g, fft%npwt, fft%ig_l2gt, me_bgrp,&
+               & nproc_bgrp, root_bgrp, intra_bgrp_comm)  
+          CALL splitwf(psi_t, evc_g, npw, ig_l2g, me_bgrp, nproc_bgrp,&
+               & root_bgrp, intra_bgrp_comm)  
        ENDIF
     ENDIF
 
