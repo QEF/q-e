@@ -107,7 +107,7 @@ CONTAINS
     ! ... NPOOL must be a whole divisor of NPROC
     !
     IMPLICIT NONE
-    INTEGER :: world, nproc_ortho_in
+    INTEGER :: world, nproc_ortho_in = 0
     INTEGER :: root = 0
     !
     !
@@ -164,8 +164,8 @@ CONTAINS
        !
        CALL get_arg_northo( nproc_ortho_in )
        !
-       nproc_ortho_in = MAX( nproc_ortho_in, 1 )
-       nproc_ortho_in = MIN( nproc_ortho_in, nproc )
+       ! ... nproc_ortho_in = 0 if no command-line option -ndiag or -northo
+       ! ... nproc_ortho_in = N if -ndiag N or -northo N comm-line opt present
        !
     END IF
     !
@@ -248,7 +248,7 @@ CONTAINS
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: world, root
-    INTEGER :: nproc_ortho_in 
+    INTEGER :: nproc_ortho_in = 0 
     !
     INTEGER :: myrank, npe
     !
@@ -289,9 +289,9 @@ CONTAINS
        !
        CALL get_arg_northo( nproc_ortho_in )
        !
-       nproc_ortho_in = MAX( nproc_ortho_in, 1 )
-       nproc_ortho_in = MIN( nproc_ortho_in, nproc )
-       !
+       ! ... nproc_ortho_in = 0 if no command-line option -ndiag or -northo
+       ! ... nproc_ortho_in = N if -ndiag N or -northo N comm-line opt present
+       ! 
     END IF
     !
     CALL mp_barrier(world)
@@ -545,13 +545,13 @@ CONTAINS
   !
   !----------------------------------------------------------------------------
   SUBROUTINE init_ortho( nproc_ortho_in, parent_comm )
-    !----------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
     !
     ! ... Ortho group initialization
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(IN) :: nproc_ortho_in
+    INTEGER, INTENT(IN) :: nproc_ortho_in! read from command-line, 0 if unset
     INTEGER, INTENT(IN) :: parent_comm   ! communicator of the parent group
     !
     INTEGER :: nproc_ortho_try
@@ -570,11 +570,13 @@ CONTAINS
     !
 #endif
     !
-    IF( nproc_ortho_in > 1 ) THEN
-       ! use the command line value ensuring that it falls in the proper range.
+    IF( nproc_ortho_in > 0 ) THEN
+       ! command-line argument -ndiag N or -nproc N set to N
+       ! use the command line value ensuring that it falls in the proper range
        nproc_ortho_try = MIN( nproc_ortho_in , parent_nproc )
-    ELSE
-       ! here we can play with custom architecture specific default definitions
+    ELSE 
+       ! no command-line argument -ndiag N or -nproc N is present
+       ! insert here custom architecture specific default definitions
 #if defined __SCALAPACK
        nproc_ortho_try = MAX( parent_nproc/2, 1 )
 #else
