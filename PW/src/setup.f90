@@ -666,15 +666,12 @@ END SUBROUTINE setup
 LOGICAL FUNCTION check_para_diag( nbnd )
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
-  USE mp_global,        ONLY : nproc_pool, init_ortho_group, nproc_ortho, &
-                               np_ortho, intra_pool_comm
+  USE mp_global,        ONLY : np_ortho
 
   IMPLICIT NONE
 
   INTEGER, INTENT(IN) :: nbnd
   LOGICAL, SAVE :: first = .TRUE.
-
-  !  avoid synchronization problems when more images are active 
 
   IF( .NOT. first ) RETURN
   first = .FALSE.
