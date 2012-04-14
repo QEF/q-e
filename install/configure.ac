@@ -557,6 +557,7 @@ ia32:pgf* | ia64:pgf* | x86_64:pgf* )
         try_f90flags="-fast -Mcache_align -r8"
         try_fflags_noopt="-O0"
         try_ldflags=""
+        try_ldflags_openmp="-mp"
         try_ldflags_static="-Bstatic"
         try_dflags="$try_dflags -D__PGI"
         have_cpp=0
@@ -732,6 +733,7 @@ if test "$use_shared" -eq 0 ; then
   try_ldflags="$try_ldflags $try_ldflags_static" ; fi
 
 if test "$use_openmp" -eq 1 ; then
+  try_f90flags="$try_f90flags $try_fflags_openmp"
   try_fflags="$try_fflags $try_fflags_openmp"
   try_ldflags="$try_ldflags $try_ldflags_openmp"
 fi
@@ -894,7 +896,7 @@ then
         x86_64:pgf* | x86_64:path* | x86_64:openf95 | crayxt*:* )
                 # check for acml - note that it contains lapack as well
                 try_libdirs="/opt/acml*/pathscale64/lib/"
-                try_libdirs="$libdirs $ld_library_path $try_libdirs"
+                try_libdirs="$ld_library_path $libdirs $try_libdirs"
 
                 for dir in none $try_libdirs
                 do
@@ -909,8 +911,15 @@ then
                         FFLAGS="$test_fflags"
                         LDFLAGS="$test_ldflags $try_loption"
                         LIBS=""
-                        AC_SEARCH_LIBS(dgemm, acml, have_blas=1 have_lapack=1
-                                have_acml=1 blas_libs="$try_loption $LIBS")
+                        
+                        if test "$use_openmp" -eq 0; then
+                                AC_SEARCH_LIBS(dgemm, acml, have_blas=1 have_lapack=1
+                                    have_acml=1 blas_libs="$try_loption $LIBS")
+                        else
+                                AC_SEARCH_LIBS(dgemm, acml_mp, have_blas=1 have_lapack=1
+                                    have_acml=1 blas_libs="$try_loption $LIBS")                        
+                        fi
+                        
                         if test "$ac_cv_search_dgemm" != "no"
                         then break ; fi
                 done
