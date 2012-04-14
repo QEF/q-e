@@ -441,14 +441,17 @@
         
         if (y.le.eopreg) then
         
-            sawout = (0.5 - y/eopreg) * (1-eopreg)
+            sawout = (0.5_DP - y/eopreg) * (1._DP-eopreg)
         
         else 
-            sawout = (-0.5 + (y-eopreg)/(1-eopreg)) * (1-eopreg)
+!
+! I would use:   sawout = y - 0.5_DP * ( 1.0_DP + eopreg )
+!
+            sawout = (-0.5_DP + (y-eopreg)/(1._DP-eopreg)) * (1._DP-eopreg)
         
         end if
         
-END FUNCTION saw
+      END FUNCTION saw
 
 !
 !------------------------------------------------------------------------------!
