@@ -218,7 +218,8 @@ CONTAINS
        !
        WRITE(stdout,'(5x,"lr_lanczos: Left and right Lanczos vectors are orthogonal, this is a violation of oblique projection")')
        !
-    ELSEIF ( beta<0.0d0 ) THEN
+    END IF
+    IF ( beta<0.0d0 ) THEN
        !
        beta=sqrt(-beta)
        gamma=-beta
