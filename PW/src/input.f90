@@ -105,7 +105,7 @@ SUBROUTINE iosys()
   !
   USE martyna_tuckerman, ONLY: do_comp_mt
 #ifdef __ENVIRON
-  USE constants,    ONLY : rydberg_si, bohr_radius_si
+  USE constants,    ONLY : rydberg_si, bohr_radius_si, amu_si, k_boltzmann_ry
   USE environ_base, ONLY : do_environ_ => do_environ,                           &
                            verbose_ => verbose,                                 &
                            environ_thr_ => environ_thr,                         &
@@ -119,12 +119,18 @@ SUBROUTINE iosys()
                            atomicspread_ => atomicspread,                       &
                            ifdtype_ => ifdtype,                                 &
                            nfdpoint_ => nfdpoint,                               &
+                           mixtype_ => mixtype,                                 &
+                           ndiis_ => ndiis,                                     &
                            mixrhopol_ => mixrhopol,                             &
                            tolrhopol_ => tolrhopol,                             &
                            env_surface_tension_ => env_surface_tension,         &
                            delta_ => delta,                                     &
                            env_pressure_ => env_pressure,                       &
-                           env_slab_geometry, slab_axis
+                           env_slab_geometry, slab_axis,                        &
+                           cion_ => cion,                                       &
+                           zion_ => zion,                                       &
+                           rhopb_ => rhopb,                                     &
+                           solvent_temperature_ => solvent_temperature
 #endif
   !
   USE esm,           ONLY: do_comp_esm, &
@@ -258,14 +264,15 @@ SUBROUTINE iosys()
   !
   ! ... ENVIRON namelist
   !
-  USE input_parameters, ONLY : verbose, environ_thr, environ_type,  &
-                               stype, rhomax, rhomin, tbeta,        &
-                               env_static_permittivity, eps_mode,   &
-                               solvationrad, atomicspread,          &
-                               ifdtype, nfdpoint,                   &
-                               mixrhopol, tolrhopol,                &
-                               env_surface_tension, delta,          &
-                               env_pressure 
+  USE input_parameters, ONLY : verbose, environ_thr, environ_type,   &
+                               stype, rhomax, rhomin, tbeta,         &
+                               env_static_permittivity, eps_mode,    &
+                               solvationrad, atomicspread,           &
+                               ifdtype, nfdpoint,                    &
+                               mixtype, ndiis, mixrhopol, tolrhopol, &
+                               env_surface_tension, delta,           &
+                               env_pressure,                         &
+                               cion, zion, rhopb, solvent_temperature 
 #endif
   !
   ! ... ELECTRONS namelist
@@ -1216,10 +1223,17 @@ SUBROUTINE iosys()
   ifdtype_   = ifdtype
   nfdpoint_  = nfdpoint
   !
+  mixtype_   = mixtype
+  ndiis_     = ndiis
   mixrhopol_ = mixrhopol
   tolrhopol_ = tolrhopol
   !
   delta_     = delta
+  !
+  cion_       = cion*bohr_radius_si**3/amu_si
+  zion_       = zion
+  rhopb_      = rhopb
+  solvent_temperature_ = solvent_temperature
   !
   SELECT CASE (TRIM(environ_type))
   ! if a specific environ is selected use hardcoded parameters

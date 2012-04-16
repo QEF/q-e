@@ -22,7 +22,7 @@
  
   CONTAINS
 !=----------------------------------------------------------------------=!
-SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nrxx, f, grad )
+SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
 !=----------------------------------------------------------------------=!
   USE kinds,         ONLY : DP
   USE cell_base,     ONLY : at, bg, alat
@@ -37,9 +37,9 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nrxx, f, grad )
   INTEGER, INTENT(IN)  :: nfdpoint
   INTEGER, INTENT(IN)  :: ncfd
   INTEGER, INTENT(IN)  :: icfd(-nfdpoint:nfdpoint)
-  INTEGER, INTENT(IN)  :: nrxx
-  REAL( DP ), DIMENSION( nrxx ), INTENT(IN) :: f
-  REAL( DP ), DIMENSION( 3, nrxx ), INTENT(OUT) :: grad
+  INTEGER, INTENT(IN)  :: nnr
+  REAL( DP ), DIMENSION( nnr ), INTENT(IN) :: f
+  REAL( DP ), DIMENSION( 3, nnr ), INTENT(OUT) :: grad
   
   INTEGER :: index, index0, i, ir, ipol, in
   INTEGER :: ix(-nfdpoint:nfdpoint),iy(-nfdpoint:nfdpoint),iz(-nfdpoint:nfdpoint)
@@ -54,20 +54,12 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nrxx, f, grad )
   index0 = 0
   !
 #if defined (__MPI)
-  !
-#ifdef __BANDS
   DO i = 1, me_bgrp
     index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
   END DO
-#else
-  DO i = 1, me_pool
-    index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
-  END DO
 #endif
   !
-#endif
-  !
-  DO ir = 1, nrxx
+  DO ir = 1, nnr
     !   
     index = index0 + ir - 1
     iz(0) = index / (dfftp%nr1x*dfftp%nr2x)
@@ -103,26 +95,17 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nrxx, f, grad )
   ENDDO
   !
 #if defined (__MPI)
-  !
-#ifdef __BANDS
   DO ipol = 1, 3 
     CALL mp_sum( gradtmp(ipol,:), intra_bgrp_comm )
     CALL grid_scatter( gradtmp(ipol,:), grad(ipol,:) )
   ENDDO
-#else
-  DO ipol = 1, 3 
-    CALL mp_sum( gradtmp(ipol,:), intra_pool_comm )
-    CALL grid_scatter( gradtmp(ipol,:), grad(ipol,:) )
-  ENDDO
-#endif
-  !
 #else
   grad = gradtmp
 #endif
   !
   DEALLOCATE( gradtmp )
   !
-  DO ir = 1,nrxx
+  DO ir = 1,nnr
     grad(:,ir) = MATMUL( bg, grad(:,ir) )
   ENDDO
   grad = grad / DBLE(ncfd) / alat

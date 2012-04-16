@@ -463,7 +463,7 @@ SUBROUTINE electrons()
        !
        IF ( update_venviron ) WRITE( stdout, 9200 )
        !
-       CALL calc_venviron( update_venviron, dfftp%nnr, nspin, rhoin%of_r, vltot )
+       CALL calc_venviron( update_venviron, dfftp%nnr, nspin, dr2, rhoin%of_r, vltot )
        !
      END IF
 #endif

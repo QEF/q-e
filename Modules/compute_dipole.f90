@@ -8,7 +8,7 @@
 ! ... original code written by Giovanni Cantele and Paolo Cazzato
 ! ... adapted to work in the parallel case by Carlo Sbraccia
 ! ... originally part of the makov_payne.f90 file
-! ... adapted to accept any king of density by Oliviero Andreussi
+! ... adapted to accept any kind of density by Oliviero Andreussi
 !
 !--------------------------------------------------------------------
 SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )

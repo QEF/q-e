@@ -572,10 +572,15 @@ MODULE input_parameters
 !
 ! Iterative solver parameters
 !
+        CHARACTER( LEN=256 ) :: mixtype = 'linear'
+        ! mixing method for iterative calculation of polarization charges
+        ! 'linear', 'anderson', 'diis', 'broyden'
         REAL(DP) :: mixrhopol = 0.5D0
         ! mixing param to be used in iter calculation of polarization charges
         REAL(DP) :: tolrhopol = 1.D-10
         ! convergence threshold for polarization charges in iterative procedure
+        INTEGER :: ndiis=1
+        ! order of DIIS interpolation of iterative polarization charge
 !
 ! Cavitation energy parameters
 !
@@ -588,6 +593,17 @@ MODULE input_parameters
 !
         REAL(DP) :: env_pressure = 0.D0
         ! external pressure for PV energy, if equal to zero no pressure term 
+!
+! Ionic countercharge parameters
+!
+        REAL(DP) :: cion = 0.D0
+        ! molar concentration of ionic countercharge (M=mol/L)
+        REAL(DP) :: zion = 1.D0
+        ! valence of ionic countercharge
+        REAL(DP) :: rhopb = 0.0001D0
+        ! density threshold for the onset of ionic countercharge
+        REAL(DP) :: solvent_temperature = 300.D0
+        ! temperature of the solution
 
         NAMELIST / environ /                                           &
              verbose, environ_thr, environ_type,                       &
@@ -595,9 +611,10 @@ MODULE input_parameters
              env_static_permittivity, eps_mode,                        &
              solvationrad, atomicspread,                               &
              ifdtype, nfdpoint,                                        &
-             mixrhopol, tolrhopol,                                     &
+             mixtype, ndiis, mixrhopol, tolrhopol,                     &
              env_surface_tension, delta,                               &
-             env_pressure
+             env_pressure,                                             &
+             cion, zion, rhopb, solvent_temperature
 #endif
 !
 !=----------------------------------------------------------------------------=!

@@ -289,6 +289,8 @@ MODULE read_namelists_module
        ifdtype  = 1
        nfdpoint = 2
        !
+       mixtype   = 'linear'
+       ndiis     = 1
        mixrhopol = 0.5
        tolrhopol = 1.D-10
        !
@@ -296,6 +298,11 @@ MODULE read_namelists_module
        delta = 0.00001D0
        !
        env_pressure = 0.D0
+       !
+       cion = 0.0D0
+       zion = 1.0D0
+       rhopb = 0.0001D0
+       solvent_temperature = 300.0D0
        !
        RETURN
        !
@@ -920,6 +927,8 @@ MODULE read_namelists_module
        CALL mp_bcast( ifdtype,                    ionode_id )
        CALL mp_bcast( nfdpoint,                   ionode_id )
        !
+       CALL mp_bcast( mixtype,                    ionode_id )
+       CALL mp_bcast( ndiis,                      ionode_id )
        CALL mp_bcast( mixrhopol,                  ionode_id )
        CALL mp_bcast( tolrhopol,                  ionode_id )
        !
@@ -927,6 +936,11 @@ MODULE read_namelists_module
        CALL mp_bcast( delta,                      ionode_id )
        !
        CALL mp_bcast( env_pressure,               ionode_id )
+       !
+       CALL mp_bcast( cion,                       ionode_id )
+       CALL mp_bcast( zion,                       ionode_id )
+       CALL mp_bcast( rhopb,                      ionode_id )
+       CALL mp_bcast( solvent_temperature,        ionode_id )
        !
       RETURN
        !
