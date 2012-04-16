@@ -1071,6 +1071,9 @@ SUBROUTINE iosys()
      IF ( lgauss .OR. ltetra ) CALL errore( 'iosys', &
           'Berry Phase/electric fields only for insulators!', 1 )
   END IF
+  IF ( lberry .and. nproc_pool > 1 .and. gdir /= 3 ) CALL errore( 'iosys', &
+      'Berry Phase implemented in parallel only for gdir = 3', 1 )
+
   !
   ! ... Copy values from input module to PW internals
   !
