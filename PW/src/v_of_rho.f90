@@ -18,8 +18,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   USE kinds,            ONLY : DP
   USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ngm
-  USE lsda_mod,         ONLY : nspin
-  USE noncollin_module, ONLY : noncolin
+  USE noncollin_module, ONLY : noncolin, nspin_lsda
   USE ions_base,        ONLY : nat
   USE ldaU,             ONLY : lda_plus_U 
   USE funct,            ONLY : dft_is_meta
@@ -77,7 +76,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
   ! ... add an electric field
   ! 
-  DO is = 1, nspin
+  DO is = 1, nspin_lsda
      CALL add_efield(v%of_r(1,is), etotefield, rho%of_r, .false. )
   END DO
   !
