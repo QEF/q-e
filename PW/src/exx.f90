@@ -159,17 +159,25 @@ CONTAINS
   !------------------------------------------------------------------------
     
     USE wvfct,        ONLY : ecutwfc
-    
+    USE gvect,        ONLY : ecutrho
+
     IMPLICIT NONE
 
-    IF(ecutfock < 0.0_DP) ecutfock = ecutwfc
+    IF(ecutfock <= 0.0_DP) ecutfock = ecutrho
 
+    IF(ecutfock < ecutwfc) CALL errore('exx_fft_create', 'ecutfock can&
+         &not be smaller than ecutwfc!', 1) 
+
+    ! Initalise the g2r grid that allows us to put the wavefunction
+    ! onto the new (smaller) grid for rho.
     exx_fft_g2r%ecutt=ecutwfc
-    exx_fft_g2r%dual_t=exx_dual
+    exx_fft_g2r%dual_t=ecutfock/ecutwfc
     CALL allocate_fft_custom(exx_fft_g2r)
 
-    exx_fft_r2g%ecutt=ecutfock
-    exx_fft_r2g%dual_t=ecutwfc*exx_dual/ecutfock
+    ! Initalise the r2g grid that we then use when applying the Fock
+    ! operator in our new restricted space.
+    exx_fft_r2g%ecutt=ecutfock/exx_dual
+    exx_fft_r2g%dual_t=exx_dual
     CALL allocate_fft_custom(exx_fft_r2g)
 
   END SUBROUTINE exx_fft_create
