@@ -1009,6 +1009,7 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
     INTEGER          :: ibnd, ik, im , ig, ikq, iq, isym, iqi, ipol
     INTEGER          :: h_ibnd, half_nbnd, ierr, nrxxs
     INTEGER          :: current_ik
+    INTEGER          :: ibnd_loop_start
     REAL(DP) :: x1, x2
     REAL(DP) :: qq, xk_cryst(3), sxk(3), xkq(3), x, q(3)
     ! <LMS> temp array for vcut_spheric
@@ -1131,14 +1132,24 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
           IF (gamma_only) THEN
              half_nbnd = ( nbnd + 1 ) / 2
              h_ibnd = ibnd_start/2
-             DO ibnd=ibnd_start,ibnd_end, 2 !for each band of psi
+             IF(MOD(ibnd_start,2)==0) THEN
+                h_ibnd=h_ibnd-1
+                ibnd_loop_start=ibnd_start-1
+             ELSE
+                ibnd_loop_start=ibnd_start
+             ENDIF
+             DO ibnd=ibnd_loop_start,ibnd_end, 2 !for each band of psi
                 h_ibnd = h_ibnd + 1
-                x1 = x_occupation(ibnd,  ik)
-                IF (ibnd < ibnd_end) THEN
-                   x2 = x_occupation(ibnd + 1,ik)
+                IF( ibnd < ibnd_start ) THEN
+                   x1 = 0.d0
                 ELSE
+                   x1 = x_occupation(ibnd,  ik)
+                ENDIF
+                IF( ibnd == ibnd_end) THEN
                    x2 = 0.d0
-                END IF
+                ELSE
+                   x2 = x_occupation(ibnd+1,  ik)
+                ENDIF
                 IF ( ABS(x1) < 1.d-6 .AND.  ABS(x2) < 1.d-6 ) CYCLE
                 !
                 !loads the phi from file
