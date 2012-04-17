@@ -244,16 +244,21 @@ ENDIF
     !print *,"weight",(-1.0d0*AIMAG(w_T(LR_iteration)))
     IF (resonance_condition) THEN
     !singular matrix, the broadening term dominates, phi' has strong imaginary component
-     !DO ir=1,nrxx
-     ! rho_1_tot_im(ir,:)=rho_1_tot_im(ir,:)+cmplx(rho_1(ir,:),0.0d0,dp)*w_T(LR_iteration)
-     !enddo
-     CALL zaxpy(dfftp%nnr, w_T(LR_iteration),cmplx(rho_1(:,1),0.0d0,dp),1,rho_1_tot_im(:,1),1) !spin not implemented
+
+       ! Using BLAS here probably results in cmplx(rho_1(:,1),0.0d0,dp) being copied into a new array
+       ! due to the call being to an F77 funtion. 
+       !CALL zaxpy(dfftp%nnr, w_T(LR_iteration),cmplx(rho_1(:,1),0.0d0,dp),1,rho_1_tot_im(:,1),1) !spin not implemented
+       
+       rho_1_tot_im(1:dfftp%nnr,:) = rho_1_tot_im(1:dfftp%nnr,:) &
+            & +  w_T(LR_iteration) * cmplx(rho_1(1:dfftp%nnr,:),0.0d0,dp) 
+       
     ELSE
     !not at resonance, the imaginary part is neglected ,these are the non-absorbing oscillations
-     !DO ir=1,nrxx
-     ! rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*dble(w_T(LR_iteration))
-     !enddo
-     CALL daxpy(dfftp%nnr, dble(w_T(LR_iteration)),rho_1(:,1),1,rho_1_tot(:,1),1) !spin not implemented
+
+       !CALL daxpy(dfftp%nnr, dble(w_T(LR_iteration)),rho_1(:,1),1,rho_1_tot(:,1),1) !spin not implemented
+       rho_1_tot(1:dfftp%nnr,:) = rho_1_tot(1:dfftp%nnr,:) &
+            & +  dble( w_T(LR_iteration) ) * rho_1(1:dfftp%nnr,:)
+
     ENDIF
   !
   ENDIF

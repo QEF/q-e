@@ -260,8 +260,8 @@ CONTAINS
 
     !OBM, lets try BLAS
 
-    CALL zcopy(size_evc*2,evc1(:,:,:,:),1,evc1_old(:,:,:,:),1) !evc1_old = evc1
-    CALL zcopy(size_evc*2,evc1_new(:,:,:,:),1,evc1(:,:,:,:),1) !evc1 = evc1_new
+    CALL zcopy(size_evc*2,evc1(1,1,1,1),1,evc1_old(1,1,1,1),1) !evc1_old = evc1
+    CALL zcopy(size_evc*2,evc1_new(1,1,1,1),1,evc1(1,1,1,1),1) !evc1 = evc1_new
     !
     CALL zscal(size_evc,cmplx(1.0d0/beta,0.0d0,kind=dp),evc1(1,1,1,1),1)
     CALL zscal(size_evc,cmplx(1.0d0/gamma,0.0d0,kind=dp),evc1(1,1,1,2),1)
@@ -283,8 +283,8 @@ CONTAINS
     !
     ELSE
        CALL lr_apply_liouvillian(evc1(1,1,1,1),evc1_new(1,1,1,1),sevc1_new(1,1,1,1),.true.)
-       CALL zcopy(size_evc,evc1(:,:,:,1),1,evc1(:,:,:,2),1) !evc1(,1) = evc1(,2)
-       CALL zcopy(size_evc,evc1_new(:,:,:,1),1,evc1_new(:,:,:,2),1) !evc1_new(,1) = evc1_new(,2)
+       CALL zcopy(size_evc,evc1(1,1,1,1),1,evc1(1,1,1,2),1) !evc1(,1) = evc1(,2)
+       CALL zcopy(size_evc,evc1_new(1,1,1,1),1,evc1_new(1,1,1,2),1) !evc1_new(,1) = evc1_new(,2)
 
     ENDIF
     !
@@ -293,8 +293,8 @@ CONTAINS
     ! where f(p(i)) or f(q(i)) are calculated by lr_apply_liovillian
     !
     !OBM BLAS
-    CALL zaxpy(size_evc,-cmplx(gamma,0.0d0,kind=dp),evc1_old(:,:,:,1),1,evc1_new(:,:,:,1),1)
-    CALL zaxpy(size_evc,-cmplx(beta,0.0d0,kind=dp),evc1_old(:,:,:,2),1,evc1_new(:,:,:,2),1)
+    CALL zaxpy(size_evc,-cmplx(gamma,0.0d0,kind=dp),evc1_old(1,1,1,1),1,evc1_new(1,1,1,1),1)
+    CALL zaxpy(size_evc,-CMPLX(beta,0.0d0,kind=dp),evc1_old(1,1,1,2),1,evc1_new(1,1,1,2),1)
     !
     CALL stop_clock('one_step')
     !
