@@ -25,3 +25,6 @@ LD1_URL=http://qe-forge.org/frs/download.php/.../$(LD1).tar.gz
 XSPECTRA=xspectra
 XSPECTRA_URL=http://qe-forge.org/frs/download.php/.../$(XSPECTRA).tar.gz
 #
+PWCOND=pwcond
+PWCOND_URL=http://qe-forge.org/frs/download.php/.../$(PWCOND).tar.gz
+#

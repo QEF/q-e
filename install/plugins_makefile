@@ -52,6 +52,25 @@ uncompress-xspectra: touch-dummy
 	(gzip -dc ../archive/$(XSPECTRA).tar.gz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s $(XSPECTRA) XSpectra) ; fi 
 	touch uncompress-xspectra
+##########################################################
+# PWCOND
+###########################################################
+pwcond:  uncompress-pwcond
+	if test -d ../PWCOND; then \
+	cd ../PWCOND; $(MAKE) all; cd ../bin; ln -fs ../PWCOND/src/pwcond.x . ; fi
+	touch make-pwcond
+uncompress-pwcond: touch-dummy
+	@(if test ! -e ../archive/$(PWCOND).tar.gz && test ! -d ../PWCOND ; then \
+	wget -O ../archive/$(PWCOND).tar.gz $(PWCOND_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	curl -o ../archive/$(PWCOND).tar.gz $(PWCOND_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	echo "unable to download pwcond. Test whether curl or wget is installed in your computer." ; \
+	fi ; fi ; fi) 
+	if test ! -d ../PWCOND; then \
+	(gzip -dc ../archive/$(PWCOND).tar.gz | (cd ../ ; tar -xvf -)) ; \
+	(cd ../ ; ln -s $(PWCOND) PWCOND) ; fi 
+	touch uncompress-pwcond
 
 ##########################################################
 # GIPAW
@@ -290,7 +309,7 @@ ld1_clean:
 	rm -rf ./make-ld1 
 
 ld1_veryclean: ld1_clean
-# do we eliminate also the dirs?
+# dir is not deleted for compatibility with the repository
 
 xspectra_clean:
 	if test -d ../XSpectra; then (cd ../XSpectra; \
@@ -299,7 +318,16 @@ xspectra_clean:
 	rm -rf ./make-xspectra
 
 xspectra_veryclean: xspectra_clean
-# do we eliminate also the dirs?
+# dir is not deleted for compatibility with the repository
+
+pwcond_clean:
+	if test -d ../PWCOND; then (cd ../PWCOND; \
+	$(MAKE) clean); fi
+	rm -f ../bin/pwcond.x
+	rm -rf ./make-pwcond
+
+pwcond_veryclean: pwcond_clean
+# dir is not deleted for compatibility with the repository
 
 gipaw_clean:
 	if test -d ../GIPAW; then (cd ../GIPAW; \

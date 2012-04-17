@@ -193,9 +193,9 @@ links : bindir
 clean :
 	touch make.sys 
 	for dir in \
-		CPV PHonon/D3 PHonon/Gamma Modules PHonon/PH PP PW PWCOND \
+		CPV PHonon/D3 PHonon/Gamma Modules PHonon/PH PP PW \
 		NEB VdW ACFDT EE \
-		clib flib pwtools upftools iotk GIPAW XSpectra \
+		clib flib pwtools upftools iotk GIPAW \
 		dev-tools GWW extlibs TDDFPT Environ EPW \
 	; do \
 	    if test -d $$dir ; then \
