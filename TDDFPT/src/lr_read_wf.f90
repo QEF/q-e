@@ -6,7 +6,6 @@ SUBROUTINE lr_read_wf()
   !---------------------------------------------------------------------
   !
   ! Modified by Osman Baris Malcioglu (2009)
-#include "f_defs.h"
   !
   USE io_global,            ONLY : stdout
   USE klist,                ONLY : nks, xk

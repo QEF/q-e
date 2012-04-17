@@ -4,7 +4,6 @@
     !  S * d0psi for US case
     !
     ! Modified by Osman Baris Malcioglu (2009)
-#include "f_defs.h"
     !
     USE klist,                ONLY : nks,xk
     USE lr_variables,         ONLY : n_ipol!, real_space

@@ -10,7 +10,6 @@ PROGRAM lr_main
   ! ... spectrum version
   !---------------------------------------------------------------------
   !
-#include "f_defs.h"
   !
   USE lr_lanczos,            ONLY : one_lanczos_step
   USE io_global,             ONLY : stdout

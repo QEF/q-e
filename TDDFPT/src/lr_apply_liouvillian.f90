@@ -11,7 +11,6 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   !---------------------------------------------------------------------
   !
   ! Modified by Osman Baris Malcioglu in 2009
-#include "f_defs.h"
   !
   USE ions_base,            ONLY : ityp, nat, ntyp=>nsp
   USE cell_base,            ONLY : tpiba2
@@ -90,7 +89,8 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
        !
        !call lr_dv_of_drho(dvrs)
        ALLOCATE( dvrs_temp(dfftp%nnr, nspin) )
-       dvrs_temp=cmplx(dvrs,0.0d0)         !OBM: This memory copy was hidden in lr_dv_of_drho, can it be avoided?
+       dvrs_temp = CMPLX( dvrs, 0.0d0, kind=dp )         
+       ! OBM: This memory copy was hidden in lr_dv_of_drho, can it be avoided?
        DEALLOCATE ( dvrs )
        CALL dv_of_drho(0,dvrs_temp,.false.)
        ALLOCATE ( dvrs(dfftp%nnr, nspin) ) !SJB Worth getting rid of this memory bottle neck for the moment.

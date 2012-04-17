@@ -5,7 +5,6 @@
 ! Modified by Osman Baris Malcioglu (2009)
 SUBROUTINE lr_normalise(evc1,norm)
   !
-#include "f_defs.h"
   !
   USE gvect,                ONLY : gstart
   USE cell_base,            ONLY : omega

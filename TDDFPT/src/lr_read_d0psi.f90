@@ -6,7 +6,6 @@ SUBROUTINE lr_read_d0psi()
   !---------------------------------------------------------------------
   ! Modified by Osman Baris Malcioglu (2009)
   !
-#include "f_defs.h"
   !
   USE klist,                ONLY : nks,degauss
   USE io_files,             ONLY : prefix, diropn, tmp_dir, wfc_dir

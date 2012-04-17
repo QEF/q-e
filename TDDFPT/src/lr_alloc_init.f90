@@ -4,7 +4,6 @@ SUBROUTINE lr_alloc_init()
   ! ... allocates and initialises linear response variables
   !---------------------------------------------------------------------
   ! Modified by Osman Baris Malcioglu in 2009
-#include "f_defs.h"
   !
   USE fft_base,          ONLY : dfftp
   USE fft_base,          ONLY : dffts

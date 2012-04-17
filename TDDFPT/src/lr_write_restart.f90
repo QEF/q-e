@@ -6,7 +6,6 @@ SUBROUTINE lr_write_restart()
   !---------------------------------------------------------------------
   !
   ! Modified by Osman Baris Malcioglu (2009)
-#include "f_defs.h"
   !
   USE io_files,             ONLY : tmp_dir, prefix, diropn
   USE lr_variables,         ONLY : beta_store, gamma_store, zeta_store, norm0, &

@@ -2,7 +2,6 @@
 !OBM This subroutine initialises stuff related to open shell
 ! calculations (kpoint > 1 degauss/=0 or nspin/=1)
 !-------------------------------------------------------------
-#include "f_defs.h"
 SUBROUTINE lr_init_nfo()
 !
 !Created by Osman Baris Malcioglu (2009)

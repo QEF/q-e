@@ -5,7 +5,6 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   !---------------------------------------------------------------------
   !
   ! Modified by Osman Baris Malcioglu (2009)
-#include "f_defs.h"
   !
   USE io_global,            ONLY : stdout, ionode_id
   USE control_flags,                ONLY : gamma_only

@@ -14,7 +14,6 @@ SUBROUTINE bcast_lr_input
   !
   ! Modified by Osman Baris Malcioglu in 2009
 #ifdef __MPI
-#include "f_defs.h"
 
   USE lr_variables
   USE realus,              ONLY: real_space, real_space_debug

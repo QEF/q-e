@@ -5,7 +5,6 @@ SUBROUTINE lr_dealloc()
   !---------------------------------------------------------------------
   !
   ! Modified by Osman Baris Malcioglu (2009)
-#include "f_defs.h"
   !
   USE lr_variables
   USE uspp,           ONLY : nkb

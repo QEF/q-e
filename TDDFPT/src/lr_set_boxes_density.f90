@@ -7,7 +7,6 @@ SUBROUTINE lr_set_boxes_density()
   !---------------------------------------------------------------------
   !
   ! Modified by Osman Baris Malcioglu (2009)
-#include "f_defs.h"
   !
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : dp

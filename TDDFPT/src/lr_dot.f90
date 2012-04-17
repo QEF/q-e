@@ -10,7 +10,6 @@ FUNCTION lr_dot(x,y)
   ! ... call lr_dot(npw_k(ik),evc1(1,1,ik,1),1,evc1(1,1,ik,2),1)
   !---------------------------------------------------------------------
   ! Modified by Osman Baris Malcioglu (2009)
-#include "f_defs.h"
   !
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : dp

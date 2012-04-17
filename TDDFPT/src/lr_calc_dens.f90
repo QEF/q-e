@@ -11,7 +11,6 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   ! in case of uspps becsum is also calculated here
   ! in case of charge response calculation, the rho_tot is calculated here
 
-#include "f_defs.h"
   !
   USE ions_base,                    ONLY : ityp,nat,ntyp=>nsp
   USE cell_base,                    ONLY : omega

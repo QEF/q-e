@@ -7,7 +7,6 @@ SUBROUTINE lr_diagonalise(iter)
   ! ... LAPACK/BLAS routines
   !---------------------------------------------------------------------
   !
-#include "f_defs.h"
   !
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : dp
@@ -34,7 +33,6 @@ END SUBROUTINE lr_diagonalise
 !-----------------------------------------------------------------------
 SUBROUTINE lr_diagonalise_matrix(coeff_mat,dimen)
   !
-#include "f_defs.h"
   !
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : dp
@@ -128,7 +126,6 @@ SUBROUTINE lr_build_matrix_spectrum(coeff_mat,iter)
   ! ... version for non-hermitian lanczos scheme
   !---------------------------------------------------------------------
   !
-#include "f_defs.h"
   !
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : dp

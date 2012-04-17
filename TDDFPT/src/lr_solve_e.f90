@@ -21,7 +21,7 @@ SUBROUTINE lr_solve_e
   !-----------------------------------------------------------------------
   !
   ! Modified by Osman Baris Malcioglu (2009)
-#include "f_defs.h"
+  !
   USE kinds,                ONLY : dp
   USE gvect,                ONLY : gstart
   USE io_global,            ONLY : stdout
