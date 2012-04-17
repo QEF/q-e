@@ -22,3 +22,6 @@ PLUMED_URL=http://qe-forge.org/frs/download.php/134/$(PLUMED).tar.gz
 LD1=atomic
 LD1_URL=http://qe-forge.org/frs/download.php/.../$(LD1).tar.gz
 #
+XSPECTRA=xspectra
+XSPECTRA_URL=http://qe-forge.org/frs/download.php/.../$(XSPECTRA).tar.gz
+#

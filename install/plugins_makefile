@@ -34,6 +34,26 @@ uncompress-ld1: touch-dummy
 	(cd ../ ; ln -s $(LD1) atomic) ; fi 
 	touch uncompress-ld1
 ##########################################################
+# XSpectra
+###########################################################
+xspectra:  uncompress-xspectra
+	if test -d ../XSpectra; then \
+	cd ../XSpectra; $(MAKE) all; cd ../bin; ln -fs ../XSpectra/src/xspectra.x . ; fi
+	touch make-xspectra
+uncompress-xspectra: touch-dummy
+	@(if test ! -e ../archive/$(XSPECTRA).tar.gz && test ! -d ../XSpectra ; then \
+	wget -O ../archive/$(XSPECTRA).tar.gz $(XSPECTRA_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	curl -o ../archive/$(XSPECTRA).tar.gz $(XSPECTRA_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	echo "unable to download xspectra. Test whether curl or wget is installed in your computer." ; \
+	fi ; fi ; fi) 
+	if test ! -d ../XSpectra; then \
+	(gzip -dc ../archive/$(XSPECTRA).tar.gz | (cd ../ ; tar -xvf -)) ; \
+	(cd ../ ; ln -s $(XSPECTRA) XSpectra) ; fi 
+	touch uncompress-xspectra
+
+##########################################################
 # GIPAW
 ###########################################################
 gipaw:  uncompress-gipaw configure-gipaw
@@ -270,6 +290,15 @@ ld1_clean:
 	rm -rf ./make-ld1 
 
 ld1_veryclean: ld1_clean
+# do we eliminate also the dirs?
+
+xspectra_clean:
+	if test -d ../XSpectra; then (cd ../XSpectra; \
+	$(MAKE) clean); fi
+	rm -f ../bin/xspectra.x
+	rm -rf ./make-xspectra
+
+xspectra_veryclean: xspectra_clean
 # do we eliminate also the dirs?
 
 gipaw_clean:

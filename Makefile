@@ -66,9 +66,7 @@ pp : bindir mods libs pw
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 pwcond : bindir mods libs pw pp
-	if test -d PWCOND ; then \
-	( cd PWCOND ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 vdw : bindir mods libs pw ph pp
 	if test -d VdW ; then \
@@ -105,9 +103,7 @@ pw_export : libiotk bindir mods libs pw
 	else $(MAKE) $(MFLAGS) TLDEPS= pw_export.x ; fi ) ; fi
 
 xspectra : bindir mods libs pw
-	if test -d XSpectra ; then \
-	( cd XSpectra ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 pwall : pw neb ph pp pwcond vdw acfdt
 all   : pwall cp ld1 upf gww tddfpt
@@ -199,7 +195,7 @@ clean :
 	for dir in \
 		CPV PHonon/D3 PHonon/Gamma Modules PHonon/PH PP PW PWCOND \
 		NEB VdW ACFDT EE \
-		atomic/src clib flib pwtools upftools iotk GIPAW XSpectra \
+		clib flib pwtools upftools iotk GIPAW XSpectra \
 		dev-tools GWW extlibs TDDFPT Environ EPW \
 	; do \
 	    if test -d $$dir ; then \
