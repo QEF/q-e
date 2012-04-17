@@ -285,7 +285,6 @@ CONTAINS
        CALL lr_apply_liouvillian(evc1(1,1,1,1),evc1_new(1,1,1,1),sevc1_new(1,1,1,1),.true.)
        CALL zcopy(size_evc,evc1(:,:,:,1),1,evc1(:,:,:,2),1) !evc1(,1) = evc1(,2)
        CALL zcopy(size_evc,evc1_new(:,:,:,1),1,evc1_new(:,:,:,2),1) !evc1_new(,1) = evc1_new(,2)
-       CALL zcopy(size_evc,evc1_new(:,:,:,1),1,evc1_new(:,:,:,2),1) !evc1_new(,1) = evc1_new(,2)
 
     ENDIF
     !
