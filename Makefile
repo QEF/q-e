@@ -92,9 +92,7 @@ gww   : bindir pw ph
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 ld1 : bindir liblapack libblas mods libs
-	if test -d atomic ; then \
-	( cd atomic ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 upf : mods libs
 	if test -d upftools ; then \

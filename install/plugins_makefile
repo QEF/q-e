@@ -15,6 +15,25 @@ include plugins_list
 EXTLIBS=liblapack libblas libiotk
 
 ##########################################################
+# LD1
+###########################################################
+ld1:  uncompress-ld1
+	if test -d ../atomic; then \
+	cd ../atomic; $(MAKE) all; cd ../bin; ln -fs ../atomic/src/ld1.x . ; fi
+	touch make-ld1
+uncompress-ld1: touch-dummy
+	@(if test ! -e ../archive/$(LD1).tar.gz && test ! -d ../atomic ; then \
+	wget -O ../archive/$(LD1).tar.gz $(LD1_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	curl -o ../archive/$(LD1).tar.gz $(LD1_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	echo "unable to download ld1. Test whether curl or wget is installed in your computer." ; \
+	fi ; fi ; fi) 
+	if test ! -d ../atomic; then \
+	(gzip -dc ../archive/$(LD1).tar.gz | (cd ../ ; tar -xvf -)) ; \
+	(cd ../ ; ln -s $(LD1) atomic) ; fi 
+	touch uncompress-ld1
+##########################################################
 # GIPAW
 ###########################################################
 gipaw:  uncompress-gipaw configure-gipaw
@@ -244,15 +263,26 @@ extlibs:
 # cleaning
 ###################################
 # each lib independently
+ld1_clean:
+	if test -d ../atomic; then (cd ../atomic; \
+	$(MAKE) clean); fi
+	rm -f ../bin/ld1.x
+	rm -rf ./make-ld1 
+
+ld1_veryclean: ld1_clean
+# do we eliminate also the dirs?
+
 gipaw_clean:
 	if test -d ../GIPAW; then (cd ../GIPAW; \
 	$(MAKE) clean); fi
 	rm -f ../bin/gipaw.x
 	rm -rf ./make-gipaw 
+
 gipaw_veryclean: gipaw_clean
 	if test -d ../GIPAW; then (cd ../GIPAW; \
 	rm -f config.log config.status ); fi
 	rm -rf ./configure-gipaw
+
 epw_clean:
 	if test -d ../EPW; then (cd ../EPW; \
 	$(MAKE) clean); fi
