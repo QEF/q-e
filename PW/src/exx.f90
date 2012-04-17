@@ -988,7 +988,7 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
          & nimage, nproc_image, ibnd_start, ibnd_end, mpime, inter_bgrp_comm, intra_bgrp_comm,&
          & my_bgrp_id, nbgrp
     USE mp,        ONLY : mp_sum, mp_barrier
-    USE wvfct,        ONLY : ecutwfc
+    USE gvect,        ONLY : ecutrho
     USE wavefunctions_module, ONLY : psic
 
     IMPLICIT NONE
@@ -1168,7 +1168,7 @@ call flush_unit(stdout)
               rhoc(:)=(0.d0,0.d0)
               rhoc(1:nrxxs)=CONJG(tempphic(1:nrxxs))*temppsic(1:nrxxs) / omega
               !brings it to G-space
-              IF (ecutfock == ecutwfc) THEN
+              IF (ecutfock == ecutrho) THEN
                  CALL fwfft ('Custom', rhoc, exx_fft_r2g%dfftt)
                  vc(:) = ( 0.D0, 0.D0 )
                  vc(exx_fft_r2g%nlt(igkt(1:exx_fft_r2g%ngmt)))  =&
@@ -1463,7 +1463,7 @@ END SUBROUTINE g2_convolution
     USE mp,        ONLY : mp_sum
     use fft_base,  ONLY : dffts
     use fft_interfaces, ONLY : fwfft, invfft
-    USE wvfct,     ONLY : ecutwfc
+    USE gvect,     ONLY : ecutrho
 
     IMPLICIT NONE
     REAL (DP)   :: exxenergy2,  energy
@@ -1609,7 +1609,7 @@ END SUBROUTINE g2_convolution
                    !calculate rho in real space
                    rhoc(:)=(0.d0, 0.d0)
                    rhoc(1:nrxxs)=CONJG(tempphic(1:nrxxs))*temppsic(1:nrxxs) / omega
-                   IF (ecutfock == ecutwfc) THEN
+                   IF (ecutfock == ecutrho) THEN
                       !brings it to G-space
                       CALL fwfft ('Custom', rhoc, exx_fft_r2g%dfftt)
                       vc = 0.D0
