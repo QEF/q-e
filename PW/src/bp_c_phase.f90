@@ -221,6 +221,7 @@ SUBROUTINE c_phase
    INTEGER :: npw1
    INTEGER :: npw0
    INTEGER :: nstring
+   INTEGER :: nbnd_occ
    INTEGER :: nt
    LOGICAL :: lodd
    LOGICAL, ALLOCATABLE :: l_cal(:) ! flag for occupied/empty states
@@ -426,12 +427,14 @@ SUBROUTINE c_phase
    DO is=1,nspin 
 
       ! l_cal(n) = .true./.false. if n-th state is occupied/empty
+      nbnd_occ=0
       DO nb = 1, nbnd
          IF ( nspin == 2 .AND. tfixed_occ) THEN
             l_cal(nb) = ( f_inp(nb,is) /= 0.0_dp )
          ELSE
             l_cal(nb) = ( nb <= NINT ( nelec/2.0_dp ) )
          ENDIF
+         IF (l_cal(nb)) nbnd_occ = nbnd_occ + 1
       END DO
 
 !     --- Start loop over orthogonal k-points ---
@@ -487,7 +490,7 @@ SUBROUTINE c_phase
                DO nb=1,nbnd
                   DO mb=1,nbnd
                      IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
-                        IF ( nb == mb )  mat(nb,mb)=1.d0
+                        IF ( nb == mb )  mat(nb,mb)=(1.d0, 0.d0)
                      ELSE
                         aux(:) = (0.d0, 0.d0)
                         aux0(:)= (0.d0, 0.d0)
@@ -596,9 +599,8 @@ SUBROUTINE c_phase
 
 !        --- Calculate the localization for current kort ---
          zeta_mod= DBLE(CONJG(zeta)*zeta)
-         ! loc_k is incorrect unless nbnd = number of occupied states
-         ! not used anyway
-         loc_k(istring)= - (nppstr-1) / gvec**2 / nbnd *log(zeta_mod)
+
+         loc_k(istring)= - (nppstr-1) / gvec**2 / nbnd_occ *log(zeta_mod)
 
 !     --- End loop over orthogonal k-points ---
       END DO
