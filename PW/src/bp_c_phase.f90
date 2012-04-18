@@ -532,12 +532,13 @@ SUBROUTINE c_phase
                                        WRITE( stdout,*) ' i=',i,'   G=', &
                                             g(1,i),g(2,i),g(3,i)
                                     ENDDO
-                                    STOP
+                                    CALL errore('c_phase','wrong G',1)
                                  ENDIF
                               ELSE 
                                  WRITE( stdout,*) ' |gtr| > gcutm  for gtr=', &
                                       gtr(1),gtr(2),gtr(3) 
-                                 STOP
+                                 CALL errore('c_phase',&
+                                        '|gtr| should be smaller than gcutm',1)
                               END IF
                               aux(ng)=evc(ig,mb)
                            ENDIF
