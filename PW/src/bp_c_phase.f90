@@ -5,6 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! April 2012, A. Dal Corso: parallelization for gdir /= 3 imported
+!                           from c_phase_field.f90
+!
 !##############################################################################!
 !#                                                                            #!
 !#                                                                            #!
@@ -156,7 +159,7 @@ SUBROUTINE c_phase
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE constants,            ONLY : pi, tpi
-   USE gvect,                ONLY : ngm, g, gcutm
+   USE gvect,                ONLY : ngm, g, gcutm, ngm_g, ig_l2g
    USE fft_base,             ONLY : dfftp
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
@@ -164,9 +167,9 @@ SUBROUTINE c_phase
    USE klist,                ONLY : nelec, degauss, nks, xk, wk
    USE wvfct,                ONLY : npwx, npw, nbnd, ecutwfc
    USE wavefunctions_module, ONLY : evc
-   USE bp,                   ONLY : gdir, nppstr
+   USE bp,                   ONLY : gdir, nppstr, mapgm_global
    USE becmod,               ONLY : calbec
-   USE mp_global,            ONLY : intra_bgrp_comm
+   USE mp_global,            ONLY : intra_bgrp_comm, nproc_bgrp
    USE mp,                   ONLY : mp_sum
 
 !  --- Avoid implicit definitions ---
@@ -223,7 +226,9 @@ SUBROUTINE c_phase
    INTEGER :: nstring
    INTEGER :: nbnd_occ
    INTEGER :: nt
+   INTEGER, ALLOCATABLE :: map_g(:)
    LOGICAL :: lodd
+   LOGICAL :: l_para
    LOGICAL, ALLOCATABLE :: l_cal(:) ! flag for occupied/empty states
    REAL(DP) :: dk(3)
    REAL(DP) :: dkmod
@@ -254,6 +259,7 @@ SUBROUTINE c_phase
    REAL(DP) :: ylm_dk(lmaxq*lmaxq)
    REAL(DP) :: zeta_mod
    COMPLEX(DP), ALLOCATABLE :: aux(:)
+   COMPLEX(DP), ALLOCATABLE :: aux_g(:)
    COMPLEX(DP), ALLOCATABLE :: aux0(:)
    COMPLEX(DP) :: becp0(nkb,nbnd)
    COMPLEX(DP) :: becp_bp(nkb,nbnd)
@@ -279,6 +285,13 @@ SUBROUTINE c_phase
    ALLOCATE (psi(npwx,nbnd))
    ALLOCATE (aux(ngm))
    ALLOCATE (aux0(ngm))
+
+   l_para= (nproc_bgrp > 1 .AND. gdir /= 3)
+   IF (l_para) THEN
+      ALLOCATE ( aux_g(ngm_g) )
+   ELSE
+      ALLOCATE ( map_g(ngm) )
+   ENDIF
 
 !  --- Write header ---
    WRITE( stdout,"(/,/,/,15X,50('='))")
@@ -484,6 +497,54 @@ SUBROUTINE c_phase
                   endif
                ENDIF
 
+               IF (kpar == nppstr .AND. .NOT. l_para) THEN
+                  map_g(:) = 0
+                  DO ig=1,npw1
+!                          --- If k'=k+G_o, the relation psi_k+G_o (G-G_o) ---
+!                          --- = psi_k(G) is used, gpar=G_o, gtr = G-G_o ---
+
+                     gtr(1)=g(1,igk1(ig)) - gpar(1)
+                     gtr(2)=g(2,igk1(ig)) - gpar(2)
+                     gtr(3)=g(3,igk1(ig)) - gpar(3)
+!                          --- Find crystal coordinates of gtr, n1,n2,n3 ---
+!                          --- and the position ng in the ngm array ---
+
+                     IF (gtr(1)**2+gtr(2)**2+gtr(3)**2 <= gcutm) THEN
+                        n1=NINT(gtr(1)*at(1,1)+gtr(2)*at(2,1) &
+                             +gtr(3)*at(3,1))
+                        n2=NINT(gtr(1)*at(1,2)+gtr(2)*at(2,2) &
+                             +gtr(3)*at(3,2))
+                        n3=NINT(gtr(1)*at(1,3)+gtr(2)*at(2,3) &
+                             +gtr(3)*at(3,3))
+                        ng=ln(n1,n2,n3)
+
+                        IF ( (ABS(g(1,ng)-gtr(1)) > eps) .OR. &
+                             (ABS(g(2,ng)-gtr(2)) > eps) .OR. &
+                             (ABS(g(3,ng)-gtr(3)) > eps) ) THEN
+                           WRITE(6,*) ' error: translated G=', &
+                                gtr(1),gtr(2),gtr(3), &
+                                &     ' with crystal coordinates',n1,n2,n3, &
+                                &     ' corresponds to ng=',ng,' but G(ng)=', &
+                                &     g(1,ng),g(2,ng),g(3,ng)
+                           WRITE(6,*) ' probably because G_par is NOT', &
+                                &    ' a reciprocal lattice vector '
+                           WRITE(6,*) ' Possible choices as smallest ', &
+                                ' G_par:'
+                           DO i=1,50
+                              WRITE(6,*) ' i=',i,'   G=', &
+                                   g(1,i),g(2,i),g(3,i)
+                           ENDDO
+                           CALL errore('c_phase','wrong g',1)
+                        ENDIF
+                     ELSE
+                        WRITE(6,*) ' |gtr| > gcutm  for gtr=', &
+                             gtr(1),gtr(2),gtr(3)
+                        CALL errore('c_phase','wrong gtr',1)
+                     END IF
+                     map_g(ig)=ng
+                  END DO
+               END IF
+
 !              --- Matrix elements calculation ---
 
                mat(:,:) = (0.d0, 0.d0)
@@ -497,52 +558,28 @@ SUBROUTINE c_phase
                         DO ig=1,npw0
                            aux0(igk0(ig))=psi(ig,nb)
                         END DO
-                        DO ig=1,npw1
-                           IF (kpar /= nppstr) THEN
+                        IF (kpar /= nppstr) THEN
+                           DO ig=1,npw1
                               aux(igk1(ig))=evc(ig,mb)
-                           ELSE
-!                             --- If k'=k+G_o, the relation psi_k+G_o (G-G_o) ---
-!                             --- = psi_k(G) is used, gpar=G_o, gtr = G-G_o ---
-                              gtr(1)=g(1,igk1(ig))-gpar(1)
-                              gtr(2)=g(2,igk1(ig))-gpar(2) 
-                              gtr(3)=g(3,igk1(ig))-gpar(3) 
-!                             --- Find crystal coordinates of gtr, n1,n2,n3 ---
-!                             --- and the position ng in the ngm array ---
-                              IF (gtr(1)**2+gtr(2)**2+gtr(3)**2 <= gcutm) THEN
-                                 n1=NINT(gtr(1)*at(1,1)+gtr(2)*at(2,1) &
-                                        +gtr(3)*at(3,1))
-                                 n2=NINT(gtr(1)*at(1,2)+gtr(2)*at(2,2) &
-                                        +gtr(3)*at(3,2))
-                                 n3=NINT(gtr(1)*at(1,3)+gtr(2)*at(2,3) &
-                                        +gtr(3)*at(3,3))
-                                 ng=ln(n1,n2,n3) 
-                                 IF ((ABS(g(1,ng)-gtr(1)) > eps) .OR. &
-                                     (ABS(g(2,ng)-gtr(2)) > eps) .OR. &
-                                     (ABS(g(3,ng)-gtr(3)) > eps)) THEN
-                                    WRITE( stdout,*) ' error: translated G=', &
-                                         gtr(1),gtr(2),gtr(3), &
-                                         ' with crystal coordinates',n1,n2,n3, &
-                                         ' corresponds to ng=',ng,' but G(ng)=', &
-                                         g(1,ng),g(2,ng),g(3,ng)
-                                    WRITE( stdout,*) ' probably because G_par is NOT', &
-                                               ' a reciprocal lattice vector '
-                                    WRITE( stdout,*) ' Possible choices as smallest ', &
-                                               ' G_par:'
-                                    DO i=1,50
-                                       WRITE( stdout,*) ' i=',i,'   G=', &
-                                            g(1,i),g(2,i),g(3,i)
-                                    ENDDO
-                                    CALL errore('c_phase','wrong G',1)
-                                 ENDIF
-                              ELSE 
-                                 WRITE( stdout,*) ' |gtr| > gcutm  for gtr=', &
-                                      gtr(1),gtr(2),gtr(3) 
-                                 CALL errore('c_phase',&
-                                        '|gtr| should be smaller than gcutm',1)
-                              END IF
-                              aux(ng)=evc(ig,mb)
-                           ENDIF
-                        END DO
+                           ENDDO
+                        ELSEIF (.NOT. l_para) THEN
+                           DO ig=1,npw1
+                              aux(map_g(ig))=evc(ig,mb)
+                           ENDDO
+                        ELSE
+!
+!   In this case this processor might not have the G-G_0
+!
+                           aux_g=(0.d0,0.d0)
+                           DO ig=1,npw1
+                              aux_g(mapgm_global(ig_l2g(igk1(ig)),gdir))&
+                                                   =evc(ig,mb)
+                           ENDDO
+                           CALL mp_sum(aux_g(:), intra_bgrp_comm )
+                           DO ig=1,ngm
+                              aux(ig) = aux_g(ig_l2g(ig))
+                           ENDDO
+                        ENDIF
                         mat(nb,mb) = zdotc (ngm,aux0,1,aux,1)
                      end if
                   end do
@@ -869,6 +906,12 @@ SUBROUTINE c_phase
    DEALLOCATE(aux)
    DEALLOCATE(aux0)
    DEALLOCATE(psi)
+   IF (l_para) THEN
+      DEALLOCATE ( aux_g )
+   ELSE
+      DEALLOCATE ( map_g )
+   ENDIF
+
 !------------------------------------------------------------------------------!
 
 END SUBROUTINE c_phase
