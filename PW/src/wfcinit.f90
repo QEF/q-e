@@ -125,7 +125,7 @@ SUBROUTINE wfcinit()
      !
      ! ... write  starting wavefunctions to file
      !
-     IF ( nks > 1 .OR. (io_level > 1) ) &
+     IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) &
          CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
   END DO
