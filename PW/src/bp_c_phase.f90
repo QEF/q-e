@@ -168,7 +168,8 @@ SUBROUTINE c_phase
    USE wvfct,                ONLY : npwx, npw, nbnd, ecutwfc
    USE wavefunctions_module, ONLY : evc
    USE bp,                   ONLY : gdir, nppstr, mapgm_global
-   USE becmod,               ONLY : calbec
+   USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
+                                    deallocate_bec_type
    USE mp_global,            ONLY : intra_bgrp_comm, nproc_bgrp
    USE mp,                   ONLY : mp_sum
 
@@ -261,8 +262,8 @@ SUBROUTINE c_phase
    COMPLEX(DP), ALLOCATABLE :: aux(:)
    COMPLEX(DP), ALLOCATABLE :: aux_g(:)
    COMPLEX(DP), ALLOCATABLE :: aux0(:)
-   COMPLEX(DP) :: becp0(nkb,nbnd)
-   COMPLEX(DP) :: becp_bp(nkb,nbnd)
+   TYPE (bec_type) :: becp0
+   TYPE (bec_type) :: becp_bp
    COMPLEX(DP) :: cdet(2)
    COMPLEX(DP) :: cdwork(nbnd)
    COMPLEX(DP) :: cave
@@ -285,6 +286,10 @@ SUBROUTINE c_phase
    ALLOCATE (psi(npwx,nbnd))
    ALLOCATE (aux(ngm))
    ALLOCATE (aux0(ngm))
+   IF (okvan) THEN
+      CALL allocate_bec_type ( nkb, nbnd, becp0 )
+      CALL allocate_bec_type ( nkb, nbnd, becp_bp )
+   END IF
 
    l_para= (nproc_bgrp > 1 .AND. gdir /= 3)
    IF (l_para) THEN
@@ -603,7 +608,7 @@ SUBROUTINE c_phase
                               nhjkbm = nh(np)
                               jkb1 = jkb - nhjkb
                               DO j = 1,nhjkbm
-                                 pref = pref+CONJG(becp0(jkb,nb))*becp_bp(jkb1+j,mb) &
+                                 pref = pref+CONJG(becp0%k(jkb,nb))*becp_bp%k(jkb1+j,mb) &
                                       *q_dk(nhjkb,j,np)*struc(na)
                               ENDDO
                            ENDDO
@@ -911,6 +916,11 @@ SUBROUTINE c_phase
    ELSE
       DEALLOCATE ( map_g )
    ENDIF
+   IF (okvan) THEN
+      CALL deallocate_bec_type ( becp0 )
+      CALL deallocate_bec_type ( becp_bp )
+   END IF
+
 
 !------------------------------------------------------------------------------!
 
