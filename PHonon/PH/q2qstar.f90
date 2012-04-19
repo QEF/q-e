@@ -6,7 +6,16 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-
+! A small utility that read the first q from a dynamical matrix file (either xml or plain text),
+! recomputes the system symmetry (starting from the lattice) and generates the star of q.
+!
+! Useful for debugging and for producing the star of the wannier-phonon code output.
+!
+! Syntax:
+!   q2qstar.x filein [fileout]
+!
+! fileout default: filein.rot (old format) or filein.rot.xml (new format)
+!
 !----------------------------------------------------------------------------
 PROGRAM Q2QSTAR
   !----------------------------------------------------------------------------
