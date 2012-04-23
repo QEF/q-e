@@ -13,8 +13,8 @@ W90_URL=http://www.wannier.org/code/$(W90).tar.gz
 SAX=sax-2.0.3
 SAX_URL=http://qe-forge.org/frs/download.php/.../$(SAX).tar.gz
 #
-GIPAW=qe-gipaw-latest
-GIPAW_URL=http://qe-forge.org/frs/download.php/166/$(GIPAW).tar.gz
+GIPAW=qe-gipaw-5.0
+GIPAW_URL=http://qe-forge.org/frs/download.php/198/$(GIPAW).tar.gz
 #
 PLUMED=PLUMED-latest
 PLUMED_URL=http://qe-forge.org/frs/download.php/134/$(PLUMED).tar.gz
