@@ -430,6 +430,70 @@ CONTAINS
 !----------------------------------------------------------------------
   END SUBROUTINE generate_axis 
 !----------------------------------------------------------------------
+!----------------------------------------------------------------------
+   SUBROUTINE generate_distance( nrxx, pos, distance )
+!----------------------------------------------------------------------
+   USE kinds,            ONLY : DP
+   USE cell_base,        ONLY : at, bg, alat
+   USE fft_base,         ONLY : dfftp
+   USE mp_global,        ONLY : me_bgrp, intra_bgrp_comm
+  !
+  INTEGER, INTENT(IN) :: nrxx
+  REAL(DP), INTENT(IN) :: pos(3)
+  REAL(DP), INTENT(OUT) :: distance( 3, dfftp%nnr )
+  !
+  INTEGER  :: i, j, k, ir, ip, index, index0
+  REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
+  REAL(DP) :: r(3), s(3)
+  !
+  inv_nr1 = 1.D0 / DBLE( dfftp%nr1 )
+  inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
+  inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
+  !
+  index0 = 0
+  !
+#if defined (__MPI)
+  DO i = 1, me_bgrp
+    index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
+  END DO
+#endif
+  !
+  DO ir = 1, dfftp%nnr
+     !
+     ! ... three dimensional indexes
+     !
+     index = index0 + ir - 1
+     k     = index / (dfftp%nr1x*dfftp%nr2x)
+     index = index - (dfftp%nr1x*dfftp%nr2x)*k
+     j     = index / dfftp%nr1x
+     index = index - dfftp%nr1x*j
+     i     = index
+     !
+     DO ip = 1, 3
+        r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
+                DBLE( j )*inv_nr2*at(ip,2) + &
+                DBLE( k )*inv_nr3*at(ip,3)
+     END DO
+     !
+     r(:) = r(:) - pos(:)  
+     !
+     ! ... minimum image convention
+     !
+     s(:) = MATMUL( r(:), bg(:,:) )
+     s(:) = s(:) - ANINT(s(:))
+     r(:) = MATMUL( at(:,:), s(:) )
+     !
+     distance(:,ir) = r(:)
+     !
+  END DO
+  !
+  distance = distance * alat
+  !
+  RETURN
+  !
+!----------------------------------------------------------------------
+  END SUBROUTINE generate_distance
+!----------------------------------------------------------------------
 !=----------------------------------------------------------------------=!
 END MODULE generate_function
 !=----------------------------------------------------------------------=!
