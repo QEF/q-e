@@ -227,7 +227,7 @@ wannier_enrg.o \
 
 QEMODS=../../Modules/libqemod.a
 
-TLDEPS=bindir mods libs liblapack libblas libsolvent
+TLDEPS=bindir mods libs liblapack libblas libenviron
 
 LIBOBJS	= ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
 
