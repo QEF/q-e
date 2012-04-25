@@ -201,9 +201,9 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
 #ifdef __ENVIRON
   IF ( do_environ ) THEN 
     corr1_pol = -corr1 + corr1 / env_static_permittivity
-    aa = ( pol_quadrupole - quadrupole ) / 2.D0 +  &
+    aa = ( - pol_quadrupole - quadrupole ) / 2.D0 +  &
          & quadrupole / 2.D0 / env_static_permittivity
-    bb = dipole(1)*pol_dipole(1) + dipole(2)*pol_dipole(2) + & 
+    bb = - dipole(1)*pol_dipole(1) - dipole(2)*pol_dipole(2) - & 
          & dipole(3)*pol_dipole(3) 
     corr2_pol = ( 2.D0 / 3.D0 * pi )*( qq*aa - bb ) / alat**3 * e2
   ENDIF
