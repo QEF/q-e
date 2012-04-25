@@ -405,53 +405,56 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
                ENDIF
 
                mat=(0.d0,0.d0)
-               DO nb=1,nbnd
-                  DO mb=1,nbnd
-                     IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
-                        IF ( nb == mb )  mat(nb,mb)=1.d0
+               DO mb=1,nbnd
+                  IF ( .NOT. l_cal(mb) ) THEN
+                     mat(mb,mb)=(1.d0, 0.d0)
+                  ELSE
+                     aux=(0.d0,0.d0)
+                     IF (kpar /= (nppstr_3d(pdir)+1)) THEN
+                        DO ig=1,npw1
+                           aux(igk1(ig))=psi1(ig,mb)
+                        ENDDO
+                     ELSE IF( .not. l_para) THEN
+                        DO ig=1,npw1
+                           aux(map_g(ig))=psi1(ig,mb)
+                        ENDDO
                      ELSE
-                        aux=(0.d0,0.d0)
-                        aux0=(0.d0,0.d0)
-                        DO ig=1,npw0
-                           aux0(igk0(ig))=psi(ig,nb)
-                        END DO
-                        IF (kpar /= (nppstr_3d(pdir)+1)) THEN
-                           do ig=1,npw1
-                              aux(igk1(ig))=psi1(ig,mb)
-                           enddo
-                        ELSE IF( .not. l_para) THEN
-                           do ig=1,npw1
-                              aux(map_g(ig))=psi1(ig,mb)
-                           enddo
-                        ELSE
 ! allocate global array
-                           allocate(aux_g(ngm_g))
-                           aux_g=(0.d0,0.d0)
+                        ALLOCATE (aux_g(ngm_g))
+                        aux_g=(0.d0,0.d0)
 ! put psi1 on global array
-                           do ig=1,npw1
-                              aux_g(mapgm_global(ig_l2g(igk1(ig)),pdir))=psi1(ig,mb)
-                           enddo
-                           call mp_sum(aux_g(:))
-                           sca=(0.d0,0.d0)
+                        DO ig=1,npw1
+                           aux_g(mapgm_global(ig_l2g(igk1(ig)),pdir))=psi1(ig,mb)
+                        ENDDO
+                        CALL mp_sum(aux_g(:))
+                        DO ig=1,ngm
+                           aux(ig) = aux_g(ig_l2g(ig))
+                        ENDDO
+                        DEALLOCATE (aux_g)
+                     END IF
+                     DO nb=1,nbnd
+                        IF ( l_cal(nb) ) THEN
+                           aux0=(0.d0,0.d0)
+                           DO ig=1,npw0
+                              aux0(igk0(ig))=psi(ig,nb)
+                           END DO
 ! do scalar product
-                           do ig=1,ngm
-                              sca=sca+conjg(aux0(ig))*aux_g(ig_l2g(ig))
-                           enddo
-! do mp_sum
-                           call mp_sum(sca)
-                           mat(nb,mb)=sca
-                           deallocate(aux_g)
-                        ENDIF
-                        
-                        if(kpar /= (nppstr_3d(pdir)+1).or..not. l_para) then
-                           mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)                           
-                           call mp_sum( mat(nb,mb), intra_bgrp_comm )
-                        endif
+                           mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
+                        END IF                           
+                     ENDDO
+                  END IF
+               ENDDO
+!
+               CALL  mp_sum( mat, intra_bgrp_comm )
+
 !                    --- Calculate the augmented part: ij=KB projectors, ---
 !                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
 !                    --- <beta_jR|u_mk'> e^i(k-k')*R =                   ---
 !                    --- also <u_nk|beta_iR>=<psi_nk|beta_iR> = becp^*   ---
-                        if(okvan) then
+               IF (okvan) THEN
+                  DO mb=1,nbnd
+                     DO nb=1,nbnd
+                        IF ( l_cal(mb) .AND. l_cal(nb) ) THEN
                            pref = (0.d0,0.d0)
                            DO jkb=1,nkb
                               nhjkb = nkbtonh(jkb)
@@ -466,10 +469,10 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
                            ENDDO
                       
                            mat(nb,mb) = mat(nb,mb) + pref
-                        endif
-                     ENDIF !on l_cal
+                        ENDIF
+                     ENDDO
                   ENDDO
-               ENDDO
+               ENDIF
 
 !              --- Calculate matrix determinant ---
 

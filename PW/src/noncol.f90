@@ -48,10 +48,9 @@ MODULE noncollin_module
                             !  for constraints
   !
   REAL (DP), ALLOCATABLE :: &
-      factlist(:),         &! weightenig factors for local integrations
+      factlist(:),         &! weight factors for local integrations
       r_loc(:),            &! local integrated charge 
       m_loc(:,:)            ! local integrated magnetization
-     ! mcons(:,:),          ! constrained values for local variables
 
   REAL(DP) ::     &
      ux(3)                 ! versor for deciding signs in gga

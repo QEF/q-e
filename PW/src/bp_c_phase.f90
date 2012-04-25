@@ -553,42 +553,45 @@ SUBROUTINE c_phase
 !              --- Matrix elements calculation ---
 
                mat(:,:) = (0.d0, 0.d0)
-               DO nb=1,nbnd
-                  DO mb=1,nbnd
-                     IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
-                        IF ( nb == mb )  mat(nb,mb)=(1.d0, 0.d0)
+               DO mb=1,nbnd
+                  IF ( .NOT. l_cal(mb) ) THEN
+                      mat(mb,mb)=(1.d0, 0.d0)
+                  ELSE
+                     aux(:) = (0.d0, 0.d0)
+                     IF (kpar /= nppstr) THEN
+                        DO ig=1,npw1
+                           aux(igk1(ig))=evc(ig,mb)
+                        ENDDO
+                     ELSEIF (.NOT. l_para) THEN
+                        DO ig=1,npw1
+                           aux(map_g(ig))=evc(ig,mb)
+                        ENDDO
                      ELSE
-                        aux(:) = (0.d0, 0.d0)
-                        aux0(:)= (0.d0, 0.d0)
-                        DO ig=1,npw0
-                           aux0(igk0(ig))=psi(ig,nb)
-                        END DO
-                        IF (kpar /= nppstr) THEN
-                           DO ig=1,npw1
-                              aux(igk1(ig))=evc(ig,mb)
-                           ENDDO
-                        ELSEIF (.NOT. l_para) THEN
-                           DO ig=1,npw1
-                              aux(map_g(ig))=evc(ig,mb)
-                           ENDDO
-                        ELSE
 !
 !   In this case this processor might not have the G-G_0
 !
-                           aux_g=(0.d0,0.d0)
-                           DO ig=1,npw1
-                              aux_g(mapgm_global(ig_l2g(igk1(ig)),gdir))&
-                                                   =evc(ig,mb)
-                           ENDDO
-                           CALL mp_sum(aux_g(:), intra_bgrp_comm )
-                           DO ig=1,ngm
-                              aux(ig) = aux_g(ig_l2g(ig))
-                           ENDDO
-                        ENDIF
-                        mat(nb,mb) = zdotc (ngm,aux0,1,aux,1)
-                     end if
-                  end do
-               end do
+                        aux_g=(0.d0,0.d0)
+                        DO ig=1,npw1
+                           aux_g(mapgm_global(ig_l2g(igk1(ig)),gdir)) &
+                                                =evc(ig,mb)
+                        ENDDO
+                        CALL mp_sum(aux_g(:), intra_bgrp_comm )
+                        DO ig=1,ngm
+                           aux(ig) = aux_g(ig_l2g(ig))
+                        ENDDO
+                     ENDIF
+!
+                     DO nb=1,nbnd
+                        IF ( l_cal(nb) ) THEN
+                           aux0(:)= (0.d0, 0.d0)
+                           DO ig=1,npw0
+                              aux0(igk0(ig))=psi(ig,nb)
+                           END DO
+                           mat(nb,mb) = zdotc (ngm,aux0,1,aux,1)
+                        END IF
+                     END DO
+                  END IF
+               END DO
                !
                call mp_sum( mat, intra_bgrp_comm )
                !
