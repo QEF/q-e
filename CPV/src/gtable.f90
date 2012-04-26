@@ -192,7 +192,7 @@ subroutine find_whose_is_g
 !this subroutine set the correspondence G-->Proc
 
   USE gvecw,              ONLY : ngw, ngw_g
-  USE gvect, ONLY : ig_l2g, mill_g, mill
+  USE gvect,              ONLY : ig_l2g, mill_g, mill
   USE mp,                 ONLY : mp_sum
   USE io_global,          ONLY : stdout
   USE mp_global,          ONLY : me_bgrp, nproc_bgrp, intra_bgrp_comm
@@ -214,6 +214,15 @@ subroutine find_whose_is_g
   enddo
   call mp_sum(whose_is_g,intra_bgrp_comm)
   whose_is_g(:)=whose_is_g(:)-1
+  ! mill_g is used in gtable_missing and re-initialized here
+  ! workaround by PG to avoid a large array like mill_g allocated all the time
+
+  allocate ( mill_g(3,ngw_g) )
+  do ig=1,ngw
+     mill_g(:,ig_l2g(ig)) = mill(:,ig)
+  end do
+  call mp_sum(mill_g,intra_bgrp_comm)
+
   
 return
 end subroutine find_whose_is_g
@@ -221,15 +230,15 @@ end subroutine find_whose_is_g
 
 subroutine gtable_missing
 
-  USE efield_module, ONLY : ctable_missing_1,ctable_missing_2, whose_is_g,n_g_missing_p,&
-                          &      ctable_missing_rev_1,ctable_missing_rev_2 
+  USE efield_module,      ONLY : ctable_missing_1, ctable_missing_2,  &
+                                 whose_is_g,n_g_missing_p, &
+                                 ctable_missing_rev_1,ctable_missing_rev_2 
   USE gvecw,              ONLY : ngw, ngw_g
   USE gvect, ONLY : ig_l2g, mill_g, mill, gstart
   USE mp,                 ONLY : mp_sum, mp_max, mp_alltoall
   USE io_global,          ONLY : stdout
   USE mp_global,          ONLY : me_bgrp, nproc_bgrp, intra_bgrp_comm
   USE parallel_include
-
 
   implicit none
 
@@ -239,8 +248,6 @@ subroutine gtable_missing
   INTEGER, ALLOCATABLE :: igg_found(:,:,:), ig_send(:,:,:), igg_found_snd(:,:,:)
   INTEGER, ALLOCATABLE :: igg_found_rcv(:,:,:)
   INTEGER :: ierr,sndint,rcvint
-
-
 
   allocate( igg_found(ngw_g,2,nproc_bgrp), ig_send(ngw_g,2,nproc_bgrp) )
   do ipol=1,2
@@ -307,9 +314,9 @@ subroutine gtable_missing
         enddo
      enddo
       
-
-!determine the largest nfound for processor and set it as dimensione for ctable_missing and ctable_missing_rev
-!copy ig_send to ctable_missing
+! determine the largest nfound for processor and set it as dimension
+! for ctable_missing and ctable_missing_rev
+! copy ig_send to ctable_missing
 
      call mp_sum(nfound_max, intra_bgrp_comm)
      write(stdout,*) 'Additional found:', nfound_max
