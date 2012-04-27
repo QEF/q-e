@@ -234,7 +234,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		convergence threshold on total energy (a.u) for ionic
 		minimization: the convergence criterion is satisfied
 		when the total energy changes less than etot_conv_thr
-		between two consecutive scf steps.
+		between two consecutive scf steps. Note that etot_conv_thr 
+                is extensive, like the total energy.
 		See also forc_conv_thr - both criteria must be satisfied
 	    }
 	}
@@ -242,11 +243,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var forc_conv_thr -type REAL { 
 	    default { 1.0D-3 }
 	    info {
-		convergence threshold on forces (a.u) for ionic
-		minimization: the convergence criterion is satisfied
-		when all components of all forces are smaller than
-		forc_conv_thr.
-		See also etot_conv_thr - both criteria must be satisfied
+		convergence threshold on forces (a.u) for ionic minimization:
+                the convergence criterion is satisfied when all components of 
+                all forces are smaller than forc_conv_thr.
+                See also etot_conv_thr (note that the latter is extensive,
+                forc_conv_thr is not) - both criteria must be satisfied
 	    }
 	}
 		
@@ -1233,6 +1234,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    info {
 		Convergence threshold for selfconsistency:
 		estimated energy error < conv_thr
+                (note that conv_thr is extensive, like the total energy)
 	    }
 	}
 	
