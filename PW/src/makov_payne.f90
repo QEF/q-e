@@ -23,11 +23,7 @@ SUBROUTINE makov_payne( etot )
   USE scf,       ONLY : rho
   USE lsda_mod,  ONLY : nspin
 #ifdef __ENVIRON
-  USE environ_base, ONLY : do_environ, env_static_permittivity, &
-                           pol_dipole, pol_quadrupole, rhopol,  &
-                           rhopol_of_V, ejellium, eperiodic
-  USE cell_base, ONLY : omega
-  USE solvent, ONLY : calc_esolvent_of_V
+  USE environ_base, ONLY : do_environ
 #endif
   !
   IMPLICIT NONE
@@ -56,14 +52,8 @@ SUBROUTINE makov_payne( etot )
   CALL compute_dipole( dfftp%nnr, nspin, rho%of_r, x0, e_dipole, e_quadrupole )
   !
 #ifdef __ENVIRON
-  IF ( do_environ .AND. env_static_permittivity .GT. 1.D0 ) THEN
-    CALL calc_esolvent_of_V( dfftp%nnr, nspin, rho%of_r, ejellium, eperiodic, &
-                             & rhopol_of_V )
-    rhopol = rhopol - rhopol_of_V 
-    CALL compute_dipole( dfftp%nnr, 1, rhopol, x0, pol_dipole, pol_quadrupole )
-    rhopol = rhopol + rhopol_of_V 
-  ENDIF
-#endif  
+  IF ( do_environ ) CALL environ_makov_payne( dfftp%nnr, nspin, rho%of_r, x0 )
+#endif
   !
   CALL write_dipole( etot, x0, e_dipole, e_quadrupole, qq )
   !
@@ -84,8 +74,7 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   USE cell_base,  ONLY : at, bg, omega, alat, ibrav
   USE io_global,  ONLY : ionode
 #ifdef __ENVIRON
-  USE environ_base, ONLY : do_environ, pol_dipole, pol_quadrupole, &
-                           env_static_permittivity, ejellium, eperiodic
+  USE environ_base, ONLY : do_environ
 #endif
   !
   IMPLICIT NONE
@@ -98,9 +87,6 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   REAL(DP) :: dipole_ion(3), quadrupole_ion, dipole(3), quadrupole
   REAL(DP) :: zvia, zvtot
   REAL(DP) :: corr1, corr2, aa, bb
-#ifdef __ENVIRON
-  REAL(DP) :: corr1_pol, corr2_pol
-#endif
   INTEGER  :: ia, ip
   !
   ! ... Note that the definition of the Madelung constant used here
@@ -156,14 +142,6 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
       ( dipole_ion(ip),ip = 1, 3), ( dipole_ion(ip)*au_debye,ip = 1, 3 )
   WRITE( stdout, '( 5X,"Total",3F9.4," au (Ha),", 3F9.4," Debye")' ) &
       ( dipole(ip),    ip = 1, 3), ( dipole(ip)*au_debye,    ip = 1, 3 )
-#ifdef __ENVIRON
-  IF ( do_environ ) THEN
-    WRITE( stdout, '( 5X,"Diele",3F9.4," au (Ha),", 3F9.4," Debye")' ) &
-      (-pol_dipole(ip),ip = 1, 3), (-pol_dipole(ip)*au_debye,ip = 1, 3 )
-    WRITE( stdout, '( 5X,"Full ",3F9.4," au (Ha),", 3F9.4," Debye")' ) &
-      (dipole(ip)-pol_dipole(ip),ip = 1, 3), (dipole(ip)-pol_dipole(ip)*au_debye,ip = 1, 3 )
-  END IF
-#endif
   !
   ! ... print the electronic, ionic and total quadrupole moments
   !
@@ -173,14 +151,6 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
       quadrupole_ion
   WRITE( stdout, '( 5X,"    Total quadrupole moment",F20.8," a.u. (Ha)")' ) &
       quadrupole
-#ifdef __ENVIRON
-  IF ( do_environ ) THEN
-    WRITE( stdout, '( 5X,"Dielectr. quadrupole moment",F20.8," a.u. (Ha)")' )  &
-      -pol_quadrupole
-    WRITE( stdout, '( 5X,"     Full quadrupole moment",F20.8," a.u. (Ha)")' )  &
-      quadrupole-pol_quadrupole
-  END IF
-#endif
   !
   IF ( ibrav < 1 .OR. ibrav > 3 ) THEN
      call errore(' write_dipole', &
@@ -197,17 +167,6 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   bb = dipole(1)**2 + dipole(2)**2 + dipole(3)**2
   !
   corr2 = ( 2.D0 / 3.D0 * pi )*( qq*aa - bb ) / alat**3 * e2
-  !
-#ifdef __ENVIRON
-  IF ( do_environ ) THEN 
-    corr1_pol = -corr1 + corr1 / env_static_permittivity
-    aa = ( - pol_quadrupole - quadrupole ) / 2.D0 +  &
-         & quadrupole / 2.D0 / env_static_permittivity
-    bb = - dipole(1)*pol_dipole(1) - dipole(2)*pol_dipole(2) - & 
-         & dipole(3)*pol_dipole(3) 
-    corr2_pol = ( 2.D0 / 3.D0 * pi )*( qq*aa - bb ) / alat**3 * e2
-  ENDIF
-#endif
   !
   ! ... print the Makov-Payne correction
   !
@@ -227,23 +186,8 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
       etot - corr1 - corr2 
   !
 #ifdef __ENVIRON
-  IF ( do_environ ) THEN 
-    WRITE( stdout,'( 5X,"                       ",F14.8," Ry = ",F6.3, &
-       &              " eV (1st order diel, 1/a0)")' ) -corr1_pol, -corr1_pol*rytoev
-    WRITE( stdout,'( 5X,"                       ",F14.8," Ry = ",F6.3, &
-       &              " eV (2nd order diel, 1/a0^3)")' ) -corr2_pol, -corr2_pol*rytoev
-    WRITE( stdout,'( 5X,"                       ",F14.8," Ry = ",F6.3, &
-       &              " eV (jellium, 1/a0^3)")' ) -ejellium, -ejellium*rytoev
-    WRITE( stdout,'( 5X,"                       ",F14.8," Ry = ",F6.3, &
-       &              " eV (periodic solutes, 1/a0^3)")' ) -eperiodic, -eperiodic*rytoev
-    WRITE( stdout,'( 5X,"                       ",F14.8," Ry = ",F6.3, &
-       &              " eV (total diel)")' ) -corr1_pol-corr2_pol-ejellium-eperiodic, &
-                                   & (-corr1_pol-corr2_pol - ejellium - eperiodic)*rytoev
-    !
-    WRITE( stdout,'(/"!    Diel+Makov-Payne energy  = ",F16.8," Ry")' ) &
-        etot - corr1 - corr2 - corr1_pol - corr2_pol - ejellium - eperiodic
-    !
-  END IF
+  IF ( do_environ ) CALL environ_write_dipole(etot, x0, dipole, quadrupole, &
+                                              qq, corr1, corr2)
 #endif
   !
   RETURN
