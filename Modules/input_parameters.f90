@@ -559,6 +559,9 @@ MODULE input_parameters
         ! ionic dielectric function is adopted
         REAL(DP) :: atomicspread(nsx) = 0.5D0
         ! gaussian spreads of the atomic density of charge
+        LOGICAL :: add_jellium = .false.
+        ! depending on periodic boundary corrections, one may need to explicitly
+        ! polarize the compensatinig jellium background
 !
 ! Numerical differentiators paramters
 !
@@ -609,7 +612,7 @@ MODULE input_parameters
              verbose, environ_thr, environ_type,                       &
              stype, rhomax, rhomin, tbeta,                             &
              env_static_permittivity, eps_mode,                        &
-             solvationrad, atomicspread,                               &
+             solvationrad, atomicspread, add_jellium,                  &
              ifdtype, nfdpoint,                                        &
              mixtype, ndiis, mixrhopol, tolrhopol,                     &
              env_surface_tension, delta,                               &

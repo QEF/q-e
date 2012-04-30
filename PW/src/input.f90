@@ -117,6 +117,7 @@ SUBROUTINE iosys()
                            eps_mode_ => eps_mode,                               &
                            solvationrad_ => solvationrad,                       &
                            atomicspread_ => atomicspread,                       &
+                           add_jellium_ => add_jellium,                         &
                            ifdtype_ => ifdtype,                                 &
                            nfdpoint_ => nfdpoint,                               &
                            mixtype_ => mixtype,                                 &
@@ -264,14 +265,14 @@ SUBROUTINE iosys()
   !
   ! ... ENVIRON namelist
   !
-  USE input_parameters, ONLY : verbose, environ_thr, environ_type,   &
-                               stype, rhomax, rhomin, tbeta,         &
-                               env_static_permittivity, eps_mode,    &
-                               solvationrad, atomicspread,           &
-                               ifdtype, nfdpoint,                    &
-                               mixtype, ndiis, mixrhopol, tolrhopol, &
-                               env_surface_tension, delta,           &
-                               env_pressure,                         &
+  USE input_parameters, ONLY : verbose, environ_thr, environ_type,      &
+                               stype, rhomax, rhomin, tbeta,            &
+                               env_static_permittivity, eps_mode,       &
+                               solvationrad, atomicspread, add_jellium, &
+                               ifdtype, nfdpoint,                       &
+                               mixtype, ndiis, mixrhopol, tolrhopol,    &
+                               env_surface_tension, delta,              &
+                               env_pressure,                            &
                                cion, zion, rhopb, solvent_temperature 
 #endif
   !
@@ -1217,6 +1218,7 @@ SUBROUTINE iosys()
   solvationrad_( 1:ntyp ) = solvationrad( 1:ntyp )
   ALLOCATE( atomicspread_( ntyp ) )
   atomicspread_( 1:ntyp ) = atomicspread( 1:ntyp )
+  add_jellium_ = add_jellium
   !
   ifdtype_   = ifdtype
   nfdpoint_  = nfdpoint
@@ -1344,6 +1346,9 @@ SUBROUTINE iosys()
       !
       call errore ('iosys','unrecognized value for assume_isolated',1)
   END SELECT
+#ifdef __ENVIRON
+  IF ( do_comp_mt .OR. env_slab_geometry ) add_jellium = .false.
+#endif
   !
   ! ... read following cards
   !

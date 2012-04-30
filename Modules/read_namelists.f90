@@ -285,6 +285,7 @@ MODULE read_namelists_module
        eps_mode        = 'electronic'
        solvationrad(:) = 3.D0
        atomicspread(:) = 0.5D0
+       add_jellium = .false.
        !
        ifdtype  = 1
        nfdpoint = 2
@@ -923,6 +924,7 @@ MODULE read_namelists_module
        CALL mp_bcast( eps_mode,                   ionode_id )
        CALL mp_bcast( solvationrad,               ionode_id )
        CALL mp_bcast( atomicspread,               ionode_id )
+       CALL mp_bcast( add_jellium,                ionode_id )
        !
        CALL mp_bcast( ifdtype,                    ionode_id )
        CALL mp_bcast( nfdpoint,                   ionode_id )
