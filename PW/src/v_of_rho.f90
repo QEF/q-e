@@ -1045,8 +1045,9 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
   USE fft_interfaces,  ONLY : fwfft, invfft
   USE constants,       ONLY : fpi, e2
   USE control_flags,   ONLY : gamma_only
-  USE cell_base,       ONLY : tpiba
+  USE cell_base,       ONLY : tpiba, omega
   USE gvect,           ONLY : nl, ngm, nlm, gg, gstart, g
+  USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt
   !
   IMPLICIT NONE
   !
@@ -1059,7 +1060,8 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
   !
   COMPLEX( DP ), ALLOCATABLE :: rhoaux( : )
   COMPLEX( DP ), ALLOCATABLE :: gaux( : )
-  REAL( DP )                 :: fac
+  COMPLEX( DP ), ALLOCATABLE :: rgtot(:), vaux(:)
+  REAL( DP )                 :: fac, eh_corr
   INTEGER                    :: ig, ipol
   !
   ! ... Bring rho to G space
@@ -1084,18 +1086,32 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       !
     END DO
     !
+    ! ...and add the factor e2*fpi/2\pi/a coming from the missing prefactor of 
+    !  V = e2 * fpi divided by the 2\pi/a factor missing in G  
+    !
+    fac = e2 * fpi / tpiba
+    gaux = gaux * fac 
+    !
+    ! ...and add the factor e2*fpi/2\pi/a coming from the missing prefactor of 
+    !  V = e2 * fpi divided by the 2\pi/a factor missing in G  
+    ! 
+    if (do_comp_mt) then
+       ALLOCATE( vaux( ngm ), rgtot(ngm) )
+       rgtot(1:ngm) = rhoaux(nl(1:ngm))
+       CALL wg_corr_h (omega, ngm, rgtot, vaux, eh_corr)
+       DO ig = gstart, ngm
+         fac = g(ipol,ig) / tpiba
+         gaux(nl(ig)) = gaux(nl(ig)) + CMPLX(-AIMAG(vaux(ig)),REAL(vaux(ig)),kind=dp)*fac 
+       END DO
+       DEALLOCATE( rgtot, vaux )
+    end if
+    !
     IF ( gamma_only ) THEN
       !
       gaux(nlm(:)) = &
         CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
        !
     END IF
-    !
-    ! ...and add the factor e2*fpi/2\pi/a coming from the missing prefactor of 
-    !  V = e2 * fpi divided by the 2\pi/a factor missing in G  
-    !
-    fac = e2 * fpi / tpiba
-    gaux = gaux * fac 
     !
     ! ... bring back to R-space, (\grad_ipol a)(r) ...
     !
