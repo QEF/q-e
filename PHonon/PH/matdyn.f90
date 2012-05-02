@@ -89,6 +89,7 @@ PROGRAM matdyn
   !     q_in_band_form if .true. the q points are given in band form:
   !               Only the first and last point of one or more lines 
   !               are given. See below. (default: .false.).
+  !     q_in_cryst_coord if .true. input q points are in crystalline coordinates
   !
   !  if (readtau) atom types and positions in the supercell follow:
   !     (tau(i,na),i=1,3), ityp(na)
@@ -135,7 +136,7 @@ PROGRAM matdyn
   INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ntetra, ibrav
   CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos, filename
   CHARACTER(LEN=10)  :: asr
-  LOGICAL :: dos, has_zstar
+  LOGICAL :: dos, has_zstar, q_in_cryst_coord
   COMPLEX(DP), ALLOCATABLE :: dyn(:,:,:,:), dyn_blk(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: z(:,:)
   REAL(DP), ALLOCATABLE:: tau(:,:), q(:,:), w2(:,:), freq(:,:)
@@ -159,7 +160,7 @@ PROGRAM matdyn
   LOGICAL :: readtau, la2F, xmlifc, lo_to_split
   !
   REAL(DP) :: qhat(3), qh, DeltaE, Emin=0._dp, Emax, E, DOSofE(1)
-  REAL(DP) :: celldm(6), delta
+  REAL(DP) :: celldm(6), delta, pathL
   REAL(DP), ALLOCATABLE :: xqaux(:,:)
   INTEGER, ALLOCATABLE :: nqb(:)
   INTEGER :: n, i, j, it, nq, nqx, na, nb, ndos, iout, nqtot
@@ -176,7 +177,7 @@ PROGRAM matdyn
   !
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, at, dos,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, &
-                   la2F, ndos, DeltaE, q_in_band_form
+                   la2F, ndos, DeltaE, q_in_band_form, q_in_cryst_coord
   !
   CALL mp_startup()
   CALL environment_start('MATDYN')
@@ -209,6 +210,7 @@ PROGRAM matdyn
      l3=1
      la2F=.false.
      q_in_band_form=.FALSE.
+     q_in_cryst_coord = .FALSE.
      !
      !
      IF (ionode) READ (5,input,IOSTAT=ios)
@@ -236,6 +238,7 @@ PROGRAM matdyn
      CALL mp_bcast(l3,ionode_id)
      CALL mp_bcast(la2f,ionode_id)
      CALL mp_bcast(q_in_band_form,ionode_id)
+     CALL mp_bcast(q_in_cryst_coord,ionode_id)
      !
      ! read force constants
      !
@@ -394,6 +397,9 @@ PROGRAM matdyn
            DEALLOCATE(xqaux)
            DEALLOCATE(nqb)
         END IF
+        !
+        IF (q_in_cryst_coord)  CALL cryst_to_cart(nq,q,bg,+1)
+        ! 
      END IF
      !
      IF (asr /= 'no') THEN
@@ -532,6 +538,16 @@ PROGRAM matdyn
            WRITE(2,'(6f10.4)') (freq(i,n), i=1,3*nat)
         END DO
         CLOSE(unit=2)
+
+        OPEN (unit=2,file=trim(flfrq)//'.gp' ,status='unknown',form='formatted')
+        pathL = 0._dp
+        WRITE(2, '(f10.6,3x,999f10.4)')  pathL,  (freq(i,1), i=1,3*nat)
+        DO n=2, nq
+           pathL=pathL+(SQRT(SUM(  (q(:,n)-q(:,n-1))**2 )))
+           WRITE(2, '(f10.6,3x,999f10.4)')  pathL,  (freq(i,n), i=1,3*nat)
+        END DO
+        CLOSE(unit=2)
+
      END IF
      !
      !  If the force constants are in the xml format we write also
@@ -753,6 +769,30 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws)
                at(3,3), bg(3,3), r(3), weight, r_ws(3),  &
                total_weight, rws(0:3,nrws)
   REAL(DP), EXTERNAL :: wsweight
+  REAL(DP),SAVE,ALLOCATABLE :: wscache(:,:,:,:,:)
+  LOGICAL,SAVE :: first=.true.
+  !
+  FIRST_TIME : IF (first) THEN
+    first=.false.
+    ALLOCATE( wscache(-2*nr3:2*nr3, -2*nr2:2*nr2, -2*nr1:2*nr1, nat,nat) )
+    DO na=1, nat
+       DO nb=1, nat
+          total_weight=0.0d0
+          !
+          DO n1=-2*nr1,2*nr1
+             DO n2=-2*nr2,2*nr2
+                DO n3=-2*nr3,2*nr3
+                   DO i=1, 3
+                      r(i) = n1*at(i,1)+n2*at(i,2)+n3*at(i,3)
+                      r_ws(i) = r(i) + tau(i,na)-tau(i,nb)
+                   END DO
+                   wscache(n3,n2,n1,nb,na) = wsweight(r_ws,rws,nrws)
+                ENDDO
+             ENDDO
+          ENDDO
+      ENDDO
+    ENDDO
+  ENDIF FIRST_TIME
   !
   DO na=1, nat
      DO nb=1, nat
@@ -765,9 +805,9 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws)
                  !
                  DO i=1, 3
                     r(i) = n1*at(i,1)+n2*at(i,2)+n3*at(i,3)
-                    r_ws(i) = r(i) + tau(i,na)-tau(i,nb)
                  END DO
-                 weight = wsweight(r_ws,rws,nrws)
+
+                 weight = wscache(n3,n2,n1,nb,na) 
                  IF (weight .GT. 0.0d0) THEN
                     !
                     ! FIND THE VECTOR CORRESPONDING TO R IN THE ORIGINAL CELL
