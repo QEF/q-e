@@ -1100,7 +1100,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
        rgtot(1:ngm) = rhoaux(nl(1:ngm))
        CALL wg_corr_h (omega, ngm, rgtot, vaux, eh_corr)
        DO ig = gstart, ngm
-         fac = g(ipol,ig) / tpiba
+         fac = g(ipol,ig) * tpiba
          gaux(nl(ig)) = gaux(nl(ig)) + CMPLX(-AIMAG(vaux(ig)),REAL(vaux(ig)),kind=dp)*fac 
        END DO
        DEALLOCATE( rgtot, vaux )
