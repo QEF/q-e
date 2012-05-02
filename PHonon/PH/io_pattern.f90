@@ -11,8 +11,9 @@ SUBROUTINE io_pattern (nat,fildrho,nirr,npert,u,xq,directory,iflag)
   !
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : stdout
-  USE dfile_autoname,   ONLY : dfile_choose_name
+  USE dfile_autoname,   ONLY : dfile_name
   USE io_files,         ONLY : find_free_unit, prefix, tmp_dir, seqopn
+  USE cell_base,        ONLY : at
 
   IMPLICIT NONE
 !
@@ -33,7 +34,7 @@ SUBROUTINE io_pattern (nat,fildrho,nirr,npert,u,xq,directory,iflag)
   IF (ABS(iflag).NE.1) CALL errore('io_pattern','wrong iflag',1+ABS(iflag))
 
   iunit = find_free_unit() 
-  filname = TRIM(dfile_choose_name(xq, fildrho, TRIM(directory)//prefix, (iflag>0))) //".pat"
+  filname = TRIM(dfile_name(xq, at, fildrho, TRIM(directory)//prefix, (iflag>0))) //".pat"
   CALL seqopn(iunit,filname,'formatted',exst, directory)
 
   IF (iflag.GT.0) THEN

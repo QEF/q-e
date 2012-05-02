@@ -28,7 +28,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE check_stop,           ONLY : check_stop_now
   USE wavefunctions_module, ONLY : evc
   USE constants,            ONLY : degspin
-  USE cell_base,            ONLY : tpiba2
+  USE cell_base,            ONLY : at, tpiba2
   USE ener,                 ONLY : ef
   USE klist,                ONLY : lgauss, degauss, ngauss, xk, wk
   USE gvect,                ONLY : g
@@ -61,7 +61,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                                    minus_q, irgq, nsymq, rtau
   USE recover_mod,          ONLY : read_rec, write_rec
   ! used to write fildrho:
-  USE dfile_autoname,       ONLY : dfile_choose_name
+  USE dfile_autoname,       ONLY : dfile_name
   USE save_ph,              ONLY : tmp_dir_save
   ! used oly to write the restart file
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
@@ -173,7 +173,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   IF (ionode .AND. fildrho /= ' ') THEN
      INQUIRE (UNIT = iudrho, OPENED = exst)
      IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
-     filename = dfile_choose_name(xq, fildrho, TRIM(tmp_dir_save)//prefix, generate=.true.)
+     filename = dfile_name(xq, at, fildrho, TRIM(tmp_dir_save)//prefix, generate=.true.)
      CALL diropn (iudrho, filename, lrdrho, exst)
   END IF
 

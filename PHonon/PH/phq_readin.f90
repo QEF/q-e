@@ -147,7 +147,8 @@ SUBROUTINE phq_readin()
   !                a different mesh than that used for the charge density.
   !
   ! dvscf_star%open : if .true. write in dvscf_star%dir the dvscf_q' for all q' in the
-  !                   star of q with suffix dvscf_star%ext. The dvscf_q' is written in the basis dvscf_star%basis
+  !                   star of q with suffix dvscf_star%ext. The dvscf_q' is written in the basis dvscf_star%basis;
+  !                   if dvscf_star%pat is .true. also save a pattern file.
   ! dvscf_star%dir, dvscf_star%ext, dvscf_star%basis : see dvscf_star%open
   ! drho_star%open  : like dvscf_star%open but for drho_q
   ! drho_star%dir, drho_star%ext, drho_star%basis : see drho_star%open
@@ -247,6 +248,7 @@ SUBROUTINE phq_readin()
   !
   drho_star%open = .FALSE.
   drho_star%basis = 'modes'
+  drho_star%pat  = .TRUE.
   drho_star%ext = 'drho'
   CALL get_env( 'ESPRESSO_FILDRHO_DIR', drho_star%dir)
   IF ( TRIM( drho_star%dir ) == ' ' ) &
@@ -254,6 +256,7 @@ SUBROUTINE phq_readin()
   !
   dvscf_star%open = .FALSE.
   dvscf_star%basis = 'cartesian'
+  dvscf_star%pat  = .FALSE.
   dvscf_star%ext = 'dvscf'
   CALL get_env( 'ESPRESSO_FILDVSCF_DIR', dvscf_star%dir)
   IF ( TRIM( dvscf_star%dir ) == ' ' ) &

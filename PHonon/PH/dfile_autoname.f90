@@ -9,8 +9,9 @@
 !----------------------------------------------------------------------
 MODULE dfile_autoname
 !----------------------------------------------------------------------
+  USE kinds,     ONLY : DP
   !
-  PUBLIC :: dfile_choose_name, dfile_generate_name, dfile_get_qlist
+  PUBLIC :: dfile_name, dfile_generate_name, dfile_get_qlist
   !
   PRIVATE
   CHARACTER(len=12),PARAMETER :: dfile_directory_basename='.dfile_dir'
@@ -69,14 +70,13 @@ END FUNCTION open_dfile_directory
 !----------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
-FUNCTION scan_dfile_directory(iunit, xq, found, equiv)
+FUNCTION scan_dfile_directory(iunit, xq, at, found, equiv)
   !----------------------------------------------------------------------
-  USE kinds,     ONLY : DP
-  USE cell_base, ONLY : at
   IMPLICIT NONE
   CHARACTER(len=256) :: scan_dfile_directory
   !
   REAL(DP),INTENT(in) :: xq(3)
+  REAL(DP),INTENT(in) :: at(3,3)
   INTEGER,INTENT(in)  :: iunit
   LOGICAL,INTENT(out) :: found
   LOGICAL,INTENT(in),OPTIONAL :: equiv ! if .false. only look for exactly q
@@ -96,16 +96,17 @@ FUNCTION scan_dfile_directory(iunit, xq, found, equiv)
   equiv_ = .true.
   IF(present(equiv)) equiv_ = equiv
   ! xq in crystal coordinates:
-  aq(:) = xq(1)*at(1,:) + xq(2)*at(2,:) + xq(3)*at(3,:)
+  aq = xq
+  CALL cryst_to_cart (1,aq,at,-1)
   !
   REWIND(iunit)
   ios=0
   !
   SCAN_FILE : &
   DO WHILE(ios==0)
-    READ(iunit,*,iostat=ios) xp_name, xp
-    ap(:) = xp(1)*at(1,:) + xp(2)*at(2,:) + xp(3)*at(3,:)
-    !
+    READ(iunit,*,iostat=ios) xp, ap, xp_name
+    ! ap = xp
+    ! CALL cryst_to_cart (1,ap,at,-1)
     !
     IF (equiv_) THEN
       IF (eqvect(aq,ap,gam) .and. ios==0) THEN
@@ -128,16 +129,16 @@ END FUNCTION scan_dfile_directory
 !----------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
-FUNCTION dfile_choose_name(xq, name, prefix, generate, equiv)
+FUNCTION dfile_name(xq, at, name, prefix, generate, equiv)
   !----------------------------------------------------------------------
   ! automatically generate a name for fildrho file
-  USE kinds,        ONLY : DP
   USE io_global,    ONLY : ionode
   IMPLICIT NONE
   ! function:
-  CHARACTER(len=256) :: dfile_choose_name
+  CHARACTER(len=256) :: dfile_name
   ! input variables:
   REAL(DP),INTENT(in)         :: xq(3)    ! the q point in cartesian axes
+  REAL(DP),INTENT(in)         :: at(3,3)  ! the lattice vectors, to transform the q to crystal coords
   CHARACTER(len=*),INTENT(in) :: prefix   ! directory where to operate
   CHARACTER(len=*),INTENT(in) :: name     ! input fildrho
   LOGICAL,INTENT(in)          :: generate ! make a new name if not found
@@ -147,53 +148,56 @@ FUNCTION dfile_choose_name(xq, name, prefix, generate, equiv)
   INTEGER :: iunit = -1, ios
   LOGICAL :: found
   CHARACTER(len=256) :: basename
+  REAL(DP) :: aq(3)
   !
   ! Only ionode returns a meaningful name, as only ionode should do the i/o
   IF(.not.ionode) THEN
-    dfile_choose_name = ' '
+    dfile_name = ' '
     RETURN
   ENDIF
   !
   IF(name(1:5) /= 'auto:') THEN
-    dfile_choose_name = name
+    dfile_name = name
     RETURN
   ENDIF
   !
   basename = TRIM(name(6:))
   !
   iunit = open_dfile_directory(basename, prefix)
-  dfile_choose_name = scan_dfile_directory(iunit, xq, found, equiv)
+  dfile_name = scan_dfile_directory(iunit, xq, at, found, equiv)
   CLOSE(iunit)
   !
   ! Return here if point was found
-  !IF(found) print*, "xq found as ", TRIM(dfile_choose_name)
+  !IF(found) print*, "xq found as ", TRIM(dfile_name)
   IF(found) RETURN
   !
   IF(.not.generate) THEN
     WRITE(*,'(7x,"Error: ",3f12.6)') xq
     WRITE(*,'(7x,"Error: ",a,2x,a)') TRIM(name), TRIM(prefix)
-    CALL errore('dfile_choose_name','Requested q vector not found @ '//TRIM(basename), 1)
+    CALL errore('dfile_name','Requested q vector not found @ '//TRIM(basename), 1)
   ENDIF
   !
   ! Make up a new name
-  dfile_choose_name = dfile_generate_name(xq, basename)
+  dfile_name = dfile_generate_name(xq, at, basename)
   !
   ! Append the new name to the list
   iunit = open_dfile_directory(basename, prefix)
-  WRITE(iunit,*,iostat=ios) dfile_choose_name, xq
-  IF(ios/=0) CALL errore('dfile_choose_name','Cannot write dfile_directory',1)
+  aq = xq
+  CALL cryst_to_cart (1,aq,at,-1)
+  !
+  WRITE(iunit,*,iostat=ios) xq, aq, TRIM(dfile_name)
+  IF(ios/=0) CALL errore('dfile_name','Cannot write dfile_directory',1)
   CLOSE(iunit)
   !
   RETURN
   !----------------------------------------------------------------------
-END FUNCTION dfile_choose_name
+END FUNCTION dfile_name
 !----------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
 SUBROUTINE dfile_get_qlist(xqs, nqs, name, prefix)
   !----------------------------------------------------------------------
   ! automatically generate a name for fildrho file
-  USE kinds,        ONLY : DP
   USE io_global,    ONLY : ionode
   IMPLICIT NONE
   ! input variables:
@@ -206,7 +210,7 @@ SUBROUTINE dfile_get_qlist(xqs, nqs, name, prefix)
   CHARACTER(len=256) :: basename
   !
   ! Only ionode scans for the filename, and does NOT broadcast. The broadcast
-  ! must be done outside, because here we do not know which processors are
+  ! must be done outside, because here we do not know if all processors are
   ! calling this subroutine!
   !
   IF (.not. ionode) THEN
@@ -237,29 +241,22 @@ END SUBROUTINE dfile_get_qlist
 !----------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
-FUNCTION dfile_generate_name(xq, name, atx)
+FUNCTION dfile_generate_name(xq, at, name)
   !----------------------------------------------------------------------
   ! automatically generate a name for fildrho file
-  USE kinds,        ONLY : DP
-  USE cell_base,    ONLY : atm => at
   IMPLICIT NONE
   ! function:
   CHARACTER(len=256) :: dfile_generate_name
   ! input variables:
-  REAL(DP),INTENT(in)         :: xq(3) ! the q point in cartesian axes
-  REAL(DP),OPTIONAL,INTENT(in):: atx(3,3)
-  CHARACTER(len=*),INTENT(in) :: name  ! input fildrho
+  REAL(DP),INTENT(in)         :: xq(3)   ! the q point in cartesian axes
+  REAL(DP),INTENT(in)         :: at(3,3) ! lattice vectors
+  CHARACTER(len=*),INTENT(in) :: name    ! input fildrho
   ! local variables:
   REAL(DP) :: aq(3) ! xq in crystal axes
-  REAL(DP) :: at(3,3)
   !
-  IF(present(atx)) THEN
-    at = atx
-  ELSE
-    at = atm
-  ENDIF
   ! take xq to crystalline coordinates
-  aq(:) = xq(1)*at(1,:) + xq(2)*at(2,:) + xq(3)*at(3,:)
+  aq = xq
+  CALL cryst_to_cart (1,aq,at,-1)
   !
   WRITE(dfile_generate_name, '(a,".",a,"_",a,"_",a)') TRIM(name), &
         TRIM(real2frac(aq(1))), TRIM(real2frac(aq(2))), TRIM(real2frac(aq(3)))
@@ -279,7 +276,6 @@ END FUNCTION dfile_generate_name
 !----------------------------------------------------------------------
 FUNCTION real2frac(r) RESULT (f)
   !----------------------------------------------------------------------
-  USE kinds,    ONLY : DP
   IMPLICIT NONE
   REAL(DP),INTENT(in) :: r
   CHARACTER(len=64) :: f

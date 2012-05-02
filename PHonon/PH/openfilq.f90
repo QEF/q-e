@@ -23,6 +23,7 @@ SUBROUTINE openfilq()
                               tmp_dir_phq, start_irr, last_irr, xmldyn
   USE save_ph,         ONLY : tmp_dir_save
   USE ions_base,       ONLY : nat
+  USE cell_base,       ONLY : at
   USE qpoint,          ONLY : xq, nksq
   USE output,          ONLY : fildyn, fildvscf
   USE wvfct,           ONLY : nbnd, npwx
@@ -41,7 +42,7 @@ SUBROUTINE openfilq()
   USE input_parameters,ONLY : nk1, nk2, nk3
   USE el_phon,         ONLY : elph, elph_mat, iunwfcwann
   USE dfile_star,      ONLY : dvscf_star
-  USE dfile_autoname,  ONLY : dfile_choose_name
+  USE dfile_autoname,  ONLY : dfile_name
   !
   IMPLICIT NONE
   !
@@ -161,9 +162,9 @@ SUBROUTINE openfilq()
      iudvscf = 27
      IF ( me_pool == 0 ) THEN
            IF(trim(dvscf_star%ext).NE.' ' .and. elph_mat) THEN
-           fildvscf_rot = dfile_choose_name(xq, TRIM(dvscf_star%ext), &
-                                            TRIM(dvscf_star%dir)//prefix, &
-                                            generate=.false., equiv=.false. )
+           fildvscf_rot = dfile_name(xq, at, TRIM(dvscf_star%ext), &
+                                     TRIM(dvscf_star%dir)//prefix, &
+                                     generate=.false., equiv=.false. )
            WRITE(stdout,'(5x,5a)') "Opening dvscf file '",TRIM(fildvscf_rot), &
                                    "' (for reading) in directory '",trim(dvscf_star%dir),"'"
            

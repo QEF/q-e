@@ -13,6 +13,7 @@ MODULE dfile_star
 
   TYPE open_star_descriptor
      LOGICAL            :: open
+     LOGICAL            :: pat
      CHARACTER(len=256) :: dir
      CHARACTER(len=10)  :: basis
      CHARACTER(len=256) :: ext
@@ -83,147 +84,6 @@ SUBROUTINE deallocate_rotated_pattern_repr(rpat)
   !
 END SUBROUTINE deallocate_rotated_pattern_repr
 
-!!-----------------------------------------------------------------------
-!SUBROUTINE write_dfile_mq(xq, u)
-!  !-----------------------------------------------------------------------
-!  USE kinds,            ONLY : DP
-!  USE fft_base,         ONLY : dfftp, cgather_sym
-!  USE ions_base,        ONLY : nat
-!!  USE gvect,            ONLY : dfftp%nnr
-!!  USE gvect,            ONLY : dfftp%nr1x, dfftp%nr2x, dfftp%nr3x
-!  USE lsda_mod,         ONLY : nspin
-!  USE modes,            ONLY : nirr, npert
-!  USE units_ph,         ONLY : lrdrho
-!  USE output,           ONLY : fildrho
-!  USE io_global,        ONLY : stdout , ionode
-!  use io_files,         ONLY : find_free_unit, diropn, prefix
-!  USE dfile_autoname, ONLY : dfile_choose_name
-!  USE save_ph,          ONLY : tmp_dir_save
-!  !
-!  IMPLICIT NONE
-!  ! input variables:
-!  REAL(DP),INTENT(in) :: xq(3)
-!  ! corrent q-point at which drho has been caclulated
-!  COMPLEX(DP),INTENT(in) :: u(3*nat, 3*nat)
-
-!  ! local variables
-!  INTEGER :: na
-!  INTEGER :: iudfile_rot
-
-!  ! list of vectors in the star of q
-!  !
-!  INTEGER :: irr, imode0, ipert, is!,n,nn,ri,rj,rk!,isym_inv
-!  ! counter on the representations
-!  ! counter on the modes
-!  ! the change of Vscf due to perturbations
-!  COMPLEX(DP), ALLOCATABLE :: dfile_in(:,:,:),  dfile_at(:,:,:)
-!  COMPLEX(DP), ALLOCATABLE :: dfile_rot(:,:,:) !, dfile_rot_scr(:,:,:)
-!  LOGICAL :: exst, opnd
-!  CHARACTER(LEN=256) :: dfile_rot_name
-!  INTEGER     :: ipol!,iq,index0
-!  !
-!  IF (fildrho(1:5) /= 'auto:') THEN
-!    WRITE(stdout,'(5x,a)') "NOT writing drho of -q"
-!    RETURN
-!  ENDIF
-!  !
-!  ALLOCATE(     dfile_at(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x, nspin, 3*nat))
-!  ALLOCATE(    dfile_rot(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x, nspin, 3*nat))
-!  !
-!  dfile_at = (0._dp,0._dp)
-!  !
-!  ! Open the drho file for reading
-!  INQUIRE (UNIT = iudfile, OPENED = opnd)
-!  IF (opnd) CLOSE(UNIT = iudfile, STATUS='keep')
-!  CALL diropn (iudfile, TRIM(dfile_choose_name(xq, fildrho, TRIM(tmp_dir_save)//prefix, .false.))//'.u', lrdrho, exst)
-!  !
-!  imode0 = 0
-!  DO irr = 1, nirr
-!    ! read in drho for all the irreps
-!    ALLOCATE (dfile_in ( dfftp%nnr , nspin , npert(irr)) )
-!    DO is = 1, nspin
-!      DO ipert = 1, npert(irr)
-!        CALL davcio_drho( dfile_in(1,is,ipert), lrdrho, iudfile, imode0 + ipert, -1 )
-!      END DO
-!    ENDDO
-!    !
-!    dfile_rot = (0._dp,0._dp)
-!    !
-!#if defined (__MPI) 
-!    DO ipert = 1, npert(irr)
-!      DO is = 1, nspin
-!        CALL cgather_sym(dfile_in(:,is,ipert), dfile_rot (:,is,ipert))
-
-!      ENDDO
-!    ENDDO
-!#else
-!    dfile_rot(1:dfftp%nnr,:,:)=dfile_in(1:dfftp%nnr,:,:)
-!#endif
-!    !
-!    DO ipert=1, npert(irr)
-!      dfile_at(:,:,imode0+ipert)=dfile_rot(:, :, ipert)
-!    ENDDO
-!    !
-!    imode0 = imode0 + npert(irr)
-!    !
-!    DEALLOCATE (dfile_in)
-!    !
-!  ENDDO
-!  CLOSE(iudfile)
-!  !
-!  !
-!  !  Opening files and writing
-!  !
-!  ! ************* Store drho(q) *************
-!  !
-!  dfile_rot_name = dfile_choose_name(xq, TRIM(fildrho), TRIM(dfile_dir)//prefix, generate=.true.)
-!  iudfile_rot = find_free_unit()
-!  IF(ionode) CALL diropn(iudfile_rot, TRIM(dfile_rot_name), lrdrho, exst, dfile_dir)
-!  WRITE(stdout, '(7x,a,3f10.6,3a)') "Writing drho for q = (",xq,') on file "',&
-!                          TRIM(dfile_rot),'"'
-!  !
-!  DO na=1,nat
-!    DO ipol=1,3
-!      imode0=(na-1)*3+ipol
-!      IF( ionode ) &
-!          CALL davcio( dfile_rot(:,:,imode0), lrdrho, iudfile_rot, imode0, + 1 )
-!    ENDDO
-!  ENDDO
-!  !
-!  IF(ionode) CALL io_pattern(nat, dfile_rot_name, nirr, npert, u, xq, dfile_dir, +1)
-!  !
-!  CLOSE(iudfile_rot)
-!  !
-!  ! ************* Store drho(-q) *************
-!  !
-!  IF(xq(1)**2+xq(2)**2+xq(3)**2 < 1.d-5) RETURN
-!  !
-!  dfile_rot_name = dfile_choose_name(-xq, TRIM(fildrho), TRIM(dfile_dir)//prefix, generate=.true.)
-!  iudfile_rot = find_free_unit()
-!  IF(ionode) CALL diropn (iudfile_rot, TRIM(dfile_rot_name), lrdrho, exst, dfile_dir)
-!  WRITE(stdout, '(7x,a,3f10.6,3a)') "Writing drho for q = (",-xq,') on file "',&
-!                        TRIM(dfile_rot),'"'
-!  !
-!  DO na=1,nat
-!    DO ipol=1,3
-!      imode0=(na-1)*3+ipol
-!      IF( ionode ) &
-!          CALL davcio( CONJG(dfile_rot(:,:,imode0)), lrdrho, iudfile_rot, imode0, + 1 )
-!    ENDDO
-!  ENDDO
-!  !
-!  IF(ionode) CALL io_pattern(nat, dfile_rot_name, nirr, npert, CONJG(u), -xq, dfile_dir, +1)
-!  !
-!  CLOSE(iudfile_rot)
-!  !
-!  !
-!  DEALLOCATE(dfile_rot, dfile_at)
-!  !
-!  RETURN
-!  !----------------------------------------------------------------------------
-!END SUBROUTINE write_dfile_mq
-!!----------------------------------------------------------------------------
-
 !-----------------------------------------------------------------------
 SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, invs, irt, ntyp, ityp, dfile_minus_q )
   !-----------------------------------------------------------------------
@@ -241,7 +101,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
   USE io_global,        ONLY : stdout , ionode, ionode_id
   use io_files,         ONLY : find_free_unit, diropn, prefix
   USE constants,        ONLY : tpi
-  USE dfile_autoname,   ONLY : dfile_choose_name
+  USE dfile_autoname,   ONLY : dfile_name
   USE save_ph,          ONLY : tmp_dir_save
   USE control_ph,       ONLY : search_sym
   USE noncollin_module, ONLY : nspin_mag
@@ -345,11 +205,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
   dfile_at = (0._dp,0._dp)
   !
   ! Open the drho file for reading
-!  INQUIRE (UNIT = iudfile, OPENED = opnd)
-!  IF (opnd) CLOSE(UNIT = iudfile, STATUS='keep')
   iudfile = 90334 !find_free_unit()
-!  CALL diropn (iudfile, TRIM(dfile_choose_name(xq, descr%ext, &
-!               TRIM(tmp_dir_save)//prefix, .false.))//'.u', lrdrho, exst)
   CALL diropn(iudfile, source, lrdrho, exst)
   !
   imode0 = 0
@@ -543,7 +399,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
   !print*, "dfile",240
     ONLY_IONODE_3 : IF (ionode) THEN
     !
-    dfile_rot_name = dfile_choose_name(sxq(:,iq), TRIM(descr%ext), &
+    dfile_rot_name = dfile_name(sxq(:,iq), at, TRIM(descr%ext), &
                                   TRIM(descr%dir)//prefix, generate=.true.)
     iudfile_rot = find_free_unit()
     CALL diropn (iudfile_rot, TRIM(dfile_rot_name), lrdrho, exst, descr%dir)
@@ -557,14 +413,14 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
       ENDDO
     ENDDO
     !
-    CALL io_pattern(nat, dfile_rot_name, rpat%nirr, rpat%npert, rpat%u, sxq(:,iq), descr%dir, +1)
+    IF(descr%pat) CALL io_pattern(nat, dfile_rot_name, rpat%nirr, rpat%npert, rpat%u, sxq(:,iq), descr%dir, +1)
     !
     CLOSE(iudfile_rot)
     !
     ! Also store drho(-q) if necessary
     MINUS_Q : &
     IF  (dfile_minus_q .and. xq(1)**2+xq(2)**2+xq(3)**2 > 1.d-5 )  THEN
-        dfile_rot_name = dfile_choose_name(-sxq(:,iq), TRIM(descr%ext), &
+        dfile_rot_name = dfile_name(-sxq(:,iq), at, TRIM(descr%ext), &
                                           TRIM(descr%dir)//prefix, generate=.true.)
         iudfile_rot = find_free_unit()
         CALL diropn (iudfile_rot, TRIM(dfile_rot_name), lrdrho, exst, descr%dir)
@@ -578,7 +434,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
           ENDDO
         ENDDO
         !
-        CALL io_pattern(nat, dfile_rot_name, rpat%nirr, rpat%npert, CONJG(rpat%u), -sxq(:,iq), descr%dir, +1)
+        IF(descr%pat) CALL io_pattern(nat, dfile_rot_name, rpat%nirr, rpat%npert, CONJG(rpat%u), -sxq(:,iq), descr%dir, +1)
         !
         CLOSE(iudfile_rot)
     ENDIF &
