@@ -163,23 +163,24 @@ touch-dummy :
 	$(dummy-variable)
 
 #########################################################
-# Links and copies. "make links" is likely obsolete.
-# "make inst INSTALLDIR=/some/place" will copy all 
+# "make links" produces links to all executables in bin/
+# while "make inst" INSTALLDIR=/some/place" links all
 # available executables to /some/place/ (must exist and
 # be writable), prepending "qe_" to all executables (e.g.:
 # /some/place/qe_pw.x). This allows installation of QE
 # into system directories with no danger of name conflicts
 #########################################################
 inst : 
-	( for exe in */*.x ../GWW/*.x ; do \
+	( for exe in */*/*.x */bin/* ; do \
 	   file=`basename $$exe`; if test "$(INSTALLDIR)" != ""; then \
-		cp $(PWD)/$$exe $(INSTALLDIR)/qe_$$file ; fi ; \
+		if test ! -L $(PWD)/$$exe; then ln -fs $(PWD)/$$exe $(INSTALLDIR)/qe_$$file ; fi ; \
+		fi ; \
 	done )
 
 links : bindir
 	( cd bin/ ; \
 	rm -f *.x ; \
-	for exe in ../*/*.x ; do \
+	for exe in ../*/*/*.x ../*/bin/* ; do \
 	    if test ! -L $$exe ; then ln -fs $$exe . ; fi \
 	done \
 	)
