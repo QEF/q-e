@@ -41,6 +41,7 @@ SUBROUTINE forces()
                             iverbosity, llondon
 #ifdef __ENVIRON
   USE environ_base,  ONLY : do_environ, env_static_permittivity, rhopol
+  USE fft_interfaces,  ONLY : fwfft
 #endif
   USE bp,            ONLY : lelfield, gdir, l3dstring, efield_cart, &
                             efield_cry,efield
@@ -62,6 +63,7 @@ SUBROUTINE forces()
     ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
 #ifdef __ENVIRON
   REAL(DP), ALLOCATABLE :: force_environ(:,:)
+  COMPLEX(DP), ALLOCATABLE :: aux(:)
 #endif
 
   REAL(DP) :: sumfor, sumscf, sum_mm
@@ -122,8 +124,22 @@ SUBROUTINE forces()
   IF (do_comp_mt) THEN
     !
     ALLOCATE ( force_mt ( 3 , nat ) )
+#ifdef __ENVIRON
+    IF ( do_environ ) THEN
+      ALLOCATE( aux( dfftp%nnr ) )
+      aux(:) = CMPLX(rhopol( : ),0.D0,kind=dp) 
+      CALL fwfft ('Dense', aux, dfftp)
+      rho%of_g(:,1) = rho%of_g(:,1) + aux(nl(:))
+    ENDIF
+#endif
     CALL wg_corr_force( omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, &
                         nspin, rho%of_g, force_mt )
+#ifdef __ENVIRON
+    IF ( do_environ ) THEN
+      rho%of_g(:,1) = rho%of_g(:,1) - aux(nl(:))
+      DEALLOCATE(aux)
+    ENDIF
+#endif
 
   END IF
 #ifdef __ENVIRON
