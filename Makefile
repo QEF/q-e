@@ -248,7 +248,7 @@ tar-gui :
 # in order to build the .pdf files in Doc, "pdflatex" is needed;
 # in order to build html files for user guide and developer manual,
 # "latex2html" and "convert" (from Image-Magick) are needed.
-doc :
+doc : touch-dummy
 	if test -d Doc ; then \
 	( cd Doc ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
