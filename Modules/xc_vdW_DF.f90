@@ -161,7 +161,7 @@ CONTAINS
     !! --------------------------------------------------------------------------------------------------------
 
     if (first_iteration) then
-
+       
 #ifndef FFTGRADIENT
     !! Here we set up the calculations on the first iteration.  If this is a parallel run, each
     !! processor figures out which element in the charge-density array it should start and stop on.
@@ -221,22 +221,47 @@ CONTAINS
        
        if (ionode ) then
           
-          write(*,'(/ /A )') "---------------------------------------------------------------------------------"
-          write(*,'(A /)') "Carrying out vdW-DF run using the following parameters:"
-          
-          write(*,'(A,I6,A,I6,A,F8.3)') "Nqs =  ",Nqs, "    Nr_points =  ", Nr_points,"   r_max =  ",r_max
-          
-          write(*,'(A)',advance='no') "q_mesh =  "
-          write(*,'(F15.8)') (q_mesh(I), I=1, Nqs)
+          WRITE( stdout, '(//,5x,"************************************************************************")')
+          WRITE( stdout, '(5x,"*")')
+          WRITE( stdout, '(5x,"* You are using vdW-DF for exchange-correlation in this calculation.")')
+          WRITE( stdout, '(5x,"* Please cite the following three references that made this development")')
+          WRITE( stdout, '(5x,"* possible:")')
+          WRITE( stdout, '(5x,"*")')
+          WRITE( stdout, '(5x,"*   M. Dion, H. Rydberg, E. Schroder, D. C. Langreth, and")')
+          WRITE( stdout, '(5x,"*   B. I. Lundqvist, Phys. Rev. Lett. 92, 246401 (2004).")')
+          WRITE( stdout, '(5x,"*")')
+          WRITE( stdout, '(5x,"*   T. Thonhauser, V. R. Cooper, S. Li, A. Puzder, P. Hyldgaard, and")')
+          WRITE( stdout, '(5x,"*   D. C. Langreth, Phys. Rev. B 76, 125112 (2007).")')
+          WRITE( stdout, '(5x,"*")')
+          WRITE( stdout, '(5x,"*   G. Roman-Perez and J. M. Soler, Phys. Rev. Lett. 103, 096102 (2009).")')
+          WRITE( stdout, '(5x,"*")')
+          WRITE( stdout, '(5x,"*")')
+          WRITE( stdout, '(5x,"* If you are using vdW-DF2, please also cite:")')
+          WRITE( stdout, '(5x,"*")')
+          WRITE( stdout, '(5x,"*   K. Lee, E. D. Murray, L. Kong, B. I. Lundqvist, and")')
+          WRITE( stdout, '(5x,"*   D. C. Langreth, Phys. Rev. B 82, 081101(R) (2010).")')
+          WRITE( stdout, '(5x,"*")')
+          WRITE( stdout, '(5x,"*")')
+          WRITE( stdout, '(5x,"* If you are calculating the stress with vdW-DF, please also cite:")')
+          WRITE( stdout, '(5x,"*")')
+          WRITE( stdout, '(5x,"*   R. Sabatini, E. Kucukbenli, B. Kolb, T. Thonhauser, and")')
+          WRITE( stdout, '(5x,"*   S. de Gironcoli, J. Phys.: Condens. Matter (2012).")')
+          WRITE( stdout, '(5x,"*   [full reference will be available soon]")')
+          WRITE( stdout, '(5x,"*")')
+          WRITE( stdout, '(5x,"************************************************************************",/)')
+          WRITE( stdout, '(5x,"Carrying out vdW-DF run using the following parameters:",/)')
+          WRITE( stdout, '(5X,A,I6,A,I6,A,F8.3)' ) "Nqs =  ", Nqs, "    Nr_points =  ", Nr_points, "   r_max =  ", r_max
+          WRITE( stdout, '(5X,"q_mesh =")')
+          WRITE( stdout, '(10X,4F15.8)' ) (q_mesh(I), I=1, Nqs)
                  
 #ifdef FFTGRADIENT
-          write(*,'(/ A )') "Gradients computed in Reciprocal space"
+          WRITE( stdout, '(/,5x,"Gradients computed in reciprocal space",/)')
 #else
-          write(*,'(/ A )') "Gradients computed in Real space"
+          WRITE( stdout, '(/,5x,"Gradients computed in real space",/)')
 #endif
-          write(*,'(/ A / /)') "---------------------------------------------------------------------------------"
-
           
+          WRITE( stdout, '(5x,"************************************************************************",//)')
+
        end if
        
        !! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
