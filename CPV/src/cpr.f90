@@ -686,7 +686,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      CALL printout_new( nfi, tfirst, tfile, ttprint, tps, hold, stress, &
                         tau0, vels, fion, ekinc, temphc, tempp, temps, etot, &
                         enthal, econs, econt, vnhh, xnhh0, vnhp, xnhp0, atot, &
-                        ekin, epot, tprnfor, tpre )
+                        ekin, epot, tprnfor, tpre, tstdout )
      !
      if (abivol) etot = etot + P_ext*volclu
      if (abisur) etot = etot + Surf_t*surfclu

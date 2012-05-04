@@ -11,7 +11,8 @@
    SUBROUTINE printout_new_x   &
      ( nfi, tfirst, tfilei, tprint, tps, h, stress, tau0, vels, &
        fion, ekinc, temphc, tempp, temps, etot, enthal, econs, econt, &
-       vnhh, xnhh0, vnhp, xnhp0, atot, ekin, epot, print_forces, print_stress )
+       vnhh, xnhh0, vnhp, xnhp0, atot, ekin, epot, print_forces, print_stress, &
+       tstdout)
 !=----------------------------------------------------------------------------=!
 
       !
@@ -57,8 +58,9 @@
       REAL(DP), INTENT(IN) :: atot! enthalpy of system for c.g. case
       REAL(DP), INTENT(IN) :: ekin
       REAL(DP), INTENT(IN) :: epot ! ( epseu + eht + exc )
-      LOGICAL, INTENT(IN) :: print_forces, print_stress
-      !
+      LOGICAL, INTENT(IN) :: print_forces, print_stress, tstdout
+   
+   !
       REAL(DP) :: stress_gpa( 3, 3 )
       REAL(DP) :: cdm0( 3 )
       REAL(DP) :: dis( nsp )
@@ -66,14 +68,14 @@
       REAL(DP) :: totalmass
       INTEGER  :: isa, is, ia, kilobytes
       REAL(DP), ALLOCATABLE :: tauw(:, :)
-      LOGICAL  :: tsic, tfile, tstdout
+      LOGICAL  :: tsic, tfile
       LOGICAL, PARAMETER :: nice_output_files=.false.
       !
       ! avoid double printing to files by refering to nprint_nfi
       !
       tfile = tfilei .and. ( nfi .gt. nprint_nfi )
       !
-      tstdout = ( MOD( nfi, iprint_stdout ) == 0 )
+     
       !
       CALL memstat( kilobytes )
       !
