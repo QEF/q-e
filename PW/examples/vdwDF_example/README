@@ -30,11 +30,11 @@ As for this particular kind of implementation, the
 vdw-DF need a so called "vdW_kernel_table", a universal file that has to be
 generated once and used for all other calculations.
 
-This table, stored in ACSII format, usually ships with the QE distri-
-bution, in case the file is not present the example will launch the
-routine needed to generate it. It can be a long process, up to 30 mins
-in basic single CPU machine, but once generated can be used in any
-other machine and for any other calculation.
+This table, stored in ASCII format, usually ships with the QE distribution,
+in case the file is not present the example will launch the routine needed 
+to generate it. It can be a long process, up to 30 mins in basic single CPU
+machine, but once generated can be used in any other machine and for any 
+other calculation.
 
 After the check, and the possible generation, the example will proceed
 with two simulations, in particular
@@ -49,10 +49,10 @@ equilibrium configuration.  Check the energies and forces against
 those in the reference file.
 
 bonus) If you have the Ar.pz-rrkj.UPF in the PP_dir, you can activate the
-last example by removing the comments from the execution lines (277-280). In 
-this example it's shown how to tun a BFGS relaxation of the forces for the 
-Argon dimer. Check that the energies and forces agree with those in the 
-reference file, and that the final positions are correct.
+last example by removing the comments from the execution lines (277-280).
+In this example it is shown how to run a BFGS relaxation of the forces 
+for the Argon dimer. Check that the energies and forces agree with those
+in the reference file, and that the final positions are correct.
 
 ---
 IMPORTANT NOTE: This feature works the most accurately when Revised-PBE 
