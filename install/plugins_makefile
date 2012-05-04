@@ -71,7 +71,74 @@ uncompress-pwcond: touch-dummy
 	(gzip -dc ../archive/$(PWCOND).tar.gz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s $(PWCOND) PWCOND) ; fi 
 	touch uncompress-pwcond
-
+##########################################################
+# NEB
+###########################################################
+neb:  uncompress-neb
+	if test -d ../NEB; then \
+	cd ../NEB; $(MAKE) all; cd ../bin; ln -fs ../NEB/src/neb.x . ; fi
+	touch make-neb
+uncompress-neb: touch-dummy
+	@(if test ! -e ../archive/$(NEB).tar.gz && test ! -d ../NEB ; then \
+	wget -O ../archive/$(NEB).tar.gz $(NEB_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	curl -o ../archive/$(NEB).tar.gz $(NEB_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	echo "unable to download neb. Test whether curl or wget is installed in your computer." ; \
+	fi ; fi ; fi) 
+	if test ! -d ../NEB; then \
+	(gzip -dc ../archive/$(NEB).tar.gz | (cd ../ ; tar -xvf -)) ; \
+	(cd ../ ; ln -s $(NEB) NEB) ; fi 
+	touch uncompress-neb
+##########################################################
+# TDDFPT
+###########################################################
+tddfpt:  uncompress-tddfpt
+	if test -d ../TDDFPT; then \
+	cd ../TDDFPT; $(MAKE) all; cd ../bin; ln -fs ../TDDFPT/src/turbo_lanczos.x . ; \
+	ln -fs ../TDDFPT/tools/turbo_spectrum.x . ; fi
+	touch make-tddfpt
+uncompress-tddfpt: touch-dummy
+	@(if test ! -e ../archive/$(TDDFPT).tar.gz && test ! -d ../TDDFPT ; then \
+	wget -O ../archive/$(TDDFPT).tar.gz $(TDDFPT_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	curl -o ../archive/$(TDDFPT).tar.gz $(TDDFPT_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	echo "unable to download tddfpt. Test whether curl or wget is installed in your computer." ; \
+	fi ; fi ; fi) 
+	if test ! -d ../TDDFPT; then \
+	(gzip -dc ../archive/$(TDDFPT).tar.gz | (cd ../ ; tar -xvf -)) ; \
+	(cd ../ ; ln -s $(TDDFPT) TDDFPT) ; fi 
+	touch uncompress-tddfpt
+##########################################################
+# PHonon
+###########################################################
+phonon:  uncompress-phonon
+	if test -d ../PHonon; then \
+	cd ../PHonon; $(MAKE) all; cd ../bin; \
+	ln -fs ../PHonon/PH/ph.x . ; \
+	ln -fs ../PHonon/PH/dynmat.x . ; \
+	ln -fs ../PHonon/PH/matdyn.x . ; \
+	ln -fs ../PHonon/PH/q2r.x . ; \
+	ln -fs ../PHonon/PH/q2qstar.x . ; \
+	ln -fs ../PHonon/PH/lambda.x . ; \
+	ln -fs ../PHonon/PH/fqha.x . ; \
+	ln -fs ../PHonon/Gamma/phcg.x . ; \
+	ln -fs ../PHonon/D3/d3.x . ; \
+	fi
+	touch make-phonon
+uncompress-phonon: touch-dummy
+	@(if test ! -e ../archive/$(PHONON).tar.gz && test ! -d ../PHonon ; then \
+	wget -O ../archive/$(PHONON).tar.gz $(PHONON_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	curl -o ../archive/$(PHONON).tar.gz $(PHONON_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	echo "unable to download phonon. Test whether curl or wget is installed in your computer." ; \
+	fi ; fi ; fi) 
+	if test ! -d ../PHonon; then \
+	(gzip -dc ../archive/$(PHONON).tar.gz | (cd ../ ; tar -xvf -)) ; \
+	(cd ../ ; ln -s $(PHONON) PHonon) ; fi 
+	touch uncompress-phonon
 ##########################################################
 # GIPAW
 ###########################################################
@@ -328,6 +395,37 @@ pwcond_clean:
 
 pwcond_veryclean: pwcond_clean
 # dir is not deleted for compatibility with the repository
+
+neb_clean:
+	if test -d ../NEB; then (cd ../NEB; \
+	$(MAKE) clean); fi
+	rm -f ../bin/neb.x
+	rm -rf ./make-neb 
+# dir is not deleted for compatibility with the repository
+
+tddfpt_clean:
+	if test -d ../TDDFPT; then (cd ../TDDFPT; \
+	$(MAKE) clean); fi
+	rm -f ../bin/turbo_lanczos.x
+	rm -f ../bin/turbo_spectrum.x
+	rm -rf ./make-tddfpt 
+# dir is not deleted for compatibility with the repository
+
+phonon_clean:
+	if test -d ../PHonon; then (cd ../PHonon; \
+	$(MAKE) clean); fi
+	rm -rf ../bin/ph.x
+	rm -rf ../bin/dynmat.x
+	rm -rf ../bin/matdyn.x
+	rm -rf ../bin/q2r.x
+	rm -rf ../bin/q2qstar.x
+	rm -rf ../bin/lambda.x
+	rm -rf ../bin/fqha.x
+	rm -rf ../bin/phcg.x
+	rm -rf ../bin/d3.x
+	rm -rf ./make-phonon 
+# dir is not deleted for compatibility with the repository
+# exe links to main bin dir are deleted by PHonon Makefile
 
 gipaw_clean:
 	if test -d ../GIPAW; then (cd ../GIPAW; \

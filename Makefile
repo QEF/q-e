@@ -46,19 +46,13 @@ cp : bindir mods liblapack libblas libs libiotk
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 ph : bindir mods libs pw
-	if test -d PHonon ; then \
-	( cd PHonon ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile phonon
 
 neb : bindir mods libs pw
-	if test -d NEB ; then \
-	( cd NEB ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 tddfpt : bindir mods libs pw ph
-	if test -d TDDFPT ; then \
-	( cd TDDFPT ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 pp : bindir mods libs pw
 	if test -d PP ; then \
@@ -194,10 +188,10 @@ links : bindir
 clean :
 	touch make.sys 
 	for dir in \
-		CPV PHonon/D3 PHonon/Gamma Modules PHonon/PH PP PW \
-		NEB VdW ACFDT EE \
-		clib flib pwtools upftools iotk GIPAW \
-		dev-tools GWW extlibs TDDFPT Environ EPW \
+		CPV Modules PP PW \
+		VdW ACFDT EE \
+		clib flib pwtools upftools iotk \
+		dev-tools GWW extlibs Environ \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -219,7 +213,6 @@ distclean veryclean : clean
 	- rm -f espresso.tar.gz
 	- cd examples ; ./make_clean
 	- cd PHonon/examples ; ./make_clean
-	- cd atomic_doc ; ./make_clean
 	- for dir in Doc; do \
 	    test -d $$dir && ( cd $$dir ; $(MAKE) $(MFLAGS) TLDEPS= clean ) \
 	done
