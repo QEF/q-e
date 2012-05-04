@@ -269,7 +269,7 @@ GNU General Public License. See
 \texttt{http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt}, 
 or the file License in the distribution).
     
-We shall greatly appreciate if scientific work done using this code will 
+We shall greatly appreciate if scientific work done using \qe\ distribution will 
 contain an explicit acknowledgment and the following reference:
 \begin{quote}
 P. Giannozzi, S. Baroni, N. Bonini, M. Calandra, R. Car, C. Cavazzoni,
@@ -282,6 +282,8 @@ P. Umari, R. M. Wentzcovitch, J.Phys.:Condens.Matter 21, 395502 (2009),
 http://arxiv.org/abs/0906.2569
 \end{quote}
 Note the form \qe\ for textual citations of the code.
+Please also see package-specific documentation for
+further recommended citations.
 Pseudopotentials should be cited as (for instance)
 \begin{quote}
 [ ] We used the pseudopotentials C.pbe-rrjkus.UPF
@@ -312,14 +314,13 @@ doesn't recognize the "z" flag:
      gunzip -c espresso-X.Y.Z.tar.gz | tar xvf -
 \end{verbatim}
 A directory \texttt{espresso-X.Y.Z/} will be created. Given the size 
-of the complete distribution, you may need to download more packages
-and to unpack them following the same procedure (they will unpack into 
-the same directory). 
-
-Plug-ins \texttt{YAMBO}, \texttt{PLUMED}, \texttt{W90}, \texttt{WanT} should be downloaded into
-subdirectory \texttt{archive} but {\em not unpacked or uncompressed}:
+of the complete distribution, you may need to download more packages.
+If the computer you expect to install \qe\ is always connected
+to the internet, the \texttt{Makefiles} will automatically download,
+unpack and install the required packages on demand. If not,
+you can download each required package into subdirectory
+\texttt{archive} but {\em not unpacked or uncompressed}:
 command \texttt{make} will take care of this during installation. 
-\texttt{GIPAW} is instead automatically downloaded on demand.
 
 Occasionally, patches for the current version, fixing some errors and bugs,
 may be distributed as a "diff" file. In order to install a patch (for 
