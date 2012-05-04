@@ -104,6 +104,12 @@ CONTAINS
     
     !!write(*,*) "Reading kernel table ... "
 
+    if (allocated(kernel)) then
+
+       return
+
+    end if
+
     
     !! Get the unit number for the kernel file
     kernel_file = find_free_unit()
