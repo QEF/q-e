@@ -35,7 +35,7 @@ program ld1
   call ld1_readin ( )
   call ld1_setup ( )
   !
-  !   three possible working mode:
+  !   four possible working mode:
   !
   if (iswitch.eq.1) then
      !

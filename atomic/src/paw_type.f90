@@ -108,6 +108,7 @@ MODULE paw_type
         IF( ASSOCIATED( paw%els ) ) DEALLOCATE( paw%els )
         IF( ASSOCIATED( paw%rcutus ) ) DEALLOCATE( paw%rcutus )
         IF( ASSOCIATED( paw%enl ) ) DEALLOCATE( paw%enl )
+	IF( ASSOCIATED( paw%aewfc_rel ) ) DEALLOCATE( paw%aewfc_rel ) 
         IF( ASSOCIATED( paw%aewfc ) ) DEALLOCATE( paw%aewfc )
         IF( ASSOCIATED( paw%pswfc ) ) DEALLOCATE( paw%pswfc )
         IF( ASSOCIATED( paw%proj ) ) DEALLOCATE( paw%proj )
