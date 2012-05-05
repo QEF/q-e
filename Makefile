@@ -201,7 +201,8 @@ clean :
 	done
 	- @(cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile clean)
 	- /bin/rm -rf bin/*.x tmp
-	- cd tests; /bin/rm -rf CRASH *.out *.out2 
+	- cd PW/tests; /bin/rm -rf CRASH *.out *.out? ; cd -
+	- cd CPV/tests; /bin/rm -rf CRASH *.out *.out? 
 
 # remove configuration files too
 distclean veryclean : clean
