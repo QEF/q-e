@@ -56,8 +56,9 @@
      real(DP) ::  verl1, verl2, verl3
      real(DP),    allocatable :: emadt2(:)
      real(DP),    allocatable :: emaver(:)
-     complex(DP), allocatable :: c2(:), c3(:)
-     REAL(DP),    ALLOCATABLE :: tg_rhos(:,:)
+     complex(DP), allocatable :: c2(:), c3(:), c2tmp(:), c3tmp(:)
+     REAL(DP),    ALLOCATABLE :: tg_rhos(:,:), ftmp(:)
+     INTEGER,     ALLOCATABLE :: itmp(:)
      integer :: i, nsiz, incr, idx, idx_in, ierr
      integer :: iwfc, nwfc, is, ii, tg_rhos_siz, c2_siz
      integer :: iflag
@@ -155,7 +156,65 @@
                  CALL errore( ' runcp_uspp ', ' lda_plus_u with task group not implemented yet ', 1 )
               end if
 
-              CALL dforce( i, bec_bgrp, vkb, c0_bgrp, c2, c3, tg_rhos, tg_rhos_siz, ispin_bgrp, f_bgrp, nbsp_bgrp, nspin )
+              IF( nspin > 1 .AND. ispin_bgrp(i) /= ispin_bgrp( MIN( nbsp_bgrp, i+incr-1 ) ) ) THEN
+
+                 ! when computing force with task group and states with different spin,
+                 ! we need to compute spin up and spin down separately because the logics 
+                 ! of computing two states with different spin at the same time do not work any longer
+
+                 ALLOCATE( c2tmp( c2_siz ) )
+                 ALLOCATE( c3tmp( c2_siz ) )
+                 ALLOCATE( ftmp( nbsp_bgrp ) )
+                 ALLOCATE( itmp( nbsp_bgrp ) )
+
+                 !  spin up
+                 itmp = ispin_bgrp(i)
+                 ftmp = f_bgrp(i)
+                 c2tmp = 0.0d0
+                 c3tmp = 0.0d0
+                 CALL dforce( i, bec_bgrp, vkb, c0_bgrp, c2tmp, c3tmp, tg_rhos, tg_rhos_siz, itmp, ftmp, nbsp_bgrp, nspin )
+                 idx_in = 1
+                 DO idx = 1, incr, 2
+                    IF( i + idx - 1 <= nbsp_bgrp ) THEN
+                       IF( ispin_bgrp( i + idx - 1 ) == ispin_bgrp(i) ) THEN
+                          c2( (idx_in-1)*ngw+1 : idx_in*ngw ) = c2tmp( (idx_in-1)*ngw+1 : idx_in*ngw )
+                       END IF
+                       IF( ispin_bgrp( i + idx     ) == ispin_bgrp(i) ) THEN
+                          c3( (idx_in-1)*ngw+1 : idx_in*ngw ) = c3tmp( (idx_in-1)*ngw+1 : idx_in*ngw )
+                       END IF
+                    END IF
+                    idx_in = idx_in + 1
+                 END DO
+
+                 !  spin down
+                 itmp = ispin_bgrp( MIN( nbsp_bgrp, i+incr-1 ) )
+                 ftmp = f_bgrp( MIN( nbsp_bgrp, i+incr-1 ) )
+                 c2tmp = 0.0d0
+                 c3tmp = 0.0d0
+                 CALL dforce( i, bec_bgrp, vkb, c0_bgrp, c2tmp, c3tmp, tg_rhos, tg_rhos_siz, itmp, ftmp, nbsp_bgrp, nspin )
+                 idx_in = 1
+                 DO idx = 1, incr, 2
+                    IF( i + idx - 1 <= nbsp_bgrp ) THEN
+                       IF( ispin_bgrp( i + idx - 1 ) == ispin_bgrp( MIN( nbsp_bgrp, i+incr-1 ) ) ) THEN
+                          c2( (idx_in-1)*ngw+1 : idx_in*ngw ) = c2tmp( (idx_in-1)*ngw+1 : idx_in*ngw )
+                       END IF
+                       IF( ispin_bgrp( i + idx     ) == ispin_bgrp( MIN( nbsp_bgrp, i+incr-1 ) ) ) THEN
+                          c3( (idx_in-1)*ngw+1 : idx_in*ngw ) = c3tmp( (idx_in-1)*ngw+1 : idx_in*ngw )
+                       END IF
+                    END IF 
+                    idx_in = idx_in + 1
+                 END DO
+
+                 DEALLOCATE( itmp )
+                 DEALLOCATE( ftmp )
+                 DEALLOCATE( c3tmp )
+                 DEALLOCATE( c2tmp )
+
+              ELSE
+              
+                 CALL dforce( i, bec_bgrp, vkb, c0_bgrp, c2, c3, tg_rhos, tg_rhos_siz, ispin_bgrp, f_bgrp, nbsp_bgrp, nspin )
+
+              END IF
 
            ELSE
 
@@ -190,11 +249,11 @@
            DO idx = 1, incr, 2
               IF( i + idx - 1 <= nbsp_bgrp ) THEN
                  IF (tsde) THEN
-                    CALL wave_steepest( cm_bgrp(:, i+idx-1 ), c0_bgrp(:, i+idx-1 ), emaver, c2, ngw, idx_in )
-                    CALL wave_steepest( cm_bgrp(:, i+idx   ), c0_bgrp(:, i+idx   ), emaver, c3, ngw, idx_in )
+                    CALL wave_steepest( cm_bgrp(:, i+idx-1 ), c0_bgrp(:, i+idx-1 ), emaver, c2(:), ngw, idx_in )
+                    CALL wave_steepest( cm_bgrp(:, i+idx   ), c0_bgrp(:, i+idx   ), emaver, c3(:), ngw, idx_in )
                  ELSE
-                    CALL wave_verlet( cm_bgrp(:, i+idx-1 ), c0_bgrp(:, i+idx-1 ), verl1, verl2, emaver, c2, ngw, idx_in )
-                    CALL wave_verlet( cm_bgrp(:, i+idx   ), c0_bgrp(:, i+idx   ), verl1, verl2, emaver, c3, ngw, idx_in )
+                    CALL wave_verlet( cm_bgrp(:, i+idx-1 ), c0_bgrp(:, i+idx-1 ), verl1, verl2, emaver, c2(:), ngw, idx_in )
+                    CALL wave_verlet( cm_bgrp(:, i+idx   ), c0_bgrp(:, i+idx   ), verl1, verl2, emaver, c3(:), ngw, idx_in )
                  ENDIF
                  IF ( gstart == 2 ) THEN
                     cm_bgrp(1,i+idx-1) = CMPLX(real(cm_bgrp(1,i+idx-1)),0.0d0,kind=dp)
