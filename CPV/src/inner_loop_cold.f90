@@ -22,7 +22,8 @@
       USE energies,       ONLY: eht, epseu, exc, etot, eself, enl, &
                                 ekin, atot, entropy, egrand
       USE electrons_base, ONLY: f, nspin, nel, iupdwn, nupdwn, nudx, &
-                                nelt, nx => nbspx, n => nbsp, ispin 
+                                nelt, nx => nbspx, n => nbsp, ispin , &
+                                f_bgrp,nupdwn_bgrp,iupdwn_bgrp
 
       USE ensemble_dft,   ONLY: tens,  ninner, ismear, etemp, &
                                 ef, z0t, c0diag, becdiag, &
@@ -116,7 +117,6 @@
  
         ! rotates the wavefunctions c0 and the overlaps bec
         ! (the occupation matrix f_ij becomes diagonal f_i)      
-
         CALL rotate( z0t, c0, bec, c0diag, becdiag, .false. )
   
         ! calculates the electronic charge density
@@ -132,11 +132,10 @@
                      tau0, fion2 )
        !entropy value already  been calculated
 
-      END IF
+     END IF
      
       atot0=etot+entropy
       
-    
 !starts inner loop
       do niter=1,ninner
 !calculates c0hc0, which defines the search line (1-\labda)* psihpsi+\labda*c0hc0
@@ -250,6 +249,10 @@
          !calculates fro e0 the new occupation and the entropy        
 
          CALL efermi( nelt, n, etemp, 1, f, ef, e0, entropy, ismear, nspin )
+         
+         do is=1,nspin
+            f_bgrp(iupdwn_bgrp(is):iupdwn_bgrp(is)+nupdwn_bgrp(is)-1)=f(1:nupdwn_bgrp(is))
+         enddo
 
 
         !calculates new charge and new energy
@@ -319,10 +322,11 @@
       USE energies,       ONLY: eht, epseu, exc, etot, eself, enl, &
                                 ekin, atot, entropy, egrand
       USE electrons_base, ONLY: f, nspin, nel, iupdwn, nupdwn, nudx, &
-                                nelt, nx => nbspx, n => nbsp, ispin 
+                                nelt, nx => nbspx, n => nbsp, ispin ,&
+                                f_bgrp,nupdwn_bgrp,iupdwn_bgrp
 
       USE ensemble_dft,   ONLY: tens,  ninner, ismear, etemp, &
-                                 c0diag, becdiag
+                                 c0diag, becdiag, z0t
       USE gvect,          ONLY: ngm
       USE gvecs,          ONLY: ngms
       USE smallbox_gvec,  ONLY: ngb
@@ -402,6 +406,9 @@
 
       CALL efermi( nelt, n, etemp, 1, f, ef_aux, eaux, entropy_aux, ismear, nspin )
 
+       do is=1,nspin
+          f_bgrp(iupdwn_bgrp(is):iupdwn_bgrp(is)+nupdwn_bgrp(is)-1)=f(1:nupdwn_bgrp(is))
+       enddo
 
       ! calculates the electronic charge density
       CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, &
@@ -415,6 +422,7 @@
                    tlast, ei1, ei2, ei3, irb, eigrb, sfac, &
                    tau0, fion2 )
       !entropy value already  been calculated
+
 
       free_energy=etot+entropy_aux
          
@@ -583,7 +591,6 @@
             DO i = 1, nss
                e0( i+istart-1 )= dval( i )
             END DO
-
             z0t(:,:,is) = 0.0d0
 
             IF( descla( is )%active_node > 0 ) THEN
@@ -594,12 +601,14 @@
 
             DEALLOCATE( epsi0 , zaux, dval )
 
-   END DO
+         END DO
 
    ! rotates the wavefunctions c0 and the overlaps bec
    ! (the occupation matrix f_ij becomes diagonal f_i)      
 
-   CALL rotate ( z0t, c0, bec, c0diag, becdiag, .false. )
+
+  
+   CALL rotate ( z0t, c0, bec, c0diag, becdiag, .false. ) 
 
    CALL stop_clock( 'inner_diag')
      
