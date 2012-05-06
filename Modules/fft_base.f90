@@ -65,11 +65,11 @@
 !   like infiniband, ethernet, myrinet
 !
 !-----------------------------------------------------------------------
-SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg )
+SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg )
   !-----------------------------------------------------------------------
   !
   ! transpose the fft grid across nodes
-  ! a) From columns to planes (sign > 0)
+  ! a) From columns to planes (isgn > 0)
   !
   !    "columns" (or "pencil") representation:
   !    processor "me" has ncp_(me) contiguous columns along z
@@ -86,7 +86,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg
   !    Finally one gets the "planes" representation:
   !    processor "me" has npp_(me) complete xy planes
   !
-  !  b) From planes to columns (sign < 0)
+  !  b) From planes to columns (isgn < 0)
   !
   !  Quite the same in the opposite direction
   !
@@ -104,7 +104,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg
 
   TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
 
-  INTEGER, INTENT(in)           :: nr3x, nxx_, sign, ncp_ (:), npp_ (:)
+  INTEGER, INTENT(in)           :: nr3x, nxx_, isgn, ncp_ (:), npp_ (:)
   COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
   LOGICAL, OPTIONAL, INTENT(in) :: use_tg
 
@@ -118,6 +118,8 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg
   LOGICAL :: use_tg_ , lrcv, lsnd
   LOGICAL :: tsts(dfft%nproc), tstr(dfft%nproc)
   INTEGER :: istat( MPI_STATUS_SIZE )
+
+  INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff
 
 #if defined __HPM
      !       CALL f_hpmstart( 10, 'scatter' )
@@ -185,7 +187,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg
   !
   ierr = 0
   !
-  IF ( sign > 0 ) THEN
+  IF ( isgn > 0 ) THEN
      !
      ! "forward" scatter from columns to planes
      !
@@ -299,9 +301,138 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg
         !
      ENDDO
      !
+     IF( isgn == 1 ) THEN
+
+        me_p = dfft%mype + 1
+
+        IF ( dfft%nproc == 1 ) THEN
+           nppx = dfft%nr3x
+        ELSE
+           nppx = dfft%npp( me_p )
+        ENDIF
+
+!$omp parallel default(shared)
+!$omp do
+        DO i = 1, size(f_aux)
+           f_aux(i) = (0.d0, 0.d0)
+        ENDDO
+        !
+!$omp do private(mc,j)
+        DO i = 1, dfft%nst
+           mc = dfft%ismap( i )
+           DO j = 1, dfft%npp( me_p )
+              f_aux( mc + ( j - 1 ) * dfft%nnp ) = f_in( j + ( i - 1 ) * nppx )
+           ENDDO
+        ENDDO
+!$omp end parallel
+
+     ELSE
+
+        me_p = dfft%mype + 1
+
+        IF( use_tg_ ) THEN
+           !
+           nppx = dfft%tg_npp( me_p )
+           npp  = dfft%tg_npp( me_p )
+           nnp  = dfft%nr1x * dfft%nr2x
+           !
+        ELSE
+           !
+           nppx = dfft%npp( me_p )
+           IF( dfft%nproc == 1 ) nppx = dfft%nr3x
+           npp  = dfft%npp( me_p )
+           nnp  = dfft%nnp
+           !
+        ENDIF
+        !
+!$omp parallel default(shared), private( ii, mc, j, i, ioff, ip, it )
+!$omp do
+        DO i = 1, size( f_aux )
+           f_aux(i) = (0.d0, 0.d0)
+        ENDDO
+        !
+        ii = 0
+        !
+        DO ip = 1, dfft%nproc
+           !
+           ioff = dfft%iss( ip )
+           !
+!$omp do
+           DO i = 1, dfft%nsw( ip )
+              !
+              mc = dfft%ismap( i + ioff )
+              !
+              it = ( ii + i - 1 ) * nppx
+              !
+              DO j = 1, npp
+                 f_aux( mc + ( j - 1 ) * nnp ) = f_in( j + it )
+              ENDDO
+              !
+           ENDDO
+           !
+           ii = ii + dfft%nsw( ip )
+           !
+        ENDDO
+!$omp end parallel
+
+     END IF
+     ! 
   ELSE
      !
      !  "backward" scatter from planes to columns
+     !
+     IF( isgn == -1 ) THEN
+        me_p = dfft%mype + 1
+        IF ( dfft%nproc == 1 ) THEN
+           nppx = dfft%nr3x
+        ELSE
+           nppx = dfft%npp( me_p )
+        ENDIF
+!$omp parallel default(shared), private( mc, j, i )
+!$omp do
+        DO i = 1, dfft%nst
+           mc = dfft%ismap( i )
+           DO j = 1, dfft%npp( me_p )
+              f_in( j + ( i - 1 ) * nppx ) = f_aux( mc + ( j - 1 ) * dfft%nnp )
+           ENDDO
+        ENDDO
+!$omp end parallel
+
+     ELSE
+
+        me_p = dfft%mype + 1
+
+        IF( use_tg_ ) THEN
+           !
+           nppx = dfft%tg_npp( me_p )
+           npp  = dfft%tg_npp( me_p )
+           nnp  = dfft%nr1x * dfft%nr2x
+           !
+        ELSE
+           !
+           nppx = dfft%npp( me_p )
+           IF( dfft%nproc == 1 ) nppx = dfft%nr3x
+           npp  = dfft%npp( me_p )
+           nnp  = dfft%nnp
+           !
+        ENDIF
+
+!$omp parallel default(shared), private( mc, j, i, ii, ip, it )
+        ii = 0
+        DO ip = 1, dfft%nproc
+!$omp do
+           DO i = 1, dfft%nsw( ip )
+              mc = dfft%ismap( i + dfft%iss( ip ) )
+              it = (ii + i - 1)*nppx
+              DO j = 1, npp
+                 f_in( j + it ) = f_aux( mc + ( j - 1 ) * nnp )
+              ENDDO
+           ENDDO
+           ii = ii + dfft%nsw( ip )
+        ENDDO
+!$omp end parallel
+
+     END IF
      !
      DO ip = 1, nprocp
 
@@ -436,11 +567,11 @@ END SUBROUTINE fft_scatter
 !   with a defined topology, like on bluegene and cray machine
 !
 !-----------------------------------------------------------------------
-SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg )
+SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg )
   !-----------------------------------------------------------------------
   !
   ! transpose the fft grid across nodes
-  ! a) From columns to planes (sign > 0)
+  ! a) From columns to planes (isgn > 0)
   !
   !    "columns" (or "pencil") representation:
   !    processor "me" has ncp_(me) contiguous columns along z
@@ -457,7 +588,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg
   !    Finally one gets the "planes" representation:
   !    processor "me" has npp_(me) complete xy planes
   !
-  !  b) From planes to columns (sign < 0)
+  !  b) From planes to columns (isgn < 0)
   !
   !  Quite the same in the opposite direction
   !
@@ -474,7 +605,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg
   IMPLICIT NONE
 
   TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
-  INTEGER, INTENT(in)           :: nr3x, nxx_, sign, ncp_ (:), npp_ (:)
+  INTEGER, INTENT(in)           :: nr3x, nxx_, isgn, ncp_ (:), npp_ (:)
   COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
   LOGICAL, OPTIONAL, INTENT(in) :: use_tg
 
@@ -482,6 +613,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg
 
   INTEGER :: dest, from, k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
   INTEGER :: sendcount (dfft%nproc), sdispls (dfft%nproc), recvcount (dfft%nproc), rdispls (dfft%nproc)
+  INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff
   !
   LOGICAL :: use_tg_
 
@@ -538,7 +670,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg
   !
 
   ierr = 0
-  IF (sign.gt.0) THEN
+  IF (isgn.gt.0) THEN
      !
      ! "forward" scatter from columns to planes
      !
@@ -555,26 +687,13 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg
            gproc = proc
         ENDIF
         !
-        !  optimize for large parallel execution, where npp_ ( gproc ) ~ 1
-        !
-        IF( npp_ ( gproc ) > 128 ) THEN
-           DO k = 1, ncp_ (me)
-              CALL DCOPY (2 * npp_ ( gproc ), f_in (from + (k - 1) * nr3x), &
-                   1, f_aux (dest + (k - 1) * npp_ ( gproc ) ), 1)
+        DO k = 1, ncp_ (me)
+           kdest = dest + (k - 1) * npp_ ( gproc ) - 1
+           kfrom = from + (k - 1) * nr3x - 1
+           DO i = 1, npp_ ( gproc )
+              f_aux ( kdest + i ) =  f_in ( kfrom + i )
            ENDDO
-        ELSEIF( npp_ ( gproc ) == 1 ) THEN
-           DO k = 1, ncp_ (me)
-              f_aux (dest + (k - 1) ) =  f_in (from + (k - 1) * nr3x )
-           ENDDO
-        ELSE
-           DO k = 1, ncp_ (me)
-              kdest = dest + (k - 1) * npp_ ( gproc ) - 1
-              kfrom = from + (k - 1) * nr3x - 1
-              DO i = 1, npp_ ( gproc )
-                 f_aux ( kdest + i ) =  f_in ( kfrom + i )
-              ENDDO
-           ENDDO
-        ENDIF
+        ENDDO
         offset = offset + npp_ ( gproc )
      ENDDO
      !
@@ -597,9 +716,139 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg
 
      IF( abs(ierr) /= 0 ) CALL errore ('fft_scatter', 'info<>0', abs(ierr) )
      !
+     IF( isgn == 1 ) THEN
+
+        me_p = dfft%mype + 1
+
+        IF ( dfft%nproc == 1 ) THEN
+           nppx = dfft%nr3x
+        ELSE
+           nppx = dfft%npp( me_p )
+        ENDIF
+
+!$omp parallel default(shared)
+!$omp do
+        DO i = 1, size(f_aux)
+           f_aux(i) = (0.d0, 0.d0)
+        ENDDO
+        !
+!$omp do private(mc,j)
+        DO i = 1, dfft%nst
+           mc = dfft%ismap( i )
+           DO j = 1, dfft%npp( me_p )
+              f_aux( mc + ( j - 1 ) * dfft%nnp ) = f_in( j + ( i - 1 ) * nppx )
+           ENDDO
+        ENDDO
+!$omp end parallel
+
+     ELSE
+
+        me_p = dfft%mype + 1
+
+        IF( use_tg_ ) THEN
+           !
+           nppx = dfft%tg_npp( me_p )
+           npp  = dfft%tg_npp( me_p )
+           nnp  = dfft%nr1x * dfft%nr2x
+           !
+        ELSE
+           !
+           nppx = dfft%npp( me_p )
+           IF( dfft%nproc == 1 ) nppx = dfft%nr3x
+           npp  = dfft%npp( me_p )
+           nnp  = dfft%nnp
+           !
+        ENDIF
+        !
+!$omp parallel default(shared), private( ii, mc, j, i, ioff, ip, it )
+!$omp do
+        DO i = 1, size( f_aux )
+           f_aux(i) = (0.d0, 0.d0)
+        ENDDO
+        !
+        ii = 0
+        !
+        DO ip = 1, dfft%nproc
+           !
+           ioff = dfft%iss( ip )
+           !
+!$omp do
+           DO i = 1, dfft%nsw( ip )
+              !
+              mc = dfft%ismap( i + ioff )
+              !
+              it = ( ii + i - 1 ) * nppx
+              !
+              DO j = 1, npp
+                 f_aux( mc + ( j - 1 ) * nnp ) = f_in( j + it )
+              ENDDO
+              !
+           ENDDO
+           !
+           ii = ii + dfft%nsw( ip )
+           !
+        ENDDO
+!$omp end parallel
+
+
+     END IF
+
   ELSE
      !
      !  "backward" scatter from planes to columns
+     !
+     IF( isgn == -1 ) THEN
+        me_p = dfft%mype + 1
+        IF ( dfft%nproc == 1 ) THEN
+           nppx = dfft%nr3x
+        ELSE
+           nppx = dfft%npp( me_p )
+        ENDIF
+!$omp parallel default(shared), private( mc, j, i )
+!$omp do
+        DO i = 1, dfft%nst
+           mc = dfft%ismap( i )
+           DO j = 1, dfft%npp( me_p )
+              f_in( j + ( i - 1 ) * nppx ) = f_aux( mc + ( j - 1 ) * dfft%nnp )
+           ENDDO
+        ENDDO
+!$omp end parallel
+
+     ELSE
+
+        me_p = dfft%mype + 1
+
+        IF( use_tg_ ) THEN
+           !
+           nppx = dfft%tg_npp( me_p )
+           npp  = dfft%tg_npp( me_p )
+           nnp  = dfft%nr1x * dfft%nr2x
+           !
+        ELSE
+           !
+           nppx = dfft%npp( me_p )
+           IF( dfft%nproc == 1 ) nppx = dfft%nr3x
+           npp  = dfft%npp( me_p )
+           nnp  = dfft%nnp
+           !
+        ENDIF
+
+!$omp parallel default(shared), private( mc, j, i, ii, ip, it )
+        ii = 0
+        DO ip = 1, dfft%nproc
+!$omp do
+           DO i = 1, dfft%nsw( ip )
+              mc = dfft%ismap( i + dfft%iss( ip ) )
+              it = (ii + i - 1)*nppx
+              DO j = 1, npp
+                 f_in( j + it ) = f_aux( mc + ( j - 1 ) * nnp )
+              ENDDO
+           ENDDO
+           ii = ii + dfft%nsw( ip )
+        ENDDO
+!$omp end parallel
+
+     END IF
      !
      !  step two: communication
      !
@@ -631,26 +880,13 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg
            gproc = proc
         ENDIF
         !
-        !  optimize for large parallel execution, where npp_ ( gproc ) ~ 1
-        !
-        IF( npp_ ( gproc ) > 128 ) THEN
-           DO k = 1, ncp_ (me)
-              CALL DCOPY ( 2 * npp_ ( gproc ), f_aux (from + (k - 1) * npp_ ( gproc ) ), 1, &
-                                            f_in  (dest + (k - 1) * nr3x ), 1 )
+        DO k = 1, ncp_ (me)
+           kdest = dest + (k - 1) * nr3x - 1
+           kfrom = from + (k - 1) * npp_ ( gproc ) - 1
+           DO i = 1, npp_ ( gproc )
+              f_in ( kdest + i ) = f_aux( kfrom + i )
            ENDDO
-        ELSEIF ( npp_ ( gproc ) == 1 ) THEN
-           DO k = 1, ncp_ (me)
-              f_in ( dest + (k - 1) * nr3x ) = f_aux ( from + (k - 1) )
-           ENDDO
-        ELSE
-           DO k = 1, ncp_ (me)
-              kdest = dest + (k - 1) * nr3x - 1
-              kfrom = from + (k - 1) * npp_ ( gproc ) - 1
-              DO i = 1, npp_ ( gproc )
-                 f_in ( kdest + i ) = f_aux( kfrom + i )
-              ENDDO
-           ENDDO
-        ENDIF
+        ENDDO
         !
         offset = offset + npp_ ( gproc )
         !

@@ -319,7 +319,11 @@ CONTAINS
       desc%nnr  = nr1x * nr2x * nr3x
       desc%tg_nnr = desc%nnr
     ELSE
-      desc%nnr  = max( nr3x * ncp( desc%mype + 1 ), nr1x * nr2x * npp( desc%mype + 1 ) )
+      desc%nnr  = max( nr3x * ncp( 1 ), nr1x * nr2x * npp( 1 ) )
+      DO i = 2, desc%nproc
+         desc%nnr  = max( desc%nnr, nr3x * ncp( i ) )
+         desc%nnr  = max( desc%nnr, nr1x * nr2x * npp( i ) )
+      END DO
       desc%nnr  = max( 1, desc%nnr ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
       desc%tg_nnr = desc%nnr
       DO i = 1, desc%nproc

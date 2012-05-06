@@ -276,84 +276,22 @@ CONTAINS
      USE fft_base, ONLY: fft_scatter
      !
      INTEGER, INTENT(in) :: iopt
-     INTEGER :: nppx, ip, nnp, npp, ii, i, mc, j, ioff, it
      !
      IF( iopt == 2 ) THEN
         !
         IF( use_tg ) THEN
            !
-           nppx = dfft%tg_npp( me_p )
-           npp  = dfft%tg_npp( me_p )
-           nnp  = nx1*nx2
-           !
            CALL fft_scatter( dfft, aux, nx3, dfft%nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg )
            !
         ELSE
-           !
-           nppx = dfft%npp( me_p )
-           IF( dfft%nproc == 1 ) nppx = dfft%nr3x
-           npp  = dfft%npp( me_p )
-           nnp  = dfft%nnp
            !
            CALL fft_scatter( dfft, aux, nx3, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
            !
         ENDIF
         !
-        !
-!$omp parallel default(shared), private( ii, mc, j, i, ioff, ip, it )
-!$omp do
-        DO i = 1, size( f )
-           f(i) = (0.d0, 0.d0)
-        ENDDO
-        !
-        ii = 0
-        !
-        DO ip = 1, dfft%nproc
-           !
-           ioff = dfft%iss( ip )
-           !
-!$omp do
-           DO i = 1, dfft%nsw( ip )
-              !
-              mc = dfft%ismap( i + ioff )
-              !
-              it = ( ii + i - 1 ) * nppx
-              !
-              DO j = 1, npp
-                 f( mc + ( j - 1 ) * nnp ) = aux( j + it )
-              ENDDO
-              !
-           ENDDO
-           !
-           ii = ii + dfft%nsw( ip )
-           !
-        ENDDO
-!$omp end parallel
-        !
      ELSEIF( iopt == 1 ) THEN
         !
-        IF ( dfft%nproc == 1 ) THEN
-           nppx = dfft%nr3x
-        ELSE
-           nppx = dfft%npp( me_p )
-        ENDIF
-        !
         CALL fft_scatter( dfft, aux, nx3, dfft%nnr, f, dfft%nsp, dfft%npp, iopt )
-        !
-!$omp parallel default(shared)
-!$omp do
-        DO i = 1, size(f)
-           f(i) = (0.d0, 0.d0)
-        ENDDO
-        !
-!$omp do private(mc,j)
-        DO i = 1, dfft%nst
-           mc = dfft%ismap( i )
-           DO j = 1, dfft%npp( me_p )
-              f( mc + ( j - 1 ) * dfft%nnp ) = aux( j + ( i - 1 ) * nppx )
-           ENDDO
-        ENDDO
-!$omp end parallel
         !
      ENDIF
      !
@@ -367,41 +305,8 @@ CONTAINS
      USE fft_base, ONLY: fft_scatter
      !
      INTEGER, INTENT(in) :: iopt
-     INTEGER :: nppx, ip, nnp, npp, ii, i, mc, j, it
-     !
      !
      IF( iopt == -2 ) THEN
-        !
-        IF( use_tg ) THEN
-           !
-           nppx = dfft%tg_npp( me_p )
-           npp  = dfft%tg_npp( me_p )
-           nnp  = nx1*nx2
-           !
-        ELSE
-           !
-           nppx = dfft%npp( me_p )
-           IF( dfft%nproc == 1 ) nppx = dfft%nr3x
-           npp  = dfft%npp( me_p )
-           nnp  = dfft%nnp
-           !
-        ENDIF
-
-
-!$omp parallel default(shared), private( mc, j, i, ii, ip, it )
-        ii = 0
-        DO ip = 1, dfft%nproc
-!$omp do
-           DO i = 1, dfft%nsw( ip )
-              mc = dfft%ismap( i + dfft%iss( ip ) )
-              it = (ii + i - 1)*nppx
-              DO j = 1, npp
-                 aux( j + it ) = f( mc + ( j - 1 ) * nnp )
-              ENDDO
-           ENDDO
-           ii = ii + dfft%nsw( ip )
-        ENDDO
-!$omp end parallel
         !
         IF( use_tg ) THEN
            !
@@ -414,21 +319,6 @@ CONTAINS
         ENDIF
         !
      ELSEIF( iopt == -1 ) THEN
-        !
-        IF ( dfft%nproc == 1 ) THEN
-           nppx = dfft%nr3x
-        ELSE
-           nppx = dfft%npp( me_p )
-        ENDIF
-!$omp parallel default(shared), private( mc, j, i )
-!$omp do
-        DO i = 1, dfft%nst
-           mc = dfft%ismap( i )
-           DO j = 1, dfft%npp( me_p )
-              aux( j + ( i - 1 ) * nppx ) = f( mc + ( j - 1 ) * dfft%nnp )
-           ENDDO
-        ENDDO
-!$omp end parallel
         !
         CALL fft_scatter( dfft, aux, nx3, dfft%nnr, f, dfft%nsp, dfft%npp, iopt )
         !
