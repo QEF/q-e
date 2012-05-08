@@ -535,7 +535,7 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
               CALL find_u(sr(1,1,isym),d_spin(1,1,isym))
            END IF
         END IF
-        IF ( ftau(1,isym) == 0 .OR. ftau(2,isym) == 0 .OR. &
+        IF ( ftau(1,isym).NE.0 .OR. ftau(2,isym).NE.0 .OR. &
              ftau(3,isym).NE.0) THEN
            ft1 = at(1,1)*ftau(1,isym)/dfftp%nr1 + at(1,2)*ftau(2,isym)/dfftp%nr2 + &
                 at(1,3)*ftau(3,isym)/dfftp%nr3
