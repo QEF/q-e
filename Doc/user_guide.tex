@@ -662,13 +662,26 @@ At your choice, you may compile the complete \qe\ suite of programs
 \begin{itemize}
 \item \texttt{make pw}  compiles the self-consistent-field package \PWscf
 \item \texttt{make cp}  compiles the Car-Parrinello package \CP
-\item \texttt{make neb} compiles the \NEB\ package
-\item \texttt{make ph}  compiles the \PHonon\ package
+\item \texttt{make neb} downloads \NEB\ package from \texttt{qe-forge}
+			unpacks it and compiles it. All executables are linked
+			in main \texttt{bin} directory
+\item \texttt{make ph}  downloads \PHonon\ package from \texttt{qe-forge}
+			unpacks it and compiles it. All executables are linked
+			in main \texttt{bin} directory
 \item \texttt{make pp}  compiles the postprocessing package \PostProc
-\item \texttt{make pwcond} compiles the ballistic conductance package 
-                           \texttt{PWcond}
+\item \texttt{make pwcond} downloads the balistic conductance package \texttt{PWcond}
+			from \texttt{qe-forge}
+			unpacks it and compiles it. All executables are linked
+			in main \texttt{bin} directory
 \item \texttt{make pwall} produces all of the above.
-\item \texttt{make ld1} compiles the pseudopotential package \texttt{atomic}
+\item \texttt{make ld1}  downloads the pseudopotential generator package \texttt{atomic} 
+			from \texttt{qe-forge}
+			unpacks it and compiles it. All executables are linked
+			in main \texttt{bin} directory
+\item \texttt{make xspectra} downloads the package \texttt{Xspectra} 
+			from \texttt{qe-forge}
+			unpacks it and compiles it. All executables are linked
+			in main \texttt{bin} directory
 \item \texttt{make upf} produces utilities for pseudopotential conversion in
                         directory \texttt{upftools/}
 \item \texttt{make all} produces all of the above
@@ -676,19 +689,21 @@ At your choice, you may compile the complete \qe\ suite of programs
                            in \texttt{PW/}, \texttt{CPV/} and \texttt{clib/},
                            recompiles \PWscf\ and \CP\ with \texttt{PLUMED}
                            support
-\item \texttt{make w90} unpacks \texttt{wannier90}, copies an appropriate
+\item \texttt{make w90} downloads \texttt{wannier90}, unpacks it, copies an appropriate
                        \texttt{make.sys} file,  produces all executables
                        in \texttt{W90/wannier90.x} and in \texttt{bin/}
-\item \texttt{make want} unpacks \texttt{WanT}, runs its \configure,
+\item \texttt{make want} downloads \texttt{WanT} from \texttt{qe-forge}, 
+			 unpacks it, runs its \configure,
                          produces all executables for \texttt{WanT} in 
                          \texttt{WANT/bin}.
-\item \texttt{make yambo} unpacks \texttt{yambo}, runs its \configure,
+\item \texttt{make yambo} downloads \texttt{yambo} from \texttt{qe-forge}, 
+			  unpacks it, runs its \configure,
                           produces all \texttt{yambo} executables in 
                           \texttt{YAMBO/bin}
 \item \texttt{make gipaw} downloads \texttt{GIPAW} from \texttt{qe-forge},
                           unpacks it, runs its \configure,
                           produces all \texttt{GIPAW} executables in 
-                          \texttt{GIPAW/bin} and in \texttt{bin}.
+                          \texttt{GIPAW/bin} and in main \texttt{bin} directory.
 \end{itemize}
 For the setup of the GUI, refer to the \texttt{PWgui-X.Y.Z /INSTALL} file, where
 X.Y.Z stands for the version number of the GUI (should be the same as the
