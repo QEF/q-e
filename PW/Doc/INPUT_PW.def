@@ -838,6 +838,42 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    }
 	}
 
+	var exx_fraction -type REAL { 
+	    default { it depends on the specified functional }
+	    info {
+		Fraction of EXX for hybrid functional calculations. In the case of 
+		input_dft='PBE0', the default value is 0.25, while for input_dft='B3LYP'
+		the exx_fraction default value is 0.20.
+	    }
+	}
+
+        var screening_parameter -type REAL {
+            default {0.106}
+            info {
+                screening_parameter for HSE like hybrid functionals. 
+                See J. Chem. Phys. 118, 8207 (2003)
+                and J. Chem. Phys. 124, 219906 (2006) for more informations.
+            }
+        }
+
+
+        var exxdiv_treatment -type CHARACTER {
+            default {gygi-baldereschi}
+            info {
+                Specific for EXX. It selects the kind of approach to be used
+	        for treating the Coulomb potential divergencies at small q vectors.
+
+		gygi-baldereschi : appropriated for cubic and quasi-cubic supercells
+		yukawa : appropriated for cubic and quasi-cubic supercells.
+                erfc_simple : appropriated for cubic and quasi-cubic supercells. Used
+			      only if screening_parameter is set.
+                vcut_spherical : appropriated for cubic and quasi-cubic supercells
+                vcut_ws : appropriated for strongly anysotropic supercells, see also
+                          ecutvcut.
+                none : sets Coulomb potential at G,q=0 to 0.0
+            }
+        }
+
 	var lda_plus_u        -type LOGICAL { 
 	    default { .FALSE. }
 	    status {
