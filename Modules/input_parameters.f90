@@ -398,7 +398,7 @@ MODULE input_parameters
           ! Allowed values are:
         CHARACTER(len=80) :: exxdiv_treatment_allowed(8)
         DATA exxdiv_treatment_allowed / 'gygi-baldereschi', 'gygi-bald', 'g-b', &
-             'yukawa', 'vcut_ws', 'vcut_spherical', 'erfc_simple', 'none' /
+             'vcut_ws', 'vcut_spherical', 'none' /
           !
         LOGICAL  :: x_gamma_extrapolation = .true.
         REAL(DP) :: yukawa = 0.0_DP
