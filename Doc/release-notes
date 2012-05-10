@@ -1,8 +1,9 @@
 New in 5.0 version
 
-   * More ways of calculating electron-phonon coefficients
+   * More ways of calculating electron-phonon coefficients.
    * Full DFT+U scheme (with J and additional parameters) implemented.
-     Should work also for fully-relativistic calculations
+     Should work also for fully-relativistic calculations.
+   * band parallelization for Green function sum in EXX (memory replication).
 
 Incompatible changes in 5.0 version:
 

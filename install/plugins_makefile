@@ -30,8 +30,7 @@ uncompress-ld1: touch-dummy
 	echo "unable to download ld1. Test whether curl or wget is installed in your computer." ; \
 	fi ; fi ; fi) 
 	if test ! -d ../atomic; then \
-	(gzip -dc ../archive/$(LD1).tar.gz | (cd ../ ; tar -xvf -)) ; \
-	(cd ../ ; ln -s $(LD1) atomic) ; fi 
+	(gzip -dc ../archive/$(LD1).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-ld1
 ##########################################################
 # XSpectra
@@ -49,8 +48,7 @@ uncompress-xspectra: touch-dummy
 	echo "unable to download xspectra. Test whether curl or wget is installed in your computer." ; \
 	fi ; fi ; fi) 
 	if test ! -d ../XSpectra; then \
-	(gzip -dc ../archive/$(XSPECTRA).tar.gz | (cd ../ ; tar -xvf -)) ; \
-	(cd ../ ; ln -s $(XSPECTRA) XSpectra) ; fi 
+	(gzip -dc ../archive/$(XSPECTRA).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-xspectra
 ##########################################################
 # PWCOND
@@ -87,8 +85,7 @@ uncompress-neb: touch-dummy
 	echo "unable to download neb. Test whether curl or wget is installed in your computer." ; \
 	fi ; fi ; fi) 
 	if test ! -d ../NEB; then \
-	(gzip -dc ../archive/$(NEB).tar.gz | (cd ../ ; tar -xvf -)) ; \
-	(cd ../ ; ln -s $(NEB) NEB) ; fi 
+	(gzip -dc ../archive/$(NEB).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-neb
 ##########################################################
 # TDDFPT
@@ -107,8 +104,7 @@ uncompress-tddfpt: touch-dummy
 	echo "unable to download tddfpt. Test whether curl or wget is installed in your computer." ; \
 	fi ; fi ; fi) 
 	if test ! -d ../TDDFPT; then \
-	(gzip -dc ../archive/$(TDDFPT).tar.gz | (cd ../ ; tar -xvf -)) ; \
-	(cd ../ ; ln -s $(TDDFPT) TDDFPT) ; fi 
+	(gzip -dc ../archive/$(TDDFPT).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-tddfpt
 ##########################################################
 # PHonon
@@ -136,8 +132,7 @@ uncompress-phonon: touch-dummy
 	echo "unable to download phonon. Test whether curl or wget is installed in your computer." ; \
 	fi ; fi ; fi) 
 	if test ! -d ../PHonon; then \
-	(gzip -dc ../archive/$(PHONON).tar.gz | (cd ../ ; tar -xvf -)) ; \
-	(cd ../ ; ln -s $(PHONON) PHonon) ; fi 
+	(gzip -dc ../archive/$(PHONON).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-phonon
 ##########################################################
 # GIPAW

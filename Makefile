@@ -12,19 +12,16 @@ default :
 	@echo '  tddfpt       time dependent dft code'
 	@echo '  pp           postprocessing programs'
 	@echo '  pwcond       ballistic conductance'
-	@echo '  vdw          vdW calculation'
 	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  want         Quantum Transport with Wannier functions'
 	@echo '  plumed       Patch for calculating free-energy paths with pw or cp'
-	@echo '  gww          GW with Wannier Functions'
 	@echo '  gipaw        NMR and EPR spectra'
-	@echo '  epw          Electron-Phonon Coupling'
 	@echo '  yambo        electronic excitations with plane waves'
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  upf          utilities for pseudopotential conversion'
 	@echo '  xspectra     X-ray core-hole spectroscopy calculations '
 	@echo '  pwall        same as "make pw ph pp pwcond neb"'
-	@echo '  all          same as "make pwall cp ld1 upf gww tddfpt"'
+	@echo '  all          same as "make pwall cp ld1 upf tddfpt"'
 	@echo '  clean        remove executables and objects'
 	@echo '  veryclean    revert distribution to the original status'
 	@echo '  tar          create a tarball of the source tree'
@@ -62,11 +59,6 @@ pp : bindir mods libs pw
 pwcond : bindir mods libs pw pp
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
-vdw : bindir mods libs pw ph pp
-	if test -d VdW ; then \
-	( cd VdW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
-
 acfdt : bindir mods libs pw ph
 	if test -d ACFDT ; then \
 	( cd ACFDT ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
@@ -74,14 +66,6 @@ acfdt : bindir mods libs pw ph
 
 gipaw : pw
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
-
-epw : pw ph
-	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
-
-gww   : bindir pw ph
-	if test -d GWW ; then \
-	( cd GWW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 ld1 : bindir liblapack libblas mods libs
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
@@ -99,8 +83,8 @@ pw_export : libiotk bindir mods libs pw
 xspectra : bindir mods libs pw
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
-pwall : pw neb ph pp pwcond vdw acfdt
-all   : pwall cp ld1 upf gww tddfpt
+pwall : pw neb ph pp pwcond acfdt
+all   : pwall cp ld1 upf tddfpt
 
 ###########################################################
 # Auxiliary targets used by main targets:
@@ -189,9 +173,9 @@ clean :
 	touch make.sys 
 	for dir in \
 		CPV Modules PP PW \
-		VdW ACFDT EE \
+		ACFDT \
 		clib flib pwtools upftools iotk \
-		dev-tools GWW extlibs Environ \
+		dev-tools extlibs Environ \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
