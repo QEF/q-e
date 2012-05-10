@@ -9,7 +9,7 @@ HTMLS = INPUT_PP.html \
         INPUT_pw2bgw.html \
         INPUT_bgw2pw.html
 
-PDFS = eps_man.pdf
+PDFS = eps_man.pdf user_guide.pdf
 AUXS = $(PDFS:.pdf=.aux)
 LOGS = $(PDFS:.pdf=.log)
 OUTS = $(PDFS:.pdf=.out)
