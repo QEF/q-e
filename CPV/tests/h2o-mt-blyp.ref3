@@ -1,12 +1,16 @@
 
-     Program CP v.4.2           starts on 30Aug2010 at 11:43:47 
+     Program CP v.5.0           starts on 10May2012 at 19:42:42 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
+     http://www.quantum-espresso.org/quote.php
+
+     Serial version
+     Waiting for input...
+     Reading input from standard input
 
    Job Title:  Water Molecule
 
@@ -15,12 +19,12 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scratch/daily_test/espresso/pseudo/O.blyp-mt.UPF
-   file type is 20: UPF
+   /home/giannozz/trunk/espresso/pseudo/O.blyp-mt.UPF
+   file type is UPF v.1
 
    Reading pseudopotential for specie #  2 from file :
-   /scratch/daily_test/espresso/pseudo/H.blyp-vbc.UPF
-   file type is 20: UPF
+   /home/giannozz/trunk/espresso/pseudo/H.blyp-vbc.UPF
+   file type is UPF v.1
 
 
    Main Simulation Parameters (from input)
@@ -52,7 +56,7 @@
    ---------------
    Ecutwfc =   80.0 Ry,      Ecutrho =  320.0 Ry,      Ecuts =  320.0 Ry
    Gcutwfc =   17.1     ,    Gcutrho =   34.2          Gcuts =   34.2
-   NOTA BENE: refg, mmx =   0.050000 12800
+   NOTA BENE: refg, mmx =   0.050000  7680
    Eigenvalues calculated without the kinetic term contribution
    Orthog. with lagrange multipliers : eps =   0.10E-07,  max =  20
    Electron dynamics with newton equations
@@ -73,7 +77,7 @@
    Using Generalized Gradient Corrections with
      Exchange functional: BECKE                                                       
      Correlation functional: PERDEW AND WANG                                             
-     Exchange-correlation      =  SLA  LYP  B88  BLYP (1313)
+     Exchange-correlation      =  SLA  LYP  B88  BLYP ( 1 3 1 3 0)
      EXX-fraction              =        0.00
 
 
@@ -107,7 +111,7 @@
    Constant VOLUME Molecular dynamics
    cell parameters are not allowed to move
 
-   Verbosity: iprsta =  2
+   Verbosity: iverbosity =  2
 
 
 
@@ -120,13 +124,11 @@
    2     0.0000   12.0000    0.0000              0.0000    1.0000    0.0000
    3     0.0000    0.0000   12.0000              0.0000    0.0000    1.0000
  
-   Stick Mesh
-   ----------
-   nst =  1837,  nstw =   459, nsts =  1837
-               n.st   n.stw   n.sts    n.g    n.gw   n.gs
-   min        3673     917    3673  167037   20815  167037
-   max        3673     917    3673  167037   20815  167037
-       3673     917    3673  167037   20815  167037
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        3673    3673    917               167037   167037   20815
+     Tot        1837    1837    459
  
  
    Real Mesh
@@ -135,7 +137,7 @@
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     72    72    72      72    72    72       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     72    72    72
-   Local number of cell to store the grid ( nnrx ) =     373248
+   Local number of cell to store the grid ( nrxx ) =     373248
    Number of x-y planes for each processors: 
    nr3l =    72
  
@@ -145,20 +147,20 @@
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     72    72    72      72    72    72       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     72    72    72
-   Local number of cell to store the grid ( nnrx ) =     373248
+   Local number of cell to store the grid ( nrxx ) =     373248
    Number of x-y planes for each processors: 
    nr3sl =    72
  
    Reciprocal Space Mesh
    ---------------------
    Large Mesh
-     Global(ngmt)     MinLocal       MaxLocal      Average
+     Global(ngm_g)    MinLocal       MaxLocal      Average
           83519          83519          83519       83519.00
    Smooth Mesh
-     Global(ngst)     MinLocal       MaxLocal      Average
+     Global(ngms_g)   MinLocal       MaxLocal      Average
           83519          83519          83519       83519.00
    Wave function Mesh
-     Global(ngwt)     MinLocal       MaxLocal      Average
+     Global(ngw_g)    MinLocal       MaxLocal      Average
           10408          10408          10408       10408.00
 
 
@@ -211,7 +213,7 @@
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
 
-   reading restart file: /scratch/daily_test/espresso/tmp//h2o_51.save
+   reading restart file: /home/giannozz/trunk/espresso/CPV/tmp//h2o_51.save
    restart file read in    0.017 sec.
 
  Ionic velocities set to zero
@@ -318,7 +320,7 @@
 
   -24.88  -12.72   -9.03   -6.94
  
-   Allocated memory (kb) =     84184
+   Allocated memory (kb) =     84792
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -359,8 +361,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   200  0.00014    0.0   64.1   -17.17815   -17.17815   -17.17753   -17.17739  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch/daily_test/espresso/tmp//h2o_51.save
-   restart file written in    0.064 sec.
+   writing restart file: /home/giannozz/trunk/espresso/CPV/tmp//h2o_51.save
+   restart file written in    0.057 sec.
 
   201  0.00013    0.0   58.1   -17.17808   -17.17808   -17.17752   -17.17739  0.0000  0.0000  0.0000  0.0000
   202  0.00012    0.0   51.9   -17.17801   -17.17801   -17.17751   -17.17739  0.0000  0.0000  0.0000  0.0000
@@ -484,7 +486,7 @@
 
   -24.93  -12.98   -8.88   -6.94
  
-   Allocated memory (kb) =     84184
+   Allocated memory (kb) =     84792
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -525,8 +527,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   300  0.00003    0.0   12.4   -17.17754   -17.17754   -17.17742   -17.17739  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch/daily_test/espresso/tmp//h2o_51.save
-   restart file written in    0.064 sec.
+   writing restart file: /home/giannozz/trunk/espresso/CPV/tmp//h2o_51.save
+   restart file written in    0.057 sec.
 
   301  0.00003    0.0   16.1   -17.17758   -17.17758   -17.17742   -17.17739  0.0000  0.0000  0.0000  0.0000
   302  0.00004    0.0   20.5   -17.17763   -17.17763   -17.17743   -17.17739  0.0000  0.0000  0.0000  0.0000
@@ -559,10 +561,65 @@
   329  0.00005    0.0   25.5   -17.17770   -17.17770   -17.17745   -17.17739  0.0000  0.0000  0.0000  0.0000
 
  * Physical Quantities at step:   330
+
+
+                total energy =      -17.17765 Hartree a.u.
+              kinetic energy =       12.54212 Hartree a.u.
+        electrostatic energy =      -18.19786 Hartree a.u.
+                         esr =        0.12975 Hartree a.u.
+                       eself =       18.94976 Hartree a.u.
+      pseudopotential energy =       -9.28941 Hartree a.u.
+  n-l pseudopotential energy =        1.95857 Hartree a.u.
+ exchange-correlation energy =       -4.19107 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
+
+
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -24.57  -12.70   -8.81   -6.89
+ 
+   Allocated memory (kb) =     84792
+ 
+   CELL_PARAMETERS
+   12.00000000    0.00000000    0.00000000
+    0.00000000   12.00000000    0.00000000
+    0.00000000    0.00000000   12.00000000
+
+   System Density [g/cm^3] :     0.1167
+
+
+   Center of mass square displacement (a.u.):   0.000052
+
+   Total stress (GPa)
+       -0.80156523         0.28791000        -0.04301644
+        0.28791000        -0.31287526         0.02188678
+       -0.04301644         0.02188678        -0.10571127
+   ATOMIC_POSITIONS
+   O    0.990000E-02  0.990000E-02  0.000000E+00
+   H    0.185564E+01 -0.335735E+00  0.111490E+00
+   H   -0.192844E+00  0.183734E+01 -0.606695E-01
+ 
+   ATOMIC_VELOCITIES
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   H    0.448721E-03 -0.273014E-04  0.377643E-04
+   H    0.239325E-04  0.161108E-03 -0.126179E-04
+ 
+   Forces acting on atoms (au):
+   O    0.116980E-01 -0.435964E-02  0.719991E-03
+   H   -0.182223E-01  0.752784E-02 -0.113281E-02
+   H    0.415674E-02 -0.349756E-02  0.212559E-03
+ 
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   Mean Square Displacement (a.u.)
+        1       2.29     0.0001
+        2      19.65     0.0142
   330  0.00004    0.0   20.8   -17.17765   -17.17765   -17.17744   -17.17739  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch/daily_test/espresso/tmp//h2o_51.save
-   restart file written in    0.064 sec.
+   writing restart file: /home/giannozz/trunk/espresso/CPV/tmp//h2o_51.save
+   restart file written in    0.057 sec.
 
 
 
@@ -579,35 +636,50 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :      0.53s CPU      0.54s WALL (       1 calls)
-     total_time   :    151.47s CPU    154.25s WALL (     200 calls)
-     formf        :      0.18s CPU      0.18s WALL (       1 calls)
-     rhoofr       :     61.68s CPU     61.84s WALL (     200 calls)
-     vofrho       :     76.74s CPU     79.08s WALL (     200 calls)
-     dforce       :     10.89s CPU     10.91s WALL (     400 calls)
-     calphi       :      0.06s CPU      0.07s WALL (     200 calls)
+     initialize   :      0.33s CPU      0.34s WALL (       1 calls)
+     main_loop    :     92.34s CPU     94.20s WALL (     200 calls)
+
+     Called by main_loop:
+     move_electro :     90.97s CPU     92.82s WALL (     200 calls)
      ortho        :      0.16s CPU      0.16s WALL (     200 calls)
-     ortho_iter   :      0.00s CPU      0.00s WALL (     200 calls)
+     updatc       :      0.02s CPU      0.03s WALL (     200 calls)
+     strucf       :      0.77s CPU      0.77s WALL (     201 calls)
+     calbec       :      0.02s CPU      0.02s WALL (     201 calls)
+
+     Called by move_electrons:
+     rhoofr       :     15.59s CPU     15.62s WALL (     200 calls)
+     vofrho       :     67.14s CPU     68.72s WALL (     200 calls)
+     dforce       :      7.73s CPU      7.73s WALL (     400 calls)
+     calphi       :      0.10s CPU      0.07s WALL (     200 calls)
+     nlfl         :      0.00s CPU      0.00s WALL (     200 calls)
+
+     Called by ortho:
+     ortho_iter   :      0.01s CPU      0.01s WALL (     200 calls)
      rsg          :      0.00s CPU      0.00s WALL (     200 calls)
      rhoset       :      0.07s CPU      0.07s WALL (     200 calls)
-     updatc       :      0.03s CPU      0.03s WALL (     200 calls)
-     calbec       :      0.03s CPU      0.02s WALL (     201 calls)
-     prefor       :      0.03s CPU      0.03s WALL (     401 calls)
-     strucf       :      0.73s CPU      0.72s WALL (     201 calls)
-     nlfl         :      0.00s CPU      0.00s WALL (     200 calls)
-     nlfq         :      0.12s CPU      0.12s WALL (     200 calls)
-     nlsm1        :      0.03s CPU      0.02s WALL (     601 calls)
-     nlsm2        :      0.12s CPU      0.12s WALL (     200 calls)
-     fft          :     58.70s CPU     58.77s WALL (    3400 calls)
-     ffts         :      6.73s CPU      6.76s WALL (     400 calls)
-     fftw         :     12.87s CPU     12.90s WALL (    1200 calls)
+     sigset       :      0.05s CPU      0.04s WALL (     200 calls)
+     tauset       :      0.03s CPU      0.04s WALL (     200 calls)
+
+     Small boxes:
+
+     Low-level routines:
+     prefor       :      0.02s CPU      0.03s WALL (     401 calls)
+     nlfq         :      0.09s CPU      0.12s WALL (     200 calls)
+     nlsm1        :      0.02s CPU      0.02s WALL (     201 calls)
+     nlsm2        :      0.09s CPU      0.12s WALL (     200 calls)
+     fft          :     18.70s CPU     18.75s WALL (    1600 calls)
+     ffts         :      4.75s CPU      4.77s WALL (     400 calls)
+     fftw         :      8.61s CPU      8.65s WALL (    1200 calls)
+     betagx       :      0.14s CPU      0.14s WALL (       1 calls)
+     qradx        :      0.00s CPU      0.00s WALL (       1 calls)
+     ortho_iter   :      0.01s CPU      0.01s WALL (     200 calls)
  
  
  
-     CP           :  2m32.06s CPU     2m34.87s WALL
+     CP           :  1m32.83s CPU     1m34.73s WALL
 
  
-   This run was terminated on:  11:46:22  30Aug2010            
+   This run was terminated on:  19:44:17  10May2012            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

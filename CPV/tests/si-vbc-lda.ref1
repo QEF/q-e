@@ -1,12 +1,16 @@
 
-     Program CP v.4.2           starts on 30Aug2010 at 11:57:54 
+     Program CP v.5.0           starts on 10May2012 at 19:53: 1 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
+     http://www.quantum-espresso.org/quote.php
+
+     Serial version
+     Waiting for input...
+     Reading input from standard input
 
    Job Title:  Silicon vbc
 
@@ -15,8 +19,8 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scratch/daily_test/espresso/pseudo/Si.pz-vbc.UPF
-   file type is 20: UPF
+   /home/giannozz/trunk/espresso/pseudo/Si.pz-vbc.UPF
+   file type is UPF v.1
 
 
    Main Simulation Parameters (from input)
@@ -50,7 +54,7 @@
    Gcutwfc =    6.7     ,    Gcutrho =   13.5          Gcuts =   13.5
    modified kinetic energy functional, with parameters:
    ecutz =  12.0000  ecsig =  4.0000  ecfix =  12.00
-   NOTA BENE: refg, mmx =   0.050000  2560
+   NOTA BENE: refg, mmx =   0.050000  1536
    Eigenvalues calculated without the kinetic term contribution
    Orthog. with lagrange multipliers : eps =   0.10E-07,  max =  20
    verlet algorithm for electron dynamics
@@ -71,7 +75,7 @@
    Using Local Density Approximation with
      Exchange functional: SLATER                                                      
      Correlation functional: PERDEW AND ZUNGER                                           
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC (1100)
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1 1 0 0 0)
      EXX-fraction              =        0.00
 
 
@@ -99,7 +103,7 @@
    Constant VOLUME Molecular dynamics
    cell parameters are not allowed to move
 
-   Verbosity: iprsta =  2
+   Verbosity: iverbosity =  2
 
 
 
@@ -112,13 +116,11 @@
    2     0.0000   10.6000    0.0000              0.0000    1.0000    0.0000
    3     0.0000    0.0000   10.6000              0.0000    0.0000    1.0000
  
-   Stick Mesh
-   ----------
-   nst =   289,  nstw =    73, nsts =   289
-               n.st   n.stw   n.sts    n.g    n.gw   n.gs
-   min         577     145     577   10395    1309   10395
-   max         577     145     577   10395    1309   10395
-        577     145     577   10395    1309   10395
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         577     577    145                10395    10395    1309
+     Tot         289     289     73
  
  
    Real Mesh
@@ -127,7 +129,7 @@
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     27    27    27      27    27    27       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     27    27    27
-   Local number of cell to store the grid ( nnrx ) =      19683
+   Local number of cell to store the grid ( nrxx ) =      19683
    Number of x-y planes for each processors: 
    nr3l =    27
  
@@ -137,7 +139,7 @@
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     27    27    27      27    27    27       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     27    27    27
-   Local number of cell to store the grid ( nnrx ) =      19683
+   Local number of cell to store the grid ( nrxx ) =      19683
    Number of x-y planes for each processors: 
    nr3sl =    27
  
@@ -147,7 +149,7 @@
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     12    12    12      12    12    12       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     12    12    12
-   Local number of cell to store the grid ( nnrx ) =       1728
+   Local number of cell to store the grid ( nrxx ) =       1728
  
    unit vectors of box grid cell
    in real space:                         in reciprocal space:
@@ -158,13 +160,13 @@
    Reciprocal Space Mesh
    ---------------------
    Large Mesh
-     Global(ngmt)     MinLocal       MaxLocal      Average
+     Global(ngm_g)    MinLocal       MaxLocal      Average
            5198           5198           5198        5198.00
    Smooth Mesh
-     Global(ngst)     MinLocal       MaxLocal      Average
+     Global(ngms_g)   MinLocal       MaxLocal      Average
            5198           5198           5198        5198.00
    Wave function Mesh
-     Global(ngwt)     MinLocal       MaxLocal      Average
+     Global(ngw_g)    MinLocal       MaxLocal      Average
             655            655            655         655.00
 
    Small box Mesh
@@ -183,6 +185,12 @@
    Si   0.250000E+00  0.750000E+00  0.750000E+00
    Si   0.750000E+00  0.250000E+00  0.750000E+00
    Si   0.750000E+00  0.750000E+00  0.250000E+00
+ 
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       4.7111    0.0000    0.0000              1.0000    0.0000    0.0000
+       0.0000    4.7111    0.0000              0.0000    1.0000    0.0000
+       0.0000    0.0000    4.7111              0.0000    0.0000    1.0000
 
 
    Pseudopotentials initialization
@@ -352,7 +360,7 @@
    -7.32   -3.54   -3.49   -3.49   -3.49   -3.48   -3.45    1.15    1.17    1.18
     1.20    1.21    1.22    3.92    3.92    4.11
  
-   Allocated memory (kb) =     10012
+   Allocated memory (kb) =     14376
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -366,8 +374,8 @@
 
    Total stress (GPa)
        -1.79667333        -0.06305601        -0.01019836
-       -0.06305601         0.69555660        -0.21891160
-       -0.01019711        -0.21891031        -3.19457954
+       -0.06305601         0.69555661        -0.21891160
+       -0.01019711        -0.21891031        -3.19457953
    ATOMIC_POSITIONS
    Si   0.000000E+00  0.000000E+00  0.000000E+00
    Si   0.000000E+00  0.530000E+01  0.530000E+01
@@ -407,8 +415,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   100  0.00348    0.0    0.0   -31.13815   -31.13815   -31.13815   -31.13467  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch/daily_test/espresso/tmp//si_50.save
-   restart file written in    0.029 sec.
+   writing restart file: /home/giannozz/trunk/espresso/CPV/tmp//si_50.save
+   restart file written in    0.060 sec.
 
   101  0.00338    0.0    0.0   -31.13942   -31.13942   -31.13942   -31.13604  0.0000  0.0000  0.0000  0.0000
   102  0.00326    0.0    0.0   -31.14063   -31.14063   -31.14063   -31.13737  0.0000  0.0000  0.0000  0.0000
@@ -533,7 +541,7 @@
    -7.26   -3.43   -3.43   -3.43   -3.43   -3.43   -3.43    1.24    1.24    1.24
     1.24    1.24    1.24    3.99    3.99    3.99
  
-   Allocated memory (kb) =     10012
+   Allocated memory (kb) =     14376
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -588,8 +596,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   200  0.00000    0.0    0.0   -31.15379   -31.15379   -31.15379   -31.15379  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch/daily_test/espresso/tmp//si_50.save
-   restart file written in    0.030 sec.
+   writing restart file: /home/giannozz/trunk/espresso/CPV/tmp//si_50.save
+   restart file written in    0.027 sec.
 
 
 
@@ -606,37 +614,51 @@
    volume        :     1191.01600    1191.01600 (AU)
 
 
-     initialize   :      0.28s CPU      0.29s WALL (       1 calls)
-     total_time   :      6.52s CPU      6.64s WALL (     200 calls)
-     formf        :      0.02s CPU      0.03s WALL (       1 calls)
-     rhoofr       :      2.69s CPU      2.72s WALL (     201 calls)
-     vofrho       :      1.40s CPU      1.46s WALL (     201 calls)
-     dforce       :      1.49s CPU      1.52s WALL (    1608 calls)
-     calphi       :      0.01s CPU      0.01s WALL (     201 calls)
-     ortho        :      0.12s CPU      0.09s WALL (     201 calls)
-     ortho_iter   :      0.02s CPU      0.02s WALL (     201 calls)
-     rsg          :      0.02s CPU      0.02s WALL (     201 calls)
-     rhoset       :      0.02s CPU      0.02s WALL (     201 calls)
-     updatc       :      0.01s CPU      0.02s WALL (     201 calls)
-     gram         :      0.00s CPU      0.00s WALL (       1 calls)
-     newd         :      0.00s CPU      0.00s WALL (     201 calls)
-     calbec       :      0.04s CPU      0.06s WALL (     202 calls)
-     prefor       :      0.03s CPU      0.02s WALL (     201 calls)
+     initialize   :      0.19s CPU      0.21s WALL (       1 calls)
+     main_loop    :      3.56s CPU      3.67s WALL (     200 calls)
+
+     Called by main_loop:
+     move_electro :      2.86s CPU      2.95s WALL (     200 calls)
+     ortho        :      0.09s CPU      0.09s WALL (     201 calls)
+     updatc       :      0.02s CPU      0.02s WALL (     201 calls)
      strucf       :      0.00s CPU      0.00s WALL (       1 calls)
+     calbec       :      0.05s CPU      0.06s WALL (     202 calls)
+
+     Called by move_electrons:
+     rhoofr       :      0.72s CPU      0.72s WALL (     201 calls)
+     vofrho       :      1.12s CPU      1.20s WALL (     201 calls)
+     dforce       :      0.76s CPU      0.77s WALL (    1608 calls)
+     calphi       :      0.01s CPU      0.01s WALL (     201 calls)
+     newd         :      0.00s CPU      0.00s WALL (     201 calls)
      nlfl         :      0.00s CPU      0.00s WALL (     201 calls)
-     nlfq         :      0.18s CPU      0.18s WALL (     201 calls)
-     nlsm1        :      0.04s CPU      0.06s WALL (     604 calls)
-     nlsm2        :      0.18s CPU      0.18s WALL (     201 calls)
-     fft          :      1.75s CPU      1.74s WALL (    2412 calls)
-     ffts         :      0.28s CPU      0.29s WALL (     402 calls)
-     fftw         :      1.94s CPU      1.99s WALL (    4824 calls)
+
+     Called by ortho:
+     ortho_iter   :      0.01s CPU      0.02s WALL (     201 calls)
+     rsg          :      0.01s CPU      0.02s WALL (     201 calls)
+     rhoset       :      0.03s CPU      0.02s WALL (     201 calls)
+     sigset       :      0.02s CPU      0.02s WALL (     201 calls)
+     tauset       :      0.02s CPU      0.02s WALL (     201 calls)
+
+     Small boxes:
+
+     Low-level routines:
+     prefor       :      0.02s CPU      0.02s WALL (     201 calls)
+     nlfq         :      0.20s CPU      0.20s WALL (     201 calls)
+     nlsm1        :      0.05s CPU      0.06s WALL (     202 calls)
+     nlsm2        :      0.20s CPU      0.19s WALL (     201 calls)
+     fft          :      0.22s CPU      0.20s WALL (     603 calls)
+     ffts         :      0.12s CPU      0.14s WALL (     402 calls)
+     fftw         :      0.87s CPU      0.87s WALL (    4824 calls)
+     betagx       :      0.15s CPU      0.15s WALL (       1 calls)
+     qradx        :      0.00s CPU      0.00s WALL (       1 calls)
+     ortho_iter   :      0.01s CPU      0.02s WALL (     201 calls)
  
  
  
-     CP           :     6.84s CPU         6.96s WALL
+     CP           :     3.80s CPU         3.98s WALL
 
  
-   This run was terminated on:  11:58: 1  30Aug2010            
+   This run was terminated on:  19:53: 5  10May2012            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

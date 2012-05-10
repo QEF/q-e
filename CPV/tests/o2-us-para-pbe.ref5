@@ -1,12 +1,16 @@
 
-     Program CP v.4.2           starts on 30Aug2010 at 11:52:26 
+     Program CP v.5.0           starts on 10May2012 at 19:48:42 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
+     http://www.quantum-espresso.org/quote.php
+
+     Serial version
+     Waiting for input...
+     Reading input from standard input
 
    Job Title: O2 Crystal
 
@@ -15,8 +19,9 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scratch/daily_test/espresso/pseudo/O.pbe-rrkjus.UPF
-   file type is 20: UPF
+   /home/giannozz/trunk/espresso/pseudo/O.pbe-rrkjus.UPF
+   file type is UPF v.1
+               file O.pbe-rrkjus.UPF: wavefunction(s)  2S renormalized
 
 
    Main Simulation Parameters (from input)
@@ -48,7 +53,7 @@
    ---------------
    Ecutwfc =   30.0 Ry,      Ecutrho =  240.0 Ry,      Ecuts =  120.0 Ry
    Gcutwfc =   10.5     ,    Gcutrho =   29.6          Gcuts =   20.9
-   NOTA BENE: refg, mmx =   0.050000  9600
+   NOTA BENE: refg, mmx =   0.050000  5760
    Eigenvalues calculated without the kinetic term contribution
    Orthog. with lagrange multipliers : eps =   0.10E-07,  max =  20
    Electron dynamics with newton equations
@@ -72,7 +77,7 @@
    Using Generalized Gradient Corrections with
      Exchange functional: PERDEW BURKE ERNZERHOF                                      
      Correlation functional: PERDEW BURKE ERNZERHOF                                      
-     Exchange-correlation      =  SLA  PW   PBE  PBE (1434)
+     Exchange-correlation      =  SLA  PW   PBE  PBE ( 1 4 3 4 0)
      EXX-fraction              =        0.00
 
 
@@ -102,7 +107,7 @@
    Constant VOLUME Molecular dynamics
    cell parameters are not allowed to move
 
-   Verbosity: iprsta =  2
+   Verbosity: iverbosity =  2
 
 
 
@@ -115,13 +120,11 @@
    2     0.0000   12.0000    0.0000              0.0000    1.0000    0.0000
    3     0.0000    0.0000   12.0000              0.0000    0.0000    1.0000
  
-   Stick Mesh
-   ----------
-   nst =  1375,  nstw =   175, nsts =   685
-               n.st   n.stw   n.sts    n.g    n.gw   n.gs
-   min        2749     349    1369  108671    4801   38401
-   max        2749     349    1369  108671    4801   38401
-       2749     349    1369  108671    4801   38401
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        2749    1369    349               108671    38401    4801
+     Tot        1375     685    175
  
  
    Real Mesh
@@ -130,7 +133,7 @@
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     60    60    60      60    60    60       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     60    60    60
-   Local number of cell to store the grid ( nnrx ) =     216000
+   Local number of cell to store the grid ( nrxx ) =     216000
    Number of x-y planes for each processors: 
    nr3l =    60
  
@@ -140,7 +143,7 @@
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     45    45    45      45    45    45       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     45    45    45
-   Local number of cell to store the grid ( nnrx ) =      91125
+   Local number of cell to store the grid ( nrxx ) =      91125
    Number of x-y planes for each processors: 
    nr3sl =    45
  
@@ -150,7 +153,7 @@
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     24    24    24      24    24    24       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     24    24    24
-   Local number of cell to store the grid ( nnrx ) =      13824
+   Local number of cell to store the grid ( nrxx ) =      13824
  
    unit vectors of box grid cell
    in real space:                         in reciprocal space:
@@ -161,13 +164,13 @@
    Reciprocal Space Mesh
    ---------------------
    Large Mesh
-     Global(ngmt)     MinLocal       MaxLocal      Average
+     Global(ngm_g)    MinLocal       MaxLocal      Average
           54336          54336          54336       54336.00
    Smooth Mesh
-     Global(ngst)     MinLocal       MaxLocal      Average
+     Global(ngms_g)   MinLocal       MaxLocal      Average
           19201          19201          19201       19201.00
    Wave function Mesh
-     Global(ngwt)     MinLocal       MaxLocal      Average
+     Global(ngw_g)    MinLocal       MaxLocal      Average
            2401           2401           2401        2401.00
 
    Small box Mesh
@@ -186,6 +189,12 @@
        0.00000      12.00000       0.00000
        0.00000       0.00000      12.00000
  
+ 
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       4.8000    0.0000    0.0000              1.0000    0.0000    0.0000
+       0.0000    4.8000    0.0000              0.0000    1.0000    0.0000
+       0.0000    0.0000    4.8000              0.0000    0.0000    1.0000
 
 
    Pseudopotentials initialization
@@ -231,8 +240,8 @@
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
 
-   reading restart file: /scratch/daily_test/espresso/tmp//o2_53.save
-   restart file read in    0.019 sec.
+   reading restart file: /home/giannozz/trunk/espresso/CPV/tmp//o2_53.save
+   restart file read in    0.018 sec.
 
  Ionic velocities set to zero
  Electronic velocities set to zero
@@ -282,7 +291,7 @@
 
   -33.27  -17.97  -12.60  -12.14  -12.14
  
-   Allocated memory (kb) =    100856
+   Allocated memory (kb) =    102868
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -357,7 +366,7 @@
 
   -30.63  -18.97  -12.47  -11.08  -11.08
  
-   Allocated memory (kb) =    100856
+   Allocated memory (kb) =    102868
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -432,7 +441,7 @@
 
   -28.63  -19.83  -12.23  -10.29  -10.29
  
-   Allocated memory (kb) =    100856
+   Allocated memory (kb) =    102868
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -507,7 +516,7 @@
 
   -27.64  -20.21  -12.03   -9.86   -9.86
  
-   Allocated memory (kb) =    100856
+   Allocated memory (kb) =    102868
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -544,8 +553,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   250  0.00171    0.0  356.7   -31.72007   -31.72007   -31.71668   -31.71497  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch/daily_test/espresso/tmp//o2_53.save
-   restart file written in    0.085 sec.
+   writing restart file: /home/giannozz/trunk/espresso/CPV/tmp//o2_53.save
+   restart file written in    0.083 sec.
 
   251  0.00176    0.0  239.1   -31.71900   -31.71900   -31.71673   -31.71497  0.0000  0.0000  0.0000  0.0000
   252  0.00170    0.0  151.1   -31.71810   -31.71810   -31.71666   -31.71496  0.0000  0.0000  0.0000  0.0000
@@ -586,7 +595,7 @@
 
   -27.41  -20.29  -11.93   -9.76   -9.76
  
-   Allocated memory (kb) =    100856
+   Allocated memory (kb) =    102868
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -661,7 +670,7 @@
 
   -28.04  -20.03  -12.02  -10.00  -10.00
  
-   Allocated memory (kb) =    100856
+   Allocated memory (kb) =    102868
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -736,7 +745,7 @@
 
   -29.40  -19.43  -12.23  -10.56  -10.56
  
-   Allocated memory (kb) =    100856
+   Allocated memory (kb) =    102868
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -811,7 +820,7 @@
 
   -31.76  -18.53  -12.50  -11.52  -11.52
  
-   Allocated memory (kb) =    100856
+   Allocated memory (kb) =    102868
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -886,7 +895,7 @@
 
   -34.06  -17.69  -12.63  -12.47  -12.47
  
-   Allocated memory (kb) =    100856
+   Allocated memory (kb) =    102868
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -923,8 +932,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   300  0.00385    0.0  780.7   -31.72621   -31.72621   -31.71879   -31.71494  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch/daily_test/espresso/tmp//o2_53.save
-   restart file written in    0.084 sec.
+   writing restart file: /home/giannozz/trunk/espresso/CPV/tmp//o2_53.save
+   restart file written in    0.083 sec.
 
   301  0.00306    0.0  518.9   -31.72292   -31.72292   -31.71799   -31.71493  0.0000  0.0000  0.0000  0.0000
   302  0.00229    0.0  302.9   -31.72008   -31.72008   -31.71720   -31.71491  0.0000  0.0000  0.0000  0.0000
@@ -965,7 +974,7 @@
 
   -34.24  -17.71  -12.69  -12.57  -12.57
  
-   Allocated memory (kb) =    100856
+   Allocated memory (kb) =    102868
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -1002,8 +1011,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   310  0.00336    0.0  515.5   -31.72317   -31.72317   -31.71827   -31.71492  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch/daily_test/espresso/tmp//o2_53.save
-   restart file written in    0.085 sec.
+   writing restart file: /home/giannozz/trunk/espresso/CPV/tmp//o2_53.save
+   restart file written in    0.083 sec.
 
 
 
@@ -1020,38 +1029,53 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :      7.05s CPU      7.11s WALL (       1 calls)
-     total_time   :     84.15s CPU     85.60s WALL (     100 calls)
-     formf        :      0.27s CPU      0.27s WALL (       1 calls)
-     rhoofr       :     22.13s CPU     22.19s WALL (     100 calls)
-     vofrho       :     54.12s CPU     55.33s WALL (     100 calls)
-     dforce       :      2.59s CPU      2.59s WALL (     600 calls)
-     calphi       :      0.04s CPU      0.05s WALL (     100 calls)
-     ortho        :      0.20s CPU      0.20s WALL (     100 calls)
-     ortho_iter   :      0.01s CPU      0.01s WALL (     200 calls)
-     rsg          :      0.00s CPU      0.00s WALL (     200 calls)
-     rhoset       :      0.02s CPU      0.02s WALL (     200 calls)
-     updatc       :      0.02s CPU      0.02s WALL (     200 calls)
-     newd         :      3.85s CPU      3.85s WALL (     100 calls)
+     initialize   :      4.40s CPU      4.42s WALL (       1 calls)
+     main_loop    :     70.46s CPU     71.59s WALL (     100 calls)
+
+     Called by main_loop:
+     move_electro :     69.61s CPU     70.69s WALL (     100 calls)
+     ortho        :      0.14s CPU      0.20s WALL (     100 calls)
+     updatc       :      0.03s CPU      0.02s WALL (     100 calls)
+     strucf       :      0.03s CPU      0.06s WALL (     101 calls)
      calbec       :      0.00s CPU      0.00s WALL (     101 calls)
-     prefor       :      0.02s CPU      0.03s WALL (     201 calls)
-     strucf       :      0.07s CPU      0.06s WALL (     101 calls)
+
+     Called by move_electrons:
+     rhoofr       :     16.16s CPU     16.25s WALL (     100 calls)
+     vofrho       :     48.88s CPU     49.72s WALL (     100 calls)
+     dforce       :      1.25s CPU      1.32s WALL (     600 calls)
+     calphi       :      0.07s CPU      0.05s WALL (     100 calls)
+     newd         :      2.79s CPU      2.80s WALL (     100 calls)
      nlfl         :      0.00s CPU      0.00s WALL (     100 calls)
-     nlfq         :      0.19s CPU      0.19s WALL (     100 calls)
-     rhov         :      1.54s CPU      1.53s WALL (     100 calls)
-     nlsm1        :      0.13s CPU      0.12s WALL (     301 calls)
-     nlsm2        :      0.19s CPU      0.19s WALL (     100 calls)
-     fft          :     18.57s CPU     18.63s WALL (    2300 calls)
-     ffts         :      0.66s CPU      0.65s WALL (     200 calls)
-     fftw         :      3.31s CPU      3.31s WALL (    1800 calls)
-     fftb         :      2.66s CPU      2.65s WALL (    6200 calls)
+
+     Called by ortho:
+     ortho_iter   :      0.02s CPU      0.01s WALL (     200 calls)
+     rsg          :      0.01s CPU      0.00s WALL (     200 calls)
+     rhoset       :      0.01s CPU      0.02s WALL (     200 calls)
+     sigset       :      0.02s CPU      0.02s WALL (     200 calls)
+     tauset       :      0.02s CPU      0.02s WALL (     200 calls)
+
+     Small boxes:
+     rhov         :      1.04s CPU      1.06s WALL (     100 calls)
+     fftb         :      1.22s CPU      1.27s WALL (    6200 calls)
+
+     Low-level routines:
+     prefor       :      0.03s CPU      0.03s WALL (     201 calls)
+     nlfq         :      0.24s CPU      0.20s WALL (     100 calls)
+     nlsm1        :      0.06s CPU      0.12s WALL (     301 calls)
+     nlsm2        :      0.24s CPU      0.20s WALL (     100 calls)
+     fft          :      9.17s CPU      9.14s WALL (    2300 calls)
+     ffts         :      0.28s CPU      0.31s WALL (     200 calls)
+     fftw         :      1.36s CPU      1.45s WALL (    1800 calls)
+     betagx       :      2.69s CPU      2.69s WALL (       1 calls)
+     qradx        :      1.46s CPU      1.46s WALL (       1 calls)
+     ortho_iter   :      0.02s CPU      0.01s WALL (     200 calls)
  
  
  
-     CP           :  1m31.29s CPU     1m32.81s WALL
+     CP           :  1m15.07s CPU     1m16.29s WALL
 
  
-   This run was terminated on:  11:53:59  30Aug2010            
+   This run was terminated on:  19:49:58  10May2012            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

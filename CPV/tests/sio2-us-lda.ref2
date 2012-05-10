@@ -1,13 +1,16 @@
 
-     Program CP v.> 4.2         starts on  2Feb2011 at  9:51:47 
+     Program CP v.5.0           starts on 10May2012 at 19:51:20 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
+     http://www.quantum-espresso.org/quote.php
+
+     Serial version
      Waiting for input...
+     Reading input from standard input
 
    Job Title: MD Simulation
 
@@ -16,12 +19,13 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /home/giannozz/CVS/espresso2/pseudo/O.pz-rrkjus.UPF
-   file type is 20: UPF
+   /home/giannozz/trunk/espresso/pseudo/O.pz-rrkjus.UPF
+   file type is UPF v.1
+               file O.pz-rrkjus.UPF: wavefunction(s)  2S renormalized
 
    Reading pseudopotential for specie #  2 from file :
-   /home/giannozz/CVS/espresso2/pseudo/Si.pz-vbc.UPF
-   file type is 20: UPF
+   /home/giannozz/trunk/espresso/pseudo/Si.pz-vbc.UPF
+   file type is UPF v.1
 
 
    Main Simulation Parameters (from input)
@@ -55,7 +59,7 @@
    Gcutwfc =    6.6     ,    Gcutrho =   18.1          Gcuts =   13.2
    modified kinetic energy functional, with parameters:
    ecutz = 150.0000  ecsig =  2.0000  ecfix =  16.00
-   NOTA BENE: refg, mmx =   0.050000  6000
+   NOTA BENE: refg, mmx =   0.050000  3600
    Eigenvalues calculated without the kinetic term contribution
    Orthog. with lagrange multipliers : eps =   0.10E-07,  max =  20
    verlet algorithm for electron dynamics
@@ -78,7 +82,7 @@
    Using Local Density Approximation with
      Exchange functional: SLATER                                                      
      Correlation functional: PERDEW AND ZUNGER                                           
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC (1100)
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1 1 0 0 0)
      EXX-fraction              =        0.00
 
 
@@ -117,7 +121,7 @@
    Constant VOLUME Molecular dynamics
    cell parameters are not allowed to move
 
-   Verbosity: iprsta =  2
+   Verbosity: iverbosity =  2
 
 
 
@@ -130,13 +134,11 @@
    2     0.0000   16.0907    0.0000              0.0000    0.5773    0.0000
    3     0.0000    0.0000   10.2147              0.0000    0.0000    0.9095
  
-   Stick Mesh
-   ----------
-   nst =   892,  nstw =   120, nsts =   476
-               n.st   n.stw   n.sts    n.g    n.gw   n.gs
-   min        1783     239     951   47285    2305   18431
-   max        1783     239     951   47285    2305   18431
-       1783     239     951   47285    2305   18431
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        1783     951    239                47285    18431    2305
+     Tot         892     476    120
  
  
    Real Mesh
@@ -217,6 +219,12 @@
        0.00000      16.09066       0.00000
        0.00000       0.00000      10.21471
  
+ 
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.5739    0.0000    0.0000              1.0000    0.0000    0.0000
+       0.0000    6.0340    0.0000              0.0000    0.9238    0.0000
+       0.0000    0.0000    6.1288              0.0000    0.0000    0.9095
 
 
    Pseudopotentials initialization
@@ -272,8 +280,8 @@
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
 
-   reading restart file: /home/giannozz/CVS/espresso2/tmp//sio2_91.save
-   restart file read in    0.025 sec.
+   reading restart file: /home/giannozz/trunk/espresso/CPV/tmp//sio2_91.save
+   restart file read in    0.024 sec.
 
 
    formf: eself=   210.64152
@@ -320,7 +328,7 @@
    -5.68   -5.33   -5.31   -4.96   -4.75   -4.65   -4.48   -4.46   -4.19   -4.13
    -4.12   -3.94   -3.80   -3.65   -3.37   -3.28   -3.18   -3.09
  
-   Allocated memory (kb) =     25984
+   Allocated memory (kb) =     26872
  
    CELL_PARAMETERS
     9.28990000    0.00000000    0.00000000
@@ -417,7 +425,7 @@
    -5.64   -5.25   -5.19   -4.80   -4.78   -4.41   -4.38   -4.35   -4.18   -4.04
    -4.00   -3.96   -3.69   -3.63   -3.26   -3.25   -3.18   -3.00
  
-   Allocated memory (kb) =     25984
+   Allocated memory (kb) =     26872
  
    CELL_PARAMETERS
     9.28990000    0.00000000    0.00000000
@@ -514,7 +522,7 @@
    -5.64   -5.25   -5.20   -4.81   -4.78   -4.41   -4.38   -4.35   -4.18   -4.03
    -4.00   -3.97   -3.68   -3.63   -3.26   -3.25   -3.17   -2.99
  
-   Allocated memory (kb) =     25984
+   Allocated memory (kb) =     26872
  
    CELL_PARAMETERS
     9.28990000    0.00000000    0.00000000
@@ -611,7 +619,7 @@
    -5.64   -5.25   -5.20   -4.81   -4.78   -4.41   -4.38   -4.35   -4.18   -4.03
    -4.01   -3.97   -3.68   -3.63   -3.26   -3.25   -3.18   -3.00
  
-   Allocated memory (kb) =     25984
+   Allocated memory (kb) =     26872
  
    CELL_PARAMETERS
     9.28990000    0.00000000    0.00000000
@@ -679,14 +687,94 @@
    MAIN: convergence achieved for system relaxation
 
  * Physical Quantities at step:    42
+
+
+                total energy =     -211.98190 Hartree a.u.
+              kinetic energy =       94.60085 Hartree a.u.
+        electrostatic energy =     -198.25275 Hartree a.u.
+                         esr =        0.42693 Hartree a.u.
+                       eself =      210.64152 Hartree a.u.
+      pseudopotential energy =      -96.26600 Hartree a.u.
+  n-l pseudopotential energy =       36.46554 Hartree a.u.
+ exchange-correlation energy =      -48.52954 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
+
+
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -23.66  -23.19  -22.79  -22.32  -22.26  -22.23  -21.79  -21.77  -21.75  -21.73
+  -21.71  -21.70  -11.62  -11.56  -11.39  -10.73   -9.15   -8.69   -8.69   -8.66
+   -8.64   -8.44   -8.40   -7.74   -6.24   -6.10   -6.08   -6.01   -5.95   -5.69
+   -5.64   -5.25   -5.20   -4.81   -4.78   -4.41   -4.38   -4.35   -4.18   -4.03
+   -4.01   -3.97   -3.68   -3.63   -3.26   -3.25   -3.18   -3.00
+ 
+   Allocated memory (kb) =     26872
+ 
+   CELL_PARAMETERS
+    9.28990000    0.00000000    0.00000000
+    0.00000000   16.09066419    0.00000000
+    0.00000000    0.00000000   10.21470954
+
+   System Density [g/cm^3] :     2.6421
+
+
+   Center of mass square displacement (a.u.):   0.000000
+
+   ATOMIC_POSITIONS
+   O    0.318829E+01  0.148324E+02  0.122883E+01
+   O    0.783231E+01  0.678704E+01  0.122883E+01
+   O    0.207443E+01  0.599538E+01  0.473758E+01
+   O    0.672031E+01  0.140423E+02  0.473758E+01
+   O    0.396307E+01  0.112699E+02  0.787861E+01
+   O    0.860802E+01  0.322296E+01  0.787861E+01
+   O    0.396307E+01  0.481915E+01  0.914625E+01
+   O    0.860802E+01  0.128645E+02  0.914625E+01
+   O    0.318736E+01  0.125668E+01  0.558030E+01
+   O    0.783324E+01  0.930201E+01  0.558030E+01
+   O    0.207536E+01  0.100921E+02  0.207359E+01
+   O    0.671938E+01  0.204673E+01  0.207359E+01
+   Si   0.288916E+00  0.804533E+01  0.340456E+01
+   Si   0.493387E+01  0.000000E+00  0.340456E+01
+   Si   0.213389E+01  0.122772E+02 -0.418803E-01
+   Si   0.677884E+01  0.423184E+01 -0.418803E-01
+   Si   0.213389E+01  0.381349E+01  0.685203E+01
+   Si   0.677884E+01  0.118588E+02  0.685203E+01
+ 
+   ATOMIC_VELOCITIES
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   Si   0.000000E+00  0.000000E+00  0.000000E+00
+   Si   0.000000E+00  0.000000E+00  0.000000E+00
+   Si   0.000000E+00  0.000000E+00  0.000000E+00
+   Si   0.000000E+00  0.000000E+00  0.000000E+00
+   Si   0.000000E+00  0.000000E+00  0.000000E+00
+   Si   0.000000E+00  0.000000E+00  0.000000E+00
+ 
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   Mean Square Displacement (a.u.)
+        1       0.00     0.0000
+        2       0.00     0.0000
    42  0.00000    0.0    0.0  -211.98190  -211.98190  -211.98190  -211.98190  0.0000  0.0000  0.0000  0.0000
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.472343D-06  0.1D-05  0.248839D-06  0.1D-03  0.000000D+00  0.1D+11
    MAIN: convergence achieved for system relaxation
 
-   writing restart file: /home/giannozz/CVS/espresso2/tmp//sio2_92.save
-   restart file written in    0.067 sec.
+   writing restart file: /home/giannozz/trunk/espresso/CPV/tmp//sio2_92.save
+   restart file written in    0.077 sec.
 
 
 
@@ -703,35 +791,50 @@
    volume        :     1526.90154    1526.90154 (AU)
 
 
-     initialize   :      2.76s CPU      2.78s WALL (       1 calls)
-     total_time   :     10.56s CPU     10.68s WALL (      42 calls)
-     formf        :      0.16s CPU      0.16s WALL (       1 calls)
-     rhoofr       :      1.64s CPU      1.68s WALL (      42 calls)
-     vofrho       :      0.91s CPU      0.94s WALL (      42 calls)
-     dforce       :      1.95s CPU      1.96s WALL (    1008 calls)
-     calphi       :      0.11s CPU      0.11s WALL (      42 calls)
-     ortho        :      0.54s CPU      0.55s WALL (      42 calls)
-     ortho_iter   :      0.09s CPU      0.09s WALL (      42 calls)
-     rsg          :      0.03s CPU      0.03s WALL (      42 calls)
-     rhoset       :      0.05s CPU      0.05s WALL (      42 calls)
+     initialize   :      1.65s CPU      1.66s WALL (       1 calls)
+     main_loop    :      6.75s CPU      6.86s WALL (      42 calls)
+
+     Called by main_loop:
+     move_electro :      6.10s CPU      6.20s WALL (      42 calls)
+     ortho        :      0.53s CPU      0.53s WALL (      42 calls)
      updatc       :      0.05s CPU      0.05s WALL (      42 calls)
-     newd         :      5.21s CPU      5.22s WALL (      42 calls)
-     calbec       :      0.06s CPU      0.06s WALL (      43 calls)
-     prefor       :      0.03s CPU      0.03s WALL (      43 calls)
      strucf       :      0.00s CPU      0.00s WALL (       1 calls)
-     rhov         :      0.52s CPU      0.53s WALL (      42 calls)
-     nlsm1        :      0.32s CPU      0.32s WALL (     127 calls)
-     fft          :      0.58s CPU      0.58s WALL (     168 calls)
-     ffts         :      0.10s CPU      0.11s WALL (      84 calls)
-     fftw         :      2.16s CPU      2.16s WALL (    3024 calls)
-     fftb         :      3.78s CPU      3.82s WALL (    9324 calls)
+     calbec       :      0.06s CPU      0.05s WALL (      43 calls)
+
+     Called by move_electrons:
+     rhoofr       :      0.96s CPU      0.98s WALL (      42 calls)
+     vofrho       :      0.71s CPU      0.75s WALL (      42 calls)
+     dforce       :      1.09s CPU      1.10s WALL (    1008 calls)
+     calphi       :      0.11s CPU      0.11s WALL (      42 calls)
+     newd         :      3.18s CPU      3.19s WALL (      42 calls)
+
+     Called by ortho:
+     ortho_iter   :      0.08s CPU      0.09s WALL (      42 calls)
+     rsg          :      0.02s CPU      0.03s WALL (      42 calls)
+     rhoset       :      0.06s CPU      0.05s WALL (      42 calls)
+     sigset       :      0.06s CPU      0.05s WALL (      42 calls)
+     tauset       :      0.04s CPU      0.05s WALL (      42 calls)
+
+     Small boxes:
+     rhov         :      0.38s CPU      0.38s WALL (      42 calls)
+     fftb         :      1.72s CPU      1.80s WALL (    9324 calls)
+
+     Low-level routines:
+     prefor       :      0.03s CPU      0.03s WALL (      43 calls)
+     nlsm1        :      0.32s CPU      0.31s WALL (     127 calls)
+     fft          :      0.25s CPU      0.27s WALL (     168 calls)
+     ffts         :      0.04s CPU      0.05s WALL (      84 calls)
+     fftw         :      0.90s CPU      0.92s WALL (    3024 calls)
+     betagx       :      1.09s CPU      1.09s WALL (       1 calls)
+     qradx        :      0.44s CPU      0.45s WALL (       1 calls)
+     ortho_iter   :      0.08s CPU      0.09s WALL (      42 calls)
  
  
  
-     CP           :    13.40s CPU        13.55s WALL
+     CP           :     8.49s CPU         8.66s WALL
 
  
-   This run was terminated on:   9:52: 1   2Feb2011            
+   This run was terminated on:  19:51:29  10May2012            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

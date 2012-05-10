@@ -1,12 +1,16 @@
 
-     Program CP v.4.2           starts on 30Aug2010 at 11:58: 3 
+     Program CP v.5.0           starts on 10May2012 at 19:53: 7 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
+     http://www.quantum-espresso.org/quote.php
+
+     Serial version
+     Waiting for input...
+     Reading input from standard input
 
    Job Title:  Silicon vbc
 
@@ -15,8 +19,8 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scratch/daily_test/espresso/pseudo/Si.pz-vbc.UPF
-   file type is 20: UPF
+   /home/giannozz/trunk/espresso/pseudo/Si.pz-vbc.UPF
+   file type is UPF v.1
 
 
    Main Simulation Parameters (from input)
@@ -50,7 +54,7 @@
    Gcutwfc =    6.7     ,    Gcutrho =   13.5          Gcuts =   13.5
    modified kinetic energy functional, with parameters:
    ecutz =  12.0000  ecsig =  4.0000  ecfix =  12.00
-   NOTA BENE: refg, mmx =   0.050000  2560
+   NOTA BENE: refg, mmx =   0.050000  1536
    Eigenvalues calculated without the kinetic term contribution
    Orthog. with lagrange multipliers : eps =   0.10E-07,  max =  20
    Electron dynamics with newton equations
@@ -69,7 +73,7 @@
    Using Local Density Approximation with
      Exchange functional: SLATER                                                      
      Correlation functional: PERDEW AND ZUNGER                                           
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC (1100)
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1 1 0 0 0)
      EXX-fraction              =        0.00
 
 
@@ -105,7 +109,7 @@
    Constant VOLUME Molecular dynamics
    cell parameters are not allowed to move
 
-   Verbosity: iprsta =  2
+   Verbosity: iverbosity =  2
 
 
 
@@ -118,13 +122,11 @@
    2     0.0000   10.6000    0.0000              0.0000    1.0000    0.0000
    3     0.0000    0.0000   10.6000              0.0000    0.0000    1.0000
  
-   Stick Mesh
-   ----------
-   nst =   289,  nstw =    73, nsts =   289
-               n.st   n.stw   n.sts    n.g    n.gw   n.gs
-   min         577     145     577   10395    1309   10395
-   max         577     145     577   10395    1309   10395
-        577     145     577   10395    1309   10395
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         577     577    145                10395    10395    1309
+     Tot         289     289     73
  
  
    Real Mesh
@@ -133,7 +135,7 @@
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     27    27    27      27    27    27       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     27    27    27
-   Local number of cell to store the grid ( nnrx ) =      19683
+   Local number of cell to store the grid ( nrxx ) =      19683
    Number of x-y planes for each processors: 
    nr3l =    27
  
@@ -143,7 +145,7 @@
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     27    27    27      27    27    27       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     27    27    27
-   Local number of cell to store the grid ( nnrx ) =      19683
+   Local number of cell to store the grid ( nrxx ) =      19683
    Number of x-y planes for each processors: 
    nr3sl =    27
  
@@ -153,7 +155,7 @@
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     12    12    12      12    12    12       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     12    12    12
-   Local number of cell to store the grid ( nnrx ) =       1728
+   Local number of cell to store the grid ( nrxx ) =       1728
  
    unit vectors of box grid cell
    in real space:                         in reciprocal space:
@@ -164,13 +166,13 @@
    Reciprocal Space Mesh
    ---------------------
    Large Mesh
-     Global(ngmt)     MinLocal       MaxLocal      Average
+     Global(ngm_g)    MinLocal       MaxLocal      Average
            5198           5198           5198        5198.00
    Smooth Mesh
-     Global(ngst)     MinLocal       MaxLocal      Average
+     Global(ngms_g)   MinLocal       MaxLocal      Average
            5198           5198           5198        5198.00
    Wave function Mesh
-     Global(ngwt)     MinLocal       MaxLocal      Average
+     Global(ngw_g)    MinLocal       MaxLocal      Average
             655            655            655         655.00
 
    Small box Mesh
@@ -195,6 +197,12 @@
        0.00000      10.60000       0.00000
        0.00000       0.00000      10.60000
  
+ 
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       4.7111    0.0000    0.0000              1.0000    0.0000    0.0000
+       0.0000    4.7111    0.0000              0.0000    1.0000    0.0000
+       0.0000    0.0000    4.7111              0.0000    0.0000    1.0000
 
 
    Pseudopotentials initialization
@@ -225,8 +233,8 @@
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
 
-   reading restart file: /scratch/daily_test/espresso/tmp//si_50.save
-   restart file read in    0.015 sec.
+   reading restart file: /home/giannozz/trunk/espresso/CPV/tmp//si_50.save
+   restart file read in    0.014 sec.
 
  Ionic velocities set to zero
  Electronic velocities set to zero
@@ -310,7 +318,7 @@
    -7.26   -3.49   -3.46   -3.45   -3.41   -3.40   -3.37    1.21    1.22    1.23
     1.25    1.26    1.28    3.97    4.00    4.01
  
-   Allocated memory (kb) =     10012
+   Allocated memory (kb) =     14380
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -324,8 +332,8 @@
 
    Total stress (GPa)
        -0.81002573         0.03338486        -0.07009554
-        0.03338486        -0.81034201        -0.06427814
-       -0.07009524        -0.06427838        -0.81423036
+        0.03338486        -0.81034200        -0.06427814
+       -0.07009524        -0.06427838        -0.81423035
    ATOMIC_POSITIONS
    Si  -0.105063E-01 -0.648640E-02  0.401135E-01
    Si   0.202914E-01  0.530948E+01  0.529411E+01
@@ -487,7 +495,7 @@
    -7.26   -3.49   -3.45   -3.44   -3.41   -3.40   -3.38    1.21    1.23    1.24
     1.25    1.26    1.26    3.95    3.98    4.04
  
-   Allocated memory (kb) =     10012
+   Allocated memory (kb) =     14380
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -501,7 +509,7 @@
 
    Total stress (GPa)
        -0.83254331        -0.07862661         0.16411720
-       -0.07862661        -0.87167086         0.15712079
+       -0.07862661        -0.87167085         0.15712079
         0.16411802         0.15712127        -0.83022705
    ATOMIC_POSITIONS
    Si  -0.135626E-01  0.479226E-01  0.386034E-01
@@ -664,7 +672,7 @@
    -7.27   -3.49   -3.48   -3.47   -3.41   -3.41   -3.35    1.20    1.21    1.23
     1.24    1.26    1.28    3.91    3.99    4.02
  
-   Allocated memory (kb) =     10012
+   Allocated memory (kb) =     14380
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -679,7 +687,7 @@
    Total stress (GPa)
        -0.99543872         0.08036367        -0.31614400
         0.08036367        -1.12794191        -0.16881055
-       -0.31614222        -0.16880947        -0.97258861
+       -0.31614222        -0.16880947        -0.97258860
    ATOMIC_POSITIONS
    Si  -0.548271E-01  0.487493E-01  0.879131E-01
    Si  -0.925339E-02  0.525932E+01  0.527827E+01
@@ -841,7 +849,7 @@
    -7.29   -3.51   -3.49   -3.47   -3.45   -3.43   -3.40    1.18    1.21    1.22
     1.23    1.23    1.25    3.90    3.90    3.96
  
-   Allocated memory (kb) =     10012
+   Allocated memory (kb) =     14380
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -854,9 +862,9 @@
    Center of mass square displacement (a.u.):   0.000417
 
    Total stress (GPa)
-       -1.55287513        -0.08705618        -0.18966636
-       -0.08705618        -2.21925279         0.03486131
-       -0.18965701         0.03486455        -1.57167558
+       -1.55287512        -0.08705618        -0.18966636
+       -0.08705618        -2.21925278         0.03486131
+       -0.18965701         0.03486455        -1.57167557
    ATOMIC_POSITIONS
    Si  -0.799842E-01  0.457876E-01  0.194130E+00
    Si   0.581497E-01  0.522517E+01  0.522376E+01
@@ -1018,7 +1026,7 @@
    -7.35   -3.63   -3.56   -3.51   -3.50   -3.46   -3.41    1.08    1.15    1.20
     1.22    1.24    1.26    3.69    3.75    3.85
  
-   Allocated memory (kb) =     10012
+   Allocated memory (kb) =     14380
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -1033,7 +1041,7 @@
    Total stress (GPa)
        -3.20823492        -0.24699784        -0.16435375
        -0.24699784        -4.92671608        -0.50190329
-       -0.16433990        -0.50189700        -3.57980866
+       -0.16433990        -0.50189700        -3.57980865
    ATOMIC_POSITIONS
    Si  -0.125883E+00  0.913662E-01  0.387648E+00
    Si   0.912210E-01  0.514683E+01  0.515198E+01
@@ -1195,7 +1203,7 @@
    -7.43   -3.80   -3.76   -3.54   -3.48   -3.43   -3.40    0.92    1.09    1.14
     1.24    1.28    1.39    3.31    3.43    3.68
  
-   Allocated memory (kb) =     10012
+   Allocated memory (kb) =     14380
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -1208,9 +1216,9 @@
    Center of mass square displacement (a.u.):   0.000417
 
    Total stress (GPa)
-       -6.56940264        -0.14991333        -0.09094560
+       -6.56940264        -0.14991333        -0.09094561
        -0.14991333        -9.26844228        -1.60641880
-       -0.09095167        -1.60641119        -7.72871079
+       -0.09095167        -1.60641119        -7.72871078
    ATOMIC_POSITIONS
    Si  -0.216079E+00  0.206084E+00  0.685049E+00
    Si   0.198221E-01  0.495573E+01  0.511001E+01
@@ -1372,7 +1380,7 @@
    -7.51   -3.92   -3.88   -3.44   -3.34   -3.23   -2.99    0.72    0.88    1.16
     1.33    1.52    1.82    2.74    2.86    3.25
  
-   Allocated memory (kb) =     10012
+   Allocated memory (kb) =     14380
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -1387,7 +1395,7 @@
    Total stress (GPa)
        -9.46369745        -0.21901684         0.74993327
        -0.21901684       -10.35047477        -1.20235088
-        0.74992554        -1.20234397        -8.67651474
+        0.74992554        -1.20234398        -8.67651475
    ATOMIC_POSITIONS
    Si  -0.408729E+00  0.393286E+00  0.107760E+01
    Si  -0.894866E-01  0.464500E+01  0.510152E+01
@@ -1549,7 +1557,7 @@
    -8.44   -4.63   -4.39   -3.60   -3.43   -2.82   -1.91   -0.31    0.18    0.57
     0.77    0.94    1.35    2.22    2.80    3.26
  
-   Allocated memory (kb) =     10012
+   Allocated memory (kb) =     14380
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -1562,9 +1570,9 @@
    Center of mass square displacement (a.u.):   0.000417
 
    Total stress (GPa)
-        0.32736789        -0.02243978         0.13346459
-       -0.02243978        -0.00410728        -2.56196167
-        0.13345859        -2.56196875        -0.81043700
+        0.32736788        -0.02243978         0.13346459
+       -0.02243978        -0.00410728        -2.56196168
+        0.13345859        -2.56196876        -0.81043700
    ATOMIC_POSITIONS
    Si  -0.105603E+01  0.613055E+00  0.174298E+01
    Si  -0.147800E+00  0.421574E+01  0.497142E+01
@@ -1591,7 +1599,7 @@
    Si  -0.389181E-01  0.250391E-01 -0.280499E-01
    Si   0.354475E-01 -0.469710E-01  0.305045E-01
    Si   0.363530E-01  0.334151E-02  0.346713E-01
-   Si   0.334767E-03 -0.243506E-01 -0.222940E-01
+   Si   0.334766E-03 -0.243506E-01 -0.222940E-01
    Si  -0.296480E-02  0.382291E-01  0.268689E-01
    Si  -0.108648E-01 -0.151330E-02 -0.347323E-01
  
@@ -1604,8 +1612,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
  1000  0.00398    0.0 7759.8   -31.45204   -31.45204   -31.15716   -31.15318  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch/daily_test/espresso/tmp//si_50.save
-   restart file written in    0.030 sec.
+   writing restart file: /home/giannozz/trunk/espresso/CPV/tmp//si_50.save
+   restart file written in    0.027 sec.
 
  1001  0.00400    0.0 7802.5   -31.45368   -31.45368   -31.15717   -31.15318  0.0000  0.0000  0.0000  0.0000
  1002  0.00401    0.0 7844.0   -31.45527   -31.45527   -31.15719   -31.15318  0.0000  0.0000  0.0000  0.0000
@@ -1730,7 +1738,7 @@
    -9.49   -5.43   -5.17   -4.58   -4.04   -3.39   -1.63   -0.83   -0.05    0.07
     0.34    0.50    1.00    1.40    2.48    3.90
  
-   Allocated memory (kb) =     10012
+   Allocated memory (kb) =     14380
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -1743,9 +1751,9 @@
    Center of mass square displacement (a.u.):   0.000417
 
    Total stress (GPa)
-        9.86964515        -0.65008130         3.09047051
-       -0.65008130         0.55349939        -2.08157859
-        3.09048785        -2.08159293        10.80246787
+        9.86964515        -0.65008129         3.09047049
+       -0.65008129         0.55349940        -2.08157859
+        3.09048783        -2.08159293        10.80246786
    ATOMIC_POSITIONS
    Si  -0.230310E+01  0.898299E+00  0.238746E+01
    Si   0.158342E+00  0.382637E+01  0.452618E+01
@@ -1907,7 +1915,7 @@
    -8.46   -5.56   -4.50   -3.61   -3.07   -2.29   -1.68   -0.63    0.30    0.56
     0.66    1.61    1.76    2.29    2.58    2.85
  
-   Allocated memory (kb) =     10012
+   Allocated memory (kb) =     14380
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -1920,9 +1928,9 @@
    Center of mass square displacement (a.u.):   0.000417
 
    Total stress (GPa)
-        4.05284972         7.22646357        -5.91279172
-        7.22646357         0.54992973        -2.72938006
-       -5.91278305        -2.72940642         6.92039416
+        4.05284972         7.22646358        -5.91279173
+        7.22646358         0.54992974        -2.72938007
+       -5.91278306        -2.72940642         6.92039418
    ATOMIC_POSITIONS
    Si  -0.396075E+01  0.772873E+00  0.232795E+01
    Si   0.737480E+00  0.373905E+01  0.427015E+01
@@ -2012,10 +2020,80 @@
  1249  0.00608    0.0 5169.5   -31.35569   -31.35569   -31.15924   -31.15316  0.0000  0.0000  0.0000  0.0000
 
  * Physical Quantities at step:  1250
+
+
+                total energy =      -31.35427 Hartree a.u.
+              kinetic energy =       11.12065 Hartree a.u.
+        electrostatic energy =      -38.21429 Hartree a.u.
+                         esr =        0.00001 Hartree a.u.
+                       eself =       63.83076 Hartree a.u.
+      pseudopotential energy =       -3.18384 Hartree a.u.
+  n-l pseudopotential energy =        8.18278 Hartree a.u.
+ exchange-correlation energy =       -9.25957 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
+
+
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+   -8.08   -5.40   -4.12   -3.07   -2.98   -2.42   -1.61   -0.34    0.24    0.66
+    1.14    1.40    2.09    2.32    2.67    2.98
+ 
+   Allocated memory (kb) =     14380
+ 
+   CELL_PARAMETERS
+   10.60000000    0.00000000    0.00000000
+    0.00000000   10.60000000    0.00000000
+    0.00000000    0.00000000   10.60000000
+
+   System Density [g/cm^3] :     2.1136
+
+
+   Center of mass square displacement (a.u.):   0.000417
+
+   Total stress (GPa)
+       -5.32086687         8.44477341        -3.00592020
+        8.44477341        -0.68624825        -5.14479025
+       -3.00592802        -5.14481233         1.95615772
+   ATOMIC_POSITIONS
+   Si  -0.482369E+01  0.495219E+00  0.268450E+01
+   Si   0.732652E+00  0.378169E+01  0.428003E+01
+   Si   0.434494E+01 -0.163305E+01  0.559636E+01
+   Si   0.995790E+01  0.663948E+01 -0.264356E+01
+   Si   0.642975E+01  0.442286E+01  0.612973E+01
+   Si  -0.639693E+00  0.954521E+01  0.460357E+01
+   Si   0.853374E+01  0.230960E+01  0.971320E+01
+   Si   0.720716E+01  0.637754E+01  0.150135E+01
+ 
+   ATOMIC_VELOCITIES
+   Si  -0.143677E-02 -0.433533E-03  0.608437E-03
+   Si  -0.210052E-03  0.140969E-03  0.726276E-04
+   Si  -0.394585E-04 -0.729138E-03  0.229309E-03
+   Si   0.123497E-02  0.537525E-03 -0.941770E-03
+   Si   0.255559E-03  0.689359E-03  0.129195E-03
+   Si   0.184207E-03  0.663863E-04 -0.568626E-03
+   Si   0.454044E-03 -0.226801E-03 -0.472572E-04
+   Si  -0.442506E-03 -0.447671E-04  0.518085E-03
+ 
+   Forces acting on atoms (au):
+   Si   0.785195E-01  0.440575E-01 -0.547724E-01
+   Si  -0.313622E-01  0.894141E-02  0.985764E-03
+   Si  -0.415155E-02 -0.633665E-01  0.781982E-01
+   Si  -0.295083E-01  0.149161E-01 -0.669835E-02
+   Si  -0.104605E-01  0.280479E-02 -0.294037E-01
+   Si  -0.343882E-02  0.868119E-02  0.103627E-01
+   Si  -0.233039E-01 -0.186275E-01 -0.144536E-01
+   Si   0.229746E-01  0.921871E-02  0.178886E-01
+ 
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   Mean Square Displacement (a.u.)
+        1    5134.24    16.3446
  1250  0.00601    0.0 5134.2   -31.35427   -31.35427   -31.15916   -31.15316  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch/daily_test/espresso/tmp//si_50.save
-   restart file written in    0.030 sec.
+   writing restart file: /home/giannozz/trunk/espresso/CPV/tmp//si_50.save
+   restart file written in    0.027 sec.
 
 
 
@@ -2032,36 +2110,51 @@
    volume        :     1191.01600    1191.01600 (AU)
 
 
-     initialize   :      0.26s CPU      0.26s WALL (       1 calls)
-     total_time   :     33.42s CPU     34.03s WALL (    1000 calls)
-     formf        :      0.02s CPU      0.02s WALL (       1 calls)
-     rhoofr       :     13.71s CPU     13.73s WALL (    1000 calls)
-     vofrho       :      6.92s CPU      7.37s WALL (    1000 calls)
-     dforce       :      7.65s CPU      7.68s WALL (    8000 calls)
-     calphi       :      0.07s CPU      0.07s WALL (    1000 calls)
-     ortho        :      0.48s CPU      0.45s WALL (    1000 calls)
-     ortho_iter   :      0.06s CPU      0.06s WALL (    1000 calls)
-     rsg          :      0.10s CPU      0.08s WALL (    1000 calls)
-     rhoset       :      0.11s CPU      0.11s WALL (    1000 calls)
-     updatc       :      0.08s CPU      0.10s WALL (    1000 calls)
-     newd         :      0.01s CPU      0.00s WALL (    1000 calls)
-     calbec       :      0.26s CPU      0.28s WALL (    1001 calls)
-     prefor       :      0.17s CPU      0.17s WALL (    2001 calls)
-     strucf       :      0.28s CPU      0.30s WALL (    1001 calls)
-     nlfl         :      0.00s CPU      0.00s WALL (    1000 calls)
-     nlfq         :      0.90s CPU      0.91s WALL (    1000 calls)
-     nlsm1        :      0.26s CPU      0.28s WALL (    3001 calls)
-     nlsm2        :      0.87s CPU      0.88s WALL (    1000 calls)
-     fft          :      8.81s CPU      8.83s WALL (   12000 calls)
-     ffts         :      1.44s CPU      1.46s WALL (    2000 calls)
-     fftw         :     10.00s CPU     10.03s WALL (   24000 calls)
+     initialize   :      0.19s CPU      0.20s WALL (       1 calls)
+     main_loop    :     18.48s CPU     18.95s WALL (    1000 calls)
+
+     Called by main_loop:
+     move_electro :     14.39s CPU     14.83s WALL (    1000 calls)
+     ortho        :      0.44s CPU      0.45s WALL (    1000 calls)
+     updatc       :      0.10s CPU      0.09s WALL (    1000 calls)
+     strucf       :      0.44s CPU      0.45s WALL (    1001 calls)
+     calbec       :      0.28s CPU      0.28s WALL (    1001 calls)
+
+     Called by move_electrons:
+     rhoofr       :      3.68s CPU      3.68s WALL (    1000 calls)
+     vofrho       :      5.62s CPU      5.96s WALL (    1000 calls)
+     dforce       :      3.83s CPU      3.84s WALL (    8000 calls)
+     calphi       :      0.06s CPU      0.07s WALL (    1000 calls)
+     newd         :      0.00s CPU      0.00s WALL (    1000 calls)
+     nlfl         :      0.00s CPU      0.01s WALL (    1000 calls)
+
+     Called by ortho:
+     ortho_iter   :      0.07s CPU      0.06s WALL (    1000 calls)
+     rsg          :      0.06s CPU      0.08s WALL (    1000 calls)
+     rhoset       :      0.09s CPU      0.11s WALL (    1000 calls)
+     sigset       :      0.10s CPU      0.10s WALL (    1000 calls)
+     tauset       :      0.10s CPU      0.09s WALL (    1000 calls)
+
+     Small boxes:
+
+     Low-level routines:
+     prefor       :      0.14s CPU      0.17s WALL (    2001 calls)
+     nlfq         :      0.96s CPU      0.97s WALL (    1000 calls)
+     nlsm1        :      0.28s CPU      0.28s WALL (    1001 calls)
+     nlsm2        :      0.93s CPU      0.94s WALL (    1000 calls)
+     fft          :      1.00s CPU      1.04s WALL (    3000 calls)
+     ffts         :      0.72s CPU      0.69s WALL (    2000 calls)
+     fftw         :      4.40s CPU      4.39s WALL (   24000 calls)
+     betagx       :      0.15s CPU      0.15s WALL (       1 calls)
+     qradx        :      0.00s CPU      0.00s WALL (       1 calls)
+     ortho_iter   :      0.07s CPU      0.06s WALL (    1000 calls)
  
  
  
-     CP           :    33.72s CPU        34.35s WALL
+     CP           :    18.72s CPU        19.23s WALL
 
  
-   This run was terminated on:  11:58:37  30Aug2010            
+   This run was terminated on:  19:53:26  10May2012            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
