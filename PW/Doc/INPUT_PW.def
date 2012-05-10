@@ -864,15 +864,30 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	        for treating the Coulomb potential divergencies at small q vectors.
 
 		gygi-baldereschi : appropriated for cubic and quasi-cubic supercells
-		yukawa : appropriated for cubic and quasi-cubic supercells.
-                erfc_simple : appropriated for cubic and quasi-cubic supercells. Used
-			      only if screening_parameter is set.
                 vcut_spherical : appropriated for cubic and quasi-cubic supercells
                 vcut_ws : appropriated for strongly anysotropic supercells, see also
                           ecutvcut.
                 none : sets Coulomb potential at G,q=0 to 0.0
             }
         }
+
+        var ecutvcut -type REAL { default { 0.0 Ry }; see { exxdiv_treatment } 
+            info {
+                Reciprocal space cutoff for correcting
+	        Coulomb potential divergencies at small q vectors.
+            }
+        }
+
+	vargroup -type INTEGER {
+	    var nqx1
+	    var nqx2
+	    var nqx3
+	    info {
+		three-dimensional mesh for q (k1-k2) sampling of 
+		the Fock operator (EXX). Can be smaller than 
+                the number of kpoints.
+	    }
+	}
 
 	var lda_plus_u        -type LOGICAL { 
 	    default { .FALSE. }
