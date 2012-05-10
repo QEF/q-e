@@ -637,8 +637,6 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
      nprocp = dfft%nproc
   ENDIF
   !
-  IF (nprocp.eq.1) RETURN
-  !
   CALL start_clock ('fft_scatter')
   !
   ! sendcount(proc): amount of data processor "me" must send to processor
@@ -671,6 +669,8 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
 
   ierr = 0
   IF (isgn.gt.0) THEN
+
+     IF( nprocp < 2 ) GO TO 10 
      !
      ! "forward" scatter from columns to planes
      !
@@ -696,6 +696,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
         ENDDO
         offset = offset + npp_ ( gproc )
      ENDDO
+
      !
      ! maybe useless; ensures that no garbage is present in the output
      !
@@ -716,6 +717,8 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
 
      IF( abs(ierr) /= 0 ) CALL errore ('fft_scatter', 'info<>0', abs(ierr) )
      !
+10   CONTINUE
+
      IF( isgn == 1 ) THEN
 
         me_p = dfft%mype + 1
@@ -849,6 +852,8 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
 !$omp end parallel
 
      END IF
+
+     IF( nprocp < 2 ) GO TO 20
      !
      !  step two: communication
      !
@@ -891,6 +896,8 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
         offset = offset + npp_ ( gproc )
         !
      ENDDO
+
+20   CONTINUE
 
   ENDIF
 
