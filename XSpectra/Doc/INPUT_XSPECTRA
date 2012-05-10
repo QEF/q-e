@@ -26,7 +26,7 @@ C. Gougoussis, M. Calandra, A. Seitsonen, Ch. Brouder, A. Shukla, F. Mauri
 " Intrinsic charge transfer gap in NiO from  Ni K -edge x-ray absorption spectroscopy", Phys. Rev. B 79, 045118 (2009)
 
 
-Finally you should cite properly the Quantum Espresso package.
+Finally you should cite properly the Quantum ESPRESSO distribution.
 
 -----------------------------------------------------------------------
 XSpectra is a post-processing tools that relies on the output 
@@ -36,9 +36,9 @@ xspectra.x.
 
 To simulate core-hole effects, a pseudopotential with a hole in the s
 state (1s for K-edges, 2s for L1-edges,...) needs to be generated 
-for the absorbing atom. Some of these 
-pseudopotentials are available in the Xspectra examples directory,
-some other qre available on the QE pseudopotential web-page with the
+for the absorbing atom. Some of these pseudopotentials are available 
+in the Xspectra examples directory, some others are available on 
+the pseudopotential web-page at www.quantum-espresso.org/ with the
 label "*star1s*_gipaw*" for K-edges, "*star2s*_gipaw*" for L1-edges and so on. 
 
 The self-consistent calculation is then performed on a supercell including
@@ -69,9 +69,8 @@ The code needs the 1s radial core wavefunction
 (for the 1s state in the absence of a 
 core-hole) in input. This wavefunction is included in the pseudo
 and can be extracted using the script upf2plotcore.sh
-in the directory ~/Pw/qe-forge/espresso/XSpectra/
-of the QE distribution. Note that this script works only for UPF
-version 1.
+in the directory ~/espresso/XSpectra/tools/ .
+Note that this script works only for UPF version 1.
 This is necessary to calculate the XAS matrix element.
 
 The output spectrum can be separated in its spin-up and 
