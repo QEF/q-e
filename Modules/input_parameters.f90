@@ -396,8 +396,8 @@ MODULE input_parameters
         CHARACTER(len=80) :: exxdiv_treatment = 'gygi-baldereschi'
           ! define how ro cure the Coulomb divergence in EXX
           ! Allowed values are:
-        CHARACTER(len=80) :: exxdiv_treatment_allowed(8)
-        DATA exxdiv_treatment_allowed / 'gygi-baldereschi', 'gygi-bald', 'g-b', &
+        CHARACTER(len=80) :: exxdiv_treatment_allowed(6)
+        DATA exxdiv_treatment_allowed / 'gygi-baldereschi', 'gygi-bald', 'g-b',&
              'vcut_ws', 'vcut_spherical', 'none' /
           !
         LOGICAL  :: x_gamma_extrapolation = .true.
