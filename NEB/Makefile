@@ -1,5 +1,4 @@
 # Makefile for NEB
-# Adapted from TDDFPT main Makefile
 
 default: all
 
