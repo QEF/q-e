@@ -931,7 +931,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 (only for lda_plus_u_kind=0)
 	    }
 	}
-	dimension Hubbard_J(ntyp) -start 1 -end 3 -type REAL { 
+	var Hubbard_J(i,ityp) { 
 	    default { 0.D0 for all species }
 	    info {
 		Hubbard_J(i,ityp): J parameters (eV) for species ityp, 
