@@ -119,6 +119,7 @@ or patch some \qe\ routines can be installed as {\em plug-ins}:
       calculation of free-energy surface through metadynamics.
 \item \texttt{GIPAW} (Gauge-Independent Projector Augmented Waves):
       NMR chemical shifts and EPR g-tensor.
+\item \texttt{GWL}: electronic excitations within GW Approximation.
 \end{itemize}
 Documentation on single packages can be found in the \texttt{Doc/} or
 \texttt{doc/} directory of each package. A detailed description of input
@@ -301,7 +302,7 @@ Stable releases of the \qe\ source package (current version
 is \version) can be downloaded from the Download section
 of \texttt{http://www.quantum-espresso.org}.
 
-Uncompress and unpack the core distribution using the command:
+Uncompress and unpack the base distribution using the command:
 \begin{verbatim}
      tar zxvf espresso-X.Y.Z.tar.gz
 \end{verbatim}
@@ -319,6 +320,9 @@ unpack and install the required packages on demand. If not,
 you can download each required package into subdirectory
 \texttt{archive} but {\em not unpacked or uncompressed}:
 command \texttt{make} will take care of this during installation. 
+
+The package \texttt{GWL} needs a manual download and installation please
+follow the instructions given at \texttt{gww.qe-forge.org}.
 
 Occasionally, patches for the current version, fixing some errors and bugs,
 may be distributed as a "diff" file. In order to install a patch (for 
