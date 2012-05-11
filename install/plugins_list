@@ -37,3 +37,6 @@ PHONON_URL=http://qe-forge.org/frs/download.php/209/$(PHONON).tar.gz
 TDDFPT=tddfpt-5.0
 TDDFPT_URL=http://qe-forge.org/frs/download.php/206/$(TDDFPT).tar.gz
 #
+GUI=pwgui-5.0
+GUI_URL=http://qe-forge.org/frs/download.php/.../$(GUI).tar.gz
+#

@@ -20,6 +20,7 @@ default :
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  upf          utilities for pseudopotential conversion'
 	@echo '  xspectra     X-ray core-hole spectroscopy calculations '
+	@echo '  gui          Graphical User Interface
 	@echo '  pwall        same as "make pw ph pp pwcond neb"'
 	@echo '  all          same as "make pwall cp ld1 upf tddfpt"'
 	@echo '  clean        remove executables and objects'
@@ -81,6 +82,9 @@ pw_export : libiotk bindir mods libs pw
 	else $(MAKE) $(MFLAGS) TLDEPS= pw_export.x ; fi ) ; fi
 
 xspectra : bindir mods libs pw
+	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+
+gui : touch_dummy
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 pwall : pw neb ph pp pwcond acfdt

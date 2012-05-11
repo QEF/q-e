@@ -360,6 +360,24 @@ configure-sax: touch-dummy
 ###################################
 extlibs:
 	test -n "$(EXTLIBS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(EXTLIBS) || exit 1) || :
+
+##########################################################
+# GUI
+###########################################################
+gui:  uncompress-gui
+	touch make-gui
+uncompress-gui: touch-dummy
+	@(if test ! -e ../archive/$(GUI).tar.gz && test ! -d ../GUI ; then \
+	wget -O ../archive/$(GUI).tar.gz $(GUI_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	curl -o ../archive/$(GUI).tar.gz $(GUI_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	echo "unable to download pwGUI. Test whether curl or wget is installed in your computer." ; \
+	fi ; fi ; fi) 
+	if test ! -d ../GUI; then \
+	(gzip -dc ../archive/$(GUI).tar.gz | (cd ../ ; tar -xvf -)) ; fi
+	touch uncompress-gui
+
 ###################################
 # cleaning
 ###################################
@@ -490,6 +508,12 @@ sax_veryclean: sax_clean
 	if test -d ../SaX; then (rm -R -f ../SaX); fi
 	if test -d ../$(SAX); then (rm -R -f ../$(SAX)); fi
 	- rm -rf ./uncompress-sax
+
+gui_clean:
+	rm -rf ./make-gui 
+
+gui_veryclean: gui_clean
+# dir is not deleted for compatibility with the repository
 
 ##########################################################
 # general cleaning
