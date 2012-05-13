@@ -332,7 +332,8 @@ help etot_conv_thr -helpfmt helpdoc -helptext {
 convergence threshold on total energy (a.u) for ionic
 minimization: the convergence criterion is satisfied
 when the total energy changes less than etot_conv_thr
-between two consecutive scf steps.
+between two consecutive scf steps. Note that etot_conv_thr
+is extensive, like the total energy.
 See also forc_conv_thr - both criteria must be satisfied
          </pre></blockquote>
 </ul>      
@@ -351,11 +352,11 @@ help forc_conv_thr -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-convergence threshold on forces (a.u) for ionic
-minimization: the convergence criterion is satisfied
-when all components of all forces are smaller than
-forc_conv_thr.
-See also etot_conv_thr - both criteria must be satisfied
+convergence threshold on forces (a.u) for ionic minimization:
+the convergence criterion is satisfied when all components of
+all forces are smaller than forc_conv_thr.
+See also etot_conv_thr (note that the latter is extensive,
+forc_conv_thr is not) - both criteria must be satisfied
          </pre></blockquote>
 </ul>      
       
@@ -383,7 +384,7 @@ Specifies the amount of disk I/O activity
 
 'none':    do not save wfc, not even at the end
            (guaranteed to work only for 'scf', 'nscf',
-            'band' calculations)
+            'bands' calculations)
 
 If restarting from an interrupted calculation, the code
 will try to figure out what is available on disk. The
@@ -899,6 +900,29 @@ to be accurately converged.
 
 
 # ------------------------------------------------------------------------
+help ecutfock -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>ecutfock</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> ecutrho
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+kinetic energy cutoff (Ry) for the exact exchange operator in
+EXX type calculations. By default this is the same as ecutrho
+but in some EXX calculations significant speed-up can be found
+by reducing ecutfock, at the expense of some loss in accuracy.
+Currently only implemented for the optimized gamma point only
+calculations.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 grouphelp {nr1 nr2 nr3} -helpfmt helpdoc -helptext {
     <ul>
 <li> <em>Variables: </em><big><b>nr1, nr2, nr3</b></big>
@@ -1339,6 +1363,110 @@ Use with care and if you know what you are doing!
 
 
 # ------------------------------------------------------------------------
+help exx_fraction -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>exx_fraction</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> it depends on the specified functional
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Fraction of EXX for hybrid functional calculations. In the case of
+input_dft='PBE0', the default value is 0.25, while for input_dft='B3LYP'
+the exx_fraction default value is 0.20.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help screening_parameter -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>screening_parameter</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.106
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+screening_parameter for HSE like hybrid functionals.
+See J. Chem. Phys. 118, 8207 (2003)
+and J. Chem. Phys. 124, 219906 (2006) for more informations.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help exxdiv_treatment -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>exxdiv_treatment</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> gygi-baldereschi
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Specific for EXX. It selects the kind of approach to be used
+for treating the Coulomb potential divergencies at small q vectors.
+
+gygi-baldereschi : appropriated for cubic and quasi-cubic supercells
+vcut_spherical : appropriated for cubic and quasi-cubic supercells
+vcut_ws : appropriated for strongly anysotropic supercells, see also
+          ecutvcut.
+none : sets Coulomb potential at G,q=0 to 0.0
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help ecutvcut -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>ecutvcut</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.0 Ry
+         </li>
+<br><li> <em>See: </em> exxdiv_treatment
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Reciprocal space cutoff for correcting
+Coulomb potential divergencies at small q vectors.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+grouphelp {nqx1 nqx2 nqx3} -helpfmt helpdoc -helptext {
+    <ul>
+<li> <em>Variables: </em><big><b>nqx1, nqx2, nqx3</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+three-dimensional mesh for q (k1-k2) sampling of
+the Fock operator (EXX). Can be smaller than
+the number of kpoints.
+         </pre></blockquote>
+</ul>
+    
+}
+
+
+# ------------------------------------------------------------------------
 help lda_plus_u -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>lda_plus_u</b></big>
@@ -1346,25 +1474,45 @@ help lda_plus_u -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>LOGICAL</li>
 <br><li> <em>Default: </em> .FALSE.
          </li>
-<br><li> <em>See: </em> Hubbard_U
+<br><li> <em>Status: </em>
+DFT+U (formerly known as LDA+U) currently works only for
+a few selected elements. Modify PW/set_hubbard_l.f90 and
+PW/tabd.f90 if you plan to use DFT+U with an element that
+is not configured there.
          </li>
-<br>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Specify lda_plus_u = .TRUE. to enable DFT+U calculations
+See: Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991);
+     Anisimov et al., PRB 48, 16929 (1993);
+     Liechtenstein, Anisimov, and Zaanen, PRB 52, R5467 (1994).
+You must specify, for each species with a U term, the value of
+U and (optionally) alpha, J of the Hubbard model (all in eV):
+see lda_plus_u_kind, Hubbard_U, Hubbard_alpha, Hubbard_J
+         </pre></blockquote>
 </ul>      
       
 }
 
 
 # ------------------------------------------------------------------------
-help Hubbard_alpha -helpfmt helpdoc -helptext {
+help lda_plus_u_kind -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variables: </em><big><b>Hubbard_alpha(i), i=1,ntyp</b></big>
+<li> <em>Variable: </em><big><b>lda_plus_u_kind</b></big>
 </li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 0.D0 for all species
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 0
          </li>
-<br><li> <em>See: </em> Hubbard_U
-         </li>
-<br>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Specifies the type of DFT+U calculation:
+                  0   simplified version of Cococcioni and de Gironcoli,
+                      PRB 71, 035105 (2005), using Hubbard_U
+                  1   rotationally invariant scheme of Liechtenstein et al.,
+                      using Hubbard_U and Hubbard_J
+         </pre></blockquote>
 </ul>      
       
 }
@@ -1378,22 +1526,31 @@ help Hubbard_U -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>REAL</li>
 <br><li> <em>Default: </em> 0.D0 for all species
          </li>
-<br><li> <em>Status: </em>
-LDA+U works only for a few selected elements. Modify
-PW/set_hubbard_l.f90 and PW/tabd.f90 if you plan to use LDA+U with an
-element that is not configured there.
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Hubbard_U(i): U parameter (eV) for species i, DFT+U calculation
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help Hubbard_alpha -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variables: </em><big><b>Hubbard_alpha(i), i=1,ntyp</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.D0 for all species
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-lda_plus_u, Hubbard_alpha(i), Hubbard_U(i): parameters for LDA+U calculations
-
-If lda_plus_u = .TRUE. you must specify, for species i,
-the parameters U and (optionally) alpha of the Hubbard model (both in eV).
-
-See: Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991); Anisimov
-et al., PRB 48, 16929 (1993); Liechtenstein, Anisimov, and Zaanen, PRB
-52, R5467 (1994); Cococcioni and de Gironcoli, PRB 71, 035105 (2005).
+Hubbard_alpha(i) is the perturbation (on atom i, in eV)
+used to compute U with the linear-response method of
+Cococcioni and de Gironcoli, PRB 71, 35105 (2005)
+(only for lda_plus_u_kind=0)
          </pre></blockquote>
 </ul>      
       
@@ -1412,7 +1569,7 @@ help U_projection_type -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Only active when lda_plus_U is .true., specifies the type
-of projector on localized orbital to be used in the LDA+U
+of projector on localized orbital to be used in the DFT+U
 scheme.
 
 Currently available choices:
@@ -1962,6 +2119,7 @@ help conv_thr -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Convergence threshold for selfconsistency:
 estimated energy error &lt; conv_thr
+(note that conv_thr is extensive, like the total energy)
          </pre></blockquote>
 </ul>      
       
@@ -2097,7 +2255,7 @@ help mixing_fixed_ns -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-For LDA+U : number of iterations with fixed ns ( ns is the
+For DFT+U : number of iterations with fixed ns ( ns is the
   atomic density appearing in the Hubbard term ).
          </pre></blockquote>
 </ul>      
@@ -2632,7 +2790,7 @@ if ion_temperature='rescale-T':
 
 if ion_temperature='reduce-T':
        every 'nraise' steps the instantaneous temperature is
-       reduced by -delta_T (.e. delta_t is added to the temperature)
+       reduced by -delta_T (i.e. delta_t &lt; 0 is added to T)
 
 The instantaneous temperature is calculated at the end of
 every ionic move and BEFORE rescaling. This is the temperature
@@ -2969,14 +3127,18 @@ help cell_dofree -helpfmt helpdoc -helptext {
 Select which of the cell parameters should be moved:
 
 all     = all axis and angles are moved
-x       = only the x axis is moved
-y       = only the y axis is moved
-z       = only the z axis is moved
-xy      = only the x and y axis are moved, angles are unchanged
-xz      = only the x and z axis are moved, angles are unchanged
-yz      = only the y and z axis are moved, angles are unchanged
-xyz     = x, y and z axis are moved, angles are unchanged
+x       = only the x component of axis 1 (v1_x) is moved
+y       = only the y component of axis 2 (v2_y) is moved
+z       = only the z component of axis 3 (v3_z) is moved
+xy      = only v1_x and v_2y are moved
+xz      = only v1_x and v_3z are moved
+yz      = only v2_x and v_3z are moved
+xyz     = only v1_x, v2_x, v_3z are moved
 shape   = all axis and angles, keeping the volume fixed
+
+BEWARE: if axis are not orthogonal, some of these options do not
+ work (symmetry is broken). If you are not happy with them,
+ edit subroutine init_dofree in file Module/cell_base.f90
          </pre></blockquote>
 </ul>      
       
@@ -3317,9 +3479,7 @@ Type of constrain :
 'bennett_proj'    : constraint on the projection onto a given direction
                     of the vector defined by the position of one atom
                     minus the center of mass of the others.
-                    ( Ch.H. Bennett in Diffusion in Solids, Recent
-                      Developments, Ed. by A.S. Nowick and J.J. Burton,
-                      New York 1975 ).
+                    G.Roma,J.P.Crocombette: J.Nucl.Mater.403,32(2010)
                   </pre></blockquote>
 </ul><ul>
 <li> <em>Variables: </em><big><b>constr(1), constr(2), constr(3), constr(4)</b></big>

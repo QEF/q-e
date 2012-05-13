@@ -542,6 +542,46 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    }
 		}
 
+		separator -label "--- Hartree Fock & Hybrid Functionals ---"
+
+		var ecutfock {
+		    -label    "Kinetic energy cutoff for exact exchange operator \[in Ry\] (ecutfock):"
+		    -validate fortranposreal
+		}
+
+		var exx_fraction {
+		    -label "Fraction of EXX for hybrid functional calculations (exx_fraction):"
+		    -validate fortranreal
+		}
+
+		var exxdiv_treatment {
+		    -label "Approach for treating Coulomb potential divergencies at small q vectors (exxdiv_treatment):"
+		    -widget optionmenu
+		    -value {
+			'gygi-baldereschi'
+			'vcut_spherical'
+			'vcut_ws'
+			'none'
+		    }
+		}
+
+		var ecutvcut {
+		    -label "Reciprocal space cutoff for exxdiv_treatment (ecutvcut):"
+		    -validate fortranreal
+		}
+
+		var screening_parameter {
+		    -label "Screening_parameter for HSE like hybrid functionals (screening_parameter):"
+		    -validate fortranreal
+		}
+
+		group nqx123 {		    
+		    packwidgets left
+		    var nqx1 -label "nqx1:" -validate fortranposreal
+		    var nqx2 -label "nqx2:" -validate fortranposreal
+		    var nqx3 -label "n1x3:" -validate fortranposreal		    
+		}
+
 		separator -label "--- LDA + U parameters ---"
 	       
 		var lda_plus_u {
@@ -552,6 +592,16 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		}
 		    
 		group hubbard -name Hubbard {
+		    var lda_plus_u_kind {
+			-label     "type of LDA + U calculation (lda_plus_u_kind):"
+			-textvalue {
+			    "simplified version of Cococcioni and de Gironcoli" 
+			    "rotationally invariant scheme of Liechtenstein et al."
+			}
+			-value     {0 1}
+			-widget    radiobox
+		    }
+
 		    dimension Hubbard_U {
 			-label     "Hubbarb U (Hubbard_U):"
 			-validate  fortranreal
@@ -563,6 +613,8 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			-validate  fortranreal
 			-start 1 -end 1
 		    }
+
+		    # can't input Hubbard_J and starting_ns_eigenvalue
 
 		    var U_projection_type {
 			-label  "Type of projector on localized orbital (U_projector_type):"
