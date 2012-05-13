@@ -257,26 +257,6 @@ File where the the potential variation is written
 
 
 # ------------------------------------------------------------------------
-help dvscf_dir -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>dvscf_dir</b></big>
-</li>
-<br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Default: </em> ' '
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-Directory from where the file fildvscf is read
-(used in electron-phonon calculation). If not
-specified the fildvscf is read from outdir.
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
 help epsil -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>epsil</b></big>
@@ -437,28 +417,6 @@ help recover -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre> If .true. restart from an interrupted run.
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help dvscf_star -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>dvscf_star</b></big>
-</li>
-<br><li> <em>Type: </em>LOGICAL</li>
-<br><li> <em>Default: </em> .false.
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-If .true. the potential variations at all q-points in the
-star of xq are obtained by using symmetry and written in
-the subdirectory outdir/_ph0/Rotated_DVSCF/ . The
-potential variations written out are in real space and in
-the cartesian basis.
          </pre></blockquote>
 </ul>      
       
@@ -661,9 +619,9 @@ help lqdir -helpfmt helpdoc -helptext {
 <blockquote><pre>
 If .true. ph.x creates inside outdir a separate subdirectory
 for each q vector. The flag is set to .true. when ldisp=
-.true. and fildvscf /= ' ' or when elph is true. The induced
-potential is saved separately for each q inside the
-subdirectories.
+.true. and fildvscf /= ' ' or when an electron-phonon
+calculation is performed. The induced potential is saved
+separately for each q inside the subdirectories.
          </pre></blockquote>
 </ul>      
       
@@ -883,6 +841,85 @@ IMPORTANT
    * last_q must be &lt;= nqs (number of q points)
    * do not specify "nat_todo" together with
      "start_q", "last_q"
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help dvscf_star -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>dvscf_star</b></big>
+</li>
+<br><li> <em>Type: </em>STRUCTURE</li>
+<br><li> <em>Default: </em> disabled
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+It contains the following components:
+dvscf_star%open  (logical, default: .false.)
+dvscf_star%dir   (character, default: outdir//"Rotated_DVSCF" or the
+                  ESPRESSO_FILDVSCF_DIR environment variable)
+dvscf_star%ext   (character, default: "dvscf") the extension to use
+                  for the name of the output files, see below
+dvscf_star%basis (character, default: "cartesian") the basis on which
+                  the rotated dvscf will be saved
+dvscf_star%pat   (logical, default: true) save an optional file with the
+                 displacement patterns and q vector for each dvscf file
+
+IF dvscf_star%open is .true. use symmetry to compute and store the variation
+of the self-consistent potential on every q* in the star of the present q.
+
+The rotated dvscf will then be stored in directory dvscf_star%dir with name
+prefix.dvscf_star%ext.q_name//"1". Where q_name is derived from the coordinates
+of the q-point, expressed as fractions in crystalline coordinates
+(notice that ph.x reads q-points in cartesian coordinates).
+E.g. q_cryst= (0, 0.5, -0.25) -&gt; q_name = "0_1o2_-1o4"
+
+The dvscf can be represented on a basis of cartesian 1-atom displacements
+(dvscf_star%basis='cartesian') or on the basis of the modes at the rotated q-point
+(dvscf_star%basis='modes'). Notice that the el-ph wannier code requires 'cartesian'.
+Each dvscf file comes with a corresponding pattern file with an additional ".pat"
+suffix; this file contains information about the basis and the q-point of the dvscf.
+
+Note: rotating dvscf can require a large amount of RAM memory and can be i/o
+      intensive; in its current implementation all the operations are done
+      on a single processor.
+Note2: this feature is currently untested with image parallelisation.
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help drho_star -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>drho_star</b></big>
+</li>
+<br><li> <em>Type: </em>STRUCTURE</li>
+<br><li> <em>Default: </em> disabled
+            </li>
+<br><li> <em>See: </em> dvscf_star
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+It contains the following components:
+drho_star%open  (logical, default: .false.)
+drho_star%dir   (character, default: outdir//"Rotated_DRHO" or the
+                 ESPRESSO_FILDRHO_DIR environment variable)
+drho_star%ext   (character, default: "drho") the extension to use
+                 for the name of the output files, see below
+drho_star%basis (character, default: "modes") the basis on which
+                 the rotated drho will be saved
+drho_star%pat   (logical, default: false) save an optional file with the
+                 displacement patterns and q vector for each drho file
+
+Like dvscf_star, but for the perturbation of the charge density.
+Notice that the defaults are different.
             </pre></blockquote>
 </ul>      
       

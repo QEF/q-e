@@ -47,12 +47,6 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 		    -widget   entryfileselectquote
 		    -fmt      %S -validate string
 		}
-		var dvscf_dir {
-		    -label    "Directory from where the file fildvscf is read (dvscf_dir):" 
-		    -widget   entrydirselectquote
-		    -fmt      %S -validate string
-		}
-
 	    }
 	    
 	    page calcs -name "What to Compute" {
@@ -193,6 +187,13 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 		    -fmt       %s
 		}
 
+		var search_sym {
+		    -label     "Perform mode symmetry analysis (search_sym):"
+		    -textvalue {Yes No}
+		    -value     {.true. .false.}
+		    -widget    radiobox
+		}
+
 		group ramanthreshold -name "Thresholds for Raman" -decor normal {
 		    var eth_rps {
 			-label    "Threshold for calculation of x|Psi> (eth_rps):"
@@ -208,18 +209,98 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 		    }
 		}
 
-		var dvscf_star {
-		    -label     "Compute potential variations at all q-points in the star (dvscf_star):"
-		    -textvalue {Yes No}
-		    -value     {.true. .false.}
-		    -widget    radiobox
+		##separator -label "--- Potential variations ---"
+
+		group dvscf -name "Potential variations" -decor normal {
+		    # to trich the chek_gui only
+		    var dvscf_star
+		    #/
+		    var dvscf_star_open {
+			-variable  dvscf_star%open
+			-label     "Compute potential variations at all q-points in the star (dvscf_star%open):"
+			-textvalue {Yes No}
+			-value     {.true. .false.}
+			-widget    radiobox
+		    }
+		    var dvscf_star_dir {
+			-variable dvscf_star%dir
+			-label    "Directory where to store rotated dvscf files (dvscf_star%dir):" 
+			-widget   entrydirselectquote
+			-fmt      %S -validate string
+		    }
+		    var dvscf_star_ext {
+			-variable dvscf_star%ext
+			-label    "Extension to use for the name of dvscf files (dvscf_star%ext):" 
+			-fmt      %S -validate string
+		    }
+		    var dvscf_star_basis {
+			-variable dvscf_star%basis
+			-label    "Basis used for the dvscf files (dvscf_star%basis):" 
+			-widget   radiobox
+			-fmt      %s
+			-value {
+			    'cartesian'
+			    'modes'
+			}
+			-textvalue {
+			    "basis of cartesian 1-atom displacements <cartesian>"
+			    "basis of the modes at the rotated q-point <modes>"
+			}
+		    }
+		    var dvscf_star_pat {
+			-variable  dvscf_star%pat
+			-label     "Save displacement patterns and q vector for each dvscf file (dvscf_star%pat):"
+			-textvalue {Yes No}
+			-value     {.true. .false.}
+			-widget    radiobox
+		    }
 		}
 
-		var search_sym {
-		    -label     "Perform mode symmetry analysis (search_sym):"
-		    -textvalue {Yes No}
-		    -value     {.true. .false.}
-		    -widget    radiobox
+		##separator -label "--- Perturbation of the charge density ---"
+
+		group drho -name "Perturbation of the charge density" -decor normal {
+		    # to trich the chek_gui only
+		    var drho_star
+		    #/
+		    var drho_star_open {
+			-variable  drho_star%open
+			-label     "Compute charge density perturbation at all q-points in the star (drho_star%open):"
+			-textvalue {Yes No}
+			-value     {.true. .false.}
+			-widget    radiobox
+		    }
+		    var drho_star_dir {
+			-variable drho_star%dir
+			-label    "Directory where to store rotated drho files (drho_star%dir):" 
+			-widget   entrydirselectquote
+			-fmt      %S -validate string
+		    }
+		    var drho_star_ext {
+			-variable drho_star%ext
+			-label    "Extension to use for the name of drho files (drho_star%ext):" 
+			-fmt      %S -validate string
+		    }
+		    var drho_star_basis {
+			-variable drho_star%basis
+			-label    "Basis used for the drho files (drho_star%basis):" 
+			-widget   radiobox
+			-fmt      %s
+			-value {
+			    'cartesian'
+			    'modes'
+			}
+			-textvalue {
+			    "basis of cartesian 1-atom displacements <cartesian>"
+			    "basis of the modes at the rotated q-point <modes>"
+			}
+		    }
+		    var drho_star_pat {
+			-variable  drho_star%pat
+			-label     "Save displacement patterns and q vector for each drho file (drho_star%pat):"
+			-textvalue {Yes No}
+			-value     {.true. .false.}
+			-widget    radiobox
+		    }
 		}
 	    }
 
@@ -408,4 +489,22 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
     # source the HELP file
     # ------------------------------------------------------------------------
     source ph-help.tcl
+
+    # help postproccessing (hack for help of dvscf_star & drho_stur structures)
+    
+    foreach ident {dvscf_star drho_star} {
+	    
+	set obj      [_getObjFromVarident $ident]
+	set id       [$obj getIdFromVarident $ident]
+	set helptext [$obj getOptionValue $id helptext]
+	
+	foreach elem {open dir ext basis pat} {		
+	    puts stderr "help ${ident}_$elem -helpfmt helpdoc -helptext $helptext"
+	    help ${ident}_$elem -helpfmt helpdoc -helptext $helptext
+	}
+    }
+    postprocess {
+	widget dvscf_star forget
+	widget drho_star forget
+    }
 }
