@@ -98,7 +98,9 @@ grouphelp {Emin Emax} -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-min, max energy (eV) for DOS plot
+min, max energy (eV) for DOS plot. If unspecified, the
+lower and/or upper band value, plus/minus 3 times the
+value of the gaussian smearing if present, will be used.
          </pre></blockquote>
 </ul>
     
