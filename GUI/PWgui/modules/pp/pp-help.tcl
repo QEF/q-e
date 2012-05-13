@@ -89,7 +89,10 @@ selects what to save in filplot:
 
    8  = electron localization function (ELF)
 
-   9  = no longer in use
+   9 = Reduced density gradient
+       (J. Chem. Theory Comput. 7, 625 (2011))
+       Set the isosurface between 0.3 and 0.6 to plot the
+       non-covalent interactions
 
    10 = integrated local density of states (ILDOS)
         from emin to emax (emin, emax in eV)

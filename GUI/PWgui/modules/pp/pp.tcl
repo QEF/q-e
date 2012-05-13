@@ -42,6 +42,7 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    "|psi|^2"
 		    "|psi|^2 (noncollinear case)"
 		    "electron localization function (ELF)"
+		    "reduced density gradient"
 		    "integrated local density of states (ILDOS)"
 		    "electrostatic potential (= V_bare + V_H)"
 		    "sawtooth electric field potential"
@@ -49,7 +50,7 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    "all-electron valence charge density (for PAW)"
 		    "exchange-correlation magnetic field (for noncollinear)"
 		}
-		-value { 0 1 2 3 4 5 6 7 7 8 10 11 12 13 17 18 }
+		-value { 0 1 2 3 4 5 6 7 7 8 9 10 11 12 13 17 18 }
 		-fmt %d
 	    }
 	    var spin_component {
