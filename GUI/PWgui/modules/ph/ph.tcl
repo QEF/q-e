@@ -498,8 +498,7 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	set id       [$obj getIdFromVarident $ident]
 	set helptext [$obj getOptionValue $id helptext]
 	
-	foreach elem {open dir ext basis pat} {		
-	    puts stderr "help ${ident}_$elem -helpfmt helpdoc -helptext $helptext"
+	foreach elem {open dir ext basis pat} {
 	    help ${ident}_$elem -helpfmt helpdoc -helptext $helptext
 	}
     }
