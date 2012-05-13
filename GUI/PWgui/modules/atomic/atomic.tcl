@@ -44,6 +44,11 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 		    -fmt      %S
 		    -validate string
 		}
+		var relpert {
+		    -label    "Compute relativistic corrections to non-relativistic\nKohn-Sham energy levels (relpert):"
+		    -widget   radiobox
+		    -textvalue {Yes No} -value {.true. .false.}
+		}
 		var rel_dist {
 		    -label "How to fill the electronic states (rel_dist):"
 		    -value {'energy' 'average'} 
