@@ -200,10 +200,11 @@ SUBROUTINE do_rdg (rdg)
   IMPLICIT NONE
   real(dp), intent(out) :: rdg (dfftp%nnr)
   real(dp), allocatable :: grho(:,:)
-  real(dp), parameter :: fac = (1.d0/2.d0) * 1.d0/(3.d0*pi**2)**(1.d0/3.d0)
+  real(dp):: fac
   real(dp), parameter :: rho_cut = 0.05d0
   integer :: is, i
 
+  fac = (1.d0/2.d0) * 1.d0/(3.d0*pi**2)**(1.d0/3.d0)
   ! gradient of rho
   allocate( grho(3,dfftp%nnr) )
 
