@@ -57,8 +57,7 @@ for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
        $ECHO
        $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
-            $WGET $PSEUDO_DIR/$FILE \
-                http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE 2> /dev/null 
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null 
     fi
     if test $? != 0; then
         $ECHO
