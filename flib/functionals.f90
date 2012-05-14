@@ -901,7 +901,75 @@ subroutine pbec (rho, grho, iflag, sc, v1c, v2c)
   !
   return
 end subroutine pbec
+!
+!---------------------------------------------------------------
+subroutine sogga (rho, grho2, sx, v1x, v2x)
+  !-------------------------------------------------------------
+  !
+  ! SOGGA exchange
+  ! 
+  !
+ USE kinds
+ USE constants, ONLY : pi
 
+  implicit none
+
+  real(dp), intent(in)    :: rho, grho2
+  real(dp), intent(out)   :: sx, v1x, v2x
+  ! input: charge and squared gradient
+  ! output: energy
+  ! output: potential
+
+  ! local variables
+  real(dp)                :: grho, rho43, xs, xs2, dxs2_drho, dxs2_dgrho2
+  real(dp)                :: CX, denom, C1, C2, Fso, Fpbe, ex, Fx, dFx_dxs2, dex_drho
+
+  real(dp), parameter     :: one = 1.0_dp, two=2.0_dp, three = 3.0_dp,                &
+  &                          four = 4.0_dp, eight = 8.0_dp,             &
+  &                          f13 = one/three, f23 = two/three, f43 = four/three,      &
+  &                          f34=three/four, f83 = eight/three, f12 = one/two
+
+  real(dp), parameter     :: mu=0.12346d0, kapa=0.552d0
+  !
+  !_____________________________________________________________________
+
+
+  CX    =  f34 * (three/pi)**f13            ! Cx LDA
+  denom =  four * (three*pi**two)**f23
+  C1    =  mu / denom
+  C2    =  mu / (kapa * denom)
+
+
+  grho  = sqrt(grho2)
+  rho43 = rho**f43
+  xs    = grho / rho43
+  xs2   = xs * xs
+
+  dxs2_drho  = -f83 * xs2 / rho
+  dxs2_dgrho2 = one /rho**f83
+
+  ex        = - CX * rho43
+  dex_drho  = - f43 * CX * rho**f13
+
+  Fso       = kapa * (one - exp(-C2*xs2))
+  Fpbe      = C1 * xs2 / (one + C2*xs2)
+
+  Fx        =   f12 * (Fpbe + Fso)
+  dFx_dxs2  =   f12 * (C1 / ((one + C2*xs2)**2) + C1*exp(-C2*xs2))
+
+  !
+  !   Energy
+ !
+  sx = Fx * ex
+  !
+  !   Potential
+  !
+  v1x = dex_drho * Fx  +  ex * dFx_dxs2 * dxs2_drho
+  v2x = two * ex * dFx_dxs2 * dxs2_dgrho2
+
+end subroutine sogga
+!
+!
 !     ==================================================================
 subroutine hcth(rho,grho,sx,v1x,v2x)
   !     ==================================================================

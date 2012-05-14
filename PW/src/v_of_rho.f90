@@ -85,7 +85,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   RETURN
   !
 END SUBROUTINE v_of_rho
-!
+!----------------------------------------------------------------------------
 SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !----------------------------------------------------------------------------
   !
@@ -95,87 +95,64 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE constants,        ONLY : e2, eps8
   USE io_global,        ONLY : stdout
   USE fft_base,         ONLY : dfftp
-  USE gvect,            ONLY : ngm
+  USE gvect,            ONLY : g, nl,ngm
   USE lsda_mod,         ONLY : nspin
-  USE cell_base,        ONLY : omega
+  USE cell_base,        ONLY : omega, alat
   USE spin_orb,         ONLY : domag
-  USE funct,            ONLY : xc, xc_spin, get_igcx, get_igcc
+  USE funct,            ONLY : xc, xc_spin, tau_xc, tau_xc_spin, &
+                               get_igcx, get_igcc
   USE scf,              ONLY : scf_type
   USE mp,               ONLY : mp_sum
+  USE mp_global,        ONLY : intra_bgrp_comm
   !
   IMPLICIT NONE
   !
   TYPE (scf_type), INTENT(IN) :: rho
   REAL(DP), INTENT(IN) :: rho_core(dfftp%nnr)
-    ! the core charge
+    ! the core charge in real space
   COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
-    ! input: the core charge in reciprocal space
-  REAL(DP), INTENT(OUT) :: v(dfftp%nnr,nspin), kedtaur(dfftp%nnr,nspin), vtxc, etxc
-    ! V_xc potential
-    ! local K energy density 
-    ! integral V_xc * rho
-    ! E_xc energy
-  !
-  ! ... local variables
-  !
-  CALL start_clock( 'v_xc_meta' )
-  !
-  etxc   = 0.D0
-  vtxc   = 0.D0
-  v(:,:) = 0.D0
-  !
-!  IF (get_igcx()==7.AND.get_igcc()==6) THEN
-     call v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
-!  ELSE
-!     CALL errore('v_xc_meta','wrong igcx and/or igcc',1)
-!  ENDIF
-  CALL stop_clock( 'v_xc_meta' )
-  RETURN
-END SUBROUTINE v_xc_meta
-!
-SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
-  !     ===================
-  !--------------------------------------------------------------------
-  USE kinds,            ONLY : DP
-  USE gvect,            ONLY : g,nl,ngm
-  USE fft_base,         ONLY : dfftp
-  USE scf,              ONLY : scf_type
-  USE lsda_mod,         ONLY : nspin
-  USE cell_base,        ONLY : omega, alat
-  USE constants,        ONLY : e2
-  USE mp_global,        ONLY : intra_pool_comm, intra_bgrp_comm
-  USE mp,               ONLY : mp_sum
-
-  IMPLICIT NONE
-  !
-  ! input
-  TYPE (scf_type), INTENT(IN) :: rho
-  REAL(DP),INTENT(IN) :: rho_core(dfftp%nnr)
-  COMPLEX(DP),INTENT(IN) :: rhog_core(ngm)
-  REAL(DP),INTENT(OUT) :: etxc, vtxc, v(dfftp%nnr,nspin), kedtaur(dfftp%nnr,nspin)
-!  integer nspin , nnr
-!  real(8)  grho(nnr,3,nspin), rho(nnr,nspin),kedtau(nnr,nspin)
-  ! output: excrho: exc * rho ;  E_xc = \int excrho(r) d_r
-  ! output: rhor:   contains the exchange-correlation potential
+    ! the core charge in reciprocal space
+  REAL(DP), INTENT(OUT) :: v(dfftp%nnr,nspin), kedtaur(dfftp%nnr,nspin), &
+                           vtxc, etxc
+    ! v:      V_xc potential
+    ! kedtau: local K energy density 
+    ! vtxc:   integral V_xc * rho
+    ! etxc:   E_xc energy
+    !
+    ! ... local variables
+    !
   REAL(DP) :: zeta, rh
-  INTEGER :: k, ipol, is
-  REAL(DP) :: grho2 (2), sx, sc, v1x, v2x, v3x,v1c, v2c, v3c, &
-       v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw ,v2cup(3),v2cdw(3), &
-       v3xup, v3xdw,grhoup(3),grhodw(3),&
-       segno, arho, atau, fac
+  INTEGER  :: k, ipol, is
+  REAL(DP) :: ex, ec, v1x, v2x, v3x,v1c, v2c, v3c,                     &
+  &           v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw, v2cup, v2cdw , &
+  &           v3xup, v3xdw,v3cup, v3cdw,                               &
+  &           arho, atau, fac, rhoup, rhodw, ggrho2, tauup,taudw          
+       
+  REAL(DP), DIMENSION(2)   ::    grho2, rhoneg
+  REAL(DP), DIMENSION(3)   ::    grhoup, grhodw, v2cup_vec, v2cdw_vec
+  
   !
   REAL(DP),    ALLOCATABLE :: grho(:,:,:), h(:,:,:), dh(:)
   REAL(DP),    ALLOCATABLE :: rhoout(:,:)
   COMPLEX(DP), ALLOCATABLE :: rhogsum(:,:)
-  REAL(DP), PARAMETER :: epsr = 1.0d-6, epsg = 1.0d-10
+  REAL(DP), PARAMETER      :: eps12 = 1.0d-12, zero=0._dp
+  !
+  !----------------------------------------------------------------------------
+  !
+  !
+  CALL start_clock( 'v_xc_meta' )
+  !
+  !
+  etxc      = zero
+  vtxc      = zero
+  v(:,:)    = zero
+  rhoneg(:) = zero
+  !
   !
   ALLOCATE (grho(3,dfftp%nnr,nspin))
   ALLOCATE (h(3,dfftp%nnr,nspin))
   ALLOCATE (rhoout(dfftp%nnr,nspin))
   ALLOCATE (rhogsum(ngm,nspin))
-  !
-  vtxc = 0.d0
-  etxc = 0.d0
   !
   ! ... calculate the gradient of rho + rho_core in real space
   !
@@ -192,78 +169,108 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
      !
   END DO
   !
-  DO k = 1, dfftp%nnr
-     DO is = 1, nspin
+  do k = 1, dfftp%nnr
+  
+     do is = 1, nspin
         grho2 (is) = grho(1,k, is)**2 + grho(2,k,is)**2 + grho(3,k, is)**2
-     ENDDO
-     IF (nspin == 1) THEN
+     end do
+     
+     if (nspin == 1) then
         !
         !    This is the spin-unpolarised case
         !
         arho = ABS (rho%of_r (k, 1) )
-        segno = SIGN (1.d0, rho%of_r (k, 1) )
+
         atau = rho%kin_r(k,1) / e2  ! kinetic energy density in Hartree
-        IF (arho.GT.epsr.AND.grho2 (1) .GT.epsg.AND.ABS(atau).GT.epsr) THEN
-           CALL tpsscxc (arho, grho2(1),atau,sx, sc, v1x, v2x,v3x,v1c, v2c,v3c)
-!           if (mod(k,100).eq.0) then
-!             write(6,*) 'PON k=',k
-!             write(6,*) ' arho,atau=',arho,atau
-!             write(6,*) ' sx,sc=',sx,sc
-!             write(6,*) ' v1x,v2x,v3c=',v1x,v2x,v3x
-!             write(6,*) ' v1c,v2c,v3c=',v1c,v2c,v3c
-!           endif
-           v(k, 1) =  (v1x + v1c )*e2
-           kedtaur(k,1)=  (v3x + v3c) * 0.5d0 * e2 
+        
+        if ( (arho > eps8) .and. (grho2 (1) > eps12) .and. &
+                                 (abs(atau) > eps8)) then
+           
+           call tau_xc (arho, grho2(1),atau, ex, ec, v1x, v2x,v3x,v1c, v2c,v3c)
+           
+           v(k, 1) =  (v1x + v1c )*e2 
+           
            ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
            h(:,k,1) =  (v2x + v2c)*grho (:,k,1) *e2
-           etxc = etxc +  (sx + sc) * segno *e2
-           vtxc = vtxc + (v1x+v1c)*e2*arho + 1.5d0*kedtaur(k,1)*rho%kin_r(k,1)
-        ELSE  
-           h (:, k, 1) = 0.d0  
-           kedtaur(k,1)=0.d0
-        ENDIF
-     ELSE
+           
+           kedtaur(k,1)=  (v3x + v3c) * 0.5d0 * e2
+           
+           etxc = etxc +  (ex + ec) *e2 !* segno
+           vtxc = vtxc + (v1x+v1c)*e2*arho
+           
+        else  
+           h (:, k, 1) = zero  
+           kedtaur(k,1)= zero
+        end if
+        
+        if (rho%of_r (k, 1) < zero ) rhoneg(1) = rhoneg(1) - rho%of_r (k, 1)
+        
+     else
         !
         !    spin-polarised case
         !
-        CALL tpsscx_spin(rho%of_r(k, 1), rho%of_r(k, 2), grho2 (1), grho2 (2), &
-             rho%kin_r(k,1)/e2,rho%kin_r(k,2)/e2,sx, &
-             v1xup,v1xdw,v2xup,v2xdw,v3xup,v3xdw)
-        rh = rho%of_r(k, 1) + rho%of_r(k, 2)
-        IF (rh.GT.epsr) THEN
-           zeta = (rho%of_r(k, 1) - rho%of_r(k, 2) ) / rh
-           DO ipol=1,3
-              grhoup(ipol)=grho(ipol,k,1)
-              grhodw(ipol)=grho(ipol,k,2)
-           END DO
-           atau = (rho%kin_r(k,1)+rho%kin_r(k,2)) / e2 ! KE-density in Hartree
-           CALL tpsscc_spin(rh,zeta,grhoup,grhodw, &
-                atau,sc,v1cup,v1cdw,v2cup,v2cdw,v3c)
-        ELSE
-           sc = 0.d0  
-           v1cup = 0.d0  
-           v1cdw = 0.d0  
-           v2cup=0.d0
-           v2cdw=0.d0
-           v3c=0.d0
-           !
-        ENDIF
-        !
-        ! first term of the gradient correction : D(rho*Exc)/D(rho)
-        !
-        v(k, 1) =  (v1xup + v1cup)*e2
-        v(k, 2) =  (v1xdw + v1cdw)*e2
-        !
-        ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
-        !
-        h(:,k,1) = (v2xup*grho(:,k,1) + v2cup(:))*e2
-        h(:,k,2) = (v2xdw*grho(:,k,2) + v2cdw(:)) *e2
-        kedtaur(k,1)=  (v3xup + v3c) * 0.5d0 * e2
-        kedtaur(k,2)=  (v3xdw + v3c) * 0.5d0 * e2
-        etxc = etxc +  (sx + sc)*e2
-        vtxc = vtxc + (v1xup+v1cup+v1xdw+v1cdw)*e2*rh
-     ENDIF
-  ENDDO
+        rhoup=rho%of_r(k, 1)
+        rhodw=rho%of_r(k, 2)
+        
+        rh   = rhoup + rhodw 
+        
+        do ipol=1,3
+            grhoup(ipol)=grho(ipol,k,1)
+            grhodw(ipol)=grho(ipol,k,2)
+        end do
+        
+        ggrho2  = ( grho2 (1) + grho2 (2) ) * 4._dp
+        
+        tauup = rho%kin_r(k,1) / e2
+        taudw = rho%kin_r(k,2) / e2
+        atau  = tauup + taudw
+
+        if ((rh > eps8) .and. (ggrho2 > eps12) .and. (abs(atau) > eps8) ) then
+                
+        call tau_xc_spin (rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec, &
+                      v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw, v1cup, v1cdw, &
+                      v2cup, v2cdw, v2cup_vec, v2cdw_vec, v3cup, v3cdw ) 
+          !
+          ! first term of the gradient correction : D(rho*Exc)/D(rho)
+          !
+          v(k, 1) =  (v1xup + v1cup)*e2
+          v(k, 2) =  (v1xdw + v1cdw)*e2
+          !
+          ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
+          !
+          if (get_igcx()==7.AND.get_igcc()==6) then  ! tpss functional
+            !
+            h(:,k,1) = (v2xup * grhoup(:) + v2cup_vec(:)) * e2
+            h(:,k,2) = (v2xdw * grhodw(:) + v2cdw_vec(:)) * e2
+            !
+          else
+            !
+            h(:,k,1) = (v2xup + v2cup) * grhoup(:) * e2
+            h(:,k,2) = (v2xdw + v2cdw) * grhodw(:) * e2
+            !
+          end if
+          !
+          kedtaur(k,1)=  (v3xup + v3cup) * 0.5d0 * e2
+          kedtaur(k,2)=  (v3xdw + v3cdw) * 0.5d0 * e2
+          !
+          etxc = etxc + (ex + ec) * e2
+          vtxc = vtxc + (v1xup+v1cup+v1xdw+v1cdw) * e2 * rh
+          !
+        else
+          h(:,k,1) = zero
+          h(:,k,2) = zero
+          !
+          kedtaur(k,1)=  zero
+          kedtaur(k,2)=  zero
+
+        end if
+        
+        if (rho%of_r (k, 1) < zero ) rhoneg(1) = rhoneg(1) - rho%of_r (k, 1)
+        if (rho%of_r (k, 2) < zero ) rhoneg(2) = rhoneg(2) - rho%of_r (k, 2)
+        
+     end if
+  end do
+  !
   !
   ALLOCATE( dh( dfftp%nnr ) )    
   !
@@ -282,11 +289,20 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   END DO
   DEALLOCATE(dh)
   !
-  vtxc = omega * (vtxc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 ))
-  etxc = omega * etxc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
+  call mp_sum ( rhoneg, intra_bgrp_comm )
+  !
+  rhoneg(:) = rhoneg(:) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+  !
+  if ((rhoneg(1) > eps8) .or. (rhoneg(2) > eps8)) then
+    write (stdout, '(/,5x, "negative rho (up,down): ", 2e10.3)') rhoneg(:)
+  end if
+  !
+  vtxc = omega * vtxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) 
+  etxc = omega * etxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
   CALL mp_sum(  vtxc , intra_bgrp_comm )
   CALL mp_sum(  etxc , intra_bgrp_comm )
+  !
   DEALLOCATE(grho)
   DEALLOCATE(h)
   DEALLOCATE(rhoout)
@@ -294,8 +310,7 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   RETURN
   !
-END SUBROUTINE v_xc_tpss
-!----------------------------------------------------------------------------
+END SUBROUTINE v_xc_meta
 SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !----------------------------------------------------------------------------
   !

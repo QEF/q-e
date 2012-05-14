@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -196,7 +196,7 @@ SUBROUTINE potinit()
   !
   if ( dft_is_meta()) then
      ! ... define a starting (TF) guess for rho%kin_r and rho%kin_g
-     fact = (3.d0*pi*pi)**(2.0/3.0)
+     fact = (3.d0/5.d0)*(3.d0*pi*pi)**(2.0/3.0)
      DO is = 1, nspin
         rho%kin_r(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin
         psic(:) = rho%kin_r(:,is)

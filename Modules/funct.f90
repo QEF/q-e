@@ -40,7 +40,6 @@ module funct
 !
   USE io_global, ONLY: stdout
   USE kinds,     ONLY: DP
-  USE control_flags,  ONLY : lwfpbe0, lwfpbe0nscf ! Lingzhu Kong
   IMPLICIT NONE
   PRIVATE
   SAVE
@@ -59,7 +58,7 @@ module funct
   PUBLIC  :: dft_has_finite_size_correction, set_finite_size_volume
   ! driver subroutines computing XC
   PUBLIC  :: xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
-  PUBLIC  :: dmxc, dmxc_spin, dmxc_nc
+  PUBLIC  :: tau_xc , tau_xc_spin, dmxc, dmxc_spin, dmxc_nc
   PUBLIC  :: dgcxc, dgcxc_spin
   PUBLIC  :: nlc
   ! general XC driver
@@ -91,7 +90,9 @@ module funct
   !              "hcth"  = "nox+noc+hcth+hcth" = HCTH/120
   !              "olyp"  = "nox+lyp+optx+blyp" = OLYP
   !              "wc"    = "sla+pw+wcx+pbc"    = Wu-Cohen
+  !              "sogga  = "sla+pw+sox+pbec"   = SOGGA
   !              "tpss"  = "sla+pw+tpss+tpss"  = TPSS Meta-GGA
+  !              "m06l"  = "nox+noc+m6lx+m6lc" = M06L Meta-GGA
   !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
   !              "hse"   = "sla+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof HSE 06
   !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
@@ -132,8 +133,8 @@ module funct
   !              "pbx"    Perdew-Burke-Ernzenhof exch    igcx =3
   !              "rpb"    revised PBE by Zhang-Yang      igcx =4
   !              "hcth"   Cambridge exch, Handy et al    igcx =5
-  !              "optx"   Handy's exchange functional    igcx =6
   !              "tpss"   TPSS meta-gga                  igcx =7
+  !              "optx"   Handy's exchange functional    igcx =6
   !              "pb0x"   PBE0 (PBE exchange*0.75)       igcx =8
   !              "b3lp"   B3LYP (Becke88*0.72)           igcx =9
   !              "psx"    PBEsol exchange                igcx =10
@@ -141,8 +142,10 @@ module funct
   !              "hse"    HSE screened exchange          igcx =12
   !              "rw86"   revised PW86                   igcx =13
   !              "pbe"    same as PBX, back-comp.        igcx =14
-  !              "tpss"   same as META, back-comp.       igcx =15
+  !              "meta"   same as TPSS, back-comp.       igcx =15
   !              "c09x"   Cooper 09                      igcx =16
+  !              "sox"    sogga                          igcx =17
+  !              "m6lx"   M06L exchange Meta-GGA         igcx =18
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -154,9 +157,12 @@ module funct
   !              "tpss"   TPSS meta-gga                  igcc =6
   !              "b3lp"   B3LYP (Lee-Yang-Parr*0.81)     igcc =7
   !              "psc"    PBEsol corr                    igcc =8
+  !              "pbe"    same as PBX, back-comp.        igcc =9
+  !              "meta"   same as TPSS, back-comp.       igcx =10
+  !              "m6lc"   M06L corr  Meta-GGA            igcc =11
   !
   ! Van der Waals functionals (nonlocal term only)
-  !	         "nonlc"   none                           inlc =0 (default)
+  !             "nonlc"   none                           inlc =0 (default)
   !              "vdw1"    vdW-DF1                        inlc =1
   !              "vdw2"    vdW-DF2                        inlc =2
   !
@@ -179,8 +185,6 @@ module funct
   !              revPBE  Zhang and Yang, PRL 80, 890 (1998)
   !              rw86    E. Amonn D. Murray et al, J. Chem. Theory comp. 5, 2754 (2009) 
   !              wc      Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)
-  !              tpss    J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria, 
-  !                      PRL 91, 146401 (2003)
   !              kzk     H.Kwee, S. Zhang, H. Krakauer, PRL 100, 126404 (2008)
   !              pbe0    J.P.Perdew, M. Ernzerhof, K.Burke, JCP 105, 9982 (1996)
   !              hse     Heyd, Scuseria, Ernzerhof, J. Chem. Phys. 118, 8207 (2003)
@@ -192,6 +196,10 @@ module funct
   !                      T. Thonhauser et al., PRB 76, 125112 (2007)
   !              vdw-DF2 Lee et al., Phys. Rev. B 82, 081101 (2010)
   !              c09x    V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
+  !              tpss    J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria, 
+  !                      PRL 91, 146401 (2003)
+  !              sogga   Y. Zhao and D. G. Truhlar, JCP 128, 184109 (2008)
+  !              m06l    Y. Zhao and D. G. Truhlar, JCP 125, 194101 (2006)
   !
   integer, parameter:: notset = -1
   !
@@ -230,7 +238,7 @@ module funct
   ! data
   integer :: nxc, ncc, ngcx, ngcc, ncnl
 
-  parameter (nxc = 8, ncc =11, ngcx =16, ngcc = 10, ncnl=2)
+  parameter (nxc = 8, ncc =11, ngcx =18, ngcc = 11, ncnl=2)
 
   character (len=4) :: exc, corr
   character (len=4) :: gradx, gradc, nonlocc
@@ -240,11 +248,11 @@ module funct
   data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
               'OBW', 'GL' , 'B3LP', 'KZK' /
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
-               'META', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
-               'TPSS', 'C09X' / 
+               'TPSS', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
+               'META', 'C09X', 'SOX', 'M6LX' / 
 
-  data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'META',&
-                'B3LP', 'PSC', 'PBE', 'TPSS' / 
+  data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'TPSS',&
+                'B3LP', 'PSC', 'PBE', 'META', 'M6LC' / 
 
   data nonlocc / '    ', 'VDW1', 'VDW2' / 
 
@@ -288,6 +296,7 @@ CONTAINS
     do l = 1, len
        dftout (l:l) = capital (dft_(l:l) )
     enddo
+
     !
     ! ----------------------------------------------
     ! FIRST WE CHECK ALL THE SPECIAL NAMES
@@ -295,6 +304,7 @@ CONTAINS
     !       not using function "matches"
     ! ----------------------------------------------
     !
+
     if ( 'REVPBE' .EQ. TRIM(dftout) ) then
     ! special case : revPBE
        call set_dft_value (iexch,1) !Default
@@ -403,7 +413,7 @@ CONTAINS
     ! special case : PBC  = PW + PBC 
        call set_dft_value (iexch,1) !Default
        call set_dft_value (icorr,4)
-       call set_dft_value (igcx, 0) !Default       
+       call set_dft_value (igcx,0) !Default       
        call set_dft_value (igcc, 4)
        call set_dft_value (inlc,0) !Default    
        dft_defined = .true.
@@ -420,13 +430,13 @@ CONTAINS
     ! special case : PW91 = GGX + GGC
     else if ('PW91'.EQ. TRIM(dftout) ) then
        call set_dft_value (iexch,1) !Default
-       call set_dft_value (icorr,4) 
+       call set_dft_value (icorr,4)
        call set_dft_value (igcx, 2)
        call set_dft_value (igcc, 2)
        call set_dft_value (inlc,0) !Default    
        dft_defined = .true.
        
-    ! special case : HCTH 
+    ! special case : HCTH
     else if ('HCTH'.EQ. TRIM(dftout)) then
        call set_dft_value(iexch,0) ! contained in hcth
        call set_dft_value(icorr,0) ! contained in hcth
@@ -488,7 +498,26 @@ CONTAINS
        call set_dft_value (igcc, 0)      
        call set_dft_value (inlc,0)    
        dft_defined = .true.
-           
+
+    ! special case : SOGGA = SOX + PBEc       
+    else if (matches ('SOGGA', dftout) ) then
+       call set_dft_value (iexch, 1)
+       call set_dft_value (icorr,4)
+       call set_dft_value (igcx,17)
+       call set_dft_value (igcc, 4)
+       call set_dft_value (inlc,0) ! Default    
+       dft_defined = .true.
+     
+    ! special case : M06L Meta GGA
+    else if ( matches( 'M06L', dftout ) ) THEN
+       !
+       CALL set_dft_value( iexch, 0 ) ! contained in m6lx
+       CALL set_dft_value( icorr, 0 ) ! contained in m6lc
+       CALL set_dft_value( igcx,  18 )
+       CALL set_dft_value( igcc,  11)
+       call set_dft_value (inlc,0) ! Default  
+       dft_defined = .true.
+    
     END IF
 
     !
@@ -614,7 +643,7 @@ CONTAINS
 
     isnonlocc = (inlc > 0)
 
-    ismeta     =  (igcx == 7)
+    ismeta     =  (igcx == 7) .or. (igcx == 18)
 
     ! PBE0
     IF ( iexch==6 .or. igcx ==8 ) exx_fraction = 0.25_DP
@@ -917,6 +946,10 @@ CONTAINS
      shortname_ = 'VDW-DF-C09'
   else if (iexch_==1.and.icorr_==4.and.igcx_==16.and.igcc_==0.and.inlc_==2) then
      shortname_ = 'VDW-DF2-C09'
+  else if (iexch_==0.and.icorr_==0.and.igcx_==18.and.igcc_==11) then
+     shortname_ = 'M06L'
+  else if (iexch_==1.and.icorr_==4.and.igcx_==17.and.igcc_==4) then
+     shortname_ = 'SOGGA'
   else
      shortname_ = ' '
   end if
@@ -983,13 +1016,6 @@ subroutine xc (rho, ex, ec, vx, vc)
   !..exchange
   if (iexch == 1) THEN             !  'sla'
      call slater (rs, ex, vx)
-!==================================================================
-!Lingzhu Kong
-     IF(lwfpbe0 .or. lwfpbe0nscf)THEN
-         ex = 0.75d0 * ex
-         vx = 0.75d0 * vx
-     END IF
-!==================================================================
   ELSEIF (iexch == 2) THEN         !  'sl1'
      call slater1(rs, ex, vx)
   ELSEIF (iexch == 3) THEN         !  'rxc'
@@ -1088,14 +1114,6 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
   !..exchange
   IF (iexch == 1) THEN      ! 'sla'
      call slater_spin (rho, zeta, ex, vxup, vxdw)
-!==============================================================
-!Lingzhu Kong
-     IF( lwfpbe0 .or. lwfpbe0nscf )THEN
-          ex   = 0.75d0 * ex
-          vxup = 0.75d0 * vxup
-          vxdw = 0.75d0 * vxdw
-     END IF
-!==============================================================
   ELSEIF (iexch == 2) THEN  ! 'sl1'
      call slater1_spin (rho, zeta, ex, vxup, vxdw)
   ELSEIF (iexch == 3) THEN  ! 'rxc'
@@ -1176,12 +1194,6 @@ subroutine xc_spin_vec (rho, zeta, length, evx, evc)
   select case (iexch)
   case(1)            ! 'sla'
      call slater_spin_vec (rho, zeta, evx, length)
-!=========================================================
-!Lingzhu Kong
-     if (lwfpbe0 .or. lwfpbe0nscf) then
-        evx = 0.75_DP * evx
-     end if
-!=========================================================
   case(2)            ! 'sl1'
      do i=1,length
         call slater1_spin (rho(i), zeta(i), evx(i,3), evx(i,1), evx(i,2))
@@ -1285,14 +1297,6 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call ggax (rho, grho, sx, v1x, v2x)
   elseif (igcx == 3) then
      call pbex (rho, grho, 1, sx, v1x, v2x)
-!==============================================================
-!Lingzhu Kong
-     IF( lwfpbe0 .or. lwfpbe0nscf )THEN
-          sx  = 0.75d0 * sx
-          v1x = 0.75d0 * v1x
-          v2x = 0.75d0 * v2x
-     END IF
-!==============================================================
   elseif (igcx == 4) then
      call pbex (rho, grho, 2, sx, v1x, v2x)
   elseif (igcx == 5 .and. igcc == 5) then
@@ -1471,16 +1475,6 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
        v2xup = (1.0_DP - exx_fraction) * v2xup
        v2xdw = (1.0_DP - exx_fraction) * v2xdw
      end if
-!=============================================================
-!Lingzhu Kong
-     if (igcx == 3 .and. (lwfpbe0 .or. lwfpbe0nscf) ) then
-       sx =    0.75D0 * sx
-       v1xup = 0.75D0 * v1xup
-       v1xdw = 0.75D0 * v1xdw
-       v2xup = 0.75D0 * v2xup
-       v2xdw = 0.75D0 * v2xdw
-     end if
-!=============================================================
      if (igcx == 12 .and. exx_started ) then
 
         call pbexsr_lsd (rhoup, rhodw, grhoup2, grhodw2, sxsr,  &
@@ -1645,16 +1639,6 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
         v2xup = (1.0_DP - exx_fraction) * v2xup
         v2xdw = (1.0_DP - exx_fraction) * v2xdw
      end if
-!=============================================================
-!Lingzhu Kong
-     if (igcx == 3 .and. (lwfpbe0 .or. lwfpbe0nscf) ) then
-       sx =    0.75D0 * sx
-       v1xup = 0.75D0 * v1xup
-       v1xdw = 0.75D0 * v1xdw
-       v2xup = 0.75D0 * v2xup
-       v2xdw = 0.75D0 * v2xdw
-     end if
-!=============================================================
   case(9)
      do i=1,length
         if (rhoup(i) > small .and. sqrt(abs(grhoup2(i)) ) > small) then
@@ -1859,6 +1843,125 @@ subroutine nlc (rho_valence, rho_core, enl, vnl, v)
   !
   return
 end subroutine nlc
+
+!
+!-----------------------------------------------------------------------
+!------- META CORRECTIONS DRIVERS ----------------------------------
+!-----------------------------------------------------------------------
+!
+!-----------------------------------------------------------------------
+subroutine tau_xc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
+  !-----------------------------------------------------------------------
+  !     gradient corrections for exchange and correlation - Hartree a.u.
+  !     See comments at the beginning of module for implemented cases
+  !
+  !     input:  rho, grho=|\nabla rho|^2
+  !
+  !     definition:  E_x = \int e_x(rho,grho) dr
+  !
+  !     output: sx = e_x(rho,grho) = grad corr
+  !             v1x= D(E_x)/D(rho)
+  !             v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
+  !             v3x= D(E_x)/D(tau)
+  !
+  !             sc, v1c, v2c as above for correlation
+  !
+  implicit none
+
+  real(DP) :: rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
+  
+  !_________________________________________________________________________
+  
+  if     (igcx == 7  .and. igcc == 6) then
+  
+     call tpsscxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
+     
+  elseif (igcx == 18 .and. igcc == 11) then
+  
+     call   m06lxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
+     
+  else
+  
+     call errore('v_xc_meta','wrong igcx and/or igcc',1)
+     
+  end if
+  
+  return
+  
+end subroutine tau_xc
+
+!
+!
+!-----------------------------------------------------------------------
+subroutine tau_xc_spin (rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec,       &
+           &            v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw, v1cup, v1cdw,   &
+           &            v2cup, v2cdw, v2cup_vec, v2cdw_vec, v3cup, v3cdw)
+
+!-----------------------------------------------------------------------
+  !
+  !
+  
+  implicit none
+
+  real(dp), intent(in)                :: rhoup, rhodw, tauup, taudw
+  real(dp), dimension (3), intent(in) :: grhoup, grhodw
+  
+  real(dp), intent(out)               :: ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
+                                      &  v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw
+  real(dp), dimension(3), intent(out) :: v2cup_vec, v2cdw_vec
+  
+  !
+  !  Local variables
+  !
+  integer                 :: ipol
+  real(dp)                :: rh, zeta, atau, grhoup2, grhodw2
+  real(dp), parameter     :: epsr=1.0d-08, zero=0._dp
+  !
+  !_____________________________
+
+  grhoup2 = zero
+  grhodw2 = zero
+  
+  v2cup         = zero
+  v2cdw         = zero
+  v2cup_vec (:) = zero
+  v2cdw_vec (:) = zero
+  
+  
+  do ipol=1,3
+     grhoup2 = grhoup2 + grhoup(ipol)**2
+     grhodw2 = grhodw2 + grhodw(ipol)**2
+  end do
+
+  
+  if (igcx == 7 .and. igcc == 6) then
+
+     call tpsscx_spin(rhoup, rhodw, grhoup2, grhodw2, tauup,   &
+              &  taudw, ex, v1xup,v1xdw,v2xup,v2xdw,v3xup,v3xdw)
+  
+     rh   =  rhoup + rhodw
+        
+     zeta = (rhoup - rhodw) / rh
+     atau =  tauup + taudw    ! KE-density in Hartree
+
+     call tpsscc_spin(rh,zeta,grhoup,grhodw, atau,ec,              &
+     &                v1cup,v1cdw,v2cup_vec,v2cdw_vec,v3cup, v3cdw) 
+  
+  
+  elseif (igcx == 18 .and. igcc == 11) then
+  
+     call   m06lxc_spin (rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &
+            &            ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
+            &            v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw)
+     
+  else
+  
+     call errore('v_xc_meta','wrong igcx and/or igcc',1)
+     
+  end if
+  
+end subroutine tau_xc_spin                
+                
 
 !-----------------------------------------------------------------------
 !------- DRIVERS FOR DERIVATIVES OF XC POTENTIAL -----------------------
