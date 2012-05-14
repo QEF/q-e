@@ -38,5 +38,5 @@ TDDFPT=tddfpt-5.0
 TDDFPT_URL=http://qe-forge.org/frs/download.php/206/$(TDDFPT).tar.gz
 #
 GUI=PWgui-5.0
-GUI_URL=http://qe-forge.org/frs/download.php/212/$(GUI).tgz
+GUI_URL=http://qe-forge.org/frs/download.php/214/$(GUI).tgz
 #
