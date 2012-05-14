@@ -413,7 +413,9 @@ neb_clean:
 	if test -d ../NEB; then (cd ../NEB; \
 	$(MAKE) clean); fi
 	rm -f ../bin/neb.x
-	rm -rf ./make-neb 
+	rm -rf ./make-neb
+ 
+neb_veryclean: neb_clean
 # dir is not deleted for compatibility with the repository
 
 tddfpt_clean:
@@ -421,7 +423,9 @@ tddfpt_clean:
 	$(MAKE) clean); fi
 	rm -f ../bin/turbo_lanczos.x
 	rm -f ../bin/turbo_spectrum.x
-	rm -rf ./make-tddfpt 
+	rm -rf ./make-tddfpt
+
+tddfpt_veryclean: tddfpt_clean 
 # dir is not deleted for compatibility with the repository
 
 phonon_clean:
@@ -437,6 +441,8 @@ phonon_clean:
 	rm -rf ../bin/phcg.x
 	rm -rf ../bin/d3.x
 	rm -rf ./make-phonon 
+
+phonon_veryclean: phonon_clean
 # dir is not deleted for compatibility with the repository
 # exe links to main bin dir are deleted by PHonon Makefile
 
@@ -518,5 +524,9 @@ gui_veryclean: gui_clean
 ##########################################################
 # general cleaning
 ##########################################################
-clean: w90_clean want_clean yambo_clean plumed_clean epw_clean
-veryclean: w90_veryclean want_veryclean yambo_veryclean plumed_veryclean epw_veryclean
+clean: w90_clean want_clean yambo_clean plumed_clean epw_clean \
+	gui_clean phonon_clean tddfpt_clean xspectra_clean neb_clean pwcond_clean \
+	ld1_clean gipaw_clean
+veryclean: w90_veryclean want_veryclean yambo_veryclean plumed_veryclean epw_veryclean \
+	gui_veryclean phonon_veryclean tddfpt_veryclean xspectra_veryclean neb_veryclean \
+	pwcond_veryclean ld1_veryclean gipaw_veryclean

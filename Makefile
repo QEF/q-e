@@ -84,7 +84,7 @@ pw_export : libiotk bindir mods libs pw
 xspectra : bindir mods libs pw
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
-gui : touch_dummy
+gui : touch-dummy
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 pwall : pw neb ph pp pwcond acfdt
