@@ -20,7 +20,7 @@ default :
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  upf          utilities for pseudopotential conversion'
 	@echo '  xspectra     X-ray core-hole spectroscopy calculations '
-	@echo '  gui          Graphical User Interface
+	@echo '  gui          Graphical User Interface '
 	@echo '  pwall        same as "make pw ph pp pwcond neb"'
 	@echo '  all          same as "make pwall cp ld1 upf tddfpt"'
 	@echo '  clean        remove executables and objects'
