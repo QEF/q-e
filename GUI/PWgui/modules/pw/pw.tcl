@@ -1199,18 +1199,18 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 	#
 	# CELL_PARAMETERS
 	#
-	group cards__CELL_PARAMETERS {
-	    line lattice_type_line -name "Lattice type" {
+	group cards__CELL_PARAMETERS -name "Card: CELL_PARAMETERS" -decor normal {
+	    line lattice_type_line -decor none {
 		keyword cell_parameters CELL_PARAMETERS
 		var CELL_PARAMETERS_flags {
-		    -label    "Lattice type:" 
-		    -value    {cubic hexagonal}
+		    -label    "Cell parameter's unit:" 
+		    -value    {alat bohr angstrom}
+		    -textvalue {Alat Bohr Angstrom}
 		    -widget   radiobox
-		    -default  cubic
 		}
 	    }
 	    table lattice {
-		-caption  "Enter Lattice Basis Vectors:"
+		-caption  "Lattice Basis Vectors:"
 		-head     {X-Component Y-Component Z-Component}
 		-validate {fortranreal fortranreal fortranreal}
 		-cols     3
@@ -1222,51 +1222,56 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 	#
 	# ATOMIC_SPECIES
 	#
-	keyword atomic_species_key ATOMIC_SPECIES\n
-	table atomic_species \
-	    -caption  "Enter atomic types:" \
-	    -head     {Atomic-label Atomic-Mass Pseudopotential-file} \
-	    -cols     3 \
-	    -rows     1 \
-	    -outfmt   {"  %3s" %10.5f " %s"} \
-	    -validate {whatever fortranreal whatever} \
-	    -widgets  [list entry entry [list entrybutton "Pseudopotential ..." [list ::pwscf::pwSelectPseudopotential $this atomic_species]]]
-	
+	group atomic_species_group -name "Card: ATOMIC_SPECIES" -decor normal {
+	    keyword atomic_species_key ATOMIC_SPECIES\n
+	    table atomic_species \
+		-caption  "Atomic types:" \
+		-head     {Atomic-label Atomic-Mass Pseudopotential-file} \
+		-cols     3 \
+		-rows     1 \
+		-outfmt   {"  %3s" %10.5f " %s"} \
+		-validate {whatever fortranreal whatever} \
+		-widgets  [list entry entry [list entrybutton "Pseudopotential ..." [list ::pwscf::pwSelectPseudopotential $this atomic_species]]]	    
+	}
+
 	#
 	# ATOMIC_POSITIONS
 	#
-	line atom_coor_unit -name "Atomic coordinate unit" {
-	    keyword atomic_positions ATOMIC_POSITIONS
-	    var ATOMIC_POSITIONS_flags {
-		-label    "Atomic coordinate length unit:" 
-		-textvalue {
-		    "Cartesian in ALAT (i.e. in length units of celldm(1))  <alat>"
-		    "Cartesian in BOHR  <bohr>"
-		    "Cartesian in ANGSTROMS  <angstroms>"
-		    "Internal crystal coordinates  <crystal>"
-		}
-		-value {alat bohr angstrom crystal}	    
-		-widget radiobox
-		-default "Cartesian in ALAT (i.e. in length units of celldm(1))  <alat>"
-	    }
-	}
-		
-	table atomic_coordinates {
-	    -caption   "Enter atomic coordinates:"
-	    -head      {Atomic-label X-Coordinate Y-Coordinate Z-Coordinate if_pos(1) if_pos(2) if_pos(3)}
-	    -validate  {string fortranreal fortranreal fortranreal binary binary binary}
-	    -cols      7
-	    -rows      1
-	    -outfmt    {"  %3s" "  %14.9f" %14.9f %14.9f "  %2d" %2d %2d}
-	    -widgets   {entry entry entry entry checkbutton}
-	    -onvalues  1
-	    -offvalues 0
-	    -optionalcols 4
-	}
-	# -optcols   {4 5 6}
 
-	loaddata atomic_coordinates ::pwscf::pwLoadAtomCoor \
-	    "Load atomic coordinates from file ..."    
+	group atomic_positions_group -name "Card: ATOMIC_POSITIONS" -decor normal {
+	    line atom_coor_unit -decor none {
+		keyword atomic_positions ATOMIC_POSITIONS
+		var ATOMIC_POSITIONS_flags {
+		    -label    "Atomic coordinate length unit:" 
+		    -textvalue {
+			"Cartesian in ALAT (i.e. in length units of celldm(1))  <alat>"
+			"Cartesian in BOHR  <bohr>"
+			"Cartesian in ANGSTROMS  <angstroms>"
+			"Internal crystal coordinates  <crystal>"
+		    }
+		    -value {alat bohr angstrom crystal}	    
+		    -widget radiobox
+		    -default "Cartesian in ALAT (i.e. in length units of celldm(1))  <alat>"
+		}
+	    }
+		
+	    table atomic_coordinates {
+		-caption   "Atomic coordinates:"
+		-head      {Atomic-label X-Coordinate Y-Coordinate Z-Coordinate if_pos(1) if_pos(2) if_pos(3)}
+		-validate  {string fortranreal fortranreal fortranreal binary binary binary}
+		-cols      7
+		-rows      1
+		-outfmt    {"  %3s" "  %14.9f" %14.9f %14.9f "  %2d" %2d %2d}
+		-widgets   {entry entry entry entry checkbutton}
+		-onvalues  1
+		-offvalues 0
+		-optionalcols 4
+	    }
+	    # -optcols   {4 5 6}
+
+	    loaddata atomic_coordinates ::pwscf::pwLoadAtomCoor \
+		"Load atomic coordinates from file ..."    
+	}
     }
 
 
@@ -1280,57 +1285,61 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 	#
 	# K_POINTS
 	#
-	line kpoint_type_line -name "K-points type" {
-	    keyword k_points K_POINTS
-	    var K_POINTS_flags {
-		-label    "K-Point input" 
-		-textvalue {
-		    "Manual specification in 2pi/a units  <tpiba>"
-		    "Manual specification in CRYSTAL units  <crystal>"
-		    "Automatic generation  <automatic>"
-		    "Gamma point only  <gamma>"
-		    "Manual \"2pi/a\" specification for band structure plot <tpiba_b>"
-		    "Manual \"crystal\" specification for band structure plot <crystal_b>"
+	group k_points_group -name "Card: K_POINTS" -decor normal {
+	    line kpoint_type_line -decor none {
+		keyword k_points K_POINTS
+		var K_POINTS_flags {
+		    -label    "K-points type:" 
+		    -textvalue {
+			"Manual specification in 2pi/a units  <tpiba>"
+			"Manual specification in CRYSTAL units  <crystal>"
+			"Automatic generation  <automatic>"
+			"Gamma point only  <gamma>"
+			"Manual \"2pi/a\" specification for band structure plot <tpiba_b>"
+			"Manual \"crystal\" specification for band structure plot <crystal_b>"
+		    }
+		    -value {
+			tpiba crystal automatic gamma tpiba_b crystal_b
+		    }
+		    -widget radiobox
+		    -default "Manual specification in 2pi/a units  <tpiba>"
 		}
-		-value {
-		    tpiba crystal automatic gamma tpiba_b crystal_b
+	    }
+	    
+	    line nks_line -decor none {
+		var nks -label "Number of K-points:" -widget spinint -validate posint -default 1
+	    }
+
+	    # if nks=0 then enter the mesh and shifts
+	    group kmesh_shift_group -name "k-points mesh + shift" -decor normal {
+		line kmesh_line -decor none {
+		    group kmesh -name Kmesh {
+			packwidgets left
+			var nk1 -label "nk1:"  -widget spinint  -validate posint  -outfmt "  %d "  -default 1
+			var nk2 -label "nk2:"  -widget spinint  -validate posint  -outfmt "%d "  -default 1
+			var nk3 -label "nk3:"  -widget spinint  -validate posint  -outfmt "%d "  -default 1
+		    }
+		    group kshift -name Kshift {
+			packwidgets left
+			var sk1 -label "sk1:"  -widget spinint  -validate binary  -outfmt "  %d "  -default 1
+			var sk2 -label "sk2:"  -widget spinint  -validate binary  -outfmt "%d "  -default 1
+			var sk3 -label "sk3:"  -widget spinint  -validate binary  -outfmt "%d "  -default 1
+		    }
 		}
-		-widget radiobox
-		-default "Manual specification in 2pi/a units  <tpiba>"
 	    }
-	}
 
-	line nks_line -name "Number of K-points" {
-	    var nks -label "Number of K-points:" -widget spinint -validate posint -default 1
-	}
-
-	# if nks=0 then enter the mesh and shifts
-	line kmesh_line -name "K-point mesh + shift" {
-	    group kmesh -name Kmesh {
-		packwidgets left
-		var nk1 -label "nk1:"  -widget spinint  -validate posint  -outfmt "  %d "  -default 1
-		var nk2 -label "nk2:"  -widget spinint  -validate posint  -outfmt "%d "  -default 1
-		var nk3 -label "nk3:"  -widget spinint  -validate posint  -outfmt "%d "  -default 1
+	    # elseif nks>0 enetr kpoint coordinates
+	    table kpoints {
+		-caption  "Enter the coordinates of the K-points below:"
+		-head     {KX-Coordinate KY-Coordinate KZ-Coordinate Weight}
+		-cols     4
+		-rows     0
+		-validate {fortranreal fortranreal fortranreal fortranreal}
+		-outfmt   {%14.9f %14.9f %14.9f "  %14.9f"}
 	    }
-	    group kshift -name Kshift {
-		packwidgets left
-		var sk1 -label "sk1:"  -widget spinint  -validate binary  -outfmt "  %d "  -default 1
-		var sk2 -label "sk2:"  -widget spinint  -validate binary  -outfmt "%d "  -default 1
-		var sk3 -label "sk3:"  -widget spinint  -validate binary  -outfmt "%d "  -default 1
-	    }
+	    loaddata kpoints ::pwscf::pwLoadKPoints \
+		"Load K-point coordinates from file ..."	
 	}
-
-	# elseif nks>0 enetr kpoint coordinates
-	table kpoints {
-	    -caption  "Enter the coordinates of the K-points below:"
-	    -head     {KX-Coordinate KY-Coordinate KZ-Coordinate Weight}
-	    -cols     4
-	    -rows     0
-	    -validate {fortranreal fortranreal fortranreal fortranreal}
-	    -outfmt   {%14.9f %14.9f %14.9f "  %14.9f"}
-	}
-	loaddata kpoints ::pwscf::pwLoadKPoints \
-	    "Load K-point coordinates from file ..."	
     }
 
     ########################################################################

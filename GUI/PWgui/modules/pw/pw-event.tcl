@@ -497,7 +497,7 @@ postprocess {
     varset diagonalization -value {}
     varset ion_dynamics    -value {}
     varset K_POINTS_flags  -value automatic
-    varset CELL_PARAMETERS_flags -value cubic
+    varset CELL_PARAMETERS_flags -value {}
 
     # so far the only constraint-type is "1"
     #tableset constraints_table 1 1 -value 1
