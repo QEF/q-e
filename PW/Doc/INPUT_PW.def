@@ -53,7 +53,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	   nks
 	   xk_x, xk_y, xk_z,  wk
 
-	[ CELL_PARAMETERS { bohr | angstrom }
+	[ CELL_PARAMETERS { alat | bohr | angstrom }
 	   v1(1) v1(2) v1(3)
 	   v2(1) v2(2) v2(3)
 	   v3(1) v3(2) v3(3) ]
@@ -2115,11 +2115,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
     #
     card CELL_PARAMETERS {
 	flag lattice_type -use optional {
-	    enum { bohr | angstrom }
+	    enum { alat | bohr | angstrom }
 	    info {
 		bohr / angstrom: lattice vectors in bohr radii / angstrom.
-		nothing specified: if a lattice constant (celldm(1) or a)
-                is present, lattice vectors are in units of the lattice
+		alat or nothing specified: if a lattice constant (celldm(1) 
+                or a) is present, lattice vectors are in units of the lattice
                 constant; otherwise, in bohr radii.
 	    }
 	}
