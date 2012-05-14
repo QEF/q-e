@@ -18,6 +18,8 @@
 PREFIX=`cd ../../.. ; pwd`
 BIN_DIR=$PREFIX/bin
 PSEUDO_DIR=$PREFIX/pseudo
+NETWORK_PSEUDO=http://www.quantum-espresso.org/wp-content/uploads/upf_files/
+
 # Beware: everything in $TMP_DIR will be destroyed !
 TMP_DIR=$HOME/tmp
 

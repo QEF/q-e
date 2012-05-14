@@ -19,11 +19,7 @@
 # If you want to save a copy in file "logfile":
 #    ./check-cp.x.j h2o*.in lsda* | tee logfile
 #
-# For 'XXXX' 
-#
-# For 'XXYY' 
-#
-# For all other cases, the quantites that are verified are:
+# The quantites that are verified are:
 #    the last value of total energy, forces and stress
 
 # taken from examples - not sure it is really needed
@@ -63,9 +59,7 @@ get_pp () {
     do
         if ! test -f $ESPRESSO_PSEUDO/$ppfile ; then
             $ECHO "Downloading $ppfile to $ESPRESSO_PSEUDO...\c"
-            $WGET $ESPRESSO_PSEUDO/$ppfile \
-                http://www.quantum-espresso.org/pseudo/1.3/UPF/$ppfile \
-                 2> /dev/null
+            $WGET $ESPRESSO_PSEUDO/$ppfile $NETWORK_PSEUDO/$ppfile 2> /dev/null
             if test $? != 0; then
                 $ECHO "failed!"
                 $ECHO "test $1 will not be executed"

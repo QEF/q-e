@@ -70,9 +70,7 @@ get_pp () {
     do
 	if ! test -f $ESPRESSO_PSEUDO/$ppfile ; then
 	    $ECHO "Downloading $ppfile to $ESPRESSO_PSEUDO...\c"
-	    $WGET  $ESPRESSO_PSEUDO/$ppfile \
-                http://www.quantum-espresso.org/pseudo/1.3/UPF/$ppfile \
-		2> /dev/null
+	    $WGET  $ESPRESSO_PSEUDO/$ppfile $NETWORK_PSEUDO/$ppfile 2> /dev/null
 	    if test $? != 0; then
 		$ECHO "failed!"
 		$ECHO "test $1 will not be executed"
@@ -232,7 +230,7 @@ do
   # run the code in the scratch directory
   #
   cd $ESPRESSO_TMPDIR
-  $PARA_PREFIX $ESPRESSO_ROOT/PW/src//pw.x $PARA_POSTFIX \
+  $PARA_PREFIX $ESPRESSO_ROOT/PW/src/pw.x $PARA_POSTFIX \
         -inp $TESTDIR/$name.in > $TESTDIR/$name.out
   if test $? != 0; then
      $ECHO "FAILED with error condition!"
@@ -266,7 +264,7 @@ do
      # run the code in the scratch directory
      #
      cd $ESPRESSO_TMPDIR
-     $PARA_PREFIX $ESPRESSO_ROOT/PW/src//pw.x $PARA_POSTFIX \
+     $PARA_PREFIX $ESPRESSO_ROOT/PW/src/pw.x $PARA_POSTFIX \
              -inp $TESTDIR/$name.in$n > $TESTDIR/$name.out$n
      if test $? != 0; then
         $ECHO "FAILED with error condition!"
