@@ -26,7 +26,8 @@ default :
 	@echo '  clean        remove executables and objects'
 	@echo '  veryclean    revert distribution to the original status'
 	@echo '  tar          create a tarball of the source tree'
-	@echo '  tar-gui      create a standalone PWgui tarball from the GUI sources'
+	@if test -d GUI/; then \
+	 echo '  tar-gui      create a standalone PWgui tarball from the GUI sources'; fi
 	@echo '  doc          build documentation'
 	@echo '  links        create links to all executables in bin/'
 
