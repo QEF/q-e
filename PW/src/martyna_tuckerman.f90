@@ -154,7 +154,7 @@ CONTAINS
                        qe_erfc ( sqrt ( ecutrho / 4.d0 / alpha) )
   END DO
   beta = 0.5_dp/alpha ! 1._dp/alpha
-  write (*,*) " alpha, beta MT = ", alpha, beta
+  ! write (*,*) " alpha, beta MT = ", alpha, beta
   !
   call ws_init(at,ws)
   !

@@ -25,7 +25,7 @@ SUBROUTINE summary()
   USE cellmd,          ONLY : calc, cmass
   USE ions_base,       ONLY : amass
   USE gvect,           ONLY : ecutrho, ngm, ngm_g, gcutm
-  USE gvecs,         ONLY : doublegrid, ngms, gcutms
+  USE gvecs,           ONLY : doublegrid, ngms, gcutms
   USE fft_base,        ONLY : dfftp
   USE fft_base,        ONLY : dffts
   USE lsda_mod,        ONLY : lsda, starting_magnetization
@@ -39,8 +39,8 @@ SUBROUTINE summary()
   USE noncollin_module,ONLY : noncolin
   USE spin_orb,        ONLY : domag, lspinorb
   USE funct,           ONLY : write_dft_name
-  USE bp,              ONLY : lelfield, gdir, nppstr_3d, efield, nberrycyc, l3dstring,&
-                              efield_cart,efield_cry
+  USE bp,              ONLY : lelfield, gdir, nppstr_3d, efield, nberrycyc, &
+                              l3dstring,efield_cart,efield_cry
   USE fixed_occ,       ONLY : f_inp, tfixed_occ
   USE uspp_param,      ONLY : upf
   USE wvfct,           ONLY : nbnd, ecutwfc, qcutz, ecfixed, q2sigma
@@ -50,10 +50,8 @@ SUBROUTINE summary()
 #ifdef __ENVIRON
   USE environ_base,    ONLY : do_environ
 #endif
-! DCC
-!  USE ee_mod,          ONLY : do_comp, do_coarse, do_mltgrid, mr1, mr2, mr3
-!  USE gcoarse,         ONLY : ngmc, gcutmc
   USE esm,             ONLY : do_comp_esm, esm_summary
+  USE martyna_tuckerman,ONLY: do_comp_mt
   !
   IMPLICIT NONE
   !
@@ -146,12 +144,13 @@ SUBROUTINE summary()
 #ifdef __ENVIRON
   IF ( do_environ ) CALL environ_summary()
 #endif
-! DCC
-!  IF ( do_comp )  CALL write_ee_summary()
   !
   ! ... ESM
   !
   IF ( do_comp_esm )  CALL esm_summary()
+  !
+  IF ( do_comp_mt )  WRITE( stdout, &
+            '(5X, "Assuming isolated system, Martyna-Tuckerman method",/)')
 
   IF ( lelfield ) THEN !here information for berry's phase el. fields calculations
      WRITE(stdout, *)
