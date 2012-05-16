@@ -76,6 +76,9 @@ SUBROUTINE esm_ggen_2d()
      do_mill_2d(n1,n2) = .true.
   ENDDO
   ngm_2d = COUNT( do_mill_2d )
+!*** do_mill_2d(h,k) = .true. means there is an h,k vector on this proc
+!*** ngm_2d = total number of vectors (h,k) on this proc, excluding duplicates
+!*** with different l values
   
   ALLOCATE( mill_2d(2,ngm_2d), imill_2d(-n1xh:n1xh,-n2xh:n2xh) )
   mill_2d(:,:) = 0
@@ -92,12 +95,9 @@ SUBROUTINE esm_ggen_2d()
   ENDDO
   ENDDO
   DEALLOCATE(do_mill_2d)  
-
-  ALLOCATE(vg2_in(dfftp%nr3x),vg2(dfftp%nr3x))
-  vg2_in(:) = 0d0
-  vg2(:) = 0d0
-  CALL cft_1z(vg2_in,1,dfftp%nr3x,dfftp%nr3x,-1,vg2)
-  DEALLOCATE(vg2_in,vg2)
+!**** mill_2d(:,ig) = h,k indices of vector ig
+!**** imill_2d(h,k) = 2d index of vector with h,k indices
+!**** ng_2d = total number of 2d g vectors on this proc
 
   RETURN
 END SUBROUTINE esm_ggen_2d
@@ -133,9 +133,9 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
   complex(DP)              :: xc, ci, tmp, tmp1, tmp2, tmp3, tmp4, f1, f2, f3, f4, &
                               a0, a1, a2, a3, c_r, c_l, s_r, s_l, rg3
 
-  allocate(vg2(dfftp%nr3x),vg2_in(dfftp%nr3x),rhog3(dfftp%nr3x,ngm_2d))
+  allocate(vg2(dfftp%nr3),vg2_in(dfftp%nr3),rhog3(dfftp%nr3,ngm_2d))
 !
-! Map to FFT mesh (dfftp%nr3x,ngm_2d)
+! Map to FFT mesh (dfftp%nr3,ngm_2d)
   rhog3(:,:)=(0.d0,0.d0)
   do ng=1,ngm
      n1 = mill(1,ng)
@@ -157,7 +157,7 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
   enddo
 ! End mapping
 !
-  allocate(vg3(dfftp%nr3x,ngm_2d))
+  allocate(vg3(dfftp%nr3,ngm_2d))
   vg3(:,:)=(0.d0,0.d0)
   L=at(3,3)*alat
   z0=L/2.d0
@@ -176,9 +176,9 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
      gp=sqrt(gp2)
      tmp1=(0.d0,0.d0); tmp2=(0.d0,0.d0)
      vg2(:)=(0.d0,0.d0)
-     do iz=1, dfftp%nr3x
-        if(iz<=dfftp%nr3x/2) kn=dble(iz-1)     * tpi/L
-        if(iz> dfftp%nr3x/2) kn=dble(iz-1-dfftp%nr3x) * tpi/L
+     do iz=1, dfftp%nr3
+        if(iz<=dfftp%nr3/2) kn=dble(iz-1)     * tpi/L
+        if(iz> dfftp%nr3/2) kn=dble(iz-1-dfftp%nr3) * tpi/L
         cc=cos(kn*z0)
         ss=sin(kn*z0)
         rg3=rhog3(iz,ng_2d)
@@ -199,13 +199,13 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
         endif
      enddo
      
-     vg2_in(1:dfftp%nr3x)=vg2(1:dfftp%nr3x)  ! Since cft_1z is not in-place
-     call cft_1z(vg2_in,1,dfftp%nr3x,dfftp%nr3x,1,vg2)
+     vg2_in(1:dfftp%nr3)=vg2(1:dfftp%nr3)  ! Since cft_1z is not in-place
+     call cft_1z(vg2_in,1,dfftp%nr3,dfftp%nr3,1,vg2)
      
-     do iz=1,dfftp%nr3x
+     do iz=1,dfftp%nr3
         k3=iz-1
-        if (k3.gt.dfftp%nr3x/2) k3=iz-dfftp%nr3x-1
-        z=dble(k3)/dble(dfftp%nr3x)*L
+        if (k3.gt.dfftp%nr3/2) k3=iz-dfftp%nr3-1
+        z=dble(k3)/dble(dfftp%nr3)*L
         if (esm_bc.eq.'bc1') then
            vg2(iz)=vg2(iz)-tpi/gp*(exp(gp*(z-z0))*tmp1+exp(-gp*(z+z0))*tmp2)
         else if (esm_bc.eq.'bc2') then
@@ -219,10 +219,10 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
         endif
      enddo
      
-     vg2_in(1:dfftp%nr3x)=vg2(1:dfftp%nr3x)  ! Since cft_1z is not in-place
-     call cft_1z(vg2_in,1,dfftp%nr3x,dfftp%nr3x,-1,vg2)
+     vg2_in(1:dfftp%nr3)=vg2(1:dfftp%nr3)  ! Since cft_1z is not in-place
+     call cft_1z(vg2_in,1,dfftp%nr3,dfftp%nr3,-1,vg2)
      
-     vg3(1:dfftp%nr3x,ng_2d)=vg2(1:dfftp%nr3x)*2.d0
+     vg3(1:dfftp%nr3,ng_2d)=vg2(1:dfftp%nr3)*2.d0
   enddo
   
 !****For gp=0 case ********************
@@ -231,10 +231,10 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
      tmp1=(0.d0,0.d0); tmp2=(0.d0,0.d0); tmp3=(0.d0,0.d0); tmp4=(0.d0,0.d0)
      !for smoothing
      f1=(0.d0,0.d0); f2=(0.d0,0.d0); f3=(0.d0,0.d0); f4=(0.d0,0.d0)
-     nz_l=dfftp%nr3x/2+1+esm_nfit
-     nz_r=dfftp%nr3x/2+1-esm_nfit
-     z_l=dble(nz_l-1)*L/dble(dfftp%nr3x)-L
-     z_r=dble(nz_r-1)*L/dble(dfftp%nr3x)
+     nz_l=dfftp%nr3/2+1+esm_nfit
+     nz_r=dfftp%nr3/2+1-esm_nfit
+     z_l=dble(nz_l-1)*L/dble(dfftp%nr3)-L
+     z_r=dble(nz_r-1)*L/dble(dfftp%nr3)
      !
      rg3=rhog3(1,ng_2d)
      if (esm_bc.eq.'bc1') then
@@ -244,9 +244,9 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
      else if (esm_bc.eq.'bc3') then
         vg2(1)= tpi*(4.d0*z1-z0)*z0*rg3
      endif
-     do iz=2,dfftp%nr3x
-        if(iz<=dfftp%nr3x/2) kn=dble(iz-1)     *tpi/L
-        if(iz> dfftp%nr3x/2) kn=dble(iz-1-dfftp%nr3x) *tpi/L
+     do iz=2,dfftp%nr3
+        if(iz<=dfftp%nr3/2) kn=dble(iz-1)     *tpi/L
+        if(iz> dfftp%nr3/2) kn=dble(iz-1-dfftp%nr3) *tpi/L
         cc=cos(kn*z0)
         ss=sin(kn*z0)
         rg3=rhog3(iz,ng_2d)
@@ -279,14 +279,14 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
         !
      enddo
      
-     vg2_in(1:dfftp%nr3x)=vg2(1:dfftp%nr3x)  ! Since cft_1z is not in-place
-     call cft_1z(vg2_in,1,dfftp%nr3x,dfftp%nr3x,1,vg2)
+     vg2_in(1:dfftp%nr3)=vg2(1:dfftp%nr3)  ! Since cft_1z is not in-place
+     call cft_1z(vg2_in,1,dfftp%nr3,dfftp%nr3,1,vg2)
      
      rg3=rhog3(1,ng_2d)
-     do iz=1,dfftp%nr3x
+     do iz=1,dfftp%nr3
         k3=iz-1
-        if (k3.gt.dfftp%nr3x/2) k3=iz-dfftp%nr3x-1
-        z=dble(k3)/dble(dfftp%nr3x)*L
+        if (k3.gt.dfftp%nr3/2) k3=iz-dfftp%nr3-1
+        z=dble(k3)/dble(dfftp%nr3)*L
         if (esm_bc.eq.'bc1') then
            vg2(iz)=vg2(iz)-tpi*z**2*rg3    &
                           -tpi*(z-z0)*tmp1 &
@@ -361,14 +361,14 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
           +f4*z_l+f3*z_r+2*f4*z_r))/(z_l-z_r)**3
      a3=(2.d0*f1-2.d0*f2+(f3+f4)*(z_l-z_r))/(z_l-z_r)**3
      do iz=nz_r,nz_l
-        z=dble(iz-1)/dble(dfftp%nr3x)*L
+        z=dble(iz-1)/dble(dfftp%nr3)*L
         vg2(iz)=(a0+a1*z+a2*z**2+a3*z**3)
      enddo
      
-     vg2_in(1:dfftp%nr3x)=vg2(1:dfftp%nr3x)  ! Since cft_1z is not in-place
-     call cft_1z(vg2_in,1,dfftp%nr3x,dfftp%nr3x,-1,vg2)
+     vg2_in(1:dfftp%nr3)=vg2(1:dfftp%nr3)  ! Since cft_1z is not in-place
+     call cft_1z(vg2_in,1,dfftp%nr3,dfftp%nr3,-1,vg2)
      
-     vg3(1:dfftp%nr3x,ng_2d)=vg2(1:dfftp%nr3x)*2.d0
+     vg3(1:dfftp%nr3,ng_2d)=vg2(1:dfftp%nr3)*2.d0
      
   endif ! if( ng_2d > 0 )
 
@@ -396,7 +396,7 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
   !
   call mp_sum( ehart, intra_bgrp_comm )
   !
-! Map to FFT mesh (dfftp%nnr)
+! Map to FFT mesh (dfftp%nrx)
   aux=0.0d0
   do ng=1,ngm
      n1 = mill(1,ng)
@@ -625,7 +625,7 @@ subroutine esm_local (aux)
   z0=L/2.d0
   z1=z0+abs(esm_w)
 
-  allocate(vloc3(dfftp%nr3x,ngm_2d),vg2(dfftp%nr3x),vg2_in(dfftp%nr3x),bgauss(nat,1))
+  allocate(vloc3(dfftp%nr3,ngm_2d),vg2(dfftp%nr3),vg2_in(dfftp%nr3),bgauss(nat,1))
   do it=1,nat
      bgauss(it,1)=1.d0
   enddo
@@ -646,7 +646,7 @@ subroutine esm_local (aux)
      gp2 = sum( t(:) * t(:) ) * tpiba2
      gp=sqrt(gp2)
         
-     vg2(1:dfftp%nr3x)=(0.d0,0.d0)
+     vg2(1:dfftp%nr3)=(0.d0,0.d0)
      do it=1,nat
         tt=-fpi*upf(ityp(it))%zp/sa
         pp=-tpi*(tau(1,it)*(k1*bg(1,1)+k2*bg(1,2))+tau(2,it)*(k1*bg(2,1)+k2*bg(2,2)))
@@ -656,10 +656,10 @@ subroutine esm_local (aux)
         zp=tau(3,it)
         if (zp.gt.at(3,3)*0.5) zp=zp-at(3,3)
         zp=zp*alat
-        do iz=1,dfftp%nr3x
+        do iz=1,dfftp%nr3
            k3=iz-1
-           if (k3.gt.dfftp%nr3x/2) k3=iz-dfftp%nr3x-1
-           z=dble(k3)/dble(dfftp%nr3x)*L
+           if (k3.gt.dfftp%nr3/2) k3=iz-dfftp%nr3-1
+           z=dble(k3)/dble(dfftp%nr3)*L
            cc1=(0.d0,0.d0)
            do ig=1,1
               tmp=1.d0
@@ -685,9 +685,9 @@ subroutine esm_local (aux)
            vg2(iz) = vg2(iz) + tt*(cc1+cc2)*2.d0 ! factor 2: hartree -> Ry.
         enddo
      enddo
-     vg2_in(1:dfftp%nr3x)=vg2(1:dfftp%nr3x)
-     call cft_1z(vg2_in,1,dfftp%nr3x,dfftp%nr3x,-1,vg2)
-     do iz=1,dfftp%nr3x
+     vg2_in(1:dfftp%nr3)=vg2(1:dfftp%nr3)
+     call cft_1z(vg2_in,1,dfftp%nr3,dfftp%nr3,-1,vg2)
+     do iz=1,dfftp%nr3
         vloc3(iz,ng_2d)=vg2(iz)
      enddo
   enddo
@@ -695,18 +695,18 @@ subroutine esm_local (aux)
   ng_2d=imill_2d(0,0)
   if( ng_2d > 0 ) then
 
-     vg2(1:dfftp%nr3x)=(0.d0,0.d0)
+     vg2(1:dfftp%nr3)=(0.d0,0.d0)
 ! for smoothing
      f1=0.d0; f2=0.d0; f3=0.d0; f4=0.d0
-     nz_l=dfftp%nr3x/2+1+esm_nfit
-     nz_r=dfftp%nr3x/2+1-esm_nfit
-     z_l=dble(nz_l-1)*L/dble(dfftp%nr3x)-L
-     z_r=dble(nz_r-1)*L/dble(dfftp%nr3x)
+     nz_l=dfftp%nr3/2+1+esm_nfit
+     nz_r=dfftp%nr3/2+1-esm_nfit
+     z_l=dble(nz_l-1)*L/dble(dfftp%nr3)-L
+     z_r=dble(nz_r-1)*L/dble(dfftp%nr3)
 ! add constant potential (capacitor term)
-     do iz=1,dfftp%nr3x
+     do iz=1,dfftp%nr3
         k3=iz-1
-        if (k3.gt.dfftp%nr3x/2) k3=iz-dfftp%nr3x-1
-        z=dble(k3)/dble(dfftp%nr3x)*L
+        if (k3.gt.dfftp%nr3/2) k3=iz-dfftp%nr3-1
+        z=dble(k3)/dble(dfftp%nr3)*L
         vg2(iz)=-0.5d0*v0*(z-z1)/z1*2.d0 ! factor 2: hartree -> Ry.
      enddo
      f1=-0.5d0*v0*(z_r-z1)/z1 ! unit: hartree
@@ -719,10 +719,10 @@ subroutine esm_local (aux)
         zp=tau(3,it)
         if (zp.gt.at(3,3)*0.5) zp=zp-at(3,3)
         zp=zp*alat
-        do iz=1,dfftp%nr3x
+        do iz=1,dfftp%nr3
            k3=iz-1
-           if (k3.gt.dfftp%nr3x/2) k3=iz-dfftp%nr3x-1
-           z=dble(k3)/dble(dfftp%nr3x)*L
+           if (k3.gt.dfftp%nr3/2) k3=iz-dfftp%nr3-1
+           z=dble(k3)/dble(dfftp%nr3)*L
            cc1=(0.d0,0.d0) 
            do ig=1,1
               tmp=1.d0
@@ -777,25 +777,25 @@ subroutine esm_local (aux)
           +f4*z_l+f3*z_r+2*f4*z_r))/(z_l-z_r)**3
      a3=(2.d0*f1-2.d0*f2+(f3+f4)*(z_l-z_r))/(z_l-z_r)**3
      do iz=nz_r,nz_l
-        z=dble(iz-1)/dble(dfftp%nr3x)*L
+        z=dble(iz-1)/dble(dfftp%nr3)*L
         vg2(iz)=(a0+a1*z+a2*z**2+a3*z**3)
      enddo
-     vg2_in(1:dfftp%nr3x)=vg2(1:dfftp%nr3x)
-     call cft_1z(vg2_in,1,dfftp%nr3x,dfftp%nr3x,-1,vg2)
-     do iz=1,dfftp%nr3x
+     vg2_in(1:dfftp%nr3)=vg2(1:dfftp%nr3)
+     call cft_1z(vg2_in,1,dfftp%nr3,dfftp%nr3,-1,vg2)
+     do iz=1,dfftp%nr3
         vloc3(iz,ng_2d)=vg2(iz)
      enddo
      
   endif ! if( ng_2d > 0 )
   deallocate(vg2,vg2_in,bgauss)
   
-! Map to FFT mesh (dfftp%nnr)
+! Map to FFT mesh (dfftp%nrx)
   do ng=1,ngm
      n1 = mill(1,ng)
      n2 = mill(2,ng)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng) + 1 
-     IF (n3<1) n3 = n3 + dfftp%nr3    
+     IF (n3<1) n3 = n3 + dfftp%nr3
      aux(nl(ng))= aux(nl(ng)) + vloc3(n3,ng_2d)
   enddo
   if (gamma_only) then
@@ -1079,8 +1079,8 @@ subroutine esm_force_lc ( aux, forcelc )
 
   argmax=0.9*log(huge(1.d0))
 
-! Mat to FULL FFT mesh (dfftp%nr1x,dfftp%nr2x,dfftp%nr3x)
-  allocate(rhog3(dfftp%nr3x,ngm_2d))
+! Map to FULL FFT mesh (dfftp%nr1x,dfftp%nr2x,dfftp%nr3)
+  allocate(rhog3(dfftp%nr3,ngm_2d))
   rhog3(:,:)=(0.d0,0.d0)
   do ng=1,ngm
       n1 = mill(1,ng)
@@ -1100,7 +1100,7 @@ subroutine esm_force_lc ( aux, forcelc )
   z0=L/2.d0
   z1=z0+abs(esm_w)
 
-  allocate(vg2(dfftp%nr3x),vg2_fx(dfftp%nr3x),vg2_fy(dfftp%nr3x),vg2_fz(dfftp%nr3x),bgauss(nat,1))
+  allocate(vg2(dfftp%nr3),vg2_fx(dfftp%nr3),vg2_fy(dfftp%nr3),vg2_fz(dfftp%nr3),bgauss(nat,1))
   allocate(for_g(3,nat))
   do it=1,nat
      bgauss(it,1)=1.d0
@@ -1140,10 +1140,10 @@ subroutine esm_force_lc ( aux, forcelc )
         zp=tau(3,it)
         if (zp.gt.at(3,3)*0.5) zp=zp-at(3,3)
         zp=zp*alat
-        do iz=1,dfftp%nr3x
+        do iz=1,dfftp%nr3
            k3=iz-1
-           if (k3.gt.dfftp%nr3x/2) k3=iz-dfftp%nr3x-1
-           z=dble(k3)/dble(dfftp%nr3x)*L
+           if (k3.gt.dfftp%nr3/2) k3=iz-dfftp%nr3-1
+           z=dble(k3)/dble(dfftp%nr3)*L
            cx1=(0.d0,0.d0); cy1=(0.d0,0.d0); cz1=(0.d0,0.d0)
            do ig=1,1
               tmp=1.d0
@@ -1191,13 +1191,13 @@ subroutine esm_force_lc ( aux, forcelc )
            vg2_fy(iz) = tt*(cy1+cy2)
            vg2_fz(iz) = tt*(cz1+cz2)
         enddo
-        vg2(1:dfftp%nr3x)=vg2_fx(1:dfftp%nr3x)  ! Since cft_1z is not in-place
-        call cft_1z(vg2,1,dfftp%nr3x,dfftp%nr3x,-1,vg2_fx)
-        vg2(1:dfftp%nr3x)=vg2_fy(1:dfftp%nr3x)  ! Since cft_1z is not in-place
-        call cft_1z(vg2,1,dfftp%nr3x,dfftp%nr3x,-1,vg2_fy)
-        vg2(1:dfftp%nr3x)=vg2_fz(1:dfftp%nr3x)  ! Since cft_1z is not in-place
-        call cft_1z(vg2,1,dfftp%nr3x,dfftp%nr3x,-1,vg2_fz)
-        do iz=1,dfftp%nr3x
+        vg2(1:dfftp%nr3)=vg2_fx(1:dfftp%nr3)  ! Since cft_1z is not in-place
+        call cft_1z(vg2,1,dfftp%nr3,dfftp%nr3,-1,vg2_fx)
+        vg2(1:dfftp%nr3)=vg2_fy(1:dfftp%nr3)  ! Since cft_1z is not in-place
+        call cft_1z(vg2,1,dfftp%nr3,dfftp%nr3,-1,vg2_fy)
+        vg2(1:dfftp%nr3)=vg2_fz(1:dfftp%nr3)  ! Since cft_1z is not in-place
+        call cft_1z(vg2,1,dfftp%nr3,dfftp%nr3,-1,vg2_fz)
+        do iz=1,dfftp%nr3
            r1= dble(rhog3(iz,ng_2d))
            r2=aimag(rhog3(iz,ng_2d))
            fx1=dble(  vg2_fx(iz))
@@ -1229,10 +1229,10 @@ subroutine esm_force_lc ( aux, forcelc )
         zp=tau(3,it)
         if (zp.gt.at(3,3)*0.5) zp=zp-at(3,3)
         zp=zp*alat
-        do iz=1,dfftp%nr3x
+        do iz=1,dfftp%nr3
            k3=iz-1
-           if (k3.gt.dfftp%nr3x/2) k3=iz-dfftp%nr3x-1
-           z=dble(k3)/dble(dfftp%nr3x)*L
+           if (k3.gt.dfftp%nr3/2) k3=iz-dfftp%nr3-1
+           z=dble(k3)/dble(dfftp%nr3)*L
            cc1=(0.d0,0.d0)
            do ig=1,1
               tmp=1.d0
@@ -1247,9 +1247,9 @@ subroutine esm_force_lc ( aux, forcelc )
            endif
            vg2_fz(iz) =  tt*(cc1+cc2)
         enddo
-        vg2(1:dfftp%nr3x)=vg2_fz(1:dfftp%nr3x)  ! Since cft_1z is not in-place
-        call cft_1z(vg2,1,dfftp%nr3x,dfftp%nr3x,-1,vg2_fz)
-        do iz=1,dfftp%nr3x
+        vg2(1:dfftp%nr3)=vg2_fz(1:dfftp%nr3)  ! Since cft_1z is not in-place
+        call cft_1z(vg2,1,dfftp%nr3,dfftp%nr3,-1,vg2_fz)
+        do iz=1,dfftp%nr3
            r1=dble( rhog3(iz,ng_2d))
            r2=aimag(rhog3(iz,ng_2d))
            fz1=dble( vg2_fz(iz))
@@ -1338,7 +1338,8 @@ SUBROUTINE esm_printpot ()
            enddo
            enddo
            work4(1:5,izz) = (/dble(k3)/dble(dfftp%nr3)*L*bohr_radius_angs, &
-                              z1, z3*rytoev,z4*rytoev, z2*rytoev/)
+                              z1*bohr_radius_angs, z3*rytoev,z4*rytoev, &
+                              z2*rytoev/)
         enddo
         !
         call mp_sum(work4, intra_bgrp_comm)
@@ -1352,12 +1353,12 @@ SUBROUTINE esm_printpot ()
            do k3 = dfftp%nr3/2-dfftp%nr3+1, dfftp%nr3/2
               iz = k3 + dfftp%nr3 + 1
               if( iz > dfftp%nr3 ) iz = iz - dfftp%nr3
-              write(stdout,'(f9.3,f13.5,2f19.7,f18.7)') work4(1:5,iz)
+              write(stdout,'(f9.2,f12.4,2f19.7,f18.7)') work4(1:5,iz)
            enddo
            write(stdout,*) 
         ENDIF
         deallocate(work1,work2,work3,work4)
-9051    FORMAT( 4x,'z (A)',6x,'rho (e)',6x,'Avg v_hartree',8x,&
+9051    FORMAT( 4x,'z (A)',3x,'Tot chg (e/A)',3x,'Avg v_hartree',8x,&
         &'Avg v_local',2x,'Avg v_hart+v_loc' )
 9052    FORMAT(37x,'(eV)',15x,'(eV)',14x,'(eV)',/,4x,& 
  &'==========================================================================' )
