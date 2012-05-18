@@ -120,11 +120,6 @@ PROGRAM phonon
         !
      END IF
      !
-     !  calculates dvscf_q' for q' belonging to star{q}
-     !  where q is in the IBZ.
-     !
-     !IF( dvscf_star ) call open_dvscf_star_q(iq)
-     !
      !  electron-phonon interaction
      !
      IF ( elph ) THEN
