@@ -7,6 +7,7 @@
 !
 ! April 2012, A. Dal Corso: parallelization for gdir /= 3 imported
 !                           from c_phase_field.f90
+! May 2012, A. Dal Corso: Noncollinear/spin-orbit case allowed (experimental).
 !
 !##############################################################################!
 !#                                                                            #!
@@ -169,6 +170,8 @@ SUBROUTINE c_phase
    USE bp,                   ONLY : gdir, nppstr, mapgm_global
    USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
                                     deallocate_bec_type
+   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda
+   USE spin_orb,             ONLY : lspinorb
    USE mp_global,            ONLY : intra_bgrp_comm, nproc_bgrp
    USE mp,                   ONLY : mp_sum
 
@@ -263,8 +266,6 @@ SUBROUTINE c_phase
    COMPLEX(DP), ALLOCATABLE :: aux0(:)
    TYPE (bec_type) :: becp0
    TYPE (bec_type) :: becp_bp
-   COMPLEX(DP) :: cdet(2)
-   COMPLEX(DP) :: cdwork(nbnd)
    COMPLEX(DP) :: cave
    COMPLEX(DP) , ALLOCATABLE :: cphik(:)
    COMPLEX(DP) :: det
@@ -272,6 +273,7 @@ SUBROUTINE c_phase
    COMPLEX(DP) :: mat(nbnd,nbnd)
    COMPLEX(DP) :: pref
    COMPLEX(DP), ALLOCATABLE :: psi(:,:)
+   COMPLEX(DP), ALLOCATABLE :: q_dk_so(:,:,:,:)
    COMPLEX(DP) :: q_dk(nhm,nhm,ntyp)
    COMPLEX(DP) :: struc(nat)
    COMPLEX(DP) :: theta0
@@ -282,17 +284,18 @@ SUBROUTINE c_phase
 !                               INITIALIZATIONS
 !  -------------------------------------------------------------------------   !
 
-   ALLOCATE (psi(npwx,nbnd))
-   ALLOCATE (aux(ngm))
-   ALLOCATE (aux0(ngm))
+   ALLOCATE (psi(npwx*npol,nbnd))
+   ALLOCATE (aux(ngm*npol))
+   ALLOCATE (aux0(ngm*npol))
    IF (okvan) THEN
       CALL allocate_bec_type ( nkb, nbnd, becp0 )
       CALL allocate_bec_type ( nkb, nbnd, becp_bp )
+      IF (lspinorb) ALLOCATE(q_dk_so(nhm,nhm,4,ntyp))
    END IF
 
    l_para= (nproc_bgrp > 1 .AND. gdir /= 3)
    IF (l_para) THEN
-      ALLOCATE ( aux_g(ngm_g) )
+      ALLOCATE ( aux_g(ngm_g*npol) )
    ELSE
       ALLOCATE ( map_g(ngm) )
    ENDIF
@@ -336,7 +339,7 @@ SUBROUTINE c_phase
    endif
 !  --- Get the number of strings ---
    nstring=nks/nppstr
-   nkort=nstring/(nspin)
+   nkort=nstring/nspin_lsda
 
 !  --- Allocate memory for arrays ---
    ALLOCATE(phik(nstring))
@@ -365,7 +368,7 @@ SUBROUTINE c_phase
      CALL errore('c_phase','Wrong k-strings?',1)
 
 !  --- Check that k-points form strings ---
-   DO i=1,nspin*nkort
+   DO i=1,nspin_lsda*nkort
       DO j=2,nppstr
          kindex=j+(i-1)*nppstr
          IF (ABS(xk(1,kindex)-xk(1,kindex-1)-dk(1)) > eps) &
@@ -383,8 +386,9 @@ SUBROUTINE c_phase
 !                   electronic polarization: weight strings                    !
 !  -------------------------------------------------------------------------   !
 
-!  --- Calculate string weights, normalizing to 1 (no spin) or 1+1 (spin) ---
-   DO is=1,nspin
+!  --- Calculate string weights, normalizing to 1 (no spin or noncollinear)
+!       or 1+1 (spin) ---
+   DO is=1,nspin_lsda
       weight=0.0_dp
       DO kort=1,nkort
          istring=kort+(is-1)*nkort
@@ -430,6 +434,7 @@ SUBROUTINE c_phase
             ENDDO
          endif
       ENDDO
+      IF (lspinorb) CALL transform_qq_so(q_dk,q_dk_so)
    endif
 
 !  -------------------------------------------------------------------------   !
@@ -442,7 +447,7 @@ SUBROUTINE c_phase
    CALL weights()
 
 !  --- Start loop over spin ---
-   DO is=1,nspin 
+   DO is=1,nspin_lsda
 
       ! l_cal(n) = .true./.false. if n-th state is occupied/empty
       nbnd_occ=0
@@ -558,10 +563,20 @@ SUBROUTINE c_phase
                         DO ig=1,npw1
                            aux(igk1(ig))=evc(ig,mb)
                         ENDDO
+                        IF (noncolin) THEN
+                           DO ig=1,npw1
+                              aux(igk1(ig)+ngm)=evc(ig+npwx,mb)
+                           ENDDO
+                        ENDIF
                      ELSEIF (.NOT. l_para) THEN
                         DO ig=1,npw1
                            aux(map_g(ig))=evc(ig,mb)
                         ENDDO
+                        IF (noncolin) THEN
+                           DO ig=1,npw1
+                              aux(map_g(ig)+ngm)=evc(ig+npwx,mb)
+                           ENDDO
+                        ENDIF
                      ELSE
 !
 !   In this case this processor might not have the G-G_0
@@ -571,10 +586,21 @@ SUBROUTINE c_phase
                            aux_g(mapgm_global(ig_l2g(igk1(ig)),gdir)) &
                                                 =evc(ig,mb)
                         ENDDO
+                        IF (noncolin) THEN
+                           DO ig=1,npw1
+                              aux_g(mapgm_global(ig_l2g(igk1(ig)),gdir) &
+                                                + ngm_g) =evc(ig+npwx,mb)
+                           ENDDO
+                        ENDIF
                         CALL mp_sum(aux_g(:), intra_bgrp_comm )
                         DO ig=1,ngm
                            aux(ig) = aux_g(ig_l2g(ig))
                         ENDDO
+                        IF (noncolin) THEN
+                           DO ig=1,ngm
+                              aux(ig+ngm) = aux_g(ig_l2g(ig)+ngm_g)
+                           ENDDO
+                        ENDIF
                      ENDIF
 !
                      DO nb=1,nbnd
@@ -583,7 +609,12 @@ SUBROUTINE c_phase
                            DO ig=1,npw0
                               aux0(igk0(ig))=psi(ig,nb)
                            END DO
-                           mat(nb,mb) = zdotc (ngm,aux0,1,aux,1)
+                           IF (noncolin) THEN
+                              DO ig=1,npw0
+                                aux0(igk0(ig)+ngm)=psi(ig+npwx,nb)
+                              END DO
+                           ENDIF
+                           mat(nb,mb) = zdotc (ngm*npol,aux0,1,aux,1)
                         END IF
                      END DO
                   END IF
@@ -607,8 +638,32 @@ SUBROUTINE c_phase
                               nhjkbm = nh(np)
                               jkb1 = jkb - nhjkb
                               DO j = 1,nhjkbm
-                                 pref = pref+CONJG(becp0%k(jkb,nb))*becp_bp%k(jkb1+j,mb) &
+                                 IF (noncolin) THEN
+                                    IF (lspinorb) THEN
+                                       pref = pref+(CONJG(becp0%nc(jkb,1,nb))* &
+                                                  becp_bp%nc(jkb1+j,1,mb)  &
+                                            *q_dk_so(nhjkb,j,1,np)   &
+                                            +CONJG(becp0%nc(jkb,1,nb))* &
+                                                   becp_bp%nc(jkb1+j,2,mb)  &
+                                            *q_dk_so(nhjkb,j,2,np) &
+                                            +CONJG(becp0%nc(jkb,2,nb))* &
+                                                   becp_bp%nc(jkb1+j,1,mb)  &
+                                            *q_dk_so(nhjkb,j,3,np) &
+                                            +CONJG(becp0%nc(jkb,2,nb))* &
+                                                   becp_bp%nc(jkb1+j,2,mb)   &
+                                            *q_dk_so(nhjkb,j,4,np))*struc(na)
+                                    ELSE
+                                       pref = pref+(CONJG(becp0%nc(jkb,1,nb))* &
+                                                   becp_bp%nc(jkb1+j,1,mb) + &
+                                             CONJG(becp0%nc(jkb,2,nb))* &
+                                                   becp_bp%nc(jkb1+j,2,mb))  &
+                                             *q_dk(nhjkb,j,np)*struc(na)
+                                    END IF
+                                 ELSE
+                                    pref = pref+CONJG(becp0%k(jkb,nb))* &
+                                           becp_bp%k(jkb1+j,mb) &
                                       *q_dk(nhjkb,j,np)*struc(na)
+                                 END IF
                               ENDDO
                            ENDDO
                            mat(nb,mb) = mat(nb,mb) + pref
@@ -656,7 +711,7 @@ SUBROUTINE c_phase
 !  -------------------------------------------------------------------------   !
 
 !  --- Start loop over spins ---
-   DO is=1,nspin
+   DO is=1,nspin_lsda
 
 !  --- Initialize average of phases as complex numbers ---
       cave=(0.0_dp,0.0_dp)
@@ -695,6 +750,9 @@ SUBROUTINE c_phase
          ELSE IF (is == 2) THEN
             phidw=phik_ave !theta0+dtheta
          END IF
+      ELSE IF (nspin==4 ) THEN
+         phiup=phik_ave
+         phidw=0.0_DP
       END IF
 
 !  --- End loop over spins
@@ -719,7 +777,7 @@ SUBROUTINE c_phase
    IF (nspin == 1) THEN
       pdl_elec_tot=pdl_elec_tot-2.0_dp*NINT(pdl_elec_tot/2.0_dp)
       mod_elec_tot=2
-   ELSE IF (nspin == 2) THEN
+   ELSE IF (nspin == 2 .OR. nspin == 4) THEN
       pdl_elec_tot=pdl_elec_tot-1.0_dp*NINT(pdl_elec_tot/1.0_dp)
       mod_elec_tot=1
    END IF
@@ -818,7 +876,7 @@ SUBROUTINE c_phase
    WRITE( stdout,"(3X,'Spin',4X,'String',5X,'Weight',6X, &
             &  'First k-point in string',9X,'Phase')")
    WRITE( stdout,"(2X,76('-'))")
-   DO istring=1,nstring/nspin
+   DO istring=1,nstring/nspin_lsda
       ind1=1+(istring-1)*nppstr
       WRITE( stdout,"(3X,' up ',3X,I5,F14.6,4X,3(F8.4),F12.5,' (mod ',I1,')')") &
           &  istring,wstring(istring), &
@@ -826,7 +884,7 @@ SUBROUTINE c_phase
    END DO
    WRITE( stdout,"(2X,76('-'))")
 !  --- Treat unpolarized/polarized spin cases ---
-   IF (nspin == 1) THEN
+   IF (nspin_lsda == 1) THEN
 !     --- In unpolarized spin, just copy again the same data ---
       DO istring=1,nstring
          ind1=1+(istring-1)*nppstr
@@ -834,7 +892,7 @@ SUBROUTINE c_phase
               istring,wstring(istring), xk(1,ind1),xk(2,ind1),xk(3,ind1), &
               pdl_elec(istring),mod_elec(istring)
       END DO
-   ELSE IF (nspin == 2) THEN
+   ELSE IF (nspin_lsda == 2) THEN
 !     --- If there is spin polarization, write information for new strings ---
       DO istring=nstring/2+1,nstring
          ind1=1+(istring-1)*nppstr
@@ -844,12 +902,17 @@ SUBROUTINE c_phase
       END DO
    END IF
    WRITE( stdout,"(2X,76('-'))")
-   WRITE( stdout,"(40X,'Average phase (up): ',F9.5,' (mod ',I1,')')") & 
+   IF (noncolin) THEN
+      WRITE( stdout,"(42X,'Average phase   : ',F9.5,' (mod ',I1,')')") & 
         pdl_elec_up,mod_elec_up
-   WRITE( stdout,"(38X,'Average phase (down): ',F9.5,' (mod ',I1,')')")& 
+   ELSE
+      WRITE( stdout,"(40X,'Average phase (up): ',F9.5,' (mod ',I1,')')") & 
+        pdl_elec_up,mod_elec_up
+      WRITE( stdout,"(38X,'Average phase (down): ',F9.5,' (mod ',I1,')')")& 
         pdl_elec_dw,mod_elec_dw
-   WRITE( stdout,"(42X,'ELECTRONIC PHASE: ',F9.5,' (mod ',I1,')')") & 
+      WRITE( stdout,"(42X,'ELECTRONIC PHASE: ',F9.5,' (mod ',I1,')')") & 
         pdl_elec_tot,mod_elec_tot
+   ENDIF
    WRITE( stdout,"(2X,76('='))")
 
 !  --- Information about total phase ---
@@ -918,6 +981,7 @@ SUBROUTINE c_phase
    IF (okvan) THEN
       CALL deallocate_bec_type ( becp0 )
       CALL deallocate_bec_type ( becp_bp )
+      IF (lspinorb) DEALLOCATE(q_dk_so)
    END IF
 
 

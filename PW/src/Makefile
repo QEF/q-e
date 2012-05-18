@@ -202,6 +202,7 @@ symmetrize_at.o \
 tabd.o \
 transform_becsum_so.o \
 transform_becsum_nc.o \
+transform_qq_so.o \
 trnvecc.o \
 tweights.o \
 update_pot.o \

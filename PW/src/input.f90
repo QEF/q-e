@@ -1074,8 +1074,6 @@ SUBROUTINE iosys()
   IF ( lberry .OR. lelfield ) THEN
      IF ( npool > 1 ) CALL errore( 'iosys', &
           'Berry Phase/electric fields not implemented with pools', 1 )
-     IF ( noncolin )  CALL errore( 'iosys', &
-          'Noncolinear Berry Phase/electric fields not implemented', 1 )
      IF ( lgauss .OR. ltetra ) CALL errore( 'iosys', &
           'Berry Phase/electric fields only for insulators!', 1 )
   END IF
