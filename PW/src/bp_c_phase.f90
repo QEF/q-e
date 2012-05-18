@@ -151,7 +151,6 @@ SUBROUTINE c_phase
 !   averaged over a 2D grid of nkort k-points ortogonal to nppstr 
 
 !  --- Make use of the module with common information ---
-   USE fixed_occ
    USE kinds,                ONLY : DP
    USE io_global,            ONLY : stdout
    USE io_files,             ONLY : iunwfc, nwordwfc
@@ -165,7 +164,7 @@ SUBROUTINE c_phase
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk
-   USE wvfct,                ONLY : npwx, npw, nbnd, ecutwfc
+   USE wvfct,                ONLY : npwx, npw, nbnd, ecutwfc, wg
    USE wavefunctions_module, ONLY : evc
    USE bp,                   ONLY : gdir, nppstr, mapgm_global
    USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
@@ -440,6 +439,7 @@ SUBROUTINE c_phase
    el_loc=0.d0
    kpoint=0
    ALLOCATE ( l_cal(nbnd) ) 
+   CALL weights()
 
 !  --- Start loop over spin ---
    DO is=1,nspin 
@@ -447,11 +447,7 @@ SUBROUTINE c_phase
       ! l_cal(n) = .true./.false. if n-th state is occupied/empty
       nbnd_occ=0
       DO nb = 1, nbnd
-         IF ( nspin == 2 .AND. tfixed_occ) THEN
-            l_cal(nb) = ( f_inp(nb,is) /= 0.0_dp )
-         ELSE
-            l_cal(nb) = ( nb <= NINT ( nelec/2.0_dp ) )
-         ENDIF
+         l_cal(nb) = (wg(nb,1+nks*(is-1)/2) > eps)
          IF (l_cal(nb)) nbnd_occ = nbnd_occ + 1
       END DO
 
