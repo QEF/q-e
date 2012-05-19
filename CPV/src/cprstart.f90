@@ -22,7 +22,6 @@ PROGRAM main
   USE read_input,    ONLY : read_input_file
   USE mp_global,     ONLY : mp_startup, nimage, me_image, root_image
   USE io_global,     ONLY : ionode, ionode_id, io_global_start
-  USE control_flags, ONLY : lneb, lsmd
   USE environment,   ONLY : environment_start
   USE check_stop,    ONLY : check_stop_init
   USE mp_global,     ONLY : mp_bcast, intra_image_comm
@@ -39,11 +38,8 @@ PROGRAM main
   !
   CALL environment_start( 'CP' )
   !
-  ! reset IO nodes
-  ! (do this to make each "image head node" an ionode)
-  if ( nimage > 1) CALL io_global_start( me_image, root_image )
-  !
   ! reading plugin arguments
+  !
   IF(ionode) CALL plugin_arguments()
   CALL plugin_arguments_bcast(ionode_id,intra_image_comm)
   !
@@ -67,19 +63,7 @@ PROGRAM main
   !
   CALL check_stop_init()
   !
-  IF ( lneb ) THEN
-     !
-     CALL errore ( 'cpr_main', 'NEB no longer implemented, use "neb.x" instead', 1)
-     !
-  ELSE IF ( lsmd ) THEN
-     !
-     CALL errore ( 'cpr_main', 'SMD no longer implemented', 1)
-     !
-  ELSE
-     !
-     CALL cpr_loop( 1 )
-     !
-  END IF
+  CALL cpr_loop( 1 )
   !
   CALL stop_run( .TRUE. )
   !

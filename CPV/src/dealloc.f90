@@ -20,7 +20,6 @@ SUBROUTINE deallocate_modules_var()
   USE ensemble_dft,         ONLY : deallocate_ensemble_dft
   USE cg_module,            ONLY : deallocate_cg
   USE gvect,                ONLY : deallocate_gvect
-  USE gvect,                ONLY : deallocate_gvect
   USE gvecs,                ONLY : deallocate_gvecs
   USE gvecw,                ONLY : deallocate_gvecw
   USE smallbox_gvec,        ONLY : deallocate_smallbox_gvec

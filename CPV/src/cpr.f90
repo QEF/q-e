@@ -14,12 +14,11 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE constants,                ONLY : bohr_radius_angs, amu_au
   USE control_flags,            ONLY : iprint, isave, thdyn, tpre, iverbosity, &
                                        tfor, remove_rigid_rot, taurdr,         &
-                                       tprnfor, tsdc, lconstrain, lwf, lneb,   &
-                                       ndr, ndw, nomore, tsde, &
+                                       tprnfor, tsdc, lconstrain, lwf,         &
+                                       ndr, ndw, nomore, tsde, textfor,        &
                                        tortho, tnosee, tnosep, trane, tranp,   &
                                        tsdp, tcp, tcap, ampre, amprp, tnoseh,  &
-                                       tolp, ortho_eps, ortho_max, printwfc,   &
-                                       textfor
+                                       tolp, ortho_eps, ortho_max, printwfc
   USE core,                     ONLY : rhoc
   USE uspp_param,               ONLY : nhm, nh, nvb, ish
   USE uspp,                     ONLY : nkb, vkb, becsum, deeq, okvan, nlcc_any
@@ -859,18 +858,13 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      DO ia = 1, na(is)
         !
         isa = isa + 1
-        !
         ipos = ind_srt( isa )
-        !
         tau_out(:,ipos) = tau0(:,isa)
-        !
         fion_out(:,ipos) = fion(:,isa)
         !
      END DO
      !
   END DO
-  !
-  IF ( lneb ) fion_out(:,1:nat) = fion(:,1:nat) * DBLE( if_pos(:,1:nat) )
   !
   conv_elec = .TRUE.
   !

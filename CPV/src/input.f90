@@ -188,7 +188,7 @@ MODULE input
      USE control_flags, ONLY : textfor
      USE control_flags, ONLY : do_makov_payne, twfcollect
      USE control_flags, ONLY : lwf, lwfnscf, lwfpbe0, lwfpbe0nscf ! Lingzhu Kong
-     USE control_flags, ONLY : lneb, lpath
+     USE control_flags, ONLY : lneb, lsmd, lpath
      !
      ! ...  Other modules
      !
@@ -283,7 +283,11 @@ MODULE input
      emaec_ = emass_cutoff
      ! no longer implemented!
      lneb = ( TRIM( calculation ) == 'neb' )
-     lpath = lneb
+     IF ( lneb ) CALL errore ( 'iosys', &
+                 'NEB no longer implemented, use "neb.x" instead', 1)
+     lsmd = ( TRIM( calculation ) == 'smd' )
+     IF ( lsmd ) CALL errore ( 'iosys', 'SMD no longer implemented', 1)
+     lpath = lneb .OR. lsmd
 !====================================================================
 !Lingzhu Kong
      lwf = ( TRIM( calculation ) == 'cp-wf'      .OR. &
@@ -742,10 +746,6 @@ MODULE input
       IF( .NOT. tavel .AND. TRIM(ion_velocities)=='from_input' ) &
         CALL errore(' iosys ',' ION_VELOCITIES not present in stdin ', 1 )
 
-      IF( ( TRIM( calculation ) == 'smd' ) .AND. ( TRIM( cell_dynamics ) /= 'none' ) ) THEN
-        CALL errore(' smiosys ',' cell_dynamics not implemented : '//TRIM(cell_dynamics), 1 )
-      END IF
-
       RETURN
    END SUBROUTINE set_control_flags
    !
@@ -753,7 +753,7 @@ MODULE input
    SUBROUTINE modules_setup()
      !-------------------------------------------------------------------------
      !
-     USE control_flags,    ONLY : lconstrain, lneb, tpre, thdyn, tksw
+     USE control_flags,    ONLY : lconstrain, tpre, thdyn, tksw
 
      USE constants,        ONLY : amu_au, pi
      !
