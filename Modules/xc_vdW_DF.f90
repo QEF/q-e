@@ -280,7 +280,6 @@ CONTAINS
     allocate( total_rho(dfftp%nnr) )
     
     !! ---------------------------------------------------------------------------------------
-    
     !! Add together the valence and core charge densities to get the total charge density    
     total_rho = rho_valence(:,1) + rho_core(:)
 
@@ -292,7 +291,7 @@ CONTAINS
 
 #else
     !! -------------------------------------------------------------------------
-    !! Here we calculate the gradient numerically in real spacee
+    !! Here we calculate the gradient numerically in real space
     !! The Nneighbors variable is set above and gives the number of points in 
     !! each direction to consider when taking the numerical derivatives.
     !! -------------------------------------------------------------------------
@@ -331,14 +330,14 @@ CONTAINS
        
        ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
        
-       ! Here we calculate the gradient numerically in real spacee
+       ! Here we calculate the gradient numerically in real space
 
        call numerical_gradient(full_rho, Nneighbors, gradient_rho, my_start_z, my_end_z)
        deallocate(full_rho)
        
     else 
        
-       ! Here we calculate the gradient numerically in real spacee
+       ! Here we calculate the gradient numerically in real space
        call numerical_gradient(total_rho, Nneighbors, gradient_rho, my_start_z, my_end_z)
        
     end if
@@ -1215,7 +1214,6 @@ SUBROUTINE spline_interpolation (x, evaluation_points, values)
         
         values(i_grid, P_i) = a*y(lower_bound) + b*y(upper_bound) &
              + (c*d2y_dx2(P_i,lower_bound) + d*d2y_dx2(P_i, upper_bound))
-        
      end do
      
   end do
@@ -1523,7 +1521,6 @@ subroutine numerical_gradient(total_rho, gradient_rho)
       c_grho(:) =CMPLX(0.0_DP,0.0_DP)
       c_grho(nl(:)) = CMPLX (0.0_DP,1.0_DP) * tpiba * g(icar,:) * c_rho(nl(:))
       if (gamma_only) c_grho( nlm(:) ) = CONJG( c_grho( nl(:) ) )
- 
       ! back in real space
       CALL invfft ('Dense', c_grho, dfftp) 
       gradient_rho(:,icar) = REAL( c_grho(:) )
@@ -1540,7 +1537,7 @@ end subroutine numerical_gradient
 !! use the PWSCF gradient routine but we need the derivative of the gradient at point j 
 !! with respect to the density at point i for the potential (SOLER equation 13).  This is 
 !! difficult to do with the standard means of calculating the density gradient but trivial
-!! in the case of the numerical formula becuase the derivative of the gradient at point j
+!! in the case of the numerical formula because the derivative of the gradient at point j
 !! with respect to the density at point i is just whatever the coefficient is in the numerical
 !! derivative formula.
 
@@ -1763,7 +1760,6 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
   complex(dp), allocatable :: u_vdw(:,:)       !! temporary array holding u_alpha(k)
 
   vdW_xc_energy = 0.0D0
- 
   allocate (u_vdW(dfftp%nnr,Nqs))
   u_vdW(:,:) = CMPLX(0.0_DP,0.0_DP)
 
@@ -1780,7 +1776,7 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
   !! -------------------------------------------------------------------------------------------------
 
   !!
-  !! Here we should use gstart,ngm but all the cases are handeld by conditionals inside the loop
+  !! Here we should use gstart,ngm but all the cases are handled by conditionals inside the loop
   !!
   G_multiplier = 1.0D0
   if (gamma_only) G_multiplier = 2.0D0
@@ -1817,7 +1813,7 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
   !! Apply scaling factors.  The e2 comes from PWSCF's choice of units.  This should be 
   !! 0.5 * e2 * vdW_xc_energy * (2pi)^3/omega * (omega)^2, with the (2pi)^3/omega being
   !! the volume element for the integral (the volume of the reciprocal unit cell) and the 
-  !! 2 factors of omega beging used to cancel the factor of 1/omega PWSCF puts on forward  
+  !! 2 factors of omega being used to cancel the factor of 1/omega PWSCF puts on forward  
   !! FFTs of the 2 theta factors.  1 omega cancels and the (2pi)^3 cancels because there should
   !! be a factor of 1/(2pi)^3 on the radial Fourier transform of phi that was left out to cancel
   !! with this factor.

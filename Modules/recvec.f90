@@ -115,8 +115,8 @@
      END SUBROUTINE gvect_init
 
      SUBROUTINE deallocate_gvect()
+       ! IF( ASSOCIATED( gl ) ) DEALLOCATE( gl )
        IF( ALLOCATED( gg ) ) DEALLOCATE( gg )
-       IF( ASSOCIATED( gl ) ) DEALLOCATE( gl )
        IF( ALLOCATED( g ) )  DEALLOCATE( g )
        IF( ALLOCATED( mill_g ) ) DEALLOCATE( mill_g )
        IF( ALLOCATED( mill ) ) DEALLOCATE( mill )

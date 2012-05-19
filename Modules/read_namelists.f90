@@ -771,7 +771,7 @@ MODULE read_namelists_module
        CALL mp_bcast( nberrycyc,     ionode_id )
        CALL mp_bcast( saverho,       ionode_id )
        CALL mp_bcast( lecrpa,        ionode_id )
-       CALL mp_bcast( vdw_table_name,        ionode_id )
+       CALL mp_bcast( vdw_table_name,ionode_id )
        !
        RETURN
        !
