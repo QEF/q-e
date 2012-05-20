@@ -17,6 +17,7 @@ latgen.o : ../Modules/kind.o
 linpack.o : ../Modules/kind.o
 lsda_functionals.o : ../Modules/constants.o
 lsda_functionals.o : ../Modules/kind.o
+metagga.o : ../Modules/constants.o
 metagga.o : ../Modules/kind.o
 more_functionals.o : ../Modules/constants.o
 more_functionals.o : ../Modules/kind.o

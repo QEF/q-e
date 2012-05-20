@@ -153,6 +153,7 @@ bp_c_phase.o : ../../Modules/wavefunctions.o
 bp_c_phase.o : becmod.o
 bp_c_phase.o : bp_mod.o
 bp_c_phase.o : buffers.o
+bp_c_phase.o : noncol.o
 bp_c_phase.o : pwcom.o
 bp_calc_btq.o : ../../Modules/atom.o
 bp_calc_btq.o : ../../Modules/cell_base.o
@@ -516,6 +517,7 @@ force_us.o : symme.o
 forces.o : ../../Modules/cell_base.o
 forces.o : ../../Modules/control_flags.o
 forces.o : ../../Modules/fft_base.o
+forces.o : ../../Modules/fft_interfaces.o
 forces.o : ../../Modules/io_global.o
 forces.o : ../../Modules/ions_base.o
 forces.o : ../../Modules/kind.o
@@ -1607,6 +1609,7 @@ summary.o : ../../Modules/run_info.o
 summary.o : ../../Modules/uspp.o
 summary.o : bp_mod.o
 summary.o : esm.o
+summary.o : martyna_tuckerman.o
 summary.o : noncol.o
 summary.o : pwcom.o
 summary.o : symm_base.o
@@ -1634,6 +1637,10 @@ transform_becsum_so.o : ../../Modules/kind.o
 transform_becsum_so.o : ../../Modules/uspp.o
 transform_becsum_so.o : noncol.o
 transform_becsum_so.o : pwcom.o
+transform_qq_so.o : ../../Modules/ions_base.o
+transform_qq_so.o : ../../Modules/kind.o
+transform_qq_so.o : ../../Modules/uspp.o
+transform_qq_so.o : pwcom.o
 trnvecc.o : ../../Modules/kind.o
 tweights.o : ../../Modules/kind.o
 update_pot.o : ../../Modules/cell_base.o

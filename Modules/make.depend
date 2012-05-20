@@ -80,7 +80,6 @@ fft_parallel.o : kind.o
 fft_parallel.o : parallel_include.o
 fft_scalar.o : kind.o
 fft_types.o : io_global.o
-funct.o : control_flags.o
 funct.o : io_global.o
 funct.o : kind.o
 funct.o : xc_vdW_DF.o

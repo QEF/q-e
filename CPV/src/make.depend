@@ -122,6 +122,7 @@ cp_restart.o : ../../Modules/funct.o
 cp_restart.o : ../../Modules/io_files.o
 cp_restart.o : ../../Modules/io_global.o
 cp_restart.o : ../../Modules/ions_base.o
+cp_restart.o : ../../Modules/kernel_table.o
 cp_restart.o : ../../Modules/kind.o
 cp_restart.o : ../../Modules/mp.o
 cp_restart.o : ../../Modules/mp_global.o
@@ -224,7 +225,6 @@ cpr_loop.o : ../../Modules/ions_base.o
 cpr_loop.o : ../../Modules/kind.o
 cpr_mod.o : ../../Modules/kind.o
 cprstart.o : ../../Modules/check_stop.o
-cprstart.o : ../../Modules/control_flags.o
 cprstart.o : ../../Modules/environment.o
 cprstart.o : ../../Modules/io_global.o
 cprstart.o : ../../Modules/mp_global.o
@@ -565,10 +565,12 @@ input.o : ../../Modules/constraints_module.o
 input.o : ../../Modules/control_flags.o
 input.o : ../../Modules/electrons_base.o
 input.o : ../../Modules/fft_base.o
+input.o : ../../Modules/funct.o
 input.o : ../../Modules/input_parameters.o
 input.o : ../../Modules/io_files.o
 input.o : ../../Modules/io_global.o
 input.o : ../../Modules/ions_base.o
+input.o : ../../Modules/kernel_table.o
 input.o : ../../Modules/kind.o
 input.o : ../../Modules/read_input.o
 input.o : ../../Modules/read_pseudo.o
@@ -990,6 +992,7 @@ vofrho.o : ../../Modules/mp_global.o
 vofrho.o : ../../Modules/recvec.o
 vofrho.o : ../../Modules/sic.o
 vofrho.o : ../../Modules/uspp.o
+vofrho.o : ../../Modules/xc_vdW_DF.o
 vofrho.o : cp_interfaces.o
 vofrho.o : energies.o
 vofrho.o : ldaU.o
