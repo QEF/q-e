@@ -74,11 +74,11 @@ MODULE cp_restart
                                            epseu, enl, exc, vave
       USE mp,                       ONLY : mp_sum
       USE fft_base,                 ONLY : dfftp, dffts, dfftb
-      USE constants,                ONLY : pi
       USE uspp_param,               ONLY : n_atom_wfc
       USE global_version,           ONLY : version_number
       USE cp_main_variables,        ONLY : descla
       USE cp_interfaces,            ONLY : collect_lambda, collect_zmat
+      USE kernel_table,             ONLY : vdw_table_name
       !
       IMPLICIT NONE
       !
@@ -378,8 +378,16 @@ MODULE cp_restart
          !
          dft_name = get_dft_name()
          inlc = get_inlc()
-         CALL write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = .FALSE., INLC = inlc )
-
+         !
+         CALL write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = .FALSE., &
+                        INLC = inlc, VDW_TABLE_NAME = vdw_table_name, &
+                        PSEUDO_DIR = pseudo_dir, DIRNAME = dirname)
+         !!! should be replaced by the following: !!!
+         !CALL write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = lda_plus_u,                  &
+         !               LDA_PLUS_U_KIND = lda_plus_u_kind, HUBBARD_LMAX = Hubbard_lmax,      &
+         !               HUBBARD_L = Hubbard_l, HUBBARD_U = Hubbard_U, HUBBARD_J = Hubbard_J, &
+         !               HUBBARD_ALPHA = Hubbard_alpha, INLC = inlc, VDW_TABLE_NAME = vdw_table_name, &
+         !               PSEUDO_DIR = pseudo_dir, DIRNAME = dirname)
          !
 !-------------------------------------------------------------------------------
 ! ... OCCUPATIONS

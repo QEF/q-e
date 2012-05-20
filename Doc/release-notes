@@ -1,3 +1,7 @@
+
+   * vdW-DF functional extended to CP (experimental)
+   * PWscf: Noncollinear/spin-orbit Berry Phases (experimental)
+   * Misc compilation problems with old compilers fixed
    * New functionals: SOGGA, M06L (courtesy of Yves Ferro)
 
 New in 5.0 version

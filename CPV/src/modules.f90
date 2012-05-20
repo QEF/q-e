@@ -92,6 +92,7 @@ MODULE dener
   REAL(DP) :: dxc(3,3)
   REAL(DP) :: dsr(3,3)
   REAL(DP) :: detot(3,3)
+  REAL(DP) :: denlc(3,3)
   REAL(DP) :: dekin6(6)
   REAL(DP) :: dh6(6)
   REAL(DP) :: dps6(6)

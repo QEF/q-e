@@ -6,8 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,           &
-     &     ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion )
+SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
+                     tlast, ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion )
 !-----------------------------------------------------------------------
 !     computes: the one-particle potential v in real space,
 !               the total energy etot,
@@ -32,15 +32,17 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
       USE gvect,              ONLY: gstart, gg, g
       USE electrons_base,   ONLY: nspin
       USE constants,        ONLY: pi, fpi, au_gpa
-      USE energies,         ONLY: etot, eself, enl, ekin, epseu, esr, eht, exc, eextfor 
+      USE energies,         ONLY: etot, eself, enl, ekin, epseu, esr, eht, &
+                                  exc, eextfor 
       USE local_pseudo,     ONLY: vps, dvps, rhops
       USE uspp,             ONLY: nlcc_any
       USE smallbox_gvec
-      USE dener,            ONLY: detot, dekin, dps, dh, dsr, dxc, denl, &
+      USE dener,            ONLY: detot, dekin, dps, dh, dsr, dxc, denl, denlc, &
                                   detot6, dekin6, dps6, dh6, dsr6, dxc6, denl6
       USE mp,               ONLY: mp_sum
       USE mp_global,        ONLY: intra_bgrp_comm
-      USE funct,            ONLY: dft_is_meta, get_inlc
+      USE funct,            ONLY: dft_is_meta, dft_is_nonlocc, nlc
+      USE vdW_DF,           ONLY: stress_vdW_DF
       USE pres_ai_mod,      ONLY: abivol, abisur, v_vol, P_ext, volclu,  &
                                   Surf_t, surfclu
       USE fft_interfaces,   ONLY: fwfft, invfft
@@ -66,13 +68,12 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
       INTEGER     :: irb(:,:)
       !
       INTEGER iss, isup, isdw, ig, ir, i, j, k, ij, is, ia
-      REAL(DP) vave, ebac, wz, eh, ehpre
+      REAL(DP) :: vtxc, vave, ebac, wz, eh, ehpre, enlc
       COMPLEX(DP)  fp, fm, ci, drhop, zpseu, zh
       COMPLEX(DP), ALLOCATABLE :: rhotmp(:), vtemp(:)
-      ! COMPLEX(DP), ALLOCATABLE :: drhotmp(:,:,:)
       COMPLEX(DP), ALLOCATABLE :: drhot(:,:)
       COMPLEX(DP), ALLOCATABLE :: v(:), vs(:)
-      REAL(DP), ALLOCATABLE    :: gagb(:,:)
+      REAL(DP), ALLOCATABLE    :: gagb(:,:), rhosave(:,:), rhocsave(:)
       !
       REAL(DP), ALLOCATABLE :: fion1( :, : )
       REAL(DP), ALLOCATABLE :: stmp( :, : )
@@ -86,7 +87,6 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
       REAL(DP)                 :: ht( 3, 3 )
       REAL(DP)                 :: deht( 6 )
       COMPLEX(DP)              :: screen_coul( 1 )
-      INTEGER                  :: inlc
 !
       INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
       INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
@@ -95,10 +95,6 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
       REAL(DP),  DIMENSION(6), PARAMETER :: dalbe = &
          (/ 1.0_DP, 0.0_DP, 0.0_DP, 1.0_DP, 0.0_DP, 1.0_DP /)
 
-
-      inlc = get_inlc()
-      IF (inlc == 1 .or. inlc == 2) CALL errore('vofrho', 'vdW-DF not implemented in CP, use PW instead or &
-                                         &check PW/v_of_rho.f90 to port the implementation',1)
 
       CALL start_clock( 'vofrho' )
 
@@ -110,8 +106,6 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
       !
       ht = TRANSPOSE( h )
       !
-      ALLOCATE( v(  dfftp%nnr ) )
-      ALLOCATE( vs( dffts%nnr ) )
       ALLOCATE( vtemp( ngm ) )
       ALLOCATE( rhotmp( ngm ) )
       !
@@ -210,10 +204,8 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
       IF (gstart == 2) epseu = epseu - DBLE( vtemp(1) )
       !
       CALL mp_sum( epseu, intra_bgrp_comm )
-
       epseu = epseu * omega
-
-!
+      !
       IF( tpre ) THEN
          !
          CALL stress_local( dps6, epseu, gagb, sfac, rhotmp, drhot, omega )
@@ -266,13 +258,11 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
       IF(tpre) THEN
          !
          CALL add_drhoph( drhot, sfac, gagb )
-         !
          CALL stress_hartree(dh6, eh*omega, sfac, rhotmp, drhot, gagb, omega )
          !
-      END IF
-      !
-      IF(tpre) THEN
+         DEALLOCATE( gagb )
          DEALLOCATE( drhot )
+         !
       END IF
       !    
       !     forces on ions, ionic term in reciprocal space
@@ -299,7 +289,8 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
       DO ig=gstart,ngm
          vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*gg(ig))
       END DO
-!
+      DEALLOCATE (rhotmp)
+      !
       DO is=1,nsp
 !$omp do
          DO ig=1,ngms
@@ -313,18 +304,50 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
 !     ===================================================================
 !      calculation exchange and correlation energy and potential
 !     -------------------------------------------------------------------
+      !
+      ! ... UGLY HACK WARNING: rhor must be saved before exch_corr_h
+      ! ... overwrites it and before add_cc adds to it the core charge
+      ! ... We also need an allocated rhoc array even in absence of core charge
+      !
+      IF ( dft_is_nonlocc() ) THEN
+         ALLOCATE ( rhosave(dfftp%nnr,nspin),  rhocsave(dfftp%nnr) )
+         rhosave(:,:) = rhor(:,:)
+         IF ( SIZE(rhoc) == dfftp%nnr ) THEN
+            rhocsave(:)= rhoc(:)
+         ELSE
+            rhocsave(:)= 0.0_dp
+         ENDIF
+      END IF
+      !
       IF ( nlcc_any ) CALL add_cc( rhoc, rhog, rhor )
-!
       CALL exch_corr_h( nspin, rhog, rhor, rhoc, sfac, exc, dxc, self_exc )
-
-
-!
+      !
+      ! ... add non local corrections (if any)
+      !
+      IF ( dft_is_nonlocc() ) THEN
+         !
+         ! ... UGLY HACK WARNING: nlc adds nonlocal term, in RY, to input energy
+         !
+	 enlc = 0.0_dp
+         CALL nlc( rhosave, rhocsave, enlc, vtxc, rhor )
+         exc = exc + enlc / 2.0_dp
+         !
+         ! ... non-local XC contribution to stress stored into denlc
+         !
+         IF ( tpre ) CALL errore('vofrho','stress with nonlocal functional not yet ready',1)
+         IF ( tpre ) CALL stress_vdW_DF( rhosave, rhocsave, denlc )
+         DEALLOCATE ( rhocsave, rhosave )
+      ELSE
+         denlc(:,:) = 0.0_dp
+      END IF
+      !
 !     rhor contains the xc potential in r-space
 !
 !     ===================================================================
 !     fourier transform of xc potential to g-space (dense grid)
 !     -------------------------------------------------------------------
 !
+      ALLOCATE( v(  dfftp%nnr ) )
       IF( nspin == 1 ) THEN
          iss = 1
          if (abivol.or.abisur) then
@@ -382,7 +405,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
             ENDIF
          END DO
       ENDIF
-
+      DEALLOCATE (vtemp)
 !
 !     rhog contains now the total (local+Hartree+xc) potential in g-space
 !
@@ -452,6 +475,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
       !
       !     fourier transform of total potential to r-space (smooth grid)
       !
+      ALLOCATE( vs( dffts%nnr ) )
       vs (:) = (0.d0, 0.d0)
       !
       IF(nspin.EQ.1)THEN
@@ -490,7 +514,10 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
          !
       ENDIF
 
-      IF( dft_is_meta() ) CALL vofrho_meta( v, vs )  !METAGGA
+      IF( dft_is_meta() ) CALL vofrho_meta( v, vs )
+
+      DEALLOCATE( vs )
+      DEALLOCATE( v )
 
       ebac = 0.0d0
       !
@@ -523,13 +550,9 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
          !
       END IF
       !
-      !
       CALL stop_clock( 'vofrho' )
       !
-      !
       IF ( tpre ) THEN
-         !
-         DEALLOCATE( gagb )
          !
          IF( ( iverbosity > 2 ) .AND. ( MOD( nfi - 1, iprint) == 0 ) ) THEN  
             !
@@ -583,11 +606,6 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
             WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
          ENDIF
       ENDIF
-
-      DEALLOCATE( rhotmp )
-      DEALLOCATE( vtemp )
-      DEALLOCATE( v )
-      DEALLOCATE( vs )
 
       RETURN
 
