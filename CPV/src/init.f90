@@ -127,12 +127,14 @@
       CALL smallbox_grid_info ( dfftb )
       !
       ! ... generate g-space vectors (dense and smooth grid)
+      ! ... call to gshells generates gl, igtongl used in vdW-DF functional
       !
 #ifdef __LOWMEM
       CALL ggen( gamma_only, at, bg, intra_bgrp_comm )
 #else
       CALL ggen( gamma_only, at, bg )
 #endif
+      CALL gshells (.TRUE.)
       !
       ! ... allocate and generate (modified) kinetic energy
       !
