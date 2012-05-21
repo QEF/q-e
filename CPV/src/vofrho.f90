@@ -20,24 +20,24 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 !     rhor output: total potential on dense real space grid
 !     rhos output: total potential on smooth real space grid
 !
-      USE kinds,              ONLY: dp
-      USE control_flags,      ONLY: iprint, iverbosity, thdyn, tpre, tfor, &
-                                    tprnfor, iesr, textfor
-      USE io_global,          ONLY: stdout
-      USE ions_base,          ONLY: nsp, na, nat, rcmax, compute_eextfor
+      USE kinds,            ONLY: dp
+      USE control_flags,    ONLY: iprint, iverbosity, thdyn, tpre, tfor, &
+                                  tprnfor, iesr, textfor
+      USE io_global,        ONLY: stdout
+      USE ions_base,        ONLY: nsp, na, nat, rcmax, compute_eextfor
       USE gvecs
-      USE gvect,              ONLY: ngm, nl, nlm
-      USE cell_base,          ONLY: omega, r_to_s
-      USE cell_base,          ONLY: alat, at, tpiba2, h, ainv
-      USE gvect,              ONLY: gstart, gg, g
+      USE gvect,            ONLY: ngm, nl, nlm
+      USE cell_base,        ONLY: omega, r_to_s
+      USE cell_base,        ONLY: alat, at, tpiba2, h, ainv
+      USE gvect,            ONLY: gstart, gg, g
       USE electrons_base,   ONLY: nspin
-      USE constants,        ONLY: pi, fpi, au_gpa
+      USE constants,        ONLY: pi, fpi, au_gpa, e2
       USE energies,         ONLY: etot, eself, enl, ekin, epseu, esr, eht, &
                                   exc, eextfor 
       USE local_pseudo,     ONLY: vps, dvps, rhops
       USE uspp,             ONLY: nlcc_any
       USE smallbox_gvec
-      USE dener,            ONLY: detot, dekin, dps, dh, dsr, dxc, denl, denlc, &
+      USE dener,            ONLY: detot, dekin, dps, dh, dsr, dxc, denl, denlc,&
                                   detot6, dekin6, dps6, dh6, dsr6, dxc6, denl6
       USE mp,               ONLY: mp_sum
       USE mp_global,        ONLY: intra_bgrp_comm
@@ -326,16 +326,22 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       IF ( dft_is_nonlocc() ) THEN
          !
-         ! ... UGLY HACK WARNING: nlc adds nonlocal term, in RY, to input energy
+         ! ... UGLY HACK WARNING: nlc adds nonlocal term (Ry) to input energy
          !
 	 enlc = 0.0_dp
          CALL nlc( rhosave, rhocsave, enlc, vtxc, rhor )
-         exc = exc + enlc / 2.0_dp
+         CALL mp_sum( enlc, intra_bgrp_comm )
+         exc = exc + enlc / e2
          !
-         ! ... non-local XC contribution to stress stored into denlc
+         ! ... non-local XC contribution to stress brought to crystal axis,
+         ! ... transformed into energy derivative (Ha), added to dxc
          !
-         IF ( tpre ) CALL errore('vofrho','stress with nonlocal functional not yet ready',1)
-         IF ( tpre ) CALL stress_vdW_DF( rhosave, rhocsave, denlc )
+         IF ( tpre ) THEN
+             denlc(:,:) = 0.0_dp
+             CALL stress_vdW_DF( rhosave, rhocsave, denlc )
+             CALL mp_sum( denlc, intra_bgrp_comm )
+             dxc(:,:) = dxc(:,:) - omega/e2 * MATMUL(denlc,TRANSPOSE(ainv))
+         END IF
          DEALLOCATE ( rhocsave, rhosave )
       ELSE
          denlc(:,:) = 0.0_dp
