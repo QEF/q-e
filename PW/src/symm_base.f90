@@ -53,7 +53,7 @@ MODULE symm_base
        time_reversal=.true., &! if .TRUE. the system has time reversal symmetry
        invsym,               &! if .TRUE. the system has inversion symmetry
        nofrac= .FALSE.,      &! if .TRUE. fract. translations are not allowed
-       allfrac= .FALSE.,     &! if .TRUE. all fractionary transations allowed,
+       allfrac= .FALSE.,     &! if .TRUE. all fractionary translations allowed,
                               ! even those not commensurate with FFT grid
        nosym = .FALSE.,      &! if .TRUE. no symmetry is used
        nosym_evc = .FALSE.,  &! if .TRUE. symmetry is used only to symmetrize

@@ -510,7 +510,7 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
   ENDIF
   IF ( nsym_na > 0 ) THEN 
       WRITE( stdout, '(10x,"(note: ",i2," additional sym.ops. were found ", &
-                   &   "but ignored",/,10x," their fractional transations ", &
+                   &   "but ignored",/,10x," their fractional translations ",&
                    &   "are incommensurate with FFT grid)",/)') nsym_na
   ELSE
       WRITE( stdout, '(/)' )
