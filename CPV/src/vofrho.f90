@@ -289,7 +289,6 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       DO ig=gstart,ngm
          vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*gg(ig))
       END DO
-      DEALLOCATE (rhotmp)
       !
       DO is=1,nsp
 !$omp do
@@ -298,6 +297,8 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          END DO
       END DO
 !$omp end parallel
+
+      DEALLOCATE (rhotmp)
 !
 !     vtemp = v_loc(g) + v_h(g)
 !
