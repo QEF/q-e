@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,6 +11,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   !----------------------------------------------------------------------------
   !
   ! nonlocal (separable pseudopotential) contribution to the stress
+  ! NOTICE: sum of partial results over procs is performed in calling routine
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
@@ -38,7 +39,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   REAL(DP) :: sigmanlc(3,3), gk(3,npw)
   !
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm ) 
-  
   !
   IF ( gamma_only ) THEN
      !
@@ -69,8 +69,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        INTEGER                       :: na, np, ibnd, ipol, jpol, l, i, &
                                         ikb, jkb, ih, jh, ijkb0, ibnd_loc, &
                                         nproc, mype, nbnd_loc, nbnd_begin, &
-                                        nbnd_max, icur_blk, icyc, ibnd_begin, &
-                                        nbands
+                                        icur_blk, icyc
        INTEGER, EXTERNAL :: ldim_block, lind_block, gind_block
        REAL(DP)                 :: fac, xyz(3,3), q, evps, ddot
        REAL(DP), ALLOCATABLE    :: qm1(:)
@@ -87,16 +86,11 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           mype    = becp%mype
           nbnd_loc   = becp%nbnd_loc
           nbnd_begin = becp%ibnd_begin
-          nbnd_max   = SIZE(becp%r,2)
-          nbands = nbnd_loc
-          
           IF( ( nbnd_begin + nbnd_loc - 1 ) > nbnd ) nbnd_loc = nbnd - nbnd_begin + 1
        ELSE
           nproc = 1
           nbnd_loc = nbnd
           nbnd_begin = 1
-          nbnd_max = SIZE(becp%r,2)
-          nbands = nbnd 
        END IF
 
        IF ( lsda ) current_spin = isk(ik)
@@ -115,21 +109,13 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           END IF
        END DO
        !
-       ! ... diagonal contribution
+       ! ... diagonal contribution - if the result from "calbec" are not 
+       ! ... distributed, must be calculated on a single processor
        !
        evps = 0.D0
+       IF ( nproc == 1 .AND. me_pool /= root_pool ) GO TO 100
        !
-            
-             
-             
-
-
- 
-       
-       IF ( me_pool /= root_pool ) GO TO 100
- 
-          
-       DO ibnd_loc = 1, nbands
+       DO ibnd_loc = 1, nbnd_loc
           ibnd = ibnd_loc + becp%ibnd_begin - 1 
           fac = wg(ibnd,ik)
           ijkb0 = 0
@@ -147,7 +133,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                          ! ... only in the US case there is a contribution 
                          ! ... for jh<>ih
                          ! ... we use here the symmetry in the interchange of 
-                            ! ... ih and jh
+                         ! ... ih and jh
                          !
                          DO jh = ( ih + 1 ), nh(np)
                             jkb = ijkb0 + jh
@@ -163,13 +149,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              END DO
           END DO
        END DO
-       
-          
-      
+       !
 100    CONTINUE
-      
-
-
        !
        ! ... non diagonal contribution - derivative of the bessel function
        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -177,14 +158,11 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        CALL gen_us_dj( ik, dvkb )
        !
-       ibnd_begin = becp%ibnd_begin 
-       
        DO icyc = 0, nproc -1
-          
-          
-          DO ibnd_loc = 1, nbands
-             
-             ibnd = ibnd_loc + ibnd_begin - 1 
+          !
+          DO ibnd_loc = 1, nbnd_loc
+             !  
+             ibnd = ibnd_loc + becp%ibnd_begin - 1 
              work2(:) = (0.D0,0.D0)
              ijkb0 = 0
              DO np = 1, ntyp
@@ -229,12 +207,11 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                 END DO
              END DO
           END DO
-          IF(nproc>1)then
-             call mp_circular_shift_left(becp%r, icyc, becp%comm)
-             call mp_circular_shift_left(ibnd_begin, icyc, becp%comm)
+          IF ( nproc > 1 ) THEN
+             CALL mp_circular_shift_left(becp%r, icyc, becp%comm)
+             CALL mp_circular_shift_left(becp%ibnd_begin, icyc, becp%comm)
           END IF
        END DO
-       
        !
        ! ... non diagonal contribution - derivative of the spherical harmonics
        ! ... (no contribution from l=0)
@@ -244,78 +221,62 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        DO ipol = 1, 3
           CALL gen_us_dy( ik, xyz(1,ipol), dvkb )
-             icur_blk = mype
-             ibnd_begin = becp%ibnd_begin 
-             DO icyc = 0, nproc -1
+          icur_blk = mype
                 
+          DO icyc = 0, nproc -1
                 
-                
-                
-                
-                
-                
-                
-                DO ibnd_loc = 1, nbands
-                   ibnd = ibnd_loc + ibnd_begin - 1 
-                   work2(:) = (0.D0,0.D0)
-                   ijkb0 = 0
-                   DO np = 1, ntyp
-                      DO na = 1, nat
-                         IF ( ityp(na) == np ) THEN
-                            DO ih = 1, nh(np)
-                               ikb = ijkb0 + ih
-                               IF ( .NOT. ( upf(np)%tvanp .OR. newpseudo(np) ) ) THEN
-                                  ps = becp%r(ikb,ibnd_loc) * &
-                                          ( deeq(ih,ih,na,current_spin) - &
-                                          et(ibnd,ik) * qq(ih,ih,np ) )
-                               ELSE 
-                                  !
-                                  ! ... in the US case there is a contribution 
-                                  ! ... also for jh<>ih
-                                  !
-                                  ps = (0.D0,0.D0)
-                                  DO jh = 1, nh(np)
-                                     jkb = ijkb0 + jh
-                                     ps = ps + becp%r(jkb,ibnd_loc) * &
-                                          ( deeq(ih,jh,na,current_spin) - &
-                                          et(ibnd,ik) * qq(ih,jh,np) )
-                                  END DO
-                               END IF
-                               CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
-                            END DO
-                            ijkb0 = ijkb0 + nh(np)
-                         END IF
-                      END DO
-                   END DO
-                   !
-                   ! ... a factor 2 accounts for the other half of the G-vector sphere
-                   !
-                   DO jpol = 1, ipol
-                      DO i = 1, npw
-                         work1(i) = evc(i,ibnd) * gk(jpol,i)
-                      END DO
-                      sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                           4.D0 * wg(ibnd,ik) * &
-                           ddot( 2 * npw, work1, 1, work2, 1 )
+             DO ibnd_loc = 1, nbnd_loc
+                ibnd = ibnd_loc + becp%ibnd_begin - 1 
+                work2(:) = (0.D0,0.D0)
+                ijkb0 = 0
+                DO np = 1, ntyp
+                   DO na = 1, nat
+                      IF ( ityp(na) == np ) THEN
+                         DO ih = 1, nh(np)
+                            ikb = ijkb0 + ih
+                            IF ( .NOT. ( upf(np)%tvanp .OR. newpseudo(np) ) ) THEN
+                               ps = becp%r(ikb,ibnd_loc) * &
+                                       ( deeq(ih,ih,na,current_spin) - &
+                                       et(ibnd,ik) * qq(ih,ih,np ) )
+                            ELSE 
+                               !
+                               ! ... in the US case there is a contribution 
+                               ! ... also for jh<>ih
+                               !
+                               ps = (0.D0,0.D0)
+                               DO jh = 1, nh(np)
+                                  jkb = ijkb0 + jh
+                                  ps = ps + becp%r(jkb,ibnd_loc) * &
+                                       ( deeq(ih,jh,na,current_spin) - &
+                                       et(ibnd,ik) * qq(ih,jh,np) )
+                               END DO
+                            END IF
+                            CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
+                         END DO
+                         ijkb0 = ijkb0 + nh(np)
+                      END IF
                    END DO
                 END DO
+                !
+                ! ... a factor 2 accounts for the other half of the G-vector sphere
+                !
+                DO jpol = 1, ipol
+                   DO i = 1, npw
+                      work1(i) = evc(i,ibnd) * gk(jpol,i)
+                   END DO
+                   sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
+                        4.D0 * wg(ibnd,ik) * &
+                        ddot( 2 * npw, work1, 1, work2, 1 )
+                END DO
+             END DO
 
+             IF ( nproc > 1 ) THEN
+                CALL mp_circular_shift_left(becp%r, icyc, becp%comm)
+                CALL mp_circular_shift_left(becp%ibnd_begin, icyc, becp%comm)
+             END IF
 
-                if(nproc>1)then
-                   call mp_circular_shift_left(becp%r, icyc, becp%comm)
-                   call mp_circular_shift_left(ibnd_begin, icyc, becp%comm)
-                end if
-                
-
-             ENDDO
+          ENDDO
        END DO
-       
-
-
-
-
-
-
 
 10     CONTINUE
        !
@@ -640,7 +601,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                    sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
                                       2.D0 * wg(ibnd,ik) * & 
                                       ddot( 2 * npw, work1, 1, work2, 1 )
-               END IF
+                END IF
              END DO
           END DO
        END DO
