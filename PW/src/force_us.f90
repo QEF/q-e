@@ -76,6 +76,11 @@ SUBROUTINE force_us( forcenl )
        INTEGER       :: ik, ipol, ibnd, ibnd_loc, ig, ih, jh, na, nt, ikb, jkb, ijkb0
        ! counters
        !
+       ! ... Important notice about parallelization over the band group of processors:
+       ! ... 1) internally, "calbec" parallelises on plane waves over the band group
+       ! ... 2) the results of "calbec" are distributed across processors of the band
+       ! ...    group: the band index of becp, rdbecp is distributed
+       ! ... 3) the band group is subsequently used to parallelize over bands
        !
        forcenl(:,:) = 0.D0
        !
@@ -86,7 +91,7 @@ SUBROUTINE force_us( forcenl )
        !   
        IF ( nks > 1 ) REWIND iunigk
        !
-       ! ... the forces are a sum over the K points and the bands
+       ! ... the forces are a sum over the K points and over the bands
        !
        DO ik = 1, nks
           IF ( lsda ) current_spin = isk(ik)
@@ -113,6 +118,8 @@ SUBROUTINE force_us( forcenl )
              CALL calbec ( npw, vkb1, evc, rdbecp(ipol) )
              !
           END DO
+          !
+          ! ... from now on, sums over bands are parallelized over the band group
           !
           ijkb0 = 0
           DO nt = 1, ntyp
@@ -161,14 +168,18 @@ SUBROUTINE force_us( forcenl )
        !
        IF( becp%comm /= mp_get_comm_null() ) CALL mp_sum( forcenl, becp%comm )
        !
+       DEALLOCATE( vkb1 )
+       DO ipol = 1, 3
+          CALL deallocate_bec_type ( rdbecp(ipol) )   
+       END DO
+       !
        ! ... The total D matrix depends on the ionic position via the
        ! ... augmentation part \int V_eff Q dr, the term deriving from the 
        ! ... derivative of Q is added in the routine addusforce
        !
        CALL addusforce( forcenl )
        !
-       !
-       ! ... collect contributions across pools
+       ! ... collect contributions across pools (sum over k-points)
        !
        CALL mp_sum( forcenl, inter_pool_comm )
        !
@@ -176,11 +187,6 @@ SUBROUTINE force_us( forcenl )
        ! ... BZ we have to symmetrize the forces
        !
        CALL symvector ( nat, forcenl )
-       !
-       DEALLOCATE( vkb1 )
-       DO ipol = 1, 3
-          CALL deallocate_bec_type ( rdbecp(ipol) )   
-       END DO
        !
        RETURN
        !
