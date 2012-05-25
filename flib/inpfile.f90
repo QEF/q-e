@@ -130,6 +130,37 @@ END SUBROUTINE get_arg_npool
 !
 !----------------------------------------------------------------------------
 !
+SUBROUTINE get_arg_npot( npot )
+   !
+   IMPLICIT NONE
+   !
+   INTEGER :: npot
+   !
+   INTEGER :: nargs, iiarg
+   CHARACTER(LEN=10) :: np
+   INTEGER :: iargc
+   !
+   npot = 1
+   nargs = iargc()
+   !
+   DO iiarg = 1, ( nargs - 1 )
+      !
+      CALL getarg( iiarg, np )
+      !
+      IF ( TRIM( np ) == '-npot' .OR. TRIM( np ) == '-npots' ) THEN
+         !
+         CALL getarg( ( iiarg + 1 ), np )
+         READ( np, * ) npot
+         !
+      END IF
+      !
+   END DO
+   !
+   RETURN
+END SUBROUTINE get_arg_npot
+!
+!----------------------------------------------------------------------------
+!
 SUBROUTINE get_arg_nimage( nimage )
    !
    IMPLICIT NONE
