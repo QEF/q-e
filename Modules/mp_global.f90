@@ -34,6 +34,16 @@ MODULE mp_global
   INTEGER :: inter_image_comm = 0  ! inter image communicator
   INTEGER :: intra_image_comm = 0  ! intra image communicator  
   !
+  ! ... Pot groups (processors within a cooking-pot)
+  !
+  INTEGER :: npot       = 1  ! number of pots
+  INTEGER :: me_pot     = 0  ! index of the processor within a pot
+  INTEGER :: root_pot   = 0  ! index of the root processor within a pot
+  INTEGER :: my_pot_id  = 0  ! index of my pot
+  INTEGER :: nproc_pot  = 1  ! number of processors within a pot
+  INTEGER :: inter_pot_comm  = 0  ! inter pot communicator
+  INTEGER :: intra_pot_comm  = 0  ! intra pot communicator
+  !
   ! ... Pool groups (processors within a pool of k-points)
   !
   INTEGER :: npool       = 1  ! number of "k-points"-pools
@@ -142,6 +152,13 @@ CONTAINS
        nimage = MAX( nimage, 1 )
        nimage = MIN( nimage, nproc )
        !
+       ! ... How many parallel pots ?
+       !
+       CALL get_arg_npot( npot )
+       !
+       npot = MAX( npot, 1 )
+       npot = MIN( npot, nproc )
+       !
        ! ... How many band groups?
        !
        CALL get_arg_nbgrp( nbgrp )
@@ -178,12 +195,15 @@ CONTAINS
     CALL mp_bcast( nbgrp, meta_ionode_id )
     CALL mp_bcast( ntask_groups, meta_ionode_id )
     CALL mp_bcast( nproc_ortho_in, meta_ionode_id )
+    CALL mp_bcast( npot, meta_ionode_id )
     !
     ! ... initialize images, band, k-point, ortho groups in sequence
     !
     CALL init_images( world_comm )
     !
-    CALL init_pools( intra_image_comm )
+    CALL init_pots(intra_image_comm)
+    !
+    CALL init_pools( intra_pot_comm )
     !
     CALL init_bands( intra_pool_comm )
     !
@@ -225,6 +245,12 @@ CONTAINS
     inter_bgrp_comm  = group_i
     intra_bgrp_comm  = group_i
     ortho_comm       = group_i
+    nproc_pot        = nproc_i
+    my_pot_id        = 0
+    me_pot           = mpime
+    root_pot         = root
+    inter_pot_comm   = group_i
+    intra_pot_comm   = group_i
     !
     RETURN
     !
@@ -487,6 +513,61 @@ CONTAINS
     RETURN
     !
   END SUBROUTINE init_bands
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE init_pots( parent_comm )
+    !---------------------------------------------------------------------------
+    !
+    ! ... This routine divides the parent group into pots
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: parent_comm
+    !
+    INTEGER :: ierr = 0
+    INTEGER :: parent_nproc = 1
+    INTEGER :: parent_mype  = 0
+    !
+#if defined (__MPI)
+    !
+    parent_nproc = mp_size( parent_comm )
+    parent_mype  = mp_rank( parent_comm )
+    !
+    ! ... number of cpus per pot (they are created inside each parent group)
+    !
+    nproc_pot = parent_nproc / npot
+    !
+    IF ( MOD( parent_nproc, npot ) /= 0 ) &
+         CALL errore( 'init_pots', 'invalid number of pots, parent_nproc /= nproc_pot * npot', 1 )  
+    !
+    ! ... my_pot_id  =  pot index for this processor    ( 0 : npot - 1 )
+    ! ... me_pot     =  processor index within the pot  ( 0 : nproc_pot - 1 )
+    !
+    my_pot_id = parent_mype / nproc_pot    
+    me_pot    = MOD( parent_mype, nproc_pot )
+    !
+    CALL mp_barrier( parent_comm )
+    !
+    ! ... the intra_pot_comm communicator is created
+    !
+    CALL MPI_COMM_SPLIT( parent_comm, my_pot_id, parent_mype, intra_pot_comm, ierr )
+    !
+    IF ( ierr /= 0 ) &
+       CALL errore( 'init_pots', 'intra pot communicator initialization', ABS(ierr) )
+    !
+    CALL mp_barrier( parent_comm )
+    !
+    ! ... the inter_pot_comm communicator is created
+    !
+    CALL MPI_COMM_SPLIT( parent_comm, me_pot, parent_mype, inter_pot_comm, ierr )
+    !
+    IF ( ierr /= 0 ) &
+       CALL errore( 'init_pots', 'inter pot communicator initialization', ABS(ierr) )
+    !
+#endif
+    !
+    RETURN
+  END SUBROUTINE init_pots
   !
   !----------------------------------------------------------------------------
   SUBROUTINE init_pools( parent_comm )
