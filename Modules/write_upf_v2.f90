@@ -556,22 +556,6 @@ CONTAINS
    CALL iotk_write_dat(u, 'PP_AE_VLOC', upf%paw%ae_vloc,columns=4)
    !
    CALL iotk_write_end(u, 'PP_PAW')
-   !CORE DATA FOR GIPAW
-   !EMINE
-   CALL iotk_write_attr(attr, 'gipaw_data_format', upf%gipaw_data_format, first=.true.)
-   CALL iotk_write_begin(u, 'PP_GIPAW', attr=attr)
-   CALL iotk_write_attr(attr, 'number_of_core_orbitals', upf%gipaw_ncore_orbitals, first=.true.)
-   CALL iotk_write_begin(u, 'PP_GIPAW_CORE_ORBITALS', attr=attr)
-   DO nb = 1,upf%gipaw_ncore_orbitals
-      CALL iotk_write_attr(attr, 'index', nb, first=.true.)
-      CALL iotk_write_attr(attr, 'label', upf%gipaw_core_orbital_el(nb))
-      CALL iotk_write_attr(attr, 'n',     upf%gipaw_core_orbital_n(nb))
-      CALL iotk_write_attr(attr, 'l',     upf%gipaw_core_orbital_l(nb))
-      CALL iotk_write_dat(u, 'PP_GIPAW_CORE_ORBITAL'//iotk_index(nb), &
-           upf%gipaw_core_orbital(:,nb), columns=4, attr=attr)
-   ENDDO
-   CALL iotk_write_end(u, 'PP_GIPAW_CORE_ORBITALS')
-   CALL iotk_write_end(u, 'PP_GIPAW')
    !
    RETURN
  END SUBROUTINE write_paw
@@ -585,7 +569,7 @@ CONTAINS
    CHARACTER(len=iotk_attlenx) :: attr
    !
    INTEGER :: nb
-   IF (.not. upf%has_gipaw .or. upf%paw_as_gipaw) RETURN
+   IF (.not. upf%has_gipaw) RETURN
 
    CALL iotk_write_attr(attr, 'gipaw_data_format', upf%gipaw_data_format, first=.true.)
    CALL iotk_write_begin(u, 'PP_GIPAW', attr=attr)
@@ -601,6 +585,12 @@ CONTAINS
            upf%gipaw_core_orbital(:,nb), columns=4, attr=attr)
    ENDDO
    CALL iotk_write_end(u, 'PP_GIPAW_CORE_ORBITALS')
+   !
+   ! Only write core orbitals in the PAW as GIPAW case
+   IF (upf%paw_as_gipaw) THEN
+      CALL iotk_write_end(u, 'PP_GIPAW')
+      RETURN
+   ENDIF
    !
    ! Write valence all-electron and pseudo orbitals
    CALL iotk_write_attr(attr, 'number_of_valence_orbitals', upf%gipaw_wfs_nchannels, first=.true.)

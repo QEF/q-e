@@ -648,7 +648,10 @@ subroutine ld1_readin
           'Latter correction not implemented in PAW' ,latt)
      call errore('ld1_readin', &
           'PAW dataset generation and test is experimental' ,-1)
-     if(use_paw_as_gipaw)write(*,*)"PAW DATA WILL BE READ FOR GIPAW CALCULATION"
+     if(use_paw_as_gipaw) then 
+        write(stdout,'(5x,a)') "PAW data will be used for GIPAW calculation"
+        lgipaw_reconstruction = .true. ! this must always be true in this case
+     endif
   endif
 
   return

@@ -626,6 +626,23 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	    }
 	}
 
+
+        var use_paw_as_gipaw -type LOGICAL {
+            default { .false. }
+            info {
+               When generating a PAW dataset, seeting this option to .true. will
+               save the core all-electron wavefunctions to the UPF file.
+               The GIPAW reconstruction to be performed using the PAW data and
+               projectors for the valence wavefunctions.
+
+               In the default case, the GIPAW valence wavefunction and projectors
+               are independent from the PAW ones and must then specificed as explained
+               above in lgipaw_reconstruction.
+
+               Setting this to .true. always implies lgipaw_reconstruction = .true.
+            }
+        }
+
 	var author  -type CHARACTER {
 	    info { Name of the author. }
             default { 'anonymous' }
