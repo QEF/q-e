@@ -270,7 +270,8 @@ MODULE pw_restart
       ngk_g = 0
       ngk_g(iks:ike) = ngk(1:nks)
       !
-      CALL mp_sum( ngk_g, intra_image_comm )
+      CALL mp_sum( ngk_g, inter_pool_comm)
+      CALL mp_sum( ngk_g, intra_pool_comm)
       !
       ngk_g = ngk_g / nbgrp
       !
@@ -278,7 +279,8 @@ MODULE pw_restart
       !
       npw_g = MAXVAL( igk_l2g(:,:) )
       !
-      CALL mp_max( npw_g, intra_image_comm )
+      CALL mp_max( npw_g, inter_pool_comm )
+      CALL mp_max( npw_g, intra_pool_comm )
       !
       ! ... compute the maximum number of G vector among all k points
       !
@@ -758,7 +760,8 @@ MODULE pw_restart
              !
           END IF
           !
-          CALL mp_sum( itmp, intra_image_comm )
+          CALL mp_sum( itmp, inter_pool_comm )
+          CALL mp_sum( itmp, intra_pool_comm )
           !
           ngg = 0
           !
@@ -2974,14 +2977,17 @@ MODULE pw_restart
       ngk_g = 0
       ngk_g(iks:ike) = ngk(1:nks)
       !
-      CALL mp_sum( ngk_g, intra_image_comm )
+      CALL mp_sum( ngk_g, inter_pool_comm )
+      CALL mp_sum( ngk_g, intra_pool_comm )
       ngk_g = ngk_g / nbgrp
       !
       ! ... compute the Maximum G vector index among all G+k an processors
       !
       npw_g = MAXVAL( igk_l2g(:,:) )
       !
-      CALL mp_max( npw_g, intra_image_comm )
+      CALL mp_max( npw_g, inter_pool_comm )
+      CALL mp_max( npw_g, intra_pool_comm )
+
       !
       ! ... compute the Maximum number of G vector among all k points
       !
