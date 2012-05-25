@@ -210,6 +210,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           IF ( nproc > 1 ) THEN
              CALL mp_circular_shift_left(becp%r, icyc, becp%comm)
              CALL mp_circular_shift_left(becp%ibnd_begin, icyc, becp%comm)
+             CALL mp_circular_shift_left(nbnd_loc, icyc, becp%comm)
           END IF
        END DO
        !
@@ -273,6 +274,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              IF ( nproc > 1 ) THEN
                 CALL mp_circular_shift_left(becp%r, icyc, becp%comm)
                 CALL mp_circular_shift_left(becp%ibnd_begin, icyc, becp%comm)
+                CALL mp_circular_shift_left(nbnd_loc, icyc, becp%comm)
              END IF
 
           ENDDO

@@ -1,8 +1,14 @@
+New in 5.0.1 version
 
    * vdW-DF functional extended to CP (experimental)
    * PWscf: Noncollinear/spin-orbit Berry Phases (experimental)
-   * Misc compilation problems with old compilers fixed
    * New functionals: SOGGA, M06L (courtesy of Yves Ferro)
+
+Fixed in 5.0.1 version
+
+   * Stress calculation in parallel execution was wrong in the
+     Gamma-only case when ScaLAPACK was present (v.5.0 only) 
+   * Misc compilation problems with old compilers 
 
 New in 5.0 version
 
