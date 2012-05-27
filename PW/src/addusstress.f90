@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,6 +11,8 @@ subroutine addusstres (sigmanlc)
   !
   !   This routine computes the part of the atomic force which is due
   !   to the dependence of the Q function on the atomic position.
+  !   Adds contribution to input sigmanlc, does not sum contributions
+  !   from various processors (sum is performed by calling routine)
   !
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp
