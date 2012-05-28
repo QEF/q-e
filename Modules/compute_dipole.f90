@@ -33,7 +33,7 @@ SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
   ! ... Local variables
   !
   REAL(DP) :: r(3), rhoir
-  INTEGER  :: i, j, k, ip, ir, index, index0
+  INTEGER  :: i, j, k, ip, ir, ir_end, index, index0
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
   !
   ! ... Initialization
@@ -53,7 +53,13 @@ SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
   END DO
 #endif
   !
-  DO ir = 1, nnr
+#if defined (__MPI)
+  ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
+#else
+  ir_end = nnr
+#endif
+  !
+  DO ir = 1, ir_end 
      !
      ! ... three dimensional indexes
      !
@@ -72,7 +78,7 @@ SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
      !
      r(:) = r(:) - r0(:)
      !
-     ! ... minimum image convenction
+     ! ... minimum image convention
      !
      CALL cryst_to_cart( 1, r, bg, -1 )
      !

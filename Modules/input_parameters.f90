@@ -530,7 +530,7 @@ MODULE input_parameters
         ! type of switching functions used in the solvation models
         !    0: original Fattebert-Gygi
         !    1: ultrasoft dielectric function as defined in Andreussi et al.
-        REAL(DP) :: rhomax = 0.001
+        REAL(DP) :: rhomax = 0.005
         ! first parameter of the sw function, roughly corresponding 
         ! to the density threshold of the solvation model
         REAL(DP) :: rhomin = 0.0001

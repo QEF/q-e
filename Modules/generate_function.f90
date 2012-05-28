@@ -20,7 +20,7 @@ MODULE generate_function
  
 CONTAINS
 !----------------------------------------------------------------------
-      SUBROUTINE generate_gaussian( nrxx, charge, spread, pos, rho )
+      SUBROUTINE generate_gaussian( nnr, charge, spread, pos, rho )
 !----------------------------------------------------------------------
       !
       USE kinds,            ONLY : DP
@@ -33,14 +33,14 @@ CONTAINS
       !
       ! ... Declares variables
       !
-      INTEGER, INTENT(IN)       :: nrxx
+      INTEGER, INTENT(IN)       :: nnr
       REAL( DP ), INTENT(IN)    :: charge, spread
       REAL( DP ), INTENT(IN)    :: pos( 3 )
-      REAL( DP ), INTENT(INOUT) :: rho( nrxx )
+      REAL( DP ), INTENT(INOUT) :: rho( nnr )
       !
       ! ... Local variables
       !
-      INTEGER                   :: i, j, k, ir, ip
+      INTEGER                   :: i, j, k, ir, ir_end, ip
       INTEGER                   :: index, index0
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
@@ -58,14 +58,20 @@ CONTAINS
       DO i = 1, me_bgrp
         index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
       END DO
-#endif
+#endif  
+      !
+#if defined (__MPI)
+      ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
+#else
+      ir_end = nnr
+#endif  
       !
       scale = charge / ( sqrtpi * spread )**3
       spr2 = ( spread / alat )**2
-      ALLOCATE( rholocal( nrxx ) )
+      ALLOCATE( rholocal( nnr ) )
       rholocal = 0.D0
       !
-      DO ir = 1, nrxx
+      DO ir = 1, nnr
          !
          ! ... three dimensional indexes
          !
@@ -105,7 +111,7 @@ CONTAINS
       END SUBROUTINE generate_gaussian
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
-      SUBROUTINE generate_gradgaussian( nrxx, charge, spread, pos, gradrho )
+      SUBROUTINE generate_gradgaussian( nnr, charge, spread, pos, gradrho )
 !----------------------------------------------------------------------
       !
       USE kinds,            ONLY: DP
@@ -118,14 +124,14 @@ CONTAINS
       !
       ! ... Declares variables
       !
-      INTEGER, INTENT(IN)       :: nrxx
+      INTEGER, INTENT(IN)       :: nnr
       REAL( DP ), INTENT(IN)    :: charge, spread
       REAL( DP ), INTENT(IN)    :: pos( 3 )
-      REAL( DP ), INTENT(INOUT) :: gradrho( 3, nrxx )
+      REAL( DP ), INTENT(INOUT) :: gradrho( 3, nnr )
       !
       ! ... Local variables
       !
-      INTEGER                   :: i, j, k, ir, ip
+      INTEGER                   :: i, j, k, ir, ir_end, ip
       INTEGER                   :: index, index0
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
@@ -145,12 +151,18 @@ CONTAINS
       END DO
 #endif
       !
+#if defined (__MPI)
+      ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
+#else
+      ir_end = nnr
+#endif  
+      !
       scale = 2.d0 * charge / sqrtpi**3 / spread**5
       spr2 = ( spread / alat )**2
-      ALLOCATE( gradrholocal( 3, nrxx ) )
+      ALLOCATE( gradrholocal( 3, nnr ) )
       gradrholocal = 0.D0
       !
-      DO ir = 1, nrxx
+      DO ir = 1, ir_end
          !
          ! ... three dimensional indexes
          !
@@ -190,7 +202,7 @@ CONTAINS
       END SUBROUTINE generate_gradgaussian
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
-      SUBROUTINE generate_exponential( nrxx, spread, pos, rho )
+      SUBROUTINE generate_exponential( nnr, spread, pos, rho )
 !----------------------------------------------------------------------
       !
       USE kinds,            ONLY : DP
@@ -202,14 +214,14 @@ CONTAINS
       !
       ! ... Declares variables
       !
-      INTEGER, INTENT(IN)       :: nrxx
+      INTEGER, INTENT(IN)       :: nnr
       REAL( DP ), INTENT(IN)    :: spread
       REAL( DP ), INTENT(IN)    :: pos( 3 )
-      REAL( DP ), INTENT(INOUT) :: rho( nrxx )
+      REAL( DP ), INTENT(INOUT) :: rho( nnr )
       !
       ! ... Local variables
       !
-      INTEGER                   :: i, j, k, ir, ip
+      INTEGER                   :: i, j, k, ir, ir_end, ip
       INTEGER                   :: index, index0
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
@@ -230,10 +242,16 @@ CONTAINS
       END DO
 #endif
       !
-      ALLOCATE( rholocal( nrxx ) )
+#if defined (__MPI)
+      ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
+#else
+      ir_end = nnr
+#endif
+      !
+      ALLOCATE( rholocal( nnr ) )
       rholocal = 0.D0
       !
-      DO ir = 1, nrxx
+      DO ir = 1, ir_end
          !
          ! ... three dimensional indexes
          !
@@ -279,7 +297,7 @@ CONTAINS
       END SUBROUTINE generate_exponential
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
-      SUBROUTINE generate_gradexponential( nrxx, spread, pos, gradrho )
+      SUBROUTINE generate_gradexponential( nnr, spread, pos, gradrho )
 !----------------------------------------------------------------------
       !
       USE kinds,            ONLY : DP
@@ -291,14 +309,14 @@ CONTAINS
       !
       ! ... Declares variables
       !
-      INTEGER, INTENT(IN)       :: nrxx
+      INTEGER, INTENT(IN)       :: nnr
       REAL( DP ), INTENT(IN)    :: spread
       REAL( DP ), INTENT(IN)    :: pos( 3 )
-      REAL( DP ), INTENT(INOUT) :: gradrho( 3, nrxx )
+      REAL( DP ), INTENT(INOUT) :: gradrho( 3, nnr )
       !
       ! ... Local variables
       !
-      INTEGER                   :: i, j, k, ir, ip
+      INTEGER                   :: i, j, k, ir, ir_end, ip
       INTEGER                   :: index, index0
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
@@ -319,10 +337,16 @@ CONTAINS
       END DO
 #endif
       !
-      ALLOCATE( gradrholocal( 3, nrxx ) )
+#if defined (__MPI)
+      ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
+#else
+      ir_end = nnr
+#endif
+      !
+      ALLOCATE( gradrholocal( 3, nnr ) )
       gradrholocal = 0.D0
       !
-      DO ir = 1, nrxx
+      DO ir = 1, ir_end
          !
          ! ... three dimensional indexes
          !
@@ -366,19 +390,19 @@ CONTAINS
       END SUBROUTINE generate_gradexponential
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
-   SUBROUTINE generate_axis( nrxx, icor, pos, axis )
+   SUBROUTINE generate_axis( nnr, icor, pos, axis )
 !----------------------------------------------------------------------
    USE kinds,            ONLY : DP
    USE cell_base,        ONLY : at, bg, alat
    USE fft_base,         ONLY : dfftp
    USE mp_global,        ONLY : me_bgrp, intra_bgrp_comm
   !
-  INTEGER, INTENT(IN) :: nrxx
+  INTEGER, INTENT(IN) :: nnr
   INTEGER, INTENT(IN) :: icor
   REAL(DP), INTENT(IN) :: pos(3)
   REAL(DP), INTENT(OUT) :: axis( dfftp%nnr )
   !
-  INTEGER  :: i, j, k, ir, ip, index, index0
+  INTEGER  :: i, j, k, ir, ir_end, ip, index, index0
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
   REAL(DP) :: r(3), s(3)
   !
@@ -394,7 +418,13 @@ CONTAINS
   END DO
 #endif
   !
-  DO ir = 1, dfftp%nnr
+#if defined (__MPI)
+  ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
+#else
+  ir_end = nnr
+#endif
+  !
+  DO ir = 1, ir_end
      !
      ! ... three dimensional indexes
      !
@@ -431,18 +461,18 @@ CONTAINS
   END SUBROUTINE generate_axis 
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
-   SUBROUTINE generate_distance( nrxx, pos, distance )
+   SUBROUTINE generate_distance( nnr, pos, distance )
 !----------------------------------------------------------------------
    USE kinds,            ONLY : DP
    USE cell_base,        ONLY : at, bg, alat
    USE fft_base,         ONLY : dfftp
    USE mp_global,        ONLY : me_bgrp, intra_bgrp_comm
   !
-  INTEGER, INTENT(IN) :: nrxx
+  INTEGER, INTENT(IN) :: nnr
   REAL(DP), INTENT(IN) :: pos(3)
   REAL(DP), INTENT(OUT) :: distance( 3, dfftp%nnr )
   !
-  INTEGER  :: i, j, k, ir, ip, index, index0
+  INTEGER  :: i, j, k, ir, ir_end, ip, index, index0
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
   REAL(DP) :: r(3), s(3)
   !
@@ -458,7 +488,13 @@ CONTAINS
   END DO
 #endif
   !
-  DO ir = 1, dfftp%nnr
+#if defined (__MPI)
+  ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
+#else
+  ir_end = nnr
+#endif
+  !
+  DO ir = 1, ir_end
      !
      ! ... three dimensional indexes
      !

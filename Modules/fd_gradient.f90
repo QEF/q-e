@@ -41,7 +41,7 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
   REAL( DP ), DIMENSION( nnr ), INTENT(IN) :: f
   REAL( DP ), DIMENSION( 3, nnr ), INTENT(OUT) :: grad
   
-  INTEGER :: index, index0, i, ir, ipol, in
+  INTEGER :: index, index0, i, ir, ir_end, ipol, in
   INTEGER :: ix(-nfdpoint:nfdpoint),iy(-nfdpoint:nfdpoint),iz(-nfdpoint:nfdpoint)
   INTEGER :: ixc, iyc, izc, ixp, ixm, iyp, iym, izp, izm
   REAL( DP ), DIMENSION( :, : ), ALLOCATABLE :: gradtmp
@@ -59,7 +59,13 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
   END DO
 #endif
   !
-  DO ir = 1, nnr
+#if defined (__MPI)
+  ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
+#else
+  ir_end = nnr
+#endif
+  !
+  DO ir = 1, ir_end
     !   
     index = index0 + ir - 1
     iz(0) = index / (dfftp%nr1x*dfftp%nr2x)
