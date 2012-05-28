@@ -71,7 +71,7 @@ CONTAINS
       ALLOCATE( rholocal( nnr ) )
       rholocal = 0.D0
       !
-      DO ir = 1, nnr
+      DO ir = 1, ir_end
          !
          ! ... three dimensional indexes
          !
