@@ -600,7 +600,7 @@ SUBROUTINE external_gradient( a, grada )
   !
   IMPLICIT NONE
   !
-  REAL, INTENT(IN)         :: a( dfftp%nnr )
+  REAL( DP ), INTENT(IN)   :: a( dfftp%nnr )
   REAL( DP ), INTENT(OUT)  :: grada( 3, dfftp%nnr )
 
 ! A in real space, grad(A) in real space
@@ -622,7 +622,7 @@ SUBROUTINE external_hessian( a, grada, hessa )
   !
   IMPLICIT NONE
   !
-  REAL, INTENT(IN)         :: a( dfftp%nnr )
+  REAL( DP ), INTENT(IN)   :: a( dfftp%nnr )
   REAL( DP ), INTENT(OUT)  :: grada( 3, dfftp%nnr )
   REAL( DP ), INTENT(OUT)  :: hessa( 3, 3, dfftp%nnr )
 
