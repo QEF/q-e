@@ -41,14 +41,14 @@ FUNCTION open_dfile_directory(basename, prefix)
   INTEGER :: open_dfile_directory
   INTEGER :: ios
   CHARACTER(len=256) :: filename
-!  LOGICAL :: exst
+  LOGICAL :: exst
   !
   filename = dfile_directory_file(basename, prefix)
-  !print*, "opening dir:", TRIM(filename)
+! print*, "opening dir:", TRIM(filename)
   open_dfile_directory = find_free_unit()
   !
-!  INQUIRE( FILE = TRIM(filename), EXIST = exst )
-  !IF(.not.exst) print*, "does not exist: >",TRIM(filename),"<"
+  INQUIRE( FILE = TRIM(filename), EXIST = exst )
+  IF(.not.exst) print*, "does not exist: >",TRIM(filename),"<"
 #ifdef __XLF
   OPEN(UNIT  = open_dfile_directory, &
        ACCESS= 'sequential',           &
@@ -63,6 +63,7 @@ FUNCTION open_dfile_directory(basename, prefix)
 #endif
   !
   IF(ios/=0) CALL errore('open_dfile_directory','Cannot open: '//TRIM(filename),ABS(ios))
+  write(6,*) 'ios=',ios
   !
   RETURN
   !----------------------------------------------------------------------
@@ -226,6 +227,7 @@ SUBROUTINE dfile_get_qlist(xqs, nqs, name, prefix)
   !
   iunit = open_dfile_directory(basename, prefix)
   !
+  rewind(iunit)  
   GET_Q_LOOP : &
   DO iq = 1,nqs
      READ(iunit,*,iostat=ios) xqs(:,iq)
