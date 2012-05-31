@@ -17,6 +17,7 @@ SUBROUTINE q_points_wannier ( )
   USE el_phon, ONLY : wan_index_dyn
   USE dfile_autoname, ONLY : dfile_get_qlist
   USE dfile_star, ONLY : dvscf_star
+  USE io_files, ONLY : prefix
 
   implicit none
 
@@ -42,7 +43,8 @@ SUBROUTINE q_points_wannier ( )
   allocate(wan_index_dyn(nqs))
 
 !  !here read q_points
-  CALL dfile_get_qlist(x_q, nqs, dvscf_star%ext, dvscf_star%dir)
+    
+  CALL dfile_get_qlist(x_q, nqs, dvscf_star%ext, trim(adjustl(dvscf_star%dir))//trim(adjustl(prefix)))
 !  IF (ionode) inquire (file =TRIM(dvscf_dir)//'Q_POINTS.D', exist = exst)
 !  if(.not.exst) call errore('q_points_wannier','Q_POINTS.D not existing in dvscf_dir ',1)
 
