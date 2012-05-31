@@ -9,14 +9,15 @@
 SUBROUTINE q_points_wannier ( )
 !----------========------------------------------
 
-  USE kinds, only : dp
-  USE io_global,  ONLY :  stdout, ionode
-  USE mp_global, ONLY : me_pool, root_pool
-  USE disp,  ONLY : nqmax, nq1, nq2, nq3, x_q, nqs
-  USE output, ONLY : fildyn
-  USE el_phon, ONLY : wan_index_dyn
+  USE kinds,          ONLY : dp
+  USE io_global,      ONLY :  stdout, ionode
+  USE io_files,       ONLY : prefix
+  USE mp_global,      ONLY : me_pool, root_pool
+  USE disp,           ONLY : nqmax, nq1, nq2, nq3, x_q, nqs
+  USE output,         ONLY : fildyn
+  USE el_phon,        ONLY : wan_index_dyn
   USE dfile_autoname, ONLY : dfile_get_qlist
-  USE dfile_star, ONLY : dvscf_star
+  USE dfile_star,     ONLY : dvscf_star
   USE io_files, ONLY : prefix
 
   implicit none
@@ -43,8 +44,7 @@ SUBROUTINE q_points_wannier ( )
   allocate(wan_index_dyn(nqs))
 
 !  !here read q_points
-    
-  CALL dfile_get_qlist(x_q, nqs, dvscf_star%ext, trim(adjustl(dvscf_star%dir))//trim(adjustl(prefix)))
+  CALL dfile_get_qlist(x_q, nqs, dvscf_star%ext, TRIM(dvscf_star%dir)//prefix )
 !  IF (ionode) inquire (file =TRIM(dvscf_dir)//'Q_POINTS.D', exist = exst)
 !  if(.not.exst) call errore('q_points_wannier','Q_POINTS.D not existing in dvscf_dir ',1)
 
