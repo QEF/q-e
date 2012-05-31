@@ -199,9 +199,9 @@ SUBROUTINE chdens (filplot,plot_num)
   !
   IF (plot_num==-1) THEN
      IF (ionode) &
-        CALL read_io_header(filepp (1), title, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, dfftp%nr1, dfftp%nr2, &
-                dfftp%nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
-                idum )
+        CALL read_io_header(filepp (1), title, dfftp%nr1x, dfftp%nr2x, &
+                dfftp%nr3x, dfftp%nr1, dfftp%nr2, dfftp%nr3, nat, ntyp,&
+                ibrav, celldm, at, gcutm, dual, ecutwfc, idum )
      CALL mp_bcast( title, ionode_id )
      CALL mp_bcast( dfftp%nr1x, ionode_id )
      CALL mp_bcast( dfftp%nr2x, ionode_id )
@@ -275,10 +275,12 @@ SUBROUTINE chdens (filplot,plot_num)
      IF (abs(gcutmsa-gcutm)>1.d-8.or.abs(duals-dual)>1.d-8.or.&
          abs(ecuts-ecutwfc)>1.d-8) &
           CALL errore ('chdens', 'incompatible gcutm or dual or ecut', 1)
-     DO i = 1, 6
-        IF (abs( celldm (i)-celldms (i) ) > 1.0d-7 ) CALL errore &
-             ('chdens', 'incompatible celldm', 1)
-     ENDDO
+     IF (ibravs /= 0 ) THEN
+        DO i = 1, 6
+           IF (abs( celldm (i)-celldms (i) ) > 1.0d-7 ) &
+              CALL errore ('chdens', 'incompatible celldm', 1)
+        ENDDO
+     ENDIF
      !
      rhor (:) = rhor (:) + weight (ifile) * rhos (:)
   ENDDO
