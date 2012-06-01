@@ -41,14 +41,14 @@ FUNCTION open_dfile_directory(basename, prefix)
   INTEGER :: open_dfile_directory
   INTEGER :: ios
   CHARACTER(len=256) :: filename
-  LOGICAL :: exst
+!  LOGICAL :: exst
   !
   filename = dfile_directory_file(basename, prefix)
-! print*, "opening dir:", TRIM(filename)
+  !print*, "opening dir:", TRIM(filename)
   open_dfile_directory = find_free_unit()
   !
-  INQUIRE( FILE = TRIM(filename), EXIST = exst )
-  IF(.not.exst) print*, "does not exist: >",TRIM(filename),"<"
+!  INQUIRE( FILE = TRIM(filename), EXIST = exst )
+  !IF(.not.exst) print*, "does not exist: >",TRIM(filename),"<"
 #ifdef __XLF
   OPEN(UNIT  = open_dfile_directory, &
        ACCESS= 'sequential',           &
@@ -63,7 +63,6 @@ FUNCTION open_dfile_directory(basename, prefix)
 #endif
   !
   IF(ios/=0) CALL errore('open_dfile_directory','Cannot open: '//TRIM(filename),ABS(ios))
-  write(6,*) 'ios=',ios
   !
   RETURN
   !----------------------------------------------------------------------
@@ -179,7 +178,7 @@ FUNCTION dfile_name(xq, at, name, prefix, generate, equiv)
   ENDIF
   !
   ! Make up a new name
-  dfile_name = dfile_generate_name(xq, at, basename)
+  dfile_name = TRIM(dfile_generate_name(xq, at, basename))
   !
   ! Append the new name to the list
   iunit = open_dfile_directory(basename, prefix)
@@ -202,8 +201,8 @@ SUBROUTINE dfile_get_qlist(xqs, nqs, name, prefix)
   USE io_global,    ONLY : ionode
   IMPLICIT NONE
   ! input variables:
-  INTEGER,INTENT(in)          :: nqs      ! max number of points
-  REAL(DP),INTENT(out)        :: xqs(3,nqs)! the q point in cartesian axes
+  INTEGER,INTENT(in)          :: nqs        ! max number of points
+  REAL(DP),INTENT(out)        :: xqs(3,nqs) ! the q point in cartesian axes
   CHARACTER(len=*),INTENT(in) :: prefix     ! directory where to operate
   CHARACTER(len=*),INTENT(in) :: name       ! input fildrho
   !
@@ -226,8 +225,8 @@ SUBROUTINE dfile_get_qlist(xqs, nqs, name, prefix)
   ENDIF
   !
   iunit = open_dfile_directory(basename, prefix)
+  REWIND(iunit)
   !
-  rewind(iunit)  
   GET_Q_LOOP : &
   DO iq = 1,nqs
      READ(iunit,*,iostat=ios) xqs(:,iq)
@@ -236,7 +235,9 @@ SUBROUTINE dfile_get_qlist(xqs, nqs, name, prefix)
      ENDIF
   ENDDO &
   GET_Q_LOOP
-
+  !
+  CLOSE(iunit)
+  !
   RETURN
   !----------------------------------------------------------------------
 END SUBROUTINE dfile_get_qlist
@@ -262,6 +263,8 @@ FUNCTION dfile_generate_name(xq, at, name)
   !
   WRITE(dfile_generate_name, '(a,".",a,"_",a,"_",a)') TRIM(name), &
         TRIM(real2frac(aq(1))), TRIM(real2frac(aq(2))), TRIM(real2frac(aq(3)))
+  !
+  dfile_generate_name = TRIM(dfile_generate_name)
   !
   RETURN
   !
