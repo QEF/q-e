@@ -302,8 +302,34 @@ SUBROUTINE phq_readin()
   IF (modenum < 0) CALL errore ('phq_readin', ' Wrong modenum ', 1)
   IF (dek <= 0.d0) CALL errore ( 'phq_readin', ' Wrong dek ', 1)
   !
+  SELECT CASE( trim( electron_phonon ) )
+  CASE( 'simple' )
+     elph=.true.
+     elph_mat=.false.
+     elph_simple=.true. 
+  CASE( 'Wannier' )
+     elph=.true.
+     elph_mat=.true.
+     elph_simple=.false.
+     auxdvscf=trim(fildvscf)
+  CASE( 'interpolated' )
+     elph=.true.
+     elph_mat=.false.
+     elph_simple=.false.
+  CASE DEFAULT
+     elph=.false.
+     elph_mat=.false.
+     elph_simple=.false.
+  END SELECT
+
   epsil = epsil .OR. lraman .OR. elop
-  trans = trans .OR. ldisp
+  
+  if(elph_mat) then
+     trans=.false.
+  else
+     trans = trans .OR. ldisp
+  endif
+   
   !
   ! Set default value for fildrho and fildvscf if they are required
   IF ( (lraman.OR.elop.OR.drho_star%open) .AND. fildrho == ' ') fildrho = 'drho'
@@ -450,26 +476,6 @@ SUBROUTINE phq_readin()
   IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
      CALL errore('phq_readin',&
      'pw.x run with a different number of pools. Use wf_collect=.true.',1)
-
-  SELECT CASE( trim( electron_phonon ) )
-  CASE( 'simple' )
-     elph=.true.
-     elph_mat=.false.
-     elph_simple=.true. 
-  CASE( 'Wannier' )
-     elph=.true.
-     elph_mat=.true.
-     elph_simple=.false.
-     auxdvscf=trim(fildvscf)
-  CASE( 'interpolated' )
-     elph=.true.
-     elph_mat=.false.
-     elph_simple=.false.
-  CASE DEFAULT
-     elph=.false.
-     elph_mat=.false.
-     elph_simple=.false.
-  END SELECT
 
   IF (elph.and.nimage>1) CALL errore('phq_readin',&
        'el-ph with image parallelization is not yet available',1)
