@@ -239,14 +239,14 @@ subroutine ld1_readin
   if (zed == 0.0_dp .and. atom /= ' ') then
      zed = DBLE(atomic_number(atom))
   else if (zed /= 0.0_dp .and. atom == ' ') then
-     if (DBLE(int(zed)) /= zed .or. zed < 1.0_dp .or. zed > 103) then
+     if (zed <=0.0_dp .or. zed > 103._dp) then
         write(zdum_,'(f6.2)') zed
         call errore('ld1_readin','wrong nuclear charge zed: '//zdum_,1)
      end if
      atom = atom_name(nint(zed))
   else
      zdum = DBLE(atomic_number(atom))
-     if (zdum /= zed) call errore &
+     if (nint(zdum) /= nint(zed)) call errore &
           ('ld1_readin','inconsistent Z/atom specification',nint(zdum))
   end if
 ! with LDA-1/2 now iswitch <=4
