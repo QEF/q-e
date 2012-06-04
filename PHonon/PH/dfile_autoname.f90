@@ -70,7 +70,7 @@ END FUNCTION open_dfile_directory
 !----------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
-FUNCTION scan_dfile_directory(iunit, xq, at, found, equiv)
+FUNCTION scan_dfile_directory(iunit, xq, at, found, equiv) 
   !----------------------------------------------------------------------
   IMPLICIT NONE
   CHARACTER(len=256) :: scan_dfile_directory
@@ -82,7 +82,7 @@ FUNCTION scan_dfile_directory(iunit, xq, at, found, equiv)
   LOGICAL,INTENT(in),OPTIONAL :: equiv ! if .false. only look for exactly q
                                        ! if .true. any q+G is ok (default)
   !
-  INTEGER  :: ios
+  INTEGER  :: ios, iq_
   REAL(DP) :: xp(3), aq(3), ap(3)
   CHARACTER(len=256) :: xp_name
   REAL(DP),PARAMETER :: gam(3) = (/ 0._dp, 0._dp, 0._dp /), accept = 1.e-5_dp
@@ -104,7 +104,7 @@ FUNCTION scan_dfile_directory(iunit, xq, at, found, equiv)
   !
   SCAN_FILE : &
   DO WHILE(ios==0)
-    READ(iunit,*,iostat=ios) xp, ap, xp_name
+      READ(iunit,*,iostat=ios) xp, ap, iq_, xp_name
     ! ap = xp
     ! CALL cryst_to_cart (1,ap,at,-1)
     !
@@ -129,7 +129,7 @@ END FUNCTION scan_dfile_directory
 !----------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
-FUNCTION dfile_name(xq, at, name, prefix, generate, equiv, index_q)
+FUNCTION dfile_name(xq, at, name, prefix, generate, index_q, equiv)
   !----------------------------------------------------------------------
   ! automatically generate a name for fildrho file
   USE io_global,    ONLY : ionode
@@ -137,7 +137,7 @@ FUNCTION dfile_name(xq, at, name, prefix, generate, equiv, index_q)
   ! function:
   CHARACTER(len=256) :: dfile_name
   ! input variables:
-  INTEGER, INTENT(in),optional :: index_q      ! index of the q-point  
+  INTEGER, INTENT(in)         :: index_q      ! index of the q-point  
   REAL(DP),INTENT(in)         :: xq(3)    ! the q point in cartesian axes
   REAL(DP),INTENT(in)         :: at(3,3)  ! the lattice vectors, to transform the q to crystal coords
   CHARACTER(len=*),INTENT(in) :: prefix   ! directory where to operate
@@ -167,8 +167,9 @@ FUNCTION dfile_name(xq, at, name, prefix, generate, equiv, index_q)
   
   iunit = open_dfile_directory(basename, prefix)
   rewind(iunit)
-  
+ 
   dfile_name = scan_dfile_directory(iunit, xq, at, found, equiv)
+
   CLOSE(iunit)
   
   !
@@ -190,11 +191,7 @@ FUNCTION dfile_name(xq, at, name, prefix, generate, equiv, index_q)
   aq = xq
   CALL cryst_to_cart (1,aq,at,-1)
   !
-  if(present(index_q)) then
-     WRITE(iunit,*,iostat=ios) xq, aq, index_q, TRIM(dfile_name)
-  else
-     WRITE(iunit,*,iostat=ios) xq, aq, TRIM(dfile_name)
-  endif
+  WRITE(iunit,*,iostat=ios) xq, aq, index_q, TRIM(dfile_name)
 
   IF(ios/=0) CALL errore('dfile_name','Cannot write dfile_directory',1)
   CLOSE(iunit)
@@ -205,18 +202,20 @@ END FUNCTION dfile_name
 !----------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
-SUBROUTINE dfile_get_qlist(xqs, nqs, name, prefix)
+SUBROUTINE dfile_get_qlist(xqs, nqs, name, prefix, index_q)
   !----------------------------------------------------------------------
   ! automatically generate a name for fildrho file
   USE io_global,    ONLY : ionode
   IMPLICIT NONE
   ! input variables:
   INTEGER,INTENT(in)          :: nqs        ! max number of points
+  INTEGER                     :: index_q(nqs)    ! index of irreducible q
   REAL(DP),INTENT(out)        :: xqs(3,nqs) ! the q point in cartesian axes
   CHARACTER(len=*),INTENT(in) :: prefix     ! directory where to operate
   CHARACTER(len=*),INTENT(in) :: name       ! input fildrho
   !
   INTEGER :: iunit = -1, ios, iq
+  REAL(DP) :: xq_dummy(3)
   CHARACTER(len=256) :: basename
   !
   ! Only ionode scans for the filename, and does NOT broadcast. The broadcast
@@ -239,7 +238,7 @@ SUBROUTINE dfile_get_qlist(xqs, nqs, name, prefix)
   !
   GET_Q_LOOP : &
   DO iq = 1,nqs
-     READ(iunit,*,iostat=ios) xqs(:,iq)
+     READ(iunit,*,iostat=ios) xqs(:,iq), xq_dummy(:),index_q(iq)
      IF(ios/=0) THEN
        CALL errore('dfile_get_qlist', 'Error while reading q point', iq)
      ENDIF
