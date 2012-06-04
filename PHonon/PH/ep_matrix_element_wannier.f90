@@ -121,11 +121,12 @@ SUBROUTINE ep_matrix_element_wannier()
   IF (.NOT.trans) CALL readmat (iudyn, ibrav, celldm, nat, ntyp, &
        ityp, omega, amass, tau, xq, w2, dyn)
   !
+  
 
   deallocate(xk_gamma)
   deallocate(kpq,g_kpq,igqg)
 
-  CALL stop_clock ('elphon')
+! CALL stop_clock ('elphon')
   RETURN
 END SUBROUTINE ep_matrix_element_wannier
 
