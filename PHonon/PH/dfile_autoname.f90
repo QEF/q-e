@@ -129,7 +129,7 @@ END FUNCTION scan_dfile_directory
 !----------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
-FUNCTION dfile_name(xq, at, name, prefix, generate, equiv)
+FUNCTION dfile_name(xq, at, name, prefix, generate, equiv, iq)
   !----------------------------------------------------------------------
   ! automatically generate a name for fildrho file
   USE io_global,    ONLY : ionode
@@ -137,6 +137,7 @@ FUNCTION dfile_name(xq, at, name, prefix, generate, equiv)
   ! function:
   CHARACTER(len=256) :: dfile_name
   ! input variables:
+  INTEGER, INTENT(in),optional :: iq      ! index of the q-point  
   REAL(DP),INTENT(in)         :: xq(3)    ! the q point in cartesian axes
   REAL(DP),INTENT(in)         :: at(3,3)  ! the lattice vectors, to transform the q to crystal coords
   CHARACTER(len=*),INTENT(in) :: prefix   ! directory where to operate
@@ -163,9 +164,13 @@ FUNCTION dfile_name(xq, at, name, prefix, generate, equiv)
   !
   basename = TRIM(name(6:))
   !
+  
   iunit = open_dfile_directory(basename, prefix)
+  rewind(iunit)
+  
   dfile_name = scan_dfile_directory(iunit, xq, at, found, equiv)
   CLOSE(iunit)
+  
   !
   ! Return here if point was found
   !IF(found) print*, "xq found as ", TRIM(dfile_name)
@@ -185,7 +190,12 @@ FUNCTION dfile_name(xq, at, name, prefix, generate, equiv)
   aq = xq
   CALL cryst_to_cart (1,aq,at,-1)
   !
-  WRITE(iunit,*,iostat=ios) xq, aq, TRIM(dfile_name)
+  if(present(iq)) then
+     WRITE(iunit,*,iostat=ios) xq, aq, iq, TRIM(dfile_name)
+  else
+     WRITE(iunit,*,iostat=ios) xq, aq, TRIM(dfile_name)
+  endif
+
   IF(ios/=0) CALL errore('dfile_name','Cannot write dfile_directory',1)
   CLOSE(iunit)
   !
