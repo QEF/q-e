@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine dynmatrix
+subroutine dynmatrix(iq_)
   !-----------------------------------------------------------------------
   !
   ! This routine is a driver which computes the symmetrized dynamical
@@ -45,6 +45,7 @@ subroutine dynmatrix
   USE units_ph,      ONLY : iudrho, iudvscf
 
   implicit none
+  INTEGER, INTENT(IN) :: iq_
   ! local variables
   !
   integer :: nq, isq (48), imq, na, nt, imode0, jmode0, irr, jrr, &
@@ -170,13 +171,13 @@ subroutine dynmatrix
     INQUIRE (UNIT = iudrho, OPENED = opnd)
     IF (opnd) CLOSE(UNIT = iudrho, STATUS='keep')
     CALL write_dfile_star(drho_star, fildrho, nsym, xq, u, nq, sxq, isq, &
-                          s, sr, invs, irt, ntyp, ityp,(imq==0) )
+                          s, sr, invs, irt, ntyp, ityp,(imq==0), -1 )
   ENDIF
   IF(dvscf_star%open) THEN
     INQUIRE (UNIT = iudvscf, OPENED = opnd)
     IF (opnd) CLOSE(UNIT = iudvscf, STATUS='keep')
     CALL write_dfile_star(dvscf_star, fildvscf, nsym, xq, u, nq, sxq, isq, &
-                          s, sr, invs, irt, ntyp, ityp,(imq==0) )
+                          s, sr, invs, irt, ntyp, ityp,(imq==0), iq_ )
   ENDIF
   !
   !   Writes (if the case) results for quantities involving electric field

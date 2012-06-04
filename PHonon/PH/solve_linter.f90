@@ -128,6 +128,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
              ios,        & ! integer variable for I/O control
              mode          ! mode index
 
+  integer  :: iq_dummy
   real(DP) :: tcpu, get_clock ! timing variables
   character(len=256) :: filename
 
@@ -173,7 +174,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   IF (ionode .AND. fildrho /= ' ') THEN
      INQUIRE (UNIT = iudrho, OPENED = exst)
      IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
-     filename = dfile_name(xq, at, fildrho, TRIM(tmp_dir_save)//prefix, generate=.true.)
+     filename = dfile_name(xq, at, fildrho, TRIM(tmp_dir_save)//prefix, generate=.true., index_q=iq_dummy)
      CALL diropn (iudrho, filename, lrdrho, exst)
   END IF
 

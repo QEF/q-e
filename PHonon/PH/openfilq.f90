@@ -54,7 +54,7 @@ SUBROUTINE openfilq()
   ! logical variable to check file existe
   !
   REAL(DP) :: edum(1,1), wdum(1,1)
-  INTEGER :: ndr, ierr
+  INTEGER :: ndr, ierr, iq_dummy
   INTEGER, EXTERNAL :: find_free_unit
   !
   !
@@ -164,10 +164,11 @@ SUBROUTINE openfilq()
            IF(trim(dvscf_star%ext).NE.' ' .and. elph_mat) THEN
            fildvscf_rot = dfile_name(xq, at, TRIM(dvscf_star%ext), &
                                      TRIM(dvscf_star%dir)//prefix, &
-                                     generate=.false., equiv=.false. )
+                                     generate=.false., index_q=iq_dummy, equiv=.false. )
+
            WRITE(stdout,'(5x,5a)') "Opening dvscf file '",TRIM(fildvscf_rot), &
                                    "' (for reading) in directory '",trim(dvscf_star%dir),"'"
-           
+                 
            CALL diropn (iudvscf, fildvscf_rot, lrdrho, exst, dvscf_star%dir)
         ELSE
            CALL diropn (iudvscf, fildvscf, lrdrho, exst )

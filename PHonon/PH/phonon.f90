@@ -116,7 +116,7 @@ PROGRAM phonon
      IF ( trans ) THEN
         !
         CALL phqscf()
-        CALL dynmatrix()
+        CALL dynmatrix(iq)
         !
      END IF
      !

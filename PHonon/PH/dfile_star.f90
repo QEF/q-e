@@ -1,4 +1,4 @@
-!
+
 ! Copyright (C) 2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -95,7 +95,8 @@ SUBROUTINE deallocate_rotated_pattern_repr(rpat)
 END SUBROUTINE deallocate_rotated_pattern_repr
 
 !-----------------------------------------------------------------------
-SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, invs, irt, ntyp, ityp, dfile_minus_q )
+SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
+            sr, invs, irt, ntyp, ityp, dfile_minus_q, iq_ )
   !-----------------------------------------------------------------------
   !
   ! Electron-phonon calculation from data saved in dfile_rot
@@ -129,6 +130,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
   ! number of symmetry operations
   ! number of q in the star
   ! symmetry op. giving the rotated q
+  INTEGER          :: iq_
   INTEGER,INTENT(in) :: s(3, 3, 48), invs(48), irt(48, nat)
   ! symmetry matrices and their inverses
   REAL(DP) :: sr(3,3,48)
@@ -406,11 +408,12 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
     !
     !  Opening files and writing
     !
-  !print*, "dfile",240
+    !print*, "dfile",240
     ONLY_IONODE_3 : IF (ionode) THEN
     !
     dfile_rot_name = dfile_name(sxq(:,iq), at, TRIM(descr%ext), &
-                                  TRIM(descr%dir)//prefix, generate=.true.)
+         TRIM(descr%dir)//prefix, generate=.true., index_q=iq_ )
+       
     iudfile_rot = find_free_unit()
     CALL diropn (iudfile_rot, TRIM(dfile_rot_name), lrdrho, exst, descr%dir)
     WRITE(stdout, '(7x,a,3f10.6,3a)') "Writing drho for q = (",sxq(:,iq),') on file "',&
@@ -429,9 +432,11 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, sr, inv
     !
     ! Also store drho(-q) if necessary
     MINUS_Q : &
-    IF  (dfile_minus_q .and. xq(1)**2+xq(2)**2+xq(3)**2 > 1.d-5 )  THEN
-        dfile_rot_name = dfile_name(-sxq(:,iq), at, TRIM(descr%ext), &
-                                          TRIM(descr%dir)//prefix, generate=.true.)
+        IF (dfile_minus_q .and. xq(1)**2+xq(2)**2+xq(3)**2 > 1.d-5 )  THEN
+           dfile_rot_name = dfile_name(-sxq(:,iq), at, TRIM(descr%ext), &
+                TRIM(descr%dir)//prefix, generate=.true., index_q=iq_)
+
+        
         iudfile_rot = find_free_unit()
         CALL diropn (iudfile_rot, TRIM(dfile_rot_name), lrdrho, exst, descr%dir)
         WRITE(stdout, '(7x,a,3f10.6,3a)') "Writing drho for q = (",-sxq(:,iq),') on file "',&
