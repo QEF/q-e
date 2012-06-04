@@ -129,7 +129,7 @@ END FUNCTION scan_dfile_directory
 !----------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
-FUNCTION dfile_name(xq, at, name, prefix, generate, equiv, iq)
+FUNCTION dfile_name(xq, at, name, prefix, generate, equiv, index_q)
   !----------------------------------------------------------------------
   ! automatically generate a name for fildrho file
   USE io_global,    ONLY : ionode
