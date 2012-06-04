@@ -137,7 +137,7 @@ FUNCTION dfile_name(xq, at, name, prefix, generate, equiv, index_q)
   ! function:
   CHARACTER(len=256) :: dfile_name
   ! input variables:
-  INTEGER, INTENT(in),optional :: iq      ! index of the q-point  
+  INTEGER, INTENT(in),optional :: index_q      ! index of the q-point  
   REAL(DP),INTENT(in)         :: xq(3)    ! the q point in cartesian axes
   REAL(DP),INTENT(in)         :: at(3,3)  ! the lattice vectors, to transform the q to crystal coords
   CHARACTER(len=*),INTENT(in) :: prefix   ! directory where to operate
@@ -190,8 +190,8 @@ FUNCTION dfile_name(xq, at, name, prefix, generate, equiv, index_q)
   aq = xq
   CALL cryst_to_cart (1,aq,at,-1)
   !
-  if(present(iq)) then
-     WRITE(iunit,*,iostat=ios) xq, aq, iq, TRIM(dfile_name)
+  if(present(index_q)) then
+     WRITE(iunit,*,iostat=ios) xq, aq, index_q, TRIM(dfile_name)
   else
      WRITE(iunit,*,iostat=ios) xq, aq, TRIM(dfile_name)
   endif
