@@ -107,17 +107,16 @@ subroutine addusdens_g(rho)
   call start_clock ('addus:aux')
 #endif
 
-!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig, is, skk)
-                    do ig = 1, ngm
-                       skk = eigts1 (mill (1,ig), na) * &
-                             eigts2 (mill (2,ig), na) * &
-                             eigts3 (mill (3,ig), na)
-
-                       do is = 1, nspin_mag
-                          aux(ig,is) = aux(ig,is) + qgm(ig)*skk*tbecsum(is)
+                    do is = 1, nspin_mag
+!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(skk, ig)
+                       do ig = 1, ngm
+                          skk = eigts1 (mill (1,ig), na) * &
+                                eigts2 (mill (2,ig), na) * &
+                                eigts3 (mill (3,ig), na)
+                          aux(ig,is)=aux(ig,is) + qgm(ig)*skk*tbecsum(is)
                        enddo
-                    enddo
 !$OMP END PARALLEL DO
+                    enddo
 
 #ifdef DEBUG_ADDUSDENS
   call stop_clock ('addus:aux')
