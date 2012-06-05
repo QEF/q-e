@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,9 +14,8 @@ subroutine zstar_eu
   !
   !
   USE kinds,     ONLY : DP
-  USE cell_base, ONLY : at, bg
-  USE ions_base, ONLY : nat, zv, ityp, atm
-  USE io_global, ONLY : stdout
+  USE cell_base, ONLY : bg
+  USE ions_base, ONLY : nat, zv, ityp
   USE io_files,  ONLY : iunigk
   USE klist,     ONLY : wk, xk
   USE symme,     ONLY : symtensor
@@ -68,7 +67,7 @@ subroutine zstar_eu
            do jpol = 1, 3
               nrec = (jpol - 1) * nksq + ik
               !
-              ! read DeltaV*psi(scf) for electric field in jpol direction
+              ! read dpsi(scf)/dE for electric field in jpol direction
               !
               call davcio (dpsi, lrdwf, iudwf, nrec, - 1)
               do ibnd = 1, nbnd_occ(ik)

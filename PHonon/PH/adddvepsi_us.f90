@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,6 @@ SUBROUTINE adddvepsi_us(becp1,becp2,ipol,kpoint,dvpsi)
   USE spin_orb, ONLY : lspinorb
   USE uspp,  ONLY : nkb, vkb, qq, qq_so
   USE wvfct, ONLY : npwx, npw, nbnd
-  USE cell_base, ONLY : at
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param, only: nh
@@ -31,11 +30,11 @@ SUBROUTINE adddvepsi_us(becp1,becp2,ipol,kpoint,dvpsi)
   integer, intent(in) :: ipol, kpoint
   TYPE(bec_type), intent(in) :: becp1
   TYPE(bec_type), intent(in) :: becp2
-  COMPLEX(KIND=DP), INTENT(INOUT) :: dvpsi(npwx*MAX(npol,1),nbnd)
+  COMPLEX(KIND=DP), INTENT(INOUT) :: dvpsi(npwx*npol,nbnd)
 
   complex(DP), allocatable :: ps(:), ps_nc(:,:)
   REAL(KIND=DP), ALLOCATABLE :: ps_r(:)
-  integer:: ijkb0, nt, na, ih, jh, ikb, jkb, ibnd, ip, is, js, ijs
+  integer:: ijkb0, nt, na, ih, jh, ikb, jkb, ibnd, is, js, ijs
 
   IF (noncolin) THEN
      allocate (ps_nc(nbnd,npol))

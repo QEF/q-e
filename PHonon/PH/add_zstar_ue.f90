@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,7 @@ subroutine add_zstar_ue (imode0, npe)
   !
   USE kinds, only : DP
   USE klist, ONLY : xk, wk
-  USE uspp,  ONLY : nkb, vkb
+  USE uspp,  ONLY : vkb
   USE wvfct, ONLY : npwx, npw, igk
   USE wavefunctions_module,  ONLY: evc
   USE noncollin_module,      ONLY: noncolin
@@ -28,7 +28,7 @@ subroutine add_zstar_ue (imode0, npe)
 
   implicit none
 
-  integer :: imode0, npe
+  integer, intent(in) :: imode0, npe
 
   integer :: ibnd, jpol, ipert, nrec, mode, ik
   ! counter on bands
@@ -61,7 +61,7 @@ subroutine add_zstar_ue (imode0, npe)
            mode = imode0 + ipert
            nrec = (ipert - 1) * nksq + ik
            !
-           ! read DeltaV*psi(scf) for phonon mode # mode
+           ! read dpsi(scf)/du for phonon mode # mode
            !
 
            call davcio (dpsi, lrdwf, iudwf, nrec, -1)

@@ -13,20 +13,19 @@ subroutine dielec()
   !      calculates the dielectric tensor
   !
 
+  USE kinds, only : DP
   USE io_global,  ONLY : stdout
-  USE io_files, ONLY: iunigk
-  USE constants, ONLY: fpi, bohr_radius_angs
+  USE constants, ONLY: fpi
   USE cell_base, ONLY: at, bg, omega
   USE klist, ONLY: wk
   USE symme, ONLY: symmatrix, crys_to_cart
-  USE wvfct, ONLY: npw, npwx, igk
+  USE wvfct, ONLY: npwx
   USE noncollin_module, ONLY : npol
-  USE kinds, only : DP
   USE efield_mod, ONLY : epsilon
   USE units_ph, ONLY : lrdwf, iudwf, lrebar, iuebar
   USE eqv, ONLY : dpsi, dvpsi
   USE qpoint, ONLY : nksq
-  USE control_ph, ONLY : lrpa, lnoloc, nbnd_occ, done_epsil
+  USE control_ph, ONLY : nbnd_occ, done_epsil
   USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
   USE mp,               ONLY : mp_sum
 
@@ -36,15 +35,13 @@ subroutine dielec()
   ! counter on polarizations
   ! counter on records
   ! counter on k points
-  real(DP) :: w, weight, chi(3,3)
+  real(DP) :: w, weight
 
   complex(DP), external :: zdotc
 
   call start_clock ('dielec')
   epsilon(:,:) = 0.d0
-  if (nksq > 1) rewind (unit = iunigk)
   do ik = 1, nksq
-     if (nksq > 1) read (iunigk) npw, igk
      weight = wk (ik)
      w = fpi * weight / omega
      do ipol = 1, 3
