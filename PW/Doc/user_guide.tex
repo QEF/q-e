@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{5.0}
+\def\version{5.0.1}
 \def\PWscf{\texttt{PWscf}}
 \def\qe{{\sc Quantum ESPRESSO}}
 
@@ -1261,7 +1261,12 @@ order to prevent problems with symmetrization. Typical fractional
 translations are 1/2 or 1/3 of a lattice vector. If the FFT grid
 dimension along that direction is not divisible respectively by 2 or
 by 3, the symmetry operation will not transform the FFT grid into
-itself. 
+itself. Solution: you can either force your FFT grid to be
+commensurate with fractional translation (set variables 
+\texttt{nr1}, \texttt{nr2}, \texttt{nr3} to suitable values), or
+set variable \texttt{use\_all\_frac} to \texttt{.true.}, in namelist
+\&SYSTEM. Note however that the latter is incompatible with
+hybrid functionals and with phonon calculations.
 
 \paragraph{Self-consistency is slow or does not converge at all}
 
