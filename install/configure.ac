@@ -1,6 +1,6 @@
-AC_INIT(ESPRESSO, 5.0.0, , espresso)
+AC_INIT(ESPRESSO, 5.0.1, , espresso)
 # ----------------------------
-# Non-standart precious variables
+# Non-standard precious variables
 # ----------------------------
 AC_ARG_VAR(EXTLIB_FLAGS, This variable controls the flags passed to internal BLAS and LAPACK libraries)
 # -----------------------------
@@ -80,6 +80,8 @@ AC_ARG_WITH(scalapack,
        [use scalapack if available (default: yes)])],
    [if  test "$withval" = "yes" ; then
       with_scalapack=1
+   elif  test "$withval" = "intel" ; then
+      with_scalapack=2
    else
       with_scalapack=0
    fi],
@@ -1760,9 +1762,14 @@ if test "$have_mkl" -eq 1
    then
       unset ac_cv_search_pdgemr2d # clear cached value
       LIBS="-lmkl_blacs_lp64 $mpi_libs $blas_libs"
+      if test $with_scalapack -eq 1; then
+         scalapack_libs=-lmkl_blacs_openmpi_lp64
+      else
+         scalapack_libs=-lmkl_blacs_intelmpi_lp64
+      fi
       AC_SEARCH_LIBS(pdgemr2d, "mkl_scalapack_lp64" , have_scalapack=1
                      try_dflags="$try_dflags -D__SCALAPACK"
-                     scalapack_libs="-lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64" )
+                     scalapack_libs="-lmkl_scalapack_lp64 $scalapack_libs" )
       test "$have_scalapack" -eq 1 && break
 fi
 #

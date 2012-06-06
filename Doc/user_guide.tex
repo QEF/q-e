@@ -534,7 +534,8 @@ and the following optional packages:\\
 \begin{tabular}{ll}
 \texttt{--with-internal-blas}&    compile with internal BLAS (default: no)\\
 \texttt{--with-internal-lapack}&  compile with internal LAPACK (default: no)\\
-\texttt{--with-scalapack}&        use ScaLAPACK if available (default: yes)\\
+\texttt{--with-scalapack=no}&     do not use ScaLAPACK (default: yes)\\
+\texttt{--with-scalapack=intel}&  use ScaLAPACK for Intel MPI (default:OpenMPI)\\
 \end{tabular}\\
 If you want to modify the \configure\ script (advanced users only!), 
 see the Developer Manual.
