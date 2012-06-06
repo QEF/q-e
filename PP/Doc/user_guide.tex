@@ -207,7 +207,8 @@ crossings may not work in all circumstances, though). The output is written
 to a file in a simple format that can be directly read and converted to
 plottable format by auxiliary code
 \texttt{plotband.x}. Unpredictable plots may results if k-points are not 
-in sequence along lines. The code \texttt{bands.x} performs as well a 
+in sequence along lines, or if two consecutive points are the same. 
+The code \texttt{bands.x} performs as well a 
 symmetry analysis of the band structure. For a complete input description,
 see\texttt{Doc/INPUT\_bands.*}. See Example 01, Example 04 and Example 06 
 for simple band plots.

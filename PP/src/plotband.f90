@@ -1,11 +1,20 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 PROGRAM plotband
+
+  ! reads data files produced by "bands.x", produces
+  ! * data file ready for plotting with gnuplot, xmgr or the like
+  ! * a postscript file that can be directly printed 
+  ! Important notice:
+  ! - k-points processed by bands.x should be along a continuous path
+  ! - no two consecutive k-points should be equal (i.e.: a k-point, 
+  !   e.g. 0,0,0, can appear more than once but not in sequence)
+  ! If these rules are violated, unpredictable results may follow
 
   IMPLICIT NONE
   INTEGER, PARAMETER :: stdout=6
@@ -412,9 +421,9 @@ PROGRAM plotband
   DO i=1,nbnd
      IF (is_in_range(i)) THEN
         ! No interpolation:
-        !         write (1,'(9(f8.3,1x))') ( kx(n)*xdim/kx(nks), &
-        !             (e(i,n)-emin)*ydim/(emax-emin),n=nks,1,-1)
-        !         write (1,'(i4," banda")' ) nks-1
+        !        write (1,'(9(f8.3,1x))') ( kx(n)*xdim/kx(nks), &
+        !            (e(i,n)-emin)*ydim/(emax-emin),n=nks,1,-1)
+        !        write (1,'(i4," banda")' ) nks-1
         ! Spline interpolation with twice as many points:
         !
         ni=1
@@ -432,7 +441,7 @@ PROGRAM plotband
            CALL spline_interpol ( kx(ni), e_in, nf-ni+1, &
                 k_interp, e_interp, n_interp )
            WRITE (1,'(9(f8.3,1x))') ( k_interp(n)*xdim/kx(nks), &
-                (e_interp(n)-emin)*ydim/(emax-emin),n=n_interp,1,-1)
+               (e_interp(n)-emin)*ydim/(emax-emin),n=n_interp,1,-1)
            WRITE (1,'(i4," banda")' ) n_interp-1
         ENDDO
      ENDIF
@@ -518,6 +527,12 @@ SUBROUTINE splint (nspline, xspline, yspline, d2y, nfit, xfit, yfit)
   INTEGER :: klo, khi, i
   real :: a, b, h
 
+  if (nspline==2) THEN
+      print *, "n=",nspline,nfit
+      print *, xspline
+      print *, yspline
+      print *, d2y
+   end if
   klo=1
   DO i=1,nfit
      DO khi=klo+1, nspline
