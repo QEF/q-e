@@ -334,7 +334,7 @@ SUBROUTINE PAW_increase_lm(incr)
 
     IF( .not. paw_is_init .or. .not. allocated(rad)) THEN
         CALL infomsg('PAW_increase_lm', &
-        'WARNING: trying to increse max paw angular momentum, but it is not set!')
+        'WARNING: trying to increase max paw angular momentum, but it is not set!')
         RETURN
     ENDIF
 
