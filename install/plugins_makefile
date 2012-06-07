@@ -27,8 +27,10 @@ uncompress-ld1: touch-dummy
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(LD1).tar.gz $(LD1_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	echo "unable to download ld1. Test whether curl or wget is installed in your computer." ; \
-	fi ; fi ; fi) 
+	echo "*** Unable to download ld1. Test whether curl or wget is installed and working," ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+        echo "*** $(LD1).tar.gz from $(LD1_URL)." ; \
+	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../atomic; then \
 	(gzip -dc ../archive/$(LD1).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-ld1
@@ -45,8 +47,10 @@ uncompress-xspectra: touch-dummy
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(XSPECTRA).tar.gz $(XSPECTRA_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	echo "unable to download xspectra. Test whether curl or wget is installed in your computer." ; \
-	fi ; fi ; fi) 
+	echo "*** Unable to download xspectra. Test whether curl or wget is installed and working," ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+	echo "*** $(XSPECTRA).tar.gz from $(XSPECTRA_URL)." ; \
+	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../XSpectra; then \
 	(gzip -dc ../archive/$(XSPECTRA).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-xspectra
@@ -63,8 +67,10 @@ uncompress-pwcond: touch-dummy
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(PWCOND).tar.gz $(PWCOND_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	echo "unable to download pwcond. Test whether curl or wget is installed in your computer." ; \
-	fi ; fi ; fi) 
+	echo "*** Unable to download pwcond. Test whether curl or wget is installed and working," ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+	echo "*** $(PWCOND).tar.gz from $(PWCOND_URL)." ; \
+	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../PWCOND; then \
 	(gzip -dc ../archive/$(PWCOND).tar.gz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s $(PWCOND) PWCOND) ; fi 
@@ -82,8 +88,10 @@ uncompress-neb: touch-dummy
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(NEB).tar.gz $(NEB_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	echo "unable to download neb. Test whether curl or wget is installed in your computer." ; \
-	fi ; fi ; fi) 
+	echo "*** Unable to download neb. Test whether curl or wget is installed and working," ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+	echo "*** $(NEB).tar.gz from $(NEB_URL)." ; \
+	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../NEB; then \
 	(gzip -dc ../archive/$(NEB).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-neb
@@ -101,8 +109,10 @@ uncompress-tddfpt: touch-dummy
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(TDDFPT).tar.gz $(TDDFPT_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	echo "unable to download tddfpt. Test whether curl or wget is installed in your computer." ; \
-	fi ; fi ; fi) 
+	echo "*** Unable to download tddfpt. Test whether curl or wget is installed and working," ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+	echo "*** $(TDDFPT).tar.gz from $(TDDFPT_URL)." ; \
+	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../TDDFPT; then \
 	(gzip -dc ../archive/$(TDDFPT).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-tddfpt
@@ -129,8 +139,10 @@ uncompress-phonon: touch-dummy
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(PHONON).tar.gz $(PHONON_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	echo "unable to download phonon. Test whether curl or wget is installed in your computer." ; \
-	fi ; fi ; fi) 
+	echo "*** Unable to download phonon. Test whether curl or wget is installed and working," ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+	echo "*** $(PHONON).tar.gz from $(PHONON_URL)." ; \
+	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../PHonon; then \
 	(gzip -dc ../archive/$(PHONON).tar.gz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-phonon
@@ -147,8 +159,10 @@ uncompress-gipaw: touch-dummy
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(GIPAW).tar.gz $(GIPAW_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	echo "unable to download qe-gipaw. Test whether curl or wget is installed in your computer." ; \
-	fi ; fi ; fi) 
+	echo "*** Unable to download qe-gipaw. Test whether curl or wget is installed and working," ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+	echo "*** $(GIPAW).tar.gz from $(GIPAW_URL)." ; \
+	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../GIPAW; then \
 	(gzip -dc ../archive/$(GIPAW).tar.gz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s $(GIPAW) GIPAW) ; fi 
@@ -180,8 +194,10 @@ uncompress-w90: touch-dummy
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(W90).tar.gz $(W90_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	echo "unable to download wannier90. Test whether curl or wget is installed in your computer." ; \
-	fi ; fi ; fi) 
+	echo "*** Unable to download wannier90. Test whether curl or wget is installed and working," ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+	echo "*** $(W90).tar.gz from $(W90_URL)." ; \
+	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../W90; then \
 	(gzip -dc ../archive/$(W90).tar.gz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s $(W90) W90) ; fi 
@@ -207,8 +223,10 @@ uncompress-want: touch-dummy
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(WANT).tar.gz $(WANT_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	echo "unable to download want. Test whether curl or wget is installed in your computer." ; \
-	fi ; fi ; fi) 
+	echo "*** Unable to download want. Test whether curl or wget is installed and working," ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+	echo "*** $(WANT).tar.gz from $(WANT_URL)." ; \
+	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../WANT; then \
 	(gzip -dc ../archive/$(WANT).tar.gz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s $(WANT) WANT) ; fi 
@@ -253,8 +271,10 @@ uncompress-yambo: touch-dummy
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(YAMBO).tar.gz $(YAMBO_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	echo "unable to download yambo. Test whether curl or wget is installed in your computer." ; \
-	fi ; fi ; fi) 
+	echo "*** Unable to download yambo. Test whether curl or wget is installed and working," ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+	echo "*** $(YAMBO).tar.gz from $(YAMBO_URL)." ; \
+	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../YAMBO; then \
 	(gzip -dc ../archive/$(YAMBO).tar.gz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s $(YAMBO) YAMBO) ; fi 
@@ -293,8 +313,10 @@ uncompress-plumed: touch-dummy
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(PLUMED).tar.gz $(PLUMED_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	echo "unable to download plumed. Test whether curl or wget is installed in your computer." ; \
-	fi ; fi ; fi) 
+	echo "*** Unable to download plumed. Test whether curl or wget is installed and working," ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+	echo "*** $(PLUMED).tar.gz from $(PLUMED_URL)." ; \
+	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../PLUMED; then \
 	(gzip -dc ../archive/$(PLUMED).tar.gz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s $(PLUMED) PLUMED) ; fi 
@@ -315,15 +337,17 @@ sax: extlibs uncompress-sax configure-sax
 	if test -d ../SaX; then \
 	cd ../SaX; $(MAKE) sax_all; fi
 #	- ( cd ../bin ; ln -sf ../SaX/sax/bin/* . ) 
-	touch ./make-want
+	touch ./make-sax
 uncompress-sax: touch-dummy
 	@(if test ! -e ../archive/$(SAX).tar.gz && test ! -d ../SaX ; then \
 	wget -O ../archive/$(SAX).tar.gz $(SAX_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(SAX).tar.gz $(SAX_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	echo "unable to download want. Test whether curl or wget is installed in your computer." ; \
-	fi ; fi ; fi) 
+	echo "*** Unable to download SaX. Test whether curl or wget is installed and working." ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+	echo "*** $(SAX).tar.gz from $(SAX_URL)." ; \
+	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../SaX; then \
 	(gzip -dc ../archive/$(SAX).tar.gz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s $(SAX) SaX) ; fi 
@@ -372,8 +396,10 @@ uncompress-gui: touch-dummy
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(GUI).tgz $(GUI_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	echo "unable to download pwGUI. Test whether curl or wget is installed in your computer." ; \
-	fi ; fi ; fi) 
+	echo "*** Unable to download pwGUI. Test whether curl or wget is installed and working," ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+	echo "*** $(GUI).tar.gz from $(GUI_URL)." ; \
+	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../GUI && test ! -d ../$(GUI); then \
 	(gzip -dc ../archive/$(GUI).tgz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-gui
