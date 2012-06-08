@@ -1286,6 +1286,9 @@ SUBROUTINE iosys()
     CASE( 'makov-payne', 'm-p', 'mp' )
       !
       do_makov_payne = .true.
+      IF ( ibrav < 1 .OR. ibrav > 3 ) CALL errore(' iosys', &
+              'Makov-Payne correction defined only for cubic lattices', 1)
+      !
       do_comp_mt     = .false.
       do_comp_esm    = .false.
       !

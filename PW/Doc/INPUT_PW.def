@@ -1143,7 +1143,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 'makov-payne', 'm-p', 'mp' : the Makov-Payne correction to the 
                          total energy is computed. An estimate of the vacuum 
                          level is also calculated so that eigenvalues can be 
-                         properly aligned.
+                         properly aligned. ONLY FOR CUBIC SYSTEMS (ibrav=1,2,3)
                          Theory: 
                          G.Makov, and M.C.Payne, 
                          "Periodic boundary conditions in ab initio
