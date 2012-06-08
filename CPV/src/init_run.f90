@@ -193,10 +193,10 @@ SUBROUTINE init_run()
   ALLOCATE( vkb( ngw, nkb ) )
   !
   IF ( dft_is_meta() .AND. tens ) &
-     CALL errore( ' init_run ', 'ensemble_dft not implimented for metaGGA', 1 )
+     CALL errore( ' init_run ', 'ensemble_dft not implemented for metaGGA', 1 )
   !
   IF ( dft_is_meta() .AND. nbgrp > 1 ) &
-     CALL errore( ' init_run ', 'band parallelization not implimented for metaGGA', 1 )
+     CALL errore( ' init_run ', 'band parallelization not implemented for metaGGA', 1 )
   !
   IF ( dft_is_meta() .AND. tpre ) THEN
      !
@@ -208,20 +208,18 @@ SUBROUTINE init_run()
   !
   IF ( lwf ) THEN
      IF( nbgrp > 1 ) &
-        CALL errore( ' init_run ', ' wannier with band paralleliztion not implemented ', 1 )
+        CALL errore( ' init_run ', ' wannier with band parallelization not implemented ', 1 )
      CALL allocate_wannier( nbsp, dffts%nnr, nspin, ngm )
   END IF
   !
   IF ( tens .OR. tcg ) THEN
      IF( nbgrp > 1 ) &
-        CALL errore( ' init_run ', ' ensemble_dft with band paralleliztion not implemented ', 1 )
-     CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, nspin, nbspx, dffts%nnr, nat, &
-                                 MAXVAL(descla(:)%nrcx), MAXVAL(descla(:)%nrlx) )
+        CALL errore( ' init_run ', ' ensemble_dft with band parallelization not implemented ', 1 )
+     CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, nspin, nbspx, &
+                                 dffts%nnr, nat, descla )
   END IF
   !
   IF ( tcg ) THEN 
-     IF( nbgrp > 1 ) &
-        CALL errore( ' init_run ', ' cg with band paralleliztion not implemented ', 1 )
      CALL allocate_cg( ngw, nbspx,nkbus )
   END IF
   !

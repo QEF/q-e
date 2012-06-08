@@ -28,7 +28,8 @@ MODULE ensemble_dft
       
       integer :: niter_cold_restart !frequency for accuarate cold smearing (in iterations)
       real(DP) :: lambda_cold !step for cold smearing for not accurate iterations     
-
+      INTEGER :: nrlx    ! first dimension of z0t, fmat0
+      INTEGER :: nrcx    ! first two dimensions of psihpsi
 !***ensemble-DFT
       real(DP), allocatable::                 z0t(:,:,:)   ! transpose of z0
       complex(DP), allocatable::             c0diag(:,:)
@@ -252,15 +253,22 @@ CONTAINS
   END SUBROUTINE ensemble_dft_info
 
 
-  SUBROUTINE allocate_ensemble_dft( nhsa, n, ngw, nudx, nspin, nx, nrxxs, nat, nrcx, nrlx )
+  SUBROUTINE allocate_ensemble_dft( nhsa, n, ngw, nudx, nspin, nx, nrxxs, nat,&
+                                    descla )
+    USE descriptors
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: nhsa, n, ngw, nudx, nspin, nx, nrxxs, nat, nrcx, nrlx
-      allocate(c0diag(ngw,nx))
-      allocate(z0t(nrlx,nudx,nspin))
-      allocate(becdiag(nhsa,n))
-      allocate(e0(nx))
-      allocate(fmat0(nrlx,nudx,nspin))
-      allocate(psihpsi(nrcx,nrcx,nspin))
+    INTEGER, INTENT(IN) :: nhsa, n, ngw, nudx, nspin, nx, nrxxs, nat
+    TYPE(la_descriptor), INTENT(IN) :: descla( nspin )
+    
+    nrcx = MAXVAL (descla(:)%nrcx )
+    nrlx = MAXVAL (descla(:)%nrlx )
+    
+    allocate(c0diag(ngw,nx))
+    allocate(z0t(nrlx,nudx,nspin))
+    allocate(becdiag(nhsa,n))
+    allocate(e0(nx))
+    allocate(fmat0(nrlx,nudx,nspin))
+    allocate(psihpsi(nrcx,nrcx,nspin))
     RETURN
   END SUBROUTINE allocate_ensemble_dft
 
