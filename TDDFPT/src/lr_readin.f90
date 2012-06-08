@@ -72,6 +72,8 @@ SUBROUTINE lr_readin
      !
      !   Set default values for variables in namelist
      !
+     CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+     IF ( trim( outdir ) == ' ' ) outdir = './'
      itermax = 500
      restart = .FALSE.
      restart_step = itermax+1
