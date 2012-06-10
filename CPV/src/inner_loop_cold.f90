@@ -26,7 +26,7 @@
                                 f_bgrp,nupdwn_bgrp,iupdwn_bgrp
 
       USE ensemble_dft,   ONLY: tens,  ninner, ismear, etemp, &
-                                ef, z0t, c0diag, becdiag, &
+                                ef, z0t, c0diag, becdiag, nrcx, &
                                 e0, psihpsi, compute_entropy2, &
                                 compute_entropy_der, compute_entropy, &
                                 niter_cold_restart, lambda_cold
@@ -101,7 +101,7 @@
       CALL start_clock( 'inner_loop')
 
       allocate(fion2(3,nat))
-      allocate(c0hc0(MAXVAL( descla(:)%nrcx ),MAXVAL( descla(:)%nrcx ),nspin))
+      allocate(c0hc0(nrcx, nrcx, nspin))
       allocate(h0c0(ngw,nx))
 
 
@@ -326,7 +326,7 @@
                                 f_bgrp,nupdwn_bgrp,iupdwn_bgrp
 
       USE ensemble_dft,   ONLY: tens,  ninner, ismear, etemp, &
-                                 c0diag, becdiag, z0t
+                                 c0diag, becdiag, z0t, nrcx, nrlx
       USE gvect,          ONLY: ngm
       USE gvecs,          ONLY: ngms
       USE smallbox_gvec,  ONLY: ngb
@@ -373,8 +373,8 @@
       COMPLEX(kind=DP)            :: ei3( dfftp%nr3:dfftp%nr3, nat )
       COMPLEX(kind=DP)            :: sfac( ngms, nsp )
   
-      REAL(kind=DP), INTENT(in)   :: c0hc0(MAXVAL(descla(:)%nrcx),MAXVAL(descla(:)%nrcx),nspin)
-      REAL(kind=DP), INTENT(in)   :: c1hc1(MAXVAL(descla(:)%nrcx),MAXVAL(descla(:)%nrcx),nspin)
+      REAL(kind=DP), INTENT(in)   :: c0hc0(nrcx,nrcx,nspin)
+      REAL(kind=DP), INTENT(in)   :: c1hc1(nrcx,nrcx,nspin)
       REAL(kind=DP), INTENT(in)   :: lambda
       REAL(kind=DP), INTENT(out)  :: free_energy
 
@@ -387,10 +387,10 @@
 
       CALL start_clock( 'inner_lambda')
       
-      allocate(clhcl(MAXVAL( descla(:)%nrcx ),MAXVAL( descla(:)%nrcx ),nspin))
+      allocate(clhcl(nrcx, nrcx, nspin))
       allocate(eaux(nx))
       allocate(faux(nx))
-      allocate(zauxt(MAXVAL(descla(:)%nrlx),nudx,nspin))
+      allocate(zauxt(nrlx,nudx,nspin))
       allocate(fion2(3,nat))
 
 
@@ -508,7 +508,7 @@
 
       USE ensemble_dft,   ONLY: tens,  ninner, ismear, etemp, &
                                 ef, c0diag, becdiag, &
-                                compute_entropy2, &
+                                compute_entropy2, nrlx, nrcx, &
                                 compute_entropy_der, compute_entropy, &
                                 niter_cold_restart, lambda_cold
       USE gvect,          ONLY: ngm
@@ -543,8 +543,8 @@
 
       COMPLEX(kind=DP)            :: c0( ngw, n )
       REAL(kind=DP)               :: bec( nhsa, n )
-      REAL(kind=DP)               :: psihpsi( MAXVAL( descla(:)%nrcx ), MAXVAL( descla(:)%nrcx ), nspin )
-      REAL(kind=DP)               :: z0t( MAXVAL(descla(:)%nrlx), nudx, nspin )
+      REAL(kind=DP)               :: psihpsi( nrcx, nrcx,  nspin )
+      REAL(kind=DP)               :: z0t( nrlx, nudx, nspin )
       REAL(kind=DP)               :: e0( nx )
 
       INTEGER :: i,k, is, nss, istart, ig
