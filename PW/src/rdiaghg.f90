@@ -136,7 +136,13 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      !
      DEALLOCATE( work )
      !
-     CALL errore( 'rdiaghg', 'diagonalization (DSYGV*) failed', ABS( info ) )
+     IF ( info > n ) THEN
+        CALL errore( 'rdiaghg', 'S matrix not positive definite', ABS( info ) )
+     ELSE IF ( info > 0 ) THEN
+        CALL errore( 'rdiaghg', 'eigenvectors failed to converge', ABS( info ) )
+     ELSE IF ( info < 0 ) THEN
+        CALL errore( 'rdiaghg', 'incorrect call to DSYGV*', ABS( info ) )
+     END IF
      
      ! ... restore input S matrix from saved diagonal and lower triangle
      !
