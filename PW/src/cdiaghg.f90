@@ -126,7 +126,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
         !   DEALLOCATE( work )
         !   ALLOCATE( work( lwork ) )
         !END IF
-
+        !
         CALL ZHEGVX( 1, 'V', 'I', 'U', n, h, ldh, s, ldh, &
                      0.D0, 0.D0, 1, m, abstol, mm, e, v, ldh, &
                      work, lwork, rwork, iwork, ifail, info )
@@ -154,7 +154,13 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      DEALLOCATE( rwork )
      DEALLOCATE( work )
      !
-     CALL errore( 'cdiaghg', 'diagonalization (ZHEGV*) failed', ABS( info ) )
+     IF ( info > n ) THEN
+        CALL errore( 'cdiaghg', 'S matrix not positive definite', ABS( info ) )
+     ELSE IF ( info > 0 ) THEN
+        CALL errore( 'cdiaghg', 'eigenvectors failed to converge', ABS( info ) )
+     ELSE IF ( info < 0 ) THEN
+        CALL errore( 'cdiaghg', 'incorrect call to ZHEGV*', ABS( info ) )
+     END IF
      !
      ! ... restore input S matrix from saved diagonal and lower triangle
      !
