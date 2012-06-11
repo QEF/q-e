@@ -211,7 +211,7 @@ subroutine zstar_eu_us
               call davcio (dvpsi, lrebar, iuebar, nrec, - 1)
               !
               pdsp = (0.d0,0.d0)
-              call psidspsi (ik, u (1, mode), pdsp,npw)
+              call psidspsi (ik, u (1, mode), pdsp )
 #ifdef __MPI
               call mp_sum( pdsp, intra_pool_comm )
 #endif

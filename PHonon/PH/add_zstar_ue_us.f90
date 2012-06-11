@@ -71,7 +71,7 @@ subroutine add_zstar_ue_us(imode0,npe)
            ! Note: we need becp1
            !
            pdsp = (0.d0,0.d0)
-           call psidspsi (ik, u (1, mode), pdsp,npw)
+           call psidspsi (ik, u (1, mode), pdsp )
 #ifdef __MPI
            call mp_sum(pdsp, intra_pool_comm )
 #endif
