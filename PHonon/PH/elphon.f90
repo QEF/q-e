@@ -20,9 +20,11 @@ SUBROUTINE elphon()
   USE noncollin_module, ONLY : nspin_mag
   USE dynmat, ONLY : dyn, w2
   USE qpoint, ONLY : xq
-  USE modes,  ONLY : npert, nirr
+  USE modes,  ONLY : npert, nirr, u
   USE control_ph, ONLY : trans
   USE units_ph, ONLY : iudyn, lrdrho, iudvscf
+  USE dfile_star,    ONLY : dvscf_star
+  USE io_global, ONLY: stdout
   !
   IMPLICIT NONE
   !
@@ -35,6 +37,13 @@ SUBROUTINE elphon()
 
   CALL start_clock ('elphon')
 
+  if(dvscf_star%basis.eq.'cartesian') then
+     write(stdout,*) 'Setting patterns to identity'
+     u=CMPLX(0.d0,0.d0)
+     do irr=1,3*nat
+        u(irr,irr)=CMPLX(1.d0,0.d0)
+     enddo
+  endif
   !
   ! read Delta Vscf and calculate electron-phonon coefficients
   !
@@ -785,6 +794,7 @@ SUBROUTINE elphsum_simple
   INTEGER, EXTERNAL :: find_free_unit
 
   nmodes=3*nat
+
 
   write(filelph,'(A5,f9.6,A1,f9.6,A1,f9.6)') 'elph.',xq(1),'.',xq(2),'.',xq(3)
 
