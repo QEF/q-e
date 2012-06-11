@@ -654,7 +654,6 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   IF (ionode)THEN
      READ(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
      if (ibrav==0) then
-        read(1,'(a)') atm ! for compatibility
         read(1,*) ((at(i,j),i=1,3),j=1,3)
      end if
   ENDIF
