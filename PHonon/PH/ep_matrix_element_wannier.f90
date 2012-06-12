@@ -491,6 +491,10 @@ subroutine get_equivalent_kpq(xk,xq,kpq,g_kpq, igqg)
   ! nksq = number of k point per pool withour k+q
   !
 
+  ! 
+  ! The xk_point entering here must be the k and not
+  !    the k+q
+  !
 
   xq_crys=xq
 
