@@ -8,7 +8,7 @@
 
 
 !-----------------------------------------------------------------------
-   subroutine calcmt( fdiag, zmat, fmat, firstiter)
+   subroutine calcmt( nrlx, fdiag, zmat, fmat )
 !-----------------------------------------------------------------------
 !
 !  constructs fmat=z0^t.fdiag.z0    zmat = z0^t
@@ -20,11 +20,11 @@
       USE mp,                ONLY: mp_sum, mp_bcast
 
       implicit none
-      logical firstiter
 
-      real(DP) :: zmat( MAXVAL(descla(:)%nrlx), nudx, nspin ), fmat( MAXVAL(descla(:)%nrlx), nudx, nspin ), fdiag( nx )
-                  !  NOTE: zmat and fmat are distributed by row across processors
-                  !        fdiag is replicated
+      integer, intent(in)  :: nrlx
+      real(DP) :: zmat( nrlx, nudx, nspin ), fmat( nrlx, nudx, nspin )
+      !  NOTE: zmat and fmat are distributed by row across processors
+      real(dp) :: fdiag( nx ) !  fdiag is replicated
 
       integer  :: iss, nss, istart, i, j, k, ii, jj, kk
       integer  :: np_rot, me_rot, nrl, comm_rot, ip, nrl_ip
@@ -154,47 +154,6 @@
 
       return
     end subroutine ddiag
-
-!-----------------------------------------------------------------------
-      subroutine calcm(fdiag,zmat,fmat,firstiter)
-!-----------------------------------------------------------------------
-!
-!  constructs fmat=zmat.fdiag.zmat^t
-!
-      use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbspx, n => nbsp
-      use kinds, only : dp
-
-      implicit none
-
-      logical firstiter
-
-
-      integer iss, nss, istart, i, j, k, ii, jj, kk
-      real(dp) zmat(nudx,nudx,nspin), fmat(nudx,nudx,nspin),         &
-    &   fdiag(nx)
-
-      call errore(" calcm ", " subroutine not updated ", 1)
-
-      call start_clock('calcm')
-
-
-        do iss=1,nspin
-         nss=nupdwn(iss)
-         istart=iupdwn(iss)
-         do i=1,nss
-          do k=1,nss
-           fmat(k,i,iss)=0.0d0
-           do j=1,nss
-            fmat(k,i,iss)=fmat(k,i,iss)+                                  &
-    &            zmat(k,j,iss)*fdiag(j+istart-1)*zmat(i,j,iss)
-           end do
-          end do
-         end do
-        end do
-
-      call stop_clock('calcm')
-      return
-      end subroutine calcm
 
     subroutine minparabola(ene0,dene0,ene1,passop,passo,stima)
 !this subroutines finds the minimum of a quadratic real function

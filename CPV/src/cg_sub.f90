@@ -355,7 +355,7 @@
         call pc2(c0,bec,gi,becm)
 
         
-        if(tens) call calcmt( f, z0t, fmat0, .false. )
+        if(tens) call calcmt( nrlx, f, z0t, fmat0 )
 
         call calbec(1,nsp,eigr,hpsi,bec0) 
 
@@ -509,7 +509,7 @@
         else
           !in the ensamble case the derivative is Sum_ij (<hi|H|Psi_j>+ <Psi_i|H|hj>)*f_ji
           !     calculation of the kinetic energy x=xmin      
-         call calcmt( f, z0t, fmat0, .false. )
+         call calcmt( nrlx, f, z0t, fmat0 )
          do iss = 1, nspin
             nss    = nupdwn(iss)
             istart = iupdwn(iss)
@@ -830,7 +830,7 @@
      endif
 
 
-     call calcmt( f, z0t, fmat0, .false. )
+     call calcmt( nrlx, f, z0t, fmat0 )
 
       call newd(vpot,irb,eigrb,rhovan,fion)
       if (.not.tens) then
