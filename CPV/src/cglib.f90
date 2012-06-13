@@ -84,7 +84,7 @@
 
 
 !-----------------------------------------------------------------------
-      subroutine rotate( z0, c0, bec, c0diag, becdiag, firstiter )
+      subroutine rotate( nrlx, z0, c0, bec, c0diag, becdiag )
 !-----------------------------------------------------------------------
       use kinds, only: dp
       use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbspx, n => nbsp
@@ -97,12 +97,12 @@
       USE cp_interfaces,     ONLY: protate
 
       implicit none
-      integer iss, nss, istart
-      integer :: np_rot, me_rot, nrl, comm_rot
-      real(kind=DP)    z0( MAXVAL(descla(:)%nrlx), nudx, nspin )
+      integer, intent(in) :: nrlx
+      real(kind=DP)    z0( nrlx, nudx, nspin )
       real(kind=DP)    bec( nhsa, n ), becdiag( nhsa, n )
       complex(kind=DP) c0( ngw, nx ), c0diag( ngw, nx )
-      logical firstiter
+      integer :: np_rot, me_rot, nrl, comm_rot
+      integer iss, nss, istart
   
       CALL start_clock( 'rotate' )
 

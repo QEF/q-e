@@ -211,17 +211,17 @@
             endif
             !     calculation of the rotated quantities
 
-            call rotate( z0t, c0(:,:), bec, c0diag, becdiag, .false. )
+            call rotate( nrlx, z0t, c0(:,:), bec, c0diag, becdiag )
             !     calculation of rho corresponding to the rotated wavefunctions
-            call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec,                        &
-                     &                    rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
+            call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec, &
+                        rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
          endif
            
 !when cycle is restarted go to diagonal representation
 
           if(mod(itercg,niter_cg_restart)==1 .and. itercg >=2) then
 
-              call rotate( z0t, c0(:,:), bec, c0diag, becdiag, .false. )
+              call rotate( nrlx, z0t, c0(:,:), bec, c0diag, becdiag )
               c0(:,:)=c0diag(:,:)
               bec(:,:)=becdiag(:,:)
               call id_matrix_init( descla, nspin )
@@ -570,9 +570,10 @@
           endif
 
           !     calculation of the rotated quantities
-          call rotate( z0t, cm(:,:), becm, c0diag, becdiag, .false. )
+          call rotate( nrlx, z0t, cm(:,:), becm, c0diag, becdiag )
           !     calculation of rho corresponding to the rotated wavefunctions
-          call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
+          call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec,rhovan,rhor, &
+                      drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
         endif
 
         !calculate potential
@@ -633,9 +634,10 @@
                       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,dbec,.false., vpot  )
           endif
           !     calculation of the rotated quantities
-          call rotate( z0t, cm(:,:), becm, c0diag, becdiag, .false. )
+          call rotate( nrlx, z0t, cm(:,:), becm, c0diag, becdiag )
           !     calculation of rho corresponding to the rotated wavefunctions
-          call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
+          call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec,rhovan,rhor, &
+                     drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
         endif
 
         !calculates the potential
@@ -726,9 +728,10 @@
                           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,dbec,.false., vpot  )
               endif
               !     calculation of the rotated quantities
-              call rotate( z0t, cm(:,:), becm, c0diag, becdiag, .false. )
+              call rotate( nrlx, z0t, cm(:,:), becm, c0diag, becdiag )
               !     calculation of rho corresponding to the rotated wavefunctions
-              call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
+              call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec,rhovan,rhor, &
+                         drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
             endif
   
             !calculates the potential
@@ -805,10 +808,11 @@
           else
 
             !     calculation of the rotated quantities
-            call rotate( z0t, c0(:,:), bec, c0diag, becdiag, .false. )
+            call rotate( nrlx, z0t, c0(:,:), bec, c0diag, becdiag )
             !     calculation of rho corresponding to the rotated wavefunctions
             call caldbec_bgrp( eigr, c0diag, dbec, descla )
-            call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
+            call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec,rhovan,rhor, &
+                        drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
           endif
 
           !calculates the potential
@@ -926,7 +930,8 @@
               !
               lambdap(:,:,iss) = 0.0d0
               !
-              CALL cyc2blk_redist( nss, fmat0(1,1,iss), nrlx, SIZE(fmat0,2), lambda_dist, nlam, nlam, descla(iss) )
+              CALL cyc2blk_redist( nss, fmat0(1,1,iss), nrlx, SIZE(fmat0,2), &
+                                  lambda_dist, nlam, nlam, descla(iss) )
               !
               ! Perform lambdap = lambda * fmat0
               !
