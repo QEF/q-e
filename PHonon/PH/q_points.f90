@@ -57,7 +57,7 @@ SUBROUTINE q_points ( )
   !
   ! Write the q points in the output
   !
-  write(stdout, '(//5x,"Dynamical matrices for (", 3(i2,","),") &
+  write(stdout, '(//5x,"Dynamical matrices for (", 2(i2,","),i2,") &
            & uniform grid of q-points")') nq1, nq2, nq3
   write(stdout, '(5x,"(",i4,"q-points):")') nqs
   write(stdout, '(5x,"  N         xq(1)         xq(2)         xq(3) " )')
