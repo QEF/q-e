@@ -481,6 +481,7 @@ PROGRAM matdyn
         !
         IF (xmlifc.AND..NOT.lo_to_split) THEN
              ALLOCATE(name_rap_mode(3*nat))
+             WRITE(stdout,'(10x,"xq=",3F8.4)') q(:,n)
              CALL find_representations_mode_q(nat,ntyp,q(:,n), &
                        w2(:,n),z,tau,ityp,amass,name_rap_mode, &
                        num_rap_mode(:,n), nspin_mag)
