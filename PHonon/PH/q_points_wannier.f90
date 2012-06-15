@@ -41,8 +41,7 @@ SUBROUTINE q_points_wannier ( )
 
   nqs=nq1*nq2*nq3
  
-  if(last_q.lt.nqs) nqs=last_q
-
+  if(last_q.lt.nqs.and.last_q.gt.0) nqs=last_q
   allocate (x_q(3,nqmax))
   allocate(wan_index_dyn(nqs))
 
@@ -58,7 +57,7 @@ SUBROUTINE q_points_wannier ( )
           abs(x_q(3,iq)) .lt. 1.0e-10_dp ) then
         exist_gamma = .true.
         if (iq .ne. 1) then
-           call errore('q_points_wannier','first q in Q_POINTS.D must be Gamma',1)
+           call errore('q_points_wannier','first q in dirfile must be Gamma',1)
         end if
      end if
   end do
@@ -74,7 +73,7 @@ SUBROUTINE q_points_wannier ( )
   end do
   !
   IF ( .NOT. exist_gamma) &
-     CALL errore('q_points','Gamma is not a q point',1)
+     CALL errore('q_points_wannier','Gamma is not a q point',1)
 
   !
   ! ... write the information on the grid of q-points to file
