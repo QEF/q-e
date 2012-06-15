@@ -92,7 +92,12 @@ wrappers.o\
 ws_base.o \
 read_cards.o
 
-all : libqemod.a
+all : version libqemod.a
+.PHONY: version
+
+version :
+	- ( if test -x ../dev-tools/update_version ; then \
+                       ../dev-tools/update_version ; fi )
 
 libqemod.a: 	$(MODULES)
 	$(AR) $(ARFLAGS) $@ $?       
