@@ -234,47 +234,6 @@ MODULE cp_main_variables
             ALLOCATE( drhog( 1, 1, 1, 1 ) )
             ALLOCATE( drhor( 1, 1, 1, 1 ) )
       END IF
-!=========================================================================
-!Lingzhu Kong
-      IF ( lwfpbe0 .or. lwfpbe0nscf ) THEN
-
-         lmax=6
-         nord2 = 3
-         ALLOCATE( clm(0:lmax, 0:lmax) )
-         ALLOCATE( coeke(-nord2:nord2, 6))
-         ALLOCATE( exx_potential(dffts%nnr,nbsp), stat=ierr)
-
-         CALL getnpinsp(exx_ps_rcut, exx_me_rcut, np_in_sp, np_in_sp2 )
-
-         ALLOCATE( odtothd_in_sp(3, np_in_sp + np_in_sp2 ), stat=ierr )
-         ALLOCATE( thdtood_in_sp(nr1, nr2, nr3), stat=ierr )
-         ALLOCATE( thdtood(nr1, nr2, nr3), stat=ierr )
-         ALLOCATE( xx_in_sp(1:np_in_sp+np_in_sp2), stat=ierr )
-         ALLOCATE( yy_in_sp(1:np_in_sp+np_in_sp2), stat=ierr )
-         ALLOCATE( zz_in_sp(1:np_in_sp+np_in_sp2), stat=ierr )
-
-         my_nbspx   = nbsp / nproc_image
-
-         IF( MOD(nbsp, nproc_image) /= 0)THEN
-            my_nbspx = my_nbspx + 1
-         ENDIF
-         print *, 'my_nbspx =', my_nbspx
-      END IF
-
-      IF ( lwfpbe0nscf .or. lwfnscf ) ALLOCATE( rhopr( nnr, nspin ) )
-
-      IF ( lwfpbe0nscf ) THEN
-         ALLOCATE( vwc(3, vnbsp) )
-         ALLOCATE( pairv( np_in_sp, 2, neigh, my_nbspx), stat=ierr )
-         pairv (:,:,:,:) = 0.d0
-      ENDIF
-
-      IF ( lwfpbe0 ) THEN
-         ALLOCATE( selfv( np_in_sp, 2,          my_nbspx), stat=ierr )
-         ALLOCATE( pairv( np_in_sp, 2, neigh/2, my_nbspx), stat=ierr )
-         selfv (:,:,:) = 0.d0
-         pairv (:,:,:,:) = 0.d0
-      ENDIF
 !==========================================================================
       !
       !  Compute local dimensions for lambda matrixes

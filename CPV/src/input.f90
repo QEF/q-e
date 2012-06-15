@@ -189,6 +189,7 @@ MODULE input
      USE control_flags, ONLY : do_makov_payne, twfcollect
      USE control_flags, ONLY : lwf, lwfnscf, lwfpbe0, lwfpbe0nscf ! Lingzhu Kong
      USE control_flags, ONLY : lneb, lsmd, lpath
+     USE control_flags, ONLY : llondon
      !
      ! ...  Other modules
      !
@@ -213,7 +214,7 @@ MODULE input
         electron_dynamics, electron_damping, electron_temperature,   &
         ion_dynamics, ekin_conv_thr, etot_conv_thr, forc_conv_thr, ion_maxstep,&
         electron_maxstep, ion_damping, ion_temperature, ion_velocities, tranp, &
-        amprp, ion_nstepe, cell_nstepe, cell_dynamics, cell_damping,           &
+        amprp, ion_nstepe, cell_nstepe, cell_dynamics, cell_damping, london,   &
         cell_parameters, cell_velocities, cell_temperature, force_pairing,     &
         tapos, tavel, ecutwfc, emass, emass_cutoff, taspc, trd_ht, ibrav,      &
         ortho_eps, ortho_max, ntyp, tolp, calculation, disk_io, dt,            &
@@ -243,6 +244,7 @@ MODULE input
      forc_conv_thr_ = forc_conv_thr
      ekin_maxiter_  = electron_maxstep
      iesr           = iesr_inp
+     llondon        = london
      !
      remove_rigid_rot_ = remove_rigid_rot
      twfcollect = wf_collect
@@ -796,6 +798,7 @@ MODULE input
                                   axis
      USE input_parameters, ONLY : lda_plus_u, Hubbard_U
      USE input_parameters, ONLY : step_pen, A_pen, alpha_pen, sigma_pen
+     USE input_parameters, ONLY : london, london_s6, london_rcut
      !
      USE ions_base,        ONLY : zv
      USE cell_base,        ONLY : cell_base_init, cell_dyn_init, at, cell_alat
@@ -821,6 +824,7 @@ MODULE input
      USE funct,            ONLY : dft_is_nonlocc
      USE kernel_table,     ONLY : vdw_table_name_ => vdw_table_name, &
                                   initialize_kernel_table
+     USE london_module,    ONLY : init_london, scal6, lon_rcut
      !
      IMPLICIT NONE
      !
@@ -948,6 +952,12 @@ MODULE input
      !
      CALL ldaU_init0 ( ntyp, lda_plus_u, Hubbard_U )
      CALL ldaUpen_init( SIZE(sigma_pen), step_pen, sigma_pen, alpha_pen, A_pen )
+     !
+     IF ( london) THEN
+        lon_rcut    = london_rcut
+        scal6       = london_s6
+        CALL init_london ( )
+     END IF
      !
      ! ... initialize kernel table for nonlocal functionals
      !

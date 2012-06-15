@@ -13,7 +13,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE kinds,                    ONLY : DP
   USE constants,                ONLY : bohr_radius_angs, amu_au
   USE control_flags,            ONLY : iprint, isave, thdyn, tpre, iverbosity, &
-                                       tfor, remove_rigid_rot, taurdr,         &
+                                       tfor, remove_rigid_rot, taurdr, llondon,&
                                        tprnfor, tsdc, lconstrain, lwf,         &
                                        ndr, ndw, nomore, tsde, textfor,        &
                                        tortho, tnosee, tnosep, trane, tranp,   &
@@ -111,10 +111,12 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE orthogonalize_base,       ONLY : updatc
   USE control_flags,            ONLY : force_pairing
   USE mp,                       ONLY : mp_bcast, mp_sum
-  USE mp_global,                ONLY : root_bgrp, intra_bgrp_comm, np_ortho, me_ortho, ortho_comm, &
+  USE mp_global,                ONLY : root_bgrp, intra_bgrp_comm, np_ortho, &
+                                       me_ortho, ortho_comm, &
                                        me_bgrp, inter_bgrp_comm, nbgrp
   USE ldaU_cp,                  ONLY : lda_plus_u, vupsi
   USE fft_base,                 ONLY : dfftp
+  USE london_module,            ONLY : energy_london, force_london
   !
   IMPLICIT NONE
   !
@@ -323,6 +325,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                           enthal, enb, enbi, fccc, ccc, dt2bye, stress )
      !
      IF (lda_plus_u) fion = fion + forceh
+     !
+     ! DFT+D (Grimme) dispersion forces (factor 0.5 converts to Ha/a.u.)
+     !
+     IF (llondon) fion = fion + force_london ( alat, nat, ityp, at, bg, tau0 )
      !
      IF ( tpre ) THEN
         !
@@ -641,6 +647,11 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         END IF
         !
      END IF
+     !
+     ! DFT+D (Grimme) dispersion contribution to energy (0.5 converts to Ha)
+     !
+     IF ( llondon ) etot = etot + &
+                           0.5_dp*energy_london (alat, nat, ityp, at, bg, tau0)
      !
      epot = eht + epseu + exc
      !
