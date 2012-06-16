@@ -80,7 +80,7 @@ PROGRAM matdyn
   !     l1,l2,l3  supercell lattice vectors are original cell vectors
   !               multiplied by l1, l2, l3 respectively
   !     ntyp      number of atom types in the supercell
-  !     amass     masses of atoms in the supercell
+  !     amass     masses of atoms in the supercell (amu)
   !     readtau   read  atomic positions of the supercell from input
   !               (used to specify different masses)
   !     fltau     write atomic positions of the supercell to file "fltau"
@@ -644,6 +644,7 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   USE ifconstants,ONLY : tau => tau_blk, ityp => ityp_blk, frc, zeu
   USE io_global,  ONLY : ionode, ionode_id, stdout
   USE mp,         ONLY : mp_bcast 
+  USE constants,  ONLY : amconv
   !
   IMPLICIT NONE
   ! I/O variable
@@ -691,7 +692,7 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
      CALL mp_bcast(amass_from_file,ionode_id)
      IF (i.NE.nt) CALL errore ('readfc','wrong data read',nt)
      IF (amass(nt).EQ.0.d0) THEN
-        amass(nt) = amass_from_file
+        amass(nt) = amass_from_file/amconv
      ELSE
         WRITE(stdout,*) 'for atomic type',nt,' mass from file not used'
      END IF

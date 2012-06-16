@@ -6,6 +6,7 @@ New in 5.0.1 version
 
 Fixed in 5.0.1 version
 
+   * Funny frequencies from matdyn.x if masses were read from file
    * Stress calculation in parallel execution was wrong in the
      Gamma-only case when ScaLAPACK was present (v.5.0 only) 
    * Misc compilation problems with old compilers 
