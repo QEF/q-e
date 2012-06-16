@@ -198,15 +198,13 @@ distclean veryclean : clean
 	- @(cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile veryclean)
 	- @(cd install ; $(MAKE) $(MFLAGS) -f extlibs_makefile veryclean)
 	- rm -rf install/patch-plumed
-	- cd install ; rm -f config.log configure.msg config.status autom4te.cache \
+	- cd install ; rm -f config.log configure.msg config.status \
 	CPV/version.h ChangeLog* intel.pcl */intel.pcl
+	- cd install ; rm -fr autom4te.cache
 	- rm -f espresso.tar.gz
-	- cd examples ; ./make_clean
-	- cd PHonon/examples ; ./make_clean
 	- for dir in Doc; do \
 	    test -d $$dir && ( cd $$dir ; $(MAKE) $(MFLAGS) TLDEPS= clean ) \
 	done
-	- test -d GUI && ( cd GUI ;  $(MAKE) $(MFLAGS) TLDEPS= veryclean )
 	- rm -rf make.sys
 
 tar :
