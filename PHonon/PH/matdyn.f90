@@ -91,6 +91,11 @@ PROGRAM matdyn
   !               are given. See below. (default: .false.).
   !     q_in_cryst_coord if .true. input q points are in crystalline coordinates
   !
+  !     eigen_similarity: use similarity of the displacements to order 
+  !                       frequencies  (default: .false.)
+  !                NB: You cannot use this option with the symmetry
+  !                analysis of the modes.
+  !
   !  if (readtau) atom types and positions in the supercell follow:
   !     (tau(i,na),i=1,3), ityp(na)
   !  IF (q_in_band_form.and..not.dos) THEN
@@ -136,7 +141,7 @@ PROGRAM matdyn
   INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ntetra, ibrav
   CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos, filename
   CHARACTER(LEN=10)  :: asr
-  LOGICAL :: dos, has_zstar, q_in_cryst_coord
+  LOGICAL :: dos, has_zstar, q_in_cryst_coord, eigen_similarity
   COMPLEX(DP), ALLOCATABLE :: dyn(:,:,:,:), dyn_blk(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: z(:,:)
   REAL(DP), ALLOCATABLE:: tau(:,:), q(:,:), w2(:,:), freq(:,:)
@@ -210,6 +215,7 @@ PROGRAM matdyn
      l3=1
      la2F=.false.
      q_in_band_form=.FALSE.
+     eigen_similarity=.FALSE.
      q_in_cryst_coord = .FALSE.
      !
      !
@@ -238,6 +244,7 @@ PROGRAM matdyn
      CALL mp_bcast(l3,ionode_id)
      CALL mp_bcast(la2f,ionode_id)
      CALL mp_bcast(q_in_band_form,ionode_id)
+     CALL mp_bcast(eigen_similarity,ionode_id)
      CALL mp_bcast(q_in_cryst_coord,ionode_id)
      !
      ! read force constants
@@ -489,23 +496,26 @@ PROGRAM matdyn
             code_group_old=code_group
             DEALLOCATE(name_rap_mode)
         ENDIF
-        ! ... order phonon dispersions using similarity of eigenvalues
-        ! ... Courtesy of Takeshi Nishimatsu, IMR, Tohoku University 
-        IF (.NOT.ALLOCATED(tmp_z)) THEN
-           ALLOCATE(tmp_z(3*nat,3*nat))
-        ELSE
-           abs_similarity = ABS ( MATMUL ( CONJG( TRANSPOSE(z)), tmp_z ) )
-           mask(:) = .true.
-           DO na=1,3*nat
-              location = maxloc( abs_similarity(:,na), mask(:) )
-              mask(location(1)) = .false.
-              tmp_w2(na) = w2(location(1),n)
-              tmp_z(:,na) = z(:,location(1))
-            END DO
-            w2(:,n) = tmp_w2(:)
-            z(:,:) = tmp_z(:,:)
-        END IF
-        tmp_z(:,:) = z(:,:)
+
+        IF (eigen_similarity) THEN
+           ! ... order phonon dispersions using similarity of eigenvalues
+           ! ... Courtesy of Takeshi Nishimatsu, IMR, Tohoku University 
+           IF (.NOT.ALLOCATED(tmp_z)) THEN
+              ALLOCATE(tmp_z(3*nat,3*nat))
+           ELSE
+              abs_similarity = ABS ( MATMUL ( CONJG( TRANSPOSE(z)), tmp_z ) )
+              mask(:) = .true.
+              DO na=1,3*nat
+                 location = maxloc( abs_similarity(:,na), mask(:) )
+                 mask(location(1)) = .false.
+                 tmp_w2(na) = w2(location(1),n)
+                 tmp_z(:,na) = z(:,location(1))
+              END DO
+              w2(:,n) = tmp_w2(:)
+              z(:,:) = tmp_z(:,:)
+           END IF
+           tmp_z(:,:) = z(:,:)
+        ENDIF
         !
         if(la2F.and.ionode) then
            write(300,*) n
@@ -517,7 +527,8 @@ PROGRAM matdyn
         IF (ionode) CALL writemodes(nax,nat,q(1,n),w2(1,n),z,iout)
         !
      END DO  !nq
-     DEALLOCATE (tmp_z, tmp_w2, abs_similarity, mask)
+     DEALLOCATE (tmp_w2, abs_similarity, mask)
+     IF (eigen_similarity) DEALLOCATE(tmp_z)
      if(la2F.and.ionode) close(300)
      !
      IF(iout .NE. stdout.and.ionode) CLOSE(unit=iout)
