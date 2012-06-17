@@ -75,6 +75,7 @@ PROGRAM matdyn
   !               and is normalised to 3*nat, i.e. the number of phonons
   !     flfrq     output file for frequencies (default: 'matdyn.freq')
   !     flvec     output file for normal modes (default: 'matdyn.modes')
+  !     fldyn     output file for dynamical matrix (default: ' ' i.e. does not write)
   !     at        supercell lattice vectors - must form a superlattice of the
   !               original lattice
   !     l1,l2,l3  supercell lattice vectors are original cell vectors
@@ -139,7 +140,7 @@ PROGRAM matdyn
   INTEGER, PARAMETER:: ntypx=10, nrwsx=200
   REAL(DP), PARAMETER :: eps=1.0d-6
   INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ntetra, ibrav
-  CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos, filename
+  CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos, filename, fldyn
   CHARACTER(LEN=10)  :: asr
   LOGICAL :: dos, has_zstar, q_in_cryst_coord, eigen_similarity
   COMPLEX(DP), ALLOCATABLE :: dyn(:,:,:,:), dyn_blk(:,:,:,:)
@@ -168,7 +169,7 @@ PROGRAM matdyn
   REAL(DP) :: celldm(6), delta, pathL
   REAL(DP), ALLOCATABLE :: xqaux(:,:)
   INTEGER, ALLOCATABLE :: nqb(:)
-  INTEGER :: n, i, j, it, nq, nqx, na, nb, ndos, iout, nqtot
+  INTEGER :: n, i, j, it, nq, nqx, na, nb, ndos, iout, nqtot, iout_dyn
   LOGICAL, EXTERNAL :: has_xml
   CHARACTER(LEN=15), ALLOCATABLE :: name_rap_mode(:)
   INTEGER, ALLOCATABLE :: num_rap_mode(:,:)
@@ -182,7 +183,7 @@ PROGRAM matdyn
   !
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, at, dos,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, &
-                   la2F, ndos, DeltaE, q_in_band_form, q_in_cryst_coord
+       &           la2F, ndos, DeltaE, q_in_band_form, q_in_cryst_coord, fldyn
   !
   CALL mp_startup()
   CALL environment_start('MATDYN')
@@ -205,6 +206,7 @@ PROGRAM matdyn
      fldos='matdyn.dos'
      flfrq='matdyn.freq'
      flvec='matdyn.modes'
+     fldyn=' '
      fltau=' '
      amass(:) =0.d0
      amass_blk(:) =0.d0
@@ -234,6 +236,7 @@ PROGRAM matdyn
      CALL mp_bcast(fldos,ionode_id)
      CALL mp_bcast(flfrq,ionode_id)
      CALL mp_bcast(flvec,ionode_id)
+     CALL mp_bcast(fldyn,ionode_id)
      CALL mp_bcast(fltau,ionode_id)
      CALL mp_bcast(amass,ionode_id)
      CALL mp_bcast(amass_blk,ionode_id)
@@ -246,6 +249,7 @@ PROGRAM matdyn
      CALL mp_bcast(q_in_band_form,ionode_id)
      CALL mp_bcast(eigen_similarity,ionode_id)
      CALL mp_bcast(q_in_cryst_coord,ionode_id)
+
      !
      ! read force constants
      !
@@ -421,6 +425,14 @@ PROGRAM matdyn
         IF (ionode) OPEN (unit=iout,file=flvec,status='unknown',form='formatted')
      END IF
 
+     IF (fldyn.EQ.' ') THEN
+        iout_dyn=0
+     ELSE
+        iout_dyn=44
+        OPEN (unit=iout_dyn,file=fldyn,status='unknown',form='formatted')
+     END IF
+
+
      ALLOCATE ( dyn(3,3,nat,nat), dyn_blk(3,3,nat_blk,nat_blk) )
      ALLOCATE ( z(3*nat,3*nat), w2(3*nat,nq) )
      ALLOCATE ( tmp_w2(3*nat), abs_similarity(3*nat,3*nat), mask(3*nat) )
@@ -481,6 +493,10 @@ PROGRAM matdyn
            !
         END IF
         !
+        
+        if(iout_dyn.ne.0) call write_dyn_on_file(q(1,n),dyn,nat, iout_dyn)
+        
+
         CALL dyndiag(nat,ntyp,amass,ityp,dyn,w2(1,n),z)
         !
         ! Cannot use the small group of \Gamma to analize the symmetry
@@ -532,6 +548,7 @@ PROGRAM matdyn
      if(la2F.and.ionode) close(300)
      !
      IF(iout .NE. stdout.and.ionode) CLOSE(unit=iout)
+     IF(iout_dyn .NE. 0) CLOSE(unit=iout_dyn)
      !
      ALLOCATE (freq(3*nat, nq))
      DO n=1,nq
