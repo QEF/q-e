@@ -39,7 +39,7 @@ PROGRAM matdyn
   !     flfrc     file produced by q2r containing force constants (needed)
   !               It is the same as in the input of q2r.x (+ the .xml extension
   !               if the dynamical matrices produced by ph.x were in xml
-  !               format).
+  !               format). No default value: must be specified.
   !      asr      (character) indicates the type of Acoustic Sum Rule imposed
   !               - 'no': no Acoustic Sum Rules imposed (default)
   !               - 'simple':  previous implementation of the asr used
@@ -63,13 +63,14 @@ PROGRAM matdyn
   !               using tetrahedra and a uniform q-point grid (see below)
   !               NB: may not work properly in noncubic materials
   !               if .false. calculate phonon bands from the list of q-points
-  !               supplied in input
+  !               supplied in input (default)
   !     nk1,nk2,nk3  uniform q-point grid for DOS calculation (includes q=0)
+  !                  (must be specified if dos=.true., ignored otherwise)
   !     deltaE    energy step, in cm^(-1), for DOS calculation: from min
-  !               to max phonon energy (default: 1 cm^(-1) if ndos is
-  !               not specified)
+  !               to max phonon energy (default: 1 cm^(-1) if ndos, see
+  !               below, is not specified)
   !     ndos      number of energy steps for DOS calculations
-  !               (no default: calculated from deltaE if not specified)
+  !               (default: calculated from deltaE if not specified)
   !     fldos     output file for dos (default: 'matdyn.dos')
   !               the dos is in states/cm(-1) plotted vs omega in cm(-1)
   !               and is normalised to 3*nat, i.e. the number of phonons
@@ -77,21 +78,23 @@ PROGRAM matdyn
   !     flvec     output file for normal modes (default: 'matdyn.modes')
   !     fldyn     output file for dynamical matrix (default: ' ' i.e. does not write)
   !     at        supercell lattice vectors - must form a superlattice of the
-  !               original lattice
-  !     l1,l2,l3  supercell lattice vectors are original cell vectors
-  !               multiplied by l1, l2, l3 respectively
-  !     ntyp      number of atom types in the supercell
-  !     amass     masses of atoms in the supercell (amu)
+  !               original lattice (default: use original cell)
+  !     l1,l2,l3  supercell lattice vectors are original cell vectors times
+  !               l1, l2, l3 respectively (default: 1, ignored if at specified)
+  !     ntyp      number of atom types in the supercell (default: ntyp of the
+  !               original cell)
+  !     amass     masses of atoms in the supercell (a.m.u.), one per atom type
+  !               (default: use masses read from file flfrc)
   !     readtau   read  atomic positions of the supercell from input
-  !               (used to specify different masses)
+  !               (used to specify different masses) (default: .false.)
   !     fltau     write atomic positions of the supercell to file "fltau"
   !               (default: fltau=' ', do not write)
   !     la2F      if .true. interpolates also the el-ph coefficients.
   !     q_in_band_form if .true. the q points are given in band form:
   !               Only the first and last point of one or more lines 
   !               are given. See below. (default: .false.).
-  !     q_in_cryst_coord if .true. input q points are in crystalline coordinates
-  !
+  !     q_in_cryst_coord if .true. input q points are in crystalline 
+  !              coordinates (default: .false.)
   !     eigen_similarity: use similarity of the displacements to order 
   !                       frequencies  (default: .false.)
   !                NB: You cannot use this option with the symmetry
