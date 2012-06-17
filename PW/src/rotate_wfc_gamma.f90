@@ -59,8 +59,7 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   !
   CALL h_psi( npwx, npw, nstart, psi, aux )
   !
-  CALL DGEMM( 'T', 'N', nstart, nstart, 2 * npw, 2.D0 , psi, &
-              2 * npwx, aux, 2 * npwx, 0.D0, hr, nstart )
+  CALL DGEMM( 'T', 'N', nstart, nstart, 2 * npw, 2.D0 , psi,  2 * npwx, aux, 2 * npwx, 0.D0, hr, nstart )
   !  
   IF ( gstart == 2 ) &
      call DGER( nstart, nstart, -1.D0, psi, 2 * npwx, aux, &
@@ -72,8 +71,7 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
      ! 
      CALL s_psi( npwx, npw, nstart, psi, aux )
      !
-     CALL DGEMM( 'T', 'N', nstart, nstart, 2 * npw, 2.D0 , psi, &
-                 2 * npwx, aux, 2 * npwx, 0.D0, sr, nstart )
+     CALL DGEMM( 'T', 'N', nstart, nstart, 2 * npw, 2.D0 , psi,  2 * npwx, aux, 2 * npwx, 0.D0, sr, nstart )
      !            
      IF ( gstart == 2 ) &
         CALL DGER( nstart, nstart, -1.D0, psi, 2 * npwx, &
@@ -81,8 +79,7 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
      !              
   ELSE
      !
-     CALL DGEMM( 'T', 'N', nstart, nstart, 2 * npw, 2.D0, psi, &
-                 2 * npwx, psi, 2 * npwx, 0.D0, sr, nstart )
+     CALL DGEMM( 'T', 'N', nstart, nstart, 2 * npw, 2.D0, psi,  2 * npwx, psi, 2 * npwx, 0.D0, sr, nstart )
      !
      IF ( gstart == 2 ) &
         CALL DGER( nstart, nstart, -1.D0, psi, 2 * npwx, &
@@ -100,8 +97,7 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   !
   ! ... update the basis set
   !
-  CALL DGEMM( 'N', 'N', 2 * npw, nbnd, nstart, 1.D0, psi, 2 * npwx, &
-              vr, nstart, 0.D0, aux, 2 * npwx )
+  CALL DGEMM( 'N', 'N', 2 * npw, nbnd, nstart, 1.D0, psi, 2 * npwx,  vr, nstart, 0.D0, aux, 2 * npwx )
   !   
   evc(:,:) = aux(:,1:nbnd)
   !
@@ -290,8 +286,7 @@ CONTAINS
 
            ! use blas subs. on the matrix block
 
-           CALL DGEMM( 'T', 'N', nr, nc, 2*npw, 2.D0 , &
-                       v(1,ir), 2*npwx, w(1,ic), 2*npwx, 0.D0, work, nx )
+           CALL DGEMM( 'T', 'N', nr, nc, 2*npw, 2.D0 ,  v(1,ir), 2*npwx, w(1,ic), 2*npwx, 0.D0, work, nx )
 
            IF ( gstart == 2 ) &
               CALL DGER( nr, nc, -1.D0, v(1,ir), 2*npwx, w(1,ic), 2*npwx, work, nx )
@@ -344,15 +339,13 @@ CONTAINS
                  !  this proc sends his block
                  ! 
                  CALL mp_bcast( vr(:,1:nc), root, intra_bgrp_comm )
-                 CALL DGEMM( 'N', 'N', 2*npw, nc, nr, 1.D0, &
-                          psi(1,ir), 2*npwx, vr, nx, beta, aux(1,ic), 2*npwx )
+                 CALL DGEMM( 'N', 'N', 2*npw, nc, nr, 1.D0,  psi(1,ir), 2*npwx, vr, nx, beta, aux(1,ic), 2*npwx )
               ELSE
                  !
                  !  all other procs receive
                  ! 
                  CALL mp_bcast( vtmp(:,1:nc), root, intra_bgrp_comm )
-                 CALL DGEMM( 'N', 'N', 2*npw, nc, nr, 1.D0, &
-                          psi(1,ir), 2*npwx, vtmp, nx, beta, aux(1,ic), 2*npwx )
+                 CALL DGEMM( 'N', 'N', 2*npw, nc, nr, 1.D0,  psi(1,ir), 2*npwx, vtmp, nx, beta, aux(1,ic), 2*npwx )
               END IF
               ! 
 

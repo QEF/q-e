@@ -63,8 +63,7 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   !
   CALL h_psi( npwx, npw, nstart, psi, aux )
   !
-  call ZGEMM( 'C', 'N', nstart, nstart, kdim, ( 1.D0, 0.D0 ), psi, kdmx, &
-              aux, kdmx, ( 0.D0, 0.D0 ), hc, nstart )
+  call ZGEMM( 'C', 'N', nstart, nstart, kdim, ( 1.D0, 0.D0 ), psi, kdmx,  aux, kdmx, ( 0.D0, 0.D0 ), hc, nstart )
   !            
   CALL mp_sum(  hc , intra_bgrp_comm )
   !
@@ -72,13 +71,11 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
      !
      CALL s_psi( npwx, npw, nstart, psi, aux )
      !
-     CALL ZGEMM( 'C', 'N', nstart, nstart, kdim, ( 1.D0, 0.D0 ), psi, kdmx, &
-                 aux, kdmx, ( 0.D0, 0.D0 ), sc, nstart )
+     CALL ZGEMM( 'C', 'N', nstart, nstart, kdim, ( 1.D0, 0.D0 ), psi, kdmx,  aux, kdmx, ( 0.D0, 0.D0 ), sc, nstart )
      !
   ELSE
      !
-     CALL ZGEMM( 'C', 'N', nstart, nstart, kdim, ( 1.D0, 0.D0 ), psi, kdmx, &
-                 psi, kdmx, ( 0.D0, 0.D0 ), sc, nstart )
+     CALL ZGEMM( 'C', 'N', nstart, nstart, kdim, ( 1.D0, 0.D0 ), psi, kdmx, psi, kdmx, ( 0.D0, 0.D0 ), sc, nstart )
      !  
   END IF
   !
@@ -92,8 +89,7 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   !
   ! ...  update the basis set
   !  
-  CALL ZGEMM( 'N', 'N', kdim, nbnd, nstart, ( 1.D0, 0.D0 ), psi, kdmx, &
-              vc, nstart, ( 0.D0, 0.D0 ), aux, kdmx ) 
+  CALL ZGEMM( 'N', 'N', kdim, nbnd, nstart, ( 1.D0, 0.D0 ), psi, kdmx, vc, nstart, ( 0.D0, 0.D0 ), aux, kdmx )
   !     
   evc(:,:) = aux(:,1:nbnd)
   !
@@ -288,8 +284,7 @@ CONTAINS
 
            ! use blas subs. on the matrix block
 
-           CALL ZGEMM( 'C', 'N', nr, nc, kdim, ( 1.D0, 0.D0 ) , &
-                       v(1,ir), kdmx, w(1,ic), kdmx, ( 0.D0, 0.D0 ), work, nx )
+           CALL ZGEMM( 'C', 'N', nr, nc, kdim, ( 1.D0, 0.D0 ) ,  v(1,ir), kdmx, w(1,ic), kdmx, ( 0.D0, 0.D0 ), work, nx )
 
            ! accumulate result on dm of root proc.
            CALL mp_root_sum( work, dm, root, intra_bgrp_comm )
@@ -338,15 +333,13 @@ CONTAINS
                  !  this proc sends his block
                  ! 
                  CALL mp_bcast( vc(:,1:nc), root, intra_bgrp_comm )
-                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ), &
-                          psi(1,ir), kdmx, vc, nx, beta, aux(1,ic), kdmx )
+                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ),  psi(1,ir), kdmx, vc, nx, beta, aux(1,ic), kdmx )
               ELSE
                  !
                  !  all other procs receive
                  ! 
                  CALL mp_bcast( vtmp(:,1:nc), root, intra_bgrp_comm )
-                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ), &
-                          psi(1,ir), kdmx, vtmp, nx, beta, aux(1,ic), kdmx )
+                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ),  psi(1,ir), kdmx, vtmp, nx, beta, aux(1,ic), kdmx )
               END IF
               ! 
 
