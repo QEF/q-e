@@ -31,12 +31,16 @@ MANUAL=" Usage
 auxdir=`echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 if [ "$auxdir" != "configure" ] ; then cd $auxdir ; fi
 
+root=.
+if [ -d "GPU" ]; then
+	root="./GPU"
+fi
 
 #
 # detect the simplest cases 
 #
 case $1 in 
-  ("-h" | "--help" )      echo "$MANUAL"     ; ./install/configure --help ; exit 0 ;;
+  ("-h" | "--help" )      echo "$MANUAL"     ; $root/install/configure --help ; exit 0 ;;
 esac
 
 #
@@ -44,19 +48,19 @@ esac
 # given cong_flags 
 #
 
-test -e ./install/make.sys       && rm ./install/make.sys
-test -e ./install/configure.msg  && rm ./install/configure.msg
+test -e $root/install/make.sys       && rm $root/install/make.sys
+test -e $root/install/configure.msg  && rm $root/install/configure.msg
 
-./install/configure "$@"
+$root/install/configure "$@"
 
 #
 # copy make.sys in the home dir
 # and final clean up
 #
-test -e ./install/make.sys && mv ./install/make.sys .
-test -e config.log        && mv config.log    ./install/
-test -e config.status     && mv config.status ./install/
-test -e configure.msg     && mv configure.msg ./install/
+test -e $root/install/make.sys && mv $root/install/make.sys .
+test -e config.log        && mv config.log   $root/install/
+test -e config.status     && mv config.status $root/install/
+test -e configure.msg     && mv configure.msg $root/install/
 #
 
 exit 0
