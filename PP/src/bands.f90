@@ -127,15 +127,15 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   !    method works in many, but not in all the cases.
   !
   !
-  USE atom
+  USE kinds,                ONLY : dp
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
-  USE cell_base
+  USE cell_base,            ONLY : at, tpiba2
   USE constants,            ONLY : rytoev
-  USE gvect
+  USE gvect,                ONLY : g, ngm
   USE lsda_mod,             ONLY : nspin
-  USE klist
+  USE klist,                ONLY : xk, nks, nkstot
   USE io_files,             ONLY : iunpun, nwordwfc, iunwfc
-  USE wvfct
+  USE wvfct,                ONLY : nbnd, et, ecutwfc, igk, npw, npwx, g2kin
   USE uspp,                 ONLY : nkb, vkb, qq
   USE uspp_param,           ONLY : upf, nh, nhm
   USE noncollin_module,     ONLY : noncolin, npol
