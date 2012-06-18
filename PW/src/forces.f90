@@ -125,7 +125,7 @@ SUBROUTINE forces()
     !
     ALLOCATE ( force_mt ( 3 , nat ) )
 #ifdef __ENVIRON
-    IF ( do_environ ) THEN
+    IF ( do_environ .AND. env_static_permittivity .GT. 1.D0 ) THEN
       ALLOCATE( aux( dfftp%nnr ) )
       aux(:) = CMPLX(rhopol( : ),0.D0,kind=dp) 
       CALL fwfft ('Dense', aux, dfftp)
@@ -135,7 +135,7 @@ SUBROUTINE forces()
     CALL wg_corr_force( omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, &
                         nspin, rho%of_g, force_mt )
 #ifdef __ENVIRON
-    IF ( do_environ ) THEN
+    IF ( do_environ .AND. env_static_permittivity .GT. 1.D0  ) THEN
       rho%of_g(:,1) = rho%of_g(:,1) - aux(nl(:))
       DEALLOCATE(aux)
     ENDIF
