@@ -81,6 +81,20 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
 
 	    }
 	}
+
+        var plot_2d -type LOGICAL {
+            default { .false. }
+            info {
+                If .true. writes the eigenvalues in the output file
+                in a 2D format readable by gnuplot. Band ordering is not 
+                changed. Each band is written in a different file called 
+                filband.# with the format:
+                xk, yk, energy
+                xk, yk, energy
+                ..  ..  ..
+                enegies are written in eV and xk in units 2\pi/a.
+        }
+
            
 	vargroup -type INTEGER {
 	    var firstk

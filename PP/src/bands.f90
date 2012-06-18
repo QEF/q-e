@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -29,12 +29,12 @@ PROGRAM do_bands
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   CHARACTER (len=256) :: filband, filp, outdir
-  LOGICAL :: lsigma(4), lsym, lp, no_overlap
+  LOGICAL :: lsigma(4), lsym, lp, no_overlap, plot_2d
   INTEGER :: spin_component, firstk, lastk
   INTEGER :: ios
   !
   NAMELIST / bands / outdir, prefix, filband, filp, spin_component, lsigma,&
-                       lsym, lp, filp, firstk, lastk, no_overlap
+                       lsym, lp, filp, firstk, lastk, no_overlap, plot_2d
   !
   ! initialise environment
   !
@@ -56,6 +56,7 @@ PROGRAM do_bands
   firstk=0
   lastk=10000000
   spin_component = 1
+  plot_2d=.false.
   no_overlap=.false.
   !
   ios = 0
@@ -90,6 +91,13 @@ PROGRAM do_bands
   CALL mp_bcast( lsym, ionode_id )
   CALL mp_bcast( lsigma, ionode_id )
   CALL mp_bcast( no_overlap, ionode_id )
+  CALL mp_bcast( plot_2d, ionode_id )
+
+  IF (plot_2d) THEN
+     lsym=.false.
+     lp=.false.
+     no_overlap=.true.
+  ENDIF
 
   IF ( npool > 1 .and..not.(lsym.or.no_overlap)) CALL errore('bands', &
                                              'pools not implemented',npool)
@@ -109,9 +117,13 @@ PROGRAM do_bands
   CALL openfil_pp()
   !
   IF (lsym) no_overlap=.true.
-  CALL punch_band(filband,spin_component,lsigma,no_overlap)
-  IF (lsym) CALL sym_band(filband,spin_component,firstk,lastk)
-  IF (lp) CALL write_p_avg(filp,spin_component,firstk,lastk)
+  IF (plot_2d) THEN
+     CALL punch_band_2d(filband,spin_component)
+  ELSE
+     CALL punch_band(filband,spin_component,lsigma,no_overlap)
+     IF (lsym) CALL sym_band(filband,spin_component,firstk,lastk)
+     IF (lp) CALL write_p_avg(filp,spin_component,firstk,lastk)
+  END IF
   !
   CALL stop_pp
   STOP
@@ -489,3 +501,108 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   RETURN
   !
 END SUBROUTINE punch_band
+
+SUBROUTINE punch_band_2d(filband,spin_component)
+!
+!  This routine opens a file for each band and writes on output 
+!  kx, ky, energy, 
+!  kx, ky, energy
+!  .., .., ..
+!  where kx and ky are proportional to the length
+!  of the vectors k_1 and k_2 specified in the input of the 2d plot.
+!
+!  The k points are supposed to be in the form
+!  xk(i,j) = xk_0 + dkx *(i-1) + dky * (j-1)      1<i<n1, 1<j<n2
+!
+!  kx(i,j) = (i-1) |dkx|
+!  ky(i,j) = (j-1) |dky|
+!
+   USE kinds, ONLY : DP
+   USE constants, ONLY : eps8, rytoev
+   USE lsda_mod,  ONLY : nspin
+   USE klist, ONLY : xk, nkstot, nks
+   USE wvfct, ONLY : et, nbnd
+   USE io_files, ONLY : iuntmp
+   USE io_global, ONLY : ionode, ionode_id
+   USE mp, ONLY : mp_bcast
+
+   IMPLICIT NONE
+   CHARACTER(LEN=256),INTENT(IN) :: filband
+   INTEGER, INTENT(IN) :: spin_component
+   REAL(DP) :: xk0(3), xk1(3), xk2(3), dkx(3), dky(3), xkdum(3), mdkx, mdky
+   INTEGER :: n1, n2
+   INTEGER :: ik, i, i1, i2, ibnd, ijk, start_k, last_k, nks_eff, j, ios
+   CHARACTER(LEN=256) :: filename
+   CHARACTER(LEN=6), EXTERNAL :: int_to_char
+   REAL(DP), ALLOCATABLE :: xk_collect(:,:), et_collect(:,:)
+   
+   ALLOCATE(xk_collect(3,nkstot))
+   ALLOCATE(et_collect(nbnd,nkstot))
+   CALL xk_et_collect( xk_collect, et_collect, xk, et, nkstot, nks, nbnd )
+
+   start_k=1
+   last_k=nkstot
+   nks_eff=nkstot
+   IF (nspin==2) THEN
+      nks_eff=nkstot/2
+      IF (spin_component==1) THEN
+         start_k=1
+         last_k=nks_eff
+      ELSE
+         start_k=nks_eff+1
+         last_k=nkstot
+      ENDIF
+   ENDIF
+!
+!  Determine xk0
+!
+   xk0(:)=xk_collect(:,start_k)
+!
+! Determine dkx
+!
+   dky(:)=xk_collect(:,start_k+1)-xk0(:)
+!
+! Determine n2 and dky
+!
+
+loop_k:  DO j=start_k+2, nkstot
+     xkdum(:)=xk0(:)+(j-1)*dky(:)
+     IF (ABS(xk_collect(1,j)-xkdum(1))>eps8.OR.   &
+         ABS(xk_collect(2,j)-xkdum(2))>eps8.OR.   &
+         ABS(xk_collect(3,j)-xkdum(3))>eps8) THEN    
+         n2=j-1
+         dkx(:)=xk_collect(:,j)-xk0(:)
+         EXIT loop_k
+     ENDIF
+  ENDDO  loop_k
+  n1=nks_eff/n2
+  IF (n1*n2 /= nks_eff) CALL errore('punch_band_2d',&
+                                    'Problems with k points',1)
+  mdkx = sqrt( dkx(1)**2 + dkx(2)**2 + dkx(3)**2 )
+  mdky = sqrt( dky(1)**2 + dky(2)**2 + dky(3)**2 )
+!   
+!  write the output, a band per file
+!
+  DO ibnd=1,nbnd
+     filename=TRIM(filband) // '.' // TRIM(int_to_char(ibnd))
+     IF (ionode) &
+     open(unit=iuntmp,file=filename,status='unknown', err=100, iostat=ios)
+     CALL mp_bcast(ios,ionode_id)
+100  CALL errore('punch_band_2d','Problem opening outputfile',ios)
+     ijk=0
+     DO i1=1,n1
+        DO i2=1,n2
+           ijk=ijk+1
+           IF (ionode) &
+           WRITE(iuntmp,'(3f16.6)') mdkx*(i1-1), mdky*(i2-1), &
+                                    et_collect(ibnd,ijk)*rytoev
+        ENDDO 
+     ENDDO
+     IF (ionode) CLOSE(unit=iuntmp,status='KEEP')
+  ENDDO
+
+  DEALLOCATE(xk_collect)
+  DEALLOCATE(et_collect)
+
+  RETURN
+  END

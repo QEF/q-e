@@ -39,6 +39,7 @@ sym_band.o \
 work_function.o \
 write_p_avg.o \
 xsf.o \
+xk_et_collect.o \
 wannier_hamiltonians.o 
 
 PWOBJS = ../../PW/src/libpw.a
