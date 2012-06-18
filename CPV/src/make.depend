@@ -194,6 +194,7 @@ cpr.o : ../../Modules/io_files.o
 cpr.o : ../../Modules/io_global.o
 cpr.o : ../../Modules/ions_base.o
 cpr.o : ../../Modules/kind.o
+cpr.o : ../../Modules/mm_dispersion.o
 cpr.o : ../../Modules/mp.o
 cpr.o : ../../Modules/mp_global.o
 cpr.o : ../../Modules/recvec.o
@@ -505,6 +506,7 @@ input.o : ../../Modules/io_global.o
 input.o : ../../Modules/ions_base.o
 input.o : ../../Modules/kernel_table.o
 input.o : ../../Modules/kind.o
+input.o : ../../Modules/mm_dispersion.o
 input.o : ../../Modules/read_input.o
 input.o : ../../Modules/read_pseudo.o
 input.o : ../../Modules/run_info.o

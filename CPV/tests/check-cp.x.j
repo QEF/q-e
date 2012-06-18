@@ -221,8 +221,8 @@ do
       get_pp $TESTDIR/$name.in$i 
       $ECHO ".$i.\c"
       steps=`echo $steps $i`
-      $PARA_PREFIX $ESPRESSO_ROOT/bin/cp.x $PARA_POSTFIX < $TESTDIR/$name.in$i \
-                                                     > $TESTDIR/$name.out$i
+      $PARA_PREFIX $ESPRESSO_ROOT/bin/cp.x $PARA_POSTFIX \
+                               -inp $TESTDIR/$name.in$i > $TESTDIR/$name.out$i
       if test $? != 0; then
         $ECHO "FAILED with error condition!"
         $ECHO "Input: $name.in$i, Output: $name.out$i, Reference: $name.ref$i"

@@ -377,8 +377,7 @@ MODULE london_module
             dist6 = dist ** 6
             !
             f_damp = 1.d0 / ( 1.d0 + &
-            !
-            exp ( -beta * ( dist / ( R_sum ( ityp ( atb ) , ityp ( ata ) ) ) - 1 )))
+            exp ( -beta * ( dist / ( R_sum ( ityp (atb) , ityp (ata) ) ) - 1 )))
             !
             energy_london = energy_london - &
                   ( C6_ij ( ityp ( atb ) , ityp ( ata ) ) / dist6 ) * &

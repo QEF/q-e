@@ -650,8 +650,12 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      ! DFT+D (Grimme) dispersion contribution to energy (0.5 converts to Ha)
      !
-     IF ( llondon ) etot = etot + &
-                           0.5_dp*energy_london (alat, nat, ityp, at, bg, tau0)
+     IF ( llondon ) THEN
+        ALLOCATE( usrt_tau0( 3, nat ) )
+        usrt_tau0(:,:) = tau0(:,ind_bck(:))/alat
+        etot = etot + 0.5_dp*energy_london (alat, nat,ityp,at,bg, usrt_tau0)
+        DEALLOCATE (usrt_tau0)
+     END IF
      !
      epot = eht + epseu + exc
      !

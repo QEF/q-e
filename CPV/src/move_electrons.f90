@@ -80,7 +80,6 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
      !
      CALL rhoofr( nfi, c0_bgrp, irb, eigrb, bec_bgrp, dbec, becsum, rhor, &
                   drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
-!=================================================================
      !
      ! ... put core charge (if present) in rhoc(r)
      !
