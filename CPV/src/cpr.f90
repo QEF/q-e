@@ -328,7 +328,13 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      ! DFT+D (Grimme) dispersion forces (factor 0.5 converts to Ha/a.u.)
      !
-     IF (llondon) fion = fion + force_london ( alat, nat, ityp, at, bg, tau0 )
+     IF ( llondon ) THEN
+        ALLOCATE( usrt_tau0( 3, nat ), usrt_fion( 3, nat ) )
+        usrt_tau0(:,:) = tau0(:,ind_bck(:))/alat
+        usrt_fion =  0.5_dp*force_london ( alat, nat,ityp, at,bg, usrt_tau0 )
+        fion(:,:) = fion(:,:) + usrt_fion(:,ind_srt(:))
+        DEALLOCATE (usrt_fion, usrt_tau0)
+     END IF
      !
      IF ( tpre ) THEN
         !
