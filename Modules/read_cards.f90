@@ -600,6 +600,20 @@ CONTAINS
    !   mesh_option == crystal_b  as crystal but the weights gives the
    !                             number of points between this point and
    !                             the next
+   !   mesh_option == tpiba_c    the code expects three k points 
+   !                             k_0, k_1, k_2 in tpiba units.
+   !                             These points define a rectangle
+   !                             in reciprocal space with vertices k_0, k_1,
+   !                             k_2, k_1+k_2-k_0:  k_0 + \alpha (k_1-k_0)+
+   !                             \beta (k_2-k_0) with 0<\alpha,\beta < 1. 
+   !                             The code produces a uniform mesh n1 x n2 
+   !                             k points in this rectangle. n1 and n2 are 
+   !                             the weights of k_1 and k_2. The weight of k_0
+   !                             is not used. Useful for contour plots of the 
+   !                             bands.
+   !   mesh_option == crystal_c  as tpiba_c but the k points are given
+   !                             in crystal coordinates.
+   ! 
    !
    !   n       ( integer )  number of k points
    !   xk(:,i) ( real )     coordinates of i-th k point
@@ -614,14 +628,16 @@ CONTAINS
       IMPLICIT NONE
       !
       CHARACTER(len=256) :: input_line
-      INTEGER            :: i, j
+      INTEGER            :: i, j, ijk
       INTEGER            :: nkaux
       INTEGER, ALLOCATABLE :: wkaux(:)
       REAL(DP), ALLOCATABLE :: xkaux(:,:)
       REAL(DP) :: delta, wk0
+      REAL(DP) :: dkx(3), dky(3)
       LOGICAL, EXTERNAL  :: matches
       LOGICAL            :: tend,terr
       LOGICAL            :: kband = .false.
+      LOGICAL            :: kband_plane = .false.
       !
       !
       IF ( tkpoints ) THEN
@@ -635,10 +651,12 @@ CONTAINS
          !  input k-points are in crystal (reciprocal lattice) axis
          k_points = 'crystal'
          IF ( matches( "_B", input_line ) ) kband=.true.
+         IF ( matches( "_C", input_line ) ) kband_plane=.true.
       ELSEIF ( matches( "TPIBA", input_line ) ) THEN
          !  input k-points are in 2pi/a units
          k_points = 'tpiba'
          IF ( matches( "_B", input_line ) ) kband=.true.
+         IF ( matches( "_C", input_line ) ) kband_plane=.true.
       ELSEIF ( matches( "GAMMA", input_line ) ) THEN
          !  Only Gamma (k=0) is used
          k_points = 'gamma'
@@ -666,22 +684,17 @@ CONTAINS
          !                           ! when init_startk is called in iosys
       ELSEIF ( ( k_points == 'tpiba' ) .or. ( k_points == 'crystal' ) ) THEN
          !
-         ! ... input k-points are in 2pi/a units
+         ! ... input k-points 
          !
          CALL read_line( input_line, end_of_file = tend, error = terr )
          IF (tend) GOTO 10
          IF (terr) GOTO 20
          READ(input_line, *, END=10, ERR=20) nkstot
          !
-         IF (.NOT. kband) THEN
-            ALLOCATE ( xk(3, nkstot), wk(nkstot) )
-            DO i = 1, nkstot
-               CALL read_line( input_line, end_of_file = tend, error = terr )
-               IF (tend) GOTO 10
-               IF (terr) GOTO 20
-               READ(input_line,*, END=10, ERR=20) xk(1,i),xk(2,i),xk(3,i),wk(i)
-            ENDDO
-         ELSE
+         IF (kband) THEN
+!
+!        Only the initial and final k points of the lines are given
+!
             nkaux=nkstot
             ALLOCATE(xkaux(3,nkstot), wkaux(nkstot))
             DO i = 1, nkstot
@@ -728,6 +741,50 @@ CONTAINS
             wk(nkstot)=1.0_DP
             DEALLOCATE(xkaux)
             DEALLOCATE(wkaux)
+         ELSEIF (kband_plane) THEN
+!
+!        Generate a uniform mesh of k points on the plane defined by
+!        the origin k_0, and two vectors applied in k_0, k_1 and k_2.
+!
+            IF (nkstot /= 3) CALL errore ('card_kpoints', &
+                                'option _c requires 3 k points',i)
+            nkaux=nkstot
+            ALLOCATE(xkaux(3,nkstot), wkaux(nkstot))
+            DO i = 1, nkstot
+               CALL read_line( input_line, end_of_file = tend, error = terr )
+               IF (tend) GOTO 10
+               IF (terr) GOTO 20
+               READ(input_line,*, END=10, ERR=20) xkaux(1,i), xkaux(2,i), &
+                                                  xkaux(3,i), wk0
+               wkaux(i) = NINT ( wk0 ) ! beware: wkaux is integer
+            ENDDO
+            ! Count k-points first
+            nkstot = wkaux(2) * wkaux(3)
+            ALLOCATE ( xk(3,nkstot), wk(nkstot) )
+            dkx(:)=(xkaux(:,2)-xkaux(:,1))/(wkaux(2)-1.0_DP)
+            dky(:)=(xkaux(:,3)-xkaux(:,1))/(wkaux(3)-1.0_DP)
+            wk0=1.0_DP/nkstot
+            ijk=0
+            DO i=1, wkaux(2)
+               DO j = 1, wkaux(3)
+                  ijk=ijk+1
+                  xk(:,ijk) = xkaux(:,1) + dkx(:)*(i-1) + dky(:) * (j-1)
+                  wk(ijk) = wk0
+               ENDDO
+            ENDDO
+            DEALLOCATE(xkaux)
+            DEALLOCATE(wkaux)
+         ELSE
+!
+!    Reads on input the k points
+!
+            ALLOCATE ( xk(3, nkstot), wk(nkstot) )
+            DO i = 1, nkstot
+               CALL read_line( input_line, end_of_file = tend, error = terr )
+               IF (tend) GOTO 10
+               IF (terr) GOTO 20
+               READ(input_line,*, END=10, ERR=20) xk(1,i),xk(2,i),xk(3,i),wk(i)
+            ENDDO
          ENDIF
          !
       ELSEIF ( k_points == 'gamma' ) THEN

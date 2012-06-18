@@ -44,7 +44,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	  Y 0.5  0.0  0.0
 	  Z O.0  0.2  0.2
 
-	K_POINTS { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b }
+	K_POINTS { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c }
 	if (gamma)
 	   nothing to read
 	if (automatic)
@@ -2008,7 +2008,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
     #
     card K_POINTS {
 	flag kpoint_type -use optional {
-	    enum { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b }
+	    enum { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b | tpiba_c | crystal_c }
 	    default { tbipa }
 	    info {
 		tpiba    : read k-points in cartesian coordinates, 
@@ -2040,12 +2040,26 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                            weight of the first point. 
 
                 crystal_b: as tpiba_b, but k-points are in crystal coordinates.
+
+                tpiba_c  : Used for band-structure contour plots. 
+                           k-points are in units of  2 pi/a. nks must be 3.
+                           3 k-points k_0, k_1, and k_2 specify a rectangle 
+                           in reciprocal space of vertices k_0, k_1, k_2, 
+                           k_1 + k_2 - k_0: k_0 + \alpha (k_1-k_0)+
+                           \beta (k_2-k_0) with 0<\alpha,\beta < 1. 
+                           The code produces a uniform mesh n1 x n2 
+                           k points in this rectangle. n1 and n2 are 
+                           the weights of k_1 and k_2. The weight of k_0
+                           is not used. 
+
+               crystal_c: as tpiba_c, but k-points are in crystal coordinates.
+
 	    }
 	}
 
 	choose {
-	    when -test "tpiba  OR  crystal  OR  tpiba_b  OR  crystal_b" {
-		syntax -flag {tpiba | crystal | tpiba_b | crystal_b } {
+	    when -test "tpiba  OR  crystal  OR  tpiba_b  OR  crystal_b OR tpiba_c OR crystal_c" {
+		syntax -flag {tpiba | crystal | tpiba_b | crystal_b | tpiba_c | crystal_c } {
 		    line { 
 			var nks -type INTEGER {
 			    info {Number of supplied special k-points.}
