@@ -142,7 +142,7 @@ SUBROUTINE elphsum_wannier(q_index)
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat, ityp, tau,amass,tau, ntyp => nsp, atm
   USE cell_base, ONLY : at, bg, ibrav, celldm 
-  USE symm_base, ONLY : s, sr, irt, nsym, time_reversal, invs, ftau
+  USE symm_base, ONLY : s, sr, irt, nsym, time_reversal, invs, ftau, copy_sym, inverse_s
   USE klist, ONLY : xk, nelec
   USE wvfct, ONLY : nbnd, et
   USE el_phon
@@ -151,7 +151,7 @@ SUBROUTINE elphsum_wannier(q_index)
   USE io_files,  ONLY : prefix
   USE qpoint, ONLY : xq, nksq
   USE dynmat, ONLY : dyn, w2
-  USE modes, ONLY : u
+  USE modes, ONLY : u, gi, gimq, irgq, irotmq
   USE control_ph, only : lgamma
   USE lsda_mod, only : isk,nspin, current_spin,lsda
   USE mp,        ONLY: mp_sum
@@ -165,7 +165,7 @@ SUBROUTINE elphsum_wannier(q_index)
   integer :: nq, imq, isq(48)
   INTEGER :: ik, ikk, ikq, ibnd, jbnd, ipert, jpert, nu, mu, &
          ios, iuelphmat,i,j,nt,k
-  INTEGER :: iu_sym,nmodes
+  INTEGER :: iu_sym,nmodes,nsymq
   INTEGER :: io_file_unit
   !   for star_q
   REAL(DP) :: rtauloc(3,48,nat)
@@ -235,10 +235,20 @@ SUBROUTINE elphsum_wannier(q_index)
      !
      ! Then I dump symmetry operations
      !
-     sym(1:nsym)=.true.
+     minus_qloc = .true.
+     sym = .false.
+     sym(1:nsym) = .true.
+
      call smallg_q (xq, 0, at, bg, nsym, s, ftau, sym, minus_qloc)
-     IF ( .not. time_reversal ) minus_qloc = .false.
-     
+     nsymq = copy_sym(nsym, sym)
+     ! recompute the inverses as the order of sym.ops. has changed
+     CALL inverse_s ( )
+
+     ! part 2: this redoes most of the above, plus it computes irgq, gi, gimq
+     CALL smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
+          minus_qloc, gi, gimq)
+
+     sym(1:nsym)=.true.
      call sgam_ph (at, bg, nsym, s, irt, tau, rtauloc, nat, sym)
      call star_q(xq, at, bg, nsym , s , invs , nq, sxq, &
           isq, imq, .FALSE. )
