@@ -252,7 +252,7 @@ SUBROUTINE elphsum_wannier(q_index)
      enddo
      write(iuelphmat) nsym,nq,imq
      do i=1,nsym
-        write(iuelphmat) i,invs,isq(i)
+        write(iuelphmat) i,invs(i),isq(i)
         do j=1,3
            do k=1,3
               write(iuelphmat) k,j, s(k,j,i)
