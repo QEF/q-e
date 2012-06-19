@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004-2011 Quantum ESPRESSO group
+! Copyright (C) 2004-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -87,6 +87,7 @@ module funct
   !              "pbe"   = "sla+pw+pbx+pbc"    = PBE
   !              "revpbe"= "sla+pw+rpb+pbc"    = revPBE (Zhang-Yang)
   !              "pbesol"= "sla+pw+psx+psc"    = PBEsol
+  !              "q2d"   = "sla+pw+q2dx+q2dc"  = PBEQ2D
   !              "hcth"  = "nox+noc+hcth+hcth" = HCTH/120
   !              "olyp"  = "nox+lyp+optx+blyp" = OLYP
   !              "wc"    = "sla+pw+wcx+pbc"    = Wu-Cohen
@@ -146,6 +147,7 @@ module funct
   !              "c09x"   Cooper 09                      igcx =16
   !              "sox"    sogga                          igcx =17
   !              "m6lx"   M06L exchange Meta-GGA         igcx =18
+  !              "q2dx"   Q2D exchange grad corr         igcx =19
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -158,8 +160,9 @@ module funct
   !              "b3lp"   B3LYP (Lee-Yang-Parr*0.81)     igcc =7
   !              "psc"    PBEsol corr                    igcc =8
   !              "pbe"    same as PBX, back-comp.        igcc =9
-  !              "meta"   same as TPSS, back-comp.       igcx =10
+  !              "meta"   same as TPSS, back-comp.       igcc =10
   !              "m6lc"   M06L corr  Meta-GGA            igcc =11
+  !              "q2dc"   Q2D correlation grad corr      igcc =12
   !
   ! Van der Waals functionals (nonlocal term only)
   !             "nonlc"   none                           inlc =0 (default)
@@ -183,6 +186,8 @@ module funct
   !              hcth    Handy et al, JCP 109, 6264 (1998)
   !              olyp    Handy et al, JCP 116, 5411 (2002)
   !              revPBE  Zhang and Yang, PRL 80, 890 (1998)
+  !              pbesol  J.P. Perdew et al., PRL 100, 136406 (2008)
+  !              q2d     L. Chiodo et al., PRL 108, 126402 (2012)
   !              rw86    E. Amonn D. Murray et al, J. Chem. Theory comp. 5, 2754 (2009) 
   !              wc      Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)
   !              kzk     H.Kwee, S. Zhang, H. Krakauer, PRL 100, 126404 (2008)
@@ -191,7 +196,6 @@ module funct
   !                      Heyd, Scuseria, Ernzerhof, J. Chem. Phys. 124, 219906 (2006).
   !              b3lyp   P.J. Stephens,F.J. Devlin,C.F. Chabalowski,M.J. Frisch
   !                      J.Phys.Chem 98, 11623 (1994)
-  !              pbesol  J.P. Perdew et al., PRL 100, 136406 (2008)
   !              vdW-DF  M. Dion et al., PRL 92, 246401 (2004)
   !                      T. Thonhauser et al., PRB 76, 125112 (2007)
   !              vdw-DF2 Lee et al., Phys. Rev. B 82, 081101 (2010)
@@ -238,7 +242,7 @@ module funct
   ! data
   integer :: nxc, ncc, ngcx, ngcc, ncnl
 
-  parameter (nxc = 8, ncc =11, ngcx =18, ngcc = 11, ncnl=2)
+  parameter (nxc = 8, ncc =11, ngcx =19, ngcc = 12, ncnl=2)
 
   character (len=4) :: exc, corr
   character (len=4) :: gradx, gradc, nonlocc
@@ -247,12 +251,13 @@ module funct
   data exc / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF', 'PB0X', 'B3LP', 'KZK' /
   data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
               'OBW', 'GL' , 'B3LP', 'KZK' /
+
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
                'TPSS', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
-               'META', 'C09X', 'SOX', 'M6LX' / 
+               'META', 'C09X', 'SOX', 'M6LX', 'Q2DX' / 
 
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'TPSS',&
-                'B3LP', 'PSC', 'PBE', 'META', 'M6LC' / 
+                'B3LP', 'PSC', 'PBE', 'META', 'M6LC', 'Q2DC' / 
 
   data nonlocc / '    ', 'VDW1', 'VDW2' / 
 
@@ -345,6 +350,14 @@ CONTAINS
        call set_dft_value (igcc, 8)
        call set_dft_value (inlc,0) !Default       
        dft_defined = .true.
+
+    else if ('Q2D'.EQ. TRIM(dftout) ) then
+    ! special case : PBEQ2D
+       call set_dft_value (iexch,1) !Default    
+       call set_dft_value (icorr,4)
+       call set_dft_value (igcx,19)
+       call set_dft_value (igcc,12)
+       call set_dft_value (inlc,0) !Default       
        
     else if ('VDW-DF2-C09' .EQ. TRIM(dftout) ) then
     ! Special case vdW-DF2 with C09 exchange
@@ -929,6 +942,8 @@ CONTAINS
      shortname_ = 'revPBE'
   else if (iexch_==1.and.icorr_==4.and.igcx_==10.and.igcc_==8) then
      shortname_ = 'PBESOL'
+  else if (iexch_==1.and.icorr_==4.and.igcx_==19.and.igcc_==12) then
+     shortname_ = 'Q2D'
   else if (iexch_==1.and.icorr_==4.and.igcx_==12.and.igcc_==4) then
      shortname_ = 'HSE'
   else if (iexch_==1.and.icorr_==4.and.igcx_==11.and.igcc_==4) then
@@ -1335,6 +1350,8 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call rPW86 (rho, grho, sx, v1x, v2x)
   elseif (igcx ==16) then ! 'C09x'
      call c09x (rho, grho, sx, v1x, v2x)
+  elseif (igcx ==19) then ! 'pbesol'
+     call pbex (rho, grho, 4, sx, v1x, v2x)
   else
      sx = 0.0_DP
      v1x = 0.0_DP
@@ -1364,6 +1381,11 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      end if
   elseif (igcc == 8) then ! 'PBEsol'
      call pbec (rho, grho, 2, sc, v1c, v2c)
+  ! igcc == 9 set to 5, back-compatibility
+  ! igcc ==10 set to 6, back-compatibility
+  ! igcc ==11 M06L calculated in another routine
+  else if (igcc == 12) then ! 'Q2D'
+     call pbec (rho, grho, 3, sc, v1c, v2c)
   else
      sc = 0.0_DP
      v1c = 0.0_DP
@@ -1442,7 +1464,7 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
      v2xdw = 2.0_DP * v2xdw
   elseif (igcx == 3 .or. igcx == 4 .or. igcx == 8 .or. &
           igcx == 10 .or. igcx == 12) then
-     ! igcx=3: PBE, igcx=4: revised PBE, igcx=8 PBE0, igcx=10: PBEsol
+     ! igcx=3: PBE, igcx=4: revised PBE, igcx=8: PBE0, igcx=10: PBEsol
      ! igcx=12: HSE
      if (igcx == 4) then
         iflag = 2
@@ -1722,7 +1744,6 @@ subroutine gcc_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   ! derivatives of correlation wr. grho
 
   real(DP), parameter :: small = 1.E-10_DP, epsr=1.E-6_DP
-  !
   !
   if ( abs(zeta) > 1.0_DP ) then
      sc = 0.0_DP

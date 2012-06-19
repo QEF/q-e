@@ -2,7 +2,8 @@ New in 5.0.1 version
 
    * vdW-DF functional and DFT-D extended to CP (experimental)
    * PWscf: Noncollinear/spin-orbit Berry Phases (experimental)
-   * New functionals: SOGGA, M06L (courtesy of Yves Ferro)
+   * New functionals: SOGGA, M06L (courtesy of Yves Ferro), 
+                      PBEQ2D (courtesy of Letizia Chiodo)
 
 Fixed in 5.0.1 version
 
