@@ -15,7 +15,7 @@ MODULE environment
   USE io_global, ONLY: stdout, meta_ionode
   USE mp_global, ONLY: me_image, my_image_id, root_image, nimage, &
       nproc_image, nproc, npool, nproc_pool, nbgrp, get_ntask_groups
-  USE global_version, ONLY: version_number
+  USE global_version, ONLY: version_number, svn_revision
 
   IMPLICIT NONE
 
@@ -54,6 +54,8 @@ CONTAINS
     CALL start_clock( TRIM(code) )
 
     code_version = TRIM (code) // " v." // TRIM (version_number)
+    IF ( TRIM (svn_revision) /= " " ) code_version = &
+         TRIM (code_version) // " (svn rev. " // TRIM (svn_revision) // ")"
 
     ! ... for compatibility with PWSCF
 
@@ -130,8 +132,8 @@ CONTAINS
 
     CALL date_and_tim( cdate, ctime )
     !
-    WRITE( stdout, '(/5X,"Program ",A18," starts on ",A9," at ",A9)' ) &
-         code_version, cdate, ctime
+    WRITE( stdout, '(/5X,"Program ",A," starts on ",A9," at ",A9)' ) &
+         TRIM(code_version), cdate, ctime
     !
     WRITE( stdout, '(/5X,"This program is part of the open-source Quantum ",&
          &    "ESPRESSO suite", &
