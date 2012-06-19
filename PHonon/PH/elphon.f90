@@ -17,10 +17,15 @@ SUBROUTINE elphon()
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
   USE gvecs, ONLY: doublegrid
   USE fft_base, ONLY : dfftp, dffts
-  USE noncollin_module, ONLY : nspin_mag
+  USE noncollin_module, ONLY : nspin_mag, noncolin
+  USE lsda_mod, ONLY : nspin
+  USE phus,       ONLY : int3, int3_nc, int3_paw
+  USE uspp,  ONLY: okvan
+  USE paw_variables, ONLY : okpaw
   USE dynmat, ONLY : dyn, w2
   USE qpoint, ONLY : xq
   USE modes,  ONLY : npert, nirr, u
+  USE uspp_param, ONLY : nhm
   USE control_ph, ONLY : trans
   USE units_ph, ONLY : iudyn, lrdrho, iudvscf
   USE dfile_star,    ONLY : dvscf_star
@@ -28,7 +33,7 @@ SUBROUTINE elphon()
   !
   IMPLICIT NONE
   !
-  INTEGER :: irr, imode0, ipert, is
+  INTEGER :: irr, imode0, ipert, is, npe
   ! counter on the representations
   ! counter on the modes
   ! the change of Vscf due to perturbations
@@ -49,15 +54,21 @@ SUBROUTINE elphon()
   !
   imode0 = 0
   DO irr = 1, nirr
-     ALLOCATE (dvscfin (dfftp%nnr, nspin_mag , npert(irr)) )
-     DO ipert = 1, npert (irr)
+     npe=npert(irr)
+     ALLOCATE (dvscfin (dfftp%nnr, nspin_mag , npe) )
+     IF (okvan) THEN
+        ALLOCATE (int3 ( nhm, nhm, npe, nat, nspin_mag))
+        IF (okpaw) ALLOCATE (int3_paw (nhm, nhm, npe, nat, nspin_mag))
+        IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, npe, nat, nspin))
+     ENDIF
+     DO ipert = 1, npe
         CALL davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
                            imode0 + ipert,  -1 )
      END DO
      IF (doublegrid) THEN
         ALLOCATE (dvscfins (dffts%nnr, nspin_mag , npert(irr)) )
         DO is = 1, nspin_mag
-           DO ipert = 1, npert(irr)
+           DO ipert = 1, npe
               CALL cinterpolate (dvscfin(1,is,ipert),dvscfins(1,is,ipert),-1)
            ENDDO
         ENDDO
@@ -67,9 +78,14 @@ SUBROUTINE elphon()
      CALL newdq (dvscfin, npert(irr))
      CALL elphel (npert (irr), imode0, dvscfins)
      !
-     imode0 = imode0 + npert (irr)
+     imode0 = imode0 + npe
      IF (doublegrid) DEALLOCATE (dvscfins)
      DEALLOCATE (dvscfin)
+     IF (okvan) THEN
+        DEALLOCATE (int3)
+        IF (okpaw) DEALLOCATE (int3_paw)
+        IF (noncolin) DEALLOCATE(int3_nc)
+     ENDIF
   ENDDO
   !
   ! now read the eigenvalues and eigenvectors of the dynamical matrix
