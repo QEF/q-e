@@ -42,7 +42,6 @@ addcore.o : ../../Modules/kind.o
 addcore.o : ../../Modules/recvec.o
 addcore.o : ../../Modules/uspp.o
 addcore.o : phcom.o
-adddvepsi_us.o : ../../Modules/cell_base.o
 adddvepsi_us.o : ../../Modules/control_flags.o
 adddvepsi_us.o : ../../Modules/ions_base.o
 adddvepsi_us.o : ../../Modules/kind.o
@@ -382,7 +381,6 @@ dhdrhopsi.o : phcom.o
 dhdrhopsi.o : ramanm.o
 dielec.o : ../../Modules/cell_base.o
 dielec.o : ../../Modules/constants.o
-dielec.o : ../../Modules/io_files.o
 dielec.o : ../../Modules/io_global.o
 dielec.o : ../../Modules/kind.o
 dielec.o : ../../Modules/mp.o
@@ -640,6 +638,7 @@ elphon.o : ../../Modules/kind.o
 elphon.o : ../../Modules/mp.o
 elphon.o : ../../Modules/mp_global.o
 elphon.o : ../../Modules/parameters.o
+elphon.o : ../../Modules/paw_variables.o
 elphon.o : ../../Modules/recvec.o
 elphon.o : ../../Modules/uspp.o
 elphon.o : ../../Modules/wavefunctions.o
@@ -647,6 +646,7 @@ elphon.o : ../../PW/src/noncol.o
 elphon.o : ../../PW/src/pwcom.o
 elphon.o : ../../PW/src/start_k.o
 elphon.o : ../../PW/src/symm_base.o
+elphon.o : dfile_star.o
 elphon.o : elph.o
 elphon.o : phcom.o
 elphon.o : save_ph_input.o
@@ -1084,6 +1084,7 @@ q_points.o : ../../Modules/io_global.o
 q_points.o : ../../Modules/kind.o
 q_points.o : ../../PW/src/symm_base.o
 q_points.o : phcom.o
+q_points_wannier.o : ../../Modules/io_files.o
 q_points_wannier.o : ../../Modules/io_global.o
 q_points_wannier.o : ../../Modules/kind.o
 q_points_wannier.o : ../../Modules/mp_global.o
@@ -1400,7 +1401,6 @@ write_rec.o : ph_restart.o
 write_rec.o : phcom.o
 zstar_eu.o : ../../Modules/cell_base.o
 zstar_eu.o : ../../Modules/io_files.o
-zstar_eu.o : ../../Modules/io_global.o
 zstar_eu.o : ../../Modules/ions_base.o
 zstar_eu.o : ../../Modules/kind.o
 zstar_eu.o : ../../Modules/mp.o

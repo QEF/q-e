@@ -65,7 +65,6 @@ average.o : ../../Modules/run_info.o
 average.o : ../../Modules/wavefunctions.o
 average.o : ../../PW/src/pwcom.o
 average.o : ../../PW/src/scf_mod.o
-bands.o : ../../Modules/atom.o
 bands.o : ../../Modules/cell_base.o
 bands.o : ../../Modules/constants.o
 bands.o : ../../Modules/control_flags.o
@@ -73,6 +72,7 @@ bands.o : ../../Modules/environment.o
 bands.o : ../../Modules/io_files.o
 bands.o : ../../Modules/io_global.o
 bands.o : ../../Modules/ions_base.o
+bands.o : ../../Modules/kind.o
 bands.o : ../../Modules/mp.o
 bands.o : ../../Modules/mp_global.o
 bands.o : ../../Modules/recvec.o
@@ -586,5 +586,8 @@ write_p_avg.o : ../../PW/src/pwcom.o
 xctest.o : ../../Modules/funct.o
 xctest.o : ../../Modules/kind.o
 xctest.o : ../../Modules/mp.o
+xk_et_collect.o : ../../Modules/kind.o
+xk_et_collect.o : ../../Modules/mp.o
+xk_et_collect.o : ../../Modules/mp_global.o
 xsf.o : ../../Modules/constants.o
 xsf.o : ../../Modules/kind.o
