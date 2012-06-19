@@ -44,7 +44,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE gvect,       ONLY : gstart, mill, eigts1, eigts2, eigts3
   USE ions_base,                ONLY : na, nat, amass, nax, nsp, rcmax
   USE ions_base,                ONLY : ind_srt, ions_cofmass, ions_kinene, &
-                                       ions_temp, ions_thermal_stress, if_pos, extfor
+                                       ions_temp, ions_thermal_stress, &
+                                       if_pos, extfor
   USE ions_base,                ONLY : ions_vrescal, fricp, greasp, &
                                        iforce, ndfrz, ions_shiftvar, ityp, &
                                        atm, ind_bck, cdm, cdms, ions_cofmsub
@@ -116,7 +117,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        me_bgrp, inter_bgrp_comm, nbgrp
   USE ldaU_cp,                  ONLY : lda_plus_u, vupsi
   USE fft_base,                 ONLY : dfftp
-  USE london_module,            ONLY : energy_london, force_london
+  USE london_module,            ONLY : energy_london, force_london, stres_london
   !
   IMPLICIT NONE
   !
@@ -333,7 +334,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         usrt_tau0(:,:) = tau0(:,ind_bck(:))/alat
         usrt_fion =  0.5_dp*force_london ( alat, nat,ityp, at,bg, usrt_tau0 )
         fion(:,:) = fion(:,:) + usrt_fion(:,ind_srt(:))
+        IF ( tpre ) stress = stress + 0.5_dp * stres_london ( alat , nat , &
+                              ityp , at , bg , usrt_tau0 , omega )
         DEALLOCATE (usrt_fion, usrt_tau0)
+
      END IF
      !
      IF ( tpre ) THEN
