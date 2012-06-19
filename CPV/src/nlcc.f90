@@ -119,7 +119,7 @@
       integer :: ig, ir, iss, isup, isdw
       REAL(DP) :: rsum
       !
-      IF( iverbosity > 2 ) THEN
+      IF( iverbosity > 1 ) THEN
          rsum = SUM( rhoc ) * omega / DBLE(dfftp%nr1*dfftp%nr2*dfftp%nr3)
          CALL mp_sum( rsum, intra_bgrp_comm )
          WRITE( stdout, 10 ) rsum 

@@ -561,7 +561,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       IF ( tpre ) THEN
          !
-         IF( ( iverbosity > 2 ) .AND. ( MOD( nfi - 1, iprint) == 0 ) ) THEN  
+         IF( ( iverbosity > 1 ) .AND. ( MOD( nfi - 1, iprint) == 0 ) ) THEN  
             !
             WRITE( stdout,*)
             WRITE( stdout,*) "From vofrho:"

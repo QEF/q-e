@@ -310,7 +310,7 @@ MODULE input
      trhow_ = saverho
      tksw_  = ( TRIM( disk_io ) == 'high' )
      !
-     iverbosity_ = 1
+     iverbosity_ = 0
      timing_ = .FALSE.
           ! The code write to files fort.8 fort.41 fort.42 fort.43
           ! a detailed report of subroutines timing
@@ -325,29 +325,29 @@ MODULE input
      SELECT CASE( TRIM( verbosity ) )
        CASE( 'minimal' )
          !
-         iverbosity_ = 0
+         iverbosity_ =-1
          !
        CASE( 'low', 'default' )
          !
-         iverbosity_ = 1
+         iverbosity_ = 0
          timing_ = .TRUE.
          !
        CASE( 'medium' )
          !
-         iverbosity_   = 2
+         iverbosity_ = 1
          timing_   = .TRUE.
          tprnsfac_ = .TRUE.
          !
        CASE( 'high' )
          !
-         iverbosity_   = 3
+         iverbosity_ = 2
          memchk_   = .TRUE.
          timing_   = .TRUE.
          tprnsfac_ = .TRUE.
          !
        CASE( 'debug' )
          !
-         iverbosity_   = 4
+         iverbosity_ = 3
          memchk_   = .TRUE.
          timing_   = .TRUE.
          !

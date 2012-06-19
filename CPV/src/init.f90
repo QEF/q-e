@@ -314,7 +314,7 @@
       !
       !   generate true g-space
       !
-      call newinit( ht0%hmat, iverbosity = 2 )
+      call newinit( ht0%hmat, iverbosity = 1 )
       !
       CALL invmat( 3, h, ainv, deth )
       !
@@ -381,7 +381,7 @@
       rat1 = DBLE( dfftb%nr1 ) / DBLE( dfftp%nr1 )
       rat2 = DBLE( dfftb%nr2 ) / DBLE( dfftp%nr2 )
       rat3 = DBLE( dfftb%nr3 ) / DBLE( dfftp%nr3 )
-      CALL small_box_set( alat, omega, at, rat1, rat2, rat3, tprint = ( iverbosity > 1 ) )
+      CALL small_box_set( alat, omega, at, rat1, rat2, rat3, tprint = ( iverbosity > 0 ) )
       !
       call gcalb ( )
       !

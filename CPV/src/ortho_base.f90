@@ -805,7 +805,7 @@ END SUBROUTINE diagonalize_parallel
                          nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, sig, ldx )
          ENDIF
          !
-         IF( iverbosity > 3 ) THEN
+         IF( iverbosity > 2 ) THEN
             WRITE( stdout,*)
             WRITE( stdout,'(26x,a)') '    sig '
             DO i = 1, nr
@@ -942,7 +942,7 @@ END SUBROUTINE diagonalize_parallel
 
          END IF
 
-         IF ( iverbosity > 3 ) THEN
+         IF ( iverbosity > 2 ) THEN
             WRITE( stdout,*)
             WRITE( stdout,'(26x,a)') '    rho '
             DO i=1,nr
@@ -1083,7 +1083,7 @@ END SUBROUTINE diagonalize_parallel
             !
          END IF
 
-         IF( iverbosity > 3 ) THEN
+         IF( iverbosity > 2 ) THEN
             WRITE( stdout,*)
             WRITE( stdout,'(26x,a)') '    tau '
             DO i=1,nr
@@ -1280,7 +1280,7 @@ END SUBROUTINE diagonalize_parallel
             DEALLOCATE( bephi_tmp )
          END IF
          !
-         IF ( iverbosity > 2 ) THEN
+         IF ( iverbosity > 1 ) THEN
             WRITE( stdout,*)
             DO is = 1, nvb
                IF( nvb > 1 ) THEN
@@ -1399,7 +1399,7 @@ END SUBROUTINE diagonalize_parallel
 
       !   
 
-      IF(iverbosity > 2) THEN
+      IF(iverbosity > 1) THEN
          emtot=0.0d0
          IF( PRESENT( ema0bg ) ) THEN
             DO j=1,nbsp_bgrp

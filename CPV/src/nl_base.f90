@@ -409,7 +409,7 @@
       !
       call nlsm1( nbsp, nspmn, nspmx, eigr, c, bec )
 !
-      if ( iverbosity > 2 ) then
+      if ( iverbosity > 1 ) then
          WRITE( stdout,*)
          do is=1,nspmx
             WRITE( stdout,'(33x,a,i4)') ' calbec: bec (is)',is

@@ -675,7 +675,7 @@
     tpiba  = 2.0_DP * pi / alat
     tpiba2 = tpiba * tpiba
     !
-    IF( iverbosity > 3 ) THEN
+    IF( iverbosity > 2 ) THEN
       WRITE( stdout, 210 )
       WRITE( stdout, 220 ) ( ht( 1, j ), j = 1, 3 )
       WRITE( stdout, 220 ) ( ht( 2, j ), j = 1, 3 )
@@ -697,7 +697,7 @@
     ainv(2,:) = bg(:,2)/alat
     ainv(3,:) = bg(:,3)/alat
     !
-    IF( iverbosity > 3 ) THEN
+    IF( iverbosity > 2 ) THEN
       WRITE( stdout, 305 ) alat
       WRITE( stdout, 310 ) at(:,1)*alat
       WRITE( stdout, 320 ) at(:,2)*alat

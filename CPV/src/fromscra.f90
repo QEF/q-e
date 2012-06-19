@@ -133,7 +133,7 @@ SUBROUTINE from_scratch( )
 
     IF( force_pairing ) cm_bgrp(:,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = cm_bgrp(:,1:nupdwn(2))
     !
-    if( iverbosity > 2 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp )
+    if( iverbosity > 1 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp )
     !
     ! ... initialize bands
     !
@@ -198,7 +198,7 @@ SUBROUTINE from_scratch( )
 
       CALL compute_stress( stress, detot, h, omega )
 
-      if( iverbosity > 2 ) &
+      if( iverbosity > 1 ) &
              CALL printout_pos( stdout, fion, nat, head = ' fion ' )
 
       CALL newd( vpot, irb, eigrb, becsum, fion )
@@ -240,7 +240,7 @@ SUBROUTINE from_scratch( )
          CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, descla, fion )
       END IF
 
-      if ( iverbosity > 2 ) CALL print_lambda( lambda, descla, nbsp, 9, ccc )
+      if ( iverbosity > 1 ) CALL print_lambda( lambda, descla, nbsp, 9, ccc )
 
       !
       if ( tstress ) CALL nlfh( stress, bec_bgrp, dbec, lambda, descla )
@@ -262,7 +262,7 @@ SUBROUTINE from_scratch( )
       !
       if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, descla )
 
-      if ( iverbosity > 2 ) CALL dotcsc( eigr, c0_bgrp, ngw, nbsp_bgrp )
+      if ( iverbosity > 1 ) CALL dotcsc( eigr, c0_bgrp, ngw, nbsp_bgrp )
       !
       xnhp0 = 0.0d0
       xnhpm = 0.0d0

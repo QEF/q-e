@@ -417,7 +417,7 @@
             CALL errore('ortho','max number of iterations exceeded',iter)
          END IF
 
-         IF( iverbosity > 2 ) THEN
+         IF( iverbosity > 1 ) THEN
             WRITE( stdout, 100 ) diff, iter
          ENDIF
          !     

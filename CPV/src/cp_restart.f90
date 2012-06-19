@@ -1855,7 +1855,7 @@ MODULE cp_restart
       !
       if ( nprint_nfi == -2 ) then
          CALL read_print_counter( nprint_nfi, tmp_dir, ndr )
-         IF( iverbosity > 2 ) write( stdout,*) 'nprint_nfi= ',nprint_nfi
+         IF( iverbosity > 1 ) write( stdout,*) 'nprint_nfi= ',nprint_nfi
       endif
       !
       RETURN

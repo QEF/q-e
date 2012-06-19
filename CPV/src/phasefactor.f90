@@ -40,7 +40,7 @@
 !
       allocate( taus(3,nat) )
 !
-      if( iverbosity > 3 ) then
+      if( iverbosity > 2 ) then
          WRITE( stdout,*) ' phfac: tau0 '
          WRITE( stdout,*) ( ( tau0(i,isa), i=1, 3 ), isa=1, nat )
       endif

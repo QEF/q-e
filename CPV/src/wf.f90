@@ -139,7 +139,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   DO j = 1, nbsp
      IF( (j-1) < MOD( nbsp, nproc_bgrp ) ) ns( j ) = ns( j ) + 1 
   END DO
-  IF( iverbosity > 3) THEN
+  IF( iverbosity > 2) THEN
      DO j=1,nproc_bgrp
         WRITE( stdout, * ) ns(j)
      END DO
@@ -151,7 +151,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   DO proc=1,nproc_bgrp
      ngpwpp(proc)=(dfftp%nwl(proc)+1)/2
      total=total+ngpwpp(proc)
-     IF( iverbosity > 3) THEN
+     IF( iverbosity > 2) THEN
         WRITE( stdout, * ) "I am proceessor", proc, "and i have ",ns(me)," states."
      END IF
   END DO
@@ -162,7 +162,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
 
   ALLOCATE(c_p(ngw,nbspx))
   ALLOCATE(c_m(ngw,nbspx))
-  IF( iverbosity > 3) THEN
+  IF( iverbosity > 2) THEN
      WRITE( stdout, * ) "All allocations done"
   END IF
   !
@@ -236,7 +236,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
            END IF
         END DO
      END DO
-     IF( iverbosity > 3) THEN
+     IF( iverbosity > 2) THEN
         WRITE( stdout, * ) "Step 3. do the translation of the 2-d array...Done, wf"
      END IF
      !
@@ -418,7 +418,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         END DO
      END DO
      Oa(inw, :, :)=X(:, :)
-     IF( iverbosity > 3) THEN
+     IF( iverbosity > 2) THEN
         WRITE( stdout, * ) "Augmentation Part Done"
      END IF
 
@@ -441,7 +441,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
 
         O(inw,:,:)=Oa(inw,:,:)+X(:,:)
 
-        IF( iverbosity > 3) THEN
+        IF( iverbosity > 2) THEN
            WRITE( stdout, * ) "Soft Part Done"
         END IF
 
@@ -566,7 +566,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
               CALL jacobi_rotation(nbsp,O,Uall,b1,b2,b3)
            END IF
         END IF
-        IF( iverbosity > 3) THEN
+        IF( iverbosity > 2) THEN
            WRITE( stdout, * ) "Out from DDYN"
         END IF
      ELSE
@@ -628,14 +628,14 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !           call zgemm('nbsp','nbsp',ngw,nbsp,nbsp,ONE,cwf,ngw,U2,nbsp,ZERO,cwf,ngw)
   CALL dgemm('N','N',nkb,nbsp,nbsp,ONE,bec,nkb,Uall,nbsp,ZERO,becwf,nkb)
   U2=ZERO
-  IF( iverbosity > 3) THEN
+  IF( iverbosity > 2) THEN
      WRITE( stdout, * ) "Updating Wafefunctions and Bec"
   END IF
 
   c(:,:)=cwf(:,:)
   bec(:,:)=becwf(:,:)
 
-  IF( iverbosity > 3) THEN
+  IF( iverbosity > 2) THEN
      WRITE( stdout, * ) "Wafefunctions and Bec Updated"
   END IF
   !
@@ -845,7 +845,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
         IF(me.EQ.1) THEN
            WRITE(*,*) "MLWF Generated at Step",ini ! Lingzhu Kong
         END IF
-        IF( iverbosity > 3) THEN
+        IF( iverbosity > 2) THEN
            WRITE( stdout, * ) "MLWF Generated at Step",ini
         END IF
         GO TO 241
@@ -952,7 +952,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
         IF(me.EQ.1) THEN
            WRITE(*,*) "MLWF Not generated after",ini,"Steps." ! Lingzhu Kong
         END IF
-        IF( iverbosity > 3) THEN
+        IF( iverbosity > 2) THEN
            WRITE( stdout, * ) "MLWF Not generated after",ini,"Steps." 
         END IF
         GO TO 241
@@ -997,13 +997,13 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      WRITE(27,*) "Average spread = ", spread
   END IF
   Omat=Oc
-  IF( iverbosity > 3) THEN
+  IF( iverbosity > 2) THEN
      WRITE( stdout, * ) "Average spread = ", spread
   END IF
   !
   DEALLOCATE (mt,X1,Oc)
   !
-  IF( iverbosity > 3) THEN
+  IF( iverbosity > 2) THEN
      WRITE( stdout, * ) "Leaving DDYN"
   END IF
   RETURN
@@ -2515,7 +2515,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
         IF(me.EQ.1) THEN
            WRITE(*,*) "MLWF Generated at Step",k ! Lingzhu Kong
         END IF
-        IF( iverbosity > 3 ) THEN
+        IF( iverbosity > 2 ) THEN
            WRITE( stdout, * ) "MLWF Generated at Step",k
         END IF
         GO TO 40
@@ -2736,7 +2736,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
         IF(me.EQ.1) THEN
            WRITE(*,*) "MLWF Not generated after",k,"Steps." ! Lingzhu Kong
         END IF
-        IF( iverbosity > 3 ) THEN
+        IF( iverbosity > 2 ) THEN
            WRITE( stdout, * ) "MLWF Not generated after",k,"Steps."
         END IF
         GO TO 40

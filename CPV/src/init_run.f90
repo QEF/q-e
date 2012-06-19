@@ -164,7 +164,7 @@ SUBROUTINE init_run()
   ALLOCATE( cm_bgrp( ngw, nbspx ) )
   ALLOCATE( phi_bgrp( ngw, nbspx ) )
   !
-  IF ( iverbosity > 2 ) THEN
+  IF ( iverbosity > 1 ) THEN
      !
      CALL wave_descriptor_info( wfill, 'wfill', stdout )
      !
@@ -173,8 +173,8 @@ SUBROUTINE init_run()
   ! Depending on the verbosity set the frequency of
   ! verbose information to stdout
   !
-  IF( iverbosity < 1 ) iprint_stdout = 100 * iprint
-  IF( iverbosity ==1 ) iprint_stdout = 10 * iprint
+  IF( iverbosity < 0 ) iprint_stdout = 100 * iprint
+  IF( iverbosity ==0 ) iprint_stdout = 10 * iprint
   IF( iverbosity > 1 ) iprint_stdout = iprint
   !
   acc          = 0.D0

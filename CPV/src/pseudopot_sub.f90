@@ -745,7 +745,7 @@
          !
          !     qradb(ig,l,k,is) = 4pi/omega int_0^r dr r^2 j_l(qr) q(r,l,k,is)
          !
-         if( iverbosity > 3 ) WRITE( stdout,*)  '  qradb  '
+         if( iverbosity > 2 ) WRITE( stdout,*)  '  qradb  '
          !
          c = fpi / omegab
          !
@@ -937,7 +937,7 @@
          !   
          !   calculation of array  beta(ig,iv,is)
          !  
-         if( iverbosity > 3 ) WRITE( stdout,*)  '  beta  '
+         if( iverbosity > 2 ) WRITE( stdout,*)  '  beta  '
          c = fpi / sqrt(omega)
          do iv = 1, nh(is)
             lp = nhtolm( iv, is )
@@ -962,7 +962,7 @@
          call dylmr2_( (lmaxkb+1)**2, ngw, g, gg, ainv, dylm )
          !
          do is = 1, nsp
-            if( iverbosity > 3 ) WRITE( stdout,*)  '  dbeta  '
+            if( iverbosity > 2 ) WRITE( stdout,*)  '  dbeta  '
             c = fpi / sqrt(omega)
             do iv = 1, nh(is)
                lp = nhtolm(iv,is)
@@ -1061,7 +1061,7 @@
          !
          !     qradb(ig,l,k,is) = 4pi/omega int_0^r dr r^2 j_l(qr) q(r,l,k,is)
          !
-         if( iverbosity > 3 ) WRITE( stdout,*)  '  qradb  '
+         if( iverbosity > 2 ) WRITE( stdout,*)  '  qradb  '
          !
          c = fpi / omegab
          !
@@ -1295,7 +1295,7 @@
          !   
          !   calculation of array  beta(ig,iv,is)
          !  
-         if( iverbosity > 3 ) WRITE( stdout,*)  '  beta  '
+         if( iverbosity > 2 ) WRITE( stdout,*)  '  beta  '
          c = fpi / sqrt(omega)
          do iv = 1, nh(is)
             lp = nhtolm( iv, is )
@@ -1315,7 +1315,7 @@
          call dylmr2_( (lmaxkb+1)**2, ngw, g, gg, ainv, dylm )
          !
          do is = 1, nsp
-            if( iverbosity > 3 ) WRITE( stdout,*)  '  dbeta  '
+            if( iverbosity > 2 ) WRITE( stdout,*)  '  dbeta  '
             c = fpi / sqrt(omega)
             do iv = 1, nh(is)
                lp = nhtolm(iv,is)

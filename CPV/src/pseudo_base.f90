@@ -111,7 +111,7 @@
         end if
 !$omp end parallel
 
-        if(iverbosity > 3) WRITE( stdout,'(a,f12.8)') &
+        if(iverbosity > 2) WRITE( stdout,'(a,f12.8)') &
                            ' integrated core charge= ',omegab*rhocb(1)
 
         return

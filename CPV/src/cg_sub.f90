@@ -606,7 +606,7 @@
 
         call minparabola(ene0,spasso*dene0,ene1,passof,passo,enesti)
 
-        if( iverbosity > 1 ) write(6,*) ene0,dene0,ene1,passo, gamma, esse
+        if( iverbosity > 0 ) write(6,*) ene0,dene0,ene1,passo, gamma, esse
 
         !set new step
 

@@ -165,7 +165,7 @@
          ! write (stdout,*) "derivative of e(xc)"
          ! write (stdout,5555) ((dxc(i,j),j=1,3),i=1,3)
          !
-         IF( iverbosity > 2 ) THEN
+         IF( iverbosity > 1 ) THEN
             DO i=1,3
                DO j=1,3
                   detmp(i,j)=exc*ainv(j,i)

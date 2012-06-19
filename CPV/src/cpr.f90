@@ -511,13 +511,13 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            !
            CALL gram_bgrp( vkb, bec_bgrp, nkb, cm_bgrp, ngw )
            !
-           IF ( iverbosity > 3 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
+           IF ( iverbosity > 2 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
            !
         END IF
         !
         !  correction to displacement of ions
         !
-        IF ( iverbosity > 2 ) CALL print_lambda( lambda, descla, nbsp, 9, 1.D0 )
+        IF ( iverbosity > 1 ) CALL print_lambda( lambda, descla, nbsp, 9, 1.D0 )
         !
         IF ( tortho ) THEN
            CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, cm_bgrp, descla )
@@ -536,7 +536,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            CALL caldbec_bgrp( eigr, cm_bgrp, dbec, descla )
         END IF
         !
-        IF ( iverbosity > 2 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
+        IF ( iverbosity > 1 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
         !
      END IF
      !
@@ -900,7 +900,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                   xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
                   vnhh, velh, fion, tps, z0t, f, rhor )
   !
-  IF( iverbosity > 2 ) CALL print_lambda( lambda, descla, nbsp, nbsp, 1.D0 )
+  IF( iverbosity > 1 ) CALL print_lambda( lambda, descla, nbsp, nbsp, 1.D0 )
   !
   IF (lda_plus_u) DEALLOCATE( forceh )
 
