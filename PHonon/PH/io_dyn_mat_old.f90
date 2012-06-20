@@ -56,7 +56,7 @@ end subroutine write_dyn_on_file
 !  It will be removed when the xml file format of the dynamical matrix
 !  will be tested.
 !
-  USE constants, ONLY: amconv
+  USE constants, ONLY: amu_ry
   USE ions_base, ONLY : ntyp => nsp, nat, ityp, tau, atm, amass
   USE cell_base, ONLY : ibrav, celldm, at
   USE run_info, ONLY : title
@@ -73,7 +73,7 @@ end subroutine write_dyn_on_file
      WRITE (iudyn,'(2x,3f15.9)') ((at(i,j),i=1,3),j=1,3)
   END IF
   DO nt = 1, ntyp
-     WRITE (iudyn, * ) nt, ' ''', atm (nt) , ' '' ', amconv*amass(nt)
+     WRITE (iudyn, * ) nt, ' ''', atm (nt) , ' '' ', amu_ry*amass(nt)
   ENDDO
   DO na = 1, nat
      WRITE (iudyn, '(2i5,3f15.7)') na, ityp (na) , (tau (j, na) , j = 1, 3)

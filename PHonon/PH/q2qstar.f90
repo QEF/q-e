@@ -21,7 +21,7 @@ PROGRAM Q2QSTAR
   !----------------------------------------------------------------------------
   !
   USE kinds,              ONLY : DP
-  USE constants,          ONLY : amconv
+  USE constants,          ONLY : amu_ry
   USE parameters,         ONLY : ntypx
   USE mp,                 ONLY : mp_bcast
   USE mp_global,          ONLY : mp_startup, mp_global_end
@@ -126,7 +126,7 @@ PROGRAM Q2QSTAR
     tau =  dq_tau
     ityp = dq_ityp
     !zeu =  dq_zeu ! note: zeu from dynamicalq is a real(dp) array, zeu from control_ph is a flag (logical)
-    amass = amass/amconv
+    amass = amass/amu_ry
     !
   ENDIF XML_FORMAT_READ
   !

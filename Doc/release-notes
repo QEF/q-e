@@ -5,6 +5,9 @@ New in 5.0.1 version
    * New functionals: SOGGA, M06L (courtesy of Yves Ferro), 
                       PBEQ2D (courtesy of Letizia Chiodo)
 
+Incompatible changes in 5.0.1 version:
+   * Variable "amconv" removed from constants.f90, use "amu_ry" instead
+
 Fixed in 5.0.1 version
 
    * Funny frequencies from matdyn.x if masses were read from file

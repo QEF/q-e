@@ -26,7 +26,7 @@ SUBROUTINE iosys()
   USE funct,         ONLY: set_exx_fraction, set_screening_parameter
   USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
-                            ry_kbar, amconv, bohr_radius_angs, eps8
+                            ry_kbar, amu_ry, bohr_radius_angs, eps8
   USE mp_global,     ONLY : npool, nproc_pool
   !
   USE io_global,     ONLY : stdout, ionode, ionode_id
@@ -1399,7 +1399,7 @@ SUBROUTINE iosys()
      wmass = sum( amass(ityp(:)) )
 #endif
      !
-     wmass = wmass * amconv
+     wmass = wmass * amu_ry
      IF ( calc == 'nd' .or. calc == 'nm' ) THEN
         wmass = 0.75D0 * wmass / pi / pi / omega**( 2.D0 / 3.D0 )
      ELSEIF ( calc == 'cd' .or. calc == 'cm' ) THEN
@@ -1412,7 +1412,7 @@ SUBROUTINE iosys()
      !
      ! ... wmass is given in amu, Renata's dynamics uses masses in atomic units
      !
-     cmass  = wmass * amconv
+     cmass  = wmass * amu_ry
      !
   ENDIF
   !

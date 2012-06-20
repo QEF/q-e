@@ -74,8 +74,9 @@ end Module dynamical
       USE mp_global,  ONLY : nproc, mpime, mp_startup, mp_global_end
       USE io_global,  ONLY : ionode, ionode_id, stdout
       USE environment, ONLY : environment_start, environment_end
-      USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
+      USE io_dyn_mat,  ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                              read_dyn_mat, read_dyn_mat_tail
+      USE constants,   ONLY : amu_ry
       use dynamical
       !
       implicit none
@@ -86,7 +87,7 @@ end Module dynamical
       logical :: lread, gamma
       complex(DP), allocatable :: z(:,:)
       real(DP) :: amass(ntypx), amass_(ntypx), eps0(3,3), a0, omega, &
-           at(3,3), bg(3,3), amconv, q(3), q_(3)
+           at(3,3), bg(3,3), q(3), q_(3)
       real(DP), allocatable :: w2(:)
       integer :: nat, na, nt, ntyp, iout, axis, nax, nspin_mag, ios
       real(DP) :: celldm(6)
@@ -155,11 +156,14 @@ end Module dynamical
          if(asr.ne.'no') then
              call set_asr ( asr, axis, nat, tau, dyn, zstar )
          endif
-         amconv = 1.0_DP
       ELSE
-         IF (ionode) call readmat ( fildyn, asr, axis, nat, ntyp, atm, a0, &
-              at, omega, amass_, eps0, q_ )
-         amconv = 1.66042d-24/9.1095d-28*0.5d0 ! converts amu to au
+         IF (ionode) THEN
+            call readmat ( fildyn, asr, axis, nat, ntyp, atm, a0, &
+                            at, omega, amass_, eps0, q_ )
+            do nt=1, ntyp
+               if (amass(nt) <= 0.0d0) amass(nt)=amass_(nt)/amu_ry
+            end do
+         END IF
       ENDIF
       !
       IF (ionode) THEN
@@ -167,9 +171,6 @@ end Module dynamical
          ! from now on, execute on a single processor
          !
          gamma = ( abs( q_(1)**2+q_(2)**2+q_(3)**2 ) < 1.0d-8 )
-         do nt=1, ntyp
-            if (amass(nt) <= 0.0d0) amass(nt)=amass_(nt)/amconv
-         end do
          !
          IF (gamma) THEN
             allocate (itau(nat))
@@ -350,7 +351,7 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
   !             dchi_dtau = derivatives of chi wrt atomic displacement
   !                         (units: A^2)
  USE kinds, ONLY: DP
- USE constants, ONLY : fpi, BOHR_RADIUS_ANGS, RY_TO_THZ, RY_TO_CMM1
+ USE constants, ONLY : fpi, BOHR_RADIUS_ANGS, RY_TO_THZ, RY_TO_CMM1, amu_ry
  implicit none
  ! input
  integer, intent(in) :: nat
@@ -361,15 +362,11 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
  integer na, nu, ipol, jpol, lpol
  logical noraman
  real(DP), allocatable :: infrared(:), raman(:,:,:)
- real(DP):: polar(3), cm1thz, freq, r1fac, irfac
+ real(DP):: polar(3), cm1thz, freq, irfac
  real(DP):: cmfac, alpha, beta2
  !
  !
  cm1thz = RY_TO_THZ/RY_TO_CMM1
- !
- !   conversion factor from (Ry au for mass)^(-1) to amu(-1)
- !
- r1fac = 911.444d0
  !
  !   conversion factor for IR cross sections from
  !   (Ry atomic units * e^2)  to  (Debye/A)^2/amu
@@ -377,7 +374,7 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
  !   1 e = 4.80324x10^(-10) esu = 4.80324 Debye/A
  !     (1 Debye = 10^(-18) esu*cm = 0.2081928 e*A)
  !
- irfac = 4.80324d0**2/2.d0*r1fac
+ irfac = 4.80324d0**2/2.d0*amu_ry
  !
  write (6,'(/5x,"Polarizability (A^3 units)")')
  !
@@ -463,7 +460,7 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
           (raman(1,2,nu)**2 + raman(1,3,nu)**2 + raman(2,3,nu)**2) )/2.d0
        write (6,'(i5,f10.2,2f10.4,f15.4,f10.4)') &
             nu, freq, freq*cm1thz, infrared(nu), &
-            (45.d0*alpha**2 + 7.0d0*beta2)*r1fac, &
+            (45.d0*alpha**2 + 7.0d0*beta2)*amu_ry, &
              3.d0*beta2/(45.d0*alpha**2 + 4.0d0*beta2)
     end if
  end do

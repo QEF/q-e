@@ -21,7 +21,7 @@ MODULE dynamics_module
    USE io_global, ONLY : stdout
    USE io_files,  ONLY : prefix, tmp_dir, seqopn
    USE constants, ONLY : tpi, fpi
-   USE constants, ONLY : amconv, ry_to_kelvin, au_ps, bohr_radius_cm, ry_kbar
+   USE constants, ONLY : amu_ry, ry_to_kelvin, au_ps, bohr_radius_cm, ry_kbar
    USE constants, ONLY : eps8
    USE control_flags, ONLY : tolp
    !
@@ -289,7 +289,7 @@ CONTAINS
          ! ... check if the new positions satisfy the constrain equation
          !
          CALL check_constraint( nat, tau_new, tau, &
-                                force, if_pos, ityp, alat, dt**2, amconv )
+                                force, if_pos, ityp, alat, dt**2, amu_ry )
          !
 #if ! defined (__REDUCE_OUTPUT)
          !
@@ -309,7 +309,7 @@ CONTAINS
 
          IF (vel_defined) THEN
             CALL check_constraint( nat, tau_old, tau, &
-                                   force, if_pos, ityp, alat, dt**2, amconv )
+                                   force, if_pos, ityp, alat, dt**2, amu_ry )
          ENDIF
          !
       ENDIF
@@ -479,7 +479,7 @@ CONTAINS
          !
          DO na = 1, nat
             !
-            mass(na) = amass( ityp(na) ) * amconv
+            mass(na) = amass( ityp(na) ) * amu_ry
             !
             total_mass = total_mass + mass(na)
             !
@@ -881,7 +881,7 @@ CONTAINS
       !
       CALL force_precond( istep, force, etotold )
       !
-      acc(:,:) = force(:,:) / alat / amconv
+      acc(:,:) = force(:,:) / alat / amu_ry
       !
       CALL project_velocity()
       !
@@ -917,7 +917,7 @@ CONTAINS
          ! ... check if the new positions satisfy the constrain equation
          !
          CALL check_constraint( nat, tau_new, tau, &
-                                force, if_pos, ityp, alat, dt**2, amconv )
+                                force, if_pos, ityp, alat, dt**2, amu_ry )
          !
       ENDIF
       !
@@ -1073,7 +1073,7 @@ CONTAINS
          ! ... check if the new positions satisfy the constrain equation
          !
          CALL check_constraint( nat, tau_new, tau, &
-                                force, if_pos, ityp, alat, dt**2, amconv )
+                                force, if_pos, ityp, alat, dt**2, amu_ry )
          !
 #if ! defined (__REDUCE_OUTPUT)
          !

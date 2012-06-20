@@ -104,7 +104,7 @@ SUBROUTINE readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
   !-----------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
-  USE constants, ONLY : amconv
+  USE constants, ONLY : amu_ry
   IMPLICIT NONE
   ! Input
   INTEGER :: iudyn, ibrav, nat, ntyp, ityp (nat)
@@ -132,7 +132,7 @@ SUBROUTINE readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
           CALL errore ('readmat', 'inconsistent data', 1)
   DO nt = 1, ntyp
      READ (iudyn, * ) i, atm, amass_
-     IF ( nt.NE.i .OR. ABS (amass_ - amconv*amass (nt) ) > 1.0d-5) &
+     IF ( nt.NE.i .OR. ABS (amass_ - amu_ry*amass (nt) ) > 1.0d-5) &
         CALL errore ( 'readmat', 'inconsistent data', 1 + nt)
   ENDDO
   DO na = 1, nat
@@ -163,9 +163,9 @@ SUBROUTINE readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
         DO na = 1, nat
            DO i = 1, 3
               dynr (1, i, na, j, nb) = dynr (1, i, na, j, nb) / SQRT (amass ( &
-                   ityp (na) ) * amass (ityp (nb) ) ) / amconv
+                   ityp (na) ) * amass (ityp (nb) ) ) / amu_ry
               dynr (2, i, na, j, nb) = dynr (2, i, na, j, nb) / SQRT (amass ( &
-                   ityp (na) ) * amass (ityp (nb) ) ) / amconv
+                   ityp (na) ) * amass (ityp (nb) ) ) / amu_ry
            ENDDO
         ENDDO
      ENDDO
@@ -181,7 +181,7 @@ SUBROUTINE readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
   DO nu = 1, 3 * nat
      DO mu = 1, 3 * nat
         na = (mu - 1) / 3 + 1
-        dyn (mu, nu) = dyn (mu, nu) / SQRT ( amconv * amass (ityp (na) ) )
+        dyn (mu, nu) = dyn (mu, nu) / SQRT ( amu_ry * amass (ityp (na) ) )
      ENDDO
   ENDDO
   !

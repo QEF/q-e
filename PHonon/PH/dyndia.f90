@@ -16,7 +16,7 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
   !
   USE kinds, only : DP
   USE io_global,  ONLY : stdout
-  USE constants, ONLY : amconv, RY_TO_THZ, RY_TO_CMM1
+  USE constants, ONLY : amu_ry, RY_TO_THZ, RY_TO_CMM1
   USE io_dyn_mat, ONLY : write_dyn_mat_tail
   USE control_ph, ONLY : xmldyn
   implicit none
@@ -69,7 +69,7 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
         nb = (nu_j - 1) / 3 + 1
         ntb = ityp (nb)
         dyn (nu_i, nu_j) = dyn (nu_i, nu_j) / sqrt (amass (nta)*amass (ntb)) &
-                                            / amconv
+                                            / amu_ry
      enddo
   enddo
   !
@@ -97,7 +97,7 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
      unorm = 0.d0
      do mu = 1, 3 * nat
         na = (mu - 1) / 3 + 1
-        dyn (mu, nu_i) = z (mu, nu_i) / sqrt (amconv * amass (ityp (na) ) )
+        dyn (mu, nu_i) = z (mu, nu_i) / sqrt (amu_ry * amass (ityp (na) ) )
         unorm = unorm + dyn (mu, nu_i) * CONJG(dyn (mu, nu_i) )
      enddo
      if (iudyn /= 0) then

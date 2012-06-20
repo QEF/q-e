@@ -10,8 +10,8 @@ SUBROUTINE writedyn ( )
   !
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp, atm, amass
   USE run_info, ONLY : title
-  USE constants, ONLY : amconv
-  USE cgcom
+  USE constants, ONLY : amu_ry
+  uSE cgcom
   USE pwcom
   IMPLICIT NONE
   INTEGER :: iudyn, nt, na, nb, i, j
@@ -25,7 +25,7 @@ SUBROUTINE writedyn ( )
   WRITE(iudyn,'(a)') title_ph
   WRITE(iudyn,'(i3,i5,i3,6f11.7)') ntyp,nat,ibrav,celldm
   DO nt = 1,ntyp
-     WRITE(iudyn,*) nt," '",atm(nt),"' ",amconv*amass(nt)
+     WRITE(iudyn,*) nt," '",atm(nt),"' ",amu_ry*amass(nt)
   ENDDO
   DO na=1,nat
      WRITE(iudyn,'(2i5,3f15.7)') na,ityp(na),(tau(j,na),j=1,3)

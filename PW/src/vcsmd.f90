@@ -28,7 +28,7 @@ SUBROUTINE vcsmd()
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
-  USE constants,       ONLY : e2, ry_kbar, amconv
+  USE constants,       ONLY : e2, ry_kbar, amu_ry
   USE cell_base,       ONLY : omega, alat, at, bg, iforceh, fix_volume
   USE ions_base,       ONLY : tau, nat, ntyp => nsp, ityp, atm
   USE cellmd,          ONLY : nzero, ntimes, calc, press, at_old, omega_old, &
@@ -110,7 +110,7 @@ SUBROUTINE vcsmd()
   ! ... Allocate work arrays
   !
   ALLOCATE( amass_(ntyp) )
-  amass_(1:ntyp) = amass(1:ntyp) * amconv
+  amass_(1:ntyp) = amass(1:ntyp) * amu_ry
   ALLOCATE( rat(3,nat) )
   ALLOCATE( rati(3,nat) )
   ALLOCATE( ratd(3,nat) )

@@ -126,7 +126,7 @@ PROGRAM matdyn
   USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                          read_ifc_param, read_ifc
   USE cell_base,  ONLY : at, bg
-  USE constants,  ONLY : RY_TO_THZ, RY_TO_CMM1, amconv
+  USE constants,  ONLY : RY_TO_THZ, RY_TO_CMM1, amu_ry
   USE symm_base,  ONLY : set_sym
   USE rap_point_group,  ONLY : code_group
 
@@ -664,7 +664,7 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   USE ifconstants,ONLY : tau => tau_blk, ityp => ityp_blk, frc, zeu
   USE io_global,  ONLY : ionode, ionode_id, stdout
   USE mp,         ONLY : mp_bcast 
-  USE constants,  ONLY : amconv
+  USE constants,  ONLY : amu_ry
   !
   IMPLICIT NONE
   ! I/O variable
@@ -712,7 +712,7 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
      CALL mp_bcast(amass_from_file,ionode_id)
      IF (i.NE.nt) CALL errore ('readfc','wrong data read',nt)
      IF (amass(nt).EQ.0.d0) THEN
-        amass(nt) = amass_from_file/amconv
+        amass(nt) = amass_from_file/amu_ry
      ELSE
         WRITE(stdout,*) 'for atomic type',nt,' mass from file not used'
      END IF

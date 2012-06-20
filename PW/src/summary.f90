@@ -19,7 +19,7 @@ SUBROUTINE summary()
   USE io_global,       ONLY : stdout
   USE kinds,           ONLY : DP
   USE run_info,        ONLY: title
-  USE constants,       ONLY : amconv, rytoev
+  USE constants,       ONLY : amu_ry, rytoev
   USE cell_base,       ONLY : alat, ibrav, omega, at, bg, celldm
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
   USE cellmd,          ONLY : calc, cmass
@@ -202,9 +202,9 @@ SUBROUTINE summary()
   ENDDO
 
   IF (calc.EQ.'cd' .OR. calc.EQ.'cm' ) &
-     WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU ")') cmass/amconv
+     WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU ")') cmass/amu_ry
   IF (calc.EQ.'nd' .OR. calc.EQ.'nm' ) &
-     WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU/(a.u.)^2 ")') cmass/amconv
+     WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU/(a.u.)^2 ")') cmass/amu_ry
 
   IF (lsda) THEN
      WRITE( stdout, '(/5x,"Starting magnetic structure ", &

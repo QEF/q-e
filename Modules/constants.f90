@@ -104,7 +104,6 @@ MODULE constants
   !
   !!!!!! COMPATIBIILITY
   !
-  REAL(DP), PARAMETER :: amconv = AMU_RY
   REAL(DP), PARAMETER :: bohr_radius_cm = bohr_radius_si * 100.0_DP
   REAL(DP), PARAMETER :: BOHR_RADIUS_ANGS = bohr_radius_cm * 1.0E8_DP
   REAL(DP), PARAMETER :: ANGSTROM_AU = 1.0_DP/BOHR_RADIUS_ANGS
