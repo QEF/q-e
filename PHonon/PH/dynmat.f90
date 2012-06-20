@@ -156,6 +156,11 @@ end Module dynamical
          if(asr.ne.'no') then
              call set_asr ( asr, axis, nat, tau, dyn, zstar )
          endif
+         IF (ionode) THEN
+            do nt=1, ntyp
+               if (amass(nt) <= 0.0d0) amass(nt)=amass_(nt)
+            end do
+         END IF
       ELSE
          IF (ionode) THEN
             call readmat ( fildyn, asr, axis, nat, ntyp, atm, a0, &
