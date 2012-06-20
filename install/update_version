@@ -12,7 +12,7 @@ else
 fi
 
 # write svn into file version_tmp.f90
-cat version.f90.in | sed 's/unknown/$svn_rev/' > version.f90.tmp
+cat version.f90.in | sed 's/unknown/'$svn_rev'/' > version.f90.tmp
 
 # check if a previous version.f90 file exists
 if test -f version.f90 ; then
