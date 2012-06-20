@@ -96,8 +96,8 @@ all : version libqemod.a
 .PHONY: version
 
 version :
-	- ( if test -x ../dev-tools/update_version ; then \
-                       ../dev-tools/update_version ; fi )
+	- ( if test -x ../install/update_version ; then \
+                       ../install/update_version; fi )
 
 libqemod.a: 	$(MODULES)
 	$(AR) $(ARFLAGS) $@ $?       
