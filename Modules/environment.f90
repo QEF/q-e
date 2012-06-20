@@ -54,7 +54,7 @@ CONTAINS
     CALL start_clock( TRIM(code) )
 
     code_version = TRIM (code) // " v." // TRIM (version_number)
-    IF ( TRIM (svn_revision) /= " " ) code_version = &
+    IF ( TRIM (svn_revision) /= "unknown" ) code_version = &
          TRIM (code_version) // " (svn rev. " // TRIM (svn_revision) // ")"
 
     ! ... for compatibility with PWSCF
