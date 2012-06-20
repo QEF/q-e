@@ -136,7 +136,7 @@ SUBROUTINE interpolate_ps(filein,xmin,dx)
   USE splinelib
   USE funct, ONLY : set_dft_from_name, get_iexch, get_icorr, get_igcx, get_igcc
   IMPLICIT NONE
-  real (8), INTENT(IN) :: dx, xmin
+  real (8), INTENT(in) :: dx, xmin
   INTEGER :: i, j, ib
   CHARACTER (len=256) :: filein(2)
   CHARACTER (len=5) :: dxlabel, xminlabel
@@ -146,7 +146,7 @@ SUBROUTINE interpolate_ps(filein,xmin,dx)
   interpolate = .false.
   !
   WRITE(dxlabel,'(f5.4)') dx
-  WRITE(xminlabel,'(f5.2)')xmin 
+  WRITE(xminlabel,'(f5.2)')xmin
   !pp_info
   upf_rel = -1
   upf_rcloc = 0.d0
@@ -168,11 +168,11 @@ SUBROUTINE interpolate_ps(filein,xmin,dx)
 
   zp(1)   = zp(2)
   mesh(1) = (log(r(mesh(2),2) * zp(2) ) - xmin ) /dx + 1
-  do i=1,mesh(1)
+  DO i=1,mesh(1)
      r(i,1) = exp(xmin+dble(i-1)*dx)/zp(1)
      rab(i,1) = r(i,1) * dx
-  end do
-  write (*,*) xmin, dx, mesh(1),zp(1)
+  ENDDO
+  WRITE (*,*) xmin, dx, mesh(1),zp(1)
 
   IF (mesh(1)/=mesh(2) ) THEN
      WRITE (*,*) " pseudopotentials have different mesh "

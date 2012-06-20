@@ -31,14 +31,14 @@
 
 MODULE fpmd2upf_module
 
-  USE kinds, ONLY: DP
+  USE kinds, ONLY: dp
   USE parameters
   USE radial_grids, ONLY: ndmx
 
   IMPLICIT NONE
   SAVE
 
-  REAL(DP), PRIVATE :: TOLMESH = 1.d-5
+  REAL(dp), PRIVATE :: TOLMESH = 1.d-5
 
   TYPE pseudo_ncpp
      CHARACTER(len=4) :: psd         ! Element label
@@ -51,24 +51,24 @@ MODULE fpmd2upf_module
      INTEGER :: lll(lmaxx+1)
      INTEGER :: nchan
      INTEGER :: mesh
-     REAL(DP) ::  zv
-     REAL(DP) ::  dx            ! r(i) = cost * EXP( xmin + dx * (i-1) )
-     REAL(DP) ::  rab(ndmx)
-     REAL(DP) ::  rw(ndmx)
-     REAL(DP) ::  vnl(ndmx, lmaxx+1)
-     REAL(DP) ::  vloc(ndmx)
-     REAL(DP) ::  vrps(ndmx, lmaxx+1)
-     REAL(DP) ::  wgv(lmaxx+1)
-     REAL(DP) ::  rc(2)
-     REAL(DP) ::  wrc(2)
-     REAL(DP) ::  rcl(3,3)
-     REAL(DP) ::  al(3,3)
-     REAL(DP) ::  bl(3,3)
+     REAL(dp) ::  zv
+     REAL(dp) ::  dx            ! r(i) = cost * EXP( xmin + dx * (i-1) )
+     REAL(dp) ::  rab(ndmx)
+     REAL(dp) ::  rw(ndmx)
+     REAL(dp) ::  vnl(ndmx, lmaxx+1)
+     REAL(dp) ::  vloc(ndmx)
+     REAL(dp) ::  vrps(ndmx, lmaxx+1)
+     REAL(dp) ::  wgv(lmaxx+1)
+     REAL(dp) ::  rc(2)
+     REAL(dp) ::  wrc(2)
+     REAL(dp) ::  rcl(3,3)
+     REAL(dp) ::  al(3,3)
+     REAL(dp) ::  bl(3,3)
      INTEGER :: nrps                     ! number of atomic wave function
      INTEGER :: lrps(lmaxx+1)            ! angular momentum
-     REAL(DP) :: oc(lmaxx+1)            ! occupation for each rps
-     REAL(DP) :: rps(ndmx, lmaxx+1)  ! atomic pseudo wave function
-     REAL(DP) :: rhoc(ndmx)          ! core charge
+     REAL(dp) :: oc(lmaxx+1)            ! occupation for each rps
+     REAL(dp) :: rps(ndmx, lmaxx+1)  ! atomic pseudo wave function
+     REAL(dp) :: rhoc(ndmx)          ! core charge
    END TYPE pseudo_ncpp
 
 
@@ -126,11 +126,11 @@ CONTAINS
       SUBROUTINE analytic_to_numeric(ap)
         TYPE (pseudo_ncpp), INTENT(inout) :: ap
         INTEGER :: ir, mesh, lmax, l, n, il, ib, ll
-        REAL(DP) :: xmin, zmesh, dx, x
-!        REAL(DP) :: pi        = 3.14159265358979323846_DP
+        REAL(dp) :: xmin, zmesh, dx, x
+!        REAL(dp) :: pi        = 3.14159265358979323846_dp
 
 ! ...   declare external function
-        REAL(DP), EXTERNAL :: qe_erf
+        REAL(dp), EXTERNAL :: qe_erf
 
         IF( ap%mesh == 0 ) THEN
 ! ...     Local pseudopotential, define a logaritmic grid
@@ -184,14 +184,14 @@ CONTAINS
         TYPE (pseudo_ncpp), INTENT(inout) :: ap
         INTEGER, INTENT(in) :: uni
         INTEGER, INTENT(out) :: ierr
-        REAL(DP) :: chi( size(ap%rps, 1), size(ap%rps, 2) )
-        REAL(DP) :: vnl( size(ap%vnl, 1), size(ap%vnl, 2) )
-        REAL(DP) :: rho_core( size(ap%rhoc, 1) )
-        REAL(DP) :: r, ra, rb, fac
-        REAL(DP) :: oc( size(ap%rps, 2) )
-        REAL(DP) :: enl( size(ap%rps, 2) )
-        REAL(DP) :: zmesh, xmin, dx, etot
-        REAL(DP) :: zval
+        REAL(dp) :: chi( size(ap%rps, 1), size(ap%rps, 2) )
+        REAL(dp) :: vnl( size(ap%vnl, 1), size(ap%vnl, 2) )
+        REAL(dp) :: rho_core( size(ap%rhoc, 1) )
+        REAL(dp) :: r, ra, rb, fac
+        REAL(dp) :: oc( size(ap%rps, 2) )
+        REAL(dp) :: enl( size(ap%rps, 2) )
+        REAL(dp) :: zmesh, xmin, dx, etot
+        REAL(dp) :: zval
         INTEGER   :: nn(size(ap%rps, 2)), ll(size(ap%rps, 2))
         INTEGER   :: nwf, mesh, i, j, in1, in2, in3, in4, m
         INTEGER   :: lmax, nlc, nnl, lloc, l, il
@@ -416,11 +416,11 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
-      REAL(DP) FUNCTION calculate_dx( a, m )
-        REAL(DP), INTENT(in) :: a(:)
+      REAL(dp) FUNCTION calculate_dx( a, m )
+        REAL(dp), INTENT(in) :: a(:)
         INTEGER, INTENT(in) :: m
         INTEGER :: n
-        REAL(DP) :: ra, rb
+        REAL(dp) :: ra, rb
           n = min( size( a ), m )
           ra = a(1)
           rb = a(n)
@@ -440,7 +440,7 @@ SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
 !
   CHARACTER(len=80) :: input_line
   INTEGER :: i, j, m, strlen, info, nf, mesh
-  REAL(DP) :: rdum
+  REAL(dp) :: rdum
 
 ! ... read atomic wave functions
 ! ... nchan : indicate number of atomic wave functions ( s p d )
@@ -448,7 +448,7 @@ SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
   ierr = 0
   err_msg = ' error while reading atomic wf '
 
-  ap%rps  = 0.0_DP
+  ap%rps  = 0.0_dp
   ap%nrps = 0
   ap%oc   = 0.0d0
   ap%lrps = 0
@@ -724,7 +724,7 @@ SUBROUTINE read_atomic_cc( iunit, ap, err_msg, ierr)
 !
   CHARACTER(len=80) :: input_line
   INTEGER :: j, mesh
-  REAL(DP) :: rdum
+  REAL(dp) :: rdum
 
 ! ... read atomic core
 

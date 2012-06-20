@@ -21,7 +21,7 @@ PROGRAM casino2upf
   !
   INTEGER, EXTERNAL :: find_free_unit
   !
-  CHARACTER(len=256) :: pp_data 
+  CHARACTER(len=256) :: pp_data
   CHARACTER(len=256) :: upf_file
   CHARACTER(len=256), ALLOCATABLE:: wavefile(:)
   INTEGER, ALLOCATABLE :: waveunit(:)
@@ -32,13 +32,13 @@ PROGRAM casino2upf
        pp_data,        &         !CASINO pp filename
        upf_file,        &         !output file
        tn_grid,        &         !.true. if Trail and Needs grid is used
-       tn_prefac,      &         
+       tn_prefac,      &
        xmin,           &         !xmin for standard QE grid
        dx                        !dx for Trail and Needs and standard QE
                                  !grid
   pp_data= 'pp.data'
   upf_file= 'out.UPF'
-  
+
   CALL nullify_pseudo_upf( upf_out )
 
   WRITE(0,*) 'CASINO2UPF Converter'
@@ -60,20 +60,20 @@ PROGRAM casino2upf
         CALL errore ('casino2upf', 'cannot read file', trim(wavefile(i)))
      ENDIF
   ENDDO
-  
+
   pp_unit=find_free_unit()
-  OPEN(unit=pp_unit,file=TRIM(pp_data),status='old',form='formatted', iostat=ios)
+  OPEN(unit=pp_unit,file=trim(pp_data),status='old',form='formatted', iostat=ios)
   IF (ios /= 0 ) THEN
-     CALL errore ('casino2upf', 'cannot read file', TRIM(wavefile(i)))
+     CALL errore ('casino2upf', 'cannot read file', trim(wavefile(i)))
   ENDIF
-  
+
   CALL read_casino(pp_unit,nofiles, waveunit)
-  
+
   CLOSE (unit=pp_unit)
   DO i=1,nofiles
      CLOSE (waveunit(i))
   ENDDO
-  
+
   DEALLOCATE( wavefile, waveunit )
 
   ! convert variables read from CASINO format into those needed
@@ -82,9 +82,9 @@ PROGRAM casino2upf
   CALL convert_casino(upf_out)
 
   CALL write_upf(upf=upf_out,filename=upf_file)
-  
+
   CALL  deallocate_pseudo_upf( upf_out )
-  
+
   STOP
 
 END PROGRAM casino2upf

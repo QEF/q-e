@@ -25,7 +25,7 @@ PROGRAM fhi2upf
   INTEGER :: ios
   !
   CALL get_file ( filein )
-  IF ( TRIM(filein) == ' ') &
+  IF ( trim(filein) == ' ') &
        CALL errore ('fhi2upf', 'usage: fhi2upf "file-to-be-converted"', 1)
   OPEN ( unit=1, file=filein, status = 'old', form='formatted', iostat=ios )
   IF ( ios /= 0) CALL errore ('cpmd2upf', 'file: '//trim(filein)//' not found', 2)
@@ -113,7 +113,7 @@ SUBROUTINE read_fhi(iunps)
   READ(iunps,'(a)') info
   READ(info,*,iostat=i) Zval, l
   IF ( i /= 0 .or. zval <= 0.0 .or. zval > 100.0 ) THEN
-     WRITE (6,'("Assuming abinit format. First line:",/,A)') TRIM(info)
+     WRITE (6,'("Assuming abinit format. First line:",/,A)') trim(info)
      READ(iunps,*) Zatom, Zion, pspdat
      READ(iunps,*) pspcod, pspxc, lmax,lloc, mmax, r2well
      IF (pspcod /= 6) THEN
@@ -234,7 +234,7 @@ SUBROUTINE convert_fhi (upf)
   ELSE
      upf%comment = 'Info: automatically converted from FHI format'
   ENDIF
-  upf%rel = 'scalar'  ! just guessing 
+  upf%rel = 'scalar'  ! just guessing
   IF (nint(Zatom) > 0) THEN
      upf%psd = atom_name(nint(Zatom))
      IF (nint(Zatom) > 18) upf%rel = 'no' ! just guessing
@@ -243,16 +243,16 @@ SUBROUTINE convert_fhi (upf)
      READ (5,'(a)') upf%psd
   ENDIF
   upf%typ = 'SL'
-  upf%tvanp = .FALSE.
-  upf%tpawp = .FALSE.
-  upf%tcoulombp=.FALSE.
+  upf%tvanp = .false.
+  upf%tpawp = .false.
+  upf%tcoulombp=.false.
   upf%nlcc = nlcc_
   !
   IF (pspxc == 7) THEN
      upf%dft = 'SLA-PW'
-  ELSE IF (pspxc == 11) THEN
+  ELSEIF (pspxc == 11) THEN
      upf%dft = 'PBE'
-  ELSE 
+  ELSE
      IF (pspxc > 0) THEN
         PRINT '("DFT read from abinit file: ",i1)', pspxc
      ENDIF
@@ -294,17 +294,17 @@ SUBROUTINE convert_fhi (upf)
      READ (label(1:1),*, err=10) l
      upf%els(i)  = label
      upf%nchi(i)  = l
-     IF ( label(2:2) == 's' .OR. label(2:2) == 'S') then
+     IF ( label(2:2) == 's' .or. label(2:2) == 'S') THEN
         l=0
-     ELSE IF ( label(2:2) == 'p' .OR. label(2:2) == 'P') then
+     ELSEIF ( label(2:2) == 'p' .or. label(2:2) == 'P') THEN
         l=1
-     ELSE IF ( label(2:2) == 'd' .OR. label(2:2) == 'D') then
+     ELSEIF ( label(2:2) == 'd' .or. label(2:2) == 'D') THEN
         l=2
-     ELSE IF ( label(2:2) == 'f' .OR. label(2:2) == 'F') then
+     ELSEIF ( label(2:2) == 'f' .or. label(2:2) == 'F') THEN
         l=3
      ELSE
         l=i-1
-     END IF
+     ENDIF
      upf%lchi(i)  = l
      upf%rcut_chi(i)  = 0.0d0
      upf%rcutus_chi(i)= 0.0d0
@@ -332,10 +332,10 @@ SUBROUTINE convert_fhi (upf)
   ALLOCATE(upf%vnl(upf%mesh,0:upf%lmax,1))
   DO l=0, upf%lmax
      upf%vnl(:,l,1) = 2.d0*comp(l)%pot(:)
-  END DO
+  ENDDO
 
   ! calculate number of nonlocal projectors
-  IF ( upf%lloc >= 0 .AND. upf%lloc <= upf%lmax ) THEN
+  IF ( upf%lloc >= 0 .and. upf%lloc <= upf%lmax ) THEN
      upf%nbeta= upf%lmax
   ELSE
      upf%nbeta= upf%lmax+1
@@ -352,7 +352,7 @@ SUBROUTINE convert_fhi (upf)
         IF (l/=upf%lloc) THEN
            iv=iv+1
            DO ir = upf%mesh,1,-1
-              IF ( ABS ( upf%vnl(ir,l,1) - upf%vnl(ir,upf%lloc,1) ) > 1.0E-6 ) THEN
+              IF ( abs ( upf%vnl(ir,l,1) - upf%vnl(ir,upf%lloc,1) ) > 1.0E-6 ) THEN
                  upf%kbeta(iv)=ir
                  exit
               ENDIF
@@ -362,10 +362,10 @@ SUBROUTINE convert_fhi (upf)
      ! the number of points used in the evaluation of integrals
      ! should be even (for simpson integration)
      DO i=1,upf%nbeta
-        IF ( MOD (upf%kbeta(i),2) == 0 .AND. upf%kbeta(i) < upf%mesh) &
+        IF ( mod (upf%kbeta(i),2) == 0 .and. upf%kbeta(i) < upf%mesh) &
            upf%kbeta(i)=upf%kbeta(i)+1
-     END DO
-     upf%kkbeta = MAXVAL(upf%kbeta(:))
+     ENDDO
+     upf%kkbeta = maxval(upf%kbeta(:))
      ALLOCATE(upf%beta(upf%mesh,upf%nbeta))
      ALLOCATE(upf%dion(upf%nbeta,upf%nbeta))
      upf%beta(:,:) =0.d0

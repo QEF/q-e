@@ -7,27 +7,27 @@ MODULE casino_pp
   ! trailing underscore means that a variable with the same name
   ! is used in module 'upf' containing variables to be written
   !
-  USE kinds, ONLY : DP
+  USE kinds, ONLY : dp
 
   CHARACTER(len=20) :: dft_
   CHARACTER(len=2)  :: psd_
-  REAL(DP) :: zp_
+  REAL(dp) :: zp_
   INTEGER nlc, nnl, lmax_, lloc, nchi, rel_
   LOGICAL :: numeric, bhstype, nlcc_
   CHARACTER(len=2), ALLOCATABLE :: els_(:)
-  REAL(DP) :: zmesh
-  REAL(DP) :: xmin      = -7.0_DP
-  REAL(DP) :: dx        = 20.0_DP/1500.0_DP
-  REAL(DP) :: tn_prefac = 0.75E-6_DP
+  REAL(dp) :: zmesh
+  REAL(dp) :: xmin      = -7.0_dp
+  REAL(dp) :: dx        = 20.0_dp/1500.0_dp
+  REAL(dp) :: tn_prefac = 0.75E-6_dp
   LOGICAL  :: tn_grid   = .true.
 
 
-  REAL(DP), ALLOCATABLE::  r_(:)
+  REAL(dp), ALLOCATABLE::  r_(:)
   INTEGER :: mesh_
 
-  REAL(DP), ALLOCATABLE::  vnl(:,:)
+  REAL(dp), ALLOCATABLE::  vnl(:,:)
   INTEGER, ALLOCATABLE:: lchi_(:), nns_(:)
-  REAL(DP), ALLOCATABLE:: chi_(:,:),  oc_(:)
+  REAL(dp), ALLOCATABLE:: chi_(:,:),  oc_(:)
 
 CONTAINS
   !
@@ -36,19 +36,19 @@ CONTAINS
     !     ----------------------------------------------------------
     !
     !     Reads in a CASINO tabulated pp file and it's associated
-    !     awfn files. Some basic processing such as removig the r 
-    !     factors from the potentials is also performed.
-    
+    !     awfn files. Some basic processing such as removing the
+    !     r factors from the potentials is also performed.
 
-    USE kinds,  ONLY : DP
+
+    USE kinds,  ONLY : dp
     IMPLICIT NONE
     TYPE :: wavfun_list
        INTEGER :: occ,eup,edwn, nquant, lquant
        CHARACTER(len=2) :: label
 #ifdef __STD_F95
-       REAL(DP), POINTER :: wavefunc(:)
+       REAL(dp), POINTER :: wavefunc(:)
 #else
-       REAL(DP), ALLOCATABLE :: wavefunc(:)
+       REAL(dp), ALLOCATABLE :: wavefunc(:)
 #endif
        TYPE (wavfun_list), POINTER :: p
 
@@ -57,9 +57,9 @@ CONTAINS
     TYPE :: channel_list
        INTEGER :: lquant
 #ifdef __STD_F95
-       REAL(DP), POINTER :: channel(:)
+       REAL(dp), POINTER :: channel(:)
 #else
-       REAL(DP), ALLOCATABLE :: channel(:)
+       REAL(dp), ALLOCATABLE :: channel(:)
 #endif
        TYPE (channel_list), POINTER :: p
 
@@ -81,7 +81,7 @@ CONTAINS
 
     INTEGER :: l, i, ir, nb, gsorbs, j,k,m,tmp, lquant, orbs, nquant
     INTEGER, ALLOCATABLE :: gs(:,:)
-    INTEGER, INTENT(IN) :: waveunit(nofiles)
+    INTEGER, INTENT(in) :: waveunit(nofiles)
 
     NULLIFY (  mhead, mptr, mtail )
     dft_ = 'HF'   !Hardcoded at the moment should eventually be HF anyway
@@ -135,18 +135,18 @@ CONTAINS
     ALLOCATE(phead)
     ptail => phead
     pptr  => phead
-    
+
     ALLOCATE( pptr%channel(mesh_) )
     READ(iunps, '(15x,I1,7x)') l
     pptr%lquant=l
     READ(iunps, *)  (pptr%channel(ir),ir=1,mesh_)
-    
-    
+
+
     DO
        READ(iunps, '(15x,I1,7x)', IOSTAT=ios) l
 
        IF (ios /= 0 ) THEN
-          EXIT
+          exit
        ENDIF
 
        ALLOCATE(pptr%p)
@@ -155,14 +155,14 @@ CONTAINS
        ALLOCATE( pptr%channel(mesh_) )
        pptr%lquant=l
        READ(iunps, *)  (pptr%channel(ir),ir=1,mesh_)
-       
+
     ENDDO
 
     !Compute the number of channels read in.
     lmax_ =-1
     pptr => phead
     DO
-       IF ( .NOT. ASSOCIATED(pptr) )EXIT
+       IF ( .not. associated(pptr) )exit
        lmax_=lmax_+1
 
        pptr =>pptr%p
@@ -172,9 +172,9 @@ CONTAINS
     i=0
     pptr => phead
     DO
-       IF ( .NOT. ASSOCIATED(pptr) )EXIT
+       IF ( .not. associated(pptr) )exit
        !         lchi_(i) = pptr%lquant
-       
+
        DO ir=1,mesh_
           vnl(ir,i) = pptr%channel(ir)
        ENDDO
@@ -185,7 +185,7 @@ CONTAINS
 
     !Clean up the linked list (deallocate it)
     DO
-       IF ( .NOT. ASSOCIATED(phead) )EXIT
+       IF ( .not. associated(phead) )exit
        pptr => phead
        phead => phead%p
        DEALLOCATE( pptr )
@@ -196,8 +196,8 @@ CONTAINS
           vnl(ir,l) = vnl(ir,l)/r_(ir) !Removing the factor of r CASINO has
        ENDDO
        ! correcting for possible divide by zero
-       IF ( r_(1) == 0 ) THEN 
-          vnl(1,l) = 0  
+       IF ( r_(1) == 0 ) THEN
+          vnl(1,l) = 0
        ENDIF
     ENDDO
 
@@ -384,18 +384,18 @@ CONTAINS
      !     ----------------------------------------------------------
      SUBROUTINE convert_casino(upf_out)
        !     ----------------------------------------------------------
-       USE kinds, ONLY : DP
+       USE kinds, ONLY : dp
        USE upf_module
-       USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid 
+       USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid
        USE funct, ONLY : set_dft_from_name, get_iexch, get_icorr, &
                          get_igcx, get_igcc
 
        IMPLICIT NONE
 
-       TYPE(pseudo_upf), INTENT(INOUT)       :: upf_out
+       TYPE(pseudo_upf), INTENT(inout)       :: upf_out
 
-       REAL(DP), ALLOCATABLE :: aux(:)
-       REAL(DP) :: vll
+       REAL(dp), ALLOCATABLE :: aux(:)
+       REAL(dp) :: vll
        INTEGER :: kkbeta, l, iv, ir, i, nb
 
        WRITE(upf_out%generated, '("From a Trail & Needs tabulated &
@@ -414,7 +414,7 @@ CONTAINS
        ENDIF
 
        IF (xmin == 0 ) THEN
-          xmin= LOG(zmesh * r_(2) )
+          xmin= log(zmesh * r_(2) )
        ENDIF
 
        ! Allocate and assign the raidal grid
@@ -426,12 +426,12 @@ CONTAINS
 
        ALLOCATE(upf_out%rab(upf_out%mesh))
        ALLOCATE(  upf_out%r(upf_out%mesh))
-       
+
        upf_out%r = r_
        DEALLOCATE( r_ )
 
-       upf_out%rmax = MAXVAL(upf_out%r)
-       
+       upf_out%rmax = maxval(upf_out%r)
+
 
        !
        ! subtract out the local part from the different
@@ -444,19 +444,19 @@ CONTAINS
 
        ALLOCATE (upf_out%vloc(upf_out%mesh))
        upf_out%vloc(:) = vnl(:,lloc)
-    
+
 
        ! Compute the derivatives of the grid. The Trail and Needs
-       ! grids use r(i) = (tn_prefac / zmesh)*( exp(i*dx) - 1 ) so 
+       ! grids use r(i) = (tn_prefac / zmesh)*( exp(i*dx) - 1 ) so
        ! must be treated differently to standard QE grids.
-       
+
        IF ( tn_grid ) THEN
           DO ir = 1, upf_out%mesh
              upf_out%rab(ir) = dx * ( upf_out%r(ir) + tn_prefac / zmesh )
           ENDDO
        ELSE
           DO ir = 1, upf_out%mesh
-             upf_out%rab(ir) = dx  * upf_out%r(ir) 
+             upf_out%rab(ir) = dx  * upf_out%r(ir)
           ENDDO
        ENDIF
 
@@ -474,7 +474,7 @@ CONTAINS
           ENDIF
        ENDDO
 
-       ! This section deals with the pseudo wavefunctions. 
+       ! This section deals with the pseudo wavefunctions.
        ! These values are just given directly to the pseudo_upf structure
        upf_out%nwfc  = nchi
 
@@ -483,7 +483,7 @@ CONTAINS
        ALLOCATE( upf_out%els(upf_out%nwfc) )
        ALLOCATE( upf_out%rcut_chi(upf_out%nwfc) )
        ALLOCATE( upf_out%rcutus_chi (upf_out%nwfc) )
-       
+
        DO i=1, upf_out%nwfc
           upf_out%nchi(i)  = nns_(i)
           upf_out%lchi(i)  = lchi_(i)
@@ -537,9 +537,9 @@ CONTAINS
           ALLOCATE(aux(upf_out%kkbeta))
           ALLOCATE(upf_out%beta(upf_out%mesh,upf_out%nbeta))
           ALLOCATE(upf_out%dion(upf_out%nbeta,upf_out%nbeta))
-          
+
           upf_out%dion(:,:) =0.d0
-          
+
           iv=0
           DO i=1,upf_out%nwfc
              l=upf_out%lchi(i)
@@ -548,7 +548,7 @@ CONTAINS
                 upf_out%els_beta(iv)=upf_out%els(i)
                 upf_out%lll(iv)=l
                 DO ir=1,upf_out%kkbeta
-                   
+
                    upf_out%beta(ir,iv)=chi_(ir,i)*vnl(ir,l)
                    aux(ir) = chi_(ir,i)**2*vnl(ir,l)
 
@@ -556,7 +556,7 @@ CONTAINS
                 CALL simpson(upf_out%kkbeta,aux,upf_out%rab,vll)
                 upf_out%dion(iv,iv) = 1.0d0/vll
              ENDIF
-             
+
              IF(iv >= upf_out%nbeta) exit  ! skip additional pseudo wfns
           ENDDO
 
@@ -588,20 +588,20 @@ CONTAINS
      SUBROUTINE write_casino_tab(upf_in, grid)
 
        USE upf_module
-       USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid 
+       USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid
 
 
        IMPLICIT NONE
 
-       TYPE(pseudo_upf), INTENT(IN)       :: upf_in
-       TYPE(radial_grid_type), INTENT(IN) :: grid
+       TYPE(pseudo_upf), INTENT(in)       :: upf_in
+       TYPE(radial_grid_type), INTENT(in) :: grid
        INTEGER :: i, lp1
 
        INTEGER, EXTERNAL :: atomic_number
 
        WRITE(6,*) "Converted Pseudopotential in REAL space for ", upf_in%psd
        WRITE(6,*) "Atomic number and pseudo-charge"
-       WRITE(6,"(I3,F5.2)") atomic_number( upf_in%psd ),upf_in%zp  
+       WRITE(6,"(I3,F5.2)") atomic_number( upf_in%psd ),upf_in%zp
        WRITE(6,*) "Energy units (rydberg/hartree/ev):"
        WRITE(6,*) "rydberg"
        WRITE(6,*) "Angular momentum of local component (0=s,1=p,2=d..)"
@@ -614,29 +614,29 @@ CONTAINS
        WRITE(6,*) "R(i) in atomic units"
        WRITE(6, "(T4,E22.15)") grid%r(:)
 
-       lp1 = SIZE ( vnl, 2 )
+       lp1 = size ( vnl, 2 )
        DO i=1,lp1
           WRITE(6, "(A,I1,A)") 'r*potential (L=',i-1,') in Ry'
           WRITE(6, "(T4,E22.15)") vnl(:,i)
-       END DO
+       ENDDO
 
      END SUBROUTINE write_casino_tab
 
      SUBROUTINE conv_upf2casino(upf_in,grid)
 
        USE upf_module
-       USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid 
+       USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid
 
 
        IMPLICIT NONE
 
-       TYPE(pseudo_upf), INTENT(IN)       :: upf_in
-       TYPE(radial_grid_type), INTENT(IN) :: grid
+       TYPE(pseudo_upf), INTENT(in)       :: upf_in
+       TYPE(radial_grid_type), INTENT(in) :: grid
        INTEGER :: i, l, channels
 
-       REAL(DP), PARAMETER :: offset=1E-20_DP
-       !This is an offset added to the wavefunctions to 
-       !eliminate any divide by zeros that may be caused by 
+       REAL(dp), PARAMETER :: offset=1E-20_dp
+       !This is an offset added to the wavefunctions to
+       !eliminate any divide by zeros that may be caused by
        !zeroed wavefunction terms.
 
        channels=upf_in%nbeta+1
@@ -645,16 +645,16 @@ CONTAINS
        !Set up the local component of each channel
        DO i=1,channels
           vnl(:,i)=grid%r(:)*upf_in%vloc(:)
-       END DO
+       ENDDO
 
 
        DO i=1,upf_in%nbeta
           l=upf_in%lll(i)+1
 
-          !Check if any wfc components have been zeroed 
+          !Check if any wfc components have been zeroed
           !and apply the offset IF they have
 
-          IF ( MINVAL(ABS(upf_in%chi(:,l))) .ne. 0 ) THEN
+          IF ( minval(abs(upf_in%chi(:,l))) /= 0 ) THEN
              vnl(:,l)= (upf_in%beta(:,l)/(upf_in%chi(:,l)) &
                   *grid%r(:)) + vnl(:,l)
           ELSE
@@ -662,9 +662,9 @@ CONTAINS
                   &wavefunction to avoid divide by zero'
              vnl(:,l)= (upf_in%beta(:,l)/(upf_in%chi(:,l)+offset) &
                   *grid%r(:)) + vnl(:,l)
-          END IF
+          ENDIF
 
-       END DO
+       ENDDO
 
      END SUBROUTINE conv_upf2casino
 

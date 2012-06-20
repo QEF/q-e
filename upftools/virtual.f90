@@ -10,12 +10,12 @@
 !
 !   V^{(vca)} = V_{loc)^{(vca)} + V_{nl}^{(vca)}
 ! where
-!   V_{loc)^{(vca)} = x V_{loc}^{(1)} + (1-x) V_{loc}^{(2)} 
+!   V_{loc)^{(vca)} = x V_{loc}^{(1)} + (1-x) V_{loc}^{(2)}
 ! and
-!   V_{nl)^{(vca)} = \sum_{ij} |\beta^{(1)}_i>   x D^{(1)}_{ij} <\beta^{(1)}_j| 
+!   V_{nl)^{(vca)} = \sum_{ij} |\beta^{(1)}_i>   x D^{(1)}_{ij} <\beta^{(1)}_j|
 !                  + \sum_{ij} |\beta^{(2)}_i>(1-x)D^{(2)}_{ij} <\beta^{{2)}_j|
 ! where
-!   V_{loc}^{(n)}(r) is the local part of pseudopot n 
+!   V_{loc}^{(n)}(r) is the local part of pseudopot n
 !   \beta^{{n)}_i(r) are the projectors for pseudopot n
 !   D^{(n))_{ij} are the (bare) components of matrix D for pseudopot n
 !

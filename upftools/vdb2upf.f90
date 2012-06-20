@@ -17,7 +17,7 @@ PROGRAM vdb2upf
   CHARACTER(len=256) filein, fileout
   !
   !
-  IF ( TRIM(filein) == ' ') &
+  IF ( trim(filein) == ' ') &
        CALL errore ('vdb2upf', 'usage: vdb2upf "file-to-be-converted"', 1)
   CALL get_file ( filein )
   OPEN(unit=1,file=filein,status='old',form='formatted')

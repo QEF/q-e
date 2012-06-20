@@ -19,14 +19,14 @@ PROGRAM upf2upf2
   USE write_upf_v2_module, ONLY: write_upf_v2
   !
   IMPLICIT NONE
-  TYPE(pseudo_upf) :: upf 
+  TYPE(pseudo_upf) :: upf
   TYPE (radial_grid_type), TARGET :: grid
   CHARACTER(len=256) filein, fileout
   INTEGER :: ios
-  INTEGER, external :: atomic_number
+  INTEGER, EXTERNAL :: atomic_number
   !
   CALL get_file ( filein )
-  IF ( TRIM(filein) == ' ') &
+  IF ( trim(filein) == ' ') &
        CALL errore ('upf2upf2', 'usage: upf2upf2 "file-to-be-converted"', 1)
   OPEN ( unit=1, file=filein, status = 'old', form='formatted', iostat=ios )
   IF ( ios /= 0) &
@@ -43,16 +43,16 @@ PROGRAM upf2upf2
   !
   ! convert a few variables
   !
-  IF ( .NOT. ASSOCIATED (upf%epseu) ) THEN
+  IF ( .not. associated (upf%epseu) ) THEN
      ALLOCATE ( upf%epseu( upf%nwfc) )
      upf%epseu=0
-  END IF
+  ENDIF
   ALLOCATE ( upf%nchi( upf%nwfc) )
-  IF ( .NOT. ASSOCIATED(upf%nn) ) THEN
+  IF ( .not. associated(upf%nn) ) THEN
      upf%nchi=0
   ELSE
      upf%nchi=upf%nn(1:upf%nwfc)
-  END IF
+  ENDIF
   ALLOCATE ( upf%rcut_chi( upf%nwfc ) )
   ALLOCATE ( upf%rcutus_chi( upf%nwfc ) )
   upf%rcut_chi=upf%rcut(1:upf%nwfc)
@@ -64,11 +64,11 @@ PROGRAM upf2upf2
   upf%xmin = log(upf%r(1)*upf%zmesh )
   IF ( upf%has_so) THEN
      upf%rel="full"
-  ELSE IF ( upf%zmesh > 18 ) THEN
+  ELSEIF ( upf%zmesh > 18 ) THEN
      upf%rel="scalar"
   ELSE
      upf%rel="no"
-  END IF
+  ENDIF
   !
   ! write to file
   !

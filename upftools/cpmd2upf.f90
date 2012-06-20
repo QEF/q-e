@@ -19,11 +19,11 @@ PROGRAM cpmd2upf
   USE write_upf_v2_module, ONLY :  write_upf_v2
   !
   IMPLICIT NONE
-  TYPE(pseudo_upf) :: upf 
+  TYPE(pseudo_upf) :: upf
   CHARACTER(len=256) filein, fileout
   INTEGER :: ios
   !
-  IF ( TRIM(filein) == ' ') &
+  IF ( trim(filein) == ' ') &
        CALL errore ('cpmd2upf', 'usage: cpmd2upf "file-to-be-converted"', 1)
   CALL get_file ( filein )
   OPEN ( unit=1, file=filein, status = 'old', form='formatted', iostat=ios )
@@ -38,7 +38,7 @@ PROGRAM cpmd2upf
   !
   CALL nullify_pseudo_upf ( upf )
   !
-  CALL convert_cpmd (upf) 
+  CALL convert_cpmd (upf)
   !
   ! write to file
   !
@@ -66,7 +66,7 @@ MODULE cpmd
   !
   CHARACTER (len=80) title
   !
-  INTEGER :: ixc, pstype = 0 
+  INTEGER :: ixc, pstype = 0
   real(8) :: alphaxc
   REAL(8) :: z, zv
   ! Grid variables
@@ -74,13 +74,13 @@ MODULE cpmd
   real(8) :: amesh, rmax, xmin
   real(8), ALLOCATABLE :: r(:)
   ! PP variables
-  INTEGER, parameter :: lmaxx=3
+  INTEGER, PARAMETER :: lmaxx=3
   INTEGER ::lmax, nwfc=0
   ! Car PP variables
   real(8) :: alphaloc, alpha(0:lmaxx), a(0:lmaxx), b(0:lmaxx)
   ! Goedecker PP variables
-  INTEGER, parameter :: ncmax=4, nlmax=3
-  integer :: nc, nl(0:lmaxx) 
+  INTEGER, PARAMETER :: ncmax=4, nlmax=3
+  INTEGER :: nc, nl(0:lmaxx)
   real(8) :: rc, rl(0:lmaxx), c(ncmax), h(0:lmaxx, nlmax*(nlmax+1)/2 )
   ! Numeric PP variables
   real(8), ALLOCATABLE :: vnl(:,:)
@@ -109,7 +109,7 @@ SUBROUTINE read_cpmd(iunps)
   CHARACTER (len=256) line
   CHARACTER (len=4) token
   real (8) :: amesh_, vnl0(0:3)
-  LOGICAL :: grid_read = .FALSE., wfc_read=.FALSE.
+  LOGICAL :: grid_read = .false., wfc_read=.false.
   LOGICAL, EXTERNAL :: matches
   INTEGER, EXTERNAL :: locate
   REAL(8), EXTERNAL :: qe_erf
@@ -136,14 +136,14 @@ SUBROUTINE read_cpmd(iunps)
      ! TYPE
      READ (iunps,'(a)',end=200,err=200) line
      IF ( matches("NORMCONSERVING",line) ) THEN
-        IF ( matches("NUMERIC",line) .OR. matches("LOGARITHMIC",line)  ) THEN
+        IF ( matches("NUMERIC",line) .or. matches("LOGARITHMIC",line)  ) THEN
            pstype = 1
-        ELSE IF ( matches("CAR",line) ) THEN
+        ELSEIF ( matches("CAR",line) ) THEN
            pstype = 2
-        ELSE IF ( matches("GOEDECKER",line) ) THEN
+        ELSEIF ( matches("GOEDECKER",line) ) THEN
            pstype = 3
-        END IF
-     END IF
+        ENDIF
+     ENDIF
      IF (pstype == 0 ) CALL errore('read_cpmd','unknown type: '//line,1)
   ELSEIF (matches ("&INFO", trim(line)) ) THEN
      found = found + 1
@@ -172,7 +172,7 @@ SUBROUTINE read_cpmd(iunps)
            READ (line,*,iostat=ios) mesh
            amesh_ = -1.0d0
         ENDIF
-        IF ( .NOT. grid_read ) ALLOCATE (r(mesh))
+        IF ( .not. grid_read ) ALLOCATE (r(mesh))
         !
         ! determine the number of angular momenta
         !
@@ -188,11 +188,11 @@ SUBROUTINE read_cpmd(iunps)
         DO i=2,mesh
            READ(iunps, *) r(i),(vnl(i,l),l=0,lmax)
         ENDDO
-        IF ( .NOT.grid_read ) THEN
+        IF ( .not.grid_read ) THEN
            CALL check_radial_grid ( amesh_, mesh, r, amesh )
-           grid_read = .TRUE.
-        END IF
-     ELSE IF ( pstype == 2 ) THEN
+           grid_read = .true.
+        ENDIF
+     ELSEIF ( pstype == 2 ) THEN
      !
      ! NORMCONSERVING CAR
      !
@@ -203,12 +203,12 @@ SUBROUTINE read_cpmd(iunps)
            READ(iunps, '(A)') line
            IF (matches ("&END", trim(line)) ) THEN
               closed = closed + 1
-              EXIT
-           END IF
+              exit
+           ENDIF
            READ(line, *) alpha(lmax+1), a(lmax+1), b(lmax+1)
            alpha(lmax+1) = 1.d0/alpha(lmax+1)**2
-        END DO
-     ELSE IF ( pstype == 3 ) THEN
+        ENDDO
+     ELSEIF ( pstype == 3 ) THEN
      !
      ! NORMCONSERVING GOEDECKER
      !
@@ -218,12 +218,12 @@ SUBROUTINE read_cpmd(iunps)
         h(:,:) = 0.d0
         READ(iunps, *) lmax
         lmax = lmax - 1
-	IF ( lmax > lmaxx ) &
+        IF ( lmax > lmaxx ) &
           CALL errore('read_cpmd','incorrect parameter read',1)
         READ(iunps, *) rc
         READ(iunps, '(A)') line
         READ(line, *) nc
-	IF ( nc > ncmax ) &
+        IF ( nc > ncmax ) &
           CALL errore('read_cpmd','incorrect parameter read',2)
         ! I am not sure if it is possible to use nc in the same line
         ! where it is read. Just in case, better to read twice
@@ -232,17 +232,17 @@ SUBROUTINE read_cpmd(iunps)
            READ(iunps, '(A)') line
            IF ( matches ("&END", trim(line)) ) THEN
               closed = closed + 1
-              EXIT
-           END IF
+              exit
+           ENDIF
            READ(line, *) rl(l), nl(l)
-	   IF ( nl(l) > nlmax ) &
+           IF ( nl(l) > nlmax ) &
              CALL errore('read_cpmd','incorrect parameter read',3)
-	   IF ( nl(l) > 0 ) &
+           IF ( nl(l) > 0 ) &
               READ(line, *) rl(l), dum, ( h(l,i), i=1,nl(l)*(nl(l)+1)/2)
-        END DO
-     END IF
+        ENDDO
+     ENDIF
   ELSEIF (matches ("&WAVEFUNCTION", trim(line)) ) THEN
-     wfc_read=.TRUE.
+     wfc_read=.true.
      found = found + 1
      READ (iunps,'(A)') line
      READ (line,*,iostat=ios) mesh, amesh_
@@ -250,12 +250,12 @@ SUBROUTINE read_cpmd(iunps)
         READ (line,*,iostat=ios) mesh
         amesh_ = -1.0d0
      ENDIF
-     IF ( .NOT. grid_read )  ALLOCATE(r(mesh))
+     IF ( .not. grid_read )  ALLOCATE(r(mesh))
      ! find number of atomic wavefunctions
      READ (iunps,'(A)') line
      DO nwfc = lmax+1,1,-1
         READ(line,*,iostat=ios) r(1),(vnl0(l),l=0,nwfc-1)
-        IF ( ios == 0 ) EXIT
+        IF ( ios == 0 ) exit
      ENDDO
      IF ( ios /= 0 ) &
         CALL errore('read_cpmd','at least one atomic wvfct should be present',1)
@@ -264,21 +264,21 @@ SUBROUTINE read_cpmd(iunps)
      DO i=2,mesh
         READ(iunps, *) r(i),(chi(i,l),l=1,nwfc)
      ENDDO
-     IF ( .NOT.grid_read ) THEN
+     IF ( .not.grid_read ) THEN
         CALL check_radial_grid ( amesh_, mesh, r, amesh )
-        grid_read = .TRUE.
-     END IF
+        grid_read = .true.
+     ENDIF
   ELSEIF (matches ("&NLCC", trim(line)) ) THEN
      found = found + 1
      READ (iunps, '(a)') line
      READ(iunps, *) mesh
-     nlcc = ( mesh > 0 ) 
+     nlcc = ( mesh > 0 )
      IF (nlcc) THEN
         IF ( .not. matches ("NUMERIC", trim(line)) ) &
           CALL errore('read_cpmd',' only NUMERIC core-correction supported',1)
         ALLOCATE (rho_atc(mesh))
         READ(iunps, * ) (r(i), rho_atc(i), i=1,mesh)
-     END IF
+     ENDIF
   ELSEIF (matches ("&ATDENS", trim(line)) ) THEN
      ! skip over &ATDENS section, add others here, if there are more.
      DO WHILE(.not. matches("&END", trim(line)))
@@ -305,7 +305,7 @@ SUBROUTINE read_cpmd(iunps)
        CALL errore('read_cpmd','some &END card missing',closed)
   IF (unknown /= 0 ) PRINT '("WARNING: ",i3," cards not read")', unknown
   !
-  IF ( .NOT. grid_read ) THEN 
+  IF ( .not. grid_read ) THEN
      xmin = -7.0d0
      amesh=0.0125d0
      rmax =100.0d0
@@ -318,14 +318,14 @@ SUBROUTINE read_cpmd(iunps)
      ALLOCATE (r(mesh))
      DO i=1, mesh
         r(i) = exp (xmin+(i-1)*amesh)/z
-     END DO
+     ENDDO
      PRINT '(I4," grid points, rmax=",f8.4)', mesh, r(mesh)
-     grid_read = .TRUE.
-  END IF
+     grid_read = .true.
+  ENDIF
   rmax = r(mesh)
   xmin = log(z*r(1))
   !
-  IF ( .NOT. wfc_read ) PRINT '("Notice: atomic wfcs not found")'
+  IF ( .not. wfc_read ) PRINT '("Notice: atomic wfcs not found")'
   !
   IF ( pstype == 2 ) THEN
      ALLOCATE (vnl(mesh,0:lmax))
@@ -333,9 +333,9 @@ SUBROUTINE read_cpmd(iunps)
         DO i=1, mesh
            vnl(i,l) = ( a(l) + b(l)*r(i)**2 ) * exp (-alpha(l)*r(i)**2) - &
                        zv * qe_erf (sqrt(alphaloc)*r(i))/r(i)
-        END DO
-     END DO
-  END IF
+        ENDDO
+     ENDDO
+  ENDIF
 
   RETURN
 200 CALL errore('read_cpmd','error in reading file',1)
@@ -352,7 +352,7 @@ SUBROUTINE convert_cpmd(upf)
   !
   IMPLICIT NONE
   !
-  TYPE(pseudo_upf) :: upf 
+  TYPE(pseudo_upf) :: upf
   !
   REAL(8), ALLOCATABLE :: aux(:)
   REAL(8) :: x, x2, vll, rcloc, fac
@@ -384,20 +384,20 @@ SUBROUTINE convert_cpmd(upf)
      IF ((my_lmax <= lmax) .and. (my_lmax >= 0)) lmax = my_lmax
      PRINT '("local L ( <= ",I1," ), Rc for local pot (au) > ",$)', lmax
      READ (5,*) lloc, rcloc
-  END IF
+  ENDIF
   !
   IF ( pstype == 3 ) THEN
      upf%generated= "Generated in analytical, separable form"
      upf%author   = "Goedecker/Hartwigsen/Hutter/Teter"
      upf%date     = "Phys.Rev.B58, 3641 (1998); B54, 1703 (1996)"
-  ElSE
+  ELSE
      upf%generated= "Generated using unknown code"
      upf%author   = "unknown"
      upf%date     = "unknown"
-  END IF
+  ENDIF
   upf%nv       = "2.0.1"
   upf%comment  = "Info: automatically converted from CPMD format"
-  upf%psd      = atom_name ( NINT(z) )
+  upf%psd      = atom_name ( nint(z) )
   ! reasonable assumption
   IF (z > 18) THEN
      upf%rel = 'no'
@@ -408,17 +408,17 @@ SUBROUTINE convert_cpmd(upf)
      upf%typ = 'NC'
   ELSE
      upf%typ = 'SL'
-  END IF
-  upf%tvanp = .FALSE.
-  upf%tpawp = .FALSE.
-  upf%tcoulombp=.FALSE.
+  ENDIF
+  upf%tvanp = .false.
+  upf%tpawp = .false.
+  upf%tcoulombp=.false.
   upf%nlcc = nlcc
   !
   IF (ixc==1100) THEN
      upf%dft='SLA-PZ-NOGX-NOGC'
   ELSEIF (ixc==1111) THEN
      upf%dft='SLA-PZ-B86-P88'
-  ELSEIF (ixc==1134 .OR. ixc==1434) THEN
+  ELSEIF (ixc==1134 .or. ixc==1434) THEN
      upf%dft='SLA-PW-PBX-PBC'
   ELSEIF (ixc==1134) THEN
      upf%dft='revPBE'
@@ -435,7 +435,7 @@ SUBROUTINE convert_cpmd(upf)
      READ *, upf%dft
   ENDIF
   PRINT '("Assuming DFT: ",A," . Please check this is what you want")', &
-          TRIM(upf%dft)
+          trim(upf%dft)
   !
   upf%zp = zv
   upf%etotps =0.0d0
@@ -464,17 +464,17 @@ SUBROUTINE convert_cpmd(upf)
      READ (label(1:1),*, err=10) l
      upf%els(i)  = label
      upf%nchi(i)  = l
-     IF ( label(2:2) == 's' .OR. label(2:2) == 'S') then
+     IF ( label(2:2) == 's' .or. label(2:2) == 'S') THEN
         l=0
-     ELSE IF ( label(2:2) == 'p' .OR. label(2:2) == 'P') then
+     ELSEIF ( label(2:2) == 'p' .or. label(2:2) == 'P') THEN
         l=1
-     ELSE IF ( label(2:2) == 'd' .OR. label(2:2) == 'D') then
+     ELSEIF ( label(2:2) == 'd' .or. label(2:2) == 'D') THEN
         l=2
-     ELSE IF ( label(2:2) == 'f' .OR. label(2:2) == 'F') then
+     ELSEIF ( label(2:2) == 'f' .or. label(2:2) == 'F') THEN
         l=3
      ELSE
         l=i-1
-     END IF
+     ENDIF
      upf%lchi(i)  = l
      upf%rcut_chi(i)  = 0.0d0
      upf%rcutus_chi(i)= 0.0d0
@@ -510,12 +510,12 @@ SUBROUTINE convert_cpmd(upf)
         x2=x**2
         upf%vloc(i) = e2 * ( -upf%zp*qe_erf(x/sqrt(2.d0))/upf%r(i) + &
              exp ( -0.5d0*x2 ) * (c(1) + x2*( c(2) + x2*( c(3) + x2*c(4) ) ) ) )
-     END DO
+     ENDDO
      upf%nbeta=0
      DO l=0,upf%lmax
         upf%nbeta = upf%nbeta + nl(l)
-     END DO
-  END IF
+     ENDDO
+  ENDIF
 
   IF (upf%nbeta > 0) THEN
      ALLOCATE(upf%els_beta(upf%nbeta) )
@@ -530,7 +530,7 @@ SUBROUTINE convert_cpmd(upf)
            IF (l/=lloc) THEN
               iv=iv+1
               DO ir = upf%mesh,1,-1
-                 IF ( ABS ( vnl(ir,l) - vnl(ir,lloc) ) > 1.0E-6 ) THEN
+                 IF ( abs ( vnl(ir,l) - vnl(ir,lloc) ) > 1.0E-6 ) THEN
                     upf%kbeta(iv)=ir
                     exit
                  ENDIF
@@ -540,10 +540,10 @@ SUBROUTINE convert_cpmd(upf)
         ! the number of points used in the evaluation of integrals
         ! should be even (for simpson integration)
         DO i=1,upf%nbeta
-           IF ( MOD (upf%kbeta(i),2) == 0 .AND. upf%kbeta(i) < upf%mesh) &
+           IF ( mod (upf%kbeta(i),2) == 0 .and. upf%kbeta(i) < upf%mesh) &
               upf%kbeta(i)=upf%kbeta(i)+1
-        END DO
-        upf%kkbeta = MAXVAL(upf%kbeta(:))
+        ENDDO
+        upf%kkbeta = maxval(upf%kbeta(:))
      ENDIF
      ALLOCATE(upf%beta(upf%mesh,upf%nbeta))
      ALLOCATE(upf%dion(upf%nbeta,upf%nbeta))
@@ -564,8 +564,8 @@ SUBROUTINE convert_cpmd(upf)
                  jv = iv+j-i
                  ij=ij+1
                  upf%dion(iv,jv) = h(l,ij)/e2
-                 if ( j > i ) upf%dion(jv,iv) = upf%dion(iv,jv)
-              END  DO
+                 IF ( j > i ) upf%dion(jv,iv) = upf%dion(iv,jv)
+              ENDDO
               fac= sqrt(2d0*rl(l)) / ( rl(l)**(l+2*i) * sqrt(mygamma(l+2*i)) )
               DO ir=1,upf%mesh
                  x2 = (upf%r(ir)/rl(l))**2
@@ -575,26 +575,26 @@ SUBROUTINE convert_cpmd(upf)
                  ! ...have to be multiplied by a factor r !!!
                  upf%beta(ir,iv) = upf%beta(ir,iv)*upf%r(ir)
                  !
-              END DO
-              ! look for index kbeta such that v(i)=0 if i>kbeta 
+              ENDDO
+              ! look for index kbeta such that v(i)=0 if i>kbeta
               DO ir=upf%mesh,1,-1
-                 IF ( ABS(upf%beta(ir,iv)) > 1.D-12 ) EXIT
-              END DO
+                 IF ( abs(upf%beta(ir,iv)) > 1.D-12 ) exit
+              ENDDO
               IF ( ir < 2 ) THEN
                  CALL errore('cpmd2upf','zero beta function?!?',iv)
-              ELSE IF ( MOD(ir,2) /= 0 ) THEN
+              ELSEIF ( mod(ir,2) /= 0 ) THEN
                  ! even index
                  upf%kbeta(iv) = ir
-              ELSE IF ( ir < upf%mesh .AND. MOD(ir,2) == 0 ) THEN
+              ELSEIF ( ir < upf%mesh .and. mod(ir,2) == 0 ) THEN
                  ! odd index
                  upf%kbeta(iv) = ir+1
-              END IF
+              ENDIF
               ! not really the same thing as rc in PP generation
               upf%rcut  (iv) = upf%r(upf%kbeta(iv))
               upf%rcutus(iv) = 0.0
-           END DO
-        END DO
-        upf%kkbeta = MAXVAL(upf%kbeta(:))
+           ENDDO
+        ENDDO
+        upf%kkbeta = maxval(upf%kbeta(:))
      ELSE
         ALLOCATE(aux(upf%kkbeta))
         iv=0  ! counter on beta functions
@@ -641,9 +641,9 @@ SUBROUTINE check_radial_grid ( amesh_, mesh, r, amesh )
 ! ------------------------------------------------------------------
 !
    IMPLICIT NONE
-   INTEGER, INTENT (IN) :: mesh   
-   REAL(8), INTENT (IN) :: amesh_, r(mesh)
-   REAL(8), INTENT (OUT) :: amesh
+   INTEGER, INTENT (in) :: mesh
+   REAL(8), INTENT (in) :: amesh_, r(mesh)
+   REAL(8), INTENT (out) :: amesh
    INTEGER :: i
    !
    ! get amesh if not available directly, check its value otherwise
@@ -686,12 +686,12 @@ REAL(8) FUNCTION mygamma ( n )
   !
   USE constants, ONLY : pi
   IMPLICIT NONE
-  INTEGER, INTENT(IN) :: n
+  INTEGER, INTENT(in) :: n
   !
   REAL(8) :: x
   INTEGER, EXTERNAL :: semifact
   !
-  IF ( n < 2 ) call errore('mygamma','unexpected input argument',1)
+  IF ( n < 2 ) CALL errore('mygamma','unexpected input argument',1)
   mygamma = sqrt(pi) * semifact(2*n-3) / 2.d0**(n-1)
   !
   RETURN
