@@ -17,6 +17,7 @@ subroutine d3_summary
   !    if iverbosity = 0 only a partial summary is done.
   !
   USE kinds, only : DP
+  USE constants,  ONLY : amu_ry
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, tau, amass
   USE run_info, ONLY : title
   USE io_global,  ONLY : stdout
