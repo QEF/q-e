@@ -96,7 +96,7 @@ done
 
 # Debye Temperature calculations
 
-$QHA_DIR/bin/Debye.x <PHDOS.out >>Theta_D
+$QHA_DIR/bin/Debye.x >> Theta_D
 
 #rm -f T_Debey.in
 
