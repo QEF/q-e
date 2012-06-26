@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -33,8 +33,8 @@ subroutine allocate_nlpot
   USE wvfct,            ONLY : npwx, npw, igk, g2kin, ecutwfc
   USE us,               ONLY : qrad, tab, tab_d2y, tab_at, dq, nqx, &
                                nqxq, spline_ps
-  USE uspp,             ONLY : indv, nhtol, nhtolm, ijtoh, qq, dvan, deeq, vkb, &
-                               nkb, nkbus, nhtoj, becsum, qq_so, dvan_so, deeq_nc
+  USE uspp,             ONLY : indv, nhtol, nhtolm, ijtoh, qq, dvan, deeq, vkb,&
+                               nkb, nkbus, nhtoj, becsum, qq_so,dvan_so, deeq_nc
   USE uspp_param,       ONLY : upf, lmaxq, lmaxkb, nh, nhm, nbetam
   USE spin_orb,         ONLY : lspinorb, fcoef
   USE paw_variables,    ONLY : okpaw
@@ -94,7 +94,7 @@ subroutine allocate_nlpot
   lmaxq = 2*lmaxkb+1
   !
   if (lmaxq > 0) allocate (qrad( nqxq, nbetam*(nbetam+1)/2, lmaxq, nsp))    
-  if (nkb > 0) allocate (vkb( npwx,  nkb))    
+  allocate (vkb( npwx,  nkb))    
   allocate (becsum( nhm * (nhm + 1)/2, nat, nspin))    
   !
   ! Calculate dimensions for array tab (including a possible factor
