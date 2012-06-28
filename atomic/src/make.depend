@@ -365,4 +365,5 @@ write_resultsps.o : ld1inc.o
 write_upf.o : ../../Modules/constants.o
 write_upf.o : ../../Modules/funct.o
 write_upf.o : ../../Modules/kind.o
+write_upf.o : ../../Modules/version.o
 write_upf.o : ld1inc.o
