@@ -148,7 +148,6 @@ export_upf.o : ../../Modules/radial_grids.o
 export_upf.o : ../../Modules/upf.o
 export_upf.o : ../../Modules/version.o
 export_upf.o : ../../Modules/write_upf_v2.o
-export_upf.o : ../../iotk/src/iotk_module.o
 export_upf.o : ld1inc.o
 find_qi.o : ../../Modules/kind.o
 find_qi.o : ld1inc.o

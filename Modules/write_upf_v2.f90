@@ -222,7 +222,6 @@ CONTAINS
       WRITE (u, '(A)') TRIM(line)
       GO TO 10
 20    WRITE (u,'("</PP_INPUTFILE>")')
-      CLOSE (unit=u_input)
       !
       RETURN
 30    CALL errore('write_upf_v2::write_inputfile', 'reading data file', 1)

@@ -352,15 +352,16 @@ subroutine ld1_readin
   if (iswitch == 1) then
      !
      !    no more data needed for AE calculations
+     !    (input unit can be safely closed)
      !
      ios = close_input_file ( )
      frozen_core=.false.
-     ! PP generation: close input data file, keep if temporary
      return
      !     
   else if (iswitch == 3) then
      !
      !    reading input for PP generation
+     !    (do not yet close the input unit: will be needed later)
      !
      zval=0.0_dp
      lloc=-1
@@ -592,7 +593,7 @@ subroutine ld1_readin
   !
   if (iswitch ==2.or.iswitch==4) then
      !
-     ! close input data file, remove if temporary
+     ! input unit can be safely closed (and temporary file deleted)
      !
      ios = close_input_file ( )
      lpaw=.false.

@@ -26,7 +26,6 @@ SUBROUTINE export_upf(iunps, unit_loc)
                      nstoaets, pseudotype, enls, rhoc, vnl, vpsloc, &
                      lgipaw_reconstruction, use_paw_as_gipaw
   use funct, only: get_dft_name
-  use iotk_module, only: iotk_newline
   use global_version, only: version_number, svn_revision
   !
   use pseudo_types
