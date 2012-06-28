@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
-SUBROUTINE export_upf(iunps)
+SUBROUTINE export_upf(iunps, unit_loc)
   !---------------------------------------------------------------------
   !
   use constants, only : fpi
@@ -30,12 +30,13 @@ SUBROUTINE export_upf(iunps)
   use global_version, only: version_number, svn_revision
   !
   use pseudo_types
-  use upf_module, only : write_upf, pseudo_config, deallocate_pseudo_config
+  use upf_module, only : pseudo_config, deallocate_pseudo_config
+  use write_upf_v2_module, only: write_upf_v2
   !
   implicit none
   !
   !CHARACTER(len=*),INTENT(IN) :: filename
-  INTEGER,INTENT(IN)::iunps
+  INTEGER,INTENT(IN)::iunps, unit_loc
   !
   integer :: ibeta, jbeta, kbeta, l, ind, l1, l2
   !
@@ -267,7 +268,7 @@ SUBROUTINE export_upf(iunps)
   upf%has_wfc = lsave_wfc
   if (upf%has_wfc)   CALL export_upf_wfc()
   !
-  CALL write_upf(upf, at_conf, unit=iunps)
+  CALL write_upf_v2( iunps, upf, at_conf, unit_loc )
   !
   CALL deallocate_pseudo_upf( upf )
   CALL deallocate_radial_grid( internal_grid )

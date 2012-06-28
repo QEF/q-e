@@ -36,15 +36,17 @@ MODULE write_upf_v2_module
 CONTAINS
 
   !-------------------------------+
-  SUBROUTINE write_upf_v2(u, upf, conf) !
+  SUBROUTINE write_upf_v2(u, upf, conf, u_input)
     !----------------------------+
     ! Write pseudopotential in UPF format version 2, uses iotk
     !
     IMPLICIT NONE
-    INTEGER,INTENT(IN)                    :: u   ! i/o unit
-    TYPE(pseudo_upf),INTENT(IN)           :: upf ! the pseudo data
+    INTEGER,INTENT(IN)          :: u   ! unit for writing
+    TYPE(pseudo_upf),INTENT(IN) :: upf ! the pseudo data
     ! optional: configuration used to generate the pseudopotential
     TYPE(pseudo_config),OPTIONAL,INTENT(IN) :: conf
+    ! optional: unit pointing to input file containing generation data
+    INTEGER, OPTIONAL, INTENT(IN) :: u_input
     !
     CHARACTER(len=iotk_attlenx) :: attr
     !
@@ -54,7 +56,8 @@ CONTAINS
     !
     ! Write human-readable header
     CALL write_info(u, upf, conf)
-    !
+    ! Write input data used in generation (copy the input file)
+    IF ( PRESENT(u_input) ) CALL write_inpfile(u, u_input)
     ! Write machine-readable header
     CALL write_header(u, upf)
     ! Write radial grid mesh
@@ -202,6 +205,28 @@ CONTAINS
       RETURN
 100   CALL errore('write_upf_v2::write_info', 'Writing pseudo file', 1)
     END SUBROUTINE write_info
+    !
+    SUBROUTINE write_inpfile ( u, u_input ) 
+      IMPLICIT NONE
+      INTEGER,INTENT(IN) :: u, u_input ! units: read from u_input, write to u
+      INTEGER :: ierr ! /= 0 if something went wrong
+
+      LOGICAL :: opnd
+      CHARACTER(len=256) :: line
+      !
+      INQUIRE (unit=u_input, opened=opnd)
+      IF ( .NOT. opnd) RETURN
+      REWIND (unit=u_input)
+      WRITE (u,'("<PP_INPUTFILE>")')
+10    READ (u_input, '(A)',end=20,err=30) line
+      WRITE (u, '(A)') TRIM(line)
+      GO TO 10
+20    WRITE (u,'("</PP_INPUTFILE>")')
+      CLOSE (unit=u_input)
+      !
+      RETURN
+30    CALL errore('write_upf_v2::write_inputfile', 'reading data file', 1)
+    END SUBROUTINE write_inpfile
     !
     SUBROUTINE write_header(u, upf)
       IMPLICIT NONE

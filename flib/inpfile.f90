@@ -47,7 +47,7 @@ SUBROUTINE input_from_file( )
         !
         ! TODO: return error code ierr (-1 no file, 0 file opened, > 1 error)
         ! do not call "errore" here: it may hang in parallel execution
-        ! if this routine ois called by ionode only
+        ! if this routine is called by ionode only
         !
         IF ( ierr > 0 ) WRITE (stderr, &
                 '(" *** input file ",A," not found ***")' ) TRIM( input_file )

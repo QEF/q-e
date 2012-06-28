@@ -147,6 +147,7 @@ export_upf.o : ../../Modules/pseudo_types.o
 export_upf.o : ../../Modules/radial_grids.o
 export_upf.o : ../../Modules/upf.o
 export_upf.o : ../../Modules/version.o
+export_upf.o : ../../Modules/write_upf_v2.o
 export_upf.o : ../../iotk/src/iotk_module.o
 export_upf.o : ld1inc.o
 find_qi.o : ../../Modules/kind.o
@@ -191,6 +192,7 @@ ld1_readin.o : ../../Modules/funct.o
 ld1_readin.o : ../../Modules/io_global.o
 ld1_readin.o : ../../Modules/kind.o
 ld1_readin.o : ../../Modules/mp.o
+ld1_readin.o : ../../Modules/open_close_input_file.o
 ld1_readin.o : ../../Modules/parameters.o
 ld1_readin.o : ../../Modules/radial_grids.o
 ld1_readin.o : atomic_paw.o
@@ -202,6 +204,7 @@ ld1_setup.o : ld1inc.o
 ld1_writeout.o : ../../Modules/funct.o
 ld1_writeout.o : ../../Modules/io_global.o
 ld1_writeout.o : ../../Modules/mp.o
+ld1_writeout.o : ../../Modules/open_close_input_file.o
 ld1_writeout.o : ../../Modules/radial_grids.o
 ld1_writeout.o : ld1inc.o
 ld1_writeout.o : paw_type.o

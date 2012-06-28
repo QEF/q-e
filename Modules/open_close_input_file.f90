@@ -15,7 +15,7 @@ MODULE open_close_input_file
   LOGICAL, SAVE :: lxmlinput_loc = .false.
   CHARACTER(LEN=256), SAVE :: input_file = ' '
   PRIVATE
-  PUBLIC :: open_input_file, close_input_file
+  PUBLIC :: open_input_file, close_input_file, unit_loc
   !
 CONTAINS
   !----------------------------------------------------------------------------

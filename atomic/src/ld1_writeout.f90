@@ -25,6 +25,7 @@ subroutine ld1_writeout
                      iswitch
   use funct, only : get_dft_name
   use paw_type, only : deallocate_pseudo_paw
+  use open_close_input_file, only: close_input_file, unit_loc
 
   implicit none
 
@@ -88,9 +89,9 @@ subroutine ld1_writeout
      else
         !
         if(upf_v1_format) then
-            call write_upf_atomic(iunps)
+            call write_upf_v1(iunps)
         else
-            call export_upf(iunps)
+            call export_upf(iunps, unit_loc)
         endif
         !
         if(lpaw) call deallocate_pseudo_paw( pawsetup )
@@ -98,6 +99,8 @@ subroutine ld1_writeout
      endif
      !
      close(iunps)
+     ! close input data unit if not done previously
+     ios = close_input_file ( )
   endif
   !
   return
