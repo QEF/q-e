@@ -585,8 +585,7 @@ SUBROUTINE iosys()
   CASE( 2 )
      !
      lsda = .true.
-     IF ( noncolin ) &
-        CALL errore( 'iosys', &
+     IF ( noncolin ) CALL errore( 'iosys', &
                      'noncolin .and. nspin==2 are conflicting flags', 1 )
      !
   CASE( 4 )
@@ -600,8 +599,10 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-  IF (lda_plus_u.and.lda_plus_u_kind.eq.0.and.noncolin) CALL errore('iosys', &
-       'simplified LDA+U not implemented with noncol. magnetism, use lda_plus_u_kind = 1', 1)
+  IF ( lda_plus_u .AND. lda_plus_u_kind == 0 .AND. noncolin ) THEN
+     CALL errore('iosys', 'simplified LDA+U not implemented with &
+                          &noncol. magnetism, use lda_plus_u_kind = 1', 1)
+  END IF
   !
   two_fermi_energies = ( tot_magnetization /= -1._DP)
   IF ( two_fermi_energies .and. tot_magnetization < 0._DP) &
@@ -1077,7 +1078,8 @@ SUBROUTINE iosys()
      IF ( lgauss .OR. ltetra ) CALL errore( 'iosys', &
           'Berry Phase/electric fields only for insulators!', 1 )
   END IF
-
+  IF ( lelfield .AND. (lspinorb .OR. noncolin) ) CALL errore( 'iosys', &
+          'electric fields not implemented in noncolinear/spinorbit case', 1 )
   !
   ! ... Copy values from input module to PW internals
   !
