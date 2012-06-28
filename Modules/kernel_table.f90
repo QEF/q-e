@@ -104,14 +104,7 @@ CONTAINS
     
     !!write(*,*) "Reading kernel table ... "
 
-    if (allocated(kernel)) then
-
-       return
-
-    end if
-
-    
-    !! Get the unit number for the kernel file
+     !! Get the unit number for the kernel file
     kernel_file = find_free_unit()
    
 
@@ -124,6 +117,13 @@ CONTAINS
     
     endif
  
+   if (allocated(kernel)) then
+
+       return
+
+    end if
+
+    
     !! First we check the current directory for the vdW_kernel_table file
     !! If it is not found there it is looked for in the pseudopotential 
     !! directory.  If it's not there the default kernel file installed
