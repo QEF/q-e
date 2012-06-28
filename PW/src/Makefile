@@ -249,7 +249,7 @@ tldeps:
 clean :
 	- /bin/rm -f *.x *.o *.a *~ *.F90 *.d *.mod *.i *.L
 
-generate_vdW_kernel_table.x : generate_vdW_kernel_table.o
+generate_vdW_kernel_table.x : libpw.a generate_vdW_kernel_table.o
 	$(LD) $(LDFLAGS) -o $@ \
 		generate_vdW_kernel_table.o $(QEMODS) libpw.a $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin; ln -fs ../PW/src/$@ . )
