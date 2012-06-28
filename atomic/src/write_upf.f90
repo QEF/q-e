@@ -41,12 +41,11 @@ end subroutine write_upf_atomic
     !
     use ld1inc, only: author, rel, lloc, rcloc, els, nns, lls, nns, rcut, &
                       rcutus, enls, ocs, nwfs, title, iswitch
-    use global_version, only: version_number, svn_revision
     implicit none
     integer :: ounps  
 
     integer :: nb, ios  
-    character(len=80) :: generated, code_version, date_author, comment
+    character(len=80) :: generated, date_author, comment
     character(len=9) :: day, hour
 
     call date_and_tim(day,hour)
@@ -57,14 +56,10 @@ end subroutine write_upf_atomic
        generated='Generated using LDA-1/2 implemented by Leonardo&
                   & Matheus Marion Jorge'
     ENDIF
-    code_version = "Code version " // TRIM (version_number)
-    IF ( TRIM (svn_revision) /= "unknown" ) code_version = &
-         TRIM (code_version) // " (svn rev. " // TRIM (svn_revision) // ")"
     date_author='Author: '//TRIM(author)//'   Generation date: '// day 
     comment=title
 
     write (ounps, '(a9)', err = 100, iostat = ios) "<PP_INFO>"  
-    write (ounps, '(a75)', err = 100, iostat = ios) code_version
     write (ounps, '(a75)', err = 100, iostat = ios) generated
     write (ounps, '(a75)', err = 100, iostat = ios) date_author
     if (trim(comment) /= ' ') then
