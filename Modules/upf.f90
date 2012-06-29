@@ -19,7 +19,6 @@
       !
       USE read_upf_v1_module
       USE read_upf_v2_module
-      USE write_upf_v2_module
       !
       IMPLICIT NONE
       PUBLIC
@@ -74,43 +73,6 @@ SUBROUTINE read_upf(upf, grid, ierr, unit, filename)             !
    RETURN
 
 END SUBROUTINE read_upf
-
-!------------------------------------------------+
-SUBROUTINE write_upf(upf, conf, unit, filename)             !
-   !---------------------------------------------+
-   ! Write pseudopotential in UPF format version 2, uses iotk
-   !
-   IMPLICIT NONE
-   TYPE(pseudo_upf),INTENT(IN)            :: upf       ! the pseudo data
-   TYPE(pseudo_config),OPTIONAL,INTENT(IN):: conf      ! the pseudo GENERATION data
-   INTEGER,INTENT(IN),OPTIONAL            :: unit      ! i/o unit
-   CHARACTER(len=*),INTENT(IN),OPTIONAL   :: filename  ! i/o filename
-   !
-   INTEGER :: u, ierr ! i/o unit and error handler
-
-   ierr = 0
-
-   IF(.not. present(unit)) THEN
-      IF (.not. present(filename)) &
-         CALL errore('read_upf_v2',&
-         'You have to specify at least one between filename and unit',1)
-      CALL iotk_free_unit(u)
-   ELSE
-      u = unit
-   ENDIF
-   !
-   IF(present(filename)) &
-      open (unit = u, file = filename, status = 'unknown', form = &
-      'formatted', iostat = ierr)
-   IF(ierr>0) CALL errore('write_upf', 'Cannot open file: '//TRIM(filename),1)
-   !
-   CALL write_upf_v2( u, upf, conf )
-   !
-   IF(ierr>0) &
-      CALL errore('write_upf','Errore while writing pseudopotential file',1)
-
-END SUBROUTINE write_upf
-
 
 !=----------------------------------------------------------------------------=!
       END MODULE upf_module

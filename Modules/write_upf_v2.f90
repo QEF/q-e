@@ -1,5 +1,5 @@
-!j
-! Copyright (C) 2008-2011 Quantum ESPRESSO group
+!
+! Copyright (C) 2008-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -49,8 +49,6 @@ CONTAINS
     INTEGER, OPTIONAL, INTENT(IN) :: u_input
     !
     CHARACTER(len=iotk_attlenx) :: attr
-    CHARACTER(len=256) :: line
-    LOGICAL :: opnd
     !
     ! Initialize the file
     CALL iotk_write_attr(attr, 'version', TRIM(upf%nv), first=.true.)
@@ -107,6 +105,8 @@ CONTAINS
       !
       INTEGER :: nb ! aux counter
       INTEGER :: ierr ! /= 0 if something went wrong
+      CHARACTER(len=256) :: line
+      LOGICAL :: opnd
       !
       CALL iotk_write_begin(u,'PP_INFO')
       !

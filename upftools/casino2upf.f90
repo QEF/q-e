@@ -14,9 +14,9 @@ PROGRAM casino2upf
   !     format to unified pseudopotential format
 
   USE casino_pp
-  USE upf_module
-  USE pseudo_types, ONLY : nullify_pseudo_upf, deallocate_pseudo_upf
-
+  USE write_upf_v2_module, ONLY :  write_upf_v2
+  USE pseudo_types, ONLY : nullify_pseudo_upf, deallocate_pseudo_upf, &
+                           pseudo_upf
   IMPLICIT NONE
   !
   INTEGER, EXTERNAL :: find_free_unit
@@ -81,8 +81,12 @@ PROGRAM casino2upf
 
   CALL convert_casino(upf_out)
 
-  CALL write_upf(upf=upf_out,filename=upf_file)
+  PRINT '(''Output PP file in UPF format :  '',a)', upf_file
+  OPEN(unit=2,file=upf_file,status='unknown',form='formatted')
+ 
+  CALL write_upf_v2(u=2,upf=upf_out)
 
+  CLOSE(unit=2,status='keep')
   CALL  deallocate_pseudo_upf( upf_out )
 
   STOP

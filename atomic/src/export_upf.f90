@@ -29,8 +29,8 @@ SUBROUTINE export_upf(iunps, unit_loc)
   use global_version, only: version_number, svn_revision
   !
   use pseudo_types
-  use upf_module, only : pseudo_config, deallocate_pseudo_config
-  use write_upf_v2_module, only: write_upf_v2
+  use write_upf_v2_module, only: write_upf_v2, &
+                                 pseudo_config, deallocate_pseudo_config
   !
   implicit none
   !

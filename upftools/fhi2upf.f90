@@ -58,7 +58,7 @@ PROGRAM fhi2upf
   !     ----------------------------------------------------------
   !
   STOP
-   STOP
+   
 END PROGRAM fhi2upf
 
 MODULE fhi

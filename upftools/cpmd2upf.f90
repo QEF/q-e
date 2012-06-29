@@ -311,7 +311,7 @@ SUBROUTINE read_cpmd(iunps)
      rmax =100.0d0
      PRINT '("A radial grid must be provided. We use the following one:")'
      PRINT '("r_i = e^{xmin+(i-1)*dx}/Z, i=1,mesh, with parameters:")'
-     PRINT '("Z=",f6.2,", xmin=",f6.2," dx=",f8.4," rmax=",f6.1)")', &
+     PRINT '("Z=",f6.2,", xmin=",f6.2," dx=",f8.4," rmax=",f6.1)', &
            z, xmin, amesh, rmax
      mesh = 1 + (log(z*rmax)-xmin)/amesh
      mesh = (mesh/2)*2+1 ! mesh is odd (for historical reasons?)

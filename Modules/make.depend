@@ -261,7 +261,6 @@ upf.o : pseudo_types.o
 upf.o : radial_grids.o
 upf.o : read_upf_v1.o
 upf.o : read_upf_v2.o
-upf.o : write_upf_v2.o
 upf_to_internal.o : funct.o
 upf_to_internal.o : pseudo_types.o
 upf_to_internal.o : radial_grids.o
