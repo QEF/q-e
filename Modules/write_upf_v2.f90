@@ -49,15 +49,15 @@ CONTAINS
     INTEGER, OPTIONAL, INTENT(IN) :: u_input
     !
     CHARACTER(len=iotk_attlenx) :: attr
+    CHARACTER(len=256) :: line
+    LOGICAL :: opnd
     !
     ! Initialize the file
     CALL iotk_write_attr(attr, 'version', TRIM(upf%nv), first=.true.)
     CALL iotk_open_write(u, attr=attr, root='UPF', skip_head=.true.)
     !
     ! Write human-readable header
-    CALL write_info(u, upf, conf)
-    ! Write input data used in generation (copy the input file)
-    IF ( PRESENT(u_input) ) CALL write_inpfile(u, u_input)
+    CALL write_info(u, upf, conf, u_input)
     ! Write machine-readable header
     CALL write_header(u, upf)
     ! Write radial grid mesh
@@ -95,21 +95,20 @@ CONTAINS
 
   CONTAINS
     !
-    SUBROUTINE write_info(u, upf, conf)
+    SUBROUTINE write_info(u, upf, conf, u_input)
       ! Write human-readable header
       ! The header is written directly, not via iotk
       IMPLICIT NONE
-      INTEGER,INTENT(IN)          :: u    ! i/o unit
+      INTEGER,INTENT(IN)          :: u    ! i/o unit: write to unit u
       TYPE(pseudo_upf),INTENT(IN) :: upf  ! the pseudo data
       ! optional: configuration used to generate the pseudopotential
       TYPE(pseudo_config),OPTIONAL,INTENT(IN) :: conf
+      INTEGER, OPTIONAL, INTENT(IN) :: u_input ! read input data from u_input
       !
       INTEGER :: nb ! aux counter
       INTEGER :: ierr ! /= 0 if something went wrong
       !
       CALL iotk_write_begin(u,'PP_INFO')
-      ! All the section has to fit in a comment, otherwise iotk will complain:
-      !WRITE(u, '(2x,a)', err=100) '<!--'
       !
       WRITE(u, '(4x,a)', err=100) TRIM(CHECK(upf%generated))
       WRITE(u, '(4x,a)', err=100) &
@@ -195,7 +194,24 @@ CONTAINS
          WRITE(u, '(4x,"Comment:",/,4x,a)', err=100) TRIM(CHECK(upf%comment))
       END IF
       !
-      !WRITE(u, '(2x,a)', err=100) '-->'
+      IF ( PRESENT(u_input) ) THEN
+         !
+         ! copy content of input file used in pseudopotential generation
+         !
+         INQUIRE (unit=u_input, opened=opnd)
+         IF (opnd) THEN
+            WRITE (u,'("<PP_INPUTFILE>")')
+            REWIND (unit=u_input)
+10          READ (u_input, '(A)',end=20,err=25) line
+            WRITE (u, '(A)') TRIM(line)
+            GO TO 10
+25          CALL infomsg('write_upf_v2::write_inputfile', 'reading input data')
+20          WRITE (u,'("</PP_INPUTFILE>")')
+         ELSE
+            CALL infomsg('write_upf_v2::write_inputfile', 'input file not open')
+         END IF
+         !
+      END IF
       !
       CALL iotk_write_end(u,'PP_INFO')
       CALL iotk_write_comment(u,'                               ')
@@ -204,28 +220,9 @@ CONTAINS
       !
       RETURN
 100   CALL errore('write_upf_v2::write_info', 'Writing pseudo file', 1)
+      !
     END SUBROUTINE write_info
     !
-    SUBROUTINE write_inpfile ( u, u_input ) 
-      IMPLICIT NONE
-      INTEGER,INTENT(IN) :: u, u_input ! units: read from u_input, write to u
-      INTEGER :: ierr ! /= 0 if something went wrong
-
-      LOGICAL :: opnd
-      CHARACTER(len=256) :: line
-      !
-      INQUIRE (unit=u_input, opened=opnd)
-      IF ( .NOT. opnd) RETURN
-      REWIND (unit=u_input)
-      WRITE (u,'("<PP_INPUTFILE>")')
-10    READ (u_input, '(A)',end=20,err=30) line
-      WRITE (u, '(A)') TRIM(line)
-      GO TO 10
-20    WRITE (u,'("</PP_INPUTFILE>")')
-      !
-      RETURN
-30    CALL errore('write_upf_v2::write_inputfile', 'reading data file', 1)
-    END SUBROUTINE write_inpfile
     !
     SUBROUTINE write_header(u, upf)
       IMPLICIT NONE
