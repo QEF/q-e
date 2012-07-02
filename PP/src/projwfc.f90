@@ -43,13 +43,14 @@ PROGRAM do_projwfc
   ! for GWW
   INTEGER :: iun, idum
   REAL(DP) :: rdum1,rdum2,rdum3
-  LOGICAL :: lex, lgww
+  LOGICAL :: lex, lgww, lwrite_overlaps
   !
   !
   NAMELIST / projwfc / outdir, prefix, ngauss, degauss, lsym, &
              Emin, Emax, DeltaE, io_choice, smoothing, filpdos, filproj, &
              lgww, & !if .true. use GW QP energies from file bands.dat
-             kresolveddos, tdosinboxes, n_proj_boxes, irmin, irmax, plotboxes
+             kresolveddos, tdosinboxes, n_proj_boxes, irmin, irmax, plotboxes, &
+             lwrite_overlaps
   !
   ! initialise environment
   !
@@ -72,6 +73,7 @@ PROGRAM do_projwfc
   lsym   = .true.
   degauss= 0.d0
   lgww   = .false.
+  lwrite_overlaps   = .false.
   kresolveddos = .false.
   tdosinboxes = .false.
   plotboxes   = .false.
@@ -111,6 +113,7 @@ PROGRAM do_projwfc
   CALL mp_bcast( lsym,  ionode_id )
   CALL mp_bcast( Emin, ionode_id )
   CALL mp_bcast( Emax, ionode_id )
+  CALL mp_bcast( lwrite_overlaps, ionode_id )
   ! for GWW
   CALL mp_bcast( lgww, ionode_id )
   ! for projection on boxes
@@ -154,12 +157,12 @@ PROGRAM do_projwfc
      ENDIF
   ELSE
      IF (noncolin) THEN
-        CALL projwave_nc(filproj, lsym )
+        CALL projwave_nc(filproj, lsym, lwrite_overlaps )
      ELSE
         IF( nproc_ortho > 1 ) THEN
-           CALL pprojwave (filproj, lsym)
+           CALL pprojwave (filproj, lsym, lwrite_overlaps)
         ELSE
-           CALL projwave (filproj, lsym, lgww)
+           CALL projwave (filproj, lsym, lgww, lwrite_overlaps)
         ENDIF
      ENDIF
   ENDIF
@@ -194,6 +197,7 @@ MODULE projections
 
   REAL (DP),    ALLOCATABLE :: proj (:,:,:)
   COMPLEX (DP), ALLOCATABLE :: proj_aux (:,:,:)
+  COMPLEX (DP), ALLOCATABLE :: ovps_aux (:,:,:)
 
 END MODULE projections
 !
@@ -208,6 +212,7 @@ MODULE projections_nc
 
   REAL (DP),    ALLOCATABLE :: proj (:,:,:)
   COMPLEX (DP), ALLOCATABLE :: proj_aux (:,:,:)
+  COMPLEX (DP), ALLOCATABLE :: ovps_aux (:,:,:)
 
 END MODULE projections_nc
 !
@@ -217,7 +222,7 @@ MODULE projections_ldos
 END MODULE projections_ldos
 !
 !-----------------------------------------------------------------------
-SUBROUTINE projwave( filproj, lsym, lgww )
+SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp )
   !-----------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout, ionode
@@ -249,6 +254,8 @@ SUBROUTINE projwave( filproj, lsym, lgww )
   INTEGER, EXTERNAL :: find_free_unit
   !
   CHARACTER (len=*) :: filproj
+  LOGICAL           :: lwrite_ovp
+  !
   INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, nwfc,&
        nwfc1, lmax_wfc, is, ios, iunproj
   REAL(DP), ALLOCATABLE :: e (:)
@@ -311,6 +318,14 @@ SUBROUTINE projwave( filproj, lsym, lgww )
   proj      = 0.d0
   proj_aux  = (0.d0, 0.d0)
   !
+  IF ( lwrite_ovp ) THEN
+      ALLOCATE( ovps_aux(natomwfc, natomwfc, nkstot) )
+  ELSE
+      ALLOCATE( ovps_aux(1,1,1) )
+  ENDIF
+  ovps_aux  = (0.d0, 0.d0)
+
+  !
   IF (.not. lda_plus_u) ALLOCATE(swfcatom (npwx , natomwfc ) )
   ALLOCATE(wfcatom (npwx, natomwfc) )
   ALLOCATE(overlap (natomwfc, natomwfc) )
@@ -350,6 +365,15 @@ SUBROUTINE projwave( filproj, lsym, lgww )
      ELSE
         CALL calbec ( npw, wfcatom, swfcatom, overlap )
      ENDIF
+     !
+     ! save the overlap matrix
+     !
+     IF ( lwrite_ovp ) THEN
+         !
+         ovps_aux(1:natomwfc,1:natomwfc,ik) = overlap(1:natomwfc,1:natomwfc)
+         !
+     ENDIF
+
 
      !
      ! calculate O^{-1/2}
@@ -516,6 +540,11 @@ SUBROUTINE projwave( filproj, lsym, lgww )
   CALL poolrecover (proj,     nbnd * natomwfc, nkstot, nks)
   CALL poolrecover (proj_aux, 2 * nbnd * natomwfc, nkstot, nks)
   !
+  IF ( lwrite_ovp ) THEN
+      CALL poolrecover (ovps_aux, 2 * natomwfc * natomwfc, nkstot, nks)
+  ENDIF
+
+  !
   !!!! for GWW
   IF(lgww) THEN
     INQUIRE ( file='bands.dat', EXIST=lex )
@@ -578,7 +607,9 @@ SUBROUTINE projwave( filproj, lsym, lgww )
      !
      ! write projections to file using iotk
      !
-     CALL write_proj( "atomic_proj.xml", proj_aux )
+     CALL write_proj( "atomic_proj.xml", proj_aux, lwrite_ovp, ovps_aux )
+     !
+     DEALLOCATE( proj_aux, ovps_aux )
 
      !
      ! write on the standard output file
@@ -703,7 +734,7 @@ SUBROUTINE projwave( filproj, lsym, lgww )
 END SUBROUTINE projwave
 !
 !-----------------------------------------------------------------------
-SUBROUTINE projwave_nc(filproj, lsym )
+SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp )
   !-----------------------------------------------------------------------
   !
   USE io_global,  ONLY : stdout, ionode
@@ -736,7 +767,9 @@ SUBROUTINE projwave_nc(filproj, lsym )
   IMPLICIT NONE
   !
   CHARACTER(len=*) :: filproj
+  LOGICAL :: lwrite_ovp
   LOGICAL :: lsym
+  !
   INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, ind, n, m, m1, n1, &
              n2, l, nwfc, nwfc1, lmax_wfc, is, nspin0, iunproj,    &
              ind0
@@ -853,6 +886,14 @@ SUBROUTINE projwave_nc(filproj, lsym )
   proj     = 0.d0
   proj_aux = (0.d0,0.d0)
   !
+  IF ( lwrite_ovp ) THEN
+      ALLOCATE( ovps_aux(natomwfc, natomwfc, nkstot) )
+  ELSE
+      ALLOCATE( ovps_aux(1,1,1) )
+  ENDIF
+  ovps_aux  = (0.d0, 0.d0)
+
+  !
   !    loop on k points
   !
   CALL init_us_1
@@ -890,8 +931,17 @@ SUBROUTINE projwave_nc(filproj, lsym )
      ! calculate overlap matrix O_ij = <phi_i|\hat S|\phi_j>
      !
      CALL ZGEMM ('C', 'N', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), wfcatom, &
-       npwx*npol, swfcatom, npwx*npol, (0.d0, 0.d0), overlap, natomwfc)
+                 npwx*npol, swfcatom, npwx*npol, (0.d0, 0.d0), overlap, natomwfc)
      CALL mp_sum ( overlap, intra_pool_comm )
+     !
+     ! save the overlap matrix
+     !
+     IF ( lwrite_ovp ) THEN
+         !
+         ovps_aux(:,:,ik) = overlap(:,:)
+         !
+     ENDIF
+
      !
      ! calculate O^{-1/2}
      !
@@ -1083,6 +1133,10 @@ SUBROUTINE projwave_nc(filproj, lsym )
   CALL poolrecover (proj,     nbnd * natomwfc, nkstot, nks)
   CALL poolrecover (proj_aux, 2 * nbnd * natomwfc, nkstot, nks)
   !
+  IF ( lwrite_ovp ) THEN
+      CALL poolrecover (ovps_aux, 2 * natomwfc * natomwfc, nkstot, nks)
+  ENDIF
+  !
   IF ( ionode ) THEN
      !
      ! write on the file filproj
@@ -1116,7 +1170,9 @@ SUBROUTINE projwave_nc(filproj, lsym )
      !
      ! write projections to file using iotk
      !
-     CALL write_proj( "atomic_proj.xml", proj_aux )
+     CALL write_proj( "atomic_proj.xml", proj_aux, lwrite_ovp, ovps_aux )
+     !
+     DEALLOCATE( proj_aux, ovps_aux )
 
      !
      ! write on the standard output file
@@ -1503,7 +1559,6 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
   !
   DEALLOCATE (nlmchi)
   DEALLOCATE (proj)
-  DEALLOCATE (proj_aux)
   !
   RETURN
 END SUBROUTINE partialdos
@@ -1795,7 +1850,6 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
   !
   DEALLOCATE (nlmchi)
   DEALLOCATE (proj)
-  DEALLOCATE (proj_aux)
   !
   RETURN
 END SUBROUTINE partialdos_nc
@@ -1864,7 +1918,7 @@ FUNCTION compute_mj(j,l,m)
 END FUNCTION compute_mj
 !
 !-----------------------------------------------------------------------
-SUBROUTINE  write_proj (filename, projs)
+SUBROUTINE  write_proj (filename, projs, lwrite_ovp, ovps )
   !-----------------------------------------------------------------------
   !
   USE kinds
@@ -1879,12 +1933,14 @@ SUBROUTINE  write_proj (filename, projs)
   USE iotk_module
   IMPLICIT NONE
 
-  CHARACTER(*),  INTENT(in) :: filename
-  COMPLEX(DP),   INTENT(in) :: projs(natomwfc,nbnd,nkstot)
+  CHARACTER(*),  INTENT(IN) :: filename
+  COMPLEX(DP),   INTENT(IN) :: projs(natomwfc,nbnd,nkstot)
+  LOGICAL,       INTENT(IN) :: lwrite_ovp
+  COMPLEX(DP),   INTENT(IN) :: ovps(natomwfc,natomwfc,nkstot)
   !
   CHARACTER(256)          :: tmp
   CHARACTER(iotk_attlenx) :: attr
-  INTEGER :: ik, ik_eff, ia, ierr, num_k_points
+  INTEGER :: ik, ik_eff, isp, ia, ierr, num_k_points
 
 !
 ! subroutine body
@@ -1988,6 +2044,33 @@ SUBROUTINE  write_proj (filename, projs)
   CALL iotk_write_end(iun, "PROJECTIONS")
 
   !
+  ! overlaps
+  !
+  IF ( lwrite_ovp ) THEN
+      !
+      CALL iotk_write_begin(iun, "OVERLAPS")
+      !
+      DO ik=1,num_k_points
+          !
+          CALL iotk_write_begin( iun, "K-POINT"//trim(iotk_index(ik)) )
+          !
+          DO isp = 1, nspin
+              !
+              ik_eff = ik + num_k_points * ( isp -1 )
+              !
+              CALL iotk_write_dat(iun, "OVERLAP"//trim(iotk_index(isp)), ovps(:,:,ik_eff)  )
+              !
+              !
+          ENDDO
+          !
+          CALL iotk_write_end( iun, "K-POINT"//trim(iotk_index(ik)) )
+          !
+      ENDDO
+      !
+      CALL iotk_write_end(iun, "OVERLAPS")
+      !
+  ENDIF
+  !
   ! closing the file
   !
   CALL iotk_close_write(iun)
@@ -1999,7 +2082,7 @@ END SUBROUTINE write_proj
 !  projwave with distributed matrixes
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pprojwave( filproj, lsym )
+SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp )
   !-----------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout, ionode
@@ -2041,9 +2124,11 @@ SUBROUTINE pprojwave( filproj, lsym )
   COMPLEX(DP), PARAMETER :: one  = ( 1.0d0, 0.0d0 )
 
   CHARACTER (len=*) :: filproj
+  LOGICAL :: lwrite_ovp
+  !
   INTEGER :: ik, ibnd, i, j, na, nb, nt, isym, n,  m, m1, l, nwfc,&
        nwfc1, lmax_wfc, is, iunproj, iunaux
-  REAL(DP), ALLOCATABLE :: e (:)
+  REAL(DP),    ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
   COMPLEX(DP), ALLOCATABLE :: work1(:), proj0(:,:)
   COMPLEX(DP), ALLOCATABLE :: overlap_d(:,:), work_d(:,:), diag(:,:), vv(:,:)
@@ -2135,7 +2220,20 @@ SUBROUTINE pprojwave( filproj, lsym )
   !
   ALLOCATE( proj (natomwfc, nbnd, nkstot) )
   proj      = 0.d0
+
   !
+  ! this allocation is left written as fake
+  ! because the overlap matrix should be collected
+  ! in order to be proerly written
+  !
+  IF ( lwrite_ovp .AND. .FALSE. ) THEN
+       ALLOCATE( ovps_aux (natomwfc, natomwfc, nkstot) )
+  ELSE
+       ALLOCATE( ovps_aux (1, 1, 1) )
+  ENDIF
+  ovps_aux  = (0.d0, 0.d0)
+
+
   IF (.not. lda_plus_u) ALLOCATE(swfcatom (npwx , natomwfc ) )
   ALLOCATE(wfcatom (npwx, natomwfc) )
   !
@@ -2391,6 +2489,7 @@ SUBROUTINE pprojwave( filproj, lsym )
 
   ALLOCATE( proj_aux (natomwfc, nbnd, nkstot) )
   proj_aux  = (0.d0, 0.d0)
+  !
   DO ik = 1, nks
      !
      IF( gamma_only ) THEN
@@ -2446,7 +2545,9 @@ SUBROUTINE pprojwave( filproj, lsym )
      !
      ! write projections to file using iotk
      !
-     CALL write_proj( "atomic_proj.xml", proj_aux )
+     CALL write_proj( "atomic_proj.xml", proj_aux, .FALSE., ovps_aux )
+     !
+     DEALLOCATE( proj_aux, ovps_aux )
 
      !
      ! write on the standard output file
