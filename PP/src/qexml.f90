@@ -687,7 +687,8 @@ CONTAINS
       CALL iotk_write_dat( ounit, &
                            "BRAVAIS_LATTICE", trim( bravais_lattice ) )
       !
-      CALL iotk_write_dat( ounit, "CELL_SYMMETRY", symm_type )
+      IF ( LEN_TRIM( symm_type) > 0 ) &
+          CALL iotk_write_dat( ounit, "CELL_SYMMETRY", symm_type )
       !
       CALL iotk_write_attr( attr, "UNITS", trim(alat_units), FIRST = .true. )
       CALL iotk_write_dat( ounit, "LATTICE_PARAMETER", alat, ATTR = attr )
@@ -1591,7 +1592,7 @@ CONTAINS
       CHARACTER(len=*),  OPTIONAL, INTENT(out) :: alat_units, a_units, b_units
       INTEGER,                     INTENT(out) :: ierr
       !
-      CHARACTER(256)     :: bravais_latt_, symm_type_
+      CHARACTER(256)     :: bravais_latt_,
       CHARACTER(256)     :: alat_units_, a_units_, b_units_
       REAL(dbl)          :: celldm_(6), alat_
       REAL(dbl)          :: a1_(3), a2_(3), a3_(3)
@@ -1606,8 +1607,10 @@ CONTAINS
       CALL iotk_scan_dat( iunit, "BRAVAIS_LATTICE", bravais_latt_, IERR=ierr )
       IF ( ierr /= 0 ) RETURN
       !
-      CALL iotk_scan_dat( iunit, "CELL_SYMMETRY", symm_type_, IERR=ierr )
-      IF ( ierr /= 0 ) RETURN
+      IF ( PRESENT( symm_type ) ) THEN
+          CALL iotk_scan_dat( iunit, "CELL_SYMMETRY", symm_type, IERR=ierr )
+          IF ( ierr /= 0 ) RETURN
+      ENDIF
       !
       CALL iotk_scan_dat( iunit, "LATTICE_PARAMETER", alat_, ATTR=attr, IERR=ierr )
       IF (ierr/=0) RETURN
@@ -1655,8 +1658,7 @@ CONTAINS
       !
       !
       IF ( present(bravais_latt) )  bravais_latt = bravais_latt_
-      IF ( present(celldm) )        symm_type    = symm_type_
-      IF ( present(symm_type) )     celldm       = celldm_
+      IF ( present(celldm) )        celldm       = celldm_
       IF ( present(alat) )          alat         = alat_
       IF ( present(a1) )            a1           = a1_
       IF ( present(a2) )            a2           = a2_
