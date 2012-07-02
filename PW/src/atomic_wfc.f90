@@ -138,7 +138,7 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
                  !
               ENDIF
               !
-            ELSE
+           ELSE
               !
               call atomic_wfc___ ( )
               !
