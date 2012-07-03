@@ -16,6 +16,8 @@ SUBROUTINE print_clock_pw()
    USE control_flags,      ONLY : isolve, iverbosity, gamma_only
    USE paw_variables,      ONLY : okpaw
    USE realus,             ONLY : real_space
+   USE ldaU,               ONLY : lda_plus_U
+   USE funct,              ONLY : dft_is_hybrid
 #ifdef __ENVIRON
    USE environ_base,       ONLY : do_environ
 #endif
@@ -142,6 +144,7 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'h_psi:vnl' )
    END IF
    CALL print_clock( 'add_vuspsi' )
+   CALL print_clock( 'vhpsi' )
    CALL print_clock( 'h_psi_meta' )
    !
    WRITE( stdout, '(/5X,"General routines")' )
@@ -163,16 +166,25 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'ALLTOALL' )
 #endif
    !
-   WRITE( stdout, '(5X,"EXX routines")' )
+   IF ( lda_plus_U ) THEN
+      WRITE( stdout, '(5X,"Hubbard U routines")' )
+      CALL print_clock( 'new_ns' )
+      CALL print_clock( 'vhpsi' )
+      CALL print_clock( 'force_hub' )
+      CALL print_clock( 'stres_hub' )
+   ENDIF
    !
-   CALL print_clock( 'exx_grid' )
-   CALL print_clock( 'exxinit' )
-   CALL print_clock( 'vexx' )
-   !CALL print_clock( 'vexx_ngmloop' )
-   CALL print_clock( 'exxenergy' )
-   CALL print_clock( 'exxen2' )
-   !CALL print_clock( 'exxen2_ngmloop' )
-   CALL print_clock ('cycleig')
+   IF ( dft_is_hybrid() ) THEN
+      WRITE( stdout, '(5X,"EXX routines")' )
+      CALL print_clock( 'exx_grid' )
+      CALL print_clock( 'exxinit' )
+      CALL print_clock( 'vexx' )
+      !CALL print_clock( 'vexx_ngmloop' )
+      CALL print_clock( 'exxenergy' )
+      CALL print_clock( 'exxen2' )
+      !CALL print_clock( 'exxen2_ngmloop' )
+      CALL print_clock ('cycleig')
+   ENDIF
    !
    IF ( okpaw ) THEN
       WRITE( stdout, * )

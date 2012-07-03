@@ -34,6 +34,8 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
   integer :: ibnd, na, nt, m1, m2
   complex(DP) :: temp
   type (bec_type) :: proj
+
+  CALL start_clock('vhpsi')
   !
   ! Offset of atomic wavefunctions initialized in setup and stored in oatwfc
   !
@@ -65,6 +67,9 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
      enddo
   enddo
   call deallocate_bec_type (proj)
+  !
+  CALL stop_clock('vhpsi')
+
   return
 
 end subroutine vhpsi
@@ -95,6 +100,7 @@ subroutine vhpsi_nc (ldap, np, mps, psip, hpsi)
   complex(DP) :: temp, zdotc 
   complex(DP), allocatable :: proj(:,:)
 
+  CALL start_clock('vhpsi')
   ALLOCATE( proj(natomwfc, mps) )
 
 !--
@@ -134,6 +140,8 @@ subroutine vhpsi_nc (ldap, np, mps, psip, hpsi)
   enddo
 
   deallocate (proj)
+  CALL stop_clock('vhpsi')
+
   return
 end subroutine vhpsi_nc
 

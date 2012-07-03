@@ -29,7 +29,6 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   USE kinds,      ONLY : DP
   USE uspp,       ONLY : vkb, nkb, qq, okvan
   USE uspp_param, ONLY : upf, nh 
-  USE ldaU,       ONLY : lda_plus_u
   USE ions_base,  ONLY : nat, nsp, ityp
   USE control_flags,    ONLY: gamma_only 
   USE noncollin_module, ONLY: npol, noncolin

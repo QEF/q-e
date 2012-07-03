@@ -123,6 +123,8 @@ SUBROUTINE force_hub(forceh)
    !
    CALL symvector ( nat, forceh )
    !
+   call stop_clock('force_hub')
+   !
    RETURN
 END SUBROUTINE force_hub
 !

@@ -446,6 +446,7 @@ loopisym:     do isym = 1, nsym
 
 
   DEALLOCATE ( nr, nr1 )
+  CALL stop_clock('new_ns')
 
   RETURN
 

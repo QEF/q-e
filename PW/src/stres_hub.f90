@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#undef TIMING
 !
 !----------------------------------------------------------------------
 SUBROUTINE stres_hub ( sigmah )
@@ -35,9 +34,8 @@ SUBROUTINE stres_hub ( sigmah )
    REAL (DP), ALLOCATABLE :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat), ! the derivative of the atomic occupations
    !
-#ifdef TIMING
    CALL start_clock( 'stres_hub' )
-#endif
+   !
    IF (U_projection .NE. "atomic") CALL errore("stres_hub", &
                    " stress for this U_projection_type not implemented",1)
    IF (lda_plus_u_kind.eq.1) CALL errore("stres_hub", &
@@ -111,11 +109,9 @@ SUBROUTINE stres_hub ( sigmah )
    END DO
    
    DEALLOCATE (dns)
-#ifdef TIMING
+   !
    CALL stop_clock( 'stres_hub' )
-   CALL print_clock( 'stres_hub' )
-#endif
-
+   !
    RETURN
 END  SUBROUTINE stres_hub
 !
