@@ -348,6 +348,9 @@ CONTAINS
     CASE ( 'electron_maxstep' ) 
        CALL iotk_scan_dat_inside( xmlinputunit, electron_maxstep, ierr = ierr )
        !
+    CASE ( 'scf_must_converge' ) 
+       CALL iotk_scan_dat_inside( xmlinputunit, scf_must_converge, ierr = ierr )
+       !
     CASE ( 'emass' ) 
        CALL iotk_scan_dat_inside( xmlinputunit, emass, ierr = ierr )
        !

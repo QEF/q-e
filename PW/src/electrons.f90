@@ -43,7 +43,7 @@ SUBROUTINE electrons()
                                    iprint, istep, lscf, lmd, conv_elec, &
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
-                                   llondon
+                                   llondon, scf_must_converge
   USE io_files,             ONLY : iunwfc, iunocc, nwordwfc, output_drho, &
                                    iunefield, iunpaw
   USE buffers,              ONLY : save_buffer
@@ -345,6 +345,7 @@ SUBROUTINE electrons()
         ! ... ns (for lda+u) and becsum (for paw)
         !
         CALL mix_rho( rho, rhoin, mixing_beta, dr2, tr2_min, iter, nmix, conv_elec )
+        if (.not. scf_must_converge .and. idum == niter) conv_elec = .true.
         !
         ! ... if convergence is achieved or if the self-consistency error
         ! ... (dr2) is smaller than the estimated error due to diagonalization
@@ -695,7 +696,11 @@ SUBROUTINE electrons()
         !
         IF ( do_comp_esm ) CALL esm_printpot()
         !
-        WRITE( stdout, 9110 ) iter
+        if (idum < niter) then
+          WRITE( stdout, 9110 ) iter
+        else
+          WRITE( stdout, 9122 ) iter
+        endif
         !
         ! ... jump to the end
         !
@@ -771,6 +776,7 @@ SUBROUTINE electrons()
 9101 FORMAT(/'     End of self-consistent calculation' )
 9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
 9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
+9122 FORMAT(/'     WARNING: convergence NOT achieved after ',i3,' iterations' )
 9121 FORMAT(/'     scf convergence threshold =',1PE17.1,' Ry' )
 #ifdef __ENVIRON
 9200 FORMAT(/'     add environment contribution to local potential')

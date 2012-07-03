@@ -213,6 +213,7 @@ MODULE control_flags
     tr2_init,         &! initial value of tr2 for adaptive thresholds
     tr2_multi          ! the dexx multiplier for adaptive thresholds
                        ! tr2 = tr2_multi * dexx after each V_exx update 
+  LOGICAL, PUBLIC :: scf_must_converge
   !
   ! ... pw diagonalization
   !

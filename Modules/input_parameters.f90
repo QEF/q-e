@@ -697,6 +697,8 @@ MODULE input_parameters
           ! maximum number of steps in electronic minimization
           ! This parameter apply only when using 'cg' electronic or
           ! ionic dynamics
+        LOGICAL :: scf_must_converge = .true.
+          ! stop or continue if SCF does not converge
 
         CHARACTER(len=80) :: electron_dynamics = 'none'
           ! set how electrons should be moved
@@ -967,7 +969,7 @@ MODULE input_parameters
           ! to be used together with penalty functional ...
 
         NAMELIST / electrons / emass, emass_cutoff, orthogonalization, &
-          electron_maxstep, ortho_eps, ortho_max, electron_dynamics,   &
+          electron_maxstep, scf_must_converge, ortho_eps, ortho_max, electron_dynamics,   &
           electron_damping, electron_velocities, electron_temperature, &
           ekincw, fnosee, ampre, grease,                               &
           diis_size, diis_nreset, diis_hcut,                           &
