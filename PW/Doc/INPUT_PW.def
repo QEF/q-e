@@ -1280,6 +1280,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    }
 	}
 
+	var scf_must_converge	-type LOGICAL { 
+	    default { .TRUE. }
+	    info {
+		If .false. do not stop molecular dynamics or ionic relaxation
+                when electron_maxstep is reached. Use with care.
+	    }
+	}
+
+
 	var conv_thr -type REAL { 
 	    default { 1.D-6 }
 	    info {
