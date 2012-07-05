@@ -72,7 +72,7 @@ PROGRAM interpolate
   real (8) :: xmin, dx
   CHARACTER (len=256) :: filein(2), fileout
   PRINT '('' '')'
-  PRINT '('' Iterpolate an UPF pseudopotential to a different radial mesh'')'
+  PRINT '('' Interpolate an UPF pseudopotential to a different radial mesh'')'
   PRINT '('' '')'
   !
   is=2
@@ -97,7 +97,7 @@ PROGRAM interpolate
   PRINT '(''Output PP file in UPF format :  '',a)', fileout
 
   OPEN(unit=2,file=fileout,status='unknown',form='formatted')
-  CALL write_upf(2)
+  CALL write_upf_v1(2)
   CLOSE (unit=2)
 
 20 STOP

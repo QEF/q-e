@@ -34,7 +34,7 @@ PROGRAM rrkj2upf
   PRINT '(''Output PP file in UPF format :  '',a)', fileout
 
   OPEN(unit=2,file=fileout,status='unknown',form='formatted')
-  CALL write_upf(2)
+  CALL write_upf_v1(2)
   CLOSE (unit=2)
 
 STOP

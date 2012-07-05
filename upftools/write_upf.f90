@@ -8,7 +8,7 @@
 MODULE upf
   !
   ! All variables to be written into the UPF file
-  ! (UPF = unified pseudopotential format)
+  ! (UPF = unified pseudopotential format, v.1)
   !
   ! pp_info
   INTEGER :: rel
@@ -58,7 +58,7 @@ MODULE upf
   real(8), ALLOCATABLE :: rho_at(:)
 END MODULE upf
 !
-SUBROUTINE write_upf(ounps)
+SUBROUTINE write_upf_v1(ounps)
 
   USE upf, ONLY: nlcc
 
@@ -76,7 +76,7 @@ SUBROUTINE write_upf(ounps)
   PRINT '("*** PLEASE TEST BEFORE USING!!! ***")'
   PRINT '("review the content of the PP_INFO fields")'
   !
-END SUBROUTINE write_upf
+END SUBROUTINE write_upf_v1
 
   !
   !---------------------------------------------------------------------

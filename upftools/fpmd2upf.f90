@@ -908,7 +908,7 @@ PROGRAM fpmd2upf
   WRITE (6,'(a)') 'Pseudopotential successfully converted'
   !     ----------------------------------------------------------
 
-  CALL write_upf( 10 )
+  CALL write_upf_v1( 10 )
 
 100 CONTINUE
 

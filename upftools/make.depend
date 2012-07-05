@@ -1,4 +1,3 @@
-any2upf.o : write_upf.o
 casino2upf.o : ../Modules/pseudo_types.o
 casino2upf.o : ../Modules/write_upf_v2.o
 casino2upf.o : casino_pp.o
