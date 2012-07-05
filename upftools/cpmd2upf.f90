@@ -618,6 +618,9 @@ SUBROUTINE convert_cpmd(upf)
         ENDDO
         DEALLOCATE(aux)
      ENDIF
+  ELSE
+     ! prevents funny errors when writing file
+     ALLOCATE(upf%dion(upf%nbeta,upf%nbeta))
   ENDIF
 
   ALLOCATE (upf%chi(upf%mesh,upf%nwfc))
