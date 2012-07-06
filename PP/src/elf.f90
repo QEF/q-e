@@ -44,13 +44,13 @@ SUBROUTINE do_elf (elf)
   ! I/O variables
   !
   IMPLICIT NONE
-  real(DP) :: elf (dfftp%nnr)
+  REAL(DP) :: elf (dfftp%nnr)
   !
   ! local variables
   !
   INTEGER :: i, j, k, ibnd, ik, is
-  real(DP) :: gv(3), w1, d, fac
-  real(DP), ALLOCATABLE :: kkin (:), tbos (:)
+  REAL(DP) :: gv(3), w1, d, fac
+  REAL(DP), ALLOCATABLE :: kkin (:), tbos (:)
   COMPLEX(DP), ALLOCATABLE :: aux (:), aux2 (:)
   !
   CALL infomsg ('do_elf', 'elf + US not fully implemented')
@@ -198,36 +198,104 @@ SUBROUTINE do_rdg (rdg)
   USE gvect,                ONLY: g, ngm, nl
   USE lsda_mod,             ONLY: nspin
   IMPLICIT NONE
-  real(dp), intent(out) :: rdg (dfftp%nnr)
-  real(dp), allocatable :: grho(:,:)
-  real(dp):: fac
-  real(dp), parameter :: rho_cut = 0.05d0
-  integer :: is, i
+  REAL(DP), INTENT(OUT) :: rdg (dfftp%nnr)
+  REAL(DP), ALLOCATABLE :: grho(:,:)
+  REAL(DP) :: fac
+  REAL(DP), PARAMETER :: rho_cut = 0.05d0
+  INTEGER :: is, i
 
   fac = (1.d0/2.d0) * 1.d0/(3.d0*pi**2)**(1.d0/3.d0)
   ! gradient of rho
-  allocate( grho(3,dfftp%nnr) )
+  ALLOCATE( grho(3,dfftp%nnr) )
 
   ! put the total (up+down) charge density in rho%of_r(*,1)
-  do is = 2, nspin
+  DO is = 2, nspin
      rho%of_g(:,1) =  rho%of_g(:,1) + rho%of_g(:,is)
      rho%of_r(:,1) =  rho%of_r(:,1) + rho%of_r(:,is)
-  enddo
+  ENDDO
 
   ! gradient of rho
-  call gradrho(dfftp%nnr, rho%of_g(1,1), ngm, g, nl, grho)
+  CALL gradrho(dfftp%nnr, rho%of_g(1,1), ngm, g, nl, grho)
 
   ! calculate rdg
-  do i = 1, dfftp%nnr
-    if (rho%of_r(i,1) > rho_cut) then
-      rdg(i) = fac * 100.d0 / abs(rho%of_r(i,1))**(4.d0/3.d0)
-    else
-      rdg(i) = fac * sqrt(grho(1,i)**2 + grho(2,i)**2 + grho(3,i)**2) / abs(rho%of_r(i,1))**(4.d0/3.d0)
-    endif
-  enddo
-
-  deallocate( grho )
+  DO i = 1, dfftp%nnr
+     IF (rho%of_r(i,1) > rho_cut) THEN
+        rdg(i) = fac * 100.d0 / abs(rho%of_r(i,1))**(4.d0/3.d0)
+     ELSE
+        rdg(i) = fac * sqrt(grho(1,i)**2 + grho(2,i)**2 + grho(3,i)**2) / abs(rho%of_r(i,1))**(4.d0/3.d0)
+     ENDIF
+  ENDDO
   
-  return
+  DEALLOCATE( grho )
+  
+  RETURN
 
 END SUBROUTINE do_rdg
+
+
+
+!-----------------------------------------------------------------------
+SUBROUTINE do_sl2rho (sl2rho)
+  !-----------------------------------------------------------------------
+  !
+  !  Computes sign(l2)*rho(r), where l2 is the second largest eigenvalue
+  !  of the electron-density Hessian matrix
+  !
+  USE kinds,                ONLY: DP
+  USE constants,            ONLY: pi
+  USE cell_base,            ONLY: omega, tpiba, tpiba2
+  USE fft_base,             ONLY: dfftp
+  USE scf,                  ONLY: rho
+  USE gvect,                ONLY: g, ngm, nl
+  USE lsda_mod,             ONLY: nspin
+  IMPLICIT NONE
+  REAL(DP), INTENT(OUT) :: sl2rho (dfftp%nnr)
+  REAL(DP), ALLOCATABLE :: grho(:,:), hrho(:,:,:)
+  INTEGER :: is, i
+  !
+  REAL(DP), PARAMETER :: eps = 1.d-14
+  REAL(DP) :: vl, vu, work(24), hloc(3,3), e(3), v(3,3)
+  INTEGER :: mo, info, iwork(15), ifail(3)
+  !
+
+  ! gradient and hessian of rho
+  ALLOCATE( grho(3,dfftp%nnr), hrho(3,3,dfftp%nnr) )
+
+  ! put the total (up+down) charge density in rho%of_r(*,1)
+  DO is = 2, nspin
+     rho%of_g(:,1) =  rho%of_g(:,1) + rho%of_g(:,is)
+     rho%of_r(:,1) =  rho%of_r(:,1) + rho%of_r(:,is)
+  ENDDO
+
+  ! calculate hessian of rho (gradient is discarded)
+  CALL hessian( dfftp%nnr, rho%of_r(:,1), ngm, g, nl, grho, hrho )
+
+  ! find eigenvalues of the hessian
+  DO i = 1, dfftp%nnr
+     !
+     IF (     abs(hrho(1,2,i) - hrho(2,1,i)) > eps &
+         .OR. abs(hrho(1,3,i) - hrho(3,1,i)) > eps &
+         .OR. abs(hrho(2,3,i) - hrho(3,2,i)) > eps   ) THEN
+         CALL errore('do_sl2rho', 'hessian not symmetric', i)
+     ENDIF
+     !
+     hloc = hrho(:,:,i)
+     v (:,:) = 0.0_dp
+     CALL DSYEVX ( 'V', 'I', 'U', 3, hloc, 3, vl, vu, 1, 3, 0.0_dp, mo, e,&
+                  v, 3, work, 24, iwork, ifail, info )
+     !
+     IF ( info > 0) THEN
+        CALL errore('do_sl2rho','failed to diagonlize',info)
+     ELSEIF (info < 0) THEN
+        call errore('do_sl2rho','illegal arguments in DSYEVX',-info)
+     ENDIF
+    
+     sl2rho(i) = sign(1.d0,e(2))*rho%of_r(i,1)
+  ENDDO
+
+
+  DEALLOCATE( grho, hrho )
+  
+  RETURN
+
+END SUBROUTINE do_sl2rho
