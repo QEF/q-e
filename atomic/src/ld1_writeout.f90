@@ -17,7 +17,7 @@ subroutine ld1_writeout
   use radial_grids, only: ndmx
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
-  use ld1inc, only : file_pseudopw, upf_v1_format, zed, grid, &
+  use ld1inc, only : file_pseudopw, zed, grid, &
                      nconf , lpaw, rel, pawsetup, pseudotype, &
                      rhoc, vnl, phits, vpsloc, & 
                      elts, llts, octs, rcut, etots, nwfts, &
@@ -88,11 +88,7 @@ subroutine ld1_writeout
         !
      else
         !
-        if(upf_v1_format) then
-            call write_upf_v1(iunps)
-        else
-            call export_upf(iunps, unit_loc)
-        endif
+        call export_upf(iunps, unit_loc)
         !
         if(lpaw) call deallocate_pseudo_paw( pawsetup )
         !

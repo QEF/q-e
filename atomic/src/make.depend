@@ -364,7 +364,3 @@ write_resultsps.o : ../../Modules/kind.o
 write_resultsps.o : ../../Modules/mp.o
 write_resultsps.o : ../../Modules/radial_grids.o
 write_resultsps.o : ld1inc.o
-write_upf.o : ../../Modules/constants.o
-write_upf.o : ../../Modules/funct.o
-write_upf.o : ../../Modules/kind.o
-write_upf.o : ld1inc.o
