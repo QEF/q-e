@@ -95,7 +95,6 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
   allocate(f(mesh), stat=ierr)
   allocate(el(mesh), stat=ierr)
   allocate(c(mesh), stat=ierr)
-
   nstop=0
   nstart=0
   e=e0
@@ -117,7 +116,7 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
   enddo
   call series(y,grid%r,grid%r2,b)
 
-  !      write(stdout,*) 'eneter lam,eup,elw,e',lam,nbeta,eup,elw,e
+  !      write(stdout,*) 'enter lam,eup,elw,e',lam,nbeta,eup,elw,e
   !
   !  set up the f-function and determine the position of its last
   !  change of sign

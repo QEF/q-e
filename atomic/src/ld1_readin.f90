@@ -342,10 +342,10 @@ subroutine ld1_readin
   ! generate the radial grid - note that if iswitch = 2 or 4
   ! the radial grid is not generated but read from the pseudopotential file
   !
-  if (iswitch /= 2.or.iswitch/=4) then
-     call do_mesh(rmax,zed,xmin,dx,0,grid)
+  IF (iswitch == 1 .OR. iswitch == 3 ) THEN
+     CALL do_mesh(rmax,zed,xmin,dx,0,grid)
      rhoc=0.0_dp
-  endif
+  ENDIF
   !
   which_augfun = 'DEFAULT'
   if (iswitch == 1) then
