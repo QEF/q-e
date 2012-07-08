@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,17 +7,14 @@
 !
 !
 !---------------------------------------------------------------
-subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
-           qq,nbeta,nwfx,lls,jjs,ikk,nstop)
+subroutine ascheqps ( nam, lam, jam, e0, mesh, ndm, grid, vpot, thresh,&
+                      y, beta, ddd, qq, nbeta, nwfx, lls, jjs, ikk, nstop )
   !---------------------------------------------------------------
   !
-  !  numerical integration of the radial schroedinger equation for
-  !  bound states in a local potential.
-  !
-  !  This routine works at fixed e
-  !  It allows a nonlocal potential and an overlap
-  !  operator. Therefore it can solve a general schroedinger
-  !  equation necessary to solve a US pseudopotential
+  !  numerical integration of a generalized radial schroedinger equation,
+  !  using Numerov with outward and inward integration and matching.
+  !  Works for both norm-conserving nonlocal and US pseudopotentials
+  !  Requires in input a good estimate "e0" of the energy
   !
   use io_global, only : stdout
   use kinds, only : DP
@@ -26,34 +23,40 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
   implicit none
 
   type(radial_grid_type), intent(in) :: grid
-  integer :: &
+  integer, intent(in) :: &
        nam, &
        lam, &      ! l angular momentum
        mesh,&      ! size of radial mesh
        ndm, &      ! maximum radial mesh 
        nbeta,&     ! number of beta function  
        nwfx, &     ! maximum number of beta functions
-       ndcr,  &    ! number of required nodes
-       n1, n2, &   ! counters
-       ikl,    &   ! auxiliary
-       nstop,  &   ! used to check the behaviour of the routine
-       lls(nbeta),&! for each beta the angular momentum
-       ikk(nbeta) ! for each beta the point where it become zero
+       ikk(nbeta),&! for each beta the point where it become zero
+       lls(nbeta)  ! for each beta the angular momentum
 
-  real(DP) :: &
-       e0,e,    &  ! output eigenvalue
-       jam,     &  ! j angular momentum
-       vpot(mesh),&! the local potential 
-       thresh,   & ! precision of eigenvalue
-       y(mesh),  & ! the output solution
+  real(DP), intent(in) :: &
+       jam,       & ! j angular momentum
+       vpot(mesh),& ! the local potential 
+       thresh,    & ! precision of eigenvalue
        jjs(nwfx), & ! the j angular momentum
-       beta(ndm,nwfx),& ! the beta functions
-       work(nbeta),  & ! auxiliary space
+       beta(ndm,nwfx), &            ! the beta functions
        ddd(nwfx,nwfx),qq(nwfx,nwfx) ! parameters for computing B_ij
+
+  real(DP), intent(inout) :: &
+       e0,      &  ! output eigenvalue
+       y(mesh)     ! the output solution
+
+  integer, intent(out) :: &
+       nstop       ! error code, used to check the behavior of the routine
   !
   !    the local variables
   !
+  integer :: &
+       ndcr,  &    ! number of required nodes
+       n1, n2, &   ! counters
+       ikl         ! auxiliary variables
   real(DP) :: &
+       work(nbeta),& ! auxiliary space
+       e,          &  ! energy
        ddx12,      &  ! dx**2/12 used for Numerov integration
        sqlhf,      &  ! the term for angular momentum in equation
        ze2,        &  ! possible coulomb term aroun the origin (set 0)
@@ -87,7 +90,8 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
   logical, save :: first(0:10,0:10) = .true.
 
 
-   if (mesh.ne.grid%mesh) call errore('compute_solution','mesh dimension is not as expected',1)
+   if (mesh.ne.grid%mesh) &
+        call errore('compute_solution','mesh dimension is not as expected',1)
   !
   !  set up constants and allocate variables the 
   !
@@ -188,8 +192,8 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
 
   if(ndcr < ncross) then
      !
-     !  too many crossings. e is an upper bound to the true eigen-
-     !  value. increase abs(e)
+     !  too many crossings. e is an upper bound to the true eigenvalue.
+     !  increase abs(e)
      !
      eup=e
      e=0.9_dp*elw+0.1_dp*eup
@@ -200,8 +204,8 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
      go to 300
   else if (ndcr > ncross) then
      !
-     !  too few crossings. e is a lower bound to the true eigen-
-     !  value. decrease abs(e)
+     !  too few crossings. e is a lower bound to the true eigenvalue.
+     !  decrease abs(e)
      !
      elw=e
      e=0.9_dp*eup+0.1_dp*elw
