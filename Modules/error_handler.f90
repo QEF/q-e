@@ -44,8 +44,8 @@ SUBROUTINE errore( calling_routine, message, ierr )
   ! ... the error message is written un the "*" unit
   !
   WRITE( UNIT = *, FMT = '(/,1X,78("%"))' )
-  WRITE( UNIT = *, &
-         FMT = '(5X,"from ",A," : error #",I10)' ) calling_routine, ierr
+  WRITE( UNIT = 0, FMT = '(5X,"(",I5,") Error in routine ",A,":")' ) &
+        ierr, TRIM(calling_routine)
   WRITE( UNIT = *, FMT = '(5X,A)' ) message
   WRITE( UNIT = *, FMT = '(1X,78("%"),/)' )
   !
@@ -55,8 +55,8 @@ SUBROUTINE errore( calling_routine, message, ierr )
   ! ... which is automatically connected to stderr
   !
   WRITE( UNIT = 0, FMT = '(/,1X,78("%"))')
-  WRITE( UNIT = 0, &
-         FMT = '(5X,"from ",A," : error #",I10)' ) calling_routine, ierr
+  WRITE( UNIT = 0, FMT = '(5X,"(",I5,") Error in routine ",A,":")' ) &
+        ierr, TRIM(calling_routine)
   WRITE( UNIT = 0, FMT = '(5X,A)' ) message
   WRITE( UNIT = 0, FMT = '(1X,78("%"),/)' )
   !

@@ -7,8 +7,8 @@
 !=----------------------------------------------------------------------------=!
       MODULE upf_module
 !=----------------------------------------------------------------------------=!
-!  this module handles reading and writing of unified pseudopotential format (UPF)
-!  it can manage v2 read/write and v1 read only.
+!  this module handles reading of unified pseudopotential format (UPF)
+!  in either v1 or v2 format
 !
 ! A macro to trim both from left and right
 #define TRIM(a) trim(adjustl(a))
@@ -22,6 +22,8 @@
       !
       IMPLICIT NONE
       PUBLIC
+      !PRIVATE
+      !PUBLIC :: read_upf, pseudo_upf, deallocate_pseudo_upf
       !
       CONTAINS
 
