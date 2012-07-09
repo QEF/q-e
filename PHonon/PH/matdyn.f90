@@ -76,6 +76,7 @@ PROGRAM matdyn
   !               and is normalised to 3*nat, i.e. the number of phonons
   !     flfrq     output file for frequencies (default: 'matdyn.freq')
   !     flvec     output file for normal modes (default: 'matdyn.modes')
+  !     fleig     output file for phonon eigenvectors (default: 'matdyn.eig')
   !     fldyn     output file for dynamical matrix (default: ' ' i.e. does not write)
   !     at        supercell lattice vectors - must form a superlattice of the
   !               original lattice (default: use original cell)
@@ -143,7 +144,7 @@ PROGRAM matdyn
   INTEGER, PARAMETER:: ntypx=10, nrwsx=200
   REAL(DP), PARAMETER :: eps=1.0d-6
   INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ntetra, ibrav
-  CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos, filename, fldyn
+  CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos, filename, fldyn, fleig
   CHARACTER(LEN=10)  :: asr
   LOGICAL :: dos, has_zstar, q_in_cryst_coord, eigen_similarity
   COMPLEX(DP), ALLOCATABLE :: dyn(:,:,:,:), dyn_blk(:,:,:,:)
@@ -172,7 +173,7 @@ PROGRAM matdyn
   REAL(DP) :: celldm(6), delta, pathL
   REAL(DP), ALLOCATABLE :: xqaux(:,:)
   INTEGER, ALLOCATABLE :: nqb(:)
-  INTEGER :: n, i, j, it, nq, nqx, na, nb, ndos, iout, nqtot, iout_dyn
+  INTEGER :: n, i, j, it, nq, nqx, na, nb, ndos, iout, nqtot, iout_dyn, iout_eig
   LOGICAL, EXTERNAL :: has_xml
   CHARACTER(LEN=15), ALLOCATABLE :: name_rap_mode(:)
   INTEGER, ALLOCATABLE :: num_rap_mode(:,:)
@@ -184,7 +185,7 @@ PROGRAM matdyn
   INTEGER :: location(1)
   LOGICAL, ALLOCATABLE :: mask(:)
   !
-  NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, at, dos,  &
+  NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, fleig, at, dos,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, &
        &           la2F, ndos, DeltaE, q_in_band_form, q_in_cryst_coord, fldyn
   !
@@ -209,6 +210,7 @@ PROGRAM matdyn
      fldos='matdyn.dos'
      flfrq='matdyn.freq'
      flvec='matdyn.modes'
+     fleig=' '
      fldyn=' '
      fltau=' '
      amass(:) =0.d0
@@ -239,6 +241,7 @@ PROGRAM matdyn
      CALL mp_bcast(fldos,ionode_id)
      CALL mp_bcast(flfrq,ionode_id)
      CALL mp_bcast(flvec,ionode_id)
+     CALL mp_bcast(fleig,ionode_id)
      CALL mp_bcast(fldyn,ionode_id)
      CALL mp_bcast(fltau,ionode_id)
      CALL mp_bcast(amass,ionode_id)
@@ -435,6 +438,12 @@ PROGRAM matdyn
         OPEN (unit=iout_dyn,file=fldyn,status='unknown',form='formatted')
      END IF
 
+     IF (fleig.EQ.' ') THEN
+        iout_eig=0
+     ELSE
+        iout_eig=313
+        IF (ionode) OPEN (unit=iout_eig,file=fleig,status='unknown',form='formatted')
+     END IF
 
      ALLOCATE ( dyn(3,3,nat,nat), dyn_blk(3,3,nat_blk,nat_blk) )
      ALLOCATE ( z(3*nat,3*nat), w2(3*nat,nq) )
@@ -501,6 +510,8 @@ PROGRAM matdyn
         
 
         CALL dyndiag(nat,ntyp,amass,ityp,dyn,w2(1,n),z)
+        IF (ionode) &
+         & CALL write_eigenvectors(nat,ntyp,amass,ityp,q(1,n),w2(1,n),z,iout_eig)
         !
         ! Cannot use the small group of \Gamma to analize the symmetry
         ! of the mode if there is an electric field.
@@ -543,7 +554,9 @@ PROGRAM matdyn
            end do ! na
         endif
         !
+
         IF (ionode) CALL writemodes(nax,nat,q(1,n),w2(1,n),z,iout)
+
         !
      END DO  !nq
      DEALLOCATE (tmp_w2, abs_similarity, mask)
@@ -552,6 +565,7 @@ PROGRAM matdyn
      !
      IF(iout .NE. stdout.and.ionode) CLOSE(unit=iout)
      IF(iout_dyn .NE. 0) CLOSE(unit=iout_dyn)
+     IF(iout_eig .NE. 0) CLOSE(unit=iout_eig)
      !
      ALLOCATE (freq(3*nat, nq))
      DO n=1,nq
