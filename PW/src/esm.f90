@@ -1338,7 +1338,7 @@ SUBROUTINE esm_printpot ()
            enddo
            enddo
            work4(1:5,izz) = (/dble(k3)/dble(dfftp%nr3)*L*bohr_radius_angs, &
-                              z1*bohr_radius_angs, z3*rytoev,z4*rytoev, &
+                              z1/bohr_radius_angs, z3*rytoev,z4*rytoev, &
                               z2*rytoev/)
         enddo
         !
