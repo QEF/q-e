@@ -227,8 +227,8 @@ SUBROUTINE convert_fhi (upf)
   !
   upf%nv       = "2.0.1"
   upf%generated= "Generated using Fritz-Haber code"
-  upf%author   = "Author: unknown"
-  upf%date     = "Generation date: as well"
+  upf%author   = "unknown"
+  upf%date     = "unknown"
   IF (trim(info) /= ' ') THEN
      upf%comment = trim(info)
   ELSE
