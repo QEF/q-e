@@ -422,6 +422,8 @@ SUBROUTINE convert_cpmd(upf)
      upf%dft='SLA-PW-PBX-PBC'
   ELSEIF (ixc==1134) THEN
      upf%dft='revPBE'
+  ELSEIF (ixc==1197) THEN
+     upf%dft='PBESOL'
   ELSEIF (ixc==1312) THEN
      upf%dft='BLYP'
   ELSEIF (ixc==362) THEN
