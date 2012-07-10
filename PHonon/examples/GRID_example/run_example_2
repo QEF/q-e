@@ -61,6 +61,11 @@ done
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test ! -r $PSEUDO_DIR/$FILE ; then
         $ECHO
         $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
         $ECHO "Aborting"
