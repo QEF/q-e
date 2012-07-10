@@ -226,7 +226,7 @@ SUBROUTINE convert_fhi (upf)
   INTEGER :: l, i, ir, iv
   !
   upf%nv       = "2.0.1"
-  upf%generated= "Generated using Fritz-Haber code"
+  upf%generated= "Generated using FHI98PP, converted with fhi2upf.x v.5.0.1"
   upf%author   = "unknown"
   upf%date     = "unknown"
   IF (trim(info) /= ' ') THEN
