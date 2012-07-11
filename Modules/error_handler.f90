@@ -37,15 +37,17 @@ SUBROUTINE errore( calling_routine, message, ierr )
     ! the error flag
   INTEGER                      :: mpime, mpierr
     ! the task id  
+  CHARACTER(LEN=6) :: cerr
   !
   !
   IF ( ierr <= 0 ) RETURN
   !
   ! ... the error message is written un the "*" unit
   !
+  WRITE( cerr, FMT = '(I6)' ) ierr
   WRITE( UNIT = *, FMT = '(/,1X,78("%"))' )
-  WRITE( UNIT = 0, FMT = '(5X,"(",I5,") Error in routine ",A,":")' ) &
-        ierr, TRIM(calling_routine)
+  WRITE( UNIT = *, FMT = '(5X,"Error in routine ",A," (",A,"):")' ) &
+        TRIM(calling_routine), TRIM(ADJUSTL(cerr))
   WRITE( UNIT = *, FMT = '(5X,A)' ) message
   WRITE( UNIT = *, FMT = '(1X,78("%"),/)' )
   !
@@ -55,8 +57,8 @@ SUBROUTINE errore( calling_routine, message, ierr )
   ! ... which is automatically connected to stderr
   !
   WRITE( UNIT = 0, FMT = '(/,1X,78("%"))')
-  WRITE( UNIT = 0, FMT = '(5X,"(",I5,") Error in routine ",A,":")' ) &
-        ierr, TRIM(calling_routine)
+  WRITE( UNIT = 0, FMT = '(5X,"Error in routine ",A," (",A,"):")' ) &
+        TRIM(calling_routine), TRIM(ADJUSTL(cerr))
   WRITE( UNIT = 0, FMT = '(5X,A)' ) message
   WRITE( UNIT = 0, FMT = '(1X,78("%"),/)' )
   !
