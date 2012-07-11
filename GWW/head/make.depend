@@ -70,7 +70,6 @@ phq_init.o : ../../PW/src/noncol.o
 phq_init.o : ../../PW/src/pwcom.o
 phq_init.o : ../../PW/src/realus.o
 phq_init.o : ../pw4gww/wannier_gw.o
-phq_readin.o : ../../Modules/constants.o
 phq_readin.o : ../../Modules/control_flags.o
 phq_readin.o : ../../Modules/input_parameters.o
 phq_readin.o : ../../Modules/io_files.o

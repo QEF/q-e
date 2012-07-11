@@ -20,7 +20,6 @@ SUBROUTINE phq_readin()
   !
   USE kinds,         ONLY : DP
   USE parameters,    ONLY : nsx
-  USE constants,     ONLY : amconv
   USE ions_base,     ONLY : nat, ntyp => nsp
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_bcast
