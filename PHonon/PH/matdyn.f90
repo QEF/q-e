@@ -425,7 +425,7 @@ PROGRAM matdyn
      END IF
      !
      IF (flvec.EQ.' ') THEN
-        iout=6
+        iout=0
      ELSE
         iout=4
         IF (ionode) OPEN (unit=iout,file=flvec,status='unknown',form='formatted')
@@ -510,7 +510,7 @@ PROGRAM matdyn
         
 
         CALL dyndiag(nat,ntyp,amass,ityp,dyn,w2(1,n),z)
-        IF (ionode) &
+        IF (ionode.and.iout_eig.ne.0) &
          & CALL write_eigenvectors(nat,ntyp,amass,ityp,q(1,n),w2(1,n),z,iout_eig)
         !
         ! Cannot use the small group of \Gamma to analize the symmetry
@@ -555,7 +555,7 @@ PROGRAM matdyn
         endif
         !
 
-        IF (ionode) CALL writemodes(nax,nat,q(1,n),w2(1,n),z,iout)
+        IF (ionode.and.iout.ne.0) CALL writemodes(nax,nat,q(1,n),w2(1,n),z,iout)
 
         !
      END DO  !nq
@@ -563,7 +563,7 @@ PROGRAM matdyn
      IF (eigen_similarity) DEALLOCATE(tmp_z)
      if(la2F.and.ionode) close(300)
      !
-     IF(iout .NE. stdout.and.ionode) CLOSE(unit=iout)
+     IF(iout .NE. 0.and.ionode) CLOSE(unit=iout)
      IF(iout_dyn .NE. 0) CLOSE(unit=iout_dyn)
      IF(iout_eig .NE. 0) CLOSE(unit=iout_eig)
      !
