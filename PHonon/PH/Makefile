@@ -204,8 +204,8 @@ ph.x : phonon.o libph.a $(PWOBJS) $(LIBOBJS)
 		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/ph.x . )
 
-dynmat.x : dynmat.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ dynmat.o rigid.o libph.a \
+dynmat.x : dynmat.o rigid.o write_eigenvectors.o libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ dynmat.o write_eigenvectors.o rigid.o libph.a \
 		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 

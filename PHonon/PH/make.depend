@@ -1378,6 +1378,8 @@ transform_int_so.o : ../../PW/src/noncol.o
 transform_int_so.o : ../../PW/src/pwcom.o
 transform_int_so.o : phcom.o
 trntnsc.o : ../../Modules/kind.o
+write_eigenvectors.o : ../../Modules/constants.o
+write_eigenvectors.o : ../../Modules/kind.o
 write_epsilon_and_zeu.o : ../../Modules/kind.o
 write_epsilon_and_zeu.o : phcom.o
 write_matrix.o : ../../Modules/io_global.o
