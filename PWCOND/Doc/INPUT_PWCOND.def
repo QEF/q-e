@@ -110,6 +110,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pwcon
 	    }
 	}
 
+        var loop_ek  -type LOGICAL {
+            info {
+                if .t. the energy loop is outside the k-point loop 
+            }
+        }
+
 	var lread_cond  -type LOGICAL {
 	    info {
 		if .t. read the data necessary for PWCOND from save_file
@@ -147,6 +153,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pwcon
 		spin index for which the calculations are performed
 	    }
 	}
+
+        var tk_plot  -type INTEGER {
+            info {
+               if > 0, plot T(kx,ky) at each energy in the region [tk_plot x full BZ] 
+            }
+        }
 
 	var llocal  -type  LOGICAL {
 	    info {
