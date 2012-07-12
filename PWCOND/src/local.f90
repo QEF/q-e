@@ -8,7 +8,7 @@
 ! Generalized to spinor wavefunctions and spin-orbit Oct. 2004 (ADC).
 !
 !
-SUBROUTINE local
+SUBROUTINE local (ien)
 !
 ! This subroutine computes 2D eigenfunctions and eigenvalues for
 ! the local potential in each slab and performs 2D reduction of
@@ -26,7 +26,7 @@ SUBROUTINE local
 
   IMPLICIT NONE
 
-  INTEGER :: ig, il, k, kin, kfin
+  INTEGER :: ien, ig, il, k, kin, kfin
   REAL(DP) :: edummy
   COMPLEX(DP), ALLOCATABLE :: psibase(:,:)
   LOGICAL :: exst
@@ -70,14 +70,14 @@ SUBROUTINE local
 
   if(ewind.le.100.d0) then
     n2d = 0
-    edummy = earr(1)/rytoev + efl
+    edummy = earr(ien)/rytoev + efl
     call local_1(edummy,nrzl,vppotl,n2d,psibase)
     if(ikind.gt.0) then
-     edummy = earr(1)/rytoev + efs
+     edummy = earr(ien)/rytoev + efs
      call local_1(edummy,nrzs,vppots,n2d,psibase)
     endif
     if(ikind.eq.2) then
-     edummy = earr(1)/rytoev + efr
+     edummy = earr(ien)/rytoev + efr
      call local_1(edummy,nrzr,vppotr,n2d,psibase)
     endif
   else

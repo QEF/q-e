@@ -44,7 +44,7 @@ SUBROUTINE do_cond(done)
   LOGICAL, INTENT(OUT) :: done
   !
   REAL(DP) :: wtot, tk
-  INTEGER :: ik, ipol, ien, ios
+  INTEGER :: ik, ien, loop1, loop2, loop1_in, loop1_fin, loop2_in, loop2_fin, ipol, ios
   LOGICAL :: lso_l, lso_s, lso_r, skip_equivalence = .FALSE.
   REAL(DP) :: ecutwfc_l, ecutwfc_s, ecutwfc_r
   REAL(DP) :: ecutrho_l, ecutrho_s, ecutrho_r
@@ -56,12 +56,12 @@ SUBROUTINE do_cond(done)
   NAMELIST /inputcond/ outdir, prefixt, prefixl, prefixs, prefixr,     &
                        band_file, tran_file, save_file, fil_loc,       &
                        lwrite_loc, lread_loc, lwrite_cond, lread_cond, &
-                       tran_prefix, recover, max_seconds,              &
+                       tran_prefix, recover, max_seconds, loop_ek,     &
                        orbj_in,orbj_fin,ikind,iofspin,llocal,          &
                        bdl, bds, bdr, nz1, energy0, denergy, ecut2d,   &
                        start_e, last_e, start_k, last_k,               &
                        ewind, epsproj, delgep, cutplot,                &
-                       lorb, lorb3d, lcharge
+                       tk_plot, lorb, lorb3d, lcharge
   !
   ! initialise environment
   !
@@ -83,6 +83,7 @@ SUBROUTINE do_cond(done)
   tran_file = ' '
   save_file = ' '
   fil_loc = ' '
+  loop_ek = .FALSE.
   lwrite_loc = .FALSE.
   lread_loc = .FALSE.
   lwrite_cond = .FALSE.
@@ -111,6 +112,7 @@ SUBROUTINE do_cond(done)
   epsproj = 1.d-3
   delgep = 5.d-10
   cutplot = 2.d0
+  tk_plot = 0
   lorb=.FALSE.
   lorb3d=.FALSE.
   lcharge=.FALSE.
@@ -206,6 +208,7 @@ SUBROUTINE do_cond(done)
   CALL mp_bcast( tran_file, ionode_id )
   CALL mp_bcast( fil_loc, ionode_id )
   CALL mp_bcast( save_file, ionode_id )
+  CALL mp_bcast( loop_ek, ionode_id )
   CALL mp_bcast( lwrite_loc, ionode_id )
   CALL mp_bcast( lread_loc, ionode_id )
   CALL mp_bcast( lwrite_cond, ionode_id )
@@ -220,6 +223,7 @@ SUBROUTINE do_cond(done)
   CALL mp_bcast( orbj_in, ionode_id )
   CALL mp_bcast( orbj_fin, ionode_id )
   CALL mp_bcast( llocal, ionode_id )
+  CALL mp_bcast( tk_plot, ionode_id )
   CALL mp_bcast( lorb, ionode_id )
   CALL mp_bcast( lorb3d, ionode_id )
   CALL mp_bcast( lcharge, ionode_id )
@@ -314,15 +318,7 @@ ELSE
     ecutrho_l=ecutrho
     CALL init_cond(1,'l')
   ENDIF
-  IF (prefixs.ne.' ') then
-    call clean_pw(.true.)
-    prefix = prefixs
-    call read_file
-    lso_s=lspinorb
-    ecutwfc_s=ecutwfc
-    ecutrho_s=ecutrho
-    CALL init_cond(1,'s')
-  ENDIF
+
   IF (prefixr.ne.' ') then
     CALL clean_pw(.true.)
     prefix = prefixr
@@ -331,7 +327,15 @@ ELSE
     ecutwfc_r=ecutwfc
     ecutrho_r=ecutrho
     CALL init_cond(1,'r')
-    CALL clean_pw(.true.)
+  ENDIF
+  IF (prefixs.ne.' ') then
+    call clean_pw(.true.)
+    prefix = prefixs
+    call read_file
+    lso_s=lspinorb
+    ecutwfc_s=ecutwfc
+    ecutrho_s=ecutrho
+    CALL init_cond(1,'s')
   ENDIF
 
   IF (two_fermi_energies.or.i_cons /= 0) &
@@ -383,7 +387,13 @@ IF (nkpts==0) THEN
    CALL mp_bcast( nkpts, ionode_id )
    CALL mp_bcast( xyk, ionode_id )
    CALL mp_bcast( wkpt, ionode_id )
+ELSE
+   tk_plot = 0
 ENDIF
+
+if (tk_plot.lt.0) CALL errore('do_cond','tk_plot should be > 0',1)
+If (tk_plot.gt.0) loop_ek = .TRUE.
+IF (ikind.ne.0.and.tk_plot.gt.0) ALLOCATE( tran_k(npk) )
 
 IF (start_k .GT. 0) THEN
    IF (start_k .GT. last_k .OR. start_k .GT. nkpts) &
@@ -431,21 +441,43 @@ CALL mp_bcast( last_k, ionode_id )
   IF (llocal) &
   CALL local_set(nocrosl,noinsl,norbl,noinss,norbs,nocrosr,noinsr,norbr)
 
-  DO ik=start_k, last_k
+!-- 
+! Set up 2 loops over energies and over k-points 
+  if (loop_ek) then
+    loop1_in  = start_e
+    loop1_fin = last_e
+    loop2_in  = start_k
+    loop2_fin = last_k
+  else
+    loop1_in  = start_k
+    loop1_fin = last_k
+    loop2_in  = start_e
+    loop2_fin = last_e
+  endif
+!--
 
-    WRITE( stdout, '(/,8x,"k(",i5,") = (",2f12.7,"), wk =",f12.7,/)') ik, &
-         (xyk (ipol, ik) , ipol = 1, 2) , wkpt (ik)
+  DO loop1 = loop1_in, loop1_fin
 
-    IF (start_e.GT.1 .OR. last_e.LT.nenergy)  &
-      WRITE(stdout,'(10x,"from e(",i5,") =",f12.7," to e(",i5,") =",f12.7,/)') &
-      start_e, earr(start_e), last_e, earr(last_e)
+    if (.not.loop_ek) then
+      CALL init_gper(loop1)
+      CALL local(1)
+    endif
 
+    DO loop2 = loop2_in, loop2_fin
 
-    CALL init_gper(ik)
+      if (loop_ek) then
+        ien = loop1
+        ik  = loop2
+      else
+        ik  = loop1
+        ien = loop2
+      endif
 
-    CALL local
-
-    DO ien=start_e, last_e
+!      write(6,*) loop1_in, loop1_fin, loop2_in, loop2_fin, loop1, loop2 
+      WRITE(stdout,'("---  E-Ef = ",f12.7, "  k = ",2f12.7)') &
+            earr(ien), (xyk (ipol, ik) , ipol = 1, 2)
+      WRITE(stdout,'("---  ie = ",i10, "  ik = ",i10)') &
+            ien, ik
 
       !!! RECOVER
       ! if recover mechanism is enabled
@@ -473,6 +505,11 @@ CALL mp_bcast( last_k, ionode_id )
          ENDIF
       ENDIF
       !!!
+
+      if (loop_ek) then
+        CALL init_gper(ik)
+        CALL local(ien)
+      endif
 
       eryd = earr(ien)/rytoev + efl
       CALL form_zk(n2d, nrzpl, zkrl, zkl, eryd, tpiba)
@@ -522,19 +559,33 @@ CALL mp_bcast( last_k, ionode_id )
          ENDIF
          !!!
 
+         if (tk_plot.gt.0) tran_k(ik) = tk
+         tran_tot(ien) = tran_tot(ien) + wkpt(ik)*tk
+
       ENDIF
 
+      if (loop_ek) CALL free_mem
 
-   ENDDO
-   CALL free_mem
+    ENDDO
+
+    if (ikind.ne.0.and.tk_plot.gt.0.and.ionode) &
+             CALL summary_tran_k(ien,nk1ts,nk2ts,k1ts,k2ts)
+
   ENDDO
 
-  IF(ionode .AND. ikind.GT.0  .AND. tran_file.NE.' ') CALL summary_tran()
+  IF(ikind.ne.0.and.ionode) CALL summary_tran_tot()
 
   CALL stop_clock('PWCOND')
   CALL print_clock_pwcond()
 
   done = .TRUE.
+
+  DEALLOCATE( xyk )
+  DEALLOCATE( wkpt )
+  DEALLOCATE( earr )
+  DEALLOCATE( tran_tot )
+  IF (ikind.ne.0.and.tk_plot.gt.0) DEALLOCATE( tran_k )
+
   RETURN
 
 END SUBROUTINE do_cond

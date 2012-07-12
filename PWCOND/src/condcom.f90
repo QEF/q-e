@@ -139,6 +139,7 @@ MODULE control_cond
      ikind,       &    ! the kind of calculation
      nenergy,     &    ! number of energies computed
      iofspin,     &    ! spin index for calculation
+     tk_plot,     &    ! if <>0 plot T(kx,ky) at each energy in the region (tk_plot x BZ) 
      start_e,last_e,  &! first and last energy to be computed
      start_k,last_k    ! first and last k-point to be computed
   REAL(DP)  :: &
@@ -156,8 +157,10 @@ MODULE control_cond
   REAL(DP), ALLOCATABLE  :: &
      earr(:),       &  ! energy array
      tran_tot(:),   &  ! transmission array
+     tran_k(:),     &  ! k-resolved T(kx,ky)   
      rho_scatt(:,:)    ! charge and spin density
   LOGICAL        :: &
+     loop_ek,       &  ! if .t. the energy loop is outside the k-point loop 
      lorb,          &  ! if .t. calculate the scattering (or Bloch) states
      lorb3d,        &  ! if .t. 3D output of scatt. states (in XCRYSDENS format)
      lcharge,       &  ! if .t. computes the total charge and spin density
