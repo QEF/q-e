@@ -125,6 +125,7 @@ CONTAINS
       !
       USE constraints_module, ONLY : nconstr, check_constraint
       USE constraints_module, ONLY : remove_constr_force, remove_constr_vec
+      USE input_parameters,   ONLY : tstress
       !
       IMPLICIT NONE
       !
@@ -140,6 +141,8 @@ CONTAINS
 #endif
       LOGICAL  :: file_exists, leof
       REAL(DP), EXTERNAL :: dnrm2
+      REAL(DP) :: kstress(3,3)
+      INTEGER :: i, j
       !
       ! ... the number of degrees of freedom
       !
@@ -320,16 +323,23 @@ CONTAINS
       !
       ml   = 0.D0
       ekin = 0.D0
+      kstress = 0.d0
       !
       DO na = 1, nat
          !
          ml(:) = ml(:) + vel(:,na) * mass(na)
          ekin  = ekin + 0.5D0 * mass(na) * &
                         ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
+         do i = 1, 3
+             do j = 1, 3
+                 kstress(i,j) = kstress(i,j) + mass(na)*vel(i,na)*vel(j,na)
+             enddo
+         enddo
          !
       ENDDO
       !
       ekin = ekin*alat**2
+      kstress = kstress * alat**2 / omega
       !
       ! ... find the new temperature and update the average
       !
@@ -384,6 +394,10 @@ CONTAINS
                      & 5X,"temperature           = ",F14.8," K ",/,  &
                      & 5X,"Ekin + Etot (const)   = ",F14.8," Ry")' ) &
           ekin, temp_new, ( ekin  + etot )
+      if (tstress) &
+          write(stdout,'(5X,"Ions kinetic stress = ",F10.2," (kbar)",/3(27X,3F10.2/)/)') &
+              ((kstress(1,1)+kstress(2,2)+kstress(3,3))/3.d0*ry_kbar), &
+              (kstress(i,1)*ry_kbar,kstress(i,2)*ry_kbar,kstress(i,3)*ry_kbar, i=1,3)
       !
       IF ( .not.( lconstrain .or. lfixatom ) ) THEN
          !
