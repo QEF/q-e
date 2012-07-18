@@ -50,6 +50,8 @@ SUBROUTINE q_points_wannier ( )
   CALL dfile_get_qlist(x_q, nqs, dvscf_star%ext, TRIM(dvscf_star%dir)//prefix, wan_index_dyn )
 
   call mp_bcast(x_q,ionode_id)
+  call mp_bcast(wan_index_dyn, ionode_id)
+  
   !
   ! Check if the Gamma point is one of the points and put
   ! 
