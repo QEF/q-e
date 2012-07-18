@@ -75,8 +75,14 @@ PROGRAM matdyn
   !               the dos is in states/cm(-1) plotted vs omega in cm(-1)
   !               and is normalised to 3*nat, i.e. the number of phonons
   !     flfrq     output file for frequencies (default: 'matdyn.freq')
-  !     flvec     output file for normal modes (default: 'matdyn.modes')
+  !     flvec     output file for normalized phonon displacements 
+  !               (default: 'matdyn.modes'). The normalized phonon displacements
+  !               are the eigenvectors divided by the mass and then normalized.
+  !               As such they are not orthogonal.
+  !              
   !     fleig     output file for phonon eigenvectors (default: 'matdyn.eig')
+  !               The phonon eigenvectors are the eigenvectors of the dynamical
+  !               matrix.
   !     fldyn     output file for dynamical matrix (default: ' ' i.e. does not write)
   !     at        supercell lattice vectors - must form a superlattice of the
   !               original lattice (default: use original cell)
