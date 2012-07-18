@@ -394,8 +394,8 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
 !    We read here the wfc at the Gamma point, that is
 !    that saved by Wannier.
 
-     CALL davcio (evc, lrwfc, iunwfcwann, ik, - 1)
-     CALL davcio (evq, lrwfc, iunwfcwann, ikqg, - 1)
+!     CALL davcio (evc, lrwfc, iunwfcwann, ik, - 1)
+!     CALL davcio (evq, lrwfc, iunwfcwann, ikqg, - 1)
 
 
 
@@ -410,8 +410,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
      !
 
 
-
-    call calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq,xk_gamma, evq)
+     call calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq,xk_gamma, evq, .true.)
      
 
      DO ipert = 1, npe
@@ -478,6 +477,14 @@ subroutine get_equivalent_kpq(xk,xq,kpq,g_kpq, igqg)
     !                                                                  !
     !  Set up the k+q shell for electron-phonon coupling               ! 
     !                                                                  !
+    !  This routine finds the G vectors such that                      !
+    !  k+q+G=k'  with k and k' belonging to nksq                       !
+    !  for each k, the G vector is stored in g_kpq                     !
+    !  k'=kpq(ik)                                                      !
+    !  and finally igqg(ik) is the index that allows to find           !
+    !  the g vector g_kpq in the list of all the G vectors             !
+    !                                                                  !
+    !       Matteo Calandra                                            !
     !===================================================================  
   USE kinds, ONLY : DP
   USE io_global, ONLY : stdout
@@ -581,7 +588,7 @@ subroutine get_equivalent_kpq(xk,xq,kpq,g_kpq, igqg)
   
 end subroutine get_equivalent_kpq
 
-subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_gamma, evq)
+subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_gamma, evq, lread)
   USE kinds, ONLY : DP
   USE fft_base, ONLY : dffts
   USE fft_interfaces,        ONLY : fwfft, invfft
@@ -590,11 +597,14 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   USE gvecs, ONLY : nls
   USE cell_base, ONLY : bg, tpiba2
   USE qpoint, ONLY : nksq, npwq
+   USE wavefunctions_module, ONLY : evc
 !  USE eqv,      ONLY : evq
   USE noncollin_module,     ONLY : npol
+  USE el_phon, ONLY:iunwfcwann, lrwfcr
 
   IMPLICIT NONE
 
+  LOGICAL :: lread
   INTEGER :: ik, ikqg,   npwq_refolded
   INTEGER :: igqg(nksq)
   INTEGER :: g_kpq(3,nksq)
@@ -624,7 +634,17 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   igkq_=0
 
 
+  if(lread) then
+     call gk_sort (xk_gamma(1,ik), ngm, g_scra, ecutwfc / tpiba2, npw_, igk_, g2kin)
+     call read_wfc_rspace_and_fwfft( evc , ik , lrwfcr , iunwfcwann , npw_ , igk_ )
+  endif
+
+
   call gk_sort (xk_gamma(1,ikqg), ngm, g_scra, ecutwfc / tpiba2, npw_, igk_, g2kin)
+
+  if(lread) then
+     call read_wfc_rspace_and_fwfft( evq , ikqg , lrwfcr , iunwfcwann , npw_ , igk_ )
+  endif
 
   call gk_sort (xkqg, ngm, g_scra, ecutwfc / tpiba2, npwq_refolded, igkq_, g2kin)
 
