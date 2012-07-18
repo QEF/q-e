@@ -82,9 +82,9 @@ SUBROUTINE q_points_wannier ( )
   ! ... write the information on the grid of q-points to file
   !
   IF (ionode) THEN
-     OPEN (unit=iudyn, file=TRIM(fildyn)//'0', status='unknown', iostat=ierr)
+     OPEN (unit=iudyn, file=TRIM(fildyn)//'0_qstar', status='unknown', iostat=ierr)
      IF ( ierr > 0 ) CALL errore ('phonon','cannot open file ' &
-          & // TRIM(fildyn) // '0', ierr)
+          & // TRIM(fildyn) // '0_qstar', ierr)
      WRITE (iudyn, '(3i4)' ) nq1, nq2, nq3
      WRITE (iudyn, '( i4)' ) nqs
      DO  iq = 1, nqs
