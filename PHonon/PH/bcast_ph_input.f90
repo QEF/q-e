@@ -34,7 +34,7 @@ subroutine bcast_ph_input ( )
   USE ions_base,     ONLY : amass
   USE io_global,   ONLY : ionode_id
   USE run_info,   ONLY : title
-  USE el_phon,    ONLY : elph_nbnd_min,elph_nbnd_max,el_ph_ngauss, el_ph_nsigma, el_ph_sigma
+  USE el_phon,    ONLY : elph_nbnd_min,elph_nbnd_max,el_ph_ngauss, el_ph_nsigma, el_ph_sigma, elph_mat
   USE dfile_star, ONLY : drho_star, dvscf_star
 
   implicit none
@@ -58,6 +58,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (ldiag, ionode_id )
   call mp_bcast (lqdir, ionode_id )
   call mp_bcast (search_sym, ionode_id)
+  call mp_bcast (elph_mat , ionode_id )
   !
   ! integers
   !
