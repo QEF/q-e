@@ -7,6 +7,7 @@ New in 5.0.1 version
 
 Incompatible changes in 5.0.1 version:
    * Variable "amconv" removed from constants.f90, use "amu_ry" instead
+   * ld1.x no longer generates pseudopotentials into UPF v.1
 
 Fixed in 5.0.1 version
 

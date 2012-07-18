@@ -96,7 +96,7 @@ PROGRAM pwscf
   !
   main_loop: DO
      !
-     ! ... electronic self-consistentcy
+     ! ... electronic self-consistency
      !
      CALL electrons()
      !

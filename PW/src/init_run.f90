@@ -22,6 +22,8 @@ SUBROUTINE init_run()
   USE paw_init,           ONLY : paw_post_init
 #endif
   USE bp,                 ONLY : allocate_bp_efield, bp_global_map
+  USE fft_base,           ONLY : dffts
+  USE funct,              ONLY : dft_is_hybrid
 #ifdef __ENVIRON
   USE fft_base,           ONLY : dfftp
   USE environ_base,       ONLY : do_environ
@@ -43,6 +45,9 @@ SUBROUTINE init_run()
   ! ... allocate memory for G- and R-space fft arrays
   !
   CALL allocate_fft()
+  !
+  IF ( dft_is_hybrid() .AND. dffts%have_task_groups ) &
+     CALL errore ('init_run', '-ntg option incompatible with EXX',1)
   !
   ! ... generate reciprocal-lattice vectors and fft indices
   !
