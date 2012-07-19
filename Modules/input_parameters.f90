@@ -248,6 +248,15 @@ MODULE input_parameters
 
         CHARACTER(len=256) :: vdw_table_name = ' '
 
+        CHARACTER(len=80) :: memory = 'default' 
+          ! controls memory usage 
+        CHARACTER(len=80) :: memory_allowed(3)
+        DATA memory_allowed / 'small', 'default', 'large' /
+          ! if memory = 'small' then QE trys to use (when implemented) algorithms using less memory,
+          !                     even if they are slower than the default
+          ! if memory = 'large' then QE trys to use (when implemented) algorithms using more memory
+          !                     to enhance performance.
+
 #if defined (__MS2)
         LOGICAL :: MS2_enabled = .false.       ! Enable the shared memory exchange in MS2
         CHARACTER(len=256) :: MS2_handler = ' '! Name for the shared memory handler in MS2
@@ -259,7 +268,7 @@ MODULE input_parameters
           forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
           gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
-          vdw_table_name
+          vdw_table_name, memory
 
 
 #if defined ( __MS2)

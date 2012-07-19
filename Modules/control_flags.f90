@@ -40,7 +40,7 @@ MODULE control_flags
             t_diis_rot, tnosee, tnosep, tnoseh, tcp, tcap, tdamp, tdampions, &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
             tsteepdesc, tatomicwfc, tscreen, gamma_only, force_pairing,      &
-            lecrpa, tddfpt
+            lecrpa, tddfpt, smallmem
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
@@ -85,6 +85,7 @@ MODULE control_flags
   LOGICAL :: force_pairing = .FALSE. ! Force pairing
   LOGICAL :: lecrpa        = .FALSE. ! RPA correlation energy request
   LOGICAL :: tddfpt        = .FALSE. ! use tddfpt specific tweaks to ph.x routines
+  LOGICAL :: smallmem      = .FALSE. ! the memory per task is small
   !
   TYPE (convergence_criteria) :: tconvthrs
                               !  thresholds used to check GS convergence

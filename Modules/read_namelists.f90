@@ -119,6 +119,7 @@ MODULE read_namelists_module
        lecrpa   = .FALSE.   
        !
        saverho = .TRUE.
+       memory = 'default'
        !
        RETURN
        !
@@ -773,6 +774,7 @@ MODULE read_namelists_module
        CALL mp_bcast( saverho,       ionode_id )
        CALL mp_bcast( lecrpa,        ionode_id )
        CALL mp_bcast( vdw_table_name,ionode_id )
+       CALL mp_bcast( memory,        ionode_id )
        !
        RETURN
        !
@@ -1400,6 +1402,14 @@ MODULE read_namelists_module
        IF( prog /= 'CP' ) &
          CALL errore( sub_name, ' LOWMEM not available in '//prog//' yet ', 1 )
 #endif
+
+       allowed = .FALSE.
+       DO i = 1, SIZE( memory_allowed )
+          IF( TRIM(memory) == memory_allowed(i) ) allowed = .TRUE.
+       END DO
+       IF( .NOT. allowed ) &
+          CALL errore( sub_name, ' memory '''// &
+                       & TRIM(memory)//''' not allowed ',1)
 
        RETURN
        !
