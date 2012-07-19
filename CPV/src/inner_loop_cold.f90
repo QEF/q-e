@@ -96,7 +96,7 @@
 
       INTEGER :: np(2), coor_ip(2), ipr, ipc, nr, nc, ir, ic, ii, jj, root, j
       TYPE(la_descriptor) :: desc_ip
-      INTEGER :: np_rot, me_rot, comm_rot, nrl
+      INTEGER :: np_rot, me_rot, comm_rot, nrlx
 
       CALL start_clock( 'inner_loop')
 
@@ -117,7 +117,8 @@
  
         ! rotates the wavefunctions c0 and the overlaps bec
         ! (the occupation matrix f_ij becomes diagonal f_i)      
-        CALL rotate( z0t, c0, bec, c0diag, becdiag, .false. )
+        nrlx  = MAXVAL(descla(:)%nrlx)
+        CALL rotate( nrlx, z0t, c0, bec, c0diag, becdiag )
   
         ! calculates the electronic charge density
         CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, &
@@ -606,9 +607,7 @@
    ! rotates the wavefunctions c0 and the overlaps bec
    ! (the occupation matrix f_ij becomes diagonal f_i)      
 
-
-  
-   CALL rotate ( z0t, c0, bec, c0diag, becdiag, .false. ) 
+   CALL rotate ( nrlx, z0t, c0, bec, c0diag, becdiag ) 
 
    CALL stop_clock( 'inner_diag')
      
