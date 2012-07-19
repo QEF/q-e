@@ -53,7 +53,7 @@ SUBROUTINE phq_readin()
   USE io_global,     ONLY : ionode, stdout
   USE mp_global,     ONLY : nproc, nproc_pool, nproc_pool_file, &
                             nimage, my_image_id,    &
-                            nproc_image_file, nproc_image
+                            nproc_image_file, nproc_image, npool
   USE paw_variables, ONLY : okpaw
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
   USE freq_ph,       ONLY : fpol, fiu, nfs, nfsmax
@@ -99,9 +99,6 @@ SUBROUTINE phq_readin()
                        drho_star, dvscf_star, &
                        elph_nbnd_min, elph_nbnd_max, el_ph_ngauss,el_ph_nsigma, el_ph_sigma,  &
                        electron_phonon
-!
-!  elph, elph_mat
-!
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -482,8 +479,8 @@ SUBROUTINE phq_readin()
   if(elph_mat.and.fildvscf.eq.' ') call errore('phq_readin',&
        'el-ph with wannier requires fildvscf',1)
 
-  IF(elph_mat.and.nproc.ne.1) call errore('phq_readin',&
-       'el-ph with wannier only on single processor',1)
+  IF(elph_mat.and.npool.ne.1) call errore('phq_readin',&
+       'el-ph with wannier : pools not implemented',1)
   
   IF (elph.OR.fildvscf /= ' ') lqdir=.TRUE.
 

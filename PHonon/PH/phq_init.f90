@@ -60,7 +60,7 @@ SUBROUTINE phq_init()
   USE mp,                  ONLY : mp_sum
   USE acfdtest,            ONLY : acfdt_is_active, acfdt_num_der
   USE el_phon,             ONLY : elph_mat, iunwfcwann, npwq_refolded, &
-                           kpq,g_kpq,igqg,xk_gamma
+                           kpq,g_kpq,igqg,xk_gamma, lrwfcr
   !
   IMPLICIT NONE
   !
@@ -190,7 +190,8 @@ SUBROUTINE phq_init()
      ! ... read the wavefunctions at k
      !
     if(elph_mat) then
-       CALL davcio (evc, lrwfc, iunwfcwann, ik, - 1)
+       call read_wfc_rspace_and_fwfft( evc , ik , lrwfcr , iunwfcwann , npw , igk )
+!       CALL davcio (evc, lrwfc, iunwfcwann, ik, - 1)
     else
        CALL davcio( evc, lrwfc, iuwfc, ikk, -1 )
     endif
@@ -198,7 +199,9 @@ SUBROUTINE phq_init()
      ! ... e) we compute the becp terms which are used in the rest of
      ! ...    the code
      !
+
      CALL calbec (npw, vkb, evc, becp1(ik) )
+
      !
      ! ... e') we compute the derivative of the becp term with respect to an
      !         atomic displacement
@@ -235,10 +238,14 @@ SUBROUTINE phq_init()
      IF ( .NOT. lgamma .and..not. elph_mat )then 
         CALL davcio( evq, lrwfc, iuwfc, ikq, -1 )
      ELSEIF(.NOT. lgamma .and. elph_mat) then
+        !
+        ! I read the wavefunction in real space and fwfft it
+        !
         ikqg = kpq(ik)
-        CALL davcio (evq, lrwfc, iunwfcwann, ikqg, - 1)
+        call read_wfc_rspace_and_fwfft( evq , ikqg , lrwfcr , iunwfcwann , npwq , igkq )
+!        CALL davcio (evq, lrwfc, iunwfcwann, ikqg, - 1)
         call calculate_and_apply_phase(ik, ikqg, igqg, &
-           npwq_refolded, g_kpq,xk_gamma, evq)
+           npwq_refolded, g_kpq,xk_gamma, evq, .false.)
      ENDIF
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!

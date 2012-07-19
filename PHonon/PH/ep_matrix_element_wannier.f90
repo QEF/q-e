@@ -147,7 +147,7 @@ SUBROUTINE elphsum_wannier(q_index)
   USE wvfct, ONLY : nbnd, et
   USE el_phon
   USE mp_global, ONLY : me_pool, root_pool, inter_pool_comm, npool, intra_pool_comm
-  USE io_global, ONLY : stdout
+  USE io_global, ONLY : stdout,ionode
   USE io_files,  ONLY : prefix
   USE qpoint, ONLY : xq, nksq
   USE dynmat, ONLY : dyn, w2
@@ -187,7 +187,7 @@ SUBROUTINE elphsum_wannier(q_index)
 
   
   ! parallel case: only first node writes
-  IF ( me_pool /= root_pool ) THEN
+  IF ( .not.ionode ) THEN
      iuelphmat = 0
   ELSE
      !
@@ -231,28 +231,30 @@ SUBROUTINE elphsum_wannier(q_index)
                 ibnd=elph_nbnd_min,elph_nbnd_max)
         enddo
      enddo
-     
+  
+
+
      !
      ! Then I dump symmetry operations
      !
      minus_qloc = .true.
      sym = .false.
      sym(1:nsym) = .true.
-
+     
      call smallg_q (xq, 0, at, bg, nsym, s, ftau, sym, minus_qloc)
      nsymq = copy_sym(nsym, sym)
      ! recompute the inverses as the order of sym.ops. has changed
      CALL inverse_s ( )
-
+     
      ! part 2: this redoes most of the above, plus it computes irgq, gi, gimq
      CALL smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
           minus_qloc, gi, gimq)
-
+     
      sym(1:nsym)=.true.
      call sgam_ph (at, bg, nsym, s, irt, tau, rtauloc, nat, sym)
      call star_q(xq, at, bg, nsym , s , invs , nq, sxq, &
           isq, imq, .FALSE. )
-
+     
      
      do j=1,3
         write(iuelphmat) (at(i,j),i=1,3)
@@ -282,9 +284,9 @@ SUBROUTINE elphsum_wannier(q_index)
      enddo
      
      close(iuelphmat)
-     
-     !
-  END IF
+  endif
+  
+  !
   !
   
 
@@ -312,7 +314,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE wvfct, ONLY: nbnd, npw, npwx, igk
   USE uspp, ONLY : vkb
   USE el_phon, ONLY : el_ph_mat, iunwfcwann, igqg, kpq, g_kpq, &
-           xk_gamma, npwq_refolded
+           xk_gamma, npwq_refolded, lrwfcr
   USE modes, ONLY : u
   USE units_ph, ONLY : iubar, lrbar, lrwfc, iuwfc
   USE eqv,      ONLY : dvpsi!, evq
@@ -409,6 +411,8 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
 !     ENDIF
      !
 
+     call read_wfc_rspace_and_fwfft( evc , ik , lrwfcr , iunwfcwann , npw , igk )
+
 
      call calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq,xk_gamma, evq, .true.)
      
@@ -492,6 +496,8 @@ subroutine get_equivalent_kpq(xk,xq,kpq,g_kpq, igqg)
   USE qpoint, ONLY : nksq, ikks
   USE gvect, ONLY: g, gg
   USE qpoint, ONLY : nksq
+  USE mp_global, ONLY : intra_pool_comm
+  USE mp, ONLY : mp_sum
   ! WARNING g_kpq mesh is an integer
   implicit none
   
@@ -499,6 +505,7 @@ subroutine get_equivalent_kpq(xk,xq,kpq,g_kpq, igqg)
   
   integer :: iqx,iqy,iqz,i,j,k,n,nn,iq,ik, ig
   integer :: kpq(nksq),g_kpq(3,nksq),igqg(nksq)
+  integer, allocatable :: ig_check(:)
   real(kind=dp) :: gg_
   real(kind=dp) :: xq(3), xk(3,*)
   real(kind=dp) :: xkpq(3),Gvec(3),xq_crys(3)
@@ -561,6 +568,7 @@ subroutine get_equivalent_kpq(xk,xq,kpq,g_kpq, igqg)
   !
   ! here between all the g-vectors I find the index of that
   ! related to the translation in the Brillouin zone.
+  ! Warning: if G does not belong to the processor igqg is zero.
   !
 
   igqg=0
@@ -581,8 +589,15 @@ subroutine get_equivalent_kpq(xk,xq,kpq,g_kpq, igqg)
      end do
   end do
 
+  allocate(ig_check(nksq))
+  ig_check=igqg
+  CALL mp_sum( ig_check, intra_pool_comm )
+  do ik=1,nksq
+     if(ig_check(ik).eq.0) &
+          CALL errore('get_equivalent_kpq', &
+          ' g_kpq vector is not in the list of Gs', 100*ik )
 
-
+  enddo
   deallocate(xk_crys)
 
   
@@ -632,12 +647,6 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   npwq_refolded=0
   igk_=0
   igkq_=0
-
-
-  if(lread) then
-     call gk_sort (xk_gamma(1,ik), ngm, g_scra, ecutwfc / tpiba2, npw_, igk_, g2kin)
-     call read_wfc_rspace_and_fwfft( evc , ik , lrwfcr , iunwfcwann , npw_ , igk_ )
-  endif
 
 
   call gk_sort (xk_gamma(1,ikqg), ngm, g_scra, ecutwfc / tpiba2, npw_, igk_, g2kin)

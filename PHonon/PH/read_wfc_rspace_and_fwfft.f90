@@ -13,7 +13,7 @@ subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , n_plane_waves ,
   USE fft_interfaces,      ONLY : fwfft
   USE gvecs,                ONLY : nls
   USE io_global,             ONLY : ionode_id, ionode
-  USE mp_global,            ONLY : inter_pool_comm
+  USE mp_global,            ONLY : inter_pool_comm, mpime
   USE mp,                   ONLY : mp_bcast
   
 !
@@ -33,6 +33,7 @@ subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , n_plane_waves ,
   !
   ! Fourier transform it in reciprocal space
   !
+
   do ibnd=1,nbnd
      !
      ! read wfc in real space
@@ -59,8 +60,7 @@ subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , n_plane_waves ,
 #else    
      CALL davcio (evc_r, lrec, iunit, (ik-1)*nbnd+ibnd, - 1)
 #endif
-
-
+     
      call fwfft('Wave',evc_r(:,1),dffts)
      do ig = 1, n_plane_waves
         evc (ig,ibnd) = evc_r (nls (igmap (ig) ), 1 )

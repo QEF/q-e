@@ -27,7 +27,7 @@ SUBROUTINE openfilq()
   USE qpoint,          ONLY : xq, nksq
   USE output,          ONLY : fildyn, fildvscf
   USE wvfct,           ONLY : nbnd, npwx
-  USE fft_base,        ONLY : dfftp
+  USE fft_base,        ONLY : dfftp, dffts
   USE lsda_mod,        ONLY : nspin
   USE uspp,            ONLY : nkb, okvan
   USE uspp_param,      ONLY : nhm
@@ -40,7 +40,7 @@ SUBROUTINE openfilq()
   USE ramanm,          ONLY : lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der
   USE input_parameters,ONLY : nk1, nk2, nk3
-  USE el_phon,         ONLY : elph, elph_mat, iunwfcwann
+  USE el_phon,         ONLY : elph, elph_mat, iunwfcwann, lrwfcr
   USE dfile_star,      ONLY : dvscf_star
   USE dfile_autoname,  ONLY : dfile_name
   !
@@ -85,10 +85,13 @@ SUBROUTINE openfilq()
   END IF
   IF (elph_mat) then
      iunwfcwann=733
-     CALL diropn (iunwfcwann, 'wfc', lrwfc, exst, dvscf_star%dir)
-     IF (.NOT.exst) THEN
-        CALL errore ('elphel_refolded', 'file '//trim(prefix)//'.wfc not found in Rotated_DVSCF', 1)
-     END IF
+     lrwfcr= 2 * dffts%nr1x*dffts%nr2x*dffts%nr3x *npol
+     if(ionode) then
+        CALL diropn (iunwfcwann, 'wfc_r', lrwfcr, exst, dvscf_star%dir)
+        IF (.NOT.exst) THEN
+           CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc_r not found in Rotated_DVSCF', 1)
+        END IF
+     endif
   END IF
   !
   ! From now on all files are written with the _ph prefix
@@ -162,29 +165,29 @@ SUBROUTINE openfilq()
      iudvscf = 27
      IF ( me_pool == 0 ) THEN
            IF(trim(dvscf_star%ext).NE.' ' .and. elph_mat) THEN
-           fildvscf_rot = dfile_name(xq, at, TRIM(dvscf_star%ext), &
-                                     TRIM(dvscf_star%dir)//prefix, &
-                                     generate=.false., index_q=iq_dummy, equiv=.false. )
-
-           WRITE(stdout,'(5x,5a)') "Opening dvscf file '",TRIM(fildvscf_rot), &
-                                   "' (for reading) in directory '",trim(dvscf_star%dir),"'"
-                 
-           CALL diropn (iudvscf, fildvscf_rot, lrdrho, exst, dvscf_star%dir)
-        ELSE
-           CALL diropn (iudvscf, fildvscf, lrdrho, exst )
-        ENDIF
-        IF (okpaw) THEN
-           filint=TRIM(fildvscf)//'_paw'
-           lint3paw = 2 * nhm * nhm * 3 * nat * nspin_mag
-           iuint3paw=34
-!           IF(dvscf_dir.NE.' ') then
-!              CALL diropn (iuint3paw, filint, lint3paw, exst, dvscf_dir)
-!           ELSE
+              fildvscf_rot = dfile_name(xq, at, TRIM(dvscf_star%ext), &
+                   TRIM(dvscf_star%dir)//prefix, &
+                   generate=.false., index_q=iq_dummy, equiv=.false. )
+              
+              WRITE(stdout,'(5x,5a)') "Opening dvscf file '",TRIM(fildvscf_rot), &
+                   "' (for reading) in directory '",trim(dvscf_star%dir),"'"
+              
+              CALL diropn (iudvscf, fildvscf_rot, lrdrho, exst, dvscf_star%dir)
+           ELSE
+              CALL diropn (iudvscf, fildvscf, lrdrho, exst )
+           ENDIF
+           IF (okpaw) THEN
+              filint=TRIM(fildvscf)//'_paw'
+              lint3paw = 2 * nhm * nhm * 3 * nat * nspin_mag
+              iuint3paw=34
+              !           IF(dvscf_dir.NE.' ') then
+              !              CALL diropn (iuint3paw, filint, lint3paw, exst, dvscf_dir)
+              !           ELSE
               CALL diropn (iuint3paw, filint, lint3paw, exst)
-!           ENDIF
-        ENDIF
+              !           ENDIF
+           ENDIF
+        END IF
      END IF
-  END IF
   !
   !    In the USPP case we need two files for the Commutator, the first is
   !    given by filbar and a second which just contains P_c x |psi>,
