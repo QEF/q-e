@@ -252,9 +252,9 @@ MODULE input_parameters
           ! controls memory usage 
         CHARACTER(len=80) :: memory_allowed(3)
         DATA memory_allowed / 'small', 'default', 'large' /
-          ! if memory = 'small' then QE trys to use (when implemented) algorithms using less memory,
+          ! if memory = 'small' then QE tries to use (when implemented) algorithms using less memory,
           !                     even if they are slower than the default
-          ! if memory = 'large' then QE trys to use (when implemented) algorithms using more memory
+          ! if memory = 'large' then QE tries to use (when implemented) algorithms using more memory
           !                     to enhance performance.
 
 #if defined (__MS2)
