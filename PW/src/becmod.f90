@@ -15,7 +15,7 @@ MODULE becmod
   ! ... or betapsi(i,s,j)= <beta(i)|psi(s,j)> (s=polarization index)
   !
   USE kinds,            ONLY : DP
-  USE control_flags,    ONLY : gamma_only
+  USE control_flags,    ONLY : gamma_only, smallmem
   USE gvect,            ONLY : gstart
   USE noncollin_module, ONLY : noncolin, npol
   !
@@ -348,8 +348,7 @@ CONTAINS
     bec%nbnd_loc = nbnd
     bec%ibnd_begin = 1
     !
-#ifdef __SCALAPACK
-    IF( PRESENT( comm ) .AND. gamma_only ) THEN
+    IF( PRESENT( comm ) .AND. gamma_only .AND. smallmem ) THEN
        bec%comm = comm
        bec%nproc = mp_size( comm )
        IF( bec%nproc > 1 ) THEN
@@ -360,7 +359,7 @@ CONTAINS
           bec%ibnd_begin = gind_block( 1,  becp%nbnd, bec%nproc, bec%mype )
        END IF
     END IF
-#endif
+    !
     IF ( gamma_only ) THEN
        !
        ALLOCATE( bec%r( nkb, nbnd_siz ), STAT=ierr )

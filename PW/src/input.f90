@@ -176,7 +176,8 @@ SUBROUTINE iosys()
                             ldamped, lbands, llang,           &
                             lconstrain, restart, twfcollect, &
                             llondon, do_makov_payne, &
-                            lecrpa_           => lecrpa
+                            lecrpa_           => lecrpa, &
+                            smallmem
   USE control_flags, ONLY: scf_must_converge_ => scf_must_converge
   !
   USE wvfct,         ONLY : nbnd_ => nbnd, &
@@ -230,7 +231,7 @@ SUBROUTINE iosys()
                                pseudo_dir, disk_io, tefield, dipfield, lberry, &
                                gdir, nppstr, wf_collect,lelfield, efield,      &
                                nberrycyc, lkpoint_dir, efield_cart, lecrpa,    &
-                               vdw_table_name
+                               vdw_table_name, memory
 
 #if defined __MS2
   USE input_parameters, ONLY : MS2_enabled, MS2_handler
@@ -504,6 +505,12 @@ SUBROUTINE iosys()
   IF ( tefield .and. ( nspin > 2 ) ) THEN
      CALL errore( 'iosys', 'LSDA not available with electric field' , 1 )
   ENDIF
+  !
+  ! ... define memory related internal switches
+  !
+  IF( TRIM( memory ) == 'small' ) THEN
+     smallmem = .TRUE.
+  END IF
   !
   twfcollect = wf_collect
   !
