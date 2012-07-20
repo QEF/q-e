@@ -168,7 +168,9 @@ scatter_forw.o : condcom.o
 summary_band.o : ../../Modules/io_global.o
 summary_band.o : ../../PW/src/noncol.o
 summary_band.o : condcom.o
+summary_tran.o : ../../Modules/cell_base.o
 summary_tran.o : ../../Modules/kind.o
+summary_tran.o : ../../PW/src/symm_base.o
 summary_tran.o : condcom.o
 sunitary.o : ../../Modules/io_global.o
 sunitary.o : ../../Modules/kind.o

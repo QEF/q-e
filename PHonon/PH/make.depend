@@ -1085,6 +1085,7 @@ q_points.o : phcom.o
 q_points_wannier.o : ../../Modules/io_files.o
 q_points_wannier.o : ../../Modules/io_global.o
 q_points_wannier.o : ../../Modules/kind.o
+q_points_wannier.o : ../../Modules/mp.o
 q_points_wannier.o : ../../Modules/mp_global.o
 q_points_wannier.o : dfile_autoname.o
 q_points_wannier.o : dfile_star.o
@@ -1120,6 +1121,15 @@ raman_mat.o : ramanm.o
 ramanm.o : ../../Modules/kind.o
 random_matrix.o : ../../Modules/kind.o
 random_matrix.o : ../../Modules/random_numbers.o
+read_wfc_rspace_and_fwfft.o : ../../Modules/fft_base.o
+read_wfc_rspace_and_fwfft.o : ../../Modules/fft_interfaces.o
+read_wfc_rspace_and_fwfft.o : ../../Modules/io_global.o
+read_wfc_rspace_and_fwfft.o : ../../Modules/kind.o
+read_wfc_rspace_and_fwfft.o : ../../Modules/mp.o
+read_wfc_rspace_and_fwfft.o : ../../Modules/mp_global.o
+read_wfc_rspace_and_fwfft.o : ../../Modules/recvec.o
+read_wfc_rspace_and_fwfft.o : ../../PW/src/noncol.o
+read_wfc_rspace_and_fwfft.o : ../../PW/src/pwcom.o
 rigid.o : ../../Modules/constants.o
 rigid.o : ../../Modules/kind.o
 rotate_and_add_dyn.o : ../../Modules/constants.o
