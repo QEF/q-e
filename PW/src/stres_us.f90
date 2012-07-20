@@ -33,12 +33,32 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   !
   IMPLICIT NONE
   !
-  ! ... First the dummy variables
-  !  
-  INTEGER       :: ik
-  REAL(DP) :: sigmanlc(3,3), gk(3,npw)
+  INTEGER, INTENT(IN)    :: ik
+  REAL(DP), INTENT(IN)   :: gk(3,npw)
+  REAL(DP), INTENT(INOUT):: sigmanlc(3,3)
+  !
+  REAL(DP), ALLOCATABLE  :: qm1(:)
+  REAL(DP)               :: q
+  INTEGER                :: i
+  !
+  !
+  IF ( nkb == 0 ) RETURN
+  !
+  IF ( lsda ) current_spin = isk(ik)
+  IF ( nks > 1 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
   !
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm ) 
+  CALL calbec( npw, vkb, evc, becp )
+  !
+  ALLOCATE( qm1( npwx ) )
+  DO i = 1, npw
+     q = SQRT( gk(1,i)**2 + gk(2,i)**2 + gk(3,i)**2 )
+     IF ( q > eps8 ) THEN
+        qm1(i) = 1.D0 / q
+     ELSE
+        qm1(i) = 0.D0
+     END IF
+  END DO
   !
   IF ( gamma_only ) THEN
      !
@@ -50,6 +70,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
      !
   END IF
   !
+  DEALLOCATE( qm1 )
   CALL deallocate_bec_type ( becp ) 
   !
   RETURN
@@ -71,8 +92,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                         nproc, mype, nbnd_loc, nbnd_begin, &
                                         icur_blk, icyc
        INTEGER, EXTERNAL :: ldim_block, lind_block, gind_block
-       REAL(DP)                 :: fac, xyz(3,3), q, evps, ddot
-       REAL(DP), ALLOCATABLE    :: qm1(:)
+       REAL(DP)                 :: fac, xyz(3,3), evps, ddot
+       REAL(DP), ALLOCATABLE    :: deff(:,:,:)
        COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
        ! dvkb contains the derivatives of the kb potential
        COMPLEX(DP)              :: ps
@@ -80,7 +101,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        DATA xyz / 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0 /
        !
        !
-       IF ( nkb == 0 ) RETURN
        IF( becp%comm /= mp_get_comm_null() ) THEN
           nproc   = becp%nproc
           mype    = becp%mype
@@ -93,21 +113,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           nbnd_begin = 1
        END IF
 
-       IF ( lsda ) current_spin = isk(ik)
-       IF ( nks > 1 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
-       !
-       CALL calbec( npw, vkb, evc, becp )
-       !
-       ALLOCATE( work1( npwx ), work2( npwx ), qm1( npwx )) 
-       !
-       DO i = 1, npw
-          q = SQRT( gk(1,i)**2 + gk(2,i)**2 + gk(3,i)**2 )
-          IF ( q > eps8 ) THEN
-             qm1(i) = 1.D0 / q
-          ELSE
-             qm1(i) = 0.D0
-          END IF
-       END DO
+       ALLOCATE( work1( npwx ), work2( npwx ) ) 
+       ALLOCATE( deff(nhm,nhm,nat) )
        !
        ! ... diagonal contribution - if the result from "calbec" are not 
        ! ... distributed, must be calculated on a single processor
@@ -117,6 +124,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        DO ibnd_loc = 1, nbnd_loc
           ibnd = ibnd_loc + becp%ibnd_begin - 1 
+          CALL compute_deff ( deff, et(ibnd,ik) )
           fac = wg(ibnd,ik)
           ijkb0 = 0
           DO np = 1, ntyp
@@ -124,9 +132,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                 IF ( ityp(na) == np ) THEN
                    DO ih = 1, nh(np)
                       ikb = ijkb0 + ih
-                      ps = deeq(ih,ih,na,current_spin) - &
-                           et(ibnd,ik) * qq(ih,ih,np)
-                      evps = evps + fac * ps * ABS( becp%r(ikb,ibnd_loc) )**2
+                      evps = evps + fac * deff(ih,ih,na) * &
+                                    ABS( becp%r(ikb,ibnd_loc) )**2
                       !
                       IF ( upf(np)%tvanp .OR. newpseudo(np) ) THEN
                          !
@@ -137,9 +144,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                          !
                          DO jh = ( ih + 1 ), nh(np)
                             jkb = ijkb0 + jh
-                            ps = deeq(ih,jh,na,current_spin) - &
-                                 et(ibnd,ik) * qq(ih,jh,np)
-                            evps = evps + ps * fac * 2.D0 * &
+                            evps = evps + deff(ih,jh,na) * fac * 2.D0 * &
                                  becp%r(ikb,ibnd_loc) * becp%r(jkb,ibnd_loc)
                          END DO
                       END IF
@@ -163,6 +168,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           DO ibnd_loc = 1, nbnd_loc
              !  
              ibnd = ibnd_loc + becp%ibnd_begin - 1 
+             CALL compute_deff ( deff, et(ibnd,ik) )
              work2(:) = (0.D0,0.D0)
              ijkb0 = 0
              DO np = 1, ntyp
@@ -171,9 +177,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                       DO ih = 1, nh(np)
                          ikb = ijkb0 + ih
                          IF ( .NOT. ( upf(np)%tvanp .OR. newpseudo(np) ) ) THEN
-                            ps = becp%r(ikb,ibnd_loc) * &
-                                 ( deeq(ih,ih,na,current_spin) - &
-                                 et(ibnd,ik) * qq(ih,ih,np) )
+                            ps = becp%r(ikb,ibnd_loc) * deff(ih,ih,na)
                          ELSE
                             !
                             ! ... in the US case there is a contribution 
@@ -182,9 +186,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                             ps = (0.D0,0.D0)
                             DO jh = 1, nh(np)
                                jkb = ijkb0 + jh
-                               ps = ps + becp%r(jkb,ibnd_loc) * &
-                                    ( deeq(ih,jh,na,current_spin) - &
-                                    et(ibnd,ik) * qq(ih,jh,np) )
+                               ps = ps + becp%r(jkb,ibnd_loc) * deff(ih,jh,na)
                             END DO
                          END IF
                          CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
@@ -228,6 +230,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                 
              DO ibnd_loc = 1, nbnd_loc
                 ibnd = ibnd_loc + becp%ibnd_begin - 1 
+                CALL compute_deff ( deff, et(ibnd,ik) )
                 work2(:) = (0.D0,0.D0)
                 ijkb0 = 0
                 DO np = 1, ntyp
@@ -236,9 +239,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                          DO ih = 1, nh(np)
                             ikb = ijkb0 + ih
                             IF ( .NOT. ( upf(np)%tvanp .OR. newpseudo(np) ) ) THEN
-                               ps = becp%r(ikb,ibnd_loc) * &
-                                       ( deeq(ih,ih,na,current_spin) - &
-                                       et(ibnd,ik) * qq(ih,ih,np ) )
+                               ps = becp%r(ikb,ibnd_loc) * deff(ih,ih,na)
                             ELSE 
                                !
                                ! ... in the US case there is a contribution 
@@ -247,9 +248,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                ps = (0.D0,0.D0)
                                DO jh = 1, nh(np)
                                   jkb = ijkb0 + jh
-                                  ps = ps + becp%r(jkb,ibnd_loc) * &
-                                       ( deeq(ih,jh,na,current_spin) - &
-                                       et(ibnd,ik) * qq(ih,jh,np) )
+                                  ps = ps + becp%r(jkb,ibnd_loc)*deff(ih,jh,na)
                                END DO
                             END IF
                             CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
@@ -287,7 +286,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        END DO
        !
        DEALLOCATE( dvkb )
-       DEALLOCATE( qm1, work2, work1 )
+       DEALLOCATE( deff, work2, work1 )
        !
        RETURN
        !
@@ -306,8 +305,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        INTEGER                       :: na, np, ibnd, ipol, jpol, l, i, &
                                         ikb, jkb, ih, jh, ijkb0, is, js, ijs
-       REAL(DP)                 :: fac, xyz (3, 3), q, evps, ddot
-       REAL(DP), ALLOCATABLE    :: qm1(:)
+       REAL(DP)                 :: fac, xyz (3, 3), evps, ddot
        COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
        COMPLEX(DP), ALLOCATABLE :: work2_nc(:,:)
        COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
@@ -318,12 +316,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        DATA xyz / 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0 /
        !
        !
-       IF ( nkb == 0 ) RETURN
-       !
-       IF ( lsda ) current_spin = isk(ik)
-       IF ( nks > 1 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
-       !
-       CALL calbec( npw, vkb, evc, becp )
        if (noncolin) then
           ALLOCATE( work2_nc(npwx,npol) )
           ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
@@ -331,16 +323,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           ALLOCATE( deff(nhm,nhm,nat) )
        endif
        !
-       ALLOCATE( work1(npwx), work2(npwx), qm1( npwx ) )
-       !
-       DO i = 1, npw
-          q = SQRT( gk(1,i)**2 + gk(2,i)**2 + gk(3,i)**2 )
-          IF ( q > eps8 ) THEN
-             qm1(i) = 1.D0 / q
-          ELSE
-             qm1(i) = 0.D0
-          END IF
-       END DO
+       ALLOCATE( work1(npwx), work2(npwx) )
        !
        evps = 0.D0
        ! ... diagonal contribution
@@ -618,7 +601,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
            DEALLOCATE( deff )
        ENDIF
        DEALLOCATE( dvkb )
-       DEALLOCATE( work1, qm1 )
+       DEALLOCATE( work1 )
        !
        RETURN
        !
