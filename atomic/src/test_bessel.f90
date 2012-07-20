@@ -363,7 +363,7 @@ subroutine h_diag  ( mesh_, nswx, nsw, lmax, q )
            !
            if ( nspin == 2 ) then
               write(stdout, &
-                  "( 5x,'E(L=',i1,',spin 'a2,') =',4(f10.4,' Ry') )" ) &
+                  "( 5x,'E(L=',i1,',spin ',a2,') =',4(f10.4,' Ry') )" ) &
                    l, spin(is), (enl(n), n=1,n_states)
            else if ( rel == 2 ) then
               write(stdout, &
