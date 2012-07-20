@@ -169,7 +169,7 @@ SUBROUTINE init_run()
   ! verbose information to stdout
   !
   IF( iverbosity < 0 ) iprint_stdout = 100 * iprint
-  IF( iverbosity ==0 ) iprint_stdout = 10 * iprint
+  IF( iverbosity ==0 .OR. iverbosity == 1 ) iprint_stdout = 10 * iprint
   IF( iverbosity > 1 ) iprint_stdout = iprint
   !
   acc          = 0.D0

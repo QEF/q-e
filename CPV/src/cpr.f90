@@ -130,7 +130,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   ! ... control variables
   !
   LOGICAL :: tfirst, tlast, tstop, tconv
-  LOGICAL :: ttprint, tfile, tstdout
+  LOGICAL :: tprint, tfile, tstdout
     !  logical variable used to control printout
   !
   ! ... forces on ions
@@ -202,7 +202,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      dt2bye   = dt2 / emass
      nfi     = nfi + 1
      tlast   = ( nfi == nomore ) .OR. tlast
-     ttprint = ( MOD( nfi, iprint ) == 0 ) .OR. tlast 
+     tprint  = ( MOD( nfi, iprint ) == 0 ) .OR. tlast 
      tfile   = ( MOD( nfi, iprint ) == 0 )
      tstdout = ( MOD( nfi, iprint_stdout ) == 0 ) .OR. tlast
      !
@@ -624,7 +624,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
      END IF
      !
-     IF ( MOD( nfi, iprint ) == 0 .OR. tlast ) THEN
+     IF ( tprint ) THEN
         !
         IF( tortho ) THEN
            !
@@ -647,14 +647,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( lwf ) CALL ef_enthalpy( enthal, tau0 )
      !
-     IF ( tens ) THEN
+     IF ( tens .AND. tprint ) THEN
         !
-        IF ( MOD( nfi, iprint ) == 0 .OR. tlast ) THEN
-           !
-           WRITE( stdout, '("Occupations  :")' )
-           WRITE( stdout, '(10F9.6)' ) ( f(i), i = 1, nbsp )
-           !
-        END IF
+        WRITE( stdout, '("Occupations  :")' )
+        WRITE( stdout, '(10F9.6)' ) ( f(i), i = 1, nbsp )
         !
      END IF
      !
@@ -707,7 +703,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      if (abivol) etot = etot - P_ext*volclu
      if (abisur) etot = etot - Surf_t*surfclu
      !
-     CALL printout_new( nfi, tfirst, tfile, ttprint, tps, hold, stress, &
+     IF ( tstdout) CALL spinsq ( c0_bgrp, bec_bgrp, rhor )
+     !
+     CALL printout_new( nfi, tfirst, tfile, tprint, tps, hold, stress, &
                         tau0, vels, fion, ekinc, temphc, tempp, temps, etot, &
                         enthal, econs, econt, vnhh, xnhh0, vnhp, xnhp0, atot, &
                         ekin, epot, tprnfor, tpre, tstdout )
@@ -743,8 +741,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         CALL cg_update( tfirst, nfi, c0_bgrp )
         !
-        IF ( tfor .AND. .NOT. tens .AND. &
-             ( ( MOD( nfi, isave ) == 0 ) .OR. tlast ) ) THEN
+        IF ( tfor .AND. .NOT. tens .AND. tprint ) THEN
            !
            ! ... in this case optimize c0 and lambda for smooth
            ! ... restart with CP

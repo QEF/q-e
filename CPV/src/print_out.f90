@@ -105,8 +105,8 @@
       END IF
       !
       ! Makov-Payne correction to the total energy (isolated systems only)
-      IF( do_makov_payne .AND. tprint ) CALL makov_payne( etot )
       !
+      IF( do_makov_payne .AND. tprint ) CALL makov_payne( etot )
       !
       IF( ionode ) THEN
          !
@@ -128,7 +128,7 @@
             !
             IF( tdipole ) CALL print_dipole( 32, tfile, nfi, tps )
             !
-            IF(tstdout) CALL printout_cell( stdout, h )
+            IF( tstdout ) CALL printout_cell( stdout, h )
             !
             IF( tfile ) CALL printout_cell( 36, h, nfi, tps )
             !
@@ -185,7 +185,6 @@
                DO ia = 1, na(is)
                   !
                   isa = isa + 1
-                  !
                   CALL s_to_r( vels(:,isa), tauw(:,isa), h )
                   !
                END DO
@@ -258,14 +257,7 @@
       IF( ( MOD( nfi, iprint_stdout ) == 0 ) .OR. tfirst )  THEN
          !
          WRITE( stdout, * )
-!======================================================
-!Lingzhu Kong
-         IF(lwfpbe0 .or. lwfpbe0nscf)THEN
-           WRITE( stdout, 19470 )
-         ELSE
-          WRITE( stdout, 1947)
-         END IF
-!======================================================
+         WRITE( stdout, 1947)
          IF ( abivol .AND. pvar ) write(stdout,*) 'P = ', P_ext*au_gpa
          !
       END IF
@@ -284,18 +276,8 @@
          ' # of electrons within the isosurface = ', n_ele
 
       IF( .not. tcg ) THEN
-         !
-!===================================================================
-!Lingzhu Kong
-         IF( lwfpbe0 .or. lwfpbe0nscf ) THEN
-            WRITE( stdout, 19480 ) nfi, ekinc, temphc, tempp, -exx*0.25, &
-                                  etot-exx*0.25, enthal, econs, econt,   &
-                                  vnhh(3,3), xnhh0(3,3), vnhp(1),  xnhp0(1)
-         ELSE
-            WRITE( stdout, 1948 ) nfi, ekinc, temphc, tempp, etot, enthal, &
+         WRITE( stdout, 1948 ) nfi, ekinc, temphc, tempp, etot, enthal, &
                       econs, econt, vnhh(3,3), xnhh0(3,3), vnhp(1),  xnhp0(1)
-         END IF
-!===================================================================
       ELSE
          IF ( MOD( nfi, iprint ) == 0 .OR. tfirst ) THEN
             !
@@ -325,13 +307,6 @@
 1947  FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',8X,'etot',6X,'enthal', &
            & 7X,'econs',7X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
 1948  FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F11.5),4(1X,F7.4) )
-!===============================================================================
-!Lingzhu Kong
-19470 FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',8X,'exx', 8X,'etot', &
-              6X,'enthal',7X,'econs',7X,'econt',4X,'vnhh',3X,'xnhh0',4X, &
-              'vnhp',3X,'xnhp0')
-19480  FORMAT( I6,1X,F8.5,1X,F6.1,1X,F6.1,5(1X,F11.5),4(1X,F7.4) )
-!===============================================================================
 2948  FORMAT( I6,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F11.5),F10.2, F8.2, F8.5 )
 2949  FORMAT( I6,1X,4(1X,F7.4), F8.5 )
       !

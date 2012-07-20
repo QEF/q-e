@@ -82,6 +82,7 @@ smallbox_gvec.o \
 smallbox_subs.o \
 smallbox_lib.o \
 spline.o \
+spinsq.o \
 stop_run.o \
 stress.o \
 vol_clu.o \

@@ -892,6 +892,17 @@ smallbox_subs.o : ../../Modules/io_global.o
 smallbox_subs.o : ../../Modules/kind.o
 smallbox_subs.o : smallbox.o
 smallbox_subs.o : smallbox_gvec.o
+spinsq.o : ../../Modules/cell_base.o
+spinsq.o : ../../Modules/electrons_base.o
+spinsq.o : ../../Modules/fft_base.o
+spinsq.o : ../../Modules/io_global.o
+spinsq.o : ../../Modules/ions_base.o
+spinsq.o : ../../Modules/kind.o
+spinsq.o : ../../Modules/mp.o
+spinsq.o : ../../Modules/mp_global.o
+spinsq.o : ../../Modules/recvec.o
+spinsq.o : ../../Modules/uspp.o
+spinsq.o : gvecw.o
 spline.o : ../../Modules/kind.o
 stop_run.o : ../../Modules/constraints_module.o
 stop_run.o : ../../Modules/control_flags.o
