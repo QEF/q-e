@@ -92,10 +92,9 @@ wrappers.o\
 ws_base.o \
 read_cards.o
 
-all : version libqemod.a
-.PHONY: version
+all : version.o libqemod.a
 
-version :
+version.f90: version.f90.in
 	- ( if test -x ../install/update_version ; then \
                        ../install/update_version; fi )
 
