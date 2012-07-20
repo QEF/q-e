@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 A. Smogunov
+! Copyright (C) 2003-2012 A. Smogunov
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -115,7 +115,7 @@ do i=1, nk_full
     if(ik.gt.nkpts) call errore('summary_tran_k','k in IBZ not found',1)
 
 ! shift by a small 1.d-8 to get -0.5 from both +-0.5
-    if (t_rev(isym)) then
+    if (t_rev(isym)==1) then
       segno = -1.d0
     else
       segno = 1.d0
