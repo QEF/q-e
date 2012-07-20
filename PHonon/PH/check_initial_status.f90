@@ -339,7 +339,7 @@ SUBROUTINE check_initial_status(auxdyn)
             '(5x," The estimated total work is ", i5,&
                & " self-consistent (scf) runs")') total_work
 
-   WRITE(stdout, '(5x," I am image number ", i5 " and my work is about",i5, &
+   WRITE(stdout, '(5x," I am image number ", i5," and my work is about",i5, &
                       &  " scf runs. I calculate: ")') &
                         my_image_id, work(my_image_id)
 
