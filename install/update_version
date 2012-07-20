@@ -18,7 +18,7 @@ cat version.f90.in | sed 's/unknown/'$svn_rev'/' > version.f90.tmp
 if test -f version.f90 ; then
 
 # version.f90 existing: check if new and previous files differ
-   diff -wib -q version.f90.tmp version.f90
+   diff -wib version.f90.tmp version.f90  2> /dev/null > /dev/null
 
    if [ $? = 1 ] ; then 
 # they differ: update file version.f90
