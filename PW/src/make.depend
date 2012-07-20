@@ -711,6 +711,7 @@ init_ns.o : scf_mod.o
 init_run.o : ../../Modules/cell_base.o
 init_run.o : ../../Modules/control_flags.o
 init_run.o : ../../Modules/fft_base.o
+init_run.o : ../../Modules/funct.o
 init_run.o : ../../Modules/ions_base.o
 init_run.o : ../../Modules/paw_variables.o
 init_run.o : ../../Modules/recvec_subs.o
@@ -1084,8 +1085,10 @@ potinit.o : pw_restart.o
 potinit.o : pwcom.o
 potinit.o : scf_mod.o
 print_clock_pw.o : ../../Modules/control_flags.o
+print_clock_pw.o : ../../Modules/funct.o
 print_clock_pw.o : ../../Modules/io_global.o
 print_clock_pw.o : ../../Modules/paw_variables.o
+print_clock_pw.o : pwcom.o
 print_clock_pw.o : realus.o
 print_ks_energies.o : ../../Modules/constants.o
 print_ks_energies.o : ../../Modules/control_flags.o

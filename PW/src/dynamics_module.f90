@@ -119,13 +119,12 @@ CONTAINS
       USE ions_base,      ONLY : nat, nsp, ityp, tau, if_pos, atm
       USE cell_base,      ONLY : alat, omega
       USE ener,           ONLY : etot
-      USE force_mod,      ONLY : force
+      USE force_mod,      ONLY : force, lstres
       USE control_flags,  ONLY : istep, nstep, conv_ions, lconstrain, &
                                  lfixatom
       !
       USE constraints_module, ONLY : nconstr, check_constraint
       USE constraints_module, ONLY : remove_constr_force, remove_constr_vec
-      USE input_parameters,   ONLY : tstress
       !
       IMPLICIT NONE
       !
@@ -394,8 +393,8 @@ CONTAINS
                      & 5X,"temperature           = ",F14.8," K ",/,  &
                      & 5X,"Ekin + Etot (const)   = ",F14.8," Ry")' ) &
           ekin, temp_new, ( ekin  + etot )
-      if (tstress) &
-          write(stdout,'(5X,"Ions kinetic stress = ",F10.2," (kbar)",/3(27X,3F10.2/)/)') &
+      IF (lstres) WRITE ( stdout, &
+      '(5X,"Ions kinetic stress = ",F10.2," (kbar)",/3(27X,3F10.2/)/)') &
               ((kstress(1,1)+kstress(2,2)+kstress(3,3))/3.d0*ry_kbar), &
               (kstress(i,1)*ry_kbar,kstress(i,2)*ry_kbar,kstress(i,3)*ry_kbar, i=1,3)
       !

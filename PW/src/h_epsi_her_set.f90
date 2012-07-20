@@ -146,7 +146,6 @@ subroutine h_epsi_her_set(pdir, e_field)
 !determines the spin polarization
 
    DO ik=1,nks
-  
       CALL get_buffer ( evcel, nwordwfc, iunwfc, nx_el(ik,pdir) )
 
       if(nspin==2) then
