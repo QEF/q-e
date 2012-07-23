@@ -1417,16 +1417,20 @@
 
              do l = lmin, lmax
                do ir = 1, upf(is)%kkbeta
-                  if ( rgrid(is)%r(ir) >= upf(is)%rinner(l) ) then
-                     qrl(ir,ijv,l)=upf(is)%qfunc(ir,ijv)
-                  else
-                     qrl(ir,ijv,l)=upf(is)%qfcoef(1,l,iv,jv)
-                     do i = 2, upf(is)%nqf
-                        qrl(ir,ijv,l)=qrl(ir,ijv,l) +      &
-                             upf(is)%qfcoef(i,l,iv,jv)*rgrid(is)%r(ir)**(2*i-2)
-                     end do
-                     qrl(ir,ijv,l) = qrl(ir,ijv,l) * rgrid(is)%r(ir)**(l+1)
-                  end if
+                  IF( upf(is)%q_with_l ) THEN
+                    qrl(ir,ijv,l)=upf(is)%qfuncl(ir,ijv,l)
+                  ELSE
+                    if ( rgrid(is)%r(ir) >= upf(is)%rinner(l) ) then
+                       qrl(ir,ijv,l)=upf(is)%qfunc(ir,ijv)
+                    else
+                       qrl(ir,ijv,l)=upf(is)%qfcoef(1,l,iv,jv)
+                       do i = 2, upf(is)%nqf
+                          qrl(ir,ijv,l)=qrl(ir,ijv,l) +      &
+                              upf(is)%qfcoef(i,l,iv,jv)*rgrid(is)%r(ir)**(2*i-2)
+                       end do
+                       qrl(ir,ijv,l) = qrl(ir,ijv,l) * rgrid(is)%r(ir)**(l+1)
+                    end if
+                  ENDIF
                end do
             end do
          end do
