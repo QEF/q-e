@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{5.0}
+\def\version{5.0.1}
 \def\qe{{\sc Quantum ESPRESSO}}
 \def\qeforge{\texttt{qe-forge.org}}
 \textwidth = 17cm
@@ -159,12 +159,25 @@ subscribe to \texttt{q-e-developers@qe-forge.org} (low traffic)
 \subsection{Hints, Caveats, Do's and Dont's for developers}
 
 \begin{itemize}
-\item Before doing anything, inquire whether it is already there, or under development.
-\item Before starting writing code, inquire whether you can reuse code that is already available in the distribution. Avoid redundancy: the only bug-free software line is the one that doesn't exist.
-\item When you make some change:
+\item Before doing anything, inquire whether it is already there,
+or under development.
+\item Before starting writing code, inquire whether you can reuse
+code that is already available in the distribution. Avoid redundancy: 
+the only bug-free software line is the one that doesn't exist.
+\item When you make some changes:
 \begin{itemize}
-\item Check that are not spoiling other people's work. In particular, search the distribution for codes using the routine or module you are modifying and change its usage or its calling sequence everywhere.
-\item Do not forget that your change must work on many different combinations of hardware and software, in both serial and parallel execution.
+\item Check that are not spoiling other people's work. In particular, 
+search the distribution for codes using the routine or module you are 
+modifying and change its usage or its calling arguments everywhere.
+\item Do not forget that your changes must work on many different 
+combinations of hardware and software, in both serial and parallel execution.
+\item Do not forget that your changes must work for a wide variety of
+different system: if your code works only in some selected case, it
+must either stop or issue a warning in all other cases.
+\item Do not forget that your changes must work on systems of wildly
+different computational size: solutions that may look appropriate in
+crystal silicon may gobble a disproportionate amount of time and/or
+memory in a 1000-atom cell.
 \end{itemize}
 \item Document your changes:
 \begin{itemize}
@@ -679,7 +692,7 @@ to reduce memory conflicts.
 
 \section{Parallelization}
 
-In parallel execution (MPI only), PW starts N independent processes 
+In parallel execution (MPI only), N independent processes are started
 (do not start more than one per processor!) that communicate via calls
 to MPI libraries. Each process has its own set of variables and knows
 nothing about other processes' variables. Variables that take little memory 
@@ -735,7 +748,7 @@ of the following dimensions:
 \begin{itemize}
 \item number of plane waves, npw (or max number, npwx)
 \item number of Gvectors, ngm
-\item number of grid points in the R space, nrxx
+\item number of grid points in the R space, dfft\%nnr
 \end{itemize}
 Their size decreases linearly with the number of processors in a pool. 
 
@@ -815,16 +828,17 @@ The content of the restart directory is as follows:
 \begin{verbatim}
 data-file.xml          which contains:
                        - general information that doesn't require large data set: 
-                         atomic structure, lattice, symmetries, parameters of the run, ...
-                       - pointers to other files or directories containing bulkier data:
-                         such as grids, wavefunctions, charge density, potentials, ...
+                         atomic structure, lattice, k-points, symmetries,
+                         parameters of the run, ...
+                       - pointers to other files or directories containing bulkier
+                         data: grids, wavefunctions, charge density, potentials, ...
   
 charge_density.dat     contains the charge density
-spin_polarization.dat  contains the spin polarization (rhoup-rhodw) (LSDA calculations)
+spin_polarization.dat  contains the spin polarization (rhoup-rhodw) (LSDA case)
 magnetization.x.dat    
-magnetization.y.dat    contain the spin polarization along x,y,z (noncollinear calculations)  
-magnetization.z.dat 
-lambda.dat             contains occupations (Car-Parrinello dynamics only
+magnetization.y.dat    contain the spin polarization along x,y,z 
+magnetization.z.dat    (noncollinear calculations)
+lambda.dat             contains occupations (Car-Parrinello dynamics only)
 mat_z.1                contains occupations (ensemble-dynamics only)
 
 <pseudopotentials>     A copy of all pseudopotential files given in input
@@ -1185,8 +1199,8 @@ requires that a \& is needed both at end of line AND at the beginning of
 continuation line if there is a character variable (inside ' ' or " ")
 spanning two lines. Some compilers do not complain if the latter \& is 
 missing, others do.
-\item use DP (defined in module ''kinds'') to define the type of real and complex variables
-\item all constants should be defined to be of kind DP.  Preferred syntax: 0.0\_dp.
+\item use "dp" (defined in module ''kinds'') to define the type of real and complex variables
+\item all constants should be defined to be of kind "dp".  Preferred syntax: 0.0\_dp.
 \item use "generic" intrinsic functions: SIN, COS, etc.
 \item conversions should be explicitely indicated. For conversions to real, 
 use DBLE, or else REAL(...,KIND=dp). For conversions to complex, use 
@@ -1194,13 +1208,16 @@ CMPLX(...,...,KIND=dp). For complex conjugate, use CONJG.  For imaginary part,
 use AIMAG.  IMPORTANT: Do not use REAL or CMPLX without KIND=dp, or else you 
 will lose precision (except when you take the real part of a 
 double precision complex number).
-\item Do not use automatic arrays (e.g. \texttt{REAL(DP) :: A(N)} 
+\item Do not use automatic arrays (e.g. \texttt{REAL(dp) :: A(N)} 
 in a subroutine) except if you are sure that the array is small in all
 cases: you may easily exceed the stack size if the arrays are large.
 \item Do not use pointers unless you have a good reason to: 
 pointers may hinder optimization, allocatable arrays should be used instead.
 \item If you use pointers, nullify them before performing tests on their
 status.
+\item Beware fancy constructs like structures and pointers:
+they look great on paper, but they have also an unlimited potential
+to make a code unreadable.
 \item Do not pass unallocated arrays as arguments, even in those cases where
 they are not actually used inside the subroutine.
 \item Do not use any construct that is susceptible to be flagged as 
