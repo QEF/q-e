@@ -251,7 +251,7 @@
       use kinds, only: dp
       use control_flags, only: thdyn, tpre, tfor, tprnfor
       use io_global, only: stdout
-      use ions_base, only: nas => nax, nsp, na, nat
+      use ions_base, only: nsp, na, nat
       use gvecs
       use gvect, only: ngm, nl, nlm
       use cell_base, only: omega

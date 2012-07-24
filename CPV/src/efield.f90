@@ -128,17 +128,17 @@ CONTAINS
   END SUBROUTINE efield_update
 
 
-  SUBROUTINE allocate_efield( ngw, ngw_g, nx, nhx, nas, nsp )
+  SUBROUTINE allocate_efield( ngw, ngw_g, nx, nhx, nax, nsp )
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: ngw, ngw_g, nx, nhx, nas, nsp
+    INTEGER, INTENT(IN) :: ngw, ngw_g, nx, nhx, nax, nsp
       allocate( ctable(ngw,2,3))
       allocate( ctabin(ngw,2,3))
       allocate( qmat(nx,nx))
-      allocate( gqq(nhx,nhx,nas,nsp))
-      allocate( gqqm(nhx,nhx,nas,nsp))
+      allocate( gqq(nhx,nhx,nax,nsp))
+      allocate( gqqm(nhx,nhx,nax,nsp))
       allocate( df(ngw))
-      allocate( gqq0(nhx,nhx,nas,nsp))
-      allocate( gqqm0(nhx,nhx,nas,nsp))
+      allocate( gqq0(nhx,nhx,nax,nsp))
+      allocate( gqqm0(nhx,nhx,nax,nsp))
       allocate( whose_is_g(ngw_g))
    
     RETURN
@@ -260,16 +260,16 @@ CONTAINS
   END SUBROUTINE efield_update2
 
 
-  SUBROUTINE allocate_efield2( ngw, nx, nhx, nas, nsp )
+  SUBROUTINE allocate_efield2( ngw, nx, nhx, nax, nsp )
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: ngw, nx, nhx, nas, nsp
+    INTEGER, INTENT(IN) :: ngw, nx, nhx, nax, nsp
       allocate( ctable2(ngw,2,3))
       allocate( ctabin2(ngw,2,3))
       allocate( qmat2(nx,nx))
-      allocate( gqq2(nhx,nhx,nas,nsp))
-      allocate( gqqm2(nhx,nhx,nas,nsp))
-      allocate( gqq02(nhx,nhx,nas,nsp))
-      allocate( gqqm02(nhx,nhx,nas,nsp))
+      allocate( gqq2(nhx,nhx,nax,nsp))
+      allocate( gqqm2(nhx,nhx,nax,nsp))
+      allocate( gqq02(nhx,nhx,nax,nsp))
+      allocate( gqqm02(nhx,nhx,nax,nsp))
     RETURN
   END SUBROUTINE allocate_efield2
 

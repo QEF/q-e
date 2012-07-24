@@ -63,7 +63,7 @@
       ! ... system at istep = 0
       ! ... this array is used to compute mean square displacements,
       ! ... it is initialized when NBEG = -1, NBEG = 0 and TAURDR = .TRUE.
-      ! ... first index: x,y,z, second index: atom sortred by specie with respect input
+      ! ... first index: x,y,z, second index: atom sorted by specie with respect input
       ! ... this array is saved in the restart file
 
       REAL(DP), ALLOCATABLE :: taui(:,:)
@@ -91,42 +91,6 @@
 
 !------------------------------------------------------------------------------!
   CONTAINS
-!------------------------------------------------------------------------------!
-
-    SUBROUTINE packtau( taup, tau, na, nsp )
-      IMPLICIT NONE
-      REAL(DP), INTENT(OUT) :: taup( :, : )
-      REAL(DP), INTENT(IN) :: tau( :, :, : )
-      INTEGER, INTENT(IN) :: na( : ), nsp
-      INTEGER :: is, ia, isa
-      isa = 0
-      DO is = 1, nsp
-        DO ia = 1, na( is )
-          isa = isa + 1
-          taup( :, isa ) = tau( :, ia, is )
-        END DO
-      END DO
-      RETURN
-    END SUBROUTINE packtau
-
-!------------------------------------------------------------------------------!
-
-    SUBROUTINE unpacktau( tau, taup, na, nsp )
-      IMPLICIT NONE
-      REAL(DP), INTENT(IN) :: taup( :, : )
-      REAL(DP), INTENT(OUT) :: tau( :, :, : )
-      INTEGER, INTENT(IN) :: na( : ), nsp
-      INTEGER :: is, ia, isa
-      isa = 0
-      DO is = 1, nsp
-        DO ia = 1, na( is )
-          isa = isa + 1
-          tau( :, ia, is ) = taup( :, isa )
-        END DO
-      END DO
-      RETURN
-    END SUBROUTINE unpacktau
-
 !------------------------------------------------------------------------------!
 
     SUBROUTINE sort_tau( tausrt, isrt, tau, isp, nat, nsp )

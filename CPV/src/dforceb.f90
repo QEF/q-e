@@ -34,7 +34,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
   use  parameters
   use electrons_base, only: nx => nbspx, n => nbsp, nspin, f
   use  constants
-  use ions_base, only : nat, nas => nax, na, nsp
+  use ions_base, only : nat, nax, na, nsp
   use cell_base, only: at, alat
   use uspp_param, only: nh, nhm, nvb, ish
   use uspp, only : nhsa=> nkb
@@ -49,7 +49,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
       
       
   complex(DP) c0(ngw, n), betae(ngw,nhsa), df(ngw),&
-       &   gqq(nhm,nhm,nas,nsp),gqqm(nhm,nhm,nas,nsp),&
+       &   gqq(nhm,nhm,nax,nsp),gqqm(nhm,nhm,nax,nsp),&
        &   qmat(nx,nx)
   real(DP) bec0(nhsa,n), dq2(nat,nhm,nhm,nspin),  gmes
   real(DP), EXTERNAL :: g_mes

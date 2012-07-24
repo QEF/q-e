@@ -22,7 +22,7 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
 ! gqq        : input, Int_e exp(iG*r)*q_ijR(r)
 ! evalue     : input, scale of electric field
  
-  use ions_base, only : nas => nax, na, nsp
+  use ions_base, only : nax, na, nsp
   use uspp_param, only: nvb, ish
   use kinds, only : dp
   use constants
@@ -36,7 +36,7 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
   implicit none
 
   real(dp) evalue
-  complex(dp) qmatinv(nbspx,nbspx),gqq(nhm,nhm,nas,nsp)
+  complex(dp) qmatinv(nbspx,nbspx),gqq(nhm,nhm,nax,nsp)
   real(dp) bec0(nhsa,nbspx),becdr(nhsa,nbspx,3)
   real(dp) fion(3,*)
   integer ipol

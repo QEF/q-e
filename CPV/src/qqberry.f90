@@ -22,7 +22,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use gvecw,              only: ngw
   use gvect,              only: mill
   use constants
-  use ions_base,          only: nas => nax, na, nsp
+  use ions_base,          only: nax, na, nsp
   use cell_base,          only: at, alat
   use gvect,              only: g, gg
   use mp,                 only: mp_sum
@@ -31,8 +31,8 @@ subroutine qqberry2( gqq,gqqm, ipol)
   
   implicit none
 
-  complex(dp) gqq(nhm,nhm,nas,nsp)
-  complex(dp) gqqm(nhm,nhm,nas,nsp)
+  complex(dp) gqq(nhm,nhm,nax,nsp)
+  complex(dp) gqqm(nhm,nhm,nax,nsp)
   real(dp) gmes
   real(dp), external :: g_mes
   integer :: ipol
@@ -62,7 +62,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
   qradb2 = 0.0d0
      
   do is=1,nsp
-     do ia=1,nas
+     do ia=1,nax
         do jv=1,nhm
            do iv=1,nhm
               gqq(iv,jv,ia,is)=(0.d0,0.d0)
@@ -205,7 +205,7 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
 
   use kinds, only : dp
   use gvecw, only: ngw
-  use ions_base, only : nas => nax, nat, na, nsp
+  use ions_base, only : nax, nat, na, nsp
   use gvect, only: mill
   use uspp_param, only: nh, nhm, nvb, ish
   use mp, only: mp_sum
@@ -215,9 +215,9 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
 
  
   complex(dp) eigr(ngw,nat)
-  complex(dp) gqq(nhm,nhm,nas,nsp)
-  complex(dp) gqqm(nhm,nhm,nas,nsp)
-  complex(dp) gqqm0(nhm,nhm,nas,nsp)
+  complex(dp) gqq(nhm,nhm,nax,nsp)
+  complex(dp) gqqm(nhm,nhm,nax,nsp)
+  complex(dp) gqqm0(nhm,nhm,nax,nsp)
 
   integer ipol
   
@@ -225,7 +225,7 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
 
 
   do is=1,nsp
-     do ia=1,nas
+     do ia=1,nax
         do jv=1,nhm
            do iv=1,nhm
               gqq(iv,jv,ia,is)=(0.d0,0.d0)
