@@ -47,7 +47,7 @@ CONTAINS
   ! check on the number of bands: we need to include empty bands in order to allow
   ! to write the transitions
   !
-  IF ( REAL(nbnd, DP)  <= nelec / 2.0_DP ) CALL errore('epsilon', 'ban band number', 1)
+  IF ( REAL(nbnd, DP)  <= nelec / 2.0_DP ) CALL errore('epsilon', 'bad band number', 1)
 
   !
   ! spin is not implemented
