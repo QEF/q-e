@@ -782,6 +782,10 @@ system installed on that machine. Ask your system administrator for
 instructions. For execution using OpenMP on N threads, 
 you should set PARA\_PREFIX to \texttt{"env OMP\_NUM\_THREADS=N ... "}.
 
+Notice that most tests and examples are devised to be run serially 
+or on a small number of processors; do not use tests and examples
+to benchmark parallelism, do not try to run on too many processors.
+
 To run an example, go to the corresponding directory (e.g.
  \texttt{PW/examples/example01}) and execute: 
 \begin{verbatim}

@@ -47,8 +47,11 @@ fi
 #     ^^^ PARA_PREFIX      ^^^^^^^^ PARA_POSTFIX
 #
 # To run on a single processor, you can usually leave them empty.
+# BEWARE: most tests and examples are devised to be run serially or on
+# a small number of processors; do not use tests and examples to benchmark
+# parallelism, do not run on too many processors
 
-#PARA_PREFIX="mpirun -np 2"
+PARA_PREFIX="mpirun -np 2"
 PARA_PREFIX=" "
 PARA_POSTFIX=" "
 
