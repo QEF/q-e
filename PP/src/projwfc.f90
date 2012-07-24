@@ -43,14 +43,15 @@ PROGRAM do_projwfc
   ! for GWW
   INTEGER :: iun, idum
   REAL(DP) :: rdum1,rdum2,rdum3
-  LOGICAL :: lex, lgww, lwrite_overlaps
+  LOGICAL :: lex, lgww
+  LOGICAL :: lwrite_overlaps, lbinary_data
   !
   !
   NAMELIST / projwfc / outdir, prefix, ngauss, degauss, lsym, &
              Emin, Emax, DeltaE, io_choice, smoothing, filpdos, filproj, &
              lgww, & !if .true. use GW QP energies from file bands.dat
              kresolveddos, tdosinboxes, n_proj_boxes, irmin, irmax, plotboxes, &
-             lwrite_overlaps
+             lwrite_overlaps, lbinary_data
   !
   ! initialise environment
   !
@@ -74,6 +75,7 @@ PROGRAM do_projwfc
   degauss= 0.d0
   lgww   = .false.
   lwrite_overlaps   = .false.
+  lbinary_data = .false.
   kresolveddos = .false.
   tdosinboxes = .false.
   plotboxes   = .false.
@@ -114,6 +116,7 @@ PROGRAM do_projwfc
   CALL mp_bcast( Emin, ionode_id )
   CALL mp_bcast( Emax, ionode_id )
   CALL mp_bcast( lwrite_overlaps, ionode_id )
+  CALL mp_bcast( lbinary_data, ionode_id )
   ! for GWW
   CALL mp_bcast( lgww, ionode_id )
   ! for projection on boxes
@@ -157,12 +160,12 @@ PROGRAM do_projwfc
      ENDIF
   ELSE
      IF (noncolin) THEN
-        CALL projwave_nc(filproj, lsym, lwrite_overlaps )
+        CALL projwave_nc(filproj, lsym, lwrite_overlaps, lbinary_data )
      ELSE
         IF( nproc_ortho > 1 ) THEN
-           CALL pprojwave (filproj, lsym, lwrite_overlaps)
+           CALL pprojwave (filproj, lsym, lwrite_overlaps, lbinary_data )
         ELSE
-           CALL projwave (filproj, lsym, lgww, lwrite_overlaps)
+           CALL projwave (filproj, lsym, lgww, lwrite_overlaps, lbinary_data)
         ENDIF
      ENDIF
   ENDIF
@@ -222,7 +225,7 @@ MODULE projections_ldos
 END MODULE projections_ldos
 !
 !-----------------------------------------------------------------------
-SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp )
+SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp, lbinary )
   !-----------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout, ionode
@@ -254,7 +257,7 @@ SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp )
   INTEGER, EXTERNAL :: find_free_unit
   !
   CHARACTER (len=*) :: filproj
-  LOGICAL           :: lwrite_ovp
+  LOGICAL           :: lwrite_ovp, lbinary
   !
   INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, nwfc,&
        nwfc1, lmax_wfc, is, ios, iunproj
@@ -607,7 +610,7 @@ SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp )
      !
      ! write projections to file using iotk
      !
-     CALL write_proj( "atomic_proj.xml", proj_aux, lwrite_ovp, ovps_aux )
+     CALL write_proj( "atomic_proj", lbinary, proj_aux, lwrite_ovp, ovps_aux )
      !
      DEALLOCATE( proj_aux, ovps_aux )
 
@@ -734,7 +737,7 @@ SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp )
 END SUBROUTINE projwave
 !
 !-----------------------------------------------------------------------
-SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp )
+SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary )
   !-----------------------------------------------------------------------
   !
   USE io_global,  ONLY : stdout, ionode
@@ -767,7 +770,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp )
   IMPLICIT NONE
   !
   CHARACTER(len=*) :: filproj
-  LOGICAL :: lwrite_ovp
+  LOGICAL :: lwrite_ovp, lbinary
   LOGICAL :: lsym
   !
   INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, ind, n, m, m1, n1, &
@@ -1170,7 +1173,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp )
      !
      ! write projections to file using iotk
      !
-     CALL write_proj( "atomic_proj.xml", proj_aux, lwrite_ovp, ovps_aux )
+     CALL write_proj( "atomic_proj", lbinary, proj_aux, lwrite_ovp, ovps_aux )
      !
      DEALLOCATE( proj_aux, ovps_aux )
 
@@ -1918,7 +1921,7 @@ FUNCTION compute_mj(j,l,m)
 END FUNCTION compute_mj
 !
 !-----------------------------------------------------------------------
-SUBROUTINE  write_proj (filename, projs, lwrite_ovp, ovps )
+SUBROUTINE  write_proj (filename, lbinary, projs, lwrite_ovp, ovps )
   !-----------------------------------------------------------------------
   !
   USE kinds
@@ -1934,6 +1937,7 @@ SUBROUTINE  write_proj (filename, projs, lwrite_ovp, ovps )
   IMPLICIT NONE
 
   CHARACTER(*),  INTENT(IN) :: filename
+  LOGICAL,       INTENT(IN) :: lbinary
   COMPLEX(DP),   INTENT(IN) :: projs(natomwfc,nbnd,nkstot)
   LOGICAL,       INTENT(IN) :: lwrite_ovp
   COMPLEX(DP),   INTENT(IN) :: ovps(natomwfc,natomwfc,nkstot)
@@ -1948,7 +1952,14 @@ SUBROUTINE  write_proj (filename, projs, lwrite_ovp, ovps )
 
   tmp = trim( tmp_dir ) // trim( prefix ) // '.save/' //trim(filename)
   !
-  CALL iotk_open_write(iun, FILE=trim(tmp), ROOT="ATOMIC_PROJECTIONS", IERR=ierr )
+  IF ( lbinary ) THEN
+      tmp = TRIM(tmp) // ".dat"
+  ELSE
+      tmp = TRIM(tmp) // ".xml"
+  ENDIF
+  !
+  CALL iotk_open_write(iun, FILE=trim(tmp), ROOT="ATOMIC_PROJECTIONS", &
+                       BINARY=lbinary, IERR=ierr )
   IF ( ierr /= 0 ) RETURN
   !
   !
@@ -2082,7 +2093,7 @@ END SUBROUTINE write_proj
 !  projwave with distributed matrixes
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp )
+SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   !-----------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout, ionode
@@ -2124,7 +2135,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp )
   COMPLEX(DP), PARAMETER :: one  = ( 1.0d0, 0.0d0 )
 
   CHARACTER (len=*) :: filproj
-  LOGICAL :: lwrite_ovp
+  LOGICAL :: lwrite_ovp, lbinary
   !
   INTEGER :: ik, ibnd, i, j, na, nb, nt, isym, n,  m, m1, l, nwfc,&
        nwfc1, lmax_wfc, is, iunproj, iunaux
@@ -2545,7 +2556,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp )
      !
      ! write projections to file using iotk
      !
-     CALL write_proj( "atomic_proj.xml", proj_aux, .FALSE., ovps_aux )
+     CALL write_proj( "atomic_proj", lbinary, proj_aux, .FALSE., ovps_aux )
      !
      DEALLOCATE( proj_aux, ovps_aux )
 
