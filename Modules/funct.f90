@@ -98,9 +98,9 @@ module funct
   !              "hse"   = "sla+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof HSE 06
   !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
   !              "vdw-df"= "sla+pw+rpb+vdw1"   = vdW-DF
-  !              "vdw-df2"="sla+pw+rpb+vdw2"   = vdW-DF2
-  !              "vdw-df-c09"
-  !              "vdw-df2-c09"
+  !              "vdw-df2"="sla+pw+rw86+vdw2"  = vdW-DF2
+  !              "vdw-df-c09"="sla+pw+c09x+vdw1"
+  !              "vdw-df2-c09"="sla+pw+c09x+vdw2"
   ! or by any nonconflicting combination of the following keywords
   ! (case-insensitive):
   !
