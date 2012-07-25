@@ -66,7 +66,7 @@ acfdt : bindir mods libs pw ph
 	( cd ACFDT ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-gipaw : pw
+gipaw : pw neb
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 ld1 : bindir liblapack libblas mods libs

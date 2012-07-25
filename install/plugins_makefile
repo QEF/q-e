@@ -149,10 +149,15 @@ uncompress-phonon: touch-dummy
 ##########################################################
 # GIPAW
 ###########################################################
-gipaw:  uncompress-gipaw configure-gipaw
+#gipaw:  uncompress-gipaw configure-gipaw
+gipaw:  download-gipaw configure-gipaw
 	if test -d ../GIPAW; then \
 	cd ../GIPAW; $(MAKE) all; cd ../bin; ln -fs ../GIPAW/bin/gipaw.x . ; fi
 	touch make-gipaw
+download-gipaw:
+	@echo "GIPAW 5 is not ready for distribution. Donwloading the development version."
+	@echo "This version is not bug free. Please, check if your results make sense."
+	svn checkout svn://cvs.qe-forge.org/scmrepos/svn/qe-gipaw/trunk ../GIPAW
 uncompress-gipaw: touch-dummy
 	@(if test ! -e ../archive/$(GIPAW).tar.gz && test ! -d ../GIPAW ; then \
 	wget -O ../archive/$(GIPAW).tar.gz $(GIPAW_URL) > /dev/null 2>&1; \
