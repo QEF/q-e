@@ -76,7 +76,7 @@ SUBROUTINE print_ks_energies()
      !
      WRITE( stdout, 9030 ) ( et(ibnd,ik) * rytoev, ibnd = 1, nbnd )
      !
-     IF( iverbosity > 0 ) THEN
+     IF( iverbosity > 0 .AND. .NOT. lbands ) THEN
         !
         WRITE( stdout, 9032 )
         WRITE( stdout, 9030 ) ( wg(ibnd,ik), ibnd = 1, nbnd )
