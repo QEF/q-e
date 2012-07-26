@@ -75,6 +75,8 @@ MODULE mp_global
   INTEGER :: leg_ortho   = 1  ! the distance in the father communicator
                               ! of two neighbour processors in ortho_comm
   INTEGER :: ortho_comm  = 0  ! communicator for the ortho group
+  INTEGER :: ortho_row_comm  = 0  ! communicator for the ortho row group
+  INTEGER :: ortho_col_comm  = 0  ! communicator for the ortho col group
   INTEGER :: ortho_comm_id= 0 ! id of the ortho_comm
   !
 #if defined __SCALAPACK
@@ -245,6 +247,8 @@ CONTAINS
     inter_bgrp_comm  = group_i
     intra_bgrp_comm  = group_i
     ortho_comm       = group_i
+    ortho_row_comm   = group_i
+    ortho_col_comm   = group_i
     nproc_pot        = nproc_i
     my_pot_id        = 0
     me_pot           = mpime
@@ -368,6 +372,8 @@ CONTAINS
     inter_bgrp_comm  = group_i
     intra_bgrp_comm  = group_i
     ortho_comm       = group_i
+    ortho_row_comm   = group_i
+    ortho_col_comm   = group_i
     !
     RETURN
     !
@@ -786,6 +792,10 @@ CONTAINS
             CALL errore( " init_ortho_group ", " wrong task coordinates in ortho group ", ierr )
        IF( me_ortho1*leg_ortho /= me_all ) &
             CALL errore( " init_ortho_group ", " wrong rank assignment in ortho group ", ierr )
+
+       CALL MPI_COMM_SPLIT( ortho_comm, me_ortho(2), me_ortho(1), ortho_col_comm, ierr )
+       CALL MPI_COMM_SPLIT( ortho_comm, me_ortho(1), me_ortho(2), ortho_row_comm, ierr )
+
     else
        ortho_comm_id = 0
        me_ortho(1) = me_ortho1
