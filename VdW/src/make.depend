@@ -6,11 +6,11 @@ cegterg.o : ../../Modules/io_global.o
 cegterg.o : ../../Modules/kind.o
 cegterg.o : ../../Modules/mp.o
 cegterg.o : ../../Modules/mp_global.o
+ch_psi_all.o : ../../Modules/becmod.o
 ch_psi_all.o : ../../Modules/kind.o
 ch_psi_all.o : ../../Modules/mp.o
 ch_psi_all.o : ../../Modules/mp_global.o
 ch_psi_all.o : ../../PHonon/PH/phcom.o
-ch_psi_all.o : ../../PW/src/becmod.o
 ch_psi_all.o : ../../PW/src/pwcom.o
 check_v_eff.o : ../../Modules/cell_base.o
 check_v_eff.o : ../../Modules/constants.o
@@ -37,6 +37,7 @@ dv_of_drho.o : ../../PHonon/PH/phcom.o
 dv_of_drho.o : ../../PW/src/pwcom.o
 dv_of_drho.o : ../../PW/src/scf_mod.o
 dv_of_drho.o : vdwcom.o
+dvpsi_e.o : ../../Modules/becmod.o
 dvpsi_e.o : ../../Modules/io_global.o
 dvpsi_e.o : ../../Modules/ions_base.o
 dvpsi_e.o : ../../Modules/kind.o
@@ -44,7 +45,6 @@ dvpsi_e.o : ../../Modules/mp.o
 dvpsi_e.o : ../../Modules/mp_global.o
 dvpsi_e.o : ../../Modules/uspp.o
 dvpsi_e.o : ../../PHonon/PH/phcom.o
-dvpsi_e.o : ../../PW/src/becmod.o
 dvpsi_e.o : ../../PW/src/pwcom.o
 dvpsi_e.o : vdwcom.o
 eff_pot.o : ../../Modules/constants.o
@@ -61,12 +61,12 @@ eff_pot.o : ../../Modules/uspp.o
 eff_pot.o : ../../PW/src/pwcom.o
 eff_pot.o : ../../PW/src/scf_mod.o
 eff_pot.o : vdwcom.o
+h_psiq.o : ../../Modules/becmod.o
 h_psiq.o : ../../Modules/fft_base.o
 h_psiq.o : ../../Modules/fft_interfaces.o
 h_psiq.o : ../../Modules/kind.o
 h_psiq.o : ../../Modules/wavefunctions.o
 h_psiq.o : ../../PHonon/PH/phcom.o
-h_psiq.o : ../../PW/src/becmod.o
 h_psiq.o : ../../PW/src/pwcom.o
 h_psiq.o : ../../PW/src/scf_mod.o
 incdrhoscf.o : ../../Modules/fft_base.o
@@ -92,6 +92,7 @@ print_clock_vdw.o : ../../Modules/io_global.o
 print_clock_vdw.o : ../../Modules/uspp.o
 print_clock_vdw.o : ../../PHonon/PH/phcom.o
 print_clock_vdw.o : ../../PHonon/PH/ramanm.o
+solve_e.o : ../../Modules/becmod.o
 solve_e.o : ../../Modules/cell_base.o
 solve_e.o : ../../Modules/check_stop.o
 solve_e.o : ../../Modules/fft_base.o
@@ -104,7 +105,6 @@ solve_e.o : ../../Modules/mp.o
 solve_e.o : ../../Modules/mp_global.o
 solve_e.o : ../../Modules/uspp.o
 solve_e.o : ../../PHonon/PH/phcom.o
-solve_e.o : ../../PW/src/becmod.o
 solve_e.o : ../../PW/src/pwcom.o
 solve_e.o : ../../PW/src/scf_mod.o
 solve_e.o : vdwcom.o
