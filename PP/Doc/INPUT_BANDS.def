@@ -95,7 +95,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
                 enegies are written in eV and xk in units 2\pi/a.
         }
 
-           
+      }           
 	vargroup -type INTEGER {
 	    var firstk
 	    var lastk 
