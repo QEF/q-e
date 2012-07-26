@@ -26,7 +26,6 @@ atomic_rho.o \
 atomic_wfc.o \
 average_pp.o \
 acfdt_in_pw.o \
-becmod.o \
 newd.o \
 bp_mod.o \
 bp_c_phase.o \
@@ -124,7 +123,6 @@ n_plane_waves.o \
 new_ns.o \
 new_occ.o \
 ns_adj.o \
-noncol.o \
 nonloccorr.o \
 non_scf.o \
 offset_atom_wfc.o \
