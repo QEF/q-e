@@ -1,6 +1,3 @@
-atoms_type.o : ../../Modules/cell_base.o
-atoms_type.o : ../../Modules/kind.o
-atoms_type.o : ../../Modules/parameters.o
 berry_phase.o : ../../Modules/io_global.o
 berry_phase.o : ../../Modules/mp.o
 berry_phase.o : ../../Modules/mp_global.o
@@ -112,7 +109,6 @@ cp_interfaces.o : ../../Modules/fft_base.o
 cp_interfaces.o : ../../Modules/ions_base.o
 cp_interfaces.o : ../../Modules/kind.o
 cp_interfaces.o : ../../Modules/recvec.o
-cp_interfaces.o : atoms_type.o
 cp_restart.o : ../../Modules/cell_base.o
 cp_restart.o : ../../Modules/constants.o
 cp_restart.o : ../../Modules/control_flags.o
@@ -365,7 +361,6 @@ fromscra.o : ../../Modules/timestep.o
 fromscra.o : ../../Modules/uspp.o
 fromscra.o : ../../Modules/wave_base.o
 fromscra.o : ../../Modules/wavefunctions.o
-fromscra.o : atoms_type.o
 fromscra.o : cell_nose.o
 fromscra.o : cg.o
 fromscra.o : cp_emass.o
@@ -421,7 +416,6 @@ init.o : ../../Modules/recvec.o
 init.o : ../../Modules/recvec_subs.o
 init.o : ../../Modules/stick_set.o
 init.o : ../../Modules/uspp.o
-init.o : atoms_type.o
 init.o : berry_phase.o
 init.o : cp_interfaces.o
 init.o : cp_restart.o
@@ -537,7 +531,6 @@ ions_nose.o : ../../Modules/kind.o
 ions_positions.o : ../../Modules/cell_base.o
 ions_positions.o : ../../Modules/io_global.o
 ions_positions.o : ../../Modules/kind.o
-ions_positions.o : atoms_type.o
 ions_positions.o : printout_base.o
 ksstates.o : ../../Modules/electrons_base.o
 ksstates.o : ../../Modules/fft_base.o
@@ -729,7 +722,6 @@ potentials.o : ../../Modules/mp.o
 potentials.o : ../../Modules/mp_global.o
 potentials.o : ../../Modules/recvec.o
 potentials.o : ../../Modules/sic.o
-potentials.o : atoms_type.o
 potentials.o : gvecw.o
 pres_ai_mod.o : ../../Modules/constants.o
 pres_ai_mod.o : ../../Modules/kind.o
@@ -844,7 +836,6 @@ restart_sub.o : ../../Modules/timestep.o
 restart_sub.o : ../../Modules/uspp.o
 restart_sub.o : ../../Modules/wave_base.o
 restart_sub.o : ../../Modules/wavefunctions.o
-restart_sub.o : atoms_type.o
 restart_sub.o : cp_interfaces.o
 restart_sub.o : efield.o
 restart_sub.o : electrons.o

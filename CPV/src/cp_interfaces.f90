@@ -79,7 +79,6 @@
    PUBLIC :: vofloc
    PUBLIC :: force_loc
    PUBLIC :: self_vofhar
-   PUBLIC :: localisation
    !
    PUBLIC :: set_eitot
    PUBLIC :: set_evtot
@@ -747,18 +746,6 @@
       END SUBROUTINE
    END INTERFACE
    
-   INTERFACE localisation
-      SUBROUTINE localisation_x( wfc, atoms_m, ht)
-         USE kinds,              ONLY: DP
-         USE cell_base,   ONLY: boxdimensions
-         USE atoms_type_module, ONLY: atoms_type
-         IMPLICIT NONE 
-         COMPLEX(DP), INTENT(IN) :: wfc(:)
-         TYPE (atoms_type), INTENT(in) :: atoms_m
-         TYPE (boxdimensions), INTENT(in) :: ht
-      END SUBROUTINE
-   END INTERFACE
-
    INTERFACE set_eitot
       SUBROUTINE set_eitot_x( eitot )
          USE kinds, ONLY: DP

@@ -216,13 +216,11 @@
       use cell_base,        only: at, alat, r_to_s, cell_init, deth
 
       use cell_base,        only: ibrav, ainv, h, hold, tcell_base_init
-      USE ions_positions,   ONLY: allocate_ions_positions, atoms_init, &
-                                  atoms0, atomsm, atomsp
+      USE ions_positions,   ONLY: allocate_ions_positions, tau0, taus
       use cp_restart,       only: cp_read_cell
       USE fft_base,         ONLY: dfftb
       USE fft_types,        ONLY: fft_box_allocate
       USE cp_main_variables,ONLY: ht0, htm, taub
-      USE atoms_type_module,ONLY: atoms_type
       USE cp_interfaces,    ONLY: newinit
       USE constants,        ONLY: amu_au
 
@@ -252,18 +250,11 @@
 
       CALL allocate_ions_positions( nsp, nat )
       ! 
-      ! Scale positions that have been read from standard input 
-      ! according to the cell given in the standard input too
-      ! taus_srt = scaled, tau_srt = atomic units
+      ! tau0 = initial positions, sorted wrt order read from input
+      ! taus = initial positions, scaled with the cell read from input
       !
-      ALLOCATE( taus_srt( 3, nat ), pmass(nsp) )
-      
-      CALL r_to_s( tau_srt, taus_srt, na, nsp, ainv )
-
-      pmass (:) = amass(1:nsp) * amu_au
-      CALL atoms_init( atomsm, atoms0, atomsp, taus_srt, ind_srt, if_pos, atm, ht0%hmat, nat, nsp, na, pmass )
-      !
-      DEALLOCATE( pmass, taus_srt )
+      tau0(:,:) = tau_srt(:,:) 
+      CALL r_to_s( tau_srt, taus, na, nsp, ainv )
       !
       !  Allocate box descriptor
       !

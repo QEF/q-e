@@ -35,7 +35,6 @@ SUBROUTINE from_restart( )
    USE cp_main_variables,     ONLY : ht0, htm, lambdap, lambda, lambdam, eigr, &
                                      sfac, taub, irb, eigrb, edft, bec_bgrp, dbec, descla
    USE time_step,             ONLY : delt
-   USE atoms_type_module,     ONLY : atoms_type
    USE fft_base,              ONLY : dfftp
    !
    IMPLICIT NONE

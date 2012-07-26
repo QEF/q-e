@@ -14,7 +14,7 @@ SUBROUTINE from_scratch( )
                                      lwf, tprnfor, tortho, amprp, ampre,  &
                                      tsde, ortho_eps, ortho_max, &
                                      force_pairing
-    USE ions_positions,       ONLY : taus, tau0, tausm, vels, fion, fionm, atoms0
+    USE ions_positions,       ONLY : taus, tau0, tausm, vels, fion, fionm
     USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel
     USE ions_base,            ONLY : cdmi, nat, iforce
     USE ions_nose,            ONLY : xnhp0, xnhpm, vnhp
@@ -48,7 +48,6 @@ SUBROUTINE from_scratch( )
     USE cp_interfaces,        ONLY : print_lambda, nlfq_bgrp, setval_lambda
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
-    USE atoms_type_module,    ONLY : atoms_type
     USE wave_base,            ONLY : wave_steepest
     USE wavefunctions_module, ONLY : c0_bgrp, cm_bgrp, phi_bgrp
     USE fft_base,             ONLY : dfftp
@@ -106,7 +105,7 @@ SUBROUTINE from_scratch( )
        !
     END IF
     !
-    CALL phfacs( eigts1, eigts2, eigts3, eigr, mill, atoms0%taus, dfftp%nr1, dfftp%nr2, dfftp%nr3, atoms0%nat )
+    CALL phfacs( eigts1, eigts2, eigts3, eigr, mill, taus, dfftp%nr1, dfftp%nr2, dfftp%nr3, nat )
     !
     CALL strucf( sfac, eigts1, eigts2, eigts3, mill, ngms )
     !     
@@ -139,8 +138,7 @@ SUBROUTINE from_scratch( )
     !
     CALL occn_info( f )
     !
-    atoms0%for  = 0.D0
-    atoms0%vels = 0.D0
+    vels = 0.D0
     hold = h
     velh = 0.0d0
     fion = 0.0d0

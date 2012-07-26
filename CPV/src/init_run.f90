@@ -19,13 +19,11 @@ SUBROUTINE init_run()
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, ityp, cdms
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
-                                       vels, velsm, velsp, fion, fionm,      &
-                                       atoms0, atomsm, atomsp
+                                       vels, velsm, velsp, fion, fionm
   USE gvecw,                    ONLY : ngw, ngw_g, ggp
-  USE smallbox_gvec,                    ONLY : ngb
+  USE smallbox_gvec,            ONLY : ngb
   USE gvecs,                    ONLY : ngms
-  USE gvect,                    ONLY : ngm
-  USE gvect,       ONLY : gstart
+  USE gvect,                    ONLY : ngm, gstart
   USE fft_base,                 ONLY : dfftp, dffts
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
