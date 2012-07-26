@@ -9,13 +9,13 @@ gipaw_module.o : ../../Modules/ions_base.o
 gipaw_module.o : ../../Modules/kind.o
 gipaw_module.o : ../../Modules/mp.o
 gipaw_module.o : ../../Modules/mp_global.o
+gipaw_module.o : ../../Modules/noncol.o
 gipaw_module.o : ../../Modules/parameters.o
 gipaw_module.o : ../../Modules/recvec.o
 gipaw_module.o : ../../Modules/splinelib.o
 gipaw_module.o : ../../Modules/uspp.o
 gipaw_module.o : ../../PW/src/buffers.o
 gipaw_module.o : ../../PW/src/newd.o
-gipaw_module.o : ../../PW/src/noncol.o
 gipaw_module.o : ../../PW/src/pwcom.o
 gipaw_module.o : ../../PW/src/scf_mod.o
 gipaw_module.o : ../../PW/src/symm_base.o
@@ -42,6 +42,7 @@ init_gipaw_2.o : ../../Modules/recvec.o
 init_gipaw_2.o : ../../Modules/splinelib.o
 init_gipaw_2.o : ../../PW/src/pwcom.o
 init_gipaw_2.o : paw_gipaw.o
+init_xspectra_ldau.o : ../../Modules/becmod.o
 init_xspectra_ldau.o : ../../Modules/control_flags.o
 init_xspectra_ldau.o : ../../Modules/io_files.o
 init_xspectra_ldau.o : ../../Modules/io_global.o
@@ -49,14 +50,14 @@ init_xspectra_ldau.o : ../../Modules/ions_base.o
 init_xspectra_ldau.o : ../../Modules/kind.o
 init_xspectra_ldau.o : ../../Modules/mp.o
 init_xspectra_ldau.o : ../../Modules/mp_global.o
+init_xspectra_ldau.o : ../../Modules/noncol.o
 init_xspectra_ldau.o : ../../Modules/uspp.o
-init_xspectra_ldau.o : ../../PW/src/becmod.o
-init_xspectra_ldau.o : ../../PW/src/noncol.o
 init_xspectra_ldau.o : ../../PW/src/pwcom.o
 init_xspectra_ldau.o : xspectra_mod.o
 ipoolscatter.o : ../../Modules/kind.o
 ipoolscatter.o : ../../Modules/mp.o
 ipoolscatter.o : ../../Modules/mp_global.o
+lr_sm1_psi.o : ../../Modules/becmod.o
 lr_sm1_psi.o : ../../Modules/control_flags.o
 lr_sm1_psi.o : ../../Modules/ions_base.o
 lr_sm1_psi.o : ../../Modules/kind.o
@@ -64,7 +65,6 @@ lr_sm1_psi.o : ../../Modules/mp.o
 lr_sm1_psi.o : ../../Modules/mp_global.o
 lr_sm1_psi.o : ../../Modules/recvec.o
 lr_sm1_psi.o : ../../Modules/uspp.o
-lr_sm1_psi.o : ../../PW/src/becmod.o
 lr_sm1_psi.o : ../../PW/src/pwcom.o
 mygetK.o : ../../Modules/kind.o
 paw_gipaw.o : ../../Modules/atom.o
@@ -96,6 +96,7 @@ read_file_xspectra.o : ../../Modules/ions_base.o
 read_file_xspectra.o : ../../Modules/kind.o
 read_file_xspectra.o : ../../Modules/mp.o
 read_file_xspectra.o : ../../Modules/mp_global.o
+read_file_xspectra.o : ../../Modules/noncol.o
 read_file_xspectra.o : ../../Modules/parser.o
 read_file_xspectra.o : ../../Modules/paw_variables.o
 read_file_xspectra.o : ../../Modules/read_pseudo.o
@@ -106,7 +107,6 @@ read_file_xspectra.o : ../../Modules/wavefunctions.o
 read_file_xspectra.o : ../../Modules/xml_io_base.o
 read_file_xspectra.o : ../../PW/src/buffers.o
 read_file_xspectra.o : ../../PW/src/newd.o
-read_file_xspectra.o : ../../PW/src/noncol.o
 read_file_xspectra.o : ../../PW/src/paw_init.o
 read_file_xspectra.o : ../../PW/src/paw_onecenter.o
 read_file_xspectra.o : ../../PW/src/pw_restart.o
@@ -117,6 +117,7 @@ read_file_xspectra.o : ../../PW/src/start_k.o
 read_file_xspectra.o : ../../PW/src/symm_base.o
 read_file_xspectra.o : paw_gipaw.o
 xspectra.o : ../../Modules/atom.o
+xspectra.o : ../../Modules/becmod.o
 xspectra.o : ../../Modules/cell_base.o
 xspectra.o : ../../Modules/constants.o
 xspectra.o : ../../Modules/control_flags.o
@@ -128,6 +129,7 @@ xspectra.o : ../../Modules/ions_base.o
 xspectra.o : ../../Modules/kind.o
 xspectra.o : ../../Modules/mp.o
 xspectra.o : ../../Modules/mp_global.o
+xspectra.o : ../../Modules/noncol.o
 xspectra.o : ../../Modules/parallel_include.o
 xspectra.o : ../../Modules/parameters.o
 xspectra.o : ../../Modules/parser.o
@@ -135,8 +137,6 @@ xspectra.o : ../../Modules/radial_grids.o
 xspectra.o : ../../Modules/recvec.o
 xspectra.o : ../../Modules/uspp.o
 xspectra.o : ../../Modules/wavefunctions.o
-xspectra.o : ../../PW/src/becmod.o
-xspectra.o : ../../PW/src/noncol.o
 xspectra.o : ../../PW/src/pwcom.o
 xspectra.o : ../../PW/src/scf_mod.o
 xspectra.o : ../../PW/src/start_k.o
