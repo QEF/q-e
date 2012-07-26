@@ -9,6 +9,7 @@ MODULES = \
 atom.o \
 autopilot.o \
 basic_algebra_routines.o \
+becmod.o \
 bfgs_module.o \
 cell_base.o  \
 check_stop.o  \
@@ -46,6 +47,7 @@ mp_base.o \
 mp_global.o \
 mp_image_global_module.o \
 mp_wave.o \
+noncol.o \
 open_close_input_file.o \
 parallel_include.o \
 parameters.o \

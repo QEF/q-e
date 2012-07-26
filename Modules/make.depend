@@ -5,6 +5,12 @@ autopilot.o : kind.o
 autopilot.o : mp.o
 autopilot.o : parser.o
 basic_algebra_routines.o : kind.o
+becmod.o : control_flags.o
+becmod.o : kind.o
+becmod.o : mp.o
+becmod.o : mp_global.o
+becmod.o : noncol.o
+becmod.o : recvec.o
 bfgs_module.o : basic_algebra_routines.o
 bfgs_module.o : cell_base.o
 bfgs_module.o : constants.o
@@ -132,6 +138,8 @@ mp_image_global_module.o : mp.o
 mp_image_global_module.o : parallel_include.o
 mp_wave.o : kind.o
 mp_wave.o : parallel_include.o
+noncol.o : kind.o
+noncol.o : parameters.o
 open_close_input_file.o : ../iotk/src/iotk_module.o
 open_close_input_file.o : io_global.o
 parser.o : io_global.o
