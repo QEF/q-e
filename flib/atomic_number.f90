@@ -116,7 +116,7 @@ function atom_weight(atomic_number)
   integer :: atomic_number
   real(DP) :: atom_weight
 
-  real(DP) :: weights(103)
+  real(DP) :: weights(109)
   data weights/ 1.00794_DP,                           4.00260_DP, &
                 6.941_DP,9.01218_DP,10.811_DP,12.0107_DP,14.00674_DP, &
                 15.9994_DP,18.99840_DP,20.1797_DP, &
@@ -141,9 +141,10 @@ function atom_weight(atomic_number)
                 223._DP,226._DP,227._DP,232.0381_DP,231.03588_DP, &
                 238.0289_DP,237._DP,244._DP, &
                 243._DP,247._DP,247._DP,251._DP,252._DP,257._DP,  &
-                258._DP,259._DP, 262._DP /
+                258._DP,259._DP,262._DP,261._DP,262._DP,266._DP,264._DP, &
+                277._DP,268._DP  /
 
-  if (atomic_number < 1 .or. atomic_number > 103) then
+  if (atomic_number < 1 .or. atomic_number > 109) then
      call errore('atom_weight','invalid atomic number',abs(atomic_number))
   else
      atom_weight=weights(atomic_number)
