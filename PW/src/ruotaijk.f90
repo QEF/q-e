@@ -35,12 +35,13 @@ subroutine ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk)
   !
   !  local variable
   !
-  ! the rotation matrix in scaled crystallogra
+  ! the rotation matrix in scaled crystallographic
   integer :: ss (3, 3)
-  ! axes. Compatibility with the FFT grid must
-  ! been checked  elsewhere (sgam_at)
+  ! axes. Compatibility with the FFT grid must have 
+  ! been checked elsewhere (sgam_at)
   !
-  ! this is a temporary fix. Much better would be to pass directly ss matr
+  ! this is a temporary fix. Much better would be to pass directly the ss 
+  ! matrix
   !
   ss (1, 1) = s (1, 1)
   ss (2, 1) = s (2, 1) * nr1 / nr2
