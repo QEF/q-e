@@ -121,7 +121,7 @@ PROGRAM plotband
         ps = ( k1(1)*k2(1) + k1(2)*k2(2) + k1(3)*k2(3) ) / &
          sqrt( k1(1)*k1(1) + k1(2)*k1(2) + k1(3)*k1(3) ) / &
          sqrt( k2(1)*k2(1) + k2(2)*k2(2) + k2(3)*k2(3) )
-        high_symmetry(n) = (ABS(ps-1.d0) >1.0d-4)
+        high_symmetry(n) = (ABS(ps-1.d0) >1.0d-4).OR.high_symmetry(n)
 !
 !  The gamma point is a high symmetry point
 !
