@@ -10,7 +10,7 @@
 subroutine sym_dmag (nper, irr, dmagtosym)
   !---------------------------------------------------------------------
   ! symmetrize the change of the magnetization density
-  ! belonging to an irreproducible representation
+  ! belonging to an irreducible representation
   !
   USE kinds, only : DP
   USE constants, ONLY: tpi

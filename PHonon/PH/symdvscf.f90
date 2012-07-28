@@ -10,7 +10,7 @@
 subroutine symdvscf (nper, irr, dvtosym)
   !---------------------------------------------------------------------
   ! symmetrize the self-consistent potential of the perturbations
-  ! belonging to an irreproducible representation
+  ! belonging to an irreducible representation
   !
   USE kinds, only : DP
   USE constants, ONLY: tpi
