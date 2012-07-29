@@ -22,8 +22,9 @@ PROGRAM read_upf_tofile
   !
   !
   USE constants, ONLY : fpi
-  USE pseudo_types
-  USE upf_module
+  USE pseudo_types, ONLY : pseudo_upf, nullify_pseudo_upf, &
+                           deallocate_pseudo_upf
+  USE upf_module, ONLY : read_upf
   USE radial_grids, ONLY : radial_grid_type, nullify_radial_grid
   !
   IMPLICIT NONE
