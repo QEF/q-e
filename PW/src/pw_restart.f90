@@ -2672,7 +2672,7 @@ MODULE pw_restart
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
-      INTEGER :: ik, ik_eff, num_k_points, iunout
+      INTEGER :: ik, ik_eff, num_k_points
       LOGICAL :: found, two_fermi_energies_
       !
       ierr = 0
