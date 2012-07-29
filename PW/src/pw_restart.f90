@@ -15,8 +15,15 @@ MODULE pw_restart
   ! ... written by Carlo Sbraccia (2005)
   !
   USE iotk_module
-  USE xml_io_base
-  USE xml_io_base, ONLY : default_fmt_version => fmt_version  
+  USE xml_io_base, ONLY : default_fmt_version => fmt_version, rho_binary, &
+                          kpoint_dir, write_control, write_xc, write_occ, &
+                          attr, wfc_filename, write_eig, write_wfc, &
+                          write_exx, write_spin, write_cell, write_header, &
+                          write_moving_cell, write_para, write_ions, &
+                          write_symmetry, write_efield, write_planewaves, &
+                          write_magnetization, write_bz, save_history, &
+                          create_directory, read_wfc
+                            
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : e2
