@@ -15,12 +15,12 @@ bcast_d3_input.o : ../../Modules/run_info.o
 bcast_d3_input.o : ../../PHonon/PH/phcom.o
 bcast_d3_input.o : ../../PW/src/pwcom.o
 bcast_d3_input.o : d3com.o
+ch_psi_all2.o : ../../Modules/becmod.o
 ch_psi_all2.o : ../../Modules/kind.o
 ch_psi_all2.o : ../../Modules/mp.o
 ch_psi_all2.o : ../../Modules/mp_global.o
 ch_psi_all2.o : ../../Modules/uspp.o
 ch_psi_all2.o : ../../PHonon/PH/phcom.o
-ch_psi_all2.o : ../../PW/src/becmod.o
 ch_psi_all2.o : ../../PW/src/pwcom.o
 close_open.o : ../../Modules/io_files.o
 close_open.o : ../../Modules/io_global.o
@@ -66,10 +66,10 @@ d3_readin.o : ../../Modules/io_files.o
 d3_readin.o : ../../Modules/io_global.o
 d3_readin.o : ../../Modules/ions_base.o
 d3_readin.o : ../../Modules/mp.o
+d3_readin.o : ../../Modules/noncol.o
 d3_readin.o : ../../Modules/run_info.o
 d3_readin.o : ../../Modules/uspp.o
 d3_readin.o : ../../PHonon/PH/phcom.o
-d3_readin.o : ../../PW/src/noncol.o
 d3_readin.o : ../../PW/src/pwcom.o
 d3_readin.o : d3com.o
 d3_recover.o : ../../Modules/io_files.o
