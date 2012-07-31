@@ -81,31 +81,44 @@ subroutine init_representations()
      sym(1:nsym)=.true.
      call smallg_q (xq, modenum, at, bg, nsym, s, ftau, sym, minus_q)
      IF ( .not. time_reversal ) minus_q = .false.
+     IF (modenum > 0) THEN
+        call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
+        call mode_group (modenum, xq, at, bg, nat, nsym, s, irt, &
+                         minus_q, rtau, sym)
+     ENDIF
      nsymq = copy_sym ( nsym, sym )
      call inverse_s ( )
      call s_axis_to_cart ( )
      sym (1:nsym) = .true.
      call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
 
-     if (nsym > 1.and..not.lgamma_gamma) then
-        call set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, &
+     IF (modenum .NE. 0) THEN
+        npertx=1
+        CALL allocate_pert()
+        call set_irr_mode (nat, at, bg, xq, s, invs, isym, rtau, irt, &
+             irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, npert, &
+             nirr, gi, gimq, iverbosity, modenum)
+     ELSE
+        if (nsym > 1.and..not.lgamma_gamma) then
+           call set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, &
                     nsym, rtau, irt, irgq, nsymq, minus_q, irotmq, u, npert,  &
                     nirr, gi, gimq, iverbosity, u_from_file, w2, search_sym,  &
                     nspin_mag, t_rev, amass, num_rap_mode, name_rap_mode)
-        npertx = 0
-        DO irr = 1, nirr
-           npertx = max (npertx, npert (irr) )
-        ENDDO
-        CALL allocate_pert()
-        CALL set_irr_sym (nat, at, bg, xq, s, rtau, irt, irgq, nsymq,  &
+           npertx = 0
+           DO irr = 1, nirr
+              npertx = max (npertx, npert (irr) )
+           ENDDO
+           CALL allocate_pert()
+           CALL set_irr_sym (nat, at, bg, xq, s, rtau, irt, irgq, nsymq,  &
                           minus_q, irotmq, t, tmq, u, npert, nirr, npertx )
-     else
-        npertx=1
-        CALL allocate_pert()
-        call set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-             irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, npert, &
-             nirr, gi, gimq, iverbosity)
-     endif
+        else
+           npertx=1
+           CALL allocate_pert()
+           call set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
+                irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, npert, &
+                nirr, gi, gimq, iverbosity)
+        endif
+     ENDIF
 !
 !  Only the modes calculated by node zero are sent to all images
 !
