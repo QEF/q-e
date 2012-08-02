@@ -1,0 +1,23 @@
+This example tests the use of ph.x to calculate a part of the dynamical matrix. 
+
+The calculation proceeds as follows:
+
+1) make a self-consistent calculation for CH4 at the Gamma point
+   (input=ch4.scf.in, output=ch4.scf.out).
+
+2) make a phonon calculation at the Gamma point and calculate all the modes
+   just for comparison.
+   (input=ch4.phG.in, output=ch4.phG.out).
+
+3) make a phonon calculation at the Gamma point and calculate only the mode
+   with A1 symmetry.
+   (input=ch4.phA1.in, output=ch4.phA1.out).
+
+4) make a phonon calculation at the Gamma point and calculate only the
+   modes with E symmetry. 
+   (input=ch4.phE.in1, output=ch4.phE.out1).
+
+5) recover previous calculation and finish the E mode.
+   (input=ch4.phE.in2, output=ch4.phE.out2).
+
+

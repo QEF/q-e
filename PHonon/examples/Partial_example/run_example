@@ -1,0 +1,225 @@
+#!/bin/sh
+
+###############################################################################
+##
+##  HIGH VERBOSITY EXAMPLE
+##
+###############################################################################
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example tests the computation of a part of the dynamical matrix. "
+$ECHO "It shows how to compute only the frequency of the modes of CH4 of"
+$ECHO "A1 symmetry or only the modes of E symmetry."
+$ECHO "The latter calculation is done in two parts recovering the run."
+$ECHO "These frequencies are compared with a complete calculation."
+$ECHO
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x ph.x"
+PSEUDO_LIST="H.pz-kjpaw.UPF C.pz-kjpaw.UPF "
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x     as: $PW_COMMAND"
+$ECHO "  running ph.x     as: $PH_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# Self consistent calculation for CH4
+cat > ch4.scf.in << EOF
+ch4
+ch4 molecule in a cubic box
+ &control
+    calculation = 'scf',
+    restart_mode='from_scratch',
+    prefix='ch4',
+    tprnfor = .true.,
+    pseudo_dir = '$PSEUDO_DIR',
+    outdir='$TMP_DIR'
+ /
+ &system
+    ibrav=  1,
+    celldm(1) =15.0,
+    nat=5,
+    ntyp= 2,
+    ecutwfc =25.0,
+    ecutrho =300.0,
+ /
+ &electrons
+    mixing_beta = 0.5,
+    conv_thr =  1.0d-10
+ /
+ATOMIC_SPECIES
+ H  0.0   H.pz-kjpaw.UPF
+ C  0.0   C.pz-kjpaw.UPF
+ATOMIC_POSITIONS
+H        0.080728893   0.080728893   0.080728893
+H       -0.080728893  -0.080728893   0.080728893
+H        0.080728893  -0.080728893  -0.080728893
+H       -0.080728893   0.080728893  -0.080728893
+C        0.000000000   0.000000000   0.000000000
+K_POINTS
+1
+0.0 0.0 0.0 1.0
+EOF
+$ECHO "  running the scf calculation for CH4...\c"
+$PW_COMMAND < ch4.scf.in > ch4.scf.out
+check_failure $?
+$ECHO " done"
+
+# normal mode calculation for CH4 
+cat > ch4.phG.in << EOF
+vibrations of ch4
+ &inputph
+  tr2_ph=4.0d-17,
+  prefix='ch4',
+  outdir='$TMP_DIR',
+  nogg=.true.
+  ldiag=.true.,
+  fildyn='ch4_a1.dyn',
+ /
+0.0 0.0 0.0
+EOF
+$ECHO "  running normal mode calculation for CH4...\c"
+$PH_COMMAND < ch4.phG.in > ch4.phG.out
+check_failure $?
+$ECHO " done"
+
+# normal mode calculation for CH4 (only A1 symmetry, first representation)
+cat > ch4.phA1.in << EOF
+vibrations of ch4, only modes of A1 symmetry
+ &inputph
+  tr2_ph=4.0d-17,
+  prefix='ch4',
+  outdir='$TMP_DIR',
+  nogg=.true.
+  start_irr=1,
+  last_irr=1,
+  ldiag=.true.,
+  fildyn='ch4_a1.dyn',
+ /
+0.0 0.0 0.0
+EOF
+$ECHO "  running normal mode calculation for A1 symmetry mode of CH4...\c"
+$PH_COMMAND < ch4.phA1.in > ch4.phA1.out
+check_failure $?
+$ECHO " done"
+
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+$ECHO "  running the scf calculation for CH4...\c"
+$PW_COMMAND < ch4.scf.in > ch4.scf.out
+check_failure $?
+$ECHO " done"
+
+# normal mode calculation for CH4 (only E symmetry)
+cat > ch4.phE.in1 << EOF
+vibrations of ch4, only modes of E symmetry 
+ &inputph
+  tr2_ph=4.0d-17,
+  prefix='ch4',
+  outdir='$TMP_DIR',
+  nogg=.true.
+  start_irr=2,
+  last_irr=2,
+  max_seconds=15,
+  ldiag=.true.,
+  fildyn='ch4_e.dyn',
+ /
+0.0 0.0 0.0
+EOF
+$ECHO "  running normal mode calculation for E symmetry modes in CH4...\c"
+$PH_COMMAND < ch4.phE.in1 > ch4.phE.out1
+$ECHO " done"
+
+# normal mode calculation for CH4 (only E symmetry)
+cat > ch4.phE.in2 << EOF
+vibrations of ch4, only modes of E symmetry 
+ &inputph
+  tr2_ph=4.0d-17,
+  prefix='ch4',
+  outdir='$TMP_DIR',
+  nogg=.true.
+  start_irr=2,
+  last_irr=2,
+  recover=.true.,
+  ldiag=.true.,
+  fildyn='ch4_e.dyn',
+ /
+0.0 0.0 0.0
+EOF
+$ECHO "  recover normal mode calculation for E symmetry modes in CH4...\c"
+$PH_COMMAND < ch4.phE.in2 > ch4.phE.out2
+check_failure $?
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"

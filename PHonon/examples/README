@@ -133,3 +133,6 @@ GRID_example
 
 Recover_example:
     This example tests the recover feature of ph.x.
+
+Partial_example
+    This example tests the computation of a part of the dynamical matrix.
