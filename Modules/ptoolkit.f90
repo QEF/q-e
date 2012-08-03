@@ -1616,7 +1616,7 @@ SUBROUTINE zrep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA
 
   ldx = m / nproc + 1
 
-  ALLOCATE( auxa( MAX( n, m ) * ldx ) )
+  ALLOCATE( auxa( MAX( n, k ) * ldx ) )
   ALLOCATE( auxc( MAX( n, m ) * ldx ) )
 
   IF( TRANSA == 'N' .OR. TRANSA == 'n' ) THEN
