@@ -430,7 +430,7 @@ phonons of Cu at X
  /
 1.0 0.0 0.0
 EOF
-$ECHO "  recovering the phonon calculation for one mode PAW-Cu at Gamma...\c"
+$ECHO "  recovering the phonon calculation for one mode PAW-Cu at X...\c"
 $PH_COMMAND < Cu.phX_pbe_one_mode.in2 > Cu.phX_pbe_one_mode.out2
 check_failure $?
 $ECHO " done"
