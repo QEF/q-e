@@ -138,6 +138,7 @@ subroutine dynmatrix(iq_)
            RETURN
         ENDIF
      ENDDO
+     ldiag_loc=.TRUE.
   ENDIF
   !
   !   Generates the star of q

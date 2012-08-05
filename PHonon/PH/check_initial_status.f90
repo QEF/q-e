@@ -186,8 +186,8 @@ SUBROUTINE check_initial_status(auxdyn)
      lgamma = ( x_q(1,iq) == 0.D0 .AND. x_q(2,iq) == 0.D0 .AND. &
                 x_q(3,iq) == 0.D0 )
      !
-     ! ... each q /= gamma works on a different directory. We create them
-     ! here and copy the charge density inside
+     ! ...  with lqdir=.true. each q /= gamma works on a different directory. 
+     !      We create them here and copy the charge density inside
      !
      IF ((.NOT.lgamma.OR. newgrid).AND.lqdir) THEN
         tmp_dir_phq= TRIM (tmp_dir_ph) //TRIM(prefix)//&
@@ -366,7 +366,7 @@ SUBROUTINE check_initial_status(auxdyn)
    !  directories and created by the diffent images in the phsave directory
    !  of the image 0
    !
-   USE io_files,  ONLY : tmp_dir, xmlpun, prefix
+   USE io_files,  ONLY : tmp_dir, xmlpun_base, prefix
    USE control_ph, ONLY : tmp_dir_ph
    USE save_ph,   ONLY : tmp_dir_save
    USE disp,      ONLY : nqs, comp_irr_iq, rep_iq
@@ -389,15 +389,17 @@ SUBROUTINE check_initial_status(auxdyn)
    DO iq=1,nqs
       DO irr=0, rep_iq(iq)
          IF (comp_irr_iq(irr,iq)==1.and.ionode) THEN
-            file_input=TRIM( tmp_dir_ph ) // &
-                    & TRIM( prefix ) // '.phsave' // '/' // TRIM( xmlpun ) &
+            file_input=TRIM( tmp_dir_ph ) // '/' // &
+                    & TRIM( prefix ) // '.phsave/' // &
+                    & TRIM( xmlpun_base ) &
                     &  // '.' // TRIM(int_to_char(iq))&
-                    &  // '.' // TRIM(int_to_char(irr))
+                    &  // '.' // TRIM(int_to_char(irr)) // '.xml'
 
-            file_output=TRIM( tmp_dir_save ) // '/' // '_ph0' // &
-                    &   TRIM( prefix ) // '.phsave' // '/' // TRIM( xmlpun ) &
+            file_output=TRIM( tmp_dir_save ) // '/_ph0/' // &
+                    &   TRIM( prefix ) // '.phsave/' // &
+                    &   TRIM( xmlpun_base ) &
                     &    // '.' // TRIM(int_to_char(iq))&
-                    &    // '.' // TRIM(int_to_char(irr))
+                    &    // '.' // TRIM(int_to_char(irr)) // '.xml'
 
             INQUIRE (FILE = TRIM(file_input), EXIST = exst)
             IF (exst) CALL copy_file(file_input, file_output)
