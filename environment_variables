@@ -54,6 +54,15 @@ fi
 PARA_PREFIX="mpirun -np 2"
 PARA_PREFIX=" "
 PARA_POSTFIX=" "
+#
+# The following variables are used for image parallelization. 
+# (See for instance PHonon/examples/Image_example) 
+# NB: the number of processors in PARA_IMAGE_PREFIX is the product of the
+# number of processors in PARA_PREFIX and the number of images in
+# PARA_IMAGE_POSTFIX
+#
+PARA_IMAGE_PREFIX="mpirun -np 8"
+PARA_IMAGE_POSTFIX="-nimage 4 $PARA_POSTFIX"
 
 # function to test the exit status of a job
 check_failure () {

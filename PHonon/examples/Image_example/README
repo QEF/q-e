@@ -1,0 +1,22 @@
+This example tests the use of images in ph.x. It computes the phonon 
+dispersions of AlAs as in example02.
+
+The calculation (run_example) proceeds as follows:
+
+1) make a self-consistent calculation for AlAs without images
+   (input=alas.scf.in, output=alas.scf.out).
+
+2) make a phonon dispersion calculation with images. Each image calculates
+   a part of the q points and of the irreducible representations.
+   (input=alas.ph.in, output=alas.ph.out, out_1_0, ..., out_N_1, N is
+    the number of images).
+
+3) make a phonon dispersion calculation without images recovering the
+   information from outdir/_ph0/{prefix}.phsave. This is a fast calculation
+   where the dynamical matrices are collected, diagonalized, and written 
+   on the working directory.
+   (input=alas.ph.in1, output=alas.ph.out1).
+
+4) The rest proceeds as in example02.
+
+

@@ -136,3 +136,6 @@ Recover_example:
 
 Partial_example
     This example tests the computation of a part of the dynamical matrix.
+
+Image_example
+    This example tests image parallelism of the phonon code.
