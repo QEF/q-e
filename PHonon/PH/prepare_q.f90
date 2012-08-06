@@ -54,6 +54,8 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
      RETURN
   ENDIF
   !
+  WRITE( stdout, '(/,5X,"Calculation of q = ",3F12.7)') x_q(:,iq)
+  !
   !  Case 2) This q point is not calculated because it has too few
   !          representation and the starting representation is larger
   !          than the number of available representations
@@ -163,8 +165,6 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
 !
 
   IF ( done_iq(iq) == 1 ) do_band=.FALSE.
-
-  WRITE( stdout, '(/,5X,"Calculation of q = ",3F12.7)') xq
 
   RETURN
   !
