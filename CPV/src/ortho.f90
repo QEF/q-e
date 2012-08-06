@@ -17,8 +17,8 @@
                                     ortho_alt_iterate, diagonalize_serial,   &
                                     use_parallel_diag, diagonalize_parallel
       USE descriptors,        ONLY: la_descriptor
-      USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
-      USE mp,                 ONLY: mp_sum
+      USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, my_bgrp_id, inter_bgrp_comm, nbgrp
+      USE mp,                 ONLY: mp_sum, mp_bcast
 
       IMPLICIT  NONE
 
@@ -173,13 +173,33 @@
       !
       CALL start_clock( 'ortho_iter' )
       !
-      IF( iopt == 0 ) THEN
+      IF( my_bgrp_id == 0 ) THEN
          !
-         CALL ortho_iterate( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, rhos, tau, nss, descla)
+         !  Matrices and orthogonalization are replicated on all band groups,  there is no
+         !  need to keep all processors busy with this task. The processors of the first
+         !  group are enough. Moreover replicating the computation across groups could leads
+         ! to small numerical differences and weird numerical effects.
          !
-      ELSE
+         IF( iopt == 0 ) THEN
+            !
+            CALL ortho_iterate( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, rhos, tau, nss, descla)
+            !
+         ELSE
+            !
+            CALL ortho_alt_iterate( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, tau, nss, descla)
+            !
+         END IF
          !
-         CALL ortho_alt_iterate( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, tau, nss, descla)
+      END IF
+      !
+      IF( nbgrp > 1 ) THEN
+         !
+         !  All groups must have the same lambda matrix, in order to avoid weird
+         !  numerical side effects.
+         !
+         CALL mp_bcast( x0, 0, inter_bgrp_comm )
+         CALL mp_bcast( iter, 0, inter_bgrp_comm )
+         CALL mp_bcast( diff, 0, inter_bgrp_comm )
          !
       END IF
       !
@@ -269,7 +289,7 @@
       USE io_global,      ONLY: stdout, ionode
       USE cp_interfaces,  ONLY: ortho_gamma, c_bgrp_expand, c_bgrp_pack, nlsm1, collect_bec
       USE descriptors,    ONLY: la_descriptor
-      USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm  ! DEBUG
+      USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm, mpime  ! DEBUG
       USE orthogonalize_base, ONLY: bec_bgrp2ortho
       USE mp,                 ONLY : mp_sum
       !
