@@ -12,7 +12,7 @@ integer, intent(out) :: nimage
 integer, intent(in) :: root
 integer, intent(in) :: comm
 !
-character(len=256) :: dummy, dummy2
+character(len=512) :: dummy
 integer :: i, j
 integer :: parse_unit, neb_unit
 integer, allocatable :: unit_tmp(:)
@@ -40,7 +40,7 @@ neb_unit = find_free_unit()
 open(unit=neb_unit,file='neb.dat',status="unknown")
 dummy=""
 do while (LEN_TRIM(dummy)<1)
-read(parse_unit,fmt='(A256)',END=10) dummy
+read(parse_unit,fmt='(A512)',END=10) dummy
 enddo
 
 if(trim(dummy)=="BEGIN") then
@@ -48,11 +48,11 @@ if(trim(dummy)=="BEGIN") then
     read(parse_unit,*) dummy
     if(trim(dummy)=="BEGIN_PATH_INPUT") then
 
-        read(parse_unit,'(A256)') dummy
+        read(parse_unit,'(A512)') dummy
 
       do while (trim(dummy)/="END_PATH_INPUT")
         if(myrank==root) write(neb_unit,*) trim(dummy)
-        read(parse_unit,'(A256)') dummy
+        read(parse_unit,'(A512)') dummy
       enddo
     endif
     if(trim(dummy)=="FIRST_IMAGE") then
@@ -100,61 +100,61 @@ REWIND(parse_unit)
 
 dummy=""
 do while (LEN_TRIM(dummy)<1)
-read(parse_unit,fmt='(A256)',END=10) dummy
+read(parse_unit,fmt='(A512)',END=10) dummy
 enddo
 
 if(trim(dummy)=="BEGIN") then
   do while (trim(dummy)/="END")
     dummy=""
     do while (LEN_TRIM(dummy)<1)
-    read(parse_unit,fmt='(A256)',END=10) dummy
+    read(parse_unit,fmt='(A512)',END=10) dummy
     enddo
 
     if(trim(dummy)=="BEGIN_ENGINE_INPUT") then
        dummy=""
        do while (LEN_TRIM(dummy)<1)
-       read(parse_unit,fmt='(A256)',END=10) dummy
+       read(parse_unit,fmt='(A512)',END=10) dummy
        enddo
         
        do while (trim(dummy)/="BEGIN_POSITIONS")
-          if(myrank==root) write(unit_tmp_i,*) trim(dummy)
-          read(parse_unit,'(A256)') dummy
+          if(myrank==root) write(unit_tmp_i,'(A)') trim(dummy)
+          read(parse_unit,'(A512)') dummy
         enddo
         if(i==1) then
         do while (trim(dummy)/="FIRST_IMAGE")
-          read(parse_unit,'(A256)') dummy
+          read(parse_unit,'(A512)') dummy
         enddo
         if(trim(dummy)=="FIRST_IMAGE") then
-            read(parse_unit,'(A256)') dummy
+            read(parse_unit,'(A512)') dummy
           do while (trim(dummy)/="INTERMEDIATE_IMAGE".and.(trim(dummy)/="LAST_IMAGE"))
-            if(myrank==root) write(unit_tmp_i,*) trim(dummy)
-            read(parse_unit,'(A256)') dummy
+            if(myrank==root) write(unit_tmp_i,'(A)') trim(dummy)
+            read(parse_unit,'(A512)') dummy
           enddo
           do while (trim(dummy)/="END_POSITIONS")
-            read(parse_unit,'(A256)') dummy
+            read(parse_unit,'(A512)') dummy
           enddo
-          read(parse_unit,'(A256)') dummy
+          read(parse_unit,'(A512)') dummy
           do while (trim(dummy)/="END_ENGINE_INPUT")
-            if(myrank==root) write(unit_tmp_i,*) trim(dummy)
-            read(parse_unit,'(A256)') dummy
+            if(myrank==root) write(unit_tmp_i,'(A)') trim(dummy)
+            read(parse_unit,'(A512)') dummy
           enddo
         endif
         endif
         !
         if(i==nimage) then
         do while (trim(dummy)/="LAST_IMAGE")
-          read(parse_unit,'(A256)') dummy
+          read(parse_unit,'(A512)') dummy
         enddo
         if(trim(dummy)=="LAST_IMAGE") then
-            read(parse_unit,'(A256)') dummy
+            read(parse_unit,'(A512)') dummy
           do while (trim(dummy)/="END_POSITIONS")
-            if(myrank==root) write(unit_tmp_i,*) trim(dummy)
-            read(parse_unit,'(A256)') dummy
+            if(myrank==root) write(unit_tmp_i,'(A)') trim(dummy)
+            read(parse_unit,'(A512)') dummy
           enddo
-          read(parse_unit,'(A256)') dummy
+          read(parse_unit,'(A512)') dummy
           do while (trim(dummy)/="END_ENGINE_INPUT")
-            if(myrank==root) write(unit_tmp_i,*) trim(dummy)
-            read(parse_unit,'(A256)') dummy
+            if(myrank==root) write(unit_tmp_i,'(A)') trim(dummy)
+            read(parse_unit,'(A512)') dummy
           enddo
         endif 
         endif
@@ -163,23 +163,23 @@ if(trim(dummy)=="BEGIN") then
         do j=2,i
            dummy=""
         do while (trim(dummy)/="INTERMEDIATE_IMAGE")
-          read(parse_unit,'(A256)') dummy   
+          read(parse_unit,'(A512)') dummy   
           write(0,*) i,j,trim(dummy)
         enddo
         enddo
         if(trim(dummy)=="INTERMEDIATE_IMAGE") then
-          read(parse_unit,'(A256)') dummy
+          read(parse_unit,'(A512)') dummy
           do while ((trim(dummy)/="LAST_IMAGE").and.trim(dummy)/="INTERMEDIATE_IMAGE")
-            if(myrank==root) write(unit_tmp_i,*) trim(dummy)
-            read(parse_unit,'(A256)') dummy
+            if(myrank==root) write(unit_tmp_i,'(A)') trim(dummy)
+            read(parse_unit,'(A512)') dummy
           enddo
           do while (trim(dummy)/="END_POSITIONS")
-            read(parse_unit,'(A256)') dummy
+            read(parse_unit,'(A512)') dummy
           enddo
-          read(parse_unit,'(A256)') dummy
+          read(parse_unit,'(A512)') dummy
           do while (trim(dummy)/="END_ENGINE_INPUT")
-            if(myrank==root) write(unit_tmp_i,*) trim(dummy)
-            read(parse_unit,'(A256)') dummy
+            if(myrank==root) write(unit_tmp_i,'(A)') trim(dummy)
+            read(parse_unit,'(A512)') dummy
           enddo
         endif
         endif
