@@ -45,17 +45,11 @@ SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
   dipole(:)  = 0.D0
   quadrupole = 0.D0
   !
-  index0 = 0
-  !
 #if defined (__MPI)
-  DO i = 1, me_bgrp
-    index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
-  END DO
-#endif
-  !
-#if defined (__MPI)
+  index0 = dfftp%nr1x*dfftp%nr2x*SUM(dfftp%npp(1:me_bgrp))
   ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
 #else
+  index0 = 0
   ir_end = nnr
 #endif
   !

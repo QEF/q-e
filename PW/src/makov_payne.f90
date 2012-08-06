@@ -18,7 +18,7 @@ SUBROUTINE makov_payne( etot )
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE ions_base, ONLY : nat, tau, ityp, zv
-  USE cell_base, ONLY : at, bg
+  USE cell_base, ONLY : at, bg, alat
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho
   USE lsda_mod,  ONLY : nspin
@@ -30,8 +30,8 @@ SUBROUTINE makov_payne( etot )
   !
   REAL(DP), INTENT(IN) :: etot
   !
-  INTEGER  :: ia
-  REAL(DP) :: x0(3), zvtot, qq
+  INTEGER  :: ia, ip
+  REAL(DP) :: x0(3), zvtot, qq, quad
   REAL(DP) :: e_dipole(0:3), e_quadrupole
   !
   ! ... x0 is the center of charge of the system
@@ -49,10 +49,21 @@ SUBROUTINE makov_payne( etot )
   !
   x0(:) = x0(:) / zvtot
   !
+  quad = 0.D0
+  !
+  DO ia = 1, nat
+     !
+     DO ip = 1, 3
+        !
+        quad = quad + zv(ityp(ia))*( ( tau(ip,ia) - x0(ip) )*alat )**2
+        !
+     END DO
+  END DO
+  !
   CALL compute_dipole( dfftp%nnr, nspin, rho%of_r, x0, e_dipole, e_quadrupole )
   !
 #ifdef __ENVIRON
-  IF ( do_environ ) CALL environ_makov_payne( dfftp%nnr, nspin, rho%of_r, x0 )
+  IF ( do_environ ) CALL environ_makov_payne( dfftp%nnr, nspin, rho%of_r, zvtot, quad, x0 )
 #endif
   !
   CALL write_dipole( etot, x0, e_dipole, e_quadrupole, qq )
