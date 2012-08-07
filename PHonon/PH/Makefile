@@ -167,6 +167,7 @@ tra_write_matrix.o \
 trntnsc.o \
 write_epsilon_and_zeu.o \
 write_matrix.o \
+write_modes.o \
 write_rec.o \
 zstar_eu.o \
 zstar_eu_us.o

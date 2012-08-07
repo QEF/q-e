@@ -36,7 +36,7 @@ subroutine phq_summary
                             nmix_ph, alpha_mix, tr2_ph, zeu
   USE freq_ph,       ONLY : fpol, nfs, fiu
   USE partial,       ONLY : atomo, nat_todo, all_comp, done_irr, comp_irr
-  USE modes,         ONLY : u, npert, irotmq, irgq, minus_q, nsymq, nirr, &
+  USE modes,         ONLY : u, npert, irotmq, minus_q, nsymq, nirr, &
                             name_rap_mode
   USE qpoint,        ONLY : xq
   USE ramanm,        ONLY : lraman, elop
@@ -154,7 +154,7 @@ subroutine phq_summary
            isym = irotmq
            WRITE( stdout, '(/,5x,"This transformation sends q -> -q+G")')
         else
-           isym = irgq (isymq)
+           isym = isymq
         endif
         WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isymq, sname (isym)
         IF (noncolin.and.domag) &
@@ -300,32 +300,9 @@ subroutine phq_summary
                       TRIM( name_rap_mode(irr) )
         ENDIF
      ENDIF
-
-     if (iverbosity.eq.1) then
-        WRITE( stdout, '(5x,"Irreps are as follows:",/)')
-        if (npert (irr) .eq.1) then
-           WRITE( stdout, '(20x," mode # ",i3)') imode0 + 1
-           WRITE( stdout, '(20x," (",2f10.5,"   ) ")')  ( (u (mu, nu) ,&
-                &nu = imode0 + 1, imode0 + npert (irr) ) , mu = 1, 3 * nat)
-        elseif (npert (irr) .eq.2) then
-           WRITE( stdout, '(2(10x," mode # ",i3,16x))') imode0 + 1, &
-                imode0 + 2
-           WRITE( stdout, '(2(10x," (",2f10.5,"   ) "))')  ( (u (mu, nu) , nu &
-                &= imode0 + 1, imode0 + npert (irr) ) , mu = 1, 3 * nat)
-        elseif (npert (irr) .eq.3) then
-           WRITE( stdout, '(4x,3(" mode # ",i3,13x))') imode0 + 1, imode0 &
-                + 2, imode0 + 3
-           WRITE( stdout, '((5x,3("(",2f10.5," ) ")))') ( (u (mu, nu) , &
-                nu = imode0 + 1, imode0 + npert (irr) ) , mu = 1, 3 * nat)
-        else
-           WRITE( stdout, '(4x,4(" mode # ",i3,13x))') imode0 + 1, imode0 &
-                + 2, imode0 + 4
-           WRITE( stdout, '((5x,4("(",2f10.5," ) ")))') ( (u (mu, nu) , &
-                nu = imode0 + 1, imode0 + npert (irr) ) , mu = 1, 3 * nat)
-        endif
-        imode0 = imode0 + npert (irr)
-     endif
-  enddo
+     IF (iverbosity == 1) CALL write_modes(irr,imode0)
+     imode0 = imode0 + npert(irr)
+  ENDDO
   if (.not.all_comp) then
      WRITE( stdout, '(/,5x,"Compute atoms: ",8(i5,","))') (atomo (na) &
           , na = 1, nat_todo)
