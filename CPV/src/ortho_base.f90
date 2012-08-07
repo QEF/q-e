@@ -1260,6 +1260,7 @@ END SUBROUTINE diagonalize_parallel
                   !
                   ! here nr and ir are still valid, since they are the same for all procs in the same row
                   !
+!$omp parallel do default(none) private(ibgrp_i,inl) shared(nr,ibgrp_g2l,istart,ir,nkbus,bec_bgrp,wtemp)
                   DO i = 1, nr
                      ibgrp_i = ibgrp_g2l( i + istart + ir - 2 )
                      IF( ibgrp_i > 0 ) THEN
@@ -1268,6 +1269,7 @@ END SUBROUTINE diagonalize_parallel
                         END DO
                      END IF
                   END DO
+!$omp end parallel do
                   !
                END IF
    
