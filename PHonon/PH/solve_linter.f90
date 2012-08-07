@@ -546,8 +546,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      end if
   endif
   if (convt.and.nlcc_any) call addnlcc (imode0, drhoscfh, npe)
-  if (lmetq0) deallocate (ldoss)
-  if (lmetq0) deallocate (ldos)
+  if (allocated(ldoss)) deallocate (ldoss)
+  if (allocated(ldos)) deallocate (ldos)
   deallocate (h_diag)
   deallocate (aux1)
   deallocate (dbecsum)
