@@ -48,7 +48,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
   USE paw_variables,      ONLY : okpaw
-  USE modes,              ONLY : nsymq, invsymq !, gi, gimq, irgq, irotmq, minus_q
+  USE modes,              ONLY : nsymq, invsymq, minus_q
   USE uspp_param,         ONLY : n_atom_wfc
  
   !
@@ -58,7 +58,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   LOGICAL, INTENT (IN) :: newgrid
   !
   REAL (DP), ALLOCATABLE :: rtau (:,:,:)
-  LOGICAL  :: minus_q, magnetic_sym, sym(48)
+  LOGICAL  :: magnetic_sym, sym(48)
   LOGICAL  :: skip_equivalence
   !
   IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
@@ -90,37 +90,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   ! ... smallg_q flags in symmetry operations of the crystal
   ! ... that are not symmetry operations of the small group of q
   !
-  sym(1:nsym)=.true.
-  call smallg_q (xq, modenum, at, bg, nsym, s, ftau, sym, minus_q)
-  IF ( .not. time_reversal ) minus_q = .false.
-  !
-  ! ... for single-mode calculation: find symmetry operations
-  ! ... that leave the chosen mode unchanged. Note that array irt
-  ! ... must be available: it is allocated and read from xml file
-  !
-  if (modenum /= 0) then
-     allocate(rtau (3, 48, nat))
-     call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
-     call mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
-                      minus_q, rtau, sym)
-     deallocate (rtau)
-  endif
-  !
-  ! Here we re-order all rotations in such a way that true sym.ops.
-  ! are the first nsymq; rotations that are not sym.ops. follow
-  !
-  nsymq = copy_sym ( nsym, sym )
-  !
-  ! check if inversion (I) is a symmetry. If so, there should be nsymq/2
-  ! symmetries without inversion, followed by nsymq/2 with inversion
-  ! Since identity is always s(:,:,1), inversion should be s(:,:,1+nsymq/2)
-  !
-  invsymq = ALL ( s(:,:,nsymq/2+1) == -s(:,:,1) )
-  !
-  !  Since the order of the s matrices is changed we need to recalculate:
-  !
-  call s_axis_to_cart ()
-  IF (okpaw) CALL d_matrix(d1,d2,d3)
+  CALL set_small_group_of_q(nsymq,invsymq,minus_q)
   !
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
   ! ... lattice, with the full point symmetry of the lattice.

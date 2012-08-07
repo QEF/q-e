@@ -136,6 +136,7 @@ set_irr.o \
 set_irr_mode.o \
 set_irr_nosym.o \
 set_irr_sym.o \
+set_small_group_of_q.o \
 setlocq.o \
 setqmod.o \
 setup_dgc.o \
