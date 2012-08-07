@@ -179,11 +179,11 @@ CONTAINS
     !
 #if defined(__OPENMP)
     WRITE( stdout, '(/5X,"Parallel version (MPI & OpenMP), running on ",&
-         &I5," processor cores")' ) nproc * omp_get_max_threads()
+         &I7," processor cores")' ) nproc * omp_get_max_threads()
     !
-    WRITE( stdout, '(5X,"Number of MPI processes:           ",I5)' ) nproc
+    WRITE( stdout, '(5X,"Number of MPI processes:           ",I7)' ) nproc
     !
-    WRITE( stdout, '(5X,"Threads/MPI process:               ",I4)' ) &
+    WRITE( stdout, '(5X,"Threads/MPI process:               ",I7)' ) &
          omp_get_max_threads()
 #else
     WRITE( stdout, '(/5X,"Parallel version (MPI), running on ",&
@@ -191,15 +191,15 @@ CONTAINS
 #endif
     !
     IF ( nimage > 1 ) WRITE( stdout, &
-         '(5X,"path-images division:  nimage    = ",I4)' ) nimage
+         '(5X,"path-images division:  nimage    = ",I7)' ) nimage
     IF ( nbgrp > 1 ) WRITE( stdout, &
-         '(5X,"band groups division:  nbgrp     = ",I4)' ) nbgrp
+         '(5X,"band groups division:  nbgrp     = ",I7)' ) nbgrp
     IF ( npool > 1 ) WRITE( stdout, &
-         '(5X,"K-points division:     npool     = ",I4)' ) npool
+         '(5X,"K-points division:     npool     = ",I7)' ) npool
     IF ( nproc_pool > 1 ) WRITE( stdout, &
-         '(5X,"R & G space division:  proc/pool = ",I4)' ) nproc_pool
+         '(5X,"R & G space division:  proc/pool = ",I7)' ) nproc_pool
     IF ( get_ntask_groups() > 1 ) WRITE( stdout, &
-         '(5X,"wavefunctions fft division:  fft/group = ",I4)' ) &
+         '(5X,"wavefunctions fft division:  fft/group = ",I7)' ) &
          get_ntask_groups()
     !
   END SUBROUTINE parallel_info
@@ -213,7 +213,7 @@ CONTAINS
     !
 #if defined(__OPENMP)
     WRITE( stdout, '(/5X,"Serial multi-threaded version, running on ",&
-         &I3," processor cores")' ) omp_get_max_threads()
+         &I4," processor cores")' ) omp_get_max_threads()
     !
 #else
     WRITE( stdout, '(/5X,"Serial version")' )
