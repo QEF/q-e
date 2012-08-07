@@ -15,7 +15,7 @@ subroutine sym_def (def, irr)
   ! Used in the q=0 metallic case only.
   !
     USE kinds, only : DP
-  USE modes,   ONLY : npert, minus_q, nsymq, irgq, t, tmq, npertx
+  USE modes,   ONLY : npert, minus_q, nsymq, t, tmq, npertx
 
   implicit none
 
@@ -56,7 +56,7 @@ subroutine sym_def (def, irr)
   w_def = (0.d0, 0.d0)
   do ipert = 1, npert (irr)
      do isym = 1, nsymq
-        irot = irgq (isym)
+        irot = isym
         do jpert = 1, npert (irr)
            w_def (ipert) = w_def (ipert) + t (jpert, ipert, irot, irr) &
                 * def (jpert)

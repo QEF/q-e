@@ -18,7 +18,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   USE cell_base, ONLY : at
   USE symm_base, ONLY : s, ftau
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
-  USE modes,   ONLY : minus_q, irotmq, nsymq, irgq, gi, t, tmq, gimq
+  USE modes,   ONLY : minus_q, irotmq, nsymq, gi, t, tmq, gimq
   implicit none
 
   integer :: nper, irr
@@ -112,7 +112,7 @@ subroutine symdvscf (nper, irr, dvtosym)
         do j = 1, dfftp%nr2
            do i = 1, dfftp%nr1
               do isym = 1, nsymq
-                 irot = irgq (isym)
+                 irot = isym
                  ri = s (1, 1, irot) * (i - 1) + s (2, 1, irot) * (j - 1) &
                     + s (3, 1, irot) * (k - 1) - ftau (1, irot)
                  ri = mod (ri, dfftp%nr1) + 1
