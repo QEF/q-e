@@ -446,12 +446,12 @@
       ENDIF
 
 10    FORMAT( /, 3X, 'from rhoofr: total integrated electronic density', &
-            & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 )
+            & /, 3X, 'in g-space = ', f13.6, 3x, 'in r-space =', f13.6 )
 20    FORMAT( /, 3X, 'from rhoofr: total integrated electronic density', &
             & /, 3X, 'spin up', &
-            & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 , &
+            & /, 3X, 'in g-space = ', f13.6, 3x, 'in r-space =', f13.6 , &
             & /, 3X, 'spin down', &
-            & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 )
+            & /, 3X, 'in g-space = ', f13.6, 3x, 'in r-space =', f13.6 )
 !
       CALL stop_clock( 'rhoofr' )
 
