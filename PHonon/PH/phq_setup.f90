@@ -24,7 +24,6 @@ subroutine phq_setup
   !     tmq    the matrix of the symmetry which sends q -> -q + G
   !     gi     the G associated to each symmetry operation
   !     gimq   the G of the q -> -q+G symmetry
-  !     irgq   the small group indices
   !     nsymq  the order of the small group of q
   !     irotmq the index of the q->-q+G symmetry
   !     nirr   the number of irreducible representation
@@ -81,7 +80,7 @@ subroutine phq_setup
   USE el_phon,       ONLY : elph
   USE output,        ONLY : fildrho
   USE modes,         ONLY : u, npertx, npert, gi, gimq, nirr, &
-                            t, tmq, irotmq, irgq, minus_q, &
+                            t, tmq, irotmq, minus_q, invsymq, &
                             nsymq, nmodes, rtau, name_rap_mode, num_rap_mode
   USE dynmat,        ONLY : dyn, dyn_rec, dyn00
   USE efield_mod,    ONLY : epsilon, zstareu
@@ -120,9 +119,9 @@ subroutine phq_setup
   ! counters
 
   real(DP) :: auxdmuxc(4,4)
-  real(DP), allocatable :: w2(:), wg_up(:,:), wg_dw(:,:)
+  real(DP), allocatable :: wg_up(:,:), wg_dw(:,:)
 
-  logical :: sym (48), magnetic_sym
+  logical :: sym (48), magnetic_sym, is_symmorphic
   ! the symmetry operations
   integer, allocatable :: ifat(:)
   integer :: ierr
@@ -319,65 +318,57 @@ subroutine phq_setup
   !
   magnetic_sym = noncolin .AND. domag
   time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
-  !
-  ! allocate and calculate rtau, the rotated position of each atom
-  !
-  sym (1:nsym) = .true.
-  call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
-  !
+
   nmodes = 3 * nat
-  minus_q = (modenum .eq. 0)
-  ! if minus_q=.t. set_irr will search for Sq=-q+G symmetry.
-  ! On output minus_q=.t. if such a symmetry has been found
-  ! TEMP: set_irr_* should not find again the small group of q
-  IF (lgamma) nsymq=nsym
-  isym=nsymq
-  allocate( w2(3*nat) )
-  if (modenum .ne. 0) then
-     ! workaround: isym in the following call should be nsymq,
-     ! but nsymq is re-calculated inside, so a copy is needed
-     IF (isym==0) THEN
-        sym(1:nsym)=.true.
-        call smallg_q (xq, modenum, at, bg, nsym, s, ftau, sym, minus_q)
-        call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
-        call mode_group (modenum, xq, at, bg, nat, nsym, s, irt, &
-                         minus_q, rtau, sym)
-        isym = copy_sym ( nsym, sym )
-     ENDIF
-     npertx=1
-     CALL allocate_pert()
-     call set_irr_mode (nat, at, bg, xq, s, invs, isym, rtau, irt, &
-          irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, npert, &
-          nirr, gi, gimq, iverbosity, modenum)
-  else
-     if (nsym > 1.and..not.lgamma_gamma.and.(trans.or.zeu.or.elph)) then
-        call set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs,&
-                    nsym, rtau, irt, irgq, nsymq, minus_q, irotmq, u, npert, &
-                    nirr, gi, gimq, iverbosity, u_from_file, w2, search_sym, &
-                    nspin_mag, t_rev, amass, num_rap_mode, name_rap_mode)
-        npertx = 0
-        DO irr = 1, nirr
-           npertx = max (npertx, npert (irr) )
-        ENDDO
-        CALL allocate_pert()
-        CALL set_irr_sym (nat, at, bg, xq, s, rtau, irt, irgq, nsymq,  &
-                          minus_q, irotmq, t, tmq, u, npert, nirr, npertx )
-     else
-        search_sym=.FALSE.
-        npertx=1
-        CALL allocate_pert()
-        call set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-             irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, npert, &
-             nirr, gi, gimq, iverbosity)
-        IF (lgamma_gamma) THEN
-           search_sym=.TRUE.
-           CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym)
-        ENDIF
-     endif
-  endif
-  IF ( isym /= nsymq ) CALL errore('phq_setup',&
-             'internal error: mismatch in the order of small group',isym)
-  IF (.NOT.time_reversal) minus_q=.false.
+  !
+  !   The small group of q may be known. At a given q it is calculated
+  !   by set_nscf, at gamma it coincides with the point group and we
+  !   take nsymq=nsym
+  !
+  IF (lgamma) THEN
+     nsymq=nsym
+     minus_q=.TRUE.
+  ENDIF
+  !
+  !   If the code arrives here and nsymq is still 0 the small group of q has 
+  !   not been calculated by set_nscf because this is a recover run. 
+  !   We recalculate here the small group of q.
+  !
+  IF (nsymq==0) CALL set_small_group_of_q(nsymq, invsymq, minus_q)
+  IF ( .NOT. time_reversal ) minus_q = .FALSE.
+  !
+  !
+  IF (modenum > 0) THEN
+     search_sym=.FALSE.
+     minus_q = .FALSE.
+  ENDIF
+  !
+  ! allocate and calculate rtau, the bravais lattice vector associated
+  ! to a rotation
+  !
+  call sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
+  !
+  !    and calculate the vectors G associated to the symmetry Sq = q + G
+  !    if minus_q is true calculate also irotmq and the G associated to Sq=-g+G
+  !
+  CALL set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
+  is_symmorphic=.NOT.(ANY(ftau(:,1:nsymq) /= 0))
+  IF (.NOT.is_symmorphic) THEN
+     DO isym=1,nsymq
+        search_sym=( search_sym.and.(abs(gi(1,isym))<1.d-8).and.  &
+                                    (abs(gi(2,isym))<1.d-8).and.  &
+                                    (abs(gi(3,isym))<1.d-8) )
+     END DO
+  ENDIF
+  num_rap_mode=-1
+  IF (search_sym) CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym)
+
+  IF (.NOT.u_from_file) THEN
+     CALL find_irrep()
+     CALL ph_writefile('data_u',0)
+  ENDIF
+  CALL find_irrep_sym()
+
 
   IF (lgamma_gamma) THEN
      ALLOCATE(has_equivalent(nat))
@@ -453,8 +444,7 @@ subroutine phq_setup
         CALL errore('phq_setup', 'one of atoms to do (nat_todo) is < 0 or > nat', 1)
         ifat (atomo (na) ) = 1
         DO isym = 1, nsymq
-           irot = irgq (isym)
-           ifat (irt (irot, atomo (na) ) ) = 1
+           ifat (irt (isym, atomo (na) ) ) = 1
         ENDDO
      ENDDO
      !
@@ -576,7 +566,6 @@ subroutine phq_setup
   rec_code=-40
   CALL ph_writefile('data',0)
 
-  deallocate(w2)
   CALL stop_clock ('phq_setup')
   RETURN
 END SUBROUTINE phq_setup

@@ -289,7 +289,7 @@ SUBROUTINE phq_init()
      CALL qdipol_cryst()
   END IF
   !
-  IF ( trans ) CALL dynmat0()
+  IF ( trans ) CALL dynmat0_new()
   !
   CALL stop_clock( 'phq_init' )
   !

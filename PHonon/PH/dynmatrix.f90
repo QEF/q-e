@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine dynmatrix(iq_)
+subroutine dynmatrix_new(iq_)
   !-----------------------------------------------------------------------
   !
   ! This routine is a driver which computes the symmetrized dynamical
@@ -26,7 +26,7 @@ subroutine dynmatrix(iq_)
   USE dynmat,        ONLY : dyn, w2
   USE qpoint,        ONLY : xq
   USE noncollin_module, ONLY : nspin_mag
-  USE modes,         ONLY : u, nmodes, minus_q, irotmq, nsymq, irgq, &
+  USE modes,         ONLY : u, nmodes, minus_q, irotmq, nsymq, &
                             rtau, npert, nirr, name_rap_mode, num_rap_mode
   USE gamma_gamma,   ONLY : nasr, asr, equiv_atoms, has_equivalent, &
                             n_diff_sites
@@ -109,7 +109,7 @@ subroutine dynmatrix(iq_)
                        n_diff_sites, equiv_atoms, has_equivalent, dyn)
      IF (asr) CALL set_asr_c(nat,nasr,dyn)
   ELSE
-     CALL symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, bg, &
+     CALL symdyn_munu_new (dyn, u, xq, s, invs, rtau, irt, at, bg, &
           nsymq, nat, irotmq, minus_q)
   ENDIF
   !
@@ -243,4 +243,4 @@ subroutine dynmatrix(iq_)
 
   call stop_clock('dynmatrix')
   return
-end subroutine dynmatrix
+end subroutine dynmatrix_new

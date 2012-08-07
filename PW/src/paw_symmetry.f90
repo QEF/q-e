@@ -771,7 +771,7 @@ SUBROUTINE PAW_desymmetrize(dbecsum)
 
 END SUBROUTINE PAW_desymmetrize
 
-SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,irgq,rtau,xq,t)
+SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,rtau,xq,t)
 !
 ! This routine similar to PAW_symmetrize, symmetrize the change of 
 ! dbecsum due to an electric field perturbation. 
@@ -794,7 +794,7 @@ SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,irgq,rtau,xq,t)
     COMPLEX(DP)                :: becsym(nhm*(nhm+1)/2,nat,nspin_mag,npe)! symmetrized becsum
     REAL(DP) :: pref, usym
 
-    INTEGER, INTENT(IN) :: npe, irr, npertx, nsymq, irgq(48)
+    INTEGER, INTENT(IN) :: npe, irr, npertx, nsymq
     REAL(DP), INTENT(IN) :: rtau(3,48,nat), xq(3)
     COMPLEX(DP), INTENT(IN) :: t(npertx, npertx, 48, 3*nat)
     INTEGER :: ia, mykey,ia_s,ia_e   ! atoms counters and indexes
@@ -848,7 +848,7 @@ SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,irgq,rtau,xq,t)
 
     do ia=1,nat
        do isym=1,nsymq
-          irot = irgq (isym)
+          irot = isym
           arg = 0.0_DP
           do ipol = 1, 3
              arg = arg + xq (ipol) *  rtau(ipol,irot,ia)
@@ -883,7 +883,7 @@ SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,irgq,rtau,xq,t)
             m_j   = lm_j - l_j**2
             !
             DO isym = 1,nsymq
-                irot = irgq (isym)
+                irot = isym
                 ma = irt(irot,ia)
                 DO m_o = 1, 2*l_i +1
                 DO m_u = 1, 2*l_j +1
@@ -962,7 +962,7 @@ SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,irgq,rtau,xq,t)
              m_j   = lm_j - l_j**2
              !
              DO isym = 1,nsymq
-                irot = irgq (isym)
+                irot = isym
                 ma = irt(irot,ia)
                 DO m_o = 1, 2*l_i +1
                 DO m_u = 1, 2*l_j +1

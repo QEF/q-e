@@ -5,12 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !---------------------------------------------------------------------
-subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
-                    rtau, irt, irgq, nsymq, minus_q, irotmq, u, npert,   &
-                    nirr, gi, gimq, iverbosity, u_from_file, eigen, search_sym,&
-                    nspin_mag, t_rev, amass, num_rap_mode, name_rap_mode)
+subroutine set_irr_new (xq, u, npert, nirr, eigen) 
 !---------------------------------------------------------------------
 !
 !     This subroutine computes a basis for all the irreducible
@@ -33,9 +29,19 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
 !
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
+  USE ions_base, ONLY : nat, tau, ntyp => nsp, ityp, amass
+  USE cell_base, ONLY : at, bg
+  USE symm_base, ONLY : s, sr, ftau, invs, nsym, irt, t_rev
+  USE modes,     ONLY : nsymq, minus_q, irotmq, gi, gimq, num_rap_mode, &
+                        name_rap_mode, rtau
+  USE noncollin_module, ONLY : noncolin, nspin_mag
+  USE spin_orb,  ONLY : domag
   USE constants, ONLY: tpi
+  USE control_ph, ONLY : lgamma, search_sym
+  USE control_flags, ONLY : iverbosity
   USE random_numbers, ONLY : randy
   USE rap_point_group, ONLY : name_rap
+  
 #ifdef __MPI
   use mp, only: mp_bcast
   use io_global, only : ionode_id
@@ -45,48 +51,15 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
 !
 !   first the dummy variables
 !
-  integer ::  nat, ntyp, nsym, s (3, 3, 48), invs (48), irt (48, nat), &
-       iverbosity, npert (3 * nat), irgq (48), nsymq, irotmq, nirr, &
-       ftau(3,48), nspin_mag, t_rev(48), ityp(nat), num_rap_mode(3*nat)
-! input: the number of atoms
-! input: the number of types of atoms
-! input: the number of symmetries
-! input: the symmetry matrices
-! input: the inverse of each matrix
-! input: the rotated of each atom
-! input: write control
-! output: the dimension of each representation
-! output: the small group of q
-! output: the order of the small group
-! output: the symmetry sending q -> -q+
-! output: the number of irr. representation
-! input: the fractionary translations
-! input: the number of spin components
-! input: the time reversal symmetry
-! input: the type of each atom
-! output: the number of the representation of each mode
-
-  real(DP) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3), &
-       gi (3, 48), gimq (3), sr(3,3,48), tau(3,nat), amass(ntyp)
+  real(DP), INTENT(IN) :: xq (3)
 ! input: the q point
-! input: the R associated to each tau
-! input: the direct lattice vectors
-! input: the reciprocal lattice vectors
-! output: [S(irotq)*q - q]
-! output: [S(irotmq)*q + q]
-! input: symmetry matrices in cartesian coordinates
-! input: the atomic positions
-! input: the mass of each atom (in amu)
 
-  complex(DP) :: u(3*nat, 3*nat)
-! output: the pattern vectors
-  logical :: minus_q, u_from_file, search_sym
-! output: if true one symmetry send q -
-! input: if true the displacement patterns are not calculated here
-! output: if true the symmetry of each mode has been calculated
+  complex(DP), INTENT(OUT) :: u(3*nat, 3*nat)
 
-  character(len=15) :: name_rap_mode( 3 * nat )
-  ! output: the name of the representation for each group of modes
+  INTEGER, INTENT(OUT) :: npert(3*nat), nirr
+
+  REAL(DP), INTENT(OUT) :: eigen(3*nat)
+  
 !
 !   here the local variables
 !
@@ -97,7 +70,7 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
   integer :: info, mode_per_rap(12), count_rap(12), rap, init, pos, irap, &
              num_rap_aux( 3 * nat )
 
-  real(DP) :: eigen (3 * nat), modul, arg, eig(3*nat)
+  real(DP) :: modul, arg, eig(3*nat)
 ! the eigenvalues of dynamical matrix
 ! the modulus of the mode
 ! the argument of the phase
@@ -110,42 +83,19 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
 ! rotated pattern
 ! the phase factor
 
-  logical :: lgamma, magnetic_sym
-! if true gamma point
-!
-!   Allocate the necessary quantities
-!
-  lgamma = (xq(1) == 0.d0 .and. xq(2) == 0.d0 .and. xq(3) == 0.d0)
-!
-!   find the small group of q
-!
-  call smallgq (xq,at,bg,s,nsym,irgq,nsymq,irotmq,minus_q,gi,gimq)
-  ! are there non-symmorphic operations?
-  ! note that in input search_sym should be initialized to=.true.
-  IF ( ANY ( ftau(:,1:nsymq) /= 0 ) ) THEN
-     DO isym=1,nsymq
-        search_sym=( search_sym.and.(abs(gi(1,irgq(isym)))<1.d-8).and.  &
-                                    (abs(gi(2,irgq(isym)))<1.d-8).and.  &
-                                    (abs(gi(3,irgq(isym)))<1.d-8) )
-     END DO
-  END IF
-  num_rap_mode=-1
-  IF (search_sym) THEN
-     magnetic_sym=(nspin_mag==4)
-     CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym)
-  ENDIF
+  logical :: magnetic_sym
 
-  IF (.NOT. u_from_file) THEN
+   magnetic_sym=noncolin.AND.domag
 !
 !   then we generate a random hermitean matrix
 !
      arg = randy(0)
-     call random_matrix (irt,irgq,nsymq,minus_q,irotmq,nat,wdyn,lgamma)
+     call random_matrix_new (irt,nsymq,minus_q,irotmq,nat,wdyn,lgamma)
 !call write_matrix('random matrix',wdyn,nat)
 !
 ! symmetrize the random matrix with the little group of q
 !
-     call symdynph_gq (xq,wdyn,s,invs,rtau,irt,irgq,nsymq,nat,irotmq,minus_q)
+     call symdynph_gq_new (xq,wdyn,s,invs,rtau,irt,nsymq,nat,irotmq,minus_q)
 !call write_matrix('symmetrized matrix',wdyn,nat)
 !
 !  Diagonalize the symmetrized random matrix.
@@ -197,12 +147,10 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
 !  We have here a test which writes eigenvectors and eigenvalues
 !
      if (iverbosity.eq.1) then
+        npert=1
         do imode=1,3*nat
            WRITE( stdout, '(2x,"autoval = ", e10.4)') eigen(imode)
-           WRITE( stdout, '(2x,"Real(aut_vet)= ( ",6f10.5,")")') &
-               (  DBLE(u(na,imode)), na=1,3*nat )
-           WRITE( stdout, '(2x,"Imm(aut_vet)= ( ",6f10.5,")")') &
-               ( AIMAG(u(na,imode)), na=1,3*nat )
+           CALL write_modes(imode,imode-1)
         end do
      end if
 
@@ -246,11 +194,6 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
         eigen=eig
         u=phi
         num_rap_mode=num_rap_aux
-
-! Modes with accidentally degenerate eigenvalues, or with eigenvalues 
-! degenerate due to time reversal must be calculated together even if
-! they belong to different irreducible representations. 
-!
         DO imode=1,3*nat-1
            DO jmode = imode+1, 3*nat
               IF ((num_rap_mode(imode) /= num_rap_mode(jmode)).AND.  &
@@ -293,7 +236,6 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
            imode=imode+npert(irr)
         ENDDO
      ENDIF
-  endif
 !    Note: the following lines are for testing purposes
 !
 !      nirr = 1
@@ -322,10 +264,9 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
   call mp_bcast (npert, ionode_id, intra_image_comm)
   call mp_bcast (nirr, ionode_id, intra_image_comm)
   call mp_bcast (irotmq, ionode_id, intra_image_comm)
-  call mp_bcast (irgq, ionode_id, intra_image_comm)
   call mp_bcast (minus_q, ionode_id, intra_image_comm)
   call mp_bcast (num_rap_mode, ionode_id, intra_image_comm)
   call mp_bcast (name_rap_mode, ionode_id, intra_image_comm)
 #endif
   return
-end subroutine set_irr
+end subroutine set_irr_new

@@ -81,6 +81,7 @@ el_ph_collect.o \
 elphon.o \
 find_equiv_sites.o \
 find_mode_sym.o \
+find_irrep.o \
 generate_dynamical_matrix_c.o \
 generate_effective_charges_c.o \
 gmressolve_all.o \
@@ -98,6 +99,7 @@ localdos.o \
 mix_pot.o \
 mode_group.o \
 newdq.o \
+obsolete.o \
 openfilq.o \
 orthogonalize.o \
 phcom.o \

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
+subroutine sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the vector rtau which contains for each
@@ -28,8 +28,6 @@ subroutine sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
   ! at: direct lattice vectors
   ! bg: reciprocal lattice vectors
   ! tau: coordinates of the atoms
-  logical, intent(in) :: sym (nsym)
-  ! sym(n)=.true. if operation n is a symmetry
   real(DP), intent(out):: rtau (3, 48, nat)
   ! rtau: the direct translations
   !
@@ -57,28 +55,26 @@ subroutine sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
   !
   rtau(:,:,:) = 0.0_dp
   do isym = 1, nsym
-     if (sym (isym) ) then
-        do na = 1, nat
-           nb = irt (isym, na)
-           do ipol = 1, 3
-              ft (ipol) = s (1, ipol, isym) * xau (1, na) + &
-                          s (2, ipol, isym) * xau (2, na) + &
-                          s (3, ipol, isym) * xau (3, na) - xau (ipol, nb)
-           enddo
-           do ipol = 1, 3
-              rtau (ipol, isym, na) = at (ipol, 1) * ft (1) + &
-                                      at (ipol, 2) * ft (2) + &
-                                      at (ipol, 3) * ft (3)
-           enddo
+     do na = 1, nat
+        nb = irt (isym, na)
+        do ipol = 1, 3
+           ft (ipol) = s (1, ipol, isym) * xau (1, na) + &
+                       s (2, ipol, isym) * xau (2, na) + &
+                       s (3, ipol, isym) * xau (3, na) - xau (ipol, nb)
         enddo
-     endif
+        do ipol = 1, 3
+           rtau (ipol, isym, na) = at (ipol, 1) * ft (1) + &
+                                   at (ipol, 2) * ft (2) + &
+                                   at (ipol, 3) * ft (3)
+        enddo
+     enddo
   enddo
   !
   !    deallocate workspace
   !
   deallocate(xau)
   return
-end subroutine sgam_ph
+end subroutine sgam_ph_new
 !
 !-----------------------------------------------------------------------
 subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
@@ -94,12 +90,12 @@ subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
   USE kinds, ONLY : DP
   implicit none
 
-  real(DP) :: bg (3, 3), at (3, 3), xq (3)
+  real(DP), intent(in) :: bg (3, 3), at (3, 3), xq (3)
   ! input: the reciprocal lattice vectors
   ! input: the direct lattice vectors
   ! input: the q point of the crystal
 
-  integer :: s (3, 3, 48), nrot, ftau (3, 48), modenum
+  integer, intent(in) :: s (3, 3, 48), nrot, ftau (3, 48), modenum
   ! input: the symmetry matrices
   ! input: number of symmetry operations
   ! input: fft grid dimension (units for ftau)
@@ -108,7 +104,7 @@ subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
   !        q<>0 to restrict the small group of q
   !        to operation such that Sq=q (exactly,
   !        without G vectors) when iswitch = -3.
-  logical :: sym (48), minus_q
+  logical, intent(inout) :: sym (48), minus_q
   ! input-output: .true. if symm. op. S q = q + G
   ! output: .true. if there is an op. sym.: S q = - q + G
   !

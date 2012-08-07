@@ -1,12 +1,12 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
+subroutine symdynph_gq_new (xq, phi, s, invs, rtau, irt, nsymq, &
      nat, irotmq, minus_q)
   !-----------------------------------------------------------------------
   !
@@ -22,7 +22,7 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   !
   !    The dummy variables
   !
-  integer :: nat, s (3, 3, 48), irt (48, nat), irgq (48), invs (48), &
+  integer :: nat, s (3, 3, 48), irt (48, nat), invs (48), &
        nsymq, irotmq
   ! input: the number of atoms
   ! input: the symmetry matrices
@@ -114,7 +114,7 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
         if (iflb (na, nb) == 0) then
            work(:,:) = (0.d0, 0.d0)
            do isymq = 1, nsymq
-              irot = irgq (isymq)
+              irot = isymq
               sna = irt (irot, na)
               snb = irt (irot, nb)
               arg = 0.d0
@@ -137,7 +137,7 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
               enddo
            enddo
            do isymq = 1, nsymq
-              irot = irgq (isymq)
+              irot = isymq
               sna = irt (irot, na)
               snb = irt (irot, nb)
               do ipol = 1, 3
@@ -159,4 +159,4 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   enddo
   phi (:, :, :, :) = phi (:, :, :, :) / DBLE(nsymq)
   return
-end subroutine symdynph_gq
+end subroutine symdynph_gq_new

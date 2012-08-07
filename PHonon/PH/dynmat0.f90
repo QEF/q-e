@@ -7,7 +7,7 @@
 !
 !-----------------------------------------------------------------------
 
-subroutine dynmat0
+subroutine dynmat0_new
   !-----------------------------------------------------------------------
   !
   !     This routine computes the part of the dynamical matrix which
@@ -27,7 +27,7 @@ subroutine dynmat0
   USE ph_restart,    ONLY : ph_writefile
   USE control_ph,    ONLY : rec_code_read
   USE qpoint,        ONLY : xq
-  USE modes,         ONLY : u, minus_q, irotmq, irgq, rtau, nsymq, nmodes
+  USE modes,         ONLY : u, minus_q, irotmq, rtau, nsymq, nmodes
   USE partial,       ONLY : done_irr, comp_irr
   USE dynmat,        ONLY : dyn, dyn00, dyn_rec
   implicit none
@@ -63,7 +63,7 @@ subroutine dynmat0
   !
   if (modenum .ne. 0) then
 
-     call symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, bg, &
+     call symdyn_munu_new (dyn, u, xq, s, invs, rtau, irt, at, bg, &
           nsymq, nat, irotmq, minus_q)
      !
      ! rotate again in the pattern basis
@@ -83,11 +83,11 @@ subroutine dynmat0
         enddo
      enddo
   endif
-  !      call tra_write_matrix('dynmat0 dyn',dyn,u,nat)
+!        call tra_write_matrix('dynmat0 dyn',dyn,u,nat)
   dyn_rec(:,:)=dyn(:,:)
   done_irr(0) = 1
   CALL ph_writefile('data_dyn',0)
 
   call stop_clock ('dynmat0')
   return
-end subroutine dynmat0
+end subroutine dynmat0_new

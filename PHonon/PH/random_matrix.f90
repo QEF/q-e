@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
+subroutine random_matrix_new (irt, nsymq, minus_q, irotmq, nat, &
      wdyn, lgamma)
   !----------------------------------------------------------------------
   !
@@ -22,7 +22,7 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
   !    The dummy variables
   !
 
-  integer :: nat, irt (48, nat), irgq (48), nsymq, irotmq
+  integer :: nat, irt (48, nat), nsymq, irotmq
   ! input: number of atoms
   ! input: index of the rotated atom
   ! input: the small group of q
@@ -58,7 +58,7 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
         enddo
         do nb = na + 1, nat
            do isymq = 1, nsymq
-              irot = irgq (isymq)
+              irot = isymq
               ira = irt (irot, na)
               if (minus_q) then
                  iramq = irt (irotmq, na)
@@ -83,4 +83,4 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
      enddo
   enddo
   return
-end subroutine random_matrix
+end subroutine random_matrix_new

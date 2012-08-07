@@ -30,7 +30,7 @@ PROGRAM Q2QSTAR
   ! symmetry
   USE symm_base,          ONLY : s, invs, nsym, find_sym, set_sym_bl, irt, ftau, copy_sym, nrot, inverse_s
   ! small group symmetry
-  USE modes,              ONLY : rtau, nsymq, minus_q, irgq, irotmq, gi, gimq
+  USE modes,              ONLY : rtau, nsymq, minus_q, irotmq, gi, gimq
   ! for reading the dyn.mat.
   USE cell_base,          ONLY : at, bg, celldm, ibrav, omega
   USE ions_base,          ONLY : nat, ityp, ntyp => nsp, atm, tau, amass
@@ -157,16 +157,14 @@ PROGRAM Q2QSTAR
   nsymq = copy_sym(nsym, sym)
   ! recompute the inverses as the order of sym.ops. has changed
   CALL inverse_s ( ) 
-  ! part 2: this redoes most of the above, plus it computes irgq, gi, gimq
-  CALL smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
-                minus_q, gi, gimq)
+  ! part 2: this computes gi, gimq
+  call set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
   WRITE(stdout, '(5x,a,i3)') "Symmetries of small group of q:", nsymq
   IF(minus_q) WRITE(stdout, '(10x,a)') "in addition sym. q -> -q+G:"
   !
   ! finally this does some of the above again and also computes rtau...
   ALLOCATE(rtau( 3, 48, nat))
-  sym(1:nsym)=.true.      ! <---------------------------- BAD HACK! fix sgam_ph instead so that it does something sensible
-  CALL sgam_ph(at, bg, nsym, s, irt, tau, rtau, nat, sym)
+  CALL sgam_ph_new(at, bg, nsym, s, irt, tau, rtau, nat)
   !
   ! ######################### star of q #########################
   do na = 1, nat
@@ -174,7 +172,7 @@ PROGRAM Q2QSTAR
         call trntnsc (phi (1, 1, na, nb), at, bg, - 1)
      enddo
   enddo
-  CALL symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, nat, &
+  CALL symdynph_gq_new (xq, phi, s, invs, rtau, irt, nsymq, nat, &
        irotmq, minus_q)
   do na = 1, nat
      do nb = 1, nat

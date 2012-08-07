@@ -11,7 +11,7 @@ subroutine tra_write_matrix (alpha, adyn, u, nat)
   USE kinds, only : DP
   USE cell_base, only : at, bg
   USE symm_base, only : s, irt, invs
-  USE modes, only : rtau, irgq, nsymq, irotmq, minus_q
+  USE modes, only : rtau, nsymq, irotmq, minus_q
   USE qpoint, only : xq
   implicit none
   !
@@ -26,7 +26,7 @@ subroutine tra_write_matrix (alpha, adyn, u, nat)
   character (len=*) :: alpha
 
   auxdyn=adyn
-  CALL symdyn_munu (auxdyn, u, xq, s, invs, rtau, irt, irgq, at, bg, &
+  CALL symdyn_munu_new (auxdyn, u, xq, s, invs, rtau, irt, at, bg, &
           nsymq, nat, irotmq, minus_q)
 
   WRITE( stdout, '(a)') alpha

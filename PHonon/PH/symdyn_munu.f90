@@ -1,12 +1,12 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2012 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, &
+subroutine symdyn_munu_new (dyn, u, xq, s, invs, rtau, irt, at, &
      bg, nsymq, nat, irotmq, minus_q)
   !-----------------------------------------------------------------------
   !
@@ -16,7 +16,7 @@ subroutine symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, &
   !
   USE kinds, only : DP
   implicit none
-  integer :: nat, s (3, 3, 48), irt (48, nat), irgq (48), invs (48), &
+  integer :: nat, s (3, 3, 48), irt (48, nat), invs (48), &
        nsymq, irotmq
   ! input: the number of atoms
   ! input: the symmetry matrices
@@ -81,7 +81,7 @@ subroutine symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, &
   !
   !   And we symmetrize in this basis
   !
-  call symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, nat, &
+  call symdynph_gq_new (xq, phi, s, invs, rtau, irt, nsymq, nat, &
        irotmq, minus_q)
   !
   !  Back to cartesian coordinates
@@ -105,4 +105,4 @@ subroutine symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, &
 
   enddo
   return
-end subroutine symdyn_munu
+end subroutine symdyn_munu_new

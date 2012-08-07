@@ -137,7 +137,7 @@ PROGRAM matdyn
   USE symm_base,  ONLY : set_sym
   USE rap_point_group,  ONLY : code_group
 
-  USE ifconstants
+  USE ifconstants, ONLY : frc, atm, zeu, tau_blk, ityp_blk, m_loc
   !
   IMPLICIT NONE
   !
@@ -2357,7 +2357,7 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
   CHARACTER(15), INTENT(OUT) :: name_rap_mode(3*nat)
   INTEGER, INTENT(OUT) :: num_rap_mode(3*nat)
   REAL(DP) :: gi (3, 48), gimq (3), sr_is(3,3,48), rtau(3,48,nat)
-  INTEGER :: irgq (48), irotmq, nsymq, nsym_is, isym, i
+  INTEGER :: irotmq, nsymq, nsym_is, isym, i
   LOGICAL :: minus_q, search_sym, sym(48), magnetic_sym
 !
 !  find the small group of q
@@ -2368,8 +2368,7 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
   call smallg_q (xq, 0, at, bg, nsym, s, ftau, sym, minus_q)
   nsymq=copy_sym(nsym,sym )
   call s_axis_to_cart ()
-
-  CALL smallgq (xq,at,bg,s,nsym,irgq,nsymq,irotmq,minus_q,gi,gimq)
+  CALL set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
 !
 !  if the small group of q is non symmorphic,
 !  search the symmetries only if there are no G such that Sq -> q+G
@@ -2377,9 +2376,9 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
   search_sym=.TRUE.
   IF ( ANY ( ftau(:,1:nsymq) /= 0 ) ) THEN
      DO isym=1,nsymq
-        search_sym=( search_sym.and.(abs(gi(1,irgq(isym)))<1.d-8).and.  &
-                                    (abs(gi(2,irgq(isym)))<1.d-8).and.  &
-                                    (abs(gi(3,irgq(isym)))<1.d-8) )
+        search_sym=( search_sym.and.(abs(gi(1,isym))<1.d-8).and.  &
+                                    (abs(gi(2,isym))<1.d-8).and.  &
+                                    (abs(gi(3,isym))<1.d-8) )
      END DO
   END IF
 !
@@ -2390,7 +2389,7 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
      magnetic_sym=(nspin_mag==4)
      CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym)
      sym (1:nsym) = .TRUE.
-     CALL sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
+     CALL sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
      CALL find_mode_sym (u, w2, at, bg, tau, nat, nsymq, sr, irt, xq, rtau, &
                          amass, ntyp, ityp, 1, .FALSE., .FALSE., &
                          nspin_mag, name_rap_mode, num_rap_mode)

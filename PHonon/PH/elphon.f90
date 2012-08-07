@@ -767,7 +767,7 @@ SUBROUTINE elphsum_simple
   USE symm_base, ONLY : s, sr, irt, nsym, time_reversal, invs
   USE klist, ONLY : xk, nelec, nks, wk
   USE wvfct, ONLY : nbnd, et
-  USE el_phon
+  USE el_phon, ONLY : el_ph_mat, el_ph_nsigma, el_ph_ngauss, el_ph_sigma
   USE mp_global, ONLY : me_pool, root_pool, inter_pool_comm, npool, intra_pool_comm
   USE io_global, ONLY : stdout
   USE klist, only : degauss,ngauss
@@ -776,7 +776,7 @@ SUBROUTINE elphsum_simple
   USE io_files,  ONLY : prefix
   USE qpoint, ONLY : xq, nksq
   USE dynmat, ONLY : dyn, w2
-  USE modes, ONLY : u,rtau, irgq, nsymq,irotmq, minus_q
+  USE modes, ONLY : u,rtau, nsymq,irotmq, minus_q
   USE control_ph, only : lgamma
   USE lsda_mod, only : isk,nspin, current_spin,lsda
   USE mp,        ONLY: mp_sum
@@ -905,7 +905,7 @@ SUBROUTINE elphsum_simple
      ! symmetrize el_ph_sum(mu,nu) : it transforms as the dynamical matrix
      !
      
-     CALL symdyn_munu (el_ph_sum, u, xq, s, invs, rtau, irt, irgq, at, &
+     CALL symdyn_munu_new (el_ph_sum, u, xq, s, invs, rtau, irt,  at, &
           bg, nsymq, nat, irotmq, minus_q)
      !
      WRITE (6, 9000) degauss1, ngauss1

@@ -16,7 +16,7 @@ SUBROUTINE clean_pw_ph(iq)
   !
   USE kinds,           ONLY : DP
   USE control_flags,   ONLY : twfcollect
-  USE modes,           ONLY : nirr
+  USE modes,           ONLY : nirr, nsymq
   USE partial,         ONLY : done_irr
   USE disp,            ONLY : done_iq
   USE control_ph,      ONLY : done_bands, rec_code_read
@@ -37,6 +37,7 @@ SUBROUTINE clean_pw_ph(iq)
   CALL clean_pw( .FALSE. )
   CALL deallocate_phq()
   rec_code_read=-1000
+  nsymq=0
   !
   ! ... Close the files
   !
