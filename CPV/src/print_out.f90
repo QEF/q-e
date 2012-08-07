@@ -304,10 +304,10 @@
 1944  FORMAT(//'   Partial temperatures (for each ionic specie) ', &
              /,'   Species  Temp (K)   Mean Square Displacement (a.u.)')
 1945  FORMAT(3X,I6,1X,F10.2,1X,F10.4)
-1947  FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',8X,'etot',6X,'enthal', &
-           & 7X,'econs',7X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
-1948  FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F11.5),4(1X,F7.4) )
-2948  FORMAT( I6,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F11.5),F10.2, F8.2, F8.5 )
+1947  FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',11X,'etot',9X,'enthal', &
+           & 10X,'econs',10X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
+1948  FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F14.5),4(1X,F7.4) )
+2948  FORMAT( I6,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F14.5),F10.2, F8.2, F8.5 )
 2949  FORMAT( I6,1X,4(1X,F7.4), F8.5 )
       !
       RETURN
