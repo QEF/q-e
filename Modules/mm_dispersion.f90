@@ -257,7 +257,7 @@ MODULE london_module
          !
          ! ... define a gross maximum bound of the mxr size
          !
-         mxr = INT ( ( 2 * ( lon_rcut + alat ) ) ** 3 / omega )
+         mxr = 1 + INT ( ( 2 * ( lon_rcut + alat ) ) ** 3 / omega )
          !
       END IF
       !
