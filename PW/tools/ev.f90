@@ -306,29 +306,29 @@ PROGRAM ev
 
       IF ( fac /= 0.0_dp ) THEN
 ! cubic case
-         WRITE(iun,'("# a0 =",f6.2," a.u., k0 =",i5," kbar, dk0 =", &
+         WRITE(iun,'("# a0 =",f8.4," a.u., k0 =",i5," kbar, dk0 =", &
                     &f6.2," d2k0 =",f7.3," emin =",f11.5)') &
             (par(1)/fac)**(1d0/3d0), int(par(2)), par(3), par(4), emin
-         WRITE(iun,'("# a0 =",f7.3," Ang, k0 =", f6.1," GPa,  V0 = ", &
+         WRITE(iun,'("# a0 =",f9.5," Ang, k0 =", f6.1," GPa,  V0 = ", &
                   & f7.3," (a.u.)^3,  V0 =", f7.3," A^3 ",/)') &
            & (par(1)/fac)**(1d0/3d0)*bohr_radius_angs, par(2)/gpa_kbar, &
              par(1), par(1)*bohr_radius_angs**3
 
         WRITE(iun,'(73("#"))')
-        WRITE(iun,'("# Lat.Par", 5x, "E_calc", 8x, "E_fit", 7x, &
+        WRITE(iun,'("# Lat.Par", 7x, "E_calc", 8x, "E_fit", 7x, &
              & "E_diff", 4x, "Pressure", 6x, "Enthalpy")')
         IF (in_angstrom) THEN
-           WRITE(iun,'("# Ang", 11x, "Ry", 11x, "Ry", 12x, &
+           WRITE(iun,'("# Ang", 13x, "Ry", 11x, "Ry", 12x, &
              & "Ry", 8x, "GPa", 11x, "Ry")')
            WRITE(iun,'(73("#"))')
-           WRITE(iun,'(f7.3,2x,f12.5, 2x,f12.5, f12.5, 3x, f8.2, 3x,f12.5)') &
+           WRITE(iun,'(f9.5,2x,f12.5, 2x,f12.5, f12.5, 3x, f8.2, 3x,f12.5)') &
               & ( (v0(i)/fac)**(1d0/3d0)*bohr_radius_angs, etot(i), efit(i),  &
               & etot(i)-efit(i), p(i)/gpa_kbar, epv(i), i=1,npt )
         ELSE
-           WRITE(iun,'("# a.u.",10x, "Ry", 11x, "Ry", 12x, &
+           WRITE(iun,'("# a.u.",12x, "Ry", 11x, "Ry", 12x, &
              & "Ry", 8x, "GPa", 11x, "Ry")')
            WRITE(iun,'(73("#"))')
-           WRITE(iun,'(f7.3,2x,f12.5, 2x,f12.5, f12.5, 3x, f8.2, 3x,f12.5)') &
+           WRITE(iun,'(f9.5,2x,f12.5, 2x,f12.5, f12.5, 3x, f8.2, 3x,f12.5)') &
               & ( (v0(i)/fac)**(1d0/3d0), etot(i), efit(i),  &
               & etot(i)-efit(i), p(i)/gpa_kbar, epv(i), i=1,npt )
         ENDIF
