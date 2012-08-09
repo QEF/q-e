@@ -1800,8 +1800,14 @@ fi
        LDFLAGS=""
        AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
                    try_dflags="$try_dflags -D__SCALAPACK")
+    else
+        # scalapack provided in SCALAPACK_LIBS - not checked!
+        have_scalapack=1
+        try_dflags="$try_dflags -D__SCALAPACK"
     fi
 done
+
+echo setting SCALAPACK_LIBS... $scalapack_libs
 
 # preprocessing flag for openmp (experimental)
 if test "$use_openmp" -eq 1 ; then try_dflags="$try_dflags -D__OPENMP" ; fi
