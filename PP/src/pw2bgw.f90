@@ -91,16 +91,18 @@
 
 PROGRAM pw2bgw
 
-  USE environment, ONLY : environment_start, environment_end
+  USE constants, ONLY : eps12
   USE control_flags, ONLY : gamma_only
+  USE environment, ONLY : environment_start, environment_end
   USE io_files, ONLY : prefix, tmp_dir, outdir
   USE io_global, ONLY : ionode, ionode_id
   USE kinds, ONLY : DP
+  USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_bcast
   USE mp_global, ONLY : mp_startup
-  USE uspp, ONLY : okvan
   USE paw_variables, ONLY : okpaw
-  USE lsda_mod, ONLY : nspin
+  USE scf, ONLY : rho_core, rhog_core
+  USE uspp, ONLY : okvan
 
   IMPLICIT NONE
 
@@ -251,10 +253,12 @@ PROGRAM pw2bgw
 
   CALL read_file ( )
 
-  if(okvan) call errore ( 'pw2bgw', 'BGW cannot use ultrasoft pseudopotentials.', 3 )
-  if(okpaw) call errore ( 'pw2bgw', 'BGW cannot use PAW.', 4 )
-  if(gamma_only) call errore ( 'pw2bgw', 'BGW cannot use gamma-only run.', 5 )
-  if(nspin == 4) call errore ( 'pw2bgw', 'BGW cannot use spinors.', 6 )
+  if (MAX (MAXVAL (ABS (rho_core (:) ) ), MAXVAL (ABS (rhog_core (:) ) ) ) &
+    .GT. eps12) call errore ( 'pw2bgw', 'BGW cannot use NLCC.', 2 )
+  if (okvan) call errore ( 'pw2bgw', 'BGW cannot use USPP.', 3 )
+  if (okpaw) call errore ( 'pw2bgw', 'BGW cannot use PAW.', 4 )
+  if (gamma_only) call errore ( 'pw2bgw', 'BGW cannot use gamma-only run.', 5 )
+  if (nspin == 4) call errore ( 'pw2bgw', 'BGW cannot use spinors.', 6 )
 
   CALL openfil_pp ( )
 
@@ -1522,13 +1526,6 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
     ENDDO
   ENDDO
 
-! In GW calculations, the exchange-correlation
-! potential should not include partial core correction.
-! Assign rho_core and rhog_core to zero.
-
-  rho_core ( : ) = 0.0D0
-  rhog_core ( : ) = ( 0.0D0, 0.0D0 )
-
   DO ig = 1, ng_l
     g_g ( 1, ig_l2g ( ig ) ) = mill ( 1, ig )
     g_g ( 2, ig_l2g ( ig ) ) = mill ( 2, ig )
@@ -1638,13 +1635,6 @@ SUBROUTINE write_vxc0 ( output_file_name, input_dft, exx_flag )
   DO is = 1, ns
     vxc0_g ( is ) = ( 0.0D0, 0.0D0 )
   ENDDO
-
-! In GW calculations, the exchange-correlation
-! potential should not include partial core correction.
-! Assign rho_core and rhog_core to zero.
-
-  rho_core ( : ) = 0.0D0
-  rhog_core ( : ) = ( 0.0D0, 0.0D0 )
 
   CALL enforce_input_dft ( input_dft )
 #ifdef EXX
@@ -1782,13 +1772,6 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
 #ifdef EXX
   IF (exx_flag) CALL start_exx ()
 #endif
-
-! In GW calculations, the exchange-correlation
-! potential should not include partial core correction.
-! Assign rho_core and rhog_core to zero.
-
-  rho_core (:) = 0.0D0
-  rhog_core (:) = (0.0D0, 0.0D0)
 
   vxcr (:, :) = 0.0D0
   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxcr)
@@ -1977,13 +1960,6 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
 #ifdef EXX
   IF (exx_flag) CALL start_exx ()
 #endif
-
-! In GW calculations, the exchange-correlation
-! potential should not include partial core correction.
-! Assign rho_core and rhog_core to zero.
-
-  rho_core (:) = 0.0D0
-  rhog_core (:) = (0.0D0, 0.0D0)
 
   vxcr (:, :) = 0.0D0
   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxcr)

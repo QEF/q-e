@@ -5,7 +5,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
     intro {
 	Converts the output files produced by pw.x to the input files for BerkeleyGW.
 
-	You cannot use USPP, PAW, or spinors in a pw.x run for BerkeleyGW.
+	You cannot use NLCC, USPP, PAW, or spinors in a pw.x run for BerkeleyGW.
 
 	You cannot use "K_POINTS gamma" in a pw.x run for BerkeleyGW.
 	Use "K_POINTS { tpiba | automatic | crystal }" even for the
