@@ -274,7 +274,7 @@ ppc64-bg | ppc64-bgq )
           try_f90="bgxlf90_r"
 	fi
         try_arflags="ruv"
-        try_dflags="-D__AIX -D__XLF"
+        try_dflags="-D__XLF"
         ;;
 * )
         AC_MSG_WARN($arch : unsupported architecture?)
@@ -727,11 +727,11 @@ ppc64-bgq:*xlf* )
     else
         try_fflags="-qalias=noaryovrlp:nointptr -O3 -qstrict -qdpc=e -qarch=qp -qtune=qp"
     fi
-        try_fflags_openmp="-qsmp=omp -qtm -qthreaded"
+        try_fflags_openmp="-qsmp=noauto:noopt:omp -qtm -qthreaded"
         try_f90flags="\$(FFLAGS) -qsuffix=cpp=f90"
         try_fflags_noopt="-O0"
         try_ldflags=""
-        try_ldflags_openmp="-qstatic -qsmp=omp -qtm -qthreaded"
+        try_ldflags_openmp="-qstatic -qsmp=noauto:noopt:omp -qtm -qthreaded"
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
@@ -1674,6 +1674,31 @@ then
                         if test "$ac_cv_search_vexp" = "-lmassvp4" \
                                 -o "$ac_cv_search_vexp" = "-lmassv"
                         then mass_libs="$try_loption $ac_cv_search_vexp -lmass"
+                        fi
+                        if test "$ac_cv_search_vexp" != "no" ; then break ; fi
+                done
+                ;;
+        ppc64-bgq )
+                # check for mass (in several directories)
+                try_libdirs="/opt/ibmcmp/xlmass/bg/7.3/bglib64"
+                try_libdirs="$libdirs $try_libdirs $ld_library_path"
+
+                for dir in none $try_libdirs
+                do
+                        unset ac_cv_search_vexp # clear cached value
+                        if test "$dir" = "none"
+                        then
+                                try_loption=
+                        else
+                                echo $ECHO_N "in $dir: " $ECHO_C
+                                try_loption="-L$dir"
+                        fi
+                        FFLAGS="$test_fflags"
+                        LDFLAGS="$test_ldflags $try_loption"
+                        LIBS=""
+                        AC_SEARCH_LIBS(vexp, massv, , , -lmass_simd)
+                        if test "$ac_cv_search_vexp" = "-lmassv"
+                        then mass_libs="$try_loption $ac_cv_search_vexp -lmass_simd"
                         fi
                         if test "$ac_cv_search_vexp" != "no" ; then break ; fi
                 done
