@@ -727,11 +727,11 @@ ppc64-bgq:*xlf* )
     else
         try_fflags="-qalias=noaryovrlp:nointptr -O3 -qstrict -qdpc=e -qarch=qp -qtune=qp"
     fi
-        try_fflags_openmp="-qsmp=noauto:noopt:omp -qtm -qthreaded"
+        try_fflags_openmp="-qsmp=noauto:omp -qtm -qthreaded"
         try_f90flags="\$(FFLAGS) -qsuffix=cpp=f90"
         try_fflags_noopt="-O0"
         try_ldflags=""
-        try_ldflags_openmp="-qstatic -qsmp=noauto:noopt:omp -qtm -qthreaded"
+        try_ldflags_openmp="-qstatic -qsmp=noauto:omp -qtm -qthreaded"
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
