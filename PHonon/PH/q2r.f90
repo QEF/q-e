@@ -60,7 +60,7 @@ PROGRAM q2r
   !
   USE kinds,      ONLY : DP
   USE mp,         ONLY : mp_bcast
-  USE mp_global,  ONLY : nproc, mpime, mp_startup, mp_global_end
+  USE mp_global,  ONLY : mp_startup, mp_global_end
   USE dynamicalq, ONLY : phiq, tau, ityp, zeu
   USE fft_scalar, ONLY : cfft3d
   USE io_global, ONLY : ionode_id, ionode, stdout

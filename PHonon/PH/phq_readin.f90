@@ -51,7 +51,7 @@ SUBROUTINE phq_readin()
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : iverbosity, modenum, twfcollect
   USE io_global,     ONLY : ionode, stdout
-  USE mp_global,     ONLY : nproc, nproc_pool, nproc_pool_file, &
+  USE mp_global,     ONLY : nproc_pool, nproc_pool_file, &
                             nimage, my_image_id,    &
                             nproc_image_file, nproc_image, npool
   USE paw_variables, ONLY : okpaw

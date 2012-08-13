@@ -227,7 +227,7 @@ CONTAINS
   USE wvfct,      ONLY : nbnd
   USE io_global,  ONLY : stdout
   !
-  USE mp_global,  ONLY : nproc, npool, nimage
+  USE mp_global,  ONLY : npool
   !
   IMPLICIT NONE
   !

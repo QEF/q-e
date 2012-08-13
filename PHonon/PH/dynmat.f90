@@ -71,7 +71,7 @@ end Module dynamical
 !
       USE kinds, ONLY: DP
       USE mp,         ONLY : mp_bcast
-      USE mp_global,  ONLY : nproc, mpime, mp_startup, mp_global_end
+      USE mp_global,  ONLY : mp_startup, mp_global_end
       USE io_global,  ONLY : ionode, ionode_id, stdout
       USE environment, ONLY : environment_start, environment_end
       USE io_dyn_mat,  ONLY : read_dyn_mat_param, read_dyn_mat_header, &
