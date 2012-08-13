@@ -118,7 +118,7 @@ END SUBROUTINE find_group
 !--------------------------------------------------------------------------
 FUNCTION group_name(code)
 !--------------------------------------------------------------------------
-! This function receive a code of the group and provide the name of the
+! This function receives a code of the group and provides the name of the
 ! group. The order is the following:
 !
 !   1  "C_1 "     11 "D_6 "     21 "D_3h"     31 "O   " 

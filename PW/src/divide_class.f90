@@ -13,7 +13,7 @@ SUBROUTINE divide_class(code_group,nrot,smat,nclass,nelem,elem,which_irr)
 ! This subroutine receives as input a set of nrot 3x3 matrices smat, which
 ! are assumed to be the operations of the point group given by code_group.
 ! smat are in cartesian coordinates.
-! This routine divide the group in classes and find:
+! This routine divides the group in classes and find:
 !
 ! nclass         the number of classes of the group
 ! nelem(iclass)  for each class, the number of elements of the class
@@ -817,7 +817,7 @@ END SUBROUTINE coniug_mat
 FUNCTION compare_mat(a,b)
 !-----------------------------------------------------------------------------
 !
-!  This function compare two 3x3 matrix and returns .true. if they coincide.
+!  This function compares two 3x3 matrix and returns .true. if they coincide.
 !
 USE kinds, ONLY : DP
 IMPLICIT NONE
