@@ -2434,7 +2434,7 @@ MODULE pw_restart
                !
             END DO
          ELSE
-            CALL errore ( 'pw_writefile ', & 
+            CALL errore ( 'read_brillouin zone', & 
                 'incorrect number of symmetries for lattice', nrot )
          END IF
          !
@@ -3428,7 +3428,7 @@ MODULE pw_restart
       END DO
       !
       IF ( ngg /= ngk_g ) &
-         CALL errore( 'igk_l2g_kdip', 'unexpected dimension in ngg', 1 )
+         CALL errore( 'gk_l2gmap_kdip', 'unexpected dimension in ngg', 1 )
       !
       IF ( PRESENT( igwk ) ) THEN
          !
