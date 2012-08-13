@@ -67,8 +67,8 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
        irr, ipol, jpol, isymq, irot, sna, isym
   ! counters and auxiliary variables
 
-  integer :: info, mode_per_rap(12), count_rap(12), rap, init, pos, irap, &
-             num_rap_aux( 3 * nat )
+  integer :: info, mode_per_rap(0:12), count_rap(0:12), rap, init, pos, irap, &
+             num_rap_aux( 3 * nat ), ierr
 
   real(DP) :: modul, arg, eig(3*nat)
 ! the eigenvalues of dynamical matrix
@@ -155,50 +155,80 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
      end if
 
      IF (search_sym) THEN
-        CALL find_mode_sym (u, eigen, at, bg, tau, nat, nsymq, &
-                  sr, irt, xq, rtau, amass, ntyp, ityp, 0, lgamma, &
-                  .FALSE., nspin_mag, name_rap_mode, num_rap_mode )
+        CALL find_mode_sym_new (u, eigen, tau, nat, nsymq, sr, irt, xq,    &
+             rtau, amass, ntyp, ityp, 0, .FALSE., .TRUE., num_rap_mode, ierr)
+
 !
 !   Order the modes so that we first make all those that belong to the first
 !   representation, then the second ect.
 !
 !
 !   First count, for each irreducible representation, how many modes
-!   belong to that representation
+!   belong to that representation. Modes that could not be classified
+!   have num_rap_mode 0.
 !
         mode_per_rap=0
         DO imode=1,3*nat
-           mode_per_rap(num_rap_mode(imode))=mode_per_rap(num_rap_mode(imode))+1
+           mode_per_rap(num_rap_mode(imode))= &
+                           mode_per_rap(num_rap_mode(imode))+1
         ENDDO
 !
 !   The position of each mode on the list is the following:
-!   The positions from 1 to nrap(1) contain the modes that transform according
-!   to the first representation. From nrap(1)+1 to nrap(1)+nrap(2) the
-!   mode that transform according to the second ecc.
+!   The positions from 1 to mode_per_rap(0) contain the modes that transform 
+!   according to the first representation. From mode_per_rap(1)+1 to 
+!   mode_per_rap(1) + mode_per_rap(2) the mode that transform according 
+!   to the second ecc.
 !
         count_rap=1
         DO imode=1,3*nat
            rap=num_rap_mode(imode)
            IF (rap>12) call errore('set_irr',&
                                    'problem with the representation',1)
+!
+!   Determine the first position for the representation rap
+!
            init=0
-           DO irap=1,rap-1
+           DO irap=0,rap-1
               init=init+mode_per_rap(irap)
            ENDDO
+!
+!   Determine in which position to put this mode. count_rap keep into
+!   account how many modes of that representation we have already
+!   assigned
+!
            pos=init+count_rap(rap)
+!
+!   the eigenvalue, the mode and the number of its representation are
+!   copied in the auxiliary list 
+!
+!
            eig(pos)=eigen(imode)
            phi(:,pos)=u(:,imode)
            num_rap_aux(pos)=num_rap_mode(imode)
+!
+!   Update the number of modes already found for a representation
+!
            count_rap(rap)=count_rap(rap)+1
         ENDDO
+!
+!  Copy the new exchanged array in the old ones
+!
         eigen=eig
         u=phi
         num_rap_mode=num_rap_aux
+!
+!  If two almost degenerate modes have been assigned to different
+!  representations, we force them to be close in the list independently
+!  from their representation in order not to change previous behaviour
+!  of the code. These instructions should not be needed.
+!
         DO imode=1,3*nat-1
            DO jmode = imode+1, 3*nat
               IF ((num_rap_mode(imode) /= num_rap_mode(jmode)).AND.  &
                   (ABS(eigen(imode) - eigen(jmode))/   &
                   (ABS(eigen(imode)) + ABS (eigen (jmode) )) < 1.d-4) ) THEN
+                 WRITE(stdout,'("Eigenvectors exchange needed",2i5)') imode, &
+                                                     jmode
                  eig(1)=eigen(jmode)
                  phi(:,1)=u(:,jmode)
                  num_rap_aux(1)=num_rap_mode(jmode)
@@ -211,6 +241,7 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
               ENDIF
            ENDDO
         ENDDO
+
      ENDIF
 !
 !  Here we count the irreducible representations and their dimensions
@@ -229,11 +260,15 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
            npert (nirr) = 1
         endif
      enddo
+
      IF (search_sym) THEN
-        imode=1
-        DO irr=1,nirr
-           name_rap_mode(irr)=name_rap(num_rap_mode(imode))
-           imode=imode+npert(irr)
+!
+!  Here we set the name of the representation for each mode
+!
+        name_rap_mode=' '
+        DO imode = 1, 3*nat
+           IF (num_rap_mode(imode) > 0 ) &
+              name_rap_mode(imode)=name_rap(num_rap_mode(imode))
         ENDDO
      ENDIF
 !    Note: the following lines are for testing purposes

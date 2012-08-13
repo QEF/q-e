@@ -231,7 +231,7 @@ MODULE ph_restart
                   CALL iotk_write_dat(iunpun,"NUMBER_OF_PERTURBATIONS",&
                                          npert(irr))
                   CALL iotk_write_dat(iunpun,"SYMMETRY_TYPE",&
-                                         name_rap_mode(irr))
+                                         name_rap_mode(imode0+1))
                   DO ipert=1,npert(irr)
                      imode=imode0+ipert
                      CALL iotk_write_dat(iunpun,"DISPLACEMENT_PATTERN",&
@@ -817,10 +817,12 @@ MODULE ph_restart
           DO irr=0,nirr
              IF (irr > 0) THEN
                 CALL iotk_scan_dat(iunpun,"NUMBER_OF_PERTURBATIONS", npert(irr))
-                CALL iotk_scan_dat(iunpun,"SYMMETRY_TYPE", name_rap_mode(irr))
+                CALL iotk_scan_dat(iunpun,"SYMMETRY_TYPE",&
+                                                    name_rap_mode(imode0+1))
                 DO ipert=1,npert(irr)
                    imode=imode0+ipert
                    CALL iotk_scan_dat(iunpun,"DISPLACEMENT_PATTERN",u(:,imode))
+                   IF (ipert > 1) name_rap_mode(imode)=name_rap_mode(imode0+1)
                 ENDDO
                 imode0=imode0+npert(irr)
              ENDIF

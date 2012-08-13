@@ -57,7 +57,7 @@ subroutine dynmatrix_new(iq_)
   real(DP) :: sxq (3, 48), work(3)
   ! list of vectors in the star of q
   real(DP), allocatable :: zstar(:,:,:)
-  integer :: icart, jcart
+  integer :: icart, jcart, ierr
   logical :: ldiag_loc, opnd
   !
   call start_clock('dynmatrix')
@@ -228,9 +228,13 @@ subroutine dynmatrix_new(iq_)
   !
   IF (ldiag_loc) THEN
      call dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
-     IF (search_sym) CALL find_mode_sym (dyn, w2, at, bg, tau, nat, nsymq, sr,&
-              irt, xq, rtau, amass, ntyp, ityp, 1, lgamma, lgamma_gamma, &
-                                        nspin_mag, name_rap_mode, num_rap_mode)
+     IF (search_sym) THEN
+         CALL find_mode_sym_new (dyn, w2, tau, nat, nsymq, sr, irt, xq, &
+              rtau, amass, ntyp, ityp, 1, lgamma_gamma, .FALSE., &
+              num_rap_mode, ierr)
+         CALL print_mode_sym(w2, num_rap_mode, lgamma)
+     ENDIF
+
   END IF
 !
 ! Here we save the dynamical matrix and the effective charges dP/du on

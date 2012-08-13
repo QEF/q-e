@@ -275,11 +275,11 @@ subroutine phq_summary
      IF (done_irr (irr) .eq.1) then
         WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
              &                  " modes -",a,"  Done")') irr, npert (irr),&
-                      TRIM( name_rap_mode(irr) )
+                      TRIM( name_rap_mode(imode0+1) )
      ELSEIF (comp_irr (irr) .eq.1) then
         WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
-             &             " modes -",a," To be done")') irr, npert (irr), &
-                      TRIM( name_rap_mode(irr) )
+             &             " modes -",a,"  To be done")') irr, npert (irr), &
+                      TRIM( name_rap_mode(imode0+1) )
      ELSEIF (comp_irr (irr) .eq.0) THEN
         IF (lgamma_gamma) THEN
            IF ((irr-1)/3+1==nasr) THEN
@@ -297,7 +297,7 @@ subroutine phq_summary
         ELSE
            WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
              &     " modes -",a,"  Not done in this run")') irr, npert (irr), &
-                      TRIM( name_rap_mode(irr) )
+                      TRIM( name_rap_mode(imode0+1) )
         ENDIF
      ENDIF
      IF (iverbosity == 1) CALL write_modes(irr,imode0)
