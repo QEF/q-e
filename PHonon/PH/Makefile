@@ -135,7 +135,6 @@ set_defaults_pw.o \
 set_drhoc.o \
 set_int12_nc.o \
 set_irr.o \
-set_irr_mode.o \
 set_irr_nosym.o \
 set_irr_sym.o \
 set_small_group_of_q.o \
