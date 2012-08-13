@@ -1380,6 +1380,7 @@ MODULE pw_restart
             kunit = 1
             nproc_file=1
             nproc_pool_file=1
+            nproc_image_file=1
             !
          ELSE
             !
