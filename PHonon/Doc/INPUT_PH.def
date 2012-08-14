@@ -558,18 +558,8 @@ calculation without using start_q, last_q, start_irr, or last_irr.
 See an example in examples/GRID_example.
 
 On parallel machines the q point and the irreps calculations can be split 
-automatically. The procedure is the following:
-
-1) run pw.x with nproc processors and npools pools.
-2) run ph.x with nproc*nimage processors, npools pools and nimage images.
-3) run ph.x with the same input and recover=.true. on nproc processors 
-   and npools pools and only one image. 
-
-During the first ph.x run the phonon code split the total amount of
-work into nimage copies. Each image runs with different q and/or
-representations.  The second run of ph.x is the final run that
-collects all the data calculated by the images and writes the files
-with the dynamical matrices.  
+automatically using the -nimage flag. See the phonon user guide for further
+information.
 
 }  
 }  
