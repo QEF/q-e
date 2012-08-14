@@ -77,6 +77,7 @@ ENDDO
 !
 which_irr(1)=1
 IF (code_group==1) THEN
+   IF (nclass /= 1) CALL errore('divide_class','Wrong classes for C_1',1)
 !
 !  C_1 
 !
@@ -84,6 +85,8 @@ ELSEIF (code_group==2.OR.code_group==3.OR.code_group==4) THEN
 !
 !  C_i, C_s, C_2
 !
+   IF (nclass /= 2) &
+        CALL errore('divide_class','Wrong classes for C_i, C_s or C_2',1)
    which_irr(2)=2
 ELSEIF (code_group==5) THEN
 !
@@ -91,6 +94,7 @@ ELSEIF (code_group==5) THEN
 !
 ! The function angle_rot(smat) provides the rotation angle of the matrix smat
 !
+   IF (nclass /= 3) CALL errore('divide_class','Wrong classes for C_3',1)
    DO iclass=2,nclass
       IF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-120.d0)<eps) THEN
          which_irr(iclass)=2
@@ -103,6 +107,7 @@ ELSEIF (code_group==6) THEN
 !
 !  C_4
 !
+   IF (nclass /= 4) CALL errore('divide_class','Wrong classes for C_4',1)
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==4) THEN
@@ -124,6 +129,7 @@ ELSEIF (code_group==7) THEN
 !
 !  C_6
 !
+   IF (nclass /= 6) CALL errore('divide_class','Wrong classes for C_6',1)
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==4) THEN
@@ -150,6 +156,7 @@ ELSEIF (code_group==8) THEN
 !
 !  D_2  
 !
+   IF (nclass /= 4) CALL errore('divide_class','Wrong classes for D_2',1)
    DO iclass=2,nclass
          which_irr(iclass)=iclass
    ENDDO
@@ -157,6 +164,7 @@ ELSEIF (code_group==9) THEN
 !
 !  D_3
 !
+   IF (nclass /= 3) CALL errore('divide_class','Wrong classes for D_3',1)
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==4) THEN
@@ -171,6 +179,7 @@ ELSEIF (code_group==10) THEN
 !
 !  D_4
 !
+   IF (nclass /= 5) CALL errore('divide_class','Wrong classes for D_4',1)
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==3) THEN
@@ -204,6 +213,7 @@ ELSEIF (code_group==11) THEN
 !
 !  D_6
 !
+   IF (nclass /= 6) CALL errore('divide_class','Wrong classes for D_6',1)
    first=.true.
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
@@ -234,6 +244,7 @@ ELSEIF (code_group==12) THEN
 !
 !  C_2v
 !
+   IF (nclass /= 4) CALL errore('divide_class','Wrong classes for C_2v',1)
    first=.true.
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
@@ -250,6 +261,7 @@ ELSEIF (code_group==13) THEN
 !
 !  C_3v
 !
+   IF (nclass /= 3) CALL errore('divide_class','Wrong classes for C_3v',1)
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==3) THEN
@@ -264,6 +276,7 @@ ELSEIF (code_group==14) THEN
 !
 !  C_4v
 !
+   IF (nclass /= 5) CALL errore('divide_class','Wrong classes for C_4v',1)
    first=.true.
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
@@ -283,6 +296,7 @@ ELSEIF (code_group==15) THEN
 !
 !  C_6v
 !
+   IF (nclass /= 6) CALL errore('divide_class','Wrong classes for C_6v',1)
    first=.true.
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
@@ -306,6 +320,7 @@ ELSEIF (code_group==16) THEN
 !
 !  C_2h
 !
+   IF (nclass /= 4) CALL errore('divide_class','Wrong classes for C_2h',1)
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==4) THEN
@@ -322,7 +337,8 @@ ELSEIF (code_group==17) THEN
 !
 !  C_3h
 !
-DO iclass=2,nclass
+   IF (nclass /= 6) CALL errore('divide_class','Wrong classes for C_3h',1)
+ DO iclass=2,nclass
    ts=tipo_sym(smat(1,1,elem(1,iclass)))
    IF (ts==3) THEN
       IF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-120.d0)<eps) THEN
@@ -346,6 +362,7 @@ ELSEIF (code_group==18) THEN
 !
 !  C_4h
 !
+IF (nclass /= 8) CALL errore('divide_class','Wrong classes for C_4h',1)
 DO iclass=2,nclass
    ts=tipo_sym(smat(1,1,elem(1,iclass)))
    IF (ts==3) THEN
@@ -374,6 +391,7 @@ ELSEIF (code_group==19) THEN
 !
 !  C_6h
 !
+IF (nclass /= 12) CALL errore('divide_class','Wrong classes for C_6h',1)
 DO iclass=2,nclass
    ts=tipo_sym(smat(1,1,elem(1,iclass)))
    IF (ts==3) THEN
@@ -414,6 +432,7 @@ ELSEIF (code_group==20) THEN
 !
 !  mirror_axis gives the normal to the mirror plane
 !
+   IF (nclass /= 8) CALL errore('divide_class','Wrong classes for D_2h',1)
    done_ax=.TRUE.
    which_irr(2:nclass)=0
 !
@@ -478,6 +497,7 @@ ELSEIF (code_group==21) THEN
 !
 !  D_3h
 !
+   IF (nclass /= 6) CALL errore('divide_class','Wrong classes for D_3h',1)
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==3) THEN
@@ -501,6 +521,7 @@ ELSEIF (code_group==22) THEN
 !
 !  First search the order 4 axis
 !
+   IF (nclass /= 10) CALL errore('divide_class','Wrong classes for D_4h',1)
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==3) THEN
@@ -547,6 +568,7 @@ ELSEIF (code_group==23) THEN
 !
 !  D_6h
 !
+   IF (nclass /= 12) CALL errore('divide_class','Wrong classes for D_6h',1)
    first=.TRUE.
    first1=.TRUE.
    DO iclass=2,nclass
@@ -595,6 +617,7 @@ ELSEIF (code_group==24) THEN
 !
 !  D_2d
 !
+   IF (nclass /= 5) CALL errore('divide_class','Wrong classes for D_2d',1)
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==6) THEN
@@ -615,6 +638,7 @@ ELSEIF (code_group==25) THEN
 !
 !  D_3d
 !
+   IF (nclass /= 6) CALL errore('divide_class','Wrong classes for D_3d',1)
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==3) THEN
@@ -635,6 +659,7 @@ ELSEIF (code_group==26) THEN
 !
 !  S_4
 !
+    IF (nclass /= 4) CALL errore('divide_class','Wrong classes for S_4',1)
     DO iclass=2,nclass
        ts=tipo_sym(smat(1,1,elem(1,iclass)))
        IF (ts==4) THEN
@@ -653,6 +678,7 @@ ELSE IF (code_group==27) THEN
 !
 !  S_6
 !
+   IF (nclass /= 6) CALL errore('divide_class','Wrong classes for S_6',1)
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==3) THEN
@@ -677,6 +703,7 @@ ELSEIF (code_group==28) THEN
 !
 !  T
 !
+   IF (nclass /= 4) CALL errore('divide_class','Wrong classes for T',1)
    DO iclass=2,nclass
       ars=angle_rot(smat(1,1,elem(1,iclass)))
       IF (ABS(ars-120.d0)<eps) THEN
@@ -693,6 +720,7 @@ ELSE IF (code_group==29) THEN
 !
 !  T_h
 !
+   IF (nclass /= 4) CALL errore('divide_class','Wrong classes for T_h',1)
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==3) THEN
@@ -721,6 +749,7 @@ ELSEIF (code_group==30) THEN
 !
 !  T_d
 !
+   IF (nclass /= 5) CALL errore('divide_class','Wrong classes for T_d',1)
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==3) THEN
@@ -739,6 +768,7 @@ ELSEIF (code_group==31) THEN
 !
 !  O
 !
+   IF (nclass /= 5) CALL errore('divide_class','Wrong classes for O',1)
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==4) THEN
@@ -761,6 +791,7 @@ ELSEIF (code_group==32) THEN
 !
 !  O_h
 !
+   IF (nclass /= 10) CALL errore('divide_class','Wrong classes for O_h',1)
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==4) THEN
