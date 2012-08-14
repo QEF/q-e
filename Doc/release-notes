@@ -1,3 +1,9 @@
+Fixed
+
+   * NEB calculation can get stuck if the code tries to read &ions namelist
+     in the PWscf-related input section
+
+
 New in 5.0.1 version
 
    * vdW-DF functional and DFT-D extended to CP (experimental)
