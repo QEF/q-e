@@ -188,7 +188,7 @@ SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, sr, irt, xq,    &
 !    symmetry for all the modes of the group
 !
            IF (ABS(times) > eps) THEN
-              IF (ABS(NINT(DBLE(times))-1.d0) < 1.d-4) THEN
+              IF (ABS(NINT(DBLE(times))-DBLE(times)) < 1.d-4) THEN
                  counter_s=counter
                  DO imode=counter_s, counter_s+NINT(DBLE(times))*&
                                               NINT(DBLE(char_mat(irap,1)))-1
