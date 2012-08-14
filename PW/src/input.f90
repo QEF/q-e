@@ -1359,7 +1359,7 @@ SUBROUTINE iosys()
       call errore ('iosys','unrecognized value for assume_isolated',1)
   END SELECT
 #ifdef __ENVIRON
-  IF ( do_comp_mt .OR. env_slab_geometry ) add_jellium = .false.
+  IF ( do_environ .AND. (do_comp_mt .OR. env_slab_geometry) ) add_jellium = .false.
 #endif
   !
   ! ... read following cards
