@@ -977,6 +977,12 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'tmp_clk1' )
   CALL print_clock( 'tmp_clk2' )
   CALL print_clock( 'tmp_clk3' )
+  CALL print_clock( 'gram' )
+  CALL print_clock( 'nlinit' )
+  CALL print_clock( 'init_dim' )
+  CALL print_clock( 'newnlinit' )
+  CALL print_clock( 'from_scratch' )
+  CALL print_clock( 'from_restart' )
 !==============================================================
 ! Lingzhu Kong
   CALL print_clock( 'wf' )

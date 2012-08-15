@@ -912,6 +912,8 @@ SUBROUTINE newnlinit()
   ! 
   ! ... initialization for vanderbilt species
   !
+  CALL start_clock( 'newnlinit' )
+
   IF( tpstab ) THEN
 
      recompute_table = tpre .AND. check_tables( gmax )
@@ -953,6 +955,8 @@ SUBROUTINE newnlinit()
   ! ... non-linear core-correction   ( rhocb(ig,is) )
   !
   CALL core_charge_ftr( tpre )
+
+  CALL stop_clock( 'newnlinit' )
   !
   RETURN
   !
@@ -1166,6 +1170,7 @@ subroutine nlinit
      &              dfint(:)
       real(dp) xg, xrg, fac
 
+      CALL start_clock( 'nlinit' )
 
       IF( ionode ) THEN
         WRITE( stdout, 100 )
@@ -1244,6 +1249,8 @@ subroutine nlinit
       ! and derivatives wrt cell dbeta
       !
       call newnlinit()
+
+      CALL stop_clock( 'nlinit' )
 
       return
 end subroutine nlinit
