@@ -49,7 +49,7 @@ MODULE cp_restart
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, trhow, &
-                                           tksw, twfcollect, do_makov_payne
+                                           tksw, twfcollect, do_makov_payne, smallmem
       USE control_flags,            ONLY : tksw, lwfpbe0nscf, lwfnscf ! Lingzhu Kong
       USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, &
                                            nwordwfc, tmp_dir, diropn
@@ -72,7 +72,7 @@ MODULE cp_restart
       USE ldaU_cp,                  ONLY : lda_plus_U, ns, ldmx
       USE energies,                 ONLY : enthal, ekin, eht, esr, eself, &
                                            epseu, enl, exc, vave
-      USE mp,                       ONLY : mp_sum
+      USE mp,                       ONLY : mp_sum, mp_barrier
       USE fft_base,                 ONLY : dfftp, dffts, dfftb
       USE uspp_param,               ONLY : n_atom_wfc
       USE global_version,           ONLY : version_number
@@ -137,7 +137,6 @@ MODULE cp_restart
       INTEGER               :: nk1, nk2, nk3
       INTEGER               :: j, i, iss, ig, nspin_wfc, iss_wfc
       INTEGER               :: is, ia, isa, ik, ierr
-      INTEGER,  ALLOCATABLE :: mill_g(:,:)
       INTEGER,  ALLOCATABLE :: ftmp(:,:)
       INTEGER,  ALLOCATABLE :: ityp(:)
       REAL(DP), ALLOCATABLE :: tau(:,:)
@@ -257,16 +256,6 @@ MODULE cp_restart
       !
       CALL s_to_r( stau0, tau, na, nsp, h )
       !   
-      ! ... Collect G vectors
-      !   
-      ALLOCATE( mill_g( 3, ngm_g ) )
-      !
-      mill_g = 0
-      !
-      mill_g(:,ig_l2g(1:ngm)) = mill(:,1:ngm)
-      !
-      CALL mp_sum( mill_g, intra_bgrp_comm )
-      !
       lsda = ( nspin == 2 )
       !
       ALLOCATE( ftmp( nbnd_tot , nspin ) )
@@ -364,7 +353,7 @@ MODULE cp_restart
          !
          CALL write_planewaves( ecutwfc, dual, ngw_g, gamma_only, dfftp%nr1, dfftp%nr2, &
                                 dfftp%nr3, ngm_g, dffts%nr1, dffts%nr2, dffts%nr3, ngms_g, dfftb%nr1, &
-                                dfftb%nr2, dfftb%nr3, mill_g, .FALSE. )
+                                dfftb%nr2, dfftb%nr3, mill, .FALSE. )
          !
 !-------------------------------------------------------------------------------
 ! ... SPIN
@@ -710,7 +699,9 @@ MODULE cp_restart
             !
          END IF
          !
-         CALL write_gk( iunout, ik, mill_g, filename )
+         IF( .NOT. smallmem ) THEN
+            CALL write_gk( iunout, ik, filename )
+         END IF
          !
          DO iss = 1, nspin
             ! 
@@ -915,6 +906,8 @@ MODULE cp_restart
       !
       IF ( ionode ) CALL iotk_close_write( iunpun )
       !
+      call mp_barrier()
+      !
       IF( .NOT. twfcollect ) THEN
          !
          tmp_dir_save = tmp_dir
@@ -941,7 +934,6 @@ MODULE cp_restart
       DEALLOCATE( ftmp )
       DEALLOCATE( tau  )
       DEALLOCATE( ityp )
-      DEALLOCATE( mill_g )
       !
       CALL save_history( dirname, nfi )
       !
@@ -1041,7 +1033,6 @@ MODULE cp_restart
       INTEGER              :: i, j, iss, ig, nspin_wfc, ierr, ik
       REAL(DP)             :: omega, htm1(3,3), hinv(3,3), scalef
       LOGICAL              :: found
-      INTEGER, ALLOCATABLE :: mill_g(:,:)
       !
       ! ... variables read for testing pourposes
       !
@@ -2317,11 +2308,12 @@ MODULE cp_restart
     !
     !
     !
-    SUBROUTINE write_gk( iun, ik, mill_g, filename )
+    SUBROUTINE write_gk( iun, ik, filename )
        !
        USE gvecw,                    ONLY : ngw, ngw_g
+       USE gvect,                    ONLY : ngm, ngm_g
        USE control_flags,            ONLY : gamma_only
-       USE gvect,       ONLY : ig_l2g, mill
+       USE gvect,                    ONLY : ig_l2g, mill
        USE mp,                       ONLY : mp_sum
        USE mp_global,                ONLY : intra_bgrp_comm
        USE io_global,                ONLY : ionode
@@ -2329,13 +2321,24 @@ MODULE cp_restart
        IMPLICIT NONE
        !
        INTEGER,            INTENT(IN) :: iun, ik
-       INTEGER,            INTENT(IN) :: mill_g(:,:)
        CHARACTER(LEN=256), INTENT(IN) :: filename
        !
        INTEGER, ALLOCATABLE :: igwk(:)
        INTEGER, ALLOCATABLE :: itmp1(:)
+       INTEGER, ALLOCATABLE :: mill_g(:,:)
        INTEGER  :: npwx_g, npw_g, ig, ngg
        REAL(DP) :: xk(3)
+
+       ! ... Collect G vectors
+       !   
+       ALLOCATE( mill_g( 3, ngm_g ) )
+       !
+       mill_g = 0
+       !
+       mill_g(:,ig_l2g(1:ngm)) = mill(:,1:ngm)
+       !
+       CALL mp_sum( mill_g, intra_bgrp_comm )
+       !
 
        xk     = 0.0d0
        npwx_g = ngw_g
@@ -2394,6 +2397,7 @@ MODULE cp_restart
        END IF
        !
        DEALLOCATE( igwk )
+       DEALLOCATE( mill_g )
 
        RETURN
 
