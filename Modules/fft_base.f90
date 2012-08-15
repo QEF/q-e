@@ -197,7 +197,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
         gcomm = dfft%comm
      ENDIF
 
-     CALL mpi_barrier (gcomm, ierr)  ! why barrier? for buggy openmpi over ib
+     ! CALL mpi_barrier (gcomm, ierr)  ! why barrier? for buggy openmpi over ib
 
      CALL mpi_alltoall (f_aux(1), sendsiz, MPI_DOUBLE_COMPLEX, f_in(1), sendsiz, MPI_DOUBLE_COMPLEX, gcomm, ierr)
 
@@ -209,6 +209,8 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
      !
      IF( isgn == 1 ) THEN
 
+!$omp parallel default(none) private(ip,ioff,i,mc,it,j) shared(dfft,nppx,sendsiz,me,f_in,f_aux)
+!$omp do
         DO ip = 1, dfft%nproc
            ioff = dfft%iss( ip )
            DO i = 1, dfft%nsp( ip )
@@ -219,6 +221,8 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
               ENDDO
            ENDDO
         ENDDO
+!$omp end do
+!$omp end parallel
 
      ELSE
 
@@ -230,6 +234,8 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
            nnp  = dfft%nnp
         ENDIF
         !
+!$omp parallel default(none) private(ip,ioff,i,mc,it,j,gproc,ii) shared(dfft,nppx,npp,nnp,sendsiz,use_tg_,f_in,f_aux)
+!$omp do
         DO ip = 1, dfft%nproc
 
            IF( use_tg_ ) THEN
@@ -257,6 +263,8 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
            ENDDO
            !
         ENDDO
+!$omp end do
+!$omp end parallel
 
      END IF
 
@@ -327,7 +335,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
         gcomm = dfft%comm
      ENDIF
 
-     CALL mpi_barrier (gcomm, ierr)  ! why barrier? for buggy openmpi over ib
+     ! CALL mpi_barrier (gcomm, ierr)  ! why barrier? for buggy openmpi over ib
 
      CALL mpi_alltoall (f_in(1), sendsiz, MPI_DOUBLE_COMPLEX, f_aux(1), sendsiz, MPI_DOUBLE_COMPLEX, gcomm, ierr)
 
