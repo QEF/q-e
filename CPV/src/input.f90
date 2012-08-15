@@ -189,7 +189,7 @@ MODULE input
      USE control_flags, ONLY : do_makov_payne, twfcollect
      USE control_flags, ONLY : lwf, lwfnscf, lwfpbe0, lwfpbe0nscf ! Lingzhu Kong
      USE control_flags, ONLY : lneb, lsmd, lpath
-     USE control_flags, ONLY : llondon
+     USE control_flags, ONLY : llondon, smallmem
      !
      ! ...  Other modules
      !
@@ -222,7 +222,8 @@ MODULE input
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
         orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
-        iesr_inp, saverho, tdipole_card, rd_for, assume_isolated, wf_collect
+        iesr_inp, saverho, tdipole_card, rd_for, assume_isolated, wf_collect,  &
+        memory
      !
      IMPLICIT NONE
      !
@@ -248,6 +249,12 @@ MODULE input
      !
      remove_rigid_rot_ = remove_rigid_rot
      twfcollect = wf_collect
+     !
+     ! ... define memory related internal switches
+     !
+     IF( TRIM( memory ) == 'small' ) THEN
+        smallmem = .TRUE.
+     END IF
      !
      ! Options for isolated system
      SELECT CASE( TRIM( assume_isolated ) )
