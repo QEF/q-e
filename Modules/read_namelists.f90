@@ -1396,12 +1396,8 @@ MODULE read_namelists_module
        IF( refg < 0 ) &
          CALL errore( sub_name, ' wrong table interval refg ', 1 )
        !
-#ifdef __LOWMEM
-       IF( wf_collect .EQ. .true. ) &
-         CALL errore( sub_name, ' wf_collect = .true. is not allowed with LOWMEM build ', 1 )
-       IF( prog /= 'CP' ) &
-         CALL errore( sub_name, ' LOWMEM not available in '//prog//' yet ', 1 )
-#endif
+       IF( ( prog == 'CP' ) .AND. ( TRIM(memory) == 'small' ) .AND. wf_collect ) &
+         CALL errore( sub_name, ' wf_collect = .true. is not allowed with memory = small ', 1 )
 
        allowed = .FALSE.
        DO i = 1, SIZE( memory_allowed )
