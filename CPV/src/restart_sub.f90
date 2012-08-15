@@ -38,8 +38,11 @@ SUBROUTINE from_restart( )
    USE fft_base,              ONLY : dfftp
    !
    IMPLICIT NONE
-   
+
    INTEGER :: iss
+
+   CALL start_clock( 'from_restart' )
+   
    !
    ! ... We are restarting from file recompute ainv
    !
@@ -168,6 +171,8 @@ SUBROUTINE from_restart( )
       xnhpm = xnhp0 - (xnhp0-xnhpm)*delt/dt_old
       WRITE( stdout, '(" tausm & xnhpm were rescaled ")' )
    endif
+
+   CALL stop_clock( 'from_restart' )
    !
    RETURN
    !
