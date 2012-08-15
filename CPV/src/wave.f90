@@ -389,23 +389,18 @@
 
 
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE wave_rand_init_x( cm_bgrp )
+   SUBROUTINE wave_rand_init_x( cm_bgrp, global )
 !=----------------------------------------------------------------------------=!
 
       !  this routine sets the initial wavefunctions at random
 
 ! ... declare modules
       USE kinds,              ONLY: DP
-      USE mp,                 ONLY: mp_sum
-#if defined (__LOWMEM) || defined (__NEW_RND_WF)
-      USE mp,                 ONLY: mp_max, mp_min
-#endif
+      USE mp,                 ONLY: mp_sum, mp_max, mp_min
       USE mp_wave,            ONLY: splitwf
       USE mp_global,          ONLY: me_bgrp, nproc_bgrp, root_bgrp, intra_bgrp_comm, mpime
       USE gvect,              ONLY: ig_l2g, gstart
-#if defined (__LOWMEM) || defined (__NEW_RND_WF)
       USE gvect,              ONLY: mill, gg
-#endif
       USE gvecw,              ONLY: ngw, ngw_g
       USE io_global,          ONLY: stdout
       USE random_numbers,     ONLY: randy
@@ -415,6 +410,7 @@
 
       ! ... declare subroutine arguments 
       COMPLEX(DP), INTENT(OUT) :: cm_bgrp(:,:)
+      LOGICAL, OPTIONAL, INTENT(IN) :: global
 
       ! ... declare other variables
       INTEGER :: ntest, ig, ib, ibgrp, lb, ub
@@ -422,15 +418,21 @@
       COMPLEX(DP), ALLOCATABLE :: pwt( : )
       REAL(DP),    ALLOCATABLE :: RND( : , : )
       INTEGER :: iss, n1, n2, m1, m2, i
+      LOGICAL :: local
 
       ! ... initialize the wave functions in such a way that the values
       ! ... of the components are independent on the number of processors
-      ! ... with __NEW_RND_WF the initialization is independend from G sorting too!
+      ! ... with "local" option the initialization is independend from G sorting too!
 
       ! ... Check array dimensions
 
       IF( SIZE( cm_bgrp, 1 ) < ngw ) THEN 
         CALL errore(' wave_rand_init ', ' wrong dimensions ', 3)
+      END IF
+
+      local = .TRUE.
+      IF( PRESENT( global ) ) THEN
+         local = .NOT. global
       END IF
 
       ! ... Reset them to zero
@@ -439,63 +441,55 @@
 
       ampre   = 0.01d0
 
-#if defined (__LOWMEM) || defined (__NEW_RND_WF)
-      ggx = MAXVAL( gg( 1:ngw ) )
-      CALL mp_max( ggx, intra_bgrp_comm )
-      lb = MINVAL( mill )
-      CALL mp_min( lb, intra_bgrp_comm )
-      ub = MAXVAL( mill )
-      CALL mp_max( ub, intra_bgrp_comm )
-      ALLOCATE( RND( 3, lb:ub ) )
-#else
-      ALLOCATE( pwt( ngw_g ) )
-      ntest = ngw_g / 4
-      IF( ntest < SIZE( cm_bgrp, 2 ) ) THEN
-         ntest = ngw_g
+      IF( local ) THEN
+         ggx = MAXVAL( gg( 1:ngw ) )
+         CALL mp_max( ggx, intra_bgrp_comm )
+         lb = MINVAL( mill )
+         CALL mp_min( lb, intra_bgrp_comm )
+         ub = MAXVAL( mill )
+         CALL mp_max( ub, intra_bgrp_comm )
+         ALLOCATE( RND( 3, lb:ub ) )
+      ELSE 
+         ALLOCATE( pwt( ngw_g ) )
+         ntest = ngw_g / 4
+         IF( ntest < SIZE( cm_bgrp, 2 ) ) THEN
+            ntest = ngw_g
+         END IF
       END IF
-#endif
-      ! r1 = 0.0d0
-      ! DO ig = 1, ngw
-      !    IF( ig_l2g( ig ) <= ntest ) THEN
-      !      IF( gg( ig ) > r1 ) r1 = gg( ig ) 
-      !    ENDIF
-      ! END DO
-      ! CALL mp_max( r1, intra_bgrp_comm )
-      ! WRITE(*,*) 'r1 = ', r1
       !
       ! ... assign random values to wave functions
       !
       DO ib = 1, nbsp
 
-#if defined (__LOWMEM) || defined (__NEW_RND_WF)
-        rnd = 0.0d0
-        DO ig = lb, ub
-           rnd( 1, ig ) = 0.5d0 - randy()
-           rnd( 2, ig ) = 0.5d0 - randy()
-           rnd( 3, ig ) = 0.5d0 - randy()
-        END DO
-#else
-        pwt( : ) = 0.0d0
-        DO ig = 3, ntest
-          rranf1 = 0.5d0 - randy()
-          rranf2 = randy()
-          pwt( ig ) = ampre * CMPLX(rranf1, rranf2,kind=DP)
-        END DO
-#endif
+        IF( local ) THEN
+           rnd = 0.0d0
+           DO ig = lb, ub
+              rnd( 1, ig ) = 0.5d0 - randy()
+              rnd( 2, ig ) = 0.5d0 - randy()
+              rnd( 3, ig ) = 0.5d0 - randy()
+           END DO
+        ELSE
+           pwt( : ) = 0.0d0
+           DO ig = 3, ntest
+             rranf1 = 0.5d0 - randy()
+             rranf2 = randy()
+             pwt( ig ) = ampre * CMPLX(rranf1, rranf2,kind=DP)
+           END DO
+        END IF
         !
         ibgrp = ibgrp_g2l( ib )
         !
         IF( ibgrp > 0 ) THEN
           DO ig = 1, ngw
-#if defined (__LOWMEM) || defined (__NEW_RND_WF)
-            IF( gg(ig) < ggx / 2.519d0 ) THEN  ! 2.519 = 4^(2/3), equivalent to keep only (ngw_g/4) values
-               rranf1 = rnd( 1, mill(1,ig) ) * rnd( 2, mill(2,ig) ) * rnd( 3, mill(3,ig) )
-               rranf2 = 0.0d0
-               cm_bgrp( ig, ibgrp ) =  ampre * CMPLX( rranf1, rranf2 ,kind=DP) / ( 1.0d0 + gg(ig) )
+            IF( local ) THEN
+               IF( gg(ig) < ggx / 2.519d0 ) THEN  ! 2.519 = 4^(2/3), equivalent to keep only (ngw_g/4) values
+                  rranf1 = rnd( 1, mill(1,ig) ) * rnd( 2, mill(2,ig) ) * rnd( 3, mill(3,ig) )
+                  rranf2 = 0.0d0
+                  cm_bgrp( ig, ibgrp ) =  ampre * CMPLX( rranf1, rranf2 ,kind=DP) / ( 1.0d0 + gg(ig) )
+               END IF
+            ELSE
+               cm_bgrp( ig, ibgrp ) = pwt( ig_l2g( ig ) )
             END IF
-#else
-            cm_bgrp( ig, ibgrp ) = pwt( ig_l2g( ig ) )
-#endif
           END DO
         END IF
         !

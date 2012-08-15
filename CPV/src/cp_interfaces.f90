@@ -560,10 +560,11 @@
 
 
    INTERFACE wave_rand_init
-      SUBROUTINE wave_rand_init_x( cm )
+      SUBROUTINE wave_rand_init_x( cm, global )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
          COMPLEX(DP), INTENT(OUT) :: cm(:,:)
+         LOGICAL, OPTIONAL, INTENT(IN) :: global
       END SUBROUTINE
    END INTERFACE
 
