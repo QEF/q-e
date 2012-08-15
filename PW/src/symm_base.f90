@@ -119,10 +119,10 @@ subroutine set_sym_bl ( )
   ! rat: the rotated of a direct vector ( cartesian )
   ! rot: the rotated of a direct vector ( crystal axis )
   ! value: component of the s matrix in axis basis
-  integer :: jpol, kpol, mpol, irot
+  integer :: jpol, kpol, mpol, irot, imat(24)
   ! counters over the polarizations and the rotations
 
-  character :: s0name (64) * 45
+  character (len=45) :: s0name (64) 
   ! full name of the rotational part of each symmetry operation
 
   data s0/ 1.d0,  0.d0,  0.d0,  0.d0,  1.d0,  0.d0,  0.d0,  0.d0,  1.d0, &
@@ -277,10 +277,12 @@ subroutine set_sym_bl ( )
               go to 10
            end if
            s(kpol,jpol,nrot) = nint(value)
-           sname(nrot)=s0name(irot)
         enddo
      enddo
+     sname(nrot)=s0name(irot)
+     imat(nrot)=irot
      nrot = nrot+1
+     IF (nrot > 25) CALL errore('set_sym_bl','some problem with symmetries',1)
 10   continue
   enddo
   nrot = nrot-1
@@ -292,7 +294,7 @@ subroutine set_sym_bl ( )
      do kpol = 1,3
         do jpol = 1,3
            s(kpol,jpol,irot+nrot) = -s(kpol,jpol,irot)
-           sname(irot+nrot) = s0name(irot+32)
+           sname(irot+nrot) = s0name(imat(irot)+32)
         end do
      end do
   end do
