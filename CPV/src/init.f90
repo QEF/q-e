@@ -37,7 +37,7 @@
       USE fft_base,             ONLY: dfftp, dffts, dfftb
       USE fft_scalar,           ONLY: cft_b_omp_init
       USE stick_set,            ONLY: pstickset
-      USE control_flags,        ONLY: tdipole, gamma_only
+      USE control_flags,        ONLY: tdipole, gamma_only, smallmem
       USE berry_phase,          ONLY: berry_setup
       USE electrons_module,     ONLY: bmeshset
       USE electrons_base,       ONLY: distribute_bands
@@ -130,11 +130,11 @@
       ! ... generate g-space vectors (dense and smooth grid)
       ! ... call to gshells generates gl, igtongl used in vdW-DF functional
       !
-#ifdef __LOWMEM
-      CALL ggen( gamma_only, at, bg, intra_bgrp_comm, no_global_sort = .TRUE. )
-#else
-      CALL ggen( gamma_only, at, bg )
-#endif
+      IF( smallmem ) THEN
+         CALL ggen( gamma_only, at, bg, intra_bgrp_comm, no_global_sort = .TRUE. )
+      ELSE
+         CALL ggen( gamma_only, at, bg )
+      END IF
 
       CALL gshells (.TRUE.)
       !
