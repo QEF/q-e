@@ -80,6 +80,8 @@ SUBROUTINE from_scratch( )
     !
     ! ... Subroutine body
     !
+    CALL start_clock( 'from_scratch' )
+    !
     nfi = 0
     !
     ttforce = tfor  .or. tprnfor
@@ -287,6 +289,8 @@ SUBROUTINE from_scratch( )
        c0_bgrp = cm_bgrp
        !
     END IF
+    !
+    CALL stop_clock( 'from_scratch' )
     !
     RETURN
     !
