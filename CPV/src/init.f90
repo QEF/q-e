@@ -53,6 +53,7 @@
       real(dp) :: bg(3,3), tpiba2 
       integer :: ng_, ngs_, ngm_ , ngw_ , nogrp_
 
+      CALL start_clock( 'init_dim' )
 
       tpiba2 = ( tpi / alat ) ** 2
       IF( ionode ) THEN
@@ -130,10 +131,11 @@
       ! ... call to gshells generates gl, igtongl used in vdW-DF functional
       !
 #ifdef __LOWMEM
-      CALL ggen( gamma_only, at, bg, intra_bgrp_comm )
+      CALL ggen( gamma_only, at, bg, intra_bgrp_comm, no_global_sort = .TRUE. )
 #else
       CALL ggen( gamma_only, at, bg )
 #endif
+
       CALL gshells (.TRUE.)
       !
       ! ... allocate and generate (modified) kinetic energy
@@ -195,6 +197,8 @@
       !   Flush stdout
       !
       CALL flush_unit( stdout )
+      !
+      CALL stop_clock( 'init_dim' )
       !
       return
       end subroutine init_dimensions
