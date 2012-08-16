@@ -325,7 +325,7 @@ subroutine phq_setup
   !   by set_nscf, at gamma it coincides with the point group and we
   !   take nsymq=nsym
   !
-  IF (lgamma) THEN
+  IF (lgamma.AND.modenum==0) THEN
      nsymq=nsym
      minus_q=.TRUE.
   ENDIF

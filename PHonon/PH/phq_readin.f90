@@ -319,6 +319,8 @@ SUBROUTINE phq_readin()
   END SELECT
 
   epsil = epsil .OR. lraman .OR. elop
+
+  IF (modenum /= 0) search_sym=.FALSE.
   
   if(elph_mat) then
      trans=.false.

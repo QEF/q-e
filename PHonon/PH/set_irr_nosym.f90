@@ -15,6 +15,8 @@ subroutine set_irr_nosym_new (u, npert, nirr)
   !
   USE kinds, only : DP
   USE ions_base, ONLY : nat
+  USE modes, ONLY : num_rap_mode, name_rap_mode
+  USE control_ph, ONLY : search_sym
   IMPLICIT NONE
   !
   INTEGER, INTENT(OUT) ::  npert (3 * nat), nirr
@@ -34,6 +36,12 @@ subroutine set_irr_nosym_new (u, npert, nirr)
   do imode = 1, 3 * nat
      u (imode, imode) = (1.d0, 0.d0)
   enddo
+  IF (search_sym) THEN
+     DO imode = 1, 3 * nat
+        num_rap_mode(imode)=1
+        name_rap_mode(imode)='A'
+     END DO
+  ENDIF
 
   return
 end subroutine set_irr_nosym_new
