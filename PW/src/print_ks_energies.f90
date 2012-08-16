@@ -17,7 +17,8 @@ SUBROUTINE print_ks_energies()
   USE io_global,            ONLY : stdout, ionode
   USE ener,                 ONLY : ef, ef_up, ef_dw 
   USE klist,                ONLY : xk, nelec, ngk, nks, nkstot, &
-                                   lgauss, two_fermi_energies, nelup, neldw
+                                   lgauss, two_fermi_energies, nelup, neldw, &
+                                   wk
   USE lsda_mod,             ONLY : lsda, nspin, isk
   USE ktetra,               ONLY : ltetra
   USE wvfct,                ONLY : nbnd, et, wg
@@ -79,7 +80,7 @@ SUBROUTINE print_ks_energies()
      IF( iverbosity > 0 .AND. .NOT. lbands ) THEN
         !
         WRITE( stdout, 9032 )
-        WRITE( stdout, 9030 ) ( wg(ibnd,ik), ibnd = 1, nbnd )
+        WRITE( stdout, 9030 ) ( wg(ibnd,ik)/wk(ik), ibnd = 1, nbnd )
         !
      END IF
      !
