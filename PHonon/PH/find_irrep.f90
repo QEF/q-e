@@ -56,14 +56,14 @@ SUBROUTINE find_irrep_sym()
   INTEGER :: irr
   ! counters
 
-  IF (nsym > 1.AND..NOT.lgamma_gamma) THEN
-     npertx = 0
-     DO irr = 1, nirr
-        npertx = max (npertx, npert (irr) )
-     ENDDO
-     CALL allocate_pert()
-     CALL set_irr_sym_new (t, tmq, npertx )
-  ENDIF
+  IF (lgamma_gamma) RETURN
+
+  npertx = 0
+  DO irr = 1, nirr
+     npertx = max (npertx, npert (irr) )
+  ENDDO
+  CALL allocate_pert()
+  CALL set_irr_sym_new (t, tmq, npertx )
 
   RETURN
 END SUBROUTINE find_irrep_sym
