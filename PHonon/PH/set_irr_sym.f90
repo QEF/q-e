@@ -18,10 +18,10 @@ subroutine set_irr_sym_new ( t, tmq, npertx )
   USE constants, ONLY: tpi
   USE ions_base, ONLY : nat, tau
   USE cell_base, ONLY : at, bg
-  USE symm_base, ONLY : s, irt, nsym
+  USE symm_base, ONLY : s, irt, nsym, sname
   USE qpoint,    ONLY : xq
   USE modes,     ONLY : nsymq, u, irotmq, nirr, npert, rtau, minus_q
-
+  USE control_flags, ONLY : modenum
   USE mp, ONLY: mp_bcast
   USE mp_global, ONLY : intra_image_comm
   USE io_global, ONLY : ionode_id
@@ -71,6 +71,7 @@ subroutine set_irr_sym_new ( t, tmq, npertx )
      imode0 = 0
      do irr = 1, nirr
         do ipert = 1, npert (irr)
+           if (modenum /= 0 .AND. modenum /= irr) CYCLE
            imode = imode0 + ipert
            do na = 1, nat
               do ipol = 1, 3
@@ -113,6 +114,7 @@ subroutine set_irr_sym_new ( t, tmq, npertx )
            do na = 1, nat
               call trnvecc (wrk_ru (1, na), at, bg, 1)
            enddo
+            
 !
 !     Computes the symmetry matrices on the basis of the pattern
 !
@@ -139,7 +141,10 @@ subroutine set_irr_sym_new ( t, tmq, npertx )
 ! if this is not the case, the way the representations have been chosen has failed
 ! for some reasons (check set_irr.f90)
 !
+        
+        
         do ipert = 1, npert (irr)
+           IF (modenum /= 0 .AND. modenum /= irr) CYCLE
            do jpert = 1, npert (irr)
               wrk = cmplx(0.d0,0.d0)
               do kpert = 1, npert (irr)
