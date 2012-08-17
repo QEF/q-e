@@ -2,7 +2,11 @@ Fixed in svn version
 
    * NEB calculation can get stuck if the code tries to read &ions namelist
      in the PWscf-related input section
+   * NEB: spurious blank character appearing in lines longer than 80
+     character with Intel compiler (saome problem that was previously
+     fixed in PWscf)
    * PH: bug in symmetrization in some special cases (supercells of graphene)
+   * PH: bug in restart when the code stops during self consistency
 
 New in 5.0.1 version
 
