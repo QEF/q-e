@@ -1,8 +1,8 @@
-Fixed
+Fixed in svn version
 
    * NEB calculation can get stuck if the code tries to read &ions namelist
      in the PWscf-related input section
-
+   * PH: bug in symmetrization in some special cases (supercells of graphene)
 
 New in 5.0.1 version
 
