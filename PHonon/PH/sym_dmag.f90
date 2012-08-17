@@ -84,18 +84,8 @@ subroutine sym_dmag (nper, irr, dmagtosym)
      do k = 1, dfftp%nr3
         do j = 1, dfftp%nr2
            do i = 1, dfftp%nr1
-              ri = s (1, 1, irotmq) * (i - 1) + s (2, 1, irotmq) * (j - 1) &
-                 + s (3, 1, irotmq) * (k - 1) - ftau (1, irotmq)
-              ri = mod (ri, dfftp%nr1) + 1
-              if (ri < 1) ri = ri + dfftp%nr1
-              rj = s (1, 2, irotmq) * (i - 1) + s (2, 2, irotmq) * (j - 1) &
-                 + s (3, 2, irotmq) * (k - 1) - ftau (2, irotmq)
-              rj = mod (rj, dfftp%nr2) + 1
-              if (rj < 1) rj = rj + dfftp%nr2
-              rk = s (1, 3, irotmq) * (i - 1) + s (2, 3, irotmq) * (j - 1) &
-                 + s (3, 3, irotmq) * (k - 1) - ftau (3, irotmq)
-              rk = mod (rk, dfftp%nr3) + 1
-              if (rk < 1) rk = rk + dfftp%nr3
+              CALL ruotaijk (s(1,1,irotmq), ftau(1,irotmq), i, j, k, &
+                 dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
 
               do ipert = 1, nper
                  aux2 = (0.d0, 0.d0)
@@ -164,18 +154,8 @@ subroutine sym_dmag (nper, irr, dmagtosym)
         do i = 1, dfftp%nr1
            do isym = 1, nsymq
               irot = isym
-              ri = s (1, 1, irot) * (i - 1) + s (2, 1, irot) * (j - 1) &
-                 + s (3, 1, irot) * (k - 1) - ftau (1, irot)
-              ri = mod (ri, dfftp%nr1) + 1
-              if (ri < 1) ri = ri + dfftp%nr1
-              rj = s (1, 2, irot) * (i - 1) + s (2, 2, irot) * (j - 1) &
-                 + s (3, 2, irot) * (k - 1) - ftau (2, irot)
-              rj = mod (rj, dfftp%nr2) + 1
-              if (rj < 1) rj = rj + dfftp%nr2
-              rk = s (1, 3, irot) * (i - 1) + s (2, 3, irot) * (j - 1) &
-                 + s (3, 3, irot) * (k - 1) - ftau (3, irot)
-              rk = mod (rk, dfftp%nr3) + 1
-              if (rk < 1) rk = rk + dfftp%nr3
+              CALL ruotaijk (s(1,1,irot), ftau(1,irot), i, j, k, &
+                 dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
               dmags=(0.d0,0.d0)
               do ipert = 1, nper
                  do jpert = 1, nper
