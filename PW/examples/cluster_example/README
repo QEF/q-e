@@ -12,5 +12,4 @@ is possible to explore convergence of the results w.r.t. box size by
 editing the script and addind/modifying the variable called BOX_SIZE_LIST.
 Values for BOX_SIZE_LIST = " 12 16 20 24" are provided in the reference
 
-Relevant variables in pw.x input are do_ee in namelist SYSTEM and
-which_compensation in namelist EE.
+Relevant variables in pw.x input is assume_isolated in namelist SYSTEM 
