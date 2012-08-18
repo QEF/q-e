@@ -361,7 +361,7 @@ set origin 0,0
 set size 1,1
 set multiplot
 dx=.1 ; dy=.30   # reduce margins
-set title 0,-7
+set title offset 0,-7
 set size 1./3+1.4*dx,1.+2*dy
 set origin 0./3-dx,0-dy
 set title "Total DOS"
@@ -379,7 +379,7 @@ set origin 0,0
 set size 1,1
 set multiplot
 dx=.1 ; dy=.30   # reduce margins
-set title 0,-7
+set title offset 0,-7
 set size 1./3+1.4*dx,1.+2*dy
 set origin 0./3-dx,0-dy
 set title "Total DOS"
@@ -455,7 +455,8 @@ $PROJWFC_COMMAND < ni.pdos.in > ni.pdos.out
 check_failure $?
 $ECHO " done"
 
-$ECHO "  Fermi Surface plot Spin-Polarized case...\c"
+$ECHO
+$ECHO "  Fermi Surface plot Spin-Polarized case..."
 
 # self-consistent calculation - Spin-Polarized (SP) case
 
@@ -501,9 +502,9 @@ n_start=3
 n_last=6
 #
 E_Fermi=`grep Fermi ni.scf0.SP.out | cut -c 26-36` 
-a1=`grep 'b(1)' ni.scf.out | cut -c 24-54`
-a2=`grep 'b(2)' ni.scf.out | cut -c 24-54`
-a3=`grep 'b(3)' ni.scf.out | cut -c 24-54`
+a1=`grep 'b(1)' ni.scf0.SP.out | cut -c 24-54`
+a2=`grep 'b(2)' ni.scf0.SP.out | cut -c 24-54`
+a3=`grep 'b(3)' ni.scf0.SP.out | cut -c 24-54`
 
 cat > kvecs_FS.in <<EOF
 $a1
@@ -518,10 +519,11 @@ check_failure $?
 
 cat > ni.fs_SP.in << EOF
  &control
-    calculation='nscf'
+    calculation='bands'
     prefix='ni',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
+    verbosity='high'
  /
  &system
     ibrav=2, 
@@ -575,7 +577,8 @@ mv Bands_FS_down.bxsf  $Sysname.fs_down.bxsf
 
 ##################
 
-$ECHO "  Fermi Surface plot Non-Spin-Polarized (NSP) case...\c"
+$ECHO
+$ECHO "  Fermi Surface plot Non-Spin-Polarized (NSP) case..."
 
 # self-consistent calculation - Non-Spin-Polarised case
 
@@ -619,9 +622,9 @@ n_start=3
 n_last=6
 #
 E_Fermi=`grep Fermi ni.scf0.NSP.out | cut -c 26-36` 
-a1=`grep 'b(1)' ni.scf.out | cut -c 24-54`
-a2=`grep 'b(2)' ni.scf.out | cut -c 24-54`
-a3=`grep 'b(3)' ni.scf.out | cut -c 24-54`
+a1=`grep 'b(1)' ni.scf0.NSP.out | cut -c 24-54`
+a2=`grep 'b(2)' ni.scf0.NSP.out | cut -c 24-54`
+a3=`grep 'b(3)' ni.scf0.NSP.out | cut -c 24-54`
 
 cat > kvecs_FS.in <<EOF
 $a1
@@ -635,10 +638,11 @@ $KVECS_COMMAND < kvecs_FS.in > kvecs_FS.out
 
 cat > ni.fs_NSP.in << EOF
  &control
-    calculation='nscf'
+    calculation='bands'
     prefix='ni',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
+    verbosity='high'
  /
  &system
     ibrav=2, 
@@ -687,6 +691,7 @@ $BANDS_COMMAND < Bands_NSP.out > bands_fs.out
 check_failure $?
 mv Bands_FS.bxsf  ni.fs_NSP.bxsf 
 
+$ECHO
 $ECHO "  Fermi surface plot: use 'xcrysden --bxsf ni.fs_NSP.bxsf' to plot ...\c"
 $ECHO " done"
 
