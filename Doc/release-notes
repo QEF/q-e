@@ -1,4 +1,4 @@
-Fixed in svn version
+Fixed in svn version:
 
    * NEB calculation can get stuck if the code tries to read &ions namelist
      in the PWscf-related input section
@@ -7,6 +7,7 @@ Fixed in svn version
      fixed in PWscf)
    * PH: bug in symmetrization in some special cases (supercells of graphene)
    * PH: bug in restart when the code stops during self consistency
+   * PH: ph.x with images wasn't working any longer 
 
 New in 5.0.1 version
 
