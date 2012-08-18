@@ -10,10 +10,14 @@ pp:
 	( cd src ; if test "$(MAKE)" = "" ; then make $(MFLAGS) $@; \
 	else $(MAKE) $(MFLAGS) ; fi ) ; fi ; \
 
-clean :
+clean : example_clean
 	if test -d src ; then \
 	( cd src ; if test "$(MAKE)" = "" ; then make clean ; \
 	else $(MAKE) clean ; fi ) ; fi ;\
+
+example_clean:
+	if test -d examples ; then \
+	( cd examples ; clean_all ) ; fi 
 
 doc:
 	if test -d Doc ; then \
