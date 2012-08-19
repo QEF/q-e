@@ -11,7 +11,7 @@ The definition of a FS core-level-shift is based on a difference
 of energies and it's then necessary to take a reference atom in the
 configuration studied to obtain the relative core level shifts. In this
 example a very simple calculation regarding the SCLS (surface core level
-shift) in the rhodium 011 slab is presnted.
+shift) in the rhodium 011 slab is presented.
 
 First the slab has to be defined with the correct parameters (how many
 layers are needed to find a bulk-like atom, the separation between the

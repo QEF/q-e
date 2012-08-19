@@ -27,7 +27,7 @@ variables see the appropriate INPUT_* file)
 1) make a self-consistent calculation for Ni+CO slab (input=ni+co.scf,
    output=ni+co.scf.out). Emaxpos, eopreg and edir are the essential
    variables needed to define position and width of electric double
-   layer giving the the dipole correction.
+   layer giving the dipole correction.
 
 2) extract the total electrostatic potential (V_bare + V_H potential)
    with a post-process run (input=ni+co.pp.in, output=ni+co.pp.out,

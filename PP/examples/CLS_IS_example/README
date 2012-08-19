@@ -17,7 +17,7 @@ type with a different, core-exited, electronic configuration.
 
 The calculation proceeds as follows:
 
-1) make a self-consistent calculation for Pd [011] slab adding the
+1) make a self-consistent calculation for Rh [011] slab adding the
 core-exited PP in the ATOMIC_SPECIES. All the atomic positions will
 be defined by the normal PP, the addition of the exited PP in the list
 is needed for the next step. Notice that in &system the ntyp variable
@@ -60,7 +60,7 @@ Rhs     1.0     Rhs.pbe-rrkjus_lb.UPF       (core-ex. [s], NOT USED in ATOMIC_PO
 Rhp     1.0     Rhs.pbe-rrkjus_lb.UPF       (core-ex. [p], NOT USED in ATOMIC_POSITIONS)
 Os      1.0     Rhs.pbe-rrkjus_lb.UPF       (core-ex. NOT USED in ATOMIC_POSITIONS)
 
-- Once the SCF is finished it is possibile to define several different
+- Once the SCF is finished it is possible to define several different
 initial_state runs, each testing a different IS contribution. In every
 run one has to defined just ONE core-excited configuration per atomic
 type while excitations of different atomic types can be defined in a
