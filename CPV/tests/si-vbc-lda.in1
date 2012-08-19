@@ -40,6 +40,7 @@
   electron_dynamics = 'damp',
   electron_damping = 0.1,
   electron_velocities = 'zero',
+  ortho_max = 30
 /
 
 &IONS

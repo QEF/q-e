@@ -39,6 +39,7 @@
   orthogonalization = 'ortho',
   electron_dynamics = 'damp',
   electron_damping = 0.1
+  ortho_max = 30
 /
 
 &IONS

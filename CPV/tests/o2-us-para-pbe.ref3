@@ -1,5 +1,5 @@
 
-     Program CP v.5.0           starts on 10May2012 at 19:47:50 
+     Program CP v.5.0.1 (svn rev. 9335) starts on 19Aug2012 at 17:25:49 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,9 +8,10 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote.php
 
-     Serial version
-     Waiting for input...
-     Reading input from standard input
+     Parallel version (MPI & OpenMP), running on      12 processor cores
+     Number of MPI processes:                 1
+     Threads/MPI process:                    12
+     Reading input from /plx/userinternal/acv0/espresso/CPV/tests/o2-us-para-pbe.in3
 
    Job Title: O2 Crystal
 
@@ -19,7 +20,7 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /home/giannozz/trunk/espresso/pseudo/O.pbe-rrkjus.UPF
+   /plx/userinternal/acv0/espresso/pseudo/O.pbe-rrkjus.UPF
    file type is UPF v.1
                file O.pbe-rrkjus.UPF: wavefunction(s)  2S renormalized
 
@@ -55,7 +56,7 @@
    Gcutwfc =   10.5     ,    Gcutrho =   29.6          Gcuts =   20.9
    NOTA BENE: refg, mmx =   0.050000  5760
    Eigenvalues calculated without the kinetic term contribution
-   Orthog. with lagrange multipliers : eps =   0.10E-07,  max =  20
+   Orthog. with lagrange multipliers : eps =   0.10E-07,  max =  30
    Electron dynamics with newton equations
    Electron dynamics : the temperature is not controlled
 
@@ -106,7 +107,7 @@
    Constant VOLUME Molecular dynamics
    cell parameters are not allowed to move
 
-   Verbosity: iverbosity =  2
+   Verbosity: iverbosity =  1
 
 
 
@@ -178,10 +179,6 @@
 
    System geometry initialization
    ------------------------------
- 
-   Scaled positions from standard input
-   O    0.271692E+00  0.190604E+00  0.430258E+00
-   O    0.271692E+00  0.190604E+00  0.623262E+00
    ibrav =   14       cell parameters 
 
       12.00000       0.00000       0.00000
@@ -194,6 +191,13 @@
        4.8000    0.0000    0.0000              1.0000    0.0000    0.0000
        0.0000    4.8000    0.0000              0.0000    1.0000    0.0000
        0.0000    0.0000    4.8000              0.0000    0.0000    1.0000
+
+   Matrix Multiplication Performances
+   ortho mmul, time for parallel driver      =   0.00000 with    1 procs
+
+   Constraints matrixes will be distributed block like on
+   ortho sub-group =    1*   1 procs
+
 
 
    Pseudopotentials initialization
@@ -239,8 +243,8 @@
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
 
-   reading restart file: /home/giannozz/trunk/espresso/CPV/tmp//o2_53.save
-   restart file read in    0.018 sec.
+   reading restart file: /plx/userinternal/acv0/espresso/CPV/tmp//o2_53.save
+   restart file read in    0.023 sec.
 
 
    formf: eself=    28.72384
@@ -248,47 +252,43 @@
    formf: sum_g vps(g)=  -2.4887968 sum_g rhops(g)=  -0.5404975
    Delta V(G=0):   0.021817Ry,    0.593660eV
  
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-  151  0.00000    0.0    0.0   -31.75508   -31.75508   -31.75508   -31.75508  0.0000  0.0000  0.0000  0.0000
-  152  0.00000    0.0    0.0   -31.75508   -31.75508   -31.75508   -31.75508  0.0000  0.0000  0.0000  0.0000
-  153  0.00000    0.0    0.0   -31.75508   -31.75508   -31.75508   -31.75508  0.0000  0.0000  0.0000  0.0000
-  154  0.00000    0.0    0.0   -31.75508   -31.75508   -31.75508   -31.75508  0.0000  0.0000  0.0000  0.0000
-  155  0.00000    0.0    0.0   -31.75508   -31.75508   -31.75508   -31.75508  0.0000  0.0000  0.0000  0.0000
-  156  0.00000    0.0    0.0   -31.75508   -31.75508   -31.75508   -31.75508  0.0000  0.0000  0.0000  0.0000
-  157  0.00000    0.0    0.0   -31.75508   -31.75508   -31.75508   -31.75508  0.0000  0.0000  0.0000  0.0000
-  158  0.00000    0.0    0.0   -31.75508   -31.75508   -31.75508   -31.75508  0.0000  0.0000  0.0000  0.0000
-  159  0.00000    0.0    0.0   -31.75508   -31.75508   -31.75508   -31.75508  0.0000  0.0000  0.0000  0.0000
+  nfi    ekinc  temph  tempp           etot         enthal          econs          econt    vnhh   xnhh0    vnhp   xnhp0
+  120  0.00000    0.0    0.0      -31.75508      -31.75508      -31.75508      -31.75508  0.0000  0.0000  0.0000  0.0000
+  121  0.00000    0.0    0.0      -31.75508      -31.75508      -31.75508      -31.75508  0.0000  0.0000  0.0000  0.0000
+  122  0.00000    0.0    0.0      -31.75508      -31.75508      -31.75508      -31.75508  0.0000  0.0000  0.0000  0.0000
+  123  0.00000    0.0    0.0      -31.75508      -31.75508      -31.75508      -31.75508  0.0000  0.0000  0.0000  0.0000
+  124  0.00000    0.0    0.0      -31.75508      -31.75508      -31.75508      -31.75508  0.0000  0.0000  0.0000  0.0000
+  125  0.00000    0.0    0.0      -31.75508      -31.75508      -31.75508      -31.75508  0.0000  0.0000  0.0000  0.0000
+  126  0.00000    0.0    0.0      -31.75508      -31.75508      -31.75508      -31.75508  0.0000  0.0000  0.0000  0.0000
+  127  0.00000    0.0    0.0      -31.75508      -31.75508      -31.75508      -31.75508  0.0000  0.0000  0.0000  0.0000
+  128  0.00000    0.0    0.0      -31.75508      -31.75508      -31.75508      -31.75508  0.0000  0.0000  0.0000  0.0000
 
- * Physical Quantities at step:   160
+ * Physical Quantities at step:   129
 
-   from rhoofr: total integrated electronic density
-   spin up
-   in g-space =    7.000000   in r-space =   7.000000
-   spin down
-   in g-space =    5.000000   in r-space =   5.000000
+ Spin contamination: s(s+1)= 2.01 (Slater)  2.03 (Becke)  2.00 (expected)
 
 
                 total energy =      -31.75508 Hartree a.u.
-              kinetic energy =       13.24606 Hartree a.u.
-        electrostatic energy =      -28.34903 Hartree a.u.
-                         esr =        0.29869 Hartree a.u.
+              kinetic energy =       13.24555 Hartree a.u.
+        electrostatic energy =      -28.34947 Hartree a.u.
+                         esr =        0.29825 Hartree a.u.
                        eself =       28.72384 Hartree a.u.
-      pseudopotential energy =      -16.77587 Hartree a.u.
-  n-l pseudopotential energy =        6.92578 Hartree a.u.
- exchange-correlation energy =       -6.80201 Hartree a.u.
+      pseudopotential energy =      -16.77492 Hartree a.u.
+  n-l pseudopotential energy =        6.92555 Hartree a.u.
+ exchange-correlation energy =       -6.80179 Hartree a.u.
            average potential =        0.00000 Hartree a.u.
 
 
 
    Eigenvalues (eV), kp =   1 , spin =  1
 
-  -32.46  -20.58  -13.29  -13.22  -13.22   -6.98   -6.98
+  -32.45  -20.58  -13.29  -13.22  -13.22   -6.98   -6.98
 
    Eigenvalues (eV), kp =   1 , spin =  2
 
-  -31.17  -18.71  -12.41  -11.25  -11.25
+  -31.16  -18.71  -12.41  -11.24  -11.24
  
-   Allocated memory (kb) =    102868
+   Allocated memory (kb) =    100568
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -301,95 +301,97 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-       -0.22259238         0.00012972         0.00004240
-        0.00012972        -0.22109825         0.00003245
-        0.00004240         0.00003244        -0.22974637
+       -0.22288679         0.00005714        -0.00012520
+        0.00005714        -0.22141208        -0.00001486
+       -0.00012519        -0.00001486        -0.24394389
    ATOMIC_POSITIONS
-   O    0.326002E+01  0.228690E+01  0.515221E+01
-   O    0.326060E+01  0.228758E+01  0.749003E+01
+   O    0.326124E+01  0.228721E+01  0.515197E+01
+   O    0.325938E+01  0.228728E+01  0.749027E+01
  
    ATOMIC_VELOCITIES
-   O    0.211405E-07  0.227156E-07 -0.353927E-05
-   O   -0.211405E-07 -0.227156E-07  0.353927E-05
+   O    0.841553E-08 -0.470942E-08 -0.863439E-06
+   O   -0.841553E-08  0.470942E-08  0.863439E-06
  
    Forces acting on atoms (au):
-   O    0.385365E-03  0.186323E-03 -0.258533E-03
-   O    0.378371E-03  0.178943E-03  0.400692E-03
+   O    0.385384E-03  0.181719E-03 -0.282156E-04
+   O    0.377234E-03  0.181691E-03  0.148757E-03
  
 
 
    Partial temperatures (for each ionic specie) 
    Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.04     0.0001
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-  160  0.00000    0.0    0.0   -31.75508   -31.75508   -31.75508   -31.75508  0.0000  0.0000  0.0000  0.0000
+        1       0.00     0.0001
+  129  0.00000    0.0    0.0      -31.75508      -31.75508      -31.75508      -31.75508  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /home/giannozz/trunk/espresso/CPV/tmp//o2_53.save
-   restart file written in    0.083 sec.
+   writing restart file: /plx/userinternal/acv0/espresso/CPV/tmp//o2_53.save
+   restart file written in    0.097 sec.
 
 
 
    Averaged Physical Quantities
                       accomulated      this run
-   ekinc         :        0.56618       0.00000 (AU)
-   ekin          :       13.85195      13.24640 (AU)
-   epot          :      -50.76027     -51.92740 (AU)
-   total energy  :      -30.08677     -31.75508 (AU)
-   temperature   :        0.22609       0.02346 (K )
-   enthalpy      :      -30.08677     -31.75508 (AU)
-   econs         :      -30.08677     -31.75508 (AU)
-   pressure      :       10.51160      -0.22129 (Gpa)
+   ekinc         :        0.45058       0.00000 (AU)
+   ekin          :       13.32923      13.24564 (AU)
+   epot          :      -50.54499     -51.92632 (AU)
+   total energy  :      -30.46636     -31.75508 (AU)
+   temperature   :        0.97901       0.00142 (K )
+   enthalpy      :      -30.46636     -31.75508 (AU)
+   econs         :      -30.46635     -31.75508 (AU)
+   pressure      :        4.65410      -0.22845 (Gpa)
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :      4.43s CPU      4.44s WALL (       1 calls)
-     main_loop    :      7.04s CPU      7.14s WALL (      10 calls)
+     initialize   :      5.49s CPU      0.51s WALL (       1 calls)
+     main_loop    :     44.49s CPU      5.73s WALL (      10 calls)
 
      Called by main_loop:
-     move_electro :      6.94s CPU      7.05s WALL (      10 calls)
-     ortho        :      0.02s CPU      0.02s WALL (      10 calls)
+     move_electro :     43.52s CPU      5.65s WALL (      10 calls)
+     ortho        :      0.24s CPU      0.02s WALL (      10 calls)
      updatc       :      0.00s CPU      0.00s WALL (      10 calls)
-     strucf       :      0.00s CPU      0.01s WALL (      11 calls)
+     strucf       :      0.01s CPU      0.00s WALL (      11 calls)
      calbec       :      0.00s CPU      0.00s WALL (      11 calls)
 
      Called by move_electrons:
-     rhoofr       :      1.59s CPU      1.64s WALL (      10 calls)
-     vofrho       :      4.89s CPU      4.95s WALL (      10 calls)
-     dforce       :      0.14s CPU      0.13s WALL (      60 calls)
+     rhoofr       :     12.87s CPU      1.12s WALL (      10 calls)
+     vofrho       :     25.19s CPU      3.99s WALL (      10 calls)
+     dforce       :      1.47s CPU      0.13s WALL (      60 calls)
      calphi       :      0.00s CPU      0.00s WALL (      10 calls)
-     newd         :      0.27s CPU      0.27s WALL (      10 calls)
+     newd         :      3.64s CPU      0.38s WALL (      10 calls)
      nlfl         :      0.00s CPU      0.00s WALL (      10 calls)
 
      Called by ortho:
-     ortho_iter   :      0.00s CPU      0.00s WALL (      20 calls)
-     rsg          :      0.00s CPU      0.00s WALL (      20 calls)
-     rhoset       :      0.00s CPU      0.00s WALL (      20 calls)
+     ortho_iter   :      0.01s CPU      0.00s WALL (      20 calls)
+     rsg          :      0.05s CPU      0.00s WALL (      20 calls)
+     rhoset       :      0.03s CPU      0.00s WALL (      20 calls)
      sigset       :      0.00s CPU      0.00s WALL (      20 calls)
-     tauset       :      0.00s CPU      0.00s WALL (      20 calls)
+     tauset       :      0.01s CPU      0.00s WALL (      20 calls)
 
      Small boxes:
-     rhov         :      0.10s CPU      0.11s WALL (      10 calls)
-     fftb         :      0.11s CPU      0.12s WALL (     620 calls)
+     rhov         :      1.03s CPU      0.09s WALL (      10 calls)
+     fftb         :      2.60s CPU      0.24s WALL (     631 calls)
 
      Low-level routines:
-     prefor       :      0.02s CPU      0.00s WALL (      21 calls)
-     nlfq         :      0.01s CPU      0.02s WALL (      10 calls)
-     nlsm1        :      0.02s CPU      0.01s WALL (      31 calls)
-     nlsm2        :      0.01s CPU      0.02s WALL (      10 calls)
-     fft          :      0.92s CPU      0.91s WALL (     230 calls)
-     ffts         :      0.03s CPU      0.03s WALL (      20 calls)
-     fftw         :      0.14s CPU      0.14s WALL (     180 calls)
-     betagx       :      2.72s CPU      2.72s WALL (       1 calls)
-     qradx        :      1.44s CPU      1.45s WALL (       1 calls)
-     ortho_iter   :      0.00s CPU      0.00s WALL (      20 calls)
+     prefor       :      0.01s CPU      0.00s WALL (      21 calls)
+     nlfq         :      0.24s CPU      0.02s WALL (      10 calls)
+     nlsm1        :      0.14s CPU      0.01s WALL (      31 calls)
+     nlsm2        :      0.24s CPU      0.02s WALL (      10 calls)
+     fft          :      9.62s CPU      0.82s WALL (     230 calls)
+     ffts         :      0.39s CPU      0.03s WALL (      20 calls)
+     fftw         :      1.63s CPU      0.14s WALL (     180 calls)
+     fft_scatter  :      3.54s CPU      0.30s WALL (     430 calls)
+     betagx       :      2.81s CPU      0.24s WALL (       1 calls)
+     qradx        :      1.51s CPU      0.13s WALL (       1 calls)
+     nlinit       :      5.05s CPU      0.43s WALL (       1 calls)
+     init_dim     :      0.03s CPU      0.03s WALL (       1 calls)
+     newnlinit    :      0.40s CPU      0.04s WALL (       1 calls)
+     from_restart :      0.11s CPU      0.01s WALL (       1 calls)
+     ortho_iter   :      0.01s CPU      0.00s WALL (      20 calls)
  
  
- 
-     CP           :    11.55s CPU        11.69s WALL
+     CP           :    50.71s CPU         6.38s WALL
 
  
-   This run was terminated on:  19:48: 2  10May2012            
+   This run was terminated on:  17:25:56  19Aug2012            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

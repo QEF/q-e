@@ -38,6 +38,7 @@
   emass_cutoff = 2.8d0,
   orthogonalization = 'ortho',
   electron_dynamics = 'verlet',
+  ortho_max = 30
 /
 
 &IONS
