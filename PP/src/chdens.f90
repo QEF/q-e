@@ -56,14 +56,15 @@ SUBROUTINE chdens (filplot,plot_num)
   real(DP), ALLOCATABLE :: aux(:)
 
   CHARACTER (len=256) :: fileout
-  CHARACTER (len=13), DIMENSION(0:6) :: formatname = &
+  CHARACTER (len=13), DIMENSION(0:7) :: formatname = &
        (/ 'gnuplot      ', &
           'contour.x    ', &
           'plotrho.x    ', &
           'XCrySDen     ', &
           'gOpenMol     ', &
           'XCrySDen     ', &
-          'Gaussian cube' /)
+          'Gaussian cube', & 
+          'gnuplot x,y,f' /)
   CHARACTER (len=20), DIMENSION(0:4) :: plotname = &
        (/ '1D spherical average', &
           '1D along a line     ', &
@@ -735,6 +736,17 @@ SUBROUTINE plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
         !
         CALL xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
         CALL xsf_datagrid_2d (carica, nx, ny, m1, m2, x0, e1, e2, alat, ounit)
+     ELSEIF (output_format == 7) THEN
+        !
+        !     gnuplot format : x, y, f(x,y)
+        !
+        DO i=1, nx
+           DO j=1, ny 
+              WRITE (ounit, '(3e20.8)')  alat*deltax * (i - 1), &
+                      alat*deltay * (j - 1), dble(carica(i,j))
+           ENDDO
+           WRITE(ounit, *)
+        ENDDO
      ELSE
         CALL errore('plot_2d', 'wrong output_format', 1)
      ENDIF
