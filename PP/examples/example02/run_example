@@ -347,7 +347,7 @@ f(z)=z**(0.7)  # tune image contrast
 ef=15.2874
 #
 unset xtics
-set xtics out nomirror ("X" 1,"Gamma" 41,"K"97)
+set xtics out nomirror ("X" 1,"Gamma" 41,"K" 83, "X" 97)
 set xra[1:97]
 set label 1 "E-E_F(eV)" at 98,2.5
 set ytics out nomirror
