@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+
+echo
+echo "run_all_examples: starting"
+
+# run all examples
+for dir in example*  VCSexample EXX_example vdwDF_example ESM_example cluster_example ;
+do
+    if test -f $dir/run_example
+    then
+        sh $dir/run_example
+    fi
+done
+
+if test -f vdwDF_example/run_example_delta_scf; then
+        sh vdwDF_example/run_example_delta_scf
+fi
+
+echo
+echo "run_all_examples: done"
