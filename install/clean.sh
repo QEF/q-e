@@ -1,3 +1,3 @@
 #!/bin/bash
 
-\rm -f c_defs.h fft_defs.h >& /dev/null
+\rm -f uncompress* make_blas.inc make_lapack.inc make_wannier90.sys
