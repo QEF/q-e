@@ -1,1 +1,1 @@
-rm -r results
+rm -r results *.out *.dat ld1*

@@ -18,5 +18,17 @@ do
         cd ..
     fi
 done
+
+
+if test -d $dir/paw-examples
+   then
+   cd $dir
+   $ECHO "cleaning `pwd`...\c"
+   ./clean
+   $ECHO " done"
+   cd ..
+fi
+
+
 rm -f INPUT_*.html INPUT_*.txt
 $ECHO "cleaning all : done"

@@ -15,14 +15,4 @@ cd oxygen
 rm -rf *.UPF *.out tmp/*
 cd ..
 
-LIST=$(cd input;ls *.in)
-
-cd results
-
-rm -f *.UPF
-for input in $LIST; do
-  rm -rf ${input/.in/.out} ${input/.in/-dlog.ps} ${input/.in/}
-done
-
-cd ../
-rm -r -f results
+\rm -rf results >& /dev/null

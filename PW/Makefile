@@ -34,7 +34,7 @@ clean : examples_clean
 
 examples_clean:
 	if test -d examples ; then \
-	( cd examples ; clean_all ) ; fi 
+	( cd examples ; ./clean_all ) ; fi 
 
 
 distclean: clean doc_clean

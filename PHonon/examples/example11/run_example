@@ -16,8 +16,9 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example calculates the phonon modes of relativistic Au at the gamma and X points" 
-$ECHO " with PAW in the noncollinear and spin-orbit case."
+$ECHO "This example calculates the phonon modes of relativistic Au" 
+$ECHO "at the gamma and X points with PAW in the noncollinear and "
+$ECHO "spin-orbit case."
 $ECHO
 
 # set the needed environment variables

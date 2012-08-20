@@ -22,7 +22,7 @@ third_order:
 #	( cd D3q ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all; \
 #	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
 
-clean: phonon_clean phgamma_only_clean third_order_clean example_clean #third_order_q_clean
+clean: phonon_clean phgamma_only_clean third_order_clean examples_clean #third_order_q_clean
 
 phonon_clean:
 	if test -d PH ; then \
@@ -39,7 +39,7 @@ third_order_clean:
 	( cd D3 ; if test "$(MAKE)" = ""; then make clean; \
 	else $(MAKE) clean ; fi ) ; fi
 
-example_clean:
+examples_clean:
 	if test -d examples ; then \
 	( cd examples ; ./clean_all ) ; fi
 

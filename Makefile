@@ -190,6 +190,7 @@ clean :
 	done
 	- @(cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile clean)
 	- /bin/rm -rf bin/*.x tmp
+	- cd pseudo; ./clean_ps ; cd -
 	- cd PW/tests; /bin/rm -rf CRASH *.out *.out? ; cd -
 	- cd CPV/tests; /bin/rm -rf CRASH *.out *.out? 
 
@@ -201,6 +202,8 @@ distclean veryclean : clean
 	- cd install ; rm -f config.log configure.msg config.status \
 	CPV/version.h ChangeLog* intel.pcl */intel.pcl
 	- cd install ; rm -fr autom4te.cache
+	- cd install; ./clean.sh ; cd -
+	- cd include; ./clean.sh ; cd -
 	- rm -f espresso.tar.gz
 	- for dir in Doc; do \
 	    test -d $$dir && ( cd $$dir ; $(MAKE) $(MFLAGS) TLDEPS= clean ) \
