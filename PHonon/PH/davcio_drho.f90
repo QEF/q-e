@@ -72,7 +72,7 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
      ENDIF
      !
      CALL mp_bcast( ddrho, ionode_id, inter_pool_comm )
-     CALL mp_bcast( int3_paw, ionode_id, inter_pool_comm )
+     IF (okpaw) CALL mp_bcast( int3_paw, ionode_id, inter_pool_comm )
      !
      ! ... distributes ddrho between between the tasks of the pool
      !
