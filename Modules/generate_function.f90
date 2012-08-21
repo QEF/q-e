@@ -445,9 +445,11 @@ CONTAINS
      !
      ! ... minimum image convention
      !
-     s(:) = MATMUL( r(:), bg(:,:) )
-     s(:) = s(:) - ANINT(s(:))
-     r(:) = MATMUL( at(:,:), s(:) )
+     CALL cryst_to_cart( 1, r, bg, -1 )
+     !
+     r(:) = r(:) - ANINT( r(:) )
+     !
+     CALL cryst_to_cart( 1, r, at, 1 )
      !
      axis(ir) = r(icor)
      !
