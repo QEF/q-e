@@ -76,8 +76,8 @@ SUBROUTINE electrons()
                                    vltot_zero, environ_thr,                 &
                                    env_static_permittivity,                 & 
                                    env_surface_tension, env_pressure,       &
-                                   env_slab_geometry, deenviron,            &
-                                   esolvent, ecavity, epressure, eslab
+                                   env_periodicity, deenviron,              &
+                                   esolvent, ecavity, epressure, eperiodic
 #endif
   USE dfunct,                 only : newd
   USE esm,                  ONLY : do_comp_esm, esm_printpot
@@ -181,9 +181,9 @@ SUBROUTINE electrons()
 #ifdef __ENVIRON
   IF ( do_environ ) THEN
     vltot_zero = vltot
-    CALL environ_initions( dfftp%nnr, nat, nsp, ityp, zv, tau ) 
     CALL environ_initcell( dfftp%nnr, dfftp%nr1*dfftp%nr2*dfftp%nr3, &
                            omega, alat ) 
+    CALL environ_initions( dfftp%nnr, nat, nsp, ityp, zv, tau ) 
   END IF
 #endif
   !  
@@ -458,7 +458,7 @@ SUBROUTINE electrons()
        vltot = vltot_zero
        !
        CALL calc_eenviron( dfftp%nnr, nspin, rhoin%of_r, vltot_zero, &
-                           deenviron, esolvent, ecavity, epressure, eslab )
+                           deenviron, esolvent, ecavity, epressure, eperiodic )
        !
        update_venviron = .NOT. conv_elec .AND. dr2 .LT. environ_thr
        !
@@ -595,7 +595,7 @@ SUBROUTINE electrons()
      !
      ! ... adds the external environment contribution to the energy
      !
-     IF ( do_environ ) etot = etot + deenviron + esolvent + ecavity + epressure + eslab
+     IF ( do_environ ) etot = etot + deenviron + esolvent + ecavity + epressure + eperiodic
 #endif
      !
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
@@ -651,7 +651,7 @@ SUBROUTINE electrons()
         IF ( env_static_permittivity .GT. 1.D0 ) WRITE( stdout, 9201 ) esolvent
         IF ( env_surface_tension .GT. 0.D0 ) WRITE( stdout, 9202 ) ecavity
         IF ( env_pressure .NE. 0.D0 ) WRITE( stdout, 9203 ) epressure
-        IF ( env_slab_geometry ) WRITE( stdout, 9204 ) eslab
+        IF ( env_periodicity .NE. 3 ) WRITE( stdout, 9204 ) eperiodic
      ENDIF
      !
 #endif
@@ -783,7 +783,7 @@ SUBROUTINE electrons()
 9201 FORMAT( '     solvation energy          =',F17.8,' Ry' ) 
 9202 FORMAT( '     cavitation energy         =',F17.8,' Ry' ) 
 9203 FORMAT( '     PV energy                 =',F17.8,' Ry' ) 
-9204 FORMAT( '     slab energy correction    =',F17.8,' Ry' )
+9204 FORMAT( '     periodic energy correct.  =',F17.8,' Ry' )
 #endif
   !
   CONTAINS

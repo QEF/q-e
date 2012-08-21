@@ -127,7 +127,7 @@ SUBROUTINE iosys()
                            env_surface_tension_ => env_surface_tension,         &
                            delta_ => delta,                                     &
                            env_pressure_ => env_pressure,                       &
-                           env_slab_geometry, slab_axis,                        &
+                           env_periodicity, slab_axis,                          &
                            cion_ => cion,                                       &
                            zion_ => zion,                                       &
                            rhopb_ => rhopb,                                     &
@@ -1251,20 +1251,20 @@ SUBROUTINE iosys()
     env_static_permittivity_ = 1.D0
     env_surface_tension_ = 0.D0
     env_pressure_ = 0.D0
-    env_slab_geometry = .false.
+    env_periodicity = 3
   CASE ('water')
     ! water, experimental and SCCS tuned parameters
     env_static_permittivity_ = 78.3D0
     env_surface_tension_ = 50.D0*1.D-3*bohr_radius_si**2/rydberg_si
     env_pressure_ = -0.35D0*1.D9/rydberg_si*bohr_radius_si**3
-    env_slab_geometry = .false.
+    env_periodicity = 3
   CASE ('input')
     ! take values from input, this is the default option
     env_static_permittivity_ = env_static_permittivity
     env_surface_tension_ = &
       env_surface_tension*1.D-3*bohr_radius_si**2/rydberg_si
     env_pressure_ = env_pressure*1.D9/rydberg_si*bohr_radius_si**3
-    env_slab_geometry = .false.
+    env_periodicity = 3
   CASE DEFAULT
     call errore ('iosys','unrecognized value for environ_type',1) 
   END SELECT    
@@ -1322,30 +1322,38 @@ SUBROUTINE iosys()
 #ifdef __ENVIRON
     CASE( 'slabx' )
       !
-      do_environ_    = .true.
-      env_slab_geometry   = .true.
-      slab_axis      = 1
-      do_makov_payne = .false.
-      do_comp_mt     = .false.
-      do_comp_esm    = .false.
+      do_environ_     = .true.
+      env_periodicity = 2
+      slab_axis       = 1
+      do_makov_payne  = .false.
+      do_comp_mt      = .false.
+      do_comp_esm     = .false.
       !
     CASE( 'slaby' ) 
       !
-      do_environ_    = .true.
-      env_slab_geometry   = .true.
-      slab_axis      = 2
-      do_makov_payne = .false.
-      do_comp_mt     = .false.
-      do_comp_esm    = .false.
+      do_environ_     = .true.
+      env_periodicity = 2
+      slab_axis       = 2
+      do_makov_payne  = .false.
+      do_comp_mt      = .false.
+      do_comp_esm     = .false.
       !
     CASE( 'slabz' ) 
       !
-      do_environ_    = .true.
-      env_slab_geometry   = .true.
-      slab_axis      = 3
-      do_makov_payne = .false.
-      do_comp_mt     = .false.
-      do_comp_esm    = .false.
+      do_environ_     = .true.
+      env_periodicity = 2
+      slab_axis       = 3
+      do_makov_payne  = .false.
+      do_comp_mt      = .false.
+      do_comp_esm     = .false.
+      !
+    CASE( 'pcc' ) 
+      !
+      do_environ_     = .true.
+      env_periodicity = 0
+      do_makov_payne  = .false.
+      do_comp_mt      = .false.
+      do_comp_esm     = .false.
       !
 #endif
     CASE( 'none' )
@@ -1358,9 +1366,6 @@ SUBROUTINE iosys()
       !
       call errore ('iosys','unrecognized value for assume_isolated',1)
   END SELECT
-#ifdef __ENVIRON
-  IF ( do_environ .AND. (do_comp_mt .OR. env_slab_geometry) ) add_jellium = .false.
-#endif
   !
   ! ... read following cards
   !
