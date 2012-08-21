@@ -145,6 +145,8 @@ MODULE path_input_parameters_module
         !
         REAL(DP), ALLOCATABLE :: pos(:,:)
         !
+        INTEGER, ALLOCATABLE :: typ(:)
+        !
 !
 !   CLIMBING_IMAGES
 !
@@ -161,8 +163,10 @@ CONTAINS
     INTEGER, INTENT(in) :: num_of_images
     !
     IF ( allocated( pos ) ) DEALLOCATE( pos )
+    IF ( allocated( typ ) ) DEALLOCATE( typ )
     !
-    ALLOCATE( pos( 3*nat,num_of_images)  )
+    ALLOCATE( pos( 3*nat, num_of_images ) )
+    ALLOCATE( typ( nat ) )
     !
     pos(:,:) = 0.0
     !
@@ -173,6 +177,7 @@ CONTAINS
   SUBROUTINE deallocate_path_input_ions()
     !
     IF ( allocated( pos ) ) DEALLOCATE( pos )
+    IF ( allocated( typ ) ) DEALLOCATE( typ )
     !
     IF ( allocated( climbing ) ) DEALLOCATE( climbing )
     !
