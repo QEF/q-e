@@ -39,7 +39,8 @@ PROGRAM neb
   !
   USE path_input_parameters_module, ONLY : input_images
   !
-  USE path_input_parameters_module, ONLY : allocate_path_input_ions
+  USE path_input_parameters_module, ONLY : allocate_path_input_ions, &
+                                           deallocate_path_input_ions
   !
   USE iotk_module,   ONLY : iotk_open_read, iotk_close_read,iotk_attlenx
   !
@@ -172,6 +173,8 @@ PROGRAM neb
   CALL io_image_start()
   !
   CALL initialize_path()
+  !
+  CALL deallocate_path_input_ions()
   !
   CALL path_summary()
   !
