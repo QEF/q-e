@@ -43,7 +43,7 @@ SUBROUTINE d3_setup()
   !  8) set the variables needed to calculate only selected q=0 modes
   !
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp, tau
-  USE io_global,     ONLY : stdout
+  USE io_global,     ONLY : stdout, ionode, ionode_id
   USE io_files,      ONLY : tmp_dir
   USE kinds,         ONLY : DP
   USE pwcom
@@ -58,8 +58,8 @@ SUBROUTINE d3_setup()
   USE d3com,         ONLY : q0mode, wrmode, nsymg0, npertg0, nirrg0, &
                             npert_i, npert_f, q0mode_todo, allmodes, ug0, &
                             fild0rho
-  USE mp_global,     ONLY : npool, my_pool_id, inter_pool_comm
-  USE mp,            ONLY : mp_max, mp_min
+  USE mp_global,     ONLY : npool, my_pool_id, inter_pool_comm, intra_image_comm
+  USE mp,            ONLY : mp_max, mp_min, mp_bcast
   USE funct,         ONLY : dmxc, dmxc_spin
   !
   IMPLICIT NONE
@@ -224,14 +224,22 @@ SUBROUTINE d3_setup()
           npert, nirr, gi, gimq, iverbosity, modenum)
   ELSE
      IF (nsym > 1) THEN
-        CALL io_pattern ( nat, fildrho, nirr, npert, u, xqck, tmp_dir, -1 )
+        IF(ionode) CALL io_pattern ( nat, fildrho, nirr, npert, u, xqck, tmp_dir, -1 )
+        call mp_bcast(u,     ionode_id, intra_image_comm)
+        call mp_bcast(nirr,  ionode_id, intra_image_comm)
+        call mp_bcast(npert, ionode_id, intra_image_comm)
+        call mp_bcast(xqck,  ionode_id, intra_image_comm)
            IF(SUM(ABS(xqck(:)-xq(:))) > 1.d-4) CALL errore('d3_setup', 'Wrong drho for q', 1)
         npertx = 0
         DO irr = 1, nirr
            npertx = max (npertx, npert (irr) )
         ENDDO
         IF (.not.lgamma) THEN
-           call io_pattern ( nat, fild0rho, nirrg0, npertg0, ug0, xqck, tmp_dir, -1 )
+           IF(ionode) call io_pattern ( nat, fild0rho, nirrg0, npertg0, ug0, xqck, tmp_dir, -1 )
+           call mp_bcast(ug0,     ionode_id, intra_image_comm)
+           call mp_bcast(nirrg0,  ionode_id, intra_image_comm)
+           call mp_bcast(npertg0, ionode_id, intra_image_comm)
+           call mp_bcast(xqck,    ionode_id, intra_image_comm)
            IF(SUM(ABS(xqck(:))) > 1.d-4) CALL errore('d3_setup', 'Wrong drho for Gamma', 2)
            DO irr = 1, nirrg0
               npertx = max (npertx, npertg0 (irr) )

@@ -50,7 +50,7 @@ subroutine set_d3irr
 
   w_minus_q = .true.
   if (nsymg0.gt.1) then
-     call io_pattern(nat,fild0rho,nirrg0,npertg0,ug0,xqck,tmp_dir,-1)
+     !call io_pattern(nat,fild0rho,nirrg0,npertg0,ug0,xqck,tmp_dir,-1)
      call set_sym_irr (nat, at, bg, zero, s, invs, nsymg0, rtau, irt, &
           irgq, w_nsymq, w_minus_q, w_irotmq, tg0, w_tmq, npertx, &
           ug0, npertg0, nirrg0, w_gi, w_gimq, iverbosity)
@@ -62,3 +62,4 @@ subroutine set_d3irr
 
   return
 end subroutine set_d3irr
+

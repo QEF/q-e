@@ -152,10 +152,10 @@ FUNCTION dfile_name(xq, at, name, prefix, generate, index_q, equiv)
   REAL(DP) :: aq(3)
   !
   ! Only ionode returns a meaningful name, as only ionode should do the i/o
-!  IF(.not.ionode) THEN
-!    dfile_name = ' '
-!    RETURN
-!  ENDIF
+  IF(.not.ionode) THEN
+    dfile_name = ' '
+    RETURN
+  ENDIF
   !
   IF(name(1:5) /= 'auto:') THEN
     dfile_name = name
