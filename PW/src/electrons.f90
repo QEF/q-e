@@ -181,9 +181,9 @@ SUBROUTINE electrons()
 #ifdef __ENVIRON
   IF ( do_environ ) THEN
     vltot_zero = vltot
+    CALL environ_initions( dfftp%nnr, nat, nsp, ityp, zv, tau, alat ) 
     CALL environ_initcell( dfftp%nnr, dfftp%nr1*dfftp%nr2*dfftp%nr3, &
-                           omega, alat ) 
-    CALL environ_initions( dfftp%nnr, nat, nsp, ityp, zv, tau ) 
+                           omega, alat, at ) 
   END IF
 #endif
   !  
