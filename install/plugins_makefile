@@ -22,7 +22,7 @@ ld1:  uncompress-ld1
 	cd ../atomic; $(MAKE) all; cd ../bin; ln -fs ../atomic/src/ld1.x . ; fi
 	touch make-ld1
 uncompress-ld1: touch-dummy
-	@(if test ! -e ../archive/$(LD1).tar.gz && test ! -d ../atomic ; then \
+	@(if test ! -s ../archive/$(LD1).tar.gz && test ! -d ../atomic ; then \
 	wget -O ../archive/$(LD1).tar.gz $(LD1_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(LD1).tar.gz $(LD1_URL) > /dev/null 2>&1; \
@@ -42,7 +42,7 @@ xspectra:  uncompress-xspectra
 	cd ../XSpectra; $(MAKE) all; cd ../bin; ln -fs ../XSpectra/src/xspectra.x . ; fi
 	touch make-xspectra
 uncompress-xspectra: touch-dummy
-	@(if test ! -e ../archive/$(XSPECTRA).tar.gz && test ! -d ../XSpectra ; then \
+	@(if test ! -s ../archive/$(XSPECTRA).tar.gz && test ! -d ../XSpectra ; then \
 	wget -O ../archive/$(XSPECTRA).tar.gz $(XSPECTRA_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(XSPECTRA).tar.gz $(XSPECTRA_URL) > /dev/null 2>&1; \
@@ -62,7 +62,7 @@ pwcond:  uncompress-pwcond
 	cd ../PWCOND; $(MAKE) all; cd ../bin; ln -fs ../PWCOND/src/pwcond.x . ; fi
 	touch make-pwcond
 uncompress-pwcond: touch-dummy
-	@(if test ! -e ../archive/$(PWCOND).tar.gz && test ! -d ../PWCOND ; then \
+	@(if test ! -s ../archive/$(PWCOND).tar.gz && test ! -d ../PWCOND ; then \
 	wget -O ../archive/$(PWCOND).tar.gz $(PWCOND_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(PWCOND).tar.gz $(PWCOND_URL) > /dev/null 2>&1; \
@@ -83,7 +83,7 @@ neb:  uncompress-neb
 	cd ../NEB; $(MAKE) all; cd ../bin; ln -fs ../NEB/src/neb.x . ; fi
 	touch make-neb
 uncompress-neb: touch-dummy
-	@(if test ! -e ../archive/$(NEB).tar.gz && test ! -d ../NEB ; then \
+	@(if test ! -s ../archive/$(NEB).tar.gz && test ! -d ../NEB ; then \
 	wget -O ../archive/$(NEB).tar.gz $(NEB_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(NEB).tar.gz $(NEB_URL) > /dev/null 2>&1; \
@@ -104,7 +104,7 @@ tddfpt:  uncompress-tddfpt
 	ln -fs ../TDDFPT/tools/turbo_spectrum.x . ; fi
 	touch make-tddfpt
 uncompress-tddfpt: touch-dummy
-	@(if test ! -e ../archive/$(TDDFPT).tar.gz && test ! -d ../TDDFPT ; then \
+	@(if test ! -s ../archive/$(TDDFPT).tar.gz && test ! -d ../TDDFPT ; then \
 	wget -O ../archive/$(TDDFPT).tar.gz $(TDDFPT_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(TDDFPT).tar.gz $(TDDFPT_URL) > /dev/null 2>&1; \
@@ -134,7 +134,7 @@ phonon:  uncompress-phonon
 	fi
 	touch make-phonon
 uncompress-phonon: touch-dummy
-	@(if test ! -e ../archive/$(PHONON).tar.gz && test ! -d ../PHonon ; then \
+	@(if test ! -s ../archive/$(PHONON).tar.gz && test ! -d ../PHonon ; then \
 	wget -O ../archive/$(PHONON).tar.gz $(PHONON_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(PHONON).tar.gz $(PHONON_URL) > /dev/null 2>&1; \
@@ -159,7 +159,7 @@ download-gipaw:
 	@echo "This version is not bug free. Please, check if your results make sense."
 	svn checkout svn://cvs.qe-forge.org/scmrepos/svn/qe-gipaw/trunk ../GIPAW
 uncompress-gipaw: touch-dummy
-	@(if test ! -e ../archive/$(GIPAW).tar.gz && test ! -d ../GIPAW ; then \
+	@(if test ! -s ../archive/$(GIPAW).tar.gz && test ! -d ../GIPAW ; then \
 	wget -O ../archive/$(GIPAW).tar.gz $(GIPAW_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(GIPAW).tar.gz $(GIPAW_URL) > /dev/null 2>&1; \
@@ -194,7 +194,7 @@ w90: uncompress-w90 configure-w90
 	-(cd ../bin; ln -fs ../W90/wannier90.x .)
 	touch make-w90
 uncompress-w90: touch-dummy
-	@(if test ! -e ../archive/$(W90).tar.gz && test ! -d ../W90 ; then \
+	@(if test ! -s ../archive/$(W90).tar.gz && test ! -d ../W90 ; then \
 	wget -O ../archive/$(W90).tar.gz $(W90_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(W90).tar.gz $(W90_URL) > /dev/null 2>&1; \
@@ -223,7 +223,7 @@ want: extlibs uncompress-want configure-want
 #	- ( cd ../bin ; ln -sf ../WANT/bin/* . ) 
 	touch ./make-want
 uncompress-want: touch-dummy
-	@(if test ! -e ../archive/$(WANT).tar.gz && test ! -d ../WANT ; then \
+	@(if test ! -s ../archive/$(WANT).tar.gz && test ! -d ../WANT ; then \
 	wget -O ../archive/$(WANT).tar.gz $(WANT_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(WANT).tar.gz $(WANT_URL) > /dev/null 2>&1; \
@@ -271,7 +271,7 @@ yambo: extlibs uncompress-yambo configure-yambo
 	cd ../YAMBO; $(MAKE) all; fi
 	touch ./make-yambo
 uncompress-yambo: touch-dummy
-	@(if test ! -e ../archive/$(YAMBO).tar.gz && test ! -d ../YAMBO ; then \
+	@(if test ! -s ../archive/$(YAMBO).tar.gz && test ! -d ../YAMBO ; then \
 	wget -O ../archive/$(YAMBO).tar.gz $(YAMBO_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(YAMBO).tar.gz $(YAMBO_URL) > /dev/null 2>&1; \
@@ -309,11 +309,11 @@ plumed: test-plumed uncompress-plumed patch-plumed
 	cd ../; $(MAKE) pw; $(MAKE) cp; fi
 	touch make-plumed
 test-plumed: touch-dummy
-	@(if test ! -e ../archive/$(PLUMED).tar.gz && test ! -d ../PLUMED; then \
+	@(if test ! -s ../archive/$(PLUMED).tar.gz && test ! -d ../PLUMED; then \
 	echo "The release contains no PLUMED package. Trying to download it from qe-forge."; fi) 
 	touch ./test-plumed
 uncompress-plumed: touch-dummy
-	@(if test ! -e ../archive/$(PLUMED).tar.gz && test ! -d ../PLUMED ; then \
+	@(if test ! -s ../archive/$(PLUMED).tar.gz && test ! -d ../PLUMED ; then \
 	wget -O ../archive/$(PLUMED).tar.gz $(PLUMED_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(PLUMED).tar.gz $(PLUMED_URL) > /dev/null 2>&1; \
@@ -344,7 +344,7 @@ sax: extlibs uncompress-sax configure-sax
 #	- ( cd ../bin ; ln -sf ../SaX/sax/bin/* . ) 
 	touch ./make-sax
 uncompress-sax: touch-dummy
-	@(if test ! -e ../archive/$(SAX).tar.gz && test ! -d ../SaX ; then \
+	@(if test ! -s ../archive/$(SAX).tar.gz && test ! -d ../SaX ; then \
 	wget -O ../archive/$(SAX).tar.gz $(SAX_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(SAX).tar.gz $(SAX_URL) > /dev/null 2>&1; \
@@ -396,7 +396,7 @@ extlibs:
 gui:  uncompress-gui
 	touch make-gui
 uncompress-gui: touch-dummy
-	@(if test ! -e ../archive/$(GUI).tgz && test ! -d ../GUI && test ! -d ../$(GUI); then \
+	@(if test ! -s ../archive/$(GUI).tgz && test ! -d ../GUI && test ! -d ../$(GUI); then \
 	wget -O ../archive/$(GUI).tgz $(GUI_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(GUI).tgz $(GUI_URL) > /dev/null 2>&1; \
