@@ -53,7 +53,9 @@ SUBROUTINE phq_readin()
   USE io_global,     ONLY : ionode, stdout
   USE mp_global,     ONLY : nproc_pool, nproc_pool_file, &
                             nimage, my_image_id,    &
-                            nproc_image_file, nproc_image, npool
+                            nproc_image_file, nproc_image, npool, &
+                            get_ntask_groups, ntask_groups_file,  &
+                            nproc_bgrp_file
   USE paw_variables, ONLY : okpaw
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
   USE freq_ph,       ONLY : fpol, fiu, nfs, nfsmax
@@ -474,6 +476,9 @@ SUBROUTINE phq_readin()
   IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
      CALL errore('phq_readin',&
      'pw.x run with a different number of pools. Use wf_collect=.true.',1)
+
+  IF (get_ntask_groups() /= 1) &
+     CALL errore('phq_readin','task_groups not available in phonon',1)
 
   IF (elph.and.nimage>1) CALL errore('phq_readin',&
        'el-ph with image parallelization is not yet available',1)

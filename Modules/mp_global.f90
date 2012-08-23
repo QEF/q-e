@@ -23,6 +23,7 @@ MODULE mp_global
   INTEGER :: root  = 0  ! index of the root processor
   INTEGER :: nproc = 1  ! number of processors
   INTEGER :: world_comm = 0  ! communicator
+  INTEGER :: nproc_file = 1  ! saved on file
   !
   ! ... Image groups (processors within an image)
   !
@@ -33,6 +34,7 @@ MODULE mp_global
   INTEGER :: nproc_image=1 ! number of processors within an image
   INTEGER :: inter_image_comm = 0  ! inter image communicator
   INTEGER :: intra_image_comm = 0  ! intra image communicator  
+  INTEGER :: nproc_image_file = 1  ! value saved on file
   !
   ! ... Pot groups (processors within a cooking-pot)
   !
@@ -43,6 +45,7 @@ MODULE mp_global
   INTEGER :: nproc_pot  = 1  ! number of processors within a pot
   INTEGER :: inter_pot_comm  = 0  ! inter pot communicator
   INTEGER :: intra_pot_comm  = 0  ! intra pot communicator
+  INTEGER :: nproc_pot_file = 1  ! value saved on file
   !
   ! ... Pool groups (processors within a pool of k-points)
   !
@@ -53,6 +56,7 @@ MODULE mp_global
   INTEGER :: nproc_pool  = 1  ! number of processors within a pool
   INTEGER :: inter_pool_comm  = 0  ! inter pool communicator
   INTEGER :: intra_pool_comm  = 0  ! intra pool communicator
+  INTEGER :: nproc_pool_file  = 1  ! saved on file
   !
   ! ... Band groups (processors within a pool of bands)
   !
@@ -65,6 +69,7 @@ MODULE mp_global
   INTEGER :: intra_bgrp_comm  = 0  ! intra band group communicator  
   INTEGER :: ibnd_start = 0 !starting band index
   INTEGER :: ibnd_end = 0   !ending band index
+  INTEGER :: nproc_bgrp_file = 1  ! value saved on file
   !
   ! ... ortho (or linear-algebra) groups
   !
@@ -78,6 +83,7 @@ MODULE mp_global
   INTEGER :: ortho_row_comm  = 0  ! communicator for the ortho row group
   INTEGER :: ortho_col_comm  = 0  ! communicator for the ortho col group
   INTEGER :: ortho_comm_id= 0 ! id of the ortho_comm
+  INTEGER :: nproc_ortho_file = 1  ! value saved on file
   !
 #if defined __SCALAPACK
   INTEGER :: me_blacs   =  0  ! BLACS processor index starting from 0
@@ -89,14 +95,12 @@ MODULE mp_global
   ! ... "task" groups (for band parallelization of FFT)
   !
   INTEGER :: ntask_groups = 1  ! number of proc. in an orbital "task group" 
+  INTEGER :: ntask_groups_file  = 1  ! number of task groups 
   !
   ! ... Misc parallelization info
   ! 
   INTEGER :: kunit = 1  ! granularity of k-point distribution
   ! ... number of processors written in the data file for checkin purposes:
-  INTEGER :: nproc_file = 1        ! world group
-  INTEGER :: nproc_image_file = 1  ! in an image
-  INTEGER :: nproc_pool_file  = 1  ! in a pool
   !
   PRIVATE :: init_pools, init_bands, init_ortho
   PRIVATE :: ntask_groups

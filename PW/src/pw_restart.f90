@@ -118,8 +118,9 @@ MODULE pw_restart
       USE io_rho_xml,           ONLY : write_rho
       USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool, &
                                        nproc_image, nproc_bgrp, me_bgrp, &
+                                       nproc_pot, nproc_ortho, &
                                        root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm, &
-                                       root_bgrp, intra_bgrp_comm, inter_bgrp_comm, nbgrp
+                                       root_bgrp, intra_bgrp_comm, inter_bgrp_comm, nbgrp, get_ntask_groups, ntask_groups_file
       USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
                                        get_screening_parameter, exx_is_active
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
@@ -138,7 +139,7 @@ MODULE pw_restart
       CHARACTER(LEN=256)    :: dirname, filename
       INTEGER               :: i, ig, ik, ngg, ierr, ipol, ik_eff, num_k_points
       INTEGER               :: npool, nkbl, nkl, nkr, npwx_g
-      INTEGER               :: ike, iks, npw_g, ispin, inlc
+      INTEGER               :: ike, iks, npw_g, ispin, inlc, ntask_groups
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
       LOGICAL               :: lwfc
@@ -427,7 +428,9 @@ MODULE pw_restart
 ! ... PARALLELISM
 !-------------------------------------------------------------------------------
          !
-         CALL write_para( kunit, nproc, nproc_pool, nproc_image ) 
+         ntask_groups=get_ntask_groups()
+         CALL write_para( kunit, nproc, nproc_pool, nproc_image, ntask_groups,&
+                          nproc_pot, nproc_bgrp, nproc_ortho ) 
          !
 !-------------------------------------------------------------------------------
 ! ... CHARGE DENSITY
@@ -1254,7 +1257,9 @@ MODULE pw_restart
       USE wvfct,            ONLY : nbnd, npwx, ecutwfc
       USE control_flags,    ONLY : gamma_only
       USE mp_global,        ONLY : kunit, nproc_file, nproc_pool_file, &
-                                   nproc_image_file
+                                   nproc_image_file, ntask_groups_file, &
+                                   nproc_pot_file, nproc_bgrp_file, &
+                                   nproc_ortho_file
       !
       IMPLICIT NONE
       !
@@ -1381,6 +1386,10 @@ MODULE pw_restart
             nproc_file=1
             nproc_pool_file=1
             nproc_image_file=1
+            ntask_groups_file=1
+            nproc_pot_file=1
+            nproc_bgrp_file=1
+            nproc_ortho_file=1
             !
          ELSE
             !
@@ -1401,6 +1410,21 @@ MODULE pw_restart
                             "NUMBER_OF_PROCESSORS_PER_IMAGE", nproc_image_file,&
                                FOUND=found2 )
             IF ( .NOT. found2) nproc_image_file=1 ! compatibility
+            !
+            CALL iotk_scan_dat( iunpun, &
+                      "NUMBER_OF_PROCESSORS_PER_TASKGROUP", ntask_groups_file,&
+                               FOUND=found2 )
+            IF ( .NOT. found2) ntask_groups_file=1 ! compatibility
+            CALL iotk_scan_dat( iunpun, "NUMBER_OF_PROCESSORS_PER_POT", &
+                               nproc_pot_file, FOUND=found2 )
+            IF ( .NOT. found2) nproc_pot_file=1 ! compatibility
+            CALL iotk_scan_dat( iunpun, "NUMBER_OF_PROCESSORS_PER_BAND_GROUP", &
+                               nproc_bgrp_file,  FOUND=found2 )
+            IF ( .NOT. found2) nproc_bgrp_file=1 ! compatibility
+            CALL iotk_scan_dat( iunpun, &
+                           "NUMBER_OF_PROCESSORS_PER_DIAGONALIZATION", &
+                               nproc_ortho_file, FOUND=found2 )
+            IF ( .NOT. found2) nproc_ortho_file=1 ! compatibility
             !
             CALL iotk_scan_end( iunpun, "PARALLELISM" )
             !
@@ -1436,6 +1460,10 @@ MODULE pw_restart
       CALL mp_bcast( nproc_file, ionode_id, intra_image_comm )
       CALL mp_bcast( nproc_pool_file, ionode_id, intra_image_comm )
       CALL mp_bcast( nproc_image_file, ionode_id, intra_image_comm )
+      CALL mp_bcast( ntask_groups_file, ionode_id, intra_image_comm )
+      CALL mp_bcast( nproc_pot_file, ionode_id, intra_image_comm )
+      CALL mp_bcast( nproc_bgrp_file, ionode_id, intra_image_comm )
+      CALL mp_bcast( nproc_ortho_file, ionode_id, intra_image_comm )
       !
       RETURN
       !
