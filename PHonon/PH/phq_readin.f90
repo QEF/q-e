@@ -477,8 +477,11 @@ SUBROUTINE phq_readin()
      CALL errore('phq_readin',&
      'pw.x run with a different number of pools. Use wf_collect=.true.',1)
 
-  IF (get_ntask_groups() /= 1) &
+  IF (get_ntask_groups() > 1) &
      CALL errore('phq_readin','task_groups not available in phonon',1)
+
+  IF (nproc_bgrp_file /= nproc_pool_file) &
+     CALL errore('phq_readin','band parallelization not available in phonon',1)
 
   IF (elph.and.nimage>1) CALL errore('phq_readin',&
        'el-ph with image parallelization is not yet available',1)
