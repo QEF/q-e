@@ -110,7 +110,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
      IF ( isgn /= 2 ) THEN
         !
         IF( use_tg ) &
-           CALL errore( ' tg_cfft ', ' task groups on large mesh not implemented ', 1 )
+           CALL errore( ' tg_cft3s ', ' task groups on large mesh not implemented ', 1 )
         !
         CALL cft_1z( f, dfft%nsp( me_p ), n3, nx3, isgn, aux )
         !
@@ -143,7 +143,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
      IF ( isgn /= -2 ) THEN
         !
         IF( use_tg ) &
-           CALL errore( ' tg_cfft ', ' task groups on large mesh not implemented ', 1 )
+           CALL errore( ' tg_cft3s ', ' task groups on large mesh not implemented ', 1 )
         !
         planes = dfft%iplp
         !
@@ -197,10 +197,10 @@ CONTAINS
      IF( .not. use_tg ) RETURN
      !
      IF( dfft%tg_rdsp(dfft%nogrp) + dfft%tg_rcv(dfft%nogrp) > size( yf ) ) THEN
-        CALL errore( ' tg_cfft ', ' inconsistent size ', 1 )
+        CALL errore( 'pack_group_sticks' , ' inconsistent size ', 1 )
      ENDIF
      IF( dfft%tg_psdsp(dfft%nogrp) + dfft%tg_snd(dfft%nogrp) > size( f ) ) THEN
-        CALL errore( ' tg_cfft ', ' inconsistent size ', 2 )
+        CALL errore( 'pack_group_sticks', ' inconsistent size ', 2 )
      ENDIF
 
      CALL start_clock( 'ALLTOALL' )
@@ -213,7 +213,7 @@ CONTAINS
      CALL MPI_ALLTOALLV( f(1), dfft%tg_snd, dfft%tg_psdsp, MPI_DOUBLE_COMPLEX, yf(1), dfft%tg_rcv, &
       &                     dfft%tg_rdsp, MPI_DOUBLE_COMPLEX, dfft%ogrp_comm, IERR)
      IF( ierr /= 0 ) THEN
-        CALL errore( ' tg_cfft ', ' alltoall error 1 ', abs(ierr) )
+        CALL errore( 'pack_group_sticks', ' alltoall error 1 ', abs(ierr) )
      ENDIF
 
 #endif
@@ -236,10 +236,10 @@ CONTAINS
      IF( .not. use_tg ) RETURN
      !
      IF( dfft%tg_usdsp(dfft%nogrp) + dfft%tg_snd(dfft%nogrp) > size( f ) ) THEN
-        CALL errore( ' tg_cfft ', ' inconsistent size ', 3 )
+        CALL errore( 'unpack_group_sticks', ' inconsistent size ', 3 )
      ENDIF
      IF( dfft%tg_rdsp(dfft%nogrp) + dfft%tg_rcv(dfft%nogrp) > size( yf ) ) THEN
-        CALL errore( ' tg_cfft ', ' inconsistent size ', 4 )
+        CALL errore( 'unpack_group_sticks', ' inconsistent size ', 4 )
      ENDIF
 
      CALL start_clock( 'ALLTOALL' )
@@ -249,7 +249,7 @@ CONTAINS
           dfft%tg_rcv, dfft%tg_rdsp, MPI_DOUBLE_COMPLEX, f(1), &
           dfft%tg_snd, dfft%tg_usdsp, MPI_DOUBLE_COMPLEX, dfft%ogrp_comm, IERR)
      IF( ierr /= 0 ) THEN
-        CALL errore( ' tg_cfft ', ' alltoall error 2 ', abs(ierr) )
+        CALL errore( 'unpack_group_sticks', ' alltoall error 2 ', abs(ierr) )
      ENDIF
 #endif
 
