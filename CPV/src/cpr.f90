@@ -478,6 +478,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            hold = h
            h    = hnew
            !
+           IF( nbgrp > 1 ) THEN
+              CALL mp_bcast( h, 0, inter_bgrp_comm )
+           END IF
+           !
            CALL newinit( h, iverbosity )
            !
            CALL newnlinit()
@@ -724,6 +728,15 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         IF ( tnosep ) CALL ions_nose_shiftvar( xnhpp, xnhp0, xnhpm )
         IF ( tnosee ) CALL electrons_nose_shiftvar( xnhep, xnhe0, xnhem )
         IF ( tnoseh ) CALL cell_nose_shiftvar( xnhhp, xnhh0, xnhhm )
+        !
+        IF( nbgrp > 1 ) THEN
+           CALL mp_bcast( tau0, 0, inter_bgrp_comm )
+           CALL mp_bcast( taus, 0, inter_bgrp_comm )
+           CALL mp_bcast( vels, 0, inter_bgrp_comm )
+           CALL mp_bcast( xnhp0, 0, inter_bgrp_comm )
+           CALL mp_bcast( xnhe0, 0, inter_bgrp_comm )
+           CALL mp_bcast( xnhh0, 0, inter_bgrp_comm )
+        END IF
         !
      END IF
      !
