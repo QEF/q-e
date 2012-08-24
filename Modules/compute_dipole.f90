@@ -28,7 +28,7 @@ SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
   INTEGER,  INTENT(IN)  :: nnr, nspin
   REAL(DP), INTENT(IN)  :: rho( nnr, nspin )
   REAL(DP), INTENT(IN)  :: r0(3)
-  REAL(DP), INTENT(OUT) :: dipole(0:3), quadrupole
+  REAL(DP), INTENT(OUT) :: dipole(0:3), quadrupole(3)
   !
   ! ... Local variables
   !
@@ -43,7 +43,7 @@ SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
   inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
   !
   dipole(:)  = 0.D0
-  quadrupole = 0.D0
+  quadrupole(:) = 0.D0
   !
 #if defined (__MPI)
   index0 = dfftp%nr1x*dfftp%nr2x*SUM(dfftp%npp(1:me_bgrp))
@@ -91,14 +91,14 @@ SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
      DO ip = 1, 3
         !
         dipole(ip) = dipole(ip) + rhoir*r(ip)
-        quadrupole = quadrupole + rhoir*r(ip)**2
+        quadrupole(ip) = quadrupole(ip) + rhoir*r(ip)**2
         !
      END DO
      !
   END DO
   !
   CALL mp_sum(  dipole(0:3) , intra_bgrp_comm )
-  CALL mp_sum(  quadrupole  , intra_bgrp_comm )
+  CALL mp_sum(  quadrupole(1:3)  , intra_bgrp_comm )
   !
   dipole(0) = dipole(0)*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
@@ -106,7 +106,7 @@ SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
      dipole(ip) = dipole(ip)*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) * alat
   END DO
   !
-  quadrupole = quadrupole*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) * alat**2
+  quadrupole(ip) = quadrupole(ip)*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) * alat**2
   !
   RETURN
   !
