@@ -449,8 +449,8 @@
           CALL sticks_maps_scalar( (.not.tk), ub, lb, bg(:,1),bg(:,2),bg(:,3),&
                                     gcut, gkcut, gcut, stw, ngm_ , ngs_ )
 
-          IF( ngm_ /= ngm ) CALL errore( ' pstickset ', ' inconsistent ngm ', abs( ngm - ngm_ ) )
-!          IF( ngs_ /= ngs ) CALL errore( ' pstickset ', ' inconsistent ngs ', abs( ngs - ngs_ ) )
+          IF( ngm_ /= ngm ) CALL errore( ' pstickset_custom ', ' inconsistent ngm ', abs( ngm - ngm_ ) )
+!          IF( ngs_ /= ngs ) CALL errore( ' pstickset_custom ', ' inconsistent ngs ', abs( ngs - ngs_ ) )
 
           CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, 1, max(dfftp%nr1x, dfftp%nr3x),  dfftp%nr2x  )
 !          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, 1, max(dffts%nr1x, dffts%nr3x), dffts%nr2x )
@@ -667,13 +667,13 @@ SUBROUTINE task_groups_init_first( dffts )
     key   = MOD( dffts%mype , dffts%nogrp )
     CALL MPI_COMM_SPLIT( dffts%comm, color, key, dffts%ogrp_comm, ierr )
     if( ierr /= 0 ) &
-         CALL errore( ' init_task_groups ', ' creating ogrp_comm ', ABS(ierr) )
+         CALL errore( ' task_groups_init_first ', ' creating ogrp_comm ', ABS(ierr) )
     CALL MPI_COMM_RANK( dffts%ogrp_comm, itsk, IERR )
     CALL MPI_COMM_SIZE( dffts%ogrp_comm, ntsk, IERR )
-    IF( dffts%nogrp /= ntsk ) CALL errore( ' init_task_groups ', ' ogrp_comm size ', ntsk )
+    IF( dffts%nogrp /= ntsk ) CALL errore( ' task_groups_init_first ', ' ogrp_comm size ', ntsk )
     DO i = 1, dffts%nogrp
        IF( dffts%mype == dffts%nolist( i ) ) THEN
-          IF( (i-1) /= itsk ) CALL errore( ' init_task_groups ', ' ogrp_comm rank ', itsk )
+          IF( (i-1) /= itsk ) CALL errore( ' task_groups_init_first ', ' ogrp_comm rank ', itsk )
        END IF
     END DO
 #endif
@@ -685,13 +685,13 @@ SUBROUTINE task_groups_init_first( dffts )
     key   = dffts%mype / dffts%nogrp
     CALL MPI_COMM_SPLIT( dffts%comm, color, key, dffts%pgrp_comm, ierr )
     if( ierr /= 0 ) &
-         CALL errore( ' init_task_groups ', ' creating pgrp_comm ', ABS(ierr) )
+         CALL errore( ' task_groups_init_first ', ' creating pgrp_comm ', ABS(ierr) )
     CALL MPI_COMM_RANK( dffts%pgrp_comm, itsk, IERR )
     CALL MPI_COMM_SIZE( dffts%pgrp_comm, ntsk, IERR )
-    IF( dffts%npgrp /= ntsk ) CALL errore( ' init_task_groups ', ' pgrp_comm size ', ntsk )
+    IF( dffts%npgrp /= ntsk ) CALL errore( ' task_groups_init_first ', ' pgrp_comm size ', ntsk )
     DO i = 1, dffts%npgrp
        IF( dffts%mype == dffts%nplist( i ) ) THEN
-          IF( (i-1) /= itsk ) CALL errore( ' init_task_groups ', ' pgrp_comm rank ', itsk )
+          IF( (i-1) /= itsk ) CALL errore( ' task_groups_init_first ', ' pgrp_comm rank ', itsk )
        END IF
     END DO
     dffts%me_pgrp = itsk
