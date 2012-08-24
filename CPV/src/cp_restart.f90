@@ -59,6 +59,8 @@ MODULE cp_restart
                                            my_bgrp_id, intra_bgrp_comm, &
                                            intra_image_comm, inter_bgrp_comm, &
                                            root_bgrp, intra_pool_comm
+      USE mp_global,                ONLY : ntask_groups, nproc_pot, nproc_bgrp, &
+                                           nproc_ortho
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm, ngm_g
       USE gvecs,                    ONLY : ngms_g, ecuts, dual
@@ -396,7 +398,8 @@ MODULE cp_restart
 ! ... PARALLELISM
 !-------------------------------------------------------------------------------
          !
-         CALL write_para( kunit, nproc, nproc_pool, nproc_image )
+         CALL write_para( kunit, nproc, nproc_pool, nproc_image, ntask_groups, &
+                          nproc_pot, nproc_bgrp, nproc_ortho )
          !
       END IF
       !

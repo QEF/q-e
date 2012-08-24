@@ -103,7 +103,7 @@ MODULE mp_global
   ! ... number of processors written in the data file for checkin purposes:
   !
   PRIVATE :: init_pools, init_bands, init_ortho
-  PRIVATE :: ntask_groups
+  !!PRIVATE :: ntask_groups
   !
 CONTAINS
   !
