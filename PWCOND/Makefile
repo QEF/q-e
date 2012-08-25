@@ -8,10 +8,14 @@ all:
 	( cd src ; if test "$(MAKE)" = "" ; then make $(MFLAGS) $@; \
 	else $(MAKE) $(MFLAGS) $@ ; fi ) ; fi ; \
 
-clean :
+clean : clean_examples
 	if test -d src ; then \
 	( cd src ; if test "$(MAKE)" = "" ; then make clean ; \
 	else $(MAKE) clean ; fi ) ; fi ;\
+
+clean_examples :
+	if test -d examples ; then \
+	( cd examples ; ./clean_all) ; fi 
 
 doc:
 	if test -d Doc ; then \

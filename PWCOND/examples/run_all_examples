@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+
+echo
+echo "run_all_examples: starting"
+
+# run all examples
+for dir in example* ;
+do
+    if test -f $dir/run_example
+    then
+        sh $dir/run_example
+    fi
+done
+
+
+echo
+echo "run_all_examples: done"
