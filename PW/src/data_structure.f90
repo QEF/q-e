@@ -14,7 +14,6 @@ SUBROUTINE data_structure( gamma_only )
   ! In the parallel case, it distributes columns to processes, too
   !
   USE kinds,      ONLY : DP
-  USE io_global,  ONLY : stdout
   USE mp,         ONLY : mp_max
   USE mp_global,  ONLY : me_bgrp, nproc_bgrp, inter_bgrp_comm, intra_bgrp_comm, root_bgrp
   USE mp_global,  ONLY : get_ntask_groups

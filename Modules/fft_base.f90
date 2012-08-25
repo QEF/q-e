@@ -436,7 +436,7 @@ SUBROUTINE grid_gather( f_in, f_out )
                     recvcount, displs, MPI_DOUBLE_PRECISION, dfftp%root,    &
                     dfftp%comm, info )
   !
-  CALL errore( 'gather', 'info<>0', info )
+  CALL errore( 'grid_gather', 'info<>0', info )
   !
   CALL stop_clock( 'gather' )
   !
@@ -500,7 +500,7 @@ SUBROUTINE grid_scatter( f_in, f_out )
                      f_out, sendcount(dfftp%mype), MPI_DOUBLE_PRECISION, &
                      dfftp%root, dfftp%comm, info )
   !
-  CALL errore( 'scatter', 'info<>0', info )
+  CALL errore( 'grid_scatter', 'info<>0', info )
   !
   IF ( sendcount(dfftp%mype) /= dfftp%nnr ) f_out(sendcount(dfftp%mype)+1:dfftp%nnr) = 0.D0
   !
@@ -620,7 +620,7 @@ SUBROUTINE cgather_smooth ( f_in, f_out )
                     recvcount, displs, MPI_DOUBLE_PRECISION, dfftp%root,    &
                     dfftp%comm, info )
   !
-  CALL errore( 'gather', 'info<>0', info )
+  CALL errore( 'cgather_smooth', 'info<>0', info )
   !
   CALL stop_clock( 'gather' )
   !
@@ -680,7 +680,7 @@ SUBROUTINE cgather_custom ( f_in, f_out, dfftt )
                     recvcount, displs, MPI_DOUBLE_PRECISION, dfftp%root,    &
                     dfftp%comm, info )
   !
-  CALL errore( 'gather', 'info<>0', info )
+  CALL errore( 'cgather_custom', 'info<>0', info )
   !
   CALL stop_clock( 'gather' )
   !
@@ -1023,7 +1023,7 @@ SUBROUTINE tg_gather( dffts, v, tg_v )
       CALL errore( ' tg_gather ', ' v too small ',  ( nsiz - size( v ) ) )
 
    !
-   !  The potential in v is distributed accros all processors
+   !  The potential in v is distributed across all processors
    !  We need to redistribute it so that it is completely contained in the
    !  processors of an orbital TASK-GROUP
    !

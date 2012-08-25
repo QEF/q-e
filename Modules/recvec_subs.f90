@@ -398,7 +398,7 @@ SUBROUTINE gshells ( vc )
          ENDIF
       ENDDO
 
-      IF (igl /= ngl) CALL errore ('setup', 'igl <> ngl', ngl)
+      IF (igl /= ngl) CALL errore ('gshells', 'igl <> ngl', ngl)
 
    ENDIF
 

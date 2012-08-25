@@ -1234,7 +1234,7 @@ MODULE xml_io_base
               .NOT. PRESENT( Hubbard_J )    .OR. &
               .NOT. PRESENT( nsp )          .OR. &
               .NOT. PRESENT( Hubbard_alpha ) ) &
-            CALL errore( 'write_exchange_correlation', &
+            CALL errore( 'write_xc', &
                          ' variables for LDA+U not present', 1 )
          !
          CALL iotk_write_dat( iunpun, "NUMBER_OF_SPECIES", nsp )
@@ -1264,7 +1264,7 @@ MODULE xml_io_base
          IF ( .NOT. PRESENT( vdw_table_name ) .OR. &
               .NOT. PRESENT( pseudo_dir ) .OR. &
               .NOT. PRESENT( dirname )) &
-            CALL errore( 'write_exchange_correlation', &
+            CALL errore( 'write_xc', &
                          ' variable vdw_table_name not present', 1 )
         
          CALL iotk_write_dat( iunpun, "VDW_KERNEL_NAME", vdw_table_name )

@@ -424,7 +424,7 @@ CONTAINS
       ENDIF
     ENDDO
 
-    !  chack number of stick against the input value
+    !  check number of stick against the input value
 
     IF( any( nsp( 1:desc%nproc ) /= ncpw( 1:desc%nproc ) ) ) THEN
       DO ip = 1, desc%nproc
@@ -450,7 +450,7 @@ CONTAINS
       ENDIF
     ENDDO
 
-    !  chack number of stick against the input value
+    !  check number of stick against the input value
 
     IF( any( nsp( 1:desc%nproc ) /= ncp( 1:desc%nproc ) ) ) THEN
       DO ip = 1, desc%nproc
