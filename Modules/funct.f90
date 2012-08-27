@@ -379,7 +379,7 @@ CONTAINS
 
    else if ('VDW-DF2' .EQ. TRIM(dftout) ) then
     ! Special case vdW-DF2
-       call set_dft_value (iexch, 0)
+       call set_dft_value (iexch, 1)
        call set_dft_value (icorr, 4)
        call set_dft_value (igcx, 13)
        call set_dft_value (igcc, 0)
@@ -952,7 +952,7 @@ CONTAINS
      shortname_ = 'OLYP'
   else if (iexch_==1.and.icorr_==4.and.igcx_==4.and.igcc_==0.and.inlc_==1) then
      shortname_ = 'VDW-DF'
-  else if (iexch_==1.and.icorr_==4.and.igcx_==12.and.igcc_==0.and.inlc_==2) then
+  else if (iexch_==1.and.icorr_==4.and.igcx_==13.and.igcc_==0.and.inlc_==2) then
      shortname_ = 'VDW-DF2'
   else if (iexch_==1.and.icorr_==4.and.igcx_==16.and.igcc_==0.and.inlc_==1) then
      shortname_ = 'VDW-DF-C09'
