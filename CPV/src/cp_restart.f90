@@ -59,8 +59,8 @@ MODULE cp_restart
                                            my_bgrp_id, intra_bgrp_comm, &
                                            intra_image_comm, inter_bgrp_comm, &
                                            root_bgrp, intra_pool_comm
-      USE mp_global,                ONLY : ntask_groups, nproc_pot, nproc_bgrp, &
-                                           nproc_ortho
+      USE mp_global,                ONLY : nproc_pot, nproc_bgrp, nproc_ortho, &
+                                           get_ntask_groups
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm, ngm_g
       USE gvecs,                    ONLY : ngms_g, ecuts, dual
@@ -157,6 +157,7 @@ MODULE cp_restart
       CHARACTER(LEN=256)    :: tmp_dir_save
       LOGICAL               :: exst
       INTEGER               :: inlc
+      INTEGER               :: ntask_groups
       !
       ! ... subroutine body
       !
@@ -398,6 +399,7 @@ MODULE cp_restart
 ! ... PARALLELISM
 !-------------------------------------------------------------------------------
          !
+         ntask_groups=get_ntask_groups()
          CALL write_para( kunit, nproc, nproc_pool, nproc_image, ntask_groups, &
                           nproc_pot, nproc_bgrp, nproc_ortho )
          !
