@@ -585,9 +585,6 @@ CONTAINS
     ! No more defaults, the code exit if the dft is not defined
     ! ----------------------------------------------------------------
 
-    if (igcx == 13 .and. iexch > 0 ) &
-          call errore('set_dft_from_name','revPW86 already contains LDA contribution',iexch)
-   
     ! Back compatibility - TO BE REMOVED
  
     if (igcx == 14) igcx = 3 ! PBE -> PBX

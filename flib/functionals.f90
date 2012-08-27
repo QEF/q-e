@@ -513,14 +513,14 @@ subroutine rPW86 (rho, grho, sx, v1x, v2x)
 
   !! Calculation of energy
   fs = (1 + a*s_2 + b*s_4 + c*s_6)**(1.d0/15.d0)
-  sx = Ax * rho**(four_thirds) * fs
+  sx = Ax * rho**(four_thirds) * (fs -1.0D0)
 
 
   !! Calculation of the potential
-  df_ds = (1.d0/(15.d0*fs**(14)))*(2*a*s + 4*b*s_3 + 6*c*s_5)
+  df_ds = (1.d0/(15.d0*fs**(14.0D0)))*(2*a*s + 4*b*s_3 + 6*c*s_5)
 
 
-  v1x = Ax*(four_thirds)*(rho**(1.d0/3.d0)*fs &
+  v1x = Ax*(four_thirds)*(rho**(1.d0/3.d0)*(fs -1.0D0) &
        -grad_rho/(s_prefactor * rho)*df_ds)
 
   v2x = Ax * df_ds/(s_prefactor*grad_rho)
