@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{5.0.1}
+\def\version{5.0.2}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -1407,13 +1407,13 @@ command line switches:
 are used.
 As an example consider the following command line:
 \begin{verbatim}
-mpirun -np 4096 ./neb.x -nimage 8 -npool 2 -ntg 8 -ndiag 144 -input my.input
+mpirun -np 4096 ./neb.x -nimage 8 -npool 2 -ntg 4 -ndiag 144 -input my.input
 \end{verbatim}
 This executes a NEB calculation on 4096 processors, 8 images (points in the configuration
 space in this case) at the same time, each of 
 which is distributed across 512 processors.
 k-points are distributed across 2 pools of 256 processors each, 
-3D FFT is performed using 8 task groups (64 processors each, so
+3D FFT is performed using 4 task groups (64 processors each, so
 the 3D real-space grid is cut into 64 slices), and the diagonalization
 of the subspace Hamiltonian is distributed to a square grid of 144
 processors (12x12).
