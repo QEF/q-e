@@ -1,9 +1,13 @@
 Fixed in svn version:
 
+   * Small error in the calculation of rPW86 functional, due to a mismatch
+     between its previous definition (Slater exchange contained in GGA) and
+     the check on the rho=>0, grad rho=>0 limits. Note that a similar problem
+     might also affect hcth, olyp, m06l functionals
    * NEB calculation can get stuck if the code tries to read &ions namelist
      in the PWscf-related input section
    * NEB: spurious blank character appearing in lines longer than 80
-     character with Intel compiler (saome problem that was previously
+     character with Intel compiler (same problem that was previously
      fixed in PWscf)
    * PH: bug in symmetrization in some special cases (supercells of graphene)
    * PH: bug in restart when the code stops during self consistency
