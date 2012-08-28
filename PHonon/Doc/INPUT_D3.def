@@ -36,10 +36,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program d3.x 
 	    default { 'pwscf' }
 	}
 
-	var outdir -type CHARACTER { 
-	    info { scratch directory }
-	    default { './' }
-	}
+        var outdir -type CHARACTER {
+            default {
+                value of the ESPRESSO_TMPDIR environment variable if set;
+                current directory ('./') otherwise
+            }
+            info {
+                Directory containing input, output, and scratch files;
+                must be the same as specified in the calculation of 
+                the unperturbed system and for phonon calculation.
+            }
+        }
      
 	var fildyn -type CHARACTER { 
 	    info { 

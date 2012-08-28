@@ -36,10 +36,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    }
 	}    
 
-	var outdir -type CHARACTER {
-	    default { './' }
-	    info { Scratch directory. }
-	}
+        var outdir -type CHARACTER {
+            default {
+                value of the ESPRESSO_TMPDIR environment variable if set;
+                current directory ('./') otherwise
+            }
+            info {
+		Directory containing input, output, and scratch files; 
+                must be the same as specified in the calculation of 
+                the unperturbed system.
+            }
+        }
     
 	var prefix -type CHARACTER { 
 	    default { 'pwscf' }
