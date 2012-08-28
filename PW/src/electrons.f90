@@ -575,6 +575,13 @@ SUBROUTINE electrons()
         !
         dexx = fock1 - 0.5D0*( fock0 + fock2 )
         !
+        ! dexx is by definition positive definite. If it is less than
+        ! 0 there is some numerical problem. One such cause could be
+        ! that the exx divergence treatment has failed. 
+        !
+        IF ( dexx < 0d0 ) CALL errore( 'electrons', 'dexx is negative! &
+             & Check that exxdiv_treatment is appropriate for the system.', 1 )
+        !
         etot = etot  - dexx
         hwf_energy = hwf_energy - dexx
         !
