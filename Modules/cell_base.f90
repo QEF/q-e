@@ -156,6 +156,9 @@
      ELSE
         alat = SQRT ( at(1,1)**2+at(2,1)**2+at(3,1)**2 )
      END IF
+     ! for compatibility: celldm still used in phonon etc 
+     celldm(1) = alat
+     !
      at(:,:) = at(:,:) / alat
      CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
      !
