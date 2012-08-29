@@ -220,6 +220,7 @@ cat > Ni_gamma_d8s2.in << EOF
  &electrons
    mixing_beta=0.25,
    conv_thr=1.0E-8,
+   startingwfc='atomic'
  /
 ATOMIC_SPECIES
 Ni     0.0   Ni.pbe-nd-rrkjus.UPF
@@ -259,6 +260,7 @@ cat > Ni_gamma_d9s1.in << EOF
  &electrons
    mixing_beta=0.25,
    conv_thr=1.0E-8,
+   startingwfc='atomic'
  /
 ATOMIC_SPECIES
 Ni     0.0   Ni.pbe-nd-rrkjus.UPF

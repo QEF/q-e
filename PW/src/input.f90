@@ -888,6 +888,13 @@ SUBROUTINE iosys()
      startingwfc = 'atomic'
      !
   ENDIF
+  ! 
+  IF (one_atom_occupations .and. startingwfc /= 'atomic' ) THEN
+
+     CALL infomsg( 'iosys', 'one_atom_occupations requires startingwfc atomic' )
+
+     startingwfc = 'atomic'
+  ENDIF
   !
   SELECT CASE( trim( diagonalization ) )
   CASE ( 'cg' )
