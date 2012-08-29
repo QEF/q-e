@@ -278,7 +278,7 @@ PROGRAM ev
          WRITE(iun,'("# equation of state: birch 1st order.  chisq = ", &
                    & d10.4)') chisq
       ELSEIF(istat==2) THEN
-         WRITE(iun,'("# equation of state: birch 2nd order.  chisq = ", &
+         WRITE(iun,'("# equation of state: birch 3rd order.  chisq = ", &
                    & d10.4)') chisq
       ELSEIF(istat==3) THEN
          WRITE(iun,'("# equation of state: keane.            chisq = ", &
