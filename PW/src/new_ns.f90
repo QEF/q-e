@@ -225,7 +225,7 @@ SUBROUTINE new_ns_nc(ns)
   USE gvect,                ONLY : gstart
   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
   USE buffers,              ONLY : get_buffer
-  USE mp_global,            ONLY : intra_pool_comm, inter_pool_comm
+  USE mp_global,            ONLY : intra_bgrp_comm, inter_pool_comm
   USE mp,                   ONLY : mp_sum
 
   IMPLICIT NONE
@@ -274,7 +274,7 @@ SUBROUTINE new_ns_nc(ns)
        ENDDO
      ENDDO
 #ifdef __MPI
-     CALL mp_sum ( proj, intra_pool_comm )
+     CALL mp_sum ( proj, intra_bgrp_comm )
 #endif
      !
      ! compute the occupation matrix
