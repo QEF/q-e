@@ -324,7 +324,7 @@ SUBROUTINE phq_readin()
 
   IF (modenum /= 0) search_sym=.FALSE.
   
-  if(elph_mat) then
+  if(elph_simple.or.elph_mat) then
      trans=.false.
   else
      trans = trans .OR. ldisp
