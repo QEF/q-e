@@ -22,7 +22,6 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2
   USE control_flags,    ONLY : conv_elec, istep, history, pot_order
-  USE check_stop,       ONLY : check_stop_now
   USE vlocal,           ONLY : strf
   USE cell_base,        ONLY : bg, alat
   USE gvect,            ONLY : ngm, g, eigts1, eigts2, eigts3
