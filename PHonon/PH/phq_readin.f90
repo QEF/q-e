@@ -253,7 +253,7 @@ SUBROUTINE phq_readin()
       drho_star%dir = TRIM(outdir)//"/Rotated_DRHO/"
   !
   dvscf_star%open = .FALSE.
-  dvscf_star%basis = 'cartesian'
+  dvscf_star%basis = 'modes'
   dvscf_star%pat  = .FALSE.
   dvscf_star%ext = 'dvscf'
   CALL get_env( 'ESPRESSO_FILDVSCF_DIR', dvscf_star%dir)
