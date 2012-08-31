@@ -1,5 +1,4 @@
 compute_scf.o : ../../Modules/cell_base.o
-compute_scf.o : ../../Modules/check_stop.o
 compute_scf.o : ../../Modules/constants.o
 compute_scf.o : ../../Modules/control_flags.o
 compute_scf.o : ../../Modules/fft_base.o
@@ -26,6 +25,7 @@ engine_to_path_fix_atom_pos.o : path_variables.o
 engine_to_path_nat.o : ../../Modules/input_parameters.o
 engine_to_path_nat.o : ../../Modules/kind.o
 engine_to_path_nat.o : path_input_parameters_module.o
+engine_to_path_pos.o : ../../Modules/cell_base.o
 engine_to_path_pos.o : ../../Modules/ions_base.o
 engine_to_path_pos.o : ../../Modules/kind.o
 engine_to_path_pos.o : path_input_parameters_module.o

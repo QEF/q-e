@@ -74,46 +74,46 @@ MODULE path_io_routines
        WRITE( iunpath, summary_fmt ) "CI_scheme",     TRIM( CI_scheme )
        !
        WRITE( UNIT = iunpath, &
-              FMT = '(5X,"first_last_opt",T35," = ",1X,L1)' ) first_last_opt
+              FMT = '(5X,"first_last_opt",T35," = ",L4)' ) first_last_opt
        !
        !
        WRITE( UNIT = iunpath, &
-              FMT = '(5X,"use_freezing",T35," = ",1X,L1)' ) use_freezing
+              FMT = '(5X,"use_freezing",T35," = ",L4)' ) use_freezing
        !
        WRITE( UNIT = iunpath, &
-              FMT = '(5X,"ds",T35," = ",1X,F6.4," a.u.")' ) ds
+              FMT = '(5X,"ds",T35," = ",F9.4," a.u.")' ) ds
        !
        IF ( lneb ) THEN
           !
           WRITE( UNIT = iunpath, &
-                 FMT = '(5X,"k_max",T35," = ",1X,F6.4," a.u.")' ) k_max
+                 FMT = '(5X,"k_max",T35," = ",F9.4," a.u.")' ) k_max
           WRITE( UNIT = iunpath, &
-                 FMT = '(5X,"k_min",T35," = ",1X,F6.4," a.u.")' ) k_min
+                 FMT = '(5X,"k_min",T35," = ",F9.4," a.u.")' ) k_min
           !
           k_ratio = k_min / k_max
           !
           WRITE( UNIT = iunpath, FMT = '(5X,"suggested k_max",T35, &
-               & " = ",1X,F6.4," a.u.")' ) ( pi / ds )**2 / 16.0_DP
+               & " = ",F9.4," a.u.")' ) ( pi / ds )**2 / 16.0_DP
           !
           WRITE( UNIT = iunpath, FMT = '(5X,"suggested k_min",T35, &
-               & " = ",1X,F6.4," a.u.")' ) ( pi / ds )**2 / 16.0_DP * k_ratio
+               & " = ",F9.4," a.u.")' ) ( pi / ds )**2 / 16.0_DP * k_ratio
           !
        END IF
        !
        IF ( lsmd ) THEN
           !
           WRITE( UNIT = iunpath, &
-                 FMT = '(5X,"fixed_tan",T35," = ",1X,L1)' ) fixed_tan
+                 FMT = '(5X,"fixed_tan",T35," = ",L4)' ) fixed_tan
           !
           IF ( llangevin ) &
              WRITE( UNIT = iunpath, &
                     FMT = '(5X,"required temperature",T35, &
-                           &" = ",F6.1," K")' ) temp_req * eV_to_kelvin*autoev
+                           &" = ",F9.4," K")' ) temp_req * eV_to_kelvin*autoev
           !
        END IF
        !
        WRITE( UNIT = iunpath, &
-              FMT = '(5X,"path_thr",T35," = ",1X,F6.4," eV / A")' ) path_thr
+              FMT = '(5X,"path_thr",T35," = ",F9.4," eV / A")' ) path_thr
        !
        IF ( CI_scheme == "manual" ) THEN
           !
@@ -549,6 +549,7 @@ MODULE path_io_routines
        REAL(DP)              :: ener, ener_0
        INTEGER               :: i, j, ia
        INTEGER, PARAMETER    :: max_i = 250
+       CHARACTER(LEN=256)    :: strcrd
        !
        !
        IF ( .NOT. meta_ionode ) RETURN
@@ -671,30 +672,31 @@ MODULE path_io_routines
           ! ... (bohr units, for path) to the same format used in input
           !
        CASE( 'alat' )
-          WRITE( iuncrd, '(/"ATOMIC_POSITIONS (alat)")' )
+          strcrd = "ATOMIC_POSITIONS (alat)"
           tau_out(:,:,:) = tau_out(:,:,:) / alat
        CASE( 'bohr' )
-          WRITE( iuncrd, '(/"ATOMIC_POSITIONS (bohr)")' )
+          strcrd = "ATOMIC_POSITIONS (bohr)"
        CASE( 'crystal' )
-          WRITE( iuncrd, '(/"ATOMIC_POSITIONS (crystal)")' )
+          strcrd = "ATOMIC_POSITIONS (crystal)"
           tau_out(:,:,:) = tau_out(:,:,:) / alat
           DO i = 1, num_of_images
             call cryst_to_cart( nat, tau_out(1,1,i), bg, -1 )
           ENDDO
        CASE( 'angstrom' )
-          WRITE( iuncrd, '(/"ATOMIC_POSITIONS (angstrom)")' )
+          strcrd = "ATOMIC_POSITIONS (angstrom)"
           tau_out(:,:,:) = tau_out(:,:,:) * bohr_radius_angs
        CASE DEFAULT
-          WRITE( iuncrd, '(/"ATOMIC_POSITIONS")' )
+          strcrd = "ATOMIC_POSITIONS"
        END SELECT
        DO i = 1, num_of_images
-          ! Add the image label
+          ! Add the image label and atomic position card header
           IF ( i == 1) THEN
-             WRITE( UNIT = iuncrd, FMT='("first_image")' )
-          ELSE IF ( i == num_of_images) THEN
-             WRITE( UNIT = iuncrd, FMT='("last_image")' )
+             WRITE( UNIT = iuncrd, FMT='(A,/,A)') "FIRST_IMAGE", TRIM(strcrd)
+          ELSEIF ( i == num_of_images) THEN
+             WRITE( UNIT = iuncrd, FMT='(A,/,A)') "LAST_IMAGE", TRIM(strcrd)
           ELSE
-             WRITE( UNIT = iuncrd, FMT='("intermediate_image", i5)') i-1
+             WRITE( UNIT = iuncrd, FMT='(A,/,A)') &
+                "INTERMEDIATE_IMAGE", TRIM(strcrd)
           ENDIF
           !
           DO ia = 1, nat

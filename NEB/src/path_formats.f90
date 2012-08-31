@@ -44,7 +44,7 @@ MODULE path_formats
     run_output = "(5X,I5,4X,F15.7,10X,F10.6,12X,L1)"
   !    
   CHARACTER (LEN=*), PARAMETER :: &
-    summary_fmt = "(5X,A,T35,' = ',1X,A)"
+    summary_fmt = "(5X,A,T35,' = ',3X,A)"
   !
   CHARACTER (LEN=*), PARAMETER :: &
     final_fmt = "(/,5X,75('-'),/)"
