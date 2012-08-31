@@ -103,7 +103,6 @@ cp_autopilot.o : cp_emass.o
 cp_autopilot.o : ions_nose.o
 cp_emass.o : ../../Modules/control_flags.o
 cp_emass.o : ../../Modules/kind.o
-cp_interfaces.o : ../../Modules/cell_base.o
 cp_interfaces.o : ../../Modules/descriptors.o
 cp_interfaces.o : ../../Modules/fft_base.o
 cp_interfaces.o : ../../Modules/ions_base.o
@@ -528,10 +527,7 @@ ions_nose.o : ../../Modules/control_flags.o
 ions_nose.o : ../../Modules/io_global.o
 ions_nose.o : ../../Modules/ions_base.o
 ions_nose.o : ../../Modules/kind.o
-ions_positions.o : ../../Modules/cell_base.o
-ions_positions.o : ../../Modules/io_global.o
 ions_positions.o : ../../Modules/kind.o
-ions_positions.o : printout_base.o
 ksstates.o : ../../Modules/electrons_base.o
 ksstates.o : ../../Modules/fft_base.o
 ksstates.o : ../../Modules/fft_interfaces.o
@@ -722,7 +718,6 @@ potentials.o : ../../Modules/mp.o
 potentials.o : ../../Modules/mp_global.o
 potentials.o : ../../Modules/recvec.o
 potentials.o : ../../Modules/sic.o
-potentials.o : gvecw.o
 pres_ai_mod.o : ../../Modules/constants.o
 pres_ai_mod.o : ../../Modules/kind.o
 pres_ai_mod.o : ../../Modules/parameters.o

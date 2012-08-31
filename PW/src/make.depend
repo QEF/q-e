@@ -302,7 +302,6 @@ d_matrix.o : ../../Modules/random_numbers.o
 d_matrix.o : symm_base.o
 data_structure.o : ../../Modules/cell_base.o
 data_structure.o : ../../Modules/fft_base.o
-data_structure.o : ../../Modules/io_global.o
 data_structure.o : ../../Modules/kind.o
 data_structure.o : ../../Modules/mp.o
 data_structure.o : ../../Modules/mp_global.o
