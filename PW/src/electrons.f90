@@ -155,7 +155,6 @@ SUBROUTINE electrons()
   WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
   !
   CALL memstat( kilobytes )
-  !
   IF ( kilobytes > 0 ) WRITE( stdout, 9001 ) kilobytes/1000.0
   !
   CALL flush_unit( stdout )
@@ -194,14 +193,10 @@ SUBROUTINE electrons()
   ewld = ewald( alat, nat, nsp, ityp, zv, at, bg, tau, &
                 omega, g, gg, ngm, gcutm, gstart, gamma_only, strf )
   !
-  !
-  !
-  elondon = 0.d0
-  !
   IF ( llondon ) THEN
-  !
-  elondon = energy_london ( alat , nat , ityp , at ,&
-                                         bg , tau )
+     elondon = energy_london ( alat , nat , ityp , at ,bg , tau )
+  ELSE
+     elondon = 0.d0
   END IF
   !
   call create_scf_type ( rhoin )
