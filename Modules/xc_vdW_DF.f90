@@ -77,7 +77,6 @@ CONTAINS
     use gvect,           ONLY : ngm, nl, g, nlm
     USE fft_base,        ONLY : dfftp
     USE cell_base,       ONLY : omega, tpiba
-    USE fft_scalar,      ONLY : cfft3d
     !! -------------------------------------------------------------------------
     
     !! Local variables
@@ -707,7 +706,6 @@ CONTAINS
                                         gl, ngl, gstart
       USE fft_base,              ONLY : dfftp
       USE cell_base,             ONLY : omega, tpiba, alat, at, tpiba2
-      USE fft_scalar,            ONLY : cfft3d
 
       !! ----------------------------------------------------------------------------------
 
@@ -1843,7 +1841,6 @@ subroutine dv_drho_vdw(rho_valence, rho_core, drho, nspin, dv_drho)
     USE gvect,               ONLY : nl, g, nlm, ngm
     USE fft_base,            ONLY : dfftp
     USE cell_base,           ONLY : alat, tpiba, omega
-    USE fft_scalar,          ONLY : cfft3d
 
     integer :: nspin
     real(dp), intent(IN) :: rho_valence(:,:)       !
