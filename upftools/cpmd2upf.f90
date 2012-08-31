@@ -414,7 +414,10 @@ SUBROUTINE convert_cpmd(upf)
   upf%tcoulombp=.false.
   upf%nlcc = nlcc
   !
-  IF (ixc==1100) THEN
+  IF (ixc==900) THEN
+     PRINT '("Pade approx. not implemented! assuming Perdew-Zunger LDA")'
+     upf%dft='SLA-PZ-NOGX-NOGC'
+  ELSEIF (ixc==1100) THEN
      upf%dft='SLA-PZ-NOGX-NOGC'
   ELSEIF (ixc==1111) THEN
      upf%dft='SLA-PZ-B86-P88'
