@@ -28,8 +28,8 @@ SUBROUTINE impose_deviatoric_strain ( at_old, at )
   ! at(3,3) = at(3,3) - tr
   ! print '("difference in trace: ",e12.4)', tr
 
-  call volume (1.d0, at_old(1,1), at_old(1,2), at_old(1,3), omega_old)
-  call volume (1.d0, at(1,1), at(1,2), at(1,3), omega)
+  CALL volume (1.d0, at_old(1,1), at_old(1,2), at_old(1,3), omega_old)
+  CALL volume (1.d0, at(1,1), at(1,2), at(1,3), omega)
   at = at * (omega_old / omega)**(1.d0/3.d0)
 
 END SUBROUTINE impose_deviatoric_strain
@@ -46,31 +46,22 @@ SUBROUTINE impose_deviatoric_strain_2d ( at_old, at )
   IMPLICIT NONE
   REAL(dp), INTENT(in)    :: at_old(3,3)
   REAL(dp), INTENT(inout) :: at(3,3)
-  REAL(dp) :: tr, omega, omega_old
+  REAL(dp) :: omega, omega_old
   INTEGER :: i, j
 
-  tr = (at(1,1)+at(2,2)+at(3,3))/3.d0
-  tr = tr - (at_old(1,1)+at_old(2,2)+at_old(3,3))/3.d0
-  ! Commented out, while waiting for better idea:
-  ! it breaks the symmetry of hexagonal lattices - PG
-  ! at(1,1) = at(1,1) - tr
-  ! at(2,2) = at(2,2) - tr
-  ! at(3,3) = at(3,3) - tr
-  ! print '("difference in trace: ",e12.4)', tr
-
-  call volume (1.d0, at_old(1,1), at_old(1,2), at_old(1,3), omega_old)
-  call volume (1.d0, at(1,1), at(1,2), at(1,3), omega)
-  do i = 1,3
-  do j = 1,3
-  if (j.eq.3) then
-    at(i,j) = at(i,j) ! DON'T CHANGE IN z- DIRECTION IF 2DSHAPE
-  else
-  at(i,j) = at(i,j) * (omega_old / omega)**(1.d0/3.d0)
-  endif
-  enddo
-  enddo
+  CALL volume (1.d0, at_old(1,1), at_old(1,2), at_old(1,3), omega_old)
+  CALL volume (1.d0, at(1,1), at(1,2), at(1,3), omega)
+  DO i = 1,3
+     DO j = 1,3
+        IF (j==3) THEN
+           at(i,j) = at(i,j) ! DON'T CHANGE IN z- DIRECTION IF 2DSHAPE
+        ELSE
+           at(i,j) = at(i,j) * (omega_old / omega)**(1.d0/3.d0)
+        ENDIF
+     ENDDO
+  ENDDO
 END SUBROUTINE impose_deviatoric_strain_2d
-! 
+!
 !---------------------------------------------------------------------
 SUBROUTINE impose_deviatoric_stress ( sigma )
   !---------------------------------------------------------------------
@@ -90,7 +81,7 @@ SUBROUTINE impose_deviatoric_stress ( sigma )
   WRITE (stdout,'(5x,"Volume is kept fixed: isostatic pressure set to zero")')
 
 END SUBROUTINE impose_deviatoric_stress
-! 
+!
 !---------------------------------------------------------------------
 SUBROUTINE impose_deviatoric_stress_2d ( sigma )
   !---------------------------------------------------------------------

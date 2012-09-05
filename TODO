@@ -1,9 +1,10 @@
-TODO LIST - January 2012
+TODO LIST - September 2012
 
 0) Suspected bugs/problems:
   0.1  something happened to elf calculation between 4.1 to 4.2
   0.2  nstep ignored in vc-relax and other cases
   0.3  wf_collect and phonons on the grid + unneeded scf calculations
+  0.4  phonon restart should not recalculate the entire initialization
   0.5  Small energy differences between PW and CP - maybe PP-related, 
        but might also be a problem of Ewald calculation in CP ("raggio"?)
   0.6  Numerical instabilities with: BLYP; TPSS; noncollinear GGA; LDA+U
@@ -12,8 +13,7 @@ TODO LIST - January 2012
 1.0 Binary packages
   1.0.0 At least Debian/RPM for Linux
 1.3 svn/packaging:
-  1.3.2 run (and fix: sometimes it doesn't work) source-normalizer script
-        dev-tools/src-normal
+  1.3.2 run source-normalizer script dev-tools/src-normal
   1.3.3 Files in flib/ use modules in Modules/, while files in Modules/
         in turn call files in flib/. This kind of circular dependency
         should be avoided. There isn't any good reason for the distinction
@@ -21,13 +21,6 @@ TODO LIST - January 2012
 1.4 mailing lists:
   1.4.1 Send monthly reminder? possibly with netiquette
   1.4.2 move to qe-forge, changing names; or move to forums?
-1.5 Interoperability:
-  1.5.1 we should maintain somewhere (in the user guide and the web site)
-        a list of external "QE-interoperable codes", i.e. that either
-        provide input data for QE or read output/data files from QE
-1.6 qe-forge:
-  1.6.1 there should be a short introduction to qe-forge and its usage
-        in the developer manual
 1.7 Testing
   1.7.1 The automated tests should be moved to a machine that can
         send e-mail to q-e-commits
@@ -56,13 +49,12 @@ TODO LIST - January 2012
     - Criteria for portability
     - Update PP table with PPs that follow the recipe
 3.5 Extend documentation in pseudo-gen.tex to the case of USPP
-    (eventually to PAW) - add *.pdf
+    (eventually to PAW)
 3.6 Add default cutoff values as well as radii of augmented charge
     in pseudopotential files (they are present in recent PP only)
 3.7 The intermediate hard NCPP is useless for PAW and should not be 
     done when generating a PAW set
 3.8 Finish merge of Meta-GGA (TPSS) code into atomic code
-3.9 UPF v.1 must disappear; all converters must be converted to UPF v.2
 
 4) Development
 
