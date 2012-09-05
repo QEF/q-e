@@ -13,7 +13,7 @@ PROGRAM pwscf
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
-  USE cell_base,        ONLY : fix_volume
+  USE cell_base,        ONLY : fix_volume, fix_area
   USE control_flags,    ONLY : conv_elec, gamma_only, lscf
   USE control_flags,    ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
   USE force_mod,        ONLY : lforce, lstres, sigma
@@ -129,6 +129,8 @@ PROGRAM pwscf
      IF ( lmd .OR. lbfgs ) THEN
         !
         if (fix_volume) CALL impose_deviatoric_stress(sigma)
+        !
+        if (fix_area)  CALL  impose_deviatoric_stress_2d(sigma)
         !
         ! ... ionic step (for molecular dynamics or optimization)
         !

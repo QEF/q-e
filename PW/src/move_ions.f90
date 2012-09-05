@@ -22,7 +22,7 @@ SUBROUTINE move_ions()
   USE io_global,              ONLY : stdout
   USE io_files,               ONLY : tmp_dir, iunupdate, seqopn
   USE kinds,                  ONLY : DP
-  USE cell_base,              ONLY : alat, at, bg, omega, cell_force, fix_volume
+  USE cell_base,              ONLY : alat, at, bg, omega, cell_force, fix_volume, fix_area
   USE cellmd,                 ONLY : omega_old, at_old, press, lmovecell, calc
   USE ions_base,              ONLY : nat, ityp, tau, if_pos
   USE fft_base,               ONLY : dfftp
@@ -150,6 +150,7 @@ SUBROUTINE move_ions()
         IF ( lmovecell ) THEN
            ! changes needed only if cell moves
            if (fix_volume) call impose_deviatoric_strain(alat*at, h)
+           if (fix_area)   call impose_deviatoric_strain_2d(alat*at, h)
            at = h /alat  
            CALL recips( at(1,1),at(1,2),at(1,3), bg(1,1),bg(1,2),bg(1,3) )
            CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )

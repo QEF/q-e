@@ -70,7 +70,9 @@
         INTEGER   :: iforceh(3,3) = 1  ! if iforceh( i, j ) = 0 then h( i, j ) 
                                        ! is not allowed to move
         LOGICAL   :: fix_volume = .FALSE.  ! True if cell volume is kept fixed
-
+! 2DSHAPE
+        LOGICAL   :: fix_area = .FALSE.  ! True for cell_dofree='2Dshape' to keep area constant
+! 2DSHAPE
         REAL(DP) :: wmass = 0.0_DP     ! cell fictitious mass
         REAL(DP) :: press = 0.0_DP     ! external pressure 
 
@@ -625,6 +627,19 @@
             CASE ( 'shape' )
               iforceh = 1
               fix_volume = .true.
+! 2DSHAPE: CASE FOR SHAPE CHANGE IN xy PLANE WITH CONST AREA
+! contribution from Richard Charles Andrew
+! Physics Department, University of Pretoria
+! South Africa, august 2012.
+            CASE ( '2Dshape' )
+              iforceh = 1
+              iforceh(3,3) = 0
+              iforceh(1,3) = 0
+              iforceh(3,1) = 0
+              iforceh(2,3) = 0
+              iforceh(3,2) = 0
+              fix_area = .true.
+! 2DSHAPE
             CASE ( 'volume' )
               CALL errore(' init_dofree ', &
                  ' cell_dofree = '//TRIM(cell_dofree)//' not yet implemented ', 1 )
@@ -644,6 +659,14 @@
               ! ... if you want the entire xy plane to be free, uncomment:
               ! iforceh(1,2) = 1
               ! iforceh(2,1) = 1
+! 2DSHAPE THE ENTIRE xy PLANE IS FREE
+            CASE ('2Dxy')
+              iforceh      = 0
+              iforceh(1,1) = 1
+              iforceh(2,2) = 1
+              iforceh(1,2) = 1
+              iforceh(2,1) = 1
+! 2DSHAPE
             CASE ('xz')
               iforceh      = 0
               iforceh(1,1) = 1

@@ -29,7 +29,7 @@ SUBROUTINE vcsmd()
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
   USE constants,       ONLY : e2, ry_kbar, amu_ry
-  USE cell_base,       ONLY : omega, alat, at, bg, iforceh, fix_volume
+  USE cell_base,       ONLY : omega, alat, at, bg, iforceh, fix_volume, fix_area
   USE ions_base,       ONLY : tau, nat, ntyp => nsp, ityp, atm
   USE cellmd,          ONLY : nzero, ntimes, calc, press, at_old, omega_old, &
                               cmass, ntcheck, lmovecell
@@ -414,6 +414,9 @@ SUBROUTINE vcsmd()
   ! ... update configuration in PWSCF variables
   !
   if (fix_volume) call impose_deviatoric_strain(alat*at, avec)
+  !
+  if (fix_area) call impose_deviatoric_strain_2d(alat*at, avec)
+  !
   at = avec / alat
   !
   CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
