@@ -350,6 +350,7 @@ SUBROUTINE convert_fhi (upf)
         l=upf%lchi(i)
         IF (l/=upf%lloc) THEN
            iv=iv+1
+           upf%kbeta(iv)=upf%mesh
            DO ir = upf%mesh,1,-1
               IF ( abs ( upf%vnl(ir,l,1) - upf%vnl(ir,upf%lloc,1) ) > 1.0E-6 ) THEN
                  ! include points up to the last with nonzero value
@@ -362,8 +363,7 @@ SUBROUTINE convert_fhi (upf)
      ! the number of points used in the evaluation of integrals
      ! should be even (for simpson integration)
      DO i=1,upf%nbeta
-        IF ( mod (upf%kbeta(i),2) == 0 .and. upf%kbeta(i) < upf%mesh) &
-           upf%kbeta(i)=upf%kbeta(i)+1
+        IF ( mod (upf%kbeta(i),2) == 0 ) upf%kbeta(i)=upf%kbeta(i)+1
         upf%kbeta(i)=MIN(upf%mesh,upf%kbeta(i))
      ENDDO
      upf%kkbeta = maxval(upf%kbeta(:))

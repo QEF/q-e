@@ -534,9 +534,11 @@ SUBROUTINE convert_cpmd(upf)
            l=upf%lchi(i)
            IF (l/=lloc) THEN
               iv=iv+1
+              upf%kbeta(iv)=upf%mesh
               DO ir = upf%mesh,1,-1
                  IF ( abs ( vnl(ir,l) - vnl(ir,lloc) ) > 1.0E-6 ) THEN
-                    upf%kbeta(iv)=ir
+                    ! include points up to the last with nonzero value
+                    upf%kbeta(iv)=ir+1
                     exit
                  ENDIF
               ENDDO
@@ -545,8 +547,8 @@ SUBROUTINE convert_cpmd(upf)
         ! the number of points used in the evaluation of integrals
         ! should be even (for simpson integration)
         DO i=1,upf%nbeta
-           IF ( mod (upf%kbeta(i),2) == 0 .and. upf%kbeta(i) < upf%mesh) &
-              upf%kbeta(i)=upf%kbeta(i)+1
+           IF ( mod (upf%kbeta(i),2) == 0 ) upf%kbeta(i)=upf%kbeta(i)+1
+           upf%kbeta(i)=MIN(upf%mesh,upf%kbeta(i))
         ENDDO
         upf%kkbeta = maxval(upf%kbeta(:))
      ENDIF
@@ -593,6 +595,8 @@ SUBROUTINE convert_cpmd(upf)
               ELSEIF ( ir < upf%mesh .and. mod(ir,2) == 0 ) THEN
                  ! odd index
                  upf%kbeta(iv) = ir+1
+              ELSE
+                 upf%kbeta(iv) = upf%mesh
               ENDIF
               ! not really the same thing as rc in PP generation
               upf%rcut  (iv) = upf%r(upf%kbeta(iv))
