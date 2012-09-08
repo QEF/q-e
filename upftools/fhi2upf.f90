@@ -218,7 +218,6 @@ SUBROUTINE convert_fhi (upf)
   !
   TYPE(pseudo_upf) :: upf
   !
-  real(8), PARAMETER :: rmax = 10.0d0
   real(8), ALLOCATABLE :: aux(:)
   real(8) :: vll
   CHARACTER (len=2):: label
@@ -226,7 +225,7 @@ SUBROUTINE convert_fhi (upf)
   INTEGER :: l, i, ir, iv
   !
   upf%nv       = "2.0.1"
-  upf%generated= "Generated using FHI98PP, converted with fhi2upf.x v.5.0.1"
+  upf%generated= "Generated using FHI98PP, converted with fhi2upf.x v.5.0.2"
   upf%author   = "unknown"
   upf%date     = "unknown"
   IF (trim(info) /= ' ') THEN
@@ -353,7 +352,8 @@ SUBROUTINE convert_fhi (upf)
            iv=iv+1
            DO ir = upf%mesh,1,-1
               IF ( abs ( upf%vnl(ir,l,1) - upf%vnl(ir,upf%lloc,1) ) > 1.0E-6 ) THEN
-                 upf%kbeta(iv)=ir
+                 ! include points up to the last with nonzero value
+                 upf%kbeta(iv)=ir+1
                  exit
               ENDIF
            ENDDO
@@ -364,6 +364,7 @@ SUBROUTINE convert_fhi (upf)
      DO i=1,upf%nbeta
         IF ( mod (upf%kbeta(i),2) == 0 .and. upf%kbeta(i) < upf%mesh) &
            upf%kbeta(i)=upf%kbeta(i)+1
+        upf%kbeta(i)=MIN(upf%mesh,upf%kbeta(i))
      ENDDO
      upf%kkbeta = maxval(upf%kbeta(:))
      ALLOCATE(upf%beta(upf%mesh,upf%nbeta))

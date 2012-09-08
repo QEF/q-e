@@ -43,6 +43,7 @@ PROGRAM upf2upf2
   !
   ! convert a few variables
   !
+  upf%nv       = "2.0.1"
   IF ( .not. associated (upf%epseu) ) THEN
      ALLOCATE ( upf%epseu( upf%nwfc) )
      upf%epseu=0
