@@ -95,7 +95,8 @@ module funct
   !              "tpss"  = "sla+pw+tpss+tpss"  = TPSS Meta-GGA
   !              "m06l"  = "nox+noc+m6lx+m6lc" = M06L Meta-GGA
   !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
-  !              "hse"   = "sla+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof HSE 06
+  !              "hse"   = "sla+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof 
+  !                                              (HSE 06, see note below)
   !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
   !              "vdw-df"= "sla+pw+rpb+vdw1"   = vdW-DF
   !              "vdw-df2"="sla+pw+rw86+vdw2"  = vdW-DF2
@@ -204,6 +205,17 @@ module funct
   !                      PRL 91, 146401 (2003)
   !              sogga   Y. Zhao and D. G. Truhlar, JCP 128, 184109 (2008)
   !              m06l    Y. Zhao and D. G. Truhlar, JCP 125, 194101 (2006)
+  !
+  ! NOTE ABOUT HSE: there are two slight deviations with respect to the HSE06 
+  ! functional as it is in Gaussian code (that is considered as the reference
+  ! in the chemistry community):
+  ! - The range separation in Gaussian is precisely 0.11 bohr^-1, 
+  !   instead of 0.106 bohr^-1 in this implementation
+  ! - The gradient scaling relation is a bit more complicated 
+  !   [ see: TM Henderson, AF Izmaylov, G Scalmani, and GE Scuseria,
+  !          J. Chem. Phys. 131, 044108 (2009) ]
+  ! These two modifications accounts only for a 1e-5 Ha difference for a 
+  ! single He atom. Info by Fabien Bruneval
   !
   integer, parameter:: notset = -1
   !
