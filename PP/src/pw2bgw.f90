@@ -254,13 +254,16 @@ PROGRAM pw2bgw
   CALL read_file ( )
 
   if (MAX (MAXVAL (ABS (rho_core (:) ) ), MAXVAL (ABS (rhog_core (:) ) ) ) &
-    .GT. eps12) call errore ( 'pw2bgw', 'BGW cannot use NLCC.', 2 )
+    .LT. eps12 .AND. ionode) WRITE ( 6, '(1x, &
+    "WARNING: It is recommended to use NLCC.",/)' )
   if (okvan) call errore ( 'pw2bgw', 'BGW cannot use USPP.', 3 )
   if (okpaw) call errore ( 'pw2bgw', 'BGW cannot use PAW.', 4 )
   if (gamma_only) call errore ( 'pw2bgw', 'BGW cannot use gamma-only run.', 5 )
   if (nspin == 4) call errore ( 'pw2bgw', 'BGW cannot use spinors.', 6 )
 
   CALL openfil_pp ( )
+
+  if ( ionode ) WRITE ( 6, '("")' )
 
   IF ( wfng_flag ) THEN
     output_file_name = TRIM ( outdir ) // '/' // TRIM ( wfng_file )
