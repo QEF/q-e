@@ -203,9 +203,9 @@ CONTAINS
             WRITE (u,'("<PP_INPUTFILE>")')
             REWIND (unit=u_input)
 10          READ (u_input, '(A)',end=20,err=25) line
-            WRITE (u, '(A)') TRIM(line)
+            WRITE (u, '(A)') TRIM(CHECK(line))
             GO TO 10
-25          CALL infomsg('write_upf_v2::write_inputfile', 'reading input data')
+25          CALL infomsg('write_upf_v2::write_inputfile', 'problem writing input data')
 20          WRITE (u,'("</PP_INPUTFILE>")')
          ELSE
             CALL infomsg('write_upf_v2::write_inputfile', 'input file not open')

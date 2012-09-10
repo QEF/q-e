@@ -69,10 +69,8 @@
 
         INTEGER   :: iforceh(3,3) = 1  ! if iforceh( i, j ) = 0 then h( i, j ) 
                                        ! is not allowed to move
-        LOGICAL   :: fix_volume = .FALSE.  ! True if cell volume is kept fixed
-! 2DSHAPE
-        LOGICAL   :: fix_area = .FALSE.  ! True for cell_dofree='2Dshape' to keep area constant
-! 2DSHAPE
+        LOGICAL   :: fix_volume = .FALSE.! True if cell volume is kept fixed
+        LOGICAL   :: fix_area = .FALSE.  ! True if area in xy plane is kept constant
         REAL(DP) :: wmass = 0.0_DP     ! cell fictitious mass
         REAL(DP) :: press = 0.0_DP     ! external pressure 
 
