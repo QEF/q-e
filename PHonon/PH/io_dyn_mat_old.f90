@@ -76,7 +76,7 @@ end subroutine write_dyn_on_file
      WRITE (iudyn, * ) nt, ' ''', atm (nt) , ' '' ', amu_ry*amass(nt)
   ENDDO
   DO na = 1, nat
-     WRITE (iudyn, '(2i5,3f15.7)') na, ityp (na) , (tau (j, na) , j = 1, 3)
+     WRITE (iudyn, '(2i5,3f18.10)') na, ityp (na) , (tau (j, na) , j = 1, 3)
   ENDDO
 
   RETURN

@@ -310,7 +310,7 @@ PROGRAM q2r
         WRITE(2,*) nt," '",atm(nt),"' ",amass(nt)
      END DO
      DO na=1,nat
-        WRITE(2,'(2i5,3f15.7)') na,ityp(na),(tau(j,na),j=1,3)
+        WRITE(2,'(2i5,3f18.10)') na,ityp(na),(tau(j,na),j=1,3)
      END DO
      WRITE (2,*) lrigid
      IF (lrigid) THEN
