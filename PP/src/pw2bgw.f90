@@ -135,6 +135,7 @@ PROGRAM pw2bgw
   integer :: vxc_diag_nmax
   integer :: vxc_offdiag_nmin
   integer :: vxc_offdiag_nmax
+  logical :: vxc_zero_rho_core
   character ( len = 20 ) :: input_dft
   logical :: exx_flag
   logical :: vnlg_flag
@@ -146,8 +147,8 @@ PROGRAM pw2bgw
     wfng_occupation, wfng_nvmin, wfng_nvmax, rhog_flag, rhog_file, &
     vxcg_flag, vxcg_file, vxc0_flag, vxc0_file, vxc_flag, &
     vxc_file, vxc_integral, vxc_diag_nmin, vxc_diag_nmax, &
-    vxc_offdiag_nmin, vxc_offdiag_nmax, input_dft, exx_flag, &
-    vnlg_flag, vnlg_file
+    vxc_offdiag_nmin, vxc_offdiag_nmax, vxc_zero_rho_core, &
+    input_dft, exx_flag, vnlg_flag, vnlg_file
 
   integer :: ii, ios
   character ( len = 256 ) :: output_file_name
@@ -190,6 +191,7 @@ PROGRAM pw2bgw
   vxc_diag_nmax = 0
   vxc_offdiag_nmin = 0
   vxc_offdiag_nmax = 0
+  vxc_zero_rho_core = .TRUE.
   input_dft = 'sla+pz'
   exx_flag = .FALSE.
   vnlg_flag = .FALSE.
@@ -246,6 +248,7 @@ PROGRAM pw2bgw
   CALL mp_bcast ( vxc_diag_nmax, ionode_id )
   CALL mp_bcast ( vxc_offdiag_nmin, ionode_id )
   CALL mp_bcast ( vxc_offdiag_nmax, ionode_id )
+  CALL mp_bcast ( vxc_zero_rho_core, ionode_id )
   CALL mp_bcast ( input_dft, ionode_id )
   CALL mp_bcast ( exx_flag, ionode_id )
   CALL mp_bcast ( vnlg_flag, ionode_id )
@@ -253,9 +256,14 @@ PROGRAM pw2bgw
 
   CALL read_file ( )
 
-  if (MAX (MAXVAL (ABS (rho_core (:) ) ), MAXVAL (ABS (rhog_core (:) ) ) ) &
-    .LT. eps12 .AND. ionode) WRITE ( 6, '(1x, &
-    "WARNING: It is recommended to use NLCC.",/)' )
+  if (ionode) then
+    if (MAX (MAXVAL (ABS (rho_core (:) ) ), MAXVAL (ABS (rhog_core (:) ) ) ) &
+      .LT. eps12) then
+      WRITE ( 6, '(/,5x,"NLCC is absent")' )
+    else
+      WRITE ( 6, '(/,5x,"NLCC is present")' )
+    endif
+  endif
   if (okvan) call errore ( 'pw2bgw', 'BGW cannot use USPP.', 3 )
   if (okpaw) call errore ( 'pw2bgw', 'BGW cannot use PAW.', 4 )
   if (gamma_only) call errore ( 'pw2bgw', 'BGW cannot use gamma-only run.', 5 )
@@ -290,7 +298,7 @@ PROGRAM pw2bgw
     IF ( ionode ) WRITE ( 6, '(5x,"call write_vxcg")' )
     CALL start_clock ( 'write_vxcg' )
     CALL write_vxcg ( output_file_name, real_or_complex, symm_type, &
-      input_dft, exx_flag )
+      vxc_zero_rho_core, input_dft, exx_flag )
     CALL stop_clock ( 'write_vxcg' )
     IF ( ionode ) WRITE ( 6, '(5x,"done write_vxcg",/)' )
   ENDIF
@@ -299,7 +307,8 @@ PROGRAM pw2bgw
     output_file_name = TRIM ( outdir ) // '/' // TRIM ( vxc0_file )
     IF ( ionode ) WRITE ( 6, '(5x,"call write_vxc0")' )
     CALL start_clock ( 'write_vxc0' )
-    CALL write_vxc0 ( output_file_name, input_dft, exx_flag )
+    CALL write_vxc0 ( output_file_name, vxc_zero_rho_core, input_dft, &
+      exx_flag )
     CALL stop_clock ( 'write_vxc0' )
     IF ( ionode ) WRITE ( 6, '(5x,"done write_vxc0",/)' )
   ENDIF
@@ -312,7 +321,7 @@ PROGRAM pw2bgw
       CALL write_vxc_r ( output_file_name, &
         vxc_diag_nmin, vxc_diag_nmax, &
         vxc_offdiag_nmin, vxc_offdiag_nmax, &
-        input_dft, exx_flag )
+        vxc_zero_rho_core, input_dft, exx_flag )
       CALL stop_clock ( 'write_vxc_r' )
       IF ( ionode ) WRITE ( 6, '(5x,"done write_vxc_r",/)' )
     ENDIF
@@ -322,7 +331,7 @@ PROGRAM pw2bgw
       CALL write_vxc_g ( output_file_name, &
         vxc_diag_nmin, vxc_diag_nmax, &
         vxc_offdiag_nmin, vxc_offdiag_nmax, &
-        input_dft, exx_flag )
+        vxc_zero_rho_core, input_dft, exx_flag )
       CALL stop_clock ( 'write_vxc_g' )
       IF ( ionode ) WRITE ( 6, '(5x,"done write_vxc_g",/)' )
     ENDIF
@@ -1373,7 +1382,7 @@ END SUBROUTINE write_rhog
 !-------------------------------------------------------------------------------
 
 SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
-  input_dft, exx_flag )
+  vxc_zero_rho_core, input_dft, exx_flag )
 
   USE cell_base, ONLY : omega, alat, tpiba, tpiba2, at, bg, ibrav
   USE constants, ONLY : pi, tpi, eps6
@@ -1400,6 +1409,7 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
   character ( len = 256 ), intent (in) :: output_file_name
   integer, intent (in) :: real_or_complex
   character ( len = 9 ), intent (in) :: symm_type
+  logical, intent (in) :: vxc_zero_rho_core
   character ( len = 20 ), intent (in) :: input_dft
   logical, intent (in) :: exx_flag
 
@@ -1539,6 +1549,10 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
   IF ( exx_flag ) CALL start_exx ( )
 #endif
   vxcr_g ( :, : ) = 0.0D0
+  IF ( vxc_zero_rho_core ) THEN
+    rho_core ( : ) = 0.0D0
+    rhog_core ( : ) = ( 0.0D0, 0.0D0 )
+  ENDIF
   CALL v_xc ( rho, rho_core, rhog_core, etxc, vtxc, vxcr_g )
 #ifdef EXX
   IF ( exx_flag ) CALL stop_exx ( )
@@ -1594,7 +1608,8 @@ END SUBROUTINE write_vxcg
 
 !-------------------------------------------------------------------------------
 
-SUBROUTINE write_vxc0 ( output_file_name, input_dft, exx_flag )
+SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core, input_dft, &
+  exx_flag )
 
   USE constants, ONLY : RYTOEV
   USE ener, ONLY : etxc, vtxc
@@ -1616,6 +1631,7 @@ SUBROUTINE write_vxc0 ( output_file_name, input_dft, exx_flag )
   IMPLICIT NONE
 
   character ( len = 256 ), intent (in) :: output_file_name
+  logical, intent (in) :: vxc_zero_rho_core
   character ( len = 20 ), intent (in) :: input_dft
   logical, intent (in) :: exx_flag
 
@@ -1644,6 +1660,10 @@ SUBROUTINE write_vxc0 ( output_file_name, input_dft, exx_flag )
   IF ( exx_flag ) CALL start_exx ( )
 #endif
   vxcr_g ( :, : ) = 0.0D0
+  IF ( vxc_zero_rho_core ) THEN
+    rho_core ( : ) = 0.0D0
+    rhog_core ( : ) = ( 0.0D0, 0.0D0 )
+  ENDIF
   CALL v_xc ( rho, rho_core, rhog_core, etxc, vtxc, vxcr_g )
 #ifdef EXX
   IF ( exx_flag ) CALL stop_exx ( )
@@ -1692,7 +1712,7 @@ END SUBROUTINE write_vxc0
 !-------------------------------------------------------------------------------
 
 SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
-  offdiag_nmin, offdiag_nmax, input_dft, exx_flag)
+  offdiag_nmin, offdiag_nmax, vxc_zero_rho_core, input_dft, exx_flag)
 
   USE kinds, ONLY : DP
   USE constants, ONLY : rytoev
@@ -1723,6 +1743,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   integer, intent (inout) :: diag_nmax
   integer, intent (inout) :: offdiag_nmin
   integer, intent (inout) :: offdiag_nmax
+  logical, intent (in) :: vxc_zero_rho_core
   character (len = 20), intent (in) :: input_dft
   logical, intent (in) :: exx_flag
 
@@ -1777,6 +1798,10 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
 #endif
 
   vxcr (:, :) = 0.0D0
+  IF ( vxc_zero_rho_core ) THEN
+    rho_core ( : ) = 0.0D0
+    rhog_core ( : ) = ( 0.0D0, 0.0D0 )
+  ENDIF
   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxcr)
 
   DO ik = iks, ike
@@ -1884,7 +1909,7 @@ END SUBROUTINE write_vxc_r
 !-------------------------------------------------------------------------------
 
 SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
-  offdiag_nmin, offdiag_nmax, input_dft, exx_flag)
+  offdiag_nmin, offdiag_nmax, vxc_zero_rho_core, input_dft, exx_flag)
 
   USE constants, ONLY : rytoev
   USE cell_base, ONLY : tpiba2, at, bg
@@ -1916,6 +1941,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   integer, intent (inout) :: diag_nmax
   integer, intent (inout) :: offdiag_nmin
   integer, intent (inout) :: offdiag_nmax
+  logical, intent (in) :: vxc_zero_rho_core
   character (len = 20), intent (in) :: input_dft
   logical, intent (in) :: exx_flag
 
@@ -1965,6 +1991,10 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
 #endif
 
   vxcr (:, :) = 0.0D0
+  IF ( vxc_zero_rho_core ) THEN
+    rho_core ( : ) = 0.0D0
+    rhog_core ( : ) = ( 0.0D0, 0.0D0 )
+  ENDIF
   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxcr)
 
   DO ik = iks, ike
