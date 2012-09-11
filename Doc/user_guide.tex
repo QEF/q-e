@@ -851,6 +851,11 @@ Note that \qe\ is self-contained (with the exception of MPI libraries for
 parallel compilation): if system libraries are missing, the problem is in
 your compiler/library combination or in their usage, not in \qe.
 \item
+If you get an error like {\em Can't open module file global\_version.mod}:
+your machine doesn't like the script that produces file \texttt{version.f90}
+with the correct version and revision. Quick solution: copy 
+\texttt{Modules/version.f90.in} to \texttt{Modules/version.f90}.
+\item
 If you get mysterious errors in the provided tests and examples:
 your compiler, or your mathematical libraries, or MPI libraries,
 or a combination thereof, is very likely buggy. Although the 
@@ -859,11 +864,29 @@ the testing phase can never be ruled out, it is very unlikely
 that this happens on the provided tests and examples. 
 \end{itemize}
 
-\subsubsection{Cray XT machines}
+\subsubsection{Cray XE and XT machines}
 
-Use \texttt{./configure ARCH=crayxt4} or else \configure\ will
-not recognize the Cray-specific software environment. Older Cray 
-machines: T3D, T3E, X1, are no longer supported.
+For Cray XE machines:
+\begin{verbatim}
+$ module swap PrgEnv-cray PrgEnv-pgi
+$ ./configure --enable-openmp --enable-parallel --with-scalapack
+$ vim make.sys
+\end{verbatim}
+then manually add \texttt{-D\_\_IOTK\_WORKAROUND1} at the end of \texttt{DFLAGS} line.
+
+''Now, despite what people can imagine, every CRAY machine deployed can
+have different environment. For example on the machine I usually use 
+for tests [...] I do have to unload some modules to make QE running 
+properly. On another CRAY [...] there is also Intel compiler as option
+and the system is slightly different compared to the other. 
+So my recipe should work, 99\% of the cases.
+I strongly suggest you to use PGI, also for a performance point of view.''
+(Info by Filippo Spiga, Sept. 2012)
+
+For Cray XT machines, use \texttt{./configure ARCH=crayxt4} or else 
+\configure\ will not recognize the Cray-specific software environment. 
+
+Older Cray machines: T3D, T3E, X1, are no longer supported.
 
 \subsubsection{IBM AIX}
 
