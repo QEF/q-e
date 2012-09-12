@@ -222,7 +222,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 	          2 dzx    (real combination of m=+/-1 with cosine)
 	          3 dzy    (real combination of m=+/-1 with sine)
 	          4 dx2-y2 (real combination of m=+/-2 with cosine)
-	          5 dxy    (real combination of m=+/-1 with sine)
+	          5 dxy    (real combination of m=+/-2 with sine)
 	    }
 	}
 
