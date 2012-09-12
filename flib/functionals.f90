@@ -788,8 +788,8 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
      f1 = s2 * mu(iflag) / k (iflag)
      f2 = 1.d0 + f1
      f3 = k (iflag) / f2
+     fx = k (iflag) - f3
   end if
-  fx = k (iflag) - f3
   exunif = - c1 * kf
   sx = exunif * fx
   !
