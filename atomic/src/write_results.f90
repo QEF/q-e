@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 20042012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,7 +22,7 @@ subroutine write_results
                         relpert, evel, edar, eso, noscf, iswitch, rho, &
                         file_charge, max_out_wfc
 
-  use funct, only :  get_iexch, get_dft_name
+  use funct, only :  get_iexch, get_dft_name, write_dft_name
   implicit none
 
   integer :: is, i, j, n, m, im(40), ios, counter, ismax
@@ -46,6 +46,7 @@ subroutine write_results
   if (zed.ne.0.0) write(stdout,1250) zed
 1250 format(/5x,'atomic number is',f6.2)
   write(stdout,2300) dft_name(1:len_trim(dft_name)),lsd,isic,latt,beta,tr2
+  CALL write_dft_name () 
 2300 format(5x,'dft =',a,'   lsd =',i1,' sic =',i1,' latt =',i1, &
        '  beta=',f4.2,' tr2=',1pe7.1)
   write(stdout,1270) grid%mesh,grid%r(grid%mesh),grid%xmin,grid%dx
