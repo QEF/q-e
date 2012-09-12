@@ -363,13 +363,14 @@ CONTAINS
        call set_dft_value (inlc,0) !Default       
        dft_defined = .true.
 
-    else if ('Q2D'.EQ. TRIM(dftout) ) then
+    else if ('PBEQ2D' .EQ. TRIM(dftout) .OR. 'Q2D'.EQ. TRIM(dftout) ) then
     ! special case : PBEQ2D
        call set_dft_value (iexch,1) !Default    
        call set_dft_value (icorr,4)
        call set_dft_value (igcx,19)
        call set_dft_value (igcc,12)
        call set_dft_value (inlc,0) !Default       
+       dft_defined = .true.
        
     else if ('VDW-DF2-C09' .EQ. TRIM(dftout) ) then
     ! Special case vdW-DF2 with C09 exchange

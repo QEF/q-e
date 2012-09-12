@@ -3,7 +3,8 @@ Fixed in svn version:
    * Small error in the calculation of rPW86 functional, due to a mismatch
      between its previous definition (Slater exchange contained in GGA) and
      the check on the rho=>0, grad rho=>0 limits. Note that a similar problem
-     might also affect hcth, olyp, m06l functionals
+     might also affect hcth, olyp, m06l functionals. 
+     Another XC glitch with the new PBEQ2D functional (incorrectly called)
    * NEB calculation can get stuck if the code tries to read &ions namelist
      in the PWscf-related input section
    * NEB: spurious blank character appearing in lines longer than 80
