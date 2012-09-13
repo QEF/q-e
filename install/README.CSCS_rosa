@@ -1,0 +1,66 @@
+Info by Filippo Spiga, Sept. 2012, valid for QE v.5.0.x on machine
+MonteRosa (Cray XE6) at CSCS, Lugano:
+
+1. Use PGI compilers by loading the module (module load pgi) just
+after the login. Always do that in order to properly export the
+environment
+2. Use always a hybrid code. The reason is that there are 1 Gbyte
+RAM/core and if you put  32 MPI in a single node you are going to
+stress the Gemini interconnection. (--enable-openmp)
+3. Use ScaLAPACK (--with-scalapack), let the configure detect and use
+the default (it will be the CRAY libsci, the make.sys will not show
+anything because everything is done by the CRAY wrapper ftn/cc)
+4. Always add "ARCH=crayxt" to the configure line before run the
+configure in order to properly detect and manage CRAY ftn/cc wrappers:
+   ./configure --enable-openmp --enable-parallel --with-scalapack
+5. Add manually after the configure "-D__IOTK_WORKAROUND1" in DFLAGS.
+This because IOTK has problems with PGI 12.x. This is a mandatory
+step.
+6. make all (-:
+
+I do not have enough information about single-node performance but I
+will suggest to place no more than 16 MPI per node. I usually put 8 or
+4.
+
+I use this script for example (6400 cores, 800 MPI, 8 MPI per node, 4
+OMP per MPI thread)
+
+#SBATCH --job-name="QE-BENCH-SPIGA"
+#SBATCH --nodes=200
+#SBATCH --ntasks-per-node=8
+#SBATCH --cpus-per-task=4
+#SBATCH --time=06:00:00
+#SBATCH --output=QE-BENCH.%j.o
+#SBATCH --error=QE-BENCH.%j.e
+#SBATCH --account=g36
+
+#module load slurm
+echo "The current job ID is $SLURM_JOB_ID"
+echo "Running on $SLURM_NNODES nodes"
+echo "Using $SLURM_NTASKS_PER_NODE tasks per node"
+echo "A total of $SLURM_NPROCS tasks is used"
+
+export OMP_NUM_THREADS=4
+aprun -n $SLURM_NPROCS -N 8 -d 4 ./pw.x -input SiGe25.in -npool 4 |
+tee out.K-REDUCED.MPI-${SLURM_NPROCS}.OMP-${OMP_NUM_THREADS}.NPOOL-4
+
+or this (6400 cores, 800 MPI, 4 MPI per node, 8 OMP per MPI thread)
+
+#!/bin/bash
+#SBATCH --job-name="QE-BENCH-SPIGA"
+#SBATCH --nodes=200
+#SBATCH --ntasks-per-node=4
+#SBATCH --cpus-per-task=8
+#SBATCH --time=06:00:00
+#SBATCH --output=QE-BENCH.%j.o
+#SBATCH --error=QE-BENCH.%j.e
+#SBATCH --account=g36
+
+echo "The current job ID is $SLURM_JOB_ID"
+echo "Running on $SLURM_NNODES nodes"
+echo "Using $SLURM_NTASKS_PER_NODE tasks per node"
+echo "A total of $SLURM_NPROCS tasks is used"
+
+export OMP_NUM_THREADS=8
+aprun -n $SLURM_NPROCS -N 4 -d 8 ./pw.x -input SiGe25.in -npool 4 |
+tee out.K-REDUCED.MPI-${SLURM_NPROCS}.OMP-${OMP_NUM_THREADS}.NPOOL-4
