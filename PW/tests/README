@@ -42,6 +42,7 @@ noncolin  Fe bcc   noncollinear magnetization
 paw-atom  O, Cu    PAW   
 paw-bfgs    H2O    PAW with bfgs    
 paw-vcbfgs  H2O    PAW with variable-cell bfgs    
+pbeq2d    Cu       Modified PBE functional PBEQ2D
 relax     CO       forces
                    bfgs and damped dynamics
                    energies, forces, bfgs with saw-like electric field 
