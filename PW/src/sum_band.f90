@@ -38,7 +38,7 @@ SUBROUTINE sum_band()
   USE spin_orb,             ONLY : lspinorb, domag, fcoef
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, btype
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
-  USE mp,                   ONLY : mp_bcast, mp_sum
+  USE mp,                   ONLY : mp_sum
   USE funct,                ONLY : dft_is_meta
   USE paw_symmetry,         ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw

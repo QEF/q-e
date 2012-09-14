@@ -45,7 +45,7 @@ SUBROUTINE potinit()
   USE noncollin_module,     ONLY : noncolin, report
   USE io_files,             ONLY : tmp_dir, prefix, iunocc, input_drho
   USE spin_orb,             ONLY : domag
-  USE mp,                   ONLY : mp_bcast, mp_sum
+  USE mp,                   ONLY : mp_sum
   USE mp_global,            ONLY : intra_image_comm, inter_bgrp_comm, intra_bgrp_comm, mpime
   USE io_global,            ONLY : ionode, ionode_id
   USE pw_restart,           ONLY : pw_readfile
@@ -197,6 +197,11 @@ SUBROUTINE potinit()
   if ( dft_is_meta()) then
      ! ... define a starting (TF) guess for rho%kin_r and rho%kin_g
      fact = (3.d0/5.d0)*(3.d0*pi*pi)**(2.0/3.0)
+     !
+     ! ... for obscure reasons this starting guess doesn't seem much better
+     ! ... (and sometimes it is much worse) than starting from zero
+     !
+     !!! fact = 0.0_dp
      DO is = 1, nspin
         rho%kin_r(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin
         psic(:) = rho%kin_r(:,is)

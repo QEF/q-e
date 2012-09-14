@@ -33,8 +33,6 @@ SUBROUTINE iosys()
   !
   USE kernel_table,  ONLY : initialize_kernel_table
   !
-  USE mp,            ONLY : mp_bcast
-  !
   USE bp,            ONLY : nppstr_    => nppstr, &
                             gdir_      => gdir, &
                             lberry_    => lberry, &
