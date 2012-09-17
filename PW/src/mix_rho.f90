@@ -439,8 +439,8 @@ SUBROUTINE approx_screening2( drho, rhobest )
   USE lsda_mod,             ONLY : nspin
   USE control_flags,        ONLY : ngm0, gamma_only
   USE scf,                  ONLY : mix_type, local_tf_ddot
-  USE mp,                   ONLY : mp_max, mp_min, mp_sum
-  USE mp_global,            ONLY : intra_image_comm, intra_bgrp_comm
+  USE mp,                   ONLY : mp_sum
+  USE mp_global,            ONLY : intra_bgrp_comm
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   !
@@ -454,7 +454,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   INTEGER :: &
     iwork(mmx), i, j, m, info, is
   REAL(DP) :: &
-    rs, min_rs, max_rs, avg_rsm1, target, dr2_best
+    rs, avg_rsm1, target, dr2_best
   REAL(DP) :: &
     aa(mmx,mmx), invaa(mmx,mmx), bb(mmx), work(mmx), vec(mmx), agg0
   COMPLEX(DP), ALLOCATABLE :: &
@@ -519,8 +519,6 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   alpha(:) = REAL( psic(1:dffts%nnr) )
   !
-  min_rs   = ( 3.D0 * omega / fpi / nelec )**one_third
-  max_rs   = min_rs
   avg_rsm1 = 0.D0
   !
   DO ir = 1, dffts%nnr
@@ -530,24 +528,18 @@ SUBROUTINE approx_screening2( drho, rhobest )
      IF ( alpha(ir) > eps32 ) THEN
         !
         rs        = ( 3.D0 / fpi / alpha(ir) )**one_third
-        min_rs    = MIN( min_rs, rs )
         avg_rsm1  = avg_rsm1 + 1.D0 / rs
-        max_rs    = MAX( max_rs, rs )
         alpha(ir) = rs
         !
      END IF   
      !
   END DO
   !
-  CALL mp_sum( avg_rsm1 , intra_bgrp_comm )
-  !
-  CALL mp_min( min_rs, intra_image_comm )
-  CALL mp_max( max_rs, intra_image_comm )
-  !
   alpha = 3.D0 * ( tpi / 3.D0 )**( 5.D0 / 3.D0 ) * alpha
-  !
-  avg_rsm1 = ( dffts%nr1*dffts%nr2*dffts%nr3 ) / avg_rsm1
   rs       = ( 3.D0 * omega / fpi / nelec )**one_third
+  !
+  CALL mp_sum( avg_rsm1 , intra_bgrp_comm )
+  avg_rsm1 = ( dffts%nr1*dffts%nr2*dffts%nr3 ) / avg_rsm1
   agg0     = ( 12.D0 / pi )**( 2.D0 / 3.D0 ) / tpiba2 / avg_rsm1
   !
   ! ... calculate deltaV and the first correction vector
