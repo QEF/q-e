@@ -1,10 +1,18 @@
-Fixed in svn version:
+Fixed in 5.0.2 version:
 
+   * k-point parallelization in v.5.0 and 5.0.1 was affected by a subtle 
+     problem: the distribution of plane waves was not always the same on 
+     all pools of processors. While results were still correct, strange
+     problems (e.g. lockups) could result. Also: there are more and more
+     machines that are not able to produce the same results starting from
+     the same data on different processors. Charge-density mixing is now
+     performed on one pool, broadcast to all others, to prevent trouble.
+   * upftools: fhi2upf converter of v.5 introduced a small error in some cases
    * Small error in the calculation of rPW86 functional, due to a mismatch
      between its previous definition (Slater exchange contained in GGA) and
      the check on the rho=>0, grad rho=>0 limits. Note that a similar problem
      might also affect hcth, olyp, m06l functionals. 
-     Another XC glitch with the new PBEQ2D functional (incorrectly called)
+     The new PBEQ2D functional (introduce in 5.0.1) was also not correct.
    * NEB calculation can get stuck if the code tries to read &ions namelist
      in the PWscf-related input section
    * NEB: spurious blank character appearing in lines longer than 80
@@ -13,6 +21,7 @@ Fixed in svn version:
    * PH: bug in symmetrization in some special cases (supercells of graphene)
    * PH: bug in restart when the code stops during self consistency
    * PH: ph.x with images wasn't working any longer 
+   * PH: electron_phonon='simple' wasn't working together with ldisp=.true.
 
 New in 5.0.1 version
 
