@@ -11,7 +11,7 @@ MODULE io_rho_xml
   !----------------------------------------------------------------------------
   !
   USE kinds,       ONLY : DP
-  USE xml_io_base, ONLY : create_directory, write_rho_xml, read_rho_xml_
+  USE xml_io_base, ONLY : create_directory, write_rho_xml, read_rho_xml
   !
   PRIVATE
   !
@@ -290,7 +290,7 @@ MODULE io_rho_xml
       IF ( PRESENT( extension ) ) ext = '.' // TRIM( extension )
       file_base = TRIM( dirname ) // '/charge-density' // TRIM( ext )
       !
-      CALL read_rho_xml_( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+      CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
                  dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,1) ) 
       !
       IF ( nspin == 2 ) THEN
@@ -300,7 +300,7 @@ MODULE io_rho_xml
          ALLOCATE( rhoaux( dfftp%nnr ) )
          !
          file_base = TRIM( dirname ) // '/spin-polarization' // TRIM( ext )
-         CALL read_rho_xml_( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+         CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
                     dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rhoaux ) 
          !
          rho(:,1) = 0.5D0*( rho(:,1) + rhoaux(:) )
@@ -313,15 +313,15 @@ MODULE io_rho_xml
          IF ( domag ) THEN
             !
             file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
-            CALL read_rho_xml_( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+            CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
                  dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,2) ) 
             !
             file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
-            CALL read_rho_xml_( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+            CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
                  dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,3) ) 
             !
             file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
-            CALL read_rho_xml_( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+            CALL read_rho_xml ( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
                  dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,4) ) 
             !
          ELSE

@@ -1450,17 +1450,17 @@ END SUBROUTINE rhov
       !
       filename = TRIM(dirname) // '/' // 'charge-density'
       !
-      CALL read_rho_xml( filename, rhor(:,1), dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+      CALL read_rho_xml( filename, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
                          dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                         ionode, intra_bgrp_comm, inter_bgrp_comm )
+                         rhor(:,1) )
       !
       IF( nspin == 2 ) THEN
          !
          filename = TRIM(dirname) // '/' // 'spin-polarization'
          !
-         CALL read_rho_xml( filename, rhor(:,2), dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+         CALL read_rho_xml( filename, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
                             dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                            ionode, intra_bgrp_comm, inter_bgrp_comm )
+                            rhor(:,2) )
          !
          !  Convert rho_tot, spin_pol back to rho_up, rho_down
          !
