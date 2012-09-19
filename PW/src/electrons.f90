@@ -338,11 +338,14 @@ SUBROUTINE electrons()
         !
         ! ... mix_rho mixes several quantities: rho in g-space, tauk (for
         ! ... meta-gga), ns and ns_nc (for lda+u) and becsum (for paw)
-        ! ... Done on a single pool and results broadcast to prevent trouble
+        ! ... Results are broadcast from pool 0 to others to prevent trouble
         ! ... on machines unable to yield the same results from the same 
         ! ... calculation on same data, performed on different procs
-        !
-        IF ( my_pool_id == root_pool ) CALL mix_rho &
+        ! ... The mixing should be done on pool 0 only as well, but inside
+        ! ... mix_rho there is a call to rho_ddot that in the PAW case 
+        ! ... contains a hidden parallelization level on the entire image
+        ! IF ( my_pool_id == root_pool ) 
+        CALL mix_rho &
              ( rho, rhoin, mixing_beta, dr2, tr2_min, iter, nmix, conv_elec )
         CALL bcast_scf_type ( rhoin, root_pool, inter_pool_comm )
         CALL mp_bcast ( dr2, root_pool, inter_pool_comm )

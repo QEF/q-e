@@ -11,7 +11,9 @@
 ! The implementation assumes that divisions of atoms among the nodes is always
 ! done in the same way! By doing so we can avoid to allocate the potential for 
 ! all the atoms on all the nodes, and (most important) we don't need to
-!  distribute the potential among the nodes after computing it.
+! distribute the potential among the nodes after computing it.
+! Beware: paw_ddot, paw_potential, paw_dpotential, must be called by all
+! processors of an image, or else they will hang
 !
 MODULE paw_onecenter
     !

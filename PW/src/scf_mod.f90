@@ -596,6 +596,10 @@ CONTAINS
   !
   IF (dft_is_meta()) rho_ddot = rho_ddot + tauk_ddot( rho1, rho2, gf )
   IF (lda_plus_u )   rho_ddot = rho_ddot + ns_ddot(rho1,rho2)
+  ! 
+  ! Beware: paw_ddot has a hidden parallelization on all processors
+  !         it must be called on all processors or else it will hang
+  !
   IF (okpaw)         rho_ddot = rho_ddot + paw_ddot(rho1%bec, rho2%bec)
   IF (dipfield)      rho_ddot = rho_ddot + (e2/2.0_DP)* &
                                     (rho1%el_dipole * rho2%el_dipole)*omega/fpi
@@ -817,8 +821,6 @@ END FUNCTION ns_ddot
   END IF
   IF ( okpaw ) &
      CALL mp_bcast ( rho%bec,   root, comm )
-  ! why is this one not there?
-  ! IF ( dipfield )    CALL mp_bcast ( rho%el_dipole, root, comm )
   !
   END SUBROUTINE
  !
