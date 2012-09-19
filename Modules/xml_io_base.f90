@@ -2107,16 +2107,16 @@ MODULE xml_io_base
     END SUBROUTINE write_eig
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_rho_xml_( rho_file_base, rho, &
-                             nr1, nr2, nr3, nr1x, nr2x, ipp, npp, &
-                             intra_group_comm, intra_image_comm )
+    SUBROUTINE read_rho_xml_( rho_file_base, nr1, nr2, nr3, nr1x, nr2x, &
+                              ipp, npp, rho )
       !------------------------------------------------------------------------
       !
       ! ... Reads charge density rho, one plane at a time, to avoid 
-      ! ... collecting the entire charge density on a single proc.
+      ! ... collecting the entire charge density on a single processor
       !
       USE io_files,  ONLY : rhounit
       USE io_global, ONLY : ionode, ionode_id
+      USE mp_global, ONLY : intra_bgrp_comm, intra_image_comm
       USE mp,        ONLY : mp_put, mp_sum, mp_rank, mp_size
       !
       IMPLICIT NONE
@@ -2127,7 +2127,6 @@ MODULE xml_io_base
       REAL(DP),          INTENT(OUT) :: rho(:)
       INTEGER,           INTENT(IN)  :: ipp(:)
       INTEGER,           INTENT(IN)  :: npp(:)
-      INTEGER,           INTENT(IN)  :: intra_group_comm, intra_image_comm
       !
       INTEGER               :: ierr, i, j, k, kk, ldr, ip
       INTEGER               :: nr( 3 )
@@ -2137,8 +2136,8 @@ MODULE xml_io_base
       INTEGER,  ALLOCATABLE :: kowner(:)
       LOGICAL               :: exst
       !
-      me_group     = mp_rank ( intra_group_comm )
-      nproc_group  = mp_size ( intra_group_comm )
+      me_group     = mp_rank ( intra_bgrp_comm )
+      nproc_group  = mp_size ( intra_bgrp_comm )
       !
       rho_file = TRIM( rho_file_base ) // ".dat"
       exst = check_file_exst( TRIM(rho_file) ) 

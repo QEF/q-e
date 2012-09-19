@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -290,28 +290,18 @@ MODULE io_rho_xml
       IF ( PRESENT( extension ) ) ext = '.' // TRIM( extension )
       file_base = TRIM( dirname ) // '/charge-density' // TRIM( ext )
       !
-      IF ( nspin == 1 ) THEN
+      CALL read_rho_xml_( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+                 dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,1) ) 
+      !
+      IF ( nspin == 2 ) THEN
          !
-         CALL read_rho_xml_( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  intra_bgrp_comm, intra_image_comm ) 
-         !
-      ELSE IF ( nspin == 2 ) THEN
+         rho(:,2) = rho(:,1)
          !
          ALLOCATE( rhoaux( dfftp%nnr ) )
          !
-         CALL read_rho_xml_( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, & 
-                  intra_bgrp_comm, intra_image_comm ) 
-         !
-         rho(:,1) = rhoaux(:)
-         rho(:,2) = rhoaux(:)
-         !
          file_base = TRIM( dirname ) // '/spin-polarization' // TRIM( ext )
-         !
-         CALL read_rho_xml_( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  intra_bgrp_comm, intra_image_comm )
+         CALL read_rho_xml_( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+                    dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rhoaux ) 
          !
          rho(:,1) = 0.5D0*( rho(:,1) + rhoaux(:) )
          rho(:,2) = 0.5D0*( rho(:,2) - rhoaux(:) )
@@ -320,29 +310,19 @@ MODULE io_rho_xml
          !
       ELSE IF ( nspin == 4 ) THEN
          !
-         CALL read_rho_xml_( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  intra_bgrp_comm, intra_image_comm )
-         !
          IF ( domag ) THEN
             !
             file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
-            !
-            CALL read_rho_xml_( file_base, rho(:,2), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  intra_bgrp_comm, intra_image_comm )
+            CALL read_rho_xml_( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+                 dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,2) ) 
             !
             file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
-            !
-            CALL read_rho_xml_( file_base, rho(:,3), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  intra_bgrp_comm, intra_image_comm )
+            CALL read_rho_xml_( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+                 dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,3) ) 
             !
             file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
-            !
-            CALL read_rho_xml_( file_base, rho(:,4), dfftp%nr1, dfftp%nr2, &
-                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  intra_bgrp_comm, intra_image_comm )
+            CALL read_rho_xml_( file_base, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+                 dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, rho(:,4) ) 
             !
          ELSE
             !
