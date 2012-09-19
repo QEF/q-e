@@ -11,7 +11,7 @@ MODULE io_rho_xml
   !----------------------------------------------------------------------------
   !
   USE kinds,       ONLY : DP
-  USE xml_io_base, ONLY : create_directory, write_rho_xml, read_rho_xml
+  USE xml_io_base, ONLY : create_directory, write_rho_xml, read_rho_xml_
   !
   PRIVATE
   !
@@ -112,11 +112,13 @@ MODULE io_rho_xml
       LOGICAL :: lexist
       INTEGER :: ierr
 
-      ! Use the equivalent routine to write real space density
+      ! Use the equivalent routine to read real space density
       CALL read_rho_only( rho%of_r, nspin, extension )
-      ! The occupations ns also need to be read in order to build up
-      ! the potential
+      !
       IF ( lda_plus_u ) THEN
+         !
+         ! The occupations ns also need to be read in order to build up
+         ! the potential
          !
          IF ( ionode ) THEN
             CALL seqopn( iunocc, 'occup', 'FORMATTED', lexist )
@@ -140,8 +142,10 @@ MODULE io_rho_xml
            CALL mp_sum(rho%ns, intra_image_comm)
          endif
       END IF
-      ! Also the PAW coefficients are needed:
+      !
       IF ( okpaw ) THEN
+         !
+         ! Also the PAW coefficients are needed:
          !
          IF ( ionode ) THEN
             CALL seqopn( iunpaw, 'paw', 'FORMATTED', lexist )
@@ -264,10 +268,12 @@ MODULE io_rho_xml
       ! ... this routine reads the charge-density in xml format from the
       ! ... files saved into the '.save' directory
       !
-      USE io_files, ONLY : tmp_dir, prefix
-      USE fft_base, ONLY : dfftp
-      USE spin_orb, ONLY : domag
+      USE io_files,  ONLY : tmp_dir, prefix
+      USE fft_base,  ONLY : dfftp
+      USE spin_orb,  ONLY : domag
       USE mp_global, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_pool, me_pool
+      USE mp_global, ONLY : intra_image_comm
+      USE io_global, ONLY : ionode
       !
       IMPLICIT NONE
       !
@@ -279,46 +285,33 @@ MODULE io_rho_xml
       CHARACTER(LEN=256)    :: ext
       REAL(DP), ALLOCATABLE :: rhoaux(:)
       !
-      LOGICAL :: my_ionode=.false.
-      !
-      ! The first processor of each k-point pool reads the charge
-      ! density. This will be distributed to the group of processors
-      ! specified as  arguments to read_rho_xml, i.e. the band group
-      ! Note that this means that there will be concurrent read of the
-      ! same file from different processors, unlike in v.<5.0
-      !
-      if(me_pool==root_pool) my_ionode=.true.
-      !
-      ext = ' '
-      !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
-      !
+      ext = ' '
       IF ( PRESENT( extension ) ) ext = '.' // TRIM( extension )
-      !
       file_base = TRIM( dirname ) // '/charge-density' // TRIM( ext )
       !
       IF ( nspin == 1 ) THEN
          !
-         CALL read_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
+         CALL read_rho_xml_( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  my_ionode, intra_bgrp_comm, inter_bgrp_comm ) 
+                  intra_bgrp_comm, intra_image_comm ) 
          !
       ELSE IF ( nspin == 2 ) THEN
          !
          ALLOCATE( rhoaux( dfftp%nnr ) )
          !
-         CALL read_rho_xml( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
+         CALL read_rho_xml_( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, & 
-                  my_ionode, intra_bgrp_comm, inter_bgrp_comm ) 
+                  intra_bgrp_comm, intra_image_comm ) 
          !
          rho(:,1) = rhoaux(:)
          rho(:,2) = rhoaux(:)
          !
          file_base = TRIM( dirname ) // '/spin-polarization' // TRIM( ext )
          !
-         CALL read_rho_xml( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
+         CALL read_rho_xml_( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  my_ionode, intra_bgrp_comm, inter_bgrp_comm )
+                  intra_bgrp_comm, intra_image_comm )
          !
          rho(:,1) = 0.5D0*( rho(:,1) + rhoaux(:) )
          rho(:,2) = 0.5D0*( rho(:,2) - rhoaux(:) )
@@ -327,29 +320,29 @@ MODULE io_rho_xml
          !
       ELSE IF ( nspin == 4 ) THEN
          !
-         CALL read_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
+         CALL read_rho_xml_( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  my_ionode, intra_bgrp_comm, inter_bgrp_comm )
+                  intra_bgrp_comm, intra_image_comm )
          !
          IF ( domag ) THEN
             !
             file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
             !
-            CALL read_rho_xml( file_base, rho(:,2), dfftp%nr1, dfftp%nr2, &
+            CALL read_rho_xml_( file_base, rho(:,2), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  my_ionode, intra_bgrp_comm, inter_bgrp_comm )
+                  intra_bgrp_comm, intra_image_comm )
             !
             file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
             !
-            CALL read_rho_xml( file_base, rho(:,3), dfftp%nr1, dfftp%nr2, &
+            CALL read_rho_xml_( file_base, rho(:,3), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  my_ionode, intra_bgrp_comm, inter_bgrp_comm )
+                  intra_bgrp_comm, intra_image_comm )
             !
             file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
             !
-            CALL read_rho_xml( file_base, rho(:,4), dfftp%nr1, dfftp%nr2, &
+            CALL read_rho_xml_( file_base, rho(:,4), dfftp%nr1, dfftp%nr2, &
                   dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
-                  my_ionode, intra_bgrp_comm, inter_bgrp_comm )
+                  intra_bgrp_comm, intra_image_comm )
             !
          ELSE
             !
