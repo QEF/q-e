@@ -6,18 +6,18 @@
 SUBROUTINE lr_normalise(evc1,norm)
   !
   !
+  USE kinds,                ONLY : dp
   USE gvect,                ONLY : gstart
   USE cell_base,            ONLY : omega
   USE io_global,            ONLY : stdout
-  USE kinds,                ONLY : dp
   USE klist,                ONLY : nks,xk
   USE lsda_mod,             ONLY : nspin
   USE lr_variables,         ONLY : lanc_norm
-  USE realus,               ONLY : igk_k,npw_k
-  USE uspp,                 ONLY : vkb,nkb,okvan
-  USE wvfct,                ONLY : nbnd,npwx,npw,wg
+  USE realus,               ONLY : igk_k, npw_k
+  USE uspp,                 ONLY : vkb, nkb, okvan
+  USE wvfct,                ONLY : nbnd, npwx, npw, wg
   USE control_flags,        ONLY : gamma_only
-  USE lr_variables,   ONLY : lr_verbosity
+  USE lr_variables,         ONLY : lr_verbosity
   !
   IMPLICIT NONE
   !
@@ -46,74 +46,72 @@ SUBROUTINE lr_normalise(evc1,norm)
   !
 CONTAINS
   !
+!--------------------------------------------------------------------
   SUBROUTINE lr_normalise_gamma()
     !
-    USE becmod,                   ONLY : bec_type, becp,calbec
-    !use lr_variables,             only : real_space
-    !use real_beta,                only : ccalbecr_gamma,s_psir,fft_orbital_gamma,bfft_orbital_gamma
-      USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
-                                    bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
-                                    v_loc_psir, s_psir_gamma, real_space_debug
-
+    USE becmod,         ONLY : bec_type, becp,calbec
+    USE realus,         ONLY : real_space, fft_orbital_gamma,&
+         & initialisation_level,&
+         & bfft_orbital_gamma, calbec_rs_gamma,&
+         & add_vuspsir_gamma, v_loc_psir,&
+         & s_psir_gamma, real_space_debug 
     !
     !
     !
     IMPLICIT NONE
     !
-    real(kind=dp) :: prod
+    REAL(kind=dp) :: prod
     COMPLEX(kind=dp), EXTERNAL :: lr_dot
     INTEGER :: ibnd,ig
     !
     prod=0.0d0
     !
     IF ( nkb > 0 ) THEN
-     !
-     IF (real_space_debug>6) THEN
-     ! real space & nkb > 0
-      !
-      DO ibnd=1,nbnd,2
-          CALL fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
-          CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
-          CALL s_psir_gamma(ibnd,nbnd)
-          CALL bfft_orbital_gamma(spsi(:,:,1),ibnd,nbnd)
-      ENDDO
-      !
-     !
-     ELSE
-     !
-      !the non real_space & nkb > 0 case
        !
-       CALL calbec(npw_k(1),vkb,evc1(:,:,1),becp)
-       !call pw_gemm('Y',nkb,nbnd,npw_k(1),vkb,npwx,evc1(1,1,1),npwx,rbecp,nkb)
-       !
-       CALL s_psi(npwx,npw_k(1),nbnd,evc1(1,1,1),spsi)
-      !
-     !
-     ENDIF
+       IF (real_space_debug>6) THEN
+          ! real space & nkb > 0
+          !
+          DO ibnd=1,nbnd,2
+             CALL fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
+             CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
+             CALL s_psir_gamma(ibnd,nbnd)
+             CALL bfft_orbital_gamma(spsi(:,:,1),ibnd,nbnd)
+          ENDDO
+          !
+          !
+       ELSE
+          !
+          !the non real_space & nkb > 0 case
+          !
+          CALL calbec(npw_k(1),vkb,evc1(:,:,1),becp)
+          !
+          CALL s_psi(npwx,npw_k(1),nbnd,evc1(1,1,1),spsi)
+          !
+          !
+       ENDIF
     ELSE
-    ! The nkb == 0 part
-      ! JUST array copying
+       ! The nkb == 0 part
+       ! JUST array copying
        CALL s_psi(npwx,npw_k(1),nbnd,evc1(1,1,1),spsi)
-      !
-     !
-    !
+       !
+       !
+       !
     ENDIF
-    !The below two lines are the replicated part in real space implementation
-    !call calbec(npw_k(1),vkb,evc1(:,:,1),rbecp)
-    !call s_psi(npwx,npw_k(1),nbnd,evc1(1,1,1),spsi)
     !
     prod=dble( lr_dot( evc1(1,1,1),spsi(1,1,1) ) )
     prod=1.0d0/sqrt(abs(prod))
     !
     evc1(:,:,1)=cmplx(prod,0.0d0,dp)*evc1(:,:,1)
     !
-    WRITE(stdout,'(5X,"Norm of initial Lanczos vectors=",1x,f21.15)') 1.0d0/prod
+    WRITE(stdout,'(5X,"Norm of initial Lanczos vectors=",1x,f21.15)')&
+         & 1.0d0/prod
+    !
     lanc_norm=1.d0/prod**2/omega
     norm=1.0d0/prod
     !
     RETURN
   END SUBROUTINE lr_normalise_gamma
-  !
+!--------------------------------------------------------------------
   SUBROUTINE lr_normalise_k()
     !
     USE becmod,              ONLY : becp,calbec
@@ -129,7 +127,6 @@ CONTAINS
           !
           CALL init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
           !
-          !call ccalbec(nkb,npwx,npw_k(ik),nbnd,becp,vkb,evc1(1,1,ik))
           CALL calbec(npw_k(ik),vkb,evc1(:,:,ik),becp)
           !
        ENDIF
@@ -143,7 +140,9 @@ CONTAINS
     !
     evc1(:,:,:)=cmplx(prod,0.0d0,dp)*evc1(:,:,:)
     !
-    WRITE(stdout,'(5X,"Norm of initial Lanczos vectors=",1x,f21.15)') 1.0d0/prod
+    WRITE(stdout,'(5X,"Norm of initial Lanczos vectors=",1x,f21.15)')&
+         & 1.0d0/prod
+    !
     lanc_norm=1.d0/prod**2/omega
     norm=1.0d0/prod
     !
