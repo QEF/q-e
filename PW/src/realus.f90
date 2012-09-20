@@ -2435,7 +2435,7 @@ MODULE realus
   END SUBROUTINE bfft_orbital_gamma
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE fft_orbital_k (orbital, ibnd, nbnd,conserved)
+  SUBROUTINE fft_orbital_k (orbital, ibnd, nbnd, ik, conserved)
   !--------------------------------------------------------------------------
   !
   ! OBM 110908
@@ -2444,18 +2444,18 @@ MODULE realus
   ! orbital: the orbital to be transformed
   ! ibnd: band index
   ! nbnd: total number of bands
+    USE kinds,                    ONLY : DP
     USE wavefunctions_module,     ONLY : psic
-    USE gvecs,                  ONLY : nls,nlsm,doublegrid
-    USE kinds,         ONLY : DP
-    USE fft_base,      ONLY : dffts
-    USE fft_interfaces,ONLY : invfft
-    USE mp_global,     ONLY : me_bgrp
-    USE wvfct,         ONLY : igk
+    USE gvecs,                    ONLY : nls, nlsm, doublegrid
+    USE fft_base,                 ONLY : dffts
+    USE fft_interfaces,           ONLY : invfft
+    USE mp_global,                ONLY : me_bgrp
 
     IMPLICIT NONE
 
-    INTEGER, INTENT(in) :: ibnd,& ! Current index of the band currently being transformed
-                           nbnd ! Total number of bands you want to transform
+    INTEGER, INTENT(in) :: ibnd,& ! Index of the band currently being transformed 
+                           nbnd,& ! Total number of bands you want to transform
+                           ik     ! kpoint index of the bands
 
     COMPLEX(DP),INTENT(in) :: orbital(:,:)
     LOGICAL, OPTIONAL :: conserved !if this flag is true, the orbital is stored in temporary memory
@@ -2466,7 +2466,7 @@ MODULE realus
 
     CALL start_clock( 'fft_orbital' )
     use_tg = dffts%have_task_groups
-    dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( nbnd >= dffts%nogrp )
+    dffts%have_task_groups = ( dffts%have_task_groups ) .AND. ( nbnd >= dffts%nogrp )
 
     IF( dffts%have_task_groups ) THEN
        !
@@ -2477,7 +2477,7 @@ MODULE realus
           !
           IF( idx + ibnd - 1 <= nbnd ) THEN
              !DO j = 1, size(orbital,1)
-             tg_psic( nls( igk(:) ) + ioff ) = orbital(:,idx+ibnd-1)
+             tg_psic( nls( igk_k(:, ik) ) + ioff ) = orbital(:,idx+ibnd-1)
              !END DO
           ENDIF
           
@@ -2488,7 +2488,8 @@ MODULE realus
        CALL invfft ('Wave', tg_psic, dffts)
        IF (present(conserved)) THEN
           IF (conserved .eqv. .true.) THEN
-             IF (.not. allocated(tg_psic_temp)) ALLOCATE( tg_psic_temp( dffts%tg_nnr * dffts%nogrp ) )
+             IF (.NOT. ALLOCATED(tg_psic_temp)) &
+                  &ALLOCATE( tg_psic_temp( dffts%tg_nnr * dffts%nogrp ) )
              tg_psic_temp=tg_psic
           ENDIF
        ENDIF
@@ -2497,7 +2498,7 @@ MODULE realus
        !
        psic(1:dffts%nnr) = ( 0.D0, 0.D0 )
        !
-       psic(nls(igk(:))) = orbital(:,ibnd)
+       psic(nls(igk_k(:, ik))) = orbital(:,ibnd)
        !
        CALL invfft ('Wave', psic, dffts)
        IF (present(conserved)) THEN
@@ -2510,10 +2511,10 @@ MODULE realus
     ENDIF
     dffts%have_task_groups = use_tg
     CALL stop_clock( 'fft_orbital' )
-    END SUBROUTINE fft_orbital_k
-   !--------------------------------------------------------------------------
-   SUBROUTINE bfft_orbital_k (orbital, ibnd, nbnd,conserved)
-   !--------------------------------------------------------------------------
+  END SUBROUTINE fft_orbital_k
+  !--------------------------------------------------------------------------
+  SUBROUTINE bfft_orbital_k (orbital, ibnd, nbnd, ik, conserved)
+    !--------------------------------------------------------------------------
     !
     ! OBM 110908
     ! This subroutine transforms the given orbital using fft and puts the result in psic
@@ -2522,18 +2523,17 @@ MODULE realus
     ! ibnd: band index
     ! nbnd: total number of bands
     USE wavefunctions_module,     ONLY : psic
-    USE gvecs,                  ONLY : nls,nlsm,doublegrid
-    USE kinds,         ONLY : DP
-    USE fft_base,      ONLY : dffts
-    USE fft_interfaces,ONLY : fwfft
-    USE mp_global,     ONLY : me_bgrp
-    USE wvfct,         ONLY : igk
+    USE gvecs,                    ONLY : nls, nlsm, doublegrid
+    USE kinds,                    ONLY : DP
+    USE fft_base,                 ONLY : dffts
+    USE fft_interfaces,           ONLY : fwfft
+    USE mp_global,                ONLY : me_bgrp
 
     IMPLICIT NONE
 
-    INTEGER, INTENT(in) :: ibnd,& ! Current index of the band currently being transformed
-                           nbnd ! Total number of bands you want to transform
-
+    INTEGER, INTENT(in) :: ibnd,& ! Index of the band currently being transformed
+                           nbnd,& ! Total number of bands you want to transform
+                           ik     ! kpoint index of the bands
     COMPLEX(DP),INTENT(out) :: orbital(:,:)
     LOGICAL, OPTIONAL :: conserved !if this flag is true, the orbital is stored in temporary memory
 
@@ -2554,7 +2554,7 @@ MODULE realus
        DO idx = 1, dffts%nogrp
           !
           IF( idx + ibnd - 1 <= nbnd ) THEN
-             orbital (:, ibnd+idx-1) = tg_psic( nls(igk(:)) + ioff )
+             orbital (:, ibnd+idx-1) = tg_psic( nls(igk_k(:,ik)) + ioff )
           ENDIF
           !
           ioff = ioff + dffts%nr3x * dffts%nsw( me_bgrp + 1 )
@@ -2570,7 +2570,7 @@ MODULE realus
        !
        CALL fwfft ('Wave', psic, dffts)
        !
-       orbital(:,ibnd) = psic(nls(igk(:)))
+       orbital(:,ibnd) = psic(nls(igk_k(:,ik)))
        !
        IF (present(conserved)) THEN
           IF (conserved .eqv. .true.) THEN
@@ -2580,7 +2580,7 @@ MODULE realus
     ENDIF
     dffts%have_task_groups = use_tg
     CALL stop_clock( 'bfft_orbital' )
-    END SUBROUTINE bfft_orbital_k
+  END SUBROUTINE bfft_orbital_k
   !--------------------------------------------------------------------------
   SUBROUTINE v_loc_psir (ibnd, nbnd)
     !--------------------------------------------------------------------------
