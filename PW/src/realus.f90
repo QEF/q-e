@@ -2498,7 +2498,7 @@ MODULE realus
        !
        psic(1:dffts%nnr) = ( 0.D0, 0.D0 )
        !
-       psic(nls(igk_k(:, ik))) = orbital(:,ibnd)
+       psic(nls(igk_k(1:npw_k(ik), ik))) = orbital(1:npw_k(ik),ibnd)
        !
        CALL invfft ('Wave', psic, dffts)
        IF (present(conserved)) THEN
@@ -2570,7 +2570,7 @@ MODULE realus
        !
        CALL fwfft ('Wave', psic, dffts)
        !
-       orbital(:,ibnd) = psic(nls(igk_k(:,ik)))
+       orbital(1:npw_k(ik),ibnd) = psic(nls(igk_k(1:npw_k(ik),ik)))
        !
        IF (present(conserved)) THEN
           IF (conserved .eqv. .true.) THEN
