@@ -165,6 +165,7 @@ CONTAINS
   ! and for get_md5 which computes the md5 sum of a file.
   !
   FUNCTION feval_infix(fierr, fstr)
+    USE ISO_C_BINDING
     IMPLICIT NONE
     REAL(DP) :: feval_infix
     INTEGER :: fierr
@@ -172,9 +173,11 @@ CONTAINS
     INTEGER :: filen
     !
     INTERFACE
-    REAL(kind=c_double) FUNCTION ceval_infix(cierr, cstr, cilen) BIND(C, name="eval_infix")
+    FUNCTION ceval_infix(cierr, cstr, cilen) BIND(C, name="eval_infix")
+    !REAL(kind=c_double) FUNCTION ceval_infix(cierr, cstr, cilen) BIND(C, name="eval_infix")
     !  double eval_infix( int *ierr, const char *strExpression, int len )
       USE ISO_C_BINDING
+      REAL(kind=c_double) :: ceval_infix
       INTEGER(kind=c_int)    :: cierr
       CHARACTER(kind=c_char) :: cstr(*)
       INTEGER(kind=c_int),VALUE :: cilen
