@@ -110,10 +110,18 @@ CONTAINS
   !------------------------------------------------------------------------
   SUBROUTINE exx_grid_convert( psi, npw, fft, psi_t, sign, igkt )
   !------------------------------------------------------------------------
+    ! 
+    ! This routine reorders the gvectors of the wavefunction psi and
+    ! puts the result in psi_t. This reordering is needed when going
+    ! between two different fft grids.
+    !
+    ! sign > 0 goes from the smooth grid to the grid defined in fft
+    ! sign < 0 goes from the grid defined in fft to the smooth grid 
+    !
 
-    USE mp_global,  ONLY : me_bgrp, nproc_bgrp, intra_bgrp_comm, root_bgrp
-    USE mp_wave,    ONLY : mergewf, splitwf
-    USE gvect, ONLY : ig_l2g
+    USE mp_global,  ONLY : me_bgrp, nproc_bgrp, intra_bgrp_comm
+    USE fft_custom, ONLY : reorderwfp_col
+    USE gvect,      ONLY : ig_l2g
 
     IMPLICIT NONE
 
@@ -124,10 +132,7 @@ CONTAINS
     INTEGER, INTENT(IN) :: sign
     TYPE(fft_cus), INTENT(IN) :: fft
     
-    COMPLEX(kind=DP), ALLOCATABLE :: evc_g(:)
     INTEGER :: ig
-    
-    ALLOCATE( evc_g( fft%ngmt_g ) )
     
     IF(sign > 0 .AND. PRESENT(igkt) ) THEN
        DO ig=1, fft%ngmt
@@ -139,19 +144,17 @@ CONTAINS
        psi_t(1:fft%npwt)=psi(1:fft%npwt)
     ELSE
        IF (sign > 0 ) THEN
-          CALL mergewf(psi, evc_g, npw, ig_l2g, me_bgrp, nproc_bgrp,&
-               & root_bgrp, intra_bgrp_comm)  
-          CALL splitwf(psi_t(:), evc_g, fft%npwt, fft%ig_l2gt, me_bgrp,&
-               & nproc_bgrp, root_bgrp, intra_bgrp_comm)  
+          CALL reorderwfp_col ( 1, npw, fft%npwt, psi, psi_t, npw, fft%npwt,&
+               & ig_l2g, fft%ig_l2gt, fft%ngmt_g, me_bgrp, nproc_bgrp,&
+               & intra_bgrp_comm )
        ELSE
-          CALL mergewf(psi, evc_g, fft%npwt, fft%ig_l2gt, me_bgrp,&
-               & nproc_bgrp, root_bgrp, intra_bgrp_comm)  
-          CALL splitwf(psi_t, evc_g, npw, ig_l2g, me_bgrp, nproc_bgrp,&
-               & root_bgrp, intra_bgrp_comm)  
+          CALL reorderwfp_col ( 1, fft%npwt, npw, psi, psi_t, fft%npwt, npw,&
+               & fft%ig_l2gt, ig_l2g, fft%ngmt_g, me_bgrp, nproc_bgrp,&
+               & intra_bgrp_comm )
        ENDIF
     ENDIF
 
-    DEALLOCATE( evc_g ) 
+    RETURN
 
   END SUBROUTINE exx_grid_convert
   !------------------------------------------------------------------------
