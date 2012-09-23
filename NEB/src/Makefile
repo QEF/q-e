@@ -13,9 +13,9 @@ LIBOBJS= ../../iotk/src/libiotk.a ../../flib/flib.a \
 
 NEBOBJS = \
 neb.o \
-compute_scf.o
 
 NEBLIBS = \
+compute_scf.o \
 engine_to_path_pos.o \
 engine_to_path_alat.o \
 engine_to_path_nat.o \
