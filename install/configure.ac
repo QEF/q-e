@@ -656,7 +656,7 @@ crayxt*:pgf* )
         try_fflags_noopt="-O0"
         try_ldflags_openmp="-mp"
         try_ldflags="-v"
-        try_dflags="$try_dflags -D__PGI"
+        try_dflags="$try_dflags -D__PGI -D__IOTK_WORKAROUND1"
         have_cpp=1
         ;;
 crayxt*:pathf* )
