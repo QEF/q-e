@@ -327,7 +327,7 @@ case "$arch" in
         ia32 | ia64 | x86_64 | mac686 )
         echo $ECHO_N "checking version of $mpif90... $ECHO_C"
         ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
-        sunf95_version=`$mpif90 -V 2>&1 | grep "^sunf95"`
+        sunf95_version=`$mpif90 -V 2>&1 | grep "Sun Fortran"`
         openf95_version=`$mpif90 -V 2>&1 | grep "^Open64"`
         pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
         g95_version=`$mpif90 -v 2>&1 | grep "g95"`
@@ -415,7 +415,7 @@ f90 | fc | ftn )
 
     if $f90 -V 2>&1 | grep -q "Intel(R)" ; then
         f90_version=ifort
-    elif $f90 -V 2>&1 | grep -q "^sunf95" ; then
+    elif $f90 -V 2>&1 | grep -q "Sun Fortran" ; then
         f90_version=sunf95
     elif $f90 -V 2>&1 | grep -q "^Open64" ; then
         f90_version=openf95
