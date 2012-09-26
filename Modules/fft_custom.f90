@@ -476,7 +476,7 @@ CONTAINS
 
     
     ! Local variables
-    INTEGER :: ngwl1_max,ngwl2_max,npw1_max,npw2_max
+    INTEGER :: ngwl1_max, ngwl2_max, npw1_max, npw2_max, ngwl_min
     INTEGER :: gid,ierr
     INTEGER, ALLOCATABLE :: npw1_loc(:),npw2_loc(:)
     INTEGER, ALLOCATABLE :: ig_l2g1_tot(:,:),ig_l2g2_tot(:,:), itmp(:)
@@ -484,6 +484,9 @@ CONTAINS
     INTEGER :: ii,ip,ilast,iband
     COMPLEX(kind=DP), ALLOCATABLE :: pw1_tot(:,:),pw2_tot(:,:)
     COMPLEX(kind=DP), ALLOCATABLE :: pw1_tmp(:),pw2_tmp(:), pw_global(:)
+
+
+#ifdef __MPI
 
     gid=comm
 
@@ -575,6 +578,15 @@ CONTAINS
     DEALLOCATE(pw1_tot,pw2_tot)
     DEALLOCATE(pw1_tmp,pw2_tmp)
     DEALLOCATE(pw_global)
+    !
+#else
+    !
+    ngwl_min = MIN( ngwl1, ngwl2 )
+    !
+    pw2(:, 1:nbands) = ( 0.0d0, 0.0d0 )    
+    pw2( ig_l2g2(1:ngwl_min), 1:nbands ) = pw1( ig_l2g1(1:ngwl_min), 1:nbands ) 
+    !
+#endif
     !
     RETURN
     !
