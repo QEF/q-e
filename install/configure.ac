@@ -74,6 +74,7 @@ AC_ARG_ENABLE(signals,
 # -----------------------------
 # packages
 # ----------------------------
+
 AC_ARG_WITH(scalapack,
    [AS_HELP_STRING([--with-scalapack],
        [use scalapack if available (default: yes)])],
@@ -87,16 +88,14 @@ AC_ARG_WITH(scalapack,
    [with_scalapack=1])
 
 AC_ARG_WITH(elpa,
-   [AS_HELP_STRING([--with-elpa],
-       [use elpa if available (default: no)])],
-   [if  test "$withval" = "yes" ; then
-      with_elpa=1
-   else
-      with_elpa=0
-   fi],
-   [with_elpa=1])
-
-
+    [AS_HELP_STRING([--with-elpa],
+        [use elpa if available (default: no)])],
+    [if  test "$withval" = "yes" ; then
+       with_elpa=1
+    else
+       with_elpa=0
+    fi],
+    [with_elpa=0])
 
 AC_ARG_WITH(internal-blas,
    [AS_HELP_STRING([--with-internal-blas],
@@ -338,7 +337,7 @@ case "$arch" in
         ia32 | ia64 | x86_64 | mac686 )
         echo $ECHO_N "checking version of $mpif90... $ECHO_C"
         ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
-        sunf95_version=`$mpif90 -V 2>&1 | grep "^sunf95"`
+        sunf95_version=`$mpif90 -V 2>&1 | grep "Sun Fortran"`
         openf95_version=`$mpif90 -V 2>&1 | grep "^Open64"`
         pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
         g95_version=`$mpif90 -v 2>&1 | grep "g95"`
@@ -426,7 +425,7 @@ f90 | fc | ftn )
 
     if $f90 -V 2>&1 | grep -q "Intel(R)" ; then
         f90_version=ifort
-    elif $f90 -V 2>&1 | grep -q "^sunf95" ; then
+    elif $f90 -V 2>&1 | grep -q "Sun Fortran" ; then
         f90_version=sunf95
     elif $f90 -V 2>&1 | grep -q "^Open64" ; then
         f90_version=openf95
@@ -667,7 +666,7 @@ crayxt*:pgf* )
         try_fflags_noopt="-O0"
         try_ldflags_openmp="-mp"
         try_ldflags="-v"
-        try_dflags="$try_dflags -D__PGI"
+        try_dflags="$try_dflags -D__PGI -D__IOTK_WORKAROUND1"
         have_cpp=1
         ;;
 crayxt*:pathf* )
@@ -1831,10 +1830,6 @@ if test "$have_mkl" -eq 1
                      scalapack_libs="-lmkl_scalapack_lp64 $scalapack_libs" )
       test "$have_scalapack" -eq 1 && break
 fi
-
-if test "$with_elpa" -eq 1; then 
-        try_dflags="$try_dflags -D__ELPA"
-fi
 #
 # sci libraries (e.g. cray xt)
        unset ac_cv_search_pdgemr2d # clear cached value
@@ -1868,6 +1863,11 @@ fi
         try_dflags="$try_dflags -D__SCALAPACK"
     fi
 done
+
+if test "$with_elpa" -eq 1; then 
+        try_dflags="$try_dflags -D__ELPA"
+fi
+
 
 echo setting SCALAPACK_LIBS... $scalapack_libs
 
