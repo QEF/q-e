@@ -650,6 +650,10 @@ CONTAINS
 
   SUBROUTINE pdsyevd_drv( tv, n, nb, s, lds, w, ortho_cntx )
      USE kinds,     ONLY : DP
+     USE mp_global,   ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm,root_bgrp,ortho_comm
+#ifdef __ELPA
+     USE elpa1
+#endif
      IMPLICIT NONE
 
      LOGICAL, INTENT(IN)  :: tv  
@@ -670,7 +674,11 @@ CONTAINS
      INTEGER,  ALLOCATABLE :: iwork(:)
      INTEGER     :: LWORK, LIWORK, info
      CHARACTER   :: jobv
-     !
+     INTEGER     :: i
+#ifdef __ELPA
+     INTEGER     :: nprow,npcol,my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols
+#endif 
+
      IF( SIZE( s, 1 ) /= lds ) &
         CALL errore( ' pdsyevd_drv ', ' wrong matrix leading dimension ', 1 )
      !
@@ -690,6 +698,13 @@ CONTAINS
      itmp = 0
      rtmp = 0.0_DP
 
+#ifdef __ELPA
+     CALL BLACS_Gridinfo(ortho_cntx,nprow, npcol, my_prow,my_pcol)
+     call GET_ELPA_ROW_COL_COMMS(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
+     CALL SOLVE_EVP_REAL(n,  n,   s, lds,    w,  vv, lds     ,nb  ,mpi_comm_rows, mpi_comm_cols)
+     s = vv
+     IF( ALLOCATED( vv ) ) DEALLOCATE( vv )
+#else
      CALL PDSYEVD( jobv, 'L', n, s, 1, 1, desch, w, vv, 1, 1, desch, rtmp, lwork, itmp, liwork, info )
 
      IF( info /= 0 ) CALL errore( ' pdsyevd_drv ', ' PDSYEVD ', ABS( info ) )
@@ -706,9 +721,29 @@ CONTAINS
 
      IF( tv ) s = vv
 
+     IF( ALLOCATED( vv ) ) DEALLOCATE( vv )
      DEALLOCATE( work )
      DEALLOCATE( iwork )
-     IF( ALLOCATED( vv ) ) DEALLOCATE( vv )
+#endif 
+
+!#ifdef __ELPA   ! uncomment only if you want to printout eigenv* for debug
+!                ! purposes
+!     ALLOCATE ( work (n) ) 
+!     CALL PDLAPRNT( N, N, s, 1, 1, desch, 0, 0, 's', 99, WORK )
+!     DO i=1,N
+!        WRITE(88,*)i,w(i)
+!     END DO
+!     DEALLOCATE( work )
+!#else
+!     ALLOCATE ( work (n) ) 
+!     write(*,*)n
+!     CALL PDLAPRNT( N, N, s, 1, 1, desch, 0, 0, 's', 100, WORK )
+!     DO i=1,N
+!        WRITE(200,*)i,w(i)
+!     END DO
+!     DEALLOCATE( work )
+!#endif
+
      RETURN
   END SUBROUTINE pdsyevd_drv
 

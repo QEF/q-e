@@ -92,7 +92,12 @@ zhpev_drv.o \
 wannier_new.o \
 wrappers.o\
 ws_base.o \
-read_cards.o
+read_cards.o \
+elpa1.o \
+elpa2.o \
+elpa2_kernels.o \
+blockedQR.o
+
 
 all : version.o libqemod.a
 

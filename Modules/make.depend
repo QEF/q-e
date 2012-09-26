@@ -46,6 +46,8 @@ constraints_module.o : kind.o
 control_flags.o : kind.o
 control_flags.o : parameters.o
 dspev_drv.o : kind.o
+dspev_drv.o : elpa1.o
+elpa2.o : blockedQR.o
 electrons_base.o : constants.o
 electrons_base.o : io_global.o
 electrons_base.o : kind.o
@@ -321,4 +323,5 @@ xml_io_base.o : parser.o
 xml_io_base.o : wrappers.o
 zhpev_drv.o : io_global.o
 zhpev_drv.o : kind.o
+zhpev_drv.o : elpa1.o
 fft_scalar.o : ../include/fft_defs.h
