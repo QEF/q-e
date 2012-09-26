@@ -1,13 +1,69 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !----------------------------------------------------------------------------
 SUBROUTINE read_file()
+  !----------------------------------------------------------------------------
+  !
+  ! Wrapper routine, for compatibility
+  !
+  USE io_files,             ONLY : nwordwfc, iunwfc
+  USE io_global,            ONLY : stdout
+  USE buffers,              ONLY : open_buffer, close_buffer
+  USE wvfct,                ONLY : nbnd, npwx
+  USE noncollin_module,     ONLY : npol
+  USE klist,                ONLY : nks
+  USE paw_variables,        ONLY : okpaw, ddd_PAW
+  USE paw_onecenter,        ONLY : paw_potential
+  USE uspp,                 ONLY : becsum
+  USE scf,                  ONLY : rho
+  USE realus,               ONLY : qpointlist, betapointlist, &
+                                   init_realspace_vars,real_space
+  USE dfunct,               ONLY : newd
+  USE pw_restart,           ONLY : pw_readfile
+  !
+  IMPLICIT NONE 
+  INTEGER :: ierr
+  LOGICAL :: exst
+  !
+  ! ... Read the contents of the xml data file
+  !
+  CALL read_xml_file ( )
+  !
+  ! ... Open unit iunwfc, for Kohn-Sham orbitals
+  !
+  nwordwfc = nbnd*npwx*npol
+  CALL open_buffer ( iunwfc, 'wfc', nwordwfc, nks, exst )
+  !
+  ! ... Read orbitals, write them in 'distributed' form to iunwfc
+  !
+  CALL pw_readfile( 'wave', ierr )
+  !
+  ! ... Assorted initialization: pseudopotentials, PAW
+  ! ... Not sure which ones (if any) should be done here
+  !
+  CALL init_us_1()
+  IF (okpaw) then
+     becsum = rho%bec
+     CALL PAW_potential(rho%bec, ddd_PAW)
+  ENDIF 
+  IF ( real_space ) THEN
+    CALL betapointlist()
+    CALL init_realspace_vars()
+    WRITE(stdout,'(5X,"Real space initialisation completed")')
+  ENDIF
+  CALL newd()
+  !
+  CALL close_buffer  ( iunwfc, 'KEEP' )
+  !
+END SUBROUTINE read_file
+!
+!----------------------------------------------------------------------------
+SUBROUTINE read_xml_file()
   !----------------------------------------------------------------------------
   !
   ! ... This routine allocates space for all quantities already computed
@@ -22,7 +78,7 @@ SUBROUTINE read_file()
   USE force_mod,            ONLY : force
   USE klist,                ONLY : nkstot, nks, xk, wk
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE wvfct,                ONLY : nbnd, nbndx, et, wg, npwx, ecutwfc
+  USE wvfct,                ONLY : nbnd, nbndx, et, wg, ecutwfc
   USE symm_base,            ONLY : irt, d1, d2, d3, checkallsym
   USE ktetra,               ONLY : tetra, ntetra 
   USE extfield,             ONLY : forcefield, tefield
@@ -33,15 +89,13 @@ SUBROUTINE read_file()
   USE recvec_subs,          ONLY : ggen
   USE gvect,                ONLY : gg, ngm, g, gcutm, &
                                    eigts1, eigts2, eigts3, nl, gstart
-  USE fft_base,             ONLY : dfftp
-  USE fft_base,             ONLY : dffts
+  USE fft_base,             ONLY : dfftp, dffts
   USE gvecs,                ONLY : ngms, nls, gcutms 
   USE spin_orb,             ONLY : lspinorb, domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE wavefunctions_module, ONLY : psic
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
-  USE buffers,              ONLY : open_buffer, close_buffer
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
   USE pw_restart,           ONLY : pw_readfile
   USE read_pseudo_mod,      ONLY : readpp
@@ -49,12 +103,8 @@ SUBROUTINE read_file()
   USE uspp,                 ONLY : becsum
   USE uspp_param,           ONLY : upf
   USE paw_variables,        ONLY : okpaw, ddd_PAW
-  USE paw_onecenter,        ONLY : paw_potential
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE ldaU,                 ONLY : lda_plus_u, eth, oatwfc
-  USE realus,               ONLY : qpointlist,betapointlist,init_realspace_vars,real_space
-  USE io_global,            ONLY : stdout
-  USE dfunct,               ONLY : newd
   USE control_flags,        ONLY : gamma_only
   USE funct,                ONLY : get_inlc, get_dft_name
   USE kernel_table,         ONLY : initialize_kernel_table
@@ -63,44 +113,41 @@ SUBROUTINE read_file()
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, inlc
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
   REAL(DP) :: sr(3,3,48)
-  LOGICAL  :: exst
   CHARACTER(LEN=20) dft_name
-  !
   !
   ! ... first we get the version of the qexml file
   !     if not already read
   !
   CALL pw_readfile( 'header', ierr )
-  CALL errore( 'read_file ', 'unable to determine qexml version', ABS(ierr) )
+  CALL errore( 'read_xml_file ', 'unable to determine qexml version', ABS(ierr) )
   !
   ! ... then we check if the file can be used for post-processing
   !
-  IF ( .NOT. pp_check_file() ) &
-     CALL infomsg( 'read_file', 'file ' // TRIM( tmp_dir ) // TRIM( prefix ) &
+  IF ( .NOT. pp_check_file() ) CALL infomsg( 'read_xml_file', &
+               & 'file ' // TRIM( tmp_dir ) // TRIM( prefix ) &
                & // '.save not guaranteed to be safe for post-processing' )
+  !
+  ! ... a reset of the internal flags is necessary because some codes call
+  ! ... read_xml_file() more than once
+  !
+  CALL pw_readfile( 'reset', ierr )
   !
   ! ... here we read the variables that dimension the system
   ! ... in parallel execution, only root proc reads the file
   ! ... and then broadcasts the values to all other procs
   !
-  ! ... a reset of the internal flags is necessary because some codes call
-  ! ... read_file() more than once
-  !
-  CALL pw_readfile( 'reset', ierr )
   CALL pw_readfile( 'dim',   ierr )
-  !
-  CALL errore( 'read_file ', 'problem reading file ' // &
+  CALL errore( 'read_xml_file ', 'problem reading file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
   !
   ! ... allocate space for atomic positions, symmetries, forces, tetrahedra
   !
   IF ( nat < 0 ) &
-     CALL errore( 'read_file', 'wrong number of atoms', 1 )
+     CALL errore( 'read_xml_file', 'wrong number of atoms', 1 )
   !
   ! ... allocation
   !
   ALLOCATE( ityp( nat ) )
-  !
   ALLOCATE( tau(    3, nat ) )
   ALLOCATE( if_pos( 3, nat ) )
   ALLOCATE( force(  3, nat ) )
@@ -110,14 +157,6 @@ SUBROUTINE read_file()
   !
   ALLOCATE( irt( 48, nat ) )
   ALLOCATE( tetra( 4, MAX( ntetra, 1 ) ) )
-  !
-  ! ... here we read all the variables defining the system
-  ! ... in parallel execution, only root proc read the file
-  ! ... and then broadcast the values to all other procs
-  !
-  !-------------------------------------------------------------------------------
-  ! ... XML punch-file
-  !-------------------------------------------------------------------------------
   !
   CALL set_dimensions()
   CALL realspace_grids_init ( dfftp, dffts, at, bg, gcutm, gcutms )
@@ -144,12 +183,13 @@ SUBROUTINE read_file()
   END IF
   !
   if (cell_factor == 0.d0) cell_factor = 1.D0
-!  lmovecell = .FALSE.
   !
   ! ... allocate memory for eigenvalues and weights (read from file)
   !
   nbndx = nbnd
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ) )
+  !
+  ! ... here we read all the variables defining the system
   !
   CALL pw_readfile( 'nowave', ierr )
   !
@@ -190,7 +230,6 @@ SUBROUTINE read_file()
   ! ... read the vdw kernel table if needed
   !
   inlc = get_inlc()
-  !
   if (inlc == 1 .or. inlc ==2 ) then
       call initialize_kernel_table()
   endif
@@ -233,12 +272,9 @@ SUBROUTINE read_file()
   ! ... for compatibility with the previous version of read_file
   !
   CALL init_vloc()
-  !
-  CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
-                   dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
-  !
+  CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2, &
+                   dfftp%nr3, strf, eigts1, eigts2, eigts3 )
   CALL setlocal()
-  !
   CALL set_rhoc()
   !
   ! ... bring rho to G-space
@@ -246,12 +282,12 @@ SUBROUTINE read_file()
   DO is = 1, nspin
      !
      psic(:) = rho%of_r(:,is)
-     !
      CALL fwfft ('Dense', psic, dfftp)
-     !
      rho%of_g(:,is) = psic(nl(:))
      !
   END DO
+  !
+  ! ... read info needed for hybrid functionals
   !
   CALL pw_readfile('exx', ierr)
   !
@@ -259,31 +295,6 @@ SUBROUTINE read_file()
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
-  !
-  ! ... reads the wavefunctions and writes them in 'distributed' form 
-  ! ... to unit iunwfc (for compatibility)
-  !
-  nwordwfc = nbnd*npwx*npol
-  !
-  CALL open_buffer ( iunwfc, 'wfc', nwordwfc, nks, exst )
-  !
-  CALL pw_readfile( 'wave', ierr )
-  !
-  CALL init_us_1()
-  IF (okpaw) then
-     becsum = rho%bec
-     CALL PAW_potential(rho%bec, ddd_PAW)
-  ENDIF 
-  if ( real_space ) THEN !initialisation of real space related stuff
-    !OBM - correct parellism issues
-    !call qpointlist()
-    call betapointlist()
-    call init_realspace_vars()
-    !call betapointlist_v2()
-    write(stdout,'(5X,"Real space initialisation completed")')
-  endif
-  CALL newd()
-  CALL close_buffer  ( iunwfc, 'KEEP' )
   !
   RETURN
   !
@@ -297,7 +308,7 @@ SUBROUTINE read_file()
       USE cell_base, ONLY : alat, tpiba, tpiba2
       USE gvect,     ONLY : ecutrho, gcutm
       USE wvfct,     ONLY : ecutwfc
-      USE gvecs,   ONLY : gcutms, dual, doublegrid
+      USE gvecs,     ONLY : gcutms, dual, doublegrid
       !
       !
       ! ... Set the units in real and reciprocal space
@@ -311,17 +322,12 @@ SUBROUTINE read_file()
       ecutrho=dual * ecutwfc
       !
       doublegrid = ( dual > 4.D0 )
-      !
       IF ( doublegrid ) THEN
-         !
          gcutms = 4.D0 * ecutwfc / tpiba2
-         !
       ELSE
-         !
          gcutms = gcutm
-         !
       END IF
       !
     END SUBROUTINE set_dimensions
     !
-END SUBROUTINE read_file
+END SUBROUTINE read_xml_file
