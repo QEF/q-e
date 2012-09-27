@@ -745,8 +745,8 @@ follow these rules:
 module \texttt{mp.f90}.
 \item Routines that are used only in parallel execution may be either
 called and \#ifdef'ed inside, or not called (via an \#ifdef) and not 
-compiled (via an \#ifdef again) in the serial case. Note that "make" 
-sometimes doesn't like empty files!
+compiled (via an \#ifdef again) in the serial case. Note that
+some compilers do not like empty files or modules containing nothing!
 \item Other \#ifdef \_\_MPI may be needed when the flux of parallel
 execution is different from that of the serial case.
 \item All other \#ifdef \_\_MPI are not needed, may be removed if
