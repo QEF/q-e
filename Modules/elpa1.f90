@@ -13,6 +13,7 @@ module ELPA1
 
   PRIVATE ! By default, all routines contained are private
 
+#ifdef __ELPA
   ! The following routines are public:
 
   public :: get_elpa_row_col_comms     ! Sets MPI row/col communicators
@@ -41,7 +42,7 @@ module ELPA1
 
   public :: hh_transform_real
   public :: hh_transform_complex
-
+#endif
 !-------------------------------------------------------------------------------
 
   ! Timing results, set by every call to solve_evp_xxx
@@ -55,7 +56,7 @@ module ELPA1
   logical, public :: elpa_print_times = .false.
 
 !-------------------------------------------------------------------------------
-
+#ifdef __ELPA
   include 'mpif.h'
 
 contains
@@ -3878,9 +3879,9 @@ subroutine hh_transform_complex(alpha, xnorm_sq, xf, tau)
 end subroutine
 
 ! --------------------------------------------------------------------------------------------------
-
+#endif
 end module ELPA1
-
+#ifdef __ELPA
 ! --------------------------------------------------------------------------------------------------
 ! Please note that the following routines are outside of the module ELPA1
 ! so that they can be used with real or complex data
@@ -4090,3 +4091,4 @@ subroutine elpa_reduce_add_vectors(vmat_s,ld_s,comm_s,vmat_t,ld_t,comm_t,nvr,nvc
 end subroutine
 
 !-------------------------------------------------------------------------------
+#endif

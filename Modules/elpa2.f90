@@ -17,6 +17,7 @@ module ELPA2
   PRIVATE ! By default, all routines contained are private
 
   ! The following routines are public:
+#ifdef __ELPA
 
   public :: solve_evp_real_2stage
   public :: solve_evp_complex_2stage
@@ -33,6 +34,7 @@ module ELPA2
   
   public :: band_band_real
   public :: divide_band
+#endif
   
 !-------------------------------------------------------------------------------  
 
@@ -52,7 +54,7 @@ module ELPA2
   complex*16, allocatable :: hh_trans_complex(:,:)
 
 !-------------------------------------------------------------------------------
-
+#ifdef __ELPA
   include 'mpif.h'
 
 
@@ -3950,4 +3952,5 @@ end subroutine
 
 ! --------------------------------------------------------------------------------------------------
 
+#endif
 end module ELPA2

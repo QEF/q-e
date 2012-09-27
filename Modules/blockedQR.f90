@@ -5,11 +5,11 @@ implicit none
 
 PRIVATE
 
-public :: qr_rank2_real
 
 real*8 dnrm2,ddot
 EXTERNAL dnrm2,dgemv,dscal,dger,daxpy,ddot
-
+#ifdef __ELPA
+public :: qr_rank2_real
 contains
 
 subroutine qr_rank2_real(a, lda, vmr, ldv, tmat, nbw, istep, cols, nblk, mpi_comm_rows, mpi_comm_cols, work, eps)
@@ -759,5 +759,5 @@ subroutine houseLeft_2rank_MPI_reversed(rows, cols, b, a, lda, hv, ldh, tauvalue
         enddo
    endif
 end subroutine houseLeft_2rank_MPI_reversed
-
+#endif
 end module blockedqr
