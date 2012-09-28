@@ -13,7 +13,7 @@
   ! ... diagonalization of the KS hamiltonian in the non-scf case
   !
   USE kinds,                ONLY : DP
-  USE bp,                   ONLY : lelfield, lberry
+  USE bp,                   ONLY : lelfield, lberry, lorbm
   USE control_flags,        ONLY : io_level
   USE ener,                 ONLY : ef
   USE io_global,            ONLY : stdout, ionode
@@ -85,6 +85,10 @@
   ! ... do a Berry phase polarization calculation if required
   !
   IF ( lberry ) CALL c_phase()
+  !
+  ! ... do an orbital magnetization (Kubo terms) calculation
+  !
+  IF ( lorbm ) CALL orbm_kubo()
   !
   CALL stop_clock( 'electrons' )
   !

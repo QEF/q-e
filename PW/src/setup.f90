@@ -69,7 +69,7 @@ SUBROUTINE setup()
   USE uspp,               ONLY : okvan
   USE ldaU,               ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_U, Hubbard_J, &
                                  Hubbard_l, Hubbard_alpha, Hubbard_lmax, d_spin_ldau, oatwfc
-  USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, nx_el, nppstr_3d,l3dstring, efield
+  USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el, nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
   USE funct,              ONLY : set_dft_from_name
   USE mp_global,          ONLY : kunit
@@ -404,7 +404,7 @@ SUBROUTINE setup()
   !
   IF ( nks_start == 0 ) THEN
      !
-     IF (lelfield) THEN
+     IF (lelfield .OR. lorbm) THEN
          !
         CALL kpoint_grid_efield (at,bg, npk, &
              k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk, nspin)
