@@ -31,7 +31,8 @@
 # With the exception of IBM xlf, FDFLAGS = $(DFLAGS)
 # For IBM xlf, FDFLAGS is the same as DFLAGS with separating commas 
 
-DFLAGS         = @dflags@
+MANUAL_DFLAGS  =
+DFLAGS         = @dflags@ $(MANUAL_DFLAGS)
 FDFLAGS        = @fdflags@
 
 # IFLAGS = how to locate directories where files to be included are
