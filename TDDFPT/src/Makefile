@@ -6,7 +6,6 @@ IFLAGS         = -I../../include
 LIBOBJS        = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a 
 
 
-
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
           $(MOD_FLAG) . $(MOD_FLAG)../../PW/src \
@@ -30,7 +29,6 @@ lr_read_wf.o \
 lr_normalise.o \
 lr_lanczos.o \
 lr_apply_liouvillian.o \
-lr_main.o \
 lr_dv_setup.o \
 lr_solve_e.o \
 lr_dvpsi_e.o \
@@ -48,9 +46,13 @@ TLDEPS=bindir libs pw ph
  
 all :  tldeps turbo_lanczos.x
 
-turbo_lanczos.x : $(LROBJS) $(PWOBJS) $(QEMODS) $(PWOBJS) $(PHOBJS) $(PWOBJS) $(LIBOBJS)
+libtddfpt.a : $(LROBJS) 
+	$(AR) $(ARFLAGS) $@ $?
+	$(RANLIB) $@
+	
+turbo_lanczos.x : lr_main.o libtddfpt.a $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		$(LROBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		lr_main.o libtddfpt.a $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
@@ -63,7 +65,7 @@ tldeps:
 
 
 clean :
-	- /bin/rm -f ../bin/turbo_lanczos.x *.x *.o *~ *.d *.mod *.i work.pc
+	- /bin/rm -f ../bin/turbo_lanczos.x *.x *.o *~ *.d *.mod *.i work.pc *.a
 
 include make.depend
 
