@@ -162,11 +162,14 @@ SUBROUTINE extract (filplot,plot_num)
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
-  CALL read_file ( )
-
   needwf=(plot_num==3).or.(plot_num==4).or.(plot_num==5).or.(plot_num==7).or. &
          (plot_num==8).or.(plot_num==10)
-
+  IF ( needwf ) THEN
+     CALL read_file ( )
+  ELSE
+     CALL read_xml_file ( )
+  END IF
+  !
   IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect .and. needwf)  &
      CALL errore('postproc',&
      'pw.x run with a different number of procs/pools. Use wf_collect=.true.',1)
@@ -175,11 +178,8 @@ SUBROUTINE extract (filplot,plot_num)
        ( plot_num==3 .or. plot_num==4 .or. plot_num==5 ) ) &
      CALL errore('postproc',&
      'Post-processing with constrained magnetization is not available yet',1)
-
+  !
   CALL openfil_pp ( )
-  CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
-       strf, eigts1, eigts2, eigts3)
-!  CALL init_us_1 ( )
   !
   ! The following line sets emax to its default value if not set
   ! It is done here because Ef must be read from file
@@ -189,7 +189,6 @@ SUBROUTINE extract (filplot,plot_num)
      emin = emin / rytoev
      emax = emax / rytoev
   ENDIF
-  !
   !
   !   Now do whatever you want
   !
