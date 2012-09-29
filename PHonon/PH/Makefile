@@ -173,7 +173,7 @@ write_rec.o \
 zstar_eu.o \
 zstar_eu_us.o
 
-RAMAN =    \
+RAMANOBJS =    \
 cft_wave.o \
 psyme2.o   \
 chi_test.o \
@@ -193,37 +193,42 @@ raman.o    \
 dhdrhopsi.o\
 set_dvscf.o
 
+PHAUXOBJS = \
+rigid.o \
+write_eigenvectors.o \
+q2r.o
+
 PWOBJS = ../../PW/src/libpw.a
 QEMODS = ../../Modules/libqemod.a
 
 
-LIBOBJS        = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
+LIBOBJS	= ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
 
 TLDEPS= bindir mods libs pw
 
 all : tldeps libph.a ph.x dynmat.x matdyn.x q2r.x lambda.x fqha.x q2qstar.x 
 
 ph.x : phonon.o libph.a $(PWOBJS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o ph.x phonon.o libph.a \
+	$(LD) $(LDFLAGS) -o $@ phonon.o libph.a \
 		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/ph.x . )
 
-dynmat.x : dynmat.o rigid.o write_eigenvectors.o libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ dynmat.o write_eigenvectors.o rigid.o libph.a \
+dynmat.x : dynmat.o libphaux.a  libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ dynmat.o libphaux.a libph.a \
 		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
-matdyn.x : matdyn.o rigid.o write_eigenvectors.o libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ matdyn.o rigid.o write_eigenvectors.o libph.a \
+matdyn.x : matdyn.o libphaux.a libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ matdyn.o libphaux.a libph.a \
 		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
-q2r.x : q2r.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ q2r.o rigid.o libph.a \
+q2r.x : q2r.o libphaux.a libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ libphaux.a libph.a \
 		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
-q2qstar.x : q2qstar.o q2r.o libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
+q2qstar.x : q2qstar.o libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ q2qstar.o libph.a \
 		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
@@ -233,8 +238,8 @@ lambda.x : lambda.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
                  $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
-fqha.o :
-	$(MPIF90) $(FFLAGS_NOOPT) -c fqha.f90
+#fqha.o :
+#	$(MPIF90) $(FFLAGS_NOOPT) -c fqha.f90
 
 fqha.x : fqha.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ fqha.o \
@@ -244,10 +249,14 @@ fqha.x : fqha.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 tldeps:
 	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
-libph.a : $(PHOBJS) $(RAMAN)
+libph.a : $(PHOBJS) $(RAMANOBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
+libphaux.a : $(PHAUXOBJS)
+	$(AR) $(ARFLAGS) $@ $?
+	$(RANLIB) $@
+	
 clean :
 	- /bin/rm -f *.x *.o *.a *~ *.F90 *.d *.mod *.i *.L
 	- /bin/rm -rf ../../bin/ph.x ../../bin/dynmat.x ../../bin/matdyn.x \
