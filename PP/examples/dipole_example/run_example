@@ -382,6 +382,6 @@ fi
 $ECHO "Calculations done."
 $ECHO ""
 $ECHO "----------------------------------------------------"
-$ECHO " results/ni+co.eps -> Graph for the slab calcualtion"
+$ECHO " results/ni+co.eps -> Graph for the slab calculation"
 $ECHO " results/water.eps -> Graph for the water molecule"
 $ECHO "----------------------------------------------------"
