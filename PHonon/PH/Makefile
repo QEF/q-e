@@ -206,7 +206,9 @@ LIBOBJS	= ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src
 
 TLDEPS= bindir mods libs pw
 
-all : tldeps libph.a ph.x dynmat.x matdyn.x q2r.x lambda.x fqha.x q2qstar.x 
+all : tldeps libs-ph ph.x dynmat.x matdyn.x q2r.x lambda.x fqha.x q2qstar.x 
+
+libs-ph : libph.a libphaux.a
 
 ph.x : phonon.o libph.a $(PWOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ phonon.o libph.a \
