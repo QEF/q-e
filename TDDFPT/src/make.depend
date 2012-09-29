@@ -35,6 +35,7 @@ lr_apply_liouvillian.o : ../../PW/src/realus.o
 lr_apply_liouvillian.o : lr_variables.o
 lr_calc_dens.o : ../../Modules/becmod.o
 lr_calc_dens.o : ../../Modules/cell_base.o
+lr_calc_dens.o : ../../Modules/constants.o
 lr_calc_dens.o : ../../Modules/control_flags.o
 lr_calc_dens.o : ../../Modules/fft_base.o
 lr_calc_dens.o : ../../Modules/fft_interfaces.o

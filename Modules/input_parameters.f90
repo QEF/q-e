@@ -208,6 +208,9 @@ MODULE input_parameters
         LOGICAL :: lberry = .false.
           ! if .TRUE., use modern theory of the polarization
 
+        LOGICAL :: lorbm = .false.
+          ! if .TRUE., calculate orbital magnetization
+
         INTEGER :: gdir = 0
           ! G-vector for polarization calculation ( related to lberry )
           ! only used in PW

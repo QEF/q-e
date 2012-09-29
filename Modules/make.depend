@@ -45,12 +45,14 @@ constraints_module.o : ions_base.o
 constraints_module.o : kind.o
 control_flags.o : kind.o
 control_flags.o : parameters.o
-dspev_drv.o : kind.o
 dspev_drv.o : elpa1.o
-elpa2.o : blockedQR.o
+dspev_drv.o : kind.o
+dspev_drv.o : mp_global.o
 electrons_base.o : constants.o
 electrons_base.o : io_global.o
 electrons_base.o : kind.o
+elpa2.o : blockedQR.o
+elpa2.o : elpa1.o
 environment.o : io_files.o
 environment.o : io_global.o
 environment.o : kind.o
@@ -73,6 +75,7 @@ fft_custom.o : constants.o
 fft_custom.o : control_flags.o
 fft_custom.o : fft_scalar.o
 fft_custom.o : fft_types.o
+fft_custom.o : io_global.o
 fft_custom.o : kind.o
 fft_custom.o : mp.o
 fft_custom.o : parallel_include.o
@@ -323,5 +326,4 @@ xml_io_base.o : parser.o
 xml_io_base.o : wrappers.o
 zhpev_drv.o : io_global.o
 zhpev_drv.o : kind.o
-zhpev_drv.o : elpa1.o
 fft_scalar.o : ../include/fft_defs.h
