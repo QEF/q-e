@@ -201,15 +201,15 @@ MODULE input_parameters
           ! if .TRUE. a static homogeneous electric field is present
           ! via the modern theory of polarizability - differs from tefield!
 
+        LOGICAL :: lorbm = .false.
+          ! if .TRUE. an orbital magnetization is computed (Kubo terms)
+
         LOGICAL :: dipfield = .false.
           ! if .TRUE. the dipole field is subtracted
           ! only used in PW for surface calculations
 
         LOGICAL :: lberry = .false.
           ! if .TRUE., use modern theory of the polarization
-
-        LOGICAL :: lorbm = .false.
-          ! if .TRUE., calculate orbital magnetization
 
         INTEGER :: gdir = 0
           ! G-vector for polarization calculation ( related to lberry )
@@ -271,7 +271,7 @@ MODULE input_parameters
           forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
           gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
-          vdw_table_name, memory
+          vdw_table_name, lorbm, memory
 
 
 #if defined ( __MS2)

@@ -114,6 +114,7 @@ MODULE read_namelists_module
        IF( prog == 'CP' ) wf_collect = .TRUE.  ! default for CP is true
        printwfc = -1
        lelfield = .FALSE.
+       lorbm = .FALSE.
        nberrycyc  = 1
        lkpoint_dir = .TRUE.
        lecrpa   = .FALSE.   
@@ -770,6 +771,7 @@ MODULE read_namelists_module
        CALL mp_bcast( wf_collect,    ionode_id )
        CALL mp_bcast( printwfc,      ionode_id )
        CALL mp_bcast( lelfield,      ionode_id )
+       CALL mp_bcast( lorbm,         ionode_id )
        CALL mp_bcast( nberrycyc,     ionode_id )
        CALL mp_bcast( saverho,       ionode_id )
        CALL mp_bcast( lecrpa,        ionode_id )
