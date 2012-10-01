@@ -25,23 +25,30 @@ SUBROUTINE vcsmd()
   !
   ! Dynamics performed using Beeman algorithm, J. Comp. Phys. 20, 130 (1976))
   !
+  ! Contraints with vcsmd have been implemented by Vivek Ranjan in 2012
+  ! from the Department of Physics, North Carolina State University
+  ! Raleigh, North Carolina, USA
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
   USE constants,       ONLY : e2, ry_kbar, amu_ry
   USE cell_base,       ONLY : omega, alat, at, bg, iforceh, fix_volume, fix_area
-  USE ions_base,       ONLY : tau, nat, ntyp => nsp, ityp, atm
+  USE ions_base,       ONLY : tau, nat, ntyp => nsp, ityp, atm, if_pos
   USE cellmd,          ONLY : nzero, ntimes, calc, press, at_old, omega_old, &
                               cmass, ntcheck, lmovecell
   USE dynamics_module, ONLY : dt, temperature
   USE ions_base,       ONLY : amass, if_pos 
   USE relax,           ONLY : epse, epsf, epsp
   USE force_mod,       ONLY : force, sigma
-  USE control_flags,   ONLY : nstep, istep, tolp, conv_ions 
+  USE control_flags,   ONLY : nstep, istep, tolp, conv_ions, lconstrain, lfixatom 
   USE parameters,      ONLY : ntypx
   USE ener,            ONLY : etot
   USE io_files,        ONLY : prefix, delete_if_present, seqopn
 
+  USE constraints_module, ONLY : nconstr
+  USE constraints_module, ONLY : remove_constr_force, check_constraint
+  
+  !
   !
   IMPLICIT NONE
   !
@@ -59,6 +66,11 @@ SUBROUTINE vcsmd()
   !  press = target pressure in ryd/(a.u.)^3
   !
   ! ... local variables
+#if ! defined (__REDUCE_OUTPUT)
+! for vcsmd with constraints
+  REAL(DP), EXTERNAL :: DNRM2
+! 
+#endif
   !
   REAL(DP) :: p,            & ! virial pressure
                    vcell,        & ! cell volume
@@ -295,6 +307,16 @@ SUBROUTINE vcsmd()
   WRITE( stdout, '(/5X,"Entering Dynamics;  it = ",I5,"   time = ", &
        &                          F8.5," pico-seconds"/)' ) istep, tempo
   !
+  IF ( lconstrain ) THEN
+     !
+     ! ... we first remove the component of the force along the
+     ! ... constraint gradient ( this constitutes the initial
+     ! ... guess for the calculation of the lagrange multipliers )
+     !
+     CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
+     !
+  END IF
+  !
   ! ... save cell shape of previous step
   !
   at_old = at
@@ -443,8 +465,38 @@ SUBROUTINE vcsmd()
   WRITE( stdout, '(/5X,"Ekin = ",F14.8," Ry    T = ",F6.1," K ", &
        &       " Etot = ",F14.8)') ekint, tnew, edyn + e_start
   !
+  ! for vcsmd with constraints
+  CALL cryst_to_cart( nat, force, at, 1 )
+  !
+  force = force*alat
+  ! 
+  !
   CALL output_tau( lmovecell, .FALSE. )
   !
+  IF ( lconstrain ) THEN
+     !
+     ! ... check if the new positions satisfy the constrain equation
+     !
+     CALL check_constraint( nat, tau, tauold(:,:,1), &
+                            force, if_pos, ityp, alat, dt**2, amu_ry )
+     !
+#if ! defined (__REDUCE_OUTPUT)
+     !
+     WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
+     !
+     DO na = 1, nat
+        !
+        WRITE( stdout, &
+               '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
+            na, ityp(na), force(:,na)
+        !
+     END DO
+     !
+     WRITE( stdout, '(/5X,"Total force = ",F12.6)') DNRM2( 3*nat, force, 1 )
+     !
+#endif
+     !
+  END IF
   !
   ! ... save MD history on file
   !
