@@ -70,6 +70,8 @@ uspp2     Ni fcc   core corrections
                    non-scf calculation
 vc-relax  As       Variable-cell optimization (both damped dynamics and bfgs)
                    at zero pressure and under an external pressure
+vc-md     As       Variable-cell dynamics (Wentzcovitch dynamics)
+                   at zero pressure and under an external pressure
 vdw       C        Dispersion (van der Waals) interactions with DFT-D (Grimme)
 vdw1      C        Dispersion (van der Waals) interactions with vdW-DF  (nonlocal)
 vdw2      C        Dispersion (van der Waals) interactions with vdW-DF2 (nonlocal)
@@ -77,4 +79,4 @@ vdw2      C        Dispersion (van der Waals) interactions with vdW-DF2 (nonloca
 Tests are still missing for:
   forces with core corrections
   blyp, pw91
- 'bands' 'vc-md'
+ 'bands' 
