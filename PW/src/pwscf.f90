@@ -94,7 +94,7 @@ PROGRAM pwscf
   !
   CALL init_run()
   !
-  CALL check_stop_now()
+  IF ( check_stop_now() ) CALL stop_run( .TRUE. )
   !
   main_loop: DO
      !
