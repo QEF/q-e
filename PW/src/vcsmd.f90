@@ -278,6 +278,15 @@ SUBROUTINE vcsmd()
         !
      END IF
      !
+  ELSE IF ( idone == nstep ) THEN
+     !
+     ! ... for all other cases, check if max number of steps reached
+     !
+     WRITE( UNIT = stdout, &
+            FMT = '(/,5X,"Variable-cell Dynamics: ",i4," iterations ", &
+                  &      "completed, stopping")' ) nstep
+     conv_ions = .TRUE.
+     !
   END IF
   !
   tauold(:,:,1) = tau(:,:)
