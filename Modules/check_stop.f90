@@ -80,8 +80,6 @@ MODULE check_stop
 #if defined __TRAP_SIGUSR1
        USE set_signal, ONLY : signal_detected
 #endif
-       ! KNK_image
-       ! USE mp_global, ONLY : mpime, root, world_comm
        !
        IMPLICIT NONE
        !
@@ -107,8 +105,6 @@ MODULE check_stop
        !
        signaled = .FALSE.
        !
-       ! KNK_image
-       ! IF ( mpime == root ) THEN
        IF ( ionode ) THEN
           !
           INQUIRE( FILE = TRIM( exit_file ), EXIST = tex )
@@ -136,8 +132,6 @@ MODULE check_stop
        tex = tex .OR. signaled
 #endif
        !
-       ! KNK_image
-       ! CALL mp_bcast( check_stop_now, root, world_comm )
        CALL mp_bcast( check_stop_now, ionode_id, intra_image_comm )
        !
        IF ( check_stop_now .AND. meta_ionode ) THEN

@@ -18,7 +18,7 @@ PROGRAM pwscf
   USE control_flags,    ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
   USE force_mod,        ONLY : lforce, lstres, sigma
   USE environment,      ONLY : environment_start
-  USE check_stop,       ONLY : check_stop_init
+  USE check_stop,       ONLY : check_stop_init, check_stop_now
   USE mp_global,        ONLY : mp_startup, mp_global_end, intra_image_comm
   USE mp_global,        ONLY : nimage, me_image, root_image, my_image_id
 #if defined(__MS2)
@@ -93,6 +93,8 @@ PROGRAM pwscf
 #endif
   !
   CALL init_run()
+  !
+  CALL check_stop_now()
   !
   main_loop: DO
      !
