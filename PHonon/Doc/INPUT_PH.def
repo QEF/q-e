@@ -242,8 +242,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    default { .false. }
 	    info {        
                  If .true. calculate dynamic polarizabilities            
-                 ( experimental stage, see example33 for calculation
-                  of methane ).
+                 Requires epsil=.true. ( experimental stage:
+                 see example09 for calculation of methane ).
 	    }
 	}
 

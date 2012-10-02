@@ -369,6 +369,8 @@ SUBROUTINE phq_readin()
   ! reads the frequencies ( just if fpol = .true. )
   !
   IF ( fpol ) THEN
+     IF ( .NOT. epsil) CALL errore ('phq_readin', &
+                                    'fpol=.TRUE. needs epsil=.TRUE.', 1 )
      nfs=0
      IF (ionode) THEN
         READ (5, *, iostat = ios) card
