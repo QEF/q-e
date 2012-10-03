@@ -195,8 +195,7 @@ set_dvscf.o
 
 PHAUXOBJS = \
 rigid.o \
-write_eigenvectors.o \
-q2r.o
+write_eigenvectors.o
 
 PWOBJS = ../../PW/src/libpw.a
 QEMODS = ../../Modules/libqemod.a
@@ -226,7 +225,7 @@ matdyn.x : matdyn.o libphaux.a libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
 q2r.x : q2r.o libphaux.a libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ libphaux.a libph.a \
+	$(LD) $(LDFLAGS) -o $@ q2r.o libphaux.a libph.a \
 		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
