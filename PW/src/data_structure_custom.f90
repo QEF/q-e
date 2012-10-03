@@ -22,6 +22,8 @@ SUBROUTINE data_structure_custom(fc, gamma_only)
   USE mp_global,  ONLY : get_ntask_groups 
   USE stick_set,  ONLY : pstickset_custom
   USE fft_custom, ONLY : fft_cus, gvec_init
+  USE fft_base,   ONLY : dfftp
+  USE gvect,      ONLY : gcutm
   !
   !
   IMPLICIT NONE
@@ -77,14 +79,14 @@ SUBROUTINE data_structure_custom(fc, gamma_only)
   !
   nogrp = get_ntask_groups()
   !
-  CALL pstickset_custom( gamma_only, bg, fc%gcutmt, gkcut, &
-                  fc%dfftt, ngw_ , ngm_ , me, root, nproc, intra_comm,   &
+  CALL pstickset_custom( gamma_only, bg, gcutm, gkcut, fc%gcutmt, &
+                  dfftp, fc%dfftt, ngw_ , ngm_, ngs_, me, root, nproc, intra_comm,   &
                   nogrp )
   !
   !     on output, ngm_ and ngs_ contain the local number of G-vectors
   !     for the two grids. Initialize local and global number of G-vectors
   !
-  CALL gvec_init (fc, ngm_ , intra_comm )
+  CALL gvec_init (fc, ngs_ , intra_comm )
 
   
 END SUBROUTINE data_structure_custom

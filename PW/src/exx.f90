@@ -134,11 +134,14 @@ CONTAINS
     
     INTEGER :: ig
     
+    CALL start_clock('exx_grid_convert')
+    
     IF(sign > 0 .AND. PRESENT(igkt) ) THEN
        DO ig=1, fft%ngmt
           igkt(ig)=ig
        ENDDO
     ENDIF
+
     
     IF( fft%dual_t==4.d0) THEN
        psi_t(1:fft%npwt)=psi(1:fft%npwt)
@@ -154,15 +157,17 @@ CONTAINS
        ENDIF
     ENDIF
 
-    RETURN
+    CALL stop_clock('exx_grid_convert')
 
+    RETURN
+    
   END SUBROUTINE exx_grid_convert
   !------------------------------------------------------------------------
   SUBROUTINE exx_fft_create ()
   !------------------------------------------------------------------------
     
-    USE wvfct,        ONLY : ecutwfc
-    USE gvect,        ONLY : ecutrho
+    USE wvfct,        ONLY : ecutwfc, npw
+    USE gvect,        ONLY : ecutrho, ig_l2g
 
     IMPLICIT NONE
 
@@ -176,6 +181,12 @@ CONTAINS
     exx_fft_g2r%ecutt=ecutwfc
     exx_fft_g2r%dual_t=ecutfock/ecutwfc
     CALL allocate_fft_custom(exx_fft_g2r)
+
+    IF (MAXVAL( ABS(ig_l2g(1:npw)-exx_fft_g2r%ig_l2gt(1:npw))) /= 0) THEN
+       CALL errore('exx_fft_create', ' exx fft grid not compatible with &
+            &the smooth fft grid. ', 1 )
+       
+    ENDIF
 
     ! Initalise the r2g grid that we then use when applying the Fock
     ! operator in our new restricted space.
@@ -667,7 +678,6 @@ CONTAINS
     logical :: exst
     INTEGER, ALLOCATABLE :: rir(:,:)
     
-    COMPLEX(kind=DP), ALLOCATABLE :: state_fc_t(:,:),evc_g(:)
     integer       :: find_current_k
 
 
@@ -814,26 +824,19 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
           half_nbnd = ( nbnd + 1 )/2
           h_ibnd = 0
 
-          ALLOCATE(state_fc_t(exx_fft_g2r%npwt,nbnd))
-          ALLOCATE( evc_g( exx_fft_g2r%ngmt_g ) )
-          state_fc_t=( 0.D0, 0.D0 )
-          DO ibnd=1,nbnd !exx_cus%nbndv
-             CALL exx_grid_convert(tempevc(:,ibnd), npw, exx_fft_g2r,&
-                  & state_fc_t(:,ibnd), 1 )  
-          ENDDO
           do ibnd =1, nbnd, 2     
              h_ibnd = h_ibnd + 1
              !
              temppsic(:) = ( 0.D0, 0.D0 )
              !
              if (ibnd < nbnd) then
-                temppsic(exx_fft_g2r%nlt(1:exx_fft_g2r%npwt)) = state_fc_t(1:exx_fft_g2r%npwt,ibnd)  &
-                          + ( 0.D0, 1.D0 ) * state_fc_t(1:exx_fft_g2r%npwt,ibnd+1)
-                temppsic(exx_fft_g2r%nltm(1:exx_fft_g2r%npwt)) = CONJG( state_fc_t(1:exx_fft_g2r%npwt,ibnd) ) &
-                          + ( 0.D0, 1.D0 ) * CONJG( state_fc_t(1:exx_fft_g2r%npwt,ibnd+1) )
+                temppsic(exx_fft_g2r%nlt(1:exx_fft_g2r%npwt)) = tempevc(1:exx_fft_g2r%npwt,ibnd)  &
+                          + ( 0.D0, 1.D0 ) * tempevc(1:exx_fft_g2r%npwt,ibnd+1)
+                temppsic(exx_fft_g2r%nltm(1:exx_fft_g2r%npwt)) = CONJG( tempevc(1:exx_fft_g2r%npwt,ibnd) ) &
+                          + ( 0.D0, 1.D0 ) * CONJG( tempevc(1:exx_fft_g2r%npwt,ibnd+1) )
              else
-                temppsic(exx_fft_g2r%nlt (1:exx_fft_g2r%npwt)) = state_fc_t(1:exx_fft_g2r%npwt,ibnd) 
-                temppsic(exx_fft_g2r%nltm(1:exx_fft_g2r%npwt)) = CONJG( state_fc_t(1:exx_fft_g2r%npwt,ibnd) ) 
+                temppsic(exx_fft_g2r%nlt (1:exx_fft_g2r%npwt)) = tempevc(1:exx_fft_g2r%npwt,ibnd) 
+                temppsic(exx_fft_g2r%nltm(1:exx_fft_g2r%npwt)) = CONJG( tempevc(1:exx_fft_g2r%npwt,ibnd) ) 
              end if
 
              CALL invfft ('CustomWave', temppsic, exx_fft_g2r%dfftt)
@@ -858,7 +861,7 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
                 !CALL davcio(psic,exx_nwordwfc,iunexx,(ikq-1)*half_nbnd+h_ibnd,1)
              end do
           END DO
-          DEALLOCATE(state_fc_t, evc_g)
+
        else
           do ibnd =1, nbnd     
              IF (noncolin) THEN
@@ -1019,17 +1022,11 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
     REAL(DP) :: atws(3,3)
     integer       :: find_current_k
 
-    COMPLEX(kind=DP), ALLOCATABLE :: psi_t(:), prod_tot(:)
-    INTEGER, ALLOCATABLE :: igkt(:)
-
     CALL start_clock ('vexx')
 
     IF(gamma_only) THEN
        ALLOCATE( fac(exx_fft_r2g%ngmt) )
        nrxxs= exx_fft_g2r%dfftt%nnr
-       ALLOCATE( psi_t( exx_fft_g2r%npwt ) )
-       ALLOCATE( prod_tot(nrxxs) )
-       ALLOCATE( igkt( exx_fft_g2r%ngmt ) )
     ELSE
        ALLOCATE( fac(ngm) )
        nrxxs = dffts%nnr
@@ -1073,15 +1070,14 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
        ENDIF
 
        IF(gamma_only) THEN
-          prod_tot(:) = (0.d0,0.d0)
-          CALL exx_grid_convert( psi(:,im), npw, exx_fft_g2r, psi_t,&
-            & 1, igkt )
+          !
           temppsic(exx_fft_g2r%nlt(1:exx_fft_g2r%npwt)) =&
-               & psi_t(1:exx_fft_g2r%npwt) 
+               & psi(1:exx_fft_g2r%npwt, im) 
           temppsic(exx_fft_g2r%nltm(1:exx_fft_g2r%npwt)) =&
-               & CONJG(psi_t(1:exx_fft_g2r%npwt))
+               & CONJG(psi(1:exx_fft_g2r%npwt,im))
+          !
           CALL invfft ('CustomWave', temppsic, exx_fft_g2r%dfftt)
-
+          !
        ELSE
           IF (noncolin) THEN
              temppsic_nc(nls(igk(1:npw)),1) = psi(1:npw,im)
@@ -1174,34 +1170,32 @@ call flush_unit(stdout)
               IF (ecutfock == ecutrho) THEN
                  CALL fwfft ('Custom', rhoc, exx_fft_r2g%dfftt)
                  vc(:) = ( 0.D0, 0.D0 )
-                 vc(exx_fft_r2g%nlt(igkt(1:exx_fft_r2g%ngmt)))  =&
+                 vc(exx_fft_r2g%nlt(1:exx_fft_r2g%ngmt))  =&
                       & fac(1:exx_fft_r2g%ngmt) * rhoc(exx_fft_r2g&
-                      &%nlt(igkt(1:exx_fft_r2g%ngmt))) 
-                 vc(exx_fft_r2g%nltm(igkt(1:exx_fft_r2g%ngmt))) =&
+                      &%nlt(1:exx_fft_r2g%ngmt)) 
+                 vc(exx_fft_r2g%nltm(1:exx_fft_r2g%ngmt)) =&
                       & fac(1:exx_fft_r2g%ngmt) * rhoc(exx_fft_r2g&
-                      &%nltm(igkt(1:exx_fft_r2g%ngmt))) 
+                      &%nltm(1:exx_fft_r2g%ngmt)) 
                  !brings back v in real space
                  CALL invfft ('Custom', vc, exx_fft_r2g%dfftt) 
               ELSE
                  CALL fwfft ('CustomWave', rhoc, exx_fft_r2g%dfftt)
                  vc(:) = ( 0.D0, 0.D0 )
-                 vc(exx_fft_r2g%nlt(igkt(1:exx_fft_r2g%npwt)))  =&
+                 vc(exx_fft_r2g%nlt(1:exx_fft_r2g%npwt))  =&
                       & fac(1:exx_fft_r2g%npwt) * rhoc(exx_fft_r2g&
-                      &%nlt(igkt(1:exx_fft_r2g%npwt))) 
-                 vc(exx_fft_r2g%nltm(igkt(1:exx_fft_r2g%npwt))) =&
+                      &%nlt(1:exx_fft_r2g%npwt)) 
+                 vc(exx_fft_r2g%nltm(1:exx_fft_r2g%npwt)) =&
                       & fac(1:exx_fft_r2g%npwt) * rhoc(exx_fft_r2g&
-                      &%nltm(igkt(1:exx_fft_r2g%npwt))) 
+                      &%nltm(1:exx_fft_r2g%npwt)) 
                  !brings back v in real space
                  CALL invfft ('CustomWave', vc, exx_fft_r2g%dfftt) 
               ENDIF
    
-
               vc = CMPLX( x1 * DBLE (vc), x2 * AIMAG(vc) ,kind=DP)/ nqs
 
               !accumulates over bands and k points
-!              result(1:nrxxs) = result(1:nrxxs) + &
-!                   DBLE( vc(1:nrxxs) * tempphic(1:nrxxs) )
-              prod_tot(:) = prod_tot(:) + DBLE( vc(:) * tempphic(:))
+              result(1:nrxxs) = result(1:nrxxs) + DBLE( vc(1:nrxxs) &
+                   &* tempphic(1:nrxxs))
            END DO
 
         ELSE
@@ -1255,29 +1249,21 @@ call flush_unit(stdout)
         END IF
      END DO
 
-
-     IF(gamma_only) THEN
-        CALL mp_sum( prod_tot(1:nrxxs), inter_bgrp_comm)
+     IF (noncolin) THEN
+        CALL mp_sum( result_nc(1:nrxxs,1:npol), inter_bgrp_comm)
      ELSE
-        IF (noncolin) THEN
-           CALL mp_sum( result_nc(1:nrxxs,1:npol), inter_bgrp_comm)
-        ELSE
-           CALL mp_sum( result(1:nrxxs), inter_bgrp_comm)
-        END IF
-     ENDIF
-
+        CALL mp_sum( RESULT(1:nrxxs), inter_bgrp_comm)
+     END IF
      !
      ! Was used for parallelization on images
      !       CALL mp_sum( result(1:nrxxs), inter_image_comm )
      !brings back result in G-space
         IF( gamma_only) THEN
-           CALL fwfft( 'CustomWave' , prod_tot, exx_fft_g2r%dfftt )
-           psic(1:exx_fft_g2r%npwt) = prod_tot(exx_fft_g2r&
-                &%nlt(igkt(1:exx_fft_g2r%npwt)))
-
-           result(:)=(0.d0,0.d0)
-           CALL exx_grid_convert(psic,npw, exx_fft_g2r, result, -1)
-           hpsi(1:npw,im)=hpsi(1:npw,im) - exxalfa*result(1:npw)
+           !
+           CALL fwfft( 'CustomWave' , result, exx_fft_g2r%dfftt )
+           !
+           hpsi(1:npw,im)=hpsi(1:npw,im) - exxalfa*result(exx_fft_g2r%nlt(1:npw))
+           !
         ELSE
            IF (noncolin) THEN
              !brings back result in G-space
@@ -1302,8 +1288,6 @@ call flush_unit(stdout)
   END IF
 
   DEALLOCATE (rhoc, vc, fac )
-
-  IF(gamma_only) DEALLOCATE( psi_t, prod_tot, igkt )
 
   CALL stop_clock ('vexx')
 
@@ -1484,19 +1468,11 @@ END SUBROUTINE g2_convolution
     real(DP) :: atws(3,3) 
     integer       :: find_current_k
 
-    COMPLEX(kind=DP), ALLOCATABLE :: psi_t(:), prod_tot(:)
-    INTEGER, ALLOCATABLE :: igkt(:)
-    INTEGER :: ngm_fft
-
     call start_clock ('exxen2')
 
     IF(gamma_only) THEN
        nrxxs= exx_fft_g2r%dfftt%nnr
-!       nrxxs = exx_fft_g2r%nrxxt
        ALLOCATE( fac(exx_fft_r2g%ngmt) )
-       ALLOCATE( psi_t( exx_fft_g2r%npwt ) )
-       ALLOCATE( prod_tot(exx_fft_g2r%nrxxt) )
-       ALLOCATE( igkt( exx_fft_g2r%ngmt ) )
     ELSE
        nrxxs = dffts%nnr
        ALLOCATE( fac(ngm) )
@@ -1536,13 +1512,13 @@ END SUBROUTINE g2_convolution
           temppsic(:) = ( 0.D0, 0.D0 )
        ENDIF
        IF(gamma_only) THEN
-          CALL exx_grid_convert( evc(:,jbnd), npw, exx_fft_g2r, psi_t,&
-            & 1, igkt )
+          !
           temppsic(exx_fft_g2r%nlt(1:exx_fft_g2r%npwt)) =&
-               & psi_t(1:exx_fft_g2r%npwt) 
+               & evc(1:exx_fft_g2r%npwt,jbnd) 
           temppsic(exx_fft_g2r%nltm(1:exx_fft_g2r%npwt)) =&
-               & CONJG(psi_t(1:exx_fft_g2r%npwt))
+               & CONJG(evc(1:exx_fft_g2r%npwt,jbnd))
           CALL invfft ('CustomWave', temppsic, exx_fft_g2r%dfftt)
+          !
        ELSE
           IF (noncolin) THEN
              temppsic_nc(nls(igk(1:npw)),1) = evc(1:npw,jbnd)
@@ -1618,9 +1594,9 @@ END SUBROUTINE g2_convolution
                       vc = 0.D0
                       DO ig=1,exx_fft_r2g%ngmt
                          vc = vc + fac(ig) * x1 * &
-                              ABS( rhoc(exx_fft_r2g%nlt(igkt(ig))) + CONJG(rhoc(exx_fft_r2g%nltm(igkt(ig)))) )**2
+                              ABS( rhoc(exx_fft_r2g%nlt(ig)) + CONJG(rhoc(exx_fft_r2g%nltm(ig))) )**2
                          vc = vc + fac(ig) * x2 * &
-                              ABS( rhoc(exx_fft_r2g%nlt(igkt(ig))) - CONJG(rhoc(exx_fft_r2g%nltm(igkt(ig)))) )**2
+                              ABS( rhoc(exx_fft_r2g%nlt(ig)) - CONJG(rhoc(exx_fft_r2g%nltm(ig))) )**2
                       END DO
                    ELSE
                       !brings it to G-space
@@ -1628,9 +1604,9 @@ END SUBROUTINE g2_convolution
                       vc = 0.D0
                       DO ig=1,exx_fft_r2g%npwt
                          vc = vc + fac(ig) * x1 * &
-                              ABS( rhoc(exx_fft_r2g%nlt(igkt(ig))) + CONJG(rhoc(exx_fft_r2g%nltm(igkt(ig)))) )**2
+                              ABS( rhoc(exx_fft_r2g%nlt(ig)) + CONJG(rhoc(exx_fft_r2g%nltm(ig))) )**2
                          vc = vc + fac(ig) * x2 * &
-                              ABS( rhoc(exx_fft_r2g%nlt(igkt(ig))) - CONJG(rhoc(exx_fft_r2g%nltm(igkt(ig)))) )**2
+                              ABS( rhoc(exx_fft_r2g%nlt(ig)) - CONJG(rhoc(exx_fft_r2g%nltm(ig))) )**2
                       END DO
                    ENDIF
                    vc = vc * omega * 0.25d0 / nqs
@@ -1678,7 +1654,6 @@ END SUBROUTINE g2_convolution
     ENDIF
 
     DEALLOCATE (rhoc, fac )
-    IF(gamma_only) DEALLOCATE( psi_t, prod_tot, igkt )
 !
 ! Was used for image parallelization
 !    call mp_sum( energy, inter_image_comm )

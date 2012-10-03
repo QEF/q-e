@@ -275,15 +275,15 @@
 
 !----------------------------------------------------------------------
 
-      SUBROUTINE pstickset_custom( gamma_only, bg, gcut, gkcut, &
-          dfftp, ngw, ngm, mype, root, nproc, comm, nogrp_ )
+      SUBROUTINE pstickset_custom( gamma_only, bg, gcut, gkcut, gcuts, &
+          dfftp, dffts, ngw, ngm, ngs, mype, root, nproc, comm, nogrp_ )
 
           LOGICAL, INTENT(in) :: gamma_only
 ! ...     bg(:,1), bg(:,2), bg(:,3) reciprocal space base vectors.
           REAL(DP), INTENT(in) :: bg(3,3)
-          REAL(DP), INTENT(in) :: gcut, gkcut
-          TYPE(fft_dlay_descriptor), INTENT(inout) :: dfftp
-          INTEGER, INTENT(out) :: ngw, ngm
+          REAL(DP), INTENT(in) :: gcut, gkcut, gcuts
+          TYPE(fft_dlay_descriptor), INTENT(inout) :: dfftp, dffts
+          INTEGER, INTENT(inout) :: ngw, ngm, ngs
 
           INTEGER, INTENT(IN) :: mype, root, nproc, comm
           INTEGER, INTENT(IN) :: nogrp_
@@ -379,7 +379,7 @@
 ! ...       Fill in the stick maps, for given g-space base and cut-off
 
           CALL sticks_maps( tk, ub, lb, bg(:,1), bg(:,2), bg(:,3), &
-                            gcut, gkcut, gcut, st, stw, sts, mype, &
+                            gcut, gkcut, gcuts, st, stw, sts, mype, &
                             nproc, comm )
 
 ! ...       Now count the number of stick nst and nstw
@@ -422,9 +422,9 @@
           CALL sticks_dist( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
              nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, nproc )
 
-          ngw = sstpw( mype + 1 )
-          ngm = sstp( mype + 1 )
-!          ngs = sstps( mype + 1 )
+!          ngw = sstpw( mype + 1 )
+!          ngm = sstp( mype + 1 )
+          ngs = sstps( mype + 1 )
 
           CALL sticks_pairup( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
              nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, nproc )
@@ -433,13 +433,13 @@
 
 #if defined __MPI
 
-          CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, nogrp_ , dfftp%nr1x,  dfftp%nr2x )
-!          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, nogrp_ , dffts%nr1x, dffts%nr2x )
+!          CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, nogrp_ , dfftp%nr1x,  dfftp%nr2x )
+          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, nogrp_ , dffts%nr1x, dffts%nr2x )
 
-          CALL fft_dlay_set( dfftp, tk, nst, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
-            ub, lb, idx, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
-!          CALL fft_dlay_set( dffts, tk, nsts, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, &
-!            ub, lb, idx, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
+!          CALL fft_dlay_set( dfftp, tk, nst, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
+!            ub, lb, idx, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
+          CALL fft_dlay_set( dffts, tk, nsts, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, &
+            ub, lb, idx, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
 
 #else
 
@@ -447,16 +447,16 @@
           ALLOCATE( stw( lb(2) : ub(2), lb(3) : ub(3) ) )
 
           CALL sticks_maps_scalar( (.not.tk), ub, lb, bg(:,1),bg(:,2),bg(:,3),&
-                                    gcut, gkcut, gcut, stw, ngm_ , ngs_ )
+                                    gcut, gkcut, gcuts, stw, ngm_ , ngs_ )
 
-          IF( ngm_ /= ngm ) CALL errore( ' pstickset_custom ', ' inconsistent ngm ', abs( ngm - ngm_ ) )
-!          IF( ngs_ /= ngs ) CALL errore( ' pstickset_custom ', ' inconsistent ngs ', abs( ngs - ngs_ ) )
+!          IF( ngm_ /= ngm ) CALL errore( ' pstickset_custom ', ' inconsistent ngm ', abs( ngm - ngm_ ) )
+          IF( ngs_ /= ngs ) CALL errore( ' pstickset_custom ', ' inconsistent ngs ', abs( ngs - ngs_ ) )
 
-          CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, 1, max(dfftp%nr1x, dfftp%nr3x),  dfftp%nr2x  )
-!          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, 1, max(dffts%nr1x, dffts%nr3x), dffts%nr2x )
+!          CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, 1, max(dfftp%nr1x, dfftp%nr3x),  dfftp%nr2x  )
+          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, 1, max(dffts%nr1x, dffts%nr3x), dffts%nr2x )
 
-          CALL fft_dlay_scalar( dfftp, ub, lb, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, stw )
-!          CALL fft_dlay_scalar( dffts, ub, lb, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, stw )
+!          CALL fft_dlay_scalar( dfftp, ub, lb, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, stw )
+          CALL fft_dlay_scalar( dffts, ub, lb, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, stw )
 
 #endif
 
