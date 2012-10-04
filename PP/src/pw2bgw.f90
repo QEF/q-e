@@ -2536,7 +2536,7 @@ subroutine check_inversion(real_or_complex, ntran, mtrx, nspin, warn, real_need_
   enddo
 
   if(real_or_complex .eq. 2) then
-    if(invflag .ne. 0 .and. warn) then
+    if(invflag .ne. 0 .and. warn .and. nspin == 1) then
       if(ionode) write(6, '(a)') 'WARNING: Inversion symmetry is present. The real version would be faster.'
     endif
   else
@@ -2551,7 +2551,7 @@ subroutine check_inversion(real_or_complex, ntran, mtrx, nspin, warn, real_need_
     endif
     if(nspin .eq. 2) then
       call errore('check_inversion', &
-        'Time-reversal symmetry is absent in spin-polarized calculation. Complex version must be used.', -2)
+        'Real version may only be used for spin-unpolarized calculations.', nspin)
     endif
   endif
 
