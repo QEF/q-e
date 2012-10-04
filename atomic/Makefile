@@ -15,9 +15,9 @@ clean : examples_clean
 
 examples_clean:
 	if test -d examples ; then \
-	( cd examples ; make_clean ) ; fi 
+	( cd examples ; ./make_clean ) ; fi 
 	if test -d pseudo_library ; then \
-	( cd pseudo_library ; make_clean ) ; fi 
+	( cd pseudo_library ; ./make_clean ) ; fi 
 
 doc:
 	if test -d Doc ; then \
