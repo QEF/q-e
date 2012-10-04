@@ -1,6 +1,11 @@
 
 This example illustrates how to calculate electron-phonon interaction
-coefficients, for a (444) Monkhorst-Pack (MP) grid of q-points, in fcc Al.
+c oefficients, for a (444) Monkhorst-Pack (MP) grid of q-points, in fcc Al.
+
+IMPORTANT NOTICE: the calculation of electron-phonon coefficients is tricky.
+Do not attempt it unless you have a clear idea of the technical problems
+(e.g. very slow convergence with k-point grid,, divergence at q=>0 for optical
+modes). Carefully read the relevant literature first.
 
 The calculation proceeds as follows (for the meaning of the cited input
 variables see the appropriate INPUT_* file)
