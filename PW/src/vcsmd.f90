@@ -103,6 +103,7 @@ SUBROUTINE vcsmd()
            tempo, time_au
   CHARACTER(LEN=3) :: ios          ! status (old or new) for I/O files
   CHARACTER(LEN=6) :: ipos         ! status ('append' or 'asis') for I/O files
+  CHARACTER(LEN=80):: calc_long    ! Verbose description of type of calculation
   LOGICAL :: exst
   INTEGER, SAVE :: idone = 0
     ! counter on completed moves on this run
@@ -177,118 +178,63 @@ SUBROUTINE vcsmd()
   idone = idone + 1
   istep = istep + 1
   !
-  ! ... check if convergence for structural minimization is achieved
-  !
-  IF ( calc == 'mm' ) THEN
-     !
-     conv_ions = ( eold - etot ) < epse
-     !
-     DO i = 1, 3
-        DO na = 1, nat
-           conv_ions = conv_ions .AND. ( ABS( force(i,na) ) < epsf )
-        END DO
-     END DO
-     !
-     IF ( conv_ions ) THEN
-        !
-        WRITE( UNIT = stdout, &
-               FMT = '(/,5X,"Damped Dynamics: convergence achieved, Efinal=", &
-                      &F15.8)' ) etot
-        !
-     ELSE IF ( idone == nstep ) THEN
-        !
-        WRITE( UNIT = stdout, &
-               FMT = '(/,5X,"Damped Dynamics: ",i4," iterations ", &
-                    &       "completed, stopping")' ) nstep
-        !
-        conv_ions = .TRUE.
-        !
-     END IF
-     ! 
-     IF ( conv_ions) THEN
-        !
-        CALL output_tau( .TRUE., .TRUE. )
-        RETURN
-        !
-     END IF
-     !
-  ELSE IF ( calc == 'nm' .OR. calc == 'cm' ) THEN
-     !
-     conv_ions = ( eold - etot ) < epse
-     !
-     DO i = 1, 3
-        DO na = 1, nat
-           conv_ions = conv_ions .AND. ( ABS( force(i,na) ) < epsf )
-        END DO
-     END DO
-     !
-     DO i = 1, 3
-        !
-        conv_ions = conv_ions .AND. &
-             ( ABS( sigma(i,i) - press ) * ry_kbar * iforceh(i,i) < epsp )
-        !
-        DO j = ( i + 1 ), 3
-           conv_ions = conv_ions .AND. &
-             ( ABS( sigma(i,j) ) * ry_kbar * iforceh(i,j) < epsp )
-        END DO
-        !
-     END DO
-     !
-     IF ( conv_ions ) THEN
-        !
-        IF ( calc == 'cm' ) &
-           WRITE( UNIT = stdout, &
-                  FMT = '(/5X,"Parrinello-Rahman Damped Dynamics: ", &
-                            & "convergence achieved, Efinal=", F15.8)' ) etot
-        IF ( calc == 'nm' ) &
-           WRITE( UNIT = stdout, &
-                  FMT = '(/5X,"Wentzcovitch Damped Dynamics: ", &
-                            & "convergence achieved, Efinal=", F15.8)' ) etot
-        !
-     ELSE IF ( idone == nstep ) THEN
-        !
-        IF ( calc == 'cm' ) &
-           WRITE( UNIT = stdout, &
-               FMT = '(/,5X,"P-R Damped Dynamics: ",i4," iterations ", &
-                     &      "completed, stopping")' ) nstep
-        IF ( calc == 'nm' ) &
-           WRITE( UNIT = stdout, &
-               FMT = '(/,5X,"Wentzcovitch Damped Dynamics: ",i4," iterations",&
-                     &     " completed, stopping")' ) nstep
-        !
-        conv_ions = .TRUE.
-        !
-     END IF
-     !
-     IF ( conv_ions ) THEN
-        !                    
-        WRITE( UNIT = stdout, &
-               FMT = '(/72("-")//5X,"Final estimate of lattice vectors ", &
-                                  & "(input alat units)")' )
-        WRITE( UNIT = stdout, &
-               FMT =  '(3F14.9)') ( ( at(i,k) , i = 1, 3 ) , k = 1, 3 )
-        WRITE( UNIT = stdout, &
-               FMT =  '("  final unit-cell volume =",F12.4," (a.u.)^3")') omega
-        WRITE( UNIT = stdout, &
-               FMT =  '("  input alat = ",F12.4," (a.u.)")') alat
-        !
-        CALL output_tau( .TRUE., .TRUE. )
-        !
-        RETURN
-        !
-     END IF
-     !
-  ELSE IF ( idone == nstep ) THEN
-     !
-     ! ... for all other cases, check if max number of steps reached
-     !
-     WRITE( UNIT = stdout, &
-            FMT = '(/,5X,"Variable-cell Dynamics: ",i4," iterations ", &
-                  &      "completed, stopping")' ) nstep
-     conv_ions = .TRUE.
-     !
+  IF ( calc == 'cm' ) THEN
+     calc_long="Parrinello-Rahman Damped Cell Dynamics Minimization: "
+  ELSE IF ( calc == 'nm' ) THEN
+     calc_long="Wentzcovitch Damped Cell Dynamics Minimization: "
+  ELSE IF ( calc == 'mm' ) THEN
+     calc_long="Beeman Damped Dynamics Minimization: "
+  ELSE IF ( calc == 'cd' ) THEN
+     calc_long="Parrinello-Rahman Cell Dynamics: "
+  ELSE IF ( calc == 'nd' ) THEN
+     calc_long="Wentzcovitch Cell Dynamics: "
+  ELSE IF ( calc == 'md' ) THEN
+     calc_long="Beeman Dynamics: "
   END IF
   !
+  conv_ions = .FALSE.
+  IF ( calc(2:2) == 'm' ) THEN
+     !
+     ! ... check if convergence for structural minimization is achieved
+     !
+     conv_ions = ( (eold - etot) < epse ) .AND. ALL(ABS(force(:,1:nat)) < epsf)
+     !
+     IF ( lmovecell ) THEN
+        DO i = 1, 3
+           conv_ions = conv_ions .AND. &
+              ( ABS( sigma(i,i) - press ) * ry_kbar * iforceh(i,i) < epsp )
+           DO j = ( i + 1 ), 3
+              conv_ions = conv_ions .AND. &
+              ( ABS( sigma(i,j) ) * ry_kbar * iforceh(i,j) < epsp )
+           END DO
+        END DO
+     END IF
+     !
+     IF ( conv_ions ) THEN
+        !
+        WRITE( UNIT = stdout, FMT = '(/,5X,A,/,5X,"convergence achieved, ",&
+                &  "Efinal=", F15.8)' ) TRIM(calc_long), etot
+        !
+        IF ( lmovecell ) THEN
+           WRITE( UNIT = stdout, &
+               FMT = '(/72("-")//5X,"Final estimate of lattice vectors ", &
+                               & "(input alat units)")' )
+           WRITE( UNIT = stdout, &
+               FMT =  '(3F14.9)') ( ( at(i,k) , i = 1, 3 ) , k = 1, 3 )
+           WRITE( UNIT = stdout, &
+               FMT =  '("  final unit-cell volume =",F12.4," (a.u.)^3")') omega
+           WRITE( UNIT = stdout, &
+               FMT =  '("  input alat = ",F12.4," (a.u.)")') alat
+        END IF
+        !
+        CALL output_tau( lmovecell, .TRUE. )
+        !
+        RETURN
+        !
+     END IF
+     !
+  END IF
+  ! 
   tauold(:,:,1) = tau(:,:)
   !
   time_au = 0.0000242d0 * e2
@@ -297,18 +243,9 @@ SUBROUTINE vcsmd()
   !
   IF ( istep == 1 ) THEN
      !
-     IF ( calc == 'mm' ) THEN
-        WRITE( stdout,'(/5X,"Damped Dynamics Minimization",/5X, &
-             & "convergence thresholds: EPSE = ",E8.2,"  EPSF = ",E8.2)' ) &
-               epse, epsf
-     ELSE IF ( calc == 'cm' ) THEN
-        WRITE( stdout,'(/5X,"Parrinello-Rahman Damped Cell-Dynamics", &
-             & " Minimization", /5X, "convergence thresholds: EPSE = ", &
-             & E8.2,"  EPSF = ", E8.2,"  EPSP = ",E8.2 )' ) epse, epsf, epsp
-     ELSE IF ( calc == 'nm' ) THEN
-        WRITE( stdout,'(/5X,"Wentzcovitch Damped Cell-Dynamics Minimization", &
-             & /5x, "convergence thresholds: EPSE = ",E8.2,"  EPSF = ",E8.2, &
-             & "  EPSP = ",E8.2 )' ) epse, epsf, epsp
+     IF ( calc(2:2) == 'm' ) THEN
+        WRITE( stdout,'(/5X,A,/,5x,"convergence thresholds EPSE = ",E8.2, &
+             &  "  EPSF = ",E8.2)' ) TRIM(calc_long), epse, epsf
      END IF
      !
   END IF
@@ -381,9 +318,9 @@ SUBROUTINE vcsmd()
   !
   pv = p * omega
   !
-  IF ( calc /= 'mm' .AND. calc /= 'nm' .AND. calc /= 'cm' ) THEN
+  IF ( calc(2:2) == 'd' ) THEN
      !
-     ! ... write on output files several control quantities
+     ! ... Dynamics: write to output files several control quantities
      !
      ! ... NB: at the first iteration files should not be present,
      ! ...     for subsequent iterations they should.
@@ -474,13 +411,12 @@ SUBROUTINE vcsmd()
   WRITE( stdout, '(/5X,"Ekin = ",F14.8," Ry    T = ",F6.1," K ", &
        &       " Etot = ",F14.8)') ekint, tnew, edyn + e_start
   !
-  ! for vcsmd with constraints
   CALL cryst_to_cart( nat, force, at, 1 )
-  !
   force = force*alat
-  ! 
   !
   CALL output_tau( lmovecell, .FALSE. )
+  !
+  ! ... for vcsmd with constraints
   !
   IF ( lconstrain ) THEN
      !
@@ -507,7 +443,7 @@ SUBROUTINE vcsmd()
      !
   END IF
   !
-  ! ... save MD history on file
+  ! ... save MD history to file
   !
   CALL seqopn( 4, 'md', 'FORMATTED', exst )
   !
@@ -519,9 +455,13 @@ SUBROUTINE vcsmd()
   !
   CLOSE( UNIT = 4, STATUS = 'KEEP' )
   !
-  ! ... Deallocate
-  !
   DEALLOCATE( amass_, rat, rati, ratd, rat2d, rat2di, tauold )
+  !
+  ! ... check if max number of steps achieved
+  !
+  conv_ions = ( idone == nstep ) 
+  IF ( conv_ions ) WRITE( UNIT = stdout, FMT = '(/,5X,A,i4," iterations ", &
+                 &    "completed, stopping")' ) TRIM(calc_long),nstep
   !
   RETURN
   !
