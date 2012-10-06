@@ -6,17 +6,17 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-logical function eqvect (x, y, f)
+logical function eqvect (x, y, f, accep )
   !-----------------------------------------------------------------------
   !
   !   This function test if the difference x-y-f is an integer.
   !   x, y = 3d vectors in crystal axis, f = fractionary translation
   !
   USE kinds
+!  USE symm_base,   ONLY: acc_fct
   implicit none
-  real(DP), intent(in) :: x (3), y (3), f (3)
-  !
-  real(DP), parameter :: accep = 1.0d-5 ! acceptance parameter
+  real(DP), intent(in) :: x (3), y (3), f (3), accep
+!  real(DP) :: accep = 1.0d-5 ! acceptance parameter
   !
   eqvect = abs( x(1)-y(1)-f(1) - nint(x(1)-y(1)-f(1)) ) < accep .and. &
            abs( x(2)-y(2)-f(2) - nint(x(2)-y(2)-f(2)) ) < accep .and. &

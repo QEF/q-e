@@ -17,6 +17,8 @@ subroutine check_atoms (nvec, vec, trmat)
   USE kinds
   implicit none
   !
+  real(DP), parameter :: accep=1.d-5
+  !
   integer, intent(in) :: nvec
   ! nvec : number of atomic positions (or k-points)
   real(DP), intent(in) :: vec (3, nvec), trmat (3, 3)
@@ -41,7 +43,7 @@ subroutine check_atoms (nvec, vec, trmat)
   !
   do nv1 = 1, nvec-1
      do nv2 = nv1+1, nvec
-        if ( eqvect ( vaux (1,nv1), vaux (1,nv2), zero ) ) then
+        if ( eqvect ( vaux (1,nv1), vaux (1,nv2), zero, accep ) ) then
            write (message,'("atoms #",i4," and #",i4," overlap!")') nv1, nv2
            call errore ( 'check_atoms', message, 1)
         end if

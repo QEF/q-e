@@ -90,6 +90,8 @@ subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
   USE kinds, ONLY : DP
   implicit none
 
+  real(DP), parameter :: accep = 1.e-5_dp
+
   real(DP), intent(in) :: bg (3, 3), at (3, 3), xq (3)
   ! input: the reciprocal lattice vectors
   ! input: the direct lattice vectors
@@ -150,7 +152,7 @@ subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
            raq(ipol) = raq(ipol) + DBLE( s(ipol,jpol,irot) ) * aq( jpol)
         enddo
      enddo
-     sym (irot) = eqvect (raq, aq, zero)
+     sym (irot) = eqvect (raq, aq, zero, accep)
      !
      !  if "iswitch.le.-3" (modenum.ne.0) S must be such that Sq=q exactly !
      !
@@ -163,7 +165,7 @@ subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
         ! l'istruzione "originale" in kreductor era la seguente...
         !         if (.not. minus_q) then
         raq = - raq
-        minus_q = eqvect (raq, aq, zero)
+        minus_q = eqvect (raq, aq, zero, accep)
      endif
 100  continue
   enddo

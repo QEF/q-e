@@ -31,6 +31,7 @@ subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
   USE kinds, only : DP
   implicit none
 
+  real(DP), parameter :: accep=1.e-5_dp
   real(DP) :: bg (3, 3), at (3, 3), xq (3), gi (3, 48), gimq (3)
   ! input: the reciprocal lattice vectors
   ! input: the direct lattice vectors
@@ -86,7 +87,7 @@ subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
                 aq (jpol)
         enddo
      enddo
-     if (eqvect (raq, aq, zero) ) then
+     if (eqvect (raq, aq, zero, accep) ) then
         nsymq = nsymq + 1
         irgq (nsymq) = isym
         do ipol = 1, 3
@@ -99,7 +100,7 @@ subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
         !
         if (look_for_minus_q.and..not.minus_q) then
            raq (:) = - raq(:)
-           if (eqvect (raq, aq, zero) ) then
+           if (eqvect (raq, aq, zero, accep) ) then
               minus_q = .true.
               irotmq = isym
               do ipol = 1, 3

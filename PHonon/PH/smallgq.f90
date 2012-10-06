@@ -20,6 +20,8 @@ subroutine set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
   USE control_ph, ONLY : lgamma
   implicit none
 
+  REAL(DP), PARAMETER :: accep=1.e-5_dp
+
   real(DP), INTENT(IN) :: xq (3)
   ! input: the q point 
   real(DP), INTENT(OUT) ::gi (3, 48), gimq (3)
@@ -72,7 +74,7 @@ subroutine set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
                 aq (jpol)
         enddo
      enddo
-     if (.NOT. eqvect (raq, aq, zero) ) CALL errore('set_giq',&
+     if (.NOT. eqvect (raq, aq, zero, accep) ) CALL errore('set_giq',&
                             'problems with the input group',1)
      do ipol = 1, 3
         wrk (ipol) = raq (ipol) - aq (ipol)
@@ -81,7 +83,7 @@ subroutine set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
      gi (:, isym) = wrk (:)
      IF (irotmq == 0) THEN
         raq=-raq
-        IF (eqvect (raq, aq, zero)) THEN
+        IF (eqvect (raq, aq, zero, accep)) THEN
            irotmq=isym
            wrk = aq - raq 
            call cryst_to_cart (1, wrk, bg, 1)
@@ -102,7 +104,7 @@ subroutine set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
            enddo
         enddo
         raq=-raq
-        if (eqvect (raq, aq, zero) ) then
+        if (eqvect (raq, aq, zero, accep) ) then
            wrk = aq - raq 
            call cryst_to_cart (1, wrk, bg, 1)
            gimq (:) = wrk (:)

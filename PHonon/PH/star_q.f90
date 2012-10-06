@@ -16,6 +16,8 @@ subroutine star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity )
   USE kinds, only : DP
   implicit none
   !
+  real(DP), parameter :: accep=1.e-5_dp
+
   integer, intent(in) :: nsym, s (3, 3, 48), invs(48)
   ! nsym matrices of symmetry operations
   ! invs: list of inverse operation indices
@@ -77,7 +79,7 @@ subroutine star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity )
                     + bg (i, 3) * raq (3)
      enddo
      do iq = 1, nq
-        if (eqvect (raq, saq (1, iq), zero) ) then
+        if (eqvect (raq, saq (1, iq), zero, accep) ) then
            isq (isym) = iq
            nsq (iq) = nsq (iq) + 1
         endif
@@ -100,7 +102,7 @@ subroutine star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity )
   raq (:) = - aq(:)
   imq = 0
   do iq = 1, nq
-     if (eqvect (raq, saq (1, iq), zero) ) imq = iq
+     if (eqvect (raq, saq (1, iq), zero, accep) ) imq = iq
      if (nsq(iq)*nq /= nsym) call errore ('star_q', 'wrong degeneracy', iq)
   enddo
   !

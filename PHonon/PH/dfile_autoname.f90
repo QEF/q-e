@@ -109,7 +109,7 @@ FUNCTION scan_dfile_directory(iunit, xq, at, found, equiv)
     ! CALL cryst_to_cart (1,ap,at,-1)
     !
     IF (equiv_) THEN
-      IF (eqvect(aq,ap,gam) .and. ios==0) THEN
+      IF (eqvect(aq,ap,gam,accept) .and. ios==0) THEN
         found=.true.
         scan_dfile_directory = TRIM(ADJUSTL(xp_name))
         EXIT SCAN_FILE

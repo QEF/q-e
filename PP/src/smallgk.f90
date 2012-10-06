@@ -16,6 +16,7 @@ SUBROUTINE smallgk (xk, at, bg, s, ftau, t_rev, sname, nsym, sk, ftauk, gk, &
 !
 USE kinds, ONLY : DP
 IMPLICIT NONE
+REAL(DP), PARAMETER :: accep=1.d-5
 CHARACTER(len=45) :: snamek(48), sname(48)
 
 REAL(DP) :: bg (3, 3), at (3, 3), xk (3)
@@ -64,8 +65,8 @@ INTEGER :: s (3, 3, 48), ftau(3,48), t_rev(48), nsym, sk (3, 3, 48), &
                 ak (jpol)
         ENDDO
      ENDDO
-     IF ((t_rev(isym)==0 .and. eqvect(rak, ak, zero)) .or. &
-         (t_rev(isym)==1 .and. eqvect(rak, -ak, zero)) ) THEN
+     IF ((t_rev(isym)==0 .and. eqvect(rak, ak, zero,accep)) .or. &
+         (t_rev(isym)==1 .and. eqvect(rak, -ak, zero,accep)) ) THEN
         nsymk=nsymk+1
         sk(:,:,nsymk)=s(:,:,isym)
         ftauk(:,nsymk)=ftau(:,isym)

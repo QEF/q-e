@@ -16,7 +16,7 @@ MODULE symm_base
   ! ... and the routines to find crystal symmetries
   !  
   ! ... these are acceptance criteria
-  !
+  ! 
   REAL(DP), parameter :: eps1 = 1.0d-6, eps2 = 1.0d-5
   !
   SAVE
@@ -27,7 +27,7 @@ MODULE symm_base
   !
   PUBLIC :: s, sr, sname, ft, ftau, nrot, nsym, nsym_ns, nsym_na, t_rev, &
             no_t_rev, time_reversal, irt, invs, invsym, d1, d2, d3, &
-            allfrac, nofrac, nosym, nosym_evc
+            allfrac, nofrac, nosym, nosym_evc, acc_fct
   INTEGER :: &
        s(3,3,48),            &! symmetry matrices, in crystal axis
        invs(48),             &! index of inverse operation: S^{-1}_i=S(invs(i))
@@ -39,7 +39,10 @@ MODULE symm_base
                               ! fract. transl. is noncommensurate with FFT grid
   REAL (DP) :: &
        ft (3,48),            &! fractional translations, in crystal axis
-       sr (3,3,48)            ! symmetry matrices, in cartesian axis
+       sr (3,3,48),          &! symmetry matrices, in cartesian axis
+       acc_fct =1.d0,        &! acceptance reducing factor for checksym functions   
+       accep = 1.0d-5         ! initial value of the acceptance threshold for position comparison 
+                              ! by eqvect in checksym
   !
   ! ... note: ftau are used for symmetrization in real space (phonon, exx)
   ! ... in which case they must be commensurated with the FFT grid
@@ -319,6 +322,7 @@ SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, magnetic_sym, m_loc )
   real(DP), intent(in) :: tau (3,nat), m_loc(3,nat)
   logical, intent(in) :: magnetic_sym
   !
+  integer :: i
   logical :: sym (48)
   ! if true the corresponding operation is a symmetry operation
   !
@@ -327,28 +331,38 @@ SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, magnetic_sym, m_loc )
   !
   !    Here we find the true symmetries of the crystal
   !
-  CALL sgam_at ( nat, tau, ityp, nr1, nr2, nr3, sym )
-  !
-  !    Here we check for magnetic symmetries
-  !
-  IF ( magnetic_sym ) CALL sgam_at_mag ( nat, m_loc, sym )
-  !
-  !  If nosym_evc is true from now on we do not use the symmetry any more
-  !
-  IF (nosym_evc) THEN
-     sym=.false.
-     sym(1)=.true.
-  ENDIF
-  !
-  !    Here we re-order all rotations in such a way that true sym.ops 
-  !    are the first nsym; rotations that are not sym.ops. follow
-  !
-  nsym = copy_sym ( nrot, sym )
-  !
-  IF ( .not. is_group ( ) ) THEN
-     CALL infomsg ('find_sym', 'Not a group! symmetry disabled')
-     nsym = 1
-  END IF
+  symm: DO i=1,3 !emine: if it is not resolved in 3 steps it is sth else?
+    CALL sgam_at ( nat, tau, ityp, nr1, nr2, nr3, sym )
+    !
+    !    Here we check for magnetic symmetries
+    !
+    IF ( magnetic_sym ) CALL sgam_at_mag ( nat, m_loc, sym )
+    !
+    !  If nosym_evc is true from now on we do not use the symmetry any more
+    !
+    IF (nosym_evc) THEN
+       sym=.false.
+       sym(1)=.true.
+    ENDIF
+    !
+    !    Here we re-order all rotations in such a way that true sym.ops 
+    !    are the first nsym; rotations that are not sym.ops. follow
+    !
+    nsym = copy_sym ( nrot, sym )
+    !
+    IF ( .not. is_group ( ) ) THEN
+       CALL infomsg ('find_sym', 'Not a group! Trying with lower acceptance parameter')
+       accep = accep * 0.5d0
+       IF(i==3) THEN
+         CALL infomsg ('find_sym', 'Still not a group! symmetry disabled')
+         nsym = 1
+       ENDIF
+       CYCLE symm
+    ELSE
+       CALL infomsg ('find_sym', 'Symmetry op.s form a group' )
+       EXIT symm
+    END IF
+  END DO symm 
   !
   ! check if inversion (I) is a symmetry.
   ! If so, it should be the (nsym/2+1)-th operation of the group
@@ -784,7 +798,7 @@ logical function checksym ( irot, nat, ityp, xau, rau, ft_ )
   do na = 1, nat
      do nb = 1, nat
         checksym = ( ityp (na) == ityp (nb) .and. &
-                     eqvect (rau (1, na), xau (1, nb), ft_) )
+                     eqvect (rau (1, na), xau (1, nb), ft_ , accep) )
         if ( checksym ) then
            !
            ! the rotated atom does coincide with one of the like atoms
