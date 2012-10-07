@@ -79,14 +79,14 @@ MODULE input
      !-------------------------------------------------------------------------
      !
      USE control_flags,      ONLY : fix_dependencies, lconstrain
-     USE io_global,          ONLY : meta_ionode, stdout
+     USE io_global,          ONLY : ionode, stdout
      USE ions_base,          ONLY : nat, tau, ityp
      USE constraints_module, ONLY : init_constraint
      !
      IMPLICIT NONE
      !
      !
-     IF ( meta_ionode ) THEN
+     IF ( ionode ) THEN
         !
         WRITE( UNIT = stdout, &
                FMT = "(//,3X,'Main Simulation Parameters (from input)',/ &
@@ -990,14 +990,14 @@ MODULE input
     USE control_flags,      ONLY: nbeg, iprint, ndr, ndw, nomore
     USE time_step,          ONLY: delt
     USE cp_electronic_mass, ONLY: emass, emass_cutoff
-    USE io_global,          ONLY: meta_ionode, stdout
+    USE io_global,          ONLY: ionode, stdout
 
     IMPLICIT NONE
 
     IF( .NOT. has_been_read ) &
       CALL errore( ' iosys ', ' input file has not been read yet! ', 1 )
 
-    IF( meta_ionode ) THEN
+    IF( ionode ) THEN
       WRITE( stdout, 500) nbeg, restart_mode, nomore, iprint, ndr, ndw
       WRITE( stdout, 505) delt
       WRITE( stdout, 510) emass
@@ -1037,7 +1037,7 @@ MODULE input
     USE cell_nose,            ONLY: cell_nose_info
     USE cell_base,            ONLY: frich
     USE efield_module,        ONLY: tefield, efield_info, tefield2, efield_info2
-    USE io_global,            ONLY: meta_ionode, stdout
+    USE io_global,            ONLY: ionode, stdout
     USE time_step,            ONLY: delt
     !
     !
@@ -1048,7 +1048,7 @@ MODULE input
     IF( .NOT. has_been_read ) &
       CALL errore( ' iosys ', ' input file has not been read yet! ', 1 )
 
-    IF( meta_ionode ) THEN
+    IF( ionode ) THEN
       !
       CALL cutoffs_print_info( )
       !
