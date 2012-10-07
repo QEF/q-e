@@ -39,7 +39,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
                                  time_reversal, sname, d1, d2, d3, &
                                  copy_sym, s_axis_to_cart
   USE wvfct,              ONLY : nbnd, nbndx
-  USE control_flags,      ONLY : ethr, isolve, david, &
+  USE control_flags,      ONLY : ethr, isolve, david, max_cg_iter, &
                                  noinv, modenum, use_para_diag
   USE el_phon,            ONLY : elph_mat
   USE mp_global,          ONLY : kunit
@@ -67,11 +67,12 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   !
   ethr= 1.0D-9 / nelec
   !
-  ! ... variables for iterative diagonalization (Davidson is assumed)
-  !
+  ! ... variables for iterative diagonalization
+  ! ... Davdson: isolve=0, david=4 ; CG: isolve=1, david=1
   isolve = 0
-  david = 4
+  david  = 4
   nbndx = david*nbnd
+  max_cg_iter=20
   natomwfc = n_atom_wfc( nat, ityp, noncolin )
   !
 #ifdef __MPI
