@@ -108,23 +108,19 @@ MODULE mp_global
 CONTAINS
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE mp_startup ( )
+  SUBROUTINE mp_startup ( start_images )
     !-----------------------------------------------------------------------
-    ! ... This subroutine initializes MPI
-    ! ... Processes are organized in NIMAGE images each dealing with a subset of
-    ! ... images used to discretize the "path" (only in "path" optimizations)
-    ! ... Within each image processes are organized in NPOOL pools each dealing
-    ! ... with a subset of kpoints.
-    ! ... Within each pool R & G space distribution is performed.
-    ! ... NPROC is read from command line or can be set with the appropriate
-    ! ... environment variable ( for example use 'setenv MP_PROCS 8' on IBM SP
-    ! ... machine to run on NPROC=8 processors ); NIMAGE and NPOOL are read from
-    ! ... command line.
-    ! ... NPOOL must be a whole divisor of NPROC
+    ! ... This wrapper subroutine initializes MPI
+    ! ... If option with_images=.true., processes are organized into images,
+    ! ... each of which performing a quasi-indipendent calculation, uch as
+    ! ... a point in configuration space (NEB) or a phonon irrep (PHonon)
+    ! ... Within each image processes are further subdivided into various
+    ! ... groups and parallelization levels
     !
     IMPLICIT NONE
-    INTEGER :: world, nproc_ortho_in = 0
-    INTEGER :: root = 0
+    LOGICAL, INTENT(IN), OPTIONAL :: start_images
+    INTEGER :: world, nproc_ortho_in = 0, root = 0
+    LOGICAL :: do_images
     !
     !
     ! ... get the basic parameters from communications sub-system
@@ -135,149 +131,56 @@ CONTAINS
     !
     CALL mp_start( nproc, mpime, world )
     !
+    ! ... for compatibility: initialize images
+    !
+    meta_ionode = ( mpime == root )
+    meta_ionode_id = root
+    do_images = PRESENT(start_images) 
+    IF ( do_images ) do_images = start_images
+    IF ( do_images ) THEN
+       !
+       ! ... get nimage from command line
+       !
+       IF ( meta_ionode ) THEN
+          !
+          CALL get_arg_nimage( nimage )
+          nimage = MAX( nimage, 1 )
+          nimage = MIN( nimage, nproc )
+          !
+       END IF
+       CALL mp_barrier(world)
+       CALL mp_bcast( nimage, meta_ionode_id )
+    ELSE
+       nimage = 1
+    END IF
+    !
+    CALL init_images ( world )
     !
     ! ... now initialize processors and groups variables
     ! ... set global coordinate for this processor
     ! ... root  = index of the root processor
     !
-    CALL mp_global_start( root, mpime, world, nproc )
-    !
-    ! ... initialize input/output, set (and get) the I/O nodes
-    !
-    CALL io_global_start( mpime, root )
-    !
-    meta_ionode = ( mpime == root )
-    meta_ionode_id = root
-    !
-    IF ( meta_ionode ) THEN
-       !
-       ! ... How many parallel images ?
-       !
-       CALL get_arg_nimage( nimage )
-       !
-       nimage = MAX( nimage, 1 )
-       nimage = MIN( nimage, nproc )
-       !
-       ! ... How many parallel pots ?
-       !
-       CALL get_arg_npot( npot )
-       !
-       npot = MAX( npot, 1 )
-       npot = MIN( npot, nproc )
-       !
-       ! ... How many band groups?
-       !
-       CALL get_arg_nbgrp( nbgrp )
-       !
-       nbgrp = MAX( nbgrp, 1 )
-       nbgrp = MIN( nbgrp, nproc )
-       !
-       ! ... How many k-point pools ?
-       !
-       CALL get_arg_npool( npool )
-       !
-       npool = MAX( npool, 1 )
-       npool = MIN( npool, nproc )
-       !
-       ! ... How many task groups ?
-       !
-       CALL get_arg_ntg( ntask_groups )
-       !
-       ! ... How many processors involved in diagonalization of Hamiltonian ?
-       !
-       CALL get_arg_northo( nproc_ortho_in )
-       !
-       ! ... nproc_ortho_in = 0 if no command-line option -ndiag or -northo
-       ! ... nproc_ortho_in = N if -ndiag N or -northo N comm-line opt present
-       !
-    END IF
-    !
-    CALL mp_barrier()
-    !
-    ! ... broadcast input parallelization options to all processors
-    !
-    CALL mp_bcast( npool,  meta_ionode_id )
-    CALL mp_bcast( nimage, meta_ionode_id )
-    CALL mp_bcast( nbgrp, meta_ionode_id )
-    CALL mp_bcast( ntask_groups, meta_ionode_id )
-    CALL mp_bcast( nproc_ortho_in, meta_ionode_id )
-    CALL mp_bcast( npot, meta_ionode_id )
-    !
-    ! ... initialize images, band, k-point, ortho groups in sequence
-    !
-    CALL init_images( world_comm )
-    !
-    CALL init_pots(intra_image_comm)
-    !
-    CALL init_pools( intra_pot_comm )
-    !
-    CALL init_bands( intra_pool_comm )
-    !
-    CALL init_ortho( nproc_ortho_in, intra_bgrp_comm )
-    !
+    CALL mp_startup_new (root_image, intra_image_comm ) 
     !
     RETURN
     !
   END SUBROUTINE mp_startup
-  !
-  !-----------------------------------------------------------------------
-  SUBROUTINE mp_global_start( root_i, mpime_i, group_i, nproc_i )
-    !-----------------------------------------------------------------------
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(IN) :: root_i, mpime_i, group_i, nproc_i
-    !
-    root             = root_i
-    mpime            = mpime_i
-    world_comm       = group_i
-    nproc            = nproc_i
-    nproc_pool       = nproc_i
-    nproc_image      = nproc_i
-    nproc_bgrp       = nproc_i
-    my_pool_id       = 0
-    my_image_id      = 0
-    my_bgrp_id       = 0
-    me_pool          = mpime
-    me_image         = mpime
-    me_bgrp          = mpime
-    root_pool        = root
-    root_image       = root
-    root_bgrp        = root
-    inter_pool_comm  = group_i
-    intra_pool_comm  = group_i
-    inter_image_comm = group_i
-    intra_image_comm = group_i
-    inter_bgrp_comm  = group_i
-    intra_bgrp_comm  = group_i
-    ortho_comm       = group_i
-    ortho_row_comm   = group_i
-    ortho_col_comm   = group_i
-    nproc_pot        = nproc_i
-    my_pot_id        = 0
-    me_pot           = mpime
-    root_pot         = root
-    inter_pot_comm   = group_i
-    intra_pot_comm   = group_i
-    !
-    RETURN
-    !
-  END SUBROUTINE mp_global_start
-  !
   !-----------------------------------------------------------------------
   SUBROUTINE mp_startup_new (root, world ) 
     !-----------------------------------------------------------------------
-    ! ... This subroutine initializes MPI
-    ! ... Processes are organized in NIMAGE images each dealing with a subset of
-    ! ... images used to discretize the "path" (only in "path" optimizations)
-    ! ... Within each image processes are organized in NPOOL pools each dealing
-    ! ... with a subset of kpoints.
-    ! ... Within each pool R & G space distribution is performed.
-    ! ... NPROC is read from command line or can be set with the appropriate
-    ! ... environment variable ( for example use 'setenv MP_PROCS 8' on IBM SP
-    ! ... machine to run on NPROC=8 processors ); NIMAGE and NPOOL are read from
-    ! ... command line.
-    ! ... NPOOL must be a whole divisor of NPROC
+    ! ... This subroutine initializes the various parallelization levels
+    ! ... inside an image. On input:
+    ! ...     root =root processor for this image
+    ! ...     world=communicator for this image (intra_image_comm)
+    ! ... Within each image processes are subdivided into:
+    ! ...     npool k-points groups, for parallelization over k-points
+    ! ... Each k-point group is subdivided into
+    ! ...     nbgr      band groups, for parallelization over bands
+    ! ... Each band group performs parallelization over plane waves 
+    ! ... and is subdivided into
+    ! ...    ntg        task groups, for parallelization of H*psi
+    ! ...    ndiag      linear-algebra groups, for parallelization of LA
+    ! ... Npool, nbgr, ntg, ndiag are read from command line 
     !
     IMPLICIT NONE
     !
@@ -301,17 +204,21 @@ CONTAINS
     !
     IF ( myrank == root ) THEN
        !
+       ! ... How many parallel pots ?
+       !
+       CALL get_arg_npot( npot )
+       npot = MAX( npot, 1 )
+       npot = MIN( npot, nproc )
+       !
        ! ... How many band groups?
        !
        CALL get_arg_nbgrp( nbgrp )
-       !
        nbgrp = MAX( nbgrp, 1 )
        nbgrp = MIN( nbgrp, nproc )
        !
        ! ... How many k-point pools ?
        !
        CALL get_arg_npool( npool )
-       !
        npool = MAX( npool, 1 )
        npool = MIN( npool, nproc )
        !
@@ -336,16 +243,14 @@ CONTAINS
     CALL mp_bcast( nbgrp, root, world )
     CALL mp_bcast( ntask_groups, root, world )
     CALL mp_bcast( nproc_ortho_in, root, world )
+    CALL mp_bcast( npot, root, world )
     !
-    ! ... initialize images, band, k-point, ortho groups in sequence
+    ! ... initialize k-point, band, ortho groups in sequence
     !
-    !
-    CALL init_pools( intra_image_comm )
-    !
+    CALL init_pots( world )
+    CALL init_pools( world )
     CALL init_bands( intra_pool_comm )
-    !
     CALL init_ortho( nproc_ortho_in, intra_bgrp_comm )
-    !
     !
     RETURN
     !
