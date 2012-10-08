@@ -25,9 +25,7 @@ PROGRAM fpmd_postproc
   USE kinds,      ONLY : DP
   USE constants,  ONLY : bohr => BOHR_RADIUS_ANGS
   USE io_files,   ONLY : prefix, iunpun, xmlpun, tmp_dir, outdir
-  USE io_global,     ONLY : io_global_start
-  USE mp_global,     ONLY : mp_global_start, mp_global_end
-  USE mp,            ONLY : mp_start
+  USE mp_global,  ONLY : mp_startup, mp_global_end
 
   USE iotk_module
   USE xml_io_base
@@ -79,10 +77,8 @@ PROGRAM fpmd_postproc
   CALL remove_stack_limit ( )
 
   !  initialize mpi
-  CALL mp_start( nproc, mpime, world )
-  CALL mp_global_start( root, mpime, world, nproc )
-  CALL io_global_start( mpime, root )
-
+  CALL mp_startup  ( )
+  !
   CALL get_env( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   prefix    = 'cp'
