@@ -102,7 +102,7 @@ subroutine read_pseudo_ncpp (file_pseudo,zed,grid,ndmx,&
         read( iunps, *, err=300, iostat=ios ) a_core,  &
              b_core, alfa_core
         if (alfa_core.le.0.0_dp)  &
-             call errore('readin','nlcc but alfa=0',1)
+             call errore('read_pseudo_ncpp','nlcc but alfa=0',1)
      endif
      if (cc(2).ne.0.0_dp.and.alpc(2).ne.0.0_dp.and.bhstype) then
         call bachel(alps,alc,1,lmax)

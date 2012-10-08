@@ -65,7 +65,7 @@ subroutine partial_wave_expansion
 
 
   if (nld == 0 .or. file_pawexp == ' ') return
-  if (nld > nwfsx) call errore('lderivps','nld is too large',1)
+  if (nld > nwfsx) call errore('partial_wave_expansion','nld is too large',1)
 
   allocate( al(grid%mesh), aux(grid%mesh), aux2(grid%mesh),vaux(grid%mesh) )
 

@@ -227,7 +227,7 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
             write(stdout,*) grid%r(n),gi(n)
          enddo
       ENDIF
-     call errore ('gener_pseudo ','chi too large beyond r_c', 1)
+     call errore ('compute_chi ','chi too large beyond r_c', 1)
   endif
   return
 end subroutine compute_chi

@@ -48,7 +48,7 @@ SUBROUTINE run_test
   if (ionode) &
      open(unit=13, file=file_tests, iostat=ios, err=1111, status='unknown')
 1111 call mp_bcast(ios, ionode_id)
-     call errore('ld1_setup','opening file_tests',abs(ios))
+     call errore('run_test','opening file_tests',abs(ios))
 
   do nc=1,nconf
      if (nconf == 1) then

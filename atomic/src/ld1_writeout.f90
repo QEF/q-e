@@ -124,7 +124,7 @@ subroutine write_rrkj (iunps)
   !
   nonlocc = dft_is_nonlocc()
   if (nonlocc) &
-     CALL errore('setup','non-local functional not implemented yet', 1)
+     CALL errore('write_rrkj','non-local functional not implemented yet', 1)
 
   write( iunps, '(a75)', err=100, iostat=ios ) title
   !
@@ -191,7 +191,7 @@ subroutine write_rrkj (iunps)
   !      
   write( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
        ((phis(ir,nb),ir=1,grid%mesh),nb=1,nwfs)
-100 call errore('ld1_writeout','Writing pseudopw file',abs(ios))
+100 call errore('write_rrkj','Writing pseudopw file',abs(ios))
   !
 end subroutine write_rrkj
 

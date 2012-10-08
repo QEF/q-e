@@ -41,7 +41,7 @@ subroutine write_pseudo &
      write( iunps, '(a)', err=300, iostat=ios ) 'slater-pz-ggx-ggc'
   else
      if (non_locc) then
-        CALL errore('setup','non-local functionals not implemented yet', 1) 
+        CALL errore('write_pseudo','non-local functionals not implemented yet', 1) 
      else
          write( iunps, '(a)', err=300, iostat=ios ) dft(1:20)
      endif

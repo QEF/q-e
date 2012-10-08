@@ -34,23 +34,23 @@ SUBROUTINE ld1_setup
   !
   meta = dft_is_meta()
   IF ( meta .and. rel > 1 ) &
-      CALL errore('setup','meta-GGA not implemented for fully-relativistic case', 1)
+      CALL errore('ld1_setup','meta-GGA not implemented for fully-relativistic case', 1)
   IF ( meta .and. lsd == 1 ) &
-      CALL errore('setup','meta-GGA not implemented for LSDA', 2)
+      CALL errore('ld1_setup','meta-GGA not implemented for LSDA', 2)
   IF ( meta .and. iswitch > 1 ) &
-      CALL errore('setup','meta-GGA implemented only for all-electron case', 3)
+      CALL errore('ld1_setup','meta-GGA implemented only for all-electron case', 3)
   hf  = get_iexch()==5
-  IF (hf)     CALL errore('setup','HF not implemented yet',1)
+  IF (hf)     CALL errore('ld1_setup','HF not implemented yet',1)
   oep = get_iexch()==4
   IF (oep.and.iswitch>1) &
-     CALL errore('setup','OEP is implemented only for all-electron calc.',1)
+     CALL errore('ld1_setup','OEP is implemented only for all-electron calc.',1)
   IF (oep.and.rel>0) &
-     CALL errore('setup','OEP is implemented only for non-relativistic calc.',1)
+     CALL errore('ld1_setup','OEP is implemented only for non-relativistic calc.',1)
   IF (oep) CALL start_exx
   ! 
   non_locc = dft_is_nonlocc()
   IF ( non_locc ) &
-     CALL errore('setup','non-local functionals not implemented yet', 1)
+     CALL errore('ld1_setup','non-local functionals not implemented yet', 1)
   !
   CALL set_sl3(sl3,lmx)
   !
