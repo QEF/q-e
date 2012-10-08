@@ -31,13 +31,13 @@ subroutine occ_spin(nwf,nwfx,el,nn,ll,oc,isw)
         !    check that the new state is not already available
         !
         do n1=n+1,nwf0
-           if (el(n1)==el(n)) call errore('ld1_readin','wrong occupations',1)
+           if (el(n1)==el(n)) call errore('occ_spin','wrong occupations',1)
         enddo
         !
         !    and add it
         !
         nwf=nwf+1
-        if (nwf > nwfx) call errore('ld1_readin','too many wavefunctions',1)
+        if (nwf > nwfx) call errore('occ_spin','too many wavefunctions',1)
         el(nwf)=el(n)
         nn(nwf)=nn(n)
         ll(nwf)=ll(n)
@@ -95,7 +95,7 @@ subroutine occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw,rel_dist)
            ok=.false.
            jj(n)=ll(n)-0.5_dp
            nwf0=nwf0+1
-           if (nwf0.gt.nwfx) call errore('ld1_setup','too many wfc',1)
+           if (nwf0.gt.nwfx) call errore('occ_spinorb','too many wfc',1)
            do m=nwf0-1,n+1,-1
               nn(m+1)=nn(m)
               ll(m+1)=ll(m)
@@ -161,7 +161,7 @@ subroutine occ_spinorbps(nwf,nwfx,el,nn,ll,jj,oc,rcut,rcutus,enls,isw,rel_dist)
            ok=.false.
            jj(n)=ll(n)-0.5_dp
            nwf0=nwf0+1
-           if (nwf0.gt.nwfx) call errore('ld1_setup','too many wfc',1)
+           if (nwf0.gt.nwfx) call errore('occ_spinorbps','too many wfc',1)
            do m=nwf0-1,n+1,-1
               nn(m+1)=nn(m)
               ll(m+1)=ll(m)
@@ -224,13 +224,13 @@ subroutine occ_spin_tot(nwf,nwfx,el,nn,ll,oc,isw,enl,psi)
         !    check that the new state is not already available
         !
         do n1=n+1,nwf0
-           if (el(n1)==el(n)) call errore('ld1_readin','wrong occupations',1)
+           if (el(n1)==el(n)) call errore('occ_spin_tot','wrong occupations',1)
         enddo
         !
         !    and add it
         !
         nwf=nwf+1
-        if (nwf > nwfx) call errore('ld1_readin','too many wavefunctions',1)
+        if (nwf > nwfx) call errore('occ_spin_tot','too many wavefunctions',1)
         el(nwf)=el(n)
         nn(nwf)=nn(n)
         ll(nwf)=ll(n)
@@ -248,7 +248,7 @@ subroutine occ_spin_tot(nwf,nwfx,el,nn,ll,oc,isw,enl,psi)
         if (ok) then
            nwf=nwf+1
            if (nwf > nwfx) &
-                & call errore('occ_spin','too many wavefunctions',1)
+                & call errore('occ_spin_tot','too many wavefunctions',1)
            el(nwf)=el(n)
            nn(nwf)=nn(n)
            ll(nwf)=ll(n)
