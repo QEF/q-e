@@ -84,8 +84,8 @@ program generate_kernel
   !! Use some PWSCF modules.  In particular, we need the parallelization modules.
   !! --------------------------------------------------------------------------------------------
 
-  use mp,                   ONLY : mp_get, mp_start, mp_end, mp_barrier
-  use mp_global,            ONLY : mp_global_start, nproc, mpime
+  use mp,                   ONLY : mp_get, mp_end, mp_barrier
+  use mp_global,            ONLY : mp_startup, nproc, mpime
   use kinds,                ONLY : dp
   use io_global,            ONLY : io_global_start, ionode, ionode_id
   use constants,            ONLY : pi
@@ -282,22 +282,14 @@ program generate_kernel
   !                                                        !! indices array, ending index into the indices array.
 
   integer :: index, proc_i, kernel_file, my_Nqs
-  integer :: Nprocs, my_rank, group_id                     !! Variables holding information about the parallel run.  The total number of processors, the rank of
-  !                                                        !! this particular processor, and a group id.  These are given to the mp_global module and its internal
-  !                                                        !! variables are used in most of this code.
-  
 
   ! Set up the parallel run using PWSCF methods.
   ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !! Start a parallel run
 
-  call mp_start(Nprocs, my_rank, group_id)                   !! This calls mpoi_init, figures out the total number of processors,
-                                                             !! the index of this particular processor, and a group id for mpi_comm_world
+  call mp_startup ()
 
-  call io_global_start(my_rank, 0)                         !! This sets processor 0 to be the input/output node.  This is assumed below during the output stage
-
-  call mp_global_start(0, my_rank, group_id, Nprocs)       !! Pass parameters to the mp_global module.  Its internal parameters are used hereafter.
 
   ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
