@@ -358,7 +358,7 @@ SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, magnetic_sym, m_loc )
        ENDIF
        CYCLE symm
     ELSE
-       CALL infomsg ('find_sym', 'Symmetry op.s form a group' )
+       if ( i > 1 ) CALL infomsg ('find_sym', 'Symmetry operations form a group' )
        EXIT symm
     END IF
   END DO symm 
