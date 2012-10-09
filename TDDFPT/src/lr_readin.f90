@@ -43,7 +43,8 @@ SUBROUTINE lr_readin
   USE mp_global,           ONLY : my_pool_id, intra_image_comm, &
                                   & intra_pool_comm, nproc_image, &
                                   & nproc_pool, nproc_pool_file, &
-                                  & nproc_image_file
+                                  & nproc_image_file, nproc_bgrp, &
+                                  & nproc_bgrp_file
   USE io_global,           ONLY : ionode, ionode_id
   USE DFUNCT,              ONLY : newd
   USE vlocal,              ONLY : strf
@@ -303,7 +304,10 @@ CONTAINS
          CALL errore('lr_readin',&
          & 'pw.x run with a different number of pools. &
          & Use wf_collect=.true.',1)
-
+    IF (nproc_bgrp /= nproc_bgrp_file .AND. .NOT. twfcollect)  &
+         CALL errore('lr_readin',&
+         & 'pw.x run with a different number of band groups. &
+         & Use wf_collect=.true.',1)
     !
   END SUBROUTINE input_sanity
 
