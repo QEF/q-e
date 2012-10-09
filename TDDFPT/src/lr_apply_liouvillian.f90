@@ -261,9 +261,19 @@ CONTAINS
   !
   SUBROUTINE lr_apply_liouvillian_gamma()
     !
-    USE lr_variables,        ONLY : becp1
+    USE lr_variables,             ONLY : becp1, tg_revc0
+    USE wavefunctions_module,     ONLY : psic
+    USE realus,                   ONLY : tg_psic
+    USE mp_global,                ONLY : me_bgrp
+    USE fft_base,                 ONLY : dffts, tg_gather
     !
-    real(kind=dp), ALLOCATABLE :: becp2(:,:)
+    REAL(kind=dp), ALLOCATABLE :: becp2(:,:)
+    REAL(kind=dp), ALLOCATABLE :: tg_dvrss(:)
+    LOGICAL :: use_tg
+    INTEGER :: v_siz, incr, ioff
+    !
+    use_tg=dffts%have_task_groups
+    incr = 2
     !
     IF ( nkb > 0 .and. okvan ) THEN
        !
@@ -318,21 +328,46 @@ CONTAINS
           ENDDO
           !end: calculation of becp2
        ENDIF
+
+      IF( dffts%have_task_groups ) THEN
+         !
+         v_siz =  dffts%tg_nnr * dffts%nogrp
+         !
+         incr = 2 * dffts%nogrp
+         !
+         ALLOCATE( tg_dvrss(1:v_siz) )
+         tg_dvrss=0.0d0
+         !
+         CALL tg_gather(dffts, dvrss, tg_dvrss)
+         !
+      ENDIF
        !
        !   evc1_new is used as a container for the interaction
        !
        evc1_new(:,:,:)=(0.0d0,0.0d0)
        !
-       DO ibnd=1,nbnd,2
+       DO ibnd=1,nbnd,incr
           !
           ! Product with the potential vrs = (vltot+vr)
           ! revc0 is on smooth grid. psic is used up to smooth grid
           !
-          DO ir=1,dffts%nnr
+          IF(dffts%have_task_groups) THEN
              !
-             psic(ir)=revc0(ir,ibnd,1)*cmplx(dvrss(ir),0.0d0,dp)
+             DO ir=1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
+                !
+                tg_psic(ir)=tg_revc0(ir,ibnd,1)*CMPLX(tg_dvrss(ir),0.0d0,dp)
+                !
+             ENDDO
              !
-          ENDDO
+          ELSE
+             !
+             DO ir=1,dffts%nnr
+                !
+                psic(ir)=revc0(ir,ibnd,1)*CMPLX(dvrss(ir),0.0d0,dp)
+                !
+             ENDDO
+             !
+          ENDIF
           !
           IF (real_space_debug > 7 .and. okvan .and. nkb > 0) THEN
           !THE REAL SPACE PART (modified from s_psi)
@@ -392,7 +427,7 @@ CONTAINS
                     !
                     ENDDO
                   !
-                  ENDDO
+                 ENDDO
 
           ENDIF
           !
@@ -401,6 +436,8 @@ CONTAINS
           CALL bfft_orbital_gamma (evc1_new(:,:,1), ibnd, nbnd,.false.)
           !
        ENDDO
+       !
+       IF(dffts%have_task_groups) DEALLOCATE (tg_dvrss)
        !
        !
        IF( nkb > 0 .and. okvan .and. real_space_debug <= 7) THEN

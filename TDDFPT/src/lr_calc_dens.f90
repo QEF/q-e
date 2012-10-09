@@ -289,7 +289,7 @@ CONTAINS
     ! Gamma_only case.
     !
     USE becmod,              ONLY : bec_type, becp, calbec
-    USE lr_variables,        ONLY : becp1 
+    USE lr_variables,        ONLY : becp1, tg_revc0
     USE io_global,           ONLY : stdout
     USE realus,              ONLY : real_space, fft_orbital_gamma,&
                                     & initialisation_level,&
@@ -297,55 +297,134 @@ CONTAINS
                                     & calbec_rs_gamma,&
                                     & add_vuspsir_gamma, v_loc_psir,&
                                     & real_space_debug 
+    USE realus,              ONLY : tg_psic
+    USE mp_global,           ONLY : me_bgrp, me_pool
+    USE fft_base,            ONLY : dffts, tg_gather
+    USE wvfct,               ONLY : igk
     !
-    DO ibnd=1,nbnd,2
+    LOGICAL :: use_tg
+    INTEGER :: v_siz, incr, ioff, idx
+    REAL(DP),    ALLOCATABLE :: tg_rho(:)
+    !
+    use_tg=dffts%have_task_groups
+    incr = 2
+    !
+    IF( dffts%have_task_groups ) THEN
+       !
+       v_siz =  dffts%tg_nnr * dffts%nogrp
+       !
+       incr = 2 * dffts%nogrp
+       !
+       ALLOCATE( tg_rho( v_siz ) )
+       tg_rho= 0.0_DP
+       !
+    ENDIF
+    !
+    DO ibnd=1,nbnd,incr
+       CALL fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
        !
        ! FFT: evc1 -> psic
        !
-       CALL fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
-       !
-       ! Set weights of the two real bands now in psic
-       !
-       w1=wg(ibnd,1)/omega
-       !
-       IF(ibnd<nbnd) THEN
-          w2=wg(ibnd+1,1)/omega
-       ELSE
-          w2=w1
-       ENDIF
-       !
-       ! (n'(r,w)=2*sum_v (psi_v(r) . q_v(r,w))
-       ! where psi are the ground state valance orbitals
-       ! and q_v are the standard batch representation (rotated)
-       ! response orbitals
-       ! Here, since the ith iteration is the best approximation we
-       ! have for the most dominant eigenvalues/vectors, an estimate
-       ! for the response charge density can be calculated. This is
-       ! in no way the final response charge density.  
-       !
-       ! The loop is over real space points.
-       !
-       DO ir=1,dffts%nnr
-          rho_1(ir,1)=rho_1(ir,1) &
-               +2.0d0*(w1*real(revc0(ir,ibnd,1),dp)*real(psic(ir),dp)&
-               +w2*aimag(revc0(ir,ibnd,1))*aimag(psic(ir)))
-       ENDDO
-       !
-       ! OBM - psic now contains the response functions in real space.
-       ! Eagerly putting all the real space stuff at this point. 
-       !
-       ! Notice that betapointlist() is called in lr_readin at the
-       ! very start 
-       !
-       IF ( real_space_debug > 6 .AND. okvan) THEN
-          ! The rbecp term
-          CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
+       IF(dffts%have_task_groups) THEN
           !
-       ENDIF
-       !
-       ! End of real space stuff
-       !
+          ! Now the first proc of the group holds the first two bands
+          ! of the 2*dffts%nogrp bands that we are processing at the same time,
+          ! the second proc. holds the third and fourth band
+          ! and so on
+          !
+          ! Compute the proper factor for each band
+          !
+          DO idx = 1, dffts%nogrp
+             IF( dffts%nolist( idx ) == me_pool ) EXIT
+          END DO
+          !
+          ! Remember two bands are packed in a single array :
+          ! proc 0 has bands ibnd   and ibnd+1
+          ! proc 1 has bands ibnd+2 and ibnd+3
+          ! ....
+          !
+          idx = 2 * idx - 1
+          !
+          IF( idx + ibnd - 1 < nbnd ) THEN
+             w1 = wg( idx + ibnd - 1, 1) / omega
+             w2 = wg( idx + ibnd    , 1) / omega
+          ELSE IF( idx + ibnd - 1 == nbnd ) THEN
+             w1 = wg( idx + ibnd - 1, 1) / omega
+             w2 = w1
+          ELSE
+             w1 = 0.0d0
+             w2 = w1
+          END IF
+          !
+          DO ir=1,dffts%tg_npp( me_pool + 1 ) * dffts%nr1x * dffts%nr2x
+             tg_rho(ir)=tg_rho(ir) &
+                  +2.0d0*(w1*real(tg_revc0(ir,ibnd,1),dp)*real(tg_psic(ir),dp)&
+                  +w2*aimag(tg_revc0(ir,ibnd,1))*aimag(tg_psic(ir)))
+          ENDDO
+       else
+          !
+          ! Set weights of the two real bands now in psic
+          !
+          w1=wg(ibnd,1)/omega
+          !
+          IF(ibnd<nbnd) THEN
+             w2=wg(ibnd+1,1)/omega
+          ELSE
+             w2=w1
+          ENDIF
+          !
+          ! (n'(r,w)=2*sum_v (psi_v(r) . q_v(r,w))
+          ! where psi are the ground state valance orbitals
+          ! and q_v are the standard batch representation (rotated)
+          ! response orbitals
+          ! Here, since the ith iteration is the best approximation we
+          ! have for the most dominant eigenvalues/vectors, an estimate
+          ! for the response charge density can be calculated. This is
+          ! in no way the final response charge density.  
+          !
+          ! The loop is over real space points.
+          !
+          DO ir=1,dffts%nnr
+             rho_1(ir,1)=rho_1(ir,1) &
+                  +2.0d0*(w1*real(revc0(ir,ibnd,1),dp)*real(psic(ir),dp)&
+                  +w2*aimag(revc0(ir,ibnd,1))*aimag(psic(ir)))
+          ENDDO
+          !
+          ! OBM - psic now contains the response functions in real space.
+          ! Eagerly putting all the real space stuff at this point. 
+          !
+          ! Notice that betapointlist() is called in lr_readin at the
+          ! very start 
+          !
+          IF ( real_space_debug > 6 .AND. okvan) THEN
+             ! The rbecp term
+             CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
+             !
+          ENDIF
+          !
+          ! End of real space stuff
+          !
+       endif
     ENDDO
+    IF(dffts%have_task_groups) THEN
+       !
+       ! reduce the group charge
+       !
+       CALL mp_sum( tg_rho, gid = dffts%ogrp_comm )
+       !
+       ioff = 0
+       DO idx = 1, dffts%nogrp
+          IF( me_pool == dffts%nolist( idx ) ) EXIT
+          ioff = ioff + dffts%nr1x * dffts%nr2x * dffts%npp( dffts%nolist( idx ) + 1 )
+       END DO
+       !
+       ! copy the charge back to the processor location
+       !
+       DO ir = 1, dffts%nnr
+          rho_1(ir,1) = rho_1(ir,1) + tg_rho(ir+ioff)
+       END DO
+       !
+    ENDIF
     !
     ! If we have a US pseudopotential we compute here the becsum
     ! term. 
@@ -443,6 +522,10 @@ CONTAINS
        !
     ENDIF
     !
+    IF( dffts%have_task_groups ) THEN
+       DEALLOCATE( tg_rho )
+    END IF
+    !   
     RETURN
     !
   END SUBROUTINE lr_calc_dens_gamma

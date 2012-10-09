@@ -280,7 +280,6 @@ PROGRAM lr_main
      ENDIF
      !
   ENDDO
-  DEALLOCATE( revc0 )
   !
   !
   WRITE(stdout,'(5x,"End of Lanczos iterations")')

@@ -5,20 +5,21 @@ SUBROUTINE lr_alloc_init()
   !---------------------------------------------------------------------
   ! Modified by Osman Baris Malcioglu in 2009
   !
-  USE fft_base,          ONLY : dfftp
-  USE fft_base,          ONLY : dffts
-  USE klist,             ONLY : nks
+  USE fft_base,             ONLY : dfftp
+  USE fft_base,             ONLY : dffts
+  USE klist,                ONLY : nks
   USE lr_variables
-  USE uspp,              ONLY : nkb
-  USE lsda_mod,          ONLY : nspin
-  USE wvfct,             ONLY : npwx, nbnd
-  USE control_flags,     ONLY : gamma_only
-  USE io_global,         ONLY : stdout
-  USE charg_resp,        ONLY : w_T, w_T_beta_store, w_T_gamma_store,w_T_zeta_store,w_T_npol,chi
-  USE realus,            ONLY : igk_k, npw_k
-  USE control_ph,        ONLY : nbnd_occ
-  USE noncollin_module,  ONLY : nspin_mag
-  USE eqv,               ONLY : dmuxc
+  USE uspp,                 ONLY : nkb
+  USE lsda_mod,             ONLY : nspin
+  USE wvfct,                ONLY : npwx, nbnd
+  USE control_flags,        ONLY : gamma_only
+  USE io_global,            ONLY : stdout
+  USE charg_resp,           ONLY : w_T, w_T_beta_store, w_T_gamma_store, &
+                                  & w_T_zeta_store, w_T_npol,chi
+  USE realus,               ONLY : igk_k, npw_k, tg_psic
+  USE control_ph,           ONLY : nbnd_occ
+  USE noncollin_module,     ONLY : nspin_mag
+  USE eqv,                  ONLY : dmuxc
   USE wavefunctions_module, ONLY : evc
   USE kinds,                ONLY : dp
   !
@@ -59,7 +60,13 @@ SUBROUTINE lr_alloc_init()
   ALLOCATE(sevc1_new(npwx,nbnd,nks,2))
   ALLOCATE(d0psi(npwx,nbnd,nks,n_ipol))
   !
-  ALLOCATE(revc0(dffts%nnr,nbnd,nks))
+  IF(dffts%have_task_groups) THEN
+     ALLOCATE(tg_revc0(dffts%tg_nnr * dffts%nogrp,nbnd,nks))
+     IF(.NOT. ALLOCATED(tg_psic)) &
+          & ALLOCATE( tg_psic(dffts%tg_nnr * dffts%nogrp) )
+  ELSE
+     ALLOCATE(revc0(dffts%nnr,nbnd,nks))
+  ENDIF
   !
   ALLOCATE(rho_1(dfftp%nnr,nspin_mag))
   rho_1(:,:)=0.0d0

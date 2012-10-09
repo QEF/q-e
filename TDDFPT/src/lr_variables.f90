@@ -69,6 +69,7 @@ MODULE lr_variables
 
   !
   COMPLEX(kind=dp), ALLOCATABLE :: revc0(:,:,:) !ground state wavefunctions in real space
+  COMPLEX(kind=dp), ALLOCATABLE :: tg_revc0(:,:,:) !ground state wavefunctions in real space
   !
   real(kind=dp), ALLOCATABLE :: &
        rho_1(:,:),           &         ! response charge density in real space

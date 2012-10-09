@@ -65,14 +65,23 @@ SUBROUTINE lr_read_wf()
       !
       ! The usual way of reading wavefunctions
       !
-      USE lr_variables, ONLY : check_all_bands_gamma,&
-                             & check_density_gamma, check_vector_gamma
+      USE lr_variables,             ONLY : check_all_bands_gamma, &
+                                          & check_density_gamma, &
+                                          & check_vector_gamma, tg_revc0
+      USE wavefunctions_module,     ONLY : psic
+      USE realus,                   ONLY : tg_psic
+      USE mp_global,                ONLY : me_bgrp
       !
       !
       IMPLICIT NONE
       !
+      LOGICAL :: use_tg
+      INTEGER :: v_siz, incr, ioff, j
+      !
+      use_tg=dffts%have_task_groups
       nwordwfc = 2 * nbnd * npwx
       size_evc=npwx*nbnd*nks
+      incr = 2
       !
       !   Read in the ground state wavefunctions
       !   This is a parallel read, done in wfc_dir
@@ -191,37 +200,38 @@ SUBROUTINE lr_read_wf()
       ! Inverse fourier transform of evc0
       !
       !
-      revc0=(0.0d0,0.0d0)
+      IF( dffts%have_task_groups ) THEN
+         !
+         v_siz =  dffts%tg_nnr * dffts%nogrp
+         !
+         incr = 2 * dffts%nogrp
+         !
+         tg_revc0=(0.0d0,0.0d0)
+         !
+      ELSE
+         !
+         revc0=(0.0d0,0.0d0)
+         !
+      ENDIF
       !
       IF ( gamma_only ) THEN
          !
-         DO ibnd=1,nbnd,2
+         !
+         DO ibnd=1,nbnd,incr
             !
-            IF (ibnd<nbnd) THEN
+            CALL fft_orbital_gamma ( evc0(:,:,1), ibnd, nbnd)
+            !
+            IF (dffts%have_task_groups) THEN               
                !
-               DO ig=1,npw_k(1)
-                  !
-                  revc0(nls(igk_k(ig,1)),ibnd,1)=evc0(ig,ibnd,1)& 
-                       &+(0.0d0,1.0d0)*evc0(ig,ibnd+1,1)
-                  !
-                  revc0(nlsm(igk_k(ig,1)),ibnd,1)=CONJG(evc0(ig,ibnd,1)&
-                       &-(0.0d0,1.0d0)*evc0(ig,ibnd+1,1))
-                  !
+               DO j=1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
+                  tg_revc0(j,ibnd,1) = tg_psic(j)
                ENDDO
                !
             ELSE
                !
-               DO ig=1,npw_k(1)
-                  !
-                  revc0(nls(igk_k(ig,1)),ibnd,1)=evc0(ig,ibnd,1)
-                  !
-                  revc0(nlsm(igk_k(ig,1)),ibnd,1)=CONJG(evc0(ig,ibnd,1))
-                  !
-               ENDDO
+               revc0(1:dffts%nnr,ibnd,1) = psic(1:dffts%nnr)
                !
             ENDIF
-            !
-            CALL invfft ('Wave', revc0(:,ibnd,1), dffts)
             !
          ENDDO
          !
@@ -238,7 +248,9 @@ SUBROUTINE lr_read_wf()
                   !
                ENDDO
                !
+               dffts%have_task_groups=.false.
                CALL invfft ('Wave', revc0(:,ibnd,ik), dffts)
+               dffts%have_task_groups=use_tg
                !
             ENDDO
             !
@@ -269,6 +281,11 @@ SUBROUTINE lr_read_wf()
       REAL(kind=dp),    ALLOCATABLE :: becp1_all(:,:)
       COMPLEX(kind=dp), ALLOCATABLE :: becp1_c_all(:,:,:)
       COMPLEX(kind=dp), ALLOCATABLE :: revc_all(:,:,:)
+      !
+      ! Check for task groups
+      IF (dffts%have_task_groups) CALL errore ( 'virt_read', 'Task &
+           &groups not supported when there are virtual states in the &
+           &input.', 1 )
       !
       ! First pretend everything is normal
       nbnd=nbnd_total

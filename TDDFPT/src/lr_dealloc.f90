@@ -27,6 +27,9 @@ SUBROUTINE lr_dealloc()
   IF (allocated(evc1_new)) DEALLOCATE(evc1_new)
   IF (allocated(sevc1_new)) DEALLOCATE(sevc1_new)
   IF (allocated(d0psi)) DEALLOCATE(d0psi)
+  if (allocated(tg_revc0)) DEALLOCATE( tg_revc0 )
+  if (allocated(revc0)) DEALLOCATE( revc0 )
+
   !
   IF (project) THEN
    DEALLOCATE(evc0_virt)

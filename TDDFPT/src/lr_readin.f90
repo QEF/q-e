@@ -257,6 +257,7 @@ CONTAINS
     !   one place.
     !
     !--------------------------------------------------------------------------
+    USE fft_base, ONLY : dffts
     IMPLICIT NONE
     !
     !  Charge response mode 1 is the "do Lanczos chains twice, conserve memory"
@@ -308,6 +309,13 @@ CONTAINS
          CALL errore('lr_readin',&
          & 'pw.x run with a different number of band groups. &
          & Use wf_collect=.true.',1)
+    !
+    ! Experimental task groups warning.
+    !
+    IF (dffts%have_task_groups) CALL infomsg( 'lr_readin','Usage of task &
+         &groups with TDDFPT is still experimental. Use at your own risk.' )
+    !
+    RETURN
     !
   END SUBROUTINE input_sanity
 
