@@ -16,7 +16,7 @@ PROGRAM do_bands
   USE io_files,  ONLY : prefix, tmp_dir
   USE mp_global, ONLY : npool, nproc, nproc_pool, nproc_file, &
                         nproc_pool_file, mp_startup
-  USE control_flags, ONLY : twfcollect
+  USE control_flags, ONLY : twfcollect, gamma_only
   USE environment,   ONLY : environment_start
   USE wvfct,     ONLY : nbnd
   USE klist,     ONLY : nkstot, two_fermi_energies
@@ -101,6 +101,8 @@ PROGRAM do_bands
 
   IF ( npool > 1 .and..not.(lsym.or.no_overlap)) CALL errore('bands', &
                                              'pools not implemented',npool)
+
+  IF (gamma_only) CALL errore('bands','gamma_only case not implemented',1)
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
