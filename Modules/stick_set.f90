@@ -410,20 +410,13 @@
 
           CALL sticks_sort( ist(:,4), ist(:,3), ist(:,5), nst, idx, nproc )
 
-          ! ... Set as first stick the stick containing the G=0
-          !
-          !  DO iss = 1, nst
-          !    IF( ist( idx( iss ), 1 ) == 0 .AND. ist( idx( iss ), 2 ) == 0 )  EXIT
-          !  END DO
-          !  itmp         = idx( 1 )
-          !  idx( 1 )   = idx( iss )
-          !  idx( iss ) = itmp
+! ...       Distribute the sticks as in dfftp
 
-          CALL sticks_dist( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
+          CALL sticks_ordered_dist( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
              nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, nproc )
 
-!          ngw = sstpw( mype + 1 )
-!          ngm = sstp( mype + 1 )
+          ngw = sstpw( mype + 1 )
+          ngm = sstp( mype + 1 )
           ngs = sstps( mype + 1 )
 
           CALL sticks_pairup( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
@@ -433,11 +426,8 @@
 
 #if defined __MPI
 
-!          CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, nogrp_ , dfftp%nr1x,  dfftp%nr2x )
           CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, nogrp_ , dffts%nr1x, dffts%nr2x )
 
-!          CALL fft_dlay_set( dfftp, tk, nst, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
-!            ub, lb, idx, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
           CALL fft_dlay_set( dffts, tk, nsts, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, &
             ub, lb, idx, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
 
@@ -449,13 +439,10 @@
           CALL sticks_maps_scalar( (.not.tk), ub, lb, bg(:,1),bg(:,2),bg(:,3),&
                                     gcut, gkcut, gcuts, stw, ngm_ , ngs_ )
 
-!          IF( ngm_ /= ngm ) CALL errore( ' pstickset_custom ', ' inconsistent ngm ', abs( ngm - ngm_ ) )
           IF( ngs_ /= ngs ) CALL errore( ' pstickset_custom ', ' inconsistent ngs ', abs( ngs - ngs_ ) )
 
-!          CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, 1, max(dfftp%nr1x, dfftp%nr3x),  dfftp%nr2x  )
           CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, 1, max(dffts%nr1x, dffts%nr3x), dffts%nr2x )
 
-!          CALL fft_dlay_scalar( dfftp, ub, lb, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, stw )
           CALL fft_dlay_scalar( dffts, ub, lb, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, stw )
 
 #endif
@@ -700,6 +687,7 @@ SUBROUTINE task_groups_init_first( dffts )
     RETURN
   END SUBROUTINE task_groups_init_first
   !
+
 !=----------------------------------------------------------------------=
    END MODULE stick_set
 !=----------------------------------------------------------------------=

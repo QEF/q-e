@@ -18,7 +18,7 @@
         SAVE
 
         PUBLIC :: sticks_maps, sticks_sort, sticks_countg, sticks_dist, sticks_pairup
-        PUBLIC :: sticks_owner, sticks_deallocate, sticks_maps_scalar
+        PUBLIC :: sticks_owner, sticks_deallocate, sticks_maps_scalar, sticks_ordered_dist
 
 ! ...   sticks_owner :   stick owner, sticks_owner( i, j ) is the index of the processor
 ! ...     (starting from 1) owning the stick whose x and y coordinate  are i and j.
@@ -561,6 +561,84 @@
     END SUBROUTINE sticks_pairup
 
 !=----------------------------------------------------------------------=
+
+    SUBROUTINE sticks_ordered_dist( tk, ub, lb, idx, in1, in2, ngc, ngcw, ngcs, nct, &
+                            ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stownw, stowns, nproc )
+!
+! This routine works as sticks_dist only it distributes the sticks according to sticks_owner.
+! This ensures that the gvectors for any 'smooth like grid' remain on the same proc as the 
+! original grid.
+!
+      LOGICAL, INTENT(in) :: tk
+
+      INTEGER, INTENT(in) :: ub(:), lb(:), idx(:)
+      INTEGER, INTENT(out) :: stown( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
+      INTEGER, INTENT(out) :: stownw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
+      INTEGER, INTENT(out) :: stowns(lb(1): ub(1), lb(2):ub(2) ) ! stick map for smooth mesh
+
+      INTEGER, INTENT(in) :: in1(:), in2(:)
+      INTEGER, INTENT(in) :: ngc(:), ngcw(:), ngcs(:)
+      INTEGER, INTENT(in) :: nct
+      INTEGER, INTENT(out) :: ncp(:), ncpw(:), ncps(:)
+      INTEGER, INTENT(out) :: ngp(:), ngpw(:), ngps(:)
+      INTEGER, INTENT(in) :: nproc ! number of proc in the g-vec group
+
+      INTEGER :: mc, i1, i2, i, j, jj
+
+      ncp  = 0
+      ncps = 0
+      ncpw = 0
+      ngp  = 0
+      ngps = 0
+      ngpw = 0
+
+      stown  = sticks_owner
+      stownw = 0
+      stowns = 0
+
+      DO mc = 1, nct
+
+         i = idx( mc )
+!
+! index has no effect in this case
+!
+         i1 = in1( i )
+         i2 = in2( i )
+!
+         IF ( ( .not. tk ) .and. ( (i1 < 0) .or. ( (i1 == 0) .and. (i2 < 0) ) ) ) GOTO 30
+!
+         ! potential mesh set according to sticks_owner
+
+         jj = stown(i1,i2) 
+         ncp(jj) = ncp(jj) + 1
+         ngp(jj) = ngp(jj) + ngc(i)
+
+         ! smooth mesh
+
+         IF ( ngcs(i) > 0 ) THEN
+            ncps(jj) = ncps(jj) + 1
+            ngps(jj) = ngps(jj) + ngcs(i)
+            stowns(i1,i2) = jj
+         ENDIF
+
+         ! wave functions mesh
+
+         IF ( ngcw(i) > 0 ) THEN
+            ncpw(jj) = ncpw(jj) + 1
+            ngpw(jj) = ngpw(jj) + ngcw(i)
+            stownw(i1,i2) = jj
+         ENDIF
+
+ 30      CONTINUE
+
+      ENDDO
+
+      RETURN
+    END SUBROUTINE sticks_ordered_dist
+
+!=----------------------------------------------------------------------=
+
+
 
     SUBROUTINE sticks_deallocate
       IF( allocated( sticks_owner ) ) DEALLOCATE( sticks_owner )
