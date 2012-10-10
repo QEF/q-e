@@ -21,6 +21,7 @@ SUBROUTINE iosys()
   !
   !
   USE kinds,         ONLY : DP
+  USE uspp,          ONLY : okvan
   USE funct,         ONLY : dft_has_finite_size_correction, &
                             set_finite_size_volume, get_inlc 
   USE funct,         ONLY: set_exx_fraction, set_screening_parameter
@@ -1089,11 +1090,11 @@ SUBROUTINE iosys()
   IF ( lberry .OR. lelfield ) THEN
      IF ( npool > 1 ) CALL errore( 'iosys', &
           'Berry Phase/electric fields not implemented with pools', 1 )
+     IF ( noncolin .AND. okvan )  CALL errore( 'iosys', &
+         'Noncolinear Berry Phase/electric fields not implemented with USPP', 1 )
      IF ( lgauss .OR. ltetra ) CALL errore( 'iosys', &
           'Berry Phase/electric fields only for insulators!', 1 )
   END IF
-  IF ( lelfield .AND. (lspinorb .OR. noncolin) ) CALL errore( 'iosys', &
-          'electric fields not implemented in noncolinear/spinorbit case', 1 )
   !
   ! ... Copy values from input module to PW internals
   !

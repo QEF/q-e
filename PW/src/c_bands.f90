@@ -361,6 +361,10 @@ CONTAINS
     ! ... here the local variables
     !
     INTEGER :: ipol, ierr
+    REAL(dp) :: eps
+    !  --- Define a small number ---
+    eps=0.000001d0
+
     !
     IF ( lelfield ) THEN
        !
@@ -370,12 +374,12 @@ CONTAINS
        !
        !... read projectors from disk
        !
-       if(.not.l3dstring .and. efield /= 0.d0) then
+       if(.not.l3dstring .and. ABS(efield)>eps ) then
           CALL davcio(evcelm(:,:,gdir), 2*nwordwfc,iunefieldm,ik+(gdir-1)*nks,-1)
           CALL davcio(evcelp(:,:,gdir), 2*nwordwfc,iunefieldp,ik+(gdir-1)*nks,-1)
        else
           do ipol=1,3
-             if(efield_cry(ipol)/=0.d0) then
+             if(ABS(efield_cry(ipol))>eps) then
                 CALL davcio(evcelm(:,:,ipol), 2*nwordwfc,iunefieldm,ik+(ipol-1)*nks,-1)
                 CALL davcio(evcelp(:,:,ipol), 2*nwordwfc,iunefieldp,ik+(ipol-1)*nks,-1)
              endif
@@ -520,6 +524,7 @@ SUBROUTINE c_bands_efield ( iter, ik_, dr2 )
   !
   ! ... Driver routine for Hamiltonian diagonalization under an electric field
   !
+  USE noncollin_module,     ONLY : noncolin, npol
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : nberrycyc, fact_hepsi, &
                                    evcel, evcelp, evcelm, gdir, l3dstring,&
@@ -536,13 +541,13 @@ SUBROUTINE c_bands_efield ( iter, ik_, dr2 )
   INTEGER :: inberry, ipol, ierr
   !
   !
-  ALLOCATE( evcel ( npwx, nbnd ), STAT=ierr )
+  ALLOCATE( evcel ( npol*npwx, nbnd ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' c_bands_efield ', ' cannot allocate evcel ', ABS( ierr ) )
-  ALLOCATE( evcelm( npwx, nbnd, 3  ), STAT=ierr )
+  ALLOCATE( evcelm( npol*npwx, nbnd, 3  ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' c_bands_efield ', ' cannot allocate evcelm ', ABS( ierr ) )
-  ALLOCATE( evcelp( npwx, nbnd, 3 ), STAT=ierr )
+  ALLOCATE( evcelp( npol*npwx, nbnd, 3 ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' c_bands_efield ', ' cannot allocate evcelp ', ABS( ierr ) )
   ALLOCATE( fact_hepsi(nks, 3), STAT=ierr )

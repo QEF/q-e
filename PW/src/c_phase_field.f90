@@ -37,6 +37,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk
    USE wvfct,                ONLY : npwx, npw, nbnd, ecutwfc
+   USE noncollin_module,     ONLY : noncolin, npol
    USE wavefunctions_module, ONLY : evc
    USE bp,                   ONLY : nppstr_3d, mapgm_global, nx_el
    USE fixed_occ
@@ -93,6 +94,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    INTEGER :: npw0
    INTEGER :: nstring
    INTEGER :: nt
+   INTEGER :: nspinnc
    REAL(dp) :: dk(3)
    REAL(dp) :: dkmod
    REAL(dp) :: el_loc
@@ -113,6 +115,9 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    REAL(dp) :: zeta_mod
    COMPLEX(dp), ALLOCATABLE :: aux(:)
    COMPLEX(dp), ALLOCATABLE :: aux0(:)
+   ! For noncollinear calculations
+   COMPLEX(dp), ALLOCATABLE :: aux_2(:)
+   COMPLEX(dp), ALLOCATABLE :: aux0_2(:)
    COMPLEX(dp) :: becp0(nkb,nbnd)
    COMPLEX(dp) :: becp_bp(nkb,nbnd)
    COMPLEX(dp) , ALLOCATABLE :: cphik(:)
@@ -137,15 +142,22 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    LOGICAL :: l_para! if true new parallel treatment
    COMPLEX(kind=DP) :: sca
    COMPLEX(kind=DP), ALLOCATABLE :: aux_g(:)
+   COMPLEX(kind=DP), ALLOCATABLE :: aux_g_2(:) ! noncollinear case
 
 
 !  -------------------------------------------------------------------------   !
 !                               INITIALIZATIONS
 !  -------------------------------------------------------------------------   !
-   ALLOCATE (psi1(npwx,nbnd))
-   ALLOCATE (psi(npwx,nbnd))
+   ALLOCATE (psi1(npol*npwx,nbnd))
+   ALLOCATE (psi(npol*npwx,nbnd))
    ALLOCATE (aux(ngm))
    ALLOCATE (aux0(ngm))
+   nspinnc=nspin
+   IF (noncolin) THEN
+      nspinnc=1
+      ALLOCATE (aux_2(ngm))
+      ALLOCATE (aux0_2(ngm))
+   END IF
    ALLOCATE (map_g(npwx))
    ALLOCATE (l_cal(nbnd))
    if(pdir==3) then
@@ -191,7 +203,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    endif
 !  --- Get the number of strings ---
    nstring=nks/nppstr_3d(pdir)
-   nkort=nstring/(nspin)
+   nkort=nstring/(nspinnc) ! Include noncollinear case
 
 !  --- Allocate memory for arrays ---
    ALLOCATE(phik(nstring))
@@ -240,7 +252,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
 !  -------------------------------------------------------------------------   !
 
 !  --- Calculate string weights, normalizing to 1 (no spin) or 1+1 (spin) ---
-   DO is=1,nspin
+   DO is=1,nspinnc ! Include noncollinear case
       weight=0.0_dp
       DO kort=1,nkort
          istring=kort+(is-1)*nkort
@@ -298,7 +310,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    kpoint=0
    zeta=(1.d0,0.d0)
 !  --- Start loop over spin ---
-   DO is=1,nspin 
+   DO is=1,nspinnc ! Include noncollinear case 
 
       ! l_cal(n) = .true./.false. if n-th state is occupied/empty
       DO nb = 1, nbnd
@@ -410,36 +422,48 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
                      mat(mb,mb)=(1.d0, 0.d0)
                   ELSE
                      aux=(0.d0,0.d0)
+                     IF (noncolin) aux_2=(0.d0,0.d0)
                      IF (kpar /= (nppstr_3d(pdir)+1)) THEN
                         DO ig=1,npw1
                            aux(igk1(ig))=psi1(ig,mb)
+                           IF (noncolin) aux_2(igk1(ig))=psi1(ig+npwx,mb)
                         ENDDO
                      ELSE IF( .not. l_para) THEN
                         DO ig=1,npw1
                            aux(map_g(ig))=psi1(ig,mb)
+                           IF (noncolin) aux_2(map_g(ig))=psi1(ig+npwx,mb)
                         ENDDO
                      ELSE
 ! allocate global array
                         ALLOCATE (aux_g(ngm_g))
+                        IF(noncolin) ALLOCATE (aux_g_2(ngm_g))
                         aux_g=(0.d0,0.d0)
+                        IF(noncolin) aux_g_2=(0.d0,0.d0)
 ! put psi1 on global array
                         DO ig=1,npw1
                            aux_g(mapgm_global(ig_l2g(igk1(ig)),pdir))=psi1(ig,mb)
+                           IF(noncolin) aux_g_2(mapgm_global(ig_l2g(igk1(ig)),pdir))=psi1(ig+npwx,mb)
                         ENDDO
                         CALL mp_sum(aux_g(:))
+                        IF (noncolin) CALL mp_sum(aux_g_2(:)) !non-collinear
                         DO ig=1,ngm
                            aux(ig) = aux_g(ig_l2g(ig))
+                           IF (noncolin) aux_2(ig) = aux_g_2(ig_l2g(ig))
                         ENDDO
                         DEALLOCATE (aux_g)
+                        IF(noncolin) DEALLOCATE (aux_g_2)
                      END IF
                      DO nb=1,nbnd
                         IF ( l_cal(nb) ) THEN
                            aux0=(0.d0,0.d0)
+                           IF(noncolin) aux0_2=(0.d0,0.d0)
                            DO ig=1,npw0
                               aux0(igk0(ig))=psi(ig,nb)
+                              IF(noncolin) aux0_2(igk0(ig))=psi(ig+npwx,nb)
                            END DO
 ! do scalar product
                            mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
+                           IF (noncolin) mat(nb,mb) = mat(nb,mb)+zdotc(ngm,aux0_2,1,aux_2,1)
                         END IF                           
                      ENDDO
                   END IF
@@ -560,6 +584,8 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    DEALLOCATE(aux0)
    DEALLOCATE(psi)
    DEALLOCATE(psi1)
+   IF (ALLOCATED(aux_2)) DEALLOCATE(aux_2)
+   IF (ALLOCATED(aux0_2)) DEALLOCATE(aux0_2)
 !------------------------------------------------------------------------------!
 
 END SUBROUTINE c_phase_field

@@ -322,6 +322,8 @@ SUBROUTINE kpoint_grid_efield (at, bg, npk, &
   USE bp,    ONLY : nppstr_3d, nx_el, l3dstring, efield_cart, efield_cry,&
                       transform_el
   USE io_global,  ONLY : stdout
+  USE noncollin_module,   ONLY : noncolin
+
   IMPLICIT NONE
   !
   INTEGER, INTENT(in):: npk, k1, k2, k3, nk1, nk2, nk3,nspin
@@ -369,8 +371,13 @@ SUBROUTINE kpoint_grid_efield (at, bg, npk, &
 !allocate and set up correspondence
   nppstr_max=nk1*nk2*nk3
 
-  ALLOCATE(nx_el(nppstr_max*nspin,3))
-!establih correspondence
+  IF(noncolin) THEN
+     ALLOCATE(nx_el(nppstr_max,3))
+  ELSE
+     ALLOCATE(nx_el(nppstr_max*nspin,3))
+  END IF
+
+ !establih correspondence
 
    DO i=1,nk1
      DO j=1,nk2

@@ -434,7 +434,12 @@ SUBROUTINE setup()
      !
      IF( lelfield) THEN
         !
-        allocate(nx_el(nkstot*nspin,3))
+        IF(noncolin) THEN
+           allocate(nx_el(nkstot,3))
+        ELSE
+           allocate(nx_el(nkstot*nspin,3))
+        END IF
+
         ! <AF>
         IF ( gdir<0 .OR. gdir>3 ) CALL errore('setup','invalid gdir value',10) 
         IF ( gdir == 0 ) CALL errore('setup','needed gdir probably not set',10) 

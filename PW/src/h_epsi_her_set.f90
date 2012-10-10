@@ -16,6 +16,7 @@ subroutine h_epsi_her_set(pdir, e_field)
   ! wavefunctions from previous iteration are read into 'evcel'
   ! spin polarized systems supported only with fixed occupations
 
+  USE noncollin_module,     ONLY : noncolin, npol
   USE kinds,    ONLY : DP
   USE us
   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, ecutwfc
@@ -30,7 +31,7 @@ subroutine h_epsi_her_set(pdir, e_field)
                          evcm=>evcelm, mapgp_global, mapgm_global, nx_el
   USE basis
   USE klist
-  USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
+  USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
   USE ions_base, ONLY: ityp, tau, nat,ntyp => nsp
   USE io_files,  ONLY: iunwfc, nwordwfc, iunefieldm, iunefieldp
   USE buffers,   ONLY: get_buffer
@@ -79,7 +80,7 @@ subroutine h_epsi_her_set(pdir, e_field)
    INTEGER :: np
    INTEGER :: npw1
    INTEGER :: npw0
-   INTEGER :: nstring
+   !INTEGER :: nstring
    INTEGER :: nt
    INTEGER :: ik_stringa!k-point index inside string
    REAL(dp) :: dk(3)
@@ -90,13 +91,16 @@ subroutine h_epsi_her_set(pdir, e_field)
    REAL(dp) :: g2kin_bp(npwx)
    REAL(dp) :: gpar(3)
    REAL(dp) :: gtr(3)
-   REAL(dp) :: gvec
+   !REAL(dp) :: gvec
    REAL(dp), ALLOCATABLE :: ln(:,:,:)
    REAL(dp), ALLOCATABLE  :: ln0(:,:,:)!map g-space global to g-space k-point dependent
    REAL(dp) :: qrad_dk(nbetam,nbetam,lmaxq,ntyp)
    REAL(dp) :: ylm_dk(lmaxq*lmaxq)
    COMPLEX(dp), ALLOCATABLE :: aux(:)
    COMPLEX(dp), ALLOCATABLE  :: aux0(:)
+   ! Also for noncollinear calculation
+   COMPLEX(DP), ALLOCATABLE :: aux_2(:)
+   COMPLEX(DP), ALLOCATABLE :: aux0_2(:)
    COMPLEX(dp) :: becp0(nkb,nbnd)
    COMPLEX(dp) :: becp_bp(nkb,nbnd)
    COMPLEX(dp) :: cdet(2)
@@ -111,6 +115,8 @@ subroutine h_epsi_her_set(pdir, e_field)
    
    COMPLEX(dp) :: sca,sca1
    COMPLEX(dp) :: ps(nkb,nbnd)
+   COMPLEX(dp) :: matbig(nks,nbnd,nbnd)
+   INTEGER :: mdone(nks)
    INTEGER :: ijkb0,  ibnd,jh, ih, ikb, ik
 
 
@@ -120,8 +126,11 @@ subroutine h_epsi_her_set(pdir, e_field)
    REAL(dp) :: dkfact
    LOGICAL  :: l_para! if true new parallel treatment
    COMPLEX(kind=DP), ALLOCATABLE :: aux_g(:)
+   COMPLEX(kind=DP), ALLOCATABLE :: aux_g_2(:) ! non-collinear case
+   !  --- Define a small number ---
+   eps=0.000001d0
 
-   if(e_field==0.d0) return
+   if(ABS(e_field)<eps) return
 
 !  -------------------------------------------------------------------------   !
 !                               INITIALIZATIONS
@@ -134,18 +143,53 @@ subroutine h_epsi_her_set(pdir, e_field)
    endif
 
 
-   ALLOCATE( evct(npwx,nbnd))
+   ALLOCATE( evct(npwx*npol,nbnd))
    ALLOCATE( map_g(npwx))
 
    ALLOCATE(ln(-dfftp%nr1:dfftp%nr1,-dfftp%nr2:dfftp%nr2,-dfftp%nr3:dfftp%nr3),&
             ln0(-dfftp%nr1:dfftp%nr1,-dfftp%nr2:dfftp%nr2,-dfftp%nr3:dfftp%nr3))
    ALLOCATE(aux(ngm),aux0(ngm))
+   IF(noncolin) ALLOCATE (aux_2(ngm),aux0_2(ngm))
 
    ALLOCATE (l_cal(nbnd))
+
+!  --- Recalculate FFT correspondence (see ggen.f90) ---
+      DO ng=1,ngm
+         mk1=nint(g(1,ng)*at(1,1)+g(2,ng)*at(2,1)+g(3,ng)*at(3,1))
+         mk2=nint(g(1,ng)*at(1,2)+g(2,ng)*at(2,2)+g(3,ng)*at(3,2))
+         mk3=nint(g(1,ng)*at(1,3)+g(2,ng)*at(2,3)+g(3,ng)*at(3,3))
+         ln(mk1,mk2,mk3) = ng
+      END DO
+ 
+! !  --- Find vector along strings ---
+      if(nppstr_3d(pdir) .ne. 1) then
+         gpar(1)=(xk(1,nx_el(nppstr_3d(pdir),pdir))-xk(1,nx_el(1,pdir)))*&
+              &DBLE(nppstr_3d(pdir))/DBLE(nppstr_3d(pdir)-1)
+         gpar(2)=(xk(2,nx_el(nppstr_3d(pdir),pdir))-xk(2,nx_el(1,pdir)))*&
+              &DBLE(nppstr_3d(pdir))/DBLE(nppstr_3d(pdir)-1)
+         gpar(3)=(xk(3,nx_el(nppstr_3d(pdir),pdir))-xk(3,nx_el(1,pdir)))*&
+              &DBLE(nppstr_3d(pdir))/DBLE(nppstr_3d(pdir)-1)
+
+      else
+         gpar=bg(:,pdir)
+      endif
+      !gvec=dsqrt(gpar(1)**2+gpar(2)**2+gpar(3)**2)*tpiba
+      
+      matbig=(0.0d0,0.0d0)
+      mdone=0
+     
+      call factor_a(pdir,at,dkfact)
+      dkfact=tpiba/dkfact/dble(nppstr_3d(pdir))
   
 !determines the spin polarization
 
    DO ik=1,nks
+  
+!  --- Find vector between consecutive points in strings ---
+      dk=gpar/nppstr_3d(pdir)
+      dkmod=SQRT(DOT_PRODUCT(dk,dk))*tpiba
+      dkm=-dk
+
       CALL get_buffer ( evcel, nwordwfc, iunwfc, nx_el(ik,pdir) )
 
       if(nspin==2) then
@@ -168,18 +212,7 @@ subroutine h_epsi_her_set(pdir, e_field)
       END DO
 
       ik_stringa=mod(ik-1,nppstr_3d(pdir))+1
-      nstring=nks/nppstr_3d(pdir)
- 
- !  --- Define a small number ---
-      eps=0.000001d0
-
-!  --- Recalculate FFT correspondence (see ggen.f90) ---
-      DO ng=1,ngm
-         mk1=nint(g(1,ng)*at(1,1)+g(2,ng)*at(2,1)+g(3,ng)*at(3,1))
-         mk2=nint(g(1,ng)*at(1,2)+g(2,ng)*at(2,2)+g(3,ng)*at(3,2))
-         mk3=nint(g(1,ng)*at(1,3)+g(2,ng)*at(2,3)+g(3,ng)*at(3,3))
-         ln(mk1,mk2,mk3) = ng
-      END DO
+      !nstring=nks/nppstr_3d(pdir)
  
       if(okvan) then
 !  --- Initialize arrays ---
@@ -201,67 +234,14 @@ subroutine h_epsi_her_set(pdir, e_field)
 !           electronic polarization: set values for k-points strings           !
 !  -------------------------------------------------------------------------   !
 
-! !  --- Find vector along strings ---
-      if(nppstr_3d(pdir) .ne. 1) then
-         gpar(1)=(xk(1,nx_el(nppstr_3d(pdir),pdir))-xk(1,nx_el(1,pdir)))*&
-              &DBLE(nppstr_3d(pdir))/DBLE(nppstr_3d(pdir)-1)
-         gpar(2)=(xk(2,nx_el(nppstr_3d(pdir),pdir))-xk(2,nx_el(1,pdir)))*&
-              &DBLE(nppstr_3d(pdir))/DBLE(nppstr_3d(pdir)-1)
-         gpar(3)=(xk(3,nx_el(nppstr_3d(pdir),pdir))-xk(3,nx_el(1,pdir)))*&
-              &DBLE(nppstr_3d(pdir))/DBLE(nppstr_3d(pdir)-1)
-
-         gpar(:)=gpar(:)
-         gvec=dsqrt(gpar(1)**2+gpar(2)**2+gpar(3)**2)*tpiba
-      else
-         gpar(1)=0.d0
-         gpar(2)=0.d0
-         gpar(3)=0.d0
-         gpar(pdir)=1.d0/at(pdir,pdir)
-         gvec=tpiba/sqrt(at(pdir,1)**2.d0+at(pdir,2)**2.d0+at(pdir,3)**2.d0)
-      endif
-      
-      
-!  --- Find vector between consecutive points in strings ---
-      if(nppstr_3d(pdir).ne.1) then
-         dk(1)=xk(1,nx_el(2,pdir))-xk(1,nx_el(1,pdir))
-         dk(2)=xk(2,nx_el(2,pdir))-xk(2,nx_el(1,pdir)) 
-         dk(3)=xk(3,nx_el(2,pdir))-xk(3,nx_el(1,pdir))
-         dkmod=SQRT(dk(1)**2+dk(2)**2+dk(3)**2)*tpiba
-      else
-         dk(1)=0.d0
-         dk(2)=0.d0
-         dk(3)=0.d0
-         dk(pdir)=1.d0/at(pdir,pdir)
-         dkmod=tpiba/sqrt(at(pdir,1)**2.d0+at(pdir,2)**2.d0+at(pdir,3)**2.d0)
-      endif
-
-     
-      call factor_a(pdir,at,dkfact)
-      dkfact=tpiba/dkfact/dble(nppstr_3d(pdir))
-     
-
-      dkm(:)=-dk(:)
-
 !calculates fact factor
 !electronic charge is sqrt(2.) (Rydberg units)
 !the factor (-i)/2 comes form operator Im
 
-      if(nspin == 1) then
-         !fact_hepsi(ik)=(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod
-         fact_hepsi(nx_el(ik,pdir),pdir)=(0.d0,-1.d0)*e_field*dsqrt(2.d0)/2.d0/dkfact
-      else
-         !fact_hepsi(ik)=(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod/DBLE(nspin)
-         fact_hepsi(nx_el(ik,pdir),pdir)=(0.d0,-1.d0)*e_field*dsqrt(2.d0)/2.d0/dkfact
-      endif
-
-
-
+      fact_hepsi(nx_el(ik,pdir),pdir)=(0.d0,-1.d0)*e_field*dsqrt(2.d0)/2.d0/dkfact
   
       evcm(:,:,pdir)=(0.d0,0.d0)
       evcp(:,:,pdir)=(0.d0,0.d0)
- 
- 
-
 
       if(okvan) then
 !  -------------------------------------------------------------------------   !
@@ -371,6 +351,7 @@ subroutine h_epsi_her_set(pdir, e_field)
 
 !              --- Matrix elements calculation ---
 
+        IF(mdone(nx_el(ik,pdir))==0) THEN
          mat=(0.d0,0.d0)
          DO nb=1,nbnd
             DO mb=1,nbnd
@@ -379,15 +360,22 @@ subroutine h_epsi_her_set(pdir, e_field)
                ELSE
                   aux=(0.d0,0.d0)
                   aux0=(0.d0,0.d0)
+                  if(noncolin) then
+                     aux_2=(0.d0,0.d0)
+                     aux0_2=(0.d0,0.d0)
+                  end if
                   DO ig=1,npw1
                      aux0(igk1(ig))=evcel(ig,nb)
+                     IF (noncolin) aux0_2(igk1(ig))=evcel(ig+npwx,nb)
                   END DO
 
                   DO ig=1,npw0
                      aux(igk0(ig))=evct(ig,mb)
-                   
+                     IF (noncolin) aux(igk0(ig))=evct(ig+npwx,mb)
                   END DO
+                   
                   mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
+                  if (noncolin) mat(nb,mb)=mat(nb,mb)+zdotc(ngm,aux0_2,1,aux_2,1)
 !                    --- Calculate the augmented part: ij=KB projectors, ---
 !                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
 !                    --- <beta_jR|u_mk'> e^i(k-k')*R =                   ---
@@ -424,6 +412,12 @@ subroutine h_epsi_her_set(pdir, e_field)
          CALL zgefa(mat,nbnd,nbnd,ivpt,info)
          CALL errore('h_epsi_her','error in zgefa',abs(info))
          CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
+         matbig(nx_el(ik,pdir),:,:)=mat
+         mdone(nx_el(ik,pdir))=1
+        ELSE
+         mat=matbig(nx_el(ik,pdir),:,:)
+        END IF
+
 !    mat=S^-1(k,k-1)
          do ig=1,npw0
             gtr(1)=g(1,igk0(ig))
@@ -443,6 +437,8 @@ subroutine h_epsi_her_set(pdir, e_field)
                   do m=1,nbnd
                      do nb=1,nbnd
                         evcm(ng,m,pdir)=evcm(ng,m,pdir) + mat(nb,m)*evct(ig,nb)
+                        IF (noncolin) evcm(ng+npwx,m,pdir)=evcm(ng+npwx,m,pdir) &
+                          +mat(nb,m)*evct(ig+npwx,nb)
                      enddo
                   enddo
                end if
@@ -486,7 +482,7 @@ subroutine h_epsi_her_set(pdir, e_field)
     
  
 !           --- End of dot products between wavefunctions and betas ---
-      ELSE
+      ELSE !(ik_stringa == 1)
          
 
          CALL gk_sort(xk(1,nx_el(ik+nppstr_3d(pdir)-1,pdir)),ngm,g,ecutwfc/tpiba2, &
@@ -523,6 +519,7 @@ subroutine h_epsi_her_set(pdir, e_field)
          endif
 !              --- Matrix elements calculation ---
 
+        IF(mdone(nx_el(ik,pdir))==0) THEN
          mat=(0.d0,0.d0)
          if(.not. l_para) then
             map_g(:) = 0
@@ -570,44 +567,65 @@ subroutine h_epsi_her_set(pdir, e_field)
          endif
 
 
-         DO nb=1,nbnd
+         ! OPTIMIZATION BY AM
+         ! NOTE THERE ARE TOO MANY COMMUNICATION CALLS FOR GLOBAL ARRAY
+         ! CAN REDUCE THEM SIGNIFICANTLY  !!!
+         ! NOTE CHANGED ORDER OF LOOPS OVER BANDS!!!
             DO mb=1,nbnd
+              IF(l_para) THEN
+                !allocate global array
+                allocate(aux_g(ngm_g))
+                aux_g=(0.d0,0.d0)
+                IF (noncolin) THEN
+                  allocate(aux_g_2(ngm_g))
+                  aux_g_2=(0.d0,0.d0)
+                END IF
+!put psi1 on global array
+                do ig=1,npw0
+                  aux_g(mapgp_global(ig_l2g(igk0(ig)),pdir))=evct(ig,mb)
+                  IF (noncolin) aux_g_2(mapgp_global(ig_l2g(igk0(ig)),pdir))=evct(ig+npwx,mb)
+                enddo
+                call mp_sum(aux_g(:))
+                IF (noncolin) call mp_sum(aux_g_2(:))
+              END IF
+
+         DO nb=1,nbnd
                IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
                   IF ( nb == mb )  mat(nb,mb)=1.d0
                ELSE
                   if(.not.l_para) then
                      aux=(0.d0,0.d0)
                      aux0=(0.d0,0.d0)
+                     IF(noncolin) aux_2=(0.d0,0.d0)
+                     IF(noncolin) aux0_2=(0.d0,0.d0)
                      DO ig=1,npw1
                         aux0(igk1(ig))=evcel(ig,nb)
+                        IF(noncolin) aux0_2(igk1(ig))=evcel(ig+npwx,nb)
                      END DO
                      
                      do ig=1,npw0
-!               
                         aux(map_g(ig))=evct(ig,mb)
+                        IF (noncolin) aux_2(map_g(ig))=evct(ig+npwx,mb)
                      ENDDO
               
                      mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
+                     IF (noncolin) mat(nb,mb) = mat(nb,mb)+zdotc(ngm,aux0_2,1,aux_2,1)
                   else
-                     !allocate global array
-                     allocate(aux_g(ngm_g))
-                     aux_g=(0.d0,0.d0)
-!put psi1 on global array
-                     do ig=1,npw0
-                        aux_g(mapgp_global(ig_l2g(igk0(ig)),pdir))=evct(ig,mb)
-                     enddo
-                     call mp_sum(aux_g(:))
                      sca=(0.d0,0.d0)
 !do scalar product
                      do ig=1,npw1
                         sca=sca+conjg(evcel(ig,nb))*aux_g(ig_l2g(igk1(ig)))
+                        IF (noncolin) sca=sca+conjg(evcel(ig+npwx,nb))*aux_g_2(ig_l2g(igk1(ig)))
                      enddo
 ! mp_sum is done later!!!
                      mat(nb,mb)=sca
-                     deallocate(aux_g)
                   endif
                endif
             END DO
+                    IF(l_para) THEN
+                     deallocate(aux_g)
+                     IF (noncolin) deallocate(aux_g_2)
+                    END IF
          END DO
          !
          call mp_sum( mat, intra_bgrp_comm )
@@ -642,6 +660,11 @@ subroutine h_epsi_her_set(pdir, e_field)
          CALL zgefa(mat,nbnd,nbnd,ivpt,info)
          CALL errore('h_epsi_her','error in zgefa',abs(info))
          CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
+         matbig(nx_el(ik,pdir),:,:)=mat
+         mdone(nx_el(ik,pdir))=1
+        ELSE
+         mat=matbig(nx_el(ik,pdir),:,:)
+        END IF
      
 !    mat=S^-1(k,k-1)
         
@@ -665,6 +688,8 @@ subroutine h_epsi_her_set(pdir, e_field)
                      do m=1,nbnd
                         do nb=1,nbnd
                            evcm(ng,m,pdir)=evcm(ng,m,pdir) + mat(nb,m)*evct(ig,nb)
+                           IF (noncolin) evcm(ng+npwx,m,pdir)=evcm(ng+npwx,m,pdir) &
+                             +mat(nb,m)*evct(ig+npwx,nb)
                         enddo
                      enddo
                   endif
@@ -673,21 +698,28 @@ subroutine h_epsi_her_set(pdir, e_field)
          else
 !allocate
             allocate(aux_g(ngm_g))
+            IF (noncolin) allocate(aux_g_2(ngm_g))
 !loop on nb
             do nb=1,nbnd
                aux_g(:)=(0.d0,0.d0)
+               IF (noncolin) aux_g_2(:)=(0.d0,0.d0)
                do ig=1,npw0
                   aux_g(mapgp_global(ig_l2g(igk0(ig)),pdir))=evct(ig,nb)
+                  IF (noncolin) aux_g_2(mapgp_global(ig_l2g(igk0(ig)),pdir))=evct(ig+npwx,nb)
                enddo
 !put evct on global  array
                call mp_sum(aux_g(:))
+               IF (noncolin) call mp_sum(aux_g_2(:))
                do m=1,nbnd
                   do ig=1,npw1
                      evcm(ig,m,pdir)=evcm(ig,m,pdir)+mat(nb,m)*aux_g(ig_l2g(igk1(ig)))
+                     IF (noncolin) evcm(ig+npwx,m,pdir)=evcm(ig+npwx,m,pdir) &
+                       +mat(nb,m)*aux_g_2(ig_l2g(igk1(ig)))
                   enddo
                enddo
             enddo
             deallocate(aux_g)
+            IF (noncolin) deallocate(aux_g_2)
          endif
          if(okvan) then
             evct(:,:) =  (0.d0, 0.d0)
@@ -766,6 +798,7 @@ subroutine h_epsi_her_set(pdir, e_field)
 
 !              --- Matrix elements calculation ---
 
+        IF(mdone(nx_el(ik+1,pdir))==0) THEN
          mat=(0.d0,0.d0)
          DO nb=1,nbnd
             DO mb=1,nbnd
@@ -774,15 +807,18 @@ subroutine h_epsi_her_set(pdir, e_field)
                ELSE
                   aux=(0.d0,0.d0)
                   aux0=(0.d0,0.d0)
+                  IF(noncolin) aux_2=(0.d0,0.d0)
+                  IF(noncolin) aux0_2=(0.d0,0.d0)
                   DO ig=1,npw1
                      aux0(igk1(ig))=evcel(ig,nb)
-               END DO
-               DO ig=1,npw0
-                  
-                  aux(igk0(ig))=evct(ig,mb)
-                  
-               END DO
-               mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
+                     if (noncolin) aux0_2(igk1(ig))=evcel(ig+npwx,nb)
+                  END DO
+                  DO ig=1,npw0
+                     aux(igk0(ig))=evct(ig,mb)
+                     if (noncolin) aux_2(igk0(ig))=evct(ig+npwx,mb)
+                  END DO
+                  mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
+                  if (noncolin) mat(nb,mb)=mat(nb,mb)+zdotc(ngm,aux0_2,1,aux_2,1)
 !                    --- Calculate the augmented part: ij=KB projectors, ---
 !                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
 !                    --- <beta_jR|u_mk'> e^i(k-k')*R =                   ---
@@ -819,6 +855,11 @@ subroutine h_epsi_her_set(pdir, e_field)
       CALL zgefa(mat,nbnd,nbnd,ivpt,info)
       CALL errore('h_epsi_her','error in zgefa',abs(info))
       CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
+      matbig(nx_el(ik+1,pdir),:,:)=TRANSPOSE(CONJG(mat))
+      mdone(nx_el(ik+1,pdir))=1
+     ELSE
+      mat=TRANSPOSE(CONJG(matbig(nx_el(ik+1,pdir),:,:)))
+     END IF
 !    mat=S^-1(k,k-1)
       do ig=1,npw0
          gtr(1)=g(1,igk0(ig))
@@ -838,6 +879,8 @@ subroutine h_epsi_her_set(pdir, e_field)
                do m=1,nbnd
                   do nb=1,nbnd
                      evcp(ng,m,pdir)=evcp(ng,m,pdir) + mat(nb,m)*evct(ig,nb)
+                     IF (noncolin) evcp(ng+npwx,m,pdir)=evcp(ng+npwx,m,pdir) &
+                       + mat(nb,m)*evct(ig+npwx,nb)
                   enddo
                enddo
             endif
@@ -914,6 +957,7 @@ subroutine h_epsi_her_set(pdir, e_field)
       endif
 !              --- Matrix elements calculation ---
 
+     IF(mdone(nx_el(ik-nppstr_3d(pdir)+1,pdir))==0) THEN
       if(.not.l_para) then
          map_g(:) = 0
          do ig=1,npw0
@@ -961,42 +1005,61 @@ subroutine h_epsi_her_set(pdir, e_field)
 
 
       mat=(0.d0,0.d0)
-      DO nb=1,nbnd
          DO mb=1,nbnd
+               if(l_para) then
+ !allocate global array
+                  allocate(aux_g(ngm_g))
+                  aux_g=(0.d0,0.d0)
+                  IF (noncolin) THEN
+                    allocate(aux_g_2(ngm_g))
+                    aux_g_2=(0.d0,0.d0)
+                  END IF
+!put psi1 on global array
+                  do ig=1,npw0
+                     aux_g(mapgm_global(ig_l2g(igk0(ig)),pdir))=evct(ig,mb)
+                     IF (noncolin) aux_g_2(mapgm_global(ig_l2g(igk0(ig)),pdir))=evct(ig+npwx,mb)
+                  enddo
+                  call mp_sum(aux_g(:))
+                  IF (noncolin) call mp_sum(aux_g_2(:))
+               end if
+
+      DO nb=1,nbnd
             IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
                IF ( nb == mb )  mat(nb,mb)=1.d0
             ELSE
                if(.not.l_para) then
                   aux=(0.d0,0.d0)
                   aux0=(0.d0,0.d0)
+                  IF(noncolin) aux_2=(0.d0,0.d0)
+                  IF(noncolin) aux0_2=(0.d0,0.d0)
                   DO ig=1,npw1
                      aux0(igk1(ig))=evcel(ig,nb)
+                     IF(noncolin) aux0_2(igk1(ig))=evcel(ig+npwx,nb)
                   END DO
                   do ig=1,npw0
                      aux(map_g(ig))=evct(ig,mb)
+                     IF(noncolin) aux_2(map_g(ig))=evct(ig+npwx,mb)
                   ENDDO
                   mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
+                  IF (noncolin) mat(nb,mb)=mat(nb,mb)+zdotc(ngm,aux0_2,1,aux_2,1)
                else
- !allocate global array
-                  allocate(aux_g(ngm_g))
-                  aux_g=(0.d0,0.d0)
-!put psi1 on global array
-                  do ig=1,npw0
-                     aux_g(mapgm_global(ig_l2g(igk0(ig)),pdir))=evct(ig,mb)
-                  enddo
-                  call mp_sum(aux_g(:))
                   sca=(0.d0,0.d0)
 !do scalar product
                   do ig=1,npw1
                      sca=sca+conjg(evcel(ig,nb))*aux_g(ig_l2g(igk1(ig)))
+                     IF (noncolin) sca=sca+conjg(evcel(ig+npwx,nb)) &
+                       *aux_g_2(ig_l2g(igk1(ig)))
                   enddo
 ! mp_sum is done later!!!
                   mat(nb,mb)=sca
-                  deallocate(aux_g)
                   
                endif
             endif
          END DO
+                IF(l_para) THEN
+                  deallocate(aux_g)
+                  IF (noncolin) deallocate(aux_g_2)
+                END IF
       END DO
       ! 
       call mp_sum( mat, intra_bgrp_comm )
@@ -1027,6 +1090,11 @@ subroutine h_epsi_her_set(pdir, e_field)
       CALL zgefa(mat,nbnd,nbnd,ivpt,info)
       CALL errore('h_epsi_her','error in zgefa',abs(info))
       CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
+      matbig(nx_el(ik-nppstr_3d(pdir)+1,pdir),:,:)=TRANSPOSE(CONJG(mat))
+      mdone(nx_el(ik-nppstr_3d(pdir)+1,pdir))=1
+     ELSE
+      mat=TRANSPOSE(CONJG(matbig(nx_el(ik-nppstr_3d(pdir)+1,pdir),:,:)))
+     END IF
        
 !    mat=S^-1(k,k-1)
       if(.not.l_para) then
@@ -1048,6 +1116,8 @@ subroutine h_epsi_her_set(pdir, e_field)
                   do m=1,nbnd
                      do nb=1,nbnd
                         evcp(ng,m,pdir)=evcp(ng,m,pdir) + mat(nb,m)*evct(ig,nb)
+                        IF (noncolin) evcp(ng+npwx,m,pdir)=evcp(ng+npwx,m,pdir) &
+                          +mat(nb,m)*evct(ig+npwx,nb)
                      end do
                   enddo
                end if
@@ -1057,21 +1127,28 @@ subroutine h_epsi_her_set(pdir, e_field)
 
 !allocate
          allocate(aux_g(ngm_g))
+         IF (noncolin) allocate(aux_g_2(ngm_g))
 !loop on nb
          do nb=1,nbnd
             aux_g(:)=(0.d0,0.d0)
+            IF (noncolin) aux_g_2(:)=(0.d0,0.d0)
             do ig=1,npw0
                aux_g(mapgm_global(ig_l2g(igk0(ig)),pdir))=evct(ig,nb)
+               IF (noncolin) aux_g_2(mapgm_global(ig_l2g(igk0(ig)),pdir))=evct(ig+npwx,nb)
             enddo
 !put evct on global  array
             call mp_sum(aux_g(:))
+            IF (noncolin) call mp_sum(aux_g_2(:))
             do m=1,nbnd
                do ig=1,npw1
                   evcp(ig,m,pdir)=evcp(ig,m,pdir)+mat(nb,m)*aux_g(ig_l2g(igk1(ig)))
+                  IF (noncolin) evcp(ig+npwx,m,pdir)=evcp(ig+npwx,m,pdir) &
+                    +mat(nb,m)*aux_g_2(ig_l2g(igk1(ig)))
                enddo
             enddo
          enddo
           deallocate(aux_g)
+          IF (noncolin) deallocate(aux_g_2)
 
       endif
       if(okvan) then
@@ -1123,6 +1200,8 @@ subroutine h_epsi_her_set(pdir, e_field)
   DEALLOCATE( map_g)
   deallocate(ln,ln0)
   DEALLOCATE(aux,aux0)
+  IF (ALLOCATED(aux_2)) DEALLOCATE(aux_2)
+  IF (ALLOCATED(aux0_2)) DEALLOCATE(aux0_2)
 
   
 !  --

@@ -17,6 +17,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   ! evcel must contain the wavefunctions from previous iteration
   ! spin polarized systems supported only with fixed occupations
 
+  USE noncollin_module,     ONLY : noncolin, npol
   USE kinds,    ONLY : DP
   USE us
   USE wvfct,    ONLY : igk, npwx, npw, nbnd, ik => current_k
@@ -47,7 +48,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   INTEGER ::  n! total number of wavefunctions 
   INTEGER :: nbande!number of wavefunctions to be calculated 
   
-  COMPLEX(DP) :: psi (lda, nbande ), hpsi (lda,nbande)
+  COMPLEX(DP) :: psi (lda*npol, nbande ), hpsi (lda*npol,nbande)
 
 
   COMPLEX(DP), EXTERNAL :: zdotc
@@ -62,11 +63,13 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   COMPLEX(DP) :: sca, sca1, pref
   INTEGER nb,mb, jkb, nhjkb, na, np, nhjkbm,jkb1,i,j
   INTEGER :: jkb_bp,nt,ig, ijkb0,ibnd,jh,ih,ikb
+  REAL(dp) :: eps
   
-
-  if(e_field==0.d0) return
+  !  --- Define a small number ---
+  eps=0.000001d0
+  if(ABS(e_field)<eps) return
   
-  ALLOCATE( evct(npwx,nbnd))
+  ALLOCATE( evct(npwx*npol,nbnd))
 
   if(okvan) then
 !  --- Initialize arrays ---
@@ -97,6 +100,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
 !apply w_k     
      do mb=1,nbnd!index on states of evcel
         sca = zdotc(npw,evcel(1,mb),1,psi(1,nb),1)
+        IF (noncolin) sca = sca + zdotc(npw,evcel(1+npwx,mb),1,psi(1+npwx,nb),1)
         call mp_sum( sca, intra_bgrp_comm )
 
         if(okvan) then 
@@ -122,6 +126,8 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
 
            hpsi(ig,nb) = hpsi(ig,nb) + &
                 &     fact_hepsi(ik,pdir)*sca*(evcelm(ig,mb,pdir)-evcelp(ig,mb,pdir))
+           IF (noncolin) hpsi(ig+npwx,nb) = hpsi(ig+npwx,nb) + &
+                & fact_hepsi(ik,pdir)*sca*(evcelm(ig+npwx,mb,pdir)-evcelp(ig+npwx,mb,pdir))
         enddo
      enddo
 !apply w_k*
@@ -129,7 +135,9 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
      if(.not.okvan) then
         do mb=1,nbnd!index on states of evcel        
            sca = zdotc(npw,evcelm(1,mb,pdir),1,psi(1,nb),1)
+           IF (noncolin) sca = sca+zdotc(npw,evcelm(1+npwx,mb,pdir),1,psi(1+npwx,nb),1)
            sca1 = zdotc(npw,evcelp(1,mb,pdir),1,psi(1,nb),1)
+           IF (noncolin) sca1 = sca1 + zdotc(npw,evcelp(1+npwx,mb,pdir),1,psi(1+npwx,nb),1)
            call mp_sum( sca, intra_bgrp_comm )
            call mp_sum(  sca1, intra_bgrp_comm )
            
@@ -137,6 +145,8 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
 
               hpsi(ig,nb) = hpsi(ig,nb) + &
                    &     CONJG(fact_hepsi(ik,pdir))*evcel(ig,mb)*(sca-sca1)
+              IF (noncolin) hpsi(ig+npwx,nb) = hpsi(ig+npwx,nb) + &
+                   & CONJG(fact_hepsi(ik,pdir))*evcel(ig+npwx,mb)*(sca-sca1)
            enddo
         enddo
    
