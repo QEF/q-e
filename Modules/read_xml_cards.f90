@@ -86,7 +86,9 @@ CONTAINS
     CASE ('ATOMIC_SPECIES')
        atom_mass = 0.0_DP
        hubbard_u = 0.0_DP
+       hubbard_j0 = 0.0_DP
        hubbard_alpha = 0.0_DP
+       hubbard_beta = 0.0_DP
        starting_magnetization = sm_not_set
        starting_ns_eigenvalue = -1.0_DP
        angle1 = 0.0_DP
@@ -191,7 +193,9 @@ CONTAINS
        CALL mp_bcast( atom_label, ionode_id )
        CALL mp_bcast( taspc, ionode_id )
        CALL mp_bcast( hubbard_u, ionode_id )
+       CALL mp_bcast( hubbard_j0, ionode_id )
        CALL mp_bcast( hubbard_alpha, ionode_id )
+       CALL mp_bcast( hubbard_beta, ionode_id )
        CALL mp_bcast( starting_magnetization, ionode_id )
        CALL mp_bcast( starting_ns_eigenvalue, ionode_id )
        CALL mp_bcast( angle1, ionode_id )
@@ -719,8 +723,16 @@ CONTAINS
          CALL iotk_scan_dat_inside( xmlinputunit, hubbard_alpha( is ),&
               ierr = ierr)
          !
+      CASE ( 'hubbard_beta' )
+         CALL iotk_scan_dat_inside( xmlinputunit, hubbard_beta( is ),&
+              ierr = ierr)
+         !
       CASE ( 'hubbard_u' )
          CALL iotk_scan_dat_inside( xmlinputunit, hubbard_u( is ),&
+              ierr = ierr)
+         !
+      CASE ( 'hubbard_j0' )
+         CALL iotk_scan_dat_inside( xmlinputunit, hubbard_j0( is ),&
               ierr = ierr)
          !
       CASE ( 'starting_ns_eigenvalue' )

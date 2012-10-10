@@ -386,8 +386,10 @@ MODULE input_parameters
         INTEGER, PARAMETER :: nspinx=2
         REAL(DP) :: starting_ns_eigenvalue(lqmax,nspinx,nsx) = -1.0_DP
         REAL(DP) :: hubbard_u(nsx) = 0.0_DP
+        REAL(DP) :: hubbard_j0(nsx) = 0.0_DP
         REAL(DP) :: hubbard_j(3,nsx) = 0.0_DP
         REAL(DP) :: hubbard_alpha(nsx) = 0.0_DP
+        REAL(DP) :: hubbard_beta(nsx) = 0.0_DP
         CHARACTER(len=80) :: U_projection_type = 'atomic'
 
         LOGICAL :: la2F = .false.
@@ -499,6 +501,7 @@ MODULE input_parameters
              occupations, degauss, nspin, ecfixed,                            &
              qcutz, q2sigma, lda_plus_U, lda_plus_u_kind,                     &
              Hubbard_U, Hubbard_J, Hubbard_alpha,                             &
+             Hubbard_J0, Hubbard_beta,                                        &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
              nqx1, nqx2, nqx3, ecutfock,                                      &

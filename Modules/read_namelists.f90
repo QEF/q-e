@@ -196,8 +196,10 @@ MODULE read_namelists_module
        lda_plus_U = .FALSE.
        lda_plus_u_kind = 0
        Hubbard_U = 0.0_DP
+       Hubbard_J0 = 0.0_DP
        Hubbard_J = 0.0_DP
        Hubbard_alpha = 0.0_DP
+       Hubbard_beta = 0.0_DP
        step_pen=.false.
        A_pen=0.0_DP
        sigma_pen=0.01_DP
@@ -850,8 +852,10 @@ MODULE read_namelists_module
        CALL mp_bcast( lda_plus_U,             ionode_id )
        CALL mp_bcast( lda_plus_u_kind,        ionode_id )
        CALL mp_bcast( Hubbard_U,              ionode_id )
+       CALL mp_bcast( Hubbard_J0,             ionode_id )
        CALL mp_bcast( Hubbard_J,              ionode_id )
        CALL mp_bcast( Hubbard_alpha,          ionode_id )
+       CALL mp_bcast( Hubbard_beta,           ionode_id )
        CALL mp_bcast( step_pen,               ionode_id )
        CALL mp_bcast( A_pen,                  ionode_id )
        CALL mp_bcast( sigma_pen,              ionode_id )
