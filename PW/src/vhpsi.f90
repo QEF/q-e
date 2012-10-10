@@ -16,7 +16,7 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
   USE kinds,     ONLY : DP
   USE becmod,    ONLY : bec_type, calbec, allocate_bec_type, deallocate_bec_type
   USE ldaU,      ONLY : Hubbard_lmax, Hubbard_l, HUbbard_U, Hubbard_alpha, &
-                        swfcatom, oatwfc
+                        swfcatom, oatwfc, Hubbard_J0, Hubbard_beta
   USE lsda_mod,  ONLY : current_spin
   USE scf,       ONLY : v
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
@@ -43,7 +43,8 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
   do ibnd = 1, mps  
      do na = 1, nat  
         nt = ityp (na)  
-        if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then  
+        if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0.or.&
+            Hubbard_J0(nt).ne.0.d0 .or. Hubbard_beta(nt).ne.0.d0 ) then  
            do m1 = 1, 2 * Hubbard_l(nt) + 1 
               temp = 0.d0
               if (gamma_only) then
