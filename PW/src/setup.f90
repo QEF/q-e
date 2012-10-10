@@ -68,7 +68,8 @@ SUBROUTINE setup()
   USE uspp_param,         ONLY : upf, n_atom_wfc
   USE uspp,               ONLY : okvan
   USE ldaU,               ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_U, Hubbard_J, &
-                                 Hubbard_l, Hubbard_alpha, Hubbard_lmax, d_spin_ldau, oatwfc
+                                 Hubbard_l, Hubbard_alpha, Hubbard_lmax, d_spin_ldau, oatwfc,&
+                                 Hubbard_J0, Hubbard_beta
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el, nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
   USE funct,              ONLY : set_dft_from_name
@@ -592,7 +593,8 @@ SUBROUTINE setup()
      !
      DO nt = 1, ntyp
         !
-        IF ( Hubbard_U(nt)/=0.d0.OR.Hubbard_alpha(nt)/=0.D0 ) THEN
+        IF ( Hubbard_U(nt)/=0.d0.OR.Hubbard_alpha(nt)/=0.D0 .OR.
+             Hubbard_J0(nt) /=0.d0 .OR. Hubbard_beta(nt) /=0.d0) THEN
            !
            Hubbard_l(nt) = set_Hubbard_l( upf(nt)%psd )
            !
