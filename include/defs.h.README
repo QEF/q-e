@@ -73,7 +73,7 @@ Hardware/Compiler:
                   bugs and for insufficient stack size)
 OS:
 Parallel execution:
-      __PARA      Parallel execution 
+      __PARA      Parallel execution - should be replaced by:
       __MPI       Use MPI library
       __OPENMP    OpenMP parallelization
 Libraries:
@@ -92,6 +92,7 @@ Timing:
       __HPM        Hardware Performance Monitor (IBM SP)
       __QK_USER__  for better timing of fftw in cray xt3 (?)
 Signals:
+      __PTRACE        Enable traceback
       __TRAP_SIGUSR1  Enable signal trapping (experimental): code will stop
                       and save data if executable is signaled with USR1
 All other preprocessing flags are for debugging purposes and should not be
