@@ -672,7 +672,8 @@ SUBROUTINE v_hubbard(ns, v_hub, eth)
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp
   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U, &
-                                   Hubbard_J, Hubbard_alpha, lda_plus_u_kind
+                                   Hubbard_J, Hubbard_alpha, lda_plus_u_kind,&
+                                   Hubbard_J0, Hubbard_beta
   USE lsda_mod,             ONLY : nspin
   USE control_flags,        ONLY : iverbosity
   USE io_global,            ONLY : stdout
@@ -682,8 +683,8 @@ SUBROUTINE v_hubbard(ns, v_hub, eth)
   REAL(DP), INTENT(IN)  :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) 
   REAL(DP), INTENT(OUT) :: v_hub(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) 
   REAL(DP), INTENT(OUT) :: eth
-  REAL(DP) :: n_tot, n_spin, eth_dc, eth_u, mag2
-  INTEGER :: is, is1, na, nt, m1, m2, m3, m4
+  REAL(DP) :: n_tot, n_spin, eth_dc, eth_u, mag2, effU
+  INTEGER :: is, isop, is1, na, nt, m1, m2, m3, m4
   REAL(DP),    ALLOCATABLE :: u_matrix(:,:,:,:)
 
   ALLOCATE( u_matrix(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, 2*Hubbard_lmax+1, 2*Hubbard_lmax+1) )
@@ -699,22 +700,60 @@ SUBROUTINE v_hubbard(ns, v_hub, eth)
     DO na = 1, nat
        nt = ityp (na)
        IF (Hubbard_U(nt).NE.0.d0 .OR. Hubbard_alpha(nt).NE.0.d0) THEN
+          IF (Hubbard_J0(nt).NE.0.d0) THEN
+             effU = Hubbard_U(nt) - Hubbard_J0(nt)
+          ELSE
+             effU = Hubbard_U(nt)
+          END IF  
           DO is = 1, nspin
              DO m1 = 1, 2 * Hubbard_l(nt) + 1
-                eth = eth + ( Hubbard_alpha(nt) + 0.5D0 * Hubbard_U(nt) ) * &
+                eth = eth + ( Hubbard_alpha(nt) + 0.5D0 * effU ) * &
                               ns(m1,m1,is,na)
                 v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + &
-                            ( Hubbard_alpha(nt) + 0.5D0 * Hubbard_U(nt) )
+                            ( Hubbard_alpha(nt) + 0.5D0 * effU )
                 DO m2 = 1, 2 * Hubbard_l(nt) + 1
-                   eth = eth - 0.5D0 * Hubbard_U(nt) * &
+                   eth = eth - 0.5D0 * effU * &
                                        ns(m2,m1,is,na)* ns(m1,m2,is,na)
                    v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - &
-                                        Hubbard_U(nt) * ns(m2,m1,is,na)
+                                        effU * ns(m2,m1,is,na)
                 ENDDO
              ENDDO
           ENDDO
        ENDIF
-    ENDDO
+
+       IF (Hubbard_J0(nt).NE.0.d0 .OR. Hubbard_beta(nt).NE.0.d0) THEN
+          DO is=1, nspin
+             IF (is .eq. 2) THEN
+                isop = 1
+             ELSE
+                isop = 2
+             END IF
+             DO m1 = 1, 2 * Hubbard_l(nt) + 1
+                IF ( is .eq. 1) THEN
+                   eth = eth + Hubbard_beta(nt) * ns(m1,m1,is,na)
+                   v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + Hubbard_beta(nt)
+                   DO m2 = 1, 2 * Hubbard_l(nt) + 1
+                      eth = eth + 0.5D0 * Hubbard_J0(nt) * &
+                            ns(m2,m1,is,na)* ns(m1,m2,isop,na)
+                      v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) + &
+                                           Hubbard_J0(nt) * ns(m2,m1,isop,na)
+                   END DO
+                ELSE IF (is .eq. 2) THEN
+                   eth = eth - Hubbard_beta(nt) * ns(m1,m1,is,na)
+                   v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) - Hubbard_beta(nt)
+                   DO m2 = 1, 2 * Hubbard_l(nt) + 1
+                      eth = eth + 0.5D0 * Hubbard_J0(nt) * &
+                            ns(m2,m1,is,na) * ns(m1,m2,isop,na)
+                      v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) + &
+                                           Hubbard_J0(nt) * ns(m2,m1,isop,na)
+                   END DO
+                END IF
+             END DO
+          END DO
+       END IF
+        
+    END DO
+
     IF (nspin.EQ.1) eth = 2.d0 * eth
 
 !-- output of hubbard energies:
