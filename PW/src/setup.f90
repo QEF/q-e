@@ -593,7 +593,7 @@ SUBROUTINE setup()
      !
      DO nt = 1, ntyp
         !
-        IF ( Hubbard_U(nt)/=0.d0.OR.Hubbard_alpha(nt)/=0.D0 .OR.
+        IF ( Hubbard_U(nt)/=0.d0.OR.Hubbard_alpha(nt)/=0.D0 .OR.&
              Hubbard_J0(nt) /=0.d0 .OR. Hubbard_beta(nt) /=0.d0) THEN
            !
            Hubbard_l(nt) = set_Hubbard_l( upf(nt)%psd )
