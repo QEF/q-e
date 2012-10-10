@@ -97,8 +97,10 @@ SUBROUTINE iosys()
   USE start_k,       ONLY : init_start_k
   !
   USE ldaU,          ONLY : Hubbard_U_     => hubbard_u, &
+                            Hubbard_J0 => hubbard_j0, &
                             Hubbard_J_ => hubbard_j, &
                             Hubbard_alpha_ => hubbard_alpha, &
+                            Hubbard_beta_ => hubbard_beta, &
                             lda_plus_u_    => lda_plus_u, &
                             lda_plus_u_kind_    => lda_plus_u_kind, &
                             niter_with_fixed_ns, starting_ns, U_projection
@@ -248,6 +250,7 @@ SUBROUTINE iosys()
                                occupations, degauss, smearing, nspin,       &
                                ecfixed, qcutz, q2sigma, lda_plus_U,         &
                                lda_plus_U_kind, Hubbard_U, Hubbard_J,       &
+                               Hubbard_J0, Hubbard_beta,                    &
                                Hubbard_alpha, input_dft, la2F,              &
                                starting_ns_eigenvalue, U_projection_type,   &
                                x_gamma_extrapolation, nqx1, nqx2, nqx3,     &
@@ -853,8 +856,10 @@ SUBROUTINE iosys()
   END SELECT
   !
   Hubbard_U(:)    = Hubbard_U(:) / rytoev
+  Hubbard_J0(:)    = Hubbard_J0(:) / rytoev
   Hubbard_J(:,:)  = Hubbard_J(:,:) / rytoev
   Hubbard_alpha(:)= Hubbard_alpha(:) / rytoev
+  Hubbard_beta(:)= Hubbard_beta(:) / rytoev
   !
   ethr = diago_thr_init
   !
@@ -1159,7 +1164,9 @@ SUBROUTINE iosys()
   !
   Hubbard_U_(1:ntyp)      = hubbard_u(1:ntyp)
   Hubbard_J_(1:3,1:ntyp)  = hubbard_j(1:3,1:ntyp)
+  Hubbard_J0_(1:ntyp)     = hubbard_j0(1:ntyp)
   Hubbard_alpha_(1:ntyp)  = hubbard_alpha(1:ntyp)
+  Hubbard_beta_(1:ntyp)   = hubbard_beta(1:ntyp)
   lda_plus_u_             = lda_plus_u
   lda_plus_u_kind_        = lda_plus_u_kind
   la2F_                   = la2F
