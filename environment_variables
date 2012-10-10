@@ -51,9 +51,20 @@ fi
 # a small number of processors; do not use tests and examples to benchmark
 # parallelism, do not run on too many processors
 
+PARA_PREFIX="mpirun -np 8"
 PARA_PREFIX=" "
-PARA_PREFIX=" "
-PARA_POSTFIX=" "
+#
+# available flags: 
+#                  -nimage n        number of images         (or -nimages)
+#                  -npool  n        number of pools          (or -npools)
+#                  -nband  n        number of band groups    (or -nb, -nbgrp,
+#                                                            -nband_group )
+#                  -ntask_groups n  number of task groups    (or -ntg)
+#                  -ndiag n         number of processors for linear algebra 
+#                                            (or -nproc_ortho, -northo, 
+#                                                -nproc_diag) 
+#
+PARA_POSTFIX=" -nband 1 -ntg 1 "
 #
 # The following variables are used for image parallelization. 
 # (See for instance PHonon/examples/Image_example) 
