@@ -97,7 +97,7 @@ SUBROUTINE iosys()
   USE start_k,       ONLY : init_start_k
   !
   USE ldaU,          ONLY : Hubbard_U_     => hubbard_u, &
-                            Hubbard_J0 => hubbard_j0, &
+                            Hubbard_J0_ => hubbard_j0, &
                             Hubbard_J_ => hubbard_j, &
                             Hubbard_alpha_ => hubbard_alpha, &
                             Hubbard_beta_ => hubbard_beta, &
