@@ -16,7 +16,8 @@ subroutine write_ns
   USE io_global,  ONLY : stdout
   USE scf,        ONLY : rho
   USE ldaU,       ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_J, &
-                         Hubbard_alpha, lda_plus_u_kind
+                         Hubbard_alpha, lda_plus_u_kind, Hubbard_J0, &
+                         Hubbard_beta
   !
   implicit none
   !
@@ -40,8 +41,15 @@ subroutine write_ns
   if (lda_plus_u_kind.eq.0) then
     do nt = 1, ntyp
       if (Hubbard_U(nt) /= 0.d0 .or. Hubbard_alpha(nt) /= 0.d0) then
-        write (stdout,'(a,i2,a,f12.8)') 'U(',nt,')     =', Hubbard_U(nt)*rytoev
-        write (stdout,'(a,i2,a,f12.8)') 'alpha(',nt,') =', Hubbard_alpha(nt)*rytoev
+        if (Hubbard_J0(nt) /= 0.d0 .or. Hubbard_beta(nt) /=0.d0) then
+          write (stdout,'(a,i2,a,f12.8)') 'U(',nt,')     =', Hubbard_U(nt)*rytoev 
+          write (stdout,'(a,i2,a,f12.8)') 'J0(',nt,')     =', Hubbard_J0(nt)*rytoev 
+          write (stdout,'(a,i2,a,f12.8)') 'alpha(',nt,') =', Hubbard_alpha(nt)*rytoev
+          write (stdout,'(a,i2,a,f12.8)') 'beta(',nt,') =', Hubbard_beta(nt)*rytoev
+        else
+          write (stdout,'(a,i2,a,f12.8)') 'U(',nt,')     =', Hubbard_U(nt)*rytoev
+          write (stdout,'(a,i2,a,f12.8)') 'alpha(',nt,') =', Hubbard_alpha(nt)*rytoev
+        end if
       endif
     enddo
   else
