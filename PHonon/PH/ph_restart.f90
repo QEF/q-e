@@ -222,7 +222,7 @@ MODULE ph_restart
             !
             CALL iotk_write_dat(iunpun,"QPOINT_GROUP_RANK",nsymq)
             !
-            IF (trans.OR.zeu.OR.elph) THEN
+!            IF (trans.OR.zeu.OR.elph) THEN
               !
                CALL iotk_write_dat(iunpun,"NUMBER_IRR_REP",nirr)
               !
@@ -239,7 +239,7 @@ MODULE ph_restart
                   ENDDO
                   imode0=imode0+npert(irr)
                ENDDO
-            ENDIF
+!            ENDIF
 !
 !   Save the current flags
 !
@@ -811,7 +811,7 @@ MODULE ph_restart
               'problems with current_iq', 1 )
 
     IF (ionode) THEN
-       IF (trans.OR.zeu.OR.elph) THEN
+!       IF (trans.OR.zeu.OR.elph) THEN
           CALL iotk_scan_dat(iunpun,"NUMBER_IRR_REP",nirr)
           imode0=0
           DO irr=0,nirr
@@ -827,7 +827,7 @@ MODULE ph_restart
                 imode0=imode0+npert(irr)
              ENDIF
           ENDDO
-       ENDIF
+!       ENDIF
 !
 !   read all flags
 !
@@ -871,11 +871,11 @@ MODULE ph_restart
        IF (done_elop) CALL mp_bcast( eloptns,  ionode_id, intra_image_comm )
     ENDIF
 
-    IF (trans.OR.zeu.OR.elph) THEN
+!    IF (trans.OR.zeu.OR.elph) THEN
        CALL mp_bcast( nirr,  ionode_id, intra_image_comm )
        CALL mp_bcast( npert,  ionode_id, intra_image_comm )
        CALL mp_bcast( u,  ionode_id, intra_image_comm )
-    ENDIF
+!    ENDIF
 
     RETURN
     END SUBROUTINE read_u
