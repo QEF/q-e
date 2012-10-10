@@ -470,8 +470,15 @@ PROGRAM matdyn
         CALL setupmat (q(1,n), dyn, nat, at, bg, tau, itau_blk, nsc, alat, &
              dyn_blk, nat_blk, at_blk, bg_blk, tau_blk, omega_blk,  &
              epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws)
-
-        IF (q(1,n)==0.d0 .AND. q(2,n)==0.d0 .AND. q(3,n)==0.d0) THEN
+        !
+        ! the following lines recognize as q=0 all q=G reciprocal latt. vectors
+        !
+        qhat(1) = q(1,n)*at(1,1)+q(2,n)*at(2,1)+q(3,n)*at(3,1)
+        qhat(2) = q(1,n)*at(1,2)+q(2,n)*at(2,2)+q(3,n)*at(3,2)
+        qhat(3) = q(1,n)*at(1,3)+q(2,n)*at(2,3)+q(3,n)*at(3,3)
+        IF ( ABS( qhat(1) - NINT (qhat(1) ) ) <= eps .AND. &
+             ABS( qhat(2) - NINT (qhat(2) ) ) <= eps .AND. &
+             ABS( qhat(3) - NINT (qhat(3) ) ) <= eps ) THEN
            !
            ! q = 0 : we need the direction q => 0 for the non-analytic part
            !
