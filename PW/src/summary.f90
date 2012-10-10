@@ -30,7 +30,8 @@ SUBROUTINE summary()
   USE fft_base,        ONLY : dffts
   USE lsda_mod,        ONLY : lsda, starting_magnetization
   USE ldaU,            ONLY : lda_plus_U, Hubbard_u, Hubbard_j, Hubbard_alpha, &
-                              Hubbard_l, lda_plus_u_kind, Hubbard_lmax
+                              Hubbard_l, lda_plus_u_kind, Hubbard_lmax,&
+                              Hubbard_J0, Hubbard_beta
   USE klist,           ONLY : degauss, smearing, lgauss, nkstot, xk, wk, &
                               nelec, nelup, neldw, two_fermi_energies
   USE ktetra,          ONLY : ltetra
@@ -225,6 +226,13 @@ SUBROUTINE summary()
         IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 ) THEN
            WRITE( stdout,'(5x,a6,5x,i6,2f12.6)') &
              atm(nt), Hubbard_L(nt), Hubbard_U(nt)*rytoev, Hubbard_alpha(nt)*rytoev
+        END IF
+     END DO
+     WRITE( stdout, '(5x,"atomic species  L   Hubbard J0  Hubbard beta")' )
+     DO nt = 1, ntyp
+        IF ( Hubbard_J0(nt) /= 0.D0 .OR. Hubbard_beta(nt) /= 0.D0 ) THEN
+           WRITE( stdout,'(5x,a6,5x,i6,2f12.6)') &
+             atm(nt), Hubbard_L(nt), Hubbard_J0(nt)*rytoev, Hubbard_beta(nt)*rytoev
         END IF
      END DO
    ELSEIF(lda_plus_u_kind == 1) THEN
