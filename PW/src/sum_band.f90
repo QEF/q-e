@@ -234,7 +234,7 @@ SUBROUTINE sum_band()
        ! ... gamma version
        !
        USE becmod,        ONLY : bec_type, becp, calbec
-       USE mp_global,     ONLY : me_pool
+       USE mp_global,     ONLY : me_bgrp
        USE mp,            ONLY : mp_sum, mp_get_comm_null
        !
        IMPLICIT NONE
@@ -339,7 +339,7 @@ SUBROUTINE sum_band()
                 ! Compute the proper factor for each band
                 !
                 DO idx = 1, dffts%nogrp
-                   IF( dffts%nolist( idx ) == me_pool ) EXIT
+                   IF( dffts%nolist( idx ) == me_bgrp ) EXIT
                 END DO
                 !
                 ! Remember two bands are packed in a single array :
@@ -360,7 +360,7 @@ SUBROUTINE sum_band()
                    w2 = w1
                 END IF
                 !
-                CALL get_rho_gamma(tg_rho, dffts%tg_npp( me_pool + 1 ) * dffts%nr1x * dffts%nr2x, w1, w2, tg_psi)
+                CALL get_rho_gamma(tg_rho, dffts%tg_npp( me_bgrp + 1 ) * dffts%nr1x * dffts%nr2x, w1, w2, tg_psi)
                 !
              ELSE
                 !
@@ -450,7 +450,7 @@ SUBROUTINE sum_band()
              !
              ioff = 0
              DO idx = 1, dffts%nogrp
-                IF( me_pool == dffts%nolist( idx ) ) EXIT
+                IF( me_bgrp == dffts%nolist( idx ) ) EXIT
                 ioff = ioff + dffts%nr1x * dffts%nr2x * dffts%npp( dffts%nolist( idx ) + 1 )
              END DO
              !
@@ -565,7 +565,7 @@ SUBROUTINE sum_band()
        ! ... k-points version
        !
        USE becmod, ONLY : bec_type, becp, calbec
-       USE mp_global,     ONLY : me_pool
+       USE mp_global,     ONLY : me_bgrp
        USE mp,            ONLY : mp_sum
        !
        IMPLICIT NONE
@@ -710,7 +710,7 @@ SUBROUTINE sum_band()
                    ! Compute the proper factor for each band
                    !
                    DO idx = 1, dffts%nogrp
-                      IF( dffts%nolist( idx ) == me_pool ) EXIT
+                      IF( dffts%nolist( idx ) == me_bgrp ) EXIT
                    END DO
                    !
                    ! Remember
@@ -724,7 +724,7 @@ SUBROUTINE sum_band()
                       w1 = 0.0d0
                    END IF
                    !
-                   CALL get_rho(tg_rho, dffts%tg_npp( me_pool + 1 ) * dffts%nr1x * dffts%nr2x, w1, tg_psi)
+                   CALL get_rho(tg_rho, dffts%tg_npp( me_bgrp + 1 ) * dffts%nr1x * dffts%nr2x, w1, tg_psi)
                    !
                 ELSE
                    !
@@ -768,7 +768,7 @@ SUBROUTINE sum_band()
              !
              ioff = 0
              DO idx = 1, dffts%nogrp
-                IF( me_pool == dffts%nolist( idx ) ) EXIT
+                IF( me_bgrp == dffts%nolist( idx ) ) EXIT
                 ioff = ioff + dffts%nr1x * dffts%nr2x * dffts%npp( dffts%nolist( idx ) + 1 )
              END DO
              !
