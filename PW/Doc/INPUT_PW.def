@@ -926,6 +926,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		Hubbard_U(i): U parameter (eV) for species i, DFT+U calculation 
 	    }
 	}
+        dimension Hubbard_J0 -start 1 -end ntype -type REAL {
+            default { 0.D0 for all species }
+            info {
+                Hubbard_J0(i): J0 parameter (eV) for species i, DFT+U+J calculation,
+                see PRB 84, 115108 (2011) for details.
+            }
+        } 
 	dimension Hubbard_alpha -start 1 -end ntyp -type REAL { 
 	    default { 0.D0 for all species }
 	    info {
@@ -933,6 +940,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 used to compute U with the linear-response method of
                 Cococcioni and de Gironcoli, PRB 71, 35105 (2005)
                 (only for lda_plus_u_kind=0)
+	    }
+	}
+	dimension Hubbard_beta -start 1 -end ntyp -type REAL { 
+	    default { 0.D0 for all species }
+	    info {
+		Hubbard_beta(i) is the perturbation (on atom i, in eV)
+                used to compute J0 with the linear-response method of
+                Cococcioni and de Gironcoli, PRB 71, 35105 (2005)
+                (only for lda_plus_u_kind=0). See also 
+                PRB 84, 115108 (2011).
 	    }
 	}
 	var Hubbard_J(i,ityp) { 
