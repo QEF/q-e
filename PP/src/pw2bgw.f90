@@ -191,7 +191,7 @@ PROGRAM pw2bgw
   vxc_diag_nmax = 0
   vxc_offdiag_nmin = 0
   vxc_offdiag_nmax = 0
-  vxc_zero_rho_core = .TRUE.
+  vxc_zero_rho_core = .FALSE.
   input_dft = 'sla+pz'
   exx_flag = .FALSE.
   vnlg_flag = .FALSE.
@@ -2333,6 +2333,8 @@ SUBROUTINE write_vnlg (output_file_name, symm_type, wfng_kgrid, &
   CALL mp_max ( npw_g )
   npwx_g = MAXVAL ( ngk_g ( : ) )
 
+  CALL cryst_to_cart (nkstot, xk, at, -1)
+
   IF (ionode) THEN
     OPEN (unit = unit, file = TRIM (output_file_name), &
       form = 'unformatted', status = 'replace')
@@ -2364,6 +2366,8 @@ SUBROUTINE write_vnlg (output_file_name, symm_type, wfng_kgrid, &
     WRITE ( unit ) ngm_g
     WRITE ( unit ) ( ( gvec ( id, ig ), id = 1, nd ), ig = 1, ngm_g )
   ENDIF
+
+  CALL cryst_to_cart (nkstot, xk, bg, 1)
 
   ALLOCATE ( igwk ( npwx_g ) )
 
