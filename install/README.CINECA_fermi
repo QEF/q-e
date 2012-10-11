@@ -1,5 +1,5 @@
 Info by Carlo Cavazzoni, Sept. 2012, valid for QE v.5.0.x on machine
-Fermi (BG/Q) at CINECA, Bologna:
+Fermi (BG/Q) at CINECA, Bologna (see below for update):
 
 module purge
 module load bgq-xl/1.0
@@ -28,3 +28,16 @@ $ mpixlf90_r -qalias=noaryovrlp:nointptr -O2 -qstrict -qdpc=e -qsuffix=cpp=f90
 -I../include -I../iotk/src -I../Modules -I. -c functionals.f90
 
 go back to the espresso home dir and restart with "make all".
+
+*** Updated october 2012:
+
+1) use -D__LINUX_ESSL  instead of -D__FFTW (essl fft seems slightly better)
+2) use -D__ELPA (elpa gives better performance and scalability with 
+diagonalization at gamma)
+DFLAGS         = -D__XLF -D__LINUX_ESSL -D__MASS -D__MPI -D__PARA -D__SCALAPACK -D__OPENMP -D__ELPA
+FDFLAGS        = -D__XLF,-D__LINUX_ESSL,-D__MASS,-D__MPI,-D__PARA,-D__SCALAPACK,-D__OPENMP,-D__ELPA
+
+3) link with /bgsys/drivers/ppcfloor/comm/xl.ndebug/bin/mpixlf90_r compiler
+it links the version of the mpi library that does not contains the debug code
+LD             = /bgsys/drivers/ppcfloor/comm/xl.ndebug/bin/mpixlf90_r
+
