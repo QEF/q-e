@@ -171,7 +171,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    zeta_tot=(1.d0,0.d0)
 
 !  --- Check that we are working with an insulator with no empty bands ---
-   IF ( degauss > 0.0_dp )  CALL errore('c_phase', &
+   IF ( degauss > 0.0_dp )  CALL errore('c_phase_field', &
            'Polarization only for insulators and no empty bands',1)
 
    !  --- Define a small number ---
@@ -501,7 +501,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
 !              --- Calculate matrix determinant ---
 
                call ZGETRF(nbnd,nbnd,mat,nbnd,ivpt,info)
-               CALL errore('c_phase','error in zgetrf',abs(info))
+               CALL errore('c_phase_field','error in zgetrf',abs(info))
                det=(1.d0,0.d0)
                do nb=1,nbnd
                   if(nb.ne.ivpt(nb)) det=-det

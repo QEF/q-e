@@ -197,7 +197,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
    zeta_tot=(1.d0,0.d0)
 
 !  --- Check that we are working with an insulator with no empty bands ---
-   IF ( degauss > 0.0_dp ) CALL errore('c_phase', &
+   IF ( degauss > 0.0_dp ) CALL errore('forces_us_efield', &
             'Polarization only for insulators and no empty bands',1)
 
    !  --- Define a small number ---
@@ -564,7 +564,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
 
 ! calculate inverse
                CALL zgefa(mat,nbnd,nbnd,ivpt,info)
-               CALL errore('h_epsi_her','error in zgefa',abs(info))
+               CALL errore('forces_us_efield','error in zgefa',abs(info))
                CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
 
 

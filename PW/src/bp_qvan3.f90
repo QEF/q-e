@@ -30,9 +30,9 @@
       jvl = nhtolm(jv,is)
 
       if (ivs > nbetam .OR. jvs > nbetam) &
-           call errore (' qvan ', ' wrong dimensions (1)', MAX(ivs,jvs))
+           call errore (' qvan3 ', ' wrong dimensions (1)', MAX(ivs,jvs))
       if (ivl > nlx .OR. jvl > nlx) &
-       call errore (' qvan ', ' wrong dimensions (2)', MAX(ivl,jvl))
+       call errore (' qvan3 ', ' wrong dimensions (2)', MAX(ivl,jvl))
  
       qg = (0.0d0,0.0d0)
 

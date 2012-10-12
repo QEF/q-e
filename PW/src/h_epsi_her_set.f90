@@ -410,7 +410,7 @@ subroutine h_epsi_her_set(pdir, e_field)
 
 !              --- Calculate matrix inverse ---
          CALL zgefa(mat,nbnd,nbnd,ivpt,info)
-         CALL errore('h_epsi_her','error in zgefa',abs(info))
+         CALL errore('h_epsi_her_set','error in zgefa',abs(info))
          CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
          matbig(nx_el(ik,pdir),:,:)=mat
          mdone(nx_el(ik,pdir))=1
@@ -658,7 +658,7 @@ subroutine h_epsi_her_set(pdir, e_field)
 
 !              --- Calculate matrix inverse ---
          CALL zgefa(mat,nbnd,nbnd,ivpt,info)
-         CALL errore('h_epsi_her','error in zgefa',abs(info))
+         CALL errore('h_epsi_her_set','error in zgefa',abs(info))
          CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
          matbig(nx_el(ik,pdir),:,:)=mat
          mdone(nx_el(ik,pdir))=1
@@ -853,7 +853,7 @@ subroutine h_epsi_her_set(pdir, e_field)
 
 !              --- Calculate matrix inverse ---
       CALL zgefa(mat,nbnd,nbnd,ivpt,info)
-      CALL errore('h_epsi_her','error in zgefa',abs(info))
+      CALL errore('h_epsi_her_set','error in zgefa',abs(info))
       CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
       matbig(nx_el(ik+1,pdir),:,:)=TRANSPOSE(CONJG(mat))
       mdone(nx_el(ik+1,pdir))=1
@@ -1088,7 +1088,7 @@ subroutine h_epsi_her_set(pdir, e_field)
 
 !              --- Calculate matrix inverse ---
       CALL zgefa(mat,nbnd,nbnd,ivpt,info)
-      CALL errore('h_epsi_her','error in zgefa',abs(info))
+      CALL errore('h_epsi_her_set','error in zgefa',abs(info))
       CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
       matbig(nx_el(ik-nppstr_3d(pdir)+1,pdir),:,:)=TRANSPOSE(CONJG(mat))
       mdone(nx_el(ik-nppstr_3d(pdir)+1,pdir))=1

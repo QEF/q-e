@@ -402,7 +402,7 @@ SUBROUTINE atomic_wfc_nc_updown (ik, wfcatom)
      !
   END DO
 
-  if (n_starting_wfc /= natomwfc) call errore ('atomic_wfc', &
+  if (n_starting_wfc /= natomwfc) call errore ('atomic_wfc_nc_updown', &
        'internal error: some wfcs were lost ', 1)
 
   deallocate(aux, sk, chiq, ylm)

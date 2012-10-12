@@ -242,7 +242,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
 #ifdef __SCALAPACK
      CALL descinit( desch, n, n, desc%nrcx, desc%nrcx, 0, 0, ortho_cntx, SIZE( hh, 1 ) , info )
   
-     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' descinit ', ABS( info ) )
+     IF( info /= 0 ) CALL errore( ' rdiaghg ', ' descinit ', ABS( info ) )
 #endif
      !
 #ifdef __SCALAPACK

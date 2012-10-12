@@ -42,11 +42,11 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
   !
   IF ( MOD( nkstot, kunit ) /= 0 ) &
-     CALL errore( 'd_&_i', ' nkstot/kunit is not an integer', nkstot )
+     CALL errore( 'divide_et_impera', ' nkstot/kunit is not an integer', nkstot )
   !
   nks    = kunit * ( nkstot / kunit / npool )
   !
-  IF ( nks == 0 ) CALL errore( 'd_&_i', ' some nodes have no k-points', 1 )
+  IF ( nks == 0 ) CALL errore( 'divide_et_impera', ' some nodes have no k-points', 1 )
   !
   rest = ( nkstot - nks * npool ) / kunit
   !

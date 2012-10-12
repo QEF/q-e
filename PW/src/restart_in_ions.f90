@@ -49,7 +49,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   if (where.ne.'IONS') then
      close (unit = iunres, status = 'keep')
      WRITE( stdout,*) where, '.......?'
-     call errore ('restart_i', ' we should not be here ...!', 1)
+     call errore ('restart_in_ions', ' we should not be here ...!', 1)
   endif
   !
   !  read recover information
@@ -98,7 +98,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   ! in case of problems
   !
 
-10 call infomsg ('restart_i', 'problems in reading recover file')
+10 call infomsg ('restart_in_ions', 'problems in reading recover file')
   return
 
 end subroutine restart_in_ions

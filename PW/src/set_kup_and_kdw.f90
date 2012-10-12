@@ -32,7 +32,7 @@ subroutine set_kup_and_kdw (xk, wk, isk, nkstot, npk)
   integer :: ik, iq, ikq
   !
   !
-  if (2*nkstot > npk) call errore ('set_kup&kdw','too many k points',nkstot)
+  if (2*nkstot > npk) call errore ('set_kup_and_kdw','too many k points',nkstot)
   do ik = 1, nkstot
      xk(:,ik+nkstot)= xk(:,ik)
      wk (ik+nkstot) = wk(ik)

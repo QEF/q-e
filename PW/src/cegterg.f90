@@ -93,7 +93,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   !
   CALL start_clock( 'cegterg' )
   !
-  IF ( nvec > nvecx / 2 ) CALL errore( 'cegter', 'nvecx is too small', 1 )
+  IF ( nvec > nvecx / 2 ) CALL errore( 'cegterg', 'nvecx is too small', 1 )
   !
   ! ... threshold for empty bands
   !
@@ -567,7 +567,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   !
   CALL start_clock( 'cegterg' )
   !
-  IF ( nvec > nvecx / 2 ) CALL errore( 'regter', 'nvecx is too small', 1 )
+  IF ( nvec > nvecx / 2 ) CALL errore( 'pcegterg', 'nvecx is too small', 1 )
   !
   ! ... threshold for empty bands
   !
