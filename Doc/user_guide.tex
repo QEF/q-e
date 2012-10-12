@@ -1449,9 +1449,10 @@ of processors of each pool.
 \paragraph{Massively parallel calculations}
 For very large jobs (i.e. O(1000) atoms or more) or for very long jobs,
 to be run on massively parallel  machines (e.g. IBM BlueGene) it is
-crucial to use in an effective way all available parallelization levels. Without a judicious choice of
-parameters, large jobs will find a stumbling block in either memory or 
-CPU requirements.
+crucial to use in an effective way all available parallelization levels.
+Without a judicious choice of parameters, large jobs will find a 
+stumbling block in either memory or CPU requirements. Note that I/O
+may also become a limiting factor.
 
 Since v.4.1, ScaLAPACK can be used to diagonalize block distributed
 matrices, yielding better speed-up than the internal algorithms for
@@ -1556,7 +1557,9 @@ You can use input variable \texttt{disk\_io='minimal'}, or even
 into trouble (or into angry system managers) with excessive I/O with \pwx. 
 The code will store wavefunctions into RAM during the calculation.
 Note however that this will increase your memory usage and may limit 
-or prevent restarting from interrupted runs.
+or prevent restarting from interrupted runs. For very large runs,
+you may also want to use \texttt{wf\_collect=.false.} and (CP only)
+\texttt{saverho=.false.} to reduce I/O to the strict minimum.
 
 \subsection{Tricks and problems}
 
