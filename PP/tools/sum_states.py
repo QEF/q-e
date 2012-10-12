@@ -5,16 +5,44 @@
 # files obtained from projwfc.x. It can sum also k-solved dos, and make a plot
 # with mathplotlib (if not available, gnuplot, if not avaible, print to file)
 # if there is not X11 forwarding, plots in terminal.
+# It does something very similar to sumpdos.f90, but with
+# some extra features (use "-h" option).
 #
-# The procedure for obtaining the DOS files is explained i.e. in (espresso-dir)/PP/examples/example02/
+# it takes two different inputs, the first one is the pw.x output
+# ("-o" option), which is used for parsing the Fermi energy for fitting
+# the PDOS curve to the right energy. The other files are the pDOS files
+# ("-s" option), that can be given with shell syntax, i.e.
+# pdos_atm*Fe*wfc*d* for summing all the d orbitals of Fe.
+# It can also handle k solved dos files.
+#
+# One of the most useful feature, compared to the sumpdos.x, is the
+# fact that it also builds the picture directly, so it can be directly
+# visualized and exported for inclusion in a document.
+# It uses mathplotlib for plotting, but if no mathplotlib is found in
+# the $PYTHONPATH, it tries to use gnuplot, if no gnuplot available,
+# dumps the output data to a file.
+# In the that no X11 forwarding is available (i.e. ssh to the cluster),
+# it shows a rough graph in the terminal, so we get an idea of the shape
+# of the results.
+#
+# Example of usage:
+# cd ....../espresso-5.0/PP/examples/example02/results/
+# ../../../src/sum_states.py -o ni.dos.out -s
+# ni.pdos_atm#1\(Ni\)_wfc#2\(d\) -t "Example PP/02" -xr -6 2
+#
+#
+# The procedure for obtaining the DOS files is explained 
+# i.e. in (espresso-dir)/PP/examples/example02/
 # 
 # Author: Dr. Julen Larrucea
 #         University of Bremen,
 #         Bremen Centre for Computational Materials Science, HMI Group
 #         julenl [at] gmail.com  or larrucea [at] hmi.uni-bremen.de
 #
-#  This file is distributed under the terms of the GNU General Public License. See the file `License'
-#  in the root directory of the present distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#  This file is distributed under the terms of the GNU General Public 
+#  License. See the file `License'
+#  in the root directory of the present distribution, 
+#  or http://www.gnu.org/copyleft/gpl.txt .
 #######################
 
 import sys
