@@ -26,7 +26,7 @@ SUBROUTINE average_pp ( ntyp )
      IF ( upf(nt)%has_so ) THEN
         !
         IF ( upf(nt)%tvanp ) &
-             CALL errore( 'setup', 'US j-average not yet implemented', 1 )
+             CALL errore( 'average_pp', 'FR-PP please use lspinorb=.true.', 1 )
         !
         nbe = 0
         !
@@ -53,12 +53,12 @@ SUBROUTINE average_pp ( ntyp )
               !
               IF (ABS(upf(nt)%jjj(nbe)-upf(nt)%lll(nbe)+0.5d0) < 1.d-7) THEN
                  IF ( ABS( upf(nt)%jjj(nbe+1)-upf(nt)%lll(nbe+1)-0.5d0 ) &
-                      > 1.d-7 ) call errore('setup','wrong beta functions',1)
+                      > 1.d-7 ) call errore('average_pp','wrong beta functions',1)
                  ind=nbe+1
                  ind1=nbe
               ELSE
                  IF (ABS(upf(nt)%jjj(nbe+1)-upf(nt)%lll(nbe+1)+0.5d0) > 1.d-7) &
-                      call errore('setup','wrong beta functions',2)
+                      call errore('average_pp','wrong beta functions',2)
                  ind=nbe
                  ind1=nbe+1
               ENDIF
@@ -115,12 +115,12 @@ SUBROUTINE average_pp ( ntyp )
               !
               IF (ABS(upf(nt)%jchi(nbe)-upf(nt)%lchi(nbe)+0.5d0) < 1.d-7) THEN
                  IF ( ABS(upf(nt)%jchi(nbe+1)-upf(nt)%lchi(nbe+1)-0.5d0) > &
-                      1.d-7) call errore('setup','wrong chi functions',3)
+                      1.d-7) call errore('average_pp','wrong chi functions',3)
                  ind=nbe+1
                  ind1=nbe
               ELSE
                  IF ( ABS(upf(nt)%jchi(nbe+1)-upf(nt)%lchi(nbe+1)+0.5d0) > &
-                      1.d-7) call errore('setup','wrong chi functions',4)
+                      1.d-7) call errore('average_pp','wrong chi functions',4)
                  ind=nbe
                  ind1=nbe+1
               END IF
