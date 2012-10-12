@@ -84,7 +84,7 @@ subroutine solve_e_fpol ( iw )
 
   external cch_psi_all, ccg_psi
 
-  if (lsda) call errore ('solve_e', ' LSDA not implemented', 1)
+  if (lsda) call errore ('solve_e_fpol', ' LSDA not implemented', 1)
 
   call start_clock ('solve_e')
   allocate (dvscfin( dfftp%nnr, nspin, 3))
@@ -136,7 +136,7 @@ subroutine solve_e_fpol ( iw )
   !
   ! if q=0 for a metal: allocate and compute local DOS at Ef
   !
-  if (lgauss.or..not.lgamma) call errore ('solve_e', &
+  if (lgauss.or..not.lgamma) call errore ('solve_e_fpol', &
        'called in the wrong case', 1)
   !
   !   The outside loop is over the iterations
@@ -155,7 +155,7 @@ subroutine solve_e_fpol ( iw )
         if (lsda) current_spin = isk (ik)
         if (nksq.gt.1) then
            read (iunigk, err = 100, iostat = ios) npw, igk
-100        call errore ('solve_e', 'reading igk', abs (ios) )
+100        call errore ('solve_e_fpol', 'reading igk', abs (ios) )
         endif
         !
         ! reads unperturbed wavefuctions psi_k in G_space, for all bands

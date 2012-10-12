@@ -133,7 +133,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
      ! ... LSDA case: two different spin polarizations,
      ! ...            each with its own kpoints
      !
-     if (nspin /= 2) call errore ('setup','nspin should be 2; check iosys',1)
+     if (nspin /= 2) call errore ('setup_nscf','nspin should be 2; check iosys',1)
      !
      CALL set_kup_and_kdw( xk, wk, isk, nkstot, npk )
      !
@@ -141,7 +141,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
      !
      ! ... noncolinear magnetism: potential and charge have dimension 4 (1+3)
      !
-     if (nspin /= 4) call errore ('setup','nspin should be 4; check iosys',1)
+     if (nspin /= 4) call errore ('setup_nscf','nspin should be 4; check iosys',1)
      current_spin = 1
      !
   ELSE
@@ -152,11 +152,11 @@ SUBROUTINE setup_nscf ( newgrid, xq )
      current_spin = 1
      !
      IF ( nspin /= 1 ) &
-        CALL errore( 'setup', 'nspin should be 1; check iosys', 1 )
+        CALL errore( 'setup_nscf', 'nspin should be 1; check iosys', 1 )
      !
   END IF
   !
-  IF ( nkstot > npk ) CALL errore( 'setup', 'too many k points', nkstot )
+  IF ( nkstot > npk ) CALL errore( 'setup_nscf', 'too many k points', nkstot )
   !
   ! ...notice: qnorm is used by allocate_nlpot to determine
   ! the correct size of the interpolation table "qrad"

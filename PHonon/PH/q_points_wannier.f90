@@ -38,7 +38,7 @@ SUBROUTINE q_points_wannier ( )
   !
 
   if( nq1 <= 0 .or. nq2 <= 0 .or. nq3 <= 0 ) &
-       call errore('q_points','nq1 or nq2 or nq3 <= 0',1)
+       call errore('q_points_wannier','nq1 or nq2 or nq3 <= 0',1)
 
   nqs=nq1*nq2*nq3
  
@@ -85,7 +85,7 @@ SUBROUTINE q_points_wannier ( )
   !
   IF (ionode) THEN
      OPEN (unit=iudyn, file=TRIM(fildyn)//'0_qstar', status='unknown', iostat=ierr)
-     IF ( ierr > 0 ) CALL errore ('phonon','cannot open file ' &
+     IF ( ierr > 0 ) CALL errore ('q_points_wannier','cannot open file ' &
           & // TRIM(fildyn) // '0_qstar', ierr)
      WRITE (iudyn, '(3i4)' ) nq1, nq2, nq3
      WRITE (iudyn, '( i4)' ) nqs

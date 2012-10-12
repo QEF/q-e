@@ -88,7 +88,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
 
 11 alpha = alpha - 0.1d0
 
-  if (alpha == 0.d0) call errore ('d2ion', 'optimal alpha not found',1)
+  if (alpha == 0.d0) call errore ('d2ionq', 'optimal alpha not found',1)
 
   upperbound = 2.d0 * charge**2 * sqrt (2.d0 * alpha / tpi) * &
        qe_erfc ( sqrt (tpiba2 * gcutm / 4.d0 / alpha) )

@@ -136,7 +136,7 @@ subroutine phq_setup
   !
   IF (u_from_file) THEN
      CALL ph_readfile('data_u',ierr)
-     IF (ierr /= 0) CALL errore('ph_setup', 'problem with modes file',1)
+     IF (ierr /= 0) CALL errore('phq_setup', 'problem with modes file',1)
   ENDIF
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid

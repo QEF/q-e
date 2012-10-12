@@ -114,7 +114,7 @@ subroutine solve_e2
      do ik = 1, nksq
         if (nksq.gt.1) then
            read (iunigk, err = 100, iostat = ios) npw, igk
-100        call errore ('solve_e', 'reading igk', abs (ios) )
+100        call errore ('solve_e2', 'reading igk', abs (ios) )
         endif
         !
         ! reads unperturbed wavefuctions psi_k in G_space, for all bands
