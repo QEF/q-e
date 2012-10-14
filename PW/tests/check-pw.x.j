@@ -62,6 +62,19 @@ else
 fi
 
 ########################################################################
+# function generating kernel table for nonlocal functionals if missing
+########################################################################
+get_kernel () {
+   if test "$1" = "vdw1" || test "$1" = "vdw2" ; then
+      if ! test -f $ESPRESSO_PSEUDO/vdW_kernel_table ; then
+         $ECHO "Generating kernel table - May take several minutes...\c"
+         $PARA_PREFIX $ESPRESSO_ROOT/PW/src/generate_vdW_kernel_table.x $PARA_POSTFIX
+         mv vdW_kernel_table $ESPRESSO_PSEUDO/
+         $ECHO "kernel table generated in $ESPRESSO_PSEUDO/vdW_kernel_table"
+      fi
+    fi
+}
+########################################################################
 # function to get pseudopotentials from the web if missing
 ########################################################################
 get_pp () {
@@ -225,6 +238,7 @@ for file in $files
 do
   name=`basename $file .in`
   get_pp $name
+  get_kernel $name
   $ECHO "Checking $name...\c"
   ###
   # run the code in the scratch directory
