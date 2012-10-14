@@ -74,6 +74,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   ! |dvspi> = - (|dvpsi> - S|evc><evc|dvpsi>)
   ! note the change of sign!
   !
+#if 0
   ! uncomment for ultrasoft PPs
   ! note that spsi is used as work space to store S|evc>
   ! CALL calbec ( npw, vkb, evc, becp, nbnd_occ(ik) )
@@ -81,6 +82,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   ! CALL zgemm( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
   !     (1.d0,0.d0), spsi(1,1), npwx, ps(1,1), nbnd, (-1.d0,0.d0), &
   !     dvpsi(1,1), npwx )
+#endif
   !
   ! comment  for ultrasoft PPs
   CALL zgemm( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
