@@ -14,7 +14,7 @@ MODULE environment
   USE io_files, ONLY: crash_file, crashunit, nd_nmbr
   USE io_global, ONLY: stdout, meta_ionode
   USE mp_global, ONLY: me_image, my_image_id, root_image, nimage, &
-      nproc_image, nproc, npool, nproc_pool, nbgrp, get_ntask_groups
+      nproc_image, nproc, npool, nproc_bgrp, nbgrp, get_ntask_groups
   USE global_version, ONLY: version_number, svn_revision
 
   IMPLICIT NONE
@@ -192,12 +192,12 @@ CONTAINS
     !
     IF ( nimage > 1 ) WRITE( stdout, &
          '(5X,"path-images division:  nimage    = ",I7)' ) nimage
-    IF ( nbgrp > 1 ) WRITE( stdout, &
-         '(5X,"band groups division:  nbgrp     = ",I7)' ) nbgrp
     IF ( npool > 1 ) WRITE( stdout, &
          '(5X,"K-points division:     npool     = ",I7)' ) npool
-    IF ( nproc_pool > 1 ) WRITE( stdout, &
-         '(5X,"R & G space division:  proc/pool = ",I7)' ) nproc_pool
+    IF ( nbgrp > 1 ) WRITE( stdout, &
+         '(5X,"band groups division:  nbgrp     = ",I7)' ) nbgrp
+    IF ( nproc_bgrp > 1 ) WRITE( stdout, &
+         '(5X,"R & G space division:  proc/nbgrp/npool/nimage = ",I7)' ) nproc_bgrp
     IF ( get_ntask_groups() > 1 ) WRITE( stdout, &
          '(5X,"wavefunctions fft division:  fft/group = ",I7)' ) &
          get_ntask_groups()
