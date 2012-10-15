@@ -122,7 +122,7 @@ SUBROUTINE do_initial_state (excite)
   !
   ! ... The Hubbard contribution
   !
-  IF ( lda_plus_u ) CALL errore('initial_state','LDA+U not implemented',1)
+  IF ( lda_plus_u ) CALL errore('do_initial_state','LDA+U not implemented',1)
 
   !
   ! change atomic type and recompute needed quantities

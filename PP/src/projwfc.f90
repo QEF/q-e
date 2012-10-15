@@ -102,7 +102,7 @@ PROGRAM do_projwfc
   !
   IF (ios /= 0) WRITE (stdout, &
     '("*** namelist &inputpp no longer valid: please use &projwfc instead")')
-  IF (ios /= 0) CALL errore ('projwfc', 'reading projwfc namelist', abs (ios) )
+  IF (ios /= 0) CALL errore ('do_projwfc', 'reading projwfc namelist', abs (ios) )
   !
   ! ... Broadcast variables
   !
@@ -154,7 +154,7 @@ PROGRAM do_projwfc
   !
   IF ( tdosinboxes ) THEN
      IF( nproc_ortho > 1 ) THEN
-        CALL errore ('projwfc', 'nproc_ortho > 1 not yet implemented', 1)
+        CALL errore ('do_projwfc', 'nproc_ortho > 1 not yet implemented', 1)
      ELSE
         CALL projwave_boxes (filpdos, filproj, n_proj_boxes, irmin, irmax, plotboxes)
      ENDIF
@@ -682,7 +682,7 @@ SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp, lbinary )
         ELSEIF ( nspin == 2 ) THEN
            current_spin = isk ( ik )
         ELSE
-           CALL errore ('projwfc_nc',' called in the wrong case ',1)
+           CALL errore ('projave',' called in the wrong case ',1)
         ENDIF
         DO ibnd = 1, nbnd
            DO nwfc = 1, natomwfc
@@ -1880,7 +1880,7 @@ SUBROUTINE write_io_header(filplot, iunplot, title, nr1x, nr2x, nr3x, &
 
    OPEN (UNIT = iunplot, FILE = filplot, FORM = 'formatted', &
          STATUS = 'unknown', ERR = 101, IOSTAT = ios)
-   101     CALL errore ('write_io_h', 'opening file '//trim(filplot), abs (ios) )
+   101     CALL errore ('write_io_header', 'opening file '//trim(filplot), abs (ios) )
    WRITE (iunplot, '(a)') title
    WRITE (iunplot, '(8i8)') nr1x, nr2x, nr3x, nr1, nr2, nr3, nat, ntyp
    WRITE (iunplot, '(i6,6f12.8)') ibrav, celldm
@@ -2214,8 +2214,8 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
      ENDDO
   ENDDO
   !
-  IF (lmax_wfc > 3) CALL errore ('projwave', 'l > 3 not yet implemented', 1)
-  IF (nwfc /= natomwfc) CALL errore ('projwave', 'wrong # of atomic wfcs?', 1)
+  IF (lmax_wfc > 3) CALL errore ('pprojwave', 'l > 3 not yet implemented', 1)
+  IF (nwfc /= natomwfc) CALL errore ('pprojwave', 'wrong # of atomic wfcs?', 1)
   !
   !
   IF( ionode ) THEN
@@ -2395,7 +2395,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
                       nlmchi(nwfc1)%l == nlmchi(nwfc)%l .and. &
                       nlmchi(nwfc1)%m == 1 ) GOTO 10
               ENDDO
-              CALL errore('projwave','cannot symmetrize',1)
+              CALL errore('pprojwave','cannot symmetrize',1)
 10            nwfc1=nwfc1-1
               !
               !  nwfc1 is the first rotated atomic wfc corresponding to nwfc
@@ -2629,7 +2629,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
         ELSEIF ( nspin == 2 ) THEN
            current_spin = isk ( ik )
         ELSE
-           CALL errore ('projwfc_nc',' called in the wrong case ',1)
+           CALL errore ('pprojwave',' called in the wrong case ',1)
         ENDIF
         DO ibnd = 1, nbnd
            DO nwfc = 1, natomwfc

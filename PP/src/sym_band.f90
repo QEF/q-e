@@ -54,9 +54,9 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   CHARACTER (len=256) :: filband, namefile
   !
   IF (spin_component/=1.and.nspin/=2) &
-       CALL errore('punch_bands','incorrect spin_component',1)
+       CALL errore('sym_band','incorrect spin_component',1)
   IF (spin_component<1.or.spin_component>2) &
-       CALL errore('punch_bands','incorrect lsda spin_component',1)
+       CALL errore('sym_band','incorrect lsda spin_component',1)
 
   ALLOCATE(rap_et(nbnd,nkstot))
   ALLOCATE(code_group_k(nkstot))

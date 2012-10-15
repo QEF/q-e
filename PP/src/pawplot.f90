@@ -235,7 +235,7 @@ PROGRAM PAWplot
   ENDIF
   CALL mp_bcast (ios, ionode_id)
   IF ( ios /= 0) &
-       CALL errore ('postproc', 'reading inputpp namelist', abs(ios))
+       CALL errore ('pawplot', 'reading inputpp namelist', abs(ios))
   !
   ! ... Broadcast variables
   !
@@ -281,7 +281,7 @@ PROGRAM PAWplot
      !
      !     One-dimensional plot
      !
-     IF (nx <= 0 )   CALL errore ('chdens', 'wrong nx', 1)
+     IF (nx <= 0 )   CALL errore ('pawplot', 'wrong nx', 1)
      ALLOCATE ( rhoplot(nx) )
      IF ( okpaw ) THEN
         WRITE (stdout, '(5x,"Reconstructing all-electron charge (PAW)")')
@@ -317,10 +317,10 @@ PROGRAM PAWplot
   ELSEIF ( twodim ) THEN
      IF ( abs(e1(1)*e2(1) + e1(2)*e2(2) + e1(3)*e2(3)) > 1d-6) &
           CALL errore ('pawplot', 'e1 and e2 are not orthogonal', 1)
-     IF ( nx <= 0 .or. ny <= 0 )   CALL errore ('chdens', 'wrong nx or ny', 1)
+     IF ( nx <= 0 .or. ny <= 0 )   CALL errore ('pawplot', 'wrong nx or ny', 1)
   ELSEIF (tredim) THEN
      IF ( nx <= 0 .or. ny <= 0 .or. nz <=0 ) &
-          CALL errore ('chdens', 'wrong nx or ny or nz', 1)
+          CALL errore ('pawplot', 'wrong nx or ny or nz', 1)
   ENDIF
   !
   DEALLOCATE (rhog)

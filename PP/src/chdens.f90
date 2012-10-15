@@ -367,7 +367,7 @@ SUBROUTINE chdens (filplot,plot_num)
                             &" not implemented for Gamma only!",/, &
                             &"SOLUTION: restart this calculation with", &
                             &" emtpy namelist &inputpp")')
-             CALL errore ('punch_plot','Not implemented, please read above',1)
+             CALL errore ('chdens','Not implemented, please read above',1)
         ENDIF
         !
      ENDIF

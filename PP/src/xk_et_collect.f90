@@ -44,7 +44,7 @@ SUBROUTINE xk_et_collect( xk_collect, et_collect, xk, et, nkstot, nks, nbnd )
   IF ( ( my_pool_id + 1 ) <= rest ) nks1 = nks1 + kunit
   !
   IF (nks1.ne.nks) &
-     call errore('xk_wk_collect','problems with nks1',1)
+     call errore('xk_et_collect','problems with nks1',1)
   !
   ! ... calculates nbase = the position in the list of the first point that
   ! ...                    belong to this npool - 1

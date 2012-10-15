@@ -210,7 +210,7 @@ PROGRAM average
         DEALLOCATE (ityps)
         DEALLOCATE (taus)
         !
-        IF (nats>nat) CALL errore ('chdens', 'wrong file order? ', 1)
+        IF (nats>nat) CALL errore ('average', 'wrong file order? ', 1)
         IF (dfftp%nr1x/=nr1sxa.or.dfftp%nr2x/=nr2sxa) &
              CALL errore ('average', 'incompatible nr1x or nr2x', 1)
         IF (dfftp%nr1/=nr1sa.or.dfftp%nr2/=nr2sa.or.dfftp%nr3/=nr3sa) &
@@ -220,7 +220,7 @@ PROGRAM average
              CALL errore ('average', 'incompatible gcutm or dual or ecut', 1)
         DO i = 1, 6
            IF (abs( celldm (i)-celldms (i) ) > 1.0d-7 ) &
-                CALL errore ('chdens', 'incompatible celldm', 1)
+                CALL errore ('average', 'incompatible celldm', 1)
         ENDDO
         DO ir = 1, dfftp%nnr
            psic (ir) = psic (ir) + weight(ifile) * cmplx(rho%of_r(ir, 1),0.d0,kind=DP)
