@@ -27,7 +27,10 @@ SUBROUTINE errore( calling_routine, message, ierr )
   USE io_global, ONLY : stdout
   USE io_files,  ONLY : crashunit, crash_file
   USE parallel_include
-  !
+#if defined(__PTRACE) || defined(__INTEL)
+  USE ifcore,    ONLY : tracebackqq
+#endif
+ !
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(IN) :: calling_routine, message
@@ -69,8 +72,12 @@ SUBROUTINE errore( calling_routine, message, ierr )
   CALL flush_unit( stdout )
   !
 #ifdef __PTRACE
+#ifdef __INTEL
+  call tracebackqq(user_exit_code=-1)
+#else
     WRITE( UNIT = 0, FMT = '(5X,A)' ) "Printing strace..."
     CALL ptrace()
+#endif
 #endif 
 !
 #if defined (__MPI)

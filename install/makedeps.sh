@@ -78,7 +78,7 @@ for dir in $dirs; do
         # handle special cases
         sed '/@\/cineca\/prod\/hpm\/include\/f_hpm.h@/d' \
             make.depend > make.depend.tmp
-        sed '/@iso_c_binding@/d' make.depend.tmp > make.depend
+        sed '/@iso_c_binding@/d;/@ifcore@/d' make.depend.tmp > make.depend
 
         if test "$DIR" = "Modules"
         then
