@@ -649,7 +649,12 @@ CONTAINS
  ! or iotk will complain while read-skipping PP_INFO section.
  FUNCTION CHECK(in) RESULT (out)
    CHARACTER(len=*) :: in
+#if defined(__PGI)
+   INTEGER, PARAMETER :: length = 255
+   CHARACTER(len=length) :: out
+#else
    CHARACTER(len=len(in)) :: out
+#endif   
    INTEGER :: i
    DO i = 1,len(in)
       IF ( in(i:i) == '<' .or. in(i:i) == '>' ) THEN
