@@ -28,7 +28,7 @@ PROGRAM fhi2upf
   IF ( trim(filein) == ' ') &
        CALL errore ('fhi2upf', 'usage: fhi2upf "file-to-be-converted"', 1)
   OPEN ( unit=1, file=filein, status = 'old', form='formatted', iostat=ios )
-  IF ( ios /= 0) CALL errore ('cpmd2upf', 'file: '//trim(filein)//' not found', 2)
+  IF ( ios /= 0) CALL errore ('fhi2upf', 'file: '//trim(filein)//' not found', 2)
   !
   CALL read_fhi(1)
   !
