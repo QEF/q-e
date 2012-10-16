@@ -853,8 +853,9 @@ MODULE xml_io_base
       INTEGER,          INTENT(IN) :: if_pos(:,:)
       REAL(DP),         INTENT(IN) :: pos_unit
       !
-      INTEGER            :: i, flen
-      CHARACTER(LEN=256) :: file_pseudo
+      INTEGER            :: i, flen, flen2
+      LOGICAL            :: exst
+      CHARACTER(LEN=256) :: file_pseudo_in, file_pseudo_out
       !
       !
       CALL iotk_write_begin( iunpun, "IONS" )
@@ -864,6 +865,7 @@ MODULE xml_io_base
       CALL iotk_write_dat( iunpun, "NUMBER_OF_SPECIES", nsp )
       !
       flen = LEN_TRIM( pseudo_dir )
+      flen2= LEN_TRIM( dirname )
       !
       CALL iotk_write_attr ( attr, "UNITS", "a.m.u.", FIRST = .TRUE. )
       CALL iotk_write_empty( iunpun, "UNITS_FOR_ATOMIC_MASSES", ATTR = attr )
@@ -874,20 +876,30 @@ MODULE xml_io_base
          !
          CALL iotk_write_dat( iunpun, "ATOM_TYPE", atm(i) )
          !
+         ! ... Copy PP file into the .save directory - verify that the
+         ! ...  sourcefile exists and is not the same as the destination file
+         !
          IF ( pseudo_dir(flen:flen) /= '/' ) THEN
-            !
-            file_pseudo = pseudo_dir(1:flen) // '/' // psfile(i)
-            !
+            file_pseudo_in = pseudo_dir(1:flen) // '/' // TRIM(psfile(i))
          ELSE
-            !
-            file_pseudo = pseudo_dir(1:flen) // psfile(i)
-            !
+            file_pseudo_in = pseudo_dir(1:flen) // TRIM(psfile(i))
          END IF
          !
-         IF (TRIM( file_pseudo ).ne. TRIM( dirname ) // "/" // &
-                           TRIM(psfile(i))) &
-         CALL copy_file( TRIM( file_pseudo ), &
-                            TRIM( dirname ) // "/" // TRIM( psfile(i) ) )
+         IF ( dirname(flen2:flen2) /= '/' ) THEN
+            file_pseudo_out = dirname(1:flen2) // '/' // TRIM(psfile(i))
+         ELSE
+            file_pseudo_out = dirname(1:flen2) // TRIM(psfile(i))
+         END IF
+         !
+         IF ( file_pseudo_in .ne. file_pseudo_out ) THEN
+            INQUIRE ( FILE=file_pseudo_in, EXIST=exst )
+            IF ( exst ) THEN
+               CALL copy_file( TRIM( file_pseudo_in ), TRIM( file_pseudo_out ) )
+            ELSE
+               CALL infomsg( 'write_ions', &
+                   'file ' // TRIM( file_pseudo_in) // ' not present' )
+            END IF
+         END IF
          !
          CALL iotk_write_dat( iunpun, "MASS", amass(i) )
          !
