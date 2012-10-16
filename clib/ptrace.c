@@ -4,9 +4,9 @@
 */
 #ifdef __PTRACE
 #include <execinfo.h>
-#include <stdio.h>
 #include <stdlib.h>
 #endif
+#include <stdio.h>
 
 void F77_FUNC(ptrace,PTRACE)(int *kilobytes)
 {

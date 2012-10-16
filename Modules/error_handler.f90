@@ -27,7 +27,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
   USE io_global, ONLY : stdout
   USE io_files,  ONLY : crashunit, crash_file
   USE parallel_include
-#if defined(__PTRACE) || defined(__INTEL)
+#if defined(__PTRACE) && defined(__INTEL)
   USE ifcore,    ONLY : tracebackqq
 #endif
  !
