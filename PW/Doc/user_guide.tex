@@ -97,6 +97,7 @@ In particular:
   \item macroscopic polarization and finite electric fields via 
   the modern theory of polarization (Berry Phases).
   \item the modern theory of polarization (Berry Phases).
+  \item modern theory of orbital magnetization.
   \item free-energy surface calculation at fixed cell through meta-dynamics, if patched with PLUMED.
 \end{itemize}
 All of the above works for both insulators and metals, 
@@ -450,6 +451,13 @@ see \texttt{examples/dipole\_example} for an example of application.
 Electric fields via modern theory of polarization are documented in
 example 10. The exact meaning of the related variables, for both
 cases, is explained in the general input documentation.
+
+\paragraph{Orbital magnetization}
+Modern theory of orbital magnetization [Phys. Rev. Lett. 95, 137205 (2005)]
+for insulators. The calculation is performed by setting 
+input variable \texttt{lorbm=.true.} in nscf run. If finite electric field 
+is present (\texttt{lelfield=.true.}) only Kubo terms are computed
+[see New J. Phys. 12, 053032 (2010) for details].
 
 \subsection{Optimization and dynamics}
 
