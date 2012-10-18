@@ -243,7 +243,8 @@ CONTAINS
     pawset_%grid%dx    = grid%dx
     !
     pawset_%rmatch_augfun = rmatch_augfun
-    if (rmatch_augfun <= 0.0_dp) pawset_%rmatch_augfun = grid%r(irc)
+    !if (rmatch_augfun <= 0.0_dp) pawset_%rmatch_augfun = grid%r(irc)
+    if (rmatch_augfun <= 0.0_dp) pawset_%rmatch_augfun = MAXVAL(rcutus(1:nbeta))
     pawset_%rel = rel
     pawset_%irc = irc
     pawset_%ikk(1:nbeta)=ikk(1:nbeta)
@@ -315,7 +316,7 @@ CONTAINS
        ! specific shape of the radial part of the augmentation functions
        ! in a spherically averager system (as is the case in atoms) only
        ! the zero-th moment contribute to the scf charge
-       write(stdout, '(5x,2a)') 'Required augmentation: ',TRIM(which_paw_augfun)
+       write(stdout, '(5x,3a,f12.6)') 'Required augmentation: ',TRIM(which_paw_augfun), "   radius:", pawset_%rmatch_augfun
        !
 101    pawset_%augfun(:,:,:,:) = 0.0_dp
        DO ns=1,nbeta
@@ -421,6 +422,7 @@ CONTAINS
                 ! Defined as linear combination of Bessel functions.
                 ALLOCATE (j1 (pawset_%grid%mesh,2))
                 do ir=1,irc
+                   !if (grid%r(ir)<pawset_%rmatch_augfun) ircm=ir
                    if (grid%r(ir)<pawset_%rmatch_augfun) ircm=ir
                 end do
                 do l3 = max(l1-l2,l2-l1), l1+l2 
