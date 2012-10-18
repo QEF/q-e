@@ -70,7 +70,7 @@ MODULE becmod
   END INTERFACE
   !
   PUBLIC :: bec_type, becp, allocate_bec_type, deallocate_bec_type, calbec, &
-            beccopy, becscal
+            beccopy, becscal, is_allocated_bec_type
   !
 CONTAINS
   !-----------------------------------------------------------------------
@@ -322,6 +322,24 @@ CONTAINS
     RETURN
     !
   END SUBROUTINE calbec_nc
+  !
+  !
+  !-----------------------------------------------------------------------
+  FUNCTION is_allocated_bec_type (bec) RESULT (isalloc)
+    !-----------------------------------------------------------------------
+    IMPLICIT NONE
+    TYPE (bec_type) :: bec
+    LOGICAL :: isalloc
+#ifdef __STD_F95
+    isalloc = (associated(bec%r) .or. associated(bec%nc) .or. associated(bec%k))
+#else
+    isalloc = (allocated(bec%r) .or. allocated(bec%nc) .or. allocated(bec%k))
+#endif
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+  END FUNCTION is_allocated_bec_type
+  !-----------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
   SUBROUTINE allocate_bec_type ( nkb, nbnd, bec, comm )
