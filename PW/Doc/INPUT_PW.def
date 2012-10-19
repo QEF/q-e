@@ -178,7 +178,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    default { 20.D0 }
 	    info {
 		time step for molecular dynamics, in Rydberg atomic units
-		(1 a.u.=4.8378 * 10^-17 s : beware, the CP code use
+		(1 a.u.=4.8378 * 10^-17 s : beware, the CP code uses
 		 Hartree atomic units, half that much!!!)
 	    }
 	}
@@ -219,7 +219,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		If .false. a subdirectory for each k_point is not opened
 		in the prefix.save directory; Kohn-Sham eigenvalues are
                 stored instead in a single file for all k-points. Currently
-                doesnh't work together with wf_collect
+                doesn't work together with wf_collect
 	    }
 	}
        		
@@ -287,7 +287,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var tefield -type LOGICAL { 
 	    default { .FALSE. }
 	    info {
-		If .TRUE. a sawlike potential simulating an electric field
+		If .TRUE. a saw-like potential simulating an electric field
 		is added to the bare ionic potential. See variables
 		edir, eamp, emaxpos, eopreg for the form and size of
 		the added potential.
@@ -880,9 +880,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 Specific for EXX. It selects the kind of approach to be used
 	        for treating the Coulomb potential divergencies at small q vectors.
 
-		gygi-baldereschi : appropriated for cubic and quasi-cubic supercells
-                vcut_spherical : appropriated for cubic and quasi-cubic supercells
-                vcut_ws : appropriated for strongly anysotropic supercells, see also
+		gygi-baldereschi : appropriate for cubic and quasi-cubic supercells
+                vcut_spherical : appropriate for cubic and quasi-cubic supercells
+                vcut_ws : appropriate for strongly anisotropic supercells, see also
                           ecutvcut.
                 none : sets Coulomb potential at G,q=0 to 0.0
             }
@@ -902,7 +902,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    info {
 		three-dimensional mesh for q (k1-k2) sampling of 
 		the Fock operator (EXX). Can be smaller than 
-                the number of kpoints.
+                the number of k-points.
 	    }
 	}
 
@@ -1032,7 +1032,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var emaxpos -type REAL { 
 	    default { 0.5D0 }
 	    info {
-		Position of the maximum of the sawlike potential along crystal
+		Position of the maximum of the saw-like potential along crystal
 		axis "edir", within the  unit cell (see below), 0 < emaxpos < 1
 		Used only if tefield is .TRUE.
 	    }
@@ -1041,7 +1041,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var eopreg -type REAL {
 	    default { 0.1D0 }
 	    info {
-		Zone in the unit cell where the sawlike potential decreases.
+		Zone in the unit cell where the saw-like potential decreases.
 		( see below, 0 < eopreg < 1 ). Used only if tefield is .TRUE.
 	    }
 	}
@@ -1051,7 +1051,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    info {
 		Amplitude of the electric field, in ***Hartree*** a.u.;
                 1 a.u. = 51.4220632*10^10 V/m). Used only if tefield=.TRUE.
-                The sawlike potential increases with slope "eamp" in the
+                The saw-like potential increases with slope "eamp" in the
 		region from (emaxpos+eopreg-1) to (emaxpos), then decreases
 		to 0 until (emaxpos+eopreg), in units of the crystal
 		vector "edir". Important: the change of slope of this
@@ -1168,7 +1168,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    default { 'none' } 
             info { 
                 Used to perform calculation assuming the system to be
-                isolated (a molecule of a clustr in a 3D supercell).
+                isolated (a molecule or a cluster in a 3D supercell).
 
                 Currently available choices:
 
@@ -1262,7 +1262,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             default { 0.d0 }
             info {
                 If assume_isolated = 'esm' and esm_bc = 'bc2', gives the
-                magnitude of the electric field [Ryd/a.u.] to be applied
+                magnitude of the electric field [Ry/a.u.] to be applied
                 between semi-infinite ESM electrodes.
             }
         }
@@ -2001,7 +2001,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 				info { 
 				    atomic positions 
 				    
-				    NOTE: each atomic coordinate can also be specified as a simple algebrical expression.
+				    NOTE: each atomic coordinate can also be specified as a simple algebraic expression.
 		                          To be interpreted correctly expression must NOT contain any blank
 		                          space and must NOT start with a "+" sign. The available expressions are:
 		                          
@@ -2157,7 +2157,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 			    var sk2
 			    var sk3
 			    info {
-				The grid offests;  sk1, sk2, sk3 must be 
+				The grid offsets;  sk1, sk2, sk3 must be 
 				0 ( no offset ) or 1 ( grid displaced by 
                                 half a grid step in the corresponding direction ).
 			    }
