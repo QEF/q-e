@@ -45,8 +45,7 @@ subroutine g_psi (lda, n, m, npol, psi, e)
      do k = 1, m
         do i = 1, n
            x = (h_diag(i,ipol) - e(k)*s_diag(i,ipol))*scala
-           denm = (1.d0+x+sqrt(1.d0+(x-1)*(x-1.d0)))/scala
-        !         denm = 1.d0 + 16*x*x*x*x/(27.d0+18*x+12*x*x+8*x*x*x)
+           denm = 0.5_dp*(1.d0+x+sqrt(1.d0+(x-1)*(x-1.d0)))/scala
            psi (i, ipol, k) = psi (i, ipol, k) / denm
         enddo
      enddo

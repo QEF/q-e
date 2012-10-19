@@ -457,7 +457,7 @@ SUBROUTINE vcsmd()
   !
   DEALLOCATE( amass_, rat, rati, ratd, rat2d, rat2di, tauold )
   !
-  ! ... check if max number of steps achieved
+  ! ... check if max number of steps reached
   !
   conv_ions = ( idone == nstep ) 
   IF ( conv_ions ) WRITE( UNIT = stdout, FMT = '(/,5X,A,i4," iterations ", &
