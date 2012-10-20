@@ -281,6 +281,9 @@ ppc64-bg | ppc64-bgq )
           try_f90="bgxlf90"
 	else
           try_mpif90="mpixlf90_r"
+          # Executable paths are usually consistent across several 
+          # IBM BG/P BG/Q machine deployed 
+          ld="/bgsys/drivers/ppcfloor/comm/xl.ndebug/bin/mpixlf90_r"
           try_f90="bgxlf90_r"
 	fi
         try_arflags="ruv"
@@ -1646,9 +1649,17 @@ fi
 echo setting FFT_LIBS... $fft_libs
 
 # if no valid FFT library was found, use the local copy
+# (This happens also if OpenMP is enabled...)
 if test "$have_fft" -eq 0
 then
-        try_dflags="$try_dflags -D__FFTW"
+        case "$arch" in
+        ppc64-bg | ppc64-bgq )
+            try_dflags="$try_dflags -D__LINUX_ESSL"
+            ;;
+        * )
+		    try_dflags="$try_dflags -D__FFTW"
+            ;;
+        esac
 fi
 
 F77=$f90
