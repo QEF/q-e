@@ -45,14 +45,11 @@ constraints_module.o : ions_base.o
 constraints_module.o : kind.o
 control_flags.o : kind.o
 control_flags.o : parameters.o
-dspev_drv.o : elpa1.o
 dspev_drv.o : kind.o
 dspev_drv.o : mp_global.o
 electrons_base.o : constants.o
 electrons_base.o : io_global.o
 electrons_base.o : kind.o
-elpa2.o : blockedQR.o
-elpa2.o : elpa1.o
 environment.o : io_files.o
 environment.o : io_global.o
 environment.o : kind.o

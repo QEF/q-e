@@ -95,7 +95,7 @@ all   : pwall cp ld1 upf tddfpt
 # Auxiliary targets used by main targets:
 # compile modules, libraries, directory for binaries, etc
 ###########################################################
-mods : libiotk
+mods : libiotk libelpa
 	( cd Modules ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
 libs : mods
@@ -120,6 +120,10 @@ libblas : touch-dummy
 liblapack: touch-dummy
 	cd install ; $(MAKE) $(MFLAGS) -f extlibs_makefile $@
 
+libelpa : libelpa_internal
+libelpa_internal: touch-dummy
+	cd install ; $(MAKE) $(MFLAGS) -f extlibs_makefile $@
+	
 libiotk: touch-dummy
 	cd install ; $(MAKE) $(MFLAGS) -f extlibs_makefile $@
 

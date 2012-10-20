@@ -1792,6 +1792,7 @@ then
 fi
 echo setting MPI_LIBS... $mpi_libs
 
+
 # final check on availability of parallel environment
 parallel=0
 for dummy in x # to allow simple 'break' 
@@ -1872,14 +1873,15 @@ fi
         # scalapack provided in SCALAPACK_LIBS - not checked!
         have_scalapack=1
         try_dflags="$try_dflags -D__SCALAPACK"
-    fi
+    fi   
 done
 
-if test "$with_elpa" -eq 1; then 
-        try_dflags="$try_dflags -D__ELPA"
+# ELPA iff SCALAPACK
+if test "$with_elpa" -eq 1 && test "$have_scalapack" -eq 1; then 
+    scalapack_libs="../../ELPA/libelpa.a $scalapack_libs"
+    try_dflags="$try_dflags -D__ELPA"
 fi
-
-
+    
 echo setting SCALAPACK_LIBS... $scalapack_libs
 
 # preprocessing flag for openmp (experimental)

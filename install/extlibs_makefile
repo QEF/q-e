@@ -11,6 +11,7 @@ include ../make.sys
 all: 
 	$(MAKE) libblas_$(BLAS_LIBS_SWITCH) 
 	$(MAKE) liblapack_$(LAPACK_LIBS_SWITCH) 
+	$(MAKE) libelpa_internal 
 	$(MAKE) libiotk 
 
 # BLAS
@@ -62,6 +63,21 @@ libiotk:
 	ln -fs ../S3DE/iotk/src/iotk.x .; \
 	ln -fs ../S3DE/iotk/src/iotk_print_kinds.x .; \
 	cd ../; ln -fs S3DE/iotk iotk
+	
+# ELPA
+libelpa : libelpa_$(ELPA_LIBS_SWITCH)
+
+libelpa_external : fake_elpa_external
+
+fake_elpa_external :
+	touch fake_libelpa.a
+	rm fake_libelpa.a
+
+libelpa_internal:
+	if test ! -d ../ELPA; then \
+	( gzip -dc ../archive/ELPA-0.1.tar.gz |(cd ../; tar -xvf -)); fi
+	cd ../ELPA; $(MAKE)
+	
 ###################################
 # cleaning
 ###################################
@@ -74,6 +90,10 @@ lapack_clean:
 	if test -d ../lapack-3.2; then (cd ../lapack-3.2; $(MAKE) clean); fi
 lapack_veryclean:
 	if test -d ../lapack-3.2; then (rm -R -f ../lapack-3.2); fi
+elpa_clean:
+	if test -d ../ELPA; then (cd ../ELPA; $(MAKE) clean); fi
+elpa_veryclean:
+	if test -d ../ELPA; then (rm -R -f ../ELPA); fi
 iotk_clean:
 	if test -d ../S3DE; then (cd ../S3DE; $(MAKE) clean); fi
 	if test -e ../S3DE/iotk/src/iotk.x; then \
@@ -90,5 +110,5 @@ iotk_veryclean:
 	rm -f ../iotk
 
 # general cleaning
-clean: blas_clean lapack_clean iotk_clean
-veryclean: blas_veryclean lapack_veryclean iotk_veryclean
+clean: blas_clean lapack_clean elpa_clean iotk_clean
+veryclean: blas_veryclean lapack_veryclean elpa_veryclean iotk_veryclean
