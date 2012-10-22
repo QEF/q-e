@@ -183,7 +183,7 @@ clean :
 	for dir in \
 		CPV Modules PP PW \
 		ACFDT \
-		clib flib pwtools upftools iotk \
+		clib flib pwtools upftools \
 		dev-tools extlibs Environ \
 	; do \
 	    if test -d $$dir ; then \
@@ -193,6 +193,7 @@ clean :
 	    fi \
 	done
 	- @(cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile clean)
+	- @(cd install ; $(MAKE) $(MFLAGS) -f extlibs_makefile clean)
 	- /bin/rm -rf bin/*.x tmp
 	- cd PW/tests; /bin/rm -rf CRASH *.out *.out? ; cd -
 	- cd CPV/tests; /bin/rm -rf CRASH *.out *.out? 
