@@ -218,48 +218,55 @@ SUBROUTINE summary()
   ! Some output for LDA+U
   !
   IF ( lda_plus_U ) THEN
-   WRITE( stdout,*) '-----'
-   IF (lda_plus_u_kind == 0) THEN
-     WRITE( stdout, '(5x,"simplified LDA+U calculation, Hubbard_lmax = ",i1)') Hubbard_lmax
-     WRITE( stdout, '(5x,"atomic species  L   Hubbard U  Hubbard alpha")' )
-     DO nt = 1, ntyp
-        IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 ) THEN
-           WRITE( stdout,'(5x,a6,5x,i6,2f12.6)') &
-             atm(nt), Hubbard_L(nt), Hubbard_U(nt)*rytoev, Hubbard_alpha(nt)*rytoev
+     IF (lda_plus_u_kind == 0) THEN
+        !
+        WRITE( stdout, '(/,/,5x,"Simplified LDA+U calculation (l_max = ",i1, &
+           ") with parameters (eV):")') Hubbard_lmax
+        WRITE( stdout, '(5x,A)') &
+           "atomic species    L          U    alpha       J0     beta"
+        DO nt = 1, ntyp
+           IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 .OR. &
+                Hubbard_J0(nt) /= 0.D0 .OR. Hubbard_beta(nt) /= 0.D0 ) THEN
+              WRITE( stdout,'(5x,a6,12x,i1,2x,4f9.4)') atm(nt), Hubbard_L(nt), &
+                 Hubbard_U(nt)*rytoev, Hubbard_alpha(nt)*rytoev, &
+                 Hubbard_J0(nt)*rytoev, Hubbard_beta(nt)*rytoev
+           END IF
+        END DO
+        !
+     ELSEIF(lda_plus_u_kind == 1) THEN
+        !
+        WRITE( stdout, '(/,/,5x,"Full LDA+U calculation (l_max = ",i1, &
+           ") with parameters (eV):")') Hubbard_lmax
+        DO nt = 1, ntyp
+           IF (Hubbard_U(nt) /= 0.d0) THEN
+              IF (Hubbard_l(nt) == 0) THEN
+                 WRITE (stdout,'(5x,a,i2,a,f12.8)') &
+                    'U(',nt,') =', Hubbard_U(nt) * rytoev
+              ELSEIF (Hubbard_l(nt) == 1) THEN
+                 WRITE (stdout,'(5x,2(a,i3,a,f9.4,3x))') &
+                    'U(',nt,') =', Hubbard_U(nt)*rytoev, &
+                    'J(',nt,') =', Hubbard_J(1,nt)*rytoev
+              ELSEIF (Hubbard_l(nt) == 2) THEN
+                 WRITE (stdout,'(5x,3(a,i3,a,f9.4,3x))') &
+                    'U(',nt,') =', Hubbard_U(nt)*rytoev, &
+                    'J(',nt,') =', Hubbard_J(1,nt)*rytoev, &
+                    'B(',nt,') =', Hubbard_J(2,nt)*rytoev
+              ELSEIF (Hubbard_l(nt) == 3) THEN
+                 WRITE (stdout,'(5x,4(a,i3,a,f9.4,3x))') &
+                    'U (',nt,') =', Hubbard_U(nt)*rytoev,   &
+                    'J (',nt,') =', Hubbard_J(1,nt)*rytoev, &
+                    'E2(',nt,') =', Hubbard_J(2,nt)*rytoev, &
+                    'E3(',nt,') =', Hubbard_J(3,nt)*rytoev
+              END IF
+           END IF
+        ENDDO
+        IF (lspinorb) THEN
+           WRITE(stdout, '(5x,"LDA+U on averaged j=l+1/2,l-1/2 radial WFs")')
         END IF
-     END DO
-     WRITE( stdout, '(5x,"atomic species  L   Hubbard J0  Hubbard beta")' )
-     DO nt = 1, ntyp
-        IF ( Hubbard_J0(nt) /= 0.D0 .OR. Hubbard_beta(nt) /= 0.D0 ) THEN
-           WRITE( stdout,'(5x,a6,5x,i6,2f12.6)') &
-             atm(nt), Hubbard_L(nt), Hubbard_J0(nt)*rytoev, Hubbard_beta(nt)*rytoev
-        END IF
-     END DO
-   ELSEIF(lda_plus_u_kind == 1) THEN
-     WRITE( stdout, '(5x,"full LDA+U calculation, Hubbard_lmax = ",i1)') Hubbard_lmax
-     WRITE( stdout, '(5x,"Hubbard parameters for +U species:")' )
-     DO nt = 1, ntyp
-       IF (Hubbard_U(nt) /= 0.d0) THEN
-         IF (Hubbard_l(nt) == 0) THEN
-           WRITE (stdout,'(5x,a,i2,a,f12.8)') 'U(',nt,') =', Hubbard_U(nt) * rytoev
-         ELSEIF (Hubbard_l(nt) == 1) THEN
-           WRITE (stdout,'(5x,2(a,i3,a,f9.4,3x))') 'U(',nt,') =', Hubbard_U(nt)*rytoev,   &
-                                                   'J(',nt,') =', Hubbard_J(1,nt)*rytoev
-         ELSEIF (Hubbard_l(nt) == 2) THEN
-           WRITE (stdout,'(5x,3(a,i3,a,f9.4,3x))') 'U(',nt,') =', Hubbard_U(nt)*rytoev,   &
-                                                   'J(',nt,') =', Hubbard_J(1,nt)*rytoev, &
-                                                   'B(',nt,') =', Hubbard_J(2,nt)*rytoev
-         ELSEIF (Hubbard_l(nt) == 3) THEN
-           WRITE (stdout,'(5x,4(a,i3,a,f9.4,3x))') 'U (',nt,') =', Hubbard_U(nt)*rytoev,   &
-                                                   'J (',nt,') =', Hubbard_J(1,nt)*rytoev, &
-                                                   'E2(',nt,') =', Hubbard_J(2,nt)*rytoev, &
-                                                   'E3(',nt,') =', Hubbard_J(3,nt)*rytoev
-         END IF
-       END IF
-     ENDDO
-     IF (lspinorb) WRITE(stdout, '(5x,"LDA+U on averaged j=l+1/2,l-1/2 radial WFs")')
-   END IF
-   WRITE( stdout,*) '-----'
+        !
+      END IF
+      !
+      WRITE( stdout,'(/)')
   END IF
   !
   !   description of symmetries
