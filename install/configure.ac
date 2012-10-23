@@ -1877,9 +1877,11 @@ fi
 done
 
 # ELPA iff SCALAPACK
+elpa_libs_switch="disabled"
 if test "$with_elpa" -eq 1 && test "$have_scalapack" -eq 1; then 
     scalapack_libs="../../ELPA/libelpa.a $scalapack_libs"
     try_dflags="$try_dflags -D__ELPA"
+    elpa_libs_switch="enabled"    
 fi
     
 echo setting SCALAPACK_LIBS... $scalapack_libs
@@ -2000,6 +2002,7 @@ AC_SUBST(lapack_libs_switch)
 AC_SUBST(fft_libs)
 AC_SUBST(mpi_libs)
 AC_SUBST(mass_libs)
+AC_SUBST(elpa_libs_switch)
 AC_SUBST(scalapack_libs)
 AC_SUBST(ar)
 AC_SUBST(arflags)

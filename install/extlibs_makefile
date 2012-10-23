@@ -67,15 +67,15 @@ libiotk:
 # ELPA
 libelpa : libelpa_$(ELPA_LIBS_SWITCH)
 
-libelpa_external : fake_elpa_external
+libelpa_disabled : fake_elpa_external
 
 fake_elpa_external :
 	touch fake_libelpa.a
 	rm fake_libelpa.a
 
-libelpa_internal:
+libelpa_enabled:
 	if test ! -d ../ELPA; then \
-	( gzip -dc ../archive/ELPA-0.1.tar.gz |(cd ../; tar -xvf -)); fi
+	( gzip -dc ../archive/ELPA-0.2.tar.gz |(cd ../; tar -xvf -)); fi
 	cd ../ELPA; $(MAKE)
 	
 ###################################

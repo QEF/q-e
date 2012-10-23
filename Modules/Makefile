@@ -3,7 +3,7 @@
 include ../make.sys
 
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../ELPA $(MOD_FLAG).
+MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../ELPA/src $(MOD_FLAG).
 
 MODULES = \
 atom.o \

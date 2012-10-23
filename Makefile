@@ -120,8 +120,7 @@ libblas : touch-dummy
 liblapack: touch-dummy
 	cd install ; $(MAKE) $(MFLAGS) -f extlibs_makefile $@
 
-libelpa : libelpa_internal
-libelpa_internal: touch-dummy
+libelpa: touch-dummy
 	cd install ; $(MAKE) $(MFLAGS) -f extlibs_makefile $@
 	
 libiotk: touch-dummy
