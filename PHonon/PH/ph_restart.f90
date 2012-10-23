@@ -875,6 +875,7 @@ MODULE ph_restart
        CALL mp_bcast( nirr,  ionode_id, intra_image_comm )
        CALL mp_bcast( npert,  ionode_id, intra_image_comm )
        CALL mp_bcast( u,  ionode_id, intra_image_comm )
+       CALL mp_bcast( name_rap_mode,  ionode_id, intra_image_comm )
 !    ENDIF
 
     RETURN
