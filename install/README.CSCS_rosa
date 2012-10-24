@@ -5,11 +5,6 @@ Machine name    : MonteRosa (Cray XE6) at CSCS, Lugano (CH)
 Machine spec    : http://user.cscs.ch/hardware/monte_rosa_cray_xe6/index.html
 Similar systems : HECToR (EPCC, UK), HERMIT (HLRS, DE), Cielo (LANL, US), 
                   HOPPER (NERSC, US), Beagle (ANL, US)
-
-IMPORTANT NOTE: the CRAY XK7 system has a different compute node spec because
-                one CPU has been replaced by a NVIDIA GPU K20. Instructions to 
-                compile and run are similar BUT some parameters have to change 
-                according to the different architecture
  
 
 1. Compile the code
