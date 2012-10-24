@@ -239,7 +239,11 @@ subroutine gener_pseudo
         ! first compute possibly harder NC pseudowfcs to be
         ! used as AE reference for PAW generation
         nnode=0
-        call compute_phi(lam,ik(ns),psi_in,phis(1,ns),xc,1,occ,enls(ns),els(ns))
+        if(tm) then 
+           call compute_phi_tm(lam,ik(ns),psi_in,phis(1,ns),1,xc,enls(ns),els(ns))
+        else
+           call compute_phi(lam,ik(ns),psi_in,phis(1,ns),xc,1,occ,enls(ns),els(ns))
+        endif
         psipaw(1:grid%mesh,ns)=phis(1:grid%mesh,ns)
      endif
      !
