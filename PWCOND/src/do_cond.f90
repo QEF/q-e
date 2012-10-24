@@ -13,10 +13,12 @@ SUBROUTINE do_cond(done)
 !   scattering problem and calculates the transmission coefficient.
 !
   USE constants,  ONLY : rytoev
-  USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
+  USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau, atm
   USE cell_base,  ONLY : at, bg, tpiba
   USE klist,      ONLY : npk, xk, two_fermi_energies
-  USE ldaU,       ONLY : lda_plus_U
+  USE ldaU,       ONLY : lda_plus_U, lda_plus_u_kind, U_projection, &
+                         Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
+                         Hubbard_J0, Hubbard_beta
   USE spin_orb,   ONLY : lspinorb, domag
   USE uspp,       ONLY : okvan
   USE gvect,      ONLY : ecutrho
@@ -44,7 +46,8 @@ SUBROUTINE do_cond(done)
   LOGICAL, INTENT(OUT) :: done
   !
   REAL(DP) :: wtot, tk
-  INTEGER :: ik, ien, loop1, loop2, loop1_in, loop1_fin, loop2_in, loop2_fin, ipol, ios
+  INTEGER :: ik, ien, ipol, ios, nt
+  INTEGER :: loop1, loop2, loop1_in, loop1_fin, loop2_in, loop2_fin
   LOGICAL :: lso_l, lso_s, lso_r, skip_equivalence = .FALSE.
   REAL(DP) :: ecutwfc_l, ecutwfc_s, ecutwfc_r
   REAL(DP) :: ecutrho_l, ecutrho_s, ecutrho_r
@@ -371,7 +374,34 @@ IF (lwrite_cond) then
   return
 endif
 
-IF (lda_plus_u) call errore('do_cond','PWCOND not working with LDA+U',1)
+IF ( lda_plus_u ) THEN
+   !
+   IF ( U_projection .NE. "pseudo" ) &
+      CALL errore('do_cond','LDA+U works only for "pseudo" projection type',1)
+   !
+   ! report of LDA+U parameters (as in PW/src/summary.f90)
+   IF (lda_plus_u_kind == 0) THEN
+      !
+      WRITE( stdout, '(/,/,5x,"Simplified LDA+U calculation (l_max = ",i1, &
+         ") with parameters (eV):")') Hubbard_lmax
+      WRITE( stdout, '(5x,A)') &
+         "atomic species    L          U    alpha       J0     beta"
+      DO nt = 1, ntyp
+         IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 .OR. &
+              Hubbard_J0(nt) /= 0.D0 .OR. Hubbard_beta(nt) /= 0.D0 ) THEN
+            WRITE( stdout,'(5x,a6,12x,i1,2x,4f9.4)') atm(nt), Hubbard_L(nt), &
+               Hubbard_U(nt)*rytoev, Hubbard_alpha(nt)*rytoev, &
+               Hubbard_J0(nt)*rytoev, Hubbard_beta(nt)*rytoev
+         END IF
+      END DO
+      !
+   ELSEIF (lda_plus_u_kind == 1) THEN
+      CALL errore('do_cond', 'Full LDA+U not yet implemented in PWcond', 1)
+   ENDIF
+   !
+   WRITE( stdout,'(/)')
+   !
+ENDIF
 
 IF (nkpts==0) THEN
    time_reversal = .NOT. (noncolin .AND. domag)

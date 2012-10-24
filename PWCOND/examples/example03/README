@@ -1,0 +1,40 @@
+
+This example shows how to use pw.x and pwcond.x to compute the complex band 
+structure (CBS) and transmittace within DFT+U for an Au monatomic chain with 
+a CO impurity. The Hubbard potential is included in the coefficients of the 
+non-local part of the pseudopotential (PP), as described in:
+http://www.sissa.it/cm/thesis/2010/SclauzeroG_PhDthesis.pdf
+
+The plain LDA result is compared with the LDA+U result (using U=3 eV), 
+therefore the following calculations are performed first without, and 
+then with the Hubbard U potential.
+
+
+1.) Visualization of the CBS:
+
+ a) A pw.x calculation provides the self-consistent potential for a perfect 
+    Au monatomic chain (1 atom per cell).
+
+ b) A pwcond.x calculation gives for every energy in the chosen range the CBS
+    of the Au chain. Notice how the 5d-states of Au are pushed away from the 
+    Fermi energy by the Hubbard U potential.
+
+
+2.) Calculation of the transmittance through the chain with the impurity:
+
+ a) Two pw.x calculations provide the self-consistent potentials for a perfect
+    Au chain (used as left and right lead) and for a Au chain (6 atoms long) 
+    with a CO molecule adsorbed atop the central Au atom (scattering region).
+
+ b) A pwcond.x calculation gives the transmittance through the Au chain with 
+    the adsorbed impurity for selected energies around the Fermi level.
+
+
+You can plot the results with Gnuplot using the automatically generated script.
+
+
+N.B.: 1. In order to make the tests faster, these calculations are not fully 
+         converged with respect to k points, cut-off and size of the cell.
+      2. The PP must contain the AE wavefunctions for the valence orbitals
+         that are included in the Hubbard term (e.g. using lsave_wfc=.true.
+         when generating the PP through ld1.x).

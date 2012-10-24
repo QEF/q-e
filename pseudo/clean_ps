@@ -6,6 +6,7 @@
 # HUSPBE.RRKJ3              O_US.van                 Rhs.pbe-rrkjus_lb.UPF
 # H_US.van                  Pt.rel-pbe-n-rrkjus.UPF  Si.bhs
 # Ni.rel-pbe-nd-rrkjus.UPF  Rh.pbe-rrkjus_lb.UPF     Si.rel-pbe-rrkj.UPF
+# Au.pz-rrkjus_aewfc.UPF
 
 \rm -rf Al.pz-vbc.UPF >& /dev/null
 \rm -rf Al.pbe-rrkj.UPF >& /dev/null

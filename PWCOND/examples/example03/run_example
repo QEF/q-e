@@ -1,0 +1,531 @@
+#!/bin/sh
+
+###############################################################################
+##
+##  Example of usage for PWcond with LDA+U
+##
+###############################################################################
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x and pwcond.x to calculate the"
+$ECHO "complex bands and the transmission coefficient of an open quantum"
+$ECHO "system."
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x pwcond.x"
+PSEUDO_LIST="Au.pz-rrkjus_aewfc.UPF C.pz-rrkjus.UPF O.pz-rrkjus.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PWCOND_COMMAND="$PARA_PREFIX $BIN_DIR/pwcond.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as:     $PW_COMMAND"
+$ECHO "  running pwcond.x as: $PWCOND_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+
+# self-consistent calculation for Au monatomic wire (plain LDA)
+cat > Auwire.scf.in << EOF
+ &control
+    calculation = 'scf',
+    restart_mode = 'from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir = '$TMP_DIR/',
+    prefix = 'Auwire'
+ /
+ &system
+    ibrav = 6,
+    celldm(1) =15.0,
+    celldm(3) =0.316,
+    nat= 1,
+    ntyp= 1,
+    nspin = 1,
+    ecutwfc = 25.0,
+    ecutrho = 150.0,
+    occupations='smearing',
+    smearing='methfessel-paxton',
+    degauss=0.01
+ /
+ &electrons
+    conv_thr = 1.0e-8
+    mixing_beta = 0.6
+ /
+ATOMIC_SPECIES
+ Au  196.966  Au.pz-rrkjus_aewfc.UPF
+ATOMIC_POSITIONS (angstrom)
+ Au  0.0  0.0  0.0
+K_POINTS (automatic)
+ 1 1 25 0 0 0
+EOF
+$ECHO "  running the LDA scf calculation for Au monatomic wire...\c"
+$PW_COMMAND < Auwire.scf.in > Auwire.scf.out
+check_failure $?
+$ECHO " done"
+
+# complex bands of the Au monatomic wire (plain LDA)
+cat > Auwire.cond.in << EOF
+ &inputcond
+    outdir='$TMP_DIR/'
+    prefixl='Auwire'
+    band_file='bands.Auwire'
+    ikind=0
+    energy0=1.0d0
+    denergy=-0.05d0
+    ewind=4.d0
+    epsproj=1.d-5
+    nz1=3
+    cutplot = 1.d0
+ /
+    1
+    0.0 0.0 1.0
+    100
+EOF
+$ECHO "  running pwcond.x to calculate the complex bands of Au wire (LDA)...\c"
+$PWCOND_COMMAND < Auwire.cond.in > Auwire.cond.out
+check_failure $?
+$ECHO " done"
+
+
+# self-consistent calculation for Au monatomic wire (LDA+U)
+cat > AuwireU.scf.in << EOF
+ &control
+    calculation = 'scf',
+    restart_mode = 'from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir = '$TMP_DIR/',
+    prefix = 'AuwireU'
+ /
+ &system
+    ibrav = 6,
+    celldm(1) =15.0,
+    celldm(3) =0.316,
+    nat= 1,
+    ntyp= 1,
+    nspin = 1,
+    ecutwfc = 25.0,
+    ecutrho = 150.0,
+    occupations = 'smearing',
+    smearing = 'methfessel-paxton',
+    degauss = 0.01,
+    lda_plus_U = .true.,
+    U_projection_type = 'pseudo',
+    Hubbard_U = 3.0
+ /
+ &electrons
+    conv_thr = 1.0e-8
+    mixing_beta = 0.6
+ /
+ATOMIC_SPECIES
+ Au  196.966  Au.pz-rrkjus_aewfc.UPF
+ATOMIC_POSITIONS (angstrom)
+ Au  0.0  0.0  0.0
+K_POINTS (automatic)
+ 1 1 25 0 0 0
+EOF
+$ECHO "  running the LDA+U scf calculation for Au monatomic wire...\c"
+$PW_COMMAND < AuwireU.scf.in > AuwireU.scf.out
+check_failure $?
+$ECHO " done"
+
+
+# complex bands of the Au monatomic wire (LDA+U)
+cat > AuwireU.cond.in << EOF
+ &inputcond
+    outdir='$TMP_DIR/'
+    prefixl='AuwireU'
+    band_file='bandsU.Auwire'
+    ikind=0
+    energy0=1.0d0
+    denergy=-0.05d0
+    ewind=4.d0
+    epsproj=1.d-5
+    nz1=3
+    cutplot = 1.d0
+ /
+    1
+    0.0 0.0 1.0
+    100
+EOF
+$ECHO "  running pwcond.x to calculate the complex bands of Au wire (LDA+U)...\c"
+$PWCOND_COMMAND < AuwireU.cond.in > AuwireU.cond.out
+check_failure $?
+$ECHO " done"
+
+
+# self-consistent calculation for Au monatomic wire (LDA)
+cat > Auwire1.scf.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+    prefix='Auwire'
+ /
+ &system
+    ibrav = 6,
+    celldm(1) = 15.0,
+    celldm(3) = 0.316,
+    nat = 1,
+    ntyp = 1,
+    nspin = 1,
+    ecutwfc = 25.0,
+    ecutrho = 150.0,
+    occupations = 'smearing',
+    smearing = 'methfessel-paxton',
+    degauss = 0.01
+ /
+ &electrons
+    conv_thr = 1.0d-8,
+    mixing_beta = 0.6
+ /
+ATOMIC_SPECIES
+ Au  196.966  Au.pz-rrkjus_aewfc.UPF
+ATOMIC_POSITIONS (angstrom)
+ Au  0.0  0.0  0.0
+K_POINTS (automatic)
+ 2 2 24 1 1 1
+EOF
+$ECHO "  running the LDA scf calculation for Au monatomic wire...\c"
+$PW_COMMAND < Auwire1.scf.in > Auwire1.scf.out
+check_failure $?
+$ECHO " done"
+
+# self-consistent calculation for Au-CO-Au system (LDA)
+cat > COatAuwire.scf.in << EOF
+ &control
+    calculation = 'scf',
+    restart_mode = 'from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir = '$TMP_DIR/',
+    prefix = 'Auwire_CO',
+    tprnfor = .true.
+ /
+ &system
+    ibrav = 6,
+    celldm(1) = 15.0,
+    celldm(3) = 1.896,
+    nat = 8,
+    ntyp = 3,
+    ecutwfc = 25.0,
+    ecutrho = 150.0
+    occupations = 'smearing',
+    smearing = 'methfessel-paxton',
+    degauss = 0.01
+ /
+ &electrons
+    conv_thr = 1.0d-8,
+    mixing_beta = 0.6
+ /
+ATOMIC_SPECIES
+ Au  196.966  Au.pz-rrkjus_aewfc.UPF
+ C    12.0107  C.pz-rrkjus.UPF  
+ O    15.9994  O.pz-rrkjus.UPF  
+ATOMIC_POSITIONS
+C   0.238357456 0.0 0.948
+O   0.381346734 0.0 0.948
+Au  0.0  0.0  0.000
+Au  0.0  0.0  0.316
+Au  0.0  0.0  0.632
+Au  0.0  0.0  0.948
+Au  0.0  0.0  1.264
+Au  0.0  0.0  1.580 
+K_POINTS (automatic)
+ 2 2 4 1 1 1
+EOF
+$ECHO "  running the LDA scf calculation for Au wire with CO impurity...\c"
+$PW_COMMAND < COatAuwire.scf.in > COatAuwire.scf.out
+check_failure $?
+$ECHO " done"
+
+# transmission calculation for the Au-CO-Au system (LDA)
+cat > COatAuwire.cond.in << EOF
+ &inputcond
+    outdir = '$TMP_DIR/',
+    prefixl = 'Auwire',
+    prefixs = 'Auwire_CO',
+    tran_file = 'trans.AuwireCO',
+    ikind = 1,
+    energy0 = 1.d0,
+    denergy=0.d0,
+    ewind=4.d0,
+    epsproj=1.d-4,
+    nz1 = 2,
+ /
+    1
+    0.0  0.0  1.0
+16
+  1.0
+  0.7
+  0.5
+  0.3
+  0.2
+  0.15
+  0.1
+  0.05
+  0.0
+ -0.2
+ -0.3
+ -0.5
+ -0.7
+ -0.8
+ -0.9
+ -1.0
+EOF
+$ECHO "  running pwcond.x to calculate the LDA transmission of an Au wire with atop CO...\c"
+$PWCOND_COMMAND < COatAuwire.cond.in > COatAuwire.cond.out
+check_failure $?
+$ECHO " done"
+
+
+# self-consistent calculation for Au monatomic wire (LDA+U)
+cat > Auwire1U.scf.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+    prefix='AuwireU'
+ /
+ &system
+    ibrav = 6,
+    celldm(1) = 15.0,
+    celldm(3) = 0.316,
+    nat = 1,
+    ntyp = 1,
+    nspin = 1,
+    ecutwfc = 25.0,
+    ecutrho = 150.0,
+    occupations = 'smearing',
+    smearing = 'methfessel-paxton',
+    degauss = 0.01,
+    lda_plus_U = .true.,
+    U_projection_type = 'pseudo',
+    Hubbard_U = 3.0
+ /
+ &electrons
+    conv_thr = 1.0d-8,
+    mixing_beta = 0.6
+ /
+ATOMIC_SPECIES
+ Au  196.966  Au.pz-rrkjus_aewfc.UPF
+ATOMIC_POSITIONS (angstrom)
+ Au  0.0  0.0  0.0
+K_POINTS (automatic)
+ 2 2 24 1 1 1
+EOF
+$ECHO "  running the LDA+U scf calculation for Au monatomic wire...\c"
+$PW_COMMAND < Auwire1U.scf.in > Auwire1U.scf.out
+check_failure $?
+$ECHO " done"
+
+# self-consistent calculation for Au-CO-Au system (LDA+U)
+cat > COatAuwireU.scf.in << EOF
+ &control
+    calculation = 'scf',
+    restart_mode = 'from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir = '$TMP_DIR/',
+    prefix = 'AuwireU_CO',
+    tprnfor = .true.
+ /
+ &system
+    ibrav = 6,
+    celldm(1) = 15.0,
+    celldm(3) = 1.896,
+    nat = 8,
+    ntyp = 3,
+    ecutwfc = 25.0,
+    ecutrho = 150.0
+    occupations = 'smearing',
+    smearing = 'methfessel-paxton',
+    degauss = 0.01,
+    lda_plus_U = .true.,
+    U_projection_type = 'pseudo',
+    Hubbard_U = 3.0
+ /
+ &electrons
+    conv_thr = 1.0d-8,
+    mixing_beta = 0.6
+ /
+ATOMIC_SPECIES
+ Au  196.966  Au.pz-rrkjus_aewfc.UPF
+ C    12.0107  C.pz-rrkjus.UPF  
+ O    15.9994  O.pz-rrkjus.UPF  
+ATOMIC_POSITIONS
+C   0.238357456 0.0 0.948
+O   0.381346734 0.0 0.948
+Au  0.0  0.0  0.000
+Au  0.0  0.0  0.316
+Au  0.0  0.0  0.632
+Au  0.0  0.0  0.948
+Au  0.0  0.0  1.264
+Au  0.0  0.0  1.580 
+K_POINTS (automatic)
+ 2 2 4 1 1 1
+EOF
+$ECHO "  running the LDA+U scf calculation for Au wire with CO impurity...\c"
+$PW_COMMAND < COatAuwireU.scf.in > COatAuwireU.scf.out
+check_failure $?
+$ECHO " done"
+
+# transmission calculation for the Au-CO-Au system (LDA+U)
+cat > COatAuwireU.cond.in << EOF
+ &inputcond
+    outdir = '$TMP_DIR/',
+    prefixl = 'AuwireU',
+    prefixs = 'AuwireU_CO',
+    tran_file = 'transU.AuwireCO',
+    ikind = 1,
+    energy0 = 1.d0,
+    denergy=0.d0,
+    ewind=4.d0,
+    epsproj=1.d-4,
+    nz1 = 2,
+ /
+    1
+    0.0  0.0  1.0
+16
+  1.0
+  0.7
+  0.5
+  0.3
+  0.2
+  0.15
+  0.1
+  0.05
+  0.0
+ -0.2
+ -0.3
+ -0.5
+ -0.7
+ -0.8
+ -0.9
+ -1.0
+EOF
+$ECHO "  running pwcond.x to calculate the LDA+U transmission of an Au wire with atop CO...\c"
+$PWCOND_COMMAND < COatAuwireU.cond.in > COatAuwireU.cond.out
+check_failure $?
+$ECHO " done"
+
+cat > plot_results.gnu << EOF
+##
+# Script to visualize the results of the DFT+U PWcond example
+##
+
+set style line 11 lt 1 lc rgbcolor 'blue' lw 2 pt 6
+set style line 12 lt 2 lc rgbcolor 'cyan' lw 1 pt 6
+set style line 21 lt 1 lc rgbcolor 'red' lw 2 pt 2
+set style line 22 lt 2 lc rgbcolor 'magenta' lw 1 pt 2
+set style arrow 1 nohead lt 3 lc rgbcolor 'dark-green' lw 1.5
+set style arrow 2 nohead lt 1 lc rgbcolor 'black' lw 1
+
+#1. compare CBS of Au chain within LDA and LDA+U
+set key center right
+set xlabel 'Re(k_z)'
+set label 'Im(k_z)=0' at 0.02, -2.5 left
+set label 'Im(k_z)' at first -0.25, screen 0.03 center
+set label 'Re(k_z)=0' at -0.02, -2.5 right
+set label 'Re(k_z)+Im(k_z)' at 0.75, screen 0.03 center
+set label 'Re(k_z)=0.5' at 0.52, -2.5 left
+set ylabel 'E - E_F  (eV)'
+set arrow from graph 0,first 0 to graph 1, first 0 as 1
+set arrow from 0,graph 0 to 0,graph 1 as 2
+set arrow from 0.5,graph 0 to 0.5,graph 1 as 2
+set xrange [-0.5:1.0]
+plot '< awk "{if(\\\$1>0.0) print}" bands.Auwire.re'  w p ls 11 title 'U=0',\\
+     'bands.Auwire.im'  w p ls 11 notitle,\\
+     '< awk "{if(\\\$1>0.0) print}" bandsU.Auwire.re' w p ls 21 title 'U=3',\\
+     'bandsU.Auwire.im' w p ls 21 notitle
+
+unset arrow
+unset label
+pause -1  "Hit return to continue"
+
+## extract the number of channels
+! echo "# channels" > nch.tmp
+! grep Nchannels COatAuwire.cond.out  | cut -d\= -f2 >> nch.tmp
+! echo "# channels" > nchU.tmp
+! grep Nchannels COatAuwireU.cond.out | cut -d\= -f2 >> nchU.tmp
+
+#2. compare the ballistic transmission for CO@Au chain
+set xlabel 'E - E_F  (eV)'
+set ylabel 'Transmittance'
+set arrow from 0,graph 0 to 0,graph 1 as 1
+set xrange [-1.0:1.0]
+plot 'trans.AuwireCO'  u 1:(0.5*\$2) w lp ls 11 title 'T(U=0)', \\
+     '< paste trans.AuwireCO nch.tmp'  u 1:3 w lp ls 12 title 'N(U=0)', \\
+     'transU.AuwireCO' u 1:(0.5*\$2) w lp ls 21 title 'T(U=3)',\\
+     '< paste transU.AuwireCO nchU.tmp'  u 1:3 w lp ls 22 title 'N(U=3)'
+
+
+EOF
+$ECHO
+$ECHO "  (you can visualize the results with Gnuplot using the plot_results.gnu script)"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"
