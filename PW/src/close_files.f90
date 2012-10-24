@@ -11,7 +11,7 @@ SUBROUTINE close_files(lflag)
   !
   ! ... Close all files and synchronize processes for a new scf calculation.
   !
-  USE ldaU,          ONLY : lda_plus_u
+  USE ldaU,          ONLY : lda_plus_u, U_projection
   USE control_flags, ONLY : twfcollect, io_level
   USE fixed_occ,     ONLY : one_atom_occupations
   USE io_files,      ONLY : prefix, iunwfc, iunigk, iunat, iunsat, &
@@ -44,7 +44,8 @@ SUBROUTINE close_files(lflag)
   ! ... iunat  contains the (orthogonalized) atomic wfcs 
   ! ... iunsat contains the (orthogonalized) atomic wfcs * S
   !
-  IF ( lda_plus_u .OR. use_wannier .OR. one_atom_occupations) THEN
+  IF ( ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) .OR. &
+        use_wannier .OR. one_atom_occupations ) THEN
      !
      INQUIRE( UNIT = iunat, OPENED = opnd )  
      IF ( opnd ) CLOSE( UNIT = iunat, STATUS = 'KEEP' )

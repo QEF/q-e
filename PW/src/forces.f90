@@ -35,7 +35,7 @@ SUBROUTINE forces()
   USE force_mod,     ONLY : force, lforce
   USE scf,           ONLY : rho
   USE ions_base,     ONLY : if_pos
-  USE ldaU,          ONLY : lda_plus_u
+  USE ldaU,          ONLY : lda_plus_u, U_projection
   USE extfield,      ONLY : tefield, forcefield
   USE control_flags, ONLY : gamma_only, remove_rigid_rot, textfor, &
                             iverbosity, llondon
@@ -98,8 +98,9 @@ SUBROUTINE forces()
   CALL force_cc( forcecc )
   !
   ! ... The Hubbard contribution
+  !     (included by force_us if using beta as local projectors)
   !
-  IF ( lda_plus_u ) CALL force_hub( forceh )
+  IF ( lda_plus_u .AND. U_projection.NE.'pseudo' ) CALL force_hub( forceh )
   !
   ! ... The ionic contribution is computed here
   !

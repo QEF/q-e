@@ -31,6 +31,11 @@ add_paw_to_deeq.o : ../../Modules/kind.o
 add_paw_to_deeq.o : ../../Modules/paw_variables.o
 add_paw_to_deeq.o : ../../Modules/uspp.o
 add_paw_to_deeq.o : pwcom.o
+add_vhub_to_deeq.o : ../../Modules/ions_base.o
+add_vhub_to_deeq.o : ../../Modules/kind.o
+add_vhub_to_deeq.o : ../../Modules/uspp.o
+add_vhub_to_deeq.o : pwcom.o
+add_vhub_to_deeq.o : scf_mod.o
 add_vuspsi.o : ../../Modules/becmod.o
 add_vuspsi.o : ../../Modules/control_flags.o
 add_vuspsi.o : ../../Modules/ions_base.o
@@ -194,6 +199,7 @@ c_phase_field.o : ../../Modules/ions_base.o
 c_phase_field.o : ../../Modules/kind.o
 c_phase_field.o : ../../Modules/mp.o
 c_phase_field.o : ../../Modules/mp_global.o
+c_phase_field.o : ../../Modules/noncol.o
 c_phase_field.o : ../../Modules/recvec.o
 c_phase_field.o : ../../Modules/uspp.o
 c_phase_field.o : ../../Modules/wavefunctions.o
@@ -309,10 +315,12 @@ data_structure.o : ../../Modules/recvec.o
 data_structure.o : ../../Modules/stick_set.o
 data_structure.o : pwcom.o
 data_structure_custom.o : ../../Modules/cell_base.o
+data_structure_custom.o : ../../Modules/fft_base.o
 data_structure_custom.o : ../../Modules/fft_custom.o
 data_structure_custom.o : ../../Modules/kind.o
 data_structure_custom.o : ../../Modules/mp.o
 data_structure_custom.o : ../../Modules/mp_global.o
+data_structure_custom.o : ../../Modules/recvec.o
 data_structure_custom.o : ../../Modules/stick_set.o
 data_structure_custom.o : pwcom.o
 deriv_drhoc.o : ../../Modules/constants.o
@@ -426,8 +434,8 @@ exx.o : ../../Modules/kind.o
 exx.o : ../../Modules/mp.o
 exx.o : ../../Modules/mp_global.o
 exx.o : ../../Modules/noncol.o
-exx.o : ../../Modules/parallel_include.o
 exx.o : ../../Modules/recvec.o
+exx.o : ../../Modules/uspp.o
 exx.o : ../../Modules/wavefunctions.o
 exx.o : buffers.o
 exx.o : pwcom.o
@@ -619,6 +627,7 @@ h_epsi_her_apply.o : ../../Modules/ions_base.o
 h_epsi_her_apply.o : ../../Modules/kind.o
 h_epsi_her_apply.o : ../../Modules/mp.o
 h_epsi_her_apply.o : ../../Modules/mp_global.o
+h_epsi_her_apply.o : ../../Modules/noncol.o
 h_epsi_her_apply.o : ../../Modules/recvec.o
 h_epsi_her_apply.o : ../../Modules/uspp.o
 h_epsi_her_apply.o : bp_mod.o
@@ -633,6 +642,7 @@ h_epsi_her_set.o : ../../Modules/ions_base.o
 h_epsi_her_set.o : ../../Modules/kind.o
 h_epsi_her_set.o : ../../Modules/mp.o
 h_epsi_her_set.o : ../../Modules/mp_global.o
+h_epsi_her_set.o : ../../Modules/noncol.o
 h_epsi_her_set.o : ../../Modules/recvec.o
 h_epsi_her_set.o : ../../Modules/uspp.o
 h_epsi_her_set.o : bp_mod.o
@@ -700,6 +710,13 @@ init_ns.o : ../../Modules/noncol.o
 init_ns.o : ../../Modules/uspp.o
 init_ns.o : pwcom.o
 init_ns.o : scf_mod.o
+init_q_aeps.o : ../../Modules/atom.o
+init_q_aeps.o : ../../Modules/control_flags.o
+init_q_aeps.o : ../../Modules/io_global.o
+init_q_aeps.o : ../../Modules/ions_base.o
+init_q_aeps.o : ../../Modules/kind.o
+init_q_aeps.o : ../../Modules/uspp.o
+init_q_aeps.o : pwcom.o
 init_run.o : ../../Modules/cell_base.o
 init_run.o : ../../Modules/control_flags.o
 init_run.o : ../../Modules/fft_base.o
@@ -765,6 +782,7 @@ input.o : ../../Modules/read_namelists.o
 input.o : ../../Modules/read_pseudo.o
 input.o : ../../Modules/recvec.o
 input.o : ../../Modules/run_info.o
+input.o : ../../Modules/uspp.o
 input.o : ../../Modules/wannier_new.o
 input.o : ../../Modules/wrappers.o
 input.o : ../../Modules/xml_io_base.o
@@ -804,6 +822,7 @@ iweights.o : ../../Modules/mp_global.o
 iweights.o : ../../Modules/noncol.o
 kpoint_grid.o : ../../Modules/io_global.o
 kpoint_grid.o : ../../Modules/kind.o
+kpoint_grid.o : ../../Modules/noncol.o
 kpoint_grid.o : bp_mod.o
 lchk_tauxk.o : ../../Modules/kind.o
 make_pointlists.o : ../../Modules/cell_base.o
@@ -895,6 +914,7 @@ new_ns.o : ../../Modules/mp.o
 new_ns.o : ../../Modules/mp_global.o
 new_ns.o : ../../Modules/noncol.o
 new_ns.o : ../../Modules/recvec.o
+new_ns.o : ../../Modules/uspp.o
 new_ns.o : ../../Modules/wavefunctions.o
 new_ns.o : buffers.o
 new_ns.o : pwcom.o
@@ -1699,6 +1719,7 @@ v_of_rho.o : pwcom.o
 v_of_rho.o : scf_mod.o
 vcsmd.o : ../../Modules/cell_base.o
 vcsmd.o : ../../Modules/constants.o
+vcsmd.o : ../../Modules/constraints_module.o
 vcsmd.o : ../../Modules/control_flags.o
 vcsmd.o : ../../Modules/io_files.o
 vcsmd.o : ../../Modules/io_global.o

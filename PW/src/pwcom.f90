@@ -360,6 +360,9 @@ MODULE ldaU
        U_projection           ! specifies how input coordinates are given
   INTEGER, ALLOCATABLE :: &
        oatwfc(:)              ! offset of atomic wfcs used for projections
+  REAL(DP), ALLOCATABLE :: &
+       q_ae(:,:,:),          &! coefficients for projecting onto beta functions
+       q_ps(:,:,:)            ! (matrix elements on AE and PS atomic wfcs)
   !
 END MODULE ldaU
 !

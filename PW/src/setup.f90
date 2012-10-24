@@ -67,7 +67,7 @@ SUBROUTINE setup()
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : upf, n_atom_wfc
   USE uspp,               ONLY : okvan
-  USE ldaU,               ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_U, Hubbard_J, &
+  USE ldaU,               ONLY : lda_plus_u, lda_plus_u_kind, U_projection, Hubbard_U, Hubbard_J, &
                                  Hubbard_l, Hubbard_alpha, Hubbard_lmax, d_spin_ldau, oatwfc,&
                                  Hubbard_J0, Hubbard_beta
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el, nppstr_3d,l3dstring, efield
@@ -605,6 +605,8 @@ SUBROUTINE setup()
      END DO
    elseif ( lda_plus_u_kind.eq.1 ) then
      !
+     IF ( U_projection == 'pseudo' ) CALL errore( 'setup', &
+        & 'full LDA+U not implemented with pseudo projection type', 1 )
 
      if (noncolin) then
       ALLOCATE( d_spin_ldau(2,2,48) )

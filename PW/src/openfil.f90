@@ -20,7 +20,7 @@ SUBROUTINE openfil()
   USE wvfct,            ONLY : nbnd, npwx
   USE fixed_occ,        ONLY : one_atom_occupations
   USE klist,            ONLY : nks
-  USE ldaU,             ONLY : lda_plus_U
+  USE ldaU,             ONLY : lda_plus_U, U_projection
   USE io_files,         ONLY : prefix, iunpun, iunat, iunsat, iunwfc, iunigk, &
                                nwordwfc, nwordatwfc, iunefield, diropn, &
                                tmp_dir, wfc_dir, iunefieldm, iunefieldp, seqopn
@@ -101,7 +101,8 @@ SUBROUTINE openfil()
   !
   nwordatwfc = 2*npwx*natomwfc*npol
   !
-  IF ( lda_plus_u .OR. use_wannier .or. one_atom_occupations ) then
+  IF ( ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) .OR. &
+        use_wannier .OR. one_atom_occupations ) THEN
      CALL diropn( iunat,  'atwfc',  nwordatwfc, exst )
      CALL diropn( iunsat, 'satwfc', nwordatwfc, exst )
   END IF

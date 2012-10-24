@@ -40,13 +40,14 @@ SUBROUTINE potinit()
   USE funct,                ONLY : dft_is_meta
   USE wavefunctions_module, ONLY : psic
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
-  USE ldaU,                 ONLY : niter_with_fixed_ns
-  USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth
+  USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
+                                   niter_with_fixed_ns
   USE noncollin_module,     ONLY : noncolin, report
   USE io_files,             ONLY : tmp_dir, prefix, iunocc, input_drho
   USE spin_orb,             ONLY : domag
   USE mp,                   ONLY : mp_sum
-  USE mp_global,            ONLY : intra_image_comm, inter_bgrp_comm, intra_bgrp_comm, mpime
+  USE mp_global,            ONLY : intra_image_comm, inter_bgrp_comm, &
+                                   intra_bgrp_comm, mpime
   USE io_global,            ONLY : ionode, ionode_id
   USE pw_restart,           ONLY : pw_readfile
   USE io_rho_xml,           ONLY : read_rho
@@ -124,11 +125,13 @@ SUBROUTINE potinit()
 
      ! ... in the lda+U case set the initial value of ns
      IF (lda_plus_u) THEN
+        !
         IF (noncolin) THEN
           CALL init_ns_nc()
         ELSE
           CALL init_ns()
         ENDIF
+        !
      ENDIF
 
      ! ... in the paw case uses atomic becsum

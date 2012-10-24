@@ -24,6 +24,7 @@ SUBROUTINE hinit0()
   USE wvfct,        ONLY : npw, g2kin, igk, ecutwfc
   USE io_files,     ONLY : iunigk
   USE realus,       ONLY : qpointlist,betapointlist,init_realspace_vars,real_space
+  use ldaU,         ONLY : lda_plus_U, U_projection
   USE control_flags, ONLY : tqr 
   USE io_global,  ONLY : stdout
   !
@@ -39,6 +40,7 @@ SUBROUTINE hinit0()
   ! ... k-point independent parameters of non-local pseudopotentials
   !
   CALL init_us_1()
+  IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_at_1()
   !
   REWIND( iunigk )

@@ -24,6 +24,7 @@ SUBROUTINE read_file()
   USE realus,               ONLY : qpointlist, betapointlist, &
                                    init_realspace_vars,real_space
   USE dfunct,               ONLY : newd
+  USE ldaU,                 ONLY : lda_plus_u, U_projection
   USE pw_restart,           ONLY : pw_readfile
   !
   IMPLICIT NONE 
@@ -47,10 +48,13 @@ SUBROUTINE read_file()
   ! ... Not sure which ones (if any) should be done here
   !
   CALL init_us_1()
-  IF (okpaw) then
+  IF (lda_plus_U .AND. (U_projection == 'pseudo')) CALL init_q_aeps()
+  !
+  IF (okpaw) THEN
      becsum = rho%bec
      CALL PAW_potential(rho%bec, ddd_PAW)
   ENDIF 
+  !
   IF ( real_space ) THEN
     CALL betapointlist()
     CALL init_realspace_vars()

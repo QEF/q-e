@@ -27,8 +27,8 @@ SUBROUTINE new_ns(ns)
   USE ions_base,            ONLY : nat, ityp
   USE basis,                ONLY : natomwfc
   USE klist,                ONLY : nks, ngk
-  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, oatwfc, &
-                                   Hubbard_U, Hubbard_alpha, swfcatom
+  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, oatwfc, q_ae, &
+                                   U_projection, Hubbard_U, Hubbard_alpha, swfcatom
   USE symm_base,            ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE symm_base,            ONLY : nsym, irt
@@ -77,11 +77,18 @@ SUBROUTINE new_ns(ns)
         READ (iunigk) igk
         CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
      END IF
-     CALL davcio (swfcatom, nwordatwfc, iunsat, ik, - 1)
      !
      ! make the projection
      !
-     CALL calbec ( npw, swfcatom, evc, proj )
+     IF ( U_projection == 'pseudo' ) THEN
+        !
+        CALL compute_pproj( q_ae, proj )
+        ! does not need mp_sum intra-pool, since it is already done in calbec
+        !
+     ELSE
+        CALL davcio (swfcatom, nwordatwfc, iunsat, ik, - 1)
+        CALL calbec ( npw, swfcatom, evc, proj )
+     END IF
      !
      ! compute the occupation numbers (the quantities n(m1,m2)) of the
      ! atomic orbitals
@@ -198,6 +205,84 @@ SUBROUTINE new_ns(ns)
   CALL stop_clock('new_ns')
 
   RETURN
+
+  CONTAINS
+  !
+  !------------------------------------------------------------------
+  SUBROUTINE compute_pproj( q, p )
+    !
+    ! Here we compute LDA+U projections using the <beta|psi> overlaps
+    !
+    USE ions_base,            ONLY : ntyp => nsp
+    USE klist,                ONLY : xk
+    USE becmod,               ONLY : becp
+    USE uspp,                 ONLY : nkb, vkb
+    USE uspp_param,           ONLY : nhm, nh
+    !
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: q(natomwfc,nhm,nat)
+    TYPE(bec_type), INTENT(INOUT) :: p
+    !
+    INTEGER :: ib, iw, nt, na, ijkb0, ikb, ih
+
+    IF ( nkb == 0 ) RETURN
+    !
+    ! compute <beta|psi>
+    !
+    CALL allocate_bec_type (nkb, nbnd, becp)
+    CALL init_us_2 (npw,igk,xk(1,ik),vkb)
+    CALL calbec (npw, vkb, evc, becp)
+    !
+    IF ( gamma_only ) THEN 
+       p%r(:,:) = 0.0_DP
+    ELSE
+       p%k(:,:) = (0.0_DP,0.0_DP)
+    ENDIF
+    !
+    ijkb0 = 0
+    !
+    DO nt = 1, ntyp
+       !
+       DO na = 1, nat
+          !
+          IF ( ityp(na) == nt ) THEN
+             !
+             IF ( Hubbard_U(nt).NE.0.D0 .OR. Hubbard_alpha(nt).NE.0.D0 ) THEN
+                !
+                DO ib = 1, nbnd
+                   !
+                   DO ih = 1, nh(nt)
+                      !
+                      ikb = ijkb0 + ih
+                      DO iw = 1, natomwfc
+                         !
+                         IF ( gamma_only ) THEN
+                            p%r(iw,ib) = p%r(iw,ib) + q(iw,ih,na)*becp%r(ikb,ib)
+                         ELSE
+                            p%k(iw,ib) = p%k(iw,ib) + q(iw,ih,na)*becp%k(ikb,ib)
+                         ENDIF
+                         !
+                      ENDDO
+                      !
+                   END DO
+                   !
+                END DO
+                !
+             END IF
+             !
+             ijkb0 = ijkb0 + nh(nt)
+             !
+          END IF
+          !
+       END DO
+       !
+    END DO
+    !
+    CALL deallocate_bec_type ( becp )
+
+    RETURN
+  END SUBROUTINE compute_pproj
+  !
 
 END SUBROUTINE new_ns 
 

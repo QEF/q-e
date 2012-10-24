@@ -38,7 +38,7 @@ SUBROUTINE clean_pw( lflag )
   USE us,                   ONLY : qrad, tab, tab_at, tab_d2y, spline_ps
   USE uspp,                 ONLY : deallocate_uspp
   USE uspp_param,           ONLY : upf
-  USE ldaU,                 ONLY : lda_plus_u, oatwfc, swfcatom
+  USE ldaU,                 ONLY : lda_plus_u, oatwfc, swfcatom, q_ae, q_ps
   USE extfield,             ONLY : forcefield
   USE fft_base,             ONLY : dfftp, dffts  
   USE stick_base,           ONLY : sticks_deallocate
@@ -88,6 +88,8 @@ SUBROUTINE clean_pw( lflag )
      !
      IF ( lda_plus_u ) THEN
         IF ( ALLOCATED( oatwfc ) )     DEALLOCATE( oatwfc )
+        IF ( ALLOCATED( q_ae ) )       DEALLOCATE( q_ae )
+        IF ( ALLOCATED( q_ps ) )       DEALLOCATE( q_ps )
      END IF
      CALL deallocate_bp_efield()
      CALL dealloca_london()

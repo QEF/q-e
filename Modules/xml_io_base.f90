@@ -1214,7 +1214,7 @@ MODULE xml_io_base
     END SUBROUTINE write_magnetization
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_xc( dft, nsp, lda_plus_u, lda_plus_u_kind, Hubbard_lmax, &
+    SUBROUTINE write_xc( dft, nsp, lda_plus_u, lda_plus_u_kind, U_projection, Hubbard_lmax, &
                          Hubbard_l, Hubbard_U, Hubbard_J, Hubbard_J0, Hubbard_beta, &
                          Hubbard_alpha, inlc, vdw_table_name, pseudo_dir, dirname )
       !------------------------------------------------------------------------
@@ -1223,6 +1223,7 @@ MODULE xml_io_base
       LOGICAL,            INTENT(IN) :: lda_plus_u
       INTEGER,  OPTIONAL, INTENT(IN) :: lda_plus_u_kind
       INTEGER,  OPTIONAL, INTENT(IN) :: nsp
+      CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: U_projection
       INTEGER,  OPTIONAL, INTENT(IN) :: Hubbard_lmax
       INTEGER,  OPTIONAL, INTENT(IN) :: Hubbard_l(:)
       REAL(DP), OPTIONAL, INTENT(IN) :: Hubbard_U(:), Hubbard_J(:,:), Hubbard_alpha(:), &
@@ -1243,6 +1244,7 @@ MODULE xml_io_base
          !
          IF ( .NOT. PRESENT( Hubbard_lmax ) .OR. &
               .NOT. PRESENT( Hubbard_l )    .OR. & 
+              .NOT. PRESENT( U_projection ) .OR. &
               .NOT. PRESENT( Hubbard_U )    .OR. &
               .NOT. PRESENT( Hubbard_J0 )    .OR. &
               .NOT. PRESENT( Hubbard_J )    .OR. &
@@ -1256,6 +1258,8 @@ MODULE xml_io_base
          !
          CALL iotk_write_dat( iunpun, "LDA_PLUS_U_KIND", lda_plus_u_kind )
          ! 
+         CALL iotk_write_dat( iunpun, "U_PROJECTION_TYPE", trim(U_projection) )
+         !
          CALL iotk_write_dat( iunpun, "HUBBARD_LMAX", Hubbard_lmax )
          !
          CALL iotk_write_dat( iunpun, "HUBBARD_L", &

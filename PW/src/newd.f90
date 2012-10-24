@@ -183,14 +183,21 @@ SUBROUTINE newd()
   USE realus,        ONLY : newd_r
   USE noncollin_module, ONLY : noncolin
   USE control_flags, ONLY : tqr
+  USE ldaU,          ONLY : lda_plus_U, U_projection
   IMPLICIT NONE
-  if (tqr) then
-     call newd_r()
-  else
-     call newd_g()
-  end if
-  IF (.not.noncolin) call add_paw_to_deeq(deeq)
-  return
+  !
+  IF (tqr) THEN
+     CALL newd_r()
+  ELSE
+     CALL newd_g()
+  END IF
+  !
+  IF (.NOT.noncolin) CALL add_paw_to_deeq(deeq)
+  !
+  IF (lda_plus_U .AND. (U_projection == 'pseudo')) CALL add_vhub_to_deeq(deeq)
+  !
+  RETURN
+  !
 END SUBROUTINE newd
 !----------------------------------------------------------------------------
 SUBROUTINE newd_g()

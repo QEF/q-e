@@ -14,6 +14,7 @@ add_bfield.o \
 add_efield.o \
 add_vuspsi.o \
 add_paw_to_deeq.o \
+add_vhub_to_deeq.o \
 addusdens.o \
 addusforce.o \
 addusstress.o \
@@ -99,6 +100,7 @@ h_psi_meta.o \
 hinit0.o \
 hinit1.o \
 init_ns.o \
+init_q_aeps.o \
 init_run.o \
 init_us_1.o \
 init_us_2.o \

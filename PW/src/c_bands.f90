@@ -25,7 +25,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
   USE control_flags,        ONLY : ethr, isolve, io_level
-  USE ldaU,                 ONLY : lda_plus_u, swfcatom
+  USE ldaU,                 ONLY : lda_plus_u, swfcatom, U_projection
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions_module, ONLY : evc
   USE bp,                   ONLY : lelfield
@@ -115,7 +115,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
      ! ... Needed for LDA+U
      !
-     IF ( lda_plus_u ) CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
+     IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
+        CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
      !
      ! ... diagonalization of bands for k-point ik
      !
@@ -599,7 +600,7 @@ SUBROUTINE c_bands_nscf( ik_ )
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
   USE control_flags,        ONLY : ethr, lbands, isolve, io_level, iverbosity
-  USE ldaU,                 ONLY : lda_plus_u, swfcatom
+  USE ldaU,                 ONLY : lda_plus_u, swfcatom, U_projection
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions_module, ONLY : evc
   USE mp_global,            ONLY : npool, kunit, inter_pool_comm
@@ -686,7 +687,8 @@ SUBROUTINE c_bands_nscf( ik_ )
      !
      ! ... Needed for LDA+U
      !
-     IF ( lda_plus_u ) CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
+     IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
+        CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
      !
      ! ... calculate starting  wavefunctions
      !

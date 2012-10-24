@@ -19,7 +19,7 @@ SUBROUTINE wfcinit()
   USE klist,                ONLY : xk, nks, ngk
   USE control_flags,        ONLY : io_level, lscf
   USE fixed_occ,            ONLY : one_atom_occupations
-  USE ldaU,                 ONLY : swfcatom, lda_plus_u
+  USE ldaU,                 ONLY : swfcatom, lda_plus_u, U_projection
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordatwfc, iunwfc, iunigk, iunsat
   USE buffers,              ONLY : get_buffer, save_buffer
@@ -37,7 +37,14 @@ SUBROUTINE wfcinit()
   !
   ! ... Needed for LDA+U
   !
-  IF ( lda_plus_u .OR. use_wannier .OR. one_atom_occupations ) CALL orthoatwfc()
+  IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc()
+  IF ( lda_plus_u ) THEN
+     IF ( U_projection == 'pseudo' ) THEN
+         WRITE( stdout,*) 'Beta functions used for LDA+U Projector'
+     ELSE
+         CALL orthoatwfc()
+     ENDIF
+  ENDIF
   !
   ! ... state what is going to happen
   !
@@ -116,7 +123,7 @@ SUBROUTINE wfcinit()
      !
      ! ... LDA+U: read atomic wavefunctions for U term in Hamiltonian
      !
-     IF ( lda_plus_u ) &
+     IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
          CALL davcio( swfcatom, nwordatwfc, iunsat, ik, - 1 )
      !
      ! ... calculate starting wavefunctions
