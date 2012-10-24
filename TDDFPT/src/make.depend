@@ -26,6 +26,7 @@ lr_apply_liouvillian.o : ../../Modules/fft_interfaces.o
 lr_apply_liouvillian.o : ../../Modules/io_global.o
 lr_apply_liouvillian.o : ../../Modules/ions_base.o
 lr_apply_liouvillian.o : ../../Modules/kind.o
+lr_apply_liouvillian.o : ../../Modules/mp_global.o
 lr_apply_liouvillian.o : ../../Modules/recvec.o
 lr_apply_liouvillian.o : ../../Modules/uspp.o
 lr_apply_liouvillian.o : ../../Modules/wavefunctions.o
@@ -188,8 +189,10 @@ lr_read_wf.o : ../../Modules/fft_interfaces.o
 lr_read_wf.o : ../../Modules/io_files.o
 lr_read_wf.o : ../../Modules/io_global.o
 lr_read_wf.o : ../../Modules/kind.o
+lr_read_wf.o : ../../Modules/mp_global.o
 lr_read_wf.o : ../../Modules/recvec.o
 lr_read_wf.o : ../../Modules/uspp.o
+lr_read_wf.o : ../../Modules/wavefunctions.o
 lr_read_wf.o : ../../PHonon/PH/phcom.o
 lr_read_wf.o : ../../PW/src/buffers.o
 lr_read_wf.o : ../../PW/src/pwcom.o

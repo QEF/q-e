@@ -340,9 +340,7 @@ forces.o : gvecw.o
 forces.o : mainvar.o
 fpmdpp.o : ../../Modules/constants.o
 fpmdpp.o : ../../Modules/io_files.o
-fpmdpp.o : ../../Modules/io_global.o
 fpmdpp.o : ../../Modules/kind.o
-fpmdpp.o : ../../Modules/mp.o
 fpmdpp.o : ../../Modules/mp_global.o
 fpmdpp.o : ../../Modules/xml_io_base.o
 fpmdpp.o : ../../iotk/src/iotk_module.o

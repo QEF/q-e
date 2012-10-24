@@ -82,8 +82,8 @@ for dir in $dirs; do
 
         if test "$DIR" = "Modules"
         then
-            mv make.depend make.depend.tmp
-            sed '/@mpi@/d' make.depend.tmp > make.depend
+            sed '/@mpi@/d' make.depend > make.depend.tmp
+            sed '/@elpa1@/d' make.depend.tmp > make.depend
         fi
 
         if test "$DIR" = "clib"
