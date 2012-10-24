@@ -20,7 +20,7 @@ TODO LIST - September 2012
         between 'modules' and 'libraries' anyway
 1.4 mailing lists:
   1.4.1 Send monthly reminder? possibly with netiquette
-  1.4.2 move to qe-forge, changing names; or move to forums?
+  1.4.2 move to forums?
 1.7 Testing
   1.7.1 The automated tests should be moved to a machine that can
         send e-mail to q-e-commits
@@ -74,9 +74,10 @@ TODO LIST - September 2012
   4.1.1 new xml input/output
   4.1.2 XMCD in XSpectra
   4.1.3 Genetic Algorithm
+  4.1.4 LDA+U with Wannier functions
   4.1.5 EPW (electron-phonon with Wannier stuff): released, 
         has to be aligned with current version
-  4.1.6 G-space symmetrization also for phonons
+  4.1.6 Converse NMR
   4.1.7 QM-MM with MS2 plugin
   4.1.8 Wannier-based exact-exchange in CP (available)
 
@@ -98,7 +99,6 @@ TODO LIST - September 2012
         scratch at each different q-point
   4.2.5 Fermi-Dirac: pass T instead of "broadening", make it possible
         to use it on top of smearing for free-energy calculations
-  4.2.6 add traceback in error (error_handler module)
   4.2.7 matdyn should write frequencies in a format that is suitable
         for direct plotting by gnuplot/xmgrace - see also Eyvaz' script
         for phonon plotting. Also about phonons:

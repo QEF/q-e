@@ -1,3 +1,10 @@
+New in 5.0.2 version:
+
+   * DFT+U with on-site occupations from pseudopotential projectors
+     (experimental)
+   * DFT+U+J
+   * Calculation of orbital magnetization (experimental)
+
 Fixed in 5.0.2 version:
 
    * k-point parallelization in v.5.0 and 5.0.1 was affected by a subtle 
