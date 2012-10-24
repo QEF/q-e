@@ -128,14 +128,14 @@ data is available for most packages in files \texttt{INPUT\_*.txt} and
 
 The \qe\ codes work on many different types of Unix machines,
 including parallel machines using both OpenMP and MPI 
-(Message Passing Interface).
+(Message Passing Interface) and GPU-accelerated machines.
 Running \qe\ on Mac OS X and MS-Windows is also possible: 
 see section \ref{Sec:Installation}.
 
 Further documentation, beyond what is provided in this guide, can be found in:
 \begin{itemize}
   \item the \texttt{Doc/} directory of the \qe\ distribution;
-  \item the \qe\ web site \texttt{http://www.quantum-espresso.org};
+  \item the \qe\ web site \texttt{www.quantum-espresso.org};
   \item the archives of the  mailing list:
    See section \ref{SubSec:Contacts}, ``Contacts'', for more info.
 \end{itemize}
@@ -196,17 +196,16 @@ The web site for \qe\ is \texttt{http://www.quantum-espresso.org/}.
 Releases and patches can be downloaded from this
 site or following the links contained in it. The main entry point for 
 developers is the QE-forge web site:
-\texttt{http://qe-forge.org/}.
+\texttt{http://qe-forge.org/}, and in particular the page dedicated to
+the \qe\ project: \texttt{qe-forge.org/gf/project/q-e/}.
 
 The recommended place where to ask questions about installation 
 and usage of \qe, and to report problems, is the \texttt{pw\_forum} 
-mailing list: \texttt{pw\_forum@pwscf.org}. 
+mailing list: \texttt{pw\_forum@pwscf.org}.
 Here you can obtain help from the developers and from 
-knowledgeable users. Please read the guidelines for posting,
-section \ref{SubSec:Guidelines}!
-
-You have to be subscribed (see ``Contacts'' section of the web site)
-in order to post to the  \texttt{pw\_forum} list. 
+knowledgeable users. You have to be subscribed (see ``Contacts'' 
+section of the web site) in order to post to the  \texttt{pw\_forum} 
+list. Please read the guidelines for posting, section \ref{SubSec:Guidelines}!
 NOTA BENE: only messages that appear to come from the 
 registered user's e-mail address, in its {\em exact form}, will be
 accepted. Messages "waiting for moderator approval" are
@@ -215,7 +214,7 @@ much spam). In case of trouble, carefully check that your return
 e-mail is the correct one (i.e. the one you used to subscribe).
 
 Since \texttt{pw\_forum} has a sizable traffic, an alternative
-low-traffic mailing list, \texttt{pw\_users@pwscf.org}, is provided for
+low-traffic list, \texttt{pw\_users@pwscf.org}, is provided for
 those interested only in \qe-related news, such as e.g. announcements 
 of new versions, tutorials, etc.. You can subscribe (but not post) to 
 this list from the web site, ``Contacts'' section.
@@ -223,7 +222,7 @@ this list from the web site, ``Contacts'' section.
 If you need to contact the developers for {\em specific} questions 
 about coding, proposals, offers of help, etc., please send a message
 to the developers' mailing list: \texttt{q-e-developers@qe-forge.org}.
-Inappropriate questions will be ignored.
+Do not post general questions: they will be ignored.
 
 \subsection{Guidelines for posting to the mailing list}
 \label{SubSec:Guidelines}
@@ -292,6 +291,11 @@ and O.pbe-vbc.UPF from\\
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Installation}
 
+For machines with GPU acceleration, see the page
+\texttt{qe-forge.org/gf/project/q-e-gpu/} and the
+file \texttt{README.GPU} in the GPU-enabled distribution
+for more specific information.
+
 \subsection{Download}
  
 Presently, \qe\ is distributed in source form; some precompiled 
@@ -300,7 +304,9 @@ Packages for the Debian Linux distribution are however
 made available by \texttt{debichem} developers.
 Stable releases of the \qe\ source package (current version 
 is \version) can be downloaded from the Download section
-of \texttt{http://www.quantum-espresso.org}.
+of \texttt{www.quantum-espresso.org}. If you plan to run
+on GPU machines, download the GPU-enabled version, also reachable 
+from the same link. 
 
 Uncompress and unpack the base distribution using the command:
 \begin{verbatim}
@@ -315,30 +321,31 @@ doesn't recognize the "z" flag:
 A directory \texttt{espresso-X.Y.Z/} will be created. Given the size 
 of the complete distribution, you may need to download more packages.
 If the computer you expect to install \qe\ is always connected
-to the internet, the \texttt{Makefiles} will automatically download,
+to the internet, the \texttt{Makefile}'s will automatically download,
 unpack and install the required packages on demand. If not,
 you can download each required package into subdirectory
 \texttt{archive} but {\em not unpacked or uncompressed}:
 command \texttt{make} will take care of this during installation. 
 
-The package \texttt{GWL} needs a manual download and installation please
-follow the instructions given at \texttt{gww.qe-forge.org}.
+Package \texttt{GWL} needs a manual download and installation:
+please follow the instructions given at \texttt{gww.qe-forge.org}.
 
-Occasionally, patches for the current version, fixing some errors and bugs,
-may be distributed as a "diff" file. In order to install a patch (for 
-instance):
-\begin{verbatim}
-   cd espresso-X.Y.Z/
-   patch -p1 < /path/to/the/diff/file/patch-file.diff
-\end{verbatim}
-If more than one patch is present, they should be applied in the correct order.
+% Occasionally, patches for the current version, fixing some errors and bugs,
+% may be distributed as a "diff" file. In order to install a patch (for 
+% instance):
+% \begin{verbatim}
+%    cd espresso-X.Y.Z/
+%    patch -p1 < /path/to/the/diff/file/patch-file.diff
+% \end{verbatim}
+%If more than one patch is present, they should be applied in the correct order.
 
 % Daily snapshots of the development version can be downloaded from the
 %developers' site \texttt{qe-forge.org}: follow the link ''Quantum ESPRESSO'', 
 %then ''SCM''.
-The bravest 
-may access the development version via anonymous access to the
-Subversion (SVN) repository : see the Developer Manual
+
+The bravest may access the development version via anonymous access to the
+Subversion (SVN) repository: \texttt{qe-forge.org/gf/project/q-e/scmsvn}, 
+link ''Access Info'' on the left. See also the Developer Manual
 (\texttt{Doc/developer\_man.pdf}), section ''Using SVN''.
 Beware: the development version 
 is, well, under development: use at your own risk! 
@@ -411,10 +418,8 @@ will (try to) detect compilers and libraries available on
 your machine, and set up things accordingly. Presently it is expected
 to work on most Linux 32- and 64-bit PCs (all Intel and AMD CPUs) and 
 PC clusters, SGI Altix, IBM SP and BlueGene machines, NEC SX, Cray XT
-machines, Mac OS X, MS-Windows PCs. A GPU-enabled version is currently
-available as a separate branch of the SVN repository. See the following 
-message and instructions:\\
-\texttt{http://www.democritos.it/pipermail/pw\_forum/2011-May/020399.html}.
+machines, Mac OS X, MS-Windows PCs, and (for experts!) on several 
+GPU-acceleratd hardware. 
 
 Instructions for the impatient:
 \begin{verbatim}
@@ -1142,9 +1147,7 @@ Apart from such problems, \qe\ compiles and works on all non-buggy, properly
 configured hardware and software combinations. You may have to
 recompile MPI libraries: not all MPI installations contain support for
 the fortran-90 compiler of your choice (or for any fortran-90 compiler
-at all!). Useful step-by-step instructions for MPI compilation can be 
-found in the following post by  Javier Antonio Montoya:\\
-\texttt{http://www.democritos.it/pipermail/pw\_forum/2008April/008818.htm}. 
+at all!). 
 
 If \qe\ does not work for some reason on a PC cluster,
 try first if it works in serial execution. A frequent problem with parallel
@@ -1153,8 +1156,6 @@ due to the configuration of MPI libraries: see Sec.\ref{SubSec:para}.
 
 If you are dissatisfied with the performances in parallel execution,
 see Sec.\ref{Sec:para} and in particular Sec.\ref{SubSec:badpara}.
-See also the following post from Axel Kohlmeyer:\\
-\texttt{http://www.democritos.it/pipermail/pw\_forum/2008-April/008796.html}
 
 \subsubsection{Intel Mac OS X}
 
@@ -1621,10 +1622,7 @@ have to rely on themselves (or on less-than-adequate system managers) for
 the correct configuration of software for parallel execution. Mysterious and
 irreproducible crashes in parallel execution are sometimes due to bugs
 in \qe, but more often than not are a consequence of buggy
-compilers or of buggy or miscompiled MPI libraries. Very useful step-by-step 
-instructions to compile and install MPI libraries
-can be found in the following post by Javier Antonio Montoya:\\
-\texttt{http://www.democritos.it/pipermail/pw\_forum/2008-April/008818.htm}.
+compilers or of buggy or miscompiled MPI libraries.
 
 \end{document}
 
