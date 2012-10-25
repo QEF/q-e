@@ -2187,7 +2187,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		bohr / angstrom: lattice vectors in bohr radii / angstrom.
 		alat or nothing specified: if a lattice constant (celldm(1) 
                 or a) is present, lattice vectors are in units of the lattice
-                constant; otherwise, in bohr radii.
+                constant; otherwise, in bohr radii or angstrom, as specified.
 	    }
 	}
 
