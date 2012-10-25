@@ -998,10 +998,14 @@ CONTAINS
    !
    ! Syntax:
    !
-   !    CELL_PARAMETERS
+   !    CELL_PARAMETERS (cell_option)
    !      HT(1,1) HT(1,2) HT(1,3)
    !      HT(2,1) HT(2,2) HT(2,3)
    !      HT(3,1) HT(3,2) HT(3,3)
+   !
+   !   cell_option == alat      lattice vectors in units of alat (default)
+   !   cell_option == bohr      lattice vectors in Bohr
+   !   cell_option == angstrom  lattice vectors in Angstrom
    !
    ! Example:
    !

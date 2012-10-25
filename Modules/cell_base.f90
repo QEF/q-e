@@ -130,8 +130,12 @@
       !
       SELECT CASE ( TRIM( cell_units ) )
         CASE ( 'bohr' )
+          IF( celldm( 1 ) /= 0.0_DP .OR. a /= 0.0_dp ) CALL errore &
+              ('cell_base_init','lattice vectors in Bohr or in a0 units?',1)
           units = 1.0_DP
         CASE ( 'angstrom' )
+          IF( celldm( 1 ) /= 0.0_DP .OR. a /= 0.0_dp ) CALL errore &
+              ('cell_base_init','lattice vectors in A or in a0 units?',2)
           units = 1.0_DP / bohr_radius_angs
         CASE DEFAULT
           IF( celldm( 1 ) /= 0.0_DP ) THEN
