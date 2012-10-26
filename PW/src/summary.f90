@@ -221,9 +221,9 @@ SUBROUTINE summary()
      IF (lda_plus_u_kind == 0) THEN
         !
         WRITE( stdout, '(/,/,5x,"Simplified LDA+U calculation (l_max = ",i1, &
-           ") with parameters (eV):")') Hubbard_lmax
+           &") with parameters (eV):")') Hubbard_lmax
         WRITE( stdout, '(5x,A)') &
-           "atomic species    L          U    alpha       J0     beta"
+           &"atomic species    L          U    alpha       J0     beta"
         DO nt = 1, ntyp
            IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 .OR. &
                 Hubbard_J0(nt) /= 0.D0 .OR. Hubbard_beta(nt) /= 0.D0 ) THEN
@@ -236,7 +236,7 @@ SUBROUTINE summary()
      ELSEIF(lda_plus_u_kind == 1) THEN
         !
         WRITE( stdout, '(/,/,5x,"Full LDA+U calculation (l_max = ",i1, &
-           ") with parameters (eV):")') Hubbard_lmax
+           &") with parameters (eV):")') Hubbard_lmax
         DO nt = 1, ntyp
            IF (Hubbard_U(nt) /= 0.d0) THEN
               IF (Hubbard_l(nt) == 0) THEN
