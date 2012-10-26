@@ -208,13 +208,13 @@ be found in the Developer Manual. In order to use the data directory
 on a different machine, you need to convert the binary files to formatted
 and back, using the \texttt{bin/iotk} script.
 
-The execution stops if you create a file \texttt{prefix.EXIT} in the working 
-directory. NOTA BENE: this is the directory where the program 
-is executed, NOT the directory \texttt{outdir} defined in input, where files 
-are written. Note that with some versions of MPI, the working directory 
-is the directory where the \pwx\ executable is! The advantage of this 
-procedure is that all files are properly closed, whereas  just killing 
-the process may leave data and output files in unusable state.
+The execution stops if you create a file \texttt{prefix.EXIT} either 
+in the working directory (i.e. where the program is executed), or in 
+the  \texttt{outdir} directory. Note that with some versions of MPI, 
+the working directory  is the directory where the executable is! 
+The advantage of this procedure is that all files are properly closed, 
+whereas  just killing the process may leave data and output files in 
+an unusable state.
 
 \subsection{Format of arrays containing charge density, potential, etc.}
 

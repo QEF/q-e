@@ -76,7 +76,7 @@ MODULE check_stop
        USE mp,         ONLY : mp_bcast
        USE mp_global,  ONLY : intra_image_comm
        USE io_global,  ONLY : ionode, ionode_id, meta_ionode, stdout
-       USE io_files,   ONLY : exit_file, iunexit
+       USE io_files,   ONLY : tmp_dir, exit_file, iunexit
 #if defined __TRAP_SIGUSR1
        USE set_signal, ONLY : signal_detected
 #endif
@@ -86,7 +86,7 @@ MODULE check_stop
        INTEGER, OPTIONAL, INTENT(IN) :: inunit
        !
        INTEGER            :: unit
-       LOGICAL            :: check_stop_now, tex
+       LOGICAL            :: check_stop_now, tex, tex2
        LOGICAL            :: signaled
        REAL(DP)           :: seconds
        REAL(DP), EXTERNAL :: cclock
@@ -107,20 +107,34 @@ MODULE check_stop
        !
        IF ( ionode ) THEN
           !
+          ! ... Check first if exit file exists in current directory
+          !
           INQUIRE( FILE = TRIM( exit_file ), EXIST = tex )
           !
           IF ( tex ) THEN
              !
              check_stop_now = .TRUE.
-             !
              OPEN( UNIT = iunexit, FILE = TRIM( exit_file ) )
              CLOSE( UNIT = iunexit, STATUS = 'DELETE' )
              !
           ELSE
              !
-             seconds = cclock() - init_second
+             ! ... Check if exit file exists in scratch directory
              !
-             check_stop_now = ( seconds  >  max_seconds )
+             INQUIRE( FILE = TRIM(tmp_dir)//"/"//TRIM( exit_file ), &
+                      EXIST = tex2 )
+             !
+             IF ( tex2 ) THEN
+                !
+                check_stop_now = .TRUE.
+                OPEN( UNIT=iunexit, FILE=TRIM(tmp_dir)//"/"//TRIM(exit_file) )
+                CLOSE( UNIT = iunexit, STATUS = 'DELETE' )
+                !
+             ELSE
+                OPEN( UNIT = iunexit, FILE = TRIM( exit_file ) )
+                seconds = cclock() - init_second
+                check_stop_now = ( seconds  >  max_seconds )
+             END IF
              !
           END IF
           !
