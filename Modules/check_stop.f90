@@ -121,17 +121,15 @@ MODULE check_stop
              !
              ! ... Check if exit file exists in scratch directory
              !
-             INQUIRE( FILE = TRIM(tmp_dir)//"/"//TRIM( exit_file ), &
-                      EXIST = tex2 )
+             INQUIRE( FILE = TRIM(tmp_dir) // TRIM( exit_file ), EXIST = tex2 )
              !
              IF ( tex2 ) THEN
                 !
                 check_stop_now = .TRUE.
-                OPEN( UNIT=iunexit, FILE=TRIM(tmp_dir)//"/"//TRIM(exit_file) )
+                OPEN( UNIT = iunexit, FILE = TRIM(tmp_dir) // TRIM(exit_file) )
                 CLOSE( UNIT = iunexit, STATUS = 'DELETE' )
                 !
              ELSE
-                OPEN( UNIT = iunexit, FILE = TRIM( exit_file ) )
                 seconds = cclock() - init_second
                 check_stop_now = ( seconds  >  max_seconds )
              END IF
