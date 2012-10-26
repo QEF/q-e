@@ -197,7 +197,7 @@ SUBROUTINE clean_pw( lflag )
 #ifdef __ENVIRON
   ! ... additional arrays for external environment 
   !
-  CALL environ_clean()
+  CALL environ_clean( lflag )
   !
 #endif
   !

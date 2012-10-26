@@ -1242,6 +1242,7 @@ SUBROUTINE iosys()
   solvationrad_( 1:ntyp ) = solvationrad( 1:ntyp )
   ALLOCATE( atomicspread_( ntyp ) )
   atomicspread_( 1:ntyp ) = atomicspread( 1:ntyp )
+  IF ( do_environ ) CALL environ_initions_allocate( nat_, ntyp )
   add_jellium_ = add_jellium
   !
   ifdtype_   = ifdtype
