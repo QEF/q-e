@@ -2734,9 +2734,9 @@ then
 $as_echo "$as_me: WARNING: incorrect host name ?" >&2;}
         ;;
         esac
-	# workaround for Cray-XT machines
+	    # workaround for Cray-XT machines
         test -d /proc/cray_xt && arch=crayxt
-	# workaround for IBM BG machines
+	    # workaround for IBM BG machines
         test -d /bgsys && arch=ppc64-bg
         test -f /bgsys/drivers/ppcfloor/bin/runjob && arch=ppc64-bgq
 fi
@@ -4983,12 +4983,12 @@ xlf_flags=0
 echo using F90... $f90
 
 case "$arch:$f90_version" in
-ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
+ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
         try_fflags="-O2 -assume byterecl -g -traceback -par-report0 -vec-report0"
         if test "$use_debug" -eq 1; then
             try_fflags="$try_fflags -fpe0 -CB"
         fi
-	try_fflags_nomain="-nofor_main"
+	    try_fflags_nomain="-nofor_main"
         try_fflags_openmp="-openmp"
         try_f90flags="\$(FFLAGS) -nomodule"
         try_fflags_noopt="-O0 -assume byterecl -g -traceback"
@@ -5001,7 +5001,7 @@ ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
 ia32:pgf* | ia64:pgf* | x86_64:pgf* )
 # in try_fflags we use -O3 instead of -fast because some *.f files in Multigrid
 # confuse the optimizer when option -fast is enabled
-	try_fflags_nomain="-Mnomain"
+	    try_fflags_nomain="-Mnomain"
         try_fflags="-O3 -r8"
         try_fflags_openmp="-mp"
         try_f90flags="-fast -Mcache_align -r8"
@@ -5041,7 +5041,7 @@ ia32:path* | ia64:path* | x86_64:path* )
         try_f90flags="\$(FFLAGS) -x f95-cpp-input"
         try_fflags_noopt="-O0 -g"
         try_ldflags="-g"
-	try_ldflags_openmp="-fopenmp"
+	    try_ldflags_openmp="-fopenmp"
         try_dflags="$try_dflags -D__GFORTRAN -D__STD_F95"
         try_ldflags_static="-static"
         ;;
@@ -5062,13 +5062,13 @@ ia32:path* | ia64:path* | x86_64:path* )
         imod="-I"
         ;;
 aix:*xlf* )
-    if test "$use_debug" -eq 1; then
-        try_fflags="-q64 -qalias=noaryovrlp -g -C \
+        if test "$use_debug" -eq 1; then
+            try_fflags="-q64 -qalias=noaryovrlp -g -C \
 -qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
-    else
-        try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \
+        else
+            try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \
 -qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
-    fi
+        fi
         try_fflags_openmp="-qsmp=omp"
         try_f90flags="\$(FFLAGS) -qsuffix=cpp=f90 -qfree=f90"
         try_fflags_noopt="-q64 -O0"
@@ -5096,7 +5096,7 @@ sparc:f90 )
         ;;
 crayxt*:pgf* )
 # see comment above for pgf*
-	try_fflags_nomain="-Mnomain"
+	    try_fflags_nomain="-Mnomain"
         try_fflags_openmp="-mp"
         try_fflags="-O3 -r8"
         try_f90flags="-fast -Mcache_align -r8 -Mpreprocess"
@@ -5141,7 +5141,6 @@ ppc64:*xlf* )
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
-
 ppc64-mn:*xlf* )
     if test "$use_debug" -eq 1; then
         try_fflags="-g -C -q64 -qstrict -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q -qtune=ppc970 -qarch=ppc970 -qcache=auto -qhot=vector,simd -qenablevmx"
@@ -5241,7 +5240,9 @@ sparc:cc )
         try_cpp="fpp"
         ;;
 crayxt*:cc )
-        try_cflags="-fast"
+        # Actually we need something like is done for ftn to detect
+        # the proper compiler used (NdFilippo)
+        try_cflags="-O3"
         ;;
 necsx:* )
         #try_cflags="-D__SX6 \$(IFLAGS) \$(MODFLAGS)"
