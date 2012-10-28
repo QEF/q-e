@@ -1,8 +1,5 @@
 Info by Filippo Spiga, Oct. 2012, valid for any version of QE after 5.
 
-**************************************************************
-*      THIS IS A DRAFT - EVALUATION IN STILL IN PROGRESS     *
-**************************************************************
 
 Machine name    : TODI (Cray XKT) at CSCS, Lugano (CH)
 Machine spec    : http://user.cscs.ch/hardware/todi_cray_xk7/index.html
@@ -13,11 +10,12 @@ Similar systems : TITAN (ORNL, USA)
 
 ... starting from a SVN checkout...
 
-module switch PrgEnv-cray PrgEnv-pgi
+module switch PrgEnv-cray PrgEnv-intel
 module load cudatoolkit/5.0.33.103
+module unload atp hss-llm
 cd espresso
 cd GPU/
-./configure --enable-openmp --enable-cuda --with-gpu-arch=30 \
+./configure --enable-openmp --enable-cuda --with-gpu-arch=35 \
          --with-cuda-dir=${CRAY_CUDATOOLKIT_DIR} --disable-magma \
          --disable-profiling --enable-phigemm --enable-parallel \
          --with-scalapack ARCH=crayxt
@@ -27,19 +25,6 @@ make -f Makefile.gpu all-gpu
 
 Executables will be located under "./bin"
 
-...@todi1:~/espresso> ls -1 bin/*gpu* 
-bin/cp-gpu.x
-bin/cppp-gpu.x
-bin/dynmat-gpu.x
-bin/generate_vdW_kernel_table-gpu.x
-bin/lambda-gpu.x
-bin/matdyn-gpu.x
-bin/neb-gpu.x
-bin/ph-gpu.x
-bin/pw-gpu.x
-bin/q2r-gpu.x
-bin/turbo_lanczos-gpu.x
-bin/wfdd-gpu.x
 
 IMPORTANT NOTE (!): only pw-gpu.x, neb-gpu.x, ph-gpu.x use extensively 
                     the GPU card in multiple sections of the code. All 
@@ -50,6 +35,11 @@ IMPORTANT NOTE : not all the codes are enough "big" or "computational
                  intensive" like PWscf. To generate all the other codes
                  missing in the above list do "make -f Makefile.gpu distclean"
                  and follow the instruction in the file "README.CSCS_rosa"
+
+IMPORTANT NOTE : CPU-only code supports PGI, GNU and Intel compilers. GPU+CPU
+                 code supports *ONLY* Intel compiler. A bug report has been 
+                 filled to PGI and NVIDIA.
+
 
                 
 2. Good practices
@@ -64,6 +54,7 @@ IMPORTANT NOTE : not all the codes are enough "big" or "computational
   
 - In order to share the GPU between multiple MPI processes within the node is 
   mandatory to export the variable CRAY_CUDA_PROXY ("export CRAY_CUDA_PROXY=1")
+
 
 
 3. Example scripts 
