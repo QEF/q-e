@@ -8,8 +8,9 @@
 #!/bin/bash
 
 #
-# Convertitore da file cif a Quantum Espresso (C) Carlo Nervi 2012
-#
+# CIF to Quantum Espresso format converte r(C) Carlo Nervi 2012
+# Version 0.1
+# Date: 29-10-2012
 #
 
 if [ $# != 1 ]; then
@@ -26,14 +27,23 @@ awk -v FILE="$1" '
 
 BEGIN {
  bohr = 0.52917720859
- nfield=split("H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs Mt", AtomSymb, " ")
- split("1.0079 4.0026 6.941 9.0122 10.811 12.0107 14.0067 15.9994 18.9984 20.1797 22.9897 24.305 26.9815 28.0855 30.9738 32.065 35.453 39.948 39.0983 40.078 44.9559 47.867 50.9415 51.9961 54.938 55.845 58.9332 58.6934 63.546 65.39 69.723 72.64 74.9216 78.96 79.904 83.8 85.4678 87.62 88.9059 91.224 92.9064 95.94 98 101.07 102.906 106.42 107.868 112.411 114.818 118.71 121.76 127.6 126.904 131.293 132.905 137.327 138.905 140.116 140.908 144.24 145 150.36 151.964 157.25 158.925 162.5 164.93 167.259 168.934 173.04 174.967 178.49 180.948 183.84 186.207 190.23 192.217 195.078 196.966 200.59 204.383 207.2 208.98 209 210 222 223 226 227 232.038 231.036 238.029 237 244 243 247 247 251 252 257 258 259 262 261 262 266 264 277 268", AtomMass, " ")
+ nfield=split("H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr " \
+              "Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb " \
+              "Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf " \
+              "Db Sg Bh Hs Mt", AtomSymb, " ")
+ split("1.0079 4.0026 6.941 9.0122 10.811 12.0107 14.0067 15.9994 18.9984 20.1797 22.9897 24.305 26.9815 28.0855 30.9738 32.065 35.453 " \
+       "39.948 39.0983 40.078 44.9559 47.867 50.9415 51.9961 54.938 55.845 58.9332 58.6934 63.546 65.39 69.723 72.64 74.9216 78.96 79.904 " \
+       "83.8 85.4678 87.62 88.9059 91.224 92.9064 95.94 98 101.07 102.906 106.42 107.868 112.411 114.818 118.71 121.76 127.6 126.904 131.293 " \
+       "132.905 137.327 138.905 140.116 140.908 144.24 145 150.36 151.964 157.25 158.925 162.5 164.93 167.259 168.934 173.04 174.967 178.49 " \
+       "180.948 183.84 186.207 190.23 192.217 195.078 196.966 200.59 204.383 207.2 208.98 209 210 222 223 226 227 232.038 231.036 238.029 " \
+       "237 244 243 247 247 251 252 257 258 259 262 261 262 266 264 277 268", AtomMass, " ")
  for (i=1; i<=nfield; i++) Atoms[AtomSymb[i]] = AtomMass[i]
 }
 
 function eval(cmd,expression) {
- expression = "awk \047BEGIN{printf \"%19.15f\", "cmd" }\047"
- expression|getline l
+ expression = "awk \047BEGIN{printf \"%19.15f\", " cmd " }\047"
+ expression |& getline l
+ close(expression)
  return l     
 }
 
@@ -56,11 +66,8 @@ function norma(pat, repl, str) {
   Var[ivar]=$1
   ivar++
   Num_Var=ivar
-# Debug:
-#  print "D: " $1 "=" ivar
   if ($1 ~ /^_symmetry/) nsymm=0
   if ($1 ~ /^_atom/) natom=0
-#  if ($1 == "_symmetry_equiv_pos_as_xyz") I_Symm=ivar
  } else {
    ivar=0
    loop_switch=0
@@ -74,11 +81,7 @@ function norma(pat, repl, str) {
   loop_switch=2
   for (i=0; i<Num_Var; i++) {
     Array[Var[i]][jvar]=$(i+1)
-# Debug:
-#    printf "Array[" Var[i] "][" jvar "]=  [" $(i+1) "]   "
   }
-# Debug:
-#  printf "\n"
   jvar++
   if (Var[0] ~ /^_atom/) natom++
   if (Var[0] ~ /^_symmetry/) nsymm++
@@ -92,17 +95,15 @@ END {
  a=strtonum(Var2["_cell_length_a"])
  b=strtonum(Var2["_cell_length_b"])
  c=strtonum(Var2["_cell_length_c"])
- alpha=strtonum(Var2["_cell_angle_alpha"])/180.0*3.14159265359
- beta=strtonum(Var2["_cell_angle_beta"])/180.0*3.14159265359
- gamma=strtonum(Var2["_cell_angle_gamma"])/180.0*3.14159265359
+ alpha=strtonum(Var2["_cell_angle_alpha"])/180.0*3.14159265358979323846
+ beta=strtonum(Var2["_cell_angle_beta"])/180.0*3.14159265358979323846
+ gamma=strtonum(Var2["_cell_angle_gamma"])/180.0*3.14159265358979323846
 
  ntyp=0
  for (i=0; i<natom; i++) {
   if (Type_Atom[Array["_atom_site_type_symbol"][i]] != 1) {
     Type_Atom[Array["_atom_site_type_symbol"][i]]=1
     AtomTyp[ntyp]=Array["_atom_site_type_symbol"][i]
-# Debug:
-#    print "D: [" Array["_atom_site_type_symbol"][i] "] [" Atoms[Array["_atom_site_type_symbol"][i]] "]  AtomTyp[" ntyp "]=[" AtomTyp[ntyp] "]"
     ntyp++
   }
  }
@@ -161,15 +162,14 @@ END {
     p_X=norma("x", Array["_atom_site_fract_x"][i], Tmp[1])
     p_Y=norma("y", Array["_atom_site_fract_y"][i], Tmp[2])
     p_Z=norma("z", Array["_atom_site_fract_z"][i], Tmp[3])
-    
     printf "%2s   %19.15f   %19.15f   %19.15f\n", Array["_atom_site_type_symbol"][i], p_X, p_Y, p_Z
   }
  }
 
  print "\nK_POINTS crystal"
- print nks;
- for (i=0; i<nks; i++) print kpout[i];
-
+ print "1"
+ printf "%19.15f   %19.15f   %19.15f   %19.15f", 0.0, 0.0, 0.0, 1.0
+ 
  cell_px[0]=a
  cell_py[0]=0.0
  cell_pz[0]=0.0
@@ -189,4 +189,3 @@ END {
  print "\n\n"
 
 } ' $1.cif
-
