@@ -401,7 +401,7 @@ CONTAINS
          IF ( prog == 'PW' ) atomic_positions = 'alat'
       ENDIF
       !
-      reader_loop : DO ia = 1,nat,1
+      reader_loop : DO ia = 1,nat
          !
          CALL read_line( input_line, end_of_file = tend )
          IF ( tend ) CALL errore( 'read_cards', &
@@ -473,6 +473,9 @@ CONTAINS
          na_inp(is) = na_inp(is) + 1
          !
       ENDDO reader_loop
+      !
+      IF ( ANY ( na_inp(1:ntyp) == 0 ) ) &
+         CALL errore ('read_cards', 'some atomic species have no atoms',1)
       !
       tapos = .true.
       !
