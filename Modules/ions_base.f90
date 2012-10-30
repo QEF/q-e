@@ -110,7 +110,8 @@
           CALL errore(' sorttau ', ' wrong species index for positions ', ia )
         na( is ) = na( is ) + 1
       END DO
-
+      IF ( ANY ( na(1:nsp) == 0 ) ) &
+         CALL errore ('sort_atoms', 'some atomic species have no atoms',1)
       ! ... compute the index of the first atom in each specie
       ina( 1 ) = 0
       DO is = 2, nsp

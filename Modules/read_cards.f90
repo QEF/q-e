@@ -474,9 +474,6 @@ CONTAINS
          !
       ENDDO reader_loop
       !
-      IF ( ANY ( na_inp(1:ntyp) == 0 ) ) &
-         CALL errore ('read_cards', 'some atomic species have no atoms',1)
-      !
       tapos = .true.
       !
 
