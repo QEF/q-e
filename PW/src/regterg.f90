@@ -106,7 +106,11 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   IF( ierr /= 0 ) &
      CALL errore( 'regterg ',' cannot allocate hpsi ', ABS(ierr) )
   !
-  IF ( uspp ) ALLOCATE( spsi( npwx, nvecx ) )
+  IF ( uspp ) THEN
+     ALLOCATE( spsi( npwx, nvecx ), STAT=ierr )
+     IF( ierr /= 0 ) &
+        CALL errore( ' regterg ',' cannot allocate spsi ', ABS(ierr) )
+  END IF
   !
   ALLOCATE( sr( nvecx, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
