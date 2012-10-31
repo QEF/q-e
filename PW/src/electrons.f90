@@ -463,8 +463,8 @@ SUBROUTINE electrons()
        !
        vltot = vltot_zero
        !
-       CALL calc_eenviron( dfftp%nnr, nspin, rhoin%of_r, vltot_zero, &
-                           deenviron, esolvent, ecavity, epressure, eperiodic )
+       CALL calc_eenviron( dfftp%nnr, nspin, rhoin%of_r, deenviron, esolvent, &
+                           ecavity, epressure, eperiodic )
        !
        update_venviron = .NOT. conv_elec .AND. dr2 .LT. environ_thr
        !
@@ -608,7 +608,8 @@ SUBROUTINE electrons()
      !
      ! ... adds the external environment contribution to the energy
      !
-     IF ( do_environ ) etot = etot + deenviron + esolvent + ecavity + epressure + eperiodic
+     IF ( do_environ ) etot = etot + deenviron + esolvent + ecavity + & 
+                              epressure + eperiodic
 #endif
      !
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
