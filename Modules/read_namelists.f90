@@ -304,7 +304,7 @@ MODULE read_namelists_module
        !
        env_pressure = 0.D0
        !
-       cion = 0.0D0
+       env_ioncc_concentration = 0.0D0
        zion = 1.0D0
        rhopb = 0.0001D0
        solvent_temperature = 300.0D0
@@ -948,7 +948,7 @@ MODULE read_namelists_module
        !
        CALL mp_bcast( env_pressure,               ionode_id )
        !
-       CALL mp_bcast( cion,                       ionode_id )
+       CALL mp_bcast( env_ioncc_concentration,    ionode_id )
        CALL mp_bcast( zion,                       ionode_id )
        CALL mp_bcast( rhopb,                      ionode_id )
        CALL mp_bcast( solvent_temperature,        ionode_id )

@@ -614,7 +614,7 @@ MODULE input_parameters
 !
 ! Ionic countercharge parameters
 !
-        REAL(DP) :: cion = 0.D0
+        REAL(DP) :: env_ioncc_concentration = 0.D0
         ! molar concentration of ionic countercharge (M=mol/L)
         REAL(DP) :: zion = 1.D0
         ! valence of ionic countercharge
@@ -632,7 +632,8 @@ MODULE input_parameters
              mixtype, ndiis, mixrhopol, tolrhopol,                     &
              env_surface_tension, delta,                               &
              env_pressure,                                             &
-             cion, zion, rhopb, solvent_temperature
+             env_ioncc_concentration, zion, rhopb,                     &
+             solvent_temperature
 #endif
 !
 !=----------------------------------------------------------------------------=!
