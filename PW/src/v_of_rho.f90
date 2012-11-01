@@ -1146,8 +1146,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
     fac = e2 * fpi / tpiba
     gaux = gaux * fac 
     !
-    ! ...and add the factor e2*fpi/2\pi/a coming from the missing prefactor of 
-    !  V = e2 * fpi divided by the 2\pi/a factor missing in G  
+    ! ...add martyna-tuckerman correction, if needed
     ! 
     if (do_comp_mt) then
        ALLOCATE( vaux( ngm ), rgtot(ngm) )
