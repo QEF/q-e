@@ -5,6 +5,15 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! Experimental and incomplete plotting program for PAW
+! charge density - Paolo Giannozzi. Input: a namelist
+!    &inputpp ... / 
+! Allowed variables in namelist are: 
+!    outdir, prefix, spin_component, filplot, 
+!    e1, e2, e3, x0, nx, ny, nz, plot 
+! Same meaning and usage as for "pp.x", with the exception of 
+! "plot" (can be "core", "valence", "core+valence")
+!
 MODULE paw_postproc_
 
     USE kinds,          ONLY : DP
@@ -318,9 +327,11 @@ PROGRAM PAWplot
      IF ( abs(e1(1)*e2(1) + e1(2)*e2(2) + e1(3)*e2(3)) > 1d-6) &
           CALL errore ('pawplot', 'e1 and e2 are not orthogonal', 1)
      IF ( nx <= 0 .or. ny <= 0 )   CALL errore ('pawplot', 'wrong nx or ny', 1)
+     CALL errore ('pawplot', '2d plot not yet implemented', 2)
   ELSEIF (tredim) THEN
      IF ( nx <= 0 .or. ny <= 0 .or. nz <=0 ) &
           CALL errore ('pawplot', 'wrong nx or ny or nz', 1)
+     CALL errore ('pawplot', '3d plot not yet implemented', 3)
   ENDIF
   !
   DEALLOCATE (rhog)
