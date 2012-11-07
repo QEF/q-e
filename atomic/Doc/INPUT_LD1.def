@@ -561,7 +561,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		    
 		    * 'BESSEL'     Use Bessel functions to pseudize the Q.
 		    * 'GAUSS'      Use 2 Gaussian functions to pseudize the Q.
-		    * 'BG'         Use original Bloechl's recipy with a single gaussian.
+		    * 'BG'         Use original Bloechl's recipe with a single gaussian.
 
 		    Note: if lpaw is true and which_augfun is set to AE real all-
 		    electron charge will be used, which will produce extremely
