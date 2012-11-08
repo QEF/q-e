@@ -1,16 +1,15 @@
-!
-! Copyright (C) 2012 Carlo Nervi
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-!
 #!/bin/bash
 
 #
-# CIF to Quantum Espresso format converte r(C) Carlo Nervi 2012
-# Version 0.1
-# Date: 29-10-2012
+# CIF to Quantum Espresso format converter
+#  Version 0.2
+#  Date: 06 Nov 2012
+#
+# Copyright (C) 2012 Carlo Nervi
+# This file is distributed under the terms of the
+# GNU General Public License. See the file `License'
+# in the root directory of the present distribution,
+# or http://www.gnu.org/copyleft/gpl.txt .
 #
 
 if [ $# != 1 ]; then
@@ -38,6 +37,15 @@ BEGIN {
        "180.948 183.84 186.207 190.23 192.217 195.078 196.966 200.59 204.383 207.2 208.98 209 210 222 223 226 227 232.038 231.036 238.029 " \
        "237 244 243 247 247 251 252 257 258 259 262 261 262 266 264 277 268", AtomMass, " ")
  for (i=1; i<=nfield; i++) Atoms[AtomSymb[i]] = AtomMass[i]
+#
+#Tolerance for recognize identical atoms generate by symmetry
+#
+ tol=0.0001
+#
+# Separation (in A) to generate K Points
+#
+ separation=0.04
+ totatom=0
 }
 
 function eval(cmd,expression) {
@@ -50,7 +58,15 @@ function eval(cmd,expression) {
 function norma(pat, repl, str) {
  gsub(pat, repl, str)
  gsub(/--/, "+", str)
- return eval(str)
+ val=eval(str)
+ while (val < 0.) val+=1.
+ while (val >= 1.) val-=1.
+ return val
+}
+
+function abs(numero) {
+ if (numero < 0) numero=-numero;
+ return numero
 }
 
 # Salta il commento
@@ -98,6 +114,9 @@ END {
  alpha=strtonum(Var2["_cell_angle_alpha"])/180.0*3.14159265358979323846
  beta=strtonum(Var2["_cell_angle_beta"])/180.0*3.14159265358979323846
  gamma=strtonum(Var2["_cell_angle_gamma"])/180.0*3.14159265358979323846
+ KP_x = int(1./(a*separation)+0.5)
+ KP_y = int(1./(b*separation)+0.5)
+ KP_z = int(1./(c*separation)+0.5)
 
  ntyp=0
  for (i=0; i<natom; i++) {
@@ -105,6 +124,31 @@ END {
     Type_Atom[Array["_atom_site_type_symbol"][i]]=1
     AtomTyp[ntyp]=Array["_atom_site_type_symbol"][i]
     ntyp++
+  }
+ }
+ for (j=0; j<nsymm; j++) {
+  if (split(Array["_symmetry_equiv_pos_as_xyz"][j], Tmp, ",") != 3) {
+    print "Error in _symmetry_equiv_pos_as_xyz. Number of fields != 3: [1]=" Tmp[1] " [2]=" Tmp[2] " [3]=" Tmp[3]
+    print "D: " Array["_symmetry_equiv_pos_as_xyz"][j] "  " Tmp[1] "  " Tmp[2] "  " Tmp[3]
+    exit
+  }
+  TS[j][1]=Tmp[1]; TS[j][2]=Tmp[2]; TS[j][3]=Tmp[3]      
+  p_X=norma("x", Array["_atom_site_fract_x"][0], Tmp[1])    
+  p_Y=norma("y", Array["_atom_site_fract_y"][0], Tmp[2])
+  p_Z=norma("z", Array["_atom_site_fract_z"][0], Tmp[3])
+  ff=0
+  for (jj=0; jj<j; jj++) {
+    for (i=0; i<natom; i++) {                 
+    if (abs(p_X - norma("x", Array["_atom_site_fract_x"][i], TS[jj][1])) < tol && abs(p_Y - norma("y", Array["_atom_site_fract_y"][i], TS[jj][2])) < tol && \
+         abs(p_Z - norma("z", Array["_atom_site_fract_z"][i], TS[jj][3])) < tol ) ff=1
+  }
+  }
+  if (ff==1) continue
+  for (i=0; i<natom; i++) {
+    save_X[totatom]=norma("x", Array["_atom_site_fract_x"][i], Tmp[1])
+    save_Y[totatom]=norma("y", Array["_atom_site_fract_y"][i], Tmp[2])
+    save_Z[totatom]=norma("z", Array["_atom_site_fract_z"][i], Tmp[3])
+  totatom++
   }
  }
  print "&CONTROL"
@@ -127,7 +171,7 @@ END {
  print " /"
  print " &SYSTEM"
  print "                       ibrav = 0"
- print "                         nat = " natom*nsymm
+ print "                         nat = " totatom
  print "                        ntyp = " ntyp
  print "                     ecutwfc = 60"
  print "                     ecutrho = 600"
@@ -152,24 +196,11 @@ END {
  for (i=0; i<ntyp; i++) printf "  %3s  %14.10f  %s.pbe-van_ak.UPF\n", AtomTyp[i], Atoms[AtomTyp[i]], AtomTyp[i];
 
  print "\nATOMIC_POSITIONS crystal"
- for (j=0; j<nsymm; j++) {
-  for (i=0; i<natom; i++) {
-    if (split(Array["_symmetry_equiv_pos_as_xyz"][j], Tmp, ",") != 3) {
-      print "Error in _symmetry_equiv_pos_as_xyz. Number of fields != 3: [1]=" Tmp[1] " [2]=" Tmp[2] " [3]=" Tmp[3]
-      print "D: " Array["_symmetry_equiv_pos_as_xyz"][j] "  " Tmp[1] "  " Tmp[2] "  " Tmp[3]
-      exit
-    }
-    p_X=norma("x", Array["_atom_site_fract_x"][i], Tmp[1])
-    p_Y=norma("y", Array["_atom_site_fract_y"][i], Tmp[2])
-    p_Z=norma("z", Array["_atom_site_fract_z"][i], Tmp[3])
-    printf "%2s   %19.15f   %19.15f   %19.15f\n", Array["_atom_site_type_symbol"][i], p_X, p_Y, p_Z
-  }
- }
+ for (i=0; i<totatom; i++)
+   printf "%2s   %19.15f   %19.15f   %19.15f\n", Array["_atom_site_type_symbol"][i % natom], save_X[i], save_Y[i], save_Z[i]
+ print "\nK_POINTS automatic"
+ print KP_x "  " KP_y "  " KP_z "   0 0 0\n"
 
- print "\nK_POINTS crystal"
- print "1"
- printf "%19.15f   %19.15f   %19.15f   %19.15f", 0.0, 0.0, 0.0, 1.0
- 
  cell_px[0]=a
  cell_py[0]=0.0
  cell_pz[0]=0.0
