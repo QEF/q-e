@@ -1,8 +1,7 @@
 New in 5.0.2 version:
 
-   * DFT+U with on-site occupations from pseudopotential projectors
-     (experimental)
-   * DFT+U+J
+   * DFT+U with on-site occupations from pseudopotential projectors;
+     DFT+U+J (both experimental)
    * Calculation of orbital magnetization (experimental)
 
 Fixed in 5.0.2 version:
@@ -29,6 +28,8 @@ Fixed in 5.0.2 version:
    * PH: ph.x with images wasn't working any longer 
    * PH: electron_phonon='simple' wasn't working together with ldisp=.true.
    * PH: images with a single q point were not collecting properly the files.
+   * PH: grid splitting of irrep + single q point + wf_collect=.true. 
+     was not working
 
 New in 5.0.1 version
 
