@@ -21,7 +21,7 @@ SUBROUTINE openfilq()
   USE io_files,        ONLY : tmp_dir, diropn, seqopn
   USE control_ph,      ONLY : epsil, zue, ext_recover, trans, lgamma, &
                               tmp_dir_phq, start_irr, last_irr, xmldyn
-  USE save_ph,         ONLY : tmp_dir_save
+  USE save_ph,         ONLY : tmp_dir_save, all_done
   USE ions_base,       ONLY : nat
   USE cell_base,       ONLY : at
   USE qpoint,          ONLY : xq, nksq
@@ -80,7 +80,7 @@ SUBROUTINE openfilq()
   iuwfc = 20
   lrwfc = 2 * nbnd * npwx * npol
   CALL diropn (iuwfc, 'wfc', lrwfc, exst)
-  IF (.NOT.exst) THEN
+  IF (.NOT.exst.and..not.all_done) THEN
      CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
   END IF
   IF (elph_mat) then
