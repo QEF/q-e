@@ -130,7 +130,7 @@ subroutine dynmatrix_new(iq_)
               WRITE(stdout, '(/,5x,"Stopping because representation", &
                                  & i5, " is not done")') irr
               CALL close_phq(.TRUE.)
-              CALL stop_ph(.TRUE.)
+              CALL stop_smoothly_ph(.TRUE.)
            ELSE
               WRITE(stdout, '(/5x,"Not diagonalizing because representation", &
                                  & i5, " is not done")') irr
