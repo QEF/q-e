@@ -16,7 +16,6 @@ SUBROUTINE close_phq( flag )
   USE io_files,      ONLY : iunigk
   USE control_flags, ONLY : twfcollect
   USE paw_variables, ONLY : okpaw
-  USE mp_global,     ONLY : me_pool
   USE io_global,     ONLY : ionode, stdout
   USE uspp,          ONLY : okvan
   USE units_ph,      ONLY : iuwfc, iudwf, iubar, iudrhous, iuebar, iudrho, &
