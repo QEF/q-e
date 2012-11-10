@@ -67,10 +67,10 @@ SUBROUTINE sum_band()
   !
   becsum(:,:,:) = 0.D0
   rho%of_r(:,:)      = 0.D0
-  rho%of_g(:,:)      = 0.D0
+  rho%of_g(:,:)      = (0.D0, 0.D0)
   if ( dft_is_meta() ) then
      rho%kin_r(:,:)      = 0.D0
-     rho%kin_g(:,:)      = 0.D0
+     rho%kin_g(:,:)      = (0.D0, 0.D0)
   end if
   eband         = 0.D0
 
