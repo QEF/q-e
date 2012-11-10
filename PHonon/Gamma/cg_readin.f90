@@ -13,11 +13,13 @@ SUBROUTINE cg_readin()
   USE ions_base, ONLY : nat, amass
   USE pwcom
   USE cgcom
+  USE fft_base,      ONLY : dffts
   USE control_flags, ONLY : gamma_only
   USE uspp,          ONLY : okvan
   USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, ionode_id
   USE noncollin_module, ONLY : noncolin
+  USE mp_global, ONLY : nbgrp, get_ntask_groups
   USE mp,        ONLY : mp_bcast
   !
   IMPLICIT NONE
@@ -89,8 +91,19 @@ SUBROUTINE cg_readin()
   !
   IF (.not. gamma_only) CALL errore('cg_readin', &
       'need pw.x data file produced using Gamma tricks',1)
+!
+!   Task groups not used. 
+!
+  IF (get_ntask_groups() > 1) dffts%have_task_groups=.FALSE.
+!
+!   band group not available
+!
+  IF (nbgrp /=1 ) &
+     CALL errore('cg_readin','band parallelization not available',1)
+
   IF (okvan) CALL errore('cg_readin', &
       'ultrasoft pseudopotential not implemented',1)
+
   IF (doublegrid) &
       CALL errore('cg_readin', 'double grid not implemented',1)
   IF (.not.trans .and. .not.epsil)                                  &
