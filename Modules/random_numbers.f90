@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -25,10 +25,10 @@ MODULE random_numbers
     FUNCTION randy ( irand )
       !------------------------------------------------------------------------
       !
-      ! x=rand(n) : reseed with initial seed idum=n
+      ! x=randy(n): reseed with initial seed idum=n ( 0 <= n <= ic, see below)
       !             if randy is not explicitly initialized, it will be
       !             initialized with seed idum=0 the first time it is called
-      ! x=rand( ) : generate uniform real(DP) numbers x in [0,1]
+      ! x=randy() : generate uniform real(DP) numbers x in [0,1]
       !
       REAL(DP) :: randy
       INTEGER, optional    :: irand
@@ -43,7 +43,7 @@ MODULE random_numbers
       LOGICAL, SAVE        :: first=.true.
       !
       IF ( present(irand) ) THEN
-         idum = irand
+         idum = MIN( ABS(irand), ic) 
          first=.true.
       END IF
 
@@ -60,7 +60,7 @@ MODULE random_numbers
          iy=idum
       END IF
       j=1+(ntab*iy)/m
-      IF( j > ntab .OR. j <  1 ) call errore('randy','j out of range',j)
+      IF( j > ntab .OR. j <  1 ) call errore('randy','j out of range',ABS(j)+1)
       iy=ir(j)
       randy=iy*rm
       idum=mod(ia*idum+ic,m)

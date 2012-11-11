@@ -6,6 +6,8 @@ New in 5.0.2 version:
 
 Fixed in 5.0.2 version:
 
+   * the random-number generator wasn't checking for incorrect seeding;
+     under some unlikely circumstances this might lead to strange errors
    * k-point parallelization in v.5.0 and 5.0.1 was affected by a subtle 
      problem: the distribution of plane waves was not always the same on 
      all pools of processors. While results were still correct, strange
