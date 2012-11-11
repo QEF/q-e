@@ -20,8 +20,9 @@ SUBROUTINE openfilq()
                               lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw
   USE io_files,        ONLY : tmp_dir, diropn, seqopn
   USE control_ph,      ONLY : epsil, zue, ext_recover, trans, lgamma, &
-                              tmp_dir_phq, start_irr, last_irr, xmldyn
-  USE save_ph,         ONLY : tmp_dir_save, all_done
+                              tmp_dir_phq, start_irr, last_irr, xmldyn, &
+                              all_done
+  USE save_ph,         ONLY : tmp_dir_save
   USE ions_base,       ONLY : nat
   USE cell_base,       ONLY : at
   USE qpoint,          ONLY : xq, nksq
