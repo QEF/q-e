@@ -127,6 +127,7 @@ q2qstar_ph.o \
 qdipol_cryst.o \
 random_matrix.o \
 read_wfc_rspace_and_fwfft.o \
+rotate_dvscf_star.o \
 rotate_and_add_dyn.o \
 run_pwscf.o \
 save_ph_input.o \

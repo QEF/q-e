@@ -167,19 +167,6 @@ subroutine dynmatrix_new(iq_)
   call q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
        nq, sxq, isq, imq, iudyn)
 
-  ! Rotates and write drho_q* (to be improved)
-  IF(drho_star%open) THEN
-    INQUIRE (UNIT = iudrho, OPENED = opnd)
-    IF (opnd) CLOSE(UNIT = iudrho, STATUS='keep')
-    CALL write_dfile_star(drho_star, fildrho, nsym, xq, u, nq, sxq, isq, &
-                          s, sr, invs, irt, ntyp, ityp,(imq==0), -1 )
-  ENDIF
-  IF(dvscf_star%open) THEN
-    INQUIRE (UNIT = iudvscf, OPENED = opnd)
-    IF (opnd) CLOSE(UNIT = iudvscf, STATUS='keep')
-    CALL write_dfile_star(dvscf_star, fildvscf, nsym, xq, u, nq, sxq, isq, &
-                          s, sr, invs, irt, ntyp, ityp,(imq==0), iq_ )
-  ENDIF
   !
   !   Writes (if the case) results for quantities involving electric field
   !
