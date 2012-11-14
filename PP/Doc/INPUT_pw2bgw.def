@@ -63,7 +63,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 		'cubic' | 'hexagonal'
 		type of crystal system, 'cubic' for space groups 1 ... 142 and 195 ... 230
 		and 'hexagonal' for space groups 143 ... 194. Only used if ibrav = 0 in a
-		pw.x run. Written to BerkeleyGW WFN, RHO, VXC and VNL files but no longer
+		pw.x run. Written to BerkeleyGW WFN, RHO, VXC and VKB files but no longer
 		used (except in SAPO code in BerkeleyGW). You can use the default value for
 		all systems. Don't set to different values in different files for the same
 		system or you will get errors in BerkeleyGW.
@@ -269,11 +269,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	}
 
 	var vxc_zero_rho_core -type LOGICAL {
-	    default { .TRUE. }
+	    default { .FALSE. }
 	    info {
 		set to .TRUE. to zero out NLCC or to .FALSE. to keep NLCC when computing
 		exchange-correlation potential. For details, see Hybertsen & Louie PRB 34,
-		5390 (1986), Eq. (38) and discussion afterward.
+		5390 (1986), Eq. (38) and discussion afterwards
 	    }
 	}
 
@@ -292,19 +292,35 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    }
 	}
 
-	var vnlg_flag -type LOGICAL {
+	var vscg_flag -type LOGICAL {
 	    default { .FALSE. }
 	    info {
-		write Kleinman-Bylander projectors in G-space to BerkeleyGW VNL file.
+		write local part of self-consistent potential in G-space to
+		BerkeleyGW VSC file. Only used in SAPO code in BerkeleyGW
+	    }
+	}
+
+	var vscg_file -type STRING {
+	    default { 'VSC' }
+	    info {
+		name of BerkeleyGW VSC output file. Only used in SAPO code in BerkeleyGW.
+		Not used if vscg_flag = .FALSE.
+	    }
+	}
+
+	var vkbg_flag -type LOGICAL {
+	    default { .FALSE. }
+	    info {
+		write Kleinman-Bylander projectors in G-space to BerkeleyGW VKB file.
 		Only used in SAPO code in BerkeleyGW
 	    }
 	}
 
-	var vnlg_file -type STRING {
-	    default { 'VNL' }
+	var vkbg_file -type STRING {
+	    default { 'VKB' }
 	    info {
-		name of BerkeleyGW VNL output file. Only used in SAPO code in BerkeleyGW.
-		Not used if vnlg_flag = .FALSE.
+		name of BerkeleyGW VKB output file. Only used in SAPO code in BerkeleyGW.
+		Not used if vkbg_flag = .FALSE.
 	    }
 	}
 

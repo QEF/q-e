@@ -62,17 +62,19 @@
 ! write_wfng  - generates complex wavefunctions in G-space (normalized to 1)
 ! real_wfng   - constructs real wavefunctions by applying the Gram-Schmidt
 !               process (called from write_wfng)
-! write_rhog  - generates complex charge density in G-space
+! write_rhog  - generates real/complex charge density in G-space
 !               (units of the number of electronic states per unit cell)
-! write_vxcg  - generates complex exchange-correlation potential in G-space
+! write_vxcg  - generates real/complex exchange-correlation potential in G-space
 !               (units of Rydberg) [only local part of Vxc]
-! write_vxc0  - prints complex exchange-correlation potential at G=0
+! write_vxc0  - prints real/complex exchange-correlation potential at G=0
 !               (units of eV) [only local part of Vxc]
 ! write_vxc_r - calculates matrix elements of exchange-correlation potential
 !               in R-space (units of eV) [only local part of Vxc]
 ! write_vxc_g - calculates matrix elements of exchange-correlation potential
 !               in G-space (units of eV) [supports non-local Vxc]
-! write_vnlg  - generates Kleinman-Bylander projectors in G-space
+! write_vscg  - generates real/complex self-consistent potential in G-space
+!               (units of Rydberg) [only local part of Vxc]
+! write_vkbg  - generates complex Kleinman-Bylander projectors in G-space
 !               (units of Rydberg)
 ! check_inversion - checks whether real/complex version is appropriate
 !
@@ -138,8 +140,10 @@ PROGRAM pw2bgw
   logical :: vxc_zero_rho_core
   character ( len = 20 ) :: input_dft
   logical :: exx_flag
-  logical :: vnlg_flag
-  character ( len = 256 ) :: vnlg_file
+  logical :: vscg_flag
+  character ( len = 256 ) :: vscg_file
+  logical :: vkbg_flag
+  character ( len = 256 ) :: vkbg_file
 
   NAMELIST / input_pw2bgw / prefix, outdir, &
     real_or_complex, symm_type, wfng_flag, wfng_file, wfng_kgrid, &
@@ -148,7 +152,7 @@ PROGRAM pw2bgw
     vxcg_flag, vxcg_file, vxc0_flag, vxc0_file, vxc_flag, &
     vxc_file, vxc_integral, vxc_diag_nmin, vxc_diag_nmax, &
     vxc_offdiag_nmin, vxc_offdiag_nmax, vxc_zero_rho_core, &
-    input_dft, exx_flag, vnlg_flag, vnlg_file
+    input_dft, exx_flag, vscg_flag, vscg_file, vkbg_flag, vkbg_file
 
   integer :: ii, ios
   character ( len = 256 ) :: output_file_name
@@ -194,8 +198,10 @@ PROGRAM pw2bgw
   vxc_zero_rho_core = .FALSE.
   input_dft = 'sla+pz'
   exx_flag = .FALSE.
-  vnlg_flag = .FALSE.
-  vnlg_file = 'VNL'
+  vscg_flag = .FALSE.
+  vscg_file = 'VSC'
+  vkbg_flag = .FALSE.
+  vkbg_file = 'VKB'
 
   IF ( ionode ) THEN
     CALL input_from_file ( )
@@ -251,8 +257,10 @@ PROGRAM pw2bgw
   CALL mp_bcast ( vxc_zero_rho_core, ionode_id )
   CALL mp_bcast ( input_dft, ionode_id )
   CALL mp_bcast ( exx_flag, ionode_id )
-  CALL mp_bcast ( vnlg_flag, ionode_id )
-  CALL mp_bcast ( vnlg_file, ionode_id )
+  CALL mp_bcast ( vscg_flag, ionode_id )
+  CALL mp_bcast ( vscg_file, ionode_id )
+  CALL mp_bcast ( vkbg_flag, ionode_id )
+  CALL mp_bcast ( vkbg_file, ionode_id )
 
   CALL read_file ( )
 
@@ -337,14 +345,23 @@ PROGRAM pw2bgw
     ENDIF
   ENDIF
 
-  IF ( vnlg_flag ) THEN
-    output_file_name = TRIM ( outdir ) // '/' // TRIM ( vnlg_file )
-    IF ( ionode ) WRITE ( 6, '(5x,"call write_vnlg")' )
-    CALL start_clock ( 'write_vnlg' )
-    CALL write_vnlg ( output_file_name, symm_type, wfng_kgrid, wfng_nk1, &
+  IF ( vscg_flag ) THEN
+    output_file_name = TRIM ( outdir ) // '/' // TRIM ( vscg_file )
+    IF ( ionode ) WRITE ( 6, '(5x,"call write_vscg")' )
+    CALL start_clock ( 'write_vscg' )
+    CALL write_vscg ( output_file_name, real_or_complex, symm_type )
+    CALL stop_clock ( 'write_vscg' )
+    IF ( ionode ) WRITE ( 6, '(5x,"done write_vscg",/)' )
+  ENDIF
+
+  IF ( vkbg_flag ) THEN
+    output_file_name = TRIM ( outdir ) // '/' // TRIM ( vkbg_file )
+    IF ( ionode ) WRITE ( 6, '(5x,"call write_vkbg")' )
+    CALL start_clock ( 'write_vkbg' )
+    CALL write_vkbg ( output_file_name, symm_type, wfng_kgrid, wfng_nk1, &
       wfng_nk2, wfng_nk3, wfng_dk1, wfng_dk2, wfng_dk3 )
-    CALL stop_clock ( 'write_vnlg' )
-    IF ( ionode ) WRITE ( 6, '(5x,"done write_vnlg",/)' )
+    CALL stop_clock ( 'write_vkbg' )
+    IF ( ionode ) WRITE ( 6, '(5x,"done write_vkbg",/)' )
   ENDIF
 
   IF ( ionode ) WRITE ( 6, * )
@@ -356,7 +373,8 @@ PROGRAM pw2bgw
     IF ( vxc_integral .EQ. 'r' ) CALL print_clock ( 'write_vxc_r' )
     IF ( vxc_integral .EQ. 'g' ) CALL print_clock ( 'write_vxc_g' )
   ENDIF
-  IF ( vnlg_flag ) CALL print_clock ( 'write_vnlg' )
+  IF ( vscg_flag ) CALL print_clock ( 'write_vscg' )
+  IF ( vkbg_flag ) CALL print_clock ( 'write_vkbg' )
   IF ( wfng_flag .AND. real_or_complex .EQ. 1 ) THEN
     IF ( ionode ) WRITE ( 6, '(/,5x,"Called by write_wfng:")' )
     CALL print_clock ( 'real_wfng' )
@@ -2129,7 +2147,218 @@ END SUBROUTINE write_vxc_g
 
 !-------------------------------------------------------------------------------
 
-SUBROUTINE write_vnlg (output_file_name, symm_type, wfng_kgrid, &
+SUBROUTINE write_vscg ( output_file_name, real_or_complex, symm_type )
+
+  USE cell_base, ONLY : omega, alat, tpiba, tpiba2, at, bg, ibrav
+  USE constants, ONLY : pi, tpi, eps6
+  USE ener, ONLY : etxc, vtxc
+  USE fft_base, ONLY : dfftp
+  USE fft_interfaces, ONLY : fwfft
+  USE funct, ONLY : enforce_input_dft
+  USE gvect, ONLY : ngm, ngm_g, ig_l2g, nl, mill, ecutrho
+  USE io_global, ONLY : ionode
+  USE ions_base, ONLY : nat, atm, ityp, tau 
+  USE kinds, ONLY : DP
+  USE lsda_mod, ONLY : nspin
+  USE mp, ONLY : mp_sum
+  USE mp_global, ONLY : intra_pool_comm
+  USE scf, ONLY : vltot, v
+  USE symm_base, ONLY : s, ftau, nsym
+  USE wavefunctions_module, ONLY : psic
+#ifdef EXX
+  USE funct, ONLY : start_exx, stop_exx
+#endif
+
+  IMPLICIT NONE
+
+  character ( len = 256 ), intent (in) :: output_file_name
+  integer, intent (in) :: real_or_complex
+  character ( len = 9 ), intent (in) :: symm_type
+
+  character :: cdate*9, ctime*9, sdate*32, stime*32, stitle*32
+  integer :: unit, id, is, ir, ig, i, j, k, ierr
+  integer :: nd, ns, nr, ng_l, ng_g
+  integer :: ntran, cell_symmetry, nrecord
+  real (DP) :: alat2, recvol, dr1, t1 ( 3 ), t2 ( 3 )
+  real (DP) :: r1 ( 3, 3 ), r2 ( 3, 3 ), adot ( 3, 3 )
+  real (DP) :: bdot ( 3, 3 ), translation ( 3, 48 )
+  integer, allocatable :: g_g ( :, : )
+  real (DP), allocatable :: vscr_g ( :, : )
+  complex (DP), allocatable :: vscg_g ( :, : )
+
+  INTEGER, EXTERNAL :: atomic_number
+
+  CALL check_inversion ( real_or_complex, nsym, s, nspin, .true., .true. )
+
+  CALL date_and_tim ( cdate, ctime )
+  WRITE ( sdate, '(A2,"-",A3,"-",A4,21X)' ) cdate(1:2), cdate(3:5), cdate(6:9)
+  WRITE ( stime, '(A8,24X)' ) ctime(1:8)
+  IF ( real_or_complex .EQ. 1 ) THEN
+    WRITE ( stitle, '("VXC-Real",24X)' )
+  ELSE
+    WRITE ( stitle, '("VXC-Complex",21X)' )
+  ENDIF
+
+  unit = 4
+  nrecord = 1
+  nd = 3
+
+  ns = nspin
+  nr = dfftp%nnr
+  ng_l = ngm
+  ng_g = ngm_g
+
+  ierr = 0
+  IF ( ibrav .EQ. 0 ) THEN
+    IF ( TRIM ( symm_type ) .EQ. 'cubic' ) THEN
+      cell_symmetry = 0
+    ELSEIF ( TRIM ( symm_type ) .EQ. 'hexagonal' ) THEN
+      cell_symmetry = 1
+    ELSE
+      ierr = 1
+    ENDIF
+  ELSEIF ( abs ( ibrav ) .GE. 1 .AND. abs ( ibrav ) .LE. 3 ) THEN
+    cell_symmetry = 0
+  ELSEIF ( abs ( ibrav ) .GE. 4 .AND. abs ( ibrav ) .LE. 5 ) THEN
+    cell_symmetry = 1
+  ELSEIF ( abs ( ibrav ) .GE. 6 .AND. abs ( ibrav ) .LE. 14 ) THEN
+    cell_symmetry = 0
+  ELSE
+    ierr = 1
+  ENDIF
+  IF ( ierr .GT. 0 ) &
+    CALL errore ( 'write_vscg', 'cell_symmetry', ierr )
+
+  ntran = nsym
+  DO i = 1, ntran
+    DO j = 1, nd
+      DO k = 1, nd
+        r1 ( k, j ) = dble ( s ( k, j, i ) )
+      ENDDO
+    ENDDO
+    CALL invmat ( 3, r1, r2, dr1 )
+    t1 ( 1 ) = dble ( ftau ( 1, i ) ) / dble ( dfftp%nr1 )
+    t1 ( 2 ) = dble ( ftau ( 2, i ) ) / dble ( dfftp%nr2 )
+    t1 ( 3 ) = dble ( ftau ( 3, i ) ) / dble ( dfftp%nr3 )
+    DO j = 1, nd
+      t2 ( j ) = 0.0D0
+      DO k = 1, nd
+        t2 ( j ) = t2 ( j ) + r2 ( k, j ) * t1 ( k )
+      ENDDO
+      IF ( t2 ( j ) .GE. eps6 + 0.5D0 ) &
+        t2 ( j ) = t2 ( j ) - dble ( int ( t2 ( j ) + 0.5D0 ) )
+      IF ( t2 ( j ) .LT. eps6 - 0.5D0 ) &
+        t2 ( j ) = t2 ( j ) - dble ( int ( t2 ( j ) - 0.5D0 ) )
+    ENDDO
+    DO j = 1, nd
+      translation ( j, i ) = t2 ( j ) * tpi
+    ENDDO
+  ENDDO
+
+  alat2 = alat ** 2
+  recvol = 8.0D0 * pi**3 / omega
+
+  DO i = 1, nd
+    DO j = 1, nd
+      adot ( j, i ) = 0.0D0
+    ENDDO
+  ENDDO
+  DO i = 1, nd
+    DO j = 1, nd
+      DO k = 1, nd
+        adot ( j, i ) = adot ( j, i ) + &
+          at ( k, j ) * at ( k, i ) * alat2
+      ENDDO
+    ENDDO
+  ENDDO
+
+  DO i = 1, nd
+    DO j = 1, nd
+      bdot ( j, i ) = 0.0D0
+    ENDDO
+  ENDDO
+  DO i = 1, nd
+    DO j = 1, nd
+      DO k = 1, nd
+        bdot ( j, i ) = bdot ( j, i ) + &
+          bg ( k, j ) * bg ( k, i ) * tpiba2
+      ENDDO
+    ENDDO
+  ENDDO
+
+  ALLOCATE ( g_g ( nd, ng_g ) )
+  ALLOCATE ( vscr_g ( ng_g, ns ) )
+  ALLOCATE ( vscg_g ( ng_g, ns ) )
+
+  DO ig = 1, ng_g
+    DO id = 1, nd
+      g_g ( id, ig ) = 0
+    ENDDO
+  ENDDO
+  DO is = 1, ns
+    DO ig = 1, ng_g
+      vscg_g ( ig, is ) = ( 0.0D0, 0.0D0 )
+    ENDDO
+  ENDDO
+
+  DO ig = 1, ng_l
+    g_g ( 1, ig_l2g ( ig ) ) = mill ( 1, ig )
+    g_g ( 2, ig_l2g ( ig ) ) = mill ( 2, ig )
+    g_g ( 3, ig_l2g ( ig ) ) = mill ( 3, ig )
+  ENDDO
+  vscr_g ( :, : ) = 0.0D0
+  DO is = 1, ns
+    DO ir = 1, nr
+      psic ( ir ) = CMPLX ( v%of_r ( ir, is ) + vltot ( ir ), 0.0D0 )
+    ENDDO
+    CALL fwfft ( 'Dense', psic, dfftp )
+    DO ig = 1, ng_l
+      vscg_g ( ig_l2g ( ig ), is ) = psic ( nl ( ig ) )
+    ENDDO
+  ENDDO
+
+  CALL mp_sum ( g_g, intra_pool_comm )
+  CALL mp_sum ( vscg_g, intra_pool_comm )
+
+  IF ( ionode ) THEN
+    OPEN ( unit = unit, file = TRIM ( output_file_name ), &
+      form = 'unformatted', status = 'replace' )
+    WRITE ( unit ) stitle, sdate, stime
+    WRITE ( unit ) ns, ng_g, ntran, cell_symmetry, nat, ecutrho
+    WRITE ( unit ) dfftp%nr1, dfftp%nr2, dfftp%nr3
+    WRITE ( unit ) omega, alat, ( ( at ( j, i ), j = 1, nd ), i = 1, nd ), &
+      ( ( adot ( j, i ), j = 1, nd ), i = 1, nd )
+    WRITE ( unit ) recvol, tpiba, ( ( bg ( j, i ), j = 1, nd ), i = 1, nd ), &
+      ( ( bdot ( j, i ), j = 1, nd ), i = 1, nd )
+    WRITE ( unit ) ( ( ( s ( k, j, i ), k = 1, nd ), j = 1, nd ), i = 1, ntran )
+    WRITE ( unit ) ( ( translation ( j, i ), j = 1, nd ), i = 1, ntran )
+    WRITE ( unit ) ( ( tau ( j, i ), j = 1, nd ), atomic_number ( atm ( ityp ( i ) ) ), i = 1, nat )
+    WRITE ( unit ) nrecord
+    WRITE ( unit ) ng_g
+    WRITE ( unit ) ( ( g_g ( id, ig ), id = 1, nd ), ig = 1, ng_g )
+    WRITE ( unit ) nrecord
+    WRITE ( unit ) ng_g
+    IF ( real_or_complex .EQ. 1 ) THEN
+      WRITE ( unit ) ( ( dble ( vscg_g ( ig, is ) ), &
+        ig = 1, ng_g ), is = 1, ns )
+    ELSE
+      WRITE ( unit ) ( ( vscg_g ( ig, is ), &
+        ig = 1, ng_g ), is = 1, ns )
+    ENDIF
+    CLOSE ( unit = unit, status = 'keep' )
+  ENDIF
+
+  DEALLOCATE ( vscg_g )
+  DEALLOCATE ( vscr_g )
+  DEALLOCATE ( g_g )
+
+  RETURN
+
+END SUBROUTINE write_vscg
+
+!-------------------------------------------------------------------------------
+
+SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   wfng_nk1, wfng_nk2, wfng_nk3, wfng_dk1, wfng_dk2, wfng_dk3)
 
   USE cell_base, ONLY : omega, alat, tpiba, tpiba2, at, bg, ibrav
@@ -2221,7 +2450,7 @@ SUBROUTINE write_vnlg (output_file_name, symm_type, wfng_kgrid, &
     ierr = 1
   ENDIF
   IF ( ierr .GT. 0 ) &
-    CALL errore ( 'write_vnlg', 'cell_symmetry', ierr )
+    CALL errore ( 'write_vkbg', 'cell_symmetry', ierr )
 
   ntran = nsym
   DO i = 1, ntran
@@ -2298,7 +2527,7 @@ SUBROUTINE write_vnlg (output_file_name, symm_type, wfng_kgrid, &
   ENDDO
   CALL mp_max ( ierr )
   IF ( ierr .GT. 0 ) &
-    CALL errore ( 'write_vnlg', 'smap', ierr )
+    CALL errore ( 'write_vkbg', 'smap', ierr )
 
   ALLOCATE ( gvec ( 3, ngm_g ) )
   gvec = 0
@@ -2453,7 +2682,7 @@ SUBROUTINE write_vnlg (output_file_name, symm_type, wfng_kgrid, &
       ierr = 1
     CALL mp_max ( ierr )
     IF ( ierr .GT. 0 ) &
-      CALL errore ( 'write_vnlg', 'igwx ngk_g', ierr )
+      CALL errore ( 'write_vkbg', 'igwx ngk_g', ierr )
 
     ALLOCATE ( vkb_g ( MAX ( 1, igwx ) ) )
 
@@ -2500,7 +2729,7 @@ SUBROUTINE write_vnlg (output_file_name, symm_type, wfng_kgrid, &
 
   RETURN
 
-END SUBROUTINE write_vnlg
+END SUBROUTINE write_vkbg
 
 !-------------------------------------------------------------------------------
 
