@@ -277,21 +277,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    }
 	}
 
-	var input_dft -type STRING {
-	    default { 'sla+pz' }
-	    info {
-		exchange-correlation functional, same as in pw.x. Not used if vxcg_flag = .FALSE. and
-		vxc_flag = .FALSE.
-	    }
-	}
-
-	var exx_flag -type LOGICAL {
-	    default { .FALSE. }
-	    info {
-		set to .TRUE. when using EXX. Not used if vxcg_flag = .FALSE. and vxc_flag = .FALSE.
-	    }
-	}
-
 	var vscg_flag -type LOGICAL {
 	    default { .FALSE. }
 	    info {

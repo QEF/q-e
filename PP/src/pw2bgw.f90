@@ -73,7 +73,7 @@
 ! write_vxc_g - calculates matrix elements of exchange-correlation potential
 !               in G-space (units of eV) [supports non-local Vxc]
 ! write_vscg  - generates real/complex self-consistent potential in G-space
-!               (units of Rydberg) [only local part of Vxc]
+!               (units of Rydberg) [only local part of Vsc]
 ! write_vkbg  - generates complex Kleinman-Bylander projectors in G-space
 !               (units of Rydberg)
 ! check_inversion - checks whether real/complex version is appropriate
@@ -138,8 +138,6 @@ PROGRAM pw2bgw
   integer :: vxc_offdiag_nmin
   integer :: vxc_offdiag_nmax
   logical :: vxc_zero_rho_core
-  character ( len = 20 ) :: input_dft
-  logical :: exx_flag
   logical :: vscg_flag
   character ( len = 256 ) :: vscg_file
   logical :: vkbg_flag
@@ -152,7 +150,7 @@ PROGRAM pw2bgw
     vxcg_flag, vxcg_file, vxc0_flag, vxc0_file, vxc_flag, &
     vxc_file, vxc_integral, vxc_diag_nmin, vxc_diag_nmax, &
     vxc_offdiag_nmin, vxc_offdiag_nmax, vxc_zero_rho_core, &
-    input_dft, exx_flag, vscg_flag, vscg_file, vkbg_flag, vkbg_file
+    vscg_flag, vscg_file, vkbg_flag, vkbg_file
 
   integer :: ii, ios
   character ( len = 256 ) :: output_file_name
@@ -196,8 +194,6 @@ PROGRAM pw2bgw
   vxc_offdiag_nmin = 0
   vxc_offdiag_nmax = 0
   vxc_zero_rho_core = .FALSE.
-  input_dft = 'sla+pz'
-  exx_flag = .FALSE.
   vscg_flag = .FALSE.
   vscg_file = 'VSC'
   vkbg_flag = .FALSE.
@@ -255,8 +251,6 @@ PROGRAM pw2bgw
   CALL mp_bcast ( vxc_offdiag_nmin, ionode_id )
   CALL mp_bcast ( vxc_offdiag_nmax, ionode_id )
   CALL mp_bcast ( vxc_zero_rho_core, ionode_id )
-  CALL mp_bcast ( input_dft, ionode_id )
-  CALL mp_bcast ( exx_flag, ionode_id )
   CALL mp_bcast ( vscg_flag, ionode_id )
   CALL mp_bcast ( vscg_file, ionode_id )
   CALL mp_bcast ( vkbg_flag, ionode_id )
@@ -306,7 +300,7 @@ PROGRAM pw2bgw
     IF ( ionode ) WRITE ( 6, '(5x,"call write_vxcg")' )
     CALL start_clock ( 'write_vxcg' )
     CALL write_vxcg ( output_file_name, real_or_complex, symm_type, &
-      vxc_zero_rho_core, input_dft, exx_flag )
+      vxc_zero_rho_core )
     CALL stop_clock ( 'write_vxcg' )
     IF ( ionode ) WRITE ( 6, '(5x,"done write_vxcg",/)' )
   ENDIF
@@ -315,8 +309,7 @@ PROGRAM pw2bgw
     output_file_name = TRIM ( outdir ) // '/' // TRIM ( vxc0_file )
     IF ( ionode ) WRITE ( 6, '(5x,"call write_vxc0")' )
     CALL start_clock ( 'write_vxc0' )
-    CALL write_vxc0 ( output_file_name, vxc_zero_rho_core, input_dft, &
-      exx_flag )
+    CALL write_vxc0 ( output_file_name, vxc_zero_rho_core )
     CALL stop_clock ( 'write_vxc0' )
     IF ( ionode ) WRITE ( 6, '(5x,"done write_vxc0",/)' )
   ENDIF
@@ -329,7 +322,7 @@ PROGRAM pw2bgw
       CALL write_vxc_r ( output_file_name, &
         vxc_diag_nmin, vxc_diag_nmax, &
         vxc_offdiag_nmin, vxc_offdiag_nmax, &
-        vxc_zero_rho_core, input_dft, exx_flag )
+        vxc_zero_rho_core )
       CALL stop_clock ( 'write_vxc_r' )
       IF ( ionode ) WRITE ( 6, '(5x,"done write_vxc_r",/)' )
     ENDIF
@@ -339,7 +332,7 @@ PROGRAM pw2bgw
       CALL write_vxc_g ( output_file_name, &
         vxc_diag_nmin, vxc_diag_nmax, &
         vxc_offdiag_nmin, vxc_offdiag_nmax, &
-        vxc_zero_rho_core, input_dft, exx_flag )
+        vxc_zero_rho_core )
       CALL stop_clock ( 'write_vxc_g' )
       IF ( ionode ) WRITE ( 6, '(5x,"done write_vxc_g",/)' )
     ENDIF
@@ -1400,14 +1393,13 @@ END SUBROUTINE write_rhog
 !-------------------------------------------------------------------------------
 
 SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
-  vxc_zero_rho_core, input_dft, exx_flag )
+  vxc_zero_rho_core )
 
   USE cell_base, ONLY : omega, alat, tpiba, tpiba2, at, bg, ibrav
   USE constants, ONLY : pi, tpi, eps6
   USE ener, ONLY : etxc, vtxc
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft
-  USE funct, ONLY : enforce_input_dft
   USE gvect, ONLY : ngm, ngm_g, ig_l2g, nl, mill, ecutrho
   USE io_global, ONLY : ionode
   USE ions_base, ONLY : nat, atm, ityp, tau 
@@ -1418,9 +1410,6 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
   USE scf, ONLY : rho, rho_core, rhog_core
   USE symm_base, ONLY : s, ftau, nsym
   USE wavefunctions_module, ONLY : psic
-#ifdef EXX
-  USE funct, ONLY : start_exx, stop_exx
-#endif
 
   IMPLICIT NONE
 
@@ -1428,8 +1417,6 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
   integer, intent (in) :: real_or_complex
   character ( len = 9 ), intent (in) :: symm_type
   logical, intent (in) :: vxc_zero_rho_core
-  character ( len = 20 ), intent (in) :: input_dft
-  logical, intent (in) :: exx_flag
 
   character :: cdate*9, ctime*9, sdate*32, stime*32, stitle*32
   integer :: unit, id, is, ir, ig, i, j, k, ierr
@@ -1562,19 +1549,12 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
     g_g ( 2, ig_l2g ( ig ) ) = mill ( 2, ig )
     g_g ( 3, ig_l2g ( ig ) ) = mill ( 3, ig )
   ENDDO
-  CALL enforce_input_dft ( input_dft )
-#ifdef EXX
-  IF ( exx_flag ) CALL start_exx ( )
-#endif
   vxcr_g ( :, : ) = 0.0D0
   IF ( vxc_zero_rho_core ) THEN
     rho_core ( : ) = 0.0D0
     rhog_core ( : ) = ( 0.0D0, 0.0D0 )
   ENDIF
   CALL v_xc ( rho, rho_core, rhog_core, etxc, vtxc, vxcr_g )
-#ifdef EXX
-  IF ( exx_flag ) CALL stop_exx ( )
-#endif
   DO is = 1, ns
     DO ir = 1, nr
       psic ( ir ) = CMPLX ( vxcr_g ( ir, is ), 0.0D0 )
@@ -1626,14 +1606,12 @@ END SUBROUTINE write_vxcg
 
 !-------------------------------------------------------------------------------
 
-SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core, input_dft, &
-  exx_flag )
+SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core )
 
   USE constants, ONLY : RYTOEV
   USE ener, ONLY : etxc, vtxc
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft
-  USE funct, ONLY : enforce_input_dft
   USE gvect, ONLY : ngm, nl, mill
   USE io_global, ONLY : ionode
   USE kinds, ONLY : DP
@@ -1642,16 +1620,11 @@ SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core, input_dft, &
   USE mp_global, ONLY : intra_pool_comm
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module, ONLY : psic
-#ifdef EXX
-  USE funct, ONLY : start_exx, stop_exx
-#endif
 
   IMPLICIT NONE
 
   character ( len = 256 ), intent (in) :: output_file_name
   logical, intent (in) :: vxc_zero_rho_core
-  character ( len = 20 ), intent (in) :: input_dft
-  logical, intent (in) :: exx_flag
 
   integer :: unit
   integer :: is, ir, ig
@@ -1673,19 +1646,12 @@ SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core, input_dft, &
     vxc0_g ( is ) = ( 0.0D0, 0.0D0 )
   ENDDO
 
-  CALL enforce_input_dft ( input_dft )
-#ifdef EXX
-  IF ( exx_flag ) CALL start_exx ( )
-#endif
   vxcr_g ( :, : ) = 0.0D0
   IF ( vxc_zero_rho_core ) THEN
     rho_core ( : ) = 0.0D0
     rhog_core ( : ) = ( 0.0D0, 0.0D0 )
   ENDIF
   CALL v_xc ( rho, rho_core, rhog_core, etxc, vtxc, vxcr_g )
-#ifdef EXX
-  IF ( exx_flag ) CALL stop_exx ( )
-#endif
   DO is = 1, ns
     DO ir = 1, nr
       psic ( ir ) = CMPLX ( vxcr_g ( ir, is ), 0.0D0 )
@@ -1730,7 +1696,7 @@ END SUBROUTINE write_vxc0
 !-------------------------------------------------------------------------------
 
 SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
-  offdiag_nmin, offdiag_nmax, vxc_zero_rho_core, input_dft, exx_flag)
+  offdiag_nmin, offdiag_nmax, vxc_zero_rho_core)
 
   USE kinds, ONLY : DP
   USE constants, ONLY : rytoev
@@ -1738,7 +1704,6 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   USE ener, ONLY : etxc, vtxc
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY : invfft
-  USE funct, ONLY : enforce_input_dft
   USE gvect, ONLY : ngm, g, nl
   USE io_files, ONLY : nwordwfc, iunwfc
   USE io_global, ONLY : ionode
@@ -1750,9 +1715,6 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct, ONLY : npw, nbnd, igk, g2kin, ecutwfc
-#ifdef EXX
-  USE funct, ONLY : start_exx, stop_exx
-#endif
 
   IMPLICIT NONE
 
@@ -1762,8 +1724,6 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   integer, intent (inout) :: offdiag_nmin
   integer, intent (inout) :: offdiag_nmax
   logical, intent (in) :: vxc_zero_rho_core
-  character (len = 20), intent (in) :: input_dft
-  logical, intent (in) :: exx_flag
 
   integer :: ik, is, ib, ig, ir, unit, nkbl, nkl, nkr, iks, ike, &
     ndiag, noffdiag, ib2
@@ -1776,16 +1736,26 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
 
   IF (diag_nmin .LT. 1) diag_nmin = 1
   IF (diag_nmax .GT. nbnd) then
-    write(0,*) 'WARNING: resetting diag_nmax to max number of bands'
+    write(0,'(a,i6)') 'WARNING: resetting diag_nmax to max number of bands', nbnd
     diag_nmax = nbnd
   ENDIF
+! this causes error if diag_nmin & diag_nmax are not set
+!  if(diag_nmin > diag_nmax) then
+!    call errore ( 'write_vxc', 'diag_nmin > diag_nmax', diag_nmin )
+!  endif
   ndiag = MAX (diag_nmax - diag_nmin + 1, 0)
+
   IF (offdiag_nmin .LT. 1) offdiag_nmin = 1
   IF (offdiag_nmax .GT. nbnd)  then
-    write(0,*) 'WARNING: resetting offdiag_nmax to max number of bands'
+    write(0,'(a,i6)') 'WARNING: resetting offdiag_nmax to max number of bands', nbnd
     offdiag_nmax = nbnd
   ENDIF
+! this causes error if offdiag_nmin & offdiag_nmax are not set
+!  if(offdiag_nmin > offdiag_nmax) then
+!    call errore ( 'write_vxc', 'offdiag_nmin > offdiag_nmax', offdiag_nmin )
+!  endif
   noffdiag = MAX (offdiag_nmax - offdiag_nmin + 1, 0)
+
   IF (ndiag .EQ. 0 .AND. noffdiag .EQ. 0) RETURN
 
   unit = 4
@@ -1809,11 +1779,6 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
 
   ALLOCATE (vxcr (dfftp%nnr, nspin))
   IF (noffdiag .GT. 0) ALLOCATE (psic2 (dfftp%nnr))
-
-  CALL enforce_input_dft (input_dft)
-#ifdef EXX
-  IF (exx_flag) CALL start_exx ()
-#endif
 
   vxcr (:, :) = 0.0D0
   IF ( vxc_zero_rho_core ) THEN
@@ -1871,10 +1836,6 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
     ENDIF
   ENDDO
 
-#ifdef EXX
-  IF (exx_flag) CALL stop_exx ()
-#endif
-
   DEALLOCATE (vxcr)
   IF (noffdiag .GT. 0) DEALLOCATE (psic2)
 
@@ -1927,14 +1888,15 @@ END SUBROUTINE write_vxc_r
 !-------------------------------------------------------------------------------
 
 SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
-  offdiag_nmin, offdiag_nmax, vxc_zero_rho_core, input_dft, exx_flag)
+  offdiag_nmin, offdiag_nmax, vxc_zero_rho_core)
 
   USE constants, ONLY : rytoev
   USE cell_base, ONLY : tpiba2, at, bg
   USE ener, ONLY : etxc, vtxc
+  USE exx, ONLY : vexx
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE funct, ONLY : enforce_input_dft
+  USE funct, ONLY : exx_is_active
   USE gvect, ONLY : ngm, g, nl
   USE io_files, ONLY : nwordwfc, iunwfc
   USE io_global, ONLY : ionode
@@ -1947,10 +1909,6 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct, ONLY : npwx, npw, nbnd, igk, g2kin, ecutwfc
-#ifdef EXX
-  USE funct, ONLY : start_exx, stop_exx, exx_is_active
-  USE exx, ONLY : vexx
-#endif
 
   IMPLICIT NONE
 
@@ -1960,8 +1918,6 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   integer, intent (inout) :: offdiag_nmin
   integer, intent (inout) :: offdiag_nmax
   logical, intent (in) :: vxc_zero_rho_core
-  character (len = 20), intent (in) :: input_dft
-  logical, intent (in) :: exx_flag
 
   integer :: ik, is, ib, ig, ir, unit, nkbl, nkl, nkr, iks, ike, &
     ndiag, noffdiag, ib2
@@ -1973,11 +1929,27 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   complex (DP), allocatable :: hpsi (:)
 
   IF (diag_nmin .LT. 1) diag_nmin = 1
-  IF (diag_nmax .GT. nbnd) diag_nmax = nbnd
+  IF (diag_nmax .GT. nbnd) then
+    write(0,'(a,i6)') 'WARNING: resetting diag_nmax to max number of bands', nbnd
+    diag_nmax = nbnd
+  ENDIF
+! this causes error if diag_nmin & diag_nmax are not set
+!  if(diag_nmin > diag_nmax) then
+!    call errore ( 'write_vxc', 'diag_nmin > diag_nmax', diag_nmin )
+!  endif
   ndiag = MAX (diag_nmax - diag_nmin + 1, 0)
+
   IF (offdiag_nmin .LT. 1) offdiag_nmin = 1
-  IF (offdiag_nmax .GT. nbnd) offdiag_nmax = nbnd
+  IF (offdiag_nmax .GT. nbnd)  then
+    write(0,'(a,i6)') 'WARNING: resetting offdiag_nmax to max number of bands', nbnd
+    offdiag_nmax = nbnd
+  ENDIF
+! this causes error if offdiag_nmin & offdiag_nmax are not set
+!  if(offdiag_nmin > offdiag_nmax) then
+!    call errore ( 'write_vxc', 'offdiag_nmin > offdiag_nmax', offdiag_nmin )
+!  endif
   noffdiag = MAX (offdiag_nmax - offdiag_nmin + 1, 0)
+
   IF (ndiag .EQ. 0 .AND. noffdiag .EQ. 0) RETURN
 
   unit = 4
@@ -2002,11 +1974,6 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   ALLOCATE (vxcr (dfftp%nnr, nspin))
   IF (noffdiag .GT. 0) ALLOCATE (psic2 (dfftp%nnr))
   ALLOCATE (hpsi (dfftp%nnr))
-
-  CALL enforce_input_dft (input_dft)
-#ifdef EXX
-  IF (exx_flag) CALL start_exx ()
-#endif
 
   vxcr (:, :) = 0.0D0
   IF ( vxc_zero_rho_core ) THEN
@@ -2038,10 +2005,8 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
         DO ig = 1, npw
           psic (ig) = evc (ig, ib)
         ENDDO
-#ifdef EXX
         IF (exx_is_active ()) CALL vexx (npwx, npw, 1, &
           psic, hpsi)
-#endif
         dummy = (0.0D0, 0.0D0)
         DO ig = 1, npw
           dummy = dummy + conjg (psic (ig)) * hpsi (ig)
@@ -2070,10 +2035,8 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
         DO ig = 1, npw
           psic (ig) = evc (ig, ib)
         ENDDO
-#ifdef EXX
         IF (exx_is_active ()) CALL vexx (npwx, npw, 1, &
           psic, hpsi)
-#endif
         DO ib2 = offdiag_nmin, offdiag_nmax
           psic2 (:) = (0.0D0, 0.0D0)
           DO ig = 1, npw
@@ -2091,10 +2054,6 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
       ENDDO
     ENDIF
   ENDDO
-
-#ifdef EXX
-  IF (exx_flag) CALL stop_exx ()
-#endif
 
   DEALLOCATE (vxcr)
   IF (noffdiag .GT. 0) DEALLOCATE (psic2)
@@ -2154,7 +2113,6 @@ SUBROUTINE write_vscg ( output_file_name, real_or_complex, symm_type )
   USE ener, ONLY : etxc, vtxc
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft
-  USE funct, ONLY : enforce_input_dft
   USE gvect, ONLY : ngm, ngm_g, ig_l2g, nl, mill, ecutrho
   USE io_global, ONLY : ionode
   USE ions_base, ONLY : nat, atm, ityp, tau 
@@ -2165,9 +2123,6 @@ SUBROUTINE write_vscg ( output_file_name, real_or_complex, symm_type )
   USE scf, ONLY : vltot, v
   USE symm_base, ONLY : s, ftau, nsym
   USE wavefunctions_module, ONLY : psic
-#ifdef EXX
-  USE funct, ONLY : start_exx, stop_exx
-#endif
 
   IMPLICIT NONE
 
