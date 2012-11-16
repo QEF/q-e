@@ -1734,26 +1734,24 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   real (DP), allocatable :: vxcr (:, :)
   complex (DP), allocatable :: psic2 (:)
 
+  if(diag_nmin > diag_nmax) then
+    call errore ( 'write_vxc_r', 'diag_nmin > diag_nmax', diag_nmin )
+  endif
   IF (diag_nmin .LT. 1) diag_nmin = 1
   IF (diag_nmax .GT. nbnd) then
     write(0,'(a,i6)') 'WARNING: resetting diag_nmax to max number of bands', nbnd
     diag_nmax = nbnd
   ENDIF
-! this causes error if diag_nmin & diag_nmax are not set
-!  if(diag_nmin > diag_nmax) then
-!    call errore ( 'write_vxc', 'diag_nmin > diag_nmax', diag_nmin )
-!  endif
   ndiag = MAX (diag_nmax - diag_nmin + 1, 0)
 
+  if(offdiag_nmin > offdiag_nmax) then
+    call errore ( 'write_vxc_r', 'offdiag_nmin > offdiag_nmax', offdiag_nmin )
+  endif
   IF (offdiag_nmin .LT. 1) offdiag_nmin = 1
   IF (offdiag_nmax .GT. nbnd)  then
     write(0,'(a,i6)') 'WARNING: resetting offdiag_nmax to max number of bands', nbnd
     offdiag_nmax = nbnd
   ENDIF
-! this causes error if offdiag_nmin & offdiag_nmax are not set
-!  if(offdiag_nmin > offdiag_nmax) then
-!    call errore ( 'write_vxc', 'offdiag_nmin > offdiag_nmax', offdiag_nmin )
-!  endif
   noffdiag = MAX (offdiag_nmax - offdiag_nmin + 1, 0)
 
   IF (ndiag .EQ. 0 .AND. noffdiag .EQ. 0) RETURN
@@ -1928,26 +1926,24 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   complex (DP), allocatable :: psic2 (:)
   complex (DP), allocatable :: hpsi (:)
 
+  if(diag_nmin > diag_nmax) then
+    call errore ( 'write_vxc_g', 'diag_nmin > diag_nmax', diag_nmin )
+  endif
   IF (diag_nmin .LT. 1) diag_nmin = 1
   IF (diag_nmax .GT. nbnd) then
     write(0,'(a,i6)') 'WARNING: resetting diag_nmax to max number of bands', nbnd
     diag_nmax = nbnd
   ENDIF
-! this causes error if diag_nmin & diag_nmax are not set
-!  if(diag_nmin > diag_nmax) then
-!    call errore ( 'write_vxc', 'diag_nmin > diag_nmax', diag_nmin )
-!  endif
   ndiag = MAX (diag_nmax - diag_nmin + 1, 0)
 
+  if(offdiag_nmin > offdiag_nmax) then
+    call errore ( 'write_vxc_g', 'offdiag_nmin > offdiag_nmax', offdiag_nmin )
+  endif
   IF (offdiag_nmin .LT. 1) offdiag_nmin = 1
   IF (offdiag_nmax .GT. nbnd)  then
     write(0,'(a,i6)') 'WARNING: resetting offdiag_nmax to max number of bands', nbnd
     offdiag_nmax = nbnd
   ENDIF
-! this causes error if offdiag_nmin & offdiag_nmax are not set
-!  if(offdiag_nmin > offdiag_nmax) then
-!    call errore ( 'write_vxc', 'offdiag_nmin > offdiag_nmax', offdiag_nmin )
-!  endif
   noffdiag = MAX (offdiag_nmax - offdiag_nmin + 1, 0)
 
   IF (ndiag .EQ. 0 .AND. noffdiag .EQ. 0) RETURN
@@ -2148,6 +2144,8 @@ SUBROUTINE write_vscg ( output_file_name, real_or_complex, symm_type )
   CALL date_and_tim ( cdate, ctime )
   WRITE ( sdate, '(A2,"-",A3,"-",A4,21X)' ) cdate(1:2), cdate(3:5), cdate(6:9)
   WRITE ( stime, '(A8,24X)' ) ctime(1:8)
+  ! this is supposed to be VSC-Real/Complex but BGW wfn_rho_vxc IO
+  ! does not recognize VSC header so we are using VXC instead
   IF ( real_or_complex .EQ. 1 ) THEN
     WRITE ( stitle, '("VXC-Real",24X)' )
   ELSE
@@ -2372,6 +2370,8 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   CALL date_and_tim ( cdate, ctime )
   WRITE ( sdate, '(A2,"-",A3,"-",A4,21X)' ) cdate(1:2), cdate(3:5), cdate(6:9)
   WRITE ( stime, '(A8,24X)' ) ctime(1:8)
+  ! BGW wfn_rho_vxc IO does not recognize VKB header so this file
+  ! is read directly by SAPO code in BerkeleyGW
   WRITE ( stitle, '("VKB-Complex",21X)' )
 
   unit = 4
