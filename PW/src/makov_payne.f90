@@ -211,6 +211,12 @@ SUBROUTINE vacuum_level( x0, zion )
   USE mp,        ONLY : mp_sum
   USE control_flags, ONLY : gamma_only
   USE basic_algebra_routines, ONLY : norm
+#ifdef __ENVIRON
+  USE environ_base,   ONLY : do_environ, env_static_permittivity, vsolvent
+  USE fft_base,       ONLY : dfftp
+  USE fft_interfaces, ONLY : fwfft
+  USE gvect,          ONLY : nl
+#endif
   !
   IMPLICIT NONE
   !
@@ -227,6 +233,9 @@ SUBROUTINE vacuum_level( x0, zion )
   REAL(DP), PARAMETER      :: x(3) = (/ 0.5D0, 0.0D0, 0.0D0 /), &
                               y(3) = (/ 0.0D0, 0.5D0, 0.0D0 /), &
                               z(3) = (/ 0.0D0, 0.0D0, 0.5D0 /)
+#ifdef __ENVIRON
+  COMPLEX(DP), ALLOCATABLE    :: vaux(:)
+#endif
   !
   !
   IF ( .NOT.gamma_only ) RETURN
@@ -271,6 +280,26 @@ SUBROUTINE vacuum_level( x0, zion )
      vg(ig) = vg(ig) + CMPLX( rgtot_re, rgtot_im ,kind=DP)*fac
      !
   END DO
+  !
+#ifdef __ENVIRON  
+  !
+  IF ( do_environ .AND. env_static_permittivity .GT. 1.D0 ) THEN
+     !
+     ALLOCATE( vaux( dfftp%nnr ) )
+     vaux = CMPLX( vsolvent( : ), 0.D0 )
+     CALL fwfft ('Dense', vaux, dfftp)
+     !
+     DO ig = gstart, ngm
+        !
+        vg(ig) = vg(ig) + vaux(nl(ig))
+        !
+     ENDDO
+     !
+     DEALLOCATE( vaux )
+     !
+  END IF
+  !
+#endif
   !
   first_point = npts
   !
@@ -338,10 +367,16 @@ SUBROUTINE vacuum_level( x0, zion )
         vgig = vgig*CMPLX( COS( phase ), SIN( phase ) ,kind=DP)
         qgig = qgig*CMPLX( COS( phase ), SIN( phase ) ,kind=DP)
         !
+        ! ... vsph is the spherical average of the periodic electrostatic  
+        ! ... potential on a sphere of radius r centered in x0 
+        ! ... so this should be the monopole term in the potential  
+        !
         vsph = vsph + 2.D0*REAL( vgig )*sinxx
         qsph = qsph + 2.D0*REAL( qgig )*sinxx
         !
         IF ( absg /= 0.D0 ) THEN
+           !
+           ! ... qqr is the integral of the electronic charge in the sphere
            !
            qqr = qqr + 2.D0*REAL( qgig )* &
                        ( fpi / absg**3 )*( SIN( rg ) - rg*COS( rg ) )
@@ -358,7 +393,18 @@ SUBROUTINE vacuum_level( x0, zion )
      CALL mp_sum( qsph, intra_bgrp_comm )
      CALL mp_sum( qqr,  intra_bgrp_comm )
      !
+     ! ... qq is therefore the total (positive) charge  of the system
+     !
      qq = ( zion - qqr )
+     !
+#ifdef __ENVIRON
+     IF ( do_environ ) qq = qq / env_static_permittivity
+#endif
+     !
+     ! ... that by Gauss theorem gives a monopole average potential on the 
+     ! ... sphere seen by electrons of: - qq e2 / r
+     ! ... so  (vsph + qq e2/r) should be the shift of the isolated molecule 
+     ! ... monopole wrt the periodic potential
      !
 #if defined _PRINT_ON_FILE
      IF ( ionode ) &
@@ -370,6 +416,9 @@ SUBROUTINE vacuum_level( x0, zion )
 #if defined _PRINT_ON_FILE
   IF ( ionode ) CLOSE( UNIT = 123 )
 #endif
+  !
+  ! ... one should see (if a range of r's are computed) that this corrections 
+  ! ... should become a constant when the charge density of the molecule is decayed
   !
   WRITE( stdout, '(5X,"Corrected vacuum level    = ",F16.8," eV")' ) &
       ( vsph + e2*qq / rmax )*rytoev
