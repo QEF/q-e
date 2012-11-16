@@ -106,7 +106,7 @@ SUBROUTINE phqscf
            done_irr (irr) = 1
         ELSE
            WRITE( stdout, '(/,5x,"No convergence has been achieved ")')
-           CALL stop_ph (.FALSE.)
+           CALL stop_smoothly_ph (.FALSE.)
         ENDIF
         rec_code=20
         CALL write_rec('done_drhod',irr,0.0_DP,-1000,.false.,npe,&
