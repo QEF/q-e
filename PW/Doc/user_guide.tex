@@ -269,7 +269,7 @@ with \texttt{.in}
 \subsection{Input data}
 
 Input data 
-is organized as several namelists, followed by other fields
+is organized as several namelists, followed by other fields (``cards'')
 introduced by keywords. The namelists are
 
 \begin{tabular}{ll}
@@ -308,6 +308,9 @@ are in files \texttt{PW/Doc/INPUT\_PW.txt} and \texttt{PW/Doc/INPUT\_PW.html}.
 These files are the reference for input data and describe a large number
 of other variables as well. Almost all variables have default 
 values, which may or may not fit your needs.
+
+Comment lines in namelists can be introduced by a "!", exactly as in fortran 
+code.
     
 After the namelists, you have several fields (``cards'')
 introduced by keywords with self-explanatory names:
@@ -321,6 +324,9 @@ introduced by keywords with self-explanatory names:
 The keywords may be followed on the same line by an option. Unknown
 fields are ignored. 
 See the files mentioned above for details on the available ``cards''.
+
+Comments lines in ``cards'' can be introduced by a "\#" character in the first
+position of a line.
  
 Note about k points: The k-point grid can be either automatically generated 
 or manually provided as a list of k-points and a weight in the Irreducible

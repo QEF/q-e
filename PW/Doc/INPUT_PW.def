@@ -10,6 +10,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         by e); potentials are in energy units (i.e. they are multiplied by e)
 
         BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE 
+        Comment lines in namelists can be introduced by a "!", exactly as in 
+        fortran code. Comments lines in ``cards'' can be introduced by a "#" 
+        character in the first position of a line.
 
 	Structure of the input data:
 	===============================================================================

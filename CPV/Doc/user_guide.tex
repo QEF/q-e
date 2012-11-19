@@ -156,8 +156,8 @@ parallelization levels are implemented.
   
 \section{Input data}
 
-Input data for \cpx\ is organized into several namelists, followed by other fields
-introduced by keywords. The namelists are
+Input data for \cpx\ is organized into several namelists, followed by other 
+fields (``cards'') introduced by keywords. The namelists are
 
 \begin{tabular}{ll}
       \&CONTROL:& general variables controlling the run\\
@@ -185,7 +185,10 @@ as well as on alternative ways to input structural data,
 are contained in files \texttt{Doc/INPUT\_CP.*}. These files are the reference for input data and describe 
 a large number of other variables as well. Almost all variables have default 
 values, which may or may not fit your needs.
-    
+
+Comment lines in namelists can be introduced by a "!", exactly as in 
+fortran code. 
+
 After the namelists, you have several fields (``cards'')
 introduced by keywords with self-explanatory names:
 \begin{quote}
@@ -197,6 +200,9 @@ introduced by keywords with self-explanatory names:
 The keywords may be followed on the same line by an option. Unknown
 fields are ignored. 
 See the files mentioned above for details on the available ``cards''.
+
+Comments lines in ``cards'' can be introduced by a "\#" character in the first 
+position of a line.
  
 \subsection{Data files}
 
