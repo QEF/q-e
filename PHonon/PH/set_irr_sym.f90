@@ -16,13 +16,13 @@ subroutine set_irr_sym_new ( t, tmq, npertx )
 !
   USE kinds, ONLY : DP
   USE constants, ONLY: tpi
-  USE ions_base, ONLY : nat, tau
+  USE ions_base, ONLY : nat
   USE cell_base, ONLY : at, bg
-  USE symm_base, ONLY : s, irt, nsym, sname
+  USE symm_base, ONLY : s, irt
   USE qpoint,    ONLY : xq
   USE modes,     ONLY : nsymq, u, irotmq, nirr, npert, rtau, minus_q
   USE control_flags, ONLY : modenum
-  USE mp, ONLY: mp_bcast
+  USE mp,        ONLY : mp_bcast
   USE mp_global, ONLY : intra_image_comm
   USE io_global, ONLY : ionode_id
   implicit none
@@ -142,7 +142,7 @@ subroutine set_irr_sym_new ( t, tmq, npertx )
 ! for some reasons (check set_irr.f90)
 !
         
-        
+        if(isymq<=nsymq) then 
         do ipert = 1, npert (irr)
            IF (modenum /= 0 .AND. modenum /= irr) CYCLE
            do jpert = 1, npert (irr)
@@ -150,14 +150,15 @@ subroutine set_irr_sym_new ( t, tmq, npertx )
               do kpert = 1, npert (irr)
                  wrk = wrk + t (ipert,kpert,irot,irr) * conjg( t(jpert,kpert,irot,irr))
               enddo
-              if (jpert.ne.ipert .and. abs(wrk).gt. 1.d-6 ) &
-                     call errore('set_irr_sym','wrong representation',100*irr+10*jpert+ipert)
-              if (jpert.eq.ipert .and. abs(wrk-1.d0).gt. 1.d-6 ) &
-                     call errore('set_irr_sym','wrong representation',100*irr+10*jpert+ipert)
+              if (jpert.ne.ipert .and. abs(wrk)> 1.d-6 ) &
+                     call errore('set_irr_sym_new','wrong representation',100*irr+10*jpert+ipert)
+              if (jpert.eq.ipert .and. abs(wrk-1.d0)> 1.d-6 ) &
+                     call errore('set_irr_sym_new','wrong representation',100*irr+10*jpert+ipert)
            enddo
         enddo
-     enddo
+        endif
 
+     enddo
   enddo
 
 #ifdef __MPI
