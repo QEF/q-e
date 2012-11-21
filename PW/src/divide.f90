@@ -66,3 +66,45 @@ SUBROUTINE divide (comm, ntodiv, startn, lastn)
 
 END SUBROUTINE divide
 
+!
+!-----------------------------------------------------------------------
+SUBROUTINE divide2 (comm1, comm2, ntodiv, startn, lastn)
+  !-----------------------------------------------------------------------
+  ! Divide ntodiv points across processors belonging to two communicators 
+  ! comm1 and comm2. The final quantity must be collected among the two
+  ! Each processor gets points from startn to lastn
+  !
+#ifdef __MPI
+  !
+  USE mp, ONLY : mp_size, mp_rank
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(in) :: comm1
+  INTEGER, INTENT(in) :: comm2
+  INTEGER, INTENT(in) :: ntodiv
+  INTEGER, INTENT(out):: startn, lastn
+
+  INTEGER :: ntodiv1, start_n1, end_n1, start_n2, end_n2
+  !
+  CALL divide( comm1, ntodiv, start_n1, end_n1 )
+  ntodiv1=end_n1-start_n1+1
+  CALL divide( comm2, ntodiv1, start_n2, end_n2 )
+  startn=start_n1+start_n2-1
+  lastn=start_n1+end_n2-1
+
+#else
+
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(in) :: comm1, comm2
+  INTEGER, INTENT(in) :: ntodiv
+  INTEGER, INTENT(out):: startn, lastn
+ 
+  startn = 1
+  lastn = ntodiv
+
+#endif
+  RETURN
+
+END SUBROUTINE divide2
+
