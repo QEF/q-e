@@ -130,7 +130,8 @@ CONTAINS
 100   CALL read_line( input_line, end_of_file=tend )
       !
       IF( tend ) GOTO 120
-      IF( input_line == ' ' .or. input_line(1:1) == '#' ) GOTO 100
+      IF( input_line == ' ' .OR. input_line(1:1) == '#' .OR. &
+                                 input_line(1:1) == '!' ) GOTO 100
       !
       READ (input_line, *) card
       !
