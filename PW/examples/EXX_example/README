@@ -115,6 +115,21 @@
      than higher-order formulas yield better results but this has not been 
      explored. This option is currently not implemented but it would be
      easy to re-implement it.
+  5) use a spherical cutoff for coulomb potential (exxdiv_treatement='vcut_spheric')
+
+  In the case of strongly anisotropic supercells, such that one (or two) of the
+  products nki*ai (nki=number of k-points along axis i, ai=cell length along i axis)
+  is much larger than the others (for instance: nkz*az=50 A >> nky*ay=nkx*ax=10 A),
+  it can be shown that the fourier transform of 1/(q+G)**2 does not behave as 1/|r-r'| 
+  for small q+G, thus producing instabilities with respect to the k point sampling.
+  In order to avoid this problem you have 2 possibilities:
+    1) change your supercell to a cubic one (all nki*ai of similar value)
+    2) use a real-space Wigner-Seitz cutoff. For this you have to turn on
+       exxidv_treatment="vcut_ws" and converge your results with respect to
+       ecutvcut (reciprocal space cutoff for the correction, i.e.:
+       coulomb=1/(q+G)**2 for (q+G)**2> ecutvcut, 
+       coulomb=cutoffed_coulomb for (q+G)**2 < ecutvcut). 
+       Typical values for ecutvcut range from 0.7 to 2.0.
 
  OTHER LIMITATIONS 
   So far only NORM-CONSERVING pseudopotentials are implemented.
