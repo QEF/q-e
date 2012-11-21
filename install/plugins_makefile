@@ -157,7 +157,7 @@ gipaw:  download-gipaw configure-gipaw
 download-gipaw:
 	@echo "GIPAW 5 is not ready for distribution. Donwloading the development version."
 	@echo "This version is not bug free. Please, check if your results make sense."
-	svn checkout svn://cvs.qe-forge.org/scmrepos/svn/qe-gipaw/trunk ../GIPAW
+	svn checkout http://qeforge.qe-forge.org/svn/qe-gipaw/trunk ../GIPAW
 uncompress-gipaw: touch-dummy
 	@(if test ! -s ../archive/$(GIPAW).tar.gz && test ! -d ../GIPAW ; then \
 	wget -O ../archive/$(GIPAW).tar.gz $(GIPAW_URL) > /dev/null 2>&1; \
