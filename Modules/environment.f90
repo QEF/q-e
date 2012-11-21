@@ -119,6 +119,7 @@ CONTAINS
        WRITE( stdout,3335)
     END IF
 3335 FORMAT('=',78('-'),'=')
+    CALL flush_unit(stdout)
 
     RETURN
   END SUBROUTINE environment_end
