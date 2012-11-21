@@ -29,63 +29,97 @@ SUBROUTINE close_phq( flag )
   IMPLICIT NONE
   !
   LOGICAL :: flag
-  LOGICAL :: exst
+  LOGICAL :: exst, opnd
   !
   !
   IF ( twfcollect ) THEN
      !
-     CLOSE( UNIT = iuwfc, STATUS = 'DELETE' )
+     INQUIRE( UNIT=iuwfc, OPENED=opnd ) 
+     IF (opnd) CLOSE( UNIT = iuwfc, STATUS = 'DELETE' )
      !
   ELSE
      !
-     CLOSE( UNIT = iuwfc, STATUS = 'KEEP' )
+     INQUIRE( UNIT=iuwfc, OPENED=opnd ) 
+     IF (opnd) CLOSE( UNIT = iuwfc, STATUS = 'KEEP' )
      !
   END IF
   !
   IF (flag) THEN
-     CLOSE( UNIT = iudwf, STATUS = 'DELETE' )
-     CLOSE( UNIT = iubar, STATUS = 'DELETE' )
+     INQUIRE( UNIT=iudwf, OPENED=opnd ) 
+     IF (opnd) CLOSE( UNIT = iudwf, STATUS = 'DELETE' )
+     INQUIRE( UNIT=iubar, OPENED=opnd ) 
+     IF (opnd)  CLOSE( UNIT = iubar, STATUS = 'DELETE' )
      !
-     IF ( okvan ) CLOSE( UNIT = iudrhous, STATUS = 'DELETE' )
+     IF ( okvan ) THEN
+        INQUIRE( UNIT=iudrhous, OPENED=opnd ) 
+        IF (opnd) CLOSE( UNIT = iudrhous, STATUS = 'DELETE' )
+     ENDIF
      !
      IF ( epsil .OR. zue ) THEN
-        CLOSE( UNIT = iuebar, STATUS = 'DELETE' )
-        IF (okvan) CLOSE( UNIT = iucom, STATUS = 'DELETE' )
-        IF (okvan) CLOSE( UNIT = iudvkb3, STATUS = 'DELETE' )
+        INQUIRE( UNIT=iuebar, OPENED=opnd ) 
+        IF (opnd) CLOSE( UNIT = iuebar, STATUS = 'DELETE' )
+        IF (okvan) THEN
+           INQUIRE( UNIT=iucom, OPENED=opnd ) 
+           IF (opnd) CLOSE( UNIT = iucom, STATUS = 'DELETE' )
+           INQUIRE( UNIT=iudvkb3, OPENED=opnd ) 
+           IF (opnd) CLOSE( UNIT = iudvkb3, STATUS = 'DELETE' )
+        ENDIF
      ENDIF
   ELSE
-     CLOSE( UNIT = iudwf, STATUS = 'KEEP' )
-     CLOSE( UNIT = iubar, STATUS = 'KEEP' )
+     INQUIRE( UNIT=iudwf, OPENED=opnd ) 
+     IF (opnd) CLOSE( UNIT = iudwf, STATUS = 'KEEP' )
+     INQUIRE( UNIT=iubar, OPENED=opnd ) 
+     IF (opnd) CLOSE( UNIT = iubar, STATUS = 'KEEP' )
      !
-     IF ( okvan ) CLOSE( UNIT = iudrhous, STATUS = 'KEEP' )
+     IF ( okvan ) THEN
+        INQUIRE( UNIT=iudrhous, OPENED=opnd ) 
+        IF (opnd) CLOSE( UNIT = iudrhous, STATUS = 'KEEP' )
+     ENDIF
      !
      IF ( epsil .OR. zue ) THEN
-        CLOSE( UNIT = iuebar, STATUS = 'KEEP' )
-        IF (okvan) CLOSE( UNIT = iucom, STATUS = 'KEEP' )
-        IF (okvan) CLOSE( UNIT = iudvkb3, STATUS = 'KEEP' )
+        INQUIRE( UNIT=iuebar, OPENED=opnd ) 
+        IF (opnd) CLOSE( UNIT = iuebar, STATUS = 'KEEP' )
+        IF (okvan) THEN
+           INQUIRE( UNIT=iucom, OPENED=opnd ) 
+           IF (opnd) CLOSE( UNIT = iucom, STATUS = 'KEEP' )
+           INQUIRE( UNIT=iudvkb3, OPENED=opnd ) 
+           IF (opnd) CLOSE( UNIT = iudvkb3, STATUS = 'KEEP' )
+        ENDIF
      ENDIF
   ENDIF
   !
-  IF ( ionode .AND. &
-       fildrho /= ' ') CLOSE( UNIT = iudrho, STATUS = 'KEEP' )
+  IF ( ionode .AND. fildrho /= ' ') THEN
+     INQUIRE( UNIT=iudrho, OPENED=opnd ) 
+     IF (opnd) CLOSE( UNIT = iudrho, STATUS = 'KEEP' )
+  ENDIF
   !
   IF ( flag ) CALL clean_recover()
   !
   IF ( fildvscf /= ' ' ) THEN
-     CLOSE( UNIT = iudvscf, STATUS = 'KEEP' )
-     IF (okpaw) CLOSE( UNIT = iuint3paw, STATUS = 'KEEP' )
+     INQUIRE( UNIT=iudvscf, OPENED=opnd ) 
+     IF (opnd) CLOSE( UNIT = iudvscf, STATUS = 'KEEP' )
+     IF (okpaw) THEN
+        INQUIRE( UNIT=iuint3paw, OPENED=opnd ) 
+        IF (opnd) CLOSE( UNIT = iuint3paw, STATUS = 'KEEP' )
+     ENDIF
   ENDIF
   !
   IF (lraman .OR.elop) THEN
-     CLOSE ( UNIT=iuchf, STATUS = 'keep' )
-     CLOSE ( UNIT=iud2w, STATUS = 'keep' )
-     CLOSE ( UNIT=iuba2, STATUS = 'keep' )
+     INQUIRE( UNIT=iuchf, OPENED=opnd ) 
+     IF (opnd) CLOSE ( UNIT=iuchf, STATUS = 'KEEP' )
+     INQUIRE( UNIT=iud2w, OPENED=opnd ) 
+     IF (opnd) CLOSE ( UNIT=iud2w, STATUS = 'KEEP' )
+     INQUIRE( UNIT=iuba2, OPENED=opnd ) 
+     IF (opnd) CLOSE ( UNIT=iuba2, STATUS = 'KEEP' )
   ENDIF
   !
-  CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
+  INQUIRE( UNIT=iunigk, OPENED=opnd ) 
+  IF (opnd) CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
 
-  if(elph_mat) CLOSE( UNIT = iunwfcwann, STATUS = 'keep' ) 
-
+  IF (elph_mat) THEN
+    INQUIRE( UNIT=iunwfcwann, OPENED=opnd ) 
+    IF (opnd) CLOSE( UNIT = iunwfcwann, STATUS = 'KEEP' ) 
+  ENDIF
   !
   RETURN
   !
