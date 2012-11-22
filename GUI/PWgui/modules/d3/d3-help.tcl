@@ -84,11 +84,16 @@ help outdir -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>outdir</b></big>
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Default: </em> './'
+<br><li> <em>Default: </em>
+value of the ESPRESSO_TMPDIR environment variable if set;
+current directory ('./') otherwise
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> scratch directory
+<blockquote><pre>
+Directory containing input, output, and scratch files;
+must be the same as specified in the calculation of
+the unperturbed system and for phonon calculation.
          </pre></blockquote>
 </ul>      
       
