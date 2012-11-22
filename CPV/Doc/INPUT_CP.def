@@ -218,7 +218,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	    default {.false.}
 	    info {
                .true. to compute the volume and/or the surface of an isolated
-               system for finete pressure/finite surface tension calculations
+               system for finite pressure/finite surface tension calculations
                (PRL 94, 145501 (2005); JCP 124, 074103 (2006)).
 	    }
 	}
