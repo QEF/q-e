@@ -200,6 +200,13 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -validate posint
 		}
 
+		var lorbm {
+		    -label     "Perform orbital magnetization calculation (lorbm):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
+		}
+
 		separator -label "--- Berry phase ---"
 
 		var lberry {
@@ -608,8 +615,20 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			-start 1 -end 1
 		    }
 		    
+		    dimension Hubbard_J0 {
+			-label     "Hubbarb J0 (Hubbard_J0):"
+			-validate  fortranreal
+			-start 1 -end 1
+		    }
+		    
 		    dimension Hubbard_alpha {
 			-label     "Hubbard alpha (Hubbard_alpha):"
+			-validate  fortranreal
+			-start 1 -end 1
+		    }
+
+		    dimension Hubbard_beta {
+			-label     "Hubbard beta (Hubbard_beta):"
 			-validate  fortranreal
 			-start 1 -end 1
 		    }
@@ -766,6 +785,13 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -widget    spinint
 		    -validate  posint
 		    -fmt       %d
+		}
+
+		var scf_must_converge {
+		    -label     "Stop MD or ionic relaxation if SCF fails to converge (scf_must_converge):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
 		}
 		
 		var conv_thr {
