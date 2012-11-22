@@ -167,6 +167,43 @@ file containing the projections
 
 
 # ------------------------------------------------------------------------
+help lwrite_overlaps -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>lwrite_overlaps</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+if .true., the overlap matrix of the atomic orbitals
+prior to orthogonalization is written to the atomic_proj datafile.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help lbinary_data -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>lbinary_data</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+if .true., the atomic_proj datafile is written in binary fmt.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help kresolveddos -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>kresolveddos</b></big>
