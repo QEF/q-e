@@ -47,9 +47,27 @@ proc ::pwscf::view::structByXcrysden {guiObj} {
     global   env
     
     if { ! [info exists env(XCRYSDEN_TOPDIR)] && [auto_execok xcrysden] != "" } {
-	tk_messageBox -title Notification -type ok -icon info \
-	    -message "To view the structure by xcrysden, the XCRYSDEN_TOPDIR\nenviromental variable has to be defined !!!"
-	return
+	#
+	# new versions of xcrysden does not require XCRYSDEN_TOPDIR anymore;
+	# check is the application sis installed
+
+	set xc [auto_execok xcrysden]
+	if { $xc != "" } {
+	    set xc_dir [file dirname $xc]
+	    if { ! [file exists $xc_dir/usage] } {
+		# xcrysden script is installed system wide ... search further ...
+		foreach line [split [::tclu::readFile $xc] \n] {
+		    if { [string match *XCRYSDEN_TOPDIR=* $line] } {
+			set xc_dir [regsub XCRYSDEN_TOPDIR= $line {}]
+		    }
+		}		
+	    }
+	    set env(XCRYSDEN_TOPDIR) $xc_dir
+	} else {
+	    tk_messageBox -title Notification -type ok -icon info \
+		-message "Seems that xcrysden is not installed !!!"
+	    return
+	}
     }
 
     set moduleObj   [$guiObj getSelected moduleObj]
