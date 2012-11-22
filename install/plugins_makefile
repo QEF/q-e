@@ -325,7 +325,7 @@ uncompress-plumed: touch-dummy
 	if test ! -d ../PLUMED; then \
 	(gzip -dc ../archive/$(PLUMED).tar.gz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s $(PLUMED) PLUMED) ; fi 
-	touch uncompress-yambo
+	touch uncompress-plumed
 
 patch-plumed: touch-dummy
 	if test -d ../PLUMED; then \
