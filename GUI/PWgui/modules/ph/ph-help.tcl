@@ -47,11 +47,16 @@ help outdir -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>outdir</b></big>
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Default: </em> './'
+<br><li> <em>Default: </em>
+value of the ESPRESSO_TMPDIR environment variable if set;
+current directory ('./') otherwise
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> Scratch directory.
+<blockquote><pre>
+Directory containing input, output, and scratch files;
+must be the same as specified in the calculation of
+the unperturbed system.
          </pre></blockquote>
 </ul>      
       
@@ -83,12 +88,13 @@ help niter_ph -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>niter_ph</b></big>
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 100
+<br><li> <em>Default: </em> maxter=100
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Maximum number of iterations in a scf step.
+Maximum number of iterations in a scf step. If you want
+more than 100, edit variable "maxter" in PH/phcom.f90
          </pre></blockquote>
 </ul>      
       
@@ -529,8 +535,8 @@ help fpol -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 If .true. calculate dynamic polarizabilities
-( experimental stage, see example33 for calculation
- of methane ).
+Requires epsil=.true. ( experimental stage:
+see example09 for calculation of methane ).
          </pre></blockquote>
 </ul>      
       
