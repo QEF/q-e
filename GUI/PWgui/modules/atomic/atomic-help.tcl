@@ -793,25 +793,6 @@ help pseudotype -helpfmt helpdoc -helptext {
 
 
 # ------------------------------------------------------------------------
-help upf_v1_format -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>upf_v1_format</b></big>
-</li>
-<br><li> <em>Type: </em>LOGICAL</li>
-<br><li> <em>Default: </em> .false.
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-.true. generates pseudo-potential file in UPF version 1 format
-       Do not use except if you need GIPAW reconstruction info
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
 help file_pseudopw -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>file_pseudopw</b></big>
@@ -1050,7 +1031,7 @@ These features are available only for PAW:
 
 * 'BESSEL'     Use Bessel functions to pseudize the Q.
 * 'GAUSS'      Use 2 Gaussian functions to pseudize the Q.
-* 'BG'         Use original Bloechl's recipy with a single gaussian.
+* 'BG'         Use original Bloechl's recipe with a single gaussian.
 
 Note: if lpaw is true and which_augfun is set to AE real all-
 electron charge will be used, which will produce extremely
@@ -1150,6 +1131,33 @@ core radii in the test configuration should be the same as in
 the pseudo-potential generation section and will be used as the
 radius of reconstruction. Projectors not used to generate the
 pseudo-potential should have zero occupation number.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help use_paw_as_gipaw -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>use_paw_as_gipaw</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+When generating a PAW dataset, setting this option to .true. will
+save the core all-electron wavefunctions to the UPF file.
+The GIPAW reconstruction to be performed using the PAW data and
+projectors for the valence wavefunctions.
+
+In the default case, the GIPAW valence wavefunction and projectors
+are independent from the PAW ones and must be then specificed as
+explained above in lgipaw_reconstruction.
+
+Setting this to .true. always implies lgipaw_reconstruction = .true.
          </pre></blockquote>
 </ul>      
       
