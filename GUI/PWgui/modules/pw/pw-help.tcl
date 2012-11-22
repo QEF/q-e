@@ -118,6 +118,8 @@ This flag controls the way wavefunctions are stored to disk :
         number of processors and pools. Useful if you do not
         need the wavefunction or if you want to reduce the I/O
         or the disk occupancy.
+
+Note that this flag has no effect on reading, only on writing.
          </pre></blockquote>
 </ul>      
       
@@ -209,7 +211,7 @@ help dt -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 time step for molecular dynamics, in Rydberg atomic units
-(1 a.u.=4.8378 * 10^-17 s : beware, the CP code use
+(1 a.u.=4.8378 * 10^-17 s : beware, the CP code uses
  Hartree atomic units, half that much!!!)
          </pre></blockquote>
 </ul>      
@@ -293,7 +295,7 @@ help lkpoint_dir -helpfmt helpdoc -helptext {
 If .false. a subdirectory for each k_point is not opened
 in the prefix.save directory; Kohn-Sham eigenvalues are
 stored instead in a single file for all k-points. Currently
-doesnh't work together with wf_collect
+doesn't work together with wf_collect
          </pre></blockquote>
 </ul>      
       
@@ -426,7 +428,7 @@ help tefield -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If .TRUE. a sawlike potential simulating an electric field
+If .TRUE. a saw-like potential simulating an electric field
 is added to the bare ionic potential. See variables
 edir, eamp, emaxpos, eopreg for the form and size of
 the added potential.
@@ -494,6 +496,30 @@ In the case of a finite electric field  ( lelfield == .TRUE. )
 it defines the number of iterations for converging the
 wavefunctions in the electric field Hamiltonian, for each
 external iteration on the charge density
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help lorbm -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>lorbm</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .TRUE. perform orbital magnetization calculation.
+If finite electric field is applied (lelfield=.true.)
+only Kubo terms are computed
+[for details see New J. Phys. 12, 053032 (2010)].
+The type of calculation is nscf and should be performed
+on an automatically generated uniform grid of k points.
+Works with norm-conserving pseudopotentials.
          </pre></blockquote>
 </ul>      
       
@@ -1115,7 +1141,9 @@ help occupations -helpfmt helpdoc -helptext {
 'fixed' :       for insulators with a gap
 
 'from_input' :  The occupation are read from input file.
-                Requires "nbnd" to be set in input
+                Requires "nbnd" to be set in input.
+                Occupations should be consistent with the
+                value of "tot_charge".
          </pre></blockquote>
 </ul>      
       
@@ -1416,9 +1444,9 @@ help exxdiv_treatment -helpfmt helpdoc -helptext {
 Specific for EXX. It selects the kind of approach to be used
 for treating the Coulomb potential divergencies at small q vectors.
 
-gygi-baldereschi : appropriated for cubic and quasi-cubic supercells
-vcut_spherical : appropriated for cubic and quasi-cubic supercells
-vcut_ws : appropriated for strongly anysotropic supercells, see also
+gygi-baldereschi : appropriate for cubic and quasi-cubic supercells
+vcut_spherical : appropriate for cubic and quasi-cubic supercells
+vcut_ws : appropriate for strongly anisotropic supercells, see also
           ecutvcut.
 none : sets Coulomb potential at G,q=0 to 0.0
          </pre></blockquote>
@@ -1459,7 +1487,7 @@ grouphelp {nqx1 nqx2 nqx3} -helpfmt helpdoc -helptext {
 <blockquote><pre>
 three-dimensional mesh for q (k1-k2) sampling of
 the Fock operator (EXX). Can be smaller than
-the number of kpoints.
+the number of k-points.
          </pre></blockquote>
 </ul>
     
@@ -1537,6 +1565,25 @@ Hubbard_U(i): U parameter (eV) for species i, DFT+U calculation
 
 
 # ------------------------------------------------------------------------
+help Hubbard_J0 -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variables: </em><big><b>Hubbard_J0(i), i=1,ntype</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.D0 for all species
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Hubbard_J0(i): J0 parameter (eV) for species i, DFT+U+J calculation,
+see PRB 84, 115108 (2011) for details.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help Hubbard_alpha -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variables: </em><big><b>Hubbard_alpha(i), i=1,ntyp</b></big>
@@ -1551,6 +1598,28 @@ Hubbard_alpha(i) is the perturbation (on atom i, in eV)
 used to compute U with the linear-response method of
 Cococcioni and de Gironcoli, PRB 71, 35105 (2005)
 (only for lda_plus_u_kind=0)
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help Hubbard_beta -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variables: </em><big><b>Hubbard_beta(i), i=1,ntyp</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.D0 for all species
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Hubbard_beta(i) is the perturbation (on atom i, in eV)
+used to compute J0 with the linear-response method of
+Cococcioni and de Gironcoli, PRB 71, 35105 (2005)
+(only for lda_plus_u_kind=0). See also
+PRB 84, 115108 (2011).
          </pre></blockquote>
 </ul>      
       
@@ -1587,10 +1656,16 @@ Currently available choices:
 
 'file':         use the information from file "prefix".atwfc that must
                 have been generated previously, for instance by pmw.x
-                (see PP/poormanwannier.f90 for details)
+                (see PP/poormanwannier.f90 for details).
+
+'pseudo':       use the pseudopotential projectors. The charge density
+                outside the atomic core radii is excluded.
+                N.B.: for atoms with +U, a pseudopotential with the
+                all-electron atomic wavefunctions is required (i.e.,
+                as generated by ld1.x with lsave_wfc flag).
 
 NB: forces and stress currently implemented only for the
-'atomic' choice.
+'atomic' and 'pseudo' choice.
          </pre></blockquote>
 </ul>      
       
@@ -1627,7 +1702,7 @@ help emaxpos -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Position of the maximum of the sawlike potential along crystal
+Position of the maximum of the saw-like potential along crystal
 axis "edir", within the  unit cell (see below), 0 &lt; emaxpos &lt; 1
 Used only if tefield is .TRUE.
          </pre></blockquote>
@@ -1647,7 +1722,7 @@ help eopreg -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Zone in the unit cell where the sawlike potential decreases.
+Zone in the unit cell where the saw-like potential decreases.
 ( see below, 0 &lt; eopreg &lt; 1 ). Used only if tefield is .TRUE.
          </pre></blockquote>
 </ul>      
@@ -1668,7 +1743,7 @@ help eamp -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Amplitude of the electric field, in ***Hartree*** a.u.;
 1 a.u. = 51.4220632*10^10 V/m). Used only if tefield=.TRUE.
-The sawlike potential increases with slope "eamp" in the
+The saw-like potential increases with slope "eamp" in the
 region from (emaxpos+eopreg-1) to (emaxpos), then decreases
 to 0 until (emaxpos+eopreg), in units of the crystal
 vector "edir". Important: the change of slope of this
@@ -1873,7 +1948,7 @@ help assume_isolated -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Used to perform calculation assuming the system to be
-isolated (a molecule of a clustr in a 3D supercell).
+isolated (a molecule or a cluster in a 3D supercell).
 
 Currently available choices:
 
@@ -1882,7 +1957,7 @@ Currently available choices:
 'makov-payne', 'm-p', 'mp' : the Makov-Payne correction to the
          total energy is computed. An estimate of the vacuum
          level is also calculated so that eigenvalues can be
-         properly aligned.
+         properly aligned. ONLY FOR CUBIC SYSTEMS (ibrav=1,2,3)
          Theory:
          G.Makov, and M.C.Payne,
          "Periodic boundary conditions in ab initio
@@ -2003,7 +2078,7 @@ help esm_efield -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 If assume_isolated = 'esm' and esm_bc = 'bc2', gives the
-magnitude of the electric field [Ryd/a.u.] to be applied
+magnitude of the electric field [Ry/a.u.] to be applied
 between semi-infinite ESM electrodes.
          </pre></blockquote>
 </ul>      
@@ -2100,6 +2175,25 @@ help electron_maxstep -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 maximum number of iterations in a scf step
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help scf_must_converge -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>scf_must_converge</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .TRUE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .false. do not stop molecular dynamics or ionic relaxation
+when electron_maxstep is reached. Use with care.
          </pre></blockquote>
 </ul>      
       
@@ -2452,8 +2546,9 @@ help startingpot -helpfmt helpdoc -helptext {
 'atomic': starting potential from atomic charge superposition
           ( default for scf, *relax, *md )
 
-'file'  : start from existing "charge-density.xml" file
-          For nscf and bands alculation this is the default
+'file'  : start from existing "charge-density.xml" file in the
+          directory specified by variables "prefix" and "outdir"
+          For nscf and bands calculation this is the default
           and the only sensible possibility.
          </pre></blockquote>
 </ul>      
@@ -2487,7 +2582,8 @@ help startingwfc -helpfmt helpdoc -helptext {
           It may also reduce memory usage in conjunction with
           diagonalization='cg'
 
-'file':   start from a wavefunction file
+'file':   start from an existing wavefunction file in the
+          directory specified by variables "prefix" and "outdir"
          </pre></blockquote>
 </ul>      
       
@@ -3135,6 +3231,8 @@ xz      = only v1_x and v_3z are moved
 yz      = only v2_x and v_3z are moved
 xyz     = only v1_x, v2_x, v_3z are moved
 shape   = all axis and angles, keeping the volume fixed
+2Dxy    = only x and y components are allowed to change
+2Dshape = as above, keeping the area in xy plane fixed
 
 BEWARE: if axis are not orthogonal, some of these options do not
  work (symmetry is broken). If you are not happy with them,
@@ -3228,7 +3326,7 @@ help atomic_coordinates -helpfmt helpdoc -helptext {
 <blockquote><pre>
 atomic positions
 
-NOTE: each atomic coordinate can also be specified as a simple algebrical expression.
+NOTE: each atomic coordinate can also be specified as a simple algebraic expression.
       To be interpreted correctly expression must NOT contain any blank
       space and must NOT start with a "+" sign. The available expressions are:
 
@@ -3270,35 +3368,48 @@ structural optimization run.
 # ------------------------------------------------------------------------
 help K_POINTS_flags -helpfmt helpdoc -helptext {
       <h2>Description of K_POINTS card's flags</h2><pre>
-tpiba    : read k-points in cartesian coordinates,
-           in units of 2 pi/a (default)
+ tpiba    : read k-points in cartesian coordinates,
+            in units of 2 pi/a (default)
 
-automatic: automatically generated uniform grid of k-points, i.e,
-           generates ( nk1, nk2, nk3 ) grid with ( sk1, sk2, sk3 ) offset.
-           nk1, nk2, nk3 as in Monkhorst-Pack grids
-           k1, k2, k3 must be 0 ( no offset ) or 1 ( grid displaced
-           by half a grid step in the corresponding direction )
-           BEWARE: only grids having the full symmetry of the crystal
-           work with tetrahedra. Some grids with offset may not work.
+ automatic: automatically generated uniform grid of k-points, i.e,
+            generates ( nk1, nk2, nk3 ) grid with ( sk1, sk2, sk3 ) offset.
+            nk1, nk2, nk3 as in Monkhorst-Pack grids
+            k1, k2, k3 must be 0 ( no offset ) or 1 ( grid displaced
+            by half a grid step in the corresponding direction )
+            BEWARE: only grids having the full symmetry of the crystal
+            work with tetrahedra. Some grids with offset may not work.
 
-crystal  : read k-points in crystal coordinates, i.e. in relative
-           coordinates of the reciprocal lattice vectors
+ crystal  : read k-points in crystal coordinates, i.e. in relative
+            coordinates of the reciprocal lattice vectors
 
-gamma    : use k = 0 (no need to list k-point specifications after card)
-           In this case wavefunctions can be chosen as real,
-           and specialized subroutines optimized for calculations
-           at the gamma point are used (memory and cpu requirements
-           are reduced by approximately one half).
+ gamma    : use k = 0 (no need to list k-point specifications after card)
+            In this case wavefunctions can be chosen as real,
+            and specialized subroutines optimized for calculations
+            at the gamma point are used (memory and cpu requirements
+            are reduced by approximately one half).
 
-tpiba_b  : Used for band-structure plots.
-           k-points are in units of  2 pi/a.
-           nks points specify nks-1 lines in reciprocal space.
-           Every couple of points identifies the initial and
-           final point of a line. pw.x generates N
-           intermediate points of the line where N is the
-           weight of the first point.
+ tpiba_b  : Used for band-structure plots.
+            k-points are in units of  2 pi/a.
+            nks points specify nks-1 lines in reciprocal space.
+            Every couple of points identifies the initial and
+            final point of a line. pw.x generates N
+            intermediate points of the line where N is the
+            weight of the first point.
 
-crystal_b: as tpiba_b, but k-points are in crystal coordinates.
+ crystal_b: as tpiba_b, but k-points are in crystal coordinates.
+
+ tpiba_c  : Used for band-structure contour plots.
+            k-points are in units of  2 pi/a. nks must be 3.
+            3 k-points k_0, k_1, and k_2 specify a rectangle
+            in reciprocal space of vertices k_0, k_1, k_2,
+            k_1 + k_2 - k_0: k_0 + \alpha (k_1-k_0)+
+            \beta (k_2-k_0) with 0&lt;\alpha,\beta &lt; 1.
+            The code produces a uniform mesh n1 x n2
+            k points in this rectangle. n1 and n2 are
+            the weights of k_1 and k_2. The weight of k_0
+            is not used.
+
+crystal_c: as tpiba_c, but k-points are in crystal coordinates.
          </pre>
       
 }
@@ -3374,7 +3485,7 @@ grouphelp {sk1 sk2 sk3} -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-The grid offests;  sk1, sk2, sk3 must be
+The grid offsets;  sk1, sk2, sk3 must be
 0 ( no offset ) or 1 ( grid displaced by
 half a grid step in the corresponding direction ).
                      </pre></blockquote>
@@ -3387,9 +3498,9 @@ half a grid step in the corresponding direction ).
 help CELL_PARAMETERS_flags -helpfmt helpdoc -helptext {
       <h2>Description of CELL_PARAMETERS card's flags</h2><pre>
 bohr / angstrom: lattice vectors in bohr radii / angstrom.
-nothing specified: if a lattice constant (celldm(1) or a)
-is present, lattice vectors are in units of the lattice
-constant; otherwise, in bohr radii.
+alat or nothing specified: if a lattice constant (celldm(1)
+or a) is present, lattice vectors are in units of the lattice
+constant; otherwise, in bohr radii or angstrom, as specified.
          </pre>
       
 }
