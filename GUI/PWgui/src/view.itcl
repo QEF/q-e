@@ -49,8 +49,8 @@ proc ::pwscf::view::structByXcrysden {guiObj} {
     if { ! [info exists env(XCRYSDEN_TOPDIR)] && [auto_execok xcrysden] != "" } {
 	#
 	# new versions of xcrysden does not require XCRYSDEN_TOPDIR anymore;
-	# check is the application sis installed
-
+	# check if it is installed ...
+	#
 	set xc [auto_execok xcrysden]
 	if { $xc != "" } {
 	    set xc_dir [file dirname $xc]
