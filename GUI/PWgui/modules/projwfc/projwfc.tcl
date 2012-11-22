@@ -54,14 +54,14 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 	    
 	    var lsym {
 		-label "Symmetrize projections (lsym):"
-		-value { 1 0 }
+		-value { .true. .false. }
 		-textvalue { Yes No }
 		-widget radiobox
 	    }	
 
 	    var kresolveddos {
 		-label "Compute k-resolved DOS (kresolveddos):"
-		-value { 1 0 }
+		-value { .true. .false. }
 		-textvalue { Yes No }
 		-widget radiobox
 	    }	
@@ -78,11 +78,27 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 		-validate fortranreal
 	    }	    
 
+	    separator -label "--- PROJECTIONS options ---"
+	    
+	    var lwrite_overlaps {
+		-label "Print the overlap matrix of atomic orbitals (lwrite_overlaps):"
+		-value { .true. .false. }
+		-textvalue { Yes No }
+		-widget radiobox
+	    }
+	    
+	    var lbinary_data {
+		-label "Write atomic_proj datafile in binary format (lbinary_data):"
+		-value { .true. .false. }
+		-textvalue { Yes No }
+		-widget radiobox
+	    }	    
+	    
 	    separator -label "--- Local DOS options ---"
 	    
 	     var tdosinboxes {
 		-label "Compute the local DOS computed in volumes (tdosinboxes):"
-		-value { 1 0 }
+		-value { .true. .false. }
 		-textvalue { Yes No }
 		-widget radiobox
 	    }
@@ -108,7 +124,7 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 		
 		var plotboxes {
 		    -label "Write the boxes into XSF 3D datagrid file (plotboxes):"
-		    -value { 1 0 }
+		    -value { .true. .false. }
 		    -textvalue { Yes No }
 		    -widget radiobox
 		}
