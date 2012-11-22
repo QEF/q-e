@@ -1,4 +1,4 @@
-AC_INIT(ESPRESSO, 5.0.1, , espresso)
+AC_INIT(ESPRESSO, 5.0.2, , espresso)
 # ----------------------------
 # Non-standard precious variables
 # ----------------------------
@@ -565,12 +565,10 @@ ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
         pre_fdflags="-fpp "
         ;;
 ia32:pgf* | ia64:pgf* | x86_64:pgf* )
-# in try_fflags we use -O3 instead of -fast because some *.f files in Multigrid
-# confuse the optimizer when option -fast is enabled
 	    try_fflags_nomain="-Mnomain"
-        try_fflags="-O3 -r8"
+        try_fflags="-fast -r8"
         try_fflags_openmp="-mp"
-        try_f90flags="-fast -Mcache_align -r8"
+        try_f90flags="-fast -r8 -Mcache_align"
         try_fflags_noopt="-O0"
         try_ldflags=""
         try_ldflags_openmp="-mp"
