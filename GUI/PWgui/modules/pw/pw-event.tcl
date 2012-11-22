@@ -201,7 +201,9 @@ tracevar ntyp w {
     widgetconfigure angle1 -end $ntyp
     widgetconfigure angle2 -end $ntyp
     widgetconfigure Hubbard_U     -end $ntyp
+    widgetconfigure Hubbard_J0    -end $ntyp
     widgetconfigure Hubbard_alpha -end $ntyp
+    widgetconfigure Hubbard_beta  -end $ntyp
 }
 
 
