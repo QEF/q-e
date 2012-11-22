@@ -130,6 +130,31 @@ without changing their order.
 
 
 # ------------------------------------------------------------------------
+help plot_2d -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>plot_2d</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true. writes the eigenvalues in the output file
+in a 2D format readable by gnuplot. Band ordering is not
+changed. Each band is written in a different file called
+filband.# with the format:
+xk, yk, energy
+xk, yk, energy
+..  ..  ..
+enegies are written in eV and xk in units 2\pi/a.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 grouphelp {firstk lastk} -helpfmt helpdoc -helptext {
     <ul>
 <li> <em>Variables: </em><big><b>firstk, lastk</b></big>

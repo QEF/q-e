@@ -58,6 +58,13 @@ module Bands\#auto -title "PWSCF GUI: module Bands.x" -script {
 		-value     { .true. .false. }
 		-widget    radiobox
 	    }
+
+	    var plot_2d { 
+		-label "Print the eigenvalues in 2D gnuplot's format (plot_2d):"
+		-textvalue { Yes No }
+		-value     { .true. .false. }
+		-widget    radiobox
+	    }
 	    
 	    separator -label "--- Range of k-points for symmetry analysis ---"
 
