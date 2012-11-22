@@ -131,7 +131,7 @@ SUBROUTINE punch_plot_e()
 #else
      WRITE (iunplot, '( 5( 1pe17.9 ) )') (raux (ir) , ir = 1, dfftp%nnr)
 #endif
-     CLOSE (unit = iunplot)
+     IF (ionode) CLOSE (unit = iunplot)
   ENDDO
   DEALLOCATE (raux)
   DEALLOCATE (aux1)
