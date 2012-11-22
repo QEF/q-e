@@ -89,10 +89,10 @@ selects what to save in filplot:
 
    8  = electron localization function (ELF)
 
-   9 = Reduced density gradient
-       (J. Chem. Theory Comput. 7, 625 (2011))
-       Set the isosurface between 0.3 and 0.6 to plot the
-       non-covalent interactions
+   9  = Reduced density gradient
+        (J. Chem. Theory Comput. 7, 625 (2011))
+        Set the isosurface between 0.3 and 0.6 to plot the
+        non-covalent interactions (see also plot_num = 19)
 
    10 = integrated local density of states (ILDOS)
         from emin to emax (emin, emax in eV)
@@ -110,6 +110,9 @@ selects what to save in filplot:
 
    18 = The exchange and correlation magnetic field in
         the noncollinear case
+
+   19 = Product of the electron density (charge) and the second
+        eigenvalue of the electron-density Hessian matrix
          </pre></blockquote>
 </ul>      
       
@@ -418,6 +421,7 @@ help output_format -helpfmt helpdoc -helptext {
 5  format suitable for XCRYSDEN  (3D, using entire FFT grid)
 6  format as gaussian cube file  (3D)
    (can be read by many programs)
+7  format suitable for gnuplot   (2D) x, y, f(x,y)
          </pre></blockquote>
 </ul>      
       

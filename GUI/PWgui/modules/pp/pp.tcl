@@ -49,8 +49,9 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    "noncolinear magnetization"
 		    "all-electron valence charge density (for PAW)"
 		    "exchange-correlation magnetic field (for noncollinear)"
+		    "product of density and 2nd-eigenvalue of density Hessian matrix"
 		}
-		-value { 0 1 2 3 4 5 6 7 7 8 9 10 11 12 13 17 18 }
+		-value { 0 1 2 3 4 5 6 7 7 8 9 10 11 12 13 17 18 19 }
 		-fmt %d
 	    }
 	    var spin_component {
