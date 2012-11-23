@@ -38,7 +38,7 @@ subroutine zstar_eu_us
   USE nlcc_ph,    ONLY : nlcc_any
   USE units_ph,   ONLY : lrdwf, iucom, lrcom, lrebar, iuebar, lrdrhous, &
                          iudrhous, iudwf, lrwfc, iuwfc
-  USE mp_global, ONLY : nproc_pool
+  USE mp_global, ONLY : nproc_pool, npool
 
   !
   implicit none
@@ -267,7 +267,7 @@ subroutine zstar_eu_us
 
   fact=1.0_DP
 #ifdef __MPI
-  fact=1.0_DP/nproc_pool
+  fact=1.0_DP/nproc_pool/npool
 #endif
   IF (okpaw) THEN
      imode0 = 0
