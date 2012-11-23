@@ -225,7 +225,6 @@ clinear.o : ../../Modules/kind.o
 close_phq.o : ../../Modules/control_flags.o
 close_phq.o : ../../Modules/io_files.o
 close_phq.o : ../../Modules/io_global.o
-close_phq.o : ../../Modules/mp_global.o
 close_phq.o : ../../Modules/paw_variables.o
 close_phq.o : ../../Modules/uspp.o
 close_phq.o : elph.o
@@ -1159,6 +1158,12 @@ rigid.o : ../../Modules/constants.o
 rigid.o : ../../Modules/kind.o
 rotate_and_add_dyn.o : ../../Modules/constants.o
 rotate_and_add_dyn.o : ../../Modules/kind.o
+rotate_dvscf_star.o : ../../Modules/cell_base.o
+rotate_dvscf_star.o : ../../Modules/ions_base.o
+rotate_dvscf_star.o : ../../Modules/kind.o
+rotate_dvscf_star.o : ../../PW/src/symm_base.o
+rotate_dvscf_star.o : dfile_star.o
+rotate_dvscf_star.o : phcom.o
 run_pwscf.o : ../../Modules/control_flags.o
 run_pwscf.o : ../../Modules/io_files.o
 run_pwscf.o : ../../PW/src/pwcom.o
@@ -1343,6 +1348,8 @@ solve_linter.o : save_ph_input.o
 solve_linter.o : write_rec.o
 star_q.o : ../../Modules/io_global.o
 star_q.o : ../../Modules/kind.o
+stop_ph.o : ../../Modules/environment.o
+stop_ph.o : ../../Modules/image_io_routines.o
 stop_ph.o : ../../Modules/kind.o
 stop_ph.o : ../../Modules/mp_global.o
 summarize.o : ../../Modules/cell_base.o

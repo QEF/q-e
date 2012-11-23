@@ -62,10 +62,12 @@ d3_init.o : ../../PW/src/pwcom.o
 d3_init.o : ../../PW/src/symm_base.o
 d3_init.o : d3com.o
 d3_readin.o : ../../Modules/control_flags.o
+d3_readin.o : ../../Modules/fft_base.o
 d3_readin.o : ../../Modules/io_files.o
 d3_readin.o : ../../Modules/io_global.o
 d3_readin.o : ../../Modules/ions_base.o
 d3_readin.o : ../../Modules/mp.o
+d3_readin.o : ../../Modules/mp_global.o
 d3_readin.o : ../../Modules/noncol.o
 d3_readin.o : ../../Modules/run_info.o
 d3_readin.o : ../../Modules/uspp.o

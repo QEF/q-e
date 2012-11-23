@@ -837,6 +837,7 @@ makov_payne.o : ../../Modules/cell_base.o
 makov_payne.o : ../../Modules/constants.o
 makov_payne.o : ../../Modules/control_flags.o
 makov_payne.o : ../../Modules/fft_base.o
+makov_payne.o : ../../Modules/fft_interfaces.o
 makov_payne.o : ../../Modules/io_files.o
 makov_payne.o : ../../Modules/io_global.o
 makov_payne.o : ../../Modules/ions_base.o

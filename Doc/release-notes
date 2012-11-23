@@ -1,3 +1,13 @@
+New in svn version:
+   * CELL_PARAMETERS written on output using the same format as in input
+
+Fixed in svn version:
+   * PHonon: effective charges eu + PAW were not accurate with pools.
+   * TDDFPT works with both task groups and band groups, at the same time.
+
+Incompatible changes in svn version:
+   * calls to "find_equiv_sites" and "writemodes" changed
+
 New in 5.0.2 version:
 
    * DFT+U with on-site occupations from pseudopotential projectors;
