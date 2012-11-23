@@ -19,9 +19,11 @@ SUBROUTINE d3_readin()
   USE control_flags, ONLY : iverbosity
   USE phcom
   USE d3com
+  USE fft_base,        ONLY : dffts
   USE noncollin_module, ONLY : noncolin
   USE io_files,      ONLY : tmp_dir, prefix
   USE io_global,     ONLY : ionode, ionode_id
+  USE mp_global, ONLY : nbgrp, get_ntask_groups
   USE mp,            ONLY : mp_bcast
   !
   IMPLICIT NONE
@@ -136,6 +138,15 @@ SUBROUTINE d3_readin()
   IF (okvan) CALL errore ('d3_readin', 'US not implemented', 1)
   IF (noncolin) call errore('d3_readin', &
      'd3 is not working in the noncolinear case', 1)
+!
+  IF (get_ntask_groups() > 1) dffts%have_task_groups=.FALSE.
+!
+!   band group not available
+!
+  IF (nbgrp /=1 ) &
+     CALL errore('d3_readin','band parallelization not available',1)
+
+
 
   !
   !   There might be other variables in the input file which describe
