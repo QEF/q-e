@@ -55,7 +55,7 @@ end subroutine write_eigenvectors
 !
 !
 !-----------------------------------------------------------------------
-subroutine writemodes (nax,nat,q,w2,z,iout)
+subroutine writemodes (nat,q,w2,z,iout)
   !-----------------------------------------------------------------------
   !
   !   write modes on output file in a readable way
@@ -64,9 +64,9 @@ subroutine writemodes (nax,nat,q,w2,z,iout)
   USE constants, ONLY : ry_to_thz, ry_to_cmm1
   implicit none
   ! input
-  integer nax, nat, iout
+  integer nat, iout
   real(DP) q(3), w2(3*nat)
-  complex(DP) z(3*nax,3*nat)
+  complex(DP) z(3*nat,3*nat)
   ! local
   integer nat3, na, ipol, i, j
   real(DP):: freq(3*nat)

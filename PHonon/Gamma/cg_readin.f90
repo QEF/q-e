@@ -159,7 +159,7 @@ SUBROUTINE cg_readmodes(iunit)
   ! nmodes not given: use defaults (all modes) as normal modes ...
   !
   IF (nmodes==0) THEN
-     CALL find_equiv_sites (nat,nat,nsym,irt,has_equivalent,        &
+     CALL find_equiv_sites (nat,nsym,irt,has_equivalent,        &
           &      n_diff_sites,n_equiv_atoms,equiv_atoms)
      IF (n_diff_sites <= 0 .or. n_diff_sites > nat)            &
           &      CALL errore('equiv.sites','boh!',1)

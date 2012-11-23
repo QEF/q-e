@@ -375,7 +375,7 @@ subroutine phq_setup
      ALLOCATE(with_symmetry(3*nat))
      ALLOCATE(n_equiv_atoms(nat))
      ALLOCATE(equiv_atoms(nat,nat))
-     CALL find_equiv_sites (nat,nat,nsym,irt,has_equivalent,n_diff_sites, &
+     CALL find_equiv_sites (nat,nsym,irt,has_equivalent,n_diff_sites, &
                        n_equiv_atoms,equiv_atoms)
 
      IF (n_diff_sites .LE. 0 .OR. n_diff_sites .GT. nat)            &

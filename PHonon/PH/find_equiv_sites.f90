@@ -6,12 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-subroutine find_equiv_sites (nat,nax,nsym,irt,has_equivalent,     &
+subroutine find_equiv_sites (nat,nsym,irt,has_equivalent,     &
      n_diff_sites,n_equiv_atoms,equiv_atoms)
   !
   implicit none
-  integer :: nat, nax, nsym, na, nb, ns, n_diff_sites, irt(48,nat),    &
-       equiv_atoms(nax,nat), n_equiv_atoms(nax), has_equivalent(nax)
+  integer :: nat, nsym, na, nb, ns, n_diff_sites, irt(48,nat),    &
+       equiv_atoms(nat,nat), n_equiv_atoms(nat), has_equivalent(nat)
   !
   n_diff_sites = 0
   do na = 1,nat

@@ -146,7 +146,6 @@ PROGRAM matdyn
   ! variables *_blk refer to the original cell, other variables
   ! to the (super)cell (which may coincide with the original cell)
   !
-  INTEGER:: nax, nax_blk
   INTEGER, PARAMETER:: ntypx=10, nrwsx=200
   REAL(DP), PARAMETER :: eps=1.0d-6
   INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ntetra, ibrav
@@ -336,8 +335,6 @@ PROGRAM matdyn
      ! read/generate atomic positions of the (super)cell
      !
      nat = nat_blk * nsc
-     nax = nat
-     nax_blk = nat_blk
      !
      ALLOCATE ( tau (3, nat), ityp(nat), itau_blk(nat) )
      !
@@ -568,7 +565,7 @@ PROGRAM matdyn
         endif
         !
 
-        IF (ionode.and.iout.ne.0) CALL writemodes(nax,nat,q(1,n),w2(1,n),z,iout)
+        IF (ionode.and.iout.ne.0) CALL writemodes(nat,q(1,n),w2(1,n),z,iout)
 
         !
      END DO  !nq

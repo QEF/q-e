@@ -89,7 +89,7 @@ end Module dynamical
       real(DP) :: amass(ntypx), amass_(ntypx), eps0(3,3), a0, omega, &
            at(3,3), bg(3,3), q(3), q_(3)
       real(DP), allocatable :: w2(:)
-      integer :: nat, na, nt, ntyp, iout, axis, nax, nspin_mag, ios
+      integer :: nat, na, nt, ntyp, iout, axis, nspin_mag, ios
       real(DP) :: celldm(6)
       logical :: xmldyn, lrigid, lraman
       logical, external :: has_xml
@@ -186,7 +186,6 @@ end Module dynamical
             deallocate (itau)
          END IF
          !
-         nax = nat
          allocate ( z(3*nat,3*nat), w2(3*nat) )
          call dyndiag(nat,ntyp,amass,ityp,dyn,w2,z)
          !
@@ -196,7 +195,7 @@ end Module dynamical
             iout=4
             OPEN (unit=iout,file=filout,status='unknown',form='formatted')
          end if
-         call writemodes(nax,nat,q_,w2,z,iout)
+         call writemodes(nat,q_,w2,z,iout)
          if(iout .ne. 6) close(unit=iout)
          call writemolden (filmol, gamma, nat, atm, a0, tau, ityp, w2, z)
          call writexsf (filxsf, gamma, nat, atm, a0, at, tau, ityp, z)
