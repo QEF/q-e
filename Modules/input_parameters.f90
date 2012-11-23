@@ -1481,7 +1481,7 @@ MODULE input_parameters
 !    CELL_PARAMETERS
 !
        REAL(DP) :: rd_ht(3,3) = 0.0_DP
-       CHARACTER(len=80) :: cell_units = 'alat'
+       CHARACTER(len=80) :: cell_units = 'none'
        LOGICAL   :: trd_ht = .false.
 
 !

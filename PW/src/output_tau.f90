@@ -12,7 +12,7 @@ SUBROUTINE output_tau( print_lattice, print_final  )
   USE io_global, ONLY : stdout
   USE kinds,     ONLY : DP
   USE constants, ONLY : bohr_radius_angs
-  USE cell_base, ONLY : alat, at, bg, omega
+  USE cell_base, ONLY : alat, at, bg, omega, cell_units
   USE ions_base, ONLY : nat, tau, ityp, atm, if_pos, tau_format
   !
   IMPLICIT NONE
@@ -35,8 +35,26 @@ SUBROUTINE output_tau( print_lattice, print_final  )
      !
      WRITE( stdout, '(5x,a,1F12.5," a.u.^3 ( ",1F11.5," Ang^3 )")') &
                     "new unit-cell volume = ",omega, omega*bohr_radius_angs**3 
-     WRITE( stdout, '(/"CELL_PARAMETERS (alat=",f12.8,")")') alat 
-     WRITE( stdout, '(3F14.9)') ( ( at(i,k), i = 1, 3), k = 1, 3 )
+
+     SELECT CASE (cell_units)
+     !
+     ! ... convert output cell from internally used format
+     ! ... (alat units) to the same format used in input
+     !
+     CASE( 'alat' )
+        WRITE( stdout, '(/"CELL_PARAMETERS (alat=",f12.8,")")') alat 
+        WRITE( stdout, '(3F14.9)') ( ( at(i,k), i = 1, 3), k = 1, 3 )
+     CASE( 'bohr' )
+        WRITE( stdout, '(/"CELL_PARAMETERS (bohr)")')  
+        WRITE( stdout, '(3F14.9)') ( ( at(i,k) * alat, i = 1, 3), k = 1, 3 )
+     CASE( 'angstrom' )
+        WRITE( stdout, '(/"CELL_PARAMETERS (angstrom)")') 
+        WRITE( stdout, '(3F14.9)') &
+             ( ( at(i,k) * alat * bohr_radius_angs, i = 1, 3), k = 1, 3 )
+     CASE DEFAULT
+        WRITE( stdout, '(/"CELL_PARAMETERS (alat=",f12.8,")")') alat 
+        WRITE( stdout, '(3F14.9)') ( ( at(i,k), i = 1, 3), k = 1, 3 )
+     END SELECT
      !
   END IF
   !

@@ -22,7 +22,11 @@
     !  celldm: old-style parameters of the simulation cell (se latgen.f90)
     REAL(DP) :: celldm(6) = (/ 0.0_DP,0.0_DP,0.0_DP,0.0_DP,0.0_DP,0.0_DP /)
     !  traditional crystallographic cell parameters (alpha=cosbc and so on)
+    
     REAL(DP) :: a, b, c, cosab, cosac, cosbc
+    ! format of input cell parameters:
+    ! 'alat','bohr','angstrom'
+    CHARACTER(len=80) :: cell_units
     !  alat: lattice parameter - often used to scale quantities, or
     !  in combination to other parameters/constants to define new units
     REAL(DP) :: alat = 0.0_DP
@@ -99,7 +103,7 @@
 !------------------------------------------------------------------------------!
 !
   SUBROUTINE cell_base_init( ibrav_, celldm_, a_, b_, c_, cosab_, cosac_, &
-               cosbc_, trd_ht, rd_ht, cell_units )
+               cosbc_, trd_ht, rd_ht, cell_units_ )
     !
     ! ... initialize cell_base module variables, set up crystal lattice
     !
@@ -109,7 +113,7 @@
     REAL(DP), INTENT(IN) :: celldm_ (6)
     LOGICAL, INTENT(IN) :: trd_ht
     REAL(DP), INTENT(IN) :: rd_ht (3,3)
-    CHARACTER(LEN=*), INTENT(IN) :: cell_units
+    CHARACTER(LEN=*), INTENT(IN) :: cell_units_
     REAL(DP), INTENT(IN) :: a_ , b_ , c_ , cosab_, cosac_, cosbc_
 
     REAL(DP) :: units
@@ -123,6 +127,7 @@
     ibrav  = ibrav_
     celldm = celldm_
     a = a_ ; b = b_ ; c = c_ ; cosab = cosab_ ; cosac = cosac_ ; cosbc = cosbc_
+    cell_units = cell_units_
     !
     IF ( trd_ht ) THEN
       !
@@ -138,12 +143,17 @@
               ('cell_base_init','lattice vectors in A or in a0 units?',2)
           units = 1.0_DP / bohr_radius_angs
         CASE DEFAULT
+          ! cell_units is 'none' if nothing was specified:
+          ! set also the value of cell_units to the correct value
           IF( celldm( 1 ) /= 0.0_DP ) THEN
              units = celldm( 1 )
+             cell_units = 'alat'
           ELSE IF ( a /= 0.0_dp ) THEN
              units = a / bohr_radius_angs
+             cell_units = 'alat'
           ELSE
              units = 1.0_DP
+             cell_units = 'bohr'
           END IF
      END SELECT
      !

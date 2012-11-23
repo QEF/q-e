@@ -1043,7 +1043,9 @@ CONTAINS
       ELSEIF ( matches( "ANGSTROM", input_line ) ) THEN
          cell_units = 'angstrom'
       ELSE
-         cell_units = 'alat'
+         cell_units = 'none'
+         ! It will be set to 'bohr', 'alat' in cell_base, depending
+         ! on whether a or celldm(1) are set or not
       ENDIF
       !
       DO i = 1, 3
