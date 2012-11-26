@@ -66,8 +66,8 @@ subroutine zstar_eu_us
 #endif
 
   !  auxiliary space for <psi|ds/du|psi>
-  allocate (dvscf( dfftp%nnr , nspin, 3))
-  allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin, 3))
+  allocate (dvscf( dfftp%nnr , nspin_mag, 3))
+  allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin_mag, 3))
   if (noncolin) allocate (dbecsum_nc( nhm, nhm, nat, nspin, 3))
   allocate (aux1(  dffts%nnr))
   allocate (pdsp(nbnd,nbnd))
