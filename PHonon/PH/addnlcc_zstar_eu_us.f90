@@ -14,10 +14,9 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   USE funct, only : dft_is_gradient
   USE scf, only : rho, rho_core
   USE cell_base, ONLY : omega, alat
-  USE lsda_mod, ONLY : nspin
   USE gvect, ONLY : ngm, nl, g
   USE fft_base, ONLY : dfftp
-  USE noncollin_module, ONLY : nspin_lsda, nspin_gga
+  USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
   USE efield_mod, ONLY : zstareu0
   USE qpoint, ONLY : xq
   USE nlcc_ph, ONLY : nlcc_any
@@ -30,7 +29,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 
   IMPLICIT NONE
 
-  COMPLEX(DP) :: drhoscf (dfftp%nnr,nspin,3)
+  COMPLEX(DP) :: drhoscf (dfftp%nnr,nspin_mag,3)
 
 
   INTEGER :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
@@ -39,7 +38,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   REAL(DP) :: fac
 
   COMPLEX(DP), DIMENSION(dfftp%nnr) :: drhoc
-  COMPLEX(DP), DIMENSION(dfftp%nnr,nspin) :: dvaux
+  COMPLEX(DP), DIMENSION(dfftp%nnr,nspin_mag) :: dvaux
 
   IF (.NOT.nlcc_any) RETURN
 
@@ -64,8 +63,8 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
               rho%of_r(:,is) = rho%of_r(:,is) + fac * rho_core
            END DO
 
-           DO is = 1, nspin
-              DO is1 = 1, nspin
+           DO is = 1, nspin_mag
+              DO is1 = 1, nspin_mag
                  DO ir = 1, dfftp%nnr
                     dvaux (ir, is) = dvaux (ir, is) +     &
                          dmuxc (ir, is, is1) *            &
@@ -81,7 +80,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            IF ( dft_is_gradient() ) &
                 CALL dgradcorr (rho%of_r, grho, &
                     dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, drhoscf (1,1,ipert),&
-                    dfftp%nnr, nspin, nspin_gga, nl, ngm, g, alat, dvaux)
+                    dfftp%nnr, nspin_mag, nspin_gga, nl, ngm, g, alat, dvaux)
 
            DO is = 1, nspin_lsda
               rho%of_r(:,is) = rho%of_r(:,is) - fac * rho_core

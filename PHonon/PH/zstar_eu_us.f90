@@ -118,7 +118,7 @@ subroutine zstar_eu_us
 #endif
 
   if (doublegrid) then
-     do is = 1, nspin
+     do is = 1, nspin_mag
         do ipol = 1, 3
            call cinterpolate(dvscf(1,is,ipol),dvscf(1,is,ipol), 1)
         end do
@@ -165,7 +165,7 @@ subroutine zstar_eu_us
 ! potenial
 !
   imode0 = 0
-  allocate(drhoscfh(dfftp%nnr,nspin))
+  allocate(drhoscfh(dfftp%nnr,nspin_mag))
   do irr = 1, nirr
      npe = npert(irr)
      do imode = 1, npe
