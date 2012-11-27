@@ -6,16 +6,17 @@ PROGRAM lr_calculate_spectrum
   !---------------------------------------------------------------------
   !
   USE kinds,               ONLY : dp
-  USE constants,            ONLY : pi,rytoev,evtonm,rytonm
+  USE constants,           ONLY : pi,rytoev,evtonm,rytonm
   USE io_files,            ONLY : tmp_dir, prefix,nd_nmbr
   USE global_version,      ONLY : version_number
-  USE io_global,           ONLY : stdout,ionode
-  USE environment,           ONLY: environment_start,environment_end
-  USE mp_global,        ONLY : mp_startup,mp_global_end,mp_barrier
+  USE io_global,           ONLY : stdout,ionode, ionode_id
+  USE environment,         ONLY: environment_start,environment_end
+  USE mp_global,           ONLY : mp_startup,mp_global_end,mp_barrier
+  USE mp,                  ONLY : mp_bcast
 
   IMPLICIT NONE
   !
-  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  CHARACTER(len=256), EXTERNAL :: trimcheck
   !
   !Constants
   !
@@ -127,14 +128,19 @@ ENDIF
 
 ! The code starts here
 
-IF (ionode) THEN !No need for parallelization in this code
+  ios=0
+  IF (ionode) THEN ! No need for parallelization in this code
+     CALL input_from_file()
+     READ (5, lr_input, iostat = ios)
+  ENDIF
 
-  CALL input_from_file()
-  READ (5, lr_input, iostat = ios)
+  CALL mp_bcast ( ios, ionode_id)
+  CALL errore ('lr_readin', 'reading lr_input namelist', abs (ios) )
 
+  IF (ionode) THEN
   IF (itermax0 < 151 .and. trim(extrapolation)/="no") THEN
-   WRITE(*,*) "Itermax0 is less than 150, no extrapolation scheme can be used!"
-   extrapolation="no"
+     WRITE(*,*) "Itermax0 is less than 150, no extrapolation scheme can be used!"
+     extrapolation="no"
   ENDIF
 
   outdir = trimcheck(outdir)
@@ -248,7 +254,7 @@ IF (ionode) THEN !No need for parallelization in this code
                   ip2, ip, dble(green(ip,ip2)), aimag(green(ip,ip2))
            !
            IF(n_ipol == 1) WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
-                   ipol, ipol, DBLE(green(ip,ip2)), AIMAG(green(ip,ip2))
+                   ipol, ipol, dble(green(ip,ip2)), aimag(green(ip,ip2))
            !
            ENDDO
           !
@@ -266,7 +272,7 @@ IF (ionode) THEN !No need for parallelization in this code
 !
 ! Lets see if the environment is suitable for perceived color analysis
 !
-  
+
   do_perceived=.false.
 
   IF (verbosity > 2) THEN
@@ -325,7 +331,7 @@ IF (ionode) THEN !No need for parallelization in this code
 
   !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!FIRST STEP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  IF (verbosity > 0 .AND. n_ipol == 3) THEN ! In order to gain speed, I perform first term seperately
+  IF (verbosity > 0 .and. n_ipol == 3) THEN ! In order to gain speed, I perform first term separately
     !
     CALL calc_chi(omega(3),epsil,green(:,:))
     IF (units == 1 .or. units == 2) THEN
