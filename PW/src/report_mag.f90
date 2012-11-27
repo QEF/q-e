@@ -29,7 +29,12 @@
 ! get_local integrates on the previously determined points
 !
       call get_locals(r1_loc,m1_loc,rho%of_r)
-      
+     
+      if (nspin == 2) then
+         write(stdout,*)
+         write(stdout,'(5X,''Magnetic moment per site:'')')
+      endif
+
       do iat = 1,nat
          if (noncolin) then
 !
@@ -63,11 +68,11 @@
          end if
          
 
-         WRITE( stdout,1010)
-         WRITE( stdout,1011) iat,(tau(ipol,iat),ipol=1,3)
-         WRITE( stdout,1014) r1_loc (iat)
 
          if (noncolin) then
+            WRITE( stdout,1010)
+            WRITE( stdout,1011) iat,(tau(ipol,iat),ipol=1,3)
+            WRITE( stdout,1014) r1_loc (iat)
             WRITE( stdout,1012) (m1_loc(ipol,iat),ipol=1,3)
             WRITE( stdout,1018) (m1_loc(ipol,iat)/r1_loc(iat),ipol=1,3)
             WRITE( stdout,1013) norm,theta,phi
@@ -76,12 +81,10 @@
             else if (i_cons.eq.2) then
                WRITE( stdout,1017) 180.d0 * acos(mcons(3,ityp(iat)))/pi
             endif
+            WRITE( stdout,1010)
          else
-            WRITE( stdout,1012) m1_loc(1,iat)
-            WRITE( stdout,1018) m1_loc(1,iat)/r1_loc(iat)
-            if (i_cons.eq.1) WRITE( stdout,1015) mcons(1,ityp(iat))
+            WRITE(stdout,1020) iat, r1_loc(iat), m1_loc(1,iat), mcons(1,ityp(iat))
          endif
-         WRITE( stdout,1010)
 
       enddo
 
@@ -94,5 +97,6 @@
  1018 format (5x,'magnetization/charge:',3f12.6)
  1015 format (5x,'constrained moment : ',3f12.6) 
  1017 format (5x,'constrained theta [deg] : ',f12.6) 
+ 1020 format (5x,'atom: ',i4,4X,'charge: ',F9.4,4X,'magn: ',F9.4,4X,'constr: ',f9.4)
 
       end subroutine report_mag

@@ -82,7 +82,7 @@ SUBROUTINE allocate_fft
 
   IF (noncolin) ALLOCATE (psic_nc( dfftp%nnr, npol))
 
-  IF ( ((report.ne.0).or.(i_cons.ne.0)) .and. (noncolin.and.domag) .or. (i_cons.eq.1) ) THEN
+  IF ( ((report.ne.0).or.(i_cons.ne.0)) .and. (noncolin.and.domag) .or. (i_cons.eq.1) .or. nspin==2 ) THEN
 !
 ! In order to print out local quantities, integrated around the atoms,
 ! we need the following variables

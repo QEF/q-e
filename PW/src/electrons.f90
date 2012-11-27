@@ -506,7 +506,7 @@ SUBROUTINE electrons()
      IF ( ( MOD( iter, report ) == 0 ) .OR. &
           ( report /= 0 .AND. conv_elec ) ) THEN
         !
-        IF ( noncolin .AND. domag .or. i_cons==1) CALL report_mag()
+        IF ( (noncolin .AND. domag) .OR. i_cons==1 .OR. nspin==2) CALL report_mag()
         !
      END IF
      !
