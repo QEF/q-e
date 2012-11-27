@@ -637,7 +637,7 @@ CONTAINS
    CALL iotk_write_dat(u, 'PP_GIPAW_VLOCAL_AE', &
         upf%gipaw_vlocal_ae(:), columns=4)
    CALL iotk_write_dat(u, 'PP_GIPAW_VLOCAL_PS', &
-        upf%gipaw_vlocal_ae(:), columns=4)
+        upf%gipaw_vlocal_ps(:), columns=4)
    CALL iotk_write_end(u, 'PP_GIPAW_VLOCAL')
    !
    CALL iotk_write_end(u, 'PP_GIPAW')
