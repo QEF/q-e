@@ -42,3 +42,7 @@ TDDFPT_URL=$(URL)$(TDDFPT).tar.gz
 GUI=PWgui-5.0.1
 GUI_URL=$(URL)$(GUI).tgz
 #
+GPU=QE-GPU-5.0.2
+#GPU_URL=$(URL)$(GPU).tar.gz
+GPU_URL=http://xiexie.syslab.disco.unimib.it/~fspiga/$(GPU).tar.gz
+#

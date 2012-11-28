@@ -409,6 +409,31 @@ uncompress-gui: touch-dummy
 	(gzip -dc ../archive/$(GUI).tgz | (cd ../ ; tar -xvf -)) ; fi
 	touch uncompress-gui
 
+##########################################################
+# GPU
+###########################################################
+gpu:  uncompress-gpu
+	touch make-gpu
+uncompress-gpu: touch-dummy
+	@(if test ! -s ../archive/$(GPU).tar.gz && test ! -d ../GPU && test ! -d ../$(GPU); then \
+	wget -O ../archive/$(GPU).tar.gz $(GPU_URL) > /dev/null 2>&1; \
+        if test "`echo $$?`" -ne "0" ; then \
+	curl -o ../archive/$(GPU).tar.gz $(GPU_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	echo "*** Unable to download QE-GPU. Test whether curl or wget is installed and working," ; \
+        echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+        echo "*** $(GPU).tar.gz from $(GPU_URL)." ; \
+        exit 1 ; fi ; fi ; fi) 
+	@if test ! -d ../GPU && test ! -d ../$(GPU); then \
+        (gzip -dc ../archive/$(GPU).tar.gz | (cd ../ ; tar -xvf -)) ; fi
+	@ echo ""
+	@ echo " *****************************************************************************"
+	@ echo " * QE-GPU has been downloaded, please follow the instructions reported here: *"
+	@ echo " *       http://qe-forge.org/gf/project/q-e-gpu/                             * " 
+	@ echo " *****************************************************************************"
+	@ echo ""
+	touch uncompress-gpu
+
 ###################################
 # cleaning
 ###################################
@@ -478,8 +503,7 @@ phonon_veryclean: phonon_clean
 # exe links to main bin dir are deleted by PHonon Makefile
 
 gipaw_clean:
-	if test -d ../GIPAW; then (cd ../GIPAW; \
-	$(MAKE) clean); fi
+	if test -d ../GIPAW; then (cd ../GIPAW; $(MAKE) clean); fi
 	rm -f ../bin/gipaw.x
 	rm -rf ./make-gipaw 
 
@@ -552,12 +576,19 @@ gui_clean:
 gui_veryclean: gui_clean
 # dir is not deleted for compatibility with the repository
 
+gpu_clean:
+	rm -f ../Makefile.gpu
+	rm -f ./make-gpu 
+
+gpu_veryclean: gpu_clean
+# dir is not deleted for compatibility with the repository
+
 ##########################################################
 # general cleaning
 ##########################################################
 clean: w90_clean want_clean yambo_clean plumed_clean epw_clean \
 	gui_clean phonon_clean tddfpt_clean xspectra_clean neb_clean pwcond_clean \
-	ld1_clean gipaw_clean
+	ld1_clean gipaw_clean gpu_clean 
 veryclean: w90_veryclean want_veryclean yambo_veryclean plumed_veryclean epw_veryclean \
 	gui_veryclean phonon_veryclean tddfpt_veryclean xspectra_veryclean neb_veryclean \
-	pwcond_veryclean ld1_veryclean gipaw_veryclean
+	pwcond_veryclean ld1_veryclean gipaw_veryclean gpu_veryclean 
