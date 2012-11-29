@@ -18,7 +18,7 @@ MODULE kernel_table
   !!  used.  These parameters are stored as public parameters for use in
   !!  various routines.  This routine also reads the tabulated values of the
   !!  Fourier transformed kernel function for each pair of q values (see
-  !!  SOLER equations 3 and 11).  Since these kernel functions need to be
+  !!  SOLER equations 3 and 8).  Since these kernel functions need to be
   !!  interpolated using splines, the second derivatives of the Fourier
   !!  transformed kernel functions (phi_alpha_beta) are also tabulated in
   !!  the vdW_kernel_table and are read in here.
@@ -55,7 +55,7 @@ MODULE kernel_table
   real(dp) :: r_max, q_cut, q_min, dk            !! The maximum value of r, the maximum and minimum
   !                                                    !! values of q and the k-space spacing of grid points.
   !                                                    !! Note that, during a vdW run, values of q0 found
-  !                                                    !! larger than q_cut will be saturated (SOLER 6-7) to
+  !                                                    !! larger than q_cut will be saturated (SOLER 5) to
   !                                                    !! q_cut
 
   real(dp), allocatable :: q_mesh(:)             !! The values of all the q points used

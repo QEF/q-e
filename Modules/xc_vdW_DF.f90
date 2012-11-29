@@ -17,7 +17,7 @@ MODULE vdW_DF
   !! and potential. This method is based on the method of Guillermo Roman-Perez 
   !! and Jose M. Soler described in:
   !!
-  !!    G. Roman-Perez and J. M. Soler, PRL 103, 096101 (2009)
+  !!    G. Roman-Perez and J. M. Soler, PRL 103, 096102 (2009)
   !!
   !! henceforth referred to as SOLER. That method is a new implementation
   !! of the method found in:
@@ -94,7 +94,7 @@ CONTAINS
     real(dp) :: grid_cell_volume                !! The volume of the unit cell per G-grid point
                                                 
     real(dp), allocatable ::  q0(:)             !! The saturated value of q (equations 11 and 12 of DION)
-    !                                           !! This saturation is that of equation 7 in 
+    !                                           !! This saturation is that of equation 5 in 
     !                                           !! SOLER
     
     real(dp), allocatable :: gradient_rho(:,:)  !! The gradient of the charge density. The 
@@ -104,19 +104,19 @@ CONTAINS
     real(dp), allocatable :: potential(:)       !! The vdW contribution to the potential
                                                 
     real(dp), allocatable :: dq0_drho(:)        !! The derivative of the saturated q0 
-    !                                           !! (equation 7 of SOLER) with respect
+    !                                           !! (equation 5 of SOLER) with respect
     !                                           !! to the charge density (sort of.  see
     !                                           !! get_q0_on_grid subroutine below.) 
                                                 
     real(dp), allocatable :: dq0_dgradrho(:)    !! The derivative of the saturated q0
-    !                                           !! (equation 7 of SOLER) with respect
+    !                                           !! (equation 5 of SOLER) with respect
     !                                           !! to the gradient of the charge density
     !                                           !! (again, see get_q0_on_grid subroutine)
                                                 
-    complex(dp), allocatable :: thetas(:,:)     !! These are the functions of equation 11 of 
+    complex(dp), allocatable :: thetas(:,:)     !! These are the functions of equation 8 of 
     !                                           !! SOLER.  They will be forward Fourier transformed
     !                                           !! in place to get theta(k) and worked on in
-    !                                           !! place to get the u_alpha(r) of equation 14
+    !                                           !! place to get the u_alpha(r) of equation 11
     !                                           !! in SOLER.  They are formatted as follows:
     !                                           !1 thetas(grid_point, theta_i)
                                                 
@@ -150,9 +150,9 @@ CONTAINS
     !! ---------------------------------------------------------------------------------------------
     !!   Begin calculations
   
-    !! Check to make sure we aren't trying to do a spin-polarized run 
+    !! Check to make sure we aren't trying to do a spin-polarized run.
     !! Gamma point calculations can be done using the special {gamma} features
-    !! stress tensor calcultion and cell relaxation run are also possible.
+    !! stress tensor calcultion and cell relaxation runs are also possible.
     !! --------------------------------------------------------------------------------------------------------
 
     call errore('xc_vdW_DF','vdW functional not implemented for spin polarized runs', size(rho_valence,2)-1)
@@ -290,7 +290,7 @@ CONTAINS
 #else
     !! -------------------------------------------------------------------------
     !! Here we calculate the gradient numerically in real space
-    !! The Nneighbors variable is set above and gives the number of points in 
+    !! The neighbors variable is set above and gives the number of points in 
     !! each direction to consider when taking the numerical derivatives.
     !! -------------------------------------------------------------------------
     !! If there is only 1 processor the needed information is held by the 
@@ -298,10 +298,9 @@ CONTAINS
     !! will be deallocated the call since it is no longer needed.  
     !!
     !! The full_rho array holds the charge density at every point in the 
-    !! simulation cell.
-    !! Each processor needs this because the numerical gradients require 
-    !! knowledge of the !! charge density on points outside the slab one has 
-    !! been given.  We don't allocate this in the case of using a single 
+    !! simulation cell. Each processor needs this because the numerical
+    !! gradients require knowledge of the charge density on points outside the
+    !! slab one has been given.  We don't allocate this in the case of using a single 
     !! processor since total_rho would already hold this information.
     !! nr1x, nr2x, and nr3x are PWSCF variables that hold the TOTAL number of 
     !! divisions along each lattice vector. Thus, their product is the total 
@@ -345,7 +344,7 @@ CONTAINS
 
     !! Find the value of q0 for all assigned grid points.  q is defined in equations
     !! 11 and 12 of DION and q0 is the saturated version of q defined in equation
-    !! 7 of SOLER.  This routine also returns the derivatives of the q0s with respect
+    !! 5 of SOLER.  This routine also returns the derivatives of the q0s with respect
     !! to the charge-density and the gradient of the charge-density.  These are needed
     !! for the potential calculated below.
     !! ---------------------------------------------------------------------------------
@@ -354,25 +353,25 @@ CONTAINS
 
     !! ---------------------------------------------------------------------------------
     
-    !! Here we allocate and calculate the theta functions of SOLER equation 11.  Thee are defined as 
+    !! Here we allocate and calculate the theta functions of SOLER equation 8.  These are defined as 
     !! rho * P_i(q0(rho, gradient_rho)) where P_i is a polynomial that interpolates a Kroneker delta 
     !! function at the point q_i (taken from the q_mesh) and q0 is the saturated version of q.  q is
-    !! defined in equations 11 and 12 of DION and the saturation proceedure is defined in equation 7 
-    !! of soler.  This is the biggest memory consumer in the method since the thetas array is 
+    !! defined in equations 11 and 12 of DION and the saturation proceedure is defined in equation 5 
+    !! of SOLER.  This is the biggest memory consumer in the method since the thetas array is 
     !! (total # of FFT points)*Nqs complex numbers.  In a parallel run, each processor will hold the 
     !! values of all the theta functions on just the points assigned to it.
     !! --------------------------------------------------------------------------------------------------
     !! thetas are stored in reciprocal space as  theta_i(k) because this is the way they are used later
-    !! for the convolution (equation 11 of SOLER).  The ffts used here are timed.
+    !! for the convolution (equation 8 of SOLER).  The ffts used here are timed.
     !! --------------------------------------------------------------------------------------------------
 
     allocate( thetas(dfftp%nnr, Nqs) )
     CALL get_thetas_on_grid(total_rho, q0, thetas)
     !! ---------------------------------------------------------------------------------------------
 
-    !! Carry out the integration in equation 7 of SOLER.  This also turns the thetas array into the 
+    !! Carry out the integration in equation 8 of SOLER.  This also turns the thetas array into the 
     !! precursor to the u_i(k) array which is inverse fourier transformed to get the u_i(r) functions
-    !! of SOLER equation 14.  Add the energy we find to the output variable etxc.  This process is timed.
+    !! of SOLER equation 11.  Add the energy we find to the output variable etxc.  This process is timed.
     !! --------------------------------------------------------------------------------------------------
 
     call start_clock( 'vdW_energy')
@@ -402,7 +401,7 @@ CONTAINS
 
     !! ----------------------------------------------------------------------------------------
 
-    !! Inverse Fourier transform the u_i(k) to get the u_i(r) of SOLER equation 14.  These FFTs
+    !! Inverse Fourier transform the u_i(k) to get the u_i(r) of SOLER equation 11.  These FFTs
     !! are also timed and added to the timing of the forward FFTs done earlier.
     !!---------------------------------------------------------------------------------------
 
@@ -419,9 +418,9 @@ CONTAINS
     !! -------------------------------------------------------------------------
 
     !! Here we allocate the array to hold the potential. This is calculated via 
-    !! equation 13 of SOLER, using the u_i(r) calculated from quations 14 and 
-    !! 15 of SOLER.  Each processor allocates the array to be the size of the 
-    !! full grid  because, as can be seen in SOLER equation 13, processors need
+    !! equation 10 of SOLER, using the u_i(r) calculated from quations 11 and 
+    !! 12 of SOLER.  Each processor allocates the array to be the size of the 
+    !! full grid  because, as can be seen in SOLER equation 10, processors need
     !! to access grid points outside their allocated regions.
     !! This process is timed.  The timer is stopped below after the v output 
     !! variable has been updated with the non-local corelation potential.  
@@ -545,7 +544,7 @@ CONTAINS
 
       complex(dp), allocatable :: thetas(:,:)            ! Thetas
 #ifndef FFTGRADIENT
-      real(dp), allocatable :: full_rho(:)               ! additional Rho values onthe full grid
+      real(dp), allocatable :: full_rho(:)               ! additional Rho values on the full grid
 
       integer, save :: my_start_z, my_end_z              ! 
       integer, allocatable, save :: procs_Npoints(:)     ! 
@@ -781,7 +780,7 @@ CONTAINS
                   q_hi = Nqs 
 
                   !
-                  ! Figure out which bin our value of q0 is in in the q_mesh
+                  ! Figure out which bin our value of q0 is in the q_mesh
                   !
                   do while ( (q_hi - q_low) > 1)
 
@@ -928,11 +927,11 @@ CONTAINS
   !!                                    |__________________|
 
   !! This routine first calculates the q value defined in (DION equations 11 and 12), then
-  !! saturates it according to (SOLER equation 7).  
+  !! saturates it according to (SOLER equation 5).  
   
   SUBROUTINE get_q0_on_grid (total_rho, gradient_rho, q0, dq0_drho, dq0_dgradrho)
   !!
-  !! more specifically it calcultates the following
+  !! more specifically it calculates the following
   !!
   !!     q0(ir) = q0 as defined above
   !!     dq0_drho(ir) = total_rho * d q0 /d rho 
@@ -953,7 +952,7 @@ CONTAINS
   real(dp)                   :: Z_ab = -0.8491D0                          !! see DION
 
   integer,    parameter      :: m_cut = 12                                !! How many terms to include in the sum
-  !                                                                       !! of SOLER equation 7
+  !                                                                       !! of SOLER equation 5
   
   
   real(dp)                   :: kF, r_s, sqrt_r_s, gradient_correction    !! Intermediate variables needed to get q and q0
@@ -1008,7 +1007,7 @@ CONTAINS
      
      !! ---------------------------------------------------------------
      
-     !! Here, we calculate q0 by saturating q according to equation 7 of SOLER.  Also, we find 
+     !! Here, we calculate q0 by saturating q according to equation 5 of SOLER.  Also, we find 
      !! the derivative dq0_dq needed for the derivatives dq0_drho and dq0_dgradrh0 discussed below.
      !! ---------------------------------------------------------------------------------------
 
@@ -1315,7 +1314,7 @@ end SUBROUTINE initialize_spline_interpolation
 
 !! This routine is modeled after an algorithm from "Numerical Recipes in C" by Cambridge
 !! University Press, page 97.  Adapted for Fortran and the problem at hand.  This function is used to 
-!! find the Phi_alpha_beta needed for equations 11 and 14 of SOLER.
+!! find the Phi_alpha_beta needed for equations 8 and 11 of SOLER.
 
 
 subroutine interpolate_kernel(k, kernel_of_k)
@@ -1432,7 +1431,7 @@ subroutine interpolate_Dkernel_Dk(k, dkernel_of_dk)
 
   integer :: q1_i, q2_i, k_i                    !! Indexing variables
  
-  real(dp) :: A, B, dAdk, dBdk, dCdk, dDdk                        !! Intermediate values for the interpolation
+  real(dp) :: A, B, dAdk, dBdk, dCdk, dDdk      !! Intermediate values for the interpolation
   
 
   !! -------------------------------------------------------------------------------------
@@ -1498,7 +1497,7 @@ subroutine numerical_gradient(total_rho, gradient_rho)
    !
    ! I/O variables
    !
-   real(dp), intent(in) :: total_rho(:)        !! Input array holding total charge density.
+   real(dp), intent(in) :: total_rho(:)       !! Input array holding total charge density.
  
    real(dp), intent(out) :: gradient_rho(:,:) !! Output array that will holds the gradient
    !                                          !! of the charge density.
@@ -1532,7 +1531,7 @@ end subroutine numerical_gradient
 #else
 !! Calculates the gradient of the charge density numerically on the grid.  We could simply
 !! use the PWSCF gradient routine but we need the derivative of the gradient at point j 
-!! with respect to the density at point i for the potential (SOLER equation 13).  This is 
+!! with respect to the density at point i for the potential (SOLER equation 10).  This is 
 !! difficult to do with the standard means of calculating the density gradient but trivial
 !! in the case of the numerical formula because the derivative of the gradient at point j
 !! with respect to the density at point i is just whatever the coefficient is in the numerical
@@ -1671,7 +1670,7 @@ subroutine thetas_to_uk(thetas, u_vdW)
   USE fft_base,        ONLY : dfftp
   USE cell_base,       ONLY : tpiba, omega
 
-  complex(dp), intent(in) :: thetas(:,:)    !! On input this variable holds the theta functions (equation 11, SOLER)
+  complex(dp), intent(in) :: thetas(:,:)    !! On input this variable holds the theta functions (equation 8, SOLER)
   !                                         !! in the format thetas(grid_point, theta_i).  
   complex(dp), intent(out) :: u_vdW(:,:)
   !                                            !! On output this array holds u_alpha(k) = Sum_j[theta_beta(k)phi_alpha_beta(k)]
@@ -1725,9 +1724,9 @@ end subroutine thetas_to_uk
 !!                                              | VDW_ENERGY  |
 !!                                              |_____________|
 
-!! This routine carries out the integration of equation 11 of SOLER.  It returns the non-local 
+!! This routine carries out the integration of equation 8 of SOLER.  It returns the non-local 
 !! exchange-correlation energy and the u_alpha(k) arrays used to find the u_alpha(r) arrays via 
-!! equations 14 and 15 in SOLER.
+!! equations 11 and 12 in SOLER.
 
 subroutine vdW_energy(thetas, vdW_xc_energy)
   
@@ -1736,7 +1735,7 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
   USE cell_base,       ONLY : tpiba, omega
 
   complex(dp), intent(inout) :: thetas(:,:)    !! On input this variable holds the theta functions 
-  !                                            !! (equation 11, SOLER) in the format thetas(grid_point, theta_i).  
+  !                                            !! (equation 8, SOLER) in the format thetas(grid_point, theta_i).  
   !                                            !! On output this array holds 
   !                                            !! u_alpha(k) = Sum_j[theta_beta(k)phi_alpha_beta(k)]
 
@@ -1768,7 +1767,7 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
   !! ngm = number of g-vectors on this processor, nl = an array that gives the indices into the 
   !! FFT grid for a particular g vector, igtongl = an array that gives the index of which shell a 
   !! particular g vector is in, gl = an array that gives the magnitude of the g vectors for each shell.
-  !! In essence, we are forming the reciprocal-space u(k) functions of SOLER equation 14.  These are
+  !! In essence, we are forming the reciprocal-space u(k) functions of SOLER equation 11.  These are
   !! kept in thetas array.
   !! -------------------------------------------------------------------------------------------------
 
@@ -1965,7 +1964,7 @@ end subroutine dv_drho_vdw
 !!                                             |_________________|
 
 !! This routine finds the non-local correlation contribution to the potential (i.e. the derivative of the non-local
-!! piece of the energy with respect to density) given in SOLER equation 13.  The u_alpha(k) functions were found
+!! piece of the energy with respect to density) given in SOLER equation 10.  The u_alpha(k) functions were found
 !! while calculating the energy.  They are passed in as the matrix u_vdW.  Most of the required derivatives were
 !! calculated in the "get_q0_on_grid" routine, but the derivative of the interpolation polynomials, P_alpha(q),
 !! (SOLER equation 3) with respect to q is interpolated here, along with the polynomials themselves.
@@ -1987,7 +1986,7 @@ subroutine get_potential(q0, dq0_drho, dq0_dgradrho, gradient_rho, u_vdW, potent
   !                                                   !! the get_q0_on_grid subroutine above.
 
   complex(dp), intent(in) :: u_vdW(:,:)               !! The functions u_alpha(r) obtained by inverse transforming the 
-  !                                                   !! functions u_alph(k).  See equations 14 and 15 in SOLER
+  !                                                   !! functions u_alph(k).  See equations 11 and 12 in SOLER
 
   real(dp), intent(inout) :: potential(:)             !! The non-local correlation potential for points on the grid over
   !                                                   !! the whole cell (not just those assigned to this processor).
@@ -1998,7 +1997,7 @@ subroutine get_potential(q0, dq0_drho, dq0_dgradrho, gradient_rho, u_vdW, potent
 
   integer :: q_low, q_hi, q                           !! Variables to find the bin in the q_mesh that a particular q0
   !                                                   !! belongs to (for interpolation).
-  real(dp) :: dq, a, b, c, d, e, f                    !! Inermediate variables used in the interpolation of the polynomials
+  real(dp) :: dq, a, b, c, d, e, f                    !! Intermediate variables used in the interpolation of the polynomials
   
   real(dp) :: y(Nqs), dP_dq0, P                       !! The y values for a given polynomial (all 0 exept for element i of P_i)
   !                                                   !! The derivative of P at a given q0 and the value of P at a given q0.  Both
@@ -2070,7 +2069,7 @@ subroutine get_potential(q0, dq0_drho, dq0_dgradrho, gradient_rho, u_vdW, potent
              
         P = a*y(q_low) + b*y(q_hi) + c*d2y_dx2(P_i,q_low) + d*d2y_dx2(P_i,q_hi)
               
-        !! The first term in equation 13 of SOLER
+        !! The first term in equation 10 of SOLER
         potential(i_grid) = potential(i_grid) + u_vdW(i_grid,P_i)* (P + dP_dq0 * dq0_drho(i_grid))
         if (q0(i_grid) .ne. q_mesh(Nqs)) then
            h_prefactor(i_grid) = h_prefactor(i_grid) +  u_vdW(i_grid,P_i)* dP_dq0 * dq0_dgradrho(i_grid)
@@ -2113,7 +2112,7 @@ subroutine get_potential(q0, dq0_drho, dq0_dgradrho, N, gradient_rho, u_vdW, pot
   !                                                       !! and the starting and ending z planes for this processor
 
   complex(dp), intent(in) :: u_vdW(:,:)                   !! The functions u_alpha(r) obtained by inverse transforming the 
-  !                                                       !! functions u_alph(k).  See equations 14 and 15 in SOLER
+  !                                                       !! functions u_alph(k).  See equations 11 and 12 in SOLER
 
   real(dp), allocatable, save :: d2y_dx2(:,:)             !! Second derivatives of P_alpha polynomials for interpolation
 
@@ -2126,7 +2125,7 @@ subroutine get_potential(q0, dq0_drho, dq0_dgradrho, N, gradient_rho, u_vdW, pot
 
   real(dp), pointer, save :: coefficients(:)              !! Pointer to the gradient coefficients.  Used to find the derivative
   !                                                       !! of the magnitude of the gradient of the charge density with 
-  !                                                       !! respect to the charge density at another point.  Equation 13 in SOLER
+  !                                                       !! respect to the charge density at another point.  Equation 10 in SOLER
 
   integer, pointer, save :: indices3d(:,:,:)              !! A pointer to a rank 3 array that gives the relation between the
   !                                                       !! x, y, and z indices of a point and its index in the charge density
@@ -2239,12 +2238,12 @@ i_grid = 0
              
               P = a*y(q_low) + b*y(q_hi) + c*d2y_dx2(P_i,q_low) + d*d2y_dx2(P_i,q_hi)
               
-              !! The first term in equation 13 of SOLER
+              !! The first term in equation 10 of SOLER
               potential(indices3d(ix1,ix2,ix3)) = potential(indices3d(ix1,ix2,ix3)) + &
                                                   u_vdW(i_grid,P_i)* (P + dP_dq0 * dq0_drho(i_grid))
 
 
-              ! Now, loop over all relevant neighbors and calculate the second term in equation 13 of SOLER.  Note,
+              ! Now, loop over all relevant neighbors and calculate the second term in equation 10 of SOLER.  Note,
               ! that we are using our value of u_vdW and gradients and adding the piece of the potential point i_grid
               ! contributes to the neighbor's potential.  If the value of q0 at point i_grid is equal to q_cut, the
               ! derivative dq0_dq will be 0 so both of dq0_drho and dq0_dgradrho will be 0.  Thus, we can safely
