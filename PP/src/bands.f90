@@ -101,12 +101,10 @@ PROGRAM do_bands
 
   IF ( npool > 1 .and..not.(lsym.or.no_overlap)) CALL errore('bands', &
                                              'pools not implemented',npool)
-
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
   CALL read_file()
-	print *, 'gamma_only=',gamma_only
   !
   IF (gamma_only) CALL errore('bands','gamma_only case not implemented',1)
   IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
