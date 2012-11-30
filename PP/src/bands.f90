@@ -102,20 +102,20 @@ PROGRAM do_bands
   IF ( npool > 1 .and..not.(lsym.or.no_overlap)) CALL errore('bands', &
                                              'pools not implemented',npool)
 
-  IF (gamma_only) CALL errore('bands','gamma_only case not implemented',1)
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
   CALL read_file()
-
+	print *, 'gamma_only=',gamma_only
+  !
+  IF (gamma_only) CALL errore('bands','gamma_only case not implemented',1)
   IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
      CALL errore('bands',&
      'pw.x run with a different number of procs/pools. Use wf_collect=.true.',1)
-
   IF (two_fermi_energies.or.i_cons /= 0) &
      CALL errore('bands',&
      'The bands code with constrained magnetization has not been tested',1)
-
+  !
   CALL openfil_pp()
   !
   IF (lsym) no_overlap=.true.
