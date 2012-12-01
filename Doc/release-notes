@@ -8,6 +8,8 @@ Fixed in svn version:
    * Bug fix for NC pseudos with GIPAW info, for upf version 2 only:
      Pseudo local potential was incorrectly written and read. 
    * PP: incorrect check in bands.f90 (v.5.0.2 only)
+   * CP wasn't working properly with USPP having distinct Q functions 
+     for each value of l, due to the never ending l/l+1 problem
 
 Incompatible changes in svn version:
    * calls to "find_equiv_sites" and "writemodes" changed (fixed dimension

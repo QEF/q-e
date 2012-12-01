@@ -1418,7 +1418,9 @@
              do l = lmin, lmax
                do ir = 1, upf(is)%kkbeta
                   IF( upf(is)%q_with_l ) THEN
-                    qrl(ir,ijv,l)=upf(is)%qfuncl(ir,ijv,l)
+                    ! BEWARE: index l in upf%qfuncl(l) runs from 0 to lmax,
+                    !          not from 1 to lmax+1
+                    qrl(ir,ijv,l)=upf(is)%qfuncl(ir,ijv,l-1)
                   ELSE
                     if ( rgrid(is)%r(ir) >= upf(is)%rinner(l) ) then
                        qrl(ir,ijv,l)=upf(is)%qfunc(ir,ijv)
