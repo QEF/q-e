@@ -863,7 +863,7 @@ SUBROUTINE write_cd ( input_file_name, real_or_complex, output_dir_name )
       psic ( nl ( ig ) ) = rho%of_g ( ig, is )
     ENDDO
     CALL invfft ( 'Dense', psic, dfftp )
-    DO ig = 1, dfftp%nnr
+    DO ir = 1, dfftp%nnr
       rho%of_r ( ir, is ) = psic ( ir )
     ENDDO
   ENDDO
