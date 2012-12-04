@@ -16,6 +16,9 @@ cluster  N,NH4,H2O Martyna-Tuckermann method for isolated systems
 dipole    CO on Ni dipole field correction
 electric   Si      finite electric field using Berry's phase approach
 eval_infix Si      parser
+hse-si111  Si      HSE hybrid functional, nq=1
+hse-si222  Si      HSE hybrid functional, nq=2
+hse-si444  Si      HSE hybrid functional, nq=4
 lattice   H_2      all bravais lattices, CELL_PARAMETERS, a b c parameters
                    Gamma and automatic k-points
 lda+U     FeO      LDA+U with standard and user-defined occupancies
@@ -43,6 +46,9 @@ paw-atom  O, Cu    PAW
 paw-bfgs    H2O    PAW with bfgs    
 paw-vcbfgs  H2O    PAW with variable-cell bfgs    
 pbeq2d    Cu       Modified PBE functional PBEQ2D
+pbe0-si111 Si      PBE0 hybrid functional, nq=1
+pbe0-si222 Si      PBE0 hybrid functional, nq=2
+pbe0-si444 Si      PBE0 hybrid functional, nq=4
 relax     CO       forces
                    bfgs and damped dynamics
                    energies, forces, bfgs with saw-like electric field 
