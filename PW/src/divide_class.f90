@@ -720,7 +720,7 @@ ELSE IF (code_group==29) THEN
 !
 !  T_h
 !
-   IF (nclass /= 4) CALL errore('divide_class','Wrong classes for T_h',1)
+   IF (nclass /= 8) CALL errore('divide_class','Wrong classes for T_h',1)
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==3) THEN
