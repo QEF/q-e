@@ -175,7 +175,7 @@ program elph
   stop
 9000 format(26x,f7.3,12x,i4)
 9005 format(10x,f10.6,32x,f10.6)
-9010 format(12x,i2,2x,f8.4,9x,f8.2)
+9010 format(12x,i5,2x,f8.4,9x,f8.2)
 9014 format('# degauss   lambda    int alpha2F  <log w>     N(Ef)')
 9015 format(5x,'lambda =',f9.6,' (',f10.6,')  <log w>=',f9.3,'K  ', &
             'N(Ef)=',f9.6,' at degauss=',f5.3)

@@ -746,7 +746,7 @@ SUBROUTINE elphsum ( )
 9005 FORMAT(5x,'DOS =',f10.6,' states/spin/Ry/Unit Cell at Ef=', &
           &       f10.6,' eV')
 9006 FORMAT(5x,'double delta at Ef =',f10.6)
-9010 FORMAT(5x,'lambda(',i2,')=',f8.4,'   gamma=',f8.2,' GHz')
+9010 FORMAT(5x,'lambda(',i5,')=',f8.4,'   gamma=',f8.2,' GHz')
   !
   RETURN
 END SUBROUTINE elphsum
@@ -960,7 +960,7 @@ SUBROUTINE elphsum_simple
 9005 FORMAT(5x,'DOS =',f10.6,' states/spin/Ry/Unit Cell at Ef=', &
           &       f10.6,' eV')
 9006 FORMAT(5x,'double delta at Ef =',f10.6)
-9010 FORMAT(5x,'lambda(',i2,')=',f8.4,'   gamma=',f8.2,' GHz')
+9010 FORMAT(5x,'lambda(',i5,')=',f8.4,'   gamma=',f8.2,' GHz')
   !
   !
   IF (iuelph.NE.0) CLOSE (unit = iuelph)
