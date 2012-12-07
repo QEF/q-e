@@ -244,8 +244,8 @@ SUBROUTINE vcsmd()
   IF ( istep == 1 ) THEN
      !
      IF ( calc(2:2) == 'm' ) THEN
-        WRITE( stdout,'(/5X,A,/,5x,"convergence thresholds EPSE = ",E8.2, &
-             &  "  EPSF = ",E8.2)' ) TRIM(calc_long), epse, epsf
+        WRITE( stdout,'(/5X,A,/,5x,"convergence thresholds EPSE = ",ES8.2, &
+             &  "  EPSF = ",ES8.2)' ) TRIM(calc_long), epse, epsf
      END IF
      !
   END IF

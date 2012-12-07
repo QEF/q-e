@@ -294,7 +294,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   rhoneg(:) = rhoneg(:) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
   if ((rhoneg(1) > eps8) .or. (rhoneg(2) > eps8)) then
-    write (stdout, '(/,5x, "negative rho (up,down): ", 2e10.3)') rhoneg(:)
+    write (stdout, '(/,5x, "negative rho (up,down): ", 2es10.3)') rhoneg(:)
   end if
   !
   vtxc = omega * vtxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) 
