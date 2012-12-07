@@ -81,9 +81,8 @@ example03:
     coefficients at X for fcc Al.
 
 example04:
-    This example shows how to use pw.x and phcg.x to calculate the
-    normal modes of a molecule (SiH4) at Gamma. It shows also the
-    use of ph.x for molecules (CH4) at Gamma.
+    This example shows how to use pw.x and ph.x to calculate the
+    normal modes of a molecule (CH4) at Gamma
 
 example05:
     This example shows how to use pw.x and ph.x to calculate the Raman
@@ -119,7 +118,6 @@ example11:
 example12:
     This example shows how to use pw.x and phcg.x to calculate the normal
     modes of a molecule (SiH4) at Gamma.
-
 
 example13:
     This example shows how to use pw.x, ph.x and d3.x to calculate the

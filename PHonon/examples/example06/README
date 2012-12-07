@@ -1,23 +1,12 @@
-This example shows how to use pw.x to calculate the total energy
-and the band structure of fcc-Pt with a fully relativistic US-PP
-which includes spin-orbit effects.
-It tests ph.x for the calculation of the phonons in the spin-orbit case.
+This example shows how to use pw.x to calculate phonons with a fully 
+relativistic US-PP which includes spin-orbit effects.
 
 The calculation proceeds as follows:
 
-1) make a self-consistent calculation for Pt (input=pt.scf.in,
-   output=pt.scf.out). 
-
-2) make a band structure calculation for Pt (input=pt.nscf.in,
-   output=pt.nscf.out).
-
-3) use the bands.x program to check the band symmetry (input=pt.bands.in,
-   output=pt.bands.out).
-
-4) make a self-consistent calculation for fcc-Pt with few k-points
+1) make a self-consistent calculation for fcc-Pt
    (input=pt.scf_ph.in, output=pt.scf_ph.out).
 
-5) make a phonon calculation at the Gamma point (input=pt.ph.in,
+2) make a phonon calculation at the Gamma point (input=pt.ph.in,
    output=pt.ph.out).
 
-6) make a phonon calculation at X (input=pt.phX.in, output=pt.phX.out).
+3) make a phonon calculation at X (input=pt.phX.in, output=pt.phX.out).
