@@ -645,7 +645,7 @@ PROGRAM matdyn
            !
            !WRITE (2, '(F15.10,F15.2,F15.6,F20.5)') &
            !     E, E*RY_TO_CMM1, E*RY_TO_THZ, 0.5d0*DOSofE(1)
-           IF (ionode) WRITE (2, '(E12.4,E12.4)') E, 0.5d0*DOSofE(1)
+           IF (ionode) WRITE (2, '(ES12.4,ES12.4)') E, 0.5d0*DOSofE(1)
         END DO
         IF (ionode) CLOSE(unit=2)
      END IF  !dos

@@ -109,7 +109,7 @@ subroutine dvpsi_e (ik, ipol)
        nbnd_occ (ik), npol)
 
   if (.not.conv_root) WRITE( stdout, '(5x,"ik",i4," ibnd",i4, &
-       & " linter: root not converged ",e10.3)') &
+       & " linter: root not converged ",es10.3)') &
        ik, ibnd, anorm
   !
   CALL flush_unit( stdout )

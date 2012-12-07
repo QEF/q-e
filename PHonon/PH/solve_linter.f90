@@ -342,7 +342,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            ltaver = ltaver + lter
            lintercall = lintercall + 1
            if (.not.conv_root) WRITE( stdout, '(5x,"kpoint",i4," ibnd",i4,  &
-                &              " solve_linter: root not converged ",e10.3)') &
+                &              " solve_linter: root not converged ",es10.3)') &
                 &              ik , ibnd, anorm
            !
            ! writes delta_psi on iunit iudwf, k=kpoint,
@@ -509,8 +509,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      WRITE( stdout, '(/,5x," iter # ",i3," total cpu time :",f8.1, &
           &      " secs   av.it.: ",f5.1)') iter, tcpu, averlt
      dr2 = dr2 / npe
-     WRITE( stdout, '(5x," thresh=",e10.3, " alpha_mix = ",f6.3, &
-          &      " |ddv_scf|^2 = ",e10.3 )') thresh, alpha_mix (kter) , dr2
+     WRITE( stdout, '(5x," thresh=",es10.3, " alpha_mix = ",f6.3, &
+          &      " |ddv_scf|^2 = ",es10.3 )') thresh, alpha_mix (kter) , dr2
      !
      !    Here we save the information for recovering the run from this poin
      !

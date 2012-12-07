@@ -105,7 +105,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
 
   avg_iter = avg_iter + DBLE (lter)
   if (.not.conv_root) write(6, &
-      "(5x,'kpoint',i4,' ibnd',i4, ' pcgreen: root not converged',e10.3)") &
+      "(5x,'kpoint',i4,' ibnd',i4, ' pcgreen: root not converged',es10.3)") &
       ik,ibnd,anorm
 
   deallocate (ps)

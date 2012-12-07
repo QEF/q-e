@@ -344,7 +344,7 @@ PROGRAM q2r
      ENDIF
      resi = SUM ( ABS (AIMAG ( phid ) ) )
      IF (resi > eps12) THEN
-        WRITE (stdout,"(/5x,' fft-check warning: sum of imaginary terms = ',e12.7)") resi
+        WRITE (stdout,"(/5x,' fft-check warning: sum of imaginary terms = ',es12.6)") resi
      ELSE
         WRITE (stdout,"(/5x,' fft-check success (sum of imaginary terms < 10^-12)')")
      END IF
@@ -498,7 +498,7 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
      resi = SUM ( ABS ( AIMAG( gamout ) ) )
 
      IF (resi > eps12) THEN
-        WRITE (stdout,"(/5x,' fft-check warning: sum of imaginary terms = ',e12.7)") resi
+        WRITE (stdout,"(/5x,' fft-check warning: sum of imaginary terms = ',es12.6)") resi
      ELSE
         WRITE (stdout,"(/5x,' fft-check success (sum of imaginary terms < 10^-12)')")
      END IF

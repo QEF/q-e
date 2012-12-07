@@ -95,7 +95,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
      ! symmetrizes the Fermi energy shift
      !
      if (.not.lgamma_gamma) call sym_def (def, irr)
-     WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =", 2e15.4)') &
+     WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =", 2es15.4)')&
           (ipert, def (ipert) , ipert = 1, npert (irr) )
      !
      ! corrects the density response accordingly...
@@ -243,7 +243,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
      ! symmetrizes the Fermi energy shift
      !
      if (.not.lgamma_gamma) call sym_def (def, irr)
-     WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =", 2e15.4)') &
+     WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =", 2es15.4)')&
           (ipert, def (ipert) , ipert = 1, npert (irr) )
      !
      ! corrects the density response accordingly...

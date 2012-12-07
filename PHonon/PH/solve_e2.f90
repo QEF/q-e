@@ -219,8 +219,8 @@ subroutine solve_e2
      write (6, "(//,5x,' iter # ',i3, &
           &      '   av.it.: ',f5.1)") iter, avg_iter / (6.d0 * nksq)
      dr2 = dr2 / 6
-     write (6, "(5x,' thresh=',e10.3, ' alpha_mix = ',f6.3, &
-          &      ' |ddv_scf|^2 = ',e10.3 )") thresh, alpha_mix (kter), dr2
+     write (6, "(5x,' thresh=',es10.3, ' alpha_mix = ',f6.3, &
+          &      ' |ddv_scf|^2 = ',es10.3 )") thresh, alpha_mix (kter), dr2
      !
      CALL flush_unit( stdout )
      !
