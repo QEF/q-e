@@ -11,6 +11,8 @@ atom       O       occupancies from input, also with spin polarization
                    PBE and s-PBE stress
 berry     PbTiO3   scf: Q function in real space (tqr=.true.)
                    nscf: Berry phase calculation (with and without empty bands)
+b3lyp-O    O       B3LYP hybrid functional (spin polarized), Gamma
+b3lyp-h2o  H2O     B3LYP hybrid functional, un polarized, Gamma
 cluster  N,NH4,H2O Martyna-Tuckermann method for isolated systems
            NH4     Makov-Payne correction for isolated systems
 dipole    CO on Ni dipole field correction
@@ -84,5 +86,5 @@ vdw2      C        Dispersion (van der Waals) interactions with vdW-DF2 (nonloca
 
 Tests are still missing for:
   forces with core corrections
-  blyp, pw91
+  pw91
  'bands' 
