@@ -577,7 +577,6 @@ gui_veryclean: gui_clean
 # dir is not deleted for compatibility with the repository
 
 gpu_clean:
-	rm -f ../Makefile.gpu
 	rm -f ./make-gpu 
 
 gpu_veryclean: gpu_clean
