@@ -75,7 +75,7 @@ fake_elpa_external :
 
 libelpa_enabled:
 	if test ! -d ../ELPA; then \
-	( gzip -dc ../archive/ELPA-0.2.tar.gz |(cd ../; tar -xvf -)); fi
+	( gzip -dc ../archive/ELPA-0.3.tar.gz |(cd ../; tar -xvf -)); fi
 	cd ../ELPA; $(MAKE)
 	
 ###################################
