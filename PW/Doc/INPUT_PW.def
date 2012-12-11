@@ -379,10 +379,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var ibrav -type INTEGER {
 	    status { REQUIRED }
 	    info {
-                Bravais-lattice index. In all cases except ibrav=0,
-                either [celldm(1)-celldm(6)] or [a,b,c,cosab,cosac,cosbc]
-                must be specified: see their description. For ibrav=0
-                you may specify the lattice parameter celldm(1) or a.
+                Bravais-lattice index. If ibrav /= 0, specify EITHER
+                [ celldm(1)-celldm(6) ] OR [ A,B,C,cosAB,cosAC,cosBC ]
+                but NOT both. The lattice parameter alat is set to
+                alat = celldm(1) (in a.u.) or alat = A (in Angstrom);
+                see below for the other parameters.
+                For ibrav=0 specify the lattice vectors in CELL_PARAMETER,
+                optionally the lattice parameter alat = celldm(1) (in a.u.) 
+                or = A (in Angstrom), or else it is taken from CELL_PARAMETERS 
  
               ibrav      structure                   celldm(2)-celldm(6)
                                                    or: b,c,cosab,cosac,cosbc 
@@ -482,10 +486,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		see  { ibrav }
 		info {
 		    Crystallographic constants - see description of ibrav variable.
-
-		    * alat = celldm(1) is the lattice parameter "a" (in BOHR)
-		    * only needed celldm (depending on ibrav) must be specified
-		    * if ibrav=0 only alat = celldm(1) is used (if present)
+		    Specify either these OR A,B,C,cosAB,cosBC,cosAC NOT both.
+		    Only needed celldm (depending on ibrav) must be specified
+		    alat = celldm(1) is the lattice parameter "a" (in BOHR)
+		    If ibrav=0, only celldm(1) is used if present; 
+                    cell vectors are read from card CELL_PARAMETERS
 		}
 	    }
 
@@ -500,14 +505,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		var cosBC
 		info {
 		    Traditional crystallographic constants: a,b,c in ANGSTROM
-		    cosAB = cosine of the angle between axis a and b (gamma)
-		    cosAC = cosine of the angle between axis a and c (beta)
-		    cosBC = cosine of the angle between axis b and c (alpha)
-		    specify either these OR celldm but NOT both.
-		    
+		      cosAB = cosine of the angle between axis a and b (gamma)
+		      cosAC = cosine of the angle between axis a and c (beta)
+		      cosBC = cosine of the angle between axis b and c (alpha)
 		    The axis are chosen according to the value of ibrav.
-		    If ibrav is not specified, the axis are taken from card
-		    CELL_PARAMETERS and only a is used as lattice parameter.
+		    Specify either these OR celldm but NOT both.
+		    Only needed values (depending on ibrav) must be specified
+		    The lattice parameter alat = A (in ANGSTROM )
+		    If ibrav = 0, only A is used if present; 
+                    cell vectors are read from card CELL_PARAMETERS
 		}
 	    }
 	}
@@ -1977,16 +1983,19 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    default { alat }
 	    info {
 	        alat    : atomic positions are in cartesian coordinates,
-                          in units of the lattice parameter "a" (default)
+                          in units of the lattice parameter (either 
+                          celldm(1) or A). This is the default
 	        
 	        bohr    : atomic positions are in cartesian coordinate, 
-	                  in atomic units (i.e. Bohr)
+	                  in atomic units (i.e. Bohr radii)
 	        
 	        angstrom: atomic positions are in cartesian coordinates, 
                           in Angstrom
 	        
 	        crystal : atomic positions are in crystal coordinates, i.e.
-                          in relative coordinates of the primitive lattice vectors (see below)
+                          in relative coordinates of the primitive lattice
+                          vectors as defined either in card CELL_PARAMETERS
+                          or via the ibrav + celldm / a,b,c... variables
 	    }
 	}
 
@@ -2188,9 +2197,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    enum { alat | bohr | angstrom }
 	    info {
 		bohr / angstrom: lattice vectors in bohr radii / angstrom.
-		alat or nothing specified: if a lattice constant (celldm(1) 
-                or a) is present, lattice vectors are in units of the lattice
-                constant; otherwise, in bohr radii or angstrom, as specified.
+                (in this case the lattice parameter alat = |v1| )
+		alat or nothing specified: lattice vectors are in units of
+                the lattice parameter alat = either celldm(1) or A
 	    }
 	}
 
