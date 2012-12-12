@@ -357,6 +357,8 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   USE mp_global,     ONLY : me_pool, me_bgrp
   USE fft_base,      ONLY : dffts, dfftp, tg_gather
   USE fft_interfaces,ONLY : fwfft, invfft
+  USE lsda_mod,      ONLY : nspin
+  USE spin_orb,      ONLY : domag
   USE noncollin_module,     ONLY: npol
   USE wavefunctions_module, ONLY: psic_nc
   !
@@ -367,7 +369,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   COMPLEX(DP), INTENT(in)   :: psi (lda*npol, m)
   COMPLEX(DP), INTENT(inout):: hpsi (lda,npol,m)
   !
-  INTEGER :: ibnd, j,ipol, incr
+  INTEGER :: ibnd, j,ipol, incr, is
   COMPLEX(DP) :: sup, sdwn
   !
   LOGICAL :: use_tg
@@ -387,11 +389,15 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   !
   IF( dffts%have_task_groups ) THEN
      v_siz = dffts%tg_nnr * dffts%nogrp
-     ALLOCATE( tg_v( v_siz, 4 ) )
-     CALL tg_gather( dffts, v(:,1), tg_v(:,1) )
-     CALL tg_gather( dffts, v(:,2), tg_v(:,2) )
-     CALL tg_gather( dffts, v(:,3), tg_v(:,3) )
-     CALL tg_gather( dffts, v(:,4), tg_v(:,4) )
+     IF (domag) THEN
+        ALLOCATE( tg_v( v_siz, 4 ) )
+        DO is=1,nspin
+           CALL tg_gather( dffts, v(:,is), tg_v(:,is) )
+        ENDDO
+     ELSE
+        ALLOCATE( tg_v( v_siz, 1 ) )
+        CALL tg_gather( dffts, v(:,1), tg_v(:,1) )
+     ENDIF
      ALLOCATE( tg_psic( v_siz, npol ) )
      incr = dffts%nogrp
   ENDIF
@@ -437,23 +443,35 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
      !   product with the potential v = (vltot+vr) on the smooth grid
      !
      IF( dffts%have_task_groups ) THEN
-        DO j=1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
-           sup = tg_psic(j,1) * (tg_v(j,1)+tg_v(j,4)) + &
-                 tg_psic(j,2) * (tg_v(j,2)-(0.d0,1.d0)*tg_v(j,3))
-           sdwn = tg_psic(j,2) * (tg_v(j,1)-tg_v(j,4)) + &
-                  tg_psic(j,1) * (tg_v(j,2)+(0.d0,1.d0)*tg_v(j,3))
-           tg_psic(j,1)=sup
-           tg_psic(j,2)=sdwn
-        ENDDO
+        IF (domag) THEN
+           DO j=1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
+              sup = tg_psic(j,1) * (tg_v(j,1)+tg_v(j,4)) + &
+                    tg_psic(j,2) * (tg_v(j,2)-(0.d0,1.d0)*tg_v(j,3))
+              sdwn = tg_psic(j,2) * (tg_v(j,1)-tg_v(j,4)) + &
+                     tg_psic(j,1) * (tg_v(j,2)+(0.d0,1.d0)*tg_v(j,3))
+              tg_psic(j,1)=sup
+              tg_psic(j,2)=sdwn
+           ENDDO
+        ELSE
+           DO j=1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
+              tg_psic(j,:) = tg_psic(j,:) * tg_v(j,1)
+           ENDDO
+        ENDIF
      ELSE
-        DO j=1, dffts%nnr
-           sup = psic_nc(j,1) * (v(j,1)+v(j,4)) + &
-                 psic_nc(j,2) * (v(j,2)-(0.d0,1.d0)*v(j,3))
-           sdwn = psic_nc(j,2) * (v(j,1)-v(j,4)) + &
-                  psic_nc(j,1) * (v(j,2)+(0.d0,1.d0)*v(j,3))
-           psic_nc(j,1)=sup
-           psic_nc(j,2)=sdwn
-        ENDDO
+        IF (domag) THEN
+           DO j=1, dffts%nnr
+              sup = psic_nc(j,1) * (v(j,1)+v(j,4)) + &
+                    psic_nc(j,2) * (v(j,2)-(0.d0,1.d0)*v(j,3))
+              sdwn = psic_nc(j,2) * (v(j,1)-v(j,4)) + &
+                     psic_nc(j,1) * (v(j,2)+(0.d0,1.d0)*v(j,3))
+              psic_nc(j,1)=sup
+              psic_nc(j,2)=sdwn
+           ENDDO
+        ELSE
+           DO j=1, dffts%nnr
+              psic_nc(j,:) = psic_nc(j,:) * v(j,1)
+           ENDDO
+        ENDIF
      ENDIF
      !
      !   back to reciprocal space
