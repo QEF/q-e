@@ -1439,7 +1439,7 @@ MODULE realus
       USE uspp_param,       ONLY : upf, nh
       USE noncollin_module, ONLY : noncolin, nspin_mag, nspin_lsda
       USE spin_orb,         ONLY : domag
-      USE mp_global,        ONLY : inter_pool_comm, intra_bgrp_comm, inter_bgrp_comm
+      USE mp_global,        ONLY : inter_pool_comm, intra_bgrp_comm
       USE mp,               ONLY : mp_sum
 
       !

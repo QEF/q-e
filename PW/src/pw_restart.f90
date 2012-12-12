@@ -30,7 +30,7 @@ MODULE pw_restart
   USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
                         qexml_version, qexml_version_init, pseudo_dir
   USE io_global, ONLY : ionode, ionode_id
-  USE mp_global, ONLY : my_pool_id, intra_image_comm, intra_pool_comm, &
+  USE mp_global, ONLY : my_pool_id, intra_pool_comm, &
                         my_bgrp_id, intra_image_comm, intra_bgrp_comm, mpime
   USE mp,        ONLY : mp_bcast, mp_sum, mp_max
   USE parser,    ONLY : version_compare
@@ -978,7 +978,9 @@ MODULE pw_restart
       !
       ! ... look for an empty unit
       !
-      CALL iotk_free_unit( iunout, ierr )
+      IF (ionode) CALL iotk_free_unit( iunout, ierr )
+
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       CALL errore( 'pw_readfile', &
                    'no free units to read wavefunctions', ierr )
