@@ -398,8 +398,12 @@ CONTAINS
                         & 'unknown option for ATOMIC_POSITION: '&
                         & // input_line, 1 )
          ENDIF
+         CALL infomsg( 'read_cards ', &
+            & 'DEPRECATED: no units specified in ATOMIC_POSITIONS card' )
          IF ( prog == 'CP' ) atomic_positions = 'bohr'
          IF ( prog == 'PW' ) atomic_positions = 'alat'
+         CALL infomsg( 'read_cards ', &
+            & 'ATOMIC_POSITIONS: units set to '//TRIM(atomic_positions) )
       ENDIF
       !
       reader_loop : DO ia = 1,nat
@@ -1004,7 +1008,7 @@ CONTAINS
    !      HT(2,1) HT(2,2) HT(2,3)
    !      HT(3,1) HT(3,2) HT(3,3)
    !
-   !   cell_option == alat      lattice vectors in units of alat (default)
+   !   cell_option == alat      lattice vectors in units of alat
    !   cell_option == bohr      lattice vectors in Bohr
    !   cell_option == angstrom  lattice vectors in Angstrom
    !
@@ -1042,10 +1046,13 @@ CONTAINS
          cell_units = 'bohr'
       ELSEIF ( matches( "ANGSTROM", input_line ) ) THEN
          cell_units = 'angstrom'
+      ELSEIF ( matches( "ALAT", input_line ) ) THEN
+         cell_units = 'alat'
       ELSE
          cell_units = 'none'
-         ! It will be set to 'bohr', 'alat' in cell_base, depending
-         ! on whether a or celldm(1) are set or not
+         CALL infomsg( 'read_cards ', &
+            & 'DEPRECATED: no units specified in CELL_PARAMETERS card' )
+         ! Cell parameters are set in cell_base_init
       ENDIF
       !
       DO i = 1, 3

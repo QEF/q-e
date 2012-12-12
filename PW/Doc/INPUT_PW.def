@@ -1980,11 +1980,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 	flag atompos_unit -use optional {
 	    enum { alat | bohr | angstrom | crystal }
-	    default { alat }
+	    default { alat (DEPRECATED) }
 	    info {
-	        alat    : atomic positions are in cartesian coordinates,
-                          in units of the lattice parameter (either 
-                          celldm(1) or A). This is the default
+	        alat    : atomic positions are in cartesian coordinates, in
+                          units of the lattice parameter (either celldm(1) 
+                          or A). If no option is specified, 'alat' is assumed;
+                          not specifying units is DEPRECATED and will no
+                          longer be allowed in the future
 	        
 	        bohr    : atomic positions are in cartesian coordinate, 
 	                  in atomic units (i.e. Bohr radii)
@@ -2196,10 +2198,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	flag lattice_type -use optional {
 	    enum { alat | bohr | angstrom }
 	    info {
-		bohr / angstrom: lattice vectors in bohr radii / angstrom.
-                (in this case the lattice parameter alat = |v1| )
-		alat or nothing specified: lattice vectors are in units of
-                the lattice parameter alat = either celldm(1) or A
+                'bohr'/'angstrom': lattice vectors in bohr radii / angstrom.
+                   In this case the lattice parameter alat = sqrt(v1*v1).
+                'alat' / nothing specified: lattice vectors in units of the
+                lattice parameter (either celldm(1) or a). Not specifying
+                units is DEPRECATED and will not be allowed in the future.
+                If nothing specified and no lattice parameter specified,
+                'bohr' is assumed - DEPRECATED, will no longer be allowed
 	    }
 	}
 

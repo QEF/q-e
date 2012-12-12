@@ -120,7 +120,7 @@
     !
     IF ( ibrav_ == 0 .and. .not. trd_ht ) THEN
        CALL errore('cell_base_init', 'ibrav=0: must read cell parameters', 1)
-    ELSE IF ( ibrav /= 0 .and. trd_ht ) THEN
+    ELSE IF ( ibrav_ /= 0 .and. trd_ht ) THEN
        CALL errore('cell_base_init', 'redundant data for cell parameters', 2)
     END IF
     !
@@ -136,15 +136,24 @@
       SELECT CASE ( TRIM( cell_units ) )
         CASE ( 'bohr' )
           IF( celldm( 1 ) /= 0.0_DP .OR. a /= 0.0_dp ) CALL errore &
-              ('cell_base_init','lattice vectors in Bohr or in a0 units?',1)
+              ('cell_base_init','lattice parameter specified twice',1)
           units = 1.0_DP
         CASE ( 'angstrom' )
           IF( celldm( 1 ) /= 0.0_DP .OR. a /= 0.0_dp ) CALL errore &
-              ('cell_base_init','lattice vectors in A or in a0 units?',2)
+              ('cell_base_init','lattice parameter specified twice',2)
           units = 1.0_DP / bohr_radius_angs
-        CASE DEFAULT
-          ! cell_units is 'none' if nothing was specified:
-          ! set also the value of cell_units to the correct value
+        CASE ( 'alat' ) 
+          IF( celldm( 1 ) /= 0.0_DP ) THEN
+             units = celldm( 1 )
+          ELSE IF ( a /= 0.0_dp ) THEN
+             units = a / bohr_radius_angs
+          ELSE
+            CALL errore ('cell_base_init', &
+                         'lattice parameter not specified',1) 
+          END IF
+          ! following case is deprecated and should be removed
+        CASE ( 'none' ) 
+          ! cell_units is 'none' if nothing was specified
           IF( celldm( 1 ) /= 0.0_DP ) THEN
              units = celldm( 1 )
              cell_units = 'alat'
@@ -155,6 +164,10 @@
              units = 1.0_DP
              cell_units = 'bohr'
           END IF
+          !
+        CASE DEFAULT
+          CALL errore ('cell_base_init', &
+                       'unexpected cell_units '//TRIM(cell_units),1) 
      END SELECT
      !
      ! ... Beware the transpose operation between matrices ht and at!

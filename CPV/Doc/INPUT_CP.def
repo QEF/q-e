@@ -1719,16 +1719,19 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 
 	flag atompos_unit -use optional {
 	    enum { alat | bohr | angstrom | crystal }
-	    default { alat }
+	    default { bohr (DEPRECATED) }
 	    info {
-                alat    : atomic positions are in cartesian coordinates,
+	        alat    : atomic positions are in cartesian coordinates,
                           in units of the lattice parameter (either
-                          celldm(1) or A). This is the default
-
-                bohr    : atomic positions are in cartesian coordinate,
-                          in atomic units (i.e. Bohr radii)
-
-                angstrom: atomic positions are in cartesian coordinates,
+                          celldm(1) or A).
+	        
+	        bohr    : atomic positions are in cartesian coordinate, 
+	                  in atomic units (i.e. Bohr).
+                          If no option is specified, 'bohr' is assumed;
+                          not specifying units is DEPRECATED and will no
+                          longer be allowed in the future
+	        
+	        angstrom: atomic positions are in cartesian coordinates, 
                           in Angstrom
 
                 crystal : atomic positions are in crystal coordinates, i.e.
@@ -1828,12 +1831,14 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
     #
     card CELL_PARAMETERS {
 	flag lattice_type -use optional {
-            enum { alat | bohr | angstrom }
+            enum { bohr | angstrom | alat }
             info {
-                bohr / angstrom: lattice vectors in bohr radii / angstrom.
-                (in this case the lattice parameter alat = |v1| )
-                alat or nothing specified: lattice vectors are in units of
-                the lattice parameter alat = either celldm(1) or A.
+                'bohr'/'angstrom': lattice vectors in bohr radii / angstrom.
+                'alat' / nothing specified: lattice vectors in units or the
+                lattice parameter (either celldm(1) or a). Not specifing
+                units is DEPRECATED and will not be allowed in the future.
+                If nothing specified and no lattice parameter specified,
+                'bohr' is assumed - DEPRECATED, will no longer be allowed
 	    }
 	}
 
