@@ -837,6 +837,8 @@ SUBROUTINE electrons()
           CALL mp_sum( magtot, intra_bgrp_comm )
           CALL mp_sum( absmag, intra_bgrp_comm )
           !
+          IF (two_fermi_energies.and.lgauss) bfield(3)=0.5D0*(ef_up-ef_dw)
+          !
        ELSE IF ( noncolin ) THEN
           !
           magtot_nc = 0.D0

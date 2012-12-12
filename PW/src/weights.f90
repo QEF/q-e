@@ -21,7 +21,6 @@ SUBROUTINE weights()
                                    two_fermi_energies
   USE ktetra,               ONLY : ltetra, ntetra, tetra
   USE lsda_mod,             ONLY : nspin, current_spin, isk
-  USE noncollin_module,     ONLY : bfield
   USE wvfct,                ONLY : nbnd, wg, et
   USE mp_global,            ONLY : intra_image_comm, inter_pool_comm
   USE mp,                   ONLY : mp_bcast, mp_sum
@@ -99,8 +98,6 @@ SUBROUTINE weights()
                           ngauss, et, ef_dw, demet_dw, wg, 2, isk )
            !
            demet = demet_up + demet_dw
-           !
-           bfield(3) = 0.5D0*( ef_up - ef_dw )
            !
         ELSE
            !
