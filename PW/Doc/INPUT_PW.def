@@ -70,8 +70,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	[ CONSTRAINTS
 	   nconstr  { constr_tol }
 	   constr_type(.)   constr(1,.)   constr(2,.) [ constr(3,.)   constr(4,.) ] { constr_target(.) } ]
-    }
 
+	[ ATOMIC_FORCES
+           label_1 Fx(1) Fy(1) Fz(1)
+           .....
+           label_n Fx(n) Fy(n) Fz(n) ]
+    }
 
     #
     # namelist CONTROL
@@ -2374,5 +2378,28 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    	}
 	    }
 	}
+    }
+    #
+    # card ATOMIC_FORCES
+    #
+
+    card ATOMIC_FORCES { 
+        label { Optional card used to specify external forces acting on atoms }
+        syntax {
+           table atomic_forces {
+              rows -start 1 -end nat {
+                 col X -type CHARACTER {
+                     info { label of the atom as specified in ATOMIC_SPECIES }
+                  }
+                  colgroup -type REAL {
+                     info { external force on atom X (cartesian components, Ry/a.u. units)
+                     }
+                     col fx
+                     col fy
+                     col fz
+                   }
+              }
+           }
+        }
     }	
 }
