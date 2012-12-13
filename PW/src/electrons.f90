@@ -739,6 +739,12 @@ SUBROUTINE electrons()
      !
      !CALL forces()
      !
+     ! ... it can be very useful to track internal clocks during
+     ! ... self-consistency for benchmarking purposes
+#if defined(__PW_TRACK_ELECTRON_STEPS)
+     CALL print_clock_pw()
+#endif
+     !
   END DO
   !
   WRITE( stdout, 9101 )

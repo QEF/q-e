@@ -333,6 +333,14 @@ SUBROUTINE print_this_clock( n )
      !
      ! ... The first clock is written as days/hour/min/sec
      !
+#if defined(__CLOCK_SECONDS)
+     !
+     WRITE( stdout, &
+        '(5X,A12," : ",F9.2,"s CPU ",F9.2,"s WALL"/)' ) &
+        clock_label(n), elapsed_cpu_time, elapsed_wall_time
+     !
+#else
+     !
      nday  = elapsed_cpu_time / 86400
      nsec  = elapsed_cpu_time - 86400 * nday
      nhour = nsec / 3600
@@ -377,6 +385,7 @@ SUBROUTINE print_this_clock( n )
              clock_label(n), nsec, msec
         !
      ENDIF
+#endif
      !
   ELSEIF ( nmax == 1 .or. t0cpu(n) /= notrunning ) THEN
      !
