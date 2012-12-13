@@ -891,7 +891,6 @@ subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   call updg (avec, avecd, g, gd, gm1, gmgd, sigma, vcell)
 
   return
-302 format(1x,3e12.8)
 109 format(1x,'at quench alpha = ',f7.4,' nstep = ',i4,/)
 1001 format(/,'     new values for : kinetic energy =   ',f18.12,/, &
        &         '                      potential energy = ',f18.12,/, &

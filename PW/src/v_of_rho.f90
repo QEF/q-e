@@ -488,7 +488,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   rhoneg(:) = rhoneg(:) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
   IF ( rhoneg(1) > eps8 .OR. rhoneg(2) > eps8 ) &
-     WRITE( stdout,'(/,5X,"negative rho (up, down): ",2E10.3)') rhoneg
+     WRITE( stdout,'(/,5X,"negative rho (up, down): ",2ES10.3)') rhoneg
   !
   ! ... energy terms, local-density contribution
   !
