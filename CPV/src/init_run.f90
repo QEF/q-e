@@ -90,6 +90,10 @@ SUBROUTINE init_run()
   !
   ! ... initialize directories
   !
+  IF( nbeg < 0 ) THEN
+     CALL create_directory( tmp_dir )
+  END IF 
+  !
   IF( nimage > 1 ) THEN
      !
      ! ... When bgrps are used, open a directory for each one
