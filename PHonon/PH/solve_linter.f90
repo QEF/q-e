@@ -118,8 +118,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
              ig,         & ! counter on G vectors
              ndim,       &
              is,         & ! counter on spin polarizations
-             nt,         & ! counter on types
-             na,         & ! counter on atoms
              nrec,       & ! the record number for dvpsi and dpsi
              ios,        & ! integer variable for I/O control
              mode          ! mode index

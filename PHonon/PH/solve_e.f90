@@ -20,7 +20,7 @@ subroutine solve_e
   !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
   !
   USE kinds,                 ONLY : DP
-  USE ions_base,             ONLY : nat, ntyp => nsp, ityp
+  USE ions_base,             ONLY : nat
   USE io_global,             ONLY : stdout, ionode
   USE io_files,              ONLY : prefix, iunigk, diropn
   USE cell_base,             ONLY : tpiba2
@@ -50,7 +50,7 @@ subroutine solve_e
                                     alpha_mix, lgamma_gamma, niter_ph, &
                                     lgamma, flmixdpot, rec_code_read
   USE phus,                  ONLY : int3_paw
-  USE qpoint,                ONLY : igkq, npwq, nksq
+  USE qpoint,                ONLY : npwq, nksq
   USE recover_mod,           ONLY : read_rec, write_rec
 
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
@@ -82,8 +82,7 @@ subroutine solve_e
   logical :: conv_root, exst
   ! conv_root: true if linear system is converged
 
-  integer :: kter, iter0, ipol, ibnd, jbnd, iter, lter, &
-       ik, ig, irr, ir, is, nrec, na, nt, ndim, ios
+  integer :: kter, iter0, ipol, ibnd, iter, lter, ik, ig, is, nrec, ndim, ios
   ! counters
   integer :: ltaver, lintercall
 
@@ -176,9 +175,9 @@ subroutine solve_e
         ! compute the kinetic energy
         !
         do ig = 1, npwq
-           g2kin (ig) = ( (xk (1,ik ) + g (1,igkq (ig)) ) **2 + &
-                          (xk (2,ik ) + g (2,igkq (ig)) ) **2 + &
-                          (xk (3,ik ) + g (3,igkq (ig)) ) **2 ) * tpiba2
+           g2kin (ig) = ( (xk (1,ik ) + g (1,igk(ig)) ) **2 + &
+                          (xk (2,ik ) + g (2,igk(ig)) ) **2 + &
+                          (xk (3,ik ) + g (3,igk(ig)) ) **2 ) * tpiba2
         enddo
         h_diag=0.d0
         do ibnd = 1, nbnd_occ (ik)
@@ -381,10 +380,10 @@ subroutine solve_e
      !
      rec_code=-20
      IF (okpaw) THEN
-        CALL write_rec('solve_e...', irr, dr2, iter, convt, 3, dvscfin, &
+        CALL write_rec('solve_e...', 0, dr2, iter, convt, 3, dvscfin, &
                                                        dvscfout, dbecsum)
      ELSE
-        CALL write_rec('solve_e...', irr, dr2, iter, convt, 3, dvscfin)
+        CALL write_rec('solve_e...', 0, dr2, iter, convt, 3, dvscfin)
      ENDIF
 
      if (check_stop_now()) call stop_smoothly_ph (.false.)
