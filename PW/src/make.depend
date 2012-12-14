@@ -1801,7 +1801,6 @@ weights.o : ../../Modules/io_global.o
 weights.o : ../../Modules/kind.o
 weights.o : ../../Modules/mp.o
 weights.o : ../../Modules/mp_global.o
-weights.o : ../../Modules/noncol.o
 weights.o : pwcom.o
 wfcinit.o : ../../Modules/becmod.o
 wfcinit.o : ../../Modules/cell_base.o

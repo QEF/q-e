@@ -74,7 +74,6 @@ addnlcc_zstar_eu_us.o : ../../Modules/kind.o
 addnlcc_zstar_eu_us.o : ../../Modules/mp_global.o
 addnlcc_zstar_eu_us.o : ../../Modules/noncol.o
 addnlcc_zstar_eu_us.o : ../../Modules/recvec.o
-addnlcc_zstar_eu_us.o : ../../PW/src/pwcom.o
 addnlcc_zstar_eu_us.o : ../../PW/src/scf_mod.o
 addnlcc_zstar_eu_us.o : phcom.o
 addusdbec.o : ../../Modules/becmod.o
