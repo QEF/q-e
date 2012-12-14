@@ -29,7 +29,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE wavefunctions_module, ONLY : evc
   USE constants,            ONLY : degspin
   USE cell_base,            ONLY : at, tpiba2
-  USE ener,                 ONLY : ef
   USE klist,                ONLY : lgauss, degauss, ngauss, xk, wk
   USE gvect,                ONLY : g
   USE gvecs,                ONLY : doublegrid
@@ -46,13 +45,12 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE paw_symmetry,         ONLY : paw_dusymmetrize, paw_dumqsymmetrize
   USE control_ph,           ONLY : rec_code, niter_ph, nmix_ph, tr2_ph, &
                                    alpha_pv, lgamma, lgamma_gamma, convt, &
-                                   nbnd_occ, alpha_mix, ldisp, rec_code_read, &
+                                   nbnd_occ, alpha_mix, rec_code_read, &
                                    where_rec, flmixdpot, ext_recover
   USE el_phon,              ONLY : elph
   USE nlcc_ph,              ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
-                                   iuwfc, lrwfc, iunrec, iudvscf, &
-                                   this_pcxpsi_is_on_file
+                                   iuwfc, lrwfc, iudvscf
   USE output,               ONLY : fildrho, fildvscf
   USE phus,                 ONLY : int3_paw, becsumort
   USE eqv,                  ONLY : dvpsi, dpsi, evq, eprec
@@ -87,8 +85,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   real(DP) :: dos_ef, weight, aux_avg (2)
   ! Misc variables for metals
   ! dos_ef: density of states at Ef
-  real(DP), external :: w0gauss, wgauss
-  ! functions computing the delta and theta function
 
   complex(DP), allocatable, target :: dvscfin(:,:,:)
   ! change of the scf potential

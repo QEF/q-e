@@ -13,7 +13,7 @@ SUBROUTINE phqscf
   !     This subroutine is the main driver of the self consistent cycle
   !     which gives as output the change of the wavefunctions and the
   !     change of the self-consistent potential due to a phonon of
-  !     a fixed q or to an electric field.
+  !     fixed q.
   !
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat

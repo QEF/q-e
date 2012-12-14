@@ -80,7 +80,11 @@ SUBROUTINE print_ks_energies()
      IF( iverbosity > 0 .AND. .NOT. lbands ) THEN
         !
         WRITE( stdout, 9032 )
-        WRITE( stdout, 9030 ) ( wg(ibnd,ik)/wk(ik), ibnd = 1, nbnd )
+        IF (ABS(wk(ik))>1.d-10) THEN
+           WRITE( stdout, 9030 ) ( wg(ibnd,ik)/wk(ik), ibnd = 1, nbnd )
+        ELSE
+           WRITE( stdout, 9030 ) ( wg(ibnd,ik), ibnd = 1, nbnd )
+        ENDIF
         !
      END IF
      !

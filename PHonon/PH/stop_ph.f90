@@ -21,6 +21,8 @@ SUBROUTINE stop_ph( flag )
   LOGICAL :: flag
   !
   !
+  CALL deallocate_part()
+  !
   CALL print_clock_ph()
   !
   CALL environment_end('PHONON')
@@ -28,8 +30,6 @@ SUBROUTINE stop_ph( flag )
   IF (nimage > 1) CALL io_image_stop()
   !
   CALL mp_global_end()
-  !
-  CALL deallocate_part()
   !
   IF ( flag ) THEN
      !
