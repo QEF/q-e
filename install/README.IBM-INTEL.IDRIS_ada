@@ -22,7 +22,7 @@
 #   export AR=xiar 
 #   export MPIF90=mpiifort 
 #   export FFT_LIBS="-L$HOME/fftw3xf -lfftw3xf_intel" 
-#   export SCALAPACK_LIBS="mkl=cluster"
+#   export SCALAPACK_LIBS="-mkl=cluster"
 #   export BLAS_LIBS="-mkl=cluster"
 #   export LAPACK_LIBS="-mkl=cluster"
 #   ./configure
