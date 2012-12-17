@@ -700,9 +700,9 @@ CONTAINS
 
 #ifdef __ELPA
      CALL BLACS_Gridinfo(ortho_cntx,nprow, npcol, my_prow,my_pcol)
-     call GET_ELPA_ROW_COL_COMMS(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
+     CALL GET_ELPA_ROW_COL_COMMS(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
      CALL SOLVE_EVP_REAL(n,  n,   s, lds,    w,  vv, lds     ,nb  ,mpi_comm_rows, mpi_comm_cols)
-     s = vv
+     IF( tv )  s = vv
      IF( ALLOCATED( vv ) ) DEALLOCATE( vv )
 #else
      CALL PDSYEVD( jobv, 'L', n, s, 1, 1, desch, w, vv, 1, 1, desch, rtmp, lwork, itmp, liwork, info )
