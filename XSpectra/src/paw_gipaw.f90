@@ -154,7 +154,7 @@ CONTAINS
     !  needed for PAW reconstruction
     !
 
-    use upf_module,         only : scan_begin, scan_end
+    use read_upf_v1_module,  only : scan_begin, scan_end
     use atom,               only : rgrid
     USE io_global,          ONLY : stdout
 
@@ -225,7 +225,7 @@ CONTAINS
     !  needed for PAW reconstruction
     !
 
-    use upf_module, only: scan_begin, scan_end
+    use read_upf_v1_module, only: scan_begin, scan_end
     USE ions_base,          ONLY : ntyp => nsp
     use atom, only: msh, rgrid
     use kinds, only: DP
