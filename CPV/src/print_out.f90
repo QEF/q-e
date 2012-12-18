@@ -299,16 +299,16 @@
       !
       !
 255   FORMAT( '     ',A5,A8,3(1X,A12),A6 )
-256   FORMAT( 'Step ',I5,1X,I7,1X,F12.5,1X,F12.5,1X,F12.5,1X,I5 )
+256   FORMAT( 'Step ',I5,1X,I7,1X,ES12.5,1X,ES12.5,1X,ES12.5,1X,I5 )
 1000  FORMAT(/,3X,'Center of mass square displacement (a.u.): ',F10.6,/)
 1944  FORMAT(//'   Partial temperatures (for each ionic specie) ', &
              /,'   Species  Temp (K)   Mean Square Displacement (a.u.)')
-1945  FORMAT(3X,I6,1X,F10.2,1X,F10.4)
-1947  FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',11X,'etot',9X,'enthal', &
-           & 10X,'econs',10X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
-1948  FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F14.5),4(1X,F7.4) )
-2948  FORMAT( I6,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F14.5),F10.2, F8.2, F8.5 )
-2949  FORMAT( I6,1X,4(1X,F7.4), F8.5 )
+1945  FORMAT(3X,I6,1X,ES10.2,1X,ES14.4)
+1947  FORMAT( 2X,'nfi',5X,'ekinc',11X,'temph',7X,'tempp',7X,'etot',12X,'enthal', &
+           & 10X,'econs',11X,'econt',11X,'vnhh',11X,'xnhh0',10X,'vnhp',11X,'xnhp0' )
+1948  FORMAT( I5,1X,ES15.5,1X,ES11.1,1X,ES11.1,4(1X,ES15.5),4(1X,ES14.4) )
+2948  FORMAT( I6,1X,ES15.5,1X,ES11.1,1X,ES11.1,4(1X,ES15.5),ES12.2, ES12.2, ES15.5 )
+2949  FORMAT( I6,1X,4(1X,ES14.4), ES15.5 )
       !
       RETURN
    END SUBROUTINE printout_new_x
