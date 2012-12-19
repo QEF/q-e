@@ -77,8 +77,8 @@ PROGRAM matdyn
   !     flfrq     output file for frequencies (default: 'matdyn.freq')
   !     flvec     output file for normalized phonon displacements 
   !               (default: 'matdyn.modes'). The normalized phonon displacements
-  !               are the eigenvectors divided by the mass and then normalized.
-  !               As such they are not orthogonal.
+  !               are the eigenvectors divided by the square root of the mass
+  !               and then normalized. As such they are not orthogonal.
   !              
   !     fleig     output file for phonon eigenvectors (default: 'matdyn.eig')
   !               The phonon eigenvectors are the eigenvectors of the dynamical
