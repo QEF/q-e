@@ -161,7 +161,8 @@ subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
            sym(irot) = sym(irot) .and. (abs(raq(ipol)-aq(ipol)) < 1.0d-5)
         enddo
      endif
-     if (.not.minus_q) then
+!     if (.not.minus_q) then
+     if (sym(irot).and..not.minus_q) then
         raq = - raq
         minus_q = eqvect (raq, aq, zero, accep)
      endif
