@@ -38,6 +38,9 @@ MODULE constants
   REAL(DP), PARAMETER :: BOHR_RADIUS_SI   = 0.52917720859E-10_DP ! m
   REAL(DP), PARAMETER :: AMU_SI           = 1.660538782E-27_DP  ! Kg
   REAL(DP), PARAMETER :: C_SI             = 2.99792458E+8_DP    ! m sec^-1
+  REAL(DP), PARAMETER :: MUNOUGHT_SI      = fpi*1.0E-7_DP       ! N A^-2
+  REAL(DP), PARAMETER :: EPSNOUGHT_SI     = 1.0_DP / (MUNOUGHT_SI * &
+                                                       C_SI**2) ! F m^-1
   !
   ! ... Physical constants, atomic units:
   ! ... AU for "Hartree" atomic units (e = m = hbar = 1)
@@ -104,8 +107,8 @@ MODULE constants
   !
   !!!!!! COMPATIBIILITY
   !
-  REAL(DP), PARAMETER :: bohr_radius_cm = bohr_radius_si * 100.0_DP
-  REAL(DP), PARAMETER :: BOHR_RADIUS_ANGS = bohr_radius_cm * 1.0E8_DP
+  REAL(DP), PARAMETER :: BOHR_RADIUS_CM = BOHR_RADIUS_SI * 100.0_DP
+  REAL(DP), PARAMETER :: BOHR_RADIUS_ANGS = BOHR_RADIUS_CM * 1.0E8_DP
   REAL(DP), PARAMETER :: ANGSTROM_AU = 1.0_DP/BOHR_RADIUS_ANGS
   REAL(DP), PARAMETER :: DIP_DEBYE = AU_DEBYE
   REAL(DP), PARAMETER :: AU_TERAHERTZ  = AU_PS
