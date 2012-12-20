@@ -1105,12 +1105,13 @@ subroutine polar_mode_permittivity( nat, eps0, z, zstar, w2, omega, lplasma)
   real(DP) :: eps_new(3,3)
  
   !Conversion factor for plasma frequency from Rydberg atomic units to SI
-  real(DP), parameter :: plasma_frequency_si = ELECTRON_SI/sqrt(EPSNOUGHT_SI* &
-                                               BOHR_RADIUS_SI**3*AMU_SI)
- 
+  real(DP) :: plasma_frequency_si 
   !Conversion factor for permittivity from Rydberg atomic units to SI
-  real(DP), parameter :: permittivity_si = plasma_frequency_si**2 / (fpi * pi)
- 
+  real(DP) :: permittivity_si 
+  ! some compiler do not like SQRT in initialization expressions
+  plasma_frequency_si = ELECTRON_SI/sqrt(EPSNOUGHT_SI*BOHR_RADIUS_SI**3*AMU_SI)
+  permittivity_si = plasma_frequency_si**2 / (fpi * pi)
+
   IF (lplasma) THEN
      WRITE(6,*)
      WRITE(6,'("# mode    omega          Z~*_x         Z~*_y         Z~*_z      &
@@ -1177,7 +1178,7 @@ subroutine polar_mode_permittivity( nat, eps0, z, zstar, w2, omega, lplasma)
  
         !write out mode index, mode effective charges, 
         !          mode contribution to permittivity, mode plasma frequency
-        WRITE(6,'(i5,6f14.6)'),imode,freq*RY_TO_CMM1,meffc(1),meffc(2),meffc(3), &
+        WRITE(6,'(i5,6f14.6)') imode,freq*RY_TO_CMM1,meffc(1),meffc(2),meffc(3), &
                     weff_tot*plasma_frequency_si*eps12*(RY_TO_CMM1 / RY_TO_THZ), &
                (weff_tot*plasma_frequency_si*eps12)**2/(w2(imode)*RY_TO_THZ**2)
      END IF
