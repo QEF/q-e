@@ -65,6 +65,9 @@ end Module dynamical
 !  lperm   logical    .true. to calculate Gamma-point mode contributions to
 !                     dielectric permittivity tensor
 !                     (default: lperm=.false.)
+!  lplasma logical    .true. to calculate Gamma-point mode effective plasma 
+!                     frequencies, automatically triggers lperm = .true. 
+!                     (default: lplasma=.false.)
 !  filout  character output file containing frequencies and modes
 !                    (default: filout='dynmat.out')
 !  filmol  character as above, in a format suitable for 'molden'
@@ -94,12 +97,12 @@ end Module dynamical
       real(DP), allocatable :: w2(:)
       integer :: nat, na, nt, ntyp, iout, axis, nspin_mag, ios
       real(DP) :: celldm(6)
-      logical :: xmldyn, lrigid, lraman, lperm
+      logical :: xmldyn, lrigid, lraman, lperm, lplasma
       logical, external :: has_xml
       integer :: ibrav, nqs
       integer, allocatable :: itau(:)
       namelist /input/ amass, asr, axis, fildyn, filout, filmol, filxsf, &
-                       lperm, q
+                       lperm, lplasma, q
       !
       ! code is parallel-compatible but not parallel
       !
@@ -117,6 +120,7 @@ end Module dynamical
       amass(:)=0.0d0
       q(:)=0.0d0
       lperm=.false.
+      lplasma=.false.
       !
       IF (ionode) read (5,input, iostat=ios)
       CALL mp_bcast(ios, ionode_id)
@@ -206,8 +210,9 @@ end Module dynamical
          CALL writexsf (filxsf, gamma, nat, atm, a0, at, tau, ityp, z)
          IF (gamma) THEN 
             CALL RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
-            IF (lperm) THEN
-                CALL polar_mode_permittivity(nat,eps0,z,zstar,w2,omega)
+            IF (lperm .OR. lplasma) THEN
+                CALL polar_mode_permittivity(nat,eps0,z,zstar,w2,omega, &
+                                             lplasma)
             ENDIF
          ENDIF
       ENDIF
@@ -1043,7 +1048,7 @@ subroutine sp3(u,v,i,na,nat,scal)
 end subroutine sp3
 !
 !----------------------------------------------------------------------
-subroutine polar_mode_permittivity( nat, eps0, z, zstar, w2, omega )
+subroutine polar_mode_permittivity( nat, eps0, z, zstar, w2, omega, lplasma)
   !----------------------------------------------------------------------
 
   !
@@ -1069,8 +1074,11 @@ subroutine polar_mode_permittivity( nat, eps0, z, zstar, w2, omega )
   !square of the phonon frequencies
   real(DP), intent(in) :: w2(3*nat)
  
-  !Cell volume
+  !cell volume
   real(DP), intent(in) :: omega
+ 
+  !calculate effective plasma frequencies
+  logical, intent(in) :: lplasma
  
   !mode index
   integer :: imode
@@ -1087,8 +1095,8 @@ subroutine polar_mode_permittivity( nat, eps0, z, zstar, w2, omega )
   !mode effective charge
   real(DP) :: meffc(3)
  
-  !!total effective plasma frequency
-  !real(DP) :: weff_tot
+  !total effective plasma frequency
+  real(DP) :: weff_tot
  
   !polar mode contribution to the permittivity
   real(DP) :: deps(3,3)
@@ -1103,11 +1111,13 @@ subroutine polar_mode_permittivity( nat, eps0, z, zstar, w2, omega )
   !Conversion factor for permittivity from Rydberg atomic units to SI
   real(DP), parameter :: permittivity_si = plasma_frequency_si**2 / (fpi * pi)
  
-  !WRITE(6,*)
-  !WRITE(6,'("# mode    omega          Z~*_x         Z~*_y         Z~*_z      &
-  !          &   W_eff         deps")')
-  !WRITE(6,'("#        [cm^-1]                  [e*Bohr/sqrt(2)]              &
-  !          &  [cm^-1]     [C^2/J*m^2]")')
+  IF (lplasma) THEN
+     WRITE(6,*)
+     WRITE(6,'("# mode    omega          Z~*_x         Z~*_y         Z~*_z      &
+               &   W_eff         deps")')
+     WRITE(6,'("#        [cm^-1]                  [e*Bohr/sqrt(2)]              &
+               &  [cm^-1]     [C^2/J*m^2]")')
+  END IF
   
   eps_new=eps0
   
@@ -1132,19 +1142,19 @@ subroutine polar_mode_permittivity( nat, eps0, z, zstar, w2, omega )
  
      ! Calculate the polar mode contribution to the permittivity
      deps = 0.0d0
-     ! Use only hard modes (omega^2 > 10^-8 Ry)
-     IF (w2(imode).gt.eps8) THEN
+     ! Use only hard modes (frequency^2 > 10^-8 Ry)
+     IF (w2(imode) > eps8) THEN
         DO i = 1 , 3
            DO j = 1 , 3
- 
+    
               ! Equation (2) of Finnie and Rabe
               deps(i,j) = (permittivity_si*eps12**2/omega)*meffc(i)*meffc(j) / & 
                           (w2(imode)*RY_TO_THZ**2)
- 
+    
            END DO
         END DO
      END IF
- 
+    
      ! Add polar mode contribution to the total permittivity
      DO i = 1 , 3
         DO j = 1 , 3
@@ -1152,24 +1162,25 @@ subroutine polar_mode_permittivity( nat, eps0, z, zstar, w2, omega )
         END DO
      END DO
  
-     !! Calculate the total effective plasma frequency for the mode
-     ! weff_tot = 0.0d0
-     !DO j = 1, 3
-     !   weff_tot = weff_tot + meffc(j)*meffc(j)
-     !END DO
-     !! Rydberg units = (e / sqrt(2)) / (Bohr * sqrt(2*m_e))
-     !weff_tot = sqrt(weff_tot/omega)/tpi
+     IF (lplasma) THEN
+        ! Calculate the total effective plasma frequency for the mode
+         weff_tot = 0.0d0
+        DO j = 1, 3
+           weff_tot = weff_tot + meffc(j)*meffc(j)
+        END DO
+        ! Rydberg units = (e / sqrt(2)) / (Bohr * sqrt(2*m_e))
+        weff_tot = sqrt(weff_tot/omega)/tpi
  
-     !!Mode frequency [units of sqrt(Ry)])
-     !freq = sqrt(abs(w2(imode)))
-     !IF (w2(imode).lt.0.0_DP) freq = -freq
+        !Mode frequency [units of sqrt(Ry)])
+        freq = sqrt(abs(w2(imode)))
+        IF (w2(imode) < 0.0_DP) freq = -freq
  
-     !!write out mode index, mode effective charges, 
-     !!          mode contribution to permittivity, mode plasma frequency
-     !WRITE(6,'(i5,6f14.6)'),imode,freq*RY_TO_CMM1,meffc(1),meffc(2),meffc(3), &
-     !            weff_tot*plasma_frequency_si*eps12*(RY_TO_CMM1 / RY_TO_THZ), &
-     !       (weff_tot*plasma_frequency_si*eps12)**2/(w2(imode)*RY_TO_THZ**2)
- 
+        !write out mode index, mode effective charges, 
+        !          mode contribution to permittivity, mode plasma frequency
+        WRITE(6,'(i5,6f14.6)'),imode,freq*RY_TO_CMM1,meffc(1),meffc(2),meffc(3), &
+                    weff_tot*plasma_frequency_si*eps12*(RY_TO_CMM1 / RY_TO_THZ), &
+               (weff_tot*plasma_frequency_si*eps12)**2/(w2(imode)*RY_TO_THZ**2)
+     END IF
   END DO
   
   WRITE(6,*)
