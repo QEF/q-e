@@ -102,10 +102,13 @@ TODO LIST - September 2012
   4.2.7 matdyn should write frequencies in a format that is suitable
         for direct plotting by gnuplot/xmgrace - see also Eyvaz' script
         for phonon plotting. Also about phonons:
-        - C(R) should be calculated at the end of a dispersion run
+        - perform calculations now performed by dynmat.x at the end of a 
+          phonon run at gamma?
+        - perform calculations now performed by q2r.x: C(q)=>C(R), at the
+          end of a dispersion run
         - projected phonon DOS with tetrahedra
         - adapt plotband.x to phonon case; in general, simplify phonon plotting
-        - QHA calculations inside matdyn? see fqha.f90
+        - Bring QHA calculations inside matdyn? see fqha.f90
   4.2.8 Interface to RESP calculation - requires adding radii to xml file
   4.2.9 elf for USPP/PAW ; delocalization indices
   4.1.10 Collection of tools and utilities for data analysis 

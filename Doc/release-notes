@@ -4,6 +4,9 @@ New in svn version:
    * CELL_PARAMETERS written on output using the same format as in input
 
 Fixed in svn version:
+
+   * PHonon: in matdyn.x, displacement patterns were no longer correct
+     if eigenvectors of the dynamical matrix were also written to file
    * PHonon: compatibility with files produced by previous releases
      was broken if pool were used
    * PHonon: the recently introduced symmetry Sq=-q+G has still some problem:

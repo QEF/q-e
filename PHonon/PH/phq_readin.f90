@@ -55,7 +55,7 @@ SUBROUTINE phq_readin()
                             nimage, my_image_id,    &
                             nproc_image_file, nproc_image, npool, &
                             get_ntask_groups, ntask_groups_file,  &
-                            nproc_bgrp_file
+                            nbgrp
   USE paw_variables, ONLY : okpaw
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
   USE freq_ph,       ONLY : fpol, fiu, nfs, nfsmax
