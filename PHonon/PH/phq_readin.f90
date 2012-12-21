@@ -482,7 +482,7 @@ SUBROUTINE phq_readin()
   IF (get_ntask_groups() > 1) &
      CALL errore('phq_readin','task_groups not available in phonon',1)
 
-  IF (nproc_bgrp_file /= nproc_pool_file) &
+  IF (nbgrp /= 1) &
      CALL errore('phq_readin','band parallelization not available in phonon',1)
 
   IF (elph.and.nimage>1) CALL errore('phq_readin',&
