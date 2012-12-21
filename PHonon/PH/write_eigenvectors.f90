@@ -16,6 +16,7 @@ subroutine write_eigenvectors (nat,ntyp,amass,ityp,q,w2,z,iout)
   ! local
   integer nat3, na, nta, ipol, i, j
   real(DP):: freq(3*nat)
+  complex(DP) z_(3*nat,3*nat)
   !
   nat3=3*nat
   !
@@ -29,7 +30,7 @@ subroutine write_eigenvectors (nat,ntyp,amass,ityp,q,w2,z,iout)
     do na = 1,nat
        nta = ityp(na)
        do ipol = 1,3
-          z((na-1)*3+ipol,i) = z((na-1)*3+ipol,i)* sqrt(amu_ry*amass(nta))
+          z_((na-1)*3+ipol,i) = z((na-1)*3+ipol,i)* sqrt(amu_ry*amass(nta))
        end do
     end do
  end do
@@ -40,7 +41,7 @@ subroutine write_eigenvectors (nat,ntyp,amass,ityp,q,w2,z,iout)
      if (w2(i) < 0.0) freq(i) = -freq(i)
      write (iout,9010) i, freq(i)*ry_to_thz, freq(i)*ry_to_cmm1
      do na = 1,nat
-        write (iout,9020) (z((na-1)*3+ipol,i),ipol=1,3)
+        write (iout,9020) (z_((na-1)*3+ipol,i),ipol=1,3)
      end do
      !
   end do
