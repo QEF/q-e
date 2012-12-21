@@ -11,6 +11,7 @@ Fixed in svn version:
      was broken if pool were used
    * PHonon: the recently introduced symmetry Sq=-q+G has still some problem:
      currently disabled
+   * divide_class: wrong check for T_h
    * PHonon: effective charges eu + PAW were not accurate with pools;
      effective charges eu + US PP + spin-orbit nonmagnetic were not
      working in parallel.
