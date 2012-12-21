@@ -1,7 +1,13 @@
 New in svn version:
+
+   * dynmat.x can calculate phonon contribution to dielectric tensor
    * CELL_PARAMETERS written on output using the same format as in input
 
 Fixed in svn version:
+   * PHonon: compatibility with files produced by previous releases
+     was broken if pool were used
+   * PHonon: the recently introduced symmetry Sq=-q+G has still some problem:
+     currently disabled
    * PHonon: effective charges eu + PAW were not accurate with pools;
      effective charges eu + US PP + spin-orbit nonmagnetic were not
      working in parallel.

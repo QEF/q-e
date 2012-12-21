@@ -1425,7 +1425,7 @@ MODULE pw_restart
             IF ( .NOT. found2) nproc_pot_file=1 ! compatibility
             CALL iotk_scan_dat( iunpun, "NUMBER_OF_PROCESSORS_PER_BAND_GROUP", &
                                nproc_bgrp_file,  FOUND=found2 )
-            IF ( .NOT. found2) nproc_bgrp_file=1 ! compatibility
+            IF ( .NOT. found2) nproc_bgrp_file=nproc_pool_file ! compatibility
             CALL iotk_scan_dat( iunpun, &
                            "NUMBER_OF_PROCESSORS_PER_DIAGONALIZATION", &
                                nproc_ortho_file, FOUND=found2 )
