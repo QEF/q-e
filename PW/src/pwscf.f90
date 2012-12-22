@@ -94,7 +94,10 @@ PROGRAM pwscf
   !
   CALL init_run()
   !
-  IF ( check_stop_now() ) CALL stop_run( .TRUE. )
+  IF ( check_stop_now() ) THEN
+     CALL punch( 'all' )
+     CALL stop_run( .TRUE. )
+  ENDIF
   !
   main_loop: DO
      !
