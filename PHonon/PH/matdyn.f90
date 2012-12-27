@@ -1919,7 +1919,7 @@ SUBROUTINE a2Fdos &
   REAL(DP), INTENT(in) :: freq(3*nat,nq), q(3,nq), at(3,3), bg(3,3), &
        tau(3,nat), alat, Emin, DeltaE
   !
-  INTEGER, INTENT(in) :: nsc, nat_blk, itau_blk, nrws
+  INTEGER, INTENT(in) :: nsc, nat_blk, itau_blk(nat), nrws
   REAL(DP), INTENT(in) :: rws(0:3,nrws), at_blk(3,3), bg_blk(3,3), omega_blk
   !
   REAL(DP), ALLOCATABLE    :: gamma(:,:), frcg(:,:,:,:,:,:,:)
