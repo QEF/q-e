@@ -421,6 +421,7 @@ pw2bgw.o : ../../PW/src/pwcom.o
 pw2bgw.o : ../../PW/src/scf_mod.o
 pw2bgw.o : ../../PW/src/start_k.o
 pw2bgw.o : ../../PW/src/symm_base.o
+pw2bgw.o : ../../PW/src/symme.o
 pw2gw.o : ../../Modules/cell_base.o
 pw2gw.o : ../../Modules/constants.o
 pw2gw.o : ../../Modules/control_flags.o

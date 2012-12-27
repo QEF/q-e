@@ -64,8 +64,10 @@
 !               process (called from write_wfng)
 ! write_rhog  - generates real/complex charge density in G-space
 !               (units of the number of electronic states per unit cell)
-! write_vxcg  - generates real/complex exchange-correlation potential in G-space
-!               (units of Rydberg) [only local part of Vxc]
+! calc_rhog   - computes charge density by summing over a subset of occupied
+!               bands (called from write_rhog)
+! write_vxcg  - generates real/complex exchange-correlation potential in
+!               G-space (units of Rydberg) [only local part of Vxc]
 ! write_vxc0  - prints real/complex exchange-correlation potential at G=0
 !               (units of eV) [only local part of Vxc]
 ! write_vxc_r - calculates matrix elements of exchange-correlation potential
@@ -77,6 +79,7 @@
 ! write_vkbg  - generates complex Kleinman-Bylander projectors in G-space
 !               (units of Rydberg)
 ! check_inversion - checks whether real/complex version is appropriate
+!               (called from everywhere)
 !
 ! Quantum ESPRESSO stores the wavefunctions in is-ik-ib-ig order
 ! BerkeleyGW stores the wavefunctions in ik-ib-is-ig order
@@ -126,6 +129,8 @@ PROGRAM pw2bgw
   integer :: wfng_nvmax
   logical :: rhog_flag
   character ( len = 256 ) :: rhog_file
+  integer :: rhog_nvmin
+  integer :: rhog_nvmax
   logical :: vxcg_flag
   character ( len = 256 ) :: vxcg_file
   logical :: vxc0_flag
@@ -147,8 +152,8 @@ PROGRAM pw2bgw
     real_or_complex, symm_type, wfng_flag, wfng_file, wfng_kgrid, &
     wfng_nk1, wfng_nk2, wfng_nk3, wfng_dk1, wfng_dk2, wfng_dk3, &
     wfng_occupation, wfng_nvmin, wfng_nvmax, rhog_flag, rhog_file, &
-    vxcg_flag, vxcg_file, vxc0_flag, vxc0_file, vxc_flag, &
-    vxc_file, vxc_integral, vxc_diag_nmin, vxc_diag_nmax, &
+    rhog_nvmin, rhog_nvmax, vxcg_flag, vxcg_file, vxc0_flag, vxc0_file, &
+    vxc_flag, vxc_file, vxc_integral, vxc_diag_nmin, vxc_diag_nmax, &
     vxc_offdiag_nmin, vxc_offdiag_nmax, vxc_zero_rho_core, &
     vscg_flag, vscg_file, vkbg_flag, vkbg_file
 
@@ -182,6 +187,8 @@ PROGRAM pw2bgw
   wfng_nvmax = 0
   rhog_flag = .FALSE.
   rhog_file = 'RHO'
+  rhog_nvmin = 0
+  rhog_nvmax = 0
   vxcg_flag = .FALSE.
   vxcg_file = 'VXC'
   vxc0_flag = .FALSE.
@@ -239,6 +246,8 @@ PROGRAM pw2bgw
   CALL mp_bcast ( wfng_nvmax, ionode_id )
   CALL mp_bcast ( rhog_flag, ionode_id )
   CALL mp_bcast ( rhog_file, ionode_id )
+  CALL mp_bcast ( rhog_nvmin, ionode_id )
+  CALL mp_bcast ( rhog_nvmax, ionode_id )
   CALL mp_bcast ( vxcg_flag, ionode_id )
   CALL mp_bcast ( vxcg_file, ionode_id )
   CALL mp_bcast ( vxc0_flag, ionode_id )
@@ -290,7 +299,8 @@ PROGRAM pw2bgw
     output_file_name = TRIM ( outdir ) // '/' // TRIM ( rhog_file )
     IF ( ionode ) WRITE ( 6, '(5x,"call write_rhog")' )
     CALL start_clock ( 'write_rhog' )
-    CALL write_rhog ( output_file_name, real_or_complex, symm_type )
+    CALL write_rhog ( output_file_name, real_or_complex, symm_type, &
+      rhog_nvmin, rhog_nvmax )
     CALL stop_clock ( 'write_rhog' )
     IF ( ionode ) WRITE ( 6, '(5x,"done write_rhog",/)' )
   ENDIF
@@ -1191,7 +1201,8 @@ END SUBROUTINE real_wfng
 
 !-------------------------------------------------------------------------------
 
-SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type )
+SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type, &
+  rhog_nvmin, rhog_nvmax )
 
   USE cell_base, ONLY : omega, alat, tpiba, tpiba2, at, bg, ibrav
   USE constants, ONLY : pi, tpi, eps6
@@ -1211,6 +1222,8 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type )
   character ( len = 256 ), intent (in) :: output_file_name
   integer, intent (in) :: real_or_complex
   character ( len = 9 ), intent (in) :: symm_type
+  integer, intent (in) :: rhog_nvmin
+  integer, intent (in) :: rhog_nvmax
 
   character :: cdate*9, ctime*9, sdate*32, stime*32, stitle*32
   integer :: unit, id, is, ig, i, j, k, ierr
@@ -1321,6 +1334,9 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type )
     ENDDO
   ENDDO
 
+  IF ( rhog_nvmin .NE. 0 .AND. rhog_nvmax .NE. 0 ) &
+    CALL calc_rhog ( rhog_nvmin, rhog_nvmax )
+
   ALLOCATE ( g_g ( nd, ng_g ) )
   ALLOCATE ( rhog_g ( ng_g, ns ) )
 
@@ -1389,6 +1405,83 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type )
   RETURN
 
 END SUBROUTINE write_rhog
+
+!-------------------------------------------------------------------------------
+
+SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
+
+! calc_rhog    Originally By Brad D. Malone    Last Modified (night before his thesis defense)
+! Computes charge density by summing over a subset of occupied bands
+
+  USE cell_base, ONLY : omega, tpiba2
+  USE fft_base, ONLY : dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
+  USE gvect, ONLY : ngm, g, nl
+  USE io_files, ONLY : nwordwfc, iunwfc
+  USE klist, ONLY : xk, nkstot
+  USE lsda_mod, ONLY : nspin
+  USE mp, ONLY : mp_sum
+  USE mp_global, ONLY : kunit, my_pool_id, inter_pool_comm, npool
+  USE noncollin_module, ONLY : nspin_mag
+  USE scf, ONLY : rho
+  USE symme, ONLY : sym_rho, sym_rho_init
+  USE wavefunctions_module, ONLY : evc, psic
+  USE wvfct, ONLY : npw, igk, wg, g2kin, ecutwfc
+
+  IMPLICIT NONE
+
+  integer, intent (in) :: rhog_nvmin
+  integer, intent (in) :: rhog_nvmax
+
+  integer :: ik, is, ib, ig, ir, nkbl, nkl, nkr, iks, ike
+
+  nkbl = nkstot / kunit
+  nkl = kunit * (nkbl / npool)
+  nkr = (nkstot - nkl * npool) / kunit
+  IF (my_pool_id .LT. nkr) nkl = nkl + kunit
+  iks = nkl * my_pool_id + 1
+  IF (my_pool_id .GE. nkr) iks = iks + nkr * kunit
+  ike = iks + nkl - 1
+
+  CALL weights ()
+
+  rho%of_r (:, :) = 0.0D0
+
+  ! take psi to R-space, compute rho in R-space
+  DO ik = iks, ike
+    is = ik - ((ik - 1) / nspin) * nspin
+    CALL gk_sort (xk (1, ik - iks + 1), ngm, g, ecutwfc &
+      / tpiba2, npw, igk, g2kin)
+    CALL davcio (evc, nwordwfc, iunwfc, ik - iks + 1, -1)
+    DO ib = rhog_nvmin, rhog_nvmax
+      psic (:) = (0.0D0, 0.0D0)
+      DO ig = 1, npw
+        psic (nl (igk (ig))) = evc (ig, ib)
+      ENDDO
+      CALL invfft ('Dense', psic, dfftp)
+      DO ir = 1, dfftp%nnr
+        rho%of_r (ir, is) = rho%of_r (ir, is) + wg (ib, ik) / omega &
+          * (dble (psic (ir)) **2 + aimag (psic (ir)) **2)
+      ENDDO
+    ENDDO
+  ENDDO
+  CALL mp_sum (rho%of_r, inter_pool_comm)
+
+  ! take rho to G-space
+  DO is = 1, nspin
+    psic (:) = (0.0D0, 0.0D0)
+    psic (:) = rho%of_r (:, is)
+    CALL fwfft ('Dense', psic, dfftp)
+    rho%of_g (:, is) = psic (nl (:))
+  ENDDO
+
+  ! symmetrize rho (didn`t make a difference)
+  CALL sym_rho_init (.False.)
+  CALL sym_rho (nspin_mag, rho%of_g)
+
+  RETURN
+
+END SUBROUTINE calc_rhog
 
 !-------------------------------------------------------------------------------
 
@@ -2690,7 +2783,7 @@ END SUBROUTINE write_vkbg
 
 subroutine check_inversion(real_or_complex, ntran, mtrx, nspin, warn, real_need_inv)
 
-! check_inversion    Originally By D. Strubbe    Last Modified 10/14/2010
+! check_inversion    Originally By David A. Strubbe    Last Modified 10/14/2010
 ! Check whether our choice of real/complex version is appropriate given the
 ! presence or absence of inversion symmetry.
 

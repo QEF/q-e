@@ -182,6 +182,27 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	    }
 	}
 
+	var rhog_nvmin -type INTEGER {
+	    default { 0 }
+	    info {
+		index of the lowest band used for calculation of charge density. This is
+		needed if one wants to exclude semicore states from charge density used
+		for the GPP model in sigma code in BerkeleyGW. Make sure to include the
+		same k-points as in scf calculation. Self-consistent charge density is
+		used if rhog_nvmin = 0 and rhog_nvmax = 0. Not used if rhog_flag = .FALSE.
+		BEWARE: this feature is highly experimental and may not work at all in
+		parallel, with pools, with spins, etc.
+	    }
+	}
+
+	var rhog_nvmax -type INTEGER {
+	    default { 0 }
+	    info {
+		index of the highest band used for calculation of charge density. See
+		description of rhog_nvmin for more details
+	    }
+	}
+
 	var vxcg_flag -type LOGICAL {
 	    default { .FALSE. }
 	    info {
