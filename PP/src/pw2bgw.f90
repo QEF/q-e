@@ -1419,7 +1419,7 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
   USE gvect, ONLY : ngm, g, nl
   USE io_files, ONLY : nwordwfc, iunwfc
   USE klist, ONLY : xk, nkstot
-  USE lsda_mod, ONLY : nspin
+  USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum
   USE mp_global, ONLY : kunit, my_pool_id, inter_pool_comm, npool
   USE noncollin_module, ONLY : nspin_mag
@@ -1449,7 +1449,7 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
 
   ! take psi to R-space, compute rho in R-space
   DO ik = iks, ike
-    is = ik - ((ik - 1) / nspin) * nspin
+    is = isk (ik)
     CALL gk_sort (xk (1, ik - iks + 1), ngm, g, ecutwfc &
       / tpiba2, npw, igk, g2kin)
     CALL davcio (evc, nwordwfc, iunwfc, ik - iks + 1, -1)
