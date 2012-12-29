@@ -184,20 +184,20 @@ done
 for q in `seq 1 8 ` ; do
 for irr in `seq 1 6` ; do
 
-\cp -f $TMP_DIR/$q.$irr/_ph0/$PREFIX.phsave/data-file.$q.$irr.xml $TMP_DIR/_ph0/$PREFIX.phsave >& /dev/null
+\cp -f $TMP_DIR/$q.$irr/_ph0/$PREFIX.phsave/data-file.$q.$irr.xml $TMP_DIR/_ph0/$PREFIX.phsave &> /dev/null
 
 done 
 #
 #  collect also the representation 0 (contribution to the dynamical 
 #  matrix independent from the induced charge).
 #
-\cp -f $TMP_DIR/$q.1/_ph0/$PREFIX.phsave/data-file.$q.0.xml $TMP_DIR/_ph0/$PREFIX.phsave >& /dev/null
+\cp -f $TMP_DIR/$q.1/_ph0/$PREFIX.phsave/data-file.$q.0.xml $TMP_DIR/_ph0/$PREFIX.phsave &> /dev/null
 
 done 
 #
 # cp electric field part
 #
-\cp -f $TMP_DIR/1.1/_ph0/$PREFIX.phsave/data-file.1.xml $TMP_DIR/_ph0/$PREFIX.phsave >& /dev/null
+\cp -f $TMP_DIR/1.1/_ph0/$PREFIX.phsave/data-file.1.xml $TMP_DIR/_ph0/$PREFIX.phsave &> /dev/null
 
 cat > alas.ph.in << EOF
 phonons of AlAs
