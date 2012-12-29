@@ -488,6 +488,9 @@ SUBROUTINE phq_readin()
   IF (elph.and.nimage>1) CALL errore('phq_readin',&
        'el-ph with image parallelization is not yet available',1)
 
+  IF (elph.AND.recover) CALL errore('phq_readin',&
+     'Recovering of electron-phonon is not yet available',1)
+
   if(elph_mat.and.fildvscf.eq.' ') call errore('phq_readin',&
        'el-ph with wannier requires fildvscf',1)
 
