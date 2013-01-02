@@ -676,6 +676,7 @@ LOGICAL FUNCTION check_para_diag( nbnd )
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE mp_global,        ONLY : np_ortho
+  USE control_flags,    ONLY : gamma_only
 
   IMPLICIT NONE
 
@@ -695,7 +696,17 @@ LOGICAL FUNCTION check_para_diag( nbnd )
      WRITE( stdout, '(/,5X,"Subspace diagonalization in iterative solution ",&
                      &     "of the eigenvalue problem:")' ) 
      IF ( check_para_diag ) THEN
-#ifdef __SCALAPACK
+#if defined(__ELPA)
+        IF ( gamma_only ) THEN
+           WRITE( stdout, '(5X,"ELPA distributed-memory algorithm ", &
+              & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
+               np_ortho(1), np_ortho(2)
+        ELSE
+           WRITE( stdout, '(5X,"scalapack distributed-memory algorithm ", &
+              & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
+               np_ortho(1), np_ortho(2)
+        END IF
+#elif defined(__SCALAPACK)
         WRITE( stdout, '(5X,"scalapack distributed-memory algorithm ", &
               & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
                np_ortho(1), np_ortho(2)
