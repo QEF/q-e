@@ -58,7 +58,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 	    info { 
 		selects what to save in filplot:
 
-		   0  = charge
+		   0  = electron (pseudo-)charge density
 
 		   1  = total potential V_bare + V_H + V_xc
 
@@ -69,6 +69,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 		   4  = local density of electronic entropy
 
 		   5  = STM images
+                        Tersoff and Hamann, PRB 31, 805 (1985)
 
 		   6  = spin polarization (rho(up)-rho(down))
 
