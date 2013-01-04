@@ -599,8 +599,8 @@ CONTAINS
   ! 
   ! Beware: paw_ddot has a hidden parallelization on all processors
   !         it must be called on all processors or else it will hang
-  !
-  IF (okpaw)         rho_ddot = rho_ddot + paw_ddot(rho1%bec, rho2%bec)
+  ! Beware: commented out because it yields too often negative values
+  ! IF (okpaw)         rho_ddot = rho_ddot + paw_ddot(rho1%bec, rho2%bec)
   IF (dipfield)      rho_ddot = rho_ddot + (e2/2.0_DP)* &
                                     (rho1%el_dipole * rho2%el_dipole)*omega/fpi
 
