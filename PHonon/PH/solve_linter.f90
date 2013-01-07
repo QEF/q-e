@@ -186,12 +186,9 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   if (lmetq0) then
      allocate ( ldos ( dfftp%nnr  , nspin_mag) )
      allocate ( ldoss( dffts%nnr , nspin_mag) )
-     IF (okpaw) THEN
-        allocate (becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin_mag))
-        call localdos_paw ( ldos , ldoss , becsum1, dos_ef )
-     ELSE
-        call localdos ( ldos , ldoss , dos_ef )
-     ENDIF
+     allocate (becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin_mag))
+     call localdos_paw ( ldos , ldoss , becsum1, dos_ef )
+     IF (okpaw) deallocate(becsum1)
   endif
   !
   !
@@ -550,7 +547,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   deallocate (aux1)
   deallocate (dbecsum)
   IF (okpaw) THEN
-     if (lmetq0.and.allocated(becsum1)) deallocate (becsum1)
+     if (allocated(becsum1)) deallocate (becsum1)
      deallocate (mixin)
      deallocate (mixout)
   ENDIF
