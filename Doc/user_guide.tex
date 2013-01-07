@@ -297,6 +297,7 @@ file \texttt{README.GPU} in the GPU-enabled distribution
 for more specific information.
 
 \subsection{Download}
+\label{SubSec:Download}
  
 Presently, \qe\ is distributed in source form; some precompiled 
 executables (binary files) are provided for \texttt{PWgui}.
@@ -318,13 +319,17 @@ doesn't recognize the "z" flag:
 \begin{verbatim}
      gunzip -c espresso-X.Y.Z.tar.gz | tar xvf -
 \end{verbatim}
-A directory \texttt{espresso-X.Y.Z/} will be created. Given the size 
-of the complete distribution, you may need to download more packages.
-If the computer you expect to install \qe\ is always connected
-to the internet, the \texttt{Makefile}'s will automatically download,
-unpack and install the required packages on demand. If not,
-you can download each required package into subdirectory
-\texttt{archive} but {\em not unpacked or uncompressed}:
+A directory \texttt{espresso-X.Y.Z/} will be created. 
+
+Additional packages that are not included in the base distribution
+will be downloaded on demand at compile time, using \texttt{make} 
+(see Sec.\ref{SubSec:Compilation}).
+Note however that this will work only if the computer you are 
+installing on is directly connected to the internet and has
+either \texttt{wget} or \texttt{curl} installed and working. 
+If you run into trouble, manually download each required package 
+into subdirectory \texttt{archive/}, {\em not unpacking or
+or uncompressing it}:
 command \texttt{make} will take care of this during installation. 
 
 Package \texttt{GWL} needs a manual download and installation:
@@ -659,6 +664,7 @@ Beware that in this case, \configure\ will blindly accept the specified value,
 and won't do any extra search. 
     
 \subsection{Compilation}
+\label{SubSec:Compilation}
 
 There are a few adjustable parameters in \texttt{Modules/parameters.f90}. 
 The
@@ -717,11 +723,16 @@ For the setup of the GUI, refer to the \texttt{PWgui-X.Y.Z /INSTALL} file, where
 X.Y.Z stands for the version number of the GUI (should be the same as the
 general version number). If you are using the SVN sources, see
 the \texttt{GUI/README} file instead.
+
+If \texttt{make} refuses for some reason to download additional 
+packages, manually download them into subdirectory 
+\texttt{archive/}, {\em not unpacking or or uncompressing it},
+and try \texttt{make} again. Also see Sec.(\ref{SubSec:Download}).
    
 \subsection{Running tests and examples}
 \label{SubSec:Examples}
 
-% You should first of all ensure that you have downloaded 
+e You should first of all ensure that you have downloaded 
 % and correctly unpacked the package containing examples (since v.4.1 in a
 % separate package):
 % \begin{verbatim}
