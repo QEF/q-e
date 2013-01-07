@@ -5,6 +5,7 @@ New in svn version:
 
 Fixed in svn version:
 
+   * PHonon: restart with convt=.true. was not working with PAW
    * PHonon: in matdyn.x, displacement patterns were no longer correct
      if eigenvectors of the dynamical matrix were also written to file
    * PHonon: compatibility with files produced by previous releases
