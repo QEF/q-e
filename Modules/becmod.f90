@@ -182,6 +182,7 @@ CONTAINS
     IF ( nkb == 0 ) RETURN
     !
     CALL start_clock( 'calbec' )
+    IF ( npw == 0 ) betapsi(:,:)=0.0_DP
     npwx= size (beta, 1)
     IF ( npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
     IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
@@ -237,6 +238,7 @@ CONTAINS
     IF ( nkb == 0 ) RETURN
     !
     CALL start_clock( 'calbec' )
+    IF ( npw == 0 ) betapsi(:,:)=(0.0_DP,0.0_DP)
     npwx= size (beta, 1)
     IF ( npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
     IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
@@ -296,6 +298,7 @@ CONTAINS
     IF ( nkb == 0 ) RETURN
     !
     CALL start_clock ('calbec')
+    IF ( npw == 0 ) betapsi(:,:,:)=(0.0_DP,0.0_DP)
     npwx= size (beta, 1)
     IF ( 2*npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
     IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
