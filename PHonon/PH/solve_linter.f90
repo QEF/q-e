@@ -153,8 +153,12 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      ! restart from Phonon calculation
      IF (okpaw) THEN
         CALL read_rec(dr2, iter0, npe, dvscfin, dvscfins, drhoscfh, dbecsum)
-        CALL setmixout(npe*dfftp%nnr*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
-                    mixin, dvscfin, dbecsum, ndim, -1 )
+        IF (convt) THEN
+           CALL PAW_dpotential(dbecsum,rho%bec,int3_paw,npe)
+        ELSE
+           CALL setmixout(npe*dfftp%nnr*nspin_mag,&
+           (nhm*(nhm+1)*nat*nspin_mag*npe)/2,mixin,dvscfin,dbecsum,ndim,-1)
+        ENDIF
      ELSE
         CALL read_rec(dr2, iter0, npe, dvscfin, dvscfins, drhoscfh)
      ENDIF
