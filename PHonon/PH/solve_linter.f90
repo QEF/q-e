@@ -188,7 +188,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      allocate ( ldoss( dffts%nnr , nspin_mag) )
      allocate (becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin_mag))
      call localdos_paw ( ldos , ldoss , becsum1, dos_ef )
-     IF (okpaw) deallocate(becsum1)
+     IF (.NOT.okpaw) deallocate(becsum1)
   endif
   !
   !
