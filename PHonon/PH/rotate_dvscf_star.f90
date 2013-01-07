@@ -30,8 +30,7 @@ subroutine rotate_dvscf_star(iq_)
 
   if(.not.drho_star%open.and..not.dvscf_star%open) return
 
-  call start_clock('totate_dvscf_star')
-
+  call start_clock('rotate_dvscf_star')
   !
   !   Generates the star of q
   !
@@ -50,5 +49,7 @@ subroutine rotate_dvscf_star(iq_)
      CALL write_dfile_star(dvscf_star, fildvscf, nsym, xq, u, nq, sxq, isq, &
           s, sr, invs, irt, ntyp, ityp,(imq==0), iq_ )
   ENDIF
+  !
+  call stop_clock('rotate_dvscf_star')
   !
 end subroutine rotate_dvscf_star
