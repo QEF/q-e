@@ -116,11 +116,11 @@ subroutine phq_summary
   !    description of the atoms inside the unit cell
   !
   WRITE( stdout, '(/, 5x,"Atoms inside the unit cell: ")')
-  WRITE( stdout, '(/,3x,"Cartesian axes")')
+  WRITE( stdout, '(/,5x,"Cartesian axes")')
   WRITE( stdout, '(/,5x,"site n.  atom      mass ", &
        &                "          positions (alat units)")')
 
-  WRITE( stdout, '(7x,i5,5x,a6,f8.4,"   tau(",i5, &
+  WRITE( stdout, '(4x,i5,2x,a6,f8.4,"   tau(",i5, &
        &                              ") = (",3f11.5,"  )")')  &
        &(na, atm (ityp (na) ) , amass (ityp (na) ), na,  &
        &(tau (ipol, na) , ipol = 1, 3) , na = 1, nat)
