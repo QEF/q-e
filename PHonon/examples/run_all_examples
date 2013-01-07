@@ -7,21 +7,25 @@ echo
 echo "run_all_examples: starting"
 
 # run all examples
-for dir in example* Partial_example Recover_example Image_example ;
+for dir in example* Partial_example Recover_example Image_example GRID_example ;
 do
     if test -f $dir/run_example
     then
         sh $dir/run_example
     fi
+    if test -f $dir/run_example_1
+    then
+        sh $dir/run_example_1
+    fi
+    if test -f $dir/run_example_2
+    then
+        sh $dir/run_example_2
+    fi
+    if test -f $dir/run_example_3
+    then
+        sh $dir/run_example_3
+    fi
 done
-
-if test -f GRID_example/run_example
-then
-   sh GRID_example/run_example
-   sh GRID_example/run_example_1
-   sh GRID_example/run_example_2
-fi
-
 
 echo
 echo "run_all_examples: done"

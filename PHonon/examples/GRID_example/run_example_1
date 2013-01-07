@@ -126,7 +126,6 @@ phonons of AlAs
   nq1=4, nq2=4, nq3=4
   start_q=$q
   last_q=$q
-  recover=.true.,
   amass(1)=26.98,
   amass(2)=74.92,
   outdir="$TMP_DIR/$q",

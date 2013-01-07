@@ -210,6 +210,7 @@ phonons of Ni at X
 EOF
 $ECHO "  running the phonon calculation at X for US-Ni...\c"
 $PH_COMMAND < ni.phX.in1 > ni.phX.out1
+$ECHO " done"
 
 # phonon calculation at X
 cat > ni.phX.in2 << EOF
@@ -416,6 +417,7 @@ phonons of Cu at X
 EOF
 $ECHO "  running the phonon calculation for one mode PAW-Cu at X...\c"
 $PH_COMMAND < Cu.phX_pbe_one_mode.in1 > Cu.phX_pbe_one_mode.out1
+$ECHO " done"
 
 # single mode phonon calculation at X
 cat > Cu.phX_pbe_one_mode.in2 << EOF

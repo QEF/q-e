@@ -11,8 +11,8 @@ subroutine mode_group &
   !-----------------------------------------------------------------------
   !
   ! This routine selects, among the symmetry matrices of the point group
-  ! of a crystal, the symmetry operations which leave a given mode unchang
-  ! For the moment it assume that the mode modenum displaces the atom
+  ! of a crystal, the symmetry operations which leave a given mode unchanged
+  ! For the moment it assumes that the mode modenum displaces the atom
   ! modenum/3 in the direction mod(modenum,3)+1
   !
   USE kinds, ONLY : DP
