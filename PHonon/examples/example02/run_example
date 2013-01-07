@@ -17,7 +17,7 @@ $ECHO "real space for AlAs in zincblende structure."
 . ../../../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x ph.x q2r.x matdyn.x"
+BIN_LIST="pw.x ph.x q2r.x matdyn.x plotband.x"
 PSEUDO_LIST="Al.pz-vbc.UPF As.pz-bhs.UPF"
 
 $ECHO
@@ -25,6 +25,14 @@ $ECHO "  executables directory: $BIN_DIR"
 $ECHO "  pseudo directory:      $PSEUDO_DIR"
 $ECHO "  temporary directory:   $TMP_DIR"
 $ECHO "  checking that needed directories and files exist...\c"
+
+# check for gnuplot
+GP_COMMAND=`which gnuplot 2>/dev/null`
+if [ "$GP_COMMAND" = "" ]; then
+        $ECHO
+        $ECHO "gnuplot not in PATH"
+        $ECHO "Results will not be plotted"
+fi
 
 # check for directories
 for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
@@ -71,13 +79,16 @@ $ECHO " done"
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
-Q2R_COMMAND="$PARA_PREFIX $BIN_DIR/q2r.x $PARA_POSTFIX"
 MATDYN_COMMAND="$PARA_PREFIX $BIN_DIR/matdyn.x $PARA_POSTFIX"
+Q2R_COMMAND="$PARA_PREFIX $BIN_DIR/q2r.x $PARA_POSTFIX"
+PLOTBAND_COMMAND="$BIN_DIR/plotband.x "
 $ECHO
 $ECHO "  running pw.x as:     $PW_COMMAND"
 $ECHO "  running ph.x as:     $PH_COMMAND"
 $ECHO "  running q2r.x as:    $Q2R_COMMAND"
 $ECHO "  running matdyn.x as: $MATDYN_COMMAND"
+$ECHO "  running plotband.x as: $PLOTBAND_COMMAND"
+$ECHO "  running gnuplot as: $GP_COMMAND"
 $ECHO
 
 # clean TMP_DIR
@@ -153,24 +164,72 @@ $ECHO " done"
 cat > matdyn.in <<EOF
  &input
     asr='simple',  amass(1)=26.98, amass(2)=74.922,
-    flfrc='alas444.fc', flfrq='alas.freq'
+    flfrc='alas444.fc', flfrq='alas.freq', q_in_band_form=.true.,
  /
- 9
-  0.000 0.0 0.0  0.0
-  0.125 0.0 0.0  0.0
-  0.250 0.0 0.0  0.0
-  0.375 0.0 0.0  0.0
-  0.500 0.0 0.0  0.0
-  0.625 0.0 0.0  0.0
-  0.750 0.0 0.0  0.0
-  0.875 0.0 0.0  0.0
-  1.000 0.0 0.0  0.0
+ 6
+  0.000 0.0 0.0   40
+  1.0   0.0 0.0   20
+  1.0   0.5 0.0   20
+  1.0   1.0 0.0   40
+  0.00  0.0 0.0   40
+  0.5   0.5 0.5    1
 EOF
 
 $ECHO "  recalculating omega(q) from C(R)...\c"
 $MATDYN_COMMAND < matdyn.in > matdyn.out
 check_failure $?
 $ECHO " done"
+
+cat > plotband.in <<EOF
+alas.freq
+0 600
+freq.plot
+freq.ps
+0.0
+0.0 
+0.1
+EOF
+
+$ECHO "  writing the phonon dispersions in freq.plot...\c"
+$PLOTBAND_COMMAND < plotband.in > /dev/null
+check_failure $?
+$ECHO " done"
+
+if [ "$GP_COMMAND" = "" ]; then
+    break
+else
+cat > gnuplot.tmp <<EOF
+set encoding iso_8859_15
+set terminal postscript enhanced solid color "Helvetica" 20
+set output "alas.dispersions.ps"
+#
+set key off
+
+set xrange [0:4.280239]
+dim=450
+set yrange [0:dim]
+set arrow from 1,0. to 1,dim nohead  lw 2
+set arrow from 2,0. to 2,dim nohead  lw 2
+set arrow from 1.5,0. to 1.5,dim nohead  lw 2
+set arrow from 3.4142,0. to 3.4142,dim nohead  lw 2
+set ylabel "frequency (cm^{-1})"
+unset xtics
+lpos=-15
+set label "{/Symbol G}" at -0.05,lpos
+set label "X" at 0.95,lpos
+set label "W" at 1.45,lpos
+set label "X" at 1.95,lpos
+set label "{/Symbol G}" at 3.37,lpos
+set label "L" at 4.1897,lpos
+
+plot "freq.plot" u 1:2 w l lw 3  
+EOF
+$ECHO "  creating the postscript file alas.dispersion.ps...\c"
+$GP_COMMAND gnuplot.tmp
+check_failure $?
+$ECHO " done"
+fi
+
 
 cat > phdos.in <<EOF
  &input
@@ -183,6 +242,26 @@ $ECHO "  calculating phonon DOS ...\c"
 $MATDYN_COMMAND < phdos.in > phdos.out
 check_failure $?
 $ECHO " done"
+
+if [ "$GP_COMMAND" = "" ]; then
+    break
+else
+cat > gnuplot1.tmp <<EOF
+set encoding iso_8859_15
+set terminal postscript enhanced solid color "Helvetica" 20
+set output "alas.phdos.ps"
+#
+set key off
+set xrange [0:450]
+set xlabel "frequency (cm^{-1})"
+set ylabel "DOS"
+plot 'alas.phdos' u 1:2 w l lw 3 
+EOF
+$ECHO "  generating plot of phonon_dos in the file alas.phdos.ps...\c"
+$GP_COMMAND  gnuplot1.tmp
+check_failure $?
+$ECHO " done"
+fi
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"
