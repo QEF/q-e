@@ -20,7 +20,7 @@ subroutine init_representations()
   USE cell_base,     ONLY : at, bg
   USE symm_base,     ONLY : nrot, nsym, sr, ftau, irt, t_rev, time_reversal, &
                             sname, invs, s  
-  USE control_ph,    ONLY : rec_code, search_sym, lgamma, &
+  USE control_ph,    ONLY : rec_code, search_sym, search_sym_save, lgamma, &
                             where_rec, current_iq, u_from_file
   USE modes,         ONLY : u, npertx, npert, gi, gimq, nirr, &
                             t, tmq, irotmq, minus_q, invsymq, &
@@ -42,7 +42,7 @@ subroutine init_representations()
        mu, nu, irr, na, it, nt, is, js, nsym_is, iq
   ! counters
 
-  logical :: sym (48), magnetic_sym, is_symmorphic, save_search_sym
+  logical :: sym (48), magnetic_sym, is_symmorphic
   ! the symmetry operations
   integer :: ierr
 
@@ -68,8 +68,6 @@ subroutine init_representations()
   ! On output minus_q=.t. if such a symmetry has been found
   ! TEMP: set_irr_* should not find again the small group of q
   !
-  save_search_sym= search_sym
-  !
   DO iq=1, nqs
      xq(1:3)  = x_q(1:3,iq)
      lgamma = ( xq(1) == 0.D0 .AND. xq(2) == 0.D0 .AND. xq(3) == 0.D0 )
@@ -89,7 +87,7 @@ subroutine init_representations()
 
 
      is_symmorphic=.NOT.(ANY(ftau(:,1:nsymq) /= 0))
-     search_sym=save_search_sym
+     search_sym=search_sym_save
      IF (.NOT.is_symmorphic) THEN
         DO isym=1,nsymq
            search_sym=( search_sym.and.(abs(gi(1,isym))<1.d-8).and.  &
@@ -123,6 +121,7 @@ subroutine init_representations()
      CALL ph_writefile('data',0)
      CALL deallocate_pert()
   ENDDO
+  search_sym=search_sym_save
   u_from_file=.TRUE.
 
   DEALLOCATE (rtau)

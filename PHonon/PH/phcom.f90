@@ -319,6 +319,7 @@ MODULE control_ph
              lnoloc,      &! if .TRUE. calculates the dielectric constant
                            ! neglecting local field effects
              search_sym=.TRUE.,  &! if .TRUE. search the mode symmetry
+             search_sym_save=.TRUE.,  &! save search symmetry 
              lnscf,       &! if .TRUE. the run makes first a nscf calculation
              ldisp,       &! if .TRUE. the run calculates full phonon dispersion
              reduce_io,   &! if .TRUE. reduces needed I/O

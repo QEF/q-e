@@ -38,12 +38,14 @@ MODULE save_ph
       !
       USE ions_base,  ONLY : nat
       USE partial,    ONLY : atomo, nat_todo
+      USE control_ph, ONLY : search_sym_save, search_sym
       !
       IMPLICIT NONE
       !
       ALLOCATE(atomo_save(nat))
       nat_todo_save=nat_todo
       atomo_save=atomo
+      search_sym_save=search_sym
 
       RETURN
     END SUBROUTINE save_ph_input_variables
@@ -54,12 +56,14 @@ MODULE save_ph
       USE io_files,   ONLY : tmp_dir
       USE ions_base,  ONLY : nat
       USE partial,    ONLY : atomo, nat_todo
+      USE control_ph, ONLY : search_sym_save, search_sym
       !
       IMPLICIT NONE
       !
       nat_todo=nat_todo_save
       atomo=atomo_save
       tmp_dir=tmp_dir_save
+      search_sym = search_sym_save
 
       RETURN
     END SUBROUTINE restore_ph_input_variables
