@@ -86,7 +86,6 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   ! ... time_reversal = use q=>-q symmetry for k-point generation
   !
   magnetic_sym = noncolin .AND. domag
-  time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
   !
   ! ... smallg_q flags in symmetry operations of the crystal
   ! ... that are not symmetry operations of the small group of q

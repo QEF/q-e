@@ -58,7 +58,6 @@ subroutine init_representations()
   u_from_file=.FALSE.
 
   magnetic_sym = noncolin .AND. domag
-  time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
   !
   ! allocate and calculate rtau, the rotated position of each atom
   !
