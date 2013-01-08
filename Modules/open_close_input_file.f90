@@ -49,6 +49,7 @@ CONTAINS
   !
   INTEGER :: stdin=5, stdtmp
   CHARACTER(LEN=512) :: dummy
+  LOGICAL, EXTERNAL :: test_input_xml
   !
 #if defined(__ABSOFT)
 #   define getarg getarg_
@@ -120,7 +121,7 @@ CONTAINS
     OPEN ( UNIT = stdtmp, FILE = TRIM(input_file) , FORM = 'FORMATTED', &
           STATUS = 'OLD', IOSTAT = ierr )
     IF ( ierr > 0 ) GO TO 30
-    CALL test_input_xml (stdtmp, lxmlinput_loc )
+    lxmlinput_loc = test_input_xml (stdtmp )
     CLOSE ( UNIT=stdtmp, status='keep')
     !
     lxmlinput = lxmlinput_loc

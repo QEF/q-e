@@ -11,63 +11,49 @@ PROGRAM neb
   !
   ! ... Nudged Elastic Band / Strings Method algorithm
   !
-  USE io_global,        ONLY : meta_ionode_id, xmlinputunit
-  USE parameters,       ONLY : ntypx, npk, lmaxx
-  USE control_flags,    ONLY : conv_elec, conv_ions, lpath, gamma_only
-  USE environment,      ONLY : environment_start, environment_end
-  USE path_variables,   ONLY : conv_path
-  USE check_stop,       ONLY : check_stop_init
-  USE path_base,        ONLY : initialize_path, search_mep
-  USE path_io_routines, ONLY : path_summary
+  USE io_global,         ONLY : meta_ionode_id, xmlinputunit
+  USE environment,       ONLY : environment_start, environment_end
+  USE path_variables,    ONLY : conv_path
+  USE check_stop,        ONLY : check_stop_init
+  USE path_base,         ONLY : initialize_path, search_mep
+  USE path_io_routines,  ONLY : path_summary
   USE image_io_routines, ONLY : io_image_start
-  USE mp_global,         ONLY : mp_bcast, mp_rank
+  USE mp_global,         ONLY : mp_bcast, mp_rank, mp_start
   !
-  USE mp_image_global_module, ONLY : mp_image_startup, world_comm
-  USE mp_image_global_module, ONLY : me_image, nimage
-  USE mp_global,             ONLY : mp_start
-  USE iotk_module,           ONLY : iotk_attlenx
+  USE mp_image_global_module, ONLY : mp_image_startup, world_comm, &
+                                     me_image, nimage
+  USE iotk_module,       ONLY : iotk_open_read, iotk_close_read, iotk_attlenx
   USE open_close_input_file, ONLY : open_input_file, close_input_file
   USE read_xml_module,       ONLY : read_xml
   USE read_cards_module,     ONLY : read_cards
   USE read_namelists_module, ONLY : read_namelists
   USE path_read_namelists_module, ONLY : path_read_namelist
-  USE path_read_cards_module,            ONLY : path_read_cards
+  USE path_read_cards_module,     ONLY : path_read_cards
+  USE path_io_units_module,  ONLY : stdinpath, set_input_unit
   !
-  USE path_io_units_module, ONLY : stdinpath, set_input_unit
-  !
-  USE path_input_parameters_module, ONLY : nstep_path
-  !
-  USE path_input_parameters_module, ONLY : input_images
-  !
-  USE path_input_parameters_module, ONLY : allocate_path_input_ions, &
+  USE path_input_parameters_module, ONLY : nstep_path, input_images, &
+                                           allocate_path_input_ions, &
                                            deallocate_path_input_ions
-  !
-  USE iotk_module,   ONLY : iotk_open_read, iotk_close_read,iotk_attlenx
   !
   IMPLICIT NONE
   !
-  !
   CHARACTER (len=iotk_attlenx) :: attr
-  !
   CHARACTER(len=256) :: engine_prefix
   !
-  INTEGER :: unit_tmp
-  !
+  INTEGER :: unit_tmp = 45
   INTEGER :: i, iimage
   CHARACTER(len=10) :: a_tmp
   !
-  INTEGER :: mpime = 0, nproc = 1, neb_comm = 0
-  INTEGER :: root = 0 
+  INTEGER :: mpime = 0, nproc = 1, neb_comm = 0, root = 0 
   !
   CHARACTER(len=256) :: parsing_file_name
-  LOGICAL :: lfound_parsing_file, lfound_input_images
+  LOGICAL :: lfound_parsing_file, lfound_input_images, lxml
   !
-  LOGICAL :: lxml
-  !
+  LOGICAL, EXTERNAL :: test_input_xml
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
-  unit_tmp = 45
-  xmlinputunit = 45
+  !
+  xmlinputunit = unit_tmp
   !
 #ifdef __MPI
   CALL mp_start(nproc,mpime,neb_comm)
@@ -76,39 +62,38 @@ PROGRAM neb
 #endif
   CALL environment_start ( 'NEB' )
   !
-  !
   ! INPUT RELATED
   !
   ! ... open input file
   !
-  if(mpime==root) CALL input_file_name_getarg(parsing_file_name,lfound_parsing_file)
+  IF ( mpime == root) CALL input_file_name_getarg &
+                              (parsing_file_name, lfound_parsing_file)
   !
   engine_prefix = "pw_"
   !
   CALL mp_bcast(parsing_file_name,root,neb_comm)
   CALL mp_bcast(lfound_parsing_file,root,neb_comm)
   !
+  IF (lfound_parsing_file) then
+     WRITE(0,*) ""
+     WRITE(0,*) "parsing_file_name: ", trim(parsing_file_name)
+     CALL path_gen_inputs ( trim(parsing_file_name), engine_prefix, &
+                            input_images, root, neb_comm )
+  ELSE
+     WRITE(0,*) ""
+     WRITE(0,*) "NO input file found, assuming nothing to parse."
+     WRITE(0,*) "Searching argument -input_images or --input_images"
+     IF ( mpime == root ) CALL input_images_getarg &
+                                  (input_images,lfound_input_images)
+     CALL mp_bcast(input_images,root,neb_comm)
+     CALL mp_bcast(lfound_input_images,root,neb_comm)
+     !
+     IF (.not.lfound_input_images) CALL errore('string_methods', &
+        'Neither a file to parse nor input files for each image found',1)
+     !
+  ENDIF
   !
-  if(lfound_parsing_file) then
-    write(0,*) ""
-    write(0,*) "parsing_file_name: ", trim(parsing_file_name)
-  call path_gen_inputs(trim(parsing_file_name),engine_prefix,input_images,root,neb_comm)
-  !
-  else
-  !
-    write(0,*) ""
-    write(0,*) "NO input file found, assuming nothing to parse."
-    write(0,*) "Searching argument -input_images or --input_images"
-    if(mpime==root) CALL input_images_getarg(input_images,lfound_input_images)
-    CALL mp_bcast(input_images,root,neb_comm)
-    CALL mp_bcast(lfound_input_images,root,neb_comm)
-  !
-    IF(.not.lfound_input_images) CALL errore('string_methods', &
-      'Neither a file to parse nor input files for each image found',1)
-  !
-  endif
-  !
-  call set_input_unit()
+  CALL set_input_unit()
   !
   open(unit=stdinpath,file="neb.dat",status="old")
   CALL path_read_namelist(stdinpath)
@@ -117,7 +102,7 @@ PROGRAM neb
   !
   !
   OPEN(unit_tmp, file=trim(engine_prefix)//"1.in")
-  CALL test_input_xml(unit_tmp,lxml)
+  lxml = test_input_xml(unit_tmp)
   CLOSE(unit_tmp)
   if(.not.lxml) then
     OPEN(unit_tmp, file=trim(engine_prefix)//"1.in")
@@ -143,7 +128,7 @@ PROGRAM neb
 
     a_tmp=trim(int_to_char(i))
     OPEN(unit_tmp,file=trim(engine_prefix)//trim(a_tmp)//".in") 
-    CALL test_input_xml(unit_tmp,lxml)
+    lxml = test_input_xml(unit_tmp)
     CLOSE(unit_tmp)
     if(.not.lxml) then
       OPEN(unit_tmp,file=trim(engine_prefix)//trim(a_tmp)//".in")

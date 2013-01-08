@@ -1,29 +1,53 @@
-subroutine test_input_xml(myunit,lxml)
 !
-implicit none
+! Copyright (C) 2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
 !
-integer, intent(in) :: myunit
-logical, intent(out) :: lxml
-!
-character(len=256) :: dummy
-character :: dummy2(1:256)
-integer :: i, j
-!
-lxml = .false.
-dummy = ""
-dummy2(:) = ""
-!
-do while (LEN_TRIM(dummy)<1)
-  read(myunit,'(A256)',END=10) dummy
-  do i=1,LEN_TRIM(dummy)
-    dummy2(i) = dummy(i:i)
-  enddo
-  if(ANY(dummy2(:)=="<")) lxml=.true.
-end do
-!
-RETURN
-!
-10 write(0,*) "from test_input_xml: Empty input file .. stopping"
-STOP
-!
-end subroutine test_input_xml
+LOGICAL FUNCTION test_input_xml (myunit)
+   !
+   ! check if file opened as unit "myunit" is a xml file or not
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(in) :: myunit
+   !
+   CHARACTER(LEN=256) :: dummy
+   INTEGER :: i, j 
+   LOGICAL :: exst
+   !
+   test_input_xml = .false.
+   INQUIRE ( UNIT=myunit, EXIST=exst )
+   IF ( .NOT. exst ) GO TO 10
+   
+   ! read until a non-empty line is found
+
+   dummy = ' '
+   DO WHILE ( LEN_TRIM(dummy) < 1 )
+      READ ( myunit,'(A)', ERR=10, END=10) dummy
+   END DO
+
+   ! remove blanks from line, clean trailing characters
+
+   j=1
+   DO i=1, LEN_TRIM(dummy) 
+      IF ( dummy(i:i) /= ' ' .AND. i > j ) THEN
+         dummy(j:j) = dummy(i:i)
+         j=j+1
+      END IF
+   END DO
+   DO i=j, LEN_TRIM(dummy) 
+      dummy(i:i) = ' '
+   END DO
+
+   ! check for string "<?xml" in the beginning, ">" at the end
+
+   j = LEN_TRIM (dummy)
+   test_input_xml = ( dummy(1:5) == "<?xml" .AND. dummy(j:j) == ">" )
+
+   RETURN
+
+10 WRITE (0,"('from test_input_xml: input file not opened or empty')")
+
+END FUNCTION test_input_xml
