@@ -8,7 +8,7 @@
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 ESPRESSO_ROOT=`cd ../.. ; pwd`
-. $ESPRESSO_ROOT/examples/environment_variables
+. $ESPRESSO_ROOT/environment_variables
 ESPRESSO_TMPDIR=$ESPRESSO_ROOT/tmp/
 ESPRESSO_PSEUDO=$ESPRESSO_ROOT/pseudo/
 
