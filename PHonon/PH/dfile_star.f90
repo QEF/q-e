@@ -113,7 +113,6 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   use io_files,         ONLY : find_free_unit, diropn, prefix
   USE constants,        ONLY : tpi
   USE dfile_autoname,   ONLY : dfile_name
-  USE save_ph,          ONLY : tmp_dir_save
   USE control_ph,       ONLY : search_sym
   USE noncollin_module, ONLY : nspin_mag
   USE mp_global,        ONLY : intra_image_comm
@@ -157,9 +156,8 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   ! counter on the representations
   ! counter on the modes
   ! the change of Vscf due to perturbations
-  COMPLEX(DP), ALLOCATABLE :: dfile_in(:,:,:),  dfile_at(:,:,:)
-  COMPLEX(DP), ALLOCATABLE :: dfile_rot(:,:,:), dfile_rot_scr(:,:,:)
-  LOGICAL :: exst, opnd
+  COMPLEX(DP), ALLOCATABLE :: dfile_at(:,:,:), dfile_rot(:,:,:), dfile_rot_scr(:,:,:)
+  LOGICAL :: exst
   CHARACTER(LEN=256) :: dfile_rot_name
   COMPLEX(DP) :: phase_xq
   INTEGER     :: ipol,iq,index0,nar
@@ -189,7 +187,6 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   !
   ! ionode does all the work from here on, the other nodes are aly required for
   ! calling set_irr which includes a mp broadcast
-  !print*, "dfile", 10
   ONLY_IONODE_1 : IF (ionode) THEN
   !
   !  Between all the possible symmetries I chose the first one
@@ -212,7 +209,6 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   ALLOCATE(     dfile_at(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x, nspin, 3*nat))
   ALLOCATE(    dfile_rot(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x, nspin, 3*nat))
   ALLOCATE(dfile_rot_scr(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x, nspin, 3*nat))
-  !print*, "dfile", 20
   !
   dfile_at = (0._dp,0._dp)
   !
@@ -233,7 +229,6 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
     !
   ENDDO
   CLOSE(iudfile) 
-  !print*, "dfile", 30
   !
   ! Transform from the basis of the patterns to cartesian basis
   dfile_rot = (0._dp,0._dp)
@@ -253,7 +248,6 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
                            dfile_rot(:,:,na+3)*at(3,j)
      ENDDO
   ENDDO
-  !print*, "dfile", 40
   !
   ! take away the phase due to the q-point
   dfile_rot = (0._dp,0._dp)
@@ -273,15 +267,15 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   ! Now I rotate the dvscf
   !
   ALLOCATE(phase_sxq(nat))
-  !print*, "dfile",50
   !
   ENDIF ONLY_IONODE_1 
+  !
+  ! This part has to be done by all cpus because some parts of rpat% are used by set_irr which 
+  ! calls mp_bcast.
   CALL allocate_rotated_pattern_repr(rpat, nat, npertx)
-  !print*, "dfile",110
   ! 
   Q_IN_THE_STAR : &
   DO iq=1,nq
-  !print*, "dfile",120
     ONLY_IONODE_2 : IF (ionode) THEN
     dfile_rot = (0._dp,0._dp)
     !
@@ -303,22 +297,8 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
             !
             ! Here I rotate r
             !
-            ri = s(1, 1, isym_inv) * (i - 1) + s(2, 1, isym_inv) * (j - 1) &
-               + s(3, 1, isym_inv) * (k - 1) - ftau (1, isym_inv)
-            !
-            rj = s(1, 2, isym_inv) * (i - 1) + s(2, 2, isym_inv) * (j - 1) &
-               + s(3, 2, isym_inv) * (k - 1) - ftau (2, isym_inv)
-            !
-            rk = s(1, 3, isym_inv) * (i - 1) + s(2,3, isym_inv) * (j - 1) &
-               + s(3, 3, isym_inv) * (k - 1) - ftau (3, isym_inv)
-            !
-            ri = MOD(ri, dfftp%nr1) + 1
-            rj = MOD(rj, dfftp%nr2) + 1
-            rk = MOD(rk, dfftp%nr3) + 1
-            !
-            IF (ri < 1) ri = ri + dfftp%nr1
-            IF (rj < 1) rj = rj + dfftp%nr2
-            IF (rk < 1) rk = rk + dfftp%nr3
+            CALL ruotaijk(s(1,1,isym_inv), ftau(1,isym_inv), i, j, k, &
+                          dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
             !
             n  = (i-1)  + (j-1)*dfftp%nr1  + (k-1)*dfftp%nr2*dfftp%nr1  + 1
             nn = (ri-1) + (rj-1)*dfftp%nr1 + (rk-1)*dfftp%nr2*dfftp%nr1 + 1
@@ -343,7 +323,6 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
       ENDDO KLOOP
       !
     ENDDO
-  !print*, "dfile",130
     !
     ! Add back the phase factor for the new q-point
     !
@@ -367,10 +346,10 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
     !
     !
     ENDIF ONLY_IONODE_2
-  !print*, "dfile",210
-    ! 
+    !
+    ! This part has to be done on all nodes because set_irr calls mp_bcast!
+    ! NOTE: the new set_irr_new subroutine woudl not work here as it uses global variables!!
     IF (descr%basis=='modes') THEN
-  !print*, "dfile",220
       !
       ! Transform to the basis of the patterns at the new q...
       !
@@ -390,7 +369,6 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
       ENDIF ONLY_IONODE_2b
     !
     ELSE IF (descr%basis=='cartesian') THEN
-  !print*, "dfile",230
       !
       ! ...or leave in the basis of cartesian displacements
       !
@@ -408,7 +386,6 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
     !
     !  Opening files and writing
     !
-    !print*, "dfile",240
     ONLY_IONODE_3 : IF (ionode) THEN
     !
     dfile_rot_name = dfile_name(sxq(:,iq), at, TRIM(descr%ext), &
@@ -426,38 +403,38 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
       ENDDO
     ENDDO
     !
-    IF(descr%pat) CALL io_pattern(nat, dfile_rot_name, rpat%nirr, rpat%npert, rpat%u, sxq(:,iq), descr%dir, +1)
+    IF(descr%pat) CALL io_pattern(nat, dfile_rot_name, rpat%nirr, rpat%npert, &
+                                  rpat%u, sxq(:,iq), descr%dir, +1)
     !
     CLOSE(iudfile_rot)
     !
     ! Also store drho(-q) if necessary
     MINUS_Q : &
-        IF (dfile_minus_q .and. xq(1)**2+xq(2)**2+xq(3)**2 > 1.d-5 )  THEN
-           dfile_rot_name = dfile_name(-sxq(:,iq), at, TRIM(descr%ext), &
-                TRIM(descr%dir)//prefix, generate=.true., index_q=iq_)
-
-        
-        iudfile_rot = find_free_unit()
-        CALL diropn (iudfile_rot, TRIM(dfile_rot_name), lrdrho, exst, descr%dir)
-        WRITE(stdout, '(7x,a,3f10.6,3a)') "Writing drho for q = (",-sxq(:,iq),') on file "',&
-                              TRIM(dfile_rot_name),'"'
-        !
-        DO na=1,nat
-          DO ipol=1,3
-            imode0=(na-1)*3+ipol
-                CALL davcio( CONJG(dfile_rot(:,:,imode0)), lrdrho, iudfile_rot, imode0, + 1 )
-          ENDDO
+    IF (dfile_minus_q .and. xq(1)**2+xq(2)**2+xq(3)**2 > 1.d-5 )  THEN
+      !
+      dfile_rot_name = dfile_name(-sxq(:,iq), at, TRIM(descr%ext), &
+                        TRIM(descr%dir)//prefix, generate=.true., index_q=iq_)
+      !
+      iudfile_rot = find_free_unit()
+      CALL diropn (iudfile_rot, TRIM(dfile_rot_name), lrdrho, exst, descr%dir)
+      WRITE(stdout, '(7x,a,3f10.6,3a)') "Writing drho for q = (",-sxq(:,iq),') on file "',&
+                            TRIM(dfile_rot_name),'"'
+      !
+      DO na=1,nat
+        DO ipol=1,3
+          imode0=(na-1)*3+ipol
+              CALL davcio( CONJG(dfile_rot(:,:,imode0)), lrdrho, iudfile_rot, imode0, + 1 )
         ENDDO
-        !
-        IF(descr%pat) CALL io_pattern(nat, dfile_rot_name, rpat%nirr, rpat%npert, CONJG(rpat%u), -sxq(:,iq), descr%dir, +1)
-        !
-        CLOSE(iudfile_rot)
+      ENDDO
+      !
+      IF(descr%pat) CALL io_pattern(nat, dfile_rot_name, rpat%nirr, rpat%npert, &
+                                    CONJG(rpat%u), -sxq(:,iq), descr%dir, +1)
+      !
+      CLOSE(iudfile_rot)
     ENDIF &
     MINUS_Q
     !
     ENDIF ONLY_IONODE_3
-  !print*, "dfile",310
-    !
     !
   ENDDO &
   Q_IN_THE_STAR
