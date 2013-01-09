@@ -32,8 +32,8 @@ LOGICAL FUNCTION test_input_xml (myunit)
 
    j=1
    DO i=1, LEN_TRIM(dummy) 
-      IF ( dummy(i:i) /= ' ' .AND. i > j ) THEN
-         dummy(j:j) = dummy(i:i)
+      IF ( dummy(i:i) /= ' ' ) THEN
+         IF ( i > j ) dummy(j:j) = dummy(i:i)
          j=j+1
       END IF
    END DO
