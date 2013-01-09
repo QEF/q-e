@@ -55,7 +55,7 @@ all : tldeps average.x bands.x dos.x epsilon.x initial_state.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw_export.x pw2gw.x \
       wannier_ham.x wannier_plot.x \
-      pw2bgw.x bgw2pw.x
+      pw2bgw.x bgw2pw.x wfck2r.x
 
 qexml.x: qexml.o qexml_example.o
 	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(QEOBJS) $(LIBOBJS)
@@ -125,6 +125,11 @@ projwfc.x : projwfc.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 pw2wannier90.x : pw2wannier90.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		pw2wannier90.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+wfck2r.x : wfck2r.o $(PPOBJS) $(PHOBJS) $(MODULES) $(LIBOBJS) 
+	$(LD) $(LDFLAGS) -o $@ \
+		wfck2r.o $(PPOBJS) $(PHOBJS) $(MODULES) $(LIBOBJS)  $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 initial_state.x : initial_state.o $(PPOBJS) $(MODULES) $(LIBOBJS)
