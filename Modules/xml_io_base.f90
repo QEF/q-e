@@ -1255,24 +1255,15 @@ MODULE xml_io_base
                          ' variables for LDA+U not present', 1 )
          !
          CALL iotk_write_dat( iunpun, "NUMBER_OF_SPECIES", nsp )
-         !
-         CALL iotk_write_dat( iunpun, "LDA_PLUS_U_KIND", lda_plus_u_kind )
-         ! 
+         CALL iotk_write_dat( iunpun, "HUBBARD_LMAX", Hubbard_lmax )
+         CALL iotk_write_dat( iunpun, "HUBBARD_L",  Hubbard_l(1:nsp) )
+         CALL iotk_write_dat( iunpun, "HUBBARD_U", Hubbard_U(1:nsp) )
+         CALL iotk_write_dat( iunpun, "HUBBARD_ALPHA", Hubbard_alpha(1:nsp) )
          CALL iotk_write_dat( iunpun, "U_PROJECTION_TYPE", trim(U_projection) )
          !
-         CALL iotk_write_dat( iunpun, "HUBBARD_LMAX", Hubbard_lmax )
-         !
-         CALL iotk_write_dat( iunpun, "HUBBARD_L", &
-                              Hubbard_l(1:nsp) )
-         !
-         CALL iotk_write_dat( iunpun, "HUBBARD_U", Hubbard_U(1:nsp) )
-         !
+         CALL iotk_write_dat( iunpun, "LDA_PLUS_U_KIND", lda_plus_u_kind )
          CALL iotk_write_dat( iunpun, "HUBBARD_J", Hubbard_J(1:3,1:nsp), COLUMNS = 3 )
-         !
          CALL iotk_write_dat( iunpun, "HUBBARD_J0", Hubbard_J0(1:nsp) )
-         !
-         CALL iotk_write_dat( iunpun, "HUBBARD_ALPHA", Hubbard_alpha(1:nsp) )
-         !
          CALL iotk_write_dat( iunpun, "HUBBARD_BETA", Hubbard_beta(1:nsp) )
          !
       END IF
