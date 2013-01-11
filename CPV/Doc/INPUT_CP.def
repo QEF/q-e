@@ -1510,8 +1510,8 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
             default { 1 }
             info { 
                Localization algorithm for Wannier function calculation:
-               wfsd=1  Steepest-Descent / Conjugate-Gradient
-               wfsd=2  Damped Dynamics
+               wfsd=1  Damped Dynamics
+               wfsd=2  Steepest-Descent / Conjugate-Gradient
                wfsd=3  Jocobi Rotation
                Remember, this is consistent with all the calwf options
                as well as the tolw (see below).
