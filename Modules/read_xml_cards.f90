@@ -1,7 +1,7 @@
 !
 !
 !-------------------------------------------------------------!
-! This module handles the cards reading in case of xml input  !
+! This module handles the cards reading for xml input         !
 !                                                             !
 !   written by Simone Ziraldo (08/2010)                       !
 !-------------------------------------------------------------!
@@ -47,7 +47,7 @@ CONTAINS
   !
   !
   !--------------------------------------------------------------------------!
-  !   This subroutine sets all the cards default value; as an input          !
+  !   This subroutine sets all the cards default values; as an input         !
   !   takes the card name that you want to set                               !
   !--------------------------------------------------------------------------!
   SUBROUTINE card_default( card )
@@ -291,7 +291,7 @@ CONTAINS
   !
   !
   !-------------------------------------------------------------------------!
-  ! Here after there are the manuals and the reading of the xml cards       !
+  ! Hereafter there are the reading of the xml cards                        !
   ! For more information see the Help file                                  !
   !-------------------------------------------------------------------------!
   !                                                                         !
@@ -489,7 +489,7 @@ CONTAINS
   !                                                                         !
   ! ATOMIC_SPECIES  (compulsory)                                            !
   !                                                                         !
-  !   set the atomic species been read and their pseudopotential file       !
+  !   set the atomic species and their pseudopotential files                !
   !                                                                         !
   ! Syntax:                                                                 !
   !                                                                         !
@@ -587,7 +587,7 @@ CONTAINS
   !      label(i)  ( character(len=4) )  label of the atomic species        !
   !      mass(i)   ( real )              atomic mass                        !
   !                                      ( in u.m.a, carbon mass is 12.0 )  !
-  !      psfile(i) ( character(len=80) ) file name of the pseudopotential   !
+  !      psfile(i) ( character(len=80) ) pseudopotential filename           !
   !                                                                         !
   !_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_!
   !
@@ -1384,14 +1384,16 @@ CONTAINS
             &node', abs( ierr ) )
        !
        !
-       IF ( nkstot > size( xk, 2 )  ) CALL errore &
-            ('card_xml_kpoints', 'too many k-points', nkstot)
+       !IF ( nkstot > size( xk, 2 )  ) CALL errore &
+       !     ('card_xml_kpoints', 'too many k-points', nkstot)
        !
        allocate( points_tmp(4,nkstot) )
        !
        CALL iotk_scan_dat_inside( xmlinputunit, points_tmp, ierr = ierr )
        IF ( ierr /= 0 ) CALL errore( 'card_xml_kpoints', 'error reading data inside mesh &
             &node', abs( ierr ) )
+       !
+       ALLOCATE ( xk(3,nkstot), wk(nkstot) )
        !
        xk( :, 1:nkstot ) = points_tmp( 1:3, : )
        wk( 1:nkstot ) = points_tmp( 4, : )
@@ -1442,6 +1444,7 @@ CONTAINS
     ELSE IF ( k_points == 'gamma' ) THEN
        !
        nkstot = 1
+       ALLOCATE ( xk(3,1), wk(1) )
        xk(:, 1) = 0.0_DP
        wk(1) = 1.0_DP
        !

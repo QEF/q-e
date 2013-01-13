@@ -43,7 +43,7 @@ CONTAINS
   !
   !
   !--------------------------------------------------------!
-  !    This routine organizes reading of the xml file      !
+  !    This routine organizes the reading of the xml file  !
   !    depending on the program                            !
   !--------------------------------------------------------!
   SUBROUTINE read_xml( prog, attr )
@@ -189,7 +189,7 @@ CONTAINS
   !
   !
   !--------------------------------------------------------!
-  ! The rest of the reading for PW program: fields and     !
+  ! The remaining part of the reading for PW: fields and   !
   ! other cards                                            !
   !--------------------------------------------------------!
   SUBROUTINE read_xml_pw( )
@@ -276,11 +276,11 @@ CONTAINS
     IF ( calculation == 'nscf' .or. calculation == 'bands'  ) THEN
        !
        IF (startingpot == 'none') startingpot = 'file'
-       IF (startingwfc == 'none') startingwfc = 'atomic'
+       IF (startingwfc == 'none') startingwfc = 'atomic+random'
        !
     ELSE IF ( restart_mode == 'from_scratch' ) THEN
        !
-       IF (startingwfc == 'none') startingwfc = 'atomic'
+       IF (startingwfc == 'none') startingwfc = 'atomic+random'
        IF (startingpot == 'none') startingpot = 'atomic'
        !
     ELSE
