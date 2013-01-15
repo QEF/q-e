@@ -10,30 +10,29 @@
 SUBROUTINE engine_to_path_pos(idx)
   !-----------------------------------------------------------------------------
   !
+  ! ... Copy atomic positions (tau) and atom types (ityp) read from file
+  ! ... to array pos(:,idx) and typ(:), where idx is the index of image 
+  ! ... Translate positions by lattice vectors to make the path smooth,
+  ! ... verify that typ is the same array for all images
   !
   USE kinds,         ONLY : DP
   !
   USE path_input_parameters_module, ONLY : input_images
-  !
   USE path_input_parameters_module, ONLY : nat, alat 
-  !
-  !
   USE path_input_parameters_module, ONLY : pos, typ
+  !
   USE ions_base, ONLY : tau, ityp
   USE cell_base, ONLY : bg, at
-  !
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: idx
   !
-  ! internal variables
-  INTEGER :: iat ! counter on atoms
+  INTEGER :: iat
   REAL(DP), ALLOCATABLE :: pos0(:,:), pos1(:,:)
   ! atomic positions (in crystal units) of the previous and current image
   !
-  ! set_my_tau
-  ! il tau e gia in units di pw
+  ! tau is already in the internal QE units
   !
   ! is this really necessary? (GS)
   if(.not.allocated(pos)) allocate(pos(3*nat,input_images))
