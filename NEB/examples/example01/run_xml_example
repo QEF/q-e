@@ -91,7 +91,7 @@ $ECHO " done"
 # NEB calculation. Automatic choice of the climbing image.
 cat > H2+H.in << EOF
 BEGIN
-EGIN_PATH_INPUT
+BEGIN_PATH_INPUT
 &PATH
   restart_mode      = 'from_scratch'
   string_method     = 'neb',
