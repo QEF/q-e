@@ -17,7 +17,6 @@ MODULE path_io_units_module
   SAVE
   !
   INTEGER :: iunpath = 6
-  INTEGER :: stdinpath = 5
     CHARACTER (LEN=256) :: &
     dat_file      = 'os.dat',    &! file containing the enegy profile
     int_file      = 'os.int',    &! file containing the interpolated energy profile
@@ -55,20 +54,4 @@ MODULE path_io_units_module
   !
   END SUBROUTINE set_io_units
   ! 
-  SUBROUTINE set_output_unit()
-  !
-  IMPLICIT NONE
-  !
-  iunpath = find_free_unit()
-  !
-  END SUBROUTINE set_output_unit
-  !
-  SUBROUTINE set_input_unit()
-  !
-  IMPLICIT NONE
-  !
-  stdinpath = find_free_unit()
-  !
-  END SUBROUTINE set_input_unit
-!
 END MODULE path_io_units_module

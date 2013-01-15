@@ -29,7 +29,6 @@ PROGRAM neb
   USE read_namelists_module, ONLY : read_namelists
   USE path_read_namelists_module, ONLY : path_read_namelist
   USE path_read_cards_module,     ONLY : path_read_cards
-  USE path_io_units_module,  ONLY : stdinpath, set_input_unit
   !
   USE path_input_parameters_module, ONLY : nstep_path, input_images, &
                                            allocate_path_input_ions, &
@@ -40,7 +39,7 @@ PROGRAM neb
   CHARACTER (len=iotk_attlenx) :: attr
   CHARACTER(len=256) :: engine_prefix
   !
-  INTEGER :: unit_tmp = 45
+  INTEGER :: unit_tmp = 45, stdinpath
   INTEGER :: i, iimage
   CHARACTER(len=10) :: a_tmp
   !
@@ -49,6 +48,7 @@ PROGRAM neb
   CHARACTER(len=256) :: parsing_file_name
   LOGICAL :: lfound_parsing_file, lfound_input_images, lxml
   !
+  INTEGER, EXTERNAL :: find_free_unit
   LOGICAL, EXTERNAL :: test_input_xml
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
@@ -93,13 +93,11 @@ PROGRAM neb
      !
   ENDIF
   !
-  CALL set_input_unit()
-  !
+  stdinpath = find_free_unit () 
   open(unit=stdinpath,file="neb.dat",status="old")
   CALL path_read_namelist(stdinpath)
   CALL path_read_cards(stdinpath)
-  close(stdinpath)
-  !
+  close(unit=stdinpath)
   !
   OPEN(unit_tmp, file=trim(engine_prefix)//"1.in")
   lxml = test_input_xml(unit_tmp)
