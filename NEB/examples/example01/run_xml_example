@@ -14,7 +14,7 @@ $ECHO "This example shows how to use neb.x to calculate the"
 $ECHO "minimum energy path (MEP) of the collinear proton transfer reaction:"
 $ECHO "  H2+H <==> H+H2, within the Born-Oppenheimer approximation."
 $ECHO
-$ECHO "!!!!!Atention for neb.x NO STANDARD INPUT is allowed,"
+$ECHO "!!! Beware: neb.x DOES NOT READ FROM STANDARD INPUT"
 $ECHO "run with neb.x -inp input_file_name > output_file_name."
 $ECHO
 $ECHO "xml format is automatically detected."
@@ -254,9 +254,6 @@ END_POSITIONS
                 </parameter>
 
         </field>
-        <field name="MD">
-
-        </field>
         <k_points type="gamma">
         </k_points>
 </input>
@@ -436,9 +433,6 @@ END_POSITIONS
                                 2
                         </integer>
                 </parameter>
-
-        </field>
-        <field name="MD">
 
         </field>
         <k_points type="gamma">
@@ -630,9 +624,6 @@ END_POSITIONS
                                 2
                         </integer>
                 </parameter>
-
-        </field>
-        <field name="MD">
 
         </field>
         <k_points type="gamma">
