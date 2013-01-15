@@ -10,24 +10,20 @@
 SUBROUTINE ioneb()
   !-----------------------------------------------------------------------------
   !
-  ! ...  this subroutine reads input data from standard input ( unit 5 )
-  ! ...  Use "-input filename" to read input from file "filename":
-  ! ...  may be useful if you have trouble reading from standard input
-  ! ...  ---------------------------------------------------------------
-  !
-  ! ...  access the modules renaming the variables that have the same name
-  ! ...  as the input parameters, this is required in order to use a code
-  ! ...  independent input parser
-  !
+  ! ... Copy neb-specific variables from path_input_variables into modules,
+  ! ... Variables that have the same name in input file and in the modules
+  ! ... are renamed (the logic is the same as in routine "iosys")
+  ! ... This is done so that it is possible to use a different input parser
   !
   USE kinds,         ONLY : DP
   USE constants,     ONLY : autoev, eV_to_kelvin
   USE io_global,     ONLY : stdout
   USE io_files,      ONLY : tmp_dir 
   USE path_variables, ONLY : lsteep_des, lquick_min, &
-                             lbroyden, lbroyden2, &
-                             llangevin, &
-                             nstep_path_      => nstep_path, &    
+                             lbroyden, lbroyden2, llangevin, &
+                             lneb, lsmd, restart
+  ! renamed variables
+  USE path_variables, ONLY : nstep_path_      => nstep_path, &    
                              ds_              => ds, &
                              use_masses_      => use_masses, &
                              CI_scheme_       => CI_scheme, &
@@ -40,21 +36,11 @@ SUBROUTINE ioneb()
                              temp_req_        => temp_req, &
                              path_thr_        => path_thr
   !
-  !
-  USE path_variables, ONLY : lneb, lsmd
-  !
-  USE path_input_parameters_module, ONLY : restart_mode
-  !
-  USE path_variables, ONLY : restart
-  !                             
-  USE path_input_parameters_module, ONLY : nstep_path, string_method, &
-                               num_of_images, path_thr, CI_scheme, opt_scheme, &
-                               use_masses, first_last_opt, temp_req, k_max,    &
-                               k_min, ds, use_freezing, fixed_tan
-  !
-  !
-  ! ... "path" specific
-  !
+  USE path_input_parameters_module, ONLY : restart_mode, nstep_path,   &
+                               string_method, num_of_images, path_thr, &
+                               CI_scheme, opt_scheme, use_masses,      &
+                               first_last_opt, temp_req, k_max, k_min, &
+                               ds, use_freezing, fixed_tan
   !
   IMPLICIT NONE
   !
@@ -191,10 +177,7 @@ SUBROUTINE ioneb()
   k_min_          = k_min
   fixed_tan_      = fixed_tan
   !
-  !
-  !
   CALL verify_neb_tmpdir( tmp_dir )
-  !
   !
   RETURN
   !
