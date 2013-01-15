@@ -5,6 +5,8 @@ New in svn version:
 
 Fixed in svn version:
 
+   * PW, PP, PHonon: files for DFT+U produced by previous versions
+     could no longer be read
    * PHonon: restart with convt=.true. was not working with PAW
    * PHonon: in matdyn.x, displacement patterns were no longer correct
      if eigenvectors of the dynamical matrix were also written to file
