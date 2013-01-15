@@ -14,6 +14,7 @@ LOGICAL FUNCTION test_input_xml (myunit)
    INTEGER, INTENT(in) :: myunit
    !
    CHARACTER(LEN=256) :: dummy
+   CHARACTER(LEN=1), EXTERNAL :: capital
    INTEGER :: i, j 
    LOGICAL :: exst
    !
@@ -33,7 +34,7 @@ LOGICAL FUNCTION test_input_xml (myunit)
    j=1
    DO i=1, LEN_TRIM(dummy) 
       IF ( dummy(i:i) /= ' ' ) THEN
-         IF ( i > j ) dummy(j:j) = dummy(i:i)
+         IF ( i > j ) dummy(j:j) = capital(dummy(i:i))
          j=j+1
       END IF
    END DO
@@ -41,11 +42,11 @@ LOGICAL FUNCTION test_input_xml (myunit)
       dummy(i:i) = ' '
    END DO
 
-   ! check for string "<?xml" in the beginning, ">" at the end
+   ! check for string "<?xml" or "<xml" in the beginning, ">" at the end
 
    j = LEN_TRIM (dummy)
-   test_input_xml = ( dummy(1:5) == "<?xml" .AND. dummy(j:j) == ">" )
-
+   test_input_xml = ( (dummy(1:5) == "<?XML") .OR. (dummy(1:4) == "<XML") ) &
+                      .AND. (dummy(j:j) == ">")
    RETURN
 
 10 WRITE (0,"('from test_input_xml: input file not opened or empty')")
