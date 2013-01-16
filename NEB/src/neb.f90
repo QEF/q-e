@@ -13,10 +13,7 @@ PROGRAM neb
   !
   USE io_global,         ONLY : meta_ionode_id, xmlinputunit
   USE environment,       ONLY : environment_start, environment_end
-  USE path_variables,    ONLY : conv_path
   USE check_stop,        ONLY : check_stop_init
-  USE path_base,         ONLY : initialize_path, search_mep
-  USE path_io_routines,  ONLY : path_summary
   USE image_io_routines, ONLY : io_image_start
   USE mp_global,         ONLY : mp_bcast, mp_rank, mp_start
   !
@@ -27,6 +24,10 @@ PROGRAM neb
   USE read_xml_module,       ONLY : read_xml
   USE read_cards_module,     ONLY : read_cards
   USE read_namelists_module, ONLY : read_namelists
+  !
+  USE path_variables,    ONLY : conv_path
+  USE path_base,         ONLY : initialize_path, search_mep
+  USE path_io_routines,  ONLY : path_summary
   USE path_read_namelists_module, ONLY : path_read_namelist
   USE path_read_cards_module,     ONLY : path_read_cards
   !

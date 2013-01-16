@@ -270,7 +270,6 @@ MODULE path_base
       !
       USE path_input_parameters_module, ONLY : input_images
       USE path_variables,   ONLY : pos, dim1, num_of_images, path_length
-!      USE path_formats,     ONLY : summary_fmt
       USE path_io_units_module,         ONLY : iunpath
       !
       IMPLICIT NONE

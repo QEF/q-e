@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2008 Quantum ESPRESSO group
+! Copyright (C) 2002-20013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,15 +13,10 @@ MODULE path_input_parameters_module
 !=----------------------------------------------------------------------------=!
 !
 !  this module contains
-!  1) the definitions of all input parameters
-!     (both those read from namelists and those read from cards)
-!  2) the definitions of all namelists
-!  3) routines that allocate data needed in input
-!  Note that all values are initialized, but the default values should be
-!  set in the appropriate routines contained in module "read_namelists"
-!  The documentation of input variables can be found in Doc/INPUT_PW.*
-!  (for pw.x) or in Doc/INPUT_CP (for cp.x)
-!  Originally written by Carlo Cavazzoni for FPMD
+!  1) the definition of all input parameters for NEB
+!  2) the definition of namelist PATH
+!  3) routines that allocate/deallocate data needed in input
+!  Based upon original NEB implementation ( C.S. 17/10/2003 )
 !
 !=----------------------------------------------------------------------------=!
   !
@@ -69,7 +64,6 @@ MODULE path_input_parameters_module
 ! ... distinguish among neb and smd done in the full phase-space
 ! ... or in the coarse-grained phase-space
 !
-  !
   INTEGER :: n_inp_images
   INTEGER :: nat = 1
   REAL(DP) :: alat
@@ -86,7 +80,7 @@ MODULE path_input_parameters_module
   !
   CHARACTER(len=80) :: string_method = 'neb' 
   ! 'neb' traditional neb as described by Jonsson
-  ! 'sm' something else
+  !  'sm' strings method
   CHARACTER(len=80) :: string_method_scheme_allowed(2)
   DATA string_method_scheme_allowed / 'neb', 'sm' /
   !
@@ -140,19 +134,12 @@ MODULE path_input_parameters_module
 !
 !    ATOMIC_POSITIONS
 !
-        !
-        ! ... variable added for NEB  ( C.S. 17/10/2003 )
-        !
         REAL(DP), ALLOCATABLE :: pos(:,:)
-        !
         INTEGER, ALLOCATABLE :: typ(:)
         !
 !
 !   CLIMBING_IMAGES
 !
-      !
-      ! ... variable added for NEB  ( C.S. 20/11/2003 )
-      !
       LOGICAL, ALLOCATABLE :: climbing( : )
 ! ----------------------------------------------------------------------
 
