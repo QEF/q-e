@@ -339,7 +339,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
                     DO ig = 1, npw
                        new (igk (ig) ) = evc (ig, jbnd)
                     ENDDO
-                    pro=cgracsc(nkb,becp%k(1,jbnd),becpold%k(1,idx(ibnd)), &
+                    pro=cgracsc(nkb,becp%k(:,jbnd),becpold%k(:,idx(ibnd)), &
                          nhm, ntyp, nh, qq, nat, ityp, ngm, NEW, old, upf)
                  ENDIF
 !                 write(6,'(3i5,f15.10)') ik,idx(ibnd), jbnd, abs(pro)
