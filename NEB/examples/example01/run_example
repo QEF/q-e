@@ -108,7 +108,6 @@ BEGIN_ENGINE_INPUT
 /
 &SYSTEM
   ibrav                  = 0,
-  celldm(1)              = 1.D0,
   nat                    = 3,
   ntyp                   = 1,
   ecutwfc                = 20.0D0,
@@ -139,7 +138,7 @@ H    0.00000000      0.00000000      0.00000000
 H    4.56670009      0.00000000      0.00000000
 END_POSITIONS
 K_POINTS { gamma }
-CELL_PARAMETERS { cubic }
+CELL_PARAMETERS { bohr }
   12.00000  0.00000  0.00000
    0.00000  5.00000  0.00000
    0.00000  0.00000  5.00000
@@ -180,7 +179,6 @@ BEGIN_ENGINE_INPUT
 /
 &SYSTEM
   ibrav                  = 0,
-  celldm(1)              = 1.D0,
   nat                    = 3,
   ntyp                   = 1,
   ecutwfc                = 20.0D0,
@@ -199,7 +197,7 @@ BEGIN_ENGINE_INPUT
 ATOMIC_SPECIES
 H  1.00794  HUSPBE.RRKJ3
 K_POINTS { gamma }
-CELL_PARAMETERS { cubic }
+CELL_PARAMETERS { bohr }
   12.00000  0.00000  0.00000
    0.00000  5.00000  0.00000
    0.00000  0.00000  5.00000
@@ -262,7 +260,6 @@ BEGIN_ENGINE_INPUT
 /
 &SYSTEM
   ibrav                  = 0,
-  celldm(1)              = 1.D0,
   nat                    = 3,
   ntyp                   = 1,
   ecutwfc                = 20.0D0,
@@ -281,7 +278,7 @@ BEGIN_ENGINE_INPUT
 ATOMIC_SPECIES
 H  1.00794  HUSPBE.RRKJ3
 K_POINTS { gamma }
-CELL_PARAMETERS { cubic }
+CELL_PARAMETERS { bohr }
   12.00000  0.00000  0.00000
    0.00000  5.00000  0.00000
    0.00000  0.00000  5.00000
