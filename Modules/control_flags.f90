@@ -177,9 +177,6 @@ MODULE control_flags
     lbfgs   =.FALSE., &! if .TRUE. the calc. is a relaxation based on BFGS
     lmd     =.FALSE., &! if .TRUE. the calc. is a dynamics
     llang   =.FALSE., &! if .TRUE. the calc. is Langevin dynamics
-    lpath   =.FALSE., &! if .TRUE. the calc. is a path optimizations
-    lneb    =.FALSE., &! if .TRUE. the calc. is NEB dynamics
-    lsmd    =.FALSE., &! if .TRUE. the calc. is string dynamics
     lwf     =.FALSE., &! if .TRUE. the calc. is with wannier functions
     !=================================================================
     !  Lingzhu Kong 

@@ -36,7 +36,7 @@ SUBROUTINE summary()
                               nelec, nelup, neldw, two_fermi_energies
   USE ktetra,          ONLY : ltetra
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, lscf, &
-                              tr2, isolve, lmd, lbfgs, lpath, iverbosity
+                              tr2, isolve, lmd, lbfgs, iverbosity
   USE noncollin_module,ONLY : noncolin
   USE spin_orb,        ONLY : domag, lspinorb
   USE funct,           ONLY : write_dft_name
@@ -116,7 +116,7 @@ SUBROUTINE summary()
   !
   call write_dft_name ( ) 
   !
-  IF ( lmd .OR. lbfgs .OR. lpath ) &
+  IF ( lmd .OR. lbfgs ) &
      WRITE( stdout, '(5X,"nstep                     = ",I12,/)' ) nstep
   !
   IF (noncolin) THEN

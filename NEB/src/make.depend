@@ -40,14 +40,12 @@ input.o : ../../Modules/xml_io_base.o
 input.o : path_input_parameters_module.o
 input.o : path_variables.o
 neb.o : ../../Modules/check_stop.o
-neb.o : ../../Modules/control_flags.o
 neb.o : ../../Modules/environment.o
 neb.o : ../../Modules/image_io_routines.o
 neb.o : ../../Modules/io_global.o
 neb.o : ../../Modules/mp_global.o
 neb.o : ../../Modules/mp_image_global_module.o
 neb.o : ../../Modules/open_close_input_file.o
-neb.o : ../../Modules/parameters.o
 neb.o : ../../Modules/read_cards.o
 neb.o : ../../Modules/read_namelists.o
 neb.o : ../../Modules/read_xml.o
@@ -55,7 +53,6 @@ neb.o : ../../iotk/src/iotk_module.o
 neb.o : path_base.o
 neb.o : path_input_parameters_module.o
 neb.o : path_io_routines.o
-neb.o : path_io_units_module.o
 neb.o : path_read_cards_module.o
 neb.o : path_read_namelists_module.o
 neb.o : path_variables.o

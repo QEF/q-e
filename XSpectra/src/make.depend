@@ -74,8 +74,8 @@ paw_gipaw.o : ../../Modules/kind.o
 paw_gipaw.o : ../../Modules/parameters.o
 paw_gipaw.o : ../../Modules/pseudo_types.o
 paw_gipaw.o : ../../Modules/radial_grids.o
+paw_gipaw.o : ../../Modules/read_upf_v1.o
 paw_gipaw.o : ../../Modules/splinelib.o
-paw_gipaw.o : ../../Modules/upf.o
 paw_read_recon_paratec.o : ../../Modules/atom.o
 paw_read_recon_paratec.o : ../../Modules/io_global.o
 paw_read_recon_paratec.o : ../../Modules/ions_base.o

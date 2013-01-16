@@ -411,6 +411,7 @@ pw2bgw.o : ../../Modules/kind.o
 pw2bgw.o : ../../Modules/mp.o
 pw2bgw.o : ../../Modules/mp_global.o
 pw2bgw.o : ../../Modules/mp_wave.o
+pw2bgw.o : ../../Modules/noncol.o
 pw2bgw.o : ../../Modules/parallel_include.o
 pw2bgw.o : ../../Modules/paw_variables.o
 pw2bgw.o : ../../Modules/recvec.o
@@ -561,6 +562,19 @@ wannier_u_matrix.o : ../../Modules/io_files.o
 wannier_u_matrix.o : ../../Modules/io_global.o
 wannier_u_matrix.o : ../../Modules/kind.o
 wannier_u_matrix.o : ../../Modules/wannier_new.o
+wfck2r.o : ../../Modules/cell_base.o
+wfck2r.o : ../../Modules/environment.o
+wfck2r.o : ../../Modules/fft_base.o
+wfck2r.o : ../../Modules/fft_interfaces.o
+wfck2r.o : ../../Modules/io_files.o
+wfck2r.o : ../../Modules/io_global.o
+wfck2r.o : ../../Modules/kind.o
+wfck2r.o : ../../Modules/mp.o
+wfck2r.o : ../../Modules/mp_global.o
+wfck2r.o : ../../Modules/noncol.o
+wfck2r.o : ../../Modules/recvec.o
+wfck2r.o : ../../Modules/wavefunctions.o
+wfck2r.o : ../../PW/src/pwcom.o
 work_function.o : ../../Modules/cell_base.o
 work_function.o : ../../Modules/constants.o
 work_function.o : ../../Modules/fft_base.o

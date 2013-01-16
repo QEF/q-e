@@ -355,7 +355,6 @@ dfile_star.o : ../../PW/src/pwcom.o
 dfile_star.o : ../../PW/src/symm_base.o
 dfile_star.o : dfile_autoname.o
 dfile_star.o : phcom.o
-dfile_star.o : save_ph_input.o
 dgradcorr.o : ../../Modules/constants.o
 dgradcorr.o : ../../Modules/control_flags.o
 dgradcorr.o : ../../Modules/fft_base.o
@@ -827,9 +826,13 @@ newdq.o : ../../Modules/paw_variables.o
 newdq.o : ../../Modules/recvec.o
 newdq.o : ../../Modules/uspp.o
 newdq.o : phcom.o
+obsolete.o : ../../Modules/becmod.o
 obsolete.o : ../../Modules/cell_base.o
 obsolete.o : ../../Modules/constants.o
 obsolete.o : ../../Modules/control_flags.o
+obsolete.o : ../../Modules/fft_base.o
+obsolete.o : ../../Modules/fft_interfaces.o
+obsolete.o : ../../Modules/io_files.o
 obsolete.o : ../../Modules/io_global.o
 obsolete.o : ../../Modules/ions_base.o
 obsolete.o : ../../Modules/kind.o
@@ -839,6 +842,8 @@ obsolete.o : ../../Modules/noncol.o
 obsolete.o : ../../Modules/random_numbers.o
 obsolete.o : ../../Modules/recvec.o
 obsolete.o : ../../Modules/run_info.o
+obsolete.o : ../../Modules/uspp.o
+obsolete.o : ../../Modules/wavefunctions.o
 obsolete.o : ../../PW/src/pwcom.o
 obsolete.o : ../../PW/src/symm_base.o
 obsolete.o : dfile_star.o
@@ -1441,6 +1446,7 @@ transform_int_so.o : phcom.o
 trntnsc.o : ../../Modules/kind.o
 write_eigenvectors.o : ../../Modules/constants.o
 write_eigenvectors.o : ../../Modules/kind.o
+write_epsilon_and_zeu.o : ../../Modules/io_global.o
 write_epsilon_and_zeu.o : ../../Modules/kind.o
 write_epsilon_and_zeu.o : phcom.o
 write_matrix.o : ../../Modules/io_global.o

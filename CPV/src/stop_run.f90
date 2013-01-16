@@ -13,10 +13,9 @@ SUBROUTINE stop_run( flag )
   ! ... Close all files and synchronize processes before stopping.
   !
   USE io_global,          ONLY : stdout, ionode
-  USE control_flags,      ONLY : lpath, lconstrain
+  USE control_flags,      ONLY : lconstrain
   USE io_files,           ONLY : prefix
   USE environment,        ONLY : environment_end
-  USE image_io_routines,   ONLY : io_image_stop
   USE constraints_module, ONLY : deallocate_constraint
   USE mp_global,          ONLY : mp_global_end
   !
@@ -27,8 +26,6 @@ SUBROUTINE stop_run( flag )
   !
   !
   CALL environment_end( 'CP' )
-  !
-  IF ( lpath ) CALL io_image_stop()
   !
   CALL deallocate_modules_var()
   !

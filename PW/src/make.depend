@@ -1205,7 +1205,6 @@ pwscf.o : ../../Modules/cell_base.o
 pwscf.o : ../../Modules/check_stop.o
 pwscf.o : ../../Modules/control_flags.o
 pwscf.o : ../../Modules/environment.o
-pwscf.o : ../../Modules/image_io_routines.o
 pwscf.o : ../../Modules/io_files.o
 pwscf.o : ../../Modules/io_global.o
 pwscf.o : ../../Modules/mp_global.o

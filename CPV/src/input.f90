@@ -188,7 +188,6 @@ MODULE input
      USE control_flags, ONLY : textfor
      USE control_flags, ONLY : do_makov_payne, twfcollect
      USE control_flags, ONLY : lwf, lwfnscf, lwfpbe0, lwfpbe0nscf ! Lingzhu Kong
-     USE control_flags, ONLY : lneb, lsmd, lpath
      USE control_flags, ONLY : llondon, smallmem
      !
      ! ...  Other modules
@@ -290,13 +289,6 @@ MODULE input
      !
      emass_ = emass
      emaec_ = emass_cutoff
-     ! no longer implemented!
-     lneb = ( TRIM( calculation ) == 'neb' )
-     IF ( lneb ) CALL errore ( 'iosys', &
-                 'NEB no longer implemented, use "neb.x" instead', 1)
-     lsmd = ( TRIM( calculation ) == 'smd' )
-     IF ( lsmd ) CALL errore ( 'iosys', 'SMD no longer implemented', 1)
-     lpath = lneb .OR. lsmd
 !====================================================================
 !Lingzhu Kong
      lwf = ( TRIM( calculation ) == 'cp-wf'      .OR. &

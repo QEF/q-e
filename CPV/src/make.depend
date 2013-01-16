@@ -891,7 +891,6 @@ spline.o : ../../Modules/kind.o
 stop_run.o : ../../Modules/constraints_module.o
 stop_run.o : ../../Modules/control_flags.o
 stop_run.o : ../../Modules/environment.o
-stop_run.o : ../../Modules/image_io_routines.o
 stop_run.o : ../../Modules/io_files.o
 stop_run.o : ../../Modules/io_global.o
 stop_run.o : ../../Modules/mp_global.o
