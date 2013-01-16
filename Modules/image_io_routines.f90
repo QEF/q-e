@@ -16,7 +16,6 @@ MODULE image_io_routines
   ! ... from the orignal path_io Written by Carlo Sbraccia ( 2003-2006 )
   !
   USE kinds,      ONLY : DP
-  USE io_global,  ONLY : meta_ionode, meta_ionode_id
   !
   IMPLICIT NONE
   !
