@@ -196,7 +196,7 @@ CONTAINS
     myrank = mp_rank(world)
     npe = mp_size(world)
     !
-    CALL mp_global_start_new( root, myrank, world, npe )
+    CALL mp_global_start( root, myrank, world, npe )
     !
     ! ... initialize input/output, set (and get) the I/O nodes
     !
@@ -257,7 +257,7 @@ CONTAINS
   END SUBROUTINE mp_startup_new
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE mp_global_start_new( root_i, mpime_i, group_i, nproc_i )
+  SUBROUTINE mp_global_start( root_i, mpime_i, group_i, nproc_i )
     !-----------------------------------------------------------------------
     !
     IMPLICIT NONE
@@ -286,7 +286,7 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE mp_global_start_new
+  END SUBROUTINE mp_global_start
   !
   !-----------------------------------------------------------------------
   SUBROUTINE mp_global_end ( )
