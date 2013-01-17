@@ -103,7 +103,7 @@ PROGRAM pwscf
      !
      ! ... file in CASINO format written here if required
      !
-     CALL pw2casino()
+     IF ( lmd ) CALL pw2casino()
      !
      ! ... force calculation
      !
@@ -154,6 +154,8 @@ PROGRAM pwscf
   END DO main_loop
   !
   ! ... save final data file
+  !
+  IF ( .not. lmd) CALL pw2casino()
   !
   CALL punch('all')
   CALL stop_run( conv_ions )
