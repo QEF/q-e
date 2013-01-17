@@ -23,6 +23,7 @@ default :
 	@echo '  want         Quantum Transport with Wannier functions'
 	@echo '  yambo        electronic excitations with plane waves'
 	@echo '  plumed       Metadynamics plugin for pw or cp'
+	@echo '  epw          Electron-Phonon Coupling with wannier functions, EPW package' 
 	@echo '  gpu          Download the latest QE-GPU package'
 	@echo '  clean        remove executables and objects'
 	@echo '  veryclean    revert distribution to the original status'
@@ -144,6 +145,9 @@ yambo: touch-dummy
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 plumed: touch-dummy
+	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+
+epw: touch-dummy
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 gpu: touch-dummy
