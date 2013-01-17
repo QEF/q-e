@@ -182,6 +182,7 @@ configure-gipaw: touch-dummy
 epw: 
 	if test -d ../EPW; then \
 	cd ../EPW; $(MAKE) all; cd ../bin; ln -fs ../EPW/bin/epw.x . ; fi
+	-(cd ../bin; ln -fs ../EPW/src/epw.x .)
 	touch make-epw
 
 ###########################################################
