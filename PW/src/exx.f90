@@ -630,7 +630,7 @@ CONTAINS
 
     USE mp_global,            ONLY : nproc_pool, me_pool, nproc_bgrp, me_bgrp, &
                                      init_index_over_band, inter_bgrp_comm, &
-                                     mpime, inter_pool_comm
+                                     inter_pool_comm
     USE mp,                   ONLY : mp_sum
     USE funct,                ONLY : get_exx_fraction, start_exx, exx_is_active, &
                                      get_screening_parameter 
@@ -960,9 +960,8 @@ CONTAINS
     USE fft_base,       ONLY : dffts
     USE fft_interfaces, ONLY : fwfft, invfft
 
-!     USE parallel_include  
-    USE mp_global,      ONLY : nproc, ibnd_start, ibnd_end, mpime, &
-                               inter_bgrp_comm, intra_bgrp_comm, my_bgrp_id, nbgrp
+    USE mp_global,      ONLY : ibnd_start, ibnd_end, inter_bgrp_comm, &
+                               intra_bgrp_comm, my_bgrp_id, nbgrp
     USE mp,             ONLY : mp_sum, mp_barrier
     USE gvect,          ONLY : ecutrho
     USE wavefunctions_module, ONLY : psic

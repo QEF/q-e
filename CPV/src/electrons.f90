@@ -97,7 +97,7 @@
     END SUBROUTINE distribute_b
 !
     SUBROUTINE collect_b( b, b_bgrp )
-      USE mp_global, ONLY : inter_bgrp_comm, mpime
+      USE mp_global, ONLY : inter_bgrp_comm
       USE mp,        ONLY : mp_sum
       REAL(DP), INTENT(OUT) :: b(:,:)
       REAL(DP), INTENT(IN)  :: b_bgrp(:,:)
@@ -132,7 +132,7 @@
     END SUBROUTINE distribute_c
 !
     SUBROUTINE collect_c( c, c_bgrp )
-      USE mp_global, ONLY : inter_bgrp_comm, mpime
+      USE mp_global, ONLY : inter_bgrp_comm
       USE mp,        ONLY : mp_sum
       COMPLEX(DP), INTENT(OUT) :: c(:,:)
       COMPLEX(DP), INTENT(IN)  :: c_bgrp(:,:)

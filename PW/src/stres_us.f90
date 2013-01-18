@@ -26,7 +26,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE spin_orb,             ONLY : lspinorb
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : noncolin, npol
-  USE mp_global,            ONLY : me_pool, root_pool, intra_bgrp_comm, mpime
+  USE mp_global,            ONLY : me_pool, root_pool, intra_bgrp_comm
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp, calbec
   USE mp,                   ONLY : mp_sum, mp_get_comm_null, mp_circular_shift_left 

@@ -15,7 +15,7 @@ SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
       USE gvecw,          ONLY : ngw
       USE electrons_base, ONLY : nbspx_bgrp, ibgrp_g2l, nupdwn, iupdwn, nbspx, iupdwn_bgrp, nspin
       USE kinds,          ONLY : DP
-      USE mp_global,      ONLY : inter_bgrp_comm, mpime
+      USE mp_global,      ONLY : inter_bgrp_comm
       USE mp,             ONLY : mp_sum
 !
       IMPLICIT NONE

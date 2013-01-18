@@ -326,7 +326,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE spin_orb,         ONLY : domag
   USE funct,            ONLY : xc, xc_spin
   USE scf,              ONLY : scf_type
-  USE mp_global,        ONLY : intra_pool_comm, intra_bgrp_comm, mpime
+  USE mp_global,        ONLY : intra_pool_comm, intra_bgrp_comm
   USE mp,               ONLY : mp_sum
 
   !

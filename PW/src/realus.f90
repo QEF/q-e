@@ -1077,7 +1077,6 @@ MODULE realus
       USE uspp_param,       ONLY : upf, nh, nhm
       USE noncollin_module, ONLY : noncolin, nspin_mag
       USE spin_orb,         ONLY : domag, lspinorb
-      USE mp_global,        ONLY : mpime
       !
       IMPLICIT NONE
       !

@@ -1706,7 +1706,6 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   USE io_files,         ONLY : prefix, xmlpun, &
                                delete_if_present, check_writable
   USE pw_restart,       ONLY : pw_readfile
-  USE mp_global,        ONLY : mpime, nproc
   USE io_global,        ONLY : ionode
   USE mp,               ONLY : mp_barrier
   USE xml_io_base,      ONLY : copy_file

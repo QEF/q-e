@@ -17,8 +17,8 @@ SUBROUTINE data_structure_custom(fc, gamma_only)
   USE cell_base,  ONLY : bg, tpiba, tpiba2
   USE klist,      ONLY : xk, nks
   USE mp,         ONLY : mp_sum, mp_max,mp_barrier
-  USE mp_global,  ONLY : mpime, me_bgrp, nproc_bgrp, inter_bgrp_comm,&
-                         & intra_bgrp_comm, root_bgrp 
+  USE mp_global,  ONLY : me_bgrp, nproc_bgrp, inter_bgrp_comm, &
+                         intra_bgrp_comm, root_bgrp 
   USE mp_global,  ONLY : get_ntask_groups 
   USE stick_set,  ONLY : pstickset_custom
   USE fft_custom, ONLY : fft_cus, gvec_init

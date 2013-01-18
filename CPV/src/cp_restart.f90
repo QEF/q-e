@@ -55,7 +55,7 @@ MODULE cp_restart
                                            nwordwfc, tmp_dir, diropn
       USE mp_global,                ONLY : intra_image_comm, me_image, &
                                            nproc_pool, nproc_image, nproc, &
-                                           mpime, me_bgrp, nproc_bgrp, &
+                                           me_bgrp, nproc_bgrp, &
                                            my_bgrp_id, intra_bgrp_comm, &
                                            intra_image_comm, inter_bgrp_comm, &
                                            root_bgrp, intra_pool_comm

@@ -18,7 +18,6 @@ MODULE ms2
   ! configuration will be ignored.
 
   USE iso_c_binding
-  USE mp_global,        ONLY : root, world_comm, mpime
   USE mp,               ONLY : mp_bcast, mp_barrier
 
   IMPLICIT NONE

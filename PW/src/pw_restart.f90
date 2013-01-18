@@ -31,7 +31,7 @@ MODULE pw_restart
                         qexml_version, qexml_version_init, pseudo_dir
   USE io_global, ONLY : ionode, ionode_id
   USE mp_global, ONLY : my_pool_id, intra_pool_comm, &
-                        my_bgrp_id, intra_image_comm, intra_bgrp_comm, mpime
+                        my_bgrp_id, intra_image_comm, intra_bgrp_comm
   USE mp,        ONLY : mp_bcast, mp_sum, mp_max
   USE parser,    ONLY : version_compare
   !
