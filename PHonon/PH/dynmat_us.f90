@@ -41,7 +41,7 @@ SUBROUTINE dynmat_us()
   USE control_ph,           ONLY : nbnd_occ, lgamma
   USE units_ph,             ONLY : iuwfc, lrwfc
   USE io_global,            ONLY : stdout
-  USE mp_global,            ONLY : my_pool_id, inter_pool_comm, intra_pool_comm
+  USE mp_global,            ONLY : my_pool_id, inter_pool_comm, intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
 
 
@@ -120,7 +120,7 @@ SUBROUTINE dynmat_us()
      ENDDO
   ENDDO
 
-  CALL mp_sum (dynwrk, intra_pool_comm)
+  CALL mp_sum (dynwrk, intra_bgrp_comm)
   !
   ! each pool contributes to next term
   !

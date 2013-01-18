@@ -27,7 +27,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE eqv,                  ONLY : evq
   USE qpoint,               ONLY : ikqs
 
-  USE mp_global,            ONLY : intra_pool_comm
+  USE mp_global,            ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
 
   !Needed only for TDDFPT
@@ -141,7 +141,7 @@ CONTAINS
     ENDIF
     ps (:,:) = ps(:,:) * alpha_pv
 #ifdef __MPI
-    CALL mp_sum ( ps, intra_pool_comm )
+    CALL mp_sum ( ps, intra_bgrp_comm )
 #endif
     
     hpsi (:,:) = (0.d0, 0.d0)
@@ -193,7 +193,7 @@ CONTAINS
     ENDIF
     ps (:,:) = ps(:,:) * alpha_pv
 #ifdef __MPI
-    CALL mp_sum ( ps, intra_pool_comm )
+    CALL mp_sum ( ps, intra_bgrp_comm )
 #endif
     
     hpsi (:,:) = (0.d0, 0.d0)

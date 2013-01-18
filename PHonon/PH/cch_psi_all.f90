@@ -24,7 +24,7 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
   USE eqv,  ONLY : evq
   USE qpoint, ONLY : ikqs
 
-  USE mp_global, ONLY: intra_pool_comm
+  USE mp_global, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none
@@ -94,9 +94,7 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
           npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
   ENDIF
   ps (:,:) = ps(:,:) * alpha_pv
-#ifdef __MPI
-  call mp_sum (ps, intra_pool_comm)
-#endif
+  call mp_sum (ps, intra_bgrp_comm)
 
   hpsi (:,:) = (0.d0, 0.d0)
   IF (noncolin) THEN

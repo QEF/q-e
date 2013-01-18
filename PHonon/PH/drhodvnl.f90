@@ -27,7 +27,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
   USE spin_orb,  ONLY : lspinorb
   USE phus,      ONLY : int1, int1_nc, int2, int2_so, becp1, alphap
 
-  USE mp_global, ONLY: intra_pool_comm
+  USE mp_global, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none
@@ -69,7 +69,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
 
   dynwrk (:, :) = (0.d0, 0.d0)
 
-  call divide (intra_pool_comm, nbnd, startb, lastb)
+  call divide (intra_bgrp_comm, nbnd, startb, lastb)
   !
   !   Here we prepare the two terms
   !
@@ -237,9 +237,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
         endif
      enddo
   enddo
-#ifdef __MPI
-  call mp_sum ( dynwrk, intra_pool_comm )
-#endif
+  call mp_sum ( dynwrk, intra_bgrp_comm )
   wdyn (:,:) = wdyn (:,:) + dynwrk (:,:)
 
   IF (noncolin) THEN

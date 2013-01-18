@@ -36,7 +36,7 @@ subroutine drho
   USE phus,       ONLY : becsumort, alphap, becp1
   USE units_ph,   ONLY : lrdrhous, iudrhous
 
-  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,  ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   USE becmod,     ONLY : bec_type, allocate_bec_type, deallocate_bec_type
 
@@ -165,7 +165,7 @@ subroutine drho
   !
   ! collect contributions from nodes of a pool (sum over G & R space)
   !
-  call mp_sum ( wdyn, intra_pool_comm )
+  call mp_sum ( wdyn, intra_bgrp_comm )
 #endif
   call zaxpy (3 * nat * 3 * nat, (1.d0, 0.d0), wdyn, 1, dyn00, 1)
   !
@@ -189,9 +189,9 @@ subroutine drho
   !  Sum over processors the contributions coming from each slice of bands
   !
   IF (noncolin) THEN
-     call mp_sum ( dbecsum_nc, intra_pool_comm )
+     call mp_sum ( dbecsum_nc, intra_bgrp_comm )
   ELSE
-     call mp_sum ( dbecsum, intra_pool_comm )
+     call mp_sum ( dbecsum, intra_bgrp_comm )
   END IF
 #endif
 

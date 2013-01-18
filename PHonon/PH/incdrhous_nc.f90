@@ -32,7 +32,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE eqv,       ONLY : dpsi, evq
   USE control_ph, ONLY : nbnd_occ
   USE phus,      ONLY  : becp1, alphap
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_global, ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE becmod,    ONLY : bec_type
 
@@ -74,7 +74,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   allocate (dpsir(dffts%nnr,npol))
   allocate (ps1 (nbnd, nbnd))
 
-  call divide (intra_pool_comm, nbnd, startb, lastb)
+  call divide (intra_bgrp_comm, nbnd, startb, lastb)
   ps1 (:,:) = (0.d0, 0.d0)
   ikk = ikks(ik)
   !
@@ -132,7 +132,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
      enddo
   enddo
 #ifdef __MPI
-  call mp_sum (ps1, intra_pool_comm)
+  call mp_sum (ps1, intra_bgrp_comm)
 #endif
   dpsi (:,:) = (0.d0, 0.d0)
   wgt = 2.d0 * weight / omega

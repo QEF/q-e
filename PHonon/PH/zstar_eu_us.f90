@@ -15,7 +15,7 @@ subroutine zstar_eu_us
   !
   USE kinds,     ONLY : DP
   USE mp,        ONLY : mp_sum
-  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global, ONLY : inter_pool_comm, intra_bgrp_comm
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE klist,     ONLY : xk, wk
@@ -107,9 +107,9 @@ subroutine zstar_eu_us
 
 #ifdef __MPI
      IF (noncolin) THEN
-        call mp_sum ( dbecsum_nc, intra_pool_comm )
+        call mp_sum ( dbecsum_nc, intra_bgrp_comm )
      ELSE
-        call mp_sum ( dbecsum, intra_pool_comm )
+        call mp_sum ( dbecsum, intra_bgrp_comm )
      END IF
 #endif
 #ifdef TIMINIG_ZSTAR_US
@@ -213,7 +213,7 @@ subroutine zstar_eu_us
               pdsp = (0.d0,0.d0)
               call psidspsi (ik, u (1, mode), pdsp )
 #ifdef __MPI
-              call mp_sum( pdsp, intra_pool_comm )
+              call mp_sum( pdsp, intra_bgrp_comm )
 #endif
               !
               ! add the term of the double summation

@@ -25,7 +25,7 @@ USE ener, ONLY : ef
 USE control_ph,  ONLY : alpha_pv, nbnd_occ
 USE becmod,      ONLY : bec_type, becp, calbec
 USE uspp,        ONLY : vkb, okvan
-USE mp_global,   ONLY : intra_pool_comm
+USE mp_global,   ONLY : intra_bgrp_comm
 USE mp,          ONLY : mp_sum
 USE control_flags, ONLY : gamma_only
 USE realus,      ONLY : npw_k
@@ -125,13 +125,11 @@ ELSE
    END IF
    nbnd_eff=nbnd_occ(ikk)
 END IF
-#ifdef __MPI
 IF (gamma_only) THEN
-   call mp_sum(ps_r(:,:),intra_pool_comm)
+   call mp_sum(ps_r(:,:),intra_bgrp_comm)
 ELSE
-   call mp_sum(ps(:,1:nbnd_eff),intra_pool_comm)
+   call mp_sum(ps(:,1:nbnd_eff),intra_bgrp_comm)
 ENDIF
-#endif
 !
 ! dpsi is used as work space to store S|evc>
 !

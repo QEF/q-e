@@ -56,7 +56,7 @@ SUBROUTINE phq_init()
   USE units_ph,             ONLY : lrwfc, iuwfc
   USE qpoint,               ONLY : xq, igkq, npwq, nksq, eigqts, ikks, ikqs
 
-  USE mp_global,           ONLY : intra_pool_comm
+  USE mp_global,           ONLY : intra_bgrp_comm
   USE mp,                  ONLY : mp_sum
   USE acfdtest,            ONLY : acfdt_is_active, acfdt_num_der
   USE el_phon,             ONLY : elph_mat, iunwfcwann, npwq_refolded, &
@@ -274,7 +274,7 @@ SUBROUTINE phq_init()
      !
   END DO
 #ifdef __MPI
-     CALL mp_sum ( eprec, intra_pool_comm )
+     CALL mp_sum ( eprec, intra_bgrp_comm )
 #endif
   !
   DEALLOCATE( aux1 )

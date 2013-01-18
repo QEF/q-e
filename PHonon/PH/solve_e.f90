@@ -53,7 +53,7 @@ subroutine solve_e
   USE qpoint,                ONLY : npwq, nksq
   USE recover_mod,           ONLY : read_rec, write_rec
 
-  USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                    ONLY : mp_sum
 
   implicit none
@@ -277,9 +277,9 @@ subroutine solve_e
      !  coming from each slice of bands
      !
      IF (noncolin) THEN
-        call mp_sum ( dbecsum_nc, intra_pool_comm )
+        call mp_sum ( dbecsum_nc, intra_bgrp_comm )
      ELSE
-        call mp_sum ( dbecsum, intra_pool_comm )
+        call mp_sum ( dbecsum, intra_bgrp_comm )
      END IF
 #endif
 

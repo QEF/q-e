@@ -31,7 +31,7 @@ subroutine raman_mat
   USE units_ph, ONLY : lrdwf, iudwf, lrwfc, iuwfc
   USE qpoint,   ONLY : npwq, nksq
   USE ramanm,   ONLY : ramtns, jab, a1j, a2j, lrd2w, iud2w
-  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   implicit none
 
@@ -133,7 +133,7 @@ subroutine raman_mat
         enddo
      enddo
 #ifdef __MPI
-     call mp_sum ( ps, intra_pool_comm )
+     call mp_sum ( ps, intra_bgrp_comm )
 #endif
      do ipa = 1, 6
         nrec = (ipa - 1) * nksq + ik
@@ -219,7 +219,7 @@ subroutine raman_mat
   enddo
 
 #ifdef __MPI
-  call mp_sum( wrk, intra_pool_comm )
+  call mp_sum( wrk, intra_bgrp_comm )
   call mp_sum( wrk, inter_pool_comm )
 #endif
 

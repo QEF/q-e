@@ -62,7 +62,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE dfile_autoname,       ONLY : dfile_name
   USE save_ph,              ONLY : tmp_dir_save
   ! used oly to write the restart file
-  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
   implicit none
@@ -365,9 +365,9 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !  Sum over processors the contributions coming from each slice of bands
      !
      IF (noncolin) THEN
-        call mp_sum ( dbecsum_nc, intra_pool_comm )
+        call mp_sum ( dbecsum_nc, intra_bgrp_comm )
      ELSE
-        call mp_sum ( dbecsum, intra_pool_comm )
+        call mp_sum ( dbecsum, intra_bgrp_comm )
      ENDIF
 #endif
 
@@ -563,13 +563,13 @@ END SUBROUTINE solve_linter
 
 SUBROUTINE setmixout(in1, in2, mix, dvscfout, dbecsum, ndim, flag )
 USE kinds, ONLY : DP
-USE mp_global, ONLY : intra_pool_comm
+USE mp_global, ONLY : intra_bgrp_comm
 USE mp, ONLY : mp_sum
 IMPLICIT NONE
 INTEGER :: in1, in2, flag, ndim, startb, lastb
 COMPLEX(DP) :: mix(in1+in2), dvscfout(in1), dbecsum(in2)
 
-CALL divide (intra_pool_comm, in2, startb, lastb)
+CALL divide (intra_bgrp_comm, in2, startb, lastb)
 ndim=lastb-startb+1
 
 IF (flag==-1) THEN
@@ -580,7 +580,7 @@ ELSE
    dbecsum=(0.0_DP,0.0_DP)
    dbecsum(startb:lastb)=mix(in1+1:in1+ndim)
 #ifdef __MPI
-   CALL mp_sum(dbecsum, intra_pool_comm)
+   CALL mp_sum(dbecsum, intra_bgrp_comm)
 #endif
 ENDIF
 END SUBROUTINE setmixout
@@ -601,7 +601,7 @@ SUBROUTINE check_all_convt(convt)
   !
   CALL mp_sum(convt_check, intra_image_comm)
   !CALL mp_sum(ios, inter_pool_comm)
-  !CALL mp_sum(ios, intra_pool_com)
+  !CALL mp_sum(ios, intra_bgrp_comm)
   !
 !  convt = ALL(convt_check==0)
   IF(ANY(convt_check==0).and..not.ALL(convt_check==0) ) THEN

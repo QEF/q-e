@@ -31,7 +31,7 @@ subroutine add_zstar_ue_us(imode0,npe)
   USE modes,      ONLY : u
   USE units_ph,   ONLY : iucom, lrcom, iuwfc, lrwfc
 
-  USE mp_global, ONLY: intra_pool_comm
+  USE mp_global, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none
@@ -73,7 +73,7 @@ subroutine add_zstar_ue_us(imode0,npe)
            pdsp = (0.d0,0.d0)
            call psidspsi (ik, u (1, mode), pdsp )
 #ifdef __MPI
-           call mp_sum(pdsp, intra_pool_comm )
+           call mp_sum(pdsp, intra_bgrp_comm )
 #endif
            !
            ! add the term of the double summation

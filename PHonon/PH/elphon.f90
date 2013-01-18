@@ -212,7 +212,7 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   USE eqv,      ONLY : dvpsi, evq
   USE qpoint,   ONLY : igkq, npwq, nksq, ikks, ikqs
   USE control_ph, ONLY : trans, lgamma
-  USE mp_global, ONLY: intra_pool_comm
+  USE mp_global, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   IMPLICIT NONE
@@ -300,7 +300,7 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
         ENDDO
      ENDDO
      !
-     CALL mp_sum (elphmat, intra_pool_comm)
+     CALL mp_sum (elphmat, intra_bgrp_comm)
      !
      !  save all e-ph matrix elements into el_ph_mat
      !
@@ -768,7 +768,7 @@ SUBROUTINE elphsum_simple
   USE klist, ONLY : xk, nelec, nks, wk
   USE wvfct, ONLY : nbnd, et
   USE el_phon, ONLY : el_ph_mat, el_ph_nsigma, el_ph_ngauss, el_ph_sigma
-  USE mp_global, ONLY : me_pool, root_pool, inter_pool_comm, npool, intra_pool_comm
+  USE mp_global, ONLY : me_pool, root_pool, inter_pool_comm, npool, intra_bgrp_comm
   USE io_global, ONLY : stdout
   USE klist, only : degauss,ngauss
   USE control_flags, ONLY : modenum, noinv
@@ -982,7 +982,7 @@ FUNCTION dos_ef (ngauss, degauss, ef, et, wk, nks, nbnd)
   !-----------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
-  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global, ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   IMPLICIT NONE
   REAL(DP) :: dos_ef

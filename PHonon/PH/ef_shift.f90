@@ -30,7 +30,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE units_ph,             ONLY : lrwfc, iuwfc, lrdwf, iudwf
   USE eqv,                  ONLY : dpsi
   USE modes,                ONLY : npert
-  USE mp_global,            ONLY : intra_pool_comm
+  USE mp_global,            ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
 
   implicit none
@@ -88,7 +88,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
            if (gg(1).lt.1.0d-8) delta_n = delta_n + omega*drhoscf(nl(1),is,ipert)
            CALL invfft ('Dense', drhoscf(:,is,ipert), dfftp)
         enddo
-        call mp_sum ( delta_n, intra_pool_comm )
+        call mp_sum ( delta_n, intra_bgrp_comm )
         def (ipert) = - delta_n / dos_ef
      enddo
      !
@@ -176,7 +176,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   USE units_ph,             ONLY : lrwfc, iuwfc, lrdwf, iudwf
   USE eqv,                  ONLY : dpsi
   USE modes,                ONLY : npert
-  USE mp_global,            ONLY : intra_pool_comm
+  USE mp_global,            ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
 
   implicit none
@@ -236,7 +236,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
            if (gg(1).lt.1.0d-8) delta_n = delta_n + omega*drhoscf(nl(1),is,ipert)
            CALL invfft ('Dense', drhoscf(:,is,ipert), dfftp)
         enddo
-        call mp_sum ( delta_n, intra_pool_comm )
+        call mp_sum ( delta_n, intra_bgrp_comm )
         def (ipert) = - delta_n / dos_ef
      enddo
      !

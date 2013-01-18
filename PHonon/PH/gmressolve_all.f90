@@ -59,7 +59,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !   revised (to reduce memory) 29 May 2004 by S. de Gironcoli
   !
   USE kinds, only : DP
-  USE mp_global, ONLY: intra_pool_comm
+  USE mp_global, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none
@@ -171,7 +171,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            ! norm of pre. r : bet = |r|
            bet(ibnd) = zdotc (ndim, r(1,ibnd), 1, r(1,ibnd), 1)
 #ifdef __MPI
-           call mp_sum ( bet(ibnd), intra_pool_comm  )
+           call mp_sum ( bet(ibnd), intra_bgrp_comm  )
 #endif
            bet(ibnd) = sqrt( bet(ibnd) )
            !
@@ -232,7 +232,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 !              hm(i,j) = zdotc (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
               hm4para(1) = zdotc (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
 #ifdef __MPI
-              call mp_sum ( hm4para, intra_pool_comm )
+              call mp_sum ( hm4para, intra_bgrp_comm )
 #endif
               hm(i,j) = hm4para(1)
               ! w = w - hm_ij*v_i
@@ -243,7 +243,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 !           hm(j+1,j) = zdotc (ndim, w(1,ibnd), 1, w(1,ibnd), 1)
            hm4para(1) = zdotc (ndim, w(1,ibnd), 1, w(1,ibnd), 1)
 #ifdef __MPI
-           call mp_sum ( hm4para, intra_pool_comm )
+           call mp_sum ( hm4para, intra_bgrp_comm )
 #endif
            hm(j+1,j) = hm4para(1)
            !   compute v(j+1)

@@ -32,7 +32,7 @@ SUBROUTINE phqscf
   USE noncollin_module, ONLY : noncolin, nspin_mag
   USE recover_mod, ONLY : write_rec
 
-  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,  ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,         ONLY : mp_sum
 
   IMPLICIT NONE
@@ -96,7 +96,7 @@ SUBROUTINE phqscf
            IF (zue.AND. okvan) CALL add_zstar_ue_us(imode0, npe )
            IF (zue) THEN
 #ifdef __MPI
-              call mp_sum ( zstarue0_rec, intra_pool_comm )
+              call mp_sum ( zstarue0_rec, intra_bgrp_comm )
               call mp_sum ( zstarue0_rec, inter_pool_comm )
 #endif
               zstarue0(:,:)=zstarue0(:,:)+zstarue0_rec(:,:)

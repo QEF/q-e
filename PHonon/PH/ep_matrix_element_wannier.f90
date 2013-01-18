@@ -146,7 +146,7 @@ SUBROUTINE elphsum_wannier(q_index)
   USE klist, ONLY : xk, nelec
   USE wvfct, ONLY : nbnd, et
   USE el_phon
-  USE mp_global, ONLY : me_pool, root_pool, inter_pool_comm, npool, intra_pool_comm
+  USE mp_global, ONLY : me_pool, root_pool, inter_pool_comm, npool, intra_bgrp_comm
   USE io_global, ONLY : stdout,ionode
   USE io_files,  ONLY : prefix
   USE qpoint, ONLY : xq, nksq
@@ -320,7 +320,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE eqv,      ONLY : dvpsi!, evq
   USE qpoint,   ONLY : igkq, npwq, nksq, ikks, ikqs
   USE control_ph, ONLY : trans, lgamma
-  USE mp_global, ONLY: intra_pool_comm, me_pool, root_pool
+  USE mp_global, ONLY: intra_bgrp_comm, me_pool, root_pool
   USE mp,        ONLY: mp_sum
   USE ions_base, ONLY : nat
   USE io_global, ONLY : stdout
@@ -453,7 +453,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
         ENDDO
      ENDDO
      !
-     CALL mp_sum (elphmat, intra_pool_comm)
+     CALL mp_sum (elphmat, intra_bgrp_comm)
      !
      !  save all e-ph matrix elements into el_ph_mat
      !
@@ -496,7 +496,7 @@ subroutine get_equivalent_kpq(xk,xq,kpq,g_kpq, igqg)
   USE qpoint, ONLY : nksq, ikks
   USE gvect, ONLY: g, gg
   USE qpoint, ONLY : nksq
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_global, ONLY : intra_bgrp_comm
   USE mp, ONLY : mp_sum
   ! WARNING g_kpq mesh is an integer
   implicit none
@@ -591,7 +591,7 @@ subroutine get_equivalent_kpq(xk,xq,kpq,g_kpq, igqg)
 
   allocate(ig_check(nksq))
   ig_check=igqg
-  CALL mp_sum( ig_check, intra_pool_comm )
+  CALL mp_sum( ig_check, intra_bgrp_comm )
   do ik=1,nksq
      if(ig_check(ik).eq.0) &
           CALL errore('get_equivalent_kpq', &

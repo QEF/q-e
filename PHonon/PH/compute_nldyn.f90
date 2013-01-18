@@ -30,7 +30,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                         int2_so, int1_nc
   USE control_ph, ONLY : nbnd_occ, rec_code_read
 
-  USE mp_global, ONLY: intra_pool_comm
+  USE mp_global, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
   USE becmod,    ONLY : bec_type
 
@@ -77,7 +77,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   END IF
 
   dynwrk (:,:) = (0.d0, 0.d0)
-  call divide (intra_pool_comm, nbnd, startb, lastb)
+  call divide (intra_bgrp_comm, nbnd, startb, lastb)
   do ik = 1, nksq
      ikk = ikks(ik)
      ikq = ikqs(ik)
@@ -320,7 +320,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
      enddo
   enddo
 #ifdef __MPI
-  call mp_sum ( dynwrk, intra_pool_comm )
+  call mp_sum ( dynwrk, intra_bgrp_comm )
 #endif
   do nu_i = 1, 3 * nat
      do nu_j = 1, 3 * nat

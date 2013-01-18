@@ -25,7 +25,7 @@ subroutine dynmatcc
   USE qpoint,    ONLY : xq
   USE nlcc_ph,   ONLY : nlcc_any, drc
   USE dynmat,    ONLY : dyn
-  USE mp_global, ONLY: intra_pool_comm
+  USE mp_global, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none
@@ -97,7 +97,7 @@ subroutine dynmatcc
      enddo
   enddo
 #ifdef __MPI
-  call mp_sum (dynwrk,intra_pool_comm)
+  call mp_sum (dynwrk,intra_bgrp_comm)
 #endif
   !
   dynwrk = dynwrk * omega

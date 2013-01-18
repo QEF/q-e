@@ -23,7 +23,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   USE constants, ONLY: e2, tpi, fpi
-  USE mp_global, ONLY: intra_pool_comm
+  USE mp_global, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none
@@ -226,7 +226,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   enddo
 #ifdef __MPI
 100 continue
-  call mp_sum ( dy3, intra_pool_comm )
+  call mp_sum ( dy3, intra_bgrp_comm )
 #endif
   !
   !   The dynamical matrix was computed in cartesian axis and now we put

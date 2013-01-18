@@ -26,7 +26,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   USE nlcc_ph, ONLY : nlcc_any
   USE qpoint, ONLY : xq
 
-  USE mp_global, ONLY: intra_pool_comm
+  USE mp_global, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none
@@ -120,12 +120,11 @@ subroutine addnlcc (imode0, drhoscf, npe)
   DO is=1,nspin_lsda
      rho%of_r(:,is) = rho%of_r(:,is) - fac * rho_core(:)
   ENDDO
-#ifdef __MPI
   !
   ! collect contributions from all r/G points.
   !
-  call mp_sum ( dyn1, intra_pool_comm )
-#endif
+  call mp_sum ( dyn1, intra_bgrp_comm )
+
   dyn (:,:) = dyn(:,:) + dyn1(:,:)
   dyn_rec(:,:)=dyn_rec(:,:)+dyn1(:,:)
   deallocate (dvaux)

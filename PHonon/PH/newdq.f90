@@ -30,7 +30,7 @@ subroutine newdq (dvscf, npe)
   USE qpoint,               ONLY : xq, eigqts
   USE control_ph,           ONLY : lgamma
 
-  USE mp_global, ONLY: intra_pool_comm
+  USE mp_global, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none
@@ -144,7 +144,7 @@ subroutine newdq (dvscf, npe)
 
   enddo
 #ifdef __MPI
-  call mp_sum ( int3, intra_pool_comm )
+  call mp_sum ( int3, intra_bgrp_comm )
 #endif
   IF (noncolin) CALL set_int3_nc(npe)
   IF (okpaw) int3=int3+int3_paw

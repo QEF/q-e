@@ -31,7 +31,7 @@ subroutine zstar_eu
   USE units_ph,  ONLY : iudwf, lrdwf, iuwfc, lrwfc
   USE control_ph,ONLY : nbnd_occ, done_zeu
 
-  USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                    ONLY : mp_sum
 
   implicit none
@@ -85,7 +85,7 @@ subroutine zstar_eu
   if (okvan) call zstar_eu_us
 
 #ifdef __MPI
-  call mp_sum ( zstareu0, intra_pool_comm )
+  call mp_sum ( zstareu0, intra_bgrp_comm )
   call mp_sum ( zstareu0, inter_pool_comm )
 #endif
   !

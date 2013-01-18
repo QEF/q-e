@@ -17,13 +17,13 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE becmod, ONLY : calbec
   USE wvfct, only: npw, npwx, nbnd
-  USE uspp, only: nkb, vkb, okvan
+  USE uspp, only: nkb, vkb, okvan, ijtoh
   USE uspp_param, only: upf, nh, nhm
   USE phus,   ONLY : becp1
   USE qpoint, ONLY : npwq, ikks
   USE control_ph, ONLY : nbnd_occ
   !
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_global, ONLY : intra_bgrp_comm
   !
   implicit none
   !
@@ -71,7 +71,7 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   !
   !  Band parallelization: each processor takes care of its slice of bands
   !
-  call divide (intra_pool_comm, nbnd_occ (ikk), startb, lastb)
+  call divide (intra_bgrp_comm, nbnd_occ (ikk), startb, lastb)
   !
   ijkb0 = 0
   do nt = 1, ntyp
@@ -81,15 +81,15 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
               !
               !  And qgmq and becp and dbecq
               !
-              ijh = 1
-              do ih = 1, nh (nt)
+              do ih = 1, nh(nt)
                  ikb = ijkb0 + ih
+                 ijh=ijtoh(ih,ih,nt)
                  do ibnd = startb, lastb
                     dbecsum (ijh, na) = dbecsum (ijh, na) + &
                          wgt * ( CONJG(becp1(ik)%k(ikb,ibnd)) * dbecq(ikb,ibnd) )
                  enddo
-                 ijh = ijh + 1
                  do jh = ih + 1, nh (nt)
+                    ijh=ijtoh(ih,jh,nt)
                     jkb = ijkb0 + jh
                     do ibnd = startb, lastb
                        dbecsum (ijh, na) = dbecsum (ijh, na) + &

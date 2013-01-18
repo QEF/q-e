@@ -20,7 +20,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   USE lsda_mod,  ONLY : nspin
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
 
-  USE mp_global, ONLY: intra_pool_comm
+  USE mp_global, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none
@@ -63,7 +63,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   !
   ! collect contributions from nodes of a pool (sum over G & R space)
   !
-  call mp_sum ( dynwrk, intra_pool_comm )
+  call mp_sum ( dynwrk, intra_bgrp_comm )
 #endif
 
   wdyn(:,:) = wdyn(:,:) + dynwrk(:,:)

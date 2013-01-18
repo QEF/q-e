@@ -18,7 +18,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   use kinds, only : DP
   USE wvfct,     ONLY : nbnd, npw, npwx, g2kin
   USE wavefunctions_module,  ONLY: evc
-  USE mp_global, ONLY: intra_pool_comm
+  USE mp_global, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
   USE eqv,       ONLY: dpsi, dvpsi, eprec
   USE control_ph, ONLY : nbnd_occ
@@ -67,9 +67,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   CALL zgemm( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
        (1.d0,0.d0), evc(1,1), npwx, dvpsi(1,1), npwx, (0.d0,0.d0), &
        ps(1,1), nbnd )
-#ifdef __MPI
-  call mp_sum( ps( :, 1:nbnd_occ(ik) ), intra_pool_comm )
-#endif
+  call mp_sum( ps( :, 1:nbnd_occ(ik) ), intra_bgrp_comm )
   !
   ! |dvspi> = - (|dvpsi> - S|evc><evc|dvpsi>)
   ! note the change of sign!

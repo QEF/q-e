@@ -28,7 +28,7 @@ subroutine dielec_test
   USE units_ph, ONLY : lrwfc, iuwfc
 
   USE ramanm, ONLY : a1j, a2j, lrd2w, iud2w
-  USE mp_global,ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,       ONLY : mp_sum
 
   implicit none
@@ -58,10 +58,8 @@ subroutine dielec_test
         if (i1.ne.i2 ) epsilon (i2, i1) = epsilon (i2, i1) + tmp
      enddo
   enddo
-#ifdef __MPI
-  call mp_sum ( epsilon, intra_pool_comm )
+  call mp_sum ( epsilon, intra_bgrp_comm )
   call mp_sum ( epsilon, inter_pool_comm )
-#endif
   !
   !  symmetrize (pass to cartesian axis first)
   !

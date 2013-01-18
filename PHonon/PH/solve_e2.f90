@@ -36,7 +36,7 @@ subroutine solve_e2
   USE recover_mod, ONLY : read_rec, write_rec
 
   USE check_stop, ONLY: check_stop_now
-  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,  ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   implicit none
 
@@ -171,7 +171,7 @@ subroutine solve_e2
            enddo   ! on perturbations
         enddo      ! on k points
 #ifdef __MPI
-     call mp_sum ( dbecsum, intra_pool_comm )
+     call mp_sum ( dbecsum, intra_bgrp_comm )
 #endif
      if (doublegrid) then
         do is = 1, nspin

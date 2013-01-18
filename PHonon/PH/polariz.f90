@@ -27,7 +27,7 @@ subroutine polariz ( iw )
   USE eqv,          ONLY : dpsi, dvpsi
   USE qpoint,       ONLY : nksq
   USE cell_base,    ONLY : omega
-  USE mp_global,    ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,    ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,           ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -70,7 +70,7 @@ subroutine polariz ( iw )
      enddo
   enddo
 #ifdef __MPI
-  call mp_sum ( epsilon, intra_pool_comm )
+  call mp_sum ( epsilon, intra_bgrp_comm )
   call mp_sum ( epsilon, inter_pool_comm )
 #endif
   !

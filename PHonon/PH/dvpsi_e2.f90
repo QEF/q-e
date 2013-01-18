@@ -29,7 +29,7 @@ subroutine dvpsi_e2
   USE control_ph,      ONLY : nbnd_occ
   USE ramanm,          ONLY : lrba2, iuba2, lrchf, iuchf, a1j, a2j
 #ifdef __MPI
-  USE mp_global, ONLY: my_pool_id, inter_pool_comm, intra_pool_comm
+  USE mp_global, ONLY: my_pool_id, inter_pool_comm, intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 #endif
   implicit none
@@ -107,7 +107,7 @@ subroutine dvpsi_e2
         enddo
      enddo
 #ifdef __MPI
-     call mp_sum ( ps, intra_pool_comm )
+     call mp_sum ( ps, intra_bgrp_comm )
 #endif
 
      do ibnd = 1, nbnd_occ (ik)

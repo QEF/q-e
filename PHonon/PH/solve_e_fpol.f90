@@ -44,7 +44,7 @@ subroutine solve_e_fpol ( iw )
   USE qpoint,                ONLY : nksq, npwq, igkq
   USE units_ph,              ONLY : lrdwf, iudwf, lrwfc, iuwfc, iudrho, &
                                     lrdrho
-  USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                    ONLY : mp_sum
 
   implicit none
@@ -208,7 +208,7 @@ subroutine solve_e_fpol ( iw )
                 (1.d0,0.d0), evc(1,1), npwx, dvpsi(1,1), npwx, (0.d0,0.d0), &
                 ps(1,1), nbnd )
 #ifdef __MPI
-           call mp_sum ( ps( :, 1:nbnd_occ(ik) ), intra_pool_comm )
+           call mp_sum ( ps( :, 1:nbnd_occ(ik) ), intra_bgrp_comm )
 #endif
            ! dpsi is used as work space to store S|evc>
            !
@@ -295,7 +295,7 @@ subroutine solve_e_fpol ( iw )
      !  (see addusdbec) - we sum over processors the contributions
      !  coming from each slice of bands
      !
-     call mp_sum ( dbecsum, intra_pool_comm )
+     call mp_sum ( dbecsum, intra_bgrp_comm )
 #endif
 
      if (doublegrid) then

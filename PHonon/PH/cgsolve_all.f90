@@ -56,7 +56,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !   revised (to reduce memory) 29 May 2004 by S. de Gironcoli
   !
   USE kinds,          ONLY : DP
-  USE mp_global,      ONLY : intra_pool_comm
+  USE mp_global,      ONLY : intra_bgrp_comm
   USE mp,             ONLY : mp_sum
   USE control_flags,  ONLY : gamma_only
   USE gvect,          ONLY : gstart
@@ -169,9 +169,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         endif
      enddo
      kter_eff = kter_eff + DBLE (lbnd) / DBLE (nbnd)
-#ifdef __MPI
-     call mp_sum(  rho(1:lbnd) , intra_pool_comm )
-#endif
+     call mp_sum(  rho(1:lbnd) , intra_bgrp_comm )
      do ibnd = nbnd, 1, -1
         if (conv(ibnd).eq.0) then
            rho(ibnd)=rho(lbnd)
@@ -235,10 +233,8 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            ENDIF
         end if
      end do
-#ifdef __MPI
-     call mp_sum(  a(1:lbnd), intra_pool_comm )
-     call mp_sum(  c(1:lbnd), intra_pool_comm )
-#endif
+     call mp_sum(  a(1:lbnd), intra_bgrp_comm )
+     call mp_sum(  c(1:lbnd), intra_bgrp_comm )
      lbnd=0
      do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then

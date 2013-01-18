@@ -39,7 +39,7 @@ subroutine dvanqq
   USE qpoint, ONLY : eigqts, xq
   USE control_ph, ONLY : rec_code_read, lgamma
 
-  USE mp_global, ONLY: intra_pool_comm
+  USE mp_global, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none
@@ -238,10 +238,10 @@ subroutine dvanqq
      endif
   enddo
 #ifdef __MPI
-  call mp_sum(  int1, intra_pool_comm )
-  call mp_sum(  int2, intra_pool_comm )
-  call mp_sum(  int4, intra_pool_comm )
-  call mp_sum(  int5, intra_pool_comm )
+  call mp_sum(  int1, intra_bgrp_comm )
+  call mp_sum(  int2, intra_bgrp_comm )
+  call mp_sum(  int4, intra_bgrp_comm )
+  call mp_sum(  int5, intra_bgrp_comm )
 #endif
   IF (noncolin) THEN
      CALL set_int12_nc(0)

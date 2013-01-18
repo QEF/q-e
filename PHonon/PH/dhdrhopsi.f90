@@ -37,7 +37,6 @@ subroutine dhdrhopsi
   !         i, j are band indexes
 
   USE kinds,     ONLY : DP
-  USE mp_global, ONLY : npool
   USE io_files,  ONLY : iunigk
   USE cell_base, ONLY : tpiba, at
   USE klist,     ONLY : xk, nkstot
@@ -53,7 +52,7 @@ subroutine dhdrhopsi
   USE phus,      ONLY : becp1
   USE units_ph,  ONLY : lrdwf, iudwf, lrwfc, iuwfc
   USE control_ph, ONLY : nbnd_occ
-  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global, ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,        ONLY : mp_sum
 
   implicit none
@@ -197,9 +196,7 @@ subroutine dhdrhopsi
                          evc (1, jbnd), 1, ev_sw (1, ibnd), 1)
                  enddo
               enddo
-#ifdef __MPI
-              call mp_sum ( ps1, intra_pool_comm )
-#endif
+              call mp_sum ( ps1, intra_bgrp_comm )
               tmpc = DBLE (isg) * itdba
               if (ipb.eq.ipa) tmpc = 2.d0 * tmpc
               do ibnd = 1, nbnd_occ (ik)
@@ -245,9 +242,7 @@ subroutine dhdrhopsi
            enddo
         enddo
      enddo
-#ifdef __MPI
-     call mp_sum ( ps2, intra_pool_comm )
-#endif
+     call mp_sum ( ps2, intra_bgrp_comm )
      do ipa = 1, 3
         nrec = (ipa - 1) * nksq + ik
         call davcio (dpsi, lrdwf, iudwf, nrec, -1)
@@ -280,9 +275,7 @@ subroutine dhdrhopsi
               ps0 (jbnd) = -zdotc (npw, evc (1, jbnd), 1, &
                                      chif (1, ibnd, ipa), 1)
            enddo
-#ifdef __MPI
-           call mp_sum ( ps0, intra_pool_comm )
-#endif
+           call mp_sum ( ps0, intra_bgrp_comm )
            do jbnd = 1, nbnd_occ (ik)
               call zaxpy (npw, ps0 (jbnd), evc (1, jbnd), 1, auxg, 1)
            enddo
@@ -298,10 +291,8 @@ subroutine dhdrhopsi
      enddo
   enddo
 
-#ifdef __MPI
   call mp_sum ( avg_iter1, inter_pool_comm )
   call mp_sum ( avg_iter2, inter_pool_comm )
-#endif
   avg_iter1 = avg_iter1 / nkstot
   avg_iter2 = avg_iter2 / nkstot
   write (6, 9000) avg_iter1 / 6.d0
