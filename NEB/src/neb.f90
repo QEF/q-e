@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2011 Quantum ESPRESSO group
+! Copyright (C) 2011-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,8 +15,7 @@ PROGRAM neb
   USE environment,       ONLY : environment_start, environment_end
   USE check_stop,        ONLY : check_stop_init
   USE image_io_routines, ONLY : io_image_start
-  USE mp_global,         ONLY : mp_bcast, mp_rank, mp_start
-  !
+  USE mp,                ONLY : mp_bcast, mp_rank, mp_start
   USE mp_image_global_module, ONLY : mp_image_startup, world_comm, &
                                      me_image, nimage
   USE iotk_module,       ONLY : iotk_open_read, iotk_close_read, iotk_attlenx
@@ -60,6 +59,8 @@ PROGRAM neb
   CALL mp_start(nproc,mpime,neb_comm)
   CALL mp_image_startup (root,neb_comm)
   CALL engine_mp_start()
+!!!  CALL mp_startup ( start_images=.true. )
+!!!  IF ( nimage > 1 ) CALL io_image_start( )
 #endif
   CALL environment_start ( 'NEB' )
   !
@@ -72,6 +73,7 @@ PROGRAM neb
   !
   engine_prefix = "pw_"
   !
+  !!!CALL mp_bcast(parsing_file_name,root,world_comm)
   CALL mp_bcast(parsing_file_name,root,neb_comm)
   CALL mp_bcast(lfound_parsing_file,root,neb_comm)
   !
@@ -86,7 +88,7 @@ PROGRAM neb
      WRITE(0,*) "Searching argument -input_images or --input_images"
      IF ( mpime == root ) CALL input_images_getarg &
                                   (input_images,lfound_input_images)
-     CALL mp_bcast(input_images,root,neb_comm)
+     CALL mp_bcast(input_images,root, neb_comm)
      CALL mp_bcast(lfound_input_images,root,neb_comm)
      !
      IF (.not.lfound_input_images) CALL errore('string_methods', &
@@ -140,32 +142,29 @@ PROGRAM neb
       CALL read_xml('PW', attr = attr )
       CALL iotk_close_read(unit_tmp)
     endif
+    !
     CALL iosys()
+    !
     CALL engine_to_path_pos(i)
+    !
   enddo
   !
   CALL path_to_engine_fix_atom_pos()
   !
   CALL ioneb()
-  !
   CALL set_engine_io_units()
   !
   ! END INPUT RELATED
   !
   CALL check_stop_init()
-  !
   CALL io_image_start()
-  !
   CALL initialize_path()
-  !
   CALL deallocate_path_input_ions()
-  !
   CALL path_summary()
   !
   CALL search_mep()
   !
   CALL stop_run_path( conv_path )
-  !
   !
   STOP
   !

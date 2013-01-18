@@ -37,7 +37,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
                                istep_path, frozen, num_of_images, &
                                first_last_opt
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
-  USE mp_image_global_module,        ONLY : inter_image_comm, intra_image_comm, &
+  USE mp_image_global_module,  ONLY : inter_image_comm, intra_image_comm, &
                                my_image_id, nimage, root_image
   USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum, mp_min
   USE path_io_routines, ONLY : new_image_init, get_new_image, &
@@ -134,7 +134,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   ! ... only the first cpu initializes the file needed by parallelization
   ! ... among images
   !
-  IF ( meta_ionode ) CALL new_image_init( fii_, tmp_dir_saved )
+  IF ( meta_ionode ) CALL new_image_init( nimage, fii_, tmp_dir_saved )
   !
   image = fii_ + my_image_id
   !
@@ -152,7 +152,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
      !
      ! ... the new image is obtained (by ionode only)
      !
-     CALL get_new_image( image, tmp_dir_saved )
+     CALL get_new_image( nimage, image, tmp_dir_saved )
      !
      CALL mp_bcast( image, ionode_id, intra_image_comm )
      !
@@ -394,12 +394,6 @@ SUBROUTINE compute_scf( fii, lii, stat  )
          CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
          !
       END IF
-      !
-      ! ... input values are restored at the end of each iteration
-      ! ... ( they are modified by init_run ) - OBSOLETE?
-      !
-!      starting_pot = 'atomic'
-!      starting_wfc = 'file'
       !
       ethr = diago_thr_init
       !

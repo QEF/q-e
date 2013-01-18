@@ -14,11 +14,10 @@ SUBROUTINE stop_run_path( lflag )
   ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
   USE io_global,          ONLY : ionode, stdout
-  USE mp_global,          ONLY :  mp_global_end
-  USE mp_image_global_module, ONLY : nimage
+  USE mp_global,          ONLY : mp_global_end
   USE environment,        ONLY : environment_end
   USE path_variables,     ONLY : path_deallocation
-  USE image_io_routines,   ONLY : io_image_stop
+  USE image_io_routines,  ONLY : io_image_stop
   USE path_io_units_module,      ONLY : iunpath
   !
   IMPLICIT NONE

@@ -901,7 +901,6 @@ move_ions.o : newd.o
 move_ions.o : pwcom.o
 move_ions.o : symm_base.o
 ms2.o : ../../Modules/mp.o
-ms2.o : ../../Modules/mp_global.o
 n_plane_waves.o : ../../Modules/kind.o
 n_plane_waves.o : ../../Modules/mp.o
 n_plane_waves.o : ../../Modules/mp_global.o

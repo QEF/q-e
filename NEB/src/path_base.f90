@@ -55,26 +55,26 @@ MODULE path_base
     SUBROUTINE initialize_path()
       !-----------------------------------------------------------------------
       !
+      USE control_flags,    ONLY : conv_elec
+      USE ions_base,        ONLY : amass, ityp
+      USE io_files,         ONLY : prefix, tmp_dir
+      USE mp_image_global_module,        ONLY : nimage
       USE path_input_parameters_module, ONLY : pos_      => pos, &
                                    climbing_ => climbing, &
                                    input_images, nstep_path_ => nstep_path
       USE path_input_parameters_module, ONLY : restart_mode
-      USE path_variables, ONLY : fix_atom_pos
       USE path_input_parameters_module, ONLY : nat
-      USE control_flags,    ONLY : conv_elec
-      USE ions_base,        ONLY : amass, ityp
-      USE io_files,         ONLY : prefix, tmp_dir
-      USE path_io_units_module, ONLY : path_file, dat_file, crd_file, &
-                                   int_file, xyz_file, axsf_file, broy_file
+      USE path_variables, ONLY : fix_atom_pos
       USE path_variables,   ONLY : climbing, pos, istep_path, nstep_path,    &
                                    dim1, num_of_images, pes, grad_pes, mass, &
                                    use_masses, tangent, error, path_length,  &
                                    deg_of_freedom, frozen, use_freezing, k,  &
                                    k_min, tune_load_balance, grad, posold,   &
                                    elastic_grad, pending_image, first_last_opt
-      USE mp_image_global_module,        ONLY : nimage
-      USE path_io_routines, ONLY : read_restart
       USE path_variables,   ONLY : path_allocation
+      USE path_io_routines, ONLY : read_restart
+      USE path_io_units_module, ONLY : path_file, dat_file, crd_file, &
+                                   int_file, xyz_file, axsf_file, broy_file
       !
       IMPLICIT NONE
       !
@@ -749,7 +749,7 @@ MODULE path_base
     SUBROUTINE born_oppenheimer_pes( stat )
       !------------------------------------------------------------------------
       !
-      USE path_variables, ONLY : nim => num_of_images, &
+      USE path_variables, ONLY : num_of_images, &
                                  pending_image, istep_path, pes, &
                                  first_last_opt, Emin, Emax, Emax_index
       !
@@ -763,12 +763,12 @@ MODULE path_base
       IF ( istep_path == 0 .OR. first_last_opt ) THEN
          !
          fii = 1
-         lii = nim
+         lii = num_of_images
          !
       ELSE
          !
          fii = 2
-         lii = nim - 1
+         lii = num_of_images - 1
          !
       END IF
       !
@@ -778,9 +778,9 @@ MODULE path_base
       !
       IF ( .NOT. stat ) RETURN
       !
-      Emin       = MINVAL( pes(1:nim) )
-      Emax       = MAXVAL( pes(1:nim) )
-      Emax_index = MAXLOC( pes(1:nim), 1 )
+      Emin       = MINVAL( pes(1:num_of_images) )
+      Emax       = MAXVAL( pes(1:num_of_images) )
+      Emax_index = MAXLOC( pes(1:num_of_images), 1 )
       !
       RETURN
       !
@@ -790,7 +790,7 @@ MODULE path_base
     SUBROUTINE fe_profile()
       !------------------------------------------------------------------------
       !
-      USE path_variables, ONLY : nim => num_of_images
+      USE path_variables, ONLY : num_of_images
       USE path_variables, ONLY : pos, pes, grad_pes, &
                                  Emin, Emax, Emax_index
       !
@@ -801,16 +801,16 @@ MODULE path_base
       !
       pes(:) = 0.0_DP
       !
-      DO i = 2, nim
+      DO i = 2, num_of_images
          !
          pes(i) = pes(i-1) + 0.5_DP*( ( pos(:,i) - pos(:,i-1) ) .dot. &
                                      ( grad_pes(:,i) + grad_pes(:,i-1) ) )
          !
       END DO
       !
-      Emin       = MINVAL( pes(1:nim) )
-      Emax       = MAXVAL( pes(1:nim) )
-      Emax_index = MAXLOC( pes(1:nim), 1 )
+      Emin       = MINVAL( pes(1:num_of_images) )
+      Emax       = MAXVAL( pes(1:num_of_images) )
+      Emax_index = MAXLOC( pes(1:num_of_images), 1 )
       !
       RETURN
       !

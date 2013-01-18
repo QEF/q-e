@@ -821,7 +821,7 @@ MODULE path_io_routines
      END SUBROUTINE write_output
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE new_image_init( fii, outdir )
+     SUBROUTINE new_image_init( nimage, fii, outdir )
        !-----------------------------------------------------------------------
        !
        ! ... this subroutine initializes the file needed for the
@@ -830,11 +830,10 @@ MODULE path_io_routines
        USE path_io_units_module, ONLY : iunnewimage
        USE io_files, ONLY : prefix
        USE path_variables, ONLY : tune_load_balance
-       USE mp_image_global_module,      ONLY : nimage
        !
        IMPLICIT NONE
        !
-       INTEGER,          INTENT(IN) :: fii
+       INTEGER,          INTENT(IN) :: nimage, fii
        CHARACTER(LEN=*), INTENT(IN) :: outdir
        !
        !
@@ -852,7 +851,7 @@ MODULE path_io_routines
      END SUBROUTINE new_image_init
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE get_new_image( image, outdir )
+     SUBROUTINE get_new_image( nimage, image, outdir )
        !-----------------------------------------------------------------------
        !
        ! ... this subroutine is used to get the new image to work on
@@ -862,10 +861,10 @@ MODULE path_io_routines
        USE io_files,       ONLY : iunnewimage, iunlock, prefix
        USE io_global,      ONLY : ionode
        USE path_variables, ONLY : tune_load_balance
-       USE mp_image_global_module,      ONLY : nimage
        !
        IMPLICIT NONE
        !
+       INTEGER,          INTENT(IN)    :: nimage
        INTEGER,          INTENT(INOUT) :: image
        CHARACTER(LEN=*), INTENT(IN)    :: outdir
        !
