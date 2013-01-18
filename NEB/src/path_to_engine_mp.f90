@@ -14,12 +14,13 @@ SUBROUTINE engine_mp_start()
   !
   USE kinds,         ONLY : DP
   !
-  USE mp_image_global_module, ONLY : intra_image_comm
+  USE mp_image_global_module, ONLY : intra_image_comm, inter_image_comm
   USE mp_image_global_module, ONLY : root_image, me_image, nproc_image_file, &
                                     nproc_image, my_image_id, nimage
   !
   USE mp_global, ONLY : mp_startup_new, &
                         intra_image_comm_ => intra_image_comm, &
+                        inter_image_comm_ => inter_image_comm, &
                         me_image_ => me_image, &
                         root_image_ => root_image, &
                         nproc_image_file_ => nproc_image_file, &
@@ -32,6 +33,7 @@ SUBROUTINE engine_mp_start()
   IMPLICIT NONE
   !
   intra_image_comm_ = intra_image_comm
+  inter_image_comm_ = inter_image_comm
   me_image_ = me_image
   root_image_ = root_image
   nproc_image_ = nproc_image

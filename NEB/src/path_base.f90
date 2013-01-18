@@ -58,7 +58,7 @@ MODULE path_base
       USE control_flags,    ONLY : conv_elec
       USE ions_base,        ONLY : amass, ityp
       USE io_files,         ONLY : prefix, tmp_dir
-      USE mp_image_global_module,        ONLY : nimage
+      USE mp_global,        ONLY : nimage	
       USE path_input_parameters_module, ONLY : pos_      => pos, &
                                    climbing_ => climbing, &
                                    input_images, nstep_path_ => nstep_path
@@ -637,7 +637,7 @@ MODULE path_base
       USE path_variables, ONLY : pos, posold, num_of_images, grad, &
                                  use_freezing, first_last_opt, path_thr, &
                                  error, frozen, lquick_min
-      USE mp_image_global_module,      ONLY : nimage
+      USE mp_global,      ONLY : nimage
       !
       IMPLICIT NONE
       !
