@@ -119,7 +119,7 @@ CONTAINS
     !
     IMPLICIT NONE
     LOGICAL, INTENT(IN), OPTIONAL :: start_images
-    INTEGER :: world, nproc_ortho_in = 0, root = 0
+    INTEGER :: nproc_ortho_in = 0
     LOGICAL :: do_images
     !
     !
@@ -129,7 +129,7 @@ CONTAINS
     ! ... nproc = number of processors
     ! ... world = group index of all processors
     !
-    CALL mp_start( nproc, mpime, world )
+    CALL mp_start( nproc, mpime, world_comm )
     !
     ! ... for compatibility: initialize images
     !
@@ -148,13 +148,13 @@ CONTAINS
           nimage = MIN( nimage, nproc )
           !
        END IF
-       CALL mp_barrier(world)
+       CALL mp_barrier(world_comm)
        CALL mp_bcast( nimage, meta_ionode_id )
     ELSE
        nimage = 1
     END IF
     !
-    CALL init_images ( world )
+    CALL init_images ( world_comm )
     !
     ! ... now initialize processors and groups variables
     ! ... set global coordinate for this processor
@@ -264,18 +264,14 @@ CONTAINS
     !
     INTEGER, INTENT(IN) :: root_i, mpime_i, group_i, nproc_i
     !
-    root             = root_i
-    mpime            = mpime_i
-    world_comm       = group_i
-    nproc            = nproc_i
     nproc_pool       = nproc_i
     nproc_bgrp       = nproc_i
     my_pool_id       = 0
     my_bgrp_id       = 0
-    me_pool          = mpime
-    me_bgrp          = mpime
-    root_pool        = root
-    root_bgrp        = root
+    me_pool          = mpime_i
+    me_bgrp          = mpime_i
+    root_pool        = root_i
+    root_bgrp        = root_i
     inter_pool_comm  = group_i
     intra_pool_comm  = group_i
     inter_bgrp_comm  = group_i
