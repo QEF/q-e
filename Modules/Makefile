@@ -95,17 +95,32 @@ ws_base.o \
 read_cards.o
 
 
-all : version.o libqemod.a
+all : version version.o libqemod.a
 
-version.f90: version.f90.in
+## If no update_version is found, or it is not executable,
+## just copy the versfion.f90.in (that contains 'version=unknown').
+## We use cat and not cp so that version.f90 has a new timestamp, and
+## version.f90 is recompiled.
+## We use the innder if to avoid recompilation at each make.
+version:
 	- ( if test -x ../install/update_version ; then \
-                       ../install/update_version; fi )
+	../install/update_version; \
+	else if test ! -f version.f90 ; then \
+	cat version.f90.in > version.f90 ; fi ; fi )	
+
+version.f90: version
 
 libqemod.a: 	$(MODULES)
 	$(AR) $(ARFLAGS) $@ $?       
 	$(RANLIB) $@    
 
 clean :
-	- /bin/rm -f *.o *.a *.d *.i *~ *.F90 *.mod *.L
+	- /bin/rm -f *.o *.a *.d *.i *~ *.F90 *.mod *.L version.f90
+
+# In this way, the script for generating version.f90 always runs (possibly
+# updating the version is you run svn update).
+# the update_version script should take care of not changing the file if the
+# svn version did not change
+.PHONY: version all clean
 
 include make.depend
