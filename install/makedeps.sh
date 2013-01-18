@@ -11,9 +11,10 @@ TOPDIR=`pwd`
 
 if test $# = 0
 then
-    dirs=" Modules clib PW/src CPV/src flib PW/tools upftools PP/src PWCOND/src \
+    dirs=" Modules clib PW/src CPV/src flib PW/tools upftools PP/src PWCOND/src\
            PHonon/Gamma PHonon/PH PHonon/D3 atomic/src VdW/src XSpectra/src \
-	   GWW/gww GWW/pw4gww GWW/head ACFDT NEB/src Environ/src TDDFPT/src" 
+	   GWW/gww GWW/pw4gww GWW/head ACFDT NEB/src Environ/src TDDFPT/src \
+           GIPAW/src" 
           
 else
     dirs=$*
@@ -34,7 +35,7 @@ for dir in $dirs; do
     LEVEL2=../..
     DEPENDS="$LEVEL1/include $LEVEL1/iotk/src"
     case $DIR in 
-        EE | flib | upftools )
+        flib | upftools )
              DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/Modules" ;;
 	PP/src  )
              DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
@@ -52,7 +53,7 @@ for dir in $dirs; do
 	     DEPENDS="$LEVEL2/include $LEVEL2/PW/src $LEVEL2/iotk/src $LEVEL2/Modules" ;;
 	CPV/src | atomic/src | GWW/gww )
              DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules" ;;
-	PHonon/PH | PHonon/Gamma | XSpectra/src  | PWCOND/src | GWW/pw4gww | NEB/src )
+	PHonon/PH | PHonon/Gamma | XSpectra/src  | PWCOND/src | GWW/pw4gww | NEB/src | GIPAW/src )
              DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
                       $LEVEL2/PW/src" ;;
 	PHonon/D3 )
