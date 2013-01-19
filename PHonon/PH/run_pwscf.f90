@@ -25,6 +25,8 @@ SUBROUTINE run_pwscf(do_band)
   !
   USE acfdtest,      ONLY : acfdt_is_active, acfdt_num_der, ir_point, delta_vrs
   USE scf,           ONLY : vrs
+  USE mp_global,     ONLY : get_ntask_groups
+  USE fft_base,      ONLY : dffts
 
  !
   IMPLICIT NONE
@@ -78,6 +80,13 @@ SUBROUTINE run_pwscf(do_band)
   !
 
   bands_computed=.TRUE.
+!
+!  PWscf has run with task groups if available, but in the phonon 
+!  they are not used, apart in particular points. In that case it is
+!  activated.
+!
+  IF (get_ntask_groups()>1) dffts%have_task_groups=.FALSE.
+
   !
   CALL stop_clock( 'PWSCF' )
   !

@@ -21,13 +21,16 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE wvfct,                ONLY : npwx, nbnd
   USE becmod,               ONLY : bec_type, becp, calbec
   USE uspp,                 ONLY : nkb, vkb
+  USE fft_base,             ONLY : dffts
+  USE wvfct,                ONLY : npwx, igk
+  USE qpoint,               ONLY : igkq
   USE noncollin_module,     ONLY : noncolin, npol
 
-  USE control_ph,           ONLY : alpha_pv, nbnd_occ
+  USE control_ph,           ONLY : alpha_pv, nbnd_occ, lgamma
   USE eqv,                  ONLY : evq
   USE qpoint,               ONLY : ikqs
 
-  USE mp_global,            ONLY : intra_bgrp_comm
+  USE mp_global,            ONLY : intra_bgrp_comm, get_ntask_groups
   USE mp,                   ONLY : mp_sum
 
   !Needed only for TDDFPT
@@ -60,8 +63,14 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   ! scalar products
   ! the product of the Hamiltonian and h
   ! the product of the S matrix and h
+  INTEGER, ALLOCATABLE :: ibuf(:)
 
   CALL start_clock ('ch_psi')
+!
+!  This routine is task groups aware
+!
+  IF (get_ntask_groups() > 1) dffts%have_task_groups=.TRUE.
+
   ALLOCATE (ps  ( nbnd , m))
   ALLOCATE (hpsi( npwx*npol , m))
   ALLOCATE (spsi( npwx*npol , m))
@@ -70,7 +79,25 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !
   !   compute the product of the hamiltonian with the h vector
   !
-  CALL h_psiq (npwx, n, m, h, hpsi, spsi)
+  IF (dffts%have_task_groups) THEN
+  !
+  !   With task groups we use the Hpsi routine of PW parallelized
+  !   on task groups
+  !
+     IF (.NOT.lgamma) THEN
+        ALLOCATE(ibuf(npwx))
+        ibuf=igk
+        igk=igkq 
+     ENDIF   
+     CALL h_psi (npwx, n, m, h, hpsi)
+     CALL s_psi (npwx, n, m, h, spsi)
+     IF (.NOT.lgamma) THEN
+        igk=ibuf
+        DEALLOCATE(ibuf)
+     ENDIF
+  ELSE
+    CALL h_psiq (npwx, n, m, h, hpsi, spsi)
+  ENDIF
 
   CALL start_clock ('last')
   !
@@ -113,6 +140,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   DEALLOCATE (ps)
 
   IF (tddfpt) NULLIFY(evq)
+  dffts%have_task_groups=.FALSE.
 
   CALL stop_clock ('last')
   CALL stop_clock ('ch_psi')

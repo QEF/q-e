@@ -25,6 +25,9 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   USE wavefunctions_module,  ONLY: evc
   USE qpoint,    ONLY : npwq, igkq, ikks
   USE control_ph, ONLY : nbnd_occ
+  USE mp_global,  ONLY : me_bgrp, inter_bgrp_comm, get_ntask_groups
+  USE mp, ONLY : mp_sum
+
 
   implicit none
   ! I/O variables
@@ -46,42 +49,119 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   complex(DP), allocatable  :: psi (:), dpsic (:)
   ! the wavefunctions in real space
   ! the change of wavefunctions in real space
+  complex(DP), allocatable :: tg_psi(:), tg_dpsi(:), tg_drho(:)
 
-  integer :: ibnd, ikk, ir, ig
+  integer :: ibnd, ikk, ir, ig, incr, v_siz, idx, ioff
   ! counters
 
   call start_clock ('incdrhoscf')
+  IF (get_ntask_groups() > 1) dffts%have_task_groups=.TRUE.
   allocate (dpsic(  dffts%nnr))
   allocate (psi  (  dffts%nnr))
   wgt = 2.d0 * weight / omega
   ikk = ikks(ik)
+  incr=1
+  !
+  IF (dffts%have_task_groups) THEN
+     !
+     v_siz = dffts%tg_nnr * dffts%nogrp
+     !
+     ALLOCATE( tg_psi( v_siz ) )
+     ALLOCATE( tg_dpsi( v_siz ) )
+     ALLOCATE( tg_drho( v_siz ) )
+     !
+     incr  = dffts%nogrp
+     !
+  ENDIF
   !
   ! dpsi contains the   perturbed wavefunctions of this k point
   ! evc  contains the unperturbed wavefunctions of this k point
   !
-  do ibnd = 1, nbnd_occ (ikk)
-     psi (:) = (0.d0, 0.d0)
-     do ig = 1, npw
-        psi (nls (igk (ig) ) ) = evc (ig, ibnd)
-     enddo
+  do ibnd = 1, nbnd_occ(ikk), incr
+     !
+     IF (dffts%have_task_groups) THEN
+        !
+        tg_drho=(0.0_DP, 0.0_DP)
+        tg_psi=(0.0_DP, 0.0_DP)
+        tg_dpsi=(0.0_DP, 0.0_DP)
+        !
+        ioff   = 0
+        !
+        DO idx = 1, dffts%nogrp
+           !
+           ! ... dffts%nogrp ffts at the same time. We prepare both
+           ! evc (at k) and dpsi (at k+q)
+           !
+           IF( idx + ibnd - 1 <= nbnd_occ(ikk) ) THEN
+              !
+              DO ig = 1, npw
+                 tg_psi( nls( igk( ig ) ) + ioff ) = evc( ig, idx+ibnd-1 )
+              END DO
+              DO ig = 1, npwq
+                 tg_dpsi( nls( igkq( ig ) ) + ioff ) = dpsi( ig, idx+ibnd-1 )
+              END DO
+              !
+           END IF
+           !
+           ioff = ioff + dffts%tg_nnr
+           !
+        END DO
+        CALL invfft ('Wave', tg_psi, dffts)
+        CALL invfft ('Wave', tg_dpsi, dffts)
 
-     CALL invfft ('Wave', psi, dffts)
+        do ir = 1, dffts%tg_npp( me_bgrp + 1 ) * dffts%nr1x * dffts%nr2x
+           tg_drho (ir) = tg_drho (ir) + wgt * CONJG(tg_psi (ir) ) *  &
+                                                     tg_dpsi (ir)
+        enddo
+        !
+        ! reduce the group charge (equivalent to sum over bands of 
+        ! orbital group)
+        !
+        CALL mp_sum( tg_drho, gid = dffts%ogrp_comm )
+        !
+        ioff = 0
+        DO idx = 1, dffts%nogrp
+           IF( me_bgrp == dffts%nolist( idx ) ) EXIT
+           ioff = ioff + dffts%nr1x * dffts%nr2x * &
+                                      dffts%npp( dffts%nolist( idx ) + 1 )
+        END DO
+        !
+        ! copy the charge back to the proper processor location
+        !
+        DO ir = 1, dffts%nnr
+           drhoscf(ir) = drhoscf(ir) + tg_drho(ir+ioff)
+        END DO
+     ELSE
+        psi (:) = (0.d0, 0.d0)
+        do ig = 1, npw
+           psi (nls (igk (ig) ) ) = evc (ig, ibnd)
+        enddo
 
-     dpsic(:) = (0.d0, 0.d0)
-     do ig = 1, npwq
-        dpsic (nls (igkq (ig) ) ) = dpsi (ig, ibnd)
-     enddo
+        CALL invfft ('Wave', psi, dffts)
 
-     CALL invfft ('Wave', dpsic, dffts)
-     do ir = 1, dffts%nnr
-        drhoscf (ir) = drhoscf (ir) + wgt * CONJG(psi (ir) ) * dpsic (ir)
-     enddo
+        dpsic(:) = (0.d0, 0.d0)
+        do ig = 1, npwq
+           dpsic (nls (igkq (ig) ) ) = dpsi (ig, ibnd)
+        enddo
+
+        CALL invfft ('Wave', dpsic, dffts)
+
+        do ir = 1, dffts%nnr
+           drhoscf (ir) = drhoscf (ir) + wgt * CONJG(psi (ir) ) * dpsic (ir)
+        enddo
+     ENDIF
   enddo
-
+  
 
   call addusdbec (ik, weight, dpsi, dbecsum)
   deallocate (psi)
   deallocate (dpsic)
+  IF (dffts%have_task_groups) THEN
+     DEALLOCATE(tg_psi)
+     DEALLOCATE(tg_dpsi)
+     DEALLOCATE(tg_drho)
+  ENDIF
+  dffts%have_task_groups=.FALSE.
 
   call stop_clock ('incdrhoscf')
   return

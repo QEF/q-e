@@ -27,7 +27,7 @@ subroutine solve_e
   USE klist,                 ONLY : lgauss, xk, wk
   USE gvect,                 ONLY : g
   USE gvecs,                 ONLY : doublegrid
-  USE fft_base,              ONLY : dfftp, dffts
+  USE fft_base,              ONLY : dfftp, dffts, tg_cgather
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,              ONLY : domag
   USE wvfct,                 ONLY : nbnd, npw, npwx, igk, g2kin,  et
@@ -53,7 +53,8 @@ subroutine solve_e
   USE qpoint,                ONLY : npwq, nksq
   USE recover_mod,           ONLY : read_rec, write_rec
 
-  USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm
+  USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm, &
+                                    ntask_groups_file
   USE mp,                    ONLY : mp_sum
 
   implicit none
@@ -75,7 +76,9 @@ subroutine solve_e
                    dbecsum(:,:,:,:), & ! the becsum with dpsi
                    dbecsum_nc(:,:,:,:,:), & ! the becsum with dpsi
                    mixin(:), mixout(:), &  ! auxiliary for paw mixing
-                   aux1 (:,:),  ps (:,:)
+                   aux1 (:,:),  ps (:,:), &
+                   tg_dv(:,:), &
+                   tg_psic(:,:), aux2(:,:)
 
   complex(DP), EXTERNAL :: zdotc      ! the scalar product function
 
@@ -84,7 +87,7 @@ subroutine solve_e
 
   integer :: kter, iter0, ipol, ibnd, iter, lter, ik, ig, is, nrec, ndim, ios
   ! counters
-  integer :: ltaver, lintercall
+  integer :: ltaver, lintercall, incr, jpol, v_siz
 
   real(DP) :: tcpu, get_clock
   ! timing variables
@@ -94,6 +97,11 @@ subroutine solve_e
 
 
   call start_clock ('solve_e')
+!
+!  This routine is task group aware
+!
+  IF ( ntask_groups_file > 1 ) dffts%have_task_groups=.TRUE.
+
   allocate (dvscfin( dfftp%nnr, nspin_mag, 3))
   if (doublegrid) then
      allocate (dvscfins(dffts%nnr, nspin_mag, 3))
@@ -109,6 +117,7 @@ subroutine solve_e
   IF (noncolin) allocate (dbecsum_nc (nhm, nhm, nat, nspin, 3))
   allocate (aux1(dffts%nnr,npol))
   allocate (h_diag(npwx*npol, nbnd))
+  allocate (aux2(npwx*npol, nbnd))
   IF (okpaw) mixin=(0.0_DP,0.0_DP)
 
   if (rec_code_read == -20.AND.ext_recover) then
@@ -127,6 +136,15 @@ subroutine solve_e
      convt = .false.
      iter0 = 0
   endif
+  incr=1
+  IF ( dffts%have_task_groups ) THEN
+     !
+     v_siz =  dffts%tg_nnr * dffts%nogrp
+     ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
+     ALLOCATE( tg_psic( v_siz, npol ) )
+     incr = dffts%nogrp
+     !
+  ENDIF
   !
   IF ( ionode .AND. fildrho /= ' ') THEN
      INQUIRE (UNIT = iudrho, OPENED = exst)
@@ -202,11 +220,37 @@ subroutine solve_e
               ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
               ! dvscf_q from previous iteration (mix_potential)
               !
-              do ibnd = 1, nbnd_occ (ik)
-                 call cft_wave (evc (1, ibnd), aux1, +1)
-                 call apply_dpot(dffts%nnr, aux1, dvscfins(1,1,ipol), current_spin)
-                 call cft_wave (dvpsi (1, ibnd), aux1, -1)
+              IF ( ntask_groups_file > 1 ) dffts%have_task_groups=.TRUE.
+              IF( dffts%have_task_groups ) THEN
+                 IF (noncolin) THEN
+                    CALL tg_cgather( dffts, dvscfins(:,1,ipol), &
+                                                                tg_dv(:,1))
+                    IF (domag) THEN
+                       DO jpol=2,4
+                          CALL tg_cgather( dffts, dvscfins(:,jpol,ipol), &
+                                                             tg_dv(:,jpol))
+                       ENDDO
+                    ENDIF
+                 ELSE
+                    CALL tg_cgather( dffts, dvscfins(:,current_spin,ipol), &
+                                                             tg_dv(:,1))
+                 ENDIF
+              ENDIF
+              aux2=(0.0_DP,0.0_DP)
+              do ibnd = 1, nbnd_occ (ik), incr
+                 IF ( dffts%have_task_groups ) THEN
+                    call cft_wave_tg (evc, tg_psic, 1, v_siz, ibnd, &
+                                      nbnd_occ (ik) )
+                    call apply_dpot(v_siz, tg_psic, tg_dv, 1)
+                    call cft_wave_tg (aux2, tg_psic, -1, v_siz, ibnd, &
+                                      nbnd_occ (ik))
+                 ELSE
+                    call cft_wave (evc (1, ibnd), aux1, +1)
+                    call apply_dpot(dffts%nnr, aux1, dvscfins(1,1,ipol), current_spin)
+                    call cft_wave (aux2 (1, ibnd), aux1, -1)
+                 ENDIF
               enddo
+              dvpsi=dvpsi+aux2
               !
               call adddvscf(ipol,ik)
               !
@@ -403,6 +447,15 @@ subroutine solve_e
   if (doublegrid) deallocate (dvscfins)
   deallocate (dvscfin)
   if (noncolin) deallocate(dbecsum_nc)
+  deallocate(aux2)
+  IF ( ntask_groups_file > 1 ) dffts%have_task_groups=.TRUE.
+  IF ( dffts%have_task_groups ) THEN
+     !
+     DEALLOCATE( tg_dv  )
+     DEALLOCATE( tg_psic)
+     !
+  ENDIF
+  dffts%have_task_groups=.FALSE.
 
   call stop_clock ('solve_e')
   return

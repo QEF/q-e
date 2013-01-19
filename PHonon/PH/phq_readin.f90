@@ -32,6 +32,7 @@ SUBROUTINE phq_readin()
   USE lsda_mod,      ONLY : lsda, nspin
   USE spin_orb,      ONLY : domag
   USE cellmd,        ONLY : lmovecell
+  USE fft_base,      ONLY : dffts
   USE run_info, ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma, lgamma_gamma, epsil, &
                             zue, zeu, xmldyn, newgrid,                      &
@@ -54,7 +55,7 @@ SUBROUTINE phq_readin()
   USE mp_global,     ONLY : nproc_pool, nproc_pool_file, &
                             nimage, my_image_id,    &
                             nproc_image_file, nproc_image, npool, &
-                            get_ntask_groups, ntask_groups_file,  &
+                            get_ntask_groups,  &
                             nbgrp
   USE paw_variables, ONLY : okpaw
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
@@ -478,9 +479,11 @@ SUBROUTINE phq_readin()
   IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
      CALL errore('phq_readin',&
      'pw.x run with a different number of pools. Use wf_collect=.true.',1)
+!
+!   Task groups not used in phonon. Activated only in some places
+!
+  IF (get_ntask_groups() > 1) dffts%have_task_groups=.FALSE.
 
-  IF (get_ntask_groups() > 1) &
-     CALL errore('phq_readin','task_groups not available in phonon',1)
 
   IF (nbgrp /= 1) &
      CALL errore('phq_readin','band parallelization not available in phonon',1)
