@@ -485,8 +485,8 @@ SUBROUTINE phq_readin()
   IF (get_ntask_groups() > 1) dffts%have_task_groups=.FALSE.
 
 
-  IF (nbgrp /= 1) &
-     CALL errore('phq_readin','band parallelization not available in phonon',1)
+!  IF (nbgrp /= 1) &
+!     CALL errore('phq_readin','band parallelization not available in phonon',1)
 
   IF (elph.and.nimage>1) CALL errore('phq_readin',&
        'el-ph with image parallelization is not yet available',1)
