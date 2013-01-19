@@ -11,10 +11,9 @@ subroutine psyme2 (dvtosym)
   !-----------------------------------------------------------------------
   !  p-symmetrize the second derivative of charge density.
   !
-#ifdef __MPI
 
   use kinds, only : DP
-  USE mp_global, ONLY: me_pool
+  USE mp_global, ONLY: me_bgrp
   USE fft_base,  ONLY: dfftp, cgather_sym
   implicit none
 
@@ -22,6 +21,7 @@ subroutine psyme2 (dvtosym)
   ! the potential to symmetrize
   !-local variable
 
+#ifdef __MPI
   integer :: i, iper, npp0
 
   complex(DP), allocatable :: ddvtosym (:,:)
@@ -30,7 +30,7 @@ subroutine psyme2 (dvtosym)
   allocate (ddvtosym (dfftp%nr1x*dfftp%nr2x*dfftp%nr3x, 6))
 
   npp0 = 0
-  do i = 1, me_pool
+  do i = 1, me_bgrp
      npp0 = npp0 + dfftp%npp (i)
   enddo
   npp0 = npp0 * dfftp%nnp + 1
@@ -41,11 +41,13 @@ subroutine psyme2 (dvtosym)
   call syme2 (ddvtosym)
 
   do iper = 1, 6
-     call zcopy (dfftp%npp (me_pool+1) * dfftp%nnp, ddvtosym (npp0, iper), 1, &
+     call zcopy (dfftp%npp (me_bgrp+1) * dfftp%nnp, ddvtosym (npp0, iper), 1, &
                  dvtosym (1, iper), 1)
   enddo
 
   deallocate (ddvtosym)
+#else
+  call syme2 (dvtosym)
 #endif
   return
 end subroutine psyme2

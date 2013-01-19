@@ -195,11 +195,7 @@ subroutine solve_e2
         call dv_of_drho (0, dvscfout (1, 1, ipol), .false.)
      enddo
 
-#ifdef __MPI
      call psyme2(dvscfout)
-#else
-     call syme2(dvscfout)
-#endif
      !
      ! Mixing with the old potential
      !

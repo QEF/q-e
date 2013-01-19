@@ -464,14 +464,9 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !   Here we symmetrize them ...
      !
      IF (.not.lgamma_gamma) THEN
-#ifdef __MPI
         call psymdvscf (npe, irr, drhoscfh)
         IF ( noncolin.and.domag ) &
            CALL psym_dmag( npe, irr, drhoscfh)
-#else
-        call symdvscf (npe, irr, drhoscfh)
-        IF ( noncolin.and.domag ) CALL sym_dmag( npe, irr, drhoscfh)
-#endif
         IF (okpaw) THEN
            IF (minus_q) CALL PAW_dumqsymmetrize(dbecsum,npe,irr, &
                              npertx,irotmq,rtau,xq,tmq)

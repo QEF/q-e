@@ -15,7 +15,7 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
   USE kinds,     ONLY : DP
   USE noncollin_module, ONLY : nspin_mag
   USE modes,     ONLY : nsymq, minus_q
-  USE mp_global, ONLY : me_pool
+  USE mp_global, ONLY : me_bgrp
   USE fft_base,  ONLY : dfftp, cgather_sym
   !
   IMPLICIT NONE
@@ -40,10 +40,11 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
 
   ALLOCATE (ddvtosym ( dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, nspin_mag, nper))
   npp0 = 1
-  DO i = 1, me_pool
+  DO i = 1, me_bgrp
      npp0 = npp0 + dfftp%npp (i) * dfftp%nnp
 
   ENDDO
+
   DO iper = 1, nper
      DO is = 1, nspin_mag
         CALL cgather_sym (dvtosym (:, is, iper), ddvtosym (:, is, iper) )
@@ -54,7 +55,7 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
   CALL symdvscf (nper, irr, ddvtosym)
   DO iper = 1, nper
      DO is = 1, nspin_mag
-        CALL zcopy (dfftp%npp (me_pool+1) * dfftp%nnp, ddvtosym (npp0, is, iper), &
+        CALL zcopy (dfftp%npp (me_bgrp+1) * dfftp%nnp, ddvtosym (npp0, is, iper), &
              1, dvtosym (1, is, iper), 1)
      ENDDO
 
@@ -62,6 +63,9 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
   DEALLOCATE (ddvtosym)
 
   CALL stop_clock ('psymdvscf')
+#else
+
+  CALL symdvscf (nper, irr, dvtosym)
 
 #endif
 

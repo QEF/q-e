@@ -94,8 +94,6 @@ subroutine solve_e
 
   external ch_psi_all, cg_psi
 
-
-
   call start_clock ('solve_e')
 !
 !  This routine is task group aware
@@ -342,17 +340,10 @@ subroutine solve_e
      !   dvscfout contains the (unsymmetrized) linear charge response
      !   for the three polarizations - symmetrize it
      !
-#ifdef __MPI
      call mp_sum ( dvscfout, inter_pool_comm )
-#endif
      if (.not.lgamma_gamma) then
-#ifdef __MPI
         call psyme (dvscfout)
         IF ( noncolin.and.domag ) CALL psym_dmage(dvscfout)
-#else
-        call syme (dvscfout)
-        IF ( noncolin.and.domag ) CALL sym_dmage(dvscfout)
-#endif
      endif
      !
      !   save the symmetrized linear charge response to file

@@ -311,12 +311,8 @@ subroutine solve_e_fpol ( iw )
      !   dvscfout contains the (unsymmetrized) linear charge response
      !   for the three polarizations - symmetrize it
      !
-#ifdef __MPI
      call mp_sum ( dvscfout, inter_pool_comm )
      call psyme (dvscfout)
-#else
-     call syme (dvscfout)
-#endif
      !
      !   save the symmetrized linear charge response to file
      !   calculate the corresponding linear potential response

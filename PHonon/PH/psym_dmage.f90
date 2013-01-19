@@ -14,7 +14,7 @@ SUBROUTINE psym_dmage (dvtosym)
   !
   USE kinds,     ONLY : DP
   USE lsda_mod,   ONLY : nspin
-  USE mp_global, ONLY : me_pool
+  USE mp_global, ONLY : me_bgrp
   USE fft_base,  ONLY : dfftp, cgather_sym
   !
   IMPLICIT NONE
@@ -34,7 +34,7 @@ SUBROUTINE psym_dmage (dvtosym)
 
   ALLOCATE (ddvtosym ( dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, nspin, 3))
   npp0 = 1
-  DO i = 1, me_pool
+  DO i = 1, me_bgrp
      npp0 = npp0 + dfftp%npp (i) * dfftp%nnp
   ENDDO
   DO iper = 1, 3
@@ -46,13 +46,17 @@ SUBROUTINE psym_dmage (dvtosym)
   CALL sym_dmage (ddvtosym)
   DO iper = 1, 3
      DO is = 1, nspin
-        CALL zcopy (dfftp%npp (me_pool+1) * dfftp%nnp, ddvtosym (npp0, is, iper), &
+        CALL zcopy (dfftp%npp (me_bgrp+1) * dfftp%nnp, ddvtosym (npp0, is, iper), &
              1, dvtosym (1, is, iper), 1)
      ENDDO
   ENDDO
   DEALLOCATE (ddvtosym)
 
   CALL stop_clock ('psym_dmage')
+
+#else
+
+  CALL sym_dmage (dvtosym)
 
 #endif
 
