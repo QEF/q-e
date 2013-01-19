@@ -186,13 +186,11 @@ subroutine dvpsi_e2
                    aux3 (ir, a1j (ipa)) * aux3 (ir, a2j (ipa))
      enddo
   enddo
-#ifdef __MPI
+
  100  continue
   call mp_sum ( aux6, inter_pool_comm )
   call psyme2 (aux6)
-#else
-  call syme2 (aux6)
-#endif
+
   deallocate (d2muxc)
   deallocate (aux3)
 
