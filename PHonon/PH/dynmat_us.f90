@@ -253,20 +253,9 @@ SUBROUTINE dynmat_us()
   !
   !  We rotate the dynamical matrix on the basis of patterns
   !
-  DO nu_i = 1, 3 * nat
-     DO nu_j = 1, 3 * nat
-        work = (0.0d0, 0.0d0)
-        DO na_jcart = 1, 3 * nat
-           DO na_icart = 1, 3 * nat
-              work = work + CONJG (u (na_icart, nu_i) ) * &
-                            dynwrk (na_icart, na_jcart) * &
-                            u (na_jcart, nu_j)
-           ENDDO
-        ENDDO
-        dyn (nu_i, nu_j) = dyn (nu_i, nu_j) + work
-     ENDDO
 
-  ENDDO
+  CALL rotate_pattern_add(nat, u, dyn, dynwrk)
+
   IF (noncolin) THEN
      DEALLOCATE (deff_nc)
   ELSE

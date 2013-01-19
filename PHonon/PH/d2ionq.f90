@@ -232,18 +232,9 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   !   The dynamical matrix was computed in cartesian axis and now we put
   !   it on the basis of the modes
   !
-  do nu_i = 1, nmodes
-     do nu_j = 1, nmodes
-        work = (0.d0, 0.d0)
-        do nb_jcart = 1, 3 * nat
-           do na_icart = 1, 3 * nat
-              work = work + CONJG(u (na_icart, nu_i) ) * &
-                   dy3 (na_icart, nb_jcart) * u (nb_jcart, nu_j)
-           enddo
-        enddo
-        dyn (nu_i, nu_j) = dyn (nu_i, nu_j) - work
-     enddo
-  enddo
+  dy3 = -dy3
+  !
+  CALL rotate_pattern_add(nat, u, dyn, dy3)
   !
   call stop_clock ('d2ionq')
   return

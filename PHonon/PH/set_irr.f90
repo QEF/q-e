@@ -110,17 +110,7 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
 !
 !     We copy the dynamical matrix in a bidimensional array
 !
-     do na = 1, nat
-        do nb = 1, nat
-           do ipol = 1, 3
-              imode = ipol + 3 * (na - 1)
-              do jpol = 1, 3
-                 jmode = jpol + 3 * (nb - 1)
-                 phi (imode, jmode) = wdyn (ipol, jpol, na, nb)
-              enddo
-           enddo
-        enddo
-     enddo
+     CALL compact_dyn(nat, phi, wdyn)
 !
 !   Diagonalize
 !

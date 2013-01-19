@@ -108,18 +108,7 @@ subroutine dynmatcc
   !
   ! rotate in the pattern basis and add to dynmat
   !
-  do nu_i = 1, 3 * nat
-     do nu_j = 1, 3 * nat
-        wrk = (0.d0, 0.d0)
-        do nb_jcart = 1, 3 * nat
-           do na_icart = 1, 3 * nat
-              wrk = wrk + CONJG(u (na_icart, nu_i) ) * dynwrk (na_icart, &
-                   nb_jcart) * u (nb_jcart, nu_j)
-           enddo
-        enddo
-        dyn (nu_i, nu_j) = dyn (nu_i, nu_j) + wrk
-     enddo
-  enddo
+  CALL rotate_pattern_add(nat, u, dyn, dynwrk)
   !
   deallocate (work)
   deallocate (vxc)

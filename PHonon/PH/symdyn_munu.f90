@@ -55,21 +55,7 @@ subroutine symdyn_munu_new (dyn, u, xq, s, invs, rtau, irt, at, &
   !
   ! First we transform in the cartesian coordinates
   !
-  do i = 1, 3 * nat
-     na = (i - 1) / 3 + 1
-     icart = i - 3 * (na - 1)
-     do j = 1, 3 * nat
-        nb = (j - 1) / 3 + 1
-        jcart = j - 3 * (nb - 1)
-        work = (0.d0, 0.d0)
-        do mu = 1, 3 * nat
-           do nu = 1, 3 * nat
-              work = work + u (i, mu) * dyn (mu, nu) * CONJG(u (j, nu) )
-           enddo
-        enddo
-        phi (icart, jcart, na, nb) = work
-     enddo
-  enddo
+  CALL dyn_pattern_to_cart(nat, u, dyn, phi)
   !
   ! Then we transform to the crystal axis
   !
@@ -92,17 +78,9 @@ subroutine symdyn_munu_new (dyn, u, xq, s, invs, rtau, irt, at, &
      enddo
   enddo
   !
-  !  rewrite the dynamical matrix on the array dyn with dimension 3nat x 3
+  !  rewrite the dynamical matrix on the array dyn with dimension 3nat x 3nat
   !
-  do i = 1, 3 * nat
-     na = (i - 1) / 3 + 1
-     icart = i - 3 * (na - 1)
-     do j = 1, 3 * nat
-        nb = (j - 1) / 3 + 1
-        jcart = j - 3 * (nb - 1)
-        dyn (i, j) = phi (icart, jcart, na, nb)
-     enddo
+  CALL compact_dyn(nat, dyn, phi)
 
-  enddo
   return
 end subroutine symdyn_munu_new

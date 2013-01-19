@@ -54,17 +54,9 @@ subroutine q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   nsq = nsym / nq
   if (nsq * nq /= nsym) call errore ('q2star_ph', 'wrong degeneracy', 1)
   !
-  ! Writes dyn.mat. dyn(3*nat,3*nat) on the 4-index array phi(3,3,nat,nta)
+  ! Writes dyn.mat. dyn(3*nat,3*nat) on the 4-index array phi(3,3,nat,nat)
   !
-  do i = 1, 3 * nat
-     na = (i - 1) / 3 + 1
-     icar = i - 3 * (na - 1)
-     do j = 1, 3 * nat
-        nb = (j - 1) / 3 + 1
-        jcar = j - 3 * (nb - 1)
-        phi (icar, jcar, na, nb) = dyn (i, j)
-     enddo
-  enddo
+  CALL scompact_dyn(nat, dyn, phi)
   !
   ! Go to crystal coordinates
   !
@@ -105,17 +97,9 @@ subroutine q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
         enddo
      enddo
      !
-     ! Saves 4-index array phi(3,3,nat,nta) on the dyn.mat. dyn(3*nat,3*nat)
+     ! Saves 4-index array phi2(3,3,nat,nat) on the dyn.mat. dyn(3*nat,3*nat)
      !
-     do i = 1, 3 * nat
-        na = (i - 1) / 3 + 1
-        icar = i - 3 * (na - 1)
-        do j = 1, 3 * nat
-           nb = (j - 1) / 3 + 1
-           jcar = j - 3 * (nb - 1)
-           dyn (i, j) = phi2 (icar, jcar, na, nb)
-        enddo
-     enddo
+     CALL compact_dyn(nat, dyn, phi2)
   endif
   !
   ! For each q of the star rotates phi with the appropriate sym.op. -> phi

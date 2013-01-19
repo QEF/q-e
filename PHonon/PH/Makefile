@@ -129,6 +129,7 @@ random_matrix.o \
 read_wfc_rspace_and_fwfft.o \
 rotate_dvscf_star.o \
 rotate_and_add_dyn.o \
+rotate_pattern_add.o \
 run_pwscf.o \
 save_ph_input.o \
 set_asr_c.o \

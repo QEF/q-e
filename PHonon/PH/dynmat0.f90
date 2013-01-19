@@ -69,20 +69,13 @@ subroutine dynmat0_new
      ! rotate again in the pattern basis
      !
      call zcopy (9 * nat * nat, dyn, 1, dynwrk, 1)
-     do nu_i = 1, 3 * nat
-        do nu_j = 1, 3 * nat
-           wrk = (0.d0, 0.d0)
-           do nb_jcart = 1, 3 * nat
-              do na_icart = 1, 3 * nat
-                 wrk = wrk + CONJG(u (na_icart, nu_i) ) * &
-                             dynwrk (na_icart, nb_jcart) * &
-                             u (nb_jcart, nu_j)
-              enddo
-           enddo
-           dyn (nu_i, nu_j) = wrk
-        enddo
-     enddo
+
+     dyn=(0.d0, 0.d0)
+
+     CALL rotate_pattern_add(nat, u, dyn, dynwrk)
+
   endif
+
 !        call tra_write_matrix('dynmat0 dyn',dyn,u,nat)
   dyn_rec(:,:)=dyn(:,:)
   done_irr(0) = 1
