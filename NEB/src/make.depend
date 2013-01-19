@@ -8,7 +8,7 @@ compute_scf.o : ../../Modules/io_global.o
 compute_scf.o : ../../Modules/ions_base.o
 compute_scf.o : ../../Modules/kind.o
 compute_scf.o : ../../Modules/mp.o
-compute_scf.o : ../../Modules/mp_image_global_module.o
+compute_scf.o : ../../Modules/mp_global.o
 compute_scf.o : ../../Modules/recvec.o
 compute_scf.o : ../../PW/src/pwcom.o
 compute_scf.o : path_formats.o
@@ -34,7 +34,7 @@ input.o : ../../Modules/io_files.o
 input.o : ../../Modules/io_global.o
 input.o : ../../Modules/kind.o
 input.o : ../../Modules/mp.o
-input.o : ../../Modules/mp_image_global_module.o
+input.o : ../../Modules/mp_global.o
 input.o : ../../Modules/wrappers.o
 input.o : ../../Modules/xml_io_base.o
 input.o : path_input_parameters_module.o
@@ -44,7 +44,7 @@ neb.o : ../../Modules/environment.o
 neb.o : ../../Modules/image_io_routines.o
 neb.o : ../../Modules/io_global.o
 neb.o : ../../Modules/mp.o
-neb.o : ../../Modules/mp_image_global_module.o
+neb.o : ../../Modules/mp_global.o
 neb.o : ../../Modules/open_close_input_file.o
 neb.o : ../../Modules/read_cards.o
 neb.o : ../../Modules/read_namelists.o
@@ -64,7 +64,7 @@ path_base.o : ../../Modules/io_global.o
 path_base.o : ../../Modules/ions_base.o
 path_base.o : ../../Modules/kind.o
 path_base.o : ../../Modules/mp.o
-path_base.o : ../../Modules/mp_image_global_module.o
+path_base.o : ../../Modules/mp_global.o
 path_base.o : ../../Modules/random_numbers.o
 path_base.o : path_formats.o
 path_base.o : path_input_parameters_module.o
@@ -125,9 +125,6 @@ path_to_engine_fix_atom_pos.o : ../../Modules/ions_base.o
 path_to_engine_fix_atom_pos.o : ../../Modules/kind.o
 path_to_engine_fix_atom_pos.o : path_input_parameters_module.o
 path_to_engine_fix_atom_pos.o : path_variables.o
-path_to_engine_mp.o : ../../Modules/kind.o
-path_to_engine_mp.o : ../../Modules/mp_global.o
-path_to_engine_mp.o : ../../Modules/mp_image_global_module.o
 path_variables.o : ../../Modules/kind.o
 set_defaults.o : ../../Modules/input_parameters.o
 set_defaults.o : ../../Modules/io_global.o

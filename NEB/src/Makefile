@@ -33,7 +33,6 @@ path_reparametrisation.o \
 path_read_cards_module.o \
 path_read_namelists_module.o \
 path_to_engine_fix_atom_pos.o \
-path_to_engine_mp.o \
 path_variables.o \
 set_defaults.o \
 stop_run_path.o 
@@ -43,7 +42,11 @@ PWOBJS= ../../PW/src/libpw.a
 
 TLDEPS=bindir mods libs liblapack libblas pw
 
-all : tldeps neb.x path_interpolation.x
+all : tldeps neb.x path_interpolation.x launch.x
+
+launch.x : launch.o libneb.a $(LIBOBJS) $(PWOBJS) $(QEMODS)
+	$(LD) $(LDFLAGS) -o $@ \
+	launch.o libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 
 neb.x : $(NEBOBJS) libneb.a $(LIBOBJS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
