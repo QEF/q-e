@@ -13,6 +13,8 @@ SUBROUTINE stop_ph( flag )
   !
   USE kinds, ONLY : DP
   USE mp_global, ONLY : mp_global_end, nimage
+  USE ph_restart,      ONLY : destroy_status_run
+  USE save_ph,         ONLY : clean_input_variables
   USE environment,        ONLY : environment_end
   USE image_io_routines,  ONLY : io_image_stop
   !
@@ -20,6 +22,9 @@ SUBROUTINE stop_ph( flag )
   !
   LOGICAL :: flag
   !
+  CALL clean_input_variables()
+  !
+  CALL destroy_status_run()
   !
   CALL deallocate_part()
   !

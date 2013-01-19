@@ -49,14 +49,12 @@ PROGRAM phonon
   ! [9] ? + External Electric field
   ! [10] ? + nonperiodic boundary conditions.
 
-  USE io_global,       ONLY : stdout
   USE disp,            ONLY : nqs
   USE control_ph,      ONLY : epsil, trans, bands_computed
   USE el_phon,         ONLY : elph, elph_mat, elph_simple
   USE output,          ONLY : fildrho
   USE check_stop,      ONLY : check_stop_init
-  USE ph_restart,      ONLY : ph_writefile, destroy_status_run
-  USE save_ph,         ONLY : clean_input_variables
+  USE ph_restart,      ONLY : ph_writefile
   USE mp_global,       ONLY: mp_startup, nimage
   USE image_io_routines, ONLY : io_image_start
   USE environment,     ONLY: environment_start
@@ -76,8 +74,6 @@ PROGRAM phonon
   IF (nimage>1) CALL io_image_start()
 #endif
   CALL environment_start ( code )
-  !
-  WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )
   !
   ! ... and begin with the initialization part
   !
@@ -154,13 +150,10 @@ PROGRAM phonon
   END DO
 
   CALL ph_writefile('init',0)
-  CALL clean_input_variables()
-  CALL collect_grid_files()
-  CALL destroy_status_run()
   !
   IF (bands_computed) CALL print_clock_pw()
   !
-  CALL stop_ph( .TRUE. )
+  CALL stop_smoothly_ph( .TRUE. )
   !
   STOP
   !
