@@ -929,10 +929,10 @@ These data allow to set bounds on parallelization:
 \begin{itemize}
 \item 
   k-point parallelization is limited to $N_k$ processor pools: 
-  \texttt{-npool Nk}
+  \texttt{-nk Nk}
 \item
   FFT parallelization shouldn't exceed $N_3$ processors, i.e. if you
-  run with \texttt{-npool Nk}, use $N=N_k\times N_3$ MPI processes at most (\texttt{mpirun -np N ...})
+  run with \texttt{-nk Nk}, use $N=N_k\times N_3$ MPI processes at most (\texttt{mpirun -np N ...})
 \item
   Unless $M$ is a few hundreds or more, don't bother using linear-algebra
   parallelization
@@ -1016,7 +1016,7 @@ the " " in the definitions of PARA\_PREFIX and PARA\_POSTFIX.
   (parallel execution)} 
 If the code looks like it is not reading from input, maybe
 it isn't: the MPI libraries need to be properly configured to accept input
-redirection. Use \texttt{pw.x -inp} and the input file name (see Sec.\ref{SubSec:para}), or inquire with
+redirection. Use \texttt{pw.x -i} and the input file name (see Sec.\ref{SubSec:para}), or inquire with
 your local computer wizard (if any). Since v.4.2, this is for sure the
 reason if the code stops at {\em Waiting for input...}.
 

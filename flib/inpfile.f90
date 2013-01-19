@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2009 Quantum ESPRESSO group
+! Copyright (C) 2002-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,19 +10,27 @@
 #  define getarg getarg_
 #  define iargc  iargc_
 #endif
+! do not define iargc as external: g95 does not like it
 !
+SUBROUTINE get_env ( variable_name, variable_value )
+  !
+  ! Wrapper for intrinsic getenv - all machine-dependent stuff here
+  !
+  CHARACTER (LEN=*)  :: variable_name, variable_value
+  !
+  CALL getenv ( variable_name, variable_value)
+  !
+END SUBROUTINE get_env
 !----------------------------------------------------------------------------
 SUBROUTINE input_from_file( )
   !
   ! This subroutine checks program arguments and, if input file is present,
   ! attach input unit ( 5 ) to the specified file
   !
-  !
   IMPLICIT NONE
   !
   INTEGER             :: stdin = 5, stderr = 6, &
                          ilen, iiarg, nargs, ierr
-  ! do not define iargc as external: g95 does not like it
   INTEGER             :: iargc
   CHARACTER (LEN=256)  :: input_file
   !
@@ -36,9 +44,10 @@ SUBROUTINE input_from_file( )
      !
      CALL getarg( iiarg, input_file )
      !
-     IF ( TRIM( input_file ) == '-input' .OR. &
+     IF ( TRIM( input_file ) == '-i'     .OR. &
+          TRIM( input_file ) == '-in'    .OR. &
           TRIM( input_file ) == '-inp'   .OR. &
-          TRIM( input_file ) == '-in' ) THEN
+          TRIM( input_file ) == '-input' ) THEN
         !
         CALL getarg( ( iiarg + 1 ) , input_file )
         !
@@ -63,15 +72,14 @@ END SUBROUTINE input_from_file
 SUBROUTINE get_file( input_file )
   !
   ! This subroutine reads, either from command line or from terminal,
-  ! the name of a file to be opened
-  ! TODO: return error code if an error occurs
+  ! the name of a file to be opened. To be used for serial codes only.
+  ! Expected syntax: "code [filename]"  (one command-line option, or none)
   !
   IMPLICIT NONE
   !
   CHARACTER (LEN=*)  :: input_file
   !
   CHARACTER (LEN=256)  :: prgname
-  ! do not define iargc as external: g95 does not like it
   INTEGER             :: nargs, iargc
   LOGICAL             :: exst
   !
@@ -116,7 +124,9 @@ SUBROUTINE get_arg_npool( npool )
       !
       CALL getarg( iiarg, np )
       !
-      IF ( TRIM( np ) == '-npool' .OR. TRIM( np ) == '-npools' ) THEN
+      IF ( TRIM( np ) == '-nk'    .OR. &
+           TRIM( np ) == '-npool' .OR. &
+           TRIM( np ) == '-npools' ) THEN
          !
          CALL getarg( ( iiarg + 1 ), np )
          READ( np, * ) npool
@@ -124,6 +134,7 @@ SUBROUTINE get_arg_npool( npool )
       END IF
       !
    END DO
+   npool = MAX(npool,1)
    !
    RETURN
 END SUBROUTINE get_arg_npool
@@ -155,6 +166,7 @@ SUBROUTINE get_arg_npot( npot )
       END IF
       !
    END DO
+   npot = MAX(npot,1)
    !
    RETURN
 END SUBROUTINE get_arg_npot
@@ -178,7 +190,9 @@ SUBROUTINE get_arg_nimage( nimage )
       !
       CALL getarg( iiarg, np )
       !
-      IF ( TRIM( np ) == '-nimage' .OR. TRIM( np ) == '-nimages' ) THEN
+      IF ( TRIM( np ) == '-ni'     .OR. &
+           TRIM( np ) == '-nimage' .OR. &
+           TRIM( np ) == '-nimages' ) THEN
          !
          CALL getarg( ( iiarg + 1 ), np )
          READ( np, * ) nimage
@@ -186,6 +200,7 @@ SUBROUTINE get_arg_nimage( nimage )
       END IF
       !
    END DO
+   nimage=MAX(nimage,1)
    !
    RETURN
 END SUBROUTINE get_arg_nimage
@@ -209,7 +224,9 @@ SUBROUTINE get_arg_ntg( ntask_groups )
       !
       CALL getarg( iiarg, np )
       !
-      IF ( TRIM( np ) == '-ntg' .OR. TRIM( np ) == '-ntask_groups' ) THEN
+      IF ( TRIM( np ) == '-nt'  .OR. &
+           TRIM( np ) == '-ntg' .OR. &
+           TRIM( np ) == '-ntask_groups' ) THEN
          !
          CALL getarg( ( iiarg + 1 ), np )
          READ( np, * ) ntask_groups
@@ -233,15 +250,17 @@ SUBROUTINE get_arg_nbgrp( nbgrp )
    CHARACTER(LEN=20) :: np
    INTEGER :: iargc
    !
-   nbgrp = 0
+   nbgrp = 1
    nargs = iargc()
    !
    DO iiarg = 1, ( nargs - 1 )
       !
       CALL getarg( iiarg, np )
       !
-      IF ( TRIM( np ) == '-nbgrp' .OR. TRIM( np ) == '-nband_group' .OR. &
-           TRIM( np ) == '-nb' .OR. TRIM( np ) == '-nband' ) THEN
+      IF ( TRIM( np ) == '-nb'    .OR. &
+           TRIM( np ) == '-nband' .OR. &
+           TRIM( np ) == '-nbgrp' .OR. &
+           TRIM( np ) == '-nband_group') THEN
          !
          CALL getarg( ( iiarg + 1 ), np )
          READ( np, * ) nbgrp
@@ -249,6 +268,7 @@ SUBROUTINE get_arg_nbgrp( nbgrp )
       END IF
       !
    END DO
+   nbgrp=MAX(nbgrp,1)
    !
    RETURN
 END SUBROUTINE get_arg_nbgrp
@@ -265,6 +285,8 @@ SUBROUTINE get_arg_northo( nproc_ortho )
    CHARACTER(LEN=20) :: np
    INTEGER :: iargc
    !
+   ! ... unlike the others, this subroutine should return 0 if nothing found
+   !
    nproc_ortho = 0
    nargs = iargc()
    !
@@ -272,8 +294,11 @@ SUBROUTINE get_arg_northo( nproc_ortho )
       !
       CALL getarg( iiarg, np )
       !
-      IF ( TRIM( np ) == '-nproc_ortho' .OR. TRIM( np ) == '-nproc_diag' .OR. &
-           TRIM( np ) == '-northo' .OR. TRIM( np ) == '-ndiag' ) THEN
+      IF ( TRIM( np ) == '-nd'     .OR. &
+           TRIM( np ) == '-ndiag'  .OR. &
+           TRIM( np ) == '-northo' .OR. &
+           TRIM( np ) == '-nproc_ortho'.OR. &
+           TRIM( np ) == '-nproc_diag' ) THEN
          !
          CALL getarg( ( iiarg + 1 ), np )
          READ( np, * ) nproc_ortho
@@ -285,12 +310,3 @@ SUBROUTINE get_arg_northo( nproc_ortho )
    RETURN
 END SUBROUTINE get_arg_northo
 
-SUBROUTINE get_env ( variable_name, variable_value )
-  !
-  ! Wrapper for intrinsic getenv - all machine-dependent stuff here
-  !
-  CHARACTER (LEN=*)  :: variable_name, variable_value
-  !
-  CALL getenv ( variable_name, variable_value)
-  !
-END SUBROUTINE get_env

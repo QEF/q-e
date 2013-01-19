@@ -231,7 +231,7 @@ for the meaning of the various options.
 For illustration, here is how to run \texttt{neb.x} \ on 16 processors partitioned into
 4 image groups (4 processors each), for a path containing at least 4 images with POE:
 \begin{verbatim}
-   poe neb.x -procs 16 -nimage 4 -inp input
+   poe neb.x -procs 16 -ni 4 -i input
 \end{verbatim}
 
 
@@ -257,7 +257,7 @@ whereas processors within the same image group are tightly coupled and
 communications are more significant (please refer to the user guide of \PWscf).
 
 The default number of image groups is one, corresponding to the option
- \texttt{-nimage 1} (or, equivalently,  \texttt{-nimages 1}).
+ \texttt{-ni 1} (or, equivalently,  \texttt{-nimage 1}).
 
 \newpage
 
@@ -266,7 +266,7 @@ The default number of image groups is one, corresponding to the option
 NEB calculations with \texttt{neb.x} can be started in two different ways:
 \begin{enumerate}
 \item by reading a single input file, specified with the command line 
-option \texttt{-inp} (or \texttt{-input});
+option \texttt{-i} (or \texttt{-in}, or \texttt{-inp} );
 \item by specifying the number $N$ of images with the command line option 
 \texttt{-input\_images N}, and providing the input data for \NEB\ in
 a file named \texttt{neb.dat} and for the \PWscf\ engine in the files

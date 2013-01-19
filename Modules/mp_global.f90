@@ -154,7 +154,6 @@ CONTAINS
        IF ( meta_ionode ) THEN
           !
           CALL get_arg_nimage( nimage )
-          nimage = MAX( nimage, 1 )
           nimage = MIN( nimage, nproc )
           !
        END IF
@@ -213,19 +212,16 @@ CONTAINS
        ! ... How many parallel pots ?
        !
        CALL get_arg_npot( npot )
-       npot = MAX( npot, 1 )
        npot = MIN( npot, nproc )
        !
        ! ... How many band groups?
        !
        CALL get_arg_nbgrp( nbgrp )
-       nbgrp = MAX( nbgrp, 1 )
        nbgrp = MIN( nbgrp, nproc )
        !
        ! ... How many k-point pools ?
        !
        CALL get_arg_npool( npool )
-       npool = MAX( npool, 1 )
        npool = MIN( npool, nproc )
        !
        ! ... How many task groups ?

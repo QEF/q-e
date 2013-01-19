@@ -791,7 +791,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 
         var ortho_para -type INTEGER {
             default { 0 }
-            status { OBSOLETE: use command-line option " -ndiag XX" instead  }
+            status { OBSOLETE: use command-line option " -nd XX" instead  }
             info {
             }
         }

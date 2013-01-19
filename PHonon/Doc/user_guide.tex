@@ -347,13 +347,13 @@ Image parallelization is activated by specifying the option
 \texttt{-nimage N} to \phx. Inside an image, PW and {\bf k}-point 
 parallelization can be performed: for instance,
 \begin{verbatim}
-   mpirun -np 64 ph.x -nimage 8 -npool 2 ...
+   mpirun -np 64 ph.x -ni 8 -nk 2 ...
 \end{verbatim}
 will run $8$ images on $8$ processors each, subdivided into $2$ pools 
 of $4$ processors for {\bf k}-point parallelization. In order 
 to run the \phx\ code with these flags the \pwx\ run has to be run with:
 \begin{verbatim}
-   mpirun -np 8 pw.x -npool 2 ...
+   mpirun -np 8 pw.x -nk 2 ...
 \end{verbatim}
 without any {\tt -nimage} flag. 
 After the phonon calculation with images the dynmical matrices of 
@@ -361,7 +361,7 @@ After the phonon calculation with images the dynmical matrices of
 working directory. To obtain them you need to run 
 \phx\ again with:
 \begin{verbatim}
-   mpirun -np 8 ph.x -npool 2 ...
+   mpirun -np 8 ph.x -nk 2 ...
 \end{verbatim}
 and the {\tt recover=.true.} flag. This scheme is quite automatic and
 does not require any additional work by the user, but it wastes some 

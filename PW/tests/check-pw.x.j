@@ -245,7 +245,7 @@ do
   #
   cd $ESPRESSO_TMPDIR
   $PARA_PREFIX $ESPRESSO_ROOT/PW/src/pw.x $PARA_POSTFIX \
-        -inp $TESTDIR/$name.in > $TESTDIR/$name.out
+        -i $TESTDIR/$name.in > $TESTDIR/$name.out
   if test $? != 0; then
      $ECHO "FAILED with error condition!"
      $ECHO "Input: $name.in, Output: $name.out, Reference: $name.ref"
@@ -279,7 +279,7 @@ do
      #
      cd $ESPRESSO_TMPDIR
      $PARA_PREFIX $ESPRESSO_ROOT/PW/src/pw.x $PARA_POSTFIX \
-             -inp $TESTDIR/$name.in$n > $TESTDIR/$name.out$n
+             -i $TESTDIR/$name.in$n > $TESTDIR/$name.out$n
      if test $? != 0; then
         $ECHO "FAILED with error condition!"
         $ECHO "Input: $name.in$n, Output: $name.out$n, Reference: $name.ref$n"
