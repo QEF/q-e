@@ -312,7 +312,6 @@ subroutine solve_e
            ENDIF
         enddo   ! on polarizations
      enddo      ! on k points
-#ifdef __MPI
      !
      !  The calculation of dbecsum is distributed across processors
      !  (see addusdbec) - we sum over processors the contributions
@@ -323,7 +322,6 @@ subroutine solve_e
      ELSE
         call mp_sum ( dbecsum, intra_bgrp_comm )
      END IF
-#endif
 
      if (doublegrid) then
         do is=1,nspin_mag

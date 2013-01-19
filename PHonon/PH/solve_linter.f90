@@ -405,7 +405,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         enddo
         ! on k-points
      enddo
-#ifdef __MPI
      !
      !  The calculation of dbecsum is distributed across processors (see addusdbec)
      !  Sum over processors the contributions coming from each slice of bands
@@ -415,7 +414,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      ELSE
         call mp_sum ( dbecsum, intra_bgrp_comm )
      ENDIF
-#endif
 
      if (doublegrid) then
         do is = 1, nspin_mag
@@ -434,14 +432,12 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !    Now we compute for all perturbations the total charge and potential
      !
      call addusddens (drhoscfh, dbecsum, imode0, npe, 0)
-#ifdef __MPI
      !
      !   Reduce the delta rho across pools
      !
      call mp_sum ( drhoscf, inter_pool_comm )
      call mp_sum ( drhoscfh, inter_pool_comm )
      IF (okpaw) call mp_sum ( dbecsum, inter_pool_comm )
-#endif
 
      !
      ! q=0 in metallic case deserve special care (e_Fermi can shift)
@@ -627,9 +623,7 @@ ELSE
    dvscfout(1:in1)=mix(1:in1)
    dbecsum=(0.0_DP,0.0_DP)
    dbecsum(startb:lastb)=mix(in1+1:in1+ndim)
-#ifdef __MPI
    CALL mp_sum(dbecsum, intra_bgrp_comm)
-#endif
 ENDIF
 END SUBROUTINE setmixout
 
