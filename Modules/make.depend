@@ -135,9 +135,6 @@ mp_base.o : parallel_include.o
 mp_global.o : io_global.o
 mp_global.o : mp.o
 mp_global.o : parallel_include.o
-mp_image_global_module.o : io_global.o
-mp_image_global_module.o : mp.o
-mp_image_global_module.o : parallel_include.o
 mp_wave.o : kind.o
 mp_wave.o : parallel_include.o
 noncol.o : kind.o
