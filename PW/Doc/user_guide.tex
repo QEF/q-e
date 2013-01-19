@@ -1107,21 +1107,26 @@ have problems with the provided tests and examples.
   or whenever more RAM is needed}  
 Possible solutions:
 \begin{itemize}
-\item increase the amount of RAM you are authorized to use (which may
+\item Increase the amount of RAM you are authorized to use (which may
   be much smaller than the available RAM). Ask your system
   administrator if you don't know what to do. In some cases the 
   stack size can be a source of problems: if so, increase it with command 
   \texttt{limits} or \texttt{ulimit}).
-\item reduce \texttt{nbnd} to the strict minimum, or reduce the cutoffs, or the
-  cell size , or a combination of them
-\item  use conjugate-gradient (\texttt{diagonalization='cg'}: slow but very
-  robust): it requires less memory than the default Davidson
-  algorithm.  If you stick to the latter, use \texttt{diago\_david\_ndim=2}.
-\item in parallel execution, use more processors, or use the same
+\item Reduce \texttt{nbnd} to the strict minimum (for insulators, the
+default is already the minimum, though).
+\item Reduce the work space for Davidson diagonalization to the minimum
+ by setting \texttt{diago\_david\_ndim=2}; also consider using conjugate
+ gradient diagonalization (\texttt{diagonalization='cg'}), slow but very 
+ robust, which requires almost no work space.
+\item If the charge density takes a significant amount of RAM, reduce 
+ \texttt{mixing\_ndim} from its default value (8) to 4 or so.
+\item In parallel execution, use more processors, or use the same
   number of processors with less pools. Remember that parallelization
   with respect to k-points (pools) does not distribute memory:
-  parallelization with respect to R- (and G-) space does. 
-\item buggy or weird-behaving compiler.
+  only parallelization with respect to R- (and G-) space does. 
+\item If none of the above is sufficient or feasible, you have to either
+  reduce the cutoffs and/or the cell size, or to use a machine with 
+  more RAM.
 \end{itemize}
 
 \paragraph{pw.x crashes with {\em error in davcio}}

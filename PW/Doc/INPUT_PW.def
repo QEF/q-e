@@ -1399,7 +1399,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var mixing_ndim -type INTEGER { 
 	    default { 8 }
 	    info {
-		number of iterations used in mixing scheme
+		number of iterations used in mixing scheme.
+		If you are tight with memory, you may reduce it to 4 or so.
 	    }
 	}
 
