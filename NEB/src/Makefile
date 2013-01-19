@@ -42,11 +42,7 @@ PWOBJS= ../../PW/src/libpw.a
 
 TLDEPS=bindir mods libs liblapack libblas pw
 
-all : tldeps neb.x path_interpolation.x launch.x
-
-launch.x : launch.o libneb.a $(LIBOBJS) $(PWOBJS) $(QEMODS)
-	$(LD) $(LDFLAGS) -o $@ \
-	launch.o libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+all : tldeps neb.x path_interpolation.x
 
 neb.x : $(NEBOBJS) libneb.a $(LIBOBJS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
