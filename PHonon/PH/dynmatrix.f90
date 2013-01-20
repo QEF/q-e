@@ -70,7 +70,7 @@ subroutine dynmatrix_new(iq_)
      do irr = 1, nirr
         jmode0 = 0
         do jrr = 1, nirr
-           if (done_irr (irr) .eq.0.and.done_irr (jrr) .eq.0) then
+           if (.NOT.done_irr (irr).and..NOT.done_irr (jrr)) then
               do ipert = 1, npert (irr)
                  mu = imode0 + ipert
                  do jpert = 1, npert (jrr)
@@ -78,7 +78,7 @@ subroutine dynmatrix_new(iq_)
                     dyn (mu, nu) = CMPLX(0.d0, 0.d0,kind=DP)
                  enddo
               enddo
-           elseif (done_irr (irr) .eq.0.and.done_irr (jrr) .ne.0) then
+           elseif (.NOT.done_irr (irr) .AND. done_irr (jrr) ) then
               do ipert = 1, npert (irr)
                  mu = imode0 + ipert
                  do jpert = 1, npert (jrr)
@@ -93,7 +93,7 @@ subroutine dynmatrix_new(iq_)
      enddo
   else
      do irr = 1, nirr
-        if (comp_irr(irr)==0) then
+        if (.NOT.comp_irr(irr)) then
            do nu=1,3*nat
               dyn(irr,nu)=(0.d0,0.d0)
            enddo
@@ -125,7 +125,7 @@ subroutine dynmatrix_new(iq_)
 
   IF ( .NOT. ldiag_loc ) THEN
      DO irr=0,nirr
-        IF (done_irr(irr)==0) THEN
+        IF (.NOT.done_irr(irr)) THEN
            IF (.not.ldisp) THEN
               WRITE(stdout, '(/,5x,"Stopping because representation", &
                                  & i5, " is not done")') irr

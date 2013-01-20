@@ -49,7 +49,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !
   ! Case 1) This q point is not calculated because not requested in this run
   !
-  IF ( comp_iq(iq)==0 ) THEN
+  IF ( .NOT.comp_iq(iq) ) THEN
      do_iq=.FALSE.
      RETURN
   ENDIF
@@ -154,7 +154,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   setup_pw = (.NOT.lgamma.OR.modenum /= 0 .OR. newgrid).AND..NOT. done_bands
   do_band=.FALSE.
   DO irr=start_irr, MIN(ABS(last_irr),rep_iq(iq))
-     IF (done_rep_iq(irr,iq) /= 1) THEN
+     IF (.NOT.done_rep_iq(irr,iq)) THEN
         do_band=.TRUE.
         EXIT
      ENDIF
@@ -164,7 +164,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
 !  matrix
 !
 
-  IF ( done_iq(iq) == 1 ) do_band=.FALSE.
+  IF ( done_iq(iq) ) do_band=.FALSE.
 
   RETURN
   !

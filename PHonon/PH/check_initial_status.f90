@@ -173,16 +173,16 @@ SUBROUTINE check_initial_status(auxdyn)
   !  the q point of the recover file.
   !
   IF (nimage==1) THEN
-     comp_iq=0
+     comp_iq=.FALSE.
      DO iq=iq_start,last_q
-        comp_iq(iq)=1
+        comp_iq(iq)=.TRUE.
      ENDDO
   ELSE
      CALL image_q_irr(iq_start)
   ENDIF
   !
   DO iq=1,nqs
-     IF (comp_iq(iq).ne.1) CYCLE
+     IF (.NOT.comp_iq(iq)) CYCLE
      lgamma = ( x_q(1,iq) == 0.D0 .AND. x_q(2,iq) == 0.D0 .AND. &
                 x_q(3,iq) == 0.D0 )
      !
@@ -319,13 +319,13 @@ SUBROUTINE check_initial_status(auxdyn)
 !  Here we actually distribute the work. This image makes only
 !  the representations calculated before.
 !
-   comp_iq = 0
-   comp_irr_iq=0
+   comp_iq = .FALSE.
+   comp_irr_iq=.FALSE.
    DO iq = iq_start, last_q
       DO irr = 0, rep_iq(iq)
          IF (image_iq(irr,iq)==my_image_id ) THEN
-            comp_iq(iq)=1
-            comp_irr_iq(irr,iq)=1
+            comp_iq(iq)=.TRUE.
+            comp_irr_iq(irr,iq)=.TRUE.
          ENDIF
       ENDDO
    ENDDO
@@ -344,11 +344,11 @@ SUBROUTINE check_initial_status(auxdyn)
                         my_image_id, work(my_image_id)
 
    DO iq = 1, nqs
-      IF (comp_iq(iq)==1) THEN
+      IF (comp_iq(iq)) THEN
          WRITE(stdout, '(5x," q point number ", i5, ", representations:")') iq
          string=' '
          DO irr=0, rep_iq(iq)
-            IF (comp_irr_iq(irr, iq)==1) &
+            IF (comp_irr_iq(irr, iq)) &
                 string=TRIM(string) // " " // TRIM(int_to_char(irr))
          ENDDO
          WRITE(stdout,'(6x,A)') TRIM(string)
@@ -388,7 +388,7 @@ SUBROUTINE check_initial_status(auxdyn)
 
    DO iq=1,nqs
       DO irr=0, rep_iq(iq)
-         IF (comp_irr_iq(irr,iq)==1.and.ionode) THEN
+         IF (comp_irr_iq(irr,iq).and.ionode) THEN
             file_input=TRIM( tmp_dir_ph ) // '/' // &
                     & TRIM( prefix ) // '.phsave/' // &
                     & TRIM( xmlpun_base ) &

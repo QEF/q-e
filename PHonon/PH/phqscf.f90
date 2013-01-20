@@ -58,7 +58,7 @@ SUBROUTINE phqscf
   !    of the wavefunctions
   !
   DO irr = 1, nirr
-     IF ( (comp_irr (irr) == 1) .AND. (done_irr (irr) == 0) ) THEN
+     IF ( (comp_irr (irr)) .AND. (.NOT.done_irr (irr)) ) THEN
         npe=npert(irr)
         ALLOCATE (drhoscfs( dfftp%nnr , nspin_mag, npe))
         imode0 = 0
@@ -103,7 +103,7 @@ SUBROUTINE phqscf
            END IF
            !
            WRITE( stdout, '(/,5x,"Convergence has been achieved ")')
-           done_irr (irr) = 1
+           done_irr (irr) = .TRUE.
         ELSE
            WRITE( stdout, '(/,5x,"No convergence has been achieved ")')
            CALL stop_smoothly_ph (.FALSE.)

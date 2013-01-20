@@ -29,9 +29,9 @@ SUBROUTINE clean_pw_ph(iq)
   INTEGER :: irr
   !
   done_bands=.FALSE.
-  done_iq(iq)=1
+  done_iq(iq)=.TRUE.
   DO irr=1,nirr
-     IF (done_irr(irr)==0) done_iq(iq)=0
+     IF (.NOT.done_irr(irr)) done_iq(iq)=.FALSE.
   ENDDO
   twfcollect=.FALSE.
   CALL clean_pw( .FALSE. )

@@ -424,14 +424,14 @@ subroutine phq_setup
   !  9) set the variables needed for the partial computation:
   !     nat_todo, atomo, comp_irr
   ALLOCATE(ifat(nat))
-  comp_irr = 0
-  comp_irr(0)=1
+  comp_irr = .FALSE.
+  comp_irr(0)=.TRUE.
   IF (nat_todo==0.AND.modenum==0) THEN
      !
      !  Case 1)  The partial computation option is not used, make all
      !           representation between start_irr and last_irr
      !
-     IF (start_irr <= last_irr_eff) comp_irr(start_irr: last_irr_eff) = 1
+     IF (start_irr <= last_irr_eff) comp_irr(start_irr: last_irr_eff) = .TRUE.
      !
   ELSEIF (nat_todo /= 0) THEN
      !
@@ -455,10 +455,10 @@ subroutine phq_setup
         do ipert = 1, npert (irr)
            mu = imode0 + ipert
            do na = 1, nat
-              if (ifat (na) == 1 .and. comp_irr (irr) == 0) then
+              if (ifat (na) == 1 .and. .NOT.comp_irr (irr) ) then
                  do ipol = 1, 3
                     nu = 3 * (na - 1) + ipol
-                    if (abs (u (nu, mu) ) > 1.d-6)  comp_irr (irr) = 1
+                    if (abs (u (nu, mu) ) > 1.d-6)  comp_irr (irr) = .TRUE.
                  enddo
               endif
            enddo
@@ -466,7 +466,7 @@ subroutine phq_setup
         imode0 = imode0 + npert (irr)
      enddo
   ELSEIF (modenum /= 0) THEN
-     comp_irr(modenum)=1
+     comp_irr(modenum)=.TRUE.
   ELSE
      call errore('phq_setup','nat_todo or nrap wrong',1)
   ENDIF
@@ -475,28 +475,28 @@ subroutine phq_setup
   !
   if (lgamma_gamma) then
      with_symmetry=1
-     comp_irr = 0
-     comp_irr(0)=1
+     comp_irr = .FALSE.
+     comp_irr(0)=.TRUE.
      do na=1,nat
         if (has_equivalent(na)==0) then
             do ipol=1,3
-               comp_irr(3*(na-1)+ipol)=1
+               comp_irr(3*(na-1)+ipol)=.TRUE.
                with_symmetry(3*(na-1)+ipol)=0
             enddo
         endif
      enddo
      if (nasr>0) then
         do ipol=1,3
-           comp_irr(3*(nasr-1)+ipol)=0
+           comp_irr(3*(nasr-1)+ipol)=.FALSE.
            with_symmetry(3*(nasr-1)+ipol)=0
         enddo
      endif
      IF (start_irr <= last_irr_eff) THEN
         DO irr=1,start_irr-1
-           comp_irr(irr) = 0
+           comp_irr(irr) = .FALSE.
         ENDDO
         DO irr=last_irr_eff+1,3*nat
-           comp_irr(irr) = 0
+           comp_irr(irr) = .FALSE.
         ENDDO
      ENDIF
   endif
@@ -516,7 +516,7 @@ subroutine phq_setup
   ifat = 0
   imode0 = 0
   DO irr = 1, nirr
-     if (comp_irr (irr) .eq.1) then
+     if (comp_irr (irr)) then
         do ipert = 1, npert (irr)
            do na = 1, nat
               do ipol = 1, 3
@@ -542,12 +542,12 @@ subroutine phq_setup
   !
   all_comp=.true.
   DO irr=1,nirr
-     IF (comp_irr(irr)==0) all_comp=.false.
+     IF (.NOT.comp_irr(irr)) all_comp=.false.
   ENDDO
   all_comp = all_comp.OR.lgamma_gamma
   all_done = .FALSE.
   npertx = 0
-  done_irr = 0
+  done_irr = .FALSE.
   DO irr = 1, nirr
      npertx = max (npertx, npert (irr) )
   ENDDO

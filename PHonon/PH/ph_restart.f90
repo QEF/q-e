@@ -280,7 +280,7 @@ MODULE ph_restart
            CHARACTER(LEN=6), EXTERNAL :: int_to_char
 
            IF (trans) THEN
-              IF (done_irr(irr)/=0) THEN
+              IF (done_irr(irr)) THEN
                  !
                  CALL iotk_free_unit( iunout, ierr )
                  !
@@ -696,7 +696,7 @@ MODULE ph_restart
 
     IF (ionode) THEN
        IF (trans) THEN
-          done_irr=0
+          done_irr=.FALSE.
           dyn=(0.0_DP,0.0_DP)
           dyn_rec=(0.0_DP,0.0_DP)
           zstarue0=(0.0_DP, 0.0_DP)
@@ -709,7 +709,7 @@ MODULE ph_restart
              IF (ierr == 0 ) then
                 CALL iotk_scan_begin( iunout, "PARTIAL_MATRIX" )
                 CALL iotk_scan_dat(iunout,"DONE_IRR",done_irr(irr))
-                IF (done_irr(irr)==1) comp_irr(irr)=1
+                IF (done_irr(irr)) comp_irr(irr)=.TRUE.
                 CALL iotk_scan_dat(iunout,"PARTIAL_DYN",&
                                                 dyn_rec(:,:))
                 dyn(:,:)=dyn(:,:) + dyn_rec(:,:)
@@ -935,7 +935,7 @@ MODULE ph_restart
 
         IF (trans.OR.zeu) THEN
            DO irr=rep_iq(iq)+1,3*nat
-              done_rep_iq(irr,iq)=2
+              done_rep_iq(irr,iq)=.TRUE.
            ENDDO
            DO irr=0,rep_iq(iq)
               filename1=TRIM(filename) // "." // TRIM(int_to_char(irr))
@@ -947,10 +947,10 @@ MODULE ph_restart
               CALL iotk_scan_end( iunout, "PARTIAL_MATRIX" )
               CALL iotk_close_read(iunout)
            END DO
-           done_iq(iq)=1
+           done_iq(iq)=.TRUE.
            DO irr=0,rep_iq(iq)
-              IF (done_rep_iq(irr,iq) /= 1) THEN
-                 done_iq(iq)=0
+              IF (.NOT.done_rep_iq(irr,iq)) THEN
+                 done_iq(iq)=.FALSE.
                  EXIT
               ENDIF
            ENDDO
@@ -985,13 +985,13 @@ MODULE ph_restart
    ALLOCATE(comp_iq(nqs))
    IF (nimage>1) ALLOCATE(comp_irr_iq(0:3*nat,nqs))
 
-   done_iq=0
+   done_iq=.FALSE.
    rep_iq=3*nat
-   done_rep_iq=0
+   done_rep_iq=.FALSE.
    nsymq_iq=0
    npert_iq=0
-   IF ( allocated(comp_irr_iq) ) comp_irr_iq=0
-   comp_iq=0
+   IF ( allocated(comp_irr_iq) ) comp_irr_iq=.FALSE.
+   comp_iq=.FALSE.
 
    RETURN
    END SUBROUTINE init_status_run

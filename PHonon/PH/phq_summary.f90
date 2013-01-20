@@ -272,24 +272,24 @@ subroutine phq_summary
   WRITE( stdout, '(5x,"There are ",i3," irreducible representations")') nirr
   imode0 = 0
   DO irr = 1, nirr
-     IF (done_irr (irr) .eq.1) then
+     IF (done_irr (irr)) then
         WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
              &                  " modes -",a,"  Done")') irr, npert (irr),&
                       TRIM( name_rap_mode(imode0+1) )
-     ELSEIF (comp_irr (irr) .eq.1) then
+     ELSEIF (comp_irr (irr)) then
         WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
              &             " modes -",a,"  To be done")') irr, npert (irr), &
                       TRIM( name_rap_mode(imode0+1) )
-     ELSEIF (comp_irr (irr) .eq.0) THEN
+     ELSEIF (.NOT.comp_irr (irr)) THEN
         IF (lgamma_gamma) THEN
            IF ((irr-1)/3+1==nasr) THEN
               WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
                  &     " modes - Calculated using asr")') irr, npert (irr)
-              done_irr(irr) = 1
+              done_irr(irr) = .TRUE.
            ELSEIF (with_symmetry(irr)==1) THEN
               WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
                  &     " modes - Calculated using symmetry")') irr, npert (irr)
-              done_irr(irr) = 1
+              done_irr(irr) = .TRUE.
            ELSE
               WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
                 &     " modes - Not done in this run")') irr, npert (irr)

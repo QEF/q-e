@@ -38,7 +38,7 @@ subroutine dynmat0_new
   complex(DP) :: wrk, dynwrk (3 * nat, 3 * nat)
   ! auxiliary space
 
-  IF ( comp_irr(0) == 0 .or. done_irr(0) == 1 ) RETURN
+  IF ( .NOT.comp_irr(0) .or. done_irr(0) ) RETURN
   IF (rec_code_read > -30 ) RETURN
 
   call start_clock ('dynmat0')
@@ -78,7 +78,7 @@ subroutine dynmat0_new
 
 !        call tra_write_matrix('dynmat0 dyn',dyn,u,nat)
   dyn_rec(:,:)=dyn(:,:)
-  done_irr(0) = 1
+  done_irr(0) = .TRUE.
   CALL ph_writefile('data_dyn',0)
 
   call stop_clock ('dynmat0')

@@ -133,7 +133,7 @@ subroutine phq_recover
 !
   all_done=.true.
   DO irr = 1, nirr
-     IF ( (comp_irr (irr) == 1) .AND. (done_irr (irr) == 0) ) all_done=.false.
+     IF ( (comp_irr (irr)) .AND. (.NOT.done_irr (irr)) ) all_done=.false.
   ENDDO
   IF (rec_code_read < 2) THEN
      IF (epsil.AND..NOT.done_epsil) all_done=.FALSE.
