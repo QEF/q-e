@@ -4,73 +4,19 @@
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
-!
-!----------------------------------------------------------------------------
-SUBROUTINE input_file_name_getarg(myname,lfound)
-  !-----------------------------------------------------------------------------
-  !
-  ! check for presence of command-line option "-inp myname" or "--inp myname"
-  ! where "myname" is the name of the input file. Returns the name and if it 
-  ! has been found. 
-  !
-  USE kinds,         ONLY : DP
-  !
-  USE io_global,     ONLY : stdout
-  !
-  IMPLICIT NONE
-  !
-  CHARACTER(len=256), intent(out) :: myname
-  LOGICAL, intent(out) :: lfound
-  !
-  INTEGER  :: iiarg, nargs, iargc, i, i0
-  !
-  !
-#if defined(__ABSOFT)
-#   define getarg getarg_
-#   define iargc  iargc_
-#endif
-  !
-  nargs = iargc()
-  lfound = .false.
-  !
-  DO iiarg = 1, nargs
-    CALL getarg( iiarg, myname)
-     !
-     IF ( TRIM( myname ) == '-input' .OR. &
-          TRIM( myname ) == '-inp'   .OR. &
-          TRIM( myname ) == '-in' ) THEN
-        !
-        CALL getarg( ( iiarg + 1 ) , myname )
-        !
-        lfound = .true.
-        RETURN
-        !
-     END IF
-     !
 
-  ENDDO
-  !
-  RETURN
-  !
-END SUBROUTINE input_file_name_getarg
 !
-SUBROUTINE input_images_getarg(input_images,lfound)
+FUNCTION input_images_getarg( ) RESULT(input_images)
   !-----------------------------------------------------------------------------
   !
-  ! check for presence of command-line option "-inp myname" or "--inp myname"
-  ! where "myname" is the name of the input file. Returns the name and if it 
-  ! has been found. 
+  ! check for command-line option "-input_images N" or "--input_images N",
+  ! return N (0 if not found)
   !
   USE kinds,         ONLY : DP
   !
-  USE io_global,     ONLY : stdout
-  !
   IMPLICIT NONE
   !
-  INTEGER, intent(out) :: input_images
-  LOGICAL, intent(out) :: lfound
-  !
+  INTEGER :: input_images
   CHARACTER(len=256) ::  myname
   INTEGER  :: iiarg, nargs, iargc, i, i0
   !
@@ -81,11 +27,11 @@ SUBROUTINE input_images_getarg(input_images,lfound)
 #endif
   !
   nargs = iargc()
-  lfound = .false.
   input_images = 0
   !
   DO iiarg = 1, nargs
-    CALL getarg( iiarg, myname)
+     !
+     CALL getarg( iiarg, myname)
      !
      IF ( TRIM( myname ) == '-input_images' .OR. &
           TRIM( myname ) == '--input_images' ) THEN
@@ -93,18 +39,15 @@ SUBROUTINE input_images_getarg(input_images,lfound)
         CALL getarg( ( iiarg + 1 ) , myname )
         !
         READ(myname,*) input_images
-        !
-        lfound = .true.
         RETURN
         !
      END IF
      !
-
   ENDDO
   !
   RETURN
   !
-END SUBROUTINE input_images_getarg
+END FUNCTION input_images_getarg
 
 !----------------------------------------------------------------------------
 SUBROUTINE close_io_units(myunit)

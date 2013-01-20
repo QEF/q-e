@@ -43,10 +43,10 @@ PROGRAM neb
   CHARACTER(len=10) :: a_tmp
   !
   CHARACTER(len=256) :: parsing_file_name
-  LOGICAL :: lfound_parsing_file, lfound_input_images, lxml
+  LOGICAL :: lfound_parsing_file, lxml
   !
-  INTEGER, EXTERNAL :: find_free_unit
-  LOGICAL, EXTERNAL :: test_input_xml
+  INTEGER, EXTERNAL :: find_free_unit, input_images_getarg
+  LOGICAL, EXTERNAL :: test_input_xml, input_file_name_getarg
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
   !
@@ -60,13 +60,12 @@ PROGRAM neb
   !
   ! INPUT RELATED
   !
-  ! ... open input file
-  !
-  IF ( mpime == root) CALL input_file_name_getarg &
-                              (parsing_file_name, lfound_parsing_file)
-  !
   engine_prefix = "pw_"
   !
+  ! ... open input file
+  !
+  IF ( mpime == root) &
+     lfound_parsing_file = input_file_name_getarg (parsing_file_name)
   CALL mp_bcast(parsing_file_name,root,world_comm)
   CALL mp_bcast(lfound_parsing_file,root,world_comm)
   !
@@ -79,12 +78,10 @@ PROGRAM neb
      WRITE(0,*) ""
      WRITE(0,*) "NO input file found, assuming nothing to parse."
      WRITE(0,*) "Searching argument -input_images or --input_images"
-     IF ( mpime == root ) CALL input_images_getarg &
-                                  (input_images,lfound_input_images)
+     IF ( mpime == root )  input_images = input_images_getarg ( )
      CALL mp_bcast(input_images,root, world_comm)
-     CALL mp_bcast(lfound_input_images,root,world_comm)
      !
-     IF (.not.lfound_input_images) CALL errore('string_methods', &
+     IF (input_images == 0) CALL errore('string_methods', &
         'Neither a file to parse nor input files for each image found',1)
      !
   ENDIF

@@ -29,16 +29,44 @@ SUBROUTINE input_from_file( )
   !
   IMPLICIT NONE
   !
-  INTEGER             :: stdin = 5, stderr = 6, &
-                         ilen, iiarg, nargs, ierr
-  INTEGER             :: iargc
+  INTEGER             :: stdin = 5, stderr = 6, ierr = 0
   CHARACTER (LEN=256)  :: input_file
+  LOGICAL, EXTERNAL :: input_file_name_getarg
+  !
+  IF ( input_file_name_getarg ( input_file ) ) THEN 
+     !
+     OPEN ( UNIT = stdin, FILE = input_file, FORM = 'FORMATTED', &
+            STATUS = 'OLD', IOSTAT = ierr )
+     !
+     ! TODO: return error code ierr (-1 no file, 0 file opened, > 1 error)
+     ! do not call "errore" here: it may hang in parallel execution
+     ! if this routine is called by a single processor
+     !
+     IF ( ierr > 0 ) WRITE (stderr, &
+            '(" *** input file ",A," not found ***")' ) TRIM( input_file )
+     !
+  ELSE
+     ierr = -1
+  END IF
+  !
+END SUBROUTINE input_from_file
+
+FUNCTION input_file_name_getarg ( input_file ) RESULT ( found )
+  !
+  ! checks for presence of command-line option "-i" (or "-in", "-inp","-input")
+  ! Returns true if found and the following name file in variable "input_ file"
+  !
+  IMPLICIT NONE
+  !
+  INTEGER             :: iiarg, nargs
+  LOGICAL             :: found
+  CHARACTER (LEN=256), INTENT (OUT) :: input_file
   !
   ! ... Input from file ?
   !
   nargs = iargc()
-  !
-  ierr = -1
+  found = .FALSE.
+  input_file = ' '
   !
   DO iiarg = 1, ( nargs - 1 )
      !
@@ -50,22 +78,16 @@ SUBROUTINE input_from_file( )
           TRIM( input_file ) == '-input' ) THEN
         !
         CALL getarg( ( iiarg + 1 ) , input_file )
-        !
-        OPEN ( UNIT = stdin, FILE = input_file, FORM = 'FORMATTED', &
-               STATUS = 'OLD', IOSTAT = ierr )
-        !
-        ! TODO: return error code ierr (-1 no file, 0 file opened, > 1 error)
-        ! do not call "errore" here: it may hang in parallel execution
-        ! if this routine is called by ionode only
-        !
-        IF ( ierr > 0 ) WRITE (stderr, &
-                '(" *** input file ",A," not found ***")' ) TRIM( input_file )
+        found =.TRUE.
+        RETURN
         !
      END IF
      !
   END DO
-
-END SUBROUTINE input_from_file
+  !
+  RETURN 
+  !
+END FUNCTION input_file_name_getarg
 !
 !----------------------------------------------------------------------------
 !
