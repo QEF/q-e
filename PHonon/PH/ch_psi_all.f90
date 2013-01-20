@@ -168,9 +168,7 @@ CONTAINS
             npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
     ENDIF
     ps (:,:) = ps(:,:) * alpha_pv
-#ifdef __MPI
     CALL mp_sum ( ps, intra_bgrp_comm )
-#endif
     
     hpsi (:,:) = (0.d0, 0.d0)
     IF (noncolin) THEN
@@ -220,9 +218,7 @@ CONTAINS
        CALL DGEMM( 'C', 'N', nbnd, m, n, 2.D0,evc, 2*npwx*npol, spsi, 2*npwx*npol, 0.D0, ps, nbnd )
     ENDIF
     ps (:,:) = ps(:,:) * alpha_pv
-#ifdef __MPI
     CALL mp_sum ( ps, intra_bgrp_comm )
-#endif
     
     hpsi (:,:) = (0.d0, 0.d0)
     IF (noncolin) THEN

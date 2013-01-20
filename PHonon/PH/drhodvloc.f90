@@ -59,12 +59,10 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
      enddo
 
   enddo
-#ifdef __MPI
   !
   ! collect contributions from nodes of a pool (sum over G & R space)
   !
   call mp_sum ( dynwrk, intra_bgrp_comm )
-#endif
 
   wdyn(:,:) = wdyn(:,:) + dynwrk(:,:)
   deallocate(dvloc)

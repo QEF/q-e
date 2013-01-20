@@ -161,12 +161,10 @@ subroutine set_irr_sym_new ( t, tmq, npertx )
      enddo
   enddo
 
-#ifdef __MPI
 !
 ! parallel stuff: first node broadcasts everything to all nodes
 !
   call mp_bcast (t, ionode_id, intra_image_comm)
   call mp_bcast (tmq, ionode_id, intra_image_comm)
-#endif
   return
 end subroutine set_irr_sym_new

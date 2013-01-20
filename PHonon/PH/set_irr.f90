@@ -41,12 +41,11 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
   USE control_flags, ONLY : iverbosity
   USE random_numbers, ONLY : randy
   USE rap_point_group, ONLY : name_rap
-  
-#ifdef __MPI
+
   use mp, only: mp_bcast
   use io_global, only : ionode_id
   use mp_global, only : intra_image_comm
-#endif
+
   implicit none
 !
 !   first the dummy variables
@@ -277,7 +276,6 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
 !      nsymq=1
 !      minus_q=.false.
 
-#ifdef __MPI
 !
 ! parallel stuff: first node broadcasts everything to all nodes
 !
@@ -292,6 +290,6 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
   call mp_bcast (minus_q, ionode_id, intra_image_comm)
   call mp_bcast (num_rap_mode, ionode_id, intra_image_comm)
   call mp_bcast (name_rap_mode, ionode_id, intra_image_comm)
-#endif
+
   return
 end subroutine set_irr_new

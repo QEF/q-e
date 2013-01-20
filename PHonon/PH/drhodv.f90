@@ -137,12 +137,10 @@ subroutine drhodv (nu_i0, nper, drhoscf)
      enddo
 
   enddo
-#ifdef __MPI
   !
   ! collect contributions from all pools (sum over k-points)
   !
   call mp_sum ( wdyn, inter_pool_comm )
-#endif
   !
   ! add the contribution of the local part of the perturbation
   !

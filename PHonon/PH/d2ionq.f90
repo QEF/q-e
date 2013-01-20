@@ -224,10 +224,8 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
      enddo
 
   enddo
-#ifdef __MPI
 100 continue
   call mp_sum ( dy3, intra_bgrp_comm )
-#endif
   !
   !   The dynamical matrix was computed in cartesian axis and now we put
   !   it on the basis of the modes

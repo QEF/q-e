@@ -96,9 +96,7 @@ subroutine dynmatcc
         enddo
      enddo
   enddo
-#ifdef __MPI
   call mp_sum (dynwrk,intra_bgrp_comm)
-#endif
   !
   dynwrk = dynwrk * omega
   !

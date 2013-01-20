@@ -319,9 +319,9 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
         enddo
      enddo
   enddo
-#ifdef __MPI
+
   call mp_sum ( dynwrk, intra_bgrp_comm )
-#endif
+
   do nu_i = 1, 3 * nat
      do nu_j = 1, 3 * nat
         ps = (0.0d0, 0.0d0)

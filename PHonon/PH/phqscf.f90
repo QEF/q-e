@@ -95,10 +95,10 @@ SUBROUTINE phqscf
            IF (zue) CALL add_zstar_ue (imode0, npe )
            IF (zue.AND. okvan) CALL add_zstar_ue_us(imode0, npe )
            IF (zue) THEN
-#ifdef __MPI
+
               call mp_sum ( zstarue0_rec, intra_bgrp_comm )
               call mp_sum ( zstarue0_rec, inter_pool_comm )
-#endif
+
               zstarue0(:,:)=zstarue0(:,:)+zstarue0_rec(:,:)
            END IF
            !

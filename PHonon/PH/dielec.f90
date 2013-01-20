@@ -60,10 +60,8 @@ subroutine dielec()
         enddo
      enddo
   enddo
-#ifdef __MPI
   call mp_sum ( epsilon, intra_bgrp_comm )
   call mp_sum ( epsilon, inter_pool_comm )
-#endif
   !
   !      symmetrize
   !

@@ -273,9 +273,7 @@ SUBROUTINE phq_init()
      END DO
      !
   END DO
-#ifdef __MPI
-     CALL mp_sum ( eprec, intra_bgrp_comm )
-#endif
+  CALL mp_sum ( eprec, intra_bgrp_comm )
   !
   DEALLOCATE( aux1 )
      

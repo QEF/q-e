@@ -156,7 +156,6 @@ subroutine drho
      enddo
 
   enddo
-#ifdef __MPI
   !
   ! collect contributions from all pools (sum over k-points)
   !
@@ -166,7 +165,7 @@ subroutine drho
   ! collect contributions from nodes of a pool (sum over G & R space)
   !
   call mp_sum ( wdyn, intra_bgrp_comm )
-#endif
+
   call zaxpy (3 * nat * 3 * nat, (1.d0, 0.d0), wdyn, 1, dyn00, 1)
   !
   !     force this term to be hermitean
@@ -183,7 +182,6 @@ subroutine drho
   !
   allocate (drhoust(dfftp%nnr, nspin_mag , npertx))
   drhoust=(0.d0,0.d0)
-#ifdef __MPI
   !
   !  The calculation of dbecsum is distributed across processors (see addusdbec)
   !  Sum over processors the contributions coming from each slice of bands
@@ -193,7 +191,6 @@ subroutine drho
   ELSE
      call mp_sum ( dbecsum, intra_bgrp_comm )
   END IF
-#endif
 
   IF (noncolin.and.okvan) CALL set_dbecsum_nc(dbecsum_nc, dbecsum, 3*nat)
 
@@ -220,12 +217,10 @@ subroutine drho
      enddo
      mode = mode+npe
   enddo
-#ifdef __MPI
    !
    !  Collect the sum over k points in different pools.
    !
    IF (okpaw) call mp_sum ( becsumort, inter_pool_comm )
-#endif
 
   deallocate (drhoust)
   deallocate (dvlocin)

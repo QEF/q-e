@@ -30,6 +30,7 @@ subroutine dvpsi_e2
   USE ramanm,          ONLY : lrba2, iuba2, lrchf, iuchf, a1j, a2j
   USE mp_global, ONLY: my_pool_id, inter_pool_comm, intra_bgrp_comm
   USE mp,        ONLY: mp_sum
+
   implicit none
 
   integer :: ik, ipa, ipb, ir, ibnd, jbnd, nrec
@@ -184,8 +185,8 @@ subroutine dvpsi_e2
   enddo
 
  100  continue
- call mp_sum ( aux6, inter_pool_comm )
- call psyme2 (aux6)
+  call mp_sum ( aux6, inter_pool_comm )
+  call psyme2 (aux6)
 
   deallocate (d2muxc)
   deallocate (aux3)

@@ -207,9 +207,8 @@ subroutine solve_e_fpol ( iw )
            CALL zgemm( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
                 (1.d0,0.d0), evc(1,1), npwx, dvpsi(1,1), npwx, (0.d0,0.d0), &
                 ps(1,1), nbnd )
-#ifdef __MPI
+
            call mp_sum ( ps( :, 1:nbnd_occ(ik) ), intra_bgrp_comm )
-#endif
            ! dpsi is used as work space to store S|evc>
            !
            CALL calbec (npw, vkb, evc, becp, nbnd_occ(ik) )
@@ -289,14 +288,12 @@ subroutine solve_e_fpol ( iw )
                             ik, dbecsum(1,1,current_spin,ipol), dpsi)
         enddo   ! on polarizations
      enddo      ! on k points
-#ifdef __MPI
      !
      !  The calculation of dbecsum is distributed across processors
      !  (see addusdbec) - we sum over processors the contributions
      !  coming from each slice of bands
      !
      call mp_sum ( dbecsum, intra_bgrp_comm )
-#endif
 
      if (doublegrid) then
         do is=1,nspin

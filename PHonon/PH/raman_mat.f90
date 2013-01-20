@@ -132,9 +132,9 @@ subroutine raman_mat
            enddo
         enddo
      enddo
-#ifdef __MPI
+
      call mp_sum ( ps, intra_bgrp_comm )
-#endif
+
      do ipa = 1, 6
         nrec = (ipa - 1) * nksq + ik
         call davcio (chif (1, 1, ipa), lrd2w, iud2w, nrec, -1)
@@ -218,10 +218,8 @@ subroutine raman_mat
 
   enddo
 
-#ifdef __MPI
   call mp_sum( wrk, intra_bgrp_comm )
   call mp_sum( wrk, inter_pool_comm )
-#endif
 
   do iat = 1, nat
      do icr = 1, 3

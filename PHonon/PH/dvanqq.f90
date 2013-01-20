@@ -237,12 +237,12 @@ subroutine dvanqq
         enddo
      endif
   enddo
-#ifdef __MPI
+
   call mp_sum(  int1, intra_bgrp_comm )
   call mp_sum(  int2, intra_bgrp_comm )
   call mp_sum(  int4, intra_bgrp_comm )
   call mp_sum(  int5, intra_bgrp_comm )
-#endif
+
   IF (noncolin) THEN
      CALL set_int12_nc(0)
      int4_nc = (0.d0, 0.d0)
