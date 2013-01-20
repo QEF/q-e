@@ -126,7 +126,6 @@ check_failure $?
 $ECHO " done"
 
 # response calculation
-
 cat > alas.ph.in << EOF
 phonons of AlAs at Gamma
  &inputph
@@ -136,6 +135,9 @@ phonons of AlAs at Gamma
   trans=.true.,
   lraman=.true.,
   elop=.true.,
+  zeu=.true.,
+  zue=.true.,
+  max_seconds=3.2
   amass(1)=26.98,
   amass(2)=74.92,
   outdir='$TMP_DIR/',
@@ -147,8 +149,34 @@ EOF
 
 $ECHO "  running the response calculation...\c"
 $PH_COMMAND < alas.ph.in > alas.ph.out
+$ECHO " done"
+
+cat > alas.ph.rec.in << EOF
+phonons of AlAs at Gamma
+ &inputph
+  tr2_ph=1.0d-12,
+  prefix='alas',
+  epsil=.true.,
+  trans=.true.,
+  lraman=.true.,
+  elop=.true.,
+  zeu=.true.,
+  zue=.true.,
+  recover=.true.
+  amass(1)=26.98,
+  amass(2)=74.92,
+  outdir='$TMP_DIR/',
+  fildyn='alas.dynG',
+  fildrho='alas.drho',
+ /
+0.0 0.0 0.0
+EOF
+
+$ECHO "  recovering the response calculation...\c"
+$PH_COMMAND < alas.ph.rec.in > alas.ph.rec.out
 check_failure $?
 $ECHO " done"
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"
+
