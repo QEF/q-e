@@ -12,24 +12,22 @@ SUBROUTINE q_points_wannier ( )
   USE kinds,          ONLY : dp
   USE io_global,      ONLY : stdout, ionode, ionode_id
   USE io_files,       ONLY : prefix
-  USE mp_global,      ONLY : me_pool, root_pool
   USE mp,             ONLY : mp_bcast
-  USE disp,           ONLY : nqmax, nq1, nq2, nq3, x_q, nqs
+  USE disp,           ONLY : nq1, nq2, nq3, x_q, nqs
   USE output,         ONLY : fildyn
   USE el_phon,        ONLY : wan_index_dyn
   USE dfile_autoname, ONLY : dfile_get_qlist
   USE dfile_star,     ONLY : dvscf_star
-  USE io_files, ONLY : prefix
-  USE control_ph, ONLY : last_q
+  USE io_files,       ONLY : prefix
+  USE control_ph,     ONLY : last_q
+  USE mp_global,      ONLY : intra_image_comm
 
   implicit none
 
-  integer :: i, iq, ierr, iudyn = 26,idum,jdum
-  integer :: iq_unit
-  logical :: exist_gamma, check, skip_equivalence=.FALSE.
+  integer :: i, iq, ierr, iudyn = 26
+  logical :: exist_gamma
   logical :: exst
-  logical, external :: check_q_points_sym
-  real(DP), allocatable, dimension(:) :: wq
+  real(DP), allocatable :: wq(:)
 
   INTEGER, EXTERNAL :: find_free_unit
 
@@ -43,7 +41,7 @@ SUBROUTINE q_points_wannier ( )
   nqs=nq1*nq2*nq3
  
   if(last_q.lt.nqs.and.last_q.gt.0) nqs=last_q
-  allocate (x_q(3,nqmax))
+  allocate (x_q(3,nqs))
   allocate(wan_index_dyn(nqs))
 
 ! here read q_points
@@ -83,10 +81,12 @@ SUBROUTINE q_points_wannier ( )
   !
   ! ... write the information on the grid of q-points to file
   !
-  IF (ionode) THEN
+  IF (ionode) &
      OPEN (unit=iudyn, file=TRIM(fildyn)//'0_qstar', status='unknown', iostat=ierr)
-     IF ( ierr > 0 ) CALL errore ('q_points_wannier','cannot open file ' &
+  CALL mp_bcast(ierr, ionode_id, intra_image_comm)
+  IF ( ierr > 0 ) CALL errore ('q_point_wannier','cannot open file ' &
           & // TRIM(fildyn) // '0_qstar', ierr)
+  IF (ionode) THEN
      WRITE (iudyn, '(3i4)' ) nq1, nq2, nq3
      WRITE (iudyn, '( i4)' ) nqs
      DO  iq = 1, nqs

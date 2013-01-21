@@ -10,20 +10,23 @@ SUBROUTINE q_points ( )
 !----------========------------------------------
 
   USE kinds, only : dp
-  USE io_global,  ONLY :  stdout, ionode
-  USE disp,  ONLY : nqmax, nq1, nq2, nq3, x_q, nqs
+  USE io_global,  ONLY :  stdout, ionode, ionode_id
+  USE disp,  ONLY : nq1, nq2, nq3, x_q, nqs
   USE output, ONLY : fildyn
   USE symm_base, ONLY : nsym, s, time_reversal, t_rev, invs
   USE cell_base, ONLY : at, bg
   USE control_ph, ONLY : search_sym
+  USE mp_global,  ONLY : intra_image_comm
+  USE mp,         ONLY : mp_bcast
 
   implicit none
 
   integer :: i, iq, ierr, iudyn = 26
   logical :: exist_gamma, check, skip_equivalence=.FALSE.
   logical, external :: check_q_points_sym
-  real(DP), allocatable, dimension(:) :: wq
+  real(DP), allocatable :: xq(:,:), wq(:)
 
+  INTEGER :: nqmax
   !
   !  calculate the Monkhorst-Pack grid
   !
@@ -31,10 +34,15 @@ SUBROUTINE q_points ( )
   if( nq1 <= 0 .or. nq2 <= 0 .or. nq3 <= 0 ) &
        call errore('q_points','nq1 or nq2 or nq3 <= 0',1)
 
+  nqmax= nq1 * nq2 * nq3
+
   allocate (wq(nqmax))
-  allocate (x_q(3,nqmax))
+  allocate (xq(3,nqmax))
   call kpoint_grid( nsym, time_reversal, skip_equivalence, s, t_rev, bg, nqmax,&
-                         0,0,0, nq1,nq2,nq3, nqs, x_q, wq )
+                         0,0,0, nq1,nq2,nq3, nqs, xq, wq )
+  allocate(x_q(3,nqs))
+  x_q(:,:)=xq(:,1:nqs)
+  deallocate (xq)
   deallocate (wq)
   !
   ! Check if the Gamma point is one of the points and put
@@ -85,10 +93,12 @@ SUBROUTINE q_points ( )
   !
   ! ... write the information on the grid of q-points to file
   !
-  IF (ionode) THEN
+  IF (ionode) &
      OPEN (unit=iudyn, file=TRIM(fildyn)//'0', status='unknown', iostat=ierr)
-     IF ( ierr > 0 ) CALL errore ('q_points','cannot open file ' &
-          & // TRIM(fildyn) // '0', ierr)
+  CALL mp_bcast(ierr, ionode_id, intra_image_comm)
+  IF ( ierr > 0 ) CALL errore ('q_points','cannot open file ' &
+                   & // TRIM(fildyn) // '0', ierr)
+  IF (ionode) THEN
      WRITE (iudyn, '(3i4)' ) nq1, nq2, nq3
      WRITE (iudyn, '( i4)' ) nqs
      DO  iq = 1, nqs

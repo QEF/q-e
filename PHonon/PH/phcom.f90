@@ -415,8 +415,6 @@ MODULE disp
   !
   SAVE
   !
-  INTEGER, PARAMETER :: nqmax = 1000
-  !
   INTEGER :: nq1, nq2, nq3  ! number of q-points in each direction
   INTEGER :: nqs            ! number of q points to be calculated
   REAL(DP), ALLOCATABLE :: x_q(:,:) ! coordinates of the q points
