@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2012 Quantum ESPRESSO group
+! Copyright (C) 2002-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,6 @@
 #  define getarg getarg_
 #  define iargc  iargc_
 #endif
-! do not define iargc as external: g95 does not like it
 !
 SUBROUTINE get_env ( variable_name, variable_value )
   !
@@ -58,12 +57,11 @@ FUNCTION input_file_name_getarg ( input_file ) RESULT ( found )
   !
   IMPLICIT NONE
   !
-  INTEGER             :: iiarg, nargs
-  LOGICAL             :: found
   CHARACTER (LEN=256), INTENT (OUT) :: input_file
-#if !(defined(GFORTRAN) && defined(__STD_F95))
-  INTEGER, EXTERNAL :: iargc
-#endif
+  LOGICAL             :: found
+  !
+  INTEGER             :: iiarg, nargs
+  INTEGER, EXTERNAL   :: iargc
   !
   !
   ! ... Input from file ?
@@ -105,8 +103,9 @@ SUBROUTINE get_file( input_file )
   !
   CHARACTER (LEN=*)  :: input_file
   !
-  CHARACTER (LEN=256)  :: prgname
-  INTEGER             :: nargs, iargc
+  CHARACTER (LEN=256) :: prgname
+  INTEGER             :: nargs
+  INTEGER, EXTERNAL   :: iargc
   LOGICAL             :: exst
   !
   nargs = iargc()
@@ -141,7 +140,7 @@ SUBROUTINE get_arg_npool( npool )
    !
    INTEGER :: nargs, iiarg
    CHARACTER(LEN=10) :: np
-   INTEGER :: iargc
+   INTEGER, EXTERNAL :: iargc
    !
    npool = 1
    nargs = iargc()
@@ -175,7 +174,7 @@ SUBROUTINE get_arg_npot( npot )
    !
    INTEGER :: nargs, iiarg
    CHARACTER(LEN=10) :: np
-   INTEGER :: iargc
+   INTEGER, EXTERNAL :: iargc
    !
    npot = 1
    nargs = iargc()
@@ -207,7 +206,7 @@ SUBROUTINE get_arg_nimage( nimage )
    !
    INTEGER :: nargs, iiarg
    CHARACTER(LEN=10) :: np
-   INTEGER :: iargc
+   INTEGER, EXTERNAL :: iargc
    !
    nimage = 1
    nargs = iargc()
@@ -241,7 +240,7 @@ SUBROUTINE get_arg_ntg( ntask_groups )
    !
    INTEGER :: nargs, iiarg
    CHARACTER(LEN=20) :: np
-   INTEGER :: iargc
+   INTEGER, EXTERNAL :: iargc
    !
    ntask_groups = 0
    nargs = iargc()
@@ -274,7 +273,7 @@ SUBROUTINE get_arg_nbgrp( nbgrp )
    !
    INTEGER :: nargs, iiarg
    CHARACTER(LEN=20) :: np
-   INTEGER :: iargc
+   INTEGER, EXTERNAL :: iargc
    !
    nbgrp = 1
    nargs = iargc()
@@ -309,7 +308,7 @@ SUBROUTINE get_arg_northo( nproc_ortho )
    !
    INTEGER :: nargs, iiarg
    CHARACTER(LEN=20) :: np
-   INTEGER :: iargc
+   INTEGER, EXTERNAL :: iargc
    !
    ! ... unlike the others, this subroutine should return 0 if nothing found
    !
