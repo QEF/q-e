@@ -61,6 +61,10 @@ FUNCTION input_file_name_getarg ( input_file ) RESULT ( found )
   INTEGER             :: iiarg, nargs
   LOGICAL             :: found
   CHARACTER (LEN=256), INTENT (OUT) :: input_file
+#if !(defined(GFORTRAN) && defined(__STD_F95))
+  INTEGER, EXTERNAL :: iargc
+#endif
+  !
   !
   ! ... Input from file ?
   !
