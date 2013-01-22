@@ -13,6 +13,7 @@ subroutine allocate_part ( nat )
   ! of the dynamical matrix
   !
   USE partial, ONLY : comp_irr, done_irr, atomo
+  USE el_phon, ONLY : comp_elph, done_elph, elph
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: nat
   !
@@ -20,6 +21,10 @@ subroutine allocate_part ( nat )
   !
   allocate (comp_irr (  0:3 * nat))
   allocate (done_irr (  0:3 * nat))
+  IF (elph) THEN
+     allocate (comp_elph (1:3 * nat))
+     allocate (done_elph (1:3 * nat))
+  ENDIF
   allocate (atomo    (  nat))
   atomo(:) = 0
   return

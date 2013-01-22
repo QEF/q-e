@@ -10,10 +10,13 @@ subroutine deallocate_part()
 !----------===============-------------------------
 
   USE partial, ONLY : comp_irr, done_irr, atomo
+  USE el_phon, ONLY : done_elph, comp_elph
   IMPLICIT NONE
 
   if (allocated(comp_irr)) deallocate (comp_irr)
   if (allocated(done_irr)) deallocate (done_irr)
+  if (allocated(comp_elph)) deallocate (comp_elph)
+  if (allocated(done_elph)) deallocate (done_elph)
   if (allocated(atomo)) deallocate (atomo)
 
   return

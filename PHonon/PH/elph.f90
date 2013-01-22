@@ -24,5 +24,6 @@ MODULE el_phon
   COMPLEX(DP), ALLOCATABLE, TARGET :: &
        el_ph_mat(:,:,:,:)    !  nbnd, nbnd, nks, 3*nat
   CHARACTER (LEN=256) :: auxdvscf
+  LOGICAL, ALLOCATABLE :: comp_elph(:), done_elph(:)
   !
 END MODULE el_phon

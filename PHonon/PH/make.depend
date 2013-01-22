@@ -124,6 +124,7 @@ addusldos.o : ../../Modules/noncol.o
 addusldos.o : ../../Modules/recvec.o
 addusldos.o : ../../Modules/uspp.o
 addusldos.o : ../../Modules/wavefunctions.o
+allocate_part.o : elph.o
 allocate_part.o : phcom.o
 allocate_pert.o : ../../Modules/ions_base.o
 allocate_pert.o : phcom.o

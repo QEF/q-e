@@ -353,6 +353,11 @@ MODULE freq_ph
   INTEGER :: nfs                   ! # of frequencies
   !
   REAL (KIND=DP) :: fiu(nfsmax)    ! values  of frequency
+
+  LOGICAL, ALLOCATABLE :: comp_iu(:) ! values  of frequency to calculate in this ru
+  !
+  LOGICAL, ALLOCATABLE :: done_iu(:)    ! values of frequency already calculated
+
   !
 END MODULE freq_ph
 !
