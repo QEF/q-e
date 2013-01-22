@@ -25,8 +25,8 @@ CONTAINS
   ! ...  opens "unit" (optional, unit_loc=5 if unspecified) for input read
   ! ...  if lxmlinput=.true. and "attr" are present, tests for a xml file
   ! ...  to be opened with attribute "attr"
-  ! ...  The code detects an input filename via options:
-  ! ...     "-in failename", "-inp filename", "-input filename"
+  ! ...  The code detects an input filename via option "-i filename"
+  ! ...  (also "-in", "-inp", "-input" are accepted)
   ! ...  If no filename is not specified, the standard input is dumped to
   ! ...  temporary file "input_tmp.in" and this is opened for read
   ! ...  Returns -1 if standard input is dumped to file
@@ -44,17 +44,11 @@ CONTAINS
   INTEGER, intent(in), optional :: unit
   !
   LOGICAL :: lfound, lxmlinput_loc,lcheckxml
-  INTEGER  :: iiarg, nargs, iargc, ierr
-  CHARACTER (len=50) :: arg
-  !
+  INTEGER  :: ierr
   INTEGER :: stdin=5, stdtmp
   CHARACTER(LEN=512) :: dummy
-  LOGICAL, EXTERNAL :: test_input_xml
+  LOGICAL, EXTERNAL :: test_input_xml, input_file_name_getarg
   !
-#if defined(__ABSOFT)
-#   define getarg getarg_
-#   define iargc  iargc_
-#endif
   !
   IF (     PRESENT(attr) .AND. .NOT.PRESENT(lxmlinput) .OR. &
       .NOT.PRESENT(attr) .AND.      PRESENT(lxmlinput) ) THEN
@@ -75,27 +69,9 @@ CONTAINS
   !
   ! ... Input from file ?
   !
-  input_file=' '
-  lfound=.false.
-  nargs = iargc()
+  lfound = input_file_name_getarg ( input_file ) 
   !
-  DO iiarg = 1, ( nargs - 1 )
-     !
-     CALL getarg( iiarg, input_file )
-     !
-     IF ( TRIM( input_file ) == '-input' .OR. &
-          TRIM( input_file ) == '-inp'   .OR. &
-          TRIM( input_file ) == '-in' ) THEN
-        !
-        CALL getarg( ( iiarg + 1 ) , input_file )
-        !
-        lfound=.true.
-        GO TO 10
-     END IF
-     !
-  END DO
-  !
-10 stdtmp = find_free_unit()
+  stdtmp = find_free_unit()
   !
   IF ( .NOT. lfound ) THEN
      !
