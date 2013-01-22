@@ -673,8 +673,8 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   
   do m=1,nbnd
      psi_scratch = (0.d0, 0.d0)
-!     psi_scratch(nls (igk_ (1:npw_) ) ) = evq (1:npw_, m)
-     psi_scratch(nls (igk_ (1:npw) ) ) = evq (1:npw, m)
+     psi_scratch(nls (igk_ (1:npw_) ) ) = evq (1:npw_, m)
+!     psi_scratch(nls (igk_ (1:npw) ) ) = evq (1:npw, m)
      CALL invfft ('Wave', psi_scratch, dffts)
      !     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
      psi_scratch(1:dffts%nnr) = psi_scratch(1:dffts%nnr) * phase(1:dffts%nnr)
