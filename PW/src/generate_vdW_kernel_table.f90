@@ -87,7 +87,7 @@ program generate_kernel
   use mp,                   ONLY : mp_get, mp_end, mp_barrier
   use mp_global,            ONLY : mp_startup, nproc, mpime
   use kinds,                ONLY : dp
-  use io_global,            ONLY : io_global_start, ionode, ionode_id
+  use io_global,            ONLY : ionode, ionode_id
   use constants,            ONLY : pi
   
   !! --------------------------------------------------------------------------------------------

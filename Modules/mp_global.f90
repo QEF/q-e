@@ -194,14 +194,11 @@ CONTAINS
     INTEGER, INTENT(IN) :: world, root
     INTEGER :: nproc_ortho_in = 0 
     !
-    INTEGER :: myrank, npe
+    INTEGER :: myrank
     !
     ! ... get global coordinate for this processor
     !
     myrank = mp_rank(world)
-    npe = mp_size(world)
-    !
-    CALL mp_global_start( root, myrank, world, npe )
     !
     ! ... initialize input/output, set (and get) the I/O nodes
     !
@@ -257,34 +254,6 @@ CONTAINS
     RETURN
     !
   END SUBROUTINE mp_image_startup
-  !
-  !-----------------------------------------------------------------------
-  SUBROUTINE mp_global_start( root_i, mpime_i, group_i, nproc_i )
-    !-----------------------------------------------------------------------
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(IN) :: root_i, mpime_i, group_i, nproc_i
-    !
-    nproc_pool       = nproc_i
-    nproc_bgrp       = nproc_i
-    my_pool_id       = 0
-    my_bgrp_id       = 0
-    me_pool          = mpime_i
-    me_bgrp          = mpime_i
-    root_pool        = root_i
-    root_bgrp        = root_i
-    inter_pool_comm  = group_i
-    intra_pool_comm  = group_i
-    inter_bgrp_comm  = group_i
-    intra_bgrp_comm  = group_i
-    ortho_comm       = group_i
-    ortho_row_comm   = group_i
-    ortho_col_comm   = group_i
-    !
-    RETURN
-    !
-  END SUBROUTINE mp_global_start
   !
   !-----------------------------------------------------------------------
   SUBROUTINE mp_global_end ( )
@@ -791,12 +760,8 @@ CONTAINS
   END SUBROUTINE distribute_over_bgrp
   !
   SUBROUTINE init_index_over_band(comm,nbnd)
+    !
     IMPLICIT NONE
-#if defined (__MPI)
-    !
-    include 'mpif.h'
-    !
-#endif
     INTEGER, INTENT(IN) :: comm, nbnd
 
     INTEGER :: npe, myrank, ierror, rest, k
@@ -804,8 +769,6 @@ CONTAINS
     myrank = mp_rank(comm)
     npe = mp_size(comm)
 
-!    call mpi_comm_rank(comm, mp_rank, ierror)
-!    call mpi_comm_size(comm, mp_size, ierror)
     rest = mod(nbnd, npe)
     k = int(nbnd/npe)
 
@@ -821,7 +784,6 @@ CONTAINS
      ibnd_start = 1
      ibnd_end = nbnd
     endif
-
 
   END SUBROUTINE init_index_over_band
   !
