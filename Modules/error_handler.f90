@@ -24,9 +24,10 @@ SUBROUTINE errore( calling_routine, message, ierr )
   ! ... error, unit 0 (the message will appear in the error files 
   ! ... produced by loadleveler).
   !
+  USE mp, ONLY : mp_abort
+  USE mp_global, ONLY : mpime
   USE io_global, ONLY : stdout
-  USE io_files,  ONLY : crashunit, crash_file
-  USE parallel_include
+  USE io_files,  ONLY : crash_file
 #if defined(__PTRACE) && defined(__INTEL)
   USE ifcore,    ONLY : tracebackqq
 #endif
@@ -34,12 +35,12 @@ SUBROUTINE errore( calling_routine, message, ierr )
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(IN) :: calling_routine, message
-    ! the name of the calling calling_routinee
-    ! the output messagee
+    ! the name of the calling calling_routine
+    ! the output message
   INTEGER,          INTENT(IN) :: ierr
     ! the error flag
-  INTEGER                      :: mpime, mpierr
-    ! the task id  
+  INTEGER :: crashunit
+  INTEGER, EXTERNAL :: find_free_unit
   CHARACTER(LEN=6) :: cerr
   !
   !
@@ -82,15 +83,12 @@ SUBROUTINE errore( calling_routine, message, ierr )
 !
 #if defined (__MPI)
   !
-  mpime = 0
-  !
-  CALL MPI_COMM_RANK( MPI_COMM_WORLD, mpime, mpierr )
-  !
   !  .. write the message to a file and close it before exiting
   !  .. this will prevent loss of information on systems that
   !  .. do not flush the open streams
   !  .. added by C.C.
   !
+  crashunit = find_free_unit () 
   OPEN( UNIT = crashunit, FILE = crash_file, &
         POSITION = 'APPEND', STATUS = 'UNKNOWN' )
   !      
@@ -105,9 +103,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !
   ! ... try to exit in a smooth way
   !
-  CALL MPI_ABORT( MPI_COMM_WORLD, mpierr )
-  !
-  CALL MPI_FINALIZE( mpierr )
+  CALL mp_abort ( ) 
   !
 #endif
   !

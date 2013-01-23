@@ -1526,7 +1526,6 @@ MODULE xml_io_base
       ! ... all processors, avoiding an overall collect of the charge density
       ! ... on a single proc.
       !
-      USE io_files,  ONLY : rhounit
       USE mp,        ONLY : mp_get, mp_sum, mp_rank, mp_size
       !
       IMPLICIT NONE
@@ -1540,12 +1539,14 @@ MODULE xml_io_base
       LOGICAL,           INTENT(IN) :: ionode
       INTEGER,           INTENT(IN) :: intra_group_comm, inter_group_comm
       !
-      INTEGER               :: ierr, i, j, k, kk, ldr, ip
+      INTEGER               :: rhounit, ierr, i, j, k, kk, ldr, ip
       CHARACTER(LEN=256)    :: rho_file
       CHARACTER(LEN=10)     :: rho_extension
       REAL(DP), ALLOCATABLE :: rho_plane(:)
       INTEGER,  ALLOCATABLE :: kowner(:)
       INTEGER               :: my_group_id, me_group, nproc_group, io_group_id, io_group
+      INTEGER, EXTERNAL     :: find_free_unit
+      !
       !
       me_group    = mp_rank( intra_group_comm )
       nproc_group = mp_size( intra_group_comm )
@@ -1555,6 +1556,7 @@ MODULE xml_io_base
       IF ( .NOT. rho_binary ) rho_extension = '.xml'
       !
       rho_file = TRIM( rho_file_base ) // TRIM( rho_extension )
+      rhounit = find_free_unit () 
       !
       IF ( ionode ) THEN 
          CALL iotk_open_write( rhounit, FILE = rho_file,  BINARY = rho_binary, IERR = ierr )
@@ -1654,7 +1656,6 @@ MODULE xml_io_base
       ! ... Reads charge density rho, one plane at a time, to avoid 
       ! ... collecting the entire charge density on a single processor
       !
-      USE io_files,  ONLY : rhounit
       USE io_global, ONLY : ionode, ionode_id
       USE mp_global, ONLY : intra_bgrp_comm, intra_image_comm
       USE mp,        ONLY : mp_put, mp_sum, mp_rank, mp_size
@@ -1668,17 +1669,19 @@ MODULE xml_io_base
       INTEGER,           INTENT(IN)  :: ipp(:)
       INTEGER,           INTENT(IN)  :: npp(:)
       !
-      INTEGER               :: ierr, i, j, k, kk, ldr, ip
+      INTEGER               :: rhounit, ierr, i, j, k, kk, ldr, ip
       INTEGER               :: nr( 3 )
       INTEGER               :: me_group, nproc_group
       CHARACTER(LEN=256)    :: rho_file
       REAL(DP), ALLOCATABLE :: rho_plane(:)
       INTEGER,  ALLOCATABLE :: kowner(:)
       LOGICAL               :: exst
+      INTEGER,  EXTERNAL    :: find_free_unit
       !
       me_group     = mp_rank ( intra_bgrp_comm )
       nproc_group  = mp_size ( intra_bgrp_comm )
       !
+      rhounit = find_free_unit ( )
       rho_file = TRIM( rho_file_base ) // ".dat"
       exst = check_file_exst( TRIM(rho_file) ) 
       !

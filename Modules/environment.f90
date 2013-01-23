@@ -11,7 +11,7 @@ MODULE environment
   !==-----------------------------------------------------------------------==!
 
   USE kinds, ONLY: DP
-  USE io_files, ONLY: crash_file, crashunit, nd_nmbr
+  USE io_files, ONLY: crash_file, nd_nmbr
   USE io_global, ONLY: stdout, meta_ionode
   USE mp_global, ONLY: me_image, my_image_id, root_image, nimage, &
       nproc_image, nproc, npool, nproc_bgrp, nbgrp, get_ntask_groups
@@ -40,7 +40,8 @@ CONTAINS
     LOGICAL           :: exst, debug = .false.
     CHARACTER(LEN=80) :: code_version, uname
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
-    INTEGER :: iost
+    INTEGER :: ios, crashunit
+    INTEGER, EXTERNAL :: find_free_unit
 
     ! ... Intel compilers v .ge.8 allocate a lot of stack space
     ! ... Stack limit is often small, thus causing SIGSEGV and crash
@@ -71,9 +72,10 @@ CONTAINS
 
        INQUIRE( FILE=TRIM(crash_file), EXIST=exst )
        IF( exst ) THEN
-          OPEN(  UNIT=crashunit, FILE=TRIM(crash_file), STATUS='OLD',IOSTAT=iost )
-          IF(iost==0) CLOSE( UNIT=crashunit, STATUS='DELETE', IOSTAT=iost )
-          IF(iost/=0) WRITE(stdout,'(5x,"Remark: CRASH file could not ne deleted")')
+          crashunit = find_free_unit()
+          OPEN( UNIT=crashunit, FILE=TRIM(crash_file), STATUS='OLD',IOSTAT=ios )
+          IF(ios==0) CLOSE( UNIT=crashunit, STATUS='DELETE', IOSTAT=ios )
+          IF(ios/=0) WRITE(stdout,'(5x,"Remark: CRASH file could not ne deleted")')
        END IF
 
     ELSE

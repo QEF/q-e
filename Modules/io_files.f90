@@ -41,13 +41,6 @@ MODULE io_files
   !
   ! ... The units where various variables are saved
   !
-  INTEGER :: rhounit     = 17
-  INTEGER :: crashunit   = 15
-  INTEGER :: pseudounit  = 10
-  INTEGER :: opt_unit    = 20 ! optional unit 
-  !
-  ! ... units in pwscf
-  !
   INTEGER :: iunres      =  1 ! unit for the restart of the run
   INTEGER :: iunpun      =  4 ! unit for saving the final results
   INTEGER :: iunwfc      = 10 ! unit with wavefunctions
@@ -90,7 +83,6 @@ MODULE io_files
   INTEGER :: nwordwpp = 2
   INTEGER :: nwordwf  = 2
   !
-  INTEGER, EXTERNAL :: find_free_unit
 CONTAINS
   !
   !--------------------------------------------------------------------------
@@ -105,6 +97,7 @@ CONTAINS
     LOGICAL, OPTIONAL, INTENT(IN) :: in_warning
     LOGICAL                       :: exst, warning
     INTEGER                       :: iunit
+    INTEGER, EXTERNAL :: find_free_unit
     !
     IF ( .NOT. ionode ) RETURN
     !

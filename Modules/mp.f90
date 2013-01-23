@@ -19,7 +19,7 @@
       !
       IMPLICIT NONE
 
-      PUBLIC :: mp_start, mp_end, &
+      PUBLIC :: mp_start, mp_abort, mp_end, &
         mp_bcast, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
         mp_gather, mp_get, mp_put, mp_barrier, mp_report, mp_group_free, &
         mp_root_sum, mp_comm_free, mp_comm_create, mp_comm_group, &
@@ -161,6 +161,17 @@
 
         RETURN
       END SUBROUTINE mp_start
+!------------------------------------------------------------------------------!
+!..mp_abort
+
+      SUBROUTINE mp_abort
+        IMPLICIT NONE
+        INTEGER :: ierr
+#ifdef __MPI
+        CALL mpi_abort(mpi_comm_world, ierr)
+        CALL mpi_finalize(ierr)
+#endif
+      END SUBROUTINE mp_abort
 !
 !------------------------------------------------------------------------------!
 !..mp_end
