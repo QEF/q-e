@@ -10,7 +10,7 @@ MODULE read_xml_module
   !
   USE input_parameters
   !
-  USE io_global, ONLY : ionode, ionode_id, xmlinputunit
+  USE io_global, ONLY : ionode, ionode_id, xmlinputunit=>xmlstdin
   USE mp,        ONLY : mp_bcast
   USE iotk_module, ONLY : iotk_attlenx
   !

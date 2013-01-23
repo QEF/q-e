@@ -785,11 +785,11 @@ file
 and set the PARA\_PREFIX and PARA\_POSTFIX variables as needed. 
 Parallel executables will be run by a command like this: 
 \begin{verbatim}
-      $PARA_PREFIX pw.x $PARA_POSTFIX -in file.in > file.out
+      $PARA_PREFIX pw.x $PARA_POSTFIX -i file.in > file.out
 \end{verbatim}
 For example, if the command line is like this (as for an IBM SP):
 \begin{verbatim}
-      poe pw.x -procs 4 -in file.in > file.out
+      poe pw.x -procs 4 -i file.in > file.out
 \end{verbatim}
 you should set PARA\_PREFIX="poe", PARA\_POSTFIX="-procs
 4". Furthermore, if your machine does not support interactive use, you
@@ -1438,11 +1438,13 @@ needed beyond 8 processors per pool.
 To control the number of processors in each group,
 command line switches: 
 \texttt{-nimage}, \texttt{-npools}, \texttt{-nband},
-\texttt{-ntg}, \texttt{-northo} or \texttt{-ndiag}
+\texttt{-ntg}, \texttt{-ndiag} or \texttt{-northo}
+(shorthands, respectively: \texttt{-ni}, \texttt{-nk}, \texttt{-nb},
+\texttt{-nt}, \texttt{-nd})
 are used.
 As an example consider the following command line:
 \begin{verbatim}
-mpirun -np 4096 ./neb.x -nimage 8 -npool 2 -ntg 4 -ndiag 144 -input my.input
+mpirun -np 4096 ./neb.x -ni 8 -nk 2 -nt 4 -nd 144 -i my.input
 \end{verbatim}
 This executes a NEB calculation on 4096 processors, 8 images (points in the configuration
 space in this case) at the same time, each of 
@@ -1453,8 +1455,8 @@ the 3D real-space grid is cut into 64 slices), and the diagonalization
 of the subspace Hamiltonian is distributed to a square grid of 144
 processors (12x12).
 
-Default values are: \texttt{-nimage 1 -npool 1 -ntg 1} ; 
-\texttt{ndiag} is set to 1 if ScaLAPACK is not compiled,
+Default values are: \texttt{-ni 1 -nk 1 -nt 1} ; 
+\texttt{nd} is set to 1 if ScaLAPACK is not compiled,
 it is set to the square integer smaller than or equal to  half the number 
 of processors of each pool.
 
@@ -1579,10 +1581,11 @@ you may also want to use \texttt{wf\_collect=.false.} and (CP only)
 Some implementations of the MPI library have problems with input 
 redirection in parallel. This typically shows up under the form of
 mysterious errors when reading data. If this happens, use the option 
-\texttt{-in} (or \texttt{-inp} or \texttt{-input}), followed by the input file name. 
+\texttt{-i} (or \texttt{-in}, \texttt{-inp}, \texttt{-input}), 
+followed by the input file name. 
 Example:
 \begin{verbatim}
-   pw.x -in inputfile -npool 4 > outputfile
+   pw.x -i inputfile -nk 4 > outputfile
 \end{verbatim} 
 Of course the 
 input file must be accessible by the processor that must read it
@@ -1590,7 +1593,7 @@ input file must be accessible by the processor that must read it
 its contents to all other processors).
 
 Apparently the LSF implementation of MPI libraries manages to ignore or to
-confuse even the \texttt{-in/inp/input} mechanism that is present in all
+confuse even the \texttt{-i/in/inp/input} mechanism that is present in all
 \qe\ codes. In this case, use the \texttt{-i} option of \texttt{mpirun.lsf}
 to provide an input file.
 

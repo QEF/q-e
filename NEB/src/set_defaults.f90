@@ -34,7 +34,7 @@ END SUBROUTINE set_engine_input_defaults
 SUBROUTINE set_engine_io_units()
   !-----------------------------------------------------------------------------
   !
-  USE io_global, ONLY : stdout, xmlinputunit, ionode
+  USE io_global, ONLY : stdout, ionode
   INTEGER, EXTERNAL :: find_free_unit
   !
   if(ionode) stdout = find_free_unit()

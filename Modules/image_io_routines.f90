@@ -56,7 +56,6 @@ MODULE image_io_routines
        !
        IMPLICIT NONE
        !
-       !
        ! ... the original I/O node is set again
        !
        CALL io_global_start( mpime, root )

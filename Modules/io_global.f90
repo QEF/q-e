@@ -16,9 +16,11 @@ MODULE io_global
   !
   PUBLIC :: io_global_start, io_global_getionode
   PUBLIC :: stdout, ionode, ionode_id, meta_ionode, meta_ionode_id
-  PUBLIC :: xmlinputunit, xmloutputunit, xmltmpunit
+  PUBLIC :: stdin, xmlstdin
   !
-  INTEGER :: stdout = 6            ! unit connected to standard output
+  INTEGER :: stdin  = 5    ! unit connected to standard input
+  INTEGER :: xmlstdin=5    ! unit connected to input xml file
+  INTEGER :: stdout = 6    ! unit connected to standard output
   ! For parallel execution: I/O within an image
   INTEGER :: ionode_id = 0         ! index of the i/o node for this image
   LOGICAL :: ionode = .TRUE.       ! true if this processor is a i/o node
@@ -28,9 +30,7 @@ MODULE io_global
   LOGICAL :: meta_ionode = .TRUE.  ! true if this processor is global i/o node
   LOGICAL :: first = .TRUE.
   !
-  INTEGER :: xmlinputunit          ! unit connected to the xml input
   INTEGER :: xmloutputunit = 51    ! unit connected to the xml output
-  INTEGER :: xmltmpunit    = 52    ! unit connected to the temp xml output
   !    
   CONTAINS
      !

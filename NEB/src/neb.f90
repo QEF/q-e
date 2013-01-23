@@ -11,14 +11,13 @@ PROGRAM neb
   !
   ! ... Nudged Elastic Band / Strings Method algorithm
   !
-  USE io_global,         ONLY : meta_ionode_id, xmlinputunit
+  USE io_global,         ONLY : meta_ionode_id
   USE environment,       ONLY : environment_start, environment_end
   USE check_stop,        ONLY : check_stop_init
   USE image_io_routines, ONLY : io_image_start
   USE mp,                ONLY : mp_bcast
   USE mp_global,         ONLY : mp_startup, nimage, world_comm, mpime, root
   USE iotk_module,       ONLY : iotk_open_read, iotk_close_read, iotk_attlenx
-  USE open_close_input_file, ONLY : open_input_file, close_input_file
   USE read_xml_module,       ONLY : read_xml
   USE read_cards_module,     ONLY : read_cards
   USE read_namelists_module, ONLY : read_namelists
@@ -38,7 +37,7 @@ PROGRAM neb
   CHARACTER (len=iotk_attlenx) :: attr
   CHARACTER(len=256) :: engine_prefix
   !
-  INTEGER :: unit_tmp = 45, stdinpath
+  INTEGER :: unit_tmp
   INTEGER :: i, iimage
   CHARACTER(len=10) :: a_tmp
   !
@@ -49,8 +48,6 @@ PROGRAM neb
   LOGICAL, EXTERNAL :: test_input_xml, input_file_name_getarg
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
-  !
-  xmlinputunit = unit_tmp
   !
 #ifdef __MPI
   CALL mp_startup ( start_images=.true. )
@@ -86,11 +83,11 @@ PROGRAM neb
      !
   ENDIF
   !
-  stdinpath = find_free_unit () 
-  open(unit=stdinpath,file="neb.dat",status="old")
-  CALL path_read_namelist(stdinpath)
-  CALL path_read_cards(stdinpath)
-  close(unit=stdinpath)
+  unit_tmp = find_free_unit () 
+  open(unit=unit_tmp,file="neb.dat",status="old")
+  CALL path_read_namelist(unit_tmp)
+  CALL path_read_cards(unit_tmp)
+  close(unit=unit_tmp)
   !
   OPEN(unit_tmp, file=trim(engine_prefix)//"1.in")
   lxml = test_input_xml(unit_tmp)

@@ -20,7 +20,7 @@
 MODULE read_xml_cards_module
   !
   !
-  USE io_global, ONLY : xmlinputunit
+  USE io_global, ONLY : xmlinputunit=>xmlstdin
   USE iotk_module, ONLY : iotk_scan_begin, iotk_scan_end, iotk_scan_dat,&
        iotk_scan_dat_inside, iotk_scan_attr, iotk_attlenx
   USE read_xml_fields_module, ONLY : clean_str
