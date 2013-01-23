@@ -198,7 +198,7 @@ SUBROUTINE elphsum_wannier(q_index)
      iuelphmat = find_free_unit()
      OPEN (unit = iuelphmat, file = file_elphmat, status = 'unknown', err = &
           111, iostat = ios, form='unformatted')
-111  CALL errore ('elphon', 'opening file'//file_elphmat, ABS (ios) )
+111  CALL errore ('elphsum_wannier', 'opening file'//file_elphmat, ABS (ios) )
      REWIND (iuelphmat)
      xk_dummy(:)=xq(:)
      call cryst_to_cart(1,xk_dummy,at,-1)
@@ -363,7 +363,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
      
      IF (nksq.GT.1) THEN
         READ (iunigk, err = 100, iostat = ios) npw, igk
-100     CALL errore ('elphel', 'reading igk', ABS (ios) )
+100     CALL errore ('elphel_refolded', 'reading igk', ABS (ios) )
      ENDIF
      !
      !  ik = counter of k-points with vector k
@@ -380,7 +380,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
      IF (lsda) current_spin = isk (ikk)
      IF (.NOT.lgamma.AND.nksq.GT.1) THEN
         READ (iunigk, err = 200, iostat = ios) npwq, igkq
-200     CALL errore ('elphel', 'reading igkq', ABS (ios) )
+200     CALL errore ('elphel_refolded', 'reading igkq', ABS (ios) )
      ENDIF
 
      
@@ -669,7 +669,7 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   phase(:)=conjg(phase(:))
 
 
-  if(npwq_refolded.ne.npw_) call errore('elphel_refolded', 'Warning : npwq_refolded \= npw_',-1)
+  if(npwq_refolded.ne.npw_) call errore('calculate_and_apply_phase', 'Warning : npwq_refolded \= npw_',-1)
   
   do m=1,nbnd
      psi_scratch = (0.d0, 0.d0)
