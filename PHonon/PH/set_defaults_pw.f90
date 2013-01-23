@@ -44,6 +44,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   USE el_phon,            ONLY : elph_mat
   USE mp_global,          ONLY : kunit
   USE spin_orb,           ONLY : domag
+  USE control_ph,         ONLY : lgamma
   USE noncollin_module,   ONLY : noncolin
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
@@ -166,8 +167,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   !
   ! ... set the granularity for k-point distribution
   !
-  IF ( ABS( xq(1) ) < eps8 .AND. ABS( xq(2) ) < eps8 .AND. &
-       ABS( xq(3) ) < eps8 ) THEN
+  IF ( lgamma  ) THEN
      !
      kunit = 1
      !
