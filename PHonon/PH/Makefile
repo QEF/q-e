@@ -34,6 +34,7 @@ ccg_psi.o \
 cgsolve_all.o \
 cgsolve_all_imfreq.o \
 ch_psi_all.o \
+check_if_partial_dyn.o \
 check_initial_status.o \
 check_q_points_sym.o \
 check_restart_recover.o \
@@ -160,6 +161,7 @@ symdyn_munu.o \
 symdynph_gq.o \
 syme.o \
 symm.o \
+symmorphic_or_nzb.o \
 transform_int_so.o \
 transform_int_nc.o \
 transform_alphasum_nc.o \
