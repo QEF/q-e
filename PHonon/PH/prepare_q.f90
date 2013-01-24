@@ -26,15 +26,15 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   USE io_global,       ONLY : stdout, ionode
   USE klist,           ONLY : lgauss
   USE qpoint,          ONLY : xq
-  USE disp,            ONLY : x_q, done_iq, rep_iq, done_rep_iq, comp_iq
+  USE disp,            ONLY : x_q, done_iq, comp_iq, lgamma_iq
+  USE grid_irr_iq,     ONLY : irr_iq, done_irr_iq, done_bands
   USE control_ph,      ONLY : ldisp, lgamma, epsil, trans, zue, zeu, &
                               start_irr, last_irr, current_iq, newgrid, &
-                              done_bands, tmp_dir_ph, tmp_dir_phq, lqdir
+                              tmp_dir_ph, tmp_dir_phq, lqdir
   USE io_files,        ONLY : prefix
   USE ramanm,          ONLY : lraman, elop
   USE freq_ph,         ONLY : fpol
   USE output,          ONLY : fildyn, fildvscf
-  USE ph_restart,      ONLY : ph_writefile
   USE el_phon,         ONLY : elph_mat, wan_index_dyn, auxdvscf
   !
   IMPLICIT NONE
@@ -49,7 +49,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !
   ! Case 1) This q point is not calculated because not requested in this run
   !
-  IF ( .NOT.comp_iq(iq) ) THEN
+  IF ( .NOT. comp_iq(iq) ) THEN
      do_iq=.FALSE.
      RETURN
   ENDIF
@@ -60,10 +60,10 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !          representation and the starting representation is larger
   !          than the number of available representations
   !
-  IF (start_irr>rep_iq(iq)) THEN
+  IF (start_irr>irr_iq(iq)) THEN
      WRITE(6,'(5x,"Exiting... start_irr,",i4,&
             & " > number of representations,",i4   )') &
-            start_irr, rep_iq(iq)
+            start_irr, irr_iq(iq)
      do_iq=.FALSE.
      RETURN
   ENDIF
@@ -80,7 +80,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
      !
      !  Check if it is lgamma
      !
-     lgamma = ( xq(1) == 0.D0 .AND. xq(2) == 0.D0 .AND. xq(3) == 0.D0 )
+     lgamma = lgamma_iq(iq)
      !
      ! ... set the name for the output file
      !
@@ -94,7 +94,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
      ! ... each q /= gamma is saved on a different directory
      !
      IF (.NOT.lgamma.AND.lqdir) &
-         tmp_dir_phq= TRIM (tmp_dir_ph) // TRIM(prefix) // '_q' &
+         tmp_dir_phq= TRIM (tmp_dir_ph) // TRIM(prefix) // '.q_' &
                        & // TRIM(int_to_char(iq))//'/'
      !
      IF ( lgamma ) THEN
@@ -137,12 +137,9 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
         !
         !
      END IF
+  ELSE
+     lgamma=lgamma_iq(iq)
   ENDIF
-  !
-  !  Save the current status of the run: all the flags, the list of q,
-  !  and the current q, the fact that we are before the bands
-  !
-  CALL ph_writefile('init',0)
   !
   ! ... In the case:
   !     of q = 0 and one of nk1, nk2 or nk3 = 0 (newgrid=.false.)
@@ -151,10 +148,11 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !              we do make first a nscf run
   !     of q \= 0   we do make first a nscf run
   !
-  setup_pw = (.NOT.lgamma.OR.modenum /= 0 .OR. newgrid).AND..NOT. done_bands
+  setup_pw = (.NOT.lgamma .OR. modenum /= 0 .OR. newgrid) 
+
   do_band=.FALSE.
-  DO irr=start_irr, MIN(ABS(last_irr),rep_iq(iq))
-     IF (.NOT.done_rep_iq(irr,iq)) THEN
+  DO irr=start_irr, MIN(ABS(last_irr),irr_iq(iq))
+     IF (.NOT. done_irr_iq(irr,iq)) THEN
         do_band=.TRUE.
         EXIT
      ENDIF

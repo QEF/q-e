@@ -30,9 +30,9 @@ SUBROUTINE phq_readin()
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
+  USE fft_base,      ONLY : dffts
   USE spin_orb,      ONLY : domag
   USE cellmd,        ONLY : lmovecell
-  USE fft_base,      ONLY : dffts
   USE run_info, ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma, lgamma_gamma, epsil, &
                             zue, zeu, xmldyn, newgrid,                      &
@@ -40,8 +40,10 @@ SUBROUTINE phq_readin()
                             nmix_ph, ldisp, recover, lrpa, lnoloc, start_irr, &
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
                             ext_recover, ext_restart, u_from_file, ldiag, &
-                            search_sym, lqdir, electron_phonon
-  USE save_ph,       ONLY : tmp_dir_save
+                            search_sym, lqdir, electron_phonon, tmp_dir_phq, &
+                            rec_code_read
+
+  USE save_ph,       ONLY : tmp_dir_save, save_ph_input_variables
   USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
   USE partial,       ONLY : atomo, nat_todo, nat_todo_input
@@ -53,13 +55,13 @@ SUBROUTINE phq_readin()
   USE control_flags, ONLY : iverbosity, modenum, twfcollect
   USE io_global,     ONLY : ionode, stdout
   USE mp_global,     ONLY : nproc_pool, nproc_pool_file, &
-                            nimage, my_image_id,    &
+                            nimage, my_image_id, intra_image_comm,   &
                             nproc_image_file, nproc_image, npool, &
-                            get_ntask_groups,  &
-                            nbgrp
+                            get_ntask_groups, nproc_bgrp_file, nproc_bgrp
   USE paw_variables, ONLY : okpaw
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
-  USE freq_ph,       ONLY : fpol, fiu, nfs, nfsmax
+  USE freq_ph,       ONLY : fpol, fiu, nfs
+  USE cryst_ph,      ONLY : magnetic_sym
   USE ph_restart,    ONLY : ph_readfile
   USE xml_io_base,   ONLY : create_directory
   USE el_phon,       ONLY : elph,elph_mat,elph_simple,elph_nbnd_min, elph_nbnd_max, &
@@ -70,7 +72,7 @@ SUBROUTINE phq_readin()
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
-  INTEGER :: ios, ipol, iter, na, it, ierr
+  INTEGER :: ios, ipol, iter, na, it, ierr, ierr1
     ! integer variable for I/O control
     ! counter on polarizations
     ! counter on iterations
@@ -78,7 +80,7 @@ SUBROUTINE phq_readin()
     ! counter on types
   REAL(DP) :: amass_input(nsx)
     ! save masses read from input here
-  CHARACTER (LEN=256) :: outdir
+  CHARACTER (LEN=256) :: outdir, filename
   !
   CHARACTER(LEN=80)          :: card
   CHARACTER(LEN=1), EXTERNAL :: capital
@@ -89,6 +91,7 @@ SUBROUTINE phq_readin()
   REAL(DP), EXTERNAL :: atom_weight
   LOGICAL, EXTERNAL  :: imatches
   LOGICAL, EXTERNAL  :: has_xml
+  LOGICAL :: exst
   !
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
                        nat_todo, iverbosity, outdir, epsil,  &
@@ -145,8 +148,9 @@ SUBROUTINE phq_readin()
   ! ik1, ik2, ik3: when specified in input it uses for the phonon run
   !                a different mesh than that used for the charge density.
   !
-  ! dvscf_star%open : if .true. write in dvscf_star%dir the dvscf_q' for all q' in the
-  !                   star of q with suffix dvscf_star%ext. The dvscf_q' is written in the basis dvscf_star%basis;
+  ! dvscf_star%open : if .true. write in dvscf_star%dir the dvscf_q
+  !                   'for all q' in the star of q with suffix dvscf_star%ext. 
+  !                   The dvscf_q' is written in the basis dvscf_star%basis;
   !                   if dvscf_star%pat is .true. also save a pattern file.
   ! dvscf_star%dir, dvscf_star%ext, dvscf_star%basis : see dvscf_star%open
   ! drho_star%open  : like dvscf_star%open but for drho_q
@@ -302,7 +306,7 @@ SUBROUTINE phq_readin()
   IF (dek <= 0.d0) CALL errore ( 'phq_readin', ' Wrong dek ', 1)
   !
   SELECT CASE( trim( electron_phonon ) )
-  CASE( 'simple' )
+  CASE( 'simple'  )
      elph=.true.
      elph_mat=.false.
      elph_simple=.true. 
@@ -353,8 +357,8 @@ SUBROUTINE phq_readin()
   CALL mp_bcast(xq, ionode_id )
   IF (.NOT.ldisp) THEN
      lgamma = xq (1) .EQ.0.D0.AND.xq (2) .EQ.0.D0.AND.xq (3) .EQ.0.D0
-     IF ( (epsil.OR.zue) .AND..NOT.lgamma) CALL errore ('phq_readin', &
-          'gamma is needed for elec.field', 1)
+     IF ( (epsil.OR.zue.or.lraman.or.elop) .AND..NOT.lgamma) &
+                CALL errore ('phq_readin', 'gamma is needed for elec.field', 1)
   ENDIF
   IF (zue.AND..NOT.trans) CALL errore ('phq_readin', 'trans must be &
        &.t. for Zue calc.', 1)
@@ -384,8 +388,8 @@ SUBROUTINE phq_readin()
      CALL mp_bcast(ios, ionode_id )
      CALL errore ('phq_readin', 'reading number of FREQUENCIES', ABS(ios) )
      CALL mp_bcast(nfs, ionode_id )
-     if (nfs > nfsmax) call errore('phq_readin','Too many frequencies',1)
      if (nfs < 1) call errore('phq_readin','Too few frequencies',1)
+     ALLOCATE(fiu(nfs))
      IF (ionode) THEN
         IF ( TRIM(card) == 'FREQUENCIES' .OR. &
              TRIM(card) == 'frequencies' .OR. &
@@ -399,7 +403,8 @@ SUBROUTINE phq_readin()
      CALL errore ('phq_readin', 'reading FREQUENCIES card', ABS(ios) )
      CALL mp_bcast(fiu, ionode_id )
   ELSE
-     nfs=0
+     nfs=1
+     ALLOCATE(fiu(1))
      fiu=0.0_DP
   END IF
 
@@ -415,31 +420,53 @@ SUBROUTINE phq_readin()
   !
   tmp_dir_save=tmp_dir
   tmp_dir_ph= TRIM (tmp_dir) // '_ph' // TRIM(int_to_char(my_image_id)) //'/'
-  CALL create_directory(tmp_dir_ph)
+  IF (ionode) inquire (file =TRIM(tmp_dir_ph), exist = exst)
+  CALL mp_bcast( exst, ionode_id )
+  IF (.NOT. exst) CALL create_directory(tmp_dir_ph)
+  tmp_dir_phq=tmp_dir_ph
 
   ext_restart=.FALSE.
   ext_recover=.FALSE.
+  rec_code_read=-1000
   IF (recover) THEN
-     CALL ph_readfile('init',ierr)
-     IF (ierr /= 0 ) THEN
+!
+!    With a recover run we read here the mesh of q points, the current iq,
+!    and the current frequency
+!
+     CALL ph_readfile('init', 0, 0, ierr)
+     CALL ph_readfile('status_ph', 0, 0, ierr1)
+!
+!   If some error occured here, we cannot recover the run
+!
+     IF (ierr /= 0 .OR. ierr1 /= 0 ) THEN
+        write(stdout,'(5x,"Run is not recoverable starting from scratch")')
         recover=.FALSE.
         goto 1001
      ENDIF
-     tmp_dir=tmp_dir_ph
-     CALL check_restart_recover(ext_recover, ext_restart)
-     tmp_dir=tmp_dir_save
-     IF (ldisp) lgamma = (current_iq==1)
 !
-!  If there is a restart or a recover file ph.x has saved its own data-file
-!  and we read the initial information from that file
+!   We check if the bands and the information on the pw run are in the directory
+!   written by the phonon code for the current q point. If the file exists
+!   we read from there, otherwise use the information in outdir.
 !
-     IF ((ext_recover.OR.ext_restart).AND..NOT.lgamma) &
-                                                      tmp_dir=tmp_dir_ph
+     IF (lqdir) &
+        tmp_dir_phq= TRIM (tmp_dir_ph) //TRIM(prefix)//&
+                          & '.q_' // TRIM(int_to_char(current_iq))//'/'
+
+     filename=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/data-file.xml'
+     IF (ionode) inquire (file =TRIM(filename), exist = exst)
+     !
+     CALL mp_bcast( exst, ionode_id, intra_image_comm )
+     !
+     !  If this file exist we use it to recover the pw.x informations
+     !
+     IF (exst) tmp_dir=tmp_dir_phq
      u_from_file=.true.
   ENDIF
 1001 CONTINUE
 
   CALL read_file ( )
+
+  magnetic_sym=noncolin .AND. domag
   !
   ! init_start_grid returns .true. if a new k-point grid is set from values
   ! read from input (this happens if nk1*nk2*nk3, else it returns .false.,
@@ -479,26 +506,23 @@ SUBROUTINE phq_readin()
   IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
      CALL errore('phq_readin',&
      'pw.x run with a different number of pools. Use wf_collect=.true.',1)
+
 !
 !   Task groups not used in phonon. Activated only in some places
 !
   IF (get_ntask_groups() > 1) dffts%have_task_groups=.FALSE.
 
-
-!  IF (nbgrp /= 1) &
-!     CALL errore('phq_readin','band parallelization not available in phonon',1)
-
-  IF (elph.and.nimage>1) CALL errore('phq_readin',&
-       'el-ph with image parallelization is not yet available',1)
-
-  IF (elph.AND.recover) CALL errore('phq_readin',&
-     'Recovering of electron-phonon is not yet available',1)
-
+  IF (nproc_bgrp_file /= nproc_bgrp) &
+     CALL errore('phq_readin','pw.x run with different band parallelization',1)
+  
   if(elph_mat.and.fildvscf.eq.' ') call errore('phq_readin',&
        'el-ph with wannier requires fildvscf',1)
 
   IF(elph_mat.and.npool.ne.1) call errore('phq_readin',&
        'el-ph with wannier : pools not implemented',1)
+
+  IF(elph.and.nimage>1) call errore('phq_readin',&
+       'el-ph with images not implemented',1)
   
   IF (elph.OR.fildvscf /= ' ') lqdir=.TRUE.
 
@@ -603,6 +627,8 @@ SUBROUTINE phq_readin()
   !
   IF (ldisp .AND. (nq1 .LE. 0 .OR. nq2 .LE. 0 .OR. nq3 .LE. 0)) &
        CALL errore('phq_readin','nq1, nq2, and nq3 must be greater than 0',1)
+
+  CALL save_ph_input_variables()
   !
   RETURN
   !

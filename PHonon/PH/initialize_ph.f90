@@ -11,10 +11,9 @@ SUBROUTINE initialize_ph()
   !
   ! This is a driver to the phonon initialization routines.
   !
-  USE klist,  ONLY : nks
-  USE qpoint, ONLY : nksq, ikks, ikqs
+  USE klist,  ONLY : nks, nkstot
+  USE qpoint, ONLY : nksq, nksqtot, ikks, ikqs
   USE control_ph, ONLY : lgamma
-  USE ph_restart, ONLY : ph_writefile
   !
   IMPLICIT NONE
   INTEGER :: ik
@@ -24,6 +23,7 @@ SUBROUTINE initialize_ph()
   IF ( lgamma ) THEN
      !
      nksq = nks
+     nksqtot = nkstot
      ALLOCATE(ikks(nksq), ikqs(nksq))
      DO ik=1,nksq
         ikks(ik) = ik
@@ -33,6 +33,7 @@ SUBROUTINE initialize_ph()
   ELSE
      !
      nksq = nks / 2
+     nksqtot = nkstot / 2
      ALLOCATE(ikks(nksq), ikqs(nksq))
      DO ik=1,nksq
         ikks(ik) = 2 * ik - 1
@@ -40,11 +41,6 @@ SUBROUTINE initialize_ph()
      ENDDO
      !
   END IF
-  !
-  !  Save again the status of the run because now the bands have been
-  !  calculated
-  !
-  CALL ph_writefile('init',0)
   !
   !  Allocate the phonon variables
   !

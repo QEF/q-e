@@ -77,8 +77,8 @@ PROGRAM matdyn
   !     flfrq     output file for frequencies (default: 'matdyn.freq')
   !     flvec     output file for normalized phonon displacements 
   !               (default: 'matdyn.modes'). The normalized phonon displacements
-  !               are the eigenvectors divided by the square root of the mass
-  !               and then normalized. As such they are not orthogonal.
+  !               are the eigenvectors divided by the mass and then normalized.
+  !               As such they are not orthogonal.
   !              
   !     fleig     output file for phonon eigenvectors (default: 'matdyn.eig')
   !               The phonon eigenvectors are the eigenvectors of the dynamical
@@ -256,7 +256,7 @@ PROGRAM matdyn
      CALL mp_bcast(l1,ionode_id)
      CALL mp_bcast(l2,ionode_id)
      CALL mp_bcast(l3,ionode_id)
-     CALL mp_bcast(la2f,ionode_id)
+     CALL mp_bcast(la2F,ionode_id)
      CALL mp_bcast(q_in_band_form,ionode_id)
      CALL mp_bcast(eigen_similarity,ionode_id)
      CALL mp_bcast(q_in_cryst_coord,ionode_id)
@@ -452,7 +452,7 @@ PROGRAM matdyn
      ALLOCATE ( z(3*nat,3*nat), w2(3*nat,nq) )
      ALLOCATE ( tmp_w2(3*nat), abs_similarity(3*nat,3*nat), mask(3*nat) )
 
-     if(la2F.and.ionode) open(300,file='dyna2F',status='unknown')
+     if(la2F.and.ionode) open(unit=300,file='dyna2F',status='unknown')
      IF (xmlifc) CALL set_sym(nat, tau, ityp, nspin_mag, m_loc, 6, 6, 6 )
 
      ALLOCATE(num_rap_mode(3*nat,nq))
@@ -1860,7 +1860,7 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg
   USE symm_base,  ONLY : set_sym_bl, find_sym, s, irt, nsym, &
-                         nrot, t_rev, time_reversal,  sname
+                         nrot, time_reversal, t_rev, sname
   !
   IMPLICIT NONE
   ! input
@@ -1906,8 +1906,9 @@ SUBROUTINE a2Fdos &
   !
   USE kinds,      ONLY : DP
   USE io_global,   ONLY : ionode, ionode_id
+  USE mp_global,   ONLY : intra_image_comm
   USE mp,          ONLY : mp_bcast
-  USE ifconstants
+  USE ifconstants, ONLY : zeu, tau_blk
   USE constants,  ONLY : pi, RY_TO_THZ
   !
   IMPLICIT NONE
@@ -1929,40 +1930,44 @@ SUBROUTINE a2Fdos &
                               deg(10), fermi(10), E
   real(DP), parameter      :: eps_w2 = 0.0000001d0
   integer                  :: isig, ifn, n, m, na, nb, nc, nu, nmodes, &
-                              i,j,k, ngauss, jsig, p1, p2, p3, filea2F
-  character(len=14)        :: name
+                              i,j,k, ngauss, jsig, p1, p2, p3, filea2F, ios
+  character(len=256)        :: name
+  character(len=256)        :: elph_dir
   real(DP), external       :: dos_gam
   CHARACTER(LEN=6)         :: int_to_char
   !
   !
   nmodes = 3*nat
-  IF (ionode) THEN
-  do isig=1,10
+  elph_dir='elph_dir/'
+  DO isig=1,10
      filea2F = 60 + isig
-     write(name,"(A10,I2)") 'a2Fmatdyn.',filea2F
-     open(filea2F, file=name, STATUS = 'unknown')
-     READ(filea2F,*) deg(isig), fermi(isig), dos_ee(isig)
-  enddo
-  ENDIF 
-  call mp_bcast(deg, ionode_id)
-  call mp_bcast(fermi, ionode_id)
-  call mp_bcast(dos_ee, ionode_id)
+     name= TRIM(elph_dir) // 'a2Fmatdyn.' // TRIM(int_to_char(filea2F))
+     IF (ionode) open(unit=filea2F, file=TRIM(name), &
+                               STATUS = 'unknown', IOSTAT=ios)
+     CALL mp_bcast(ios, ionode_id, intra_image_comm)
+     IF (ios /= 0) CALL errore('a2Fdos','problem opening file'//TRIM(name),1)
+     IF (ionode) &
+           READ(filea2F,*) deg(isig), fermi(isig), dos_ee(isig)
+  ENDDO
+  call mp_bcast(deg, ionode_id, intra_image_comm)
+  call mp_bcast(fermi, ionode_id, intra_image_comm)
+  call mp_bcast(dos_ee, ionode_id, intra_image_comm)
   !
   IF (ionode) THEN
-  IF(dos) then
-     open(400,file='lambda',status='unknown')
-     write(400,*)
-     write(400,*) ' Electron-phonon coupling constant, lambda '
-     write(400,*)
-  ELSE
-     open (20,file='gam.lines' ,status='unknown')
-     write(20,*)
-     write(20,*) ' Gamma lines for all modes [THz] '
-     write(20,*)
-     write(6,*)
-     write(6,*) ' Gamma lines for all modes [Rydberg] '
-     write(6,*)
-  ENDIF
+     IF(dos) THEN
+       open(unit=400,file='lambda',status='unknown')
+       write(400,*)
+       write(400,*) ' Electron-phonon coupling constant, lambda '
+       write(400,*)
+    ELSE
+       open (unit=20,file='gam.lines' ,status='unknown')
+       write(20,*)
+       write(20,*) ' Gamma lines for all modes [THz] '
+       write(20,*)
+       write(6,*)
+       write(6,*) ' Gamma lines for all modes [Rydberg] '
+       write(6,*)
+    ENDIF
   ENDIF
   !
   ALLOCATE ( frcg(nr1,nr2,nr3,3,3,nat,nat) )
@@ -1978,7 +1983,7 @@ SUBROUTINE a2Fdos &
         CALL set_asr (asr, nr1, nr2, nr3, frcg, zeu, nat_blk, ibrav, tau_blk)
      endif
      !
-     IF (ionode) open(300,file='dyna2F',status='old')
+     IF (ionode) open(unit=300,file='dyna2F',status='old')
      !
      do n = 1 ,nq
         gam(:,:,:,:) = (0.d0, 0.d0)
@@ -2059,10 +2064,10 @@ SUBROUTINE a2Fdos &
               !
            enddo
            lambda = lambda + 2.d0 * dos_tot/E * DeltaE
-           write (ifn, '(3X,2F12.6)') E, dos_tot
-           write (ifn, '(6F16.8)') (dos_a2F(j),j=1,nmodes)
+!           write (ifn, '(3X,2F12.6)') E, dos_tot
+           write (ifn, '(6F16.8)') E, (dos_a2F(j),j=1,nmodes)
         enddo  !ndos
-        write(ifn,*) " lambda =",lambda,'   Delta = ',DeltaE
+!        write(ifn,*) " lambda =",lambda,'   Delta = ',DeltaE
         close (ifn)
         write(400,'(" Broadening ",F8.4," lambda ",F12.4," dos(Ef)",F8.4)') &
              deg(isig),lambda, dos_ee(isig)
@@ -2348,8 +2353,8 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
 
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg
-  USE symm_base,  ONLY : find_sym, s, sr, ftau, irt, nsym, &
-                         nrot, t_rev, time_reversal, sname, copy_sym, &
+  USE symm_base,  ONLY : find_sym, s, sr, ftau, irt, time_reversal, nsym, &
+                         nrot, t_rev, sname, copy_sym, &
                          s_axis_to_cart
 
   IMPLICIT NONE
@@ -2361,11 +2366,12 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
   CHARACTER(15), INTENT(OUT) :: name_rap_mode(3*nat)
   INTEGER, INTENT(OUT) :: num_rap_mode(3*nat)
   REAL(DP) :: gi (3, 48), gimq (3), sr_is(3,3,48), rtau(3,48,nat)
-  INTEGER :: irotmq, nsymq, nsym_is, isym, i
+  INTEGER :: irotmq, nsymq, nsym_is, isym, i, ierr
   LOGICAL :: minus_q, search_sym, sym(48), magnetic_sym
 !
 !  find the small group of q
 !
+  time_reversal=.TRUE.
   IF (.NOT.time_reversal) minus_q=.FALSE.
 
   sym(1:nsym)=.true.
@@ -2394,9 +2400,9 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
      CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym)
      sym (1:nsym) = .TRUE.
      CALL sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
-     CALL find_mode_sym (u, w2, at, bg, tau, nat, nsymq, sr, irt, xq, rtau, &
-                         amass, ntyp, ityp, 1, .FALSE., .FALSE., &
-                         nspin_mag, name_rap_mode, num_rap_mode)
+     CALL find_mode_sym_new (u, w2, tau, nat, nsymq, sr, irt, xq,    &
+             rtau, amass, ntyp, ityp, 1, .FALSE., .FALSE., num_rap_mode, ierr)
+
   ENDIF
   RETURN
   END SUBROUTINE find_representations_mode_q

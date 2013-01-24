@@ -30,6 +30,7 @@ subroutine zstar_eu
   USE efield_mod,   ONLY : zstareu0, zstareu
   USE units_ph,  ONLY : iudwf, lrdwf, iuwfc, lrwfc
   USE control_ph,ONLY : nbnd_occ, done_zeu
+  USE ph_restart, ONLY : ph_writefile
 
   USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                    ONLY : mp_sum
@@ -37,7 +38,7 @@ subroutine zstar_eu
   implicit none
 
   integer :: ibnd, ipol, jpol, icart, na, nu, mu, imode0, irr, &
-       imode, nrec, mode, ik
+       imode, nrec, mode, ik, ierr
   ! counters
   real(DP) :: weight
   complex(DP), external :: zdotc
@@ -119,6 +120,7 @@ subroutine zstar_eu
 
   done_zeu=.TRUE.
   call summarize_zeu()
+  CALL ph_writefile('tensors',0,0,ierr)
 
   call stop_clock ('zstar_eu')
   return

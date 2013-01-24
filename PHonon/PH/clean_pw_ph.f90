@@ -19,7 +19,7 @@ SUBROUTINE clean_pw_ph(iq)
   USE modes,           ONLY : nirr, nsymq
   USE partial,         ONLY : done_irr
   USE disp,            ONLY : done_iq
-  USE control_ph,      ONLY : done_bands, rec_code_read
+  USE control_ph,      ONLY : rec_code_read
   USE save_ph,         ONLY : restore_ph_input_variables
   !
   IMPLICIT NONE
@@ -28,7 +28,6 @@ SUBROUTINE clean_pw_ph(iq)
   !
   INTEGER :: irr
   !
-  done_bands=.FALSE.
   done_iq(iq)=.TRUE.
   DO irr=1,nirr
      IF (.NOT.done_irr(irr)) done_iq(iq)=.FALSE.

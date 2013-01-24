@@ -249,14 +249,14 @@ cat > lambda.in << EOF
     -0.5000000 -0.5000000  1.0000000  12.00  !
      0.0000000  0.0000000  1.0000000   3.00  !
     -0.5000000  0.0000000  1.0000000   6.00  ! the last q-point 
-elph. 0.000000. 0.000000. 0.000000 ! elph output file names,
-elph.-0.250000. 0.250000.-0.250000 ! in the same order as the q-points before  
-elph. 0.500000.-0.500000. 0.500000
-elph. 0.000000. 0.500000. 0.000000
-elph. 0.750000.-0.250000. 0.750000
-elph. 0.500000. 0.000000. 0.500000
-elph. 0.000000.-1.000000. 0.000000
-elph.-0.500000.-1.000000. 0.000000
+elph_dir/elph.inp_lambda.1 ! elph output file names,
+elph_dir/elph.inp_lambda.2 ! in the same order as the q-points before
+elph_dir/elph.inp_lambda.3
+elph_dir/elph.inp_lambda.4
+elph_dir/elph.inp_lambda.5
+elph_dir/elph.inp_lambda.6
+elph_dir/elph.inp_lambda.7
+elph_dir/elph.inp_lambda.8
 0.10                     ! \mu the Coloumb coefficient in the modified
                          ! Allen-Dynes formula for T_c (via \omega_log)
 EOF

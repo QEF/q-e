@@ -13,7 +13,7 @@ SUBROUTINE q_points_wannier ( )
   USE io_global,      ONLY : stdout, ionode, ionode_id
   USE io_files,       ONLY : prefix
   USE mp,             ONLY : mp_bcast
-  USE disp,           ONLY : nq1, nq2, nq3, x_q, nqs
+  USE disp,           ONLY : nq1, nq2, nq3, x_q, nqs, lgamma_iq
   USE output,         ONLY : fildyn
   USE el_phon,        ONLY : wan_index_dyn
   USE dfile_autoname, ONLY : dfile_get_qlist
@@ -41,6 +41,7 @@ SUBROUTINE q_points_wannier ( )
   nqs=nq1*nq2*nq3
  
   if(last_q.lt.nqs.and.last_q.gt.0) nqs=last_q
+  allocate (lgamma_iq(nqs))
   allocate (x_q(3,nqs))
   allocate(wan_index_dyn(nqs))
 
@@ -64,6 +65,8 @@ SUBROUTINE q_points_wannier ( )
         end if
      end if
   end do
+  lgamma_iq=.FALSE.
+  lgamma_iq(1)=.TRUE.
   !
   ! Write the q points in the output
   !

@@ -29,7 +29,7 @@ SUBROUTINE phescf()
   !
   IMPLICIT NONE
   !
-  INTEGER :: iu
+  INTEGER :: iu, ierr
   !
   !
   IF ( rec_code_read >  1 ) THEN
@@ -55,7 +55,7 @@ SUBROUTINE phescf()
      freq_loop : DO WHILE ( iu .gt. 0)
         !
         CALL solve_e_fpol( fiu(iu) )
-        IF ( convt ) CALL polariz ( fiu(iu) )
+        IF ( convt ) CALL polariz ( fiu(iu) , iu)
         iu = iu - 1
         !
      END DO freq_loop
@@ -105,7 +105,7 @@ SUBROUTINE phescf()
      !
      where_rec='after_diel'
      rec_code=2
-     CALL ph_writefile('data',0)
+     CALL ph_writefile('status_ph',0,0,ierr)
   ELSE
      IF (done_epsil) call summarize_epsilon()
      IF (done_zeu) call summarize_zeu()

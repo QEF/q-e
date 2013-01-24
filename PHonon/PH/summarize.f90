@@ -165,3 +165,23 @@ ENDDO
 
 RETURN
 END SUBROUTINE summarize_elopt
+
+SUBROUTINE summarize_fpol ()
+  !-----------------------------------------------------------------------
+
+  USE kinds, only : DP
+  USE freq_ph,    ONLY : nfs, done_iu
+
+  IMPLICIT NONE
+  ! input variables
+
+  INTEGER :: iu
+  ! counter on frequencies
+  !
+  DO iu=nfs, 1, -1
+     IF ( done_iu(iu) ) CALL write_polariz(iu)
+  END DO
+
+  RETURN
+END SUBROUTINE summarize_fpol
+!

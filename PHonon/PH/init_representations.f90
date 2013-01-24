@@ -5,30 +5,29 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
 !-----------------------------------------------------------------------
 subroutine init_representations()
   !-----------------------------------------------------------------------
   !
   !  This subroutine initializes the modes of all irreducible representations
-  !  for all q points. It writes the file data-file.#q.x. It is used by 
-  !  unrecovered phonon runs.
-  !
+  !  for all q points. It writes the files patterns.#q.xml in the outdir 
+  !  directory. It is used by unrecovered  phonon runs. The small group of 
+  !  q must be calculated for each q. Note that all images receives the 
+  !  same modes calculated by the root processor and save them on file. 
   !
   USE kinds,         ONLY : DP
-  USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp, amass
+  USE ions_base,     ONLY : tau, nat
   USE cell_base,     ONLY : at, bg
-  USE symm_base,     ONLY : nrot, nsym, sr, ftau, irt, t_rev, time_reversal, &
-                            sname, invs, s  
-  USE control_ph,    ONLY : rec_code, search_sym, search_sym_save, lgamma, &
-                            where_rec, current_iq, u_from_file
-  USE modes,         ONLY : u, npertx, npert, gi, gimq, nirr, &
-                            t, tmq, irotmq, minus_q, invsymq, &
-                            nsymq, nmodes, rtau, name_rap_mode, num_rap_mode
+  USE io_global,     ONLY : stdout
+  USE symm_base,     ONLY : nsym, sr, ftau, irt, time_reversal, t_rev, s
+  USE control_ph,    ONLY : search_sym, lgamma, current_iq, u_from_file, &
+                            search_sym_save
+  USE modes,         ONLY : u, npert, gi, gimq, nirr, irotmq, minus_q, &
+                            invsymq, nsymq, nmodes, rtau, name_rap_mode, &
+                            num_rap_mode
   USE qpoint,        ONLY : xq
-  USE disp,          ONLY : x_q, nqs, nsymq_iq, rep_iq, npert_iq
-  USE noncollin_module, ONLY : noncolin
-  USE spin_orb,      ONLY : domag
+  USE disp,          ONLY : x_q, nqs, lgamma_iq
+  USE cryst_ph,      ONLY : magnetic_sym
   USE ph_restart,    ONLY : ph_writefile
   USE control_flags, ONLY : modenum, noinv
   USE mp,            ONLY : mp_bcast
@@ -36,14 +35,9 @@ subroutine init_representations()
 
   implicit none
 
-  real(DP) :: sr_is(3,3,48)
-
-  integer :: ir,  isym, jsym, &
-       mu, nu, irr, na, it, nt, is, js, nsym_is, iq
+  integer ::  isym, irr, iq
   ! counters
-
-  logical :: sym (48), magnetic_sym, is_symmorphic
-  ! the symmetry operations
+  LOGICAL, EXTERNAL :: symmorphic_or_nzb
   integer :: ierr
 
   call start_clock ('init_rep')
@@ -54,22 +48,18 @@ subroutine init_representations()
   allocate (num_rap_mode( 3 * nat))
   allocate (npert ( 3 * nat))
 
-  name_rap_mode=' '
   u_from_file=.FALSE.
-
-  magnetic_sym = noncolin .AND. domag
   !
   ! allocate and calculate rtau, the rotated position of each atom
   !
   nmodes = 3 * nat
   minus_q = (modenum .eq. 0)
+  IF ( .not. time_reversal ) minus_q = .false.
   ! if minus_q=.t. set_irr will search for Sq=-q+G symmetry.
   ! On output minus_q=.t. if such a symmetry has been found
-  ! TEMP: set_irr_* should not find again the small group of q
-  !
   DO iq=1, nqs
      xq(1:3)  = x_q(1:3,iq)
-     lgamma = ( xq(1) == 0.D0 .AND. xq(2) == 0.D0 .AND. xq(3) == 0.D0 )
+     lgamma = lgamma_iq(iq)
 !
 !    search for the small group of q
 !
@@ -80,21 +70,15 @@ subroutine init_representations()
      CALL sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
 !
 !    and calculate the vectors G associated to the symmetry Sq = q + G
-!    if minus_q is true calculate also irotmq and the G associated to Sq=-q+G
+!    if minus_q is true calculate also irotmq and the G associated to Sq=-g+G
 !
      CALL set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
-
-
-     is_symmorphic=.NOT.(ANY(ftau(:,1:nsymq) /= 0))
-     search_sym=search_sym_save
-     IF (.NOT.is_symmorphic) THEN
-        DO isym=1,nsymq
-           search_sym=( search_sym.and.(abs(gi(1,isym))<1.d-8).and.  &
-                                       (abs(gi(2,isym))<1.d-8).and.  &
-                                       (abs(gi(3,isym))<1.d-8) )
-        END DO
-     END IF
+!
+!    Check if we can search symmetry for this q point
+!
+     search_sym = search_sym_save .AND. symmorphic_or_nzb()
      num_rap_mode=-1
+     name_rap_mode=' '
      IF (search_sym) CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym)
 
      CALL find_irrep()
@@ -108,20 +92,10 @@ subroutine init_representations()
      CALL mp_bcast (name_rap_mode, root, world_comm)
      CALL mp_bcast (num_rap_mode, root, world_comm)
 
-     nsymq_iq(iq) = nsymq
-     rep_iq(iq) = nirr
-     DO irr=1, nirr
-        npert_iq(irr,iq)=npert(irr)
-     ENDDO
-
-     current_iq=iq
-     where_rec='init_rep..'
-     rec_code=-50
-     CALL ph_writefile('data',0)
-     CALL deallocate_pert()
+     CALL ph_writefile('data_u',iq,0,ierr)
   ENDDO
-  search_sym=search_sym_save
   u_from_file=.TRUE.
+  search_sym=search_sym_save
 
   DEALLOCATE (rtau)
   DEALLOCATE (u)
@@ -132,3 +106,76 @@ subroutine init_representations()
   CALL stop_clock ('init_rep')
   RETURN
 END SUBROUTINE init_representations
+
+!-----------------------------------------------------------------------
+subroutine initialize_grid_variables()
+  !-----------------------------------------------------------------------
+  !
+  !  This subroutine initializes the grid variables by reading the
+  !  modes from file. It uses the routine check_if_partial_dyn to 
+  !  set the modes to compute according to start_irr, last_irr or
+  !  modenum and ifat flags.
+  !
+  USE kinds,         ONLY : DP
+  USE ions_base,     ONLY : nat
+  USE modes,         ONLY : u, npert, nirr, nsymq, name_rap_mode, num_rap_mode
+  USE disp,          ONLY : nqs, comp_iq
+  USE partial,       ONLY : comp_irr
+  USE grid_irr_iq,   ONLY : nsymq_iq, irr_iq, npert_irr_iq, comp_irr_iq
+  USE ph_restart,    ONLY : ph_readfile
+  USE control_ph,    ONLY : start_q, last_q
+  USE mp,            ONLY : mp_bcast
+  USE mp_global,     ONLY : root, world_comm
+
+  implicit none
+
+  integer ::  irr, iq
+  ! counters
+  integer :: ierr
+
+  allocate (u ( 3 * nat, 3 * nat))
+  allocate (name_rap_mode( 3 * nat))
+  allocate (num_rap_mode( 3 * nat))
+  allocate (npert ( 3 * nat))
+
+  DO iq=1, nqs
+!
+!  Only the modes calculated by node zero are sent to all images
+!
+     CALL ph_readfile('data_u', iq, 0, ierr)
+     IF (ierr /= 0) call errore('initialize_grid_variables',&
+                                'problems reading u',1)
+
+     nsymq_iq(iq) = nsymq
+     irr_iq(iq) = nirr
+     DO irr=1, nirr
+        npert_irr_iq(irr,iq)=npert(irr)
+     ENDDO
+!
+!    here we deal with start_irr, last_irr, OR of modenum OR of ifat atomo
+!
+     CALL check_if_partial_dyn(u, nirr, npert, comp_irr)
+     comp_irr_iq(:,iq)=comp_irr(:)
+  ENDDO
+!
+!  here deal with the start_q, last_q flags
+!
+  comp_iq=.FALSE.
+  DO iq=1,nqs
+     IF (iq>=start_q.AND.iq<=last_q) THEN
+        DO irr=1,irr_iq(iq)
+           IF (comp_irr_iq(irr,iq)) comp_iq(iq)=.TRUE.
+        ENDDO
+     ELSE
+        comp_irr_iq(:,iq)=.FALSE.
+     ENDIF
+  ENDDO
+
+  DEALLOCATE (u)
+  DEALLOCATE (npert)
+  DEALLOCATE (num_rap_mode)
+  DEALLOCATE (name_rap_mode)
+
+  RETURN
+END SUBROUTINE initialize_grid_variables
+

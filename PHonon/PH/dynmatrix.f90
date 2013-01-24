@@ -33,7 +33,8 @@ subroutine dynmatrix_new(iq_)
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0, zstarue
   USE control_ph,    ONLY : epsil, zue, lgamma, lgamma_gamma, search_sym, ldisp, &
                             start_irr, last_irr, done_zue, where_rec, &
-                            rec_code, ldiag, done_epsil, done_zeu, xmldyn
+                            rec_code, ldiag, done_epsil, done_zeu, xmldyn, &
+                            current_iq
   USE ph_restart,    ONLY : ph_writefile
   USE partial,       ONLY : all_comp, comp_irr, done_irr, nat_todo_input
   USE units_ph,      ONLY : iudyn
@@ -230,7 +231,7 @@ subroutine dynmatrix_new(iq_)
 !
   rec_code=30
   where_rec='dynmatrix.'
-  CALL ph_writefile('data',0)
+  CALL ph_writefile('status_ph',current_iq,0,ierr)
 
   call stop_clock('dynmatrix')
   return

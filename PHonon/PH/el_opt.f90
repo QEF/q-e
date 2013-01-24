@@ -23,16 +23,16 @@ subroutine el_opt
   USE wvfct,      ONLY : nbnd, npw, npwx
   USE units_ph,   ONLY : iudrho, lrdrho, lrdwf, iudwf
   USE control_ph, ONLY : nbnd_occ
+  USE ph_restart, ONLY : ph_writefile
   USE ramanm,     ONLY : eloptns, jab, lrchf, iuchf, done_elop
   USE io_global, ONLY: ionode_id
-
   USE mp, ONLY: mp_bcast, mp_sum
-  USE mp_global, ONLY: my_pool_id, inter_pool_comm, intra_bgrp_comm, &
+  USE mp_global, ONLY: my_bgrp_id, inter_pool_comm, intra_bgrp_comm, &
                       intra_image_comm
   implicit none
 
   logical wr_all
-  integer :: ik, ir, ipa, ipb, ipc, nrec, ibnd, il, ntm
+  integer :: ik, ir, ipa, ipb, ipc, nrec, ibnd, il, ntm, ierr
   real(DP) :: weight, fac, elop_ (3, 3, 3, 3), ps3 (3, 3, 3)
   real(DP) :: d2mxc, rhotot
   ! external function
@@ -97,9 +97,8 @@ subroutine el_opt
   do ipa = 1, 3
      call davcio_drho (aux3 (1, ipa), lrdrho, iudrho, ipa, -1)
   enddo
-#ifdef __MPI
-  if (my_pool_id .ne. 0) goto 100
-#endif
+
+  if (my_bgrp_id .ne. 0) goto 100
 
   d2muxc (:) = 0.0_dp
   do ir = 1, dfftp%nnr
@@ -181,6 +180,7 @@ subroutine el_opt
   enddo
 
   done_elop=.TRUE.
+  CALL ph_writefile('tensors',0,0,ierr)
   call stop_clock('el_opt')
   return
 end subroutine el_opt

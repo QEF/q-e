@@ -16,9 +16,9 @@ subroutine phq_recover
   !    info on calculated irreps - overrides initialization in phq_setup.
   !    The xml file is in the
   !    directory _phprefix.phsave. The xml file contains
-  ! where_rec  a string with information of the point where the calculation
-  !            stopped
-  !   rec_code_read  where_rec     status description
+  !    where_rec  a string with information of the point where the calculation
+  !               stopped
+  !    rec_code_read  where_rec     status description
   !
   !  -1000                    Nothing has been read. There is no recover file.
   !  -40         phq_setup    Only the displacements u have been read from file
@@ -36,7 +36,6 @@ subroutine phq_recover
   !   20         phqscf       all previous dyn_rec(irr) and zstarue0(irr) are
   !                           available.
   !   30         dynmatrix    all previous, dyn and zstarue are available.
-
   !
   ! The logic of the phonon code recover is the following:
   ! The recover variable is read from input and never changed. If it is
@@ -83,21 +82,26 @@ subroutine phq_recover
   !    be available in the directory phsave, so this routine reads the
   !    appropriate files and reset comp_irr and done_irr if appropriate.
   !
-  !    NB: The restart of the electron-phonon part is not available yet.
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE ph_restart,    ONLY : ph_readfile
   USE control_ph,    ONLY : epsil, rec_code_read, all_done, where_rec,&
-                            zeu, done_epsil, done_zeu, ext_recover, recover
+                            zeu, done_epsil, done_zeu, ext_recover, recover, &
+                            lgamma, zue, trans, current_iq
+  USE wvfct,         ONLY : nbnd
+  USE qpoint,        ONLY : nksq
+  USE el_phon,       ONLY : el_ph_mat, el_ph_mat_rec, done_elph, elph
+  USE efield_mod,    ONLY : zstarue0, zstarue0_rec
   USE partial,       ONLY : comp_irr, done_irr
-  USE modes,         ONLY : nirr
+  USE modes,         ONLY : nirr, npert
   USE ramanm,        ONLY : lraman, elop, done_lraman, done_elop
-
+  USE freq_ph,       ONLY : fpol, done_fpol, done_iu, nfs
+  USE dynmat,        ONLY : dyn, dyn_rec
   !
   implicit none
   !
-  integer :: irr, ierr
+  integer :: irr, ierr, ierr1, iu, npe, imode0
   ! counter on representations
   ! error code
   logical :: exst
@@ -105,9 +109,46 @@ subroutine phq_recover
 
   ierr=0
   IF (recover) THEN
-     CALL ph_readfile('data',ierr)
+     IF (lgamma) CALL ph_readfile('tensors', 0, 0, ierr1)
+     IF (fpol.and.lgamma) THEN
+        done_fpol=.TRUE.
+        DO iu=1,nfs
+           CALL ph_readfile('polarization', 0, iu, ierr1)
+           done_fpol=done_fpol.AND.done_iu(iu)
+        END DO
+     ENDIF
+     dyn = (0.0_DP, 0.0_DP )
+     done_irr=.FALSE.
+     imode0=0
+     IF (elph) THEN
+        el_ph_mat=(0.0_DP, 0.0_DP)
+        done_elph=.FALSE.
+     ENDIF
+     DO irr=0, nirr
+        IF (trans.OR.elph) THEN
+           CALL ph_readfile('data_dyn', current_iq, irr, ierr1)
+           IF (ierr1 == 0) THEN
+              dyn = dyn + dyn_rec
+              IF (zue.and.irr>0) zstarue0 = zstarue0 + zstarue0_rec
+           ENDIF
+        END IF
+        IF ( elph .and. irr > 0 ) THEN
+           npe = npert(irr)
+           ALLOCATE(el_ph_mat_rec(nbnd,nbnd,nksq,npe))
+           CALL ph_readfile('el_phon', current_iq, irr, ierr1)
+           IF (ierr1 == 0) THEN
+              el_ph_mat(:,:,:,imode0+1:imode0+npe) = &
+                  el_ph_mat(:,:,:,imode0+1:imode0+npe) + el_ph_mat_rec(:,:,:,:)
+           ENDIF
+           DEALLOCATE(el_ph_mat_rec)
+           imode0=imode0 + npe
+        END IF
+     ENDDO
+
      IF (rec_code_read==-40) THEN
         WRITE( stdout, '(/,4x," Modes are read from file ")')
+     ELSEIF (rec_code_read==-25) THEN
+        WRITE( stdout, '(/,4x," Restart in Polarization calculation")')
      ELSEIF (rec_code_read==-20) THEN
         WRITE( stdout, '(/,4x," Restart in Electric Field calculation")')
      ELSEIF (rec_code_read==-10) then
@@ -133,13 +174,14 @@ subroutine phq_recover
 !
   all_done=.true.
   DO irr = 1, nirr
-     IF ( (comp_irr (irr)) .AND. (.NOT.done_irr (irr)) ) all_done=.false.
+     IF ( comp_irr(irr) .AND. .NOT.done_irr(irr)  ) all_done=.false.
   ENDDO
   IF (rec_code_read < 2) THEN
      IF (epsil.AND..NOT.done_epsil) all_done=.FALSE.
      IF (zeu.AND..NOT.done_zeu) all_done=.FALSE.
      IF (lraman.AND..NOT.done_lraman) all_done=.FALSE.
      IF (elop.AND..NOT.done_elop) all_done=.FALSE.
+     IF (fpol.AND..NOT.done_fpol) all_done=.FALSE.
   END IF
 
   RETURN

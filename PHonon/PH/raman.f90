@@ -15,8 +15,11 @@ subroutine raman
   USE control_flags, ONLY : gamma_only
   USE uspp, ONLY: okvan
   USE control_ph, ONLY : epsil, convt, rec_code_read, lgamma
+  USE ph_restart, ONLY : ph_writefile
   USE ramanm, ONLY: lraman, elop, done_lraman, done_elop
   implicit none
+
+  INTEGER :: ierr
 
   if (okvan) &
       call errore ('raman','Ultrasoft pseudopotentials not implemented',1)
@@ -33,18 +36,23 @@ subroutine raman
      write (6,'(/,5x,''Skipping computation of Pc [DH,Drho] |psi> '')')
   ELSE
      write (6,'(/,5x,''Computing Pc [DH,Drho] |psi> '')')
-     call dhdrhopsi ( )
+     call dhdrhopsi ( ) 
   END IF
   !
   ! Computes the electro-optic tensor
   !
-  if (elop.and..not.done_elop) call el_opt
+  IF (elop.AND..NOT.done_elop) THEN
+     call el_opt()
+  ELSEIF (done_elop) THEN
+     CALL summarize_elopt()
+  ENDIF
+     
   if (.not.lraman) return
   write (6,'(/,5x,''Computing Second order response '')')
   !
   ! Computes the potential that remains unchanged in the scf-cycle
   !
-  call dvpsi_e2 ( )
+  call dvpsi_e2 ( ) 
   !
   ! Self-consistent cycle to compute the second derivative of the charge
   !
@@ -55,5 +63,6 @@ subroutine raman
   call raman_mat ( )
 
   done_lraman=.TRUE.
+  CALL ph_writefile('tensors',0, 0, ierr)
   return
 end subroutine raman

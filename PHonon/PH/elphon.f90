@@ -22,6 +22,7 @@ SUBROUTINE elphon()
   USE phus,       ONLY : int3, int3_nc, int3_paw
   USE uspp,  ONLY: okvan
   USE paw_variables, ONLY : okpaw
+  USE el_phon,  ONLY : done_elph
   USE dynmat, ONLY : dyn, w2
   USE qpoint, ONLY : xq
   USE modes,  ONLY : npert, nirr, u
@@ -38,7 +39,12 @@ SUBROUTINE elphon()
   ! counter on the modes
   ! the change of Vscf due to perturbations
   COMPLEX(DP), POINTER :: dvscfin(:,:,:), dvscfins (:,:,:)
-
+!
+!  This routine has to be called only if all representations are available
+!  
+  DO irr=1,nirr
+     IF (.NOT.done_elph(irr)) RETURN
+  ENDDO
 
   CALL start_clock ('elphon')
 
@@ -76,7 +82,7 @@ SUBROUTINE elphon()
         dvscfins => dvscfin
      ENDIF
      CALL newdq (dvscfin, npert(irr))
-     CALL elphel (npert (irr), imode0, dvscfins)
+     CALL elphel (irr, npert (irr), imode0, dvscfins)
      !
      imode0 = imode0 + npe
      IF (doublegrid) DEALLOCATE (dvscfins)
@@ -190,7 +196,7 @@ SUBROUTINE readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
 END SUBROUTINE readmat
 !
 !-----------------------------------------------------------------------
-SUBROUTINE elphel (npe, imode0, dvscfins)
+SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   !-----------------------------------------------------------------------
   !
   !      Calculation of the electron-phonon matrix elements el_ph_mat
@@ -206,27 +212,36 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wvfct, ONLY: nbnd, npw, npwx, igk
   USE uspp, ONLY : vkb
-  USE el_phon, ONLY : el_ph_mat
+  USE el_phon, ONLY : el_ph_mat, el_ph_mat_rec, el_ph_mat_rec_col, &
+                      comp_elph, done_elph
   USE modes, ONLY : u
   USE units_ph, ONLY : iubar, lrbar, lrwfc, iuwfc
   USE eqv,      ONLY : dvpsi, evq
-  USE qpoint,   ONLY : igkq, npwq, nksq, ikks, ikqs
-  USE control_ph, ONLY : trans, lgamma
-  USE mp_global, ONLY: intra_bgrp_comm
+  USE qpoint,   ONLY : igkq, npwq, nksq, ikks, ikqs, nksqtot
+  USE control_ph, ONLY : trans, lgamma, current_iq
+  USE ph_restart, ONLY : ph_writefile
+  USE mp_global, ONLY: intra_bgrp_comm, npool
   USE mp,        ONLY: mp_sum
 
   IMPLICIT NONE
   !
-  INTEGER :: npe, imode0
-  COMPLEX(DP) :: dvscfins (dffts%nnr, nspin_mag, npe)
+  INTEGER, INTENT(IN) :: irr, npe, imode0
+  COMPLEX(DP), INTENT(IN) :: dvscfins (dffts%nnr, nspin_mag, npe)
   ! LOCAL variables
   INTEGER :: nrec, ik, ikk, ikq, ipert, mode, ibnd, jbnd, ir, ig, &
-       ios
+       ios, ierr
   COMPLEX(DP) , ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:)
   COMPLEX(DP), EXTERNAL :: zdotc
+  LOGICAL :: htg
   !
+  IF (.NOT. comp_elph(irr) .OR. done_elph(irr)) RETURN
+  htg = dffts%have_task_groups
+  dffts%have_task_groups=.FALSE.
+
   ALLOCATE (aux1    (dffts%nnr, npol))
   ALLOCATE (elphmat ( nbnd , nbnd , npe))
+  ALLOCATE( el_ph_mat_rec (nbnd,nbnd,nksq,npe) )
+  el_ph_mat_rec=(0.0_DP,0.0_DP)
   !
   !  Start the loops over the k-points
   !
@@ -308,11 +323,24 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
         DO jbnd = 1, nbnd
            DO ibnd = 1, nbnd
               el_ph_mat (ibnd, jbnd, ik, ipert + imode0) = elphmat (ibnd, jbnd, ipert)
+              el_ph_mat_rec (ibnd, jbnd, ik, ipert ) = elphmat (ibnd, jbnd, ipert)
            ENDDO
         ENDDO
      ENDDO
   ENDDO
   !
+  done_elph(irr)=.TRUE.
+  IF (npool>1) THEN
+     ALLOCATE(el_ph_mat_rec_col(nbnd,nbnd,nksqtot,npe))
+     CALL el_ph_collect(npe,el_ph_mat_rec,el_ph_mat_rec_col,nksqtot,nksq)
+   ELSE
+     el_ph_mat_rec_col => el_ph_mat_rec
+  ENDIF
+  CALL ph_writefile('el_phon',current_iq,irr,ierr)
+  IF (npool > 1) DEALLOCATE(el_ph_mat_rec_col)
+  DEALLOCATE(el_ph_mat_rec)
+  !
+  dffts%have_task_groups=htg
   DEALLOCATE (elphmat)
   DEALLOCATE (aux1)
   !
@@ -338,14 +366,15 @@ SUBROUTINE elphsum ( )
   USE noncollin_module, ONLY: nspin_lsda, nspin_mag
   USE wvfct,       ONLY: nbnd, et
   USE parameters,  ONLY : npk
-  USE el_phon,     ONLY : el_ph_mat
+  USE el_phon,     ONLY : el_ph_mat, done_elph
   USE qpoint,      ONLY : xq, nksq
-  USE modes,       ONLY : u, minus_q, nsymq, rtau
+  USE modes,       ONLY : u, minus_q, nsymq, rtau, nirr
   USE dynmat,      ONLY : dyn, w2
   USE io_global,   ONLY : stdout, ionode, ionode_id
+  USE xml_io_base, ONLY : create_directory
   USE mp_global,   ONLY : my_pool_id, npool, kunit, intra_image_comm
   USE mp,          ONLY : mp_bcast
-  USE control_ph,  ONLY : lgamma, tmp_dir_phq, xmldyn
+  USE control_ph,  ONLY : lgamma, tmp_dir_phq, xmldyn, current_iq
   USE save_ph,     ONLY : tmp_dir_save
   USE io_files,    ONLY : prefix, tmp_dir, seqopn
   !
@@ -396,9 +425,22 @@ SUBROUTINE elphsum ( )
   REAL(DP), ALLOCATABLE :: xk_collect(:,:), wk_collect(:)
   REAL(DP), POINTER :: wkfit_dist(:), etfit_dist(:,:)
   INTEGER :: nksfit_dist, rest, kunit_save
-  INTEGER :: nks_real, ispin, nksqtot
+  INTEGER :: nks_real, ispin, nksqtot, irr
+  CHARACTER(LEN=256) :: elph_dir
+  CHARACTER(LEN=6) :: int_to_char
   !
   !
+  !
+  !  If the electron phonon matrix elements have not been calculated for
+  !  all representations this routine exit
+  !
+  DO irr=1,nirr
+     IF (.NOT.done_elph(irr)) RETURN
+  ENDDO
+  elph_dir='elph_dir/'
+  IF (ionode) INQUIRE(file=TRIM(elph_dir), EXIST=exst)
+  CALL mp_bcast(exst, ionode_id, intra_image_comm) 
+  IF (.NOT.exst) CALL create_directory( elph_dir )
   WRITE (6, '(5x,"electron-phonon interaction  ..."/)')
   ngauss1 = 0
   nsig = 10
@@ -425,7 +467,7 @@ SUBROUTINE elphsum ( )
      ENDIF
      ALLOCATE(el_ph_mat_collect(nbnd,nbnd,nksqtot,3*nat))
      CALL xk_wk_collect(xk_collect,wk_collect,xk,wk,nkstot,nks)
-     CALL el_ph_collect(el_ph_mat,el_ph_mat_collect,nksqtot,nksq)
+     CALL el_ph_collect(3*nat,el_ph_mat,el_ph_mat_collect,nksqtot,nksq)
   ENDIF
   !
   ! read eigenvalues for the dense grid
@@ -687,21 +729,27 @@ SUBROUTINE elphsum ( )
      enddo
   enddo
   ! Isaev: save files in suitable format for processing by lambda.x
-  write(name,'(A5,f9.6,A1,f9.6,A1,f9.6)') 'elph.',xq(1),'.',xq(2),'.',xq(3)
-  open(12,file=name, form='formatted', status='unknown')
+   name=TRIM(elph_dir)// 'elph.inp_lambda.' //TRIM(int_to_char(current_iq))
+                                             
+  IF (ionode) THEN
+     open(unit=12, file=TRIM(name), form='formatted', status='unknown', &
+                                    iostat=ios)
 
-  write(12, "(5x,3f14.6,2i6)") xq(1),xq(2),xq(3), nsig, 3*nat
-  write(12, "(6e14.6)") (w2(i), i=1,3*nat)
+     write(12, "(5x,3f14.6,2i6)") xq(1),xq(2),xq(3), nsig, 3*nat
+     write(12, "(6e14.6)") (w2(i), i=1,3*nat)
 
-  do isig= 1,nsig
-     WRITE (12, 9000) deg(isig), ngauss1
-     WRITE (12, 9005) dosfit(isig), effit(isig) * rytoev
-     do nu=1,3*nat
-        WRITE (12, 9010) nu, lamb(nu,isig), gam(nu,isig)
+     do isig= 1,nsig
+        WRITE (12, 9000) deg(isig), ngauss1
+        WRITE (12, 9005) dosfit(isig), effit(isig) * rytoev
+        do nu=1,3*nat
+           WRITE (12, 9010) nu, lamb(nu,isig), gam(nu,isig)
+        enddo
      enddo
-  enddo
-  close (unit=12,status='keep')
+     close (unit=12,status='keep')
+  ENDIF
   ! Isaev end
+  CALL mp_bcast(ios, ionode_id, intra_image_comm)
+  IF (ios /= 0) CALL errore('elphsum','problem opening file'//TRIM(name),1)
   deallocate (gam)
   deallocate (lamb)
   write(stdout,*)
@@ -711,17 +759,20 @@ SUBROUTINE elphsum ( )
   call star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE. )
   !
   do isig=1,nsig
-     write(name,"(A7,I2)") 'a2Fq2r.',50 + isig
+     name=TRIM(elph_dir)//'a2Fq2r.'// TRIM(int_to_char(50 + isig)) &
+                                  //'.'//TRIM(int_to_char(current_iq))
      if (ionode) then
         iuelph = 4
         open(iuelph, file=name, STATUS = 'unknown', FORM = 'formatted', &
-             POSITION='append')
+                     iostat=ios)
      else
         !
         ! this node doesn't write: unit 6 is redirected to /dev/null
         !
         iuelph =6
      end if
+     call mp_bcast(ios, ionode_id, intra_image_comm)
+     IF (ios /= 0) call errore('elphsum','opening output file '// TRIM(name),1)
      dyn22(:,:) = gf(:,:,isig)
      write(iuelph,*) deg(isig), effit(isig), dosfit(isig)
      IF ( imq == 0 ) THEN
@@ -764,11 +815,11 @@ SUBROUTINE elphsum_simple
   USE ions_base, ONLY : nat, ityp, tau,amass,tau, ntyp => nsp, atm
   USE cell_base, ONLY : at, bg, ibrav, celldm 
   USE fft_base,  ONLY: dfftp
-  USE symm_base, ONLY : s, sr, irt, nsym, time_reversal, invs
+  USE symm_base, ONLY : s, sr, irt, nsym, invs, time_reversal
   USE klist, ONLY : xk, nelec, nks, wk
   USE wvfct, ONLY : nbnd, et
   USE el_phon, ONLY : el_ph_mat, el_ph_nsigma, el_ph_ngauss, el_ph_sigma
-  USE mp_global, ONLY : me_pool, root_pool, inter_pool_comm, npool, intra_bgrp_comm
+  USE mp_global, ONLY : me_pool, root_pool, inter_pool_comm, npool
   USE io_global, ONLY : stdout
   USE klist, only : degauss,ngauss
   USE control_flags, ONLY : modenum, noinv
@@ -810,7 +861,6 @@ SUBROUTINE elphsum_simple
   INTEGER, EXTERNAL :: find_free_unit
 
   nmodes=3*nat
-
 
   write(filelph,'(A5,f9.6,A1,f9.6,A1,f9.6)') 'elph.',xq(1),'.',xq(2),'.',xq(3)
 
@@ -982,7 +1032,7 @@ FUNCTION dos_ef (ngauss, degauss, ef, et, wk, nks, nbnd)
   !-----------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
-  USE mp_global, ONLY : inter_pool_comm, intra_bgrp_comm
+  USE mp_global, ONLY : inter_pool_comm
   USE mp,        ONLY : mp_sum
   IMPLICIT NONE
   REAL(DP) :: dos_ef

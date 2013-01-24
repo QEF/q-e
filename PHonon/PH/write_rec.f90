@@ -38,7 +38,7 @@ CONTAINS
     USE uspp, ONLY : okvan
     USE phus, ONLY : int1, int2, int3
     USE eqv,  ONLY : drhoscfs
-    USE control_ph, ONLY : where_rec, rec_code, reduce_io
+    USE control_ph, ONLY : where_rec, rec_code, reduce_io, current_iq
     USE ph_restart, ONLY : ph_writefile
     USE efield_mod, ONLY : zstareu0, zstarue0
     USE io_files, ONLY : seqopn
@@ -52,11 +52,12 @@ CONTAINS
     COMPLEX(DP), INTENT(IN), OPTIONAL :: drhoscfh (dfftp%nnr, nspin_mag, npe)
     COMPLEX(DP), INTENT(IN), OPTIONAL :: dbecsum((nhm*(nhm+1))/2,nat,nspin_mag,npe)
 
+    INTEGER :: ierr
     LOGICAL :: exst
     CALL start_clock ('write_rec')
     where_rec=where
-    CALL ph_writefile('data',0)
-    IF (where_rec=='done_drhod') CALL ph_writefile('data_dyn',irr)
+    CALL ph_writefile('status_ph',current_iq,0,ierr)
+    IF (where=='done_drhod') CALL ph_writefile('data_dyn',current_iq,irr,ierr)
     CALL seqopn (iunrec, 'recover', 'unformatted', exst)
     !
     ! info on current iteration (iter=0 potential mixing not available)

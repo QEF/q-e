@@ -17,7 +17,7 @@ subroutine deallocate_phq
 
   USE ramanm, ONLY: ramtns
   USE modes, ONLY : tmq, t, npert, u, rtau, name_rap_mode, num_rap_mode
-  USE qpoint, ONLY : eigqts, igkq, ikks, ikqs, nksq
+  USE qpoint, ONLY : eigqts, igkq, ikks, ikqs, nksq, xk_col
   USE efield_mod, ONLY : zstareu, zstarue, zstarue0, zstareu0, &
                          zstarue0_rec
   USE phus, ONLY : int1, int1_nc, int2, int2_so, int3, int3_nc, int3_paw, &
@@ -34,6 +34,8 @@ subroutine deallocate_phq
   USE dynmat, ONLY : dyn00, dyn_rec, dyn, w2
   USE control_ph, ONLY : lgamma
   USE el_phon, ONLY : el_ph_mat
+  USE freq_ph, ONLY : polar
+
 
   IMPLICIT NONE
   INTEGER :: ik, ipol
@@ -65,6 +67,8 @@ subroutine deallocate_phq
   if(allocated(dyn_rec)) deallocate (dyn_rec)
   if(allocated(dyn00)) deallocate (dyn00)
   if(allocated(w2)) deallocate (w2)
+  if(allocated(xk_col)) deallocate (xk_col)
+  if(allocated(polar)) deallocate (polar)
 
   CALL deallocate_pert()
 

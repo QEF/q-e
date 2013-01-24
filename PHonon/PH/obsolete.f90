@@ -949,14 +949,14 @@ subroutine dynmat0
   USE control_flags, ONLY : modenum
   USE kinds,         ONLY : DP
   USE ph_restart,    ONLY : ph_writefile
-  USE control_ph,    ONLY : rec_code_read
+  USE control_ph,    ONLY : rec_code_read, current_iq
   USE qpoint,        ONLY : xq
   USE modes,         ONLY : u, minus_q, irotmq, irgq, rtau, nsymq, nmodes
   USE partial,       ONLY : done_irr, comp_irr
   USE dynmat,        ONLY : dyn, dyn00, dyn_rec
   implicit none
 
-  integer :: nu_i, nu_j, na_icart, nb_jcart
+  integer :: nu_i, nu_j, na_icart, nb_jcart, ierr
   ! counters
 
   complex(DP) :: wrk, dynwrk (3 * nat, 3 * nat)
@@ -1010,7 +1010,7 @@ subroutine dynmat0
   !      call tra_write_matrix('dynmat0 dyn',dyn,u,nat)
   dyn_rec(:,:)=dyn(:,:)
   done_irr(0) = .TRUE.
-  CALL ph_writefile('data_dyn',0)
+  CALL ph_writefile('data_dyn',current_iq,0,ierr)
 
   call stop_clock ('dynmat0')
   return
@@ -1323,7 +1323,8 @@ subroutine dynmatrix(iq_)
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0, zstarue
   USE control_ph,    ONLY : epsil, zue, lgamma, lgamma_gamma, search_sym, ldisp, &
                             start_irr, last_irr, done_zue, where_rec, &
-                            rec_code, ldiag, done_epsil, done_zeu, xmldyn
+                            rec_code, ldiag, done_epsil, done_zeu, xmldyn, &
+                            current_iq
   USE ph_restart,    ONLY : ph_writefile
   USE partial,       ONLY : all_comp, comp_irr, done_irr, nat_todo_input
   USE units_ph,      ONLY : iudyn
@@ -1339,7 +1340,7 @@ subroutine dynmatrix(iq_)
   ! local variables
   !
   integer :: nq, isq (48), imq, na, nt, imode0, jmode0, irr, jrr, &
-       ipert, jpert, mu, nu, i, j, nqq
+       ipert, jpert, mu, nu, i, j, nqq, ierr
   ! nq :  degeneracy of the star of q
   ! isq: index of q in the star of a given sym.op.
   ! imq: index of -q in the star of q (0 if not present)
@@ -1529,7 +1530,7 @@ subroutine dynmatrix(iq_)
 !
   rec_code=30
   where_rec='dynmatrix.'
-  CALL ph_writefile('data',0)
+  CALL ph_writefile('status_ph',current_iq,0,ierr)
 
   call stop_clock('dynmatrix')
   return

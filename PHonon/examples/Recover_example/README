@@ -1,6 +1,6 @@
 This example tests the recover feature of ph.x 
 
-The calculation proceeds as follows:
+The calculation in run_example proceeds as follows:
 
 1) make a self-consistent calculation for norm conserving Si 
    (input=si.scf.in, output=si.scf.out).
@@ -29,3 +29,15 @@ The calculation proceeds as follows:
 9) make a phonon calculation at the Gamma point and recover the previous
    run (input=Cu.phG_pbe.in2, output=Cu.phG_pbe.out2).
 
+The calculation in run_example_1 proceeds as follows:
+
+1) Makes two self-consistent calculations of Al (see example 03)
+
+2) Start the electron phonon calculation with max_seconds=3 sec.
+
+3) Remove the a2fq2r files produced by the first electron-phonon run.
+
+4) Recover the electron-phonon calculation with recover=.true. and no
+max_seconds limit.
+
+5) calculate a2F(omega) and plots it.

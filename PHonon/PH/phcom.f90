@@ -50,6 +50,20 @@ MODULE modes
   !
 END MODULE modes
 !
+MODULE cryst_ph
+   !  
+   USE kinds,  ONLY : DP
+   !
+   SAVE
+   !
+   ! This modeule contains the variables that describe properties of the
+   ! crystal that are needed by the phonon program and are not in pw data
+   ! probably these variables should be in the common of pw
+   ! These variables are sets immediately after reading the pw variables
+   !
+   LOGICAL :: magnetic_sym   ! true in the non-collinear magnetic case
+
+END MODULE cryst_ph
 !
 MODULE dynmat
   USE kinds, ONLY :  DP
@@ -82,9 +96,10 @@ MODULE qpoint
   !
   INTEGER, POINTER :: igkq(:)     ! npwx)
   ! correspondence k+q+G <-> G
-  INTEGER :: nksq, npwq
+  INTEGER :: nksq, npwq, nksqtot
   ! the real number of k points
   ! the number of plane waves for q
+  ! the total number of q points 
   INTEGER, ALLOCATABLE :: ikks(:), ikqs(:)
   ! the index of k point in the list of k
   ! the index of k+q point in the list of k
@@ -92,6 +107,7 @@ MODULE qpoint
   ! the coordinates of the q point
   COMPLEX (DP), ALLOCATABLE :: eigqts(:) ! nat)
   ! the phases associated to the q
+  REAL (DP), ALLOCATABLE :: xk_col(:,:)
   !
 END MODULE qpoint
 !
@@ -313,6 +329,7 @@ MODULE control_ph
              done_zue=.FALSE., &! .TRUE. when the eff. charges are available
              zeu,         &! if .TRUE. computes eff. charges as induced forces
              done_zeu=.FALSE., &! .TRUE. when the eff. charges are available
+             done_start_zstar=.FALSE., &!
              recover,     &! if .TRUE. the run restarts
              ext_restart, &! if .TRUE. there is a restart file
              ext_recover, &! if .TRUE. there is a recover file
@@ -347,12 +364,16 @@ MODULE freq_ph
   !
   ! ... the variables for computing frequency dependent dielectric constant
   !
-  LOGICAL :: fpol ! if .TRUE. dynamic dielectric constant is computed
+  LOGICAL :: fpol, & ! if .TRUE. dynamic dielectric constant is computed
+             done_fpol ! if .TRUE. all dynamic dielectric constant is computed
   !
-  INTEGER, PARAMETER :: nfsmax=50  ! # of maximum frequencies
   INTEGER :: nfs                   ! # of frequencies
   !
-  REAL (KIND=DP) :: fiu(nfsmax)    ! values  of frequency
+  INTEGER :: current_iu            ! the current frequency 
+  !
+  REAL (KIND=DP), ALLOCATABLE :: fiu(:)    ! values  of frequency
+  !
+  REAL (KIND=DP), ALLOCATABLE :: polar(:,:,:)    ! values  of frequency
 
   LOGICAL, ALLOCATABLE :: comp_iu(:) ! values  of frequency to calculate in this ru
   !
@@ -423,18 +444,32 @@ MODULE disp
   INTEGER :: nq1, nq2, nq3  ! number of q-points in each direction
   INTEGER :: nqs            ! number of q points to be calculated
   REAL(DP), ALLOCATABLE :: x_q(:,:) ! coordinates of the q points
-  INTEGER, ALLOCATABLE :: &
-       rep_iq(:),       &! number of irreducible representation per q point
-       nsymq_iq(:),     &! dimension of the small group of q
-       npert_iq(:,:)     ! for each q, the number of perturbation of each irr
 
   LOGICAL, ALLOCATABLE :: &
+       lgamma_iq(:),    &! if .true. this q is gamma.
        done_iq(:),      &! if .true. this q point has been already calculated
-       done_rep_iq(:,:),&! which representation have been already done in each q
-       comp_iq(:),      &! if .true. this q point has to be calculated
-       comp_irr_iq(:,:)  ! for each q, comp_irr. Used for image parallelization
+       comp_iq(:)        ! if .true. this q point has to be calculated
   !
 END MODULE disp
+
+MODULE grid_irr_iq
+
+   INTEGER, ALLOCATABLE ::  &
+       npert_irr_iq(:,:),&! for each q and irr: the number of perturbations
+       irr_iq(:),        &! number of irreducible representation per q point
+       nsymq_iq(:)        ! dimension of the small group of q for each q
+
+  LOGICAL, ALLOCATABLE ::  &
+       comp_irr_iq(:,:),   & ! for each q and irr: if .TRUE. this 
+                             ! representation has  to be calculated
+       done_irr_iq(:,:),   & ! for each q and irr: if .TRUE. this 
+                             ! representation has been already calculated
+       done_elph_iq(:,:),   & ! for each q and irr: if .TRUE. the elph of this 
+                             ! representation has been already calculated
+       done_bands(:)         ! nqs, if .TRUE. the bands of this q have been 
+                             ! calculated
+END MODULE grid_irr_iq
+
 !
 !
 MODULE phcom
@@ -453,4 +488,5 @@ MODULE phcom
   USE output
   USE gamma_gamma
   USE disp
+  USE grid_irr_iq
 END MODULE phcom

@@ -12,11 +12,10 @@ subroutine dielec()
   !
   !      calculates the dielectric tensor
   !
-
   USE kinds, only : DP
   USE io_global,  ONLY : stdout
   USE constants, ONLY: fpi
-  USE cell_base, ONLY: at, bg, omega
+  USE cell_base, ONLY: omega
   USE klist, ONLY: wk
   USE symme, ONLY: symmatrix, crys_to_cart
   USE wvfct, ONLY: npwx
@@ -25,19 +24,22 @@ subroutine dielec()
   USE units_ph, ONLY : lrdwf, iudwf, lrebar, iuebar
   USE eqv, ONLY : dpsi, dvpsi
   USE qpoint, ONLY : nksq
-  USE control_ph, ONLY : nbnd_occ, done_epsil
+  USE ph_restart, ONLY : ph_writefile
+  USE control_ph, ONLY : nbnd_occ, done_epsil, epsil
   USE mp_global,        ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,               ONLY : mp_sum
 
   implicit none
 
-  integer :: ibnd, ipol, jpol, nrec, ik
+  integer :: ibnd, ipol, jpol, nrec, ik, ierr
   ! counter on polarizations
   ! counter on records
   ! counter on k points
   real(DP) :: w, weight
 
   complex(DP), external :: zdotc
+
+  IF (.NOT.epsil.OR.done_epsil) RETURN
 
   call start_clock ('dielec')
   epsilon(:,:) = 0.d0
@@ -88,6 +90,7 @@ subroutine dielec()
   !
   done_epsil=.TRUE.
   CALL summarize_epsilon()
+  CALL ph_writefile('tensors',0,0,ierr)
 
   call stop_clock ('dielec')
 

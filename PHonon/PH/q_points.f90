@@ -11,7 +11,7 @@ SUBROUTINE q_points ( )
 
   USE kinds, only : dp
   USE io_global,  ONLY :  stdout, ionode, ionode_id
-  USE disp,  ONLY : nq1, nq2, nq3, x_q, nqs
+  USE disp,  ONLY : nq1, nq2, nq3, x_q, nqs, lgamma_iq
   USE output, ONLY : fildyn
   USE symm_base, ONLY : nsym, s, time_reversal, t_rev, invs
   USE cell_base, ONLY : at, bg
@@ -41,6 +41,7 @@ SUBROUTINE q_points ( )
   call kpoint_grid( nsym, time_reversal, skip_equivalence, s, t_rev, bg, nqmax,&
                          0,0,0, nq1,nq2,nq3, nqs, xq, wq )
   allocate(x_q(3,nqs))
+  allocate(lgamma_iq(nqs))
   x_q(:,:)=xq(:,1:nqs)
   deallocate (xq)
   deallocate (wq)
@@ -62,6 +63,8 @@ SUBROUTINE q_points ( )
         end if
      end if
   end do
+  lgamma_iq=.FALSE.
+  lgamma_iq(1)=.TRUE.
   !
   ! Write the q points in the output
   !

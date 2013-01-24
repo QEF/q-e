@@ -18,27 +18,27 @@ subroutine dynmat0_new
   !
   !
   !
+  USE kinds,         ONLY : DP
   USE ions_base, ONLY : nat,ntyp => nsp, ityp, zv, tau
   USE cell_base, ONLY: alat, omega, at, bg
   USE gvect, ONLY: g, gg, ngm, gcutm
   USE symm_base, ONLY: irt, s, invs
   USE control_flags, ONLY : modenum
-  USE kinds,         ONLY : DP
   USE ph_restart,    ONLY : ph_writefile
-  USE control_ph,    ONLY : rec_code_read
+  USE control_ph,    ONLY : rec_code_read, current_iq
   USE qpoint,        ONLY : xq
   USE modes,         ONLY : u, minus_q, irotmq, rtau, nsymq, nmodes
   USE partial,       ONLY : done_irr, comp_irr
   USE dynmat,        ONLY : dyn, dyn00, dyn_rec
   implicit none
 
-  integer :: nu_i, nu_j, na_icart, nb_jcart
+  integer :: nu_i, nu_j, na_icart, nb_jcart, ierr
   ! counters
 
   complex(DP) :: wrk, dynwrk (3 * nat, 3 * nat)
   ! auxiliary space
 
-  IF ( .NOT.comp_irr(0) .or. done_irr(0) ) RETURN
+  IF ( .NOT. comp_irr(0) .or. done_irr(0) ) RETURN
   IF (rec_code_read > -30 ) RETURN
 
   call start_clock ('dynmat0')
@@ -75,11 +75,10 @@ subroutine dynmat0_new
      CALL rotate_pattern_add(nat, u, dyn, dynwrk)
 
   endif
-
-!        call tra_write_matrix('dynmat0 dyn',dyn,u,nat)
+  !      call tra_write_matrix('dynmat0 dyn',dyn,u,nat)
   dyn_rec(:,:)=dyn(:,:)
   done_irr(0) = .TRUE.
-  CALL ph_writefile('data_dyn',0)
+  CALL ph_writefile('data_dyn',current_iq,0,ierr)
 
   call stop_clock ('dynmat0')
   return

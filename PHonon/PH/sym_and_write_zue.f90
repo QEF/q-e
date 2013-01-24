@@ -20,12 +20,13 @@ subroutine sym_and_write_zue
   USE symme,      ONLY : symtensor
   USE efield_mod, ONLY : zstarue, zstarue0
   USE modes,      ONLY : u
-  USE control_ph, ONLY : xmldyn
+  USE ph_restart, ONLY : ph_writefile
+  USE control_ph, ONLY : zue, done_zue, xmldyn
   USE units_ph,   ONLY : iudyn
 
   implicit none
 
-  integer :: ipol, jpol, icart, jcart, na, nu, mu
+  integer :: ipol, jpol, icart, jcart, na, nu, mu, ierr
   ! counter on polarization
   ! counter on cartesian coordinates
   ! counter on atoms and modes
@@ -34,6 +35,8 @@ subroutine sym_and_write_zue
   real(DP) :: work (3, 3, nat)
   ! auxiliary space (note the order of indices)
   !
+  IF (.NOT.zue.OR.done_zue) RETURN
+
   zstarue(:,:,:) = 0.d0
   do jcart = 1, 3
      do mu = 1, 3 * nat
@@ -82,18 +85,20 @@ subroutine sym_and_write_zue
   ! write Z_{s,alpha}{beta} on iudyn
   !
   IF (.NOT. xmldyn) THEN
-  write (iudyn, '(/5x, &
+     write (iudyn, '(/5x, &
        &               "Effective Charges U-E: Z_{s,alpha}{beta}",/)')
-  do na = 1, nat
-     write (iudyn, '(5x,"atom # ",i4)') na
-     write (iudyn, '(3e24.12)') ( (zstarue (ipol, na, jpol) , jpol = 1, &
+     do na = 1, nat
+        write (iudyn, '(5x,"atom # ",i4)') na
+        write (iudyn, '(3e24.12)') ( (zstarue (ipol, na, jpol) , jpol = 1, &
           3) , ipol = 1, 3)
-  enddo
+     enddo
   ENDIF
   !
   ! write Z_{s,alpha}{beta} on standard output
   !
+  done_zue=.true.
   CALL summarize_zue()
+  CALL ph_writefile('tensors', 0, 0, ierr)
 
   return
 end subroutine sym_and_write_zue

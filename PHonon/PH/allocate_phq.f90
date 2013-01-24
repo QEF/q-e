@@ -16,7 +16,7 @@ subroutine allocate_phq
 
   USE kinds, only : DP
   USE ions_base, ONLY : nat, ntyp => nsp
-  USE klist, only : nks
+  USE klist, only : nks, nkstot
   USE wvfct, ONLY : nbnd, igk, npwx
   USE gvect, ONLY : ngm
   USE lsda_mod, ONLY : nspin
@@ -30,7 +30,7 @@ subroutine allocate_phq
   USE uspp_param, ONLY: nhm
   USE ramanm, ONLY: ramtns, lraman
 
-  USE qpoint, ONLY : nksq, eigqts, igkq
+  USE qpoint, ONLY : nksq, eigqts, igkq, xk_col
   USE phus, ONLY : int1, int1_nc, int2, int2_so, int3, int3_nc, int3_paw, &
                    int4, int4_nc, int5, int5_so, becsumort, dpqq, &
                    dpqq_so, alphasum, alphasum_nc, becsum_nc, &
@@ -42,7 +42,7 @@ subroutine allocate_phq
   USE modes, ONLY : u, rtau, npert, name_rap_mode, num_rap_mode
   USE control_ph, ONLY :  lgamma
   USE el_phon, ONLY : el_ph_mat, elph
-
+  USE freq_ph, ONLY : polar, nfs
 
   implicit none
   INTEGER :: ik, ipol
@@ -80,6 +80,8 @@ subroutine allocate_phq
   allocate (name_rap_mode( 3 * nat))
   allocate (num_rap_mode( 3 * nat ))
   allocate (npert ( 3 * nat))
+  ALLOCATE (xk_col(3, nkstot))
+  allocate (polar (3, 3,  nfs))
   allocate (zstareu (3, 3,  nat))
   allocate (zstareu0 (3, 3 * nat))
   allocate (zstarue (3 , nat, 3))

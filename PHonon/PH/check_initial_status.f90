@@ -9,21 +9,62 @@
 SUBROUTINE check_initial_status(auxdyn)
   !-----------------------------------------------------------------------
   !
-  ! This routine checks the initial status of the phonon run and prepares
-  ! the control of the dispersion calculation. The grid is determined
-  ! by the following variables:
+  ! This routine checks the initial status of the phonon run and sets
+  ! the variables that control the run, dealing with the image
+  ! and GRID parallelization features of the phonon code.
+  ! 
+  ! The size of the grid is determined by the following variables:
   ! nqs : the number of q points
   ! x_q : the coordinates of the q points
-  ! comp_iq : =1 if this q point is calculated in this run, 0 otherwise
-  ! done_iq : =1 if already calculated, 0 otherwise
-  ! rep_iq  : for each q point how many irreducible representations
-  ! done_rep_iq : =1 if the representation has been already calculated
+  !
   ! nfs : the number of imaginary frequencies
-  ! The last four variables are calculated only at gamma if fpol is .true.
-  ! If recover is true this routine checks also that the control parameters
-  ! read in input match the values given in the recover file.
-  ! Finally it sets the variable:
-  ! done_bands : if true the bands have been already calculated for this q
+  ! fiu : which frequencies 
+  !
+  ! The flags that control which tensors to calculate
+  !
+  ! In a recover calculation the q grid variables are already known, 
+  ! read from file in phq_readin. In a calculation starting from
+  ! scratch this routine sets them. The frequencies variables and the
+  ! tensors flags are read from input. 
+  ! The amount of work to do for each representation of each q
+  ! point depends on the size of the representation and the 
+  ! order of the small group of q. In a recover calculation
+  ! these information are on file, when recover=.false. this
+  ! routine writes the modes and their degeneration on files 
+  ! and calculates the order of the small group of q. The following
+  ! variables are set
+  !
+  ! irr_iq : for each q point how many irreducible representations
+  ! npert_irr_iq : how many perturbation per representation and per q
+  ! nsymq_iq : the order of the small group of q for each q
+  !
+  ! The following variables are set by this routine on the basis of
+  ! start_irr, last_irr, start_iq, last_iq, OR of modenum, OR of ifat and 
+  ! atomo:
+  !
+  ! comp_iq : =.TRUE. if the q point is calculated in this run
+  ! comp_irr_iq : =.TRUE. if the representation is calculated in this run
+  ! comp_iu : =.TRUE. if this frequency is calculated in this run
+  !                   NB: start_iu, last_iu is not yet programmed
+  ! 
+  ! After knowing this info the routine divides the total work among
+  ! the images (when nimage > 1) INDEPENDENTLY of what has been already
+  ! calculated and is available on file.
+  !
+  ! Then, when recover=.true., the routine looks on files for pieces
+  ! already calculated and sets the array
+  !
+  ! done_irr_iq : =.TRUE. if the representation has been already calculated
+  ! done_iq : =.TRUE. if the q point has been already calculated
+  ! done_iu : =.TRUE. if already calculated
+  ! done_bands_iq : .TRUE. if the bands for the q point are on file.
+  !
+  ! If recover=.false. all these array are initialized to .false.
+  !
+  ! Finally this routine creates a file fildyn0 and writes the q mesh, if
+  ! this file is not present in the current directory, or if recover=.false..
+  ! It also creates a directory for each q inside outdir/_ph# 
+  ! if this directory does not exist and lqdir=.true.
   !
   USE io_global,       ONLY : stdout
   USE control_flags,   ONLY : modenum
@@ -31,19 +72,22 @@ SUBROUTINE check_initial_status(auxdyn)
   USE io_files,        ONLY : tmp_dir
   USE lsda_mod,        ONLY : nspin
   USE scf,             ONLY : rho
-  USE disp,            ONLY : nqs, x_q, comp_iq, comp_irr_iq
+  USE disp,            ONLY : nqs, x_q, comp_iq, nq1, nq2, nq3, &
+                              done_iq, lgamma_iq
   USE qpoint,          ONLY : xq
   USE output,          ONLY : fildyn
-  USE control_ph,      ONLY : ldisp, recover, done_bands,  &
-                              start_q, last_q, current_iq, tmp_dir_ph, lgamma, &
+  USE control_ph,      ONLY : ldisp, recover, where_rec, rec_code, &
+                              start_q, last_q, current_iq, &
+                              tmp_dir_ph, lgamma, &
                               ext_recover, ext_restart, tmp_dir_phq, lqdir, &
                               start_irr, last_irr, newgrid
   USE save_ph,         ONLY : tmp_dir_save
-  USE ph_restart,      ONLY : ph_readfile, check_status_run, init_status_run, &
-                              ph_writefile
-  USE save_ph,         ONLY : save_ph_input_variables
+  USE units_ph,        ONLY : iudyn
+  USE ph_restart,      ONLY : check_directory_phsave, check_available_bands,&
+                              allocate_grid_variables, ph_writefile
+  USE freq_ph,         ONLY : current_iu
   USE io_rho_xml,      ONLY : write_rho
-  USE mp_global,       ONLY : nimage, my_image_id, intra_image_comm
+  USE mp_global,       ONLY : nimage, intra_image_comm
   USE io_global,       ONLY : ionode, ionode_id
   USE io_files,        ONLY : prefix
   USE mp,              ONLY : mp_bcast
@@ -59,35 +103,113 @@ SUBROUTINE check_initial_status(auxdyn)
   CHARACTER (LEN=6), EXTERNAL :: int_to_char
   LOGICAL :: exst
   INTEGER :: iq, iq_start, ierr
-  INTEGER :: iu
-  !
-  ! Initialize local variables
   !
   tmp_dir=tmp_dir_ph
   !
-  ! ... Checking the status of the calculation
+  ! If this not a recover run, we generate the q mesh. Otherwise at this
+  ! point the code has read the q mesh from the files contained in 
+  ! prefix.phsave
   !
+  IF (.NOT.recover) THEN
+     !
+     ! recover file not found or not looked for
+     !
+     current_iu=1
+     current_iq=1
+     IF (ldisp) THEN
+        !
+        ! ... Calculate the q-points for the dispersion
+        !
+        IF(elph_mat) then
+           CALL q_points_wannier()
+        ELSE
+           CALL q_points()
+        END IF
+        !
+     ELSE
+        !
+        nqs = 1
+        last_q = 1
+        ALLOCATE(x_q(3,1))
+        ALLOCATE(lgamma_iq(1))
+        x_q(:,1)=xq(:)
+        lgamma_iq(1)=lgamma
+        !
+     END IF
+     !
+     !   Save the mesh of q and the control flags on file
+     !
+     CALL ph_writefile('init',0,0,ierr)
+     !
+     !   Initialize the representations and write them on file.
+     !
+     CALL init_representations()
+     !
+     IF ((start_irr==0).AND.(last_irr==0)) THEN
+        where_rec='init_rep..'
+        rec_code=-50
+        current_iq=1
+        current_iu=1
+        CALL ph_writefile('status_ph',current_iq,0,ierr)
+        CALL clean_pw(.FALSE.)
+        CALL close_files(.FALSE.)
+        CALL mp_global_end()
+        STOP
+     ENDIF
+  ENDIF
+
+  IF (last_q<1.or.last_q>nqs) last_q=nqs
+  IF (start_q<1.or.start_q>last_q) call errore('check_initial_status', &
+     'wrong start_q',1)
+!
+!  now we allocate the variables needed to describe the grid
+!
+  CALL allocate_grid_variables()
+!
+!  This routine assumes that the modes are on file, either written by 
+!  init_representation or written by a previous run. It takes care
+!  of dealing with start_irr, last_irr flags and ifat or modenum
+!  restricted  computation, moreover it sets the size of each 
+!  representation and the size of the small group of q for each point.
+!
+  CALL initialize_grid_variables()
+!
+! If there are more than one image, divide the work among the images
+!
+  IF (nimage > 1) CALL image_q_irr()
+!
   IF (recover) THEN
 !
-!  check if a recover file exists. In this case the first q point is
-!  the current one.
+! ... Checking the status of the calculation
 !
+!  sets which q point and representations have been already calculated
+!
+     CALL check_directory_phsave()
+!
+!  If a recover or a restart file exists the first q point is the current one.
+!
+     CALL check_restart_recover(ext_recover, ext_restart)
      IF (.NOT.ext_recover.AND..NOT.ext_restart) THEN
-        iq_start=start_q
-        done_bands=.FALSE.
+        current_iq=start_q
      ELSE
-        iq_start=current_iq
+!
+!   Check that the representations from start_q to current_iq have been done
+!
+        DO iq=start_q, current_iq-1
+           IF (comp_iq(iq) .AND. .NOT.done_iq(iq)) &
+              CALL errore('check_initial_status',&
+                      & 'recover file found, change in start_q not allowed',1)
+           comp_iq(iq)=.FALSE.
+        ENDDO
      ENDIF
+     iq_start=current_iq
 !
-!  check which representation files are available on the disk and
-!  sets which q points and representations have been already calculated
+!  check which bands are available and set the array done_bands
 !
-     CALL check_status_run()
+    CALL check_available_bands()
 !
 ! write the information on output
-!
-     IF (last_q<1.OR.last_q>nqs) last_q=nqs
-     IF (iq_start<=last_q.AND.iq_start>0) THEN
+    IF (iq_start<=last_q.AND.iq_start>0) THEN
         WRITE(stdout, &
             '(5x,i4," /",i4," q-points for this run, from", i3,&
                & " to", i3,":")') last_q-iq_start+1, nqs, iq_start, last_q
@@ -119,79 +241,51 @@ SUBROUTINE check_initial_status(auxdyn)
      ENDIF   
   ELSE  
      ! this is the standard treatment
-     IF ( ( ( ldisp .OR. .NOT.lgamma .OR. modenum/=0 ) .AND. (.NOT.lqdir) ) &
+     IF ( ( ( ldisp.OR..NOT.lgamma .OR. modenum/=0 ) .AND. (.NOT.lqdir) ) &
           .OR. newgrid ) CALL write_rho( rho, nspin )
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
   !
-  CALL save_ph_input_variables()
+  !  Write the file fildyn0 with the mesh of q points. This file is used
+  !  by postprocessing programs such as q2r.x and we write it again if
+  !  it is not found in the running directory.
   !
-  IF (.NOT.recover) THEN
-     !
-     ! recover file not found or not looked for
-     !
-     done_bands=.FALSE.
-     iq_start=start_q
-     IF (ldisp) THEN
-        !
-        ! ... Calculate the q-points for the dispersion
-        !
-        IF(elph_mat) then
-           CALL q_points_wannier()
-        ELSE
-           CALL q_points()
-        END IF
-
-        IF (last_q<1.or.last_q>nqs) last_q=nqs
-        !
-     ELSE
-        !
-        nqs = 1
-        last_q = 1
-        ALLOCATE(x_q(3,1))
-        x_q(:,1)=xq(:)
-        !
-     END IF
-     !
-     ! This routine initialize the grid control in order to
-     ! calculate all q and all representations. The representations are
-     ! written on file and read again by phq_setup.
-     !
-     CALL init_status_run()
-     CALL init_representations()
-     IF ((start_irr==0).AND.(last_irr==0)) THEN
-        CALL ph_writefile('init',0)
-        CALL clean_pw(.FALSE.)
-        CALL close_files(.FALSE.)
-        CALL mp_global_end()
-        STOP
+  filename=TRIM(fildyn)//'0'
+  IF (ionode) THEN
+     INQUIRE (FILE = TRIM(filename), EXIST = exst)
+     ierr=0
+     IF (.NOT. exst .OR. .NOT. recover) THEN
+        iudyn=26
+        OPEN (unit=iudyn, file=TRIM(filename), status='unknown', iostat=ierr)
+        IF ( ierr == 0 ) THEN
+           WRITE (iudyn, '(3i4)' ) nq1, nq2, nq3
+           WRITE (iudyn, '( i4)' ) nqs
+           DO  iq = 1, nqs
+               WRITE (iudyn, '(3e24.15)') x_q(1,iq), x_q(2,iq), x_q(3,iq)
+           END DO
+           CLOSE (unit=iudyn)
+        ENDIF
      ENDIF
-     !
   END IF
+  CALL mp_bcast(ierr, ionode_id, intra_image_comm)
+  CALL errore ('check_initial_status','cannot open file ' // TRIM(filename),&
+                abs(ierr))
   !
-  !  Set the q points to calculate. If there is the recover file, start from
-  !  the q point of the recover file.
+  !  The following commands deal with the flag lqdir=.true. In this case
+  !  each q point works on a different directory. We create the directories
+  !  if they do not exist and copy the self consistent charge density
+  !  there.
   !
-  IF (nimage==1) THEN
-     comp_iq=.FALSE.
-     DO iq=iq_start,last_q
-        comp_iq(iq)=.TRUE.
-     ENDDO
-  ELSE
-     CALL image_q_irr(iq_start)
-  ENDIF
-  !
-  DO iq=1,nqs
+  DO iq = 1,nqs
      IF (.NOT.comp_iq(iq)) CYCLE
-     lgamma = ( x_q(1,iq) == 0.D0 .AND. x_q(2,iq) == 0.D0 .AND. &
-                x_q(3,iq) == 0.D0 )
+     lgamma = lgamma_iq(iq) 
      !
-     ! ...  with lqdir=.true. each q /= gamma works on a different directory. 
-     !      We create them here and copy the charge density inside
+     ! ... each q /= gamma works on a different directory. We create them
+     ! here and copy the charge density inside
      !
      IF ((.NOT.lgamma.OR. newgrid).AND.lqdir) THEN
         tmp_dir_phq= TRIM (tmp_dir_ph) //TRIM(prefix)//&
-                          & '_q' // TRIM(int_to_char(iq))//'/'
+                          & '.q_' // TRIM(int_to_char(iq))//'/'
         filename=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/charge-density.dat'
         IF (ionode) inquire (file =TRIM(filename), exist = exst)
         !
@@ -207,38 +301,33 @@ SUBROUTINE check_initial_status(auxdyn)
   ENDDO
   !
   auxdyn = fildyn
-  !
   RETURN
   END SUBROUTINE check_initial_status
 
-  SUBROUTINE image_q_irr(iq_start)
+  SUBROUTINE image_q_irr()
 !
 !  This routine is an example of the load balancing among images.
-!  It decides which image makes which q and which irreducible representations
+!  It decides which image makes which q and which irreducible representation
 !  The algorithm at the moment is straightforward. Possibly better
 !  methods could be found.
 !  It receives as input:
 !  nsym  : the dimension of the point group
 !  nsymq_iq  : the dimension of the small group of q for each q
-!  rep_iq : the number of representation for each q
-!  npert_iq : for each q and each irrep its dimension
+!  irr_iq : the number of irreps for each q
+!  npert_irr_iq : for each q and each irrep its dimension
 !  It provides as output the two arrays
 !  comp_iq : if this q has to be calculated by the present image
 !  comp_irr_iq : for each q the array to be copied into comp_irr
 
    USE ions_base, ONLY : nat
-   USE disp, ONLY : rep_iq, npert_iq, comp_iq, comp_irr_iq, nqs, &
-                    nq1, nq2, nq3, nsymq_iq
+   USE disp, ONLY : comp_iq, nqs, nq1, nq2, nq3
+   USE grid_irr_iq, ONLY : irr_iq, npert_irr_iq, comp_irr_iq, nsymq_iq
    USE control_ph, ONLY : start_q, last_q
    USE io_global,  ONLY : stdout
    USE mp_global,  ONLY : nimage, my_image_id
    USE symm_base,  ONLY : nsym
 
    IMPLICIT NONE
-   INTEGER, INTENT(IN) :: iq_start ! the calculation start from this q.
-                               ! It can be different from start_q in a
-                               ! recovered run. The division of the work
-                               ! is done from start_q to last_q.
    INTEGER :: total_work,  &  ! total amount of work to do
               total_nrapp, &  ! total number of representations
               work_per_image  ! approximate minimum work per image
@@ -254,10 +343,12 @@ SUBROUTINE check_initial_status(auxdyn)
    total_work=0
    total_nrapp=0
    DO iq = start_q, last_q
-      DO irr = 1, rep_iq(iq)
-         total_work = total_work + npert_iq(irr, iq) * nsym / nsymq_iq(iq)
-         IF (irr==1) total_work = total_work + nsym / nsymq_iq(iq)
-         total_nrapp = total_nrapp + 1
+      DO irr = 1, irr_iq(iq)
+         IF (comp_irr_iq(irr,iq)) THEN
+            total_work = total_work + npert_irr_iq(irr, iq) * nsym / nsymq_iq(iq)
+            IF (irr==1) total_work = total_work + nsym / nsymq_iq(iq)
+            total_nrapp = total_nrapp + 1
+         ENDIF
       END DO
    END DO
    IF (nimage > total_nrapp) &
@@ -276,10 +367,11 @@ SUBROUTINE check_initial_status(auxdyn)
    work=0
    work_so_far=0
    DO iq = start_q, last_q
-      DO irr = 1, rep_iq(iq)
+      DO irr = 1, irr_iq(iq)
+       IF (comp_irr_iq(irr,iq)) THEN
          image_iq(irr,iq) = image
-         work(image)=work(image) + npert_iq(irr, iq) * nsym / nsymq_iq(iq)
-         work_so_far=work_so_far + npert_iq(irr, iq) * nsym / nsymq_iq(iq)
+         work(image)=work(image) + npert_irr_iq(irr, iq) * nsym / nsymq_iq(iq)
+         work_so_far=work_so_far + npert_irr_iq(irr, iq) * nsym / nsymq_iq(iq)
          IF (irr==1) THEN
             image_iq(0,iq)=image
             work(image)=work(image) + nsym / nsymq_iq(iq)
@@ -298,11 +390,11 @@ SUBROUTINE check_initial_status(auxdyn)
 !  is less than actual_diff.
 !
          actual_diff=-work(image)+work_per_image
-         IF (irr<rep_iq(iq)) THEN
-            diff_for_next= work(image)+npert_iq(irr+1, iq)*nsym/nsymq_iq(iq) &
+         IF (irr<irr_iq(iq)) THEN
+            diff_for_next= work(image)+npert_irr_iq(irr+1, iq)*nsym/nsymq_iq(iq) &
                            - work_per_image
-         ELSEIF (irr==rep_iq(iq).and.iq<last_q) THEN
-            diff_for_next= work(image)+npert_iq(1, iq+1)* &
+         ELSEIF (irr==irr_iq(iq).and.iq<last_q) THEN
+            diff_for_next= work(image)+npert_irr_iq(1, iq+1)* &
                        nsym/nsymq_iq(iq+1) + nsym/nsymq_iq(iq+1)-work_per_image
          ELSE
             diff_for_next=0
@@ -313,23 +405,29 @@ SUBROUTINE check_initial_status(auxdyn)
             work_per_image= (total_work-work_so_far) / (nimage-image-1)
             image=image+1
          ENDIF
+       ENDIF
       ENDDO
    ENDDO
 !
 !  Here we actually distribute the work. This image makes only
 !  the representations calculated before.
 !
-   comp_iq = .FALSE.
-   comp_irr_iq=.FALSE.
-   DO iq = iq_start, last_q
-      DO irr = 0, rep_iq(iq)
-         IF (image_iq(irr,iq)==my_image_id ) THEN
-            comp_iq(iq)=.TRUE.
-            comp_irr_iq(irr,iq)=.TRUE.
+   DO iq = start_q, last_q
+      DO irr = 0, irr_iq(iq)
+         IF (image_iq(irr,iq)/=my_image_id ) THEN
+            comp_irr_iq(irr,iq)=.FALSE.
          ENDIF
       ENDDO
    ENDDO
 
+   comp_iq = .FALSE.
+   DO iq = start_q, last_q
+      DO irr = 0, irr_iq(iq)
+         IF (comp_irr_iq(irr,iq).AND..NOT.comp_iq(iq)) THEN
+            comp_iq(iq)=.TRUE.
+         ENDIF
+      ENDDO
+   ENDDO
 
    WRITE(stdout, &
             '(/,5x," Image parallelization. There are", i3,&
@@ -339,7 +437,7 @@ SUBROUTINE check_initial_status(auxdyn)
             '(5x," The estimated total work is ", i5,&
                & " self-consistent (scf) runs")') total_work
 
-   WRITE(stdout, '(5x," I am image number ", i5," and my work is about",i5, &
+   WRITE(stdout, '(5x," I am image number ", i5 " and my work is about",i5, &
                       &  " scf runs. I calculate: ")') &
                         my_image_id, work(my_image_id)
 
@@ -347,7 +445,7 @@ SUBROUTINE check_initial_status(auxdyn)
       IF (comp_iq(iq)) THEN
          WRITE(stdout, '(5x," q point number ", i5, ", representations:")') iq
          string=' '
-         DO irr=0, rep_iq(iq)
+         DO irr=0, irr_iq(iq)
             IF (comp_irr_iq(irr, iq)) &
                 string=TRIM(string) // " " // TRIM(int_to_char(irr))
          ENDDO
@@ -369,7 +467,9 @@ SUBROUTINE check_initial_status(auxdyn)
    USE io_files,  ONLY : tmp_dir, xmlpun_base, prefix
    USE control_ph, ONLY : tmp_dir_ph
    USE save_ph,   ONLY : tmp_dir_save
-   USE disp,      ONLY : nqs, comp_irr_iq, rep_iq
+   USE disp,      ONLY : nqs
+   USE grid_irr_iq,  ONLY : comp_irr_iq, irr_iq
+   USE el_phon,     ONLY : elph
    USE xml_io_base, ONLY : copy_file
    USE mp,        ONLY : mp_barrier
    USE mp_global, ONLY : my_image_id, nimage, intra_image_comm
@@ -387,24 +487,37 @@ SUBROUTINE check_initial_status(auxdyn)
    IF (my_image_id==0) RETURN
 
    DO iq=1,nqs
-      DO irr=0, rep_iq(iq)
+      DO irr=0, irr_iq(iq)
          IF (comp_irr_iq(irr,iq).and.ionode) THEN
-            file_input=TRIM( tmp_dir_ph ) // '/' // &
-                    & TRIM( prefix ) // '.phsave/' // &
-                    & TRIM( xmlpun_base ) &
-                    &  // '.' // TRIM(int_to_char(iq))&
+            file_input=TRIM( tmp_dir_ph ) // &
+                    & TRIM( prefix ) // '.phsave/dynmat.'  &
+                    &  // TRIM(int_to_char(iq))&
                     &  // '.' // TRIM(int_to_char(irr)) // '.xml'
 
-            file_output=TRIM( tmp_dir_save ) // '/_ph0/' // &
-                    &   TRIM( prefix ) // '.phsave/' // &
-                    &   TRIM( xmlpun_base ) &
-                    &    // '.' // TRIM(int_to_char(iq))&
+            file_output=TRIM( tmp_dir_save ) // '/_ph0/' &
+                    &    // TRIM( prefix ) // '.phsave/dynmat.' &
+                    &    // TRIM(int_to_char(iq))  &
                     &    // '.' // TRIM(int_to_char(irr)) // '.xml'
 
             INQUIRE (FILE = TRIM(file_input), EXIST = exst)
             IF (exst) CALL copy_file(file_input, file_output)
+            IF ( elph .AND. irr>0 ) THEN
+
+               file_input=TRIM( tmp_dir_ph ) // &
+                    & TRIM( prefix ) // '.phsave/elph.'  &
+                    &  // TRIM(int_to_char(iq))&
+                    &  // '.' // TRIM(int_to_char(irr)) // '.xml'
+
+               file_output=TRIM( tmp_dir_save ) // '/_ph0/' // &
+                    &   TRIM( prefix ) // '.phsave/elph.' &
+                    &    // TRIM(int_to_char(iq))  &
+                    &    // '.' // TRIM(int_to_char(irr)) // '.xml'
+
+               INQUIRE (FILE = TRIM(file_input), EXIST = exst)
+               IF (exst) CALL copy_file(file_input, file_output)
+            ENDIF
          ENDIF
       ENDDO
    ENDDO
    RETURN
-   END SUBROUTINE
+   END SUBROUTINE collect_grid_files

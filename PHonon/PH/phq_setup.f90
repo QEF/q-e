@@ -56,7 +56,7 @@ subroutine phq_setup
   USE io_files,      ONLY : tmp_dir
   USE ener,          ONLY : ef, ef_up, ef_dw
   USE klist,         ONLY : xk, lgauss, degauss, ngauss, nks, nelec, nelup, &
-                            neldw, two_fermi_energies, wk
+                            neldw, two_fermi_energies, wk, nkstot
   USE ktetra,        ONLY : ltetra, tetra
   USE lsda_mod,      ONLY : nspin, lsda, starting_magnetization, isk
   USE scf,           ONLY : v, vrs, vltot, rho, rho_core, kedtau
@@ -77,27 +77,27 @@ subroutine phq_setup
                             trans, epsil, lgamma, recover, where_rec, alpha_pv,&
                             nbnd_occ, flmixdpot, reduce_io, rec_code_read, &
                             done_epsil, zeu, done_zeu, current_iq, u_from_file
-  USE el_phon,       ONLY : elph
+  USE el_phon,       ONLY : elph, comp_elph, done_elph
   USE output,        ONLY : fildrho
   USE modes,         ONLY : u, npertx, npert, gi, gimq, nirr, &
                             t, tmq, irotmq, minus_q, invsymq, &
                             nsymq, nmodes, rtau, name_rap_mode, num_rap_mode
   USE dynmat,        ONLY : dyn, dyn_rec, dyn00
   USE efield_mod,    ONLY : epsilon, zstareu
-  USE qpoint,        ONLY : xq
+  USE qpoint,        ONLY : xq, xk_col
   USE partial,       ONLY : comp_irr, atomo, nat_todo, all_comp, &
                             done_irr
   USE gamma_gamma,   ONLY : has_equivalent, asr, nasr, n_diff_sites, &
                             equiv_atoms, n_equiv_atoms, with_symmetry
   USE ph_restart,    ONLY : ph_writefile, ph_readfile
   USE control_flags, ONLY : iverbosity, modenum, noinv
-  USE disp,          ONLY : comp_irr_iq
+  USE grid_irr_iq,   ONLY : comp_irr_iq
   USE funct,         ONLY : dmxc, dmxc_spin, dmxc_nc, dft_is_gradient
   USE ramanm,        ONLY : lraman, elop, ramtns, eloptns, done_lraman, &
                             done_elop
 
   USE mp,            ONLY : mp_max, mp_min
-  USE mp_global,     ONLY : inter_pool_comm, nimage
+  USE mp_global,     ONLY : inter_pool_comm, nimage, npool
   !
   USE acfdtest,      ONLY : acfdt_is_active, acfdt_num_der
 
@@ -131,11 +131,14 @@ subroutine phq_setup
   !
   IF (dft_is_gradient().and.(lraman.or.elop)) call errore('phq_setup', &
      'third order derivatives not implemented with GGA', 1)
+
+  IF (nsymq==0) CALL errore('phq_setup', &
+                 'The small group of q is no more calculated in phq_setup',1)
   !
   !  read the displacement patterns
   !
   IF (u_from_file) THEN
-     CALL ph_readfile('data_u',ierr)
+     CALL ph_readfile('data_u',current_iq,0,ierr)
      IF (ierr /= 0) CALL errore('phq_setup', 'problem with modes file',1)
   ENDIF
   !
@@ -320,6 +323,12 @@ subroutine phq_setup
   time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
 
   nmodes = 3 * nat
+
+  IF (npool > 1) THEN
+     CALL xk_collect( xk_col, xk, nkstot, nks )
+  ELSE
+     xk_col(:,1:nks) = xk(:,1:nks)
+  ENDIF
   !
   !   The small group of q may be known. At a given q it is calculated
   !   by set_nscf, at gamma it coincides with the point group and we
@@ -365,7 +374,7 @@ subroutine phq_setup
 
   IF (.NOT.u_from_file) THEN
      CALL find_irrep()
-     CALL ph_writefile('data_u',0)
+     CALL ph_writefile('data_u',current_iq,0,ierr)
   ENDIF
   CALL find_irrep_sym()
 
@@ -470,6 +479,11 @@ subroutine phq_setup
   ELSE
      call errore('phq_setup','nat_todo or nrap wrong',1)
   ENDIF
+
+  DO irr=0,nirr
+     comp_irr(irr)=comp_irr_iq(irr,current_iq)
+     IF (elph .AND. irr>0) comp_elph(irr)=comp_irr(irr)
+  ENDDO
   !
   !  The gamma_gamma case needs a different treatment
   !
@@ -500,16 +514,6 @@ subroutine phq_setup
         ENDDO
      ENDIF
   endif
-!
-!  In this case the number of irreducible representations to compute
-!  has been done elsewhere
-!
-  IF (nimage > 1 ) THEN
-     DO irr=0,nirr
-        comp_irr(irr)=comp_irr_iq(irr,current_iq)
-     ENDDO
-  ENDIF
-
   !
   !  Compute how many atoms moves and set the list atomo
   !
@@ -548,6 +552,7 @@ subroutine phq_setup
   all_done = .FALSE.
   npertx = 0
   done_irr = .FALSE.
+  IF (elph) done_elph = .FALSE.
   DO irr = 1, nirr
      npertx = max (npertx, npert (irr) )
   ENDDO
@@ -564,7 +569,7 @@ subroutine phq_setup
 
   where_rec='phq_setup.'
   rec_code=-40
-  CALL ph_writefile('data',0)
+  CALL ph_writefile('status_ph',current_iq,0,ierr)
 
   CALL stop_clock ('phq_setup')
   RETURN

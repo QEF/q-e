@@ -370,6 +370,7 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
   USE kinds, ONLY : DP
   USE fft_scalar, ONLY : cfft3d
   USE io_global, ONLY : ionode, ionode_id, stdout
+  USE mp_global, ONLY : intra_image_comm
   USE mp,        ONLY : mp_bcast
   !
   IMPLICIT NONE
@@ -385,7 +386,11 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
   LOGICAL :: lq
   REAL(DP) :: deg, ef, dosscf
   REAL(DP) :: q(3,48), xq, resi
-  character(len=14) :: name
+  character(len=256) :: name
+  CHARACTER(LEN=256) :: elph_dir
+  CHARACTER(LEN=6) :: int_to_char
+  LOGICAL :: exst
+  INTEGER :: ios
 
   !
   ALLOCATE (gaminp(3,3,nat,nat,48), gamout(nr1*nr2*nr3,3,3,nat,nat) )
@@ -397,16 +402,25 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
   nr(1) = nr1
   nr(2) = nr2
   nr(3) = nr3
+  elph_dir='elph_dir/'
+!  IF (ionode) INQUIRE(FILE=TRIM(elph_dir), EXIST=exst)
+!  CALL mp_bcast(exst, ionode_id, intra_image_comm)
+!  IF (.NOT. exst) CALL errore('gammaq2r','elph_dir directory not exists',1)
   !
   DO isig=1, nsig
      filea2F = 50 + isig
-     write(name,"(A7,I2)") 'a2Fq2r.',filea2F
-     IF (ionode) open(filea2F, file=name, STATUS = 'old', FORM = 'formatted')
      nc = 0
+     DO count_q=1,nqtot
+        name= TRIM(elph_dir) // 'a2Fq2r.' // TRIM(int_to_char(filea2F)) &
+                          // '.' // TRIM(int_to_char(count_q))
+        IF (ionode) open(unit=filea2F, file=name, STATUS = 'old', &
+                                 FORM = 'formatted', IOSTAT=ios)
+        CALL mp_bcast(ios, ionode_id, intra_image_comm)
+        IF (ios /= 0) CALL errore('gammaq2r','problem opening file' &
+                                   //TRIM(name), 1)
      !
      ! to pass to matdyn, for each isig, we read: degauss, Fermi energy and DOS
      !
-     DO count_q=1,nqtot
         !
         IF (ionode) THEN
            READ(filea2F,*) deg, ef, dosscf
@@ -432,13 +446,13 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
               m(ipol)= mod(iq,nr(ipol)) + 1
               if (m(ipol) < 1) m(ipol) = m(ipol) + nr(ipol)
            end do !ipol
-           IF (.NOT.lq) CALL errore('init','q not allowed',1)
+           IF (.NOT.lq) CALL errore('gammaq2r','q not allowed',1)
            !
            if(nc(m(1),m(2),m(3)) == 0) then
               nc(m(1),m(2),m(3)) = 1
               CALL TRASL( gamout, gaminp, nq, nr1, nr2, nr3, nat, m(1), m(2), m(3) )
            else
-              call errore('init',' nc already filled: wrong q grid or wrong nr',1)
+              call errore('gammaq2r',' nc already filled: wrong q grid or wrong nr',1)
            end if
         enddo ! stars for given q-point
      ENDDO ! q-points
@@ -449,7 +463,7 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
         write (stdout,'(" Broadening = ",F10.3)') deg
         write (stdout,'(5x,a,i4)') ' q-space grid ok, #points = ',nq_log
      else
-        call errore('init',' missing q-point(s)!',1)
+        call errore('gammaq2r',' missing q-point(s)!',1)
      end if
      do j1=1,3
         do j2=1,3
@@ -466,9 +480,9 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
      IF (ionode) close(filea2F)
      !
      filea2F = 60 + isig
-     write(name,"(A10,I2)") 'a2Fmatdyn.',filea2F
+     name = TRIM(elph_dir) // 'a2Fmatdyn.'// TRIM(int_to_char(filea2F)) 
      IF (ionode) THEN
-     open(filea2F, file=name, STATUS = 'unknown')
+     open(unit=filea2F, file=name, STATUS = 'unknown')
      !
      WRITE(filea2F,*) deg, ef, dosscf
      write(filea2F,'(3i4)') nr1, nr2, nr3
