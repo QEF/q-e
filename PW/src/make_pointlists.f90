@@ -25,7 +25,7 @@ SUBROUTINE make_pointlists
   USE io_global,  ONLY : stdout
   USE ions_base,  ONLY : nat, tau, ntyp => nsp, ityp
   USE cell_base,  ONLY : at, bg, alat
-  USE mp_global,  ONLY : me_pool
+  USE mp_global,  ONLY : me_bgrp
   USE fft_base,   ONLY : dfftp
 
   USE noncollin_module, ONLY : factlist, pointlist, r_m
@@ -49,7 +49,7 @@ SUBROUTINE make_pointlists
 
   idx0 = 0
 #ifdef __MPI
-  DO indproc=1,me_pool
+  DO indproc=1,me_bgrp
      idx0 = idx0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(indproc)
   ENDDO
 
