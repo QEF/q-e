@@ -12,7 +12,7 @@ SUBROUTINE io_pattern (nat,fildrho,nirr,npert,u,xq,directory,iflag)
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : stdout
   USE dfile_autoname,   ONLY : dfile_name
-  USE io_files,         ONLY : find_free_unit, prefix, tmp_dir, seqopn
+  USE io_files,         ONLY : prefix, tmp_dir, seqopn
   USE cell_base,        ONLY : at
 
   IMPLICIT NONE
@@ -29,6 +29,7 @@ SUBROUTINE io_pattern (nat,fildrho,nirr,npert,u,xq,directory,iflag)
 !   here the local variables
 !
   INTEGER :: i,iunit
+  INTEGER, EXTERNAL :: find_free_unit
   LOGICAL :: exst
 
   IF (ABS(iflag).NE.1) CALL errore('io_pattern','wrong iflag',1+ABS(iflag))

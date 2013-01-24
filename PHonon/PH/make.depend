@@ -141,7 +141,9 @@ allocate_phq.o : ../../PW/src/pwcom.o
 allocate_phq.o : elph.o
 allocate_phq.o : phcom.o
 allocate_phq.o : ramanm.o
+apply_dpot.o : ../../Modules/fft_base.o
 apply_dpot.o : ../../Modules/kind.o
+apply_dpot.o : ../../Modules/mp_global.o
 apply_dpot.o : ../../Modules/noncol.o
 apply_dpot.o : ../../PW/src/pwcom.o
 bcast_ph_input.o : ../../Modules/control_flags.o
@@ -169,6 +171,7 @@ cch_psi_all.o : phcom.o
 cft_wave.o : ../../Modules/fft_base.o
 cft_wave.o : ../../Modules/fft_interfaces.o
 cft_wave.o : ../../Modules/kind.o
+cft_wave.o : ../../Modules/mp_global.o
 cft_wave.o : ../../Modules/noncol.o
 cft_wave.o : ../../Modules/recvec.o
 cft_wave.o : ../../PW/src/pwcom.o
@@ -184,6 +187,7 @@ cgsolve_all_imfreq.o : ../../Modules/kind.o
 cgsolve_all_imfreq.o : ../../Modules/mp.o
 ch_psi_all.o : ../../Modules/becmod.o
 ch_psi_all.o : ../../Modules/control_flags.o
+ch_psi_all.o : ../../Modules/fft_base.o
 ch_psi_all.o : ../../Modules/kind.o
 ch_psi_all.o : ../../Modules/mp.o
 ch_psi_all.o : ../../Modules/mp_global.o
@@ -193,6 +197,11 @@ ch_psi_all.o : ../../Modules/wavefunctions.o
 ch_psi_all.o : ../../PW/src/pwcom.o
 ch_psi_all.o : ../../PW/src/realus.o
 ch_psi_all.o : phcom.o
+check_if_partial_dyn.o : ../../Modules/control_flags.o
+check_if_partial_dyn.o : ../../Modules/ions_base.o
+check_if_partial_dyn.o : ../../Modules/kind.o
+check_if_partial_dyn.o : ../../PW/src/symm_base.o
+check_if_partial_dyn.o : phcom.o
 check_initial_status.o : ../../Modules/control_flags.o
 check_initial_status.o : ../../Modules/io_files.o
 check_initial_status.o : ../../Modules/io_global.o
@@ -331,6 +340,7 @@ davcio_drho.o : ../../Modules/mp_global.o
 davcio_drho.o : ../../Modules/noncol.o
 davcio_drho.o : ../../Modules/paw_variables.o
 davcio_drho.o : phcom.o
+deallocate_part.o : elph.o
 deallocate_part.o : phcom.o
 deallocate_phq.o : ../../Modules/becmod.o
 deallocate_phq.o : ../../Modules/noncol.o
@@ -338,7 +348,6 @@ deallocate_phq.o : ../../Modules/wavefunctions.o
 deallocate_phq.o : elph.o
 deallocate_phq.o : phcom.o
 deallocate_phq.o : ramanm.o
-dfile_autoname.o : ../../Modules/io_files.o
 dfile_autoname.o : ../../Modules/io_global.o
 dfile_autoname.o : ../../Modules/kind.o
 dfile_star.o : ../../Modules/cell_base.o
@@ -386,6 +395,7 @@ dielec.o : ../../Modules/mp_global.o
 dielec.o : ../../Modules/noncol.o
 dielec.o : ../../PW/src/pwcom.o
 dielec.o : ../../PW/src/symme.o
+dielec.o : ph_restart.o
 dielec.o : phcom.o
 dielec_test.o : ../../Modules/cell_base.o
 dielec_test.o : ../../Modules/constants.o
@@ -616,6 +626,7 @@ el_opt.o : ../../Modules/mp_global.o
 el_opt.o : ../../PW/src/pwcom.o
 el_opt.o : ../../PW/src/scf_mod.o
 el_opt.o : ../../PW/src/symme.o
+el_opt.o : ph_restart.o
 el_opt.o : phcom.o
 el_opt.o : ramanm.o
 el_ph_collect.o : ../../Modules/io_global.o
@@ -641,11 +652,13 @@ elphon.o : ../../Modules/paw_variables.o
 elphon.o : ../../Modules/recvec.o
 elphon.o : ../../Modules/uspp.o
 elphon.o : ../../Modules/wavefunctions.o
+elphon.o : ../../Modules/xml_io_base.o
 elphon.o : ../../PW/src/pwcom.o
 elphon.o : ../../PW/src/start_k.o
 elphon.o : ../../PW/src/symm_base.o
 elphon.o : dfile_star.o
 elphon.o : elph.o
+elphon.o : ph_restart.o
 elphon.o : phcom.o
 elphon.o : save_ph_input.o
 ep_matrix_element_wannier.o : ../../Modules/cell_base.o
@@ -709,6 +722,8 @@ incdrhoscf.o : ../../Modules/fft_base.o
 incdrhoscf.o : ../../Modules/fft_interfaces.o
 incdrhoscf.o : ../../Modules/ions_base.o
 incdrhoscf.o : ../../Modules/kind.o
+incdrhoscf.o : ../../Modules/mp.o
+incdrhoscf.o : ../../Modules/mp_global.o
 incdrhoscf.o : ../../Modules/recvec.o
 incdrhoscf.o : ../../Modules/uspp.o
 incdrhoscf.o : ../../Modules/wavefunctions.o
@@ -719,6 +734,8 @@ incdrhoscf_nc.o : ../../Modules/fft_base.o
 incdrhoscf_nc.o : ../../Modules/fft_interfaces.o
 incdrhoscf_nc.o : ../../Modules/ions_base.o
 incdrhoscf_nc.o : ../../Modules/kind.o
+incdrhoscf_nc.o : ../../Modules/mp.o
+incdrhoscf_nc.o : ../../Modules/mp_global.o
 incdrhoscf_nc.o : ../../Modules/noncol.o
 incdrhoscf_nc.o : ../../Modules/recvec.o
 incdrhoscf_nc.o : ../../Modules/uspp.o
@@ -753,17 +770,15 @@ incdrhous_nc.o : ../../PW/src/pwcom.o
 incdrhous_nc.o : phcom.o
 init_representations.o : ../../Modules/cell_base.o
 init_representations.o : ../../Modules/control_flags.o
+init_representations.o : ../../Modules/io_global.o
 init_representations.o : ../../Modules/ions_base.o
 init_representations.o : ../../Modules/kind.o
 init_representations.o : ../../Modules/mp.o
 init_representations.o : ../../Modules/mp_global.o
-init_representations.o : ../../Modules/noncol.o
-init_representations.o : ../../PW/src/pwcom.o
 init_representations.o : ../../PW/src/symm_base.o
 init_representations.o : ph_restart.o
 init_representations.o : phcom.o
 initialize_ph.o : ../../PW/src/pwcom.o
-initialize_ph.o : ph_restart.o
 initialize_ph.o : phcom.o
 io_dyn_mat.o : ../../Modules/constants.o
 io_dyn_mat.o : ../../Modules/io_global.o
@@ -898,6 +913,7 @@ ph_restart.o : ../../Modules/mp_global.o
 ph_restart.o : ../../Modules/parser.o
 ph_restart.o : ../../Modules/version.o
 ph_restart.o : ../../Modules/xml_io_base.o
+ph_restart.o : ../../PW/src/pwcom.o
 ph_restart.o : ../../PW/src/start_k.o
 ph_restart.o : ../../iotk/src/iotk_module.o
 ph_restart.o : elph.o
@@ -918,12 +934,9 @@ phescf.o : ramanm.o
 phonon.o : ../../Modules/check_stop.o
 phonon.o : ../../Modules/environment.o
 phonon.o : ../../Modules/image_io_routines.o
-phonon.o : ../../Modules/io_global.o
 phonon.o : ../../Modules/mp_global.o
 phonon.o : elph.o
-phonon.o : ph_restart.o
 phonon.o : phcom.o
-phonon.o : save_ph_input.o
 phq_init.o : ../../Modules/atom.o
 phq_init.o : ../../Modules/becmod.o
 phq_init.o : ../../Modules/cell_base.o
@@ -943,6 +956,7 @@ phq_init.o : acfdtest.o
 phq_init.o : elph.o
 phq_init.o : phcom.o
 phq_readin.o : ../../Modules/control_flags.o
+phq_readin.o : ../../Modules/fft_base.o
 phq_readin.o : ../../Modules/input_parameters.o
 phq_readin.o : ../../Modules/io_files.o
 phq_readin.o : ../../Modules/io_global.o
@@ -966,6 +980,8 @@ phq_readin.o : ramanm.o
 phq_readin.o : save_ph_input.o
 phq_recover.o : ../../Modules/io_global.o
 phq_recover.o : ../../Modules/kind.o
+phq_recover.o : ../../PW/src/pwcom.o
+phq_recover.o : elph.o
 phq_recover.o : ph_restart.o
 phq_recover.o : phcom.o
 phq_recover.o : ramanm.o
@@ -1026,13 +1042,13 @@ polariz.o : ../../Modules/mp.o
 polariz.o : ../../Modules/mp_global.o
 polariz.o : ../../PW/src/pwcom.o
 polariz.o : ../../PW/src/symme.o
+polariz.o : ph_restart.o
 polariz.o : phcom.o
 prepare_q.o : ../../Modules/control_flags.o
 prepare_q.o : ../../Modules/io_files.o
 prepare_q.o : ../../Modules/io_global.o
 prepare_q.o : ../../PW/src/pwcom.o
 prepare_q.o : elph.o
-prepare_q.o : ph_restart.o
 prepare_q.o : phcom.o
 prepare_q.o : ramanm.o
 prepare_sym_analysis.o : ../../Modules/kind.o
@@ -1109,6 +1125,8 @@ q2r.o : io_dyn_mat_old.o
 q_points.o : ../../Modules/cell_base.o
 q_points.o : ../../Modules/io_global.o
 q_points.o : ../../Modules/kind.o
+q_points.o : ../../Modules/mp.o
+q_points.o : ../../Modules/mp_global.o
 q_points.o : ../../PW/src/symm_base.o
 q_points.o : phcom.o
 q_points_wannier.o : ../../Modules/io_files.o
@@ -1130,6 +1148,7 @@ raman.o : ../../Modules/control_flags.o
 raman.o : ../../Modules/kind.o
 raman.o : ../../Modules/uspp.o
 raman.o : ../../PW/src/pwcom.o
+raman.o : ph_restart.o
 raman.o : phcom.o
 raman.o : ramanm.o
 raman_mat.o : ../../Modules/becmod.o
@@ -1169,8 +1188,11 @@ rotate_dvscf_star.o : ../../Modules/kind.o
 rotate_dvscf_star.o : ../../PW/src/symm_base.o
 rotate_dvscf_star.o : dfile_star.o
 rotate_dvscf_star.o : phcom.o
+rotate_pattern_add.o : ../../Modules/kind.o
 run_pwscf.o : ../../Modules/control_flags.o
+run_pwscf.o : ../../Modules/fft_base.o
 run_pwscf.o : ../../Modules/io_files.o
+run_pwscf.o : ../../Modules/mp_global.o
 run_pwscf.o : ../../PW/src/pwcom.o
 run_pwscf.o : ../../PW/src/scf_mod.o
 run_pwscf.o : acfdtest.o
@@ -1357,6 +1379,8 @@ stop_ph.o : ../../Modules/environment.o
 stop_ph.o : ../../Modules/image_io_routines.o
 stop_ph.o : ../../Modules/kind.o
 stop_ph.o : ../../Modules/mp_global.o
+stop_ph.o : ph_restart.o
+stop_ph.o : save_ph_input.o
 summarize.o : ../../Modules/cell_base.o
 summarize.o : ../../Modules/constants.o
 summarize.o : ../../Modules/io_global.o
@@ -1370,6 +1394,7 @@ sym_and_write_zue.o : ../../Modules/io_global.o
 sym_and_write_zue.o : ../../Modules/ions_base.o
 sym_and_write_zue.o : ../../Modules/kind.o
 sym_and_write_zue.o : ../../PW/src/symme.o
+sym_and_write_zue.o : ph_restart.o
 sym_and_write_zue.o : phcom.o
 sym_def.o : ../../Modules/kind.o
 sym_def.o : phcom.o
@@ -1405,6 +1430,8 @@ syme2.o : ../../PW/src/symm_base.o
 syme2.o : ramanm.o
 symm.o : ../../Modules/constants.o
 symm.o : ../../Modules/kind.o
+symmorphic_or_nzb.o : ../../PW/src/symm_base.o
+symmorphic_or_nzb.o : phcom.o
 tra_write_matrix.o : ../../Modules/cell_base.o
 tra_write_matrix.o : ../../Modules/io_global.o
 tra_write_matrix.o : ../../Modules/kind.o
@@ -1482,6 +1509,7 @@ zstar_eu.o : ../../Modules/uspp.o
 zstar_eu.o : ../../Modules/wavefunctions.o
 zstar_eu.o : ../../PW/src/pwcom.o
 zstar_eu.o : ../../PW/src/symme.o
+zstar_eu.o : ph_restart.o
 zstar_eu.o : phcom.o
 zstar_eu_us.o : ../../Modules/cell_base.o
 zstar_eu_us.o : ../../Modules/fft_base.o

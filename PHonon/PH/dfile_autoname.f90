@@ -34,21 +34,16 @@ END FUNCTION dfile_directory_file
 !----------------------------------------------------------------------
 FUNCTION open_dfile_directory(basename, prefix)
   !----------------------------------------------------------------------
-  USE io_files, ONLY : find_free_unit
   IMPLICIT NONE
   CHARACTER(len=*),INTENT(in) :: basename
   CHARACTER(len=*),INTENT(in) :: prefix   ! directory where to operate
-  INTEGER :: open_dfile_directory
-  INTEGER :: ios
+  INTEGER :: open_dfile_directory, ios
+  INTEGER, EXTERNAL :: find_free_unit
   CHARACTER(len=256) :: filename
-!  LOGICAL :: exst
   !
   filename = dfile_directory_file(basename, prefix)
-  !print*, "opening dir:", TRIM(filename)
   open_dfile_directory = find_free_unit()
   !
-!  INQUIRE( FILE = TRIM(filename), EXIST = exst )
-  !IF(.not.exst) print*, "does not exist: >",TRIM(filename),"<"
 #ifdef __XLF
   OPEN(UNIT  = open_dfile_directory, &
        ACCESS= 'sequential',           &

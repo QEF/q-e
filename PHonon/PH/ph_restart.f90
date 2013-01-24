@@ -155,7 +155,7 @@ MODULE ph_restart
       
          SUBROUTINE write_polarization(iu)
 !
-            USE freq_ph, ONLY : polar, done_iu, fpol, done_fpol
+            USE freq_ph, ONLY : polar, done_iu, fpol, done_fpol, fiu
 
             IMPLICIT NONE
             INTEGER :: iu
@@ -1206,7 +1206,7 @@ MODULE ph_restart
    USE disp,        ONLY : nqs, x_q, done_iq, comp_iq, lgamma_iq
    USE grid_irr_iq, ONLY : done_irr_iq, irr_iq, nsymq_iq, &
                           npert_irr_iq, comp_irr_iq, done_bands, done_elph_iq
-   USE freq_ph,     ONLY : comp_iu, done_iu
+   USE freq_ph,     ONLY : comp_iu, done_iu, fiu
    IMPLICIT NONE
 
    IF (ALLOCATED(x_q)) DEALLOCATE(x_q)

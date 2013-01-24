@@ -110,7 +110,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   USE modes,            ONLY : nirr, npert, npertx, rtau
   USE units_ph,         ONLY : lrdrho
   USE io_global,        ONLY : stdout , ionode, ionode_id
-  use io_files,         ONLY : find_free_unit, diropn, prefix
+  use io_files,         ONLY : diropn, prefix
   USE constants,        ONLY : tpi
   USE dfile_autoname,   ONLY : dfile_name
   USE control_ph,       ONLY : search_sym
@@ -146,9 +146,8 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
 
   ! local variables
   INTEGER :: na, i, j
-              ! local variables
   INTEGER :: isym, nsymrot, iudfile_rot, iudfile
-
+  INTEGER, EXTERNAL :: find_free_unit
   ! auxiliary xq\cdot\tau and \xq_s\cdot\tau
   REAL(DP) :: xq_tau,sxq_tau
   !
