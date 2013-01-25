@@ -35,9 +35,7 @@ The calculation in run_example_1 proceeds as follows:
 
 2) Start the electron phonon calculation with max_seconds=3 sec.
 
-3) Remove the a2fq2r files produced by the first electron-phonon run.
-
-4) Recover the electron-phonon calculation with recover=.true. and no
+3) Recover the electron-phonon calculation with recover=.true. and no
 max_seconds limit.
 
-5) calculate a2F(omega) and plots it.
+4) calculate a2F(omega).

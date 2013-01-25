@@ -1,0 +1,236 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether ECHO has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use the recover feature of ph.x for el-ph"
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x ph.x"
+PSEUDO_LIST="Si.pz-vbc.UPF Ni.pbe-nd-rrkjus.UPF Cu.pbe-kjpaw.UPF Au.rel-pz-kjpaw.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for gnuplot
+GP_COMMAND=`which gnuplot 2>/dev/null`
+if [ "$GP_COMMAND" = "" ]; then
+        $ECHO
+        $ECHO "gnuplot not in PATH"
+        $ECHO "Results will not be plotted"
+fi
+
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results_1" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results_1
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
+Q2R_COMMAND="$PARA_PREFIX $BIN_DIR/q2r.x $PARA_POSTFIX"
+MATDYN_COMMAND="$PARA_PREFIX $BIN_DIR/matdyn.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as:     $PW_COMMAND"
+$ECHO "  running ph.x as:     $PH_COMMAND"
+$ECHO "  running q2r.x as:    $Q2R_COMMAND"
+$ECHO "  running matdyn.x as: $MATDYN_COMMAND"
+$ECHO
+
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+$ECHO 
+
+#
+# SCF at dense k-mesh, good enough for electronic DOS
+#
+PREFIX='al'
+cat > al.scf.fit.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='$PREFIX',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=  2, celldm(1) =7.5, nat= 1, ntyp= 1,
+    ecutwfc =15.0,
+    occupations='smearing', smearing='methfessel-paxton', degauss=0.05,
+    la2F = .true.,
+ /
+ &electrons
+    conv_thr =  1.0d-8
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Al  26.98 Al.pz-vbc.UPF
+ATOMIC_POSITIONS
+ Al 0.00 0.00 0.00
+K_POINTS {automatic}
+ 16 16 16  0 0 0
+EOF
+$ECHO "  running the scf calculation with dense k-point grid...\c"
+$PW_COMMAND  < al.scf.fit.in > al.scf.fit.out
+check_failure $?
+$ECHO "  done"
+#
+#  SCF at k-mesh good enough for phonons
+#
+cat > al.scf.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='$PREFIX',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=  2, celldm(1) =7.5, nat= 1, ntyp= 1,
+    ecutwfc =15.0,
+    occupations='smearing', smearing='methfessel-paxton', degauss=0.05
+ /
+ &electrons
+    conv_thr =  1.0d-8
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Al  26.98 Al.pz-vbc.UPF
+ATOMIC_POSITIONS
+ Al 0.00 0.00 0.00
+K_POINTS {automatic}
+ 8 8 8  0 0 0
+EOF
+$ECHO "  running the scf calculation...\c"
+$PW_COMMAND < al.scf.in > al.scf.out
+check_failure $?
+$ECHO "  done"
+cat > al.elph.in << EOF
+Electron-phonon coefficients for Al
+ &inputph
+  tr2_ph=1.0d-10,
+  prefix='$PREFIX',
+  fildvscf='aldv',
+  amass(1)=26.98,
+  outdir='$TMP_DIR/',
+  fildyn='al.dyn',
+  electron_phonon='interpolated',
+  max_seconds=3,
+  trans=.true.,
+  ldisp=.true.
+  nq1=4, nq2=4, nq3=4
+ /
+EOF
+$ECHO "  running the electron-phonon calculation ...\c"
+$PH_COMMAND < al.elph.in > al.elph.out
+#
+#   The electron phonon routine appends its results to a2fq2r.# so we need
+#   to remove these files before recovering
+#
+\rm -rf a2Fq2r.* 2> /dev/null
+
+#
+cat > al.elph.in1 << EOF
+Electron-phonon coefficients for Al
+ &inputph
+  tr2_ph=1.0d-10,
+  prefix='$PREFIX',
+  fildvscf='aldv',
+  amass(1)=26.98,
+  outdir='$TMP_DIR/',
+  fildyn='al.dyn',
+  electron_phonon='interpolated',
+  recover=.true.,
+  trans=.true.,
+  ldisp=.true.
+  nq1=4, nq2=4, nq3=4
+ /
+EOF
+$ECHO "  recovering the electron phonon calculation ...\c"
+$PH_COMMAND < al.elph.in1 > al.elph.out1
+check_failure $?
+$ECHO "  done"
+#
+
+cat > q2r.in << EOF
+ &input
+  zasr='simple',  fildyn='al.dyn', flfrc='Al444.fc', la2F=.true.
+ /
+EOF
+$ECHO "  running q2r...\c"
+$Q2R_COMMAND < q2r.in > q2r.out
+check_failure $?
+$ECHO "  done"
+#
+#
+#
+cat > matdyn.in.dos << EOF
+ &input
+    asr='simple',  amass(1)=26.98,
+    flfrc='Al444.fc', flfrq='Al444.freq', la2F=.true., dos=.true.
+    fldos='phonon.dos', nk1=10, nk2=10, nk3=10, ndos=50
+ /
+EOF
+$ECHO "  running matdyn for a2F(omega) calculation...\c"
+$MATDYN_COMMAND < matdyn.in.dos > matdyn.out.dos
+check_failure $?
+$ECHO "  done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"
+
