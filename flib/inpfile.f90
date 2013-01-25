@@ -60,9 +60,9 @@ FUNCTION input_file_name_getarg ( input_file ) RESULT ( found )
   CHARACTER (LEN=256), INTENT (OUT) :: input_file
   LOGICAL             :: found
   !
-  INTEGER             :: iiarg, nargs
-  INTEGER, EXTERNAL   :: iargc
-  !
+  INTEGER :: iiarg, nargs
+  ! Do not define iargc as external: gfortran doesn't like it
+  INTEGER :: iargc
   !
   ! ... Input from file ?
   !
@@ -105,7 +105,7 @@ SUBROUTINE get_file( input_file )
   !
   CHARACTER (LEN=256) :: prgname
   INTEGER             :: nargs
-  INTEGER, EXTERNAL   :: iargc
+  INTEGER             :: iargc
   LOGICAL             :: exst
   !
   nargs = iargc()
@@ -136,11 +136,11 @@ SUBROUTINE get_arg_npool( npool )
    !
    IMPLICIT NONE
    !
-   INTEGER :: npool
+   INTEGER, INTENT(OUT) :: npool
    !
    INTEGER :: nargs, iiarg
+   INTEGER :: iargc
    CHARACTER(LEN=10) :: np
-   INTEGER, EXTERNAL :: iargc
    !
    npool = 1
    nargs = iargc()
@@ -170,11 +170,11 @@ SUBROUTINE get_arg_npot( npot )
    !
    IMPLICIT NONE
    !
-   INTEGER :: npot
+   INTEGER, INTENT(OUT) :: npot
    !
    INTEGER :: nargs, iiarg
+   INTEGER :: iargc
    CHARACTER(LEN=10) :: np
-   INTEGER, EXTERNAL :: iargc
    !
    npot = 1
    nargs = iargc()
@@ -202,11 +202,11 @@ SUBROUTINE get_arg_nimage( nimage )
    !
    IMPLICIT NONE
    !
-   INTEGER :: nimage
+   INTEGER, INTENT(OUT) :: nimage
    !
    INTEGER :: nargs, iiarg
    CHARACTER(LEN=10) :: np
-   INTEGER, EXTERNAL :: iargc
+   INTEGER :: iargc
    !
    nimage = 1
    nargs = iargc()
@@ -236,11 +236,11 @@ SUBROUTINE get_arg_ntg( ntask_groups )
    !
    IMPLICIT NONE
    !
-   INTEGER :: ntask_groups
+   INTEGER, INTENT(OUT) :: ntask_groups
    !
    INTEGER :: nargs, iiarg
+   INTEGER :: iargc
    CHARACTER(LEN=20) :: np
-   INTEGER, EXTERNAL :: iargc
    !
    ntask_groups = 0
    nargs = iargc()
@@ -269,11 +269,11 @@ SUBROUTINE get_arg_nbgrp( nbgrp )
    !
    IMPLICIT NONE
    !
-   INTEGER :: nbgrp
+   INTEGER, INTENT(OUT) :: nbgrp
    !
    INTEGER :: nargs, iiarg
+   INTEGER :: iargc
    CHARACTER(LEN=20) :: np
-   INTEGER, EXTERNAL :: iargc
    !
    nbgrp = 1
    nargs = iargc()
@@ -304,11 +304,11 @@ SUBROUTINE get_arg_northo( nproc_ortho )
    !
    IMPLICIT NONE
    !
-   INTEGER :: nproc_ortho
+   INTEGER, INTENT(OUT) :: nproc_ortho
    !
    INTEGER :: nargs, iiarg
+   INTEGER :: iargc
    CHARACTER(LEN=20) :: np
-   INTEGER, EXTERNAL :: iargc
    !
    ! ... unlike the others, this subroutine should return 0 if nothing found
    !

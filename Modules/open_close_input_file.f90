@@ -21,16 +21,22 @@ CONTAINS
   !-----------------------------------------------------------------------------
   !
   ! ...  Opens file for input read, connecting it to unit stdin (text input)
-  ! ...  or xmlstdin (xml file). Xml file is tested if lxmlinput=.true. with
-  ! ...  attribute "attr" (both or none must be present)
+  ! ...  or xmlstdin (xml file).
+  ! ...  On entry:
+  ! ...    if optional variable lxmlinput is present and set to .true., 
+  ! ...    test if the file is a valid xml file. In this case, optional
+  ! ...    variable attr must be present and used to open the file.
   ! ...  The code detects an input filename via option "-i filename"
   ! ...  (also "-in", "-inp", "-input" are accepted)
   ! ...  If no filename is specified, the standard input is dumped to
   ! ...  temporary file "input_tmp.in" and this is opened for read
-  ! ...  Returns -1 if standard input is dumped to file
-  ! ...  Returns  0 if input file is successfully opened
-  ! ...  Returns  1 if called with wrong arguments
-  ! ...  Returns  2 if there was an error opening file
+  ! ...  On exit:
+  ! ...    Returns -1 if standard input is dumped to file
+  ! ...    Returns  0 if input file is successfully opened
+  ! ...    Returns  1 if called with wrong arguments
+  ! ...    Returns  2 if there was an error opening file
+  ! ...    lxmlinput=.true. if the file has extension '.xml' or '.XML'
+  ! ...       or if either <xml...> or <?xml...> is found as first token
   ! ...  ---------------------------------------------------------------
   !
   IMPLICIT NONE
@@ -39,25 +45,20 @@ CONTAINS
   CHARACTER (len=*), intent(inout), optional :: attr
   !
   LOGICAL :: lfound, lxmlinput_loc,lcheckxml
-  INTEGER  :: ierr
+  INTEGER :: ierr, len
   INTEGER :: stdtmp
   CHARACTER(LEN=512) :: dummy
   LOGICAL, EXTERNAL :: test_input_xml, input_file_name_getarg
   INTEGER, EXTERNAL :: find_free_unit
   !
   !
-  IF (     PRESENT(attr) .AND. .NOT.PRESENT(lxmlinput) .OR. &
-      .NOT.PRESENT(attr) .AND.      PRESENT(lxmlinput) ) THEN
-     !
+  lcheckxml = .false.
+  IF ( PRESENT(lxmlinput) ) lcheckxml = lxmlinput
+  !
+  IF ( lcheckxml .AND. .NOT.PRESENT(attr) ) THEN
      open_input_file = 1
      RETURN
-     !
   ENDIF
-  !
-  lcheckxml = .false.
-  IF ( PRESENT(attr) .AND. (PRESENT(lxmlinput)) ) lcheckxml = .true.
-  !
-  lxmlinput_loc = .false.
   !
   ! ... Input from file ?
   !
@@ -84,13 +85,21 @@ CONTAINS
 20   CLOSE ( UNIT=stdtmp, STATUS='keep' )
   ENDIF
   !
+  lxmlinput_loc = .false.
   IF (lcheckxml) THEN
     !
-    OPEN ( UNIT = stdtmp, FILE = TRIM(input_file) , FORM = 'FORMATTED', &
-          STATUS = 'OLD', IOSTAT = ierr )
-    IF ( ierr > 0 ) GO TO 30
-    lxmlinput_loc = test_input_xml (stdtmp )
-    CLOSE ( UNIT=stdtmp, status='keep')
+    len = LEN_TRIM(input_file)
+    IF ( len > 4) THEN
+       lxmlinput_loc = ( input_file(len-3:len) == '.xml' .OR. &
+                         input_file(len-3:len) == '.XML' )
+    END IF
+    IF ( .NOT. lxmlinput_loc ) THEN
+       OPEN ( UNIT = stdtmp, FILE = TRIM(input_file) , FORM = 'FORMATTED', &
+              STATUS = 'OLD', IOSTAT = ierr )
+       IF ( ierr > 0 ) GO TO 30
+       lxmlinput_loc = test_input_xml (stdtmp )
+       CLOSE ( UNIT=stdtmp, status='keep')
+    END IF
     !
     lxmlinput = lxmlinput_loc
     !
