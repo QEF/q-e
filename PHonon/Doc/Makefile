@@ -3,7 +3,7 @@ HELPDOC=../../dev-tools/helpdoc
 LATEX   = pdflatex
 LATEX2HTML = latex2html
 
-PDFS = user_guide.pdf
+PDFS = user_guide.pdf developer_man.pdf
 AUXS = $(PDFS:.pdf=.aux)
 LOGS = $(PDFS:.pdf=.log)
 OUTS = $(PDFS:.pdf=.out)
@@ -13,7 +13,7 @@ TOCS = $(PDFS:.pdf=.toc)
 doc:  all
 all:  pdf html defs
 pdf: $(PDFS)
-html: user_guide
+html: user_guide developer_man
 
 $(PDFS): %.pdf: %.tex
 	$(LATEX)  $<
@@ -43,6 +43,27 @@ user_guide: user_guide.pdf
 	@echo ""
 	@echo "***"
 	@echo "*** User's Guide created in user_guide/user_guide.html"
+	@echo "***"
+	@echo ""
+
+
+developer_man: developer_man.pdf
+	rm -rf developer_man/
+	latex2html \
+                -t "User's Guide for the PHonon package" \
+                -html_version 3.2,math \
+                -toc_depth 5 -split 5 -toc_stars -show_section_numbers \
+                -local_icons -image_type png \
+                developer_man.tex
+	cd developer_man; \
+	for file in *.html; do \
+                cp $$file /tmp/$$file; \
+                cat /tmp/$$file | sed 's/HREF="http/NAME="http/g' | sed 's/mathend000#//g' - > $$file; \
+                rm -f /tmp/$$file; \
+        done
+	@echo ""
+	@echo "***"
+	@echo "*** Developer manual created in developer_man/developer_man.html"
 	@echo "***"
 	@echo ""
 

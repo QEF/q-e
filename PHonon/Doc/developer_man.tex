@@ -1,0 +1,920 @@
+\documentclass[12pt,a4paper]{article}
+\def\version{$>$5.0.2}
+\def\qe{{\sc Quantum ESPRESSO}}
+\def\qeforge{\texttt{qe-forge.org}}
+\textwidth = 17cm
+\textheight = 24cm
+\topmargin =-1 cm
+\oddsidemargin = 0 cm
+
+\usepackage{html}
+
+% BEWARE: don't revert from graphicx for epsfig, because latex2html
+% doesn't handle epsfig commands !!!
+\usepackage{graphicx}
+
+
+% \def\htmladdnormallink#1#2{#1}
+
+\def\configure{\texttt{configure}}
+\def\configurac{\texttt{configure.ac}}
+\def\autoconf{\texttt{autoconf}}
+
+\def\qeImage{../../Doc/quantum_espresso.pdf}
+\def\democritosImage{../../Doc/democritos.pdf}
+
+\begin{htmlonly}
+\def\qeImage{../../Doc/quantum_espresso.png}
+\def\democritosImage{../../Doc/democritos.png}
+\end{htmlonly}
+
+\def\pwx{\texttt{pw.x}}
+\def\phx{\texttt{ph.x}}
+\def\configure{\texttt{configure}}
+\def\PWscf{\texttt{PWscf}}
+\def\PHonon{\texttt{PHonon}}
+\def\make{\texttt{make}}
+
+
+\begin{document} 
+\author{}
+\date{}
+\title{
+  \includegraphics[width=5cm]{\qeImage} \hskip 2cm
+  \includegraphics[width=6cm]{\democritosImage}\\
+  \vskip 1cm
+  % title
+  \Huge Developer's Manual for \PHonon\ package \smallskip
+  \Large (version \version)
+}
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+\subsection{Who should read (and who should {\em write}) this guide}
+
+The intended audience of this guide is everybody who wants to:
+\begin{itemize}
+\item know how the \PHonon\ package works, including its internals;
+\item modify/customize/add/extend/improve/clean up the \PHonon\ package;
+\item know how to read data produced by the \PHonon\ package.
+\end{itemize}
+The same category of people should also {\em write} this guide, of course.
+
+\subsection{Who may read this guide but will not necessarily profit from it}
+
+People who want to know about the capabilities of the \PHonon\ package.
+
+People who want to know about the methods or the physics
+behind \PHonon\ should read first the relevant  
+literature (some pointers in the User Guide).
+
+
+
+\section{General structure of \phx}
+
+The behavior of the \phx\ code is controlled by a set of flags.
+In a general run when all control flags are \texttt{.true.} the phonon 
+code computes the following quantities in the given order:
+
+\begin{verbatim}
+                              frequency             q        perturbations
+
+polarizability                   iu                 gamma       x,y,z 
+dielectric constant               0                 gamma       x,y,z
+zeu                               0                 gamma       x,y,z  
+electro optic coefficient         0                 gamma       x,y,x 
+raman tensor                      0                 gamma       3 x 3
+dynamical matrix                  0                 all q      all irreps
+zue                               0                 gamma      all irreps
+electron phonon interactions      0                 all q      all irreps
+
+zeu = Born effective charges as derivative of the forces,
+zue = Born effective charges as derivative of the polarization 
+\end{verbatim}
+
+Two control flags associated to every calculated quantity 
+allow to set/unset the calculation of that quantity independently from 
+the others. One of these flags is an input variable:
+
+\begin{verbatim}
+fpol,             if .TRUE. computes the frequency dependent polarizability
+epsil,            if .TRUE. computes the dielectric constant
+zeu,              if .TRUE. computes eff. charges as induced forces
+lraman,           if .TRUE. computes the raman tensor
+elop,             if .TRUE. computes the el-optical coefficient
+trans,            if .TRUE. computes the dynamical matrix
+zue,              if .TRUE. computes eff. charges as induced polarization
+elph              if .TRUE. computes the electron phonon coupling
+\end{verbatim}
+
+By default, only the \texttt{trans} flag is \texttt{.true.}.
+The second flag is described in the following Section.
+
+The phonon code contains three loops.
+The outer loop is over {\bf q} points. The other two loops are inside the
+{\bf q}-point loop, but they are separate and carried out sequentially. 
+There is a loop over the frequencies that calculates the frequency 
+dependent polarizabilities and a loop over the irreducible 
+representations (\texttt{irreps}). 
+In addition to this there is the calculation of the response to the electric
+field. The loop over the frequencies and the response to an electric field are 
+calculated only if {\bf q} is the $\Gamma$ point. The size of the loops over
+the frequencies and over {\bf q} points is controlled by input variables.  
+
+\begin{verbatim}
+nfs               ! number of frequencies
+fiu(nfs)          ! frequencies in Ry
+
+nq1, nq2, nq3     ! the mesh of q points
+or
+xq                ! the coordinates of a q point
+
+start_iq          ! initial q to calculate
+last_iq           ! last q to calculate
+start_irr         ! initial representation to calculate
+last_irr          ! last representation to calculate
+\end{verbatim}
+
+The run can be controlled also in other two ways by the following input
+variables:
+
+\begin{verbatim}
+nat_todo          ! the number of atoms to move
+atomo(nat_todo)   ! which atoms to move
+
+or
+
+modenum           ! the response to a single mode
+\end{verbatim}
+The first two options limit the calculation to the representations in which
+at least one of a set of atoms (specified by \texttt{atomo}) moves.
+The second option calculates only the motion with respect to one 
+vibrational mode.
+
+The flow of the code can be summarized as follows:
+
+\begin{verbatim}
+1) Read input and set the flags of the quantities to compute
+   1.1) Read all the quantities written by pw.x
+   1.2) Read the pseudopotential data
+
+2) Decide what must be calculated.
+   2.1) If not already on disk, compute the grid of q points and 
+        all the modes for all q points and save on disk (SD)
+   2.2) If image parallelization is requested divide the work among images
+
+3) In a recover run check what is already available on the .xml files and
+   sets the appropriate done flags to .TRUE.
+
+4) Start a main loop over the q points:
+
+   4.1) Compute all quantities that do not depend on the response of the system
+   NB: the following points are executed only when q is Gamma.
+     4.2) Start a loop on the frequencies
+          4.2.1) Compute the polarizability as a function of iu SD
+     4.3) Compute the response to an electric field 
+     4.4) Compute epsilon and SD
+     4.5) Compute zeu and SD
+     4.7) Compute the electro-optic coefficient and SD
+     4.6) Compute the second order response to E
+     4.8) Compute Raman tensor and SD
+   END NB
+
+5) Start a loop over the irreducible representation 
+     5.1) Compute the response to an irreducible representation
+     5.1.1) Accumulate the contribution to electron-phonon SD
+     5.1.2) Accumulate the contribution to the dynamical matrix 
+     5.1.3) Accumulate the contribution to zue 
+     5.1.4) SD this contribution to the dynamical matrix and to zue
+continue the loop 5) until all representations of the current q point
+have been computed
+
+6) diagonalize the dynamical matrix and SD (only if all representations of 
+   this q have been computed)
+
+7) Sum over k and bands the electron-phonon couplings to calculate gamma_mat
+   SD (only if all representations of this q have been computed)
+
+8) continue the loop at point 4 until all q points have been computed
+
+\end{verbatim}
+
+In more detail the quantities calculated by the phonon code and
+the routines where these quantities are calculated are:
+
+\begin{itemize}
+
+\item
+4.2.1) The polarization as a function of the complex frequency is a
+\texttt{3x3} real tensor for each frequency: \texttt{polar(3,3,nfs)} 
+(calculated in \texttt{polariz}). These quantities are presently written 
+on output.
+
+\item
+4.4) The dielectric constant is a real \texttt{3x3} tensor: 
+\texttt{epsilon} (calculated in \texttt{dielec}). 
+
+\item
+4.5) Zeu is a real array: \texttt{zstareu(3,3,nat)}. The first index is 
+the electric field, while the other two indices give the atom that moves and the
+direction. 
+
+\item
+The electro-optic tensor is a three indices tensor \texttt{eloptns(3,3,3)}
+that is calculated by the routine \texttt{el\_opt}. It requires the response
+to the electric field perturbation.
+
+\item
+The raman tensor is a real array \texttt{zstarue(3,3,3,nat)} that
+gives the derivatives of the dielectric constant when the atom nat moves.
+The third index give the direction of the displacement.
+It requires the first and the second order response of the wavefunctions
+with respect to the electric field perturbation. It is calculated
+by the routine \texttt{raman\_mat}.
+
+\item The dynamical matrix is a complex matrix of dimensions
+\texttt{(3 * nat, 3 * nat)}. It is calculated by three routines:
+\texttt{dynmat0} computes the part that does not require the linear
+response of the system. It has an ion-ion term, a term common to NC, US, and
+PAW scheme and the nonlinear core correction term. 
+The US and PAW schemes have additional parts, 
+one of them calculated inside \texttt{dynmat0} with a call to
+\texttt{addusdynmat}, and another part calculated in \texttt{drho}.
+There is then a contribution that requires the response of the
+wavefunctions calculated in \texttt{drhodv} and \texttt{drhodv\_loc}
+which is common to the NC, US, and PAW schemes. The latter two schemes
+have other contributions calculated in \texttt{drhodvus}. This
+routine contains also the additional PAW term.
+
+\item
+5.1.3 Zue is a real array: \texttt{zstarue(3,nat,3)}. The first two indices 
+give the atom that moves and the direction, the third gives the electric 
+field. 
+
+\item
+The electron phonon coefficients are explained in the \PHonon\ user guide. 
+\phx\ saves on \texttt{.xml} files $g_{{\bf q},\nu} ({\bf k},i,j)$ 
+for all the modes of an irreducible representation. The coefficients are
+saved for each {\bf k} and for all the perturbations. Each irreducible
+representation is contained in a different file (see below). Note that 
+these quantities are gauge dependent, so if you calculate them on 
+different machines with the GRID parallelization, you can use them only 
+for gauge invariant quantities. Be very careful with it. (still at an 
+experimental stage).
+
+\end{itemize}
+
+All the quantities calculated by the phonon code are saved in the
+\texttt{fildyn} files with the exception of the
+polarization as a function of the complex frequency that is written 
+on output, and of the electron phonon coefficients. The output of the
+code in the latter case is given by the files {\tt a2Fq2r.\#.\#iq}.
+
+The charge density response to the electric field perturbations and
+to the atomic displacements, or the change of the Kohn and Sham
+potential can be saved on disk giving appropriate input variables.
+These quantities are saved on disk by \texttt{solve\_e} and 
+\texttt{solve\_linter}.
+
+
+\section{GRID parallelization and recover}
+
+The \phx\ code might start from scratch or recover an interrupted run. 
+In a recover run the input control flags are assumed to coincide with 
+those used in the interrupted run. The required quantities might be
+found in \texttt{.xml} recover files and do not need to be recalculated. 
+If the quantities are found on file the following flags become 
+\texttt{.TRUE.}.
+
+\begin{verbatim}
+done_fpol,          if .TRUE. all frequency dependent polarizabilities are known
+done_epsil,         if .TRUE. the dielectric constant is known
+done_start_zstar,   if .TRUE. zstareu0 is known
+done_zeu,           if .TRUE. zeu is known
+done_lraman,        if .TRUE. the raman tensor is known
+done_elop,          if .TRUE. the electron-optical coefficient is known
+done_trans,         if .TRUE. the dynamical matrix is known
+done_zue,           if .TRUE. zue is known
+done_elph           if .TRUE. the electron-phonon coupling coefficient is known
+\end{verbatim}
+
+The variables that control the grid are:
+
+\begin{verbatim}
+comp_iq(nqs)=.TRUE.              ! .FALSE. when this q is not computed in 
+                                 ! this run (controlled by start_iq, last_iq,
+                                 ! or by the image controller)
+
+comp_irr_iq(0:3*nat,nqs)=.TRUE.  ! .FALSE. for the representations that are
+                                 !  not calculated in this run.
+                                 ! (controlled by start_iq, last_iq, 
+                                 !  start_irr, last_irr, 
+                                 !  or by the image controller)
+
+comp_iu(nfs)=.TRUE.              ! .FALSE. for the frequencies not calculated 
+                                 ! in this run. 
+
+\end{verbatim}
+
+These variables are set at the beginning of the run on the basis of
+the input and of the number of images requested by the calculation.
+If this is a recover run some of these quantities might be already
+available on file. The code checks what is already saved on files and
+sets the corresponding flags:
+
+\begin{verbatim}
+done_iu(nfs)=.FALSE.        ! .TRUE. when the polarization(iu) is available.
+
+done_iq(nqs)=.FALSE.        ! .TRUE. when the dyn. mat. and, if required, the
+                            ! electron-phonon coefficients at the q point 
+                            ! have been calculated
+
+done_bands(nqs)=.FALSE.     ! .TRUE. when the bands for that q are already 
+                            !  on disk
+
+done_irr_iq(0:3*nat,nqs)=.FALSE. ! The representations that have been already 
+                                 ! calculated for each q are set .TRUE.. 
+                                 ! The representation 0 is the part of the
+                                 ! dynamical matrix computed by drho and
+                                 ! dynmat0.
+
+done_elph_iq(3*nat,nqs)=.FALSE.  ! .TRUE. when the electron phonon coefficient 
+                                 ! for this irreducible representation and
+                                 ! this q is available.
+
+\end{verbatim}
+
+The phonon code might stop in the middle of a self-consistent linear response 
+run, or while it is computing the bands. This case is controlled  
+by a single code that is read from the files written on disk.
+This is an integer that tells where the code stopped. This code
+is used in several points to avoid too many flags checks. Saved
+on disk in \texttt{.xml} file there is also a string.  
+The codes are the following:
+
+\begin{verbatim}
+!  rec_code   where_rec     status description
+!
+!    -1000              Nothing has been read. There is no recover file.
+!    -50     init_rep.. All displacement have been written on file.
+!    -40     phq_setup  Only the displacements u have been read from file
+!    -30     phq_init   u and dyn(0) read from file
+!    -25     solve_e_fp all previous. Stopped in solve_e_fpol. There
+!                       should be a recover file.
+!    -20     solve_e    all previous. Stopped within solve_e. There 
+!                       should be a recover file.
+!    -10     solve_e2   epsilon and zstareu are available if requested. 
+!                       Within solve_e2. There should be a recover file.
+!     2      phescf     all previous, raman tensor and elop tensor are
+!                       available if required.
+!     10     solve_linter all previous. Stopped within solve linter. 
+!                       Recover file  should be present.
+!     20     phqscf     all previous dyn_rec(irr) and zstarue0_rec(irr) are
+!                       available.
+!     30     dynmatrix  all previous, dyn and zstarue are available.
+! 
+\end{verbatim}
+
+\section{Suggestion for developers}
+
+If you plan to add something to the phonon code  follow these
+simple rules:
+
+\begin{itemize}
+
+\item
+All quantities that do not require the perturbed wavefunctions, are
+calculated in setup (for simple quantities), or by calling a
+separate routine in \texttt{phq\_init}. 
+
+\item
+The quantities that require the perturbed wavefunctions due to an
+electric field are calculated by a separate routine after 
+\texttt{solve\_e} in the routine \texttt{phescf}.
+
+\item
+The quantities that require the perturbed wavefunctions due to an
+atomic displacement are accumulated by calling a separate routine
+in phqscf after \texttt{solve\_linter}. 
+NB: the perturbed wavefunctions are saved in a file that is rewritten at
+each new \texttt{irrep}.
+
+\item
+After calculating a quantity, it has to be saved in the directory
+\texttt{outdir} in an \texttt{.xml} file, by adding it to the list 
+of variables in the routine \texttt{write\_tensors}  
+(preferable), or by writing a routine similar to \texttt{write\_tensors} 
+that writes a separate file. The same quantity must be read by 
+\texttt{read\_tensors} or by writing a separate routine.
+
+\item
+If you introduce the calculation of a new quantity in the phonon code 
+and save it in the \texttt{.xml} file, please add also the associated flags 
+that control the calculation: 
+\texttt{lquantity} is read in input and tells \phx\ that that quantity must be 
+calculated, \texttt{done\_quantity} tells \phx\ that that quantity 
+was available in the \texttt{.xml} files and should not be recalculated, 
+\texttt{comp\_quantity} can be introduced if the quantity depends on 
+{\bf q} or on the frequency and tells \phx\ that that quantity must be 
+calculated in this run. The image controller can divide the work among images
+by setting the array \texttt{comp\_quantity}. At each {\bf q} point and 
+at each frequency the quantity must be saved in the \texttt{.xml} file.
+Please update the image controller to add the additional work that the 
+calculation of your quantity involves and make a single image calculate it 
+or divide the work among different images.
+
+\item
+Please, try to avoid opening files inside routines.
+Files must be opened in \texttt{openfilq} and closed in \texttt{close\_phq}.
+
+\item
+Global variables must be allocated in \texttt{allocate\_phq}, directly in the 
+routine, or by calling a separate routine that allocates all
+your new variables. The same variables must be deallocated in 
+\texttt{deallocate\_phq}, by a separate routine or by adding them to the
+list of variables. Note that at each new {\bf q} point these variables are
+deallocated and reallocated. 
+
+\item
+Variables that control the grid should not be deallocated at
+each new {\bf q} point must be allocated in \texttt{allocate\_grid\_variables} 
+and deallocated in \texttt{destroy\_status\_run}.
+A few arrays that must be read from input are allocated in 
+\texttt{phq\_readin} after reading their size and deallocated in
+\texttt{destroy\_status\_run}.
+
+\item
+Preferably global variables are written only once by a single routine 
+and used by the other routines. In particular routines are not allowed to 
+change:
+\begin{itemize}
+\item
+  The variables calculated by \phx.
+\item
+  The modes.
+\item
+  The variables that describe the symmetry of the small group of {\bf q}
+\item
+  The variables that describe the response of the ultrasoft quantities
+        (e.g. int1, int2, ..., alphasum, becsum, dpqq, etc.)
+\end{itemize}
+If you need to modify these quantities, please allocate new variables 
+and copy the variables of the phonon on them.
+
+\item
+If you want to establish a new recover point, add the appropriate
+\texttt{rec\_code} in the list above. The point in which the code stopped 
+is saved in \texttt{prefix.phsave/status\_run.xml}. 
+
+\end{itemize}
+
+\section{Parallelization}
+
+The \PHonon\ package uses the same parallelization mechanisms of the \qe\
+package. See the Developer manual in the \texttt{Doc} directory
+two levels above this one for more information.
+It is parallelized on plane-waves, pools, bands, and images.
+The \texttt{-ortho} flag is not used. \texttt{Scalapack} routines are not 
+used in the \phx\ code.
+
+Each tensor should be collected as soon as it is calculated
+and all processors must have the same tensors. Please avoid to collect
+tensors in routines distant from where they are calculated. There might be
+exception to this rule for efficiency, but please try not to abuse for
+small arrays. Only collected quantities are saved on the \texttt{.xml} file,
+so they should not depend on the parallelization level. Note that only ionode
+writes the \texttt{.xml} files, so you have different \texttt{xml} files only 
+for different images. The variables are then broadcasted to all processors 
+in an image.
+
+\section{Files produced by ph.x}
+
+The output files of the \pwx\ code are not modified by the \phx\ code. 
+Each image of \phx\ creates a new directory called \texttt{outdir/\_ph\#} 
+where it writes its files. \texttt{\#} is an integer equal to \texttt{0} 
+in a single image calculation or to the image number when the 
+\texttt{-nimage} flag is used. 
+There are two sets of files written 
+by \phx\ in the \texttt{outdir/\_ph\#} directories: unformatted files 
+containing internal arrays, and \texttt{.xml} 
+files containing partial results or tensors. The former are in 
+\texttt{outdir/\_ph\#} if the input flag \texttt{lqdir=.false.}, or in 
+separate subdirectories \texttt{outdir/\_ph\#/q\_iq},
+where \texttt{iq} is the number of the {\bf q} point. Note that if 
+\texttt{lqdir=.false.} (default is \texttt{lqdir=elph})
+the disk occupation is reduced but the information on each {\bf q} point is 
+rewritten by the following {\bf q} so it is not possible to run an 
+electron-phonon calculation with \texttt{trans=.false.} and 
+\texttt{ldisp=.true.} after generating the potential. 
+The \texttt{.xml} files calculated by each image are in the 
+\texttt{outdir/\_ph\#/{prefix}.phsave} directory for all {\bf q}-vectors and 
+irreps calculated by that images. Before closing the image calculation 
+the content of all the \texttt{outdir/\_ph\#/{prefix}.phsave}
+directories are copied into \texttt{outdir/\_ph0/{prefix}.phsave} directory, so
+it is possible to recover the calculation without using images.
+The \phx\ code reads the output of \pwx\ from the \texttt{outdir} directory. 
+The wavefunctions are in \texttt{outdir/{prefix}.wfc} files 
+while information on the structure of the solid and on the \pwx\ 
+run are in the \texttt{outdir/{prefix}.save} directory. The wavefunctions are 
+also in this directory if \pwx\ was run with the \texttt{wf\_collect=.true.} 
+flag. These files are not modified by \phx. 
+At a finite {\bf q} vector, \phx\ runs its own instance of \pwx\
+to compute the bands and saves the results into 
+the \texttt{outdir/\_ph\#/q\_iq} directory (\texttt{lqdir=.true.}) or
+in \texttt{outdir/\_ph\#}. The charge density is copied inside 
+these directories before calculating the bands. The output of \pwx\ is 
+in files called \texttt{outdir/\_ph\#/q\_iq/{prefix}.wfc} and in the directory 
+{\tt outdir/\_ph\#/q\_iq/{prefix}.save} (\texttt{lqdir=.true.}),
+or in \texttt{outdir/\_ph\#/{prefix}.wfc} and in 
+\texttt{outdir/\_ph\#/{prefix}.save} (\texttt{lqdir=.false.}). With
+\texttt{lqdir=.false.} \phx\ saves in \texttt{outdir/\_ph}
+\texttt{\#/{prefix}.bar} the
+non self-consistent part of the right hand side of the linear system, 
+in \texttt{outdir/\_ph\#/{prefix}.dwf} the change of the wavefunctions. 
+The files \texttt{outdir/\_ph\#/{prefix}.igk} contain the ${\bf k}+{\bf G}$ 
+lists as in the \pwx\ run.
+With US or PAW, files called \texttt{outdir/\_ph\#/{prefix}.prd} 
+contain the induced charge density, for all modes. 
+Only the part that does not depend on the perturbed wavefunctions 
+is contained in these files. With electric field perturbations 
+there are also files called \texttt{outdir/\_ph\#/{prefix}.com} that 
+contain $P_c x |\psi\rangle$ and are needed for the calculation 
+of the Born effective charges.
+The mixing routine saves its data in files called 
+\texttt{outdir/\_ph\#/{prefix}.mixd}. These, and the wavefunctions,
+are the only files that presently can be kept in memory with 
+{\tt disk\_io='low'}.
+The status of \phx\ is saved at each iteration in files called
+\texttt{outdir/\_ph\#/{prefix}.recover}. These files can be used 
+to recover the run. All these files are saved in \texttt{outdir/\_ph\#/q\_iq}
+directory when \texttt{lqdir=.true.}.
+
+In parallel calculations, previous files are split into several files 
+that have a final number. Each number labels the processor that wrote the 
+file. There are as many files as processors per image. 
+
+The files with the dynamical matrices are written in the directory in
+which \phx\ is started and are called \texttt{{fildyn}\#iq} where 
+\texttt{\#iq} is the {\bf q}-vector number in a dispersion calculation, 
+or is not added in a single-{\bf q} calculation. Only one copy of this 
+file is written in a parallel run. When the \texttt{-nimage} option
+is used some of these files might be empty (if the coresponding {\bf q}
+point has been divided between two or more images). So you need to
+collect the results running \phx\ another time without images.
+
+Moreover \phx\ opens a directory called {\tt outdir/\_ph\#/{prefix}.phsave}.
+This directory contains the partial information on the calculation.
+These files can be used to recover a run also when the recover file 
+is corrupted. In the directory {\tt outdir/\_ph\#/{prefix}.phsave} the 
+files are in \texttt{.xml} format. There are several files:
+
+\texttt{control\_ph.xml} contains information on the flags that control
+what \phx\ calculates. The content of this file is used mainly for 
+checking purposes. The code reads these flags in input and does not need
+to reread them from file, but a recover run in which these flags change 
+is not allowed. \texttt{control\_ph.xml} contains also the mesh of 
+{\bf q}-vectors and their coordinates. This file is written only in a non 
+recovered calculation from the routine \texttt{check\_initial\_status} after 
+the creation of the {\bf q}-vector mesh. It is read, if 
+\texttt{recover=.true.}, at the beginning of 
+the run by \texttt{phq\_readin}.
+
+\texttt{status\_run.xml} contains information that tell \phx\ 
+at which point the code stopped. It has information on the current 
+{\bf q} vector, the current frequency, and a recover code that tells 
+\phx\ if it has to expect a recover file and which routine produced this 
+recover file. 
+\texttt{status\_run.xml} file is rewritten each time the phonon code 
+reaches a point from which a new recover is possible.
+It is read, if \texttt{recover=.true.},
+at the beginning of the run by \texttt{phq\_readin}.
+
+If some routine wrote it, \texttt{tensors.xml} contains the tensors that
+have been calculated. Possible tensors are: dielectric constant, 
+Born effective charges calculated as derivative of the forces (EU), 
+Born effective charges calculated as derivative of the polarization (UE), 
+raman tensor, elettro-optic coefficient. This file is written by the 
+routines that calculate the tensors. 
+It is read by the routine \texttt{phq\_recover}, if \texttt{recover=.true.} 
+and the {\bf q} vector is $\Gamma$.
+
+If \texttt{polariz} wrote it, \texttt{polariz.xml} contains the frequency
+dependent polarizabilities for the frequencies calculated so far. 
+It is read by the routine 
+\texttt{phq\_recover}, if \texttt{recover=.true.} and the {\bf q} vector
+is $\Gamma$.
+
+\texttt{patterns.\#iq.xml} are files written for each {\bf q} vector 
+(\texttt{\#iq} is its number).
+They contain the information on the displacement patterns that 
+transform according to irreducible representations of the small 
+group of {\bf q}: number of irreducible representations, their dimensions, 
+the displacement patterns and the name of the irreducible representation 
+to which each mode belongs. It is written in nonrecover runs by the routine 
+\texttt{init\_representations}.
+It is read for each {\bf q} vector by \texttt{phq\_setup}. The routine
+reads the data of the file with \texttt{iq=current\_iq}.
+
+\texttt{dynmat.\#iq.0.xml} contains the part of the dynamical matrix 
+calculated by \texttt{dynmat0} that does not depend on the perturbed 
+wavefunctions. It is written by \texttt{dynmat0} and read only in recover runs
+by \texttt{phq\_recover}.
+
+\texttt{dynmat.\#iq.\#irr.xml}
+contains the contribution to the dynamical matrix at the 
+{\bf q} vector \texttt{\#iq} of
+the representation \texttt{\#irr}. 
+Note that these files can be calculated independently even on 
+different machines and collected in a single directory (see the GRID example),
+but it is necessary to calculate the patterns file in a single machine and
+send it to all the machine where the calculation is run to be sure that
+all machines use the same displacement patterns.
+When the files \texttt{dynmat.\#iq.\#irr.xml} are present for all 
+\texttt{\#irr} of a given \texttt{\#iq} the dynamical matrix for that 
+${\bf q}$ can be calculated. If all the \texttt{\#irr} of a given symmetry 
+for a given \texttt{\#iq} are present, 
+the partial dynamical matrix that can be constructed with this information 
+can be diagonalized and the frequency of the modes of that symmetry can 
+be calculated (using the \texttt{ldiag=.true.} flag).
+These files are written by \texttt{phqscf} after calculating the 
+contribution of the representation to the dynamical matrix by 
+\texttt{drhodv}. They are read only in recover runs by the routine 
+\texttt{phq\_recover}.
+
+\texttt{elph.\#iq.\#irr.xml} contains the contribution to the electron 
+phonon coefficients 
+at the {\bf q} vector \texttt{\#iq} of the representation \texttt{\#irr}. 
+These files are written by \texttt{elphel} and contains the quantities 
+$g_{{\bf q}\nu} ({\bf k}, i, j)$ 
+(see User Manual) and are read in recover runs by the 
+routine \texttt{phq\_recover}.
+
+\section{ File Formats}
+\PHonon\ recover file specifications:
+
+Format name: QEXML \\
+Format version: 1.4.0 \\
+
+The structure of the file \texttt{status\_run.xml} is:
+
+\begin{verbatim}
+<Root>
+  <STATUS_PH>
+    <STOPPED_IN>
+     <where_rec>
+    </STOPPED_IN>
+    <RECOVER_CODE>
+     <rec_code>
+    </RECOVER_CODE>
+    <CURRENT_Q>
+     <current_iq>
+    </CURRENT_Q>
+    <CURRENT_IU>
+     <current_iu>
+    </CURRENT_IU>
+  </STATUS_PH>
+</Root>
+\end{verbatim}
+
+The structure of the file \texttt{control\_run.xml} is:
+
+\begin{verbatim}
+<Root>
+  <HEADER>
+    <FORMAT>
+    <CREATOR>
+  </HEADER>
+  <CONTROL>
+    <DISPERSION_RUN>
+     <ldisp>
+    </DISPERSION_RUN>
+    <ELECTRIC_FIELD>
+     <epsil>
+    </ELECTRIC_FIELD>
+    <PHONON_RUN>
+     <trans>
+    </PHONON_RUN>
+    <ELECTRON_PHONON>
+     <elph>
+    </ELECTRON_PHONON>
+    <EFFECTIVE_CHARGE_EU>
+     <zeu>
+    </EFFECTIVE_CHARGE_EU>
+    <EFFECTIVE_CHARGE_PH>
+    <zue>
+    </EFFECTIVE_CHARGE_PH>
+    <RAMAN_TENSOR>
+    <lraman>
+    </RAMAN_TENSOR>
+    <ELECTRO_OPTIC>
+    <elop>
+    </ELECTRO_OPTIC>
+    <FREQUENCY_DEP_POL>
+    <fpol>
+    </FREQUENCY_DEP_POL>
+  </CONTROL>
+  <Q_POINTS>
+    <NUMBER_OF_Q_POINTS>
+     <nqs>
+    </NUMBER_OF_Q_POINTS>
+    <UNITS_FOR_Q-POINT>
+    <Q-POINT_COORDINATES>
+    <x_q(3,nqs)>
+    </Q-POINT_COORDINATES>
+  </Q_POINTS>
+</Root>
+\end{verbatim}
+
+The structure of the file \texttt{tensors.xml} is:
+
+\begin{verbatim}
+<Root>
+  <EF_TENSORS>
+    <DONE_ELECTRIC_FIELD>
+    <done_epsil>
+    </DONE_ELECTRIC_FIELD>
+    <DONE_START_EFFECTIVE_CHARGE>
+    <done_start_zstar>
+    </DONE_START_EFFECTIVE_CHARGE>
+    <DONE_EFFECTIVE_CHARGE_EU>
+    <done_zeu>
+    </DONE_EFFECTIVE_CHARGE_EU>
+    <DONE_EFFECTIVE_CHARGE_PH>
+    <done_zue>
+    </DONE_EFFECTIVE_CHARGE_PH>
+    <DONE_RAMAN_TENSOR>
+    <done_raman>
+    </DONE_RAMAN_TENSOR>
+    <DONE_ELECTRO_OPTIC>
+    <done_elop>
+    </DONE_ELECTRO_OPTIC>
+    <DIELECTRIC_CONSTANT>
+    <epsil>
+    </DIELECTRIC_CONSTANT>
+    <START_EFFECTIVE_CHARGES>
+    <zstareu0>
+    </START_EFFECTIVE_CHARGES>
+    <EFFECTIVE_CHARGES_EU>
+    <zstareu>
+    </EFFECTIVE_CHARGES_EU>
+    <RAMAN_TNS>
+    <ramantns>
+    </RAMAN_TNS>
+    <ELOP_TNS>
+    <eloptns>
+    </ELOP_TNS>
+    <EFFECTIVE_CHARGES_UE>
+    <zstarue>
+    </EFFECTIVE_CHARGES_UE>
+  </EF_TENSORS>
+</Root>
+\end{verbatim}
+
+
+The structure of the file \texttt{patterns.\#iq.xml} is:
+
+\begin{verbatim}
+<Root>
+  <IRREPS_INFO>
+    <QPOINT_NUMBER>
+      <iq>
+    </QPOINT_NUMBER>
+    <QPOINT_GROUP_RANK>
+       <nsymq>
+    </QPOINT_GROUP_RANK>
+    <MINUS_Q_SYM>
+     <minus_q>
+    </MINUS_Q_SYM>
+    <NUMBER_IRR_REP>
+     <nirr> 
+    </NUMBER_IRR_REP>
+#for each irr    
+    <REPRESENTION.irr>
+      <NUMBER_OF_PERTURBATIONS>
+        <npert(irr)> 
+      </NUMBER_OF_PERTURBATIONS>
+#for each ipert
+      <PERTURBATION.ipert>
+        <SYMMETRY_TYPE_CODE>
+         <num_rap_mode>
+        </SYMMETRY_TYPE_CODE>
+        <SYMMETRY_TYPE>
+         <name_rap_mode>
+        </SYMMETRY_TYPE>
+        <DISPLACEMENT_PATTERN>
+         <u>
+        </DISPLACEMENT_PATTERN>
+      </PERTURBATION.ipert>
+    </REPRESENTION.irr>
+  </IRREPS_INFO>
+</Root>
+\end{verbatim}
+
+The structure of the file \texttt{dynmat.\#iq.\#irr.xml} is:
+
+\begin{verbatim}
+<Root>
+  <PARTIAL_MATRIX>
+    <DONE_IRR>
+     done_irr(irr)
+    </DONE_IRR>
+    <PARTIAL_DYN>
+     <dynmat_rec>
+    </PARTIAL_DYN>
+  </PARTIAL_MATRIX>
+</Root>
+\end{verbatim}
+
+The structure of the file \texttt{elph.\#iq.\#irr.xml} is:
+
+\begin{verbatim}
+<Root>
+  <PARTIAL_EL_PHON>
+    <DONE_ELPH type="logical" size="1">
+     <done_elph_iq(irr,iq)>
+    </DONE_ELPH>
+    <NUMBER_OF_K>
+      <nksqtot> 
+    </NUMBER_OF_K>
+    <NUMBER_OF_BANDS>
+        <nbnd> 
+    </NUMBER_OF_BANDS>
+#for each ik
+    <K_POINT.ik>
+      <COORDINATES_XK>
+       xk(ik)
+      </COORDINATES_XK>
+      <PARTIAL_ELPH>
+       el_ph_mat_rec_col 
+      </PARTIAL_ELPH>
+    </K_POINT.ik>
+#enddo
+  </PARTIAL_EL_PHON>
+</Root>
+
+
+</Root>
+\end{verbatim}
+
+
+\section{Bibliography}
+
+\begin{itemize}
+\item
+General overview: 
+S. Baroni, S. de Gironcoli, A. Dal Corso, and P. Giannozzi
+``Phonons and related properties of extended systems from density
+functional perturbation theory'', Rev. Mod. Phys. {\bf 73}, 515 (2001).
+
+\item
+NC, Raman tensor
+Michele Lazzeri and Francesco Mauri,
+Phys. Rev. B {\bf 68}, 161101 (2003).
+
+\item
+LSDA, Spin-GGA (dynamical matrix)
+A. Dal Corso and S. de Gironcoli,
+ ``{\it Ab-initio} phonon dispersions of Fe and Ni'',
+Phys. Rev. B {\bf 62}, 273 (2000).
+
+\item
+US-PPs (dynamical matrix)
+A. Dal Corso
+``Density functional perturbation theory with ultrasoft pseudopotentials'',
+Phys. Rev. B {\bf 64}, 235118 (2001).
+
+\item 
+US-PPs (dielectric constant)
+J. T\'obik and A. Dal Corso,
+``Electric fields with ultrasoft pseudo-potentials: applications to
+benzene and anthracene'', Jour. of Chem. Phys. {\bf 120}, 9934 (2004).
+
+\item 
+US-PPs + spin-orbit (dynamical matrix)
+A. Dal Corso, ``Density functional perturbation theory for lattice
+dynamics with fully relativistic ultrasoft pseudopotentials: application
+to fcc-Pt and fcc-Au'', Phys. Rev. B {\bf 76}, 054308 (2007).
+
+\item 
+PAW (dynamical matrix)
+A. Dal Corso,
+``Density functional perturbation theory within the projector augmented wave
+method'', Phys. Rev. B {\bf 81}, 075123 (2010).
+
+\item
+NC, Electron-phonon interaction
+F. Mauri, O. Zakharov, S. de Gironcoli, S. G. Louie, and M. L. Cohen,
+``Phonon Softening and Superconductivity in Tellurium under Pressure''
+Phys. Rev. Lett. {\bf 77}, 1151 (1996).
+
+\item
+US, Electron-phonon interaction
+M. Wierzbowska, S. de Gironcoli, P. Giannozzi,
+``Origins of low- and high-pressure discontinuities of $T_{c}$ in niobium''
+arXiv:cond-mat/0504077.
+
+\end{itemize}
+\end{document}
