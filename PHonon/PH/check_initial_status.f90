@@ -188,7 +188,15 @@ SUBROUTINE check_initial_status(auxdyn)
 !
 !  If a recover or a restart file exists the first q point is the current one.
 !
-     CALL check_restart_recover(ext_recover, ext_restart)
+     IF ((.NOT.lgamma_iq(current_iq).OR. newgrid).AND.lqdir) THEN
+        tmp_dir_phq= TRIM (tmp_dir_ph) //TRIM(prefix)//&
+                          & '.q_' // TRIM(int_to_char(current_iq))//'/'
+        tmp_dir=tmp_dir_phq
+        CALL check_restart_recover(ext_recover, ext_restart)
+        tmp_dir=tmp_dir_ph
+     ELSE
+        CALL check_restart_recover(ext_recover, ext_restart)
+     ENDIF
      IF (.NOT.ext_recover.AND..NOT.ext_restart) THEN
         current_iq=start_q
      ELSE
