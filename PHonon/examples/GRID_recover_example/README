@@ -1,0 +1,7 @@
+This example illustrate the possibility to recover a ph.x calculation
+made on a GRID or using images.
+run_example tests the calculation of the phonon dispersion on the GRID and
+is similar to example of GRID_example. The calculation
+is however stopped with max_seconds and recovered.
+run_example_2 tests the same calculation made in Image_example 
+recovering a calculation that uses the images feature.

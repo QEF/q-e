@@ -7,7 +7,7 @@ echo
 echo "run_all_examples: starting"
 
 # run all examples
-for dir in example* Partial_example Recover_example Image_example GRID_example ;
+for dir in example* Partial_example Recover_example Image_example GRID_example GRID_recover_example ;
 do
     if test -f $dir/run_example
     then
