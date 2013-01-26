@@ -57,7 +57,8 @@ environment.o : mp_global.o
 environment.o : version.o
 error_handler.o : io_files.o
 error_handler.o : io_global.o
-error_handler.o : parallel_include.o
+error_handler.o : mp.o
+error_handler.o : mp_global.o
 fd_gradient.o : cell_base.o
 fd_gradient.o : fft_base.o
 fd_gradient.o : kind.o

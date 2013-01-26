@@ -306,7 +306,7 @@
         msglen = 1
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
-        CALL BCAST_INTEGER( msg, msglen, source, group )
+        CALL bcast_integer( msg, msglen, source, group )
 #endif
       END SUBROUTINE mp_bcast_i1
 !
@@ -322,7 +322,7 @@
         msglen = size(msg)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
-        CALL BCAST_INTEGER( msg, msglen, source, group )
+        CALL bcast_integer( msg, msglen, source, group )
 #endif
       END SUBROUTINE mp_bcast_iv
 !
@@ -338,7 +338,7 @@
         msglen = size(msg)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
-        CALL BCAST_INTEGER( msg, msglen, source, group )
+        CALL bcast_integer( msg, msglen, source, group )
 #endif
       END SUBROUTINE mp_bcast_im
 !
@@ -357,7 +357,7 @@
         msglen = size(msg)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
-        CALL BCAST_INTEGER( msg, msglen, source, group )
+        CALL bcast_integer( msg, msglen, source, group )
 #endif
       END SUBROUTINE mp_bcast_it
 !
