@@ -1703,8 +1703,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   USE wrappers,         ONLY : f_mkdir
   USE input_parameters, ONLY : restart_mode
   USE control_flags,    ONLY : lbands
-  USE io_files,         ONLY : prefix, xmlpun, &
-                               delete_if_present, check_writable
+  USE io_files,         ONLY : prefix, xmlpun, delete_if_present
   USE pw_restart,       ONLY : pw_readfile
   USE io_global,        ONLY : ionode
   USE mp,               ONLY : mp_barrier
@@ -1788,7 +1787,6 @@ SUBROUTINE parallel_mkdir ( tmp_dir )
   USE wrappers,      ONLY : f_mkdir
   USE mp_global,     ONLY : mpime, nproc
   USE mp,            ONLY : mp_barrier, mp_sum
-  USE io_files,      ONLY : check_writable
   !
   IMPLICIT NONE
   !
