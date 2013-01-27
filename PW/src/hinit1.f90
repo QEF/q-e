@@ -51,8 +51,7 @@ SUBROUTINE hinit1()
   ! ... update the D matrix and the PAW coefficients
   !
   IF (okpaw) THEN
-!     CALL paw_atomic_becsum()
-     CALL compute_becsum(.true.)
+     CALL compute_becsum(1)
      CALL PAW_potential(rho%bec, ddd_paw)
      CALL PAW_symmetrize_ddd(ddd_paw)
   ENDIF
