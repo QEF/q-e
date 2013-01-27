@@ -1,6 +1,8 @@
 include ../make.sys
 
-all: libminpack pw4gwwa heada gwwa
+#all: libminpack pw4gwwa heada gwwa
+all:
+	@echo "GWW no longer supported"
 
 libminpack:
 	cd minpack ; $(MAKE) all
