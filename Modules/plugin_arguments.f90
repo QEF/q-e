@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2010 Quantum ESPRESSO group
+! Copyright (C) 2010-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,7 @@ SUBROUTINE plugin_arguments()
   ! check for presence of command-line option "-plugin_name" or "--plugin_name"
   ! where "plugin_name" has to be set here. If such option is found, variable
   ! "use_plugin_name" is set and usage of "plugin_name" is thus enabled.
-  ! Currently implemented: "plumed" (case insensitive)
+  ! Currently implemented: "plumed", "pw2casino" (both case-sensitive)
   !
   USE kinds,         ONLY : DP
   !
