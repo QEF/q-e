@@ -46,7 +46,7 @@ FUNCTION set_hubbard_l( psd ) RESULT( hubbard_l )
         !
         hubbard_l =  1
         !
-     CASE( 'Ga', 'In' )
+     CASE( 'As', 'Ga', 'In' )
         !
         hubbard_l =  2
         !
