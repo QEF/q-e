@@ -46,6 +46,13 @@ mp.o \
 mp_base.o \
 mp_global.o \
 mp_wave.o \
+mp_world.o \
+mp_images.o \
+mp_pots.o \
+mp_pools.o \
+mp_bands.o \
+mp_diag.o \
+command_line_options.o \
 noncol.o \
 open_close_input_file.o \
 parallel_include.o \

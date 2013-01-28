@@ -282,8 +282,9 @@ END SUBROUTINE diagonalize_parallel
 
    SUBROUTINE mesure_mmul_perf( n )
       !
-      USE mp_global,   ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, &
-                             root_bgrp, ortho_comm, nproc_ortho, np_ortho, &
+      USE mp_bands,    ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, &
+                             root_bgrp
+      USE mp_diag,     ONLY: ortho_comm, nproc_ortho, np_ortho, &
                              me_ortho, init_ortho_group, ortho_comm_id
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier

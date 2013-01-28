@@ -611,7 +611,7 @@ newd.o : ../../Modules/fft_interfaces.o
 newd.o : ../../Modules/ions_base.o
 newd.o : ../../Modules/kind.o
 newd.o : ../../Modules/mp.o
-newd.o : ../../Modules/mp_global.o
+newd.o : ../../Modules/mp_bands.o
 newd.o : ../../Modules/uspp.o
 newd.o : modules.o
 newd.o : smallbox.o
@@ -670,6 +670,8 @@ ortho_base.o : ../../Modules/io_global.o
 ortho_base.o : ../../Modules/ions_base.o
 ortho_base.o : ../../Modules/kind.o
 ortho_base.o : ../../Modules/mp.o
+ortho_base.o : ../../Modules/mp_bands.o
+ortho_base.o : ../../Modules/mp_diag.o
 ortho_base.o : ../../Modules/mp_global.o
 ortho_base.o : ../../Modules/ptoolkit.o
 ortho_base.o : ../../Modules/recvec.o

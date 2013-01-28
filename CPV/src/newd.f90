@@ -27,8 +27,8 @@
       USE electrons_base,   ONLY: nspin
       USE control_flags,    ONLY: iprint, thdyn, tfor, tprnfor
       USE mp,               ONLY: mp_sum
-      USE mp_global,        ONLY: intra_bgrp_comm, inter_bgrp_comm, &
-                                  distribute_over_bgrp, my_bgrp_id, nbgrp 
+      USE mp_bands,         ONLY: intra_bgrp_comm, inter_bgrp_comm, &
+                                  my_bgrp_id, nbgrp 
       USE fft_interfaces,   ONLY: invfft
       USE fft_base,         ONLY: dfftb, dfftp
 !

@@ -45,7 +45,6 @@ neb.o : ../../Modules/image_io_routines.o
 neb.o : ../../Modules/io_global.o
 neb.o : ../../Modules/mp.o
 neb.o : ../../Modules/mp_global.o
-neb.o : ../../Modules/open_close_input_file.o
 neb.o : ../../Modules/read_cards.o
 neb.o : ../../Modules/read_namelists.o
 neb.o : ../../Modules/read_xml.o
@@ -96,7 +95,6 @@ path_io_routines.o : path_input_parameters_module.o
 path_io_routines.o : path_io_units_module.o
 path_io_routines.o : path_reparametrisation.o
 path_io_routines.o : path_variables.o
-path_io_tools.o : ../../Modules/io_global.o
 path_io_tools.o : ../../Modules/kind.o
 path_opt_routines.o : ../../Modules/basic_algebra_routines.o
 path_opt_routines.o : ../../Modules/constants.o

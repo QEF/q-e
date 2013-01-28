@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2009 Quantum ESPRESSO group
+! Copyright (C) 2002-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,7 +9,10 @@
 #if defined __HPM
 #  include "/cineca/prod/hpm/include/f_hpm.h"
 #endif
-
+!
+! This module contains interfaces to most low-level MPI operations:
+! initialization and stopping, broadcast, parallel sum, etc.
+!
 !------------------------------------------------------------------------------!
     MODULE mp
 !------------------------------------------------------------------------------!
@@ -183,17 +186,12 @@
         ierr = 0
         taskid = 0
 
-#if defined __HPM
-
-        !   terminate the IBM Harware performance monitor
-
 #if defined(__MPI)
         CALL mpi_comm_rank( mpi_comm_world, taskid, ierr)
-#endif
+#if defined __HPM
+        !   terminate the IBM Harware performance monitor
         CALL f_hpmterminate( taskid )
 #endif
-
-#if defined(__MPI)
         CALL mpi_finalize(ierr)
         IF (ierr/=0) CALL mp_stop( 8004 )
 #endif
