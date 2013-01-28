@@ -72,7 +72,6 @@ MODULE cp_autopilot
   !---------------------------------------------------------------------------
 
   USE kinds
-  USE parser, ONLY :  read_line
   USE autopilot, ONLY : current_nfi, pilot_p, pilot_unit, pause_p,auto_error, &
         &  parse_mailbox, rule_isave, rule_iprint, rule_dt, rule_emass,       &
         &  rule_electron_dynamics, rule_electron_damping, rule_ion_dynamics, &

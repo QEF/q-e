@@ -11,7 +11,6 @@ PROGRAM X_Spectra
   USE constants,       ONLY : rytoev,pi,fpi
   USE io_global,       ONLY : stdout,ionode,ionode_id   ! Modules/io_global.f90
   USE io_files,        ONLY : prefix, iunwfc, nwordwfc, tmp_dir, diropn
-  USE parser,          ONLY : read_line
   USE cell_base,       ONLY : bg, at, celldm
   USE parameters,      ONLY : ntypx,lmaxx,lqmax
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
