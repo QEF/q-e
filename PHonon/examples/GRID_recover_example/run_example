@@ -300,8 +300,7 @@ alas.freq
 freq.plot
 freq.ps
 0.0
-0.0 
-0.1
+50.0 0.0
 EOF
 
 $ECHO "  writing the phonon dispersions in freq.plot...\c"
