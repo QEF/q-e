@@ -876,31 +876,43 @@ If you get mysterious errors ("Segmentation faults" and the like)
 in the provided tests and examples:
 your compiler, or your mathematical libraries, or MPI libraries,
 or a combination thereof, is very likely buggy, or there is some
-for of incompatibility (see below). Although the 
+form of incompatibility (see below). Although the 
 presence of subtle bugs in \qe\ that are not revealed during 
 the testing phase can never be ruled out, it is very unlikely
 that this happens on the provided tests and examples. 
 \end{itemize}
 
 {\em Note:} "There is a known incompatibility problem between the calling 
-convention for functions that return complex values: one is the one used by 
+convention for Fortran functions that return complex values: there is the
+convention used by 
 g77/f2c, where in practice the compiler converts such functions to subroutines 
 with a further parameter for the return value; gfortran instead produces a 
-normal function returning a value (and maybe also ifort). If your system 
-libraries were compiled using g77, and you instead use gfortran (or possibly
-ifort) your code may crash or produce random results. This typically happens 
-with zdotc, which is one the most commonly used complex-returning functions in 
-BLAS and LAPACK.
+normal function returning a complex value (and maybe also ifort?).
+If your system libraries were compiled using g77 (which may happen for
+system-provided libraries in not-too-recent Linux distributions),
+and you instead use gfortran (or possibly ifort) to compile \qe, your code
+may crash or produce random results. This typically happens 
+during calls to \texttt{zdotc}, which is one the most commonly used
+complex-returning functions of BLAS+LAPACK.
 
 For further details see for instance this link:\\
-\texttt{http://www.macresearch.org/lapackblas-fortran-106\#comment-17071}
+\texttt{http://www.macresearch.org/lapackblas-fortran-106\#comment-17071}\\
+or read the man page of gfortran under the flag \texttt{-ff2c}.
 
-Otherwise, another trick that you can try if you use gfortran and you confirm 
-that this is the problem, is to add the -ff2c flag to all compilations with 
-gfortran. But the best probably is to use libraries compiled with the same 
+If your code crashes during a call to \texttt{zdotc},
+one solution is to try to recompile \qe\ using the internal BLAS and LAPACK
+routines (using the \texttt{--with-internal-blas} and 
+\texttt{--with-internal-lapack} parameters of the configure script)
+to see if the problem disappears.
+
+Otherwise, there is another trick that can be possibly tried if you use gfortran
+and you can confirm that your problem is the one described above:
+add the \texttt{-ff2c} flag to all compilations with 
+gfortran (even if this is not necessarily the best thing to do: the best
+is to use libraries compiled with the same 
 compiler, or at least libraries that are verified to work with your compiler
-(in your case, since it appears that you use ifort, you may want to link to 
-the proper intel MKL libraries)" (info by Giovanni Pizzi, Jan. 2013).
+(for instance, if you use ifort, you may prefer to link to 
+the appropriate intel MKL libraries)" (info by Giovanni Pizzi, Jan. 2013).
 
 \subsubsection{Cray XE and XT machines}
 
