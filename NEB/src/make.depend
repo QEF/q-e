@@ -41,7 +41,6 @@ input.o : path_input_parameters_module.o
 input.o : path_variables.o
 neb.o : ../../Modules/check_stop.o
 neb.o : ../../Modules/environment.o
-neb.o : ../../Modules/image_io_routines.o
 neb.o : ../../Modules/io_global.o
 neb.o : ../../Modules/mp.o
 neb.o : ../../Modules/mp_global.o
@@ -127,7 +126,6 @@ path_variables.o : ../../Modules/kind.o
 set_defaults.o : ../../Modules/input_parameters.o
 set_defaults.o : ../../Modules/io_global.o
 stop_run_path.o : ../../Modules/environment.o
-stop_run_path.o : ../../Modules/image_io_routines.o
 stop_run_path.o : ../../Modules/io_global.o
 stop_run_path.o : ../../Modules/mp_global.o
 stop_run_path.o : path_io_units_module.o

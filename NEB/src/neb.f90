@@ -14,7 +14,6 @@ PROGRAM neb
   USE io_global,         ONLY : meta_ionode_id
   USE environment,       ONLY : environment_start, environment_end
   USE check_stop,        ONLY : check_stop_init
-  USE image_io_routines, ONLY : io_image_start
   USE mp,                ONLY : mp_bcast
   USE mp_global,         ONLY : mp_startup, nimage, world_comm, mpime, root
   USE iotk_module,       ONLY : iotk_open_read, iotk_close_read, iotk_attlenx
@@ -51,7 +50,6 @@ PROGRAM neb
   !
 #ifdef __MPI
   CALL mp_startup ( start_images=.true. )
-  IF ( nimage > 1 ) CALL io_image_start( )
 #endif
   CALL environment_start ( 'NEB' )
   !
@@ -144,7 +142,6 @@ PROGRAM neb
   ! END INPUT RELATED
   !
   CALL check_stop_init()
-  CALL io_image_start()
   CALL initialize_path()
   CALL deallocate_path_input_ions()
   CALL path_summary()

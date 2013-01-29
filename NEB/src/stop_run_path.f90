@@ -17,7 +17,6 @@ SUBROUTINE stop_run_path( lflag )
   USE mp_global,          ONLY : mp_global_end
   USE environment,        ONLY : environment_end
   USE path_variables,     ONLY : path_deallocation
-  USE image_io_routines,  ONLY : io_image_stop
   USE path_io_units_module,      ONLY : iunpath
   !
   IMPLICIT NONE
@@ -25,12 +24,6 @@ SUBROUTINE stop_run_path( lflag )
   LOGICAL, INTENT(IN) :: lflag
   LOGICAL             :: exst, opnd, flag2
   !
-  !
-  !
-  !
-  CALL io_image_stop()
-  !
-! call pwscf stop run routine, close files and deallocate arrays
   !
   CALL close_files(lflag)
   !
