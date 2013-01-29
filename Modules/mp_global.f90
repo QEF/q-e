@@ -69,7 +69,7 @@ CONTAINS
     CALL mp_start_pots  ( npot_, intra_image_comm )
     CALL mp_start_pools ( npool_, intra_image_comm )
     CALL mp_start_bands ( nband_, intra_pool_comm )
-    ntask_group = ntg_
+    ntask_groups = ntg_
     CALL mp_start_diag  ( ndiag_, intra_bgrp_comm )
     !
     RETURN
