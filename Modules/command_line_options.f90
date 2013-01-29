@@ -90,7 +90,7 @@ CONTAINS
      GO TO 10
      ! ... something wrong: notify and continue
 15   CALL infomsg ('get_command_line', 'unexpected argument # ' // &
-                  & int_to_char(narg) // ':' //TRIM(arg), narg)
+                  & int_to_char(narg) // ':' //TRIM(arg))
      narg = narg + 1
      GO TO 10
      ! ... normal exit
