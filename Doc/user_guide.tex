@@ -609,6 +609,7 @@ BLAS by Kazushige Goto. They can be freely downloaded,
 but not redistributed. See the "GotoBLAS2" item at\\
 \texttt{http://www.tacc.utexas.edu/tacc-projects/}.
 
+
 \paragraph{FFT}
 \qe\ has an internal copy of an old FFTW version, and it 
 can use the following vendor-specific FFT libraries:
@@ -872,13 +873,35 @@ your machine doesn't like the script that produces file \texttt{version.f90}
 with the correct version and revision. Quick solution: copy 
 \texttt{Modules/version.f90.in} to \texttt{Modules/version.f90}.
 \item
-If you get mysterious errors in the provided tests and examples:
+If you get mysterious errors ("Segmentation faults" and the like) 
+in the provided tests and examples:
 your compiler, or your mathematical libraries, or MPI libraries,
-or a combination thereof, is very likely buggy. Although the 
+or a combination thereof, is very likely buggy, or there is some
+for of incompatibility (see below). Although the 
 presence of subtle bugs in \qe\ that are not revealed during 
 the testing phase can never be ruled out, it is very unlikely
 that this happens on the provided tests and examples. 
 \end{itemize}
+
+{\em Note:} "There is a known incompatibility problem between the calling 
+convention for functions that return complex values: one is the one used by 
+g77/f2c, where in practice the compiler converts such functions to subroutines 
+with a further parameter for the return value; gfortran instead produces a 
+normal function returning a value (and maybe also ifort). If your system 
+libraries were compiled using g77, and you instead use gfortran (or possibly
+ifort) your code may crash or produce random results. This typically happens 
+with zdotc, which is one the most commonly used complex-returning functions in 
+BLAS and LAPACK.
+
+For further details see for instance this link:\\
+\texttt{http://www.macresearch.org/lapackblas-fortran-106\#comment-17071}
+
+Otherwise, another trick that you can try if you use gfortran and you confirm 
+that this is the problem, is to add the -ff2c flag to all compilations with 
+gfortran. But the best probably is to use libraries compiled with the same 
+compiler, or at least libraries that are verified to work with your compiler
+(in your case, since it appears that you use ifort, you may want to link to 
+the proper intel MKL libraries)" (info by Giovanni Pizzi, Jan. 2013).
 
 \subsubsection{Cray XE and XT machines}
 
