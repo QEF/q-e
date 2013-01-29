@@ -441,7 +441,7 @@ subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   !
   integer :: mxdatm, mxdtyp
 
-  integer :: ityp (mxdatm), if_pos(3,mxdtyp), iforceh(3,3)
+  integer :: ityp (mxdatm), if_pos(3,mxdatm), iforceh(3,3)
   real(DP) :: avec (3, 3), rat (3, mxdatm)
   !
   real(DP) :: atmass (mxdtyp), ratd (3, mxdatm), rat2d (3, mxdatm), &
