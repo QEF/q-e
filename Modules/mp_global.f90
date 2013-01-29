@@ -50,7 +50,6 @@ CONTAINS
     !
     USE command_line_options, ONLY : get_command_line, &
         nimage_, npool_, npot_, ndiag_, nband_, ntg_
-    USE io_global, ONLY : io_global_start
     IMPLICIT NONE
     LOGICAL, INTENT(IN), OPTIONAL :: start_images
     LOGICAL :: do_images

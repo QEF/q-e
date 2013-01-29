@@ -63,7 +63,7 @@ SUBROUTINE init_run()
   USE cg_module,                ONLY : allocate_cg
   USE wannier_module,           ONLY : allocate_wannier  
   USE io_files,                 ONLY : tmp_dir, prefix
-  USE io_global,                ONLY : ionode, stdout, io_global_start
+  USE io_global,                ONLY : ionode, stdout
   USE printout_base,            ONLY : printout_base_init
   USE wave_types,               ONLY : wave_descriptor_info
   USE xml_io_base,              ONLY : restart_dir, create_directory, change_directory
@@ -96,14 +96,13 @@ SUBROUTINE init_run()
   !
   IF( nimage > 1 ) THEN
      !
-     ! ... When bgrps are used, open a directory for each one
+     ! ... When images are used, open a directory for each one (obsolete?)
      !
      WRITE( dirname, FMT = '( I5.5 )' ) my_image_id
      tmp_dir = TRIM( tmp_dir ) // '/' // TRIM( dirname )
      IF( nbeg < 0 ) THEN
         CALL create_directory( tmp_dir )
      END IF
-     CALL io_global_start( me_image, root_image )
      !
   END IF
 
