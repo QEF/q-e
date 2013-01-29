@@ -16,7 +16,6 @@ SUBROUTINE stop_ph( flag )
   USE ph_restart,      ONLY : destroy_status_run
   USE save_ph,         ONLY : clean_input_variables
   USE environment,        ONLY : environment_end
-  USE image_io_routines,  ONLY : io_image_stop
   !
   IMPLICIT NONE
   !
@@ -31,8 +30,6 @@ SUBROUTINE stop_ph( flag )
   CALL print_clock_ph()
   !
   CALL environment_end('PHONON')
-  !
-  IF (nimage > 1) CALL io_image_stop()
   !
   CALL mp_global_end()
   !

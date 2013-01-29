@@ -55,7 +55,6 @@ PROGRAM phonon
   USE output,          ONLY : fildrho
   USE check_stop,      ONLY : check_stop_init
   USE mp_global,       ONLY: mp_startup, nimage
-  USE image_io_routines, ONLY : io_image_start
   USE environment,     ONLY: environment_start
 
   !
@@ -70,7 +69,6 @@ PROGRAM phonon
   !
 #ifdef __MPI
   CALL mp_startup ( start_images=.true. )
-  IF (nimage>1) CALL io_image_start()
 #endif
   CALL environment_start ( code )
   !

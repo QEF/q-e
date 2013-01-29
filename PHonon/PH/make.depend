@@ -933,7 +933,6 @@ phescf.o : phcom.o
 phescf.o : ramanm.o
 phonon.o : ../../Modules/check_stop.o
 phonon.o : ../../Modules/environment.o
-phonon.o : ../../Modules/image_io_routines.o
 phonon.o : ../../Modules/mp_global.o
 phonon.o : elph.o
 phonon.o : phcom.o
@@ -1376,7 +1375,6 @@ solve_linter.o : write_rec.o
 star_q.o : ../../Modules/io_global.o
 star_q.o : ../../Modules/kind.o
 stop_ph.o : ../../Modules/environment.o
-stop_ph.o : ../../Modules/image_io_routines.o
 stop_ph.o : ../../Modules/kind.o
 stop_ph.o : ../../Modules/mp_global.o
 stop_ph.o : ph_restart.o
