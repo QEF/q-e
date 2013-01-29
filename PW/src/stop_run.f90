@@ -17,7 +17,6 @@ SUBROUTINE stop_run( lflag )
   USE mp_global,          ONLY : mp_global_end
   USE environment,        ONLY : environment_end
   USE io_files,           ONLY : iuntmp, seqopn
-  USE image_io_routines,  ONLY : io_image_stop
   !
   IMPLICIT NONE
   !
@@ -52,8 +51,6 @@ SUBROUTINE stop_run( lflag )
   CALL print_clock_pw()
   !
   CALL environment_end( 'PWSCF' )
-  !
-  CALL io_image_stop()
   !
   CALL mp_global_end ()
   !

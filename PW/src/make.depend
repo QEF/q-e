@@ -1475,7 +1475,6 @@ spinor.o : ../../Modules/kind.o
 start_k.o : ../../Modules/cell_base.o
 start_k.o : ../../Modules/kind.o
 stop_run.o : ../../Modules/environment.o
-stop_run.o : ../../Modules/image_io_routines.o
 stop_run.o : ../../Modules/io_files.o
 stop_run.o : ../../Modules/io_global.o
 stop_run.o : ../../Modules/mp_global.o
