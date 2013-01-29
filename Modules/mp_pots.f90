@@ -10,7 +10,6 @@ MODULE mp_pots
   !----------------------------------------------------------------------------
   !
   USE mp, ONLY : mp_barrier, mp_size, mp_rank
-  USE command_line_options, ONLY : npot_
   USE parallel_include
   !
   IMPLICIT NONE 
@@ -30,7 +29,7 @@ MODULE mp_pots
 CONTAINS
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE mp_start_pots ( parent_comm )
+  SUBROUTINE mp_start_pots ( npot_, parent_comm )
     !---------------------------------------------------------------------------
     !
     ! ... Divide processors (of the "parent_comm" group) into "pots"
@@ -40,7 +39,7 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(IN) :: parent_comm
+    INTEGER, INTENT(IN) :: npot_, parent_comm
     !
     INTEGER :: parent_nproc = 1, parent_mype  = 0, ierr = 0
     !

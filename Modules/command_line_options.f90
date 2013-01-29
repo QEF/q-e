@@ -30,9 +30,6 @@ MODULE command_line_options
   ! ... Command line arguments not identified
   CHARACTER(LEN=256) :: command_line = ' '
   !
-  !PRIVATE
-  !PUBLIC :: command_line
-  !
 CONTAINS
   !
   SUBROUTINE get_command_line ( )
@@ -46,6 +43,11 @@ CONTAINS
      !
      command_line = ' '
      nargs = iargc()
+     CALL mp_bcast ( nargs, root, world_comm )
+     !
+     ! ... Only the first node reads and broadcasts
+     !
+     IF ( .NOT. meta_ionode ) GO TO 20
      !
      arg = ' '
      narg=0
@@ -86,14 +88,13 @@ CONTAINS
         END SELECT
         IF ( narg > nargs ) GO TO 20
      GO TO 10
-     ! .... something wrong, notify and continue
-15   CALL mp_bcast ( narg, 0 ) !, world_comm )
-     CALL infomsg ('get_command_line', 'unexpected argument # ' // &
+     ! ... something wrong: notify and continue
+15   CALL infomsg ('get_command_line', 'unexpected argument # ' // &
                   & int_to_char(narg) // ':' //TRIM(arg), narg)
      narg = narg + 1
      GO TO 10
+     ! ... normal exit
 20   CONTINUE
-
      CALL mp_bcast( command_line, root, world_comm ) 
      CALL mp_bcast( input_file_ , root, world_comm ) 
      CALL mp_bcast( nimage_, root, world_comm ) 

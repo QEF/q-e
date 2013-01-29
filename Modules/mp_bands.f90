@@ -10,7 +10,6 @@ MODULE mp_bands
   !----------------------------------------------------------------------------
   !
   USE mp, ONLY : mp_barrier, mp_bcast, mp_size, mp_rank
-  USE command_line_options, ONLY : nband_
   USE parallel_include
   !
   IMPLICIT NONE 
@@ -35,7 +34,7 @@ MODULE mp_bands
 CONTAINS
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE mp_start_bands( parent_comm )
+  SUBROUTINE mp_start_bands( nband_, parent_comm )
     !---------------------------------------------------------------------------
     !
     ! ... Divide processors (of the "parent_comm" group) into bands pools
@@ -45,7 +44,7 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(IN) :: parent_comm
+    INTEGER, INTENT(IN) :: nband_, parent_comm
     !
     INTEGER :: parent_nproc = 1, parent_mype = 0, ierr = 0
     !

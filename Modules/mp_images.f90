@@ -11,7 +11,6 @@ MODULE mp_images
   !
   USE mp, ONLY : mp_barrier, mp_bcast, mp_size, mp_rank
   USE io_global, ONLY : ionode, ionode_id
-  USE command_line_options, ONLY : nimage_
   USE parallel_include
   !
   IMPLICIT NONE 
@@ -31,7 +30,7 @@ MODULE mp_images
 CONTAINS
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE mp_start_images ( parent_comm )
+  SUBROUTINE mp_start_images ( nimage_, parent_comm )
     !-----------------------------------------------------------------------
     !
     ! ... Divide processors (of the "parent_comm" group) into "images". 
@@ -39,7 +38,7 @@ CONTAINS
     ! ...           parent_comm, typically world_comm = group of all processors
     !
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: parent_comm
+    INTEGER, INTENT(IN) :: nimage_, parent_comm
     !
     INTEGER :: parent_nproc, parent_mype, ierr = 0
     !

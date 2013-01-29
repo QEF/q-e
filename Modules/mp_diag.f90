@@ -10,7 +10,6 @@ MODULE mp_diag
   !----------------------------------------------------------------------------
   !
   USE mp, ONLY : mp_size, mp_rank, mp_sum, mp_comm_free
-  USE command_line_options, ONLY : ndiag_
   !
   ! The following variables are needed in order to set up the communicator
   ! for scalapack
@@ -48,14 +47,14 @@ MODULE mp_diag
 CONTAINS
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE mp_start_diag( parent_comm )
+  SUBROUTINE mp_start_diag( ndiag_, parent_comm )
     !---------------------------------------------------------------------------
     !
     ! ... Ortho/diag/linear algebra group initialization
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(IN) :: parent_comm   ! communicator of the parent group
+    INTEGER, INTENT(IN) :: ndiag_, parent_comm
     !
     INTEGER :: nproc_ortho_try
     INTEGER :: parent_nproc  ! nproc of the parent group

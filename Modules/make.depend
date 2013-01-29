@@ -134,12 +134,10 @@ mm_dispersion.o : mp_global.o
 mp.o : io_global.o
 mp.o : kind.o
 mp.o : parallel_include.o
-mp_bands.o : command_line_options.o
 mp_bands.o : mp.o
 mp_bands.o : parallel_include.o
 mp_base.o : kind.o
 mp_base.o : parallel_include.o
-mp_diag.o : command_line_options.o
 mp_diag.o : mp.o
 mp_diag.o : mp_bands.o
 mp_diag.o : mp_pools.o
@@ -152,14 +150,11 @@ mp_global.o : mp_images.o
 mp_global.o : mp_pools.o
 mp_global.o : mp_pots.o
 mp_global.o : mp_world.o
-mp_images.o : command_line_options.o
 mp_images.o : io_global.o
 mp_images.o : mp.o
 mp_images.o : parallel_include.o
-mp_pools.o : command_line_options.o
 mp_pools.o : mp.o
 mp_pools.o : parallel_include.o
-mp_pots.o : command_line_options.o
 mp_pots.o : mp.o
 mp_pots.o : parallel_include.o
 mp_wave.o : kind.o

@@ -48,7 +48,8 @@ CONTAINS
     ! ... Within each image processes are further subdivided into various
     ! ... groups and parallelization levels
     !
-    USE command_line_options, ONLY : get_command_line
+    USE command_line_options, ONLY : get_command_line, &
+        nimage_, npool_, npot_, ndiag_, nband_, ntg_
     USE io_global, ONLY : io_global_start
     IMPLICIT NONE
     LOGICAL, INTENT(IN), OPTIONAL :: start_images
@@ -60,15 +61,16 @@ CONTAINS
     do_images = PRESENT(start_images) 
     IF ( do_images ) do_images = start_images
     IF ( do_images ) THEN
-       CALL mp_start_images ( world_comm )
+       CALL mp_start_images ( nimage_, world_comm )
     ELSE
        CALL mp_init_image ( world_comm  )
     END IF
     !
-    !!! CALL mp_start_pots ( intra_image_comm )
-    CALL mp_start_pools ( intra_image_comm )
-    CALL mp_start_bands ( intra_pool_comm )
-    CALL mp_start_diag  ( intra_bgrp_comm )
+    CALL mp_start_pots  ( npot_, intra_image_comm )
+    CALL mp_start_pools ( npool_, intra_image_comm )
+    CALL mp_start_bands ( nband_, intra_pool_comm )
+    ntask_group = ntg_
+    CALL mp_start_diag  ( ndiag_, intra_bgrp_comm )
     !
     RETURN
     !
