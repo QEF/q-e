@@ -25,8 +25,8 @@
 !                               routine error and show by the second string the
 !                               name of the field where read-error occurred.
 !
-! ... SUBROUTINE version_parse: Determine the major, minor and patch numbers from 
-!                               a version string with the fmt "i.j.k"
+! ... SUBROUTINE version_parse: Determine the major, minor and patch numbers 
+!                               from a version string with the fmt "i.j.k"
 !
 ! ... FUNCTION version_compare: Compare two version strings; the result can be
 !                               "newer", "equal", "older", ""
@@ -131,7 +131,7 @@ MODULE parser
     !--------------------------------------------------------------------------
     !
     USE mp,        ONLY : mp_bcast
-    USE mp_global, ONLY : world_comm
+    USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
     !
     IMPLICIT NONE
@@ -159,9 +159,9 @@ MODULE parser
 20     CONTINUE
     END IF
     !
-    CALL mp_bcast( tend, ionode_id, world_comm )
-    CALL mp_bcast( terr, ionode_id, world_comm )
-    CALL mp_bcast( line, ionode_id, world_comm )
+    CALL mp_bcast( tend, ionode_id, intra_image_comm )
+    CALL mp_bcast( terr, ionode_id, intra_image_comm )
+    CALL mp_bcast( line, ionode_id, intra_image_comm )
     !
     IF( PRESENT(end_of_file) ) THEN
        end_of_file = tend

@@ -17,9 +17,9 @@ MODULE read_xml_module
   ! ...default and checkin of fields
   !
   USE read_namelists_module, ONLY : control_defaults, system_defaults,&
-       ee_defaults, electrons_defaults, wannier_ac_defaults, ions_defaults, &
+       electrons_defaults, wannier_ac_defaults, ions_defaults, &
        cell_defaults, press_ai_defaults, wannier_defaults, control_bcast, &
-       system_bcast, ee_bcast, electrons_bcast, ions_bcast,cell_bcast, &
+       system_bcast, electrons_bcast, ions_bcast,cell_bcast, &
        press_ai_bcast, wannier_bcast, wannier_ac_bcast, control_checkin, &
        system_checkin, electrons_checkin, ions_checkin, cell_checkin, &
        wannier_checkin, wannier_ac_checkin, fixval
@@ -114,7 +114,6 @@ CONTAINS
     CALL electrons_defaults( prog )
     CALL ions_defaults( prog )
     CALL cell_defaults( prog )
-    CALL ee_defaults( prog )
     CALL wannier_defaults( prog )
     CALL wannier_ac_defaults( prog )
     !
@@ -315,7 +314,6 @@ CONTAINS
     CALL ions_bcast( )
     CALL cell_bcast()
     CALL press_ai_bcast()
-    CALL ee_bcast()
     CALL wannier_bcast()
     CALL wannier_ac_bcast()
     !
@@ -527,7 +525,6 @@ CONTAINS
     CALL ions_bcast( )
     CALL cell_bcast()
     CALL press_ai_bcast()
-    CALL ee_bcast()
     CALL wannier_bcast()
     CALL wannier_ac_bcast()
     !
