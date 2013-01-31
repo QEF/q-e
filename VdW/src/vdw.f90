@@ -185,8 +185,7 @@ SUBROUTINE vdw_init ( )
      !
      READ (5, *, err = 10, iostat = ios) card
      READ (5, *, err = 10, iostat = ios) nfs
-     IF ( nfs > nfsmax ) &
-        CALL  errore ('extract', 'nfs too large', 1 )
+     ALLOCATE(fiu(nfs))
      DO i = 1, nfs
         READ (5, *, err = 10, iostat = ios) fiu(i)
      ENDDO
