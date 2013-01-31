@@ -281,7 +281,6 @@ MODULE pw_restart
       !
       CALL mp_sum( ngk_g, inter_pool_comm)
       CALL mp_sum( ngk_g, intra_pool_comm)
-      !
       ngk_g = ngk_g / nbgrp
       !
       ! ... compute the maximum G vector index among all G+k an processors
@@ -3030,6 +3029,7 @@ MODULE pw_restart
       !
       CALL mp_sum( ngk_g, inter_pool_comm )
       CALL mp_sum( ngk_g, intra_pool_comm )
+      !
       ngk_g = ngk_g / nbgrp
       !
       ! ... compute the Maximum G vector index among all G+k an processors

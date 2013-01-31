@@ -50,12 +50,12 @@ subroutine setup_dgc
      gmag=0.0_dp
   ENDIF
 
-  allocate (dvxc_rr(dfftp%nnr, nspin_gga , nspin_gga))
-  allocate (dvxc_sr(dfftp%nnr, nspin_gga , nspin_gga))
-  allocate (dvxc_ss(dfftp%nnr, nspin_gga , nspin_gga))
-  allocate (dvxc_s (dfftp%nnr, nspin_gga , nspin_gga))
-  allocate (grho   (  3    , dfftp%nnr, nspin_gga))
-  allocate (rhoout ( dfftp%nnr, nspin_gga))
+  IF(.NOT.ALLOCATED(dvxc_rr)) ALLOCATE (dvxc_rr(dfftp%nnr, nspin_gga , nspin_gga))
+  IF(.NOT.ALLOCATED(dvxc_sr)) ALLOCATE (dvxc_sr(dfftp%nnr, nspin_gga , nspin_gga))
+  IF(.NOT.ALLOCATED(dvxc_ss)) ALLOCATE (dvxc_ss(dfftp%nnr, nspin_gga , nspin_gga))
+  IF(.NOT.ALLOCATED(dvxc_s))  ALLOCATE (dvxc_s (dfftp%nnr, nspin_gga , nspin_gga))
+  IF(.NOT.ALLOCATED(grho))    ALLOCATE (grho   (  3    , dfftp%nnr, nspin_gga))
+  IF(.NOT.ALLOCATED(rhoout))  ALLOCATE (rhoout ( dfftp%nnr, nspin_gga))
 
   dvxc_rr(:,:,:) = 0.d0
   dvxc_sr(:,:,:) = 0.d0

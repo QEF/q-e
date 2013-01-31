@@ -29,7 +29,7 @@ USE ener, ONLY : ef
 USE control_ph,  ONLY : alpha_pv, nbnd_occ
 !USE becmod,      ONLY : becp, becp_nc, calbec
 USE uspp,        ONLY : vkb, okvan
-USE mp_global,   ONLY : intra_pool_comm
+USE mp_global,   ONLY : intra_bgrp_comm
 USE mp,          ONLY : mp_sum
 !use lr_variables, ONLY : lr_alpha_pv, nbnd_occ,
 USE lr_variables, ONLY : lr_verbosity
@@ -150,7 +150,7 @@ CONTAINS
       nbnd_eff=nbnd_occ(ikk)
    ENDIF
 #ifdef __MPI
-   CALL mp_sum(ps(:,1:nbnd_eff),intra_pool_comm)
+   CALL mp_sum(ps(:,1:nbnd_eff),intra_bgrp_comm)
 #endif
    !!
    !! |dvspi> =  -(|dvpsi> - |sevc><evq|dvpsi>)
@@ -232,7 +232,7 @@ CONTAINS
      ENDIF
   ENDIF
 #ifdef __MPI
-   CALL mp_sum(ps(:,:),intra_pool_comm)
+   CALL mp_sum(ps(:,:),intra_bgrp_comm)
 #endif
   ! in the original dpsi was used as a storage for sevc, since in
   ! tddfpt we have it stored in memory as sevc0 this part is obsolote
@@ -332,7 +332,7 @@ CONTAINS
       nbnd_eff=nbnd_occ(ikk)
    ENDIF
 #ifdef __MPI
-   CALL mp_sum(ps(:,1:nbnd_eff),intra_pool_comm)
+   CALL mp_sum(ps(:,1:nbnd_eff),intra_bgrp_comm)
 #endif
    ! in the original dpsi was used as a storage for sevc, since in
    ! tddfpt we have it stored in memory as sevc0 this part is obsolote

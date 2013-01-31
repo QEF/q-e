@@ -216,7 +216,7 @@ CONTAINS
     USE wavefunctions_module, ONLY : evc
     USE realus,               ONLY : npw_k
     USE mp,                   ONLY : mp_sum
-    USE mp_global,            ONLY : intra_pool_comm
+    USE mp_global,            ONLY : intra_bgrp_comm
 
     IMPLICIT NONE
 
@@ -252,7 +252,7 @@ CONTAINS
     ENDDO
     !
 #ifdef __MPI
-    CALL mp_sum(eprec, intra_pool_comm)
+    CALL mp_sum(eprec, intra_bgrp_comm)
 #endif
     DEALLOCATE(work)
 

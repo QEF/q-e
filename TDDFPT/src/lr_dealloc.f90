@@ -13,6 +13,7 @@ SUBROUTINE lr_dealloc()
   USE io_global,      ONLY : stdout
   USE charg_resp,     ONLY : w_T_beta_store, w_T_gamma_store, w_T, w_T_zeta_store,chi
   USE eqv,            ONLY : dmuxc
+  USE lr_exx_kernel,     ONLY : lr_exx_dealloc
 
   IMPLICIT NONE
   !
@@ -65,6 +66,7 @@ SUBROUTINE lr_dealloc()
   IF (allocated(w_T)) DEALLOCATE(w_T)
   IF (allocated(rho_1_tot)) DEALLOCATE(rho_1_tot)
   IF (allocated(rho_1_tot_im)) DEALLOCATE(rho_1_tot_im)
+  IF (lr_exx) CALL lr_exx_dealloc
   !
   IF (gamma_only) THEN
      CALL lr_dealloc_gamma()

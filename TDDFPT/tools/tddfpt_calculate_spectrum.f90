@@ -44,7 +44,7 @@ PROGRAM lr_calculate_spectrum
   INTEGER :: n_ipol
   real(dp), ALLOCATABLE, DIMENSION(:,:) :: beta_store, gamma_store
   COMPLEX(dp), ALLOCATABLE, DIMENSION(:,:,:) :: zeta_store
-  real(dp) :: norm0(3)
+  real(dp) :: norm0(3) 
   INTEGER :: i,j, info, ip, ip2, counter
   real(kind=dp) :: average(3), av_amplitude(3), epsil
   INTEGER :: ios
@@ -154,7 +154,7 @@ ENDIF
 
   ! Polarization symmetry
   IF ( .not. sym_op == 0 ) THEN
-    CALL errore("tddfpt_pp","Unsupported symmetry operation",1)
+!    CALL errore("tddfpt_pp","Unsupported symmetry operation",1)
    IF (sym_op == 1) THEN
     WRITE(stdout,'(5x,"All polarization axes will be considered to be equal.")')
     n_ipol=3
@@ -676,7 +676,7 @@ CONTAINS
 SUBROUTINE read_b_g_z_file()
 !Reads the coefficients from the designated file
 IMPLICIT NONE
- IF (sym_op == 0) THEN
+IF (sym_op == 0) THEN
   DO ip=1,n_ipol
    ! Read the coefficents
     IF (n_ipol==3) filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(ip))
@@ -738,7 +738,7 @@ IMPLICIT NONE
    OPEN (158, file = filename, form = 'formatted', status = 'old')
    !
    READ(158,*) itermax_actual
-   WRITE(stdout,'(/5X,"Reading ",I6," Lanczos steps for direction ",I1)') itermax_actual, ip
+   WRITE(stdout,'(/5X,"Reading ",I6," Lanczos steps for direction ",I1)') itermax_actual, ipol
    WRITE(stdout,'(5X,I6," steps will be considered")') itermax0
   IF (itermax0 > itermax_actual .or. itermax0 > itermax) THEN
    CALL errore("tddfpt_calculate_spectrum", "Error in Itermax0",1)
@@ -746,6 +746,7 @@ IMPLICIT NONE
 
    !
    READ(158,*) norm0(1)
+   !print *, "norm0(", ip,")=",norm0(ip)
    !
    norm0(2)=norm0(1)
    norm0(3)=norm0(1)
@@ -770,9 +771,9 @@ IMPLICIT NONE
    ENDDO
    !
    CLOSE(158)
-   beta_store(ip,itermax0+1:)=0.d0
-   gamma_store(ip,itermax0+1:)=0.d0
-   zeta_store(ip,:,itermax0+1:)=(0.d0,0.d0)
+   beta_store(:,itermax0+1:)=0.d0
+   gamma_store(:,itermax0+1:)=0.d0
+   zeta_store(:,:,itermax0+1:)=(0.d0,0.d0)
 
  ENDIF
 END SUBROUTINE read_b_g_z_file

@@ -19,6 +19,7 @@ lr_alloc_init.o : ../../PW/src/pwcom.o
 lr_alloc_init.o : ../../PW/src/realus.o
 lr_alloc_init.o : lr_charg_resp.o
 lr_alloc_init.o : lr_variables.o
+lr_alloc_init.o : lr_exx_kernel.o
 lr_apply_liouvillian.o : ../../Modules/cell_base.o
 lr_apply_liouvillian.o : ../../Modules/control_flags.o
 lr_apply_liouvillian.o : ../../Modules/fft_base.o
@@ -34,6 +35,7 @@ lr_apply_liouvillian.o : ../../PW/src/newd.o
 lr_apply_liouvillian.o : ../../PW/src/pwcom.o
 lr_apply_liouvillian.o : ../../PW/src/realus.o
 lr_apply_liouvillian.o : lr_variables.o
+lr_apply_liouvillian.o : lr_exx_kernel.o
 lr_calc_dens.o : ../../Modules/becmod.o
 lr_calc_dens.o : ../../Modules/cell_base.o
 lr_calc_dens.o : ../../Modules/constants.o
@@ -52,6 +54,7 @@ lr_calc_dens.o : ../../Modules/uspp.o
 lr_calc_dens.o : ../../Modules/wavefunctions.o
 lr_calc_dens.o : ../../PW/src/pwcom.o
 lr_calc_dens.o : ../../PW/src/realus.o
+lr_calc_dens.o : lr_exx_kernel.o
 lr_calc_dens.o : lr_charg_resp.o
 lr_calc_dens.o : lr_variables.o
 lr_charg_resp.o : ../../Modules/becmod.o
@@ -78,6 +81,7 @@ lr_dealloc.o : ../../PHonon/PH/phcom.o
 lr_dealloc.o : ../../PW/src/realus.o
 lr_dealloc.o : lr_charg_resp.o
 lr_dealloc.o : lr_variables.o
+lr_dealloc.o : lr_exx_kernel.o
 lr_diagonalise.o : ../../Modules/io_global.o
 lr_diagonalise.o : ../../Modules/kind.o
 lr_diagonalise.o : lr_variables.o

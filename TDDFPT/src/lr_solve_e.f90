@@ -32,13 +32,14 @@ SUBROUTINE lr_solve_e
   USE realus,               ONLY : igk_k,npw_k
   USE lsda_mod,             ONLY : lsda, isk, current_spin
   USE uspp,                 ONLY : vkb
-  USE wvfct,                ONLY : igk, nbnd, npwx, npw, et
+  USE wvfct,                ONLY : igk, nbnd, npwx, npw, et, current_k
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : evc
-  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                   ONLY : mp_max,mp_min
   USE realus,               ONLY : real_space, real_space_debug!, dvpsir_e
   USE control_ph,           ONLY : alpha_pv
+
   !
   IMPLICIT NONE
   !
@@ -117,11 +118,14 @@ SUBROUTINE lr_solve_e
   !else
   !  print *, "Vkb electric field operator"
     DO ik=1,nks
-        !
-        IF ( lsda ) current_spin = isk(ik)
        !
-      evc(:,:)=evc0(:,:,ik)
-      !
+       current_k=ik
+       !
+       IF ( lsda ) current_spin = isk(ik)
+       !
+       evc(:,:)=evc0(:,:,ik)
+       !
+       !
        npw=npw_k(ik)
        igk(:)=igk_k(:,ik)
        !

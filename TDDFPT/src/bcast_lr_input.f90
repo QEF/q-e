@@ -23,6 +23,7 @@ SUBROUTINE bcast_lr_input
   USE charg_resp,          ONLY: omeg, w_T_prefix, w_T_npol,epsil
   USE io_global,           ONLY: ionode, ionode_id
   USE mp_global,           ONLY: intra_image_comm
+  USE exx,                 ONLY: ecutfock
 
   IMPLICIT NONE
   !
@@ -56,6 +57,8 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (plot_type, ionode_id )
   CALL mp_bcast (no_hxc, ionode_id )
   CALL mp_bcast (bgz_suffix, ionode_id )
+  call mp_bcast (scissor, ionode_id)
+  CALL mp_bcast (ecutfock, ionode_id )
   CALL mp_barrier()
   !print *, "bcast lr input finished"
   !print *, "variables"

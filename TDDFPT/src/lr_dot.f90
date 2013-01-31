@@ -21,7 +21,7 @@ FUNCTION lr_dot(x,y)
   USE control_flags,        ONLY : gamma_only
   USE gvect,                ONLY : gstart
   USE mp,                   ONLY : mp_sum
-  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
   USE lr_variables,   ONLY : lr_verbosity
    USE io_global,      ONLY : stdout
  !
@@ -78,7 +78,7 @@ CONTAINS
     !
 #ifdef __MPI
     !call reduce(1,temp_gamma)
-    CALL mp_sum(temp_gamma, intra_pool_comm)
+    CALL mp_sum(temp_gamma, intra_bgrp_comm)
 #endif
     !
     RETURN
@@ -97,7 +97,7 @@ CONTAINS
     !call poolreduce(2,temp_k)
     CALL mp_sum(temp_k,inter_pool_comm)
     !call reduce(2,temp_k)
-    CALL mp_sum(temp_k, intra_pool_comm)
+    CALL mp_sum(temp_k, intra_bgrp_comm)
 #endif
     !
     RETURN

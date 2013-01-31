@@ -7,7 +7,7 @@ SUBROUTINE lr_init_nfo()
 !Created by Osman Baris Malcioglu (2009)
 !
   !
-  USE kinds, ONLY : DP
+  USE kinds,                ONLY : DP
   USE klist,                ONLY : nks,degauss,lgauss,ngauss,xk, nelec
   USE wvfct,                ONLY : nbnd, et, igk, npw, g2kin
   USE realus,               ONLY : npw_k, igk_k
@@ -23,20 +23,24 @@ SUBROUTINE lr_init_nfo()
   USE ktetra,               ONLY : ltetra
   USE lsda_mod,             ONLY : lsda
   USE realus,               ONLY : real_space
-  USE control_ph,            ONLY : alpha_pv, nbnd_occ
+  USE control_ph,           ONLY : alpha_pv, nbnd_occ
   USE wvfct,                ONLY : npwx, ecutwfc
-  USE klist,             ONLY : nks
- !
+  USE klist,                ONLY : nks
+  USE io_files,             ONLY : iunigk, seqopn
+  !
   IMPLICIT NONE
   !
   ! local variables
-  real(kind=DP) :: small, emin, emax, xmax, fac, targ
+  REAL(kind=DP) :: small, emin, emax, xmax, fac, targ
   INTEGER       :: ik,ibnd, ipol
+  LOGICAL       :: exst
   !
   ! Open shell related
   IF ( .not. allocated( igk_k ) )    ALLOCATE(igk_k(npwx,nks))
   IF ( .not. allocated( npw_k ) )    ALLOCATE(npw_k(nks))
   !IF ( .not. ALLOCATED( nbnd_occ ) ) allocate (nbnd_occ (nks))
+
+  CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
 
   IF (.not. real_space) THEN
   DO ik=1,nks
@@ -47,7 +51,10 @@ SUBROUTINE lr_init_nfo()
       !
       igk_k(:,ik) = igk(:)
       !
-     !
+      ! For systems with more than one kpoint, we also write 
+      ! igk to iunigk. This is required by exx_init().
+      IF ( nks > 1 ) WRITE( iunigk ) igk
+      !
   ENDDO
   ENDIF
   !OBM!! The following part is derived from phonon phq_setup

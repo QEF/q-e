@@ -27,7 +27,7 @@ SUBROUTINE sm1_psi( recalculate, ik, lda, n, m, psi, spsi)
   USE ldaU,       ONLY : lda_plus_u
   USE ions_base,  ONLY : ityp,nat,ntyp=>nsp
   USE mp,         ONLY : mp_sum
-  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
   USE lr_variables,   ONLY : lr_verbosity
   USE io_global,      ONLY : stdout
   !
@@ -262,7 +262,7 @@ CONTAINS
           CALL zgemm('C','N',nkb,nkb,npw_k(ik1),(1.d0,0.d0),vkb,lda,vkb,lda,(0.d0,0.d0),BB_(1,1,ik1),nkb)
 #ifdef __MPI
           !CALL reduce( 2 * nkb * nkb, BB_(:,:,ik1) )
-          CALL mp_sum(BB_(:,:,ik1), intra_pool_comm)
+          CALL mp_sum(BB_(:,:,ik1), intra_bgrp_comm)
 #endif
 
           ps(:,:) = (0.d0,0.d0)

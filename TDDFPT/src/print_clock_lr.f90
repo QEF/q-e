@@ -38,7 +38,9 @@ SUBROUTINE print_clock_lr()
    !
    CALL print_clock('lr_apply')
    CALL print_clock('lr_apply_int')
+   CALL print_clock('lr_exx_int')
    CALL print_clock('lr_apply_no')
+   CALL print_clock('lr_exx_noint')
    !
    WRITE( stdout, * )
    !
@@ -82,7 +84,9 @@ SUBROUTINE print_clock_lr()
    CALL print_clock( 'calbec' )
    CALL print_clock( 'fft' )
    CALL print_clock( 'ffts' )
+   CALL print_clock( 'fftc' )
    CALL print_clock( 'fftw' )
+   CALL print_clock( 'fftcw' )
    CALL print_clock( 'interpolate' )
    CALL print_clock( 'davcio' )
    CALL print_clock( 'newq' )
@@ -101,7 +105,6 @@ SUBROUTINE print_clock_lr()
     WRITE( stdout, * )
 #endif
    !
-#ifdef EXX
    WRITE( stdout, '(5X,"EXX routines")' )
    !
    CALL print_clock( 'exx_grid' )
@@ -110,7 +113,6 @@ SUBROUTINE print_clock_lr()
    CALL print_clock( 'exxenergy' )
    CALL print_clock( 'exxen2' )
    CALL print_clock ('cycleig')
-#endif   
    !
    CALL print_clock( 'post-processing' )
    RETURN

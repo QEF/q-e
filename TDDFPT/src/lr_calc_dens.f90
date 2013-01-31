@@ -29,7 +29,8 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
                                      &,rho_1_tot_im, LR_iteration,&
                                      & LR_polarization, project,&
                                      & evc0_virt, F,nbnd_total,&
-                                     & n_ipol, becp1_virt 
+                                     & n_ipol, becp1_virt, rho_1c,&
+                                     & lr_exx
   USE lsda_mod,               ONLY : current_spin, isk
   USE wavefunctions_module,   ONLY : psic
   USE wvfct,                  ONLY : nbnd, et, wg, npwx, npw
@@ -39,8 +40,8 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE io_global,              ONLY : ionode, stdout
   USE io_files,               ONLY : tmp_dir, prefix
   USE mp,                     ONLY : mp_sum
-  USE mp_global,              ONLY : inter_pool_comm, intra_pool_comm,&
-                                     & nproc 
+  USE mp_global,              ONLY : inter_pool_comm, intra_bgrp_comm,&
+                                     & nproc, inter_bgrp_comm 
   USE realus,                 ONLY : igk_k,npw_k, addusdens_r
   USE charg_resp,             ONLY : w_T, lr_dump_rho_tot_cube,&
                                      & lr_dump_rho_tot_xyzd, &
@@ -49,6 +50,8 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE noncollin_module,       ONLY : nspin_mag
   USE control_flags,          ONLY : tqr
   USE becmod,                 ONLY : becp
+  USE lr_exx_kernel,             ONLY : lr_exx_kernel_int, revc_int,&
+                                     & revc_int_c
   USE constants,              ONLY : eps12
   !
   IMPLICIT NONE
@@ -86,17 +89,32 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   !
   ALLOCATE( psic(dfftp%nnr) )
   psic(:)    = (0.0d0,0.0d0)
-  rho_1(:,:) =  0.0d0
-  !
   IF(gamma_only) THEN
-     CALL lr_calc_dens_gamma()
+     rho_1(:,:) =  0.0d0
   ELSE
-     CALL lr_calc_dens_k()
+     rho_1c(:,:) =  0.0d0
   ENDIF
   !
-  ! If a double grid is used, interpolate onto the fine grid
-  !
-  IF ( doublegrid ) CALL interpolate(rho_1,rho_1,1)
+  IF(gamma_only) THEN
+     IF (lr_exx) revc_int=0.0d0
+     CALL lr_calc_dens_gamma()
+     !
+     ! If a double grid is used, interpolate onto the fine grid
+     !
+     IF ( doublegrid ) CALL interpolate(rho_1,rho_1,1)
+#ifdef __MPI
+     CALL mp_sum(rho_1, inter_bgrp_comm)
+#endif
+     !
+  ELSE
+     IF (lr_exx) revc_int_c=(0.0d0,0.d0)
+     CALL lr_calc_dens_k()
+     !
+     ! If a double grid is used, interpolate onto the fine grid
+     !
+     IF ( doublegrid ) CALL cinterpolate(rho_1c,rho_1c,1)
+     !
+  ENDIF
   !
   ! Here we add the Ultrasoft contribution to the charge density
   ! response. 
@@ -114,7 +132,11 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   DEALLOCATE ( psic )
   !
 #ifdef __MPI
-  CALL mp_sum(rho_1, inter_pool_comm)
+  IF(gamma_only) THEN
+     CALL mp_sum(rho_1, inter_pool_comm)
+  ELSE
+     CALL mp_sum(rho_1c, inter_pool_comm)
+  ENDIF
 #endif
   !
   ! check response charge density sums to 0
@@ -127,7 +149,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
         rho_sum=SUM(rho_1(:,ispin))
         !
 #ifdef __MPI
-        CALL mp_sum(rho_sum, intra_pool_comm )
+        CALL mp_sum(rho_sum, intra_bgrp_comm )
 #endif
         !
         rho_sum = rho_sum * omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
@@ -181,9 +203,9 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      ENDDO
      !
 #ifdef __MPI
-     CALL mp_sum(rho_sum_resp_x, intra_pool_comm)
-     CALL mp_sum(rho_sum_resp_y, intra_pool_comm)
-     CALL mp_sum(rho_sum_resp_z, intra_pool_comm)
+     CALL mp_sum(rho_sum_resp_x, intra_bgrp_comm)
+     CALL mp_sum(rho_sum_resp_y, intra_bgrp_comm)
+     CALL mp_sum(rho_sum_resp_z, intra_bgrp_comm)
      IF (ionode) THEN
 #endif
         WRITE(stdout,'(5X,"Dumping plane sums of densities for &
@@ -297,14 +319,22 @@ CONTAINS
                                     & calbec_rs_gamma,&
                                     & add_vuspsir_gamma, v_loc_psir,&
                                     & real_space_debug 
+    USE mp_global,           ONLY : ibnd_start, ibnd_end, inter_bgrp_comm
+    USE mp,                  ONLY : mp_sum
     USE realus,              ONLY : tg_psic
     USE mp_global,           ONLY : me_bgrp, me_pool
     USE fft_base,            ONLY : dffts, tg_gather
     USE wvfct,               ONLY : igk
-    !
+
+    INTEGER   :: ibnd_start_gamma, ibnd_end_gamma
     LOGICAL :: use_tg
     INTEGER :: v_siz, incr, ioff, idx
     REAL(DP),    ALLOCATABLE :: tg_rho(:)
+
+    ibnd_start_gamma=ibnd_start
+    IF (MOD(ibnd_start, 2)==0) ibnd_start_gamma = ibnd_start+1
+    ibnd_end_gamma = MAX(ibnd_end, ibnd_start_gamma)
+    !
     !
     use_tg=dffts%have_task_groups
     incr = 2
@@ -320,10 +350,10 @@ CONTAINS
        !
     ENDIF
     !
-    DO ibnd=1,nbnd,incr
+    DO ibnd=ibnd_start_gamma,ibnd_end_gamma,incr
+       !
        CALL fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
        !
-       ! FFT: evc1 -> psic
        !
        IF(dffts%have_task_groups) THEN
           !
@@ -335,7 +365,7 @@ CONTAINS
           ! Compute the proper factor for each band
           !
           DO idx = 1, dffts%nogrp
-             IF( dffts%nolist( idx ) == me_pool ) EXIT
+             IF( dffts%nolist( idx ) == me_bgrp ) EXIT
           END DO
           !
           ! Remember two bands are packed in a single array :
@@ -346,9 +376,11 @@ CONTAINS
           idx = 2 * idx - 1
           !
           IF( idx + ibnd - 1 < nbnd ) THEN
+!         IF( idx + ibnd - 1 < ibnd_end_gamma ) THEN
              w1 = wg( idx + ibnd - 1, 1) / omega
              w2 = wg( idx + ibnd    , 1) / omega
           ELSE IF( idx + ibnd - 1 == nbnd ) THEN
+!         ELSE IF( idx + ibnd - 1 == ibnd_end_gamma ) THEN
              w1 = wg( idx + ibnd - 1, 1) / omega
              w2 = w1
           ELSE
@@ -356,7 +388,7 @@ CONTAINS
              w2 = w1
           END IF
           !
-          DO ir=1,dffts%tg_npp( me_pool + 1 ) * dffts%nr1x * dffts%nr2x
+          DO ir=1,dffts%tg_npp( me_bgrp + 1 ) * dffts%nr1x * dffts%nr2x
              tg_rho(ir)=tg_rho(ir) &
                   +2.0d0*(w1*real(tg_revc0(ir,ibnd,1),dp)*real(tg_psic(ir),dp)&
                   +w2*aimag(tg_revc0(ir,ibnd,1))*aimag(tg_psic(ir)))
@@ -370,7 +402,7 @@ CONTAINS
           IF(ibnd<nbnd) THEN
              w2=wg(ibnd+1,1)/omega
           ELSE
-             w2=w1
+             w2=0.d0
           ENDIF
           !
           ! (n'(r,w)=2*sum_v (psi_v(r) . q_v(r,w))
@@ -404,7 +436,9 @@ CONTAINS
           !
           ! End of real space stuff
           !
-       endif
+          IF (lr_exx) CALL lr_exx_kernel_int ( evc1(:,:,1), ibnd, nbnd, 1 )
+          !
+       ENDIF
     ENDDO
     IF(dffts%have_task_groups) THEN
        !
@@ -414,7 +448,7 @@ CONTAINS
        !
        ioff = 0
        DO idx = 1, dffts%nogrp
-          IF( me_pool == dffts%nolist( idx ) ) EXIT
+          IF( me_bgrp == dffts%nolist( idx ) ) EXIT
           ioff = ioff + dffts%nr1x * dffts%nr2x * dffts%npp( dffts%nolist( idx ) + 1 )
        END DO
        !
@@ -548,11 +582,14 @@ CONTAINS
           !
           ! loop over real space points
           DO ir=1,dffts%nnr
-             rho_1(ir,:)=rho_1(ir,:) &
-                  +2.0d0*w1*real(conjg(revc0(ir,ibnd,ik))*psic(ir),dp)
+             rho_1c(ir,:)=rho_1c(ir,:) &
+                  +2.0d0*w1*conjg(revc0(ir,ibnd,ik))*psic(ir)
           ENDDO
           !
+          IF (lr_exx) CALL lr_exx_kernel_int (evc1(:,:,ik), ibnd, nbnd, ik )
+          !
        ENDDO
+       !
     ENDDO
     !
     ! ... If we have a US pseudopotential we compute here the becsum term

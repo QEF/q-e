@@ -30,13 +30,15 @@ PROGRAM lr_main
                                     resonance_condition
   USE ions_base,             ONLY : tau,nat,atm,ityp
   USE environment,           ONLY: environment_start
-  USE mp_global,             ONLY : nimage, mp_startup
+  USE mp_global,             ONLY : nimage, mp_startup, init_index_over_band, inter_bgrp_comm
 
   USE control_ph,            ONLY : nbnd_occ
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions_module,  ONLY : psic
   USE control_flags,         ONLY : tddfpt
   USE check_stop,            ONLY : check_stop_now, check_stop_init
+  USE funct,                ONLY : dft_is_hybrid
+
   !Debugging
   USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,check_vector_gamma
   !
@@ -47,7 +49,7 @@ PROGRAM lr_main
   !INTEGER           :: iter, ip, op
   INTEGER           :: ip,pol_index,ibnd_occ,ibnd_virt,ibnd
   INTEGER           :: iter_restart,iteration
-  LOGICAL           :: rflag
+  LOGICAL           :: rflag, nomsg
   CHARACTER (len=9) :: code = 'TDDFPT'
   COMPLEX(kind=dp)     :: sum_F,sum_c
   !
@@ -68,6 +70,7 @@ PROGRAM lr_main
 !  WRITE( stdout, '(/5x,"Please cite this project as:  ")' )
 !  WRITE( stdout, '(/5x,"O.B.Malcioglu, R. Gebauer, D. Rocca, S. Baroni,")' )
 !  WRITE( stdout, '(/5x,"""turboTDDFT – a code for the simulation of molecular")' )
+
 !  WRITE( stdout, '(/5x,"spectra using the Liouville-Lanczos approach to")' )
 !  WRITE( stdout, '(/5x,"time-dependent density-functional perturbation theory""")' )
 !  WRITE( stdout, '(/5x,"CPC, (in press)")' )
@@ -92,7 +95,12 @@ PROGRAM lr_main
   WRITE(stdout,'(5x,"Number of Lanczos iterations = ",i6)') itermax
   !
   !
-  IF (no_hxc)  WRITE(stdout,'(5x,"No Hartree/Exchange/Correlation")')
+  IF (no_hxc)  THEN
+     WRITE(stdout,'(5x,"No Hartree/Exchange/Correlation")')
+  ELSEIF (dft_is_hybrid()) THEN
+     WRITE(stdout, '(/5x,"Use of exact-exchange enabled. Note the EXX correction to the [H,X]", &
+                    &/5x,"commutator is NOT included hence the f-sum rule will be violated.")')
+  ENDIF
   !
   !   Allocate and zero lr variables
   !
@@ -117,6 +125,7 @@ PROGRAM lr_main
    nbnd_total=nbnd
   ENDIF
   !
+
   CALL lr_alloc_init()
   !
   !  Charge response: initialisation
@@ -125,6 +134,8 @@ PROGRAM lr_main
   !   Read in ground state wavefunctions
   !
   CALL lr_read_wf()
+  !
+  CALL init_index_over_band(inter_bgrp_comm,nbnd)
   !
   !   Set up initial response orbitals
   !

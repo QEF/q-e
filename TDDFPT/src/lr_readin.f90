@@ -22,7 +22,7 @@ SUBROUTINE lr_readin
                                   & destroy_scf_type
   USE fft_base,            ONLY : dfftp
   USE gvecs,               ONLY : doublegrid
-  USE wvfct,               ONLY : nbnd, et, wg
+  USE wvfct,               ONLY : nbnd, et, wg, current_k
   USE lsda_mod,            ONLY : isk
   USE ener,                ONLY : ef
   USE io_global,           ONLY : ionode, ionode_id
@@ -36,18 +36,20 @@ SUBROUTINE lr_readin
                                   & betapointlist, read_rs_status, newd_r 
   USE funct,               ONLY : dft_is_meta
   USE io_global,           ONLY : stdout
-  USE control_flags,       ONLY : tqr, twfcollect
+  USE control_flags,       ONLY : tqr, twfcollect, ethr
   USE iotk_module
   USE charg_resp,          ONLY : w_T_prefix, omeg, w_T_npol, epsil
   USE mp,                  ONLY : mp_bcast,mp_barrier
   USE mp_global,           ONLY : my_pool_id, intra_image_comm, &
-                                  & intra_pool_comm, nproc_image, &
+                                  & intra_bgrp_comm, nproc_image, &
                                   & nproc_pool, nproc_pool_file, &
                                   & nproc_image_file, nproc_bgrp, &
                                   & nproc_bgrp_file
   USE io_global,           ONLY : ionode, ionode_id
   USE DFUNCT,              ONLY : newd
   USE vlocal,              ONLY : strf
+  USE exx,                 ONLY : ecutfock
+
 
   IMPLICIT NONE
   !
@@ -59,11 +61,11 @@ SUBROUTINE lr_readin
           ! Specify the amount of I/O activities
   INTEGER :: ios, iunout, ierr, ipol
   LOGICAL :: auto_rs
+  REAL(kind=dp) :: charge
   !
-  NAMELIST / lr_input / restart, restart_step, lr_verbosity, prefix, outdir,&
-       & test_case_no, wfcdir, disk_io, max_seconds 
-  NAMELIST / lr_control / itermax, ipol, ltammd, real_space, real_space_debug,&
-       & charge_response, tqr, auto_rs, no_hxc, n_ipol, project
+  NAMELIST / lr_input / restart, restart_step ,lr_verbosity, prefix, outdir, test_case_no, wfcdir, disk_io, max_seconds
+  NAMELIST / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, charge_response, tqr, auto_rs, no_hxc, n_ipol, &
+       & project, scissor, ecutfock
   NAMELIST / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int
   !
   auto_rs = .TRUE.
@@ -98,6 +100,9 @@ SUBROUTINE lr_readin
      plot_type = 1
      project = .FALSE.
      max_seconds = 0.D0
+     eig_dir='./'
+     scissor = 0.d0
+     ecutfock = -1d0
      !
      !   Reading the namelist lr_input
      !
@@ -180,6 +185,7 @@ SUBROUTINE lr_readin
   CALL mp_bcast(auto_rs, ionode_id)
 #endif
   !
+  current_k = 1 ! Required for restart runs as this never gets initalised 
   outdir = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
   IF (auto_rs) CALL read_rs_status( outdir, ierr )
   IF (real_space) real_space_debug=99
@@ -236,8 +242,10 @@ SUBROUTINE lr_readin
   !
   CALL iweights( nks, wk, nbnd, nelec, et, ef, wg, 0, isk)
   !
-  !
   IF ( charge_response == 2 ) CALL lr_set_boxes_density()
+  !
+  !   Checking
+  !
   !
   !Scalapack related stuff, 
   !
@@ -257,7 +265,11 @@ CONTAINS
     !   one place.
     !
     !--------------------------------------------------------------------------
-    USE fft_base, ONLY : dffts
+    USE fft_base,         ONLY : dffts
+    USE paw_variables,    ONLY : okpaw
+    USE uspp,             ONLY : okvan
+    USE funct,            ONLY : dft_is_hybrid
+
     IMPLICIT NONE
     !
     !  Charge response mode 1 is the "do Lanczos chains twice, conserve memory"
@@ -269,7 +281,6 @@ CONTAINS
     IF ( project .AND. charge_response /= 1) &
          & CALL errore ('lr_readin', &
          & 'projection is possible only in charge response mode 1', 1 )
-
     !
     !  Meta-DFT currently not supported by TDDFPT
     !
@@ -310,10 +321,28 @@ CONTAINS
          & 'pw.x run with a different number of band groups. &
          & Use wf_collect=.true.',1)
     !
+    ! No taskgroups and EXX.
+    !
+    IF (dffts%have_task_groups .AND. dft_is_hybrid()) &
+         & CALL errore( ' iosys ', ' Linear response calculation ' // &
+         & 'not implemented for EXX+Task groups', 1 )
+    !
     ! Experimental task groups warning.
     !
     IF (dffts%have_task_groups) CALL infomsg( 'lr_readin','Usage of task &
          &groups with TDDFPT is still experimental. Use at your own risk.' )
+    !
+    ! No PAW support.
+    !
+    IF (okpaw) &
+         & CALL errore( ' iosys ', ' Linear response calculation ' // &
+         & 'not implemented for PAW', 1 )
+    !
+    ! No USPP+EXX support.
+    !
+    IF (okvan .AND. dft_is_hybrid()) &
+         & CALL errore( ' iosys ', ' Linear response calculation ' // &
+         & 'not implemented for EXX+Ultrasoft', 1 )
     !
     RETURN
     !

@@ -68,8 +68,13 @@ SUBROUTINE lr_alloc_init()
      ALLOCATE(revc0(dffts%nnr,nbnd,nks))
   ENDIF
   !
-  ALLOCATE(rho_1(dfftp%nnr,nspin_mag))
-  rho_1(:,:)=0.0d0
+  IF(gamma_only) THEN
+     ALLOCATE(rho_1(dfftp%nnr,nspin_mag))
+     rho_1(:,:)=0.0d0
+  ELSE
+     ALLOCATE(rho_1c(dfftp%nnr,nspin_mag))
+     rho_1c(:,:)=(0.0d0,0.0d0)
+  ENDIF
   !allocate(rho_tot(dfftp%nnr))
   IF (charge_response == 1 ) THEN
    !allocate(rho_1_tot(dfftp%nnr,nspin_mag)) !Due to broadening this is now done in lr_charg_resp

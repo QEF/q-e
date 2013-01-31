@@ -16,7 +16,7 @@ SUBROUTINE lr_read_wf()
                                  & tmp_dir, wfc_dir 
   USE lr_variables,         ONLY : evc0, sevc0 ,revc0, evc0_virt,&
                                  & sevc0_virt, nbnd_total, becp1_virt, &
-                                 & becp1_c_virt  
+                                 & becp1_c_virt, no_hxc
   USE realus,               ONLY : igk_k,npw_k
   USE lr_variables,         ONLY : becp1, becp1_c, test_case_no,&
                                  & size_evc, project
@@ -32,8 +32,13 @@ SUBROUTINE lr_read_wf()
                                  & bfft_orbital_gamma, calbec_rs_gamma,&
                                  & add_vuspsir_gamma, v_loc_psir,&
                                  & s_psir_gamma, real_space_debug  
-  USE lr_variables,         ONLY : lr_verbosity
+  USE lr_variables,         ONLY : lr_verbosity, lr_exx
   USE buffers,              ONLY : get_buffer
+  USE exx,                  ONLY : exx_grid_init, exx_div_check, exx_restart
+  USE funct,                ONLY : dft_is_hybrid
+  USE lr_exx_kernel,        ONLY : lr_exx_revc0_init, lr_exx_alloc
+  USE wavefunctions_module, ONLY : evc
+  USE buffers,              ONLY : open_buffer
   !
   IMPLICIT NONE
   !
@@ -55,6 +60,21 @@ SUBROUTINE lr_read_wf()
      CALL virt_read()
   ELSE
      CALL normal_read()
+  ENDIF
+
+  evc(:,:)=evc0(:,:,1)
+  IF ( dft_is_hybrid() ) THEN
+     CALL open_buffer ( iunwfc, 'wfc', nwordwfc, nks, exst )
+     CALL exx_grid_init()
+     CALL exx_div_check()
+     CALL exx_restart(.true.)
+     IF(.NOT. no_hxc) THEN
+        lr_exx =.TRUE.
+        CALL lr_exx_alloc()
+        DO ik=1,nks
+           CALL lr_exx_revc0_init(evc0,ik)
+        ENDDO
+     ENDIF
   ENDIF
   !
   RETURN
@@ -311,7 +331,7 @@ SUBROUTINE lr_read_wf()
       ENDIF
       !
       !
-      nwordwfc = 2 * nbnd * npwx
+      nwordwfc = nbnd * npwx
       size_evc=npwx*nbnd_occ(1)*nks
       !
       !   Read in the ground state wavefunctions
@@ -319,7 +339,7 @@ SUBROUTINE lr_read_wf()
       !
       tmp_dir_saved = tmp_dir
       IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
-      CALL diropn ( iunwfc, 'wfc', nwordwfc, exst)
+      CALL diropn ( iunwfc, 'wfc', 2*nwordwfc, exst)
       !
       IF (.NOT.exst .AND. wfc_dir == 'undefined') CALL errore(&
            &'lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
@@ -332,7 +352,7 @@ SUBROUTINE lr_read_wf()
          !
          tmp_dir = tmp_dir_saved
          !
-         CALL diropn ( iunwfc, 'wfc', nwordwfc, exst)
+         CALL diropn ( iunwfc, 'wfc', 2*nwordwfc, exst)
          !
          IF (.NOT.exst) CALL errore('lr_read_wfc', &
               &TRIM( prefix )//'.wfc'//' not found',1)
@@ -358,7 +378,7 @@ SUBROUTINE lr_read_wf()
          !
          !   Read in the ground state wavefunctions
          !   This is a parallel read, done in wfc_dir
-         CALL davcio(evc_all(:,:,ik),nwordwfc,iunwfc,ik,-1)
+         CALL davcio(evc_all(:,:,ik),2*nwordwfc,iunwfc,ik,-1)
          !
       ENDDO
       !

@@ -56,6 +56,7 @@ MODULE exx
   INTEGER, ALLOCATABLE :: index_xkq(:,:) ! index_xkq(nks,nqs) 
   INTEGER, ALLOCATABLE :: index_xk(:)    ! index_xk(nkqs)  
   INTEGER, ALLOCATABLE :: index_sym(:)   ! index_sym(nkqs)
+  INTEGER, ALLOCATABLE :: rir(:,:)       ! rotations to take k to q
 !
 !  Used for k points pool parallelization. All pools need these quantities.
 !  They are allocated only IF needed.
@@ -222,6 +223,7 @@ CONTAINS
     IF ( allocated(index_xkq) ) DEALLOCATE(index_xkq)
     IF ( allocated(index_xk ) ) DEALLOCATE(index_xk )
     IF ( allocated(index_sym) ) DEALLOCATE(index_sym)
+    IF ( ALLOCATED (rir)       ) DEALLOCATE (rir)
     IF ( allocated(x_occupation) ) DEALLOCATE(x_occupation)
     IF ( allocated(xkq_collect) )  DEALLOCATE(xkq_collect)
     IF ( allocated(exxbuff) )      DEALLOCATE(exxbuff)
@@ -653,7 +655,7 @@ CONTAINS
     COMPLEX(DP) :: d_spin(2,2,48)
     INTEGER :: current_ik
     logical, allocatable :: ispresent(:)
-    INTEGER, ALLOCATABLE :: rir(:,:)
+
     
     integer       :: find_current_k
 
@@ -704,9 +706,11 @@ CONTAINS
        if( .not. allocated( exxbuff ) ) ALLOCATE( exxbuff(nrxxs,nbnd,nkqs) )
     ENDIF
     !
-    ALLOCATE(ispresent(nsym),rir(nxxs,nsym))
+    ALLOCATE(ispresent(nsym))
     ALLOCATE(tempevc( npwx*npol, nbnd ))
 
+    IF(.NOT. ALLOCATED(rir)) ALLOCATE(rir(nxxs,nsym))
+    rir = 0
     exx_nwordwfc=2*nrxxs
     IF (.not.exx_is_active()) THEN 
        !iunexx = find_free_unit()
@@ -911,7 +915,7 @@ CONTAINS
     !
     !
     DEALLOCATE(tempevc)
-    DEALLOCATE(ispresent,rir)
+    DEALLOCATE(ispresent)
     IF (noncolin) THEN
        DEALLOCATE(temppsic_nc, psic_nc)
 #ifdef __MPI

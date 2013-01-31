@@ -29,7 +29,7 @@ SUBROUTINE read_wT_beta_gamma_z()
   !
   USE mp,                   ONLY : mp_bcast, mp_barrier
   USE lr_variables,         ONLY : LR_polarization, itermax
-  USE mp_global,                ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,                ONLY : inter_pool_comm, intra_bgrp_comm
   !
   IMPLICIT NONE
   !
@@ -341,7 +341,7 @@ SUBROUTINE lr_dump_rho_tot_compat1()
   USE io_files,              ONLY : prefix
   USE lr_variables,          ONLY : rho_1_tot, LR_polarization, LR_iteration, cube_save
   USE fft_base,              ONLY : dfftp
-  USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm
 
   IMPLICIT NONE
   CHARACTER(len=6), EXTERNAL :: int_to_char
@@ -429,9 +429,9 @@ SUBROUTINE lr_dump_rho_tot_cube(rho,identifier)
   USE cell_base
   USE ions_base,                ONLY : nat, ityp, atm, ntyp => nsp, tau
   USE mp,                   ONLY : mp_barrier, mp_sum, mp_bcast, mp_get
-  USE mp_global,            ONLY : me_image, intra_image_comm, me_pool, nproc_pool, &
-                            intra_pool_comm, my_pool_id
-
+  USE mp_global,            ONLY : me_image, intra_image_comm, me_bgrp, nproc_bgrp, &
+                            intra_bgrp_comm, my_bgrp_id
+  
   USE constants,            ONLY : BOHR_RADIUS_ANGS
   USE fft_base,             ONLY : dfftp !this contains dfftp%npp (number of z planes per processor
                                            ! and dfftp%ipp (offset of the first z plane of the processor
@@ -513,21 +513,21 @@ SUBROUTINE lr_dump_rho_tot_cube(rho,identifier)
         !
         ! ... find the index of the pool that will write rho
         !
-        IF ( ionode ) iopool_id = my_pool_id
+        IF ( ionode ) iopool_id = my_bgrp_id
         !
         CALL mp_bcast( iopool_id, ionode_id, intra_image_comm )
         !
         ! ... find the index of the ionode within its own pool
         !
-        IF ( ionode ) ionode_pool = me_pool
+        IF ( ionode ) ionode_pool = me_bgrp
         !
         CALL mp_bcast( ionode_pool, ionode_id, intra_image_comm )
         !
         ! ... find out the owner of each "z" plane
         !
         !
-        !IF (nproc_pool > 1) THEN
-        ! DO i = 1, nproc_pool
+        !IF (nproc_bgrp > 1) THEN
+        ! DO i = 1, nproc_bgrp
         !    !
         !    kowner( (dfftp%ipp(i)+1):(dfftp%ipp(i)+dfftp%npp(i)) ) = i - 1
         !    !
@@ -545,9 +545,9 @@ SUBROUTINE lr_dump_rho_tot_cube(rho,identifier)
             !
             !Parallel gather of Z plane
             rho_plane(:)=0
-            DO i = 1, nproc_pool
+            DO i = 1, nproc_bgrp
                 rho_temp(:)=0
-                IF( (i-1) == me_pool ) THEN
+                IF( (i-1) == me_bgrp ) THEN
                    !
                    !
                    DO  i3=1, dfftp%npp(i)
@@ -559,11 +559,11 @@ SUBROUTINE lr_dump_rho_tot_cube(rho,identifier)
                    !print *, "get 1=",rho_plane(1)," 2=",rho_plane(2)," ",dfftp%npp(i),"=",rho_plane(dfftp%npp(i))
                  ENDIF
                  !call mp_barrier()
-                 IF ( my_pool_id == iopool_id ) &
+                 IF ( my_bgrp_id == iopool_id ) &
                    !Send plane to ionode
                    ! Send and recieve rho_plane,
                    CALL mp_get( rho_temp, rho_temp, &
-                                                 me_pool, ionode_pool, (i-1), i-1, intra_pool_comm )
+                                                 me_bgrp, ionode_pool, (i-1), i-1, intra_bgrp_comm )
 
                    !
                  !call mp_barrier()
@@ -678,8 +678,8 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
   USE cell_base
   USE ions_base,            ONLY : nat, ityp, atm, ntyp => nsp, tau
   USE mp,                   ONLY : mp_barrier, mp_sum, mp_bcast, mp_get
-  USE mp_global,            ONLY : me_image, intra_image_comm, me_pool, nproc_pool, &
-                            intra_pool_comm, my_pool_id
+  USE mp_global,            ONLY : me_image, intra_image_comm, me_bgrp, nproc_bgrp, &
+                            intra_bgrp_comm, my_bgrp_id
 
   USE constants,            ONLY : BOHR_RADIUS_ANGS
   USE fft_base,             ONLY : dfftp !this contains dfftp%npp (number of z planes per processor
@@ -733,21 +733,21 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
         !
         ! ... find the index of the pool that will write rho
         !
-        IF ( ionode ) iopool_id = my_pool_id
+        IF ( ionode ) iopool_id = my_bgrp_id
         !
         CALL mp_bcast( iopool_id, ionode_id, intra_image_comm )
         !
         ! ... find the index of the ionode within its own pool
         !
-        IF ( ionode ) ionode_pool = me_pool
+        IF ( ionode ) ionode_pool = me_bgrp
         !
         CALL mp_bcast( ionode_pool, ionode_id, intra_image_comm )
         !
         ! ... find out the owner of each "z" plane
         !
         !
-        IF (nproc_pool > 1) THEN
-         DO i = 1, nproc_pool
+        IF (nproc_bgrp > 1) THEN
+         DO i = 1, nproc_bgrp
             !
             kowner( (dfftp%ipp(i)+1):(dfftp%ipp(i)+dfftp%npp(i)) ) = i - 1
             !
@@ -762,11 +762,11 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
       !
       DO i3 = 1, dfftp%nr3
          !
-         IF( kowner(i3) == me_pool ) THEN
+         IF( kowner(i3) == me_bgrp ) THEN
             !
             kk = i3
             !
-            IF ( nproc_pool > 1 ) kk = i3 - dfftp%ipp(me_pool+1)
+            IF ( nproc_bgrp > 1 ) kk = i3 - dfftp%ipp(me_bgrp+1)
             !
             DO i2 = 1, dfftp%nr2
                !
@@ -781,9 +781,9 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
             !
          ENDIF
          !Send plane to ionode
-         IF ( kowner(i3) /= ionode_pool .and. my_pool_id == iopool_id ) &
-            CALL mp_get( rho_plane, rho_plane, me_pool, ionode_pool,&
-            & kowner(i3), i3, intra_pool_comm ) 
+         IF ( kowner(i3) /= ionode_pool .and. my_bgrp_id == iopool_id ) &
+            CALL mp_get( rho_plane, rho_plane, me_bgrp, ionode_pool,&
+            & kowner(i3), i3, intra_bgrp_comm ) 
          !
          ! write
          IF ( ionode ) THEN
@@ -879,8 +879,8 @@ SUBROUTINE lr_dump_rho_tot_xcrys(rho, identifier)
   USE cell_base
   USE ions_base,             ONLY : nat, ityp, atm, ntyp => nsp, tau
   USE mp,                   ONLY : mp_barrier, mp_sum, mp_bcast, mp_get
-  USE mp_global,            ONLY : me_image, intra_image_comm, me_pool, nproc_pool, &
-                            intra_pool_comm, my_pool_id
+  USE mp_global,            ONLY : me_image, intra_image_comm, me_bgrp, nproc_bgrp, &
+                            intra_bgrp_comm, my_bgrp_id
 
   USE constants,            ONLY : BOHR_RADIUS_ANGS
   USE fft_base,             ONLY : dfftp !this contains dfftp%npp (number of z planes per processor
@@ -962,21 +962,21 @@ SUBROUTINE lr_dump_rho_tot_xcrys(rho, identifier)
         !
         ! ... find the index of the pool that will write rho
         !
-        IF ( ionode ) iopool_id = my_pool_id
+        IF ( ionode ) iopool_id = my_bgrp_id
         !
         CALL mp_bcast( iopool_id, ionode_id, intra_image_comm )
         !
         ! ... find the index of the ionode within its own pool
         !
-        IF ( ionode ) ionode_pool = me_pool
+        IF ( ionode ) ionode_pool = me_bgrp
         !
         CALL mp_bcast( ionode_pool, ionode_id, intra_image_comm )
         !
         ! ... find out the owner of each "z" plane
         !
         !
-        IF (nproc_pool > 1) THEN
-         DO i = 1, nproc_pool
+        IF (nproc_bgrp > 1) THEN
+         DO i = 1, nproc_bgrp
             !
             kowner( (dfftp%ipp(i)+1):(dfftp%ipp(i)+dfftp%npp(i)) ) = i - 1
             !
@@ -991,11 +991,11 @@ SUBROUTINE lr_dump_rho_tot_xcrys(rho, identifier)
       !
       DO i3 = 1, dfftp%nr3
          !
-         IF( kowner(i3) == me_pool ) THEN
+         IF( kowner(i3) == me_bgrp ) THEN
             !
             kk = i3
             !
-            IF ( nproc_pool > 1 ) kk = i3 - dfftp%ipp(me_pool+1)
+            IF ( nproc_bgrp > 1 ) kk = i3 - dfftp%ipp(me_bgrp+1)
             !
             DO i2 = 1, dfftp%nr2
                !
@@ -1009,9 +1009,9 @@ SUBROUTINE lr_dump_rho_tot_xcrys(rho, identifier)
             !
          ENDIF
          !Send plane to ionode
-         IF ( kowner(i3) /= ionode_pool .and. my_pool_id == iopool_id ) &
+         IF ( kowner(i3) /= ionode_pool .and. my_bgrp_id == iopool_id ) &
             CALL mp_get( rho_plane, rho_plane, &
-                                          me_pool, ionode_pool, kowner(i3), i3, intra_pool_comm )
+                                          me_bgrp, ionode_pool, kowner(i3), i3, intra_bgrp_comm )
          !
          ! write
          IF ( ionode ) THEN
@@ -1133,7 +1133,7 @@ SUBROUTINE lr_dump_rho_tot_pxyd(rho,identifier)
   USE cell_base
   USE ions_base,             ONLY : nat, ityp, atm, ntyp => nsp, tau
   USE mp,                    ONLY : mp_barrier, mp_sum
-  USE mp_global,             ONLY : intra_pool_comm
+  USE mp_global,             ONLY : intra_bgrp_comm
   USE constants,             ONLY : BOHR_RADIUS_ANGS
   !
   IMPLICIT NONE
@@ -1203,7 +1203,7 @@ END SUBROUTINE lr_dump_rho_tot_pxyd
 !
 USE lsda_mod,                 ONLY : nspin
 USE mp,                       ONLY : mp_sum
-USE mp_global,                ONLY : inter_pool_comm, intra_pool_comm,nproc
+USE mp_global,                ONLY : inter_pool_comm, intra_bgrp_comm,nproc
 USE uspp,                     ONLY : okvan,qq,vkb
 USE wvfct,                    ONLY : wg,nbnd,npwx
 USE uspp_param,               ONLY : upf, nh
@@ -1332,7 +1332,7 @@ IMPLICIT NONE
       !US contribution
       SSUM=SSUM+scal
 #ifdef __MPI
-       CALL mp_sum(SSUM, intra_pool_comm)
+       CALL mp_sum(SSUM, intra_bgrp_comm)
 #endif
        IF(nspin/=2) SSUM=SSUM/2.0D0
        !
@@ -1352,7 +1352,7 @@ IMPLICIT NONE
 !
 USE lsda_mod,                 ONLY : nspin
 USE mp,                       ONLY : mp_sum
-USE mp_global,                ONLY : inter_pool_comm, intra_pool_comm,nproc
+USE mp_global,                ONLY : inter_pool_comm, intra_bgrp_comm,nproc
 USE uspp,                     ONLY : okvan,qq,vkb
 USE wvfct,                    ONLY : wg,nbnd,npwx
 USE uspp_param,               ONLY : upf, nh
@@ -1381,7 +1381,7 @@ IMPLICIT NONE
       SSUM=(2.D0*wg(ibnd_occ,1)*DDOT(2*npw_k(1),evc0_virt(:,ibnd_virt,1),1,d0psi(:,ibnd_occ,1,ipol),1))
       IF (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*dble(d0psi(1,ibnd_occ,1,ipol))*dble(evc0_virt(1,ibnd_virt,1)))
 #ifdef __MPI
-       CALL mp_sum(SSUM, intra_pool_comm)
+       CALL mp_sum(SSUM, intra_bgrp_comm)
 #endif
        IF(nspin/=2) SSUM=SSUM/2.0D0
        !

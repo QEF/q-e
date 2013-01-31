@@ -30,8 +30,10 @@ SUBROUTINE lr_dv_setup
   USE noncollin_module, ONLY : noncolin,nspin_mag
   USE eqv,           ONLY : dmuxc
   USE funct,         ONLY : dmxc, dmxc_spin
-  USE lr_variables,  ONLY : lr_verbosity
+  USE lr_variables,  ONLY : lr_verbosity, lr_exx
   USE io_global,     ONLY : stdout
+  USE funct,         ONLY : exx_is_active
+
  IMPLICIT NONE
   !
   real(DP) :: rhotot, rhoup, rhodw
@@ -63,15 +65,21 @@ SUBROUTINE lr_dv_setup
   ! 2) Computes the derivative of the xc potential
   !
   !
-  dmuxc(:,:,:) = 0.d0
-  if (lsda) then
-     do ir = 1, dfftp%nnr
-        rhoup = rho%of_r (ir, 1) + 0.5d0 * rho_core (ir)
-        rhodw = rho%of_r (ir, 2) + 0.5d0 * rho_core (ir)
-        call dmxc_spin (rhoup, rhodw, dmuxc(ir,1,1), dmuxc(ir,2,1), &
-                                      dmuxc(ir,1,2), dmuxc(ir,2,2) )
-     enddo
-  else
+  IF ( ( .not. exx_is_active() ) .AND. lr_exx ) THEN
+     ! If exx has been enforced from input but we are not using 
+     ! any exact exchange (ie we are using the scissor approximation)
+     ! the derivative of the xc potential is not used.
+     dmuxc(:,:,:) = 0.0_DP
+  ELSE
+     dmuxc(:,:,:) = 0.0_DP
+     IF (lsda) THEN
+        DO ir = 1, dfftp%nnr
+           rhoup = rho%of_r (ir, 1) + 0.5d0 * rho_core (ir)
+           rhodw = rho%of_r (ir, 2) + 0.5d0 * rho_core (ir)
+           CALL dmxc_spin (rhoup, rhodw, dmuxc(ir,1,1), dmuxc(ir,2,1), &
+                dmuxc(ir,1,2), dmuxc(ir,2,2) )
+        ENDDO
+     ELSE
 !    IF (noncolin.and.domag) THEN
 !       do ir = 1, dfftp%nnr
 !          rhotot = rho%of_r (ir, 1) + rho_core (ir)
@@ -83,13 +91,14 @@ SUBROUTINE lr_dv_setup
 !          END DO
 !       enddo
 !    ELSE
-        do ir = 1, dfftp%nnr
+        DO ir = 1, dfftp%nnr
            rhotot = rho%of_r (ir, 1) + rho_core (ir)
-           if (rhotot.gt.1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
-           if (rhotot.lt. - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
-        enddo
+           IF (rhotot.GT.1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
+           IF (rhotot.LT. - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
+        ENDDO
 !     END IF
-  endif
+     ENDIF
+  ENDIF
   !
   ! 3.1) Setup all gradient correction stuff
   !

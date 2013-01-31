@@ -40,7 +40,9 @@ lr_write_restart.o \
 print_clock_lr.o \
 sd0psi.o \
 lr_set_boxes_density.o \
-lr_init_nfo.o 
+lr_init_nfo.o \
+lr_exx_kernel.o 
+
 
 TLDEPS=bindir libs pw ph
  

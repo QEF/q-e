@@ -34,6 +34,28 @@ MODULE lr_variables
   !
   CHARACTER (len=24) :: bgz_suffix
   !
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !Variables for TDHF using Dario Rocca's BSE routines.
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  LOGICAL :: lr_exx
+
+  REAL(kind=dp), ALLOCATABLE :: xkk_m(:,:), xkk_p(:,:), weight_kk(:)
+  REAL(kind=dp) :: exxdiv
+  REAL(kind=dp) :: ecutfock_
+!  REAL(kind=dp), ALLOCATABLE :: revc_int(:,:)
+!  COMPLEX(kind=dp), ALLOCATABLE :: revc_int_c(:,:,:)
+
+  INTEGER, ALLOCATABLE :: &
+       igkk_kk_m(:,:),&
+       npw_kk_m(:),&
+       ind_kk_m(:,:),&
+       igkk_kk_p(:,:),&
+       npw_kk_p(:),&
+       ind_kk_p(:,:)
+  REAL(kind=dp) :: scissor
+  CHARACTER(len=200) :: eig_dir
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !
   !LOGICAL :: nlcc_any  ! .T. if any atom-type has nlcc
   !
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -77,6 +99,9 @@ MODULE lr_variables
        rho_1_tot(:,:)                !response charge density (mode 2)
   COMPLEX(kind=dp), ALLOCATABLE :: &
        rho_1_tot_im(:,:)             !response charge density, imaginary part used in resonance condition
+  COMPLEX(kind=dp), ALLOCATABLE :: &
+       rho_1c(:,:)      ! response charge density in real space
+
   !
   !integer, allocatable :: &
   !     igk_k(:,:),&
@@ -190,7 +215,7 @@ SUBROUTINE check_vector_gamma (x)
 ! component
 ! input, evc
 ! output : screen output
-   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
    USE realus,               ONLY : npw_k
   USE gvect,                ONLY : gstart
@@ -206,7 +231,7 @@ IMPLICIT NONE
       temp_gamma = 2.D0*DDOT(2*npw_k(1),x(:),1,x(:),1)
        IF (gstart==2) temp_gamma = temp_gamma - dble(x(1))*dble(x(1))
 #ifdef __MPI
-       CALL mp_sum(temp_gamma, intra_pool_comm)
+       CALL mp_sum(temp_gamma, intra_bgrp_comm)
 #endif
       WRITE(stdout,'("<x> = ",E15.8)') temp_gamma
     END SUBROUTINE check_vector_gamma
@@ -217,7 +242,7 @@ SUBROUTINE check_vector_f (x)
 ! component
 ! input, evc
 ! output : screen output
-   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
    USE realus,               ONLY : npw_k
   USE gvect,                ONLY : gstart
@@ -232,7 +257,7 @@ IMPLICIT NONE
 
       temp_f = ZDOTC(npw_k(1),x(:),1,x(:),1)
 #ifdef __MPI
-       CALL mp_sum(temp_f, intra_pool_comm)
+       CALL mp_sum(temp_f, intra_bgrp_comm)
 #endif
       WRITE(stdout,'("<x> = ",2E15.8,1X)') temp_f
  END SUBROUTINE check_vector_f
@@ -241,7 +266,7 @@ SUBROUTINE check_all_bands_gamma (x,sx,nbnd1,nbnd2)
 ! Checks all bands of given KS states for orthoganilty
 ! input, evc and sevc
 ! output : screen output
-   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
    USE realus,               ONLY : npw_k
    USE io_global,            ONLY : stdout
@@ -261,7 +286,7 @@ IMPLICIT NONE
       temp_gamma = 2.D0*DDOT(2*npw_k(1),x(:,ibnd),1,sx(:,jbnd),1)
        IF (gstart==2) temp_gamma = temp_gamma - dble(x(1,ibnd))*dble(sx(1,jbnd))
 #ifdef __MPI
-       CALL mp_sum(temp_gamma, intra_pool_comm)
+       CALL mp_sum(temp_gamma, intra_bgrp_comm)
 #endif
       WRITE(stdout,'("<x,",I02,"|S|x,",I02,"> =",E15.8)') ibnd,jbnd,temp_gamma
      ENDDO
@@ -272,7 +297,7 @@ SUBROUTINE check_density_gamma (rx,nbnd)
 ! Checks the contirbution of a given function transformed into real space
 ! input, revc
 ! output : screen output
-   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
    USE realus,               ONLY : npw_k
    USE wvfct,                ONLY : wg
@@ -299,7 +324,7 @@ IMPLICIT NONE
        temp_gamma=sum(w1*dble(rx(1:dfftp%nnr,ibnd))*dble(rx(1:dfftp%nnr,ibnd))&
                +w2*aimag(rx(1:dfftp%nnr,ibnd))*aimag(rx(1:dfftp%nnr,ibnd)))
 #ifdef __MPI
-       CALL mp_sum(temp_gamma, intra_pool_comm)
+       CALL mp_sum(temp_gamma, intra_bgrp_comm)
 #endif
       WRITE(stdout,'("Contribution of bands ",I02," and ",I02," to total density",E15.8)') ibnd,ibnd+1,temp_gamma
     ENDDO

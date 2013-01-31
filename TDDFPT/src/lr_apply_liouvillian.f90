@@ -22,12 +22,13 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   USE fft_interfaces,       ONLY : fwfft
   USE gvecs,                ONLY : nls, nlsm
   USE gvect,                ONLY : nl, ngm, gstart, g, gg
-  USE fft_base,             ONLY : dfftp
+  USE fft_base,             ONLY : dfftp, dffts
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : dp
   USE klist,                ONLY : nks, xk
   USE lr_variables,         ONLY : evc0, revc0, rho_1, lr_verbosity,&
-                                 & ltammd, size_evc, no_hxc 
+                                 & ltammd, size_evc, no_hxc, lr_exx, &
+                                 & scissor, rho_1c
   USE realus,               ONLY : igk_k,npw_k
   USE lsda_mod,             ONLY : nspin
   USE uspp,                 ONLY : vkb, nkb, okvan
@@ -47,6 +48,9 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   USE io_global,            ONLY : stdout
   USE dfunct,               ONLY : newq
   USE control_flags,        ONLY : tqr
+  USE mp,                   ONLY : mp_sum, mp_barrier
+  USE mp_global,            ONLY : intra_bgrp_comm
+  use lr_exx_kernel
   !
   !
   IMPLICIT NONE
@@ -68,6 +72,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   !
   COMPLEX(kind=dp), ALLOCATABLE :: dvrs_temp(:,:)   
   COMPLEX(kind=dp), ALLOCATABLE :: spsi1(:,:)
+  COMPLEX(kind=dp), ALLOCATABLE :: dvrsc(:,:), dvrssc(:)
   !
   COMPLEX(kind=dp) :: fp, fm
   !
@@ -93,10 +98,17 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      !
      ! Calculate the full L
      !
-     ALLOCATE( dvrs(dfftp%nnr, nspin) )
-     ALLOCATE( dvrss(dffts%nnr) )
-     dvrs(:,:)=0.0d0
-     dvrss(:)=0.0d0
+     IF(gamma_only) THEN
+        ALLOCATE( dvrs(dfftp%nnr, nspin) )
+        ALLOCATE( dvrss(dffts%nnr) )
+        dvrs(:,:)=0.0d0
+        dvrss(:)=0.0d0
+     ELSE
+        ALLOCATE( dvrsc(dfftp%nnr, nspin) )
+        ALLOCATE( dvrssc(dffts%nnr) )
+        dvrsc(:,:)=0.0d0
+        dvrssc(:) =0.0d0
+     ENDIF
      !
      ! Calculation of the charge density response
      !
@@ -111,27 +123,39 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
         ! With no_hxc=.true. we recover the independent electrion 
         ! approximation, so we zero the interation.
         !
-        dvrs(:,1)=0.0d0
-        CALL interpolate (dvrs(:,1),dvrss,-1)
+        IF(gamma_only) THEN
+           dvrs(:,1)=0.0d0
+           CALL interpolate (dvrs(:,1),dvrss,-1)
+        ELSE
+           dvrsc(:,1)=0.0d0
+           CALL cinterpolate (dvrsc(:,1),dvrssc,-1)
+        ENDIF
         !
      ELSE
         !
-        dvrs(:,1)=rho_1(:,1)
-        !
-        ! In the gamma_only case dvrs is real, but dv_of_drho expects
-        ! a complex array on input, hence this temporary variable.
-        !
-        ALLOCATE( dvrs_temp(dfftp%nnr, nspin) )
-        dvrs_temp = CMPLX( dvrs, 0.0d0, kind=dp )         
-        !
-        DEALLOCATE ( dvrs )
-        !
-        CALL dv_of_drho(0,dvrs_temp,.FALSE.)
-        !
-        ALLOCATE ( dvrs(dfftp%nnr, nspin) ) 
-        dvrs=DBLE(dvrs_temp)
-        DEALLOCATE(dvrs_temp)
-        !
+        IF(gamma_only) THEN
+           dvrs(:,1)=rho_1(:,1)
+           !
+           ! In the gamma_only case dvrs is real, but dv_of_drho expects
+           ! a complex array on input, hence this temporary variable.
+           !
+           ALLOCATE( dvrs_temp(dfftp%nnr, nspin) )
+           dvrs_temp = CMPLX( dvrs, 0.0d0, kind=dp )         
+           !
+           DEALLOCATE ( dvrs )
+           !
+           CALL dv_of_drho(0,dvrs_temp,.FALSE.)
+           !
+           ALLOCATE ( dvrs(dfftp%nnr, nspin) ) 
+           dvrs=DBLE(dvrs_temp)
+           DEALLOCATE(dvrs_temp)
+           !
+        ELSE
+           dvrsc(:,1)=rho_1c(:,1)
+           !
+           CALL dv_of_drho(0,dvrsc,.FALSE.)
+           !
+        ENDIF
         IF ( okvan )  THEN
            IF ( tqr ) THEN
               CALL newq_r(dvrs,d_deeq,.TRUE.)
@@ -148,14 +172,18 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
         !
         ! Put the nteraction on the smooth grid.
         !
-        CALL interpolate (dvrs(:,1),dvrss,-1)
+        IF (gamma_only) THEN
+           CALL interpolate (dvrs(:,1),dvrss,-1)
+        ELSE
+           CALL cinterpolate (dvrsc(:,1),dvrssc,-1)
+        ENDIF
      ENDIF
      !
   ENDIF
   !
   ! Make sure the psic workspace is availible
   !
-  ALLOCATE ( psic (dfftp%nnr) )
+  ALLOCATE ( psic (dffts%nnr) )
   !
   IF( gamma_only ) THEN
      !
@@ -169,7 +197,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   !
   DEALLOCATE ( psic )
   !
-  IF ( interaction .and. (.not.ltammd) ) THEN
+  IF ( (interaction .or. lr_exx) .and. (.not.ltammd)  ) THEN
      !
      !   Normal interaction
      !
@@ -266,11 +294,15 @@ CONTAINS
     USE realus,                   ONLY : tg_psic
     USE mp_global,                ONLY : me_bgrp
     USE fft_base,                 ONLY : dffts, tg_gather
+    USE mp_global,                ONLY : ibnd_start, ibnd_end, inter_bgrp_comm
+    USE mp,                       ONLY : mp_sum
+    USE lr_exx_kernel,            ONLY : lr_exx_sum_int
     !
     REAL(kind=dp), ALLOCATABLE :: becp2(:,:)
     REAL(kind=dp), ALLOCATABLE :: tg_dvrss(:)
     LOGICAL :: use_tg
     INTEGER :: v_siz, incr, ioff
+    INTEGER   :: ibnd_start_gamma, ibnd_end_gamma
     !
     use_tg=dffts%have_task_groups
     incr = 2
@@ -346,7 +378,14 @@ CONTAINS
        !
        evc1_new(:,:,:)=(0.0d0,0.0d0)
        !
-       DO ibnd=1,nbnd,incr
+       ibnd_start_gamma=ibnd_start
+       IF (MOD(ibnd_start, 2)==0) ibnd_start_gamma = ibnd_start+1
+       ibnd_end_gamma = MAX(ibnd_end, ibnd_start_gamma)
+       !
+       IF (lr_exx) CALL lr_exx_sum_int()
+       !
+       DO ibnd=ibnd_start_gamma,ibnd_end_gamma,incr
+!       DO ibnd=1,nbnd,2
           !
           ! Product with the potential vrs = (vltot+vr)
           ! revc0 is on smooth grid. psic is used up to smooth grid
@@ -367,6 +406,10 @@ CONTAINS
                 !
              ENDDO
              !
+          ENDIF
+          !
+          IF (lr_exx) THEN
+             CALL lr_exx_apply_revc_int(psic, ibnd, nbnd,1)
           ENDIF
           !
           IF (real_space_debug > 7 .and. okvan .and. nkb > 0) THEN
@@ -433,10 +476,14 @@ CONTAINS
           !
           !   Back to reciprocal space 
           !
+
           CALL bfft_orbital_gamma (evc1_new(:,:,1), ibnd, nbnd,.false.)
           !
        ENDDO
        !
+#ifdef __MPI
+       CALL mp_sum( evc1_new(:,:,1), inter_bgrp_comm )
+#endif
        IF(dffts%have_task_groups) DEALLOCATE (tg_dvrss)
        !
        !
@@ -450,6 +497,8 @@ CONTAINS
        CALL stop_clock('interaction')
        !
     ENDIF
+    !
+    IF (lr_exx .AND. .NOT.interaction) CALL lr_exx_kernel_noint(evc1,evc1_new)
     !
     !   Call h_psi on evc1 such that h.evc1 = sevc1_new
     !
@@ -471,8 +520,8 @@ CONTAINS
     !
     DO ibnd=1,nbnd
        !
-       CALL zaxpy(npw_k(1), CMPLX(-et(ibnd,1),0.0d0,dp), &
-            &spsi1(:,ibnd), 1, sevc1_new(:,ibnd,1), 1)
+       CALL zaxpy(npw_k(1), CMPLX(-(et(ibnd,1)-scissor), &
+            &0.0d0,dp), spsi1(:,ibnd), 1, sevc1_new(:,ibnd,1), 1)
        !
     ENDDO
     !
@@ -485,6 +534,7 @@ CONTAINS
   SUBROUTINE lr_apply_liouvillian_k()
     !
     USE lr_variables,        ONLY : becp1_c
+    USE wvfct,               ONLY : current_k, npw
     !
     COMPLEX(kind=dp), ALLOCATABLE :: becp2(:,:)
     !
@@ -514,9 +564,14 @@ CONTAINS
              !
              DO ir=1,dffts%nnr
                 !
-                psic(ir)=revc0(ir,ibnd,ik)*cmplx(dvrss(ir),0.0d0,dp)
+                psic(ir)=revc0(ir,ibnd,ik)*dvrssc(ir)
                 !
              ENDDO
+!             IF (lr_exx) psic(:) = psic(:) + 0.5d0 * revc_int_c(:,ibnd,ik)
+             IF (lr_exx) THEN
+                CALL lr_exx_apply_revc_int(psic, ibnd, nbnd, ik)
+             ENDIF
+
              !
              !   Back to reciprocal space
              !
@@ -589,6 +644,7 @@ CONTAINS
     !   Call h_psi on evc1
     !   h_psi uses arrays igk and npw, so restore those
     !
+    IF (lr_exx .AND. .NOT.interaction) CALL lr_exx_kernel_noint(evc1,evc1_new)
     DO ik=1,nks
        !
        CALL init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
@@ -602,6 +658,8 @@ CONTAINS
        ENDDO
        !
        igk(:)=igk_k(:,ik)
+       current_k = ik
+       npw=npw_k(ik)
        !
        CALL h_psi(npwx,npw_k(ik),nbnd,evc1(1,1,ik),sevc1_new(1,1,ik))
        !
