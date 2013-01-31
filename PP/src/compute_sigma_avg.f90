@@ -23,7 +23,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
   USE gvecs,                ONLY : nls, nlsm, doublegrid
   USE scf,                  ONLY : rho
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE mp_global,            ONLY : me_pool, intra_pool_comm
+  USE mp_global,            ONLY : me_pool, intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : invfft
@@ -179,7 +179,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
            c_aux = zdotc(dffts%nnr, psic_nc(1,ipol), 1, dfx, 1)
            magtot1(4) = magtot1(4) + aimag(c_aux)
         ENDDO
-        CALL mp_sum( magtot1(4), intra_pool_comm )
+        CALL mp_sum( magtot1(4), intra_bgrp_comm )
         magtot1(4) = magtot1(4)/(dffts%nr1*dffts%nr2*dffts%nr3)
      ENDIF
 
@@ -188,7 +188,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
            DO ir = 1,dfftp%nnr
               magtot1(ipol) = magtot1(ipol) + rho%of_r(ir,ipol+1)
            ENDDO
-           CALL mp_sum( magtot1(ipol), intra_pool_comm )
+           CALL mp_sum( magtot1(ipol), intra_bgrp_comm )
            magtot1(ipol) = magtot1(ipol) / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
         ENDIF
      ENDDO

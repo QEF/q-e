@@ -36,7 +36,7 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
   USE io_files, ONLY: iunwfc, nwordwfc
   USE constants,      ONLY : degspin
   USE mp,        ONLY : mp_max, mp_min, mp_sum
-  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global, ONLY : inter_pool_comm
   USE fft_base,  ONLY : grid_gather
 !
   IMPLICIT NONE

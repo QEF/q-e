@@ -19,7 +19,7 @@ FUNCTION cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
   !
   USE kinds
   USE pseudo_types, ONLY : pseudo_upf
-  USE mp_global,  ONLY : intra_pool_comm
+  USE mp_global,  ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
 
 
@@ -65,9 +65,7 @@ FUNCTION cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
   COMPLEX(DP) :: scal, zdotc
   !
   scal = zdotc (npw, psi1, 1, psi2, 1)
-#ifdef __MPI
-  CALL mp_sum(  scal, intra_pool_comm )
-#endif
+  CALL mp_sum(  scal, intra_bgrp_comm )
   ijkb0 = 0
   DO np = 1, ntyp
      IF (upf(np)%tvanp ) THEN
@@ -111,7 +109,7 @@ FUNCTION cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
   USE uspp, ONLY: qq, qq_so
   USE spin_orb, ONLY: lspinorb
   USE pseudo_types, ONLY : pseudo_upf
-  USE mp_global,  ONLY : intra_pool_comm
+  USE mp_global,  ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   IMPLICIT NONE
   !
@@ -153,9 +151,7 @@ FUNCTION cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
   COMPLEX(DP) :: scal, zdotc
   !
   scal = zdotc (npw*npol, psi1, 1, psi2, 1)
-#ifdef __MPI
-  CALL mp_sum(  scal, intra_pool_comm )
-#endif
+  CALL mp_sum(  scal, intra_bgrp_comm )
   ijkb0 = 0
   DO np = 1, ntyp
      IF (upf(np)%tvanp ) THEN

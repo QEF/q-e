@@ -28,7 +28,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   USE wavefunctions_module, ONLY : evc
   USE io_global,            ONLY : ionode, ionode_id, stdout
   USE mp,                   ONLY : mp_bcast, mp_sum
-  USE mp_global,            ONLY : intra_pool_comm
+  USE mp_global,            ONLY : intra_bgrp_comm
   !
   IMPLICIT NONE
   !
@@ -132,9 +132,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
      ENDDO
      DEALLOCATE(ppsi)
      IF (okvan) DEALLOCATE(ppsi_us)
-#ifdef __MPI
-     CALL mp_sum(matp, intra_pool_comm)
-#endif
+     CALL mp_sum(matp, intra_bgrp_comm)
 
      IF (ionode) THEN
         IF (ik == nks1) &

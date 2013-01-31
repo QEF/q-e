@@ -330,7 +330,7 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, nbndmin, nbndmax, s
   USE io_global,            ONLY : ionode, stdout
   !
   USE grid_module,          ONLY : alpha, focc, wgrid, grid_build, grid_destroy
-  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,            ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -1128,7 +1128,7 @@ SUBROUTINE offdiag_calc ( intersmear,intrasmear, nw, wmax, wmin, nbndmin, nbndma
   USE klist,                ONLY : nks, nkstot, degauss
   USE grid_module,          ONLY : focc, wgrid, grid_build, grid_destroy
   USE io_global,            ONLY : ionode, stdout
-  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,            ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
 
   !
@@ -1333,7 +1333,7 @@ SUBROUTINE dipole_calc( ik, dipole_aux, metalcalc, nbndmin, nbndmax )
   USE gvect,                ONLY : ngm, g
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE grid_module,          ONLY : focc
-  USE mp_global,            ONLY : intra_pool_comm
+  USE mp_global,            ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
 
 IMPLICIT NONE
@@ -1405,9 +1405,9 @@ IMPLICIT NONE
      !
   ENDIF
   !
-  ! recover over G parallelization (intra_pool)
+  ! recover over G parallelization (intra_bgrp)
   !
-  CALL mp_sum( dipole_aux, intra_pool_comm )
+  CALL mp_sum( dipole_aux, intra_bgrp_comm )
   !
   CALL stop_clock( 'dipole_calc' )
   !

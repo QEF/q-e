@@ -23,7 +23,7 @@ SUBROUTINE addusdens1d (plan, prho)
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum
   USE uspp_param, ONLY: upf, lmaxq, nh
-  USE mp_global,  ONLY : intra_pool_comm
+  USE mp_global,  ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
 
   !
@@ -108,9 +108,7 @@ SUBROUTINE addusdens1d (plan, prho)
   ELSE
      qg(:) = (0.d0, 0.d0)
   ENDIF
-#ifdef __MPI
-  CALL mp_sum(  qg, intra_pool_comm )
-#endif
+  CALL mp_sum(  qg, intra_bgrp_comm )
   dimz = alat * celldm (3)
   DO ig = 1, dfftp%nr3
      qgr (ig) =  dble (qg (ig) )
