@@ -98,6 +98,8 @@ SUBROUTINE print_ks_energies()
      !
      IF ( lgauss .OR. ltetra ) THEN
         !
+        ! ... presumably a metal: print Fermi energy
+        !
         IF ( two_fermi_energies ) THEN
            WRITE( stdout, 9041 ) ef_up*rytoev, ef_dw*rytoev
         ELSE
@@ -105,6 +107,9 @@ SUBROUTINE print_ks_energies()
         END IF
         !
      ELSE
+        !
+        ! ... presumably not a metal: store in ibnd the position of HOMO
+        ! ... (or in ibnd_up, ibnd_dw for LSDA calculations)
         !
         IF ( tfixed_occ ) THEN
            ibnd    = 0
@@ -114,7 +119,7 @@ SUBROUTINE print_ks_energies()
               IF ( nspin == 1 .OR. nspin == 4 ) THEN
                  IF ( f_inp(kbnd,1) > 0.D0 ) ibnd = kbnd
               ELSE
-                 IF ( f_inp(kbnd,1) > 0.D0 ) ibnd_up   = kbnd
+                 IF ( f_inp(kbnd,1) > 0.D0 ) ibnd_up = kbnd
                  IF ( f_inp(kbnd,2) > 0.D0 ) ibnd_dw = kbnd
                  ibnd = MAX(ibnd_up, ibnd_dw)
               END IF
@@ -129,14 +134,14 @@ SUBROUTINE print_ks_energies()
            END IF
         END IF
         !
-        IF ( ionode .AND. nbnd > ibnd .AND. .NOT. one_atom_occupations ) THEN
+        ! ... print HOMO and LUMO (or just the HOMO if LUMO is not there)
+        !
+        IF ( ionode .AND. .NOT. one_atom_occupations ) THEN
            !
            IF ( nspin == 1 .OR. nspin == 4 ) THEN
               ehomo = MAXVAL( et(ibnd,  1:nkstot) )
-              elumo = MINVAL( et(ibnd+1,1:nkstot) )
+              IF ( nbnd > ibnd ) elumo = MINVAL( et(ibnd+1,1:nkstot) )
            ELSE
-              elumo = MIN( MINVAL( et(ibnd_up+1,1:nkstot/2) ), &
-                           MINVAL( et(ibnd_dw+1,nkstot/2+1:nkstot) ) )
               IF ( ibnd_up == 0 ) THEN
                  !
                  ehomo = MAXVAL( et(ibnd_dw,1:nkstot/2) )
@@ -151,9 +156,16 @@ SUBROUTINE print_ks_energies()
                               MAXVAL( et(ibnd_dw,nkstot/2+1:nkstot) ) )
                  !
               END IF
+              IF ( nbnd > ibnd ) &
+                 elumo = MIN( MINVAL( et(ibnd_up+1,1:nkstot/2) ), &
+                              MINVAL( et(ibnd_dw+1,nkstot/2+1:nkstot) ) )
            END IF
            !
-           WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
+           IF ( nbnd > ibnd ) THEN
+              WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
+           ELSE
+              WRITE( stdout, 9043 ) ehomo*rytoev
+           END IF
            !
         END IF
      END IF
@@ -172,6 +184,7 @@ SUBROUTINE print_ks_energies()
 9021 FORMAT(/'          k =',3F7.4,' (',I6,' PWs)   bands (ev):'/ )
 9030 FORMAT( '  ',8F9.4 )
 9032 FORMAT(/'     occupation numbers ' )
+9043 FORMAT(/'     highest occupied level (ev): ',F10.4 )
 9042 FORMAT(/'     highest occupied, lowest unoccupied level (ev): ',2F10.4 )
 9041 FORMAT(/'     the spin up/dw Fermi energies are ',2F10.4,' ev' )
 9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev' )
