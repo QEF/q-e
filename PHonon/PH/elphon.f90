@@ -39,13 +39,7 @@ SUBROUTINE elphon()
   ! counter on the modes
   ! the change of Vscf due to perturbations
   COMPLEX(DP), POINTER :: dvscfin(:,:,:), dvscfins (:,:,:)
-!
-!  This routine has to be called only if all representations are available
-!  
-  DO irr=1,nirr
-     IF (.NOT.done_elph(irr)) RETURN
-  ENDDO
-
+   
   CALL start_clock ('elphon')
 
   if(dvscf_star%basis.eq.'cartesian') then
