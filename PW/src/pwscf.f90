@@ -34,11 +34,8 @@ PROGRAM pwscf
   !
   CHARACTER(len=256) :: dirname
   !
-#ifdef __MPI
   !
   CALL mp_startup ( )
-  !
-#endif
   CALL environment_start ( 'PWSCF' )
   !
   IF ( ionode ) WRITE( unit = stdout, FMT = 9010 ) &
