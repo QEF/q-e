@@ -42,7 +42,7 @@ MODULE read_input
      LOGICAL :: xmlinput
      INTEGER :: ierr
      !
-     !
+     xmlinput = .TRUE.
      IF ( ionode ) THEN
         IF ( prog == 'CP' ) CALL xml_input_dump()
         ierr = open_input_file( xmlinput, attr) 
