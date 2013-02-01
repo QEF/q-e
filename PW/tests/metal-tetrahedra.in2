@@ -12,7 +12,7 @@
  /
 ATOMIC_SPECIES
  Al  26.98 Al.pz-vbc.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS {alat}
  Al 0.00 0.00 0.00
 K_POINTS {automatic}
  6 6 6 1 1 1
