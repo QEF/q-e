@@ -2315,7 +2315,7 @@ MODULE pw_restart
             CALL iotk_scan_dat( iunpun, "LDA_PLUS_U_KIND", lda_plus_u_kind, &
                                 FOUND = found )
             IF ( .NOT. found ) THEN
-               lda_plus_u_kind = 0 ! comatiility
+               lda_plus_u_kind = 0 ! compatibility
             ELSE
                CALL iotk_scan_dat( iunpun, "HUBBARD_J", Hubbard_J(1:3,1:nsp_) )
                CALL iotk_scan_dat( iunpun, "HUBBARD_J0", Hubbard_J0(1:nsp_) )
