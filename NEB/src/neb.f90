@@ -16,10 +16,8 @@ PROGRAM neb
   USE check_stop,        ONLY : check_stop_init
   USE mp,                ONLY : mp_bcast
   USE mp_global,         ONLY : mp_startup, nimage, world_comm, mpime, root
-  USE iotk_module,       ONLY : iotk_open_read, iotk_close_read, iotk_attlenx
-  USE read_xml_module,       ONLY : read_xml
-  USE read_cards_module,     ONLY : read_cards
-  USE read_namelists_module, ONLY : read_namelists
+  USE read_input,        ONLY : read_input_file
+  USE command_line_options,  ONLY : input_file_
   !
   USE path_variables,    ONLY : conv_path
   USE path_base,         ONLY : initialize_path, search_mep
@@ -33,24 +31,13 @@ PROGRAM neb
   !
   IMPLICIT NONE
   !
-  CHARACTER (len=iotk_attlenx) :: attr
-  CHARACTER(len=256) :: engine_prefix
-  !
-  INTEGER :: unit_tmp
-  INTEGER :: i, iimage
-  CHARACTER(len=10) :: a_tmp
-  !
-  CHARACTER(len=256) :: parsing_file_name
-  LOGICAL :: lfound_parsing_file, lxml
-  !
+  CHARACTER(len=256) :: engine_prefix, parsing_file_name
+  INTEGER :: unit_tmp, i, iimage
   INTEGER, EXTERNAL :: find_free_unit, input_images_getarg
-  LOGICAL, EXTERNAL :: test_input_xml, input_file_name_getarg
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
   !
-#ifdef __MPI
   CALL mp_startup ( start_images=.true. )
-#endif
   CALL environment_start ( 'NEB' )
   !
   ! INPUT RELATED
@@ -59,15 +46,10 @@ PROGRAM neb
   !
   ! ... open input file
   !
-  IF ( mpime == root) &
-     lfound_parsing_file = input_file_name_getarg (parsing_file_name)
-  CALL mp_bcast(parsing_file_name,root,world_comm)
-  CALL mp_bcast(lfound_parsing_file,root,world_comm)
-  !
-  IF (lfound_parsing_file) then
+  IF ( input_file_ /= ' ') THEN
      WRITE(0,*) ""
-     WRITE(0,*) "parsing_file_name: ", trim(parsing_file_name)
-     CALL path_gen_inputs ( trim(parsing_file_name), engine_prefix, &
+     WRITE(0,*) "parsing_file_name: ", trim(input_file_)
+     CALL path_gen_inputs ( trim(input_file_), engine_prefix, &
                             input_images, root, world_comm )
   ELSE
      WRITE(0,*) ""
@@ -87,21 +69,10 @@ PROGRAM neb
   CALL path_read_cards(unit_tmp)
   close(unit=unit_tmp)
   !
-  OPEN(unit_tmp, file=trim(engine_prefix)//"1.in")
-  lxml = test_input_xml(unit_tmp)
-  CLOSE(unit_tmp)
-  if(.not.lxml) then
-    OPEN(unit_tmp, file=trim(engine_prefix)//"1.in")
-    CALL read_namelists( prog='PW', unit=unit_tmp )
-    CALL read_cards( prog='PW', unit=unit_tmp )
-    CLOSE(unit_tmp)
-  else
-    CALL iotk_open_read( unit_tmp, trim(engine_prefix)//"1.in", &
-           attr = attr, qe_syntax = .true.)
-    CALL read_xml('PW', attr = attr )
-    CALL iotk_close_read(unit_tmp)
-  endif
+  parsing_file_name = trim(engine_prefix)//"1.in"
+  CALL read_input_file ( 'PW', parsing_file_name )
   CALL iosys()
+  !
   CALL engine_to_path_nat()
   CALL engine_to_path_alat()
   CALL allocate_path_input_ions(input_images)
@@ -111,23 +82,9 @@ PROGRAM neb
   do i=2,input_images
     CALL set_engine_input_defaults()
     CALL clean_pw(.true.)
-
-    a_tmp=trim(int_to_char(i))
-    OPEN(unit_tmp,file=trim(engine_prefix)//trim(a_tmp)//".in") 
-    lxml = test_input_xml(unit_tmp)
-    CLOSE(unit_tmp)
-    if(.not.lxml) then
-      OPEN(unit_tmp,file=trim(engine_prefix)//trim(a_tmp)//".in")
-      CALL read_namelists( prog='PW', unit=unit_tmp )
-      CALL read_cards( prog='PW', unit=unit_tmp )
-      CLOSE(unit_tmp)
-    else
-      CALL iotk_open_read( unit_tmp, trim(engine_prefix)//trim(a_tmp)//".in", &
-           attr = attr, qe_syntax = .true. )
-      CALL read_xml('PW', attr = attr )
-      CALL iotk_close_read(unit_tmp)
-    endif
+    parsing_file_name = trim(engine_prefix)//trim(int_to_char(i))//".in"
     !
+    CALL read_input_file ( 'PW', parsing_file_name )
     CALL iosys()
     !
     CALL engine_to_path_pos(i)

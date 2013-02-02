@@ -25,14 +25,10 @@ PROGRAM pwscf
                                ms2_initialization,    &
                                set_positions, return_forces
 #endif
-  USE io_files,           ONLY : tmp_dir
-  USE xml_io_base,        ONLY : create_directory, change_directory
+  USE command_line_options,ONLY: input_file_ 
   USE read_input,         ONLY : read_input_file
   !
   IMPLICIT NONE
-  !
-  !
-  CHARACTER(len=256) :: dirname
   !
   !
   CALL mp_startup ( )
@@ -46,7 +42,7 @@ PROGRAM pwscf
   !
   ! ... open, read, close input file
   !
-  CALL read_input_file ('PW')
+  CALL read_input_file ('PW', input_file_ )
   !
   ! ... convert to internal variables
   !

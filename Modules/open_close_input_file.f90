@@ -17,19 +17,19 @@ MODULE open_close_input_file
   !
 CONTAINS
   !----------------------------------------------------------------------------
-  INTEGER FUNCTION open_input_file ( lxmlinput, attr )
+  INTEGER FUNCTION open_input_file ( input_file_, lxmlinput, attr )
   !-----------------------------------------------------------------------------
   !
-  ! ...  Opens file for input read, connecting it to unit stdin (text input)
-  ! ...  or xmlstdin (xml file).
-  ! ...  On entry:
-  ! ...    if optional variable lxmlinput is present and set to .true., 
-  ! ...    test if the file is a valid xml file. In this case, optional
-  ! ...    variable attr must be present and used to open the file.
-  ! ...  The code detects an input filename via option "-i filename"
-  ! ...  (also "-in", "-inp", "-input" are accepted)
-  ! ...  If no filename is specified, the standard input is dumped to
-  ! ...  temporary file "input_tmp.in" and this is opened for read
+  ! ...  Open file "input_file_" for input read, connecting it to unit stdin
+  ! ...  (text input) or xmlstdin (xml file). If "input_file_" is empty, 
+  ! ...  the standard input is dumped to temporary file "input_tmp.in"
+  ! ...  and this is opened for read
+  ! ...  If optional variable lxmlinput is present, test if the file is a
+  ! ...  valid xml file. In this case, optional variable attr must be 
+  ! ...  present and is used to open the file.
+  ! ...  In parallel execution, should be called by a single processor
+  ! ...  if reading from standard input; may be called on all processors
+  ! ...  otherwise, but ensure first that all processors can read and write!
   ! ...  On exit:
   ! ...    Returns -1 if standard input is dumped to file
   ! ...    Returns  0 if input file is successfully opened
@@ -37,36 +37,37 @@ CONTAINS
   ! ...    Returns  2 if there was an error opening file
   ! ...    lxmlinput=.true. if the file has extension '.xml' or '.XML'
   ! ...       or if either <xml...> or <?xml...> is found as first token
+  ! ...    input_file is set to the file name actually read
   ! ...  ---------------------------------------------------------------
   !
   IMPLICIT NONE
   !
+  CHARACTER (len=*), intent(in) :: input_file_
   LOGICAL, intent(inout), optional :: lxmlinput
   CHARACTER (len=*), intent(inout), optional :: attr
   !
-  LOGICAL :: lfound, lxmlinput_loc,lcheckxml
+  LOGICAL :: lxmlinput_loc,lcheckxml
   INTEGER :: ierr, len
   INTEGER :: stdtmp
   CHARACTER(LEN=512) :: dummy
-  LOGICAL, EXTERNAL :: test_input_xml, input_file_name_getarg
+  LOGICAL, EXTERNAL :: test_input_xml
   INTEGER, EXTERNAL :: find_free_unit
   !
   !
-  lcheckxml = .false.
-  IF ( PRESENT(lxmlinput) ) lcheckxml = lxmlinput
-  !
+  lcheckxml = PRESENT(lxmlinput)
   IF ( lcheckxml .AND. .NOT.PRESENT(attr) ) THEN
      open_input_file = 1
      RETURN
   ENDIF
   !
-  ! ... Input from file ?
-  !
-  lfound = input_file_name_getarg ( input_file ) 
-  !
   stdtmp = find_free_unit()
   !
-  IF ( .NOT. lfound ) THEN
+  IF ( TRIM(input_file_) /= ' ' ) THEn
+     !
+     ! copy file to be opened into input_file
+     !
+     input_file = input_file_
+  ELSE
      !
      ! if no file specified then copy from standard input
      !

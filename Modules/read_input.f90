@@ -22,7 +22,7 @@ MODULE read_input
    CONTAINS
    !
    !-------------------------------------------------------------------------
-   SUBROUTINE read_input_file ( prog )
+   SUBROUTINE read_input_file ( prog, input_file_ )
      !-------------------------------------------------------------------------
      !
      USE read_namelists_module, ONLY : read_namelists
@@ -38,14 +38,17 @@ MODULE read_input
      IMPLICIT NONE
      !
      CHARACTER(LEN=2), INTENT (IN) :: prog
+     CHARACTER(LEN=*), INTENT (IN) :: input_file_
+     !
      CHARACTER(LEN=iotk_attlenx) :: attr
      LOGICAL :: xmlinput
      INTEGER :: ierr
      !
-     xmlinput = .TRUE.
      IF ( ionode ) THEN
         IF ( prog == 'CP' ) CALL xml_input_dump()
-        ierr = open_input_file( xmlinput, attr) 
+        print *, trim(input_file_)
+        ierr = open_input_file( input_file_, xmlinput, attr) 
+        print *, ierr
      END IF
      !
      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
