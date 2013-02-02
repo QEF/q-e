@@ -46,9 +46,7 @@ MODULE read_input
      !
      IF ( ionode ) THEN
         IF ( prog == 'CP' ) CALL xml_input_dump()
-        print *, trim(input_file_)
         ierr = open_input_file( input_file_, xmlinput, attr) 
-        print *, ierr
      END IF
      !
      CALL mp_bcast( ierr, ionode_id, intra_image_comm )

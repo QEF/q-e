@@ -43,7 +43,7 @@ CONTAINS
   IMPLICIT NONE
   !
   CHARACTER (len=*), intent(in) :: input_file_
-  LOGICAL, intent(inout), optional :: lxmlinput
+  LOGICAL, intent(out), optional :: lxmlinput
   CHARACTER (len=*), intent(inout), optional :: attr
   !
   LOGICAL :: lxmlinput_loc,lcheckxml
