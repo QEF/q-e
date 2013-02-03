@@ -7,30 +7,6 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE set_engine_input_defaults()
-  !-----------------------------------------------------------------------------
-  !
-  USE input_parameters, ONLY : &
-                                 tapos, tkpoints, taspc, twannier, &
-                                 tconstr, tforces, tocc, tksout,   &
-                                 tionvel, tesr, tdipole, tcell
-  !
-  tapos = .false.
-  tkpoints = .false.
-  taspc = .false.
-  twannier = .false.
-  tconstr = .false.
-  tforces = .false.
-  tocc = .false.
-  tksout = .false.
-  tionvel = .false.
-  tesr = .false.
-  tdipole = .false.
-  tcell = .false.
-  !
-END SUBROUTINE set_engine_input_defaults
-!
-!----------------------------------------------------------------------------
 SUBROUTINE set_engine_io_units()
   !-----------------------------------------------------------------------------
   !
@@ -38,7 +14,6 @@ SUBROUTINE set_engine_io_units()
   INTEGER, EXTERNAL :: find_free_unit
   !
   if(ionode) stdout = find_free_unit()
-  !
   !
 END SUBROUTINE set_engine_io_units
 !

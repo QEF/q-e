@@ -25,6 +25,7 @@ MODULE read_input
    SUBROUTINE read_input_file ( prog, input_file_ )
      !-------------------------------------------------------------------------
      !
+     USE input_parameters,      ONLY : reset_input_checks
      USE read_namelists_module, ONLY : read_namelists
      USE read_cards_module,     ONLY : read_cards
      USE io_global,             ONLY : ionode, ionode_id
@@ -53,6 +54,8 @@ MODULE read_input
      IF ( ierr > 0 ) CALL errore('read_input', 'opening input file',ierr)
      CALL mp_bcast( xmlinput, ionode_id, intra_image_comm )
      CALL mp_bcast( attr, ionode_id, intra_image_comm )
+     !
+     CALL reset_input_checks () 
      !
      IF ( xmlinput ) THEN
         !

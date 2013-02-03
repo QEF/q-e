@@ -69,25 +69,21 @@ PROGRAM neb
   CALL path_read_cards(unit_tmp)
   close(unit=unit_tmp)
   !
-  parsing_file_name = trim(engine_prefix)//"1.in"
-  CALL read_input_file ( 'PW', parsing_file_name )
-  CALL iosys()
-  !
-  CALL engine_to_path_nat()
-  CALL engine_to_path_alat()
-  CALL allocate_path_input_ions(input_images)
-  CALL engine_to_path_pos(1)
-  CALL engine_to_path_fix_atom_pos()
-
-  do i=2,input_images
-    CALL set_engine_input_defaults()
-    CALL clean_pw(.true.)
+  do i=1,input_images
+    !
+    IF ( i > 1 ) CALL clean_pw(.true.)
     parsing_file_name = trim(engine_prefix)//trim(int_to_char(i))//".in"
     !
     CALL read_input_file ( 'PW', parsing_file_name )
     CALL iosys()
     !
+    IF ( i == 1 ) THEN
+      CALL engine_to_path_nat()
+      CALL engine_to_path_alat()
+      CALL allocate_path_input_ions(input_images)
+    END IF
     CALL engine_to_path_pos(i)
+    IF ( i == 1 ) CALL engine_to_path_fix_atom_pos()
     !
   enddo
   !

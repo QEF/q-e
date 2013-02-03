@@ -1427,10 +1427,6 @@ MODULE input_parameters
           ! atomic_positions = 'bohr' | 'angstrong' | 'crystal' | 'alat'
           ! select the units for the atomic positions being read from stdin
 
-        !
-        ! ... variable added for NEB  ( C.S. 17/10/2003 )
-        !
-        !
 !
 !    ION_VELOCITIES
 !
@@ -1507,14 +1503,6 @@ MODULE input_parameters
         ! written to files 'KS.'
 
 !
-!   CLIMBING_IMAGES
-!
-      !
-      ! ... variable added for NEB  ( C.S. 20/11/2003 )
-      !
-      LOGICAL, ALLOCATABLE :: climbing( : )
-
-!
 !   PLOT_WANNIER
 !
 
@@ -1533,8 +1521,36 @@ MODULE input_parameters
       LOGICAL :: xmloutput = .false.
       ! if .true. PW produce an xml output
 CONTAINS
-
+!
+!----------------------------------------------------------------------------
+SUBROUTINE reset_input_checks()
+  !-----------------------------------------------------------------------------
+  !
+  ! ... This routine sets to .false. flags used to check whether some variables
+  ! ... have been read. If called before reading, allows to read a different
+  ! ... input file without triggering bogus error messages - useful for NEB
+  !
+  IMPLICIT NONE
+  !
+  tapos = .false.
+  tkpoints = .false.
+  taspc = .false.
+  twannier = .false.
+  tconstr = .false.
+  tforces = .false.
+  tocc = .false.
+  tksout = .false.
+  tionvel = .false.
+  tesr = .false.
+  tdipole = .false.
+  tcell = .false.
+  !
+  END SUBROUTINE reset_input_checks
+  !
+  !
+  !-----------------------------------------------------------------------------
   SUBROUTINE allocate_input_ions( ntyp, nat )
+  !-----------------------------------------------------------------------------
     !
     INTEGER, INTENT(in) :: ntyp, nat
     !
@@ -1569,7 +1585,9 @@ CONTAINS
     !
   END SUBROUTINE allocate_input_ions
 
+  !-----------------------------------------------------------------------------
   SUBROUTINE allocate_input_constr()
+  !-----------------------------------------------------------------------------
     !
     IF ( allocated( constr_type_inp ) )   DEALLOCATE( constr_type_inp )
     IF ( allocated( constr_inp ) )        DEALLOCATE( constr_inp )
@@ -1591,7 +1609,9 @@ CONTAINS
     !
   END SUBROUTINE allocate_input_constr
 
+  !-----------------------------------------------------------------------------
   SUBROUTINE allocate_input_iprnks( nksx, nspin )
+  !-----------------------------------------------------------------------------
     !
     INTEGER, INTENT(in) :: nksx, nspin
     !
@@ -1605,8 +1625,9 @@ CONTAINS
     !
   END SUBROUTINE allocate_input_iprnks
 
-
+  !-----------------------------------------------------------------------------
   SUBROUTINE deallocate_input_parameters()
+  !-----------------------------------------------------------------------------
     !
     IF ( allocated( xk ) ) DEALLOCATE( xk )
     IF ( allocated( wk ) ) DEALLOCATE( wk )
