@@ -198,7 +198,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   !      Original routine written by Francesco Mauri
   !
   USE kinds, ONLY : DP
-  USE fft_base, ONLY : dffts
+  USE fft_base, ONLY : dffts, tg_cgather
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: iunigk
   USE klist, ONLY: xk
@@ -214,7 +214,8 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE qpoint,   ONLY : igkq, npwq, nksq, ikks, ikqs, nksqtot
   USE control_ph, ONLY : trans, lgamma, current_iq
   USE ph_restart, ONLY : ph_writefile
-  USE mp_global, ONLY: intra_bgrp_comm, npool
+  USE spin_orb,   ONLY : domag
+  USE mp_global,  ONLY: intra_bgrp_comm, npool, get_ntask_groups
   USE mp,        ONLY: mp_sum
 
   IMPLICIT NONE
@@ -223,19 +224,29 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   COMPLEX(DP), INTENT(IN) :: dvscfins (dffts%nnr, nspin_mag, npe)
   ! LOCAL variables
   INTEGER :: nrec, ik, ikk, ikq, ipert, mode, ibnd, jbnd, ir, ig, &
-       ios, ierr
-  COMPLEX(DP) , ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:)
+       ipol, ios, ierr
+  COMPLEX(DP) , ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:), tg_dv(:,:), &
+       tg_psic(:,:), aux2(:,:)
+  INTEGER :: v_siz, incr
   COMPLEX(DP), EXTERNAL :: zdotc
-  LOGICAL :: htg
   !
   IF (.NOT. comp_elph(irr) .OR. done_elph(irr)) RETURN
-  htg = dffts%have_task_groups
-  dffts%have_task_groups=.FALSE.
+  IF ( get_ntask_groups() > 1 ) dffts%have_task_groups=.TRUE.
 
   ALLOCATE (aux1    (dffts%nnr, npol))
   ALLOCATE (elphmat ( nbnd , nbnd , npe))
   ALLOCATE( el_ph_mat_rec (nbnd,nbnd,nksq,npe) )
   el_ph_mat_rec=(0.0_DP,0.0_DP)
+  ALLOCATE (aux2(npwx*npol, nbnd))
+  incr=1
+  IF ( dffts%have_task_groups ) THEN
+     !
+     v_siz =  dffts%tg_nnr * dffts%nogrp
+     ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
+     ALLOCATE( tg_psic( v_siz, npol ) )
+     incr = dffts%nogrp
+     !
+  ENDIF
   !
   !  Start the loops over the k-points
   !
@@ -288,13 +299,37 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
         !
         ! calculate dvscf_q*psi_k
         !
-        DO ibnd = 1, nbnd
-           CALL cft_wave (evc(1, ibnd), aux1, +1)
-           CALL apply_dpot(dffts%nnr, aux1, dvscfins(1,1,ipert), current_spin)
-           CALL cft_wave (dvpsi(1, ibnd), aux1, -1)
-        END DO
-        CALL adddvscf (ipert, ik)
+        IF ( get_ntask_groups() > 1 ) dffts%have_task_groups=.TRUE.
+        IF ( dffts%have_task_groups ) THEN
+           IF (noncolin) THEN
+              CALL tg_cgather( dffts, dvscfins(:,1,ipert), tg_dv(:,1))
+              IF (domag) THEN
+                 DO ipol=2,4
+                    CALL tg_cgather( dffts, dvscfins(:,ipol,ipert), &
+                                                          tg_dv(:,ipol))
+                 ENDDO
+              ENDIF
+           ELSE
+              CALL tg_cgather( dffts, dvscfins(:,current_spin,ipert), &
+                                                            tg_dv(:,1))
+           ENDIF
+        ENDIF
+        aux2=(0.0_DP,0.0_DP)
+        DO ibnd = 1, nbnd, incr
+           IF ( dffts%have_task_groups ) THEN
+              CALL cft_wave_tg (evc, tg_psic, 1, v_siz, ibnd, nbnd )
+              CALL apply_dpot(v_siz, tg_psic, tg_dv, 1)
+              CALL cft_wave_tg (aux2, tg_psic, -1, v_siz, ibnd, nbnd)
+           ELSE
+              CALL cft_wave (evc(1, ibnd), aux1, +1)
+              CALL apply_dpot(dffts%nnr, aux1, dvscfins(1,1,ipert), current_spin)
+              CALL cft_wave (aux2(1, ibnd), aux1, -1)
+           ENDIF
+        ENDDO
+        dvpsi=dvpsi+aux2
+        dffts%have_task_groups=.FALSE.
 
+        CALL adddvscf (ipert, ik)
         !
         ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
         !
@@ -334,9 +369,15 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   IF (npool > 1) DEALLOCATE(el_ph_mat_rec_col)
   DEALLOCATE(el_ph_mat_rec)
   !
-  dffts%have_task_groups=htg
   DEALLOCATE (elphmat)
   DEALLOCATE (aux1)
+  DEALLOCATE (aux2)
+  IF ( get_ntask_groups() > 1) dffts%have_task_groups=.TRUE.
+  IF ( dffts%have_task_groups ) THEN
+     DEALLOCATE( tg_dv )
+     DEALLOCATE( tg_psic )
+  ENDIF
+  dffts%have_task_groups=.FALSE.
   !
   RETURN
 END SUBROUTINE elphel
@@ -813,8 +854,7 @@ SUBROUTINE elphsum_simple
   USE klist, ONLY : xk, nelec, nks, wk
   USE wvfct, ONLY : nbnd, et
   USE el_phon, ONLY : el_ph_mat, el_ph_nsigma, el_ph_ngauss, el_ph_sigma
-  USE mp_global, ONLY : me_pool, root_pool, inter_pool_comm, npool
-  USE io_global, ONLY : stdout
+  USE mp_global, ONLY : inter_pool_comm, npool, intra_image_comm
   USE klist, only : degauss,ngauss
   USE control_flags, ONLY : modenum, noinv
   USE units_ph,       ONLY :iudyn
@@ -824,7 +864,6 @@ SUBROUTINE elphsum_simple
   USE modes, ONLY : u,rtau, nsymq,irotmq, minus_q
   USE control_ph, only : lgamma
   USE lsda_mod, only : isk,nspin, current_spin,lsda
-  USE mp_global, ONLY : intra_image_comm
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE mp,        ONLY: mp_sum, mp_bcast
   !
