@@ -824,8 +824,9 @@ SUBROUTINE elphsum_simple
   USE modes, ONLY : u,rtau, nsymq,irotmq, minus_q
   USE control_ph, only : lgamma
   USE lsda_mod, only : isk,nspin, current_spin,lsda
-  USE io_global, ONLY : stdout
-  USE mp,        ONLY: mp_sum
+  USE mp_global, ONLY : intra_image_comm
+  USE io_global, ONLY : stdout, ionode, ionode_id
+  USE mp,        ONLY: mp_sum, mp_bcast
   !
   IMPLICIT NONE
   REAL(DP), PARAMETER :: eps = 20_dp/ry_to_cmm1 ! eps = 20 cm^-1, in Ry
@@ -860,17 +861,19 @@ SUBROUTINE elphsum_simple
   write(filelph,'(A5,f9.6,A1,f9.6,A1,f9.6)') 'elph.',xq(1),'.',xq(2),'.',xq(3)
 
   ! parallel case: only first node writes
-  IF ( me_pool /= root_pool ) THEN
-     iuelph = 0
-  ELSE
+  IF ( ionode ) THEN
      !
      iuelph = find_free_unit()
      OPEN (unit = iuelph, file = filelph, status = 'unknown', err = &
           100, iostat = ios)
-100  CALL errore ('elphon', 'opening file '//filelph, ABS (ios) )
      REWIND (iuelph)
+  ELSE
+     iuelph = 0
      !
   END IF
+100 CONTINUE
+  CALL mp_bcast(ios,ionode_id,intra_image_comm)
+  CALL errore ('elphsum_simple', 'opening file '//filelph, ABS (ios) )
 
   WRITE (iuelph, '(3f15.8,2i8)') xq, nsig, 3 * nat
   WRITE (iuelph, '(6e14.6)') (w2 (nu) , nu = 1, nmodes)
