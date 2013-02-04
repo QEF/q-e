@@ -961,7 +961,7 @@ SUBROUTINE elphsum_simple
      ENDIF
      
      DO nu = 1, nmodes
-        gamma = 0.0
+        gamma = 0.d0
         DO mu = 1, 3 * nat
            DO vu = 1, 3 * nat
               gamma = gamma + DBLE (CONJG (dyn (mu, nu) ) * el_ph_sum (mu, vu)&
@@ -990,7 +990,7 @@ SUBROUTINE elphsum_simple
            ! lambda(nu)= gamma(nu)/(pi N(Ef) \omega_{q,nu}^2)
            lambda = gamma / pi / w2 (nu) / dosef
         ELSE
-           lambda = 0.0
+           lambda = 0.d0
         ENDIF
         ! 3.289828x10^6 is the conversion factor from Ry to GHz
         WRITE (6, 9010) nu, lambda, gamma * 3.289828d6
