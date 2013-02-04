@@ -819,7 +819,7 @@ SUBROUTINE elphsum_simple
   USE control_flags, ONLY : modenum, noinv
   USE units_ph,       ONLY :iudyn
   USE io_files,  ONLY : prefix
-  USE qpoint, ONLY : xq, nksq
+  USE qpoint, ONLY : xq, nksq, ikks, ikqs
   USE dynmat, ONLY : dyn, w2
   USE modes, ONLY : u,rtau, nsymq,irotmq, minus_q
   USE control_ph, only : lgamma
@@ -907,13 +907,8 @@ SUBROUTINE elphsum_simple
         !
         ! see subroutine elphel for the logic of indices
         !
-        IF (lgamma) THEN
-           ikk = ik
-           ikq = ik
-        ELSE
-           ikk = 2 * ik - 1
-           ikq = ikk + 1
-        ENDIF
+        ikk = ikks(ik)
+        ikq = ikqs(ik)
         DO ibnd = 1, nbnd
            w0g1 = w0gauss ( (ef1 - et (ibnd, ikk) ) / degauss1, ngauss1) &
                 / degauss1
