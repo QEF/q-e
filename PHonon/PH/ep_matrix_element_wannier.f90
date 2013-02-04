@@ -149,7 +149,7 @@ SUBROUTINE elphsum_wannier(q_index)
   USE mp_global, ONLY : me_pool, root_pool, inter_pool_comm, npool, intra_bgrp_comm
   USE io_global, ONLY : stdout,ionode
   USE io_files,  ONLY : prefix
-  USE qpoint, ONLY : xq, nksq
+  USE qpoint, ONLY : xq, nksq, ikks, ikqs
   USE dynmat, ONLY : dyn, w2
   USE modes, ONLY : u, gi, gimq, irgq, irotmq
   USE control_ph, only : lgamma
@@ -213,13 +213,8 @@ SUBROUTINE elphsum_wannier(q_index)
      WRITE (iuelphmat) ((u(ipert,jpert),ipert=1,nmodes),jpert=1,nmodes)
      WRITE (iuelphmat) ((dyn(ipert,jpert),ipert=1,3*nat),jpert=1,3*nat)
      do ik=1,nksq
-        IF (lgamma) THEN
-           ikk = ik
-           ikq = ik
-        ELSE
-           ikk = 2 * ik - 1
-           ikq = ikk + 1
-        ENDIF
+        ikk=ikks(ik)
+        ikq=ikqs(ik) 
         xk_dummy(:)=xk(:,ikk)
         call cryst_to_cart(1,xk_dummy,at,-1)
         WRITE (iuelphmat) (xk_dummy(ipert),ipert=1,3)
