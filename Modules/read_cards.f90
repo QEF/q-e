@@ -119,11 +119,13 @@ CONTAINS
       LOGICAL                    :: tend
       INTEGER                    :: i
       !
-      INTEGER :: unit_loc=5
+      ! read_line reads from unit parse_unit
       !
-      !
-      if(present(unit)) unit_loc =  unit
-      parse_unit = unit_loc
+      IF (present(unit)) THEN
+         parse_unit =  unit
+      ELSE
+         parse_unit =  5
+      END IF
       !
       CALL card_default_values( )
       !
