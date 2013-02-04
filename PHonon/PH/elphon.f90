@@ -824,6 +824,7 @@ SUBROUTINE elphsum_simple
   USE modes, ONLY : u,rtau, nsymq,irotmq, minus_q
   USE control_ph, only : lgamma
   USE lsda_mod, only : isk,nspin, current_spin,lsda
+  USE io_global, ONLY : stdout
   USE mp,        ONLY: mp_sum
   !
   IMPLICIT NONE
@@ -952,9 +953,9 @@ SUBROUTINE elphsum_simple
      CALL symdyn_munu_new (el_ph_sum, u, xq, s, invs, rtau, irt,  at, &
           bg, nsymq, nat, irotmq, minus_q)
      !
-     WRITE (6, 9000) degauss1, ngauss1
-     WRITE (6, 9005) dosef, ef1 * rytoev
-     WRITE (6, 9006) phase_space
+     WRITE (stdout, 9000) degauss1, ngauss1
+     WRITE (stdout, 9005) dosef, ef1 * rytoev
+     WRITE (stdout, 9006) phase_space
      IF (iuelph.NE.0) THEN
         WRITE (iuelph, 9000) degauss1, ngauss1
         WRITE (iuelph, 9005) dosef, ef1 * rytoev
@@ -970,7 +971,7 @@ SUBROUTINE elphsum_simple
         ENDDO
         write(819+mu,*) gamma
         gamma = pi * gamma / 2.d0
-        write(6,*) 'gamma*pi/2=',gamma
+        write(stdout,*) 'gamma*pi/2=',gamma
         !
         ! the factor 2 comes from the factor sqrt(hbar/2/M/omega) that appears
         ! in the definition of the electron-phonon matrix element g
@@ -993,7 +994,7 @@ SUBROUTINE elphsum_simple
            lambda = 0.d0
         ENDIF
         ! 3.289828x10^6 is the conversion factor from Ry to GHz
-        WRITE (6, 9010) nu, lambda, gamma * 3.289828d6
+        WRITE (stdout, 9010) nu, lambda, gamma * 3.289828d6
         IF (iuelph.NE.0) WRITE (iuelph, 9010) nu, lambda, gamma * &
              3.289828d6
      ENDDO
