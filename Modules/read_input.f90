@@ -28,7 +28,7 @@ MODULE read_input
      USE input_parameters,      ONLY : reset_input_checks
      USE read_namelists_module, ONLY : read_namelists
      USE read_cards_module,     ONLY : read_cards
-     USE io_global,             ONLY : ionode, ionode_id
+     USE io_global,             ONLY : ionode, ionode_id, qestdin
      USE xml_input,             ONLY : xml_input_dump
      USE read_xml_module,       ONLY : read_xml
      USE mp,                    ONLY : mp_bcast
@@ -65,11 +65,11 @@ MODULE read_input
         !
         ! ... Read NAMELISTS 
         !
-        CALL read_namelists( prog )
+        CALL read_namelists( prog, qestdin )
         !
         ! ... Read CARDS 
         !
-        CALL read_cards ( prog )
+        CALL read_cards ( prog, qestdin )
         !
      END IF
      IF ( ionode) ierr = close_input_file( )

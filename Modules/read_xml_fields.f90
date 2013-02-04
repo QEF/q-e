@@ -7,7 +7,7 @@
 MODULE read_xml_fields_module
   !
   !
-  USE io_global, ONLY : xmlinputunit => xmlstdin
+  USE io_global, ONLY : xmlinputunit => qestdin
   USE kinds,     ONLY : DP
   USE input_parameters 
   !

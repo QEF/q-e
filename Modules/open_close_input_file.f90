@@ -7,7 +7,7 @@
 !
 MODULE open_close_input_file
   !
-  USE io_global,     ONLY : stdin, stdout, xmlstdin
+  USE io_global,     ONLY : stdin, stdout, qestdin
   USE iotk_module,   ONLY : iotk_open_read, iotk_close_read,iotk_attlenx
   !
   LOGICAL, SAVE :: lxmlinput_loc = .false.
@@ -20,10 +20,9 @@ CONTAINS
   INTEGER FUNCTION open_input_file ( input_file_, lxmlinput, attr )
   !-----------------------------------------------------------------------------
   !
-  ! ...  Open file "input_file_" for input read, connecting it to unit stdin
-  ! ...  (text input) or xmlstdin (xml file). If "input_file_" is empty, 
-  ! ...  the standard input is dumped to temporary file "input_tmp.in"
-  ! ...  and this is opened for read
+  ! ...  Open file "input_file_" for input read, connecting it to unit qestdin.
+  ! ...  If "input_file_" is empty, the standard input is dumped to temporary 
+  ! ...  file "input_tmp.in"  and this is opened for read
   ! ...  If optional variable lxmlinput is present, test if the file is a
   ! ...  valid xml file. In this case, optional variable attr must be 
   ! ...  present and is used to open the file.
@@ -112,7 +111,7 @@ CONTAINS
      ELSE
         WRITE(stdout, '(5x,a)') "Reading xml input from standard input"
      END IF
-     CALL iotk_open_read( xmlstdin, TRIM(input_file), attr = attr, &
+     CALL iotk_open_read( qestdin, TRIM(input_file), attr = attr, &
                           qe_syntax = .true., ierr = ierr)
   ELSE 
      IF ( input_file .NE. "input_tmp.in") THEN
@@ -120,7 +119,7 @@ CONTAINS
      ELSE
          WRITE(stdout, '(5x,a)') "Reading input from standard input"
      END IF
-     OPEN ( UNIT = stdin, FILE = TRIM(input_file), FORM = 'FORMATTED', &
+     OPEN ( UNIT = qestdin, FILE = TRIM(input_file), FORM = 'FORMATTED', &
             STATUS = 'OLD', IOSTAT = ierr )
   ENDIF
   IF ( ierr > 0 ) GO TO 30
@@ -141,20 +140,19 @@ INTEGER FUNCTION close_input_file ( )
   !
   IMPLICIT NONE
   !
-  LOGICAL :: opened
+  LOGICAL :: opnd
   INTEGER :: ierr
   !
-  INQUIRE ( stdin, opened = opened )
-  IF (.NOT.opened .AND. stdin /= xmlstdin) INQUIRE ( xmlstdin, opened = opened )
-  IF (opened) THEN
+  INQUIRE ( qestdin, opened = opnd )
+  IF (opnd) THEN
      !
      IF (lxmlinput_loc) THEN
-        CALL iotk_close_read(unit=xmlstdin, ierr = ierr)
+        CALL iotk_close_read(unit=qestdin, ierr = ierr)
      ELSE
         IF ( TRIM(input_file) == "input_tmp.in") THEN
-           CLOSE (UNIT=stdin, STATUS='delete', IOSTAT=ierr )
+           CLOSE (UNIT=qestdin, STATUS='delete', IOSTAT=ierr )
         ELSE
-           CLOSE (UNIT=stdin, STATUS='keep', IOSTAT=ierr )
+           CLOSE (UNIT=qestdin, STATUS='keep', IOSTAT=ierr )
         ENDIF
      ENDIF
      !
