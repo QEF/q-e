@@ -20,11 +20,12 @@ PROGRAM main
   !
   USE input,         ONLY : iosys_pseudo, iosys
   USE read_input,    ONLY : read_input_file
-  USE mp_global,     ONLY : mp_startup, nimage, me_image, root_image
+  USE mp_global,     ONLY : mp_startup
   USE io_global,     ONLY : ionode, ionode_id
   USE environment,   ONLY : environment_start
   USE check_stop,    ONLY : check_stop_init
-  USE mp_global,     ONLY : mp_bcast, intra_image_comm
+  USE mp_images,     ONLY : intra_image_comm
+  USE mp,            ONLY : mp_bcast
   USE command_line_options, ONLY : input_file_
   !
   IMPLICIT NONE

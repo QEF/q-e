@@ -69,7 +69,7 @@ SUBROUTINE init_run()
   USE xml_io_base,              ONLY : restart_dir, create_directory, change_directory
   USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
   USE ions_base,                ONLY : ions_reference_positions, cdmi
-  USE mp_global,                ONLY : nimage, my_image_id, nbgrp, me_image, intra_image_comm, root_image
+  USE mp_bands,                 ONLY : nbgrp
   USE mp,                       ONLY : mp_barrier
   USE wrappers
   USE ldaU_cp
@@ -94,18 +94,6 @@ SUBROUTINE init_run()
      CALL create_directory( tmp_dir )
   END IF 
   !
-  IF( nimage > 1 ) THEN
-     !
-     ! ... When images are used, open a directory for each one (obsolete?)
-     !
-     WRITE( dirname, FMT = '( I5.5 )' ) my_image_id
-     tmp_dir = TRIM( tmp_dir ) // '/' // TRIM( dirname )
-     IF( nbeg < 0 ) THEN
-        CALL create_directory( tmp_dir )
-     END IF
-     !
-  END IF
-
   CALL plugin_initialization()
 
   IF( nbgrp > 1 .AND. force_pairing ) &
