@@ -20,7 +20,7 @@ MODULE xml_io_base
   USE kinds,     ONLY : DP
   USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, &
                         current_fmt_version => qexml_version
-  USE io_global, ONLY : ionode, ionode_id, stdout
+  USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_bcast
   USE parser,    ONLY : version_compare
   !

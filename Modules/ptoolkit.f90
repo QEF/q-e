@@ -10,7 +10,6 @@
 !==----------------------------------------------==!
 
     USE kinds,     ONLY : DP
-    USE io_global, ONLY : stdout
     USE parallel_include
 
     IMPLICIT NONE

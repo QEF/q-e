@@ -45,7 +45,6 @@ CONTAINS
       !
 
      USE kinds,     ONLY : DP
-     USE io_global, ONLY : stdout
 
       IMPLICIT NONE
 
@@ -468,7 +467,6 @@ CONTAINS
    SUBROUTINE pzupgtr( n, nrl, ap, lda, tau, q, ldq, nproc, me, comm)
 
      USE kinds,     ONLY : DP
-     USE io_global, ONLY : stdout
 !
 !  Parallel MPI version of the LAPACK routine ZUPGTR
 !
@@ -755,7 +753,6 @@ CONTAINS
 !     Courant Institute, Argonne National Lab, and Rice University
 !
      USE kinds,     ONLY : DP
-     USE io_global, ONLY : stdout
 
       IMPLICIT NONE
 
@@ -1390,7 +1387,6 @@ CONTAINS
    SUBROUTINE zhpev_drv( JOBZ, UPLO, N, AP, W, Z, LDZ )
 
      USE kinds,     ONLY : DP
-     USE io_global, ONLY : stdout
 
         IMPLICIT NONE
 
