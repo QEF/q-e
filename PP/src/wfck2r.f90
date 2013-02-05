@@ -96,7 +96,7 @@ PROGRAM wfck2r
   
  
 
-  write(6,*) 'length of wfc in real space', nks*lrwfcr*nbnd*8
+  write(6,*) 'length of wfc in real space/per band', nks*lrwfcr*8
   write(6,*) 'length of wfc in k space', 2*nbnd*npwx*nks*8
   CALL init_us_1
 
@@ -119,11 +119,11 @@ PROGRAM wfck2r
      
      CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
 
-     evc_r = cmplx(0.d0, 0.d0)     
      do ibnd=1,nbnd 
      !
      ! I perform fourier transform
      !
+        evc_r = cmplx(0.d0, 0.d0)     
         do ig = 1, npw
            evc_r (nls (igk (ig) ),1 ) = evc (ig,ibnd)
         enddo
@@ -135,11 +135,17 @@ PROGRAM wfck2r
            CALL invfft ('Wave', evc_r(:,2), dffts)
         ENDIF
 
+        dist_evc_r=CMPLX(0.d0,0.d0)
+
+#if defined (__MPI)
         DO is = 1, nspin_mag
            !
            CALL cgather_smooth( evc_r(:,is), dist_evc_r(:,is) )
            !
         END DO
+#else
+        dist_evc_r(1:dffts%nnr,:)=evc_r(1:dffts%nnr,:)
+#endif
 
         if(ionode)     call davcio (dist_evc_r, lrwfcr, iuwfcr, (ik-1)*nbnd+ibnd, +1)
      enddo
