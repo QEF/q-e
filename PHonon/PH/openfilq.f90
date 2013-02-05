@@ -36,7 +36,7 @@ SUBROUTINE openfilq()
   USE noncollin_module,ONLY : npol, nspin_mag
   USE paw_variables,   ONLY : okpaw
   USE control_flags,   ONLY : twfcollect
-  USE mp_global,       ONLY : me_pool
+  USE mp_global,       ONLY : me_bgrp
   USE io_global,       ONLY : ionode,stdout
   USE ramanm,          ONLY : lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der
@@ -164,29 +164,25 @@ SUBROUTINE openfilq()
   !
 400 IF (trim(fildvscf).NE.' ') THEN
      iudvscf = 27
-     IF ( me_pool == 0 ) THEN
-           IF(trim(dvscf_star%ext).NE.' ' .and. elph_mat) THEN
-              fildvscf_rot = dfile_name(xq, at, TRIM(dvscf_star%ext), &
+     IF ( me_bgrp == 0 ) THEN
+        IF (trim(dvscf_star%ext).NE.' ' .and. elph_mat) THEN
+           fildvscf_rot = dfile_name(xq, at, TRIM(dvscf_star%ext), &
                    TRIM(dvscf_star%dir)//prefix, &
                    generate=.false., index_q=iq_dummy, equiv=.false. )
               
-              WRITE(stdout,'(5x,5a)') "Opening dvscf file '",TRIM(fildvscf_rot), &
+           WRITE(stdout,'(5x,5a)') "Opening dvscf file '",TRIM(fildvscf_rot), &
                    "' (for reading) in directory '",trim(dvscf_star%dir),"'"
               
-              CALL diropn (iudvscf, fildvscf_rot, lrdrho, exst, dvscf_star%dir)
-           ELSE
-              CALL diropn (iudvscf, fildvscf, lrdrho, exst )
-           ENDIF
-           IF (okpaw) THEN
-              filint=TRIM(fildvscf)//'_paw'
-              lint3paw = 2 * nhm * nhm * 3 * nat * nspin_mag
-              iuint3paw=34
-              !           IF(dvscf_dir.NE.' ') then
-              !              CALL diropn (iuint3paw, filint, lint3paw, exst, dvscf_dir)
-              !           ELSE
-              CALL diropn (iuint3paw, filint, lint3paw, exst)
-              !           ENDIF
-           ENDIF
+           CALL diropn (iudvscf, fildvscf_rot, lrdrho, exst, dvscf_star%dir)
+        ELSE
+           CALL diropn (iudvscf, fildvscf, lrdrho, exst )
+        ENDIF
+        IF (okpaw) THEN
+           filint=TRIM(fildvscf)//'_paw'
+           lint3paw = 2 * nhm * nhm * nat * nspin_mag
+           iuint3paw=34
+           CALL diropn (iuint3paw, filint, lint3paw, exst)
+        ENDIF
         END IF
      END IF
   !

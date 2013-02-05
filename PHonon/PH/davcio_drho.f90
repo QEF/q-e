@@ -21,9 +21,6 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   USE mp_global, ONLY : inter_pool_comm, me_pool, intra_image_comm
   USE mp,        ONLY : mp_bcast, mp_barrier
   USE noncollin_module,  ONLY : nspin_mag
-  USE paw_variables, ONLY : okpaw
-  USE phus,     ONLY : int3_paw
-  USE units_ph, ONLY : iuint3paw, lint3paw
   !
   IMPLICIT NONE
   !
@@ -59,7 +56,6 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
      !
      IF ( ionode ) THEN
         CALL davcio( ddrho, lrec, iunit, nrec, + 1 )
-        IF (okpaw) CALL davcio( int3_paw, lint3paw, iuint3paw, nrec, + 1 )
      END IF
      !
   ELSE IF ( isw < 0 ) THEN
@@ -68,11 +64,9 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
      !
      IF ( ionode ) THEN
         CALL davcio( ddrho, lrec, iunit, nrec, - 1 )
-        IF (okpaw) CALL davcio( int3_paw, lint3paw, iuint3paw, nrec, - 1 )
      ENDIF
      !
      CALL mp_bcast( ddrho, ionode_id, inter_pool_comm )
-     IF (okpaw) CALL mp_bcast( int3_paw, ionode_id, inter_pool_comm )
      !
      ! ... distributes ddrho between between the tasks of the pool
      !
@@ -89,7 +83,6 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
 #else
   !
   CALL davcio( drho, lrec, iunit, nrec, isw )
-  IF (okpaw) CALL davcio( int3_paw, lint3paw, iuint3paw, nrec, isw )
 ! !
 #endif
   !

@@ -50,20 +50,21 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE el_phon,              ONLY : elph
   USE nlcc_ph,              ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
-                                   iuwfc, lrwfc, iudvscf
+                                   iuwfc, lrwfc, iudvscf, iuint3paw, lint3paw
   USE output,               ONLY : fildrho, fildvscf
   USE phus,                 ONLY : int3_paw, becsumort
   USE eqv,                  ONLY : dvpsi, dpsi, evq, eprec
   USE qpoint,               ONLY : xq, npwq, igkq, nksq, ikks, ikqs
   USE modes,                ONLY : npertx, npert, u, t, irotmq, tmq, &
                                    minus_q, nsymq, rtau
+
   USE recover_mod,          ONLY : read_rec, write_rec
   ! used to write fildrho:
   USE dfile_autoname,       ONLY : dfile_name
   USE save_ph,              ONLY : tmp_dir_save
   ! used oly to write the restart file
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm, &
-                                   get_ntask_groups
+                                   get_ntask_groups, me_bgrp
   USE mp,                   ONLY : mp_sum
   !
   implicit none
@@ -573,6 +574,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         do ipert = 1, npe
            call davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
                          imode0 + ipert, +1 )
+           IF (okpaw.AND.me_bgrp==0) CALL davcio( int3_paw(:,:,ipert,:,:), lint3paw, &
+                                                  iuint3paw, imode0+ipert, + 1 )
         end do
         if (elph) call elphel (irr, npe, imode0, dvscfins)
      end if
