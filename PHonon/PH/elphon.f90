@@ -883,7 +883,6 @@ SUBROUTINE elphsum_simple
   REAL(DP) :: weight, w0g1, w0g2, w0gauss, wgauss,degauss1, dosef, &
        ef1, phase_space, lambda, gamma, wg1, w0g,wgp,deltae
   REAL(DP), EXTERNAL :: dos_ef, efermig
-  REAL(DP) xk_dummy(3)
   COMPLEX(DP), allocatable :: phi(:,:,:,:),phi_nonanal(:,:,:,:)
   COMPLEX(DP), allocatable :: dyn_mat_r(:,:),zz(:,:)
   CHARACTER(len=20) :: char_deg
@@ -951,8 +950,6 @@ SUBROUTINE elphsum_simple
         DO ibnd = 1, nbnd
            w0g1 = w0gauss ( (ef1 - et (ibnd, ikk) ) / degauss1, ngauss1) &
                 / degauss1
-           xk_dummy(:)=xk(:,ikk)
-           call cryst_to_cart(1,xk_dummy,at,-1)
            DO jbnd = 1, nbnd
               w0g2 = w0gauss ( (ef1 - et (jbnd, ikq) ) / degauss1, ngauss1) &
                    / degauss1
@@ -1006,9 +1003,7 @@ SUBROUTINE elphsum_simple
                    * dyn (vu, nu) )
            ENDDO
         ENDDO
-        write(819+mu,*) gamma
         gamma = pi * gamma / 2.d0
-        write(stdout,*) 'gamma*pi/2=',gamma
         !
         ! the factor 2 comes from the factor sqrt(hbar/2/M/omega) that appears
         ! in the definition of the electron-phonon matrix element g
