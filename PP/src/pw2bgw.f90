@@ -65,7 +65,7 @@
 ! write_rhog  - generates real/complex charge density in G-space
 !               (units of the number of electronic states per unit cell)
 ! calc_rhog   - computes charge density by summing over a subset of occupied
-!               bands (called from write_rhog)
+!               bands (called from write_rhog), destroys charge density
 ! write_vxcg  - generates real/complex exchange-correlation potential in
 !               G-space (units of Rydberg) [only local part of Vxc]
 ! write_vxc0  - prints real/complex exchange-correlation potential at G=0
@@ -295,16 +295,6 @@ PROGRAM pw2bgw
     IF ( ionode ) WRITE ( 6, '(5x,"done write_wfng",/)' )
   ENDIF
 
-  IF ( rhog_flag ) THEN
-    output_file_name = TRIM ( outdir ) // '/' // TRIM ( rhog_file )
-    IF ( ionode ) WRITE ( 6, '(5x,"call write_rhog")' )
-    CALL start_clock ( 'write_rhog' )
-    CALL write_rhog ( output_file_name, real_or_complex, symm_type, &
-      rhog_nvmin, rhog_nvmax )
-    CALL stop_clock ( 'write_rhog' )
-    IF ( ionode ) WRITE ( 6, '(5x,"done write_rhog",/)' )
-  ENDIF
-
   IF ( vxcg_flag ) THEN
     output_file_name = TRIM ( outdir ) // '/' // TRIM ( vxcg_file )
     IF ( ionode ) WRITE ( 6, '(5x,"call write_vxcg")' )
@@ -365,6 +355,19 @@ PROGRAM pw2bgw
       wfng_nk2, wfng_nk3, wfng_dk1, wfng_dk2, wfng_dk3 )
     CALL stop_clock ( 'write_vkbg' )
     IF ( ionode ) WRITE ( 6, '(5x,"done write_vkbg",/)' )
+  ENDIF
+
+  ! since calc_rhog (called from write_rhog) destroys charge density,
+  ! it must be called after v_xc (called from write_vxcg, write_vxc0,
+  ! write_vxc_r, write_vxc_g)
+  IF ( rhog_flag ) THEN
+    output_file_name = TRIM ( outdir ) // '/' // TRIM ( rhog_file )
+    IF ( ionode ) WRITE ( 6, '(5x,"call write_rhog")' )
+    CALL start_clock ( 'write_rhog' )
+    CALL write_rhog ( output_file_name, real_or_complex, symm_type, &
+      rhog_nvmin, rhog_nvmax )
+    CALL stop_clock ( 'write_rhog' )
+    IF ( ionode ) WRITE ( 6, '(5x,"done write_rhog",/)' )
   ENDIF
 
   IF ( ionode ) WRITE ( 6, * )
@@ -2199,7 +2202,6 @@ SUBROUTINE write_vscg ( output_file_name, real_or_complex, symm_type )
 
   USE cell_base, ONLY : omega, alat, tpiba, tpiba2, at, bg, ibrav
   USE constants, ONLY : pi, tpi, eps6
-  USE ener, ONLY : etxc, vtxc
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft
   USE gvect, ONLY : ngm, ngm_g, ig_l2g, nl, mill, ecutrho
