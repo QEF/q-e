@@ -1,11 +1,12 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2004-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!----------------------------------------------------------------------------
+!--------------------------------------------------------------------
+
 SUBROUTINE stop_lr( full_run  )
   !----------------------------------------------------------------------------
   !
@@ -17,7 +18,7 @@ SUBROUTINE stop_lr( full_run  )
   !
   USE parallel_include
   USE lr_variables,         ONLY : n_ipol, LR_polarization, beta_store
-  USE lr_variables,         ONLY :  gamma_store, zeta_store, norm0, rho_1_tot
+  USE lr_variables,         ONLY :  gamma_store, zeta_store, norm0, code
   USE lr_variables,         ONLY : lr_verbosity, itermax, bgz_suffix
   USE io_global,            ONLY : ionode
   USE io_files,             ONLY : tmp_dir, prefix
@@ -84,7 +85,7 @@ SUBROUTINE stop_lr( full_run  )
   !
   CALL lr_dealloc()
   !
-  CALL environment_end('TDDFPT')
+  CALL environment_end(code)
   !
   CALL mp_barrier()
   !

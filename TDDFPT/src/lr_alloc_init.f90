@@ -22,12 +22,23 @@ SUBROUTINE lr_alloc_init()
   USE eqv,                  ONLY : dmuxc
   USE wavefunctions_module, ONLY : evc
   USE kinds,                ONLY : dp
+  USE control_ph,           ONLY : nbnd_occ
   !
   IMPLICIT NONE
   !
   IF (lr_verbosity > 5) THEN
    WRITE(stdout,'("<lr_alloc_init>")')
   ENDIF
+  !
+  IF (nbnd>nbnd_occ(1)) THEN
+     WRITE(stdout,'(/,5X,"Warning: There are virtual states in the input file,&
+          & trying to disregard in response calculation")')
+     nbnd_total=nbnd
+     nbnd=nbnd_occ(1)
+  ELSE
+     nbnd_total=nbnd
+  ENDIF
+  !
   IF (lr_verbosity > 7) THEN
    WRITE(stdout,'("NPWX=",I15)') npwx
    WRITE(stdout,'("NBND=",I15)') nbnd

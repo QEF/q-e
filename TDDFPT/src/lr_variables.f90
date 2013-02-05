@@ -27,6 +27,8 @@ MODULE lr_variables
   INTEGER :: nwordd0psi
   INTEGER :: nwordrestart
   !
+  CHARACTER (len=10), PARAMETER :: code = 'turboTDDFT'
+  !
   INTEGER :: n_ipol
   !
   !
@@ -94,11 +96,8 @@ MODULE lr_variables
   COMPLEX(kind=dp), ALLOCATABLE :: tg_revc0(:,:,:) !ground state wavefunctions in real space
   !
   real(kind=dp), ALLOCATABLE :: &
-       rho_1(:,:),           &         ! response charge density in real space
+       rho_1(:,:)                    ! response charge density in real space
        !rho_tot(:),        &         ! ground state + resp. charge density in real space (obm: is it used at all?)
-       rho_1_tot(:,:)                !response charge density (mode 2)
-  COMPLEX(kind=dp), ALLOCATABLE :: &
-       rho_1_tot_im(:,:)             !response charge density, imaginary part used in resonance condition
   COMPLEX(kind=dp), ALLOCATABLE :: &
        rho_1c(:,:)      ! response charge density in real space
 

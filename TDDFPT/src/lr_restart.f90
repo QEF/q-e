@@ -1,4 +1,12 @@
-!-----------------------------------------------------------------------
+!
+! Copyright (C) 2004-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!--------------------------------------------------------------------
+
 SUBROUTINE lr_restart(iter_restart,rflag)
   !---------------------------------------------------------------------
   ! ... restart the Lanczos recursion
@@ -12,10 +20,10 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   USE cell_base,            ONLY : tpiba2
   USE gvect,                ONLY : g
   USE io_files,             ONLY : tmp_dir, prefix, diropn, wfc_dir
-  USE lr_variables,         ONLY : itermax,evc1, evc1_new, sevc1_new, rho_1_tot , rho_1_tot_im,&
+  USE lr_variables,         ONLY : itermax,evc1, evc1_new, sevc1_new,&
                                    restart, nwordrestart, iunrestart,project,nbnd_total,F,&
                                    bgz_suffix
-  USE charg_resp,           ONLY : resonance_condition
+  USE charg_resp,           ONLY : resonance_condition, rho_1_tot , rho_1_tot_im
   USE wvfct,                ONLY : npw, igk, nbnd, g2kin, npwx
   USE lr_variables,         ONLY : beta_store, gamma_store, zeta_store, norm0!,real_space
   USE becmod,               ONLY : bec_type, becp, calbec

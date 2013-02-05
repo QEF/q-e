@@ -1,4 +1,12 @@
-!-----------------------------------------------------------------------
+!
+! Copyright (C) 2004-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!--------------------------------------------------------------------
+
 SUBROUTINE lr_write_restart()
   !---------------------------------------------------------------------
   ! ... reads in and stores the vectors necessary to
@@ -10,10 +18,10 @@ SUBROUTINE lr_write_restart()
   USE io_files,             ONLY : tmp_dir, prefix, diropn
   USE lr_variables,         ONLY : beta_store, gamma_store, zeta_store, norm0, &
                                    LR_polarization, LR_iteration, n_ipol,F,project,&
-                                   evc1,evc1_new,iunrestart, nwordrestart, rho_1_tot, rho_1_tot_im, &
+                                   evc1,evc1_new,iunrestart, nwordrestart, &
                                    nbnd_total, charge_response,lr_verbosity,&
                                    bgz_suffix
-  USE charg_resp,           ONLY : resonance_condition
+  USE charg_resp,           ONLY : resonance_condition, rho_1_tot, rho_1_tot_im
   USE wvfct,                ONLY : nbnd, npwx, npw
   USE fft_base,             ONLY : dfftp
   USE io_global,            ONLY : ionode

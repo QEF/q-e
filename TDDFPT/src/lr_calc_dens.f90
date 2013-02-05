@@ -25,8 +25,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE klist,                  ONLY : nks,xk,wk
   USE lr_variables,           ONLY : evc0,revc0,rho_1,lr_verbosity,&
                                      & charge_response, itermax,&
-                                     & cube_save, rho_1_tot&
-                                     &,rho_1_tot_im, LR_iteration,&
+                                     & cube_save, LR_iteration,&
                                      & LR_polarization, project,&
                                      & evc0_virt, F,nbnd_total,&
                                      & n_ipol, becp1_virt, rho_1c,&
@@ -46,11 +45,12 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE charg_resp,             ONLY : w_T, lr_dump_rho_tot_cube,&
                                      & lr_dump_rho_tot_xyzd, &
                                      & lr_dump_rho_tot_xcrys,&
-                                     & resonance_condition, epsil
+                                     & resonance_condition, epsil,&
+                                     & rho_1_tot, rho_1_tot_im
   USE noncollin_module,       ONLY : nspin_mag
   USE control_flags,          ONLY : tqr
   USE becmod,                 ONLY : becp
-  USE lr_exx_kernel,             ONLY : lr_exx_kernel_int, revc_int,&
+  USE lr_exx_kernel,          ONLY : lr_exx_kernel_int, revc_int,&
                                      & revc_int_c
   USE constants,              ONLY : eps12
   !
