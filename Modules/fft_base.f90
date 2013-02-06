@@ -440,6 +440,8 @@ SUBROUTINE grid_gather( f_in, f_out )
   !
   CALL stop_clock( 'gather' )
   !
+#else
+  CALL errore('grid_gather', 'do not use in serial execution', 1)
 #endif
   !
   RETURN
@@ -506,6 +508,8 @@ SUBROUTINE grid_scatter( f_in, f_out )
   !
   CALL stop_clock( 'scatter' )
   !
+#else
+  CALL errore('grid_scatter', 'do not use in serial execution', 1)
 #endif
   !
   RETURN
@@ -565,6 +569,8 @@ SUBROUTINE cgather_sym( f_in, f_out )
   !
   CALL stop_clock( 'cgather' )
   !
+#else
+  CALL errore('cgather_sym', 'do not use in serial execution', 1)
 #endif
   !
   RETURN
@@ -624,6 +630,8 @@ SUBROUTINE cgather_smooth ( f_in, f_out )
   !
   CALL stop_clock( 'gather' )
   !
+#else
+  CALL errore('cgather_smooth', 'do not use in serial execution', 1)
 #endif
   !
   RETURN
@@ -684,6 +692,8 @@ SUBROUTINE cgather_custom ( f_in, f_out, dfftt )
   !
   CALL stop_clock( 'gather' )
   !
+#else
+  CALL errore('cgather_custom', 'do not use in serial execution', 1)
 #endif
   !
   RETURN
@@ -745,6 +755,8 @@ SUBROUTINE cscatter_sym( f_in, f_out )
   !
   CALL stop_clock( 'cscatter_sym' )
   !
+#else
+  CALL errore('cscatter_sym', 'do not use in serial execution', 1)
 #endif
   !
   RETURN
@@ -805,6 +817,8 @@ SUBROUTINE cscatter_smooth( f_in, f_out )
   !
   CALL stop_clock( 'scatter' )
   !
+#else
+  CALL errore('cscatter_smooth', 'do not use in serial execution', 1)
 #endif
   !
   RETURN
@@ -866,6 +880,8 @@ SUBROUTINE cscatter_custom( f_in, f_out, dfftt )
   !
   CALL stop_clock( 'scatter' )
   !
+#else
+  CALL errore('cscatter_custom', 'do not use in serial execution', 1)
 #endif
   !
   RETURN
@@ -925,6 +941,8 @@ SUBROUTINE gather_smooth ( f_in, f_out )
   !
   CALL stop_clock( 'gather' )
   !
+#else
+  CALL errore('gather_smooth', 'do not use in serial execution', 1)
 #endif
   !
   RETURN
@@ -985,6 +1003,8 @@ SUBROUTINE scatter_smooth( f_in, f_out )
   !
   CALL stop_clock( 'scatter' )
   !
+#else
+  CALL errore('scatter_smooth', 'do not use in serial execution', 1)
 #endif
   !
   RETURN
