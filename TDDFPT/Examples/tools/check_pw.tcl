@@ -143,18 +143,16 @@ global lc_pos
 	               puts stderr "Error reading bands for K point $k_out_x $_out_y $k_out_z"
  	               exit 5
            	}
+
 		set lc_pos [lindex [split $lc_pos] 1]
-         	foreach {lc_pos} [regexp -all -line -inline -start $lc_pos -indices -- {-?[0-9]+\.?[0-9]*} $band_kp_ref] {
-		 set lc_pos [lindex [split $lc_pos] 0]
-		 #puts $lc_pos
+		#puts $lc_pos
                  regexp -start $lc_pos -- {-?[0-9]+\.?[0-9]*} $band_kp_ref band_ref
                  regexp -start $lc_pos -- {-?[0-9]+\.?[0-9]*} $band_kp_out band_out
 		 if {[ expr {abs($band_ref - $band_out)} ] > 0.001 } {
                         puts "\[NOT OK\]"
 			puts stderr "Discrepancy in band values ref:$band_ref read:$band_out"
                         exit 5
-		 }
-		}
+		     }
          }
 
 
