@@ -853,23 +853,18 @@ SUBROUTINE elphsum_simple
   !-----------------------------------------------------------------------
   USE kinds, ONLY : DP
   USE constants, ONLY : pi, ry_to_cmm1, rytoev
-  USE ions_base, ONLY : nat, ityp, tau,amass,tau, ntyp => nsp, atm
-  USE cell_base, ONLY : at, bg, ibrav, celldm 
-  USE fft_base,  ONLY: dfftp
-  USE symm_base, ONLY : s, sr, irt, nsym, invs, time_reversal
+  USE ions_base, ONLY : nat
+  USE cell_base, ONLY : at, bg
+  USE symm_base, ONLY : s, irt, nsym, invs
   USE klist, ONLY : xk, nelec, nks, wk
   USE wvfct, ONLY : nbnd, et
   USE el_phon, ONLY : el_ph_mat, el_ph_nsigma, el_ph_ngauss, el_ph_sigma
   USE mp_global, ONLY : inter_pool_comm, npool, intra_image_comm
-  USE klist, only : degauss,ngauss
-  USE control_flags, ONLY : modenum, noinv
-  USE units_ph,       ONLY :iudyn
-  USE io_files,  ONLY : prefix
   USE qpoint, ONLY : xq, nksq, ikks, ikqs
   USE dynmat, ONLY : dyn, w2
-  USE modes, ONLY : u,rtau, nsymq,irotmq, minus_q
-  USE control_ph, only : lgamma, current_iq
-  USE lsda_mod, only : isk,nspin, current_spin,lsda
+  USE modes, ONLY : u, rtau, nsymq, irotmq, minus_q
+  USE control_ph, only : current_iq
+  USE lsda_mod, only : isk
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE mp,        ONLY: mp_sum, mp_bcast
   !
@@ -877,22 +872,11 @@ SUBROUTINE elphsum_simple
   REAL(DP), PARAMETER :: eps = 20_dp/ry_to_cmm1 ! eps = 20 cm^-1, in Ry
   !
   INTEGER :: ik, ikk, ikq, isig, ibnd, jbnd, ipert, jpert, nu, mu, &
-       vu, ngauss1, nsig, iuelph, ios, iuelphmat,icnt,i,j,rrho,nt,k
-  INTEGER :: na,nb,icar,jcar,iu_sym,nmodes
-  INTEGER :: iu_Delta_dyn,iu_analdyn,iu_nonanaldyn
-  INTEGER :: io_file_unit
-  !   for star_q
-  INTEGER :: nsymloc, sloc(3,3,48), invsloc(48), irtloc(48,nat), &
-             nqloc, isqloc(48), imqloc
-  REAL(DP) :: rtauloc(3,48,nat), sxqloc(3,48)
-  !   end of star_q definitions
-  REAL(DP) :: weight, w0g1, w0g2, w0gauss, wgauss,degauss1, dosef, &
-       ef1, phase_space, lambda, gamma, wg1, w0g,wgp,deltae
+       vu, ngauss1, nsig, iuelph, ios
+  INTEGER :: nmodes
+  REAL(DP) :: weight, w0g1, w0g2, w0gauss, wgauss, degauss1, dosef, &
+       ef1, phase_space, lambda, gamma
   REAL(DP), EXTERNAL :: dos_ef, efermig
-  COMPLEX(DP), allocatable :: phi(:,:,:,:),phi_nonanal(:,:,:,:)
-  COMPLEX(DP), allocatable :: dyn_mat_r(:,:),zz(:,:)
-  CHARACTER(len=20) :: char_deg
-  CHARACTER(len=1) :: char_ng
   character(len=80) :: filelph
   CHARACTER(len=256) ::  file_elphmat
   !
@@ -903,13 +887,13 @@ SUBROUTINE elphsum_simple
 
   nmodes=3*nat
 
-  filelph='elph.'//int_to_char(current_iq)
+  filelph='elph.'//TRIM(int_to_char(current_iq))
 
   ! parallel case: only first node writes
   IF ( ionode ) THEN
      !
      iuelph = find_free_unit()
-     OPEN (unit = iuelph, file = filelph, status = 'unknown', err = &
+     OPEN (unit = iuelph, file = TRIM(filelph), status = 'unknown', err = &
           100, iostat = ios)
      REWIND (iuelph)
   ELSE
