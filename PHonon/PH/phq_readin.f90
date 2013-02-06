@@ -329,12 +329,11 @@ SUBROUTINE phq_readin()
 
   IF (modenum /= 0) search_sym=.FALSE.
   
-  if(elph_simple.or.elph_mat) then
+  IF (elph_mat) THEN
      trans=.false.
-  else
+  ELSEIF (.NOT. elph) THEN
      trans = trans .OR. ldisp
-  endif
-   
+  ENDIF
   !
   ! Set default value for fildrho and fildvscf if they are required
   IF ( (lraman.OR.elop.OR.drho_star%open) .AND. fildrho == ' ') fildrho = 'drho'
