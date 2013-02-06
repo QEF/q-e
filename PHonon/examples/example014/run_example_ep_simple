@@ -23,7 +23,7 @@ $ECHO "coefficients for fcc Al."
 . ../../../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x ph.x q2r.x matdyn.x lambda.x"
+BIN_LIST="pw.x ph.x"
 PSEUDO_LIST="Al.pz-vbc.UPF"
 
 $ECHO
@@ -77,15 +77,9 @@ $ECHO " done"
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
-Q2R_COMMAND="$PARA_PREFIX $BIN_DIR/q2r.x $PARA_POSTFIX"
-MATDYN_COMMAND="$PARA_PREFIX $BIN_DIR/matdyn.x $PARA_POSTFIX"
-LAMBDA_COMMAND="$BIN_DIR/lambda.x "
 $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO "  running ph.x as: $PH_COMMAND"
-#$ECHO "  running q2r.x as: $Q2R_COMMAND"
-#$ECHO "  running matdyn.x as: $MATDYN_COMMAND"
-#$ECHO "  running lambda.x as: $LAMBDA_COMMAND"
 $ECHO
 
 # clean TMP_DIR
@@ -120,7 +114,7 @@ ATOMIC_POSITIONS
 K_POINTS {automatic}
  8 8 8  0 0 0
 EOF
-$ECHO "  running the scf cal k-point grid...\c"
+$ECHO "  running the self-consistent calculation...\c"
 $PW_COMMAND  < al.scf.in > al.scf.out
 check_failure $?
 $ECHO "  done"
@@ -136,9 +130,9 @@ Electron-phonon coefficients for Al
   fildyn='al.dyn',
   trans=.true.,
  /
-  0.500 0.500 0.500 0.0
+  0.500 0.500 0.500
 EOF
-$ECHO "  running the ph calculation...\c"
+$ECHO "  running the phonon calculation...\c"
 $PH_COMMAND < al.ph.in > al.ph.out
 check_failure $?
 $ECHO "  done"
@@ -159,15 +153,13 @@ Electron-phonon coefficients for Al
   nk2=16,
   nk3=16,
  /
-  0.500 0.500 0.500 0.0
+  0.500 0.500 0.500 
 EOF
 $ECHO "  running the elph calculation...\c"
 $PH_COMMAND < al.elph.in > al.elph.out
 check_failure $?
 $ECHO "  done"
 
-
-
-
-
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"
 
