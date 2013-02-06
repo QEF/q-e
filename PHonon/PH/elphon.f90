@@ -868,7 +868,7 @@ SUBROUTINE elphsum_simple
   USE qpoint, ONLY : xq, nksq, ikks, ikqs
   USE dynmat, ONLY : dyn, w2
   USE modes, ONLY : u,rtau, nsymq,irotmq, minus_q
-  USE control_ph, only : lgamma
+  USE control_ph, only : lgamma, current_iq
   USE lsda_mod, only : isk,nspin, current_spin,lsda
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE mp,        ONLY: mp_sum, mp_bcast
@@ -899,10 +899,11 @@ SUBROUTINE elphsum_simple
   COMPLEX(DP) :: el_ph_sum (3*nat,3*nat), dyn_corr(3*nat,3*nat)
 
   INTEGER, EXTERNAL :: find_free_unit
+  CHARACTER(LEN=6) :: int_to_char
 
   nmodes=3*nat
 
-  write(filelph,'(A5,f9.6,A1,f9.6,A1,f9.6)') 'elph.',xq(1),'.',xq(2),'.',xq(3)
+  filelph='elph.'//int_to_char(current_iq)
 
   ! parallel case: only first node writes
   IF ( ionode ) THEN
@@ -919,15 +920,16 @@ SUBROUTINE elphsum_simple
   CALL mp_bcast(ios,ionode_id,intra_image_comm)
   CALL errore ('elphsum_simple', 'opening file '//filelph, ABS (ios) )
 
-  WRITE (iuelph, '(3f15.8,2i8)') xq, nsig, 3 * nat
-  WRITE (iuelph, '(6e14.6)') (w2 (nu) , nu = 1, nmodes)
+  IF (ionode) THEN
+     WRITE (iuelph, '(3f15.8,2i8)') xq, nsig, 3 * nat
+     WRITE (iuelph, '(6e14.6)') (w2 (nu) , nu = 1, nmodes)
+  ENDIF
   
 
   ngauss1=0
   DO isig = 1, el_ph_nsigma
      !     degauss1 = 0.01 * isig
      degauss1 = el_ph_sigma * isig
-     write(stdout,*) degauss1
      el_ph_sum(:,:) = (0.d0, 0.d0)
      phase_space = 0.d0
      !
@@ -993,10 +995,11 @@ SUBROUTINE elphsum_simple
      CALL symdyn_munu_new (el_ph_sum, u, xq, s, invs, rtau, irt,  at, &
           bg, nsymq, nat, irotmq, minus_q)
      !
+     WRITE (stdout, *)
      WRITE (stdout, 9000) degauss1, ngauss1
      WRITE (stdout, 9005) dosef, ef1 * rytoev
      WRITE (stdout, 9006) phase_space
-     IF (iuelph.NE.0) THEN
+     IF (ionode) THEN
         WRITE (iuelph, 9000) degauss1, ngauss1
         WRITE (iuelph, 9005) dosef, ef1 * rytoev
      ENDIF
@@ -1033,7 +1036,7 @@ SUBROUTINE elphsum_simple
         ENDIF
         ! 3.289828x10^6 is the conversion factor from Ry to GHz
         WRITE (stdout, 9010) nu, lambda, gamma * 3.289828d6
-        IF (iuelph.NE.0) WRITE (iuelph, 9010) nu, lambda, gamma * &
+        IF (ionode) WRITE (iuelph, 9010) nu, lambda, gamma * &
              3.289828d6
      ENDDO
   ENDDO
@@ -1046,7 +1049,7 @@ SUBROUTINE elphsum_simple
 9010 FORMAT(5x,'lambda(',i5,')=',f8.4,'   gamma=',f8.2,' GHz')
   !
   !
-  IF (iuelph.NE.0) CLOSE (unit = iuelph)
+  IF (ionode) CLOSE (unit = iuelph)
   RETURN
   
 
