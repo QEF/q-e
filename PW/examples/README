@@ -83,11 +83,6 @@ example03:
     for 2- and 8-atom cells of Si starting with compressed bonds along
     (111).
 
-example05:
-    This example shows how to use pw.x and postprocessing codes to
-    make a contour plot in the [110] plane of the charge density for
-    Si, and to plot the band structure of Si.
-
 example04:
     This example shows how to calculate the polarization via Berry
     Phase in PBTiO3 (contributed by the Vanderbilt Group in Rutgers
