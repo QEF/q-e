@@ -593,8 +593,8 @@ SUBROUTINE phq_readin()
   !
   IF (elph.AND..NOT.lgauss) CALL errore ('phq_readin', 'Electron-&
        &phonon only for metals', 1)
-!  IF (elph.AND.fildvscf.EQ.' ') CALL errore ('phq_readin', 'El-ph needs &
-!       &a DeltaVscf file', 1)
+  IF (elph.AND.fildvscf.EQ.' ') CALL errore ('phq_readin', 'El-ph needs &
+       &a DeltaVscf file', 1)
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here
   !
