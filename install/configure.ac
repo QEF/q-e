@@ -1922,7 +1922,7 @@ if test "$ranlib" != "echo"
 then
    AC_CHECK_PROG(ranlib,ranlib,ranlib,echo)
 fi
-# MacOs walkaround for ranlib
+# MacOs workaround for ranlib
 if test "$arch" == "mac686"; then
    if test "$ranlib" == "ranlib"; then
       ranlib="ranlib -c"
