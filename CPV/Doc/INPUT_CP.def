@@ -1320,9 +1320,8 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                yz      = only v2_y and v3_z are moved
                xyz     = only v1_x, v2_y, v3_z are moved
                shape   = all axis and angles, keeping the volume fixed
-
-               Beware: if axis are not orthogonal, some of the above options
-                       will break symmetry
+               2Dxy    = only x and y components are allowed to change
+               2Dshape = as above, keeping the area in xy plane fixed
 	    }
 	}
     }
