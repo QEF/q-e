@@ -511,7 +511,7 @@ SUBROUTINE phq_readin()
 !
   IF (get_ntask_groups() > 1) dffts%have_task_groups=.FALSE.
 
-  IF (nproc_bgrp_file /= nproc_bgrp) &
+  IF (nproc_bgrp_file /= nproc_bgrp .AND. .NOT. twfcollect ) &
      CALL errore('phq_readin','pw.x run with different band parallelization',1)
   
   if(elph_mat.and.fildvscf.eq.' ') call errore('phq_readin',&
