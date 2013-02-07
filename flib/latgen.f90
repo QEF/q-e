@@ -144,6 +144,15 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
         a3(3)= a2(3)
      ELSE IF ( ibrav == -5) THEN
         !     threefold axis along (111)
+        ! Notice that in the cubic limit (alpha=90, celldm(4)=0, term1=term2=1)
+        ! does not yield the x,y,z axis, but an equivalent rotated triplet:
+        !    a/3 (-1,2,2), a/3 (2,-1,2), a/3 (2,2,-1)
+        ! If you prefer the x,y,z axis as cubic limit, you should modify the
+        ! definitions of a1(1) and a1(2) as follows:'
+        !    a1(1) = celldm(1)*(term1+2.0_dp*term2)/3.0_dp
+        !    a1(2) = celldm(1)*(term1-term2)/3.0_dp
+        ! (info by G. Pizzi and A. Cepellotti)
+        !
         a1(1) = celldm(1)*(term1-2.0_dp*term2)/3.0_dp
         a1(2) = celldm(1)*(term1+term2)/3.0_dp
         a1(3) = a1(2)
