@@ -861,6 +861,7 @@ SUBROUTINE elphsum_simple
   USE el_phon, ONLY : el_ph_mat, el_ph_nsigma, el_ph_ngauss, el_ph_sigma
   USE mp_global, ONLY : inter_pool_comm, npool, intra_image_comm
   USE qpoint, ONLY : xq, nksq, ikks, ikqs
+  USE output, ONLY : fildyn
   USE dynmat, ONLY : dyn, w2
   USE modes, ONLY : u, rtau, nsymq, irotmq, minus_q
   USE control_ph, only : current_iq
@@ -887,7 +888,7 @@ SUBROUTINE elphsum_simple
 
   nmodes=3*nat
 
-  filelph='elph.'//TRIM(int_to_char(current_iq))
+  filelph=TRIM(fildyn)//'.elph.'//TRIM(int_to_char(current_iq))
 
   ! parallel case: only first node writes
   IF ( ionode ) THEN
