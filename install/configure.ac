@@ -77,12 +77,12 @@ AC_ARG_ENABLE(signals,
 
 AC_ARG_WITH(scalapack,
    [AS_HELP_STRING([--with-scalapack],
-       [use scalapack if available (default: yes)])],
+       [(yes|no|intel) Use scalapack if available. Set to "intel" to use Intel MPI and blacs (default: use openMPI)])],
    [if  test "$withval" = "yes" ; then
       with_scalapack=1
    elif  test "$withval" = "intel" ; then
       with_scalapack=2
-   else
+   elif  test "$withval" = "no" ; then
       with_scalapack=0
    fi],
    [with_scalapack=1])
@@ -196,7 +196,7 @@ then
                 *-ibm-aix* )            arch=aix    ;;
                 sparc-sun-* )           arch=sparc  ;;
                 i386-pc-solaris* )      arch=solaris;;
-                i686-apple-darwin* )    arch=mac686 ;;
+                i*86-apple-darwin* )    arch=mac686 ;;
                 *-pc-cygwin )           arch=cygwin ;;
                 sx*-nec* )              arch=necsx  ;;
                 powerpc64-*-linux-gnu ) arch=ppc64  ;;
