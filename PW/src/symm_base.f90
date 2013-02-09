@@ -296,19 +296,21 @@ SUBROUTINE set_sym_bl ( )
   !     symmetry )
   !
   DO irot = 1, nrot
+     sname(irot+nrot) = s0name(imat(irot)+32)
      DO kpol = 1,3
         DO jpol = 1,3
            s(kpol,jpol,irot+nrot) = -s(kpol,jpol,irot)
-           sname(irot+nrot) = s0name(imat(irot)+32)
         ENDDO
      ENDDO
   ENDDO
   nrot = 2*nrot
-
+  !
+  !    reset fractional translations to zero before checking the group
+  ! 
+  ft(:,:) = 0.0_dp
+  IF ( .not. is_group ( nrot ) ) THEN
   !    This happens for instance for an hexagonal lattice with one axis 
   !    oriented at 15 degrees from the x axis, the opther along (-1,1,0)
-  
-  IF ( .not. is_group ( nrot ) ) THEN
      CALL errore ('set_sym_bl', &
          'Symmetry group not a group! Use standard orientations for axis',1)
   ENDIF
@@ -771,7 +773,7 @@ LOGICAL FUNCTION is_group ( nsym_ )
               found = .true.
            ENDIF
         ENDDO
-        IF ( .not.found) THEN
+        IF ( .NOT. found ) THEN
            is_group = .false.
            RETURN
         ENDIF

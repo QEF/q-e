@@ -7,6 +7,8 @@ New in svn version:
 
 Fixed in svn version:
 
+   * Bogus symmetry error in NEB due to missing re-initialization
+     of fractional translations
    * PW, PP, PHonon: files for DFT+U produced by previous versions
      could no longer be read
    * PHonon: restart with convt=.true. was not working with PAW
