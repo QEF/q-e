@@ -1737,6 +1737,10 @@ SUBROUTINE setwfg( ibrav, b1, b2, b3 )
      twfg(6,2)=0 
      twfg(6,3)=1
      !   
+  CASE DEFAULT
+     ! alternate ibrav values -5, -9, -12: not sure what to do 
+     !
+     CALL errore ('setwfc','ibrav not implemented', ABS(ibrav))
      !
   END SELECT
   !
