@@ -1567,7 +1567,16 @@ MODULE pw_restart
             ibrav = 13
          CASE( "Triclinic P" )
             ibrav = 14
+         CASE( "Trigonal R (3-fold axis <111>)" )
+            ibrav = -5
+         CASE( "Orthorhombic base-centered(bco), alt. axes" )
+            ibrav = -9
+         CASE( "Monoclinic P, alt. axis (unique axis b)" )
+            ibrav = -12
          CASE DEFAULT
+            CALL infomsg('read_cell',&
+                 'Unexpected value for bravais_lattice string in XML, ' // &
+                 'setting ibrav=0')
             ibrav = 0
          END SELECT
          !

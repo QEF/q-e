@@ -682,6 +682,16 @@ CONTAINS
            bravais_lattice = "Monoclinic base-centered"
         CASE( 14 )
            bravais_lattice = "Triclinic P"
+        CASE( -5 )
+           bravais_lattice = "Trigonal R (3-fold axis <111>)"
+        CASE( -9 )
+           bravais_lattice = "Orthorhombic base-centered(bco), alt. axes"
+        CASE( -12 )
+           bravais_lattice = "Monoclinic P, alt. axis (unique axis b)"
+        CASE DEFAULT
+           CALL infomsg('qexml_write_cell',&
+                'Unexpected value for ibrav, setting ibrav=0 in the XML')
+           bravais_lattice = "free"
       END SELECT
       !
       CALL iotk_write_dat( ounit, &
