@@ -1,5 +1,5 @@
 
-! Copyright (C) 2010 Quantum ESPRESSO group
+! Copyright (C) 2010-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,13 +7,16 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE set_engine_io_units()
+SUBROUTINE set_engine_output()
   !-----------------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout, ionode
-  INTEGER, EXTERNAL :: find_free_unit
   !
-  if(ionode) stdout = find_free_unit()
+  ! ... assign a unit number different from 6 to stdout,
+  ! ... or else the output NEB routines will be redirected as well!
+  ! ... only processors performing I/O need to be redirected
   !
-END SUBROUTINE set_engine_io_units
+  if(ionode) stdout = 66
+  !
+END SUBROUTINE set_engine_output
 !

@@ -90,7 +90,7 @@ PROGRAM neb
   CALL path_to_engine_fix_atom_pos()
   !
   CALL ioneb()
-  CALL set_engine_io_units()
+  CALL set_engine_output()
   !
   ! END INPUT RELATED
   !

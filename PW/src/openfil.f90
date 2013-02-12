@@ -27,7 +27,7 @@ SUBROUTINE openfil()
   USE pw_restart,       ONLY : pw_readfile
   USE noncollin_module, ONLY : npol
   USE bp,               ONLY : lelfield
-  USE buffers,          ONLY : open_buffer, init_buffer
+  USE buffers,          ONLY : open_buffer
   USE control_flags,    ONLY : io_level, twfcollect
   USE wannier_new,            ONLY : use_wannier
   !
@@ -54,40 +54,26 @@ SUBROUTINE openfil()
   !
   nwordwfc = nbnd*npwx*npol
   !
-  ! ... iunwfc=10: read/write wfc from/to file
-  ! ... iunwfc=-1: copy wfc to/from RAM 
+  ! ... iunwfc= 10: read/write wfc from/to file
+  ! ... iunwfc=-10: copy wfc to/from RAM 
   !
   IF ( io_level > 0 ) THEN
      iunwfc = 10
   ELSE
-     iunwfc = -1
+     iunwfc =-10
   END IF
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, nks, exst )
   !
   IF ( TRIM(starting_wfc) == 'file' .AND. .NOT. exst)  THEN
      !
+     ! ... wavefunctions are read from the "save" file and rewritten
+     ! ... (directly in pw_readfile) using the internal format
+     !
      ierr = 1 
-     IF ( twfcollect ) THEN
-        !
-        ! ... wavefunctions are read from the "save" file and rewritten
-        ! ... (directly in pw_readfile) using the internal format
-        !
-        CALL pw_readfile( 'wave', ierr )
-        !
-     ELSE
-        !
-        ! ... wavefunctions are read into memory
-        !
-        CALL init_buffer ( iunwfc, exst, ierr )
-        !
-     END IF
-
+     IF ( twfcollect ) CALL pw_readfile( 'wave', ierr )
      IF ( ierr > 0 ) THEN
-        !
         WRITE( stdout, '(5X,"Cannot read wfc : file not found")' )
-        !
         starting_wfc = 'atomic'
-        !
      END IF
      !
   END IF

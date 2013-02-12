@@ -45,15 +45,14 @@ SUBROUTINE openfil_cond()
   ! ... for the direct-access file containing wavefunctions
   !
   nwordwfc = nbnd*npwx*npol
-
   !
-  ! ... iunwfc=10: read/write wfc from/to file
-  ! ... iunwfc=-1: copy wfc to/from RAM
+  ! ... iunwfc= 10: read/write wfc from/to file
+  ! ... iunwfc=-10: copy wfc to/from RAM
   !
   IF ( io_level > 0 ) THEN
      iunwfc = 10
   ELSE
-     iunwfc = -1
+     iunwfc =-10
   END IF
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, nks, exst )
   !
@@ -80,7 +79,7 @@ SUBROUTINE closefil_cond()
   IF ( io_level > 0 ) THEN
      iunwfc = 10
   ELSE
-     iunwfc = -1
+     iunwfc =-10
   END IF
   CALL close_buffer( iunwfc, 'keep' )
   !
