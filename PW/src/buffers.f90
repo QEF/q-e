@@ -29,14 +29,14 @@ MODULE buffers
   SUBROUTINE open_buffer (unit, extension, nword, maxrec, exst)
   !-----------------------------------------------------------------------
   !
-  !     unit > 6 : connect unit "unit" to a file "prefix"."extension" in
-  !     tmp_dir for direct I/O access, record length nword complex numbers;
+  !     unit > 6 : connect unit "unit" to file $wfc_dir/$prefix."extension" 
+  !     for direct I/O access, with record length = nword complex numbers;
   !     maxrec is ignored, exst=T(F) if the file (does not) exists
   !
   !     unit =-10: in addition to opening unit 10 as above, allocate a buffer
   !     for storing up to maxrec records of length nword complex numbers
   !
-  USE io_files,  ONLY : diropn
+  USE io_files,  ONLY : diropn, wfc_dir
   !
   IMPLICIT NONE
   !
@@ -59,7 +59,7 @@ MODULE buffers
   END IF
   !
   IF ( unit == -10 .OR. unit > 6 ) THEN
-     CALL diropn ( ABS(unit), extension, 2*nword, exst)
+     CALL diropn ( ABS(unit), extension, 2*nword, exst, wfc_dir )
   ELSE
      CALL errore ('open_buffer', 'incorrect unit specified', ABS(unit))
   END IF

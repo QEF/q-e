@@ -11,18 +11,23 @@ MODULE io_files
   !
   USE parameters, ONLY: ntypx
   !
-  ! ... The name of the files
+  ! ... I/O related variables: file names, utilities
   !
   IMPLICIT NONE
   !
   SAVE
-  !
-  CHARACTER(len=256) :: tmp_dir = './'            ! directory for temporary files
-  CHARACTER(len=256) :: wfc_dir = 'undefined'     ! directory for large files on each node, should be kept 'undefined' if not known 
-  CHARACTER(len=256) :: prefix  = 'os'            ! prepended to file names
-  CHARACTER(len=6)   :: nd_nmbr = '000000'        ! node number (used only in parallel case)
-  CHARACTER(len=256) :: pseudo_dir = './'    ! original location of PP files
-  CHARACTER(len=256) :: pseudo_dir_cur = ' ' ! current location when restarting
+  ! ... directory for all temporary files
+  CHARACTER(len=256) :: tmp_dir = './'
+  ! ... directory for large files on each node. Default: same as tmp_dir
+  CHARACTER(len=256) :: wfc_dir = 'undefined'
+  ! ... prefix is prepended to all file (and directory) names 
+  CHARACTER(len=256) :: prefix  = 'os'
+  ! ... for parallel case and distributed I/O: node number
+  CHARACTER(len=6)   :: nd_nmbr = '000000'
+  ! ... directory where pseudopotential files are found
+  CHARACTER(len=256) :: pseudo_dir = './'
+  ! ... location of PP files after a restart from file
+  CHARACTER(len=256) :: pseudo_dir_cur = ' '
   CHARACTER(len=256) :: psfile( ntypx ) = 'UPF'
   CHARACTER(len=256) :: outdir  = './'
   !
@@ -32,9 +37,8 @@ MODULE io_files
   CHARACTER(LEN=256) :: input_drho = ' '          ! name of the file with the input drho
   CHARACTER(LEN=256) :: output_drho = ' '         ! name of the file with the output drho
   !
-  CHARACTER(LEN=5 ), PARAMETER :: crash_file    = 'CRASH'
-  CHARACTER (LEN=261) :: &
-    exit_file = "os.EXIT"    ! file required for a soft exit  
+  CHARACTER(LEN=5 ), PARAMETER :: crash_file  = 'CRASH'
+  CHARACTER (LEN=261) :: exit_file = 'os.EXIT' ! file required for a soft exit  
   !
   CHARACTER (LEN=9),  PARAMETER :: xmlpun_base = 'data-file'
   CHARACTER (LEN=13), PARAMETER :: xmlpun      = xmlpun_base // '.xml'
@@ -66,9 +70,7 @@ MODULE io_files
   INTEGER :: nwordatwfc  =  2 ! length of record in atomic wfc file
   INTEGER :: nwordwann   =  2 ! length of record in sic wfc file
   !
-  ! ... "path" specific
-  !
-  !... finite electric field (Umari)
+  !... finite electric field
   !
   INTEGER :: iunefield   = 31 ! unit to store wavefunction for calculatin electric field operator
   !

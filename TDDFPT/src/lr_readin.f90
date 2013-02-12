@@ -141,11 +141,6 @@ SUBROUTINE lr_readin
      !
      outdir = trimcheck(outdir)
      tmp_dir = outdir
-     IF ( .NOT. TRIM( wfcdir ) == 'undefined' ) THEN
-     !
-        wfc_dir = trimcheck ( wfcdir )
-        !
-     ENDIF
      w_T_prefix = TRIM( tmp_dir ) // TRIM( beta_gamma_z_prefix ) // & 
           & ".beta_gamma_z." 
      !
@@ -198,6 +193,12 @@ SUBROUTINE lr_readin
   !   Now PWSCF XML file will be read, and various initialisations will be done
   !
   CALL read_file()
+  !
+  !   Set wfc_dir - this is done here because read_file sets wfc_dir = tmp_dir
+  !   FIXME:,if wfcdir is not present in input, wfc_dir is set to "undefined"
+  !   instead of tmp_dir, because of the logic used in the rest of TDDFPT   
+  !
+  wfc_dir = trimcheck ( wfcdir )
   !
   !  Make sure all the features used in the PWscf calculation are actually
   !   supported by TDDFPT.

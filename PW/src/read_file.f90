@@ -11,7 +11,7 @@ SUBROUTINE read_file()
   !
   ! Wrapper routine, for compatibility
   !
-  USE io_files,             ONLY : nwordwfc, iunwfc
+  USE io_files,             ONLY : nwordwfc, iunwfc, tmp_dir, wfc_dir
   USE io_global,            ONLY : stdout
   USE buffers,              ONLY : open_buffer, close_buffer
   USE wvfct,                ONLY : nbnd, npwx
@@ -35,8 +35,10 @@ SUBROUTINE read_file()
   !
   CALL read_xml_file ( )
   !
-  ! ... Open unit iunwfc, for Kohn-Sham orbitals
+  ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
+  ! ... have been written to tmp_dir, not to a different directory!
   !
+  wfc_dir = tmp_dir
   nwordwfc = nbnd*npwx*npol
   CALL open_buffer ( iunwfc, 'wfc', nwordwfc, nks, exst )
   !

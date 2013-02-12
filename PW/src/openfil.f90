@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !----------------------------------------------------------------------------
 SUBROUTINE openfil()
   !----------------------------------------------------------------------------
@@ -35,19 +34,6 @@ SUBROUTINE openfil()
   !
   LOGICAL            :: exst
   INTEGER            :: ierr
-  CHARACTER(LEN=256) :: tmp_dir_save
-  !
-  ! ... tmp_dir may be replaced by wfc_dir  for large files
-  !
-  tmp_dir_save = tmp_dir
-  !
-  IF ( wfc_dir /= 'undefined' ) THEN
-     !
-     WRITE( stdout, '(5X,"writing wfc files to a dedicated directory")' )
-     !
-     tmp_dir = wfc_dir
-     !
-  END IF
   !
   ! ... nwordwfc is the record length (IN COMPLEX WORDS)
   ! ... for the direct-access file containing wavefunctions
@@ -89,24 +75,21 @@ SUBROUTINE openfil()
   !
   IF ( ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) .OR. &
         use_wannier .OR. one_atom_occupations ) THEN
-     CALL diropn( iunat,  'atwfc',  nwordatwfc, exst )
-     CALL diropn( iunsat, 'satwfc', nwordatwfc, exst )
+     CALL diropn( iunat,  'atwfc',  nwordatwfc, exst, wfc_dir )
+     CALL diropn( iunsat, 'satwfc', nwordatwfc, exst, wfc_dir )
   END IF
   !
   ! ... iunigk contains the number of PW and the indices igk
-  ! ... Note that unit 15 is reserved for error messages 
   !
   CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
   !
   ! ... open units for electric field calculations
   !
   IF ( lelfield ) THEN
-      CALL diropn( iunefield , 'ewfc' , 2*nwordwfc, exst )
-      CALL diropn( iunefieldm, 'ewfcm', 2*nwordwfc, exst )
-      CALL diropn( iunefieldp, 'ewfcp', 2*nwordwfc, exst )
+      CALL diropn( iunefield , 'ewfc' , 2*nwordwfc, exst, wfc_dir )
+      CALL diropn( iunefieldm, 'ewfcm', 2*nwordwfc, exst, wfc_dir )
+      CALL diropn( iunefieldp, 'ewfcp', 2*nwordwfc, exst, wfc_dir )
   END IF
-  !
-  tmp_dir = tmp_dir_save
   !
   RETURN
   !

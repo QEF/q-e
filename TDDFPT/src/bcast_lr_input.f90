@@ -46,7 +46,6 @@ SUBROUTINE bcast_lr_input
   !call mp_bcast (broadening, ionode_id )
   CALL mp_bcast (real_space, ionode_id )
   CALL mp_bcast (real_space_debug, ionode_id )
-  CALL mp_bcast (tmp_dir, ionode_id )
   CALL mp_bcast (tqr, ionode_id )
   CALL mp_bcast (test_case_no, ionode_id )
   CALL mp_bcast (omeg, ionode_id )

@@ -1528,11 +1528,10 @@ SUBROUTINE iosys()
   CALL verify_tmpdir( tmp_dir )
   !
   IF ( .not. trim( wfcdir ) == 'undefined' ) THEN
-     !
      wfc_dir = trimcheck ( wfcdir )
-     !
      CALL verify_tmpdir( wfc_dir )
-     !
+  ELSE
+     wfc_dir = tmp_dir
   ENDIF
   !
   CALL restart_from_file()

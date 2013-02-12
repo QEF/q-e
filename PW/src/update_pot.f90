@@ -62,7 +62,7 @@ SUBROUTINE update_pot()
   !
   USE kinds,         ONLY : DP
   USE control_flags, ONLY : pot_order, wfc_order, history, alpha0, beta0
-  USE io_files,      ONLY : prefix, iunupdate, wfc_dir, tmp_dir, nd_nmbr, seqopn
+  USE io_files,      ONLY : prefix, iunupdate, tmp_dir, wfc_dir, nd_nmbr, seqopn
   USE io_global,     ONLY : ionode, ionode_id
   USE cell_base,     ONLY : bg
   USE ions_base,     ONLY : nat, tau, nsp, ityp
@@ -76,7 +76,6 @@ SUBROUTINE update_pot()
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
   INTEGER               :: rho_extr, wfc_extr
   LOGICAL               :: exists
-  CHARACTER (LEN=256)   :: tmp_dir_saved
   !
   !
   CALL start_clock( 'update_pot' )
@@ -119,9 +118,6 @@ SUBROUTINE update_pot()
   CALL mp_bcast( beta0,  ionode_id, intra_image_comm )
   CALL mp_bcast( tauold, ionode_id, intra_image_comm )
   !
-  tmp_dir_saved = tmp_dir
-  IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
-  !
   IF ( wfc_order > 0 ) THEN
      !
      ! ... determines the maximum effective order of the extrapolation on the
@@ -131,14 +127,14 @@ SUBROUTINE update_pot()
         !
         wfc_extr = MIN( 1, history, wfc_order )
         !
-        INQUIRE( FILE = TRIM( tmp_dir ) // &
+        INQUIRE( FILE = TRIM( wfc_dir ) // &
             & TRIM( prefix ) // '.oldwfc' // nd_nmbr, EXIST = exists )
         !
         IF ( exists ) THEN
            !
            wfc_extr = MIN( 2, history, wfc_order  )
            !
-           INQUIRE( FILE = TRIM( tmp_dir ) // &
+           INQUIRE( FILE = TRIM( wfc_dir ) // &
                & TRIM( prefix ) // '.old2wfc' // nd_nmbr , EXIST = exists )
            !
            IF ( exists ) wfc_extr = MIN( 3, history, wfc_order )
@@ -166,7 +162,6 @@ SUBROUTINE update_pot()
   END IF
   !
   DEALLOCATE( tauold )
-  tmp_dir = tmp_dir_saved
   !
   ! ... determines the maximum effective order of the extrapolation on the
   ! ... basis of the files that are really available (for the charge density)
