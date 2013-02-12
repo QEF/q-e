@@ -154,7 +154,7 @@ MODULE cp_restart
       INTEGER               :: nbnd_tot
       INTEGER               :: natomwfc, nbnd_
       REAL(DP), ALLOCATABLE :: mrepl(:,:)
-      CHARACTER(LEN=256)    :: tmp_dir_save
+      CHARACTER(LEN=256)    :: wfc_dir
       LOGICAL               :: exst
       INTEGER               :: inlc
       INTEGER               :: ntask_groups
@@ -915,20 +915,18 @@ MODULE cp_restart
       !
       IF( .NOT. twfcollect ) THEN
          !
-         tmp_dir_save = tmp_dir
-         tmp_dir = TRIM( restart_dir( tmp_dir, ndw ) ) // '/'
-         tmp_dir = TRIM( kpoint_dir( tmp_dir, 1 ) ) // '/'
+         wfc_dir = TRIM( restart_dir( tmp_dir, ndw ) ) // '/'
+         wfc_dir = TRIM( kpoint_dir( wfc_dir, 1 ) ) // '/'
          !
          iunwfc = 10
          nwordwfc = SIZE( c02 )
          !
-         CALL diropn ( iunwfc, 'wfc', 2*nwordwfc, exst )
+         CALL diropn ( iunwfc, 'wfc', 2*nwordwfc, exst, wfc_dir )
 
          CALL davcio ( c02, 2*nwordwfc, iunwfc, 1, +1 )  ! save wave funct
          CALL davcio ( cm2, 2*nwordwfc, iunwfc, 2, +1 )  ! save wave funct
          !
          CLOSE( UNIT = iunwfc, STATUS = 'KEEP' )
-         tmp_dir = tmp_dir_save
          !
       END IF
 
@@ -1068,7 +1066,7 @@ MODULE cp_restart
       REAL(DP)              :: s1, s0, cclock
       REAL(DP), ALLOCATABLE :: mrepl(:,:) 
       LOGICAL               :: exst, exist_wfc 
-      CHARACTER(LEN=256)    :: tmp_dir_save
+      CHARACTER(LEN=256)    :: wfc_dir
       INTEGER               :: io_bgrp_id
       !
       ! ... look for an empty unit
@@ -1818,14 +1816,13 @@ MODULE cp_restart
       !
       IF( .NOT. exist_wfc ) THEN
          !
-         tmp_dir_save = tmp_dir
-         tmp_dir = TRIM( restart_dir( tmp_dir, ndr ) ) // '/'
-         tmp_dir = TRIM( kpoint_dir( tmp_dir, 1 ) ) // '/'
+         wfc_dir = TRIM( restart_dir( tmp_dir, ndr ) ) // '/'
+         wfc_dir = TRIM( kpoint_dir( wfc_dir, 1 ) ) // '/'
          !
          iunwfc = 10
          nwordwfc = SIZE( c02 )
          !
-         CALL diropn ( iunwfc, 'wfc', 2*nwordwfc, exst )
+         CALL diropn ( iunwfc, 'wfc', 2*nwordwfc, exst, wfc_dir )
   
          IF ( exst ) THEN
             CALL davcio ( c02, 2*nwordwfc, iunwfc, 1, -1 )  ! read wave funct
@@ -1835,8 +1832,6 @@ MODULE cp_restart
             CLOSE( UNIT = iunwfc, STATUS = 'DELETE' )
             CALL errore( ' readfile ' , ' no wave function found! ' , 1 )
          END IF
-
-         tmp_dir = tmp_dir_save
          !
       END IF
       !
