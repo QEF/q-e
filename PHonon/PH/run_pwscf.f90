@@ -15,7 +15,7 @@ SUBROUTINE run_pwscf(do_band, iq)
   !
   USE control_flags,   ONLY : conv_ions, twfcollect
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
-  USE io_files,        ONLY : prefix, tmp_dir, seqopn
+  USE io_files,        ONLY : prefix, tmp_dir, wfc_dir, seqopn
   USE lsda_mod,        ONLY : nspin
   USE control_flags,   ONLY : restart
   USE fft_base,        ONLY : dffts
@@ -44,6 +44,7 @@ SUBROUTINE run_pwscf(do_band, iq)
   IF (done_bands(iq)) THEN
      CALL clean_pw( .TRUE. )
      CALL close_files(.true.)
+     wfc_dir=tmp_dir_phq
      tmp_dir=tmp_dir_phq
      CALL read_file()
 !
@@ -61,6 +62,7 @@ SUBROUTINE run_pwscf(do_band, iq)
   !
   ! From now on, work only on the _ph virtual directory
   !
+  wfc_dir=tmp_dir_phq
   tmp_dir=tmp_dir_phq
   ! ... Setting the values for the nscf run
   !
