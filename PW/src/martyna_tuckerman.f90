@@ -129,7 +129,7 @@ CONTAINS
   USE gvect,         ONLY : ngm, gg, gstart_ => gstart, nl, nlm, ecutrho
   USE cell_base,     ONLY : at, alat, tpiba2, omega
 
-  INTEGER :: index0, index, ir, i,j,k, ig, nt
+  INTEGER :: idx0, idx, ir, i,j,k, ig, nt
   REAL(DP) :: r(3), rws, upperbound, rws2
   COMPLEX (DP), ALLOCATABLE :: aux(:)
   REAL(DP), EXTERNAL :: qe_erfc
@@ -163,25 +163,24 @@ CONTAINS
   !
   ! Index for parallel summation
   !
-  index0 = 0
 #if defined (__MPI)
-  DO i = 1, me_bgrp
-     index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
-  END DO
+  idx0 = dfftp%nr1x*dfftp%nr2x*dfftp%ipp(me_bgrp+1)
+#else
+  idx0 = 0 
 #endif
   !
   ALLOCATE (aux(dfftp%nnr))
   aux = CMPLX(0._dp,0._dp)
-  DO ir = 1, dfftp%nnr
+  DO ir = 1, dfftp%nr1x*dfftp%nr2x * dfftp%npl
      !
-     ! ... three dimensional indexes
+     ! ... three dimensional indices
      !
-     index = index0 + ir - 1
-     k     = index / (dfftp%nr1x*dfftp%nr2x)
-     index = index - (dfftp%nr1x*dfftp%nr2x)*k
-     j     = index / dfftp%nr1x
-     index = index - dfftp%nr1x*j
-     i     = index
+     idx = idx0 + ir - 1
+     k   = idx / (dfftp%nr1x*dfftp%nr2x)
+     idx = idx - (dfftp%nr1x*dfftp%nr2x)*k
+     j   = idx / dfftp%nr1x
+     idx = idx - dfftp%nr1x*j
+     i   = idx
 
      r(:) = ( at(:,1)/dfftp%nr1*i + at(:,2)/dfftp%nr2*j + at(:,3)/dfftp%nr3*k )
 

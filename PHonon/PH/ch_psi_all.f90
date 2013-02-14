@@ -204,9 +204,8 @@ CONTAINS
   SUBROUTINE ch_psi_all_gamma()
     
     USE becmod, ONLY : becp,  calbec
-    USE realus, ONLY : real_space, fft_orbital_gamma, &
-         bfft_orbital_gamma, calbec_rs_gamma, &
-         s_psir_gamma,real_space_debug
+    USE realus, ONLY : real_space, real_space_debug, fft_orbital_gamma, &
+         bfft_orbital_gamma, calbec_rs_gamma,  s_psir_gamma
     
     IMPLICIT NONE
     
