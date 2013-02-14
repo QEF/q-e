@@ -310,7 +310,7 @@ MODULE realus
       ! ... now we find the points
       !
 #if defined (__MPI)
-      idx0 = dfftp%nr1x*dfftp%nr2x * sum ( dfftp%npp(1:me_bgrp) )
+      idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_bgrp+1)
 #else
       idx0 = 0
 #endif
@@ -331,7 +331,7 @@ MODULE realus
          tau_ia(2) = tau(2,ia)
          tau_ia(3) = tau(3,ia)
          !
-         DO ir = 1, dfftp%nnr
+         DO ir = 1, dfftp%nr1x*dfftp%nr2x * dfftp%npl
             !
             ! ... three dimensional indices (i,j,k)
             !
@@ -760,7 +760,7 @@ MODULE realus
       !
       ! The beta functions are treated on smooth grid
 #if defined (__MPI)
-      index0 = dffts%nr1x*dffts%nr2x * sum ( dffts%npp(1:me_bgrp) )
+      index0 = dffts%nr1x*dffts%nr2x * dffts%ipp(me_bgrp+1)
 #else
       index0 = 0
 #endif
@@ -779,7 +779,7 @@ MODULE realus
          tau_ia(2) = tau(2,ia)
          tau_ia(3) = tau(3,ia)
          !
-         DO ir = 1, dffts%nnr
+         DO ir = 1, dffts%nr1x*dffts%nr2x * dffts%npl
             !
             ! ... three dimensional indexes
             !
