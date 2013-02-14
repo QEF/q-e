@@ -53,7 +53,7 @@ MODULE realus_scatt
    ALLOCATE( orig_or_copy( roughestimate, nat ) )
 
 #if defined (__MPI)
-   idx0 = dfftp%nr1x*dfftp%nr2x * SUM ( dfftp%npp(1:me_pool) )
+   idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_bgrp+1)
 #else
    idx0 = 0
 #endif
@@ -66,7 +66,7 @@ MODULE realus_scatt
        IF ( .NOT. upf(ityp(ia))%tvanp ) CYCLE
        mbia = 0
        boxradsq_ia = boxrad(ityp(ia))**2
-       DO ir = 1, dfftp%nnr
+       DO ir = 1, dfftp%nr1x*dfftp%nr2x * dfftp%npl
          idx   = idx0 + ir - 1
          k     = idx / (dfftp%nr1x*dfftp%nr2x)
          idx   = idx - (dfftp%nr1x*dfftp%nr2x)*k

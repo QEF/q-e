@@ -102,11 +102,11 @@ SUBROUTINE PAW_make_ae_charge(rho)
          DEALLOCATE(d1y, d2y)
          !
 #if defined (__MPI)
-         idx0 =  dfftp%nr1x* dfftp%nr2x * sum ( dfftp%npp(1:me_pool) )
+         idx0 =  dfftp%nr1x* dfftp%nr2x * dfftp%ipp(me_pool+1)
 #else
          idx0 = 0
 #endif
-         rsp_point : DO ir = 1,  dfftp%nnr
+         rsp_point : DO ir = 1, dfftp%nr1x*dfftp%nr2x * dfftp%npl
             !
             ! three dimensional indices (i,j,k)
             idx   = idx0 + ir - 1

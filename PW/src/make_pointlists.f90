@@ -47,13 +47,12 @@ SUBROUTINE make_pointlists
   ! In the parallel case, find the index-offset to account for the planes
   ! treated by other procs
 
-  idx0 = 0
-#ifdef __MPI
-  DO indproc=1,me_bgrp
-     idx0 = idx0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(indproc)
-  ENDDO
-
+#if defined (__MPI)
+      idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_bgrp+1)
+#else
+      idx0 = 0
 #endif
+
   ! Bring all the atomic positions on the first unit cell
 
   tau0=tau
@@ -125,9 +124,9 @@ SUBROUTINE make_pointlists
 
   DO iat = 1,nat
      nt=ityp(iat)
-     DO ir=1,dfftp%nnr
-        idx = idx0 + ir - 1
+     DO ir=1,dfftp%nr1x*dfftp%nr2x * dfftp%npl
 
+        idx = idx0 + ir - 1
         k0  = idx/(dfftp%nr1x*dfftp%nr2x)
         idx = idx - (dfftp%nr1x*dfftp%nr2x) * k0
         j0  = idx / dfftp%nr1x
