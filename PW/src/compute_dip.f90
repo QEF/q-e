@@ -120,7 +120,7 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   ! Procedure for parallel summation
   !
 #if defined (__MPI)
-      idx0 = dffts%nr1x*dffts%nr2x * dffts%ipp(me_bgrp+1)
+      idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_bgrp+1)
 #else
       idx0 = 0
 #endif
