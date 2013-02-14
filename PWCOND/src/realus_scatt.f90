@@ -53,7 +53,7 @@ MODULE realus_scatt
    ALLOCATE( orig_or_copy( roughestimate, nat ) )
 
 #if defined (__MPI)
-   idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_bgrp+1)
+   idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_pool+1)
 #else
    idx0 = 0
 #endif
