@@ -629,7 +629,7 @@ MODULE realus
       INTEGER,  ALLOCATABLE :: buffpoints(:,:)
       REAL(DP), ALLOCATABLE :: buffdist(:,:)
       REAL(DP)              :: distsq, qtot_int, first, second
-      INTEGER               :: index0, index, indproc, ir
+      INTEGER               :: idx0, idx, indproc, ir
       INTEGER               :: i, j, k, i0, j0, k0, ipol, lm, nb, mb, ijv, ilast
       REAL(DP)              :: posi(3)
       REAL(DP), ALLOCATABLE :: rl(:,:), rl2(:)
@@ -705,9 +705,9 @@ MODULE realus
       !
       ! The beta functions are treated on smooth grid
 #if defined (__MPI)
-      index0 = dffts%nr1x*dffts%nr2x * dffts%ipp(me_bgrp+1)
+      idx0 = dffts%nr1x*dffts%nr2x * dffts%ipp(me_bgrp+1)
 #else
-      index0 = 0
+      idx0 = 0
 #endif
       !
       inv_nr1s = 1.D0 / dble( dffts%nr1 )
@@ -728,12 +728,12 @@ MODULE realus
             !
             ! ... three dimensional indexes
             !
-            index = index0 + ir - 1
-            k     = index / (dffts%nr1x*dffts%nr2x)
-            index = index - (dffts%nr1x*dffts%nr2x)*k
-            j     = index / dffts%nr1x
-            index = index - dffts%nr1x*j
-            i     = index
+            idx = idx0 + ir - 1
+            k   = idx / (dffts%nr1x*dffts%nr2x)
+            idx = idx - (dffts%nr1x*dffts%nr2x)*k
+            j   = idx / dffts%nr1x
+            idx = idx - dffts%nr1x*j
+            i   = idx
             !
             DO ipol = 1, 3
                posi(ipol) = dble( i )*inv_nr1s*at(ipol,1) + &

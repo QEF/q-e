@@ -93,7 +93,7 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   !
   REAL(DP), ALLOCATABLE :: rho_all(:), aux(:)
   REAL(DP) :: rhoir,bmod
-  INTEGER  :: i, k, j, ip, ir, index, index0, na
+  INTEGER  :: i, k, j, ip, ir, idx, idx0, na
   REAL(DP) :: sawarg, tvectb
 
   !--------------------------
@@ -119,31 +119,24 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   !
   ! Procedure for parallel summation
   !
-
-  index0 = 0
-  !
 #if defined (__MPI)
-  !
-  DO i = 1, me_bgrp
-     index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
-  END DO
-  !
+      idx0 = dffts%nr1x*dffts%nr2x * dffts%ipp(me_bgrp+1)
+#else
+      idx0 = 0
 #endif
-
   !
   ! Loop in the charge array
   !
-  DO ir = 1, dfftp%nnr
+  DO ir = 1, dfftp%nr1x*dfftp%nr2x * dfftp%npl
      !
-     ! ... three dimensional indexes
+     ! ... three dimensional indices
      !
-     index = index0 + ir - 1
-     k     = index / (dfftp%nr1x*dfftp%nr2x)
-     index = index - (dfftp%nr1x*dfftp%nr2x)*k
-     j     = index / dfftp%nr1x
-     index = index - dfftp%nr1x*j
-     i     = index
-     
+     idx = idx0 + ir - 1
+     k   = idx / (dfftp%nr1x*dfftp%nr2x)
+     idx = idx - (dfftp%nr1x*dfftp%nr2x)*k
+     j   = idx / dfftp%nr1x
+     idx = idx - dfftp%nr1x*j
+     i   = idx
      !
      ! Define the argument for the saw function     
      !
