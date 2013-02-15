@@ -90,7 +90,7 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
      if (w2 (nu_i) < 0.d0) w1 = - w1
      WRITE( stdout, 9010) nu_i, w1 * RY_TO_THZ, w1 * RY_TO_CMM1
      if (iudyn /= 0) write (iudyn, 9010) nu_i, w1 * RY_TO_THZ, w1 * RY_TO_CMM1
-9010 format   (5x,'omega(',i5,') =',f15.6,' [THz] =',f15.6,' [cm-1]')
+9010 format   (5x,'freq (',i5,') =',f15.6,' [THz] =',f15.6,' [cm-1]')
      !
      ! write displacements onto matrix dyn
      !

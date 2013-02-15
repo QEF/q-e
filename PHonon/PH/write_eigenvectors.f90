@@ -55,7 +55,7 @@ subroutine write_eigenvectors (nat,ntyp,amass,ityp,q,w2,z,iout)
   !
   return
   !
-9010 format(5x,'omega(',i5,') =',f15.6,' [THz] =',f15.6,' [cm-1]')
+9010 format(5x,'freq (',i5,') =',f15.6,' [THz] =',f15.6,' [cm-1]')
 9020 format (1x,'(',3 (f10.6,1x,f10.6,3x),')')
   !
 end subroutine write_eigenvectors
@@ -105,7 +105,7 @@ subroutine writemodes (nat,q,w2,z,iout)
   !
   return
   !
-9010 format(5x,'omega(',i5,') =',f15.6,' [THz] =',f15.6,' [cm-1]')
+9010 format(5x,'freq (',i5,') =',f15.6,' [THz] =',f15.6,' [cm-1]')
 9020 format (1x,'(',3 (f10.6,1x,f10.6,3x),')')
   !
 end subroutine writemodes

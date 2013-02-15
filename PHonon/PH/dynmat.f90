@@ -1114,7 +1114,7 @@ subroutine polar_mode_permittivity( nat, eps0, z, zstar, w2, omega, lplasma)
 
   IF (lplasma) THEN
      WRITE(6,*)
-     WRITE(6,'("# mode    omega          Z~*_x         Z~*_y         Z~*_z      &
+     WRITE(6,'("# mode    freq           Z~*_x         Z~*_y         Z~*_z      &
                &   W_eff         deps")')
      WRITE(6,'("#        [cm^-1]                  [e*Bohr/sqrt(2)]              &
                &  [cm^-1]     [C^2/J*m^2]")')
