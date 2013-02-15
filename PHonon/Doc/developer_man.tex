@@ -817,10 +817,12 @@ The structure of the file \texttt{dynmat.\#iq.\#irr.xml} is:
 
 \begin{verbatim}
 <Root>
-  <PARTIAL_MATRIX>
+  <PM_HEADER>
     <DONE_IRR>
      done_irr(irr)
     </DONE_IRR>
+  </PM_HEADER>
+  <PARTIAL_MATRIX>
     <PARTIAL_DYN>
      <dynmat_rec>
     </PARTIAL_DYN>
@@ -832,10 +834,12 @@ The structure of the file \texttt{elph.\#iq.\#irr.xml} is:
 
 \begin{verbatim}
 <Root>
-  <PARTIAL_EL_PHON>
+  <EL_PHON_HEADER>
     <DONE_ELPH type="logical" size="1">
      <done_elph_iq(irr,iq)>
     </DONE_ELPH>
+  </EL_PHON_HEADER>
+  <PARTIAL_EL_PHON>
     <NUMBER_OF_K>
       <nksqtot> 
     </NUMBER_OF_K>
@@ -864,6 +868,22 @@ The structure of the file \texttt{elph.\#iq.\#irr.xml} is:
 
 \begin{itemize}
 \item
+Original idea and first implementation: 
+S. Baroni, P. Giannozzi, and A. Testa, 
+``Green’s-function approach to linear response in solids''
+Phys. Rev. Lett.  {\bf 58}, 1861 (1987).
+P. Giannozzi, S. de Gironcoli, P. Pavone, and S. Baroni,
+``Ab initio calculation of phonon dispersions in semiconductors''
+Phys. Rev. B {\bf 43}, 7231 (1991).
+
+\item
+Phonon in metals: 
+S. de Gironcoli, 
+``Lattice dynamics of metals from density-functional perturbation theory''
+Phys. Rev. B {\bf 51}, 6773 (1995).
+
+
+\item
 General overview: 
 S. Baroni, S. de Gironcoli, A. Dal Corso, and P. Giannozzi
 ``Phonons and related properties of extended systems from density
@@ -872,6 +892,7 @@ functional perturbation theory'', Rev. Mod. Phys. {\bf 73}, 515 (2001).
 \item
 NC, Raman tensor
 Michele Lazzeri and Francesco Mauri,
+``High-order density-matrix perturbation theory''
 Phys. Rev. B {\bf 68}, 161101 (2003).
 
 \item
