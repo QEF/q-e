@@ -240,6 +240,11 @@ pw.x : $(PWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
 	   $(PWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin; ln -fs ../PW/src/$@ . )
 
+manypw.x : manypw.o libpw.a $(LIBOBJS) $(QEMODS)
+	$(LD) $(LDFLAGS) -o $@ \
+	manypw.o libpw.a $(QEMODS) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin; ln -fs ../PW/src/$@ . )
+
 libpw.a : $(PWLIBS) 
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@

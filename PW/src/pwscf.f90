@@ -153,8 +153,6 @@ PROGRAM pwscf
   CALL punch('all')
   CALL stop_run( conv_ions )
   !
-  !  END IF      
-  !
   STOP
   !
 9010 FORMAT( /,5X,'Current dimensions of program PWSCF are:', &
