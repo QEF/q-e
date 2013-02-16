@@ -382,7 +382,6 @@ CONTAINS
      ENDDO
      
      retval = file_md5( istr, ilen, getter )
-
      DO i = 1,32
         md5(i:i) = char(  getter(i) )
      ENDDO

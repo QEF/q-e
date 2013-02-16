@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2009 Quantum ESPRESSO group
+! Copyright (C) 2002-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,10 +23,10 @@
     IF ( l == 0 ) CALL errore( 'trimcheck', ' input name empty', 1)
     !
     IF ( directory(l:l) == '/' ) THEN
-       trimcheck = TRIM ( directory)
+       trimcheck = TRIM ( ADJUSTL(directory) )
     ELSE
        IF ( l < LEN( trimcheck ) ) THEN
-          trimcheck = TRIM ( directory ) // '/'
+          trimcheck = TRIM ( ADJUSTL(directory) ) // '/'
        ELSE
           CALL errore(  'trimcheck', ' input name too long', l )
        END IF
