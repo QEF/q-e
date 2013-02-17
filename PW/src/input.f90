@@ -104,7 +104,6 @@ SUBROUTINE iosys()
 #ifdef __ENVIRON
   USE constants,    ONLY : rydberg_si, bohr_radius_si, amu_si, k_boltzmann_ry
   USE environ_base, ONLY : do_environ_ => do_environ,                          &
-12345678901234567890123456789012345678901234567890123456789012345678901234567890
                            verbose_ => verbose,                                &
                            environ_thr_ => environ_thr,                        &
                            stype_ => stype,                                    &
