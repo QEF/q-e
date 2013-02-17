@@ -14,29 +14,29 @@ PROGRAM manypw
   ! ... or whatever is appropriate for your parallel environment
   ! ... Starts Ni pw.x instances each running on Np/Ni processors
   ! ... Each pw.x instances
-  ! ... * reads input data from from pw_N.in, N=0,..,,Ni-1
+  ! ... * reads input data from from pw_N.in, N=0,..,,Ni-1 if no input
+  ! ...   file is specified via the -i option; from "input_file"_N
+  ! ...   if command-line options -i "input_file" is specified
   ! ... * saves temporary and final data to "outdir"_N/ directory
   ! ...   (or to tmp_N/ if outdir='./')
-  ! ... * writes output to pw_N.out in the current directory
+  ! ... * writes output to pw_N.out in the current directory if no input
+  ! ...   file is specified via the -i option; to "input_file"_N.out
+  ! ...   if command-line options -i "input_file" is specified
   !
   USE check_stop,        ONLY : check_stop_init
   USE environment,       ONLY : environment_start, environment_end
   USE input_parameters,  ONLY : outdir
   USE io_global,         ONLY : ionode, ionode_id, stdout
-  USE mp_global,         ONLY : mp_startup, &
-                                nimage, my_image_id, intra_image_comm
-  USE mp,                ONLY : mp_bcast, mp_sum
-  USE read_cards_module,     ONLY : read_cards
-  USE read_namelists_module, ONLY : read_namelists
+  USE mp_global,         ONLY : mp_startup, nimage, my_image_id
+  USE read_input,        ONLY : read_input_file
+  USE command_line_options, ONLY: input_file_
   !
   IMPLICIT NONE
   !
-  INTEGER :: unit_tmp, ios, i
+  INTEGER :: i
   LOGICAL :: opnd
-  CHARACTER(len=10) :: filename
-  !
-  INTEGER, EXTERNAL :: find_free_unit
-  LOGICAL, EXTERNAL :: test_input_xml
+  CHARACTER(LEN=256) :: filename
+  CHARACTER(LEN=6) :: image_label
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
   !
@@ -45,23 +45,15 @@ PROGRAM manypw
 #endif
   CALL environment_start ( 'MANYPW' )
   !
-  ! ... Here open image-specific input files
+  ! ... Image-specific input files
   !
-  unit_tmp = find_free_unit () 
-  IF ( ionode ) THEN
-     filename = 'pw_' // TRIM(int_to_char(my_image_id))  // '.in'
-     OPEN (unit = unit_tmp, FILE=filename, STATUS='old', iostat=ios)
+  image_label = int_to_char(my_image_id)
+  IF ( TRIM (input_file_) == ' ') THEN
+     filename = 'pw_' // TRIM(image_label)  // '.in'
+  ELSE
+     filename = TRIM(input_file_) // '_' // TRIM(image_label) 
   END IF
-  CALL mp_bcast (ios, ionode_id, intra_image_comm )
-  CALL mp_sum (ios)
-  IF ( ios /= 0 ) CALL errore &
-     ( 'manypw', 'error opening input file '//TRIM(filename),1)
-  !
-  ! ... Here read input data from input files
-  !
-  CALL read_namelists( prog='PW', unit=unit_tmp )
-  CALL read_cards( prog='PW', unit=unit_tmp )
-  IF ( ionode ) CLOSE(UNIT=unit_tmp)
+  CALL read_input_file ( prog='PW', input_file_=filename )
   !
   ! ... Set image-specific value for "outdir", starting from input value
   ! ... i = position of last character different from '/' and '.'
@@ -70,9 +62,9 @@ PROGRAM manypw
      IF ( outdir(i:i) /= '/' .AND. outdir(i:i) /= '.' ) EXIT
   END DO
   IF ( i == 0 ) THEN
-     outdir = 'tmp_' // trim(int_to_char(my_image_id)) // '/'
+     outdir = 'tmp_' // trim(image_label) // '/'
   ELSE
-     outdir = outdir(1:i) // '_' // trim(int_to_char(my_image_id)) // '/'
+     outdir = outdir(1:i) // '_' // trim(image_label) // '/'
   END IF
   !
   ! ... Here copy data read from input to internal modules
@@ -85,7 +77,11 @@ PROGRAM manypw
      !
      INQUIRE ( UNIT = stdout, OPENED = opnd )
      IF (opnd) CLOSE ( UNIT = stdout )
-     filename = 'pw_' // TRIM(int_to_char(my_image_id))  // '.out'
+     IF ( TRIM (input_file_) == ' ') THEN
+        filename = 'pw_' // TRIM(image_label)  // '.out'
+     ELSE
+        filename = TRIM(input_file_) // '_' // TRIM(image_label) // '.out'
+     END IF
      OPEN( UNIT = stdout, FILE = TRIM(filename), STATUS = 'UNKNOWN' )
      !
   END IF
