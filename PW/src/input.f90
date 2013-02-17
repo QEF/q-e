@@ -10,15 +10,10 @@
 SUBROUTINE iosys()
   !-----------------------------------------------------------------------------
   !
-  ! ...  this subroutine reads input data from standard input ( unit 5 )
-  ! ...  Use "-input filename" to read input from file "filename":
-  ! ...  may be useful if you have trouble reading from standard input
-  ! ...  ---------------------------------------------------------------
-  !
-  ! ...  access the modules renaming the variables that have the same name
-  ! ...  as the input parameters, this is required in order to use a code
-  ! ...  independent input parser
-  !
+  ! ...  Copy data read from input file (in subroutine "read_input_file") and
+  ! ...  stored in modules input_parameters into internal modules
+  ! ...  Note that many variables in internal modules, having the same name as
+  ! ...  those in input_parameters, are locally renamed by adding a "_"
   !
   USE kinds,         ONLY : DP
   USE uspp,          ONLY : okvan
@@ -108,31 +103,32 @@ SUBROUTINE iosys()
   USE martyna_tuckerman, ONLY: do_comp_mt
 #ifdef __ENVIRON
   USE constants,    ONLY : rydberg_si, bohr_radius_si, amu_si, k_boltzmann_ry
-  USE environ_base, ONLY : do_environ_ => do_environ,                           &
-                           verbose_ => verbose,                                 &
-                           environ_thr_ => environ_thr,                         &
-                           stype_ => stype,                                     &
-                           rhomax_ => rhomax,                                   &
-                           rhomin_ => rhomin,                                   &
-                           tbeta_ => tbeta,                                     &
-                           env_static_permittivity_ => env_static_permittivity, &
-                           eps_mode_ => eps_mode,                               &
-                           solvationrad_ => solvationrad,                       &
-                           atomicspread_ => atomicspread,                       &
-                           add_jellium_ => add_jellium,                         &
-                           ifdtype_ => ifdtype,                                 &
-                           nfdpoint_ => nfdpoint,                               &
-                           mixtype_ => mixtype,                                 &
-                           ndiis_ => ndiis,                                     &
-                           mixrhopol_ => mixrhopol,                             &
-                           tolrhopol_ => tolrhopol,                             &
-                           env_surface_tension_ => env_surface_tension,         &
-                           delta_ => delta,                                     &
-                           env_pressure_ => env_pressure,                       &
-                           env_periodicity, slab_axis,                          &
-                           env_ioncc_concentration_ => env_ioncc_concentration, &
-                           zion_ => zion,                                       &
-                           rhopb_ => rhopb,                                     &
+  USE environ_base, ONLY : do_environ_ => do_environ,                          &
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+                           verbose_ => verbose,                                &
+                           environ_thr_ => environ_thr,                        &
+                           stype_ => stype,                                    &
+                           rhomax_ => rhomax,                                  &
+                           rhomin_ => rhomin,                                  &
+                           tbeta_ => tbeta,                                    &
+                           env_static_permittivity_ => env_static_permittivity,&
+                           eps_mode_ => eps_mode,                              &
+                           solvationrad_ => solvationrad,                      &
+                           atomicspread_ => atomicspread,                      &
+                           add_jellium_ => add_jellium,                        &
+                           ifdtype_ => ifdtype,                                &
+                           nfdpoint_ => nfdpoint,                              &
+                           mixtype_ => mixtype,                                &
+                           ndiis_ => ndiis,                                    &
+                           mixrhopol_ => mixrhopol,                            &
+                           tolrhopol_ => tolrhopol,                            &
+                           env_surface_tension_ => env_surface_tension,        &
+                           delta_ => delta,                                    &
+                           env_pressure_ => env_pressure,                      &
+                           env_periodicity, slab_axis,                         &
+                           env_ioncc_concentration_ => env_ioncc_concentration,&
+                           zion_ => zion,                                      &
+                           rhopb_ => rhopb,                                    &
                            solvent_temperature_ => solvent_temperature
 #endif
   !
@@ -1091,8 +1087,6 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-  tmp_dir = trimcheck ( outdir )
-  !
   IF ( lberry .OR. lelfield ) THEN
      IF ( npool > 1 ) CALL errore( 'iosys', &
           'Berry Phase/electric fields not implemented with pools', 1 )
@@ -1422,6 +1416,8 @@ SUBROUTINE iosys()
   CALL init_start_k ( nk1, nk2, nk3, k1, k2, k3, k_points, nkstot, xk, wk )
   gamma_only = ( k_points == 'gamma' )
   !
+  IF ( real_space .AND. .NOT. gamma_only ) &
+     CALL errore ('iosys', 'Real space only with Gamma point', 1)
   IF ( lelfield .AND. gamma_only ) &
       CALL errore( 'iosys', 'electric fields not available for k=0 only', 1 )
   !
@@ -1519,12 +1515,18 @@ SUBROUTINE iosys()
      CALL init_constraint( nat, tau, ityp, alat )
   END IF
   !
+  ! ... Files
+  !
+  input_drho  = ' '
+  output_drho = ' '
+  !
   ! ... read atomic positions and unit cell from data file
   ! ... must be done before "verify_tmpdir" because the latter
   ! ... removes the data file in a run from scratch
   !
   IF ( startingconfig == 'file' ) CALL read_config_from_file()
   !
+  tmp_dir = trimcheck ( outdir )
   CALL verify_tmpdir( tmp_dir )
   !
   IF ( .not. trim( wfcdir ) == 'undefined' ) THEN
@@ -1536,18 +1538,10 @@ SUBROUTINE iosys()
   !
   CALL restart_from_file()
   !
-  ! ... Files
-  !
-  input_drho  = ' '
-  output_drho = ' '
-  !
-  IF (real_space ) THEN
-     IF ( gamma_only ) THEN
-        WRITE( stdout, '(5x,"Real space treatment of Beta functions, &
-         &V.1 (BE SURE TO CHECK MANUAL!)",/)' )
-     ELSE
-        CALL errore ('iosys', 'Real space only with Gamma point', 1)
-     END IF
+  IF ( real_space .AND. gamma_only ) THEN
+     ! FIXME: move to summary
+     WRITE( stdout, '(5x,"Real space treatment of Beta functions, &
+       & V.1 (BE SURE TO CHECK MANUAL!)",/)' )
   ENDIF
   !
   ! Deallocation of temp input arrays
