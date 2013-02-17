@@ -237,37 +237,34 @@ MODULE ph_restart
             !
             CALL iotk_write_dat(iunpun,"MINUS_Q_SYM",minus_q)
             !
-            IF (trans.or.zeu.or.elph) THEN
-              !
-               CALL iotk_write_dat(iunpun,"NUMBER_IRR_REP",nirr)
-              !
-               imode0=0
-               DO irr=1,nirr
-                  CALL iotk_write_begin( iunpun, "REPRESENTION"// &
-                                        TRIM( iotk_index( irr ) ) )
-                  CALL iotk_write_dat(iunpun,"NUMBER_OF_PERTURBATIONS",&
-                                         npert(irr))
-                  DO ipert=1,npert(irr)
-                     imode=imode0+ipert
-                     CALL iotk_write_begin( iunpun, "PERTURBATION"// &
-                                        TRIM( iotk_index( ipert ) ) )
-                     CALL iotk_write_dat(iunpun,"SYMMETRY_TYPE_CODE", &
-                                                         num_rap_mode(imode))
-
-                     CALL iotk_write_dat(iunpun,"SYMMETRY_TYPE",&
-                                         name_rap_mode(imode))
-                     CALL iotk_write_dat(iunpun,"DISPLACEMENT_PATTERN",&
-                                         u(:,imode))
-                     CALL iotk_write_end( iunpun, "PERTURBATION"// &
-                                        TRIM( iotk_index( ipert ) ) )
-                  ENDDO
-                  imode0=imode0+npert(irr)
-                  CALL iotk_write_end( iunpun, "REPRESENTION"// &
-                                        TRIM( iotk_index( irr ) ) )
-               ENDDO
-            ENDIF
+            CALL iotk_write_dat(iunpun,"NUMBER_IRR_REP",nirr)
             !
-             CALL iotk_write_end(iunpun, "IRREPS_INFO" )
+            imode0=0
+            DO irr=1,nirr
+               CALL iotk_write_begin( iunpun, "REPRESENTION"// &
+                                     TRIM( iotk_index( irr ) ) )
+               CALL iotk_write_dat(iunpun,"NUMBER_OF_PERTURBATIONS",&
+                                      npert(irr))
+               DO ipert=1,npert(irr)
+                  imode=imode0+ipert
+                  CALL iotk_write_begin( iunpun, "PERTURBATION"// &
+                                     TRIM( iotk_index( ipert ) ) )
+                  CALL iotk_write_dat(iunpun,"SYMMETRY_TYPE_CODE", &
+                                                      num_rap_mode(imode))
+
+                  CALL iotk_write_dat(iunpun,"SYMMETRY_TYPE",&
+                                       name_rap_mode(imode))
+                  CALL iotk_write_dat(iunpun,"DISPLACEMENT_PATTERN",&
+                                       u(:,imode))
+                  CALL iotk_write_end( iunpun, "PERTURBATION"// &
+                                     TRIM( iotk_index( ipert ) ) )
+               ENDDO
+               imode0=imode0+npert(irr)
+               CALL iotk_write_end( iunpun, "REPRESENTION"// &
+                                     TRIM( iotk_index( irr ) ) )
+            ENDDO
+            !
+            CALL iotk_write_end(iunpun, "IRREPS_INFO" )
             RETURN
          END SUBROUTINE write_modes
 
@@ -850,46 +847,42 @@ MODULE ph_restart
               'problems with current_iq', 1 )
 
     IF (ionode) THEN
-       IF (trans.or.zeu.or.elph) THEN
 
-          CALL iotk_scan_dat(iunpun, "QPOINT_GROUP_RANK", nsymq)
-          CALL iotk_scan_dat(iunpun, "MINUS_Q_SYM", minus_q)
-          CALL iotk_scan_dat(iunpun, "NUMBER_IRR_REP", nirr)
-          imode0=0
-          DO irr=1,nirr
-             CALL iotk_scan_begin( iunpun, "REPRESENTION"// &
-                                        TRIM( iotk_index( irr ) ) )
-             CALL iotk_scan_dat(iunpun,"NUMBER_OF_PERTURBATIONS", npert(irr))
-             DO ipert=1,npert(irr)
-                imode=imode0+ipert
-                CALL iotk_scan_begin( iunpun, "PERTURBATION"// &
-                                        TRIM( iotk_index( ipert ) ) )
-                CALL iotk_scan_dat(iunpun,"SYMMETRY_TYPE_CODE", &
-                                                           num_rap_mode(imode))
-                CALL iotk_scan_dat(iunpun,"SYMMETRY_TYPE", name_rap_mode(imode))
-                CALL iotk_scan_dat(iunpun,"DISPLACEMENT_PATTERN",u(:,imode))
-                CALL iotk_scan_end( iunpun, "PERTURBATION"// &
-                                        TRIM( iotk_index( ipert ) ) )
-             ENDDO
-             imode0=imode0+npert(irr)
-             CALL iotk_scan_end( iunpun, "REPRESENTION"// &
-                                        TRIM( iotk_index( irr ) ) )
+       CALL iotk_scan_dat(iunpun, "QPOINT_GROUP_RANK", nsymq)
+       CALL iotk_scan_dat(iunpun, "MINUS_Q_SYM", minus_q)
+       CALL iotk_scan_dat(iunpun, "NUMBER_IRR_REP", nirr)
+       imode0=0
+       DO irr=1,nirr
+          CALL iotk_scan_begin( iunpun, "REPRESENTION"// &
+                                     TRIM( iotk_index( irr ) ) )
+          CALL iotk_scan_dat(iunpun,"NUMBER_OF_PERTURBATIONS", npert(irr))
+          DO ipert=1,npert(irr)
+             imode=imode0+ipert
+             CALL iotk_scan_begin( iunpun, "PERTURBATION"// &
+                                     TRIM( iotk_index( ipert ) ) )
+             CALL iotk_scan_dat(iunpun,"SYMMETRY_TYPE_CODE", &
+                                                        num_rap_mode(imode))
+             CALL iotk_scan_dat(iunpun,"SYMMETRY_TYPE", name_rap_mode(imode))
+             CALL iotk_scan_dat(iunpun,"DISPLACEMENT_PATTERN",u(:,imode))
+             CALL iotk_scan_end( iunpun, "PERTURBATION"// &
+                                     TRIM( iotk_index( ipert ) ) )
           ENDDO
-       ENDIF
+          imode0=imode0+npert(irr)
+          CALL iotk_scan_end( iunpun, "REPRESENTION"// &
+                                        TRIM( iotk_index( irr ) ) )
+       ENDDO
        !
        CALL iotk_scan_end( iunpun, "IRREPS_INFO" )
        !
     ENDIF
 
-    IF (trans.or.zeu.or.elph) THEN
-       CALL mp_bcast( nirr,  ionode_id, intra_image_comm )
-       CALL mp_bcast( npert,  ionode_id, intra_image_comm )
-       CALL mp_bcast( nsymq,  ionode_id, intra_image_comm )
-       CALL mp_bcast( minus_q,  ionode_id, intra_image_comm )
-       CALL mp_bcast( u,  ionode_id, intra_image_comm )
-       CALL mp_bcast( name_rap_mode,  ionode_id, intra_image_comm )
-       CALL mp_bcast( num_rap_mode,  ionode_id, intra_image_comm )
-    ENDIF
+    CALL mp_bcast( nirr,  ionode_id, intra_image_comm )
+    CALL mp_bcast( npert,  ionode_id, intra_image_comm )
+    CALL mp_bcast( nsymq,  ionode_id, intra_image_comm )
+    CALL mp_bcast( minus_q,  ionode_id, intra_image_comm )
+    CALL mp_bcast( u,  ionode_id, intra_image_comm )
+    CALL mp_bcast( name_rap_mode,  ionode_id, intra_image_comm )
+    CALL mp_bcast( num_rap_mode,  ionode_id, intra_image_comm )
 
     RETURN
     END SUBROUTINE read_modes
