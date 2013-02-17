@@ -1537,14 +1537,6 @@ SUBROUTINE iosys()
   !
   CALL restart_from_file()
   !
-  IF ( real_space .AND. gamma_only ) THEN
-     ! FIXME: move to summary
-     WRITE( stdout, '(5x,"Real space treatment of Beta functions, &
-       & V.1 (BE SURE TO CHECK MANUAL!)",/)' )
-  ENDIF
-  !
-  ! Deallocation of temp input arrays
-  !
   CALL deallocate_input_parameters ()  
   !
   RETURN

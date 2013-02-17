@@ -36,7 +36,7 @@ SUBROUTINE summary()
                               nelec, nelup, neldw, two_fermi_energies
   USE ktetra,          ONLY : ltetra
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, lscf, &
-                              tr2, isolve, lmd, lbfgs, iverbosity
+                              tr2, isolve, lmd, lbfgs, iverbosity, tqr
   USE noncollin_module,ONLY : noncolin
   USE spin_orb,        ONLY : domag, lspinorb
   USE funct,           ONLY : write_dft_name
@@ -53,6 +53,7 @@ SUBROUTINE summary()
 #endif
   USE esm,             ONLY : do_comp_esm, esm_summary
   USE martyna_tuckerman,ONLY: do_comp_mt
+  USE realus,          ONLY : real_space
   !
   IMPLICIT NONE
   !
@@ -360,12 +361,10 @@ SUBROUTINE summary()
        &         ngmtot, dffts%nr1, dffts%nr2, dffts%nr3
   ENDIF
 
-! DCC
-!  IF (do_coarse .OR. do_mltgrid ) THEN
-!    WRITE( stdout, '(5x,"G cutoff =",f10.4,"  (", &
-!          &    i7," G-vectors)","  coarse grid: (",i3, &
-!          &    ",",i3,",",i3,")")') gcutmc, ngmc, mr1, mr2, mr3
-!  END IF
+  IF ( real_space ) WRITE( stdout, &
+       & '(5x,"Real space treatment of Beta functions,", &
+       &      " V.1 (BE SURE TO CHECK MANUAL!)")' )
+  IF ( tqr ) WRITE( stdout, '(5x,"Real space treatment of Q(r)")' )
 
   IF (tfixed_occ) THEN
      WRITE( stdout, '(/,5X,"Occupations read from input ")' ) 
@@ -378,7 +377,6 @@ SUBROUTINE summary()
         WRITE(stdout, '(/,(5X,8f9.4))') (f_inp(ibnd,1), ibnd=1,nbnd)
      END IF
   END IF
-
   !
   CALL flush_unit( stdout )
   !
