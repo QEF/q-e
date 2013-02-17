@@ -1547,7 +1547,7 @@ CONTAINS
                        vc = vc + fac(ig) * x2 * &
                             ABS( rhoc(exx_fft_r2g%nlt(ig)) - CONJG(rhoc(exx_fft_r2g%nltm(ig))) )**2
                     END DO
-                  ENDIF&
+                  ENDIF &
                   IF_ECUTFOCK
                   !
                   vc = vc * omega * 0.25d0 / nqs
