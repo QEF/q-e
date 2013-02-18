@@ -806,15 +806,10 @@ SUBROUTINE iosys()
   CASE( 'restart' )
      !
      restart = .true.
-     !
      IF ( trim( ion_positions ) == 'from_input' ) THEN
-        !
         startingconfig = 'input'
-        !
      ELSE
-        !
         startingconfig = 'file'
-        !
      ENDIF
      !
   CASE DEFAULT
@@ -846,23 +841,21 @@ SUBROUTINE iosys()
   CASE DEFAULT
      !
      io_level = 1
-     !
      IF ( lscf ) restart  = .false.
      !
   END SELECT
   !
   Hubbard_U(:)    = Hubbard_U(:) / rytoev
-  Hubbard_J0(:)    = Hubbard_J0(:) / rytoev
+  Hubbard_J0(:)   = Hubbard_J0(:) / rytoev
   Hubbard_J(:,:)  = Hubbard_J(:,:) / rytoev
   Hubbard_alpha(:)= Hubbard_alpha(:) / rytoev
-  Hubbard_beta(:)= Hubbard_beta(:) / rytoev
+  Hubbard_beta(:) = Hubbard_beta(:) / rytoev
   !
   ethr = diago_thr_init
   !
   IF ( startingpot /= 'atomic' .and. startingpot /= 'file' ) THEN
      !
      CALL infomsg( 'iosys', 'wrong startingpot: use default (1)' )
-     !
      IF ( lscf ) THEN
         startingpot = 'atomic'
      ELSE 
@@ -874,7 +867,6 @@ SUBROUTINE iosys()
   IF ( .not. lscf .and. startingpot /= 'file' ) THEN
      !
      CALL infomsg( 'iosys', 'wrong startingpot: use default (2)' )
-     !
      startingpot = 'file'
      !
   ENDIF
@@ -885,15 +877,12 @@ SUBROUTINE iosys()
             startingwfc /= 'file' ) THEN
      !
      CALL infomsg( 'iosys', 'wrong startingwfc: use default' )
-     !
      startingwfc = 'atomic'
      !
   ENDIF
   ! 
   IF (one_atom_occupations .and. startingwfc /= 'atomic' ) THEN
-
      CALL infomsg( 'iosys', 'one_atom_occupations requires startingwfc atomic' )
-
      startingwfc = 'atomic'
   ENDIF
   !
@@ -1042,25 +1031,15 @@ SUBROUTINE iosys()
   !
   SELECT CASE( trim( mixing_mode ) )
   CASE( 'plain' )
-     !
      imix = 0
-     !
   CASE( 'TF' )
-     !
      imix = 1
-     !
   CASE( 'local-TF' )
-     !
      imix = 2
-     !
   CASE( 'potential' )
-     !
      CALL errore( 'iosys', 'potential mixing no longer implemented', 1 )
-     !
   CASE DEFAULT
-     !
      CALL errore( 'iosys', 'unknown mixing ' // trim( mixing_mode ), 1 )
-     !
   END SELECT
   !
   starting_scf_threshold = tr2
@@ -1073,17 +1052,11 @@ SUBROUTINE iosys()
   !
   SELECT CASE( trim( verbosity ) )
   CASE( 'debug', 'high', 'medium' )
-     !
      iverbosity = 1
-     !
   CASE( 'low', 'default', 'minimal' )
-     !
      iverbosity = 0 
-     !
   CASE DEFAULT
-     !
      iverbosity = 0
-     !
   END SELECT
   !
   IF ( lberry .OR. lelfield ) THEN

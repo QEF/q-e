@@ -36,7 +36,7 @@ PROGRAM manypw
   INTEGER :: i
   LOGICAL :: opnd
   CHARACTER(LEN=256) :: filename
-  CHARACTER(LEN=6) :: image_label
+  CHARACTER(LEN=7) :: image_label
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
   !
@@ -47,44 +47,45 @@ PROGRAM manypw
   !
   ! ... Image-specific input files
   !
-  image_label = int_to_char(my_image_id)
+  image_label = '_' // int_to_char(my_image_id)
   IF ( TRIM (input_file_) == ' ') THEN
-     filename = 'pw_' // TRIM(image_label)  // '.in'
+     filename = 'pw' // TRIM(image_label)  // '.in'
   ELSE
-     filename = TRIM(input_file_) // '_' // TRIM(image_label) 
+     filename = TRIM(input_file_) // TRIM(image_label) 
   END IF
   CALL read_input_file ( prog='PW', input_file_=filename )
   !
-  ! ... Set image-specific value for "outdir", starting from input value
-  ! ... i = position of last character different from '/' and '.'
-  !
-  DO i=LEN_TRIM(outdir),1,-1
-     IF ( outdir(i:i) /= '/' .AND. outdir(i:i) /= '.' ) EXIT
-  END DO
-  IF ( i == 0 ) THEN
-     outdir = 'tmp_' // trim(image_label) // '/'
-  ELSE
-     outdir = outdir(1:i) // '_' // trim(image_label) // '/'
-  END IF
-  !
-  ! ... Here copy data read from input to internal modules
-  !
-  CALL iosys()
-  !
-  ! ... Here open image-specific output file
+  ! ... Here open image-specific output files
   !
   IF ( ionode ) THEN
      !
      INQUIRE ( UNIT = stdout, OPENED = opnd )
      IF (opnd) CLOSE ( UNIT = stdout )
      IF ( TRIM (input_file_) == ' ') THEN
-        filename = 'pw_' // TRIM(image_label)  // '.out'
+        filename = 'pw' // TRIM(image_label)  // '.out'
      ELSE
-        filename = TRIM(input_file_) // '_' // TRIM(image_label) // '.out'
+        filename = TRIM(input_file_) // TRIM(image_label) // '.out'
      END IF
      OPEN( UNIT = stdout, FILE = TRIM(filename), STATUS = 'UNKNOWN' )
      !
   END IF
+  !
+  ! ... Set image-specific value for "outdir", starting from input value
+  ! ... (read in read_input_file)
+  !
+  DO i=LEN_TRIM(outdir),1,-1
+     IF ( outdir(i:i) /= '/' .AND. outdir(i:i) /= '.' ) EXIT
+  END DO
+  ! ... i = position of last character different from '/' and '.'
+  IF ( i == 0 ) THEN
+     outdir = 'tmp' // trim(image_label) // '/'
+  ELSE
+     outdir = outdir(1:i) // trim(image_label) // '/'
+  END IF
+  !
+  ! ... Here copy data read from input to internal modules
+  !
+  CALL iosys()
   !
   ! ... Perform actual calculation
   !
