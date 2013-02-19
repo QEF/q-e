@@ -29,8 +29,6 @@ SUBROUTINE q_points_wannier ( )
   logical :: exst
   real(DP), allocatable :: wq(:)
 
-  INTEGER, EXTERNAL :: find_free_unit
-
   !
   !  calculate the Monkhorst-Pack grid
   !
