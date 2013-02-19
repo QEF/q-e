@@ -1,0 +1,18 @@
+This example illustrates how to use the phonon code to calculate
+the dispersions along some line or in a plane in the BZ, when it
+is not possible to use the Fourier interpolation or when one
+wants to check the Fourier interpolation itself.
+
+The calculation proceeds as follows 
+
+1) make a self-consistent calculation for fcc-Al. 
+   (input=al.scf.in, output=al.scf.out) 
+
+2) make the phonon calculation for a grid of 444 q-points and interpolates
+   the frequencies as in example02.
+
+3) make the phonon calculation along some lines of the BZ and compare
+   the results with the interpolated frequencies.
+   The output can be seen in al.dispersion.ps (the Fourier interpolated
+   frequencies are plotted with a continous line, while the frequencies
+   calculated by ph.x are indicated by points). 
