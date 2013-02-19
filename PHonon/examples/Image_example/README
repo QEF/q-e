@@ -1,5 +1,5 @@
 This example tests the use of images in ph.x. It computes the phonon 
-dispersions of AlAs as in example02.
+dispersions of AlAs as in example02 and the dispersions of Al as in example14.
 
 The calculation (run_example) proceeds as follows:
 
@@ -20,3 +20,5 @@ The calculation (run_example) proceeds as follows:
 4) The rest proceeds as in example02.
 
 
+Similarly for example14. The two phonon calculations are done using
+the image features and then collected.
