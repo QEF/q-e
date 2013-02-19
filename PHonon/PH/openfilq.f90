@@ -56,7 +56,6 @@ SUBROUTINE openfilq()
   !
   REAL(DP) :: edum(1,1), wdum(1,1)
   INTEGER :: ndr, ierr, iq_dummy
-  INTEGER, EXTERNAL :: find_free_unit
   !
   !
   IF (LEN_TRIM(prefix) == 0) CALL errore ('openfilq', 'wrong prefix', 1)

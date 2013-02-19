@@ -41,14 +41,14 @@ SUBROUTINE phq_readin()
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
                             ext_recover, ext_restart, u_from_file, ldiag, &
                             search_sym, lqdir, electron_phonon, tmp_dir_phq, &
-                            rec_code_read
+                            rec_code_read, qplot
 
   USE save_ph,       ONLY : tmp_dir_save, save_ph_input_variables
   USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
   USE partial,       ONLY : atomo, nat_todo, nat_todo_input
   USE output,        ONLY : fildyn, fildvscf, fildrho
-  USE disp,          ONLY : nq1, nq2, nq3
+  USE disp,          ONLY : nq1, nq2, nq3, x_q, wq, nqs, lgamma_iq
   USE io_files,      ONLY : tmp_dir, prefix
   USE noncollin_module, ONLY : i_cons, noncolin
   USE ldaU,          ONLY : lda_plus_u
@@ -87,11 +87,15 @@ SUBROUTINE phq_readin()
   CHARACTER(LEN=6) :: int_to_char
   INTEGER                    :: i
   LOGICAL                    :: nogg
+  LOGICAL      :: q2d, q_in_band_form
   INTEGER, EXTERNAL  :: atomic_number
   REAL(DP), EXTERNAL :: atom_weight
   LOGICAL, EXTERNAL  :: imatches
   LOGICAL, EXTERNAL  :: has_xml
   LOGICAL :: exst
+  REAL(DP), ALLOCATABLE :: xqaux(:,:)
+  INTEGER, ALLOCATABLE :: wqaux(:)
+  INTEGER :: nqaux, iq
   !
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
                        nat_todo, iverbosity, outdir, epsil,  &
@@ -104,7 +108,8 @@ SUBROUTINE phq_readin()
                        nk1, nk2, nk3, k1, k2, k3, &
                        drho_star, dvscf_star, &
                        elph_nbnd_min, elph_nbnd_max, el_ph_ngauss,el_ph_nsigma, el_ph_sigma,  &
-                       electron_phonon
+                       electron_phonon, &
+                       q_in_band_form, q2d, qplot
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -241,6 +246,9 @@ SUBROUTINE phq_readin()
   last_q       =-1000
   ldiag        =.FALSE.
   lqdir        =.FALSE.
+  qplot        =.FALSE.
+  q_in_band_form=.FALSE.
+  q2d         = .FALSE.
   search_sym   =.TRUE.
   nk1       = 0
   nk2       = 0
@@ -282,6 +290,8 @@ SUBROUTINE phq_readin()
 
   CALL bcast_ph_input ( )
   CALL mp_bcast(nogg, ionode_id )
+  CALL mp_bcast(q2d, ionode_id )
+  CALL mp_bcast(q_in_band_form, ionode_id )
   !
   ! ... Check all namelist variables
   !
@@ -293,6 +303,8 @@ SUBROUTINE phq_readin()
      IF (alpha_mix (iter) .LT.0.D0.OR.alpha_mix (iter) .GT.1.D0) CALL &
           errore ('phq_readin', ' Wrong alpha_mix ', iter)
   ENDDO
+  IF (qplot.AND..NOT.ldisp) CALL errore('phq_readin', &
+                                        'qplot requires ldisp=.true.',1)
   IF (niter_ph.LT.1.OR.niter_ph.GT.maxter) CALL errore ('phq_readin', &
        ' Wrong niter_ph ', 1)
   IF (nmix_ph.LT.1.OR.nmix_ph.GT.5) CALL errore ('phq_readin', ' Wrong &
@@ -324,6 +336,8 @@ SUBROUTINE phq_readin()
      elph_mat=.false.
      elph_simple=.false.
   END SELECT
+  IF (elph.AND.qplot) &
+     CALL errore('phq_readin', 'qplot and elph not implemented',1)
 
   epsil = epsil .OR. lraman .OR. elop
 
@@ -348,12 +362,31 @@ SUBROUTINE phq_readin()
   !    reads the q point (just if ldisp = .false.)
   !
   IF (ionode) THEN
-     IF (.NOT. ldisp) &
-        READ (5, *, iostat = ios) (xq (ipol), ipol = 1, 3)
+     IF (qplot) THEN
+        READ (5, *, iostat = ios) nqaux
+     ELSE
+        IF (.NOT. ldisp) READ (5, *, iostat = ios) (xq (ipol), ipol = 1, 3)
+     ENDIF
   END IF
   CALL mp_bcast(ios, ionode_id)
   CALL errore ('phq_readin', 'reading xq', ABS (ios) )
-  CALL mp_bcast(xq, ionode_id )
+  IF (qplot) THEN
+     CALL mp_bcast(nqaux, ionode_id)
+     ALLOCATE(xqaux(3,nqaux))
+     ALLOCATE(wqaux(nqaux))
+     IF (ionode) THEN
+        DO iq=1, nqaux
+           READ (5, *, iostat = ios) (xqaux (ipol,iq), ipol = 1, 3), wqaux(iq)
+        ENDDO
+     ENDIF
+     CALL mp_bcast(ios, ionode_id)
+     CALL errore ('phq_readin', 'reading xq', ABS (ios) )
+     CALL mp_bcast(xqaux, ionode_id)
+     CALL mp_bcast(wqaux, ionode_id)
+  ELSE
+     CALL mp_bcast(xq, ionode_id )
+  ENDIF
+  
   IF (.NOT.ldisp) THEN
      lgamma = xq (1) .EQ.0.D0.AND.xq (2) .EQ.0.D0.AND.xq (3) .EQ.0.D0
      IF ( (epsil.OR.zue.or.lraman.or.elop) .AND..NOT.lgamma) &
@@ -463,6 +496,43 @@ SUBROUTINE phq_readin()
   ENDIF
 1001 CONTINUE
 
+  IF (qplot.AND..NOT.recover) THEN
+     IF (q2d) THEN
+        nqs=wqaux(2)*wqaux(3)
+        ALLOCATE(x_q(3,nqs))
+        ALLOCATE(wq(nqs))
+        CALL generate_k_in_plane(nqaux, xqaux, wqaux, x_q, wq, nqs)
+     ELSEIF (q_in_band_form) THEN
+        nqs=SUM(wqaux(1:nqaux-1))+1
+        DO i=1,nqaux-1
+           IF (wqaux(i)==0) nqs=nqs+1
+        ENDDO
+        ALLOCATE(x_q(3,nqs))
+        ALLOCATE(wq(nqs))
+        CALL generate_k_along_lines(nqaux, xqaux, wqaux, x_q, wq, nqs)
+     ELSE
+        nqs=nqaux
+        ALLOCATE(x_q(3,nqs))
+        ALLOCATE(wq(nqs))
+        wq(:)=wqaux(:)
+        x_q(:,1:nqs)=xqaux(:,1:nqs)  
+     ENDIF
+     DEALLOCATE(xqaux)
+     DEALLOCATE(wqaux)
+     ALLOCATE(lgamma_iq(nqs))
+     DO iq=1, nqs
+        lgamma_iq(iq)= ( ABS(x_q(1,iq)) .LT. 1.0e-10_dp ) .AND. &
+                       ( ABS(x_q(2,iq)) .LT. 1.0e-10_dp ) .AND. &
+                       ( ABS(x_q(3,iq)) .LT. 1.0e-10_dp )
+     ENDDO
+     WRITE(stdout, '(//5x,"Dynamical matrices for q-points given in input")') 
+     WRITE(stdout, '(5x,"(",i4,"q-points):")') nqs
+     WRITE(stdout, '(5x,"  N         xq(1)         xq(2)         xq(3) " )')
+     DO iq = 1, nqs
+        WRITE(stdout, '(5x,i3, 3f14.9)') iq, x_q(1,iq), x_q(2,iq), x_q(3,iq)
+     END DO
+  ENDIF
+
   CALL read_file ( )
 
   magnetic_sym=noncolin .AND. domag
@@ -511,7 +581,7 @@ SUBROUTINE phq_readin()
 !
   IF (get_ntask_groups() > 1) dffts%have_task_groups=.FALSE.
 
-  IF (nproc_bgrp_file /= nproc_bgrp .AND. .NOT. twfcollect ) &
+  IF (nproc_bgrp_file /= nproc_bgrp .AND. .NOT. twfcollect) &
      CALL errore('phq_readin','pw.x run with different band parallelization',1)
   
   if(elph_mat.and.fildvscf.eq.' ') call errore('phq_readin',&
@@ -624,7 +694,8 @@ SUBROUTINE phq_readin()
   IF (modenum > 0 .OR. lraman ) lgamma_gamma=.FALSE.
   IF (.NOT.lgamma_gamma) asr=.FALSE.
   !
-  IF (ldisp .AND. (nq1 .LE. 0 .OR. nq2 .LE. 0 .OR. nq3 .LE. 0)) &
+  IF ((ldisp.AND..NOT.qplot) .AND. &
+                  (nq1 .LE. 0 .OR. nq2 .LE. 0 .OR. nq3 .LE. 0)) &
        CALL errore('phq_readin','nq1, nq2, and nq3 must be greater than 0',1)
 
   CALL save_ph_input_variables()

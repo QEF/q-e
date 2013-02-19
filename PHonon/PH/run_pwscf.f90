@@ -23,7 +23,7 @@ SUBROUTINE run_pwscf(do_band, iq)
   USE disp,            ONLY : lgamma_iq
   USE qpoint,          ONLY : xq
   USE control_ph,      ONLY : reduce_io, recover, tmp_dir_phq, &
-                              ext_restart, bands_computed, newgrid
+                              ext_restart, bands_computed, newgrid, qplot
   USE save_ph,         ONLY : tmp_dir_save
   !
   USE grid_irr_iq,     ONLY : done_bands
@@ -47,12 +47,8 @@ SUBROUTINE run_pwscf(do_band, iq)
      wfc_dir=tmp_dir_phq
      tmp_dir=tmp_dir_phq
      CALL read_file()
-!
-!   This routine is here only for invsymq. It seems that this flag is not
-!   used. If it is useful to somebody please tell me or the call to this routine
-!   will be removed.
-!
-     IF (.NOT.lgamma_iq(iq)) CALL set_small_group_of_q(nsymq,invsymq,minus_q)
+     IF (.NOT.lgamma_iq(iq).OR.(qplot.AND.iq>1)) CALL &
+                                  set_small_group_of_q(nsymq,invsymq,minus_q)
      RETURN
   ENDIF
   !

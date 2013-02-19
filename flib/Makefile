@@ -17,6 +17,7 @@ expint.o \
 find_free_unit.o \
 flush_unit.o \
 functionals.o \
+generate_k_along_lines.o \
 lsda_functionals.o \
 more_functionals.o \
 has_xml.o \

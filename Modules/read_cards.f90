@@ -713,39 +713,15 @@ CONTAINS
                wkaux(i) = NINT ( wk0 ) ! beware: wkaux is integer
             ENDDO
             ! Count k-points first
-            nkstot=0
+            nkstot=SUM(wkaux(1:nkaux-1))+1
             DO i=1,nkaux-1
-               IF ( wkaux(i) > 0 ) THEN
-                  nkstot=nkstot+wkaux(i)
-               ELSEIF ( wkaux(i) == 0 ) THEN
-                  nkstot=nkstot+1
-               ELSE
-                  CALL errore ('card_kpoints', 'wrong number of points',i)
-               ENDIF  
+              IF (wkaux(i)==0) nkstot=nkstot+1
             ENDDO
-            nkstot=nkstot+1
             ALLOCATE ( xk(3,nkstot), wk(nkstot) )
-            ! Now fill the points
-            nkstot=0
-            DO i=1,nkaux-1
-               IF (wkaux(i)>0) THEN
-                  delta=1.0_DP/wkaux(i)
-                  DO j=0,wkaux(i)-1
-                     nkstot=nkstot+1
-                     xk(:,nkstot)=xkaux(:,i)+delta*j*(xkaux(:,i+1)-xkaux(:,i))
-                     wk(nkstot)=1.0_DP
-                  ENDDO
-               ELSEIF (wkaux(i)==0) THEN
-                  nkstot=nkstot+1
-                  xk(:,nkstot)=xkaux(:,i)
-                  wk(nkstot)=1.0_DP
-               ELSE
-                  CALL errore ('card_kpoints', 'wrong number of points',i)
-               ENDIF  
-            ENDDO
-            nkstot=nkstot+1
-            xk(:,nkstot)=xkaux(:,nkaux)
-            wk(nkstot)=1.0_DP
+            !
+            !  generate the points along the lines
+            !
+            CALL generate_k_along_lines(nkaux, xkaux, wkaux, xk, wk, nkstot)
             DEALLOCATE(xkaux)
             DEALLOCATE(wkaux)
          ELSEIF (kband_plane) THEN
@@ -768,17 +744,7 @@ CONTAINS
             ! Count k-points first
             nkstot = wkaux(2) * wkaux(3)
             ALLOCATE ( xk(3,nkstot), wk(nkstot) )
-            dkx(:)=(xkaux(:,2)-xkaux(:,1))/(wkaux(2)-1.0_DP)
-            dky(:)=(xkaux(:,3)-xkaux(:,1))/(wkaux(3)-1.0_DP)
-            wk0=1.0_DP/nkstot
-            ijk=0
-            DO i=1, wkaux(2)
-               DO j = 1, wkaux(3)
-                  ijk=ijk+1
-                  xk(:,ijk) = xkaux(:,1) + dkx(:)*(i-1) + dky(:) * (j-1)
-                  wk(ijk) = wk0
-               ENDDO
-            ENDDO
+            CALL generate_k_in_plane(nkaux, xkaux, wkaux, xk, wk, nkstot)
             DEALLOCATE(xkaux)
             DEALLOCATE(wkaux)
          ELSE

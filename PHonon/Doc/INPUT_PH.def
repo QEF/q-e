@@ -187,6 +187,30 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    info { If .true. restart from an interrupted run.}
 	}
 
+	var qplot  -type LOGICAL { 
+	    default { .false. }
+	    info { If .true. a list of q points is read from input.}
+	}
+
+	var q2d  -type LOGICAL { 
+	    default { .false. }
+	    info { If .true. three q points and relative weights are
+            read from input. The three q points define the rectangle 
+            q(:,1) + l (q(:,2)-q(:,1)) + m (q(:,3)-q(:,1)) where
+            0< l,m < 1. The weights are integer and those of points two
+            and three are the number of points in the two directions.}
+	}
+
+	var q_in_band_form  -type LOGICAL { 
+	    default { .false. }
+	    info { This flag is used only when qplot is .true. and q2d is
+           .false.. When .true. each couple of q points q(:,i+1) and
+           q(:,i) define the line from q(:,i) to q(:,i+1) and nq
+           points are generated along that line. nq is the weigth of 
+           q(:,i). When .false. only the list of q points given as
+           input is calculated. The weights are not used.}
+	}
+
 	var electron_phonon  -type CHARACTER { 
 	    default { ' ' }
 	    info {
@@ -493,11 +517,32 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    info {
 		The phonon wavevector, in units of 2pi/a0
 		(a0 = lattice parameter).
-		Not used if ldisp=.true. 
+		Not used if ldisp=.true. or qplot=.true.
 	    }
 	}
     }
 
+ group {
+            label { Specification q points when qplot=.true. }
+
+    var nqs -type INTEGER {
+        default { none }
+            info { Number of q points in the list. Used only if qplot=.true.
+            }
+        }
+
+
+        list xq_list_qplot -type REAL {
+	    format { xq(1)  xq(2)  xq(3) nq } 
+	    info {
+		Used only with ldisp=.true. and qplot=.true.
+		The phonon wavevector, in units of 2pi/a0
+		(a0 = lattice parameter). The meaning of these q 
+		points and their weights nq depend on the flags q2d and 
+		q_in_band_form. (NB: nq is integer)
+	    }
+	}
+    }
 	
     choose {
 	when -test "nat_todo was specified" {

@@ -50,7 +50,7 @@ PROGRAM phonon
   ! [10] ? + nonperiodic boundary conditions.
 
   USE disp,            ONLY : nqs
-  USE control_ph,      ONLY : epsil, trans, bands_computed
+  USE control_ph,      ONLY : epsil, trans, bands_computed, qplot
   USE el_phon,         ONLY : elph, elph_mat, elph_simple
   USE output,          ONLY : fildrho
   USE check_stop,      ONLY : check_stop_init
@@ -145,6 +145,8 @@ PROGRAM phonon
      CALL clean_pw_ph(iq)
      !
   END DO
+  !
+  IF (qplot) CALL write_qplot_data(auxdyn)
   !
   IF (bands_computed) CALL print_clock_pw()
   !

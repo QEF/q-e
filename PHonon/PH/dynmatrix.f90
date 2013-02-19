@@ -31,10 +31,11 @@ subroutine dynmatrix_new(iq_)
   USE gamma_gamma,   ONLY : nasr, asr, equiv_atoms, has_equivalent, &
                             n_diff_sites
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0, zstarue
+  USE disp,          ONLY : omega_disp
   USE control_ph,    ONLY : epsil, zue, lgamma, lgamma_gamma, search_sym, ldisp, &
                             start_irr, last_irr, done_zue, where_rec, &
                             rec_code, ldiag, done_epsil, done_zeu, xmldyn, &
-                            current_iq
+                            current_iq, qplot
   USE ph_restart,    ONLY : ph_writefile
   USE partial,       ONLY : all_comp, comp_irr, done_irr, nat_todo_input
   USE units_ph,      ONLY : iudyn
@@ -222,7 +223,7 @@ subroutine dynmatrix_new(iq_)
               num_rap_mode, ierr)
          CALL print_mode_sym(w2, num_rap_mode, lgamma)
      ENDIF
-
+     IF (qplot) omega_disp(:,current_iq)=w2(:)
   END IF
 !
 ! Here we save the dynamical matrix and the effective charges dP/du on

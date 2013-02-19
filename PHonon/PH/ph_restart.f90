@@ -280,8 +280,10 @@ MODULE ph_restart
            IF (trans.OR.zeu) THEN
               IF (done_irr(irr)) THEN
                  !
-                 CALL iotk_write_begin(iunpun, "PARTIAL_MATRIX")
+                 CALL iotk_write_begin(iunpun, "PM_HEADER")
                  CALL iotk_write_dat(iunpun, "DONE_IRR", done_irr(irr))
+                 CALL iotk_write_end(iunpun, "PM_HEADER")
+                 CALL iotk_write_begin(iunpun, "PARTIAL_MATRIX")
                  CALL iotk_write_dat(iunpun, "PARTIAL_DYN", dyn_rec(:,:))
                  IF (zue.and.irr>0) CALL iotk_write_dat(iunpun, &
                                            "PARTIAL_ZUE", zstarue0_rec(:,:))
@@ -304,8 +306,10 @@ MODULE ph_restart
 
            IF (.NOT. elph .OR. .NOT. done_elph(irr)) RETURN
            !
-           CALL iotk_write_begin(iunpun, "PARTIAL_EL_PHON")
+           CALL iotk_write_begin(iunpun, "EL_PHON_HEADER")
            CALL iotk_write_dat(iunpun, "DONE_ELPH", done_elph(irr))
+           CALL iotk_write_end(iunpun, "EL_PHON_HEADER")
+           CALL iotk_write_begin(iunpun, "PARTIAL_EL_PHON")
            CALL iotk_write_dat(iunpun, "NUMBER_OF_K", nksqtot)
            CALL iotk_write_dat(iunpun, "NUMBER_OF_BANDS", nbnd)
            DO ik=1,nksqtot
@@ -749,8 +753,10 @@ MODULE ph_restart
     ierr=0
     IF (ionode) THEN
        IF (trans) THEN
+          CALL iotk_scan_begin( iunpun, "PM_HEADER" )
+          CALL iotk_scan_dat( iunpun,"DONE_IRR",done_irr(irr) )
+          CALL iotk_scan_end( iunpun, "PM_HEADER" )
           CALL iotk_scan_begin( iunpun, "PARTIAL_MATRIX" )
-          CALL iotk_scan_dat(iunpun,"DONE_IRR",done_irr(irr))
           CALL iotk_scan_dat(iunpun,"PARTIAL_DYN", dyn_rec(:,:))
           IF (zue.AND.irr>0) CALL iotk_scan_dat(iunpun, &
                                "PARTIAL_ZUE", zstarue0_rec(:,:))
@@ -791,8 +797,10 @@ MODULE ph_restart
     ENDIF
 
     IF (ionode) THEN
-       CALL iotk_scan_begin(iunpun, "PARTIAL_EL_PHON")
+       CALL iotk_scan_begin(iunpun, "EL_PHON_HEADER")
        CALL iotk_scan_dat(iunpun, "DONE_ELPH", done_elph(irr))
+       CALL iotk_scan_end(iunpun, "EL_PHON_HEADER")
+       CALL iotk_scan_begin(iunpun, "PARTIAL_EL_PHON")
        CALL iotk_scan_dat(iunpun, "NUMBER_OF_K", idum)
        CALL iotk_scan_dat(iunpun, "NUMBER_OF_BANDS", idum)
        DO ik=1,nksqtot
@@ -869,7 +877,7 @@ MODULE ph_restart
           ENDDO
           imode0=imode0+npert(irr)
           CALL iotk_scan_end( iunpun, "REPRESENTION"// &
-                                        TRIM( iotk_index( irr ) ) )
+                                     TRIM( iotk_index( irr ) ) )
        ENDDO
        !
        CALL iotk_scan_end( iunpun, "IRREPS_INFO" )
@@ -1035,9 +1043,9 @@ MODULE ph_restart
               CALL iotk_open_read(iunout, FILE = TRIM(filename1), &
                                        BINARY = .FALSE., IERR = ierr )
               IF (ierr /= 0 ) GOTO 100
-              CALL iotk_scan_begin( iunout, "PARTIAL_MATRIX" )
+              CALL iotk_scan_begin( iunout, "PM_HEADER" )
               CALL iotk_scan_dat(iunout,"DONE_IRR",done_irr_iq(irr,iq))
-              CALL iotk_scan_end( iunout, "PARTIAL_MATRIX" )
+              CALL iotk_scan_end( iunout, "PM_HEADER" )
               CALL iotk_close_read(iunout)
            END DO
 !
@@ -1054,9 +1062,9 @@ MODULE ph_restart
                  CALL iotk_open_read(iunout, FILE = TRIM(filename1), &
                                           BINARY = .FALSE., IERR = ierr )
                  IF (ierr /= 0 ) GOTO 100
-                 CALL iotk_scan_begin(iunout, "PARTIAL_EL_PHON")
+                 CALL iotk_scan_begin(iunout, "EL_PHON_HEADER")
                  CALL iotk_scan_dat(iunout, "DONE_ELPH", done_elph_iq(irr,iq))
-                 CALL iotk_scan_end(iunout, "PARTIAL_EL_PHON")
+                 CALL iotk_scan_end(iunout, "EL_PHON_HEADER")
                  CALL iotk_close_read(iunout)
               ENDDO
            END IF
@@ -1155,12 +1163,15 @@ MODULE ph_restart
 !  nqs and x_q have been decided, either reading them from file when
 !  recover is .true. or recalculating them from scratch  
 !
-   USE disp, ONLY : nqs, done_iq, comp_iq              
+   USE disp, ONLY : nqs, done_iq, comp_iq, omega_disp              
    USE grid_irr_iq, ONLY : done_irr_iq, irr_iq, nsymq_iq, &
                            comp_irr_iq, npert_irr_iq, done_bands, &
                            done_elph_iq
    USE freq_ph, ONLY : done_iu, comp_iu, nfs
    USE ions_base, ONLY : nat
+   USE el_phon, ONLY : elph_simple, gamma_disp, el_ph_nsigma
+   USE control_ph, ONLY : qplot
+
    IMPLICIT NONE
 
    ALLOCATE(done_iq(nqs))
@@ -1190,15 +1201,20 @@ MODULE ph_restart
    nsymq_iq=0
    npert_irr_iq=0
 
+   IF (qplot) THEN
+      ALLOCATE(omega_disp(3*nat,nqs))
+      IF (elph_simple) ALLOCATE(gamma_disp(3*nat,el_ph_nsigma,nqs))
+   ENDIF
 
    RETURN
    END SUBROUTINE allocate_grid_variables
 
    SUBROUTINE destroy_status_run()
    USE start_k,     ONLY : xk_start, wk_start
-   USE disp,        ONLY : nqs, x_q, done_iq, comp_iq, lgamma_iq
+   USE disp,        ONLY : nqs, x_q, done_iq, comp_iq, lgamma_iq, omega_disp
    USE grid_irr_iq, ONLY : done_irr_iq, irr_iq, nsymq_iq, &
                           npert_irr_iq, comp_irr_iq, done_bands, done_elph_iq
+   USE el_phon,     ONLY : gamma_disp
    USE freq_ph,     ONLY : comp_iu, done_iu, fiu
    IMPLICIT NONE
 
@@ -1216,6 +1232,8 @@ MODULE ph_restart
    IF (ALLOCATED(fiu)) DEALLOCATE(fiu)
    IF (ALLOCATED(done_iu)) DEALLOCATE(done_iu)
    IF (ALLOCATED(comp_iu)) DEALLOCATE(comp_iu)
+   IF (ALLOCATED(omega_disp)) DEALLOCATE(omega_disp)
+   IF (ALLOCATED(gamma_disp)) DEALLOCATE(gamma_disp)
 !
 ! Note that these two variables are allocated by read_file. 
 ! They cannot be deallocated by clean_pw because the starting xk and wk 

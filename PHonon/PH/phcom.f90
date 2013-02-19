@@ -349,6 +349,7 @@ MODULE control_ph
              recover_read=.FALSE., & ! if true the recover data have been read
              ldiag=.FALSE.,        & ! if true force the diagonalization
              lqdir=.FALSE.,        & ! if true each q writes in its directory
+             qplot=.FALSE.,        & ! if true the q are read from input
              xmldyn=.FALSE.,   & ! if true the dynamical matrix is in xml form
              all_done, &      ! if .TRUE. all representations have been done
              newgrid=.FALSE.  ! if .TRUE. use new k-point grid nk1,nk2,nk3
@@ -443,7 +444,10 @@ MODULE disp
   !
   INTEGER :: nq1, nq2, nq3  ! number of q-points in each direction
   INTEGER :: nqs            ! number of q points to be calculated
-  REAL(DP), ALLOCATABLE :: x_q(:,:) ! coordinates of the q points
+  REAL(DP), ALLOCATABLE :: x_q(:,:), & ! coordinates of the q points
+                        wq(:) ! for plot
+
+  REAL(DP), ALLOCATABLE :: omega_disp(:,:)
 
   LOGICAL, ALLOCATABLE :: &
        lgamma_iq(:),    &! if .true. this q is gamma.

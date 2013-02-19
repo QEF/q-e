@@ -171,6 +171,7 @@ transform_dbecsum_nc.o \
 tra_write_matrix.o \
 trntnsc.o \
 write_epsilon_and_zeu.o \
+write_qplot_data.o \
 write_matrix.o \
 write_modes.o \
 write_rec.o \

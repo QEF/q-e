@@ -80,7 +80,7 @@ SUBROUTINE check_initial_status(auxdyn)
                               start_q, last_q, current_iq, &
                               tmp_dir_ph, lgamma, &
                               ext_recover, ext_restart, tmp_dir_phq, lqdir, &
-                              start_irr, last_irr, newgrid
+                              start_irr, last_irr, newgrid, qplot
   USE save_ph,         ONLY : tmp_dir_save
   USE units_ph,        ONLY : iudyn
   USE ph_restart,      ONLY : check_directory_phsave, check_available_bands,&
@@ -123,7 +123,7 @@ SUBROUTINE check_initial_status(auxdyn)
         IF(elph_mat) then
            CALL q_points_wannier()
         ELSE
-           CALL q_points()
+           IF (.NOT. qplot) CALL q_points()
         END IF
         !
      ELSE
