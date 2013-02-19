@@ -22,12 +22,12 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE constants,        ONLY : rytoev
   USE cell_base,        ONLY : at, bg, omega, alat, celldm, ibrav
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
-  USE run_info,    ONLY : title
+  USE run_info,         ONLY : title
   USE extfield,         ONLY : tefield, dipfield
   USE fft_base,         ONLY : dfftp
   USE fft_interfaces,   ONLY : fwfft, invfft
   USE gvect,            ONLY : gcutm
-  USE gvecs,          ONLY : dual
+  USE gvecs,            ONLY : dual
   USE klist,            ONLY : nks, nkstot, xk
   USE lsda_mod,         ONLY : nspin, current_spin
   USE ener,             ONLY : ehart
@@ -52,7 +52,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
 #endif
   ! auxiliary vector
-  REAL(DP), ALLOCATABLE :: raux (:)
+  REAL(DP), ALLOCATABLE :: raux (:), raux2(:,:)
 
 
   IF (filplot == ' ') RETURN
@@ -172,9 +172,29 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      CALL do_elf (raux)
 
   ELSEIF (plot_num == 9) THEN
+     !
+     !      plot of the charge density minus the atomic rho
+     !
+     allocate (raux2(dfftp%nnr,nspin))
+     raux2 = 0.d0
+     call atomic_rho(raux2, nspin)
+     rho%of_r(:,:) = rho%of_r(:,:) - raux2
+     deallocate (raux2)
 
-     IF (noncolin) CALL errore('punch_plot','rdg+noncolin not yet implemented',1)
-     CALL do_rdg (raux)           ! in elf.f90
+     IF (noncolin) THEN
+        CALL dcopy (dfftp%nnr, rho%of_r, 1, raux, 1)
+     ELSE
+        IF (spin_component == 0) THEN
+           CALL dcopy (dfftp%nnr, rho%of_r (1, 1), 1, raux, 1)
+           DO is = 2, nspin
+              CALL daxpy (dfftp%nnr, 1.d0, rho%of_r (1, is), 1, raux, 1)
+           ENDDO
+        ELSE
+           IF (nspin == 2) current_spin = spin_component
+           CALL dcopy (dfftp%nnr, rho%of_r (1, current_spin), 1, raux, 1)
+           CALL dscal (dfftp%nnr, 0.5d0 * nspin, raux, 1)
+        ENDIF
+     ENDIF
 
   ELSEIF (plot_num == 10) THEN
 
@@ -247,10 +267,20 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      ELSE
         CALL errore('punch_plot','B_xc available only when noncolin=.true.',1)
      ENDIF
-  ELSEIF (plot_num == 19) THEN
 
+  ELSEIF (plot_num == 19) THEN
+     !
+     ! Reduced density gradient
+     !
      IF (noncolin) CALL errore('punch_plot','rdg+noncolin not yet implemented',1)
-     CALL do_sl2rho (raux)           ! in elf.f90
+     CALL do_rdg (raux)           ! in elf.f90
+
+  ELSEIF (plot_num == 20) THEN
+     !
+     ! Density * second eigenvalue of Hessian of density (for coloring RDG plots)
+     !
+     IF (noncolin) CALL errore('punch_plot','rdg+noncolin not yet implemented',1)
+     CALL do_sl2rho (raux)        ! in elf.f90
 
   ELSE
 
