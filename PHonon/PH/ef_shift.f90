@@ -139,7 +139,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
      enddo
      do ipert = 1, npert (irr)
         do is = 1, nspin_mag
-           call zaxpy (dffts%nnr, def(ipert), ldoss(1,is), 1, drhoscf(1,is,ipert), 1)
+           call zaxpy (dfftp%nnr, def(ipert), ldos(1,is), 1, drhoscf(1,is,ipert), 1)
         enddo
      enddo
   endif
@@ -289,7 +289,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
      enddo
      do ipert = 1, npert (irr)
         do is = 1, nspin_mag
-           call zaxpy (dffts%nnr, def(ipert), ldoss(1,is), 1, drhoscf(1,is,ipert), 1)
+           call zaxpy (dfftp%nnr, def(ipert), ldos(1,is), 1, drhoscf(1,is,ipert), 1)
         enddo
      enddo
   endif
