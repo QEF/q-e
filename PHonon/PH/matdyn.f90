@@ -154,7 +154,7 @@ PROGRAM matdyn
   LOGICAL :: dos, has_zstar, q_in_cryst_coord, eigen_similarity
   COMPLEX(DP), ALLOCATABLE :: dyn(:,:,:,:), dyn_blk(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: z(:,:)
-  REAL(DP), ALLOCATABLE:: tau(:,:), q(:,:), w2(:,:), freq(:,:)
+  REAL(DP), ALLOCATABLE:: tau(:,:), q(:,:), w2(:,:), freq(:,:), wq(:)
   INTEGER, ALLOCATABLE:: tetra(:,:), ityp(:), itau_blk(:)
   REAL(DP) ::     omega,alat, &! cell parameters and volume
                   at_blk(3,3), bg_blk(3,3),  &! original cell
@@ -187,7 +187,8 @@ PROGRAM matdyn
   ! .... variables for band plotting based on similarity of eigenvalues
   COMPLEX(DP), ALLOCATABLE :: tmp_z(:,:)
   REAL(DP), ALLOCATABLE :: abs_similarity(:,:), tmp_w2(:)
-  INTEGER :: location(1)
+  INTEGER :: location(1), isig
+  CHARACTER(LEN=6) :: int_to_char
   LOGICAL, ALLOCATABLE :: mask(:)
   !
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, fleig, at, dos,  &
@@ -387,32 +388,18 @@ PROGRAM matdyn
            ALLOCATE(nqb(nq))
            ALLOCATE(xqaux(3,nq))
            DO n = 1,nq
-              IF (ionode) READ (5,*) (q(i,n),i=1,3), nqb(n)
+              IF (ionode) READ (5,*) (xqaux(i,n),i=1,3), nqb(n)
            END DO
-           CALL mp_bcast(q, ionode_id)
+           CALL mp_bcast(xqaux, ionode_id)
            CALL mp_bcast(nqb, ionode_id)
            nqtot=SUM(nqb(1:nq-1))+1
            DO i=1,nq-1
               IF (nqb(i)==0) nqtot=nqtot+1
            ENDDO
-           xqaux(:,1:nq)=q(:,1:nq)
            DEALLOCATE(q)
            ALLOCATE(q(3,nqtot))
-           nqtot=0
-           DO i=1,nq-1
-              IF (nqb(i)>0) THEN
-                 delta=1.0_DP/nqb(i)
-                 DO j=0,nqb(i)-1
-                    nqtot=nqtot+1
-                    q(:,nqtot)=xqaux(:,i)+delta*j*(xqaux(:,i+1)-xqaux(:,i))
-                 ENDDO
-              ELSE
-                 nqtot=nqtot+1
-                 q(:,nqtot) = xqaux(:,i)
-              ENDIF
-           ENDDO
-           nqtot=nqtot+1
-           q(:,nqtot)=xqaux(:,nq)
+           ALLOCATE(wq(nqtot))
+           CALL generate_k_along_lines(nq, xqaux, nqb, q, wq, nqtot)
            nq=nqtot
            DEALLOCATE(xqaux)
            DEALLOCATE(nqb)
@@ -657,6 +644,13 @@ PROGRAM matdyn
          !
          ! convert frequencies to Ry
          !
+         IF (.NOT. dos) THEN
+            DO isig=1,10
+               OPEN (unit=200+isig,file='elph.gamma.'//&
+                  TRIM(int_to_char(isig)), status='unknown',form='formatted')
+               WRITE(200+isig, '(" &plot nbnd=",i4,", nks=",i4," /")') 3*nat, nq
+            END DO
+         END IF
          freq(:,:)= freq(:,:) / RY_TO_CMM1
          Emin  = Emin / RY_TO_CMM1
          DeltaE=DeltaE/ RY_TO_CMM1
@@ -665,7 +659,14 @@ PROGRAM matdyn
                            nsc, nat_blk, at_blk, bg_blk, itau_blk, omega_blk, &
                            rws, nrws, dos, Emin, DeltaE, ndos, &
                            ntetra, tetra, asr, q, freq)
+
+         IF (.NOT.dos) THEN
+            DO isig=1,10
+               CLOSE(UNIT=200+isig)
+            ENDDO
+         ENDIF
      END IF
+
      DEALLOCATE ( freq)
      DEALLOCATE(num_rap_mode)
      DEALLOCATE(high_sym)
@@ -2084,6 +2085,15 @@ SUBROUTINE a2Fdos &
            write( 6,'(3x,i5)') n
            write(20,'(9F8.4)')  (gamma(i,n)*RY_TO_THZ,i=1,3*nat)
            write( 6,'(6F12.9)') (gamma(i,n),i=1,3*nat)
+!
+!   write also in a format that can be read by plotband
+!
+           WRITE(200+isig, '(10x,3f10.6)')  q(1,n), q(2,n), q(3,n)
+!
+!     output in GHz
+!
+           WRITE(200+isig, '(6f10.4)') (gamma(nu,n)*RY_TO_THZ*1000.0_DP, &
+                                        nu=1,3*nat)
         end do
      endif
      !
