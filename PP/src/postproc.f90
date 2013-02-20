@@ -166,6 +166,7 @@ SUBROUTINE extract (filplot,plot_num)
          (plot_num==8).or.(plot_num==10)
   IF ( needwf ) THEN
      CALL read_file ( )
+     CALL openfil_pp ( )
   ELSE
      CALL read_xml_file ( )
   END IF
@@ -178,8 +179,6 @@ SUBROUTINE extract (filplot,plot_num)
        ( plot_num==3 .or. plot_num==4 .or. plot_num==5 ) ) &
      CALL errore('postproc',&
      'Post-processing with constrained magnetization is not available yet',1)
-  !
-  CALL openfil_pp ( )
   !
   ! The following line sets emax to its default value if not set
   ! It is done here because Ef must be read from file

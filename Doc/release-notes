@@ -7,6 +7,8 @@ New in svn version:
 
 Fixed in svn version:
 
+   * Bogus "file not found" error in pp.x when extracting quantities not
+     requiring wave functions if these were "collected" - v.5.0.2 only
    * some quantities calculated in real space (including the charge itself
      when tqr=.true.) were not always accurately computed in parallel
      execution if the number of planes wasn't the same for all processors
