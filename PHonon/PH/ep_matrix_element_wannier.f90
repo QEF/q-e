@@ -118,7 +118,10 @@ SUBROUTINE ep_matrix_element_wannier()
   ! now read the eigenvalues and eigenvectors of the dynamical matrix
   ! calculated in a previous run
   !
-  IF (.NOT.trans) CALL readmat (iudyn, ibrav, celldm, nat, ntyp, &
+!  IF (.NOT.trans) CALL readmat (iudyn, ibrav, celldm, nat, ntyp, &
+!       ityp, omega, amass, tau, xq, w2, dyn)
+
+  IF (.NOT.trans) CALL readmat_findq (iudyn, ibrav, celldm, nat, ntyp, &
        ityp, omega, amass, tau, xq, w2, dyn)
   !
   
@@ -226,7 +229,8 @@ SUBROUTINE elphsum_wannier(q_index)
                 ibnd=elph_nbnd_min,elph_nbnd_max)
         enddo
      enddo
-  
+
+
 
 
      !
@@ -686,3 +690,117 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   return
 end subroutine calculate_and_apply_phase
   
+
+!-----------------------------------------------------------------------
+SUBROUTINE readmat_findq (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
+     amass, tau, q, w2, dyn)
+  !-----------------------------------------------------------------------
+  !
+  USE kinds, ONLY : DP
+  USE constants, ONLY : amu_ry
+  IMPLICIT NONE
+  ! Input
+  INTEGER :: iudyn, ibrav, nat, ntyp, ityp (nat)
+  REAL(DP) :: celldm (6), amass (ntyp), tau (3, nat), q (3), &
+       omega
+  ! output
+  REAL(DP) :: w2 (3 * nat)
+  COMPLEX(DP) :: dyn (3 * nat, 3 * nat)
+  ! local (control variables)
+  INTEGER :: ntyp_, nat_, ibrav_, ityp_
+  REAL(DP) :: celldm_ (6), amass_, tau_ (3), q_ (3)
+  ! local
+  REAL(DP) :: dynr (2, 3, nat, 3, nat), err_q(3)
+  CHARACTER(len=80) :: line
+  CHARACTER(len=3)  :: atm
+  INTEGER :: nt, na, nb, naa, nbb, nu, mu, i, j
+  LOGICAL :: lfound
+  
+  !
+  !
+  REWIND (iudyn)
+  READ (iudyn, '(a)') line
+  READ (iudyn, '(a)') line
+  READ (iudyn, * ) ntyp_, nat_, ibrav_, celldm_
+  IF ( ntyp.NE.ntyp_ .OR. nat.NE.nat_ .OR.ibrav_.NE.ibrav .OR. &
+       ABS ( celldm_ (1) - celldm (1) ) > 1.0d-5) &
+          CALL errore ('readmat', 'inconsistent data', 1)
+  DO nt = 1, ntyp
+     READ (iudyn, * ) i, atm, amass_
+     IF ( nt.NE.i .OR. ABS (amass_ - amu_ry*amass (nt) ) > 1.0d-5) &
+        CALL errore ( 'readmat', 'inconsistent data', 1 + nt)
+  ENDDO
+  DO na = 1, nat
+     READ (iudyn, * ) i, ityp_, tau_
+     IF (na.NE.i.OR.ityp_.NE.ityp (na) ) CALL errore ('readmat', &
+          'inconsistent data', 10 + na)
+  ENDDO
+
+  lfound=.false.
+
+  do while(.not.lfound)
+
+     READ (iudyn, '(a)') line
+     READ (iudyn, '(a)') line
+     READ (iudyn, '(a)') line
+     READ (iudyn, '(a)') line
+
+     READ (line (11:80), * ) (q_ (i), i = 1, 3)
+
+     err_q(1:3)=dabs(q_(1:3)-q(1:3))
+
+     if(err_q(1).lt.1.d-7.and.err_q(2).lt.1.d-7.and.err_q(3).lt.1.d-7) lfound=.true.
+
+
+
+     READ (iudyn, '(a)') line
+     DO na = 1, nat
+        DO nb = 1, nat
+           READ (iudyn, * ) naa, nbb
+           IF (na.NE.naa.OR.nb.NE.nbb) CALL errore ('readmat', 'error reading &
+                &file', nb)
+           READ (iudyn, * ) ( (dynr (1, i, na, j, nb), dynr (2, i, na, j, nb) &
+                , j = 1, 3), i = 1, 3)
+        ENDDO
+     ENDDO
+
+     if(lfound) then
+        !
+        ! divide the dynamical matrix by the (input) masses (in amu)
+        !
+        DO nb = 1, nat
+           DO j = 1, 3
+              DO na = 1, nat
+                 DO i = 1, 3
+                    dynr (1, i, na, j, nb) = dynr (1, i, na, j, nb) / SQRT (amass ( &
+                         ityp (na) ) * amass (ityp (nb) ) ) / amu_ry
+                    dynr (2, i, na, j, nb) = dynr (2, i, na, j, nb) / SQRT (amass ( &
+                         ityp (na) ) * amass (ityp (nb) ) ) / amu_ry
+                 ENDDO
+              ENDDO
+           ENDDO
+        ENDDO
+       !
+       ! solve the eigenvalue problem.
+       ! NOTA BENE: eigenvectors are overwritten on dyn
+       !
+       CALL cdiagh (3 * nat, dynr, 3 * nat, w2, dyn)
+       !
+       ! divide by sqrt(mass) to get displacements
+       !
+       DO nu = 1, 3 * nat
+          DO mu = 1, 3 * nat
+             na = (mu - 1) / 3 + 1
+             dyn (mu, nu) = dyn (mu, nu) / SQRT ( amu_ry * amass (ityp (na) ) )
+          ENDDO
+       ENDDO
+       !
+       !
+     endif
+  enddo
+
+
+
+  RETURN
+END SUBROUTINE readmat_findq
+
