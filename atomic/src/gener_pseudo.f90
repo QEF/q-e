@@ -394,7 +394,7 @@ subroutine gener_pseudo
            !
            bmat(ns,ns1)=bmat(ns,ns1)+enls(ns1)*qq(ns,ns1)
            !
-           !    Use symmetry of the n,ns1 indeces to set qvan and qq and bmat
+           !    Use symmetry of the n,ns1 indices to set qvan and qq and bmat
            !
            if (ns.ne.ns1) then
               do n=1,grid%mesh
