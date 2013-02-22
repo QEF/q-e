@@ -59,8 +59,8 @@ MODULE io_dyn_mat
 
     INTEGER, INTENT(IN) :: ityp(nat)
 
-    INTEGER :: ierr, na, nt, kc
-    REAL(DP) :: aux(3,3)
+    INTEGER :: ierr, na, nt, kc, ibrav_
+    REAL(DP) :: aux(3,3), celldm_(6)
     REAL (DP), PARAMETER ::   convfact = BOHR_RADIUS_ANGS**2
 
 
@@ -71,7 +71,7 @@ MODULE io_dyn_mat
     END IF
     CALL mp_bcast( ierr, ionode_id, intra_image_comm )
     !
-    CALL errore( 'write_dyn_mat', 'no free units to write ', ierr )
+    CALL errore( 'write_dyn_mat_header', 'no free units to write ', ierr )
     IF ( ionode ) THEN
        !
        ! ... open XML descriptor
@@ -82,16 +82,19 @@ MODULE io_dyn_mat
     ENDIF
     CALL mp_bcast( ierr, ionode_id, intra_image_comm )
     !
-    CALL errore( 'write_dyn_mat', 'error opening the dyn mat file ', ierr )
+    CALL errore( 'write_dyn_mat_header', 'error opening the dyn mat file ', ierr )
     !
     IF (ionode) THEN
        CALL iotk_write_begin(iunout, "GEOMETRY_INFO" )
        !
        CALL iotk_write_dat(iunout, "NUMBER_OF_TYPES", ntyp )
        CALL iotk_write_dat(iunout, "NUMBER_OF_ATOMS", nat )
-       CALL iotk_write_dat(iunout, "BRAVAIS_LATTICE_INDEX", ibrav )
+       ibrav_=0
+       CALL iotk_write_dat(iunout, "BRAVAIS_LATTICE_INDEX", ibrav_ )
        CALL iotk_write_dat(iunout, "SPIN_COMPONENTS", nspin_mag )
-       CALL iotk_write_dat(iunout, "CELL_DIMENSIONS", celldm )
+       celldm_=0.0_DP
+       celldm_(1)=celldm(1)
+       CALL iotk_write_dat(iunout, "CELL_DIMENSIONS", celldm_ )
        CALL iotk_write_dat(iunout, "AT", at, COLUMNS=3 )
        CALL iotk_write_dat(iunout, "BG", bg, COLUMNS=3 )
        CALL iotk_write_dat(iunout, "UNIT_CELL_VOLUME_AU", omega )
@@ -271,7 +274,7 @@ MODULE io_dyn_mat
     ENDIF
     CALL mp_bcast( ierr, ionode_id, intra_image_comm )
     !
-    CALL errore( 'write_dyn_mat', 'error opening the dyn mat file ', ierr )
+    CALL errore( 'read_dyn_mat_param', 'error opening the dyn mat file ', ierr )
     !
     IF (ionode) THEN
        CALL iotk_scan_begin(iunout, "GEOMETRY_INFO" )
