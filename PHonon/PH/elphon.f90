@@ -13,11 +13,12 @@ SUBROUTINE elphon()
   ! Electron-phonon calculation from data saved in fildvscf
   !
   USE kinds, ONLY : DP
-  USE cell_base, ONLY : celldm, omega, ibrav
+  USE constants, ONLY : amu_ry
+  USE cell_base, ONLY : celldm, omega, ibrav, at, bg
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
   USE gvecs, ONLY: doublegrid
   USE fft_base, ONLY : dfftp, dffts
-  USE noncollin_module, ONLY : nspin_mag, noncolin
+  USE noncollin_module, ONLY : nspin_mag, noncolin, m_loc
   USE lsda_mod, ONLY : nspin
   USE phus,       ONLY : int3, int3_nc, int3_paw
   USE uspp,  ONLY: okvan
@@ -27,7 +28,10 @@ SUBROUTINE elphon()
   USE qpoint, ONLY : xq
   USE modes,  ONLY : npert, nirr, u
   USE uspp_param, ONLY : nhm
-  USE control_ph, ONLY : trans
+  USE control_ph, ONLY : trans, xmldyn
+  USE output,     ONLY : fildyn
+  USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
+                         read_dyn_mat, read_dyn_mat_tail
   USE units_ph, ONLY : iudyn, lrdrho, iudvscf, iuint3paw, lint3paw
   USE dfile_star,    ONLY : dvscf_star
   USE mp_global, ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
@@ -41,6 +45,10 @@ SUBROUTINE elphon()
   ! counter on the modes
   ! the change of Vscf due to perturbations
   COMPLEX(DP), POINTER :: dvscfin(:,:,:), dvscfins (:,:,:)
+
+  INTEGER :: ntyp_, nat_, ibrav_, nspin_mag_, mu, nu, na, nb, nta, ntb, nqs_
+  REAL(DP) :: celldm_(6)
+  CHARACTER(LEN=3) :: atm(ntyp)
    
   CALL start_clock ('elphon')
 
@@ -97,8 +105,52 @@ SUBROUTINE elphon()
   ! now read the eigenvalues and eigenvectors of the dynamical matrix
   ! calculated in a previous run
   !
-  IF (.NOT.trans) CALL readmat (iudyn, ibrav, celldm, nat, ntyp, &
-       ityp, omega, amass, tau, xq, w2, dyn)
+  IF (.NOT.trans) THEN
+     IF (.NOT. xmldyn) THEN
+        CALL readmat (iudyn, ibrav, celldm, nat, ntyp, &
+                      ityp, omega, amass, tau, xq, w2, dyn)
+     ELSE
+        CALL read_dyn_mat_param(fildyn, ntyp_, nat_)
+        IF ( ntyp_ /= ntyp .OR. nat_ /= nat ) &
+           CALL errore('elphon','uncorrect nat or ntyp',1)
+          
+        CALL read_dyn_mat_header(ntyp, nat, ibrav_, nspin_mag_, &
+                 celldm_, at, bg, omega, atm, amass, tau, ityp, &
+                 m_loc, nqs_)
+
+        IF (ibrav_.NE.ibrav .OR. ABS ( celldm_ (1) - celldm (1) ) > 1.0d-5 &
+             .OR. (nspin_mag_ /= nspin_mag ) ) CALL errore ('elphon', &
+             'inconsistent data', 1)
+
+        CALL read_dyn_mat(nat,1,xq,dyn)
+        !
+        !  Diagonalize the dynamical matrix
+        !
+        DO mu = 1, 3*nat
+           na = (mu - 1) / 3 + 1
+           nta = ityp (na)
+           DO nu = 1, 3*nat
+              nb = (nu - 1) / 3 + 1
+              ntb = ityp (nb)
+              dyn (mu, nu) = dyn (mu, nu) / &
+                             sqrt (amass (nta)*amass (ntb)) / amu_ry
+           ENDDO
+        ENDDO
+        !
+        CALL cdiagh (3 * nat, dyn, 3 * nat, w2, dyn)
+        !
+        ! divide by sqrt(mass) to get displacements
+        !
+        DO nu = 1, 3 * nat
+           DO mu = 1, 3 * nat
+              na = (mu - 1) / 3 + 1
+              dyn (mu, nu) = dyn (mu, nu) / SQRT ( amu_ry * amass (ityp (na) ) )
+           ENDDO
+        ENDDO
+
+        CALL read_dyn_mat_tail(nat)
+     ENDIF
+  ENDIF
   !
   CALL stop_clock ('elphon')
   RETURN
