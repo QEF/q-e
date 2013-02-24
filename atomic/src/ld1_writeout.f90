@@ -15,7 +15,7 @@ subroutine ld1_writeout
   !     Vanderbilt form or in the norm-conserving form
   !
   use radial_grids, only: ndmx
-  use io_global, only : stdout, ionode, ionode_id
+  use io_global, only : qestdin, stdout, ionode, ionode_id
   use mp,        only : mp_bcast
   use ld1inc, only : file_pseudopw, zed, grid, &
                      nconf , lpaw, rel, pawsetup, pseudotype, &
@@ -25,7 +25,7 @@ subroutine ld1_writeout
                      iswitch
   use funct, only : get_dft_name
   use paw_type, only : deallocate_pseudo_paw
-  use open_close_input_file, only: close_input_file, unit_loc
+  use open_close_input_file, only: close_input_file
 
   implicit none
 
@@ -88,7 +88,7 @@ subroutine ld1_writeout
         !
      else
         !
-        call export_upf(iunps, unit_loc)
+        call export_upf(iunps, qestdin)
         !
         if(lpaw) call deallocate_pseudo_paw( pawsetup )
         !

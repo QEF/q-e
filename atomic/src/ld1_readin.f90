@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------
-subroutine ld1_readin
+subroutine ld1_readin(input_file)
   !---------------------------------------------------------------
   !
   !     This routine reads the input parameters of the calculation
@@ -16,7 +16,7 @@ subroutine ld1_readin
   use ld1_parameters, only: ncmax1, nwfx, nwfsx
   use parameters,     only: lmaxx
   use constants,  ONLY : rytoev, c_au
-  USE io_global,  ONLY : ionode, ionode_id, stdout
+  USE io_global,  ONLY : ionode, ionode_id, qestdin, stdout
   USE mp,         ONLY : mp_bcast
   USE open_close_input_file,  ONLY : open_input_file, close_input_file
   use ld1inc,     only : els, lls, betas, qq, qvan, ikk, nbeta, pseudotype, &
@@ -49,6 +49,7 @@ subroutine ld1_readin
   use atomic_paw, only : paw2us
   implicit none
 
+  character(len=*), intent(in) :: input_file
   integer ::  &
        n,     &          ! counters on wavefunctions
        nc,    &          ! counter on configuration
@@ -219,13 +220,13 @@ subroutine ld1_readin
   ! (when generating a pseudopotential, input data file is needed)
 
   ios = 0
-  if (ionode) ios = open_input_file()
+  if (ionode) ios = open_input_file(input_file)
   call mp_bcast(ios, ionode_id)
   If ( ios > 0 ) call errore('ld1_readin','opening input file ',abs(ios))
 
   ! read the namelist input
 
-  if (ionode) read(5,input,err=100,iostat=ios) 
+  if (ionode) read(qestdin,input,err=100,iostat=ios) 
 100  call mp_bcast(ios, ionode_id)
   call errore('ld1_readin','reading input namelist ',abs(ios))
 
@@ -377,7 +378,7 @@ subroutine ld1_readin
      rmatch_augfun=-1.0_dp   ! force a crash
      rmatch_augfun_nc =.false.
 
-     if (ionode) read(5,inputp,err=500,iostat=ios)
+     if (ionode) read(qestdin,inputp,err=500,iostat=ios)
 500  call mp_bcast(ios, ionode_id)
      call errore('ld1_readin','reading inputp',abs(ios))
 
@@ -467,7 +468,7 @@ subroutine ld1_readin
 
   ! read test namelist, if present
 
-  if (ionode) read(5,test,end=300,err=300,iostat=ios)
+  if (ionode) read(qestdin,test,end=300,err=300,iostat=ios)
 300  call mp_bcast(ios, ionode_id)
 
   if(iswitch==4.and.rcutv<0.0) call errore('ld1_readin','inconsistent rcutv',1)
