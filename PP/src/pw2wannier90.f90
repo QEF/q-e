@@ -100,7 +100,8 @@ PROGRAM pw2wannier90
      !
      !   set default values for variables in namelist
      !
-     outdir = './'
+     CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+     IF ( trim( outdir ) == ' ' ) outdir = './'
      prefix = ' '
      seedname = 'wannier'
      spin_component = 'none'
