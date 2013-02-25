@@ -11,6 +11,7 @@ autopilot.o \
 basic_algebra_routines.o \
 becmod.o \
 bfgs_module.o \
+bspline.o \
 cell_base.o  \
 check_stop.o  \
 clocks.o \
