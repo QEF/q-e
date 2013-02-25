@@ -11,7 +11,7 @@
 ! updated by PG on Sep. 15, 2005 to account for the case in which
 ! nr1x,nr2x,nr3x (the physical dimensions of array rho) differ from
 !  nr1, nr2, nr3 (the true dimensions)
-!
+! updated by PG on Feb, 2013 upon suggestion by Thomas Gruber
 
 ! -------------------------------------------------------------------
 ! this routine writes a gaussian 98 like formatted cubefile.
@@ -25,14 +25,13 @@ SUBROUTINE write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
   USE kinds,  ONLY : DP
 
   IMPLICIT NONE
-  INTEGER          :: nat, ityp(nat), ounit,nr1, nr2, nr3, nr1x, nr2x, nr3x
-  CHARACTER(len=3) :: atm(*)
-  real(DP)    :: alat, tau(3,nat), at(3,3), bg(3,3), rho(nr1x,nr2x,nr3x)
-
+  INTEGER, INTENT(IN):: nat, ityp(nat), ounit, nr1,nr2,nr3, nr1x,nr2x,nr3x
+  CHARACTER(len=3), INTENT(IN) :: atm(*)
+  REAL(DP), INTENT(IN) :: alat, tau(3,nat), at(3,3),bg(3,3), rho(nr1x,nr2x,nr3x)
   ! --
-  INTEGER          :: i, nt, i1, i2, i3, at_num
+  INTEGER          :: i, nt, i1, i2, i3, im1, im2, im3, at_num
   INTEGER, EXTERNAL:: atomic_number
-  real(DP)    :: at_chrg, tpos(3), inpos(3)
+  real(DP)    :: at_chrg, tpos(3), inpos(3), rhoaux(nr3+1)
 
 !C     WRITE A FORMATTED 'DENSITY-STYLE' CUBEFILE VERY SIMILAR
 !C     TO THOSE CREATED BY THE GAUSSIAN PROGRAM OR THE CUBEGEN UTILITY.
@@ -54,9 +53,9 @@ SUBROUTINE write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
   WRITE(ounit,*) ' Total SCF Density'
 !                        origin is forced to (0.0,0.0,0.0)
   WRITE(ounit,'(I5,3F12.6)') nat, 0.0d0, 0.0d0, 0.0d0
-  WRITE(ounit,'(I5,3F12.6)') nr1, (alat*at(i,1)/dble(nr1),i=1,3)
-  WRITE(ounit,'(I5,3F12.6)') nr2, (alat*at(i,2)/dble(nr2),i=1,3)
-  WRITE(ounit,'(I5,3F12.6)') nr3, (alat*at(i,3)/dble(nr3),i=1,3)
+  WRITE(ounit,'(I5,3F12.6)') nr1+1, (alat*at(i,1)/dble(nr1),i=1,3)
+  WRITE(ounit,'(I5,3F12.6)') nr2+1, (alat*at(i,2)/dble(nr2),i=1,3)
+  WRITE(ounit,'(I5,3F12.6)') nr3+1, (alat*at(i,3)/dble(nr3),i=1,3)
 
   DO i=1,nat
      nt = ityp(i)
@@ -73,9 +72,15 @@ SUBROUTINE write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
      WRITE(ounit,'(I5,5F12.6)') at_num, at_chrg, inpos
   ENDDO
 
-  DO i1=1,nr1
-     DO i2=1,nr2
-        WRITE(ounit,'(6E13.5)') (rho(i1,i2,i3),i3=1,nr3)
+  DO i1=1,nr1+1
+     im1=mod(i1-1,nr1)+1
+     DO i2=1,nr2+1
+        im2=mod(i2-1,nr2)+1
+        DO i3=1,nr3+1
+           im3=mod(i3-1,nr3)+1
+           rhoaux(i3) = rho(im1,im2,im3)
+        END DO
+        WRITE(ounit,'(6E13.5)') (rhoaux(i3),i3=1,nr3+1)
      ENDDO
   ENDDO
   RETURN
