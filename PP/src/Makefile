@@ -111,9 +111,9 @@ xctest.x : xctest.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 		xctest.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pp.x : postproc.o chdens.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+pp.x : postproc.o chdens.o chdens_bspline.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		postproc.o chdens.o $(PPOBJS) $(MODULES) \
+		postproc.o chdens.o chdens_bspline.o $(PPOBJS) $(MODULES) \
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 

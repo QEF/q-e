@@ -81,3 +81,96 @@ SUBROUTINE write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
   RETURN
 END SUBROUTINE write_cubefile
 
+
+! -------------------------------------------------------------------
+! this routine instead writes a re-gridded cubefile (i.e. by B-spline
+! interpolation)
+! -------------------------------------------------------------------
+SUBROUTINE write_cubefile_new (alat, nat, tau, atm, ityp, x0, &
+               m1, m2, m3, e1, e2, e3, nx, ny, nz, carica, ounit)
+  USE kinds,     ONLY : dp
+  USE io_global, ONLY : stdout
+  USE cell_base, ONLY : at
+  implicit none
+  real(dp), intent(in) :: alat, tau(3,nat)
+  integer, intent(in)  :: nat, ityp(nat), ounit, nx, ny, nz
+  character(len=3)     :: atm(*)
+  real(dp), intent(in) :: m1, m2, m3, x0(3), e1(3), e2(3), e3(3), carica(nx,ny,nz)
+  integer              :: ia, i, j, k, at_num
+  integer, external    :: atomic_number
+  real(dp)             :: at_chrg, tpos(3), inpos(3)
+  real(dp)             :: bbmin(3), bbmax(3)
+  integer, parameter   :: natomsmax = 10000
+  real(dp)             :: taupos(3,natomsmax), pos(3)
+  integer              :: natoms, taupostyp(natomsmax)
+
+  ! generate bounding box
+  bbmin(:) = 1d30
+  bbmax(:) = -1d30
+  call bbox(x0, bbmin, bbmax)
+  call bbox(x0+e1, bbmin, bbmax)
+  call bbox(x0+e2, bbmin, bbmax)
+  call bbox(x0+e3, bbmin, bbmax)
+  call bbox(x0+e1+e2, bbmin, bbmax)
+  call bbox(x0+e2+e3, bbmin, bbmax)
+  call bbox(x0+e3+e1, bbmin, bbmax)
+  call bbox(x0+e1+e2+e3, bbmin, bbmax)
+  write(stdout,'(5X,''Bounding box= ['',F12.4,'','',F12.4,'']'')') bbmin(1)*alat, bbmax(1)*alat
+  write(stdout,'(5X,''              ['',F12.4,'','',F12.4,'']'')') bbmin(2)*alat, bbmax(2)*alat
+  write(stdout,'(5X,''              ['',F12.4,'','',F12.4,'']'')') bbmin(3)*alat, bbmax(3)*alat
+
+  ! generate atoms in bounding box
+  natoms = 0
+  do i = -5, 5
+     do j = -5, 5
+        do k = -5, 5
+           do ia = 1, nat
+              pos = tau(:,ia) + i*at(:,1) + j*at(:,2) + k*at(:,3)
+              if (all(pos >= bbmin) .and. all(pos <= bbmax)) then
+                 natoms = natoms + 1
+                 if (natoms > natomsmax) &
+                    call errore('write_cubefile_new', 'increase natomsmax', natoms)
+                 taupos(:,natoms) = pos(:)
+                 taupostyp(natoms) = ityp(ia)
+              endif
+           enddo
+        enddo
+     enddo
+  enddo
+  write(stdout,'(5X,I6,'' atoms inside bounding box'')') natoms
+
+  write(ounit,*) 'cubfile created from pwscf calculation'
+  write(ounit,*) 'total scf density'
+  write(ounit,'(i5,3f12.6)') natoms, x0(:)*alat
+  write(ounit,'(i5,3f12.6)') nx, alat*m1*e1(:)/dble(nx)
+  write(ounit,'(i5,3f12.6)') ny, alat*m2*e2(:)/dble(ny)
+  write(ounit,'(i5,3f12.6)') nz, alat*m3*e3(:)/dble(nz)
+
+  do ia = 1, natoms
+     at_num = atomic_number(trim(atm(taupostyp(ia))))
+     at_chrg = dble(at_num)
+     write(ounit,'(i5,5f12.6)') at_num, at_chrg, alat*taupos(:,ia)
+  enddo
+
+  do i=1,nx
+     do j=1,ny
+        write(ounit,'(6e13.5)') (carica(i,j,k),k=1,nz)
+     enddo
+  enddo
+  return
+
+END SUBROUTINE write_cubefile_new
+
+
+SUBROUTINE bbox(r, bbmin, bbmax)
+   USE kinds, only: dp
+   implicit none
+   real(dp), intent(in) :: r(3)
+   real(dp), intent(inout) :: bbmin(3), bbmax(3)
+   integer :: i
+   do i = 1, 3
+      bbmin(i) = min(bbmin(i), r(i))
+      bbmax(i) = max(bbmax(i), r(i))
+   enddo
+END SUBROUTINE bbox
+

@@ -79,6 +79,7 @@ SUBROUTINE chdens (filplot,plot_num)
   INTEGER, ALLOCATABLE :: ityps (:)
   CHARACTER (len=3) :: atms(ntypx)
   CHARACTER (len=256) :: filepp(nfilemax)
+  CHARACTER (len=20) :: interpolation
   real(DP) :: rhotot
   COMPLEX(DP), ALLOCATABLE:: rhog (:)
   ! rho or polarization in G space
@@ -86,7 +87,7 @@ SUBROUTINE chdens (filplot,plot_num)
 
   NAMELIST /plot/  &
        nfile, filepp, weight, iflag, e1, e2, e3, nx, ny, nz, x0, &
-       radius, output_format, fileout
+       radius, output_format, fileout, interpolation
 
   !
   !   set the DEFAULT values
@@ -105,6 +106,7 @@ SUBROUTINE chdens (filplot,plot_num)
   nx            = 0
   ny            = 0
   nz            = 0
+  interpolation = 'fourier'
   !
   !    read and check input data
   !
@@ -139,6 +141,7 @@ SUBROUTINE chdens (filplot,plot_num)
   CALL mp_bcast( nx, ionode_id )
   CALL mp_bcast( ny, ionode_id )
   CALL mp_bcast( nz, ionode_id )
+  CALL mp_bcast( interpolation, ionode_id )
 
   IF (output_format == -1 .or. iflag == -1) THEN
      CALL infomsg ('chdens', 'output format not set, exiting' )
@@ -194,6 +197,10 @@ SUBROUTINE chdens (filplot,plot_num)
      CALL errore ('chdens', 'iflag not implemented', 1)
 
   ENDIF
+
+  ! check interpolation
+  if (trim(interpolation) /= 'fourier' .and. trim(interpolation) /= 'bspline') &
+     call errore('chdens', 'wrong interpolation: ' // trim(interpolation), 1)
 
   !
   ! Read the header and allocate objects
@@ -341,6 +348,8 @@ SUBROUTINE chdens (filplot,plot_num)
        ( at(2,1) == 0.d0  .and.  at(3,1) == 0.d0) .and. &
        ( at(1,2) == 0.d0  .and.  at(3,2) == 0.d0) .and. &
        ( at(1,3) == 0.d0  .and.  at(2,3) == 0.d0)
+
+  fast3d = fast3d .and. (trim(interpolation) == 'fourier')
   !
   !    Initialise FFT for rho(r) => rho(G) conversion if needed
   !
@@ -392,12 +401,21 @@ SUBROUTINE chdens (filplot,plot_num)
   !
   IF (iflag <= 1) THEN
 
-     CALL plot_1d (nx, m1, x0, e1, ngm, g, rhog, alat, iflag, ounit)
+     if (trim(interpolation) == 'fourier') then
+        CALL plot_1d (nx, m1, x0, e1, ngm, g, rhog, alat, iflag, ounit)
+     else
+        CALL plot_1d_bspline (nx, m1, x0, e1, rhor, alat, iflag, ounit)
+     endif
 
   ELSEIF (iflag == 2) THEN
 
-     CALL plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
-          at, nat, tau, atm, ityp, output_format, ounit)
+     if (trim(interpolation) == 'fourier') then
+       CALL plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
+            at, nat, tau, atm, ityp, output_format, ounit)
+     else
+       CALL plot_2d_bspline (nx, ny, m1, m2, x0, e1, e2, rhor, alat, &
+            at, nat, tau, atm, ityp, output_format, ounit)
+     endif
      IF (output_format == 2.and.ionode) THEN
         WRITE (ounit, '(i4)') nat
         WRITE (ounit, '(3f8.4,i3)') ( (tau(ipol,na), ipol=1,3), 1, na=1,nat)
@@ -436,30 +454,37 @@ SUBROUTINE chdens (filplot,plot_num)
         !
         ! GAUSSIAN CUBE FORMAT
         !
-        CALL write_cubefile (alat, at, bg, nat, tau, atm, ityp, rhor, &
-             dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, ounit)
+        if (trim(interpolation) == 'fourier') then
+           CALL write_cubefile (alat, at, bg, nat, tau, atm, ityp, rhor, &
+                dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, ounit)
+        else
+           CALL plot_3d_bspline(celldm(1), at, nat, tau, atm, ityp, rhor,&
+                nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, &
+                ounit, rhotot)
+        endif
 
      ELSE
         !
         ! GOPENMOL FORMAT
         !
-        IF (ionode) THEN
-           !
-           IF (fast3d) THEN
+        IF (fast3d) THEN
+           CALL plot_fast (celldm (1), at, nat, tau, atm, ityp, &
+               dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, dfftp%nr1, dfftp%nr2, dfftp%nr3, rhor, &
+               bg, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, &
+               rhotot)
+        ELSE
+           IF (nx<=0 .or. ny <=0 .or. nz <=0) CALL errore("chdens","nx,ny,nz, required",1)
 
-              CALL plot_fast (celldm (1), at, nat, tau, atm, ityp, &
-                  dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, dfftp%nr1, dfftp%nr2, dfftp%nr3, rhor, &
-                  bg, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, &
-                  rhotot)
-           ELSE
-              IF (nx<=0 .or. ny <=0 .or. nz <=0) &
-                  CALL errore("chdens","nx,ny,nz, required",1)
-
+           if (trim(interpolation) == 'fourier') then 
               CALL plot_3d (celldm (1), at, nat, tau, atm, ityp, ngm, g, rhog,&
                    nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, &
                    ounit, rhotot)
-           ENDIF
-           !
+           else
+              CALL plot_3d_bspline(celldm(1), at, nat, tau, atm, ityp, rhor,&
+                   nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, &
+                   ounit, rhotot)
+           endif
+
         ENDIF
      ENDIF
 
@@ -951,7 +976,6 @@ SUBROUTINE plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
            ENDDO
         ENDDO
      ENDDO
-
   ENDDO
   CALL mp_sum( carica, intra_bgrp_comm )
   !
