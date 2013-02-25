@@ -123,15 +123,17 @@ subroutine initialize_grid_variables()
   USE partial,       ONLY : comp_irr
   USE grid_irr_iq,   ONLY : nsymq_iq, irr_iq, npert_irr_iq, comp_irr_iq
   USE ph_restart,    ONLY : ph_readfile
-  USE control_ph,    ONLY : start_q, last_q
-  USE mp,            ONLY : mp_bcast
-  USE mp_global,     ONLY : root, world_comm
+  USE control_ph,    ONLY : start_q, last_q, epsil, zeu
+  USE el_phon,       ONLY : elph
+  USE io_global,     ONLY : stdout
+  USE mp_global,     ONLY : mp_global_end
 
   implicit none
 
-  integer ::  irr, iq
+  INTEGER ::  irr, iq
   ! counters
-  integer :: ierr
+  INTEGER :: ierr
+  LOGICAL :: something_to_do
 
   allocate (u ( 3 * nat, 3 * nat))
   allocate (name_rap_mode( 3 * nat))
@@ -161,10 +163,14 @@ subroutine initialize_grid_variables()
 !  here deal with the start_q, last_q flags
 !
   comp_iq=.FALSE.
+  something_to_do=.FALSE.
   DO iq=1,nqs
      IF (iq>=start_q.AND.iq<=last_q) THEN
-        DO irr=1,irr_iq(iq)
-           IF (comp_irr_iq(irr,iq)) comp_iq(iq)=.TRUE.
+        DO irr=0,irr_iq(iq)
+           IF (comp_irr_iq(irr,iq)) THEN
+              comp_iq(iq)=.TRUE.
+              something_to_do=.TRUE.
+           ENDIF
         ENDDO
      ELSE
         comp_irr_iq(:,iq)=.FALSE.
@@ -175,6 +181,13 @@ subroutine initialize_grid_variables()
   DEALLOCATE (npert)
   DEALLOCATE (num_rap_mode)
   DEALLOCATE (name_rap_mode)
+  IF (.NOT.(something_to_do.OR.epsil.OR.zeu.OR.elph)) THEN
+     write(stdout,'(/,5x, "The code stops because there is nothing to do")') 
+     CALL clean_pw(.FALSE.)
+     CALL close_files(.FALSE.)
+     CALL mp_global_end()
+     STOP
+  ENDIF
 
   RETURN
 END SUBROUTINE initialize_grid_variables
