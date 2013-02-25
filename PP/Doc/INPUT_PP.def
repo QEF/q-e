@@ -338,6 +338,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 	    }	
 	}
 
+	var interpolation -type CHARACTER {
+	    default { "fourier" }
+	    info {
+		type of interpolation: "fourier" or "bspline" (EXPERIMENTAL!)
+	    }	
+	}
+
 	choose {	    
 	    when -test "iflag = 0 or 1" {
 		label { the following variables are REQUIRED: } 
