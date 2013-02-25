@@ -187,6 +187,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    info { If .true. restart from an interrupted run.}
 	}
 
+	var only_init  -type LOGICAL { 
+	    default { .false. }
+	    info { If .true. only the bands and other 
+                   initialization quantities are calculated. 
+                   (used for GRID parallelization)}
+	}
+
 	var qplot  -type LOGICAL { 
 	    default { .false. }
 	    info { If .true. a list of q points is read from input.}

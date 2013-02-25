@@ -21,7 +21,7 @@ subroutine bcast_ph_input ( )
                          niter_ph, lnoloc, alpha_mix, tr2_ph, lrpa, recover, &
                          ldisp, reduce_io, zue, zeu, epsil, trans, &
                          lgamma, ldiag, lqdir, search_sym,  electron_phonon, &
-                         qplot
+                         qplot, only_init
   USE gamma_gamma, ONLY : asr
   USE disp, ONLY : nq1, nq2, nq3
   USE partial, ONLY : nat_todo
@@ -59,6 +59,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (ldiag, ionode_id )
   call mp_bcast (lqdir, ionode_id )
   call mp_bcast (qplot, ionode_id )
+  call mp_bcast (only_init, ionode_id )
   call mp_bcast (search_sym, ionode_id)
   !
   ! integers

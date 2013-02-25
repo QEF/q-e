@@ -41,7 +41,7 @@ SUBROUTINE phq_readin()
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
                             ext_recover, ext_restart, u_from_file, ldiag, &
                             search_sym, lqdir, electron_phonon, tmp_dir_phq, &
-                            rec_code_read, qplot
+                            rec_code_read, qplot, only_init
 
   USE save_ph,       ONLY : tmp_dir_save, save_ph_input_variables
   USE gamma_gamma,   ONLY : asr
@@ -106,7 +106,7 @@ SUBROUTINE phq_readin()
                        fpol, asr, lrpa, lnoloc, start_irr, last_irr, &
                        start_q, last_q, nogg, ldiag, search_sym, lqdir, &
                        nk1, nk2, nk3, k1, k2, k3, &
-                       drho_star, dvscf_star, &
+                       drho_star, dvscf_star, only_init, &
                        elph_nbnd_min, elph_nbnd_max, el_ph_ngauss,el_ph_nsigma, el_ph_sigma,  &
                        electron_phonon, &
                        q_in_band_form, q2d, qplot
@@ -249,6 +249,7 @@ SUBROUTINE phq_readin()
   qplot        =.FALSE.
   q_in_band_form=.FALSE.
   q2d         = .FALSE.
+  only_init  = .FALSE.
   search_sym   =.TRUE.
   nk1       = 0
   nk2       = 0
@@ -338,6 +339,10 @@ SUBROUTINE phq_readin()
   END SELECT
   IF (elph.AND.qplot) &
      CALL errore('phq_readin', 'qplot and elph not implemented',1)
+
+  IF (ldisp.AND.only_init.AND.(.NOT.lqdir)) &
+     CALL errore('phq_readin', &
+                 'only_init=.TRUE. requires lqdir=.TRUE. or data are lost',1)
 
   epsil = epsil .OR. lraman .OR. elop
 
@@ -480,9 +485,13 @@ SUBROUTINE phq_readin()
 !   written by the phonon code for the current q point. If the file exists
 !   we read from there, otherwise use the information in outdir.
 !
-     IF (lqdir) &
+     IF (lqdir) THEN
         tmp_dir_phq= TRIM (tmp_dir_ph) //TRIM(prefix)//&
                           & '.q_' // TRIM(int_to_char(current_iq))//'/'
+        CALL check_restart_recover(ext_recover, ext_restart)
+        IF (.NOT.ext_recover.AND..NOT.ext_restart) tmp_dir_phq=tmp_dir_ph
+     ENDIF
+
 
      filename=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/data-file.xml'
      IF (ionode) inquire (file =TRIM(filename), exist = exst)

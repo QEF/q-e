@@ -330,6 +330,7 @@ MODULE control_ph
              zeu,         &! if .TRUE. computes eff. charges as induced forces
              done_zeu=.FALSE., &! .TRUE. when the eff. charges are available
              done_start_zstar=.FALSE., &!
+             only_init=.FALSE.,  &! if .TRUE. computes only initial stuff
              recover,     &! if .TRUE. the run restarts
              ext_restart, &! if .TRUE. there is a restart file
              ext_recover, &! if .TRUE. there is a recover file

@@ -43,3 +43,25 @@ machines or different processors.
 (input input.#q, output output.#q)
 
 3) q2r and matdyn compute the interatomic force constants and the dispersions.
+
+The calculation in run_example_3 is a variation of run_example
+in which all the bands are calculated first and then the band files are
+copied in the outdir directories or each ph.x run.
+At variance with run_example it does not recalculate the
+initialization (bands and electric field) for each irreducible 
+representation, but it occupies more disk space. Each different q must be 
+run in a different directory using lqdir=.true. It might be more convenient 
+than run_example for systems with many atoms and few q points.
+
+The run is as follows:
+
+1) A self consistent calculation is done:
+(input alas.scf.in, output alas.scf.out)
+
+2) A preparatory phonon run with lqdir=.true. and only_init=.true. calculates 
+the displacement patterns, the bands and if necessary the dielectric
+constant and effective charges
+(input alas.ph.in0, output alas.ph.out0)
+
+3-5) The rest is as in run_example (Note however that lqdir=.true. must
+be used in all phonon inputs).

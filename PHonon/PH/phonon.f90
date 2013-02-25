@@ -50,7 +50,7 @@ PROGRAM phonon
   ! [10] ? + nonperiodic boundary conditions.
 
   USE disp,            ONLY : nqs
-  USE control_ph,      ONLY : epsil, trans, bands_computed, qplot
+  USE control_ph,      ONLY : epsil, trans, bands_computed, qplot, only_init
   USE el_phon,         ONLY : elph, elph_mat, elph_simple
   USE output,          ONLY : fildrho
   USE check_stop,      ONLY : check_stop_init
@@ -104,6 +104,8 @@ PROGRAM phonon
      !
      IF (epsil) CALL phescf()
      !
+     IF (only_init) GOTO 100
+     !
      !  phonon perturbation
      !
      IF ( trans ) THEN
@@ -142,7 +144,7 @@ PROGRAM phonon
      !
      ! ... cleanup of the variables for the next q point
      !
-     CALL clean_pw_ph(iq)
+100  CALL clean_pw_ph(iq)
      !
   END DO
   !
