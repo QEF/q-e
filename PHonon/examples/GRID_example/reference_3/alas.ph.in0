@@ -1,0 +1,11 @@
+phonons of AlAs
+ &inputph
+  tr2_ph=1.0d-12,
+  prefix='alas',
+  ldisp=.true.,
+  nq1=4, nq2=4, nq3=4
+  only_init=.true.,
+  lqdir=.true.,
+  outdir='/u/cm/dalcorso/tmp/',
+  fildyn='alas.dyn.xml',
+ /
