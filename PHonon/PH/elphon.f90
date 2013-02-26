@@ -918,7 +918,7 @@ SUBROUTINE elphsum_simple
   USE modes, ONLY : u, rtau, nsymq, irotmq, minus_q
   USE control_ph, only : current_iq, qplot
   USE lsda_mod, only : isk
-  USE el_phon,   ONLY : gamma_disp
+  USE el_phon,   ONLY : done_elph, gamma_disp
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE mp,        ONLY: mp_sum, mp_bcast
   !
@@ -938,6 +938,11 @@ SUBROUTINE elphsum_simple
 
   INTEGER, EXTERNAL :: find_free_unit
   CHARACTER(LEN=6) :: int_to_char
+
+
+  DO irr=1,nirr
+     IF (.NOT.done_elph(irr)) RETURN
+  ENDDO
 
   nmodes=3*nat
 
