@@ -187,6 +187,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    info { If .true. restart from an interrupted run.}
 	}
 
+	var low_directory_check  -type LOGICAL { 
+	    default { .false. }
+	    info { If .true. search in the phsave directory only the
+                  quantities requested in input.}
+	}
+
 	var only_init  -type LOGICAL { 
 	    default { .false. }
 	    info { If .true. only the bands and other 
