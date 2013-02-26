@@ -916,7 +916,7 @@ SUBROUTINE elphsum_simple
   USE output, ONLY : fildyn
   USE dynmat, ONLY : dyn, w2
   USE modes, ONLY : u, rtau, nsymq, irotmq, minus_q
-  USE control_ph, only : current_iq
+  USE control_ph, only : current_iq, qplot
   USE lsda_mod, only : isk
   USE el_phon,   ONLY : gamma_disp
   USE io_global, ONLY : stdout, ionode, ionode_id
@@ -1076,7 +1076,7 @@ SUBROUTINE elphsum_simple
         WRITE (stdout, 9010) nu, lambda, gamma * 3.289828d6
         IF (ionode) WRITE (iuelph, 9010) nu, lambda, gamma * &
              3.289828d6
-        gamma_disp(nu,isig,current_iq) = gamma * 3.289828d6
+        IF (qplot) gamma_disp(nu,isig,current_iq) = gamma * 3.289828d6
      ENDDO
   ENDDO
   
