@@ -181,6 +181,7 @@ intref.o : ../../Modules/kind.o
 intref.o : ../../Modules/radial_grids.o
 inward.o : ../../Modules/kind.o
 inward.o : ../../Modules/radial_grids.o
+ld1.o : ../../Modules/command_line_options.o
 ld1.o : ../../Modules/environment.o
 ld1.o : ../../Modules/mp_global.o
 ld1.o : ../../Modules/radial_grids.o

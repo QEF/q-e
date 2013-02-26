@@ -1,4 +1,3 @@
-
 !
 ! Copyright (C) 2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the

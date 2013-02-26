@@ -338,8 +338,6 @@ davcio_drho.o : ../../Modules/kind.o
 davcio_drho.o : ../../Modules/mp.o
 davcio_drho.o : ../../Modules/mp_global.o
 davcio_drho.o : ../../Modules/noncol.o
-davcio_drho.o : ../../Modules/paw_variables.o
-davcio_drho.o : phcom.o
 deallocate_part.o : elph.o
 deallocate_part.o : phcom.o
 deallocate_phq.o : ../../Modules/becmod.o
@@ -638,7 +636,6 @@ el_ph_collect.o : ../../PW/src/pwcom.o
 elph.o : ../../Modules/kind.o
 elphon.o : ../../Modules/cell_base.o
 elphon.o : ../../Modules/constants.o
-elphon.o : ../../Modules/control_flags.o
 elphon.o : ../../Modules/fft_base.o
 elphon.o : ../../Modules/io_files.o
 elphon.o : ../../Modules/io_global.o
@@ -658,10 +655,12 @@ elphon.o : ../../PW/src/start_k.o
 elphon.o : ../../PW/src/symm_base.o
 elphon.o : dfile_star.o
 elphon.o : elph.o
+elphon.o : io_dyn_mat.o
 elphon.o : ph_restart.o
 elphon.o : phcom.o
 elphon.o : save_ph_input.o
 ep_matrix_element_wannier.o : ../../Modules/cell_base.o
+ep_matrix_element_wannier.o : ../../Modules/constants.o
 ep_matrix_element_wannier.o : ../../Modules/fft_base.o
 ep_matrix_element_wannier.o : ../../Modules/fft_interfaces.o
 ep_matrix_element_wannier.o : ../../Modules/io_files.o
@@ -776,6 +775,7 @@ init_representations.o : ../../Modules/kind.o
 init_representations.o : ../../Modules/mp.o
 init_representations.o : ../../Modules/mp_global.o
 init_representations.o : ../../PW/src/symm_base.o
+init_representations.o : elph.o
 init_representations.o : ph_restart.o
 init_representations.o : phcom.o
 initialize_ph.o : ../../PW/src/pwcom.o
@@ -1481,6 +1481,13 @@ write_modes.o : ../../Modules/io_global.o
 write_modes.o : ../../Modules/ions_base.o
 write_modes.o : ../../Modules/kind.o
 write_modes.o : phcom.o
+write_qplot_data.o : ../../Modules/constants.o
+write_qplot_data.o : ../../Modules/io_global.o
+write_qplot_data.o : ../../Modules/ions_base.o
+write_qplot_data.o : ../../Modules/kind.o
+write_qplot_data.o : ../../Modules/mp_global.o
+write_qplot_data.o : elph.o
+write_qplot_data.o : phcom.o
 write_ramtns.o : ../../Modules/cell_base.o
 write_ramtns.o : ../../Modules/constants.o
 write_ramtns.o : ../../Modules/ions_base.o

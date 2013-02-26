@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -449,7 +449,7 @@ SUBROUTINE elphsum ( )
   !      New version by  Malgorzata Wierzbowska
   !
   USE kinds,       ONLY : DP
-  USE constants,   ONLY : pi, rytoev, degspin
+  USE constants,   ONLY : pi, rytoev, ry_to_cmm1, ry_to_ghz, degspin
   USE ions_base,   ONLY : nat, ityp, tau
   USE cell_base,   ONLY : at, bg
   USE lsda_mod,    ONLY: isk, nspin
@@ -473,8 +473,8 @@ SUBROUTINE elphsum ( )
   !
   IMPLICIT NONE
   ! epsw = 20 cm^-1, in Ry
-  REAL(DP), PARAMETER :: Rytocm1 = 109737.57990d0, RytoGHz = 3.289828D6, &
-       RytoTHz = RytoGHz/1000.d0, epsw = 20.d0 / Rytocm1, eps = 1.0d-6
+  REAL(DP), PARAMETER :: epsw = 20.d0 / ry_to_cmm1
+  REAL(DP), PARAMETER :: eps = 1.0d-6
   !
   INTEGER :: iuna2Fsave  = 40
   !
@@ -810,7 +810,7 @@ SUBROUTINE elphsum ( )
         else
            lamb(nu,isig) = 0.0d0
         endif
-        gam(nu,isig) = gam(nu,isig)*RytoGHz
+        gam(nu,isig) = gam(nu,isig)*ry_to_ghz
      enddo  !nu
   enddo  ! isig
   !
@@ -904,7 +904,7 @@ SUBROUTINE elphsum_simple
   !      Rewritten by Matteo Calandra
   !-----------------------------------------------------------------------
   USE kinds, ONLY : DP
-  USE constants, ONLY : pi, ry_to_cmm1, rytoev
+  USE constants, ONLY : pi, ry_to_cmm1, ry_to_ghz, rytoev
   USE ions_base, ONLY : nat
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, irt, nsym, invs
@@ -1025,9 +1025,7 @@ SUBROUTINE elphsum_simple
      !
      ! collect contributions from all pools (sum over k-points)
      !
-     
-!     CALL poolreduce (2 * 3 * nat * 3 * nat, el_ph_sum)
-!     CALL poolreduce (1, phase_space)
+
      call mp_sum ( el_ph_sum , inter_pool_comm )
      call mp_sum ( phase_space , inter_pool_comm )
 
@@ -1077,11 +1075,9 @@ SUBROUTINE elphsum_simple
         ELSE
            lambda = 0.d0
         ENDIF
-        ! 3.289828x10^6 is the conversion factor from Ry to GHz
-        WRITE (stdout, 9010) nu, lambda, gamma * 3.289828d6
-        IF (ionode) WRITE (iuelph, 9010) nu, lambda, gamma * &
-             3.289828d6
-        IF (qplot) gamma_disp(nu,isig,current_iq) = gamma * 3.289828d6
+        WRITE (stdout, 9010) nu, lambda, gamma * ry_to_gHz
+        IF (ionode) WRITE (iuelph, 9010) nu, lambda, gamma * ry_to_gHz
+        IF (qplot) gamma_disp(nu,isig,current_iq) = gamma * ry_to_gHz
      ENDDO
   ENDDO
   
@@ -1104,9 +1100,6 @@ SUBROUTINE elphsum_simple
 
 END SUBROUTINE elphsum_simple
    
-
-
-
 !-----------------------------------------------------------------------
 FUNCTION dos_ef (ngauss, degauss, ef, et, wk, nks, nbnd)
   !-----------------------------------------------------------------------

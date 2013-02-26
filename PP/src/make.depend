@@ -126,6 +126,11 @@ chdens.o : ../../Modules/recvec_subs.o
 chdens.o : ../../Modules/run_info.o
 chdens.o : ../../Modules/wavefunctions.o
 chdens.o : ../../PW/src/pwcom.o
+chdens_bspline.o : ../../Modules/bspline.o
+chdens_bspline.o : ../../Modules/cell_base.o
+chdens_bspline.o : ../../Modules/fft_base.o
+chdens_bspline.o : ../../Modules/io_global.o
+chdens_bspline.o : ../../Modules/kind.o
 compute_ppsi.o : ../../Modules/becmod.o
 compute_ppsi.o : ../../Modules/cell_base.o
 compute_ppsi.o : ../../Modules/io_global.o
@@ -149,6 +154,8 @@ compute_sigma_avg.o : ../../Modules/uspp.o
 compute_sigma_avg.o : ../../Modules/wavefunctions.o
 compute_sigma_avg.o : ../../PW/src/pwcom.o
 compute_sigma_avg.o : ../../PW/src/scf_mod.o
+cube.o : ../../Modules/cell_base.o
+cube.o : ../../Modules/io_global.o
 cube.o : ../../Modules/kind.o
 d_matrix_nc.o : ../../Modules/kind.o
 d_matrix_nc.o : ../../Modules/random_numbers.o

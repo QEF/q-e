@@ -40,14 +40,12 @@ input.o : ../../Modules/xml_io_base.o
 input.o : path_input_parameters_module.o
 input.o : path_variables.o
 neb.o : ../../Modules/check_stop.o
+neb.o : ../../Modules/command_line_options.o
 neb.o : ../../Modules/environment.o
 neb.o : ../../Modules/io_global.o
 neb.o : ../../Modules/mp.o
 neb.o : ../../Modules/mp_global.o
-neb.o : ../../Modules/read_cards.o
-neb.o : ../../Modules/read_namelists.o
-neb.o : ../../Modules/read_xml.o
-neb.o : ../../iotk/src/iotk_module.o
+neb.o : ../../Modules/read_input.o
 neb.o : path_base.o
 neb.o : path_input_parameters_module.o
 neb.o : path_io_routines.o
@@ -123,7 +121,6 @@ path_to_engine_fix_atom_pos.o : ../../Modules/kind.o
 path_to_engine_fix_atom_pos.o : path_input_parameters_module.o
 path_to_engine_fix_atom_pos.o : path_variables.o
 path_variables.o : ../../Modules/kind.o
-set_defaults.o : ../../Modules/input_parameters.o
 set_defaults.o : ../../Modules/io_global.o
 stop_run_path.o : ../../Modules/environment.o
 stop_run_path.o : ../../Modules/io_global.o

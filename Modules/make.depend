@@ -16,6 +16,7 @@ bfgs_module.o : cell_base.o
 bfgs_module.o : constants.o
 bfgs_module.o : io_files.o
 bfgs_module.o : kind.o
+bspline.o : kind.o
 cell_base.o : constants.o
 cell_base.o : control_flags.o
 cell_base.o : io_global.o
@@ -176,7 +177,6 @@ pseudo_types.o : kind.o
 pseudo_types.o : radial_grids.o
 ptoolkit.o : descriptors.o
 ptoolkit.o : dspev_drv.o
-ptoolkit.o : io_global.o
 ptoolkit.o : kind.o
 ptoolkit.o : parallel_include.o
 ptoolkit.o : zhpev_drv.o
@@ -192,6 +192,7 @@ read_cards.o : parser.o
 read_cards.o : wannier_new.o
 read_cards.o : wrappers.o
 read_input.o : ../iotk/src/iotk_module.o
+read_input.o : input_parameters.o
 read_input.o : io_global.o
 read_input.o : kind.o
 read_input.o : mp.o
@@ -339,6 +340,5 @@ xml_io_base.o : mp_global.o
 xml_io_base.o : mp_wave.o
 xml_io_base.o : parser.o
 xml_io_base.o : wrappers.o
-zhpev_drv.o : io_global.o
 zhpev_drv.o : kind.o
 fft_scalar.o : ../include/fft_defs.h

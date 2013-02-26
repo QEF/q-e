@@ -221,9 +221,12 @@ cpr_loop.o : ../../Modules/ions_base.o
 cpr_loop.o : ../../Modules/kind.o
 cpr_mod.o : ../../Modules/kind.o
 cprstart.o : ../../Modules/check_stop.o
+cprstart.o : ../../Modules/command_line_options.o
 cprstart.o : ../../Modules/environment.o
 cprstart.o : ../../Modules/io_global.o
+cprstart.o : ../../Modules/mp.o
 cprstart.o : ../../Modules/mp_global.o
+cprstart.o : ../../Modules/mp_images.o
 cprstart.o : ../../Modules/read_input.o
 cprstart.o : input.o
 dealloc.o : ../../Modules/electrons_base.o
@@ -434,7 +437,7 @@ init_run.o : ../../Modules/io_global.o
 init_run.o : ../../Modules/ions_base.o
 init_run.o : ../../Modules/kind.o
 init_run.o : ../../Modules/mp.o
-init_run.o : ../../Modules/mp_global.o
+init_run.o : ../../Modules/mp_bands.o
 init_run.o : ../../Modules/recvec.o
 init_run.o : ../../Modules/timestep.o
 init_run.o : ../../Modules/uspp.o
