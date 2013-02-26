@@ -915,7 +915,7 @@ SUBROUTINE elphsum_simple
   USE qpoint, ONLY : xq, nksq, ikks, ikqs
   USE output, ONLY : fildyn
   USE dynmat, ONLY : dyn, w2
-  USE modes, ONLY : u, rtau, nsymq, irotmq, minus_q
+  USE modes, ONLY : u, rtau, nsymq, irotmq, minus_q, nirr
   USE control_ph, only : current_iq, qplot
   USE lsda_mod, only : isk
   USE el_phon,   ONLY : done_elph, gamma_disp
@@ -926,7 +926,7 @@ SUBROUTINE elphsum_simple
   REAL(DP), PARAMETER :: eps = 20_dp/ry_to_cmm1 ! eps = 20 cm^-1, in Ry
   !
   INTEGER :: ik, ikk, ikq, isig, ibnd, jbnd, ipert, jpert, nu, mu, &
-       vu, ngauss1, nsig, iuelph, ios
+       vu, ngauss1, nsig, iuelph, ios, irr
   INTEGER :: nmodes
   REAL(DP) :: weight, w0g1, w0g2, w0gauss, wgauss, degauss1, dosef, &
        ef1, phase_space, lambda, gamma
