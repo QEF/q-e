@@ -21,6 +21,7 @@ subroutine el_config &
   !
   use kinds, only: dp
   use ld1_parameters
+  use io_global, only : qestdin
   implicit none
   ! input: electronic configuration
   character(len=*), intent(in):: config
@@ -226,6 +227,7 @@ subroutine read_config(rel, lsd, nwf, el, nn, ll, oc, isw, jj)
   !
   use kinds, only: dp
   use ld1_parameters, only: nwfx
+  use io_global, only : qestdin
   implicit none
   ! input
   integer :: rel, lsd 
@@ -239,7 +241,7 @@ subroutine read_config(rel, lsd, nwf, el, nn, ll, oc, isw, jj)
   character (len=1), external :: capital
   !
   !
-  read(5,*,err=200,iostat=ios) nwf
+  read(qestdin,*,err=200,iostat=ios) nwf
 200 call errore('read_config','reading nwf ',abs(ios))
   if (nwf <= 0) call errore('read_config','nwf is wrong',1)
   if (nwf > nwfx) call errore('read_config','too many wfcs',1)
@@ -250,19 +252,19 @@ subroutine read_config(rel, lsd, nwf, el, nn, ll, oc, isw, jj)
      if (rel < 2) then
         jj(n) = 0.0_dp
         if (lsd == 0) then
-           read(5,*,err=20,end=20,iostat=ios) &
+           read(qestdin,*,err=20,end=20,iostat=ios) &
                 el(n), nn(n), ll(n), oc(n)
            isw(n)=1
 20         call errore('read_config','reading orbital (lda)',abs(ios))
         else  
-           read(5,*,err=21,end=21,iostat=ios) &
+           read(qestdin,*,err=21,end=21,iostat=ios) &
                 el(n), nn(n), ll(n), oc(n), isw(n)
 21         call errore('read_config','reading orbital (lsd)',abs(ios))
            if(isw(n) > 2 .or. isw(n) < 1) &
                 call errore('read_config','spin variable wrong ',n)
         endif
      else
-        read(5,*,err=22,end=22,iostat=ios) &
+        read(qestdin,*,err=22,end=22,iostat=ios) &
              el(n), nn(n), ll(n), oc(n), jj(n)
         isw(n)=1
         if ((abs(ll(n)+0.5_dp-jj(n)) > 1.e-3_dp) .and. &
@@ -308,6 +310,7 @@ subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
   !
   use kinds, only: dp
   use ld1_parameters, only: nwfsx
+  use io_global, only : qestdin
   implicit none
   ! input
   integer :: rel, lsd 
@@ -321,7 +324,7 @@ subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
   character (len=2) :: label
   character (len=1), external :: capital
 
-  read(5,*,err=600,iostat=ios) nwfs
+  read(qestdin,*,err=600,iostat=ios) nwfs
 600 call errore('read_psconfig','reading number of pseudo wavefunctions (nwfs)',abs(ios))
 
   if (nwfs <= 0 .or. nwfs > nwfsx) &
@@ -330,7 +333,7 @@ subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
   do n=1,nwfs
      if (rel < 2) then
         if (lsd == 1) then
-           read(5,*,err=30,end=30,iostat=ios) &
+           read(qestdin,*,err=30,end=30,iostat=ios) &
                 els(n), nns(n), lls(n), ocs(n), enls(n), &
                 rcut(n), rcutus(n), isws(n)
            if (isws(n) > 2 .or. isws(n) < 1) &
@@ -338,7 +341,7 @@ subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
            if (ocs(n) > (2.0_dp*lls(n)+1.0_dp))                 &
              call errore('read_psconfig','occupations (ls) wrong',n)
         else
-           read(5,*,err=30,end=30,iostat=ios) &
+           read(qestdin,*,err=30,end=30,iostat=ios) &
                 els(n), nns(n), lls(n), ocs(n), enls(n), &
                 rcut(n), rcutus(n)
            isws(n)=1
@@ -347,7 +350,7 @@ subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
         end if
         jjs(n)=0.0_dp
      else
-        read(5,*,err=30,end=30,iostat=ios) &
+        read(qestdin,*,err=30,end=30,iostat=ios) &
              els(n), nns(n), lls(n), ocs(n), enls(n),     &
              rcut(n), rcutus(n), jjs(n)
         isws(n)=1
