@@ -1024,6 +1024,16 @@ MODULE ph_restart
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   LOGICAL :: exst
   !
+  ierr=0
+  IF (ionode) THEN
+     CALL iotk_free_unit( iunout, ierr )
+  ENDIF
+  !
+  CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+  !
+  CALL errore( 'check_directory_phsave', &
+                   'no free units to write or read ', ierr )
+
   dirname = TRIM( tmp_dir_ph ) // TRIM( prefix ) // '.phsave'
   ierr=0
   DO iq=1, nqs
