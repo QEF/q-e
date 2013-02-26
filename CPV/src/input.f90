@@ -857,7 +857,10 @@ MODULE input
      ! ...   Set Values for the cutoff
 
      CALL ecutoffs_setup( ecutwfc, ecutrho, ecfixed, qcutz, q2sigma, refg )
-
+     if (.not. allocated(xk)) then
+       allocate(xk(3,1))
+       xk = 0.d0
+     endif
      CALL gcutoffs_setup( alat_ , tk_inp, nkstot, xk )
 
      ! ... 

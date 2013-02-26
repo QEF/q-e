@@ -1020,9 +1020,15 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
 
   CALL mp_sum( bec, inter_bgrp_comm )
   !
-  IF( ( descla( 1 )%active_node > 0 ) .OR. ( descla( 2 )%active_node > 0 ) ) THEN
-     ALLOCATE ( tmpbec(nhm,nrcx), tmpdh(nrcx,nhm), temp(nrcx,nrcx) )
-  END IF
+  IF (nspin == 1) THEN
+     IF( ( descla( 1 )%active_node > 0 ) ) THEN
+        ALLOCATE ( tmpbec(nhm,nrcx), tmpdh(nrcx,nhm), temp(nrcx,nrcx) )
+     ENDIF
+  ELSEIF (nspin == 2) THEN
+     IF( ( descla( 1 )%active_node > 0 ) .OR. ( descla( 2 )%active_node > 0 ) ) THEN
+        ALLOCATE ( tmpbec(nhm,nrcx), tmpdh(nrcx,nhm), temp(nrcx,nrcx) )
+     END IF
+  ENDIF
   !
   fpre = 0.d0
   !
@@ -1100,7 +1106,8 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
      enddo
   enddo
 
-  IF( ( descla( 1 )%active_node > 0 ) .OR. ( descla( 2 )%active_node > 0 ) ) THEN
+  !!IF( ( descla( 1 )%active_node > 0 ) .OR. ( descla( 2 )%active_node > 0 ) ) THEN
+  IF (allocated(tmpbec)) THEN
      DEALLOCATE ( tmpbec, tmpdh, temp )
   END IF
 
