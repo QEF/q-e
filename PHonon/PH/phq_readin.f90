@@ -41,7 +41,7 @@ SUBROUTINE phq_readin()
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
                             ext_recover, ext_restart, u_from_file, ldiag, &
                             search_sym, lqdir, electron_phonon, tmp_dir_phq, &
-                            rec_code_read, qplot, only_init
+                            rec_code_read, qplot, only_init, low_directory_check
 
   USE save_ph,       ONLY : tmp_dir_save, save_ph_input_variables
   USE gamma_gamma,   ONLY : asr
@@ -109,7 +109,7 @@ SUBROUTINE phq_readin()
                        drho_star, dvscf_star, only_init, &
                        elph_nbnd_min, elph_nbnd_max, el_ph_ngauss,el_ph_nsigma, el_ph_sigma,  &
                        electron_phonon, &
-                       q_in_band_form, q2d, qplot
+                       q_in_band_form, q2d, qplot, low_directory_check
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -168,8 +168,12 @@ SUBROUTINE phq_readin()
   ! el_ph_nsigma, 
   ! el_ph_sigma  :  if (elph_mat=.true.) it defines the kind and the val-ue of the
   !                 smearing to be used in the eph coupling calculation.
+  ! qplot, : if true a list of q points is given in input
+  ! q_in_band_form: if true the input list of q points defines paths 
+  ! q2d, : if .true. the q list define a mesh in a square.
+  ! low_directory_check : if .true. only the requested representations
+  !                       are searched on file
   !             
-
   IF (ionode) THEN
   !
   ! ... Input from file ?
@@ -250,6 +254,7 @@ SUBROUTINE phq_readin()
   q_in_band_form=.FALSE.
   q2d         = .FALSE.
   only_init  = .FALSE.
+  low_directory_check=.FALSE.
   search_sym   =.TRUE.
   nk1       = 0
   nk2       = 0

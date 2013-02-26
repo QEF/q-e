@@ -332,6 +332,9 @@ MODULE control_ph
              done_start_zstar=.FALSE., &!
              only_init=.FALSE.,  &! if .TRUE. computes only initial stuff
              recover,     &! if .TRUE. the run restarts
+             low_directory_check=.FALSE., & ! if .TRUE. search on the phsave 
+                           ! directory only the representations requested 
+                           ! in input.
              ext_restart, &! if .TRUE. there is a restart file
              ext_recover, &! if .TRUE. there is a recover file
              lrpa,        &! if .TRUE. calculates the RPA dielectric constant

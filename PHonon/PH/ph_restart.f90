@@ -1014,7 +1014,7 @@ MODULE ph_restart
   USE kinds, ONLY : DP
   USE disp, ONLY : nqs, done_iq
   USE grid_irr_iq, ONLY : comp_irr_iq, done_irr_iq, irr_iq, done_elph_iq
-  USE control_ph, ONLY : trans, current_iq
+  USE control_ph, ONLY : trans, current_iq, low_directory_check
   USE el_phon,    ONLY : elph
   ! 
   IMPLICIT NONE
@@ -1043,20 +1043,22 @@ MODULE ph_restart
 !    NB: the representation 0 is the initial dynamical matrix calculated by 
 !        dyn0. If it finds the file read the relevant information
 !
-            filename= TRIM( dirname ) // '/dynmat.' // &
-                      TRIM(int_to_char(iq)) // '.' 
+           filename= TRIM( dirname ) // '/dynmat.' // &
+                     TRIM(int_to_char(iq)) // '.' 
 
            DO irr=0,irr_iq(iq)
-              filename1=TRIM(filename) // TRIM(int_to_char(irr)) // '.xml'
-              INQUIRE(FILE=TRIM(filename1), EXIST=exst)
-              IF (.NOT.exst) CYCLE
-              CALL iotk_open_read(iunout, FILE = TRIM(filename1), &
+              IF (comp_irr_iq(irr,iq).OR..NOT.low_directory_check) THEN
+                 filename1=TRIM(filename) // TRIM(int_to_char(irr)) // '.xml'
+                 INQUIRE(FILE=TRIM(filename1), EXIST=exst)
+                 IF (.NOT.exst) CYCLE
+                 CALL iotk_open_read(iunout, FILE = TRIM(filename1), &
                                        BINARY = .FALSE., IERR = ierr )
-              IF (ierr /= 0 ) GOTO 100
-              CALL iotk_scan_begin( iunout, "PM_HEADER" )
-              CALL iotk_scan_dat(iunout,"DONE_IRR",done_irr_iq(irr,iq))
-              CALL iotk_scan_end( iunout, "PM_HEADER" )
-              CALL iotk_close_read(iunout)
+                 IF (ierr /= 0 ) GOTO 100
+                 CALL iotk_scan_begin( iunout, "PM_HEADER" )
+                 CALL iotk_scan_dat(iunout,"DONE_IRR",done_irr_iq(irr,iq))
+                 CALL iotk_scan_end( iunout, "PM_HEADER" )
+                 CALL iotk_close_read(iunout)
+              ENDIF
            END DO
 !
 !   Check for the electron phonon files
@@ -1066,16 +1068,18 @@ MODULE ph_restart
                         TRIM(int_to_char(iq)) // '.' 
 
               DO irr=1,irr_iq(iq)
-                 filename1=TRIM(filename) // TRIM(int_to_char(irr)) // '.xml'
-                 INQUIRE(FILE=TRIM(filename1), EXIST=exst)
-                 IF (.NOT.exst) CYCLE
-                 CALL iotk_open_read(iunout, FILE = TRIM(filename1), &
+                 IF (comp_irr_iq(irr,iq).OR..NOT.low_directory_check) THEN
+                    filename1=TRIM(filename) // TRIM(int_to_char(irr)) // '.xml'
+                    INQUIRE(FILE=TRIM(filename1), EXIST=exst)
+                    IF (.NOT.exst) CYCLE
+                    CALL iotk_open_read(iunout, FILE = TRIM(filename1), &
                                           BINARY = .FALSE., IERR = ierr )
-                 IF (ierr /= 0 ) GOTO 100
-                 CALL iotk_scan_begin(iunout, "EL_PHON_HEADER")
-                 CALL iotk_scan_dat(iunout, "DONE_ELPH", done_elph_iq(irr,iq))
-                 CALL iotk_scan_end(iunout, "EL_PHON_HEADER")
-                 CALL iotk_close_read(iunout)
+                    IF (ierr /= 0 ) GOTO 100
+                    CALL iotk_scan_begin(iunout, "EL_PHON_HEADER")
+                    CALL iotk_scan_dat(iunout, "DONE_ELPH", done_elph_iq(irr,iq))
+                    CALL iotk_scan_end(iunout, "EL_PHON_HEADER")
+                    CALL iotk_close_read(iunout)
+                 ENDIF
               ENDDO
            END IF
         END IF 

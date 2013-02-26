@@ -88,7 +88,7 @@ subroutine phq_recover
   USE ph_restart,    ONLY : ph_readfile
   USE control_ph,    ONLY : epsil, rec_code_read, all_done, where_rec,&
                             zeu, done_epsil, done_zeu, ext_recover, recover, &
-                            lgamma, zue, trans, current_iq
+                            lgamma, zue, trans, current_iq, low_directory_check
   USE wvfct,         ONLY : nbnd
   USE qpoint,        ONLY : nksq
   USE el_phon,       ONLY : el_ph_mat, el_ph_mat_rec, done_elph, elph
@@ -97,6 +97,7 @@ subroutine phq_recover
   USE modes,         ONLY : nirr, npert
   USE ramanm,        ONLY : lraman, elop, done_lraman, done_elop
   USE freq_ph,       ONLY : fpol, done_fpol, done_iu, nfs
+  USE grid_irr_iq,   ONLY : comp_irr_iq
   USE dynmat,        ONLY : dyn, dyn_rec
   !
   implicit none
@@ -125,24 +126,26 @@ subroutine phq_recover
         done_elph=.FALSE.
      ENDIF
      DO irr=0, nirr
-        IF (trans.OR.elph) THEN
-           CALL ph_readfile('data_dyn', current_iq, irr, ierr1)
-           IF (ierr1 == 0) THEN
-              dyn = dyn + dyn_rec
-              IF (zue.and.irr>0) zstarue0 = zstarue0 + zstarue0_rec
-           ENDIF
-        END IF
-        IF ( elph .and. irr > 0 ) THEN
-           npe = npert(irr)
-           ALLOCATE(el_ph_mat_rec(nbnd,nbnd,nksq,npe))
-           CALL ph_readfile('el_phon', current_iq, irr, ierr1)
-           IF (ierr1 == 0) THEN
-              el_ph_mat(:,:,:,imode0+1:imode0+npe) = &
+        IF (comp_irr_iq(irr,current_iq).OR..NOT.low_directory_check) THEN
+           IF (trans.OR.elph) THEN
+              CALL ph_readfile('data_dyn', current_iq, irr, ierr1)
+              IF (ierr1 == 0) THEN
+                 dyn = dyn + dyn_rec
+                 IF (zue.and.irr>0) zstarue0 = zstarue0 + zstarue0_rec
+              ENDIF
+           END IF
+           IF ( elph .and. irr > 0 ) THEN
+              npe = npert(irr)
+              ALLOCATE(el_ph_mat_rec(nbnd,nbnd,nksq,npe))
+              CALL ph_readfile('el_phon', current_iq, irr, ierr1)
+              IF (ierr1 == 0) THEN
+                 el_ph_mat(:,:,:,imode0+1:imode0+npe) = &
                   el_ph_mat(:,:,:,imode0+1:imode0+npe) + el_ph_mat_rec(:,:,:,:)
-           ENDIF
-           DEALLOCATE(el_ph_mat_rec)
-           imode0=imode0 + npe
-        END IF
+              ENDIF
+              DEALLOCATE(el_ph_mat_rec)
+              imode0=imode0 + npe
+           END IF
+        ENDIF
      ENDDO
 
      IF (rec_code_read==-40) THEN

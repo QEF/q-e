@@ -169,6 +169,7 @@ phonons of AlAs
   start_irr=$irr
   last_irr=$irr
   recover=.true.,
+  low_directory_check=.true.
   outdir="$TMP_DIR/$q.$irr",
   fildyn='$PREFIX.dyn.xml',
  /
@@ -176,8 +177,13 @@ EOF
 
 mkdir $TMP_DIR/$q.$irr
 cp -r $TMP_DIR/$PREFIX.* $TMP_DIR/$q.$irr
-mkdir -p $TMP_DIR/$q.$irr/_ph0
-cp -r $TMP_DIR/_ph0/* $TMP_DIR/$q.$irr/_ph0/
+#mkdir -p $TMP_DIR/$q.$irr/_ph0/$PREFIX.q_$q
+#mkdir -p $TMP_DIR/$q.$irr/_ph0/$PREFIX.q_8
+cp -r $TMP_DIR/_ph0/$PREFIX.phsave $TMP_DIR/$q.$irr/_ph0/
+if [ "$q" != "1" ]; then
+cp -r $TMP_DIR/_ph0/$PREFIX.q_$q $TMP_DIR/$q.$irr/_ph0/ 
+fi
+cp -r $TMP_DIR/_ph0/$PREFIX.q_8 $TMP_DIR/$q.$irr/_ph0/
 
 $ECHO "  running the phonon calculation for q= " $q " irr=" $irr "...\c"
 $PH_COMMAND < input.$q.$irr > output.$q.$irr
@@ -196,18 +202,8 @@ for irr in `seq 1 6` ; do
 \cp -f $TMP_DIR/$q.$irr/_ph0/$PREFIX.phsave/dynmat.$q.$irr.xml $TMP_DIR/_ph0/$PREFIX.phsave 2> /dev/null
 
 done 
-#
-#  collect also the representation 0 (contribution to the dynamical 
-#  matrix independent from the induced charge).
-#
-#\cp -f $TMP_DIR/$q.1/_ph0/$PREFIX.phsave/dynmat.$q.0.xml $TMP_DIR/_ph0/$PREFIX.phsave 2> /dev/null
-
 done 
 #
-# cp electric field part
-#
-#\cp -f $TMP_DIR/1.1/_ph0/$PREFIX.phsave/tensors.xml $TMP_DIR/_ph0/$PREFIX.phsave 
-
 cat > alas.ph.in << EOF
 phonons of AlAs
  &inputph
