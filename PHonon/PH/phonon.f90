@@ -54,13 +54,14 @@ PROGRAM phonon
   USE el_phon,         ONLY : elph, elph_mat, elph_simple
   USE output,          ONLY : fildrho
   USE check_stop,      ONLY : check_stop_init
+  USE ph_restart,      ONLY : ph_writefile
   USE mp_global,       ONLY: mp_startup, nimage
   USE environment,     ONLY: environment_start
 
   !
   IMPLICIT NONE
   !
-  INTEGER :: iq
+  INTEGER :: iq, ierr
   LOGICAL :: do_band, do_iq, setup_pw
   CHARACTER (LEN=9)   :: code = 'PHONON'
   CHARACTER (LEN=256) :: auxdyn
@@ -147,6 +148,10 @@ PROGRAM phonon
 100  CALL clean_pw_ph(iq)
      !
   END DO
+  !
+  !  reset the status of the recover files
+  !
+  CALL ph_writefile('status_ph',1,0,ierr)
   !
   IF (qplot) CALL write_qplot_data(auxdyn)
   !

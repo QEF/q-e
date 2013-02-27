@@ -49,9 +49,12 @@ in which all the bands are calculated first and then the band files are
 copied in the outdir directories or each ph.x run.
 At variance with run_example it does not recalculate the
 initialization (bands and electric field) for each irreducible 
-representation, but it occupies more disk space. Each different q must be 
-run in a different directory using lqdir=.true. It might be more convenient 
-than run_example for systems with many atoms and few q points.
+representation. Each different q must be run in a different directory 
+using lqdir=.true. 
+Note that the script runs in a different outdir directory for each q and irrep.
+This simulates the use of separate machines, but if you run on many CPUs
+that share the same disk you can avoid copying the files using the same 
+outdir directory for all q and irrep. 
 
 The run is as follows:
 

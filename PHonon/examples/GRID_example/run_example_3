@@ -175,15 +175,13 @@ phonons of AlAs
  /
 EOF
 
-mkdir $TMP_DIR/$q.$irr
+mkdir -p $TMP_DIR/$q.$irr/_ph0/$PREFIX.q_$q
+mkdir -p $TMP_DIR/$q.$irr/_ph0/$PREFIX.phsave
 cp -r $TMP_DIR/$PREFIX.* $TMP_DIR/$q.$irr
-#mkdir -p $TMP_DIR/$q.$irr/_ph0/$PREFIX.q_$q
-#mkdir -p $TMP_DIR/$q.$irr/_ph0/$PREFIX.q_8
-cp -r $TMP_DIR/_ph0/$PREFIX.phsave $TMP_DIR/$q.$irr/_ph0/
+cp $TMP_DIR/_ph0/$PREFIX.phsave/* $TMP_DIR/$q.$irr/_ph0/$PREFIX.phsave
 if [ "$q" != "1" ]; then
-cp -r $TMP_DIR/_ph0/$PREFIX.q_$q $TMP_DIR/$q.$irr/_ph0/ 
+cp -r $TMP_DIR/_ph0/$PREFIX.q_$q/* $TMP_DIR/$q.$irr/_ph0/$PREFIX.q_$q
 fi
-cp -r $TMP_DIR/_ph0/$PREFIX.q_8 $TMP_DIR/$q.$irr/_ph0/
 
 $ECHO "  running the phonon calculation for q= " $q " irr=" $irr "...\c"
 $PH_COMMAND < input.$q.$irr > output.$q.$irr
