@@ -1,5 +1,5 @@
 
-     Program MATDYN v.5.0.2 (svn rev. 10016) starts on 26Feb2013 at 17:20:56 
+     Program MATDYN v.5.0.2 (svn rev. 10021) starts on 27Feb2013 at 10:15:33 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -170,10 +170,10 @@
           xq=  0.4875  0.4875  0.4875
           xq=  0.5000  0.5000  0.5000
 
-     MATDYN       :     0.13s CPU         0.15s WALL
+     MATDYN       :     0.13s CPU         0.14s WALL
 
 
-   This run was terminated on:  17:20:57  26Feb2013            
+   This run was terminated on:  10:15:34  27Feb2013            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
