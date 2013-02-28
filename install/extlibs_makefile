@@ -67,6 +67,7 @@ libiotk:
 # ELPA
 libelpa : libelpa_$(ELPA_LIBS_SWITCH)
 
+libelpa_ : fake_elpa_external
 libelpa_disabled : fake_elpa_external
 
 fake_elpa_external :
