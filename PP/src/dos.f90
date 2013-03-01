@@ -84,7 +84,7 @@ PROGRAM do_dos
   CALL mp_bcast( tmp_dir, ionode_id )
   CALL mp_bcast( prefix, ionode_id )
   !
-  CALL read_file( )
+  CALL read_xml_file( )
   !
   IF ( ionode ) THEN
      !

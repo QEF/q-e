@@ -132,7 +132,8 @@ PROGRAM average
 
 1100 CALL errore ('average', 'readin input', abs (ios) )
 
-     CALL read_io_header(filename (1), title, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+     CALL read_io_header(filename (1), title, dfftp%nr1x, dfftp%nr2x, &
+                         dfftp%nr3x, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
           nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num)
      nspin = 1
      CALL latgen (ibrav, celldm, at(1,1), at(1,2), at(1,3), omega )
