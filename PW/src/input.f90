@@ -1487,30 +1487,30 @@ SUBROUTINE iosys()
      CALL init_constraint( nat, tau, ityp, alat )
   END IF
   !
-  ! ... Files
+  ! ... Files (for compatibility) and directories
   !
   input_drho  = ' '
   output_drho = ' '
-  !
-  ! ... read atomic positions and unit cell from data file
-  ! ... must be done before "verify_tmpdir" because the latter
-  ! ... removes the data file in a run from scratch
-  !
-  IF ( startingconfig == 'file' ) CALL read_config_from_file()
-  !
   tmp_dir = trimcheck ( outdir )
-  CALL verify_tmpdir( tmp_dir )
-  !
   IF ( .not. trim( wfcdir ) == 'undefined' ) THEN
      wfc_dir = trimcheck ( wfcdir )
-     CALL verify_tmpdir( wfc_dir )
   ELSE
      wfc_dir = tmp_dir
   ENDIF
   !
-  CALL restart_from_file()
+  ! ... End of reading input parameters
   !
   CALL deallocate_input_parameters ()  
+  !
+  ! ... Next lines to be moved out of this routine
+  ! ... Read atomic positions and unit cell from data file
+  !
+  IF ( startingconfig == 'file' ) CALL read_config_from_file()
+  !
+  CALL verify_tmpdir( tmp_dir )
+  IF ( TRIM(wfc_dir) /= TRIM(tmp_dir) ) CALL verify_tmpdir( wfc_dir )
+  !
+  CALL restart_from_file()
   !
   RETURN
   !
@@ -1677,7 +1677,6 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   !
   !
   file_path = trim( tmp_dir ) // trim( prefix )
-  !
   !
   IF ( restart_mode == 'from_scratch' ) THEN
      !
