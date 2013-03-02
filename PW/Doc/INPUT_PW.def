@@ -645,6 +645,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		density (and scf potential). If not specified
 		the grid is calculated based on the cutoff for
 		charge density (see also "ecutrho")
+                Note: you must specify all three dimensions for this setting to
+                be used.
 	    }
 	}
 
@@ -656,6 +658,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		three-dimensional mesh for wavefunction FFT and for the smooth
 		part of charge density ( smooth grid ).
 		Coincides with nr1, nr2, nr3 if ecutrho = 4 * ecutwfc ( default )
+                Note: you must specify all three dimensions for this setting to
+                be used.
 	    }
 	}
 	
