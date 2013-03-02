@@ -325,6 +325,7 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   INTEGER  :: ia, image, nt, inlc
+  LOGICAL  :: exst, parallelfs
   REAL(DP) :: theta, phi
   !
   !
@@ -827,12 +828,10 @@ SUBROUTINE iosys()
   CASE ( 'low' )
      !
      io_level = 0
-     restart  = .false.
      !
   CASE ( 'none' )
      !
      io_level = -1
-     restart  = .false.
      IF ( twfcollect ) THEN
         CALL infomsg('iosys', 'minimal I/O required, wf_collect reset to FALSE')
         twfcollect= .false.
@@ -841,7 +840,6 @@ SUBROUTINE iosys()
   CASE DEFAULT
      !
      io_level = 1
-     IF ( lscf ) restart  = .false.
      !
   END SELECT
   !
@@ -1503,13 +1501,23 @@ SUBROUTINE iosys()
   CALL deallocate_input_parameters ()  
   !
   ! ... Next lines to be moved out of this routine
+  !
+  CALL check_tempdir ( tmp_dir, exst, parallelfs )
+  IF ( .NOT. exst .AND. restart ) THEN
+     CALL infomsg('iosys', 'restart disabled: needed files not found')
+     restart = .false.
+  ELSE IF ( .NOT. exst .AND. (lbands .OR. .NOT. lscf) ) THEN
+     CALL errore('iosys', 'bands or non-scf calculation not possible: ' // &
+                          'needed files are missing', 1)
+  ELSE IF ( exst .AND. .NOT.restart ) THEN
+     CALL clean_tempdir ( tmp_dir )
+  END IF
+  IF ( TRIM(wfc_dir) /= TRIM(tmp_dir) ) &
+     CALL check_tempdir( wfc_dir, exst, parallelfs )
+  !
   ! ... Read atomic positions and unit cell from data file
   !
   IF ( startingconfig == 'file' ) CALL read_config_from_file()
-  !
-  CALL verify_tmpdir( tmp_dir )
-  IF ( TRIM(wfc_dir) /= TRIM(tmp_dir) ) CALL verify_tmpdir( wfc_dir )
-  !
   CALL restart_from_file()
   !
   RETURN
@@ -1654,119 +1662,71 @@ SUBROUTINE convert_tau (tau_format, nat_, tau)
   !
 END SUBROUTINE convert_tau
 !-----------------------------------------------------------------------
-SUBROUTINE verify_tmpdir( tmp_dir )
+SUBROUTINE check_tempdir ( tmp_dir, exst, pfs )
   !-----------------------------------------------------------------------
   !
-  USE wrappers,         ONLY : f_mkdir
-  USE input_parameters, ONLY : restart_mode
-  USE control_flags,    ONLY : lbands
-  USE io_files,         ONLY : prefix, xmlpun, delete_if_present
-  USE pw_restart,       ONLY : pw_readfile
-  USE io_global,        ONLY : ionode
-  USE mp,               ONLY : mp_barrier
-  USE xml_io_base,      ONLY : copy_file
+  ! ... Verify if tmp_dir exists, creates it if not
+  ! ... On output:
+  ! ...    exst= .t. if tmp_dir exists
+  ! ...    pfs = .t. if tmp_dir visible from all procs of an image
+  !
+  USE wrappers,      ONLY : f_mkdir
+  USE io_global,     ONLY : ionode, ionode_id
+  USE mp_images,     ONLY : intra_image_comm, nproc_image, me_image
+  USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
   !
   IMPLICIT NONE
   !
-  CHARACTER(len=*), INTENT(inout) :: tmp_dir
+  CHARACTER(len=*), INTENT(in) :: tmp_dir
+  LOGICAL, INTENT(out)         :: exst, pfs
   !
   INTEGER             :: ios, image, proc, nofi
-  LOGICAL             :: exst
   CHARACTER (len=256) :: file_path, filename
   CHARACTER(len=6), EXTERNAL :: int_to_char
   !
+  ! ... create tmp_dir on ionode
+  ! ... f_mkdir returns -1 if tmp_dir already exists
+  ! ...                  0 if         created
+  ! ...                  1 if         cannot be created
   !
-  file_path = trim( tmp_dir ) // trim( prefix )
+  IF ( ionode ) ios = f_mkdir( TRIM(tmp_dir) )
+  CALL mp_bcast ( ios, ionode_id, intra_image_comm )
+  exst = ( ios == -1 )
+  IF ( ios > 0 ) CALL errore ('check_tempdir','tmp_dir cannot be opened',1)
   !
-  IF ( restart_mode == 'from_scratch' ) THEN
-     !
-     ! ... let us try to create the scratch directory
-     !
-     CALL parallel_mkdir ( tmp_dir )
-     !
-  ENDIF
+  ! ... let us check now if tmp_dir is visible on all nodes
+  ! ... if not, a local tmp_dir is created on each node
   !
-  !
-  ! ... if starting from scratch all temporary files are removed
-  ! ... from tmp_dir ( only by the master node )
-  !
-  IF ( restart_mode == 'from_scratch' ) THEN
-     !
-     ! ... xml data file in save directory is removed
-     !     but, header is read anyway to store qexml version
-     !
-     CALL pw_readfile( 'header', ios )
-     !
-     IF ( ionode ) THEN
-        !
-        IF ( .not. lbands ) THEN
-            !
-            ! save a bck copy of datafile.xml (AF)
-            !
-            filename = trim( file_path ) // '.save/' // trim( xmlpun )
-            INQUIRE( FILE = filename, EXIST = exst )
-            !
-            IF ( exst ) CALL copy_file( trim(filename), trim(filename) // '.bck' )
-            !
-            CALL delete_if_present( trim(filename) )
-            !
-        ENDIF
-        !
-        ! ... extrapolation file is removed
-        !
-        CALL delete_if_present( trim( file_path ) // '.update' )
-        !
-        ! ... MD restart file is removed
-        !
-        CALL delete_if_present( trim( file_path ) // '.md' )
-        !
-        ! ... BFGS restart file is removed
-        !
-        CALL delete_if_present( trim( file_path ) // '.bfgs' )
-        !
-     ENDIF
-     !
-  ENDIF
+  ios = f_mkdir( TRIM(tmp_dir) )
+  CALL mp_sum ( ios, intra_image_comm )
+  pfs = ( ios == -nproc_image ) ! actually this is true only if .not.exst 
   !
   RETURN
   !
-END SUBROUTINE verify_tmpdir
-
+END SUBROUTINE check_tempdir
+!
 !-----------------------------------------------------------------------
-SUBROUTINE parallel_mkdir ( tmp_dir )
+SUBROUTINE clean_tempdir( tmp_dir )
   !-----------------------------------------------------------------------
   !
-  ! ... Safe creation of the scratch directory in the parallel case
-  ! ... Works on both parallel and distributed file systems
-  ! ... Not really a smart algorithm, though
-  !
-  USE wrappers,      ONLY : f_mkdir
-  USE mp_global,     ONLY : mpime, nproc
-  USE mp,            ONLY : mp_barrier, mp_sum
+  USE io_files,         ONLY : prefix, delete_if_present
+  USE io_global,        ONLY : ionode
   !
   IMPLICIT NONE
   !
   CHARACTER(len=*), INTENT(in) :: tmp_dir
   !
-  INTEGER             :: ios, proc
-  CHARACTER(len=6), EXTERNAL :: int_to_char
+  CHARACTER (len=256) :: file_path, filename
   !
-  ! ... the scratch directory is created sequentially by all the cpus
+  ! ... remove temporary files from tmp_dir ( only by the master node )
   !
-  DO proc = 0, nproc - 1
-     !
-     IF ( proc == mpime ) ios = f_mkdir( trim( tmp_dir ) )
-     CALL mp_barrier()
-     !
-  ENDDO
-  !
-  ! ... each job checks whether the scratch directory is writable
-  ! ... note that tmp_dir should end by a "/"
-  !
-  IF ( ios /= 0 ) CALL errore( 'parallel_mkdir', trim( tmp_dir ) // &
-                             & ' non existent or non writable', 1 )
+  file_path = trim( tmp_dir ) // trim( prefix )
+  IF ( ionode ) THEN
+     CALL delete_if_present( trim( file_path ) // '.update' )
+     CALL delete_if_present( trim( file_path ) // '.md' )
+     CALL delete_if_present( trim( file_path ) // '.bfgs' )
+  ENDIF
   !
   RETURN
   !
-END SUBROUTINE parallel_mkdir
-
+END SUBROUTINE clean_tempdir
