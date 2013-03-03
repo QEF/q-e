@@ -38,7 +38,7 @@ SUBROUTINE openfil()
   !
   ! ... nwordwfc is the record length (IN COMPLEX WORDS)
   ! ... for the direct-access file containing wavefunctions
-  ! ... nwordatwfc as above, for atomic wavefunctions
+  ! ... nwordatwfc as above (IN REAL WORDS) for atomic wavefunctions
   !
   nwordwfc = nbnd*npwx*npol
   nwordatwfc = 2*npwx*natomwfc*npol
