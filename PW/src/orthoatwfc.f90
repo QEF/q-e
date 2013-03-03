@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -35,18 +35,19 @@ SUBROUTINE orthoatwfc
   !
   INTEGER :: ik, ibnd, info, i, j, k, na, nb, nt, isym, n, ntemp, m, &
        l, lm, ltot, ntot, ipol
-  ! the k point under consideration
-  ! counter on bands
-  REAL(DP) :: t0, scnds
-  ! cpu time spent
+  ! ik: the k point under consideration
+  ! ibnd: counter on bands
   LOGICAL :: orthogonalize_wfc
      
-  COMPLEX(DP) :: temp, t (5)
+  COMPLEX(DP) :: temp 
   COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:), work (:,:), overlap (:,:)
   REAL(DP) , ALLOCATABLE :: e (:)
 
-  t0 = scnds ()
-  
+  IF ( U_projection == 'pseudo' ) THEN
+     WRITE( stdout,*) 'Beta functions used for LDA+U Projector'
+     RETURN
+  END IF
+
   IF (noncolin) THEN
      ALLOCATE (wfcatom( npwx*npol, natomwfc))    
   ELSE
@@ -101,9 +102,8 @@ SUBROUTINE orthoatwfc
      ELSE
        CALL atomic_wfc (ik, wfcatom)
      ENDIF
-
      !
-     ! write atomic wfc on unit iunat
+     ! write atomic wfc to unit iunat
      !
      CALL davcio (wfcatom, nwordatwfc, iunat, ik, 1)
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
@@ -138,7 +138,7 @@ SUBROUTINE orthoatwfc
         !
         CALL cdiagh (natomwfc, overlap, natomwfc, e, work)
         DO i = 1, natomwfc
-           e (i) = 1.d0 / dsqrt (e (i) )
+           e (i) = 1.d0 / SQRT (e (i) )
         ENDDO
         DO i = 1, natomwfc
            DO j = i, natomwfc
@@ -174,7 +174,7 @@ SUBROUTINE orthoatwfc
      ! write S * atomic wfc to unit iunsat
      !
      CALL davcio (swfcatom, nwordatwfc, iunsat, ik, 1)
-     
+     !
   ENDDO
   DEALLOCATE (overlap)
   DEALLOCATE (work)

@@ -1,5 +1,5 @@
 ! 
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,14 +19,14 @@ SUBROUTINE wfcinit()
   USE klist,                ONLY : xk, nks, ngk
   USE control_flags,        ONLY : io_level, lscf
   USE fixed_occ,            ONLY : one_atom_occupations
-  USE ldaU,                 ONLY : swfcatom, lda_plus_u, U_projection
+  USE ldaU,                 ONLY : lda_plus_u
   USE lsda_mod,             ONLY : lsda, current_spin, isk
-  USE io_files,             ONLY : nwordwfc, nwordatwfc, iunwfc, iunigk, iunsat
+  USE io_files,             ONLY : nwordwfc, nwordatwfc, iunwfc, iunigk
   USE buffers,              ONLY : get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions_module, ONLY : evc
   USE wvfct,                ONLY : nbnd, npw, current_k, igk
-  USE wannier_new,              ONLY : use_wannier
+  USE wannier_new,          ONLY : use_wannier
   !
   IMPLICIT NONE
   !
@@ -37,14 +37,8 @@ SUBROUTINE wfcinit()
   !
   ! ... Needed for LDA+U
   !
-  IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc()
-  IF ( lda_plus_u ) THEN
-     IF ( U_projection == 'pseudo' ) THEN
-         WRITE( stdout,*) 'Beta functions used for LDA+U Projector'
-     ELSE
-         CALL orthoatwfc()
-     ENDIF
-  ENDIF
+  IF ( use_wannier .OR. one_atom_occupations .or. lda_plus_u ) &
+     CALL orthoatwfc()
   !
   ! ... state what is going to happen
   !
@@ -120,11 +114,6 @@ SUBROUTINE wfcinit()
      ! ... Calculate nonlocal pseudopotential projectors |beta>
      !
      IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
-     !
-     ! ... LDA+U: read atomic wavefunctions for U term in Hamiltonian
-     !
-     IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
-         CALL davcio( swfcatom, nwordatwfc, iunsat, ik, - 1 )
      !
      ! ... calculate starting wavefunctions
      !
