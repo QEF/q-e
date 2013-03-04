@@ -9,7 +9,7 @@
 subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi, dvpsi)
   !----------------------------------------------------------------------
   !
-  ! On output: dvpsi contains [H,x_ipol] | psi_ik > in crystal axis 
+  ! On output: dpsi contains [H,x_ipol] | psi_ik > in crystal axis 
   !            (projected on at(*,ipol) )
   !
   ! vkb,evc,igk must be properly set for the appropriate k-point
