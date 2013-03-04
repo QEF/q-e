@@ -23,7 +23,7 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   USE fft_interfaces, ONLY : invfft
   USE gvecs,    ONLY : nls
   USE wvfct,      ONLY : npw, npwx, nbnd, igk
-  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE noncollin_module, ONLY : npol, nspin_mag
   USE wavefunctions_module,  ONLY: evc
   USE io_files,   ONLY: iunigk
   USE uspp,       ONLY: okvan, nkb, vkb
@@ -52,9 +52,7 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   real(DP) :: wgg (nbnd, nbnd, nksq)
   ! input: the weights
 
-  integer :: ipert, mode, ik, ikq, ikk, is, ig, nu_i, ibnd, ios
-  ! counter on the pertubations
-  ! counter on the modes
+  integer :: ik, ikq, ikk, ig, nu_i, ibnd, ios
   ! counter on k points
   ! the point k+q
   ! record for wfcs at k point

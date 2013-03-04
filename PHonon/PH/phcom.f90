@@ -16,7 +16,7 @@ MODULE modes
   !
   SAVE
   !
-  INTEGER :: irgq(48), nsymq, irotmq, nirr, nmodes
+  INTEGER :: irgq(48), nsymq=0, irotmq, nirr, nmodes
   ! selects the operations of the small group
   ! the number of symmetry of the small group
   ! selects the symmetry sending q <-> -q+G

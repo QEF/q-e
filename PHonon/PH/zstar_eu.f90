@@ -85,10 +85,8 @@ subroutine zstar_eu
   !
   if (okvan) call zstar_eu_us
 
-#ifdef __MPI
   call mp_sum ( zstareu0, intra_bgrp_comm )
   call mp_sum ( zstareu0, inter_pool_comm )
-#endif
   !
   ! bring the mode index to cartesian coordinates
   ! NOTA BENE: the electric field is in crystal axis

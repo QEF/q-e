@@ -22,11 +22,10 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE wvfct,                ONLY : npw, npwx, et
   USE klist,                ONLY : degauss, ngauss, ngk
   USE ener,                 ONLY : ef
-  USE noncollin_module,     ONLY : nspin_mag, nspin_lsda
+  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, nspin_lsda
 ! modules from phcom
   USE qpoint,               ONLY : nksq
   USE control_ph,           ONLY : nbnd_occ, lgamma_gamma
-  USE noncollin_module,     ONLY : noncolin, npol
   USE units_ph,             ONLY : lrwfc, iuwfc, lrdwf, iudwf
   USE eqv,                  ONLY : dpsi
   USE modes,                ONLY : npert

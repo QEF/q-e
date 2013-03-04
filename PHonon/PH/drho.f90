@@ -22,7 +22,7 @@ subroutine drho
   USE fft_base,   ONLY : dfftp, dffts
   USE lsda_mod,   ONLY : nspin
   USE cell_base,  ONLY : omega
-  USE ions_base,  ONLY : nat, ntyp => nsp, ityp
+  USE ions_base,  ONLY : nat
   USE noncollin_module, ONLY : noncolin, npol, nspin_lsda, nspin_mag
   USE uspp_param, ONLY : upf, nhm
   USE uspp,       ONLY : okvan, nkb
@@ -42,9 +42,8 @@ subroutine drho
 
   implicit none
 
-  integer :: nt, mode, mu, na, is, ir, irr, iper, npe, nrstot, nu_i, nu_j, ik, &
+  integer :: mode, is, ir, irr, iper, npe, nrstot, nu_i, nu_j, ik, &
              ipol
-  ! counter on atomic types
   ! counter on modes
   ! counter on atoms and polarizations
   ! counter on atoms
@@ -71,7 +70,7 @@ subroutine drho
   ! the derivative
 
 !
-!  The PAW case require dbecsumort so we recalculate this starting part
+!  The PAW case requires dbecsumort so we recalculate this starting part
 !  This will be changed soon
 !
   if (all_done) return

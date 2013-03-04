@@ -21,30 +21,27 @@ subroutine dynmatrix_new(iq_)
   USE io_global,     ONLY : stdout
   USE control_flags, ONLY : modenum
   USE cell_base,     ONLY : at, bg, celldm, ibrav, omega
-  USE symm_base,     ONLY : s, sr, irt, nsym, time_reversal, invs
-  USE run_info, ONLY : title
+  USE symm_base,     ONLY : s, sr, irt, nsym, invs
   USE dynmat,        ONLY : dyn, w2
   USE qpoint,        ONLY : xq
   USE noncollin_module, ONLY : nspin_mag
   USE modes,         ONLY : u, nmodes, minus_q, irotmq, nsymq, &
-                            rtau, npert, nirr, name_rap_mode, num_rap_mode
+                            rtau, npert, nirr, num_rap_mode
   USE gamma_gamma,   ONLY : nasr, asr, equiv_atoms, has_equivalent, &
                             n_diff_sites
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0, zstarue
   USE disp,          ONLY : omega_disp
   USE control_ph,    ONLY : epsil, zue, lgamma, lgamma_gamma, search_sym, ldisp, &
-                            start_irr, last_irr, done_zue, where_rec, &
+                            done_zue, where_rec, &
                             rec_code, ldiag, done_epsil, done_zeu, xmldyn, &
                             current_iq, qplot
   USE ph_restart,    ONLY : ph_writefile
   USE partial,       ONLY : all_comp, comp_irr, done_irr, nat_todo_input
   USE units_ph,      ONLY : iudyn
   USE noncollin_module, ONLY : m_loc, nspin_mag
-  USE output,        ONLY : fildyn, fildrho, fildvscf
+  USE output,        ONLY : fildyn
   USE io_dyn_mat,    ONLY : write_dyn_mat_header
   USE ramanm,        ONLY : lraman, ramtns
-  USE dfile_star,    ONLY : write_dfile_star, drho_star, dvscf_star !write_dfile_mq
-  USE units_ph,      ONLY : iudrho, iudvscf
 
   implicit none
   INTEGER, INTENT(IN) :: iq_
@@ -60,7 +57,7 @@ subroutine dynmatrix_new(iq_)
   ! list of vectors in the star of q
   real(DP), allocatable :: zstar(:,:,:)
   integer :: icart, jcart, ierr
-  logical :: ldiag_loc, opnd
+  logical :: ldiag_loc
   !
   call start_clock('dynmatrix')
   ldiag_loc=ldiag.OR.(nat_todo_input > 0).OR.all_comp

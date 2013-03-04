@@ -24,7 +24,7 @@ SUBROUTINE phqscf
   USE efield_mod, ONLY : zstarue0, zstarue0_rec
   USE control_ph, ONLY : zue, convt, rec_code
   USE partial,    ONLY : done_irr, comp_irr
-  USE modes,      ONLY : nirr, npert, npertx
+  USE modes,      ONLY : nirr, npert
   USE phus,       ONLY : int3, int3_nc, int3_paw
   USE uspp_param, ONLY : nhm
   USE eqv,        ONLY : drhoscfs
@@ -45,9 +45,6 @@ SUBROUTINE phqscf
 
   REAL(DP) :: tcpu, get_clock
   ! timing variables
-
-  LOGICAL :: exst
-  ! used to test the recover file
 
   EXTERNAL get_clock
   ! the change of density due to perturbations

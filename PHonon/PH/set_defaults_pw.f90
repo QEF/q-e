@@ -23,24 +23,21 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   ! ... Misc. data needed for running the non-scf calculation
   !
   USE kinds,              ONLY : DP
-  USE constants,          ONLY : eps8
   USE parameters,         ONLY : npk
   USE io_global,          ONLY : stdout
   USE constants,          ONLY : pi, degspin
-  USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, omega
-  USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
+  USE cell_base,          ONLY : at, bg
+  USE ions_base,          ONLY : nat, tau, ityp, zv
   USE force_mod,          ONLY : force
   USE basis,              ONLY : natomwfc
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
                                  nkstot, qnorm
-  USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
-                                 starting_magnetization
+  USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
   USE symm_base,          ONLY : s, t_rev, irt, ftau, nrot, nsym, &
-                                 time_reversal, sname, d1, d2, d3, &
-                                 copy_sym, s_axis_to_cart
+                                 time_reversal
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : ethr, isolve, david, max_cg_iter, &
-                                 noinv, modenum, use_para_diag
+                                 noinv, use_para_diag
   USE el_phon,            ONLY : elph_mat
   USE mp_global,          ONLY : kunit
   USE spin_orb,           ONLY : domag

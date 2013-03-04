@@ -105,13 +105,11 @@ subroutine zstar_eu_us
      end do
   end do
 
-#ifdef __MPI
      IF (noncolin) THEN
         call mp_sum ( dbecsum_nc, intra_bgrp_comm )
      ELSE
         call mp_sum ( dbecsum, intra_bgrp_comm )
      END IF
-#endif
 #ifdef TIMINIG_ZSTAR_US
   call stop_clock('zstar_us_1')
   call start_clock('zstar_us_2')
@@ -129,9 +127,7 @@ subroutine zstar_eu_us
 
   call addusddense (dvscf, dbecsum)
 
-#ifdef __MPI
   call mp_sum ( dvscf, inter_pool_comm )
-#endif
 
 #ifdef TIMINIG_ZSTAR_US
   call stop_clock('zstar_us_2')
@@ -150,11 +146,7 @@ subroutine zstar_eu_us
      !
      call dv_of_drho (0, dvscf (1, 1, ipol), .false.)
   enddo
-#ifdef __MPI
   call psyme (dvscf)
-#else
-  call syme (dvscf)
-#endif
 
 #ifdef TIMINIG_ZSTAR_US
   call stop_clock('zstar_us_3')

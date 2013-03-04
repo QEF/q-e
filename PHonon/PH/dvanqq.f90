@@ -31,7 +31,7 @@ subroutine dvanqq
   use spin_orb, only : lspinorb
   use scf, only : v, vltot
   use noncollin_module, ONLY : noncolin, nspin_mag
-  USE uspp, ONLY: okvan
+  USE uspp, ONLY: okvan, ijtoh
   USE uspp_param, ONLY: upf, lmaxq, nh
 
   USE phus, ONLY : int1, int2, int4, int4_nc, int5, int5_so
@@ -49,7 +49,6 @@ subroutine dvanqq
 
   integer :: nt, na, nb, ig, nta, ntb, ir, ih, jh, ijh, ipol, jpol, is
   ! counters
-  integer :: is1, is2, ijs, lh, kh, find_ijh
 
   real(DP), allocatable :: qmod (:), qmodg (:), qpg (:,:), &
        ylmkq (:,:), ylmk0 (:,:)
@@ -130,10 +129,9 @@ subroutine dvanqq
   !
   do ntb = 1, ntyp
      if (upf(ntb)%tvanp ) then
-        ijh = 0
         do ih = 1, nh (ntb)
            do jh = ih, nh (ntb)
-              ijh = ijh + 1
+              ijh = ijtoh(ih,jh,ntb) 
               !
               !    compute the augmentation function
               !

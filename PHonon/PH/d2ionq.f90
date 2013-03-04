@@ -171,11 +171,9 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   enddo
   !
   !  Then there is also a part in real space which is computed here.
-#ifdef __MPI
   !   ... only by the node that contains  G=0
   !
   if (gg (1) > 1.d-8) goto 100
-#endif
   !
   rmax = 5.d0 / sqrt (alpha) / alat
   !

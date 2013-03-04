@@ -50,21 +50,21 @@ subroutine phq_setup
   !
   !
   USE kinds,         ONLY : DP
-  USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp, amass
+  USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp
   USE cell_base,     ONLY : at, bg
   USE io_global,     ONLY : stdout, ionode
   USE io_files,      ONLY : tmp_dir
   USE ener,          ONLY : ef, ef_up, ef_dw
   USE klist,         ONLY : xk, lgauss, degauss, ngauss, nks, nelec, nelup, &
                             neldw, two_fermi_energies, wk, nkstot
-  USE ktetra,        ONLY : ltetra, tetra
+  USE ktetra,        ONLY : ltetra
   USE lsda_mod,      ONLY : nspin, lsda, starting_magnetization, isk
   USE scf,           ONLY : v, vrs, vltot, rho, rho_core, kedtau
   USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : ngm
   USE gvecs,       ONLY : doublegrid
   USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
-                            sname, sr, invs, inverse_s, copy_sym
+                            sr, invs, inverse_s
   USE uspp_param,    ONLY : upf
   USE spin_orb,      ONLY : domag
   USE constants,     ONLY : degspin, pi
@@ -81,7 +81,7 @@ subroutine phq_setup
   USE output,        ONLY : fildrho
   USE modes,         ONLY : u, npertx, npert, gi, gimq, nirr, &
                             t, tmq, irotmq, minus_q, invsymq, &
-                            nsymq, nmodes, rtau, name_rap_mode, num_rap_mode
+                            nsymq, nmodes, rtau, num_rap_mode
   USE dynmat,        ONLY : dyn, dyn_rec, dyn00
   USE efield_mod,    ONLY : epsilon, zstareu
   USE qpoint,        ONLY : xq, xk_col
@@ -90,14 +90,14 @@ subroutine phq_setup
   USE gamma_gamma,   ONLY : has_equivalent, asr, nasr, n_diff_sites, &
                             equiv_atoms, n_equiv_atoms, with_symmetry
   USE ph_restart,    ONLY : ph_writefile, ph_readfile
-  USE control_flags, ONLY : iverbosity, modenum, noinv
+  USE control_flags, ONLY : modenum, noinv
   USE grid_irr_iq,   ONLY : comp_irr_iq
   USE funct,         ONLY : dmxc, dmxc_spin, dmxc_nc, dft_is_gradient
   USE ramanm,        ONLY : lraman, elop, ramtns, eloptns, done_lraman, &
                             done_elop
 
   USE mp,            ONLY : mp_max, mp_min
-  USE mp_global,     ONLY : inter_pool_comm, nimage, npool
+  USE mp_global,     ONLY : inter_pool_comm, npool
   !
   USE acfdtest,      ONLY : acfdt_is_active, acfdt_num_der
 
@@ -121,7 +121,8 @@ subroutine phq_setup
   real(DP) :: auxdmuxc(4,4)
   real(DP), allocatable :: wg_up(:,:), wg_dw(:,:)
 
-  logical :: sym (48), magnetic_sym, is_symmorphic
+  logical :: sym (48), magnetic_sym
+  LOGICAL :: symmorphic_or_nzb
   ! the symmetry operations
   integer, allocatable :: ifat(:)
   integer :: ierr
@@ -361,14 +362,9 @@ subroutine phq_setup
   !    if minus_q is true calculate also irotmq and the G associated to Sq=-g+G
   !
   CALL set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
-  is_symmorphic=.NOT.(ANY(ftau(:,1:nsymq) /= 0))
-  IF (.NOT.is_symmorphic) THEN
-     DO isym=1,nsymq
-        search_sym=( search_sym.and.(abs(gi(1,isym))<1.d-8).and.  &
-                                    (abs(gi(2,isym))<1.d-8).and.  &
-                                    (abs(gi(3,isym))<1.d-8) )
-     END DO
-  ENDIF
+
+  search_sym = search_sym .AND. symmorphic_or_nzb()
+
   num_rap_mode=-1
   IF (search_sym) CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym)
 
