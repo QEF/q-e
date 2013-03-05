@@ -1,209 +1,586 @@
 !
-! Copyright (C) 2007 Quantum ESPRESSO group
+!        ~~~ BUffer Input/Output Library. ~~~
+! Copyright Lorenzo Paulatto <paulatz@gmail.com> 2013
+!
+! Contains a few changes by PG wrt the original implementation:
+! - data is complex, not real
+! - most routines are functions that return error status instead of stopping
+!
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
+! or http://www.gnu.org/copyleft/gpl.txt 
 !
-!----------------------------------------------------------------------------
-MODULE buffers
-  !----------------------------------------------------------------------------
-  !
+! <<^V^\\=========================================//-//-//========//O\\//
+MODULE buiol
   USE kinds, ONLY : DP
   !
+  PUBLIC :: init_buiol          ! init the linked chain of i/o units
+  PUBLIC :: stop_buiol          ! destroy the linked chain, dealloc everything
+  PUBLIC :: report_buiol        ! report on total number of units and memory usage
+  PUBLIC :: buiol_open_unit     ! (unit, recl) open a new unit
+  PUBLIC :: buiol_close_unit    ! (unit) close the unit, dealloc the space
+  PUBLIC :: buiol_check_unit    ! (unit) returns recl, if opened, -1 if closed
+  PUBLIC :: buiol_report_unit   ! (unit, mem?) report about unit status (on stdout)
+  PUBLIC :: buiol_write_record  ! (unit, recl, nrec, DATA) write DATA(recl) in record nrec of unit
+  PUBLIC :: buiol_read_record   ! (unit, recl, nrec, DATA) read DATA(recl) from record nrec of unit
+  !
   PRIVATE
-  PUBLIC :: open_buffer, get_buffer, save_buffer, close_buffer
+  ! initial number of records in the buffer (each record will only be allocated on write!)
+  INTEGER,PARAMETER :: nrec0 = 1024
+  ! when writing beyond the last available record increase the index by AT LEAST this factor..
+  REAL(DP),PARAMETER :: fact0 = 1.5_dp
+  ! .. furthermore, allocate up to AT LEAST this factor times the required overflowing nrec
+  REAL(DP),PARAMETER :: fact1 = 1.2_dp
+  ! NOTE: the new buffer size will be determined with both methods, taking the MAX of the two
   !
-  SAVE
+  ! Size of the single item of the record (for memory usage report only)
+  INTEGER,PARAMETER :: size0 = DP ! 8 bytes
   !
-  ! ... global variables: buffer1 is the memory buffer
-  !                       nword_ the record length
-  !                       buffered is true when buffer has been written
-  !                       at least once - read from file otherwise
-  COMPLEX(DP), ALLOCATABLE :: buffer1(:,:)
-  INTEGER :: nword_
-  LOGICAL :: buffered = .FALSE.
+  ! base element of the linked chain of buffers
+  TYPE index_of_list
+    TYPE(data_in_the_list),POINTER :: index(:)
+    INTEGER :: nrec, unit, recl
+    TYPE(index_of_list),POINTER :: next => null()
+  END TYPE
+  !
+  ! sub-structure containing the data buffer
+  TYPE data_in_the_list 
+    COMPLEX(DP), POINTER :: data(:) => null()
+  END TYPE
+  !
+  ! beginning of the linked chain, statically allocated (for implementation simplicity)
+  TYPE(index_of_list),SAVE,POINTER :: ENTRY
   !
   CONTAINS
-  !-----------------------------------------------------------------------
+  ! <<^V^\\=========================================//-//-//========//O\\//
+  !
+  SUBROUTINE init_buiol
+    IMPLICIT NONE
+    ALLOCATE(ENTRY)
+    ALLOCATE(ENTRY%index(0))
+    ENTRY%nrec =  0
+    ENTRY%unit = -1
+    ENTRY%recl = -1
+    NULLIFY(ENTRY%next)
+    RETURN
+  END SUBROUTINE init_buiol
+  ! \/o\________\\\_________________________________________/^>
+  SUBROUTINE stop_buiol
+    IMPLICIT NONE
+    TYPE(index_of_list),POINTER :: CURSOR, AUX
+    CURSOR => ENTRY
+    DO WHILE (associated(CURSOR%NEXT))
+      AUX => CURSOR
+      CURSOR => CURSOR%NEXT
+      CALL dealloc_buffer(AUX)
+    ENDDO
+    CALL dealloc_buffer(CURSOR)
+ 
+    RETURN
+  END SUBROUTINE stop_buiol
+  ! \/o\________\\\_________________________________________/^>
+  SUBROUTINE report_buiol
+    IMPLICIT NONE
+    TYPE(index_of_list),POINTER :: CURSOR
+    INTEGER :: mem
+    !
+    WRITE(*,'(2x,106("-") )')
+    mem = 0
+    CURSOR => ENTRY
+    DO WHILE (associated(CURSOR%NEXT))
+      CALL buiol_report_buffer(CURSOR, mem)
+      CURSOR => CURSOR%NEXT
+    ENDDO
+    CALL buiol_report_buffer(CURSOR, mem)
+    WRITE(*,'(2x,106("-"))')
+    WRITE(*,'(2x,a,3i14)') "[BUIOL] total memory used B/KB/MB", mem, mem/1024, mem/1024**2
+    WRITE(*,'(2x,106("-"))')
+
+    RETURN
+  END SUBROUTINE report_buiol
+  ! \/o\________\\\_________________________________________/^>
+  FUNCTION buiol_open_unit(unit, recl) RESULT (ierr)
+    IMPLICIT NONE
+    INTEGER,INTENT(in) :: unit, recl
+    INTEGER :: ierr
+    TYPE(index_of_list),POINTER :: CURSOR
+    !
+    IF(recl<0) THEN
+#ifdef __DEBUG
+       CALL infomsg('buiol', 'wrong recl')
+#endif
+       ierr = 1
+       RETURN
+    END IF
+    !
+    ! check if the unit is already opened
+    CURSOR => find_unit(unit)
+    IF(associated(CURSOR)) THEN
+#ifdef __DEBUG
+       CALL infomsg('buiol', 'unit already opened')
+#endif
+       ierr = -1
+       RETURN
+    END IF
+    !
+    ! all is fine, allocate a new unit with standard size
+    CURSOR => alloc_buffer(unit, recl, nrec0)
+    !
+    ! place it at the beginning of the chain
+    CURSOR%next => ENTRY%next
+    ENTRY%next  => CURSOR
+    ierr = 0
+    !
+    RETURN
+    !
+  END FUNCTION buiol_open_unit
+  ! \/o\________\\\_________________________________________/^>
+  FUNCTION buiol_close_unit(unit) RESULT (ierr)
+    IMPLICIT NONE
+    INTEGER,INTENT(in) :: unit
+    INTEGER :: ierr
+    TYPE(index_of_list),POINTER :: CURSOR, AUX
+    !
+    ! find the unit to close
+    CURSOR => find_prev_unit(unit)
+    IF(.not.associated(CURSOR))  THEN
+#ifdef __DEBUG
+       CALL infomsg('buiol', 'cannot close this unit')
+#endif
+       ierr = 1
+    END IF
+    IF(.not.associated(CURSOR%next)) THEN
+#ifdef __DEBUG
+       CALL infomsg('buiol', 'cannot find unit to close',1)
+#endif
+       ierr = 2
+    END IF
+    !
+    ! replace this unit with the next, but keep track of it
+    AUX => CURSOR%next
+    CURSOR%next => AUX%next ! <--- works even if %next is null()
+    !
+    ! destroy the closed unit
+    CALL dealloc_buffer(AUX)
+    ierr = 0
+    !
+    RETURN
+    !
+  END FUNCTION buiol_close_unit
+  ! \/o\________\\\_________________________________________/^>
+  FUNCTION buiol_check_unit(unit) RESULT(recl)
+    IMPLICIT NONE
+    INTEGER,INTENT(in) :: unit
+    INTEGER :: recl
+    TYPE(index_of_list),POINTER :: CURSOR
+    !
+    ! find the unit
+    CURSOR => find_unit(unit)
+    IF(.not.associated(CURSOR)) THEN
+      recl = -1
+    ELSE
+      recl = CURSOR%recl
+    ENDIF
+    !
+    RETURN
+    !
+  END FUNCTION buiol_check_unit
+  ! \/o\______\\_______________________________________/^>
+  SUBROUTINE increase_nrec(nrec_new, CURSOR)
+    IMPLICIT NONE
+    INTEGER,INTENT(in) :: nrec_new
+    TYPE(index_of_list),POINTER,INTENT(inout) :: CURSOR
+    !
+    INTEGER :: i
+    TYPE(data_in_the_list),POINTER :: new(:), old(:)
+    !
+    IF(nrec_new < CURSOR%nrec) CALL errore('buiol', 'wrong new nrec',1)
+    !
+    ! create a new index with more space
+    ALLOCATE(new(nrec_new))
+    !
+    ! associate the data to the new unit
+    old => CURSOR%index
+    DO i = 1, CURSOR%nrec
+      new(i)%data => old(i)%data ! <-- also the null() are copied
+    ENDDO
+    CURSOR%index => new
+    !
+    ! clean the old index
+    CURSOR%nrec = nrec_new
+    DEALLOCATE(old)
+    !
+    RETURN
+    !
+  END SUBROUTINE increase_nrec
+  ! \/o\________\\\_________________________________________/^>
+  FUNCTION buiol_write_record(unit, recl, nrec, DATA) RESULT (ierr)
+    IMPLICIT NONE
+    INTEGER,INTENT(in) :: unit, recl, nrec
+    COMPLEX(dp),INTENT(in) :: DATA(recl)
+    INTEGER :: ierr
+    !
+    TYPE(index_of_list),POINTER :: CURSOR
+    INTEGER :: nrec_new
+    !
+    ! find the unit, if it exists
+    CURSOR => find_unit(unit)
+    IF(.not.associated(CURSOR)) THEN
+#ifdef __DEBUG
+       CALL infomsg('buiol', 'cannot write: unit not opened')
+#endif
+       ierr = 1
+       RETURN
+    END IF
+    IF(CURSOR%recl/=recl) THEN
+#ifdef __DEBUG
+       CALL infomsg('buiol', 'cannot write: wrong recl')
+#endif
+       ierr = 2
+       RETURN
+    END IF
+    !
+    ! increase size of index, if necessary
+    IF(CURSOR%nrec<nrec) THEN
+      nrec_new = NINT(MAX(fact0*DBLE(CURSOR%nrec),fact1*DBLE(nrec)))
+      CALL increase_nrec(nrec_new, CURSOR ) 
+    ENDIF
+    !
+    IF(.not.associated(CURSOR%index(nrec)%data)) &
+      ALLOCATE( CURSOR%index(nrec)%data(recl) )
+    !
+    ! copy the data
+    CURSOR%index(nrec)%data = DATA
+    ierr = 0
+    RETURN
+    !
+  END FUNCTION
+  ! \/o\________\\\_________________________________________/^>
+  FUNCTION buiol_read_record(unit, recl, nrec, DATA) RESULT (ierr)
+    IMPLICIT NONE
+    INTEGER,INTENT(in) :: unit, recl, nrec
+    COMPLEX(dp),INTENT(out) :: DATA(recl)
+    INTEGER :: ierr
+    !
+    TYPE(index_of_list),POINTER :: CURSOR
+    !
+    ! sanity checks
+    CURSOR => find_unit(unit)
+    IF(.not.associated(CURSOR)) THEN
+#ifdef __DEBUG
+       CALL infomsg('buiol', 'cannot read: unit not opened')
+#endif
+       ierr = 1
+       RETURN
+    END IF
+    IF(CURSOR%recl/=recl) THEN
+#ifdef __DEBUG
+        CALL infomsg('buiol', 'cannot read: wrong recl')
+#endif
+       ierr = 1
+       RETURN
+    END IF
+    IF(CURSOR%nrec<nrec) THEN
+#ifdef __DEBUG
+       CALL infomsg('buiol', 'cannot read: wrong nrec')
+#endif
+       ierr =-1
+       RETURN
+    END IF
+    IF(.not.associated(CURSOR%index(nrec)%data)) THEN
+#ifdef __DEBUG
+       CALL infomsg('buiol', 'cannot read: virgin nrec')
+#endif
+       ierr =-1
+       RETURN
+    END IF
+    !
+    DATA = CURSOR%index(nrec)%data
+    ierr = 0
+    RETURN
+    !
+  END FUNCTION buiol_read_record
+  ! \/o\________\\\_________________________________________/^>
+  SUBROUTINE buiol_report_unit(unit)
+    IMPLICIT NONE
+    INTEGER,INTENT(in) :: unit
+    !
+    TYPE(index_of_list),POINTER :: CURSOR
+    ! sanity checks
+    CURSOR => find_unit(unit)
+    IF(.not.associated(CURSOR)) CALL errore('buiol', 'cannot report: unit not opened',1)
+    CALL buiol_report_buffer(CURSOR)
+    RETURN
+    !
+  END SUBROUTINE buiol_report_unit
+  ! \/o\________\\\_________________________________________/^>
+  SUBROUTINE buiol_report_buffer(CURSOR, mem)
+    IMPLICIT NONE
+    TYPE(index_of_list),INTENT(in) :: CURSOR
+    INTEGER,OPTIONAL,INTENT(inout) :: mem
+    !
+    INTEGER :: i, ndata, bytes
+    !
+    ndata = 0
+    DO i = 1,CURSOR%nrec
+      IF(associated(CURSOR%index(i)%data)) ndata=ndata+1
+    ENDDO
+    !
+    bytes = ndata*CURSOR%recl*size0
+    WRITE(*,'(2x,a,2(a,i8),(a,2i8),(a,i12))') "[BUIOL] ", &
+             "unit:", CURSOR%unit, &
+        "   | recl:", CURSOR%recl, &
+        "   | nrec (idx/alloc):", CURSOR%nrec, ndata, &
+        "   | memory used:", bytes
+    IF(present(mem)) mem = mem+bytes
+    RETURN
+    !
+  END SUBROUTINE buiol_report_buffer
+  ! \/o\________\\\_________________________________________/^>
+  FUNCTION find_unit(unit) RESULT(CURSOR)
+    IMPLICIT NONE
+    INTEGER,INTENT(in) :: unit
+    TYPE(index_of_list),POINTER :: CURSOR
+    !
+    CURSOR => ENTRY
+    DO WHILE (associated(CURSOR%NEXT))
+      CURSOR => CURSOR%NEXT
+      IF(CURSOR%unit == unit) RETURN ! <-- found
+    ENDDO
+    CURSOR => null() ! <------------------ not found 
+    RETURN
+  END FUNCTION find_unit
+  ! \/o\________\\\_________________________________________/^>
+  FUNCTION find_prev_unit(unit) RESULT(CURSOR)
+    IMPLICIT NONE
+    INTEGER,INTENT(in) :: unit
+    TYPE(index_of_list),POINTER :: CURSOR
+    !
+    CURSOR => ENTRY
+    DO WHILE (associated(CURSOR%NEXT))
+      IF(CURSOR%next%unit == unit) RETURN ! <-- found
+      CURSOR => CURSOR%NEXT
+    ENDDO
+    CURSOR => null() ! <------------------ not found 
+    RETURN
+  END FUNCTION find_prev_unit
+  ! \/o\________\\\_________________________________________/^>
+  FUNCTION alloc_buffer(unit, recl, nrec)
+    IMPLICIT NONE
+    INTEGER,INTENT(in) :: unit, recl, nrec
+    TYPE(index_of_list),POINTER :: alloc_buffer
+    TYPE(index_of_list),POINTER :: CURSOR
+    !
+    ALLOCATE(CURSOR)
+    CURSOR%unit = unit
+    CURSOR%recl = recl
+    CURSOR%nrec = nrec0
+    NULLIFY(CURSOR%next)
+    ALLOCATE(CURSOR%index(CURSOR%nrec))
+    !
+    alloc_buffer => CURSOR
+    RETURN
+  END FUNCTION alloc_buffer
+  ! \/o\________\\\_________________________________________/^>
+  SUBROUTINE dealloc_buffer(CURSOR)
+    IMPLICIT NONE
+    TYPE(index_of_list),POINTER,INTENT(inout) :: CURSOR
+    !
+    INTEGER :: i
+    DO i = 1,CURSOR%nrec
+      IF(associated(CURSOR%index(i)%data)) THEN
+         DEALLOCATE(CURSOR%index(i)%data)
+         NULLIFY(CURSOR%index(i)%data)
+      ENDIF
+    ENDDO
+    DEALLOCATE(CURSOR%index)
+    CURSOR%unit = -1
+    CURSOR%recl = -1
+    CURSOR%nrec = -1
+    DEALLOCATE(CURSOR)
+    NULLIFY(CURSOR)
+    !
+  END SUBROUTINE dealloc_buffer
+  ! \/o\________\\\_________________________________________/^>
+END MODULE buiol
+! <<^V^\\=========================================//-//-//========//O\\//
+
+Module buffers
+
+  use kinds, only: dp
+  use buiol, only: init_buiol, buiol_open_unit, buiol_close_unit, &
+                   buiol_check_unit, buiol_read_record, buiol_write_record
+  implicit none
+  !
+  ! QE interfaces to BUIOL module
+  !
+  PUBLIC :: open_buffer, get_buffer, save_buffer, close_buffer
+  !
+  PRIVATE
+  INTEGER:: nunits = 0
+  !
+contains
+
+  !----------------------------------------------------------------------------
   SUBROUTINE open_buffer (unit, extension, nword, maxrec, exst)
-  !-----------------------------------------------------------------------
-  !
-  !     unit > 6 : connect unit "unit" to file $wfc_dir/$prefix."extension" 
-  !     for direct I/O access, with record length = nword complex numbers;
-  !     maxrec is ignored, exst=T(F) if the file (does not) exists
-  !
-  !     unit =-10: in addition to opening unit 10 as above, allocate a buffer
-  !     for storing up to maxrec records of length nword complex numbers
-  !
-  USE io_files,  ONLY : diropn, wfc_dir
-  !
-  IMPLICIT NONE
-  !
-  CHARACTER(LEN=*), INTENT(IN) :: extension
-  INTEGER, INTENT(IN) :: unit, nword, maxrec
-  LOGICAL, INTENT(OUT) :: exst
-  !
-  INTEGER :: ierr
-  !
-  exst = .FALSE.
-  IF ( unit == -10) THEN
-     exst =  ALLOCATED ( buffer1 )
-     IF ( exst ) THEN
-        CALL infomsg ('open_buffer', 'buffer already allocated')
-     ELSE
-        nword_ = nword
-        ALLOCATE ( buffer1 ( nword, maxrec ) )
-        buffered = .FALSE.
-     END IF
-  END IF
-  !
-  IF ( unit == -10 .OR. unit > 6 ) THEN
-     CALL diropn ( ABS(unit), extension, 2*nword, exst, wfc_dir )
-  ELSE
-     CALL errore ('open_buffer', 'incorrect unit specified', ABS(unit))
-  END IF
-  !
-  RETURN
-  !
-END SUBROUTINE open_buffer
-!
-!----------------------------------------------------------------------------
-SUBROUTINE save_buffer( vect, nword, unit, nrec )
+    !---------------------------------------------------------------------------
+    !
+    !     unit >=0 : connect unit "unit" to file "wfc_fdir"/"prefix"."extension"
+    !     for direct I/O access, with record length = nword complex numbers;
+    !     on output, exst=T(F) if the file (does not) exists
+    !
+    !     unit < 0 : un addition to opening unit "abs(unit)" as above, open a
+    !     buffer for storing records of length nword complex numbers;
+    !     on output, exst=T(F) if the buffer is already allocated
+    !
+    !     fIXME: maxrec is no longer used and should be removed
+    !
+    USE io_files,  ONLY : diropn, wfc_dir
+    !
+    IMPLICIT NONE
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: extension
+    INTEGER, INTENT(IN) :: unit, nword, maxrec
+    LOGICAL, INTENT(OUT) :: exst
+    !
+    INTEGER :: ierr
+    !
+    !   not-so-elegant way to initialize the linked chain with units
+    !
+    IF ( nunits == 0 ) CALL init_buiol( )
+    !
+    IF (extension == ' ') &
+       CALL errore ('open_buffer','filename extension not given',1)
+    !
+    CALL diropn ( abs(unit), extension, 2*nword, exst, wfc_dir )      
+    nunits = nunits + 1
+    !
+    IF ( unit < 0 ) THEN
+       ierr = buiol_open_unit ( abs(unit), nword )
+       IF ( ierr > 0 ) CALL errore ('open_buffer', ' cannot open unit', 2)
+       exst = ( ierr == -1 )
+       IF (exst) THEN
+          CALL infomsg ('open_buffer', 'unit already opened')
+          nunits = nunits - 1
+       END IF
+    ENDIF
+    !
+    RETURN
+    !
+  END SUBROUTINE open_buffer
   !----------------------------------------------------------------------------
+  SUBROUTINE save_buffer( vect, nword, unit, nrec )
+    !---------------------------------------------------------------------------
+    !
+    ! ... copy vect(1:nword) into the "nrec"-th record of
+    ! ... - a previously allocated buffer, if unit < 0
+    ! ... - a previously opened direct-access file with unit >= 0
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: nword, unit, nrec
+    COMPLEX(DP), INTENT(IN) :: vect(nword)
+    INTEGER :: ierr
+    !
+    IF ( unit < 0 ) THEN
+       ierr = buiol_write_record ( abs(unit), nword, nrec, vect )
+       if ( ierr > 0 ) &
+           CALL errore ('save_buffer', 'cannot write record', ABS(unit))
+#ifdef __DEBUG
+       print *, 'save_buffer: record', nrec, ' written to unit', unit
+#endif
+    ELSE 
+       CALL davcio ( vect, 2*nword, unit, nrec, +1 )
+    END IF
+    !
+  END SUBROUTINE save_buffer
   !
-  ! ... copy vect(1:nword) into the "nrec"-th record of
-  ! ... - a previously allocated buffer, if unit = -10
-  ! ... - a previously opened direct-access file with unit > 6
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN) :: nword, unit, nrec
-  COMPLEX(DP), INTENT(IN) :: vect(nword)
-  !
-  IF ( unit == -10 ) THEN
-     !
-     IF ( ALLOCATED ( buffer1 ) ) THEN
-        !
-        IF ( nrec > SIZE ( buffer1, 2) )  &
-           CALL errore ('save_buffer', 'too many records', ABS(nrec))
-        IF ( nword /= SIZE ( buffer1, 1) )  &
-           CALL errore ('save_buffer', 'record length mismatch', ABS(nword))
-        !
-        buffer1(:,nrec) = vect(:)
-        buffered = .TRUE.
-        !
-     ELSE
-        !
-        CALL errore ('save_buffer', 'buffer not allocated', ABS(unit))
-        !
-     END IF
-     !
-  ELSE IF ( unit > 6 ) THEN
-     !
-     CALL davcio ( vect, 2*nword, unit, nrec, +1 )
-     !
-  ELSE
-     !
-     CALL errore ('save_buffer', 'incorrect unit specified', ABS(unit))
-     !
-  END IF
-  !
-  RETURN
-  !
-END SUBROUTINE save_buffer
-!
-!----------------------------------------------------------------------------
-SUBROUTINE get_buffer( vect, nword, unit, nrec )
   !----------------------------------------------------------------------------
-  !
-  ! ... copy vect(1:nword) from the "nrec"-th record of
-  ! ... - a previously allocated buffer, if unit = -10 ;
-  ! ...   if buffer never written: read it from unit 10
-  ! ... - a previously opened direct-access file with unit > 6
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN) :: nword, unit, nrec
-  COMPLEX(DP), INTENT(OUT) :: vect(nword)
-  !
-  IF ( unit == -10 ) THEN
-     !
-     IF ( ALLOCATED ( buffer1 ) ) THEN
-        IF ( nrec > SIZE ( buffer1, 2) )  &
-           CALL errore ('get_buffer', 'no such record', ABS(nrec))
-        IF ( nword /= SIZE ( buffer1, 1) )  &
-           CALL errore ('get_buffer', 'record length mismatch', ABS(nword))
-        IF ( buffered ) THEN
-           vect(:) = buffer1(:,nrec)
-        ELSE
-           CALL davcio ( vect, 2*nword, ABS(unit), nrec, -1 )
-        END IF
-     ELSE
-        CALL errore ('get_buffer', 'buffer not allocated', ABS(unit))
-     END IF
-     !
-  ELSE IF ( unit > 6 ) THEN
-     !
-     CALL davcio ( vect, 2*nword, unit, nrec, -1 )
-     !
-  ELSE
-     !
-     CALL errore ('get_buffer', 'incorrect unit specified', ABS(unit))
-     !
-  END IF
-  !
-  RETURN
-  !
-END SUBROUTINE get_buffer
-!
-SUBROUTINE close_buffer ( unit, status )
-  !
-  !     unit > 6 : close unit with status "status" ('keep' or 'delete')
-  !     unit =-10: deallocate buffer
-  !                if status='keep', save to previosly opened file
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN) :: unit
-  CHARACTER(LEN=*), INTENT(IN) :: status
-  !
-  INTEGER :: i
-  LOGICAL :: exst, opnd
-  !
-  IF ( unit == -10 ) THEN
-     !
-     IF ( ALLOCATED ( buffer1 ) ) THEN
-        !
-        IF ( TRIM(status) == 'KEEP' .OR. TRIM(status) == 'keep') THEN
-           DO i = 1, SIZE (buffer1, 2)
-              CALL davcio ( buffer1(1,i), 2*nword_, ABS(unit), i, +1 )
-           END DO
-           CLOSE( UNIT = ABS(unit), STATUS = status )
-        END IF
-        !
-        DEALLOCATE (buffer1)
-        buffered = .FALSE.
-        !
-     ELSE
-        !
-        CALL infomsg ('close_buffer', 'buffer not allocated')
-        !
-     END IF
-     !
-  END IF
-  !
-  IF ( unit == -10 .OR. unit > 6 ) THEN
-     !
-     INQUIRE( UNIT = ABS(unit), OPENED = opnd )
-     IF ( opnd ) CLOSE( UNIT = ABS(unit), STATUS = status )
-     !
-  ELSE
-     !
-     CALL infomsg ('get_buffer', 'incorrect unit specified')
-     !
-  END IF
-  !
-END SUBROUTINE close_buffer
-!
-END MODULE buffers
+  SUBROUTINE get_buffer( vect, nword, unit, nrec )
+    !---------------------------------------------------------------------------
+    !
+    ! ... copy vect(1:nword) from the "nrec"-th record of
+    ! ... - a previously allocated buffer, if unit < 0
+    ! ... - a previously opened direct-access file with unit >= 0
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: nword, unit, nrec
+    COMPLEX(DP), INTENT(OUT) :: vect(nword)
+    INTEGER :: ierr
+    !
+    IF ( unit < 0 ) THEN
+       ierr = buiol_read_record ( abs(unit), nword, nrec, vect )
+#ifdef __DEBUG
+       print *, 'get_buffer: record', nrec, ' read from unit', unit
+#endif
+       if ( ierr < 0 ) then
+          ! record not found: read from file ....
+          CALL davcio ( vect, 2*nword, abs(unit), nrec, -1 )
+          ! ... and save to memory
+          ierr =  buiol_write_record ( abs(unit), nword, nrec, vect )
+          if ( ierr /= 0 ) CALL errore ('get_buffer', &
+                                  'cannot store record in memory', ABS(unit))
+#ifdef __DEBUG
+          print *, 'get_buffer: record', nrec, ' read from file', unit
+#endif
+       end if
+#ifdef __DEBUG
+       print *, 'get_buffer: record', nrec, ' read from unit', unit
+#endif
+    ELSE
+       CALL davcio ( vect, 2*nword, unit, nrec, -1 )
+    END IF
+    !
+  END SUBROUTINE get_buffer
+
+  SUBROUTINE close_buffer ( unit, status )
+    !
+    !     unit >=0 : close unit with status "status" ('keep' or 'delete')
+    !     unit < 0 : deallocate buffer; if "status='keep'" save to file
+    !                (using saved value of extension)
+    !
+    USE io_files, ONLY : diropn
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: unit
+    CHARACTER(LEN=*), INTENT(IN) :: status
+    !
+    COMPLEX(dp), ALLOCATABLE :: vect(:)
+    INTEGER :: n, ierr, nrec, nword
+    LOGICAL :: opnd
+    !
+    IF ( unit < 0 ) THEN
+       if ( status == 'keep' .or. status == 'KEEP' ) then
+          !
+          nword = buiol_check_unit ( abs(unit) )
+          allocate (vect(nword))
+          n = 1
+  10      continue
+             ierr = buiol_read_record ( abs(unit), nword, n, vect )
+             IF ( ierr /= 0 ) go to 20
+             CALL davcio ( vect, 2*nword, abs(unit), n, +1 )
+             n = n+1
+          go to 10
+  20      deallocate (vect)
+       end if
+       ierr = buiol_close_unit ( abs(unit) )
+       if ( ierr < 0 ) &
+            CALL errore ('close_buffer', 'error closing', ABS(unit))
+#ifdef __DEBUG
+       print *, 'close_buffer: unit ',unit, 'closed'
+#endif
+       CLOSE( UNIT = abs(unit), STATUS = status )
+    ELSE
+       INQUIRE( UNIT = unit, OPENED = opnd )
+       IF ( opnd ) CLOSE( UNIT = unit, STATUS = status )
+    END IF
+    nunits = nunits - 1
+    !
+  END SUBROUTINE close_buffer
+
+  ! end interface for old "buffers" module
+
+end module buffers
