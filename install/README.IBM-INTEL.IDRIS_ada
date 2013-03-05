@@ -1,46 +1,47 @@
-#
-# Info by Lorenzo Paulatto  http://www-int.impmc.upmc.fr/~paulatto/
-# Dec. 2012, valid for QE 5.0.2 and 4.3.2
-# on ADA machine of French computing center IDRIS: http://www.idris.fr/ada/
-# Configuration: IBM + Intel MKL
-#
-# Below is the manually edited working make.sys file i
-# Remember to modify FFT_LIBS and TOPDIR below according to your path.
-#
-# Untile a compiled version of Intel MKL FFTW3 is made available you will
-# to compile the intreface yourself:
-#   MKLBASE=$(cd $(dirname $(which ifort))/../../mkl; pwd)
-#   cp -r $MKLBASE/interfaces/fftw3xf/ $HOME/
-#   cd $HOME/fftw3xf/
-#   make libintel64
-# these steps will create an Intel FFTW3 library in "$HOME/fftw3xf/".
-# It is not clear if this library is any faster than stock FFTW3 but at least 
-# it does not hurt. You can also ignore this part and do not set FFT_LIBS, 
-# using internal FFTW3 instead.
-#
-# Proceed with configure:
-#   export AR=xiar 
-#   export MPIF90=mpiifort 
-#   export FFT_LIBS="-L$HOME/fftw3xf -lfftw3xf_intel" 
-#   export SCALAPACK_LIBS="-mkl=cluster"
-#   export BLAS_LIBS="-mkl=cluster"
-#   export LAPACK_LIBS="-mkl=cluster"
-#   ./configure
-# Then proceed with make as usual.
-#
-#  Notes:
-#   * setting AR=xiar is only needes if you want to enable multi-file optimisation (i.e. with -fast)
-#     however, I never found this optimisation to be any effective, but it does not hurt trying.
-#   * currently, the mkl variables are not properly set in the computing nodes, you should add
-#     something like this at the beginning of your job script or in your .bashrc:
-#     . /gpfs4l/smplocal/opt/intel/composer_xe_2011_sp1.6.233/mkl/bin/mklvars.sh intel64
-#     do not forget the "." at the beginning! I'm confident this will be fixed soon anyway.
-#   * just setting SCALAPACK_LIBS=-mkl=cluster is enough to compile, but leaving BLAS_LIBS
-#     or LAPACK_LIBS empty will pull in MKL libraries linked with the wrong MPI implementation.
-#   * alternatively, if you do not want scalapack, you can set --without-scalapack and
-#     use -mkl=sequential instead.
-#
-# make.sys follows
+
+ Info by Lorenzo Paulatto  http://www-int.impmc.upmc.fr/~paulatto/
+ Dec. 2012, valid for QE 5.0.2 and 4.3.2
+ on ADA machine of French computing center IDRIS: http://www.idris.fr/ada/
+ Configuration: IBM + Intel MKL
+
+
+ Until a pre-compiled version of Intel MKL FFTW3 is made available you will
+ have to compile the interface yourself:
+   MKLBASE=$(cd $(dirname $(which ifort))/../../mkl; pwd)
+   cp -r $MKLBASE/interfaces/fftw3xf/ $HOME/
+   cd $HOME/fftw3xf/
+   make libintel64
+ these steps will create an Intel FFTW3 library in "$HOME/fftw3xf/".
+ It is not clear if this library is any faster than stock FFTW3 but at least 
+ it does no harm. You can also ignore this part and not set FFT_LIBS, 
+ using internal FFTW3 instead.
+
+ Proceed with configure:
+   export AR=xiar 
+   export MPIF90=mpiifort 
+   export FFT_LIBS="-L$HOME/fftw3xf -lfftw3xf_intel" 
+   export SCALAPACK_LIBS="-mkl=cluster"
+   export BLAS_LIBS="-mkl=cluster"
+   export LAPACK_LIBS="-mkl=cluster"
+   ./configure
+ Then proceed with make as usual.
+
+  Notes:
+   * setting AR=xiar is only needed if you want to enable multi-file optimisation (i.e. with -fast)
+     however, I never found this optimisation to be any effective, it does not hurt to try but
+     compilation time will increase a lot.
+   * currently, the mkl variables are not properly set in the computing nodes, you should add
+     something like this at the beginning of your job script or in your .bashrc:
+     . /gpfs4l/smplocal/opt/intel/composer_xe_2011_sp1.6.233/mkl/bin/mklvars.sh intel64
+     do not forget the "." at the beginning! I'm confident this will be fixed soon anyway.
+   * just setting SCALAPACK_LIBS="-mkl=cluster" is enough to compile, but leaving BLAS_LIBS
+     or LAPACK_LIBS empty will pull in MKL libraries linked with the wrong MPI implementation.
+   * alternatively, if you do not want scalapack, you can set --without-scalapack and set 
+     BLAS_LIBS="-mkl=sequential" and LAPACK_LIBS="-mkl=sequential".
+
+ Below is the my working make.sys file. If you use it, do not forget to edit FFT_LIBS and TOPDIR
+ according to your path.
+
 ###################################################################
 # make.sys.  Generated from make.sys.in by configure.
 
