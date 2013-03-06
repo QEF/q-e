@@ -462,9 +462,7 @@ SUBROUTINE phq_readin()
   !
   tmp_dir_save=tmp_dir
   tmp_dir_ph= TRIM (tmp_dir) // '_ph' // TRIM(int_to_char(my_image_id)) //'/'
-  IF (ionode) inquire (file =TRIM(tmp_dir_ph), exist = exst)
-  CALL mp_bcast( exst, ionode_id )
-  IF (.NOT. exst) CALL create_directory(tmp_dir_ph)
+  CALL parallel_mkdir(tmp_dir_ph)
   tmp_dir_phq=tmp_dir_ph
 
   ext_restart=.FALSE.
