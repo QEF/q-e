@@ -1379,7 +1379,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    info {
 		When adaptive_thr = .TRUE. the convergence threshold for 
 		each scf cycle is given by:
-		min( conv_thr, conv_thr_multi * dexx )
+		max( conv_thr, conv_thr_multi * dexx )
 	    }
 	}
 
