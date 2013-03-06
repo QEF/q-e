@@ -163,9 +163,9 @@ SUBROUTINE electrons()
   !
   IF ( .NOT. lscf ) THEN
      !
-     CALL non_scf (ik_)
-     !
      conv_elec = .TRUE.
+     !
+     CALL non_scf (ik_)
      !
      RETURN
      !
