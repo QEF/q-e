@@ -50,25 +50,41 @@ MODULE buiol
   END TYPE
   !
   ! beginning of the linked chain, statically allocated (for implementation simplicity)
-  TYPE(index_of_list),SAVE,POINTER :: ENTRY
+  TYPE(index_of_list),SAVE,POINTER :: ENTRY => null()
+  !
+  ! set to true when the library has been initialized
+  LOGICAL,SAVE :: is_init_buiol = .false.
   !
   CONTAINS
   ! <<^V^\\=========================================//-//-//========//O\\//
   !
   SUBROUTINE init_buiol
     IMPLICIT NONE
+    ! avoid initializing twice, or we will loose the head of the list!
+    IF (is_init_buiol) THEN 
+#ifdef __DEBUG
+       CALL infomsg('buiol', 'already initialized')
+#endif
+       RETURN
+    ENDIF
+    !
     ALLOCATE(ENTRY)
     ALLOCATE(ENTRY%index(0))
     ENTRY%nrec =  0
     ENTRY%unit = -1
     ENTRY%recl = -1
     NULLIFY(ENTRY%next)
+    is_init_buiol = .true.
+    !
     RETURN
   END SUBROUTINE init_buiol
   ! \/o\________\\\_________________________________________/^>
   SUBROUTINE stop_buiol
     IMPLICIT NONE
     TYPE(index_of_list),POINTER :: CURSOR, AUX
+    IF (.not.is_init_buiol) RETURN
+    IF (.not.associated(ENTRY) ) CALL errore('buiol', 'ENTRY was lost.',1)
+    !
     CURSOR => ENTRY
     DO WHILE (associated(CURSOR%NEXT))
       AUX => CURSOR
@@ -76,7 +92,8 @@ MODULE buiol
       CALL dealloc_buffer(AUX)
     ENDDO
     CALL dealloc_buffer(CURSOR)
- 
+    !
+    is_init_buiol=.false.
     RETURN
   END SUBROUTINE stop_buiol
   ! \/o\________\\\_________________________________________/^>
@@ -84,6 +101,11 @@ MODULE buiol
     IMPLICIT NONE
     TYPE(index_of_list),POINTER :: CURSOR
     INTEGER :: mem
+    !
+    IF (.not.is_init_buiol) THEN
+      WRITE(*,'(2x,a,3i14)') "[BUIOL] not even initialized"
+      RETURN
+    ENDIF
     !
     WRITE(*,'(2x,106("-") )')
     mem = 0
@@ -106,6 +128,7 @@ MODULE buiol
     INTEGER :: ierr
     TYPE(index_of_list),POINTER :: CURSOR
     !
+    IF (.not.is_init_buiol) CALL errore('buiol', 'You must init before open',1)
     IF(recl<0) THEN
 #ifdef __DEBUG
        CALL infomsg('buiol', 'wrong recl')
@@ -309,7 +332,9 @@ MODULE buiol
     TYPE(index_of_list),POINTER :: CURSOR
     ! sanity checks
     CURSOR => find_unit(unit)
+#ifdef __DEBUG
     IF(.not.associated(CURSOR)) CALL errore('buiol', 'cannot report: unit not opened',1)
+#endif
     CALL buiol_report_buffer(CURSOR)
     RETURN
     !
@@ -343,6 +368,8 @@ MODULE buiol
     INTEGER,INTENT(in) :: unit
     TYPE(index_of_list),POINTER :: CURSOR
     !
+    IF (.not.is_init_buiol) CALL errore('buiol', 'You must init before find_unit',1)
+    !
     CURSOR => ENTRY
     DO WHILE (associated(CURSOR%NEXT))
       CURSOR => CURSOR%NEXT
@@ -356,6 +383,8 @@ MODULE buiol
     IMPLICIT NONE
     INTEGER,INTENT(in) :: unit
     TYPE(index_of_list),POINTER :: CURSOR
+    !
+    IF (.not.is_init_buiol) CALL errore('buiol', 'You must init before find_prev_unit',1)
     !
     CURSOR => ENTRY
     DO WHILE (associated(CURSOR%NEXT))
