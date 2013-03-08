@@ -1207,7 +1207,6 @@ SUBROUTINE iosys()
   solvationrad_( 1:ntyp ) = solvationrad( 1:ntyp )
   ALLOCATE( atomicspread_( ntyp ) )
   atomicspread_( 1:ntyp ) = atomicspread( 1:ntyp )
-  IF ( do_environ ) CALL environ_initions_allocate( nat_, ntyp )
   add_jellium_ = add_jellium
   !
   ifdtype_   = ifdtype
@@ -1240,6 +1239,16 @@ SUBROUTINE iosys()
     env_pressure_ = -0.35D0*1.D9/rydberg_si*bohr_radius_si**3
     env_periodicity = 3
     env_ioncc_concentration = 0.D0
+  CASE ('water-cation')
+    ! water, experimental and SCCS tuned parameters for cations
+    env_static_permittivity_ = 78.3D0
+    env_surface_tension_ = 5.D0*1.D-3*bohr_radius_si**2/rydberg_si
+    env_pressure_ = 0.125D0*1.D9/rydberg_si*bohr_radius_si**3
+    env_periodicity = 3
+    env_ioncc_concentration = 0.D0
+    rhomax_ = 0.0035
+    rhomin_ = 0.0002
+    tbeta_ = LOG( rhomax / rhomin )
   CASE ('input')
     ! take values from input, this is the default option
     env_static_permittivity_ = env_static_permittivity
@@ -1333,6 +1342,8 @@ SUBROUTINE iosys()
       !
     CASE( 'pcc' ) 
       !
+      IF ( ibrav < 1 .OR. ibrav > 3 ) CALL errore(' iosys', &
+              'PCC correction defined only for cubic lattices', 1)
       do_environ_     = .true.
       env_periodicity = 0
       do_makov_payne  = .false.
@@ -1351,6 +1362,7 @@ SUBROUTINE iosys()
       call errore ('iosys','unrecognized value for assume_isolated',1)
   END SELECT
 #ifdef __ENVIRON
+  IF ( do_environ_ ) CALL environ_initions_allocate( nat_, ntyp )
   IF ( env_ioncc_concentration .GT. 0.D0 .AND. env_periodicity .NE. 2 ) &
       call errore ('iosys','ioncc requires slab boundary conditions',1)
 #endif
