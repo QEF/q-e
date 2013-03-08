@@ -41,7 +41,8 @@ SUBROUTINE phq_readin()
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
                             ext_recover, ext_restart, u_from_file, ldiag, &
                             search_sym, lqdir, electron_phonon, tmp_dir_phq, &
-                            rec_code_read, qplot, only_init, low_directory_check
+                            rec_code_read, qplot, only_init, only_wfc, &
+                            low_directory_check
 
   USE save_ph,       ONLY : tmp_dir_save, save_ph_input_variables
   USE gamma_gamma,   ONLY : asr
@@ -106,7 +107,7 @@ SUBROUTINE phq_readin()
                        fpol, asr, lrpa, lnoloc, start_irr, last_irr, &
                        start_q, last_q, nogg, ldiag, search_sym, lqdir, &
                        nk1, nk2, nk3, k1, k2, k3, &
-                       drho_star, dvscf_star, only_init, &
+                       drho_star, dvscf_star, only_init, only_wfc, &
                        elph_nbnd_min, elph_nbnd_max, el_ph_ngauss,el_ph_nsigma, el_ph_sigma,  &
                        electron_phonon, &
                        q_in_band_form, q2d, qplot, low_directory_check
@@ -254,6 +255,7 @@ SUBROUTINE phq_readin()
   q_in_band_form=.FALSE.
   q2d         = .FALSE.
   only_init  = .FALSE.
+  only_wfc    = .FALSE.
   low_directory_check=.FALSE.
   search_sym   =.TRUE.
   nk1       = 0

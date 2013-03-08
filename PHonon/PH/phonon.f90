@@ -50,7 +50,8 @@ PROGRAM phonon
   ! [10] ? + nonperiodic boundary conditions.
 
   USE disp,            ONLY : nqs
-  USE control_ph,      ONLY : epsil, trans, bands_computed, qplot, only_init
+  USE control_ph,      ONLY : epsil, trans, bands_computed, qplot, only_init, &
+                              only_wfc
   USE el_phon,         ONLY : elph, elph_mat, elph_simple
   USE output,          ONLY : fildrho
   USE check_stop,      ONLY : check_stop_init
@@ -95,6 +96,8 @@ PROGRAM phonon
      !  If necessary the bands are recalculated
      !
      IF (setup_pw) CALL run_pwscf(do_band, iq)
+     !
+     IF (only_wfc) GOTO 100
      !
      !  Initialize the quantities which do not depend on
      !  the linear response of the system

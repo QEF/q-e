@@ -23,7 +23,9 @@ SUBROUTINE run_pwscf(do_band, iq)
   USE disp,            ONLY : lgamma_iq
   USE qpoint,          ONLY : xq
   USE control_ph,      ONLY : reduce_io, recover, tmp_dir_phq, &
-                              ext_restart, bands_computed, newgrid, qplot
+                              ext_restart, bands_computed, newgrid, qplot, &
+                              only_wfc
+  USE io_global,       ONLY : stdout
   USE save_ph,         ONLY : tmp_dir_save
   !
   USE grid_irr_iq,     ONLY : done_bands
@@ -42,6 +44,7 @@ SUBROUTINE run_pwscf(do_band, iq)
   CALL start_clock( 'PWSCF' )
   !
   IF (done_bands(iq)) THEN
+     WRITE (stdout,'(/,5x,"Bands found: reading from ",a)') TRIM(tmp_dir_phq)
      CALL clean_pw( .TRUE. )
      CALL close_files(.true.)
      wfc_dir=tmp_dir_phq
@@ -81,7 +84,11 @@ SUBROUTINE run_pwscf(do_band, iq)
   IF (do_band) CALL electrons()
   !
   IF (.NOT.reduce_io.and.do_band) THEN
-     twfcollect=.FALSE.
+!
+!  If only_wfc flag is true, we use the same twfcollect as in the pw.x
+!  calculation.
+!
+     IF (.NOT. only_wfc) twfcollect=.FALSE.
      CALL punch( 'all' )
   ENDIF
   !

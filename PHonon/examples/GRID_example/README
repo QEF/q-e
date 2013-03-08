@@ -61,9 +61,18 @@ The run is as follows:
 1) A self consistent calculation is done:
 (input alas.scf.in, output alas.scf.out)
 
-2) A preparatory phonon run with lqdir=.true. and only_init=.true. calculates 
-the displacement patterns, the bands and if necessary the dielectric
-constant and effective charges
+2) A preparatory phonon run with lqdir=.true. and only_wfc=.true. calculates 
+the displacement patterns and the bands.
+(input alas.ph.wfc.in, output alas.ph.wfc.out)
+Note that the scf calculation and this band calculation can be done
+with the option twfcollect=.true. (that needs to be set only in the pw.x
+input) with a number of processors different from the following phonon run.
+
+3) The dielectric constant, effective charges and the part of the dynamical
+matrix not dependent on the perturbation can be calculated in a
+second initialization run using lqdir=.true. and only_init=.true..
+This step can be skipped but in this case all representations corresponding
+to q=0 will calculate the electric field part.
 (input alas.ph.in0, output alas.ph.out0)
 
 3-5) The rest is as in run_example (Note however that lqdir=.true. must

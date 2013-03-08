@@ -317,7 +317,7 @@ MODULE control_ph
   CHARACTER(LEN=10)  :: where_rec='no_recover'! where the ph run recovered
   CHARACTER(LEN=12) :: electron_phonon
   CHARACTER(LEN=256) :: flmixdpot, tmp_dir_ph, tmp_dir_phq
-  INTEGER :: rec_code,    &! code for recover
+  INTEGER :: rec_code=-1000,    &! code for recover
              rec_code_read=-1000 ! code for recover. Not changed during the run
   LOGICAL :: lgamma,      &! if .TRUE. this is a q=0 computation
              lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only
@@ -330,6 +330,7 @@ MODULE control_ph
              zeu,         &! if .TRUE. computes eff. charges as induced forces
              done_zeu=.FALSE., &! .TRUE. when the eff. charges are available
              done_start_zstar=.FALSE., &!
+             only_wfc=.FALSE.,  &! if .TRUE. computes only bands
              only_init=.FALSE.,  &! if .TRUE. computes only initial stuff
              recover,     &! if .TRUE. the run restarts
              low_directory_check=.FALSE., & ! if .TRUE. search on the phsave 

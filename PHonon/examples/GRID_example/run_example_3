@@ -79,6 +79,8 @@ $ECHO " done"
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
+PW1_COMMAND="mpirun -n 4 $BIN_DIR/pw.x $PARA_POSTFIX"
+PH1_COMMAND="mpirun -n 4 $BIN_DIR/ph.x $PARA_POSTFIX"
 Q2R_COMMAND="$PARA_PREFIX $BIN_DIR/q2r.x $PARA_POSTFIX"
 MATDYN_COMMAND="$PARA_PREFIX $BIN_DIR/matdyn.x $PARA_POSTFIX"
 PLOTBAND_COMMAND="$BIN_DIR/plotband.x"
@@ -108,6 +110,7 @@ cat > alas.scf.in << EOF
     prefix='$PREFIX',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
+    wf_collect=.true.
  /
  &system
     ibrav=  2, celldm(1) =10.50, nat=  2, ntyp= 2,
@@ -129,11 +132,34 @@ K_POINTS
  0.25 0.25 0.75 3.0
 EOF
 $ECHO "  running the scf calculation...\c"
-$PW_COMMAND < alas.scf.in > alas.scf.out
+$PW1_COMMAND < alas.scf.in > alas.scf.out
 check_failure $?
 $ECHO " done"
-
-# phonon calculation on a (444) uniform grid of q-points
+#
+# Initial calculation, only band structure. Note that here and in pw.x
+# you can use a different number of processors with respect to the
+# phonon calculation using the wf_collect=.true. flag.
+# 
+cat > alas.ph.wfc.in << EOF
+phonons of AlAs
+ &inputph
+  tr2_ph=1.0d-12,
+  prefix='$PREFIX',
+  ldisp=.true.,
+  nq1=4, nq2=4, nq3=4
+  only_wfc=.true.,
+  lqdir=.true.,
+  outdir='$TMP_DIR/',
+  fildyn='$PREFIX.dyn.xml',
+ /
+EOF
+$ECHO "  running the band structure calculation ...\c"
+$PH1_COMMAND < alas.ph.wfc.in > alas.ph.wfc.out
+check_failure $?
+$ECHO " done"
+#
+# Initial calculation, initial part of the dynamical matrix
+# 
 cat > alas.ph.in0 << EOF
 phonons of AlAs
  &inputph
@@ -142,15 +168,17 @@ phonons of AlAs
   ldisp=.true.,
   nq1=4, nq2=4, nq3=4
   only_init=.true.,
+  recover=.true.
   lqdir=.true.,
   outdir='$TMP_DIR/',
   fildyn='$PREFIX.dyn.xml',
  /
 EOF
-$ECHO "  running the phonon calculation ...\c"
+$ECHO "  running the initialization phonon calculation ...\c"
 $PH_COMMAND < alas.ph.in0 > alas.ph.out0
 check_failure $?
 $ECHO " done"
+
 
 for q in `seq 1 8 ` ; do
 
@@ -192,7 +220,6 @@ done
 #
 #  Collecting all results in a single directory:
 #
-
 for q in `seq 1 8 ` ; do
 
 for irr in `seq 1 6` ; do
@@ -200,7 +227,17 @@ for irr in `seq 1 6` ; do
 \cp -f $TMP_DIR/$q.$irr/_ph0/$PREFIX.phsave/dynmat.$q.$irr.xml $TMP_DIR/_ph0/$PREFIX.phsave 2> /dev/null
 
 done 
-done 
+#
+#  collect also the representation 0 (contribution to the dynamical 
+#  matrix independent from the induced charge).
+#
+\cp -f $TMP_DIR/$q.1/_ph0/$PREFIX.phsave/dynmat.$q.0.xml $TMP_DIR/_ph0/$PREFIX.phsave 2> /dev/null
+
+done
+#
+# cp electric field part
+#
+\cp -f $TMP_DIR/1.1/_ph0/$PREFIX.phsave/tensors.xml $TMP_DIR/_ph0/$PREFIX.phsave
 #
 cat > alas.ph.in << EOF
 phonons of AlAs
@@ -208,7 +245,6 @@ phonons of AlAs
   tr2_ph=1.0d-12,
   prefix='$PREFIX',
   ldisp=.true.,
-  lqdir=.true.,
   nq1=4, nq2=4, nq3=4
   recover=.true.,
   outdir='$TMP_DIR/',

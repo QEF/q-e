@@ -15,7 +15,6 @@ SUBROUTINE clean_pw_ph(iq)
   ! a new q.
   !
   USE kinds,           ONLY : DP
-  USE control_flags,   ONLY : twfcollect
   USE modes,           ONLY : nirr, nsymq
   USE partial,         ONLY : done_irr
   USE disp,            ONLY : done_iq
@@ -32,7 +31,6 @@ SUBROUTINE clean_pw_ph(iq)
   DO irr=1,nirr
      IF (.NOT.done_irr(irr)) done_iq(iq)=.FALSE.
   ENDDO
-  twfcollect=.FALSE.
   CALL clean_pw( .FALSE. )
   CALL deallocate_phq()
   rec_code_read=-1000
