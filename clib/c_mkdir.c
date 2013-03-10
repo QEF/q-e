@@ -14,6 +14,30 @@
 #include <errno.h>
 #include <time.h>
 #include "c_defs.h"
+#include <unistd.h>
+int check_writable_dir(const char *filename) {
+    struct stat sb;
+    /* lstat follows symlinks */
+    if (lstat(filename, &sb) == -1) {
+      fprintf( stderr , "chk dir fail: directory '%s' not created\n", filename ) ;
+      return -3; /* does not exist */
+      /* note: this happens also if looking for "dir/" when there is a file called "dir" */
+    }
+    if ( (sb.st_mode & S_IFMT) != S_IFDIR) {
+      fprintf( stderr , "chk dir fail: file '%s' exists but is NOT a directory\n", filename ) ;
+      return -2; /* not a directory */
+    }
+    /* if ( ! (sb.st_mode & S_IWUSR) )        return -4; /* not writeble by owner */
+    /* return 0 if I can read, write and execute (enter) this directory, -1 otherwise
+       note: we do not actually need R_OK in Quantum-ESPRESSO;
+             W_OK is definitely needed, about X_OK I'm not sure */
+    if ( access(filename, W_OK|R_OK|X_OK ) ) {
+      fprintf( stderr , "chk dir fail: insufficient permissions to access '%s'\n", filename ) ;
+      return -1; /* no permissions  */
+    }
+    
+    return 0;
+}  /* check_writable_dir */
 
 static void fatal ( const char * msg )
 {
@@ -59,7 +83,8 @@ int F77_FUNC_(c_mkdir_int,C_MKDIR_INT)( const int * dirname , const int * length
      retval = 1 ;
      }
    free( ldir ) ;
-
+   /* double check that the directory is a directory and has the good permissions */
+   if ( check_writable_dir(ldir) < 0) retval = 1;  
    return retval ;
 
 } /* end of c_mkdir */
@@ -75,6 +100,8 @@ int c_mkdir_safe( const char * dirname )
      fprintf( stderr , "mkdir fail: [%d] %s\n" , errno , strerror( errno ) ) ;
      retval = 1 ;
      }
+   /* double check that the directory is a directory and has the good permissions */
+   if ( check_writable_dir(dirname) < 0) retval = 1;  
    return retval ;
 }
 
