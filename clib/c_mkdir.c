@@ -82,9 +82,9 @@ int F77_FUNC_(c_mkdir_int,C_MKDIR_INT)( const int * dirname , const int * length
      fprintf( stderr , "mkdir fail: [%d] %s\n" , errno , strerror( errno ) ) ;
      retval = 1 ;
      }
-   free( ldir ) ;
    /* double check that the directory is a directory and has the good permissions */
    if ( check_writable_dir(ldir) < 0) retval = 1;  
+   free( ldir ) ;
    return retval ;
 
 } /* end of c_mkdir */
