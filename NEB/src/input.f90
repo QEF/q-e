@@ -200,7 +200,7 @@ SUBROUTINE verify_neb_tmpdir( tmp_dir )
   CHARACTER(len=*), INTENT(inout) :: tmp_dir
   !
   INTEGER             :: ios, image, proc, nofi
-  LOGICAL             :: exst
+  LOGICAL             :: exst, parallelfs
   CHARACTER (len=256) :: file_path, filename
   CHARACTER(len=6), EXTERNAL :: int_to_char
   !
@@ -212,7 +212,7 @@ SUBROUTINE verify_neb_tmpdir( tmp_dir )
      !
      ! ... let us try to create the scratch directory
      !
-     CALL parallel_mkdir ( tmp_dir )
+     CALL check_tempdir ( tmp_dir, exst, parallelfs )
      !
   ENDIF
   !
@@ -243,7 +243,7 @@ SUBROUTINE verify_neb_tmpdir( tmp_dir )
      file_path = trim( tmp_dir ) // trim( prefix ) //"_" // &
                  trim( int_to_char( image ) ) // '/'
      !
-     CALL parallel_mkdir ( file_path )
+     CALL check_tempdir ( file_path, exst, parallelfs )
      !
      ! ... if starting from scratch all temporary files are removed
      ! ... from tmp_dir ( by all the cpus in sequence )
