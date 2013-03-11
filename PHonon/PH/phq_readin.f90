@@ -93,7 +93,7 @@ SUBROUTINE phq_readin()
   REAL(DP), EXTERNAL :: atom_weight
   LOGICAL, EXTERNAL  :: imatches
   LOGICAL, EXTERNAL  :: has_xml
-  LOGICAL :: exst
+  LOGICAL :: exst, parallelfs
   REAL(DP), ALLOCATABLE :: xqaux(:,:)
   INTEGER, ALLOCATABLE :: wqaux(:)
   INTEGER :: nqaux, iq
@@ -464,7 +464,7 @@ SUBROUTINE phq_readin()
   !
   tmp_dir_save=tmp_dir
   tmp_dir_ph= TRIM (tmp_dir) // '_ph' // TRIM(int_to_char(my_image_id)) //'/'
-  CALL parallel_mkdir(tmp_dir_ph)
+  CALL check_tempdir ( tmp_dir_ph, exst, parallelfs )
   tmp_dir_phq=tmp_dir_ph
 
   ext_restart=.FALSE.
