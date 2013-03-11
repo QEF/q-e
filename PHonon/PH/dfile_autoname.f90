@@ -44,18 +44,11 @@ FUNCTION open_dfile_directory(basename, prefix)
   filename = dfile_directory_file(basename, prefix)
   open_dfile_directory = find_free_unit()
   !
-#ifdef __XLF
   OPEN(UNIT  = open_dfile_directory, &
        ACCESS= 'sequential',           &
        POSITION='append',              &
        FILE  = TRIM(filename),         &
        FORM  ='formatted', status='unknown', iostat=ios)
-#else
-  OPEN(UNIT  = open_dfile_directory, &
-       ACCESS= 'append',               &
-       FILE  = TRIM(filename),         &
-       FORM  ='formatted', status='unknown', iostat=ios)
-#endif
   !
   IF(ios/=0) CALL errore('open_dfile_directory','Cannot open: '//TRIM(filename),ABS(ios))
   !
