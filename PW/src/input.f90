@@ -1682,7 +1682,7 @@ SUBROUTINE check_tempdir ( tmp_dir, exst, pfs )
   ! ...    exst= .t. if tmp_dir exists
   ! ...    pfs = .t. if tmp_dir visible from all procs of an image
   !
-  USE wrappers,      ONLY : f_mkdir
+  USE wrappers,      ONLY : f_mkdir_safe
   USE io_global,     ONLY : ionode, ionode_id
   USE mp_images,     ONLY : intra_image_comm, nproc_image, me_image
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
@@ -1697,11 +1697,11 @@ SUBROUTINE check_tempdir ( tmp_dir, exst, pfs )
   CHARACTER(len=6), EXTERNAL :: int_to_char
   !
   ! ... create tmp_dir on ionode
-  ! ... f_mkdir returns -1 if tmp_dir already exists
-  ! ...                  0 if         created
-  ! ...                  1 if         cannot be created
+  ! ... f_mkdir_safe returns -1 if tmp_dir already exists
+  ! ...                       0 if         created
+  ! ...                       1 if         cannot be created
   !
-  IF ( ionode ) ios = f_mkdir( TRIM(tmp_dir) )
+  IF ( ionode ) ios = f_mkdir_safe( TRIM(tmp_dir) )
   CALL mp_bcast ( ios, ionode_id, intra_image_comm )
   exst = ( ios == -1 )
   IF ( ios > 0 ) CALL errore ('check_tempdir','tmp_dir cannot be opened',1)
@@ -1709,7 +1709,7 @@ SUBROUTINE check_tempdir ( tmp_dir, exst, pfs )
   ! ... let us check now if tmp_dir is visible on all nodes
   ! ... if not, a local tmp_dir is created on each node
   !
-  ios = f_mkdir( TRIM(tmp_dir) )
+  ios = f_mkdir_safe( TRIM(tmp_dir) )
   CALL mp_sum ( ios, intra_image_comm )
   pfs = ( ios == -nproc_image ) ! actually this is true only if .not.exst 
   !

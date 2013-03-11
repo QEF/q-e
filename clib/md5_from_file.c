@@ -111,21 +111,3 @@ void get_md5(const char *file, char *md5, int err)
      return;
 }
 
-int F77_FUNC_(file_md5,FILE_MD5)( const int * f_name, const int * f_len, int * out )
-{
-     int i, err = -1 ;
-     char * md5 = ( char * ) xcmalloc( 32 + 1 ) ;
-     char * f = ( char * ) xcmalloc( (*f_len) + 1) ;
-
-     for( i = 0; i < * f_len; i++ ) f[ i ] = (char)f_name[ i ];
-
-     f[*f_len] = '\0' ;
-
-     get_md5( f ,  md5, err) ;
-     for( i = 0; i < 32; i++ ) out[ i ] = md5[ i ]; 
-
-     free(f); 
-     free(md5); 
-     return err;
-} 
-

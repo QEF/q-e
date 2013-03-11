@@ -709,21 +709,3 @@ double eval_infix( int *ierr, const char *strExpression, int len )
   return result;
 }
 
-/* FORTRAN interface */
-double F77_FUNC_(eval_infix_wrapper,EVAL_INFIX_WRAPPER)( int *ierr, const int *strExpression, const int *len )
-{
-	int    i;
-        double result = 0.0;
-	char   tmp[256];
-	if( *len < 1 ) {
-		*ierr = 2;
-	} else if( *len > 256 ) {
-		*ierr = 3;
-	} else {
-		for( i = 0; i < *len; i ++ ) {
-			tmp[i] = (char)strExpression[i];
-		}
-		result = eval_infix( ierr, tmp, *len );
-	}
-	return result;
-}

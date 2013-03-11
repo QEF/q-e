@@ -59,7 +59,7 @@ MODULE xml_io_base
     SUBROUTINE create_directory( dirname )
       !------------------------------------------------------------------------
       !
-      USE wrappers,  ONLY : f_mkdir
+      USE wrappers,  ONLY : f_mkdir_safe
       USE mp,        ONLY : mp_barrier
       USE mp_global, ONLY : me_image, intra_image_comm
       USE io_files,  ONLY : check_writable
@@ -70,7 +70,7 @@ MODULE xml_io_base
 
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
-      IF ( ionode ) ierr = f_mkdir( TRIM( dirname ) )
+      IF ( ionode ) ierr = f_mkdir_safe( TRIM( dirname ) )
       CALL mp_bcast ( ierr, ionode_id, intra_image_comm )
       !
       CALL errore( 'create_directory', &

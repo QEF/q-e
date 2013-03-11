@@ -266,7 +266,7 @@ PROGRAM pw_export
   !
 
 
-  USE wrappers,  ONLY : f_mkdir
+  USE wrappers,  ONLY : f_mkdir_safe
   USE pwcom
   USE fft_base,  ONLY : dfftp
   USE io_global, ONLY : stdout, ionode, ionode_id
@@ -324,7 +324,7 @@ PROGRAM pw_export
           !
           pp_file = trim(prefix)//".export/index.xml"
           !
-          IF(ionode) ios = f_mkdir( trim(outdir)//"/"//trim(prefix)//".export" )
+          IF(ionode) ios = f_mkdir_safe( trim(outdir)//"/"//trim(prefix)//".export" )
       ENDIF
       !
   ENDIF

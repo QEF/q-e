@@ -117,7 +117,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   USE noncollin_module, ONLY : nspin_mag
   USE mp_global,        ONLY : intra_image_comm
   USE mp,               ONLY : mp_bcast
-  USE wrappers,         ONLY : f_mkdir
+  USE wrappers,         ONLY : f_mkdir_safe
   !
   IMPLICIT NONE
   ! input variables:
@@ -182,7 +182,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   IF (ionode) INQUIRE(file=trimcheck(descr%dir)//'.', exist = exst)
   CALL mp_bcast( exst, ionode_id, intra_image_comm )
   !if(.not.exst) CALL create_directory(descr%dir)
-  if(.not.exst) is = f_mkdir(descr%dir)
+  if(.not.exst) is = f_mkdir_safe(descr%dir)
   !
   ! ionode does all the work from here on, the other nodes are aly required for
   ! calling set_irr which includes a mp broadcast
