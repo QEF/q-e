@@ -27,18 +27,18 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   !
   ! Input variables
   !
-  integer :: ngy, ih, jh, np
+  integer,intent(IN) :: ngy, ih, jh, np
   ! ngy   :   number of G vectors to compute
   ! ih, jh:   first and second index of Q
   ! np    :   index of pseudopotentials
   !
-  real(DP) :: ylmk0 (ngy, lmaxq * lmaxq), qmod (ngy)
+  real(DP),intent(IN) :: ylmk0 (ngy, lmaxq * lmaxq), qmod (ngy)
   ! ylmk0 :  spherical harmonics
   ! qmod  :  moduli of the q+g vectors
   !
   ! output: the fourier transform of interest
   !
-  real(DP) :: qg (2,ngy)
+  real(DP),intent(OUT) :: qg (2,ngy)
   !
   !     here the local variables
   !
