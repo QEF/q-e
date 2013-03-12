@@ -18,7 +18,6 @@ int check_writable_dir(const char *filename) {
     struct stat sb;
     /* lstat follows symlinks */
     if (lstat(filename, &sb) == -1) {
-      fprintf( stderr , "\ncheck_writable_dir fail: directory '%s' not created\n", filename ) ;
       return -3; /* does not exist */
       /* note: this happens also if looking for "dir/" when there is a file called "dir" */
     }
