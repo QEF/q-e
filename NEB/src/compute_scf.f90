@@ -29,7 +29,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE ions_base,        ONLY : tau, nat, nsp, ityp
   USE ener,             ONLY : etot
   USE force_mod,        ONLY : force
-  USE io_files,         ONLY : prefix, tmp_dir, iunupdate, seqopn, &
+  USE io_files,         ONLY : prefix, tmp_dir, wfc_dir,  iunupdate, seqopn, &
                                exit_file, iunexit, delete_if_present
   USE path_io_units_module, ONLY : iunpath
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para
@@ -263,6 +263,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
                 TRIM( int_to_char( image ) ) // "/"
+      wfc_dir = tmp_dir
       !
       ! ... unit stdout is connected to the appropriate file
       !
