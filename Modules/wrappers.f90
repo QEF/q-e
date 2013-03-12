@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004-2012 Quantum ESPRESSO group
+! Copyright (C) 2004-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,14 +8,15 @@
 !--------------------------------------------------------------------------
 !
 ! This module contains fortran wrappers to POSIX system calls. 
-! The wrappers are used to conver the Fortran CHARACTER array to null-terminated C *char.
-! The conversion and the interface is done with the F95 intrinsic iso_c_binding module.
+! The wrappers are used to convert the Fortran CHARACTER array to
+! null-terminated C *char. The conversion and the interface is done
+! with the F95 intrinsic iso_c_binding module.
 !
-! Additionally, it provides iterfaces to the C functions in clib/: eval_infix, md5_from_file
-! and f_mkdir_safe
+! Additionally, it provides interfaces to the C functions in clib/: 
+! eval_infix, md5_from_file, f_mkdir_safe
 !
-! NOTE: the mkdir function is NOT called directly as it return error on directory
-!       already existing, we are instead using a c wrapper (c_mkdir_safe)
+! NOTE: the mkdir function is NOT called directly as it returns error if
+!       directory already exists. We use instead a C wrapper c_mkdir_safe
 !
 MODULE wrappers
   USE kinds, ONLY : DP
