@@ -918,11 +918,9 @@ MODULE cp_restart
          wfc_dir = TRIM( restart_dir( tmp_dir, ndw ) ) // '/'
          wfc_dir = TRIM( kpoint_dir( wfc_dir, 1 ) ) // '/'
          !
-         iunwfc = 10
          nwordwfc = SIZE( c02 )
-         !
          CALL diropn ( iunwfc, 'wfc', 2*nwordwfc, exst, wfc_dir )
-
+         !
          CALL davcio ( c02, 2*nwordwfc, iunwfc, 1, +1 )  ! save wave funct
          CALL davcio ( cm2, 2*nwordwfc, iunwfc, 2, +1 )  ! save wave funct
          !
@@ -1819,7 +1817,6 @@ MODULE cp_restart
          wfc_dir = TRIM( restart_dir( tmp_dir, ndr ) ) // '/'
          wfc_dir = TRIM( kpoint_dir( wfc_dir, 1 ) ) // '/'
          !
-         iunwfc = 10
          nwordwfc = SIZE( c02 )
          !
          CALL diropn ( iunwfc, 'wfc', 2*nwordwfc, exst, wfc_dir )

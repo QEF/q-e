@@ -15,7 +15,6 @@ SUBROUTINE openfil_cond()
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : stdout
   USE wvfct,            ONLY : nbnd, npwx
-  USE klist,            ONLY : nks
   USE io_files,         ONLY : prefix, iunpun, iunat, iunsat, iunwfc, iunigk, &
                                nwordwfc, nwordatwfc, iunefield, &
                                iunefieldm, iunefieldp
@@ -30,18 +29,10 @@ SUBROUTINE openfil_cond()
   !
   ! ... nwordwfc is the record length (IN COMPLEX WORDS)
   ! ... for the direct-access file containing wavefunctions
+  ! ... io_level > 0 : open a file; io_level <= 0 : open a buffer
   !
   nwordwfc = nbnd*npwx*npol
-  !
-  ! ... iunwfc= 10: read/write wfc from/to file
-  ! ... iunwfc=-10: copy wfc to/from RAM
-  !
-  IF ( io_level > 0 ) THEN
-     iunwfc = 10
-  ELSE
-     iunwfc =-10
-  END IF
-  CALL open_buffer( iunwfc, 'wfc', nwordwfc, nks, exst )
+  CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst )
   !
   RETURN
   !
@@ -56,16 +47,9 @@ SUBROUTINE closefil_cond()
   USE kinds,            ONLY : DP
   USE io_files,         ONLY : iunwfc
   USE buffers,          ONLY : close_buffer
-  USE control_flags,    ONLY : io_level
   !
   IMPLICIT NONE
   !
-  !
-  IF ( io_level > 0 ) THEN
-     iunwfc = 10
-  ELSE
-     iunwfc =-10
-  END IF
   CALL close_buffer( iunwfc, 'keep' )
   !
   RETURN

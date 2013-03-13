@@ -452,25 +452,23 @@ Module buffers
 contains
 
   !----------------------------------------------------------------------------
-  SUBROUTINE open_buffer (unit, extension, nword, maxrec, exst)
+  SUBROUTINE open_buffer (unit, extension, nword, io_level, exst)
     !---------------------------------------------------------------------------
     !
-    !     unit >=0 : connect unit "unit" to file "wfc_fdir"/"prefix"."extension"
-    !     for direct I/O access, with record length = nword complex numbers;
-    !     on output, exst=T(F) if the file (does not) exists
+    !   io_level>0: connect unit "unit" to file "wfc_fdir"/"prefix"."extension"
+    !   for direct I/O access, with record length = nword complex numbers;
+    !   on output, exst=T(F) if the file (does not) exists
     !
-    !     unit < 0 : un addition to opening unit "abs(unit)" as above, open a
-    !     buffer for storing records of length nword complex numbers;
-    !     on output, exst=T(F) if the buffer is already allocated
-    !
-    !     fIXME: maxrec is no longer used and should be removed
+    !   io_level=0: in addition to opening unit "unit" as above, open a
+    !   buffer for storing records of length nword complex numbers;
+    !   on output, exst=T(F) if the buffer is already allocated
     !
     USE io_files,  ONLY : diropn, wfc_dir
     !
     IMPLICIT NONE
     !
     CHARACTER(LEN=*), INTENT(IN) :: extension
-    INTEGER, INTENT(IN) :: unit, nword, maxrec
+    INTEGER, INTENT(IN) :: unit, nword, io_level
     LOGICAL, INTENT(OUT) :: exst
     !
     INTEGER :: ierr
@@ -482,11 +480,11 @@ contains
     IF (extension == ' ') &
        CALL errore ('open_buffer','filename extension not given',1)
     !
-    CALL diropn ( abs(unit), extension, 2*nword, exst, wfc_dir )      
+    CALL diropn ( unit, extension, 2*nword, exst, wfc_dir )      
     nunits = nunits + 1
     !
-    IF ( unit < 0 ) THEN
-       ierr = buiol_open_unit ( abs(unit), nword )
+    IF ( io_level <= 0 ) THEN
+       ierr = buiol_open_unit ( unit, nword )
        IF ( ierr > 0 ) CALL errore ('open_buffer', ' cannot open unit', 2)
        exst = ( ierr == -1 )
        IF (exst) THEN
@@ -502,9 +500,9 @@ contains
   SUBROUTINE save_buffer( vect, nword, unit, nrec )
     !---------------------------------------------------------------------------
     !
-    ! ... copy vect(1:nword) into the "nrec"-th record of
-    ! ... - a previously allocated buffer, if unit < 0
-    ! ... - a previously opened direct-access file with unit >= 0
+    ! ... copy vect(1:nword) into the "nrec"-th record of a previously
+    ! ... allocated buffer / opened direct-access file, depending upon
+    ! ... how "open_buffer" was called
     !
     IMPLICIT NONE
     !
@@ -512,10 +510,11 @@ contains
     COMPLEX(DP), INTENT(IN) :: vect(nword)
     INTEGER :: ierr
     !
-    IF ( unit < 0 ) THEN
-       ierr = buiol_write_record ( abs(unit), nword, nrec, vect )
+    ierr = buiol_check_unit (unit)
+    IF( ierr > 0 ) THEN
+       ierr = buiol_write_record ( unit, nword, nrec, vect )
        if ( ierr > 0 ) &
-           CALL errore ('save_buffer', 'cannot write record', ABS(unit))
+           CALL errore ('save_buffer', 'cannot write record', unit)
 #ifdef __DEBUG
        print *, 'save_buffer: record', nrec, ' written to unit', unit
 #endif
@@ -529,9 +528,9 @@ contains
   SUBROUTINE get_buffer( vect, nword, unit, nrec )
     !---------------------------------------------------------------------------
     !
-    ! ... copy vect(1:nword) from the "nrec"-th record of
-    ! ... - a previously allocated buffer, if unit < 0
-    ! ... - a previously opened direct-access file with unit >= 0
+    ! ... copy vect(1:nword) from the "nrec"-th record of a previously
+    ! ... allocated buffer / opened direct-access file, depending upon
+    ! ... how "open_buffer" was called
     !
     IMPLICIT NONE
     !
@@ -539,18 +538,19 @@ contains
     COMPLEX(DP), INTENT(OUT) :: vect(nword)
     INTEGER :: ierr
     !
-    IF ( unit < 0 ) THEN
-       ierr = buiol_read_record ( abs(unit), nword, nrec, vect )
+    ierr = buiol_check_unit (unit)
+    IF( ierr > 0 ) THEN
+       ierr = buiol_read_record ( unit, nword, nrec, vect )
 #ifdef __DEBUG
        print *, 'get_buffer: record', nrec, ' read from unit', unit
 #endif
        if ( ierr < 0 ) then
           ! record not found: read from file ....
-          CALL davcio ( vect, 2*nword, abs(unit), nrec, -1 )
+          CALL davcio ( vect, 2*nword, unit, nrec, -1 )
           ! ... and save to memory
-          ierr =  buiol_write_record ( abs(unit), nword, nrec, vect )
+          ierr =  buiol_write_record ( unit, nword, nrec, vect )
           if ( ierr /= 0 ) CALL errore ('get_buffer', &
-                                  'cannot store record in memory', ABS(unit))
+                                  'cannot store record in memory', unit)
 #ifdef __DEBUG
           print *, 'get_buffer: record', nrec, ' read from file', unit
 #endif
@@ -566,9 +566,10 @@ contains
 
   SUBROUTINE close_buffer ( unit, status )
     !
-    !     unit >=0 : close unit with status "status" ('keep' or 'delete')
-    !     unit < 0 : deallocate buffer; if "status='keep'" save to file
-    !                (using saved value of extension)
+    !     close unit with status "status" ('keep' or 'delete') OR
+    !     deallocate buffer; if "status='keep'" save to file
+    !     (using saved value of extension)
+    ! ... depending upon how "open_buffer" was called
     !
     USE io_files, ONLY : diropn
     !
@@ -581,27 +582,28 @@ contains
     INTEGER :: n, ierr, nrec, nword
     LOGICAL :: opnd
     !
-    IF ( unit < 0 ) THEN
+    ierr = buiol_check_unit (unit)
+    IF( ierr > 0 ) THEN
        if ( status == 'keep' .or. status == 'KEEP' ) then
           !
-          nword = buiol_check_unit ( abs(unit) )
+          nword = buiol_check_unit ( unit )
           allocate (vect(nword))
           n = 1
   10      continue
-             ierr = buiol_read_record ( abs(unit), nword, n, vect )
+             ierr = buiol_read_record ( unit, nword, n, vect )
              IF ( ierr /= 0 ) go to 20
-             CALL davcio ( vect, 2*nword, abs(unit), n, +1 )
+             CALL davcio ( vect, 2*nword, unit, n, +1 )
              n = n+1
           go to 10
   20      deallocate (vect)
        end if
-       ierr = buiol_close_unit ( abs(unit) )
+       ierr = buiol_close_unit ( unit )
        if ( ierr < 0 ) &
             CALL errore ('close_buffer', 'error closing', ABS(unit))
 #ifdef __DEBUG
        print *, 'close_buffer: unit ',unit, 'closed'
 #endif
-       CLOSE( UNIT = abs(unit), STATUS = status )
+       CLOSE( UNIT = unit, STATUS = status )
     ELSE
        INQUIRE( UNIT = unit, OPENED = opnd )
        IF ( opnd ) CLOSE( UNIT = unit, STATUS = status )

@@ -36,6 +36,10 @@ Fixed in svn version:
 Incompatible changes in svn version:
    * calls to "find_equiv_sites" and "writemodes" changed (fixed dimension
      "nax" removed)
+   * call to "open_buffer" changed: unit must be a valid fortran unit > 0;
+     max number of records is no longer specified; a new flag explicitly
+     specifies if writing to RAM buffer is required. Functionalities of 
+     Modules/buffers.f90 have been considerably modified and extended.
 
 New in 5.0.2 version:
 

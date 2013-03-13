@@ -15,7 +15,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE control_flags,        ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only, io_level
   USE ions_base,            ONLY : nat, nsp, ityp, tau, if_pos, extfor
   USE basis,                ONLY : natomwfc
   USE cell_base,            ONLY : tpiba2, alat,omega, at, bg, ibrav
@@ -298,7 +298,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
 
      nwordwfc = nbnd*npwx*npol
   !
-     CALL open_buffer ( iunwfc, 'wfc', nwordwfc, nks, exst )
+     CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
   !
      CALL pw_readfile( 'wave', ierr )
   !

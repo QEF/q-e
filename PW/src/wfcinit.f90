@@ -44,15 +44,9 @@ SUBROUTINE wfcinit()
      CALL orthoatwfc()
   !
   ! ... open files/buffer for wavefunctions (nwordwfc set in openfil)
-  ! ... iunwfc= 10: read/write wfc from/to file
-  ! ... iunwfc=-10: copy wfc to/from RAM
+  ! ... io_level > 1 : open file, otherwise: open buffer
   !
-  IF ( io_level > 0 ) THEN
-     iunwfc = 10
-  ELSE
-     iunwfc =-10
-  END IF
-  CALL open_buffer( iunwfc, 'wfc', nwordwfc, nks, exst )
+  CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst )
   !
   ! ... now the various possible wavefunction initializations
   ! ... first a check: is "tmp_dir"/"prefix".wfc found on disk?

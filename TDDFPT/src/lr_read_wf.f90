@@ -64,7 +64,7 @@ SUBROUTINE lr_read_wf()
 
   evc(:,:)=evc0(:,:,1)
   IF ( dft_is_hybrid() ) THEN
-     CALL open_buffer ( iunwfc, 'wfc', nwordwfc, nks, exst )
+     CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
      CALL exx_grid_init()
      CALL exx_div_check()
      CALL exx_restart(.true.)

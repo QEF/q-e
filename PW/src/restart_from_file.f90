@@ -17,23 +17,18 @@ SUBROUTINE restart_from_file
   IMPLICIT NONE
   !
   CHARACTER(LEN=20) :: where_restart  
-    ! parameter indicating from where to restart
   INTEGER           :: ios
   !
   ! ... restart not required: delete restart file if present, return
   !
   IF ( .NOT. restart ) THEN
-     !
-     !WRITE( UNIT = stdout, &
-     !     & FMT = '(/5X,"RECOVER from restart file has been", &
-     !     &             " switched off on input")' )
-     !
-     IF ( ionode ) THEN
-        !
+#ifdef DEBUG
+     WRITE( UNIT = stdout, &
+          & FMT = '(/5X,"RECOVER from restart file has been", &
+          &             " switched off on input")' )
+#endif
+     IF ( ionode ) &
         CALL delete_if_present( TRIM(tmp_dir) // TRIM(prefix) // '.restart' )
-        !
-     END IF
-     !
      RETURN
      !
   END IF
@@ -43,12 +38,7 @@ SUBROUTINE restart_from_file
   !
   iunres = 1
   !
-  IF ( ionode ) THEN
-     !
-     CALL seqopn( iunres, 'restart', 'UNFORMATTED', restart )
-     !
-  END IF
-  !
+  IF ( ionode ) CALL seqopn( iunres, 'restart', 'UNFORMATTED', restart )
   CALL mp_bcast ( restart, ionode_id )
   !
   IF ( .NOT. restart ) THEN
@@ -56,13 +46,7 @@ SUBROUTINE restart_from_file
      WRITE( UNIT = stdout, &
           & FMT = '(/5X,"RECOVER from restart file failed:", &
           &             " file not found")')
-     !
-     IF ( ionode ) THEN
-        !
-        CLOSE( UNIT = iunres, STATUS = 'DELETE' )
-        !
-     END IF
-     !
+     IF ( ionode ) CLOSE( UNIT = iunres, STATUS = 'DELETE' )
      RETURN
      !
   END IF
@@ -70,14 +54,10 @@ SUBROUTINE restart_from_file
   IF ( ionode ) THEN
      !
      WRITE( UNIT = stdout, FMT = '(/5X,"read information from restart file")' )
-     !
      READ( iunres, IOSTAT = ios ) where_restart 
-     !
-     IF ( where_restart /= 'ELECTRONS' .AND. where_restart /= 'IONS' ) THEN
-        !
+     IF ( where_restart /= 'ELECTRONS' .AND. where_restart /= 'IONS' ) &
         ios = 1001
-        !
-     END IF
+     !
      ! ... close the file for later use
      !
      CLOSE( UNIT = iunres, STATUS = 'KEEP' )
@@ -88,13 +68,10 @@ SUBROUTINE restart_from_file
   CALL mp_bcast ( where_restart, ionode_id )
   !
   IF ( ios == 0 ) THEN
-     !
      WRITE( UNIT = stdout, FMT = '(5X,"Restarting in ",A)' ) where_restart 
-     !
   ELSE
-     !
-     CALL errore( 'restart_from_file', 'Cannot restart from here: '//TRIM(where_restart), ios)
-     !
+     CALL errore( 'restart_from_file', &
+                  'Cannot restart from here: '//TRIM(where_restart), ios)
   END IF
   !
   RETURN

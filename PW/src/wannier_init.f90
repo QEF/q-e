@@ -30,7 +30,7 @@ SUBROUTINE wannier_init(hwwa)
   
   LOGICAL,INTENT(IN) :: hwwa ! have we Wannier already?
   LOGICAL :: exst = .FALSE.,opnd
-  INTEGER :: i
+  INTEGER :: i, io_level
 
   ALLOCATE(pp(nwan,nbnd))
   ALLOCATE(wan_in(nwan,nspin))
@@ -62,8 +62,9 @@ SUBROUTINE wannier_init(hwwa)
   !now open files to store projectors and wannier functions
   nwordwpp = nwan*nbnd*npol
   nwordwf = nwan*npwx*npol
-  CALL open_buffer( iunwpp, 'wproj', nwordwpp, nks, exst )
-  CALL open_buffer( iunwf, 'wwf', nwordwf, nks, exst )
+  io_level = 1
+  CALL open_buffer( iunwpp, 'wproj', nwordwpp, io_level, exst )
+  CALL open_buffer( iunwf, 'wwf', nwordwf, io_level, exst )
 
   ! For atomic wavefunctions
   INQUIRE( UNIT = iunigk, OPENED = opnd )
@@ -74,9 +75,9 @@ SUBROUTINE wannier_init(hwwa)
   
   nwordatwfc = 2*npwx*natomwfc*npol
   INQUIRE( UNIT = iunat, OPENED = opnd )
-  IF(.NOT. opnd) CALL open_buffer( iunat,  'atwfc',  nwordatwfc/2, nks, exst )
+  IF(.NOT. opnd) CALL open_buffer( iunat, 'atwfc', nwordatwfc/2,io_level,exst )
   INQUIRE( UNIT = iunsat, OPENED = opnd )
-  IF(.NOT. opnd) CALL open_buffer( iunsat, 'satwfc', nwordatwfc/2, nks, exst )
+  IF(.NOT. opnd) CALL open_buffer( iunsat,'satwfc',nwordatwfc/2,io_level,exst )
 
   RETURN
   !

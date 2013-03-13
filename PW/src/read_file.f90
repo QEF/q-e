@@ -26,6 +26,7 @@ SUBROUTINE read_file()
   USE dfunct,               ONLY : newd
   USE ldaU,                 ONLY : lda_plus_u, U_projection
   USE pw_restart,           ONLY : pw_readfile
+  USE control_flags,        ONLY : io_level
   !
   IMPLICIT NONE 
   INTEGER :: ierr
@@ -37,10 +38,12 @@ SUBROUTINE read_file()
   !
   ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
   ! ... have been written to tmp_dir, not to a different directory!
+  ! ... io_level = 1 so that a real file is opened
   !
   wfc_dir = tmp_dir
   nwordwfc = nbnd*npwx*npol
-  CALL open_buffer ( iunwfc, 'wfc', nwordwfc, nks, exst )
+  io_level = 1
+  CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
   !
   ! ... Read orbitals, write them in 'distributed' form to iunwfc
   !
