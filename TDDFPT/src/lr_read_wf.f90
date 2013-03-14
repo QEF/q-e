@@ -21,7 +21,7 @@ SUBROUTINE lr_read_wf()
   USE lr_variables,         ONLY : becp1, becp1_c, test_case_no,&
                                  & size_evc, project
   USE wvfct,                ONLY : npw, igk, nbnd, g2kin, npwx, ecutwfc
-  USE control_flags,        ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only,io_level
   USE gvecs,                ONLY : nls, nlsm
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : invfft
