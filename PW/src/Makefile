@@ -165,6 +165,7 @@ rotate_wfc.o \
 rotate_wfc_k.o \
 rotate_wfc_gamma.o \
 ruotaijk.o \
+run_pwscf.o \
 s_1psi.o \
 s_psi.o \
 save_in_cbands.o \
