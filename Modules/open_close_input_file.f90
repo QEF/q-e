@@ -66,6 +66,7 @@ CONTAINS
      ! copy file to be opened into input_file
      !
      input_file = input_file_
+     !
   ELSE
      !
      ! if no file specified then copy from standard input
@@ -127,6 +128,7 @@ CONTAINS
   open_input_file = 0
   RETURN
 30 open_input_file = 2
+   WRITE(stdout, "('Open_input_file: error opening ',A)") TRIM(input_file)
   RETURN
   !
 END FUNCTION open_input_file
