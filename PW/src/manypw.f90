@@ -43,6 +43,7 @@ PROGRAM manypw
 #ifdef __MPI
   CALL mp_startup ( start_images=.true. )
 #endif
+  !
   CALL environment_start ( 'MANYPW' )
   !
   ! ... Image-specific input files
@@ -53,6 +54,7 @@ PROGRAM manypw
   ELSE
      filename = TRIM(input_file_) // TRIM(image_label) 
   END IF
+  !
   CALL read_input_file ( prog='PW', input_file_=filename )
   !
   ! ... Here open image-specific output files
@@ -83,10 +85,6 @@ PROGRAM manypw
      outdir = outdir(1:i) // trim(image_label) // '/'
   END IF
   !
-  ! ... Here copy data read from input to internal modules
-  !
-  CALL iosys()
-  !
   ! ... Perform actual calculation
   !
   CALL compute_pwscf  ( )
@@ -99,8 +97,8 @@ END PROGRAM manypw
 SUBROUTINE compute_pwscf ( ) 
   !----------------------------------------------------------------------------
   !
-  ! ... This is just the main of pw.x with the initialization and read section
-  ! ... taken out 
+  ! ... This is just the main program of pw.x with initialization
+  ! ... and read section taken out 
   !
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE io_global,        ONLY : stdout, ionode, ionode_id
@@ -122,13 +120,13 @@ SUBROUTINE compute_pwscf ( )
   IF (ionode) CALL plugin_arguments()
   CALL plugin_arguments_bcast( ionode_id, intra_image_comm )
   !
-  ! ... open, read, close input file ALREADY DONE
+  ! ... open, read, close input file DONE IN THE CALLING PROGRAM
   !
   !!! CALL read_input_file ('PW')
   !
-  ! ... convert to internal variables ALREADY DONE
+  ! ... convert to internal variables
   !
-  !!! CALL iosys()
+  CALL iosys()
   !
   IF ( gamma_only ) WRITE( UNIT = stdout, &
      & FMT = '(/,5X,"gamma-point specific algorithms are used")' )
