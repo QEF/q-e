@@ -18,6 +18,7 @@ PROGRAM pwscf
   USE command_line_options, ONLY: input_file_
   !
   IMPLICIT NONE
+  LOGICAL :: conv
   !
   !
   CALL mp_startup ( )
@@ -27,7 +28,9 @@ PROGRAM pwscf
   !
   ! ... Perform actual calculation
   !
-  CALL run_pwscf  ( )
+  CALL run_pwscf  ( conv )
+  !
+  CALL stop_run( conv )
   !
   STOP
   !

@@ -33,28 +33,23 @@ PROGRAM manypw
   IMPLICIT NONE
   !
   INTEGER :: i
-  LOGICAL :: opnd
-  CHARACTER(LEN=256) :: filename
+  LOGICAL :: opnd, conv
+  CHARACTER(LEN=256) :: filin, filout
   CHARACTER(LEN=7) :: image_label
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
   !
-#ifdef __MPI
   CALL mp_startup ( start_images=.true. )
-#endif
-  !
   CALL environment_start ( 'MANYPW' )
   !
   ! ... Image-specific input files
   !
   image_label = '_' // int_to_char(my_image_id)
   IF ( TRIM (input_file_) == ' ') THEN
-     filename = 'pw' // TRIM(image_label)  // '.in'
+     filin = 'pw' // TRIM(image_label)  // '.in'
   ELSE
-     filename = TRIM(input_file_) // TRIM(image_label) 
+     filin = TRIM(input_file_) // TRIM(image_label) 
   END IF
-  !
-  CALL read_input_file ( prog='PW', input_file_=filename )
   !
   ! ... Here open image-specific output files
   !
@@ -63,13 +58,15 @@ PROGRAM manypw
      INQUIRE ( UNIT = stdout, OPENED = opnd )
      IF (opnd) CLOSE ( UNIT = stdout )
      IF ( TRIM (input_file_) == ' ') THEN
-        filename = 'pw' // TRIM(image_label)  // '.out'
+        filout = 'pw' // TRIM(image_label)  // '.out'
      ELSE
-        filename = TRIM(input_file_) // TRIM(image_label) // '.out'
+        filout = TRIM(input_file_) // TRIM(image_label) // '.out'
      END IF
-     OPEN( UNIT = stdout, FILE = TRIM(filename), STATUS = 'UNKNOWN' )
+     OPEN( UNIT = stdout, FILE = TRIM(filout), STATUS = 'UNKNOWN' )
      !
   END IF
+  !
+  CALL read_input_file ( prog='PW', input_file_=filin )
   !
   ! ... Set image-specific value for "outdir", starting from input value
   ! ... (read in read_input_file)
@@ -86,7 +83,9 @@ PROGRAM manypw
   !
   ! ... Perform actual calculation
   !
-  CALL run_pwscf  ( )
+  CALL run_pwscf ( conv )
+  !
+  CALL stop_run( conv )
   !
   STOP
   !

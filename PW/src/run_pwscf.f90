@@ -6,11 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE run_pwscf ( ) 
+SUBROUTINE run_pwscf ( conv ) 
   !----------------------------------------------------------------------------
   !
   ! ... Run an instance of the Plane Wave Self-Consistent Field code 
-  ! ... MPI initialization and input data reading is performed in the calling code
+  ! ... MPI initialization and input data reading is performed in the 
+  ! ... calling code - returns in "conv" whether successfully completed
   ! ... Will be eventualy merged with NEB
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
@@ -28,10 +29,10 @@ SUBROUTINE run_pwscf ( )
 #endif
   !
   IMPLICIT NONE
+  LOGICAL, INTENT(OUT) :: conv
   !
   !
-  IF ( ionode ) WRITE( unit = stdout, FMT = 9010 ) &
-         ntypx, npk, lmaxx
+  IF ( ionode ) WRITE( unit = stdout, FMT = 9010 ) ntypx, npk, lmaxx
   !
   IF (ionode) CALL plugin_arguments()
   CALL plugin_arguments_bcast( ionode_id, intra_image_comm )
@@ -63,7 +64,8 @@ SUBROUTINE run_pwscf ( )
   !
   IF ( check_stop_now() ) THEN
      CALL punch( 'all' )
-     CALL stop_run( .TRUE. )
+     conv = .TRUE.
+     RETURN
   ENDIF
   !
   main_loop: DO
@@ -74,7 +76,8 @@ SUBROUTINE run_pwscf ( )
      !
      IF ( .NOT. conv_elec ) THEN
        CALL punch( 'all' )
-       CALL stop_run( conv_elec )
+       conv = .FALSE.
+       RETURN
      ENDIF
      !
      ! ... ionic section starts here
@@ -141,11 +144,10 @@ SUBROUTINE run_pwscf ( )
   ! ... save final data file
   !
   IF ( .not. lmd) CALL pw2casino()
-  !
   CALL punch('all')
-  CALL stop_run( conv_ions )
   !
-  STOP
+  conv = conv_ions
+  RETURN
   !
 9010 FORMAT( /,5X,'Current dimensions of program PWSCF are:', &
            & /,5X,'Max number of different atomic species (ntypx) = ',I2,&
