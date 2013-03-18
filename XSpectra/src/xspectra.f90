@@ -466,11 +466,10 @@ PROGRAM X_Spectra
 
      IF(.NOT.twfcollect) THEN
         !
-        ! ... nwordwfc is the record length for the direct-access file
-        ! ... containing wavefunctions
+        ! ... nwordwfc is the number of complex words in wavefunctions
         !
-        nwordwfc = 2 * nbnd * npwx ! * npol not implemented
-        CALL diropn( iunwfc, 'wfc', nwordwfc, exst )
+        nwordwfc = nbnd * npwx ! * npol not implemented
+        CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
         IF ( .not. exst ) CALL errore ('xspectra', &
              'file '//trim( prefix )//'.wfc'//' not found',1)
         !
@@ -3462,8 +3461,8 @@ SUBROUTINE verify_hpsi
      ! open saved eigenvectors
      !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
      inquire (unit = iunwfc, opened = opnd)
-     IF (.NOT.opnd)   CALL diropn( iunwfc, 'wfc', nwordwfc, exst )
-     CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+     IF (.NOT.opnd)   CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+     CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
 
      numk=0
      nkppool=nkstot/npool
