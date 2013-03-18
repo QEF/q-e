@@ -99,7 +99,7 @@ SUBROUTINE lr_read_wf()
       INTEGER :: v_siz, incr, ioff, j
       !
       use_tg=dffts%have_task_groups
-      nwordwfc = 2 * nbnd * npwx
+      nwordwfc = nbnd * npwx
       size_evc=npwx*nbnd*nks
       incr = 2
       !
@@ -108,7 +108,7 @@ SUBROUTINE lr_read_wf()
       !
       tmp_dir_saved = tmp_dir
       IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
-      CALL diropn ( iunwfc, 'wfc', nwordwfc, exst)
+      CALL diropn ( iunwfc, 'wfc', 2*nwordwfc, exst)
       !
       IF (.NOT.exst .AND. wfc_dir == 'undefined') CALL errore(&
            &'lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1) 
@@ -121,7 +121,7 @@ SUBROUTINE lr_read_wf()
          !
          tmp_dir = tmp_dir_saved
          !
-         CALL diropn ( iunwfc, 'wfc', nwordwfc, exst)
+         CALL diropn ( iunwfc, 'wfc', 2*nwordwfc, exst)
          !
          IF (.NOT.exst) CALL errore('lr_read_wfc', &
               &TRIM( prefix )//'.wfc'//' not found',1)
@@ -147,7 +147,7 @@ SUBROUTINE lr_read_wf()
          !
          !   Read in the ground state wavefunctions
          !   This is a parallel read, done in wfc_dir
-         CALL davcio(evc0(:,:,ik),nwordwfc,iunwfc,ik,-1)
+         CALL davcio(evc0(:,:,ik),2*nwordwfc,iunwfc,ik,-1)
          !
       ENDDO
       !
