@@ -20,7 +20,7 @@ SUBROUTINE close_phq( flag )
   USE uspp,          ONLY : okvan
   USE units_ph,      ONLY : iuwfc, iudwf, iubar, iudrhous, iuebar, iudrho, &
                             iudvscf, iucom, iudvkb3, iuint3paw
-  USE control_ph,    ONLY : zue, epsil
+  USE control_ph,    ONLY : zue, epsil, only_wfc
   USE recover_mod,   ONLY : clean_recover
   USE output,        ONLY : fildrho, fildvscf
   USE ramanm,        ONLY : lraman, elop, iuchf, iud2w, iuba2
@@ -31,6 +31,7 @@ SUBROUTINE close_phq( flag )
   LOGICAL :: flag
   LOGICAL :: exst, opnd
   !
+  IF (only_wfc) RETURN
   !
   IF ( twfcollect ) THEN
      !
