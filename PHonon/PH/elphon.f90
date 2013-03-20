@@ -459,7 +459,8 @@ SUBROUTINE elphsum ( )
   USE noncollin_module, ONLY: nspin_lsda, nspin_mag
   USE wvfct,       ONLY: nbnd, et
   USE parameters,  ONLY : npk
-  USE el_phon,     ONLY : el_ph_mat, done_elph
+  USE el_phon,     ONLY : el_ph_mat, done_elph, el_ph_nsigma, el_ph_ngauss, &
+                          el_ph_sigma
   USE qpoint,      ONLY : xq, nksq
   USE modes,       ONLY : u, minus_q, nsymq, rtau, nirr
   USE dynmat,      ONLY : dyn, w2
@@ -507,7 +508,8 @@ SUBROUTINE elphsum ( )
   INTEGER, ALLOCATABLE :: eqBZ(:), sBZ(:)
   REAL(DP) :: weight, wqa, w0g1, w0g2, degauss1, dosef, &
        ef1, lambda, gamma
-  REAL(DP) :: deg(10), effit(10), dosfit(10), etk, etq
+  REAL(DP), ALLOCATABLE :: deg(:), effit(:), dosfit(:)
+  REAL(DP) :: etk, etq
   REAL(DP), EXTERNAL :: dos_ef, efermig, w0gauss
   character(len=80) :: name
   LOGICAL  :: exst, xmldyn_save
@@ -536,10 +538,15 @@ SUBROUTINE elphsum ( )
   IF (.NOT.exst) CALL create_directory( elph_dir )
   WRITE (6, '(5x,"electron-phonon interaction  ..."/)')
   ngauss1 = 0
-  nsig = 10
+  nsig =el_ph_nsigma
 
   ALLOCATE(xk_collect(3,nkstot))
   ALLOCATE(wk_collect(nkstot))
+
+  ALLOCATE(deg(nsig))
+  ALLOCATE(effit(nsig))
+  ALLOCATE(dosfit(nsig))
+
   IF (npool==1) THEN
 !
 !  no pool, just copy old variable on the new ones
@@ -623,7 +630,7 @@ SUBROUTINE elphsum ( )
      ! recalculate Ef = effit and DOS at Ef N(Ef) = dosfit using dense grid
      ! for value "deg" of gaussian broadening
      !
-     deg(isig) = isig * 0.005d0
+     deg(isig) = isig * el_ph_sigma
      !
      effit(isig) = efermig &
           ( etfit_dist, nbnd, nksfit_dist, nelec, wkfit_dist, &
@@ -881,6 +888,9 @@ SUBROUTINE elphsum ( )
      if (ionode) CLOSE( UNIT = iuelph, STATUS = 'KEEP' )
   enddo
   deallocate (gf)
+  DEALLOCATE( deg )
+  DEALLOCATE( effit )
+  DEALLOCATE( dosfit )
   DEALLOCATE(xk_collect)
   DEALLOCATE(wk_collect)
   IF (npool /= 1) DEALLOCATE(el_ph_mat_collect)
