@@ -262,7 +262,7 @@ SUBROUTINE check_initial_status(auxdyn)
   IF (ionode) THEN
      INQUIRE (FILE = TRIM(filename), EXIST = exst)
      ierr=0
-     IF (.NOT. exst .OR. .NOT. recover) THEN
+     IF ((.NOT. exst .OR. .NOT. recover).AND.ldisp) THEN
         iudyn=26
         OPEN (unit=iudyn, file=TRIM(filename), status='unknown', iostat=ierr)
         IF ( ierr == 0 ) THEN
