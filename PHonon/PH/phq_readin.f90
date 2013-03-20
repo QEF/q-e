@@ -322,6 +322,9 @@ SUBROUTINE phq_readin()
   IF (fildyn.EQ.' ') CALL errore ('phq_readin', ' Wrong fildyn ', 1)
   IF (max_seconds.LT.0.1D0) CALL errore ('phq_readin', ' Wrong max_seconds', 1)
 
+  IF (only_init.AND.only_wfc) CALL errore('phq_readin', &
+                        'only_init or only_wfc can be .true.', 1)
+
   IF (modenum < 0) CALL errore ('phq_readin', ' Wrong modenum ', 1)
   IF (dek <= 0.d0) CALL errore ( 'phq_readin', ' Wrong dek ', 1)
   !
