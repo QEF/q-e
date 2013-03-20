@@ -97,6 +97,8 @@ PROGRAM phonon
      !
      IF (setup_pw) CALL run_pwscf(do_band, iq)
      !
+     !  If only_wfc=.TRUE. the code computes only the wavefunctions 
+     !
      IF (only_wfc) GOTO 100
      !
      !  Initialize the quantities which do not depend on
@@ -107,6 +109,8 @@ PROGRAM phonon
      !  electric field perturbation
      !
      IF (epsil) CALL phescf()
+     !
+     !  IF only_init is .true. the code computes only the initialization parts.
      !
      IF (only_init) GOTO 100
      !
