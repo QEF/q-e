@@ -17,12 +17,6 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
 !     give a basis for the irreducible representations of the
 !     small group of q.
 !
-!     Furthermore it computes:
-!     1) the small group of q
-!     2) the possible G vectors associated to every symmetry operation
-!     3) the matrices which represent the small group of q on the
-!        pattern basis.
-!
 !     Original routine was from C. Bungaro.
 !     Revised Oct. 1995 by Andrea Dal Corso.
 !     April 1997: parallel stuff added (SdG)
