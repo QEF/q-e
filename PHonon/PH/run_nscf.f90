@@ -110,4 +110,4 @@ SUBROUTINE run_nscf(do_band, iq)
   CALL stop_clock( 'PWSCF' )
   !
   RETURN
-END SUBROUTINE run_nwscf
+END SUBROUTINE run_nscf
