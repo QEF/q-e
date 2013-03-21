@@ -116,7 +116,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      ! ... Needed for LDA+U
      !
      IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
-        CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
+        CALL get_buffer ( swfcatom, nwordatwfc, iunsat, ik )
      !
      ! ... diagonalization of bands for k-point ik
      !
@@ -170,6 +170,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   !
   USE kinds,                ONLY : DP
+  USE buffers,              ONLY : get_buffer
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : nwordwfc, iunefieldp, iunefieldm
   USE uspp,                 ONLY : vkb, nkb, okvan
@@ -379,13 +380,13 @@ CONTAINS
        !... read projectors from disk
        !
        if(.not.l3dstring .and. ABS(efield)>eps ) then
-          CALL davcio(evcelm(:,:,gdir), 2*nwordwfc,iunefieldm,ik+(gdir-1)*nks,-1)
-          CALL davcio(evcelp(:,:,gdir), 2*nwordwfc,iunefieldp,ik+(gdir-1)*nks,-1)
+          CALL get_buffer (evcelm(:,:,gdir), nwordwfc, iunefieldm, ik+(gdir-1)*nks)
+          CALL get_buffer (evcelp(:,:,gdir), nwordwfc, iunefieldp, ik+(gdir-1)*nks)
        else
           do ipol=1,3
              if(ABS(efield_cry(ipol))>eps) then
-                CALL davcio(evcelm(:,:,ipol), 2*nwordwfc,iunefieldm,ik+(ipol-1)*nks,-1)
-                CALL davcio(evcelp(:,:,ipol), 2*nwordwfc,iunefieldp,ik+(ipol-1)*nks,-1)
+                CALL get_buffer (evcelm(:,:,ipol), nwordwfc, iunefieldm, ik+(ipol-1)*nks)
+                CALL get_buffer(evcelp(:,:,ipol), nwordwfc, iunefieldp, ik+(ipol-1)*nks)
              endif
           enddo
        endif
@@ -691,7 +692,7 @@ SUBROUTINE c_bands_nscf( ik_ )
      ! ... Needed for LDA+U
      !
      IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
-        CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
+        CALL get_buffer( swfcatom, nwordatwfc, iunsat, ik )
      !
      ! ... calculate starting  wavefunctions
      !

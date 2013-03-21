@@ -78,14 +78,14 @@ SUBROUTINE force_hub(forceh)
       IF (nks > 1) READ (iunigk) igk
 
       CALL get_buffer (evc, nwordwfc, iunwfc, ik)
-      CALL davcio(swfcatom,nwordatwfc,iunsat,ik,-1)
+      CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
       CALL calbec( npw, swfcatom, evc, proj )
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
 
 ! read atomic wfc - swfcatom is used here as work space
-      CALL davcio(swfcatom,nwordatwfc,iunat,ik,-1)
+      CALL get_buffer (swfcatom, nwordatwfc, iunat, ik)
    
       DO ipol = 1,3
          DO alpha = 1,nat                 ! the displaced atom

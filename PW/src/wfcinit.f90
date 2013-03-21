@@ -138,7 +138,7 @@ SUBROUTINE wfcinit()
      ! ... Needed for LDA+U
      !
      IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
-        CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
+        CALL get_buffer( swfcatom, nwordatwfc, iunsat, ik )
      !
      ! ... calculate starting wavefunctions
      !

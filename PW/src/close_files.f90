@@ -19,8 +19,8 @@ SUBROUTINE close_files(lflag)
   USE buffers,       ONLY : close_buffer
   USE mp_global,     ONLY : intra_image_comm
   USE mp,            ONLY : mp_barrier
-  USE wannier_new,     ONLY : use_wannier
-  USE bp,                 ONLY : lelfield
+  USE wannier_new,   ONLY : use_wannier
+  USE bp,            ONLY : lelfield
   !
   IMPLICIT NONE
   !
@@ -47,10 +47,13 @@ SUBROUTINE close_files(lflag)
   IF ( ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) .OR. &
         use_wannier .OR. one_atom_occupations ) THEN
      !
-     INQUIRE( UNIT = iunat, OPENED = opnd )  
-     IF ( opnd ) CLOSE( UNIT = iunat, STATUS = 'KEEP' )
-     INQUIRE( UNIT = iunsat, OPENED = opnd )  
-     IF ( opnd ) CLOSE( UNIT = iunsat, STATUS = 'KEEP' )
+     IF ( io_level < 0 ) THEN
+        CALL close_buffer ( iunat, 'DELETE' )
+        CALL close_buffer ( iunsat,'DELETE' )
+     ELSE
+        CALL close_buffer ( iunat, 'KEEP' )
+        CALL close_buffer ( iunsat,'KEEP' )
+     END IF
      !
   END IF
   !
@@ -58,14 +61,15 @@ SUBROUTINE close_files(lflag)
   !
   IF ( lelfield ) THEN
      !
-     INQUIRE( UNIT = iunefield, OPENED = opnd )
-     IF ( opnd ) CLOSE( UNIT = iunefield, STATUS = 'KEEP' )
-     !
-     INQUIRE( UNIT = iunefieldm, OPENED = opnd )
-     IF ( opnd ) CLOSE( UNIT = iunefieldm, STATUS = 'KEEP' )
-     !
-     INQUIRE( UNIT = iunefieldp, OPENED = opnd )
-     IF ( opnd ) CLOSE( UNIT = iunefieldp, STATUS = 'KEEP' )
+     IF ( io_level < 0 ) THEN
+        CALL close_buffer ( iunefield, 'DELETE' )
+        CALL close_buffer ( iunefieldm,'DELETE' )
+        CALL close_buffer ( iunefieldp,'DELETE' )
+     ELSE
+        CALL close_buffer ( iunefield, 'KEEP' )
+        CALL close_buffer ( iunefieldm,'KEEP' )
+        CALL close_buffer ( iunefieldp,'KEEP' )
+     ENDIF
      !
   END IF
   !

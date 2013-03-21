@@ -234,7 +234,7 @@ TLDEPS=bindir mods libs liblapack libblas libenviron
 
 LIBOBJS	= ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
 
-all : tldeps pw.x generate_vdW_kernel_table.x
+all : tldeps pw.x manypw.x generate_vdW_kernel_table.x
 
 pw.x : $(PWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \

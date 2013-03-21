@@ -73,11 +73,11 @@ SUBROUTINE wannier_init(hwwa)
   IF(.NOT. ALLOCATED(swfcatom)) ALLOCATE( swfcatom( npwx, natomwfc))
   U_projection = 'ortho-atomic'
   
-  nwordatwfc = 2*npwx*natomwfc*npol
+  nwordatwfc = npwx*natomwfc*npol
   INQUIRE( UNIT = iunat, OPENED = opnd )
-  IF(.NOT. opnd) CALL open_buffer( iunat, 'atwfc', nwordatwfc/2,io_level,exst )
+  IF(.NOT. opnd) CALL open_buffer( iunat, 'atwfc', nwordatwfc,io_level,exst )
   INQUIRE( UNIT = iunsat, OPENED = opnd )
-  IF(.NOT. opnd) CALL open_buffer( iunsat,'satwfc',nwordatwfc/2,io_level,exst )
+  IF(.NOT. opnd) CALL open_buffer( iunsat,'satwfc',nwordatwfc,io_level,exst )
 
   RETURN
   !

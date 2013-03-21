@@ -979,12 +979,14 @@ offset_atom_wfc.o : ../../Modules/ions_base.o
 offset_atom_wfc.o : ../../Modules/noncol.o
 offset_atom_wfc.o : ../../Modules/uspp.o
 offset_atom_wfc.o : pwcom.o
+openfil.o : ../../Modules/control_flags.o
 openfil.o : ../../Modules/io_files.o
 openfil.o : ../../Modules/io_global.o
 openfil.o : ../../Modules/kind.o
 openfil.o : ../../Modules/noncol.o
 openfil.o : ../../Modules/wannier_new.o
 openfil.o : bp_mod.o
+openfil.o : buffers.o
 openfil.o : pwcom.o
 orbm_kubo.o : ../../Modules/becmod.o
 orbm_kubo.o : ../../Modules/cell_base.o
@@ -1018,6 +1020,7 @@ orthoatwfc.o : ../../Modules/mp.o
 orthoatwfc.o : ../../Modules/mp_global.o
 orthoatwfc.o : ../../Modules/noncol.o
 orthoatwfc.o : ../../Modules/uspp.o
+orthoatwfc.o : buffers.o
 orthoatwfc.o : pwcom.o
 output_tau.o : ../../Modules/cell_base.o
 output_tau.o : ../../Modules/constants.o

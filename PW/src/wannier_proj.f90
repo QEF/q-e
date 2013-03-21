@@ -26,7 +26,7 @@ subroutine wannier_proj(ik, wan_func)
   USE wavefunctions_module, ONLY : evc
   USE gvect,                ONLY : gstart
   USE noncollin_module, ONLY : npol
-  USE buffers
+  USE buffers,          ONLY : get_buffer
 
   
   implicit none
@@ -50,11 +50,11 @@ subroutine wannier_proj(ik, wan_func)
   
   !Read current wavefunctions
   evc = ZERO
-  call davcio( evc, nwordwfc, iunwfc, ik, -1 )  
+  call get_buffer ( evc, nwordwfc, iunwfc, ik )  
   ! Reads ortho-atomic wfc
   ! You should prepare data using orthoatwfc.f90
   swfcatom = ZERO
-  CALL davcio (swfcatom, nwordatwfc, iunsat, ik, -1)
+  CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
   
   ! generates trial wavefunctions as a summ of ingridients
   trialwf = ZERO

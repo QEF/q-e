@@ -34,7 +34,7 @@ subroutine h_epsi_her_set(pdir, e_field)
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
   USE ions_base, ONLY: ityp, tau, nat,ntyp => nsp
   USE io_files,  ONLY: iunwfc, nwordwfc, iunefieldm, iunefieldp
-  USE buffers,   ONLY: get_buffer
+  USE buffers,   ONLY: get_buffer, save_buffer
   USE constants, ONLY : e2, pi, tpi, fpi
   USE fixed_occ
   USE mp,        ONLY : mp_sum
@@ -1189,8 +1189,8 @@ subroutine h_epsi_her_set(pdir, e_field)
 
 
 !writes projectors to disk 
-   call davcio(evcm(:,:,pdir), 2*nwordwfc,iunefieldm,nx_el(ik,pdir)+(pdir-1)*nks,1)
-   call davcio(evcp(:,:,pdir), 2*nwordwfc,iunefieldp,nx_el(ik,pdir)+(pdir-1)*nks,1)
+   call save_buffer (evcm(:,:,pdir), nwordwfc, iunefieldm, nx_el(ik,pdir)+(pdir-1)*nks)
+   call save_buffer (evcp(:,:,pdir), nwordwfc, iunefieldp, nx_el(ik,pdir)+(pdir-1)*nks)
 
   END  DO !on ik
 

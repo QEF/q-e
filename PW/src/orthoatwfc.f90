@@ -15,6 +15,7 @@ SUBROUTINE orthoatwfc
   ! in order to make lda+U calculations
   !
   USE kinds,      ONLY : DP
+  USE buffers,    ONLY : save_buffer
   USE io_global,  ONLY : stdout
   USE io_files,   ONLY : iunat, iunsat, nwordatwfc, iunigk
   USE ions_base,  ONLY : nat
@@ -105,7 +106,7 @@ SUBROUTINE orthoatwfc
      !
      ! write atomic wfc to unit iunat
      !
-     CALL davcio (wfcatom, nwordatwfc, iunat, ik, 1)
+     CALL save_buffer (wfcatom, nwordatwfc, iunat, ik)
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
      CALL calbec (npw, vkb, wfcatom, becp) 
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
@@ -173,7 +174,7 @@ SUBROUTINE orthoatwfc
      !
      ! write S * atomic wfc to unit iunsat
      !
-     CALL davcio (swfcatom, nwordatwfc, iunsat, ik, 1)
+     CALL save_buffer (swfcatom, nwordatwfc, iunsat, ik)
      !
   ENDDO
   DEALLOCATE (overlap)

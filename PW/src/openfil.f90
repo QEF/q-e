@@ -14,14 +14,16 @@ SUBROUTINE openfil()
   ! ... All units are set in Modules/io_files.f90
   !
   USE kinds,            ONLY : DP
+  USE buffers,          ONLY : open_buffer
+  USE control_flags,    ONLY : io_level
   USE io_global,        ONLY : stdout
   USE basis,            ONLY : natomwfc, starting_wfc
   USE wvfct,            ONLY : nbnd, npwx
   USE fixed_occ,        ONLY : one_atom_occupations
   USE ldaU,             ONLY : lda_plus_U, U_projection
   USE io_files,         ONLY : prefix, iunpun, iunat, iunsat, iunigk, &
-                               nwordwfc, nwordatwfc, iunefield, diropn, &
-                               tmp_dir, wfc_dir, iunefieldm, iunefieldp, seqopn
+                               nwordwfc, nwordatwfc, iunefield, &
+                               iunefieldm, iunefieldp, seqopn
   USE noncollin_module, ONLY : npol
   USE bp,               ONLY : lelfield
   USE wannier_new,      ONLY : use_wannier
@@ -41,12 +43,12 @@ SUBROUTINE openfil()
   ! ... nwordatwfc as above (IN REAL WORDS) for atomic wavefunctions
   !
   nwordwfc = nbnd*npwx*npol
-  nwordatwfc = 2*npwx*natomwfc*npol
+  nwordatwfc = npwx*natomwfc*npol
   !
   IF ( ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) .OR. &
         use_wannier .OR. one_atom_occupations ) THEN
-     CALL diropn( iunat,  'atwfc',  nwordatwfc, exst, wfc_dir )
-     CALL diropn( iunsat, 'satwfc', nwordatwfc, exst, wfc_dir )
+     CALL open_buffer ( iunat,  'atwfc',  nwordatwfc, io_level, exst )
+     CALL open_buffer ( iunsat, 'satwfc', nwordatwfc, io_level, exst )
   END IF
   !
   ! ... iunigk contains the number of PW and the indices igk
@@ -56,9 +58,9 @@ SUBROUTINE openfil()
   ! ... open units for electric field calculations
   !
   IF ( lelfield ) THEN
-      CALL diropn( iunefield , 'ewfc' , 2*nwordwfc, exst, wfc_dir )
-      CALL diropn( iunefieldm, 'ewfcm', 2*nwordwfc, exst, wfc_dir )
-      CALL diropn( iunefieldp, 'ewfcp', 2*nwordwfc, exst, wfc_dir )
+      CALL open_buffer( iunefield , 'ewfc' , nwordwfc, io_level, exst )
+      CALL open_buffer( iunefieldm, 'ewfcm', nwordwfc, io_level, exst )
+      CALL open_buffer( iunefieldp, 'ewfcp', nwordwfc, io_level, exst )
   END IF
   !
   RETURN

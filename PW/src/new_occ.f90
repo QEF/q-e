@@ -75,7 +75,7 @@ SUBROUTINE new_evc()
         READ (iunigk) igk
         CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
      END IF
-     CALL davcio (swfcatom, nwordatwfc, iunsat, ik, - 1)
+     CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
      !
      ! make the projection on the atomic wavefunctions,
      !

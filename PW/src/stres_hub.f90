@@ -189,13 +189,13 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
 ! read atomic wfc - swfcatom is used as work space
-      CALL davcio(swfcatom,nwordatwfc,iunat,ik,-1)
+      CALL get_buffer (swfcatom, nwordatwfc, iunat, ik)
       IF ( gamma_only ) THEN
          CALL dprojdepsilon_gamma (swfcatom, spsi, ipol, jpol, dproj%r)
       ELSE
          CALL dprojdepsilon_k (swfcatom, spsi, ik, ipol, jpol, dproj%k)
       END IF
-      CALL davcio(swfcatom,nwordatwfc,iunsat,ik,-1)
+      CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
       CALL calbec ( npw, swfcatom, evc, proj)
       !
       ! compute the derivative of the occupation numbers (quantities dn(m1,m2))

@@ -114,6 +114,7 @@ dvex.o : ../../Modules/constants.o
 dvex.o : ../../Modules/kind.o
 dvex.o : ../../Modules/radial_grids.o
 dvex.o : ld1inc.o
+el_config.o : ../../Modules/io_global.o
 el_config.o : ../../Modules/kind.o
 el_config.o : parameters.o
 elsd.o : ../../Modules/constants.o

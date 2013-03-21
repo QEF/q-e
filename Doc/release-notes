@@ -4,6 +4,7 @@ New in svn version:
    * CELL_PARAMETERS written on output using the same format as in input
    * turboTDDFT now supports hybrid functionals (only with norm-conserving
      pseudopotentials.)
+   * "image" parallelization re-introduced in pw.x: see code "manypw.x"
 
 Fixed in svn version:
 

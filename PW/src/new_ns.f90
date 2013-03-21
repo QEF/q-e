@@ -86,7 +86,7 @@ SUBROUTINE new_ns(ns)
         ! does not need mp_sum intra-pool, since it is already done in calbec
         !
      ELSE
-        CALL davcio (swfcatom, nwordatwfc, iunsat, ik, - 1)
+        CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
         CALL calbec ( npw, swfcatom, evc, proj )
      END IF
      !
@@ -349,7 +349,7 @@ SUBROUTINE new_ns_nc(ns)
         READ (iunigk) igk
         CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
      END IF
-     CALL davcio (swfcatom, nwordatwfc, iunsat, ik, - 1)
+     CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
      !
      ! make the projection
      !
