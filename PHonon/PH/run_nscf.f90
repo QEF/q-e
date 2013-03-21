@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE run_pwscf(do_band, iq)
+SUBROUTINE run_nscf(do_band, iq)
   !-----------------------------------------------------------------------
   !
   ! ... This is the main driver of the pwscf program called from the
@@ -110,4 +110,4 @@ SUBROUTINE run_pwscf(do_band, iq)
   CALL stop_clock( 'PWSCF' )
   !
   RETURN
-END SUBROUTINE run_pwscf
+END SUBROUTINE run_nwscf

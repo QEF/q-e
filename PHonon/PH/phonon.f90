@@ -95,7 +95,7 @@ PROGRAM phonon
      !
      !  If necessary the bands are recalculated
      !
-     IF (setup_pw) CALL run_pwscf(do_band, iq)
+     IF (setup_pw) CALL run_nscf(do_band, iq)
      !
      !  If only_wfc=.TRUE. the code computes only the wavefunctions 
      !
