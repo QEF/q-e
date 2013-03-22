@@ -130,14 +130,18 @@ example14:
 
 Additional feature-specific examples:
 
+Partial_example
+    This example tests the computation of a part of the dynamical matrix.
+
 GRID_example
     This example shows how to use ph.x on a GRID.
+
+Image_example
+    This example tests image parallelism of the ph.x.
 
 Recover_example:
     This example tests the recover feature of ph.x.
 
-Partial_example
-    This example tests the computation of a part of the dynamical matrix.
+GRID_recover_example
+    This example tests the recover feature with the GRID or the images.
 
-Image_example
-    This example tests image parallelism of the phonon code.
