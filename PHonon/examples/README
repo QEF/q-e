@@ -123,6 +123,10 @@ example13:
     This example shows how to use pw.x, ph.x and d3.x to calculate the
     third-order expansion coefficients of the total energy of Si.
 
+example14:
+    This example shows how to use ph.x to calculate the phonon frequencies
+    on an arbitrary set of q points. The points can be generated automatically
+    along paths or on a bi-dimensional plane.
 
 Additional feature-specific examples:
 
