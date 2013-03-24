@@ -26,7 +26,7 @@ subroutine wannier_proj(ik, wan_func)
   USE wavefunctions_module, ONLY : evc
   USE gvect,                ONLY : gstart
   USE noncollin_module, ONLY : npol
-  USE buffers,          ONLY : get_buffer
+  USE buffers,          ONLY : get_buffer, save_buffer
 
   
   implicit none
