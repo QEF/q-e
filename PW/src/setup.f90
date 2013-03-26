@@ -442,12 +442,15 @@ SUBROUTINE setup()
         END IF
 
         ! <AF>
-        IF ( gdir<0 .OR. gdir>3 ) CALL errore('setup','invalid gdir value',10) 
-        IF ( gdir == 0 ) CALL errore('setup','needed gdir probably not set',10) 
+        IF ( gdir<1 .OR. gdir>3 ) CALL errore('setup','invalid gdir value'&
+                                  &' (valid values: 1=x, 2=y, 3=z)',10) 
         !
         DO ik=1,nkstot
            nx_el(ik,gdir)=ik
         END DO
+        ! sanity check (when nkstot==1 we /could/ just set nppstr=1):
+        IF(nppstr==0) CALL errore('setup', 'When lefield is true and kpoint are '&
+                                 &'specified manually you MUST set nppstr',1)
         if(nspin==2) nx_el(nkstot+1:2*nkstot,:) = nx_el(1:nkstot,:) + nkstot
         nppstr_3d(gdir)=nppstr
         l3dstring=.false.
