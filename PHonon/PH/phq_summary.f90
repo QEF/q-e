@@ -300,7 +300,7 @@ subroutine phq_summary
                       TRIM( name_rap_mode(imode0+1) )
         ENDIF
      ENDIF
-     IF (iverbosity == 1) CALL write_modes(irr,imode0)
+     IF (iverbosity == 1) CALL write_modes_out(irr,imode0)
      imode0 = imode0 + npert(irr)
   ENDDO
   if (.not.all_comp) then

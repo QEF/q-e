@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-SUBROUTINE write_modes(irr, imode0)
+SUBROUTINE write_modes_out(irr, imode0)
 !
 ! This routine writes the displacements on the representation irr that
 ! starts at mode imode0
@@ -41,4 +41,4 @@ ELSE
 ENDIF
 
 RETURN
-END SUBROUTINE write_modes
+END SUBROUTINE write_modes_out

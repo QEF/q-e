@@ -133,7 +133,7 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
         npert=1
         do imode=1,3*nat
            WRITE( stdout, '(2x,"autoval = ", e10.4)') eigen(imode)
-           CALL write_modes(imode,imode-1)
+           CALL write_modes_out(imode,imode-1)
         end do
      end if
 
