@@ -69,8 +69,7 @@ People who want to know about the capabilities of the \PHonon\ package.
 
 People who want to know about the methods or the physics
 behind \PHonon\ should read first the relevant  
-literature (some pointers in the User Guide).
-
+literature (some pointers in the User Guide and in the Bibliography).
 
 
 \section{General structure of \phx}
@@ -561,7 +560,7 @@ which \phx\ is started and are called \texttt{{fildyn}\#iq} where
 \texttt{\#iq} is the {\bf q}-vector number in a dispersion calculation, 
 or is not added in a single-{\bf q} calculation. Only one copy of this 
 file is written in a parallel run. When the \texttt{-nimage} option
-is used some of these files might be empty (if the coresponding {\bf q}
+is used some of these files might be empty (if the corresponding {\bf q}
 point has been divided between two or more images). So you need to
 collect the results running \phx\ another time without images.
 
@@ -651,6 +650,656 @@ These files are written by \texttt{elphel} and contains the quantities
 $g_{{\bf q}\nu} ({\bf k}, i, j)$ 
 (see User Manual) and are read in recover runs by the 
 routine \texttt{phq\_recover}.
+
+
+\section{The routines of the phonon package}
+
+The routines of the \PHonon\ package can be divided in groups of  
+related task. There are high level drivers that call the
+routines that do the actual work and low level routines that make
+a single task. Note that the phonon code is tightly integrated in the QE
+package, so it uses the routines provided by the 
+{\tt Modules} or by the {\tt PW/src} directories. Only a brief comment
+on the purpose and the use of the routines can be found here. More details
+might be written inside the routines themselves. We report here the name of the
+file that contains the routines. Each file might contain more than one
+routine. Unfortunately sometimes there is no correspondence between the name of
+the file and the name of the routine. This is mainly for historical reasons.
+We adopt the following convention: if the file and the routine contained inside
+have the same name we report only the filename; if the file contains a single
+routine with a different name or more than one routine, we report in 
+parenthesis the routine name.
+
+Modules that contain the new variables used by the \phx:
+
+\begin{verbatim}
+phcom.f90  Almost all global variables are here.
+elph.f90   Variables needed for the electron-phonon part.
+ramanm.f90 Variables for Raman calculation.
+
+\end{verbatim}
+
+Global variables allocation and deallocation. Note that some
+variables are allocated also by {\tt phq\_readin} or {\tt ph\_restart}.
+
+\begin{verbatim}
+allocate_phq.f90    This is the main allocation routine in which almost 
+                    all global variables are allocated. It needs only the 
+                    dimensions defined in pw.x.
+allocate_part.f90   Allocate quantities for the partial computation of
+                    the dynamical matrix. It is called in phq_readin.          
+allocate_pert.f90   Allocate the symmetry matrices in the basis of the 
+                    modes. It needs the maximun number of perturbations.              
+deallocate_part.f90 Deallocate the variables allocated by allocate part.
+deallocate_phq.f90  Deallocate all the ph.x variables allocated in 
+                    allocate_phq. The variables allocated in phq_readin
+                    or ph_restart should be deallocated by destroy_status_run,
+                    contained in ph_restart.       
+clean_pw_ph.f90     Clean all variables of pw.x and of ph.x. Used to 
+                    reinitialize the calculation at each q.               
+\end{verbatim}
+
+Starting point and main programs. The directory {\tt PHonon/PH} contains five 
+executables whose main program are:
+
+\begin{verbatim}
+phonon.f90  This is the main program of ph.x
+q2r.f90     This is the main program of q2r.x
+matdyn.f90  This is the main program of matdyn.x
+dynmat.f90  This is the main program of dynmat.x
+fqha.f90    This is the main program for fqha.x                      
+\end{verbatim}
+
+Reading input, pseudopotentials and pw punch file:
+
+\begin{verbatim}
+phq_readin.f90      This is the routine that reads the input, the PP and
+                    the punch file of pw.x.
+bcast_ph_input.f90  This routine broadcasts the input variables to all
+                    processors.
+save_ph_input.f90 (save_ph_input_variables) A few input variables are 
+                  changed by the ph.x code and are saved by this routine.
+                  (restore_ph_input_variables) this routine restores the
+                  saved variables.
+                  (clean_input_variables) deallocate the saved variables.
+\end{verbatim}
+
+Check the initial status of the calculation and decide what has to be
+computed:
+
+\begin{verbatim}
+check_initial_status.f90  Tests the initial status of the calculation,
+                          prepare or reads the mesh of q points and the
+                          irreps, divide the work among images and creates
+                          the necessary directories in outdir.    
+           (image_q_irr) Divide the work among several images.
+           (collect_grid_files) Copy the files produced by images in
+                         the .phsave directory of the image0.
+check_if_partial_dyn.f90  Control partial calculations in phonon. 
+check_restart_recover.f90 Check if a restart or recover file is present
+                          in the outdir directory       
+\end{verbatim}
+
+Routines that select the small group of q and other symmetry matrices of
+the ph.x code.
+
+\begin{verbatim}
+set_small_group_of_q.f90  This is a driver that selects among the s matrices 
+               those of the small group of q. Check if q-> -q+G symmetry 
+               exists. If modenum > 0 removes also the symmetries that do not
+               send the mode in itself.
+      (smallg_q) do the actual work of selecting the s matrices.
+mode_group.f90 Find the small group of q and of the mode (used with modenum)
+
+smallgq.f90 (set_giq)  Find the G vectors associated to each rotation: Sq=q+G.
+
+sgam_ph.f90    Finds the rtau vectors. These are Bravais lattice vectors that
+               link an atom na to its rotated atom nb if these two atoms are
+               not in the same cell. These quantities are needed to rotate 
+               the modes and to symmetrize the potentials.
+\end{verbatim}
+
+Routines that manipulate or generate the irreducible representations, 
+the q point mesh and all the preparatory stuff that is needed by the
+phonon code:
+
+\begin{verbatim}
+q_points.f90   Generate the mesh of q vectors.
+check_q_points_sym.f90  Check if the q point mesh is compatible with the fft
+               mesh used by q2r.x.
+
+init_representations.f90 This is a driver that initialize all the irreps 
+               for all q vectors. First it finds the small group of q 
+               and then calls find_irrep for each q.
+    (initialize_grid_variables) This routine reads the irreps from file and
+               sets the variables that define the grid of q and irreps.
+
+find_irrep.f90 Find the irreps of a given q calling set_irr or set_irr_nosym.
+   (find_irrep_sym) is a driver that allocate the symmetry matrices in
+                the basis of the modes and calls set_irr_sym to calculate
+                them.
+  
+random_matrix.f90 Generate the random matrix to calculate the irreps.
+
+set_irr.f90    Call random_matrix to generate a random matrix and
+               symmetrize it. The eigenvectors are the irreps. Count their
+               degeneracy and if search_sym is true find their symmetry.
+
+set_irr_nosym.f90 As set_irr in the case in which the system has no
+               symmetry or symmetry is not used.
+
+set_irr_sym.f90 Calculate the rotation matrices on the irreps basis.
+
+\end{verbatim}
+
+High level drivers to make the actual calculation:
+
+\begin{verbatim}
+prepare_q.f90  Decides if a given q has to be calculated and if it needs
+            the band calculation or just to open the k-point list.
+
+initialize_ph.f90 Initialization driver. It calls the other initialization
+             routines one after the other: allocate_phq, phq_setup,
+             phq_recover, phq_summary, openfilq, and phq_init.               
+
+phq_setup.f90 Setup all the simple quantities need by of the phonon. The
+             most significant are: the local+SCF potential, derivatives
+             of xc potential, using dmxc or similar functions and setup_dgc,
+             alpha_pv and occupated bands, rotation matrices on the 
+             basis of the mode (calling find_irrep_sym), setup the gamma_gamma
+             tricks.
+
+phq_init.f90 Setup more complex quantities that require the implementation
+             of more complex formula.
+             It is a driver that uses auxiliary routines:
+             set_drhoc, setlocq, dvanqq, drho, dynmat0. Moreover it computes
+             becp1, alphap, eprec. 
+
+phescf.f90  This is the main driver for the electric field perturbations.
+            It decides what to compute on the basis of the input flags.
+            It can compute polarization, epsilon, raman, and elop.
+
+phqscf.f90  This is the main driver for the phonon perturbation. It has 
+            a loop over the irreps at a given q. It calls solve_linter 
+            to calculate the perturbed wavefunctions and potentials, drhodv 
+            to update the dynamical matrix and add_zstar_ue to update the 
+            zue effective charges.
+\end{verbatim}
+
+Opening and closing files:
+
+\begin{verbatim}
+openfilq.f90 Open almost all files of the ph.x code.
+close_phq.f90 Close the above files if open.                  
+\end{verbatim}
+
+Drivers of \pwx\ to compute the band structure:
+
+\begin{verbatim}
+run_nscf.f90 This routine run pw.x to calculate the bands. It calls
+             init_run, electrons, and punch. However the functionalities
+             of setup are provided by setup_nscf.
+set_defaults_pw.f90 (setup_nscf)
+            This routine sets the input of pw.x with default values. 
+            It sets the k point list.
+\end{verbatim}
+
+Routines that compute quantities independent from the perturbed wavefunctions
+that are used in the rest of the code. Mainly for the US/PAW part. These
+routines are called by {\tt phq\_init}:
+
+\begin{verbatim}
+dvanqq.f90 This routine computes four of the five integrals  
+           of the augmentation functions and its derivatives with 
+           derivatives of the local potential. Needed only in the US/PAW case.
+
+drho.f90   This is a driver that computes the parts of the
+           induced charge density and of the dynamical matrix that
+           do not depend on the change of the wavefunctions. These
+           terms are present only in the US/PAW case.            
+           It calls many of the following routines.
+
+compute_becsum_ph.f90  This routine computes becsum.        
+compute_alphasum.f90   This routine computes alphasum.           
+compute_becalp.f90     Compute the product of vkb and psi_{k+q} or of the
+                       derivative of vkb and psi_{k+q}
+
+compute_drhous.f90  This is a driver that makes a loop over the k points
+           to accumulate using incdrhous the part of the induced
+           charge density due to the change of the orthogonality
+           constraint. All the modes are computed here. (US/PAW case only).
+                     
+compute_drhous_nc.f90  As compute_drhous in the noncollinear/so case.
+
+incdrhous.f90  Accumulate for a given k point and a given mode
+               the contribution to the induced charge density due to the
+               change of the orthogonality constraint.
+incdrhous_nc.f90  As incdrhous in the noncollinear/so case.
+
+compute_nldyn.f90  Computes the orthogonality term in the dynamical matrix.
+                   Used only in the US/PAW case.         
+
+compute_weight.f90 Compute the composite weights for metals.         
+
+qdipol_cryst.f90 This routine computes the dipole moment of the augmentation
+           functions.
+
+setlocq.f90 This routine computes the local potential at q+G.
+compute_dvloc.f90 Computes the change of the local potential due to
+            a phonon perturbation.     
+
+setqmod.f90 Computes (q+G)**2
+hdiag.f90   Computes the kinetic energy.                      
+\end{verbatim}
+
+Lower level drivers that set up and solve the linear system to calculate
+the response of the system to a perturbation:
+
+\begin{verbatim}
+solve_linter.f90 Driver to calculate the phonon perturbation.
+solve_e.f90      Driver to calculate the static electric field perturbation.
+solve_e_fpol.f90 Driver to calculate the electric field perturbation at 
+                 imaginary frequency.
+solve_e2.f90     Driver for the electric field perturbation at second order.
+solve_e_nscf.f90 A simplified version of solve_e in which the induced
+                 self consistent potential is already known. This 
+                 routine is used in dhdrhopsi.f90.
+\end{verbatim}
+
+Routines used by the above drivers to do their job. Some of these routines
+are used by all drivers:
+
+\begin{verbatim}
+dvpsi_e.f90      Compute the right hand side of the linear system in
+                 the electric field case (only non SCF part). It
+                 uses commutator_Hx_psi.
+commutator_Hx_psi.f90  Compute the commutator of the Hamiltonian with r.       
+
+dvpsi_e2.f90   Compute the right hand side of the linear system for
+               the second order perturbation in the electric field case.                   
+dvqpsi_us.f90    Compute the right-hand side of the linear system in the
+                 phonon case (Only non SCF part). It uses dvqpsi_us_only.
+dvqpsi_us_only.f90  The part of dvqpsi due to the nonlocal potential.          
+
+cft_wave.f90    Wavefunction from real to reciprocal space and return.
+apply_dpot.f90  Add the contribution of the change of the SCF potential  
+                to the right-hand side of the linear system.               
+adddvscf.f90    Add the additional US/PAW contribution to the right-hand
+                side of the linear system (phonon case).
+adddvepsi_us.f90 As adddvscf for the electric field case.
+
+orthogonalize.f90 Apply the projector on the valence bands to the right-hand
+                side of the linear system. Deal with both insulators and metals.
+
+cgsolve_all.f90  Solve the linear system with an iterative conjugate gradient
+                 method.                
+
+pcgreen.f90      Orthogonalizes and solve the linear system. Used by 
+                 solve_e2 and solve_e_nscf instead of the more standard method.
+                 Calls cgsolve_all for doing the actual calculation.
+
+gmressolve_all.f90 Solve the linear system in the case of 
+                   imaginary frequency polarizability calculation.           
+
+ch_psi_all.f90     Apply H+Q-eS to the wavefunctions. Used by the routine that 
+                   solves the linear system.
+
+cch_psi_all.f90    As ch_psi_all for complex e. Used by gmresolve_all.
+
+h_psiq.f90         Calculate h psi for k+q. Compute also S psi.              
+cg_psi.f90         Apply the preconditioning.               
+ccg_psi.f90        A complex preconditioning for gmresolve_all.
+
+incdrhoscf.f90     Add the contribution of the computed set of perturbed
+                   wavefunction at a given k and for a given perturbation
+                   to the perturbed change density.              
+incdrhoscf_nc.f90  As incdrhoscf for the noncollinear/so case.         
+addusdbec.f90      Add the contribution of the computed set of perturbed
+                   wavefunctions at a given k and for a given perturbation
+                   to the change of the becsum.               
+addusdbec_nc.f90   As addusdbec for the noncollinear/spin-orbit case.
+
+addusddens.f90     Add the US/PAW augmentation contribution to the change 
+                   of the charge density. (Phonon case)
+addusddense.f90    Add the US/PAW augmentation contribution to the change 
+                   of the charge density. (Electric field case)              
+
+dv_of_drho.f90     Compute the change of the SCF potential given the change
+                   of the SCF charge density.
+
+mix_pot.f90        Mix input and output induced SCF potentials. In the
+                   PAW case mixes also dbecsum.
+
+newdq.f90          Integrate the augmentation function with the change of
+                   the SCF potential (US/PAW case only). In the PAW case
+                   add the PAW contribution to the change of the coefficients
+                   of the nonlocal potential. The coefficients calculated
+                   here are used by adddvscf (phonon case) and adddvepsi_us
+                   (electric field case).
+
+PW/src/paw_onecenter.f90: 
+                   (PAW_dpotential) Computes the change of the coefficients 
+                   on the nonlocal potential due to the perturbation.
+
+ef_shift.f90       Accounts for the change of the Fermi level in metals at
+                   the gamma point.
+  (ef_shift_paw)   Account also for the change of dbecsum. 
+
+localdos.f90       Computes the local DOS.
+addusldos.f90      US contribution to the local DOS.               
+\end{verbatim}
+
+Routines to calculate the derivative of the xc potential.
+Note that some of them are also in Module/funct.f90:
+
+\begin{verbatim}
+setup_dgc.f90   Sets the derivative of the xc functionals needed to
+                calculate the change of the potential. It is called by
+                phq_setup.
+d2mxc.f90       LDA second derivatives of the xc functional            
+dgradcorr.f90   Change of the GGA part of the xc functional.          
+compute_vsgga.f90  Additional GGA term present in the noncollinear/spin-orbit
+                 case.
+\end{verbatim}
+
+Routines to deal with the NLCC
+
+\begin{verbatim}
+set_drhoc.f90  Fourier transform of the core charge at q+G. Called by
+               phq_setup.
+addcore.f90    Change of the core charge for a phonon perturbation.            
+               Used by dv_of_drho and add_nlcc.
+dynmatcc.f90   NLCC contribution independent from the perturbed 
+               wavefunctions. Called by dynmat0.
+addnlcc.f90    The nlcc part of the dynamical matrix that depends on the
+               perturbed potential. Called by solve_linter.
+\end{verbatim}
+
+Routines that calculate the required tensors or quantities: 
+
+Frequency dependent polarizability
+
+\begin{verbatim}
+polariz.f90   Computes the frequency dependent polarizability, given dpsi.
+\end{verbatim}
+
+Dielectric tensor:
+
+\begin{verbatim}
+dielec.f90    Computes the dielectric tensor given the dpsi.          
+\end{verbatim}
+
+Compute the Born effective charges:
+
+\begin{verbatim}
+add_zstar_ue.f90     Add the contribution to zue due to dpsi induced by 
+                     a phonon      
+add_zstar_ue_us.f90  Add the US contribution to zue             
+zstar_eu.f90         Compute zeu from the dpsi induced by an electric field 
+zstar_eu_us.f90      Add the US/PAW contribution to zeu.
+add_dkmds.f90        Additional terms for the US/PAW Born effective charges    
+psidspsi.f90         Calculate <psi_v'|ds/du|psi_v>
+add_for_charges.f90  Calculate dS/du P_c [x, H-eS] |psi>            
+addnlcc_zstar_eu_us.f90  Add nlcc contribution to zeu         
+dvkb3.f90     Derivative of beta functions with respect to q and tau.  
+\end{verbatim}
+
+Raman tensor:
+
+\begin{verbatim}
+raman.f90       This is the main driver for the raman calculation. It 
+                computes the second order response calling solve_e2 and
+                the right hand side calling dvpsi_e2.
+raman_mat.f90   Computes and writes the raman tensor.
+dhdrhopsi.f90   Computes Pc [DH,Drho] |psi>.            
+dielec_test.f90 Compute the dielectric constant with the quantities 
+                calculated inside dhdrhopsi. 
+\end{verbatim}
+
+Electron optical coefficient:
+
+\begin{verbatim}
+el_opt.f90     Computes the electro-optic tensor.
+\end{verbatim}
+
+Dynamical matrix:
+
+\begin{verbatim}
+dynmat0.f90      Driver for the part of the dynamical matrix independent
+                 from the perturbation. It calls dynmatcc, d2ionq, and 
+                 dynmat_us. This routine is called by init_phq. 
+
+dynmat_us.f90    Expectation value of the second derivative of the 
+                 nonlocal potential.                 
+addusdynmat.f90  US/PAW contribution to the second derivative of 
+                 the potential.                
+d2ionq.f90       Ewald contribution.            
+
+drhodv.f90       Contribution to the dynamical matrix due to the change
+                 of the wavefunctions.
+drhodvnl.f90     Accumulate the contribution to the dynamical matrix due 
+                 to the change of the wavefunctions (Only the contribution
+                 of the nonlocal PP). Called at each k point.        
+drhodvloc.f90    As drhodvnl for the local potential.           
+drhodvus.f90     A term present only in the US/PAW case. Integral of the
+                 induced SCF potential and the change of the charge at
+                 fixed wavefunctions. It is called in solve_linter because
+                 the induced potential is not available outside.      
+
+dynmatrix.f90    Is a driver that collects the dynamical matrix, checks if
+                 all representations have been calculated, symmetrize the
+                 dynamical matrix, computes the matrices rotated in all 
+                 equivalent q and diagonalized the matrix. The same is
+                 done for zue if required from input.                 
+\end{verbatim}
+
+Electron-phonon coupling coefficients
+
+\begin{verbatim}
+elphon.f90   This is a driver that in the case trans=.false. reads the
+             induced self-consistent potential and recalculates the
+             electron phonon matrix elements. It reads also the 
+             dynamical matrix and rediagonalizes it.
+    (readmat) reads the dynamical matrix.
+    (elphel) computes the electron-phonon matrix elements.                 
+    (elphsum) makes a sum over the BZ of the square moduli of the 
+              el-ph matrix elements and computes phonon linewidths. This
+              routine makes also linear interpolation on k points 
+              (still unsettled). Require compatibility between q and k 
+              meshes.
+    (elphsum_simple) As elphsum but without the interpolation. It can be
+              used at arbitrary q.
+el_ph_collect.f90  Collect the electron-phonon matrix elements among pools.
+clinear.f90          
+\end{verbatim}
+
+Routines that write the output quantities:
+
+\begin{verbatim}
+phq_summary.f90  Summarize what has been read from the pw output and
+                 what has been calculated by phq_setup.
+
+summarize.f90    Write the tensors on output. 
+
+write_epsilon_and_zeu.f90 Use summarizes, but contains also old 
+                 instructions to write the dielectric constant and 
+                 the born effective charges in the dynamical matrix file.
+
+write_modes.f90  This routine writes the modes on output.
+
+write_qplot_data.f90  Write a file that can be read by plotband with
+                  q vectors and phonon frequencies.
+
+write_ramtns.f90  Write the raman tensor.
+
+write_eigenvectors.f90 Used by matdyn to write the eigenvectors on output.
+                 Writes the displacements in several format suited to some
+                 molecular graphics programs.
+\end{verbatim}
+
+Routines that write on file the induced charge density:
+
+\begin{verbatim}
+punch_plot_e.f90 Write the change of the charge due to an electric field.
+davcio_drho.f90  Write the change of the charge due to a phonon perturbation.  
+\end{verbatim}
+
+Routines to read and write the xml files with the partial results:
+
+\begin{verbatim}
+ph_restart.f90  This file contains many routines to write and read the .xml
+                files that contain the partial results of ph.x. See the section 
+                "file produced by ph.x". 
+       (ph_writefile) This routine can be called from external routines to
+                write the tensors on file.
+       (ph_readfile)  This routine can be called from external routines to
+                read the tensors from file.
+       (check_directory_phsave) This routine tries to read the files in the
+                phsave directory to check what has been already calculated.
+       (check_available_bands) This routine search on the outdir directory
+                for the bands files to see if they have been already 
+                calculated.
+       (allocate_grid_variables) This routine allocates space for the variables
+                that control the grid calculation.
+       (destroy_status_run) This routine deallocates the variables that 
+                control the grid and the variables allocated by phq_readin
+                or ph_restart.
+
+io_dyn_mat.f90  This file contains the routines that read and write the
+                dynamical matrix in .xml format.
+
+io_dyn_mat_old.f90 These are the routines that read and write the dynamical
+                matrix in the old format (not .xml).
+\end{verbatim}
+
+Routines that read and write the recover file:
+
+\begin{verbatim}
+phq_recover.f90 This routine reads the recover files and reconstruct the
+                status of the calculation so far.
+write_rec.f90   This file contains the routines to read and write the 
+                recover file (in unformatted form).
+\end{verbatim}
+
+Symmetrization of induced potentials:
+
+\begin{verbatim}
+symdvscf.f90   Symmetrize the change of the potentials due to a set of
+               perturbations that form an irreducible representation.
+syme.f90       Symmetrize the change of potentials due to electric field
+               perturbations.
+sym_dmag.f90   Symmetrize the change of B_xc due to a set
+               of phonon perturbations.
+sym_dmage.f90  Symmetrize the change of B_xc due to a set of electric field
+               perturbations
+syme2.f90      Symmetrize the potential of the second order response.
+\end{verbatim}
+
+and corresponding parallel routines that collect on a single processor 
+the quantity to symmetrize and then call the previous routines:
+
+\begin{verbatim}
+psymdvscf.f90   Parallel version of symdvscf.
+psyme.f90       Parallel version of syme.
+psym_dmag.f90   Parallel version of sym_dmag.
+psym_dmage.f90  Parallel version of sym_dmage.
+psyme2.f90      Parallel version of syme2.
+\end{verbatim}
+
+Symmetrization of tensors or other quantities:
+
+\begin{verbatim}
+symdyn_munu.f90 Symmetrize a dynamical matrix on the basis of the modes,
+                transforming it in the cartesian basis and applying
+                symdynph_gq.
+symdynph_gq.f90 Symmetrize a dynamical matrix written in cartesian coordinates.
+star_q.f90      Given a q point finds all the q in its star. 
+q2qstar_ph.f90  Generate the dynamical matrix in all the q of the star.
+rotate_and_add_dyn.f90 Rotate a dynamical matrix with a given symmetry
+                operation.
+tra_write_matrix.f90 Symmetrize the dynamical matrix written in the basis 
+              of the modes, brings it in cartesian form and write it.
+trntnsc.f90   Transform a complex 2D tensor from the crystal basis to the 
+              cartesian basis or vice-versa.
+sym_def.f90   Symmetrize the change of the Fermi level due to the phonon
+              perturbations.
+sym_and_write_zue.f90  Symmetrize zue.
+symm.f90      Symmetrize the electron-phonon coefficients.
+rotate_pattern_add.f90  These are a set of auxiliary routines that manipulate
+              the dynamical matrix in different forms. See the heading
+              of this matrix to see its capabilities.
+\end{verbatim}
+
+Routines that perform the symmetry analysis of the eigenvectors to decide
+to which irreducible representation they belong:
+
+\begin{verbatim}
+prepare_sym_analysis.f90 Prepare the quantities for the symmetry analysis.
+symmorphic_or_nzb.f90  A function that checks if symmetry analysis can be
+                       carried out. It returns true if q is not at zone border
+                       or if the group is symmorphic.
+find_mode_sym.f90    Symmetry analysis of the modes.              
+\end{verbatim}
+
+Routines that apply the Clebsch Gordan coefficients for the spin-orbit
+part of the code:
+
+\begin{verbatim}
+transform_alphasum_nc.f90  Apply the coefficients to alphasum (no-so case) 
+transform_alphasum_so.f90  Apply the coefficients to alphasum (so case)
+transform_dbecsum_nc.f90   Apply the coefficients to dbecsum (no-so case)
+transform_dbecsum_so.f90   Apply the coefficients to dbecsum (so case)
+transform_int_nc.f90       Apply the coefficients to the integrals (no-so case)
+transform_int_so.f90       Apply the coefficients to the integrals (so case)
+set_int12_nc.f90        This is a driver that call the previous routines
+                        according to the type of PP.
+\end{verbatim}
+
+Routines that are needed to apply the {\tt gamma\_gamma} trick:
+
+\begin{verbatim}
+find_equiv_sites.f90              
+generate_dynamical_matrix_c.f90   
+generate_effective_charges_c.f90 
+set_asr_c.f90
+\end{verbatim}
+
+Miscellaneous routines:
+
+\begin{verbatim}
+print_clock_ph.f90   Print timings info.
+stop_ph.f90          Stops the phonon code closing all the files.
+rigid.f90            Used by matdyn and dynmat to compute the long range
+                     electrostatic part of the dynamical matrix.
+dyndia.f90           Diagonalizes the dynamical matrix.                        
+\end{verbatim}
+
+Obsolete routines that are there for compatibility with other codes that
+might use them:
+
+\begin{verbatim}
+obsolete.f90
+\end{verbatim}
+
+Development routines provided by some developers but still incomplete,
+or used in proprietary codes not yet in the QE distribution, or added and 
+forgotten:
+
+\begin{verbatim}
+acfdtest.f90              
+read_wfc_rspace_and_fwfft.f90
+dfile_autoname.f90          
+dfile_star.f90             
+rotate_dvscf_star.f90
+q_points_wannier.f90
+set_dvscf.f90
+ep_matrix_element_wannier.f90     
+io_pattern.f90                    
+cgsolve_all_imfreq.f90            
+q2qstar.f90
+write_matrix.f90
+chi_test.f90                      
+\end{verbatim}
 
 \section{ File Formats}
 \PHonon\ recover file specifications:
@@ -877,67 +1526,67 @@ P. Giannozzi, S. de Gironcoli, P. Pavone, and S. Baroni,
 Phys. Rev. B {\bf 43}, 7231 (1991).
 
 \item
-Phonon in metals: 
+NC, phonon in metals: 
 S. de Gironcoli, 
 ``Lattice dynamics of metals from density-functional perturbation theory''
 Phys. Rev. B {\bf 51}, 6773 (1995).
 
 \item
-General overview: 
+General overview of DFPT: 
 S. Baroni, S. de Gironcoli, A. Dal Corso, and P. Giannozzi
 ``Phonons and related properties of extended systems from density
 functional perturbation theory'', Rev. Mod. Phys. {\bf 73}, 515 (2001).
 
 \item
-NC, Raman tensor
+NC, Raman tensor:
 Michele Lazzeri and Francesco Mauri,
 ``High-order density-matrix perturbation theory''
 Phys. Rev. B {\bf 68}, 161101 (2003).
 
 \item
-GGA (dynamical matrix) 
+GGA dynamical matrix:
 F. Favot and A. Dal Corso,
 ``Phonon dispersions: Performance of the GGA approximation'',
 Phys. Rev. B. {\bf 60}, 11427 (1999).
 
 \item
-LSDA, Spin-GGA (dynamical matrix)
+LSDA, spin-GGA dynamical matrix:
 A. Dal Corso and S. de Gironcoli,
  ``{\it Ab-initio} phonon dispersions of Fe and Ni'',
 Phys. Rev. B {\bf 62}, 273 (2000).
 
 \item
-US-PPs (dynamical matrix)
+US-PPs dynamical matrix:
 A. Dal Corso
 ``Density functional perturbation theory with ultrasoft pseudopotentials'',
 Phys. Rev. B {\bf 64}, 235118 (2001).
 
 \item 
-US-PPs (dielectric constant)
+US-PPs dielectric constant:
 J. T\'obik and A. Dal Corso,
 ``Electric fields with ultrasoft pseudo-potentials: applications to
 benzene and anthracene'', Jour. of Chem. Phys. {\bf 120}, 9934 (2004).
 
 \item 
-US-PPs + spin-orbit (dynamical matrix)
+US-PPs + spin-orbit dynamical matrix:
 A. Dal Corso, ``Density functional perturbation theory for lattice
 dynamics with fully relativistic ultrasoft pseudopotentials: application
 to fcc-Pt and fcc-Au'', Phys. Rev. B {\bf 76}, 054308 (2007).
 
 \item 
-PAW (dynamical matrix)
+PAW dynamical matrix:
 A. Dal Corso,
 ``Density functional perturbation theory within the projector augmented wave
 method'', Phys. Rev. B {\bf 81}, 075123 (2010).
 
 \item
-NC, Electron-phonon interaction
+NC, Electron-phonon interaction:
 F. Mauri, O. Zakharov, S. de Gironcoli, S. G. Louie, and M. L. Cohen,
 ``Phonon Softening and Superconductivity in Tellurium under Pressure''
 Phys. Rev. Lett. {\bf 77}, 1151 (1996).
 
 \item
-US-PPs, Electron-phonon interaction
+US-PPs, Electron-phonon interaction:
 M. Wierzbowska, S. de Gironcoli, P. Giannozzi,
 ``Origins of low- and high-pressure discontinuities of $T_{c}$ in niobium''
 arXiv:cond-mat/0504077.
