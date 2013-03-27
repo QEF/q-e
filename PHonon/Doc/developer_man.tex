@@ -386,8 +386,7 @@ simple rules:
 
 \item
 All quantities that do not require the perturbed wavefunctions, are
-calculated in setup (for simple quantities), or by calling a
-separate routine in \texttt{phq\_init}. 
+calculated in setup or by calling a separate routine in \texttt{phq\_init}. 
 
 \item
 The quantities that require the perturbed wavefunctions due to an
@@ -802,7 +801,7 @@ initialize_ph.f90 Initialization driver. It calls the other initialization
              routines one after the other: allocate_phq, phq_setup,
              phq_recover, phq_summary, openfilq, and phq_init.               
 
-phq_setup.f90 Setup all the simple quantities need by of the phonon. The
+phq_setup.f90 Setup many quantities needed by the phonon. The
              most significant are: the local+SCF potential, derivatives
              of xc potential, using dmxc or similar functions and setup_dgc,
              alpha_pv and occupated bands, rotation matrices on the 
@@ -830,13 +829,13 @@ Opening and closing files:
 
 \begin{verbatim}
 openfilq.f90 Open almost all files of the ph.x code.
-close_phq.f90 Close the above files if open.                  
+close_phq.f90 Close the above files if opened.                  
 \end{verbatim}
 
 Drivers of \pwx\ to compute the band structure:
 
 \begin{verbatim}
-run_nscf.f90 This routine run pw.x to calculate the bands. It calls
+run_nscf.f90 This routine runs pw.x to calculate the bands. It calls
              init_run, electrons, and punch. However the functionalities
              of setup are provided by setup_nscf.
 set_defaults_pw.f90 (setup_nscf)
@@ -865,7 +864,7 @@ compute_becalp.f90     Compute the product of vkb and psi_{k+q} or of the
                        derivative of vkb and psi_{k+q}
 
 compute_drhous.f90  This is a driver that makes a loop over the k points
-           to accumulate using incdrhous the part of the induced
+           to accumulate, using incdrhous, the part of the induced
            charge density due to the change of the orthogonality
            constraint. All the modes are computed here. (US/PAW case only).
                      
@@ -924,7 +923,7 @@ dvqpsi_us_only.f90  The part of dvqpsi due to the nonlocal potential.
 cft_wave.f90    Wavefunction from real to reciprocal space and return.
 apply_dpot.f90  Add the contribution of the change of the SCF potential  
                 to the right-hand side of the linear system.               
-adddvscf.f90    Add the additional US/PAW contribution to the right-hand
+adddvscf.f90    Add the additional US/PAW contributions to the right-hand
                 side of the linear system (phonon case).
 adddvepsi_us.f90 As adddvscf for the electric field case.
 
@@ -934,9 +933,9 @@ orthogonalize.f90 Apply the projector on the valence bands to the right-hand
 cgsolve_all.f90  Solve the linear system with an iterative conjugate gradient
                  method.                
 
-pcgreen.f90      Orthogonalizes and solve the linear system. Used by 
+pcgreen.f90      Orthogonalize and solve the linear system. Used by 
                  solve_e2 and solve_e_nscf instead of the more standard method.
-                 Calls cgsolve_all for doing the actual calculation.
+                 Call cgsolve_all for doing the actual calculation.
 
 gmressolve_all.f90 Solve the linear system in the case of 
                    imaginary frequency polarizability calculation.           
@@ -979,7 +978,8 @@ newdq.f90          Integrate the augmentation function with the change of
 
 PW/src/paw_onecenter.f90: 
                    (PAW_dpotential) Computes the change of the coefficients 
-                   on the nonlocal potential due to the perturbation.
+                   on the nonlocal potential due to the perturbation
+                   (Only PAW case).
 
 ef_shift.f90       Accounts for the change of the Fermi level in metals at
                    the gamma point.
@@ -997,7 +997,7 @@ setup_dgc.f90   Sets the derivative of the xc functionals needed to
                 calculate the change of the potential. It is called by
                 phq_setup.
 d2mxc.f90       LDA second derivatives of the xc functional            
-dgradcorr.f90   Change of the GGA part of the xc functional.          
+dgradcorr.f90   Change of the GGA part of the xc potential.          
 compute_vsgga.f90  Additional GGA term present in the noncollinear/spin-orbit
                  case.
 \end{verbatim}
@@ -1008,16 +1008,14 @@ Routines to deal with the NLCC
 set_drhoc.f90  Fourier transform of the core charge at q+G. Called by
                phq_setup.
 addcore.f90    Change of the core charge for a phonon perturbation.            
-               Used by dv_of_drho and add_nlcc.
-dynmatcc.f90   NLCC contribution independent from the perturbed 
-               wavefunctions. Called by dynmat0.
+               Used by dv_of_drho and addnlcc.
+dynmatcc.f90   NLCC contribution to the dynamical matrix independent from 
+               the perturbed wavefunctions. Called by dynmat0.
 addnlcc.f90    The nlcc part of the dynamical matrix that depends on the
                perturbed potential. Called by solve_linter.
 \end{verbatim}
 
-Routines that calculate the required tensors or quantities: 
-
-Frequency dependent polarizability
+Frequency dependent polarizability:
 
 \begin{verbatim}
 polariz.f90   Computes the frequency dependent polarizability, given dpsi.
@@ -1026,7 +1024,7 @@ polariz.f90   Computes the frequency dependent polarizability, given dpsi.
 Dielectric tensor:
 
 \begin{verbatim}
-dielec.f90    Computes the dielectric tensor given the dpsi.          
+dielec.f90    Computes the dielectric tensor, given dpsi.          
 \end{verbatim}
 
 Compute the Born effective charges:
@@ -1056,7 +1054,7 @@ dielec_test.f90 Compute the dielectric constant with the quantities
                 calculated inside dhdrhopsi. 
 \end{verbatim}
 
-Electron optical coefficient:
+Electro-optic tensor:
 
 \begin{verbatim}
 el_opt.f90     Computes the electro-optic tensor.
@@ -1070,9 +1068,10 @@ dynmat0.f90      Driver for the part of the dynamical matrix independent
                  dynmat_us. This routine is called by init_phq. 
 
 dynmat_us.f90    Expectation value of the second derivative of the 
-                 nonlocal potential.                 
+                 local and nonlocal potentials.                 
 addusdynmat.f90  US/PAW contribution to the second derivative of 
-                 the potential.                
+                 the potential. There are terms due to the change of the
+                 augmentation function.               
 d2ionq.f90       Ewald contribution.            
 
 drhodv.f90       Contribution to the dynamical matrix due to the change
@@ -1080,7 +1079,9 @@ drhodv.f90       Contribution to the dynamical matrix due to the change
 drhodvnl.f90     Accumulate the contribution to the dynamical matrix due 
                  to the change of the wavefunctions (Only the contribution
                  of the nonlocal PP). Called at each k point.        
-drhodvloc.f90    As drhodvnl for the local potential.           
+drhodvloc.f90    As drhodvnl for the local potential. It can be calculated
+                 as an integral of the potential and the induced charge 
+                 density.
 drhodvus.f90     A term present only in the US/PAW case. Integral of the
                  induced SCF potential and the change of the charge at
                  fixed wavefunctions. It is called in solve_linter because
@@ -1089,22 +1090,22 @@ drhodvus.f90     A term present only in the US/PAW case. Integral of the
 dynmatrix.f90    Is a driver that collects the dynamical matrix, checks if
                  all representations have been calculated, symmetrize the
                  dynamical matrix, computes the matrices rotated in all 
-                 equivalent q and diagonalized the matrix. The same is
-                 done for zue if required from input.                 
+                 equivalent q and diagonalizes the matrix. The same is
+                 done for zue.                 
 \end{verbatim}
 
 Electron-phonon coupling coefficients
 
 \begin{verbatim}
 elphon.f90   This is a driver that in the case trans=.false. reads the
-             induced self-consistent potential and recalculates the
-             electron phonon matrix elements. It reads also the 
-             dynamical matrix and rediagonalizes it.
-    (readmat) reads the dynamical matrix.
-    (elphel) computes the electron-phonon matrix elements.                 
-    (elphsum) makes a sum over the BZ of the square moduli of the 
-              el-ph matrix elements and computes phonon linewidths. This
-              routine makes also linear interpolation on k points 
+             induced self-consistent potential and calculates the
+             electron-phonon matrix elements. It reads also the 
+             dynamical matrix and diagonalizes it.
+    (readmat) read the dynamical matrix.
+    (elphel) compute the electron-phonon matrix elements.                 
+    (elphsum) make a sum over the BZ of the square moduli of the 
+              el-ph matrix elements and compute phonon linewidths. This
+              routine makes a linear interpolation on k points 
               (still unsettled). Require compatibility between q and k 
               meshes.
     (elphsum_simple) As elphsum but without the interpolation. It can be
@@ -1120,12 +1121,20 @@ phq_summary.f90  Summarize what has been read from the pw output and
                  what has been calculated by phq_setup.
 
 summarize.f90    Write the tensors on output. 
+     (summarize_epsilon) write the dielectric tensor.
+     (summarize_zeu) write zeu.
+     (summarize_zue) write zue.
+     (summarize_elopt) write the electro-optic tensor.
+     (summarize_fpol) write the frequency dependent polarizability.
 
-write_epsilon_and_zeu.f90 Use summarizes, but contains also old 
+
+write_epsilon_and_zeu.f90 Use the routines of summarize, but contain also old 
                  instructions to write the dielectric constant and 
-                 the born effective charges in the dynamical matrix file.
+                 the Born effective charges in the dynamical matrix file.
 
-write_modes.f90  This routine writes the modes on output.
+write_modes.f90  
+      (write_modes_out) This routine writes the modes on output. It is called
+                 by set_irr and by phq_summarize.
 
 write_qplot_data.f90  Write a file that can be read by plotband with
                   q vectors and phonon frequencies.
