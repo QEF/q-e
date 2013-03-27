@@ -5,6 +5,18 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!  This file provides the following routines:
+!  rotate_pattern_add transfrom a dynamical matrix from the cartesian
+!                     basis to the pattern basis and adds it to a
+!                     matrix given in input.
+!
+!  dyn_pattern_to_cart Dynamical matrix from the pattern basis to the
+!                     cartesian basis.
+!
+!  compact_dyn Dynamical matrix from a 3,3,nat,nat format to a 3xnat, 3xnat
+!              format
+!
+!  scompact_dyn The opposite of compact dyn.
 !
 !----------------------------------------------------------------------
   SUBROUTINE rotate_pattern_add(nat, u, dyn, dynwrk)

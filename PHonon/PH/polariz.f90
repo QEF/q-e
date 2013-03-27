@@ -138,5 +138,5 @@ end subroutine polariz
   WRITE(stdout,'(3f10.2,5x,3f14.4)') ( (polar(ipol,jpol,iu), jpol=1,3), &
                 (polar(ipol,jpol,iu)*BOHR_RADIUS_ANGS**3, jpol=1,3), ipol=1,3)
   RETURN
-  END
+  END SUBROUTINE write_polariz
 
