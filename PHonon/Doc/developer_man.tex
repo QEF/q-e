@@ -44,12 +44,14 @@
   \includegraphics[width=6cm]{\democritosImage}\\
   \vskip 1cm
   % title
-  \Huge Developer's Manual for \PHonon\ package \smallskip
+  \Huge Developers' Manual for the \PHonon\ package \smallskip
   \Large (version \version)
 }
 \maketitle
 
 \tableofcontents
+
+\newpage
 
 \section{Introduction}
 
@@ -353,6 +355,7 @@ This is an integer that tells where the code stopped. This code
 is used in several points to avoid too many flags checks. Saved
 on disk in \texttt{.xml} file there is also a string.  
 The codes are the following:
+\newpage
 
 \begin{verbatim}
 !  rec_code   where_rec     status description
@@ -377,97 +380,6 @@ The codes are the following:
 ! 
 \end{verbatim}
 
-\section{Suggestion for developers}
-
-If you plan to add something to the phonon code  follow these
-simple rules:
-
-\begin{itemize}
-
-\item
-All quantities that do not require the perturbed wavefunctions, are
-calculated in setup or by calling a separate routine in \texttt{phq\_init}. 
-
-\item
-The quantities that require the perturbed wavefunctions due to an
-electric field are calculated by a separate routine after 
-\texttt{solve\_e} in the routine \texttt{phescf}.
-
-\item
-The quantities that require the perturbed wavefunctions due to an
-atomic displacement are accumulated by calling a separate routine
-in phqscf after \texttt{solve\_linter}. 
-NB: the perturbed wavefunctions are saved in a file that is rewritten at
-each new \texttt{irrep}.
-
-\item
-After calculating a quantity, it has to be saved in the directory
-\texttt{outdir} in an \texttt{.xml} file, by adding it to the list 
-of variables in the routine \texttt{write\_tensors}  
-(preferable), or by writing a routine similar to \texttt{write\_tensors} 
-that writes a separate file. The same quantity must be read by 
-\texttt{read\_tensors} or by writing a separate routine.
-
-\item
-If you introduce the calculation of a new quantity in the phonon code 
-and save it in the \texttt{.xml} file, please add also the associated flags 
-that control the calculation: 
-\texttt{lquantity} is read in input and tells \phx\ that that quantity must be 
-calculated, \texttt{done\_quantity} tells \phx\ that that quantity 
-was available in the \texttt{.xml} files and should not be recalculated, 
-\texttt{comp\_quantity} can be introduced if the quantity depends on 
-{\bf q} or on the frequency and tells \phx\ that that quantity must be 
-calculated in this run. The image controller can divide the work among images
-by setting the array \texttt{comp\_quantity}. At each {\bf q} point and 
-at each frequency the quantity must be saved in the \texttt{.xml} file.
-Please update the image controller to add the additional work that the 
-calculation of your quantity involves and make a single image calculate it 
-or divide the work among different images.
-
-\item
-Please, try to avoid opening files inside routines.
-Files must be opened in \texttt{openfilq} and closed in \texttt{close\_phq}.
-
-\item
-Global variables must be allocated in \texttt{allocate\_phq}, directly in the 
-routine, or by calling a separate routine that allocates all
-your new variables. The same variables must be deallocated in 
-\texttt{deallocate\_phq}, by a separate routine or by adding them to the
-list of variables. Note that at each new {\bf q} point these variables are
-deallocated and reallocated. 
-
-\item
-Variables that control the grid should not be deallocated at
-each new {\bf q} point must be allocated in \texttt{allocate\_grid\_variables} 
-and deallocated in \texttt{destroy\_status\_run}.
-A few arrays that must be read from input are allocated in 
-\texttt{phq\_readin} after reading their size and deallocated in
-\texttt{destroy\_status\_run}.
-
-\item
-Preferably global variables are written only once by a single routine 
-and used by the other routines. In particular routines are not allowed to 
-change:
-\begin{itemize}
-\item
-  The variables calculated by \phx.
-\item
-  The modes.
-\item
-  The variables that describe the symmetry of the small group of {\bf q}
-\item
-  The variables that describe the response of the ultrasoft quantities
-        (e.g. int1, int2, ..., alphasum, becsum, dpqq, etc.)
-\end{itemize}
-If you need to modify these quantities, please allocate new variables 
-and copy the variables of the phonon on them.
-
-\item
-If you want to establish a new recover point, add the appropriate
-\texttt{rec\_code} in the list above. The point in which the code stopped 
-is saved in \texttt{prefix.phsave/status\_run.xml}. 
-
-\end{itemize}
 
 \section{Parallelization}
 
@@ -656,7 +568,7 @@ $g_{{\bf q}\nu} ({\bf k}, i, j)$
 \texttt{phq\_recover}.
 
 
-\section{The routines of the phonon package}
+\section{The routines of the PHonon package}
 
 The routines of the \PHonon\ package can be divided in groups of  
 related task. There are high level drivers that call the
@@ -1316,7 +1228,107 @@ write_matrix.f90
 chi_test.f90                      
 \end{verbatim}
 
-\section{ File Formats}
+\section{Suggestion for developers}
+
+If you plan to add something to the \texttt{PHonon} package follow these
+simple rules:
+
+\begin{itemize}
+
+\item
+All quantities that do not require the perturbed wavefunctions, are
+calculated in setup or by calling a separate routine in \texttt{phq\_init}. 
+
+\item
+The quantities that require the perturbed wavefunctions due to an
+electric field are calculated by a separate routine after 
+\texttt{solve\_e} in the routine \texttt{phescf}.
+
+\item
+The quantities that require the perturbed wavefunctions due to an
+atomic displacement are accumulated by calling a separate routine
+in phqscf after \texttt{solve\_linter}. 
+NB: the perturbed wavefunctions are saved in a file that is rewritten at
+each new \texttt{irrep}.
+
+\item
+After calculating a quantity, it has to be saved in the directory
+\texttt{outdir} in an \texttt{.xml} file, by adding it to the list 
+of variables in the routine \texttt{write\_tensors}  
+(preferable), or by writing a routine similar to \texttt{write\_tensors} 
+that writes a separate file. The same quantity must be read by 
+\texttt{read\_tensors} or by writing a separate routine.
+
+\item
+If you introduce the calculation of a new quantity in the phonon code 
+and save it in the \texttt{.xml} file, please add also the associated flags 
+that control the calculation: 
+\texttt{lquantity} is read in input and tells \phx\ that that quantity must be 
+calculated, \texttt{done\_quantity} tells \phx\ that that quantity 
+was available in the \texttt{.xml} files and should not be recalculated, 
+\texttt{comp\_quantity} can be introduced if the quantity depends on 
+{\bf q} or on the frequency and tells \phx\ that that quantity must be 
+calculated in this run. The image controller can divide the work among images
+by setting the array \texttt{comp\_quantity}. At each {\bf q} point and 
+at each frequency the quantity must be saved in the \texttt{.xml} file.
+Please update the image controller to add the additional work that the 
+calculation of your quantity involves and make a single image calculate it 
+or divide the work among different images.
+
+\item
+Please, try to avoid opening files inside routines.
+Files must be opened in \texttt{openfilq} and closed in \texttt{close\_phq}.
+
+\item
+Global variables must be allocated in \texttt{allocate\_phq}, directly in the 
+routine, or by calling a separate routine that allocates all
+your new variables. The same variables must be deallocated in 
+\texttt{deallocate\_phq}, by a separate routine or by adding them to the
+list of variables. Note that at each new {\bf q} point these variables are
+deallocated and reallocated. 
+
+\item
+Variables that control the grid should not be deallocated at
+each new {\bf q} point must be allocated in \texttt{allocate\_grid\_variables} 
+and deallocated in \texttt{destroy\_status\_run}.
+A few arrays that must be read from input are allocated in 
+\texttt{phq\_readin} after reading their size and deallocated in
+\texttt{destroy\_status\_run}.
+
+\item
+Preferably global variables are calculated by in a single routine 
+and used by the other routines. In particular routines are not allowed to 
+modify:
+\begin{itemize}
+\item
+  The variables calculated by \pwx.
+\item
+  The modes.
+\item
+  The variables that describe the symmetry of the small group of {\bf q}.
+\item
+  The variables that describe the response of the ultrasoft quantities
+        (e.g. \texttt{int1}, \texttt{int2}, ..., \texttt{alphasum}, 
+\texttt{becsum}, \texttt{dpqq}, etc.).
+\end{itemize}
+If you need to modify these quantities, please allocate new variables 
+and copy the variables of the phonon on them.
+
+\item
+If you want to establish a new recover point, add the appropriate
+\texttt{rec\_code} in the list above. The point in which the code stopped 
+is saved in \texttt{prefix.phsave/status\_run.xml}. 
+
+\end{itemize}
+
+If you are searching for some interesting project to contribute to the
+\texttt{PHonon} package, please read the header of \texttt{phonon.f90}
+and implement some feature that is not yet ready. Ideally all quantities
+should be at level [10], presently level [5] is still experimental and
+some quantities are at level [1].
+
+
+\section{File Formats}
 \PHonon\ recover file specifications:
 
 Format name: QEXML \\
