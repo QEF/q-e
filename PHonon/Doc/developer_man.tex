@@ -493,20 +493,21 @@ in an image.
 The output files of the \pwx\ code are not modified by the \phx\ code. 
 Each image of \phx\ creates a new directory called \texttt{outdir/\_ph\#} 
 where it writes its files. \texttt{\#} is an integer equal to \texttt{0} 
-in a single image calculation or to the image number when the 
+in a calculation with one image or to the image number when the 
 \texttt{-nimage} flag is used. 
 There are two sets of files written 
 by \phx\ in the \texttt{outdir/\_ph\#} directories: unformatted files 
 containing internal arrays, and \texttt{.xml} 
 files containing partial results or tensors. The former are in 
 \texttt{outdir/\_ph\#} if the input flag \texttt{lqdir=.false.}, or in 
-separate subdirectories \texttt{outdir/\_ph\#/q\_iq},
-where \texttt{iq} is the number of the {\bf q} point. Note that if 
+separate subdirectories \texttt{outdir/\_ph\#/prefix.q\_\#iq},
+where \texttt{\#iq} is the number of the {\bf q} point. Note that if 
 \texttt{lqdir=.false.} (default is \texttt{lqdir=elph})
-the disk occupation is reduced but the information on each {\bf q} point is 
+the disk occupation is reduced but the files of each {\bf q} point are
 rewritten by the following {\bf q} so it is not possible to run an 
 electron-phonon calculation with \texttt{trans=.false.} and 
-\texttt{ldisp=.true.} after generating the potential. 
+\texttt{ldisp=.true.} after generating the induced potentials for a mesh of 
+{\bf q} points. 
 The \texttt{.xml} files calculated by each image are in the 
 \texttt{outdir/\_ph\#/{prefix}.phsave} directory for all {\bf q}-vectors and 
 irreps calculated by that images. Before closing the image calculation 
@@ -521,18 +522,19 @@ also in this directory if \pwx\ was run with the \texttt{wf\_collect=.true.}
 flag. These files are not modified by \phx. 
 At a finite {\bf q} vector, \phx\ runs its own instance of \pwx\
 to compute the bands and saves the results into 
-the \texttt{outdir/\_ph\#/q\_iq} directory (\texttt{lqdir=.true.}) or
+the \texttt{outdir/\_ph\#/prefix.q\_\#iq} directory (\texttt{lqdir=.true.}) or
 in \texttt{outdir/\_ph\#}. The charge density is copied inside 
 these directories before calculating the bands. The output of \pwx\ is 
-in files called \texttt{outdir/\_ph\#/q\_iq/{prefix}.wfc} and in the directory 
-{\tt outdir/\_ph\#/q\_iq/{prefix}.save} (\texttt{lqdir=.true.}),
+in files called \texttt{outdir/\_ph\#/prefix.q\_\#iq/{prefix}.wfc} and in 
+the directory 
+{\tt outdir/\_ph\#/prefix.q\_\#iq/prefix.save} (\texttt{lqdir=.true.}),
 or in \texttt{outdir/\_ph\#/{prefix}.wfc} and in 
 \texttt{outdir/\_ph\#/{prefix}.save} (\texttt{lqdir=.false.}). With
-\texttt{lqdir=.false.} \phx\ saves in \texttt{outdir/\_ph}
-\texttt{\#/{prefix}.bar} the
+\texttt{lqdir=.false.} \phx\ saves in 
+\texttt{outdir/\_ph\#/{prefix}.bar} the
 non self-consistent part of the right hand side of the linear system, 
 in \texttt{outdir/\_ph\#/{prefix}.dwf} the change of the wavefunctions. 
-The files \texttt{outdir/\_ph\#/{prefix}.igk} contain the ${\bf k}+{\bf G}$ 
+The files \texttt{outdir/\_ph\#/} \texttt{{prefix}.igk} contain the ${\bf k}+{\bf G}$ 
 lists as in the \pwx\ run.
 With US or PAW, files called \texttt{outdir/\_ph\#/{prefix}.prd} 
 contain the induced charge density, for all modes. 
@@ -547,8 +549,8 @@ are the only files that presently can be kept in memory with
 {\tt disk\_io='low'}.
 The status of \phx\ is saved at each iteration in files called
 \texttt{outdir/\_ph\#/{prefix}.recover}. These files can be used 
-to recover the run. All these files are saved in \texttt{outdir/\_ph\#/q\_iq}
-directory when \texttt{lqdir=.true.}.
+to recover the run. All these unformatted files are saved in 
+\texttt{outdir/\_ph\#/prefix.q\_\#iq} directory when \texttt{lqdir=.true.}.
 
 In parallel calculations, previous files are split into several files 
 that have a final number. Each number labels the processor that wrote the 
@@ -560,14 +562,17 @@ which \phx\ is started and are called \texttt{{fildyn}\#iq} where
 or is not added in a single-{\bf q} calculation. Only one copy of this 
 file is written in a parallel run. When the \texttt{-nimage} option
 is used some of these files might be empty (if the corresponding {\bf q}
-point has been divided between two or more images). So you need to
-collect the results running \phx\ another time without images.
+point has been divided between two or more images). The results are
+collected running \phx\ another time (with \texttt{recover=.true.})
+without images.
 
-Moreover \phx\ opens a directory called {\tt outdir/\_ph\#/{prefix}.phsave}.
+Moreover \phx\ opens a directory called \texttt{outdir/\_ph\#/{prefix}.phsave}.
 This directory contains the partial information on the calculation.
 These files can be used to recover a run also when the recover file 
 is corrupted. In the directory {\tt outdir/\_ph\#/{prefix}.phsave} the 
-files are in \texttt{.xml} format. There are several files:
+files are in \texttt{.xml} format. Note that this directory is
+always in \texttt{outdir/\_ph\#/} also when \texttt{lqdir=.true.}.
+There are several files:
 
 \texttt{control\_ph.xml} contains information on the flags that control
 what \phx\ calculates. The content of this file is used mainly for 
@@ -594,7 +599,7 @@ If some routine wrote it, \texttt{tensors.xml} contains the tensors that
 have been calculated. Possible tensors are: dielectric constant, 
 Born effective charges calculated as derivative of the forces (EU), 
 Born effective charges calculated as derivative of the polarization (UE), 
-raman tensor, elettro-optic coefficient. This file is written by the 
+raman tensor, electro-optic coefficient. This file is written by the 
 routines that calculate the tensors. 
 It is read by the routine \texttt{phq\_recover}, if \texttt{recover=.true.} 
 and the {\bf q} vector is $\Gamma$.
@@ -635,7 +640,7 @@ When the files \texttt{dynmat.\#iq.\#irr.xml} are present for all
 ${\bf q}$ can be calculated. If all the \texttt{\#irr} of a given symmetry 
 for a given \texttt{\#iq} are present, 
 the partial dynamical matrix that can be constructed with this information 
-can be diagonalized and the frequency of the modes of that symmetry can 
+can be diagonalized and the frequencies of the modes of that symmetry can 
 be calculated (using the \texttt{ldiag=.true.} flag).
 These files are written by \texttt{phqscf} after calculating the 
 contribution of the representation to the dynamical matrix by 
@@ -645,10 +650,10 @@ contribution of the representation to the dynamical matrix by
 \texttt{elph.\#iq.\#irr.xml} contains the contribution to the electron 
 phonon coefficients 
 at the {\bf q} vector \texttt{\#iq} of the representation \texttt{\#irr}. 
-These files are written by \texttt{elphel} and contains the quantities 
+These files are written by \texttt{elphel} and contain the quantities 
 $g_{{\bf q}\nu} ({\bf k}, i, j)$ 
-(see User Manual) and are read in recover runs by the 
-routine \texttt{phq\_recover}.
+(see User Manual). They are read in recover runs by the routine 
+\texttt{phq\_recover}.
 
 
 \section{The routines of the phonon package}
@@ -658,7 +663,7 @@ related task. There are high level drivers that call the
 routines that do the actual work and low level routines that make
 a single task. Note that the phonon code is tightly integrated in the QE
 package, so it uses the routines provided by the 
-{\tt Modules} or by the {\tt PW/src} directories. Only a brief comment
+\texttt{Modules} or by the \texttt{PW/src} directories. Only a brief comment
 on the purpose and the use of the routines can be found here. More details
 might be written inside the routines themselves. We report here the name of the
 file that contains the routines. Each file might contain more than one
@@ -669,7 +674,7 @@ have the same name we report only the filename; if the file contains a single
 routine with a different name or more than one routine, we report in 
 parenthesis the routine name.
 
-Modules that contain the new variables used by the \phx:
+Modules that contain the variables used by \phx:
 
 \begin{verbatim}
 phcom.f90  Almost all global variables are here.
@@ -679,7 +684,7 @@ ramanm.f90 Variables for Raman calculation.
 \end{verbatim}
 
 Global variables allocation and deallocation. Note that some
-variables are allocated also by {\tt phq\_readin} or {\tt ph\_restart}.
+variables are allocated by \texttt{phq\_readin} and by \texttt{ph\_restart}.
 
 \begin{verbatim}
 allocate_phq.f90    This is the main allocation routine in which almost 
@@ -698,8 +703,8 @@ clean_pw_ph.f90     Clean all variables of pw.x and of ph.x. Used to
                     reinitialize the calculation at each q.               
 \end{verbatim}
 
-Starting point and main programs. The directory {\tt PHonon/PH} contains five 
-executables whose main program are:
+Starting point and main programs. The directory \texttt{PHonon/PH} contains 
+five executables whose main programs are:
 
 \begin{verbatim}
 phonon.f90  This is the main program of ph.x
@@ -709,7 +714,7 @@ dynmat.f90  This is the main program of dynmat.x
 fqha.f90    This is the main program for fqha.x                      
 \end{verbatim}
 
-Reading input, pseudopotentials and pw punch file:
+Reading input, pseudopotentials, and files written by \texttt{pw.x}:
 
 \begin{verbatim}
 phq_readin.f90      This is the routine that reads the input, the PP and
@@ -739,8 +744,8 @@ check_restart_recover.f90 Check if a restart or recover file is present
                           in the outdir directory       
 \end{verbatim}
 
-Routines that select the small group of q and other symmetry matrices of
-the ph.x code.
+Routines that select the small group of {\bf q} and other symmetry related
+quantities used by the \phx\ code:
 
 \begin{verbatim}
 set_small_group_of_q.f90  This is a driver that selects among the s matrices 
@@ -759,8 +764,8 @@ sgam_ph.f90    Finds the rtau vectors. These are Bravais lattice vectors that
 \end{verbatim}
 
 Routines that manipulate or generate the irreducible representations, 
-the q point mesh and all the preparatory stuff that is needed by the
-phonon code:
+the {\bf q}-point mesh and all the preparatory stuff that is needed by the
+\phx\ code:
 
 \begin{verbatim}
 q_points.f90   Generate the mesh of q vectors.
@@ -791,7 +796,7 @@ set_irr_sym.f90 Calculate the rotation matrices on the irreps basis.
 
 \end{verbatim}
 
-High level drivers to make the actual calculation:
+High level drivers that make the actual calculation:
 
 \begin{verbatim}
 prepare_q.f90  Decides if a given q has to be calculated and if it needs
@@ -832,7 +837,7 @@ openfilq.f90 Open almost all files of the ph.x code.
 close_phq.f90 Close the above files if opened.                  
 \end{verbatim}
 
-Drivers of \pwx\ to compute the band structure:
+Drivers that compute the band structure using the \pwx\ routines:
 
 \begin{verbatim}
 run_nscf.f90 This routine runs pw.x to calculate the bands. It calls
@@ -844,8 +849,8 @@ set_defaults_pw.f90 (setup_nscf)
 \end{verbatim}
 
 Routines that compute quantities independent from the perturbed wavefunctions
-that are used in the rest of the code. Mainly for the US/PAW part. These
-routines are called by {\tt phq\_init}:
+that are used in the rest of the code (mainly US/PAW part). These
+routines are called by \texttt{phq\_init}:
 
 \begin{verbatim}
 dvanqq.f90 This routine computes four of the five integrals  
@@ -906,7 +911,7 @@ solve_e_nscf.f90 A simplified version of solve_e in which the induced
 \end{verbatim}
 
 Routines used by the above drivers to do their job. Some of these routines
-are used by all drivers:
+are used by all drivers, others are specific for a given perturbation:
 
 \begin{verbatim}
 dvpsi_e.f90      Compute the right hand side of the linear system in
@@ -989,8 +994,8 @@ localdos.f90       Computes the local DOS.
 addusldos.f90      US contribution to the local DOS.               
 \end{verbatim}
 
-Routines to calculate the derivative of the xc potential.
-Note that some of them are also in Module/funct.f90:
+Routines that calculate the derivative of the xc potential.
+Note that some of them are also in \texttt{Module/funct.f90}:
 
 \begin{verbatim}
 setup_dgc.f90   Sets the derivative of the xc functionals needed to
@@ -1002,7 +1007,7 @@ compute_vsgga.f90  Additional GGA term present in the noncollinear/spin-orbit
                  case.
 \end{verbatim}
 
-Routines to deal with the NLCC
+Routines that deal with the nonlinear core correction (NLCC):
 
 \begin{verbatim}
 set_drhoc.f90  Fourier transform of the core charge at q+G. Called by
@@ -1027,7 +1032,7 @@ Dielectric tensor:
 dielec.f90    Computes the dielectric tensor, given dpsi.          
 \end{verbatim}
 
-Compute the Born effective charges:
+Born effective charges:
 
 \begin{verbatim}
 add_zstar_ue.f90     Add the contribution to zue due to dpsi induced by 
@@ -1094,7 +1099,7 @@ dynmatrix.f90    Is a driver that collects the dynamical matrix, checks if
                  done for zue.                 
 \end{verbatim}
 
-Electron-phonon coupling coefficients
+Electron-phonon coupling coefficients:
 
 \begin{verbatim}
 elphon.f90   This is a driver that in the case trans=.false. reads the
@@ -1146,14 +1151,14 @@ write_eigenvectors.f90 Used by matdyn to write the eigenvectors on output.
                  molecular graphics programs.
 \end{verbatim}
 
-Routines that write on file the induced charge density:
+Routines that write on file the induced charge densities:
 
 \begin{verbatim}
 punch_plot_e.f90 Write the change of the charge due to an electric field.
 davcio_drho.f90  Write the change of the charge due to a phonon perturbation.  
 \end{verbatim}
 
-Routines to read and write the xml files with the partial results:
+Routines that read or write the \texttt{.xml} files with the partial results:
 
 \begin{verbatim}
 ph_restart.f90  This file contains many routines to write and read the .xml
@@ -1181,13 +1186,14 @@ io_dyn_mat_old.f90 These are the routines that read and write the dynamical
                 matrix in the old format (not .xml).
 \end{verbatim}
 
-Routines that read and write the recover file:
+Routines that read or write the recover file:
 
 \begin{verbatim}
 phq_recover.f90 This routine reads the recover files and reconstruct the
                 status of the calculation so far.
-write_rec.f90   This file contains the routines to read and write the 
+write_rec.f90   This file contains the routine that writes the 
                 recover file (in unformatted form).
+     (read_rec) read the recover file.
 \end{verbatim}
 
 Symmetrization of induced potentials:
@@ -1204,8 +1210,8 @@ sym_dmage.f90  Symmetrize the change of B_xc due to a set of electric field
 syme2.f90      Symmetrize the potential of the second order response.
 \end{verbatim}
 
-and corresponding parallel routines that collect on a single processor 
-the quantity to symmetrize and then call the previous routines:
+and parallel routines that collect on a single processor 
+the quantity to symmetrize and call the previous routines:
 
 \begin{verbatim}
 psymdvscf.f90   Parallel version of symdvscf.
@@ -1239,7 +1245,7 @@ rotate_pattern_add.f90  These are a set of auxiliary routines that manipulate
               of this matrix to see its capabilities.
 \end{verbatim}
 
-Routines that perform the symmetry analysis of the eigenvectors to decide
+Routines that perform the symmetry analysis of the eigenvectors to find
 to which irreducible representation they belong:
 
 \begin{verbatim}
@@ -1264,7 +1270,7 @@ set_int12_nc.f90        This is a driver that call the previous routines
                         according to the type of PP.
 \end{verbatim}
 
-Routines that are needed to apply the {\tt gamma\_gamma} trick:
+Routines that apply the \texttt{gamma\_gamma} trick:
 
 \begin{verbatim}
 find_equiv_sites.f90              
@@ -1283,7 +1289,7 @@ rigid.f90            Used by matdyn and dynmat to compute the long range
 dyndia.f90           Diagonalizes the dynamical matrix.                        
 \end{verbatim}
 
-Obsolete routines that are there for compatibility with other codes that
+Obsolete routines that are here for compatibility with other codes that
 might use them:
 
 \begin{verbatim}
