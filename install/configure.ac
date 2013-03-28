@@ -442,6 +442,8 @@ f90 | fc | ftn )
         f90_version=pathf95
     elif $f90 -v 2>&1 | grep -q "gcc version" ; then
         f90_version=gfortran
+    elif $f90 -V 2>&1 | grep -q "Cray Fortran" ; then
+        f90_version=crayftn
     else
         echo $ECHO_N "unknown, leaving as... $ECHO_C"
         f90_version=$f90
@@ -658,6 +660,18 @@ sparc:f90 )
         imod="-M"
         have_cpp=0
         ;;
+crayxt*:cray* )
+	    try_fflags_nomain=""
+        try_fflags_openmp="-h omp"
+        try_fflags="-O3 -default64"
+        try_f90flags="-O3 -default64"
+        try_fflags_noopt="-O0"
+        try_ldflags_openmp="-h omp"
+        try_ldflags="-v"
+        try_ldflags_static="-static"
+        try_dflags="$try_dflags -D__CRAY"
+        have_cpp=0
+        ;;
 crayxt*:pgf* )
 # see comment above for pgf*
 	    try_fflags_nomain="-Mnomain"
@@ -748,7 +762,7 @@ ppc64-bgq:*xlf* )
 
 * )
         # unknown, try these
-        try_fflags="-O"
+        try_fflags="-O1"
         try_f90flags="\$(FFLAGS)"
         try_fflags_noopt="-O0"
         try_ldflags=""
