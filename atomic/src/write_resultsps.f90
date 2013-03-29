@@ -50,15 +50,36 @@ SUBROUTINE write_resultsps ( )
           '       e PS (Ry)    De AE-PS (Ry) ')
      DO n=1,nwfts
         IF (verbosity=='high') THEN
-           IF (octs(n)>-eps6) WRITE(stdout,401) &
-                nnts(n),llts(n),elts(n),iswts(n),octs(n), &
-                enl(nstoaets(n)),enlts(n), &
-                enl(nstoaets(n))-enlts(n)
+           IF (octs(n)>-eps6) THEN
+              IF (ABS(enl(nstoaets(n))-enlts(n))< 5.d-3) THEN
+                 WRITE(stdout,401) &
+                 nnts(n),llts(n),elts(n),iswts(n),octs(n), &
+                 enl(nstoaets(n)),enlts(n), &
+                 enl(nstoaets(n))-enlts(n)
+              ELSE
+!
+!     put a ! close to the eigenvalues that differ more than 5 mRy
+!
+                 WRITE(stdout,403) &
+                 nnts(n),llts(n),elts(n),iswts(n),octs(n), &
+                 enl(nstoaets(n)),enlts(n), &
+                 enl(nstoaets(n))-enlts(n)
+              ENDIF
+           ENDIF
         ELSE
-           IF (octs(n)>-eps6) WRITE(stdout,400) &
-                nnts(n),llts(n),elts(n),iswts(n),octs(n), &
-                enl(nstoaets(n)),enlts(n), &
-                enl(nstoaets(n))-enlts(n)
+           IF (octs(n)>-eps6) THEN
+              IF (ABS(enl(nstoaets(n))-enlts(n))< 5.d-3) THEN
+                WRITE(stdout,400) &
+                  nnts(n),llts(n),elts(n),iswts(n),octs(n), &
+                  enl(nstoaets(n)),enlts(n), &
+                  enl(nstoaets(n))-enlts(n)
+              ELSE
+                 WRITE(stdout,402) &
+                   nnts(n),llts(n),elts(n),iswts(n),octs(n), &
+                   enl(nstoaets(n)),enlts(n), &
+                   enl(nstoaets(n))-enlts(n)
+              ENDIF
+           ENDIF
         ENDIF
      ENDDO
      IF (ionode) WRITE(13,400)  &
@@ -67,19 +88,37 @@ SUBROUTINE write_resultsps ( )
           enl(nstoaets(n))-enlts(n),  n=1,nwfts)
 400 FORMAT(4x,2i2,5x,a2,i4,'(',f5.2,')',f15.5,f15.5,f15.5)
 401 FORMAT(4x,2i2,5x,a2,i4,'(',f5.2,')',f15.5,f15.5,f15.8)
+402 FORMAT(4x,2i2,5x,a2,i4,'(',f5.2,')',f15.5,f15.5,f15.5,"  !")
+403 FORMAT(4x,2i2,5x,a2,i4,'(',f5.2,')',f15.5,f15.5,f15.8,"  !")
   ELSE
      WRITE(stdout,500)
 500 FORMAT(/5x,'n l  j  nl             e AE (Ry)',  &
           '       e PS (Ry)    De AE-PS (Ry) ')
      DO n=1,nwfts
         IF (verbosity=='high') THEN
-           IF(octs(n)>-eps6) WRITE(stdout,601) &
-               nnts(n),llts(n),jjts(n),elts(n),iswts(n),octs(n), &
-               enl(nstoaets(n)),enlts(n), enl(nstoaets(n))-enlts(n)
-        ELSE
-           IF(octs(n)>-eps6) WRITE(stdout,600) &
+           IF(octs(n)>-eps6) THEN
+             IF (ABS(enl(nstoaets(n))-enlts(n))< 5.d-3) THEN
+                WRITE(stdout,601) &
                 nnts(n),llts(n),jjts(n),elts(n),iswts(n),octs(n), &
                 enl(nstoaets(n)),enlts(n), enl(nstoaets(n))-enlts(n)
+             ELSE
+                WRITE(stdout,603) &
+                nnts(n),llts(n),jjts(n),elts(n),iswts(n),octs(n), &
+                enl(nstoaets(n)),enlts(n), enl(nstoaets(n))-enlts(n)
+             ENDIF
+           ENDIF
+        ELSE
+           IF(octs(n)>-eps6) THEN
+             IF (ABS(enl(nstoaets(n))-enlts(n))< 5.d-3) THEN
+                WRITE(stdout,600) &
+                  nnts(n),llts(n),jjts(n),elts(n),iswts(n),octs(n), &
+                  enl(nstoaets(n)),enlts(n), enl(nstoaets(n))-enlts(n)
+             ELSE
+                WRITE(stdout,602) &
+                   nnts(n),llts(n),jjts(n),elts(n),iswts(n),octs(n), &
+                   enl(nstoaets(n)),enlts(n), enl(nstoaets(n))-enlts(n)
+             ENDIF
+           ENDIF
         ENDIF
      ENDDO
      IF (ionode) WRITE(13,600)  &
@@ -88,6 +127,8 @@ SUBROUTINE write_resultsps ( )
           enl(nstoaets(n))-enlts(n),  n=1,nwfts)
 600 FORMAT(4x,2i2,f4.1,1x,a2,i4,'(',f5.2,')',f15.5,f15.5,f15.5)
 601 FORMAT(4x,2i2,f4.1,1x,a2,i4,'(',f5.2,')',f15.5,f15.5,f15.8)
+602 FORMAT(4x,2i2,f4.1,1x,a2,i4,'(',f5.2,')',f15.5,f15.5,f15.5,"  !")
+603 FORMAT(4x,2i2,f4.1,1x,a2,i4,'(',f5.2,')',f15.5,f15.5,f15.8,"  !")
   ENDIF
   WRITE(stdout,"(/5x,'eps =',1pe8.1,'  iter =',i3)") eps0,iter
   WRITE(stdout,*)
