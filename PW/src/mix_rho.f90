@@ -44,7 +44,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter, co
   USE scf,            ONLY : scf_type, create_scf_type, destroy_scf_type, &
                              mix_type, create_mix_type, destroy_mix_type, &
                              assign_scf_to_mix_type, assign_mix_to_scf_type, &
-                             mix_type_AXPY, diropn_mix_file, close_mix_file, &
+                             mix_type_AXPY, open_mix_file, close_mix_file, &
                              davcio_mix_type, rho_ddot, high_frequency_mixing, &
                              mix_type_COPY, mix_type_SCAL
   USE io_global,     ONLY : stdout
@@ -173,7 +173,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter, co
   IF ( savetofile ) THEN
      !
      iunmix = find_free_unit()
-     CALL diropn_mix_file( iunmix, 'mix', exst )
+     CALL open_mix_file( iunmix, 'mix', exst )
      !
      IF ( mixrho_iter > 1 .AND. .NOT. exst ) THEN
         !
