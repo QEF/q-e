@@ -976,7 +976,8 @@ then
                 # check for mkl (in several directories)
                 try_libdirs="/opt/intel/Compiler/*/*/mkl/lib/64
                              /opt/intel/mkl/*/lib/64
-                             /opt/intel/mkl*/lib/64"
+                             /opt/intel/mkl*/lib/64
+                             /opt/intel/mkl/lib"
                 try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
                 for dir in none $try_libdirs
@@ -1048,7 +1049,8 @@ then
         x86_64:* )
                 try_libdirs="/opt/intel/Compiler/*/*/mkl/lib/em64t
                              /opt/intel/mkl/*/lib/em64t
-                             /opt/intel/mkl*/lib/em64t"
+                             /opt/intel/mkl*/lib/em64t
+                             /opt/intel/mkl/lib"
                 try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
                 for dir in none $try_libdirs
@@ -1091,7 +1093,8 @@ then
                 # check for mkl (in several directories)
                 try_libdirs="/opt/intel/Compiler/*/*/mkl/lib/32
                              /opt/intel/mkl/*/lib/32
-                             /opt/intel/mkl*/lib/32"
+                             /opt/intel/mkl*/lib/32
+                             /opt/intel/mkl/lib"
                 try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
                 for dir in none $try_libdirs
@@ -1241,10 +1244,12 @@ then
 		fi
                 ;;
 	mac686:ifort* )
-                #This solution is tested with MacOs 10.6 and Intel 11.1 
+                #This solution is tested with MacOs 10.6 and Intel 11.1
+                #..and now MacOs 10.8.3 and Intel 13 
                 try_libdirs="/Developer/opt/intel/Compiler/*/*/Frameworks/mkl/lib/universal
                              /opt/intel/Compiler/*/*/Frameworks/mkl/lib/universal
-                             /opt/intel/mkl*/lib/em64t"
+                             /opt/intel/mkl*/lib/em64t
+                             /opt/intel/mkl/lib"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
 		for dir in none $try_libdirs
