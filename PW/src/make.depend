@@ -1407,7 +1407,6 @@ scf_mod.o : ../../Modules/control_flags.o
 scf_mod.o : ../../Modules/fft_base.o
 scf_mod.o : ../../Modules/fft_interfaces.o
 scf_mod.o : ../../Modules/funct.o
-scf_mod.o : ../../Modules/io_files.o
 scf_mod.o : ../../Modules/ions_base.o
 scf_mod.o : ../../Modules/kind.o
 scf_mod.o : ../../Modules/mp.o
@@ -1416,6 +1415,7 @@ scf_mod.o : ../../Modules/paw_variables.o
 scf_mod.o : ../../Modules/recvec.o
 scf_mod.o : ../../Modules/uspp.o
 scf_mod.o : ../../Modules/wavefunctions.o
+scf_mod.o : buffers.o
 scf_mod.o : paw_onecenter.o
 scf_mod.o : pwcom.o
 set_kplusq.o : ../../Modules/kind.o
