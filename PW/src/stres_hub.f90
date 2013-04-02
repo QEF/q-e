@@ -22,7 +22,7 @@ SUBROUTINE stres_hub ( sigmah )
    USE scf,       ONLY : v
    USE lsda_mod,  ONLY : nspin
    USE symme,     ONLY : symmatrix
-   USE io_files,  ONLY : prefix, iunocc
+   USE io_files,  ONLY : prefix
    USE io_global, ONLY : stdout, ionode
    !
    IMPLICIT NONE

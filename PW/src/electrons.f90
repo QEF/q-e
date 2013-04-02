@@ -38,14 +38,15 @@ SUBROUTINE electrons()
                                    elondon, ef_up, ef_dw
   USE scf,                  ONLY : scf_type, scf_type_COPY, bcast_scf_type,&
                                    create_scf_type, destroy_scf_type, &
-                                   rho, rho_core, rhog_core, &
-                                   v, vltot, vrs, kedtau, vnew
+                                   open_mix_file, close_mix_file, &
+                                   rho, rho_core, rhog_core, v, vltot, vrs, &
+                                   kedtau, vnew
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
                                    iprint, istep, lscf, lmd, conv_elec, &
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
                                    llondon, scf_must_converge
-  USE io_files,             ONLY : iunwfc, iunocc, nwordwfc, output_drho, &
+  USE io_files,             ONLY : iunwfc, iunmix, nwordwfc, output_drho, &
                                    iunefield, iunpaw
   USE buffers,              ONLY : save_buffer
   USE ldaU,                 ONLY : eth, Hubbard_U, Hubbard_lmax, &
@@ -106,7 +107,7 @@ SUBROUTINE electrons()
       en_el=0.0_DP,&! electric field contribution to the total energy
       eext=0.0_DP   ! external forces contribution to the total energy
   LOGICAL :: &
-      first
+      first, exst
   !
   ! ... auxiliary variables for calculating and storing temporary copies of
   ! ... the charge density and of the HXC-potential
@@ -215,7 +216,7 @@ SUBROUTINE electrons()
   WRITE( stdout, 9002 )
   !
   CALL flush_unit( stdout )
-
+  CALL open_mix_file( iunmix, 'mix', exst )
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
@@ -252,7 +253,8 @@ SUBROUTINE electrons()
      !
      deband_hwf = delta_e()
      !
-     ! save input current density in rhoin
+     ! ... save input density to rhoin
+     !
      call scf_type_COPY( rho, rhoin )
      !
      scf_step: DO
@@ -346,9 +348,10 @@ SUBROUTINE electrons()
         ! ... The mixing should be done on pool 0 only as well, but inside
         ! ... mix_rho there is a call to rho_ddot that in the PAW case 
         ! ... contains a hidden parallelization level on the entire image
+        !
         ! IF ( my_pool_id == root_pool ) 
-        CALL mix_rho &
-             ( rho, rhoin, mixing_beta, dr2, tr2_min, iter, nmix, conv_elec )
+        CALL mix_rho ( rho, rhoin, mixing_beta, dr2, tr2_min, iter, nmix, &
+                       iunmix, conv_elec )
         CALL bcast_scf_type ( rhoin, root_pool, inter_pool_comm )
         CALL mp_bcast ( dr2, root_pool, inter_pool_comm )
         CALL mp_bcast ( conv_elec, root_pool, inter_pool_comm )
@@ -411,10 +414,12 @@ SUBROUTINE electrons()
            !
            ! ... write the charge density to file
            ! ... also write ldaU ns coeffs and PAW becsum
+           !
            CALL write_rho( rho, nspin )
            !
         ELSE not_converged_electrons
            !
+           CALL close_mix_file( iunmix, 'delete' )
            ! ... convergence reached:
            ! ... 1) the output HXC-potential is saved in vr
            ! ... 2) vnew contains V(out)-V(in) ( used to correct the forces ).
@@ -424,13 +429,12 @@ SUBROUTINE electrons()
            CALL v_of_rho( rho,rho_core,rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
            !
+           vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
+           !
            IF (okpaw) THEN
               CALL PAW_potential(rho%bec, ddd_paw, epaw)
               CALL PAW_symmetrize_ddd(ddd_paw)
            ENDIF
-
-           !
-           vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
            !
            ! ... note that rho is here the output, not mixed, charge density
            ! ... so correction for variational energy is no longer needed

@@ -43,7 +43,7 @@ SUBROUTINE potinit()
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
                                    niter_with_fixed_ns
   USE noncollin_module,     ONLY : noncolin, report
-  USE io_files,             ONLY : tmp_dir, prefix, iunocc, input_drho
+  USE io_files,             ONLY : tmp_dir, prefix, input_drho
   USE spin_orb,             ONLY : domag
   USE mp,                   ONLY : mp_sum
   USE mp_global,            ONLY : intra_image_comm, intra_bgrp_comm

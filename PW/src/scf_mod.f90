@@ -433,11 +433,12 @@ CONTAINS
  return
  end subroutine open_mix_file
  !
- subroutine close_mix_file( iunit )
+ subroutine close_mix_file( iunit, stat )
    implicit none
    integer, intent(in) :: iunit
+   character(len=*), intent(in) :: stat
    deallocate (io_buffer)
-   close(iunit,status='keep')
+   close(iunit,status=trim(stat))
    return
  end subroutine close_mix_file
 

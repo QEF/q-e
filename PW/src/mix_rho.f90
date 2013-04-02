@@ -23,7 +23,8 @@ END MODULE mix_save
 #endif
 
 !----------------------------------------------------------------------------
-SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter, conv )
+SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
+                    iunmix, conv )
   !----------------------------------------------------------------------------
   !
   ! ... Modified Broyden's method for charge density mixing
@@ -44,8 +45,8 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter, co
   USE scf,            ONLY : scf_type, create_scf_type, destroy_scf_type, &
                              mix_type, create_mix_type, destroy_mix_type, &
                              assign_scf_to_mix_type, assign_mix_to_scf_type, &
-                             mix_type_AXPY, open_mix_file, close_mix_file, &
-                             davcio_mix_type, rho_ddot, high_frequency_mixing, &
+                             mix_type_AXPY, davcio_mix_type, rho_ddot, &
+                             high_frequency_mixing, &
                              mix_type_COPY, mix_type_SCAL
   USE io_global,     ONLY : stdout
 #ifdef __GFORTRAN
@@ -59,7 +60,8 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter, co
   !
   INTEGER, INTENT(IN) :: &
     iter,        &!  counter of the number of iterations
-    n_iter        !  number of iterations used in mixing
+    n_iter,      &!  number of iterations used in mixing
+    iunmix        !  I/O unit where data from previous iterations is stored
   REAL(DP), INTENT(IN) :: &
     alphamix,    &! mixing factor
     tr2_min       ! estimated error in diagonalization. If the estimated
@@ -79,7 +81,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter, co
   INTEGER, PARAMETER :: &
     maxmix = 25             ! max number of iterations for charge mixing
   INTEGER ::    &
-    iunmix,        &! I/O unit number of charge density file in G-space
     iter_used,     &! actual number of iterations used
     ipos,          &! index of the present iteration
     inext,         &! index of the next iteration
@@ -92,7 +93,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter, co
 #ifdef __NORMALIZE_BETAMIX
   REAL(DP) :: norm2, obn
 #endif
-  LOGICAL :: exst          ! if true the file exists
   !
   ! ... saved variables and arrays
   !
@@ -160,16 +160,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter, co
      CALL stop_clock( 'mix_rho' )
      !
      RETURN
-     !
-  END IF
-  !
-  iunmix = find_free_unit()
-  CALL open_mix_file( iunmix, 'mix', exst )
-  !
-  IF ( mixrho_iter > 1 .AND. .NOT. exst ) THEN
-     !
-     CALL infomsg( 'mix_rho', 'file not found, restarting' )
-     mixrho_iter = 1
      !
   END IF
   !
@@ -283,8 +273,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter, co
     ! ... auxiliary vectors dv and df not needed anymore
     !
   ENDIF skip_on_first
-  !
-  call close_mix_file( iunmix )
   !
   IF ( ALLOCATED( df ) ) THEN
      DO i=1, n_iter

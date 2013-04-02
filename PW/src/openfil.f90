@@ -35,8 +35,6 @@ SUBROUTINE openfil()
   ! ... Files needed for LDA+U
   ! ... iunat  contains the (orthogonalized) atomic wfcs 
   ! ... iunsat contains the (orthogonalized) atomic wfcs * S
-  ! ... iunocc contains the atomic occupations computed in new_ns
-  ! ... it is opened and closed for each reading-writing operation  
   !
   ! ... nwordwfc is the record length (IN COMPLEX WORDS)
   ! ... for the direct-access file containing wavefunctions

@@ -11,7 +11,7 @@ MODULE io_files
   !
   USE parameters, ONLY: ntypx
   !
-  ! ... I/O related variables: file names, utilities
+  ! ... I/O related variables: file names, units, utilities
   !
   IMPLICIT NONE
   !
@@ -44,6 +44,7 @@ MODULE io_files
   CHARACTER (LEN=13), PARAMETER :: xmlpun      = xmlpun_base // '.xml'
   !
   ! ... The units where various variables are saved
+  ! ... Only units that are kept open during the run should be listed here
   !
   INTEGER :: iunres      =  1 ! unit for the restart of the run
   INTEGER :: iunpun      =  4 ! unit for saving the final results
@@ -52,7 +53,7 @@ MODULE io_files
   INTEGER :: iunoldwfc2  = 12 ! as above at step -2
   INTEGER :: iunat       = 13 ! unit for saving (orthogonal) atomic wfcs 
   INTEGER :: iunsat      = 14 ! unit for saving (orthogonal) atomic wfcs * S
-  INTEGER :: iunocc      = 15 ! unit for saving the atomic n_{ij}
+  INTEGER :: iunmix      = 15 ! unit for saving mixing information
   INTEGER :: iunigk      = 16 ! unit for saving indices
   INTEGER :: iunpaw      = 17 ! unit for saving paw becsum and D_Hxc
   !

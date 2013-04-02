@@ -22,7 +22,7 @@ SUBROUTINE force_hub(forceh)
                                     hubbard_alpha, U_projection, &
                                     swfcatom, lda_plus_u_kind, oatwfc
    USE symme,                ONLY : symvector
-   USE io_files,             ONLY : prefix, iunocc
+   USE io_files,             ONLY : prefix
    USE wvfct,                ONLY : nbnd, npwx, npw, igk
    USE control_flags,        ONLY : gamma_only
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
