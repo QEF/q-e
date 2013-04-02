@@ -47,7 +47,7 @@ SUBROUTINE electrons()
                                    gamma_only, iverbosity, textfor,     &
                                    llondon, scf_must_converge
   USE io_files,             ONLY : iunwfc, iunmix, nwordwfc, output_drho, &
-                                   iunefield, iunpaw
+                                   iunefield
   USE buffers,              ONLY : save_buffer
   USE ldaU,                 ONLY : eth, Hubbard_U, Hubbard_lmax, &
                                    niter_with_fixed_ns, lda_plus_u
