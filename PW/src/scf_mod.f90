@@ -422,7 +422,7 @@ CONTAINS
    start_ldaU = start_kin + rlen_kin / 2
    start_bec = start_ldaU + ( rlen_ldaU + 1 ) / 2 
    start_dipole = start_bec + ( rlen_bec + 1 ) / 2
-   ! define total record length, in complex number
+   ! define total record length, in complex numbers
    record_length = start_dipole + rlen_dip - 1
    ! open file and allocate io_buffer
    call open_buffer ( iunit, extension, record_length, io_level, exst)
