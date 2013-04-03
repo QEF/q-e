@@ -19,6 +19,7 @@ SUBROUTINE electrons()
   ! ... the separate contributions.
   !
   USE kinds,                ONLY : DP
+  USE check_stop,           ONLY : check_stop_now
   USE constants,            ONLY : eps8, pi
   USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
@@ -224,7 +225,10 @@ SUBROUTINE electrons()
   !
   DO idum = 1, niter
      !
-     IF ( check_stop_now() ) RETURN
+     IF ( check_stop_now(stdout) ) THEN
+        conv_elec=.FALSE.
+        RETURN
+     END IF
      !
      iter = iter + 1
      !
@@ -278,7 +282,10 @@ SUBROUTINE electrons()
            !
         END IF
         !
-        IF ( check_stop_now() ) RETURN
+        IF ( check_stop_now(stdout) ) THEN
+           conv_elec=.FALSE.
+           RETURN
+        END IF
         !
         ! ... xk, wk, isk, et, wg are distributed across pools;
         ! ... the first node has a complete copy of xk, wk, isk,
@@ -887,27 +894,6 @@ SUBROUTINE electrons()
        RETURN
        !
      END SUBROUTINE compute_magnetization
-     !
-     !-----------------------------------------------------------------------
-     FUNCTION check_stop_now()
-       !-----------------------------------------------------------------------
-       !
-       USE check_stop,    ONLY : global_check_stop_now => check_stop_now
-       !
-       IMPLICIT NONE
-       !
-       LOGICAL :: check_stop_now
-       INTEGER :: unit
-       !
-       unit = stdout
-       !
-       check_stop_now = global_check_stop_now( unit )
-       !
-       IF ( check_stop_now ) conv_elec = .FALSE.
-       !
-       RETURN
-       !
-     END FUNCTION check_stop_now
      !
      !-----------------------------------------------------------------------
      FUNCTION delta_e()
