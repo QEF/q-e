@@ -24,7 +24,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
-  USE control_flags,        ONLY : ethr, isolve, io_level
+  USE control_flags,        ONLY : ethr, isolve
   USE ldaU,                 ONLY : lda_plus_u, swfcatom, U_projection
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions_module, ONLY : evc
@@ -110,7 +110,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
      ! ... read in wavefunctions from the previous iteration
      !
-     IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) &
+     IF ( nks > 1 .OR. lelfield ) &
           CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
      !
      ! ... Needed for LDA+U
@@ -126,12 +126,12 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      ! ... iterative diagonalization of the next scf iteration
      ! ... and for rho calculation
      !
-     IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) &
+     IF ( nks > 1 .OR. lelfield ) &
           CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
      ! ... save restart information
      !
-     IF ( io_level > 1 ) CALL save_in_cbands( iter, ik, dr2 )
+     CALL save_in_cbands( iter, ik, dr2 )
      !
   END DO k_loop
   !
@@ -710,13 +710,13 @@ SUBROUTINE c_bands_nscf( ik_ )
      !
      call diag_bands ( iter, ik, avg_iter )
      !
-     ! ... save wave-functions (unless instructed not to save them)
+     ! ... save wave-functions (unless disabled in input)
+     ! ... and restart information
      !
-     IF ( io_level > -1 ) CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
-     !
-     ! ... save restart information
-     !
-     IF ( io_level > 0 ) CALL save_in_cbands( iter, ik, dr2 )
+     IF ( io_level > -1 ) THEN
+        CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+        CALL save_in_cbands( iter, ik, dr2 )
+     END IF
      !
      ! ... check is performed only if not interfering with phonon calc.
      !
@@ -751,7 +751,7 @@ SUBROUTINE c_bands_nscf( ik_ )
   CALL mp_sum( avg_iter, inter_pool_comm )
   avg_iter = avg_iter / nkstot
   !
-  WRITE( stdout, '( /,5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
+  WRITE( stdout, '(/,5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1)' ) &
        ethr, avg_iter
   !
   CALL stop_clock( 'c_bands' )

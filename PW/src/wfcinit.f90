@@ -94,12 +94,11 @@ SUBROUTINE wfcinit()
   !
   IF ( TRIM(starting_wfc) == 'file' ) THEN
      !
-     ! ... wavefunctions are read from file in routine c_bands, but
-     ! ... not if there is a single k-point, unless high I/O is required
-     ! ... In such a case, store wavefunctions in memory
+     ! ... wavefunctions are read from file (or buffer) in routine 
+     ! ... c_bands, but not if there is a single k-point. In such
+     ! ... a case, store wavefunctions in memory here
      !
-     IF ( nks == 1 .AND. (io_level < 2) ) &
-        CALL get_buffer ( evc, nwordwfc, iunwfc, 1 )
+     IF ( nks == 1 ) CALL get_buffer ( evc, nwordwfc, iunwfc, 1 )
      CALL stop_clock( 'wfcinit' )
      RETURN
      !

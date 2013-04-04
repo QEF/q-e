@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -226,6 +226,10 @@ SUBROUTINE electrons()
   DO idum = 1, niter
      !
      IF ( check_stop_now() ) THEN
+        IF ( nks == 1 .AND. .NOT. lelfield ) &
+            CALL save_buffer ( evc, nwordwfc, iunwfc, nks )
+        CALL write_rho( rho, nspin )
+        CALL close_mix_file( iunmix, 'keep' )
         conv_elec=.FALSE.
         RETURN
      END IF
@@ -283,6 +287,10 @@ SUBROUTINE electrons()
         END IF
         !
         IF ( check_stop_now() ) THEN
+           IF ( nks == 1 .AND. .NOT. lelfield ) &
+              CALL save_buffer ( evc, nwordwfc, iunwfc, nks )
+           CALL write_rho( rho, nspin )
+           CALL close_mix_file( iunmix, 'keep' )
            conv_elec=.FALSE.
            RETURN
         END IF
@@ -296,7 +304,9 @@ SUBROUTINE electrons()
         CALL poolrecover( et, nbnd, nkstot, nks )
         !
         ! ... the new density is computed here
+        !
         CALL sum_band()
+        !
         ! PAW : sum_band computes new becsum (stored in uspp modules) and a
         ! subtly different copy in rho%bec (scf module)
         !
@@ -394,8 +404,8 @@ SUBROUTINE electrons()
            !
         END IF
         !
-        not_converged_electrons : &
         IF ( .NOT. conv_elec ) THEN
+           !
            ! ... no convergence yet: calculate new potential from mixed
            ! ... charge density (i.e. the new estimate)
            !
@@ -419,23 +429,15 @@ SUBROUTINE electrons()
            !
            CALL scf_type_COPY( rhoin, rho )
            !
-           ! ... write the charge density to file
-           ! ... also write ldaU ns coeffs and PAW becsum
+        ELSE 
            !
-           CALL write_rho( rho, nspin )
-           !
-        ELSE not_converged_electrons
-           !
-           CALL close_mix_file( iunmix, 'delete' )
            ! ... convergence reached:
-           ! ... 1) the output HXC-potential is saved in vr
+           ! ... 1) the output HXC-potential is saved in v
            ! ... 2) vnew contains V(out)-V(in) ( used to correct the forces ).
            !
            vnew%of_r(:,:) = v%of_r(:,:)
-           !
            CALL v_of_rho( rho,rho_core,rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
-           !
            vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
            !
            IF (okpaw) THEN
@@ -443,12 +445,18 @@ SUBROUTINE electrons()
               CALL PAW_symmetrize_ddd(ddd_paw)
            ENDIF
            !
+           ! ... remove mixing info, write the charge density to file
+           ! ... (also write ldaU ns coeffs and PAW becsum)
+           !
+           CALL close_mix_file( iunmix, 'delete' )
+           CALL write_rho( rho, nspin )
+           !
            ! ... note that rho is here the output, not mixed, charge density
            ! ... so correction for variational energy is no longer needed
            !
            descf = 0._dp
            !
-        END IF not_converged_electrons
+        END IF 
         !
         IF ( exx_is_active() ) THEN
            !
@@ -496,12 +504,13 @@ SUBROUTINE electrons()
      ! ... term in the nonlocal potential
      !
      ! ... PAW: newd contains PAW updates of NL coefficients
+     !
      CALL newd()
      !
-     ! ... save converged wfc if they have not been written previously
+     ! ... write restart file
      !
-     IF ( nks == 1 .AND. (io_level < 2) ) &
-        CALL save_buffer ( evc, nwordwfc, iunwfc, nks )
+     CALL save_in_electrons( iter, dr2 )
+     ! ... save converged wfc if they have not been written previously
      !
      ! ... calculate the polarization
      !
@@ -510,10 +519,6 @@ SUBROUTINE electrons()
      ELSE
         en_el=0.d0 
      ENDIF
-     !
-     ! ... write recover file
-     !
-     CALL save_in_electrons( iter, dr2 )
      !
      IF ( ( MOD( iter, report ) == 0 ) .OR. &
           ( report /= 0 .AND. conv_elec ) ) THEN

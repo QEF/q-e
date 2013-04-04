@@ -27,6 +27,7 @@ SUBROUTINE close_files(lflag)
   LOGICAL, intent(in) :: lflag
   !
   LOGICAL :: opnd
+  !
   !  ... close buffer/file containing wavefunctions: discard if
   !  ... wavefunctions are written in xml format, save otherwise
   !
