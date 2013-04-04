@@ -825,6 +825,10 @@ SUBROUTINE iosys()
      !
      io_level = 2
      !
+  CASE ( 'medium' )
+     !
+     io_level = 1
+     !
   CASE ( 'low' )
      !
      io_level = 0
@@ -839,7 +843,7 @@ SUBROUTINE iosys()
      !
   CASE DEFAULT
      !
-     io_level = 1
+     io_level = 0
      !
   END SELECT
   !
@@ -1512,7 +1516,7 @@ SUBROUTINE iosys()
   !
   CALL deallocate_input_parameters ()  
   !
-  ! ... Next lines to be moved out of this routine
+  ! ... Initialize temporary directory(-ies)
   !
   CALL check_tempdir ( tmp_dir, exst, parallelfs )
   IF ( .NOT. exst .AND. restart ) THEN
