@@ -23,26 +23,19 @@ SUBROUTINE stop_run( lflag )
   LOGICAL, INTENT(IN) :: lflag
   LOGICAL             :: exst, opnd
   !
-  !
-  !
-  ! ... iunwfc contains wavefunctions and is kept open during
-  ! ... the execution - close the file and save it (or delete it 
-  ! ... if the wavefunctions are already stored in the .save file)
-  !
   IF (lflag ) THEN
+     ! 
+     ! ... remove files needed only to restart
+     !
      CALL seqopn( iuntmp, 'restart', 'UNFORMATTED', exst )
      CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
-  ENDIF
-
-  IF ( lflag .AND. ionode ) THEN
      !
-     ! ... all other files must be reopened and removed
-     !
-     CALL seqopn( iuntmp, 'update', 'FORMATTED', exst )
-     CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
-     !
-     CALL seqopn( iuntmp, 'para', 'FORMATTED', exst )
-     CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
+     IF ( ionode ) THEN
+        CALL seqopn( iuntmp, 'update', 'FORMATTED', exst )
+        CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
+        CALL seqopn( iuntmp, 'para', 'FORMATTED', exst )
+        CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
+     END IF
      !
   END IF
   !

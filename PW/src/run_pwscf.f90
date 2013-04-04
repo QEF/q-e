@@ -12,7 +12,7 @@ SUBROUTINE run_pwscf ( conv )
   ! ... Run an instance of the Plane Wave Self-Consistent Field code 
   ! ... MPI initialization and input data reading is performed in the 
   ! ... calling code - returns in "conv" whether successfully completed
-  ! ... Will be eventualy merged with NEB
+  ! ... Will be eventually merged with NEB
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
@@ -32,6 +32,7 @@ SUBROUTINE run_pwscf ( conv )
   LOGICAL, INTENT(OUT) :: conv
   !
   !
+  CONV = .false.
   IF ( ionode ) WRITE( unit = stdout, FMT = 9010 ) ntypx, npk, lmaxx
   !
   IF (ionode) CALL plugin_arguments()
@@ -62,11 +63,10 @@ SUBROUTINE run_pwscf ( conv )
   !
   CALL init_run()
   !
-  IF ( check_stop_now() ) THEN
-     CALL punch( 'all' )
-     conv = .TRUE.
-     RETURN
-  ENDIF
+  ! ... dry run: code will stop here if called with exit file present
+  ! ... useful for a quick and automated way to check input data
+  !
+  IF ( check_stop_now() ) RETURN
   !
   main_loop: DO
      !
@@ -74,10 +74,11 @@ SUBROUTINE run_pwscf ( conv )
      !
      CALL electrons()
      !
-     IF ( .NOT. conv_elec ) THEN
-       CALL punch( 'all' )
-       conv = .FALSE.
-       RETURN
+     ! ... code stopped by user or not converged
+     !
+     IF ( check_stop_now() .OR. .NOT. conv_elec ) THEN
+        CALL punch( 'config' )
+        RETURN
      ENDIF
      !
      ! ... ionic section starts here
