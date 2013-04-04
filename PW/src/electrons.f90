@@ -225,7 +225,7 @@ SUBROUTINE electrons()
   !
   DO idum = 1, niter
      !
-     IF ( check_stop_now(stdout) ) THEN
+     IF ( check_stop_now() ) THEN
         conv_elec=.FALSE.
         RETURN
      END IF
@@ -282,7 +282,7 @@ SUBROUTINE electrons()
            !
         END IF
         !
-        IF ( check_stop_now(stdout) ) THEN
+        IF ( check_stop_now() ) THEN
            conv_elec=.FALSE.
            RETURN
         END IF

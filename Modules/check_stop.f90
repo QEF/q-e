@@ -23,10 +23,9 @@ MODULE check_stop
   SAVE
   !
   REAL(DP) :: max_seconds = 1.E+7_DP
-  !
-  LOGICAL, PRIVATE :: tinit = .FALSE.
-  !
   REAL(DP) :: init_second
+  LOGICAL :: exiting = .FALSE.
+  LOGICAL, PRIVATE :: tinit = .FALSE.
   !
   CONTAINS
      !
@@ -42,7 +41,6 @@ MODULE check_stop
 #if defined __TRAP_SIGUSR1
        USE set_signal,       ONLY : signal_trap_init
 #endif
-
        !
        IMPLICIT NONE
        !
@@ -91,6 +89,10 @@ MODULE check_stop
        REAL(DP)           :: seconds
        REAL(DP), EXTERNAL :: cclock
        !
+       IF ( exiting ) THEN
+          check_stop_now = .TRUE.
+          RETURN
+       END IF
        !
        ! ... cclock is a C function returning the elapsed solar
        ! ... time in seconds since the Epoch ( 00:00:00 1/1/1970 )
@@ -165,6 +167,8 @@ MODULE check_stop
           END IF
           !
        END IF
+       !
+       exiting = check_stop_now
        !
        RETURN
        !
