@@ -19,7 +19,7 @@ MODULE scf
   USE lsda_mod,     ONLY : nspin
   USE ldaU,         ONLY : lda_plus_u, Hubbard_lmax
   USE ions_base,    ONLY : nat
-  USE buffers,      ONLY : open_buffer, get_buffer, save_buffer
+  USE buffers,      ONLY : open_buffer, close_buffer, get_buffer, save_buffer
   USE funct,        ONLY : dft_is_meta
   USE fft_base,     ONLY : dfftp
   USE fft_interfaces,ONLY: invfft
@@ -438,7 +438,7 @@ CONTAINS
    integer, intent(in) :: iunit
    character(len=*), intent(in) :: stat
    deallocate (io_buffer)
-   close(iunit,status=trim(stat))
+   call close_buffer ( iunit, trim(stat) ) 
    return
  end subroutine close_mix_file
 
