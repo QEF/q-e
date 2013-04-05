@@ -81,7 +81,7 @@ SUBROUTINE run_nscf(do_band, iq)
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!!END OF ACFDT TEST !!!!!!!!!!!!!!!!
 !
-  IF (do_band) CALL electrons()
+  IF (do_band) CALL non_scf ( 0 )
   !
   IF (.NOT.reduce_io.and.do_band) THEN
 !
