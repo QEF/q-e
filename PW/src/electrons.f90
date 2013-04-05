@@ -292,49 +292,47 @@ SUBROUTINE electrons()
         !
         CALL poolrecover( et, nbnd, nkstot, nks )
         !
-        ! ... the new density is computed here
+        ! ... the new density is computed here. For PAW:
+        ! ... sum_band computes new becsum (stored in uspp modules)
+        ! ... and a subtly different copy in rho%bec (scf module)
         !
         CALL sum_band()
-        !
-        ! PAW : sum_band computes new becsum (stored in uspp modules) and a
-        ! subtly different copy in rho%bec (scf module)
         !
         ! ... the Harris-Weinert-Foulkes energy is computed here using only
         ! ... quantities obtained from the input density
         !
         hwf_energy = eband + deband_hwf + (etxc - etxcc) + ewld + ehart + demet
+        If ( okpaw ) hwf_energy = hwf_energy + epaw
+        IF ( lda_plus_u ) hwf_energy = hwf_energy + eth
         !
         IF ( lda_plus_u )  THEN
            !
-           hwf_energy = hwf_energy + eth
-           !
            IF ( iverbosity > 0 .OR. first ) THEN
-            IF (noncolin) THEN
-              CALL write_ns_nc()
-            ELSE
-              CALL write_ns()
-            ENDIF
+              IF (noncolin) THEN
+                 CALL write_ns_nc()
+              ELSE
+                 CALL write_ns()
+              ENDIF
            ENDIF
            !
            IF ( first .AND. istep == 0 .AND. starting_pot == 'atomic' ) THEN
               CALL ns_adj()
               IF (noncolin) THEN
-                rhoin%ns_nc = rho%ns_nc
+                 rhoin%ns_nc = rho%ns_nc
               ELSE
-                rhoin%ns = rho%ns
+                 rhoin%ns = rho%ns
               ENDIF
            END IF
            IF ( iter <= niter_with_fixed_ns ) THEN
               WRITE( stdout, '(/,5X,"RESET ns to initial values (iter <= mixing_fixed_ns)",/)')
               IF (noncolin) THEN
-                rho%ns_nc = rhoin%ns_nc
+                 rho%ns_nc = rhoin%ns_nc
               ELSE
-                rho%ns = rhoin%ns
+                 rho%ns = rhoin%ns
               ENDIF
            END IF
            !
         END IF
-        IF (okpaw) hwf_energy = hwf_energy + epaw
         !
         ! ... calculate total and absolute magnetization
         !
@@ -503,11 +501,7 @@ SUBROUTINE electrons()
      !
      ! ... calculate the polarization
      !
-     IF ( lelfield ) THEN
-        CALL calc_pol (en_el)
-     ELSE
-        en_el=0.d0 
-     ENDIF
+     IF ( lelfield ) en_el =  calc_pol ( )
      !
      IF ( ( MOD( iter, report ) == 0 ) .OR. &
           ( report /= 0 .AND. conv_elec ) ) THEN
@@ -544,8 +538,13 @@ SUBROUTINE electrons()
         END IF
      END IF
      !
-     etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf +en_el
+     etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
+     !
      IF (okpaw) etot = etot + epaw
+     IF ( lda_plus_u ) etot = etot + eth
+     !
+     IF ( lelfield ) etot = etot + en_el
+     ! not sure about the HWF functional in the above case
      IF( textfor ) THEN
         eext =  compute_eextfor()
         etot = etot + eext
@@ -558,7 +557,6 @@ SUBROUTINE electrons()
      etot = etot - 0.5D0*fock0
      hwf_energy = hwf_energy -0.5D0*fock0
      !
-     IF ( lda_plus_u ) etot = etot + eth
      IF ( tefield ) THEN
         etot = etot + etotefield
         hwf_energy = hwf_energy + etotefield
@@ -856,7 +854,7 @@ SUBROUTINE electrons()
      END FUNCTION delta_escf
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE calc_pol ( en_el )
+     FUNCTION calc_pol ( ) RESULT ( en_el )
        !-----------------------------------------------------------------------
        !
        USE kinds,     ONLY : DP
@@ -866,7 +864,7 @@ SUBROUTINE electrons()
                              transform_el, efield_cart
        !
        IMPLICIT NONE
-       REAL (DP), INTENT(out) :: en_el
+       REAL (DP) :: en_el
        !
        INTEGER :: i, j 
        REAL(DP):: sca, el_pol_cart(3),  el_pol_acc_cart(3)
@@ -942,7 +940,7 @@ SUBROUTINE electrons()
           endif
        ENDIF
        !
-     END SUBROUTINE calc_pol
+     END FUNCTION calc_pol
      !
      !-----------------------------------------------------------------------
      SUBROUTINE print_energies ( )
