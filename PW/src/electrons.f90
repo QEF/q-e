@@ -20,7 +20,6 @@ SUBROUTINE electrons()
   !
   USE kinds,                ONLY : DP
   USE check_stop,           ONLY : check_stop_now
-  USE constants,            ONLY : eps8, pi
   USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
   USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor
@@ -43,7 +42,7 @@ SUBROUTINE electrons()
                                    rho, rho_core, rhog_core, v, vltot, vrs, &
                                    kedtau, vnew
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
-                                   iprint, istep, lmd, conv_elec, &
+                                   iprint, istep, conv_elec, &
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
                                    llondon, scf_must_converge
@@ -559,6 +558,20 @@ SUBROUTINE electrons()
      etot = etot - 0.5D0*fock0
      hwf_energy = hwf_energy -0.5D0*fock0
      !
+     IF ( lda_plus_u ) etot = etot + eth
+     IF ( tefield ) THEN
+        etot = etot + etotefield
+        hwf_energy = hwf_energy + etotefield
+     END IF
+     !
+#ifdef __ENVIRON
+     !
+     ! ... adds the external environment contribution to the energy
+     !
+     IF ( do_environ ) etot = etot + deenviron + esolvent + ecavity + & 
+                              epressure + eperiodic + eioncc
+#endif
+     !
      IF ( dft_is_hybrid() .AND. conv_elec ) THEN
         !
         first = .NOT. exx_is_active()
@@ -606,93 +619,7 @@ SUBROUTINE electrons()
         !
      END IF
      !
-     IF ( lda_plus_u ) etot = etot + eth
-     IF ( tefield ) THEN
-        etot = etot + etotefield
-        hwf_energy = hwf_energy + etotefield
-     END IF
-     !
-#ifdef __ENVIRON
-     !
-     ! ... adds the external environment contribution to the energy
-     !
-     IF ( do_environ ) etot = etot + deenviron + esolvent + ecavity + & 
-                              epressure + eperiodic + eioncc
-#endif
-     !
-     IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
-        !
-        IF ( dr2 > eps8 ) THEN
-           WRITE( stdout, 9081 ) etot, hwf_energy, dr2
-        ELSE
-           WRITE( stdout, 9083 ) etot, hwf_energy, dr2
-        END IF
-        IF ( only_paw ) WRITE( stdout, 9085 ) etot+total_core_energy
-        !
-        WRITE( stdout, 9060 ) &
-            ( eband + deband ), ehart, ( etxc - etxcc ), ewld
-        !
-        IF ( llondon ) WRITE ( stdout , 9074 ) elondon
-        !
-        IF ( dft_is_hybrid()) THEN
-           WRITE( stdout, 9062 ) - fock1
-           WRITE( stdout, 9064 ) 0.5D0*fock2
-        ENDIF
-        !
-        IF ( textfor)             WRITE( stdout, &
-            '(/5x,"Energy of the external Forces = ", F18.8)' ) eext
-        IF ( tefield )            WRITE( stdout, 9061 ) etotefield
-        IF ( lda_plus_u )         WRITE( stdout, 9065 ) eth
-        IF ( ABS (descf) > eps8 ) WRITE( stdout, 9069 ) descf
-        IF ( okpaw )              WRITE( stdout, 9067 ) epaw
-        !
-        ! ... With Fermi-Dirac population factor, etot is the electronic
-        ! ... free energy F = E - TS , demet is the -TS contribution
-        !
-        IF ( lgauss ) WRITE( stdout, 9070 ) demet
-        !
-     ELSE IF ( conv_elec .AND. lmd ) THEN
-        !
-        IF ( dr2 > eps8 ) THEN
-           WRITE( stdout, 9081 ) etot, hwf_energy, dr2
-        ELSE
-           WRITE( stdout, 9083 ) etot, hwf_energy, dr2
-        END IF
-        !
-     ELSE
-        !
-        IF ( dr2 > eps8 ) THEN
-           WRITE( stdout, 9080 ) etot, hwf_energy, dr2
-        ELSE
-           WRITE( stdout, 9082 ) etot, hwf_energy, dr2
-        END IF
-     END IF
-     !
-#ifdef __ENVIRON
-     IF ( do_environ )  THEN
-        IF ( env_static_permittivity .GT. 1.D0 ) WRITE( stdout, 9201 ) esolvent
-        IF ( env_surface_tension .GT. 0.D0 ) WRITE( stdout, 9202 ) ecavity
-        IF ( env_pressure .NE. 0.D0 ) WRITE( stdout, 9203 ) epressure
-        IF ( env_ioncc_concentration .GT. 0.D0 ) THEN 
-          WRITE( stdout, 9205 ) eioncc
-        ELSE IF ( env_periodicity .NE. 3 ) THEN
-          WRITE( stdout, 9204 ) eperiodic
-        ENDIF
-     ENDIF
-     !
-#endif
-     !
-     IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
-     !
-     IF ( noncolin .AND. domag ) &
-        WRITE( stdout, 9018 ) magtot_nc(1:3), absmag
-     !
-     IF ( i_cons == 3 .OR. i_cons == 4 )  &
-        WRITE( stdout, 9071 ) bfield(1), bfield(2), bfield(3)
-     IF ( i_cons /= 0 .AND. i_cons < 4 ) &
-        WRITE( stdout, 9073 ) lambda
-     !
-     CALL flush_unit( stdout )
+     CALL print_energies ( )
      !
      IF ( conv_elec ) THEN
         !
@@ -770,54 +697,14 @@ SUBROUTINE electrons()
 9001 FORMAT(/'     per-process dynamical memory: ',f7.1,' Mb' )
 9002 FORMAT(/'     Self-consistent Calculation' )
 9010 FORMAT(/'     iteration #',I3,'     ecut=', F9.2,' Ry',5X,'beta=',F4.2 )
-9017 FORMAT(/'     total magnetization       =', F9.2,' Bohr mag/cell', &
-            /'     absolute magnetization    =', F9.2,' Bohr mag/cell' )
-9018 FORMAT(/'     total magnetization       =',3F9.2,' Bohr mag/cell' &
-       &   ,/'     absolute magnetization    =', F9.2,' Bohr mag/cell' )
 9050 FORMAT(/'     WARNING: integrated charge=',F15.8,', expected=',F15.8 )
-9060 FORMAT(/'     The total energy is the sum of the following terms:',/,&
-            /'     one-electron contribution =',F17.8,' Ry' &
-            /'     hartree contribution      =',F17.8,' Ry' &
-            /'     xc contribution           =',F17.8,' Ry' &
-            /'     ewald contribution        =',F17.8,' Ry' )
-9061 FORMAT( '     electric field correction =',F17.8,' Ry' )
-9062 FORMAT( '     - averaged Fock potential =',F17.8,' Ry' )
-9064 FORMAT( '     + Fock energy             =',F17.8,' Ry' )
-9065 FORMAT( '     Hubbard energy            =',F17.8,' Ry' )
 9066 FORMAT( '     est. exchange err (dexx)  =',F17.8,' Ry' )
-9067 FORMAT( '     one-center paw contrib.   =',F17.8,' Ry' )
-9069 FORMAT( '     scf correction            =',F17.8,' Ry' )
-9070 FORMAT( '     smearing contrib. (-TS)   =',F17.8,' Ry' )
-9071 FORMAT( '     Magnetic field            =',3F12.7,' Ry' )
-9072 FORMAT( '     Magnetic field            =',F12.7, ' Ry' )
-9073 FORMAT( '     lambda                    =',F11.2,' Ry' )
-9074 FORMAT( '     Dispersion Correction     =',F17.8,' Ry' )
-9080 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
-            /'     estimated scf accuracy    <',0PF17.8,' Ry' )
-9081 FORMAT(/'!    total energy              =',0PF17.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
-            /'     estimated scf accuracy    <',0PF17.8,' Ry' )
-9082 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
-            /'     estimated scf accuracy    <',1PE17.1,' Ry' )
-9083 FORMAT(/'!    total energy              =',0PF17.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
-            /'     estimated scf accuracy    <',1PE17.1,' Ry' )
-9085 FORMAT(/'     total all-electron energy =',0PF17.6,' Ry' )
 9101 FORMAT(/'     End of self-consistent calculation' )
 9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
 9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
 9122 FORMAT(/'     WARNING: convergence NOT achieved after ',i3,' iterations' )
 9121 FORMAT(/'     scf convergence threshold =',1PE17.1,' Ry' )
-#ifdef __ENVIRON
 9200 FORMAT(/'     add environment contribution to local potential')
-9201 FORMAT( '     solvation energy          =',F17.8,' Ry' ) 
-9202 FORMAT( '     cavitation energy         =',F17.8,' Ry' ) 
-9203 FORMAT( '     PV energy                 =',F17.8,' Ry' ) 
-9204 FORMAT( '     periodic energy correct.  =',F17.8,' Ry' )
-9205 FORMAT( '     ionic charge energy       =',F17.8,' Ry' )
-#endif
   !
   CONTAINS
      !
@@ -1009,7 +896,8 @@ SUBROUTINE electrons()
           do i=1,3
              do j=1,3
                 !el_pol_cart(i)=el_pol_cart(i)+transform_el(j,i)*el_pol(j)
-                el_pol_cart(i)=el_pol_cart(i)+at(i,j)*el_pol(j)/(dsqrt(at(1,j)**2.d0+at(2,j)**2.d0+at(3,j)**2.d0))
+                el_pol_cart(i)=el_pol_cart(i)+at(i,j)*el_pol(j) / &
+                               (sqrt(at(1,j)**2.d0+at(2,j)**2.d0+at(3,j)**2.d0))
              enddo
           enddo
 
@@ -1056,4 +944,130 @@ SUBROUTINE electrons()
        !
      END SUBROUTINE calc_pol
      !
+     !-----------------------------------------------------------------------
+     SUBROUTINE print_energies ( )
+       !-----------------------------------------------------------------------
+       !
+       USE constants, ONLY : eps8
+       USE control_flags, ONLY : lmd
+       !
+       IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
+          !
+          IF ( dr2 > eps8 ) THEN
+             WRITE( stdout, 9081 ) etot, hwf_energy, dr2
+          ELSE
+             WRITE( stdout, 9083 ) etot, hwf_energy, dr2
+          END IF
+          IF ( only_paw ) WRITE( stdout, 9085 ) etot+total_core_energy
+          !
+          WRITE( stdout, 9060 ) &
+               ( eband + deband ), ehart, ( etxc - etxcc ), ewld
+          !
+          IF ( llondon ) WRITE ( stdout , 9074 ) elondon
+          !
+          IF ( dft_is_hybrid()) THEN
+             WRITE( stdout, 9062 ) - fock1
+             WRITE( stdout, 9064 ) 0.5D0*fock2
+          ENDIF
+          !
+          IF ( textfor)             WRITE( stdout, &
+               '(/5x,"Energy of the external Forces = ", F18.8)' ) eext
+          IF ( tefield )            WRITE( stdout, 9061 ) etotefield
+          IF ( lda_plus_u )         WRITE( stdout, 9065 ) eth
+          IF ( ABS (descf) > eps8 ) WRITE( stdout, 9069 ) descf
+          IF ( okpaw )              WRITE( stdout, 9067 ) epaw
+          !
+          ! ... With Fermi-Dirac population factor, etot is the electronic
+          ! ... free energy F = E - TS , demet is the -TS contribution
+          !
+          IF ( lgauss ) WRITE( stdout, 9070 ) demet
+          !
+       ELSE IF ( conv_elec .AND. lmd ) THEN
+          !
+          IF ( dr2 > eps8 ) THEN
+             WRITE( stdout, 9081 ) etot, hwf_energy, dr2
+          ELSE
+             WRITE( stdout, 9083 ) etot, hwf_energy, dr2
+          END IF
+          !
+       ELSE
+          !
+          IF ( dr2 > eps8 ) THEN
+             WRITE( stdout, 9080 ) etot, hwf_energy, dr2
+          ELSE
+             WRITE( stdout, 9082 ) etot, hwf_energy, dr2
+          END IF
+       END IF
+       !
+#ifdef __ENVIRON
+       IF ( do_environ )  THEN
+          IF ( env_static_permittivity .GT. 1.D0 ) WRITE( stdout, 9201 ) esolvent
+          IF ( env_surface_tension .GT. 0.D0 ) WRITE( stdout, 9202 ) ecavity
+          IF ( env_pressure .NE. 0.D0 ) WRITE( stdout, 9203 ) epressure
+          IF ( env_ioncc_concentration .GT. 0.D0 ) THEN 
+             WRITE( stdout, 9205 ) eioncc
+          ELSE IF ( env_periodicity .NE. 3 ) THEN
+             WRITE( stdout, 9204 ) eperiodic
+          ENDIF
+       ENDIF
+       !
+#endif
+       !
+       IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
+       !
+       IF ( noncolin .AND. domag ) &
+            WRITE( stdout, 9018 ) magtot_nc(1:3), absmag
+       !
+       IF ( i_cons == 3 .OR. i_cons == 4 )  &
+            WRITE( stdout, 9071 ) bfield(1), bfield(2), bfield(3)
+       IF ( i_cons /= 0 .AND. i_cons < 4 ) &
+            WRITE( stdout, 9073 ) lambda
+       !
+       CALL flush_unit( stdout )
+       !
+       RETURN
+       !
+9017 FORMAT(/'     total magnetization       =', F9.2,' Bohr mag/cell', &
+            /'     absolute magnetization    =', F9.2,' Bohr mag/cell' )
+9018 FORMAT(/'     total magnetization       =',3F9.2,' Bohr mag/cell' &
+       &   ,/'     absolute magnetization    =', F9.2,' Bohr mag/cell' )
+9060 FORMAT(/'     The total energy is the sum of the following terms:',/,&
+            /'     one-electron contribution =',F17.8,' Ry' &
+            /'     hartree contribution      =',F17.8,' Ry' &
+            /'     xc contribution           =',F17.8,' Ry' &
+            /'     ewald contribution        =',F17.8,' Ry' )
+9061 FORMAT( '     electric field correction =',F17.8,' Ry' )
+9062 FORMAT( '     - averaged Fock potential =',F17.8,' Ry' )
+9064 FORMAT( '     + Fock energy             =',F17.8,' Ry' )
+9065 FORMAT( '     Hubbard energy            =',F17.8,' Ry' )
+9067 FORMAT( '     one-center paw contrib.   =',F17.8,' Ry' )
+9069 FORMAT( '     scf correction            =',F17.8,' Ry' )
+9070 FORMAT( '     smearing contrib. (-TS)   =',F17.8,' Ry' )
+9071 FORMAT( '     Magnetic field            =',3F12.7,' Ry' )
+9072 FORMAT( '     Magnetic field            =',F12.7, ' Ry' )
+9073 FORMAT( '     lambda                    =',F11.2,' Ry' )
+9074 FORMAT( '     Dispersion Correction     =',F17.8,' Ry' )
+9080 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
+            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
+            /'     estimated scf accuracy    <',0PF17.8,' Ry' )
+9081 FORMAT(/'!    total energy              =',0PF17.8,' Ry' &
+            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
+            /'     estimated scf accuracy    <',0PF17.8,' Ry' )
+9082 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
+            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
+            /'     estimated scf accuracy    <',1PE17.1,' Ry' )
+9083 FORMAT(/'!    total energy              =',0PF17.8,' Ry' &
+            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
+            /'     estimated scf accuracy    <',1PE17.1,' Ry' )
+9085 FORMAT(/'     total all-electron energy =',0PF17.6,' Ry' )
+#ifdef __ENVIRON
+9201 FORMAT( '     solvation energy          =',F17.8,' Ry' ) 
+9202 FORMAT( '     cavitation energy         =',F17.8,' Ry' ) 
+9203 FORMAT( '     PV energy                 =',F17.8,' Ry' ) 
+9204 FORMAT( '     periodic energy correct.  =',F17.8,' Ry' )
+9205 FORMAT( '     ionic charge energy       =',F17.8,' Ry' )
+#endif
+
+  END SUBROUTINE print_energies
+  !
 END SUBROUTINE electrons
