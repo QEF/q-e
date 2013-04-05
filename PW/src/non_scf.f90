@@ -14,7 +14,7 @@
   !
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : lelfield, lberry, lorbm
-  USE control_flags,        ONLY : io_level
+  USE control_flags,        ONLY : io_level, conv_elec
   USE ener,                 ONLY : ef
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunwfc, nwordwfc, iunefield
@@ -73,8 +73,9 @@
   !
   WRITE( stdout, 9102 )
   !
-  ! ... write band eigenvalues
+  ! ... write band eigenvalues (conv_elec is used in print_ks_energies)
   !
+  conv_elec = .true.
   CALL print_ks_energies ( ) 
   !
   ! ... save converged wfc if they have not been written previously

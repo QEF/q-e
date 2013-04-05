@@ -70,9 +70,13 @@ SUBROUTINE run_pwscf ( conv )
   !
   main_loop: DO
      !
-     ! ... electronic self-consistency
+     ! ... electronic self-consistency or band structure calculation
      !
-     CALL electrons()
+     IF ( .NOT. lscf) THEN
+        CALL non_scf ( 0 )
+     ELSE
+        CALL electrons()
+     END IF
      !
      ! ... code stopped by user or not converged
      !

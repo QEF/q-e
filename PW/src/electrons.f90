@@ -43,7 +43,7 @@ SUBROUTINE electrons()
                                    rho, rho_core, rhog_core, v, vltot, vrs, &
                                    kedtau, vnew
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
-                                   iprint, istep, lscf, lmd, conv_elec, &
+                                   iprint, istep, lmd, conv_elec, &
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
                                    llondon, scf_must_converge
@@ -162,16 +162,6 @@ SUBROUTINE electrons()
   IF ( kilobytes > 0 ) WRITE( stdout, 9001 ) kilobytes/1000.0
   !
   CALL flush_unit( stdout )
-  !
-  IF ( .NOT. lscf ) THEN
-     !
-     conv_elec = .TRUE.
-     !
-     CALL non_scf (ik_)
-     !
-     RETURN
-     !
-  END IF
   !
   CALL start_clock( 'electrons' )
   !
