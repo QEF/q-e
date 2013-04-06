@@ -878,8 +878,8 @@ SUBROUTINE iosys()
             startingwfc /= 'atomic+random' .and. &
             startingwfc /= 'file' ) THEN
      !
-     CALL infomsg( 'iosys', 'wrong startingwfc: use default' )
-     startingwfc = 'atomic'
+     CALL infomsg( 'iosys', 'wrong startingwfc: use default (atomic+random)' )
+     startingwfc = 'atomic+random'
      !
   ENDIF
   ! 
