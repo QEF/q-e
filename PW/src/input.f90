@@ -1396,6 +1396,30 @@ SUBROUTINE iosys()
   !
   call cell_base_init ( ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
                         trd_ht, rd_ht, cell_units )
+
+  !
+  ! ... Files (for compatibility) and directories
+  !     This stuff must be done before calling read_config_from_file!
+  !
+  input_drho  = ' '
+  output_drho = ' '
+  tmp_dir = trimcheck ( outdir )
+  IF ( .not. trim( wfcdir ) == 'undefined' ) THEN
+     wfc_dir = trimcheck ( wfcdir )
+  ELSE
+     wfc_dir = tmp_dir
+  ENDIF
+  !
+  ! ... Read atomic positions and unit cell from data file, if needed,
+  !     overwriting what I just read before from the input
+  !
+  IF ( startingconfig == 'file' ) then
+     CALL read_config_from_file()
+  ELSE
+     ! I have to convert the units of tau only if it was read from input,
+     ! not if it was read from file
+     CALL convert_tau ( tau_format, nat_, tau)
+  END IF
   !
   ! ... set up k-points
   !
@@ -1406,8 +1430,6 @@ SUBROUTINE iosys()
      CALL errore ('iosys', 'Real space only with Gamma point', 1)
   IF ( lelfield .AND. gamma_only ) &
       CALL errore( 'iosys', 'electric fields not available for k=0 only', 1 )
-  !
-  CALL convert_tau ( tau_format, nat_, tau)
   !
   IF ( wmass == 0.D0 ) THEN
      !
@@ -1501,17 +1523,6 @@ SUBROUTINE iosys()
      CALL init_constraint( nat, tau, ityp, alat )
   END IF
   !
-  ! ... Files (for compatibility) and directories
-  !
-  input_drho  = ' '
-  output_drho = ' '
-  tmp_dir = trimcheck ( outdir )
-  IF ( .not. trim( wfcdir ) == 'undefined' ) THEN
-     wfc_dir = trimcheck ( wfcdir )
-  ELSE
-     wfc_dir = tmp_dir
-  ENDIF
-  !
   ! ... End of reading input parameters
   !
   CALL deallocate_input_parameters ()  
@@ -1530,10 +1541,7 @@ SUBROUTINE iosys()
   END IF
   IF ( TRIM(wfc_dir) /= TRIM(tmp_dir) ) &
      CALL check_tempdir( wfc_dir, exst, parallelfs )
-  !
-  ! ... Read atomic positions and unit cell from data file
-  !
-  IF ( startingconfig == 'file' ) CALL read_config_from_file()
+
   CALL restart_from_file()
   !
   RETURN
