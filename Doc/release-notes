@@ -1,3 +1,11 @@
+Incompatible changes in svn version:
+
+   * Routine "electrons" doesn't deal any longer with non-scf cases;
+     Use routine "non_scf" instead.
+   * restart mechanism of pw.x changed a lot. It works ONLY if you stop
+     the code cleanly with the prefix.EXIT file, or by setting "max_seconds".
+     Restarting from hard crashes is no longer supported.
+
 New in svn version:
 
    * dynmat.x can calculate phonon contribution to dielectric tensor

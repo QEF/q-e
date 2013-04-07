@@ -19,7 +19,7 @@ SUBROUTINE electrons()
   ! ... the separate contributions.
   !
   USE kinds,                ONLY : DP
-  USE check_stop,           ONLY : check_stop_now
+  USE check_stop,           ONLY : check_stop_now, stopped_by_user
   USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
   USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor
@@ -47,8 +47,8 @@ SUBROUTINE electrons()
                                    gamma_only, iverbosity, textfor,     &
                                    llondon, scf_must_converge
   USE io_files,             ONLY : iunwfc, iunmix, nwordwfc, output_drho, &
-                                   iunefield
-  USE buffers,              ONLY : save_buffer
+                                   iunres, iunefield, seqopn
+  USE buffers,              ONLY : save_buffer, close_buffer
   USE ldaU,                 ONLY : eth, Hubbard_U, Hubbard_lmax, &
                                    niter_with_fixed_ns, lda_plus_u
   USE extfield,             ONLY : tefield, etotefield
@@ -100,7 +100,7 @@ SUBROUTINE electrons()
       idum,         &! dummy counter on iterations
       iter,         &! counter on iterations
       ik_,          &! used to read ik from restart file
-      kilobytes
+      ios, kilobytes
   REAL(DP) :: &
       tr2_min,     &! estimated error on energy coming from diagonalization
       descf,       &! correction for variational energy
@@ -128,31 +128,37 @@ SUBROUTINE electrons()
   ENDIF
   !
   IF ( restart ) THEN
-     !
-     CALL restart_in_electrons( iter, ik_, dr2 )
-     !
-     IF ( ik_ == -1000 ) THEN
-        !
-        conv_elec = .TRUE.
-        !
-        IF ( output_drho /= ' ' ) CALL remove_atomic_rho ()
-        !
-        RETURN
-        !
+     CALL seqopn (iunres, 'restart_scf', 'formatted', exst)
+     IF ( exst ) THEN
+        ios = 0
+        READ (iunres, *, iostat=ios) iter, dr2
+        IF ( ios /= 0 ) THEN
+           iter = 0
+        ELSE IF ( iter < 0 .OR. iter > nks ) THEN
+           iter = 0
+        ELSE 
+           READ (iunres, *, iostat=ios) et (1:nbnd,1:nks)
+           IF (ios == 0) THEN
+              WRITE(stdout,'(5x,"Calculation restarted from iteration #",i6)')& 
+                 iter + 1
+           ELSE
+              et (1:nbnd,1:nks) = 0.0_dp
+           END IF
+        END IF
      END IF
-     !
-     IF( exx_is_active() ) THEN
-       iter = 0
-       call save_in_electrons( iter, dr2 )
-       WRITE( stdout, '(5x,"EXX: now go back to refine exchange calculation")')
-     ELSE IF ( dft_is_hybrid() .AND. TRIM(starting_wfc) == 'file' ) THEN
-       !
-       ! suggested by Hannu Komsa: useful when several calculations with 
-       ! different values of alpha have to be performed
-       !
-       call exx_restart(.true.)
-       WRITE( stdout, '(5x,"EXX: now go back to refine exchange calculation")')
-     ENDIF
+     CLOSE ( unit=iunres, status='delete')
+  !   IF( exx_is_active() ) THEN
+  !     iter = 0
+  !     call save_in_electrons( iter, dr2 )
+  !     WRITE( stdout, '(5x,"EXX: now go back to refine exchange calculation")')
+  !   ELSE IF ( dft_is_hybrid() .AND. TRIM(starting_wfc) == 'file' ) THEN
+  !     !
+  !     ! suggested by Hannu Komsa: useful when several calculations with 
+  !     ! different values of alpha have to be performed
+  !     !
+  !     call exx_restart(.true.)
+  !     WRITE( stdout, '(5x,"EXX: now go back to refine exchange calculation")')
+  !   ENDIF
   END IF
   !
   WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
@@ -216,13 +222,16 @@ SUBROUTINE electrons()
      !
      IF ( check_stop_now() ) THEN
         IF ( nks == 1 .AND. .NOT. lelfield ) &
-            CALL save_buffer ( evc, nwordwfc, iunwfc, nks )
+           CALL save_buffer ( evc, nwordwfc, iunwfc, nks )
         CALL write_rho( rho, nspin )
         CALL close_mix_file( iunmix, 'keep' )
         conv_elec=.FALSE.
+        CALL seqopn (iunres, 'restart_scf', 'formatted', exst)
+        WRITE (iunres, *) iter, dr2
+        WRITE (iunres, *) et (1:nbnd,1:nks)
+        CLOSE ( unit=iunres, status='keep')
         RETURN
      END IF
-     !
      iter = iter + 1
      !
      WRITE( stdout, 9010 ) iter, ecutwfc, mixing_beta
@@ -271,17 +280,19 @@ SUBROUTINE electrons()
            !
         ELSE
            !
-           CALL c_bands( iter, ik_, dr2 )
+           CALL c_bands( iter )
            !
         END IF
         !
-        IF ( check_stop_now() ) THEN
-           IF ( nks == 1 .AND. .NOT. lelfield ) &
-              CALL save_buffer ( evc, nwordwfc, iunwfc, nks )
+        IF ( stopped_by_user ) THEN
            CALL write_rho( rho, nspin )
            CALL close_mix_file( iunmix, 'keep' )
            conv_elec=.FALSE.
-           RETURN
+           CALL seqopn (iunres, 'restart_scf', 'formatted', exst)
+           WRITE (iunres, *) iter-1, dr2
+           WRITE (iunres, *) et (1:nbnd,1:nks)
+           CLOSE ( unit=iunres, status='keep')
+	   RETURN
         END IF
         !
         ! ... xk, wk, isk, et, wg are distributed across pools;

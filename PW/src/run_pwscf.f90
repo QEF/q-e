@@ -73,7 +73,7 @@ SUBROUTINE run_pwscf ( conv )
      ! ... electronic self-consistency or band structure calculation
      !
      IF ( .NOT. lscf) THEN
-        CALL non_scf ( 0 )
+        CALL non_scf ()
      ELSE
         CALL electrons()
      END IF
@@ -92,7 +92,7 @@ SUBROUTINE run_pwscf ( conv )
      !
      ! ... recover from a previous run, if appropriate
      !
-     IF ( restart .AND. lscf ) CALL restart_in_ions()
+     !IF ( restart .AND. lscf ) CALL restart_in_ions()
      !
      ! ... file in CASINO format written here if required
      !
@@ -121,7 +121,7 @@ SUBROUTINE run_pwscf ( conv )
         IF ( istep < nstep .AND. .NOT. conv_ions ) THEN
            !
            CALL punch( 'config' )
-           CALL save_in_ions()
+           !CALL save_in_ions()
            !
         END IF
         !

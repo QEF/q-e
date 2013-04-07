@@ -1,16 +1,19 @@
 !
-! Copyright (C) 2002-2010 Quantum ESPRESSO group
+! Copyright (C) 2002-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-! ... This module contains functions to check if the code should
-! ... be smoothly stopped.
-! ... In particular the function check_stop_now returns .TRUE. if
-! ... either the user has created a given file or if the
-! ... elapsed time is larger than max_seconds
+! ... This module contains functions nd variables used to check if the code
+! ... should be smoothly stopped. In order to use this module, function
+! ... check_stop_init must be called (only once) at the beginning of the calc.
+! ... Function check_stop_now returns .TRUE. if either the user has created
+! ... an "exit" file, or if the elapsed wall time is larger than max_seconds,
+! ... or if these conditions have been met in a provious call of check_stop_now.
+! ... Moreover, function check_stop_now removes the exit file and sets variable
+! ... stopped_by_user to .true..
 !
 !------------------------------------------------------------------------------!
 MODULE check_stop
@@ -24,7 +27,7 @@ MODULE check_stop
   !
   REAL(DP) :: max_seconds = 1.E+7_DP
   REAL(DP) :: init_second
-  LOGICAL :: exiting = .FALSE.
+  LOGICAL :: stopped_by_user = .FALSE.
   LOGICAL, PRIVATE :: tinit = .FALSE.
   !
   CONTAINS
@@ -89,7 +92,7 @@ MODULE check_stop
        REAL(DP)           :: seconds
        REAL(DP), EXTERNAL :: cclock
        !
-       IF ( exiting ) THEN
+       IF ( stopped_by_user ) THEN
           check_stop_now = .TRUE.
           RETURN
        END IF
@@ -168,7 +171,7 @@ MODULE check_stop
           !
        END IF
        !
-       exiting = check_stop_now
+       stopped_by_user = check_stop_now
        !
        RETURN
        !

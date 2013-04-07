@@ -566,10 +566,10 @@ contains
 
   SUBROUTINE close_buffer ( unit, status )
     !
-    !     close unit with status "status" ('keep' or 'delete') OR
-    !     deallocate buffer; if "status='keep'" save to file
-    !     (using saved value of extension)
-    ! ... depending upon how "open_buffer" was called
+    !     close unit with status "status" ('keep' or 'delete')
+    !     deallocate related buffer if any; if "status='keep'"
+    !     save it to file (using saved value of extension)
+    !     doesn't complain if closing an already closed unit
     !
     USE io_files, ONLY : diropn
     !
@@ -603,11 +603,9 @@ contains
 #ifdef __DEBUG
        print *, 'close_buffer: unit ',unit, 'closed'
 #endif
-       CLOSE( UNIT = unit, STATUS = status )
-    ELSE
-       INQUIRE( UNIT = unit, OPENED = opnd )
-       IF ( opnd ) CLOSE( UNIT = unit, STATUS = status )
     END IF
+    INQUIRE( UNIT = unit, OPENED = opnd )
+    IF ( opnd ) CLOSE( UNIT = unit, STATUS = status )
     nunits = nunits - 1
     !
   END SUBROUTINE close_buffer
