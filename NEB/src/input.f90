@@ -193,7 +193,6 @@ SUBROUTINE verify_neb_tmpdir( tmp_dir )
   USE mp_global,        ONLY : mpime, nproc
   USE io_global,        ONLY : meta_ionode
   USE mp,               ONLY : mp_barrier
-  USE xml_io_base,      ONLY : copy_file
   !
   IMPLICIT NONE
   !

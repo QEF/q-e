@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2012-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -478,14 +478,14 @@ SUBROUTINE check_initial_status(auxdyn)
    USE disp,      ONLY : nqs
    USE grid_irr_iq,  ONLY : comp_irr_iq, irr_iq
    USE el_phon,     ONLY : elph
-   USE xml_io_base, ONLY : copy_file
+   USE wrappers,  ONLY : f_copy
    USE mp,        ONLY : mp_barrier
    USE mp_global, ONLY : my_image_id, nimage, intra_image_comm
    USE io_global, ONLY : stdout, ionode
 
    IMPLICIT NONE
 
-   INTEGER :: iq, irr
+   INTEGER :: iq, irr, ios
    LOGICAL :: exst
    CHARACTER(LEN=256) :: file_input, file_output
    CHARACTER(LEN=6), EXTERNAL :: int_to_char
@@ -508,7 +508,7 @@ SUBROUTINE check_initial_status(auxdyn)
                     &    // '.' // TRIM(int_to_char(irr)) // '.xml'
 
             INQUIRE (FILE = TRIM(file_input), EXIST = exst)
-            IF (exst) CALL copy_file(file_input, file_output)
+            IF (exst) ios = f_copy(file_input, file_output)
             IF ( elph .AND. irr>0 ) THEN
 
                file_input=TRIM( tmp_dir_ph ) // &
@@ -522,7 +522,7 @@ SUBROUTINE check_initial_status(auxdyn)
                     &    // '.' // TRIM(int_to_char(irr)) // '.xml'
 
                INQUIRE (FILE = TRIM(file_input), EXIST = exst)
-               IF (exst) CALL copy_file(file_input, file_output)
+               IF (exst) ios = f_copy(file_input, file_output)
             ENDIF
          ENDIF
       ENDDO

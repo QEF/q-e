@@ -208,6 +208,7 @@ check_initial_status.o : ../../Modules/io_global.o
 check_initial_status.o : ../../Modules/ions_base.o
 check_initial_status.o : ../../Modules/mp.o
 check_initial_status.o : ../../Modules/mp_global.o
+check_initial_status.o : ../../Modules/wrappers.o
 check_initial_status.o : ../../Modules/xml_io_base.o
 check_initial_status.o : ../../PW/src/io_rho_xml.o
 check_initial_status.o : ../../PW/src/pwcom.o

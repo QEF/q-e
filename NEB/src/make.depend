@@ -36,7 +36,6 @@ input.o : ../../Modules/kind.o
 input.o : ../../Modules/mp.o
 input.o : ../../Modules/mp_global.o
 input.o : ../../Modules/wrappers.o
-input.o : ../../Modules/xml_io_base.o
 input.o : path_input_parameters_module.o
 input.o : path_variables.o
 neb.o : ../../Modules/check_stop.o
