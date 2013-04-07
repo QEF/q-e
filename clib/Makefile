@@ -6,6 +6,7 @@ OBJS = \
 customize_signals.o \
 stack.o \
 c_mkdir.o \
+copy.o \
 cptimer.o \
 eval_infix.o \
 fft_stick.o \

@@ -27,7 +27,7 @@ MODULE wrappers
   ! C std library functions fortran wrappers:
   PUBLIC  f_remove, f_link, rename, f_chdir, f_mkdir, f_rmdir, f_getcwd
   ! more stuff:
-  PUBLIC  feval_infix, md5_from_file, f_mkdir_safe
+  PUBLIC  f_copy, feval_infix, md5_from_file, f_mkdir_safe
   !
   ! HELP:
   ! integer f_remove(pathname)
@@ -163,8 +163,28 @@ CONTAINS
     ENDDO
     output(i:)=' '
   END SUBROUTINE
-  !
   ! ==================================================================== 
+  ! copy a file, uses clibs/copy.c which currently does a binary copy
+  ! using an 8kb buffer
+  ! 
+  ! returns:
+  !  0 : no error
+  ! -1 : cannot open source
+  ! -2 : cannot open dest
+  ! -3 : error while writing
+  ! -4 : disk full while writing
+  FUNCTION f_copy(source, dest) RESULT(r)
+    INTERFACE
+    FUNCTION c_copy(source,dest) BIND(C,name="copy") RESULT(r)
+      USE iso_c_binding
+      CHARACTER(kind=c_char),INTENT(in)  :: source(*), dest(*)
+      INTEGER(c_int)         :: r
+    END FUNCTION c_copy
+    END INTERFACE
+    CHARACTER(*),INTENT(in)  :: source, dest
+    INTEGER(c_int) :: r
+    r= c_copy(TRIM(source)//C_NULL_CHAR, TRIM(dest)//C_NULL_CHAR)
+  END FUNCTION
   !
   ! safe mkdir from clib/c_mkdir.c that creates a directory, if necessary, 
   ! and checks permissions. It can be called in parallel.
