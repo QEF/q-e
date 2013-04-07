@@ -41,8 +41,7 @@ MODULE xml_io_base
   PUBLIC :: rho_binary
   PUBLIC :: attr
   !
-  PUBLIC :: create_directory, change_directory,                          &
-            kpoint_dir, wfc_filename, copy_file,       &
+  PUBLIC :: create_directory, change_directory, kpoint_dir, wfc_filename,&
             restart_dir, check_restartfile, check_file_exst,             &
             pp_check_file, save_history, save_print_counter,             &
             read_print_counter, set_kpoints_vars,                        &
@@ -194,43 +193,6 @@ MODULE xml_io_base
       RETURN
       !
     END FUNCTION
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE copy_file( file_in, file_out )
-      !------------------------------------------------------------------------
-      !
-      CHARACTER(LEN=*), INTENT(IN) :: file_in, file_out
-      !
-      CHARACTER(LEN=256) :: string
-      INTEGER            :: iun_in, iun_out, ierr
-      !
-      !
-      IF ( .NOT. ionode ) RETURN
-      !
-      CALL iotk_free_unit( iun_in,  ierr )
-      CALL iotk_free_unit( iun_out, ierr )
-      !
-      CALL errore( 'copy_file', 'no free units available', ierr )
-      !
-      OPEN( UNIT = iun_in,  FILE = file_in,  STATUS = "OLD" )
-      OPEN( UNIT = iun_out, FILE = file_out, STATUS = "UNKNOWN" )         
-      !
-      copy_loop: DO
-         !
-         READ( UNIT = iun_in, FMT = '(A256)', IOSTAT = ierr ) string
-         !
-         IF ( ierr < 0 ) EXIT copy_loop
-         !
-         WRITE( UNIT = iun_out, FMT = '(A)' ) TRIM( string )
-         !
-      END DO copy_loop
-      !
-      CLOSE( UNIT = iun_in )
-      CLOSE( UNIT = iun_out )
-      !
-      RETURN
-      !
-    END SUBROUTINE
     !
     !------------------------------------------------------------------------
     FUNCTION restart_dir( outdir, runit )
@@ -418,6 +380,7 @@ MODULE xml_io_base
       ! ... history subdir
       !
       USE io_files, ONLY : xmlpun_base
+      USE wrappers, ONLY : f_copy
       !
       IMPLICIT NONE
       !
@@ -426,6 +389,7 @@ MODULE xml_io_base
       !
 #if defined (__VERBOSE_SAVE)
       !
+      INTEGER :: ios
       CHARACTER(LEN=256) :: filename
       CHARACTER(LEN=6)   :: hindex
       !
@@ -438,8 +402,8 @@ MODULE xml_io_base
          filename = TRIM( dirname ) // '/history/' // &
                   & TRIM( xmlpun_base ) // hindex // '.xml'
          !
-         CALL copy_file( TRIM( dirname ) // "/" // TRIM( xmlpun ), &
-                         TRIM( filename ) )
+         ios = f_copy( TRIM( dirname ) // "/" // TRIM( xmlpun ), &
+                      TRIM( filename ) )
          !
       END IF
       !
@@ -852,6 +816,7 @@ MODULE xml_io_base
                            pseudo_dir, amass, tau, if_pos, dirname, pos_unit )
       !------------------------------------------------------------------------
       !
+      USE wrappers, ONLY : f_copy
       INTEGER,          INTENT(IN) :: nsp, nat
       INTEGER,          INTENT(IN) :: ityp(:)
       CHARACTER(LEN=*), INTENT(IN) :: atm(:)
@@ -863,7 +828,7 @@ MODULE xml_io_base
       INTEGER,          INTENT(IN) :: if_pos(:,:)
       REAL(DP),         INTENT(IN) :: pos_unit
       !
-      INTEGER            :: i, flen, flen2
+      INTEGER            :: i, ios, flen, flen2
       LOGICAL            :: exst
       CHARACTER(LEN=256) :: file_pseudo_in, file_pseudo_out
       !
@@ -904,7 +869,7 @@ MODULE xml_io_base
          IF ( file_pseudo_in .ne. file_pseudo_out ) THEN
             INQUIRE ( FILE=file_pseudo_in, EXIST=exst )
             IF ( exst ) THEN
-               CALL copy_file( TRIM( file_pseudo_in ), TRIM( file_pseudo_out ) )
+               ios = f_copy( TRIM( file_pseudo_in ), TRIM( file_pseudo_out ) )
             ELSE
                CALL infomsg( 'write_ions', &
                    'file ' // TRIM( file_pseudo_in) // ' not present' )
@@ -1229,6 +1194,7 @@ MODULE xml_io_base
                          Hubbard_alpha, inlc, vdw_table_name, pseudo_dir, dirname )
       !------------------------------------------------------------------------
       !
+      USE wrappers, ONLY : f_copy
       CHARACTER(LEN=*),   INTENT(IN) :: dft
       LOGICAL,            INTENT(IN) :: lda_plus_u
       INTEGER,  OPTIONAL, INTENT(IN) :: lda_plus_u_kind
@@ -1241,7 +1207,7 @@ MODULE xml_io_base
       INTEGER,  OPTIONAL, INTENT(IN) :: inlc
       CHARACTER(LEN=*), OPTIONAL,   INTENT(IN) :: vdw_table_name, pseudo_dir, dirname
       !
-      INTEGER            :: i, flen
+      INTEGER            :: ios, i, flen
       CHARACTER(LEN=256) :: file_table
       !
       CALL iotk_write_begin( iunpun, "EXCHANGE_CORRELATION" )
@@ -1307,7 +1273,7 @@ MODULE xml_io_base
              !
          END IF
          !
-         CALL copy_file( TRIM( file_table ), TRIM( dirname ) // "/" // TRIM( vdw_table_name ) )
+         ios = f_copy( TRIM( file_table ), TRIM( dirname ) // "/" // TRIM( vdw_table_name ) )
  
       END IF
 
