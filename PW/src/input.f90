@@ -1542,7 +1542,7 @@ SUBROUTINE iosys()
   IF ( TRIM(wfc_dir) /= TRIM(tmp_dir) ) &
      CALL check_tempdir( wfc_dir, exst, parallelfs )
 
-  CALL restart_from_file()
+  ! CALL restart_from_file()
   !
   RETURN
   !
