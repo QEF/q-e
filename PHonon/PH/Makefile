@@ -210,7 +210,7 @@ LIBOBJS	= ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src
 
 TLDEPS= bindir mods libs pw
 
-all : tldeps libs-ph ph.x dynmat.x matdyn.x q2r.x lambda.x fqha.x q2qstar.x 
+all : tldeps libs-ph ph.x dynmat.x matdyn.x q2r.x q2trans.x q2trans_fd.x lambda.x fqha.x q2qstar.x 
 
 libs-ph : libph.a libphaux.a
 
@@ -231,6 +231,17 @@ matdyn.x : matdyn.o libphaux.a libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
 
 q2r.x : q2r.o libphaux.a libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ q2r.o libphaux.a libph.a \
+		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
+
+
+q2trans.x : q2trans.o libphaux.a libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ q2trans.o libphaux.a libph.a \
+		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
+
+q2trans_fd.x : q2trans_fd.o libphaux.a libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ q2trans_fd.o libphaux.a libph.a \
 		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
@@ -266,7 +277,7 @@ libphaux.a : $(PHAUXOBJS)
 clean :
 	- /bin/rm -f *.x *.o *.a *~ *.F90 *.d *.mod *.i *.L
 	- /bin/rm -rf ../../bin/ph.x ../../bin/dynmat.x ../../bin/matdyn.x \
-	../../bin/q2r.x ../../bin/lambda.x ../../bin/fqha.x
+	../../bin/q2r.x ../../bin/q2trans.x ../../bin/q2trans_fd.x ../../bin/lambda.x ../../bin/fqha.x
 
 include make.depend
 # DO NOT DELETE
