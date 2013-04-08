@@ -184,6 +184,7 @@ subroutine nonanal(nat, nat_blk, itau_blk, epsil, q, zeu, omega, dyn )
         q(2)*(epsil(2,1)*q(1)+epsil(2,2)*q(2)+epsil(2,3)*q(3))+    &
         q(3)*(epsil(3,1)*q(1)+epsil(3,2)*q(2)+epsil(3,3)*q(3)))
  !
+!print*, q(1), q(2), q(3)
  if (qeq < 1.d-8) then
     write(6,'(5x,"A direction for q was not specified:", &
       &          "TO-LO splitting will be absent")')
@@ -206,6 +207,7 @@ subroutine nonanal(nat, nat_blk, itau_blk, epsil, q, zeu, omega, dyn )
        do i = 1,3
           do j = 1,3
              dyn(i,j,na,nb) = dyn(i,j,na,nb)+ fpi*e2*zag(i)*zbg(j)/qeq/omega
+!             print*, zag(i),zbg(j),qeq, fpi*e2*zag(i)*zbg(j)/qeq/omega
           end do
        end do
     end do
@@ -213,6 +215,77 @@ subroutine nonanal(nat, nat_blk, itau_blk, epsil, q, zeu, omega, dyn )
  !
  return
 end subroutine nonanal
+
+!-----------------------------------------------------------------------
+subroutine nonanal_ifc(nat, nat_blk, itau_blk, epsil, q, zeu, omega, dyn, nr1,nr2,nr3,f_of_q )
+  !-----------------------------------------------------------------------
+  !     add the nonanalytical term with macroscopic electric fields
+  !
+  use kinds, only: dp
+  use constants, only: pi, fpi, e2
+ implicit none
+ integer, intent(in) :: nat, nat_blk, itau_blk(nat), nr1,nr2,nr3
+ !  nat: number of atoms in the cell (in the supercell in the case
+ !       of a dyn.mat. constructed in the mass approximation)
+ !  nat_blk: number of atoms in the original cell (the same as nat if
+ !       we are not using the mass approximation to build a supercell)
+ !  itau_blk(na): atom in the original cell corresponding to
+ !                atom na in the supercell
+ !
+ complex(DP), intent(inout) :: dyn(3,3,nat,nat),f_of_q(3,3,nat,nat) ! dynamical matrix
+ real(DP), intent(in) :: q(3),  &! polarization vector
+      &       epsil(3,3),     &! dielectric constant tensor
+      &       zeu(3,3,nat_blk),   &! effective charges tensor
+      &       omega            ! unit cell volume
+ !
+ ! local variables
+ !
+ real(DP) zag(3),zbg(3),  &! eff. charges  times g-vector
+      &       qeq              !  <q| epsil | q>
+ integer na,nb,              &! counters on atoms
+      &  na_blk,nb_blk,      &! as above for the original cell
+      &  i,j                  ! counters on cartesian coordinates
+ !
+IF ( q(1)==0.d0 .AND. &
+     q(2)==0.d0 .AND. &
+     q(3)==0.d0 ) return
+ !
+ qeq = (q(1)*(epsil(1,1)*q(1)+epsil(1,2)*q(2)+epsil(1,3)*q(3))+    &
+        q(2)*(epsil(2,1)*q(1)+epsil(2,2)*q(2)+epsil(2,3)*q(3))+    &
+        q(3)*(epsil(3,1)*q(1)+epsil(3,2)*q(2)+epsil(3,3)*q(3)))
+ !
+!print*, q(1), q(2), q(3)
+ if (qeq < 1.d-8) then
+    write(6,'(5x,"A direction for q was not specified:", &
+      &          "TO-LO splitting will be absent")')
+    return
+ end if
+
+ do na = 1,nat
+    na_blk = itau_blk(na)
+    do nb = 1,nat
+       nb_blk = itau_blk(nb)
+       !
+       do i=1,3
+          !
+          zag(i) = q(1)*zeu(1,i,na_blk) +  q(2)*zeu(2,i,na_blk) + &
+                   q(3)*zeu(3,i,na_blk)
+          zbg(i) = q(1)*zeu(1,i,nb_blk) +  q(2)*zeu(2,i,nb_blk) + &
+                   q(3)*zeu(3,i,nb_blk)
+       end do
+       !
+       do i = 1,3
+          do j = 1,3
+!             dyn(i,j,na,nb) = dyn(i,j,na,nb)+ fpi*e2*zag(i)*f_of_q*zbg(j)/qeq/omega/(nr1*nr2*nr3)
+              f_of_q(i,j,na,nb)=fpi*e2*zag(i)*zbg(j)/qeq/omega/(nr1*nr2*nr3)
+!             print*, i,j,na,nb, dyn(i,j,na,nb)
+          end do
+       end do
+    end do
+ end do
+ !
+ return
+end subroutine nonanal_ifc
 !
 !-----------------------------------------------------------------------
 subroutine dyndiag (nat,ntyp,amass,ityp,dyn,w2,z)
