@@ -10,6 +10,179 @@
 SUBROUTINE electrons()
   !----------------------------------------------------------------------------
   !
+  ! ... Loop for hybrid functionals
+  !
+  USE kinds,                ONLY : DP
+  USE check_stop,           ONLY : check_stop_now, stopped_by_user
+  USE io_global,            ONLY : stdout, ionode
+  USE fft_base,             ONLY : dfftp
+  USE gvecs,                ONLY : doublegrid
+  USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
+  USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
+                                   vtxc, etxc, etxcc, ewld, demet, epaw, &
+                                   elondon, ef_up, ef_dw
+  USE scf,                  ONLY : rho, rho_core, rhog_core, v, vltot, vrs, &
+                                   kedtau, vnew
+  USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
+                                   iprint, istep, conv_elec, &
+                                   restart, io_level, do_makov_payne,  &
+                                   gamma_only, iverbosity, textfor,     &
+                                   llondon, scf_must_converge
+  USE io_files,             ONLY : iunwfc, iunmix, nwordwfc, output_drho, &
+                                   iunres, iunefield, seqopn
+  USE buffers,              ONLY : save_buffer, close_buffer
+  USE ldaU,                 ONLY : eth
+  USE extfield,             ONLY : tefield, etotefield
+  USE wavefunctions_module, ONLY : evc, psic
+  USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
+                                   lambda, report
+  USE spin_orb,             ONLY : domag
+  USE io_rho_xml,           ONLY : write_rho
+  USE uspp,                 ONLY : okvan
+  USE exx,                  ONLY : exxinit, exxenergy2, &
+                                   fock0, fock1, fock2, dexx, exx_restart
+  USE funct,                ONLY : dft_is_hybrid, exx_is_active
+  USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi
+  USE funct,                ONLY : dft_is_meta
+  USE mp_global,            ONLY : intra_bgrp_comm, inter_pool_comm, &
+                                   root_pool, my_pool_id
+  USE mp,                   ONLY : mp_sum, mp_bcast
+  !
+  USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
+  USE paw_onecenter,        ONLY : PAW_potential
+  USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
+  USE uspp_param,           ONLY : nh, nhm ! used for PAW
+  !
+  !
+  IMPLICIT NONE
+  !
+  ! ... a few local variables
+  !
+  REAL(DP) :: &
+      dr2,          &! the norm of the diffence between potential
+      charge,       &! the total charge
+      mag           ! local magnetization
+  INTEGER :: &
+      i,            &! counter on polarization
+      idum,         &! dummy counter on iterations
+      iter,         &! counter on iterations
+      ios, kilobytes, maxter=10
+  REAL(DP) :: &
+      tr2_min,     &! estimated error on energy coming from diagonalization
+      tr2_final,   &! final threshold for exx minimization 
+                    ! when using adaptive thresholds.
+      descf,       &! correction for variational energy
+      en_el=0.0_DP,&! electric field contribution to the total energy
+      eext=0.0_DP   ! external forces contribution to the total energy
+  LOGICAL :: &
+      first, exst
+  !
+  ! ... external functions
+  !
+  REAL(DP), EXTERNAL :: ewald, get_clock
+  !
+  !
+  dr2  = 0.0_dp
+  tr2_final = tr2
+  IF (dft_is_hybrid() .AND. adapt_thr ) tr2= tr2_init
+  IF ( istep > 0 ) ethr = 1.D-6
+  fock0 = 0.D0
+  fock1 = 0.D0
+  fock2 = 0.D0
+  !
+  CALL start_clock( 'electrons_hf' )
+  !
+  WRITE( stdout, 9002 )
+  CALL flush_unit( stdout )
+  !
+  !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  !%%%%%%%%%%%%%%%%%%%%  Iterate hybrid functional  %%%%%%%%%%%%%%%%%%%%%
+  !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  !
+  !
+  DO iter=1, maxter
+     !
+     CALL electrons_scf ( )
+     !
+     IF ( .NOT. conv_elec .OR. .NOT. dft_is_hybrid() ) GO TO 10
+     !
+     ! ... From now on: hybrid DFT only
+     !
+     first =  .NOT. exx_is_active ( )
+     CALL exxinit()
+     !
+     IF ( first ) THEN
+        !
+        fock0 = exxenergy2()
+        !
+        CALL v_of_rho( rho, rho_core,rhog_core, &
+             ehart, etxc, vtxc, eth, etotefield, charge, v)
+        IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
+        !
+        CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
+             nspin, doublegrid )
+        !
+        WRITE( stdout, * ) fock0
+        !
+     ELSE
+        !
+        fock2 = fock0
+        fock0 = exxenergy2()
+        dexx = fock1 - 0.5D0*(fock0+fock2)
+        !
+        !
+        ! dexx is by definition positive definite. If it is less than
+        ! 0 there is some numerical problem. One such cause could be
+        ! that the exx divergence treatment has failed. 
+        !
+        IF ( dexx < 0d0 ) CALL errore( 'electrons', 'dexx is negative! &
+             Check that exxdiv_treatment is appropriate for the system.', 1 )
+        !
+        etot = etot  - dexx
+        hwf_energy = hwf_energy - dexx
+        !
+        WRITE( stdout, * ) fock0, fock1, fock2
+        WRITE( stdout, 9066 ) dexx
+        !
+        IF ( dexx < tr2_final ) THEN
+           WRITE( stdout, 9101 )
+           GO TO 10
+        END IF
+        !
+     END IF
+     !
+     WRITE( stdout,'(5x,"EXX: now go back to refine exchange calculation")')
+     IF ( adapt_thr ) THEN
+        tr2 = MAX(tr2_multi * dexx, tr2_final)
+        WRITE( stdout, 9121 ) tr2
+     ENDIF
+     !
+     !
+  END DO
+  !
+  WRITE( stdout, 9120 ) iter
+  CALL flush_unit( stdout )
+  !
+10 CALL stop_clock( 'electrons_hf' )
+  !
+  RETURN
+  !
+  ! ... formats
+  !
+9002 FORMAT(/'     Self-consistent Calculation' )
+9066 FORMAT( '     est. exchange err (dexx)  =',F17.8,' Ry' )
+9101 FORMAT(/'     End of self-consistent calculation' )
+9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
+9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
+9122 FORMAT(/'     WARNING: convergence NOT achieved after ',i3,' iterations' )
+9121 FORMAT(/'     scf convergence threshold =',1PE17.1,' Ry' )
+  !
+END SUBROUTINE electrons
+!
+!----------------------------------------------------------------------------
+SUBROUTINE electrons_scf()
+  !----------------------------------------------------------------------------
+  !
   ! ... This routine is a driver of the self-consistent cycle.
   ! ... It uses the routine c_bands for computing the bands at fixed
   ! ... Hamiltonian, the routine sum_band to compute the charge density,
@@ -58,11 +231,8 @@ SUBROUTINE electrons()
   USE spin_orb,             ONLY : domag
   USE io_rho_xml,           ONLY : write_rho
   USE uspp,                 ONLY : okvan
-  USE exx,                  ONLY : exxinit, exxenergy, exxenergy2, &
-                                   fock0, fock1, fock2, dexx, exx_restart
+  USE exx,                  ONLY : exxenergy2, fock0, fock1
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
-  USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi
-  USE funct,                ONLY : dft_is_meta
   USE mp_global,            ONLY : intra_bgrp_comm, inter_pool_comm, &
                                    root_pool, my_pool_id
   USE mp,                   ONLY : mp_sum, mp_bcast
@@ -85,7 +255,7 @@ SUBROUTINE electrons()
   USE dfunct,                 only : newd
   USE esm,                  ONLY : do_comp_esm, esm_printpot
   !
-  !
+  
   IMPLICIT NONE
   !
   ! ... a few local variables
@@ -116,14 +286,15 @@ SUBROUTINE electrons()
   ! ... external functions
   !
   REAL(DP), EXTERNAL :: ewald, get_clock
-  REAL(DP) :: tr2_final ! final threshold for exx minimization 
-                        ! when using adaptive thresholds.
+  !
   iter = 0
   dr2  = 0.0_dp
-  tr2_final = tr2
-  IF (dft_is_hybrid() .AND. adapt_thr ) THEN
-     tr2= tr2_init
-  ENDIF
+  !
+  ! ... Convergence threshold for iterative diagonalization
+  ! ... for the first scf iteration of each ionic step (after the first),
+  ! ... the threshold is fixed to a default value of 1.D-6
+  !
+  IF ( istep > 0 ) ethr = 1.D-6
   !
   IF ( restart ) THEN
      CALL seqopn (iunres, 'restart_scf', 'formatted', exst)
@@ -145,35 +316,16 @@ SUBROUTINE electrons()
         END IF
      END IF
      CLOSE ( unit=iunres, status='delete')
-  !   IF( exx_is_active() ) THEN
-  !     iter = 0
-  !     call save_in_electrons( iter, dr2 )
-  !     WRITE( stdout, '(5x,"EXX: now go back to refine exchange calculation")')
-  !   ELSE IF ( dft_is_hybrid() .AND. TRIM(starting_wfc) == 'file' ) THEN
-  !     !
-  !     ! suggested by Hannu Komsa: useful when several calculations with 
-  !     ! different values of alpha have to be performed
-  !     !
-  !     call exx_restart(.true.)
-  !     WRITE( stdout, '(5x,"EXX: now go back to refine exchange calculation")')
-  !   ENDIF
   END IF
   !
   WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
   !
   CALL memstat( kilobytes )
   IF ( kilobytes > 0 ) WRITE( stdout, 9001 ) kilobytes/1000.0
-  !
   CALL flush_unit( stdout )
   !
   CALL start_clock( 'electrons' )
   !
-  if ( exx_is_active())  then
-     CALL v_of_rho( rho, rho_core, rhog_core, &
-                    ehart, etxc, vtxc, eth, etotefield, charge, v)
-     CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
-  end if
-  !  
 #ifdef __ENVIRON
   IF ( do_environ ) THEN
     vltot_zero = vltot
@@ -182,7 +334,6 @@ SUBROUTINE electrons()
                            omega, alat, at ) 
   END IF
 #endif
-  !  
   CALL flush_unit( stdout )
   !
   ! ... calculates the ewald contribution to total energy
@@ -198,18 +349,9 @@ SUBROUTINE electrons()
   !
   call create_scf_type ( rhoin )
   !
-10 CONTINUE
-  !
-  ! ... Convergence threshold for iterative diagonalization
-  !
-  ! ... for the first scf iteration of each ionic step (after the first),
-  ! ... the threshold is fixed to a default value of 1.D-6
-  !
-  IF ( istep > 0 ) ethr = 1.D-6
-  !
   WRITE( stdout, 9002 )
-  !
   CALL flush_unit( stdout )
+  !
   CALL open_mix_file( iunmix, 'mix', exst )
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -454,18 +596,7 @@ SUBROUTINE electrons()
            !
         END IF 
         !
-        IF ( exx_is_active() ) THEN
-           !
-           fock1 = exxenergy2()
-           fock2 = fock0
-           !
-        ELSE
-           !
-           fock0 = 0.D0
-           fock1 = 0.D0
-           fock2 = 0.D0
-           !
-        END IF
+        IF ( exx_is_active() ) fock1 = exxenergy2()
         !
         ! ... if we didn't cycle before we can exit the do-loop
         !
@@ -579,74 +710,9 @@ SUBROUTINE electrons()
                               epressure + eperiodic + eioncc
 #endif
      !
-     IF ( dft_is_hybrid() .AND. conv_elec ) THEN
-        !
-        first = .NOT. exx_is_active()
-        !
-        CALL exxinit()
-        !
-        IF ( first ) THEN
-           !
-           fock0 = exxenergy2()
-           !
-           CALL v_of_rho( rho, rho_core,rhog_core, &
-                          ehart, etxc, vtxc, eth, etotefield, charge, v)
-           IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
-           !
-           CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
-           !
-           conv_elec = .false.
-           iter = 0
-           CALL save_in_electrons( iter, dr2 )
-           WRITE( stdout,'(5x,"EXX: now go back to refine exchange calculation")')
-           WRITE( stdout, * ) fock0
-           !
-           GO TO 10
-           !
-        END IF
-        !
-        fock2 = exxenergy2()
-        !
-        dexx = fock1 - 0.5D0*( fock0 + fock2 )
-        !
-        ! dexx is by definition positive definite. If it is less than
-        ! 0 there is some numerical problem. One such cause could be
-        ! that the exx divergence treatment has failed. 
-        !
-        IF ( dexx < 0d0 ) CALL errore( 'electrons', 'dexx is negative! &
-             & Check that exxdiv_treatment is appropriate for the system.', 1 )
-        !
-        etot = etot  - dexx
-        hwf_energy = hwf_energy - dexx
-        !
-        WRITE( stdout, * ) fock0, fock1, fock2
-        WRITE( stdout, 9066 ) dexx
-        !
-        fock0 = fock2
-        !
-     END IF
-     !
      CALL print_energies ( )
      !
      IF ( conv_elec ) THEN
-        !
-        IF ( dft_is_hybrid() .AND. dexx > tr2_final ) THEN  
-           !
-           conv_elec = .false.
-           iter = 0
-
-           CALL save_in_electrons( iter, dr2 )
-           !
-           WRITE (stdout,*) " NOW GO BACK TO REFINE HYBRID CALCULATION"
-
-           IF ( adapt_thr ) THEN
-              tr2 = MAX(tr2_multi * dexx, tr2_final)
-              WRITE( stdout, 9121 ) tr2
-           ENDIF
-           !
-           GO TO 10
-           !
-        END IF
         !
         ! ... if system is charged add a Makov-Payne correction to the energy
         !
@@ -705,7 +771,6 @@ SUBROUTINE electrons()
 9002 FORMAT(/'     Self-consistent Calculation' )
 9010 FORMAT(/'     iteration #',I3,'     ecut=', F9.2,' Ry',5X,'beta=',F4.2 )
 9050 FORMAT(/'     WARNING: integrated charge=',F15.8,', expected=',F15.8 )
-9066 FORMAT( '     est. exchange err (dexx)  =',F17.8,' Ry' )
 9101 FORMAT(/'     End of self-consistent calculation' )
 9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
 9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
@@ -791,6 +856,7 @@ SUBROUTINE electrons()
        !               - \int rho%kin_r(r) v%kin_r(r) [for Meta-GGA]
        !               - \sum rho%ns       v%ns       [for LDA+U]
        !               - \sum becsum       D1_Hxc     [for PAW]
+       USE funct,  ONLY : dft_is_meta
        IMPLICIT NONE
        REAL(DP) :: delta_e, delta_e_hub
        !
@@ -830,8 +896,9 @@ SUBROUTINE electrons()
        !                  - \sum \delta becsum       D1         [for PAW]
        ! ... calculates the difference between the Hartree and XC energy
        ! ... at first order in the charge density difference \delta rho(r)
-       IMPLICIT NONE
        !
+       USE funct,  ONLY : dft_is_meta
+       IMPLICIT NONE
        REAL(DP) :: delta_escf, delta_escf_hub
        !
        delta_escf = - SUM( ( rhoin%of_r(:,:)-rho%of_r(:,:) )*v%of_r(:,:) )
@@ -974,7 +1041,7 @@ SUBROUTINE electrons()
           !
           IF ( dft_is_hybrid()) THEN
              WRITE( stdout, 9062 ) - fock1
-             WRITE( stdout, 9064 ) 0.5D0*fock2
+             WRITE( stdout, 9064 ) 0.5D0*fock0
           ENDIF
           !
           IF ( textfor)             WRITE( stdout, &
@@ -1077,4 +1144,4 @@ SUBROUTINE electrons()
 
   END SUBROUTINE print_energies
   !
-END SUBROUTINE electrons
+END SUBROUTINE electrons_scf
