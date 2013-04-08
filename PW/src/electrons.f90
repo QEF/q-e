@@ -99,7 +99,6 @@ SUBROUTINE electrons()
       i,            &! counter on polarization
       idum,         &! dummy counter on iterations
       iter,         &! counter on iterations
-      ik_,          &! used to read ik from restart file
       ios, kilobytes
   REAL(DP) :: &
       tr2_min,     &! estimated error on energy coming from diagonalization
@@ -120,7 +119,6 @@ SUBROUTINE electrons()
   REAL(DP) :: tr2_final ! final threshold for exx minimization 
                         ! when using adaptive thresholds.
   iter = 0
-  ik_  = 0
   dr2  = 0.0_dp
   tr2_final = tr2
   IF (dft_is_hybrid() .AND. adapt_thr ) THEN
@@ -241,7 +239,7 @@ SUBROUTINE electrons()
      ! ... Convergence threshold for iterative diagonalization is
      ! ... automatically updated during self consistency
      !
-     IF ( iter > 1 .AND. ik_ == 0 ) THEN
+     IF ( iter > 1 ) THEN
         !
         IF ( iter == 2 ) ethr = 1.D-2
         ethr = MIN( ethr, 0.1D0*dr2 / MAX( 1.D0, nelec ) )
@@ -276,7 +274,7 @@ SUBROUTINE electrons()
         !
         IF ( lelfield ) THEN
            !
-           CALL c_bands_efield ( iter, ik_, dr2 )
+           CALL c_bands_efield ( iter )
            !
         ELSE
            !

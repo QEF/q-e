@@ -548,7 +548,7 @@ CONTAINS
 END SUBROUTINE diag_bands
 !
 !----------------------------------------------------------------------------
-SUBROUTINE c_bands_efield ( iter, ik_, dr2 )
+SUBROUTINE c_bands_efield ( iter )
   !----------------------------------------------------------------------------
   !
   ! ... Driver routine for Hamiltonian diagonalization under an electric field
@@ -564,8 +564,7 @@ SUBROUTINE c_bands_efield ( iter, ik_, dr2 )
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT (in) :: iter, ik_
-  REAL(DP), INTENT (in) :: dr2
+  INTEGER, INTENT (in) :: iter
   !
   INTEGER :: inberry, ipol, ierr
   !
@@ -597,7 +596,7 @@ SUBROUTINE c_bands_efield ( iter, ik_, dr2 )
      endif
      call flush_unit(stdout)
      !
-     CALL c_bands( iter, ik_, dr2 )
+     CALL c_bands( iter )
      !
   END DO
   !

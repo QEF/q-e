@@ -29,22 +29,19 @@
   !
   ! ... local variables
   !
-  INTEGER :: iter, ik_, i
-  REAL(DP) :: dr2 = 0.d0
+  INTEGER :: iter, i
   REAL(DP), EXTERNAL :: get_clock
   !
   !
   CALL start_clock( 'electrons' )
   iter = 1
-  ik_  = 0
-  dr2  = 0.0_dp
   !
   WRITE( stdout, 9002 )
   CALL flush_unit( stdout )
   !
   IF ( lelfield) THEN
      !
-     CALL c_bands_efield ( iter, ik_, dr2 )
+     CALL c_bands_efield ( iter )
      !
   ELSE
      !
