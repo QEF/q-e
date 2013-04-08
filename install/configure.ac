@@ -1019,14 +1019,14 @@ then
                            if test "$f90" = "g95" -o"$f90" = "gfortran"; then
      			      AC_SEARCH_LIBS(dgemm, mkl_gf_ipf, 
                                  have_blas=1 have_mkl=1 
-                                 blas_libs="$try_loption $LIBS -lmkl_thread -lmkl_core"
+                                 blas_libs="$try_loption $LIBS -lmkl_gnu_thread -lmkl_core"
                                  ldflags="$MKL_FLAGS $ldflags",
                                  echo "MKL not found",
                                  -lmkl_sequential -lmkl_core)
 			   else
      			      AC_SEARCH_LIBS(dgemm, mkl_intel_ipf, 
                                  have_blas=1 have_mkl=1 
-                                 blas_libs="$try_loption $LIBS -lmkl_thread -lmkl_core"
+                                 blas_libs="$try_loption $LIBS -lmkl_intel_thread -lmkl_core"
                                  ldflags="$MKL_FLAGS $ldflags",
                                  echo "MKL not found",
                                  -lmkl_sequential -lmkl_core)
@@ -1110,14 +1110,14 @@ then
                            if test "$f90" = "g95" -o "$f90" = "gfortran" ; then
      			      AC_SEARCH_LIBS(dgemm, mkl_gf_lp64, 
                                  have_blas=1 have_mkl=1 
-                                 blas_libs="$try_loption $LIBS -lmkl_thread -lmkl_core"
+                                 blas_libs="$try_loption $LIBS -lmkl_gnu_thread -lmkl_core"
                                  ldflags="$MKL_FLAGS $ldflags",
                                  echo "MKL not found",
                                  -lmkl_sequential -lmkl_core)
 			   else
      			      AC_SEARCH_LIBS(dgemm, mkl_intel_lp64, 
                                  have_blas=1 have_mkl=1 
-                                 blas_libs="$try_loption $LIBS -lmkl_thread -lmkl_core"
+                                 blas_libs="$try_loption $LIBS -lmkl_intel_thread -lmkl_core"
                                  ldflags="$MKL_FLAGS $ldflags",
                                  echo "MKL not found",
                                  -lmkl_sequential -lmkl_core)
@@ -1159,7 +1159,7 @@ then
                                  blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core"
                                  ldflags="$MKL_FLAGS $ldflags",
                                  echo "MKL not found",
-                                 -lmkl_sequential -lmkl_core)
+                                 -lmkl_sequentia -lmkl_core)
 			   else
      			      AC_SEARCH_LIBS(dgemm, mkl_intel, 
                                  have_blas=1 have_mkl=1 
@@ -1172,14 +1172,14 @@ then
                            if test "$f90" = "g95" -o "$f90" = "gfortran" ; then
      			      AC_SEARCH_LIBS(dgemm, mkl_gf, 
                                  have_blas=1 have_mkl=1 
-                                 blas_libs="$try_loption $LIBS -lmkl_thread -lmkl_core"
+                                 blas_libs="$try_loption $LIBS -lmkl_gnu_thread -lmkl_core"
                                  ldflags="$MKL_FLAGS $ldflags",
                                  echo "MKL not found",
                                  -lmkl_sequential -lmkl_core)
 			   else
      			      AC_SEARCH_LIBS(dgemm, mkl_intel, 
                                  have_blas=1 have_mkl=1 
-                                 blas_libs="$try_loption $LIBS -lmkl_thread -lmkl_core"
+                                 blas_libs="$try_loption $LIBS -lmkl_intel_thread -lmkl_core"
                                  ldflags="$MKL_FLAGS $ldflags",
                                  echo "MKL not found",
                                  -lmkl_sequential -lmkl_core)
