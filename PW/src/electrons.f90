@@ -10,7 +10,7 @@
 SUBROUTINE electrons()
   !----------------------------------------------------------------------------
   !
-  ! ... Loop for hybrid functionals
+  ! ... General self-consistency loop, also for hybrid functionals
   !
   USE kinds,                ONLY : DP
   USE check_stop,           ONLY : check_stop_now, stopped_by_user
@@ -59,14 +59,12 @@ SUBROUTINE electrons()
   ! ... a few local variables
   !
   REAL(DP) :: &
-      dr2,          &! the norm of the diffence between potential
       charge,       &! the total charge
       mag           ! local magnetization
   INTEGER :: &
-      i,            &! counter on polarization
       idum,         &! dummy counter on iterations
       iter,         &! counter on iterations
-      ios, kilobytes, maxter=10
+      ios
   REAL(DP) :: &
       tr2_min,     &! estimated error on energy coming from diagonalization
       tr2_final,   &! final threshold for exx minimization 
@@ -82,7 +80,8 @@ SUBROUTINE electrons()
   REAL(DP), EXTERNAL :: ewald, get_clock
   !
   !
-  dr2  = 0.0_dp
+  iter = 0
+  first = .true.
   tr2_final = tr2
   IF (dft_is_hybrid() .AND. adapt_thr ) tr2= tr2_init
   IF ( istep > 0 ) ethr = 1.D-6
@@ -90,46 +89,59 @@ SUBROUTINE electrons()
   fock1 = 0.D0
   fock2 = 0.D0
   !
-  CALL start_clock( 'electrons_hf' )
-  !
-  WRITE( stdout, 9002 )
-  CALL flush_unit( stdout )
-  !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%  Iterate hybrid functional  %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
+  IF ( restart ) THEN
+     CALL seqopn (iunres, 'restart_e', 'formatted', exst)
+     IF ( exst ) THEN
+        ios = 0
+        READ (iunres, *, iostat=ios) iter, tr2, fock2
+        IF ( ios /= 0 ) THEN
+           iter = 0
+        ELSE IF ( iter < 0 .OR. iter > niter ) THEN
+           iter = 0
+        ELSE 
+           first = .false.
+           WRITE(stdout,'(5x,"Calculation (EXX) restarted from iteration #",i6)')& 
+                iter + 1
+        END IF
+     END IF
+     CLOSE ( unit=iunres, status='delete')
+  END IF
   !
-  DO iter=1, maxter
+  DO idum=1,niter
+     !
+     iter = iter + 1
      !
      CALL electrons_scf ( )
      !
-     IF ( .NOT. conv_elec .OR. .NOT. dft_is_hybrid() ) GO TO 10
+     IF ( stopped_by_user .OR. .NOT. conv_elec .OR. .NOT. dft_is_hybrid() ) RETURN
      !
      ! ... From now on: hybrid DFT only
      !
-     first =  .NOT. exx_is_active ( )
+     first =  first .AND. .NOT. exx_is_active ( )
      CALL exxinit()
      !
      IF ( first ) THEN
         !
-        fock0 = exxenergy2()
+        fock2 = exxenergy2()
         !
-        CALL v_of_rho( rho, rho_core,rhog_core, &
+        CALL v_of_rho( rho, rho_core, rhog_core, &
              ehart, etxc, vtxc, eth, etotefield, charge, v)
         IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
         !
         CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
              nspin, doublegrid )
         !
-        WRITE( stdout, * ) fock0
+        ! WRITE( stdout, * ) fock0
         !
      ELSE
         !
-        fock2 = fock0
-        fock0 = exxenergy2()
+        fock0 = fock2
+        fock2 = exxenergy2()
         dexx = fock1 - 0.5D0*(fock0+fock2)
-        !
         !
         ! dexx is by definition positive definite. If it is less than
         ! 0 there is some numerical problem. One such cause could be
@@ -138,15 +150,17 @@ SUBROUTINE electrons()
         IF ( dexx < 0d0 ) CALL errore( 'electrons', 'dexx is negative! &
              Check that exxdiv_treatment is appropriate for the system.', 1 )
         !
+        ! FIXME: this is the total energy that should be printed on output
+        !
         etot = etot  - dexx
         hwf_energy = hwf_energy - dexx
         !
-        WRITE( stdout, * ) fock0, fock1, fock2
+        ! WRITE( stdout, * ) fock0, fock1, fock2
         WRITE( stdout, 9066 ) dexx
         !
         IF ( dexx < tr2_final ) THEN
            WRITE( stdout, 9101 )
-           GO TO 10
+           RETURN
         END IF
         !
      END IF
@@ -157,13 +171,18 @@ SUBROUTINE electrons()
         WRITE( stdout, 9121 ) tr2
      ENDIF
      !
+     IF ( check_stop_now() ) THEN
+        conv_elec=.FALSE.
+        CALL seqopn (iunres, 'restart_e', 'formatted', exst)
+        WRITE (iunres, *) iter, tr2, fock2
+        CLOSE (unit=iunres, status='keep')
+        RETURN
+     END IF
      !
   END DO
   !
   WRITE( stdout, 9120 ) iter
   CALL flush_unit( stdout )
-  !
-10 CALL stop_clock( 'electrons_hf' )
   !
   RETURN
   !
@@ -231,7 +250,7 @@ SUBROUTINE electrons_scf()
   USE spin_orb,             ONLY : domag
   USE io_rho_xml,           ONLY : write_rho
   USE uspp,                 ONLY : okvan
-  USE exx,                  ONLY : exxenergy2, fock0, fock1
+  USE exx,                  ONLY : exxenergy2, fock0, fock1, fock2
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
   USE mp_global,            ONLY : intra_bgrp_comm, inter_pool_comm, &
                                    root_pool, my_pool_id
@@ -281,7 +300,7 @@ SUBROUTINE electrons_scf()
   ! ... auxiliary variables for calculating and storing temporary copies of
   ! ... the charge density and of the HXC-potential
   !
-  type (scf_type), save :: rhoin ! used to store rho_in of current/next iteration
+  type (scf_type) :: rhoin ! used to store rho_in of current/next iteration
   !
   ! ... external functions
   !
@@ -322,7 +341,6 @@ SUBROUTINE electrons_scf()
   !
   CALL memstat( kilobytes )
   IF ( kilobytes > 0 ) WRITE( stdout, 9001 ) kilobytes/1000.0
-  CALL flush_unit( stdout )
   !
   CALL start_clock( 'electrons' )
   !
@@ -636,8 +654,7 @@ SUBROUTINE electrons_scf()
      !
      ! ... write restart file
      !
-     CALL save_in_electrons( iter, dr2 )
-     ! ... save converged wfc if they have not been written previously
+     !!!CALL save_in_electrons( iter, dr2 )
      !
      ! ... calculate the polarization
      !
@@ -693,9 +710,11 @@ SUBROUTINE electrons_scf()
         etot = etot + elondon
         hwf_energy = hwf_energy + elondon
      END IF
-     !
-     etot = etot - 0.5D0*fock0
-     hwf_energy = hwf_energy -0.5D0*fock0
+     ! 
+     If ( exx_is_active () ) THEN
+        etot = etot - 0.5D0*fock2
+        hwf_energy = hwf_energy -0.5D0*fock2
+     END IF
      !
      IF ( tefield ) THEN
         etot = etot + etotefield
@@ -722,21 +741,11 @@ SUBROUTINE electrons_scf()
         !
         IF ( do_comp_esm ) CALL esm_printpot()
         !
-        if (idum < niter) then
-          WRITE( stdout, 9110 ) iter
-        else
-          WRITE( stdout, 9122 ) iter
-        endif
+        WRITE( stdout, 9110 ) iter
         !
         ! ... jump to the end
         !
-        IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
-        !
-        CALL stop_clock( 'electrons' )
-        !
-        call destroy_scf_type ( rhoin )
-        !
-        RETURN
+        GO TO 10
         !
      END IF
      !
@@ -756,10 +765,10 @@ SUBROUTINE electrons_scf()
   WRITE( stdout, 9101 )
   WRITE( stdout, 9120 ) iter
   !
-  CALL flush_unit( stdout )
+10  CALL flush_unit( stdout )
   !
   IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
-  !
+  call destroy_scf_type ( rhoin )
   CALL stop_clock( 'electrons' )
   !
   RETURN
@@ -1041,7 +1050,7 @@ SUBROUTINE electrons_scf()
           !
           IF ( dft_is_hybrid()) THEN
              WRITE( stdout, 9062 ) - fock1
-             WRITE( stdout, 9064 ) 0.5D0*fock0
+             WRITE( stdout, 9064 ) 0.5D0*fock2
           ENDIF
           !
           IF ( textfor)             WRITE( stdout, &
