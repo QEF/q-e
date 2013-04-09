@@ -2006,7 +2006,7 @@ REAL(DP), INTENT(IN) :: vout_lm(i%m, i%l**2, nspin_gga)
              ! input: the spin up and spin down charges
 REAL(DP), INTENT(IN) :: segni_rad(i%m, rad(i%t)%nx)
              ! input: keep track of the direction of the magnetization
-REAL(DP), INTENT(OUT) :: v_lm(i%m, i%l**2, nspin)
+REAL(DP), INTENT(INOUT) :: v_lm(i%m, i%l**2, nspin)
              ! output: the xc potential and magnetic field
 
 REAL(DP) :: vsave_lm(i%m, i%l**2, nspin) ! auxiliary: v_lm is updated
@@ -2172,7 +2172,7 @@ REAL(DP), INTENT(IN) ::  drho_lm(i%m, i%l**2, nspin)
              ! input: the four components of the charge 
 REAL(DP), INTENT(IN) :: vout_lm(i%m, i%l**2, nspin_gga)
              ! output: the spin up and spin down charge
-REAL(DP), INTENT(OUT) :: v_lm(i%m, i%l**2, nspin)
+REAL(DP), INTENT(INOUT) :: v_lm(i%m, i%l**2, nspin)
              ! output: the spin up and spin down charge
 REAL(DP), INTENT(IN) :: segni_rad(i%m, rad(i%t)%nx)
              ! output: keep track of the spin direction
