@@ -1,0 +1,53 @@
+!fd_prefix     Prefix of the preceding pw.x run
+!fd_outdir     Outdir of the preceding pw.x run
+!fd_outfile    Prefix for the generated macrocell input files
+!fd_outdir_dir Directory for the generated macrocell input files
+!nrx1,2,3      Number of unitcell repetitions along the lattice vectors
+!              (for the generation of the macrocell)
+!de            Cartesian displacement for the atoms, in Angs.
+!
+&inputfd
+ fd_prefix      = 'silicon' 
+ fd_outdir      = './'
+ fd_outfile     = 'displaced'
+ fd_outfile_dir = './fd_files'
+ nrx1           = 2
+ nrx2           = 2
+ nrx3           = 2
+ de             = 0.01
+/
+
+!The following namelist is for additional flexibility
+!1. Each string (everything between a pair of single quotation marks)
+!   will be pasted verbatim to the generated input files.
+!   Within the corresponding namelist
+!2. Mind not using single quotation marks within strings
+!3. Mind keeping "system2" instead of "system". Fortran conflict
+!   within the corresponding
+!4. Asterisks (*) inside the "kpoints" string represent change of line
+!
+&verbatim
+control =
+'
+prefix="silicon",
+pseudo_dir="./",
+outdir="./"
+'
+
+electrons =
+'
+conv_thr=1.0d-16,
+mixing_beta=0.7
+'
+
+system2 =
+'
+
+'
+
+kpoints = '
+K_POINTS {automatic} *
+1 1 1 1 1 1
+'
+
+/

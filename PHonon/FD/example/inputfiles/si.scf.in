@@ -1,0 +1,22 @@
+&control
+   calculation='scf',
+   prefix='silicon',
+   restart_mode='from_scratch',
+   tstress = .true.,
+   tprnfor = .true.,
+   pseudo_dir = './',
+   outdir='./'
+/
+&system    
+   ibrav=  2, celldm(1) =10.2, nat=  2, ntyp= 1,
+   ecutwfc = 18.0
+/
+&electrons
+/
+ATOMIC_SPECIES
+ Si  28.086  Si.vbc.UPF
+ATOMIC_POSITIONS
+ Si 0.00 0.00 0.00 
+ Si 0.25 0.25 0.25 
+K_POINTS {automatic}
+4 4 4 1 1 1

@@ -1,0 +1,49 @@
+# Makefile for school
+
+include ../../make.sys
+
+# location of include files
+#IFLAGS=-I../../../include
+
+# location of needed modules
+MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
+          $(MOD_FLAG)../../EE $(MOD_FLAG)../../PW/src $(MOD_FLAG).
+
+#location of needed libraries
+LIBOBJS= ../../iotk/src/libiotk.a ../../flib/flib.a \
+         ../../clib/clib.a ../../flib/ptools.a 
+
+FDOBJS = \
+        stop_pp.o 
+
+
+QEMODS = ../../Modules/libqemod.a
+PWOBJS = ../../PW/src/libpw.a
+
+
+TLDEPS= bindir libs pw
+
+all : tldeps fd.x fd_ifc.x
+
+fd_ifc.x : fd_ifc.o 
+	$(LD) $(LDFLAGS) -o $@ fd_ifc.o
+	- ( cd ../../bin ; ln -fs ../PHonon/FD/$@ . )
+
+fd.x : fd.o libfd.a  $(FDOBJS) $(PWOBJS) $(QEMODS)  
+	$(LD) $(LDFLAGS) -o $@ \
+	fd.o libfd.a $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+	- ( cd ../../bin ; ln -fs ../PHonon/FD/$@ . )
+ 
+tldeps:
+	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+
+libfd.a : $(FDOBJS)
+	$(AR) $(ARFLAGS) $@ $?
+	$(RANLIB) $@
+
+clean :
+	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.L libfd.a
+
+include make.depend
+# DO NOT DELETE
+

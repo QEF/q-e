@@ -1,0 +1,14 @@
+fd.o : ../../Modules/cell_base.o
+fd.o : ../../Modules/constants.o
+fd.o : ../../Modules/environment.o
+fd.o : ../../Modules/io_files.o
+fd.o : ../../Modules/io_global.o
+fd.o : ../../Modules/ions_base.o
+fd.o : ../../Modules/kind.o
+fd.o : ../../Modules/mp.o
+fd.o : ../../Modules/mp_global.o
+fd.o : ../../PW/src/pwcom.o
+stop_pp.o : ../../Modules/control_flags.o
+stop_pp.o : ../../Modules/io_files.o
+stop_pp.o : ../../Modules/mp.o
+stop_pp.o : ../../Modules/parallel_include.o
