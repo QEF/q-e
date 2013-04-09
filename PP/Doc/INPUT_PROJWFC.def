@@ -29,8 +29,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 	}
 
 	var outdir -type CHARACTER {
-	    info { directory containing the input file }
-	    default { './' }
+	    info {
+                   directory containing the input data,
+                   i.e. the same as in pw.x }
+	    default {
+                      value of the ESPRESSO_TMPDIR environment variable if set;
+                      current directory ('./') otherwise }
 	}
 
 	var ngauss -type INTEGER {

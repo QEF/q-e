@@ -41,11 +41,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 	    }
 	}
 	
-	var outdir -type CHARACTER {
-	    info { 
-		temporary directory where pw.x files resides 
-	    }
-	}
+        var outdir -type CHARACTER {
+            info {
+                   directory containing the input data,
+                   i.e. the same as in pw.x }
+            default {
+                      value of the ESPRESSO_TMPDIR environment variable if set;
+                      current directory ('./') otherwise }
+        }
 	
 	var filplot -type CHARACTER {
 	    info { 
