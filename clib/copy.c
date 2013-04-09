@@ -19,10 +19,10 @@ int copy(const char* fn_in, const char* fn_out) {
 
    while((l1 = fread(buffer, 1, sizeof buffer, fd1)) > 0) {
      size_t l2 = fwrite(buffer, 1, l1, fd2);
-     if(l2 < 0 || l2 < l1) {
+     if(l2 == 0 || l2 < l1) {
        fclose(fd1);
        fclose(fd2);
-       if(l2<0) return -3; // output error
+       if(l2==0) return -3; // output error
        return -4; // disk full
      }
    }
