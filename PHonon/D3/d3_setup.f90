@@ -223,39 +223,31 @@ SUBROUTINE d3_setup()
           irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u,    &
           npert, nirr, gi, gimq, iverbosity, modenum)
   ELSE
-     IF (nsym > 1) THEN
-        IF(ionode) CALL io_pattern ( nat, fildrho, nirr, npert, u, xqck, tmp_dir, -1 )
-        call mp_bcast(u,     ionode_id, intra_image_comm)
-        call mp_bcast(nirr,  ionode_id, intra_image_comm)
-        call mp_bcast(npert, ionode_id, intra_image_comm)
-        call mp_bcast(xqck,  ionode_id, intra_image_comm)
-           IF(SUM(ABS(xqck(:)-xq(:))) > 1.d-4) CALL errore('d3_setup', 'Wrong drho for q', 1)
-        npertx = 0
-        DO irr = 1, nirr
-           npertx = max (npertx, npert (irr) )
-        ENDDO
-        IF (.not.lgamma) THEN
-           IF(ionode) call io_pattern ( nat, fild0rho, nirrg0, npertg0, ug0, xqck, tmp_dir, -1 )
-           call mp_bcast(ug0,     ionode_id, intra_image_comm)
-           call mp_bcast(nirrg0,  ionode_id, intra_image_comm)
-           call mp_bcast(npertg0, ionode_id, intra_image_comm)
-           call mp_bcast(xqck,    ionode_id, intra_image_comm)
-           IF(SUM(ABS(xqck(:))) > 1.d-4) CALL errore('d3_setup', 'Wrong drho for Gamma', 2)
-           DO irr = 1, nirrg0
-              npertx = max (npertx, npertg0 (irr) )
-           ENDDO
-        ENDIF
-        CALL allocate_pert_d3()
-        CALL set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-             irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u,   &
-             npert, nirr, gi, gimq, iverbosity)
-     ELSE
-        npertx=1
-        CALL allocate_pert_d3()
-        CALL set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
-             irt, irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, &
-             npert, nirr, gi, gimq, iverbosity)
-     ENDIF
+      IF(ionode) CALL io_pattern ( nat, fildrho, nirr, npert, u, xqck, tmp_dir, -1 )
+      call mp_bcast(u,     ionode_id, intra_image_comm)
+      call mp_bcast(nirr,  ionode_id, intra_image_comm)
+      call mp_bcast(npert, ionode_id, intra_image_comm)
+      call mp_bcast(xqck,  ionode_id, intra_image_comm)
+         IF(SUM(ABS(xqck(:)-xq(:))) > 1.d-4) CALL errore('d3_setup', 'Wrong drho for q', 1)
+      npertx = 0
+      DO irr = 1, nirr
+         npertx = max (npertx, npert (irr) )
+      ENDDO
+      IF (.not.lgamma) THEN
+         IF(ionode) call io_pattern ( nat, fild0rho, nirrg0, npertg0, ug0, xqck, tmp_dir, -1 )
+         call mp_bcast(ug0,     ionode_id, intra_image_comm)
+         call mp_bcast(nirrg0,  ionode_id, intra_image_comm)
+         call mp_bcast(npertg0, ionode_id, intra_image_comm)
+         call mp_bcast(xqck,    ionode_id, intra_image_comm)
+         IF(SUM(ABS(xqck(:))) > 1.d-4) CALL errore('d3_setup', 'Wrong drho for Gamma', 2)
+         DO irr = 1, nirrg0
+            npertx = max (npertx, npertg0 (irr) )
+         ENDDO
+      ENDIF
+      CALL allocate_pert_d3()
+      CALL set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
+           irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u,   &
+           npert, nirr, gi, gimq, iverbosity)
   ENDIF
 
   IF ( lgamma ) THEN
