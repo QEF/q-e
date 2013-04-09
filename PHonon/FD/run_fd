@@ -1,0 +1,56 @@
+#!/bin/bash
+
+#Same than in fd.in
+fd_outfile=displaced
+
+IN_DIR='./fd_files/'
+OUT_DIR='./fd_files/'
+FORCEDIR='./fd_forces/'
+pw_exe='../../../../bin/pw.x'
+
+#check directories
+if [ ! -d "${IN_DIR}" ]; then
+  echo ERROR: ${IN_DIR} does not exist
+  exit
+fi
+
+if [ ! -d "${OUT_DIR}" ]; then
+  mkdir -p ${OUT_DIR}
+fi
+
+if [ ! -d "${FORCEDIR}" ]; then
+  mkdir -p ${FORCEDIR}
+fi
+# scf calculation of the displaced macrocells
+#x,y,z displacements
+#atomic_index within original unit cell (two Si atoms)
+#positive/negative displacement
+
+for i in $(seq 1 3); do
+  for n in $(seq 1 2); do
+      for m in $(seq 1 2 ); do   	    
+	    echo running serial pw.x on ${fd_outfile}.$m.$i.$n.in
+	    $pw_exe < $IN_DIR/${fd_outfile}.$m.$i.$n.in > $OUT_DIR/${fd_outfile}.$m.$i.$n.out;
+        done
+    done
+done
+
+# scf calculation of the reference macrocell (no displacement)
+echo running serial pw.x on ${fd_outfile}.0.0.0.in
+$pw_exe < $IN_DIR/${fd_outfile}.0.0.0.in > $OUT_DIR/${fd_outfile}.0.0.0.out
+
+# extract forces
+grep 'force =   ' $OUT_DIR/${fd_outfile}.0.0.0.out | grep '     atom ' > forces
+awk '{printf("% 18.12f % 18.12f % 18.12f \n",$7,$8,$9)}' < forces > $FORCEDIR/force.0.0.0
+rm forces
+
+for i in `seq 1 3 ` ; do
+    for n in `seq 1 2 ` ; do
+        for m in `seq 1 2 ` ; do
+            grep 'force =   ' $OUT_DIR/${fd_outfile}.$m.$i.$n.out | grep '     atom ' > forces
+            awk '{printf("% 18.12f % 18.12f % 18.12f \n",$7,$8,$9)}' < forces > $FORCEDIR/force.$m.$i.$n
+            rm forces
+        done
+    done
+done
+
