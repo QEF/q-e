@@ -106,6 +106,9 @@ PROGRAM matdyn
   !                       frequencies  (default: .false.)
   !                NB: You cannot use this option with the symmetry
   !                analysis of the modes.
+  !     na_ifc     (logical) add non analitic contributions to the interatomic force 
+  !                constants if finite displacement method is used (as in Wang et al.
+  !                Phys. Rev. B 85, 224303 (2012)) [to be used in conjunction with fd.x]
   !
   !  if (readtau) atom types and positions in the supercell follow:
   !     (tau(i,na),i=1,3), ityp(na)
