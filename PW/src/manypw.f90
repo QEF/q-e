@@ -48,7 +48,7 @@ PROGRAM manypw
   IF ( TRIM (input_file_) == ' ') THEN
      filin = 'pw' // TRIM(image_label)  // '.in'
   ELSE
-     filin = TRIM(input_file_) // TRIM(image_label) 
+     filin = TRIM(input_file_) // TRIM(image_label) // '.in'
   END IF
   !
   ! ... Here open image-specific output files
