@@ -148,7 +148,7 @@ SUBROUTINE electrons()
         ! that the exx divergence treatment has failed. 
         !
         IF ( dexx < 0d0 ) CALL errore( 'electrons', 'dexx is negative! &
-             Check that exxdiv_treatment is appropriate for the system.', 1 )
+           &  Check that exxdiv_treatment is appropriate for the system.', 1 )
         !
         ! FIXME: this is the total energy that should be printed on output
         !
