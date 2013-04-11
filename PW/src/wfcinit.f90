@@ -61,7 +61,7 @@ SUBROUTINE wfcinit()
      CALL pw_readfile( 'wave', ierr )
      IF ( ierr > 0 ) THEN
         WRITE( stdout, '(5X,"Cannot read wfc : file not found")' )
-        starting_wfc = 'atomic'
+        starting_wfc = 'atomic+random'
      END IF
      !
   END IF
