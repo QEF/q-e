@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2005-2008 Quantum ESPRESSO group
+! Copyright (C) 2005-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -143,15 +143,19 @@ MODULE pw_restart
       INTEGER               :: ike, iks, npw_g, ispin, inlc, ntask_groups
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
-      LOGICAL               :: lwfc
+      LOGICAL               :: lwfc, lrho
       REAL(DP), ALLOCATABLE :: raux(:)
       !
       !
       lwfc  = .FALSE.
+      lrho  = .FALSE.
       !
       SELECT CASE( what )
       CASE( "all" )
          !
+         ! ... do not overwrite the scf charge density with a non-scf one
+         !
+         lrho  = lscf
          lwfc  = twfcollect
          !
       CASE DEFAULT
@@ -724,10 +728,9 @@ MODULE pw_restart
 ! ... CHARGE-DENSITY FILES
 !-------------------------------------------------------------------------------
       !
-      ! ... do not overwrite the scf charge density with a non-scf one
       ! ... also writes rho%ns if lda+U and rho%bec if PAW
       !
-      IF ( lscf ) CALL write_rho( rho, nspin )
+      IF ( lrho ) CALL write_rho( rho, nspin )
 !-------------------------------------------------------------------------------
 ! ... END RESTART SECTIONS
 !-------------------------------------------------------------------------------

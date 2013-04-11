@@ -1,68 +1,78 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine save_in_electrons (iter, dr2)
+SUBROUTINE save_in_electrons (iter, dr2, et)
   !-----------------------------------------------------------------------
-  USE kinds,         ONLY: DP
-  USE io_files,      ONLY: iunres, prefix, seqopn
-  USE ener,          ONLY: etot
+  USE kinds,         ONLY: dp
+  USE io_files,      ONLY: iunres, seqopn
   USE klist,         ONLY: nks
-  USE control_flags, ONLY: io_level, conv_elec, tr2, ethr
-  USE wvfct,         ONLY: nbnd, et
-  USE scf,           ONLY: vnew
-  USE funct,         ONLY : exx_is_active
-  USE exx,           ONLY : fock0, fock1, fock2, dexx, x_occupation
-  implicit none
-  character :: where * 20
-  ! are we in the right place?
-  integer :: ik, ibnd, ik_, iter
-  ! counters
-  ! last completed kpoint
-  ! last completed iteration
-  logical :: exst
-
-  real(DP) :: dr2
-  if ( io_level < 2 ) return
+  USE wvfct,         ONLY: nbnd
   !
-  ! open recover file
+  IMPLICIT NONE
   !
-  call seqopn (iunres, 'restart', 'unformatted', exst)
+  INTEGER, INTENT (in) :: iter
+  REAL(dp), INTENT(in) :: dr2, et(nbnd,nks)
   !
-  ! save restart information
+  LOGICAL :: exst
   !
-  if (conv_elec) then
-     !
-     ! step on electrons has been completed. restart from ions
-     !
-     where = 'IONS'
-     write (iunres) where
-     write (iunres) ( (et (ibnd, ik), ibnd = 1, nbnd), ik = 1, nks)
-     write (iunres) etot, tr2
-     ! vnew = V(in)-V(out) is needed in the scf correction term to forces
-     write (iunres) vnew%of_r
-  else
-     !
-     ! save iteration number
-     !
-     ! iteration iter has been completed
-     ik_ = 0
-     where = 'ELECTRONS'
-     write (iunres) where
-     write (iunres) ( (et (ibnd, ik), ibnd = 1, nbnd), ik = 1, nks)
-     write (iunres) iter, ik_, dr2, tr2, ethr
-
-  endif
-  write (iunres)  exx_is_active(), fock0, fock1, fock2, dexx
-  IF ( exx_is_active() )  write (iunres) &
-     ( (x_occupation (ibnd, ik), ibnd = 1, nbnd), ik = 1, nks)
+  CALL seqopn (iunres, 'restart_scf', 'formatted', exst)
+  WRITE (iunres, *) iter, dr2
+  WRITE (iunres, *) et(1:nbnd,1:nks)
+!  write (iunres)  exx_is_active(), fock0, fock1, fock2, dexx
+!  IF ( exx_is_active() )  write (iunres) &
+!     ( (x_occupation (ibnd, ik), ibnd = 1, nbnd), ik = 1, nks)
+  CLOSE ( unit=iunres, status='keep')
   !
-
-  close (unit = iunres, status = 'keep')
-  return
-
-end subroutine save_in_electrons
+END SUBROUTINE save_in_electrons
+!
+!-----------------------------------------------------------------------
+SUBROUTINE restart_in_electrons (iter, dr2, et)
+  !-----------------------------------------------------------------------
+  USE kinds,         ONLY: dp
+  USE io_global,     ONLY: stdout
+  USE io_files,      ONLY: iunres, seqopn
+  USE klist,         ONLY: nks
+  USE wvfct,         ONLY: nbnd
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT (out) :: iter
+  REAL(dp), INTENT(out) :: dr2, et(nbnd,nks)
+  !
+  REAL(dp), ALLOCATABLE :: et_(:,:)
+  REAL(dp):: dr2_
+  INTEGER :: ios
+  LOGICAL :: exst
+  !
+  CALL seqopn (iunres, 'restart_scf', 'formatted', exst)
+  IF ( exst ) THEN
+     ios = 0
+     READ (iunres, *, iostat=ios) iter, dr2_
+     IF ( ios /= 0 ) THEN
+        iter = 0
+     ELSE IF ( iter < 1 ) THEN
+        iter = 0
+     ELSE
+        ALLOCATE (et_(nbnd,nks))
+        READ (iunres, *, iostat=ios) et_
+        IF ( ios /= 0 ) THEN
+           iter = 0
+        ELSE
+           WRITE( stdout, &
+           '(5x,"Calculation restarted from scf iteration #",i6)' ) iter + 1
+           dr2 = dr2_
+           et (:,:) = et_(:,:)
+        END IF
+        DEALLOCATE (et_)
+     END IF
+  ELSE
+     iter = 0
+  END IF
+  CLOSE ( unit=iunres, status='delete')
+  !
+END SUBROUTINE restart_in_electrons

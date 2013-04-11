@@ -17,8 +17,7 @@ SUBROUTINE c_bands( iter )
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE io_files,             ONLY : iunigk, iunsat, iunwfc, iunres, &
-                                   seqopn, nwordwfc, nwordatwfc
+  USE io_files,             ONLY : iunigk, iunsat, iunwfc, nwordwfc, nwordatwfc
   USE buffers,              ONLY : get_buffer, save_buffer, close_buffer
   USE klist,                ONLY : nkstot, nks, xk, ngk
   USE uspp,                 ONLY : vkb, nkb
@@ -43,43 +42,19 @@ SUBROUTINE c_bands( iter )
   ! average number of H*psi products
   INTEGER :: ik_, ik, nkdum, ios
   ! ik : counter on k points
-  ! ik_: k-point already done
+  ! ik_: k-point already done in a previous run
   LOGICAL :: exst
   !
-  IF ( restart ) THEN
-     CALL seqopn (iunres, 'restart_k', 'formatted', exst)
-     IF ( exst ) THEN
-        ios = 0
-        READ (iunres, *, iostat=ios) ik_, ethr
-        IF ( ios /= 0 ) THEN
-           ik_ = 0
-        ELSE IF ( ik_ < 1 .OR. ik_ > nks ) THEN
-           ik_ = 0
-        ELSE IF ( ik_> 0) THEN
-           WRITE( stdout, &
-           '(5x,"Calculation restarted from kpoint #",i6)' ) ik_ + 1
-        END IF
-     ELSE
-        ik_ = 0
-     END IF
-     CLOSE ( unit=iunres, status='delete')
-  ELSE
-     ik_ = 0
-  END IF
+  ik_ = 0
+  IF ( restart ) CALL restart_in_cbands(ik_, ethr, et )
   CALL start_clock( 'c_bands' )
   !
   IF ( isolve == 0 ) THEN
-     !
      WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
-     !
   ELSE IF ( isolve == 1 ) THEN
-     !
      WRITE( stdout, '(5X,"CG style diagonalization")')
-     !
   ELSE
-     !
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
-     !
   END IF
   !
   avg_iter = 0.D0
@@ -99,12 +74,13 @@ SUBROUTINE c_bands( iter )
      !
      npw = ngk(ik)
      !
-     ! ... do not recalculate k-points if restored from a previous run
+     ! ... Dirty trick: iunigk is sequential so it has to be read by all 
+     ! ... k-points even when restarting or else wrong igk would be read
+     ! ... Read from file already calculated wavefunctions
      !
-     IF ( ik <= ik_ ) THEN
-        !
+     IF ( ik < ik_+1) THEN
+        CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
         CYCLE k_loop
-        !
      END IF
      !
      ! ... various initializations
@@ -144,25 +120,14 @@ SUBROUTINE c_bands( iter )
      !
      IF (ik .le. nkdum) THEN
         IF (check_stop_now()) THEN
-           !
-           ! ... stop requested by user: save restart information,
-           ! ... save wavefunctions to file
-           !
-           IF ( nks == 1 .AND. .NOT. lelfield ) &
-              CALL save_buffer ( evc, nwordwfc, iunwfc, nks )
-           CALL seqopn (iunres, 'restart_k', 'formatted', exst)
-           WRITE (iunres, *) ik, ethr
-           CLOSE ( unit=iunres, status='keep')
+           CALL save_in_cbands(ik, ethr, et )
            RETURN
         END IF
      ENDIF
      !
   END DO k_loop
   !
-  ik_ = 0
-  !
   CALL mp_sum( avg_iter, inter_pool_comm )
-  !
   avg_iter = avg_iter / nkstot
   !
   WRITE( stdout, &
@@ -617,8 +582,7 @@ SUBROUTINE c_bands_nscf( )
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE io_files,             ONLY : iunigk, iunsat, iunwfc, iunres, &
-                                   seqopn, nwordwfc, nwordatwfc
+  USE io_files,             ONLY : iunigk, iunsat, iunwfc, nwordwfc, nwordatwfc
   USE buffers,              ONLY : get_buffer, save_buffer, close_buffer
   USE basis,                ONLY : starting_wfc
   USE klist,                ONLY : nkstot, nks, xk, ngk
@@ -637,59 +601,24 @@ SUBROUTINE c_bands_nscf( )
   !
   REAL(DP) :: avg_iter, ethr_
   ! average number of H*psi products
-  REAL(DP), ALLOCATABLE :: et_(:,:)
-  ! restart information
   INTEGER :: ik_, ik, nkdum, ios
-  ! ik_: k-point already done
+  ! ik_: k-point already done in a previous run
   ! ik : counter on k points
   LOGICAL :: exst
   !
   REAL(DP), EXTERNAL :: get_clock
   !
-  IF ( restart ) THEN
-     CALL seqopn (iunres, 'restart_k', 'formatted', exst)
-     IF ( exst ) THEN
-        ios = 0
-        READ (iunres, *, iostat=ios) ik_, ethr_
-        IF ( ios /= 0 ) THEN
-           ik_ = 0
-        ELSE IF ( ik_ < 1 .OR. ik_ > nks ) THEN
-           ik_ = 0
-        ELSE 
-           ALLOCATE (et_(nbnd,ik_))
-           READ (iunres, *, iostat=ios) et_
-           IF ( ios /= 0 ) THEN
-              ik_ = 0
-           ELSE
-              WRITE( stdout, &
-              '(5x,"Calculation restarted from kpoint #",i6)' ) ik_ + 1
-              ethr = ethr_
-              et (1:nbnd,1:ik_) = et_
-           END IF
-           DEALLOCATE (et_)
-        END IF
-     ELSE
-        ik_ = 0
-     END IF
-     CLOSE ( unit=iunres, status='delete')
-  ELSE
-     ik_ = 0
-  END IF
+  ik_ = 0
+  IF ( restart ) CALL restart_in_cbands(ik_, ethr, et )
   !
   CALL start_clock( 'c_bands' )
   !
   IF ( isolve == 0 ) THEN
-     !
      WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
-     !
   ELSE IF ( isolve == 1 ) THEN
-     !
      WRITE( stdout, '(5X,"CG style diagonalization")')
-     !
   ELSE
-     !
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
-     !
   END IF
   !
   avg_iter = 0.D0
@@ -758,17 +687,13 @@ SUBROUTINE c_bands_nscf( )
      ! ... the loop on k-points before checking for stop condition
      !
      nkdum  = kunit * ( nkstot / kunit / npool )
-     !
      IF (ik .le. nkdum) THEN
+        !
+        ! ... stop requested by user: save restart information,
+        ! ... save wavefunctions to file
+        !
         IF (check_stop_now()) THEN
-           !
-           ! ... stop requested by user: save restart information,
-           ! ... save wavefunctions to file
-           !
-           CALL seqopn (iunres, 'restart_k', 'formatted', exst)
-           WRITE (iunres, *) ik, ethr
-           WRITE (iunres, *) et(1:nbnd,1:ik)
-           CLOSE ( unit=iunres, status='keep')
+           CALL save_in_cbands(ik, ethr, et )
            RETURN
         END IF
      ENDIF

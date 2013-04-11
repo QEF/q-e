@@ -1,47 +1,75 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine save_in_cbands (iter, ik_, dr2)
+SUBROUTINE save_in_cbands (ik, ethr, et)
   !-----------------------------------------------------------------------
-  USE kinds,         ONLY: DP
-  USE io_files,      ONLY: iunres, prefix, seqopn
+  USE kinds,         ONLY: dp
+  USE io_files,      ONLY: iunres, seqopn
   USE klist,         ONLY: nks
-  USE control_flags, ONLY: io_level, tr2, ethr
-  USE wvfct,         ONLY: nbnd, et
-  USE funct,         ONLY: exx_is_active
-  USE exx,           ONLY: fock0, fock1, fock2, dexx, x_occupation
-  implicit none
-  character :: where * 20
-  ! are we in the right place?
-  integer :: ik, ibnd, ik_, iter
-  ! counters
-  ! last completed kpoint
-  ! last completed iteration
-  logical :: exst
-
-  real(DP) :: dr2
+  USE wvfct,         ONLY: nbnd
   !
-  ! open recover file
+  IMPLICIT NONE
   !
-  call seqopn (iunres, 'restart', 'unformatted', exst)
+  INTEGER, INTENT (in) :: ik
+  REAL(dp), INTENT(in) :: ethr, et(nbnd,nks)
   !
-  ! save restart information
+  LOGICAL :: exst
   !
-  where = 'ELECTRONS'
-  write (iunres) where
-  write (iunres) ( (et (ibnd, ik), ibnd = 1, nbnd), ik = 1, nks)
-
-  write (iunres) iter, ik_, dr2, tr2, ethr
-  write (iunres) exx_is_active(), fock0, fock1, fock2, dexx
-  if(exx_is_active() ) &
-    write (iunres) ( (x_occupation (ibnd, ik), ibnd = 1, nbnd), ik = 1, nks)
-
-  close (unit = iunres, status = 'keep')
+  CALL seqopn (iunres, 'restart_k', 'formatted', exst)
+  WRITE (iunres, *) ik, ethr
+  WRITE (iunres, *) et(1:nbnd,1:nks)
+  CLOSE ( unit=iunres, status='keep')
   !
-  return
-end subroutine save_in_cbands
+END SUBROUTINE save_in_cbands
+!
+!-----------------------------------------------------------------------
+SUBROUTINE restart_in_cbands (ik, ethr, et)
+  !-----------------------------------------------------------------------
+  USE kinds,         ONLY: dp
+  USE io_global,     ONLY: stdout
+  USE io_files,      ONLY: iunres, seqopn
+  USE klist,         ONLY: nks
+  USE wvfct,         ONLY: nbnd
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT (out) :: ik
+  REAL(dp), INTENT(out) :: ethr, et(nbnd,nks)
+  !
+  REAL(dp), ALLOCATABLE :: et_(:,:)
+  REAL(dp):: ethr_
+  INTEGER :: ios
+  LOGICAL :: exst
+  !
+  CALL seqopn (iunres, 'restart_k', 'formatted', exst)
+  IF ( exst ) THEN
+     ios = 0
+     READ (iunres, *, iostat=ios) ik, ethr_
+     IF ( ios /= 0 ) THEN
+        ik = 0
+     ELSE IF ( ik < 1 .OR. ik > nks ) THEN
+        ik = 0
+     ELSE
+        ALLOCATE (et_(nbnd,nks))
+        READ (iunres, *, iostat=ios) et_
+        IF ( ios /= 0 ) THEN
+           ik = 0
+        ELSE
+           WRITE( stdout, &
+           '(5x,"Calculation restarted from kpoint #",i6)' ) ik + 1
+           ethr = ethr_
+           et (:,:) = et_(:,:)
+        END IF
+        DEALLOCATE (et_)
+     END IF
+  ELSE
+     ik = 0
+  END IF
+  CLOSE ( unit=iunres, status='delete')
+  !
+END SUBROUTINE restart_in_cbands
