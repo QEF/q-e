@@ -69,7 +69,7 @@ SUBROUTINE run_nscf(do_band, iq)
   starting_pot      = 'file'
   starting_wfc      = 'atomic'
   restart = ext_restart
-  CALL restart_from_file()
+!  CALL restart_from_file()
   conv_ions=.true.
   !
   CALL setup_nscf ( newgrid, xq )
