@@ -173,15 +173,16 @@ The flow of the code can be summarized as follows:
 4) Start a main loop over the q points:
 
    4.1) Compute all quantities that do not depend on the response of the system
+   4.2) Check if a band calculation is needed and do it.
    NB: the following points are executed only when q is Gamma.
-     4.2) Start a loop on the frequencies
-          4.2.1) Compute the polarizability as a function of iu SD
-     4.3) Compute the response to an electric field 
-     4.4) Compute epsilon and SD
-     4.5) Compute zeu and SD
+     4.3) Start a loop on the frequencies
+          4.3.1) Compute the polarizability as a function of iu SD
+     4.4) Compute the response to an electric field 
+     4.5) Compute epsilon and SD
+     4.6) Compute zeu and SD
      4.7) Compute the electro-optic coefficient and SD
-     4.6) Compute the second order response to E
-     4.8) Compute Raman tensor and SD
+     4.8) Compute the second order response to E
+     4.9) Compute Raman tensor and SD
    END NB
 
 5) Start a loop over the irreducible representation 

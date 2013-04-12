@@ -83,7 +83,7 @@ MODULE buiol
     IMPLICIT NONE
     TYPE(index_of_list),POINTER :: CURSOR, AUX
     IF (.not.is_init_buiol) RETURN
-    IF (.not.associated(ENTRY) ) CALL errore('buiol', 'ENTRY was lost.',1)
+    IF (.not.associated(ENTRY) ) CALL errore('stop_buiol', 'ENTRY was lost.',1)
     !
     CURSOR => ENTRY
     DO WHILE (associated(CURSOR%NEXT))
@@ -128,10 +128,10 @@ MODULE buiol
     INTEGER :: ierr
     TYPE(index_of_list),POINTER :: CURSOR
     !
-    IF (.not.is_init_buiol) CALL errore('buiol', 'You must init before open',1)
+    IF (.not.is_init_buiol) CALL errore('buiol_open_unit', 'You must init before open',1)
     IF(recl<0) THEN
 #ifdef __DEBUG
-       CALL infomsg('buiol', 'wrong recl')
+       CALL infomsg('buiol_open_unit', 'wrong recl')
 #endif
        ierr = 1
        RETURN
@@ -141,7 +141,7 @@ MODULE buiol
     CURSOR => find_unit(unit)
     IF(associated(CURSOR)) THEN
 #ifdef __DEBUG
-       CALL infomsg('buiol', 'unit already opened')
+       CALL infomsg('buiol_open_unit', 'unit already opened')
 #endif
        ierr = -1
        RETURN
@@ -169,13 +169,13 @@ MODULE buiol
     CURSOR => find_prev_unit(unit)
     IF(.not.associated(CURSOR))  THEN
 #ifdef __DEBUG
-       CALL infomsg('buiol', 'cannot close this unit')
+       CALL infomsg('buiol_close_unit', 'cannot close this unit')
 #endif
        ierr = 1
     END IF
     IF(.not.associated(CURSOR%next)) THEN
 #ifdef __DEBUG
-       CALL infomsg('buiol', 'cannot find unit to close',1)
+       CALL infomsg('buiol_close_unit', 'cannot find unit to close',1)
 #endif
        ierr = 2
     END IF
@@ -218,7 +218,7 @@ MODULE buiol
     INTEGER :: i
     TYPE(data_in_the_list),POINTER :: new(:), old(:)
     !
-    IF(nrec_new < CURSOR%nrec) CALL errore('buiol', 'wrong new nrec',1)
+    IF(nrec_new < CURSOR%nrec) CALL errore('increase_nrec', 'wrong new nrec',1)
     !
     ! create a new index with more space
     ALLOCATE(new(nrec_new))
@@ -251,14 +251,14 @@ MODULE buiol
     CURSOR => find_unit(unit)
     IF(.not.associated(CURSOR)) THEN
 #ifdef __DEBUG
-       CALL infomsg('buiol', 'cannot write: unit not opened')
+       CALL infomsg('buiol_write_record', 'cannot write: unit not opened')
 #endif
        ierr = 1
        RETURN
     END IF
     IF(CURSOR%recl/=recl) THEN
 #ifdef __DEBUG
-       CALL infomsg('buiol', 'cannot write: wrong recl')
+       CALL infomsg('buiol_write_record', 'cannot write: wrong recl')
 #endif
        ierr = 2
        RETURN
@@ -292,28 +292,28 @@ MODULE buiol
     CURSOR => find_unit(unit)
     IF(.not.associated(CURSOR)) THEN
 #ifdef __DEBUG
-       CALL infomsg('buiol', 'cannot read: unit not opened')
+       CALL infomsg('buiol_read_record', 'cannot read: unit not opened')
 #endif
        ierr = 1
        RETURN
     END IF
     IF(CURSOR%recl/=recl) THEN
 #ifdef __DEBUG
-        CALL infomsg('buiol', 'cannot read: wrong recl')
+        CALL infomsg('buiol_read_record', 'cannot read: wrong recl')
 #endif
        ierr = 1
        RETURN
     END IF
     IF(CURSOR%nrec<nrec) THEN
 #ifdef __DEBUG
-       CALL infomsg('buiol', 'cannot read: wrong nrec')
+       CALL infomsg('buiol_read_record', 'cannot read: wrong nrec')
 #endif
        ierr =-1
        RETURN
     END IF
     IF(.not.associated(CURSOR%index(nrec)%data)) THEN
 #ifdef __DEBUG
-       CALL infomsg('buiol', 'cannot read: virgin nrec')
+       CALL infomsg('buiol_read_record', 'cannot read: virgin nrec')
 #endif
        ierr =-1
        RETURN
@@ -333,7 +333,7 @@ MODULE buiol
     ! sanity checks
     CURSOR => find_unit(unit)
 #ifdef __DEBUG
-    IF(.not.associated(CURSOR)) CALL errore('buiol', 'cannot report: unit not opened',1)
+    IF(.not.associated(CURSOR)) CALL errore('buiol_report_unit', 'cannot report: unit not opened',1)
 #endif
     CALL buiol_report_buffer(CURSOR)
     RETURN
@@ -368,7 +368,7 @@ MODULE buiol
     INTEGER,INTENT(in) :: unit
     TYPE(index_of_list),POINTER :: CURSOR
     !
-    IF (.not.is_init_buiol) CALL errore('buiol', 'You must init before find_unit',1)
+    IF (.not.is_init_buiol) CALL errore('find_unit', 'You must init before find_unit',1)
     !
     CURSOR => ENTRY
     DO WHILE (associated(CURSOR%NEXT))
@@ -384,7 +384,7 @@ MODULE buiol
     INTEGER,INTENT(in) :: unit
     TYPE(index_of_list),POINTER :: CURSOR
     !
-    IF (.not.is_init_buiol) CALL errore('buiol', 'You must init before find_prev_unit',1)
+    IF (.not.is_init_buiol) CALL errore('find_prev_unit', 'You must init before find_prev_unit',1)
     !
     CURSOR => ENTRY
     DO WHILE (associated(CURSOR%NEXT))
