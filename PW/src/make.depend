@@ -1309,13 +1309,9 @@ restart_from_file.o : ../../Modules/control_flags.o
 restart_from_file.o : ../../Modules/io_files.o
 restart_from_file.o : ../../Modules/io_global.o
 restart_from_file.o : ../../Modules/mp.o
-restart_in_electrons.o : ../../Modules/control_flags.o
 restart_in_electrons.o : ../../Modules/io_files.o
 restart_in_electrons.o : ../../Modules/io_global.o
 restart_in_electrons.o : ../../Modules/kind.o
-restart_in_electrons.o : ../../Modules/noncol.o
-restart_in_electrons.o : ../../Modules/wavefunctions.o
-restart_in_electrons.o : exx.o
 restart_in_electrons.o : pwcom.o
 restart_in_ions.o : ../../Modules/cell_base.o
 restart_in_ions.o : ../../Modules/control_flags.o
@@ -1378,7 +1374,6 @@ save_in_cbands.o : ../../Modules/io_global.o
 save_in_cbands.o : ../../Modules/kind.o
 save_in_cbands.o : pwcom.o
 save_in_electrons.o : ../../Modules/io_files.o
-save_in_electrons.o : ../../Modules/io_global.o
 save_in_electrons.o : ../../Modules/kind.o
 save_in_electrons.o : pwcom.o
 save_in_ions.o : ../../Modules/control_flags.o

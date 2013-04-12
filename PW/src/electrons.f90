@@ -23,30 +23,24 @@ SUBROUTINE electrons()
                                    elondon, ef_up, ef_dw
   USE scf,                  ONLY : rho, rho_core, rhog_core, v, vltot, vrs, &
                                    kedtau, vnew
-  USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
-                                   iprint, istep, conv_elec, &
-                                   restart, io_level, do_makov_payne,  &
-                                   gamma_only, iverbosity, textfor,     &
-                                   llondon, scf_must_converge
+  USE control_flags,        ONLY : tr2, niter, conv_elec, restart
   USE io_files,             ONLY : iunwfc, iunmix, nwordwfc, output_drho, &
                                    iunres, iunefield, seqopn
   USE buffers,              ONLY : save_buffer, close_buffer
   USE ldaU,                 ONLY : eth
   USE extfield,             ONLY : tefield, etotefield
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions_module, ONLY : evc
+  USE wvfct,                ONLY : nbnd, wg, et
+  USE klist,                ONLY : nks
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
                                    lambda, report
-  USE spin_orb,             ONLY : domag
-  USE io_rho_xml,           ONLY : write_rho
   USE uspp,                 ONLY : okvan
   USE exx,                  ONLY : exxinit, exxenergy2, &
                                    fock0, fock1, fock2, dexx, exx_restart
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi
-  USE funct,                ONLY : dft_is_meta
   USE mp_global,            ONLY : intra_bgrp_comm, inter_pool_comm, &
                                    root_pool, my_pool_id
-  USE mp,                   ONLY : mp_sum, mp_bcast
   !
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
   USE paw_onecenter,        ONLY : PAW_potential
@@ -64,7 +58,7 @@ SUBROUTINE electrons()
   INTEGER :: &
       idum,         &! dummy counter on iterations
       iter,         &! counter on iterations
-      ios
+      ik, ios
   REAL(DP) :: &
       tr2_min,     &! estimated error on energy coming from diagonalization
       tr2_final,   &! final threshold for exx minimization 
@@ -84,7 +78,6 @@ SUBROUTINE electrons()
   first = .true.
   tr2_final = tr2
   IF (dft_is_hybrid() .AND. adapt_thr ) tr2= tr2_init
-  IF ( istep > 0 ) ethr = 1.D-6
   fock0 = 0.D0
   fock1 = 0.D0
   fock2 = 0.D0
@@ -97,24 +90,27 @@ SUBROUTINE electrons()
      CALL seqopn (iunres, 'restart_e', 'formatted', exst)
      IF ( exst ) THEN
         ios = 0
-        READ (iunres, *, iostat=ios) iter, tr2, fock2
+        READ (iunres, *, iostat=ios) iter, tr2, dexx
         IF ( ios /= 0 ) THEN
            iter = 0
         ELSE IF ( iter < 0 .OR. iter > niter ) THEN
            iter = 0
         ELSE 
+           READ (iunres, *) fock0, fock1, fock2
+           READ (iunres, *) (wg(1:nbnd,ik),ik=1,nks)
+           READ (iunres, *) (et(1:nbnd,ik),ik=1,nks)
            ! ... if restarting here, exx was already active
            ! ... initialize stuff for exx
            first = .false.
            CALL exxinit()
            CALL v_of_rho( rho, rho_core, rhog_core, &
-                ehart, etxc, vtxc, eth, etotefield, charge, v)
+               ehart, etxc, vtxc, eth, etotefield, charge, v)
            IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
            CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
                          nspin, doublegrid )
            !
-           WRITE(stdout,'(5x,"Calculation (EXX) restarted from iteration #",i6)')& 
-                iter + 1
+           WRITE(stdout,'(5x,"Calculation (EXX) restarted from iteration #", &
+                        & i6)') iter 
         END IF
      END IF
      CLOSE ( unit=iunres, status='delete')
@@ -131,7 +127,10 @@ SUBROUTINE electrons()
         conv_elec=.FALSE.
         IF ( .NOT. first) THEN
            CALL seqopn (iunres, 'restart_e', 'formatted', exst)
-           WRITE (iunres, *) iter-1, tr2, fock2
+           WRITE (iunres, *) iter-1, tr2, dexx
+           WRITE (iunres, *) fock0, fock1, fock2
+           WRITE (iunres, *) (wg(1:nbnd,ik),ik=1,nks)
+           WRITE (iunres, *) (et(1:nbnd,ik),ik=1,nks)
            CLOSE (unit=iunres, status='keep')
         END IF
         RETURN
@@ -144,7 +143,10 @@ SUBROUTINE electrons()
      !
      IF ( first ) THEN
         !
+        first = .false.
         fock2 = exxenergy2()
+        !
+        ! ... Potential must be re-calculated because XC functional has changed
         !
         CALL v_of_rho( rho, rho_core, rhog_core, &
              ehart, etxc, vtxc, eth, etotefield, charge, v)
@@ -191,7 +193,10 @@ SUBROUTINE electrons()
      IF ( check_stop_now() ) THEN
         conv_elec=.FALSE.
         CALL seqopn (iunres, 'restart_e', 'formatted', exst)
-        WRITE (iunres, *) iter, tr2, fock2
+        WRITE (iunres, *) iter, tr2, dexx
+        WRITE (iunres, *) fock0, fock1, fock2
+        WRITE (iunres, *) (wg(1:nbnd,ik),ik=1,nks)
+        WRITE (iunres, *) (et(1:nbnd,ik),ik=1,nks)
         CLOSE (unit=iunres, status='keep')
         RETURN
      END IF
@@ -261,7 +266,7 @@ SUBROUTINE electrons_scf()
   USE ldaU,                 ONLY : eth, Hubbard_U, Hubbard_lmax, &
                                    niter_with_fixed_ns, lda_plus_u
   USE extfield,             ONLY : tefield, etotefield
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
                                    lambda, report
   USE spin_orb,             ONLY : domag
