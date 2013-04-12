@@ -54,7 +54,7 @@ subroutine solve_e
   USE recover_mod,           ONLY : read_rec, write_rec
 
   USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm, &
-                                    ntask_groups_file
+                                    get_ntask_groups
   USE mp,                    ONLY : mp_sum
 
   implicit none
@@ -98,7 +98,7 @@ subroutine solve_e
 !
 !  This routine is task group aware
 !
-  IF ( ntask_groups_file > 1 ) dffts%have_task_groups=.TRUE.
+  IF ( get_ntask_groups() > 1 ) dffts%have_task_groups=.TRUE.
 
   allocate (dvscfin( dfftp%nnr, nspin_mag, 3))
   if (doublegrid) then
@@ -218,7 +218,7 @@ subroutine solve_e
               ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
               ! dvscf_q from previous iteration (mix_potential)
               !
-              IF ( ntask_groups_file > 1 ) dffts%have_task_groups=.TRUE.
+              IF ( get_ntask_groups() > 1 ) dffts%have_task_groups=.TRUE.
               IF( dffts%have_task_groups ) THEN
                  IF (noncolin) THEN
                     CALL tg_cgather( dffts, dvscfins(:,1,ipol), &
@@ -437,7 +437,7 @@ subroutine solve_e
   deallocate (dvscfin)
   if (noncolin) deallocate(dbecsum_nc)
   deallocate(aux2)
-  IF ( ntask_groups_file > 1 ) dffts%have_task_groups=.TRUE.
+  IF ( get_ntask_groups() > 1 ) dffts%have_task_groups=.TRUE.
   IF ( dffts%have_task_groups ) THEN
      !
      DEALLOCATE( tg_dv  )
