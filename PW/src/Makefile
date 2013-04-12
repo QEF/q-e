@@ -168,7 +168,6 @@ s_1psi.o \
 s_psi.o \
 save_in_cbands.o \
 save_in_electrons.o \
-save_in_ions.o \
 scale_h.o \
 scf_mod.o \
 set_kplusq.o \

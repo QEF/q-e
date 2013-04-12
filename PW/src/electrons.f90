@@ -36,11 +36,9 @@ SUBROUTINE electrons()
                                    lambda, report
   USE uspp,                 ONLY : okvan
   USE exx,                  ONLY : exxinit, exxenergy2, &
-                                   fock0, fock1, fock2, dexx, exx_restart
+                                   fock0, fock1, fock2, dexx
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi
-  USE mp_global,            ONLY : intra_bgrp_comm, inter_pool_comm, &
-                                   root_pool, my_pool_id
   !
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
   USE paw_onecenter,        ONLY : PAW_potential
@@ -53,25 +51,17 @@ SUBROUTINE electrons()
   ! ... a few local variables
   !
   REAL(DP) :: &
-      charge,       &! the total charge
-      mag           ! local magnetization
+      charge         ! the total charge
   INTEGER :: &
       idum,         &! dummy counter on iterations
       iter,         &! counter on iterations
       ik, ios
   REAL(DP) :: &
       tr2_min,     &! estimated error on energy coming from diagonalization
-      tr2_final,   &! final threshold for exx minimization 
+      tr2_final     ! final threshold for exx minimization 
                     ! when using adaptive thresholds.
-      descf,       &! correction for variational energy
-      en_el=0.0_DP,&! electric field contribution to the total energy
-      eext=0.0_DP   ! external forces contribution to the total energy
   LOGICAL :: &
       first, exst
-  !
-  ! ... external functions
-  !
-  REAL(DP), EXTERNAL :: ewald, get_clock
   !
   !
   iter = 0
@@ -97,6 +87,7 @@ SUBROUTINE electrons()
            iter = 0
         ELSE 
            READ (iunres, *) fock0, fock1, fock2
+           ! FIXME: et and wg should be read from xml file
            READ (iunres, *) (wg(1:nbnd,ik),ik=1,nks)
            READ (iunres, *) (et(1:nbnd,ik),ik=1,nks)
            ! ... if restarting here, exx was already active
@@ -124,6 +115,7 @@ SUBROUTINE electrons()
      !
      IF ( .NOT. dft_is_hybrid() ) RETURN
      IF ( stopped_by_user .OR. .NOT. conv_elec ) THEN
+        ! FIXME: stopping here not yet working
         conv_elec=.FALSE.
         IF ( .NOT. first) THEN
            CALL seqopn (iunres, 'restart_e', 'formatted', exst)
@@ -195,6 +187,7 @@ SUBROUTINE electrons()
         CALL seqopn (iunres, 'restart_e', 'formatted', exst)
         WRITE (iunres, *) iter, tr2, dexx
         WRITE (iunres, *) fock0, fock1, fock2
+        ! FIXME: et and wg are written to xml file
         WRITE (iunres, *) (wg(1:nbnd,ik),ik=1,nks)
         WRITE (iunres, *) (et(1:nbnd,ik),ik=1,nks)
         CLOSE (unit=iunres, status='keep')
@@ -642,16 +635,9 @@ SUBROUTINE electrons_scf()
      !
      CALL newd()
      !
-     ! ... write restart file
-     !
-     !!!CALL save_in_electrons( iter, dr2 )
-     !
-     ! ... calculate the polarization
-     !
      IF ( lelfield ) en_el =  calc_pol ( )
      !
-     IF ( ( MOD( iter, report ) == 0 ) .OR. &
-          ( report /= 0 .AND. conv_elec ) ) THEN
+     IF ( ( MOD(iter,report) == 0 ) .OR. ( report /= 0 .AND. conv_elec ) ) THEN
         !
         IF ( (noncolin .AND. domag) .OR. i_cons==1 .OR. nspin==2) CALL report_mag()
         !
@@ -762,6 +748,7 @@ SUBROUTINE electrons_scf()
   !
   IF ( nks == 1 .AND. .NOT. lelfield ) &
       CALL save_buffer ( evc, nwordwfc, iunwfc, nks )
+  !
   IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
   call destroy_scf_type ( rhoin )
   CALL stop_clock( 'electrons' )
