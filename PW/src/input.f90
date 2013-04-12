@@ -323,8 +323,9 @@ SUBROUTINE iosys()
   IMPLICIT NONE
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  INTEGER, EXTERNAL :: read_config_from_file
   !
-  INTEGER  :: ia, image, nt, inlc
+  INTEGER  :: ia, nt, inlc, ierr
   LOGICAL  :: exst, parallelfs
   REAL(DP) :: theta, phi
   !
@@ -1411,15 +1412,16 @@ SUBROUTINE iosys()
   ENDIF
   !
   ! ... Read atomic positions and unit cell from data file, if needed,
-  !     overwriting what I just read before from the input
+  ! ... overwriting what has just been read before from input
   !
-  IF ( startingconfig == 'file' ) then
-     CALL read_config_from_file()
-  ELSE
-     ! I have to convert the units of tau only if it was read from input,
-     ! not if it was read from file
-     CALL convert_tau ( tau_format, nat_, tau)
-  END IF
+  ierr = 1
+  IF ( startingconfig == 'file' ) ierr = read_config_from_file()
+  !
+  ! ... read_config_from_file returns 0 if structure successfully read
+  ! ... Atomic positions (tau) must be converted to internal units
+  ! ... only if they were read from input, not from file
+  !
+  IF ( ierr /= 0 ) CALL convert_tau ( tau_format, nat_, tau)
   !
   ! ... set up k-points
   !

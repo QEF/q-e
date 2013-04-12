@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE read_config_from_file()
+FUNCTION read_config_from_file() RESULT (ierr)
   !-----------------------------------------------------------------------
   !
   USE kinds,          ONLY : DP
@@ -26,8 +26,8 @@ SUBROUTINE read_config_from_file()
   !
   IF ( TRIM( startingconfig ) /= 'file' ) RETURN
   !
-  WRITE( stdout, '(/5X,"Atomic positions and unit cell read from directory:"/5X,A)') &
-      TRIM( tmp_dir ) // TRIM( prefix ) // ".save/"
+  WRITE( stdout, '(/5X,"Atomic positions and unit cell read from directory:", &
+                &  /,5X,A)') TRIM( tmp_dir ) // TRIM( prefix ) // ".save/"
   !
   ! ... check if restart file is present, if yes read config parameters
   !
@@ -37,7 +37,6 @@ SUBROUTINE read_config_from_file()
      !
      WRITE( stdout, '(5X,"Nothing found: ", &
                        & "using input atomic positions and unit cell",/)' )
-     !
      RETURN
      !
   END IF
@@ -64,4 +63,4 @@ SUBROUTINE read_config_from_file()
   !
   RETURN
   !
-END SUBROUTINE read_config_from_file
+END FUNCTION read_config_from_file

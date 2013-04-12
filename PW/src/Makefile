@@ -157,6 +157,7 @@ read_file.o \
 regterg.o \
 remove_atomic_rho.o \
 report_mag.o \
+restart_in_electrons.o \
 rho2zeta.o \
 rotate_wfc.o \
 rotate_wfc_k.o \

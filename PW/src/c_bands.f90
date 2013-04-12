@@ -375,7 +375,7 @@ CONTAINS
           do ipol=1,3
              if(ABS(efield_cry(ipol))>eps) then
                 CALL get_buffer (evcelm(:,:,ipol), nwordwfc, iunefieldm, ik+(ipol-1)*nks)
-                CALL get_buffer(evcelp(:,:,ipol), nwordwfc, iunefieldp, ik+(ipol-1)*nks)
+                CALL get_buffer (evcelp(:,:,ipol), nwordwfc, iunefieldp, ik+(ipol-1)*nks)
              endif
           enddo
        endif
