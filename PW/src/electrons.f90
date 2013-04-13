@@ -35,7 +35,7 @@ SUBROUTINE electrons()
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
                                    lambda, report
   USE uspp,                 ONLY : okvan
-  USE exx,                  ONLY : exxinit, exxenergy2, &
+  USE exx,                  ONLY : exxinit, exxenergy2, exxbuff, &
                                    fock0, fock1, fock2, dexx
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi
@@ -90,10 +90,17 @@ SUBROUTINE electrons()
            ! FIXME: et and wg should be read from xml file
            READ (iunres, *) (wg(1:nbnd,ik),ik=1,nks)
            READ (iunres, *) (et(1:nbnd,ik),ik=1,nks)
+           CLOSE ( unit=iunres, status='delete')
            ! ... if restarting here, exx was already active
            ! ... initialize stuff for exx
            first = .false.
            CALL exxinit()
+           ! FIXME: ugly hack, overwrites exxbuffer from exxinit
+           CALL seqopn (iunres, 'restart_exx', 'unformatted', exst)
+           ! FIXME: doesn't work non non-colinear hybrids
+           IF (exst) READ (iunres, iostat=ios) exxbuff
+           IF (ios /= 0) WRITE(stdout,'(5x,"Error in EXX restart!")')
+           !
            CALL v_of_rho( rho, rho_core, rhog_core, &
                ehart, etxc, vtxc, eth, etotefield, charge, v)
            IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
@@ -123,6 +130,9 @@ SUBROUTINE electrons()
            WRITE (iunres, *) fock0, fock1, fock2
            WRITE (iunres, *) (wg(1:nbnd,ik),ik=1,nks)
            WRITE (iunres, *) (et(1:nbnd,ik),ik=1,nks)
+           CLOSE (unit=iunres, status='keep')
+           CALL seqopn (iunres, 'restart_exx', 'unformatted', exst)
+           WRITE (iunres) exxbuff
            CLOSE (unit=iunres, status='keep')
         END IF
         RETURN
