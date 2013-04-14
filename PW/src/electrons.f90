@@ -97,7 +97,6 @@ SUBROUTINE electrons()
            CALL exxinit()
            ! FIXME: ugly hack, overwrites exxbuffer from exxinit
            CALL seqopn (iunres, 'restart_exx', 'unformatted', exst)
-           ! FIXME: doesn't work non non-colinear hybrids
            IF (exst) READ (iunres, iostat=ios) exxbuff
            IF (ios /= 0) WRITE(stdout,'(5x,"Error in EXX restart!")')
            !
@@ -122,7 +121,6 @@ SUBROUTINE electrons()
      !
      IF ( .NOT. dft_is_hybrid() ) RETURN
      IF ( stopped_by_user .OR. .NOT. conv_elec ) THEN
-        ! FIXME: stopping here not yet working
         conv_elec=.FALSE.
         IF ( .NOT. first) THEN
            CALL seqopn (iunres, 'restart_e', 'formatted', exst)

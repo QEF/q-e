@@ -41,11 +41,7 @@ MODULE exx
                                          ! x_occupation(nbnd,nks) the weight of 
                                          ! auxiliary functions in the density matrix
   COMPLEX(DP), ALLOCATABLE :: exxbuff(:,:,:)
-                                         ! temporay buffer to store wfc 
-  COMPLEX(DP), ALLOCATABLE :: exxbuff_nc(:,:,:,:)
-                                         ! temporay buffer to store wfc in the
-                                         ! noncollinear case
-
+                                         ! temporary buffer where to store wfc 
   !
   ! let xk(:,ik) + xq(:,iq) = xkq(:,ikq) = S(isym)*xk(ik') + G
   ! 
@@ -227,7 +223,6 @@ CONTAINS
     IF ( allocated(x_occupation) ) DEALLOCATE(x_occupation)
     IF ( allocated(xkq_collect) )  DEALLOCATE(xkq_collect)
     IF ( allocated(exxbuff) )      DEALLOCATE(exxbuff)
-    IF ( allocated(exxbuff_nc) )   DEALLOCATE(exxbuff_nc)
     !
     !
     CALL exx_fft_destroy()
@@ -583,35 +578,6 @@ CONTAINS
   !------------------------------------------------------------------------
   !
   !------------------------------------------------------------------------
-  SUBROUTINE exx_restart(l_exx_was_active)
-  !------------------------------------------------------------------------
-    !This SUBROUTINE is called when restarting an exx calculation
-    USE funct,                ONLY : get_exx_fraction, start_exx, exx_is_active, &
-                                     get_screening_parameter
-    USE fft_base,             ONLY : dffts
-    USE io_global,            ONLY : stdout
-
-    IMPLICIT NONE
-    LOGICAL, INTENT(IN) :: l_exx_was_active
-
-    IF (.not. l_exx_was_active ) return ! nothing had happpened yet
-    !!
-    exx_nwordwfc=2*dffts%nnr
-    !iunexx = find_free_unit()
-    !CALL diropn(iunexx,'exx', exx_nwordwfc, exst) 
-    erfc_scrlen = get_screening_parameter()
-    exxdiv = exx_divergence() 
-    exxalfa = get_exx_fraction()
-    CALL start_exx
-    CALL weights()
-    CALL exxinit()
-    fock0 = exxenergy2()
- 
-    return
-    !------------------------------------------------------------------------
-  END SUBROUTINE exx_restart
-  !------------------------------------------------------------------------
-  !------------------------------------------------------------------------
   SUBROUTINE exxinit()
   !------------------------------------------------------------------------
 
@@ -700,11 +666,10 @@ CONTAINS
     CALL init_index_over_band(inter_bgrp_comm,nbnd)
     IF (noncolin) THEN
        ALLOCATE(temppsic_nc(nrxxs, npol), psic_nc(nrxxs, npol))
-       IF (.NOT. allocated(exxbuff_nc)) ALLOCATE( exxbuff_nc(nrxxs,npol,nbnd,nkqs))
     ELSE
        ALLOCATE(temppsic(nrxxs), psic(nrxxs))
-       if( .not. allocated( exxbuff ) ) ALLOCATE( exxbuff(nrxxs,nbnd,nkqs) )
     ENDIF
+    IF (.NOT. allocated(exxbuff)) ALLOCATE( exxbuff(nrxxs*npol,nbnd,nkqs))
     !
     ALLOCATE(ispresent(nsym))
     ALLOCATE(tempevc( npwx*npol, nbnd ))
@@ -760,11 +725,7 @@ CONTAINS
        ENDIF
     ENDDO
 
-    IF (noncolin) THEN
-       exxbuff_nc=(0.0_DP,0.0_DP)
-    ELSE
-       exxbuff=(0.0_DP,0.0_DP)
-    ENDIF
+    exxbuff=(0.0_DP,0.0_DP)
     ! set appropriately the x_occupation
     DO ik =1,nkstot
        IF(ABS(wk_collect(ik)) > eps_occ ) THEN
@@ -879,7 +840,8 @@ CONTAINS
                       END DO
                    END DO
 #endif
-                   exxbuff_nc(:,:,ibnd,ikq)=psic_nc(:,:)
+                   exxbuff(      1:  nrxxs,ibnd,ikq)=psic_nc(:,1)
+                   exxbuff(nrxxs+1:2*nrxxs,ibnd,ikq)=psic_nc(:,2)
                 ELSE ! noncolinear
 #ifdef __MPI
                   CALL cgather_smooth(temppsic,temppsic_all)
@@ -905,14 +867,7 @@ CONTAINS
     KPOINTS_LOOP
     !
     !   All pools must have the complete set of wavefunctions (i.e. from every kpoint)
-    IF (npool>1) THEN
-       IF (noncolin) THEN
-          CALL mp_sum(exxbuff_nc, inter_pool_comm)
-       ELSE
-          CALL mp_sum(exxbuff, inter_pool_comm)
-       END IF
-    END IF
-    !
+    IF (npool>1) CALL mp_sum(exxbuff, inter_pool_comm)
     !
     DEALLOCATE(tempevc)
     DEALLOCATE(ispresent)
@@ -1151,7 +1106,8 @@ CONTAINS
             !loads the phi from file
             !
             IF (noncolin) THEN
-                tempphic_nc(:,:)=exxbuff_nc(:,:,ibnd,ikq)
+                tempphic_nc(:,1)=exxbuff(      1:  nrxxs,ibnd,ikq)
+                tempphic_nc(:,2)=exxbuff(nrxxs+1:2*nrxxs,ibnd,ikq)
             ELSE
                 tempphic(:)=exxbuff(:,ibnd,ikq)
             ENDIF
@@ -1565,7 +1521,8 @@ CONTAINS
                    !loads the phi from file
                    !
                    IF (noncolin) THEN
-                      tempphic_nc(:,:)=exxbuff_nc(:,:,ibnd,ikq)
+                      tempphic_nc(:,1)=exxbuff(      1:  nrxxs,ibnd,ikq)
+                      tempphic_nc(:,2)=exxbuff(nrxxs+1:2*nrxxs,ibnd,ikq)
                       rhoc(:)=(CONJG(tempphic_nc(:,1))*temppsic_nc(:,1) + &
                                CONJG(tempphic_nc(:,2))*temppsic_nc(:,2) )/omega
                    ELSE
