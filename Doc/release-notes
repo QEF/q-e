@@ -1,7 +1,7 @@
 New in svn version
 
-   * Added the subdirectory FD in PHonon. Calculation of phonon dispersions using
-     the finite displacements supercell approach.
+   * Added the subdirectory FD in PHonon. Calculation of phonon dispersions 
+     using the finite displacements supercell approach.
 
 Incompatible changes in svn version:
 
