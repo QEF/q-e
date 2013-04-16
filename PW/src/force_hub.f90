@@ -483,13 +483,12 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
 
    ldim = 2 * Hubbard_l(nt) + 1
 
-   ALLOCATE ( dwfc(npwx,ldim) )
-
    dproj(:,:) = (0.d0, 0.d0)
    !
    ! At first the derivatives of the atomic wfc and the beta are computed
    !
    IF (Hubbard_U(nt) /= 0.d0 .OR. Hubbard_alpha(nt) /= 0.d0) THEN
+      ALLOCATE ( dwfc(npwx,ldim) )
       DO ig = 1,npw
          gvec = g(ipol,igk(ig)) * tpiba
 
