@@ -315,7 +315,7 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
    COMPLEX (DP), INTENT (OUT) :: &
            dproj(natomwfc,nbnd)     ! output: the derivative of the projection
    !
-   INTEGER :: ig, jkb2, na, m1, ibnd, iwf, nt, ih, jh, ldim
+   INTEGER :: ig, ijkb0, na, m1, ibnd, iwf, nt, ih, jh, ldim
    REAL (DP) :: gvec
    COMPLEX (DP), ALLOCATABLE :: dwfc(:,:), dbeta(:,:), &
                                 betapsi(:,:), dbetapsi(:,:), &
@@ -359,7 +359,7 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
    !
    CALL mp_sum( dproj, intra_bgrp_comm )
    !
-   jkb2 = 0
+   ijkb0 = 0
    DO nt=1,ntyp
       DO na=1,nat
          IF ( ityp(na) .EQ. nt ) THEN
@@ -371,14 +371,14 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
             DO ih=1,nh(nt)
                DO ig = 1, npw
                   gvec = g(ipol,igk(ig)) * tpiba
-                  dbeta(ig,ih) = (0.d0,-1.d0) * vkb(ig,jkb2+ih) * gvec
+                  dbeta(ig,ih) = (0.d0,-1.d0) * vkb(ig,ijkb0+ih) * gvec
                END DO
             END DO
             CALL calbec ( npw, dbeta, evc, dbetapsi ) 
             CALL calbec ( npw, wfcatom, dbeta, wfatdbeta ) 
             DO ih=1,nh(nt)
                DO ig = 1, npw
-                  dbeta(ig,ih) = vkb(ig,jkb2+ih)
+                  dbeta(ig,ih) = vkb(ig,ijkb0+ih)
                END DO
             END DO
             CALL calbec ( npw, wfcatom, dbeta, wfatbeta ) 
@@ -402,7 +402,7 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
                DO ibnd=1,nbnd
                   DO jh=1,nh(nt)
                       betapsi(ih,ibnd) = betapsi(ih,ibnd) + &
-                                         qq(ih,jh,nt) * becp%k(jkb2+jh,ibnd)
+                                         qq(ih,jh,nt) * becp%k(ijkb0+jh,ibnd)
                   END DO
                END DO
             END DO
@@ -421,7 +421,7 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
             DEALLOCATE (wfatdbeta )
             DEALLOCATE (dbetapsi )
          END IF
-         jkb2 = jkb2 + nh(nt)
+         ijkb0 = ijkb0 + nh(nt)
          END IF
       END DO
    END DO
@@ -466,7 +466,7 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
    REAL (DP), INTENT (OUT) :: &
            dproj(natomwfc,nbnd)     ! output: the derivative of the projection
    !
-   INTEGER :: ig, jkb2, na, m1, ibnd, iwf, nt, ih, jh, ldim
+   INTEGER :: ig, ijkb0, na, m1, ibnd, iwf, nt, ih, jh, ldim
    REAL (DP) :: gvec
    COMPLEX (DP), ALLOCATABLE :: dwfc(:,:), dbeta(:,:)
    REAL (DP), ALLOCATABLE ::    betapsi(:,:), dbetapsi(:,:), &
@@ -509,7 +509,7 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
    !
    CALL mp_sum( dproj, intra_bgrp_comm )
    ! 
-   jkb2 = 0
+   ijkb0 = 0
    DO nt=1,ntyp
       DO na=1,nat
          IF ( ityp(na) .EQ. nt ) THEN
@@ -521,14 +521,14 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
             DO ih=1,nh(nt)
                DO ig = 1, npw
                   gvec = g(ipol,igk(ig)) * tpiba
-                  dbeta(ig,ih) = (0.d0,-1.d0) * vkb(ig,jkb2+ih) * gvec
+                  dbeta(ig,ih) = (0.d0,-1.d0) * vkb(ig,ijkb0+ih) * gvec
                END DO
             END DO
             CALL calbec ( npw, dbeta, evc, dbetapsi ) 
             CALL calbec ( npw, wfcatom, dbeta, wfatdbeta ) 
             DO ih=1,nh(nt)
                DO ig = 1, npw
-                  dbeta(ig,ih) = vkb(ig,jkb2+ih)
+                  dbeta(ig,ih) = vkb(ig,ijkb0+ih)
                END DO
             END DO
             CALL calbec ( npw, wfcatom, dbeta, wfatbeta ) 
@@ -552,7 +552,7 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
                DO ibnd=1,nbnd
                   DO jh=1,nh(nt)
                       betapsi(ih,ibnd) = betapsi(ih,ibnd) + &
-                                         qq(ih,jh,nt) * becp%r(jkb2+jh,ibnd)
+                                         qq(ih,jh,nt) * becp%r(ijkb0+jh,ibnd)
                   END DO
                END DO
             END DO
@@ -571,7 +571,7 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
             DEALLOCATE (wfatdbeta )
             DEALLOCATE (dbetapsi )
          END IF
-         jkb2 = jkb2 + nh(nt)
+         ijkb0 = ijkb0 + nh(nt)
          END IF
       END DO
    END DO

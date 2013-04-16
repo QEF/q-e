@@ -294,7 +294,7 @@ SUBROUTINE dprojdepsilon_k ( wfcatom, spsi, ik, ipol, jpol, dproj )
    COMPLEX (DP), INTENT(OUT) :: &
            dproj(natomwfc,nbnd)     ! the derivative of the projection
    !
-   INTEGER :: i, ig, jkb2, lmax_wfc, na, ibnd, iwf, nt, ih,jh, &
+   INTEGER :: i, ig, ijkb0, lmax_wfc, na, ibnd, iwf, nt, ih,jh, &
               nworddw, nworddb
    REAL (DP) :: xyz(3,3), q, a1, a2
    REAL (DP), PARAMETER :: eps=1.0d-8
@@ -377,26 +377,26 @@ SUBROUTINE dprojdepsilon_k ( wfcatom, spsi, ik, ipol, jpol, dproj )
    ! and here the derivative of the spherical harmonic
    CALL gen_us_dy (ik,xyz(1,ipol),aux1)
 
-   jkb2 = 0
+   ijkb0 = 0
    DO nt=1,ntyp
       DO na=1,nat
          IF ( ityp(na) .EQ. nt ) THEN
             DO ih=1,nh(nt)
-               jkb2 = jkb2 + 1
+               ijkb0 = ijkb0 + 1
                ! now we compute the true dbeta function
                DO ig = 1,npw
-                  dbeta(ig,jkb2) = - aux1(ig,jkb2)*gk(jpol,ig) - &
-                        dbeta(ig,jkb2) * gk(ipol,ig) * gk(jpol,ig) * qm1(ig)
+                  dbeta(ig,ijkb0) = - aux1(ig,ijkb0)*gk(jpol,ig) - &
+                        dbeta(ig,ijkb0) * gk(ipol,ig) * gk(jpol,ig) * qm1(ig)
                   IF (ipol.EQ.jpol) &
-                     dbeta(ig,jkb2) = dbeta(ig,jkb2) - vkb(ig,jkb2)*0.5d0
+                     dbeta(ig,ijkb0) = dbeta(ig,ijkb0) - vkb(ig,ijkb0)*0.5d0
                END DO
                DO ibnd = 1,nbnd
-                  betapsi(ih,ibnd)= becp%k(jkb2,ibnd)
-                  dbetapsi(ih,ibnd)= zdotc(npw,dbeta(1,jkb2),1,evc(1,ibnd),1)
+                  betapsi(ih,ibnd)= becp%k(ijkb0,ibnd)
+                  dbetapsi(ih,ibnd)= zdotc(npw,dbeta(1,ijkb0),1,evc(1,ibnd),1)
                END DO
                DO iwf=1,natomwfc
-                  wfatbeta(iwf,ih) = zdotc(npw,wfcatom(1,iwf),1,vkb(1,jkb2),1)
-                  wfatdbeta(iwf,ih)= zdotc(npw,wfcatom(1,iwf),1,dbeta(1,jkb2),1)
+                  wfatbeta(iwf,ih) = zdotc(npw,wfcatom(1,iwf),1,vkb(1,ijkb0),1)
+                  wfatdbeta(iwf,ih)= zdotc(npw,wfcatom(1,iwf),1,dbeta(1,ijkb0),1)
                END DO
             END DO
             !
@@ -463,7 +463,7 @@ SUBROUTINE dprojdepsilon_gamma ( wfcatom, spsi, ipol, jpol, dproj )
    REAL (DP), INTENT(OUT) :: &
            dproj(natomwfc,nbnd)     ! the derivative of the projection
    !
-   INTEGER :: ik=1, i, ig, jkb2, lmax_wfc, na, ibnd, iwf, nt, ih,jh, &
+   INTEGER :: ik=1, i, ig, ijkb0, lmax_wfc, na, ibnd, iwf, nt, ih,jh, &
               nworddw, nworddb
    REAL (DP) :: xyz(3,3), q, a1, a2
    REAL (DP), PARAMETER :: eps=1.0d-8
@@ -546,35 +546,35 @@ SUBROUTINE dprojdepsilon_gamma ( wfcatom, spsi, ipol, jpol, dproj )
    ! and here the derivative of the spherical harmonic
    CALL gen_us_dy (ik,xyz(1,ipol),aux1)
 
-   jkb2 = 0
+   ijkb0 = 0
    DO nt=1,ntyp
       DO na=1,nat
          IF ( ityp(na) .EQ. nt ) THEN
             DO ih=1,nh(nt)
-               jkb2 = jkb2 + 1
+               ijkb0 = ijkb0 + 1
                ! now we compute the true dbeta function
                DO ig = 1,npw
-                  dbeta(ig,jkb2) = - aux1(ig,jkb2)*gk(jpol,ig) - &
-                        dbeta(ig,jkb2) * gk(ipol,ig) * gk(jpol,ig) * qm1(ig)
+                  dbeta(ig,ijkb0) = - aux1(ig,ijkb0)*gk(jpol,ig) - &
+                        dbeta(ig,ijkb0) * gk(ipol,ig) * gk(jpol,ig) * qm1(ig)
                   IF (ipol.EQ.jpol) &
-                     dbeta(ig,jkb2) = dbeta(ig,jkb2) - vkb(ig,jkb2)*0.5d0
+                     dbeta(ig,ijkb0) = dbeta(ig,ijkb0) - vkb(ig,ijkb0)*0.5d0
                END DO
                DO ibnd = 1,nbnd
-                  betapsi(ih,ibnd)= becp%r(jkb2,ibnd)
+                  betapsi(ih,ibnd)= becp%r(ijkb0,ibnd)
                   dbetapsi(ih,ibnd) = 2.0_dp * &
-                      ddot(2*npw,dbeta(1,jkb2),1,evc(1,ibnd),1)
+                      ddot(2*npw,dbeta(1,ijkb0),1,evc(1,ibnd),1)
                   IF ( gstart == 2 ) dbetapsi(ih,ibnd) = &
-                        dbetapsi(ih,ibnd) - dbeta(1,jkb2)*evc(1,ibnd)
+                        dbetapsi(ih,ibnd) - dbeta(1,ijkb0)*evc(1,ibnd)
                END DO
                DO iwf=1,natomwfc
                   wfatbeta(iwf,ih) = 2.0_dp * &
-                    ddot(2*npw,wfcatom(1,iwf),1,vkb(1,jkb2),1)
+                    ddot(2*npw,wfcatom(1,iwf),1,vkb(1,ijkb0),1)
                   IF ( gstart == 2 ) wfatbeta(iwf,ih) = &
-                      wfatbeta(iwf,ih) - wfcatom(1,iwf)*vkb(1,jkb2)
+                      wfatbeta(iwf,ih) - wfcatom(1,iwf)*vkb(1,ijkb0)
                   wfatdbeta(iwf,ih)= 2.0_dp * &
-                    ddot(2*npw,wfcatom(1,iwf),1,dbeta(1,jkb2),1)
+                    ddot(2*npw,wfcatom(1,iwf),1,dbeta(1,ijkb0),1)
                   IF ( gstart == 2 ) wfatdbeta(iwf,ih) = &
-                      wfatdbeta(iwf,ih) - wfcatom(1,iwf)*dbeta(1,jkb2)
+                      wfatdbeta(iwf,ih) - wfcatom(1,iwf)*dbeta(1,ijkb0)
                END DO
             END DO
             !
