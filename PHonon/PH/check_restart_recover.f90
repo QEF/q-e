@@ -14,7 +14,7 @@ LOGICAL :: exst_recover, exst_restart
 iunrec = 99
 iunres = 98
 CALL seqopn (iunrec, 'recover', 'unformatted', exst_recover)
-CALL seqopn( iunres, 'restart', 'UNFORMATTED', exst_restart )
+CALL seqopn( iunres, 'restart_k', 'UNFORMATTED', exst_restart )
 IF (exst_recover) THEN
    close (unit = iunrec, status = 'keep')
 ELSE

@@ -18,6 +18,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE io_files,        ONLY : prefix, tmp_dir, wfc_dir, seqopn
   USE lsda_mod,        ONLY : nspin
   USE control_flags,   ONLY : restart
+  USE check_stop,      ONLY : check_stop_now
   USE fft_base,        ONLY : dffts
   USE modes,           ONLY : minus_q, nsymq, invsymq
   USE disp,            ONLY : lgamma_iq
@@ -69,7 +70,6 @@ SUBROUTINE run_nscf(do_band, iq)
   starting_pot      = 'file'
   starting_wfc      = 'atomic'
   restart = ext_restart
-!  CALL restart_from_file()
   conv_ions=.true.
   !
   CALL setup_nscf ( newgrid, xq )
@@ -82,6 +82,17 @@ SUBROUTINE run_nscf(do_band, iq)
 !!!!!!!!!!!!!!!!!!!!!!!!END OF ACFDT TEST !!!!!!!!!!!!!!!!
 !
   IF (do_band) CALL non_scf ( )
+
+
+  IF ( check_stop_now() ) THEN
+!
+!  In this case the code stops inside the band calculation. Save the
+!  files and stop the pwscf run
+!
+     CALL punch( 'config' )
+     CALL stop_run(.false.)
+  ENDIF
+
   !
   IF (.NOT.reduce_io.and.do_band) THEN
 !
