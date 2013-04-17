@@ -2161,6 +2161,7 @@ subroutine setgam (q, gam, nat, at,bg,tau,itau_blk,nsc,alat, &
   !
   call q_gen(nsc,qbid,at_blk,bg_blk,at,bg)
   !
+  f_of_q=(0.0_DP,0.0_DP)
   do iq=1,nsc
      !
      do k=1,3
