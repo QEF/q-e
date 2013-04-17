@@ -16,8 +16,8 @@ $ECHO "This example shows how to use the recover feature of ph.x for el-ph"
 . ../../../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x ph.x"
-PSEUDO_LIST="Si.pz-vbc.UPF Ni.pbe-nd-rrkjus.UPF Cu.pbe-kjpaw.UPF Au.rel-pz-kjpaw.UPF"
+BIN_LIST="pw.x ph.x q2r.x matdyn.x"
+PSEUDO_LIST="Al.pz-vbc.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -180,12 +180,6 @@ Electron-phonon coefficients for Al
 EOF
 $ECHO "  running the electron-phonon calculation ...\c"
 $PH_COMMAND < al.elph.in > al.elph.out
-#
-#   The electron phonon routine appends its results to a2fq2r.# so we need
-#   to remove these files before recovering
-#
-\rm -rf a2Fq2r.* 2> /dev/null
-
 #
 cat > al.elph.in1 << EOF
 Electron-phonon coefficients for Al
