@@ -1143,10 +1143,10 @@ MODULE ph_restart
 
   DO iq=1, nqs
      IF ( iq == current_iq .OR. lqdir) THEN
-        IF (lqdir) THEN
+        IF (lqdir .AND. .NOT. lgamma_iq(iq)) THEN
            dir_phq= TRIM (tmp_dir_ph) // TRIM(prefix) //  &
-                       & '.q_' // TRIM(int_to_char(iq)) 
-           dirname= TRIM (dir_phq) // '/' &
+                       & '.q_' // TRIM(int_to_char(iq)) // '/'
+           dirname= TRIM (dir_phq) &
                        &  //TRIM(prefix)//'.save'
            tmp_dir=dir_phq
         ELSE
