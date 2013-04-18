@@ -1452,14 +1452,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 	var diago_thr_init -type REAL {
 	    info {
-		Convergence threshold for the first iterative diagonalization
+		Convergence threshold for iterative diagonalization
 		(the check is on eigenvalue convergence).
-		For scf calculations, the default is 1.D-2 if starting from a
+		For scf calculations: default is 1.D-2 if starting from a
 		superposition of atomic orbitals; 1.D-5 if starting from a
 		charge density. During self consistency the threshold (ethr)
-		is automatically reduced when approaching convergence.
-		For non-scf calculations, this is the threshold used in the
-		iterative diagonalization. The default is conv_thr /N elec.
+		is automatically reduced (but never below 1.D-13) when 
+                approaching convergence.
+                For non-scf calculations: default is conv_thr /N elec .
 	    }
 	}
 
