@@ -382,8 +382,6 @@ SUBROUTINE electrons_scf()
   DO idum = 1, niter
      !
      IF ( check_stop_now() ) THEN
-        CALL write_rho( rho, nspin )
-        CALL close_mix_file( iunmix, 'keep' )
         conv_elec=.FALSE.
         CALL save_in_electrons (iter, dr2, et )
         GO TO 10
@@ -437,8 +435,6 @@ SUBROUTINE electrons_scf()
         END IF
         !
         IF ( stopped_by_user ) THEN
-           CALL write_rho( rho, nspin )
-           CALL close_mix_file( iunmix, 'keep' )
            conv_elec=.FALSE.
            CALL save_in_electrons (iter-1, dr2, et )
            GO TO 10
@@ -592,12 +588,6 @@ SUBROUTINE electrons_scf()
               CALL PAW_symmetrize_ddd(ddd_paw)
            ENDIF
            !
-           ! ... remove mixing info, write the charge density to file
-           ! ... (also write ldaU ns coeffs and PAW becsum)
-           !
-           CALL close_mix_file( iunmix, 'delete' )
-           CALL write_rho( rho, nspin )
-           !
            ! ... note that rho is here the output, not mixed, charge density
            ! ... so correction for variational energy is no longer needed
            !
@@ -638,7 +628,6 @@ SUBROUTINE electrons_scf()
      !
      ! ... in the US case we have to recompute the self-consistent
      ! ... term in the nonlocal potential
-     !
      ! ... PAW: newd contains PAW updates of NL coefficients
      !
      CALL newd()
@@ -750,6 +739,19 @@ SUBROUTINE electrons_scf()
   WRITE( stdout, 9120 ) iter
   !
 10  CALL flush_unit( stdout )
+  !
+  ! ... exiting: write the charge density to file
+  ! ... (also write ldaU ns coefficients and PAW becsum)
+  !
+  CALL write_rho( rho, nspin )
+  !
+  ! ... delete mixing info if converged, keep it if not
+  !
+  IF ( conv_elec ) THEN
+     CALL close_mix_file( iunmix, 'delete' )
+  ELSE
+     CALL close_mix_file( iunmix, 'keep' )
+  END IF
   !
   ! Save wavefunctions to buffer if never saved before
   ! FIXME: we should just write to file, not to buffer
