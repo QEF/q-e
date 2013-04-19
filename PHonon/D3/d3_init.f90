@@ -52,8 +52,14 @@ SUBROUTINE d3_init
   ENDIF
 !
 ! uses the same initialization routines as the phonon program
+! Temporary: Note that now phq_init uses buffers so the size of the 
+! records must be declared 1/2 of davcio (please fix me or use buffers in
+! d3)
 !
+  lrwfc=lrwfc/2
   CALL phq_init
+  lrwfc=lrwfc*2
+
   CALL write_igk
 !
 !  the fourier components of the local potential at q+G for q=0
