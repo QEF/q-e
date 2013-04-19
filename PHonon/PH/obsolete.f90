@@ -1927,6 +1927,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   USE fft_interfaces, ONLY: invfft
   USE gvecs,   ONLY : doublegrid, nls
   USE klist,     ONLY : xk, wk, degauss, ngauss
+  USE buffers,   ONLY : get_buffer
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wvfct,     ONLY : nbnd, npw, npwx, igk, et
@@ -1997,7 +1998,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
      !
      ! unperturbed wfs in reciprocal space read from unit iuwfc
      !
-     if (nksq > 1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
+     if (nksq > 1) call get_buffer (evc, lrwfc, iuwfc, ik)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
      !
      call calbec ( npw, vkb, evc, becp)

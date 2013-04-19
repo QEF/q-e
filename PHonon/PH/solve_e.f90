@@ -32,6 +32,7 @@ subroutine solve_e
   USE spin_orb,              ONLY : domag
   USE wvfct,                 ONLY : nbnd, npw, npwx, igk, g2kin,  et
   USE check_stop,            ONLY : check_stop_now
+  USE buffers,               ONLY : get_buffer, save_buffer
   USE wavefunctions_module,  ONLY : evc
   USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : upf, nhm
@@ -184,7 +185,7 @@ subroutine solve_e
         !
         ! reads unperturbed wavefuctions psi_k in G_space, for all bands
         !
-        if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
+        if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
         npwq = npw
         call init_us_2 (npw, igk, xk (1, ik), vkb)
         !
@@ -218,7 +219,7 @@ subroutine solve_e
               ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
               ! dvscf_q from previous iteration (mix_potential)
               !
-              IF ( get_ntask_groups() > 1 ) dffts%have_task_groups=.TRUE.
+              IF ( get_ntask_groups() > 1) dffts%have_task_groups=.TRUE.
               IF( dffts%have_task_groups ) THEN
                  IF (noncolin) THEN
                     CALL tg_cgather( dffts, dvscfins(:,1,ipol), &
@@ -274,7 +275,7 @@ subroutine solve_e
               ! starting value for  delta_psi is read from iudwf
               !
               nrec = (ipol - 1) * nksq + ik
-              call davcio (dpsi, lrdwf, iudwf, nrec, - 1)
+              call get_buffer (dpsi, lrdwf, iudwf, nrec)
               !
               ! threshold for iterative solution of the linear system
               !
@@ -299,7 +300,7 @@ subroutine solve_e
            ! writes delta_psi on iunit iudwf, k=kpoint,
            !
            nrec = (ipol - 1) * nksq + ik
-           call davcio (dpsi, lrdwf, iudwf, nrec, + 1)
+           call save_buffer(dpsi, lrdwf, iudwf, nrec)
            !
            ! calculates dvscf, sum over k => dvscf_q_ipert
            !

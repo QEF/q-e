@@ -18,6 +18,7 @@ subroutine zstar_eu_us
   USE mp_global, ONLY : inter_pool_comm, intra_bgrp_comm
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
+  USE buffers,   ONLY : get_buffer
   USE klist,     ONLY : xk, wk
   USE gvecs,   ONLY : doublegrid
   USE fft_base, ONLY : dfftp, dffts
@@ -88,13 +89,13 @@ subroutine zstar_eu_us
   do ik = 1, nksq
      if (nksq.gt.1) read (iunigk) npw, igk
      npwq = npw
-     if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
+     if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
      if (lsda) current_spin = isk (ik)
      call init_us_2 (npw, igk, xk(1,ik), vkb)
      weight = wk (ik)
      do jpol = 1, 3
         nrec = (jpol - 1) * nksq + ik
-        call davcio (dpsi, lrdwf, iudwf, nrec, - 1)
+        call get_buffer(dpsi, lrdwf, iudwf, nrec)
         if (noncolin) then
            call incdrhoscf_nc (dvscf(1,1,jpol),weight,ik, &
                               dbecsum_nc(1,1,1,1,jpol), dpsi)
@@ -162,7 +163,7 @@ subroutine zstar_eu_us
      npe = npert(irr)
      do imode = 1, npe
         mode = imode0 + imode
-        call davcio (drhoscfh, lrdrhous, iudrhous, mode, -1)
+        call get_buffer(drhoscfh, lrdrhous, iudrhous, mode)
         do jpol = 1, 3
            do is=1,nspin_mag
               zstareu0(jpol,mode) =  zstareu0(jpol,mode) -                  &
@@ -187,7 +188,7 @@ subroutine zstar_eu_us
      if (nksq.gt.1) read (iunigk) npw, igk
      npwq = npw
      weight = wk (ik)
-     if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
+     if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
      call dvkb3(ik, dvkb)
      imode0 = 0
@@ -200,7 +201,7 @@ subroutine zstar_eu_us
               ! read the Commutator+add. terms
               !
               nrec = (jpol - 1) * nksq + ik
-              call davcio (dvpsi, lrebar, iuebar, nrec, - 1)
+              call get_buffer(dvpsi, lrebar, iuebar, nrec)
               !
               pdsp = (0.d0,0.d0)
               call psidspsi (ik, u (1, mode), pdsp )
@@ -228,7 +229,7 @@ subroutine zstar_eu_us
               ! first we read  P_c [H-eS]|psi> and store it in dpsi
               !
               nrec = (jpol - 1) * nksq + ik
-              call davcio (dpsi, lrcom, iucom, nrec, -1)
+              call get_buffer(dpsi, lrcom, iucom, nrec)
               !
               ! Apply the matrix dS/du
               !

@@ -34,6 +34,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   USE cell_base, ONLY : tpiba
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE wavefunctions_module,  ONLY: psic
+  USE buffers,    ONLY : get_buffer
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
   USE paw_variables, ONLY : okpaw
   USE modes,     ONLY : u
@@ -203,7 +204,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
      allocate (drhous( dfftp%nnr, nspin_mag))
      do ipert = 1, npe
         mu = mode0 + ipert
-        call davcio (drhous, lrdrhous, iudrhous, mu, -1)
+        call get_buffer (drhous, lrdrhous, iudrhous, mu)
         call daxpy (2*dfftp%nnr*nspin_mag, 1.d0, drhous, 1, drhoscf(1,1,ipert), 1)
      end do
      deallocate (drhous)

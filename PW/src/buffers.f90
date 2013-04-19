@@ -452,7 +452,7 @@ Module buffers
 contains
 
   !----------------------------------------------------------------------------
-  SUBROUTINE open_buffer (unit, extension, nword, io_level, exst)
+  SUBROUTINE open_buffer (unit, extension, nword, io_level, exst, exst_file, direc)
     !---------------------------------------------------------------------------
     !
     !   io_level>0: connect unit "unit" to file "wfc_fdir"/"prefix"."extension"
@@ -468,8 +468,11 @@ contains
     IMPLICIT NONE
     !
     CHARACTER(LEN=*), INTENT(IN) :: extension
+    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: direc
     INTEGER, INTENT(IN) :: unit, nword, io_level
     LOGICAL, INTENT(OUT) :: exst
+    LOGICAL, INTENT(OUT), OPTIONAL :: exst_file
+    CHARACTER(LEN=256) :: save_dir
     !
     INTEGER :: ierr
     !
@@ -480,7 +483,13 @@ contains
     IF (extension == ' ') &
        CALL errore ('open_buffer','filename extension not given',1)
     !
-    CALL diropn ( unit, extension, 2*nword, exst, wfc_dir )      
+    IF (present(direc)) THEN
+       save_dir=TRIM(direc)
+    ELSE
+       save_dir=TRIM(wfc_dir)
+    ENDIF
+    CALL diropn ( unit, extension, 2*nword, exst, save_dir )      
+    IF (present(exst_file)) exst_file=exst
     nunits = nunits + 1
     !
     IF ( io_level <= 0 ) THEN

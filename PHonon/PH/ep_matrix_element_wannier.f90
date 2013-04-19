@@ -310,12 +310,13 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE klist, ONLY: xk
   USE lsda_mod, ONLY: lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE buffers, ONLY : get_buffer
   USE wvfct, ONLY: nbnd, npw, npwx, igk
   USE uspp, ONLY : vkb
   USE el_phon, ONLY : el_ph_mat, iunwfcwann, igqg, kpq, g_kpq, &
            xk_gamma, npwq_refolded, lrwfcr
   USE modes, ONLY : u
-  USE units_ph, ONLY : iubar, lrbar, lrwfc, iuwfc
+  USE units_ph, ONLY : iubar, lrbar
   USE eqv,      ONLY : dvpsi!, evq
   USE qpoint,   ONLY : igkq, npwq, nksq, ikks, ikqs
   USE control_ph, ONLY : trans, lgamma
@@ -422,7 +423,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
         !  dvbare_q*psi_kpoint is read from file (if available) or recalculated
         !
         IF (trans) THEN
-           CALL davcio (dvpsi, lrbar, iubar, nrec, - 1)
+           CALL get_buffer (dvpsi, lrbar, iubar, nrec)
         ELSE
            mode = imode0 + ipert
            ! TODO : .false. or .true. ???

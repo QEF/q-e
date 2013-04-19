@@ -20,6 +20,7 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   USE klist,                 ONLY : xk
   USE fft_base,              ONLY : dffts
   USE fft_interfaces,        ONLY : fwfft, invfft
+  USE buffers,               ONLY : get_buffer
   USE gvect,                 ONLY : g
   USE gvecs,               ONLY : nls
   USE wvfct,                 ONLY : npw, igk, g2kin,  et
@@ -87,7 +88,7 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   ! starting value for  delta_psi is read from iudwf
   !
   nrec = (ipol - 1) * nksq + ik
-  call davcio (dpsi, lrdwf, iudwf, nrec, -1)
+  call get_buffer (dpsi, lrdwf, iudwf, nrec)
   call pcgreen (avg_iter, thresh, ik, et (1, ik))
 !
 !  The pcxpsi on file could be at k+dk and cannot be used by the following

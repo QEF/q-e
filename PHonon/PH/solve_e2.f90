@@ -23,6 +23,7 @@ subroutine solve_e2
   USE fft_base,              ONLY : dfftp, dffts
   USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE io_files,  ONLY: prefix, iunigk
+  USE buffers,   ONLY: get_buffer
   USE ions_base, ONLY: nat
   USE uspp,      ONLY: okvan, nkb, vkb
   USE uspp_param,ONLY : nhm
@@ -119,7 +120,7 @@ subroutine solve_e2
         !
         ! reads unperturbed wavefuctions psi_k in G_space, for all bands
         !
-        if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, -1)
+        if (nksq.gt.1) call get_buffer(evc, lrwfc, iuwfc, ik)
         npwq = npw
         call init_us_2 (npw, igk, xk (1, ik), vkb)
         !

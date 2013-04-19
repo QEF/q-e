@@ -21,6 +21,7 @@ SUBROUTINE dynmat_us()
   USE scf,                  ONLY : rho
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
+  USE buffers,              ONLY : get_buffer
   USE gvect,                ONLY : g, ngm, nl, igtongl
   USE wvfct,                ONLY : npw, npwx, nbnd, igk, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
@@ -137,7 +138,7 @@ SUBROUTINE dynmat_us()
      ! npwq and igkq are not actually used
      IF (nksq >1 .AND. .NOT.lgamma) READ (iunigk) npwq, igkq
 
-     IF (nksq > 1) CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
+     IF (nksq > 1) CALL get_buffer (evc, lrwfc, iuwfc, ikk)
      CALL init_us_2 (npw, igk, xk (1, ikk), vkb)
      !
      !    We first prepare the gamma terms, which are the second derivatives

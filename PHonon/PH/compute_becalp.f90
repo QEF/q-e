@@ -20,6 +20,7 @@ subroutine compute_becalp (becq, alpq)
   USE klist,     ONLY : xk
   USE gvect,     ONLY : g
   USE becmod, ONLY: calbec, bec_type, becscal
+  USE buffers, ONLY: get_buffer
   USE uspp, ONLY: nkb, vkb
   USE noncollin_module, ONLY : noncolin, npol
   USE io_files, ONLY: iunigk
@@ -62,7 +63,7 @@ subroutine compute_becalp (becq, alpq)
 
      endif
      call init_us_2 (npwq, igkq, xk (1, ikq), vkb)
-     call davcio (evq, lrwfc, iuwfc, ikq, - 1)
+     call get_buffer (evq, lrwfc, iuwfc, ikq)
      call calbec ( npwq, vkb, evq, becq(ik) )
      do ipol = 1, 3
         aux=(0.d0,0.d0)

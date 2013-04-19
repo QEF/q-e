@@ -23,6 +23,7 @@ subroutine el_opt
   USE wvfct,      ONLY : nbnd, npw, npwx
   USE units_ph,   ONLY : iudrho, lrdrho, lrdwf, iudwf
   USE control_ph, ONLY : nbnd_occ
+  USE buffers,    ONLY : get_buffer
   USE ph_restart, ONLY : ph_writefile
   USE ramanm,     ONLY : eloptns, jab, lrchf, iuchf, done_elop
   USE io_global, ONLY: ionode_id
@@ -52,7 +53,7 @@ subroutine el_opt
      npw = ngk(ik)
      do ipa = 1, 3
         nrec = (ipa - 1) * nksq + ik
-        call davcio (depsi(1,1,ipa), lrdwf, iudwf, nrec, -1)
+        call get_buffer(depsi(1,1,ipa), lrdwf, iudwf, nrec)
      enddo
      do ipb = 1, 6
         nrec = (ipb - 1) * nksq + ik

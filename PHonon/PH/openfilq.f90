@@ -13,7 +13,7 @@ SUBROUTINE openfilq()
   ! ... calculation.
   !
   USE kinds,           ONLY : DP
-  USE control_flags,   ONLY : modenum
+  USE control_flags,   ONLY : io_level, modenum
   USE units_ph,        ONLY : iuwfc, iudwf, iubar, iucom, iudvkb3, &
                               iudrhous, iuebar, iudrho, iudyn, iudvscf, &
                               lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
@@ -38,6 +38,7 @@ SUBROUTINE openfilq()
   USE control_flags,   ONLY : twfcollect
   USE mp_global,       ONLY : me_bgrp
   USE io_global,       ONLY : ionode,stdout
+  USE buffers,         ONLY : open_buffer
   USE ramanm,          ONLY : lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der
   USE input_parameters,ONLY : nk1, nk2, nk3
@@ -51,8 +52,9 @@ SUBROUTINE openfilq()
   ! integer variable for I/O control
   CHARACTER (len=256) :: filint, fildvscf_rot
   ! the name of the file
-  LOGICAL :: exst
-  ! logical variable to check file existe
+  LOGICAL :: exst, exst_mem
+  ! logical variable to check file exists
+  ! logical variable to check file exists in memory
   !
   REAL(DP) :: edum(1,1), wdum(1,1)
   INTEGER :: ndr, ierr, iq_dummy
@@ -78,9 +80,9 @@ SUBROUTINE openfilq()
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
   iuwfc = 20
-  lrwfc = 2 * nbnd * npwx * npol
-  CALL diropn (iuwfc, 'wfc', lrwfc, exst)
-  IF (.NOT.exst.and..not.all_done) THEN
+  lrwfc = nbnd * npwx * npol
+  CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
+  IF (.NOT.exst.AND..NOT.exst_mem.and..not.all_done) THEN
      CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
   END IF
   IF (elph_mat) then
@@ -101,16 +103,16 @@ SUBROUTINE openfilq()
   !    The file with deltaV_{bare} * psi
   !
   iubar = 21
-  lrbar = 2 * nbnd * npwx * npol
-  CALL diropn (iubar, 'bar', lrbar, exst)
+  lrbar = nbnd * npwx * npol
+  CALL open_buffer (iubar, 'bar', lrbar, io_level, exst_mem, exst, tmp_dir)
   IF (ext_recover.AND..NOT.exst) &
      CALL errore ('openfilq','file '//trim(prefix)//'.bar not found', 1)
   !
   !    The file with the solution delta psi
   !
   iudwf = 22
-  lrdwf = 2 * nbnd * npwx * npol
-  CALL diropn (iudwf, 'dwf', lrdwf, exst)
+  lrdwf =  nbnd * npwx * npol
+  CALL open_buffer (iudwf, 'dwf', lrdwf, io_level, exst_mem, exst, tmp_dir)
   IF (ext_recover.AND..NOT.exst) &
      CALL errore ('openfilq','file '//trim(prefix)//'.dwf not found', 1)
   !
@@ -118,8 +120,8 @@ SUBROUTINE openfilq()
   !
   IF (okvan) THEN
      iudrhous = 25
-     lrdrhous = 2 * dfftp%nnr * nspin_mag
-     CALL diropn (iudrhous, 'prd', lrdrhous, exst)
+     lrdrhous =  dfftp%nnr * nspin_mag
+     CALL open_buffer (iudrhous, 'prd', lrdrhous, io_level, exst_mem, exst, tmp_dir)
      IF (ext_recover.AND..NOT.exst) &
         CALL errore ('openfilq','file '//trim(prefix)//'.prd not found', 1)
   ENDIF
@@ -191,8 +193,8 @@ SUBROUTINE openfilq()
   !
   IF (okvan .AND. (epsil .OR. zue)) THEN
      iucom = 28
-     lrcom = 2 * nbnd * npwx * npol
-     CALL diropn (iucom, 'com', lrcom, exst)
+     lrcom = nbnd * npwx * npol
+     CALL open_buffer (iucom, 'com', lrcom, io_level, exst_mem, exst, tmp_dir)
      IF (ext_recover.AND..NOT.exst) &
          CALL errore ('openfilq', 'file '//trim(prefix)//'.com not found', 1)
   !
@@ -207,8 +209,8 @@ SUBROUTINE openfilq()
   ENDIF
   IF (epsil .OR. zue) THEN
      iuebar = 30
-     lrebar = 2 * nbnd * npwx * npol
-     CALL diropn (iuebar, 'ebar', lrebar, exst)
+     lrebar =  nbnd * npwx * npol
+     CALL open_buffer (iuebar, 'ebar', lrebar, io_level, exst_mem, exst, tmp_dir)
      IF (ext_recover.AND..NOT.exst) &
         CALL errore ('openfilq','file '//trim(prefix)//'.ebar not found', 1)
   ENDIF

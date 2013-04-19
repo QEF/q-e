@@ -23,6 +23,7 @@ subroutine dvpsi_e (ik, ipol)
   USE gvect,           ONLY : g
   USE wvfct,           ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE wavefunctions_module, ONLY: evc
+  USE buffers,         ONLY : save_buffer, get_buffer
   USE noncollin_module,ONLY : noncolin, npol
   USE becmod,          ONLY : bec_type, becp, calbec, &
                               allocate_bec_type, deallocate_bec_type
@@ -63,7 +64,7 @@ subroutine dvpsi_e (ik, ipol)
   dvpsi=(0.d0, 0.d0)
   if (this_pcxpsi_is_on_file(ik,ipol)) then
      nrec = (ipol - 1)*nksq + ik
-     call davcio(dvpsi, lrebar, iuebar, nrec, -1)
+     call get_buffer(dvpsi, lrebar, iuebar, nrec)
      call stop_clock ('dvpsi_e')
      return
   end if
@@ -128,7 +129,7 @@ subroutine dvpsi_e (ik, ipol)
      ! for effective charges
      !
      nrec = (ipol - 1) * nksq + ik
-     call davcio (dvpsi, lrcom, iucom, nrec, 1)
+     call save_buffer(dvpsi, lrcom, iucom, nrec)
      !
      allocate (spsi ( npwx*npol, nbnd))
      CALL calbec (npw, vkb, dvpsi, becp )
@@ -141,7 +142,7 @@ subroutine dvpsi_e (ik, ipol)
   IF (nkb > 0) call deallocate_bec_type (becp2)
 
   nrec = (ipol - 1)*nksq + ik
-  call davcio(dvpsi, lrebar, iuebar, nrec, 1)
+  call save_buffer(dvpsi, lrebar, iuebar, nrec)
   this_pcxpsi_is_on_file(ik,ipol) = .true.
   call stop_clock ('dvpsi_e')
   return

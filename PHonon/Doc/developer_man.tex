@@ -457,13 +457,13 @@ there are also files called \texttt{outdir/\_ph\#/{prefix}.com} that
 contain $P_c x |\psi\rangle$ and are needed for the calculation 
 of the Born effective charges.
 The mixing routine saves its data in files called 
-\texttt{outdir/\_ph\#/{prefix}.mixd}. These, and the wavefunctions,
-are the only files that presently can be kept in memory with 
-{\tt disk\_io='low'}.
+\texttt{outdir/\_ph\#/{prefix}.mixd}. 
 The status of \phx\ is saved at each iteration in files called
 \texttt{outdir/\_ph\#/{prefix}.recover}. These files can be used 
 to recover the run. All these unformatted files are saved in 
 \texttt{outdir/\_ph\#/prefix.q\_\#iq} directory when \texttt{lqdir=.true.}.
+Using the input flag \texttt{reduce\_io=.true.} these files can be
+kept in memory and saved only at the end of the run if necessary.
 
 In parallel calculations, previous files are split into several files 
 that have a final number. Each number labels the processor that wrote the 

@@ -17,6 +17,7 @@ subroutine zstar_eu
   USE cell_base, ONLY : bg
   USE ions_base, ONLY : nat, zv, ityp
   USE io_files,  ONLY : iunigk
+  USE buffers,   ONLY : get_buffer
   USE klist,     ONLY : wk, xk
   USE symme,     ONLY : symtensor
   USE wvfct,     ONLY : npw, npwx, igk
@@ -54,7 +55,7 @@ subroutine zstar_eu
      if (nksq > 1) read (iunigk) npw, igk
      npwq = npw
      weight = wk (ik)
-     if (nksq > 1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
+     if (nksq > 1) call get_buffer (evc, lrwfc, iuwfc, ik)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
      imode0 = 0
      do irr = 1, nirr
@@ -70,7 +71,7 @@ subroutine zstar_eu
               !
               ! read dpsi(scf)/dE for electric field in jpol direction
               !
-              call davcio (dpsi, lrdwf, iudwf, nrec, - 1)
+              call get_buffer (dpsi, lrdwf, iudwf, nrec)
               do ibnd = 1, nbnd_occ(ik)
                  zstareu0(jpol,mode)=zstareu0(jpol, mode)-2.d0*weight*&
                       zdotc(npwx*npol,dpsi(1,ibnd),1,dvpsi(1,ibnd),1)

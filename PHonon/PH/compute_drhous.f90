@@ -18,6 +18,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   USE ions_base,  ONLY : nat
   USE wavefunctions_module,  ONLY: evc
   USE io_files,   ONLY : iunigk
+  USE buffers,    ONLY : get_buffer
   USE uspp,       ONLY : okvan, nkb, vkb
   USE uspp_param, ONLY : nhm
   USE lsda_mod,   ONLY : lsda, nspin, current_spin, isk
@@ -98,7 +99,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
      !   Read the wavefunctions at k and transform to real space
      !
 
-     call davcio (evc, lrwfc, iuwfc, ikk, - 1)
+     call get_buffer (evc, lrwfc, iuwfc, ikk)
      evcr(:,:) = (0.d0, 0.d0)
      do ibnd = 1, nbnd
         do ig = 1, npw
@@ -109,7 +110,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
      !
      !   Read the wavefunctions at k+q
      !
-     if (.not.lgamma.and.nksq.gt.1) call davcio (evq, lrwfc, iuwfc, ikq, -1)
+     if (.not.lgamma.and.nksq.gt.1) call get_buffer (evq, lrwfc, iuwfc, ikq)
      !
      !   And compute the contribution of this k point to the change of
      !   the charge density

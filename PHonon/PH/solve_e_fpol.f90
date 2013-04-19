@@ -23,6 +23,7 @@ subroutine solve_e_fpol ( iw )
   USE ions_base,             ONLY : nat
   USE io_global,             ONLY : stdout, ionode
   USE io_files,              ONLY : prefix, iunigk, diropn
+  USE buffers,               ONLY : get_buffer, save_buffer
   USE check_stop,            ONLY : check_stop_now
   USE wavefunctions_module,  ONLY : evc
   USE cell_base,             ONLY : tpiba2
@@ -160,7 +161,7 @@ subroutine solve_e_fpol ( iw )
         !
         ! reads unperturbed wavefuctions psi_k in G_space, for all bands
         !
-        if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
+        if (nksq.gt.1) call get_buffer(evc, lrwfc, iuwfc, ik)
         npwq = npw
         call init_us_2 (npw, igk, xk (1, ik), vkb)
         !
@@ -236,7 +237,7 @@ subroutine solve_e_fpol ( iw )
               ! starting value for  delta_psi is read from iudwf
               !
               nrec = (ipol - 1) * nksq + ik
-              call davcio (dpsi, lrdwf, iudwf, nrec, - 1)
+              call get_buffer(dpsi, lrdwf, iudwf, nrec)
               !
               ! threshold for iterative solution of the linear system
               !
@@ -280,7 +281,7 @@ subroutine solve_e_fpol ( iw )
            ! writes delta_psi on iunit iudwf, k=kpoint,
            !
            nrec = (ipol - 1) * nksq + ik
-           call davcio (dpsi, lrdwf, iudwf, nrec, + 1)
+           call save_buffer (dpsi, lrdwf, iudwf, nrec)
            !
            ! calculates dvscf, sum over k => dvscf_q_ipert
            !

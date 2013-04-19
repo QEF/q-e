@@ -23,6 +23,7 @@ subroutine drho
   USE lsda_mod,   ONLY : nspin
   USE cell_base,  ONLY : omega
   USE ions_base,  ONLY : nat
+  USE buffers,    ONLY : save_buffer
   USE noncollin_module, ONLY : noncolin, npol, nspin_lsda, nspin_mag
   USE uspp_param, ONLY : upf, nhm
   USE uspp,       ONLY : okvan, nkb
@@ -212,7 +213,7 @@ subroutine drho
      call addusddens (drhoust, dbecsum(1,1,1,mode+1), mode, npe, 1)
      do iper = 1, npe
         nu_i = mode+iper
-        call davcio (drhoust (1, 1, iper), lrdrhous, iudrhous, nu_i, 1)
+        call save_buffer (drhoust (1, 1, iper), lrdrhous, iudrhous, nu_i)
      enddo
      mode = mode+npe
   enddo

@@ -39,6 +39,7 @@ SUBROUTINE phq_init()
   USE gvect,                ONLY : g, ngm
   USE klist,                ONLY : xk
   USE lsda_mod,             ONLY : lsda, current_spin, isk
+  USE buffers,              ONLY : get_buffer
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : iunigk
   USE atom,                 ONLY : msh, rgrid
@@ -193,7 +194,7 @@ SUBROUTINE phq_init()
        call read_wfc_rspace_and_fwfft( evc , ik , lrwfcr , iunwfcwann , npw , igk )
 !       CALL davcio (evc, lrwfc, iunwfcwann, ik, - 1)
     else
-       CALL davcio( evc, lrwfc, iuwfc, ikk, -1 )
+       CALL get_buffer( evc, lrwfc, iuwfc, ikk )
     endif
      !
      ! ... e) we compute the becp terms which are used in the rest of
@@ -228,15 +229,15 @@ SUBROUTINE phq_init()
   IF (acfdt_is_active) THEN
      ! ACFDT -test always read calculated wcf from non_scf calculation
      IF(acfdt_num_der) then 
-       CALL davcio( evq, lrwfc, iuwfc, ikq, -1 )
+       CALL get_buffer( evq, lrwfc, iuwfc, ikq )
      ELSE
        IF ( .NOT. lgamma ) &
-          CALL davcio( evq, lrwfc, iuwfc, ikq, -1 )
+          CALL get_buffer( evq, lrwfc, iuwfc, ikq )
      ENDIF
   ELSE
      ! this is the standard treatment
      IF ( .NOT. lgamma .and..not. elph_mat )then 
-        CALL davcio( evq, lrwfc, iuwfc, ikq, -1 )
+        CALL get_buffer( evq, lrwfc, iuwfc, ikq )
      ELSEIF(.NOT. lgamma .and. elph_mat) then
         !
         ! I read the wavefunction in real space and fwfft it

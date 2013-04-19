@@ -19,6 +19,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
   USE fft_base, ONLY : dffts
   use ramanm,  ONLY : lrd2w, iud2w, jab
   USE units_ph, ONLY : iuwfc, lrdwf, iudwf
+  USE buffers, ONLY : get_buffer
   USE qpoint, ONLY : npwq, nksq
   USE eqv, ONLY : dpsi, dvpsi
   USE control_ph, ONLY : nbnd_occ
@@ -46,7 +47,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
   !
   do ip = 1, 3
      nrec = (ip - 1) * nksq + ik
-     call davcio (depsi (1, 1, ip), lrdwf, iudwf, nrec, -1)
+     call get_buffer (depsi (1, 1, ip), lrdwf, iudwf, nrec)
   enddo
 
   do jp = 1, 6

@@ -20,6 +20,7 @@ subroutine add_zstar_ue (imode0, npe)
   USE wavefunctions_module,  ONLY: evc
   USE noncollin_module,      ONLY: noncolin
   USE io_files, ONLY: iunigk
+  USE buffers,  ONLY : get_buffer
   USE qpoint,   ONLY: npwq, nksq
   USE eqv,      ONLY: dpsi, dvpsi
   USE efield_mod, ONLY: zstarue0_rec
@@ -49,7 +50,7 @@ subroutine add_zstar_ue (imode0, npe)
      if (nksq.gt.1) read (iunigk) npw, igk
      npwq = npw
      weight = wk (ik)
-     if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
+     if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
      do jpol = 1, 3
         !
@@ -64,7 +65,7 @@ subroutine add_zstar_ue (imode0, npe)
            ! read dpsi(scf)/du for phonon mode # mode
            !
 
-           call davcio (dpsi, lrdwf, iudwf, nrec, -1)
+           call get_buffer (dpsi, lrdwf, iudwf, nrec)
            do ibnd = 1, nbnd_occ(ik)
               zstarue0_rec (mode, jpol) = zstarue0_rec (mode, jpol) - 2.d0 * weight * &
                    zdotc (npw, dpsi (1, ibnd), 1, dvpsi (1, ibnd), 1)

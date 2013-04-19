@@ -19,6 +19,7 @@ subroutine dielec()
   USE klist, ONLY: wk
   USE symme, ONLY: symmatrix, crys_to_cart
   USE wvfct, ONLY: npwx
+  USE buffers, ONLY : get_buffer
   USE noncollin_module, ONLY : npol
   USE efield_mod, ONLY : epsilon
   USE units_ph, ONLY : lrdwf, iudwf, lrebar, iuebar
@@ -48,10 +49,10 @@ subroutine dielec()
      w = fpi * weight / omega
      do ipol = 1, 3
         nrec = (ipol - 1) * nksq + ik
-        call davcio (dvpsi, lrebar, iuebar, nrec, - 1)
+        call get_buffer(dvpsi, lrebar, iuebar, nrec)
         do jpol = 1, 3
            nrec = (jpol - 1) * nksq + ik
-           call davcio (dpsi, lrdwf, iudwf, nrec, - 1)
+           call get_buffer (dpsi, lrdwf, iudwf, nrec)
            do ibnd = 1, nbnd_occ (ik)
               !
               !  this is the real part of <DeltaV*psi(E)|DeltaPsi(E)>

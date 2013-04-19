@@ -26,7 +26,7 @@ SUBROUTINE phq_readin()
   USE start_k,       ONLY : reset_grid
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, lgauss
   USE ktetra,        ONLY : ltetra
-  USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir
+  USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir, io_level
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
@@ -584,6 +584,8 @@ SUBROUTINE phq_readin()
 
   IF (lmovecell) CALL errore('phq_readin', &
       'The phonon code is not working after vc-relax',1)
+
+  IF (reduce_io) io_level=0
 
   IF (nproc_image /= nproc_image_file .and. .not. twfcollect)  &
      CALL errore('phq_readin',&

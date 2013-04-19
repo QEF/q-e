@@ -26,6 +26,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   USE fft_base,  ONLY : dfftp
   USE uspp,      ONLY : okvan
   USE io_global, ONLY : stdout
+  USE buffers,   ONLY : get_buffer
   USE uspp_param, ONLY : upf, nh
   USE paw_variables, ONLY : okpaw
   USE noncollin_module, ONLY : nspin_mag
@@ -71,7 +72,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   do irr1 = 1, nirr
      do ipert = 1, npert (irr1)
         nu_j = mode0 + ipert
-        call davcio (drhous,  lrdrhous, iudrhous, nu_j, - 1)
+        call get_buffer (drhous,  lrdrhous, iudrhous, nu_j)
         do mu = 1, npert (irr)
            nu_i = imode0 + mu
            dyn1 (nu_i, nu_j) = dyn1 (nu_i, nu_j) + &

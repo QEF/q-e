@@ -20,6 +20,7 @@ subroutine raman_mat
   USE gvect,    ONLY : g
   USE klist,    ONLY : wk, xk
   USE io_files, ONLY : iunigk
+  USE buffers,  ONLY : get_buffer
   USE ions_base,ONLY : nat
   USE symme,    ONLY : symtensor3
   USE uspp,     ONLY : nkb, vkb
@@ -114,12 +115,12 @@ subroutine raman_mat
 
      if (nksq.gt.1) read (iunigk) npw, igk
      npwq = npw
-     if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, -1)
+     if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
      call init_us_2 (npw, igk, xk (1,ik), vkb)
 
      do ipa = 1, 3
         nrec = (ipa - 1) * nksq + ik
-        call davcio (depsi (1, 1, ipa), lrdwf, iudwf, nrec, -1)
+        call get_buffer(depsi (1, 1, ipa), lrdwf, iudwf, nrec)
      enddo
      do ipa = 1, 3
         do ipb = 1, 3
@@ -174,7 +175,7 @@ subroutine raman_mat
 
      do ipa = 1, 3
         nrec = (ipa - 1) * nksq + ik
-        call davcio (chif (1, 1, ipa), lrdwf, iudwf, nrec, -1)
+        call get_buffer(chif (1, 1, ipa), lrdwf, iudwf, nrec)
      enddo
 
      do imod = 1, 3 * nat

@@ -30,6 +30,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
                         deallocate_bec_type
   USE fft_base,  ONLY : dfftp
   USE io_global, ONLY : stdout
+  USE buffers,   ONLY : get_buffer
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE io_files, ONLY: iunigk
 
@@ -37,7 +38,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE modes,    ONLY : u
   USE qpoint,   ONLY : nksq, npwq, igkq, ikks, ikqs
   USE eqv,      ONLY : dpsi
-  USE units_ph, ONLY : lrdwf, iuwfc, iudwf
+  USE units_ph, ONLY : lrdwf, iudwf
   USE control_ph, ONLY : lgamma
 
   USE mp_global,        ONLY : inter_pool_comm
@@ -97,7 +98,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
 
      do mu = 1, nper
         nrec = (mu - 1) * nksq + ik
-        if (nksq > 1 .or. nper > 1) call davcio(dpsi, lrdwf, iudwf, nrec,-1)
+        if (nksq > 1 .or. nper > 1) call get_buffer(dpsi, lrdwf, iudwf, nrec)
         call calbec (npwq, vkb, dpsi, dbecq(mu) )
         do ipol = 1, 3
            aux=(0.d0,0.d0)

@@ -23,6 +23,7 @@ subroutine polariz ( iw, iu )
   USE kinds,        ONLY : DP
   USE control_ph,   ONLY : nbnd_occ
   USE units_ph,     ONLY : lrdwf, iudwf, lrebar, iuebar
+  USE buffers,      ONLY : get_buffer
   USE freq_ph,      ONLY : polar, done_iu, comp_iu
   USE eqv,          ONLY : dpsi, dvpsi
   USE qpoint,       ONLY : nksq
@@ -58,10 +59,10 @@ subroutine polariz ( iw, iu )
      w = fpi * weight / omega
      do ipol = 1, 3
         nrec = (ipol - 1) * nksq + ik
-        call davcio (dvpsi, lrebar, iuebar, nrec, - 1)
+        call get_buffer (dvpsi, lrebar, iuebar, nrec)
         do jpol = 1, 3
            nrec = (jpol - 1) * nksq + ik
-           call davcio (dpsi, lrdwf, iudwf, nrec, - 1)
+           call get_buffer(dpsi, lrdwf, iudwf, nrec)
            do ibnd = 1, nbnd_occ (ik)
               !
               !  this is the real part of <DeltaV*psi(E)|DeltaPsi(E)>

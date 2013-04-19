@@ -21,6 +21,7 @@ subroutine dvpsi_e2
   USE gvecs,         ONLY : doublegrid
   USE wvfct,           ONLY : npw, npwx, nbnd, igk
   USE wavefunctions_module, ONLY: evc
+  USE buffers,         ONLY : get_buffer
   USE fft_base,        ONLY : dfftp, dffts
   USE scf,             ONLY : rho
   USE io_files,        ONLY : iunigk
@@ -76,13 +77,13 @@ subroutine dvpsi_e2
      if (nksq.gt.1) then
         read (iunigk) npw, igk
         npwq = npw
-        call davcio (evc, lrwfc, iuwfc, ik, -1)
+        call get_buffer (evc, lrwfc, iuwfc, ik)
      endif
      weight = 2.d0 * wk(ik) / omega
 
      do ipa = 1, 3
         nrec = (ipa - 1) * nksq + ik
-        call davcio (depsi (1, 1, ipa), lrdwf, iudwf, nrec, -1)
+        call get_buffer (depsi (1, 1, ipa), lrdwf, iudwf, nrec)
      enddo
 
      do ibnd = 1, nbnd_occ (ik)
@@ -214,7 +215,7 @@ subroutine dvpsi_e2
      if (nksq.gt.1) then
         read (iunigk) npw, igk
         npwq = npw
-        call davcio (evc, lrwfc, iuwfc, ik, -1)
+        call get_buffer(evc, lrwfc, iuwfc, ik)
      endif
      do ipa = 1, 6
         nrec = (ipa - 1) * nksq + ik

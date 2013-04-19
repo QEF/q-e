@@ -23,7 +23,7 @@ subroutine add_zstar_ue_us(imode0,npe)
   USE noncollin_module,   ONLY : npol
   USE wavefunctions_module,    ONLY : evc
   USE io_files, ONLY: iunigk
-
+  USE buffers, ONLY: get_buffer
   USE qpoint,     ONLY : npwq, nksq
   USE efield_mod, ONLY: zstarue0_rec
   USE control_ph, ONLY : nbnd_occ
@@ -56,7 +56,7 @@ subroutine add_zstar_ue_us(imode0,npe)
      if (nksq.gt.1) read (iunigk) npw, igk
      npwq = npw
      weight = wk (ik)
-     if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
+     if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ik)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
      call dvkb3(ik,dvkb)
      do ipert = 1, npe
@@ -97,7 +97,7 @@ subroutine add_zstar_ue_us(imode0,npe)
            ! first we read  P_c [H-eS]|psi> and store it in dpsi
            !
            nrec = (jpol - 1) * nksq + ik
-           call davcio (dpsi, lrcom, iucom, nrec, -1)
+           call get_buffer (dpsi, lrcom, iucom, nrec)
            !
            ! Apply the matrix dS/du, the result is stored in dvpsi
            !

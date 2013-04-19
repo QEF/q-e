@@ -38,6 +38,7 @@ subroutine dhdrhopsi
 
   USE kinds,     ONLY : DP
   USE io_files,  ONLY : iunigk
+  USE buffers,   ONLY : get_buffer
   USE cell_base, ONLY : tpiba, at
   USE klist,     ONLY : xk, nkstot
   USE fft_base,  ONLY : dffts
@@ -154,7 +155,7 @@ subroutine dhdrhopsi
      call dcopy (3, xk (1, ik), 1, xk_sw, 1)
      call dcopy (nbnd, et (1, ik), 1, et_sw, 1)
      call beccopy (becp1(ik), becp1_sw, nkb, nbnd)
-     call davcio (ev_sw, lrwfc, iuwfc, ik, -1)
+     call get_buffer (ev_sw, lrwfc, iuwfc, ik)
 
      do ipa = 1, 3
         do isg = -1, 1, 2
@@ -245,7 +246,7 @@ subroutine dhdrhopsi
      call mp_sum ( ps2, intra_bgrp_comm )
      do ipa = 1, 3
         nrec = (ipa - 1) * nksq + ik
-        call davcio (dpsi, lrdwf, iudwf, nrec, -1)
+        call get_buffer (dpsi, lrdwf, iudwf, nrec)
         do ibnd = 1, nbnd_occ (ik)
            call cft_wave (dpsi (1, ibnd), auxr, +1)
            do ipb = 1, 3

@@ -20,6 +20,7 @@ subroutine dielec_test
   USE wvfct,    ONLY : npw, igk
   USE symme,    ONLY : symmatrix, crys_to_cart
   USE io_files, ONLY : iunigk
+  USE buffers,  ONLY : get_buffer
   USE wavefunctions_module,  ONLY: evc
   USE efield_mod, ONLY : epsilon
   USE qpoint, ONLY : nksq
@@ -43,7 +44,7 @@ subroutine dielec_test
      if (nksq > 1) read (iunigk) npw, igk
      weight = wk (ik)
      w_ = - fpi * weight / omega
-     call davcio (evc, lrwfc, iuwfc, ik, -1)
+     call get_buffer (evc, lrwfc, iuwfc, ik)
      do ipol = 1, 6
         nrec = (ipol - 1) * nksq + ik
         call davcio (dpsi, lrd2w, iud2w, nrec, -1)

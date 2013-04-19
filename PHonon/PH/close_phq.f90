@@ -17,6 +17,7 @@ SUBROUTINE close_phq( flag )
   USE control_flags, ONLY : twfcollect
   USE paw_variables, ONLY : okpaw
   USE io_global,     ONLY : ionode, stdout
+  USE buffers,       ONLY : close_buffer
   USE uspp,          ONLY : okvan
   USE units_ph,      ONLY : iuwfc, iudwf, iubar, iudrhous, iuebar, iudrho, &
                             iudvscf, iucom, iudvkb3, iuint3paw
@@ -35,54 +36,38 @@ SUBROUTINE close_phq( flag )
   !
   IF ( twfcollect ) THEN
      !
-     INQUIRE( UNIT=iuwfc, OPENED=opnd ) 
-     IF (opnd) CLOSE( UNIT = iuwfc, STATUS = 'DELETE' )
+     CALL close_buffer(iuwfc,'delete')
      !
   ELSE
      !
-     INQUIRE( UNIT=iuwfc, OPENED=opnd ) 
-     IF (opnd) CLOSE( UNIT = iuwfc, STATUS = 'KEEP' )
+     CALL close_buffer(iuwfc,'keep')
      !
   END IF
   !
   IF (flag) THEN
-     INQUIRE( UNIT=iudwf, OPENED=opnd ) 
-     IF (opnd) CLOSE( UNIT = iudwf, STATUS = 'DELETE' )
-     INQUIRE( UNIT=iubar, OPENED=opnd ) 
-     IF (opnd)  CLOSE( UNIT = iubar, STATUS = 'DELETE' )
+     CALL close_buffer(iudwf,'delete')
+     CALL close_buffer(iubar,'delete')
      !
-     IF ( okvan ) THEN
-        INQUIRE( UNIT=iudrhous, OPENED=opnd ) 
-        IF (opnd) CLOSE( UNIT = iudrhous, STATUS = 'DELETE' )
-     ENDIF
+     IF ( okvan ) CALL close_buffer(iudrhous,'delete')
      !
      IF ( epsil .OR. zue ) THEN
-        INQUIRE( UNIT=iuebar, OPENED=opnd ) 
-        IF (opnd) CLOSE( UNIT = iuebar, STATUS = 'DELETE' )
+        CALL close_buffer(iuebar,'delete')
         IF (okvan) THEN
-           INQUIRE( UNIT=iucom, OPENED=opnd ) 
-           IF (opnd) CLOSE( UNIT = iucom, STATUS = 'DELETE' )
+           CALL close_buffer(iucom,'delete')
            INQUIRE( UNIT=iudvkb3, OPENED=opnd ) 
            IF (opnd) CLOSE( UNIT = iudvkb3, STATUS = 'DELETE' )
         ENDIF
      ENDIF
   ELSE
-     INQUIRE( UNIT=iudwf, OPENED=opnd ) 
-     IF (opnd) CLOSE( UNIT = iudwf, STATUS = 'KEEP' )
-     INQUIRE( UNIT=iubar, OPENED=opnd ) 
-     IF (opnd) CLOSE( UNIT = iubar, STATUS = 'KEEP' )
+     CALL close_buffer(iudwf,'keep')
+     CALL close_buffer(iubar,'keep')
      !
-     IF ( okvan ) THEN
-        INQUIRE( UNIT=iudrhous, OPENED=opnd ) 
-        IF (opnd) CLOSE( UNIT = iudrhous, STATUS = 'KEEP' )
-     ENDIF
+     IF ( okvan ) CALL close_buffer(iudrhous,'keep')
      !
      IF ( epsil .OR. zue ) THEN
-        INQUIRE( UNIT=iuebar, OPENED=opnd ) 
-        IF (opnd) CLOSE( UNIT = iuebar, STATUS = 'KEEP' )
+        CALL close_buffer(iuebar,'keep')
         IF (okvan) THEN
-           INQUIRE( UNIT=iucom, OPENED=opnd ) 
-           IF (opnd) CLOSE( UNIT = iucom, STATUS = 'KEEP' )
+           CALL close_buffer(iucom,'keep')
            INQUIRE( UNIT=iudvkb3, OPENED=opnd ) 
            IF (opnd) CLOSE( UNIT = iudvkb3, STATUS = 'KEEP' )
         ENDIF

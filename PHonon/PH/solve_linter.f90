@@ -43,6 +43,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE paw_variables,        ONLY : okpaw
   USE paw_onecenter,        ONLY : paw_dpotential
   USE paw_symmetry,         ONLY : paw_dusymmetrize, paw_dumqsymmetrize
+  USE buffers,              ONLY : save_buffer, get_buffer
   USE control_ph,           ONLY : rec_code, niter_ph, nmix_ph, tr2_ph, &
                                    alpha_pv, lgamma, lgamma_gamma, convt, &
                                    nbnd_occ, alpha_mix, rec_code_read, &
@@ -251,10 +252,10 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         !
         if (nksq.gt.1) then
            if (lgamma) then
-              call davcio (evc, lrwfc, iuwfc, ikk, - 1)
+              call get_buffer (evc, lrwfc, iuwfc, ikk)
            else
-              call davcio (evc, lrwfc, iuwfc, ikk, - 1)
-              call davcio (evq, lrwfc, iuwfc, ikq, - 1)
+              call get_buffer (evc, lrwfc, iuwfc, ikk)
+              call get_buffer (evq, lrwfc, iuwfc, ikq)
            endif
 
         endif
@@ -291,7 +292,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               !
               ! After the first iteration dvbare_q*psi_kpoint is read from file
               !
-              call davcio (dvpsi, lrbar, iubar, nrec, - 1)
+              call get_buffer (dvpsi, lrbar, iubar, nrec)
               !
               ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
               ! dvscf_q from previous iteration (mix_potential)
@@ -342,7 +343,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               !  and written to file
               !
               call dvqpsi_us (ik, u (1, mode),.false. )
-              call davcio (dvpsi, lrbar, iubar, nrec, 1)
+              call save_buffer (dvpsi, lrbar, iubar, nrec)
            endif
            !
            ! Ortogonalize dvpsi to valence states: ps = <evq|dvpsi>
@@ -354,7 +355,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               !
               ! starting value for delta_psi is read from iudwf
               !
-              call davcio ( dpsi, lrdwf, iudwf, nrec, -1)
+              call get_buffer( dpsi, lrdwf, iudwf, nrec)
               !
               ! threshold for iterative solution of the linear system
               !
@@ -390,7 +391,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            ! writes delta_psi on iunit iudwf, k=kpoint,
            !
            !               if (nksq.gt.1 .or. npert(irr).gt.1)
-           call davcio (dpsi, lrdwf, iudwf, nrec, + 1)
+           call save_buffer (dpsi, lrdwf, iudwf, nrec)
            !
            ! calculates dvscf, sum over k => dvscf_q_ipert
            !

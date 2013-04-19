@@ -18,6 +18,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : gg, nl
+  USE buffers,              ONLY : get_buffer, save_buffer
   USE lsda_mod,             ONLY : nspin
   USE wvfct,                ONLY : npw, npwx, et
   USE klist,                ONLY : degauss, ngauss, ngk
@@ -112,14 +113,14 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
         ! reads unperturbed wavefuctions psi_k in G_space, for all bands
         !
         ikrec = ik
-        if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ikrec, - 1)
+        if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ikrec)
         !
         ! reads delta_psi from iunit iudwf, k=kpoint
         !
         do ipert = 1, npert (irr)
            nrec = (ipert - 1) * nksq + ik
            if (nksq.gt.1.or.npert(irr).gt.1) &
-                call davcio (dpsi, lrdwf, iudwf, nrec, -1)
+                call get_buffer(dpsi, lrdwf, iudwf, nrec)
            do ibnd = 1, nbnd_occ (ik)
               wfshift = 0.5d0 * def(ipert) * &
                    w0gauss( (ef-et(ibnd,ik))/degauss, ngauss) / degauss
@@ -133,7 +134,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
            ! writes corrected delta_psi to iunit iudwf, k=kpoint,
            !
            if (nksq.gt.1.or.npert(irr).gt.1) &
-                call davcio (dpsi, lrdwf, iudwf, nrec, +1)
+                call save_buffer (dpsi, lrdwf, iudwf, nrec)
         enddo
      enddo
      do ipert = 1, npert (irr)
@@ -160,6 +161,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   USE ions_base,            ONLY : nat
   USE wavefunctions_module, ONLY : evc
   USE cell_base,            ONLY : omega
+  USE buffers,              ONLY : get_buffer, save_buffer
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : gg, nl
@@ -262,14 +264,14 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
         ! reads unperturbed wavefuctions psi_k in G_space, for all bands
         !
         ikrec = ik
-        if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ikrec, - 1)
+        if (nksq.gt.1) call get_buffer (evc, lrwfc, iuwfc, ikrec)
         !
         ! reads delta_psi from iunit iudwf, k=kpoint
         !
         do ipert = 1, npert (irr)
            nrec = (ipert - 1) * nksq + ik
            if (nksq.gt.1.or.npert(irr).gt.1) &
-                call davcio (dpsi, lrdwf, iudwf, nrec, -1)
+                call get_buffer(dpsi, lrdwf, iudwf, nrec)
            do ibnd = 1, nbnd_occ (ik)
               wfshift = 0.5d0 * def(ipert) * &
                    w0gauss( (ef-et(ibnd,ik))/degauss, ngauss) / degauss
@@ -283,7 +285,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
            ! writes corrected delta_psi to iunit iudwf, k=kpoint,
            !
            if (nksq.gt.1.or.npert(irr).gt.1) &
-                call davcio (dpsi, lrdwf, iudwf, nrec, +1)
+                call save_buffer(dpsi, lrdwf, iudwf, nrec)
         enddo
      enddo
      do ipert = 1, npert (irr)

@@ -259,10 +259,12 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE fft_base, ONLY : dffts, tg_cgather
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: iunigk
+  USE buffers,  ONLY : get_buffer
   USE klist, ONLY: xk
   USE lsda_mod, ONLY: lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wvfct, ONLY: nbnd, npw, npwx, igk
+  USE buffers, ONLY : get_buffer
   USE uspp, ONLY : vkb
   USE el_phon, ONLY : el_ph_mat, el_ph_mat_rec, el_ph_mat_rec_col, &
                       comp_elph, done_elph
@@ -335,10 +337,10 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
      !
      IF (nksq.GT.1) THEN
         IF (lgamma) THEN
-           CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
+           CALL get_buffer(evc, lrwfc, iuwfc, ikk)
         ELSE
-           CALL davcio (evc, lrwfc, iuwfc, ikk, - 1)
-           CALL davcio (evq, lrwfc, iuwfc, ikq, - 1)
+           CALL get_buffer (evc, lrwfc, iuwfc, ikk)
+           CALL get_buffer (evq, lrwfc, iuwfc, ikq)
         ENDIF
      ENDIF
      !
@@ -348,7 +350,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
         !  dvbare_q*psi_kpoint is read from file (if available) or recalculated
         !
         IF (trans) THEN
-           CALL davcio (dvpsi, lrbar, iubar, nrec, - 1)
+           CALL get_buffer (dvpsi, lrbar, iubar, nrec)
         ELSE
            mode = imode0 + ipert
            ! TODO : .false. or .true. ???
