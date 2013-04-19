@@ -54,18 +54,13 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
         DO na = 1, nat  
            IF ( nt == ityp (na) ) THEN
               IF (gamma_only) THEN
-                 DO m1 = 1,ldim 
-                    DO ibnd = 1, mps  
-                       rtemp(m1,ibnd) = 0.0_dp
-                       DO m2 = 1,ldim 
-                          rtemp(m1,ibnd) = rtemp(m1,ibnd) + v%ns(m1,m2,current_spin,na)*&
-                                                            proj%r(oatwfc(na)+m2, ibnd)
-                       ENDDO
-                    ENDDO
-                 ENDDO
+                 CALL DGEMM ('n','n', ldim,mps,ldim, 1.0_dp, v%ns(1,1,current_spin,na),&
+                      2*Hubbard_lmax+1,proj%r(oatwfc(na)+1,1),natomwfc, 0.0_dp, &
+                      rtemp, ldim)
                  CALL DGEMM ('n','n', 2*np, mps, ldim, 1.0_dp, swfcatom(1,oatwfc(na)+1),&
                       2*ldap, rtemp, ldim, 1.0_dp, hpsi, 2*ldap)
               ELSE
+!$omp parallel do default(shared), private(m1,ibnd,m2)
                  DO m1 = 1,ldim 
                     DO ibnd = 1, mps  
                        ctemp(m1,ibnd) = (0.0_dp, 0.0_dp)
@@ -75,6 +70,7 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
                        ENDDO
                     ENDDO
                  ENDDO
+!$omp end parallel do
                  CALL ZGEMM ('n','n', np, mps, ldim, (1.0_dp,0.0_dp), &
                       swfcatom(1,oatwfc(na)+1), ldap, ctemp, ldim, &
                       (1.0_dp,0.0_dp), hpsi, ldap)
