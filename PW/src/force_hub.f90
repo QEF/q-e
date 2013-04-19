@@ -120,6 +120,9 @@ SUBROUTINE force_hub(forceh)
    ! ...symmetrize...
    !
    CALL symvector ( nat, forceh )
+!write(66,'("Hubbard contribution Begin")')
+!write(66,'(3f12.6)') forceh(:,:)
+!write(66,'("Hubbard contribution End")')
    !
    call stop_clock('force_hub')
    !
@@ -413,15 +416,16 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
       END DO
    END DO
    !
-   DO ibnd=1,nbnd
-      DO ih=1,nh(nt)
-         DO iwf=1,natomwfc
-            dproj(iwf,ibnd) = dproj(iwf,ibnd) +            &
-                            ( wfatdbeta(iwf,ih)*betapsi(ih,ibnd) +   &
-                               wfatbeta(iwf,ih)*dbetapsi(ih,ibnd) )
-         END DO
-      END DO
-   END DO
+   ! dproj(iwf,ibnd) = \sum_ih wfatdbeta(iwf,ih)*betapsi(ih,ibnd) +
+   !                           wfatbeta(iwf,ih)*dbetapsi(ih,ibnd) 
+   !
+   CALL ZGEMM('N','N',natomwfc, nbnd, nh(nt), 1.0_dp,  &
+        wfatdbeta, natomwfc, betapsi, nh(nt), 1.0_dp,&
+        dproj, natomwfc)
+   CALL ZGEMM('N','N',natomwfc, nbnd, nh(nt), 1.0_dp,  &
+        wfatbeta, natomwfc, dbetapsi, nh(nt), 1.0_dp,&
+        dproj, natomwfc)
+   !
    DEALLOCATE ( betapsi )
    DEALLOCATE ( wfatbeta ) 
    DEALLOCATE (wfatdbeta )
@@ -566,15 +570,16 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
       END DO
    END DO
    !
-   DO ibnd=1,nbnd
-      DO ih=1,nh(nt)
-         DO iwf=1,natomwfc
-            dproj(iwf,ibnd) = dproj(iwf,ibnd) +           &
-                             ( wfatdbeta(iwf,ih)*betapsi(ih,ibnd) +   &
-                               wfatbeta(iwf,ih)*dbetapsi(ih,ibnd) )
-          END DO
-      END DO
-   END DO
+   ! dproj(iwf,ibnd) = \sum_ih wfatdbeta(iwf,ih)*betapsi(ih,ibnd) +
+   !                           wfatbeta(iwf,ih)*dbetapsi(ih,ibnd) 
+   !
+   CALL DGEMM('N','N',natomwfc, nbnd, nh(nt), 1.0_dp,  &
+        wfatdbeta, natomwfc, betapsi, nh(nt), 1.0_dp,&
+        dproj, natomwfc)
+   CALL DGEMM('N','N',natomwfc, nbnd, nh(nt), 1.0_dp,  &
+        wfatbeta, natomwfc, dbetapsi, nh(nt), 1.0_dp,&
+        dproj, natomwfc)
+   !
    DEALLOCATE ( betapsi )
    DEALLOCATE ( wfatbeta ) 
    DEALLOCATE (wfatdbeta )
