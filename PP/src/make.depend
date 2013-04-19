@@ -174,6 +174,7 @@ do_initial_state.o : ../../Modules/kind.o
 do_initial_state.o : ../../Modules/parameters.o
 do_initial_state.o : ../../Modules/recvec.o
 do_initial_state.o : ../../Modules/uspp.o
+do_initial_state.o : ../../PW/src/ldaU.o
 do_initial_state.o : ../../PW/src/newd.o
 do_initial_state.o : ../../PW/src/pwcom.o
 do_initial_state.o : ../../PW/src/scf_mod.o
@@ -346,6 +347,7 @@ poormanwannier.o : ../../Modules/mp_global.o
 poormanwannier.o : ../../Modules/recvec.o
 poormanwannier.o : ../../Modules/uspp.o
 poormanwannier.o : ../../Modules/wavefunctions.o
+poormanwannier.o : ../../PW/src/ldaU.o
 poormanwannier.o : ../../PW/src/pwcom.o
 poormanwannier.o : ../../PW/src/symm_base.o
 postproc.o : ../../Modules/cell_base.o
@@ -385,6 +387,7 @@ projwfc.o : ../../Modules/run_info.o
 projwfc.o : ../../Modules/uspp.o
 projwfc.o : ../../Modules/wavefunctions.o
 projwfc.o : ../../Modules/zhpev_drv.o
+projwfc.o : ../../PW/src/ldaU.o
 projwfc.o : ../../PW/src/pwcom.o
 projwfc.o : ../../PW/src/scf_mod.o
 projwfc.o : ../../PW/src/symm_base.o
@@ -563,6 +566,7 @@ wannier_plot.o : ../../Modules/mp_global.o
 wannier_plot.o : ../../Modules/recvec.o
 wannier_plot.o : ../../Modules/wannier_new.o
 wannier_plot.o : ../../PW/src/buffers.o
+wannier_plot.o : ../../PW/src/ldaU.o
 wannier_plot.o : ../../PW/src/pwcom.o
 wannier_plot.o : ../../PW/src/symm_base.o
 wannier_u_matrix.o : ../../Modules/io_files.o
@@ -604,6 +608,7 @@ write_p_avg.o : ../../Modules/noncol.o
 write_p_avg.o : ../../Modules/recvec.o
 write_p_avg.o : ../../Modules/uspp.o
 write_p_avg.o : ../../Modules/wavefunctions.o
+write_p_avg.o : ../../PW/src/ldaU.o
 write_p_avg.o : ../../PW/src/pwcom.o
 xctest.o : ../../Modules/funct.o
 xctest.o : ../../Modules/kind.o

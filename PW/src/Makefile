@@ -114,6 +114,7 @@ iweights.o \
 start_k.o \
 kpoint_grid.o \
 lchk_tauxk.o \
+ldaU.o \
 make_pointlists.o \
 makov_payne.o \
 martyna_tuckerman.o \

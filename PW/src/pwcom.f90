@@ -324,49 +324,6 @@ MODULE us
 END MODULE us
 !
 !
-MODULE ldaU
-  !
-  ! ... The quantities needed in lda+U calculations
-  !
-  USE kinds,      ONLY : DP
-  USE parameters, ONLY : lqmax, ntypx
-  !
-  SAVE
-  !
-  INTEGER, PARAMETER :: nspinx=2
-  COMPLEX(DP), ALLOCATABLE :: &
-       swfcatom(:,:),         &! orthogonalized atomic wfcs
-       d_spin_ldau(:,:,:)      ! the rotations in spin space for all the symmetries
-  REAL(DP) :: &
-       eth,                  &! the Hubbard contribution to the energy
-       Hubbard_U(ntypx),     &! the Hubbard U
-       Hubbard_J0(ntypx),    &! the Hubbard J, in lda_plus_u_kind=0
-       Hubbard_J(3,ntypx),   &! extra Hubbard parameters:  
-                              !     p: J(1) = J
-                              !     d: J(1) = J, J(2) =  B 
-                              !     f: J(1) = J, J(2) = E2, J(3) = E3 
-       Hubbard_alpha(ntypx), &! the Hubbard alpha (used to calculate U)
-       Hubbard_beta(ntypx),  &! the Hubbard beta (used to calculate J0)
-       starting_ns(lqmax,nspinx,ntypx) !
-  INTEGER :: &
-       niter_with_fixed_ns,  &! no. of iterations with fixed ns
-       lda_plus_u_kind,      &! 1/0 --> full/simplified(old) LDA+U calculation  
-       Hubbard_l(ntypx),     &! the angular momentum of Hubbard states
-       Hubbard_lmax = 0       ! maximum angular momentum of Hubbard states
-  LOGICAL :: &
-       lda_plus_u,           &! .TRUE. if lda+u calculation is performed
-       conv_ns                ! .TRUE. if ns are converged
-  CHARACTER(len=30) :: &      ! 'atomic', 'ortho-atomic', 'file'
-       U_projection           ! specifies how input coordinates are given
-  INTEGER, ALLOCATABLE :: &
-       oatwfc(:)              ! offset of atomic wfcs used for projections
-  REAL(DP), ALLOCATABLE :: &
-       q_ae(:,:,:),          &! coefficients for projecting onto beta functions
-       q_ps(:,:,:)            ! (matrix elements on AE and PS atomic wfcs)
-  !
-END MODULE ldaU
-!
-!
 MODULE extfield
   !
   ! ... The quantities needed in calculations with external field

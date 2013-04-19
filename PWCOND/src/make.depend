@@ -43,6 +43,7 @@ do_cond.o : ../../Modules/noncol.o
 do_cond.o : ../../Modules/paw_variables.o
 do_cond.o : ../../Modules/recvec.o
 do_cond.o : ../../Modules/uspp.o
+do_cond.o : ../../PW/src/ldaU.o
 do_cond.o : ../../PW/src/paw_onecenter.o
 do_cond.o : ../../PW/src/pwcom.o
 do_cond.o : ../../PW/src/symm_base.o

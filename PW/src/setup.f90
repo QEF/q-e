@@ -67,9 +67,7 @@ SUBROUTINE setup()
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : upf, n_atom_wfc
   USE uspp,               ONLY : okvan
-  USE ldaU,               ONLY : lda_plus_u, lda_plus_u_kind, U_projection, Hubbard_U, Hubbard_J, &
-                                 Hubbard_l, Hubbard_alpha, Hubbard_lmax, d_spin_ldau, oatwfc,&
-                                 Hubbard_J0, Hubbard_beta
+  USE ldaU,               ONLY : lda_plus_u, init_lda_plus_u
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el, nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
   USE funct,              ONLY : set_dft_from_name
@@ -85,12 +83,11 @@ SUBROUTINE setup()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: na, nt, is, ierr, ibnd, ik
+  INTEGER  :: na, is, ierr, ibnd, ik
   LOGICAL  :: magnetic_sym, skip_equivalence=.FALSE.
   REAL(DP) :: iocc, ionic_charge, one
   !
   LOGICAL, EXTERNAL  :: check_para_diag
-  INTEGER, EXTERNAL :: set_Hubbard_l
   !
   ! ... okvan/okpaw = .TRUE. : at least one pseudopotential is US/PAW
   !
@@ -581,90 +578,10 @@ SUBROUTINE setup()
         ENDDO
      ENDDO
   ENDIF
-
-!---
-! ... Set up Hubbard parameters for LDA+U calculation
-!
-  IF ( lda_plus_u ) THEN
-     !
-   Hubbard_lmax = -1
-   ! Set the default of Hubbard_l for the species which have
-   ! Hubbard_U=0 (in that case set_Hubbard_l will not be called)
-   Hubbard_l(:) = -1
-
-   if ( lda_plus_u_kind.eq.0 ) then
-     !
-     DO nt = 1, ntyp
-        !
-        IF ( Hubbard_U(nt)/=0.d0.OR.Hubbard_alpha(nt)/=0.D0 .OR.&
-             Hubbard_J0(nt) /=0.d0 .OR. Hubbard_beta(nt) /=0.d0) THEN
-           !
-           Hubbard_l(nt) = set_Hubbard_l( upf(nt)%psd )
-           !
-           Hubbard_lmax = MAX( Hubbard_lmax, Hubbard_l(nt) )
-           !
-        END IF
-        !
-     END DO
-   elseif ( lda_plus_u_kind.eq.1 ) then
-     !
-     IF ( U_projection == 'pseudo' ) CALL errore( 'setup', &
-        & 'full LDA+U not implemented with pseudo projection type', 1 )
-
-     if (noncolin) then
-      ALLOCATE( d_spin_ldau(2,2,48) )
-      call comp_dspinldau ()
-     endif
-
-     DO nt = 1, ntyp
-
-        if (Hubbard_alpha(nt)/=0.d0 ) CALL errore( 'setup', &
-                   & 'full LDA+U does not support Hubbard_alpha calculation', 1 )
-
-        IF ( Hubbard_U(nt)/=0.d0 .OR. ANY( Hubbard_J(:,nt)/=0.d0 ) ) THEN
-
-           !
-           Hubbard_l(nt) = set_Hubbard_l( upf(nt)%psd )
-
-           Hubbard_lmax = MAX( Hubbard_lmax, Hubbard_l(nt) )
-           !
-           if (Hubbard_U(nt) == 0.d0) Hubbard_U(nt) = 1.d-14
-
-           if ( Hubbard_l(nt) == 2 ) then
-             if ( Hubbard_J(2,nt) == 0.d0 ) &
-                          Hubbard_J(2,nt) = 0.114774114774d0 * Hubbard_J(1,nt)
-           elseif ( Hubbard_l(nt) == 3 ) then
-             if ( Hubbard_J(2,nt) == 0.d0 ) &
-                       Hubbard_J(2,nt) = 0.002268d0 * Hubbard_J(1,nt)
-             if ( Hubbard_J(3,nt)==0.d0 ) &
-                       Hubbard_J(3,nt) = 0.0438d0 * Hubbard_J(1,nt)
-           endif
-
-        END IF
-        !
-     END DO
-   else
-    CALL errore( 'setup', &
-                   & 'lda_plus_u_kind should be 0 or 1', 1 )
-   endif
-   IF ( Hubbard_lmax == -1 ) &
-        CALL errore( 'setup', &
-                   & 'lda_plus_u calculation but Hubbard_l not set', 1 )
-   IF ( Hubbard_lmax > 3 ) &
-        CALL errore( 'setup', &
-                   & 'Hubbard_l should not be > 3 ', 1 )
-
-   ! compute index of atomic wfcs used as projectors
-   if(.not.allocated(oatwfc)) ALLOCATE ( oatwfc(nat) )
-   CALL offset_atom_wfc ( nat, oatwfc )
-
-  ELSE
-     !
-     Hubbard_lmax = 0
-     !
-  END IF
-!---
-
+  !
+  ! ... Set up Hubbard parameters for LDA+U calculation
+  !
+  CALL init_lda_plus_u ( upf(1:ntyp)%psd, noncolin )
   !
   ! ... initialize d1 and d2 to rotate the spherical harmonics
   !

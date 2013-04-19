@@ -968,6 +968,7 @@ phq_readin.o : ../../Modules/paw_variables.o
 phq_readin.o : ../../Modules/run_info.o
 phq_readin.o : ../../Modules/uspp.o
 phq_readin.o : ../../Modules/xml_io_base.o
+phq_readin.o : ../../PW/src/ldaU.o
 phq_readin.o : ../../PW/src/pwcom.o
 phq_readin.o : ../../PW/src/start_k.o
 phq_readin.o : dfile_star.o
