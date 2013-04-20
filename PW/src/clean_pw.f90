@@ -38,7 +38,7 @@ SUBROUTINE clean_pw( lflag )
   USE us,                   ONLY : qrad, tab, tab_at, tab_d2y, spline_ps
   USE uspp,                 ONLY : deallocate_uspp
   USE uspp_param,           ONLY : upf
-  USE ldaU,                 ONLY : lda_plus_u, oatwfc, swfcatom, q_ae, q_ps
+  USE ldaU,                 ONLY : deallocate_ldaU
   USE extfield,             ONLY : forcefield
   USE fft_base,             ONLY : dfftp, dffts  
   USE stick_base,           ONLY : sticks_deallocate
@@ -86,16 +86,13 @@ SUBROUTINE clean_pw( lflag )
      IF ( ALLOCATED( forcefield ) ) DEALLOCATE( forcefield )
      IF ( ALLOCATED (irt) )         DEALLOCATE (irt)
      !
-     IF ( lda_plus_u ) THEN
-        IF ( ALLOCATED( oatwfc ) )     DEALLOCATE( oatwfc )
-        IF ( ALLOCATED( q_ae ) )       DEALLOCATE( q_ae )
-        IF ( ALLOCATED( q_ps ) )       DEALLOCATE( q_ps )
-     END IF
      CALL deallocate_bp_efield()
      CALL dealloca_london()
      CALL deallocate_constraint()
      !
   END IF
+  !
+  CALL deallocate_ldaU ( lflag )
   !
   IF ( ALLOCATED( f_inp ) )      DEALLOCATE( f_inp )
   IF ( ALLOCATED( tetra ) )      DEALLOCATE( tetra )
@@ -165,9 +162,6 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
-  IF ( lda_plus_u ) THEN
-     IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
-  ENDIF
   !
   ! ... fft structures allocated in data_structure.f90  
   !

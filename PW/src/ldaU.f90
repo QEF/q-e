@@ -20,7 +20,7 @@ MODULE ldaU
   INTEGER, PARAMETER :: nspinx=2
   COMPLEX(DP), ALLOCATABLE :: &
        swfcatom(:,:),         &! orthogonalized atomic wfcs
-       d_spin_ldau(:,:,:)      ! the rotations in spin space for all the symmetries
+       d_spin_ldau(:,:,:)      ! the rotations in spin space for all symmetries
   REAL(DP) :: &
        eth,                  &! the Hubbard contribution to the energy
        Hubbard_U(ntypx),     &! the Hubbard U
@@ -33,6 +33,7 @@ MODULE ldaU
        Hubbard_beta(ntypx),  &! the Hubbard beta (used to calculate J0)
        starting_ns(lqmax,nspinx,ntypx) !
   INTEGER :: &
+       nwfcU,                &! total no. of atomic wavefunctions having U term
        niter_with_fixed_ns,  &! no. of iterations with fixed ns
        lda_plus_u_kind,      &! 1/0 --> full/simplified(old) LDA+U calculation
        Hubbard_l(ntypx),     &! the angular momentum of Hubbard states
@@ -44,7 +45,7 @@ MODULE ldaU
   CHARACTER(len=30) :: &      ! 'atomic', 'ortho-atomic', 'file'
        U_projection           ! specifies how input coordinates are given
   INTEGER, ALLOCATABLE :: &
-       oatwfc(:)              ! offset of atomic wfcs used for projections
+       oatwfc(:), offsetU(:)  ! offset of atomic wfcs used for projections
   REAL(DP), ALLOCATABLE :: &
        q_ae(:,:,:),          &! coefficients for projecting onto beta functions
        q_ps(:,:,:)            ! (matrix elements on AE and PS atomic wfcs)
@@ -53,14 +54,14 @@ CONTAINS
   !
   SUBROUTINE init_lda_plus_u ( psd, noncolin )
     !
-    USE ions_base, ONLY: nat, ntyp => nsp
+    USE ions_base, ONLY: nat, ntyp => nsp, ityp
     !
     IMPLICIT NONE
     CHARACTER (LEN=2), INTENT(IN) :: psd(:)
     LOGICAL, INTENT(IN) :: noncolin
     !
     INTEGER, EXTERNAL :: set_Hubbard_l
-    INTEGER :: nt
+    INTEGER :: na, nt
     !
     !
     IF ( .NOT. lda_plus_u ) THEN
@@ -92,7 +93,7 @@ CONTAINS
        !
     ELSE IF ( lda_plus_u_kind == 1 ) THEN
        !
-       IF ( U_projection == 'pseudo' ) CALL errore( 'setup', &
+       IF ( U_projection == 'pseudo' ) CALL errore( 'init_lda_plus_u', &
             & 'full LDA+U not implemented with pseudo projection type', 1 )
        !
        IF (noncolin) THEN
@@ -101,7 +102,7 @@ CONTAINS
        END IF
        
        DO nt = 1, ntyp
-          IF (Hubbard_alpha(nt)/=0.d0 ) CALL errore( 'setup', &
+          IF (Hubbard_alpha(nt)/=0.d0 ) CALL errore( 'init_lda_plus_u', &
                'full LDA+U does not support Hubbard_alpha calculation', 1 )
 
           is_hubbard(nt) = Hubbard_U(nt)/= 0.0_dp .OR. &
@@ -127,18 +128,40 @@ CONTAINS
           !
        END DO
     else
-       CALL errore( 'setup', 'lda_plus_u_kind should be 0 or 1', 1 )
+       CALL errore( 'init_lda_plus_u', 'lda_plus_u_kind should be 0 or 1', 1 )
     endif
-    IF ( Hubbard_lmax == -1 ) CALL errore( 'setup', &
+    IF ( Hubbard_lmax == -1 ) CALL errore( 'init_lda_plus_u', &
          'lda_plus_u calculation but Hubbard_l not set', 1 )
     IF ( Hubbard_lmax > 3 ) &
-         CALL errore( 'setup', 'Hubbard_l should not be > 3 ', 1 )
+         CALL errore( 'init_lda_plus_u', 'Hubbard_l should not be > 3 ', 1 )
 
     ! compute index of atomic wfcs used as projectors
     IF ( .NOT.allocated(oatwfc)) ALLOCATE ( oatwfc(nat) )
     CALL offset_atom_wfc ( nat, oatwfc )
     !
+    IF ( .NOT.allocated(offsetU)) ALLOCATE ( offsetU(nat) )
+    nwfcU = 0
+    DO na=1,nat
+       offsetU(na) = nwfcU
+       nt = ityp(na)
+       IF ( is_hubbard(nt) ) nwfcU = nwfcU + 2*hubbard_l(nt)+1
+    END DO
+    !
   END SUBROUTINE init_lda_plus_u
+  !
+  SUBROUTINE deallocate_ldaU ( flag )
+  !
+  LOGICAL, INTENT (in) :: flag
+  !
+  IF ( flag ) THEN
+     IF ( ALLOCATED( oatwfc ) )     DEALLOCATE( oatwfc )
+     IF ( ALLOCATED( offsetU ) )    DEALLOCATE( offsetU )
+     IF ( ALLOCATED( q_ae ) )       DEALLOCATE( q_ae )
+     IF ( ALLOCATED( q_ps ) )       DEALLOCATE( q_ps )
+  END IF
+  IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
+  !
+  END SUBROUTINE deallocate_ldaU
 
 END MODULE ldaU
 !

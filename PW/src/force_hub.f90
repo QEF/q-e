@@ -19,8 +19,9 @@ SUBROUTINE force_hub(forceh)
    USE ions_base,            ONLY : nat, ityp
    USE cell_base,            ONLY : at, bg
    USE ldaU,                 ONLY : hubbard_lmax, hubbard_l, hubbard_u, &
-                                    hubbard_alpha, U_projection, &
-                                    swfcatom, lda_plus_u_kind, oatwfc
+                                    hubbard_alpha, U_projection, offsetU, &
+                                    nwfcU, swfcatom, lda_plus_u_kind, &
+                                    oatwfc, is_hubbard
    USE symme,                ONLY : symvector
    USE io_files,             ONLY : prefix
    USE wvfct,                ONLY : nbnd, npwx, npw, igk
@@ -29,7 +30,6 @@ SUBROUTINE force_hub(forceh)
    USE scf,                  ONLY : v
    USE mp_global,            ONLY : inter_pool_comm
    USE mp,                   ONLY : mp_sum
-   USE basis,                ONLY : natomwfc
    USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
    USE uspp,                 ONLY : nkb, vkb
    USE wavefunctions_module, ONLY : evc
@@ -41,25 +41,26 @@ SUBROUTINE force_hub(forceh)
    IMPLICIT NONE
    REAL (DP) :: forceh(3,nat)  ! output: the Hubbard forces
 
-   type (bec_type) :: proj     ! proj(natomwfc,nbnd)
-   COMPLEX (DP), ALLOCATABLE :: spsi(:,:)
+   type (bec_type) :: proj     ! proj(nwfcU,nbnd)
+   COMPLEX (DP), ALLOCATABLE :: spsi(:,:), wfcU(:,:)
    !                            spsi(npwx,nbnd)
    REAL (DP), ALLOCATABLE :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
-
    INTEGER :: alpha, na, nt, is, m1, m2, ipol, ldim, ik
 
    IF (U_projection .NE. "atomic") CALL errore("force_hub", &
                    " forces for this U_projection_type not implemented",1)
-   IF (lda_plus_u_kind.eq.1) CALL errore("force_hub", &
+   IF (lda_plus_u_kind == 1) CALL errore("force_hub", &
                    " forces in full LDA+U scheme are not yet implemented",1)
 
    call start_clock('force_hub')
    ldim= 2 * Hubbard_lmax + 1
    ALLOCATE ( dns(ldim,ldim,nspin,nat), spsi(npwx,nbnd) )
    call allocate_bec_type ( nkb, nbnd, becp) 
-   call allocate_bec_type ( natomwfc, nbnd, proj )
-
+   call allocate_bec_type ( nwfcU, nbnd, proj )
+!!!
+   ALLOCATE ( wfcU(npwx,nwfcU) )
+!!!
    forceh(:,:) = 0.d0
 
    ! Offset of atomic wavefunctions initialized in setup and stored in oatwfc
@@ -77,20 +78,38 @@ SUBROUTINE force_hub(forceh)
 
       CALL get_buffer (evc, nwordwfc, iunwfc, ik)
       CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
+!!!
+      DO na=1,nat
+         nt = ityp(na)
+         if ( is_hubbard(nt) ) then
+            m1 = 1
+            m2 = 2*hubbard_l(nt)+1
+            wfcU(:,offsetU(na)+m1:offsetU(na)+m2) = swfcatom(:,oatwfc(na)+m1:oatwfc(na)+m2) 
+         end if
+      END DO
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
-      CALL calbec( npw, swfcatom, evc, proj )
+      CALL calbec( npw, wfcU, evc, proj )
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
 
 ! read atomic wfc - swfcatom is used here as work space
       CALL get_buffer (swfcatom, nwordatwfc, iunat, ik)
-   
+!!!
+      DO na=1,nat
+         nt = ityp(na)
+         if ( is_hubbard(nt) ) then
+            m1 = 1
+            m2 = 2*hubbard_l(nt)+1
+            wfcU(:,offsetU(na)+m1:offsetU(na)+m2) = swfcatom(:,oatwfc(na)+m1:oatwfc(na)+m2) 
+         end if
+      END DO
+!!!   
       DO ipol = 1,3
          DO alpha = 1,nat                 ! the displaced atom
             IF ( gamma_only ) THEN
-               CALL dndtau_gamma(ldim,oatwfc,proj%r,swfcatom,spsi,alpha,ipol,ik,dns)
+               CALL dndtau_gamma(ldim,proj%r,nwfcU,wfcU,offsetU,spsi,alpha,ipol,ik,dns)
             ELSE
-               CALL dndtau_k (ldim,oatwfc,proj%k,swfcatom,spsi,alpha,ipol,ik,dns)
+               CALL dndtau_k (ldim,proj%k,nwfcU,wfcU,offsetU,spsi,alpha,ipol,ik,dns)
             ENDIF
             DO na = 1,nat                 ! the Hubbard atom
                nt = ityp(na)
@@ -114,15 +133,16 @@ SUBROUTINE force_hub(forceh)
    DEALLOCATE(dns, spsi)
    call deallocate_bec_type (proj)
    call deallocate_bec_type (becp)
+   DEALLOCATE ( wfcU )
    
    IF (nspin == 1) forceh(:,:) = 2.d0 * forceh(:,:)
    !
    ! ...symmetrize...
    !
    CALL symvector ( nat, forceh )
-!write(66,'("Hubbard contribution Begin")')
-!write(66,'(3f12.6)') forceh(:,:)
-!write(66,'("Hubbard contribution End")')
+write(66,'("Hubbard contribution Begin")')
+write(66,'(3f12.6)') forceh(:,:)
+write(66,'("Hubbard contribution End")')
    !
    call stop_clock('force_hub')
    !
@@ -130,7 +150,8 @@ SUBROUTINE force_hub(forceh)
 END SUBROUTINE force_hub
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dndtau_k (ldim, offset, proj, wfcatom, spsi, alpha, ipol, ik, dns)
+SUBROUTINE dndtau_k (ldim, proj, nwfcU, wfcU, offsetU, &
+     spsi, alpha, ipol, ik, dns)
    !-----------------------------------------------------------------------
    !
    ! This routine computes the derivative of the ns with respect to the ionic
@@ -139,17 +160,16 @@ SUBROUTINE dndtau_k (ldim, offset, proj, wfcatom, spsi, alpha, ipol, ik, dns)
    !
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ityp
-   USE basis,                ONLY : natomwfc
    USE lsda_mod,             ONLY : nspin, current_spin
    USE ldaU,                 ONLY : Hubbard_U, Hubbard_alpha, Hubbard_l
    USE wvfct,                ONLY : nbnd, npwx, npw, wg
    
    IMPLICIT NONE
 
-   INTEGER, INTENT(IN) ::  alpha, ipol, ik, ldim, offset(nat)
-   ! offset(nat): offset of d electrons of atom d in the natomwfc ordering
+   INTEGER, INTENT(IN) :: nwfcU, alpha, ipol, ik, ldim, offsetU(nat)
+   ! offsetU(nat): offset of d electrons 
    COMPLEX (DP), INTENT(IN) :: &
-             proj(natomwfc,nbnd), wfcatom(npwx,natomwfc), spsi(npwx,nbnd)
+             proj(nwfcU,nbnd), wfcU(npwx,nwfcU), spsi(npwx,nbnd)
    REAL (DP), INTENT (OUT) :: dns(ldim,ldim,nspin,nat)
    !
    INTEGER ::  ibnd, is, na, nt, m1, m2
@@ -158,8 +178,8 @@ SUBROUTINE dndtau_k (ldim, offset, proj, wfcatom, spsi, alpha, ipol, ik, dns)
    !
    CALL start_clock('dndtau')
    !
-   ALLOCATE ( dproj(natomwfc,nbnd) )
-   CALL dprojdtau_k ( wfcatom, spsi, alpha, ipol, offset(alpha), dproj )
+   ALLOCATE ( dproj(nwfcU,nbnd) )
+   CALL dprojdtau_k ( nwfcU, wfcU, offsetU, spsi, alpha, ipol, dproj )
    !
    ! compute the derivative of occupation numbers (the quantities dn(m1,m2))
    ! of the atomic orbitals. They are real quantities as well as n(m1,m2)
@@ -173,10 +193,10 @@ SUBROUTINE dndtau_k (ldim, offset, proj, wfcatom, spsi, alpha, ipol, ik, dns)
                DO ibnd = 1,nbnd
                   dns(m1,m2,current_spin,na) = dns(m1,m2,current_spin,na) + &
                                           wg(ibnd,ik) *            &
-                              DBLE(  proj(offset(na)+m1,ibnd)  *   &
-                             CONJG(dproj(offset(na)+m2,ibnd))  +   &
-                                    dproj(offset(na)+m1,ibnd)  *   &
-                             CONJG(proj(offset(na)+m2,ibnd)) )
+                              DBLE( proj(offsetU(na)+m1,ibnd)  *   &
+                             CONJG(dproj(offsetU(na)+m2,ibnd))  +   &
+                                   dproj(offsetU(na)+m1,ibnd)  *   &
+                             CONJG( proj(offsetU(na)+m2,ibnd)) )
                END DO
             END DO
          END DO
@@ -206,8 +226,9 @@ SUBROUTINE dndtau_k (ldim, offset, proj, wfcatom, spsi, alpha, ipol, ik, dns)
 END SUBROUTINE dndtau_k
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dndtau_gamma (ldim, offset, rproj, wfcatom, spsi, alpha, ipol, ik, dns)
-   !-----------------------------------------------------------------------
+SUBROUTINE dndtau_gamma (ldim, rproj, nwfcU, wfcU, offsetU, &
+     spsi, alpha, ipol, ik, dns)
+  !-----------------------------------------------------------------------
    !
    ! This routine computes the derivative of the ns with respect to the ionic
    ! displacement u(alpha,ipol) used to obtain the Hubbard contribution to the
@@ -215,17 +236,16 @@ SUBROUTINE dndtau_gamma (ldim, offset, rproj, wfcatom, spsi, alpha, ipol, ik, dn
    !
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ityp
-   USE basis,                ONLY : natomwfc
    USE lsda_mod,             ONLY : nspin, current_spin
    USE ldaU,                 ONLY : Hubbard_U, Hubbard_alpha, Hubbard_l
    USE wvfct,                ONLY : nbnd, npwx, npw, wg
    
    IMPLICIT NONE
 
-   INTEGER, INTENT(IN) ::  alpha, ipol, ik, ldim, offset(nat)
-   ! offset(nat): offset of d electrons of atom d in the natomwfc ordering
-   COMPLEX (DP), INTENT(IN) ::  wfcatom(npwx,natomwfc), spsi(npwx,nbnd)
-   REAL(DP), INTENT (IN) ::  rproj(natomwfc,nbnd)
+   INTEGER, INTENT(IN) ::  alpha, ipol, ik, ldim, nwfcU, offsetU(nat)
+   ! offsetU(nat): offset of d electrons of atom 
+   COMPLEX (DP), INTENT(IN) :: wfcU(npwx,nwfcU), spsi(npwx,nbnd)
+   REAL(DP), INTENT (IN) ::  rproj(nwfcU,nbnd)
    REAL (DP), INTENT (OUT) :: dns(ldim,ldim,nspin,nat)
    !
    INTEGER ::  ibnd, is, na, nt, m1, m2
@@ -234,8 +254,8 @@ SUBROUTINE dndtau_gamma (ldim, offset, rproj, wfcatom, spsi, alpha, ipol, ik, dn
    !
    CALL start_clock('dndtau')
    !
-   ALLOCATE ( dproj(natomwfc,nbnd) )
-   CALL dprojdtau_gamma ( wfcatom, spsi, alpha, ipol, offset(alpha), dproj )
+   ALLOCATE ( dproj(nwfcU,nbnd) )
+   CALL dprojdtau_gamma ( nwfcU, wfcU, offsetU, spsi, alpha, ipol, dproj )
    !
    ! compute the derivative of occupation numbers (the quantities dn(m1,m2))
    ! of the atomic orbitals. They are real quantities as well as n(m1,m2)
@@ -249,10 +269,10 @@ SUBROUTINE dndtau_gamma (ldim, offset, rproj, wfcatom, spsi, alpha, ipol, ik, dn
                DO ibnd = 1,nbnd
                   dns(m1,m2,current_spin,na) = dns(m1,m2,current_spin,na) + &
                                           wg(ibnd,ik) * (   &
-                              rproj(offset(na)+m1,ibnd)  *   &
-                              dproj(offset(na)+m2,ibnd)  +   &
-                              dproj(offset(na)+m1,ibnd)  *   &
-                              rproj(offset(na)+m2,ibnd) )
+                              rproj(offsetU(na)+m1,ibnd)  *   &
+                              dproj(offsetU(na)+m2,ibnd)  +   &
+                              dproj(offsetU(na)+m1,ibnd)  *   &
+                              rproj(offsetU(na)+m2,ibnd) )
                END DO
             END DO
          END DO
@@ -282,7 +302,7 @@ SUBROUTINE dndtau_gamma (ldim, offset, rproj, wfcatom, spsi, alpha, ipol, ik, dn
 END SUBROUTINE dndtau_gamma
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
+SUBROUTINE dprojdtau_k (nwfcU, wfcU, offsetU, spsi, alpha, ipol, dproj)
    !-----------------------------------------------------------------------
    !
    ! This routine computes the first derivative of the projection
@@ -292,7 +312,6 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
    !
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-   USE basis,                ONLY : natomwfc
    USE cell_base,            ONLY : tpiba
    USE gvect,                ONLY : g
    USE klist,                ONLY : nks, xk
@@ -309,12 +328,12 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
    INTEGER, INTENT (IN) :: &
               alpha,   &! the displaced atom
               ipol,    &! the component of displacement
-              offset    ! the offset of the wfcs of the atom "alpha"
+              nwfcU, offsetU(nat)
    COMPLEX (DP), INTENT (IN) :: &
-           wfcatom(npwx,natomwfc), &! the atomic wfc
+           wfcU(npwx,nwfcU), &! the atomic wfc
            spsi(npwx,nbnd)          ! S|evc>
    COMPLEX (DP), INTENT (OUT) :: &
-           dproj(natomwfc,nbnd)     ! output: the derivative of the projection
+           dproj(nwfcU,nbnd)     ! output: the derivative of the projection
    !
    INTEGER :: nt, ig, ijkb0, na_, m1, ibnd, iwf, nt_, ih, jh, ldim
    REAL (DP) :: gvec
@@ -325,8 +344,8 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
    !      dbeta(npwx,nhm),       ! the derivative of the beta function
    !      betapsi(nhm,nbnd),     ! <beta|evc>
    !      dbetapsi(nhm,nbnd),    ! <dbeta|evc>
-   !      wfatbeta(natomwfc,nhm),! <wfc|beta>
-   !      wfatdbeta(natomwfc,nhm)! <wfc|dbeta>
+   !      wfatbeta(nwfcU,nhm),   ! <wfc|beta>
+   !      wfatdbeta(nwfcU,nhm)   ! <wfc|dbeta>
 
    call start_clock('dprojdtau')
    nt = ityp(alpha)
@@ -347,13 +366,13 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
          ! in c.c. term because the sign of the imaginary unit.
    
          DO m1 = 1, ldim
-            dwfc(ig,m1) = (0.d0,-1.d0) * gvec * wfcatom(ig,offset+m1)
+            dwfc(ig,m1) = (0.d0,-1.d0) * gvec * wfcU(ig,offsetU(alpha)+m1)
          END DO
       END DO
 
       CALL ZGEMM('C','N',ldim, nbnd, npw, (1.d0,0.d0), &
                   dwfc, npwx, spsi, npwx, (0.d0,0.d0), &
-                  dproj(offset+1,1), natomwfc)
+                  dproj(offsetU(alpha)+1,1), nwfcU)
 
       DEALLOCATE ( dwfc ) 
       CALL mp_sum( dproj, intra_bgrp_comm )
@@ -374,8 +393,8 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
    ! ijkb0 points now to the beta functions of atom alpha
    !
    ALLOCATE (dbetapsi(nh(nt),nbnd) ) 
-   ALLOCATE (wfatdbeta(natomwfc,nh(nt)) )
-   ALLOCATE ( wfatbeta(natomwfc,nh(nt)) )
+   ALLOCATE (wfatdbeta(nwfcU,nh(nt)) )
+   ALLOCATE ( wfatbeta(nwfcU,nh(nt)) )
    ALLOCATE ( dbeta(npwx,nh(nt)) )
    DO ih=1,nh(nt)
       DO ig = 1, npw
@@ -384,13 +403,13 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
       END DO
    END DO
    CALL calbec ( npw, dbeta, evc, dbetapsi ) 
-   CALL calbec ( npw, wfcatom, dbeta, wfatdbeta ) 
+   CALL calbec ( npw, wfcU, dbeta, wfatdbeta ) 
    DO ih=1,nh(nt)
       DO ig = 1, npw
          dbeta(ig,ih) = vkb(ig,ijkb0+ih)
       END DO
    END DO
-   CALL calbec ( npw, wfcatom, dbeta, wfatbeta ) 
+   CALL calbec ( npw, wfcU, dbeta, wfatbeta ) 
    DEALLOCATE ( dbeta )
    ! calculate \sum_j qq(i,j)*dbetapsi(j)
    ! betapsi is used here as work space 
@@ -419,12 +438,12 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
    ! dproj(iwf,ibnd) = \sum_ih wfatdbeta(iwf,ih)*betapsi(ih,ibnd) +
    !                           wfatbeta(iwf,ih)*dbetapsi(ih,ibnd) 
    !
-   CALL ZGEMM('N','N',natomwfc, nbnd, nh(nt), 1.0_dp,  &
-        wfatdbeta, natomwfc, betapsi, nh(nt), 1.0_dp,&
-        dproj, natomwfc)
-   CALL ZGEMM('N','N',natomwfc, nbnd, nh(nt), 1.0_dp,  &
-        wfatbeta, natomwfc, dbetapsi, nh(nt), 1.0_dp,&
-        dproj, natomwfc)
+   CALL ZGEMM('N','N',nwfcU, nbnd, nh(nt), 1.0_dp,  &
+        wfatdbeta, nwfcU, betapsi, nh(nt), 1.0_dp,&
+        dproj, nwfcU)
+   CALL ZGEMM('N','N',nwfcU, nbnd, nh(nt), 1.0_dp,  &
+        wfatbeta, nwfcU, dbetapsi, nh(nt), 1.0_dp,&
+        dproj, nwfcU)
    !
    DEALLOCATE ( betapsi )
    DEALLOCATE ( wfatbeta ) 
@@ -437,7 +456,7 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
 END SUBROUTINE dprojdtau_k
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
+SUBROUTINE dprojdtau_gamma (nwfcU, wfcU, offsetU, spsi, alpha, ipol, dproj)
    !-----------------------------------------------------------------------
    !
    ! This routine computes the first derivative of the projection
@@ -447,7 +466,6 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
    !
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-   USE basis,                ONLY : natomwfc
    USE cell_base,            ONLY : tpiba
    USE gvect,                ONLY : g, gstart
    USE klist,                ONLY : nks, xk
@@ -461,15 +479,16 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
    USE mp,                   ONLY : mp_sum
    
    IMPLICIT NONE
+
    INTEGER, INTENT (IN) :: &
               alpha,   &! the displaced atom
               ipol,    &! the component of displacement
-              offset    ! the offset of the wfcs of the atom "alpha"
+              nwfcU, offsetU(nat)
    COMPLEX (DP), INTENT (IN) :: &
-           wfcatom(npwx,natomwfc), &! the atomic wfc
-           spsi(npwx,nbnd)          ! S|evc>
+           wfcU(npwx,nwfcU),     &! the atomic wfc
+           spsi(npwx,nbnd)         ! S|evc>
    REAL (DP), INTENT (OUT) :: &
-           dproj(natomwfc,nbnd)     ! output: the derivative of the projection
+           dproj(nwfcU,nbnd)     ! output: the derivative of the projection
    !
    INTEGER :: nt, ig, ijkb0, na_, m1, ibnd, iwf, nt_, ih, jh, ldim
    REAL (DP) :: gvec
@@ -480,12 +499,11 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
    !      dbeta(npwx,nhm),       ! the derivative of the beta function
    !      betapsi(nhm,nbnd),     ! <beta|evc>
    !      dbetapsi(nhm,nbnd),    ! <dbeta|evc>
-   !      wfatbeta(natomwfc,nhm),! <wfc|beta>
-   !      wfatdbeta(natomwfc,nhm)! <wfc|dbeta>
+   !      wfatbeta(nwfcU,nhm),   ! <wfcU|beta>
+   !      wfatdbeta(nwfcU,nhm)   ! <wfcU|dbeta>
 
    call start_clock('dprojdtau')
    nt = ityp(alpha)
-
    ldim = 2 * Hubbard_l(nt) + 1
 
    dproj(:,:) = (0.d0, 0.d0)
@@ -502,13 +520,13 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
          ! in c.c. term because the sign of the imaginary unit.
    
          DO m1 = 1, ldim
-            dwfc(ig,m1) = (0.d0,-1.d0) * gvec * wfcatom(ig,offset+m1)
+            dwfc(ig,m1) = (0.d0,-1.d0) * gvec * wfcU(ig,offsetU(alpha)+m1)
          END DO
       END DO
       ! there is no G=0 term
       CALL DGEMM('T','N',ldim, nbnd, 2*npw, 2.0_dp,  &
                   dwfc, 2*npwx, spsi, 2*npwx, 0.0_dp,&
-                  dproj(offset+1,1), natomwfc)
+                  dproj(offsetU(alpha)+1,1), nwfcU)
       DEALLOCATE ( dwfc ) 
       CALL mp_sum( dproj, intra_bgrp_comm )
    END IF
@@ -528,8 +546,8 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
    ! ijkb0 points now to the beta functions of atom alpha
    !
    ALLOCATE (dbetapsi(nh(nt),nbnd) ) 
-   ALLOCATE (wfatdbeta(natomwfc,nh(nt)) )
-   ALLOCATE ( wfatbeta(natomwfc,nh(nt)) )
+   ALLOCATE (wfatdbeta(nwfcU,nh(nt)) )
+   ALLOCATE ( wfatbeta(nwfcU,nh(nt)) )
    ALLOCATE ( dbeta(npwx,nh(nt)) )
    DO ih=1,nh(nt)
       DO ig = 1, npw
@@ -538,13 +556,13 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
       END DO
    END DO
    CALL calbec ( npw, dbeta, evc, dbetapsi ) 
-   CALL calbec ( npw, wfcatom, dbeta, wfatdbeta ) 
+   CALL calbec ( npw, wfcU, dbeta, wfatdbeta ) 
    DO ih=1,nh(nt)
       DO ig = 1, npw
          dbeta(ig,ih) = vkb(ig,ijkb0+ih)
       END DO
    END DO
-   CALL calbec ( npw, wfcatom, dbeta, wfatbeta ) 
+   CALL calbec ( npw, wfcU, dbeta, wfatbeta ) 
    DEALLOCATE ( dbeta )
    ! calculate \sum_j qq(i,j)*dbetapsi(j)
    ! betapsi is used here as work space 
@@ -573,12 +591,12 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
    ! dproj(iwf,ibnd) = \sum_ih wfatdbeta(iwf,ih)*betapsi(ih,ibnd) +
    !                           wfatbeta(iwf,ih)*dbetapsi(ih,ibnd) 
    !
-   CALL DGEMM('N','N',natomwfc, nbnd, nh(nt), 1.0_dp,  &
-        wfatdbeta, natomwfc, betapsi, nh(nt), 1.0_dp,&
-        dproj, natomwfc)
-   CALL DGEMM('N','N',natomwfc, nbnd, nh(nt), 1.0_dp,  &
-        wfatbeta, natomwfc, dbetapsi, nh(nt), 1.0_dp,&
-        dproj, natomwfc)
+   CALL DGEMM('N','N',nwfcU, nbnd, nh(nt), 1.0_dp,  &
+        wfatdbeta, nwfcU, betapsi, nh(nt), 1.0_dp,&
+        dproj, nwfcU)
+   CALL DGEMM('N','N',nwfcU, nbnd, nh(nt), 1.0_dp,  &
+        wfatbeta, nwfcU, dbetapsi, nh(nt), 1.0_dp,&
+        dproj, nwfcU)
    !
    DEALLOCATE ( betapsi )
    DEALLOCATE ( wfatbeta ) 
