@@ -25,10 +25,9 @@ SUBROUTINE new_ns(ns)
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp
-  USE basis,                ONLY : natomwfc
   USE klist,                ONLY : nks, ngk
   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, oatwfc, q_ae, &
-                                   U_projection, Hubbard_U, Hubbard_alpha,&
+                                   U_projection, &
                                    is_hubbard, nwfcU, offsetU, swfcatom
   USE symm_base,            ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
@@ -47,12 +46,11 @@ SUBROUTINE new_ns(ns)
   !
   REAL(DP), INTENT(OUT) :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
   !
-  TYPE (bec_type) :: proj     ! proj(natomwfc,nbnd)
+  TYPE (bec_type) :: proj     ! proj(nwfcU,nbnd)
   INTEGER :: ik, ibnd, is, i, na, nb, nt, isym, m1, m2, m0, m00, ldim
   ! counter on k points
   !    "    "  bands
   !    "    "  spins
-  ! in the natomwfc ordering
   COMPLEX(DP) , ALLOCATABLE :: wfcU (:,:)
   REAL(DP) , ALLOCATABLE :: nr (:,:,:,:)
   REAL(DP) :: psum
@@ -214,6 +212,7 @@ SUBROUTINE new_ns(ns)
      ENDIF 
   ENDDO
 
+  DEALLOCATE( wfcU )  
   DEALLOCATE ( nr )
   CALL stop_clock('new_ns')
 
@@ -227,6 +226,7 @@ SUBROUTINE new_ns(ns)
     ! Here we compute LDA+U projections using the <beta|psi> overlaps
     !
     USE ions_base,            ONLY : ntyp => nsp
+    USE basis,                ONLY : natomwfc
     USE klist,                ONLY : xk
     USE becmod,               ONLY : becp
     USE uspp,                 ONLY : nkb, vkb
@@ -308,10 +308,9 @@ SUBROUTINE new_ns_nc(ns)
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp
-  USE basis,                ONLY : natomwfc
   USE klist,                ONLY : nks, ngk
   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, oatwfc, &
-                                   Hubbard_U, Hubbard_alpha, d_spin_ldau, &
+                                   d_spin_ldau, &
                                    is_hubbard, nwfcU, offsetU, swfcatom
   USE symm_base,            ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
