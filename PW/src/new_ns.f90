@@ -346,7 +346,7 @@ SUBROUTINE new_ns_nc(ns)
 
   ALLOCATE( nr(ldim,ldim,npol,npol,nat), nr1(ldim,ldim,npol,npol,nat) )  
   ALLOCATE( proj(nwfcU,nbnd) )
-  ALLOCATE( wfcU(npwx,nwfcU) )
+  ALLOCATE( wfcU(npwx*npol,nwfcU) )
 
   nr  (:,:,:,:,:) = 0.d0
   nr1 (:,:,:,:,:) = 0.d0
