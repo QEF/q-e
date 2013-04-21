@@ -44,26 +44,13 @@ SUBROUTINE orthoatwfc
   COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:), work (:,:), overlap (:,:)
   REAL(DP) , ALLOCATABLE :: e (:)
 
-  IF ( U_projection == 'pseudo' ) THEN
+  IF ( U_projection == "pseudo" ) THEN
      WRITE( stdout,*) 'Beta functions used for LDA+U Projector'
      RETURN
-  END IF
-
-  IF (noncolin) THEN
-     ALLOCATE (wfcatom( npwx*npol, natomwfc))    
-  ELSE
-     ALLOCATE (wfcatom( npwx, natomwfc))    
-  END IF
-  ALLOCATE (overlap( natomwfc , natomwfc))    
-  ALLOCATE (work   ( natomwfc , natomwfc))    
-  ALLOCATE (e      ( natomwfc))    
-
-  IF (U_projection=="file") THEN
+  ELSE IF (U_projection=="file") THEN
      WRITE( stdout,*) 'LDA+U Projector read from file '
      RETURN
-  END IF
-
-  IF (U_projection=="atomic") THEN
+  ELSE IF (U_projection=="atomic") THEN
      orthogonalize_wfc = .FALSE.
      WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are NOT orthogonalized'
   ELSE IF (U_projection=="ortho-atomic") THEN
@@ -84,6 +71,15 @@ SUBROUTINE orthoatwfc
      WRITE( stdout,*) "U_projection_type =", U_projection
      CALL errore ("orthoatwfc"," this U_projection_type is not valid",1)
   END IF
+
+  IF (noncolin) THEN
+     ALLOCATE (wfcatom( npwx*npol, natomwfc))    
+  ELSE
+     ALLOCATE (wfcatom( npwx, natomwfc))    
+  END IF
+  ALLOCATE (overlap( natomwfc , natomwfc))    
+  ALLOCATE (work   ( natomwfc , natomwfc))    
+  ALLOCATE (e      ( natomwfc))    
 
   ! Allocate the array becp = <beta|wfcatom>
   CALL allocate_bec_type (nkb,natomwfc, becp) 
