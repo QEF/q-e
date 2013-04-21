@@ -17,7 +17,7 @@
     conv_thr =  1.0d-6
     mixing_fixed_ns = 0
  /
-CELL_PARAMETERS
+CELL_PARAMETERS alat
 0.50 0.50 1.00
 0.50 1.00 0.50
 1.00 0.50 0.50

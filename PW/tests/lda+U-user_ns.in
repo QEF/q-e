@@ -16,10 +16,10 @@
  &electrons
     mixing_mode = 'plain'
     mixing_beta = 0.3
-    conv_thr =  1.0d-6
+    conv_thr =  1.0d-8
     mixing_fixed_ns = 0
  /
-CELL_PARAMETERS
+CELL_PARAMETERS (alat)
 0.50 0.50 1.00
 0.50 1.00 0.50
 1.00 0.50 0.50
