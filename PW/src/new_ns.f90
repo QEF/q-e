@@ -212,7 +212,7 @@ SUBROUTINE new_ns(ns)
      ENDIF 
   ENDDO
 
-  DEALLOCATE( wfcU )  
+  DEALLOCATE ( wfcU )
   DEALLOCATE ( nr )
   CALL stop_clock('new_ns')
 
@@ -233,7 +233,7 @@ SUBROUTINE new_ns(ns)
     USE uspp_param,           ONLY : nhm, nh
     !
     IMPLICIT NONE
-    REAL(DP), INTENT(IN) :: q(natomwfc,nhm,nat)
+    REAL(DP), INTENT(IN) :: q(nwfcU,nhm,nat)
     TYPE(bec_type), INTENT(INOUT) :: p
     !
     INTEGER :: ib, iw, nt, na, ijkb0, ikb, ih
@@ -267,7 +267,7 @@ SUBROUTINE new_ns(ns)
                    DO ih = 1, nh(nt)
                       !
                       ikb = ijkb0 + ih
-                      DO iw = 1, natomwfc
+                      DO iw = 1, nwfcU
                          !
                          IF ( gamma_only ) THEN
                             p%r(iw,ib) = p%r(iw,ib) + q(iw,ih,na)*becp%r(ikb,ib)
@@ -296,7 +296,6 @@ SUBROUTINE new_ns(ns)
     RETURN
   END SUBROUTINE compute_pproj
   !
-
 END SUBROUTINE new_ns 
 
 

@@ -17,11 +17,10 @@ SUBROUTINE init_q_aeps ( )
    !
    USE kinds,      ONLY : DP
    USE ions_base,  ONLY : ntyp => nsp, ityp, nat
-   USE basis,      ONLY : natomwfc
    USE atom,       ONLY : rgrid, msh
    USE lsda_mod,   ONLY : nspin
    USE ldaU,       ONLY : q_ae, q_ps, Hubbard_l, oatwfc, &
-                          U_projection, Hubbard_U, Hubbard_alpha
+                          U_projection, is_hubbard, nwfcU, offsetU
    USE uspp_param, ONLY : nbetam, nh, nhm, upf
    USE uspp,       ONLY : indv, nhtol, nhtolm, nkb
    USE control_flags, ONLY : iverbosity
@@ -36,9 +35,7 @@ SUBROUTINE init_q_aeps ( )
    REAL(DP) :: psint, aeint, wsgn
    !
    !
-   ALLOCATE ( q_ae(natomwfc,nhm,nat), q_ps(natomwfc,nhm,nat) )
-   !IF ( .NOT.ALLOCATED( q_ae ) )  ALLOCATE ( q_ae(natomwfc,nhm,nat) )
-   !IF ( .NOT.ALLOCATED( q_ps ) )  ALLOCATE ( q_ps(natomwfc,nhm,nat) )
+   ALLOCATE ( q_ae(nwfcU,nhm,nat), q_ps(nwfcU,nhm,nat) )
    !
    ndm = MAXVAL (msh(1:ntyp))
    ALLOCATE ( aux(ndm), qq_ae(nbetam,nbetam,ntyp), qq_ps(nbetam,nbetam,ntyp) )
@@ -50,12 +47,11 @@ SUBROUTINE init_q_aeps ( )
    !
    !
    ! Compute the integrals of the AE and PS wavefunctions up to core radii
-   ! (only for atomic types entering in the Hubbard Hamiltonian, while for 
-   ! the others set q_ae=q_ps=0, so that AE atomic wfcs are not required)
+   ! (only for atomic types entering in the Hubbard Hamiltonian)
    !
    DO nt = 1, ntyp
       !
-      IF ( Hubbard_U(nt) == 0.D0 .AND. Hubbard_alpha(nt) == 0.D0 ) CYCLE
+      IF ( .NOT. is_hubbard(nt) ) CYCLE
       !
       IF ( .NOT.upf(nt)%has_wfc ) CALL errore('init_q_aeps', &
          "All-electron atomic-wavefunctions needed for pseudo U_projection",1)
@@ -134,7 +130,7 @@ SUBROUTINE init_q_aeps ( )
          !
          nt_ = ityp(na)
          ! offset for atomic wavefunctions (initialized in offset_atom_wfc)
-         iwfc = oatwfc(na)
+         iwfc = offsetU(na)
 
          IF ( nt_ == nt .AND. lH .GE. 0 ) THEN
             !
