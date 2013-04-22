@@ -20,7 +20,7 @@ SUBROUTINE wfcinit()
   USE klist,                ONLY : xk, nks, ngk
   USE control_flags,        ONLY : io_level, lscf
   USE fixed_occ,            ONLY : one_atom_occupations
-  USE ldaU,                 ONLY : lda_plus_u, swfcatom, U_projection
+  USE ldaU,                 ONLY : lda_plus_u, swfcatom, U_projection, copy_U_wfc
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordatwfc, iunsat, iunwfc, iunigk
   USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
@@ -136,8 +136,10 @@ SUBROUTINE wfcinit()
      !
      ! ... Needed for LDA+U
      !
-     IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
+     IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) THEN
         CALL get_buffer( swfcatom, nwordatwfc, iunsat, ik )
+        CALL copy_U_wfc ( )
+     END IF
      !
      ! ... calculate starting wavefunctions
      !

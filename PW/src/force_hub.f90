@@ -20,8 +20,8 @@ SUBROUTINE force_hub(forceh)
    USE cell_base,            ONLY : at, bg
    USE ldaU,                 ONLY : hubbard_lmax, hubbard_l, hubbard_u, &
                                     hubbard_alpha, U_projection, offsetU, &
-                                    nwfcU, swfcatom, lda_plus_u_kind, &
-                                    oatwfc, is_hubbard
+                                    nwfcU, wfcU, is_hubbard, lda_plus_u_kind, &
+                                    oatwfc, swfcatom, copy_U_wfc
    USE symme,                ONLY : symvector
    USE io_files,             ONLY : prefix
    USE wvfct,                ONLY : nbnd, npwx, npw, igk
@@ -42,7 +42,7 @@ SUBROUTINE force_hub(forceh)
    REAL (DP) :: forceh(3,nat)  ! output: the Hubbard forces
 
    type (bec_type) :: proj     ! proj(nwfcU,nbnd)
-   COMPLEX (DP), ALLOCATABLE :: spsi(:,:), wfcU(:,:)
+   COMPLEX (DP), ALLOCATABLE :: spsi(:,:)
    !                            spsi(npwx,nbnd)
    REAL (DP), ALLOCATABLE :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
@@ -58,9 +58,7 @@ SUBROUTINE force_hub(forceh)
    ALLOCATE ( dns(ldim,ldim,nspin,nat), spsi(npwx,nbnd) )
    call allocate_bec_type ( nkb, nbnd, becp) 
    call allocate_bec_type ( nwfcU, nbnd, proj )
-!!!
-   ALLOCATE ( wfcU(npwx,nwfcU) )
-!!!
+
    forceh(:,:) = 0.d0
 
    ! Offset of atomic wavefunctions initialized in setup and stored in oatwfc
@@ -79,14 +77,8 @@ SUBROUTINE force_hub(forceh)
       CALL get_buffer (evc, nwordwfc, iunwfc, ik)
       CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
 !!!
-      DO na=1,nat
-         nt = ityp(na)
-         if ( is_hubbard(nt) ) then
-            m1 = 1
-            m2 = 2*hubbard_l(nt)+1
-            wfcU(:,offsetU(na)+m1:offsetU(na)+m2) = swfcatom(:,oatwfc(na)+m1:oatwfc(na)+m2) 
-         end if
-      END DO
+      call copy_U_wfc ()
+!!!
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
       CALL calbec( npw, wfcU, evc, proj )
       CALL calbec( npw, vkb, evc, becp )
@@ -95,15 +87,8 @@ SUBROUTINE force_hub(forceh)
 ! read atomic wfc - swfcatom is used here as work space
       CALL get_buffer (swfcatom, nwordatwfc, iunat, ik)
 !!!
-      DO na=1,nat
-         nt = ityp(na)
-         if ( is_hubbard(nt) ) then
-            m1 = 1
-            m2 = 2*hubbard_l(nt)+1
-            wfcU(:,offsetU(na)+m1:offsetU(na)+m2) = swfcatom(:,oatwfc(na)+m1:oatwfc(na)+m2) 
-         end if
-      END DO
-!!!   
+      call copy_U_wfc ()
+!!!
       DO ipol = 1,3
          DO alpha = 1,nat                 ! the displaced atom
             IF ( gamma_only ) THEN
@@ -133,7 +118,6 @@ SUBROUTINE force_hub(forceh)
    DEALLOCATE(dns, spsi)
    call deallocate_bec_type (proj)
    call deallocate_bec_type (becp)
-   DEALLOCATE ( wfcU )
    
    IF (nspin == 1) forceh(:,:) = 2.d0 * forceh(:,:)
    !

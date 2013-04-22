@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2009 Quantum ESPRESSO group
+! Copyright (C) 2002-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -127,8 +127,8 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE ions_base,            ONLY : nat, ityp
    USE control_flags,        ONLY : gamma_only   
    USE klist,                ONLY : nks, xk, ngk
-   USE ldaU,                 ONLY : swfcatom, nwfcU, offsetU, Hubbard_l, &
-                                    oatwfc, is_hubbard
+   USE ldaU,                 ONLY : wfcU, nwfcU, offsetU, Hubbard_l, &
+                                    is_hubbard, oatwfc, swfcatom, copy_U_wfc
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
    USE uspp,                 ONLY : nkb, vkb
@@ -154,13 +154,12 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
               is,    & !    "    "  spins
               na, nt, m1, m2
 
-   COMPLEX (DP), ALLOCATABLE :: spsi(:,:), wfcU(:,:)
+   COMPLEX (DP), ALLOCATABLE :: spsi(:,:)
    type (bec_type) :: proj, dproj
    !
    !
    ALLOCATE ( spsi(npwx,nbnd) )
-   ALLOCATE ( wfcU(npwx,nwfcU) )
-   call allocate_bec_type( nwfcU,nbnd, proj)
+   call allocate_bec_type ( nwfcU,nbnd, proj)
    call allocate_bec_type ( nwfcU,nbnd, dproj )
    call allocate_bec_type ( nkb,nbnd, becp )
    !
@@ -189,14 +188,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
 ! read atomic wfc - swfcatom is used as work space
       CALL get_buffer (swfcatom, nwordatwfc, iunat, ik)
 !!!
-      DO na=1,nat
-         nt = ityp(na)
-         if ( is_hubbard(nt) ) then
-            m1 = 1
-            m2 = 2*hubbard_l(nt)+1
-            wfcU(:,offsetU(na)+m1:offsetU(na)+m2) = swfcatom(:,oatwfc(na)+m1:oatwfc(na)+m2) 
-         end if
-      END DO
+      call copy_U_wfc ( )
 !!!  
       IF ( gamma_only ) THEN
          CALL dprojdepsilon_gamma (wfcU, spsi, ipol, jpol, dproj%r)
@@ -205,14 +197,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
       END IF
       CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
 !!!
-      DO na=1,nat
-         nt = ityp(na)
-         if ( is_hubbard(nt) ) then
-            m1 = 1
-            m2 = 2*hubbard_l(nt)+1
-            wfcU(:,offsetU(na)+m1:offsetU(na)+m2) = swfcatom(:,oatwfc(na)+m1:oatwfc(na)+m2) 
-         end if
-      END DO
+      call copy_U_wfc ( )
 !!!  
       CALL calbec ( npw, wfcU, evc, proj)
       !

@@ -19,7 +19,8 @@ MODULE ldaU
   !
   INTEGER, PARAMETER :: nspinx=2
   COMPLEX(DP), ALLOCATABLE :: &
-       swfcatom(:,:),         &! orthogonalized atomic wfcs
+       swfcatom(:,:),         &! (orthogonalized) atomic wfcs
+       wfcU(:,:),             &! atomic wfcs with U term
        d_spin_ldau(:,:,:)      ! the rotations in spin space for all symmetries
   REAL(DP) :: &
        eth,                  &! the Hubbard contribution to the energy
@@ -160,8 +161,26 @@ CONTAINS
      IF ( ALLOCATED( q_ps ) )       DEALLOCATE( q_ps )
   END IF
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
+  IF ( ALLOCATED( wfcU ) )       DEALLOCATE( wfcU )
   !
   END SUBROUTINE deallocate_ldaU
+
+  SUBROUTINE copy_U_wfc ( )
+  !
+  USE ions_base, ONLY: nat, ntyp => nsp, ityp
+  IMPLICIT NONE
+  INTEGER :: na, nt, m1, m2
+
+  DO na=1,nat
+     nt = ityp(na)
+     if ( is_hubbard(nt) ) then
+        m1 = 1
+        m2 = 2*hubbard_l(nt)+1
+        wfcU(:,offsetU(na)+m1:offsetU(na)+m2) = swfcatom(:,oatwfc(na)+m1:oatwfc(na)+m2)
+     end if
+  END DO
+
+  END SUBROUTINE copy_U_wfc
 
 END MODULE ldaU
 !

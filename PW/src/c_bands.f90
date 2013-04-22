@@ -24,7 +24,7 @@ SUBROUTINE c_bands( iter )
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
   USE control_flags,        ONLY : ethr, isolve, restart
-  USE ldaU,                 ONLY : lda_plus_u, swfcatom, U_projection
+  USE ldaU,                 ONLY : lda_plus_u, swfcatom, U_projection, copy_U_wfc
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions_module, ONLY : evc
   USE bp,                   ONLY : lelfield
@@ -98,8 +98,12 @@ SUBROUTINE c_bands( iter )
      !
      ! ... Needed for LDA+U
      !
-     IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
+     IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) THEN
         CALL get_buffer ( swfcatom, nwordatwfc, iunsat, ik )
+!!!
+        CALL copy_u_wfc ()
+!!!
+     END IF
      !
      ! ... diagonalization of bands for k-point ik
      !
@@ -590,7 +594,7 @@ SUBROUTINE c_bands_nscf( )
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
   USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity
-  USE ldaU,                 ONLY : lda_plus_u, swfcatom, U_projection
+  USE ldaU,                 ONLY : lda_plus_u, swfcatom, U_projection, copy_U_wfc
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions_module, ONLY : evc
   USE mp_global,            ONLY : npool, kunit, inter_pool_comm
@@ -659,8 +663,12 @@ SUBROUTINE c_bands_nscf( )
      !
      ! ... Needed for LDA+U
      !
-     IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
-        CALL get_buffer( swfcatom, nwordatwfc, iunsat, ik )
+     IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) THEN
+        CALL get_buffer ( swfcatom, nwordatwfc, iunsat, ik )
+!!!
+        CALL copy_u_wfc ()
+!!!
+     END IF
      !
      ! ... calculate starting  wavefunctions
      !

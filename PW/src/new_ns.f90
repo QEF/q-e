@@ -26,9 +26,9 @@ SUBROUTINE new_ns(ns)
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp
   USE klist,                ONLY : nks, ngk
-  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, oatwfc, q_ae, &
-                                   U_projection, &
-                                   is_hubbard, nwfcU, offsetU, swfcatom
+  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, q_ae, wfcU, &
+                                   U_projection, is_hubbard, nwfcU, offsetU, &
+                                   oatwfc, swfcatom, copy_U_wfc
   USE symm_base,            ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE symm_base,            ONLY : nsym, irt
@@ -51,14 +51,12 @@ SUBROUTINE new_ns(ns)
   ! counter on k points
   !    "    "  bands
   !    "    "  spins
-  COMPLEX(DP) , ALLOCATABLE :: wfcU (:,:)
   REAL(DP) , ALLOCATABLE :: nr (:,:,:,:)
   REAL(DP) :: psum
 
   CALL start_clock('new_ns')
   ldim = 2 * Hubbard_lmax + 1
   ALLOCATE( nr(ldim,ldim,nspin,nat) )  
-  ALLOCATE( wfcU(npwx,nwfcU) )  
   CALL allocate_bec_type ( nwfcU, nbnd, proj ) 
   !
   ! D_Sl for l=1, l=2 and l=3 are already initialized, for l=0 D_S0 is 1
@@ -89,14 +87,7 @@ SUBROUTINE new_ns(ns)
      ELSE
         CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
 !!!
-        DO na=1,nat
-           nt = ityp(na)
-           if ( is_hubbard(nt) ) then
-              m1 = 1
-              m2 = 2*hubbard_l(nt)+1
-              wfcU(:,offsetU(na)+m1:offsetU(na)+m2) = swfcatom(:,oatwfc(na)+m1:oatwfc(na)+m2)
-           end if
-        END DO
+        call copy_U_wfc ()
 !!!
         CALL calbec ( npw, wfcU, evc, proj )
      END IF
@@ -212,7 +203,6 @@ SUBROUTINE new_ns(ns)
      ENDIF 
   ENDDO
 
-  DEALLOCATE ( wfcU )
   DEALLOCATE ( nr )
   CALL stop_clock('new_ns')
 
@@ -226,7 +216,6 @@ SUBROUTINE new_ns(ns)
     ! Here we compute LDA+U projections using the <beta|psi> overlaps
     !
     USE ions_base,            ONLY : ntyp => nsp
-    USE basis,                ONLY : natomwfc
     USE klist,                ONLY : xk
     USE becmod,               ONLY : becp
     USE uspp,                 ONLY : nkb, vkb
@@ -308,9 +297,9 @@ SUBROUTINE new_ns_nc(ns)
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp
   USE klist,                ONLY : nks, ngk
-  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, oatwfc, &
-                                   d_spin_ldau, &
-                                   is_hubbard, nwfcU, offsetU, swfcatom
+  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, wfcU, &
+                                   d_spin_ldau, is_hubbard, nwfcU, offsetU, &
+                                   oatwfc, swfcatom, copy_U_wfc
   USE symm_base,            ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE noncollin_module, ONLY : noncolin, npol
@@ -333,7 +322,6 @@ SUBROUTINE new_ns_nc(ns)
              m1, m2, m3, m4, is1, is2, is3, is4, m0, m00, ldim
 
   COMPLEX(DP) , ALLOCATABLE :: nr (:,:,:,:,:), nr1 (:,:,:,:,:), proj(:,:) 
-  COMPLEX(DP) , ALLOCATABLE :: wfcU (:,:)
 
   COMPLEX(DP) :: z, zdotc
 
@@ -345,7 +333,6 @@ SUBROUTINE new_ns_nc(ns)
 
   ALLOCATE( nr(ldim,ldim,npol,npol,nat), nr1(ldim,ldim,npol,npol,nat) )  
   ALLOCATE( proj(nwfcU,nbnd) )
-  ALLOCATE( wfcU(npwx*npol,nwfcU) )
 
   nr  (:,:,:,:,:) = 0.d0
   nr1 (:,:,:,:,:) = 0.d0
@@ -364,14 +351,8 @@ SUBROUTINE new_ns_nc(ns)
      END IF
      CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
 !!!
-     DO na=1,nat
-        nt = ityp(na)
-        if ( is_hubbard(nt) ) then
-           m1 = 1
-           m2 = 2*hubbard_l(nt)+1
-           wfcU(:,offsetU(na)+m1:offsetU(na)+m2) = swfcatom(:,oatwfc(na)+m1:oatwfc(na)+m2)
-        end if
-     END DO
+     call copy_U_wfc ()
+!!!
      !
      ! make the projection - FIXME: use ZGEMM or calbec instead
      !
@@ -550,7 +531,6 @@ loopisym:     do isym = 1, nsym
      ENDIF 
   ENDDO
 !--
-  DEALLOCATE( wfcU )  
   DEALLOCATE ( nr, nr1 )
   CALL stop_clock('new_ns')
 
