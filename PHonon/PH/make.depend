@@ -23,6 +23,7 @@ add_zstar_ue.o : ../../Modules/kind.o
 add_zstar_ue.o : ../../Modules/noncol.o
 add_zstar_ue.o : ../../Modules/uspp.o
 add_zstar_ue.o : ../../Modules/wavefunctions.o
+add_zstar_ue.o : ../../PW/src/buffers.o
 add_zstar_ue.o : ../../PW/src/pwcom.o
 add_zstar_ue.o : phcom.o
 add_zstar_ue_us.o : ../../Modules/io_files.o
@@ -32,6 +33,7 @@ add_zstar_ue_us.o : ../../Modules/mp_global.o
 add_zstar_ue_us.o : ../../Modules/noncol.o
 add_zstar_ue_us.o : ../../Modules/uspp.o
 add_zstar_ue_us.o : ../../Modules/wavefunctions.o
+add_zstar_ue_us.o : ../../PW/src/buffers.o
 add_zstar_ue_us.o : ../../PW/src/pwcom.o
 add_zstar_ue_us.o : phcom.o
 addcore.o : ../../Modules/cell_base.o
@@ -101,6 +103,7 @@ addusddens.o : ../../Modules/paw_variables.o
 addusddens.o : ../../Modules/recvec.o
 addusddens.o : ../../Modules/uspp.o
 addusddens.o : ../../Modules/wavefunctions.o
+addusddens.o : ../../PW/src/buffers.o
 addusddens.o : phcom.o
 addusddense.o : ../../Modules/fft_base.o
 addusddense.o : ../../Modules/fft_interfaces.o
@@ -224,6 +227,7 @@ check_restart_recover.o : ../../Modules/io_files.o
 chi_test.o : ../../Modules/fft_base.o
 chi_test.o : ../../Modules/kind.o
 chi_test.o : ../../Modules/wavefunctions.o
+chi_test.o : ../../PW/src/buffers.o
 chi_test.o : ../../PW/src/pwcom.o
 chi_test.o : phcom.o
 chi_test.o : ramanm.o
@@ -236,6 +240,7 @@ close_phq.o : ../../Modules/io_files.o
 close_phq.o : ../../Modules/io_global.o
 close_phq.o : ../../Modules/paw_variables.o
 close_phq.o : ../../Modules/uspp.o
+close_phq.o : ../../PW/src/buffers.o
 close_phq.o : elph.o
 close_phq.o : phcom.o
 close_phq.o : ramanm.o
@@ -266,6 +271,7 @@ compute_becalp.o : ../../Modules/noncol.o
 compute_becalp.o : ../../Modules/paw_variables.o
 compute_becalp.o : ../../Modules/recvec.o
 compute_becalp.o : ../../Modules/uspp.o
+compute_becalp.o : ../../PW/src/buffers.o
 compute_becalp.o : ../../PW/src/pwcom.o
 compute_becalp.o : phcom.o
 compute_becsum_ph.o : ../../Modules/ions_base.o
@@ -284,6 +290,7 @@ compute_drhous.o : ../../Modules/kind.o
 compute_drhous.o : ../../Modules/recvec.o
 compute_drhous.o : ../../Modules/uspp.o
 compute_drhous.o : ../../Modules/wavefunctions.o
+compute_drhous.o : ../../PW/src/buffers.o
 compute_drhous.o : ../../PW/src/pwcom.o
 compute_drhous.o : phcom.o
 compute_drhous_nc.o : ../../Modules/becmod.o
@@ -296,6 +303,7 @@ compute_drhous_nc.o : ../../Modules/noncol.o
 compute_drhous_nc.o : ../../Modules/recvec.o
 compute_drhous_nc.o : ../../Modules/uspp.o
 compute_drhous_nc.o : ../../Modules/wavefunctions.o
+compute_drhous_nc.o : ../../PW/src/buffers.o
 compute_drhous_nc.o : ../../PW/src/pwcom.o
 compute_drhous_nc.o : phcom.o
 compute_dvloc.o : ../../Modules/cell_base.o
@@ -381,6 +389,7 @@ dhdrhopsi.o : ../../Modules/mp.o
 dhdrhopsi.o : ../../Modules/mp_global.o
 dhdrhopsi.o : ../../Modules/uspp.o
 dhdrhopsi.o : ../../Modules/wavefunctions.o
+dhdrhopsi.o : ../../PW/src/buffers.o
 dhdrhopsi.o : ../../PW/src/pwcom.o
 dhdrhopsi.o : phcom.o
 dhdrhopsi.o : ramanm.o
@@ -391,6 +400,7 @@ dielec.o : ../../Modules/kind.o
 dielec.o : ../../Modules/mp.o
 dielec.o : ../../Modules/mp_global.o
 dielec.o : ../../Modules/noncol.o
+dielec.o : ../../PW/src/buffers.o
 dielec.o : ../../PW/src/pwcom.o
 dielec.o : ../../PW/src/symme.o
 dielec.o : ph_restart.o
@@ -402,6 +412,7 @@ dielec_test.o : ../../Modules/kind.o
 dielec_test.o : ../../Modules/mp.o
 dielec_test.o : ../../Modules/mp_global.o
 dielec_test.o : ../../Modules/wavefunctions.o
+dielec_test.o : ../../PW/src/buffers.o
 dielec_test.o : ../../PW/src/pwcom.o
 dielec_test.o : ../../PW/src/symme.o
 dielec_test.o : phcom.o
@@ -417,6 +428,7 @@ drho.o : ../../Modules/noncol.o
 drho.o : ../../Modules/paw_variables.o
 drho.o : ../../Modules/recvec.o
 drho.o : ../../Modules/uspp.o
+drho.o : ../../PW/src/buffers.o
 drho.o : ../../PW/src/pwcom.o
 drho.o : phcom.o
 drhodv.o : ../../Modules/becmod.o
@@ -431,6 +443,7 @@ drhodv.o : ../../Modules/mp_global.o
 drhodv.o : ../../Modules/noncol.o
 drhodv.o : ../../Modules/recvec.o
 drhodv.o : ../../Modules/uspp.o
+drhodv.o : ../../PW/src/buffers.o
 drhodv.o : ../../PW/src/pwcom.o
 drhodv.o : phcom.o
 drhodvloc.o : ../../Modules/cell_base.o
@@ -460,6 +473,7 @@ drhodvus.o : ../../Modules/mp_global.o
 drhodvus.o : ../../Modules/noncol.o
 drhodvus.o : ../../Modules/paw_variables.o
 drhodvus.o : ../../Modules/uspp.o
+drhodvus.o : ../../PW/src/buffers.o
 drhodvus.o : phcom.o
 dv_of_drho.o : ../../Modules/cell_base.o
 dv_of_drho.o : ../../Modules/constants.o
@@ -501,6 +515,7 @@ dvpsi_e.o : ../../Modules/noncol.o
 dvpsi_e.o : ../../Modules/recvec.o
 dvpsi_e.o : ../../Modules/uspp.o
 dvpsi_e.o : ../../Modules/wavefunctions.o
+dvpsi_e.o : ../../PW/src/buffers.o
 dvpsi_e.o : ../../PW/src/pwcom.o
 dvpsi_e.o : phcom.o
 dvpsi_e.o : ramanm.o
@@ -512,6 +527,7 @@ dvpsi_e2.o : ../../Modules/mp.o
 dvpsi_e2.o : ../../Modules/mp_global.o
 dvpsi_e2.o : ../../Modules/recvec.o
 dvpsi_e2.o : ../../Modules/wavefunctions.o
+dvpsi_e2.o : ../../PW/src/buffers.o
 dvpsi_e2.o : ../../PW/src/pwcom.o
 dvpsi_e2.o : ../../PW/src/scf_mod.o
 dvpsi_e2.o : phcom.o
@@ -570,6 +586,7 @@ dynmat_us.o : ../../Modules/noncol.o
 dynmat_us.o : ../../Modules/recvec.o
 dynmat_us.o : ../../Modules/uspp.o
 dynmat_us.o : ../../Modules/wavefunctions.o
+dynmat_us.o : ../../PW/src/buffers.o
 dynmat_us.o : ../../PW/src/pwcom.o
 dynmat_us.o : ../../PW/src/scf_mod.o
 dynmat_us.o : phcom.o
@@ -609,6 +626,7 @@ ef_shift.o : ../../Modules/noncol.o
 ef_shift.o : ../../Modules/recvec.o
 ef_shift.o : ../../Modules/uspp.o
 ef_shift.o : ../../Modules/wavefunctions.o
+ef_shift.o : ../../PW/src/buffers.o
 ef_shift.o : ../../PW/src/pwcom.o
 ef_shift.o : phcom.o
 el_opt.o : ../../Modules/cell_base.o
@@ -619,6 +637,7 @@ el_opt.o : ../../Modules/ions_base.o
 el_opt.o : ../../Modules/kind.o
 el_opt.o : ../../Modules/mp.o
 el_opt.o : ../../Modules/mp_global.o
+el_opt.o : ../../PW/src/buffers.o
 el_opt.o : ../../PW/src/pwcom.o
 el_opt.o : ../../PW/src/scf_mod.o
 el_opt.o : ../../PW/src/symme.o
@@ -648,6 +667,7 @@ elphon.o : ../../Modules/recvec.o
 elphon.o : ../../Modules/uspp.o
 elphon.o : ../../Modules/wavefunctions.o
 elphon.o : ../../Modules/xml_io_base.o
+elphon.o : ../../PW/src/buffers.o
 elphon.o : ../../PW/src/pwcom.o
 elphon.o : ../../PW/src/start_k.o
 elphon.o : ../../PW/src/symm_base.o
@@ -671,6 +691,7 @@ ep_matrix_element_wannier.o : ../../Modules/noncol.o
 ep_matrix_element_wannier.o : ../../Modules/recvec.o
 ep_matrix_element_wannier.o : ../../Modules/uspp.o
 ep_matrix_element_wannier.o : ../../Modules/wavefunctions.o
+ep_matrix_element_wannier.o : ../../PW/src/buffers.o
 ep_matrix_element_wannier.o : ../../PW/src/pwcom.o
 ep_matrix_element_wannier.o : ../../PW/src/symm_base.o
 ep_matrix_element_wannier.o : elph.o
@@ -809,6 +830,7 @@ localdos.o : ../../Modules/noncol.o
 localdos.o : ../../Modules/recvec.o
 localdos.o : ../../Modules/uspp.o
 localdos.o : ../../Modules/wavefunctions.o
+localdos.o : ../../PW/src/buffers.o
 localdos.o : ../../PW/src/pwcom.o
 localdos.o : phcom.o
 matdyn.o : ../../Modules/cell_base.o
@@ -858,6 +880,7 @@ obsolete.o : ../../Modules/recvec.o
 obsolete.o : ../../Modules/run_info.o
 obsolete.o : ../../Modules/uspp.o
 obsolete.o : ../../Modules/wavefunctions.o
+obsolete.o : ../../PW/src/buffers.o
 obsolete.o : ../../PW/src/pwcom.o
 obsolete.o : ../../PW/src/symm_base.o
 obsolete.o : dfile_star.o
@@ -877,6 +900,7 @@ openfilq.o : ../../Modules/mp_global.o
 openfilq.o : ../../Modules/noncol.o
 openfilq.o : ../../Modules/paw_variables.o
 openfilq.o : ../../Modules/uspp.o
+openfilq.o : ../../PW/src/buffers.o
 openfilq.o : ../../PW/src/pwcom.o
 openfilq.o : acfdtest.o
 openfilq.o : dfile_autoname.o
@@ -949,6 +973,7 @@ phq_init.o : ../../Modules/noncol.o
 phq_init.o : ../../Modules/recvec.o
 phq_init.o : ../../Modules/uspp.o
 phq_init.o : ../../Modules/wavefunctions.o
+phq_init.o : ../../PW/src/buffers.o
 phq_init.o : ../../PW/src/pwcom.o
 phq_init.o : acfdtest.o
 phq_init.o : elph.o
@@ -1039,6 +1064,7 @@ polariz.o : ../../Modules/io_global.o
 polariz.o : ../../Modules/kind.o
 polariz.o : ../../Modules/mp.o
 polariz.o : ../../Modules/mp_global.o
+polariz.o : ../../PW/src/buffers.o
 polariz.o : ../../PW/src/pwcom.o
 polariz.o : ../../PW/src/symme.o
 polariz.o : ph_restart.o
@@ -1181,6 +1207,7 @@ raman_mat.o : ../../Modules/mp_global.o
 raman_mat.o : ../../Modules/recvec.o
 raman_mat.o : ../../Modules/uspp.o
 raman_mat.o : ../../Modules/wavefunctions.o
+raman_mat.o : ../../PW/src/buffers.o
 raman_mat.o : ../../PW/src/pwcom.o
 raman_mat.o : ../../PW/src/symme.o
 raman_mat.o : phcom.o
@@ -1208,6 +1235,7 @@ rotate_dvscf_star.o : ../../PW/src/symm_base.o
 rotate_dvscf_star.o : dfile_star.o
 rotate_dvscf_star.o : phcom.o
 rotate_pattern_add.o : ../../Modules/kind.o
+run_nscf.o : ../../Modules/check_stop.o
 run_nscf.o : ../../Modules/control_flags.o
 run_nscf.o : ../../Modules/fft_base.o
 run_nscf.o : ../../Modules/io_files.o
@@ -1323,6 +1351,7 @@ solve_e.o : ../../Modules/paw_variables.o
 solve_e.o : ../../Modules/recvec.o
 solve_e.o : ../../Modules/uspp.o
 solve_e.o : ../../Modules/wavefunctions.o
+solve_e.o : ../../PW/src/buffers.o
 solve_e.o : ../../PW/src/paw_onecenter.o
 solve_e.o : ../../PW/src/paw_symmetry.o
 solve_e.o : ../../PW/src/pwcom.o
@@ -1341,6 +1370,7 @@ solve_e2.o : ../../Modules/mp_global.o
 solve_e2.o : ../../Modules/recvec.o
 solve_e2.o : ../../Modules/uspp.o
 solve_e2.o : ../../Modules/wavefunctions.o
+solve_e2.o : ../../PW/src/buffers.o
 solve_e2.o : ../../PW/src/pwcom.o
 solve_e2.o : phcom.o
 solve_e2.o : ramanm.o
@@ -1359,6 +1389,7 @@ solve_e_fpol.o : ../../Modules/mp_global.o
 solve_e_fpol.o : ../../Modules/recvec.o
 solve_e_fpol.o : ../../Modules/uspp.o
 solve_e_fpol.o : ../../Modules/wavefunctions.o
+solve_e_fpol.o : ../../PW/src/buffers.o
 solve_e_fpol.o : ../../PW/src/pwcom.o
 solve_e_fpol.o : phcom.o
 solve_e_nscf.o : ../../Modules/cell_base.o
@@ -1367,6 +1398,7 @@ solve_e_nscf.o : ../../Modules/fft_interfaces.o
 solve_e_nscf.o : ../../Modules/kind.o
 solve_e_nscf.o : ../../Modules/recvec.o
 solve_e_nscf.o : ../../Modules/wavefunctions.o
+solve_e_nscf.o : ../../PW/src/buffers.o
 solve_e_nscf.o : ../../PW/src/pwcom.o
 solve_e_nscf.o : phcom.o
 solve_linter.o : ../../Modules/cell_base.o
@@ -1384,6 +1416,7 @@ solve_linter.o : ../../Modules/paw_variables.o
 solve_linter.o : ../../Modules/recvec.o
 solve_linter.o : ../../Modules/uspp.o
 solve_linter.o : ../../Modules/wavefunctions.o
+solve_linter.o : ../../PW/src/buffers.o
 solve_linter.o : ../../PW/src/paw_onecenter.o
 solve_linter.o : ../../PW/src/paw_symmetry.o
 solve_linter.o : ../../PW/src/pwcom.o
@@ -1533,6 +1566,7 @@ zstar_eu.o : ../../Modules/mp_global.o
 zstar_eu.o : ../../Modules/noncol.o
 zstar_eu.o : ../../Modules/uspp.o
 zstar_eu.o : ../../Modules/wavefunctions.o
+zstar_eu.o : ../../PW/src/buffers.o
 zstar_eu.o : ../../PW/src/pwcom.o
 zstar_eu.o : ../../PW/src/symme.o
 zstar_eu.o : ph_restart.o
@@ -1549,5 +1583,6 @@ zstar_eu_us.o : ../../Modules/paw_variables.o
 zstar_eu_us.o : ../../Modules/recvec.o
 zstar_eu_us.o : ../../Modules/uspp.o
 zstar_eu_us.o : ../../Modules/wavefunctions.o
+zstar_eu_us.o : ../../PW/src/buffers.o
 zstar_eu_us.o : ../../PW/src/pwcom.o
 zstar_eu_us.o : phcom.o
