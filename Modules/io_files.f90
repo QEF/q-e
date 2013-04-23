@@ -51,10 +51,11 @@ MODULE io_files
   INTEGER :: iunwfc      = 10 ! unit with wavefunctions
   INTEGER :: iunoldwfc   = 11 ! unit with old wavefunctions
   INTEGER :: iunoldwfc2  = 12 ! as above at step -2
-  INTEGER :: iunat       = 13 ! unit for saving (orthogonal) atomic wfcs 
+  INTEGER :: iunhub      = 13 ! unit for saving Hubbard-U atomic wfcs 
   INTEGER :: iunsat      = 14 ! unit for saving (orthogonal) atomic wfcs * S
   INTEGER :: iunmix      = 15 ! unit for saving mixing information
   INTEGER :: iunigk      = 16 ! unit for saving indices
+  INTEGER :: iunat       = 17 ! unit for saving (orthogonal) atomic wfcs 
   !
   INTEGER :: iunexit     = 26 ! unit for a soft exit  
   INTEGER :: iunupdate   = 27 ! unit for saving old positions (extrapolation)
@@ -68,6 +69,7 @@ MODULE io_files
   !
   INTEGER :: nwordwfc    =  2 ! length of record in wavefunction file
   INTEGER :: nwordatwfc  =  2 ! length of record in atomic wfc file
+  INTEGER :: nwordwfcU   =  2 ! length of record in atomic hubbard wfc file
   INTEGER :: nwordwann   =  2 ! length of record in sic wfc file
   !
   !... finite electric field
