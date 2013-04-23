@@ -15,7 +15,7 @@ SUBROUTINE close_files(lflag)
   USE control_flags, ONLY : twfcollect, io_level
   USE fixed_occ,     ONLY : one_atom_occupations
   USE io_files,      ONLY : prefix, iunwfc, iunigk, iunat, iunsat, &
-                            iunefield, iunefieldm, iunefieldp
+                            iunhub, iunefield, iunefieldm, iunefieldp
   USE buffers,       ONLY : close_buffer
   USE mp_global,     ONLY : intra_image_comm
   USE mp,            ONLY : mp_barrier
@@ -51,9 +51,11 @@ SUBROUTINE close_files(lflag)
      IF ( io_level < 0 ) THEN
         CALL close_buffer ( iunat, 'DELETE' )
         CALL close_buffer ( iunsat,'DELETE' )
+        CALL close_buffer ( iunhub,'DELETE' )
      ELSE
         CALL close_buffer ( iunat, 'KEEP' )
         CALL close_buffer ( iunsat,'KEEP' )
+        CALL close_buffer ( iunhub,'KEEP' )
      END IF
      !
   END IF

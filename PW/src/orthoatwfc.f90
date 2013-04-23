@@ -17,11 +17,11 @@ SUBROUTINE orthoatwfc
   USE kinds,      ONLY : DP
   USE buffers,    ONLY : save_buffer
   USE io_global,  ONLY : stdout
-  USE io_files,   ONLY : iunat, iunsat, nwordatwfc, iunigk
+  USE io_files,   ONLY : iunat, iunsat, iunhub, nwordwfcU, nwordatwfc, iunigk
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc
   USE klist,      ONLY : nks, xk, ngk
-  USE ldaU,       ONLY : swfcatom, U_projection
+  USE ldaU,       ONLY : swfcatom, U_projection, wfcU, nwfcU, copy_U_wfc
   USE wvfct,      ONLY : npwx, npw, igk
   USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
@@ -72,14 +72,12 @@ SUBROUTINE orthoatwfc
      CALL errore ("orthoatwfc"," this U_projection_type is not valid",1)
   END IF
 
-  IF (noncolin) THEN
-     ALLOCATE (wfcatom( npwx*npol, natomwfc))    
-  ELSE
-     ALLOCATE (wfcatom( npwx, natomwfc))    
-  END IF
-  ALLOCATE (overlap( natomwfc , natomwfc))    
-  ALLOCATE (work   ( natomwfc , natomwfc))    
-  ALLOCATE (e      ( natomwfc))    
+  ALLOCATE (wfcatom( npwx*npol, natomwfc))    
+  IF ( orthogonalize_wfc) THEN
+     ALLOCATE (overlap( natomwfc , natomwfc))    
+     ALLOCATE (work   ( natomwfc , natomwfc))    
+     ALLOCATE (e      ( natomwfc))    
+  ENDIF
 
   ! Allocate the array becp = <beta|wfcatom>
   CALL allocate_bec_type (nkb,natomwfc, becp) 
@@ -91,16 +89,14 @@ SUBROUTINE orthoatwfc
      npw = ngk (ik)
      IF (nks > 1) READ (iunigk) igk
      
-     overlap(:,:) = (0.d0,0.d0)
-     work(:,:) = (0.d0,0.d0)
-     
      IF (noncolin) THEN
        CALL atomic_wfc_nc_updown (ik, wfcatom)
      ELSE
        CALL atomic_wfc (ik, wfcatom)
      ENDIF
      !
-     ! write atomic wfc to unit iunat
+     ! write atomic wfc to unit iunat - FIXME: this is used only
+     ! only in force and stress calculation, might be recalculated
      !
      CALL save_buffer (wfcatom, nwordatwfc, iunat, ik)
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
@@ -108,6 +104,8 @@ SUBROUTINE orthoatwfc
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 
      IF (orthogonalize_wfc) THEN
+        overlap(:,:) = (0.d0,0.d0)
+        work(:,:) = (0.d0,0.d0)
         !
         ! calculate overlap matrix
         !
@@ -172,10 +170,18 @@ SUBROUTINE orthoatwfc
      !
      CALL save_buffer (swfcatom, nwordatwfc, iunsat, ik)
      !
+     ! copy atomic wavefunctions with Hubbard U term only in wfcU
+     ! save to unit iunhub
+     !
+     CALL copy_U_wfc ( )
+     CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
+     !
   ENDDO
-  DEALLOCATE (overlap)
-  DEALLOCATE (work)
-  DEALLOCATE (e)
+  IF ( orthogonalize_wfc) THEN
+     DEALLOCATE (overlap)
+     DEALLOCATE (work)
+     DEALLOCATE (e)
+   END IF
   DEALLOCATE (wfcatom)
   CALL deallocate_bec_type ( becp )
   !

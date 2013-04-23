@@ -27,15 +27,14 @@ SUBROUTINE new_ns(ns)
   USE ions_base,            ONLY : nat, ityp
   USE klist,                ONLY : nks, ngk
   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, q_ae, wfcU, &
-                                   U_projection, is_hubbard, nwfcU, offsetU, &
-                                   oatwfc, swfcatom, copy_U_wfc
+                                   U_projection, is_hubbard, nwfcU, offsetU
   USE symm_base,            ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE symm_base,            ONLY : nsym, irt
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : evc
-  USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
+  USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordwfcU, iunhub
   USE buffers,              ONLY : get_buffer
   USE mp_global,            ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
@@ -85,10 +84,7 @@ SUBROUTINE new_ns(ns)
         ! does not need mp_sum intra-pool, since it is already done in calbec
         !
      ELSE
-        CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
-!!!
-        call copy_U_wfc ()
-!!!
+        CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
         CALL calbec ( npw, wfcU, evc, proj )
      END IF
      !
@@ -298,8 +294,7 @@ SUBROUTINE new_ns_nc(ns)
   USE ions_base,            ONLY : nat, ityp
   USE klist,                ONLY : nks, ngk
   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, wfcU, &
-                                   d_spin_ldau, is_hubbard, nwfcU, offsetU, &
-                                   oatwfc, swfcatom, copy_U_wfc
+                                   d_spin_ldau, is_hubbard, nwfcU, offsetU
   USE symm_base,            ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE noncollin_module, ONLY : noncolin, npol
@@ -308,7 +303,7 @@ SUBROUTINE new_ns_nc(ns)
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : evc
   USE gvect,                ONLY : gstart
-  USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
+  USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordwfcU, iunhub
   USE buffers,              ONLY : get_buffer
   USE mp_global,            ONLY : intra_bgrp_comm, inter_pool_comm
   USE mp,                   ONLY : mp_sum
@@ -349,10 +344,7 @@ SUBROUTINE new_ns_nc(ns)
         READ (iunigk) igk
         CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
      END IF
-     CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
-!!!
-     call copy_U_wfc ()
-!!!
+     CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
      !
      ! make the projection - FIXME: use ZGEMM or calbec instead
      !

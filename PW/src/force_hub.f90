@@ -35,7 +35,7 @@ SUBROUTINE force_hub(forceh)
    USE wavefunctions_module, ONLY : evc
    USE klist,                ONLY : nks, xk, ngk
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
-                                    iunat, iunsat, nwordatwfc
+                                    iunat, iunhub, nwordwfcU, nwordatwfc
    USE buffers,              ONLY : get_buffer
 
    IMPLICIT NONE
@@ -72,13 +72,11 @@ SUBROUTINE force_hub(forceh)
       ! now we need the first derivative of proj with respect to tau(alpha,ipol)
       !
       npw = ngk (ik)
-      IF (nks > 1) READ (iunigk) igk
-
-      CALL get_buffer (evc, nwordwfc, iunwfc, ik)
-      CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
-!!!
-      call copy_U_wfc ()
-!!!
+      IF (nks > 1) THEN
+         READ (iunigk) igk
+         CALL get_buffer (evc, nwordwfc, iunwfc, ik)
+      END IF
+      CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
       CALL calbec( npw, wfcU, evc, proj )
       CALL calbec( npw, vkb, evc, becp )

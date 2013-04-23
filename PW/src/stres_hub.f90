@@ -135,7 +135,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE becmod,               ONLY : bec_type, becp, calbec, &
                                     allocate_bec_type, deallocate_bec_type
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
-                                    iunat, iunsat, nwordatwfc
+                                    iunat, iunhub, nwordwfcU, nwordatwfc
    USE buffers,              ONLY : get_buffer
    USE mp_global,            ONLY : inter_pool_comm
    USE mp,                   ONLY : mp_sum
@@ -195,10 +195,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
       ELSE
          CALL dprojdepsilon_k (wfcU, spsi, ik, ipol, jpol, dproj%k)
       END IF
-      CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
-!!!
-      call copy_U_wfc ( )
-!!!  
+      CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
       CALL calbec ( npw, wfcU, evc, proj)
       !
       ! compute the derivative of the occupation numbers (quantities dn(m1,m2))
