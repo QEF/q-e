@@ -20,7 +20,7 @@ USE kinds, ONLY : DP
 USE ions_base, ONLY : nat
 USE symm_base, ONLY : irt
 USE partial, ONLY : nat_todo, atomo
-USE control_ph, ONLY : start_irr, last_irr
+USE control_ph, ONLY : start_irr, last_irr, ldiag
 USE control_flags, ONLY : modenum
 USE modes, ONLY : nsymq
 IMPLICIT NONE
@@ -93,6 +93,12 @@ INTEGER :: last_irr_eff
   IF (last_irr > nirr.or.last_irr<0) last_irr_eff=nirr
   IF (start_irr > 1) comp_irr(0:start_irr-1) = .FALSE.
   IF (last_irr_eff < nirr ) comp_irr(last_irr_eff+1:nirr) = .FALSE.
+
+!
+! When ldiag=.true. the partial dynamical matrix is diagonalized.
+! It must contain also the part calculated by dynmat0
+!  
+  IF (ldiag) comp_irr(0)=.TRUE.
 
   DEALLOCATE(ifat)
 
