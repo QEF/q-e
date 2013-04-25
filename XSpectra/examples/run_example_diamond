@@ -7,9 +7,6 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
-# function to test the exit status of a job
-. ../../examples/check_failure.sh
-
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -17,13 +14,14 @@ $ECHO "This example tests K-edge X-ray absorption spectra calculation"
 $ECHO
 
 # set the needed environment variables
-. ../../examples/environment_variables
+. ../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x xspectra.x "
 PSEUDO_LIST="Ch_PBE_TM_2pj.UPF  C_PBE_TM_2pj.UPF  "
 PSEUDO_DIR="$EXAMPLE_DIR/pseudo"
-# TMP_DIR="$EXAMPLE_DIR/results/tmp"
+BIN_DIR="$EXAMPLE_DIR/../../bin/"
+TMP_DIR="$EXAMPLE_DIR/results/tmp"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"

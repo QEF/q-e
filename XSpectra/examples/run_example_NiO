@@ -7,9 +7,6 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
-# function to test the exit status of a job
-. ../../examples/check_failure.sh
-
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -17,12 +14,14 @@ $ECHO "This example tests K-edge X-ray absorption spectra calculation"
 $ECHO
 
 # set the needed environment variables
-. ../../examples/environment_variables
+. ../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x xspectra.x "
 PSEUDO_LIST="Ni_PBE_TM_2pj.UPF  O_PBE_TM.UPF"
+
 PSEUDO_DIR="$EXAMPLE_DIR/pseudo"
+BIN_DIR="$EXAMPLE_DIR/../../bin/"
 TMP_DIR="$EXAMPLE_DIR/results/tmp"
 
 $ECHO
@@ -207,7 +206,7 @@ mv xanes.dat NiO.xspectra_dip.dat
 $ECHO " done"
 
 $ECHO "#"
-$ECHO "# no we calculate again the cross"
+$ECHO "# now we calculate again the cross"
 $ECHO "# section from the .sav file"
 $ECHO "# with a different broadening"
 $ECHO "# without need of performing a new lanczos"
