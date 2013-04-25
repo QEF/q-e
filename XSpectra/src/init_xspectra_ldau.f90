@@ -1,74 +1,64 @@
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!  this initializes som variables for DFT+U calculation,
-!  espescially atomic wfc
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-
-
-subroutine init_xanes_ldau
-  USE ldaU,             ONLY : lda_plus_u, Hubbard_U, Hubbard_l, &
-                                 Hubbard_alpha, Hubbard_lmax, U_projection 
-  USE basis,            only : natomwfc  
-  USE xspectra,            only : xread_wf, U_projection_type
-  use wvfct,            ONLY : npwx,nbndx,nbnd,npw
-  USE io_global,        ONLY : ionode, ionode_id, stdout
-  USE ions_base,        ONLY : nat, ntyp => nsp
-  USE lsda_mod,          ONLY : lsda, nspin
-  USE uspp_param,           ONLY : upf
-  implicit none
-
-  logical :: exst, opnd
-  integer :: ldim, nt
-  INTEGER :: set_Hubbard_l
-
-
-  call init_at_1
-
-
-     Hubbard_lmax = -1
-     !
-     DO nt = 1, ntyp
-        !
-        IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 ) THEN
-           !
-            Hubbard_l(nt) = set_Hubbard_l( upf(nt)%psd )
-           !
-           Hubbard_lmax = MAX( Hubbard_lmax, Hubbard_l(nt) )
-           !
-           WRITE( UNIT = stdout, &
-                  FMT = * ) ' HUBBARD L FOR TYPE ',upf(nt)%psd,' IS ', Hubbard_l(nt)
-           !
-        END IF
-        !
-     END DO
-     !
-     WRITE( UNIT = stdout, &
-            FMT = * ) ' MAXIMUM HUBBARD L IS ', Hubbard_lmax
-     !
-     IF ( Hubbard_lmax == -1 ) &
-        CALL errore( 'setup', &
-                   & 'lda_plus_u calculation but Hubbard_l not set', 1 )
-
-  ldim = 2 * Hubbard_lmax + 1
-  U_projection=U_projection_type
-
- end subroutine init_xanes_ldau
-
-
-
-
-! Here is a slightly modified version of orthoatwfc, for a 
-! selected k-point and without writing the result
-! modified by CG
-
-
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!  this routine initializes some variables for DFT+U
+!  calculation, in particular atomic wfc
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+
+subroutine init_xanes_ldau
+  USE ldaU,             ONLY : lda_plus_u, Hubbard_U, Hubbard_l, &
+                               Hubbard_alpha, Hubbard_lmax, U_projection 
+  USE basis,            only : natomwfc  
+  USE xspectra,         only : xread_wf, U_projection_type
+  use wvfct,            ONLY : npwx,nbndx,nbnd,npw
+  USE io_global,        ONLY : ionode, ionode_id, stdout
+  USE ions_base,        ONLY : nat, ntyp => nsp
+  USE lsda_mod,         ONLY : lsda, nspin
+  USE uspp_param,       ONLY : upf
+  implicit none
+
+  logical :: exst, opnd
+  integer :: ldim, nt
+  INTEGER :: set_Hubbard_l
+
+  call init_at_1
+  Hubbard_lmax = -1
+  !
+  DO nt = 1, ntyp
+     !
+     IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 ) THEN
+        !
+        Hubbard_l(nt) = set_Hubbard_l( upf(nt)%psd )
+        Hubbard_lmax = MAX( Hubbard_lmax, Hubbard_l(nt) )
+        WRITE( UNIT = stdout, FMT = * ) &
+           ' HUBBARD L FOR TYPE ',upf(nt)%psd,' IS ', Hubbard_l(nt)
+        !
+     END IF
+     !
+  END DO
+  !
+  WRITE( UNIT = stdout, FMT = * ) &
+       ' MAXIMUM HUBBARD L IS ', Hubbard_lmax
+  !
+  IF ( Hubbard_lmax == -1 ) CALL errore( 'setup', &
+                   & 'lda_plus_u calculation but Hubbard_l not set', 1 )
+
+  ldim = 2 * Hubbard_lmax + 1
+  U_projection=U_projection_type
+
+END SUBROUTINE init_xanes_ldau
+
+! Here is a slightly modified version of orthoatwfc, for a 
+! selected k-point and without writing the result
+! modified by CG
+
 !-----------------------------------------------------------------------
 SUBROUTINE init_xanes_ldau_2(ik)
   !-----------------------------------------------------------------------
@@ -79,11 +69,11 @@ SUBROUTINE init_xanes_ldau_2(ik)
   !
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
-  USE io_files,   ONLY : iunat, iunsat, nwordatwfc, iunigk, diropn
+  USE io_files,   ONLY : iunhub, nwordwfcU, diropn
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc
   USE klist,      ONLY : nks, xk, ngk
-  USE ldaU,       ONLY : swfcatom, U_projection
+  USE ldaU,       ONLY : swfcatom, U_projection, wfcU, nwfcU, copy_U_wfc
   USE wvfct,      ONLY : npwx, npw, igk
   USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, becp, calbec
@@ -111,25 +101,14 @@ SUBROUTINE init_xanes_ldau_2(ik)
 
   t0 = scnds ()
   
-  IF (noncolin) THEN
-     ALLOCATE (wfcatom( npwx*npol, natomwfc))    
-  ELSE
-     ALLOCATE (wfcatom( npwx, natomwfc))    
-  END IF
-  ALLOCATE (overlap( natomwfc , natomwfc))    
-  ALLOCATE (work   ( natomwfc , natomwfc))    
-  ALLOCATE (e      ( natomwfc))    
+  ALLOCATE (wfcatom( npwx*npol, natomwfc))    
 
   IF (U_projection=="file") THEN
+
      WRITE( stdout,*) 'LDA+U Projector read from file '
-
-       nwordatwfc=2*npwx*natomwfc*npol
-
-       CALL diropn( iunsat, 'satwfc', nwordatwfc, exst )
-       CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
-
-       INQUIRE( UNIT = iunsat, OPENED = opnd )
-       IF ( opnd ) CLOSE( UNIT = iunsat, STATUS = 'KEEP' )
+     CALL diropn( iunhub, 'hub', 2*nwordwfcU, exst )
+     CALL davcio( wfcU, nwordwfcU, iunhub, ik, -1 )
+     CLOSE( UNIT = iunhub, STATUS = 'KEEP' )
 
      RETURN
   END IF
@@ -158,18 +137,16 @@ SUBROUTINE init_xanes_ldau_2(ik)
 
   ! Allocate the array becp = <beta|wfcatom>
   CALL allocate_bec_type (nkb,natomwfc, becp) 
-  
-     
+  CALL atomic_wfc (ik, wfcatom)
+  CALL calbec (npw, vkb, wfcatom, becp)
+  CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
+
+  IF (orthogonalize_wfc) THEN
+     ALLOCATE (overlap( natomwfc , natomwfc))    
+     ALLOCATE (work   ( natomwfc , natomwfc))    
+     ALLOCATE (e      ( natomwfc))    
      overlap(:,:) = (0.d0,0.d0)
      work(:,:) = (0.d0,0.d0)
-     
-     CALL atomic_wfc (ik, wfcatom)
-     
-     CALL calbec (npw, vkb, wfcatom, becp)
-
-     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
-
-   IF (orthogonalize_wfc) THEN
      !
      ! calculate overlap matrix
      !
@@ -227,12 +204,15 @@ SUBROUTINE init_xanes_ldau_2(ik)
            CALL zcopy (natomwfc, work, 1, swfcatom (i, 1), npwx)
         END IF
      ENDDO
-        
-   END IF ! orthogonalize_wfc
 
-  DEALLOCATE (overlap)
-  DEALLOCATE (work)
-  DEALLOCATE (e)
+     DEALLOCATE (overlap)
+     DEALLOCATE (work)
+     DEALLOCATE (e)
+        
+  END IF ! orthogonalize_wfc
+  !!!
+  CALL copy_U_wfc ()
+  !!!
   DEALLOCATE (wfcatom)
   CALL deallocate_bec_type (becp )
   !

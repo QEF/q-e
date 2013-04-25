@@ -12,7 +12,6 @@ MODULE gipaw_module
   ! ... This module contains the variables used for GIPAW calculations
   !
   USE kinds, ONLY : DP
-  USE constants, ONLY : a0_to_cm => bohr_radius_cm
   USE parameters, ONLY : npk, ntypx, lmaxx
 
   IMPLICIT NONE
@@ -236,20 +235,17 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE gipaw_openfil
     USE io_global,        ONLY : stdout
-    USE basis,            ONLY : natomwfc, starting_wfc
     USE wvfct,            ONLY : nbnd, npwx
-    USE ldaU,             ONLY : lda_plus_U
-    USE klist,            ONLY : nks
-    USE io_files,         ONLY : prefix, iunat, iunsat, iunwfc, iunigk, &
-                                 nwordwfc, nwordatwfc, tmp_dir, diropn, seqopn
+    USE ldaU,             ONLY : lda_plus_U, nwfcU
+    USE io_files,         ONLY : prefix, iunhub, iunwfc, iunigk, &
+                                 nwordwfcU, nwordwfc, seqopn
     USE noncollin_module, ONLY : npol
-    USE mp_global,        ONLY : kunit
     USE buffers,          ONLY : open_buffer
     USE control_flags,    ONLY : io_level
     IMPLICIT NONE
     LOGICAL            :: exst
     !
-    ! ... nwordwfc is the record length (IN COMPLEX WORDS)
+    ! ... nwordwfc is the record length (IN REAL WORDS)
     ! ... for the direct-access file containing wavefunctions
     ! ... io_level > 0 : open a file; io_level <= 0 : open a buffer
     !
@@ -257,23 +253,18 @@ CONTAINS
     CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst )
 
     ! ... Needed for LDA+U
-    ! ... iunat  contains the (orthogonalized) atomic wfcs
-    ! ... iunsat contains the (orthogonalized) atomic wfcs * S
-    ! ... iunocc contains the atomic occupations computed in new_ns
-    ! ... it is opened and closed for each reading-writing operation
-    nwordatwfc = 2*npwx*natomwfc*npol
-    IF ( lda_plus_u ) then
-       CALL diropn( iunat,  'atwfc',  nwordatwfc, exst )
-       CALL diropn( iunsat, 'satwfc', nwordatwfc, exst )
-    END IF
-
+    ! ... iunhub contains the (orthogonalized) atomic wfcs * S
+    !
+    nwordwfcU = npwx*nwfcU*npol
+    IF ( lda_plus_u ) &
+       CALL open_buffer( iunhub, 'hub', nwordwfcU, io_level, exst )
+    !
     ! ... iunigk contains the number of PW and the indices igk
-    ! ... Note that unit 15 is reserved for error messages
+    ! ... 
     CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
+    !
     RETURN
   END SUBROUTINE gipaw_openfil
-
-
   !-----------------------------------------------------------------------
   ! Print timings
   !-----------------------------------------------------------------------
