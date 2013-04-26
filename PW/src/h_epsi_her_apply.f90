@@ -28,7 +28,6 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   USE uspp
   USE uspp_param, ONLY: nh, nhm, nbetam
   USE bp
-  USE basis
   USE klist
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
   USE ions_base, ONLY: ityp, tau, nat,ntyp => nsp

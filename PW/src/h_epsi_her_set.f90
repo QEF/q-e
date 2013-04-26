@@ -29,7 +29,6 @@ subroutine h_epsi_her_set(pdir, e_field)
   USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq
   USE bp,         ONLY : nppstr_3d, fact_hepsi, evcel, evcp=>evcelp, &
                          evcm=>evcelm, mapgp_global, mapgm_global, nx_el
-  USE basis
   USE klist
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
   USE ions_base, ONLY: ityp, tau, nat,ntyp => nsp

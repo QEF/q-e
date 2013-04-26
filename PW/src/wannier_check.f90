@@ -14,7 +14,7 @@ subroutine wannier_check()
   use klist, only : nks, nkstot
   use ions_base, only : nat, ityp, atm,tau
   use wvfct, only: nbnd
-  use basis, only: natomwfc
+  USE basis, only: natomwfc
   use wannier_new, only: nwan, wan_in, use_energy_int
   use lsda_mod, only: nspin
   USE control_flags,    ONLY : gamma_only

@@ -394,7 +394,6 @@ MODULE pwcom
   !
   USE constants, ONLY : e2, rytoev, pi, tpi, fpi
   USE cell_base, ONLY : celldm, at, bg, alat, omega, tpiba, tpiba2, ibrav
-  USE basis
   USE gvect
   USE gvecs
   USE klist
