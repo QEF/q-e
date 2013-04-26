@@ -74,8 +74,6 @@ SUBROUTINE wannier_init(hwwa)
   U_projection = 'ortho-atomic'
   
   nwordatwfc = npwx*natomwfc*npol
-  INQUIRE( UNIT = iunat, OPENED = opnd )
-  IF(.NOT. opnd) CALL open_buffer( iunat, 'atwfc', nwordatwfc,io_level,exst )
   INQUIRE( UNIT = iunsat, OPENED = opnd )
   IF(.NOT. opnd) CALL open_buffer( iunsat,'satwfc',nwordatwfc,io_level,exst )
 

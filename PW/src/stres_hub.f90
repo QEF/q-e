@@ -135,7 +135,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE becmod,               ONLY : bec_type, becp, calbec, &
                                     allocate_bec_type, deallocate_bec_type
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
-                                    iunat, iunhub, nwordwfcU, nwordatwfc
+                                    iunhub, nwordwfcU, nwordatwfc
    USE buffers,              ONLY : get_buffer
    USE mp_global,            ONLY : inter_pool_comm
    USE mp,                   ONLY : mp_sum
@@ -185,11 +185,10 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
-! read atomic wfc - swfcatom is used as work space
-      CALL get_buffer (swfcatom, nwordatwfc, iunat, ik)
-!!!
+! re-calculate atomic wfc - swfcatom is used as work space
+! (must be modified in order to account for nocolinear case)
+      CALL atomic_wfc (ik, swfcatom)
       call copy_U_wfc ( )
-!!!  
       IF ( gamma_only ) THEN
          CALL dprojdepsilon_gamma (wfcU, spsi, ipol, jpol, dproj%r)
       ELSE

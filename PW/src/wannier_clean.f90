@@ -34,8 +34,6 @@ subroutine wannier_clean()
   CALL close_buffer( iunwf, 'keep' )
   
   IF ( .NOT. ( lda_plus_u .OR. one_atom_occupations ) ) THEN
-     INQUIRE( UNIT = iunat, OPENED = opnd )  
-     IF ( opnd ) CALL close_buffer( iunat, 'delete' )
      INQUIRE( UNIT = iunsat, OPENED = opnd )  
      IF ( opnd ) CALL close_buffer( iunsat, 'delete' )
   END IF

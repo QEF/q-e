@@ -34,7 +34,7 @@ SUBROUTINE force_hub(forceh)
    USE wavefunctions_module, ONLY : evc
    USE klist,                ONLY : nks, xk, ngk
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
-                                    iunat, iunhub, nwordwfcU, nwordatwfc
+                                    iunhub, nwordwfcU, nwordatwfc
    USE buffers,              ONLY : get_buffer
 
    IMPLICIT NONE
@@ -81,9 +81,10 @@ SUBROUTINE force_hub(forceh)
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
 
-! read atomic wfc - swfcatom is used here as work space
+! re-calculate atomic wfc - swfcatom is used here as work space
+! (has to be modified for noncolinear case)
 
-      CALL get_buffer (swfcatom, nwordatwfc, iunat, ik)
+      CALL atomic_wfc (ik, swfcatom)
       call copy_U_wfc ()
 
       DO ipol = 1,3

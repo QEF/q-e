@@ -55,7 +55,6 @@ MODULE io_files
   INTEGER :: iunsat      = 14 ! unit for saving (orthogonal) atomic wfcs * S
   INTEGER :: iunmix      = 15 ! unit for saving mixing information
   INTEGER :: iunigk      = 16 ! unit for saving indices
-  INTEGER :: iunat       = 17 ! unit for saving (orthogonal) atomic wfcs 
   !
   INTEGER :: iunexit     = 26 ! unit for a soft exit  
   INTEGER :: iunupdate   = 27 ! unit for saving old positions (extrapolation)
@@ -63,7 +62,6 @@ MODULE io_files
   INTEGER :: iunlock     = 29 ! as above (locking file)
   !
   INTEGER :: iunbfgs     = 30 ! unit for the bfgs restart file
-  INTEGER :: iunatsicwfc = 31 ! unit for sic wfc
   !
   INTEGER :: iuntmp      = 90 ! temporary unit, when used must be closed ASAP
   !
@@ -74,11 +72,12 @@ MODULE io_files
   !
   !... finite electric field
   !
-  INTEGER :: iunefield   = 31 ! unit to store wavefunction for calculatin electric field operator
-  !
-  INTEGER :: iunefieldm  = 32 !unit to store projectors for hermitean electric field potential
-  !
-  INTEGER :: iunefieldp  = 33 !unit to store projectors for hermitean electric field potential
+  INTEGER :: iunefield   = 31 ! unit to store wavefunction for calculating
+                              ! electric field operator
+  INTEGER :: iunefieldm  = 32 ! unit to store projectors for hermitean
+                              ! electric field potential
+  INTEGER :: iunefieldp  = 33 ! unit to store projectors for hermitean 
+                              ! electric field potential
   !
   ! ... For Wannier Hamiltonian
   !

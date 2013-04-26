@@ -21,7 +21,7 @@ SUBROUTINE openfil()
   USE wvfct,            ONLY : nbnd, npwx
   USE fixed_occ,        ONLY : one_atom_occupations
   USE ldaU,             ONLY : lda_plus_U, U_projection, nwfcU
-  USE io_files,         ONLY : prefix, iunpun, iunat, iunsat, iunigk,  &
+  USE io_files,         ONLY : prefix, iunpun, iunsat, iunigk,  &
                                iunhub, nwordwfcU, nwordwfc, nwordatwfc,&
                                iunefield, iunefieldm, iunefieldp, seqopn
   USE noncollin_module, ONLY : npol
@@ -33,7 +33,6 @@ SUBROUTINE openfil()
   LOGICAL            :: exst
   !
   ! ... Files needed for LDA+U
-  ! ... iunat  contains the (orthogonalized) atomic wfcs 
   ! ... iunsat contains the (orthogonalized) atomic wfcs * S
   ! ... iunhub as above, only wfcs with a U correction
   !
@@ -47,7 +46,6 @@ SUBROUTINE openfil()
   !
   IF ( ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) .OR. &
         use_wannier .OR. one_atom_occupations ) THEN
-     CALL open_buffer ( iunat,  'atwfc',  nwordatwfc, io_level, exst )
      CALL open_buffer ( iunsat, 'satwfc', nwordatwfc, io_level, exst )
      CALL open_buffer ( iunhub, 'hub',    nwordwfcU, io_level, exst )
   END IF

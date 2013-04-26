@@ -2091,7 +2091,7 @@ SUBROUTINE wan2sic
 
   USE io_global,  ONLY : stdout
   USE kinds, ONLY : DP
-  USE io_files, ONLY : iunwfc, iunatsicwfc, nwordwfc, nwordwann
+  USE io_files, ONLY : iunwfc, nwordwfc, nwordwann
   USE cell_base, ONLY : omega, tpiba2
   USE gvect, ONLY : g, ngm
   USE gvecs, ONLY: nls
@@ -2102,6 +2102,7 @@ SUBROUTINE wan2sic
 
   INTEGER :: i, j, nn, ik, ibnd, iw, ikevc
   COMPLEX(DP), ALLOCATABLE :: orbital(:,:), u_matrix(:,:,:)
+  INTEGER :: iunatsicwfc = 31 ! unit for sic wfc
 
   OPEN (20, file = trim(seedname)//".dat" , form = 'formatted', status = 'unknown')
   WRITE(stdout,*) ' wannier plot '

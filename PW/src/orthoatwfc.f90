@@ -17,7 +17,7 @@ SUBROUTINE orthoatwfc
   USE kinds,      ONLY : DP
   USE buffers,    ONLY : save_buffer
   USE io_global,  ONLY : stdout
-  USE io_files,   ONLY : iunat, iunsat, iunhub, nwordwfcU, nwordatwfc, iunigk
+  USE io_files,   ONLY : iunsat, iunhub, nwordwfcU, nwordatwfc, iunigk
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc
   USE klist,      ONLY : nks, xk, ngk
@@ -83,11 +83,6 @@ SUBROUTINE orthoatwfc
      ELSE
        CALL atomic_wfc (ik, wfcatom)
      ENDIF
-     !
-     ! write atomic wfc to unit iunat - FIXME: this is used only
-     ! only in force and stress calculation, might be recalculated
-     !
-     CALL save_buffer (wfcatom, nwordatwfc, iunat, ik)
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
      CALL calbec (npw, vkb, wfcatom, becp) 
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
