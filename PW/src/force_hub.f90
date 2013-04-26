@@ -82,10 +82,10 @@ SUBROUTINE force_hub(forceh)
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
 
 ! read atomic wfc - swfcatom is used here as work space
+
       CALL get_buffer (swfcatom, nwordatwfc, iunat, ik)
-!!!
       call copy_U_wfc ()
-!!!
+
       DO ipol = 1,3
          DO alpha = 1,nat                 ! the displaced atom
             IF ( gamma_only ) THEN
@@ -256,6 +256,7 @@ SUBROUTINE dndtau_gamma (ldim, rproj, nwfcU, wfcU, offsetU, &
       IF (is_hubbard(nt)) THEN
          DO m1 = 1, 2*Hubbard_l(nt)+1
             DO m2 = m1, 2*Hubbard_l(nt)+1
+!$omp parallel do default(shared) private(ibnd)
                DO ibnd = 1,nbnd
                   dns(m1,m2,current_spin,na) = dns(m1,m2,current_spin,na) + &
                                           wg(ibnd,ik) * (   &
@@ -264,6 +265,7 @@ SUBROUTINE dndtau_gamma (ldim, rproj, nwfcU, wfcU, offsetU, &
                               dproj(offsetU(na)+m1,ibnd)  *   &
                               rproj(offsetU(na)+m2,ibnd) )
                END DO
+!$omp end parallel do
             END DO
          END DO
       END IF

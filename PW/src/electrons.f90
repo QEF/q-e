@@ -238,7 +238,7 @@ SUBROUTINE electrons_scf()
   USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
   USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor
-  USE basis,                ONLY : starting_pot, starting_wfc
+  USE basis,                ONLY : starting_pot
   USE bp,                   ONLY : lelfield
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm, gstart, nl, nlm, g, gg, gcutm

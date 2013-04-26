@@ -13,7 +13,6 @@ FUNCTION read_config_from_file() RESULT (ierr)
   USE kinds,          ONLY : DP
   USE io_global,      ONLY : stdout
   USE ions_base,      ONLY : nat, ityp, tau
-  USE basis,          ONLY : startingconfig
   USE cell_base,      ONLY : at, bg, omega
   USE cellmd,         ONLY : at_old, omega_old, lmovecell
   USE io_files,       ONLY : tmp_dir, prefix
@@ -23,8 +22,6 @@ FUNCTION read_config_from_file() RESULT (ierr)
   !
   INTEGER :: ierr
   !
-  !
-  IF ( TRIM( startingconfig ) /= 'file' ) RETURN
   !
   WRITE( stdout, '(/5X,"Atomic positions and unit cell read from directory:", &
                 &  /,5X,A)') TRIM( tmp_dir ) // TRIM( prefix ) // ".save/"
