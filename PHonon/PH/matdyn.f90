@@ -106,6 +106,7 @@ PROGRAM matdyn
   !                       frequencies  (default: .false.)
   !                NB: You cannot use this option with the symmetry
   !                analysis of the modes.
+  !     fd         (logical) if .t. the ifc come from the finite displacement calculation
   !     na_ifc     (logical) add non analitic contributions to the interatomic force 
   !                constants if finite displacement method is used (as in Wang et al.
   !                Phys. Rev. B 85, 224303 (2012)) [to be used in conjunction with fd.x]
@@ -176,7 +177,7 @@ PROGRAM matdyn
 
   INTEGER :: nspin_mag, nqs, ios
   !
-  LOGICAL :: readtau, la2F, xmlifc, lo_to_split, na_ifc
+  LOGICAL :: readtau, la2F, xmlifc, lo_to_split, na_ifc, fd
   !
   REAL(DP) :: qhat(3), qh, DeltaE, Emin=0._dp, Emax, E, DOSofE(1), qq
   REAL(DP) :: celldm(6), delta, pathL
@@ -198,7 +199,7 @@ PROGRAM matdyn
   !
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, fleig, at, dos,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, &
-       &           la2F, ndos, DeltaE, q_in_band_form, q_in_cryst_coord, fldyn,na_ifc
+       &           la2F, ndos, DeltaE, q_in_band_form, q_in_cryst_coord, fldyn,na_ifc, fd
   !
   CALL mp_startup()
   CALL environment_start('MATDYN')
@@ -236,6 +237,7 @@ PROGRAM matdyn
      eigen_similarity=.FALSE.
      q_in_cryst_coord = .FALSE.
      na_ifc=.FALSE.
+     fd=.FALSE.
      !
      !
      IF (ionode) READ (5,input,IOSTAT=ios)
@@ -292,6 +294,7 @@ PROGRAM matdyn
         CALL readfc ( flfrc, nr1, nr2, nr3, epsil, nat_blk, &
             ibrav, alat, at_blk, ntyp_blk, &
             amass_blk, omega_blk, has_zstar)
+        print*,'alat', alat
      ENDIF
      !
      CALL recips ( at_blk(1,1),at_blk(1,2),at_blk(1,3),  &
@@ -475,7 +478,7 @@ PROGRAM matdyn
 
         CALL setupmat (q(1,n), dyn, nat, at, bg, tau, itau_blk, nsc, alat, &
              dyn_blk, nat_blk, at_blk, bg_blk, tau_blk, omega_blk,  &
-             epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws, na_ifc,f_of_q)
+             epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws, na_ifc,f_of_q,fd)
 
         qhat(1) = q(1,n)*at(1,1)+q(2,n)*at(2,1)+q(3,n)*at(3,1)
         qhat(2) = q(1,n)*at(1,2)+q(2,n)*at(2,2)+q(3,n)*at(3,2)
@@ -679,7 +682,7 @@ PROGRAM matdyn
          call a2Fdos (nat, nq, nr1, nr2, nr3, ibrav, at, bg, tau, alat, &
                            nsc, nat_blk, at_blk, bg_blk, itau_blk, omega_blk, &
                            rws, nrws, dos, Emin, DeltaE, ndos, &
-                           ntetra, tetra, asr, q, freq)
+                           ntetra, tetra, asr, q, freq,fd)
          !
          IF (.NOT.dos) THEN
             DO isig=1,10
@@ -829,7 +832,7 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
 END SUBROUTINE readfc
 !
 !-----------------------------------------------------------------------
-SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q)
+SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q,fd)
   !-----------------------------------------------------------------------
   ! calculates the dynamical matrix at q from the (short-range part of the)
   ! force constants
@@ -840,14 +843,16 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q)
   !
   IMPLICIT NONE
   INTEGER nr1, nr2, nr3, nat, n1, n2, n3, &
-          ipol, jpol, na, nb, m1, m2, m3, nint, i,j, nrws
+          ipol, jpol, na, nb, m1, m2, m3, nint, i,j, nrws, nax
   COMPLEX(DP) dyn(3,3,nat,nat), f_of_q(3,3,nat,nat)
   REAL(DP) frc(nr1,nr2,nr3,3,3,nat,nat), tau(3,nat), q(3), arg, &
                at(3,3), bg(3,3), r(3), weight, r_ws(3),  &
-               total_weight, rws(0:3,nrws)
+               total_weight, rws(0:3,nrws), alat
   REAL(DP), EXTERNAL :: wsweight
   REAL(DP),SAVE,ALLOCATABLE :: wscache(:,:,:,:,:)
+  REAL(DP), ALLOCATABLE :: ttt(:,:,:,:,:), tttx(:,:)
   LOGICAL,SAVE :: first=.true.
+  LOGICAL :: fd
   !
   FIRST_TIME : IF (first) THEN
     first=.false.
@@ -862,6 +867,7 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q)
                    DO i=1, 3
                       r(i) = n1*at(i,1)+n2*at(i,2)+n3*at(i,3)
                       r_ws(i) = r(i) + tau(i,na)-tau(i,nb)
+                      if (fd) r_ws(i) = r(i) + tau(i,nb)-tau(i,na)
                    END DO
                    wscache(n3,n2,n1,nb,na) = wsweight(r_ws,rws,nrws)
                 ENDDO
@@ -871,6 +877,10 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q)
     ENDDO
   ENDIF FIRST_TIME
   !
+  ALLOCATE(ttt(3,nat,nr1,nr2,nr3))
+  ALLOCATE(tttx(3,nat*nr1*nr2*nr3))
+  ttt(:,:,:,:,:)=0.d0
+
   DO na=1, nat
      DO nb=1, nat
         total_weight=0.0d0
@@ -895,9 +905,15 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q)
                     IF(m2.LE.0) m2=m2+nr2
                     m3 = MOD(n3+1,nr3)
                     IF(m3.LE.0) m3=m3+nr3
+                 !   write(*,'(6i4)') n1,n2,n3,m1,m2,m3
                     !
                     ! FOURIER TRANSFORM
                     !
+                    do i=1,3
+                       ttt(i,na,m1,m2,m3)=tau(i,na)+m1*at(i,1)+m2*at(i,2)+m3*at(i,3)
+                       ttt(i,nb,m1,m2,m3)=tau(i,nb)+m1*at(i,1)+m2*at(i,2)+m3*at(i,3)
+                    end do
+
                     arg = tpi*(q(1)*r(1) + q(2)*r(2) + q(3)*r(3))
                     DO ipol=1, 3
                        DO jpol=1, 3
@@ -919,13 +935,36 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws,f_of_q)
      END DO
   END DO
   !
+!  alat=10.2
+!  nax=0
+!  DO n1=1,nr1
+!     DO n2=1,nr2
+!        DO n3=1,nr3
+!           do na=1,nat
+!              nax=nax+1
+!              do i=1,3
+!                 tttx(i,nax)=ttt(i,na,n1,n2,n3)*alat*0.529177
+!              end do
+!           end do
+!        end do
+!     end do
+!  end do
+!
+!  do nb=1,nat
+!     write(6,'(3(f15.9,1x))') tau(1,nb),tau(2,nb),tau(3,nb)
+!  enddo
+!  print*, '========='
+!  do nb=1,nat*nr1*nr2*nr3
+!     write(6,'(3(f15.9,1x))') tttx(1,nb),tttx(2,nb),tttx(3,nb)
+!  enddo
+! 
   RETURN
 END SUBROUTINE frc_blk
 !
 !-----------------------------------------------------------------------
 SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
      &         dyn_blk,nat_blk,at_blk,bg_blk,tau_blk,omega_blk, &
-     &                 epsil,zeu,frc,nr1,nr2,nr3,has_zstar,rws,nrws,na_ifc,f_of_q)
+     &                 epsil,zeu,frc,nr1,nr2,nr3,has_zstar,rws,nrws,na_ifc,f_of_q,fd)
   !-----------------------------------------------------------------------
   ! compute the dynamical matrix (the analytic part only)
   !
@@ -943,7 +982,7 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
   REAL(DP) :: tau_blk(3,nat_blk), at_blk(3,3), bg_blk(3,3), omega_blk
   COMPLEX(DP) dyn_blk(3,3,nat_blk,nat_blk), f_of_q(3,3,nat,nat)
   COMPLEX(DP) ::  dyn(3,3,nat,nat)
-  LOGICAL :: has_zstar, na_ifc
+  LOGICAL :: has_zstar, na_ifc, fd
   !
   ! local variables
   !
@@ -963,7 +1002,7 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
      !
      dyn_blk(:,:,:,:) = (0.d0,0.d0)
      CALL frc_blk (dyn_blk,qp,tau_blk,nat_blk,              &
-          &              nr1,nr2,nr3,frc,at_blk,bg_blk,rws,nrws,f_of_q)
+          &              nr1,nr2,nr3,frc,at_blk,bg_blk,rws,nrws,f_of_q,fd)
       IF (has_zstar .and. .not.na_ifc) &
            CALL rgd_blk(nr1,nr2,nr3,nat_blk,dyn_blk,qp,tau_blk,   &
                         epsil,zeu,bg_blk,omega_blk,+1.d0)
@@ -1922,7 +1961,7 @@ END SUBROUTINE gen_qpoints
 SUBROUTINE a2Fdos &
      (nat, nq, nr1, nr2, nr3, ibrav, at, bg, tau, alat, &
      nsc, nat_blk, at_blk, bg_blk, itau_blk, omega_blk, rws, nrws, &
-     dos, Emin, DeltaE, ndos, ntetra, tetra, asr, q, freq )
+     dos, Emin, DeltaE, ndos, ntetra, tetra, asr, q, freq,fd )
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -1936,7 +1975,7 @@ SUBROUTINE a2Fdos &
   !
   INTEGER, INTENT(in) :: nat, nq, nr1, nr2, nr3, ibrav, ndos, ntetra, &
        tetra(4, ntetra)
-  LOGICAL, INTENT(in) :: dos
+  LOGICAL, INTENT(in) :: dos,fd
   CHARACTER(LEN=*), INTENT(IN) :: asr
   REAL(DP), INTENT(in) :: freq(3*nat,nq), q(3,nq), at(3,3), bg(3,3), &
        tau(3,nat), alat, Emin, DeltaE
@@ -2019,7 +2058,7 @@ SUBROUTINE a2Fdos &
         !
         CALL setgam (q(1,n), gam, nat, at, bg, tau, itau_blk, nsc, alat, &
              gam_blk, nat_blk, at_blk,bg_blk,tau_blk, omega_blk, &
-             frcg, nr1,nr2,nr3, rws, nrws)
+             frcg, nr1,nr2,nr3, rws, nrws, fd)
         !
         ! here multiply dyn*gam*dyn for gamma and divide by w2 for lambda at given q
         !
@@ -2133,7 +2172,7 @@ END SUBROUTINE a2Fdos
 !-----------------------------------------------------------------------
 subroutine setgam (q, gam, nat, at,bg,tau,itau_blk,nsc,alat, &
      &             gam_blk, nat_blk,    at_blk,bg_blk,tau_blk,omega_blk, &
-     &             frcg, nr1,nr2,nr3, rws,nrws)
+     &             frcg, nr1,nr2,nr3, rws,nrws, fd)
   !-----------------------------------------------------------------------
   ! compute the dynamical matrix (the analytic part only)
   !
@@ -2150,6 +2189,7 @@ subroutine setgam (q, gam, nat, at,bg,tau,itau_blk,nsc,alat, &
                     frcg(nr1,nr2,nr3,3,3,nat_blk,nat_blk)
   COMPLEX(DP)  :: gam_blk(3,3,nat_blk,nat_blk),f_of_q(3,3,nat,nat)
   COMPLEX(DP) ::  gam(3,3,nat,nat)
+  LOGICAL :: fd
   !
   ! local variables
   !
@@ -2170,7 +2210,7 @@ subroutine setgam (q, gam, nat, at,bg,tau,itau_blk,nsc,alat, &
      !
      gam_blk(:,:,:,:) = (0.d0,0.d0)
      CALL frc_blk (gam_blk,qp,tau_blk,nat_blk,              &
-                   nr1,nr2,nr3,frcg,at_blk,bg_blk,rws,nrws,f_of_q)
+                   nr1,nr2,nr3,frcg,at_blk,bg_blk,rws,nrws,f_of_q,fd)
      !
      do na=1,nat
         na_blk = itau_blk(na)
