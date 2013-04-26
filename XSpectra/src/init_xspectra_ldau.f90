@@ -24,7 +24,6 @@ subroutine init_xanes_ldau
   USE uspp_param,       ONLY : upf
   implicit none
 
-  logical :: exst, opnd
   integer :: ldim, nt
   INTEGER :: set_Hubbard_l
 
@@ -79,28 +78,18 @@ SUBROUTINE init_xanes_ldau_2(ik)
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
-  USE mp_global,  ONLY : intra_pool_comm
-  USE mp,         ONLY : mp_sum
 
   ! 
   IMPLICIT NONE
-  !
   !
   INTEGER :: ik, ibnd, info, i, j, k, na, nb, nt, isym, n, ntemp, m, &
        l, lm, ltot, ntot, ipol
   ! the k point under consideration
   ! counter on bands
-  REAL(DP) :: t0, scnds
-  ! cpu time spent
-  LOGICAL :: orthogonalize_wfc
-     
-  COMPLEX(DP) :: temp, t (5)
-  COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:), work (:,:), overlap (:,:)
-  REAL(DP) , ALLOCATABLE :: e (:)
-  LOGICAL :: opnd, exst
+  LOGICAL :: orthogonalize_wfc, normalize_only
+  COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:)
+  LOGICAL :: exst
 
-  t0 = scnds ()
-  
   ALLOCATE (wfcatom( npwx*npol, natomwfc))    
 
   IF (U_projection=="file") THEN
@@ -115,24 +104,23 @@ SUBROUTINE init_xanes_ldau_2(ik)
 
   IF (U_projection=="atomic") THEN
      orthogonalize_wfc = .FALSE.
+     normalize_only = .FALSE.
      WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are NOT orthogonalized'
   ELSE IF (U_projection=="ortho-atomic") THEN
      orthogonalize_wfc = .TRUE.
+     normalize_only = .FALSE.
      WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are orthogonalized'
-     IF (gamma_only) THEN
-        WRITE( stdout,*) 'Gamma-only calculation for this case not implemented'
-        STOP
-     END IF
+     IF (gamma_only) CALL errore('init_xanes_ldau2', &
+          'Gamma-only calculation for this case not implemented', 1 )
   ELSE IF (U_projection=="norm-atomic") THEN
      orthogonalize_wfc = .TRUE.
+     normalize_only = .TRUE.
      WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are normalized but NOT orthogonalized'
-     IF (gamma_only) THEN
-        WRITE( stdout,*) 'Gamma-only calculation for this case not implemented'
-        STOP
-     END IF
+     IF (gamma_only) CALL errore('init_xanes_ldau2', &
+          'Gamma-only calculation for this case not implemented', 1 )
   ELSE
      WRITE( stdout,*) "U_projection_type =", U_projection
-     CALL errore ("orthoatwfc"," this U_projection_type is not valid",1)
+     CALL errore ("init_xanes_ldau2"," this U_projection_type is not valid",1)
   END IF
 
   ! Allocate the array becp = <beta|wfcatom>
@@ -141,75 +129,8 @@ SUBROUTINE init_xanes_ldau_2(ik)
   CALL calbec (npw, vkb, wfcatom, becp)
   CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 
-  IF (orthogonalize_wfc) THEN
-     ALLOCATE (overlap( natomwfc , natomwfc))    
-     ALLOCATE (work   ( natomwfc , natomwfc))    
-     ALLOCATE (e      ( natomwfc))    
-     overlap(:,:) = (0.d0,0.d0)
-     work(:,:) = (0.d0,0.d0)
-     !
-     ! calculate overlap matrix
-     !
-     IF (noncolin) THEN
-        CALL zgemm ('c', 'n', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), &
-             wfcatom, npwx, swfcatom, npwx, (0.d0,0.d0), overlap, natomwfc)
-     ELSE
-         CALL zgemm ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0), &
-             wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0), overlap, natomwfc)
-     END IF
-#ifdef __MPI
-     CALL mp_sum(  overlap, intra_pool_comm )
-#endif
-     IF (U_projection=="norm-atomic") THEN
-        DO i = 1, natomwfc
-           DO j = i+1, natomwfc
-              overlap(i,j) = (0.d0,0.d0)
-              overlap(j,i) = (0.d0,0.d0)
-           ENDDO
-        ENDDO
-     END IF
-     !
-     ! find O^-.5
-     !
-     CALL cdiagh (natomwfc, overlap, natomwfc, e, work)
-     DO i = 1, natomwfc
-        e (i) = 1.d0 / dsqrt (e (i) )
-     ENDDO
-     DO i = 1, natomwfc
-        DO j = i, natomwfc
-           temp = (0.d0, 0.d0)
-           DO k = 1, natomwfc
-              temp = temp + e (k) * work (j, k) * CONJG (work (i, k) )
-           ENDDO
-           overlap (i, j) = temp
-           IF (j.NE.i) overlap (j, i) = CONJG (temp)
-        ENDDO
-     ENDDO
-     !
-     ! transform atomic orbitals O^-.5 psi
-     !
-     DO i = 1, npw
-        work(:,1) = (0.d0,0.d0)
-        IF (noncolin) THEN
-           DO ipol=1,npol
-              j = i + (ipol-1)*npwx
-              CALL zgemv ('n',natomwfc,natomwfc,(1.d0,0.d0),overlap, &
-                   natomwfc,swfcatom(j,1),npwx*npol, &
-                                       (0.d0,0.d0),work,1)
-              CALL zcopy (natomwfc,work,1,swfcatom(j,1),npwx*npol)
-           END DO
-        ELSE
-           CALL zgemv ('n', natomwfc, natomwfc, (1.d0, 0.d0) , overlap, &
-                natomwfc, swfcatom (i, 1) , npwx, (0.d0, 0.d0) , work, 1)
-           CALL zcopy (natomwfc, work, 1, swfcatom (i, 1), npwx)
-        END IF
-     ENDDO
-
-     DEALLOCATE (overlap)
-     DEALLOCATE (work)
-     DEALLOCATE (e)
-        
-  END IF ! orthogonalize_wfc
+  IF (orthogonalize_wfc) &
+     CALL ortho_swfc ( normalize_only, natomwfc, wfcatom, swfcatom )
   !!!
   CALL copy_U_wfc ()
   !!!
