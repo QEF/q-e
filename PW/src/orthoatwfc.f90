@@ -93,7 +93,7 @@ SUBROUTINE orthoatwfc
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 
      IF (orthogonalize_wfc) &
-        CALL ortho_wfc ( normalize_only, natomwfc, wfcatom, swfcatom )
+        CALL ortho_swfc ( normalize_only, natomwfc, wfcatom, swfcatom )
      !
      ! write S * atomic wfc to unit iunsat
      !
@@ -114,7 +114,7 @@ SUBROUTINE orthoatwfc
 END SUBROUTINE orthoatwfc
 !
 !-----------------------------------------------------------------------
-SUBROUTINE ortho_wfc ( normalize_only, m, wfc, swfc )
+SUBROUTINE ortho_swfc ( normalize_only, m, wfc, swfc )
   !-----------------------------------------------------------------------
   !
   ! On input : wfc (npwx*npol,m) =  \psi = a set of "m" (atomic) wavefcts
@@ -207,4 +207,4 @@ SUBROUTINE ortho_wfc ( normalize_only, m, wfc, swfc )
   DEALLOCATE (work)
   DEALLOCATE (e)
         
-END SUBROUTINE ortho_wfc
+END SUBROUTINE ortho_swfc
