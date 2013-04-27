@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2009 PWSCF group
+! Copyright (C) 2003-2013 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -37,6 +37,10 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   INTEGER :: v_siz, idx, ioff
   !
+#if (defined(__CUDA) && !defined(__DISABLE_CUDA_VLOCPSI) && !defined(__PARA)) || (defined(__CUDA) && !defined(__DISABLE_CUDA_VLOCPSI) && defined(__PARA) && defined(__USE_3D_FFT))
+  CALL vloc_psi_gamma_gpu ( lda, n, m, psi, v, hpsi )
+  RETURN
+#endif
   !
   incr = 2
   !
@@ -222,6 +226,10 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   INTEGER :: v_siz, idx, ioff
   !
+#if (defined(__CUDA) && !defined(__DISABLE_CUDA_VLOCPSI) && !defined(__PARA)) || (defined(__CUDA) && !defined(__DISABLE_CUDA_VLOCPSI) && defined(__PARA) && defined(__USE_3D_FFT))
+  CALL vloc_psi_k_gpu ( lda, n, m, psi, v, hpsi )
+  RETURN
+#endif
   !
   ! The following is dirty trick to prevent usage of task groups if
   ! the number of bands is smaller than the number of task groups 

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2010 Quantum ESPRESSO group
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,10 +10,39 @@ MODULE dfunct
 
 CONTAINS
 !---------------------------------------
+
 SUBROUTINE newq(vr,deeq,skip_vltot) 
   !
   !   This routine computes the integral of the perturbed potential with
   !   the Q function 
+  !
+  USE kinds,                ONLY : DP
+  USE fft_base,             ONLY : dfftp
+  USE ions_base,            ONLY : nat
+  USE lsda_mod,             ONLY : nspin
+  USE uspp_param,           ONLY : nhm
+  !
+  IMPLICIT NONE
+  !
+  ! Input: potential , output: contribution to integral
+  REAL(kind=dp), intent(in)  :: vr(dfftp%nnr,nspin)
+  REAL(kind=dp), intent(inout) :: deeq( nhm, nhm, nat, nspin )
+  LOGICAL, intent(in) :: skip_vltot
+  !
+#if defined(__CUDA) && !defined(__DISABLE_CUDA_NEWD)
+  CALL newq_compute_gpu(vr,deeq,skip_vltot)
+#else
+  CALL newq_compute(vr,deeq,skip_vltot)
+#endif
+  !
+  RETURN
+
+END SUBROUTINE newq
+
+SUBROUTINE newq_compute(vr,deeq,skip_vltot)
+  !
+  !   This routine computes the integral of the perturbed potential with
+  !   the Q function
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
@@ -176,7 +205,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
   !
   DEALLOCATE( aux, qgm, qmod, ylmk0 )
   !
-END SUBROUTINE newq
+END SUBROUTINE newq_compute
 !---------------------------------------
 SUBROUTINE newd()
   USE uspp,          ONLY : deeq

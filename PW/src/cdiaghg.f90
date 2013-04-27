@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum ESPRESSO group
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,6 +11,33 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
+  !----------------------------------------------------------------------------
+  !
+  ! ... calculates eigenvalues and eigenvectors of the generalized problem
+  ! ... Hv=eSv, with H hermitean matrix, S overlap matrix.
+  ! ... On output both matrix are unchanged
+  !
+  USE kinds,            ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: n, m, ldh
+  COMPLEX(DP), INTENT(INOUT) :: h(ldh,n), s(ldh,n)
+  REAL(DP), INTENT(OUT) :: e(n)
+  COMPLEX(DP), INTENT(OUT) :: v(ldh,m)
+  !
+#if defined(__CUDA) && defined(__MAGMA)
+  CALL cdiaghg_gpu( n, m, h, s, ldh, e, v )
+#else
+  CALL cdiaghg_compute( n, m, h, s, ldh, e, v )
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE cdiaghg
+
+!----------------------------------------------------------------------------
+SUBROUTINE cdiaghg_compute( n, m, h, s, ldh, e, v )
   !----------------------------------------------------------------------------
   !
   ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -187,7 +214,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   RETURN
   !
-END SUBROUTINE cdiaghg
+END SUBROUTINE cdiaghg_compute
 !
 !----------------------------------------------------------------------------
 SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
