@@ -8,6 +8,9 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG).
 PWOBJS = \
 pwscf.o 
 
+MANYPWOBJS = \
+manypw.o 
+
 PWLIBS = \
 a2fmod.o \
 add_bfield.o \
@@ -239,9 +242,9 @@ pw.x : $(PWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
 	   $(PWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin; ln -fs ../PW/src/$@ . )
 
-manypw.x : manypw.o libpw.a $(LIBOBJS) $(QEMODS)
+manypw.x : $(MANYPWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	manypw.o libpw.a $(QEMODS) $(LIBOBJS) $(LIBS)
+	 $(MANYPWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin; ln -fs ../PW/src/$@ . )
 
 libpw.a : $(PWLIBS) 
