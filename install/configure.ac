@@ -1159,7 +1159,7 @@ then
                                  blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core"
                                  ldflags="$MKL_FLAGS $ldflags",
                                  echo "MKL not found",
-                                 -lmkl_sequentia -lmkl_core)
+                                 -lmkl_sequential -lmkl_core)
 			   else
      			      AC_SEARCH_LIBS(dgemm, mkl_intel, 
                                  have_blas=1 have_mkl=1 

@@ -7851,7 +7851,7 @@ for ac_lib in '' mkl_gf; do
     ac_res="none required"
   else
     ac_res=-l$ac_lib
-    LIBS="-l$ac_lib -lmkl_sequentia -lmkl_core $ac_func_search_save_LIBS"
+    LIBS="-l$ac_lib -lmkl_sequential -lmkl_core $ac_func_search_save_LIBS"
   fi
   rm -f conftest.$ac_objext conftest$ac_exeext
 if { (ac_try="$ac_link"
