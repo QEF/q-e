@@ -162,6 +162,10 @@
         IF (ierr/=0) CALL mp_stop( 8006 )
 #  endif
 
+#if defined(__CUDA) || defined(__PHIGEMM )
+        CALL InitCudaEnv()
+#endif
+
         RETURN
       END SUBROUTINE mp_start
 !------------------------------------------------------------------------------!
@@ -192,6 +196,11 @@
         !   terminate the IBM Harware performance monitor
         CALL f_hpmterminate( taskid )
 #endif
+
+#if defined(__CUDA) || defined(__PHIGEMM )
+		CALL CloseCudaEnv()
+#endif
+
         CALL mpi_finalize(ierr)
         IF (ierr/=0) CALL mp_stop( 8004 )
 #endif
