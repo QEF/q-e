@@ -69,9 +69,7 @@ PROGRAM phonon
   !
   ! Initialize MPI, clocks, print initial messages
   !
-#ifdef __MPI
   CALL mp_startup ( start_images=.true. )
-#endif
   CALL environment_start ( code )
   !
   ! ... and begin with the initialization part
