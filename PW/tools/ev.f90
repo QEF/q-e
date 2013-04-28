@@ -81,8 +81,7 @@ PROGRAM ev
       in_angstrom = au_unit=='Ang' .or. au_unit=='ANG' .or. &
                     au_unit=='ang'
       IF (in_angstrom) PRINT '(5x,"Assuming Angstrom")'
-
-      PRINT '(5x,"Enter type of bravais lattice (fcc, bcc, sc, hex) > ",$)'
+      PRINT '(5x,"Enter type of bravais lattice (fcc, bcc, sc, noncubic) > ",$)'
       READ '(a)',bravais
 !
       IF(bravais=='fcc'.or.bravais=='FCC') THEN
@@ -91,7 +90,8 @@ PROGRAM ev
          fac = 0.50d0
       ELSEIF(bravais=='sc'.or.bravais=='SC') THEN
          fac = 1.0d0
-      ELSEIF(bravais=='hex'.or.bravais=='HEX') THEN
+      ELSEIF(bravais=='noncubic'.or.bravais=='NONCUBIC' .or.  &
+             bravais=='hex'.or.bravais=='HEX' ) THEN
 !         fac = sqrt(3d0)/2d0 ! not used
          fac = 0.0_DP ! not used
       ELSE
@@ -120,7 +120,8 @@ PROGRAM ev
   10  CONTINUE
       emin=1d10
       DO npt=1,nmaxpt
-         IF (bravais=='hex'.or.bravais=='HEX') THEN
+         IF (bravais=='noncubic'.or.bravais=='NONCUBIC' .or. &
+             bravais=='hex'.or.bravais=='HEX' ) THEN
             READ(2,*,err=10,END=20) v0(npt), etot(npt)
             IF (in_angstrom) v0(npt)=v0(npt)/bohr_radius_angs**3
          ELSE
