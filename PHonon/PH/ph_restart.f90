@@ -1165,7 +1165,7 @@ MODULE ph_restart
      END IF
      IF (lgamma_iq(iq).AND..NOT.newgrid) done_bands(iq) = .TRUE.
   END DO
-  tmp_dir_save=tmp_dir
+  tmp_dir=tmp_dir_save
   !
   RETURN
   !
