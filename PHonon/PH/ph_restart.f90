@@ -1159,7 +1159,8 @@ MODULE ph_restart
         !
         CALL mp_bcast( exst, ionode_id, intra_image_comm )
         !
-        CALL check_restart_recover(exst_recover, exst_restart)
+        exst_restart=.FALSE.
+        IF (exst) CALL check_restart_recover(exst_recover, exst_restart)
         !
         IF (exst.AND..NOT.exst_restart) done_bands(iq)=.TRUE.
      END IF
