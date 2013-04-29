@@ -145,8 +145,8 @@ program elph
      end do
      lambda2=lambda2*2.d0*deltae
      logavg =logavg*2.d0 *deltae
-     ! 1 THz = 50 K
-     logavg=exp(logavg/lambda2)*50.d0
+     ! 1 THz = 48 K
+     logavg=exp(logavg/lambda2)*47.9924d0
      omegalog(ng)=logavg
      write(6,9015) lambda(ng), lambda2, logavg,dosef(ng),degauss(ng)
      write(iuelph,9016) &
