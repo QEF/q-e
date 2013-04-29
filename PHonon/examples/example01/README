@@ -23,10 +23,8 @@ variables see the appropriate INPUT_* file)
    as it is shown here for the X point.
 
 3) make a phonon calculation for X point (input=si.phX.in,
-   output=si.phX.out). Note the option "lnscf=.true.": this instructs
-   the code to perform a needed non-scf calculation first.
-   Note that the q-point (the X point in this case) is read after
-   the namelist inputph.
+   output=si.phX.out). Note that the q-point (the X point 
+   in this case) is read after the namelist &inputph.
    Dynamical matrices will be saved for further analysis in fildyn
    (whose default name is 'matdyn', here overwritten to si.dynX). 
    The fildyn file contains the dynamical matrices for q-points that
