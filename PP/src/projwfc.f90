@@ -32,13 +32,12 @@ PROGRAM do_projwfc
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
-  CHARACTER (len=256) :: filpdos, filproj, io_choice, outdir
-  REAL (DP)      :: Emin, Emax, DeltaE, degauss1, smoothing
+  CHARACTER (len=256) :: filpdos, filproj, outdir
+  REAL (DP)      :: Emin, Emax, DeltaE, degauss1
   INTEGER :: ngauss1, ios
   LOGICAL :: lsym, kresolveddos, tdosinboxes, plotboxes
   INTEGER, PARAMETER :: N_MAX_BOXES = 999
   INTEGER :: n_proj_boxes, irmin(3,N_MAX_BOXES), irmax(3,N_MAX_BOXES)
-
   !
   ! for GWW
   INTEGER :: iun, idum
@@ -48,7 +47,7 @@ PROGRAM do_projwfc
   !
   !
   NAMELIST / projwfc / outdir, prefix, ngauss, degauss, lsym, &
-             Emin, Emax, DeltaE, io_choice, smoothing, filpdos, filproj, &
+             Emin, Emax, DeltaE, filpdos, filproj, &
              lgww, & !if .true. use GW QP energies from file bands.dat
              kresolveddos, tdosinboxes, n_proj_boxes, irmin, irmax, plotboxes, &
              lwrite_overlaps, lbinary_data
