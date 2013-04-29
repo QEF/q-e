@@ -73,7 +73,7 @@ end Module dynamical
 !  filmol  character as above, in a format suitable for 'molden'
 !                    (default: filmol='dynmat.mold')
 !  filxsf  character as above, in axsf format suitable for xcrysden
-!                    (default: filmol='dynmat.axsf')
+!                    (default: filxsf='dynmat.axsf')
 !
       USE kinds, ONLY: DP
       USE mp,         ONLY : mp_bcast
