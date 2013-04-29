@@ -428,53 +428,6 @@ subroutine phq_setup
   !
   !  9) set the variables needed for the partial computation:
   !     nat_todo, atomo, comp_irr
-  ALLOCATE(ifat(nat))
-  comp_irr = .FALSE.
-  comp_irr(0)=.TRUE.
-  IF (nat_todo==0.AND.modenum==0) THEN
-     !
-     !  Case 1)  The partial computation option is not used, make all
-     !           representation between start_irr and last_irr
-     !
-     IF (start_irr <= last_irr_eff) comp_irr(start_irr: last_irr_eff) = .TRUE.
-     !
-  ELSEIF (nat_todo /= 0) THEN
-     !
-     !   Case 2) Sets the atoms which must be computed: the requested
-     !   atoms and all the symmetry related atoms
-     !
-     ifat = 0
-     DO na = 1, nat_todo
-        IF(atomo(na)>nat .or. atomo(na)<1) &
-        CALL errore('phq_setup', 'one of atoms to do (nat_todo) is < 0 or > nat', 1)
-        ifat (atomo (na) ) = 1
-        DO isym = 1, nsymq
-           ifat (irt (isym, atomo (na) ) ) = 1
-        ENDDO
-     ENDDO
-     !
-     !  Find the irreducible representations where the required atoms moves
-     !
-     imode0 = 0
-     do irr = 1, nirr
-        do ipert = 1, npert (irr)
-           mu = imode0 + ipert
-           do na = 1, nat
-              if (ifat (na) == 1 .and. .NOT.comp_irr (irr) ) then
-                 do ipol = 1, 3
-                    nu = 3 * (na - 1) + ipol
-                    if (abs (u (nu, mu) ) > 1.d-6)  comp_irr (irr) = .TRUE.
-                 enddo
-              endif
-           enddo
-        enddo
-        imode0 = imode0 + npert (irr)
-     enddo
-  ELSEIF (modenum /= 0) THEN
-     comp_irr(modenum)=.TRUE.
-  ELSE
-     call errore('phq_setup','nat_todo or nrap wrong',1)
-  ENDIF
 
   DO irr=0,nirr
      comp_irr(irr)=comp_irr_iq(irr,current_iq)
@@ -513,6 +466,7 @@ subroutine phq_setup
   !
   !  Compute how many atoms moves and set the list atomo
   !
+  ALLOCATE(ifat(nat))
   ifat = 0
   imode0 = 0
   DO irr = 1, nirr
