@@ -129,6 +129,7 @@ SUBROUTINE force_hub(forceh)
    call stop_clock('force_hub')
    !!!
    call print_clock('force_hub')
+   call print_clock('atomic_wfc')
    call print_clock('dndtau')
    call print_clock('dprojdtau')
    call print_clock('dprojdtau:1')
@@ -154,6 +155,8 @@ SUBROUTINE dndtau_k (ldim, proj, nwfcU, wfcU, offsetU, &
    USE lsda_mod,             ONLY : nspin, current_spin
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l
    USE wvfct,                ONLY : nbnd, npwx, npw, wg
+   USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
+   USE mp,                   ONLY : mp_sum
    
    IMPLICIT NONE
 
@@ -163,7 +166,7 @@ SUBROUTINE dndtau_k (ldim, proj, nwfcU, wfcU, offsetU, &
              proj(nwfcU,nbnd), wfcU(npwx,nwfcU), spsi(npwx,nbnd)
    REAL (DP), INTENT (OUT) :: dns(ldim,ldim,nspin,nat)
    !
-   INTEGER ::  ibnd, is, na, nt, m1, m2
+   INTEGER ::  ibnd, is, na, nt, m1, m2, na_s, na_e, mykey
    COMPLEX (DP), ALLOCATABLE :: dproj(:,:)
    !
    !
@@ -175,12 +178,20 @@ SUBROUTINE dndtau_k (ldim, proj, nwfcU, wfcU, offsetU, &
    ! compute the derivative of occupation numbers (the quantities dn(m1,m2))
    ! of the atomic orbitals. They are real quantities as well as n(m1,m2)
    !
+   ! poor-man parallelization over atoms
+   ! - if nproc_pool=1   : na_s=1, na_e=nat, mykey=0
+   ! - if nproc_pool<=nat: each processor calculates atom na_s to na_e; mykey=0
+   ! - if nproc_pool> nat: each processor takes care of atom na_s=na_e;
+   !   mykey labels how many times each atom appears (mykey=0 first time etc.)
+   !
+   CALL block_distribute( nat, me_pool, nproc_pool, na_s, na_e, mykey )
    dns(:,:,:,:) = 0.d0
    DO na = 1,nat
       nt = ityp(na)
-      IF ( is_hubbard(nt) ) THEN
+      IF ( is_hubbard(nt) .AND. mykey == 0 ) THEN
          DO m1 = 1, 2*Hubbard_l(nt)+1
             DO m2 = m1, 2*Hubbard_l(nt)+1
+!$omp parallel do default(shared) private(ibnd)
                DO ibnd = 1,nbnd
                   dns(m1,m2,current_spin,na) = dns(m1,m2,current_spin,na) + &
                                           wg(ibnd,ik) *            &
@@ -189,6 +200,7 @@ SUBROUTINE dndtau_k (ldim, proj, nwfcU, wfcU, offsetU, &
                                    dproj(offsetU(na)+m1,ibnd)  *   &
                              CONJG( proj(offsetU(na)+m2,ibnd)) )
                END DO
+!$omp end parallel do
             END DO
          END DO
       END IF
@@ -230,7 +242,9 @@ SUBROUTINE dndtau_gamma (ldim, rproj, nwfcU, wfcU, offsetU, &
    USE lsda_mod,             ONLY : nspin, current_spin
    USE ldaU,                 ONLY : is_hubbard, Hubbard_l
    USE wvfct,                ONLY : nbnd, npwx, npw, wg
-   
+   USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
+   USE mp,                   ONLY : mp_sum
+
    IMPLICIT NONE
 
    INTEGER, INTENT(IN) ::  alpha, ipol, ik, ldim, nwfcU, offsetU(nat)
@@ -239,7 +253,7 @@ SUBROUTINE dndtau_gamma (ldim, rproj, nwfcU, wfcU, offsetU, &
    REAL(DP), INTENT (IN) ::  rproj(nwfcU,nbnd)
    REAL (DP), INTENT (OUT) :: dns(ldim,ldim,nspin,nat)
    !
-   INTEGER ::  ibnd, is, na, nt, m1, m2
+   INTEGER ::  ibnd, is, na, nt, m1, m2, na_s, na_e, mykey
    REAL (DP), ALLOCATABLE :: dproj(:,:)
    !
    !
@@ -251,10 +265,17 @@ SUBROUTINE dndtau_gamma (ldim, rproj, nwfcU, wfcU, offsetU, &
    ! compute the derivative of occupation numbers (the quantities dn(m1,m2))
    ! of the atomic orbitals. They are real quantities as well as n(m1,m2)
    !
+   ! poor-man parallelization over atoms
+   ! - if nproc_pool=1   : na_s=1, na_e=nat, mykey=0
+   ! - if nproc_pool<=nat: each processor calculates atom na_s to na_e; mykey=0
+   ! - if nproc_pool> nat: each processor takes care of atom na_s=na_e;
+   !   mykey labels how many times each atom appears (mykey=0 first time etc.)
+   !
+   CALL block_distribute( nat, me_pool, nproc_pool, na_s, na_e, mykey )
    dns(:,:,:,:) = 0.d0
-   DO na = 1,nat
+   DO na = na_s, na_e
       nt = ityp(na)
-      IF (is_hubbard(nt)) THEN
+      IF (is_hubbard(nt) .AND. mykey == 0 ) THEN
          DO m1 = 1, 2*Hubbard_l(nt)+1
             DO m2 = m1, 2*Hubbard_l(nt)+1
 !$omp parallel do default(shared) private(ibnd)
@@ -272,6 +293,8 @@ SUBROUTINE dndtau_gamma (ldim, rproj, nwfcU, wfcU, offsetU, &
       END IF
    END DO
    DEALLOCATE ( dproj ) 
+   !
+   CALL mp_sum(dns, intra_pool_comm)
    !
    ! In nspin.eq.1 k-point weight wg is normalized to 2 el/band 
    ! in the whole BZ but we are interested in dns of one spin component

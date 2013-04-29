@@ -1,46 +1,50 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !-----------------------------------------------------------------------
 !
-SUBROUTINE block_distribute( nat, me_image, nproc_image, ia_s, ia_e, mykey )
-    INTEGER, INTENT(IN)  :: nat, me_image, nproc_image  
+SUBROUTINE block_distribute( nat, me, nproc, ia_s, ia_e, mykey )
+    !
+    ! Distribute "nat" objects (.e.g atoms) among "nproc" processors
+    ! Atoms "ia_s" to "ia_e" are assigned to this ("me") processor
+    ! If nproc > nat, atoms are assigned more than once to processors,
+    ! "mykey" labels how many times the same atom appears
+    !
+    INTEGER, INTENT(IN)  :: nat, me, nproc  
     INTEGER, INTENT(OUT) :: ia_s, ia_e, mykey
     INTEGER :: na_loc, r, nproc_ia
 
     INTEGER, EXTERNAL :: ldim_block, gind_block
 
-    ! Parallel: divide among processors for the same image
-    !
     ! compute how many processors we have for a given atom
     !
-    nproc_ia = nproc_image / nat
+    nproc_ia = nproc / nat
     !
     IF( nproc_ia == 0 ) THEN
        !       
        ! here we have less than one processor per atom
        !       
        mykey  = 0
-       na_loc = ldim_block( nat, nproc_image, me_image)
-       ia_s   = gind_block( 1, nat, nproc_image, me_image )
+       na_loc = ldim_block( nat, nproc, me)
+       ia_s   = gind_block( 1, nat, nproc, me )
        ia_e   = ia_s + na_loc - 1
        !       
     ELSE 
        !       
        ! here we have more than one proc per atom
        !
-       r = MOD( nproc_image, nat )
+       r = MOD( nproc, nat )
        !
-       IF( me_image < (nproc_ia + 1)*r ) THEN
+       IF( me < (nproc_ia + 1)*r ) THEN
           ! processors that do the work, more procs work on a single atom
-          ia_s  = me_image/(nproc_ia + 1) + 1
-          mykey = MOD( me_image, nproc_ia + 1 )
+          ia_s  = me/(nproc_ia + 1) + 1
+          mykey = MOD( me, nproc_ia + 1 )
        ELSE
-          ia_s  = ( me_image - (nproc_ia + 1)*r ) / nproc_ia + 1 + r
-          mykey = MOD( me_image - (nproc_ia + 1)*r , nproc_ia )
+          ia_s  = ( me - (nproc_ia + 1)*r ) / nproc_ia + 1 + r
+          mykey = MOD( me - (nproc_ia + 1)*r , nproc_ia )
        END IF
        !
        ia_e = ia_s
@@ -51,7 +55,6 @@ SUBROUTINE block_distribute( nat, me_image, nproc_image, ia_s, ia_e, mykey )
 
 END SUBROUTINE
 !
-
 !
 SUBROUTINE GRID2D_DIMS( grid_shape, nproc, nprow, npcol )
    !
