@@ -48,6 +48,7 @@ atomic_wfc_nc_proj.o : ../../Modules/kind.o
 atomic_wfc_nc_proj.o : ../../Modules/noncol.o
 atomic_wfc_nc_proj.o : ../../Modules/recvec.o
 atomic_wfc_nc_proj.o : ../../Modules/uspp.o
+atomic_wfc_nc_proj.o : ../../PW/src/atomic_wfc_mod.o
 atomic_wfc_nc_proj.o : ../../PW/src/pwcom.o
 average.o : ../../Modules/cell_base.o
 average.o : ../../Modules/constants.o
@@ -347,6 +348,7 @@ poormanwannier.o : ../../Modules/mp_global.o
 poormanwannier.o : ../../Modules/recvec.o
 poormanwannier.o : ../../Modules/uspp.o
 poormanwannier.o : ../../Modules/wavefunctions.o
+poormanwannier.o : ../../PW/src/atomic_wfc_mod.o
 poormanwannier.o : ../../PW/src/ldaU.o
 poormanwannier.o : ../../PW/src/pwcom.o
 poormanwannier.o : ../../PW/src/symm_base.o
@@ -387,6 +389,7 @@ projwfc.o : ../../Modules/run_info.o
 projwfc.o : ../../Modules/uspp.o
 projwfc.o : ../../Modules/wavefunctions.o
 projwfc.o : ../../Modules/zhpev_drv.o
+projwfc.o : ../../PW/src/atomic_wfc_mod.o
 projwfc.o : ../../PW/src/ldaU.o
 projwfc.o : ../../PW/src/pwcom.o
 projwfc.o : ../../PW/src/scf_mod.o
@@ -565,8 +568,8 @@ wannier_plot.o : ../../Modules/mp.o
 wannier_plot.o : ../../Modules/mp_global.o
 wannier_plot.o : ../../Modules/recvec.o
 wannier_plot.o : ../../Modules/wannier_new.o
+wannier_plot.o : ../../PW/src/atomic_wfc_mod.o
 wannier_plot.o : ../../PW/src/buffers.o
-wannier_plot.o : ../../PW/src/ldaU.o
 wannier_plot.o : ../../PW/src/pwcom.o
 wannier_plot.o : ../../PW/src/symm_base.o
 wannier_u_matrix.o : ../../Modules/io_files.o

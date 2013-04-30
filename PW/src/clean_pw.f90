@@ -18,6 +18,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... phonon, vc-relax). Beware: the new calculation should not call any
   ! ... of the routines mentioned above
   !
+  USE basis,                ONLY : swfcatom
   USE cellmd,               ONLY : lmovecell
   USE ions_base,            ONLY : deallocate_ions_base
   USE gvect,                ONLY : g, gg, gl, nl, nlm, igtongl, mill, &
@@ -84,7 +85,7 @@ SUBROUTINE clean_pw( lflag )
      !
      IF ( ALLOCATED( force ) )      DEALLOCATE( force )
      IF ( ALLOCATED( forcefield ) ) DEALLOCATE( forcefield )
-     IF ( ALLOCATED (irt) )         DEALLOCATE (irt)
+     IF ( ALLOCATED( irt ) )        DEALLOCATE( irt )
      !
      CALL deallocate_bp_efield()
      CALL dealloca_london()
@@ -162,6 +163,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
+  IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
   !
   ! ... fft structures allocated in data_structure.f90  
   !

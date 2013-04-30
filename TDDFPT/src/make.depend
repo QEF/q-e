@@ -272,7 +272,6 @@ lr_sm1_psi.o : ../../Modules/kind.o
 lr_sm1_psi.o : ../../Modules/mp.o
 lr_sm1_psi.o : ../../Modules/mp_global.o
 lr_sm1_psi.o : ../../Modules/uspp.o
-lr_sm1_psi.o : ../../PW/src/ldaU.o
 lr_sm1_psi.o : ../../PW/src/pwcom.o
 lr_sm1_psi.o : ../../PW/src/realus.o
 lr_sm1_psi.o : lr_variables.o

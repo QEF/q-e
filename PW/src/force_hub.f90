@@ -20,7 +20,8 @@ SUBROUTINE force_hub(forceh)
    USE cell_base,            ONLY : at, bg
    USE ldaU,                 ONLY : hubbard_lmax, hubbard_l, U_projection, &
                                     nwfcU, wfcU, is_hubbard, lda_plus_u_kind, &
-                                    oatwfc, swfcatom, copy_U_wfc, offsetU
+                                    oatwfc, copy_U_wfc, offsetU
+   USE basis,                ONLY : swfcatom
    USE symme,                ONLY : symvector
    USE io_files,             ONLY : prefix
    USE wvfct,                ONLY : nbnd, npwx, npw, igk
@@ -85,7 +86,7 @@ SUBROUTINE force_hub(forceh)
 ! (has to be modified for noncolinear case)
 
       CALL atomic_wfc (ik, swfcatom)
-      call copy_U_wfc ()
+      call copy_U_wfc (swfcatom)
 
       DO ipol = 1,3
          DO alpha = 1,nat                 ! the displaced atom
@@ -539,17 +540,19 @@ SUBROUTINE dprojdtau_gamma (nwfcU, wfcU, offsetU, spsi, alpha, ipol, dproj)
    call start_clock('dprojdtau:1')
    IF (is_hubbard(nt) ) THEN
       ALLOCATE ( dwfc(npwx,ldim) )
-      DO ig = 1,npw
-         gvec = g(ipol,igk(ig)) * tpiba
+!$omp parallel do default(shared) private(m1,ig,gvect)
+      DO m1 = 1, ldim
+         DO ig = 1,npw
+            gvec = g(ipol,igk(ig)) * tpiba
 
          ! in the expression of dwfc we don't need (k+G) but just G; k always
          ! multiplies the underived quantity and gives an opposite contribution
          ! in c.c. term because the sign of the imaginary unit.
    
-         DO m1 = 1, ldim
             dwfc(ig,m1) = (0.d0,-1.d0) * gvec * wfcU(ig,offsetU(alpha)+m1)
          END DO
       END DO
+!$omp end parallel do
       ! there is no G=0 term
       CALL DGEMM('T','N',ldim, nbnd, 2*npw, 2.0_dp,  &
                   dwfc, 2*npwx, spsi, 2*npwx, 0.0_dp,&
@@ -573,34 +576,37 @@ SUBROUTINE dprojdtau_gamma (nwfcU, wfcU, offsetU, spsi, alpha, ipol, dproj)
    ! 
    ! ijkb0 points now to the beta functions of atom alpha
    !
+   call start_clock('dprojdtau:2')
    ALLOCATE (dbetapsi(nh(nt),nbnd) ) 
    ALLOCATE (wfatdbeta(nwfcU,nh(nt)) )
    ALLOCATE ( wfatbeta(nwfcU,nh(nt)) )
    ALLOCATE ( dbeta(npwx,nh(nt)) )
-   call start_clock('dprojdtau:2')
-   DO ih=1,nh(nt)
-      DO ig = 1, npw
-         gvec = g(ipol,igk(ig)) * tpiba
-         dbeta(ig,ih) = (0.d0,-1.d0) * vkb(ig,ijkb0+ih) * gvec
-      END DO
-   END DO
-   CALL calbec ( npw, dbeta, evc, dbetapsi ) 
-   CALL calbec ( npw, wfcU, dbeta, wfatdbeta ) 
-   call stop_clock('dprojdtau:2')
-   call start_clock('dprojdtau:3')
+!$omp parallel do default(shared) private(ih,ig)
    DO ih=1,nh(nt)
       DO ig = 1, npw
          dbeta(ig,ih) = vkb(ig,ijkb0+ih)
       END DO
    END DO
+!$omp end parallel do
    CALL calbec ( npw, wfcU, dbeta, wfatbeta ) 
-   call stop_clock('dprojdtau:3')
+!$omp parallel do default(shared) private(ih,ig,gvec)
+   DO ih=1,nh(nt)
+      DO ig = 1, npw
+         gvec = g(ipol,igk(ig)) * tpiba
+         dbeta(ig,ih) = (0.d0,-1.d0) * dbeta(ig,ih) * gvec
+      END DO
+   END DO
+!$omp end parallel do
+   CALL calbec ( npw, dbeta, evc, dbetapsi ) 
+   CALL calbec ( npw, wfcU, dbeta, wfatdbeta ) 
    DEALLOCATE ( dbeta )
+   call stop_clock('dprojdtau:2')
    ! calculate \sum_j qq(i,j)*dbetapsi(j)
    ! betapsi is used here as work space 
-   ALLOCATE ( betapsi(nh(nt), nbnd) ) 
    call start_clock('dprojdtau:4')
+   ALLOCATE ( betapsi(nh(nt), nbnd) ) 
    betapsi(:,:) = (0.0_dp, 0.0_dp)
+!$omp parallel do default(shared) private(ih,ibnd,jh)
    DO ih=1,nh(nt)
       DO ibnd=1,nbnd
          DO jh=1,nh(nt)
@@ -609,9 +615,11 @@ SUBROUTINE dprojdtau_gamma (nwfcU, wfcU, offsetU, spsi, alpha, ipol, dproj)
          END DO
       END DO
    END DO
+!$omp end parallel do
    dbetapsi(:,:) = betapsi(:,:)
    ! calculate \sum_j qq(i,j)*betapsi(j)
    betapsi(:,:) = (0.0_dp, 0.0_dp)
+!$omp parallel do default(shared) private(ih,ibnd,jh)
    DO ih=1,nh(nt)
       DO ibnd=1,nbnd
          DO jh=1,nh(nt)
@@ -620,6 +628,7 @@ SUBROUTINE dprojdtau_gamma (nwfcU, wfcU, offsetU, spsi, alpha, ipol, dproj)
          END DO
       END DO
    END DO
+!$omp end parallel do
    call stop_clock('dprojdtau:4')
    !
    ! dproj(iwf,ibnd) = \sum_ih wfatdbeta(iwf,ih)*betapsi(ih,ibnd) +

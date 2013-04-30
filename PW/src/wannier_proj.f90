@@ -16,11 +16,10 @@ subroutine wannier_proj(ik, wan_func)
   USE io_files
   USE wannier_new,      ONLY : wan_in, nwan, use_energy_int
   USE ions_base,        ONLY : nat, ityp
-  USE basis,            ONLY : natomwfc
   USE wvfct,            ONLY : nbnd, npw, npwx, et
   USE lsda_mod,         ONLY : lsda, isk
   USE constants,        ONLY : rytoev
-  USE ldaU,             ONLY : swfcatom
+  USE basis,            ONLY : swfcatom
   USE control_flags,    ONLY : gamma_only
   USE uspp_param,       ONLY : upf 
   USE wavefunctions_module, ONLY : evc

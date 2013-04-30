@@ -230,14 +230,14 @@ SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp, lbinary )
   USE io_global, ONLY : stdout, ionode
   USE run_info, ONLY: title
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
-  USE basis,     ONLY : natomwfc
+  USE basis,     ONLY : natomwfc, swfcatom
   USE cell_base
   USE constants, ONLY: rytoev, eps4
   USE gvect
   USE gvecs,   ONLY: dual
   USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec
-  USE ldaU
+  USE ldaU,  ONLY: lda_plus_u
   USE lsda_mod, ONLY: nspin, isk, current_spin
   USE symm_base, ONLY: nsym, irt, d1, d2, d3
   USE wvfct
@@ -741,7 +741,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary )
   !
   USE io_global,  ONLY : stdout, ionode
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
-  USE basis,     ONLY : natomwfc
+  USE basis,     ONLY : natomwfc, swfcatom
   USE run_info, ONLY: title
   USE cell_base
   USE constants, ONLY: rytoev, eps4
@@ -749,7 +749,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary )
   USE gvecs,   ONLY: dual
   USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec
-  USE ldaU
+  USE ldaU,  ONLY: lda_plus_u
   USE lsda_mod, ONLY: nspin
   USE noncollin_module, ONLY: noncolin, npol, angle1, angle2
   USE symm_base, ONLY: nsym, irt, t_rev
@@ -2098,14 +2098,14 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   USE io_global, ONLY : stdout, ionode
   USE run_info, ONLY: title
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
-  USE basis,     ONLY : natomwfc
+  USE basis,     ONLY : natomwfc, swfcatom
   USE cell_base
   USE constants, ONLY: rytoev, eps4
   USE gvect
   USE gvecs,   ONLY: dual
   USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec
-  USE ldaU
+  USE ldaU,  ONLY: lda_plus_u
   USE lsda_mod, ONLY: nspin, isk, current_spin
   USE symm_base, ONLY: nsym, irt, d1, d2, d3
   USE wvfct

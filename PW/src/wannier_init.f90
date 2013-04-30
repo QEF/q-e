@@ -18,12 +18,12 @@ SUBROUTINE wannier_init(hwwa)
   USE input_parameters, only: constrain_pot, wan_data
   USE lsda_mod, only: nspin
   USE ions_base, only : nat
-  USE basis, only : natomwfc
+  USE basis, only : natomwfc, swfcatom
   USE constants, only: rytoev
   USE klist, only: nks
   USE io_files
   USE buffers
-  USE ldaU,       ONLY : swfcatom, U_projection
+  USE ldaU,       ONLY : U_projection
   USE noncollin_module, ONLY : npol
 
   IMPLICIT NONE 

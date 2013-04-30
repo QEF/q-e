@@ -112,6 +112,7 @@ allocate_wfc.o : ../../Modules/io_global.o
 allocate_wfc.o : ../../Modules/noncol.o
 allocate_wfc.o : ../../Modules/wannier_new.o
 allocate_wfc.o : ../../Modules/wavefunctions.o
+allocate_wfc.o : atomic_wfc_mod.o
 allocate_wfc.o : ldaU.o
 allocate_wfc.o : pwcom.o
 atomic_rho.o : ../../Modules/atom.o
@@ -136,7 +137,9 @@ atomic_wfc.o : ../../Modules/kind.o
 atomic_wfc.o : ../../Modules/noncol.o
 atomic_wfc.o : ../../Modules/recvec.o
 atomic_wfc.o : ../../Modules/uspp.o
+atomic_wfc.o : atomic_wfc_mod.o
 atomic_wfc.o : pwcom.o
+atomic_wfc_mod.o : ../../Modules/kind.o
 average_pp.o : ../../Modules/atom.o
 average_pp.o : ../../Modules/kind.o
 average_pp.o : ../../Modules/uspp.o
@@ -187,6 +190,7 @@ c_bands.o : ../../Modules/noncol.o
 c_bands.o : ../../Modules/recvec.o
 c_bands.o : ../../Modules/uspp.o
 c_bands.o : ../../Modules/wavefunctions.o
+c_bands.o : atomic_wfc_mod.o
 c_bands.o : bp_mod.o
 c_bands.o : buffers.o
 c_bands.o : g_psi_mod.o
@@ -243,6 +247,7 @@ clean_pw.o : ../../Modules/stick_base.o
 clean_pw.o : ../../Modules/uspp.o
 clean_pw.o : ../../Modules/wannier_new.o
 clean_pw.o : ../../Modules/wavefunctions.o
+clean_pw.o : atomic_wfc_mod.o
 clean_pw.o : bp_mod.o
 clean_pw.o : dynamics_module.o
 clean_pw.o : exx.o
@@ -387,6 +392,7 @@ electrons.o : ../../Modules/paw_variables.o
 electrons.o : ../../Modules/recvec.o
 electrons.o : ../../Modules/uspp.o
 electrons.o : ../../Modules/wavefunctions.o
+electrons.o : atomic_wfc_mod.o
 electrons.o : bp_mod.o
 electrons.o : buffers.o
 electrons.o : esm.o
@@ -492,9 +498,11 @@ force_hub.o : ../../Modules/ions_base.o
 force_hub.o : ../../Modules/kind.o
 force_hub.o : ../../Modules/mp.o
 force_hub.o : ../../Modules/mp_global.o
+force_hub.o : ../../Modules/mp_pools.o
 force_hub.o : ../../Modules/recvec.o
 force_hub.o : ../../Modules/uspp.o
 force_hub.o : ../../Modules/wavefunctions.o
+force_hub.o : atomic_wfc_mod.o
 force_hub.o : buffers.o
 force_hub.o : ldaU.o
 force_hub.o : pwcom.o
@@ -690,6 +698,7 @@ hinit0.o : ../../Modules/io_files.o
 hinit0.o : ../../Modules/io_global.o
 hinit0.o : ../../Modules/ions_base.o
 hinit0.o : ../../Modules/recvec.o
+hinit0.o : atomic_wfc_mod.o
 hinit0.o : ldaU.o
 hinit0.o : pwcom.o
 hinit0.o : realus.o
@@ -803,6 +812,7 @@ input.o : ../../Modules/uspp.o
 input.o : ../../Modules/wannier_new.o
 input.o : ../../Modules/wrappers.o
 input.o : a2fmod.o
+input.o : atomic_wfc_mod.o
 input.o : bp_mod.o
 input.o : dynamics_module.o
 input.o : esm.o
@@ -892,6 +902,7 @@ memory_report.o : ../../Modules/mp_global.o
 memory_report.o : ../../Modules/noncol.o
 memory_report.o : ../../Modules/recvec.o
 memory_report.o : ../../Modules/uspp.o
+memory_report.o : atomic_wfc_mod.o
 memory_report.o : ldaU.o
 memory_report.o : pwcom.o
 mix_rho.o : ../../Modules/cell_base.o
@@ -957,8 +968,8 @@ new_occ.o : ../../Modules/mp_global.o
 new_occ.o : ../../Modules/noncol.o
 new_occ.o : ../../Modules/recvec.o
 new_occ.o : ../../Modules/wavefunctions.o
+new_occ.o : atomic_wfc_mod.o
 new_occ.o : buffers.o
-new_occ.o : ldaU.o
 new_occ.o : pwcom.o
 newd.o : ../../Modules/cell_base.o
 newd.o : ../../Modules/control_flags.o
@@ -1005,14 +1016,15 @@ ns_adj.o : scf_mod.o
 offset_atom_wfc.o : ../../Modules/ions_base.o
 offset_atom_wfc.o : ../../Modules/noncol.o
 offset_atom_wfc.o : ../../Modules/uspp.o
+offset_atom_wfc.o : atomic_wfc_mod.o
 offset_atom_wfc.o : ldaU.o
-offset_atom_wfc.o : pwcom.o
 openfil.o : ../../Modules/control_flags.o
 openfil.o : ../../Modules/io_files.o
 openfil.o : ../../Modules/io_global.o
 openfil.o : ../../Modules/kind.o
 openfil.o : ../../Modules/noncol.o
 openfil.o : ../../Modules/wannier_new.o
+openfil.o : atomic_wfc_mod.o
 openfil.o : bp_mod.o
 openfil.o : buffers.o
 openfil.o : ldaU.o
@@ -1049,6 +1061,7 @@ orthoatwfc.o : ../../Modules/mp.o
 orthoatwfc.o : ../../Modules/mp_global.o
 orthoatwfc.o : ../../Modules/noncol.o
 orthoatwfc.o : ../../Modules/uspp.o
+orthoatwfc.o : atomic_wfc_mod.o
 orthoatwfc.o : buffers.o
 orthoatwfc.o : ldaU.o
 orthoatwfc.o : pwcom.o
@@ -1075,6 +1088,7 @@ paw_init.o : ../../Modules/paw_variables.o
 paw_init.o : ../../Modules/radial_grids.o
 paw_init.o : ../../Modules/random_numbers.o
 paw_init.o : ../../Modules/uspp.o
+paw_init.o : atomic_wfc_mod.o
 paw_init.o : paw_symmetry.o
 paw_init.o : pwcom.o
 paw_init.o : scf_mod.o
@@ -1120,6 +1134,7 @@ plus_u_full.o : ../../Modules/noncol.o
 plus_u_full.o : ../../Modules/random_numbers.o
 plus_u_full.o : ../../Modules/recvec.o
 plus_u_full.o : ../../Modules/uspp.o
+plus_u_full.o : atomic_wfc_mod.o
 plus_u_full.o : ldaU.o
 plus_u_full.o : pwcom.o
 plus_u_full.o : symm_base.o
@@ -1141,6 +1156,7 @@ potinit.o : ../../Modules/recvec.o
 potinit.o : ../../Modules/uspp.o
 potinit.o : ../../Modules/wavefunctions.o
 potinit.o : ../../Modules/xml_io_base.o
+potinit.o : atomic_wfc_mod.o
 potinit.o : io_rho_xml.o
 potinit.o : ldaU.o
 potinit.o : paw_init.o
@@ -1223,6 +1239,7 @@ pw_restart.o : ../../Modules/version.o
 pw_restart.o : ../../Modules/wavefunctions.o
 pw_restart.o : ../../Modules/xml_io_base.o
 pw_restart.o : ../../iotk/src/iotk_module.o
+pw_restart.o : atomic_wfc_mod.o
 pw_restart.o : buffers.o
 pw_restart.o : esm.o
 pw_restart.o : exx.o
@@ -1472,6 +1489,7 @@ setup.o : ../../Modules/parameters.o
 setup.o : ../../Modules/paw_variables.o
 setup.o : ../../Modules/recvec.o
 setup.o : ../../Modules/uspp.o
+setup.o : atomic_wfc_mod.o
 setup.o : bp_mod.o
 setup.o : exx.o
 setup.o : ldaU.o
@@ -1534,6 +1552,7 @@ stres_hub.o : ../../Modules/mp_global.o
 stres_hub.o : ../../Modules/recvec.o
 stres_hub.o : ../../Modules/uspp.o
 stres_hub.o : ../../Modules/wavefunctions.o
+stres_hub.o : atomic_wfc_mod.o
 stres_hub.o : buffers.o
 stres_hub.o : ldaU.o
 stres_hub.o : pwcom.o
@@ -1773,9 +1792,11 @@ wannier_check.o : ../../Modules/ions_base.o
 wannier_check.o : ../../Modules/kind.o
 wannier_check.o : ../../Modules/uspp.o
 wannier_check.o : ../../Modules/wannier_new.o
+wannier_check.o : atomic_wfc_mod.o
 wannier_check.o : pwcom.o
 wannier_clean.o : ../../Modules/io_files.o
 wannier_clean.o : ../../Modules/wannier_new.o
+wannier_clean.o : atomic_wfc_mod.o
 wannier_clean.o : buffers.o
 wannier_clean.o : ldaU.o
 wannier_clean.o : pwcom.o
@@ -1791,6 +1812,7 @@ wannier_init.o : ../../Modules/io_files.o
 wannier_init.o : ../../Modules/ions_base.o
 wannier_init.o : ../../Modules/noncol.o
 wannier_init.o : ../../Modules/wannier_new.o
+wannier_init.o : atomic_wfc_mod.o
 wannier_init.o : buffers.o
 wannier_init.o : ldaU.o
 wannier_init.o : pwcom.o
@@ -1811,8 +1833,8 @@ wannier_proj.o : ../../Modules/recvec.o
 wannier_proj.o : ../../Modules/uspp.o
 wannier_proj.o : ../../Modules/wannier_new.o
 wannier_proj.o : ../../Modules/wavefunctions.o
+wannier_proj.o : atomic_wfc_mod.o
 wannier_proj.o : buffers.o
-wannier_proj.o : ldaU.o
 wannier_proj.o : pwcom.o
 weights.o : ../../Modules/io_global.o
 weights.o : ../../Modules/kind.o
@@ -1833,6 +1855,7 @@ wfcinit.o : ../../Modules/recvec.o
 wfcinit.o : ../../Modules/uspp.o
 wfcinit.o : ../../Modules/wannier_new.o
 wfcinit.o : ../../Modules/wavefunctions.o
+wfcinit.o : atomic_wfc_mod.o
 wfcinit.o : bp_mod.o
 wfcinit.o : buffers.o
 wfcinit.o : ldaU.o

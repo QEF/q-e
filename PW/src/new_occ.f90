@@ -20,9 +20,8 @@ SUBROUTINE new_evc()
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
   USE constants,            ONLY : rytoev
-  USE basis,                ONLY : natomwfc
+  USE basis,                ONLY : natomwfc, swfcatom
   USE klist,                ONLY : nks, ngk
-  USE ldaU,                 ONLY : swfcatom
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, et
   USE control_flags,        ONLY : gamma_only, iverbosity

@@ -88,12 +88,12 @@ SUBROUTINE projection (first_band, last_band)
   USE io_global,  ONLY : stdout
   USE uspp_param, ONLY : upf
   USE ions_base,  ONLY : nat, ityp
-  USE basis,      ONLY : natomwfc
+  USE basis,      ONLY : natomwfc, swfcatom
   USE cell_base
   USE constants,  ONLY: rytoev
   USE gvect
   USE klist
-  USE ldaU,       ONLY : swfcatom, lda_plus_u, &
+  USE ldaU,       ONLY : lda_plus_u, &
                          Hubbard_lmax, Hubbard_l, Hubbard_alpha, Hubbard_U
   USE lsda_mod
   USE symm_base,  ONLY: nsym, irt, d1, d2, d3

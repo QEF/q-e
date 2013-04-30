@@ -8,8 +8,11 @@ Incompatible changes in svn version:
    * Routine "electrons" doesn't deal any longer with non-scf cases;
      Use routine "non_scf" instead.
    * restart mechanism of pw.x changed a lot. It works ONLY if you stop
-     the code cleanly with the prefix.EXIT file, or by setting "max_seconds".
+     the code cleanly with the prefix.EXIT file, or by setting "max_seconds";
+     disk_io='high' no longer needed (use it ONLY if tight with memory)
      Restarting from hard crashes is no longer supported.
+   * Major restructuring of DFT+U and related modules in PW;
+     "swfcatom" moved to module "basis"
 
 New in svn version:
 

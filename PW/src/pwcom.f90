@@ -7,22 +7,6 @@
 !
 !--------------------------------------------------------------------------
 !
-MODULE basis
-  !
-  ! ... The variables needed to describe the atoms in the unit cell
-  !
-  SAVE
-  !
-  INTEGER :: &
-       natomwfc            ! number of starting wavefunctions
-  CHARACTER(len=30) ::    &!
-       starting_wfc,      &! 'random' or 'atomic' or 'atomic+randm' or 'file'
-       starting_pot,      &! 'atomic' or 'file'
-       startingconfig      ! 'input' or 'file'
-  !
-END MODULE basis
-!
-!
 MODULE klist
   !
   ! ... The variables for the k-points

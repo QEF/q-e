@@ -19,9 +19,9 @@ SUBROUTINE orthoatwfc
   USE io_global,  ONLY : stdout
   USE io_files,   ONLY : iunsat, iunhub, nwordwfcU, nwordatwfc, iunigk
   USE ions_base,  ONLY : nat
-  USE basis,      ONLY : natomwfc
+  USE basis,      ONLY : natomwfc, swfcatom
   USE klist,      ONLY : nks, xk, ngk
-  USE ldaU,       ONLY : swfcatom, U_projection, wfcU, nwfcU, copy_U_wfc
+  USE ldaU,       ONLY : U_projection, wfcU, nwfcU, copy_U_wfc
   USE wvfct,      ONLY : npwx, npw, igk
   USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
@@ -97,7 +97,7 @@ SUBROUTINE orthoatwfc
      ! copy atomic wavefunctions with Hubbard U term only in wfcU
      ! save to unit iunhub
      !
-     CALL copy_U_wfc ( )
+     CALL copy_U_wfc (swfcatom)
      CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
      !
   ENDDO

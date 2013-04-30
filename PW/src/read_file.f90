@@ -82,7 +82,6 @@ SUBROUTINE read_xml_file()
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, nsp, ityp, tau, if_pos, extfor
-  USE basis,                ONLY : natomwfc
   USE cell_base,            ONLY : tpiba2, alat,omega, at, bg, ibrav
   USE force_mod,            ONLY : force
   USE klist,                ONLY : nkstot, nks, xk, wk

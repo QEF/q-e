@@ -1241,6 +1241,7 @@ run_nscf.o : ../../Modules/fft_base.o
 run_nscf.o : ../../Modules/io_files.o
 run_nscf.o : ../../Modules/io_global.o
 run_nscf.o : ../../Modules/mp_global.o
+run_nscf.o : ../../PW/src/atomic_wfc_mod.o
 run_nscf.o : ../../PW/src/pwcom.o
 run_nscf.o : ../../PW/src/scf_mod.o
 run_nscf.o : acfdtest.o
@@ -1262,6 +1263,7 @@ set_defaults_pw.o : ../../Modules/noncol.o
 set_defaults_pw.o : ../../Modules/parameters.o
 set_defaults_pw.o : ../../Modules/paw_variables.o
 set_defaults_pw.o : ../../Modules/uspp.o
+set_defaults_pw.o : ../../PW/src/atomic_wfc_mod.o
 set_defaults_pw.o : ../../PW/src/pwcom.o
 set_defaults_pw.o : ../../PW/src/start_k.o
 set_defaults_pw.o : ../../PW/src/symm_base.o

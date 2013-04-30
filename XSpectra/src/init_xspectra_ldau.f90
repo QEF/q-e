@@ -70,9 +70,9 @@ SUBROUTINE init_xanes_ldau_2(ik)
   USE io_global,  ONLY : stdout
   USE io_files,   ONLY : iunhub, nwordwfcU, diropn
   USE ions_base,  ONLY : nat
-  USE basis,      ONLY : natomwfc
+  USE basis,      ONLY : natomwfc, swfcatom
   USE klist,      ONLY : nks, xk, ngk
-  USE ldaU,       ONLY : swfcatom, U_projection, wfcU, nwfcU, copy_U_wfc
+  USE ldaU,       ONLY : U_projection, wfcU, nwfcU, copy_U_wfc
   USE wvfct,      ONLY : npwx, npw, igk
   USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, becp, calbec
@@ -131,9 +131,9 @@ SUBROUTINE init_xanes_ldau_2(ik)
 
   IF (orthogonalize_wfc) &
      CALL ortho_swfc ( normalize_only, natomwfc, wfcatom, swfcatom )
-  !!!
-  CALL copy_U_wfc ()
-  !!!
+  !
+  CALL copy_U_wfc (swfcatom)
+  !
   DEALLOCATE (wfcatom)
   CALL deallocate_bec_type (becp )
   !

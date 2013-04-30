@@ -128,7 +128,8 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE control_flags,        ONLY : gamma_only   
    USE klist,                ONLY : nks, xk, ngk
    USE ldaU,                 ONLY : wfcU, nwfcU, offsetU, Hubbard_l, &
-                                    is_hubbard, oatwfc, swfcatom, copy_U_wfc
+                                    is_hubbard, oatwfc, copy_U_wfc
+   USE basis,                ONLY : swfcatom
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
    USE uspp,                 ONLY : nkb, vkb
@@ -188,7 +189,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
 ! re-calculate atomic wfc - swfcatom is used as work space
 ! (must be modified in order to account for nocolinear case)
       CALL atomic_wfc (ik, swfcatom)
-      call copy_U_wfc ( )
+      call copy_U_wfc (swfcatom)
       IF ( gamma_only ) THEN
          CALL dprojdepsilon_gamma (wfcU, spsi, ipol, jpol, dproj%r)
       ELSE

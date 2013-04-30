@@ -49,10 +49,9 @@ init_xspectra_ldau.o : ../../Modules/io_files.o
 init_xspectra_ldau.o : ../../Modules/io_global.o
 init_xspectra_ldau.o : ../../Modules/ions_base.o
 init_xspectra_ldau.o : ../../Modules/kind.o
-init_xspectra_ldau.o : ../../Modules/mp.o
-init_xspectra_ldau.o : ../../Modules/mp_global.o
 init_xspectra_ldau.o : ../../Modules/noncol.o
 init_xspectra_ldau.o : ../../Modules/uspp.o
+init_xspectra_ldau.o : ../../PW/src/atomic_wfc_mod.o
 init_xspectra_ldau.o : ../../PW/src/ldaU.o
 init_xspectra_ldau.o : ../../PW/src/pwcom.o
 init_xspectra_ldau.o : xspectra_mod.o
@@ -108,6 +107,7 @@ read_file_xspectra.o : ../../Modules/recvec_subs.o
 read_file_xspectra.o : ../../Modules/uspp.o
 read_file_xspectra.o : ../../Modules/wavefunctions.o
 read_file_xspectra.o : ../../Modules/xml_io_base.o
+read_file_xspectra.o : ../../PW/src/atomic_wfc_mod.o
 read_file_xspectra.o : ../../PW/src/buffers.o
 read_file_xspectra.o : ../../PW/src/ldaU.o
 read_file_xspectra.o : ../../PW/src/newd.o
