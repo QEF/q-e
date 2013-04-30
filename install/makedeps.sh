@@ -12,9 +12,8 @@ TOPDIR=`pwd`
 if test $# = 0
 then
     dirs=" Modules clib PW/src CPV/src flib PW/tools upftools PP/src PWCOND/src\
-           PHonon/Gamma PHonon/PH PHonon/D3 atomic/src VdW/src XSpectra/src \
-	   GWW/gww GWW/pw4gww GWW/head ACFDT NEB/src Environ/src TDDFPT/src \
-           GIPAW/src" 
+           PHonon/Gamma PHonon/PH PHonon/D3 atomic/src XSpectra/src ACDFR \
+	   NEB/src Environ/src TDDFPT/src GIPAW/src" 
           
 else
     dirs=$*
