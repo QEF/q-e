@@ -23,7 +23,7 @@ program fd
   integer :: ios, kunittmp
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   character(len=200) :: pp_file
-  logical :: uspp_spsi, ascii, single_file, raw
+  logical :: uspp_spsi, ascii, single_file, raw, disp_only
 
   INTEGER :: i, ipol, apol, na, nt
   ! counter on the celldm elements
@@ -44,7 +44,7 @@ program fd
   character(300)    :: control,electrons,system2,kpoints
   logical           :: do_000
 
-  NAMELIST /inputfd/ fd_prefix,nrx1,nrx2,nrx3,de,fd_outfile,fd_outdir,fd_outfile_dir
+  NAMELIST /inputfd/ fd_prefix,nrx1,nrx2,nrx3,de,fd_outfile,fd_outdir,fd_outfile_dir, disp_only
   NAMELIST /verbatim/ control,electrons,system2,kpoints
   CALL mp_startup ( )
   CALL environment_start ( code )
@@ -137,7 +137,7 @@ program fd
      close(2)
               
     write(6,*) '**************************************************'
-    write(6,*) '* Info for macrocell calculation                 *'
+    write(6,*) '* Info for supercell calculation                 *'
     write(6,*) '**************************************************'
     write(6,*) ''
     WRITE(6,*) 'a1: ',(r1(j), j=1,3)
@@ -151,7 +151,7 @@ program fd
           do na=1,nat
             nax=nax+1
             do i=1,3
-              atomx(i,nax)=taut(i,na)+(nr1-1)*r1(i)+(nr2-1)*r2(i)+(nr3-1)*r3(i)
+             atomx(i,nax)=taut(i,na)+(nr1-1)*r1(i)+(nr2-1)*r2(i)+(nr3-1)*r3(i)
             enddo
             atom_namex(nax)=atom_name(na)
             !        write(2,'(a4,3(f15.9,1x))') atom_namex(nax), atomx(1,nax),atomx(2,nax),atomx(3,nax)
@@ -185,6 +185,9 @@ program fd
             file_out=trim(fd_outfile_dir)//'/'//TRIM(fd_outfile)//'.'//TRIM(cnx)//'.'//TRIM(ci)//'.'//TRIM(cna)//'.in'
             OPEN(2,FILE=TRIM(file_out),FORM='formatted')
           endif
+
+          if(.not.disp_only) then
+
           !Writing the input file
           write(2,*) '&CONTROL'
           write(2,*) 'calculation="scf"'
@@ -206,6 +209,9 @@ program fd
             WRITE(2, '(a6,3x,f10.3,6x,a)') &
               atm(nt), amass(nt),TRIM (psfile(nt))
           ENDDO
+
+          end if  
+
           write(2,*) 'ATOMIC_POSITIONS {angstrom}'
           if (do_000) then
             do nb=1,natx
@@ -216,12 +222,18 @@ program fd
               write(2,'(a4,3(f15.9,1x))') atom_namex(nb), taux(1,nb),taux(2,nb),taux(3,nb) 
             enddo 
           endif
+
+          if(.not.disp_only) then
+
           call replace_cr(kpoints)
           write(2,*) trim(kpoints) 
           write(2,*) 'CELL_PARAMETERS {angstrom}'
           WRITE(2,*) (nrx1*r1(j), j=1,3)
           WRITE(2,*) (nrx2*r2(j), j=1,3)
           WRITE(2,*) (nrx3*r3(j), j=1,3)
+
+          end if
+
           CLOSE(2)
           if (do_000) then
             do_000=.false.
