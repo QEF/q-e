@@ -577,6 +577,35 @@ CONTAINS
   END SUBROUTINE exx_grid_check
   !------------------------------------------------------------------------
   !
+  SUBROUTINE exx_restart(l_exx_was_active)
+     !------------------------------------------------------------------------
+     !This SUBROUTINE is called when restarting an exx calculation
+     USE funct,                ONLY : get_exx_fraction, start_exx, &
+                                      exx_is_active, get_screening_parameter
+     USE fft_base,             ONLY : dffts
+     USE io_global,            ONLY : stdout
+ 
+     IMPLICIT NONE
+     LOGICAL, INTENT(IN) :: l_exx_was_active
+ 
+     IF (.not. l_exx_was_active ) return ! nothing had happpened yet
+     !	
+     exx_nwordwfc=2*dffts%nnr
+     !iunexx = find_free_unit()
+     !CALL diropn(iunexx,'exx', exx_nwordwfc, exst)
+     erfc_scrlen = get_screening_parameter()
+     exxdiv = exx_divergence()
+     exxalfa = get_exx_fraction()
+     CALL start_exx()
+     CALL weights()
+     CALL exxinit()
+     fock0 = exxenergy2()
+ 
+     return
+     !------------------------------------------------------------------------
+  END SUBROUTINE exx_restart
+  !------------------------------------------------------------------------
+  !
   !------------------------------------------------------------------------
   SUBROUTINE exxinit()
   !------------------------------------------------------------------------
