@@ -40,8 +40,8 @@ SUBROUTINE wfcinit()
   !
   ! ... Orthogonalized atomic functions needed for LDA+U and other cases
   !
-  IF ( use_wannier .OR. one_atom_occupations .or. lda_plus_u ) &
-     CALL orthoatwfc()
+  IF ( use_wannier .OR. one_atom_occupations ) CALL orthoatwfc ( use_wannier )
+  IF ( lda_plus_u ) CALL orthoUwfc()
   !
   ! ... open files/buffer for wavefunctions (nwordwfc set in openfil)
   ! ... io_level > 1 : open file, otherwise: open buffer

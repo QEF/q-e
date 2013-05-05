@@ -138,8 +138,7 @@ SUBROUTINE new_hamiltonian(plot_bands)
      IF ( nks > 1 ) WRITE( iunigk ) igk
   ENDDO
   !
-
-  CALL orthoatwfc()
+  CALL orthoatwfc( .true. )
 
   wan_func = ZERO
   pp = ZERO

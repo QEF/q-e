@@ -44,11 +44,10 @@ SUBROUTINE openfil()
   nwordatwfc= npwx*natomwfc*npol
   nwordwfcU = npwx*nwfcU*npol
   !
-  IF ( ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) .OR. &
-        use_wannier .OR. one_atom_occupations ) THEN
-     CALL open_buffer ( iunsat, 'satwfc', nwordatwfc, io_level, exst )
+  IF ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) &
      CALL open_buffer ( iunhub, 'hub',    nwordwfcU, io_level, exst )
-  END IF
+  IF ( use_wannier .OR. one_atom_occupations ) &
+     CALL open_buffer ( iunsat, 'satwfc', nwordatwfc, io_level, exst )
   !
   ! ... iunigk contains the number of PW and the indices igk
   !

@@ -61,7 +61,8 @@ SUBROUTINE hinit1()
   ! ... and recalculate the products of the S with the atomic wfcs used 
   ! ... in LDA+U calculations
   !
-  IF ( lda_plus_u .OR. use_wannier ) CALL orthoatwfc()
+  IF ( lda_plus_u ) CALL orthoUwfc () 
+  IF ( use_wannier ) CALL orthoatwfc( .true. )
   !
   call tag_wg_corr_as_obsolete
   !

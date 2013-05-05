@@ -25,20 +25,12 @@ SUBROUTINE allocate_wfc()
   IMPLICIT NONE
   !
   !
-  IF (noncolin) THEN
-     ALLOCATE( evc( npwx*npol, nbnd ) )    
-     IF ( ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) &
-        .OR. one_atom_occupations ) ALLOCATE( swfcatom( npwx*npol, natomwfc) )
-     IF ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) &
-        ALLOCATE( wfcU(npwx*npol, nwfcU) )
-  ELSE
-     ALLOCATE( evc( npwx, nbnd ) )    
-     IF ( ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) .OR. use_wannier &
-        .OR. one_atom_occupations ) ALLOCATE( swfcatom( npwx, natomwfc) )
-     IF ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) &
-        ALLOCATE( wfcU(npwx, nwfcU) )
-  ENDIF
+  ALLOCATE( evc( npwx*npol, nbnd ) )    
+  IF ( one_atom_occupations .OR. use_wannier ) &
+     ALLOCATE( swfcatom( npwx*npol, natomwfc) )
+  IF ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) &
+     ALLOCATE( wfcU(npwx*npol, nwfcU) )
   !
   RETURN
   !
-END subroutine allocate_wfc
+END SUBROUTINE allocate_wfc

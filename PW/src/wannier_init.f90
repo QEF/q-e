@@ -23,7 +23,6 @@ SUBROUTINE wannier_init(hwwa)
   USE klist, only: nks
   USE io_files
   USE buffers
-  USE ldaU,       ONLY : U_projection
   USE noncollin_module, ONLY : npol
 
   IMPLICIT NONE 
@@ -71,7 +70,6 @@ SUBROUTINE wannier_init(hwwa)
   IF(.NOT. opnd) CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
 
   IF(.NOT. ALLOCATED(swfcatom)) ALLOCATE( swfcatom( npwx, natomwfc))
-  U_projection = 'ortho-atomic'
   
   nwordatwfc = npwx*natomwfc*npol
   INQUIRE( UNIT = iunsat, OPENED = opnd )

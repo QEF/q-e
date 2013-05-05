@@ -7,17 +7,18 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE orthoatwfc
+SUBROUTINE orthoUwfc
   !-----------------------------------------------------------------------
   !
-  ! This routine is meant to orthogonalize all the atomic wfcs. This is
-  ! useful when we want to compute the occupation of the atomic orbitals
-  ! in order to make lda+U calculations
+  ! This routine saves to buffer "iunhub" atomic wavefunctions having an
+  ! associated Hubbard U term, for DFT+U calculations. Atomic wavefunctions
+  ! are orthogonalized if desired, depending upon the value of "U_projection"
+  ! "swfcatom" must NOT be allocated on input.
   !
   USE kinds,      ONLY : DP
   USE buffers,    ONLY : save_buffer
   USE io_global,  ONLY : stdout
-  USE io_files,   ONLY : iunsat, iunhub, nwordwfcU, nwordatwfc, iunigk
+  USE io_files,   ONLY : iunhub, nwordwfcU, iunigk
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc, swfcatom
   USE klist,      ONLY : nks, xk, ngk
@@ -66,6 +67,79 @@ SUBROUTINE orthoatwfc
      CALL errore ("orthoatwfc"," this U_projection_type is not valid",1)
   END IF
 
+  ALLOCATE ( wfcatom(npwx*npol, natomwfc), swfcatom(npwx*npol, natomwfc) )
+
+  ! Allocate the array becp = <beta|wfcatom>
+  CALL allocate_bec_type (nkb,natomwfc, becp) 
+  
+  IF (nks > 1) REWIND (iunigk)
+  
+  DO ik = 1, nks
+     
+     npw = ngk (ik)
+     IF (nks > 1) READ (iunigk) igk
+     
+     IF (noncolin) THEN
+       CALL atomic_wfc_nc_updown (ik, wfcatom)
+     ELSE
+       CALL atomic_wfc (ik, wfcatom)
+     ENDIF
+     CALL init_us_2 (npw, igk, xk (1, ik), vkb)
+     CALL calbec (npw, vkb, wfcatom, becp) 
+     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
+
+     IF (orthogonalize_wfc) &
+        CALL ortho_swfc ( normalize_only, natomwfc, wfcatom, swfcatom )
+     !
+     ! copy atomic wavefunctions with Hubbard U term only in wfcU
+     ! save to unit iunhub
+     !
+     CALL copy_U_wfc (swfcatom)
+     CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
+     !
+  ENDDO
+  DEALLOCATE (wfcatom, swfcatom)
+  CALL deallocate_bec_type ( becp )
+  !
+  RETURN
+     
+END SUBROUTINE orthoUwfc
+!
+!-----------------------------------------------------------------------
+SUBROUTINE orthoatwfc (orthogonalize_wfc)
+  !-----------------------------------------------------------------------
+  !
+  ! This routine calculates atomic wavefunctions, orthogonalizes them
+  ! if "orthogonalzie_wfc" is .true., saves them into buffer "iunsat".
+  ! "swfcatom" must be allocated on input.
+  ! Useful for options "wannier" and "one_atom_occupations"
+  !
+  USE kinds,      ONLY : DP
+  USE buffers,    ONLY : save_buffer
+  USE io_global,  ONLY : stdout
+  USE io_files,   ONLY : iunsat, nwordatwfc, iunigk
+  USE ions_base,  ONLY : nat
+  USE basis,      ONLY : natomwfc, swfcatom
+  USE klist,      ONLY : nks, xk, ngk
+  USE wvfct,      ONLY : npwx, npw, igk
+  USE uspp,       ONLY : nkb, vkb
+  USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
+                         bec_type, becp, calbec
+  USE control_flags,    ONLY : gamma_only
+  USE noncollin_module, ONLY : noncolin, npol
+  ! 
+  IMPLICIT NONE
+  !
+  LOGICAL, INTENT(in) :: orthogonalize_wfc
+  !
+  INTEGER :: ik, ibnd, info, i, j, k, na, nb, nt, isym, n, ntemp, m, &
+       l, lm, ltot, ntot, ipol
+  ! ik: the k point under consideration
+  ! ibnd: counter on bands
+  LOGICAL :: normalize_only = .FALSE.
+  COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:)
+
+  normalize_only=.FALSE.
   ALLOCATE (wfcatom( npwx*npol, natomwfc))
 
   ! Allocate the array becp = <beta|wfcatom>
@@ -93,12 +167,6 @@ SUBROUTINE orthoatwfc
      ! write S * atomic wfc to unit iunsat
      !
      CALL save_buffer (swfcatom, nwordatwfc, iunsat, ik)
-     !
-     ! copy atomic wavefunctions with Hubbard U term only in wfcU
-     ! save to unit iunhub
-     !
-     CALL copy_U_wfc (swfcatom)
-     CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
      !
   ENDDO
   DEALLOCATE (wfcatom)

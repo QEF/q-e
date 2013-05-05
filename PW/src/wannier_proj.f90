@@ -58,7 +58,7 @@ subroutine wannier_proj(ik, wan_func)
   swfcatom = ZERO
   CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
   
-  ! generates trial wavefunctions as a summ of ingridients
+  ! generates trial wavefunctions as a sum of ingredients
   trialwf = ZERO
   do iwan=1, nwan
      do j=1,wan_in(iwan,current_spin)%ning
@@ -70,7 +70,7 @@ subroutine wannier_proj(ik, wan_func)
      end do
   end do
   
-  ! copmputes <\Psi|\hat S|\phi> for all \Psi and \phi
+  ! computes <\Psi|\hat S|\phi> for all \Psi and \phi
   ! later one should select only few columns 
   pp = ZERO
   DO ibnd = 1, nbnd
