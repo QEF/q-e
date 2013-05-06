@@ -21,7 +21,7 @@ SUBROUTINE force_hub(forceh)
    USE ldaU,                 ONLY : hubbard_lmax, hubbard_l, U_projection, &
                                     nwfcU, wfcU, is_hubbard, lda_plus_u_kind, &
                                     oatwfc, copy_U_wfc, offsetU
-   USE basis,                ONLY : swfcatom
+   USE basis,                ONLY : natomwfc
    USE symme,                ONLY : symvector
    USE io_files,             ONLY : prefix
    USE wvfct,                ONLY : nbnd, npwx, npw, igk
@@ -44,8 +44,7 @@ SUBROUTINE force_hub(forceh)
    REAL (DP) :: forceh(3,nat)  ! output: the Hubbard forces
 
    type (bec_type) :: proj     ! proj(nwfcU,nbnd)
-   COMPLEX (DP), ALLOCATABLE :: spsi(:,:)
-   !                            spsi(npwx,nbnd)
+   COMPLEX (DP), ALLOCATABLE :: spsi(:,:), wfcatom(:,:) 
    REAL (DP), ALLOCATABLE :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
    INTEGER :: alpha, na, nt, is, m1, m2, ipol, ldim, ik, ijkb0
@@ -58,7 +57,9 @@ SUBROUTINE force_hub(forceh)
 
    call start_clock('force_hub')
    ldim= 2 * Hubbard_lmax + 1
-   ALLOCATE ( dns(ldim,ldim,nspin,nat), spsi(npwx,nbnd) )
+   ALLOCATE ( dns(ldim,ldim,nspin,nat) )
+   ALLOCATE ( spsi(npwx,nbnd) ) 
+   ALLOCATE ( wfcatom (npwx,natomwfc) ) 
    call allocate_bec_type ( nkb, nbnd, becp) 
    call allocate_bec_type ( nwfcU, nbnd, proj )
    !
@@ -91,12 +92,11 @@ SUBROUTINE force_hub(forceh)
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
 
-! re-calculate atomic wfc - swfcatom is used here as work space
+! re-calculate atomic wfc - wfcatom is used here as work space
 ! (beware: doesn't work in the noncolinear case)
 
-      CALL atomic_wfc (ik, swfcatom)
-      call copy_U_wfc (swfcatom)
-
+      CALL atomic_wfc (ik, wfcatom)
+      call copy_U_wfc (wfcatom)
       DO alpha = 1,nat  ! forces are calculated for atom alpha ...
          !
          ! FIXME: ijkb0 (position of beta functions for atom alpha)
@@ -144,9 +144,11 @@ SUBROUTINE force_hub(forceh)
    !
    CALL mp_sum( forceh, inter_pool_comm )
    !
-   DEALLOCATE(dns, spsi)
-   call deallocate_bec_type (proj)
    call deallocate_bec_type (becp)
+   call deallocate_bec_type (proj)
+   DEALLOCATE( wfcatom  ) 
+   DEALLOCATE( spsi  ) 
+   DEALLOCATE( dns ) 
    
    IF (nspin == 1) forceh(:,:) = 2.d0 * forceh(:,:)
    !

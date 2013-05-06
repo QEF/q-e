@@ -129,7 +129,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE klist,                ONLY : nks, xk, ngk
    USE ldaU,                 ONLY : wfcU, nwfcU, offsetU, Hubbard_l, &
                                     is_hubbard, oatwfc, copy_U_wfc
-   USE basis,                ONLY : swfcatom
+   USE basis,                ONLY : natomwfc
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
    USE uspp,                 ONLY : nkb, vkb
@@ -155,10 +155,11 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
               is,    & !    "    "  spins
               na, nt, m1, m2
 
-   COMPLEX (DP), ALLOCATABLE :: spsi(:,:)
+   COMPLEX (DP), ALLOCATABLE :: spsi(:,:), wfcatom(:,:)
    type (bec_type) :: proj, dproj
    !
    !
+   ALLOCATE ( wfcatom (npwx,natomwfc) )
    ALLOCATE ( spsi(npwx,nbnd) )
    call allocate_bec_type ( nwfcU,nbnd, proj)
    call allocate_bec_type ( nwfcU,nbnd, dproj )
@@ -186,10 +187,13 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
-! re-calculate atomic wfc - swfcatom is used as work space
-! (must be modified in order to account for nocolinear case)
-      CALL atomic_wfc (ik, swfcatom)
-      call copy_U_wfc (swfcatom)
+
+! re-calculate atomic wfc - wfcatom is used here as work space
+! (beware: doesn't work in the noncolinear case)
+
+      CALL atomic_wfc (ik, wfcatom)
+      call copy_U_wfc (wfcatom)
+
       IF ( gamma_only ) THEN
          CALL dprojdepsilon_gamma (wfcU, spsi, ipol, jpol, dproj%r)
       ELSE
@@ -251,10 +255,12 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
       END DO
    END DO
 
-   DEALLOCATE ( spsi )
    call deallocate_bec_type (proj)
    call deallocate_bec_type (dproj)
    call deallocate_bec_type (becp)
+   DEALLOCATE ( spsi )
+   DEALLOCATE ( wfcatom  )
+
    RETURN
 END SUBROUTINE dndepsilon
 !
