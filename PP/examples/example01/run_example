@@ -364,10 +364,10 @@ ATOMIC_POSITIONS
  Si 0.25 0.25 0.25
 K_POINTS tpiba_b
   5
-   0.5 0.5 0.5  5
-   0.0 0.0 0.0 10
-   0.0 0.0 1.0 10
-   0.0 1.0 1.0 10
+   0.5 0.5 0.5 20
+   0.0 0.0 0.0 20
+   0.0 0.0 1.0  0
+   1.0 1.0 0.0 30
    0.0 0.0 0.0  1
 EOF
 $ECHO "  running the band-structure calculation for Si...\c"
@@ -403,5 +403,77 @@ $PLOTBAND_COMMAND < si.plotband.in > si.plotband.out
 check_failure $?
 $ECHO " done"
 
+
+if [ "$GP_COMMAND" = "" ]; then
+    break
+else
+cat > gnuplot1.tmp <<EOF
+set encoding iso_8859_15
+set terminal postscript enhanced solid color "Helvetica" 20
+set output "si.bands.ps"
+#
+set key off
+
+dim1=-12.5
+dim2=6
+sqrt32=sqrt(3)*0.5
+sqrt2=sqrt(2)
+set xrange [0:sqrt2+sqrt32+1]
+set yrange [dim1:dim2]
+set arrow from sqrt32,dim1 to sqrt32,dim2 nohead lw 2 front
+set arrow from sqrt32+1,dim1 to sqrt32+1,dim2 nohead lw 2 front
+set arrow from 0,0 to sqrt2+sqrt32+1,0 nohead lw 1 front
+set ylabel "Energy (eV)"
+set label "Si" at 0.3,5 center
+unset xtics
+set border lw 2
+lpos=dim1-0.45
+set label "L" at 0.,lpos center
+set label "{/Symbol G}" at sqrt32,lpos center
+set label "X" at sqrt32+1,lpos center
+set label "{/Symbol G}" at sqrt2+sqrt32+1,lpos center
+
+set label "L_1" at 0.3,-10. center tc lt 1
+set label "L_3" at 0.3,-2. center  tc lt 2
+
+set label "{/Symbol G}_1" at sqrt32+0.02,-11.5 left
+set label "{/Symbol G}_{25}'" at sqrt32+0.02,0.5 left
+set label "{/Symbol G}_{15}" at sqrt32+0.02,2.0 left
+set label "{/Symbol G}_{2}'" at sqrt32+0.02,4.6 left
+
+set label "{/Symbol D}_1" at sqrt32+0.6,-9.5 center tc lt 1
+set label "{/Symbol D}_2'" at sqrt32+0.6,-5.5 center tc lt 2
+set label "{/Symbol D}_5" at sqrt32+0.6,-1.7 center tc lt 3
+
+set label "{/Symbol S}_1" at sqrt32+1.7,-11 center tc lt 1
+set label "{/Symbol S}_4" at sqrt32+1.7,-6.5 center tc lt 3
+set label "{/Symbol S}_2" at sqrt32+1.7,-2.2 center tc lt 2
+set label "{/Symbol S}_3" at sqrt32+1.7,4. center tc lt 5
+
+hpos=0.6
+set label "C_{3v}" at sqrt32*0.5,dim2+hpos center
+set label "O_h" at sqrt32,dim2+hpos center
+set label "C_{4v}" at sqrt32+0.5,dim2+hpos center
+set label "C_{2v}" at sqrt32+1.0+sqrt2/2,dim2+hpos center
+set label "O_h" at sqrt32+1.0+sqrt2,dim2+hpos center
+
+vb_max=6.255
+
+plot "sibands.xmgr.1.1"   u 1:(\$2-vb_max) w l lw 3  lt 1 ,\
+"sibands.xmgr.1.3" u 1:(\$2-vb_max) w l lw 3  lt 2 ,\
+"sibands.xmgr.2.1" u 1:(\$2-vb_max) w l lw 3  lt 1 ,\
+"sibands.xmgr.2.4" u 1:(\$2-vb_max) w l lw 3  lt 2 ,\
+"sibands.xmgr.2.5" u 1:(\$2-vb_max) w l lw 3  lt 3 ,\
+"sibands.xmgr.3"   u 1:(\$2-vb_max) w l lw 3  lt 1 ,\
+"sibands.xmgr.4.1" u 1:(\$2-vb_max) w l lw 3  lt 1 ,\
+"sibands.xmgr.4.2" u 1:(\$2-vb_max) w l lw 3  lt 2 ,\
+"sibands.xmgr.4.3" u 1:(\$2-vb_max) w l lw 3  lt 5 ,\
+"sibands.xmgr.4.4" u 1:(\$2-vb_max) w l lw 3  lt 3 
+EOF
+$ECHO "  creating the postscript file alas.dispersion.ps...\c"
+$GP_COMMAND gnuplot1.tmp
+check_failure $?
+$ECHO " done"
+fi
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

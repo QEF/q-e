@@ -47,6 +47,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   REAL(DP), PARAMETER :: accuracy=1.d-4
   COMPLEX(DP) :: d_spink(2,2,48), d_spin_is(2,2,48), zdotc
   COMPLEX(DP),ALLOCATABLE :: times(:,:,:)
+  REAL(DP) :: dxk(3), dkmod, dkmod_save
   INTEGER, ALLOCATABLE :: rap_et(:,:), code_group_k(:)
   INTEGER, ALLOCATABLE :: ngroup(:), istart(:,:)
   CHARACTER(len=11) :: group_name
@@ -168,11 +169,33 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
                 nbnd, nks2tot-nks1tot+1
            IF (search_sym) CALL write_group_info(.true.)
            is_high_sym=.true.
+           dxk(:) = xk(:,nks1tot+1) - xk(:,nks1tot)
+           dkmod_save = sqrt( dxk(1)**2 + dxk(2)**2 + dxk(3)**2 )
         ELSE
            IF (code_group_k(ik)/=code_group_k(ik-1).and.search_sym) &
                 CALL write_group_info(.true.)
-           is_high_sym= (code_group_k(ik)/=code_group_k(ik-1)) &
-                .and..not.is_high_sym
+!
+!    When the symmetry changes the point must be considered a high
+!    symmetry point. If the previous point was also high_symmetry, there
+!    are two possibilities. The two points are distant and in this case
+!    both of them must be considered high symmetry. If they are close only
+!    the first point is a high symmetry point. First compute the distance
+!
+           dxk(:) = xk(:,ik) - xk(:,ik-1)
+           dkmod= sqrt( dxk(1)**2 + dxk(2)**2 + dxk(3)**2 )
+           IF (dkmod < 5.0_DP * dkmod_save) THEN
+!
+!    In this case the two points are considered close
+!
+              is_high_sym= ((code_group_k(ik)/=code_group_k(ik-1)) &
+                 .and..not.is_high_sym) 
+              IF (dkmod > 1.d-3) dkmod_save=dkmod
+           ELSE
+!
+!    Points are distant. They are all high symmetry
+!
+              is_high_sym= .TRUE.
+           ENDIF
         ENDIF
         WRITE (iunout, '(10x,3f10.6,l5)') xk(1,ik),xk(2,ik),xk(3,ik), &
              is_high_sym

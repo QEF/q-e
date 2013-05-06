@@ -35,7 +35,7 @@ PROGRAM plotband
   real :: emin = 1.e10, emax =-1.e10, etic, eref, deltaE, Ef
 
   INTEGER, PARAMETER :: max_lines=99
-  real :: mine
+  real :: mine, dxmod, dxmod_save
   INTEGER :: point(max_lines+1), nrap(max_lines)
   INTEGER :: ilines, irap, ibnd, ipoint, jnow
 
@@ -44,6 +44,7 @@ PROGRAM plotband
 
   LOGICAL :: exist_rap
   LOGICAL, ALLOCATABLE :: todo(:,:)
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
 
 
   CALL get_file ( filename )
@@ -109,8 +110,8 @@ PROGRAM plotband
   CLOSE(unit=1)
   IF (exist_rap) CLOSE(unit=21)
 !
-!  Now find the high symmetry points. Note that here we neglect what has been
-!  read in the representation file
+!  Now find the high symmetry points in addition to those already identified
+!  in the representation file
 !
   DO n=1,nks
      IF (n==1 .OR. n==nks) THEN
@@ -126,21 +127,40 @@ PROGRAM plotband
 !  The gamma point is a high symmetry point
 !
         IF (k(1,n)**2+k(2,n)**2+k(3,n)**2 < 1.0d-9) high_symmetry(n)=.true.
+!
+!   save the typical lenght of dk
+!
+        IF (n==2) dxmod_save = sqrt( k1(1)**2 + k1(2)**2 + k1(3)**2)
+
      ENDIF
   ENDDO
 
   kx(1) = 0.d0
   DO n=2,nks
-     IF (high_symmetry(n).AND.high_symmetry(n-1)) THEN
+     dxmod=sqrt ( (k(1,n)-k(1,n-1))**2 + &
+                  (k(2,n)-k(2,n-1))**2 + &
+                  (k(3,n)-k(3,n-1))**2 )
+     IF (dxmod > 5*dxmod_save) THEN
 !
-!   Account for the case in which in a plot a point k and a point k+G
-!   are joined in a single point
+!   A big jump in dxmod is a sign that the point k(:,n) and k(:,n-1)
+!   are quite distant and belong to two different lines. We put them on
+!   the same point in the graph 
 !
         kx(n)=kx(n-1)
+     ELSEIF (dxmod > 1.d-5) THEN
+!
+!  This is the usual case. The two points k(:,n) and k(:,n-1) are in the
+!  same path.
+!
+        kx(n) = kx(n-1) +  dxmod
+        dxmod_save = dxmod
      ELSE
-        kx(n) = kx(n-1) + sqrt ( (k(1,n)-k(1,n-1))**2 + &
-                                 (k(2,n)-k(2,n-1))**2 + &
-                                 (k(3,n)-k(3,n-1))**2 )
+!
+!  This is the case in which dxmod is almost zero. The two points coincide
+!  in the graph, but we do not save dxmod.
+!
+        kx(n) = kx(n-1) +  dxmod
+
      ENDIF
   ENDDO
 
@@ -152,25 +172,48 @@ PROGRAM plotband
   ENDDO
   PRINT '("Range:",2f10.4,"eV  Emin, Emax > ",$)', emin, emax
   READ(5,*) emin, emax
-
+!
+!  Since the minimum and miximum energies are given in input we can
+!  sign the bands that are completely outside this range.
+!
   is_in_range = .false.
   DO i=1,nbnd
      is_in_range(i) = any (e(i,1:nks) >= emin .and. e(i,1:nks) <= emax)
   ENDDO
+!
+!  Now we compute how many paths there are: nlines
+!  The first point of this path: point(iline)
+!  How many points are in each path: npoints(iline)
+!
   DO n=1,nks
      IF (high_symmetry(n)) THEN
         IF (n==1) THEN
-           nlines=0
+!
+!   first point. Initialize the number of lines, and the number of point
+!   and say that this line start at the first point
+!
+           nlines=1
            npoints(1)=1
+           point(1)=1
         ELSEIF (n==nks) THEN
-           npoints(nlines+1) = npoints(nlines+1)+1
-           nlines=nlines+1
+!
+!    Last point. Here we save the last point of this line, but
+!    do not increase the number of lines
+!
+           npoints(nlines) = npoints(nlines)+1
+           point(nlines+1)=n
         ELSE
-           npoints(nlines+1) = npoints(nlines+1)+1
+!
+!   Middle line. The current line has one more points, and there is a new
+!   line that has to be initialized. It has one point and its first point
+!   is the current k.
+!
+           npoints(nlines) = npoints(nlines)+1
            nlines=nlines+1
-           npoints(nlines+1) = 1
+           IF (nlines>99) CALL errore('plotband','too many lines',1)
+           npoints(nlines) = 1
+           point(nlines)=n
         ENDIF
-        point(nlines+1)=n
         IF (n==1) THEN
            WRITE( stdout,'("high-symmetry point: ",3f7.4,&
                          &"   x coordinate   0.0000")') (k(i,n),i=1,3)
@@ -179,7 +222,11 @@ PROGRAM plotband
                          &"   x coordinate",f9.4)') (k(i,n),i=1,3), kx(n)
         ENDIF
      ELSE
-        npoints(nlines+1) = npoints(nlines+1)+1
+!
+!   This k is not an high symmetry line so we just increase the number of
+!   points of this line.
+!
+        npoints(nlines) = npoints(nlines)+1
      ENDIF
   ENDDO
   !
@@ -189,7 +236,12 @@ PROGRAM plotband
      PRINT '("skipping ...")'
      GOTO 25
   ENDIF
-  IF (.not.exist_rap) THEN
+  IF (.NOT.exist_rap) THEN
+!
+!  Here the symmetry analysis has not been done. So simply save the bands
+!  on output. The odd one from left to right, the even one from right to
+!  left.
+!
      OPEN (unit=2,file=filename,form='formatted',status='unknown',&
            iostat=ios)
      ! draw bands
@@ -209,8 +261,8 @@ PROGRAM plotband
 !   representation. Each file contains the bands of that representation.
 !   The file is called filename.#line.#rap
 !
-!
 !   First determine for each line how many representations are there
+!   in each line
 !
      DO ilines=1,nlines
         nrap(ilines)=0
@@ -220,7 +272,8 @@ PROGRAM plotband
               nrap(ilines)=max(nrap(ilines),rap(ibnd,n))
            ENDDO
         ENDDO
-        WRITE(6,*) 'lines nrap',ilines, nrap(ilines)
+        IF (nrap(ilines) > 12) CALL errore("plotband",&
+                                           "Too many representations",1)
      ENDDO
 !
 !   Then, for each line and for each representation along that line
@@ -231,11 +284,8 @@ PROGRAM plotband
 !   Along this line the symmetry decomposition has not been done.
 !   Plot all the bands as in the standard case
 !
-           IF (ilines<10) THEN
-              WRITE(filename1,'(a,".",i1)') trim(filename), ilines
-           ELSE
-              WRITE(filename1,'(a,".",i2)') trim(filename), ilines
-           ENDIF
+           filename1=TRIM(filename) // "." // TRIM(int_to_char(ilines))
+
            OPEN (unit=2,file=filename1,form='formatted',status='unknown',&
                 iostat=ios)
            ! draw bands
@@ -252,30 +302,18 @@ PROGRAM plotband
            ENDDO
            CLOSE (unit = 2)
         ENDIF
+
         todo=.true.
         DO irap=1, nrap(ilines)
 !
 !     open a file
 !
-           IF (ilines>99.or.irap>12) THEN
-              WRITE(6,'("too many lines or rap")')
-              STOP
-           ENDIF
-           IF (ilines < 10) THEN
-              IF (irap < 10 ) THEN
-                 WRITE(filename1,'(a,".",i1,".",i1)') trim(filename),ilines,irap
-              ELSE
-                 WRITE(filename1,'(a,".",i1,".",i2)') trim(filename),ilines,irap
-              ENDIF
-           ELSE
-              IF (irap < 10 ) THEN
-                 WRITE(filename1,'(a,".",i2,".",i1)') trim(filename),ilines,irap
-              ELSE
-                 WRITE(filename1,'(a,".",i2,".",i2)') trim(filename),ilines,irap
-              ENDIF
-           ENDIF
+           filename1=TRIM(filename) // "." // TRIM(int_to_char(ilines)) &
+                                   //  "." // TRIM(int_to_char(irap))
            OPEN (unit=2,file=filename1,form='formatted',status='unknown',&
                  iostat=ios)
+           IF (ios /= 0) CALL errore("plotband","opening file" &
+                                     //TRIM(filename1),1) 
 !  For each k point along this line selects only the bands which belong
 !  to the irap representation
            nbnd_rapk=100000
@@ -335,7 +373,7 @@ PROGRAM plotband
            IF (minval(nbnd_rapk)==0) THEN
               CLOSE (unit = 2,status='delete')
            ELSE
-              CLOSE (unit = 2)
+              CLOSE (unit = 2,status='keep')
            ENDIF
         ENDDO
      ENDDO
@@ -349,6 +387,7 @@ PROGRAM plotband
      DEALLOCATE(rap)
      DEALLOCATE(k_rap)
      DEALLOCATE(todo)
+     DEALLOCATE(is_in_range_rap)
   ENDIF
   PRINT '("output file (ps) > ",$)'
   READ(5,'(a)',end=30,err=30)  filename
@@ -356,7 +395,7 @@ PROGRAM plotband
      PRINT '("stopping ...")'
      GOTO 30
   ENDIF
-  OPEN (unit=1,file=filename,form='formatted',status='unknown',&
+  OPEN (unit=1,file=TRIM(filename),form='formatted',status='unknown',&
        iostat=ios)
   PRINT '("Efermi > ",$)'
   READ(5,*) Ef
@@ -432,6 +471,7 @@ PROGRAM plotband
            ni=nf
            nf=nf + npoints(nl)-1
            n_interp= 2*(nf-ni)+1
+           IF (n_interp < 7) CYCLE
            DO n=1,n_interp
               k_interp(n)=kx(ni)+(n-1)*(kx(nf)-kx(ni))/(n_interp-1)
            ENDDO
