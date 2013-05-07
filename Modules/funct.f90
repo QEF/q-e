@@ -54,6 +54,9 @@ module funct
   PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
   PUBLIC  :: set_exx_fraction
   PUBLIC  :: set_screening_parameter, get_screening_parameter
+  !gau-pbe in
+  PUBLIC  :: set_gau_parameter, get_gau_parameter
+  !gau-pbe out
   ! additional subroutines/functions for finite size corrections
   PUBLIC  :: dft_has_finite_size_correction, set_finite_size_volume
   ! driver subroutines computing XC
@@ -149,6 +152,9 @@ module funct
   !              "sox"    sogga                          igcx =17
   !              "m6lx"   M06L exchange Meta-GGA         igcx =18
   !              "q2dx"   Q2D exchange grad corr         igcx =19
+  ! gau-pbe in
+  !              "gaup"   Gau-PBE hybrid exchange        igcx =20
+  ! gau-pbe out
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -205,6 +211,7 @@ module funct
   !                      PRL 91, 146401 (2003)
   !              sogga   Y. Zhao and D. G. Truhlar, JCP 128, 184109 (2008)
   !              m06l    Y. Zhao and D. G. Truhlar, JCP 125, 194101 (2006)
+  !              gau-pbe J.-W. Song, K. Yamashita, K. Hirao JCP 135, 071103 (2011)
   !
   ! NOTE ABOUT HSE: there are two slight deviations with respect to the HSE06 
   ! functional as it is in Gaussian code (that is considered as the reference
@@ -226,6 +233,9 @@ module funct
   integer :: inlc  = notset
   real(DP):: exx_fraction = 0.0_DP
   real(DP):: screening_parameter = 0.0_DP
+  !gau-pbe in
+  real(DP):: gau_parameter = 0.0_DP
+  !gau-pbe out
   logical :: isgradient  = .false.
   logical :: ismeta      = .false.
   logical :: ishybrid    = .false.
@@ -254,7 +264,10 @@ module funct
   ! data
   integer :: nxc, ncc, ngcx, ngcc, ncnl
 
-  parameter (nxc = 8, ncc =11, ngcx =19, ngcc = 12, ncnl=2)
+! gau-pbe in
+!  parameter (nxc = 8, ncc =11, ngcx =19, ngcc = 12, ncnl=2)
+  parameter (nxc = 8, ncc =11, ngcx =20, ngcc = 12, ncnl=2)
+! gau-pbe out
 
   character (len=4) :: exc, corr
   character (len=4) :: gradx, gradc, nonlocc
@@ -266,7 +279,10 @@ module funct
 
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
                'TPSS', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
-               'META', 'C09X', 'SOX', 'M6LX', 'Q2DX' / 
+! gau-pbe in
+!               'META', 'C09X', 'SOX', 'M6LX', 'Q2DX' / 
+               'META', 'C09X', 'SOX', 'M6LX', 'Q2DX', 'GAUP' / 
+! gau-pbe out
 
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'TPSS',&
                 'B3LP', 'PSC', 'PBE', 'META', 'M6LC', 'Q2DC' / 
@@ -353,6 +369,17 @@ CONTAINS
        call set_dft_value (igcc, 4)
        call set_dft_value (inlc,0) !Default       
        dft_defined = .true.
+
+! gau-pbe in
+   else if (matches ('GAUP', dftout) ) then
+    ! special case : GAUPBE
+       call set_dft_value (iexch,1) !Default
+       call set_dft_value (icorr,4)
+       call set_dft_value (igcx, 20)
+       call set_dft_value (igcc, 4)
+       call set_dft_value (inlc,0) !Default
+       dft_defined = .true.
+! gau-pbe out
        
     else if ('PBESOL'.EQ. TRIM(dftout) ) then
     ! special case : PBEsol
@@ -675,6 +702,12 @@ CONTAINS
        exx_fraction = 0.25_DP
        screening_parameter = 0.106_DP
     END IF
+! gau-pbe in
+    IF ( igcx ==20 ) THEN
+       exx_fraction = 0.24_DP
+       gau_parameter = 0.150_DP
+    END IF
+! gau-pbe out
     ! HF or OEP
     IF ( iexch==4 .or. iexch==5 ) exx_fraction = 1.0_DP
     !B3LYP
@@ -802,6 +835,22 @@ CONTAINS
      get_screening_parameter = screening_parameter
      return
   end function get_screening_parameter
+ ! gau-pbe in
+  !-----------------------------------------------------------------------
+  subroutine set_gau_parameter (gauparm_)
+     implicit none
+     real(DP):: gauparm_
+     gau_parameter = gauparm_
+     write (stdout,'(5x,a,f12.7)') 'EXX Gau parameter changed: ', &
+          & gau_parameter
+  end subroutine set_gau_parameter
+  !----------------------------------------------------------------------
+  function get_gau_parameter ()
+     real(DP):: get_gau_parameter
+     get_gau_parameter = gau_parameter
+     return
+  end function get_gau_parameter
+ ! gau-pbe out
   !-----------------------------------------------------------------------
   function get_iexch ()
      integer get_iexch
@@ -956,6 +1005,10 @@ CONTAINS
      shortname_ = 'Q2D'
   else if (iexch_==1.and.icorr_==4.and.igcx_==12.and.igcc_==4) then
      shortname_ = 'HSE'
+! gau-pbe in
+  else if (iexch_==1.and.icorr_==4.and.igcx_==20.and.igcc_==4) then
+     shortname_ = 'GAUPBE'
+! gau-pbe out
   else if (iexch_==1.and.icorr_==4.and.igcx_==11.and.igcc_==4) then
      shortname_ = 'WC'
   else if (iexch_==7.and.(icorr_==10.or.icorr_==2).and.igcx_==9.and. &
@@ -1362,6 +1415,16 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call c09x (rho, grho, sx, v1x, v2x)
   elseif (igcx ==19) then ! 'pbesol'
      call pbex (rho, grho, 4, sx, v1x, v2x)
+ ! gau-pbe in
+  elseif (igcx ==20) then ! 'gau-pbe'
+     call pbex (rho, grho, 1, sx, v1x, v2x)
+     if(exx_started) then
+       call pbexgau (rho, grho, sxsr, v1xsr, v2xsr, gau_parameter)
+       sx = sx - exx_fraction * sxsr
+       v1x = v1x - exx_fraction * v1xsr
+       v2x = v2x - exx_fraction * v2xsr
+     endif
+ ! gau-pbe out
   else
      sx = 0.0_DP
      v1x = 0.0_DP
@@ -1473,9 +1536,13 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
   elseif (igcx == 3 .or. igcx == 4 .or. igcx == 8 .or. &
-          igcx == 10 .or. igcx == 12) then
+! gau-pbe in
+!          igcx == 10 .or. igcx == 12) then
+          igcx == 10 .or. igcx == 12 .or. igcx == 20) then
      ! igcx=3: PBE, igcx=4: revised PBE, igcx=8: PBE0, igcx=10: PBEsol
-     ! igcx=12: HSE
+     !! igcx=12: HSE
+     ! igcx=12: HSE,  igcx=20: gau-pbe
+! gau-pbe out
      if (igcx == 4) then
         iflag = 2
      elseif (igcx == 10) then
@@ -1519,6 +1586,20 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
         v1xdw = v1xdw - exx_fraction*v1xdwsr
         v2xdw = v2xdw - exx_fraction*v2xdwsr
      end if
+! gau-pbe in 
+     if (igcx == 20 .and. exx_started ) then
+
+        call pbexgau_lsd (rhoup, rhodw, grhoup2, grhodw2, sxsr,  &
+                         v1xupsr, v2xupsr, v1xdwsr, v2xdwsr, &
+                         gau_parameter)
+!        write(*,*) sxsr,v1xsr,v2xsr
+        sx  = sx - exx_fraction*sxsr
+        v1xup = v1xup - exx_fraction*v1xupsr
+        v2xup = v2xup - exx_fraction*v2xupsr
+        v1xdw = v1xdw - exx_fraction*v1xdwsr
+        v2xdw = v2xdw - exx_fraction*v2xdwsr
+     end if
+! gau-pbe out
   elseif (igcx == 9) then
      if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
         call becke88_spin (rhoup, grhoup2, sxup, v1xup, v2xup)

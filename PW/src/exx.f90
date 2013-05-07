@@ -86,6 +86,10 @@ MODULE exx
   !
   ! erf screening
   REAL(DP)          :: erf_scrlen = 0._dp
+  ! gau-screening
+  !gau-pbe in
+  REAL (DP)         :: gau_scrlen = 0.d0
+  !gau-pbe out
   ! cutoff techniques
   LOGICAL           :: use_coulomb_vcut_ws = .FALSE.
   LOGICAL           :: use_coulomb_vcut_spheric = .FALSE.
@@ -630,7 +634,10 @@ CONTAINS
                                      inter_pool_comm
     USE mp,                   ONLY : mp_sum
     USE funct,                ONLY : get_exx_fraction, start_exx, exx_is_active, &
-                                     get_screening_parameter 
+                                     !gau-pbe in
+                                     !get_screening_parameter 
+                                     get_screening_parameter, get_gau_parameter
+                                     !gau-pbe out 
     USE fft_base,             ONLY : cgather_smooth, cscatter_smooth,&
                                      dffts, cgather_custom, cscatter_custom
     USE fft_interfaces,       ONLY : invfft
@@ -710,6 +717,9 @@ CONTAINS
        !iunexx = find_free_unit()
        !CALL diropn(iunexx,'exx', exx_nwordwfc, exst) 
        erfc_scrlen = get_screening_parameter()
+       !gau-pbe in
+       gau_scrlen = get_gau_parameter()
+       !gau-pbe out
        exxdiv = exx_divergence() 
        exxalfa = get_exx_fraction()
        !
@@ -1272,6 +1282,13 @@ CONTAINS
           !
           fac(ig) = vcut_spheric_get(vcut,q)
           !
+      !gau-pbe in
+      ELSE IF(gau_scrlen > 0) THEN
+          fac(ig)=e2*((pi/gau_scrlen)**(1.5d0))* &
+                      EXP(-qq/4.d0/gau_scrlen) * grid_factor
+          IF (on_double_grid) fac(ig) = 0._dp
+      !gau-pbe out
+      !
       ELSE IF (qq > eps_qdiv) THEN
           !
           IF ( erfc_scrlen > 0  ) THEN
@@ -1537,6 +1554,7 @@ CONTAINS
                   !
                   vc = vc * omega * 0.25d0 / nqs
                   energy = energy - exxalfa * vc * wg(jbnd,ikk)
+                  ! gau-pbe see latar
                   !
                 END DO &
                 IBND_LOOP_GAM
@@ -1853,6 +1871,19 @@ CONTAINS
                       fac(ig) = vcut_spheric_get(vcut, q)
                       fac_stress(ig) = 0._dp   ! not implemented
                       IF (gamma_only .and. qq > 1.d-8) fac(ig) = 2.d0 * fac(ig) 
+
+                  !gau-pbe in
+                  ELSE IF (gau_scrlen > 0) then
+                      fac(ig)=e2*((pi/gau_scrlen)**(1.5d0))* &
+                            exp(-qq/4.d0/gau_scrlen) * grid_factor
+                      fac_stress(ig) =  e2*2.d0/4.d0/gau_scrlen * &
+                            exp(-qq/4.d0/gau_scrlen) *((pi/gau_scrlen)**(1.5d0))* &
+                                                                     grid_factor
+                      IF (gamma_only) fac(ig) = 2.d0 * fac(ig)
+                      IF (gamma_only) fac_stress(ig) = 2.d0 * fac_stress(ig)
+                      IF (on_double_grid) fac(ig) = 0._dp
+                      IF (on_double_grid) fac_stress(ig) = 0._dp
+                 !gau-pbe out see later more
 
                   ELSE IF (qq > 1.d-8) THEN
                       IF ( erfc_scrlen > 0 ) THEN

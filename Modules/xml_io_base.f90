@@ -1285,7 +1285,10 @@ MODULE xml_io_base
     !------------------------------------------------------------------------
     SUBROUTINE write_exx( x_gamma_extrapolation, nqx1, nqx2, nqx3, &
                           exxdiv_treatment, yukawa, ecutvcut, exx_fraction, &
-                          screening_parameter, exx_is_active )
+!                          screening_parameter, exx_is_active )
+                          !gau-pbe in
+                          gau_parameter, screening_parameter, exx_is_active )
+                          !gau-pbe out
       !------------------------------------------------------------------------
       !
       LOGICAL,            INTENT(IN) :: x_gamma_extrapolation, exx_is_active
@@ -1293,6 +1296,9 @@ MODULE xml_io_base
       CHARACTER(LEN=*),   INTENT(IN) :: exxdiv_treatment
       REAL(DP),           INTENT(IN) :: yukawa, ecutvcut, exx_fraction
       REAL(DP),           INTENT(IN) :: screening_parameter
+      !gau-pbe in
+      REAL(DP),           INTENT(IN) :: gau_parameter
+      !gau-pbe out
 
       CALL iotk_write_begin(iunpun, "EXACT_EXCHANGE" )
       call iotk_write_dat(iunpun, "x_gamma_extrapolation", x_gamma_extrapolation)
@@ -1304,6 +1310,9 @@ MODULE xml_io_base
       call iotk_write_dat(iunpun, "ecutvcut", ecutvcut)
       call iotk_write_dat(iunpun, "exx_fraction", exx_fraction)
       call iotk_write_dat(iunpun, "screening_parameter", screening_parameter)
+      !gau-pbe in
+      call iotk_write_dat(iunpun, "gau_parameter", gau_parameter)
+      !gau-pbe out
       call iotk_write_dat(iunpun, "exx_is_active", exx_is_active)
       CALL iotk_write_end(iunpun, "EXACT_EXCHANGE" )
     END SUBROUTINE write_exx

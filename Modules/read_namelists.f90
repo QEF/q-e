@@ -796,6 +796,9 @@ MODULE read_namelists_module
        CALL mp_bcast( nqx3,                   ionode_id, intra_image_comm )
        CALL mp_bcast( exx_fraction,           ionode_id, intra_image_comm )
        CALL mp_bcast( screening_parameter,    ionode_id, intra_image_comm ) 
+       !gau-pbe in
+       CALL mp_bcast( gau_parameter,          ionode_id, intra_image_comm )
+       !gau-pbe out
        CALL mp_bcast( exxdiv_treatment,       ionode_id, intra_image_comm )
        CALL mp_bcast( x_gamma_extrapolation,  ionode_id, intra_image_comm )
        CALL mp_bcast( yukawa,                 ionode_id, intra_image_comm )

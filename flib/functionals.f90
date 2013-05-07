@@ -1599,6 +1599,184 @@ end function dpz
       RETURN
       END SUBROUTINE pbexsr
 !
+! gau-pbe in
+!
+!-----------------------------------------------------------------------
+      SUBROUTINE pbexgau_lsd(RHOA,RHOB,GRHOAA,GRHOBB,sx, &
+                            V1XA,V2XA,V1XB,V2XB,alpha_gau)
+!     ==--------------------------------------------------------------==
+      IMPLICIT REAL*8 (A-H,O-Z)
+      PARAMETER(SMALL=1.D-20)
+!     ==--------------------------------------------------------------==
+      SXA=0.0D0
+      SXB=0.0D0
+      V1XA=0.0D0
+      V2XA=0.0D0
+      V1XB=0.0D0
+      V2XB=0.0D0
+      IF(RHOA.GT.SMALL.AND.GRHOAA.GT.SMALL) THEN
+        CALL pbexgau(2.D0*RHOA, 4.D0*GRHOAA, SXA, V1XA, V2XA, &
+                                                   alpha_gau)
+      ENDIF
+      IF(RHOB.GT.SMALL.AND.GRHOBB.GT.SMALL) THEN
+        CALL pbexgau(2.D0*RHOB, 4.D0*GRHOBB, SXB, V1XB, V2XB, &
+                                                   alpha_gau)
+      ENDIF
+      sx = 0.5D0*(SXA+SXB)
+      V2XA = 2.D0*V2XA
+      V2XB = 2.D0*V2XB          ! I HOPE THIS WORKS JUST LIKE THIS
+
+!     ==--------------------------------------------------------------==
+      RETURN
+      END SUBROUTINE pbexgau_lsd
+!
+!-----------------------------------------------------------------------
+      SUBROUTINE pbexgau(RHO,GRHO,sxsr,v1xsr,v2xsr,alpha_gau)
+!-----------------------------------------------------------------------
+!
+      use kinds, ONLY : DP
+
+      IMPLICIT REAL*8 (A-H,O-Z)
+
+      PARAMETER(SMALL=1.D-20,SMAL2=1.D-08)
+      PARAMETER(US=0.161620459673995492D0,AX=-0.738558766382022406D0, &
+                UM=0.2195149727645171D0,UK=0.8040D0,UL=UM/UK)
+      REAL(DP), PARAMETER :: f1 = -1.10783814957303361_DP, alpha = 2.0_DP/3.0_DP
+!     ==--------------------------------------------------------------==
+
+      RS = RHO**(1.0_DP/3.0_DP)
+      VX = (4.0_DP/3.0_DP)*f1*alpha*RS
+      AA    = GRHO
+      RR    = 1.0_DP/(RHO*RS)
+      EX    = AX/RR
+! AX is 3/4/PI*(3*PI*PI)**(1/3). This is the same as -c1*c2 in pbex().
+      S2    = AA*RR*RR*US*US
+      S = SQRT(S2)
+      IF(S.GT.10.D0) THEN
+        S = 10.D0
+      ENDIF
+      CALL pbe_gauscheme(RHO,S,alpha_gau,FX,D1X,D2X)
+      sxsr = EX*FX        ! - EX
+      DSDN = -4.D0/3.D0*S/RHO
+      V1Xsr = VX*FX + (DSDN*D2X+D1X)*EX   ! - VX
+      DSDG = US*RR
+      V2Xsr = EX*1.D0/SQRT(AA)*DSDG*D2X
+
+! NOTE, here sx is the total energy density,
+! not just the gradient correction energy density as e.g. in pbex()
+! And the same goes for the potentials V1X, V2X
+
+!     ==--------------------------------------------------------------==
+      RETURN
+      END SUBROUTINE pbexgau
+!
+!-----------------------------------------------------------------------
+      SUBROUTINE pbe_gauscheme(rho,s,alpha_gau,Fx,dFxdr,dFxds)
+!--------------------------------------------------------------------
+
+      Implicit None
+      Real*8 rho,s,alpha_gau,Fx,dFxdr,dFxds
+!     input: charge and squared gradient and alpha_gau
+!     output: GGA enhancement factor of gau-PBE
+!     output: d(Fx)/d(s) , d(Fx)/d(rho)
+
+      Real*8 Kx, Nx
+!     PBE96 GGA enhancement factor
+!     GGA enhancement factor of Gaussian Function
+
+      Real*8 bx, cx, PI, sqrtpial, Prefac, term_PBE, Third, KsF
+      Real*8 d1sdr, d1Kxds, d1Kxdr, d1bxdr, d1bxds, d1bxdKx, &
+           d1Nxdbx,d1Nxdr, d1Nxds
+
+      Real*8, external :: qe_erf,TayExp
+
+      Real*8 Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten
+
+      Save Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten
+      Data Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten &
+        / 0D0,1D0,2D0,3D0,4D0,5D0,6D0,7D0,8D0,9D0,10D0 /
+
+      Real*8 k , mu
+      Data k / 0.804d0 / , mu / 0.21951d0 /
+!     parameters of PBE functional
+
+      Third = One/Three
+      PI = ACos(-One)
+      KsF = (Three*PI*PI*rho)**Third
+      sqrtpial = sqrt(PI/alpha_gau)
+      Prefac = Two *sqrt(PI/alpha_gau) / Three
+
+!     PBE96 GGA enhancement factor part
+      term_PBE = One / (One + s*s*mu/k)
+      Kx =  One + k - k * term_PBE
+
+!     GGA enhancement factor of Gaussian Function part
+      bx = sqrt(Kx*alpha_gau) / KsF
+
+!      cx = exp(-One/Four/bx/bx) - One
+      If(Abs(One/bx/bx) .lt. 1.0D-4) then
+         cx = TayExp(-One/bx/bx)
+      else
+         cx = exp(-One/bx/bx) - One
+      endIf
+
+      Nx = bx * Prefac * ( sqrt(PI) * qe_erf(One/bx) + &
+       (bx - Two*bx*bx*bx)*cx - Two*bx )
+
+! for convergency
+      If(Abs(Nx) .lt. 1.0D-15)then
+        Nx = Zero
+      else if ((One - Abs(Nx)) .lt. 1.0D-15)then
+        Nx = One
+      else
+        Nx = Nx
+      endIf
+! for convergency end
+
+      Fx =  Kx * Nx
+
+!     1st derivatives
+      d1sdr = - Four / Three * s / rho
+
+      d1Kxds = Two * s * mu * term_PBE * term_PBE
+      d1Kxdr = d1Kxds * d1sdr
+      d1bxdKx = bx / (Two* Kx)
+
+      d1bxdr = - bx /(Three*rho) + d1Kxdr * d1bxdKx
+
+      d1bxds =  d1bxdKx * d1Kxds
+
+      d1Nxdbx =  Nx/bx - Prefac * bx * Three * &
+                  ( cx*(One + Two*bx*bx) + Two )
+
+      d1Nxdr = d1Nxdbx * d1bxdr
+      d1Nxds = d1Nxdbx * d1bxds
+
+      dFxdr = d1Kxdr * Nx + Kx * d1Nxdr
+      dFxds = d1Kxds * Nx + Kx * d1Nxds
+
+      RETURN
+      END SUBROUTINE pbe_gauscheme
+!
+      FUNCTION TayExp(X)
+      Real*8 TAYEXP,X
+      INTEGER NTERM,I
+      Real*8 SUMVAL,IVAL,COEF
+      PARAMETER (NTERM=16)
+
+      SUMVAL = X
+      IVAL = X
+      COEF = 1.0D0
+      DO 10 I = 2,NTERM
+         COEF = COEF * I
+         IVAL = IVAL * (X / COEF)
+         SUMVAL = SUMVAL + IVAL
+ 10         CONTINUE
+      TAYEXP = SUMVAL
+      RETURN
+      END FUNCTION TayExp
+! gau-pbe out
+!
 !-----------------------------------------------------------------------
       SUBROUTINE wpbe_analy_erfc_approx_grad(rho,s,omega,Fx_wpbe, &
                       d1rfx,d1sfx)

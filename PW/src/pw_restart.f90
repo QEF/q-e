@@ -123,6 +123,9 @@ MODULE pw_restart
                                        root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm, &
                                        root_bgrp, intra_bgrp_comm, inter_bgrp_comm, nbgrp, get_ntask_groups, ntask_groups_file
       USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
+                                       !gau-pbe in
+                                       get_gau_parameter, &
+                                       !gau-pbe out
                                        get_screening_parameter, exx_is_active
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
@@ -412,6 +415,9 @@ MODULE pw_restart
                          ( x_gamma_extrapolation, nq1, nq2, nq3, &
                          exxdiv_treatment, yukawa, ecutvcut, &
                          get_exx_fraction(), &
+                         !gau-pbe in
+                         get_gau_parameter(), &
+                         !gau-pbe out
                          get_screening_parameter(), exx_is_active() )
          !
 !-------------------------------------------------------------------------------
@@ -3304,6 +3310,9 @@ MODULE pw_restart
       ! ... read EXX variables
       !
       USE funct,                ONLY : set_exx_fraction, set_screening_parameter, &
+                                       !gau-pbe in
+                                       set_gau_parameter, &
+                                       !gau-pbe out
                                        enforce_input_dft, start_exx
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
@@ -3312,6 +3321,9 @@ MODULE pw_restart
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       REAL(DP) :: exx_fraction, screening_parameter
+      !gau-pbe in
+      REAL(DP) :: gau_parameter
+      !gau-pbe out
       LOGICAL :: exx_is_active, found
       !
       IF ( ionode ) THEN
@@ -3335,6 +3347,9 @@ MODULE pw_restart
             CALL iotk_scan_dat(iunpun, "ecutvcut", ecutvcut)
             CALL iotk_scan_dat(iunpun, "exx_fraction", exx_fraction)
             CALL iotk_scan_dat(iunpun, "screening_parameter", screening_parameter)
+            !gau-pbe in
+            CALL iotk_scan_dat(iunpun, "gau_parameter", gau_parameter)
+            !gau-pbe out
             CALL iotk_scan_dat(iunpun, "exx_is_active", exx_is_active)
             CALL iotk_scan_end( iunpun, "EXACT_EXCHANGE" )
          END IF
@@ -3352,10 +3367,16 @@ MODULE pw_restart
       CALL mp_bcast( ecutvcut, ionode_id, intra_image_comm )
       CALL mp_bcast( exx_fraction, ionode_id, intra_image_comm )
       CALL mp_bcast( screening_parameter, ionode_id, intra_image_comm )
+      !gau-pbe in
+      CALL mp_bcast( gau_parameter, ionode_id, intra_image_comm )
+      !gau-pbe out
       CALL mp_bcast( exx_is_active, ionode_id, intra_image_comm )
       !
       CALL set_exx_fraction(exx_fraction)
       CALL set_screening_parameter(screening_parameter)
+      !gau-pbe in
+      call set_gau_parameter(gau_parameter)
+      !gau-pbe out
       IF (exx_is_active) CALL start_exx( ) 
       !
       RETURN

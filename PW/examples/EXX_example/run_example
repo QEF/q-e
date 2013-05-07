@@ -191,6 +191,59 @@ grep -e ! si.hse_nq=${nq}.out | tail -1
 
 done
 
+
+$ECHO
+$ECHO "  running Gau-PBE calculation for Si with nq=1,2,4 \c"
+$ECHO
+
+for nq in 1 2 4 ; do
+
+# self-consistent calculation
+cat > si.in << EOF
+ &control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    prefix='silicon',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system    
+    ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
+    ecutwfc =12.0,  nbnd = 8,
+    input_dft='gaupbe', nqx1 = $nq, nqx2 = $nq, nqx3 = $nq, 
+    x_gamma_extrapolation = .false.
+    exxdiv_treatment = 'none'
+ /
+ &electrons
+    mixing_beta = 0.7 
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.pz-vbc.UPF
+ATOMIC_POSITIONS
+ Si 0.00 0.00 0.00 
+ Si 0.25 0.25 0.25 
+K_POINTS
+  10
+   0.1250000  0.1250000  0.1250000   1.00
+   0.1250000  0.1250000  0.3750000   3.00
+   0.1250000  0.1250000  0.6250000   3.00
+   0.1250000  0.1250000  0.8750000   3.00
+   0.1250000  0.3750000  0.3750000   3.00
+   0.1250000  0.3750000  0.6250000   6.00
+   0.1250000  0.3750000  0.8750000   6.00
+   0.1250000  0.6250000  0.6250000   3.00
+   0.3750000  0.3750000  0.3750000   1.00
+   0.3750000  0.3750000  0.6250000   3.00
+EOF
+$ECHO "  running the scf calculation for Si with nq = $nq ...\c"
+$PW_COMMAND < si.in > si.gaupbe_nq=${nq}.out
+$ECHO " done"
+grep -e ! si.gaupbe_nq=${nq}.out | tail -1
+
+#rm -f si.in
+
+done
+
 $ECHO
 $ECHO "  running now a few molecules with Gamma sampling ...\c"
 $ECHO
@@ -199,10 +252,14 @@ $ECHO "  pseudo directory changed to:      $PSEUDO_DIR"
 $ECHO
 
 
-for xc in pbe0 hse ; do
+for xc in pbe0 hse gaupbe; do
 
 $ECHO "  Exchange and correlation is: " $xc "...\c"
 $ECHO
+
+if [ "$xc" = "gaupbe" ] ; then x_gamma_extrapolation=.FALSE. ; fi
+if [ "$xc" = "gaupbe" ] ; then exxdiv_treatment=none ; fi
+if [ "$xc" = "gaupbe" ] ; then ecutvcut=0.0 ; fi
 
 ps=1nlcc
 ecut=80

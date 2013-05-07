@@ -406,6 +406,9 @@ MODULE input_parameters
           !
         REAL(DP) :: exx_fraction = -1.0_DP      ! if negative, use defaults
         REAL(DP) :: screening_parameter = -1.0_DP
+        !gau-pbe in
+        REAL(DP) :: gau_parameter = -1.0_DP
+        !gau-pbe out
           !
         CHARACTER(len=80) :: exxdiv_treatment = 'gygi-baldereschi'
           ! define how ro cure the Coulomb divergence in EXX
