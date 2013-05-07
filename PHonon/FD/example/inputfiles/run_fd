@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+OUT_DIR='./fd_files/'
+IN_DIR='./fd_files/'
+FORCEDIR='./fd_files/'
+
+# scf calculation
+
+~/marco/espresso/bin/pw.x < $IN_DIR/displaced.0.0.0.in > $OUT_DIR/displaced.0.0.0.out
+
+for i in `seq 1 3 ` ; do
+    for n in `seq 1 2 ` ; do
+        for m in `seq 1 2 ` ; do
+
+~/marco/espresso/bin/pw.x < $IN_DIR/displaced.$m.$i.$n.in > $OUT_DIR/displaced.$m.$i.$n.out
+
+        done
+    done
+done
+
+grep 'force =   ' $OUTDIR/displaced.0.0.0.out | grep '     atom ' > forces
+awk '{printf("% 18.12f % 18.12f % 18.12f \n",$7,$8,$9)}' < forces > $FORCEDIR/force.0.0.0
+rm forces
+
+for i in `seq 1 3 ` ; do
+    for n in `seq 1 2 ` ; do
+        for m in `seq 1 2 ` ; do
+
+    grep 'force =   ' $OUTDIR/displaced.$m.$i.$n.out | grep '     atom ' > forces
+    awk '{printf("% 18.12f % 18.12f % 18.12f \n",$7,$8,$9)}' < forces > $FORCEDIR/force.$m.$i.$n
+    rm forces
+
+        done
+    done
+done
+
