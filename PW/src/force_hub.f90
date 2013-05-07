@@ -77,26 +77,29 @@ SUBROUTINE force_hub(forceh)
    !
    IF (nks > 1) REWIND (iunigk)
    DO ik = 1, nks
+      !
       IF (lsda) current_spin = isk(ik)
-      !
-      ! now we need the first derivative of proj with respect to tau(alpha,ipol)
-      !
       npw = ngk (ik)
       IF (nks > 1) THEN
          READ (iunigk) igk
          CALL get_buffer (evc, nwordwfc, iunwfc, ik)
       END IF
-      CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
-      CALL calbec( npw, wfcU, evc, proj )
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
 
-! re-calculate atomic wfc - wfcatom is used here as work space
-! (beware: doesn't work in the noncolinear case)
+      ! re-calculate atomic wfc - wfcatom is used here as work space
 
       CALL atomic_wfc (ik, wfcatom)
       call copy_U_wfc (wfcatom)
+
+      ! wfcU contains Hubbard-U atomic wavefunctions
+      ! proj=<wfcU|S|evc> - no need to read S*wfcU from buffer
+
+      CALL calbec( npw, wfcU, spsi, proj )
+
+      ! now we need the first derivative of proj with respect to tau(alpha,ipol)
+
       DO alpha = 1,nat  ! forces are calculated for atom alpha ...
          !
          ! FIXME: ijkb0 (position of beta functions for atom alpha)
@@ -155,18 +158,13 @@ SUBROUTINE force_hub(forceh)
    ! ...symmetrize...
    !
    CALL symvector ( nat, forceh )
-write(66,'("Hubbard contribution Begin")')
-write(66,'(3f12.6)') forceh(:,:)
-write(66,'("Hubbard contribution End")')
+#ifdef __DEBUG
+   write(66,'("Hubbard contribution Begin")')
+   write(66,'(3f12.6)') forceh(:,:)
+   write(66,'("Hubbard contribution End")')
+#endif
    !
    call stop_clock('force_hub')
-   !!!
-   call print_clock('dndtau')
-   call print_clock('dprojdtau')
-   call print_clock('dprojdtau:1')
-   call print_clock('dprojdtau:2')
-   call print_clock('dprojdtau:3')
-   call print_clock('dprojdtau:4')
    !
    RETURN
 END SUBROUTINE force_hub
@@ -396,7 +394,6 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
    !
    ! At first the derivatives of the atomic wfc and the beta are computed
    !
-   call start_clock('dprojdtau:1')
    IF ( is_hubbard(nt) ) THEN
       ALLOCATE ( dwfc(npwx,ldim) )
 !!omp parallel do default(shared) private(ig,gvec,m1)
@@ -420,13 +417,11 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
       DEALLOCATE ( dwfc ) 
       CALL mp_sum( dproj, intra_bgrp_comm )
    END IF
-   call stop_clock('dprojdtau:1')
    !
    ALLOCATE (dbetapsi(nh(nt),nbnd) ) 
    ALLOCATE (wfatdbeta(nwfcU,nh(nt)) )
    ALLOCATE ( wfatbeta(nwfcU,nh(nt)) )
    ALLOCATE ( dbeta(npwx,nh(nt)) )
-   call start_clock('dprojdtau:2')
 !!omp parallel do default(shared) private(ig,ih)
    DO ih=1,nh(nt)
       DO ig = 1, npw
@@ -445,8 +440,6 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
 !!omp end parallel do
    CALL calbec ( npw, dbeta, evc, dbetapsi ) 
    CALL calbec ( npw, wfcU, dbeta, wfatdbeta ) 
-   call stop_clock('dprojdtau:2')
-   call start_clock('dprojdtau:3')
    DEALLOCATE ( dbeta )
    ! calculate \sum_j qq(i,j)*dbetapsi(j)
    ! betapsi is used here as work space 
@@ -476,12 +469,10 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
       END DO
    END DO
 !!omp end parallel do
-   call stop_clock('dprojdtau:3')
    !
    ! dproj(iwf,ibnd) = \sum_ih wfatdbeta(iwf,ih)*betapsi(ih,ibnd) +
    !                           wfatbeta(iwf,ih)*dbetapsi(ih,ibnd) 
    !
-   call start_clock('dprojdtau:4')
    IF ( mykey == 0 ) THEN
       CALL ZGEMM('N','N',nwfcU, nb_e-nb_s+1, nh(nt), 1.0_dp,  &
            wfatdbeta, nwfcU, betapsi(1,nb_s), nh(nt), 1.0_dp,&
@@ -495,7 +486,6 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
    DEALLOCATE ( wfatbeta ) 
    DEALLOCATE (wfatdbeta )
    DEALLOCATE (dbetapsi )
-   call stop_clock('dprojdtau:4')
    !
    call stop_clock('dprojdtau')
 
@@ -553,7 +543,6 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
    !
    ! At first the derivatives of the atomic wfc and the beta are computed
    !
-   call start_clock('dprojdtau:1')
    dproj(:,:) = 0.0_dp
    IF (is_hubbard(nt) ) THEN
       ALLOCATE ( dwfc(npwx,ldim) )
@@ -575,9 +564,7 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
       DEALLOCATE ( dwfc ) 
       CALL mp_sum( dproj, intra_bgrp_comm )
    END IF
-   call stop_clock('dprojdtau:1')
    !
-   call start_clock('dprojdtau:2')
    ALLOCATE (dbetapsi(nh(nt),nbnd) ) 
    ALLOCATE (wfatdbeta(nwfcU,nh(nt)) )
    ALLOCATE ( wfatbeta(nwfcU,nh(nt)) )
@@ -601,9 +588,7 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
    CALL calbec ( npw, dbeta, evc, dbetapsi ) 
    CALL calbec ( npw, wfcU, dbeta, wfatdbeta ) 
    DEALLOCATE ( dbeta )
-   call stop_clock('dprojdtau:2')
    !
-   call start_clock('dprojdtau:3')
    ! calculate \sum_j qq(i,j)*dbetapsi(j)
    ! betapsi is used here as work space 
    ALLOCATE ( betapsi(nh(nt), nbnd) ) 
@@ -632,12 +617,10 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
       END DO
    END DO
 !!omp end parallel do
-   call stop_clock('dprojdtau:3')
    !
    ! dproj(iwf,ibnd) = \sum_ih wfatdbeta(iwf,ih)*betapsi(ih,ibnd) +
    !                           wfatbeta(iwf,ih)*dbetapsi(ih,ibnd) 
    !
-   call start_clock('dprojdtau:4')
    IF ( mykey == 0 ) THEN
       CALL DGEMM('N','N',nwfcU, nb_e-nb_s+1, nh(nt), 1.0_dp,  &
            wfatdbeta, nwfcU, betapsi(1,nb_s), nh(nt), 1.0_dp,&
@@ -651,7 +634,6 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
    DEALLOCATE ( wfatbeta ) 
    DEALLOCATE (wfatdbeta )
    DEALLOCATE (dbetapsi )
-   call stop_clock('dprojdtau:4')
    !
    call stop_clock('dprojdtau')
 

@@ -27,10 +27,9 @@ SUBROUTINE stres_hub ( sigmah )
    !
    IMPLICIT NONE
    !
-   REAL (DP) :: sigmah(3,3)        ! output: the Hubbard stresses
-
-   INTEGER :: ipol, jpol, na, nt, is, m1,m2
-   INTEGER :: ldim
+   REAL (DP), INTENT(OUT) :: sigmah(3,3) ! the Hubbard contribution to stresses
+   !
+   INTEGER :: ipol, jpol, na, nt, is, m1,m2, ldim
    REAL (DP), ALLOCATABLE :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat), ! the derivative of the atomic occupations
    !
@@ -45,8 +44,7 @@ SUBROUTINE stres_hub ( sigmah )
 
    ldim = 2 * Hubbard_lmax + 1
    ALLOCATE (dns(ldim,ldim,nspin,nat))
-   dns(:,:,:,:) = 0.d0
-
+   !
 #ifdef DEBUG
    DO na=1,nat
       DO is=1,nspin
@@ -69,7 +67,7 @@ SUBROUTINE stres_hub ( sigmah )
 !
    DO ipol = 1,3
       DO jpol = 1,3
-         CALL dndepsilon(dns,ldim,ipol,jpol)
+         CALL dndepsilon(ipol,jpol,ldim,dns)
          DO na = 1,nat                 
             nt = ityp(na)
             IF ( is_hubbard(nt) ) THEN
@@ -116,7 +114,7 @@ SUBROUTINE stres_hub ( sigmah )
 END  SUBROUTINE stres_hub
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
+SUBROUTINE dndepsilon ( ipol,jpol,ldim,dns )
    !-----------------------------------------------------------------------
    ! This routine computes the derivative of the ns atomic occupations with
    ! respect to the strain epsilon(ipol,jpol) used to obtain the hubbard
@@ -138,26 +136,33 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
                                     iunhub, nwordwfcU, nwordatwfc
    USE buffers,              ONLY : get_buffer
-   USE mp_global,            ONLY : inter_pool_comm
+   USE mp_pools,             ONLY : inter_pool_comm, intra_pool_comm, &
+                                    me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
 
    IMPLICIT NONE
    !
    ! I/O variables first
    !
-   INTEGER :: ipol, jpol, ldim
-   REAL (DP) :: dns(ldim,ldim,nspin,nat)
+   INTEGER, INTENT(IN) :: ipol, jpol, ldim
+   REAL(DP), INTENT(OUT) :: dns(ldim,ldim,nspin,nat)
    !
    ! local variable
    !
    INTEGER :: ik,    & ! counter on k points
               ibnd,  & !    "    "  bands
               is,    & !    "    "  spins
-              na, nt, m1, m2
-
+              na, nt, m1, m2, nb_s, nb_e, mykey
    COMPLEX (DP), ALLOCATABLE :: spsi(:,:), wfcatom(:,:)
    type (bec_type) :: proj, dproj
    !
+   ! poor-man parallelization over bands
+   ! - if nproc_pool=1   : nb_s=1, nb_e=nbnd, mykey=0
+   ! - if nproc_pool<=nbnd:each processor calculates band nb_s to nb_e; mykey=0
+   ! - if nproc_pool>nbnd :each processor takes care of band na_s=nb_e;
+   !   mykey labels how many times each band appears (mykey=0 first time etc.)
+   !
+   CALL block_distribute( nbnd, me_pool, nproc_pool, nb_s, nb_e, mykey )
    !
    ALLOCATE ( wfcatom (npwx,natomwfc) )
    ALLOCATE ( spsi(npwx,nbnd) )
@@ -177,30 +182,34 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
 
    DO ik = 1, nks
       IF (lsda) current_spin = isk(ik)
-      IF (nks > 1) READ (iunigk) igk
       npw = ngk(ik)
       !
-      ! now we need the first derivative of proj with respect to
-      ! epsilon(ipol,jpol)
-      !
-      CALL get_buffer (evc, nwordwfc, iunwfc, ik)
+      IF (nks > 1) THEN
+         READ (iunigk) igk
+         CALL get_buffer (evc, nwordwfc, iunwfc, ik)
+      END IF
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
-
-! re-calculate atomic wfc - wfcatom is used here as work space
-! (beware: doesn't work in the noncolinear case)
+      
+      ! re-calculate atomic wfc - wfcatom is used here as work space
 
       CALL atomic_wfc (ik, wfcatom)
       call copy_U_wfc (wfcatom)
 
+      ! wfcU contains Hubbard-U atomic wavefunctions
+      ! proj=<wfcU|S|evc> - no need to read S*wfcU from buffer
+      !
+      CALL calbec ( npw, wfcU, spsi, proj)
+      !
+      ! now we need the first derivative of proj with respect to
+      ! epsilon(ipol,jpol)
+      !
       IF ( gamma_only ) THEN
          CALL dprojdepsilon_gamma (wfcU, spsi, ipol, jpol, dproj%r)
       ELSE
          CALL dprojdepsilon_k (wfcU, spsi, ik, ipol, jpol, dproj%k)
       END IF
-      CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
-      CALL calbec ( npw, wfcU, evc, proj)
       !
       ! compute the derivative of the occupation numbers (quantities dn(m1,m2))
       ! of the atomic orbitals. They are real quantities as well as n(m1,m2)
@@ -375,30 +384,29 @@ SUBROUTINE dprojdepsilon_k ( wfcU, spsi, ik, ipol, jpol, dproj )
 
    ijkb0 = 0
    DO nt=1,ntyp
+      dbetapsi(:,:) = (0.0_dp, 0.0_dp)
+      wfatbeta (:,:)= (0.0_dp, 0.0_dp)
+      wfatdbeta(:,:)= (0.0_dp, 0.0_dp)
       DO na=1,nat
          IF ( ityp(na) .EQ. nt ) THEN
             DO ih=1,nh(nt)
-               ijkb0 = ijkb0 + 1
                ! now we compute the true dbeta function
                DO ig = 1,npw
-                  dbeta(ig,ijkb0) = - aux1(ig,ijkb0)*gk(jpol,ig) - &
-                        dbeta(ig,ijkb0) * gk(ipol,ig) * gk(jpol,ig) * qm1(ig)
+                  dbeta(ig,ijkb0+ih) = - aux1(ig,ijkb0+ih)*gk(jpol,ig) - &
+                       dbeta(ig,ijkb0+ih) * gk(ipol,ig) * gk(jpol,ig) * qm1(ig)
                   IF (ipol.EQ.jpol) &
-                     dbeta(ig,ijkb0) = dbeta(ig,ijkb0) - vkb(ig,ijkb0)*0.5d0
+                       dbeta(ig,ijkb0+ih) = dbeta(ig,ijkb0+ih) - vkb(ig,ijkb0+ih)*0.5d0
                END DO
                DO ibnd = 1,nbnd
-                  betapsi(ih,ibnd)= becp%k(ijkb0,ibnd)
-                  dbetapsi(ih,ibnd)= zdotc(npw,dbeta(1,ijkb0),1,evc(1,ibnd),1)
-               END DO
-               DO iwf=1,nwfcU
-                  wfatbeta(iwf,ih) = zdotc(npw,wfcU(1,iwf),1,vkb(1,ijkb0),1)
-                  wfatdbeta(iwf,ih)= zdotc(npw,wfcU(1,iwf),1,dbeta(1,ijkb0),1)
+                  betapsi(ih,ibnd)= becp%k(ijkb0+ih,ibnd)
                END DO
             END DO
             !
-            CALL mp_sum( dbetapsi, intra_bgrp_comm )
-            CALL mp_sum( wfatbeta, intra_bgrp_comm )
-            CALL mp_sum( wfatdbeta, intra_bgrp_comm )
+            CALL calbec(npw, dbeta(:,ijkb0+1:ijkb0+nh(nt)), evc, dbetapsi(1:nh(nt),:) )
+            CALL calbec(npw, wfcU, vkb(:,ijkb0+1:ijkb0+nh(nt)), wfatbeta(:,1:nh(nt)) )
+            CALL calbec(npw, wfcU, dbeta(:,ijkb0+1:ijkb0+nh(nt)),wfatdbeta(:,1:nh(nt)) )
+            !
+            ijkb0 = ijkb0 + nh(nt)
             !
             DO ibnd = 1,nbnd
                DO ih=1,nh(nt)
@@ -534,39 +542,29 @@ SUBROUTINE dprojdepsilon_gamma ( wfcU, spsi, ipol, jpol, dproj )
 
    ijkb0 = 0
    DO nt=1,ntyp
+      dbetapsi (:,:) = 0.0_dp
+      wfatbeta (:,:) = 0.0_dp
+      wfatdbeta(:,:) = 0.0_dp
       DO na=1,nat
          IF ( ityp(na) .EQ. nt ) THEN
             DO ih=1,nh(nt)
-               ijkb0 = ijkb0 + 1
                ! now we compute the true dbeta function
                DO ig = 1,npw
-                  dbeta(ig,ijkb0) = - aux1(ig,ijkb0)*gk(jpol,ig) - &
-                        dbeta(ig,ijkb0) * gk(ipol,ig) * gk(jpol,ig) * qm1(ig)
+                  dbeta(ig,ijkb0+ih) = - aux1(ig,ijkb0+ih)*gk(jpol,ig) - &
+                       dbeta(ig,ijkb0+ih) * gk(ipol,ig) * gk(jpol,ig) * qm1(ig)
                   IF (ipol.EQ.jpol) &
-                     dbeta(ig,ijkb0) = dbeta(ig,ijkb0) - vkb(ig,ijkb0)*0.5d0
+                       dbeta(ig,ijkb0+ih) = dbeta(ig,ijkb0+ih) - vkb(ig,ijkb0+ih)*0.5d0
                END DO
                DO ibnd = 1,nbnd
-                  betapsi(ih,ibnd)= becp%r(ijkb0,ibnd)
-                  dbetapsi(ih,ibnd) = 2.0_dp * &
-                      ddot(2*npw,dbeta(1,ijkb0),1,evc(1,ibnd),1)
-                  IF ( gstart == 2 ) dbetapsi(ih,ibnd) = &
-                        dbetapsi(ih,ibnd) - dbeta(1,ijkb0)*evc(1,ibnd)
-               END DO
-               DO iwf=1,nwfcU
-                  wfatbeta(iwf,ih) = 2.0_dp * &
-                    ddot(2*npw,wfcU(1,iwf),1,vkb(1,ijkb0),1)
-                  IF ( gstart == 2 ) wfatbeta(iwf,ih) = &
-                      wfatbeta(iwf,ih) - wfcU(1,iwf)*vkb(1,ijkb0)
-                  wfatdbeta(iwf,ih)= 2.0_dp * &
-                    ddot(2*npw,wfcU(1,iwf),1,dbeta(1,ijkb0),1)
-                  IF ( gstart == 2 ) wfatdbeta(iwf,ih) = &
-                      wfatdbeta(iwf,ih) - wfcU(1,iwf)*dbeta(1,ijkb0)
+                  betapsi(ih,ibnd)= becp%r(ijkb0+ih,ibnd)
                END DO
             END DO
             !
-            CALL mp_sum( dbetapsi, intra_bgrp_comm )
-            CALL mp_sum( wfatbeta, intra_bgrp_comm )
-            CALL mp_sum( wfatdbeta, intra_bgrp_comm )
+            CALL calbec(npw, dbeta(:,ijkb0+1:ijkb0+nh(nt)), evc, dbetapsi(1:nh(nt),:) )
+            CALL calbec(npw, wfcU, vkb(:,ijkb0+1:ijkb0+nh(nt)), wfatbeta(:,1:nh(nt)) )
+            CALL calbec(npw, wfcU, dbeta(:,ijkb0+1:ijkb0+nh(nt)),wfatdbeta(:,1:nh(nt)) )
+            !
+            ijkb0 = ijkb0 + nh(nt)
             !
             DO ibnd = 1,nbnd
                DO ih=1,nh(nt)
