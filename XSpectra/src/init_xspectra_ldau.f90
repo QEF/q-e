@@ -96,7 +96,7 @@ SUBROUTINE init_xanes_ldau_2(ik)
 
      WRITE( stdout,*) 'LDA+U Projector read from file '
      CALL diropn( iunhub, 'hub', 2*nwordwfcU, exst )
-     CALL davcio( wfcU, nwordwfcU, iunhub, ik, -1 )
+     CALL davcio( wfcU, 2*nwordwfcU, iunhub, ik, -1 )
      CLOSE( UNIT = iunhub, STATUS = 'KEEP' )
 
      RETURN
