@@ -1359,7 +1359,7 @@ IMPLICIT NONE
   !
   ! read wfc for the given kpt
   !
-  CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+  CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
   !
   ! compute matrix elements
   !

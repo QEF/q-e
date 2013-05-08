@@ -1039,9 +1039,9 @@ SUBROUTINE compute_mmn
       WRITE (stdout,'(i8)') ik
       ikevc = ik + ikstart - 1
 !      if(noncolin) then
-!         call davcio (evc_nc, nwordwfc, iunwfc, ikevc, -1 )
+!         call davcio (evc_nc, 2*nwordwfc, iunwfc, ikevc, -1 )
 !      else
-         CALL davcio (evc, nwordwfc, iunwfc, ikevc, -1 )
+         CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
 !      end if
       CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
       IF(write_spn.and.noncolin) THEN
@@ -1074,9 +1074,9 @@ SUBROUTINE compute_mmn
 ! read wfc at k+b
          ikpevcq = ikp + ikstart - 1
 !         if(noncolin) then
-!            call davcio (evcq_nc, nwordwfc, iunwfc, ikpevcq, -1 )
+!            call davcio (evcq_nc, 2*nwordwfc, iunwfc, ikpevcq, -1 )
 !         else
-            CALL davcio (evcq, nwordwfc, iunwfc, ikpevcq, -1 )
+            CALL davcio (evcq, 2*nwordwfc, iunwfc, ikpevcq, -1 )
 !         end if
          CALL gk_sort (xk(1,ikp), ngm, g, ecutwfc / tpiba2, npwq, igkq, g2kin)
 ! compute the phase
@@ -1344,9 +1344,9 @@ SUBROUTINE compute_amn
       WRITE (stdout,'(i8)') ik
       ikevc = ik + ikstart - 1
 !      if(noncolin) then
-!         call davcio (evc_nc, nwordwfc, iunwfc, ikevc, -1 )
+!         call davcio (evc_nc, 2*nwordwfc, iunwfc, ikevc, -1 )
 !      else
-         CALL davcio (evc, nwordwfc, iunwfc, ikevc, -1 )
+         CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
 !      end if
       CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
       CALL generate_guiding_functions(ik)   ! they are called gf(npw,n_proj)
@@ -1616,7 +1616,7 @@ SUBROUTINE write_plot
       ENDIF
    ENDIF
 
-      CALL davcio (evc, nwordwfc, iunwfc, ik, -1 )
+      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
       CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
 
       ibnd1 = 0
@@ -1742,7 +1742,7 @@ SUBROUTINE write_parity
    !
    ! building the evc array corresponding to the Gamma point
    !
-   CALL davcio (evc, nwordwfc, iunwfc, kgamma, -1 )
+   CALL davcio (evc, 2*nwordwfc, iunwfc, kgamma, -1 )
    CALL gk_sort (xk(1,kgamma), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
    !
    ! opening the <seedname>.unkg file
@@ -2125,7 +2125,7 @@ SUBROUTINE wan2sic
   !
   DO ik=1,iknum
      ikevc = ik + ikstart - 1
-     CALL davcio (evc, nwordwfc, iunwfc, ikevc, -1)
+     CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1)
      CALL gk_sort (xk(1,ik), ngm, g, ecutwfc/tpiba2, npw, igk, g2kin)
      WRITE(stdout,*) 'npw ',npw
      DO iw=1,n_wannier

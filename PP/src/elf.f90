@@ -70,7 +70,7 @@ SUBROUTINE do_elf (elf)
      !
      !   reads the eigenfunctions
      !
-     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
      !
      DO ibnd = 1, nbnd
         DO j = 1, 3

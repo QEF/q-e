@@ -52,7 +52,7 @@ subroutine wannier_proj(ik, wan_func)
   evc = ZERO
   ! See comment in PP/src/openfil.f90 why davcio and not get_buffer
   ! call get_buffer ( evc, nwordwfc, iunwfc, ik )  
-  call davcio ( evc, nwordwfc, iunwfc, ik, -1 )  
+  call davcio ( evc, 2*nwordwfc, iunwfc, ik, -1 )  
   ! Reads ortho-atomic wfc
   ! You should prepare data using orthoatwfc.f90
   swfcatom = ZERO

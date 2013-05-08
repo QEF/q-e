@@ -136,8 +136,8 @@ SUBROUTINE projection (first_band, last_band)
   WRITE( stdout, '(/5x,"Calling projection .... ")')
   IF ( gamma_only ) WRITE( stdout, '(5x,"gamma-point specific algorithms are used")')
   !
-  nwordatwfc = 2 * npwx * natomwfc
-  CALL diropn( iunsat, 'satwfc', nwordatwfc, exst )
+  nwordatwfc = npwx * natomwfc
+  CALL diropn( iunsat, 'satwfc', 2*nwordatwfc, exst )
   !
   ALLOCATE(proj (natomwfc, nbnd, nkstot) )
   ALLOCATE(wfcatom (npwx, natomwfc) )
@@ -212,7 +212,7 @@ SUBROUTINE projection (first_band, last_band)
   DO ik = 1, nks
      WRITE ( stdout, * ) "KPOINT =", ik
      CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 
      CALL atomic_wfc (ik, wfcatom)
 
@@ -316,7 +316,7 @@ SUBROUTINE projection (first_band, last_band)
 
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 
-     CALL davcio (swfcatom, nwordatwfc, iunsat, ik, 1)
+     CALL davcio (swfcatom, 2*nwordatwfc, iunsat, ik, 1)
 
 
      ! on k-points

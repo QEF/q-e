@@ -92,7 +92,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
      !
      !   read eigenfunctions
      !
-     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
      !
      ! Find the small group of k
      !

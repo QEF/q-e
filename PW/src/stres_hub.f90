@@ -303,7 +303,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE uspp_param,           ONLY : upf, nhm, nh
    USE wavefunctions_module, ONLY : evc
    USE becmod,               ONLY : bec_type, becp, calbec
-   USE mp_global,            ONLY : intra_bgrp_comm
+   USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
 
    IMPLICIT NONE
@@ -483,7 +483,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE uspp_param,           ONLY : upf, nhm, nh
    USE wavefunctions_module, ONLY : evc
    USE becmod,               ONLY : bec_type, becp, calbec
-   USE mp_global,            ONLY : intra_bgrp_comm
+   USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
 
    IMPLICIT NONE

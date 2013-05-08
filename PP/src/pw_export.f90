@@ -771,7 +771,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
      local_pw = 0
      IF( (ik >= iks) .and. (ik <= ike) ) THEN
 
-       CALL davcio (evc, nwordwfc, iunwfc, (ik-iks+1), - 1)
+       CALL davcio (evc, 2*nwordwfc, iunwfc, (ik-iks+1), - 1)
        local_pw = ngk(ik-iks+1)
 
      ENDIF
@@ -829,7 +829,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
            IF( (ik >= iks) .and. (ik <= ike) ) THEN
 
                CALL gk_sort (xk (1, ik+iks-1), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-               CALL davcio (evc, nwordwfc, iunwfc, (ik-iks+1), - 1)
+               CALL davcio (evc, 2*nwordwfc, iunwfc, (ik-iks+1), - 1)
 
                CALL init_us_2(npw, igk, xk(1, ik), vkb)
                local_pw = ngk(ik-iks+1)

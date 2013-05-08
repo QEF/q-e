@@ -347,7 +347,7 @@ SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp, lbinary )
   !
   DO ik = 1, nks
      CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 
      CALL atomic_wfc (ik, wfcatom)
 
@@ -919,7 +919,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary )
      wfcatom = (0.d0,0.d0)
      swfcatom= (0.d0,0.d0)
      CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
      !
      CALL atomic_wfc_nc_proj (ik, wfcatom)
      !
@@ -2257,7 +2257,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   DO ik = 1, nks
      !
      CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 
      CALL atomic_wfc (ik, wfcatom)
 
@@ -3167,7 +3167,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
      !
      IF ( lsda ) current_spin = isk(ik)
      CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
      !
      bnd_loop: DO ibnd = 1, nbnd
         !

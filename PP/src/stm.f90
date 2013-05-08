@@ -155,7 +155,7 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
      istates = istates +  (last_band - first_band + 1)
 
      CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
      !
      IF (gamma_only) THEN
         !

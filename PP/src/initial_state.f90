@@ -81,7 +81,7 @@ PROGRAM initial_state
   CALL hinit1
   IF ( nks == 1 ) THEN
      ik = 1
-     CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+     CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
      IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
   ENDIF
 

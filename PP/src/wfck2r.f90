@@ -117,7 +117,7 @@ PROGRAM wfck2r
      CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, &
           igk, g2kin)
      
-     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 
      do ibnd=1,nbnd 
      !

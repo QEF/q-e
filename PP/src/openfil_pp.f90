@@ -28,21 +28,18 @@ SUBROUTINE openfil_pp()
   ! ... nwordwfc is the record length for the direct-access file
   ! ... containing wavefunctions
   !
-  ! FIXME: in post-processing codes, wavefunctions are still opened using
-  !        "diropn" and not "open_buffer" (there is no real advantage in
-  !        using buffers; there would be one if wavefunctions in collected
-  !        format were read into a buffer instead of being written to file
-  !        in distributed format, but this is not yet done) As a consequence
-  !        nwordwfc is twice as big as in pwscf. This is not a problem as
-  !        long as PP does not attempt to use use "get_buffer" instead of
-  !        "davcio" (e.g. via routines in PW). PG May 2013
+  ! NOTE: in post-processing codes, wavefunctions are still opened using
+  !       "diropn" and not "open_buffer" (there is no real advantage in
+  !       using buffers; there would be one if wavefunctions in collected
+  !       format were read into a buffer instead of being written to file
+  !       in distributed format, but this is not yet done). In order to have
+  !       a uniform definition, nwordwfc is defined as in pwscf as the number
+  !       of COMPLEX WORDS of the wavefunction packet.
   !
-  nwordwfc = 2 * nbnd * npwx * npol
-  CALL diropn( iunwfc, 'wfc', nwordwfc, exst )
-  !
-  IF ( .not. exst ) THEN
+  nwordwfc = nbnd * npwx * npol
+  CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+  IF ( .not. exst ) &
      CALL errore ('openfil_pp','file '//trim( prefix )//'.wfc'//' not found',1)
-  ENDIF
   !
   RETURN
   !

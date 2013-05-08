@@ -825,7 +825,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
 
     local_pw = 0
     IF ( ik .GE. iks .AND. ik .LE. ike ) THEN
-      CALL davcio ( evc, nwordwfc, iunwfc, ik - iks + 1, - 1 )
+      CALL davcio ( evc, 2*nwordwfc, iunwfc, ik - iks + 1, - 1 )
       local_pw = ngk ( ik - iks + 1 )
     ENDIF
 
@@ -1455,7 +1455,7 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
     is = isk (ik)
     CALL gk_sort (xk (1, ik - iks + 1), ngm, g, ecutwfc &
       / tpiba2, npw, igk, g2kin)
-    CALL davcio (evc, nwordwfc, iunwfc, ik - iks + 1, -1)
+    CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
     DO ib = rhog_nvmin, rhog_nvmax
       psic (:) = (0.0D0, 0.0D0)
       DO ig = 1, npw
@@ -1884,7 +1884,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   DO ik = iks, ike
     CALL gk_sort (xk (1, ik - iks + 1), ngm, g, ecutwfc &
       / tpiba2, npw, igk, g2kin)
-    CALL davcio (evc, nwordwfc, iunwfc, ik - iks + 1, -1)
+    CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
     IF (ndiag .GT. 0) THEN
       DO ib = diag_nmin, diag_nmax
         psic (:) = (0.0D0, 0.0D0)
@@ -2077,7 +2077,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   DO ik = iks, ike
     CALL gk_sort (xk (1, ik - iks + 1), ngm, g, ecutwfc &
       / tpiba2, npw, igk, g2kin)
-    CALL davcio (evc, nwordwfc, iunwfc, ik - iks + 1, -1)
+    CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
     IF (ndiag .GT. 0) THEN
       DO ib = diag_nmin, diag_nmax
         psic (:) = (0.0D0, 0.0D0)

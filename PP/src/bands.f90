@@ -276,7 +276,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
         !
         !   read eigenfunctions
         !
-        CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+        CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
         !
         ! calculate becp = <psi|beta>
         !

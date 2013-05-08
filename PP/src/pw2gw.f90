@@ -643,7 +643,7 @@ SUBROUTINE compute_gw( use_gmaps )
       !
     ELSE
       !
-      CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+      CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
       !
       ! copy coefficient from array evc(:,n) (ordered as |k+G|)
       ! into array c0 with |G| ordering
@@ -737,7 +737,7 @@ SUBROUTINE compute_gw( use_gmaps )
    CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
    DO ik=1,nkpt
       CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-      CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+      CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
       DO iband1 = 1, nbnd
          psic(:) = (0.d0, 0.d0)
          DO ig = 1, npw
@@ -970,7 +970,7 @@ SUBROUTINE write_gmaps ( kunit)
      IF( (ik >= iks) .and. (ik <= ike) ) THEN
         ispin = isk( ik )
         WRITE( 100 + mpime ) ik, iks, ike, nkstot, kunit, nproc, ispin, nspin, npw_g, &
-                             nbnd, ngk(ik-iks+1), nwordwfc, npwx, iunwfc, nd_nmbr
+                             nbnd, ngk(ik-iks+1), 2*nwordwfc, npwx, iunwfc, nd_nmbr
         WRITE( 100 + mpime ) ( igk_l2g( i, ik-iks+1 ), i = 1, ngk(ik-iks+1) )
      ENDIF
   ENDDO
@@ -1016,8 +1016,8 @@ SUBROUTINE read_and_collect( c, ldc, n, ik )
       ALLOCATE( evc( npwx, nbnd ) )
       ALLOCATE( igk_l2g( ngk ) )
       READ( 100 + ip )  ( igk_l2g( i ), i = 1, ngk )
-      CALL diropn_gw ( 99, trim( prefix )//'.wfc', nwordwfc, exst, ip, nd_nmbr )
-      CALL davcio ( evc, nwordwfc, 99, (ik-iks+1), - 1 )
+      CALL diropn_gw ( 99, trim( prefix )//'.wfc', 2*nwordwfc, exst, ip, nd_nmbr )
+      CALL davcio ( evc, 2*nwordwfc, 99, (ik-iks+1), - 1 )
       CLOSE( 99 )
       DO j = 1, n
         DO i = 1, ngk

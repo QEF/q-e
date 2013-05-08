@@ -253,7 +253,7 @@ SUBROUTINE do_plan_avg (averag, plan, ninter)
   DO ik = 1, nks
      IF (lsda) current_spin = isk (ik)
      CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
 
      CALL calbec ( npw, vkb, evc, becp)

@@ -81,7 +81,7 @@ SUBROUTINE add_shift_us( shift_nl )
           !
           CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
           IF ( nks > 1 ) THEN
-             CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+             CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
              IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
           ENDIF
           !
@@ -171,7 +171,7 @@ SUBROUTINE add_shift_us( shift_nl )
           !
           CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
           IF ( nks > 1 ) THEN
-             CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+             CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
              IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
           ENDIF
           !

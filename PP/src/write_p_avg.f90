@@ -95,7 +95,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
      !
      !   read eigenfunctions
      !
-     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 
      IF (noncolin) THEN
         CALL calbec ( npw, vkb, evc, becp, nbnd_occ )

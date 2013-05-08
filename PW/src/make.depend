@@ -1548,7 +1548,8 @@ stres_hub.o : ../../Modules/io_global.o
 stres_hub.o : ../../Modules/ions_base.o
 stres_hub.o : ../../Modules/kind.o
 stres_hub.o : ../../Modules/mp.o
-stres_hub.o : ../../Modules/mp_global.o
+stres_hub.o : ../../Modules/mp_bands.o
+stres_hub.o : ../../Modules/mp_pools.o
 stres_hub.o : ../../Modules/recvec.o
 stres_hub.o : ../../Modules/uspp.o
 stres_hub.o : ../../Modules/wavefunctions.o
@@ -1814,7 +1815,6 @@ wannier_init.o : ../../Modules/noncol.o
 wannier_init.o : ../../Modules/wannier_new.o
 wannier_init.o : atomic_wfc_mod.o
 wannier_init.o : buffers.o
-wannier_init.o : ldaU.o
 wannier_init.o : pwcom.o
 wannier_occ.o : ../../Modules/io_files.o
 wannier_occ.o : ../../Modules/io_global.o
