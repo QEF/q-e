@@ -744,8 +744,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 	var occupations -type CHARACTER {
 	    info {
-		'smearing':     gaussian smearing for metals
-		                requires a value for degauss
+		'smearing':     gaussian smearing for metals 
+		                see variables 'smearing' and 'degauss'
 
 		'tetrahedra' :  especially suited for calculation of DOS
                                 (see P.E. Bloechl, PRB49, 16223 (1994))
