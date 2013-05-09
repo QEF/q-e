@@ -212,8 +212,8 @@ subroutine ld1_readin(input_file)
   noscf = .false.
   write_coulomb = .false.
   lsave_wfc = .false.
-  lgipaw_reconstruction = .true.
-  use_paw_as_gipaw = .true. !EMINE
+  lgipaw_reconstruction = .false.
+  use_paw_as_gipaw = .false. !EMINE
   relpert = .false.
 
   ! check if reading from file, dump stdin to file otherwise
@@ -377,6 +377,8 @@ subroutine ld1_readin(input_file)
      lnc2paw = .false.
      rmatch_augfun=-1.0_dp   ! force a crash
      rmatch_augfun_nc =.false.
+     lgipaw_reconstruction = .true.
+     use_paw_as_gipaw = .true. 
 
      if (ionode) read(qestdin,inputp,err=500,iostat=ios)
 500  call mp_bcast(ios, ionode_id)
@@ -402,7 +404,7 @@ subroutine ld1_readin(input_file)
 !
 !  gipaw reconstruction is not implemented in the fully relativistic case
 !
-     if (rel==2) then
+     if (rel==2.OR..NOT.lpaw) then
         lgipaw_reconstruction = .false.
         use_paw_as_gipaw = .false. 
      endif
