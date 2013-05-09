@@ -1,16 +1,16 @@
 !==========================================
 
-!* File Name : ifc.f90
+!* File Name : fd_ifc.f90
 
 !* Creation Date : 25-12-2012
 
-!* Last Modified : Tue Dec 25 13:01:29 2012
+!* Last Modified : Thu May  9 14:10:06 2013
 
 !* Created By : Marco Buongiorno Nardelli 
 
 !==========================================
 
-program ifc
+program fd_ifc
 
 implicit none
 
@@ -28,6 +28,7 @@ REAL(KIND=DP),    ALLOCATABLE     :: temp(:)
 REAL(KIND=DP),    ALLOCATABLE     :: rmsd(:,:) 
 REAL(KIND=DP),    ALLOCATABLE     :: force0(:,:) 
 REAL(KIND=DP),    ALLOCATABLE     :: force(:,:,:,:,:)
+REAL(KIND=DP),    ALLOCATABLE     :: fforce(:,:,:,:,:)
 REAL(KIND=DP),    ALLOCATABLE     :: phid(:,:,:,:)
 REAL(KIND=DP),    ALLOCATABLE     :: phid_symm(:,:,:,:)
 REAL(KIND=DP),    ALLOCATABLE     :: force3_11(:,:,:,:,:,:,:)
@@ -70,14 +71,9 @@ natx=nat*nrx1*nrx2*nrx3
 
 allocate (force0(3,natx))
 allocate (force(2,3,3,natx,natx))
+allocate (fforce(2,3,3,natx,natx))
 allocate (phid(3,3,natx,natx))
 allocate (phid_symm(3,3,natx,natx))
-allocate (force3_11(2,3,3,3,natx,natx,natx))
-allocate (force3_12(3,3,3,natx,natx,natx))
-allocate (force3(2,3,3,3,natx,natx,natx))
-allocate (phid3(3,3,3,natx,natx,natx))
-allocate (phidD3(3,3,3,natx,natx,natx))
-allocate (phid_symm3(3,3,3,natx,natx,natx))
 allocate (phid_T(3,3,natx,natx))
 allocate (inat(nat,nrx1,nrx2,nrx3))
 allocate (inbt3(nrx1,natx,nat))
@@ -158,7 +154,7 @@ do nr1=1,nrx1
       do nr3=1,nrx3
          do na=1,nat
             nax=nax+1
-            inat(na,nr1,nr2,nr3)=nax  !the indexing has to match the order of the atoms in the supercell constructed in displacement3D.f90
+            inat(na,nr1,nr2,nr3)=nax  !the indexing has to match the order of the atoms in the supercell constructed in fd.f90
          end do
       end do
    end do
@@ -182,8 +178,8 @@ do nr1=1,nrx1
                      do na=1,nat
                         do j=1,3
                            do i=1,3
-                              force(1,i,j,inat(na,nax,nbx,ncx),nbb)=force(1,i,j,inat(na,nrr1,nrr2,nrr3),nb)
-                              force(2,i,j,inat(na,nax,nbx,ncx),nbb)=force(2,i,j,inat(na,nrr1,nrr2,nrr3),nb)
+                              fforce(1,i,j,inat(na,nax,nbx,ncx),nbb)=force(1,i,j,inat(na,nrr1,nrr2,nrr3),nb)
+                              fforce(2,i,j,inat(na,nax,nbx,ncx),nbb)=force(2,i,j,inat(na,nrr1,nrr2,nrr3),nb)
                            end do
                         end do
                      end do
@@ -197,10 +193,10 @@ end do
 
 !compute IFCs
 do j=1,3
-   do nb=1,natx
+   do na=1,natx
       do i=1,3
-         do na=1,natx
-            phid(i,j,na,nb)=-0.5*(force(1,i,j,na,nb)-force(2,i,j,na,nb))/de
+         do nb=1,natx
+            phid(i,j,na,nb)=-0.5*(fforce(1,i,j,na,nb)-fforce(2,i,j,na,nb))/de
          end do
       end do
    end do
@@ -212,7 +208,7 @@ do i=1,3
    do j=1,3
       do na=1,natx
          do nb=1,natx
-           phid_symm(i,j,na,nb)=0.5*(phid(i,j,na,nb)+phid(j,i,nb,na))
+            phid_symm(i,j,na,nb)=0.5*(phid(i,j,na,nb)+phid(j,i,nb,na))
          end do
       end do
    end do
@@ -242,6 +238,13 @@ end do
 CLOSE (3)
 
 IF(verbose) THEN
+
+allocate (force3_11(2,3,3,3,natx,natx,natx))
+allocate (force3_12(3,3,3,natx,natx,natx))
+allocate (force3(2,3,3,3,natx,natx,natx))
+allocate (phid3(3,3,3,natx,natx,natx))
+allocate (phidD3(3,3,3,natx,natx,natx))
+allocate (phid_symm3(3,3,3,natx,natx,natx))
 
 ! anharmonic IJJ term from one-displacement forces
 
@@ -495,21 +498,22 @@ CLOSE (3)
 !WRITE (*,'(6i4,2x,1f18.11)') 1,1,2,3,13,2,1000*phid_symm3(1,3,2,1,2,9)/2.0
 !WRITE (*,'(6i4,2x,1f18.11)') 1,2,2,3,13,3,1000*phid_symm3(2,3,3,1,2,9)/2.0
 
-END IF
-
-deallocate (force0)
-deallocate (force)
-deallocate (phid)
-deallocate (phid_symm)
 deallocate (force3_11)
 deallocate (force3_12)
 deallocate (force3)
 deallocate (phid3)
 deallocate (phidD3)
 deallocate (phid_symm3)
+
+END IF
+
+deallocate (force0)
+deallocate (force)
+deallocate (phid)
+deallocate (phid_symm)
 deallocate (phid_T)
 deallocate (inat)
 deallocate (inbt3)
 deallocate (inct3)
 
-end program ifc
+end program fd_ifc
