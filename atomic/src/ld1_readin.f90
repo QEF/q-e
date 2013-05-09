@@ -212,8 +212,8 @@ subroutine ld1_readin(input_file)
   noscf = .false.
   write_coulomb = .false.
   lsave_wfc = .false.
-  lgipaw_reconstruction = .false.
-  use_paw_as_gipaw = .false. !EMINE
+  lgipaw_reconstruction = .true.
+  use_paw_as_gipaw = .true. !EMINE
   relpert = .false.
 
   ! check if reading from file, dump stdin to file otherwise
@@ -399,6 +399,14 @@ subroutine ld1_readin(input_file)
      if (rel==2 .and. pseudotype==1 ) &
           call errore('ld1_readin','Generation of a FR PP with'// & 
                   &     ' pseudotype=1 not allowed',1)
+!
+!  gipaw reconstruction is not implemented in the fully relativistic case
+!
+     if (rel==2) then
+        lgipaw_reconstruction = .false.
+        use_paw_as_gipaw = .false. 
+     endif
+
      if (which_augfun=='PSQ'.and.pseudotype.ne.3) &
           call errore('ld1_readin','PSQ requires pseudotype=3',1)
      !
