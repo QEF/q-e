@@ -570,7 +570,7 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
                   dwfc, 2*npwx, spsi, 2*npwx, 0.0_dp,&
                   dproj0, ldim)
       DEALLOCATE ( dwfc ) 
-      CALL mp_sum( dproj, intra_bgrp_comm )
+      CALL mp_sum( dproj0, intra_bgrp_comm )
       ! copy to dproj results for the bands treated by this processor
       dproj( offsetU(alpha)+1:offsetU(alpha)+ldim, :) = dproj0(:, nb_s:nb_e)
       DEALLOCATE ( dproj0 ) 
