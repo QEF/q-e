@@ -16,7 +16,9 @@ SUBROUTINE memory_report()
   USE fft_base,  ONLY : dfftp
   USE gvect,     ONLY : ngl, ngm
   USE uspp,      ONLY : nkb
-  USE ldaU,      ONLY : lda_plus_u, U_projection
+  USE ldaU,      ONLY : lda_plus_u, U_projection, nwfcU
+  USE fixed_occ, ONLY : one_atom_occupations
+  USE wannier_new,ONLY: use_wannier
   USE lsda_mod,  ONLY : nspin
   USE noncollin_module,     ONLY : npol
   USE control_flags, ONLY: isolve, nmix, gamma_only, lscf
@@ -34,10 +36,14 @@ SUBROUTINE memory_report()
   WRITE( stdout, '(8x,"Kohn-Sham Wavefunctions   ",f10.2," Mb", &
                  & 5x,"(",i8,",",i5,")")') &
      complex_size*nbnd*npol*DBLE(npwx)/Mb, npwx*npol,nbnd
-  IF ( lda_plus_u .AND. U_projection .NE. 'pseudo' ) &
+  IF ( one_atom_occupations .OR. use_wannier ) &
      WRITE( stdout, '(8x,"Atomic wavefunctions      ",f10.2," Mb", &
                     & 5x,"(",i8,",",i5,")")') &
-     complex_size*natomwfc*npol*DBLE(npwx)/Mb, npwx*npol,natomwfc
+   & complex_size*natomwfc*npol*DBLE(npwx)/Mb, npwx*npol,natomwfc
+  IF ( lda_plus_u .AND. U_projection .NE. 'pseudo' ) &
+     WRITE( stdout, '(8x,"Atomic Hubbard wavefuncts ",f10.2," Mb", &
+                    & 5x,"(",i8,",",i5,")")') &
+   & complex_size*nwfcU*npol*DBLE(npwx)/Mb, npwx*npol,nwfcU
   WRITE( stdout, '(8x,"NL pseudopotentials       ",f10.2," Mb", &
                  & 5x,"(",i8,",",i5,")")') &
      complex_size*nkb*DBLE(npwx)/Mb, npwx, nkb
