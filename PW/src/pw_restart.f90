@@ -150,9 +150,6 @@ MODULE pw_restart
       REAL(DP), ALLOCATABLE :: raux(:)
       !
       !
-      lwfc  = .FALSE.
-      lrho  = .FALSE.
-      !
       SELECT CASE( what )
       CASE( "all" )
          !
@@ -161,9 +158,18 @@ MODULE pw_restart
          lrho  = lscf
          lwfc  = twfcollect
          !
+      CASE( "config" ) 
+         ! 
+         ! ... write just the xml data file, not the charge density and the wavefunctions
+         !
+         lwfc  = .FALSE.
+         lrho  = .FALSE.
+         !
       CASE DEFAULT
          !
-      END SELECT
+         CALL errore( 'pw_writefile', 'unexpected case: '//TRIM(what), 1 )
+         ! 
+     END SELECT
       !
       IF ( ionode ) THEN
          !

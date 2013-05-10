@@ -54,7 +54,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
 #endif
   !
   IMPLICIT NONE
-  integer :: kilobytes
   !
   ! ... First the I/O variable
   !

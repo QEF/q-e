@@ -187,7 +187,7 @@ SUBROUTINE forces()
   endif
   !
   ! ... here we sum all the contributions and compute the total force acting
-  ! ... on the crstal
+  ! ... on the crystal
   !
   DO ipol = 1, 3
      !
