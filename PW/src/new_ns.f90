@@ -84,7 +84,7 @@ SUBROUTINE new_ns(ns)
         ! does not need mp_sum intra-pool, since it is already done in calbec
         !
      ELSE
-        CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
+        IF (nks > 1) CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
         CALL calbec ( npw, wfcU, evc, proj )
      END IF
      !

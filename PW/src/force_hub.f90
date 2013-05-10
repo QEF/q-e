@@ -37,7 +37,7 @@ SUBROUTINE force_hub(forceh)
    USE uspp_param,           ONLY : nh
    USE wavefunctions_module, ONLY : evc
    USE klist,                ONLY : nks, xk, ngk
-   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, iunhub, nwordwfcU
+   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc
    USE buffers,              ONLY : get_buffer
 
    IMPLICIT NONE
