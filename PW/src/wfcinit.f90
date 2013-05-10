@@ -136,9 +136,8 @@ SUBROUTINE wfcinit()
      !
      ! ... Needed for LDA+U
      !
-     IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) THEN
+     IF ( nks > 1 .AND. lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
         CALL get_buffer( wfcU, nwordwfcU, iunhub, ik )
-     END IF
      !
      ! ... calculate starting wavefunctions
      !
