@@ -199,7 +199,7 @@ SUBROUTINE dndtau_k &
    !
    CALL start_clock('dndtau')
    !
-   ALLOCATE ( dproj(nwfcU,nbnd) )
+   ALLOCATE ( dproj(nwfcU,nb_s:nb_e) )
    CALL dprojdtau_k ( spsi, alpha, jkb0, ipol, nb_s, nb_e, mykey, dproj )
    !
    ! compute the derivative of occupation numbers (the quantities dn(m1,m2))
@@ -286,7 +286,7 @@ SUBROUTINE dndtau_gamma &
    !
    CALL start_clock('dndtau')
    !
-   ALLOCATE ( dproj(nwfcU,nbnd) )
+   ALLOCATE ( dproj(nwfcU,nb_s:nb_e) )
    CALL dprojdtau_gamma ( spsi, alpha, jkb0, ipol, nb_s, nb_e, mykey, dproj )
    !
    ! compute the derivative of occupation numbers (the quantities dn(m1,m2))
@@ -371,11 +371,11 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
                            ijkb0     ! position of beta functions for atom alpha
    INTEGER, INTENT (IN) :: nb_s, nb_e, mykey       ! band parallelization
    COMPLEX (DP), INTENT (IN) :: spsi(npwx,nbnd)    ! S|evc>
-   COMPLEX (DP), INTENT (OUT) :: dproj(nwfcU,nbnd) ! derivative of projection
+   COMPLEX (DP), INTENT (OUT) :: dproj(nwfcU,nb_s:nb_e) ! derivative of projection
    !
    INTEGER :: nt, ig, na_, m1, ibnd, iwf, nt_, ih, jh, ldim
    REAL (DP) :: gvec
-   COMPLEX (DP), ALLOCATABLE :: dwfc(:,:), dbeta(:,:), &
+   COMPLEX (DP), ALLOCATABLE :: dproj0(:,:), dwfc(:,:), dbeta(:,:), &
                                 betapsi(:,:), dbetapsi(:,:), &
                                 wfatbeta(:,:), wfatdbeta(:,:)
    !      dwfc(npwx,ldim),       ! the derivative of the atomic d wfc
@@ -392,9 +392,11 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
 
    dproj(:,:) = (0.d0, 0.d0)
    !
-   ! At first the derivatives of the atomic wfc and the beta are computed
+   ! First the derivatives of the atomic wfc and the beta are computed
+   ! Note: parallelization here is over plane waves, not over bands!
    !
    IF ( is_hubbard(nt) ) THEN
+      ALLOCATE ( dproj0(ldim,nbnd) )
       ALLOCATE ( dwfc(npwx,ldim) )
 !!omp parallel do default(shared) private(ig,gvec,m1)
       DO ig = 1,npw
@@ -412,10 +414,14 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
 
       CALL ZGEMM('C','N',ldim, nbnd, npw, (1.d0,0.d0), &
                   dwfc, npwx, spsi, npwx, (0.d0,0.d0), &
-                  dproj(offsetU(alpha)+1,1), nwfcU)
+                  dproj0, ldim)
 
       DEALLOCATE ( dwfc ) 
-      CALL mp_sum( dproj, intra_bgrp_comm )
+      CALL mp_sum( dproj0, intra_bgrp_comm )
+      ! copy to dproj results for the bands treated by this processor
+      dproj( offsetU(alpha)+1:offsetU(alpha)+ldim, :) = dproj0(:, nb_s:nb_e)
+      DEALLOCATE ( dproj0 ) 
+      !
    END IF
    !
    ALLOCATE (dbetapsi(nh(nt),nbnd) ) 
@@ -523,12 +529,12 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
                            ijkb0     ! position of beta functions for atom alpha
    INTEGER, INTENT (IN) :: nb_s, nb_e, mykey       ! band parallelization
    COMPLEX (DP), INTENT (IN) :: spsi(npwx,nbnd)   ! S|evc>
-   REAL (DP), INTENT (OUT) ::  dproj(nwfcU,nbnd)  ! derivative of projection
+   REAL (DP), INTENT (OUT) ::  dproj(nwfcU,nb_s:nb_e) ! derivative of projection
    !
    INTEGER :: nt, ig, na_, m1, ibnd, iwf, nt_, ih, jh, ldim
    REAL (DP) :: gvec
    COMPLEX (DP), ALLOCATABLE :: dwfc(:,:), dbeta(:,:)
-   REAL (DP), ALLOCATABLE ::    betapsi(:,:), dbetapsi(:,:), &
+   REAL (DP), ALLOCATABLE ::    dproj0(:,:), betapsi(:,:), dbetapsi(:,:), &
                                 wfatbeta(:,:), wfatdbeta(:,:), bproj(:,:)
    !      dwfc(npwx,ldim),       ! the derivative of the atomic d wfc
    !      dbeta(npwx,nhm),       ! the derivative of the beta function
@@ -542,9 +548,11 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
    ldim = 2 * Hubbard_l(nt) + 1
    !
    ! At first the derivatives of the atomic wfc and the beta are computed
+   ! Note: parallelization here is over plane waves, not over bands!
    !
    dproj(:,:) = 0.0_dp
    IF (is_hubbard(nt) ) THEN
+      ALLOCATE ( dproj0(ldim,nbnd) )
       ALLOCATE ( dwfc(npwx,ldim) )
 !!omp parallel do default(shared) private(ig,m1,gvec)
       DO ig = 1,npw
@@ -560,9 +568,13 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, nb_s, nb_e, mykey, dproj)
       ! there is no G=0 term
       CALL DGEMM('T','N',ldim, nbnd, 2*npw, 2.0_dp,  &
                   dwfc, 2*npwx, spsi, 2*npwx, 0.0_dp,&
-                  dproj(offsetU(alpha)+1,1), nwfcU)
+                  dproj0, ldim)
       DEALLOCATE ( dwfc ) 
       CALL mp_sum( dproj, intra_bgrp_comm )
+      ! copy to dproj results for the bands treated by this processor
+      dproj( offsetU(alpha)+1:offsetU(alpha)+ldim, :) = dproj0(:, nb_s:nb_e)
+      DEALLOCATE ( dproj0 ) 
+      !
    END IF
    !
    ALLOCATE (dbetapsi(nh(nt),nbnd) ) 

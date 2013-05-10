@@ -95,7 +95,8 @@ SUBROUTINE orthoUwfc
      ! save to unit iunhub
      !
      CALL copy_U_wfc (swfcatom)
-     CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
+     IF ( nks > 1 ) &
+          CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
      !
   ENDDO
   DEALLOCATE (wfcatom, swfcatom)

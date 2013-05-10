@@ -126,7 +126,7 @@ subroutine write_ns
   enddo
 
   if (nspin.eq.1) nsum = 2.d0 * nsum 
-  WRITE( stdout, '(a,1x,f11.7)') 'N of occupied +U levels =', nsum
+  WRITE( stdout, '(a,1x,f11.6)') 'N of occupied +U levels =', nsum
   WRITE( stdout,*) '--- exit write_ns ---'
   return
 end subroutine write_ns
@@ -241,7 +241,7 @@ subroutine write_ns_nc
      endif
   enddo
 
-  WRITE( stdout, '(a,1x,f11.7)') 'N of occupied +U levels =', nsum
+  WRITE( stdout, '(a,1x,f11.6)') 'N of occupied +U levels =', nsum
   WRITE( stdout,*) '--- exit write_ns ---'
 
   return

@@ -98,9 +98,8 @@ SUBROUTINE c_bands( iter )
      !
      ! ... Needed for LDA+U
      !
-     IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) THEN
-        CALL get_buffer ( wfcU, nwordwfcU, iunhub, ik )
-     END IF
+     IF ( nks > 1 .AND. lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
+          CALL get_buffer ( wfcU, nwordwfcU, iunhub, ik )
      !
      ! ... diagonalization of bands for k-point ik
      !
@@ -660,9 +659,8 @@ SUBROUTINE c_bands_nscf( )
      !
      ! ... Needed for LDA+U
      !
-     IF ( lda_plus_u .AND. (U_projection .NE. 'pseudo') ) THEN
-        CALL get_buffer ( wfcU, nwordwfcU, iunhub, ik )
-     END IF
+     IF ( nks > 1 .AND. lda_plus_u .AND. (U_projection .NE. 'pseudo') ) &
+          CALL get_buffer ( wfcU, nwordwfcU, iunhub, ik )
      !
      ! ... calculate starting  wavefunctions
      !
