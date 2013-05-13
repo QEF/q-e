@@ -242,6 +242,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ELSEIF (plot_num == 17) THEN
      WRITE(stdout, '(7x,a)') "Reconstructing all-electron valence charge."
      ! code partially duplicate from plot_num=0, should be unified
+     CALL init_us_1()
      CALL PAW_make_ae_charge(rho)
      !
      IF (spin_component == 0) THEN
