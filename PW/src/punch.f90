@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum ESPRESSO group
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,10 +13,12 @@ SUBROUTINE punch( what )
   ! ... the information needed for further processing (phonon etc.)
   !
   USE io_global,            ONLY : stdout
-  USE io_files,             ONLY : prefix, iunpun
-  USE control_flags,        ONLY : io_level
+  USE io_files,             ONLY : prefix, iunpun, iunwfc, nwordwfc
+  USE control_flags,        ONLY : io_level, twfcollect
+  USE klist,                ONLY : nks
   USE pw_restart,           ONLY : pw_writefile
   USE a2F,                  ONLY : la2F, a2Fsave
+  USE wavefunctions_module, ONLY : evc
   !
   IMPLICIT NONE
   !
@@ -28,6 +30,11 @@ SUBROUTINE punch( what )
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
       TRIM( prefix ) // '.save'
   !
+  ! ... if wavefunctions are stored in "distributed" format,
+  ! ... save here wavefunctions to file if never saved before
+  !
+  IF ( .NOT. twfcollect .AND. nks == 1 ) &
+              CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, 1 )
   iunpun = 4
   !
   CALL pw_writefile( TRIM( what ) )

@@ -84,6 +84,7 @@
   CALL print_ks_energies ( ) 
   !
   ! ... save converged wfc if they have not been written previously
+  ! ... FIXME: it shouldn't be necessary to do this here
   !
   IF ( nks == 1 .AND. (io_level < 2) .AND. (io_level > -1) ) &
         CALL save_buffer ( evc, nwordwfc, iunwfc, nks )

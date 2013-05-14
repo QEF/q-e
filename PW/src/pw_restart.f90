@@ -158,7 +158,7 @@ MODULE pw_restart
          lrho  = lscf
          lwfc  = twfcollect
          !
-      CASE( "config" ) 
+      CASE( "config" )
          ! 
          ! ... write just the xml data file, not the charge density and the wavefunctions
          !
@@ -847,7 +847,7 @@ MODULE pw_restart
              !
              ispin = isk(ik)
              !
-             IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
+             IF ( ( nks > 1 ) .AND. ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                 !
                 CALL get_buffer ( evc, nwordwfc, iunwfc, (ik-iks+1) )
                 !
@@ -875,7 +875,7 @@ MODULE pw_restart
              !
              ispin = isk(ik_eff)
              !
-             IF ( ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
+             IF ( ( nks > 1 ) .AND. ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
                 !
                 CALL get_buffer ( evc, nwordwfc, iunwfc, (ik_eff-iks+1) )
                 !
@@ -901,7 +901,7 @@ MODULE pw_restart
              !
            ELSE
              !
-             IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
+             IF ( ( nks > 1 ) .AND. ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                 !
                 CALL get_buffer( evc, nwordwfc, iunwfc, (ik-iks+1) )
                 !
@@ -3147,7 +3147,7 @@ MODULE pw_restart
                            ngk(ik-iks+1), filename, scalef, &
                            ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
             !
-            IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
+            IF ( ( nks > 1 ) .AND. ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                !
                CALL save_buffer ( evc, nwordwfc, iunwfc, (ik-iks+1) )
                !
@@ -3172,7 +3172,7 @@ MODULE pw_restart
                            ngk(ik_eff-iks+1), filename, scalef, &
                            ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
             !
-            IF ( ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
+            IF ( ( nks > 1 ) .AND. ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
                !
                CALL save_buffer ( evc, nwordwfc, iunwfc, (ik_eff-iks+1) )
                !
@@ -3222,7 +3222,7 @@ MODULE pw_restart
                !
             END IF
             !
-            IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
+            IF (( nks > 1 ) .AND. ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                !
                CALL save_buffer ( evc, nwordwfc, iunwfc, (ik-iks+1) )
                !

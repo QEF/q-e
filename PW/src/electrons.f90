@@ -753,12 +753,6 @@ SUBROUTINE electrons_scf()
      CALL close_mix_file( iunmix, 'keep' )
   END IF
   !
-  ! Save wavefunctions to buffer if never saved before
-  ! FIXME: we should just write to file, not to buffer
-  !
-  IF ( nks == 1 .AND. .NOT. lelfield ) &
-      CALL save_buffer ( evc, nwordwfc, iunwfc, nks )
-  !
   IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
   call destroy_scf_type ( rhoin )
   CALL stop_clock( 'electrons' )

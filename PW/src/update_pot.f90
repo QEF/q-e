@@ -504,7 +504,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
         ! ... "now"  -> "old"
         !
-        CALL get_buffer( evc, nwordwfc, iunwfc, ik )
+        IF ( nks > 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
         CALL davcio( evc, 2*nwordwfc, iunoldwfc, ik, +1 )
         !
      END DO
@@ -560,7 +560,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         ! ... read wavefcts as (t-dt), replace with wavefcts at (t)
         !
         CALL davcio( evcold, 2*nwordwfc, iunoldwfc, ik, -1 )
-        CALL get_buffer( evc, nwordwfc, iunwfc, ik )
+        IF ( nks > 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
         CALL davcio(    evc, 2*nwordwfc, iunoldwfc, ik, +1 )
         !
         IF ( okvan ) THEN
@@ -660,7 +660,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
         ! ... save interpolated wavefunctions to file iunwfc
         !
-        CALL save_buffer( evc, nwordwfc, iunwfc, ik )
+        IF ( nks > 1 ) CALL save_buffer( evc, nwordwfc, iunwfc, ik )
         !
      END DO
      !

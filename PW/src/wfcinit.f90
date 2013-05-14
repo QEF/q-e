@@ -96,9 +96,10 @@ SUBROUTINE wfcinit()
      !
      ! ... wavefunctions are read from file (or buffer) in routine 
      ! ... c_bands, but not if there is a single k-point. In such
-     ! ... a case, store wavefunctions in memory here
+     ! ... a case, we read wavefunctions (directly from file in 
+     ! ... order to avoid a useless buffer allocation) here
      !
-     IF ( nks == 1 ) CALL get_buffer ( evc, nwordwfc, iunwfc, 1 )
+     IF ( nks == 1 ) CALL davcio ( evc, 2*nwordwfc, iunwfc, 1, -1 )
      CALL stop_clock( 'wfcinit' )
      RETURN
      !

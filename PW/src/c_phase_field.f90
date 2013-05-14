@@ -38,7 +38,6 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    USE klist,                ONLY : nelec, degauss, nks, xk, wk
    USE wvfct,                ONLY : npwx, npw, nbnd, ecutwfc
    USE noncollin_module,     ONLY : noncolin, npol
-   USE wavefunctions_module, ONLY : evc
    USE bp,                   ONLY : nppstr_3d, mapgm_global, nx_el
    USE fixed_occ
    USE gvect,   ONLY : ig_l2g
