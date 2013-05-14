@@ -51,7 +51,7 @@ SUBROUTINE wfcinit()
   ! ... now the various possible wavefunction initializations
   ! ... first a check: is "tmp_dir"/"prefix".wfc found on disk?
   !
-  IF ( TRIM(starting_wfc) == 'file' .AND. .NOT. exst)  THEN
+  IF ( TRIM(starting_wfc) == 'file' .AND. .NOT. exst) THEN
      !
      ! ... "tmp_dir"/"prefix".wfc not found on disk: try to read
      ! ... wavefunctions in "collected" format from "prefix".save/, 
@@ -64,9 +64,18 @@ SUBROUTINE wfcinit()
         starting_wfc = 'atomic+random'
      END IF
      !
+  ELSE IF ( TRIM(starting_wfc) == 'file' .AND. exst) THEN
+     !
+     ! ... wavefunctions are read from file (or buffer) in routine 
+     ! ... c_bands, but not if there is a single k-point. In such
+     ! ... a case, we read wavefunctions (directly from file in 
+     ! ... order to avoid a useless buffer allocation) here
+     !
+     IF ( nks == 1 ) CALL davcio ( evc, 2*nwordwfc, iunwfc, 1, -1 )
+     !
   END IF
   !
-  ! ... first of all, state what will happen
+  ! ... state what will happen
   !
   IF ( TRIM(starting_wfc) == 'file' ) THEN
      !
@@ -92,29 +101,16 @@ SUBROUTINE wfcinit()
      !
   END IF
   !
-  IF ( TRIM(starting_wfc) == 'file' ) THEN
-     !
-     ! ... wavefunctions are read from file (or buffer) in routine 
-     ! ... c_bands, but not if there is a single k-point. In such
-     ! ... a case, we read wavefunctions (directly from file in 
-     ! ... order to avoid a useless buffer allocation) here
-     !
-     IF ( nks == 1 ) CALL davcio ( evc, 2*nwordwfc, iunwfc, 1, -1 )
-     CALL stop_clock( 'wfcinit' )
-     RETURN
-     !
-  END IF
+  ! ... exit here if starting from file or for non-scf calculations.
+  ! ... In the latter case the starting wavefunctions are not 
+  ! ... calculated here but just before diagonalization (to reduce I/O)
   !
-  ! ... for non-scf calculations, the starting wavefunctions are not 
-  ! ... calculated here but before diagonalization (to reduce I/O)
-  !
-  IF ( .NOT. lscf .AND. .NOT. lelfield ) THEN
+  IF (  ( .NOT. lscf .AND. .NOT. lelfield ) .OR. TRIM(starting_wfc) == 'file' ) THEN
      !
      CALL stop_clock( 'wfcinit' )
      RETURN
      !
   END IF
-  !
   !
   IF ( nks > 1 ) REWIND( iunigk )
   !
