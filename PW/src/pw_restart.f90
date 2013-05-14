@@ -75,7 +75,7 @@ MODULE pw_restart
       !
       USE control_flags,        ONLY : istep, twfcollect, conv_ions, &
                                        lscf, lkpoint_dir, gamma_only, &
-                                       tqr, noinv, do_makov_payne 
+                                       tqr, noinv, do_makov_payne, smallmem
       USE realus,               ONLY : real_space
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
@@ -709,7 +709,7 @@ MODULE pw_restart
          !
          IF ( lwfc ) THEN
            !
-           CALL write_gk( iunout, ik, filename )
+           IF ( .NOT. smallmem ) CALL write_gk( iunout, ik, filename )
            !
            CALL write_this_wfc ( iunout, ik )
            !

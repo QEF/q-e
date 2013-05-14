@@ -12,7 +12,7 @@ SUBROUTINE init_run()
   USE klist,              ONLY : nkstot
   USE symme,              ONLY : sym_rho_init
   USE wvfct,              ONLY : nbnd, et, wg, btype
-  USE control_flags,      ONLY : lmd, gamma_only
+  USE control_flags,      ONLY : lmd, gamma_only, smallmem
   USE cell_base,          ONLY : at, bg
   USE cellmd,             ONLY : lmovecell
   USE dynamics_module,    ONLY : allocate_dyn_vars
@@ -32,6 +32,7 @@ SUBROUTINE init_run()
   USE wannier_new,        ONLY : use_wannier    
   USE dfunct,             ONLY : newd
   USE esm,                ONLY : do_comp_esm, esm_ggen_2d
+  USE mp_bands,           ONLY : intra_bgrp_comm
   !
   IMPLICIT NONE
   !
@@ -51,7 +52,12 @@ SUBROUTINE init_run()
   !
   ! ... generate reciprocal-lattice vectors and fft indices
   !
-  CALL ggen ( gamma_only, at, bg )
+  IF( smallmem ) THEN
+     CALL ggen( gamma_only, at, bg, intra_bgrp_comm, no_global_sort = .TRUE. )
+  ELSE
+     CALL ggen( gamma_only, at, bg )
+  END IF
+  !
   IF (do_comp_esm) CALL esm_ggen_2d ()
   CALL gshells ( lmovecell )
   !

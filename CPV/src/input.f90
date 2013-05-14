@@ -247,13 +247,11 @@ MODULE input
      llondon        = london
      !
      remove_rigid_rot_ = remove_rigid_rot
+     !
+     ! ... define memory- and disk-related internal switches
+     !
+     smallmem = ( TRIM( memory ) == 'small' )
      twfcollect = wf_collect
-     !
-     ! ... define memory related internal switches
-     !
-     IF( TRIM( memory ) == 'small' ) THEN
-        smallmem = .TRUE.
-     END IF
      !
      ! Options for isolated system
      SELECT CASE( TRIM( assume_isolated ) )

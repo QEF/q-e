@@ -510,12 +510,9 @@ SUBROUTINE iosys()
      CALL errore( 'iosys', 'LSDA not available with electric field' , 1 )
   ENDIF
   !
-  ! ... define memory related internal switches
+  ! ... define memory- and disk-related internal switches
   !
-  IF( TRIM( memory ) == 'small' ) THEN
-     smallmem = .TRUE.
-  END IF
-  !
+  smallmem = ( TRIM( memory ) == 'small' )
   twfcollect = wf_collect
   !
   ! ... Set Values for electron and bands
