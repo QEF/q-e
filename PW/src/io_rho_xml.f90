@@ -138,8 +138,11 @@ MODULE io_rho_xml
          IF ( ionode ) THEN
             CLOSE( UNIT = iunocc, STATUS = 'KEEP')
          ELSE
-            rho%ns(:,:,:,:) = 0.D0
-            rho%ns_nc(:,:,:,:) = 0.D0
+            if (noncolin) then
+              rho%ns_nc(:,:,:,:) = 0.D0
+            else
+              rho%ns(:,:,:,:) = 0.D0
+            endif 
          END IF
          if (noncolin) then
            CALL mp_sum(rho%ns_nc, intra_image_comm)
