@@ -537,9 +537,11 @@ SUBROUTINE task_groups_init( dffts )
 
    CALL task_groups_init_first( dffts )
    !
+#ifdef DEBUG
    IF ( dffts%nogrp > 1 ) WRITE( stdout, 100 ) dffts%nogrp, dffts%npgrp
 
 100 FORMAT( /,3X,'Task Groups are in USE',/,3X,'groups and procs/group : ',I5,I5 )
+#endif
 
    !Find maximum chunk of local data concerning coefficients of eigenfunctions in g-space
 

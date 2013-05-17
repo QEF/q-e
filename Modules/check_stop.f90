@@ -87,7 +87,7 @@ MODULE check_stop
        INTEGER, OPTIONAL, INTENT(IN) :: inunit
        !
        INTEGER            :: unit
-       LOGICAL            :: check_stop_now, tex, tex2
+       LOGICAL            :: check_stop_now, tex
        LOGICAL            :: signaled
        REAL(DP)           :: seconds
        REAL(DP), EXTERNAL :: cclock
@@ -126,9 +126,9 @@ MODULE check_stop
              !
              ! ... Check if exit file exists in scratch directory
              !
-             INQUIRE( FILE = TRIM(tmp_dir) // TRIM( exit_file ), EXIST = tex2 )
+             INQUIRE( FILE = TRIM(tmp_dir) // TRIM( exit_file ), EXIST = tex )
              !
-             IF ( tex2 ) THEN
+             IF ( tex ) THEN
                 !
                 check_stop_now = .TRUE.
                 OPEN( UNIT = iunexit, FILE = TRIM(tmp_dir) // TRIM(exit_file) )

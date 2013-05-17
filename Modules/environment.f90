@@ -202,8 +202,8 @@ CONTAINS
     IF ( nproc_bgrp > 1 ) WRITE( stdout, &
          '(5X,"R & G space division:  proc/nbgrp/npool/nimage = ",I7)' ) nproc_bgrp
     IF ( get_ntask_groups() > 1 ) WRITE( stdout, &
-         '(5X,"wavefunctions fft division:  fft/group = ",I7)' ) &
-         get_ntask_groups()
+         '(5X,"wavefunctions fft division:  fft and procs/group = ",2I7)' ) &
+         get_ntask_groups(), nproc_bgrp / get_ntask_groups()
     !
   END SUBROUTINE parallel_info
 
