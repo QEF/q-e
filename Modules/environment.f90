@@ -145,7 +145,7 @@ CONTAINS
          &    "395502 (2009);", &
          &/9X," URL http://www.quantum-espresso.org"", ", &
          &/5X,"in publications or presentations arising from this work. More details at",&
-         &/5x,"http://www.quantum-espresso.org/quote.php")' )
+         &/5x,"http://www.quantum-espresso.org/quote")' )
 
     RETURN
   END SUBROUTINE opening_message
