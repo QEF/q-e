@@ -14,11 +14,12 @@ SUBROUTINE lr_write_restart()
   !---------------------------------------------------------------------
   !
   ! Modified by Osman Baris Malcioglu (2009)
+  ! Modified by Xiaochuan Ge (May. 2013) to adapt pseudo-hermitian
   !
   USE io_files,             ONLY : tmp_dir, prefix, diropn
   USE lr_variables,         ONLY : beta_store, gamma_store, zeta_store, norm0, &
                                    LR_polarization, LR_iteration, n_ipol,F,project,&
-                                   evc1,evc1_new,iunrestart, nwordrestart, &
+                                   evc1,evc1_new,evc1_old,iunrestart, nwordrestart, &
                                    nbnd_total, charge_response,lr_verbosity,&
                                    bgz_suffix
   USE charg_resp,           ONLY : resonance_condition, rho_1_tot, rho_1_tot_im
@@ -67,17 +68,25 @@ SUBROUTINE lr_write_restart()
   !
   WRITE(158,*) LR_iteration
   !
+  norm0(pol_index)=beta_store(pol_index,1)
   WRITE(158,*) norm0(pol_index)
   !
-  DO i=1,LR_iteration
+  DO i=1,LR_iteration-1
      !
-     WRITE(158,*) beta_store(pol_index,i)
-     WRITE(158,*) gamma_store(pol_index,i)
+     WRITE(158,*) beta_store(pol_index,i+1)
+     WRITE(158,*) gamma_store(pol_index,i+1)
      !This is absolutely necessary for cross platform compatibilty
      DO j=1,n_ipol
       WRITE(158,*) zeta_store (pol_index,j,i)
      ENDDO
      !
+  ENDDO
+  ! XC: compatable with the old version. The beta&gamma will not be used in 
+  ! spectrum calculation
+  WRITE(158,*) beta_store(pol_index,LR_iteration)             
+  WRITE(158,*) gamma_store(pol_index,LR_iteration)             
+  DO j=1,n_ipol                                               
+    WRITE(158,*) zeta_store (pol_index,j,LR_iteration)        
   ENDDO
   !
   CLOSE(158)
@@ -125,8 +134,8 @@ SUBROUTINE lr_write_restart()
        !
        CALL davcio(evc1(:,:,:,1),nwordrestart,iunrestart,1,1)
        CALL davcio(evc1(:,:,:,2),nwordrestart,iunrestart,2,1)
-       CALL davcio(evc1_new(:,:,:,1),nwordrestart,iunrestart,3,1)
-       CALL davcio(evc1_new(:,:,:,2),nwordrestart,iunrestart,4,1)
+       CALL davcio(evc1_old(:,:,:,1),nwordrestart,iunrestart,3,1)
+       CALL davcio(evc1_old(:,:,:,2),nwordrestart,iunrestart,4,1)
        !
        CLOSE( unit = iunrestart)
     !

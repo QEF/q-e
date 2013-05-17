@@ -31,14 +31,16 @@ SUBROUTINE lr_alloc_init()
   ENDIF
   !
   IF (nbnd>nbnd_occ(1)) THEN
-     WRITE(stdout,'(/,5X,"Warning: There are virtual states in the input file,&
-          & trying to disregard in response calculation")')
+     if(.not. davidson)  WRITE(stdout,'(/,5X,"Warning: There are virtual&
+           states in the input file, trying to disregard in response calculation")')
      nbnd_total=nbnd
      nbnd=nbnd_occ(1)
   ELSE
+     if(davidson) WRITE(stdout,'(/5X,"(XC.G): No virtrual state!! For analysis the property of transitions, &
+               & it is suggested to calculate some virtual states. ")')
      nbnd_total=nbnd
   ENDIF
-  !
+
   IF (lr_verbosity > 7) THEN
    WRITE(stdout,'("NPWX=",I15)') npwx
    WRITE(stdout,'("NBND=",I15)') nbnd
@@ -46,17 +48,15 @@ SUBROUTINE lr_alloc_init()
    WRITE(stdout,'("NRXX=",I15)') dfftp%nnr
    WRITE(stdout,'("NSPIN_MAG=",I15)') nspin_mag
   ENDIF
-  !
+
   IF (allocated(evc)) THEN
    DEALLOCATE(evc)
    ALLOCATE(evc(npwx,nbnd))
   ENDIF
   ALLOCATE(evc0(npwx,nbnd,nks))
   ALLOCATE(sevc0(npwx,nbnd,nks))
-  IF (project) THEN
+  IF (project .or. davidson) THEN
    WRITE(stdout,'(5x,"Allocating ",I5," extra bands for projection")') nbnd_total-nbnd
-   ALLOCATE(evc0_virt(npwx,(nbnd_total-nbnd),nks))
-   !allocate(sevc0_virt(npwx,(nbnd_total-nbnd),nks))
    ALLOCATE(F(nbnd,(nbnd_total-nbnd),n_ipol))
    ALLOCATE(R(nbnd,(nbnd_total-nbnd),n_ipol))
    ALLOCATE(chi(3,3))
@@ -68,7 +68,13 @@ SUBROUTINE lr_alloc_init()
   ALLOCATE(evc1_old(npwx,nbnd,nks,2))
   ALLOCATE(evc1(npwx,nbnd,nks,2))
   ALLOCATE(evc1_new(npwx,nbnd,nks,2))
-  ALLOCATE(sevc1_new(npwx,nbnd,nks,2))
+  !if(pseudo_hermitian) then
+    ALLOCATE(sevc1_new(npwx,nbnd,nks,2))
+    sevc1_new(:,:,:,:)=(0.0d0,0.0d0)
+  !else
+    ALLOCATE(sevc1(npwx,nbnd,nks,2))
+    sevc1(:,:,:,:)=(0.0d0,0.0d0)
+  !endif
   ALLOCATE(d0psi(npwx,nbnd,nks,n_ipol))
   !
   IF(dffts%have_task_groups) THEN
@@ -115,7 +121,6 @@ SUBROUTINE lr_alloc_init()
   evc1_old(:,:,:,:)=(0.0d0,0.0d0)
   evc1(:,:,:,:)=(0.0d0,0.0d0)
   evc1_new(:,:,:,:)=(0.0d0,0.0d0)
-  sevc1_new(:,:,:,:)=(0.0d0,0.0d0)
   !rho_tot(:)=0.0d0
   d0psi(:,:,:,:)=(0.0d0,0.0d0)
   !
@@ -151,7 +156,7 @@ CONTAINS
        becp%r(:,:)=0.0d0
        ALLOCATE(becp1(nkb,nbnd))
        becp1(:,:)=0.0d0
-       IF (project) THEN
+       IF (project .or. davidson) THEN
         ALLOCATE(becp1_virt(nkb,nbnd_total-nbnd))
         becp1_virt(:,:)=0.0d0
        ENDIF
@@ -172,7 +177,7 @@ CONTAINS
        becp%k(:,:)=(0.0d0,0.0d0)
        ALLOCATE(becp1_c(nkb,nbnd,nks))
        becp1_c(:,:,:)=(0.0d0,0.0d0)
-       IF (project) THEN
+       IF (project .or. davidson) THEN
         ALLOCATE(becp1_c_virt(nkb,nbnd_total-nbnd,nks))
         becp1_c_virt(:,:,:)=(0.0d0,0.0d0)
        ENDIF

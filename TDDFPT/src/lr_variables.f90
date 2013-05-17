@@ -88,7 +88,7 @@ MODULE lr_variables
                                ! index 1: q' using rotated SBR 2: p')
        evc1(:,:,:,:),     &    !  "    "
        evc1_new(:,:,:,:), &    !  "    "
-       sevc1_new(:,:,:,:),&    ! S * "    "
+       sevc1(:,:,:,:), sevc1_new(:,:,:,:),&    ! S * "    "
        d0psi(:,:,:,:)          ! for saving the original starting vectors
 
   !
@@ -162,6 +162,8 @@ MODULE lr_variables
   real(kind=dp), ALLOCATABLE :: vl(:,:),vr(:,:)
   !
    REAL(kind=dp) :: norm0(3)
+
+   LOGICAL :: davidson = .false.           
   !
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! lr_input:
@@ -185,6 +187,7 @@ MODULE lr_variables
   INTEGER :: itermax            ! number of Lanczos vectors to be calculated
   INTEGER :: itermax_int        ! interpolated number of lanczos steps for Ritz vectors
   LOGICAL :: ltammd             ! Tarn-Darnkhoff approximation
+  LOGICAL :: pseudo_hermitian   ! If psedudo hermitian algorithm is used
   LOGICAL :: no_hxc             ! If .true. no hartree exchange correlation corrections will be considered.
   LOGICAL :: project            ! If .true. projections to read virtual states will be calculated
   !

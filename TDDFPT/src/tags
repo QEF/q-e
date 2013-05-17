@@ -1,0 +1,332 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+200	lr_readin.f90	/^200  CALL errore ('lr_readin', 'reading lr_input namelist', ABS (ios) )$/;"	l	subroutine:lr_readin	file:
+201	lr_readin.f90	/^201    CALL errore ('lr_readin', 'reading lr_control namelist', ABS (ios) )$/;"	l	subroutine:lr_readin	file:
+202	lr_readin.f90	/^202     CALL errore ('lr_readin', 'reading lr_post namelist', ABS (ios) )$/;"	l	subroutine:lr_readin	file:
+299	lr_readin.f90	/^299    CALL errore ('lr_readin', 'reading lr_dav namelist', ABS (ios) )$/;"	l	subroutine:lr_readin	file:
+301	lr_charg_resp.f90	/^301 CALL errore ('read_beta_gamma_z', 'File is corrupted, no data', i )$/;"	l	subroutine:read_wT_beta_gamma_z	file:
+301	lr_restart.f90	/^  301 CALL errore ('restart', 'A File is corrupted, file ended unexpectedly', 1 )$/;"	l	subroutine:lr_restart	file:
+302	lr_charg_resp.f90	/^302 CALL errore ('read_beta_gamma_z', 'File is corrupted, itermax not found', 1 )$/;"	l	subroutine:read_wT_beta_gamma_z	file:
+303	lr_charg_resp.f90	/^303 CALL errore ('read_beta_gamma_z', 'File is corrupted, data number follows:', i )$/;"	l	subroutine:read_wT_beta_gamma_z	file:
+303	lr_restart.f90	/^  303 CALL errore ('restart', 'A File is corrupted, error in reading data', 1)$/;"	l	subroutine:lr_restart	file:
+501	lr_charg_resp.f90	/^501 CALL errore ('lr_dump_rho_tot_cube', 'Unable to open file for writing', 1 )$/;"	l	subroutine:lr_dump_rho_tot_cube	file:
+501	lr_charg_resp.f90	/^501 CALL errore ('lr_dump_rho_tot_pxyd', 'Unable to open file for writing', 1 )$/;"	l	subroutine:lr_dump_rho_tot_pxyd	file:
+501	lr_charg_resp.f90	/^501 CALL errore ('lr_dump_rho_tot_xyzd', 'Unable to open file for writing', 1 )$/;"	l	subroutine:lr_dump_rho_tot_xcrys	file:
+501	lr_charg_resp.f90	/^501 CALL errore ('lr_dump_rho_tot_xyzd', 'Unable to open file for writing', 1 )$/;"	l	subroutine:lr_dump_rho_tot_xyzd	file:
+C_right_full	lr_dav_variables.f90	/^        D_left_full(:,:,:,:),C_right_full(/;"	v	module:lr_dav_variables
+C_vec_b	lr_dav_variables.f90	/^        vec_b(:,:,:,:), svec_b(:,:,:,:),   & ! vectors for the basis of Liouvillian$/;"	v	module:lr_dav_variables
+D_left_full	lr_dav_variables.f90	/^        ground_state(:,:,:),&$/;"	v	module:lr_dav_variables
+D_vec_b	lr_dav_variables.f90	/^        C_vec_b(:,:,:,:),       &  ! D and C applied to vec_b $/;"	v	module:lr_dav_variables
+F	lr_variables.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: F(/;"	v	module:lr_variables
+Fx	lr_dav_variables.f90	/^        D_left_full(:,:,:,:),C_right_full(:,:,:,:),&$/;"	v	module:lr_dav_variables
+FxR	lr_dav_variables.f90	/^  real(dp) :: FxR(/;"	v	module:lr_dav_variables
+Fy	lr_dav_variables.f90	/^        Fx(:,:),Fy(/;"	v	module:lr_dav_variables
+FyR	lr_dav_variables.f90	/^  real(dp) :: FxR(3), FyR(/;"	v	module:lr_dav_variables
+IFLAGS	Makefile	/^IFLAGS         = -I..\/..\/include$/;"	m
+LIBOBJS	Makefile	/^LIBOBJS        = ..\/..\/flib\/ptools.a ..\/..\/flib\/flib.a ..\/..\/clib\/clib.a ..\/..\/iotk\/src\/libiotk.a $/;"	m
+LROBJS	Makefile	/^LROBJS= \\$/;"	m
+LR_iteration	lr_variables.f90	/^  INTEGER           :: LR_iteration,/;"	v	module:lr_variables
+LR_polarization	lr_variables.f90	/^  INTEGER           :: LR_iteration, LR_polarization /;"	v	module:lr_variables
+Ltempvec1	lr_dav_variables.f90	/^        Fx(:,:),Fy(:,:),tempvec1(:,:),Ltempvec1(/;"	v	module:lr_dav_variables
+M	lr_dav_variables.f90	/^        M_/;"	v	module:lr_dav_variables
+MODFLAGS	Makefile	/^MODFLAGS= $(MOD_FLAG)..\/..\/iotk\/src $(MOD_FLAG)..\/..\/Modules \\$/;"	m
+M_C	lr_dav_variables.f90	/^        left2(:),right2(:), & ! square of the module of left_res and right_res$/;"	v	module:lr_dav_variables
+M_D	lr_dav_variables.f90	/^        M_C(:,:),M_D(/;"	v	module:lr_dav_variables
+M_shadow_avatar	lr_dav_variables.f90	/^        eign_value(:,:),&$/;"	v	module:lr_dav_variables
+PHOBJS	Makefile	/^PHOBJS=..\/..\/PHonon\/PH\/libph.a$/;"	m
+PI	lr_dav_variables.f90	/^  real (dp), PARAMETER :: PI /;"	v	module:lr_dav_variables
+PWOBJS	Makefile	/^PWOBJS = ..\/..\/PW\/src\/libpw.a$/;"	m
+QEMODS	Makefile	/^QEMODS = ..\/..\/Modules\/libqemod.a$/;"	m
+R	lr_variables.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: R(/;"	v	module:lr_variables
+TLDEPS	Makefile	/^TLDEPS=bindir libs pw ph$/;"	m
+bcast_lr_input	bcast_lr_input.f90	/^SUBROUTINE bcast_lr_input$/;"	s
+becp1_c	lr_variables.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: becp1_c(/;"	v	module:lr_variables
+becp1_c_virt	lr_variables.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: becp1_c_virt(/;"	v	module:lr_variables
+becp1_virt	lr_variables.f90	/^  real(kind=dp), ALLOCATABLE :: becp1_virt(/;"	v	module:lr_variables
+bfft_orbital_custom_gamma	lr_exx_kernel.f90	/^SUBROUTINE bfft_orbital_custom_gamma(/;"	s	module:lr_exx_kernel
+bgz_suffix	lr_variables.f90	/^  CHARACTER (len=24) :: bgz_suffix$/;"	v	module:lr_variables
+broadening	lr_dav_variables.f90	/^  REAL(kind=dp) :: residue_conv_thr, reference, close_pre, broadening,/;"	v	module:lr_dav_variables
+calc_inter	lr_dav_routines.f90	/^  real(dp) function calc_inter(/;"	f	module:lr_dav_routines
+charg_resp	lr_charg_resp.f90	/^MODULE charg_resp$/;"	m
+charge_response	lr_variables.f90	/^  INTEGER :: charge_response /;"	v	module:lr_variables
+check	lr_dav_debug.f90	/^  subroutine check(/;"	s	module:lr_dav_debug
+check_all_bands_gamma	lr_variables.f90	/^SUBROUTINE check_all_bands_gamma /;"	s	module:lr_variables
+check_density_gamma	lr_variables.f90	/^SUBROUTINE check_density_gamma /;"	s	module:lr_variables
+check_hermitian	lr_dav_debug.f90	/^  subroutine check_hermitian(/;"	s	module:lr_dav_debug
+check_orth	lr_dav_debug.f90	/^  subroutine check_orth(/;"	s	module:lr_dav_debug
+check_overlap	lr_dav_debug.f90	/^  subroutine check_overlap(/;"	s	module:lr_dav_debug
+check_overlap_basis	lr_dav_debug.f90	/^  subroutine check_overlap_basis(/;"	s	module:lr_dav_debug
+check_revc0	lr_dav_debug.f90	/^  subroutine check_revc0(/;"	s	module:lr_dav_debug
+check_vector_f	lr_variables.f90	/^SUBROUTINE check_vector_f /;"	s	module:lr_variables
+check_vector_gamma	lr_variables.f90	/^SUBROUTINE check_vector_gamma /;"	s	module:lr_variables
+chi	lr_charg_resp.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: chi(/;"	v	module:charg_resp
+chi_dav	lr_dav_variables.f90	/^        energy_dif(:),contribute(:,:),&$/;"	v	module:lr_dav_variables
+close_pre	lr_dav_variables.f90	/^  REAL(kind=dp) :: residue_conv_thr, reference, close_pre,/;"	v	module:lr_dav_variables
+code	lr_variables.f90	/^  CHARACTER (len=10), PARAMETER :: code /;"	v	module:lr_variables
+contribute	lr_dav_variables.f90	/^        energy_dif(:),contribute(/;"	v	module:lr_dav_variables
+cube_save	lr_variables.f90	/^  INTEGER, ALLOCATABLE :: cube_save(/;"	v	module:lr_variables
+d0psi	lr_variables.f90	/^       sevc1(:,:,:,:), sevc1_new(:,:,:,:),&    ! S * "    "$/;"	v	module:lr_variables
+dav_calc_chi	lr_dav_routines.f90	/^  real(dp) function dav_calc_chi(/;"	f	module:lr_dav_routines
+dav_calc_residue	lr_dav_routines.f90	/^  subroutine dav_calc_residue(/;"	s	module:lr_dav_routines
+dav_conv	lr_dav_variables.f90	/^  LOGICAL :: dav_conv$/;"	v	module:lr_dav_variables
+dav_debug	lr_dav_variables.f90	/^  logical :: precondition,dav_debug,/;"	v	module:lr_dav_variables
+dav_expan_basis	lr_dav_routines.f90	/^  subroutine dav_expan_basis(/;"	s	module:lr_dav_routines
+dav_iter	lr_dav_variables.f90	/^             lwork,info,dav_iter /;"	v	module:lr_dav_variables
+davidson	lr_variables.f90	/^   LOGICAL :: davidson /;"	v	module:lr_variables
+debugM_C	lr_dav_variables.f90	/^        M_C(:,:),M_D(:,:),M(:,:),& ! Matrix represented in the sub space$/;"	v	module:lr_dav_variables
+debugM_D	lr_dav_variables.f90	/^        debugM_C(:,:),debugM_D(/;"	v	module:lr_dav_variables
+debugleft	lr_dav_variables.f90	/^        debugM_C(:,:),debugM_D(:,:),debugleft(/;"	v	module:lr_dav_variables
+debugright	lr_dav_variables.f90	/^        debugM_C(:,:),debugM_D(:,:),debugleft(:,:,:,:),debugright(/;"	v	module:lr_dav_variables
+diag_of_h	lr_dav_variables.f90	/^             sort_contr,diag_of_h,/;"	v	module:lr_dav_variables
+dinv_matrix	lr_sm1_psi.f90	/^SUBROUTINE dinv_matrix(/;"	s
+ecutfock_	lr_variables.f90	/^  REAL(kind=dp) :: ecutfock_$/;"	v	module:lr_variables
+eig_dir	lr_variables.f90	/^  CHARACTER(len=200) :: eig_dir$/;"	v	module:lr_variables
+eign_value	lr_dav_variables.f90	/^        right_M(:,:),       & ! left and right appro. eigen vectors of$/;"	v	module:lr_dav_variables
+eign_value_order	lr_dav_variables.f90	/^        vc_couple(:,:),&  ! for calculating the optimal initial vector$/;"	v	module:lr_dav_variables
+energy_dif	lr_dav_variables.f90	/^        tr_energy(:),&$/;"	v	module:lr_dav_variables
+energy_dif_order	lr_dav_variables.f90	/^        eign_value_order(:), energy_dif_order(/;"	v	module:lr_dav_variables
+epsil	lr_charg_resp.f90	/^  REAL(kind=dp)                 :: epsil /;"	v	module:charg_resp
+error_beta	lr_lanczos.f90	/^  subroutine error_beta(/;"	s	subroutine:one_lanczos_step
+eval1	lr_variables.f90	/^  real(kind=dp), ALLOCATABLE :: eval1(/;"	v	module:lr_variables
+eval2	lr_variables.f90	/^  real(kind=dp), ALLOCATABLE :: eval1(:),eval2(/;"	v	module:lr_variables
+evc0	lr_variables.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: &$/;"	v	module:lr_variables
+evc0_virt	lr_variables.f90	/^       evc0(:,:,:),       &    ! the ground state wavefunctions (plane wave, band, k point)$/;"	v	module:lr_variables
+evc1	lr_variables.f90	/^       evc1_/;"	v	module:lr_variables
+evc1_new	lr_variables.f90	/^       evc1(:,:,:,:),     &    !  "    "$/;"	v	module:lr_variables
+evc1_old	lr_variables.f90	/^       sevc0_virt(:,:,:), &    ! S * virtual ground state wavefunctions$/;"	v	module:lr_variables
+exxdiv	lr_variables.f90	/^  REAL(kind=dp) :: exxdiv$/;"	v	module:lr_variables
+fft_orbital_custom_gamma	lr_exx_kernel.f90	/^SUBROUTINE fft_orbital_custom_gamma(/;"	s	module:lr_exx_kernel
+finish	lr_dav_variables.f90	/^  REAL(kind=dp) :: residue_conv_thr, reference, close_pre, broadening,start,&$/;"	v	module:lr_dav_variables
+func_broadening	lr_dav_routines.f90	/^  real(dp) function func_broadening(/;"	f	module:lr_dav_routines
+ground_state	lr_dav_variables.f90	/^        debugM_C(:,:),debugM_D(:,:),debugleft(:,:,:,:),debugright(:,:,:,:),& ! only for debuging$/;"	v	module:lr_dav_variables
+ibnd	lr_dav_main.f90	/^  INTEGER            :: ibnd_/;"	v	program:lr_dav_main
+ibnd	lr_main.f90	/^  INTEGER            :: ip,pol_index,ibnd_/;"	v	program:lr_main
+ibnd_occ	lr_dav_main.f90	/^  INTEGER            :: ibnd_occ,/;"	v	program:lr_dav_main
+ibnd_occ	lr_main.f90	/^  INTEGER            :: ip,pol_index,ibnd_occ,/;"	v	program:lr_main
+ibnd_virt	lr_dav_main.f90	/^  INTEGER            :: ibnd_occ,ibnd_virt,/;"	v	program:lr_dav_main
+ibnd_virt	lr_main.f90	/^  INTEGER            :: ip,pol_index,ibnd_occ,ibnd_virt,/;"	v	program:lr_main
+if_check_her	lr_dav_variables.f90	/^             if_random_init,if_check_her$/;"	v	module:lr_dav_variables
+if_check_orth	lr_dav_variables.f90	/^             sort_contr,diag_of_h,print_spectrum,if_check_orth,/;"	v	module:lr_dav_variables
+if_random_init	lr_dav_variables.f90	/^             sort_contr,diag_of_h,print_spectrum,if_check_orth,&$/;"	v	module:lr_dav_variables
+igkk_kk_m	lr_variables.f90	/^  INTEGER, ALLOCATABLE :: &$/;"	v	module:lr_variables
+igkk_kk_p	lr_variables.f90	/^       ind_kk_m(:,:),&$/;"	v	module:lr_variables
+ind_kk_m	lr_variables.f90	/^       npw_kk_m(:),&$/;"	v	module:lr_variables
+ind_kk_p	lr_variables.f90	/^       npw_kk_p(:),&$/;"	v	module:lr_variables
+info	lr_dav_variables.f90	/^             lwork,info,/;"	v	module:lr_dav_variables
+inner_matrix	lr_dav_variables.f90	/^        M_shadow_avatar(:,:),&$/;"	v	module:lr_dav_variables
+input_sanity	lr_readin.f90	/^  SUBROUTINE input_sanity(/;"	s	subroutine:lr_readin
+interpret_eign	lr_dav_routines.f90	/^  subroutine interpret_eign(/;"	s	module:lr_dav_routines
+ip	lr_main.f90	/^  INTEGER            :: ip,/;"	v	program:lr_main
+iter_restart	lr_main.f90	/^  INTEGER            :: iter_restart,/;"	v	program:lr_main
+iteration	lr_main.f90	/^  INTEGER            :: iter_restart,iteration$/;"	v	program:lr_main
+itermax	lr_variables.f90	/^  INTEGER :: itermax /;"	v	module:lr_variables
+itermax_int	lr_variables.f90	/^  INTEGER :: itermax_int /;"	v	module:lr_variables
+iund0psi	lr_variables.f90	/^  INTEGER :: iund0psi /;"	v	module:lr_variables
+iunrestart	lr_variables.f90	/^  INTEGER :: iunrestart /;"	v	module:lr_variables
+k1d_term_gamma	lr_exx_kernel.f90	/^FUNCTION k1d_term_gamma(/;"	f	module:lr_exx_kernel
+k1d_term_k	lr_exx_kernel.f90	/^FUNCTION k1d_term_k(/;"	f	module:lr_exx_kernel
+k2d_term_gamma	lr_exx_kernel.f90	/^FUNCTION k2d_term_gamma(/;"	f	module:lr_exx_kernel
+k2d_term_k	lr_exx_kernel.f90	/^FUNCTION k2d_term_k(/;"	f	module:lr_exx_kernel
+k2q	lr_exx_kernel.f90	/^  INTEGER, PRIVATE, ALLOCATABLE :: k2q(/;"	v	module:lr_exx_kernel
+kill_left	lr_dav_variables.f90	/^  logical, allocatable :: kill_left(/;"	v	module:lr_dav_variables
+kill_right	lr_dav_variables.f90	/^  logical, allocatable :: kill_left(:),kill_right(/;"	v	module:lr_dav_variables
+lanc_norm	lr_variables.f90	/^  real(kind=dp) :: lanc_norm$/;"	v	module:lr_variables
+left2	lr_dav_variables.f90	/^        right_res(:,:,:,:), &  ! left and right residual of the appr. eigen-v$/;"	v	module:lr_dav_variables
+left_M	lr_dav_variables.f90	/^        work(:) ,&            ! global work space for linear algorithm routine$/;"	v	module:lr_dav_variables
+left_full	lr_dav_variables.f90	/^        D_vec_b(:,:,:,:),       &  ! D and C applied to vec_b. see documentation for explaination of D&C$/;"	v	module:lr_dav_variables
+left_res	lr_dav_variables.f90	/^        right_full(:,:,:,:),&  ! left and right appro. eigen vector of D*C in full space$/;"	v	module:lr_dav_variables
+lr_1to1orth	lr_dav_routines.f90	/^  subroutine lr_1to1orth(/;"	s	module:lr_dav_routines
+lr_alloc_init	lr_alloc_init.f90	/^SUBROUTINE lr_alloc_init(/;"	s
+lr_alloc_init_gamma	lr_alloc_init.f90	/^  SUBROUTINE lr_alloc_init_gamma(/;"	s	subroutine:lr_alloc_init
+lr_alloc_init_k	lr_alloc_init.f90	/^  SUBROUTINE lr_alloc_init_k(/;"	s	subroutine:lr_alloc_init
+lr_apply_liouvillian	lr_apply_liouvillian.f90	/^SUBROUTINE lr_apply_liouvillian(/;"	s
+lr_apply_liouvillian_gamma	lr_apply_liouvillian.f90	/^  SUBROUTINE lr_apply_liouvillian_gamma(/;"	s	subroutine:lr_apply_liouvillian
+lr_apply_liouvillian_k	lr_apply_liouvillian.f90	/^  SUBROUTINE lr_apply_liouvillian_k(/;"	s	subroutine:lr_apply_liouvillian
+lr_apply_s	lr_us.f90	/^  subroutine lr_apply_s(/;"	s	module:lr_us
+lr_build_matrix_spectrum	lr_diagonalise.f90	/^SUBROUTINE lr_build_matrix_spectrum(/;"	s
+lr_calc_F	lr_charg_resp.f90	/^  SUBROUTINE lr_calc_F(/;"	s	module:charg_resp
+lr_calc_Fxy	lr_dav_routines.f90	/^  subroutine lr_calc_Fxy(/;"	s	module:lr_dav_routines
+lr_calc_R	lr_charg_resp.f90	/^  SUBROUTINE lr_calc_R(/;"	s	module:charg_resp
+lr_calc_dens	lr_calc_dens.f90	/^SUBROUTINE lr_calc_dens(/;"	s
+lr_calc_dens_gamma	lr_calc_dens.f90	/^  SUBROUTINE lr_calc_dens_gamma$/;"	s	subroutine:lr_calc_dens
+lr_calc_dens_k	lr_calc_dens.f90	/^  SUBROUTINE lr_calc_dens_k$/;"	s	subroutine:lr_calc_dens
+lr_calc_eprec	lr_dvpsi_e.f90	/^  SUBROUTINE lr_calc_eprec(/;"	s	subroutine:lr_dvpsi_e
+lr_calc_project	lr_charg_resp.f90	/^  SUBROUTINE lr_calc_project(/;"	s	module:charg_resp
+lr_calc_w_T	lr_charg_resp.f90	/^  SUBROUTINE lr_calc_w_T(/;"	s	module:charg_resp
+lr_control	lr_readin.f90	/^  NAMELIST \/ lr_control /;"	n	subroutine:lr_readin
+lr_dav	lr_readin.f90	/^  namelist \/ lr_dav /;"	n	subroutine:lr_readin
+lr_dav_alloc_init	lr_dav_routines.f90	/^  subroutine lr_dav_alloc_init(/;"	s	module:lr_dav_routines
+lr_dav_cvcouple	lr_dav_routines.f90	/^  subroutine lr_dav_cvcouple(/;"	s	module:lr_dav_routines
+lr_dav_debug	lr_dav_debug.f90	/^module lr_dav_debug$/;"	m
+lr_dav_main	lr_dav_main.f90	/^PROGRAM lr_dav_main$/;"	p
+lr_dav_routines	lr_dav_routines.f90	/^module lr_dav_routines$/;"	m
+lr_dav_set_init	lr_dav_routines.f90	/^  subroutine lr_dav_set_init(/;"	s	module:lr_dav_routines
+lr_dav_variables	lr_dav_variables.f90	/^MODULE lr_dav_variables$/;"	m
+lr_dealloc	lr_dealloc.f90	/^SUBROUTINE lr_dealloc(/;"	s
+lr_dealloc_gamma	lr_dealloc.f90	/^  SUBROUTINE lr_dealloc_gamma(/;"	s	subroutine:lr_dealloc
+lr_dealloc_k	lr_dealloc.f90	/^  SUBROUTINE lr_dealloc_k(/;"	s	subroutine:lr_dealloc
+lr_diagonalise	lr_diagonalise.f90	/^SUBROUTINE lr_diagonalise(/;"	s
+lr_diagonalise_matrix	lr_diagonalise.f90	/^SUBROUTINE lr_diagonalise_matrix(/;"	s
+lr_dot	lr_dot.f90	/^FUNCTION lr_dot(/;"	f
+lr_dot_gamma	lr_dot.f90	/^  SUBROUTINE lr_dot_gamma$/;"	s	function:lr_dot
+lr_dot_k	lr_dot.f90	/^  SUBROUTINE lr_dot_k$/;"	s	function:lr_dot
+lr_dot_us	lr_us.f90	/^  function lr_dot_us(/;"	f	module:lr_us
+lr_dump_rho	lr_charg_resp.f90	/^  SUBROUTINE lr_dump_rho(/;"	s	module:charg_resp
+lr_dump_rho_tot_compat1	lr_charg_resp.f90	/^  SUBROUTINE lr_dump_rho_tot_compat1(/;"	s	module:charg_resp
+lr_dump_rho_tot_cube	lr_charg_resp.f90	/^  SUBROUTINE lr_dump_rho_tot_cube(/;"	s	module:charg_resp
+lr_dump_rho_tot_pxyd	lr_charg_resp.f90	/^  SUBROUTINE lr_dump_rho_tot_pxyd(/;"	s	module:charg_resp
+lr_dump_rho_tot_xcrys	lr_charg_resp.f90	/^  SUBROUTINE lr_dump_rho_tot_xcrys(/;"	s	module:charg_resp
+lr_dump_rho_tot_xyzd	lr_charg_resp.f90	/^  SUBROUTINE lr_dump_rho_tot_xyzd(/;"	s	module:charg_resp
+lr_dv_setup	lr_dv_setup.f90	/^SUBROUTINE lr_dv_setup$/;"	s
+lr_dvpsi_e	lr_dvpsi_e.f90	/^SUBROUTINE lr_dvpsi_e(/;"	s
+lr_exx	lr_variables.f90	/^  LOGICAL :: lr_exx$/;"	v	module:lr_variables
+lr_exx_alloc	lr_exx_kernel.f90	/^SUBROUTINE lr_exx_alloc(/;"	s	module:lr_exx_kernel
+lr_exx_apply_revc_int	lr_exx_kernel.f90	/^SUBROUTINE lr_exx_apply_revc_int(/;"	s	module:lr_exx_kernel
+lr_exx_dealloc	lr_exx_kernel.f90	/^SUBROUTINE lr_exx_dealloc(/;"	s	module:lr_exx_kernel
+lr_exx_kernel	lr_exx_kernel.f90	/^MODULE lr_exx_kernel$/;"	m
+lr_exx_kernel_int	lr_exx_kernel.f90	/^SUBROUTINE lr_exx_kernel_int /;"	s	module:lr_exx_kernel
+lr_exx_kernel_noint	lr_exx_kernel.f90	/^SUBROUTINE lr_exx_kernel_noint /;"	s	module:lr_exx_kernel
+lr_exx_revc0_init	lr_exx_kernel.f90	/^SUBROUTINE lr_exx_revc0_init(/;"	s	module:lr_exx_kernel
+lr_exx_sum_int	lr_exx_kernel.f90	/^SUBROUTINE lr_exx_sum_int(/;"	s	module:lr_exx_kernel
+lr_init_nfo	lr_init_nfo.f90	/^SUBROUTINE lr_init_nfo(/;"	s
+lr_input	lr_readin.f90	/^  NAMELIST \/ lr_input /;"	n	subroutine:lr_readin
+lr_io_level	lr_variables.f90	/^  INTEGER :: lr_io_level /;"	v	module:lr_variables
+lr_lanczos	lr_lanczos.f90	/^MODULE lr_lanczos$/;"	m
+lr_mGS_orth	lr_dav_routines.f90	/^  subroutine lr_mGS_orth(/;"	s	module:lr_dav_routines
+lr_mGS_orth_pp	lr_dav_routines.f90	/^  subroutine lr_mGS_orth_pp(/;"	s	module:lr_dav_routines
+lr_main	lr_main.f90	/^PROGRAM lr_main$/;"	p
+lr_norm	lr_dav_routines.f90	/^  subroutine lr_norm(/;"	s	module:lr_dav_routines
+lr_normalise	lr_normalise.f90	/^SUBROUTINE lr_normalise(/;"	s
+lr_normalise_gamma	lr_normalise.f90	/^  SUBROUTINE lr_normalise_gamma(/;"	s	subroutine:lr_normalise
+lr_normalise_k	lr_normalise.f90	/^  SUBROUTINE lr_normalise_k(/;"	s	subroutine:lr_normalise
+lr_ortho	lr_ortho.f90	/^SUBROUTINE lr_ortho(/;"	s
+lr_ortho_gamma	lr_ortho.f90	/^ SUBROUTINE lr_ortho_gamma(/;"	s	subroutine:lr_ortho
+lr_ortho_k	lr_ortho.f90	/^ SUBROUTINE lr_ortho_k(/;"	s	subroutine:lr_ortho
+lr_ortho_noncolin	lr_ortho.f90	/^ SUBROUTINE lr_ortho_noncolin(/;"	s	subroutine:lr_ortho
+lr_post	lr_readin.f90	/^  NAMELIST \/ lr_post /;"	n	subroutine:lr_readin
+lr_print_preamble	lr_dav_main.f90	/^  SUBROUTINE lr_print_preamble(/;"	s	program:lr_dav_main
+lr_print_preamble	lr_main.f90	/^  SUBROUTINE lr_print_preamble(/;"	s	program:lr_main
+lr_project_init	lr_charg_resp.f90	/^  SUBROUTINE lr_project_init(/;"	s	module:charg_resp
+lr_read_d0psi	lr_read_d0psi.f90	/^SUBROUTINE lr_read_d0psi(/;"	s
+lr_read_wf	lr_read_wf.f90	/^SUBROUTINE lr_read_wf(/;"	s
+lr_readin	lr_readin.f90	/^SUBROUTINE lr_readin$/;"	s
+lr_restart	lr_restart.f90	/^SUBROUTINE lr_restart(/;"	s
+lr_set_boxes_density	lr_set_boxes_density.f90	/^SUBROUTINE lr_set_boxes_density(/;"	s
+lr_solve_e	lr_solve_e.f90	/^SUBROUTINE lr_solve_e$/;"	s
+lr_us	lr_us.f90	/^module lr_us$/;"	m
+lr_variables	lr_variables.f90	/^MODULE lr_variables$/;"	m
+lr_verbosity	lr_variables.f90	/^  INTEGER :: lr_verbosity /;"	v	module:lr_variables
+lr_write_restart	lr_write_restart.f90	/^SUBROUTINE lr_write_restart(/;"	s
+ltammd	lr_variables.f90	/^  LOGICAL :: ltammd /;"	v	module:lr_variables
+lwork	lr_dav_variables.f90	/^             num_basis,toadd,       &   ! total number of basis$/;"	v	module:lr_dav_variables
+n_ipol	lr_variables.f90	/^  INTEGER :: n_ipol$/;"	v	module:lr_variables
+nbrx	lr_variables.f90	/^  INTEGER, PARAMETER:: nbrx=/;"	v	module:lr_variables
+no_hxc	lr_variables.f90	/^  LOGICAL :: no_hxc /;"	v	module:lr_variables
+nomsg	lr_dav_main.f90	/^  LOGICAL            :: rflag, nomsg$/;"	v	program:lr_dav_main
+nomsg	lr_main.f90	/^  LOGICAL            :: rflag, nomsg$/;"	v	program:lr_main
+norm0	lr_variables.f90	/^   REAL(kind=dp) :: norm0(/;"	v	module:lr_variables
+norm_F	lr_dav_variables.f90	/^        chi_dav(:,:),total_chi(:),norm_F(/;"	v	module:lr_dav_variables
+normal_read	lr_read_wf.f90	/^    SUBROUTINE normal_read(/;"	s	subroutine:lr_read_wf
+npw_kk_m	lr_variables.f90	/^       igkk_kk_m(:,:),&$/;"	v	module:lr_variables
+npw_kk_p	lr_variables.f90	/^       igkk_kk_p(:,:),&$/;"	v	module:lr_variables
+num_basis	lr_dav_variables.f90	/^  INTEGER :: num_basis_/;"	v	module:lr_dav_variables
+num_basis_max	lr_dav_variables.f90	/^  INTEGER :: num_eign, num_init, num_basis_max,/;"	v	module:lr_dav_variables
+num_basis_old	lr_dav_variables.f90	/^  INTEGER :: num_basis_old,/;"	v	module:lr_dav_variables
+num_eign	lr_dav_variables.f90	/^  INTEGER :: num_eign,/;"	v	module:lr_dav_variables
+num_init	lr_dav_variables.f90	/^  INTEGER :: num_eign, num_init,/;"	v	module:lr_dav_variables
+nwordd0psi	lr_variables.f90	/^  INTEGER :: nwordd0psi$/;"	v	module:lr_variables
+nwordrestart	lr_variables.f90	/^  INTEGER :: nwordrestart$/;"	v	module:lr_variables
+omeg	lr_charg_resp.f90	/^  REAL(kind=dp)                 :: omeg /;"	v	module:charg_resp
+omegal	lr_dav_variables.f90	/^        chi_dav(:,:),total_chi(:),norm_F(:),&$/;"	v	module:lr_dav_variables
+omegar	lr_dav_variables.f90	/^        omegal(:),omegar(/;"	v	module:lr_dav_variables
+one_dav_step	lr_dav_routines.f90	/^  subroutine one_dav_step(/;"	s	module:lr_dav_routines
+one_lanczos_step	lr_lanczos.f90	/^  SUBROUTINE one_lanczos_step(/;"	s	module:lr_lanczos
+p_nbnd_occ	lr_dav_variables.f90	/^  INTEGER :: num_eign, num_init, num_basis_max,&$/;"	v	module:lr_dav_variables
+p_nbnd_virt	lr_dav_variables.f90	/^             p_nbnd_occ,p_nbnd_virt /;"	v	module:lr_dav_variables
+plot_type	lr_variables.f90	/^  INTEGER :: plot_type /;"	v	module:lr_variables
+pol_index	lr_main.f90	/^  INTEGER            :: ip,pol_index,/;"	v	program:lr_main
+precondition	lr_dav_variables.f90	/^  logical :: precondition,/;"	v	module:lr_dav_variables
+print_clock_lr	print_clock_lr.f90	/^SUBROUTINE print_clock_lr(/;"	s
+print_principle_components	lr_dav_routines.f90	/^  subroutine print_principle_components(/;"	s	module:lr_dav_routines
+print_spectrum	lr_dav_variables.f90	/^             sort_contr,diag_of_h,print_spectrum,/;"	v	module:lr_dav_variables
+project	lr_variables.f90	/^  LOGICAL :: project /;"	v	module:lr_variables
+pseudo_dens_c	lr_exx_kernel.f90	/^  COMPLEX(DP), PRIVATE, ALLOCATABLE :: pseudo_dens_c(/;"	v	module:lr_exx_kernel
+pseudo_hermitian	lr_variables.f90	/^  LOGICAL :: pseudo_hermitian /;"	v	module:lr_variables
+random_init	lr_dav_routines.f90	/^  subroutine random_init(/;"	s	module:lr_dav_routines
+read_wT_beta_gamma_z	lr_charg_resp.f90	/^  SUBROUTINE read_wT_beta_gamma_z(/;"	s	module:charg_resp
+red_revc0	lr_exx_kernel.f90	/^  COMPLEX(DP), PRIVATE, ALLOCATABLE :: red_revc0(/;"	v	module:lr_exx_kernel
+reference	lr_dav_variables.f90	/^  REAL(kind=dp) :: residue_conv_thr, reference,/;"	v	module:lr_dav_variables
+residue_conv_thr	lr_dav_variables.f90	/^  REAL(kind=dp) :: residue_conv_thr,/;"	v	module:lr_dav_variables
+resonance_condition	lr_charg_resp.f90	/^  LOGICAL :: resonance_condition$/;"	v	module:charg_resp
+restart	lr_variables.f90	/^  LOGICAL :: restart /;"	v	module:lr_variables
+restart_step	lr_variables.f90	/^  INTEGER :: restart_step /;"	v	module:lr_variables
+revc0	lr_variables.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: revc0(/;"	v	module:lr_variables
+revc_int	lr_exx_kernel.f90	/^  REAL(kind=dp),    PUBLIC, ALLOCATABLE :: revc_int(/;"	v	module:lr_exx_kernel
+revc_int_c	lr_exx_kernel.f90	/^  COMPLEX(kind=dp), PUBLIC, ALLOCATABLE :: revc_int_c(/;"	v	module:lr_exx_kernel
+rflag	lr_dav_main.f90	/^  LOGICAL            :: rflag,/;"	v	program:lr_dav_main
+rflag	lr_main.f90	/^  LOGICAL            :: rflag,/;"	v	program:lr_main
+rho_1	lr_variables.f90	/^  real(kind=dp), ALLOCATABLE :: &$/;"	v	module:lr_variables
+rho_1_tot	lr_charg_resp.f90	/^  REAL(kind=dp), ALLOCATABLE    ::  rho_1_tot(/;"	v	module:charg_resp
+rho_1_tot_im	lr_charg_resp.f90	/^  COMPLEX(kind=dp), ALLOCATABLE ::  rho_1_tot_im(/;"	v	module:charg_resp
+right2	lr_dav_variables.f90	/^        left2(:),right2(/;"	v	module:lr_dav_variables
+right_M	lr_dav_variables.f90	/^        left_M(:,:),        &$/;"	v	module:lr_dav_variables
+right_full	lr_dav_variables.f90	/^        left_full(:,:,:,:), swork(:,:,:),& $/;"	v	module:lr_dav_variables
+right_res	lr_dav_variables.f90	/^        left_res(:,:,:,:), &  $/;"	v	module:lr_dav_variables
+sLtempvec1	lr_dav_variables.f90	/^        Fx(:,:),Fy(:,:),tempvec1(:,:),Ltempvec1(:,:),&$/;"	v	module:lr_dav_variables
+scissor	lr_variables.f90	/^  REAL(kind=dp) :: scissor$/;"	v	module:lr_variables
+sd0psi	sd0psi.f90	/^  SUBROUTINE sd0psi(/;"	s
+sevc0	lr_variables.f90	/^       evc0_virt(:,:,:),  &    ! unoccupied ground state wavefunctions (plane wave, band, k point)$/;"	v	module:lr_variables
+sevc0_virt	lr_variables.f90	/^       sevc0(:,:,:),      &    ! S * ground state wavefunctions$/;"	v	module:lr_variables
+sevc1	lr_variables.f90	/^       evc1_new(:,:,:,:), &    !  "    "$/;"	v	module:lr_variables
+sevc1_new	lr_variables.f90	/^       sevc1(:,:,:,:), sevc1_new(/;"	v	module:lr_variables
+single_pole	lr_dav_variables.f90	/^  logical :: precondition,dav_debug, single_pole,/;"	v	module:lr_dav_variables
+size_evc	lr_variables.f90	/^  INTEGER :: size_evc$/;"	v	module:lr_variables
+sm1_psi	lr_sm1_psi.f90	/^SUBROUTINE sm1_psi(/;"	s
+sm1_psi_gamma	lr_sm1_psi.f90	/^  SUBROUTINE sm1_psi_gamma(/;"	s	subroutine:sm1_psi
+sm1_psi_k	lr_sm1_psi.f90	/^  SUBROUTINE sm1_psi_k(/;"	s	subroutine:sm1_psi
+sort_contr	lr_dav_variables.f90	/^  logical :: precondition,dav_debug, single_pole,&$/;"	v	module:lr_dav_variables
+start	lr_dav_variables.f90	/^  REAL(kind=dp) :: residue_conv_thr, reference, close_pre, broadening,start,/;"	v	module:lr_dav_variables
+step	lr_dav_variables.f90	/^                   finish,step,/;"	v	module:lr_dav_variables
+stop_lr	stop_lr.f90	/^SUBROUTINE stop_lr(/;"	s
+sum_F	lr_main.f90	/^  COMPLEX(kind=dp)   :: sum_F,/;"	v	program:lr_main
+sum_c	lr_main.f90	/^  COMPLEX(kind=dp)   :: sum_F,sum_c$/;"	v	program:lr_main
+svec_b	lr_dav_variables.f90	/^        vec_b(:,:,:,:), svec_b(/;"	v	module:lr_dav_variables
+swork	lr_dav_variables.f90	/^        left_full(:,:,:,:), swork(/;"	v	module:lr_dav_variables
+tempvec1	lr_dav_variables.f90	/^        Fx(:,:),Fy(:,:),tempvec1(/;"	v	module:lr_dav_variables
+tempvec2	lr_dav_variables.f90	/^        sLtempvec1(:,:),tempvec2(/;"	v	module:lr_dav_variables
+test_case_no	lr_variables.f90	/^  INTEGER :: test_case_no /;"	v	module:lr_variables
+test_restart	lr_main.f90	/^  LOGICAL FUNCTION test_restart(/;"	f	program:lr_main
+tg_revc0	lr_variables.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: tg_revc0(/;"	v	module:lr_variables
+toadd	lr_dav_variables.f90	/^             num_basis,toadd,/;"	v	module:lr_dav_variables
+total_chi	lr_dav_variables.f90	/^        chi_dav(:,:),total_chi(/;"	v	module:lr_dav_variables
+tr_energy	lr_dav_variables.f90	/^        inner_matrix(:,:),&$/;"	v	module:lr_dav_variables
+treat_residue	lr_dav_routines.f90	/^  subroutine treat_residue(/;"	s	module:lr_dav_routines
+turn2planb	lr_dav_variables.f90	/^                   finish,step,turn2planb$/;"	v	module:lr_dav_variables
+vc_couple	lr_dav_variables.f90	/^  integer , allocatable :: &$/;"	v	module:lr_dav_variables
+vec_b	lr_dav_variables.f90	/^  COMPLEX (DP), ALLOCATABLE ::  &$/;"	v	module:lr_dav_variables
+vhart	lr_exx_kernel.f90	/^  COMPLEX(DP), PRIVATE, ALLOCATABLE :: vhart(/;"	v	module:lr_exx_kernel
+virt_read	lr_read_wf.f90	/^    SUBROUTINE virt_read(/;"	s	subroutine:lr_read_wf
+vl	lr_variables.f90	/^  real(kind=dp), ALLOCATABLE :: vl(/;"	v	module:lr_variables
+vr	lr_variables.f90	/^  real(kind=dp), ALLOCATABLE :: vl(:,:),vr(/;"	v	module:lr_variables
+w_T	lr_charg_resp.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: w_T /;"	v	module:charg_resp
+w_T_beta_store	lr_charg_resp.f90	/^  REAL(kind=dp), ALLOCATABLE :: &  ! the required parts of the lanczos matrix $/;"	v	module:charg_resp
+w_T_gamma_store	lr_charg_resp.f90	/^                                w_T_beta_store(:),&         ! for w_T (iter) $/;"	v	module:charg_resp
+w_T_norm0_store	lr_charg_resp.f90	/^  REAL(kind=dp)                 :: w_T_norm0_store /;"	v	module:charg_resp
+w_T_npol	lr_charg_resp.f90	/^  INTEGER                    :: w_T_npol /;"	v	module:charg_resp
+w_T_prefix	lr_charg_resp.f90	/^  CHARACTER(len=256)         :: w_T_prefix /;"	v	module:charg_resp
+w_T_zeta_store	lr_charg_resp.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: w_T_zeta_store(/;"	v	module:charg_resp
+weight_kk	lr_variables.f90	/^  REAL(kind=dp), ALLOCATABLE :: xkk_m(:,:), xkk_p(:,:), weight_kk(/;"	v	module:lr_variables
+wfc_dot	lr_dav_routines.f90	/^  real(dp) function wfc_dot(/;"	f	module:lr_dav_routines
+work	lr_dav_variables.f90	/^  REAL (DP), ALLOCATABLE :: &$/;"	v	module:lr_dav_variables
+write_eigenvalues	lr_dav_routines.f90	/^  subroutine write_eigenvalues(/;"	s	module:lr_dav_routines
+write_spectrum	lr_dav_routines.f90	/^  subroutine write_spectrum(/;"	s	module:lr_dav_routines
+xc_sort_array_get_order	lr_dav_routines.f90	/^  subroutine xc_sort_array_get_order(/;"	s	module:lr_dav_routines
+xkk_m	lr_variables.f90	/^  REAL(kind=dp), ALLOCATABLE :: xkk_m(/;"	v	module:lr_variables
+xkk_p	lr_variables.f90	/^  REAL(kind=dp), ALLOCATABLE :: xkk_m(:,:), xkk_p(/;"	v	module:lr_variables
+zero	lr_dav_variables.f90	/^  real (dp), PARAMETER :: zero=/;"	v	module:lr_dav_variables
+zeta_store	lr_variables.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: zeta_store(/;"	v	module:lr_variables
+zinv_matrix	lr_sm1_psi.f90	/^SUBROUTINE zinv_matrix(/;"	s

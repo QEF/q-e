@@ -60,17 +60,23 @@ SUBROUTINE stop_lr( full_run  )
   !
   WRITE(158,*) itermax
   !
+  norm0(ip)=beta_store(ip,1)
   WRITE(158,*) norm0(ip)
   !
-  DO i=1,itermax
+  DO i=1,itermax-1
      !
-     WRITE(158,*) beta_store(ip,i)
-     WRITE(158,*) gamma_store(ip,i)
+     WRITE(158,*) beta_store(ip,i+1)
+     WRITE(158,*) gamma_store(ip,i+1)
      !This is absolutely necessary for cross platform compatibilty
      DO j=1,n_ipol
       WRITE(158,*) zeta_store (ip,j,i)
      ENDDO
      !
+  ENDDO
+  WRITE(158,*) beta_store(ip,itermax)  ! XC: This two faked values will not be
+  WRITE(158,*) gamma_store(ip,itermax) ! really used in spectrum calculation
+  DO j=1,n_ipol                                               
+    WRITE(158,*) zeta_store (ip,j,itermax)                    
   ENDDO
   !
   CLOSE(158)

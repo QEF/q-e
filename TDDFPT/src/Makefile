@@ -41,12 +41,15 @@ print_clock_lr.o \
 sd0psi.o \
 lr_set_boxes_density.o \
 lr_init_nfo.o \
-lr_exx_kernel.o 
-
+lr_exx_kernel.o \
+lr_dav_variables.o\
+lr_dav_routines.o\
+lr_us.o\
+lr_dav_debug.o
 
 TLDEPS=bindir libs pw ph
  
-all :  tldeps turbo_lanczos.x
+all :  tldeps turbo_lanczos.x turbo_davidson.x
 
 libtddfpt.a : $(LROBJS) 
 	$(AR) $(ARFLAGS) $@ $?
@@ -55,6 +58,12 @@ libtddfpt.a : $(LROBJS)
 turbo_lanczos.x : lr_main.o libtddfpt.a $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		lr_main.o libtddfpt.a $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
+	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
+
+turbo_davidson.x : lr_dav_main.o libtddfpt.a $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		lr_dav_main.o libtddfpt.a $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
@@ -67,7 +76,7 @@ tldeps:
 
 
 clean :
-	- /bin/rm -f ../bin/turbo_lanczos.x *.x *.o *~ *.d *.mod *.i work.pc *.a
+	- /bin/rm -f ../bin/turbo_lanczos.x ../bin/turbo_davidson.x *.x *.o *~ *.d *.mod *.i work.pc *.a
 
 include make.depend
 

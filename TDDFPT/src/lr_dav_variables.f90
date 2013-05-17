@@ -1,0 +1,78 @@
+! Copyright (C) 2001-2003 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+
+
+MODULE lr_dav_variables
+  !--------------------------------------------------------------------------
+  ! ... sets the dimensions of the variables required in the
+  ! ... lr_davidson algorithm
+  !--------------------------------------------------------------------------
+  ! Created by Xiaochuan Ge (Oct.2012)
+  USE kinds,                ONLY : dp
+
+  IMPLICIT NONE
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Parameters
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  real (dp), PARAMETER :: zero=1.0E-10
+  real (dp), PARAMETER :: PI = 3.14159265d0
+
+  
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Namelist
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  INTEGER :: num_eign, num_init, num_basis_max,&
+             p_nbnd_occ,p_nbnd_virt ! number of occ and virt bands for projection
+  REAL(kind=dp) :: residue_conv_thr, reference, close_pre, broadening,start,&
+                   finish,step,turn2planb
+  logical :: precondition,dav_debug, single_pole,&
+             sort_contr,diag_of_h,print_spectrum,if_check_orth,&
+             if_random_init,if_check_her
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !Global Variables
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  integer , allocatable :: &
+        vc_couple(:,:),&  ! for calculating the optimal initial vector
+        eign_value_order(:), energy_dif_order(:)
+
+  LOGICAL :: dav_conv
+  logical, allocatable :: kill_left(:),kill_right(:) 
+  INTEGER :: num_basis_old, &   ! num of basis that has been applied Liouvillian
+             num_basis,toadd,       &   ! total number of basis
+             lwork,info,dav_iter        ! for calling lapack routine 
+             
+
+  COMPLEX (DP), ALLOCATABLE ::  &
+        vec_b(:,:,:,:), svec_b(:,:,:,:),   & ! vectors for the basis of Liouvillian
+        C_vec_b(:,:,:,:),       &  ! D and C applied to vec_b 
+        D_vec_b(:,:,:,:),       &  ! D and C applied to vec_b. see documentation for explaination of D&C
+        left_full(:,:,:,:), swork(:,:,:),& 
+        right_full(:,:,:,:),&  ! left and right appro. eigen vector of D*C in full space
+        left_res(:,:,:,:), &  
+        right_res(:,:,:,:), &  ! left and right residual of the appr. eigen-v
+        left2(:),right2(:), & ! square of the module of left_res and right_res
+        M_C(:,:),M_D(:,:),M(:,:),& ! Matrix represented in the sub space
+        debugM_C(:,:),debugM_D(:,:),debugleft(:,:,:,:),debugright(:,:,:,:),& ! only for debuging
+        ground_state(:,:,:),&
+        D_left_full(:,:,:,:),C_right_full(:,:,:,:),&
+        Fx(:,:),Fy(:,:),tempvec1(:,:),Ltempvec1(:,:),&
+        sLtempvec1(:,:),tempvec2(:,:)
+  real(dp) :: FxR(3), FyR(3)
+
+  REAL (DP), ALLOCATABLE :: &
+        work(:) ,&            ! global work space for linear algorithm routine
+        left_M(:,:),        &
+        right_M(:,:),       & ! left and right appro. eigen vectors of
+        eign_value(:,:),&
+        M_shadow_avatar(:,:),&
+        inner_matrix(:,:),&
+        tr_energy(:),&
+        energy_dif(:),contribute(:,:),&
+        chi_dav(:,:),total_chi(:),norm_F(:),&
+        omegal(:),omegar(:)
+  
+end module lr_dav_variables

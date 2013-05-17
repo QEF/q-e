@@ -16,6 +16,7 @@ SUBROUTINE bcast_lr_input
 #ifdef __MPI
 
   USE lr_variables
+  USE lr_dav_variables
   USE realus,              ONLY: real_space, real_space_debug
   USE mp,                  ONLY: mp_bcast, mp_barrier
   USE io_files,            ONLY: tmp_dir, prefix, wfc_dir
@@ -43,6 +44,7 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (wfc_dir, ionode_id )
   CALL mp_bcast (LR_polarization, ionode_id )
   CALL mp_bcast (ltammd, ionode_id )
+  CALL mp_bcast (pseudo_hermitian, ionode_id )
   !call mp_bcast (broadening, ionode_id )
   CALL mp_bcast (real_space, ionode_id )
   CALL mp_bcast (real_space_debug, ionode_id )
@@ -58,7 +60,6 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (bgz_suffix, ionode_id )
   call mp_bcast (scissor, ionode_id)
   CALL mp_bcast (ecutfock, ionode_id )
-  CALL mp_barrier()
   !print *, "bcast lr input finished"
   !print *, "variables"
   !print *, "prefix=", prefix
@@ -67,6 +68,32 @@ SUBROUTINE bcast_lr_input
   !print *, "charge_response=",charge_response
   !print *, "omeg=",omeg
   !print *, "test_case_no=",test_case_no
+
+  ! for lr_dav
+  CALL mp_bcast (davidson, ionode_id )
+  CALL mp_bcast (num_eign, ionode_id )
+  CALL mp_bcast (num_init, ionode_id )
+  CALL mp_bcast (num_basis_max, ionode_id )
+  CALL mp_bcast (residue_conv_thr, ionode_id )
+  CALL mp_bcast (precondition, ionode_id )
+  CALL mp_bcast (dav_debug, ionode_id )
+  CALL mp_bcast (reference, ionode_id )
+  CALL mp_bcast (single_pole, ionode_id )
+  CALL mp_bcast (sort_contr, ionode_id )
+  CALL mp_bcast (diag_of_h, ionode_id )
+  CALL mp_bcast (close_pre, ionode_id )
+  CALL mp_bcast (broadening, ionode_id )
+  CALL mp_bcast (print_spectrum, ionode_id )
+  CALL mp_bcast (start, ionode_id )
+  CALL mp_bcast (finish, ionode_id )
+  CALL mp_bcast (step, ionode_id )
+  CALL mp_bcast (if_check_orth, ionode_id )
+  CALL mp_bcast (if_random_init, ionode_id )
+  CALL mp_bcast (if_check_her, ionode_id )
+  CALL mp_bcast (p_nbnd_occ, ionode_id )
+  CALL mp_bcast (p_nbnd_virt, ionode_id )
+  CALL mp_barrier()
+  
 #endif
   RETURN
 END SUBROUTINE bcast_lr_input

@@ -28,7 +28,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   USE klist,                ONLY : nks, xk
   USE lr_variables,         ONLY : evc0, revc0, rho_1, lr_verbosity,&
                                  & ltammd, size_evc, no_hxc, lr_exx, &
-                                 & scissor, rho_1c
+                                 & scissor, rho_1c,davidson
   USE realus,               ONLY : igk_k,npw_k
   USE lsda_mod,             ONLY : nspin
   USE uspp,                 ONLY : vkb, nkb, okvan
@@ -201,7 +201,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      !
      !   Normal interaction
      !
-     WRITE(stdout,'(5X,"lr_apply_liouvillian: &
+     if(.not. davidson) WRITE(stdout,'(5X,"lr_apply_liouvillian: &
           &applying interaction: normal")')
      !
      ! Here we add the two terms: 
@@ -215,7 +215,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      !
      !   Tamm-dancoff interaction
      !
-     WRITE(stdout,'(5X,"lr_apply_liouvillian:&
+     if(.not. davidson) WRITE(stdout,'(5X,"lr_apply_liouvillian:&
           & applying interaction: tamm-dancoff")')
      !
      !   Here evc1_new contains the interaction
@@ -228,7 +228,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      !
      !   Non interacting
      !
-     WRITE(stdout,'(5X,"lr_apply_liouvillian:&
+     if(.not. davidson) WRITE(stdout,'(5X,"lr_apply_liouvillian:&
           & not applying interaction")') 
      !
   ENDIF

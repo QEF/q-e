@@ -324,3 +324,44 @@ stop_lr.o : ../../Modules/kind.o
 stop_lr.o : ../../Modules/mp.o
 stop_lr.o : ../../Modules/parallel_include.o
 stop_lr.o : lr_variables.o
+
+# Here is for davidson calculation
+bcast_lr_input.o : lr_dav_variables.o
+lr_dav_variables.o : ../../Modules/kind.o
+lr_dav_main.o : ../../Modules/check_stop.o
+lr_dav_main.o : ../../Modules/control_flags.o
+lr_dav_main.o : ../../Modules/environment.o
+lr_dav_main.o : ../../Modules/io_files.o
+lr_dav_main.o : ../../Modules/io_global.o
+lr_dav_main.o : ../../Modules/ions_base.o
+lr_dav_main.o : ../../Modules/kind.o
+lr_dav_main.o : ../../Modules/mp.o
+lr_dav_main.o : ../../Modules/mp_global.o
+lr_dav_main.o : ../../Modules/version.o
+lr_dav_main.o : ../../Modules/wavefunctions.o
+lr_dav_main.o : ../../PHonon/PH/phcom.o
+lr_dav_main.o : ../../PW/src/pwcom.o
+lr_dav_main.o : lr_variables.o
+lr_dav_main.o : lr_dav_variables.o
+lr_dav_main.o : lr_dav_routines.o
+lr_dav_main.o : lr_dav_debug.o
+lr_dav_main.o : lr_us.o
+lr_dav_main.o : lr_lanczos.o
+lr_dav_routines.o : lr_dav_debug.o
+lr_dav_routines.o : lr_us.o
+lr_dav_debug.o : lr_dav_variables.o
+lr_dav_debug.o : ../../PW/src/realus.o
+lr_dav_debug.o : ../../Modules/kind.o
+lr_dav_debug.o : ../../Modules/becmod.o
+lr_dav_debug.o : ../../Modules/control_flags.o
+lr_dav_debug.o : ../../Modules/uspp.o
+lr_dav_debug.o : ../../PW/src/pwcom.o
+lr_dav_debug.o : lr_us.o
+lr_us.o : lr_dav_variables.o
+lr_us.o : ../../PW/src/realus.o
+lr_us.o : ../../Modules/kind.o
+lr_us.o : ../../Modules/becmod.o
+lr_us.o : ../../Modules/control_flags.o
+lr_us.o : ../../Modules/uspp.o
+lr_us.o : ../../PW/src/pwcom.o
+

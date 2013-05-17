@@ -20,7 +20,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   USE cell_base,            ONLY : tpiba2
   USE gvect,                ONLY : g
   USE io_files,             ONLY : tmp_dir, prefix, diropn, wfc_dir
-  USE lr_variables,         ONLY : itermax,evc1, evc1_new, sevc1_new,&
+  USE lr_variables,         ONLY : itermax,evc1, evc1_new, sevc1_new,evc1_old, &
                                    restart, nwordrestart, iunrestart,project,nbnd_total,F,&
                                    bgz_suffix
   USE charg_resp,           ONLY : resonance_condition, rho_1_tot , rho_1_tot_im
@@ -119,15 +119,18 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   IF ( iter_restart >= itermax ) iter_restart = itermax
   !
   READ(158,*,end=301,err=303) norm0(pol_index)
+  !XC: New structures for pseudo-hermitian algorithm
+  beta_store(pol_index,1)=norm0(pol_index)
   !
-  DO i=1,iter_restart
-     !
-     READ(158,*,end=301,err=303) beta_store(pol_index,i)
-     READ(158,*,end=301,err=303) gamma_store(pol_index,i)
+  DO i=1,iter_restart-1
+     READ(158,*,end=301,err=303) beta_store(pol_index,i+1)
+     READ(158,*,end=301,err=303) gamma_store(pol_index,i+1)
      READ(158,*,end=301,err=303) zeta_store (pol_index,:,i)
-     !
   ENDDO
-  !
+  READ(158,*,end=301,err=303) beta_store(pol_index,iter_restart)
+  READ(158,*,end=301,err=303) gamma_store(pol_index,iter_restart)
+  READ(158,*,end=301,err=303) zeta_store (pol_index,:,iter_restart)
+
   CLOSE(158)
 #ifdef __MPI
   ENDIF
@@ -192,8 +195,8 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   !
   CALL davcio(evc1(:,:,:,1),nwordrestart,iunrestart,1,-1)
   CALL davcio(evc1(:,:,:,2),nwordrestart,iunrestart,2,-1)
-  CALL davcio(evc1_new(:,:,:,1),nwordrestart,iunrestart,3,-1)
-  CALL davcio(evc1_new(:,:,:,2),nwordrestart,iunrestart,4,-1)
+  CALL davcio(evc1_old(:,:,:,1),nwordrestart,iunrestart,3,-1)
+  CALL davcio(evc1_old(:,:,:,2),nwordrestart,iunrestart,4,-1)
   !
   CLOSE( unit = iunrestart)
   IF (charge_response == 1 ) THEN
@@ -209,68 +212,6 @@ SUBROUTINE lr_restart(iter_restart,rflag)
      ENDIF
   !
   ! End of all file i/o for restart
-  !
-  !
-  ! Reinitializing sevc1_new vector
-  !
-  IF (gamma_only) THEN
-     !
-     IF ( nkb > 0 .and. okvan ) THEN
-      IF (real_space_debug>6) THEN
-       DO ibnd=1,nbnd,2
-        CALL fft_orbital_gamma(evc1_new(:,:,1,1),ibnd,nbnd)
-        CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
-        CALL s_psir_gamma(ibnd,nbnd)
-        CALL bfft_orbital_gamma(sevc1_new(:,:,1,1),ibnd,nbnd)
-       ENDDO
-      ELSE
-       CALL calbec(npw_k(1),vkb,evc1_new(:,:,1,1),becp)
-       !call pw_gemm('Y',nkb,nbnd,npw_k(1),vkb,npwx,evc1_new(1,1,1,1),npwx,rbecp,nkb)
-       CALL s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,1),sevc1_new(:,:,1,1))
-      ENDIF
-     ELSE
-      !nkb = 0 not real space
-       !
-       CALL s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,1),sevc1_new(:,:,1,1))
-       !
-      !
-     ENDIF
-     !
-     IF ( nkb > 0 .and. okvan ) THEN
-      IF (real_space_debug>6) THEN
-        DO ibnd=1,nbnd,2
-        CALL fft_orbital_gamma(evc1_new(:,:,1,2),ibnd,nbnd)
-        CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
-        CALL s_psir_gamma(ibnd,nbnd)
-        CALL bfft_orbital_gamma(sevc1_new(:,:,1,2),ibnd,nbnd)
-       ENDDO
-     ELSE
-       CALL calbec(npw_k(1),vkb,evc1_new(:,:,1,2),becp%r)
-      !call pw_gemm('Y',nkb,nbnd,npw_k(1),vkb,npwx,evc1_new(1,1,1,2),npwx,rbecp,nkb)
-       CALL s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,2),sevc1_new(:,:,1,2))
-      ENDIF
-     ENDIF
-     !call s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,2),sevc1_new(:,:,1,2))
-     !
-  ELSE
-     !
-     DO ik=1,nks
-        !
-        IF ( nkb > 0 .and. okvan ) THEN
-           CALL init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
-           !call ccalbec(nkb,npwx,npw_k(ik),nbnd,becp,vkb,evc1_new(1,1,ik,1))
-           CALL calbec(npw_k(ik), vkb, evc1_new(:,:,ik,1), becp)
-        ENDIF
-        CALL s_psi(npwx,npw_k(ik),nbnd,evc1_new(:,:,ik,1),sevc1_new(:,:,ik,1))
-        !
-        IF (nkb > 0) CALL calbec(npw_k(ik), vkb, evc1_new(:,:,ik,2), becp)
-        !call ccalbec(nkb,npwx,npw_k(ik),nbnd,becp,vkb,evc1_new(1,1,ik,2))
-        CALL s_psi(npwx,npw_k(ik),nbnd,evc1_new(:,:,ik,2),sevc1_new(:,:,ik,2))
-        !
-     ENDDO
-     !
-  ENDIF
-  !
   !
   RETURN
   301 CALL errore ('restart', 'A File is corrupted, file ended unexpectedly', 1 )

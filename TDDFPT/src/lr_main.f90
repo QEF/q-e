@@ -24,7 +24,7 @@ PROGRAM lr_main
   USE kinds,                 ONLY : dp
   USE lr_variables,          ONLY : restart, restart_step,&
        itermax, lr_verbosity,&
-       evc1, norm0, charge_response,&
+       evc1, evc1_old,norm0, charge_response,&
        n_ipol, d0psi, &
        LR_iteration, LR_polarization, &
        plot_type, no_hxc, nbnd_total, project, F,R, &
@@ -156,8 +156,12 @@ PROGRAM lr_main
         !
         CALL lr_read_d0psi()
         evc1(:,:,:,1) = d0psi(:,:,:,pol_index)
-        CALL lr_normalise( evc1(:,:,:,1), norm0(pol_index) )
-        evc1(:,:,:,2) = evc1(:,:,:,1)
+        evc1(:,:,:,2) = d0psi(:,:,:,pol_index)
+        evc1_old(:,:,:,1) = cmplx(0.0d0,0.0d0)
+        evc1_old(:,:,:,2) = cmplx(0.0d0,0.0d0)
+        ! The new structure doesn't need it here
+        ! CALL lr_normalise( evc1(:,:,:,1), norm0(pol_index) ) 
+        ! evc1(:,:,:,2) = evc1(:,:,:,1)
         !
         iter_restart=1
         !
@@ -171,7 +175,7 @@ PROGRAM lr_main
      lancz_loop1 : DO iteration = iter_restart, itermax
         !
         LR_iteration=iteration
-        WRITE(stdout,'(/5x,"Lanczos iteration:",1x,i8)') LR_iteration
+        WRITE(stdout,'(/5x,"Lanczos iteration:",1x,i8,3x"Pol:",i1,i8)') LR_iteration, ip
         !
         CALL one_lanczos_step()
         !
@@ -252,7 +256,7 @@ PROGRAM lr_main
 CONTAINS
   SUBROUTINE lr_print_preamble()
 
-    USE lr_variables, ONLY : no_hxc, itermax
+    USE lr_variables, ONLY : no_hxc
     USE uspp,         ONLY : okvan
     USE funct,        only : dft_is_hybrid
 
@@ -270,8 +274,7 @@ CONTAINS
     !
     IF(okvan) WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )
     !
-    WRITE(stdout,'(/,5X,"Lanczos linear response spectrum calculation")')
-    WRITE(stdout,'(5x,"Number of Lanczos iterations = ",i6)') itermax
+    WRITE(stdout,'(/,5X,"Davidson linear response spectrum calculation")')
     !
     IF (no_hxc)  THEN
        WRITE(stdout,'(5x,"No Hartree/Exchange/Correlation")')

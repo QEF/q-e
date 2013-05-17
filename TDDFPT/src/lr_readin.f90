@@ -14,6 +14,7 @@ SUBROUTINE lr_readin
   !    by the self-consistent program.
   !
   USE lr_variables
+  USE lr_dav_variables
   USE kinds,               ONLY : DP
   USE io_files,            ONLY : tmp_dir, prefix, wfc_dir
   USE lsda_mod,            ONLY : current_spin, nspin
@@ -65,8 +66,11 @@ SUBROUTINE lr_readin
   !
   NAMELIST / lr_input / restart, restart_step ,lr_verbosity, prefix, outdir, test_case_no, wfcdir, disk_io, max_seconds
   NAMELIST / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, charge_response, tqr, auto_rs, no_hxc, n_ipol, &
-       & project, scissor, ecutfock
+       & project, scissor, ecutfock, pseudo_hermitian
   NAMELIST / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int
+  namelist / lr_dav / num_eign, num_init, num_basis_max, residue_conv_thr, precondition,dav_debug, reference,single_pole,&
+                          &sort_contr, diag_of_h, close_pre,broadening,print_spectrum,start,finish,step,if_check_orth,&
+                          &if_random_init,if_check_her,p_nbnd_occ,p_nbnd_virt
   !
   auto_rs = .TRUE.
 #ifdef __MPI
@@ -84,6 +88,7 @@ SUBROUTINE lr_readin
      prefix = 'pwscf'
      disk_io = 'default'
      ltammd = .FALSE.
+     pseudo_hermitian=.true.
      ipol = 1
      n_ipol = 1
      no_hxc = .FALSE.
@@ -103,9 +108,31 @@ SUBROUTINE lr_readin
      eig_dir='./'
      scissor = 0.d0
      ecutfock = -1d0
-     !
+
+     ! For lr_dav
+     num_eign=1
+     num_init=6
+     num_basis_max=20
+     broadening=0.005
+     residue_conv_thr=1.0E-5
+     close_pre=1.0E-5
+     turn2planb=1.0E-3
+     precondition=.true.
+     dav_debug=.false.
+     reference=0
+     single_pole=.false.
+     sort_contr=.true.
+     print_spectrum=.true.
+     start=0.0d0
+     finish=1.0d0
+     step=0.01d0
+     if_check_orth=.false.
+     if_check_her=.false.
+     if_random_init=.false.
+     p_nbnd_occ=10
+     p_nbnd_virt=10
+
      !   Reading the namelist lr_input
-     !
      CALL input_from_file( )
      !
      READ (5, lr_input, err = 200, iostat = ios)
@@ -114,12 +141,15 @@ SUBROUTINE lr_readin
      !
      !   Reading the namelist lr_control
      !
-     READ (5, lr_control, err = 201, iostat = ios)
-201  CALL errore ('lr_readin', 'reading lr_control namelist', ABS (ios) )
-     !
-     !
+     if(.not. davidson) then
+       READ (5, lr_control, err = 201, iostat = ios)
+201    CALL errore ('lr_readin', 'reading lr_control namelist', ABS (ios) )
+     else
+       READ (5, lr_dav, err = 299, iostat = ios)
+299    CALL errore ('lr_readin', 'reading lr_dav namelist', ABS (ios) )
+     endif
+
      !   Reading the namelist lr_post
-     !
      IF (charge_response == 1) THEN
         READ (5, lr_post, err = 202, iostat = ios)
 202     CALL errore ('lr_readin', 'reading lr_post namelist', ABS (ios) )
