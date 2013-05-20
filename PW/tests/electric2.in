@@ -4,6 +4,7 @@
     nppstr=7,
     lelfield=.true.,
     nberrycyc=3
+    tprnfor=.true. tstress=.true.
  /
  &system
     ibrav= 1, 
