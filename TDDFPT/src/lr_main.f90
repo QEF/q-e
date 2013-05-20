@@ -274,7 +274,8 @@ CONTAINS
     !
     IF(okvan) WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )
     !
-    WRITE(stdout,'(/,5X,"Davidson linear response spectrum calculation")')
+    WRITE(stdout,'(/,5X,"Lanczos linear response spectrum calculation")')
+    WRITE(stdout,'(5x,"Number of Lanczos iterations = ",i6)') itermax
     !
     IF (no_hxc)  THEN
        WRITE(stdout,'(5x,"No Hartree/Exchange/Correlation")')
