@@ -2928,8 +2928,9 @@ MODULE pw_restart
     SUBROUTINE read_wavefunctions( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      ! ... This routines reads wavefunctions from the new file format and
-      ! ... writes them into the old format
+      ! ... This routines reads wavefunctions from "collected" file format,
+      ! ... rewriting them to file or buffer "iunwfc", in "distributed" format
+      ! ... FIXME: re-writing wasteful for a single k-point
       !
       USE control_flags,        ONLY : twfcollect, lkpoint_dir
       USE cell_base,            ONLY : tpiba2
@@ -2941,9 +2942,11 @@ MODULE pw_restart
       USE buffers,              ONLY : save_buffer
       USE gvect,                ONLY : ngm, ngm_g, g, ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
-      USE mp_global,            ONLY : kunit, nproc_image, nproc_pool, me_pool, me_bgrp, nbgrp, &
-                                       root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm, &
-                                       root_bgrp, intra_bgrp_comm, inter_bgrp_comm
+      USE mp_global,            ONLY : kunit, nproc_image, intra_image_comm, &
+                                       nproc_pool, me_pool, root_pool, &
+                                       intra_pool_comm, inter_pool_comm, &
+                                       me_bgrp, nbgrp, root_bgrp, &
+                                       intra_bgrp_comm,  inter_bgrp_comm
       !
       IMPLICIT NONE
       !
@@ -3144,10 +3147,11 @@ MODULE pw_restart
             !
             CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
-                           ngk(ik-iks+1), filename, scalef, &
-                           ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+                           ngk(ik-iks+1), filename, scalef, ionode,      &
+                           root_pool, intra_pool_comm, inter_pool_comm,  &
+                           intra_image_comm )
             !
-            IF ( ( nks > 1 ) .AND. ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
+            IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                !
                CALL save_buffer ( evc, nwordwfc, iunwfc, (ik-iks+1) )
                !
@@ -3169,10 +3173,11 @@ MODULE pw_restart
             !
             CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:,ik_eff-iks+1),   &
-                           ngk(ik_eff-iks+1), filename, scalef, &
-                           ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+                           ngk(ik_eff-iks+1), filename, scalef, ionode,      &
+                           root_pool, intra_pool_comm, inter_pool_comm,      &
+                           intra_image_comm )
             !
-            IF ( ( nks > 1 ) .AND. ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
+            IF ( ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
                !
                CALL save_buffer ( evc, nwordwfc, iunwfc, (ik_eff-iks+1) )
                !
@@ -3217,12 +3222,13 @@ MODULE pw_restart
                !
                CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,         &
                               evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),      &
-                              ngk(ik-iks+1), filename, scalef, &
-                              ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+                              ngk(ik-iks+1), filename, scalef, ionode,         &
+                              root_pool, intra_pool_comm, inter_pool_comm,     &
+                              intra_image_comm )
                !
             END IF
             !
-            IF (( nks > 1 ) .AND. ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
+            IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                !
                CALL save_buffer ( evc, nwordwfc, iunwfc, (ik-iks+1) )
                !
