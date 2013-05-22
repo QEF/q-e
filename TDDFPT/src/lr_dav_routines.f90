@@ -928,7 +928,7 @@ contains
     integer :: iv, ic
     real(dp) :: temp
 
-    write (stdout,'(/5x,"Firt we print out only the principle components.")')
+    write (stdout,'(/5x,"First we print out only the principle components.")')
     write (stdout,'(/5x,"occ",5x,"virt",7x,"FX",14x,"FY"/)')
     do iv = nbnd-p_nbnd_occ+1, nbnd
       do ic = 1, p_nbnd_virt
