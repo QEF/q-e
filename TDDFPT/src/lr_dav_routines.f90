@@ -171,7 +171,7 @@ contains
     num_basis_old=0
     dav_conv=.false.
     dav_iter=0
-    call check_orth()
+    ! call check_orth()
     WRITE(stdout,'(5x,"Finished initiating.")')
   END subroutine  lr_dav_set_init
   !-------------------------------------------------------------------------------
@@ -200,6 +200,13 @@ contains
     integer :: ik, ip, ibnd,ig, pol_index, ibr, ibl, ieign,ios
     CHARACTER(len=6), EXTERNAL :: int_to_char
     real(dp) :: inner
+
+    ! dummy variables for math routines
+    integer :: dummy_ILO, dummy_IHI,dummy_IWORK
+    real(dp) :: dummy_ABNRM,&
+                dummy_SCALE(num_basis_max),&
+                dummy_RCONDE(num_basis_max),&
+                dummy_RCONDV(num_basis_max)
 
     call start_clock('one_step')
     write(stdout,'(/7x,"==============================")') 
@@ -266,8 +273,9 @@ contains
     ! Solve M_DC
     ! It is dangerous to be "solved", use its shadow avatar in order to protect the original one
     M_shadow_avatar(:,:) = dble(M(:,:))  
-    CALL DGEEV( 'V', 'V', num_basis,M_shadow_avatar, num_basis_max,eign_value(1,1), &
-            eign_value(1,2), left_M, num_basis_max, right_M, num_basis_max, WORK, lwork, INFO )  
+    CALL DGEEVX('N','V', 'V','N', num_basis,M_shadow_avatar, num_basis_max,eign_value(1,1), &
+            eign_value(1,2), left_M, num_basis_max, right_M, num_basis_max,dummy_ILO,dummy_IHI,&
+            dummy_SCALE, dummy_ABNRM,dummy_RCONDE, dummy_RCONDV,WORK,lwork,dummy_IWORK,INFO )  
     if(.not. INFO .eq. 0) stop "al_davidson: errors solving the DC in subspace"
  
     ! sort the solution

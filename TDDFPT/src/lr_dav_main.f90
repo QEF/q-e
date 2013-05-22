@@ -95,9 +95,12 @@ PROGRAM lr_dav_main
       call dav_expan_basis()
   enddo
   ! call check_hermitian()
-  call interpret_eign()
   ! Extract physical meaning from the solution
-  call check_orth()
+  call interpret_eign()
+  ! The check_orth at the end may take quite a lot of time in the case of 
+  ! USPP because we didn't store the S* vector basis. Turn this step on only
+  ! in cases of debugging
+  ! call check_orth() 
 
   !   Deallocate pw variables
   CALL clean_pw( .false. )
