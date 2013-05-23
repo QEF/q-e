@@ -35,6 +35,7 @@ kbloch.o \
 local.o \
 local_set.o \
 openfil_cond.o \
+plus_u_setup.o \
 poten.o \
 print_clock_pwcond.o \
 realus_scatt.o \

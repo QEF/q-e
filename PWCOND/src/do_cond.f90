@@ -374,35 +374,6 @@ IF (lwrite_cond) then
   return
 endif
 
-IF ( lda_plus_u ) THEN
-   !
-   IF ( U_projection .NE. "pseudo" ) &
-      CALL errore('do_cond','LDA+U works only for "pseudo" projection type',1)
-   !
-   ! report of LDA+U parameters (as in PW/src/summary.f90)
-   IF (lda_plus_u_kind == 0) THEN
-      !
-      WRITE( stdout, '(/,/,5x,"Simplified LDA+U calculation (l_max = ",i1, &
-         ") with parameters (eV):")') Hubbard_lmax
-      WRITE( stdout, '(5x,A)') &
-         "atomic species    L          U    alpha       J0     beta"
-      DO nt = 1, ntyp
-         IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 .OR. &
-              Hubbard_J0(nt) /= 0.D0 .OR. Hubbard_beta(nt) /= 0.D0 ) THEN
-            WRITE( stdout,'(5x,a6,12x,i1,2x,4f9.4)') atm(nt), Hubbard_L(nt), &
-               Hubbard_U(nt)*rytoev, Hubbard_alpha(nt)*rytoev, &
-               Hubbard_J0(nt)*rytoev, Hubbard_beta(nt)*rytoev
-         END IF
-      END DO
-      !
-   ELSEIF (lda_plus_u_kind == 1) THEN
-      CALL errore('do_cond', 'Full LDA+U not yet implemented in PWcond', 1)
-   ENDIF
-   !
-   WRITE( stdout,'(/)')
-   !
-ENDIF
-
 IF (nkpts==0) THEN
    time_reversal = .NOT. (noncolin .AND. domag)
    IF (ionode) THEN
@@ -567,12 +538,12 @@ CALL mp_bcast( last_k, ionode_id )
 
          WRITE(stdout,*) 'to transmit'
          CALL transmit(ik, ien, tk, .true.)
-         if (lorb) CALL transmit(ik, ien, tk, .false.)
-
          !
          ! To add T(k) to the total T
          !
          tran_tot(ien) = tran_tot(ien) + wkpt(ik)*tk
+         if (lorb) CALL transmit(ik, ien, tk, .false.)
+
          !
          !!! RECOVER
          ! if recover is enabled, save the partial transmission on file,

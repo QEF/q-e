@@ -411,6 +411,10 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
   endif
 !---------------------------
 
+!-- if LDA+U  
+  call plus_u_setup (natih, lsr)
+!--
+
   deallocate (orbind)
   if (norb>0) THEN
      deallocate (taunew)
