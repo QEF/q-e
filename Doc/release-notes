@@ -1,5 +1,7 @@
 New in svn version
 
+   * turboTDDFT: pseudo_Hamiltonians, Davidson-like diagonalization
+   * PWCOND with DFT+U
    * New functional 'gau-pbe'
    * Added the subdirectory FD in PHonon. Calculation of phonon dispersions 
      using the finite displacements supercell approach.
@@ -20,6 +22,12 @@ Incompatible changes in svn version:
    * Major restructuring of DFT+U and related modules in PW: related variables
      moved to module ldaU, "swfcatom" moved to module "basis"
    * definition of "natomwfc" in PP/ follows the same login as in PW/
+   * calls to "find_equiv_sites" and "writemodes" changed (fixed dimension
+     "nax" removed)
+   * call to "open_buffer" changed: unit must be a valid fortran unit > 0;
+     max number of records is no longer specified; a new flag explicitly
+     specifies if writing to RAM buffer is required. Functionalities of 
+     Modules/buffers.f90 have been considerably modified and extended.
 
 Fixed in svn version:
 
@@ -32,6 +40,9 @@ Fixed in svn version:
      execution if the number of planes wasn't the same for all processors
    * Bogus symmetry error in NEB due to missing re-initialization
      of fractional translations
+
+Fixed in patches to 5.0.2 version:
+
    * PW, PP, PHonon: files for DFT+U produced by previous versions
      could no longer be read
    * PHonon: restart with convt=.true. was not working with PAW
@@ -41,23 +52,15 @@ Fixed in svn version:
      was broken if pool were used
    * PHonon: symmetry Sq=-q+G introduced in v.5.0.2 could lead to bad 
      phonons in some cases and has been disabled
-   * divide_class: wrong check for T_h
    * PHonon: effective charges eu + PAW were not accurate with pools;
      effective charges eu + US PP + spin-orbit nonmagnetic were not
      working in parallel.
    * Bug fix for NC pseudos with GIPAW info, for upf version 2 only:
      Pseudo local potential was incorrectly written and read. 
+   * divide_class: wrong check for T_h
    * PP: incorrect check in bands.f90 (v.5.0.2 only)
    * CP wasn't working properly with USPP having distinct Q functions 
      for each value of l, due to the never ending l/l+1 problem
-
-Incompatible changes in svn version:
-   * calls to "find_equiv_sites" and "writemodes" changed (fixed dimension
-     "nax" removed)
-   * call to "open_buffer" changed: unit must be a valid fortran unit > 0;
-     max number of records is no longer specified; a new flag explicitly
-     specifies if writing to RAM buffer is required. Functionalities of 
-     Modules/buffers.f90 have been considerably modified and extended.
 
 New in 5.0.2 version:
 
