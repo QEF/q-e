@@ -1,32 +1,32 @@
-!
 subroutine plus_u_setup(natih, lsr)
 !
-! It writes transmission coefficients onto the file tran_file
+! Add additional +U orbitals (if DFT+U) to the full list of projectors
 !
-  USE kinds, only : DP
-  USE constants,  ONLY : rytoev
-  use noncollin_module, only : noncolin
-  USE ldaU,       ONLY : lda_plus_U, lda_plus_u_kind, U_projection, &
-                         Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
-                         Hubbard_J0, Hubbard_beta
-  use atom,       only : rgrid
-  USE scf,        ONLY : rho
-  use radial_grids, only: ndmx
-  USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm
-  USE cell_base,  ONLY : alat
-  use uspp_param, only : nhm, upf 
-  USE io_global,  ONLY : stdout
-  USE cond,       ONLY : norbs, nocrosl, noinss, nocrosr, tblms, taunews, &
-                         nenergy, earr, nrzs, zs, tran_tot, norbf, nbrx,  &
-                         cross, zpseus, zpseus_nc, betars, iofspin  
+!
+  USE kinds,            ONLY : DP
+  USE constants,        ONLY : rytoev
+  use noncollin_module, ONLY : noncolin
+  USE ldaU,             ONLY : lda_plus_U, lda_plus_u_kind, U_projection, &
+                               Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
+                               Hubbard_J0, Hubbard_beta
+  use atom,             ONLY : rgrid
+  USE scf,              ONLY : rho
+  use radial_grids,     ONLY : ndmx
+  USE ions_base,        ONLY : nat, ityp, ntyp => nsp, atm
+  USE cell_base,        ONLY : alat
+  use uspp_param,       only : nhm, upf 
+  USE io_global,        ONLY : stdout
+  USE cond,             ONLY : norbs, nocrosl, noinss, nocrosr, tblms, taunews, &
+                               nenergy, earr, nrzs, zs, tran_tot, norbf, nbrx,  &
+                               cross, zpseus, zpseus_nc, betars, iofspin  
   implicit none
 
-  integer ::  lsr, iorb, iorb1, it, iwfc, iwfc1, mesh, i, ipol, ldim, &
-              norbs_new, nocrosl_new, noinss_new, nocrosr_new, na,    &
-              natih(2,norbs), lll, kkbeta
-  integer, allocatable :: ind(:,:), tblms_new(:,:), cross_new(:,:)   
-  real(DP), parameter :: epswfc=1.d-4, eps=1.d-8
-  REAL(DP) :: r1, beta1, beta2, norm, ledge, redge 
+  integer               :: lsr, iorb, iorb1, it, iwfc, iwfc1, mesh, i, ipol, ldim, &
+                           norbs_new, nocrosl_new, noinss_new, nocrosr_new, na,    &
+                           natih(2,norbs), lll, kkbeta
+  integer, allocatable  :: ind(:,:), tblms_new(:,:), cross_new(:,:)   
+  real(DP), parameter   :: epswfc=1.d-4, eps=1.d-8
+  REAL(DP)              :: r1, beta1, beta2, norm, ledge, redge 
   REAL(DP), ALLOCATABLE :: bphi(:,:), rsph(:), taunews_new(:,:),  &
                            gi(:), zpseus_new(:,:,:)
  
@@ -75,7 +75,6 @@ subroutine plus_u_setup(natih, lsr)
   iorb = 1
   do while (iorb.le.norbs)
     it = tblms(1,iorb)
-
     if (Hubbard_U(it).ne.0.d0) then
       iorb1 = iorb
       do while (natih(1,iorb1).eq.natih(1,iorb))
@@ -92,13 +91,9 @@ subroutine plus_u_setup(natih, lsr)
       ldim = 2*Hubbard_l(it)+1
       noinss_new = noinss_new + ldim
       norbs_new = norbs_new + ldim
-
       iorb = iorb1
-
     endif
-
     iorb = iorb + 1
-
   enddo
 !--
 
@@ -106,30 +101,22 @@ subroutine plus_u_setup(natih, lsr)
 ! Determine the radii of atomic U WF's
 !
   do it = 1, ntyp
-
     if (Hubbard_U(it).ne.0.d0) then
      do iwfc = 1, upf(it)%nwfc
       if (upf(it)%lchi(iwfc).eq.Hubbard_l(it)) then
-
        r1 = 0.d0
        do i = 2, rgrid(it)%mesh
          r1 = max(r1, ABS(upf(it)%chi(i,iwfc)/rgrid(it)%r(i)))
        enddo
-
        i = rgrid(it)%mesh
-
        do while (abs(upf(it)%chi(i,iwfc)/rgrid(it)%r(i)).le.epswfc*r1)
          i = i - 1
        enddo
        rsph(it) = rgrid(it)%r(i) / alat
        mesh = i
-
       endif
      enddo
     endif
-
-    write(6,*) 'radius U  ', it, rsph(it)
-
   enddo
 !--
 
@@ -144,7 +131,6 @@ subroutine plus_u_setup(natih, lsr)
       beta1 = taunews(3,iorb)-rsph(it)
       beta2 = taunews(3,iorb)+rsph(it)
       if (beta1.le.1.d-4.or.beta2.gt.zs(nrzs+1)-1.d-4) i = 1
-      write(6,*) 'U edges ', iorb, beta1, beta2 
     endif
   enddo
   if (i.eq.1) call errore('plus_u_setup','some +U orbitals cross the boundary (not allowed) ...',1)
@@ -159,10 +145,8 @@ subroutine plus_u_setup(natih, lsr)
 
      mesh = upf(it)%grid%mesh
      kkbeta = upf(it)%kkbeta
-
      do iwfc = 1, upf(it)%nwfc
        if (upf(it)%lchi(iwfc).eq.Hubbard_l(it)) then
-
          do iorb = 1, upf(it)%nbeta 
            if (upf(it)%lll(iorb).eq.Hubbard_l(it)) then
               gi(1:kkbeta)= upf(it)%beta(1:kkbeta,iorb) * &
@@ -170,10 +154,8 @@ subroutine plus_u_setup(natih, lsr)
               call simpson (kkbeta, gi, upf(it)%grid%rab,bphi(iorb,it))
            endif  
          enddo
-
        endif 
      enddo
-
      gi(:) = 0.d0
      do iorb = 1, upf(it)%nbeta
        do iorb1 = 1, upf(it)%nbeta
@@ -211,13 +193,9 @@ subroutine plus_u_setup(natih, lsr)
 !                                                 ( ...                 ) 
   iorb1 = 0
   do iorb = 1, norbs
-
     iorb1 = iorb1 + 1
-
     it = tblms(1,iorb)
     na = natih(1,iorb)
-
-
 !--
 !   setting up some beta arrays from old ones (just shifting)
 
@@ -248,7 +226,6 @@ subroutine plus_u_setup(natih, lsr)
 
       lll = Hubbard_l(it)
       ldim = 2*lll + 1 
-
 !--
 !     beta-beta additional block of zpseu
 !
@@ -393,6 +370,4 @@ subroutine plus_u_setup(natih, lsr)
 
   return
 end subroutine plus_u_setup
-
-
 
