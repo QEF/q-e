@@ -14,6 +14,8 @@ add_shift_us.o \
 atomic_wfc_nc_proj.o \
 cft.o \
 cgracsc.o \
+chdens.o \
+chdens_bspline.o \
 compute_ppsi.o \
 compute_sigma_avg.o \
 cube.o \
@@ -31,6 +33,7 @@ local_dos1d.o \
 openfil_pp.o\
 paw_postproc.o \
 plot_whole_cell.o \
+projwfc_box.o \
 punch_plot.o \
 smallgk.o \
 stm.o \
@@ -40,7 +43,10 @@ work_function.o \
 write_p_avg.o \
 xsf.o \
 xk_et_collect.o \
-wannier_hamiltonians.o 
+write_io_header.o \
+wannier_hamiltonians.o \
+wannier_umatrix_subroutines.o \
+wannier_u_matrix.o
 
 PWOBJS = ../../PW/src/libpw.a
 QEOBJS = ../../Modules/libqemod.a
@@ -57,131 +63,135 @@ all : tldeps average.x bands.x dos.x epsilon.x initial_state.x \
       wannier_ham.x wannier_plot.x \
       pw2bgw.x bgw2pw.x wfck2r.x
 
+
+libpp.a : $(PPOBJS) 
+	$(AR) $(ARFLAGS) $@ $?
+	$(RANLIB) $@
+
 qexml.x: qexml.o qexml_example.o
 	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(QEOBJS) $(LIBOBJS)
 
-average.x : average.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+average.x : average.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		average.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		average.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-bands.x : bands.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+bands.x : bands.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		bands.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		bands.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-dos.x : dos.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+dos.x : dos.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		dos.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		dos.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pawplot.x : pawplot.o $(PPOBJS) $(PPOBJS) $(MODULES) $(LIBOBJS)
+pawplot.x : pawplot.o libpp.a libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		pawplot.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		pawplot.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 
-plan_avg.x : plan_avg.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+plan_avg.x : plan_avg.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		plan_avg.o $(PPOBJS) $(MODULES) \
+		plan_avg.o libpp.a $(MODULES) \
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-plotband.x : plotband.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+plotband.x : plotband.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		plotband.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		plotband.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-plotproj.x : plotproj.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+plotproj.x : plotproj.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		plotproj.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		plotproj.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-plotrho.x : plotrho.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+plotrho.x : plotrho.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		plotrho.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		plotrho.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pmw.x : poormanwannier.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+pmw.x : poormanwannier.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		poormanwannier.o $(PPOBJS) $(MODULES) \
+		poormanwannier.o libpp.a $(MODULES) \
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-xctest.x : xctest.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+xctest.x : xctest.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		xctest.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		xctest.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pp.x : postproc.o chdens.o chdens_bspline.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+pp.x : postproc.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		postproc.o chdens.o chdens_bspline.o $(PPOBJS) $(MODULES) \
+		postproc.o libpp.a $(MODULES) \
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-projwfc.x : projwfc.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+projwfc.x : projwfc.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		projwfc.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		projwfc.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pw2wannier90.x : pw2wannier90.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+pw2wannier90.x : pw2wannier90.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		pw2wannier90.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		pw2wannier90.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-wfck2r.x : wfck2r.o $(PPOBJS) $(PHOBJS) $(MODULES) $(LIBOBJS) 
+wfck2r.x : wfck2r.o libpp.a $(PHOBJS) $(MODULES) $(LIBOBJS) 
 	$(LD) $(LDFLAGS) -o $@ \
-		wfck2r.o $(PPOBJS) $(PHOBJS) $(MODULES) $(LIBOBJS)  $(LIBS)
+		wfck2r.o libpp.a $(PHOBJS) $(MODULES) $(LIBOBJS)  $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-initial_state.x : initial_state.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+initial_state.x : initial_state.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		initial_state.o $(PPOBJS) $(MODULES) \
+		initial_state.o libpp.a $(MODULES) \
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pw2gw.x : pw2gw.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+pw2gw.x : pw2gw.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		pw2gw.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		pw2gw.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pw_export.x : pw_export.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+pw_export.x : pw_export.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		pw_export.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		pw_export.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 sumpdos.x : sumpdos.o 
 	$(LD) $(LDFLAGS) -o $@ sumpdos.o
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-epsilon.x : epsilon.o $(PPOBJS) $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ epsilon.o $(PPOBJS) $(MODULES) \
+epsilon.x : epsilon.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ epsilon.o libpp.a $(MODULES) \
 	$(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-wannier_ham.x : wannier_ham.o wannier_umatrix_subroutines.o wannier_u_matrix.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+wannier_ham.x : wannier_ham.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-	wannier_ham.o wannier_umatrix_subroutines.o wannier_u_matrix.o \
-	$(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
-        
-wannier_plot.x : wannier_plot.o $(PPOBJS) $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ \
-	wannier_plot.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+	wannier_ham.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-pw2bgw.x : pw2bgw.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+wannier_plot.x : wannier_plot.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		pw2bgw.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+	wannier_plot.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-bgw2pw.x : bgw2pw.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+pw2bgw.x : pw2bgw.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		bgw2pw.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		pw2bgw.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+bgw2pw.x : bgw2pw.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		bgw2pw.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 tldeps:
 	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
-	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.L
+	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.L libpp.a
 
 include make.depend
