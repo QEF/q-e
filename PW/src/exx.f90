@@ -487,7 +487,6 @@ CONTAINS
       CALL errore(sub_name,'invalid exxdiv_treatment: '//TRIM(exxdiv_treatment), 1)
     END SELECT
     !
-    ! <AF>
     ! Set variables for Coulomb vcut
     ! NOTE: some memory is allocated inside this routine (in the var vcut)
     !       and should be deallocated somewehre, at the end of the run
@@ -631,7 +630,7 @@ CONTAINS
 
     USE mp_global,            ONLY : nproc_pool, me_pool, nproc_bgrp, me_bgrp, &
                                      init_index_over_band, inter_bgrp_comm, &
-                                     inter_pool_comm
+                                     inter_pool_comm, ibnd_start, ibnd_end
     USE mp,                   ONLY : mp_sum
     USE funct,                ONLY : get_exx_fraction, start_exx, exx_is_active, &
                                      !gau-pbe in
@@ -646,6 +645,7 @@ CONTAINS
     IMPLICIT NONE
     INTEGER :: ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq
     INTEGER :: h_ibnd, half_nbnd
+    INTEGER :: ibnd_loop_start, ibnd_buff_start, ibnd_buff_end
     INTEGER :: ipol, jpol
     COMPLEX(DP),ALLOCATABLE :: temppsic(:),      psic(:), tempevc(:,:)
     COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:), psic_nc(:,:)
@@ -705,7 +705,20 @@ CONTAINS
     ELSE
        ALLOCATE(temppsic(nrxxs), psic(nrxxs))
     ENDIF
-    IF (.NOT. allocated(exxbuff)) ALLOCATE( exxbuff(nrxxs*npol,nbnd,nkqs))
+    !
+    IF ( gamma_only ) THEN
+        ibnd_buff_start = ibnd_start/2
+        IF(MOD(ibnd_start,2)==0) ibnd_buff_start = ibnd_buff_start -1
+        !
+        ibnd_buff_end = ibnd_end/2
+        IF(MOD(ibnd_end,2)==1) ibnd_buff_end = ibnd_buff_end +1
+    ELSE
+        ibnd_buff_start = ibnd_start
+        ibnd_buff_end   = ibnd_end
+    ENDIF
+    !
+    IF (.NOT. allocated(exxbuff)) &
+        ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_end, nkqs))
     !
     ALLOCATE(ispresent(nsym))
     ALLOCATE(tempevc( npwx*npol, nbnd ))
@@ -791,15 +804,23 @@ CONTAINS
        !
        GAMMA_OR_NOT : & 
        IF (gamma_only) THEN
-          half_nbnd = ( nbnd + 1 )/2
-          h_ibnd = 0
+          !
+          half_nbnd = ( nbnd + 1 ) / 2
+          h_ibnd = ibnd_start/2
+          !
+          IF(MOD(ibnd_start,2)==0) THEN
+             h_ibnd=h_ibnd-1
+             ibnd_loop_start=ibnd_start-1
+          ELSE
+             ibnd_loop_start=ibnd_start
+          ENDIF
 
-          do ibnd =1, nbnd, 2     
+          DO ibnd = ibnd_loop_start, ibnd_end, 2
              h_ibnd = h_ibnd + 1
              !
              temppsic(:) = ( 0._dp, 0._dp )
              !
-             if (ibnd < nbnd) then
+             if ( ibnd < ibnd_end ) then
                 temppsic(exx_fft_g2r%nlt(1:exx_fft_g2r%npwt)) = tempevc(1:exx_fft_g2r%npwt,ibnd)  &
                           + ( 0.D0, 1.D0 ) * tempevc(1:exx_fft_g2r%npwt,ibnd+1)
                 temppsic(exx_fft_g2r%nltm(1:exx_fft_g2r%npwt)) = CONJG( tempevc(1:exx_fft_g2r%npwt,ibnd) ) &
@@ -833,7 +854,8 @@ CONTAINS
        ELSE GAMMA_OR_NOT 
           !
           IBND_LOOP_K : &
-          DO ibnd =1, nbnd     
+          DO ibnd = ibnd_start, ibnd_end
+             !
              IF (noncolin) THEN
                 temppsic_nc(:,:) = ( 0._dp, 0._dp )
                 temppsic_nc(nls(igk(1:npw)),1) = tempevc(1:npw,ibnd)
@@ -1072,8 +1094,10 @@ CONTAINS
         !
         GAMMA_OR_NOT : &
         IF (gamma_only) THEN
+            !
             half_nbnd = ( nbnd + 1 ) / 2
             h_ibnd = ibnd_start/2
+            !
             IF(MOD(ibnd_start,2)==0) THEN
               h_ibnd=h_ibnd-1
               ibnd_loop_start=ibnd_start-1
@@ -1083,6 +1107,7 @@ CONTAINS
 
             IBND_LOOP_GAM : &
             DO ibnd=ibnd_loop_start,ibnd_end, 2 !for each band of psi
+              !
               h_ibnd = h_ibnd + 1
               IF( ibnd < ibnd_start ) THEN
                   x1 = 0._dp
@@ -1320,16 +1345,16 @@ CONTAINS
     !-----------------------------------------------------------------------
     ! This function is called to correct the deband value and have 
     ! the correct energy 
-    USE io_files,   ONLY : iunigk,iunwfc, nwordwfc
-    USE buffers,    ONLY : get_buffer
-    USE wvfct,      ONLY : nbnd, npwx, npw, igk, wg, current_k
-    USE control_flags, ONLY : gamma_only
-    USE gvect,      ONLY : gstart
-    USE wavefunctions_module, ONLY : evc
-    USE lsda_mod,   ONLY : lsda, current_spin, isk
-    USE klist,      ONLY : ngk, nks, xk
-    USE mp_global,  ONLY : inter_pool_comm, inter_bgrp_comm, intra_bgrp_comm, nbgrp
-    USE mp,         ONLY : mp_sum
+    USE io_files,              ONLY : iunigk,iunwfc, nwordwfc
+    USE buffers,               ONLY : get_buffer
+    USE wvfct,                 ONLY : nbnd, npwx, npw, igk, wg, current_k
+    USE control_flags,         ONLY : gamma_only
+    USE gvect,                 ONLY : gstart
+    USE wavefunctions_module,  ONLY : evc
+    USE lsda_mod,              ONLY : lsda, current_spin, isk
+    USE klist,                 ONLY : ngk, nks, xk
+    USE mp_global,             ONLY : inter_pool_comm, inter_bgrp_comm, intra_bgrp_comm, nbgrp
+    USE mp,                    ONLY : mp_sum
 
     IMPLICIT NONE
 
@@ -1387,44 +1412,46 @@ CONTAINS
   FUNCTION exxenergy2()
     !-----------------------------------------------------------------------
     !
-    USE constants, ONLY : fpi, e2, pi
-    USE io_files,  ONLY : iunigk,iunwfc, nwordwfc
-    USE buffers,   ONLY : get_buffer
-    USE cell_base, ONLY : alat, omega, bg, at, tpiba
-    USE symm_base, ONLY : nsym, s
-    USE gvect,     ONLY : ngm, gstart, g, nl
-    USE gvecs,     ONLY : ngms, nls, nlsm, doublegrid
-    USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg
-    USE control_flags,        ONLY : gamma_only
-    USE wavefunctions_module, ONLY : evc
-    USE klist,     ONLY : xk, ngk, nks, nkstot
-    USE lsda_mod,  ONLY : lsda, current_spin, isk
-    USE mp_global, ONLY : inter_pool_comm, inter_image_comm, inter_bgrp_comm, intra_bgrp_comm, nbgrp
-    USE mp_global, ONLY : my_image_id, nimage, ibnd_start, ibnd_end
-    USE mp,        ONLY : mp_sum
-    USE fft_base,  ONLY : dffts
-    USE fft_interfaces,       ONLY : fwfft, invfft
-    USE gvect,     ONLY : ecutrho
-    USE klist,     ONLY : wk
-
+    USE constants,               ONLY : fpi, e2, pi
+    USE io_files,                ONLY : iunigk,iunwfc, nwordwfc
+    USE buffers,                 ONLY : get_buffer
+    USE cell_base,               ONLY : alat, omega, bg, at, tpiba
+    USE symm_base,               ONLY : nsym, s
+    USE gvect,                   ONLY : ngm, gstart, g, nl
+    USE gvecs,                   ONLY : ngms, nls, nlsm, doublegrid
+    USE wvfct,                   ONLY : nbnd, npwx, npw, igk, wg
+    USE control_flags,           ONLY : gamma_only
+    USE wavefunctions_module,    ONLY : evc
+    USE klist,                   ONLY : xk, ngk, nks, nkstot
+    USE lsda_mod,                ONLY : lsda, current_spin, isk
+    USE mp_global,               ONLY : inter_pool_comm, inter_image_comm, &
+                                        inter_bgrp_comm, intra_bgrp_comm, nbgrp
+    USE mp_global,               ONLY : my_image_id, nimage, ibnd_start, ibnd_end
+    USE mp,                      ONLY : mp_sum
+    USE fft_base,                ONLY : dffts
+    USE fft_interfaces,          ONLY : fwfft, invfft
+    USE gvect,                   ONLY : ecutrho
+    USE klist,                   ONLY : wk
+    !
     IMPLICIT NONE
     !
     REAL(DP)   :: exxenergy2,  energy
     !
     ! local variables
-    COMPLEX(DP), allocatable :: tempphic(:), temppsic(:)
+    COMPLEX(DP), ALLOCATABLE :: tempphic(:), temppsic(:)
     COMPLEX(DP), ALLOCATABLE :: tempphic_nc(:,:), temppsic_nc(:,:)
     COMPLEX(DP), ALLOCATABLE :: rhoc(:)
-    REAL(DP),   ALLOCATABLE :: fac(:)
-    INTEGER          :: jbnd, ibnd, ik, ikk, ig, ikq, iq, isym
-    INTEGER          :: half_nbnd, h_ibnd, nrxxs, current_ik
-    REAL(DP)    :: x1, x2
-    REAL(DP) :: xk_cryst(3), sxk(3), xkq(3), vc
+    REAL(DP),    ALLOCATABLE :: fac(:)
+    INTEGER    :: jbnd, ibnd, ik, ikk, ig, ikq, iq, isym
+    INTEGER    :: half_nbnd, h_ibnd, nrxxs, current_ik
+    INTEGER    :: ibnd_loop_start 
+    REAL(DP)   :: x1, x2
+    REAL(DP)   :: xk_cryst(3), sxk(3), xkq(3), vc
     ! temp array for vcut_spheric
-    INTEGER,EXTERNAL :: find_current_k
+    INTEGER,        EXTERNAL :: find_current_k
 
-    COMPLEX(kind=DP), ALLOCATABLE :: psi_t(:), prod_tot(:)
-    INTEGER, ALLOCATABLE :: igkt(:)
+    COMPLEX(DP), ALLOCATABLE :: psi_t(:), prod_tot(:)
+    INTEGER,     ALLOCATABLE :: igkt(:)
     !
     CALL start_clock ('exxen2')
 
@@ -1459,7 +1486,8 @@ CONTAINS
        END IF
        !
        JBND_LOOP : &
-       DO jbnd = ibnd_start, ibnd_end !for each band of psi (the k cycle is outside band)
+       DO jbnd = 1, nbnd     !for each band of psi (the k cycle is outside band)
+          !
           IF (noncolin) THEN
               temppsic_nc = ( 0._dp, 0._dp )
           ELSE
@@ -1503,17 +1531,32 @@ CONTAINS
 
             GAMMA_OR_NOT : &
             IF (gamma_only) THEN
-              half_nbnd = ( nbnd + 1) / 2
-              h_ibnd = 0
+              !
+              half_nbnd = ( nbnd + 1 ) / 2
+              h_ibnd = ibnd_start/2
+              !
+              IF(MOD(ibnd_start,2)==0) THEN
+                 h_ibnd=h_ibnd-1
+                 ibnd_loop_start=ibnd_start-1
+              ELSE
+                 ibnd_loop_start=ibnd_start
+              ENDIF
               !
               IBND_LOOP_GAM : &
-              DO ibnd=1,nbnd,2 !for each band of psi
+              DO ibnd = ibnd_loop_start, ibnd_end, 2       !for each band of psi
+                  !
                   h_ibnd = h_ibnd + 1
-                  x1 = x_occupation(ibnd,ik)
-                  IF ( ibnd < nbnd ) THEN
-                    x2 = x_occupation(ibnd+1,ik)
+                  !
+                  IF ( ibnd < ibnd_start ) THEN
+                      x1 = 0.0_dp
                   ELSE
-                    x2 = 0._dp
+                      x1 = x_occupation(ibnd,ik)
+                  ENDIF
+                  !
+                  IF ( ibnd < ibnd_end ) THEN
+                      x2 = x_occupation(ibnd+1,ik)
+                  ELSE
+                      x2 = 0.0_dp
                   ENDIF
                   IF ( abs(x1) < 1.d-6 .and. abs(x2) < 1.d-6 ) cycle
                   !
@@ -1526,6 +1569,7 @@ CONTAINS
                   !calculate rho in real space
                   rhoc(:)=(0._dp, 0._dp)
                   rhoc(1:nrxxs)=CONJG(tempphic(1:nrxxs))*temppsic(1:nrxxs) / omega
+                  !
                   IF_ECUTFOCK : &
                   IF (ecutfock == ecutrho) THEN
                     !brings it to G-space
@@ -1562,7 +1606,8 @@ CONTAINS
              ELSE GAMMA_OR_NOT
                 !
                 IBND_LOOP_K : &
-                DO ibnd=1,nbnd !for each band of psi
+                DO ibnd = ibnd_start, ibnd_end
+                   !
                    IF ( abs(x_occupation(ibnd,ik)) < 1.d-6) cycle
                    !
                    !loads the phi from file
@@ -1753,32 +1798,36 @@ CONTAINS
     !
     ! This is Eq.(10) of PRB 73, 125120 (2006).
     !
-    USE constants, ONLY : fpi, e2, pi, tpi
-    USE io_files,  ONLY : iunigk,iunwfc, nwordwfc
-    USE buffers,   ONLY : get_buffer
-    USE cell_base, ONLY : alat, omega, bg, at, tpiba
-    USE symm_base,ONLY : nsym, s
-    USE gvect,     ONLY : ngm
-    USE gvecs,   ONLY : nls, nlsm, doublegrid
-    USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, current_k
-    USE control_flags, ONLY : gamma_only
+    USE constants,            ONLY : fpi, e2, pi, tpi
+    USE io_files,             ONLY : iunigk,iunwfc, nwordwfc
+    USE buffers,              ONLY : get_buffer
+    USE cell_base,            ONLY : alat, omega, bg, at, tpiba
+    USE symm_base,            ONLY : nsym, s
+    USE gvect,                ONLY : ngm
+    USE gvecs,                ONLY : nls, nlsm, doublegrid
+    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, current_k
+    USE control_flags,        ONLY : gamma_only
     USE wavefunctions_module, ONLY : evc
-    USE klist,     ONLY : xk, ngk, nks
-    USE lsda_mod,  ONLY : lsda, current_spin, isk
-    USE gvect,     ONLY : g, nl
-    USE mp_global, ONLY : inter_pool_comm, inter_bgrp_comm, intra_bgrp_comm
-    USE mp_global, ONLY : my_image_id, nimage
-    USE mp,        ONLY : mp_sum 
-    USE fft_base,  ONLY : dffts
-    USE fft_interfaces, ONLY : fwfft, invfft
+    USE klist,                ONLY : xk, ngk, nks
+    USE lsda_mod,             ONLY : lsda, current_spin, isk
+    USE gvect,                ONLY : g, nl
+    USE mp_global,            ONLY : inter_pool_comm, inter_bgrp_comm, intra_bgrp_comm, &
+                                     my_image_id, nimage, ibnd_start, ibnd_end
+    USE mp,                   ONLY : mp_sum 
+    USE fft_base,             ONLY : dffts
+    USE fft_interfaces,       ONLY : fwfft, invfft
+    !
     ! ---- local variables -------------------------------------------------
+    !
     IMPLICIT NONE
+    !
     REAL(DP)   :: exx_stress(3,3), exx_stress_(3,3)
     complex(dp), allocatable :: tempphic(:), temppsic(:)
     complex(dp), allocatable :: rhoc(:)
-    REAL(DP), allocatable :: fac(:), fac_tens(:,:,:), fac_stress(:)
-    INTEGER :: jbnd, ibnd, ik, ikk, ig, ikq, iq, isym
-    INTEGER :: half_nbnd, h_ibnd, nqi, iqi, beta, nrxxs
+    REAL(DP),    allocatable :: fac(:), fac_tens(:,:,:), fac_stress(:)
+    INTEGER  :: jbnd, ibnd, ik, ikk, ig, ikq, iq, isym
+    INTEGER  :: half_nbnd, h_ibnd, nqi, iqi, beta, nrxxs
+    INTEGER  :: ibnd_loop_start
     REAL(DP) :: x1, x2
     REAL(DP) :: qq, xk_cryst(3), sxk(3), xkq(3), vc(3,3), x, q(3)
     ! temp array for vcut_spheric
@@ -1917,15 +1966,30 @@ CONTAINS
                 !CALL stop_clock ('exxen2_ngmloop')
 
                 IF (gamma_only) THEN
-                    half_nbnd = (nbnd + 1) / 2
-                    h_ibnd = 0
-                    DO ibnd=1,nbnd, 2 !for each band of psi
+                    !
+                    half_nbnd = ( nbnd + 1 ) / 2
+                    h_ibnd = ibnd_start/2
+                    !
+                    IF(MOD(ibnd_start,2)==0) THEN
+                      h_ibnd=h_ibnd-1
+                      ibnd_loop_start=ibnd_start-1
+                    ELSE
+                      ibnd_loop_start=ibnd_start
+                    ENDIF
+                    !
+                    DO ibnd = ibnd_loop_start, ibnd_end, 2     !for each band of psi
+                        !
                         h_ibnd = h_ibnd + 1
-                        x1 = x_occupation(ibnd,ik)
-                        IF ( ibnd < nbnd ) THEN
-                          x2 = x_occupation(ibnd+1,ik)
+                        !
+                        IF( ibnd < ibnd_start ) THEN
+                            x1 = 0._dp
                         ELSE
-                          x2 = 0._dp
+                            x1 = x_occupation(ibnd,  ik)
+                        ENDIF
+                        IF( ibnd == ibnd_end) THEN
+                            x2 = 0._dp
+                        ELSE
+                            x2 = x_occupation(ibnd+1,  ik)
                         ENDIF
                         IF ( abs(x1) < 1.d-6 .and. abs(x2) < 1.d-6 ) cycle
 
@@ -1950,7 +2014,9 @@ CONTAINS
                         exx_stress_ = exx_stress_ + exxalfa * vc * wg(jbnd,ikk)
                     enddo
                 ELSE
-                    DO ibnd=1,nbnd !for each band of psi
+
+                    DO ibnd = ibnd_start, ibnd_end    !for each band of psi
+                      !
                       IF ( abs(x_occupation(ibnd,ik)) < 1.d-6) cycle
 
                       ! loads the phi from file
@@ -1982,6 +2048,7 @@ CONTAINS
   !  CALL mp_sum( exx_stress_, inter_image_comm )
   !
     CALL mp_sum( exx_stress_, intra_bgrp_comm )
+    CALL mp_sum( exx_stress_, inter_bgrp_comm )
     CALL mp_sum( exx_stress_, inter_pool_comm )
     exx_stress = exx_stress_
 
