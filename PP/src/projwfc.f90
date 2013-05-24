@@ -193,7 +193,8 @@ MODULE projections
   USE kinds, ONLY : DP
 
   TYPE wfc_label
-     INTEGER na, n, l, m
+     INTEGER na, n, l, m, ind
+     REAL (DP) jj
   END TYPE wfc_label
   TYPE(wfc_label), ALLOCATABLE :: nlmchi(:)
 
@@ -203,25 +204,6 @@ MODULE projections
 
 END MODULE projections
 !
-MODULE projections_nc
-  USE kinds, ONLY : DP
-
-  TYPE wfc_label_nc
-     INTEGER na, n, l, m, ind
-     REAL (DP) jj
-  END TYPE wfc_label_nc
-  TYPE(wfc_label_nc), ALLOCATABLE :: nlmchi(:)
-
-  REAL (DP),    ALLOCATABLE :: proj (:,:,:)
-  COMPLEX (DP), ALLOCATABLE :: proj_aux (:,:,:)
-  COMPLEX (DP), ALLOCATABLE :: ovps_aux (:,:,:)
-
-END MODULE projections_nc
-!
-MODULE projections_ldos
-  USE kinds, ONLY : DP
-  REAL (DP),    ALLOCATABLE :: proj (:,:,:)
-END MODULE projections_ldos
 !
 !-----------------------------------------------------------------------
 SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp, lbinary )
@@ -764,7 +746,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary )
   USE mp,        ONLY : mp_sum
   !
   USE spin_orb,   ONLY: lspinorb, domag
-  USE projections_nc
+  USE projections
   !
   IMPLICIT NONE
   !
@@ -1578,7 +1560,7 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
   USE constants, ONLY: rytoev
   !
   USE spin_orb,   ONLY: lspinorb
-  USE projections_nc
+  USE projections
   !
   IMPLICIT NONE
   CHARACTER (len=256) :: filpdos
@@ -2959,6 +2941,11 @@ CONTAINS
   END SUBROUTINE wf_times_roverlap
   !
 END SUBROUTINE pprojwave
+!
+MODULE projections_ldos
+  USE kinds, ONLY : DP
+  REAL (DP),    ALLOCATABLE :: proj (:,:,:)
+END MODULE projections_ldos
 !
 !-----------------------------------------------------------------------
 SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotboxes )
