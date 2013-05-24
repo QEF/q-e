@@ -206,22 +206,20 @@ do na=1,nat
 end do
 END IF
 
-IF (idir == 1) nrx=nr1
-IF (idir == 2) nrx=nr2
-IF (idir == 3) nrx=nr3
-
 READ (3,'(3i4)') ndummy,ndummy,ndummy
 
 do i=1,3
    do j=1,3
       do na=1,nat
          do nb=1,nat
-            READ (3,*) 
-            do m1=1,nrx
-               IF (idir == 3) READ (3,'(3i4,2x,1pe18.11)') ndummy,ndummy,ndummy,ifc3(i,j,na,nb,1,1,m1)
-               IF (idir == 2) READ (3,'(3i4,2x,1pe18.11)') ndummy,ndummy,ndummy,ifc3(i,j,na,nb,1,m1,1)
-               IF (idir == 1) READ (3,'(3i4,2x,1pe18.11)') ndummy,ndummy,ndummy,ifc3(i,j,na,nb,m1,1,1)
-            end do
+            READ (3,*)
+            do m1=1,nr1
+              do m2=1,nr2
+                 do m3=1,nr3
+                    READ (3,'(3i4,2x,1pe18.11)')ndummy,ndummy,ndummy,ifc3(i,j,na,nb,m1,m2,m3)
+                 end do
+               end do
+             end do
          end do
       end do
    end do
