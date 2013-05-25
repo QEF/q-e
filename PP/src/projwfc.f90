@@ -25,8 +25,7 @@ PROGRAM do_projwfc
   USE mp,               ONLY : mp_bcast
   USE mp_global,        ONLY : mp_startup, nproc_ortho
   USE environment,      ONLY : environment_start
-  !
-  ! for GWW
+  USE wvfct, ONLY: et, nbnd
   !
   IMPLICIT NONE
   !
@@ -35,20 +34,14 @@ PROGRAM do_projwfc
   CHARACTER (len=256) :: filpdos, filproj, outdir
   REAL (DP)      :: Emin, Emax, DeltaE, degauss1
   INTEGER :: ngauss1, ios
+  LOGICAL :: lwrite_overlaps, lbinary_data
   LOGICAL :: lsym, kresolveddos, tdosinboxes, plotboxes
   INTEGER, PARAMETER :: N_MAX_BOXES = 999
   INTEGER :: n_proj_boxes, irmin(3,N_MAX_BOXES), irmax(3,N_MAX_BOXES)
-  !
-  ! for GWW
-  INTEGER :: iun, idum
-  REAL(DP) :: rdum1,rdum2,rdum3
-  LOGICAL :: lex, lgww
-  LOGICAL :: lwrite_overlaps, lbinary_data
-  !
+  LOGICAL :: lgww  !if .true. use GW QP energies from file bands.dat
   !
   NAMELIST / projwfc / outdir, prefix, ngauss, degauss, lsym, &
-             Emin, Emax, DeltaE, filpdos, filproj, &
-             lgww, & !if .true. use GW QP energies from file bands.dat
+             Emin, Emax, DeltaE, filpdos, filproj, lgww, &
              kresolveddos, tdosinboxes, n_proj_boxes, irmin, irmax, plotboxes, &
              lwrite_overlaps, lbinary_data
   !
@@ -116,7 +109,6 @@ PROGRAM do_projwfc
   CALL mp_bcast( Emax, ionode_id )
   CALL mp_bcast( lwrite_overlaps, ionode_id )
   CALL mp_bcast( lbinary_data, ionode_id )
-  ! for GWW
   CALL mp_bcast( lgww, ionode_id )
   ! for projection on boxes
   CALL mp_bcast( tdosinboxes, ionode_id )
@@ -127,6 +119,8 @@ PROGRAM do_projwfc
   !   Now allocate space for pwscf variables, read and check them.
   !
   CALL read_file ( )
+  !
+  IF(lgww) CALL get_et_from_gww ( nbnd, et )
   !
   CALL openfil_pp ( )
   !
@@ -164,7 +158,7 @@ PROGRAM do_projwfc
         IF( nproc_ortho > 1 ) THEN
            CALL pprojwave (filproj, lsym, lwrite_overlaps, lbinary_data )
         ELSE
-           CALL projwave (filproj, lsym, lgww, lwrite_overlaps, lbinary_data)
+           CALL projwave (filproj, lsym, lwrite_overlaps, lbinary_data)
         ENDIF
      ENDIF
   ENDIF
@@ -188,6 +182,43 @@ PROGRAM do_projwfc
   CALL stop_pp
   !
 END PROGRAM do_projwfc
+
+SUBROUTINE get_et_from_gww ( nbnd, et )
+  !
+  USE kinds, ONLY : dp
+  USE constants, ONLY: rytoev
+  USE io_global,  ONLY : stdout
+  !
+  IMPLICIT NONE
+  INTEGER, INTENT(IN)  :: nbnd
+  REAL(dp), INTENT(OUT):: et(nbnd,1)
+  !
+  INTEGER :: iun, idum, i, ios
+  REAL(DP) :: rdum1, rdum2, rdum3
+  LOGICAL :: lex
+  INTEGER, EXTERNAL :: find_free_unit
+  !
+  INQUIRE ( file='bands.dat', EXIST=lex )
+  WRITE(stdout,*) 'lex=', lex
+  CALL flush_unit(stdout)
+  !
+  IF(lex) THEN
+     WRITE(stdout,*) 'Read the file bands.dat => GWA Eigenvalues used.'
+     CALL flush_unit(stdout)
+     iun = find_free_unit()
+     OPEN(unit=iun, file='bands.dat', status='unknown', form='formatted', &
+          IOSTAT=ios)
+     READ(iun,*) idum
+     DO i=1, nbnd
+        READ(iun,*) idum,rdum1,rdum2,et(i,1),rdum3
+     ENDDO
+     et(:,1)=et(:,1)/rytoev !! in bands.dat file, the QP energies are in eV
+  ELSE
+     WRITE(stdout,*) 'The file bands.dat does not exist.'
+     WRITE(stdout,*) 'Eigenergies are not modified'
+     CALL flush_unit(stdout)
+  ENDIF
+END SUBROUTINE get_et_from_gww
 !
 MODULE projections
   USE kinds, ONLY : DP
@@ -305,7 +336,7 @@ END MODULE projections
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp, lbinary )
+SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   !-----------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout, ionode
@@ -332,13 +363,11 @@ SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp, lbinary )
   !
   IMPLICIT NONE
   !
-  INTEGER, EXTERNAL :: find_free_unit
-  !
   CHARACTER (len=*) :: filproj
   LOGICAL           :: lwrite_ovp, lbinary
   !
   INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, nwfc,&
-       nwfc1, lmax_wfc, is, ios, iunproj
+       nwfc1, lmax_wfc, is, iunproj
   REAL(DP), ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:),work1(:), proj0(:,:)
@@ -352,12 +381,6 @@ SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp, lbinary )
   CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/)
   INTEGER, ALLOCATABLE :: idx(:)
   LOGICAL :: lsym
-  !
-  !
-  ! for GWW
-  INTEGER :: iun, idum
-  REAL(DP) :: rdum1,rdum2,rdum3
-  LOGICAL :: lex, lgww
   !
   !
   WRITE( stdout, '(/5x,"Calling projwave .... ")')
@@ -605,30 +628,6 @@ SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp, lbinary )
   ENDIF
 
   !
-  !!!! for GWW
-  IF(lgww) THEN
-    INQUIRE ( file='bands.dat', EXIST=lex )
-    WRITE(stdout,*) 'lex=', lex
-    CALL flush_unit(stdout)
-    !
-    IF(lex) THEN
-       WRITE(stdout,*) 'Read the file bands.dat => GWA Eigenvalues used.'
-       CALL flush_unit(stdout)
-       iun = find_free_unit()
-       OPEN(unit=iun, file='bands.dat', status='unknown', form='formatted', IOSTAT=ios)
-       READ(iun,*) idum
-       DO i=1, nbnd
-         READ(iun,*) idum,rdum1,rdum2,et(i,1),rdum3
-       ENDDO
-       et(:,1)=et(:,1)/rytoev !! because in bands.dat file, the QP energies are in eV
-    ELSE
-       WRITE(stdout,*) 'The file bands.dat does not exist.'
-       WRITE(stdout,*) 'Eigenergies are not modified'
-       CALL flush_unit(stdout)
-    ENDIF
-    !!!! end GWW
-    !
-  ENDIF
   IF ( ionode ) THEN
      !
      ! write on the file filproj
@@ -719,10 +718,7 @@ SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp, lbinary )
               WRITE( stdout, '(10x,"+",5(f5.3,"*[#",i4,"]+"))') &
                    (proj1 (i), idx(i), i = 5*j+1, min(5*(j+1),nwfc))
            ENDDO
-           psum = 0.d0
-           DO nwfc = 1, natomwfc
-              psum = psum + proj (nwfc, ibnd, ik)
-           ENDDO
+           psum = SUM ( proj(1:natomwfc, ibnd, ik) )
            WRITE( stdout, '(4x,"|psi|^2 = ",f5.3)') psum
            !
         ENDDO
@@ -755,7 +751,7 @@ SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp, lbinary )
      !
      DO na = 1, nat
         DO is = 1, nspin
-           totcharge(is) = sum(charges(na,0:lmax_wfc,is))
+           totcharge(is) = SUM(charges(na,0:lmax_wfc,is))
         ENDDO
         IF ( nspin == 1) THEN
            WRITE( stdout, 2000) na, totcharge(1), &
@@ -776,7 +772,7 @@ SUBROUTINE projwave( filproj, lsym, lgww, lwrite_ovp, lbinary )
 2002 FORMAT (15x,"  spin down    = ",f8.4,4(", ",a1," =",f8.4))
 2003 FORMAT (15x,"  polarization = ",f8.4,4(", ",a1," =",f8.4))
      !
-     psum = sum(charges(:,:,:)) / nelec
+     psum = SUM(charges(:,:,:)) / nelec
      WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum
      !
      ! Sanchez-Portal et al., Sol. State Commun.  95, 685 (1995).
@@ -1217,10 +1213,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary )
               WRITE( stdout, '(10x,"+",5(f5.3,"*[#",i3,"]+"))') &
                    (proj1 (i), idx(i), i = 5*j+1, min(5*(j+1),nwfc))
            ENDDO
-           psum = 0.d0
-           DO nwfc = 1, natomwfc
-              psum = psum + proj (nwfc, ibnd, ik)
-           ENDDO
+           psum = SUM ( proj(1:natomwfc, ibnd, ik) )
            WRITE( stdout, '(4x,"|psi|^2 = ",f5.3)') psum
            !
         ENDDO
@@ -1269,7 +1262,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary )
      !
      DO na = 1, nat
         DO is = 1, nspin0
-           totcharge(is) = sum(charges(na,0:lmax_wfc,is))
+           totcharge(is) = SUM(charges(na,0:lmax_wfc,is))
         ENDDO
         IF ( nspin0 == 1) THEN
            WRITE( stdout, 2000) na, totcharge(1), &
@@ -1997,10 +1990,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
               WRITE( stdout, '(10x,"+",5(f5.3,"*[#",i4,"]+"))') &
                    (proj1 (i), idx(i), i = 5*j+1, min(5*(j+1),nwfc))
            ENDDO
-           psum = 0.d0
-           DO nwfc = 1, natomwfc
-              psum = psum + proj (nwfc, ibnd, ik)
-           ENDDO
+           psum = SUM (proj (1:natomwfc, ibnd, ik) )
            WRITE( stdout, '(4x,"|psi|^2 = ",f5.3)') psum
            !
         ENDDO
@@ -2034,7 +2024,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
      !
      DO na = 1, nat
         DO is = 1, nspin
-           totcharge(is) = sum(charges(na,0:lmax_wfc,is))
+           totcharge(is) = SUM(charges(na,0:lmax_wfc,is))
         ENDDO
         IF ( nspin == 1) THEN
            WRITE( stdout, 2000) na, totcharge(1), &
@@ -2055,7 +2045,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
 2002 FORMAT (15x,"  spin down    = ",f8.4,4(", ",a1," =",f8.4))
 2003 FORMAT (15x,"  polarization = ",f8.4,4(", ",a1," =",f8.4))
      !
-     psum = sum(charges(:,:,:)) / nelec
+     psum = SUM(charges(:,:,:)) / nelec
      WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum
      !
      ! Sanchez-Portal et al., Sol. State Commun.  95, 685 (1995).
