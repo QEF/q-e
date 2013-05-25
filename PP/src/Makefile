@@ -31,6 +31,7 @@ local_dos.o \
 local_dos_mag.o \
 local_dos1d.o \
 openfil_pp.o\
+partialdos.o \
 paw_postproc.o \
 plot_whole_cell.o \
 projwfc_box.o \
@@ -41,6 +42,7 @@ stop_pp.o \
 sym_band.o \
 work_function.o \
 write_p_avg.o \
+write_proj.o \
 xsf.o \
 xk_et_collect.o \
 write_io_header.o \
