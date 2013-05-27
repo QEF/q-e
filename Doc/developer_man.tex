@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{5.0.2}
+\def\version{$>5.0.3$}
 \def\qe{{\sc Quantum ESPRESSO}}
 \def\qeforge{\texttt{qe-forge.org}}
 \textwidth = 17cm
@@ -36,7 +36,7 @@
   \includegraphics[width=6cm]{\democritosImage}\\
   \vskip 1cm
   % title
-  \Huge Developer's Manual for \qe (v. \version) \smallskip
+  \Huge Developer's Manual for \qe (v.\version) \smallskip
 }
 \maketitle
 
@@ -48,16 +48,17 @@
 
 The intended audience of this guide is everybody who wants to:
 \begin{itemize}
-\item know how \qe\ works, including its internals;
+\item know how \qe\ works internally;
 \item modify/customize/add/extend/improve/clean up \qe;
-\item know how to read data produced by \qe.
+\item know how to read and use data produced by \qe.
 \end{itemize}
 The same category of people should also {\em write} this guide, of course.
 
 \subsection{Who may read this guide but will not necessarily profit from it}
 
 People who want to know about the capabilities of \qe,
-or who want just to use it, should read the User Guide.
+or who want just to use it, should read the User Guide
+instead of (or in addition to) this guide.
 
 People who want to know about the methods or the physics
 behind \qe\ should read first the relevant  
@@ -94,55 +95,75 @@ You can contribute to a better \qe, even as an ordinary user, by:
 
 If you want to get involved as a developer and contribute serious
 or nontrivial stuff (or even simple and trivial stuff), you should
-first of all register for the \qe\ project on \qeforge. Please 
-introduce yourself when you register so that the administrator 
-knows that you are a real person. 
+first of all register on \qeforge\ as a developer for the \qe\ 
+project.
 
 \subsection{About \qeforge}
 
 \qeforge\ is the portal for \qe\ developers, contributors,
 and for anybody else wanting to develop a project in the
-field of atomistic simulations.  \qeforge\ provides a CVS 
-or SVN repository, mailing lists, a wiki, upload space, a
-bug tracking facility, various other tools that are useful 
-for developers. You can use either CVS or SVN but not both
-together. Note that the usage of the wiki provided by \qeforge\ 
-is currently disabled for security reasons.
+field of atomistic simulations. \qeforge\ provides a 
+repository, mailing lists, a wiki\footnote{Usage of the
+wiki provided by \qeforge\ is currently disabled for 
+security reasons.}, upload space, a bug tracking facility, 
+various other tools that are useful for developers.
 
-You can open your own project, retaining all rights on it (including 
-the right not to release anything); or else, you can register as a 
-developer in an existing project (or both).
+Once you have obtained an account ({\em please} follow the 
+instructions and introduce yourself when you register: the 
+site administrator has to be sure that you are a real person!)
+you may open your own project, retaining all rights on it 
+(including the right not to release anything). You have the 
+choice between a repository using CVS, SVN, \texttt{git}, 
+plus other choices. You may as well register as a developer 
+in an existing project: just obtain the permission from the 
+leader of the project you are interested in.
+
+You may need to register your SSH keys in order to have read-write 
+access the repository (if you have such permissions). The procedure 
+is as follows:
+\begin{enumerate}
+\item login to your \qeforge\ account
+\item click on My stuff (menu on top line)
+\item click on My account (menu on the left)
+\item click on Edit SSH Keys, follow the instructions to add your keys
+\end{enumerate}
+
+\subsection{\qe\ on \qeforge}
 
 Currently \qe\ uses the following development tools:
 \begin{itemize}
 \item SVN server (with web interface to browse the repository)
 \item Bug Tracking facility
 \item Upload space (with download counter)
-\item Mailing lists \texttt{q-e-commits} and \texttt{q-e-developers}.
+\item Mailing lists, currently
+\begin{itemize}
+\item \texttt{pw\_users} (low traffic): for announcements.
+Restricted: only a few developers can post messages here.
+\item \texttt{pw\_forum} (high traffic): for ordinary users, 
+requests for help, problems, discussions, etc.. Only
+registered users can post.
+\item \texttt{q-e-gpgpu} (low traffic): specific to GPU-based 
+architectures. Only registered users can post.
+\item \texttt{q-e-developers} (low traffic):
+for communications among developers and people interested
+in the development of \qe. Only registered users can post
+but messages from unregistered users are monitored and 
+approved if relevant.
+\item \texttt{q-e-commits}(medium traffic): for automatic
+commit messages (it is allowed to send replies to commit 
+messages in case of doubts or questions or remarks
+over a specific commit).
+\end{itemize}
 \end{itemize}
 Everybody is encouraged to explore other capabilities of \qeforge.
 
-Once you are registered, you need to register your SSH keys in order
-to have read-write access the CVS or SVN repository (if you have been
-allowed by the project leader). The procedure is as follows:
-\begin{itemize}
-\item login to your \qeforge\ account
-\item click on My stuff (menu on top line)
-\item click on My account (menu on the left)
-\item click on Edit SSH Keys, follow the instructions to add your keys
-\end{itemize}
-
-If you want to become a \qe\ developer, you should subscribe to
-the two mailing lists
-\begin{itemize}
-\item \texttt{q-e-developers} (low-traffic):
-for communications among developers and people interested
-in the development of \qe
-\item \texttt{q-e-commits} (not-so-low traffic): for commit messages.
-\end{itemize}
-Subscription is not automatic when you register: you should
-subscribe using the links in
-\texttt{http://www.qe-forge.org/gf/project/q-e/mailman/}.
+All \qe\ developer are {\em strongly} invited to subscribe to the 
+two mailing lists \texttt{q-e-developers} and \texttt{q-e-commits}.
+Those who don't lose i) the opportunity to follow what is going on,
+ii) the right to complain if something has gone into a direction 
+they don't like. Note that subscription to mailing lists is not 
+automatic when you register: you should subscribe using the links 
+in \texttt{http://www.qe-forge.org/gf/project/q-e/mailman/}.
 
 \subsection{Contributing new developments}
 
@@ -207,8 +228,10 @@ packages, including external packages using \qe).
 \item Do not forget that your changes must work on many different 
 combinations of hardware and software, in both serial and parallel execution.
 \item Do not forget that your changes must work for a wide variety of
-different system: if your code works only in some selected case, it
-must either stop or issue a warning in all other cases.
+different case: if you implement something that works only in some 
+selected cases, that's ok, as long as the code stops (or ate least,
+issues a warning) in all other cases. There is something worse than
+no results: wrong results.
 \item Do not forget that your changes must work on systems of wildly
 different computational size: solutions that may look appropriate in
 crystal silicon may gobble a disproportionate amount of time and/or
@@ -218,8 +241,8 @@ memory in a 1000-atom cell.
 \begin{itemize}
 \item If you modify what a code can do, or introduce
 incompatibilities with previous versions (e.g. old data file 
-no longer readable, old input no longer valid), report it in
-file \texttt{Doc/release-notes}.
+no longer readable, old input no longer valid), {\em please}
+report it in file \texttt{Doc/release-notes}.
 \item If you add/modify/remove input variables, document
 it in the appropriate file \\
 \texttt{INPUT\_*.def}; if
@@ -232,17 +255,18 @@ new one or a modified existing test or example).
 \item Please do not include files (any kind, including
 pseudopotential files) with DOS \^{}M characters or 
 tabulators \^{}I. 
-\end{itemize}
-When you modify the program sources, run the
+\item When you modify the program sources, run the
 \texttt{install/makedeps.sh}  script  or type \texttt{make depend} 
 to update files \texttt{make.depend} in the various 
-subdirectories.
+subdirectories. These files are under SVN as well;
+if modified they should be committed.
+\end{itemize}
 
 \subsection{Guidelines for reporting bugs}
 \label{SubSec:Bugs}
 \begin{itemize}
 \item Before deciding that a problem is due to a bug in the codes, 
-verify if it is reproducible on different machines/architectures/phases 
+verify if it is reproducible on different machines/architectures/phases
 of the moon: erratic or irreproducible problems, especially in parallel
 execution, are often an indication of buggy compilers or libraries
 \item Bug reports should preferably be filed using the bug tracking 
@@ -257,11 +281,19 @@ message alone is usually not a sufficient piece of information.
 \item If a bug is found in a stable (released) version of \qe, it must
 be reported in the \texttt{Doc/release-notes} file.
 \end{itemize}
+
 \section{ Structure of the distribution}
-% \subsection{Contents of the various directories}
-% \subsubsection{ Modules}
-% \subsubsection{ Sources}
+
+\qe\ is since v.5 organized into packages. Each package is stored 
+into a specific subdirectory. In addition, there is a set of
+directories, common to all packages, containing common code, 
+libraries, installation utilities, general documentation.
+
+\subsection{Common directories}
+
 % \subsubsection{ Utilities}
+% \subsubsection{ Modules}
+
 \subsubsection{ Libraries}
 
 Subdirectory \texttt{flib/} contains libraries written in fortran77 
@@ -270,36 +302,75 @@ The latter should not depend on any module, except for modules
 \texttt{kinds} and \texttt{constants}.
 
 Subdirectory \texttt{clib/} contains libraries written in C 
-(\texttt{*.c}). Functions that are called by fortran
-should be preprocessed using the macros:
+(\texttt{*.c}). There are currently two different ways to 
+ensure that fortran can call C routines. The new and recommanded 
+way use the fortran-95 intrinsic \texttt{iso\_c\_binding} module: 
+see \texttt{flib/wrappers.f90} for an example of usage.
+
+The old way uses macros in C routines:
 \begin{enumerate}
 \item \texttt{F77\_FUNC (func,FUNC)} for function \texttt{func}, not
   containing underscore(s) in name  
 \item \texttt{F77\_FUNC\_(f\_nc,F\_NC)} for function \texttt{f\_nc},
   containing underscore(s) in name 
 \end{enumerate}
-These macros are defined in file \texttt{include/c\_defs.h}. This file must be included
-by all \texttt{*.c} files. The macros are automagically generated by 
-\configure\ and 
-choose the correct case 
-(lowercase or uppercase) and the correct number of final underscores. 
+These macros are defined in file \texttt{include/c\_defs.h},
+included by all \texttt{*.c} files, and are automagically 
+generated by \configure. The goal of these macros is to
+choose the correct case (lowercase or uppercase, the latter
+probably obsolete) and the correct number of underscores. 
 See file \texttt{include/defs.h.README} for more info.
+
+% \subsection{Contents of the various directories}
+% \subsubsection{ Modules}
+% \subsubsection{ Sources}
+% \subsubsection{ Utilities}
 
 \subsection{Installation mechanism}
 
 \label{SubSec:Inst}
-The code contains C-style preprocessing directives. There are two ways
-to do preprocessing of fortran files: 
-\begin{itemize}
-\item directly with the fortran compiler, if supported;
-\item by first pre-compiling with the C preprocessor \texttt{cpp}.
-\end{itemize}
+In order to compile and link \qe, one has to run the \configure\ 
+script first to produce a \texttt{make.sys}, containing all machine 
+dependencies. Then one runs \texttt{make} with appropriate targets.
+Possible \configure\ and  \texttt{make} options are documented in the
+User Guide.
 
-In the first case, one needs to specify in the \texttt{make.sys} file
-the fortran compiler option that tells the compiler to pre-process
-first. In the second case, one needs to specify the C precompiler and
-options (if needed) in \texttt{make.sys}. 
-Normally, \configure\ should take care of this.
+\subsection{Preprocessing}
+\label{SubSec:CPP}
+The code contains C-style preprocessing directives. Most fortran
+compilers directly support them; some don't, and preprocessing is
+''hand made'' by the makefile using the C preprocessor \texttt{cpp}. 
+Normally, \configure\ takes care of this, by selecting the
+appropriate case and the producing the appropriate \texttt{make.sys}.
+
+The C preprocessor may: 
+\begin{itemize}
+\item assign a value to a given expression. For instance, command
+  \texttt{\#define THIS that}, or the option in the command line:
+  \texttt{-DTHIS=that}, will replace all occurrences of \texttt{THIS}
+  with \texttt{that}. 
+\item include file (command \texttt{\#include})
+\item expand macros (command \texttt{\#define})
+\item execute conditional expressions such as
+\begin{verbatim}
+  #ifdef __expression
+    ...code A...
+  #else
+    ...code B...
+  #endif
+\end{verbatim}
+If \texttt{\_\_expression} is defined (with a \texttt{\#define} command
+or from the command line with option \texttt{-D\_\_expression}), 
+then  \texttt{...code A...} is sent to output; otherwise 
+\texttt{...code B...} is sent to output.
+
+\end{itemize}
+The file \texttt{include/defs.h.README} contains a list of definitions
+that are used in the code. In order to make  preprocessing options
+easy to see, preprocessing variables should start with  
+two underscores, as \texttt{\_\_expression} in the above
+example. Traditionally ''preprocessed'' variables are also written in
+uppercase. 
 
 \subsubsection{ How to edit the \configure\ script}
 
@@ -314,7 +385,8 @@ first.
 
 GNU \autoconf\ is installed by default on most Unix/Linux systems.  If
 you don't have it on your system, you'll have to install it. You will
-need a recent version (e.g. v.2.65) of \autoconf, because our \configurac
+need a recent version (e.g. v.2.65) of \autoconf, because our 
+\configurac\
 file uses recent syntax.
 
 \configurac\ is a regular Bourne shell script (i.e., "sh" -- not csh!), 
@@ -622,39 +694,6 @@ directory, and because a given library may require other libraries as
 prerequisites (for example, Lapack requires BLAS).
 \end{enumerate}
 
-\subsection{Preprocessing}
-\label{SubSec:CPP}
-The code contains C-style preprocessing directives. Most fortran
-compilers directly support them; some don't, and preprocessing is
-''hand-made'' by the makefile using the C preprocessor
-\texttt{cpp}. The C preprocessor may: 
-\begin{itemize}
-\item assign a value to a given expression. For instance, command
-  \texttt{\#define THIS that}, or the option in the command line:
-  \texttt{-DTHIS=that}, will replace all occurrence of \texttt{THIS}
-  with \texttt{that}. 
-\item include file (command \texttt{\#include})
-\item expand macros (command \texttt{\#define})
-\item execute conditional expressions such as
-\begin{verbatim}
-  #ifdef __expression
-    ...code A...
-  #else
-    ...code B...
-  #endif
-\end{verbatim}
-If ''expression'' is defined (with a \texttt{\#define} command 
-or from the command line with option \texttt{\-D\_\_expression}), 
-then  \texttt{...code A...} is sent to output; otherwise 
-\texttt{...code B...} is sent to output.
-
-\end{itemize}
-The file \texttt{include/defs.h.README} contains a list of definitions
-that are used in the code. In order to make  preprocessing options
-easy to see, preprocessing variables should start with  
-two underscores, as \texttt{\_\_expression} in the above
-example. Traditionally ''preprocessed'' variables are also written in
-uppercase. 
 
 % \subsection{Adding new directories or routines}
 
@@ -1316,10 +1355,10 @@ CALL something( )
 \item Indent DO's and IF's with three white spaces (editors like emacs will do this automatically for you)
 \item Do not write crammed code: leave spaces, insert empty separation lines
 \item Use comments (introduced by a !) to explain what is not obvious from 
-the code. Remember that what is obvious to yoiu may not be obvious to other 
+the code. Remember that what is obvious to you may not be obvious to other 
 people. It is especially important to document what a routine does, what
 it needs on input, what it produces on output. A few words of comment
-may save hours of searches into the code for a pice of missing information.
+may save hours of searches into the code for a piece of missing information.
 \item do not use machine-dependent extensions or sloppy syntax. Am example:
 Standard f90 
 requires that a \& is needed both at end of line AND at the beginning of 
@@ -1335,20 +1374,23 @@ CMPLX(...,...,KIND=dp). For complex conjugate, use CONJG.  For imaginary part,
 use AIMAG.  IMPORTANT: Do not use REAL or CMPLX without KIND=dp, or else you 
 will lose precision (except when you take the real part of a 
 double precision complex number).
-\item Do not use automatic arrays (e.g. \texttt{REAL(dp) :: A(N)} 
-in a subroutine) except if you are sure that the array is small in all
-cases: you may easily exceed the stack size if the arrays are large.
+\item Do not use automatic arrays (e.g. \texttt{REAL(dp) :: A(N)} with
+\texttt{N} defined at run time) unless you are sure that the array is 
+small in all cases: large arrays may easily exceed the stack size,
+or the memory size,
 \item Do not use pointers unless you have a good reason to: 
 pointers may hinder optimization. Allocatable arrays should be used instead.
 \item If you use pointers, nullify them before performing tests on their
 status.
-\item Beware fancy constructs like structures and pointers:
-they look great on paper, but they have also the potential
-to make a code unreadable, or to confuse the compiler.
-Also, be careful with F90 array syntax and in particular with
-array sections: they may turn out to be inefficient.
+\item Beware fancy constructs like structures: they look great on paper, 
+but they also have the potential to make a code unreadable, or inefficient,
+or not working because some compiler gets confused.
+\item Be careful with F90 array syntax and in particular with
+array sections: the compiler might decide that a copy is needed,
+thus silently increasing the memory footprint.
 \item Do not pass unallocated arrays as arguments, even in those cases where
-they are not actually used inside the subroutine.
+they are not actually used inside the subroutine: some compilers don't
+like it.
 \item Do not use any construct that is susceptible to be flagged as 
 out-of-bounds error, even if no actual out-of-bound error takes place.
 \item Always use IMPLICIT NONE and define all local variables.

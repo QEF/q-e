@@ -31,6 +31,8 @@ Incompatible changes in svn version:
 
 Fixed in svn version:
 
+   * PWscf: Forces with finite electric field (lelfield=.ture.) and US PP
+     were incorrect in parallel execution
    * D3: bug when the crystal has symmetry but the small group of the 
      q-point has no symmetry.
    * Bogus "file not found" error in pp.x when extracting quantities not
