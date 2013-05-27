@@ -372,6 +372,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
       
          zeta_mod = 1.d0
 
+
 !        --- Start loop over parallel k-points ---
          DO kpar = 1,nppstr_3d(pdir)+1
 
@@ -398,7 +399,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                           CALL ZGEMM( 'C', 'N', nkb, nbnd, npw0, ( 1.D0, 0.D0 ),   &
                           vkb1, npwx, psi, npwx, ( 0.D0, 0.D0 ),      &
                           dbecp0(1,1,ipol), nkb )
-                  
+                          call mp_sum(dbecp0(1:nkb,1:nbnd,ipol))
                   ENDDO
                endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
@@ -419,7 +420,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                              CALL ZGEMM( 'C', 'N', nkb, nbnd, npw1, ( 1.D0, 0.D0 ),   &
                              vkb1, npwx, psi1, npwx, ( 0.D0, 0.D0 ),      &
                              dbecp_bp(1,1,ipol), nkb )
-                  
+                             call mp_sum(dbecp_bp(1:nkb,1:nbnd,ipol))
                      ENDDO
                   endif
                ELSE
@@ -440,7 +441,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                              CALL ZGEMM( 'C', 'N', nkb, nbnd, npw1, ( 1.D0, 0.D0 ),   &
                              vkb1, npwx, psi1, npwx, ( 0.D0, 0.D0 ),      &
                              dbecp_bp(1,1,ipol), nkb )
-                  
+                             call mp_sum(dbecp_bp(1:nkb,1:nbnd,ipol))
                      ENDDO
                   endif
                ENDIF
@@ -563,6 +564,8 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
 !              --- Calculate matrix determinant ---
 
 ! calculate inverse
+
+
                CALL zgefa(mat,nbnd,nbnd,ivpt,info)
                CALL errore('forces_us_efield','error in zgefa',abs(info))
                CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
