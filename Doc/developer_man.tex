@@ -91,6 +91,21 @@ You can contribute to a better \qe, even as an ordinary user, by:
   will try to make you happy (no warranty that we will actually succeed).
 \end{itemize}
 
+\subsection{\qe\ as a distribution}
+
+\qe\ is not organized as a monolithic code, but rather as a
+{\em distribution} (integrated suite) of ``packages'' that can 
+be installed on demand and with varying degrees of integration. 
+It is thus possible to contribute:
+\begin{itemize}
+\item a small (or large) piece of code to an existing package; or
+\item a new package that uses QE as a library; or
+\item a ``plugin'' that modifies QE, adding a new functionality; or
+\item a new ``external'' package that just reads data file produced by QE.
+\end{itemize}
+
+\newpage
+
 \section{How to become a developer}
 
 If you want to get involved as a developer and contribute serious
@@ -197,7 +212,7 @@ changes, or ask one of the expert developers to do this if you do not
 feel confident enough.
 
 For case b), you should from time to time align your branch with the
-trunk.
+trunk. See Sect. \ref{SubSec:Merge} for hints on how to do this.
 
 For case c): if your project is ``loosely coupled'' to \qe, that is,
 it just uses the \qe\ installation procedure and/or data files, there
@@ -282,11 +297,63 @@ message alone is usually not a sufficient piece of information.
 be reported in the \texttt{Doc/release-notes} file.
 \end{itemize}
 
+\section{Stable vs development versions}
+When a sufficient number of new features or improvements are available,
+a stable release is packaged. There is no well-defined procedure or 
+rule to decide when it is time to package a new release: the decision
+is taken after informal discussions of developers on the mailing list. 
+Note what open-source conventional wisdom says: 
+{\em release early, release often}.
+
+When the decision is made, development of new stuff is temporarily
+stopped: nothing new or potentially ''dangerous'' is added, and all 
+attention is dedicated to fix bugs and to stabilize the distribution.
+This phase should last a few weeks or so, a few months at most.
+
+Releases are labelled as $N.M.p$, where $N$=major, $M$=minor, $p$=bugfix.
+The logic goes nore or less as follows:
+\begin{itemize}
+\item {\em Major}: when something really important changes, e.g.
+\begin{enumerate}
+\item[v.1] First public release of PWscf
+\item[v.2] Conversion from f77 to f90
+\item[v.3] Merge with the CP and FPMD codes (beginning of \qe)
+\item[v.4] New XML-based data file format
+\item[v.5] Major package and directory reorganization
+\end{enumerate}
+(the above numbers are a slightly idealized versions of how things have 
+gone until now)
+\item {\em Minor}: when some important new functionality is being added
+\item {\em Bugfix}: only bug fixes; occasionally, minor new functionalities
+that don't break any existing one are allowed to sneak into a bugfix release.
+\end{itemize}
+It may be convenient to make a SVN branch at release $N.M.0$: this allows 
+to go on with the development while keeping track of bug fixes. 
+
+Releases are stored to \qeforge. Given the size of the complete distribution,
+the release is split into a ``core'' distribution and ``add-ons'',
+additional packages, that can be downloaded and installed on demand 
+from the core distribution. ``External'' packages can be independently
+released, as long as there is no compatibility problem.
+
+{\bf spiegare qui il casinismo del file che punta ai tar.gz}
+
 \section{ Structure of the distribution}
 
-\qe\ is since v.5 organized into packages. Each package is stored 
-into a specific subdirectory. In addition, there is a set of
-directories, common to all packages, containing common code, 
+\qe\ is not organized as a monolithic code, but rather as a
+{\em distribution} (integrated suite) of ``packages'' that can 
+be installed on demand and with varying degrees of integration. 
+It is thus possible to contribute:
+\begin{itemize}
+\item a small (or large) piece of code to an existing package; or
+\item a new package that uses QE as a library; or
+\item a ``plugin'' that modifies QE, adding a new functionality; or
+\item a new ``external'' package that just reads data file produced by QE.
+\end{itemize}
+Since v.5, the directory structure of \qe\ reflects its organization
+into packages. Each package is stored into a specific subdirectory. 
+In addition, there is a set of directories, common to all packages, 
+containing common code, 
 libraries, installation utilities, general documentation.
 
 \subsection{Common directories}
@@ -1449,10 +1516,10 @@ read\_namelists.f90 )
  
 \section{ Using SVN}
 \label{Sec:SVN}
-The package is available read-only using anonymous access to the Subversion 
-(SVN) repository. Developers can have read-write access when needed. Note 
-that the latest (development) version may not work properly, and sometimes 
-not even compile properly. Use at your own risk. 
+\qe is maintained in a Subversion (SVN) repository. Developers can have 
+read-write access when needed. Note that the latest (development) version
+may not work properly, and sometimes not even compile properly. 
+Use at your own risk. 
 
 Subversion, also known as SVN, is a software that allows many
 developers to work and maintain a single copy of a software in a
@@ -1463,6 +1530,17 @@ For the end user, SVN is rather similar to CVS:
 if no advanced features are used, the basic commands are the same.
 More information on SVN can be found here: 
 \texttt{http://subversion.apache.org/}.
+
+Current organization:
+\begin{itemize}
+\item {\em trunk}: development goes on here -- open read-only to everybody
+\item {\em branches}: major new developments, disruptive changes, very
+experimental features, things that have a long time before being released
+(if ever) ... -- branches may or may not be public
+\item {\em external}: packages that are be developed in a separate SVN trunk
+can be downloaded into the main QE trunk -- access may be restricted to
+specific (usually expert) developers.
+\end{itemize}
 
 Follow the instructions in
 \texttt{http://qe-forge.org/gf/project/q-e/scmsvn},
@@ -1524,6 +1602,10 @@ The web-SVN interface:
 \end{verbatim}
 will also be very helpful in locating the problem.
 Of course, communication with other developers will also help.
+
+\subsection{Merging branch and trunk}
+\label{SubSec:Merge}
+TO BE WRITTEN
 
 \section{Bibliography}
 
