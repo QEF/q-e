@@ -572,6 +572,8 @@ CALL mp_bcast( last_k, ionode_id )
     if (ikind.ne.0.and.tk_plot.gt.0.and.ionode) &
              CALL summary_tran_k(ien,nk1ts,nk2ts,k1ts,k2ts)
 
+    if (.not.loop_ek) CALL free_mem
+
   ENDDO
 
   IF(ikind.ne.0.and.ionode) CALL summary_tran_tot()
