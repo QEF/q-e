@@ -8517,7 +8517,7 @@ fi
 		# specify a library path to have essl linked, while
 		# in reality it is needed to specify where essl are
 		if test "$arch"="ppc64-bg"; then
-                   try_dflags="$try_dflags -D__ESSL"
+                   try_dflags="$try_dflags -D__LINUX_ESSL"
 		   if test "$blas_libs"=""; then
 		      if test "$use_openmp" -eq 0 ; then
 		         blas_libs="-L/opt/ibmmath/essl/4.4/lib/ -lesslbg"
