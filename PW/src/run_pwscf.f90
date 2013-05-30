@@ -154,7 +154,7 @@ SUBROUTINE run_pwscf ( exit_status )
   IF ( .not. lmd) CALL pw2casino()
   CALL punch('all')
   !
-  IF ( .NOT. conv_elec )  exit_status =  1
+  IF ( .NOT. conv_ions )  exit_status =  1
   RETURN
   !
 9010 FORMAT( /,5X,'Current dimensions of program PWSCF are:', &
