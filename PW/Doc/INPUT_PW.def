@@ -1946,12 +1946,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                yz      = only v2_y and v3_z are moved
                xyz     = only v1_x, v2_y, v3_z are moved
                shape   = all axis and angles, keeping the volume fixed
+               volume  = the volume changes, keeping all angles fixed (i.e. only celldm(1) changes)
                2Dxy    = only x and y components are allowed to change
                2Dshape = as above, keeping the area in xy plane fixed
 
                BEWARE: if axis are not orthogonal, some of these options do not
                 work (symmetry is broken). If you are not happy with them, 
-                edit subroutine init_dofree in file Module/cell_base.f90
+                edit subroutine init_dofree in file Modules/cell_base.f90
 	    }
 	}
     }
