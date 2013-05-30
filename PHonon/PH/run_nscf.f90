@@ -90,7 +90,7 @@ SUBROUTINE run_nscf(do_band, iq)
 !  files and stop the pwscf run
 !
      CALL punch( 'config' )
-     CALL stop_run(.false.)
+     CALL stop_run( -1 )
   ENDIF
 
   !

@@ -6,12 +6,13 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE run_pwscf ( conv ) 
+SUBROUTINE run_pwscf ( exit_status ) 
   !----------------------------------------------------------------------------
   !
   ! ... Run an instance of the Plane Wave Self-Consistent Field code 
   ! ... MPI initialization and input data reading is performed in the 
-  ! ... calling code - returns in "conv" whether successfully completed
+  ! ... calling code - returns in exit_status whether successfully
+  ! ... completed (0) or stopped by user request (-1) or not converged (1)
   ! ... Will be eventually merged with NEB
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
@@ -29,10 +30,10 @@ SUBROUTINE run_pwscf ( conv )
 #endif
   !
   IMPLICIT NONE
-  LOGICAL, INTENT(OUT) :: conv
+  INTEGER, INTENT(OUT) :: exit_status
   !
   !
-  CONV = .false.
+  exit_status = 0
   IF ( ionode ) WRITE( unit = stdout, FMT = 9010 ) ntypx, npk, lmaxx
   !
   IF (ionode) CALL plugin_arguments()
@@ -66,7 +67,11 @@ SUBROUTINE run_pwscf ( conv )
   ! ... dry run: code will stop here if called with exit file present
   ! ... useful for a quick and automated way to check input data
   !
-  IF ( check_stop_now() ) RETURN
+  IF ( check_stop_now() ) THEN
+     CALL punch( 'config' )
+     exit_status = -1
+     RETURN
+  ENDIF
   !
   main_loop: DO
      !
@@ -81,6 +86,8 @@ SUBROUTINE run_pwscf ( conv )
      ! ... code stopped by user or not converged
      !
      IF ( check_stop_now() .OR. .NOT. conv_elec ) THEN
+        IF ( check_stop_now() ) exit_status = -1
+        IF ( .NOT. conv_elec )  exit_status =  1
         CALL punch( 'config' )
         RETURN
      ENDIF
@@ -118,12 +125,8 @@ SUBROUTINE run_pwscf ( conv )
         !
         ! ... then we save restart information for the new configuration
         !
-        IF ( istep < nstep .AND. .NOT. conv_ions ) THEN
-           !
+        IF ( istep < nstep .AND. .NOT. conv_ions ) &
            CALL punch( 'config' )
-           !CALL save_in_ions()
-           !
-        END IF
         !
      END IF
      !
@@ -151,7 +154,7 @@ SUBROUTINE run_pwscf ( conv )
   IF ( .not. lmd) CALL pw2casino()
   CALL punch('all')
   !
-  conv = conv_ions
+  IF ( .NOT. conv_elec )  exit_status =  1
   RETURN
   !
 9010 FORMAT( /,5X,'Current dimensions of program PWSCF are:', &

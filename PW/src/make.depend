@@ -210,7 +210,6 @@ c_phase_field.o : ../../Modules/mp_global.o
 c_phase_field.o : ../../Modules/noncol.o
 c_phase_field.o : ../../Modules/recvec.o
 c_phase_field.o : ../../Modules/uspp.o
-c_phase_field.o : ../../Modules/wavefunctions.o
 c_phase_field.o : bp_mod.o
 c_phase_field.o : buffers.o
 c_phase_field.o : pwcom.o
@@ -747,6 +746,7 @@ init_run.o : ../../Modules/control_flags.o
 init_run.o : ../../Modules/fft_base.o
 init_run.o : ../../Modules/funct.o
 init_run.o : ../../Modules/ions_base.o
+init_run.o : ../../Modules/mp_bands.o
 init_run.o : ../../Modules/paw_variables.o
 init_run.o : ../../Modules/recvec_subs.o
 init_run.o : ../../Modules/uspp.o
@@ -902,6 +902,7 @@ memory_report.o : ../../Modules/mp_global.o
 memory_report.o : ../../Modules/noncol.o
 memory_report.o : ../../Modules/recvec.o
 memory_report.o : ../../Modules/uspp.o
+memory_report.o : ../../Modules/wannier_new.o
 memory_report.o : atomic_wfc_mod.o
 memory_report.o : ldaU.o
 memory_report.o : pwcom.o
@@ -1180,8 +1181,10 @@ print_ks_energies.o : pwcom.o
 punch.o : ../../Modules/control_flags.o
 punch.o : ../../Modules/io_files.o
 punch.o : ../../Modules/io_global.o
+punch.o : ../../Modules/wavefunctions.o
 punch.o : a2fmod.o
 punch.o : pw_restart.o
+punch.o : pwcom.o
 pw2blip.o : ../../Modules/cell_base.o
 pw2blip.o : ../../Modules/constants.o
 pw2blip.o : ../../Modules/control_flags.o

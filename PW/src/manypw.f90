@@ -32,8 +32,8 @@ PROGRAM manypw
   !
   IMPLICIT NONE
   !
-  INTEGER :: i
-  LOGICAL :: opnd, conv
+  INTEGER :: i, exit_status
+  LOGICAL :: opnd
   CHARACTER(LEN=256) :: filin, filout
   CHARACTER(LEN=7) :: image_label
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
@@ -83,9 +83,9 @@ PROGRAM manypw
   !
   ! ... Perform actual calculation
   !
-  CALL run_pwscf ( conv )
+  CALL run_pwscf ( exit_status )
   !
-  CALL stop_run( conv )
+  CALL stop_run( exit_status )
   !
   STOP
   !
