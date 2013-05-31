@@ -190,15 +190,15 @@
         ierr = 0
         taskid = 0
 
+#if defined(__CUDA) || defined(__PHIGEMM )
+		CALL CloseCudaEnv()
+#endif
+
 #if defined(__MPI)
         CALL mpi_comm_rank( mpi_comm_world, taskid, ierr)
 #if defined __HPM
         !   terminate the IBM Harware performance monitor
         CALL f_hpmterminate( taskid )
-#endif
-
-#if defined(__CUDA) || defined(__PHIGEMM )
-		CALL CloseCudaEnv()
 #endif
 
         CALL mpi_finalize(ierr)
