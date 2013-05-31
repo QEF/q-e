@@ -103,11 +103,11 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !
   ! ... try to exit in a smooth way
   !
-  CALL mp_abort ( ) 
+  CALL mp_abort ( 1 ) 
   !
 #endif
   !
-  STOP 2
+  STOP 1
   !
   RETURN
   !

@@ -11,8 +11,19 @@ SUBROUTINE run_pwscf ( exit_status )
   !
   ! ... Run an instance of the Plane Wave Self-Consistent Field code 
   ! ... MPI initialization and input data reading is performed in the 
-  ! ... calling code - returns in exit_status whether successfully
-  ! ... completed (0) or stopped by user request (-1) or not converged (1)
+  ! ... calling code - returns in exit_status the exit code for pw.x, 
+  ! ... returned in the shell. Values are:
+  ! ... * 0: completed successfully
+  ! ... * 1: an error has occurred (value returned by the errore() routine)
+  ! ... * 2-127: convergence error
+  ! ...   * 2: scf convergence error
+  ! ...   * 3: ion convergence error
+  ! ... * 128-255: code exited due to specific trigger
+  !       * 255: exit due to user request, or signal trapped,
+  !              or time > max_seconds
+  ! ...     (note: in the future, check_stop_now could also return a value
+  ! ...     to specify the reason of exiting, and the value could be used
+  ! ..      to return a different value for different reasons)
   ! ... Will be eventually merged with NEB
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
@@ -69,7 +80,7 @@ SUBROUTINE run_pwscf ( exit_status )
   !
   IF ( check_stop_now() ) THEN
      CALL punch( 'config' )
-     exit_status = -1
+     exit_status = 255
      RETURN
   ENDIF
   !
@@ -86,8 +97,8 @@ SUBROUTINE run_pwscf ( exit_status )
      ! ... code stopped by user or not converged
      !
      IF ( check_stop_now() .OR. .NOT. conv_elec ) THEN
-        IF ( check_stop_now() ) exit_status = -1
-        IF ( .NOT. conv_elec )  exit_status =  1
+        IF ( check_stop_now() ) exit_status = 255
+        IF ( .NOT. conv_elec )  exit_status =  2
         CALL punch( 'config' )
         RETURN
      ENDIF
@@ -154,7 +165,7 @@ SUBROUTINE run_pwscf ( exit_status )
   IF ( .not. lmd) CALL pw2casino()
   CALL punch('all')
   !
-  IF ( .NOT. conv_ions )  exit_status =  1
+  IF ( .NOT. conv_ions )  exit_status =  3
   RETURN
   !
 9010 FORMAT( /,5X,'Current dimensions of program PWSCF are:', &

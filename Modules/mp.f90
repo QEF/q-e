@@ -171,11 +171,18 @@
 !------------------------------------------------------------------------------!
 !..mp_abort
 
-      SUBROUTINE mp_abort
+      SUBROUTINE mp_abort(errorcode)
         IMPLICIT NONE
         INTEGER :: ierr
+        INTEGER, OPTIONAL :: errorcode
+        INTEGER :: errcode_internal
 #ifdef __MPI
-        CALL mpi_abort(mpi_comm_world, ierr)
+        IF (PRESENT(errorcode)) THEN
+           errcode_internal = errorcode
+        ELSE
+           errcode_internal = 1
+        ENDIF
+        CALL mpi_abort(mpi_comm_world, errcode_internal, ierr)
         CALL mpi_finalize(ierr)
 #endif
       END SUBROUTINE mp_abort
@@ -1238,11 +1245,12 @@
       SUBROUTINE mp_stop(code)
         IMPLICIT NONE
         INTEGER, INTENT (IN) :: code
+        INTEGER :: ierr
         WRITE( stdout, fmt='( "*** error in Message Passing (mp) module ***")' )
         WRITE( stdout, fmt='( "*** error msg:  ",A60)' ) TRIM( err_msg )
         WRITE( stdout, fmt='( "*** error code: ",I5)' ) code
 #if defined(__MPI)
-        CALL mpi_abort(mpi_comm_world,code)
+        CALL mpi_abort(mpi_comm_world,code,ierr)
 #endif
         STOP
       END SUBROUTINE mp_stop

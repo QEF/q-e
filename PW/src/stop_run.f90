@@ -53,13 +53,26 @@ SUBROUTINE stop_run( exit_status )
   CALL clean_pw( .TRUE. )
   !
   IF ( exit_status == -1 ) THEN
-     ! -1 is not an acceptable value for stop in fortran
-     ! the following will print "stop -1" but exit status will be 0
-     STOP '-1'
+     ! -1 is not an acceptable value for stop in fortran;
+     ! convert it to 255
+     STOP 255
+  ELSE IF ( exit_status == 0 ) THEN
+     STOP
   ELSE IF ( exit_status == 1 ) THEN
      STOP 1
+  ELSE IF ( exit_status == 2 ) THEN
+     STOP 2
+  ELSE IF ( exit_status == 3 ) THEN
+     STOP 3
+  ELSE IF ( exit_status == 4 ) THEN
+     STOP 4
+  ELSE IF ( exit_status == 255 ) THEN
+     STOP 255
+  ELSE IF ( exit_status == 254 ) THEN
+     STOP 254
   ELSE
-     STOP
+     ! unimplemented value
+     STOP 128
   END IF
   !
 END SUBROUTINE stop_run
@@ -75,7 +88,7 @@ SUBROUTINE closefile()
   !
   WRITE( stdout,'(5X,"Signal Received, stopping ... ")')
   !
-  CALL stop_run( -1 )
+  CALL stop_run( 255 )
   !
   RETURN
   !
