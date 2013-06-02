@@ -107,8 +107,6 @@ cp GPU/PW/pw-gpu.x ${FINALDIR}/pw-mpi-omp-gpu-magma.x
 ## GNU ##
 
 module switch PrgEnv-pgi PrgEnv-gnu
-module unload gcc
-module load gcc/4.4.4
 module load cudatoolkit
 module unload atp totalview-support xt-totalview hss-llm
 module load fftw
@@ -169,7 +167,7 @@ IMPORTANT NOTE : only pw-gpu.x, neb-gpu.x, ph-gpu.x use extensively
 
 
 
-3. Example scripts 
+3.a Example scripts (CSCS, SLURM)
 
 #SBATCH --job-name="QE-BENCH-SPIGA"
 #SBATCH --nodes=64
@@ -196,6 +194,45 @@ export MALLOC_TRIM_THRESHOLD_=536870912
 
 aprun -n $SLURM_NPROCS -N 2 -d 8 ./pw.x -input <...> | tee out
 
+
+3.b Example scripts (TITAN, PBS)
+
+IMPORTANT NOTE : The per node charging factor changed from 16 to 30 to 
+                 reflect the availability of GPU/Accelerators. Job utilization 
+                 is now calculated via the formula: 
+                          30 * walltime * number of requested nodes 
+
+IMPORTANT NOTE : project granted at ORNL usually have 3 letters (XXX) 
+                 and three digits (YYY)
+
+#!/bin/csh
+#PBS -A XXXYYY
+#PBS -N QE-BENCH-SPIGA
+#PBS -j oe
+#PBS -l walltime=2:00:00,nodes=8
+
+cd $PBS_O_WORKDIR
+
+setenv OMP_NUM_THREADS 4
+setenv MKL_NUM_THREADS 4
+
+setenv MPICH_ENV_DISPLAY 1
+setenv PMI_DEBUG 1
+
+# REMEMBER TO CALCULATE...
+# '-n' : number of PEs or total MPI processes ('-N' \times 'nodes') 
+# '-N' : number MPI task per node
+# '-d' : number OpenMP thread per node
+# so...
+# nodes \times 16 = total number of cores requested
+# '-d' \times '-N' == 16
+ 
+aprun -n 32 -N 4 -d 4 ./pw-gpu.x -input <...> | tee out.$PBS_JOBID
+
+
+IMPORTANT NOTE : refer to this link 
+                    https://www.olcf.ornl.gov/kb_articles/spider-the-center-wide-lustre-file-system/
+                 about the fileystem management and availability
 
 
 4. Benchmarks 
