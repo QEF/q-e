@@ -1,68 +1,31 @@
-Info by Filippo Spiga, Oct. 2012, valid for any version of QE after 5.
+Info by Filippo Spiga, Jun. 2013, valid for any version of QE after 5.
 
 
-Machine name    : MonteRosa (Cray XE6) at CSCS, Lugano (CH)
+Machine name    : MonteRosa at CSCS(CH)
 Machine spec    : http://user.cscs.ch/hardware/monte_rosa_cray_xe6/index.html
-Similar systems : HECToR (EPCC, UK), HERMIT (HLRS, DE), Cielo (LANL, US), 
-                  HOPPER (NERSC, US), Beagle (ANL, US)
- 
+
 
 1. Compile the code
 
-The code can be compiled using INTEL, PGI or GNU compilers. On this 
-machine it seems that surprising GNU compiler delivers slightly better 
-performance.
+Suggested compiler : 
 
-The default package available is built using GNU but it does not 
-use OpenMP. I think it is not the best solution for lot of cases.
+## PGI ##
 
-NOTE: these flags are just a starting point, further investigations 
-      might identify better combinations
+ 
 
-1.1 Using GNU compilers (thanks to Luca Marsella, CSCS)
+## INTEL ##
 
-module load PrgEnv-gnu
-module load fftw
-module load perftools
-export CC="cc"
-export FC="ftn"
-export CXX="CC"
-export MPICC="cc"
-export MPIF90="ftn"
-export CFLAGS="-O3 -fopenmp"
-export FCLAGS="-O3 -fopenmp"
-export CXXFLAGS="-O3 -fopenmp"
-./configure LIBDIRS="$LIBDIRS" --enable-parallel --enable-openmp --with-scalapack --disable-shared
 
-1.2 Using PGI compilers
 
-module load PrgEnv-pgi
-module switch pgi/12.5.0 pgi/12.8.0
-module unload atp totalview-support xt-totalview hss-llm
-./configure ARCH=crayxt --enable-openmp --enable-parallel --with-scalapack 
+## CRAY ##
 
-and then eventually edit "make.inc" manually in this way
 
-CFLAGS = -Minfo=all -Mneginfo=all -O3 -fastsse -Mipa=fast,inline -tp bulldozer-64 $(DFLAGS) $(IFLAGS)
-F90FLAGS = -Minfo=all -Mneginfo=all -O3 -fastsse -Mipa=fast,inline -tp bulldozer-64 -Mcache_align -r8 -Mpreprocess -mp $(FDFLAGS) $(IFLAGS) $(MODFLAGS)
-FFLAGS = -Minfo=all -Mneginfo=all -O3 -fastsse -Mipa=fast,inline -tp bulldozer-64 -r8 -mp 
 
-those flags raise the performance up to ~10%  than the default
+## GNU ##
 
-1.3 Using INTEL compilers
 
-module load PrgEnv-intel
-module unload atp totalview-support xt-totalview hss-llm
-export CFLAGS="-O3 -openmp"
-export FFLAGS="-O2 -assume byterecl -g -traceback -par-report0 -vec-report0 -openmp"
-export F90FLAGS="-nomodule -openmp"
-export FFLAGS_NOOPT="-O0 -assume byterecl -g -traceback"
-export FFLAGS_NOMAIN="-nofor_main"
-./configure ARCH=crayxt --enable-openmp --enable-parallel --with-scalapack 
+Executables will be located under "./bin"
 
-NOTE: the configure does not detect properly Intel on CRAY because 
-      historically CRAY systems had PGI, CRAY and PATHSCALE compilers
-      
 
 2. Good practices
 
@@ -77,7 +40,7 @@ advantages to use ACML explicitly.
 default library (it will be the CRAY libsci, the make.sys will not show
 anything because everything is done by the CRAY wrapper ftn/cc).
 
-- the new ELPA library (--with-elpa) has not yet tested
+- try ELPA library (--with-elpa) but check properly results
 
 - The environment is exported automatically by 'sbatch' during the 
 submission operation. So check to have loaded properly the right modules.
@@ -138,4 +101,9 @@ NOTE (2): other two useful options for aprun are:
                The recommend setting for most codes is -cc cpu which restricts 
                each task to run on a specific core. 
                
-          Try and use them wisely.
+Try and use them wisely.
+
+          
+
+4. Benchmarks 
+          
