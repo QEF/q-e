@@ -405,14 +405,22 @@ additional packages, that can be downloaded and installed on demand
 from the core distribution. ``External'' packages can be independently
 released, as long as there is no compatibility problem.
 
-{\bf CHECK}
 The automatic downloading of packages from the web suffers a catch-22: 
 the core distribution must know the location of all packages it downloads,
 but these are known only {\em after} packages are uploaded to \qeforge.
 The workaround is that the core distribution looks for generic names,
 written in file \texttt{install/plugins\_list}. These names are translated
 by \qeforge\ into specific names. After all packages have been uploaded,
-edit file \texttt{XXX} on \qeforge, update the links.{\bf END CHECK}
+file \texttt{/var/lib/gforge/archives/index.php}, residing on \qeforge, must be
+edited and links updated. Only the sys.adm. can do this.
+
+\paragraph{Preparing a release} 
+{\bf to be written} 
+
+\paragraph{Updating web site} After the release has been uploaded to
+\qeforge, the online documentation must be copied to directory
+\texttt{/var/www/quantum\_wp\_db/wordpress-3.1.4/wp-content/uploads/Doc}
+on the web site (only the sys.adm. can do this).
 
 \section{Structure of the distribution}
 
