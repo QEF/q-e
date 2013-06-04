@@ -448,7 +448,11 @@ CONTAINS
     DEALLOCATE (ee, nnlz)
 800 format(4x,'|',i5,i11,5x,f10.2,f12.2,15x,'|')
     if (iver(1) >= 3 .and. nang > 0) then
-       write(fmt,900) 2*nang-1, 40-8*(2*nang-2)
+       IF (nang < 4) THEN
+          write(fmt,900) 2*nang-1, 40-8*(2*nang-2)
+       ELSE
+          write(fmt,900) 2*nang-1, 1
+       ENDIF
 900    format('(4x,"|  rinner =",',i1,'f8.4,',i2,'x,"|")')
        WRITE( stdout,fmt)  (upf%rinner(lp),lp=1,2*nang-1)
     end if
