@@ -542,6 +542,7 @@ CALL mp_bcast( last_k, ionode_id )
          ! To add T(k) to the total T
          !
          tran_tot(ien) = tran_tot(ien) + wkpt(ik)*tk
+         if (tk_plot.gt.0) tran_k(ik) = tk
          if (lorb) CALL transmit(ik, ien, tk, .false.)
 
          !
@@ -559,9 +560,6 @@ CALL mp_bcast( last_k, ionode_id )
             ENDIF
          ENDIF
          !!!
-
-         if (tk_plot.gt.0) tran_k(ik) = tk
-         tran_tot(ien) = tran_tot(ien) + wkpt(ik)*tk
 
       ENDIF
 
