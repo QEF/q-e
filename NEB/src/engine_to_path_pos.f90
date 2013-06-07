@@ -17,9 +17,10 @@ SUBROUTINE engine_to_path_pos(idx)
   !
   USE kinds,         ONLY : DP
   !
-  USE path_input_parameters_module, ONLY : input_images
+  USE path_input_parameters_module, ONLY : input_images, minimum_image
   USE path_input_parameters_module, ONLY : nat, alat 
   USE path_input_parameters_module, ONLY : pos, typ
+  USE path_io_units_module,         ONLY : iunpath
   !
   USE ions_base, ONLY : tau, ityp
   USE cell_base, ONLY : bg, at
@@ -42,37 +43,60 @@ SUBROUTINE engine_to_path_pos(idx)
   !
   pos(1:3*nat,idx) = reshape( tau, (/ 3 * nat /) ) * alat
   !
-  ! Use the translational periodicity of the unit cell to ensure that the path
-  ! is smooth (.i.e., to avoid "jumps" between periodic replicas of atoms).
+  ! If requested, use the translational periodicity of the unit cell to ensure
+  ! that the path is smooth (even if atoms in the input images do not move on
+  ! a smooth path). It adopts a "minimum image criterion", which assumes that 
+  ! atoms do not be displaced by more than half the unit cell size from one 
+  ! input image to the next. If this happens, a periodic replica of that atom
+  ! is chosen to avoid atomic "jumps". If not requested, just give a warning 
+  ! when an atom moves that much. -GS
+  !
+  ALLOCATE( pos0(3,nat), pos1(3,nat) )
+  !
+  ! atomic positions in current image
+  pos1 = reshape( pos(:,idx),   (/ 3, nat /) ) / alat
+  CALL cryst_to_cart( nat, pos1(1,1), bg, -1 )
+  ! refold them within the unit cell around the origin
+  IF ( minimum_image ) pos1 = pos1(:,:) - anint(pos1(:,:))
   !
   IF ( idx > 1 ) THEN
      !
-     ALLOCATE( pos0(3,nat), pos1(3,nat) )
+     ! atomic positions in previous image
      pos0 = reshape( pos(:,idx-1), (/ 3, nat /) ) / alat
-     pos1 = reshape( pos(:,idx),   (/ 3, nat /) ) / alat
      CALL cryst_to_cart( nat, pos0(1,1), bg, -1 )
-     CALL cryst_to_cart( nat, pos1(1,1), bg, -1 )
      !
      DO iat = 1,nat
         !
         ! translate atom by a lattice vector if needed
         ! N.B.: this solves the problem only when |p1-p0|<1.0
         !
-        WHERE( (pos1(:,iat) - pos0(:,iat)) > 0.5_DP ) 
-           pos1(:,iat) = pos1(:,iat) - 1.0_DP
-        ENDWHERE
-        !
-        WHERE( (pos1(:,iat) - pos0(:,iat)) < -0.5_DP ) 
-           pos1(:,iat) = pos1(:,iat) + 1.0_DP
-        ENDWHERE
+        IF ( minimum_image ) THEN
+           WHERE( (pos1(:,iat) - pos0(:,iat)) > 0.5_DP )
+              pos1(:,iat) = pos1(:,iat) - 1.0_DP
+           ENDWHERE
+           !
+           WHERE( (pos1(:,iat) - pos0(:,iat)) < -0.5_DP ) 
+              pos1(:,iat) = pos1(:,iat) + 1.0_DP
+           ENDWHERE
+        ELSE
+           IF ( ANY(ABS(pos1(:,iat) - pos0(:,iat)) > 0.5_DP) ) THEN
+              WRITE ( iunpath, '(/,5x,A,I5,A,I3,A,I3,/,5x,A)' ) "WARNING: atom", iat, &
+                 " moved more than 1/2 alat from image", idx-1, " to image", idx, &
+                 "You can set minimum_image to true to avoid jumps in the path"
+           ENDIF
+        ENDIF
      ENDDO
+  ENDIF
+  !
+  IF ( minimum_image ) THEN
      !
+     ! update positions only if requested
      CALL cryst_to_cart( nat, pos1(1,1), at, 1 )
      pos(1:3*nat,idx) = reshape( pos1, (/ 3 * nat /) ) * alat
      !
-     DEALLOCATE( pos0, pos1 )
-     !
   ENDIF
+  !
+  DEALLOCATE( pos0, pos1 )
   !
   ! consistency check on atomic type, just to be sure... (GS)
   !

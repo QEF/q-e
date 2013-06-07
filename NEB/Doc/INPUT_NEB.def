@@ -144,6 +144,17 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
 		}
 	    }
 
+	    var minimum_image -type LOGICAL { 
+		default { .FALSE. }
+		info {
+		    Assume a "minimum image criterion" to build the path. If an atom
+                    moves by more than half the length of a crystal axis between one
+                    image and the next in the input (before interpolation),
+                    an appropriate periodic replica of that atom is chosen.
+                    Useful to avoid jumps in the initial reaction path.
+		}
+	    }
+
 	    var temp_req -type REAL { 
 		default { 0.D0 Kelvin }
 		info {

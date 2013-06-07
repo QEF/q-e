@@ -364,12 +364,15 @@ consecutive input images.
 You can visualize the \texttt{.axsf} file with XCrySDen as an animation:
  take some time to check if any atoms overlap or get very close in some
 of the new images (in that case you will have to supply intermediate images).
-%% the following should have been fixed (GS)
-%Remember that \qe\ assumes continuity
-%between the first and the last image at the initial condition. In other 
-%words, periodic images are NOT used; you may have to manually translate
-%an atom by one or more unit cell base vectors in order to have a meaningful
-%initial path. 
+Remember that \qe\ assumes continuity between two consecutive input images
+ to initialize the path. In other words, periodic images are not used 
+by default, so that an unwanted path could result if some atom crosses the 
+border of the unit cell and it is refolded in the unit cell in the input image.
+The problem can be solved by activating the mininum_image option, which choses
+an appropriate periodic replica of any atom that moves by more than half the
+size of the unit cell between two consecutive input images.
+If this does not work either, you may have to manually translate an atom by
+one or more unit cell base vectors in order to have a meaningful initial path. 
 \item
 Try to start the NEB process with most atomic positions fixed, 
 in order to converge the more "problematic" ones, before leaving

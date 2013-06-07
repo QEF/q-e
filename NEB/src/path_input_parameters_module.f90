@@ -99,6 +99,7 @@ MODULE path_input_parameters_module
   DATA CI_scheme_allowed / 'no-CI', 'auto', 'manual' /
   !
   LOGICAL :: first_last_opt = .false.
+  LOGICAL :: minimum_image  = .false.
   LOGICAL :: use_masses     = .false.
   LOGICAL :: use_freezing   = .false.
   LOGICAL :: fixed_tan      = .false.
@@ -130,7 +131,7 @@ MODULE path_input_parameters_module
                     string_method, nstep_path, num_of_images, & 
                     CI_scheme, opt_scheme, use_masses,    &
                     first_last_opt, ds, k_max, k_min, temp_req,          &
-                    path_thr, fixed_tan, use_freezing
+                    path_thr, fixed_tan, use_freezing, minimum_image
 !
 !    ATOMIC_POSITIONS
 !
