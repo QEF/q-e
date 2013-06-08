@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------
-! Module containing routines for fft with an custom energy cutoff
+! Module containing routines for fft with a custom energy cutoff
 !--------------------------------------------------------------------
 !
 MODULE fft_custom
@@ -91,8 +91,8 @@ CONTAINS
 
 
 
-  !--------------------------------------------------------------------
   !
+  !--------------------------------------------------------------------
   SUBROUTINE set_custom_grid(fc)
     !-----------------------------------------------------------------------
     !     This routine computes the dimensions of the minimum FFT grid
@@ -127,12 +127,12 @@ CONTAINS
             &at(2, 1)**2 + at(3, 1)**2) ) + 1  
 10     CONTINUE
        IF (fc%nr1t > nmax) &
-            CALL errore ('set_fft_dim', 'nr1 is unreasonably large', fc%nr1t)
+            CALL errore ('set_custom_grid', 'nr1 is unreasonably large', fc%nr1t)
        IF (allowed (fc%nr1t) ) GOTO 15
        fc%nr1t = fc%nr1t + 1
        GOTO 10
     ELSE
-       IF (.NOT.allowed (fc%nr1t) ) CALL errore ('set_fft_dim', &
+       IF (.NOT.allowed (fc%nr1t) ) CALL errore ('set_custom_grid', &
             'input nr1t value not allowed', 1)
     ENDIF
 15  CONTINUE
@@ -145,7 +145,7 @@ CONTAINS
             &at(2, 2)**2 + at(3, 2)**2) ) + 1 
 20     CONTINUE
        IF (fc%nr2t > nmax) &
-            CALL errore ('set_fft_dim', 'nr2t is unreasonably large', fc%nr2t)
+            CALL errore ('set_custom_grid', 'nr2t is unreasonably large', fc%nr2t)
        IF (allowed (fc%nr2t) ) GOTO 25
        fc%nr2t = fc%nr2t + 1
        GOTO 20
@@ -163,12 +163,12 @@ CONTAINS
             &at(2, 3)**2 + at(3, 3) **2) ) + 1
 30     CONTINUE
        IF (fc%nr3t > nmax) &
-            CALL errore ('set_fft_dim', 'nr3 is unreasonably large', fc%nr3t)
+            CALL errore ('set_custom_grid', 'nr3 is unreasonably large', fc%nr3t)
        IF (allowed (fc%nr3t) ) GOTO 35
        fc%nr3t = fc%nr3t + 1
        GOTO 30
     ELSE
-       IF (.NOT.allowed (fc%nr3t) ) CALL errore ('set_fft_dim', &
+       IF (.NOT.allowed (fc%nr3t) ) CALL errore ('set_custom_grid', &
             'input nr3t value not allowed', 3)
     ENDIF
 35  CONTINUE
@@ -177,8 +177,11 @@ CONTAINS
     !
     RETURN
   END SUBROUTINE set_custom_grid
-
+  !
+  !--------------------------------------------------------------------
   SUBROUTINE ggent(fc)
+    !--------------------------------------------------------------------
+    !
     USE kinds,              ONLY : DP
     USE cell_base,          ONLY : at, bg, tpiba2
     USE control_flags,      ONLY : gamma_only
@@ -248,8 +251,7 @@ CONTAINS
              tt = SUM(t(:)**2)
              IF (tt <= fc%gcutmt) THEN
                 fc%ngmt = fc%ngmt + 1
-                IF (fc%ngmt > fc%ngmt_g) CALL errore ('ggent', 'too ma&
-                     &ny g-vectors', fc%ngmt)
+                IF (fc%ngmt > fc%ngmt_g) CALL errore ('ggent', 'too many g-vectors', fc%ngmt)
                 mill_unsorted( :, fc%ngmt ) = (/ i,j,k /)
                 IF ( tt > eps8 ) THEN
                    g2sort_g(fc%ngmt) = tt
@@ -262,7 +264,7 @@ CONTAINS
     ENDDO iloop
     
     IF (fc%ngmt  /= fc%ngmt_g ) &
-         CALL errore ('ggen', 'g-vectors missing !', ABS(fc%ngmt - fc%ngmt_g))
+         CALL errore ('ggent', 'g-vectors missing !', ABS(fc%ngmt - fc%ngmt_g))
 
     igsrt(1) = 0
     CALL hpsort_eps( fc%ngmt_g, g2sort_g, igsrt, eps8 )
@@ -297,7 +299,7 @@ CONTAINS
        fc%gt (1:3, fc%ngmt) = i * bg (:, 1) + j * bg (:, 2) + k * bg (:, 3)
        fc%ggt (fc%ngmt) = SUM(fc%gt (1:3, fc%ngmt)**2)
        
-       IF (fc%ngmt > ngmx) CALL errore ('ggen', 'too many g-vectors', fc%ngmt)
+       IF (fc%ngmt > ngmx) CALL errore ('ggent', 'too many g-vectors', fc%ngmt)
     ENDDO ngloop
 
     IF (fc%ngmt /= ngmx) &
@@ -372,8 +374,9 @@ CONTAINS
 !    IF( ALLOCATED( ngmpe ) ) DEALLOCATE( ngmpe )
 
     RETURN
-    
+    !    
   END SUBROUTINE ggent
+
   !-----------------------------------------------------------------------
   SUBROUTINE index_minusg_custom(fc)
     !----------------------------------------------------------------------
@@ -399,7 +402,7 @@ CONTAINS
        IF (n3 < 1) n3 = n3 + fc%dfftt%nr3
        
        IF (n1>fc%dfftt%nr1 .OR. n2>fc%dfftt%nr2 .OR. n3>fc%dfftt%nr3) THEN
-          CALL errore('ggent meno','Mesh too small?',ng)
+          CALL errore('index_minusg_custom','Mesh too small?',ng)
        ENDIF
        
 #if defined (__MPI) && !defined (__USE_3D_FFT)
@@ -434,6 +437,7 @@ CONTAINS
     RETURN
 
   END SUBROUTINE deallocate_fft_custom
+  !
   !----------------------------------------------------------------------------
   SUBROUTINE reorderwfp_col ( nbands, npw1, npw2, pw1, pw2, ngwl1, ngwl2,&
        & ig_l2g1, ig_l2g2, n_g, mpime, nproc, comm )  

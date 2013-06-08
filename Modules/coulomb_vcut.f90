@@ -70,7 +70,7 @@ CONTAINS
   vcut%b_omega=num_determinant(vcut%b)
   vcut%a_omega=num_determinant(vcut%a)
 
-  ! automatically finds if wether the cell is orthorombic or not
+  ! automatically finds whether the cell is orthorombic or not
   vcut%orthorombic=.false.
   mod2a=sum(vcut%a**2,1)
   if(sum(vcut%a(:,1)*vcut%a(:,2))/(mod2a(1)*mod2a(2))<eps6 .and. &
