@@ -74,10 +74,15 @@ MODULE london_module
       !
       INTEGER, PARAMETER :: maxZ = 86
       REAL (DP) :: vdw_coeffs(2,maxZ)
+      !
       ! vdw C6 and radii for the first 86 atoms for the DFTD2 method
-      ! data taken from the DFTD2 sections of the dftd3.f file found
-      ! on S.Grimmes home page for the DFTD3 method 
-      ! http://toc.uni-muenster.de/DFTD3/index.html
+      ! Data from the DFT-D2 section of the dftd3.f file found on S.Grimme's home page:
+      ! http://www.thch.uni-bonn.de/tc/index.php?section=downloads&subsection=DFT-D3
+      ! See also S. Grimme, J. Comp. Chem., 27, 1787 (2006)
+      ! First  column: C6, converted to Ry*Bohr^6 units
+      ! (in the paper: J*nm^6/mol, conversion factor: 1 J*nm^6/mol = 34.69 Ry*Bohr^6)
+      ! Second column: radii, in Bohr (in the paper they are in A)
+      ! 
       DATA vdw_coeffs / &
          4.857,    1.892,&
          2.775,    1.912,&
