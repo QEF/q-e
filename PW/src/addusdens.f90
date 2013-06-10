@@ -105,7 +105,7 @@ subroutine addusdens_g(rho)
                  if (ityp (na) .eq.nt) then
                     !
                     !  Multiply becsum and qg with the correct structure factor
-                    tbecsum(:) = becsum(ijh,na,:)
+                    tbecsum(1:nspin_mag) = becsum(ijh,na,1:nspin_mag)
                     !
 #ifdef DEBUG_ADDUSDENS
   call start_clock ('addus:aux')
