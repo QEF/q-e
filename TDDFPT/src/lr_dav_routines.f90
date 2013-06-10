@@ -78,6 +78,8 @@ contains
     WRITE(stdout,'(5x,"Num of eigen values=",I15)') num_eign
     WRITE(stdout,'(5x,"Allocating parameters for davidson ...")')
 
+    call estimate_ram()
+
     allocate(vc_couple(2,nbnd*(nbnd_total-nbnd))) ! 1. v  2. c  
     allocate(vec_b(npwx,nbnd,nks,num_basis_max)) ! subspace basises
     allocate(swork(npwx,nbnd,nks))
@@ -1153,6 +1155,32 @@ contains
     close(18)
     return
   end subroutine write_eigenvalues
+  !-------------------------------------------------------------------------------
+
+
+  subroutine estimate_ram()
+    !-------------------------------------------------------------------------------
+    ! Created by X.Ge in Jun. 2013
+    !-------------------------------------------------------------------------------
+    use lr_dav_variables
+    use kinds,    only : dp
+    use io_global,     only : stdout
+    use wvfct,         only : nbnd,npwx
+    use klist,             only : nks
+
+    implicit none
+    real(dp) :: ram_vect, ram_eigen
+
+    ram_vect=2*sizeof(ram_vect)*nbnd*npwx*nks*num_basis_max*3
+    ram_eigen=2*sizeof(ram_eigen)*nbnd*npwx*nks*num_eign*6
+
+    write(stdout,'(/5x,"Estimating the RAM requirements:")')
+    write(stdout,'(10x,"For the basis sets:",5x,F10.2,5x,"M")') ram_vect/1048576
+    write(stdout,'(10x,"For the eigenvectors:",5x,F10.2,5x,"M")') ram_eigen/1048576
+    write(stdout,'(5x,"Do make sure that you have enough RAM.",/)')
+
+    return
+  end subroutine estimate_ram
   !-------------------------------------------------------------------------------
 
 END MODULE lr_dav_routines

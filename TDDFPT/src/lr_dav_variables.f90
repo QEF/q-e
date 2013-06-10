@@ -56,7 +56,6 @@ MODULE lr_dav_variables
         right_res(:,:,:,:), &  ! left and right residual of the appr. eigen-v
         left2(:),right2(:), & ! square of the module of left_res and right_res
         M_C(:,:),M_D(:,:),M(:,:),& ! Matrix represented in the sub space
-        debugM_C(:,:),debugM_D(:,:),debugleft(:,:,:,:),debugright(:,:,:,:),& ! only for debuging
         ground_state(:,:,:),&
         D_left_full(:,:,:,:),C_right_full(:,:,:,:),&
         Fx(:,:),Fy(:,:),tempvec1(:,:),Ltempvec1(:,:),&
