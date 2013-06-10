@@ -366,7 +366,7 @@ subroutine dv_of_drho(mesh,dx,r,r2,rho,drho,dvhx,dvxc,pp, l_add_tf_term)
       pp(i) = drho(i) * r(i)  * dr3 /3.d0
       qq(i) = drho(i) / r2(i) * dr3 /3.d0
    end do
-   do i=1,mesh
+   do i=2,mesh
       pp(i) = pp(i) + pp(i-1) 
    end do
 !   write (*,*) "pp in dv_of_drho"
