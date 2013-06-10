@@ -70,7 +70,7 @@ MODULE symm_base
   ! ... Exported routines
   !
   PUBLIC ::  find_sym, inverse_s, copy_sym, checkallsym, &
-             s_axis_to_cart, set_sym, set_sym_bl
+             s_axis_to_cart, set_sym, set_sym_bl, find_sym_ifc
   !
 CONTAINS
    !
@@ -935,5 +935,182 @@ SUBROUTINE s_axis_to_cart ( )
   ENDDO
   !
  END SUBROUTINE s_axis_to_cart
+
+!-----------------------------------------------------------------------
+SUBROUTINE find_sym_ifc ( nat, tau, ityp)
+  !-----------------------------------------------------------------------
+  !
+  !     This routine finds the point group of the crystal, by eliminating
+  !     the symmetries of the Bravais lattice which are not allowed
+  !     by the atomic positions (for use in the FD package)
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(in) :: nat, ityp (nat)
+  real(DP), INTENT(in) :: tau (3,nat)
+  !
+  INTEGER :: i
+  LOGICAL :: sym (48)
+  ! if true the corresponding operation is a symmetry operation
+  !
+  IF ( .not. allocated(irt) ) ALLOCATE( irt( 48, nat ) )
+  irt( :, : ) = 0
+  !
+  !    Here we find the true symmetries of the crystal
+  !
+  !symm: DO i=1,3 !emine: if it is not resolved in 3 steps it is sth else?
+    CALL sgam_at_ifc ( nat, tau, ityp, sym )
+    !
+    !    Here we re-order all rotations in such a way that true sym.ops
+    !    are the first nsym; rotations that are not sym.ops. follow
+    !
+    nsym = copy_sym ( nrot, sym )
+    !
+  !  IF ( .not. is_group ( nsym ) ) THEN
+  !     IF (i == 1) CALL infomsg ('find_sym', &
+  !                    'Not a group! Trying with lower acceptance parameter...')
+  !     accep = accep * 0.5d0
+  !     IF (i == 3) THEN
+  !       CALL infomsg ('find_sym', 'Still not a group! symmetry disabled')
+  !       nsym = 1
+  !     ENDIF
+  !     CYCLE symm
+  !  ELSE
+  !     IF (i > 1) CALL infomsg ('find_sym', 'Symmetry operations form a group')
+  !     exit symm
+  !  ENDIF
+  !ENDDO symm
+  !
+  ! check if inversion (I) is a symmetry.
+  ! If so, it should be the (nsym/2+1)-th operation of the group
+  !
+  invsym = all ( s(:,:,nsym/2+1) == -s(:,:,1) )
+  !
+  CALL inverse_s ( )
+  !
+  CALL s_axis_to_cart ( )
+  !
+  RETURN
+  !
+END SUBROUTINE find_sym_ifc
+!
+!-----------------------------------------------------------------------
+SUBROUTINE sgam_at_ifc ( nat, tau, ityp, sym )
+  !-----------------------------------------------------------------------
+  !
+  !     Given the point group of the Bravais lattice, this routine finds
+  !     the subgroup which is the point group of the considered crystal.
+  !     Non symmorphic groups are allowed, provided that fractional
+  !     translations are allowed (nofrac=.false), that the unit cell is
+  !     not a supercell.
+  !
+  !     On output, the array sym is set to .true.. for each operation
+  !     of the original point group that is also a symmetry operation
+  !     of the crystal symmetry point group
+  !
+  USE io_global,  ONLY : stdout
+  USE kinds
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(in) :: nat, ityp (nat)
+  ! nat  : number of atoms in the unit cell
+  ! ityp : species of each atom in the unit cell
+  !
+  real(DP), INTENT(in) :: tau (3, nat)
+  !
+  ! tau  : cartesian coordinates of the atoms
+  !
+  !     output variables
+  !
+  LOGICAL, INTENT(out) :: sym (48)
+  ! sym(isym)    : flag indicating if sym.op. isym in the parent group
+  !                is a true symmetry operation of the crystal
+  !
+  INTEGER :: na, kpol, nb, irot, i, j
+  ! counters
+  real(DP) , ALLOCATABLE :: xau (:,:), rau (:,:)
+  ! atomic coordinates in crystal axis
+  LOGICAL :: fractional_translations
+  real(DP) :: ft_(3), ft1, ft2, ft3
+  !
+  ALLOCATE(xau(3,nat))
+  ALLOCATE(rau(3,nat))
+  !
+  !     Compute the coordinates of each atom in the basis of
+  !     the direct lattice vectors
+  !
+  DO na = 1, nat
+     xau(:,na) = bg(1,:) * tau(1,na) + bg(2,:) * tau(2,na) + bg(3,:) * tau(3,na)
+  ENDDO
+  !
+  !      check if the identity has fractional translations
+  !      (this means that the cell is actually a supercell).
+  !      When this happens, fractional translations are disabled,
+  !      because there is no guarantee that the generated sym.ops.
+  !      form a group
+  !
+  nb = 1
+  irot = 1
+  !
+  fractional_translations = .not. nofrac
+  DO na = 2, nat
+     IF ( fractional_translations ) THEN
+        IF (ityp (nb) == ityp (na) ) THEN
+           ft_(:) = xau(:,na) - xau(:,nb) - nint( xau(:,na) - xau(:,nb) )
+           !
+           sym(irot) = checksym ( irot, nat, ityp, xau, xau, ft_ )
+           !
+           IF ( sym (irot) .and. &
+               (abs (ft_(1) **2 + ft_(2) **2 + ft_(3) **2) < 1.d-8) ) &
+               CALL errore ('sgam_at_ifc', 'overlapping atoms', na)
+        ENDIF
+     ENDIF
+  ENDDO
+  !
+  nsym_ns = 0
+  DO irot = 1, nrot
+     DO na = 1, nat
+        ! rau = rotated atom coordinates
+        rau (:, na) = s (1,:, irot) * xau (1, na) + &
+                      s (2,:, irot) * xau (2, na) + &
+                      s (3,:, irot) * xau (3, na)
+     ENDDO
+     !
+     !      first attempt: no fractional translation
+     !
+     ftau (:, irot) = 0
+     ft (:, irot) = 0
+     ft_(:) = 0.d0
+     !
+     sym(irot) = checksym ( irot, nat, ityp, xau, rau, ft_ )
+     !
+     IF (.not.sym (irot) .and. fractional_translations) THEN
+        nb = 1
+        DO na = 1, nat
+           IF (ityp (nb) == ityp (na) ) THEN
+              !
+              !      second attempt: check all possible fractional translations
+              !
+              ft_ (:) = rau(:,na) - xau(:,nb) - nint( rau(:,na) - xau(:,nb) )
+              !
+              sym(irot) = checksym ( irot, nat, ityp, xau, rau, ft_ )
+              !
+              IF (sym (irot) ) THEN
+                 nsym_ns = nsym_ns + 1
+                 ft (:,irot) = ft_(:)
+                 GOTO 100
+              ENDIF
+           ENDIF
+        ENDDO
+
+     ENDIF
+100  CONTINUE
+  ENDDO
+  !
+  DEALLOCATE (rau)
+  DEALLOCATE (xau)
+  !
+  RETURN
+END SUBROUTINE sgam_at_ifc
 
 END MODULE symm_base
