@@ -1036,7 +1036,7 @@ SUBROUTINE plot_fast (alat, at, nat, tau, atm, ityp,&
   real(DP) :: alat, tau (3, nat), at (3, 3), rho(nr1x,nr2x,nr3x), &
        bg (3, 3), e1(3), e2(3), e3(3), x0 (3), m1, m2, m3
 
-  INTEGER :: nx, ny, nz, nx0, ny0, nz0, nx1, ny1, nz1, i, j, k, i1, j1, k1
+  INTEGER :: nx, ny, nz, nx0, ny0, nz0, nx1, ny1, nz1, nix, niy, niz, i, j, k, i1, j1, k1
   real(DP) :: rhomin, rhomax, rhotot, rhoabs
   real(DP), ALLOCATABLE :: carica (:,:,:)
   real(DP) :: deltax, deltay, deltaz
@@ -1061,9 +1061,24 @@ SUBROUTINE plot_fast (alat, at, nat, tau, atm, ityp,&
   ny1 = nint ( (x0(1)*bg(1,2)+(x0(2)+m2)*bg(2,2)+x0(3)*bg(3,2) )*nr2)
   nz1 = nint ( (x0(1)*bg(1,3)+x0(2)*bg(2,3)+(x0(3)+m3)*bg(3,3) )*nr3)
 
-  nx = nx1 - nx0 + 1
-  ny = ny1 - ny0 + 1
-  nz = nz1 - nz0 + 1
+  ! find number of intervals between points
+  nix = nx1 - nx0 + 1
+  niy = ny1 - ny0 + 1
+  niz = nz1 - nz0 + 1
+
+  IF ( output_format == 3 ) THEN
+     ! XSF grids require one more point at the end of the parallelepiped sides
+     nx1 = nx1 + 1
+     ny1 = ny1 + 1
+     nz1 = nz1 + 1
+     nx = nix + 1
+     ny = niy + 1
+     nz = niz + 1
+  ELSE
+     nx = nix
+     ny = niy
+     nz = niz
+  END IF
 
   ALLOCATE ( carica(nx, ny, nz) )
 
@@ -1086,9 +1101,9 @@ SUBROUTINE plot_fast (alat, at, nat, tau, atm, ityp,&
   ! consistent with the FFT grid
   !
   WRITE( stdout,'(5x,"Requested parallelepiped sides : ",3f8.4)') m1, m2,m3
-  m1 = nx * sqrt (at(1, 1) **2 + at(2, 1) **2 + at(3, 1) **2) / nr1
-  m2 = ny * sqrt (at(1, 2) **2 + at(2, 2) **2 + at(3, 2) **2) / nr2
-  m3 = nz * sqrt (at(1, 3) **2 + at(2, 3) **2 + at(3, 3) **2) / nr3
+  m1 = nix * sqrt (at(1, 1) **2 + at(2, 1) **2 + at(3, 1) **2) / nr1
+  m2 = niy * sqrt (at(1, 2) **2 + at(2, 2) **2 + at(3, 2) **2) / nr2
+  m3 = niz * sqrt (at(1, 3) **2 + at(2, 3) **2 + at(3, 3) **2) / nr3
   WRITE( stdout,'(5x,"Redefined parallelepiped sides : ",3f8.4)') m1, m2,m3
   !
   ! recalculate x0 (the origin of the parallelepiped)
@@ -1100,9 +1115,9 @@ SUBROUTINE plot_fast (alat, at, nat, tau, atm, ityp,&
   x0(3)=(nx0-1)*at(3,1)/ nr1 +(ny0-1)*at(3,2)/ nr2 +(nz0-1)*at(3,3)/ nr3
   WRITE( stdout,'(5x,"Redefined parallelepiped origin: ",3f8.4)') x0
 
-  deltax = m1/nx
-  deltay = m2/ny
-  deltaz = m3/nz
+  deltax = m1/nix
+  deltay = m2/niy
+  deltaz = m3/niz
   !
   !    Here we check the value of the resulting charge
   !
@@ -1110,8 +1125,8 @@ SUBROUTINE plot_fast (alat, at, nat, tau, atm, ityp,&
 
   rhomin = max ( minval (carica), 1.d-10 )
   rhomax = maxval (carica)
-  rhotot = sum (carica(:,:,:)) * omega * deltax * deltay * deltaz
-  rhoabs = sum (abs(carica(:,:,:))) * omega * deltax * deltay * deltaz
+  rhotot = sum (carica(1:nix,1:niy,1:niz)) * omega * deltax * deltay * deltaz
+  rhoabs = sum (abs(carica(1:nix,1:niy,1:niz))) * omega * deltax * deltay * deltaz
 
   WRITE(stdout, '(/5x,"Min, Max, Total, Abs charge: ",4f10.6)') rhomin, &
        rhomax, rhotot, rhoabs
