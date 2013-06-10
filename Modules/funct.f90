@@ -279,10 +279,7 @@ module funct
 
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
                'TPSS', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
-! gau-pbe in
-!               'META', 'C09X', 'SOX', 'M6LX', 'Q2DX' / 
                'META', 'C09X', 'SOX', 'M6LX', 'Q2DX', 'GAUP' / 
-! gau-pbe out
 
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'TPSS',&
                 'B3LP', 'PSC', 'PBE', 'META', 'M6LC', 'Q2DC' / 
@@ -1039,9 +1036,9 @@ end subroutine dft_name
 subroutine write_dft_name
 !-----------------------------------------------------------------------
    WRITE( stdout, '(5X,"Exchange-correlation      = ",A, &
-        &  " (",5I2,")")') TRIM( dft ), iexch, icorr, igcx, igcc, inlc
-   WRITE( stdout, '(5X,"EXX-fraction              =",F12.2)') &
-        get_exx_fraction()
+        &  " (",I2,3I3,I2")")') TRIM( dft ), iexch, icorr, igcx, igcc, inlc
+   IF ( get_exx_fraction() > 0.0_dp ) WRITE( stdout, &
+        '(5X,"EXX-fraction              =",F12.2)') get_exx_fraction()
    return
 end subroutine write_dft_name
 

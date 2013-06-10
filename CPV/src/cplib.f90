@@ -250,95 +250,15 @@
 
       SUBROUTINE exch_corr_print_info()
 
-        USE funct, ONLY: get_iexch, get_icorr, get_igcx, get_igcc, write_dft_name
+        USE funct, ONLY: write_dft_name
         USE io_global, ONLY: stdout
 
         IMPLICIT NONE
 
-        CHARACTER(LEN = 60) :: exch_info
-        CHARACTER(LEN = 60) :: corr_info
-        CHARACTER(LEN = 60) :: exgc_info
-        CHARACTER(LEN = 60) :: cogc_info
-
         WRITE(stdout,800)
-
-          ! ...     iexch => Exchange functional form
-          ! ...     icorr => Correlation functional form
-          ! ...     igcx  => Gradient Correction to the Exchange potential
-          ! ...     igcc  => Gradient Correction to the Correlation potential
-
-          SELECT CASE ( get_iexch() )
-            CASE (0)
-              exch_info = 'NONE'
-            CASE (1)
-              exch_info = 'SLATER'
-            CASE (2)
-              exch_info = 'SLATER (alpha=1)'
-            CASE DEFAULT
-              exch_info = 'UNKNOWN'
-          END SELECT
-          SELECT CASE ( get_icorr() )
-            CASE (0)
-              corr_info = 'NONE'
-            CASE (1)
-              corr_info = 'PERDEW AND ZUNGER'
-            CASE (2)
-              corr_info = 'VOSKO, WILK AND NUSAIR'
-            CASE (3)
-              corr_info = 'LEE, YANG, AND PARR'
-            CASE (4)
-              corr_info = 'PERDEW AND WANG'
-            CASE (9)
-              corr_info = 'PADE APPROXIMATION'
-            CASE DEFAULT
-              corr_info = 'UNKNOWN'
-          END SELECT
-          SELECT CASE ( get_igcx() )
-            CASE (0)
-              exgc_info = 'NONE'
-            CASE (1)
-              exgc_info = 'BECKE'
-            CASE (2)
-              exgc_info = 'PERDEW'
-            CASE (3)
-              exgc_info = 'PERDEW BURKE ERNZERHOF'
-            CASE (7)
-              exgc_info = 'META-TPSS'
-            CASE DEFAULT
-              exgc_info = 'UNKNOWN'
-          END SELECT
-          SELECT CASE ( get_igcc() )
-            CASE (0)
-              cogc_info = 'NONE'
-            CASE (1)
-              cogc_info = 'PERDEW'
-            CASE (2)
-              cogc_info = 'LEE, YANG AND PARR'
-            CASE (3)
-              cogc_info = 'PERDEW AND WANG'
-            CASE (4)
-              cogc_info = 'PERDEW BURKE ERNZERHOF'
-            CASE (6)
-              cogc_info = 'META-TPSS'
-            CASE DEFAULT
-              cogc_info = 'UNKNOWN'
-          END SELECT
-
-          WRITE(stdout,910)
-          WRITE(stdout,fmt='(5X,"Exchange functional: ",A)') exch_info
-          WRITE(stdout,fmt='(5X,"Correlation functional: ",A)') corr_info
-          IF( ( get_igcx() > 0 ) .OR. ( get_igcc() > 0 ) ) THEN
-            WRITE(stdout,810)
-            WRITE(stdout,fmt='(5X,"Exchange functional: ",A)') exgc_info
-            WRITE(stdout,fmt='(5X,"Correlation functional: ",A)') cogc_info
-          END IF
-
-        call write_dft_name
-
+        call write_dft_name ( )
 800 FORMAT(//,3X,'Exchange and correlations functionals',/ &
              ,3X,'-------------------------------------')
-810 FORMAT(   3X,'Using Generalized Gradient Corrections with')
-910 FORMAT(   3X,'Using Local Density Approximation with')
 
         RETURN
       END SUBROUTINE exch_corr_print_info
