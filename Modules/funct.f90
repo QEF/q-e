@@ -1036,7 +1036,7 @@ end subroutine dft_name
 subroutine write_dft_name
 !-----------------------------------------------------------------------
    WRITE( stdout, '(5X,"Exchange-correlation      = ",A, &
-        &  " (",I2,3I3,I2")")') TRIM( dft ), iexch, icorr, igcx, igcc, inlc
+        &  " (",I2,3I3,I2,")")') TRIM( dft ), iexch, icorr, igcx, igcc, inlc
    IF ( get_exx_fraction() > 0.0_dp ) WRITE( stdout, &
         '(5X,"EXX-fraction              =",F12.2)') get_exx_fraction()
    return
