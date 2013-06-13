@@ -17,5 +17,6 @@ CH4-PR: Tests charge response algorithm
 SiH4: Tests Ultrasoft PP implementation
 CH4-BOND: This is an example that shows visual analysis of a softened bond in a set of degenerate bonds. 
 tools: Tools to compare data. 
+CH4-DAV: Example of using davidson algorithm
 
 
