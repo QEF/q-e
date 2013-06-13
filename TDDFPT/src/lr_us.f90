@@ -64,11 +64,11 @@ contains
 
     implicit none
     complex(kind=dp),external :: lr_dot
-    complex(dp) :: vect1(npwx,nbnd,nks),vect2(npwx,nbnd,nks),svect2(npwx,nbnd,nks)
+    complex(dp) :: vect1(npwx,nbnd,nks),vect2(npwx,nbnd,nks),svect1(npwx,nbnd,nks)
     complex(dp) :: lr_dot_us
 
-    call lr_apply_s(vect2(1,1,1),svect2(1,1,1))
-    lr_dot_us=lr_dot(vect1,svect2)
+    call lr_apply_s(vect1(1,1,1),svect1(1,1,1))
+    lr_dot_us=lr_dot(svect1,vect2)
     
     return
   end function lr_dot_us

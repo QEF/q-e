@@ -71,9 +71,11 @@ contains
     use lr_variables,   only : nbnd_total
     use wvfct,         only : nbnd,npwx
     use klist,             only : nks
+    use uspp,           only : okvan
     use io_global,     only : stdout
 
     implicit none
+    integer :: ierr
 
     WRITE(stdout,'(5x,"Num of eigen values=",I15)') num_eign
     WRITE(stdout,'(5x,"Allocating parameters for davidson ...")')
@@ -81,10 +83,12 @@ contains
     call estimate_ram()
 
     allocate(vc_couple(2,nbnd*(nbnd_total-nbnd))) ! 1. v  2. c  
-    allocate(vec_b(npwx,nbnd,nks,num_basis_max)) ! subspace basises
-    allocate(swork(npwx,nbnd,nks))
-    allocate(D_vec_b(npwx,nbnd,nks,num_basis_max)) 
-    allocate(C_vec_b(npwx,nbnd,nks,num_basis_max)) 
+    !allocate(D_vec_b(npwx,nbnd,nks,num_basis_max),stat=ierr) 
+    !IF (ierr /= 0) call errore('lr_dav_alloc_init',"no enough memory",ierr) 
+    !allocate(C_vec_b(npwx,nbnd,nks,num_basis_max),stat=ierr) 
+    !IF (ierr /= 0) call errore('lr_dav_alloc_init',"no enough memory",ierr) 
+    allocate(svecwork(npwx,nbnd,nks))
+    allocate(vecwork(npwx,nbnd,nks))
     allocate(M(num_basis_max,num_basis_max))
     allocate(M_shadow_avatar(num_basis_max,num_basis_max))
     allocate(M_C(num_basis_max,num_basis_max))
@@ -104,8 +108,6 @@ contains
     allocate(kill_right(num_eign))
     allocate(ground_state(npwx,nbnd,nks))
     
-    allocate(C_right_full(npwx,nbnd,nks,num_eign))
-    allocate(D_left_full(npwx,nbnd,nks,num_eign))
     allocate(omegal(num_eign))
     allocate(omegar(num_eign))
 
@@ -117,6 +119,19 @@ contains
 
     lwork=8*num_basis_max
     allocate(work(lwork))
+
+    allocate(vec_b(npwx,nbnd,nks,num_basis_max),stat=ierr) ! subspace basises
+    IF (ierr /= 0) call errore('lr_dav_alloc_init',"no enough memory",ierr) 
+
+    if( .not. poor_of_ram .and. okvan ) then
+      WRITE(stdout,'(/5x,"poor_of_ram is set to .false.. This means that you &
+                     &would like to increase the speed of",/5x,"your calculation with&
+                     & USPP by paying double memory.",/5x,"Switch it to .true. if you need &
+                     &to save memory.",/)')
+
+      allocate(svec_b(npwx,nbnd,nks,num_basis_max),stat=ierr)
+      IF (ierr /= 0) call errore('lr_dav_alloc_init',"no enough memory",ierr)
+    endif
 
     if ( p_nbnd_occ > nbnd ) p_nbnd_occ = nbnd
     if ( p_nbnd_virt > nbnd_total-nbnd ) p_nbnd_virt = nbnd_total-nbnd
@@ -149,6 +164,8 @@ contains
     use io_global,    only : stdout
     use wvfct,       only : g2kin,npwx,nbnd,et,npw
     use gvect,                only : gstart
+    use uspp,           only : okvan
+    use lr_us
     use lr_dav_debug
 
     implicit none
@@ -165,6 +182,8 @@ contains
       CALL lr_dav_cvcouple()
       do ib = 1, num_init, 1
         vec_b(:,vc_couple(1,ib),1,ib)=evc0_virt(:,vc_couple(2,ib)-nbnd,1)
+        if(.not. poor_of_ram .and. okvan) &
+          & call lr_apply_s(vec_b(:,:,1,ib),svec_b(:,:,1,ib))
       enddo
 
     else ! Random initial
@@ -194,11 +213,13 @@ contains
     use wvfct,                only : nbnd, npwx, npw
     use mp,                   only : mp_bcast,mp_barrier                  
     use lr_us
+    use uspp,           only : okvan
     use lr_dav_variables
     use lr_dav_debug
     use lr_us
 
     implicit none
+    complex(kind=dp),external :: lr_dot
     integer :: ik, ip, ibnd,ig, pol_index, ibr, ibl, ieign,ios
     CHARACTER(len=6), EXTERNAL :: int_to_char
     real(dp) :: inner
@@ -216,49 +237,50 @@ contains
     write(stdout,'(7x,"num of basis:",I5)') num_basis
 
     ! Add new matrix elements to the M_C and M_D(in the subspace)(part 1)
-    do ibr = 1, num_basis_old
-      do ibl = num_basis_old+1, num_basis
-        if(.not. ltammd) then
-          M_C(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),C_vec_b(1,1,1,ibr))
-          M_C(ibr,ibl)=M_C(ibl,ibr)
-          M_D(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),D_vec_b(1,1,1,ibr))
-          M_D(ibr,ibl)=M_D(ibl,ibr)
-        else
-          M_C(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),C_vec_b(1,1,1,ibr))
-          M_C(ibr,ibl)=M_C(ibl,ibr)
-          M_D(ibl,ibr)=M_C(ibl,ibr)
-          M_D(ibr,ibl)=M_C(ibl,ibr)
-        endif
-      enddo
-    enddo
-     
-    ! Calculate new C*vec_b and D*vec_b
-    do ibr=num_basis_old+1, num_basis
+    do ibr = num_basis_old+1, num_basis
       if(.not.ltammd) then
-        call lr_apply_liouvillian(vec_b(:,:,:,ibr),D_vec_b(:,:,:,ibr),swork(:,:,:),.false.)  ! apply Liouvillian
-        call lr_apply_liouvillian(vec_b(:,:,:,ibr),C_vec_b(:,:,:,ibr),swork(:,:,:),.true.)
-        call lr_ortho(D_vec_b(:,:,:,ibr), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.)  ! Project to virtual space
-        call lr_ortho(C_vec_b(:,:,:,ibr), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.)
-      else
-        call lr_apply_liouvillian(vec_b(:,:,:,ibr),C_vec_b(:,:,:,ibr),swork(:,:,:),.true.)
-        call lr_ortho(C_vec_b(:,:,:,ibr), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.)
-        D_vec_b(:,:,:,ibr)=C_vec_b(:,:,:,ibr)
-      endif
+        ! Calculate new D*vec_b
+        call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),svecwork(:,:,:),.false.)
+        call lr_ortho(vecwork(:,:,:), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.) ! Project to virtual space
+        ! Add new M_D
+        do ibl = 1, ibr
+          ! Here there's a choice between saving memory and saving calculation
+          if(poor_of_ram .or. .not. okvan) then ! Less memory needed
+            M_D(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),vecwork(1,1,1))
+          else  ! Less calculation, double memory required 
+            M_D(ibl,ibr)=lr_dot(svec_b(1,1,1,ibl),vecwork(1,1,1))
+          endif
+          if(ibl /= ibr)  M_D(ibr,ibl)=M_D(ibl,ibr)
+        enddo
 
-    ! add new elements to M_C and M_D (part 2)
-      do ibl=ibr,num_basis
-        if(.not. ltammd) then
-          M_C(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),C_vec_b(1,1,1,ibr))
+        ! Calculate new C*vec_b
+        call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),svecwork(:,:,:),.true.)
+        call lr_ortho(vecwork(:,:,:), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.) ! Project to virtual space
+        ! Add new M_C
+        do ibl = 1, ibr
+          if(poor_of_ram .or. .not. okvan) then ! Less memory needed
+            M_C(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),vecwork(1,1,1))
+          else  ! Less calculation, double memory required
+            M_C(ibl,ibr)=lr_dot(svec_b(1,1,1,ibl),vecwork(1,1,1))
+          endif
           if(ibl /= ibr) M_C(ibr,ibl)=M_C(ibl,ibr)
-          M_D(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),D_vec_b(1,1,1,ibr))
+        enddo
+
+      else ! ltammd
+        call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),svecwork(:,:,:),.true.)
+        call lr_ortho(vecwork(:,:,:), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.)
+        ! Add new M_D, M_C
+        do ibl = 1, ibr
+          if(poor_of_ram .or. .not. okvan) then ! Less memory needed
+            M_D(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),vecwork(1,1,1))
+          else ! Less calculation, double memory required
+            M_D(ibl,ibr)=lr_dot_us(svec_b(1,1,1,ibl),vecwork(1,1,1))
+          endif
           if(ibl /= ibr) M_D(ibr,ibl)=M_D(ibl,ibr)
-        else
-          M_C(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),C_vec_b(1,1,1,ibr))
+          M_C(ibl,ibr)=M_D(ibl,ibr)
           if(ibl /= ibr) M_C(ibr,ibl)=M_C(ibl,ibr)
-          M_D(ibl,ibr)=M_C(ibl,ibr)
-          M_D(ibr,ibl)=M_C(ibl,ibr)
-        endif
-      enddo
+        enddo
+      endif
     enddo
 
 #ifdef __MPI
@@ -380,8 +402,8 @@ contains
     toadd=2*num_eign
 
     do ieign = 1, num_eign
-      call lr_apply_liouvillian(right_full(:,:,:,ieign),right_res(:,:,:,ieign),swork(:,:,:),.true.) ! Apply lanczos
-      call lr_apply_liouvillian(left_full(:,:,:,ieign),left_res(:,:,:,ieign),swork(:,:,:),.false.)
+      call lr_apply_liouvillian(right_full(:,:,:,ieign),right_res(:,:,:,ieign),svecwork(:,:,:),.true.) ! Apply lanczos
+      call lr_apply_liouvillian(left_full(:,:,:,ieign),left_res(:,:,:,ieign),svecwork(:,:,:),.false.)
       call lr_ortho(right_res(:,:,:,ieign), evc0(:,:,1), 1,1,sevc0(:,:,1),.true.) ! Project to virtual space
       call lr_ortho(left_res(:,:,:,ieign), evc0(:,:,1), 1,1,sevc0(:,:,1),.true.)
      
@@ -430,6 +452,8 @@ contains
     use lr_dav_variables
     use lr_variables,    only : evc0, sevc0
     use io_global,       only : stdout
+    use uspp,           only : okvan
+    use lr_us
     use lr_dav_debug
     
     implicit none
@@ -468,6 +492,8 @@ contains
     do ieign = 1, num_eign
       call lr_ortho(right_res(:,:,:,ieign), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.)
       call lr_ortho(left_res(:,:,:,ieign), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.)
+      call lr_norm(right_res(:,:,:,ieign))
+      call lr_norm(left_res(:,:,:,ieign))
     enddo
 
     if(toadd .eq. 0) then
@@ -487,10 +513,14 @@ contains
         if(.not. kill_left(ieign)) then
           num_basis=num_basis+1
           vec_b(:,:,:,num_basis)=left_res(:,:,:,ieign)
+          if(.not. poor_of_ram .and. okvan) &
+            call lr_apply_s(vec_b(:,:,:,num_basis),svec_b(:,:,:,num_basis))
         endif
         if(.not. kill_right(ieign)) then
           num_basis=num_basis+1
           vec_b(:,:,:,num_basis)=right_res(:,:,:,ieign)
+          if(.not. poor_of_ram .and. okvan) &
+            call lr_apply_s(vec_b(:,:,:,num_basis),svec_b(:,:,:,num_basis))
         endif
       enddo
     endif
@@ -506,6 +536,7 @@ contains
     use kinds,                only : dp
     use klist,                only : nks
     use wvfct,                only : npwx,nbnd
+    use uspp,           only : okvan
     use lr_dav_variables
  
     implicit none
@@ -515,10 +546,20 @@ contains
     ! first orthogonalize to old basis
     do ib = 1, num_basis
       do ieign = 1, num_eign
-        if (.not. kill_left(ieign)) &
-          &call lr_1to1orth(left_res(1,1,1,ieign),vec_b(1,1,1,ib))
-        if (.not. kill_right(ieign)) &
-          &call lr_1to1orth(right_res(1,1,1,ieign),vec_b(1,1,1,ib))
+        if (.not. kill_left(ieign)) then
+          if(poor_of_ram .or. .not. okvan) then ! Less memory needed
+            call lr_1to1orth(left_res(1,1,1,ieign),vec_b(1,1,1,ib))
+          else ! Less calculation, double memory required
+            call lr_bi_1to1orth(left_res(1,1,1,ieign),vec_b(1,1,1,ib),svec_b(1,1,1,ib))
+          endif
+        endif
+        if (.not. kill_right(ieign)) then
+          if(poor_of_ram .or. .not. okvan) then ! Less memory needed
+            call lr_1to1orth(right_res(1,1,1,ieign),vec_b(1,1,1,ib))
+          else ! Less calculation, double memory required
+            call lr_bi_1to1orth(right_res(1,1,1,ieign),vec_b(1,1,1,ib),svec_b(1,1,1,ib))
+          endif
+        endif
       enddo
     enddo
 
@@ -592,7 +633,7 @@ contains
     !-------------------------------------------------------------------------------
     ! Created by X.Ge in Jan. 2013
     !-------------------------------------------------------------------------------
-    ! Normalizes vect, returns vect/sqrt(<vect|svect>)
+    ! Normalizes vect, returns vect/sqrt(<svect|vect>)
     
     use kinds,                only : dp
     use klist,                only : nks
@@ -609,7 +650,7 @@ contains
     return
   end subroutine lr_norm
   !-------------------------------------------------------------------------------
- 
+
   subroutine lr_1to1orth(vect1,vect2)
     !-------------------------------------------------------------------------------
     ! Created by X.Ge in Jan. 2013
@@ -628,6 +669,26 @@ contains
     vect1(:,:,1)=vect1(:,:,1)-(lr_dot_us(vect1(1,1,1),vect2(1,1,1))/lr_dot_us(vect2(1,1,1),vect2(1,1,1)))*vect2(:,:,1)
     return
   end subroutine lr_1to1orth
+  !-------------------------------------------------------------------------------
+
+  subroutine lr_bi_1to1orth(vect1,vect2,svect2)
+    ! Created by X.Ge in Jun. 2013
+    !-------------------------------------------------------------------------------
+    ! This routine calculate the components of vect1 which is "vertical" to
+    ! vect2. In the case of USPP, svect2 is explicitly treated as input so one
+    ! dose need to spend time calculating it
+    
+    use kinds,                only : dp
+    use klist,                only : nks
+    use wvfct,                only : npwx,nbnd,npw
+    
+    implicit none
+    complex(kind=dp),external :: lr_dot
+    complex(dp)  :: vect1(npwx,nbnd,nks),vect2(npwx,nbnd,nks),svect2(npwx,nbnd,nks)
+    
+    vect1(:,:,1)=vect1(:,:,1)-(lr_dot(svect2(1,1,1),vect1(1,1,1))/lr_dot(svect2(1,1,1),vect2(1,1,1)))*vect2(:,:,1)
+    return
+  end subroutine lr_bi_1to1orth
   !-------------------------------------------------------------------------------
 
   subroutine treat_residue(vect,ieign)
@@ -684,7 +745,8 @@ contains
     allocate(norm_F(num_eign))
 
     write(stdout,'(/7x,"================================================================")') 
-    write(stdout,'(/7x,"Davidson diagonalization has finished, now print out information of eigen pairs")') 
+    write(stdout,'(/7x,"Davidson diagonalization has finished in",I5, &
+                 &"steps, now print out information of eigen pairs")') dav_iter 
 
     call lr_calc_R()
     
@@ -749,11 +811,11 @@ contains
       left_full(:,:,:,ieign)=left_full(:,:,:,ieign)/norm      
       
       ! Linear transform from L,R back to x,y
-      D_left_full(:,:,:,ieign)=(right_full(:,:,:,ieign)+left_full(:,:,:,ieign))/sqrt(2.0d0) !X
-      C_right_full(:,:,:,ieign)=(right_full(:,:,:,ieign)-left_full(:,:,:,ieign))/sqrt(2.0d0) !Y
+      left_res(:,:,:,ieign)=(right_full(:,:,:,ieign)+left_full(:,:,:,ieign))/sqrt(2.0d0) !X
+      right_res(:,:,:,ieign)=(right_full(:,:,:,ieign)-left_full(:,:,:,ieign))/sqrt(2.0d0) !Y
 
-      normx=dble(lr_dot_us(D_left_full(1,1,1,ieign),D_left_full(1,1,1,ieign)))
-      normy=-dble(lr_dot_us(C_right_full(1,1,1,ieign),C_right_full(1,1,1,ieign)))
+      normx=dble(lr_dot_us(left_res(1,1,1,ieign),left_res(1,1,1,ieign)))
+      normy=-dble(lr_dot_us(right_res(1,1,1,ieign),right_res(1,1,1,ieign)))
       norm_F(ieign)=normx+normy  !! Actually norm_F should always be one since it was previously normalized
       
       write(stdout,'(/5x,"The two digitals below indicate the importance of doing beyong TDA: ")')
@@ -832,9 +894,9 @@ contains
     integer :: ieign,ipol
 
     if( flag_calc .eq. "X" ) then
-      dav_calc_chi=lr_dot_us(d0psi(:,:,1,ipol), D_left_full(:,:,1,ieign))
+      dav_calc_chi=lr_dot_us(d0psi(:,:,1,ipol), left_res(:,:,1,ieign))
     else if (flag_calc .eq. "Y") then
-      dav_calc_chi=lr_dot_us(d0psi(:,:,1,ipol), C_right_full(:,:,1,ieign))
+      dav_calc_chi=lr_dot_us(d0psi(:,:,1,ipol), right_res(:,:,1,ieign))
     endif
 
     return
@@ -1058,8 +1120,8 @@ contains
     
     do iv = nbnd-p_nbnd_occ+1, nbnd
       do ic = 1, p_nbnd_virt
-        Fx(iv,ic)=wfc_dot(D_left_full(:,iv,1,ieign),sevc0_virt(:,ic,1))/sqrt(norm_F(ieign))
-        Fy(iv,ic)=wfc_dot(C_right_full(:,iv,1,ieign),sevc0_virt(:,ic,1))/sqrt(norm_F(ieign))
+        Fx(iv,ic)=wfc_dot(left_res(:,iv,1,ieign),sevc0_virt(:,ic,1))/sqrt(norm_F(ieign))
+        Fy(iv,ic)=wfc_dot(right_res(:,iv,1,ieign),sevc0_virt(:,ic,1))/sqrt(norm_F(ieign))
       enddo
     enddo
   end subroutine lr_calc_Fxy
@@ -1076,7 +1138,9 @@ contains
     use gvect,          only : gstart
     use klist,          only : nks
     use io_global,      only : stdout
+    use uspp,           only : okvan
     use lr_variables,   only : evc0, sevc0
+    use lr_us
     use lr_dav_variables
 
     implicit none
@@ -1120,6 +1184,8 @@ contains
       do ia = ib+1, num_init
         call lr_1to1orth(vec_b(1,1,1,ia),vec_b(1,1,1,ib))
       enddo
+      if(.not. poor_of_ram .and. okvan) &
+        &call lr_apply_s(vec_b(:,:,1,ib),svec_b(:,:,1,ib))
     enddo
 
     return
@@ -1157,6 +1223,40 @@ contains
   end subroutine write_eigenvalues
   !-------------------------------------------------------------------------------
 
+<<<<<<< .mine
+
+  subroutine estimate_ram()
+    !-------------------------------------------------------------------------------
+    ! Created by X.Ge in Jun. 2013
+    !-------------------------------------------------------------------------------
+    use lr_dav_variables
+    use kinds,    only : dp
+    use uspp,           only : okvan
+    use io_global,     only : stdout
+    use wvfct,         only : nbnd,npwx
+    use klist,             only : nks
+
+    implicit none
+    real(dp) :: ram_vect, ram_eigen
+
+    if( .not. poor_of_ram .and. okvan ) then
+      ram_vect=2.0d0*sizeof(ram_vect)*nbnd*npwx*nks*num_basis_max*2
+    else
+      ram_vect=2.0d0*sizeof(ram_vect)*nbnd*npwx*nks*num_basis_max
+    endif
+      
+    ram_eigen=2.0d0*sizeof(ram_eigen)*nbnd*npwx*nks*num_eign*4
+
+    write(stdout,'(/5x,"Estimating the RAM requirements:")')
+    write(stdout,'(10x,"For the basis sets:",5x,F10.2,5x,"M")') ram_vect/1048576
+    write(stdout,'(10x,"For the eigenvectors:",5x,F10.2,5x,"M")') ram_eigen/1048576
+    write(stdout,'(5x,"Do make sure that you have enough RAM.",/)')
+
+    return
+  end subroutine estimate_ram
+  !-------------------------------------------------------------------------------
+
+=======
 
   subroutine estimate_ram()
     !-------------------------------------------------------------------------------
@@ -1183,4 +1283,5 @@ contains
   end subroutine estimate_ram
   !-------------------------------------------------------------------------------
 
+>>>>>>> .r10315
 END MODULE lr_dav_routines

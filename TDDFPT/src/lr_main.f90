@@ -113,7 +113,6 @@ PROGRAM lr_main
      call lr_project_init
   ENDIF
 
-
   !
   !   Set up initial stuff for derivatives
   !

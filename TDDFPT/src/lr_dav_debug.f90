@@ -13,15 +13,21 @@ contains
     use lr_dav_variables
     use io_global,   only : stdout
     use lr_us,   only : lr_dot_us
+    use uspp,    only : okvan
     
     implicit none
+    complex(kind=dp),external :: lr_dot
     integer :: ia, ib
     real(dp) :: inner_err,temp
     
     inner_err=0.0d0
     do ia = 1, num_basis
       do ib = 1, num_basis 
-        inner_matrix(ia,ib)=dble(lr_dot_us(vec_b(:,:,1,ia),vec_b(:,:,1,ib)))
+        if( poor_of_ram .or. .not. okvan) then
+          inner_matrix(ia,ib)=dble(lr_dot_us(vec_b(:,:,1,ia),vec_b(:,:,1,ib)))
+        else
+          inner_matrix(ia,ib)=dble(lr_dot(svec_b(:,:,1,ia),vec_b(:,:,1,ib)))
+        endif
         if(ia==ib) then
           temp=(inner_matrix(ia,ib)-1)**2
         else
@@ -231,10 +237,10 @@ call mp_stop(100)
     real(dp) :: diff,diffmax
 
     do ibr = 1, num_basis
-      call lr_apply_liouvillian(vec_b(:,:,:,ibr),C_vec_b(:,:,:,ibr),swork(:,:,:),.true.)
-      call lr_ortho(C_vec_b(:,:,:,ibr), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.)
+      call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),svecwork(:,:,:),.true.)
+      call lr_ortho(vecwork(:,:,:), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.)
       do ibl = 1, num_basis
-          M_C(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),C_vec_b(1,1,1,ibr))
+        M_C(ibl,ibr)=lr_dot_us(vec_b(1,1,1,ibl),vecwork(1,1,1))
       enddo
     enddo
 
@@ -243,7 +249,7 @@ call mp_stop(100)
     do ibr = 1, num_basis-1
       do ibl = ibr+1, num_basis
         diff = abs(dble(M_C(ibl,ibr))-dble(M_C(ibr,ibl)))
-        !print *, diff,dble(M_C(ibl,ibr)),dble(M_C(ibr,ibl))
+        print *, diff,dble(M_C(ibl,ibr)),dble(M_C(ibr,ibl))
         if( diff .gt. diffmax ) then
           diffmax=diff
           ibr0=ibr;ibl0=ibl

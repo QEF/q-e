@@ -92,6 +92,7 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (if_check_her, ionode_id )
   CALL mp_bcast (p_nbnd_occ, ionode_id )
   CALL mp_bcast (p_nbnd_virt, ionode_id )
+  CALL mp_bcast (poor_of_ram, ionode_id )
   CALL mp_barrier()
   
 #endif

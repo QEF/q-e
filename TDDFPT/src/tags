@@ -17,32 +17,21 @@
 501	lr_charg_resp.f90	/^501 CALL errore ('lr_dump_rho_tot_pxyd', 'Unable to open file for writing', 1 )$/;"	l	subroutine:lr_dump_rho_tot_pxyd	file:
 501	lr_charg_resp.f90	/^501 CALL errore ('lr_dump_rho_tot_xyzd', 'Unable to open file for writing', 1 )$/;"	l	subroutine:lr_dump_rho_tot_xcrys	file:
 501	lr_charg_resp.f90	/^501 CALL errore ('lr_dump_rho_tot_xyzd', 'Unable to open file for writing', 1 )$/;"	l	subroutine:lr_dump_rho_tot_xyzd	file:
-C_right_full	lr_dav_variables.f90	/^        D_left_full(:,:,:,:),C_right_full(/;"	v	module:lr_dav_variables
-C_vec_b	lr_dav_variables.f90	/^        vec_b(:,:,:,:), svec_b(:,:,:,:),   & ! vectors for the basis of Liouvillian$/;"	v	module:lr_dav_variables
-D_left_full	lr_dav_variables.f90	/^        ground_state(:,:,:),&$/;"	v	module:lr_dav_variables
+C_vec_b	lr_dav_variables.f90	/^        ground_state(:,:,:),&$/;"	v	module:lr_dav_variables
 D_vec_b	lr_dav_variables.f90	/^        C_vec_b(:,:,:,:),       &  ! D and C applied to vec_b $/;"	v	module:lr_dav_variables
 F	lr_variables.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: F(/;"	v	module:lr_variables
-Fx	lr_dav_variables.f90	/^        D_left_full(:,:,:,:),C_right_full(:,:,:,:),&$/;"	v	module:lr_dav_variables
+Fx	lr_dav_variables.f90	/^        D_vec_b(:,:,:,:),       &  ! D and C applied to vec_b. see documentation for explaination of D&C$/;"	v	module:lr_dav_variables
 FxR	lr_dav_variables.f90	/^  real(dp) :: FxR(/;"	v	module:lr_dav_variables
 Fy	lr_dav_variables.f90	/^        Fx(:,:),Fy(/;"	v	module:lr_dav_variables
 FyR	lr_dav_variables.f90	/^  real(dp) :: FxR(3), FyR(/;"	v	module:lr_dav_variables
-IFLAGS	Makefile	/^IFLAGS         = -I..\/..\/include$/;"	m
-LIBOBJS	Makefile	/^LIBOBJS        = ..\/..\/flib\/ptools.a ..\/..\/flib\/flib.a ..\/..\/clib\/clib.a ..\/..\/iotk\/src\/libiotk.a $/;"	m
-LROBJS	Makefile	/^LROBJS= \\$/;"	m
 LR_iteration	lr_variables.f90	/^  INTEGER           :: LR_iteration,/;"	v	module:lr_variables
 LR_polarization	lr_variables.f90	/^  INTEGER           :: LR_iteration, LR_polarization /;"	v	module:lr_variables
-Ltempvec1	lr_dav_variables.f90	/^        Fx(:,:),Fy(:,:),tempvec1(:,:),Ltempvec1(/;"	v	module:lr_dav_variables
 M	lr_dav_variables.f90	/^        M_/;"	v	module:lr_dav_variables
-MODFLAGS	Makefile	/^MODFLAGS= $(MOD_FLAG)..\/..\/iotk\/src $(MOD_FLAG)..\/..\/Modules \\$/;"	m
 M_C	lr_dav_variables.f90	/^        left2(:),right2(:), & ! square of the module of left_res and right_res$/;"	v	module:lr_dav_variables
 M_D	lr_dav_variables.f90	/^        M_C(:,:),M_D(/;"	v	module:lr_dav_variables
 M_shadow_avatar	lr_dav_variables.f90	/^        eign_value(:,:),&$/;"	v	module:lr_dav_variables
-PHOBJS	Makefile	/^PHOBJS=..\/..\/PHonon\/PH\/libph.a$/;"	m
 PI	lr_dav_variables.f90	/^  real (dp), PARAMETER :: PI /;"	v	module:lr_dav_variables
-PWOBJS	Makefile	/^PWOBJS = ..\/..\/PW\/src\/libpw.a$/;"	m
-QEMODS	Makefile	/^QEMODS = ..\/..\/Modules\/libqemod.a$/;"	m
 R	lr_variables.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: R(/;"	v	module:lr_variables
-TLDEPS	Makefile	/^TLDEPS=bindir libs pw ph$/;"	m
 bcast_lr_input	bcast_lr_input.f90	/^SUBROUTINE bcast_lr_input$/;"	s
 becp1_c	lr_variables.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: becp1_c(/;"	v	module:lr_variables
 becp1_c_virt	lr_variables.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: becp1_c_virt(/;"	v	module:lr_variables
@@ -77,10 +66,6 @@ dav_debug	lr_dav_variables.f90	/^  logical :: precondition,dav_debug,/;"	v	modul
 dav_expan_basis	lr_dav_routines.f90	/^  subroutine dav_expan_basis(/;"	s	module:lr_dav_routines
 dav_iter	lr_dav_variables.f90	/^             lwork,info,dav_iter /;"	v	module:lr_dav_variables
 davidson	lr_variables.f90	/^   LOGICAL :: davidson /;"	v	module:lr_variables
-debugM_C	lr_dav_variables.f90	/^        M_C(:,:),M_D(:,:),M(:,:),& ! Matrix represented in the sub space$/;"	v	module:lr_dav_variables
-debugM_D	lr_dav_variables.f90	/^        debugM_C(:,:),debugM_D(/;"	v	module:lr_dav_variables
-debugleft	lr_dav_variables.f90	/^        debugM_C(:,:),debugM_D(:,:),debugleft(/;"	v	module:lr_dav_variables
-debugright	lr_dav_variables.f90	/^        debugM_C(:,:),debugM_D(:,:),debugleft(:,:,:,:),debugright(/;"	v	module:lr_dav_variables
 diag_of_h	lr_dav_variables.f90	/^             sort_contr,diag_of_h,/;"	v	module:lr_dav_variables
 dinv_matrix	lr_sm1_psi.f90	/^SUBROUTINE dinv_matrix(/;"	s
 ecutfock_	lr_variables.f90	/^  REAL(kind=dp) :: ecutfock_$/;"	v	module:lr_variables
@@ -91,6 +76,7 @@ energy_dif	lr_dav_variables.f90	/^        tr_energy(:),&$/;"	v	module:lr_dav_var
 energy_dif_order	lr_dav_variables.f90	/^        eign_value_order(:), energy_dif_order(/;"	v	module:lr_dav_variables
 epsil	lr_charg_resp.f90	/^  REAL(kind=dp)                 :: epsil /;"	v	module:charg_resp
 error_beta	lr_lanczos.f90	/^  subroutine error_beta(/;"	s	subroutine:one_lanczos_step
+estimate_ram	lr_dav_routines.f90	/^  subroutine estimate_ram(/;"	s	module:lr_dav_routines
 eval1	lr_variables.f90	/^  real(kind=dp), ALLOCATABLE :: eval1(/;"	v	module:lr_variables
 eval2	lr_variables.f90	/^  real(kind=dp), ALLOCATABLE :: eval1(:),eval2(/;"	v	module:lr_variables
 evc0	lr_variables.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: &$/;"	v	module:lr_variables
@@ -102,14 +88,14 @@ exxdiv	lr_variables.f90	/^  REAL(kind=dp) :: exxdiv$/;"	v	module:lr_variables
 fft_orbital_custom_gamma	lr_exx_kernel.f90	/^SUBROUTINE fft_orbital_custom_gamma(/;"	s	module:lr_exx_kernel
 finish	lr_dav_variables.f90	/^  REAL(kind=dp) :: residue_conv_thr, reference, close_pre, broadening,start,&$/;"	v	module:lr_dav_variables
 func_broadening	lr_dav_routines.f90	/^  real(dp) function func_broadening(/;"	f	module:lr_dav_routines
-ground_state	lr_dav_variables.f90	/^        debugM_C(:,:),debugM_D(:,:),debugleft(:,:,:,:),debugright(:,:,:,:),& ! only for debuging$/;"	v	module:lr_dav_variables
+ground_state	lr_dav_variables.f90	/^        M_C(:,:),M_D(:,:),M(:,:),& ! Matrix represented in the sub space$/;"	v	module:lr_dav_variables
 ibnd	lr_dav_main.f90	/^  INTEGER            :: ibnd_/;"	v	program:lr_dav_main
 ibnd	lr_main.f90	/^  INTEGER            :: ip,pol_index,ibnd_/;"	v	program:lr_main
 ibnd_occ	lr_dav_main.f90	/^  INTEGER            :: ibnd_occ,/;"	v	program:lr_dav_main
 ibnd_occ	lr_main.f90	/^  INTEGER            :: ip,pol_index,ibnd_occ,/;"	v	program:lr_main
 ibnd_virt	lr_dav_main.f90	/^  INTEGER            :: ibnd_occ,ibnd_virt,/;"	v	program:lr_dav_main
 ibnd_virt	lr_main.f90	/^  INTEGER            :: ip,pol_index,ibnd_occ,ibnd_virt,/;"	v	program:lr_main
-if_check_her	lr_dav_variables.f90	/^             if_random_init,if_check_her$/;"	v	module:lr_dav_variables
+if_check_her	lr_dav_variables.f90	/^             if_random_init,if_check_her,/;"	v	module:lr_dav_variables
 if_check_orth	lr_dav_variables.f90	/^             sort_contr,diag_of_h,print_spectrum,if_check_orth,/;"	v	module:lr_dav_variables
 if_random_init	lr_dav_variables.f90	/^             sort_contr,diag_of_h,print_spectrum,if_check_orth,&$/;"	v	module:lr_dav_variables
 igkk_kk_m	lr_variables.f90	/^  INTEGER, ALLOCATABLE :: &$/;"	v	module:lr_variables
@@ -135,9 +121,9 @@ k2q	lr_exx_kernel.f90	/^  INTEGER, PRIVATE, ALLOCATABLE :: k2q(/;"	v	module:lr_e
 kill_left	lr_dav_variables.f90	/^  logical, allocatable :: kill_left(/;"	v	module:lr_dav_variables
 kill_right	lr_dav_variables.f90	/^  logical, allocatable :: kill_left(:),kill_right(/;"	v	module:lr_dav_variables
 lanc_norm	lr_variables.f90	/^  real(kind=dp) :: lanc_norm$/;"	v	module:lr_variables
-left2	lr_dav_variables.f90	/^        right_res(:,:,:,:), &  ! left and right residual of the appr. eigen-v$/;"	v	module:lr_dav_variables
+left2	lr_dav_variables.f90	/^        vecwork(:,:,:), svecwork(:,:,:), & ! Working space for supervectors$/;"	v	module:lr_dav_variables
 left_M	lr_dav_variables.f90	/^        work(:) ,&            ! global work space for linear algorithm routine$/;"	v	module:lr_dav_variables
-left_full	lr_dav_variables.f90	/^        D_vec_b(:,:,:,:),       &  ! D and C applied to vec_b. see documentation for explaination of D&C$/;"	v	module:lr_dav_variables
+left_full	lr_dav_variables.f90	/^        vec_b(:,:,:,:), svec_b(:,:,:,:),   & ! vectors for the basis of Liouvillian$/;"	v	module:lr_dav_variables
 left_res	lr_dav_variables.f90	/^        right_full(:,:,:,:),&  ! left and right appro. eigen vector of D*C in full space$/;"	v	module:lr_dav_variables
 lr_1to1orth	lr_dav_routines.f90	/^  subroutine lr_1to1orth(/;"	s	module:lr_dav_routines
 lr_alloc_init	lr_alloc_init.f90	/^SUBROUTINE lr_alloc_init(/;"	s
@@ -147,6 +133,7 @@ lr_apply_liouvillian	lr_apply_liouvillian.f90	/^SUBROUTINE lr_apply_liouvillian(
 lr_apply_liouvillian_gamma	lr_apply_liouvillian.f90	/^  SUBROUTINE lr_apply_liouvillian_gamma(/;"	s	subroutine:lr_apply_liouvillian
 lr_apply_liouvillian_k	lr_apply_liouvillian.f90	/^  SUBROUTINE lr_apply_liouvillian_k(/;"	s	subroutine:lr_apply_liouvillian
 lr_apply_s	lr_us.f90	/^  subroutine lr_apply_s(/;"	s	module:lr_us
+lr_bi_1to1ortho	lr_dav_routines.f90	/^  subroutine lr_bi_1to1ortho(/;"	s	module:lr_dav_routines
 lr_build_matrix_spectrum	lr_diagonalise.f90	/^SUBROUTINE lr_build_matrix_spectrum(/;"	s
 lr_calc_F	lr_charg_resp.f90	/^  SUBROUTINE lr_calc_F(/;"	s	module:charg_resp
 lr_calc_Fxy	lr_dav_routines.f90	/^  subroutine lr_calc_Fxy(/;"	s	module:lr_dav_routines
@@ -249,6 +236,7 @@ p_nbnd_occ	lr_dav_variables.f90	/^  INTEGER :: num_eign, num_init, num_basis_max
 p_nbnd_virt	lr_dav_variables.f90	/^             p_nbnd_occ,p_nbnd_virt /;"	v	module:lr_dav_variables
 plot_type	lr_variables.f90	/^  INTEGER :: plot_type /;"	v	module:lr_variables
 pol_index	lr_main.f90	/^  INTEGER            :: ip,pol_index,/;"	v	program:lr_main
+poor_of_ram	lr_dav_variables.f90	/^             if_random_init,if_check_her,poor_of_ram$/;"	v	module:lr_dav_variables
 precondition	lr_dav_variables.f90	/^  logical :: precondition,/;"	v	module:lr_dav_variables
 print_clock_lr	print_clock_lr.f90	/^SUBROUTINE print_clock_lr(/;"	s
 print_principle_components	lr_dav_routines.f90	/^  subroutine print_principle_components(/;"	s	module:lr_dav_routines
@@ -274,9 +262,8 @@ rho_1_tot	lr_charg_resp.f90	/^  REAL(kind=dp), ALLOCATABLE    ::  rho_1_tot(/;"	
 rho_1_tot_im	lr_charg_resp.f90	/^  COMPLEX(kind=dp), ALLOCATABLE ::  rho_1_tot_im(/;"	v	module:charg_resp
 right2	lr_dav_variables.f90	/^        left2(:),right2(/;"	v	module:lr_dav_variables
 right_M	lr_dav_variables.f90	/^        left_M(:,:),        &$/;"	v	module:lr_dav_variables
-right_full	lr_dav_variables.f90	/^        left_full(:,:,:,:), swork(:,:,:),& $/;"	v	module:lr_dav_variables
+right_full	lr_dav_variables.f90	/^        left_full(:,:,:,:), &$/;"	v	module:lr_dav_variables
 right_res	lr_dav_variables.f90	/^        left_res(:,:,:,:), &  $/;"	v	module:lr_dav_variables
-sLtempvec1	lr_dav_variables.f90	/^        Fx(:,:),Fy(:,:),tempvec1(:,:),Ltempvec1(:,:),&$/;"	v	module:lr_dav_variables
 scissor	lr_variables.f90	/^  REAL(kind=dp) :: scissor$/;"	v	module:lr_variables
 sd0psi	sd0psi.f90	/^  SUBROUTINE sd0psi(/;"	s
 sevc0	lr_variables.f90	/^       evc0_virt(:,:,:),  &    ! unoccupied ground state wavefunctions (plane wave, band, k point)$/;"	v	module:lr_variables
@@ -295,9 +282,7 @@ stop_lr	stop_lr.f90	/^SUBROUTINE stop_lr(/;"	s
 sum_F	lr_main.f90	/^  COMPLEX(kind=dp)   :: sum_F,/;"	v	program:lr_main
 sum_c	lr_main.f90	/^  COMPLEX(kind=dp)   :: sum_F,sum_c$/;"	v	program:lr_main
 svec_b	lr_dav_variables.f90	/^        vec_b(:,:,:,:), svec_b(/;"	v	module:lr_dav_variables
-swork	lr_dav_variables.f90	/^        left_full(:,:,:,:), swork(/;"	v	module:lr_dav_variables
-tempvec1	lr_dav_variables.f90	/^        Fx(:,:),Fy(:,:),tempvec1(/;"	v	module:lr_dav_variables
-tempvec2	lr_dav_variables.f90	/^        sLtempvec1(:,:),tempvec2(/;"	v	module:lr_dav_variables
+svecwork	lr_dav_variables.f90	/^        vecwork(:,:,:), svecwork(/;"	v	module:lr_dav_variables
 test_case_no	lr_variables.f90	/^  INTEGER :: test_case_no /;"	v	module:lr_variables
 test_restart	lr_main.f90	/^  LOGICAL FUNCTION test_restart(/;"	f	program:lr_main
 tg_revc0	lr_variables.f90	/^  COMPLEX(kind=dp), ALLOCATABLE :: tg_revc0(/;"	v	module:lr_variables
@@ -308,6 +293,7 @@ treat_residue	lr_dav_routines.f90	/^  subroutine treat_residue(/;"	s	module:lr_d
 turn2planb	lr_dav_variables.f90	/^                   finish,step,turn2planb$/;"	v	module:lr_dav_variables
 vc_couple	lr_dav_variables.f90	/^  integer , allocatable :: &$/;"	v	module:lr_dav_variables
 vec_b	lr_dav_variables.f90	/^  COMPLEX (DP), ALLOCATABLE ::  &$/;"	v	module:lr_dav_variables
+vecwork	lr_dav_variables.f90	/^        right_res(:,:,:,:), &  ! left and right residual of the appr. eigen-v$/;"	v	module:lr_dav_variables
 vhart	lr_exx_kernel.f90	/^  COMPLEX(DP), PRIVATE, ALLOCATABLE :: vhart(/;"	v	module:lr_exx_kernel
 virt_read	lr_read_wf.f90	/^    SUBROUTINE virt_read(/;"	s	subroutine:lr_read_wf
 vl	lr_variables.f90	/^  real(kind=dp), ALLOCATABLE :: vl(/;"	v	module:lr_variables

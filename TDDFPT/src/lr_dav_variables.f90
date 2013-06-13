@@ -30,7 +30,7 @@ MODULE lr_dav_variables
                    finish,step,turn2planb
   logical :: precondition,dav_debug, single_pole,&
              sort_contr,diag_of_h,print_spectrum,if_check_orth,&
-             if_random_init,if_check_her
+             if_random_init,if_check_her,poor_of_ram
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !Global Variables
@@ -48,18 +48,18 @@ MODULE lr_dav_variables
 
   COMPLEX (DP), ALLOCATABLE ::  &
         vec_b(:,:,:,:), svec_b(:,:,:,:),   & ! vectors for the basis of Liouvillian
-        C_vec_b(:,:,:,:),       &  ! D and C applied to vec_b 
-        D_vec_b(:,:,:,:),       &  ! D and C applied to vec_b. see documentation for explaination of D&C
-        left_full(:,:,:,:), swork(:,:,:),& 
+        left_full(:,:,:,:), &
         right_full(:,:,:,:),&  ! left and right appro. eigen vector of D*C in full space
         left_res(:,:,:,:), &  
         right_res(:,:,:,:), &  ! left and right residual of the appr. eigen-v
+        vecwork(:,:,:), svecwork(:,:,:), & ! Working space for supervectors
         left2(:),right2(:), & ! square of the module of left_res and right_res
         M_C(:,:),M_D(:,:),M(:,:),& ! Matrix represented in the sub space
         ground_state(:,:,:),&
-        D_left_full(:,:,:,:),C_right_full(:,:,:,:),&
-        Fx(:,:),Fy(:,:),tempvec1(:,:),Ltempvec1(:,:),&
-        sLtempvec1(:,:),tempvec2(:,:)
+        C_vec_b(:,:,:,:),       &  ! D and C applied to vec_b 
+        D_vec_b(:,:,:,:),       &  ! D and C applied to vec_b. see documentation for explaination of D&C
+        Fx(:,:),Fy(:,:)
+        
   real(dp) :: FxR(3), FyR(3)
 
   REAL (DP), ALLOCATABLE :: &

@@ -70,7 +70,7 @@ SUBROUTINE lr_readin
   NAMELIST / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int
   namelist / lr_dav / num_eign, num_init, num_basis_max, residue_conv_thr, precondition,dav_debug, reference,single_pole,&
                           &sort_contr, diag_of_h, close_pre,broadening,print_spectrum,start,finish,step,if_check_orth,&
-                          &if_random_init,if_check_her,p_nbnd_occ,p_nbnd_virt
+                          &if_random_init,if_check_her,p_nbnd_occ,p_nbnd_virt,poor_of_ram
   !
   auto_rs = .TRUE.
 #ifdef __MPI
@@ -111,10 +111,10 @@ SUBROUTINE lr_readin
 
      ! For lr_dav
      num_eign=1
-     num_init=6
+     num_init=2
      num_basis_max=20
      broadening=0.005
-     residue_conv_thr=1.0E-5
+     residue_conv_thr=1.0E-4
      close_pre=1.0E-5
      turn2planb=1.0E-3
      precondition=.true.
@@ -131,6 +131,7 @@ SUBROUTINE lr_readin
      if_random_init=.false.
      p_nbnd_occ=10
      p_nbnd_virt=10
+     poor_of_ram=.false.
 
      !   Reading the namelist lr_input
      CALL input_from_file( )
@@ -140,11 +141,10 @@ SUBROUTINE lr_readin
      !
      !
      !   Reading the namelist lr_control
-     !
-     if(.not. davidson) then
        READ (5, lr_control, err = 201, iostat = ios)
 201    CALL errore ('lr_readin', 'reading lr_control namelist', ABS (ios) )
-     else
+
+     if(davidson) then
        READ (5, lr_dav, err = 299, iostat = ios)
 299    CALL errore ('lr_readin', 'reading lr_dav namelist', ABS (ios) )
      endif
