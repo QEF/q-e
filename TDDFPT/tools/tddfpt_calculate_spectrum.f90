@@ -35,8 +35,8 @@ PROGRAM lr_calculate_spectrum
   INTEGER :: verbosity
   real(kind=dp) :: start,end,increment
   real(kind=dp) :: omegmax,delta_omeg
-  CHARACTER(len=60) :: extrapolation
-  CHARACTER(len=256) :: outdir, filename
+  CHARACTER(len=60) :: extrapolation,td
+  CHARACTER(len=256) :: outdir, filename,eign_file
   INTEGER :: units
   !
   !General use variables & counters
@@ -82,7 +82,8 @@ PROGRAM lr_calculate_spectrum
   !
   NAMELIST / lr_input / itermax, itermax0, itermax_actual, extrapolation,&
                       & end, increment, start, ipol, outdir, prefix,&
-                      & epsil, sym_op, verbosity, units,omeg,omegmax,delta_omeg
+                      & epsil, sym_op, verbosity, units,omeg,omegmax,&
+                      & delta_omeg, td,eign_file
 
 
   !
@@ -108,6 +109,7 @@ PROGRAM lr_calculate_spectrum
   omeg=-1
   delta_omeg=-1
   omegmax=-1
+  td='lanczos'
   !
   !Other initialisation
   !
@@ -137,31 +139,42 @@ ENDIF
   CALL mp_bcast ( ios, ionode_id)
   CALL errore ('lr_readin', 'reading lr_input namelist', abs (ios) )
 
+  if(trim(td)=="davidson" .or. trim(td)=='david') then
+    if(ionode) call spectrum_david()
+#ifdef __MPI
+    CALL mp_barrier ()
+    CALL mp_global_end ()
+#endif
+    return
+  endif
+
   IF (ionode) THEN
-  IF (itermax0 < 151 .and. trim(extrapolation)/="no") THEN
-     WRITE(*,*) "Itermax0 is less than 150, no extrapolation scheme can be used!"
-     extrapolation="no"
-  ENDIF
+  
+    IF (itermax0 < 151 .and. trim(extrapolation)/="no") THEN
+       WRITE(*,*) "Itermax0 is less than 150, no extrapolation scheme can be used!"
+       extrapolation="no"
+    ENDIF
 
-  outdir = trimcheck(outdir)
-  tmp_dir = outdir
-  IF (ipol < 4) THEN
-    n_ipol=1
-  ELSE
-    n_ipol=3
-    ipol = 1
-  ENDIF
+    outdir = trimcheck(outdir)
+    tmp_dir = outdir
+    IF (ipol < 4) THEN
+      n_ipol=1
+    ELSE
+      n_ipol=3
+      ipol = 1
+    ENDIF
 
-  ! Polarization symmetry
-  IF ( .not. sym_op == 0 ) THEN
-!    CALL errore("tddfpt_pp","Unsupported symmetry operation",1)
-   IF (sym_op == 1) THEN
-    WRITE(stdout,'(5x,"All polarization axes will be considered to be equal.")')
-    n_ipol=3
-    ipol=1
-   ELSE
-    CALL errore("tddfpt_pp","Unsupported symmetry operation",1)
-   ENDIF
+    ! Polarization symmetry
+    IF ( .not. sym_op == 0 ) THEN
+    ! CALL errore("tddfpt_pp","Unsupported symmetry operation",1)
+    IF (sym_op == 1) THEN
+      WRITE(stdout,'(5x,"All polarization axes will be considered to be equal.")')
+      n_ipol=3
+      ipol=1
+    ELSE
+     CALL errore("tddfpt_pp","Unsupported symmetry operation",1)
+    ENDIF
+
   ENDIF
   ! Terminator Scheme
   IF (trim(extrapolation)=="no") THEN
@@ -976,6 +989,58 @@ real(kind=dp), INTENT(out) :: red,green,blue
    blue = 0.
  ENDIF
 END SUBROUTINE wl_to_color
+
+  subroutine spectrum_david()
+  
+    implicit none
+    real(dp) :: energy,chi(4)
+    integer :: ieign, nstep, istep
+    real(dp) :: frequency, temp
+    real(dp), allocatable :: absorption(:,:)
+
+    open(18,file=trim(eign_file),action='read')
+
+    nstep=(end-start)/increment+1
+    allocate(absorption(nstep,5)) ! Column 1: Energy; 2: Toal; 3,4,5: X,Y,Z
+    absorption(:,:)=0.0d0
+
+    read(18,*)  ! Jump to the second line
+522 read(18,*,END=521)  energy,chi
+      frequency=start
+      istep=1
+      do while( .not. istep .gt. nstep )
+
+        absorption(istep,1)=frequency
+        temp=frequency-energy
+        temp=epsil/(temp**2+epsil**2)
+        absorption(istep,2)=absorption(istep,2)+chi(1)*temp
+        absorption(istep,3)=absorption(istep,3)+chi(2)*temp
+        absorption(istep,4)=absorption(istep,4)+chi(3)*temp
+        absorption(istep,5)=absorption(istep,5)+chi(4)*temp
+        istep=istep+1
+        frequency=frequency+increment
+      enddo
+    goto 522
+
+521 close(18)
+
+    filename=trim(prefix)//".plot"
+    OPEN(17,file=filename,status="unknown")
+    write(17,'("#",2x,"Energy(Ry)",10x,"total",13x,"X",13x,"Y",13x,"Z")')
+    write(17,'("#  Broadening is: ",5x,F10.7,5x"Ry")') epsil
+    istep=1
+    do while( .not. istep .gt. nstep )
+      write(17,'(5E20.8)') absorption(istep,1),absorption(istep,1)*absorption(istep,2),&
+                           absorption(istep,1)*absorption(istep,3),absorption(istep,1)*&
+                           absorption(istep,4),absorption(istep,1)*absorption(istep,5)
+      istep=istep+1
+    enddo
+
+     print *, "   The spectrum is in file: ", filename
+
+    close(17)
+    return
+  end subroutine spectrum_david
 
 !------------------------------------------------
 
