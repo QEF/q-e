@@ -1223,8 +1223,6 @@ contains
   end subroutine write_eigenvalues
   !-------------------------------------------------------------------------------
 
-<<<<<<< .mine
-
   subroutine estimate_ram()
     !-------------------------------------------------------------------------------
     ! Created by X.Ge in Jun. 2013
@@ -1256,32 +1254,4 @@ contains
   end subroutine estimate_ram
   !-------------------------------------------------------------------------------
 
-=======
-
-  subroutine estimate_ram()
-    !-------------------------------------------------------------------------------
-    ! Created by X.Ge in Jun. 2013
-    !-------------------------------------------------------------------------------
-    use lr_dav_variables
-    use kinds,    only : dp
-    use io_global,     only : stdout
-    use wvfct,         only : nbnd,npwx
-    use klist,             only : nks
-
-    implicit none
-    real(dp) :: ram_vect, ram_eigen
-
-    ram_vect=2*sizeof(ram_vect)*nbnd*npwx*nks*num_basis_max*3
-    ram_eigen=2*sizeof(ram_eigen)*nbnd*npwx*nks*num_eign*6
-
-    write(stdout,'(/5x,"Estimating the RAM requirements:")')
-    write(stdout,'(10x,"For the basis sets:",5x,F10.2,5x,"M")') ram_vect/1048576
-    write(stdout,'(10x,"For the eigenvectors:",5x,F10.2,5x,"M")') ram_eigen/1048576
-    write(stdout,'(5x,"Do make sure that you have enough RAM.",/)')
-
-    return
-  end subroutine estimate_ram
-  !-------------------------------------------------------------------------------
-
->>>>>>> .r10315
 END MODULE lr_dav_routines
