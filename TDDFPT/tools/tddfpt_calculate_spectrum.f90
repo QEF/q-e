@@ -141,11 +141,7 @@ ENDIF
 
   if(trim(td)=="davidson" .or. trim(td)=='david') then
     if(ionode) call spectrum_david()
-#ifdef __MPI
-    CALL mp_barrier ()
-    CALL mp_global_end ()
-#endif
-    return
+    goto  555
   endif
 
   IF (ionode) THEN
@@ -584,6 +580,7 @@ CLOSE(17)
   CALL environment_end( 'TDDFPT_PP' )
   !
 ENDIF
+555 print *, "Calculation is finished."
 #ifdef __MPI
   CALL mp_barrier ()
   CALL mp_global_end ()
