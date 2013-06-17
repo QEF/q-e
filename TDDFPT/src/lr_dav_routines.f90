@@ -124,12 +124,24 @@ contains
     IF (ierr /= 0) call errore('lr_dav_alloc_init',"no enough memory",ierr) 
 
     if( .not. poor_of_ram .and. okvan ) then
-      WRITE(stdout,'(/5x,"poor_of_ram is set to .false.. This means that you &
+      WRITE(stdout,'(5x,"poor_of_ram is set to .false.. This means that you &
                      &would like to increase the speed of",/5x,"your calculation with&
                      & USPP by paying double memory.",/5x,"Switch it to .true. if you need &
                      &to save memory.",/)')
-
       allocate(svec_b(npwx,nbnd,nks,num_basis_max),stat=ierr)
+      IF (ierr /= 0) call errore('lr_dav_alloc_init',"no enough memory",ierr)
+    endif
+
+    if( .not. poor_of_ram2 ) then
+      WRITE(stdout,'(5x,"poor_of_ram2 is set to .false.. This means that you &
+                     &would like to increase the speed ",/5x,"by storing the D_basis&
+                     & and C_basis vectors which will cause three time of the memory cost.",&
+                     /5x,"Switch it to .true. if you need &
+                     &to save memory.",/)')
+      allocate(D_vec_b(npwx,nbnd,nks,num_basis_max),stat=ierr)
+      IF (ierr /= 0) call errore('lr_dav_alloc_init',"no enough memory",ierr)
+
+      allocate(C_vec_b(npwx,nbnd,nks,num_basis_max),stat=ierr)
       IF (ierr /= 0) call errore('lr_dav_alloc_init',"no enough memory",ierr)
     endif
 
@@ -175,6 +187,7 @@ contains
     WRITE(stdout,'(5x,"Initiating variables for davidson ...")')
     ! set initial basis
     num_basis=num_init
+    num_basis_tot=num_init
     vec_b(:,:,:,:) = (0.0D0,0.0D0)
 
     if (.not. if_random_init) then  ! set the initial basis set to be {|c><v|}
@@ -234,7 +247,7 @@ contains
     call start_clock('one_step')
     write(stdout,'(/7x,"==============================")') 
     write(stdout,'(/7x,"Davidson iteration:",1x,I8)') dav_iter
-    write(stdout,'(7x,"num of basis:",I5)') num_basis
+    write(stdout,'(7x,"num of basis:",I5,3x,"total built basis:",I5)') num_basis,num_basis_tot
 
     ! Add new matrix elements to the M_C and M_D(in the subspace)(part 1)
     do ibr = num_basis_old+1, num_basis
@@ -242,6 +255,8 @@ contains
         ! Calculate new D*vec_b
         call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),svecwork(:,:,:),.false.)
         call lr_ortho(vecwork(:,:,:), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.) ! Project to virtual space
+        if(.not. poor_of_ram2) D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+
         ! Add new M_D
         do ibl = 1, ibr
           ! Here there's a choice between saving memory and saving calculation
@@ -256,6 +271,8 @@ contains
         ! Calculate new C*vec_b
         call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),svecwork(:,:,:),.true.)
         call lr_ortho(vecwork(:,:,:), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.) ! Project to virtual space
+        if(.not. poor_of_ram2) C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+
         ! Add new M_C
         do ibl = 1, ibr
           if(poor_of_ram .or. .not. okvan) then ! Less memory needed
@@ -269,6 +286,11 @@ contains
       else ! ltammd
         call lr_apply_liouvillian(vec_b(:,:,:,ibr),vecwork(:,:,:),svecwork(:,:,:),.true.)
         call lr_ortho(vecwork(:,:,:), evc0(:,:,1), 1, 1,sevc0(:,:,1),.true.)
+        if(.not. poor_of_ram2) then
+          D_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+          C_vec_b(:,:,:,ibr)=vecwork(:,:,:)
+        endif
+
         ! Add new M_D, M_C
         do ibl = 1, ibr
           if(poor_of_ram .or. .not. okvan) then ! Less memory needed
@@ -381,7 +403,10 @@ contains
     ! Created by X.Ge in Jan. 2013
     !-------------------------------------------------------------------------------
     ! Calculate the residue of appro. eigen vector
-    use lr_dav_variables
+    use lr_dav_variables, only : right_res,left_res,svecwork,C_vec_b,D_vec_b,&
+                                 kill_left,kill_right,poor_of_ram2,right2,left2,&
+                                 right_full,left_full,eign_value_order,residue_conv_thr,&
+                                 toadd,left_M,right_M,num_eign,dav_conv,num_basis,zero
     use lr_variables,    only : evc0, sevc0
     use kinds,  only : dp
     use io_global, only : stdout
@@ -391,9 +416,8 @@ contains
     use lr_us
     
     implicit none
-    
     real(dp) :: max_res
-    integer :: ieign, flag
+    integer :: ieign, flag,ibr
     complex(kind=dp) :: temp(npwx,nbnd)
 
     max_res=0
@@ -402,10 +426,19 @@ contains
     toadd=2*num_eign
 
     do ieign = 1, num_eign
-      call lr_apply_liouvillian(right_full(:,:,:,ieign),right_res(:,:,:,ieign),svecwork(:,:,:),.true.) ! Apply lanczos
-      call lr_apply_liouvillian(left_full(:,:,:,ieign),left_res(:,:,:,ieign),svecwork(:,:,:),.false.)
-      call lr_ortho(right_res(:,:,:,ieign), evc0(:,:,1), 1,1,sevc0(:,:,1),.true.) ! Project to virtual space
-      call lr_ortho(left_res(:,:,:,ieign), evc0(:,:,1), 1,1,sevc0(:,:,1),.true.)
+      if(poor_of_ram2) then ! If D_ C_ basis are not stored, we have to apply liouvillian again
+        call lr_apply_liouvillian(right_full(:,:,:,ieign),right_res(:,:,:,ieign),svecwork(:,:,:),.true.) ! Apply lanczos
+        call lr_apply_liouvillian(left_full(:,:,:,ieign),left_res(:,:,:,ieign),svecwork(:,:,:),.false.)
+        call lr_ortho(right_res(:,:,:,ieign), evc0(:,:,1), 1,1,sevc0(:,:,1),.true.) ! Project to virtual space
+        call lr_ortho(left_res(:,:,:,ieign), evc0(:,:,1), 1,1,sevc0(:,:,1),.true.)
+      else ! Otherwise they are be recovered directly by the combination of C_ and D_ basis
+        left_res(:,:,:,ieign)=0.0d0
+        right_res(:,:,:,ieign)=0.0d0
+        do ibr = 1, num_basis
+          right_res(:,:,1,ieign)=right_res(:,:,1,ieign)+right_M(ibr,eign_value_order(ieign))*C_vec_b(:,:,1,ibr)
+          left_res(:,:,1,ieign)=left_res(:,:,1,ieign)+left_M(ibr,eign_value_order(ieign))*D_vec_b(:,:,1,ibr)
+        enddo
+      endif
      
       ! The reason of useing this method
       call lr_1to1orth(right_res(1,1,1,ieign),left_full(1,1,1,ieign))
@@ -501,13 +534,16 @@ contains
       dav_conv=.true.
       return
     endif
- 
-    if(num_basis+toadd .gt. num_basis_max) then
-      write(stdout,'(/5x,"!!!! We have arrived maximum number of basis. We have to stop &
-                   &here, and the result will not be trustable !!!!! ")')  
+
+    !if( dav_iter .gt. max_iter .or. num_basis+toadd .gt. num_basis_max ) then
+    if( dav_iter .gt. max_iter ) then
+      write(stdout,'(/5x,"!!!! We have arrived maximum number of iterations. We have to stop &
+                   &here, and the result will not be trustable !!!!! ")')
       dav_conv=.true.
     else
-    num_basis_old=num_basis
+      num_basis_old=num_basis
+      if(num_basis+toadd .gt. num_basis_max) call discharge_temp()
+      num_basis_tot=num_basis_tot+toadd
       ! Expand the basis
       do ieign = 1, num_eign
         if(.not. kill_left(ieign)) then
@@ -745,8 +781,11 @@ contains
     allocate(norm_F(num_eign))
 
     write(stdout,'(/7x,"================================================================")') 
-    write(stdout,'(/7x,"Davidson diagonalization has finished in",I5, &
-                 &"steps, now print out information of eigen pairs")') dav_iter 
+    write(stdout,'(/7x,"Davidson diagonalization has finished in",I5," steps.")') dav_iter
+    write(stdout,'(10x,"the number of current basis is",I5)') num_basis
+    write(stdout,'(10x,"the number of total basis built is",I5)') num_basis_tot
+
+    write(stdout,'(/7x,"Now print out information of eigenstates")') 
 
     call lr_calc_R()
     
@@ -1242,6 +1281,8 @@ contains
     else
       ram_vect=2.0d0*sizeof(ram_vect)*nbnd*npwx*nks*num_basis_max
     endif
+    if(.not. poor_of_ram2)&
+      &ram_vect=ram_vect+2.0d0*sizeof(ram_vect)*nbnd*npwx*nks*num_basis_max*2
       
     ram_eigen=2.0d0*sizeof(ram_eigen)*nbnd*npwx*nks*num_eign*4
 
@@ -1253,5 +1294,114 @@ contains
     return
   end subroutine estimate_ram
   !-------------------------------------------------------------------------------
+
+  subroutine discharge_temp()
+    !-------------------------------------------------------------------------------
+    ! Created by X.Ge in Jun. 2013
+    !-------------------------------------------------------------------------------
+    ! This routine discharges the basis set keeping only 2*num_eign best vectors for the
+    ! basis and through aways others in order to make space for the new vectors
+
+    use lr_dav_variables
+    use kinds,    only : dp
+    use uspp,     only : okvan
+    use io_global,     only : stdout
+    use wvfct,         only : nbnd,npwx
+    use klist,             only : nks
+    use lr_us
+
+    implicit none
+    integer :: ieign,ib,ia
+
+    write(stdout,'(/5x,"!!!! The basis set has arrived its maximum size, now discharge it",/5x,&
+                  &"to make space for the following calculation.")')
+
+    ! Set the new vec_b and s_vec_b
+    do ieign = 1, num_eign
+      vec_b(:,:,:,2*ieign-1)=right_full(:,:,:,ieign)
+      vec_b(:,:,:,2*ieign)=left_full(:,:,:,ieign)
+    enddo
+
+    ! GS orthogonalization, twice for numerical stability
+    ! 1st
+    do ib = 1, 2*num_eign
+      call lr_norm(vec_b(1,1,1,ib))
+      do ia = ib+1, num_init
+        call lr_1to1orth(vec_b(1,1,1,ia),vec_b(1,1,1,ib))
+      enddo
+    enddo
+    ! 2nd
+    do ib = 1, 2*num_eign
+      call lr_norm(vec_b(1,1,1,ib))
+      do ia = ib+1, num_init
+        call lr_1to1orth(vec_b(1,1,1,ia),vec_b(1,1,1,ib))
+      enddo
+      if(.not. poor_of_ram .and. okvan) &
+        &call lr_apply_s(vec_b(:,:,1,ib),svec_b(:,:,1,ib))
+    enddo
+
+    if(.not. poor_of_ram .and. okvan) then
+      do ieign = 1 , 2*num_eign
+        call lr_apply_s(vec_b(:,:,:,ieign),svec_b(:,:,:,ieign))
+      enddo
+    endif
+ 
+
+    num_basis_old=0
+    num_basis=2*num_eign
+
+    return
+  end subroutine discharge_temp
+
+  subroutine discharge()
+    !-------------------------------------------------------------------------------
+    ! Created by X.Ge in Jun. 2013
+    !-------------------------------------------------------------------------------
+    ! This routine discharges the basis set keeping only 2*num_eign best vectors for the
+    ! basis and through aways others in order to make space for the new vectors
+
+    use lr_dav_variables
+    use kinds,    only : dp
+    use uspp,     only : okvan
+    use io_global,     only : stdout
+    use wvfct,         only : nbnd,npwx
+    use klist,             only : nks
+    use lr_us
+
+    implicit none
+    integer :: ieign,ibr
+
+    write(stdout,'(/5x,"!!!! The basis set has arrived its maximum size, now discharge it",/5x,&
+                  &"to make space for the following calculation.")')
+
+    ! Set the new vec_b and s_vec_b
+    do ieign = 1, num_eign
+      vec_b(:,:,:,2*ieign-1)=right_full(:,:,:,ieign)
+      vec_b(:,:,:,2*ieign)=left_full(:,:,:,ieign)
+      call lr_apply_s(vec_b(:,:,:,2*ieign-1),svec_b(:,:,:,2*ieign-1))
+      call lr_apply_s(vec_b(:,:,:,2*ieign),svec_b(:,:,:,2*ieign))
+    enddo
+
+    ! If needed set the new D_vec_b and C_vec_b
+    if(.not. poor_of_ram2) then
+      right_full(:,:,:,:)=0.0d0
+      left_full(:,:,:,:)=0.0d0
+      do ieign = 1, num_eign
+        do ibr = 1, num_basis
+          left_full(:,:,1,ieign)=left_full(:,:,1,ieign)+left_M(ibr,eign_value_order(ieign))*vec_b(:,:,1,ibr)
+          right_full(:,:,1,ieign)=right_full(:,:,1,ieign)+right_M(ibr,eign_value_order(ieign))*vec_b(:,:,1,ibr)
+        enddo
+      enddo
+  
+    endif
+
+        left_res(:,:,:,ieign)=0.0d0
+        right_res(:,:,:,ieign)=0.0d0
+        do ibr = 1, num_basis
+          right_res(:,:,1,ieign)=right_res(:,:,1,ieign)+right_M(ibr,eign_value_order(ieign))*C_vec_b(:,:,1,ibr)
+          left_res(:,:,1,ieign)=left_res(:,:,1,ieign)+left_M(ibr,eign_value_order(ieign))*D_vec_b(:,:,1,ibr)
+        enddo
+    return
+  end subroutine discharge
 
 END MODULE lr_dav_routines

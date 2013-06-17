@@ -78,3 +78,14 @@ When this set to true, you double the memory used for USPP calculation, but you 
 times of s_psi and cal_bec calculation, which takes a lot of time (sometimes more than half of the whole
 calculation) when the size of sub space is more than 100. 
 
+=====================================
+     poor_of_ram2=.true.
+
+Another option to burn the memory to boom the speed. It will store the D_ and C_ basis so the calculation will
+be speeded up a lot when one is calculating many transitions at the same time. 
+
+=====================================
+     max_iter=100
+
+When the number of iterations arrives this number, the calculation will stop even if the convergence has not arrived
+

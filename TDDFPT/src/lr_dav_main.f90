@@ -41,9 +41,6 @@ PROGRAM lr_dav_main
   USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,check_vector_gamma
   !
   IMPLICIT NONE
-  !
-  ! Local variables
-  !
   INTEGER            :: ibnd_occ,ibnd_virt,ibnd
   LOGICAL            :: rflag, nomsg
 
@@ -84,7 +81,7 @@ PROGRAM lr_dav_main
 
   !   Davidson loop
   if (precondition) write(stdout,'(/5x,"Precondition is used in the algorithm,")')
-  do while (.not. dav_conv)
+  do while (.not. dav_conv .and. dav_iter .lt. max_iter)
     dav_iter=dav_iter+1
       if(if_check_orth) call check_orth()
       ! In one david step, M_C,M_D and M_CD are first constructed;then will be
@@ -144,7 +141,6 @@ CONTAINS
        WRITE(stdout, '(/5x,"Use of exact-exchange enabled. Note the EXX correction to the [H,X]", &
             &/5x,"commutator is NOT included hence the f-sum rule will be violated.")')
     ENDIF
-    !
   END SUBROUTINE lr_print_preamble
 
 END PROGRAM lr_dav_main

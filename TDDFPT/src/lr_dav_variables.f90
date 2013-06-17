@@ -24,13 +24,13 @@ MODULE lr_dav_variables
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Namelist
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  INTEGER :: num_eign, num_init, num_basis_max,&
+  INTEGER :: num_eign, num_init, num_basis_max,max_iter,&
              p_nbnd_occ,p_nbnd_virt ! number of occ and virt bands for projection
   REAL(kind=dp) :: residue_conv_thr, reference, close_pre, broadening,start,&
                    finish,step,turn2planb
   logical :: precondition,dav_debug, single_pole,&
              sort_contr,diag_of_h,print_spectrum,if_check_orth,&
-             if_random_init,if_check_her,poor_of_ram
+             if_random_init,if_check_her,poor_of_ram,poor_of_ram2
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !Global Variables
@@ -43,8 +43,8 @@ MODULE lr_dav_variables
   logical, allocatable :: kill_left(:),kill_right(:) 
   INTEGER :: num_basis_old, &   ! num of basis that has been applied Liouvillian
              num_basis,toadd,       &   ! total number of basis
-             lwork,info,dav_iter        ! for calling lapack routine 
-             
+             lwork,info,&         ! for calling lapack routine 
+             dav_iter,num_basis_tot  
 
   COMPLEX (DP), ALLOCATABLE ::  &
         vec_b(:,:,:,:), svec_b(:,:,:,:),   & ! vectors for the basis of Liouvillian

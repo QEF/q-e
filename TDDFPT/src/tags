@@ -64,10 +64,12 @@ dav_calc_residue	lr_dav_routines.f90	/^  subroutine dav_calc_residue(/;"	s	modul
 dav_conv	lr_dav_variables.f90	/^  LOGICAL :: dav_conv$/;"	v	module:lr_dav_variables
 dav_debug	lr_dav_variables.f90	/^  logical :: precondition,dav_debug,/;"	v	module:lr_dav_variables
 dav_expan_basis	lr_dav_routines.f90	/^  subroutine dav_expan_basis(/;"	s	module:lr_dav_routines
-dav_iter	lr_dav_variables.f90	/^             lwork,info,dav_iter /;"	v	module:lr_dav_variables
+dav_iter	lr_dav_variables.f90	/^             lwork,info,&         ! for calling lapack routine $/;"	v	module:lr_dav_variables
 davidson	lr_variables.f90	/^   LOGICAL :: davidson /;"	v	module:lr_variables
 diag_of_h	lr_dav_variables.f90	/^             sort_contr,diag_of_h,/;"	v	module:lr_dav_variables
 dinv_matrix	lr_sm1_psi.f90	/^SUBROUTINE dinv_matrix(/;"	s
+discharge	lr_dav_routines.f90	/^  subroutine discharge(/;"	s	module:lr_dav_routines
+discharge_temp	lr_dav_routines.f90	/^  subroutine discharge_temp(/;"	s	module:lr_dav_routines
 ecutfock_	lr_variables.f90	/^  REAL(kind=dp) :: ecutfock_$/;"	v	module:lr_variables
 eig_dir	lr_variables.f90	/^  CHARACTER(len=200) :: eig_dir$/;"	v	module:lr_variables
 eign_value	lr_dav_variables.f90	/^        right_M(:,:),       & ! left and right appro. eigen vectors of$/;"	v	module:lr_dav_variables
@@ -133,7 +135,7 @@ lr_apply_liouvillian	lr_apply_liouvillian.f90	/^SUBROUTINE lr_apply_liouvillian(
 lr_apply_liouvillian_gamma	lr_apply_liouvillian.f90	/^  SUBROUTINE lr_apply_liouvillian_gamma(/;"	s	subroutine:lr_apply_liouvillian
 lr_apply_liouvillian_k	lr_apply_liouvillian.f90	/^  SUBROUTINE lr_apply_liouvillian_k(/;"	s	subroutine:lr_apply_liouvillian
 lr_apply_s	lr_us.f90	/^  subroutine lr_apply_s(/;"	s	module:lr_us
-lr_bi_1to1ortho	lr_dav_routines.f90	/^  subroutine lr_bi_1to1ortho(/;"	s	module:lr_dav_routines
+lr_bi_1to1orth	lr_dav_routines.f90	/^  subroutine lr_bi_1to1orth(/;"	s	module:lr_dav_routines
 lr_build_matrix_spectrum	lr_diagonalise.f90	/^SUBROUTINE lr_build_matrix_spectrum(/;"	s
 lr_calc_F	lr_charg_resp.f90	/^  SUBROUTINE lr_calc_F(/;"	s	module:charg_resp
 lr_calc_Fxy	lr_dav_routines.f90	/^  subroutine lr_calc_Fxy(/;"	s	module:lr_dav_routines
@@ -210,6 +212,7 @@ lr_verbosity	lr_variables.f90	/^  INTEGER :: lr_verbosity /;"	v	module:lr_variab
 lr_write_restart	lr_write_restart.f90	/^SUBROUTINE lr_write_restart(/;"	s
 ltammd	lr_variables.f90	/^  LOGICAL :: ltammd /;"	v	module:lr_variables
 lwork	lr_dav_variables.f90	/^             num_basis,toadd,       &   ! total number of basis$/;"	v	module:lr_dav_variables
+max_iter	lr_dav_variables.f90	/^  INTEGER :: num_eign, num_init, num_basis_max,max_iter,/;"	v	module:lr_dav_variables
 n_ipol	lr_variables.f90	/^  INTEGER :: n_ipol$/;"	v	module:lr_variables
 nbrx	lr_variables.f90	/^  INTEGER, PARAMETER:: nbrx=/;"	v	module:lr_variables
 no_hxc	lr_variables.f90	/^  LOGICAL :: no_hxc /;"	v	module:lr_variables
@@ -223,6 +226,7 @@ npw_kk_p	lr_variables.f90	/^       igkk_kk_p(:,:),&$/;"	v	module:lr_variables
 num_basis	lr_dav_variables.f90	/^  INTEGER :: num_basis_/;"	v	module:lr_dav_variables
 num_basis_max	lr_dav_variables.f90	/^  INTEGER :: num_eign, num_init, num_basis_max,/;"	v	module:lr_dav_variables
 num_basis_old	lr_dav_variables.f90	/^  INTEGER :: num_basis_old,/;"	v	module:lr_dav_variables
+num_basis_tot	lr_dav_variables.f90	/^             dav_iter,num_basis_tot /;"	v	module:lr_dav_variables
 num_eign	lr_dav_variables.f90	/^  INTEGER :: num_eign,/;"	v	module:lr_dav_variables
 num_init	lr_dav_variables.f90	/^  INTEGER :: num_eign, num_init,/;"	v	module:lr_dav_variables
 nwordd0psi	lr_variables.f90	/^  INTEGER :: nwordd0psi$/;"	v	module:lr_variables
@@ -232,11 +236,12 @@ omegal	lr_dav_variables.f90	/^        chi_dav(:,:),total_chi(:),norm_F(:),&$/;"	
 omegar	lr_dav_variables.f90	/^        omegal(:),omegar(/;"	v	module:lr_dav_variables
 one_dav_step	lr_dav_routines.f90	/^  subroutine one_dav_step(/;"	s	module:lr_dav_routines
 one_lanczos_step	lr_lanczos.f90	/^  SUBROUTINE one_lanczos_step(/;"	s	module:lr_lanczos
-p_nbnd_occ	lr_dav_variables.f90	/^  INTEGER :: num_eign, num_init, num_basis_max,&$/;"	v	module:lr_dav_variables
+p_nbnd_occ	lr_dav_variables.f90	/^  INTEGER :: num_eign, num_init, num_basis_max,max_iter,&$/;"	v	module:lr_dav_variables
 p_nbnd_virt	lr_dav_variables.f90	/^             p_nbnd_occ,p_nbnd_virt /;"	v	module:lr_dav_variables
 plot_type	lr_variables.f90	/^  INTEGER :: plot_type /;"	v	module:lr_variables
 pol_index	lr_main.f90	/^  INTEGER            :: ip,pol_index,/;"	v	program:lr_main
-poor_of_ram	lr_dav_variables.f90	/^             if_random_init,if_check_her,poor_of_ram$/;"	v	module:lr_dav_variables
+poor_of_ram	lr_dav_variables.f90	/^             if_random_init,if_check_her,poor_of_ram,/;"	v	module:lr_dav_variables
+poor_of_ram2	lr_dav_variables.f90	/^             if_random_init,if_check_her,poor_of_ram,poor_of_ram2$/;"	v	module:lr_dav_variables
 precondition	lr_dav_variables.f90	/^  logical :: precondition,/;"	v	module:lr_dav_variables
 print_clock_lr	print_clock_lr.f90	/^SUBROUTINE print_clock_lr(/;"	s
 print_principle_components	lr_dav_routines.f90	/^  subroutine print_principle_components(/;"	s	module:lr_dav_routines

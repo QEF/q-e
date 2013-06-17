@@ -80,27 +80,20 @@ PROGRAM lr_main
   CALL check_stop_init()
   !
   !   Initialisation of degauss/openshell related stuff
-  !
   CALL lr_init_nfo()
   !
   !   Allocate and zero lr variables
-  !
   CALL lr_alloc_init()
   !
   !   Now print some preamble info about the run to stdout
-  !
   CALL lr_print_preamble()
   !
   !   Read in ground state wavefunctions
-  !
-
   CALL lr_read_wf()
   !
   CALL init_index_over_band(inter_bgrp_comm,nbnd)
   !
   !   Set up initial response orbitals
-  !
-  !
   IF ( test_restart(1) ) THEN
      CALL lr_read_d0psi()
   ELSE
@@ -115,11 +108,9 @@ PROGRAM lr_main
 
   !
   !   Set up initial stuff for derivatives
-  !
   CALL lr_dv_setup()
   !
   !   Coordinates of the read atom, just in case
-  !
   IF (lr_verbosity > 1) THEN
      WRITE(stdout,'(/,5X,"Positions of atoms in internal coordinates")')
      DO ip=1,nat ! I am using ip here as a counter over atoms
@@ -128,31 +119,21 @@ PROGRAM lr_main
   ENDIF
   !
   !   Lanczos loop where the real work happens
-  !
   DO ip=1, n_ipol
-     !
      IF (n_ipol/=1) THEN
         LR_polarization=ip
         pol_index=LR_polarization
      ENDIF
-     !
      IF (charge_response == 1 ) THEN
-        !
         ! Read precalculated beta gamma z
-        !
         CALL read_wT_beta_gamma_z()
         CALL lr_calc_w_T()
      ENDIF
-     !
      IF (test_restart(2)) THEN
-        !
         CALL lr_restart(iter_restart,rflag)
         CALL lr_read_d0psi()
-        !
         WRITE(stdout,'(/5x,"Restarting Lanczos loop",1x,i8)') LR_polarization
-        !
      ELSE
-        !
         CALL lr_read_d0psi()
         evc1(:,:,:,1) = d0psi(:,:,:,pol_index)
         evc1(:,:,:,2) = d0psi(:,:,:,pol_index)
@@ -165,19 +146,14 @@ PROGRAM lr_main
         iter_restart=1
         !
         WRITE(stdout,'(/5x,"Starting Lanczos loop",1x,i8)')   LR_polarization
-        !
      ENDIF
      !
      CALL sd0psi() !after this d0psi is Sd0psi 
      !OBM:Check if this is really necessary
-     !
      lancz_loop1 : DO iteration = iter_restart, itermax
-        !
         LR_iteration=iteration
         WRITE(stdout,'(/5x,"Lanczos iteration:",1x,i8,3x"Pol:",i1,i8)') LR_iteration, ip
-        !
         CALL one_lanczos_step()
-        !
         IF ( lr_io_level > 0 .and. (mod(LR_iteration,restart_step)==0 .or. &
              LR_iteration==itermax .or. LR_iteration==1) )&
              CALL lr_write_restart()
@@ -185,41 +161,26 @@ PROGRAM lr_main
         ! Check to see if the wall time limit has been exceeded.
         ! if it has exit gracefully saving the last set of Lanczos
         ! iterations.
-        !
         IF ( check_stop_now() ) THEN
-           !
            CALL lr_write_restart()
-           !
            !   Deallocate pw variables
-           !
            CALL clean_pw( .FALSE. )
-           !
            CALL stop_clock('lr_main')
-           !
            CALL print_clock_lr()
-           !
            CALL stop_lr( .FALSE. )
-           !
         ENDIF
      ENDDO lancz_loop1
      !
      IF (charge_response == 1 ) THEN
         !
         !  Write the apropriate charge density plot.
-        !        
         CALL lr_dump_rho (plot_type)
-        !
      ENDIF
-     !
-     !
      IF (project) THEN
         !
         !  Calculate projections onto virtual states if required.
-        !
         CALL lr_calc_project(ip)
-        !
      ENDIF
-     !
   ENDDO
   !
   !
@@ -228,24 +189,16 @@ PROGRAM lr_main
   IF (project .and. n_ipol == 3) THEN
      !
      !  Final projection and report (if required).
-     !
      CALL lr_calc_project(4)
-     !
   ENDIF
 
   !
   !   Deallocate pw variables
-  !
   CALL clean_pw( .false. )
-  !
   WRITE(stdout,'(5x,"Finished linear response calculation...")')
-  !
   CALL stop_clock('lr_main')
-  !
   CALL print_clock_lr()
-  !
   CALL stop_lr( .TRUE. )
-  !
   IF (lr_verbosity > 5) THEN
      WRITE(stdout,'("<end of lr_main>")')
   ENDIF
