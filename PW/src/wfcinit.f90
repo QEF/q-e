@@ -223,7 +223,6 @@ SUBROUTINE init_wfc ( ik )
             !
             DO ipol = 1, npol
                !
-!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig, rr, arg)
                DO ig = 1, npw
                   !
                   rr  = randy()
@@ -233,7 +232,6 @@ SUBROUTINE init_wfc ( ik )
                      ( 1.0_DP + 0.05_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ,kind=DP) ) 
                   !
                END DO
-!$OMP END PARALLEL DO
                !
             END DO
             !
@@ -252,7 +250,6 @@ SUBROUTINE init_wfc ( ik )
         ! 
         wfcatom(:,ipol,ibnd) = (0.0_dp, 0.0_dp)
         !
-!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig, rr, arg)
         DO ig = 1, npw
            !
            rr  = randy()
@@ -264,7 +261,6 @@ SUBROUTINE init_wfc ( ik )
                          ( xk(2,ik) + g(2,igk(ig)) )**2 + &
                          ( xk(3,ik) + g(3,igk(ig)) )**2 + 1.0_DP )
         END DO
-!$OMP END PARALLEL DO
         !
      END DO
      !
