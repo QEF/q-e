@@ -21,7 +21,7 @@ SUBROUTINE set_psi_in(ik,l,j,e,psi_out,psi_out_rel)
   REAL(DP) :: psi_out_rel(ndmx) ! output: the function psi (small component).
   REAL(DP) :: psi_dir(ndmx,2) ! auxiliary function.
   REAL(DP) :: ze2, jnor, thrdum=0.0_dp
-  INTEGER  :: n, nstop
+  INTEGER  :: n, i, nstop
 
   psi_out_rel=0.0_DP
   IF (rel == 1) THEN
@@ -52,6 +52,19 @@ SUBROUTINE set_psi_in(ik,l,j,e,psi_out,psi_out_rel)
         psi_out_rel(n)=psi_out_rel(n)*0.5_dp/jnor
      ENDDO
   ENDIF
+  !
+  !  Set the wavefunction to zero if it diverges too much. In any case
+  !  this part of the scattering wavefunction is not used and generates 
+  !  noise in the code.
+  !
+  Do n=ik+1,grid%mesh
+     IF (ABS(psi_out(n))>1.d9) THEN
+        DO i=n,grid%mesh
+           psi_out(n)=0.0_DP
+           IF (rel==2) psi_out_rel(n)=0.0_DP
+        ENDDO
+     ENDIF
+  ENDDO 
 
   RETURN
 END SUBROUTINE set_psi_in
