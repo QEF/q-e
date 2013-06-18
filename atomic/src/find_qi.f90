@@ -64,9 +64,10 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
   dq_0=0.05_dp
   imax=600
   !
-  !    prepare for the first iteration  
+  !    prepare for the first iteration. For too small q the function could
+  !    have noise.
   !
-  qmax=0.1_dp
+  qmax=0.3_dp
   call sph_bes(7,grid%r(ik-3),qmax,lam,j1)
   j1(1:7) = j1(1:7)*grid%r(ik-3:ik+3)**flag
   logdermax=compute_log(j1,grid%r(ik),grid%dx)-logderae
