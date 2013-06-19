@@ -4,27 +4,57 @@ Info by Filippo Spiga, Jun. 2013, valid for any version of QE after 5.
 Machine name    : MonteRosa at CSCS(CH)
 Machine spec    : http://user.cscs.ch/hardware/monte_rosa_cray_xe6/index.html
 
+IMPORTANT NOTE: other CRAY XE6 systems might have different modules, please
+                check for equivalent if the ones mentioned are missing.
+                
+
+0. Architecture peculiarities
+
+CRAY XE6 systems currently in operation are equipped with XE6 nodes that have 
+two 16-core AMD. Interlagos is composed of a number of "Bulldozer modules" 
+or "Compute Unit". A compute unit has shared and dedicated components:
+- there are two independent integer units
+- a SHARED 256-bit Floating Point pipeline supporting SSEx and AVX extension
+
+For this reason it is better to use the CPU in SINGLE STREAM MODE (aprun -j 1)
+reducing the maximum number of OpenMP thread per node from 32 to 16 (split 
+across two two sockets) being able to exploit at maximum the floating-point 
+pipeline. In this way the L2 cache is effectively twice as large and the 
+peak performance (in double-precision)should not be affected.
+
+The interconnection topology might have "holes" due to service nodes and I/O 
+nodes. Cray's Application Level Placement Scheduler (ALPS) should be able to
+support a resource manager to identify a subset of free nodes in the cluster 
+to minimize hops. Please refer to specific user-guide provided by your HPC
+centre.
+
 
 1. Compile the code
 
-Suggested compiler : 
+1.1 Suggested compiler : 
 
-## PGI ##
-
- 
-
-## INTEL ##
+All the compilers tested work. I prefer to use PGI (or eventually INTEL).
 
 
+1.2 MonteRosa modules :
 
-## CRAY ##
+CRAY is the default after login...
 
+$ module switch PrgEnv-cray PrgEnv-pgi
+$ module unload atp totalview-support xt-totalview hss-llm
 
+$ ./configure ARCH=crayxt --enable-openmp --enable-parallel --with-scalapack
 
-## GNU ##
+$ ./configure ARCH=crayxt --enable-openmp --enable-parallel --with-scalapack --with-elpa
 
+it is possible to try to push more aggressive PGI compiler flags and
+optimizations by editing make.sys directly...
 
-Executables will be located under "./bin"
+CFLAGS = -Minfo=all -Mneginfo=all -O3 -fastsse -Mipa=fast,inline -tp bulldozer-64 $(DFLAGS) $(IFLAGS)
+F90FLAGS = -Minfo=all -Mneginfo=all -O3 -fastsse -Mipa=fast,inline -tp bulldozer-64 -Mcache_align -r8 -Mpreprocess -mp=nonuma $(FDFLAGS) $(IFLAGS) $(MODFLAGS)
+FFLAGS = -Minfo=all -Mneginfo=all -O3 -fastsse -Mipa=fast,inline -tp bulldozer-64 -r8 -mp=nonuma
+
+Real benefits have to be proven...
 
 
 2. Good practices

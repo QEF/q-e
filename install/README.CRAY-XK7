@@ -1,8 +1,5 @@
 Info by Filippo Spiga, Jun. 2013, valid for any version of QE after 5.
 
-
-0. Tested environments
-
 Machine name    : TODI at CSCS (CH)
 Machine spec    : http://user.cscs.ch/hardware/todi_cray_xk7/index.html
 
@@ -13,143 +10,89 @@ IMPORTANT NOTE: other CRAY XK7 systems might have different modules, please
                 check for equivalent if the ones mentioned are missing
 
  
+0. Architecture peculiarities
+
+CRAY XK7 systems currently in operation are equipped with one AMD 16-core
+Interlagos and one NVIDIA K20x. The XK7 blade layout is then similar to the
+CRAY XE6 one.
+
+As remind, Interlagos is composed of a number of "Bulldozer modules" or 
+"Compute Unit". A compute unit has shared and dedicated components:
+- there are two independent integer units
+- a SHARED 256-bit Floating Point pipeline supporting SSEx and AVX extension
+
+For this reason it is better to use the CPU in SINGLE STREAM MODE (aprun -j 1)
+reducing the maximum number of OpenMP thread per node from 16 to 8 being able
+to exploit at maximum the floating-point pipeline. In this way the L2 cache 
+is effectively twice as large and the peak performance (in double-precision)
+should not be affected.
+
+The interconnection topology might have "holes" due to service nodes and I/O 
+nodes. Cray's Application Level Placement Scheduler (ALPS) should be able to
+support a resource manager to identify a subset of free nodes in the cluster 
+to minimize hops. Please refer to specific user-guide provided by your HPC
+centre.
 
 1. Compile the code
 
-Suggested compiler : PGI
+1.1 Suggested compiler : 
 
+Up to now, extensive tests proven that Intel compiler is the best choice now 
+to exploit GPU capabilities of QE-GPU on CRAY XK7 nodes. 
 
-## PGI (usually the default after login) ##
+NODE: Despite the selected compiler is Intel, xt-libsci (usually 12.0.02 or 
+      12.0.03) is used.
 
-module load cudatoolkit
-module unload atp totalview-support xt-totalview hss-llm
-module load gcc/4.4.4
+Intel:
+- Compile ok
+- CPU execution ok
+- GPU execution without CRAY_CUDA_PROXY: ok
+- GPU execution with CRAY_CUDA_PROXY: ok
 
-make -f Makefile.gpu distclean
-cd GPU/
-./configure --enable-parallel --enable-openmp --enable-cuda --with-gpu-arch=35 --with-cuda-dir=${CRAY_CUDATOOLKIT_DIR} --disable-magma --enable-phigemm  --with-scalapack --disable-profiling  ARCH=crayxt
-cd ../
-make -f Makefile.gpu pw-gpu
-cp GPU/PW/pw-gpu.x ${FINALDIR}/pw-mpi-omp-gpu-scalapack.x
+PGI, CRAY:
+- Compile ok
+- CPU execution ok
+- GPU execution without CRAY_CUDA_PROXY: *KO*
+- GPU execution with CRAY_CUDA_PROXY: *KO*
 
-make -f Makefile.gpu distclean
-cd GPU/
-./configure --enable-parallel --enable-openmp --enable-cuda --with-gpu-arch=35 --with-cuda-dir=${CRAY_CUDATOOLKIT_DIR} --disable-magma --enable-phigemm  --with-scalapack --disable-profiling --with-elpa  ARCH=crayxt
-cd ../
-make -f Makefile.gpu pw-gpu
-cp GPU/PW/pw-gpu.x ${FINALDIR}/pw-mpi-omp-gpu-elpa.x
+GPU: not tested yet
 
-make -f Makefile.gpu distclean
-cd GPU/
-./configure --enable-parallel --enable-openmp --enable-cuda --with-gpu-arch=35 --with-cuda-dir=${CRAY_CUDATOOLKIT_DIR} --enable-magma --enable-phigemm  --without-scalapack --disable-profiling  --with-internal-cblas ARCH=crayxt
-cd ../
-make -f Makefile.gpu pw-gpu
-cp GPU/PW/pw-gpu.x ${FINALDIR}/pw-mpi-omp-gpu-magma.x
+NOTE: Priority will be given to Intel compiler since future generations of 
+      CRAY will be equipped with Intel processors (see CRAY CX30).
+        
 
+1.2 Titan (ORNL) :
 
-## INTEL ##
+PGI is the default after login...
 
-module switch PrgEnv-pgi PrgEnv-intel
-module load cudatoolkit
-module unload atp totalview-support xt-totalview hss-llm
-module load gcc/4.4.4
+$ module switch PrgEnv-pgi PrgEnv-intel
+$ module load cudatoolkit
+$ module unload atp totalview-support xt-totalview hss-llm
+$ module load gcc/4.4.4
 
-make -f Makefile.gpu distclean
-cd GPU/
-./configure --enable-parallel --enable-openmp --enable-cuda --with-gpu-arch=35 --with-cuda-dir=${CRAY_CUDATOOLKIT_DIR} --disable-magma --enable-phigemm  --with-scalapack --disable-profiling  ARCH=crayxt
-cd ../
-make -f Makefile.gpu pw-gpu
-cp GPU/PW/pw-gpu.x ${FINALDIR}/pw-mpi-omp-gpu-scalapack.x
+$ export FINALDIR=$HOME/whatever
+$ mkdir -p $FINALDIR
 
-make -f Makefile.gpu distclean
-cd GPU/
-./configure --enable-parallel --enable-openmp --enable-cuda --with-gpu-arch=35 --with-cuda-dir=${CRAY_CUDATOOLKIT_DIR} --disable-magma --enable-phigemm  --with-scalapack --disable-profiling --with-elpa  ARCH=crayxt
-cd ../
-make -f Makefile.gpu pw-gpu
-cp GPU/PW/pw-gpu.x ${FINALDIR}/pw-mpi-omp-gpu-elpa.x
+$ make -f Makefile.gpu distclean
+$ cd GPU/
+$ ./configure --enable-parallel --enable-openmp --enable-cuda --with-gpu-arch=35 --with-cuda-dir=${CRAY_CUDATOOLKIT_DIR} --disable-magma --enable-phigemm  --with-scalapack --disable-profiling  ARCH=crayxt
+$ cd ../
+$ make -f Makefile.gpu pw-gpu
+$ cp GPU/PW/pw-gpu.x ${FINALDIR}/pw-mpi-omp-gpu-scalapack.x
 
-make -f Makefile.gpu distclean
-cd GPU/
-./configure --enable-parallel --enable-openmp --enable-cuda --with-gpu-arch=35 --with-cuda-dir=${CRAY_CUDATOOLKIT_DIR} --enable-magma --enable-phigemm  --without-scalapack --disable-profiling  --with-internal-cblas ARCH=crayxt
-cd ../
-make -f Makefile.gpu pw-gpu
-cp GPU/PW/pw-gpu.x ${FINALDIR}/pw-mpi-omp-gpu-magma.x
+$ make -f Makefile.gpu distclean
+$ cd GPU/
+$ ./configure --enable-parallel --enable-openmp --enable-cuda --with-gpu-arch=35 --with-cuda-dir=${CRAY_CUDATOOLKIT_DIR} --disable-magma --enable-phigemm  --with-scalapack --disable-profiling --with-elpa  ARCH=crayxt
+$ cd ../
+$ make -f Makefile.gpu pw-gpu
+$ cp GPU/PW/pw-gpu.x ${FINALDIR}/pw-mpi-omp-gpu-elpa.x
 
-
-## CRAY ##
-
-module load cudatoolkit
-module unload atp totalview-support xt-totalview hss-llm
-module load gcc/4.4.4
-
-make -f Makefile.gpu distclean
-cd GPU/
-./configure --enable-parallel --enable-openmp --enable-cuda --with-gpu-arch=35 --with-cuda-dir=${CRAY_CUDATOOLKIT_DIR} --disable-magma --enable-phigemm  --with-scalapack --disable-profiling  --disable-wrappers ARCH=crayxt
-cd ../
-make -f Makefile.gpu pw-gpu
-cp GPU/PW/pw-gpu.x ${FINALDIR}/pw-mpi-omp-gpu-scalapack.x
-
-make -f Makefile.gpu distclean
-cd GPU/
-./configure --enable-parallel --enable-openmp --enable-cuda --with-gpu-arch=35 --with-cuda-dir=${CRAY_CUDATOOLKIT_DIR} --disable-magma --enable-phigemm  --with-scalapack --disable-profiling --with-elpa  --disable-wrappers ARCH=crayxt
-cd ../
-make -f Makefile.gpu pw-gpu
-cp GPU/PW/pw-gpu.x ${FINALDIR}/pw-mpi-omp-gpu-elpa.x
-
-make -f Makefile.gpu distclean
-cd GPU/
-./configure --enable-parallel --enable-openmp --enable-cuda --with-gpu-arch=35 --with-cuda-dir=${CRAY_CUDATOOLKIT_DIR} --enable-magma --enable-phigemm  --without-scalapack --disable-profiling --disable-wrappers   --with-internal-cblas ARCH=crayxt
-cd ../
-make -f Makefile.gpu pw-gpu
-cp GPU/PW/pw-gpu.x ${FINALDIR}/pw-mpi-omp-gpu-magma.x
-
-
-## GNU ##
-
-module switch PrgEnv-pgi PrgEnv-gnu
-module load cudatoolkit
-module unload atp totalview-support xt-totalview hss-llm
-module load fftw
-
-export CC="cc"
-export FC="ftn"
-export CXX="CC"
-export MPICC="cc"
-export MPIF90="ftn"
-export CFLAGS="-O3 -fopenmp"
-export FCLAGS="-O3 -fopenmp"
-export CXXFLAGS="-O3 -fopenmp"
-
-make -f Makefile.gpu distclean
-cd GPU/
-./configure --enable-parallel --enable-openmp --enable-cuda --with-gpu-arch=35 --with-cuda-dir=${CRAY_CUDATOOLKIT_DIR} --disable-magma --enable-phigemm  --with-scalapack --disable-profiling  ARCH=crayxt
-cd ../
-make -f Makefile.gpu pw-gpu
-cp GPU/PW/pw-gpu.x ${FINALDIR}/pw-mpi-omp-gpu-scalapack.x
-
-make -f Makefile.gpu distclean
-cd GPU/
-./configure --enable-parallel --enable-openmp --enable-cuda --with-gpu-arch=35 --with-cuda-dir=${CRAY_CUDATOOLKIT_DIR} --disable-magma --enable-phigemm  --with-scalapack --disable-profiling --with-elpa  ARCH=crayxt
-cd ../
-make -f Makefile.gpu pw-gpu
-cp GPU/PW/pw-gpu.x ${FINALDIR}/pw-mpi-omp-gpu-elpa.x
-
-make -f Makefile.gpu distclean
-cd GPU/
-./configure --enable-parallel --enable-openmp --enable-cuda --with-gpu-arch=35 --with-cuda-dir=${CRAY_CUDATOOLKIT_DIR} --enable-magma --enable-phigemm  --without-scalapack --disable-profiling  --with-internal-cblas ARCH=crayxt
-cd ../
-make -f Makefile.gpu pw-gpu
-cp GPU/PW/pw-gpu.x ${FINALDIR}/pw-mpi-omp-gpu-magma.x
-
-
-
-IMPORTANT NOTE : Executables will be located under "./bin"
-
-IMPORTANT NOTE : only pw-gpu.x, neb-gpu.x, ph-gpu.x use extensively 
-                 the GPU card in multiple sections of the code. All 
-                 the other executable exploit the GPU only by the 
-                 phiGEMM library (for now)
-
+$ make -f Makefile.gpu distclean
+$ cd GPU/
+$ ./configure --enable-parallel --enable-openmp --enable-cuda --with-gpu-arch=35 --with-cuda-dir=${CRAY_CUDATOOLKIT_DIR} --enable-magma --enable-phigemm  --without-scalapack --disable-profiling  --with-internal-cblas ARCH=crayxt
+$ cd ../
+$ make -f Makefile.gpu pw-gpu
+$ cp GPU/PW/pw-gpu.x ${FINALDIR}/pw-mpi-omp-gpu-magma.x
 
     
 2. Good practices
@@ -159,43 +102,56 @@ IMPORTANT NOTE : only pw-gpu.x, neb-gpu.x, ph-gpu.x use extensively
   to 2.
 
 - If the calculation is not too memory demanding, it is possible to increase 
-  the ratio MPI:GPU up to 4. The new Hyper-Q technology will help to leverage 
-  and exploit the GPU at its best.
+  the ratio MPI:GPU up to 4.
   
 - In order to share the GPU between multiple MPI processes within the node is 
   mandatory to export the variable CRAY_CUDA_PROXY ("export CRAY_CUDA_PROXY=1")
 
+- compiling with hugepage support does not produce big benefits, need 
+  more testing...
 
 
-3.a Example scripts (CSCS, SLURM)
+3 Example scripts (CSCS, SLURM)
 
-#SBATCH --job-name="QE-BENCH-SPIGA"
-#SBATCH --nodes=64
-# REMEMBER: --ntasks-per-node * --cpus-per-task <= 16
-#SBATCH --ntasks-per-node=2
-#SBATCH --cpus-per-task=8
-#SBATCH --time=02:00:00
+3.1 TODI (SLURM)
+
+#!/bin/bash
+
+# Example requesting 4 nodes (32 cores in total in SINGLE STREAM MODE 
+# using 4 OpenMP thread per MPI), 2 MPI process per node (8 in total)
+# sharing the NVIDIA K20x among them.
+
+#SBATCH --job-name="QE-TEST"
+#SBATCH --nodes=4
+#SBATCH --time=00:25:00
 #SBATCH --output=QE-BENCH.%j.o
 #SBATCH --error=QE-BENCH.%j.e
 #SBATCH --account=<...>
 
-echo "The current job ID is $SLURM_JOB_ID"
-echo "Running on $SLURM_NNODES nodes"
-echo "Using $SLURM_NTASKS_PER_NODE tasks per node"
-echo "A total of $SLURM_NPROCS tasks is used"
-
-export OMP_NUM_THREADS=8
 export CRAY_CUDA_PROXY=1
 
-export MALLOC_MMAP_MAX_=0
-export MALLOC_TRIM_THRESHOLD_=536870912
-#export MPICH_VERSION_DISPLAY=1
-#export MPICH_ENV_DISPLAY=1
+#export MALLOC_MMAP_MAX_=0
+#export MALLOC_TRIM_THRESHOLD_=536870912
 
-aprun -n $SLURM_NPROCS -N 2 -d 8 ./pw.x -input <...> | tee out
+export MPICH_VERSION_DISPLAY=1
+export MPICH_ENV_DISPLAY=1
+export MPICH_CPUMASK_DISPLAY=1
+
+# REMEMBER...
+# '-n' : number of PEs or total MPI processes
+# '-d' : number OpenMP thread per node
+
+#export OMP_NUM_THREADS=8
+#aprun -n 4 -j 1 -d 8 ./pw-mpi-omp-gpu.x -input ausurf_gamma.in | tee out.GPU.1-PER-NODE.$SLURM_JOB_ID.v1
+
+export OMP_NUM_THREADS=4
+aprun -n 8 -j 1 -d 4 ./pw-mpi-omp-gpu.x -input ausurf_gamma.in | tee out.GPU.2-PER-NODE.$SLURM_JOB_ID.v1
+
+#export OMP_NUM_THREADS=2
+#aprun -n 16 -j 1 -d 2 ./pw-mpi-omp-gpu.x -input ausurf_gamma.in | tee out.GPU.4-PER-NODE.$SLURM_JOB_ID.v1
 
 
-3.b Example scripts (TITAN, PBS)
+3.2 TITAN (PBS Pro)
 
 IMPORTANT NOTE : The per node charging factor changed from 16 to 30 to 
                  reflect the availability of GPU/Accelerators. Job utilization 
@@ -206,28 +162,28 @@ IMPORTANT NOTE : project granted at ORNL usually have 3 letters (XXX)
                  and three digits (YYY)
 
 #!/bin/csh
-#PBS -A XXXYYY
-#PBS -N QE-BENCH-SPIGA
+
+# Example requesting 8 nodes (64 cores in total in SINGLE STREAM MODE 
+# using 8 OpenMP thread per MPI), 1 MPI process per node (8 in total)
+# dedicating the full NVIDIA K20x resource to a single MPI process.
+
+#PBS -A <XXXYYY>
+#PBS -N QE-BENCH
 #PBS -j oe
-#PBS -l walltime=2:00:00,nodes=8
+#PBS -l walltime=1:00:00,nodes=8
 
 cd $PBS_O_WORKDIR
 
-setenv OMP_NUM_THREADS 4
-setenv MKL_NUM_THREADS 4
 
+setenv CRAY_CUDA_PROXY 1
 setenv MPICH_ENV_DISPLAY 1
-setenv PMI_DEBUG 1
 
-# REMEMBER TO CALCULATE...
-# '-n' : number of PEs or total MPI processes ('-N' \times 'nodes') 
-# '-N' : number MPI task per node
+# REMEMBER...
+# '-n' : number of PEs or total MPI processes
 # '-d' : number OpenMP thread per node
-# so...
-# nodes \times 16 = total number of cores requested
-# '-d' \times '-N' == 16
  
-aprun -n 32 -N 4 -d 4 ./pw-gpu.x -input <...> | tee out.$PBS_JOBID
+setenv OMP_NUM_THREADS 8
+aprun -n 8 -j 1 -d 8 ./pw-mpi-omp-gpu.x -input ausurf_gamma.in | tee out.GPU.1-PER-NODE.$PBS_JOBID.v1
 
 
 IMPORTANT NOTE : refer to this link 
@@ -236,3 +192,5 @@ IMPORTANT NOTE : refer to this link
 
 
 4. Benchmarks 
+
+TO BE ADDED
