@@ -1,4 +1,4 @@
-Info by Filippo Spiga, Jun. 2013, valid for any version of QE after 5.
+Info by F. Spiga (spiga -dot- filippo -at- gmail -dot-  com) -- Jun 19, 2013
 
 Machine name    : TODI at CSCS (CH)
 Machine spec    : http://user.cscs.ch/hardware/todi_cray_xk7/index.html
@@ -6,8 +6,9 @@ Machine spec    : http://user.cscs.ch/hardware/todi_cray_xk7/index.html
 Machine name    : TITAN at Oak Ridge National laboratory (USA)
 Machine spec    : https://www.olcf.ornl.gov/computing-resources/titan-cray-xk7/
 
-IMPORTANT NOTE: other CRAY XK7 systems might have different modules, please
-                check for equivalent if the ones mentioned are missing
+# IMPORTANT NOTE: 
+Other CRAY XK7 systems might have different modules, please check for 
+equivalent if the ones mentioned are missing
 
  
 0. Architecture peculiarities
@@ -35,30 +36,30 @@ centre.
 
 1. Compile the code
 
-1.1 Suggested compiler : 
-
 Up to now, extensive tests proven that Intel compiler is the best choice now 
 to exploit GPU capabilities of QE-GPU on CRAY XK7 nodes. 
 
-NODE: Despite the selected compiler is Intel, xt-libsci (usually 12.0.02 or 
-      12.0.03) is used.
+# NOTE: 
+Despite the selected compiler is Intel, xt-libsci (usually 12.0.02 or 12.0.03)
+is used.
 
 Intel:
-- Compile ok
-- CPU execution ok
+- compile: ok
+- CPU execution: ok
 - GPU execution without CRAY_CUDA_PROXY: ok
 - GPU execution with CRAY_CUDA_PROXY: ok
 
 PGI, CRAY:
-- Compile ok
-- CPU execution ok
+- compile: ok
+- CPU execution: ok
 - GPU execution without CRAY_CUDA_PROXY: *KO*
 - GPU execution with CRAY_CUDA_PROXY: *KO*
 
-GPU: not tested yet
+GNU: not tested yet
 
-NOTE: Priority will be given to Intel compiler since future generations of 
-      CRAY will be equipped with Intel processors (see CRAY CX30).
+# NOTE:
+Priority will be given to Intel compiler since future generations of CRAY 
+will be equipped with Intel processors (see CRAY XC30).
         
 
 1.2 Titan (ORNL) :
@@ -153,13 +154,13 @@ aprun -n 8 -j 1 -d 4 ./pw-mpi-omp-gpu.x -input ausurf_gamma.in | tee out.GPU.2-P
 
 3.2 TITAN (PBS Pro)
 
-IMPORTANT NOTE : The per node charging factor changed from 16 to 30 to 
-                 reflect the availability of GPU/Accelerators. Job utilization 
-                 is now calculated via the formula: 
-                          30 * walltime * number of requested nodes 
+# IMPORTANT NOTE (1): 
+The per node charging factor changed from 16 to 30 to reflect the availability
+of GPU/Accelerators. Job utilization is now calculated via the formula: 
+      30 * walltime * number of requested nodes 
 
-IMPORTANT NOTE : project granted at ORNL usually have 3 letters (XXX) 
-                 and three digits (YYY)
+# IMPORTANT NOTE (2): 
+Project granted at ORNL usually have 3 letters (XXX) and three digits (YYY)
 
 #!/bin/csh
 
@@ -186,11 +187,12 @@ setenv OMP_NUM_THREADS 8
 aprun -n 8 -j 1 -d 8 ./pw-mpi-omp-gpu.x -input ausurf_gamma.in | tee out.GPU.1-PER-NODE.$PBS_JOBID.v1
 
 
-IMPORTANT NOTE : refer to this link 
-                    https://www.olcf.ornl.gov/kb_articles/spider-the-center-wide-lustre-file-system/
-                 about the fileystem management and availability
+# IMPORTANT NOTE: 
+refer to this link 
+   https://www.olcf.ornl.gov/kb_articles/spider-the-center-wide-lustre-file-system/
+about the fileystem management and availability
 
 
 4. Benchmarks 
 
-TO BE ADDED
+[TO BE ADDED]
