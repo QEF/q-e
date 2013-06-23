@@ -1364,8 +1364,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    default { 1.D-6 }
 	    info {
 		Convergence threshold for selfconsistency:
-		estimated energy error < conv_thr
-                (note that conv_thr is extensive, like the total energy)
+		   estimated energy error < conv_thr
+                (note that conv_thr is extensive, like the total energy).
+                For non-self-consistent calculations, conv_thr is used
+                to set the default value of the threshold (ethr) for
+                iterative diagonalizazion: see diago_thr_init
 	    }
 	}
 	
@@ -1461,14 +1464,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 	var diago_thr_init -type REAL {
 	    info {
-		Convergence threshold for iterative diagonalization
+		Convergence threshold (ethr) for iterative diagonalization
 		(the check is on eigenvalue convergence).
 		For scf calculations: default is 1.D-2 if starting from a
 		superposition of atomic orbitals; 1.D-5 if starting from a
-		charge density. During self consistency the threshold (ethr)
+		charge density. During self consistency the threshold
 		is automatically reduced (but never below 1.D-13) when 
                 approaching convergence.
-                For non-scf calculations: default is conv_thr /N elec .
+                For non-scf calculations: default is (conv_thr/N elec)/10.
 	    }
 	}
 
