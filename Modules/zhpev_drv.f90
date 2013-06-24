@@ -45,6 +45,7 @@ CONTAINS
       !
 
      USE kinds,     ONLY : DP
+     USE io_global, ONLY : stdout
 
       IMPLICIT NONE
 
@@ -467,6 +468,7 @@ CONTAINS
    SUBROUTINE pzupgtr( n, nrl, ap, lda, tau, q, ldq, nproc, me, comm)
 
      USE kinds,     ONLY : DP
+     USE io_global, ONLY : stdout
 !
 !  Parallel MPI version of the LAPACK routine ZUPGTR
 !
@@ -753,6 +755,7 @@ CONTAINS
 !     Courant Institute, Argonne National Lab, and Rice University
 !
      USE kinds,     ONLY : DP
+     USE io_global, ONLY : stdout
 
       IMPLICIT NONE
 
@@ -1387,6 +1390,7 @@ CONTAINS
    SUBROUTINE zhpev_drv( JOBZ, UPLO, N, AP, W, Z, LDZ )
 
      USE kinds,     ONLY : DP
+     USE io_global, ONLY : stdout
 
         IMPLICIT NONE
 
@@ -1458,7 +1462,11 @@ CONTAINS
   SUBROUTINE pzheevd_drv( tv, n, nb, h, w, ortho_cntx )
 
      USE kinds,     ONLY : DP
-
+     USE mp_global, ONLY : ortho_comm
+     USE mp,        ONLY : mp_barrier
+#ifdef __ELPA
+     USE elpa1
+#endif
      IMPLICIT NONE
      
      LOGICAL, INTENT(IN)  :: tv
@@ -1473,7 +1481,7 @@ CONTAINS
 
      COMPLEX(DP) :: ztmp( 4 )
      REAL(DP)    :: rtmp( 4 )
-     INTEGER     :: itmp( 4 )
+     INTEGER     :: itmp( 4 ),ldw
      COMPLEX(DP), ALLOCATABLE :: work(:)
      COMPLEX(DP), ALLOCATABLE :: v(:,:)
      REAL(DP),    ALLOCATABLE :: rwork(:)
@@ -1481,6 +1489,10 @@ CONTAINS
      INTEGER     :: LWORK, LRWORK, LIWORK
      INTEGER     :: desch( 10 ), info
      CHARACTER   :: jobv
+#ifdef __ELPA
+     INTEGER     :: nprow,npcol,my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols
+#endif 
+
      !
      IF( tv ) THEN
         ALLOCATE( v( SIZE( h, 1 ), SIZE( h, 2 ) ) )
@@ -1489,11 +1501,23 @@ CONTAINS
         CALL errore( ' pzheevd_drv ', ' pzheevd does not compute eigenvalue only ', ABS( info ) )
      END IF
 
-     CALL descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, SIZE( h, 1 ) , info )
+     call descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, size(h,1), info )
+#ifdef __ELPA
+     CALL BLACS_Gridinfo( ortho_cntx, nprow, npcol, my_prow, my_pcol )
+
+     call GET_ELPA_ROW_COL_COMMS(ortho_comm, my_prow, my_pcol,mpi_comm_rows,mpi_comm_cols)
+
+     call solve_evp_complex(n, n, h, size(h,1), w, v, size(h,1), nb, &
+                          mpi_comm_rows, mpi_comm_cols)
+     h = v
+
+#else
+!
 
      lwork = -1
      lrwork = -1
      liwork = -1
+     !
      CALL PZHEEVD( 'V', 'L', n, h, 1, 1, desch, w, v, 1, 1, &
                    desch, ztmp, LWORK, rtmp, LRWORK, itmp, LIWORK, INFO )
 
@@ -1510,13 +1534,13 @@ CONTAINS
      CALL PZHEEVD( 'V', 'L', n, h, 1, 1, desch, w, v, 1, 1, &
                    desch, work, LWORK, rwork, LRWORK, iwork, LIWORK, INFO )
 
-     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' PZHEEVD ', ABS( info ) )
+    IF( info /= 0 ) CALL errore( ' cdiaghg ', ' PZHEEVD ', ABS( info ) )
 
      IF( tv ) h = v
-
-     DEALLOCATE( work )
-     DEALLOCATE( rwork )
-     DEALLOCATE( iwork )
+#endif
+     IF( ALLOCATED (rwork) )DEALLOCATE( work )
+     IF ( ALLOCATED (rwork) )DEALLOCATE( rwork )
+     IF ( ALLOCATED (iwork) )DEALLOCATE( iwork )
      IF( ALLOCATED( v ) ) DEALLOCATE( v )
      RETURN
   END SUBROUTINE pzheevd_drv
