@@ -60,8 +60,8 @@ SUBROUTINE set_psi_in(ik,l,j,e,psi_out,psi_out_rel)
   Do n=ik+1,grid%mesh
      IF (ABS(psi_out(n))>1.d9) THEN
         DO i=n,grid%mesh
-           psi_out(n)=0.0_DP
-           IF (rel==2) psi_out_rel(n)=0.0_DP
+           psi_out(i)=0.0_DP
+           IF (rel==2) psi_out_rel(i)=0.0_DP
         ENDDO
      ENDIF
   ENDDO 
