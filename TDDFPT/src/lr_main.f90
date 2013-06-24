@@ -55,7 +55,7 @@ PROGRAM lr_main
   !
   INTEGER            :: ip,pol_index,ibnd_occ,ibnd_virt,ibnd
   INTEGER            :: iter_restart,iteration
-  LOGICAL            :: rflag, nomsg
+  LOGICAL            :: rflag, nomsg, tg_tmp
   COMPLEX(kind=dp)   :: sum_F,sum_c
   !
   !
@@ -93,12 +93,14 @@ PROGRAM lr_main
   !
   CALL init_index_over_band(inter_bgrp_comm,nbnd)
   !
+  tg_tmp = dffts%have_task_groups
   !   Set up initial response orbitals
   IF ( test_restart(1) ) THEN
      CALL lr_read_d0psi()
   ELSE
      CALL lr_solve_e()
   ENDIF
+  dffts%have_task_groups = tg_tmp
   !
   DEALLOCATE( psic )
   !

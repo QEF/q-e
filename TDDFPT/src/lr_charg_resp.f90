@@ -299,7 +299,10 @@ CONTAINS
     IF (lr_verbosity > 5) THEN
        WRITE(stdout,'("<lr_calc_w_T>")')
     ENDIF
-    IF (omeg == 0.D0) RETURN
+    IF (omeg == 0.D0) THEN
+       CALL stop_clock( 'post-processing' )
+       RETURN
+    END IF
     !
     ALLOCATE(a(itermax_int))
     ALLOCATE(b(itermax_int))
@@ -1506,8 +1509,8 @@ CONTAINS
     WRITE(158,'(a)') 'END_DATAGRID_3D'
     WRITE(158,'(a)') 'END_BLOCK_DATAGRID_3D'
 #endif
-    RETURN
     CALL stop_clock( 'post-processing' )
+    RETURN
     !
 501 CALL errore ('lr_dump_rho_tot_xyzd', 'Unable to open file for writing', 1 )
     !-----------------------------------------------------------------------

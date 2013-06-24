@@ -279,9 +279,10 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   DEALLOCATE(spsi1)
   !
   !
-  CALL stop_clock('lr_apply')
   IF (interaction)      CALL stop_clock('lr_apply_int')
   IF (.not.interaction) CALL stop_clock('lr_apply_no')
+  !
+  CALL stop_clock('lr_apply')
   !
   RETURN
   !
