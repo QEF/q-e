@@ -48,9 +48,9 @@ CONTAINS
    REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
    INTEGER,  OPTIONAL, INTENT(IN) :: comm
    LOGICAL,  OPTIONAL, INTENT(IN) :: no_global_sort
-   !  if no_global_sort is present (and it is true) G vectors are sorted only locally and not globally.
-   !  In this case no global array should be allocated and sorted (save memory
-   !  and a lot of time for large systems).
+   !  if no_global_sort is present (and it is true) G vectors are sorted only
+   !  locally and not globally. In this case no global array needs to be
+   !  allocated and sorted: saves memory and a lot of time for large systems.
    !
    !     here a few local variables
    !

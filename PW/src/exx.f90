@@ -283,11 +283,11 @@ CONTAINS
     IF ( .NOT.allocated (wk_collect) )  ALLOCATE(wk_collect(nkstot))
     ! the next if/then if probably not necessary, as xk_wk collect can
     ! deal with npool==1, leaving it for clarity.
-    IF (npool>1) THEN
+    IF ( npool > 1 ) THEN
       CALL xk_wk_collect(xk_collect, wk_collect, xk, wk, nkstot, nks)
     ELSE
-      xk_collect = xk
-      wk_collect = wk
+      xk_collect(:,1:nks) = xk(:,1:nks)
+      wk_collect(1:nks) = wk(1:nks)
     ENDIF
     !
     ! set a safe limit as the maximum number of auxiliary points we may need

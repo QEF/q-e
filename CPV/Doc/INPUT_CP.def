@@ -263,14 +263,26 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	    }
 	}
 
-		
 	var disk_io -type CHARACTER { 
+	    default { 'default' }
 	    info {
-               'high', 'default'
-
-               'high': CP code will write Kohn-Sham wf files and additional
+               'high': CP code will write Kohn-Sham wfc files and additional
                        information in data-file.xml in order to restart
                        with a PW calculation or to use postprocessing tools.
+                       If disk_io is not set to 'high', the data file
+                       written by CP will not be readable by PW or PostProc.
+	    }
+	}
+
+	var memory -type CHARACTER { 
+	    default { 'default' }
+	    info {
+               'small': memory-saving tricks are implemented. Currently:
+                        - the G-vectors are sorted only locally, not globally
+                        - they are not collected and written to file
+                        For large systems, the memory and time gain is sizable
+                        but the resulting data files are not portable - use it
+                        only if you do not need to re-read the data file
 	    }
 	}
 

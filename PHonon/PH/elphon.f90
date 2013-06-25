@@ -551,7 +551,7 @@ SUBROUTINE elphsum ( )
 
   IF (npool==1) THEN
 !
-!  no pool, just copy old variable on the new ones
+!  no pool, just copy old variables on the new ones
 !
      nksqtot=nksq
      xk_collect(:,1:nks) = xk(:,1:nks)
