@@ -45,6 +45,7 @@ PROGRAM lr_main
   USE control_flags,         ONLY : tddfpt
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE funct,                 ONLY : dft_is_hybrid
+  USE fft_base,              ONLY : dffts
 
   !Debugging
   USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,check_vector_gamma
