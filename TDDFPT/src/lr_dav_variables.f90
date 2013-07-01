@@ -30,7 +30,8 @@ MODULE lr_dav_variables
                    finish,step,turn2planb
   logical :: precondition,dav_debug, single_pole,&
              sort_contr,diag_of_h,print_spectrum,if_check_orth,&
-             if_random_init,if_check_her,poor_of_ram,poor_of_ram2
+             if_random_init,if_check_her,poor_of_ram,poor_of_ram2,&
+	     conv_assistant
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !Global Variables
@@ -40,6 +41,8 @@ MODULE lr_dav_variables
         eign_value_order(:), energy_dif_order(:)
 
   LOGICAL :: dav_conv
+  LOGICAL :: ploted(3)=.false., done_calc_R=.false.
+  real(dp) :: max_res
   logical, allocatable :: kill_left(:),kill_right(:) 
   INTEGER :: num_basis_old, &   ! num of basis that has been applied Liouvillian
              num_basis,toadd,       &   ! total number of basis

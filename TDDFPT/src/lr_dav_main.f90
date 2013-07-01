@@ -93,7 +93,7 @@ PROGRAM lr_dav_main
   enddo
   ! call check_hermitian()
   ! Extract physical meaning from the solution
-  call interpret_eign()
+  call interpret_eign('END')
   ! The check_orth at the end may take quite a lot of time in the case of 
   ! USPP because we didn't store the S* vector basis. Turn this step on only
   ! in cases of debugging
