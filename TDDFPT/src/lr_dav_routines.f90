@@ -77,8 +77,8 @@ contains
     implicit none
     integer :: ierr
 
-    WRITE(stdout,'(5x,"Num of eigen values=",I15)') num_eign
-    WRITE(stdout,'(5x,"Allocating parameters for davidson ...")')
+    write(stdout,'(5x,"Num of eigen values=",I15)') num_eign
+    write(stdout,'(5x,"Allocating parameters for davidson ...")')
 
     call estimate_ram()
 
@@ -124,7 +124,7 @@ contains
     IF (ierr /= 0) call errore('lr_dav_alloc_init',"no enough memory",ierr) 
 
     if( .not. poor_of_ram .and. okvan ) then
-      WRITE(stdout,'(5x,"poor_of_ram is set to .false.. This means that you &
+      write(stdout,'(5x,"poor_of_ram is set to .false.. This means that you &
                      &would like to increase the speed of",/5x,"your calculation with&
                      & USPP by paying double memory.",/5x,"Switch it to .true. if you need &
                      &to save memory.",/)')
@@ -133,7 +133,7 @@ contains
     endif
 
     if( .not. poor_of_ram2 ) then
-      WRITE(stdout,'(5x,"poor_of_ram2 is set to .false.. This means that you &
+      write(stdout,'(5x,"poor_of_ram2 is set to .false.. This means that you &
                      &would like to increase the speed ",/5x,"by storing the D_basis&
                      & and C_basis vectors which will cause three time of the memory cost.",&
                      /5x,"Switch it to .true. if you need &
@@ -149,7 +149,7 @@ contains
     if ( p_nbnd_virt > nbnd_total-nbnd ) p_nbnd_virt = nbnd_total-nbnd
 
     if ( p_nbnd_occ*p_nbnd_virt .lt. num_init .and. .not. if_random_init) then
-      WRITE(stdout,'(/5X,"Initial vectors are forced to be chosen &
+      write(stdout,'(/5X,"Initial vectors are forced to be chosen &
                &randomly because no enough particle-hole pairs are available.",/5x, &
                "You may want to try to calculate more virtual states or include more occupied states by changing &
                p_nbnd_occ in the input.",/)')
@@ -184,7 +184,7 @@ contains
     integer :: ib,ia,ipw,ibnd
     real(dp) :: temp,R,R2
 
-    WRITE(stdout,'(5x,"Initiating variables for davidson ...")')
+    write(stdout,'(5x,"Initiating variables for davidson ...")')
     ! set initial basis
     num_basis=num_init
     num_basis_tot=num_init
@@ -206,7 +206,7 @@ contains
     dav_conv=.false.
     dav_iter=0
     ! call check_orth()
-    WRITE(stdout,'(5x,"Finished initiating.")')
+    write(stdout,'(5x,"Finished initiating.")')
   END subroutine  lr_dav_set_init
   !-------------------------------------------------------------------------------
 
@@ -234,8 +234,9 @@ contains
     implicit none
     complex(kind=dp),external :: lr_dot
     integer :: ik, ip, ibnd,ig, pol_index, ibr, ibl, ieign,ios
-    CHARACTER(len=6), EXTERNAL :: int_to_char
+    CHARACTER(len=6), external :: int_to_char
     real(dp) :: inner
+    real(DP), external ::  get_clock
 
     ! dummy variables for math routines
     integer :: dummy_ILO, dummy_IHI,dummy_IWORK
@@ -245,6 +246,8 @@ contains
                 dummy_RCONDV(num_basis_max)
 
     call start_clock('one_step')
+    write( stdout, 9000 ) get_clock( 'lr_dav_main' )
+9000  format(/'     total cpu time spent up to now is ',F10.1,' secs' )
     write(stdout,'(/7x,"==============================")') 
     write(stdout,'(/7x,"Davidson iteration:",1x,I8)') dav_iter
     write(stdout,'(7x,"num of basis:",I5,3x,"total built basis:",I5)') num_basis,num_basis_tot
@@ -791,7 +794,7 @@ contains
     
     ! Print out Oscilation strength
     write(stdout,'(/,/5x,"K-S Oscillator strengths")')
-    WRITE(stdout,'(5x,"occ",1x,"con",8x,"R-x",14x,"R-y",14x,"R-z")')
+    write(stdout,'(5x,"occ",1x,"con",8x,"R-x",14x,"R-y",14x,"R-z")')
     do iv=nbnd-p_nbnd_occ+1, nbnd
       do ic=1,p_nbnd_virt
         write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,E16.8)') &
