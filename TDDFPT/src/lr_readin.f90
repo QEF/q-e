@@ -135,7 +135,7 @@ SUBROUTINE lr_readin
      poor_of_ram=.false.
      poor_of_ram2=.true.
      max_iter=100
-     conv_assistant=.true.
+     conv_assistant=.false.
 
      !   Reading the namelist lr_input
      CALL input_from_file( )
