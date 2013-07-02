@@ -13,6 +13,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         Comment lines in namelists can be introduced by a "!", exactly as in 
         fortran code. Comments lines in ``cards'' can be introduced by 
         either a "!" or a "#" character in the first position of a line.
+        Do not start any line in ``cards'' with a "/" character.
 
 	Structure of the input data:
 	===============================================================================
