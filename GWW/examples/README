@@ -9,8 +9,4 @@ example01 computes the GW quasi-particle energies in C6H6 (Benzene molecule)
 example02 computes the GW quasi-particle energies in bulk Si (extended system)
            Note: in order to accelerate this example, used as a daily distribution test,
                it is using parameters giving particularly unconverged results, the
-               user should find a better example on gww.qe-forge.org
 
-example03 computes the orbital decomposition of the total GWW density of states in C6H6 (Benzene molecule)
-
-Joe, 05/08/2009
