@@ -1,0 +1,29 @@
+&control
+ calculation='nscf'
+ restart_mode='from_scratch',
+ prefix='si'
+ pseudo_dir='./'
+/
+&system
+ ibrav= 8, celldm(1)= 10.26,celldm(2)= 1, celldm(3)=1,
+ nat=  8, ntyp= 1,
+ ecutwfc = 15.0, nosym=.true.
+    nbnd=32
+/
+&electrons
+ diagonalization='cg',
+ conv_thr =  1.0d-10,
+ mixing_beta = 0.5,
+ startingwfc='random',
+/
+ATOMIC_SPECIES
+Si  1. Si.pz-vbc.UPF
+ATOMIC_POSITIONS (crystal)
+Si 0.00000 0.00000 0.00000
+Si 0.50000 0.50000 0.00000
+Si 0.00000 0.50000 0.50000
+Si 0.50000 0.00000 0.50000
+Si 0.25000 0.25000 0.25000
+Si 0.75000 0.75000 0.25000
+Si 0.75000 0.25000 0.75000
+Si 0.25000 0.75000 0.75000

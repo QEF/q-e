@@ -1,0 +1,17 @@
+calculation of head
+ &inputph
+  trans=.false.
+  l_head=.true.
+  tr2_ph=1.d-4,
+  prefix='si',
+  omega_gauss=20.0
+  n_gauss=97
+  grid_type=5
+  second_grid_i=1
+  second_grid_n=10
+  niter_ph=1
+  nsteps_lanczos=30
+  outdir='./'
+ /
+0.0 0.0 0.0
+
