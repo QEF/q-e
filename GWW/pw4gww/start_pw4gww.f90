@@ -1,13 +1,13 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! Author: L. Martin-Samos
 !
-subroutine start_pw4gww
+!
+subroutine start_pw4gww 
   !
   !  Usage: [mpirun, mpprun, whatever] postproc [-npool N]
   !
@@ -18,10 +18,10 @@ subroutine start_pw4gww
   implicit none
   character(len=9) :: code = 'PW4GWW'
   !
-#ifdef __MPI
+#ifdef __PARA
   CALL mp_startup ( )
 #endif
   CALL environment_start ( code )
-  !
+  ! 
   return
 end subroutine start_pw4gww

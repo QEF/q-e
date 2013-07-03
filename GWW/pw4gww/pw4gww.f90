@@ -1,9 +1,14 @@
-! Copyright (C) 2003-2006 Andrea Ferretti and Quantum ESPRESSO group
+!
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+
+!
+! Original version by Andrea Ferretti
 ! Modified mainly by Layla Martin-Samos
 ! Modified by Joe Stenuit
 !
@@ -22,36 +27,36 @@
   END MODULE
 
 !-----------------------------------------------------------------------
-program pp_punch
+program gwl_punch
   !-----------------------------------------------------------------------
   !
-  ! writes PWSCF data for postprocessing purposes in XML format using IOTK lib
-  ! Wave-functions are collected and written using IO_BASE module.
-  !
+  ! read in PWSCF data in XML format using IOTK lib
+  ! then prepare matrices for GWL calculation
+  ! 
   ! input:  namelist "&inputpp", with variables
   !   prefix       prefix of input files saved by program pwscf
   !   outdir       temporary directory where files resides
-  !   pp_file      output file. If it is omitted, a directory
+  !   pp_file      output file. If it is omitted, a directory 
   !                "prefix.export/" is created in outdir and
-  !                some output files are put there. Anyway all the data
+  !                some output files are put there. Anyway all the data 
   !                are accessible through the "prefix.export/index.xml" file which
   !                contains implicit pointers to all the other files in the
   !                export directory. If reading is done by the IOTK library
   !                all data appear to be in index.xml even if physically it
-  !                is not.
-  !   uspp_spsi    using US PP if set .TRUE. writes S | psi >
-  !                and | psi > separately in the output file
+  !                is not. 
+  !   uspp_spsi    using US PP if set .TRUE. writes S | psi > 
+  !                and | psi > separately in the output file 
   !   single_file  one-file output is produced
   !   ascii        ....
   !
   !   pseudo_dir   pseudopotential directory
-  !   psfile(:)    name of the pp file for each species
-  !
+  !   psfile(:)    name of the pp file for each species 
+  !    
 
   USE kinds,     ONLY : i4b
+  USE gvect,  ONLY : mill
   use pwcom
-  use fft_base,  ONLY : dfftp
-  USE constants,       ONLY : rytoev
+  USE constants,            ONLY : rytoev
   use io_global, ONLY : stdout, ionode, ionode_id
   use io_files,  ONLY : psfile, pseudo_dir
   use io_files,  ONLY : prefix, tmp_dir, outdir
@@ -63,114 +68,125 @@ program pp_punch
   use realus, ONLY : qpointlist
   use uspp, ONLY : okvan
   use ldaU, ONLY : lda_plus_u
+  USE basis,                ONLY : swfcatom
   use scf, only : vrs, vltot, v, kedtau
   USE klist,                ONLY : xk, wk, nks, nkstot
+  USE fft_base,             ONLY : dfftp
   USE wannier_gw,       ONLY :  lwannier, &
-                                cutoff_wsq, &
-                                cutoff_wsq_c, &
-                                cutoff_wpr, &
-                                cutoff_wpr_wpr, &
-                                cutoff_overlap,&
                                 num_nbndv, &
                                 num_nbnds, &
-                                lsmallgrid, &
-                                lnonorthogonal, &
-                                no_radius, &
-                                lggrid, &
                                 nset, &
-                                ultra_alpha_v, &
-                                ultra_alpha_c, &
-                                ultra_alpha_c2, &
-                                ultra_alpha_c_prim, &
-                                num_nbndc_set, &
                                 l_truncated_coulomb, &
                                 truncation_radius, &
-                                r_cutoff_products, &
                                 remainder, &
                                 restart_gww, &
                                 numw_prod, &
-                                cutoff_wpr_vc,&
-                                cutoff_wpr_vc2,&
-                                num_nbnd_first,&
-                                cutoff_wpr_prim,&
-                                cutoff_wpr_prim2,&
                                 l_gram,&
                                 l_head,&
                                 n_gauss,&
                                 omega_gauss, &
                                 l_exchange, &
-                                tau_gauss, &
                                 l_zero, &
                                 l_wing, &
                                 grid_type, &
-                                cprim_type, &
-                                cprim_first, &
-                                cprim_last, &
-                                l_vcw_overlap, &
                                 nset_overlap, &
                                 nspace,&
-                                lambda_ene,&
-                                e_min_cutoff, &
-                                e_max_cutoff, &
-                                v_min_cutoff, &
-                                v_max_cutoff, &
-                                l_orthonorm_products, &
-                                cutoff_products, &
                                 ecutoff_global, &
-                                l_wpwt_terms,&
-                                l_polarization_analysis,&
-                                cutoff_polarization,&
-                                nc_polarization_analysis,&
-                                l_only_val_cond,&
-                                l_no_val_cond_sec,&
                                 maxiter2,&
                                 diago_thr2, &
                                 l_plot_mlwf,&
-                                l_plot_ulwf,&
-                                l_ultra_external,&
-                                nbnd_normal,&
-                                num_nbnd_delta,&
-                                num_nbnd_upper,&
                                 l_pmatrix,&
                                 npcol,&
                                 nprow,&
-                                l_assume_ortho,&
-                                l_coulomb_analysis,&
-                                cutoff_coulomb_analysis,&
-                                mem_per_core
-
+                                n_pola_lanczos,&
+                                n_self_lanczos,&
+                                nsteps_lanczos_pola,&
+                                nsteps_lanczos_self,&
+                                s_pola_lanczos,&
+                                s_self_lanczos,&
+                                s_g_lanczos,&
+                                l_pmat_diago,&
+                                pmat_ethr, &
+                                pmat_cutoff,&
+                                pmat_type,&
+                                lanczos_restart,&
+                                n_pola_lanczos_eff,&
+                                n_self_lanczos_eff,&
+                                n_pmat,&
+                                s_pmat,&
+                                n_fast_pmat,&
+                                off_fast_pmat,&
+                                l_fast_pola,&
+                                l_v_basis,&
+                                v_cutoff,&
+                                l_iter_algorithm,&
+                                dual_pb, &
+                                l_t_wannier,&
+                                dual_vt,&
+                                dual_vs,&
+                                wannier_thres,&
+                                s_first_state,&
+                                s_last_state,&
+                                l_selfconsistent,&
+                                l_whole_s,&
+                                l_ts_eigen,&
+                                l_frac_occ,&
+                                num_nbndv_min,&
+                                l_cond_pol_base,&
+                                l_semicore,&
+                                n_semicore,&
+                                l_semicore_read,&
+                                l_verbose,&
+                                l_contour,&
+                                l_real,&
+                                l_bse,&
+                                s_bse,&
+                                dual_bse,&
+                                l_big_system,&
+                                extra_pw_cutoff,&
+                                l_list,&
+                                l_scissor,&
+                                scissor,&
+                                l_full,&
+                                n_full
+                 
+ 
+  USE exchange_custom, ONLY : exchange_fast_dual
+  
   !
   implicit none
-  !
-  CHARACTER(LEN=256), EXTERNAL :: trimcheck
-  !
   integer :: i, kunittmp, ios
 
   character(len=200) :: pp_file
   character(len=iotk_attlenx) :: attr
   logical :: found, uspp_spsi, ascii, single_file, raw
 !  INTEGER(i4b), EXTERNAL :: C_MKDIR
+ CHARACTER(LEN=256), EXTERNAL :: trimcheck
 
   NAMELIST /inputpw4gww/ prefix, outdir, pp_file, uspp_spsi, ascii, single_file, raw, &
                      psfile, pseudo_dir, &
-                     lwannier, cutoff_wsq, cutoff_wpr, num_nbndv, &
-                               lsmallgrid, lnonorthogonal, no_radius, cutoff_overlap,&
-                               cutoff_wsq_c,lggrid, nset,num_nbnds, ultra_alpha_v, &
-                               ultra_alpha_c, num_nbndc_set, l_truncated_coulomb, &
-                               truncation_radius, cutoff_wpr_wpr, r_cutoff_products, &
-                               remainder, ultra_alpha_c_prim, restart_gww, numw_prod, &
-                               cutoff_wpr_vc,cutoff_wpr_vc2,num_nbnd_first, cutoff_wpr_prim, &
-                               l_gram, ultra_alpha_c2, l_head, n_gauss, omega_gauss, l_exchange, &
-                               tau_gauss,l_zero,cutoff_wpr_prim2, l_wing, grid_type, cprim_type, &
-                               cprim_first,cprim_last, l_vcw_overlap, nset_overlap, nspace, &
-                               lambda_ene, e_min_cutoff, e_max_cutoff, v_min_cutoff, v_max_cutoff, &
-                               l_orthonorm_products,cutoff_products,ecutoff_global,&
-                               l_wpwt_terms, l_polarization_analysis,&
-                               cutoff_polarization, nc_polarization_analysis,l_only_val_cond,&
-                               l_no_val_cond_sec,maxiter2,diago_thr2,l_plot_mlwf,l_plot_ulwf,&
-                               l_ultra_external,nbnd_normal,num_nbnd_delta,num_nbnd_upper,&
-                               l_pmatrix, npcol,nprow,l_assume_ortho,l_coulomb_analysis,&
-                               cutoff_coulomb_analysis, mem_per_core
+                      lwannier, num_nbndv, &
+                               nset,num_nbnds, &
+                               l_truncated_coulomb, &
+                               truncation_radius, &
+                               remainder, restart_gww, numw_prod, &
+                               l_gram, l_head, n_gauss, omega_gauss, l_exchange, &
+                               l_zero, l_wing, grid_type, &
+                               nset_overlap, nspace, &
+                               ecutoff_global,&
+                               maxiter2,diago_thr2,l_plot_mlwf,&
+                               l_pmatrix, npcol,nprow,&
+                               n_pola_lanczos, nsteps_lanczos_pola,nsteps_lanczos_self,&
+                               s_pola_lanczos,s_self_lanczos,n_self_lanczos,s_g_lanczos,&
+                               l_pmat_diago,pmat_ethr,pmat_cutoff, pmat_type, lanczos_restart,&
+                               n_pola_lanczos_eff,n_self_lanczos_eff,n_pmat,s_pmat,n_fast_pmat,&
+                               off_fast_pmat,l_fast_pola,l_v_basis,v_cutoff,l_iter_algorithm,&
+                               dual_pb, l_t_wannier, dual_vt, dual_vs,wannier_thres,s_first_state,&
+                               s_last_state,l_selfconsistent,l_whole_s,l_ts_eigen,l_frac_occ,num_nbndv_min,&
+                               l_cond_pol_base,l_semicore,n_semicore,l_semicore_read, l_verbose, l_contour,&
+                               l_real,exchange_fast_dual,l_bse,s_bse,dual_bse,l_big_system,extra_pw_cutoff,&
+                               l_list,l_scissor,scissor,l_full,n_full
+                    
 
   !
   call start_pw4gww( )
@@ -188,81 +204,84 @@ program pp_punch
 !
 !       nppstr   = 1
 !
-       lwannier = .true.
-       cutoff_wsq = 0.9999d0
-       cutoff_wsq_c = 0.9999d0
-       cutoff_wpr = 1000d0
-       cutoff_overlap = 0.d0
-       cutoff_wpr_wpr = 0.02
-       num_nbndv = 1
-       num_nbnds = 1
-       lsmallgrid = .false.
-       lnonorthogonal = .true.
-       lggrid=.true.
-       no_radius = 8.d0
-       nset = 200
-       ultra_alpha_v = 1000d0
-       ultra_alpha_c = 1000d0
-       ultra_alpha_c2 = 1000d0
-       ultra_alpha_c_prim = 1000d0
-       num_nbndc_set = 0
-       l_truncated_coulomb = .false.
-       truncation_radius = 10.d0
-       r_cutoff_products = 10.d0
-       remainder=-1
-       restart_gww=0
-       numw_prod=1
-       cutoff_wpr_vc=0.05d0
-       cutoff_wpr_vc2=1000d0
-       cutoff_wpr_prim=0.0d0
-       cutoff_wpr_prim2=0.0d0
-       num_nbnd_first=0
-       l_gram=.false.
-       l_head=.false.
-       l_exchange=.true.
-       n_gauss=79
-       omega_gauss=20.d0
-       tau_gauss=10.d0
-       l_zero=.false.
-       l_wing=.false.
-       grid_type=2
-       cprim_type=2
-       cprim_first=1
-       cprim_last=1
-       l_vcw_overlap=.true.
-       nset_overlap=1000
-       nspace=1
-       lambda_ene=0.d0
-       e_min_cutoff = 0.d0
-       e_max_cutoff = 50.d0
-       v_min_cutoff = 0.d0
-       v_max_cutoff = 10.d0
-       l_orthonorm_products = .true.
-       cutoff_products = 0.01d0
-       ecutoff_global = 80.d0
-       l_wpwt_terms=.true.
-       l_polarization_analysis = .true.
-       cutoff_polarization = 0.1d0
-       nc_polarization_analysis = 10000
-       l_only_val_cond = .true.
-       l_no_val_cond_sec = .true.
-       maxiter2=0
-       diago_thr2=0.d0
-       l_plot_mlwf=.false.
-       l_plot_ulwf=.false.
-       l_ultra_external=.false.
-       nbnd_normal=0
-       num_nbnd_delta=100
-       num_nbnd_upper=10
-       l_pmatrix=.false.
-       npcol=1
-       nprow=1
-       l_assume_ortho=.true.
-       l_coulomb_analysis=.false.
-       cutoff_coulomb_analysis=0.d0
-       mem_per_core=1600000000
-!
-
+  lwannier = .false.
+  wannier_thres=0.d0
+  num_nbndv(1:2) = 1
+  num_nbnds = 1
+  nset = 250
+  l_truncated_coulomb = .false.
+  truncation_radius = 10.d0
+  remainder=-1
+  restart_gww=-1
+  numw_prod=1
+  l_gram=.false.
+  l_head=.false.
+  l_exchange=.false.
+  n_gauss=79
+  omega_gauss=20.d0
+  l_zero=.true.
+  l_wing=.false.
+  grid_type=3
+  nset_overlap=250
+  nspace=1
+  ecutoff_global = 400.d0
+  maxiter2=0
+  diago_thr2=0.d0
+  l_plot_mlwf=.false.
+  l_pmatrix=.false.
+  npcol=1
+  nprow=1
+  n_pola_lanczos=400
+  n_self_lanczos=600
+  nsteps_lanczos_pola=20
+  nsteps_lanczos_self=40
+  s_pola_lanczos=0.5d0
+  s_self_lanczos=1d-12
+  s_g_lanczos=0.d0
+  l_pmat_diago=.true.
+  pmat_ethr=1d-5
+  pmat_cutoff=3.d0
+  pmat_type=4
+  lanczos_restart=0
+  n_pola_lanczos_eff=0
+  n_self_lanczos_eff=0
+  n_pmat=100
+  s_pmat=0.01d0
+  n_fast_pmat=0
+  off_fast_pmat=0.d0
+  l_fast_pola=.false.
+  l_v_basis=.false.
+  v_cutoff=0.01d0
+  l_iter_algorithm=.true.
+  dual_pb=1.d0
+  dual_vt=1.d0
+  dual_vs=1.d0
+  l_t_wannier=.true.
+  s_first_state=0
+  s_last_state=0
+  l_selfconsistent=.false.
+  l_whole_s=.false.
+  l_ts_eigen=.true.
+  l_frac_occ=.false.
+  num_nbndv_min(1:2)=1
+  l_cond_pol_base=.false.
+  l_semicore=.false.
+  n_semicore=1
+  l_semicore_read=.false.
+  l_verbose=.false.
+  l_contour=.false.
+  l_real=.false.
+  exchange_fast_dual=4.d0
+  l_bse=.false.
+  s_bse=0.d0
+  dual_bse=1.d0
+  l_big_system=.false.
+  l_list=.false.
+  extra_pw_cutoff=0.d0
+  l_scissor=.false.
+  scissor=0.d0
+  l_full=.false.
+  n_full=0
   !
   !    Reading input file
   !
@@ -305,91 +324,97 @@ program pp_punch
   !
 !      CALL mp_bcast( nppstr,        ionode_id )
 !
-       CALL mp_bcast( lwannier,      ionode_id )
-       CALL mp_bcast( cutoff_wsq,    ionode_id )
-       CALL mp_bcast( cutoff_wsq_c,    ionode_id )
-       CALL mp_bcast( cutoff_wpr,    ionode_id )
-       CALL mp_bcast( cutoff_wpr_wpr,    ionode_id )
-       CALL mp_bcast( cutoff_overlap,ionode_id )
-       CALL mp_bcast( num_nbndv,     ionode_id )
-       CALL mp_bcast( num_nbnds,     ionode_id )
-       CALL mp_bcast( lsmallgrid,    ionode_id )
-       CALL mp_bcast( lggrid,        ionode_id )
-       CALL mp_bcast( lnonorthogonal,ionode_id )
-       CALL mp_bcast( no_radius,     ionode_id )
-       CALL mp_bcast( nset,          ionode_id )
-       CALL mp_bcast(ultra_alpha_c,  ionode_id )
-       CALL mp_bcast(ultra_alpha_c2,  ionode_id )
-       CALL mp_bcast(ultra_alpha_v,  ionode_id )
-       CALL mp_bcast(ultra_alpha_c_prim, ionode_id)
-       CALL mp_bcast(num_nbndc_set,  ionode_id )
-       CALL mp_bcast(l_truncated_coulomb, ionode_id)
-       CALL mp_bcast(truncation_radius, ionode_id)
-       CALL mp_bcast(r_cutoff_products, ionode_id)
-       CALL mp_bcast(remainder, ionode_id)
-       CALL mp_bcast(restart_gww, ionode_id)
-       call mp_bcast(numw_prod, ionode_id)
-       call mp_bcast(cutoff_wpr_vc,  ionode_id)
-       call mp_bcast(cutoff_wpr_vc2,  ionode_id)
-       call mp_bcast(num_nbnd_first,  ionode_id)
-       call mp_bcast(cutoff_wpr_prim,  ionode_id)
-       call mp_bcast(cutoff_wpr_prim2,  ionode_id)
-       CALL mp_bcast(l_gram, ionode_id)
-       CALL mp_bcast(l_head, ionode_id)
-       CALL mp_bcast(n_gauss, ionode_id)
-       CALL mp_bcast(omega_gauss, ionode_id)
-       CALL mp_bcast(l_exchange, ionode_id)
-       CALL mp_bcast(tau_gauss, ionode_id)
-       CALL mp_bcast(l_zero, ionode_id)
-       CALL mp_bcast(l_wing, ionode_id)
-       CALL mp_bcast(grid_type, ionode_id)
-       CALL mp_bcast(cprim_type, ionode_id)
-       CALL mp_bcast(cprim_first, ionode_id)
-       CALL mp_bcast(cprim_last, ionode_id)
-       CALL mp_bcast(l_vcw_overlap, ionode_id)
-       CALL mp_bcast(nset_overlap, ionode_id)
-       CALL mp_bcast(nspace, ionode_id)
-       CALL mp_bcast(lambda_ene, ionode_id)
-       CALL mp_bcast(e_min_cutoff, ionode_id)
-       CALL mp_bcast(e_max_cutoff, ionode_id)
-       CALL mp_bcast(v_min_cutoff, ionode_id)
-       CALL mp_bcast(v_max_cutoff, ionode_id)
-       CALL mp_bcast(l_orthonorm_products, ionode_id)
-       CALL mp_bcast(cutoff_products, ionode_id)
-       CALL mp_bcast(ecutoff_global, ionode_id)
-       CALL mp_bcast(l_wpwt_terms, ionode_id)
-       CALL mp_bcast(l_polarization_analysis, ionode_id)
-       CALL mp_bcast(cutoff_polarization, ionode_id)
-       CALL mp_bcast(nc_polarization_analysis, ionode_id)
-       CALL mp_bcast(l_only_val_cond, ionode_id)
-       CALL mp_bcast(l_no_val_cond_sec, ionode_id)
-       CALL mp_bcast(maxiter2, ionode_id)
-       CALL mp_bcast(diago_thr2, ionode_id)
-       CALL mp_bcast(l_plot_mlwf, ionode_id)
-       CALL mp_bcast(l_plot_ulwf, ionode_id)
-       CALL mp_bcast(l_ultra_external, ionode_id)
-       CALL mp_bcast(nbnd_normal, ionode_id)
-       CALL mp_bcast(num_nbnd_delta, ionode_id)
-       CALL mp_bcast(num_nbnd_upper, ionode_id)
-       CALL mp_bcast(l_pmatrix, ionode_id)
-       CALL mp_bcast(npcol, ionode_id)
-       CALL mp_bcast(nprow, ionode_id)
-       CALL mp_bcast(l_assume_ortho, ionode_id)
-       CALL mp_bcast(l_coulomb_analysis, ionode_id)
-       CALL mp_bcast(cutoff_coulomb_analysis, ionode_id)
-       CALL mp_bcast(mem_per_core, ionode_id)
-  !
+     
+  CALL mp_bcast( lwannier,      ionode_id )
+  CALL mp_bcast( wannier_thres, ionode_id)
+  CALL mp_bcast( num_nbndv,     ionode_id )
+  CALL mp_bcast( num_nbnds,     ionode_id )
+  CALL mp_bcast( nset,          ionode_id )
+  CALL mp_bcast(l_truncated_coulomb, ionode_id)
+  CALL mp_bcast(truncation_radius, ionode_id)
+  CALL mp_bcast(remainder, ionode_id)
+  CALL mp_bcast(restart_gww, ionode_id)
+  call mp_bcast(numw_prod, ionode_id)
+  CALL mp_bcast(l_gram, ionode_id)
+  CALL mp_bcast(l_head, ionode_id)
+  CALL mp_bcast(n_gauss, ionode_id)
+  CALL mp_bcast(omega_gauss, ionode_id)
+  CALL mp_bcast(l_exchange, ionode_id)
+  CALL mp_bcast(l_zero, ionode_id)
+  CALL mp_bcast(l_wing, ionode_id)
+  CALL mp_bcast(grid_type, ionode_id)
+  CALL mp_bcast(nset_overlap, ionode_id)
+  CALL mp_bcast(nspace, ionode_id)
+  CALL mp_bcast(ecutoff_global, ionode_id)
+  CALL mp_bcast(maxiter2, ionode_id)
+  CALL mp_bcast(diago_thr2, ionode_id)
+  CALL mp_bcast(l_plot_mlwf, ionode_id)
+  CALL mp_bcast(l_pmatrix, ionode_id)
+  CALL mp_bcast(npcol, ionode_id)
+  CALL mp_bcast(nprow, ionode_id)
+  CALL mp_bcast(n_pola_lanczos, ionode_id)
+  CALL mp_bcast(n_self_lanczos, ionode_id)
+  CALL mp_bcast(nsteps_lanczos_pola, ionode_id)
+  CALL mp_bcast(nsteps_lanczos_self, ionode_id)
+  CALL mp_bcast(s_pola_lanczos, ionode_id)
+  CALL mp_bcast(s_self_lanczos, ionode_id)
+  CALL mp_bcast(s_g_lanczos, ionode_id)
+  CALL mp_bcast(l_pmat_diago, ionode_id)
+  CALL mp_bcast(pmat_ethr, ionode_id)
+  CALL mp_bcast(pmat_cutoff, ionode_id)
+  CALL mp_bcast(pmat_type, ionode_id)
+  CALL mp_bcast(lanczos_restart, ionode_id)
+  CALL mp_bcast(n_pola_lanczos_eff, ionode_id)
+  CALL mp_bcast(n_self_lanczos_eff, ionode_id)
+  CALL mp_bcast(n_pmat, ionode_id)
+  CALL mp_bcast(s_pmat, ionode_id)
+  CALL mp_bcast(n_fast_pmat, ionode_id)
+  CALL mp_bcast(off_fast_pmat, ionode_id)
+  CALL mp_bcast(l_fast_pola, ionode_id)
+  CALL mp_bcast(l_v_basis, ionode_id)
+  CALL mp_bcast(v_cutoff, ionode_id)
+  CALL mp_bcast(l_iter_algorithm, ionode_id)
+  CALL mp_bcast(dual_pb, ionode_id)
+  CALL mp_bcast(dual_vt, ionode_id)
+  CALL mp_bcast(dual_vs, ionode_id)
+  CALL mp_bcast(l_t_wannier, ionode_id)
+  CALL mp_bcast(s_first_state, ionode_id)
+  CALL mp_bcast(s_last_state, ionode_id)
+  CALL mp_bcast(l_selfconsistent, ionode_id)
+  CALL mp_bcast(l_whole_s, ionode_id)
+  CALL mp_bcast(l_ts_eigen, ionode_id)
+  CALL mp_bcast(l_frac_occ, ionode_id)
+  CALL mp_bcast(num_nbndv_min, ionode_id)
+  CALL mp_bcast(l_cond_pol_base, ionode_id)
+  CALL mp_bcast(l_semicore, ionode_id)
+  CALL mp_bcast(n_semicore, ionode_id)
+  CALL mp_bcast(l_semicore_read, ionode_id)
+  CALL mp_bcast(l_verbose, ionode_id)
+  CALL mp_bcast(l_contour, ionode_id)
+  CALL mp_bcast(l_real, ionode_id)
+  CALL mp_bcast(exchange_fast_dual, ionode_id)
+  CALL mp_bcast(l_bse, ionode_id)
+  CALL mp_bcast(s_bse, ionode_id)
+  CALL mp_bcast(dual_bse, ionode_id)
+  CALL mp_bcast(l_big_system, ionode_id)
+  CALL mp_bcast(extra_pw_cutoff, ionode_id)
+  CALL mp_bcast(l_list, ionode_id)
+  CALL mp_bcast(l_scissor, ionode_id)
+  CALL mp_bcast(scissor, ionode_id)
+  CALL mp_bcast(l_full, ionode_id)
+  CALL mp_bcast(n_full, ionode_id)
 
-  call read_file
+  call read_file 
 
 
-#if defined __MPI
+#if defined __PARA
   kunittmp = kunit
 #else
   kunittmp = 1
 #endif
 
   !
+ 
 
   call openfil_pw4gww
 
@@ -408,7 +433,7 @@ program pp_punch
 !
   CALL hinit0()
 !
-  if(lda_plus_u) then
+  if(lda_plus_u) then 
     CALL init_ns()
   endif
 
@@ -422,14 +447,14 @@ program pp_punch
 ! This is something from hinit0.f90, qpointlist ????
 
 !
-  write(stdout,*) 'PRIMA QPOINT',l_exchange, okvan!ATTENZIONE
-  IF ( (lwannier .or. l_head .or. l_exchange).and. okvan) CALL qpointlist()
+  if(l_verbose) write(stdout,*) 'PRIMA QPOINT',l_exchange, okvan!ATTENZIONE
+  IF ( okvan) CALL qpointlist()
 !
 ! -----------------------------------------------------
 ! now calculating the first wannier stuff (first in non_scf.f90)
 ! -----------------------------------------------------
 
-  write(stdout,*) 'To check, we print the KS eigenvalues:'
+  if(l_verbose) write(stdout,*) 'To check, we print the KS eigenvalues:'
   CALL flush_unit( stdout )
   !
   CALL print_ks_energies()
@@ -446,42 +471,40 @@ program pp_punch
 
   IF(l_exchange) THEN
     IF(gamma_only) THEN
-      call dft_exchange(num_nbndv,num_nbnds,nset)
+      call dft_exchange(num_nbndv(1),num_nbnds,nset) 
     ELSE
       !!! add this, since wk are used in dft_exchange_k
       !
       CALL weights  ( )
       !
-      write(stdout,*) 'BEFORE dft_exchange_k'
+      if(l_verbose) write(stdout,*) 'BEFORE dft_exchange_k'
       CALL flush_unit( stdout )
-      call dft_exchange_k(num_nbndv,num_nbnds,ecutoff_global)
-      write(stdout,*) 'AFTER dft_exchange_k'
+      !call dft_exchange_k(num_nbndv,num_nbnds,ecutoff_global)
+      if(l_verbose) write(stdout,*) 'AFTER dft_exchange_k'
       CALL flush_unit( stdout )
     ENDIF
   ENDIF
 
 
-  IF(lwannier) THEN
-!     IF(.not.gamma_only) THEN  ! not yet implemented
-!       CALL produce_wannier
-!     ELSE
-        write(stdout,*) 'BEFORE produce_wannier_gamma'
-        CALL flush_unit( stdout )
-        CALL produce_wannier_gamma
-        write(stdout,*) 'AFTER produce_wannier_gamma'
-        CALL flush_unit( stdout )
+ 
+
+  if(l_verbose) write(stdout,*) 'BEFORE produce_wannier_gamma'
+  CALL flush_unit( stdout )
+  CALL produce_wannier_gamma
+  if(l_verbose) write(stdout,*) 'AFTER produce_wannier_gamma'
+  CALL flush_unit( stdout )
 !     ENDIF
-  ENDIF
+ 
 !
 !
 !deallocate wannier stuff (clean_pw.f90)
 !
   CALL deallocate_wannier()
-!  call write_export (pp_file, kunittmp, uspp_spsi, ascii, single_file, raw)
+
 
   call stop_pp
   stop
-end program pp_punch
+end program gwl_punch
 !
 !-----------------------------------------------------------------------
 subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
@@ -490,12 +513,15 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use iotk_module
 
 
-  use kinds,          ONLY : DP
-  use pwcom
-  use control_flags,  ONLY : gamma_only
+  use kinds,          ONLY : DP 
+  use pwcom  
+  use control_flags,  ONLY : gamma_only  
   use becmod,         ONLY : bec_type, becp, calbec, &
                              allocate_bec_type, deallocate_bec_type
-  use symm_base,       ONLY : nsym, s, invsym, irt, ftau
+!  use symme,          ONLY : nsym, s, invsym, sname, irt, ftau
+!  use symme,          ONLY : nsym, s, invsym, irt, ftau
+!  use char,           ONLY : sname
+! occhio sname is in symme which is now outside pwcom
   use  uspp,          ONLY : nkb, vkb
   use wavefunctions_module,  ONLY : evc
   use io_files,       ONLY : nd_nmbr, outdir, prefix, iunwfc, nwordwfc, iunsat, nwordatwfc
@@ -505,7 +531,8 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use mp_global,      ONLY : nproc, nproc_pool, mpime
   use mp_global,      ONLY : my_pool_id, intra_pool_comm, inter_pool_comm
   use mp,             ONLY : mp_sum, mp_max
-  use ldaU,           ONLY : swfcatom, lda_plus_u
+  use ldaU,           ONLY : lda_plus_u
+  USE basis,                ONLY : swfcatom
 
   implicit none
 
@@ -531,7 +558,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   integer, allocatable :: igk_l2g( :, : )
 
 
-  real(DP) :: wfc_scal
+  real(DP) :: wfc_scal 
   logical :: twf0, twfm
   character(iotk_attlenx) :: attr
   complex(DP), allocatable :: sevc (:,:)
@@ -572,7 +599,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   write(stdout,*) "after first init"
 
-  ! find out the global number of G vectors: ngm_g
+  ! find out the global number of G vectors: ngm_g  
   ngm_g = ngm
   call mp_sum( ngm_g , intra_pool_comm )
 
@@ -585,9 +612,9 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   itmp_g = 0
   do  ig = 1, ngm
-    itmp_g( 1, ig_l2g( ig ) ) = mill(1,ig )
-    itmp_g( 2, ig_l2g( ig ) ) = mill(2,ig )
-    itmp_g( 3, ig_l2g( ig ) ) = mill(3,ig )
+    itmp_g( 1, ig_l2g( ig ) ) = mill(1, ig )
+    itmp_g( 2, ig_l2g( ig ) ) = mill(2, ig )
+    itmp_g( 3, ig_l2g( ig ) ) = mill(3, ig )
   end do
   call mp_sum( itmp_g , intra_pool_comm )
   !
@@ -598,8 +625,8 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   call cryst_to_cart( ngm_g, rtmp_g, bg , 1 )
   !
   ! compute squared moduli
-  do  ig = 1, ngm_g
-     rtmp_gg(ig) = rtmp_g(1,ig)**2 + rtmp_g(2,ig)**2 + rtmp_g(3,ig)**2
+  do  ig = 1, ngm_g 
+     rtmp_gg(ig) = rtmp_g(1,ig)**2 + rtmp_g(2,ig)**2 + rtmp_g(3,ig)**2 
   enddo
   deallocate( rtmp_g )
 
@@ -652,10 +679,10 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
     ALLOCATE( itmp1( npw_g ), STAT= ierr )
     IF ( ierr/=0 ) CALL errore('pw_export','allocating itmp1', ABS(ierr) )
     itmp1 = 0
-    !
-    IF( ik >= iks .AND. ik <= ike ) THEN
+    ! 
+    IF( ik >= iks .AND. ik <= ike ) THEN 
       DO  ig = 1, ngk( ik-iks+1 )
-        itmp1( igk_l2g( ig, ik-iks+1 ) ) = igk_l2g( ig, ik-iks+1 )
+        itmp1( igk_l2g( ig, ik-iks+1 ) ) = igk_l2g( ig, ik-iks+1 ) 
       END DO
     END IF
     !
@@ -677,13 +704,13 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   ENDDO
   !
   deallocate( itmp_g )
-
+  
   write(stdout,*)"after wfc waves"
 
-#ifdef __MPI
+#ifdef __PARA
   call poolrecover (et, nbnd, nkstot, nks)
 #endif
-
+ 
   wfc_scal = 1.0d0
   twf0 = .true.
   twfm = .false.
@@ -692,7 +719,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
      local_pw = 0
      IF( (ik >= iks) .AND. (ik <= ike) ) THEN
 
-       call davcio (evc, nwordwfc, iunwfc, (ik-iks+1), - 1)
+       call davcio (evc, 2*nwordwfc, iunwfc, (ik-iks+1), - 1)
        IF ( lda_plus_u ) CALL davcio( swfcatom, nwordatwfc, iunsat, (ik-iks+1), -1 )
        local_pw = ngk(ik-iks+1)
 
@@ -714,17 +741,17 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
 
      ispin = isk( ik )
-     !  WRITE(0,*) ' ### ', ik,nkstot,iks,ike,kunit,nproc,nproc_pool
+     !  WRITE(0,*) ' ### ', ik,nkstot,iks,ike,kunit,nproc,nproc_pool 
      deallocate(l2g_new)
   end do
-  !
+  !  
 
   write(stdout,*) "after davcio"
 
-  ! If specified and if USPP are used the wfcs S_psi are written
-  ! | spsi_nk > = \hat S | psi_nk >
-  ! where S is the overlap operator of US PP
-  !
+  ! If specified and if USPP are used the wfcs S_psi are written  
+  ! | spsi_nk > = \hat S | psi_nk >  
+  ! where S is the overlap operator of US PP 
+  !  
   IF ( uspp_spsi .AND. nkb > 0 ) THEN
 
        ALLOCATE( sevc(npwx,nbnd), STAT=ierr )
@@ -736,18 +763,18 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
        CALL allocate_bec_type (nkb,nbnd,becp)
 
        do ik = 1, nkstot
-
+ 
            local_pw = 0
            IF( (ik >= iks) .AND. (ik <= ike) ) THEN
-
+               
                CALL gk_sort (xk (1, ik+iks-1), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-               CALL davcio (evc, nwordwfc, iunwfc, (ik-iks+1), - 1)
+               CALL davcio (evc, 2*nwordwfc, iunwfc, (ik-iks+1), - 1)
 
                CALL init_us_2(npw, igk, xk(1, ik), vkb)
                local_pw = ngk(ik-iks+1)
-
+                            
                IF ( gamma_only ) THEN
-                  CALL calbec ( ngk_g(ik), vkb, evc, becp )
+                  if(nkb>0) CALL calbec ( ngk_g(ik), vkb, evc, becp )
                ELSE
                   CALL calbec ( npw, vkb, evc, becp )
                ENDIF
@@ -770,7 +797,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
            ispin = isk( ik )
            DEALLOCATE(l2g_new)
        ENDDO
-
+      
        DEALLOCATE( sevc, STAT=ierr )
        IF ( ierr/= 0 ) CALL errore('read_export','Unable to deallocate SEVC',ABS(ierr))
        CALL deallocate_bec_type ( becp )

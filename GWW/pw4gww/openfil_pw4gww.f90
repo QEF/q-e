@@ -1,10 +1,13 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+!
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+
 ! Author: L. Martin-Samos
 !
 !----------------------------------------------------------------------------
@@ -17,33 +20,34 @@ SUBROUTINE openfil_pw4gww()
   USE kinds,          ONLY : DP
   USE wvfct,          ONLY : nbnd, npwx
   use control_flags,  ONLY:  twfcollect
-  USE io_files,       ONLY : prefix, iunwfc, nwordwfc, iunat, iunsat, &
-                             diropn, nwordatwfc
-  USE noncollin_module, ONLY : npol, noncolin
+  USE io_files,       ONLY : prefix, iunwfc, nwordwfc, iunsat, nwordatwfc, diropn
+  USE noncollin_module, ONLY : npol
   USE ldaU,             ONLY : lda_plus_u
   USE basis,            ONLY : natomwfc
-  USE uspp_param,       ONLY : n_atom_wfc
   USE ions_base,        ONLY : nat, ityp
+  USE noncollin_module,   ONLY : noncolin
+  USE uspp_param,         ONLY : n_atom_wfc
   !
   IMPLICIT NONE
   !
   LOGICAL       :: exst
+  !
   !
   twfcollect=.false.
   !
   ! ... nwordwfc is the record length for the direct-access file
   ! ... containing wavefunctions
   !
-  nwordwfc = 2 * nbnd * npwx * npol
+  nwordwfc = nbnd * npwx * npol
   !
-  CALL diropn( iunwfc, 'wfc', nwordwfc, exst )
+  CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
   !
   IF ( .NOT. exst ) THEN
-     call errore ('openfil_pw4gww','file '//TRIM( prefix )//'.wfc'//' not found',1)
+     call errore ('openfil_pw4gww','file '//TRIM( prefix )//'.wfc'//' not found',1)     
   END IF
   !
   !!!! ... iunigk contains the number of PW and the indices igk
-  !!!! ... Note that unit 15 is reserved for error messages
+  !!!! ... Note that unit 15 is reserved for error messages 
   !
   !!!! CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
   !!!!
@@ -53,16 +57,16 @@ SUBROUTINE openfil_pw4gww()
   !
   ! ... Needed for LDA+U
   !
-  ! ... iunat  contains the (orthogonalized) atomic wfcs
+  ! ... iunat  contains the (orthogonalized) atomic wfcs 
   ! ... iunsat contains the (orthogonalized) atomic wfcs * S
   ! ... iunocc contains the atomic occupations computed in new_ns
-  ! ... it is opened and closed for each reading-writing operation
+  ! ... it is opened and closed for each reading-writing operation  
   !
   natomwfc = n_atom_wfc( nat, ityp, noncolin )
   nwordatwfc = 2*npwx*natomwfc*npol
   !
   IF ( lda_plus_u ) then
-     CALL diropn( iunat,  'atwfc',  nwordatwfc, exst )
+     !CALL diropn( iunat,  'atwfc',  nwordatwfc, exst )
      IF ( .NOT. exst ) THEN
         call errore ('openfil_pw4gww','file '//TRIM( prefix )//'.atwfc'//' not found',1)
      END IF

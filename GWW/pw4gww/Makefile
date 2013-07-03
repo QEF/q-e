@@ -8,50 +8,50 @@ IFLAGS=-I../../include
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../PW/src $(MOD_FLAG).
+          $(MOD_FLAG)../../EE $(MOD_FLAG)../../PW/src $(MOD_FLAG).
 
 #location of needed libraries
 LIBOBJS= ../../iotk/src/libiotk.a ../../flib/flib.a \
-         ../../clib/clib.a ../../flib/ptools.a
+         ../../clib/clib.a ../../flib/ptools.a 
 
 PW4GWWOBJS = \
 allocate_wannier.o \
-calculate_wing.o \
-cprim.o \
-dft_exchange.o \
-dirdel.o \
-distance_gw.o \
-energies_u.o \
-energies_xc.o \
-go_wannier_product.o \
-gram_schmidt_pwannier.o \
-local_wannier.o \
-matrix_wannier_gamma.o \
-memory_limit.o \
 produce_wannier_gamma.o \
-product_wannier.o \
-product_wannier_para.o \
-product_wannier_para_c.o \
-openfil_pw4gww.o \
-stop_pp.o \
-real_wfc.o \
-rotate_wannier.o \
-set_wannier_P.o \
-start_pw4gww.o \
-ultra_external.o \
-ultralocalization.o \
-ultralocalization_para.o \
-wannier.o \
 wannier_gw.o \
-wannier_pmat_terms_ggrid.o \
-wannier_uterms.o \
-wannier_uterms_c.o \
-wannier_valence_terms.o \
+start_pw4gww.o \
+stop_pp.o \
+openfil_pw4gww.o \
+dft_exchange.o  \
 wfc_real.o \
-write_vpot_matrix.o \
-write_wannier_matrix.o \
-write_wannier_matrix_c.o \
-write_wannier_products.o 
+full.o \
+energies_xc.o  \
+wannier.o  \
+write_wannier_matrix.o  \
+rotate_wannier.o  \
+self_lanczos.o \
+pola_lanczos.o \
+matrix_wannier_gamma.o \
+calculate_wing.o  \
+fake_conduction.o \
+o_1psi.o  \
+o_bands.o  \
+optimal.o \
+pola_partial.o \
+semicore.o \
+semicore_read.o \
+v_basis.o  \
+wannier_uterms.o \
+write_vpot_matrix.o  \
+diago_cg.o  \
+o_rinitcgg.o \
+diago_cg_g.o \
+contour_terms.o \
+fft_custom.o  \
+exchange_custom.o \
+mp_wave_parallel.o \
+wannier_bse.o\
+hpsi_pw4gww.o \
+cgsolve_all_gamma.o 
 
 QEMODS = ../../Modules/libqemod.a
 PWOBJS = ../../PW/src/libpw.a
@@ -62,9 +62,9 @@ TLDEPS= bindir libs pw
 
 all : tldeps pw4gww.x
 
-pw4gww.x : pw4gww.o libpw4gww.a $(PW4GWWOBJS) $(PWOBJS) $(QEMODS) $(LIBMIN) 
+pw4gww.x : pw4gww.o libpw4gww.a  $(PW4GWWOBJS) $(PWOBJS) $(QEMODS)  $(LIBMIN) 
 	$(LD) $(LDFLAGS) -o $@ \
-		pw4gww.o libpw4gww.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+		pw4gww.o libpw4gww.a $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
 	- ( cd ../../bin ; ln -fs ../GWW/pw4gww/$@ . )
  
 tldeps:
@@ -78,3 +78,4 @@ clean :
 	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.L libpw4gww.a
 
 include make.depend
+# DO NOT DELETE

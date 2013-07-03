@@ -1,16 +1,15 @@
-! FOR GWW
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! Author: P. Umari
-! Modified by G. Stenuit
+!
+
 !
 !----------------------------------------------------------------------------
-SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
+SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
   !----------------------------------------------------------------------------
   !
   ! computes the expectation values of the exchange and correlation potential
@@ -24,57 +23,60 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
   ! ... output:
   !       e_xc
   !       e_h
-  USE kinds,            ONLY : DP
-  USE control_flags,    ONLY : gamma_only
-  USE uspp,             ONLY : vkb, nkb
-  USE wvfct,            ONLY : igk, g2kin, ecutwfc
-  USE fft_base,         ONLY : dffts, dfftp
-  USE fft_interfaces,   ONLY : fwfft, invfft
-  USE gvecs,          ONLY : nls, doublegrid
-  USE gvect,            ONLY : ngm, gstart, nl, nlm, g, gg, gcutm
-  USE cell_base,        ONLY : alat, omega
-  USE lsda_mod,         ONLY : nspin
-  USE ldaU,             ONLY : lda_plus_u
-  USE lsda_mod,         ONLY : current_spin
-  USE gvect,            ONLY : gstart
-  USE io_global,        ONLY : stdout
-  USE scf,              ONLY : scf_type, rho, v, vrs, rho_core, rhog_core, vltot
-  USE constants,        ONLY : rytoev
-  USE io_files,         ONLY : find_free_unit, diropn
-  USE ener,             ONLY : etxc, vtxc, ehart
+  USE kinds,    ONLY : DP
+  USE uspp,     ONLY : vkb, nkb
+  USE wvfct,    ONLY : igk, g2kin, ecutwfc
+  USE gvecs,  ONLY : nls, doublegrid
+  USE gvect,                ONLY : ngm, gstart, nl, nlm, g, gg, gcutm
+  USE cell_base,            ONLY :  alat, omega
+  USE lsda_mod,             ONLY : nspin
+  USE ldaU,     ONLY : lda_plus_u
+  USE lsda_mod, ONLY : current_spin
+  USE gvect,    ONLY : gstart
+  USE io_global, ONLY :stdout
+  USE scf,       ONLY : rho, vltot, vrs, rho_core,rhog_core, scf_type
+  USE constants,  ONLY :rytoev
+  USE io_files, ONLY : diropn
+  USE mp, ONLY : mp_sum, mp_barrier
+  USE control_flags,        ONLY : gamma_only
+  USE funct,            ONLY : dft_is_meta
+  USE fft_base,             ONLY : dfftp, dffts
+  USE fft_interfaces,       ONLY : fwfft, invfft
 
-#ifdef EXX
   USE exx,      ONLY : vexx !Suriano
-  USE funct,    ONLY : exx_is_active
-#endif
+  USE funct,    ONLY : exx_is_active,dft_is_hybrid
+
 
   !
   IMPLICIT NONE
+  INTEGER, EXTERNAL :: find_free_unit
   !
   ! ... input/output arguments
   !
   INTEGER          :: lda, n, m
-!  COMPLEX(DP) :: psi(lda,m)
+  COMPLEX(DP) :: psi(lda,m) 
   REAL(kind=DP) :: e_xc(m), e_h(m)
+  INTEGER, INTENT(in) :: ispin !spin 1,2 
+
+  REAL(kind=DP), ALLOCATABLE :: vr(:,:)
   !
   !
   CALL start_clock( 'h_psi' )
-  !
+  allocate(vr(dfftp%nnr,nspin))
+  !  
   IF ( gamma_only ) THEN
      !
-     write(stdout,*) 'BEFORE energies_xc_gamma'
-     call flush_unit(stdout)
      CALL energies_xc_gamma()
-     write(stdout,*) 'AFTER energies_xc_gamma'
-     call flush_unit(stdout)
      !
-  ELSE
+  ELSE  
      !
      CALL energies_xc_k( )
      !
-  END IF
+  END IF  
+
   !
   CALL stop_clock( 'h_psi' )
+  deallocate(vr)
   !
   RETURN
   !
@@ -86,14 +88,15 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
        !
        ! ... k-points version
        !
-       USE wavefunctions_module, ONLY : psic, evc
-       USE becmod,  ONLY : bec_type, becp
+       USE wavefunctions_module, ONLY : psic
+       USE becmod,  ONLY : becp
        !
        IMPLICIT NONE
        !
-
+      
        INTEGER :: ibnd, j,is, ig
-       !!! REAL(dp) :: etxc,vtxc
+       REAL(dp) :: etxc,vtxc
+       REAL(kind=DP) :: ehart, charge
        ! counters
        !
        !
@@ -107,16 +110,16 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
        !
        ! ... the local potential V_Loc psi. First the psi in real space
 !set exchange and correlation potential
-      !if(.not.allocated(rho%of_r)) write(stdout,*) 'rho not allocated'
-      if(.not.allocated(psic)) write(stdout,*) 'psic not allocated'
-      !if(.not.allocated(v%of_r)) write(stdout,*) 'v not allocated'
-      !
-      call v_xc (rho, rho_core, rhog_core, etxc, vtxc, v%of_r)
-      !!!! CALL v_xc(rho,rho_core,nr1,nr2,nr3,nr1x,nr2x,nr3x,&
-      !!!!&nrxx, nl,ngm,g,nspin,alat,omega,etxc,vtxc,v%of_r)
+          if(.not.allocated(psic)) write(stdout,*) 'psic not allocated'
+       if (dft_is_meta()) then
+!         call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
+      else
+         CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vr )
+      endif
+    
 
        do is=1,nspin
-          vrs(:,is)=v%of_r(:,is)
+          vrs(:,is)=vr(:,is)
           if(doublegrid) call interpolate(vrs(1,is),vrs(1,is),-1)
        enddo
        !
@@ -126,15 +129,16 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
           !
           psic(1:dffts%nnr) = ( 0.D0, 0.D0 )
           !
-          psic(nls(igk(1:n))) = evc(1:n,ibnd)
+          psic(nls(igk(1:n))) = psi(1:n,ibnd)
           !
           CALL invfft ('Wave', psic, dffts)
+         
           !
           CALL stop_clock( 'firstfft' )
           !
           ! ... product with the potential vrs = (vltot+vr) on the smooth grid
           !
-          psic(1:dffts%nnr) = psic(1:dffts%nnr) * vrs(1:dffts%nnr,current_spin)
+          psic(1:dffts%nnr) = psic(1:dffts%nnr) * vrs(1:dffts%nnr,1)
           !
           ! ... back to reciprocal space
           !
@@ -146,270 +150,397 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
           !
           e_xc(ibnd)=0.d0
           do ig=1,n
-             e_xc(ibnd)=e_xc(ibnd)+real(conjg(evc(ig,ibnd))*psic(nls(igk(ig))))
-          enddo
-          write(stdout,*) 'Routine energies_xc :', ibnd, e_xc(ibnd)*rytoev
+             e_xc(ibnd)=e_xc(ibnd)+real(conjg(psi(ig,ibnd))*psic(nls(igk(ig))))
+          enddo          
+          call mp_sum(e_xc(ibnd))
+          write(stdout,*) 'energies_xc :', ibnd, e_xc(ibnd)*rytoev
 !
           CALL stop_clock( 'secondfft' )
           !
        END DO
+       vr(:,:)=0.d0
+       call  v_h(rho%of_g , ehart, charge, vr )
+       do is=1,nspin
+          vrs(:,is)=vr(:,is)
+          if(doublegrid) call interpolate(vrs(1,is),vrs(1,is),-1)
+       enddo
+
+
+       DO ibnd = 1, m
+        
+          CALL start_clock( 'firstfft' )
+          psic(1:dffts%nnr) = ( 0.D0, 0.D0 )
+          psic(nls(igk(1:n))) = psi(1:n,ibnd)
+        
+          CALL invfft ('Wave', psic, dffts)
+        
+        
+          CALL stop_clock( 'firstfft' )
+        
+        
+          psic(1:dffts%nnr) = psic(1:dffts%nnr) * vrs(1:dffts%nnr,1)
+        
+          CALL start_clock( 'secondfft' )
+          CALL fwfft ('Wave', psic, dffts)
+          e_h(ibnd)=0.d0
+          do ig=1,n
+             e_h(ibnd)=e_h(ibnd)+real(conjg(psi(ig,ibnd))*psic(nls(igk(ig))))
+          enddo
+          call mp_sum(e_h(ibnd))
+          write(stdout,*) 'energies_h :', ibnd, e_h(ibnd)*rytoev
+
+          CALL stop_clock( 'secondfft' )
+
+       enddo!                                       
+
        !
        !
        !
        RETURN
        !
-     END SUBROUTINE energies_xc_k
-!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!
+     END SUBROUTINE energies_xc_k     
      SUBROUTINE energies_xc_gamma
-
-       USE uspp,                 ONLY : okvan
-       USE wannier_gw,           ONLY : becp_gw, restart_gww
-       USE realus,               ONLY : adduspos_gamma_r
-       USE wvfct,                ONLY : npwx, npw, nbnd, et, g2kin
+ 
+       USE uspp, ONLY : okvan   
+       USE wannier_gw, ONLY : becp_gw, restart_gww,l_whole_s,l_verbose,&
+                               &l_scissor,scissor,num_nbndv
+      ! USE realus,  ONLY : adduspos_gamma_r
+       USE wvfct,    ONLY : npwx,npw,nbnd, et,g2kin
        USE wavefunctions_module, ONLY : evc
        USE klist,                ONLY : xk
-       USE mp,                   ONLY : mp_sum
-       USE gvect,                ONLY : gstart,g
-       USE constants,            ONLY : rytoev
-       USE becmod,               ONLY : bec_type, becp, allocate_bec_type, calbec
+       USE mp, ONLY : mp_sum
+       USE gvect,  ONLY : gstart,g
+       USE constants, ONLY : rytoev
+       USE becmod,           ONLY : becp, calbec,allocate_bec_type,deallocate_bec_type
        USE cell_base,            ONLY : tpiba2
-
+       USE io_global, ONLY : ionode
+       USE io_files, ONLY :prefix
+     USE exx, ONLY : exxalfa
 
        implicit none
 
-       INTEGER :: ibnd,ir,ig
-       INTEGER :: iunwfcreal
-       REAL(kind=DP) :: charge
+       INTEGER, EXTERNAL :: find_free_unit
+
+       INTEGER :: ibnd,jbnd,ir,ig
+       INTEGER :: iunwfcreal,iunu
+       REAL(kind=DP) :: etxc,vtxc,ehart, charge
        REAL(kind=DP), ALLOCATABLE :: psi_r(:),psi_rs(:)
        LOGICAL :: exst
        REAL(kind=DP), ALLOCATABLE :: rho_fake_core(:)
-       COMPLEX(kind=DP), ALLOCATABLE :: hpsi(:,:), psi(:,:)
-       REAL(kind=DP) :: norm, diff
-       REAL(kind=DP) :: tresh=1.d-5
+       COMPLEX(kind=DP), ALLOCATABLE :: hpsi(:,:)
+       REAL(kind=DP), ALLOCATABLE :: exact_x(:)
+       REAL(kind=DP), ALLOCATABLE :: e_hub(:)!Hubbard contribution to KS energies 
+       REAL(kind=DP), ALLOCATABLE :: et_off(:,:)!off-diagonal energies
 
+
+       allocate(exact_x(nbnd))
+       allocate(e_hub(nbnd))
+       if(l_whole_s) then
+          allocate (et_off(nbnd,nbnd))
+       endif
 !if required calculates also the KS energies
-      if(restart_gww==-1) then
-         write(stdout,*) 'ATTENZIONE1 and doublegrid=', doublegrid
-         write(stdout,*) 'nkb=', nkb, 'nbnd=', nbnd
+ !     if(restart_gww==-1) then
+         if(l_verbose) write(stdout,*) 'ATTENZIONE1'
          call flush_unit(stdout)
-
-         call allocate_bec_type (nkb, nbnd, becp)
+         !allocate( becp%r( nkb, nbnd ) )
+         call allocate_bec_type ( nkb, nbnd, becp)        
+         if(l_verbose) write(stdout,*) 'ATTENZIONE2'
+         call flush_unit(stdout)
 
          IF ( nkb > 0 )  CALL init_us_2( npw, igk, xk(1,1), vkb )
-         call calbec(npw, vkb, evc, becp, nbnd) !! N.B. nbnd is optional !
+         !call ccalbec( nkb, npwx, npw, nbnd, becp%r, vkb, evc )
+        !if(nkb> 0)CALL calbec ( npw, vkb, psi, becp, nbnd)
+
+        if(l_verbose)write(stdout,*) 'ATTENZIONE3'
+         call flush_unit(stdout)
 
          allocate(hpsi(npwx,nbnd))
-         allocate(psi(npwx,nbnd))
-         psi(:,:)=0.D0
-         hpsi(:,:)=0.D0
-
-         psi(:,1:nbnd)=evc(:,1:nbnd)
-
-!         g2kin(1:npw) = ( ( xk(1,1) + g(1,igk(1:npw)) )**2 + &
-!              ( xk(2,1) + g(2,igk(1:npw)) )**2 + &
-!              ( xk(3,1) + g(3,igk(1:npw)) )**2 ) * tpiba2
-
-         call g2_kin(1)
-
-         call h_psi( npwx, npw, nbnd, psi, hpsi )
-         et(:,1)=0.d0
-
-         !!! for info:
-          write(stdout,*) 'gstart=', gstart, ' and nbnd=', nbnd, &
-                          ' and npw=', npw,  ' and npwx=', npwx
+         if(l_verbose)write(stdout,*) 'ATTENZIONE4'
          call flush_unit(stdout)
-         do ibnd=1,nbnd
+
+         g2kin(1:npw) = ( ( xk(1,1) + g(1,igk(1:npw)) )**2 + &
+              ( xk(2,1) + g(2,igk(1:npw)) )**2 + &
+              ( xk(3,1) + g(3,igk(1:npw)) )**2 ) * tpiba2
+
+
+         if(l_verbose)write(stdout,*) 'ATTENZIONE5'
+          call flush_unit(stdout)
+          
+     
+ !         exxalfa=0.d0!ATTENZIONE
+         call h_psi( npwx, npw, nbnd, psi, hpsi )
+         et(:,ispin)=0.d0
+         if(l_verbose)write(stdout,*) 'ATTENZIONE6'
+         if(l_verbose)write(stdout,*) 'EXXALFA', exxalfa
+         call flush_unit(stdout)
+
+          do ibnd=1,nbnd
 
            !   call dgemm('T','N',1,1,2*npw,2.d0,evc(:,ibnd),2*npwx,hpsi(:,ibnd),2*npwx,&
            !        &0.d0,et(ibnd,1),1)
-           do ig=1,npw
-              et(ibnd,1)=et(ibnd,1)+2.d0*dble(conjg(evc(ig,ibnd))*hpsi(ig,ibnd))
-           enddo
-           if(gstart==2) then
-              et(ibnd,1)=et(ibnd,1)-dble(conjg(evc(1,ibnd))*hpsi(1,ibnd))
-           endif
-         enddo
+              do ig=1,npw
+                 et(ibnd,ispin)=et(ibnd,ispin)+2.d0*dble(conjg(evc(ig,ibnd))*hpsi(ig,ibnd))
+              enddo
+              if(gstart==2) then
+                et(ibnd,ispin)=et(ibnd,ispin)-dble(conjg(evc(1,ibnd))*hpsi(1,ibnd))
+             endif
+          enddo
+          call mp_sum(et(:,ispin))
+          if(l_scissor) then
+             et(1:num_nbndv(ispin),ispin)=et(1:num_nbndv(ispin),ispin)+scissor/rytoev
+          endif
 
-         call mp_sum(et(:,1))
+          if(l_verbose)write(stdout,*) 'ATTENZIONE7'
+          call flush_unit(stdout)
+!if required calculate Hubbard U contribution to eigen-energies
+         e_hub(:)=0.d0
+         if ( lda_plus_u ) then
+            hpsi(:,:)=(0.d0,0.d0)
+            CALL vhpsi( npwx, npw, nbnd, psi, hpsi )
+           
+            do ibnd=1,nbnd
 
-         do ibnd=1,nbnd
-            write(stdout,*) 'KS energy:', ibnd, et(ibnd,1)*rytoev
-         enddo
-         call flush_unit(stdout)
-         deallocate(hpsi,psi,becp%r)
-       endif
-       !
-       allocate(psi_r(dfftp%nnr),psi_rs(dffts%nnr))
-       !
+               do ig=1,npw
+                  e_hub(ibnd)=e_hub(ibnd)+2.d0*dble(conjg(psi(ig,ibnd))*hpsi(ig,ibnd))
+               enddo
+               if(gstart==2) then
+                  e_hub(ibnd)=e_hub(ibnd)-dble(conjg(psi(1,ibnd))*hpsi(1,ibnd))
+               endif
+            enddo
+            call mp_sum(e_hub(:))
+            do ibnd=1,nbnd
+               write(stdout,*) 'Hubbard U energy:',ibnd,e_hub(ibnd)*rytoev
+            enddo
+            call flush_unit(stdout)
+
+         endif
+          do ibnd=1,nbnd
+             write(stdout,*) 'KS energy:',ibnd,et(ibnd,ispin)*rytoev
+          enddo
+          call flush_unit(stdout)
+
+!in case of hybrid functionals and HF we have to calculated also the exact exchange part
+
+          if(dft_is_hybrid()) then
+!NOT_TO_BE_INCLUDED_START
+             hpsi(:,:)=(0.d0,0.d0)
+             call vexx( npwx, npw, nbnd, psi, hpsi )
+             do ibnd=1,nbnd
+                call dgemm('T','N',1,1,2*npw,2.d0,evc(:,ibnd),2*npwx,hpsi(:,ibnd),2*npwx,&
+                     &0.d0,exact_x(ibnd),1)
+                if(gstart==2) then
+                   exact_x(ibnd)=exact_x(ibnd)-dble(conjg(evc(1,ibnd))*hpsi(1,ibnd))
+                endif
+                call mp_sum(exact_x(ibnd))
+                write(stdout,*) 'Exact exchange :',ibnd, exact_x(ibnd)
+             enddo
+!NOT_TO_BE_INCLUDED_END
+          end if
+
+ !         deallocate(hpsi,becp%r)
+          call deallocate_bec_type ( becp)
+!       endif
+
+
+
+       allocate(psi_r(dfftp%nnr),psi_rs(dfftp%nnr))
+       
        iunwfcreal=find_free_unit()
-       CALL diropn( iunwfcreal, 'real_whole', dffts%nnr, exst )
-       !
+       CALL diropn( iunwfcreal, 'real_whole', dfftp%nnr, exst )
+
+
 !calculate xc potential on fine grid
-       !
-       !if(.not.allocated(rho%of_r)) write(stdout,*) 'rho not allocated'
-       !if(.not.allocated(v%of_r)) write(stdout,*) 'v not allocated'
+
+       
+       if(.not.allocated(vr)) write(stdout,*) 'vr not allocated'
        allocate(rho_fake_core(dfftp%nnr))
        rho_fake_core(:)=0.d0
-       CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v%of_r )
-       !!CALL v_xc(rho,rho_core,nr1,nr2,nr3,nr1x,nr2x,nr3x,&
-       !!     &nrxx, nl,ngm,g,nspin,alat,omega,etxc,vtxc,v%of_r)
-       !
-       !!! to test non-linear core correction :
-       !! replace rho_core by rho_fake_core in
-       !! CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v%of_r )
-       !
-       !  CALL v_xc(rho,rho_fake_core,nr1,nr2,nr3,nr1x,nr2x,nr3x,&
-       !    &nrxx, nl,ngm,g,nspin,alat,omega,etxc,vtxc,vr)
-       deallocate(rho_fake_core)
-       !
-       !
+
+       if (dft_is_meta()) then
+      !    call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
+       else
+          CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vr )
+       endif
+
+
+     deallocate(rho_fake_core)
+
+
+       if(l_whole_s) then
+!NOT_TO_BE_INCLUDED_START
+          allocate(hpsi(npwx,nbnd))
+          hpsi(:,:)=(0.d0,0.d0)
+          CALL vloc_psi_gamma ( npwx, npw, nbnd, evc, vr(1,ispin), hpsi )
+          call dgemm('T','N',nbnd,nbnd,2*npw,2.d0,evc,2*npwx,hpsi,2*npwx,&
+               &0.d0,et_off,nbnd)
+          if(gstart==2) then
+             do ibnd=1,nbnd
+                do jbnd=1,nbnd
+                   et_off(ibnd,jbnd)=et_off(ibnd,jbnd)-dble(conjg(evc(1,ibnd))*hpsi(1,jbnd))
+                enddo
+             enddo
+          endif
+          deallocate(hpsi)
+          call mp_sum(et_off)
+!write on file                                                                                                                          
+          if(ionode) then
+             iunu = find_free_unit()
+             if(ispin==1) then
+                open(unit=iunu,file=trim(prefix)//'.exc_off',status='unknown',form='unformatted')
+             else
+                open(unit=iunu,file=trim(prefix)//'.exc_off2',status='unknown',form='unformatted')
+             endif
+             write(iunu) nbnd
+             do ibnd=1,nbnd
+                write(iunu) et_off(1:nbnd,ibnd)
+             enddo
+             close(iunu)
+          endif
+!NOT_TO_BE_INCLUDED_END
+       endif
+
+
+
+
        do ibnd=1,m!loop on states
-         !read from disk wfc on coarse grid
-         !
-         CALL davcio( psi_rs, dffts%nnr, iunwfcreal, ibnd, -1)
-         !
-         !
+!read from disk wfc on coarse grid
+         CALL davcio( psi_rs,dffts%nnr,iunwfcreal,ibnd+(ispin-1)*nbnd,-1)
          if(doublegrid) then
            call interpolate(psi_r,psi_rs,1)
          else
            psi_r(:)=psi_rs(:)
          endif
-         !
-         !
+
          do ir=1,dfftp%nnr
             psi_r(ir)=psi_r(ir)**2.d0
          enddo
-         !
-         !
-         if(okvan) call adduspos_gamma_r(ibnd,ibnd,psi_r,1,becp_gw(:,ibnd),becp_gw(:,ibnd))
-         !
-         !
-         ! CHECK if the norm if equal to 1.0
-         !
-         norm=0.0
-         do ir=1,dfftp%nnr
-            norm=norm+psi_r(ir)
-         enddo
-         norm=norm/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
-         call  mp_sum(norm)
-         !
-         diff=abs( norm - 1.0d0 )
-         !
-         ! Write a warning if the norm is not equal to one (within a given threshold)
-         if(diff .gt. tresh ) then
-            write(stdout,*) 'WARNING: in e_xc part : for the band i=', ibnd
-            write(stdout,*) 'WARNING: norm after US contribution is not exactly equal to 1.0 ', norm
-            call flush_unit(stdout)
-         endif
-         !
+
+         !if(okvan) call adduspos_gamma_r(ibnd,ibnd,psi_r,1,becp_gw(:,ibnd),becp_gw(:,ibnd))
+
          e_xc(ibnd)=0.d0
          do ir=1,dfftp%nnr
-           e_xc(ibnd)=e_xc(ibnd)+psi_r(ir)*v%of_r(ir,1)!the 1 is for the spin NOT IMPLEMENTED YET
+           e_xc(ibnd)=e_xc(ibnd)+psi_r(ir)*vr(ir,ispin)!the 1 is for the spin NOT IMPLEMENTED YET
          enddo
-         !
          e_xc(ibnd)=e_xc(ibnd)/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
-         !
+       
          call mp_sum(e_xc(ibnd))
-         !
+
+!ifrequired add the contribution from exact exchange for hybrids and HF
+         if(dft_is_hybrid()) then
+!NOT_TO_BE_INCLUDED_START
+            e_xc(ibnd)=e_xc(ibnd)+exact_x(ibnd)
+!NOT_TO_BE_INCLUDED_END
+         endif
+
          write(stdout,*) 'Routine energies_xc :', ibnd, e_xc(ibnd)*rytoev
-         call flush_unit(stdout)
-         !
-       enddo
-       !
-       v%of_r(:,:)=0.d0
-       !
-       CALL v_h( rho%of_g, ehart, charge, v%of_r )
-       !!CALL v_h( rho, nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, nl, &
-       !!         ngm, gg, gstart, nspin, alat, omega, ehart, charge, v%of_r )
-       !
-       do ibnd=1,m!loop on states
-           !read from disk wfc on coarse grid
-           CALL davcio( psi_rs,dffts%nnr,iunwfcreal,ibnd,-1)
+   
+!now hartree term
+
+
+      enddo
+       
+!if required add to e_xc Hubbard U terms
+
+      if(lda_plus_u) then
+
+         e_xc(1:nbnd)=e_xc(1:nbnd)+e_hub(1:nbnd)
+      endif
+
+
+       vr(:,:)=0.d0
+
+       call  v_h(rho%of_g , ehart, charge, vr )
+
+
+        do ibnd=1,m!loop on states
+!read from disk wfc on coarse grid
+           CALL davcio( psi_rs,dffts%nnr,iunwfcreal,ibnd+(ispin-1)*nbnd,-1)
            if(doublegrid) then
               call interpolate(psi_r,psi_rs,1)
            else
               psi_r(:)=psi_rs(:)
            endif
-           !
+           
            do ir=1,dfftp%nnr
               psi_r(ir)=psi_r(ir)**2.d0
            enddo
-           !
-           if(okvan) call adduspos_gamma_r(ibnd,ibnd,psi_r,1,becp_gw(:,ibnd),becp_gw(:,ibnd))
-           !
-           ! CHECK the norm
-           norm=0.0
-           do ir=1,dfftp%nnr
-              norm=norm+psi_r(ir)
-           enddo
-           norm=norm/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
-           call  mp_sum(norm)
-           !
-           diff=abs( norm - 1.0d0 )
-           !
-           ! Write a warning if the norm is not equal to one (within a given threshold)
-           if(diff .gt. tresh ) then
-              write(stdout,*) 'WARNING: in e_h part : for the band i=', ibnd
-              write(stdout,*) 'WARNING: norm after US contribution is not exactly equal to 1.0 ', norm
-              call flush_unit(stdout)
-           endif
-           !
+
+           !if(okvan) call adduspos_gamma_r(ibnd,ibnd,psi_r,1,becp_gw(:,ibnd),becp_gw(:,ibnd))
+
            e_h(ibnd)=0.d0
            do ir=1,dfftp%nnr
-              e_h(ibnd)=e_h(ibnd)+psi_r(ir)*v%of_r(ir,1)!the 1 is for the spin NOT IMPLEMENTED YET
+              e_h(ibnd)=e_h(ibnd)+psi_r(ir)*vr(ir,ispin)
            enddo
            e_h(ibnd)=e_h(ibnd)/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
-           !
+         
            call mp_sum(e_h(ibnd))
            write(stdout,*) 'Routine energies_h :', ibnd, e_h(ibnd)*rytoev
-           !
-       enddo
-       !
+
+!now hartree term
+
+
+        enddo
+
+
+
+
+
        deallocate(psi_r,psi_rs)
-       !
-       close(iunwfcreal)
-       !
-       return
-       !
-  END SUBROUTINE energies_xc_gamma
-     !
+       deallocate(exact_x)
+      close(iunwfcreal)
+      deallocate(e_hub)
+      if(l_whole_s) then
+!NOT_TO_BE_INCLUDED_START
+         deallocate(et_off)
+!NOT_TO_BE_INCLUDED_END
+      endif
+
+      return     
+
+     END SUBROUTINE energies_xc_gamma
      !
 END SUBROUTINE energies_xc
 
 
 SUBROUTINE write_energies_xc(e_xc)
-  !
-  !
+
   USE kinds, ONLY : DP
-  USE wannier_gw, ONLY : num_nbnds, nbnd_normal
-  USE io_files, ONLY : find_free_unit, prefix
+  USE wannier_gw, ONLY : num_nbnds, l_verbose
+  USE io_files, ONLY : prefix
   USE io_global, ONLY : ionode
   USE wvfct,    ONLY : nbnd
+  USE lsda_mod, ONLY : nspin
 
   implicit none
 
-  REAL(kind=DP), intent(in) :: e_xc(nbnd)!exchange and correlation energies
+  INTEGER, EXTERNAL :: find_free_unit
+  
+  REAL(kind=DP) :: e_xc(nbnd,nspin)!exchange and correlation energies
 
   INTEGER :: iunu, iw
-
+ 
 
   if(ionode) then
      iunu = find_free_unit()
-
+     
      open(unit=iunu,file=trim(prefix)//'.dft_xc',status='unknown',form='unformatted')
+  
+     write(iunu) nbnd
+  
 
-     write(iunu) nbnd_normal
-
-
-     do iw=1,nbnd_normal
-        write(iunu) e_xc(iw)
+     do iw=1,nbnd
+        write(iunu) e_xc(iw,1)
+        if(l_verbose) WRITE(*,*) 'SCRITTO e_XC 1', e_xc(iw,1)
      enddo
-
+     if(nspin==2) then
+        do iw=1,nbnd
+           write(iunu) e_xc(iw,2)
+           if(l_verbose) WRITE(*,*) 'SCRITTO e_XC 2', e_xc(iw,2)
+        enddo
+     endif
      close(iunu)
   endif
-  !
-  !
+
   return
 
 END SUBROUTINE write_energies_xc

@@ -1,9 +1,12 @@
-! FOR GWW
 !
-! Author: P. Umari
-! Modified by G. Stenuit
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!#ifdef __GWW
+!
+
 !
 !new module for wannier function support
 MODULE wannier_gw
@@ -11,13 +14,6 @@ MODULE wannier_gw
   USE kinds, ONLY: DP
 
   SAVE
-
-  TYPE wannier_product!this structure described the product of 2 wannier functions w_i(r)*w_j(r)
-     INTEGER :: i! i
-     INTEGER :: j! j
-     INTEGER :: center(3)!center of the product on the grid
-     INTEGER :: radius(3)! radius length in grid units on three cartesian directions
-  END TYPE wannier_product
 
   TYPE real_matrix_pointer
      REAL(kind=DP), DIMENSION(:,:), POINTER :: p
@@ -27,122 +23,64 @@ MODULE wannier_gw
      COMPLEX(kind=DP), DIMENSION(:,:), POINTER :: p
   END TYPE complex_matrix_pointer
 
-  TYPE wannier_P!this structure described the localized and normalized products of wanniers  w_P
-     INTEGER :: numij!number of (unordered)couples of wannier w_i w_j which overlap both with w_P
-     INTEGER, DIMENSION(:,:), POINTER :: ij!array for i,j (ij,:)
-     REAL(kind=DP),DIMENSION(:), POINTER :: o!overlap <w_P|w_i*w_j>
-  END TYPE wannier_P
 
-  LOGICAL  :: lwannier!if true calculates wannier functions
-  REAL(kind=DP),  ALLOCATABLE :: wannier_centers(:,:)!wannier centers in a.u.
-  REAL(kind=DP),  ALLOCATABLE :: wannier_radii(:)!wannier centers in a.u.
-  INTEGER, ALLOCATABLE  :: w_centers(:,:)!wanier centers on the grid
+  TYPE optimal_options!options for obtaining optimal basis sets
+     LOGICAL :: l_complete!if true just do a diagonalization
+     INTEGER :: idiago !kind of optimization: 0=Gram-Schmidt like
+     INTEGER :: ithres!kind of threshold: 0=on modulus square
+     REAL(kind=DP) :: thres!value of threshold
+  END TYPE optimal_options
 
-  INTEGER, ALLOCATABLE  :: w_radii(:)!wannier lengths in grid units
-  INTEGER, ALLOCATABLE  :: w_centers_c(:,:)!wanier centers on the grid for {c'} subspace
-  INTEGER, ALLOCATABLE  :: w_radii_c(:)!wannier lengths in grid units for {c'} subspace
-  COMPLEX(kind=DP), ALLOCATABLE :: u_trans(:,:)!unitarian transformation from bloch wfcs to wannier'
-  REAL(kind=DP) :: cutoff_wsq!cutoff for |w|^2
-  REAL(kind=DP) :: cutoff_wsq_c!cutoff for |w|^2 for conduction states
-  REAL(kind=DP) :: cutoff_wpr!cutoff for w_i*w_j
-  REAL(kind=DP) :: cutoff_overlap!for overlaps <w^{p}|w_iw_j>
+
+ 
+  REAL(kind=DP),  ALLOCATABLE :: wannier_centers(:,:,:)!wannier centers in a.u.
+  REAL(kind=DP),  ALLOCATABLE :: wannier_radii(:,:)!wannier centers in a.u.
+  INTEGER, ALLOCATABLE  :: w_centers(:,:,:)!wanier centers on the grid
+
+  INTEGER, ALLOCATABLE  :: w_radii(:,:)!wannier lengths in grid units
+  COMPLEX(kind=DP), ALLOCATABLE :: u_trans(:,:,:)!unitarian transformation from bloch wfcs to wannier'
   INTEGER :: numw_prod!number of products w_i(r)*w_j(r) then of orthonormalized products
-  INTEGER :: numw_prod_c!number of products w_c'(r)*w_c(r)
-  INTEGER :: numw_prod_vvc!!number of products w_i(r)*w_j(r) original
-  INTEGER :: numw_prod_val_cond!number of products w_val(r)*w_cond(r) original
-  INTEGER :: numw_prod_val_cond_sec!number of products w_val(r)*w_cond^2(r) original
-  TYPE(wannier_product), POINTER :: w_prod(:)!array for describing products of wannier wfcs
-  INTEGER :: num_nbndv !number of valence bands
+  INTEGER :: num_nbndv(2) !number of valence bands
   INTEGER :: num_nbnds !number of studied bands valence plus  a part of conduction's
-  LOGICAL :: lsmallgrid!uses small wavefunction G grid, instead of denser R grid for wannier products
-  LOGICAL :: lnonorthogonal!if true non orthogonal ultralocalized wanniers
-  REAL(kind=DP) :: no_radius!radius to be used for nonorthogonal localization
-  REAL(kind=DP), ALLOCATABLE :: becp_gw(:,:)!to store projections of wfcs with us projectors
-  REAL(kind=DP), ALLOCATABLE :: becp_gw_c(:,:)!to store projections of wfcs with us projectors for {c'} subspace
-  LOGICAL :: lggrid!if true calculates overlaps in g space
+  REAL(kind=DP), ALLOCATABLE :: becp_gw(:,:,:)!to store projections of wfcs with us projectors
+  REAL(kind=DP), ALLOCATABLE :: becp_gw_c(:,:,:)!to store projections of wfcs with us projectors for {c'} subspace
   COMPLEX(kind=DP), ALLOCATABLE :: expgsave(:,:,:,:) !to store exp_igx  on us augmentation functions
   INTEGER :: nset!number of states to be read  written from/to file simultaneously
-  REAL(kind=DP) :: ultra_alpha_v!alpha factor for valence states
-  REAL(kind=DP) :: ultra_alpha_c!alpha factor for conduction states
-  REAL(kind=DP) :: ultra_alpha_c2!alpha factor for conduction states for second block
-  REAL(kind=DP) :: ultra_alpha_c_prim!alpha factor for the subspace of observed conduction states
-  INTEGER :: num_nbndc_set!number of conduction bands to be treated as a separate manifold, for sigma calculation
   LOGICAL :: l_truncated_coulomb!if true the Coulomb potential is truncated
   REAL(kind=DP) :: truncation_radius!truncation radius for Coulomb potential
-  INTEGER :: numw_prodprod!total number of products of products of non-orthogonal wanniers
-  REAL(kind=DP) :: cutoff_wpr_wpr!cutoff for  products of products of non-orthogonal wanniers
-  REAL(kind=DP) :: r_cutoff_products!cutoff radius for distance of products of wanniers
-  LOGICAL, ALLOCATABLE :: l_on_products(:,:)!if true the distance of two products of wanniers is less than r_cutoff_products
   INTEGER :: remainder!1-cutoff 2-distance 3-no remainder 4-postprocessing from W 5-postprocessing from dressed polarization P
   INTEGER :: restart_gww!for restarting the calculation of gww stuff, 0 begins from beginning
 
-  REAL(kind=DP) :: cutoff_wpr_vc!cutoff for w_i*w_j for V-C first block
-  REAL(kind=DP) :: cutoff_wpr_vc2!cutoff for w_i*w_j for V-C second block
-  INTEGER :: num_nbnd_first!defines first block of conduction states
-
-  REAL(kind=DP) :: cutoff_wpr_prim!cutoff for w_i*w_j for C-C' first block
-  REAL(kind=DP) :: cutoff_wpr_prim2!cutoff for w_i*w_j for C-C' second block
 
   LOGICAL :: l_gram!if true uses gram schmidt for orthonormalizing the products of wanniers
-
   LOGICAL :: l_head!if true calculates the head of the symmetrized dielectric matrix -1
   INTEGER :: n_gauss!number of frequency steps for head calculation
   REAL(kind=DP) :: omega_gauss!period for frequency calculation
   LOGICAL :: l_exchange!if true calculate the exchange terms with k-points sampling
-  REAL(kind=DP) :: tau_gauss!period for the calculation of the gauss legendre time grid
+
 
   LOGICAL :: l_zero!if .true. calculate also the v e v^1/2 operators with G=0,G'=0 put to 0
 
   LOGICAL :: l_wing!if .true. calculate also the wing terms, it requires the file .e_head
 
 
-  INTEGER :: grid_type!0 GL -T,T 2 GL 0 T
+  INTEGER :: grid_type!0 GL -T,T 2 GL 0 T 3 Equally spaced 0 Omega
 
-  INTEGER :: cprim_type!if == 0 treats c' manifold through ultraorthogonalized wannier, if ==1 calculates all
-                       !elemenst S_{c'c i}, if ==2 calculates S{c' v,c i}
-  INTEGER :: cprim_first,cprim_last!define the range for c'
-
-  LOGICAL :: l_vcw_overlap!if true calculates the  overlaps \int dr \Psi_v(r)\Psi_c(r) \tilde{w}^P_i
 
   INTEGER :: nset_overlap!number of states to be read  written from/to file simultaneously, when
                          !calculating overlaps
   INTEGER :: nspace!space on grid for evalueation of exchange-type integrals
 
-  REAL(kind=DP) :: lambda_ene!if >0.  localizes wanniers also on energy
-  REAL(kind=DP) :: e_min_cutoff!energy for Ev-Ec for which the cutoff is /= 0 (in Ry)
-  REAL(kind=DP) :: e_max_cutoff!energy for Ev-Ec for which the cutoff is /= 0 and /= +inf (in Ry)
-  REAL(kind=DP) :: v_min_cutoff!value of cutoff at e_min_cutoff (in a.u.)
-  REAL(kind=DP) :: v_max_cutoff!value of cutoff at e_max_cutoff (in a.u.)
-
-  LOGICAL :: l_orthonorm_products!if true orthonormalize directly the products of wannier
-  LOGICAL :: l_wpwt_terms!if .true. (default) calculates  the overlaps <\tilde{w}_i| w_j>
-
-  REAL(kind=DP) :: cutoff_products!cutoff for orthonormalization of wannier products
 
   REAL(kind=DP) :: ecutoff_global!cut off in Rydbergs for G sum on (dense charge grid)
 
-
-  LOGICAL :: l_polarization_analysis!if true calculate the polarization and retain only significant eigenvectors
-  REAL(kind=DP) :: cutoff_polarization!cutoff for polarization analysis
-  INTEGER :: nc_polarization_analysis!number of conduction states for calculating the polarization
-                                           !in polarization analysis
-  LOGICAL :: l_only_val_cond!if true one calculating orthonormalization of wannier products
-                            !considers only valence*conduction products
-  LOGICAL :: l_no_val_cond_sec!if true one calculating orthonormalization of wannier products
-                            !considers only valence*(second block of conduction) products
 
   INTEGER :: maxiter2!max number of iteration for the genaralized maximally localized wannier
                       !of the second conduction manifold
   REAL(kind=DP) :: diago_thr2!thresold for electronic states used in c_bands for upper
                               !conduction manifold if any, if ==0 used same cutoff as for valence
   LOGICAL :: l_plot_mlwf!if true save the orthonormal wannier for plotting
-  LOGICAL :: l_plot_ulwf!if true save the ultralocalized wannier for plotting
 
-  LOGICAL :: l_ultra_external!if true ultralocalize through the new procedure
-
-  INTEGER :: nbnd_normal!max number of bands with normal treatment if == 0 sets nbnd_max = nbnd
-  INTEGER :: num_nbnd_delta!number of upper bands for which the same energy is considered
-  INTEGER :: num_nbnd_upper!number of upper bands AFTER THE REDUCTION for which the same energy is considered
 
 
   INTEGER :: max_ngm!max number of g vector for charge grid effctively stored
@@ -158,20 +96,105 @@ MODULE wannier_gw
   INTEGER :: myrow!actual processor row
   INTEGER :: mycol!actual processor column
 
-  LOGICAL :: l_assume_ortho!during s_3 step assumes orthonormality (and uses s_2 cutoff)
+
 
   LOGICAL :: l_coulomb_analysis!if true after polarization analysis consider eigenvalues of coulomb potential
   REAL(kind=DP) ::  cutoff_coulomb_analysis!cutoff for coulomb analysis
-  REAL(kind=DP) :: mem_per_core! memory (in Bytes) per core (not per CPU or per node !)
+
+
+  INTEGER :: n_pola_lanczos!number of orthonormal states for polarization lanczos-style
+  INTEGER :: n_self_lanczos!number of orthonormal states for self-energy lanczos-style
+  INTEGER :: nsteps_lanczos_pola!number of lanczos steps for the polarizability
+  INTEGER :: nsteps_lanczos_self!number of lanczos steps for the self_energy
+  REAL(kind=DP) :: s_pola_lanczos!cutoff for lanczos basis for polarization
+  REAL(kind=DP) :: s_self_lanczos!cutoff for lanczos basis for self-energy
+  INTEGER :: nump_lanczos!dimension of basis for lanczos calculation of the polarization
+  INTEGER :: nums_lanczos!dimension of basis for lanczos calculation of the self-energy
+  REAL(kind=DP) :: s_g_lanczos!cutoff for absolute value of trial green function
+
+  LOGICAL :: l_pmat_diago!if true find the basis for the polarization diagonalizing the O matrix
+  REAL(kind=DP) :: pmat_ethr!threshold for diagonalizing the O matrix
+
+  REAL(kind=DP) :: pmat_cutoff!cutoff (in Ryd) for polarization diagonalization
+  INTEGER :: pmat_type!type of approximation 1 usual, 2 with wanniers, 3 with optimal representation,5 just plane waves
+  INTEGER :: n_fast_pmat!number of states  for fast evaluation of conduction manifold if =0 disabled
+  INTEGER :: n_pmat!number of orthonormal states for optimal representation O matrix
+  REAL(kind=DP) :: s_pmat!cutoff for optimal basis for O matrix
+  INTEGER :: lanczos_restart!restart point for lanczos
+  INTEGER :: n_pola_lanczos_eff!effective number of pola states; if 0 equal to n_pola_lanczos
+  INTEGER :: n_self_lanczos_eff!effective number of self states; if 0 equal to n_self_lanczos
+  REAL(kind=DP) :: off_fast_pmat!offset in Ry for fast assessment of polarizability if =0 disabled
+  LOGICAL :: l_fast_pola!if true fast assessment of polarizability for basis construction  
+  LOGICAL :: l_v_basis!if true valuate the polarizability basis vectors as eigenstates of v operator
+  REAL(kind=DP) :: v_cutoff!cutoff in Ryd for v operator
+  LOGICAL :: l_iter_algorithm!if true uses iterative algorithms
+  REAL(kind=DP) :: dual_pb!dual value till 4.d0 for defing the grid on which the polarizability basis is created
+  
+  REAL(kind=DP), ALLOCATABLE :: vg_q(:) ! contains the elements V(G) of the Coulomb potential obtained upon integration over q
+  LOGICAL :: l_t_wannier!if true builds t verctors starting from KS valence wannier functions
+  REAL(kind=DP) :: dual_vt!dual value till 4.d0 for defing the grid on which the t vectors created
+  REAL(kind=DP) :: dual_vs!dual value till 4.d0 for defing the grid on which the s vectors created
+
+  LOGICAL  :: lwannier!if true take advantage of localization of wannier functions
+  REAL(kind=DP) :: wannier_thres!threshold for modulus of wannier function in a.u.
+  
+
+  INTEGER :: s_first_state!if different from 0, first KS state for calculatin s vectors (if last 1)
+  INTEGER :: s_last_state!if different from 0, last KS state for calculatin s vectors (if last num_nbnds)
+
+  LOGICAL :: l_selfconsistent!if true do selfconsistent GW calculation, requires file band.dat
+  REAL(kind=DP), ALLOCATABLE :: ene_gw(:,:)!GW energies of previous iteration for selfconsistent calculation
+  INTEGER :: n_gw_states!number of GW states for selfconsistent calculation
+  REAL(kind=DP) :: delta_self!delta energy for selfconsistent calculation
+
+  LOGICAL :: l_whole_s!if true calculates also the off-diagonal elemenets of V_xc for then 
+                      !calculating the off-diagonal elements of sigma 
+  LOGICAL :: l_ts_eigen!if true the t and global vectors are calculated considering also the eigenvalues of the partial basis (recommanded)
+
+  LOGICAL :: l_frac_occ! if true consider fractional occupancies
+  INTEGER :: num_nbndv_min(2)!limits for fully occupied states
+
+  LOGICAL :: l_cond_pol_base!if true uses conduction states till num_nbnds for the construction of the polarizability bases
+
+
+  LOGICAL :: l_semicore!if true evaluate semicore terms
+  INTEGER :: n_semicore!number of semicore states staring from the bottom of valence states
+  LOGICAL :: l_semicore_read!if true reads semicore file for calculating products for Green's function
+
+  LOGICAL :: l_verbose!if true a lot of ouput for debug
+
+
+  LOGICAL :: l_contour! if true calculates the terms for contour integration
+  LOGICAL :: l_real!if true calculate the polarizability basis, s and t vectors avoiding ffts it requires more memory
+
+  LOGICAL :: l_big_system!if true uses startegy for large systems: just local s vectors are used
+
+  REAL(kind=DP) ::extra_pw_cutoff!cutoff to add to the optimal polarizability basis plane-waves (sin and cos functions) 
+                                 !if 0 no plane waves is added
+  
+  !REAL(kind=DP) :: exchange_fast_dual!for defining the fast exchnage routines
+
+  LOGICAL :: l_bse!if true computing quantities for bse calculation
+  REAL(kind=DP) :: s_bse!threshold for wannier function overlap
+  REAL(kind=DP) :: dual_bse!dual factor for bse calculations
+
+  LOGICAL :: l_list !if true uses startegy for large systems from list of states included in s_first_state, s_last_state
+  INTEGER :: n_list(2)!number of states in list for the 2 spin channels
+  INTEGER, ALLOCATABLE :: i_list(:,:) !list of KS states to be computed 
+
+  LOGICAL :: l_scissor! if true uses a scissor
+  REAL(kind=DP) :: scissor!value for scissor in eV
+  LOGICAL :: l_full!if true prepare data for further post-processing for a full-relativistic calculation
+  INTEGER :: n_full!numeber of proper relativistic states in G of GW
 
   INTERFACE free_memory
 
-  MODULE PROCEDURE free_complex,free_real,free_wannier_P
+  MODULE PROCEDURE free_complex,free_real
 
   END INTERFACE
 
   CONTAINS
-
+   
     subroutine free_complex( c)
       implicit none
       type(complex_matrix_pointer) :: c
@@ -188,21 +211,13 @@ MODULE wannier_gw
     end subroutine
 
 
-   subroutine free_wannier_P( w_P)
-      implicit none
-      type(wannier_P) :: w_P
-      deallocate(w_P%ij)
-      deallocate(w_P%o)
-      return
-    end subroutine
-
-
+      
     subroutine  max_ngm_set
  !set the value of max_ngm
       use io_global, only : stdout
       use gvect, only :     ngm,gg
       use cell_base, only : tpiba2
-
+      
       implicit none
 
       integer :: ig
@@ -216,11 +231,11 @@ MODULE wannier_gw
       write(stdout,*) 'MAX_NGM:', max_ngm, ngm
 
 end subroutine max_ngm_set
-
-
-
+          
+ 
+   
 
 END MODULE wannier_gw
 
-!#endif
+
 

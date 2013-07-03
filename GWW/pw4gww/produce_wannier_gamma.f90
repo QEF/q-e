@@ -1,86 +1,108 @@
-! FOR GWW
-! Author: P. Umari
-! Modified by G. Stenuit
 !
-!----------------------------------------------------------------------------
-SUBROUTINE produce_wannier_gamma
-  !----------------------------------------------------------------------------
-  !
-  ! ... This routine is a driver of the self-consistent cycle.
-  ! ... It uses the routine c_bands for computing the bands at fixed
-  ! ... Hamiltonian, the routine sum_band to compute the charge
-  ! ... density, the routine v_of_rho to compute the new potential
-  ! ... and the routine mix_rho to mix input and output charge densities
-  ! ... It prints on output the total energy and its decomposition in
-  ! ... the separate contributions.
-  !
-  !
-  USE kinds,                ONLY : DP
-  USE constants,            ONLY : rytoev
-  USE io_global,            ONLY : stdout, ionode, ionode_id
-  USE wvfct,                ONLY : nbnd, et, wg,npwx,npw
-  USE ener,                 ONLY : etot, eband, deband, ehart, vtxc, etxc, &
-                                   etxcc, ewld, demet, ef, ef_up, ef_dw
-  USE io_files,             ONLY : prefix, iunwfc, nwordwfc, find_free_unit
-  USE wavefunctions_module, ONLY : evc
-#if defined (EXX)
-  USE funct,                ONLY : dft_is_hybrid, exx_is_active
-#endif
-  USE ldaU,                 ONLY : lda_plus_u
-  USE wannier_gw,           ONLY : u_trans,numw_prod, real_matrix_pointer, complex_matrix_pointer, &
-                                 &    wannier_P, w_prod, free_memory, num_nbndv, &
-                                 &    cutoff_overlap, nset, num_nbnds, num_nbndc_set, expgsave, &
-                                 &    remainder, restart_gww, num_nbnd_first, l_zero, l_wing, &
-                                 &    cprim_type, l_vcw_overlap, nset_overlap, nspace, lambda_ene, l_orthonorm_products, &
-                                 &     cutoff_products, ecutoff_global,numw_prod_vvc,&
-                                 &    l_wpwt_terms, l_polarization_analysis, &
-                                 &    cutoff_polarization, nc_polarization_analysis, l_only_val_cond, numw_prod_val_cond, &
-                                 &    l_no_val_cond_sec, numw_prod_val_cond_sec, l_plot_mlwf, l_plot_ulwf, l_ultra_external,&
-                                 &    no_radius, nbnd_normal, max_ngm_set, l_pmatrix, p_mpime, p_nproc, npcol, nprow, icontxt, &
-                                 &    myrow, mycol, l_coulomb_analysis,cutoff_coulomb_analysis, truncation_radius
-  USE uspp,                 ONLY : okvan
-  USE mp,                   ONLY : mp_bcast,mp_barrier
-  USE mp_global,            ONLY : nproc, mpime
-  USE parallel_include
-  USE exx,                  ONLY : exx_grid_init
-  USE buffers,              ONLY : get_buffer, save_buffer
-  !
-  IMPLICIT NONE
-  !
-  ! ... a few local variables
-  !
-#if defined (EXX)
-  REAL(DP) :: dexx
-  REAL(DP) :: fock0,  fock1,  fock2
-#endif
-  REAL(kind=DP), TARGET, ALLOCATABLE :: omat(:,:)!matrix for overlap between product of wanniers
-  REAL(kind=DP), TARGET, ALLOCATABLE :: uterms(:,:), uterms_tmp(:)!matrix for 1/|r-r'| terms between product of wanniers
-  TYPE(wannier_P), ALLOCATABLE :: w_P(:)
-  INTEGER :: iunuterms, iw, jw
-  INTEGER :: numw_prod_old
-  REAL(kind=DP), ALLOCATABLE :: vmat(:,:)
-  INTEGER :: numpw_max, numpw_offset
-  !
-  REAL(kind=DP), ALLOCATABLE :: e_xc(:), e_h(:), e_u(:)
-  INTEGER :: ii
-  REAL(kind=DP), ALLOCATABLE :: ene_loc(:)!local energy for state
-  LOGICAL :: l_on_ene!if true localizes also mon energy
-  REAL(kind=DP), ALLOCATABLE :: tmp_rot(:,:)
-  INTEGER :: numw_prod_r, numw_prod_c, numw_prod_dimr, numw_prod_dimc
-  INTEGER :: num_wp_r, num_wp_dimr
-#ifdef __SCALAPACK
-  INTEGER, EXTERNAL :: indxg2p, indxg2l
-#endif
-  INTEGER :: numw_prod_vvc_r, numw_prod_vvc_dimr, numw_prod_vvc_c, numw_prod_vvc_dimc
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
 
-  INTEGER :: i
+ SUBROUTINE produce_wannier_gamma
 
-! NEW
-  allocate(e_xc(nbnd),e_h(nbnd))
-  if (lda_plus_u) allocate(e_u(nbnd))
+
+      
+       USE wannier_gw
+       USE wvfct,                ONLY : npw
+       USE io_global, ONLY : ionode_id
+       USE mp, ONLY : mp_barrier, mp_bcast
+       USE io_files, ONLY : prefix, nwordwfc,iunwfc
+       USE wvfct,                ONLY : nbnd, et, npwx
+       USE io_global,            ONLY : stdout, ionode
+       USE wavefunctions_module, ONLY : evc
+       USE exx,      ONLY : ecutfock,vexx,exx_div_check,exx_grid_init,exx_grid_check,exxinit,x_occupation
+       USE funct,    ONLY : exx_is_active, dft_is_hybrid,start_exx,stop_exx
+       USE wvfct,     ONLY  : current_k, ecutwfc,et
+       USE scf,                  ONLY : scf_type, scf_type_COPY, &
+                                   create_scf_type, destroy_scf_type, &
+                                   rho, rho_core, rhog_core, &
+                                   v, vltot, vrs, kedtau, vnew
+       USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
+                                   vtxc, etxc, etxcc, ewld, demet, epaw, &
+                                   elondon
+       USE ldaU,                 ONLY : eth, Hubbard_U, Hubbard_lmax, &
+                                   niter_with_fixed_ns, lda_plus_u
+ 
+       USE extfield,             ONLY : tefield, etotefield
+       USE lsda_mod,             ONLY : lsda, nspin,current_spin,isk
+
+       USE gvecs,              ONLY : doublegrid
+       USE fake_cond_mod
+       USE constants,            ONLY : rytoev
+       USE fft_base,             ONLY : dfftp
+       USE exchange_custom
+       USE fft_custom_gwl
+       USE klist,                ONLY : nks
+
+       implicit none
+
+       INTEGER, EXTERNAL :: find_free_unit
+
+       REAL(kind=DP), ALLOCATABLE :: e_xc(:,:),e_h(:,:),e_x(:,:)
+       INTEGER :: ii,iw,jw,iunuterms,iun,iun2
+       REAL(kind=DP), ALLOCATABLE :: tmp_rot(:,:)
+       REAL(kind=DP), ALLOCATABLE :: v_states(:,:)!valence states in real space
+       COMPLEX(kind=DP), ALLOCATABLE :: o_basis(:,:)!polarization basis 
+                                                       !(from diagonalization of O matrix)
+       REAL(kind=DP), ALLOCATABLE :: o_mat(:,:)
+
+   !    INTEGER :: fcw_number!number of "producs of fake conduction with valence wannier" states for O matrix method
+   !    COMPLEX(kind=DP), POINTER, DIMENSION(:,:) :: fcw_state! fcw states for O matrix method
+   !    REAL(kind=DP), POINTER, DIMENSION(:,:) :: fcw_mat! "fcw matrix
+       REAL(kind=DP), TARGET, ALLOCATABLE :: uterms(:,:), uterms_tmp(:)!matrix for 1/|r-r'| terms between product of wanniers
+       REAL(kind=DP) :: charge
+       INTEGER :: idumm
+       REAL(kind=DP) :: rdumm1,rdumm2,rdumm3
+       INTEGER :: is
+       COMPLEX(kind=DP), ALLOCATABLE :: ks_wfcs(:,:,:)!Kohn-Sham wfcs (or wannier's) with spin multiplicity
+       COMPLEX(kind=DP), ALLOCATABLE :: ks_wfcs_diag(:,:,:)!Kohn-Sham with spin multiplicity
+       INTEGER :: num_nbndv_max
+       INTEGER :: istate
+       INTEGER :: numw_prod_all
+
+       TYPE(exchange_cus) :: exx_cus
+
+!       interface
+!          subroutine fake_conduction_wannier(fcw_n,fcw_s,fcw_m,cut,s_cut)
+
+!            USE kinds,                ONLY : DP
+
+!            INTEGER,INTENT(out) :: fcw_n!number of "fake conduction" states for O matrix method
+!            COMPLEX(kind=DP), POINTER, DIMENSION(:,:)  :: fcw_s! "fake conduction" states for O matrix method
+!            REAL(kind=DP), POINTER, DIMENSION(:,:) :: fcw_m! "fake conduction" matrix
+!            REAL(kind=DP), INTENT(in) :: cut!cutoff for planewaves
+!            REAL(kind=DP), INTENT(in) :: s_cut!cutoff for orthonormalization
+  !          INTEGER, INTENT(in) :: n_fast! number of fast conduction states, 0 = disabled
+  !          REAL(kind=DP), INTENT(in) :: o_fast!offset for fast polarizability matrix 0 = disabled
+  !          LOGICAL, INTENT(in) :: l_fast!if true fast polarizability matrix calculation
+!          end subroutine fake_conduction_wannier
+!       end interface
+       allocate(e_xc(nbnd,nspin),e_h(nbnd,nspin), e_x(nbnd,nspin))
+       allocate(ks_wfcs(npwx,nbnd,nspin))
+       allocate(ks_wfcs_diag(npwx,nbnd,nspin))
+
+
+       call start_clock('produce_wannier')
+
+!setup global cutoff
+       ecutoff_global=ecutwfc
+       
+       if(restart_gww>=2) then
+           if(extra_pw_cutoff>0.d0)   call update_numwp(numw_prod, extra_pw_cutoff)
+           if(.not.l_truncated_coulomb)  numw_prod=numw_prod+1
+       endif
 
 !setup parallel environment
-#ifndef __MPI
+#ifndef __PARA
          l_pmatrix=.false.
 #endif
 #ifndef __SCALAPACK
@@ -101,720 +123,520 @@ SUBROUTINE produce_wannier_gamma
             write(stdout,*) 'MYROW MYCOL', myrow,mycol
 #endif
          endif
+         
+         if(l_scissor) then
+            do is=1,nspin
+               et(1:num_nbndv(is),is)=et(1:num_nbndv(is),is)+scissor/rytoev
+            enddo
+         endif
 
 
+         if(l_truncated_coulomb) then
+            l_zero=.false.
+            l_wing=.false.
+         else
+            l_zero=.false.
+            l_wing=.true.
+         endif
 
-         !set ngm max
+
+  !set ngm max
          call max_ngm_set
 
-         if(lambda_ene > 0 .and. lambda_ene <= 1.d0) then
-            l_on_ene = .true.
-         else
-            l_on_ene = .false.
+
+
+         if(l_selfconsistent) then
+!NOT_TO_BE_INCLUDED_START
+            if(ionode) then
+               iun =  find_free_unit()
+               open( unit=iun, file='bands.dat', status='old',form='formatted')
+               read(iun,*) n_gw_states
+            endif
+            call mp_bcast(n_gw_states,ionode_id)
+            allocate(ene_gw(n_gw_states,1))
+            if(ionode) then
+               do ii=1,n_gw_states
+                  read(iun,*) idumm,rdumm1,rdumm2,ene_gw(ii,1),rdumm3
+               enddo
+               close(iun)
+            endif
+            call mp_bcast(ene_gw(:,1),ionode_id)
+            ene_gw(:,1)=ene_gw(:,1)/rytoev
+            delta_self=ene_gw(n_gw_states,1)-rdumm1/rytoev!offset for all the conduction states above those calculated
+!NOT_TO_BE_INCLUDED_END
          endif
 
-         allocate(ene_loc(nbnd))
-! ene_loc is defined as inout in go_wannier and is re-used for restart_gw<=3 in go_wannier. NO
-! cprim_type allways=2 (default value)
-         ene_loc(:)= et(:,1)*rytoev
-         call exx_grid_init()
 
-!         if(remainder /= 4 .and. remainder /= 5 )then !otherwise just post-processing remainder calculation
-            !
-            if(restart_gww <= 0) then
-               write(stdout,*) 'restart_gww <= 0'
-               write(stdout,*) "remainder", remainder
-               write(stdout,*) 'ATT1'
-               write(stdout,*) 'evc(1,1)=', evc(1,1), 'evc(1,2)=', evc(1,2)
-               write(stdout,*) npwx, npw, nbnd, evc(1,1)
-               write(stdout,*) rytoev
-               do i=1,nbnd
-                 write(stdout,*)i,et(i,1)*rytoev
-               enddo
+         if( dft_is_hybrid()) then
+!NOT_TO_BE_INCLUDED_START                                                                                                                                   
+            ecutfock=exchange_fast_dual*ecutwfc
+            
+            CALL exx_grid_init()
+            CALL exx_div_check()
+            call stop_exx()
+            call  exxinit
+            call start_exx()
+            current_k= 1
+               !the following is very important                                                                                                                            
+            if ( exx_is_active())  then
+               CALL v_of_rho( rho, rho_core, rhog_core, &
+                    ehart, etxc, vtxc, eth, etotefield, charge, v)
+               CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
+            end if
+!NOT_TO_BE_INCLUDED_END                                                                                                                                     
+         endif
+            
+
+         if(restart_gww <= 0 ) then
+
+!calculate coulomb potential by integration over q   for PBC 
+            if(.not.l_truncated_coulomb) call calculate_vg0()
+
+
+!save KS wfcs if nspin==1
+            if(nspin==1) CALL davcio(evc,2*nwordwfc,iunwfc,1,1)
+
+
+
+!loop on spin
+
+            do is=1,nspin
+               IF (lsda) current_spin  = isk(is)
+               if(nspin/=1)  CALL davcio(evc,2*nwordwfc,iunwfc,is,-1)!read wfcs for 
+               if(l_verbose) write(stdout,*) 'ATT1'
                call flush_unit(stdout)
-               CALL wfc_gamma_real(0)
-               write(stdout,*) 'ATT2'
+               CALL wfc_gamma_real(0,is)
                call flush_unit(stdout)
-               do i=1,nbnd
-                 write(stdout,*)i,et(i,1)*rytoev
-               enddo
-               write(stdout,*) npwx, npw, nbnd, evc(1,1)
-               !!!! only 5 arguments !!!!
-               !!! compared to the previous version, the 4th
-               !!! argument, evc, has been removed !!!
-               call energies_xc( npwx, npw, nbnd, e_xc, e_h )
-               write(stdout,*) 'After : call energies_xc'
-               write(stdout,*) '------------------------------'
-               write(stdout,*) 'e_xc(1:nbnd)=', e_xc(1:nbnd)
-               write(stdout,*) '------------------------------'
-               write(stdout,*) 'e_h(1:nbnd)=', e_h(1:nbnd)
-               write(stdout,*) '------------------------------'
+               call  energies_xc( npwx, npw, nbnd, evc, e_xc(:,is),e_h(:,is),is )
+               if( is == nspin) call write_energies_xc(e_xc)
                CALL flush_unit( stdout )
-               !
-               call write_energies_xc(e_xc)
-               !
-               write(stdout,*) 'After : call write_energies_xc'
-               write(stdout,*) '------------------------------'
-               write(stdout,*) 'e_xc(1:nbnd)=', e_xc(1:nbnd)
-               write(stdout,*) '------------------------------'
-               write(stdout,*) 'e_h(1:nbnd)=', e_h(1:nbnd)
-               write(stdout,*) '------------------------------'
-               CALL flush_unit( stdout )
-
-               !!! NEW:
-               IF ( lda_plus_u ) then
-                  write(stdout,*) 'if lda_plus_u : compute <ener>_i'
-                  !!!write(stdout,*) npwx, npw, nbnd, evc(1,1)
-                  CALL flush_unit( stdout )
-                  CALL energies_u_gamma( e_u)
-                  write(stdout,*) 'write to a file .hubbard_u these energies'
-                  !!!write(stdout,*) npwx, npw, nbnd, evc(1,1)
-                  DO iw=1, nbnd
-                     write(stdout,*) 'e_u(', iw , ')=', e_u(iw), ' Ry'
-                  ENDDO
-                  CALL flush_unit( stdout )
-                  CALL write_energies_u(e_u)
-                  write(stdout,*) 'OUT of lda_plus_u'
-                  CALL flush_unit( stdout )
-               endif
-
-               write(stdout,*) 'call go_wannier'
-               CALL flush_unit( stdout )
-               !-----------------------------------------------
-               !----------------------------------------------
-               call go_wannier(iunwfc,1.d-9,40,num_nbndv, 0, l_on_ene, ene_loc, lambda_ene)
-               !
-               !!!! just before, in go_wannier, the evc have been changed
-               !!!! by rotate_wannier_gamma and stored in evc1 in files wfc_w
-               !!!! so the evc have not been updated !!!! => one need here to read back the evc
-               !!!! or changed wfc_gamma_real !!!
-!!!!!               call wfc_gamma_real(0)
-! MODIFIED to
-               call wfc_gamma_real_after_rot(0)
-               ! reput it to check if QE will be OK
-! pourquoi????               call wfc_gamma_real(0)
-               !if required save MLWF for plotting
-               write(stdout,*) 'call write_wfc_plot if l_plot_mlwf .or. l_ultra_external is T'
-               CALL flush_unit( stdout )
-               if(l_plot_mlwf.or.l_ultra_external) then
+               call go_wannier(iunwfc,1.d-9,40,num_nbndv(is), 0, is)
+               call wfc_gamma_real(0,is)
+!if required save MLWF for plotting
+               if(l_plot_mlwf) then
                   call write_wfc_plot(0)
                endif
-               !               deallocate(evc)
-               call distance_wannier
-               CALL flush_unit( stdout )
-               ! call appropriate routine for ultralocalization
-               if(.not.l_ultra_external) then
-                  call ultralocalization_para(num_nbndv,nbnd_normal,1.d-5,0,num_nbndv,0)
-                  write(stdout,*) 'Ultralocalization valence wfcs'!ATTENZIONE
-                  if(num_nbnd_first==0) then
-                     call ultralocalization_para(num_nbndv,nbnd_normal,1.d-5,1,nbnd-num_nbndv,0)
-                  else
-                     call ultralocalization_para(num_nbndv,num_nbndv+num_nbnd_first,1.d-5,1,num_nbnd_first,0)
-                     call ultralocalization_para(num_nbndv+num_nbnd_first,nbnd_normal,1.d-5,2,&
-                          &nbnd-num_nbndv- num_nbnd_first,0)
-                  endif
-               else
-                   call ultra_external( 1, num_nbndv, no_radius, 0)
-                   if(num_nbnd_first==0) then
-                      call ultra_external( num_nbndv+1, nbnd_normal, no_radius, 0)
-                   else
-                      call ultra_external( num_nbndv+1, num_nbndv+num_nbnd_first, no_radius, 0)
-                      call ultra_external( num_nbndv+num_nbnd_first+1, nbnd_normal, no_radius, 0)
-                   endif
-               endif
-               if(okvan) deallocate(expgsave)
-               !if required save MLWF for plotting
-               if(l_plot_ulwf) then
-                  !                   ALLOCATE( evc( npwx, nbnd ) )
-                  !                   CALL get_buffer ( evc, nwordwfc, iunwfc, 1)
-                  allocate(tmp_rot(nbnd_normal,nbnd_normal))
-                  tmp_rot(:,:)=dble(u_trans(:,:))
-                  call rotate_wannier_gamma( tmp_rot,1,1)
-                  deallocate(tmp_rot)
-                  call write_wfc_plot(1)
-                  !                 deallocate(evc)
-               endif
-               !calculate products of wanniers
-
-
-               !write transformation matrix u on file
-               !!!
-               ! to check
-               write(stdout,*) '------------------------------'
-               write(stdout,*) 'e_xc(1:nbnd)=', e_xc(1:nbnd)
-               write(stdout,*) '------------------------------'
-               write(stdout,*) 'e_h(1:nbnd)=', e_h(1:nbnd)
-               write(stdout,*) '------------------------------'
-               CALL flush_unit( stdout )
-               !
-               if(ionode) call write_wannier_matrix(e_xc,e_h)
+             !write transformation matrix u on file
+               if(ionode ) call write_wannier_matrix(e_xc,e_h,is)
                do ii=1,nbnd
                   call mp_barrier
-                  call mp_bcast(u_trans(:,ii),ionode_id)
+                  call mp_bcast(u_trans(:,ii,is),ionode_id)
                enddo
-               ! u_trans TO BE BROADCASTED
-               deallocate(e_xc,e_h)
-               !
-               call product_wannier_para(num_nbndv,.true., ene_loc, lambda_ene)
-               !
-               ! now it can delete the wavefunctions in real space
-               if(cprim_type /= 0) then
-                  call dirdel('real_whole')
-                  call dirdel('realwan')
-               endif
-               !
-               CALL flush_unit( stdout )
-               ! calculate terms for calculating residual part
-               ! not in use now
-               !
-               !               if(remainder==0) then
-               !                  call wannier_valence_terms(num_nbnds,nset,num_nbnds)
-               !               else if(remainder==1) then
-               !                  call wannier_valence_terms_cutoff(num_nbnds,nset,num_nbnds)
-               !               else if(remainder==3) then
-               !                  call wannier_valence_terms_distance(num_nbnds,nset,num_nbnds)
-               !               endif
-               !               deallocate(l_on_products)!ATTENZIONE posizione provvisoria
-               !
-               !calculate 1/|r-r'| between products of wannier
-            else
-               !                deallocate(evc)
-            endif  !!!!!!! endif gww<=0   !!!!! endif of the first restart gww
-            !
-            if(restart_gww <= 1 ) then
-                write(stdout,*) 'restart_gww <= 1 and numw_prod= ', numw_prod
+!u_trans TO BE BROADCASTED
+            enddo
+            deallocate(evc)
+               
+          else
+             deallocate(evc)
+          endif
+          write(stdout,*) 'USE RESTART: 1'
+          call flush_unit(stdout)
+
+          if(restart_gww <= 1) then
+!read coulomb potential   for PBC                   
+            if(.not.l_truncated_coulomb) call read_vg0
+
+             allocate( evc( npwx, nbnd ) )
+!if required localize the valence wfcs
+                if(pmat_type==2 .or. pmat_type==3 .or. pmat_type == 4) then
+                   call read_wannier_matrix
+                   allocate(tmp_rot(nbnd,nbnd))
+                endif
+                do is=1,nspin
+                   call davcio(evc,2*nwordwfc,iunwfc,is,-1)
+                   ks_wfcs_diag(1:npw,1:nbnd,is)=evc(1:npw,1:nbnd)
+                   if(pmat_type==2 .or. pmat_type==3 .or. pmat_type == 4) then
+                      tmp_rot(:,:)=dble(u_trans(:,:,is))
+                      call rotate_wannier_gamma( tmp_rot,1,0)
+                   endif
+                   ks_wfcs(1:npw,1:nbnd,is)=evc(1:npw,1:nbnd)
+                enddo
+                if(pmat_type==2 .or. pmat_type==3 .or. pmat_type == 4)  deallocate(tmp_rot)
+
+!if required calculate optimal basis for products of valence wannier fncs times 
+!fake conduction states
+                if (pmat_type==3 .or. pmat_type==4) then
+                   if(l_verbose) write(stdout,*) 'Before fake_conduction_wannier' !ATTENZIONE
+                   call flush_unit(stdout)
+                   !nullify(fcw_state)
+                   !call fake_conduction_wannier(fcw_number,fcw_state,fcw_mat,pmat_cutoff,s_pmat)!,n_fast_pmat,off_fast_pmat,l_fast_pola)
+                   call start_clock('f_conduction')
+                   if(.not.lwannier) then
+                      if(.not.l_real) then
+                         call fake_conduction_wannier(pmat_cutoff,s_pmat,ks_wfcs,l_frac_occ,ks_wfcs_diag,l_cond_pol_base)
+                      else
+!NOT_TO_BE_INCLUDED_START
+                         call fake_conduction_real(pmat_cutoff,s_pmat,ks_wfcs,l_frac_occ,ks_wfcs_diag,l_cond_pol_base)
+!NOT_TO_BE_INCLUDED_END
+                      endif
+                   else
+!NOT_TO_BE_INCLUDED_START
+!still to be implemented with spin
+                      call fake_conduction_wannier_real(pmat_cutoff,s_pmat)
+!NOT_TO_BE_INCLUDED_END
+                   endif
+                   call stop_clock('f_conduction')
+                   if(l_verbose) write(stdout,*) 'After fake_conduction_wannier' !ATTENZIONE
+                   call flush_unit(stdout)
+                   call print_clock('f_conduction')
+                   call print_clock('mpsum')
+                   call print_clock('fc_optimal')
+                   call print_clock('fc_merge')
+                   call print_clock('fc_loop')
+                   call print_clock('fc_dgemm')
+                   deallocate(fcw_state,fcw_mat) 
+                endif
+
+!calculates the polarization basis diagonalizing the O matrix
+                if(pmat_type==0 .or. pmat_type == 1 .or. pmat_type == 2) then
+                   allocate(v_states(dfftp%nnr,num_nbndv(1)))
+                else
+                   allocate(v_states(1,1))
+                endif
+                numw_prod_all=numw_prod
+
+                if(extra_pw_cutoff>0.d0)   call update_numwp(numw_prod_all, extra_pw_cutoff)
+                allocate(o_basis(npw,numw_prod_all))
+                write(stdout,*) 'NUMW_PROD_ALL', numw_prod_all!DEBUG
+!calculate array of valence states in real space
+                if(l_verbose) write(stdout,*) 'Call evc_to_real'
                 call flush_unit(stdout)
-                !
-                if(l_orthonorm_products) then
-                   if(.not.l_pmatrix) then
-                      allocate(omat(numw_prod,numw_prod))
-                      numw_prod_dimr=numw_prod
-                      numw_prod_dimc=numw_prod
-                      numw_prod_r=numw_prod
-                      numw_prod_c=numw_prod
-                   else
-#ifdef __SCALAPACK
-                      numw_prod_r=ceiling(real(numw_prod)/real(max(nprow,npcol)))
-                      numw_prod_c=ceiling(real(numw_prod)/real(max(npcol,nprow)))
-                      numw_prod_dimr=ceiling (real(numw_prod)/real(numw_prod_r*nprow))*numw_prod_r
-                      numw_prod_dimc=ceiling (real(numw_prod)/real(numw_prod_c*npcol))*numw_prod_c
-                      allocate(omat(numw_prod_dimr,numw_prod_dimc))
+                if(pmat_type==0 .or. pmat_type == 1 .or. pmat_type == 2) call evc_to_real(num_nbndv(1), v_states)
 
-#endif
-                   endif
-                   write(stdout,*) 'CALL wannier_pmat_terms_ggrid',numw_prod_dimr,numw_prod_dimc
-                   call flush_unit(stdout)
-                   if(.not.l_pmatrix) then
-                      call wannier_pmat_terms_ggrid(numw_prod,numw_prod,omat, nset, ecutoff_global)
-                   else
-                      call wannier_pmat_terms_ggrid(numw_prod_dimr,numw_prod_dimc,omat, nset, ecutoff_global)
-                   endif
-                   write(stdout,*) 'CALL orthonormalize_producs_cutoff', numw_prod_dimr,numw_prod_dimc
-                   write(stdout,*) 'OMAT1', omat(1,1)
-                   call flush_unit(stdout)
-                   numw_prod_vvc=numw_prod
-                   !
-                   if(.not.l_only_val_cond) then
-                      numpw_max=numw_prod
-                   else
-                      numpw_max=numw_prod_val_cond
-                   endif
-                   !
-                   if(.not.l_no_val_cond_sec) then
-                      numpw_offset=0
-                   else
-                      numpw_offset=numw_prod_val_cond_sec
-                   endif
-                   !
-                   if(restart_gww==1) then
-                   write(stdout,*) 'restart_gww == 1 and numw_prod= ', numw_prod
-                      call flush_unit(stdout)
-                      !we suppose ordinary alpha startegy calculation
-                      numpw_offset=0
-                      numpw_max=numw_prod
-                   endif
-                   !
-                   if(.not.l_pmatrix) then
-                      call  orthonormalize_producs_cutoff(numw_prod,numpw_max, &
-                      numpw_offset,numw_prod_vvc,omat,numw_prod,numw_prod,cutoff_products, nset, &
-                           & ecutoff_global,.true.)
-                   else
-                      call  orthonormalize_producs_cutoff(numw_prod,numpw_max,&
-                      numpw_offset,numw_prod_vvc,omat,numw_prod_dimr,numw_prod_dimc,cutoff_products, nset,&
-                           & ecutoff_global,.true.)
-                   endif
-                   !
-                   write(stdout,*) 'OMAT2', omat(1,1)
-                   !
-                   if(l_wpwt_terms.or.l_polarization_analysis) then
-                     !
-                     !find the overlaps <\tilde{w}_i*\tilde{}w_j|w^P_k>
-                     if(.not.l_pmatrix) then
-                        allocate(w_P(numw_prod))
-                        num_wp_r=numw_prod
-                        num_wp_dimr=numw_prod
-                     else
-                        num_wp_r=ceiling(real(numw_prod)/real(nproc))
-                        num_wp_dimr=ceiling (real(numw_prod)/real(numw_prod_r*nproc))*num_wp_r
-                        allocate(w_P(num_wp_dimr))
-                     endif
-                     write(stdout,*) 'CALL set_wannier_P'
-                     call flush_unit(stdout)
-                     !
-                     !
-                     call set_wannier_P(numw_prod,numw_prod_vvc,w_prod,omat,numw_prod_dimr,&
-                     numw_prod_dimc,cutoff_overlap,w_P, num_wp_dimr, num_wp_r, numw_prod_r,numw_prod_c)
-                     CALL flush_unit( stdout )
-                     !
-                     ! write overlaps  <w_P|w_i*w_j> on file
-                     call write_wannier_products(w_P,0,num_wp_dimr,num_wp_r)
-                     !
-                     write(stdout,*) 'OMAT3', omat(1,1)
-                     !write orthonormalization matrix of wanniers products
-                     !
-                     numw_prod_old=numw_prod
-                     ! if required do the polarizarion analysis
-                     if(l_polarization_analysis) then
-                        call do_polarization_analysis( w_P,num_wp_dimr,num_wp_r, &
-                        cutoff_polarization,numw_prod,&
-                              &numw_prod_vvc, nset, ecutoff_global, .true.,omat,numw_prod_dimr,&
-                              numw_prod_dimc,nc_polarization_analysis,numw_prod_r,numw_prod_c)
-                        !
-                        write(stdout,*) 'OMAT4', omat(1,1)
-                        !
-                        ! deallocate memory
-                        !ATTENZIONE the following is now done in do_polarization_analysis
-                        !                         do iw=1,numw_prod_old
-                        !                            call free_memory(w_P(iw))
-                        !                         enddo
-                        deallocate(w_P)
-                        !
-                        if(l_coulomb_analysis) then
-                           !allocate and create coulomb matrix
-                           if(.not.l_pmatrix) then
-                              numw_prod_r=numw_prod
-                              numw_prod_dimr=numw_prod
-                              numw_prod_c=numw_prod
-                              numw_prod_dimc=numw_prod
-                           else
-                              numw_prod_r=ceiling(real(numw_prod)/real(max(nprow,npcol)))
-                              numw_prod_c=ceiling(real(numw_prod)/real(max(npcol,nprow)))
-                              numw_prod_dimr=ceiling (real(numw_prod)/real(numw_prod_r*nprow))*numw_prod_r
-                              numw_prod_dimc=ceiling (real(numw_prod)/real(numw_prod_c*npcol))*numw_prod_c
-                           endif
-                           !
-                           if(.not.l_pmatrix) then
-                              numw_prod_vvc_r=numw_prod_vvc
-                              numw_prod_vvc_dimr=numw_prod_vvc
-                              numw_prod_vvc_c=numw_prod_vvc
-                              numw_prod_vvc_dimc=numw_prod_vvc
-                           else
-                              numw_prod_vvc_r=ceiling(real(numw_prod_vvc)/real(max(nprow,npcol)))
-                              numw_prod_vvc_c=ceiling(real(numw_prod_vvc)/real(max(npcol,nprow)))
-                              numw_prod_vvc_dimr=ceiling (real(numw_prod_vvc)/ &
-                              real(numw_prod_vvc_r*nprow))*numw_prod_vvc_r
-                              numw_prod_vvc_dimc=ceiling (real(numw_prod_vvc)/&
-                              real(numw_prod_vvc_c*npcol))*numw_prod_vvc_c
-                           endif
-                           !
-                           allocate(vmat(numw_prod_dimr,numw_prod_dimc))
-                           !calculate vmat matrix
-                           call  wannier_uterms_red(nset,l_zero, ecutoff_global,vmat,numw_prod_dimr,numw_prod_dimc,&
-                                 &numw_prod_r,numw_prod_c,numw_prod,numw_prod,1,.true.)
+!allocate and set trial product with random number
+                if(l_verbose) write(stdout,*) 'Call o_basis_init'
+                call flush_unit(stdout)
+                !nullify(fcw_state)
+                if(pmat_type==0 .or.pmat_type == 1 .or. pmat_type == 2) call o_basis_init(numw_prod,&
+             &   o_basis,num_nbndv(1),v_states,pmat_cutoff,pmat_type,fcw_number,fcw_state,fcw_mat,pmat_ethr)
+!diagonalize products
+                if(l_verbose) write(stdout,*) 'Call o_bands'
+                call flush_unit(stdout)
+                call start_clock('o_bands')
+!note: v_states is relevant only for pmat_type ==  0,1,2
+                call o_bands(num_nbndv(1), v_states,numw_prod,o_basis,pmat_ethr,pmat_cutoff,pmat_type)
+                call stop_clock('o_bands')
+!write them to disk
+                if(l_v_basis) then
+                   call v_basis(numw_prod,o_basis,v_cutoff)
+                endif
+                if(l_verbose) write(stdout,*) 'Call o_bands write'
+                call flush_unit(stdout)
+!if PBC add also the last one the G=0 element
+!NOTE for PBC that numpw BECOMES numpw+1 AT THIS POINT, FOLLOWING ROUTINE
+!if required add plane waves to the basis obtained till now
+                if(extra_pw_cutoff>0.d0) then
+                   call o_extra_pw( o_basis, numw_prod, numw_prod_all,extra_pw_cutoff)
+                endif
 
-                           !call routine
-                           call coulomb_analysis(numw_prod,numw_prod_old,numw_prod_vvc,vmat, numw_prod_dimr, &
-                                  &numw_prod_dimc,cutoff_coulomb_analysis, nset, ecutoff_global, .true.,omat, &
-                                  &numw_prod_vvc_dimr,numw_prod_vvc_dimc,numw_prod_vvc_r,numw_prod_vvc_c)
-                           !
-                           !deallocate
-                           deallocate(vmat)
-                        endif  !!! of if(l_coulomb_analysis)
-                        ! set new descriptors for products of wanniers
-                        if(.not.l_pmatrix) then
-                           allocate(w_P(numw_prod))
-                           num_wp_r=numw_prod
-                           num_wp_dimr=numw_prod
-                        else
-                           num_wp_r=ceiling(real(numw_prod)/real(nproc))
-                           num_wp_dimr=ceiling (real(numw_prod)/real(numw_prod_r*nproc))*num_wp_r
-                           allocate(w_P(num_wp_dimr))
-                        endif
-                        !
-                        call set_wannier_P(numw_prod,numw_prod_vvc,w_prod,omat,numw_prod_dimr,&
-                        numw_prod_dimc,cutoff_overlap,w_P,num_wp_dimr,num_wp_r,numw_prod_r,numw_prod_c)
-                        CALL flush_unit( stdout )
-                        !
-                        ! write overlaps  <w_P|w_i*w_j> on file
-                        !
-                        call write_wannier_products(w_P,0,num_wp_dimr,num_wp_r)
-                        if(.not.l_pmatrix) then
-                           do iw=1,numw_prod
-                              if(ionode) call free_memory(w_P(iw))
-                           enddo
-                        else
-#ifdef __SCALAPACK
-                           do iw=1,numw_prod
-                              if(indxg2p(iw,num_wp_r,0,0,nproc)==mpime) then
-                                 call free_memory(w_P(indxg2l(iw,num_wp_r,0,0,nproc)))
-                              endif
-                           enddo
-#endif
-                        endif
-                        deallocate(w_P)
-                        deallocate(omat)
-                        !the following is for the beta strategy
-                        if(cprim_type /= 2) then
-                           !TD allocate vmat
-                           if(.not.l_pmatrix) then
-                              numw_prod_vvc_r=numw_prod_vvc
-                              numw_prod_vvc_dimr=numw_prod_vvc
-                              numw_prod_r=numw_prod
-                              numw_prod_dimr=numw_prod
-                              numw_prod_c=numw_prod
-                              numw_prod_dimc=numw_prod
-                           else
-                              numw_prod_r=ceiling(real(numw_prod)/real(max(nprow,npcol)))
-                              numw_prod_c=ceiling(real(numw_prod)/real(max(npcol,nprow)))
-                              numw_prod_dimr=ceiling (real(numw_prod)/real(numw_prod_r*nprow))*numw_prod_r
-                              numw_prod_dimc=ceiling (real(numw_prod)/real(numw_prod_c*npcol))*numw_prod_c
-                              numw_prod_vvc_r=ceiling(real(numw_prod_vvc)/real(nprow))
-                              numw_prod_vvc_dimr=ceiling (real(numw_prod_vvc)/real(numw_prod_vvc_r*nprow))*numw_prod_vvc_r
-                           endif
-                           !
-                           allocate(vmat(numw_prod_vvc_dimr,numw_prod_dimc))
-                           !calculate vmat matrix
-                           !
-                           call  wannier_uterms_red(nset,l_zero, ecutoff_global,vmat,numw_prod_vvc_dimr,numw_prod_dimc,&
-                                 &numw_prod_vvc_r,numw_prod_c,numw_prod,numw_prod_vvc,0,.false.)
-                           !treat is as products of wanniers
-                           !
-                           if(.not.l_pmatrix) then
-                              allocate(w_P(numw_prod))
-                              num_wp_r=numw_prod
-                              num_wp_dimr=numw_prod
-                           else
-                              num_wp_r=ceiling(real(numw_prod)/real(nproc))
-                              num_wp_dimr=ceiling (real(numw_prod)/real(num_wp_r*nproc))*num_wp_r
-                              allocate(w_P(num_wp_dimr))
-                           endif
-                           call set_wannier_P(numw_prod,numw_prod_vvc,w_prod,vmat,numw_prod_vvc_dimr,numw_prod_dimc,&
-                                 &0.d0,w_P,num_wp_dimr,num_wp_r,numw_prod_vvc_r,numw_prod_c)
-
-                           !write on disk
-                           call write_wannier_products(w_P,1,num_wp_dimr,num_wp_r)
-                           !
-                           if(.not.l_pmatrix) then
-                               do iw=1,numw_prod
-                                  if(ionode)call free_memory(w_P(iw))
-                               enddo
-                           else
-#ifdef __SCALAPACK
-                               do iw=1,numw_prod
-                                  if(indxg2p(iw,num_wp_r,0,0,nproc)==mpime) then
-                                     call free_memory(w_P(indxg2l(iw,num_wp_r,0,0,nproc)))
-                                  endif
-                               enddo
-#endif
-                           endif
-                           deallocate(w_P)
-                           deallocate(vmat)
-                        else !!! if(cprim_type /= 2)
-                            !call dirdel('wiwjwfc')!ATTENZIONE
-                        endif
-                        call dirdel('wiwjwfc_on')
-                     else  !!! f(l_polarization_analysis)
-                        if(.not. l_pmatrix) then
-                           do iw=1,numw_prod_old
-                              if(ionode) call free_memory(w_P(iw))
-                           enddo
-                        else
-#ifdef __SCALAPACK
-                          do iw=1,numw_prod_old
-                             if(indxg2p(iw,num_wp_r,0,0,nproc)==mpime) then
-                                 call free_memory(w_P(indxg2l(iw,num_wp_r,0,0,nproc)))
-                             endif
-                          enddo
-#endif
-                        endif !!!! endif of if(.not. l_pmatrix)
-                        deallocate(omat)
-                     endif !!!!!!! endif if(l_polarization_analysis)
-                  else  !!!!! else of if(l_wpwt_terms.or.l_pola ...
-                     deallocate(omat)
-                  endif !!!!! endif of if if(l_wpwt_terms.or.l_pola ...
-                endif  !!!! if(l_orthonorm_products)
-                !
-                if(.not. l_zero) then
-                   if(.not.l_orthonorm_products) then
-                      call wannier_uterms(nset,.false.,.false.,0, ecutoff_global)
-                   else
-                      if(.not.l_polarization_analysis) then
-                         call wannier_uterms(nset,.false.,.false.,1, ecutoff_global)
-                      else
-                         call wannier_uterms(nset,.false.,.false.,2, ecutoff_global)
-                      endif
-                   endif
-                   CALL flush_unit( stdout )
-                   allocate(uterms(numw_prod,numw_prod))
-                   if(ionode) then
-                      iunuterms =  find_free_unit()
-                      open( unit= iunuterms, file=trim(prefix)//'.uterms', status='old',form='unformatted')
-                   endif
-                   allocate(uterms_tmp(numw_prod))
-                   do iw=1,numw_prod
-                      if(ionode) read(iunuterms) uterms_tmp(1:iw)
-                      call mp_bcast(uterms_tmp(1:iw), ionode_id)
-                      do jw=1,iw
-                         uterms(iw,jw)=uterms_tmp(jw)
-                         uterms(jw,iw)=uterms(iw,jw)
-                      enddo
-                   enddo
-                   deallocate(uterms_tmp)
-                   if(ionode)    close(iunuterms)
-                   if(ionode) call write_vpot_matrix(uterms,0)
-                   deallocate(uterms)
-                   CALL flush_unit( stdout )
-                   !
-                   !if required also the term with G=0,G'=0 of v put to zero
-                else !!!! if(.not. l_zero)
-                   if(.not.l_orthonorm_products) then
-                       call wannier_uterms(nset,.false.,.true.,0, ecutoff_global)
-                   else
-                      if(.not.l_polarization_analysis) then
-                         call wannier_uterms(nset,.false.,.true.,1, ecutoff_global)
-                      else
-                         call wannier_uterms(nset,.false.,.true.,2, ecutoff_global)
-                      endif
-                   endif
-                   CALL flush_unit( stdout )
-                   allocate(uterms(numw_prod,numw_prod))
-                   if(ionode) then
-                     iunuterms =  find_free_unit()
-                     open( unit= iunuterms, file=trim(prefix)//'.uterms', status='old',form='unformatted')
-                   endif
-                   write(stdout,*) 'WRITE UTERMS'
+                call o_basis_write(numw_prod, o_basis,.true.,ecutoff_global,.not.l_truncated_coulomb)
+!deallocate arrays
+                deallocate(v_states,o_basis)
+                deallocate(evc)
+                if(.not.l_zero) then
+                   call wannier_uterms(nset,.false.,.false.,2, ecutoff_global)
+                    CALL flush_unit( stdout )
+                    allocate(uterms(numw_prod,numw_prod))
+                    if(ionode) then
+                       iunuterms =  find_free_unit()
+                       open( unit= iunuterms, file=trim(prefix)//'.uterms', status='old',form='unformatted')
+                    endif
+                    allocate(uterms_tmp(numw_prod))
+                    do iw=1,numw_prod
+                       if(ionode) read(iunuterms) uterms_tmp(1:iw)
+                       call mp_bcast(uterms_tmp(1:iw), ionode_id)
+                       do jw=1,iw
+                          uterms(iw,jw)=uterms_tmp(jw)
+                          uterms(jw,iw)=uterms(iw,jw)
+                       enddo
+                    enddo
+                    deallocate(uterms_tmp)
+                    if(ionode)    close(iunuterms)
+                    if(ionode) call write_vpot_matrix(uterms,0)
+                    deallocate(uterms)
+                    CALL flush_unit( stdout )
+                else
+                   write(stdout,*) 'NOT LZERO NOT IMPLEMENTED'
                    call flush_unit(stdout)
-                   call mp_barrier
-                   !
-                   allocate(uterms_tmp(numw_prod))
-                   do iw=1,numw_prod
-                     if(ionode) read(iunuterms) uterms_tmp(1:iw)
-                     call mp_barrier
-                     call mp_bcast(uterms_tmp(1:iw), ionode_id)
-                     do jw=1,iw
-                       uterms(iw,jw)=uterms_tmp(jw)
-                       uterms(jw,iw)=uterms(iw,jw)
-                     enddo
-                   enddo
-                   deallocate(uterms_tmp)
-                   if(ionode)    close(iunuterms)
-                   if(ionode) call write_vpot_matrix(uterms,3)
-                   deallocate(uterms)
-                   CALL flush_unit( stdout )
-                endif !!!!! !!!! endif of if(.not. l_zero)
-                !
-                write(stdout,*) 'OUT OF RESTART_GWW1',numw_prod
+                   stop
+                endif
+                if(l_verbose) write(stdout,*) 'OUT OF RESTART_GWW1',numw_prod
                 call flush_unit(stdout)
                 call mp_barrier
-                !
-            endif  !!!! endif restartgw<=1
 
-            if(restart_gww <= 2) then
-              !!!! for after ...
-            endif
-            !
-            if(restart_gww <= 3 ) then
-              write(stdout,*) 'restart_gww <= 3 and numw_prod= ', numw_prod
+             endif
+             
+          if(restart_gww <= 2 ) then
+!read coulomb potential   for PBC                                               
+              write(stdout,*) 'USE RESTART: 2 LANCZOS RESTART:0'
               call flush_unit(stdout)
-              !
-              !if required calculates the wings term of the symmetrized dielectric matrix
-              if( l_wing) then
-                 if(.not.l_orthonorm_products) then
-                    call calculate_wing(nset,0)
-                 else
-                    if(.not.l_polarization_analysis) then
-                       call calculate_wing(nset,1)
-                    else
-                       call calculate_wing(nset,2)
-                    endif
-                 endif
-              endif
-              !
-              ! if required ultralocalized subspace {C'} and calculates Vc',c'p matrix elements
-              if(cprim_type == 0) then !usual treatment
-                 if(num_nbndc_set > 0 ) then
-                    !
-                    !                     ALLOCATE( evc( npwx, nbnd ) )
-                    !                     CALL get_buffer ( evc, nwordwfc, iunwfc, 1)
-                    ! pourquoi???         CALL wfc_gamma_real(1)
 
-                    !----------------------------------------------
-                    ! I put here ene_loc to re-initialize
-!                    ene_loc(:)= et(:,1)*rytoev
-                    !-----------------------------------------------
-                    call go_wannier(iunwfc,1.d-9,40,num_nbndv, 1,.false., ene_loc, 0.1d0)
-                    ! pourquoi???                     call wfc_gamma_real(1)
-                    !if required save MLWF for plotting
-                    if(l_plot_mlwf.or.l_ultra_external) then
-                        call write_wfc_plot(0)
-                    endif
-!                   deallocate(evc)
-                    if(.not.l_ultra_external) then
-                       call ultralocalization_para(num_nbndv,nbnd_normal,1.d-5,1,nbnd-num_nbndv,1)
-                    else
-                       call ultra_external( num_nbndv+1, num_nbndv+num_nbndc_set, no_radius, 1)
-                    endif
-                    if(restart_gww == 0) then
-                        call product_wannier_para_c(num_nbndv,.true.,.false.)
-                     else
-                        call product_wannier_para_c(num_nbndv,.true.,.true.)
-                     endif
-                     if(.not.l_zero) then
-                        if(.not.l_orthonorm_products) then
-                           call wannier_uterms_c(nset,.false.,0, ecutoff_global)
-                        else
-                           if(.not.l_polarization_analysis) then
-                              call wannier_uterms_c(nset,.false.,1, ecutoff_global)
-                           else
-                              call wannier_uterms_c(nset,.false.,2, ecutoff_global)
-                           endif
-                        endif
-                        CALL flush_unit( stdout )
-!if required calculated also the term with v(G=0,G'=0) = 0
-                     else
-                        if(.not.l_orthonorm_products) then
-                           call wannier_uterms_c(nset,.true.,0, ecutoff_global)
-                        else
-                           if(.not.l_polarization_analysis) then
-                              call wannier_uterms_c(nset,.true.,1, ecutoff_global)
-                           else
-                              call wannier_uterms_c(nset,.true.,2, ecutoff_global)
-                           endif
-                        endif
-                        CALL flush_unit( stdout )
+            if(.not.l_truncated_coulomb) call read_vg0
 
-                     endif
-                     call write_wannier_matrix_c
-
-
-
+            if(l_big_system.and.l_list) then
+!read list of KS state for which the self-energy will be calculated
+               if(ionode) then
+                  iun =  find_free_unit()
+                  open( unit=iun, file='list_1.dat', status='old')
+                  read(iun,*) n_list(1)
+                  if(nspin==2) then
+                     iun2 =  find_free_unit()
+                     open( unit=iun2, file='list_2.dat', status='old')
+                     read(iun,*) n_list(2)
+                  else
+                     n_list(2)=0
                   endif
-              else if (cprim_type==1) then!direct treatment of selected states
-!read in bands again
-!                    ALLOCATE( evc( npwx, nbnd ) )
-!                    CALL get_buffer ( evc, nwordwfc, iunwfc, 1)
-                    if(.not.l_orthonorm_products) then
-                       call create_vcprim(nset_overlap, l_zero,0, ecutoff_global,.true.)
-                    else
-                       if(.not.l_polarization_analysis) then
-                          call create_vcprim(nset_overlap, l_zero,1, ecutoff_global,.true.)
-                       else
-                          call create_vcprim(nset_overlap, l_zero,2, ecutoff_global,.true.)
-                       endif
-                    endif
-
-!                    DEALLOCATE( evc)
-
-                 else
-!direct treatment of selected states in bands again
-                    write(stdout,*) 'Inside'
-                    write(stdout,*) 'evc(1,1)=', evc(1,1), 'evc(1,2)=', evc(1,2)
-                    call flush_unit(stdout)
-                    !!!! since it seems the evc have changed ! I have removed these comments
-!                    ALLOCATE( evc( npwx, nbnd ) )
-                    !evc(:,:) = (0.D0,0.D0)
-!                    CALL davcio(evc, nwordwfc, iunwfc, 1, - 1)
-!                   ALLOCATE( evc( npwx, nbnd ) )
-!                   CALL get_buffer ( evc, nwordwfc, iunwfc, 1)
-                    write(stdout,*) 'after get_buffer'
-                    write(stdout,*) 'evc(1,1)=', evc(1,1), 'evc(1,2)=', evc(1,2)
-                    call flush_unit(stdout)
-                    if(.not.l_orthonorm_products) then
-                       call create_vcprim(nset_overlap, l_zero,0, ecutoff_global,.false.)
-                    else
-                       if(.not.l_polarization_analysis) then
-                           call create_vcprim(nset_overlap, l_zero,1, ecutoff_global,.false.)
-                        else
-                           call create_vcprim(nset_overlap, l_zero,2, ecutoff_global,.false.)
-                        endif
-                     endif
-!                   DEALLOCATE( evc)
-                 endif
-            endif
-!            if(restart_gww <= 4  ) then
-!               write(stdout,*) 'restart_gww <= 4 and numw_prod= ', numw_prod
-!               call flush_unit(stdout)
-
-!               CALL flush_unit( stdout )
-!!               ALLOCATE( evc( npwx, nbnd ) )
-!-------------------------------------------------------------
-! here is just because in rotate_wannier evc have been modified.....!!!! YEAH!
-!               evc(:,:) = (0.D0,0.D0)
-!               CALL davcio(evc, nwordwfc, iunwfc, 1, - 1)
-!!               CALL get_buffer ( evc, nwordwfc, iunwfc, 1)
-!--------------------------------------------------------------
-!               CALL dft_exchange(num_nbndv,num_nbnds,nset)
-!               CALL flush_unit( stdout )
-!!               deallocate(evc)
-!            endif
-            if(restart_gww <= 5  ) then
-              write(stdout,*) 'restart_gww <= 5 and numw_prod= ', numw_prod
-              call flush_unit(stdout)
-
-!if required calculates the overlaps v c w_p
-              CALL flush_unit( stdout )
-!                 ALLOCATE( evc( npwx, nbnd ) )
-!                 CALL get_buffer ( evc, nwordwfc, iunwfc, 1)
-              if(l_vcw_overlap) then
-                 if(.not.l_orthonorm_products) then
-                    call create_vcw_overlap(nset_overlap,0,ecutoff_global)
-                 else
-                    if(.not.l_polarization_analysis) then
-                        call create_vcw_overlap(nset_overlap,1,ecutoff_global)
-                    else
-                        call create_vcw_overlap(nset_overlap,2,ecutoff_global)
-                    endif
-                 endif
-              endif
-!                 deallocate(evc)
-            endif ! endif restart_gww<=5
-!if required calculates the reduced conduction states
-              if(restart_gww <= 6  ) then
-                 write(stdout,*) 'restart_gww <= 6 and numw_prod= ', numw_prod
-                 call flush_unit(stdout)
-
-                 CALL flush_unit( stdout )
-!                 ALLOCATE( evc( npwx, nbnd ) )
-!                 CALL get_buffer ( evc, nwordwfc, iunwfc, 1)
-                 if(nbnd > nbnd_normal) then
-                    if(.not.l_orthonorm_products) then
-                       call create_upper_states(nset_overlap, l_zero, 0,ecutoff_global)
-                    else
-                       if(.not.l_polarization_analysis) then
-                          call create_upper_states(nset_overlap, l_zero, 1,ecutoff_global)
-                       else
-                          call create_upper_states(nset_overlap, l_zero, 2,ecutoff_global)
-                       endif
-                    endif
-                 endif
-              endif
-!          else!just study of exchange convergence
-!             write(stdout,*) 'EXCHANGE RADIUS',truncation_radius
-!             call flush_unit(stdout)
-!             CALL dft_exchange(num_nbndv,num_nbnds,nset)
-!             CALL flush_unit( stdout )
-!          endif ! endif remainder
-          deallocate(ene_loc)
-
-
-!switch off parallel environment for matrices
-          if(l_pmatrix) then
-#ifdef __SCALAPACK
-            if((myrow+1) <= nprow .and. (mycol+1) <= npcol) then
-               call blacs_gridexit(icontxt)
+               endif
+               call mp_bcast(n_list,ionode_id)
+               allocate(i_list(max(n_list(1),n_list(2)),2))
+               i_list=0
+               if(ionode) then
+                  do ii=1,n_list(1)
+                     read(iun,*) i_list(ii,1)
+                  enddo
+                  close(iun)
+                  if(nspin==2) then
+                     do ii=1,n_list(2)
+                        read(iun2,*) i_list(ii,2)
+                     enddo
+                     close(iun2)
+                  endif
+               endif
+               call mp_bcast(i_list,ionode_id)
+               s_first_state=1
+               s_last_state=num_nbnds
             endif
 
-#endif
-         endif
-         return
-END SUBROUTINE  produce_wannier_gamma
+             do is=1,nspin
+                IF (lsda) current_spin  = isk(is)
+                allocate( evc( npwx, nbnd ) )
+                call davcio(evc,2*nwordwfc,iunwfc,is,-1)
+!if required calculate partial occupancies factors
+                if(l_frac_occ) then
+!NOT_TO_BE_INCLUDED_START
+                   call pola_partial(numw_prod,is)
+!NOT_TO_BE_INCLUDED_END
+                endif
+
+!if EXX is one calculates stuff for Fock operator
+                if(dft_is_hybrid()) then
+!NOT_TO_BE_INCLUDED_START
+                   call  exxinit
+                   current_k= 1
+!NOT_TO_BE_INCLUDED_END
+                endif
+             
+
+
+                call read_wannier_matrix
+                allocate(tmp_rot(nbnd,nbnd))
+                tmp_rot(1:nbnd,1:nbnd)=dble(u_trans(1:nbnd,1:nbnd,is))
+                if(l_t_wannier) call rotate_wannier_gamma( tmp_rot,1,0)
+                deallocate(tmp_rot)
+             
+                if(n_pola_lanczos > numw_prod) n_pola_lanczos=numw_prod
+                if(n_self_lanczos > numw_prod) n_self_lanczos=numw_prod
+             
+                if(n_pola_lanczos_eff == 0) n_pola_lanczos_eff=n_pola_lanczos
+                if(n_self_lanczos_eff == 0) n_self_lanczos_eff=n_self_lanczos
+             
+                if(lanczos_restart <= 0) then
+                   call start_clock('pola_basis')
+                   if(.not.l_real) then
+                      call pola_basis_lanczos(nset,n_pola_lanczos,numw_prod,nsteps_lanczos_pola,is)
+                   else
+!NOT_TO_BE_INCLUDED_START
+                      call pola_basis_lanczos_real(nset,n_pola_lanczos,numw_prod,nsteps_lanczos_pola,is)
+!NOT_TO_BE_INCLUDED_END
+                   endif
+                   call stop_clock('pola_basis')
+                endif
+                write(stdout,*) 'USE RESTART: 2 LANCZOS_RESTART:1'
+                call flush_unit(stdout)
+              
+           
+                if(lanczos_restart <= 1) then
+                   call start_clock('global_pola')
+                   call davcio(evc,2*nwordwfc,iunwfc,is,-1)!re-read for testing and for selfconsistency
+                   call global_pola_lanczos(n_pola_lanczos,n_pola_lanczos_eff,s_pola_lanczos,nump_lanczos,&
+                        nsteps_lanczos_pola,numw_prod,is,l_ts_eigen)
+                   call stop_clock('global_pola')
+                endif
+                write(stdout,*) 'USE RESTART: 2 LANCZOS_RESTART:2'
+                call flush_unit(stdout)
+
+                if(lanczos_restart <= 2) then
+                   call start_clock('self_basis')
+                   call davcio(evc,2*nwordwfc,iunwfc,is,-1)
+                   if(.not.l_real) then 
+                      call self_basis_lanczos(nset,n_self_lanczos,numw_prod,nsteps_lanczos_self,is,l_full,n_full)
+                   else
+!NOT_TO_BE_INCLUDED_START
+                      call self_basis_lanczos_real(nset,n_self_lanczos,numw_prod,nsteps_lanczos_self,is)
+!NOT_TO_BE_INCLUDED_END
+                   endif
+                   call stop_clock('self_basis')
+                   call print_clock('self_basis')
+                   call print_clock('sl_loop')
+                   call print_clock('sl_dgemm')
+                   call print_clock('sl_dsyevX')
+                   call print_clock('sl_mpbcast')
+                   call print_clock('sl_merge')
+                endif
+                CALL flush_unit( stdout )
+           !  ALLOCATE( evc( npwx, nbnd ) )
+              !  deallocate(evc)
+                write(stdout,*) 'USE RESTART: 2 LANCZOS_RESTART:3'
+                call flush_unit(stdout)
+
+                if(lanczos_restart <= 3) then
+            !    CALL davcio(evc,2*nwordwfc,iunwfc,1,-1)
+            !    CALL dft_exchange(num_nbndv,num_nbnds,nset,e_x)
+            !    CALL flush_unit( stdout )
+                   call mp_barrier
+                   call davcio(evc,2*nwordwfc,iunwfc,is,-1)
+                   call start_clock('global_self')
+                   if(.not.l_big_system) then
+                      call global_self_lanczos(n_self_lanczos,n_self_lanczos_eff,s_self_lanczos,nums_lanczos,&
+                           nsteps_lanczos_self,numw_prod,s_g_lanczos,is,l_ts_eigen,1,l_full)
+                   else
+                      if(.not.l_list) then
+                         do istate=s_first_state,s_last_state
+                            call global_self_lanczos(n_self_lanczos,n_self_lanczos_eff,s_self_lanczos,nums_lanczos,&
+                                 nsteps_lanczos_self,numw_prod,s_g_lanczos,is,l_ts_eigen,istate,l_full)
+                         enddo
+                      else
+                         do ii=1,n_list(is)
+                            istate=i_list(ii,is)
+                            call global_self_lanczos(n_self_lanczos,n_self_lanczos_eff,s_self_lanczos,nums_lanczos,&
+                                 nsteps_lanczos_self,numw_prod,s_g_lanczos,is,l_ts_eigen,istate,l_full)
+                         enddo
+                      endif
+                   endif
+                   call stop_clock('global_self')
+                endif
+             
+                deallocate(evc)
+           !  if(.not.l_truncated_coulomb) call calculate_wing(nset,2)
+             enddo
+             if(l_big_system.and.l_list) deallocate(i_list)
+          endif
+     
+           
+          write(stdout,*) 'USE RESTART: 3 LANCZOS_RESTART /=2,3'
+          call flush_unit(stdout)
+
+          if(restart_gww <= 3 .and. lanczos_restart /=3 .and. lanczos_restart /=2 ) then !ATTENZIONE RESTART lanczos_restart never been here!
+!read coulomb potential   for PBC                                                          
+             if(.not.l_truncated_coulomb) call read_vg0
+
+             if(.not.l_truncated_coulomb) call calculate_wing(nset,2)
+             CALL flush_unit( stdout )
+             ALLOCATE( evc( npwx, nbnd ) )
+             do is=1,nspin
+                CALL davcio(evc,2*nwordwfc,iunwfc,is,-1)
+                ks_wfcs(1:npw,1:nbnd,is)=evc(1:npw,1:nbnd)
+             enddo
+             CALL dft_exchange(num_nbndv,num_nbnds,nset,e_x,ks_wfcs)
+             CALL flush_unit( stdout )
+!DEBUG TEST
+             if(l_verbose) then
+                if(nspin==1) then
+                   num_nbndv_max=num_nbndv(1)
+                else
+                   num_nbndv_max=max(num_nbndv(1),num_nbndv(2))
+                endif
+                CALL  setup_exx_cus(nspin,num_nbndv_max,num_nbndv,evc, exx_cus, 1.d0, 40.d0, truncation_radius)
+                CALL dft_exchange_fast(1,num_nbnds,ks_wfcs(:,:,1),exx_cus)
+                write(stdout,*) 'BEFORE periodic_dft_exchange'
+                call flush_unit(stdout)
+                !CALL  periodic_dft_exchange(exx_cus)
+                write(stdout,*) 'AFTER periodic_dft_exchange'
+                call flush_unit(stdout)
+
+                call free_memory_exx_cus(exx_cus)
+             endif
+           deallocate(evc)
+          endif
+          write(stdout,*) 'USE RESTART: 4 LANCZOS_RESTART /=2,3'
+          call flush_unit(stdout)
+
+          if(restart_gww <= 4 .and. l_semicore .and. lanczos_restart /=3 .and. lanczos_restart /=2) then
+!NOT_TO_BE_INCLUDED_START
+             allocate( evc( npwx, nbnd ) )
+             do is=1,nspin
+                CALL davcio(evc,2*nwordwfc,iunwfc,is,-1)
+                call semicore(n_semicore, num_nbnds,is)
+             enddo
+             deallocate(evc)
+!NOT_TO_BE_INCLUDED_END
+          endif
+          write(stdout,*) 'USE RESTART: 5 LANCZOS_RESTART /=2,3'
+          call flush_unit(stdout)
+
+          if(restart_gww <= 5 .and. l_semicore_read .and. lanczos_restart /=3 .and. lanczos_restart /=2) then
+!NOT_TO_BE_INCLUDED_START
+             if(.not.l_truncated_coulomb) call read_vg0
+             allocate( evc( npwx, nbnd ) )
+             do is=1,nspin
+                CALL davcio(evc,2*nwordwfc,iunwfc,is,-1)
+                call semicore_read(num_nbnds,numw_prod,is)
+             enddo
+             deallocate(evc)
+!NOT_TO_BE_INCLUDED_END
+          endif
+
+!NOT_TO_BE_INCLUDED_START
+
+          if(restart_gww<=6  .and. l_full) then
+             call write_pola_basis(numw_prod)
+          endif
+
+          if (l_bse) then
+
+          call read_wannier_matrix
+          allocate(tmp_rot(nbnd,nbnd))
+          allocate( evc( npwx, nbnd ) )
+
+          do is=1,nspin
+             allocate(o_mat(num_nbndv(is),num_nbndv(is)))
+             call davcio(evc,2*nwordwfc,iunwfc,is,-1)
+             
+             tmp_rot(:,:)=dble(u_trans(:,:,is))
+             !call rotate_wannier_gamma( tmp_rot,1,0)!DEBUG
+             
+             if(.not.l_truncated_coulomb) call read_vg0
+             call wannier_bse(is,evc,o_mat)
+             
+             deallocate(o_mat)
+          enddo
+
+          deallocate(tmp_rot)
+          deallocate(evc)
+
+          endif
+!NOT_TO_BE_INCLUDED_END
+
+          deallocate(e_xc,e_h,e_x)
+          deallocate(ks_wfcs,ks_wfcs_diag)
+         
+          write(stdout,*) 'PW4GWW COMPLETED'
+          call stop_clock('produce_wannier')
+          call print_clock('produce_wannier')
+          call print_clock('f_conduction')
+          call print_clock('o_bands')
+          call print_clock('pola_basis')
+          call print_clock('global_pola')
+          call print_clock('self_basis')
+          call print_clock('cft3t')
+          call print_clock('h_psi')
+          call print_clock('fft')
+          call print_clock('ffts')
+          call print_clock('fftw')
+          call print_clock('davcio')
+          call print_clock('mpsum')
+          call print_clock('global_self')
+          call print_clock('lanczos_state')
+          call flush_unit(stdout)
+          return
+  END SUBROUTINE produce_wannier_gamma

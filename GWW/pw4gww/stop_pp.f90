@@ -1,9 +1,11 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
 !
 !
 ! Author: L. Martin-Samos
@@ -16,9 +18,9 @@ subroutine stop_pp
   !
   use control_flags, only: twfcollect
   use io_files, only: iunwfc
-  use mp_global,only: mp_global_end
+  use mp, only: mp_end, mp_barrier
   USE parallel_include
-#ifdef __MPI
+#ifdef __PARA
 
   integer :: info
   logical :: op
@@ -31,10 +33,22 @@ subroutine stop_pp
      else
         close (unit = iunwfc, status = 'keep')
      end if
-  end if
-#endif
+  end if 
 
-  call mp_global_end()
+  call mp_barrier()
+
+  ! call mpi_finalize (info)
+#endif
+ 
+  call mp_end()
+
+#ifdef __T3E
+  !
+  ! set streambuffers off
+  !
+
+  call set_d_stream (0)
+#endif
 
   stop
 end subroutine stop_pp

@@ -1,83 +1,142 @@
-! FOR GWW
-!
-! Author: P. Umari
-! Modified by G. Stenuit and L. Martin-Samos
-!
-  subroutine write_wannier_matrix(e_xc,e_h)
+!                                                                                                                                     
+! Copyright (C) 2001-2013 Quantum ESPRESSO group                                                                                      
+! This file is distributed under the terms of the                                                                                     
+! GNU General Public License. See the file `License'                                                                                  
+! in the root directory of the present distribution,                                                                                  
+! or http://www.gnu.org/copyleft/gpl.txt .                                                                                            
+!                                                                                                                                     
+!                             
+  subroutine write_wannier_matrix(e_xc,e_h, ispin)
 !this subroutine writes the inverse transfromation matrix from KS eigenstates
 !to ML wanniers on file, to be read by GWW code
 !the INVERSE matrix is calculated here
 
-! #ifdef __GWW
+
+
+  
+
+  USE kinds, ONLY : DP
+  USE wannier_gw, ONLY : u_trans, num_nbndv, l_selfconsistent,ene_gw,delta_self,n_gw_states
+  USE wvfct,    ONLY : et,nbnd
+  USE io_global, ONLY : stdout
+  USE io_files, ONLY : prefix
+  USE lsda_mod,    ONLY : nspin
+
+  implicit none
+
+  INTEGER, EXTERNAL :: find_free_unit
+
+  REAL(kind=DP) :: e_xc(nbnd,nspin)!exchange and correlation energies
+  REAL(kind=DP) :: e_h(nbnd,nspin)!hartree energies
+  INTEGER, INTENT(in) :: ispin!spin channel
+
+  COMPLEX(kind=DP) :: sca
+
+  INTEGER :: iunu, iw,jw
+  INTEGER :: ivpt(nbnd), info
+  COMPLEX(kind=DP) :: cdet(2),det
+  COMPLEX(kind=DP), ALLOCATABLE :: cdwork(:)
+
+  REAL(kind=DP), ALLOCATABLE :: et_new(:)
+  INTEGER :: is
+  
+  do iw=1,nbnd
+     do jw=iw,nbnd
+        sca=u_trans(iw,jw,ispin)
+        u_trans(iw,jw,ispin)=conjg(u_trans(jw,iw,ispin))
+        u_trans(jw,iw,ispin)=conjg(sca)
+     enddo
+  enddo
+  
+
+  iunu = find_free_unit()
+  
+  open(unit=iunu,file=trim(prefix)//'.wannier',status='unknown',form='unformatted')
+
+  write(iunu) nspin
+  write(iunu) nbnd
+
+  do is=1,nspin
+     write(iunu) num_nbndv(is)
+
+     if(.not.l_selfconsistent) then
+        write(iunu) et(1:nbnd,is)
+     else
+        allocate(et_new(nbnd))
+        et_new(1:n_gw_states)=ene_gw(1:n_gw_states,is)
+        if(nbnd>n_gw_states) et_new(n_gw_states+1:nbnd)=et(n_gw_states+1:nbnd,is)+delta_self
+        write(iunu) et_new(1:nbnd)
+        deallocate(et_new)
+     endif
+     if(l_selfconsistent) e_xc(:,is)=0.d0
+     write(iunu) e_xc(1:nbnd,is)
+     write(iunu) e_h(1:nbnd,is)
+
+
+     do iw=1,nbnd
+        write(iunu) u_trans(1:nbnd,iw,is)
+     enddo
+  enddo
+  close(iunu)
+
+
+  return
+  end subroutine
+  
+
+ subroutine read_wannier_matrix
+!this read the inverse transfromation matrix from KS eigenstates
+!to ML wanniers on file, to be read by GWW code
+!the INVERSE matrix is calculated here
+
+
 
 
 
   USE kinds, ONLY : DP
-  USE wannier_gw, ONLY : u_trans, num_nbndv, lnonorthogonal,nbnd_normal
-  USE wvfct,    ONLY : et
-  USE io_global, ONLY : stdout
-  USE io_files, ONLY : find_free_unit, prefix
+  USE wannier_gw, ONLY : u_trans, num_nbndv
+  USE wvfct,    ONLY : et,nbnd
+  USE io_global, ONLY : stdout,ionode,ionode_id
+  USE io_files, ONLY : prefix
+  USE mp, ONLY : mp_bcast
+  USE lsda_mod, ONLY :nspin
 
   implicit none
 
-  REAL(kind=DP) :: e_xc(nbnd_normal)!exchange and correlation energies
-  REAL(kind=DP) :: e_h(nbnd_normal)!hartree energies
-  COMPLEX(kind=DP) :: sca
+  INTEGER, EXTERNAL :: find_free_unit
 
-  INTEGER :: iunu, iw,jw
-  INTEGER :: ivpt(nbnd_normal), info
-  COMPLEX(kind=DP) :: cdet(2),det
-  COMPLEX(kind=DP), ALLOCATABLE :: cdwork(:)
+  INTEGER :: iunu, iw, is
+  INTEGER :: idumm
+  REAL(kind=DP), ALLOCATABLE :: rdummv(:)
+  
+  allocate(rdummv(nbnd))
 
 
-  write(stdout,*) "nbnb_normal:",nbnd_normal
-  write(stdout,*) "ubound e_h e_xc", ubound(e_h), ubound(e_xc)
-  write(stdout,*) "ubound u_trans", ubound(u_trans,1), ubound(u_trans,2)
-  call flush_unit(stdout)
-
-  if(.not.lnonorthogonal) then
-    do iw=1,nbnd_normal
-      do jw=iw,nbnd_normal
-        sca=u_trans(iw,jw)
-        u_trans(iw,jw)=conjg(u_trans(jw,iw))
-        u_trans(jw,iw)=conjg(sca)
-      enddo
-    enddo
-  else
-    allocate(cdwork(nbnd_normal))
-    write(stdout,*) "before zgefa"
-    call flush_unit(stdout)
-    CALL zgefa(u_trans,nbnd_normal,nbnd_normal,ivpt,info)
-    CALL errore('write_wannier_matrix','error in zgefa',abs(info))
-    write(stdout,*) "before zgedi"
-    call flush_unit(stdout)
-    CALL zgedi(u_trans,nbnd_normal,nbnd_normal,ivpt,cdet,cdwork,11)
-    det=cdet(1)*10.d0**cdet(2)
-    write(stdout,*) 'DETERMINANT OF A MATRIX:', det
-    deallocate(cdwork)
+  if(ionode) then
+     iunu = find_free_unit()
+     open(unit=iunu,file=trim(prefix)//'.wannier',status='old',form='unformatted')
+  
+     read(iunu) idumm
+     read(iunu) idumm
   endif
+  do is=1,nspin
+     if(ionode) then
+        read(iunu) idumm
+        read(iunu) rdummv(1:nbnd)
+        read(iunu) rdummv(1:nbnd)
+        read(iunu) rdummv(1:nbnd)
+     endif
+ 
 
-  iunu = find_free_unit()
-
-  open(unit=iunu,file=trim(prefix)//'.wannier',status='unknown',form='unformatted')
-
-  write(iunu) nbnd_normal
-  write(iunu) num_nbndv
-
-  write(iunu) et(1:nbnd_normal,1)
-  write(iunu) e_xc(1:nbnd_normal)
-  write(iunu) e_h(1:nbnd_normal)
-
-
-  do iw=1,nbnd_normal
-     write(iunu) u_trans(1:nbnd_normal,iw)
-
+     do iw=1,nbnd
+        if(ionode) read(iunu) u_trans(1:nbnd,iw,is)
+        call mp_bcast(u_trans(1:nbnd,iw,is),ionode_id)       
+     enddo
   enddo
+  if(ionode) close(iunu)
+  
+  deallocate(rdummv)
 
-  close(iunu)
 
-! #endif
   return
-  end subroutine
-
-
+end subroutine read_wannier_matrix
