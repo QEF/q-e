@@ -1,12 +1,13 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! Taken from Phonon code
-! Modified by P. Umari and G. Stenuit
+!
+
+!
 !
 !----------------------------------------------------------------------------
 SUBROUTINE phq_init()
@@ -53,18 +54,15 @@ SUBROUTINE phq_init()
   USE uspp_param,           ONLY : upf
   USE eqv,                  ONLY : vlocq, evq, eprec
   USE phus,                 ONLY : becp1, alphap, dpqq, dpqq_so
-  USE nlcc_ph,              ONLY : nlcc_any, drc
-  USE control_ph,           ONLY : zue, epsil, lgamma, all_done, nbnd_occ
+  USE nlcc_ph,              ONLY : nlcc_any
+  USE control_ph,           ONLY : trans, zue, epsil, lgamma, all_done, nbnd_occ
   USE units_ph,             ONLY : lrwfc, iuwfc
   USE qpoint,               ONLY : xq, igkq, npwq, nksq, eigqts, ikks, ikqs
 
   USE mp_global,           ONLY : intra_pool_comm
   USE mp,                  ONLY : mp_sum
-  !
-!#ifdef __GWW
   USE wannier_gw,           ONLY : l_head
-  USE realus,               ONLY : qpointlist
-!#endif
+  USE buffers,              ONLY : get_buffer
   !
   IMPLICIT NONE
   !
@@ -83,28 +81,28 @@ SUBROUTINE phq_init()
     ! the argument of the phase
   COMPLEX(DP), ALLOCATABLE :: aux1(:,:)
     ! used to compute alphap
-  COMPLEX(DP), EXTERNAL :: ZDOTC
+  COMPLEX(DP), EXTERNAL :: zdotc
   !
   !
   IF (all_done) RETURN
   !
   CALL start_clock( 'phq_init' )
   !
-  ALLOCATE( aux1( npwx*npol, nbnd ) )
-  !
+  ALLOCATE( aux1( npwx*npol, nbnd ) )    
+  !                 
   DO na = 1, nat
      !
      arg = ( xq(1) * tau(1,na) + &
              xq(2) * tau(2,na) + &
              xq(3) * tau(3,na) ) * tpi
-     !
-     eigqts(na) = CMPLX( COS( arg ), - SIN( arg ), KIND=dp )
+     !        
+     eigqts(na) = CMPLX( COS( arg ), - SIN( arg ) ,kind=DP)
      !
   END DO
   !
   ! ... a0) compute rhocore for each atomic-type if needed for nlcc
   !
-  IF ( nlcc_any ) CALL set_drhoc( xq, drc )
+  IF ( nlcc_any ) CALL set_drhoc( xq )
   !
   ! ... b) the fourier components of the local potential at q+G
   !
@@ -112,9 +110,13 @@ SUBROUTINE phq_init()
   !
   DO nt = 1, ntyp
      !
-     CALL setlocq( xq, rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r,&
+     IF (upf(nt)%tcoulombp) then
+        CALL setlocq_coul ( xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1,nt) )
+     ELSE
+        CALL setlocq( xq, rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r,&
                    upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngm, g, omega, &
                    vlocq(1,nt) )
+     END IF
      !
   END DO
   !
@@ -139,7 +141,7 @@ SUBROUTINE phq_init()
         !
         npwq = npw
         !
-     ELSE
+     ELSE   
         !
         CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), &
                       npwq, igkq, g2kin )
@@ -165,7 +167,8 @@ SUBROUTINE phq_init()
      !
      ! ... read the wavefunctions at k
      !
-     CALL davcio( evc, lrwfc, iuwfc, ikk, -1 )
+     !CALL davcio( evc, lrwfc, iuwfc, ikk, -1 )
+     CALL get_buffer( evc, lrwfc, iuwfc, ikk )
      !
      ! ... e) we compute the becp terms which are used in the rest of
      ! ...    the code
@@ -179,12 +182,12 @@ SUBROUTINE phq_init()
         aux1=(0.d0,0.d0)
         DO ibnd = 1, nbnd
            DO ig = 1, npw
-              aux1(ig,ibnd) = evc(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * &
+              aux1(ig,ibnd) = evc(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * & 
                               ( xk(ipol,ikk) + g(ipol,igk(ig)) )
            END DO
            IF (noncolin) THEN
               DO ig = 1, npw
-                 aux1(ig+npwx,ibnd)=evc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*&
+                 aux1(ig+npwx,ibnd)=evc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*& 
                            ( xk(ipol,ikk) + g(ipol,igk(ig)) )
               END DO
            END IF
@@ -194,9 +197,10 @@ SUBROUTINE phq_init()
      !
      !
      IF ( .NOT. lgamma ) &
-        CALL davcio( evq, lrwfc, iuwfc, ikq, -1 )
+          CALL get_buffer( evq, lrwfc, iuwfc, ikq )
+          !   CALL davcio( evq, lrwfc, iuwfc, ikq, -1 )
      !
-     ! diagonal elements of the unperturbed Hamiltonian,
+     ! diagonal elements of the unperturbed Hamiltonian, 
      ! needed for preconditioning
      !
      do ig = 1, npwq
@@ -215,11 +219,11 @@ SUBROUTINE phq_init()
         END DO
      END IF
      DO ibnd=1,nbnd_occ(ikk)
-        eprec (ibnd,ik) = 1.35d0 * ZDOTC(npwx*npol,evq(1,ibnd),1,aux1(1,ibnd),1)
+        eprec (ibnd,ik) = 1.35d0 * zdotc(npwx*npol,evq(1,ibnd),1,aux1(1,ibnd),1)
      END DO
      !
   END DO
-#ifdef __MPI
+#ifdef __PARA
      CALL mp_sum ( eprec, intra_pool_comm )
 #endif
   !
@@ -228,14 +232,13 @@ SUBROUTINE phq_init()
   CALL dvanqq()
   CALL drho()
   !
-  ! GWW
   IF ( ( epsil .OR. zue .OR. l_head) .AND. okvan ) THEN
      CALL compute_qdipol(dpqq)
      IF (lspinorb) CALL compute_qdipol_so(dpqq, dpqq_so)
+     CALL qdipol_cryst()
   END IF
   !
-  ! GWW
-  IF( l_head .AND. okvan) CALL qpointlist
+  IF ( trans ) CALL dynmat0_new()
   !
   CALL stop_clock( 'phq_init' )
   !

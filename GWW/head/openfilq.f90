@@ -1,12 +1,12 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! Taken from Phonon code
-! Modified by P. Umari and G. Stenuit
+!
+
 !
 !----------------------------------------------------------------------------
 SUBROUTINE openfilq()
@@ -16,40 +16,37 @@ SUBROUTINE openfilq()
   ! ... calculation.
   !
   USE kinds,          ONLY : DP
-  USE control_flags, ONLY : modenum
+  USE control_flags, ONLY : io_level, modenum
   USE units_ph,       ONLY : iuwfc, iudwf, iubar, iucom, iudvkb3, &
                              iudrhous, iuebar, iudrho, iudyn, iudvscf, &
                              lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
                              lrdrhous, lrebar, lrdrho
-  USE io_files,       ONLY : tmp_dir, diropn
-  USE control_ph,     ONLY : epsil, zue, recover, trans, lgamma, &
+  ! USE io_files,       ONLY : tmp_dir
+  USE control_ph,     ONLY : epsil, zue, ext_recover, trans,  lgamma, &
                              tmp_dir_ph, start_irr, last_irr
-  USE el_phon,        ONLY : elph
   USE save_ph,        ONLY : tmp_dir_save
   USE qpoint,         ONLY : nksq
   USE output,         ONLY : fildyn, fildvscf
   USE wvfct,          ONLY : nbnd, npwx
-  USE fft_base,       ONLY : dfftp
   USE lsda_mod,       ONLY : nspin
   USE uspp,           ONLY : nkb, okvan
-  USE io_files,       ONLY : prefix, iunigk, seqopn
-  USE noncollin_module, ONLY : npol
+  USE io_files,       ONLY : prefix,tmp_dir, iunigk,diropn,seqopn
+  USE noncollin_module, ONLY : npol, nspin_mag
   USE control_flags,  ONLY : twfcollect
   USE mp_global,      ONLY : me_pool
   USE io_global,      ONLY : ionode
   USE ramanm, ONLY: lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
-  !
-!#ifdef __GWW
   USE wannier_gw,     ONLY : l_head
-!#endif __GWW
-  !
+  USE fft_base,             ONLY : dfftp, dffts
+  USE buffers,         ONLY : open_buffer
+ !
   IMPLICIT NONE
   !
   INTEGER :: ios
   ! integer variable for I/O control
   CHARACTER (len=256) :: filint
   ! the name of the file
-  LOGICAL :: exst
+  LOGICAL :: exst, exst_mem
   ! logical variable to check file existe
   !
   REAL(DP) :: edum(1,1), wdum(1,1)
@@ -65,12 +62,20 @@ SUBROUTINE openfilq()
   !
   tmp_dir=tmp_dir_ph
   IF (lgamma.AND.modenum==0) tmp_dir=tmp_dir_save
+!  iuwfc = 20
+!  lrwfc = 2 * nbnd * npwx * npol
+!  CALL diropn (iuwfc, 'wfc', lrwfc, exst)
   iuwfc = 20
-  lrwfc = 2 * nbnd * npwx * npol
-  CALL diropn (iuwfc, 'wfc', lrwfc, exst)
-  IF (.NOT.exst) THEN
+  lrwfc = nbnd * npwx * npol
+  CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
+  IF (.NOT.exst.AND..NOT.exst_mem) THEN
      CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
   END IF
+
+
+ ! IF (.NOT.exst) THEN
+ !    CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
+ ! END IF
   !
   ! From now on all files are written with the _ph prefix
   !
@@ -78,27 +83,41 @@ SUBROUTINE openfilq()
   !
   !    The file with deltaV_{bare} * psi
   !
+ ! iubar = 21
+ ! lrbar = 2 * nbnd * npwx * npol
+ ! CALL diropn (iubar, 'bar', lrbar, exst)
+ ! IF (ext_recover.AND..NOT.exst) &
+ !    CALL errore ('openfilq','file '//trim(prefix)//'.bar not found', 1)
   iubar = 21
-  lrbar = 2 * nbnd * npwx * npol
-  CALL diropn (iubar, 'bar', lrbar, exst)
-  IF (recover.AND..NOT.exst) &
+  lrbar = nbnd * npwx * npol
+  CALL open_buffer (iubar, 'bar', lrbar, io_level, exst_mem, exst, tmp_dir)
+  IF (ext_recover.AND..NOT.exst) &
      CALL errore ('openfilq','file '//trim(prefix)//'.bar not found', 1)
+
   !
   !    The file with the solution delta psi
   !
+ ! iudwf = 22
+ ! lrdwf = 2 * nbnd * npwx * npol
+ ! CALL diropn (iudwf, 'dwf', lrdwf, exst)
+ ! IF (ext_recover.AND..NOT.exst) &
+ !    CALL errore ('openfilq','file '//trim(prefix)//'.dwf not found', 1)
   iudwf = 22
-  lrdwf = 2 * nbnd * npwx * npol
-  CALL diropn (iudwf, 'dwf', lrdwf, exst)
-  IF (recover.AND..NOT.exst) &
+  lrdwf =  nbnd * npwx * npol
+  CALL open_buffer (iudwf, 'dwf', lrdwf, io_level, exst_mem, exst, tmp_dir)
+  IF (ext_recover.AND..NOT.exst) &
      CALL errore ('openfilq','file '//trim(prefix)//'.dwf not found', 1)
+
+
+
   !
   !   open a file with the static change of the charge
   !
   IF (okvan) THEN
      iudrhous = 25
-     lrdrhous = 2 * dfftp%nnr * nspin
+     lrdrhous = 2 * dfftp%nnr * nspin_mag
      CALL diropn (iudrhous, 'prd', lrdrhous, exst)
-     IF (recover.AND..NOT.exst) &
+     IF (ext_recover.AND..NOT.exst) &
         CALL errore ('openfilq','file '//trim(prefix)//'.prd not found', 1)
   ENDIF
   !
@@ -106,7 +125,7 @@ SUBROUTINE openfilq()
   !  and solve_linter). Used for third-order calculations.
   !
   iudrho = 23
-  lrdrho = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin
+  lrdrho = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin_mag
   !
   !
   !   Here the sequential files
@@ -123,12 +142,12 @@ SUBROUTINE openfilq()
   !   exception: electron-phonon calculation from saved data
   !  (iudyn is read, not written, by all nodes)
   !
-  IF ( ( .NOT. ionode ) .AND. (.NOT.elph.OR.trans) ) THEN
+  IF ( ( .NOT. ionode ) .AND. (trans) ) THEN
      iudyn = 6
      GOTO 400
   ENDIF
 
-  IF ((trans.AND.(start_irr/=0.OR.last_irr/=0)).OR.elph) THEN
+  IF ((trans.AND.(start_irr/=0.OR.last_irr/=0))) THEN
      iudyn = 26
      OPEN (unit=iudyn, file=fildyn, status='unknown', err=100, iostat=ios)
 100  CALL errore ('openfilq', 'opening file'//fildyn, ABS (ios) )
@@ -148,29 +167,35 @@ SUBROUTINE openfilq()
   !    given by filbar and a second which just contains P_c x |psi>,
   !    which is required for the calculation of the Born effective carges
   !
-! added flag l_head for GWW
-  IF (okvan .AND. (epsil .OR. zue .OR. l_head)) THEN
+   IF (okvan .AND. (epsil .OR. zue .OR. l_head)) THEN
      iucom = 28
      lrcom = 2 * nbnd * npwx * npol
      CALL diropn (iucom, 'com', lrcom, exst)
-     IF (recover.AND..NOT.exst) &
+     IF (ext_recover.AND..NOT.exst) &
          CALL errore ('openfilq', 'file '//trim(prefix)//'.com not found', 1)
   !
-  !    In the USPP case we also need a file in  order to store derivatives
+  !    In the USPP case we also need a file in  order to store derivatives 
   !    of kb projectors
-  !
+  !  
      iudvkb3 = 29
      lrdvkb3 = 2 * npwx * nkb * 3
      CALL diropn (iudvkb3, 'dvkb3', lrdvkb3, exst)
-     IF (recover.AND..NOT.exst) &
+     IF (ext_recover.AND..NOT.exst) &
          CALL errore ('openfilq', 'file '//trim(prefix)//'.dvkb3 not found', 1)
   ENDIF
   IF (epsil .OR. zue .OR. l_head) THEN
+!     iuebar = 30
+!     lrebar = 2 * nbnd * npwx * npol
+!     CALL diropn (iuebar, 'ebar', lrebar, exst)
+!     IF (ext_recover.AND..NOT.exst) &
+!        CALL errore ('openfilq','file '//trim(prefix)//'.ebar not found', 1)
+     
      iuebar = 30
-     lrebar = 2 * nbnd * npwx * npol
-     CALL diropn (iuebar, 'ebar', lrebar, exst)
-     IF (recover.AND..NOT.exst) &
+     lrebar =  nbnd * npwx * npol
+     CALL open_buffer (iuebar, 'ebar', lrebar, io_level, exst_mem, exst, tmp_dir)
+     IF (ext_recover.AND..NOT.exst) &
         CALL errore ('openfilq','file '//trim(prefix)//'.ebar not found', 1)
+
   ENDIF
   !
   !    files used by raman calculation
