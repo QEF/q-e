@@ -13,7 +13,7 @@ if test $# = 0
 then
     dirs=" Modules clib PW/src CPV/src flib PW/tools upftools PP/src PWCOND/src\
            PHonon/Gamma PHonon/PH PHonon/D3 PHonon/FD atomic/src XSpectra/src \
-           ACDFT NEB/src Environ/src TDDFPT/src GIPAW/src" 
+           ACDFT NEB/src Environ/src TDDFPT/src GIPAW/src GWW/pw4gww GWW/gww GWW/head" 
           
 else
     dirs=$*
@@ -58,9 +58,15 @@ for dir in $dirs; do
 	PHonon/D3 )
 	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
 	              $LEVEL2/PW/src $LEVEL2/PHonon/PH" ;;	
-	GWW/head )
+        GWW/pw4gww )
+            DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \           
+                       $LEVEL2/PW/src  " ;;
+	GWW/gww )
+            DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \                                                                                           " ;;
+        GWW/head )
              DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
-                      $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL1/pw4gww " ;;
+                      $LEVEL2/PW/src $LEVEL2/PHonon/PH " ;;
+
 	TDDFPT/src )
              DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
                       $LEVEL2/PW/src $LEVEL2/PHonon/PH" ;;
