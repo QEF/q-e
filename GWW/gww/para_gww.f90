@@ -1,7 +1,15 @@
-!P.Umari Program GWW
+!
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+
 
 MODULE para_gww
-!this modules contains arrays indicating if the
+!this modules contains arrays indicating if the 
 !processor should perform the task
 
 SAVE
@@ -15,7 +23,7 @@ SAVE
 CONTAINS
 
   subroutine free_memory_para_gww
-
+    
     implicit none
 
     if(allocated(is_my_time)) deallocate(is_my_time)
@@ -27,7 +35,7 @@ CONTAINS
     return
 
   end subroutine free_memory_para_gww
-
+  
   SUBROUTINE setup_para_gww(ntimes,nstates, i_min, i_max)
 
 !this subroutine initialize the para variables for the gww
@@ -51,12 +59,12 @@ CONTAINS
     allocate(is_my_pola(0:ntimes))
     allocate(is_my_state(nstates))
     allocate(is_my_state_range(i_min:i_max))
-
+    
     is_my_time(:)=.false.
     is_my_pola(:)=.false.
     is_my_state(:)=.false.
     is_my_state_range(:)=.false.
-
+    
 
     ndelta=(2*ntimes+1)/nproc
     if(ndelta*nproc < (2*ntimes+1)) ndelta=ndelta+1
@@ -80,7 +88,7 @@ CONTAINS
        is_my_last=.false.
     endif
 
-    ndelta=(ntimes+1)/nproc
+    ndelta=(ntimes+1)/nproc 
     if(ndelta*nproc < (ntimes+1)) ndelta=ndelta+1
 
     iqq=0
@@ -126,7 +134,7 @@ CONTAINS
        enddo
     enddo
 
-
+    
 
 
     return

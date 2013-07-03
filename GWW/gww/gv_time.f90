@@ -1,4 +1,12 @@
-!P.Umari GW code
+!
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+
 
 MODULE w_divergence
 !for the treatment of the G=0,G=0 divergence of the W operator
@@ -22,20 +30,20 @@ MODULE w_divergence
      implicit none
 
      TYPE(gv_time) :: gt
-
+     
      nullify(gt%ex)
      nullify(gt%inv_epsi)
      return
    END SUBROUTINE initialize_gv_time
 
    SUBROUTINE free_memory_gv_time(gt)
-     implicit none
-
-     TYPE(gv_time) :: gt
-
+     implicit none                                            
+                                                            
+     TYPE(gv_time) :: gt                                      
+         
      if(associated(gt%ex)) deallocate(gt%ex)
      if(associated(gt%inv_epsi)) deallocate(gt%inv_epsi)
-     nullify(gt%ex)
+     nullify(gt%ex)  
      return
    END SUBROUTINE free_memory_gv_time
 
@@ -43,14 +51,14 @@ MODULE w_divergence
    SUBROUTINE read_data_pw_gv_time(gt, prefix)
 
      USE io_global,            ONLY : stdout, ionode, ionode_id
-     USE io_files,             ONLY : find_free_unit
      USE mp,                   ONLY : mp_bcast
 
      implicit none
 
+     INTEGER, EXTERNAL :: find_free_unit
      TYPE(gv_time) :: gt!to be read from PW file
      CHARACTER(LEN=256) ::  prefix!to designate the PW files
-
+     
      REAL(kind=DP), ALLOCATABLE :: buf(:)
      INTEGER :: iun,i
 
@@ -66,7 +74,7 @@ MODULE w_divergence
      call mp_bcast(gt%max_i, ionode_id)
      call mp_bcast(gt%n, ionode_id)
      call mp_bcast(gt%tau, ionode_id)
-
+     
      allocate(gt%ex(gt%max_i,2*gt%n+2))
      allocate(gt%inv_epsi(2*gt%n+1))
      gt%inv_epsi(:)=0.d0
@@ -91,14 +99,13 @@ MODULE w_divergence
    SUBROUTINE write_gv_time(gt)
 !save on file
      USE io_global,            ONLY : ionode
-     USE io_files,             ONLY : find_free_unit
-
+         
      implicit none
-
+     INTEGER, EXTERNAL :: find_free_unit
      TYPE(gv_time) :: gt
 
      INTEGER :: iun,i
-
+     
      if(ionode) then
          iun = find_free_unit()
          open(unit=iun, file='gv_time', status='unknown',form='unformatted')
@@ -120,11 +127,10 @@ MODULE w_divergence
    SUBROUTINE read_gv_time(gt)
 !read from file
      USE io_global,            ONLY : ionode, ionode_id
-     USE io_files,             ONLY : find_free_unit
      USE mp,                   ONLY : mp_bcast
 
      implicit none
-
+     INTEGER, EXTERNAL :: find_free_unit
      TYPE(gv_time) :: gt
 
      INTEGER :: iun,i
@@ -157,7 +163,7 @@ MODULE w_divergence
          read(iun) gt%inv_epsi(1:2*gt%n+1)
          close(iun)
       endif
-
+      
       call mp_bcast(gt%ex(:,:), ionode_id)
       call mp_bcast(gt%inv_epsi(:), ionode_id)
 
@@ -173,7 +179,7 @@ MODULE w_divergence
       USE io_global,            ONLY : stdout
 
       implicit none
-
+      
       TYPE(gv_time) :: gt
       TYPE(times_freqs) :: tf! time frequency grids and factors
 
@@ -181,7 +187,7 @@ MODULE w_divergence
       INTEGER :: ii,jj,iw,jw
       COMPLEX(kind=DP), ALLOCATABLE :: tmpc(:), factors(:)
       COMPLEX(kind=DP), ALLOCATABLE :: inv_epsi_new(:)
-
+      
 
       allocate(factors(-tf%n:tf%n), tmpc(-tf%n:tf%n))
       allocate(inv_epsi_new(2*tf%n+1))
@@ -189,10 +195,10 @@ MODULE w_divergence
 !check for consistency
 
       if(tf%n /= gt%n) then
-         write(stdout,*) 'FFT_GV: not consistent n', tf%n,gt%n
+         write(stdout,*) 'FFT_GV: not consistent n'
          stop
       endif
-
+      
       if(tf%omega /= gt%omega) then
           write(stdout,*) 'FFT_GV: not consistent omega'
          stop
@@ -225,10 +231,10 @@ MODULE w_divergence
       do jj=-tf%n,tf%n
          tmpc(jj)=gt%inv_epsi(jj+tf%n+1)*factors(jj)
       enddo
-
-
+      
+      
       inv_epsi_new(ii+tf%n+1)=sum(tmpc(-tf%n:tf%n))
-
+      
 
 
    enddo
@@ -254,18 +260,18 @@ MODULE w_divergence
  end SUBROUTINE fft_gv_time
 
  SUBROUTINE setup_gv_time(gt)
-!this subroutine set up the gv_time structure
+!this subroutine set up the gv_time structure 
 !with the head of the inverse dielectric matrices
 !to be done in imaginary time
 
    USE io_global,  ONLY : stdout
-
+   
    implicit none
 
    TYPE(gv_time) :: gt!the structure to be set up
    INTEGER :: ii,it
 
-
+   
    if(.not.gt%ontime) then
       write(stdout,*) 'Routine setup_gv_time imaginary time required'
       stop
@@ -283,7 +289,7 @@ MODULE w_divergence
 
    gt%ex(:,gt%n+1)=0.5d0*gt%inv_epsi(gt%n+1)*(gt%ex(:,gt%n+1)+gt%ex(:,2*gt%n+2))
 
-
+   
    return
  END SUBROUTINE setup_gv_time
 

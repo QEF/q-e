@@ -1,6 +1,13 @@
 !
-! P.Umari GWW code
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+
+
   MODULE  fft_gw
 !this modules contains the structures and subroutine
 !which permits ffts: the structures polaw are read from
@@ -30,16 +37,6 @@
 
  CONTAINS
 
-
-   SUBROUTINE initialize_memory_fft_data(fftd)
-     implicit none
-     TYPE(fft_data) :: fftd
-     nullify(fftd%fd)
-   return
- END SUBROUTINE initialize_memory_fft_data
-
-
-
  SUBROUTINE free_memory_fft_data(fftd)
 !this subroutine  deallocates the fft descriptor
    implicit none
@@ -48,18 +45,18 @@
    nullify(fftd%fd)
    return
  END SUBROUTINE
-
+  
 
 
  SUBROUTINE read_fft_data(label,fftd,debug)
 !this subroutine reads the fft descriptor from file
 !we take care of the t ==> -t symmetry
-   USE io_files,   ONLY : find_free_unit
    implicit none
+   INTEGER, EXTERNAL :: find_free_unit
    TYPE(fft_data) :: fftd
    INTEGER :: label !label for the corresponding file
    LOGICAL :: debug !if true formatted files
-
+   
    INTEGER :: iunf, iw,it, jw
    CHARACTER(5) :: nfile
 
@@ -94,7 +91,7 @@
       read(iunf)  fftd%firstrow
       read(iunf)  fftd%lastrow
       read(iunf)  fftd%period
-      read(iunf)  fftd%n
+      read(iunf)  fftd%n   
     else
       read(iunf,*)  fftd%label
       read(iunf,*)  fftd%ontime
@@ -127,15 +124,15 @@
     endif
 
     close(iunf)
-
+   
     return
   END SUBROUTINE
-
+   
  SUBROUTINE write_fft_data(fftd,debug)
 !this subroutine writes the fft descriptor on file
 !we take care of the t ==> -t symmetry
-   USE io_files,   ONLY : find_free_unit
    implicit none
+   INTEGER, EXTERNAL :: find_free_unit
    TYPE(fft_data) :: fftd
    LOGICAL :: debug!if true formatted output
 
@@ -211,7 +208,7 @@
 !data is put on appropiate order for FFT
 !total period=2*T+T/n
     USE  polarization,        ONLY : polaw,read_polaw, free_memory_polaw,&
-                                 & read_polaw_range
+                                 & read_polaw_range  
     USE  io_global,           ONLY : stdout
     USE  constants,           ONLY : eps8, pi
     USE  times_gw,            ONLY : times_freqs
@@ -250,7 +247,7 @@
 !read the -n polaw
     if(.not.direct_access) then
 !       CALL read_polaw(-n,pw,debug)
-       CALL read_polaw(n,pw,debug)
+       CALL read_polaw(n,pw,debug,.false.)
     else
 !       CALL read_polaw_range(-n,pw,debug,firstr,firstr+fftd%numrows-1, .true.)
        CALL read_polaw_range(n,pw,debug,firstr,firstr+fftd%numrows-1, .true. )
@@ -281,8 +278,8 @@
 !put in data at the right position
 !the position at 1 is zero for definition
 !we take advantage of the t ==> -t symmetry
-!    do iw=1,fftd%numrows
-!        fftd%fd(1:fftd%numpw,iw,2) = pw%pw(1:fftd%numpw,firstr+iw-1)
+!    do iw=1,fftd%numrows 
+!        fftd%fd(1:fftd%numpw,iw,2) = pw%pw(1:fftd%numpw,firstr+iw-1)   
 !    enddo
 
 !read in the other times/frequencies
@@ -290,7 +287,7 @@
 !we take advantage of the t ==> -t symmetry
 !    do il=-n+1,n!loop on time/frequency
     do il=0,n
-       CALL read_polaw(il,pw,debug)
+       CALL read_polaw(il,pw,debug,.false.)
 
 !consistency test
 
@@ -328,7 +325,7 @@
        enddo
 
     enddo
-
+   
 
    CALL free_memory_polaw(pw)
 
@@ -342,11 +339,11 @@
 !data is put on appropiate order for FFT
 !total period=2*T+T/n
     USE polarization,        ONLY : polaw,read_polaw, free_memory_polaw,&
-                                 & read_polaw_range, initialize_polaw
+                                 & read_polaw_range  
     USE io_global,           ONLY : stdout
     USE constants,           ONLY : eps8, pi
     USE times_gw,            ONLY : times_freqs
-    USE mp_global,           ONLY : nproc, mpime, world_comm
+    USE mp_global,           ONLY : nproc, mpime,world_comm! group
     USE parallel_include
 
     implicit none
@@ -370,7 +367,6 @@
 !first dealloacate and set
 
 
-    call initialize_polaw(pw)
     write(stdout,*) 'VALUE TF', tf%l_fft_timefreq!ATTENZIONE
 
     totalperiod=2.d0*period+2.d0*period/real(n)
@@ -381,9 +377,9 @@
     fftd%firstrow=firstr
     fftd%lastrow =lastr
 
-    numrows_read = lastr - firstr + 1
+    numrows_read = lastr - firstr + 1 
 
-    fftd%numrows = numrows_read / nproc
+    fftd%numrows = numrows_read / nproc   
     if( MOD( numrows_read, nproc ) /= 0 ) fftd%numrows = fftd%numrows + 1
 
     fftd%n = n
@@ -395,7 +391,7 @@
     nblk_siz = (n + 1) / nproc
     if( MOD( (n + 1), nproc ) /= 0 ) nblk_siz = nblk_siz + 1
 
-    nbegin = 0 + mpime * nblk_siz
+    nbegin = 0 + mpime * nblk_siz 
     nend   = nbegin + nblk_siz - 1
 
     ALLOCATE( sndbuf( fftd%numpw * fftd%numrows * nproc ) )
@@ -424,7 +420,7 @@
 
       end if
 
-#ifdef __MPI
+#ifdef __PARA
       CALL MPI_ALLTOALL( sndbuf, fftd%numrows * fftd%numpw, MPI_DOUBLE_COMPLEX,  &
                          rcvbuf, fftd%numrows * fftd%numpw, MPI_DOUBLE_COMPLEX, world_comm, ierr )
 #else
@@ -433,9 +429,9 @@
 
       do ip = 0, nproc - 1
 
-         nbegin_ip = 0 + ip * nblk_siz
+         nbegin_ip = 0 + ip * nblk_siz 
 
-         ipos = il - nbegin + nbegin_ip
+         ipos = il - nbegin + nbegin_ip 
 
          if( ipos <= n ) then
             do iw = 1, fftd%numrows
@@ -448,7 +444,7 @@
       enddo
 
     enddo
-
+   
     DEALLOCATE( rcvbuf )
     DEALLOCATE( sndbuf )
 
@@ -460,7 +456,7 @@
 
 
   SUBROUTINE save_fft_data(tf, fftd,debug)
-! this subroutine writes the descriptor for the fftw
+! this subroutine writes the descriptor for the fftw 
 ! on the  polaw on disk
 !data is put on appropiate order for FFT
 !total period=2*T+T/n
@@ -494,7 +490,7 @@
 !read in  times/frequencies
 
 !    do iil=-fftd%n,fftd%n!loop on time/frequency the order is the physical one
-! we take advantage of the symmetry t ==> -t
+! we take advantage of the symmetry t ==> -t 
      do iil=0,fftd%n
 
 !the following is in order to avoid same processor working with the same polaw
@@ -504,7 +500,7 @@
        if(il>fftd%n) il=il-fftd%n-1
 !we take care of the symmetry t ==> -t
        if(.not.direct_access) then
-          CALL read_polaw(il,pw,debug)
+          CALL read_polaw(il,pw,debug,.false.)
        else
           CALL read_polaw_range(il,pw,debug,fftd%firstrow,fftd%firstrow+fftd%numrows-1,.true.)
        endif
@@ -536,13 +532,13 @@
 
 !put in data at the right position
       if(tf%l_fft_timefreq) then
-         if(.not.fftd%ontime) then !freqeuncy case
+         if(.not.fftd%ontime) then !freqeuncy case 
             if(il>=0) then
                ipos=il+1
             else
                ipos=2*fftd%n+2+il+1
             endif
-         else !time case
+         else !time case 
             if(il>0) then
                ipos=2*fftd%n+2-il+1
             else
@@ -575,7 +571,7 @@
 
 
   SUBROUTINE save_fft_data2(tf, fftd,debug)
-! this subroutine writes the descriptor for the fftw
+! this subroutine writes the descriptor for the fftw 
 ! on the  polaw on disk
 !data is put on appropiate order for FFT
 !total period=2*T+T/n
@@ -585,7 +581,7 @@
     USE  io_global,           ONLY : stdout
     USE  constants,           ONLY : eps8, pi
     USE  mp,                  ONLY : mp_barrier
-    USE  mp_global,           ONLY : mpime, nproc, world_comm
+    USE  mp_global,           ONLY : mpime, nproc, world_comm!group
     USE  times_gw,            ONLY : times_freqs
     USE  parallel_include
 
@@ -655,14 +651,14 @@
          else
             do iw = 1, fftd%numrows
                do k = 1, fftd%numpw
-                  sndbuf( k + fftd%numpw * (iw-1) + fftd%numrows * fftd%numpw * ip ) = 0.0d0
+                  sndbuf( k + fftd%numpw * (iw-1) + fftd%numrows * fftd%numpw * ip ) = 0.0d0 
                end do
             end do
          end if
 
       enddo
 
-#ifdef __MPI
+#ifdef __PARA
       CALL MPI_ALLTOALL( sndbuf, fftd%numrows * fftd%numpw, MPI_DOUBLE_COMPLEX,  &
                          rcvbuf, fftd%numrows * fftd%numpw, MPI_DOUBLE_COMPLEX, world_comm, ierr )
 #else
@@ -678,7 +674,7 @@
             end do
          end do
 
-
+         
 
          pw%label = il
 
@@ -699,7 +695,7 @@
 
 
   SUBROUTINE transform_fft_data(fftd)
-!this subroutine performs a FFT transform from imaginary time
+!this subroutine performs a FFT transform from imaginary time 
 !to imaginary frequency and viceversa
 !uses FFTW machinery
 !does not reorder data but puts appropriate factors
@@ -724,10 +720,10 @@
 
 
   allocate(in(good_dim),out(good_dim))
-
+  
   totalperiod=2.d0*fftd%period+2.d0*fftd%period/real(fftd%n)
   totalfrequency=(2.d0*pi/totalperiod)*real(2*fftd%n+2)
-
+  
   if(fftd%ontime) then!time to frequency transform
     fftd%ontime=.false.
 
@@ -816,13 +812,13 @@
    REAL(kind=DP), ALLOCATABLE :: x(:),w(:)
    COMPLEX(kind=DP), DIMENSION(nmesh_g) :: tmpg
    COMPLEX(kind=DP), ALLOCATABLE ::  fij(:,:), fp(:),fm(:)
-
+   
 !we take advantage of the t ==> -t symmetry
-
+  
 !   allocate(fd_new(fftd%numpw,fftd%numrows,2*fftd%n+1))
    allocate(fd_new(fftd%numpw,fftd%numrows,fftd%n+1))
    allocate(factors(-tf%n:tf%n), tmpc(fftd%numpw,-tf%n:tf%n))
-
+ 
 !check for consistency
    if(fftd%n /= tf%n) then
       write(stdout,*) 'Routine transform_fft_data_grid: consistency failed'
@@ -876,27 +872,27 @@
       x(:)=0.d0
       w(:)=0.d0
       call legzo(nmesh,x,w)
-
+                    
       x(:)=x(:)*tf%tau/2.d0
       x(:)=x(:)+tf%tau/2.d0
       w(:)=w(:)*tf%tau/2.d0
-
+      
       !x(:)=x(:)*(tf%times(tf%n)-tf%tau)/2.d0
       !x(:)=x(:)+(tf%times(tf%n)-tf%tau)/2.d0+tf%tau
       !w(:)=w(:)*(tf%times(tf%n)-tf%tau)/2.d0
-
+         
 
 
       do jj=1,nmesh
          write(stdout,*)'MESH', jj, x(jj),w(jj)
       enddo
-
+      
       do ii=-tf%n,tf%n
          do jj=1,nmesh
             fij(ii,jj)=exp((0.d0,-1.d0)*tf%freqs(ii)*x(jj))
          enddo
       enddo
-
+      
       do iw=1,fftd%numpw
          do jw=1,fftd%numrows
             r_p=dble(fftd%fd(iw,jw,2*tf%n+1)/fftd%fd(iw,jw,2*tf%n+2))
@@ -904,13 +900,13 @@
             b_p=log(r_p)/(tf%times(tf%n)-tf%times(tf%n-1))
             a_p=fftd%fd(iw,jw,2*tf%n+1)/(exp(-b_p*tf%times(tf%n-1)))
             if(r_p == tf%g_tau) a_p=0.d0
-
+            
             r_m=dble(fftd%fd(iw,jw,3)/fftd%fd(iw,jw,2))
             if(r_m <= 1.d0) r_m = tf%g_tau
             b_m=log(r_m)/(tf%times(-tf%n+1)-tf%times(-tf%n))
             a_m=fftd%fd(iw,jw,3)/(exp(b_m*tf%times(-tf%n+1)))
             if(r_m == tf%g_tau) a_m=0.d0
-
+            
             do jj=1,nmesh
                fp(jj)=a_p*exp(-b_p*x(jj))*w(jj)
                fm(jj)=a_m*exp(-b_m*x(jj))*w(jj)
@@ -934,7 +930,7 @@
       deallocate(fij,fp,fm)
       deallocate(x,w)
    else if(.not.fftd%ontime .and. tf%l_fourier_fit_freq) then
-
+      
       allocate(fij(-tf%n:tf%n,nmesh_g))
       allocate(fp(nmesh_g),fm(nmesh_g))
       allocate(x(nmesh_g),w(nmesh_g))
@@ -960,7 +956,7 @@
             fij(ii,jj)=exp((0.d0,1.d0)*tf%times(ii)*x(jj))*w(jj)
          enddo
       enddo
-
+      
       do jj=1,nmesh
          write(stdout,*)'MESH', jj, x(jj),w(jj)
       enddo
@@ -968,17 +964,17 @@
 
       do iw=1,fftd%numpw
          do jw=1,fftd%numrows
-
+            
             r_p=dble(fftd%fd(iw,jw,2*tf%n+1)/fftd%fd(iw,jw,2*tf%n+2))
             b_p=(tf%freqs(tf%n)**2.d0-r_p*tf%freqs(tf%n-1)**2.d0)/(r_p-1.d0)
             if(b_p < -tf%freqs(tf%n-1)**2.d0) b_p=-tf%g_omega*tf%freqs(tf%n-1)**2.d0
             a_p=fftd%fd(iw,jw,2*tf%n+1)*(b_p+tf%freqs(tf%n-1)**2.d0)
-
+            
             r_m=dble(fftd%fd(iw,jw,3)/fftd%fd(iw,jw,2))
             b_m=(tf%freqs(-tf%n)**2.d0-r_m*tf%freqs(-tf%n+1)**2.d0)/(r_m-1.d0)
             if(b_m < -tf%freqs(-tf%n+1)**2.d0) b_m=-tf%g_omega*tf%freqs(-tf%n+1)**2.d0
             a_m=fftd%fd(iw,jw,3)*(b_m+tf%freqs(-tf%n+1)**2.d0)
-
+            
             do jj=1,nmesh_g
                fp(jj)=a_p/(b_p+x(jj)**2.d0)
                fm(jj)=a_m/(b_m+x(jj)**2.d0)
@@ -1003,7 +999,7 @@
       deallocate(fij,fp,fm)
 
    endif
-
+      
    if(fftd%ontime) then
       fftd%ontime=.false.
    else
@@ -1016,7 +1012,7 @@
 !      fftd%fd(:,:,jj+tf%n+2)=fd_new(:,:,jj+tf%n+1)
       fftd%fd(:,:,jj+1)=fd_new(:,:,jj+1)
    enddo
-
+   
 
 
 
@@ -1031,5 +1027,5 @@
 
 
  END MODULE fft_gw
-
-
+     
+   

@@ -1,19 +1,25 @@
 !
-! Author: P. Umari
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+
 !this contains routines to fit a function on the positive part
 !of the imaginary axes with a multipole expansion
 
   MODULE global_minpack
-!this module conatins global variables(sigh!) for using old FORTRAN77
+!this module conatins global variables(sigh!) for using old FORTRAN77 
 ! minpack routine
   USE kinds, ONLY : DP
 
   IMPLICIT NONE
 
   SAVE
-
-  INTEGER, PARAMETER :: maxm=200!max number of samples
+   
+  INTEGER, PARAMETER :: maxm=400!max number of samples
   INTEGER, PARAMETER :: maxpole=30
   INTEGER :: n_poles
   COMPLEX(kind=DP) :: c_target(maxm)
@@ -37,7 +43,7 @@
 
    INTEGER, INTENT(in) :: n!numer of sampled values
    INTEGER, INTENT(in) :: m!number of parameters a
-   COMPLEX(kind=DP), INTENT(in) :: z(n)!where
+   COMPLEX(kind=DP), INTENT(in) :: z(n)!where 
    COMPLEX(kind=DP), INTENT(in) :: s(n)!values s(z_j) to be fitted
    COMPLEX(kind=DP), INTENT(inout) :: a_0
    COMPLEX(kind=DP), INTENT(inout) :: a(m)
@@ -57,12 +63,12 @@
 
    INTEGER :: ip, im
 
-   ddb= 0.01d0
+   ddb= 0.01d0 
    dd = delta
-   random=.true.
+   random=.true. 
    ip=1
    im=1
-
+   
 !calculates initial chi
 
    chi0=0.d0
@@ -117,14 +123,14 @@
     old_a(:)=a(:)
     a(:)=new_a(:)
     if(.not. random) b(:)=new_b(:)
-
+     
     chi1=0.d0
     do i=1,n
       cc = func(z(i))-s(i)
       !cc = (func(z(i))-s(i))/s(i)
       chi1=chi1+cc*conjg(cc)
     enddo
-
+   
     if(chi1 > chi0) then
        a_0=old_a_0
        a(:)=old_a(:)
@@ -178,7 +184,7 @@
     endif
     !write(stdout,*) 'chi0',chi0!ATTENZIONE
  enddo
-  write(stdout,*) 'Routine fit_multipole: maxiter reached ', chi0
+  write(stdout,*) 'Routine fit_multipole: maxiter reached ', chi0  
   return
 
   CONTAINS
@@ -196,10 +202,10 @@
   enddo
 
   return
-  END FUNCTION func
+END FUNCTION func
 
-  END SUBROUTINE fit_multipole
-
+END SUBROUTINE fit_multipole
+  
     SUBROUTINE  fit_multipole_verlet(n,m,z,s,a_0,a,b,thres,maxiter,ma_0,ma,mb,dt,frice)
 !fits with the function f(z)=a_0+\sum_{i=1,m} a_i/(z-b_i)
 !the values z_j,s_j
@@ -273,9 +279,9 @@
         fb(j)=fb(j)-(func(z(i))-s(i))*conjg(a(j))/((conjg(z(i))-conjg(b(j)))*(conjg(z(i))-conjg(b(j))))
       enddo
     enddo
-
+    
 !step
-
+   
    a_0p=a_0+0.5d0*fa_0*dt*dt/ma_0
    ap(:)=a(:)+0.5d0*fa(:)*(dt)**2.d0/ma
    bp(:)=b(:)+0.5d0*fb(:)*(dt)**2.d0/mb
@@ -291,14 +297,14 @@
    write(*,*) 'a_0', a_0,ma_0
     write(*,*) 'a', a
     write(*,*) 'b', b
-
+  
 !set intial velocities
    va_0m=(0.d0,0.d0)
    vam(:)=(0.d0,0.d0)
    vbm(:)=(0.d0,0.d0)
    va_0=fa_0*dt/ma_0
    va(:)=fa(:)*dt/ma
-   vb(:)=fb(:)*dt/mb
+   vb(:)=fb(:)*dt/mb 
 
 
    do it=1,maxiter
@@ -340,7 +346,7 @@
 !    write(*,*) 'fa_0', fa_0
 !    write(*,*) 'fa', fa
 !    write(*,*) 'fb', fb
-
+    
 !update positions
 
     a_0p=2.d0*a_0-a_0m+(fa_0/ma_0)*(dt)**2.d0
@@ -427,7 +433,7 @@
   use kinds, ONLY : DP
   use io_global, ONLY : stdout
   use global_minpack
-
+  
 
   implicit none
 
@@ -466,8 +472,9 @@
     a(i)=cmplx(x(i*2+1),x(i*2+2))
   enddo
   do i=1,n_poles
-    b(i)=cmplx(x((i+n_poles)*2+1),-(x((i+n_poles)*2+2))**2.d0)
-  enddo
+    !b(i)=cmplx(x((i+n_poles)*2+1),-(x((i+n_poles)*2+2))**2.d0)
+     b(i)=cmplx(x((i+n_poles)*2+1),x((i+n_poles)*2+2))!ATTENZIONE
+  enddo  
 
 !perform calculaation
 
@@ -527,7 +534,7 @@
    INTEGER :: iflag
    INTEGER :: np
 
-   np=2+4*m!number of parameters
+   np=2+4*m!number of parameters 
    allocate(omegas(n))
    allocate(x0(np),x(np),v(np),f(np),ma(np),x1(np))
    omegas(1:n)=aimag(z(1:n))
@@ -572,7 +579,7 @@
      if(mod(it,1000)==1) write(stdout,*) 'VERLET2', it, chi1
 
      !x1(:)=2.d0*x(:)-x0(:)+f(:)*(dt**2.d0)/ma(:)-frice*v(:)*(dt**2.d0)
-
+     
      x1(:)=x(:)+f(:)*dtt/ma(:)
 
      v(:)=(x1(:)-x0(:))/(2.d0*dt)
@@ -587,8 +594,9 @@
     a(i)=cmplx(x(i*2+1),x(i*2+2))
   enddo
   do i=1,m
-    b(i)=cmplx(x((i+m)*2+1),(-1.d0)*((x((i+m)*2+2))**2.d0))
-  enddo
+    !b(i)=cmplx(x((i+m)*2+1),(-1.d0)*((x((i+m)*2+2))**2.d0))
+     b(i)=cmplx(x((i+m)*2+1),x((i+m)*2+2))             
+ enddo
   chi=chi1
 
   write(stdout,*) 'FINAL CHI', chi!ATTENZIONE
@@ -617,9 +625,9 @@
   enddo
 
   return
-
+  
 END FUNCTION func
-
+  
 
 END SUBROUTINE fit_multipole_verlet2
 
@@ -672,6 +680,9 @@ END SUBROUTINE fit_multipole_verlet2
    np=2+4*m
    allocate(ipvt(np))
    allocate(fjac(n,np))
+   write(stdout,*) 'Allocated'
+   call flush_unit(stdout)
+
    omegas(1:n)=aimag(z(1:n))
 
 !calculates initial chi
@@ -687,6 +698,7 @@ END SUBROUTINE fit_multipole_verlet2
  !  write(*,*) 'z,s' , z(1),s(1),func(z(1))
  !  write(*,*) 'z,s' , z(n),s(n),func(z(n))
    write(stdout,*) 'Chi0 initial:', chi0
+   call flush_unit(stdout)
 !set in variables
    variables(1)=real(a_0)
    variables(2)=aimag(a_0)
@@ -694,8 +706,9 @@ END SUBROUTINE fit_multipole_verlet2
      variables(i*2+1)=real(a(i))
      variables(i*2+2)=aimag(a(i))
      variables((i+m)*2+1)=real(b(i))
-     variables((i+m)*2+2)=sqrt(abs(aimag(b(i))))
-   enddo
+     !variables((i+m)*2+2)=sqrt(abs(aimag(b(i))))
+     variables((i+m)*2+2)=aimag(b(i))!ATTENZIONE 
+   enddo   
 
 !set up fcn function paramters
    call fcn_set(n, m, omegas,s)
@@ -717,12 +730,13 @@ END SUBROUTINE fit_multipole_verlet2
 
    write(stdout,*) ' INFO :', info,thres!ATTENZIONE
 !set back parameters
-  a_0=cmplx(variables(1),variables(2))
+  a_0=dcmplx(variables(1),variables(2))
   do i=1,m
-    a(i)=cmplx(variables(i*2+1),variables(i*2+2))
+    a(i)=dcmplx(variables(i*2+1),variables(i*2+2))
   enddo
   do i=1,m
-    b(i)=cmplx(variables((i+m)*2+1),(-1.d0)*((variables((i+m)*2+2))**2.d0))
+    !b(i)=dcmplx(variables((i+m)*2+1),(-1.d0)*((variables((i+m)*2+2))**2.d0))
+     b(i)=dcmplx(variables((i+m)*2+1),variables((i+m)*2+2))
   enddo
 
 !recalculate chi and write result on stdout
@@ -816,12 +830,13 @@ END SUBROUTINE fit_multipole_verlet2
     stop
   endif
 !set up parameters
-  a_0=cmplx(x(1),x(2))
+  a_0=dcmplx(x(1),x(2))
   do i=1,n_poles
-    a(i)=cmplx(x(i*2+1),x(i*2+2))
+    a(i)=dcmplx(x(i*2+1),x(i*2+2))
   enddo
   do i=1,n_poles
-    b(i)=cmplx(x((i+n_poles)*2+1),-(x((i+n_poles)*2+2))**2.d0)
+    !b(i)=dcmplx(x((i+n_poles)*2+1),-(x((i+n_poles)*2+2))**2.d0)
+     b(i)=dcmplx(x((i+n_poles)*2+1),x((i+n_poles)*2+2))
   enddo
 
   if(iflag==1) then
@@ -830,8 +845,8 @@ END SUBROUTINE fit_multipole_verlet2
      do i=1,m
         fvec(i)=0.d0
         func=a_0
-        zz=cmplx(0.d0,freq(i))
-
+        zz=dcmplx(0.d0,freq(i))
+        
         do j=1,n_poles
            func=func+a(j)/(zz-b(j))
         enddo
@@ -864,7 +879,8 @@ END SUBROUTINE fit_multipole_verlet2
             do i=1, n_poles
                h=a(i)/((zz-b(i))**2.d0)
                fjac(j,(i+n_poles)*2+1)=2.d0*real(h*conjg(g))
-               fjac(j,(i+n_poles)*2+2)=-2.d0*aimag(h*conjg(g))*(-2.d0*x((i+n_poles)*2+2))
+              !fjac(j,(i+n_poles)*2+2)=-2.d0*aimag(h*conjg(g))*(-2.d0*x((i+n_poles)*2+2)) 
+              fjac(j,(i+n_poles)*2+2)=-2.d0*aimag(h*conjg(g))
             enddo
 
          enddo
@@ -904,7 +920,8 @@ END SUBROUTINE fcnj
     a(i)=cmplx(x(i*2+1),x(i*2+2))
   enddo
   do i=1,n_poles
-     b(i)=cmplx(x((i+n_poles)*2+1),-(x((i+n_poles)*2+2))**2.d0)
+  !   b(i)=cmplx(x((i+n_poles)*2+1),-(x((i+n_poles)*2+2))**2.d0)
+     b(i)=cmplx(x((i+n_poles)*2+1),x((i+n_poles)*2+2))  
   enddo
 
 

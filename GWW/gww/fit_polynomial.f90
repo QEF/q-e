@@ -1,6 +1,12 @@
 !
-! Author: P. Umari
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+
 !this contains routines to fit a function on the positive part
 !of the imaginary axes with a multipole expansion
 
@@ -17,7 +23,7 @@
 
    INTEGER, INTENT(in) :: n!numer of sampled values
    INTEGER, INTENT(in) :: m!number of parameters a
-   COMPLEX(kind=DP), INTENT(in) :: z(n)!where
+   COMPLEX(kind=DP), INTENT(in) :: z(n)!where 
    COMPLEX(kind=DP), INTENT(in) :: s(n)!values s(z_j) to be fitted
    COMPLEX(kind=DP), INTENT(inout) :: a(m)
    COMPLEX(kind=DP), INTENT(inout) :: b(m)
@@ -35,7 +41,7 @@
    REAL(kind=DP) :: dd
 
    dd = delta
-
+  
 !calculates initial chi
 
    write(*,*) 'a', a
@@ -76,13 +82,13 @@
 !calculates new chi
 
      a(:)=new_a(:)
-
+     
      chi1=0.d0
      do i=1,n
        cc = func(z(i))-s(i)
        chi1=chi1+cc*conjg(cc)
      enddo
-
+   
      if(chi1 > chi0) then
         write(stdout,*) 'Routine fit_multipole: chi1 > chi0 '
         !return
@@ -137,7 +143,7 @@
         dd=dd*0.1d0
      else if((chi0-chi1) <= thres) then
        return
-     else
+     else 
        chi0=chi1
      endif
      write(*,*) 'chi0',chi0!ATTENZIONE
@@ -145,7 +151,7 @@
    enddo
 
 
-   write(stdout,*) 'Routine fit_multipole: maxcycle reached '
+   write(stdout,*) 'Routine fit_multipole: maxcycle reached '  
    return
 
    CONTAINS
@@ -171,5 +177,5 @@
   END FUNCTION func
 
   END SUBROUTINE fit_polynomial
-
-
+  
+   

@@ -1,3 +1,12 @@
+!
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+
 !Program GWW P. Umari
 
 SUBROUTINE remainder(options, qp)
@@ -12,8 +21,10 @@ SUBROUTINE remainder(options, qp)
    USE compact_product
    USE mp,                 ONLY : mp_sum, mp_bcast
    USE para_gww,           ONLY : is_my_time, is_my_pola, is_my_state
-   USE energies_gww,       ONLY : quasi_particles
+   USE energies_gww,           ONLY : quasi_particles
    USE constants,          ONLY : RYTOEV
+   USE energies_gww,           ONLY : quasi_particles
+
 
    implicit none
 
@@ -67,14 +78,14 @@ SUBROUTINE remainder(options, qp)
    write(stdout,*) 'enter remainder COH'
 
 !allocates
-   allocate(qp%ene_remainder(options%max_i))
-
+   allocate(qp%ene_remainder(options%max_i,qp%nspin))
+   
    call initialize_green(gg)
    call initialize_green(gm)
    call initialize_polaw(ww)
 
 
-
+      
 !read U matrix
   call read_data_pw_u(uu,options%prefix)
 !read overlap matrix Q
@@ -95,7 +106,7 @@ SUBROUTINE remainder(options, qp)
 
 
   write(stdout,*) 'enter remainder COH'
-
+  
 
   if(options%remainder /= 4) then!not needed if calculated through pw
      if(options%l_remainder_cutoff) then
@@ -106,12 +117,12 @@ SUBROUTINE remainder(options, qp)
      endif
   endif
 
-
+         
   call read_green(0,gg,options%debug,.false.)
   call read_green(0,gm,options%debug,.true.)
+  
 
-
-  call read_polaw(0,ww,options%debug)
+  call read_polaw(0,ww,options%debug,options%l_verbose)
 
   write(stdout,*) 'POLAW FACTOR', ww%factor!ATTENZIONE
 
@@ -121,11 +132,11 @@ SUBROUTINE remainder(options, qp)
         WRITE(*,*) 'PW_RED OUT', pw_red(1)
      endif
   endif
-
+      
 
   time=0.d0
 
-  qp%ene_remainder(:) =(0.d0,0.d0)
+  qp%ene_remainder(:,:) =(0.d0,0.d0)
   do ii=1,options%max_i
      if(is_my_state(ii)) then
         if(.not.options%use_contractions) then
@@ -142,7 +153,7 @@ SUBROUTINE remainder(options, qp)
         endif
 
 !sene changes sign because we are on the negative axes!!
-        qp%ene_remainder(ii)=qp%ene_remainder(ii)+0.5d0*dble(sca)
+        qp%ene_remainder(ii,1)=qp%ene_remainder(ii,1)+0.5d0*dble(sca)
 
         write(*,*) 'REMAINDER SENE 1', ii, 0.5d0*sca
 
@@ -157,7 +168,7 @@ SUBROUTINE remainder(options, qp)
               call free_memory_contraction_state(crs)
            endif
          endif
-         qp%ene_remainder(ii)=qp%ene_remainder(ii)-0.5d0*dble(sca)
+         qp%ene_remainder(ii,1)=qp%ene_remainder(ii,1)-0.5d0*dble(sca)
 
          write(*,*) 'REMAINDER SENE 2', ii, 0.5d0*sca
 
@@ -168,23 +179,23 @@ SUBROUTINE remainder(options, qp)
             else
                call self_energy_remainder(ii,sca,time,wp,ww)
             endif
-
-            qp%ene_remainder(ii)=qp%ene_remainder(ii)+0.5d0*dble(sca)
+            
+            qp%ene_remainder(ii,1)=qp%ene_remainder(ii,1)+0.5d0*dble(sca)
             write(*,*) 'REMAINDER SENE 3', ii, 0.5d0*sca
          endif
       endif
    enddo
+      
 
 
-
-
+ 
 
    call free_memory_polaw(ww)
    call free_memory_green(gg)
    call free_memory_green(gm)
    write(*,*)  'in of cycle'!ATTENZIONE
-
-
+   
+   
    if(options%remainder /= 4) then
       if(options%l_remainder_cutoff) then
          deallocate(pw_red)
@@ -202,13 +213,13 @@ SUBROUTINE remainder(options, qp)
       call free_memory_contraction_index(cri)
    endif
 
-  call mp_sum(qp%ene_remainder(:))
+  call mp_sum(qp%ene_remainder(:,1))
 
   if(options%lconduction) call addconduction_remainder(qp, options)
 
   if(ionode) then
      do ii=1,options%max_i
-        write(stdout,*) 'CORRECTION COH', ii, qp%ene_remainder(ii)*RYTOEV
+        write(stdout,*) 'CORRECTION COH', ii, qp%ene_remainder(ii,1)*RYTOEV
      enddo
   endif
 
@@ -261,7 +272,7 @@ SUBROUTINE addconduction_remainder(qp, options)
     nullify(wup%umat)
     nullify(vpp%ij)
     nullify(vpp%vmat)
-
+    
 
     call initialize_green(gg)
 
@@ -297,7 +308,7 @@ SUBROUTINE addconduction_remainder(qp, options)
           enddo
        enddo
     enddo
-
+ 
     call free_memory(vpp)
 
     call read_data_pw_v(vp,options%prefix,options%debug,0,.false.)
@@ -310,7 +321,7 @@ SUBROUTINE addconduction_remainder(qp, options)
 !loop on negative imaginary times
     if(ionode)  then
        nullify(ww%pw)
-       call read_polaw(0,ww,options%debug)
+       call read_polaw(0,ww,options%debug,options%l_verbose)
        call orthonormalize_inverse(opi,ww)
        allocate(wtemp(ww%numpw,ww%numpw))
 
@@ -333,7 +344,7 @@ SUBROUTINE addconduction_remainder(qp, options)
        allocate(gf_t(wup%nums-wup%nums_occ,wup%nums-wup%nums_occ))
        do iw=1,(wup%nums-wup%nums_occ)
           do jw=1,(wup%nums-wup%nums_occ)
-             gf_t(jw,iw) = gg%gf_p(jw+wup%nums_occ, iw+wup%nums_occ)
+             gf_t(jw,iw) = gg%gf_p(jw+wup%nums_occ, iw+wup%nums_occ,1)
           enddo
        enddo
 
@@ -344,7 +355,7 @@ SUBROUTINE addconduction_remainder(qp, options)
 
 
           allocate(qg(op%numpw,wup%nums-wup%nums_occ))
-          call dgemm('N','N',op%numpw,wup%nums-wup%nums_occ,wup%nums-wup%nums_occ,1.d0,cp(:,:,ii),&
+          call dgemm('N','N',op%numpw,wup%nums-wup%nums_occ,wup%nums-wup%nums_occ,1.d0,cp(1,1,ii),&
                  &op%numpw,gf_t,wup%nums-wup%nums_occ,0.d0, qg, op%numpw)
 
           allocate(pwcp_t(op%numpw,wup%nums-wup%nums_occ))
@@ -352,13 +363,13 @@ SUBROUTINE addconduction_remainder(qp, options)
 
 
           call dgemm('N','N',op%numpw,wup%nums-wup%nums_occ,op%numpw,1.d0,ww%pw,op%numpw,&
-              &cp(:,:,ii),op%numpw,0.d0, pwcp_t,op%numpw)
+              &cp(1,1,ii),op%numpw,0.d0, pwcp_t,op%numpw)
 
           do iw=1,(wup%nums-wup%nums_occ)
              sene(ii) = sene(ii) + ddot(op%numpw,qg(:,iw),1,pwcp_t(:,iw),1)*gg%factor*ww%factor
           enddo
 
-
+         
           deallocate(pwcp_t)
           deallocate(qg)
           sene(ii)=sene(ii)*(0.d0,1.d0)
@@ -367,7 +378,7 @@ SUBROUTINE addconduction_remainder(qp, options)
     endif
     call mp_bcast(sene, ionode_id)
     do ii=1,options%max_i-wup%nums_occ
-       qp%ene_remainder(ii+wup%nums_occ)=qp%ene_remainder(ii+wup%nums_occ)-0.5d0*dble(sene(ii))
+       qp%ene_remainder(ii+wup%nums_occ,1)=qp%ene_remainder(ii+wup%nums_occ,1)-0.5d0*dble(sene(ii))
        write(*,*) 'REMAINDER CONDUCTION', ii, 0.5d0*sene(ii)
     enddo
 
@@ -409,7 +420,7 @@ SUBROUTINE addconduction_remainder(qp, options)
 
     INTEGER iw,jw,kw,it,ii
     REAL(kind=DP), ALLOCATABLE :: wtemp(:,:)
-
+    
 
     nullify(vp%vmat)
     nullify(vpi%vmat)
@@ -432,13 +443,13 @@ SUBROUTINE addconduction_remainder(qp, options)
     call orthonormalize_vpot(op,vp)
     call invert_v_pot(vp,vpi)
     call free_memory(vp)
-
+  
     call invert_ortho_polaw(op,opi)
 
 
     if(ionode)  then
        nullify(ww%pw)
-       call read_polaw(0,ww,options%debug)
+       call read_polaw(0,ww,options%debug,options%l_verbose)
        call orthonormalize_inverse(opi,ww)
        allocate(wtemp(ww%numpw,ww%numpw))
 
@@ -456,7 +467,7 @@ SUBROUTINE addconduction_remainder(qp, options)
        ww%label=-99999
        call write_polaw(ww,options%debug)
     endif
-
+     
 !!!!!!!!!!!
     call free_memory(op)
     call free_memory(opi)

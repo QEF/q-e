@@ -8,7 +8,7 @@ IFLAGS=-I../../include
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../pw4gww $(MOD_FLAG).
+          $(MOD_FLAG)../../EE $(MOD_FLAG)../pw4gww $(MOD_FLAG).
 
 #location of needed libraries
 LIBOBJS= ../../iotk/src/libiotk.a ../../flib/flib.a \
@@ -17,8 +17,15 @@ LIBOBJS= ../../iotk/src/libiotk.a ../../flib/flib.a \
 GWWOBJS = \
 basic_structures.o \
 compact_product.o \
+contour.o \
 create_hf.o \
 create_quasi_particle.o \
+create_quasi_particle_off.o \
+do_contour.o \
+do_polarization_lanczos.o \
+ do_self_lanczos.o \
+do_self_lanczos_time.o \
+do_self_lanczos_full.o \
 energies_gww.o \
 expansion.o \
 fft_gw.o \
@@ -32,6 +39,7 @@ go_polarization.o \
 green_function.o \
 gv_time.o \
 input_gw.o \
+lanczos_polarization.o \
 para_gww.o \
 polarization.o \
 read_data_pw.o \
@@ -40,24 +48,29 @@ self_energy.o \
 self_energy_storage.o \
 start_end.o \
 times_gw.o \
-vcprim.o
+vcprim.o 
+
 
 QEMODS = ../../Modules/libqemod.a
+
 LIBMIN= ../minpack/minpacklib.a
 
 TLDEPS=bindir mods libs libiotk pack
 
-all : tldeps gww.x gww_fit.x
+all : tldeps gww.x gww_fit.x libgww.a
 
-gww.x : gww.o $(GWWOBJS) $(LIBOBJS) $(QEMODS) $(LIBMIN)
+gww.x : gww.o $(GWWOBJS) $(LIBOBJS) $(QEMODS)  $(LIBMIN)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		gww.o $(GWWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+		gww.o $(GWWOBJS) $(EEMODS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
 	- ( cd ../../bin; ln -fs ../GWW/gww/$@ . )
 
-gww_fit.x : gww_fit.o $(GWWOBJS) $(LIBOBJS) $(QEMODS) $(LIBMIN)
+gww_fit.x : gww_fit.o $(GWWOBJS) $(LIBOBJS) $(EEMODS) $(QEMODS) $(LIBMIN)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-	gww_fit.o $(GWWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+	gww_fit.o $(GWWOBJS) $(EEMODS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
 	- ( cd ../../bin; ln -fs ../GWW/gww/$@ . )
+
+libgww.a : $(GWWOBJS)
+	$(AR) $(ARFLAGS) $@ $(GWWOBJS)
 
 
 tldeps:

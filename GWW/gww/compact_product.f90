@@ -1,5 +1,12 @@
-!P.Umari
-!Program GWW
+!
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+
 
   MODULE compact_product
 !this module describes the contracted products O^{P}_{n,kl}U_{ki}=Q^{P}_{n,l,i}
@@ -41,14 +48,14 @@
 
 
 
-
+      
      TYPE contraction_pola
 !this structure described the localized and normalized products of wanniers with U matrices
       INTEGER :: numpw!number of wannier-products
       INTEGER :: nums!number of KS or wannier states
       INTEGER :: nums_occ!number of occupied states
       COMPLEX(kind=DP),DIMENSION(:,:,:), POINTER :: ou!contraction terms
-    END TYPE contraction_pola
+    END TYPE contraction_pola     
 
     TYPE contraction_pola_state
 !this structure described the localized and normalized products of wanniers with U matrices
@@ -66,14 +73,14 @@
 
     SUBROUTINE  free_memory_contraction_pola(cp)
       implicit none
-
+      
       TYPE(contraction_pola) :: cp
 
       if(associated(cp%ou)) then
         deallocate(cp%ou)
         nullify(cp%ou)
       endif
-
+      
       return
     END SUBROUTINE free_memory_contraction_pola
 
@@ -150,11 +157,12 @@
 !this subroutine writes the contracted products on disk
 !in parallel case only ionode writes
 
-    USE io_files,           ONLY : find_free_unit
+   
     USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : ionode
     implicit none
 
+    INTEGER, EXTERNAL :: find_free_unit
     TYPE(contraction) :: cr!the contraction descriptor to be written on file
     TYPE(input_options) :: options!for debug flag
 
@@ -198,7 +206,7 @@
        endif
        close(iun)
     endif
-    return
+    return         
 
   END SUBROUTINE  write_contraction
 
@@ -207,20 +215,20 @@
 !in parallel case only ionode reads
 
 
-    USE io_files,           ONLY : find_free_unit
     USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : stdout, ionode, ionode_id
     USE mp,                 ONLY : mp_bcast
 
     implicit none
 
+    INTEGER, EXTERNAL :: find_free_unit
     TYPE(contraction) :: cr!the contraction descriptor to be written on file
     TYPE(input_options) :: options!for debug flag
 
     INTEGER :: iw, jw, kw, iun, ii
     INTEGER maxl
 
-    if(ionode) then
+    if(ionode) then 
        iun = find_free_unit()
        if(.not. options%debug) then
           open( unit=iun, file='contraction', status='old',form='unformatted')
@@ -258,7 +266,7 @@
     if(ionode) then
        write(stdout,*) 'CR-READ',cr%numpw,maxl,cr%max_i
 
-       if(.not.options%debug) then
+       if(.not.options%debug) then    
           read(iun) cr%numl(1:cr%numpw)
           do iw=1,cr%numpw
              read(iun) cr%l(1:cr%numl(iw),iw)
@@ -303,11 +311,11 @@
 !this subroutine writes the contracted products on disk
 !in parallel case only ionode writes
 
-    USE io_files,           ONLY : find_free_unit
     USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : ionode
     implicit none
 
+    INTEGER, EXTERNAL :: find_free_unit
     TYPE(contraction_index) :: cr!the contraction index descriptor to be written on file
     TYPE(input_options) :: options!for debug flag
 
@@ -350,13 +358,13 @@
 !in parallel case only ionode reads
 
 
-    USE io_files,           ONLY : find_free_unit
     USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : stdout, ionode, ionode_id
     USE mp,                 ONLY : mp_bcast
 
     implicit none
 
+    INTEGER, EXTERNAL :: find_free_unit
     TYPE(contraction_index) :: cr!the contraction descriptor to be written on file
     TYPE(input_options) :: options!for debug flag
 
@@ -395,7 +403,7 @@
     maxl=cr%nums
     allocate(cr%numl(cr%numpw))
     allocate(cr%l(maxl,cr%numpw))
-
+    
     if(ionode) then
        write(stdout,*) 'CR-READ',cr%numpw,maxl,cr%max_i
 
@@ -426,11 +434,11 @@
 !this subroutine writes the contracted products on disk
 !in parallel case only ionode writes
 
-    USE io_files,           ONLY : find_free_unit
-    USE input_gw,           ONLY : input_options
+     USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : ionode
     implicit none
 
+    INTEGER, EXTERNAL :: find_free_unit
     TYPE(contraction_index), INTENT(in) :: cri!the contraction index descriptor
     TYPE(contraction_state)             :: crs!the contraction state to be written on file
     TYPE(input_options) :: options!for debug flag
@@ -477,11 +485,11 @@
 !this subroutine writes the contracted products on disk
 !in parallel case only ionode writes
 
-    USE io_files,           ONLY : find_free_unit
-    USE input_gw,           ONLY : input_options
+     USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : ionode
     implicit none
 
+    INTEGER, EXTERNAL :: find_free_unit
     TYPE(contraction_index), INTENT(in) :: cri!the contraction index descriptor
     TYPE(contraction_state)             :: crs!the contraction state to be read from file
     TYPE(input_options) :: options!for debug flag
@@ -572,12 +580,12 @@
       allocate(cr%l(maxl,cr%numpw))
       allocate(cr%q(cr%numpw,maxl,max_i))
 
-
+  
 
 !do contractions
       do ii=1,cr%numpw
         posi(:)=0
-        kk=0
+        kk=0      
         cr%q(ii,:,:)=(0.d0,0.d0)
         do jj=1,qm%wp(ii)%numij
 !first index
@@ -587,7 +595,7 @@
             cr%l(kk,ii)=qm%wp(ii)%ij(1,jj)
           endif
           cr%q(ii,posi(qm%wp(ii)%ij(1,jj)),1:max_i) =  cr%q(ii,posi(qm%wp(ii)%ij(1,jj)),1:max_i)+&
-                             &qm%wp(ii)%o(jj)*conjg(uu%umat( 1:max_i,qm%wp(ii)%ij(2,jj)))
+                             &qm%wp(ii)%o(jj)*conjg(uu%umat( 1:max_i,qm%wp(ii)%ij(2,jj),1))
 !second index
           if(qm%wp(ii)%ij(1,jj)/=qm%wp(ii)%ij(2,jj)) then
             if(posi(qm%wp(ii)%ij(2,jj))==0) then
@@ -596,8 +604,8 @@
               cr%l(kk,ii)=qm%wp(ii)%ij(2,jj)
             endif
             cr%q(ii,posi(qm%wp(ii)%ij(2,jj)),1:max_i) =  cr%q(ii,posi(qm%wp(ii)%ij(2,jj)),1:max_i)+&
-                               &qm%wp(ii)%o(jj)*conjg(uu%umat(1:max_i, qm%wp(ii)%ij(1,jj)))
-            endif
+                               &qm%wp(ii)%o(jj)*conjg(uu%umat(1:max_i, qm%wp(ii)%ij(1,jj),1))
+            endif 
         enddo
         cr%numl(ii)=kk
       enddo
@@ -605,7 +613,7 @@
 
 
       deallocate(posi)
-
+      
     END SUBROUTINE
 
 
@@ -626,17 +634,17 @@
       TYPE(q_mat)  :: qm!descriptors of overlaps of othonormalized wannier producs with wannier products
       TYPE(wannier_u) :: uu!descriptor of transformation matrix from KS states to wanniers
       INTEGER :: max_i !maximum number of states to be clauclates
-      TYPE(input_options) :: options!for calling I/O routines
+      TYPE(input_options) :: options!for calling I/O routines 
 
       INTEGER :: ii,jj,kk,maxl, num_l, is
       INTEGER, ALLOCATABLE :: posi(:)
-
+      
       TYPE(contraction_index) :: cri! the contraction index descriptor to be calculated
       TYPE(contraction_state) :: crs!the contraction state to be calculated
 
 
 !free and allocates arrays
-
+      
       cri%numpw=qm%numpw
       cri%nums=uu%nums
       cri%max_i=max_i
@@ -644,7 +652,7 @@
       crs%numpw=qm%numpw
       crs%nums=uu%nums
       crs%max_i=max_i
-
+      
 
 
       allocate(posi(cri%nums))
@@ -704,7 +712,7 @@
                      posi(qm%wp(ii)%ij(1,jj))=kk
                   endif
                   crs%q(ii,posi(qm%wp(ii)%ij(1,jj))) =  crs%q(ii,posi(qm%wp(ii)%ij(1,jj)))+&
-                             &qm%wp(ii)%o(jj)*dble(uu%umat( is,qm%wp(ii)%ij(2,jj)))
+                             &qm%wp(ii)%o(jj)*dble(uu%umat( is,qm%wp(ii)%ij(2,jj),1))
 !second index
                   if(qm%wp(ii)%ij(1,jj)/=qm%wp(ii)%ij(2,jj)) then
                      if(posi(qm%wp(ii)%ij(2,jj))==0) then
@@ -712,11 +720,11 @@
                         posi(qm%wp(ii)%ij(2,jj))=kk
                      endif
                      crs%q(ii,posi(qm%wp(ii)%ij(2,jj))) =  crs%q(ii,posi(qm%wp(ii)%ij(2,jj)))+&
-                               &qm%wp(ii)%o(jj)*dble(uu%umat(is, qm%wp(ii)%ij(1,jj)))
+                               &qm%wp(ii)%o(jj)*dble(uu%umat(is, qm%wp(ii)%ij(1,jj),1))
                   endif
                enddo
             enddo
-
+         
 !writes of file
             call write_contraction_state(cri, crs, options)
          endif
@@ -757,7 +765,7 @@
 !      call free_memory_contraction_pola(cp)
       cp%numpw=qm%numpw
       cp%nums=uu%nums
-      cp%nums_occ=uu%nums_occ
+      cp%nums_occ=uu%nums_occ(1)
       nums_con=cp%nums-cp%nums_occ
       allocate(cp%ou(cp%numpw,cp%nums_occ,nums_con))
 
@@ -770,28 +778,28 @@
                   k=qm%wp(iw)%ij(1,ii)
                   m=qm%wp(iw)%ij(2,ii)
                   cp%ou(iw,vv,cc-cp%nums_occ)=cp%ou(iw,vv,cc-cp%nums_occ)+qm%wp(iw)%o(ii)*&
-                      &uu%umat(vv,k)*uu%umat(cc,m)
+                      &uu%umat(vv,k,1)*uu%umat(cc,m,1)
                   if(k /= m) then
                     cp%ou(iw,vv,cc-cp%nums_occ)=cp%ou(iw,vv,cc-cp%nums_occ)+qm%wp(iw)%o(ii)*&
-                      &uu%umat(vv,m)*uu%umat(cc,k)
+                      &uu%umat(vv,m,1)*uu%umat(cc,k,1)
                   endif
                 enddo
              enddo
           enddo
-       enddo
+       enddo                   
 
 !      do iw=1,cp%numpw
 !        do jw=iw,cp%numpw
 !           do vv=1,cp%nums_occ
 !              do cc=cp%nums_occ+1,cp%nums
-!                 do ii=1,qm%wp(iw)%numij
+!                 do ii=1,qm%wp(iw)%numij 
 !                    do jj=1,qm%wp(jw)%numij
-
+               
 !                       k=qm%wp(iw)%ij(1,ii)
 !                       m=qm%wp(iw)%ij(2,ii)
 !                       l=qm%wp(jw)%ij(1,jj)
 !                       n=qm%wp(jw)%ij(2,jj)
-
+                       
 !                       o_ii=qm%wp(iw)%o(ii)
 !                       o_jj=qm%wp(jw)%o(jj)
 
@@ -820,7 +828,7 @@
 !           cp%q(jw,iw,:,:)=conjg(cp%q(iw,jw,:,:))
 !        enddo
 !      enddo
-    END SUBROUTINE
+    END SUBROUTINE 
 
     SUBROUTINE do_contraction_pola_state(qm,uu, options)
 !this routine calculates contraction for all states and writes on disk
@@ -829,7 +837,7 @@
       USE input_gw,             ONLY : input_options
       USE mp_global,            ONLY : mpime, nproc
       USE mp,                   ONLY : mp_barrier
-
+      
       implicit none
 
       TYPE(q_mat)  :: qm!descriptors of overlaps of othonormalized wannier producs with wannier products
@@ -839,8 +847,8 @@
       INTEGER :: vv
       TYPE(contraction_pola_state) :: cps
 
-      do vv=1,uu%nums_occ
-         if(mod(vv,nproc)==mpime) then
+      do vv=1,uu%nums_occ(1)
+         if(mod(vv,nproc)==mpime) then         
             write(stdout,*) 'Contracting occupied state :', vv
             call do_contraction_pola_state_single(vv,qm,uu,cps)
          !if(ionode) call write_contraction_pola_state(cps, options)
@@ -883,13 +891,13 @@
 !      call free_memory_contraction_pola(cp)
       cps%numpw=qm%numpw
       cps%nums=uu%nums
-      cps%nums_occ=uu%nums_occ
+      cps%nums_occ=uu%nums_occ(1)
       cps%state=state
       nums_con=cps%nums-cps%nums_occ
       allocate(cps%ou(nums_con,cps%numpw))
 
       cps%ou(:,:)=0.d0
-
+ 
 
       do iw=1,cps%numpw
 !         do cc=cps%nums_occ+1,cps%nums
@@ -899,17 +907,17 @@
             m=qm%wp(iw)%ij(2,ii)
             do cc=cps%nums_occ+1,cps%nums
                cps%ou(cc-cps%nums_occ,iw)=cps%ou(cc-cps%nums_occ,iw)+qm%wp(iw)%o(ii)*&
-                    &dble(uu%umat(cps%state,k))*dble(uu%umat(cc,m))
+                    &dble(uu%umat(cps%state,k,1))*dble(uu%umat(cc,m,1))
                if(k /= m) then
                   cps%ou(cc-cps%nums_occ,iw)=cps%ou(cc-cps%nums_occ,iw)+qm%wp(iw)%o(ii)*&
-                       &dble(uu%umat(cps%state,m))*dble(uu%umat(cc,k))
+                       &dble(uu%umat(cps%state,m,1))*dble(uu%umat(cc,k,1))
                endif
             enddo
 !            endif
          enddo
 !         call mp_sum(cps%ou(:,iw))
       enddo
-
+       
 
     END SUBROUTINE do_contraction_pola_state_single
 
@@ -917,11 +925,11 @@
 !this subroutine writes the contracted pola products on disk
 !in parallel case only ionode writes
 
-    USE io_files,           ONLY : find_free_unit
     USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : ionode
     implicit none
 
+    INTEGER, EXTERNAL :: find_free_unit
     TYPE(contraction_pola_state)             :: cps!the contraction pola state to be written on file
     TYPE(input_options) :: options!for debug flag
 
@@ -971,11 +979,11 @@
 !this subroutine writes the contracted pola products on disk
 !in parallel case only ionode writes
 
-    USE io_files,           ONLY : find_free_unit
     USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : ionode
     implicit none
 
+    INTEGER, EXTERNAL :: find_free_unit
     TYPE(contraction_pola_state)             :: cps!the contraction pola state to be written on file
     TYPE(input_options) :: options!for debug flag
 
@@ -1020,13 +1028,12 @@
 !this subroutine writes the contracted products on disk
 !in parallel case only ionode writes
 
-    USE io_files,           ONLY : find_free_unit
     USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : ionode, ionode_id
     USE mp,                 ONLY : mp_bcast
     implicit none
 
-
+    INTEGER, EXTERNAL :: find_free_unit
     TYPE(contraction_index), INTENT(in) :: cri!the contraction index descriptor
     TYPE(contraction_state)             :: crs!the contraction state to be read from file
     TYPE(input_options) :: options!for debug flag

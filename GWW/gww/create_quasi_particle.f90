@@ -1,4 +1,12 @@
-! Author: P. Umari
+!
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+
  SUBROUTINE create_quasi_particles(options,qp,se)
 !given the expansion coeffcients, calculates in a perturbative
 !way without self-consistency correction the quasi-particles energies
@@ -20,7 +28,7 @@
    TYPE(self_expansion) :: se!the descriptor for the multipole expansion
 
 
-   INTEGER :: ii,jj, it
+   INTEGER :: ii,jj, it,is
    TYPE(wannier_u) :: uu
    COMPLEX(kind=DP) :: zz, sigmac,dsigmac
    REAL(kind=DP)  :: offset
@@ -31,85 +39,155 @@
 !read in DFT energies
    call read_data_pw_u(uu,options%prefix)
 
+!loop on spin
 
-   if(.not. options%l_hf_energies) then
-      if(uu%nums > uu%nums_occ) then
-         if(options%l_lda_hartree) then
-            offset=-(uu%ene(uu%nums_occ+1)+uu%ene(uu%nums_occ))/2.d0
+   do is=1,uu%nspin
+
+      if(.not. options%l_hf_energies) then
+         if(uu%nums_occ(is) == 0) then
+            offset=-2.d0
          else
-            offset=-(uu%ene(uu%nums_occ+1)+dble(qp%ene_h(uu%nums_occ+1))-qp%ene_dft_h(uu%nums_occ+1)&
-               & +uu%ene(uu%nums_occ) +dble(qp%ene_h(uu%nums_occ))-qp%ene_dft_h(uu%nums_occ))/2.d0
+            if(uu%nums > uu%nums_occ(is)) then
+               if(options%l_lda_hartree) then
+                  offset=-(uu%ene(uu%nums_occ(is)+1,is)+uu%ene(uu%nums_occ(is),is))/2.d0
+               else
+                  offset=-(uu%ene(uu%nums_occ(is)+1,is)+dble(qp%ene_h(uu%nums_occ(is)+1,is))-qp%ene_dft_h(uu%nums_occ(is)+1,is)&
+                       & +uu%ene(uu%nums_occ(is),is) +dble(qp%ene_h(uu%nums_occ(is),is))-qp%ene_dft_h(uu%nums_occ(is),is))/2.d0
+               endif
+            else
+               if(options%l_lda_hartree) then
+                  offset=-uu%ene(uu%nums_occ(is),is)
+               else
+                  offset=-(uu%ene(uu%nums_occ(is),is)+dble(qp%ene_h(uu%nums_occ(is),is))-qp%ene_dft_h(uu%nums_occ(is),is))
+               endif
+            endif
          endif
       else
-         if(options%l_lda_hartree) then
-            offset=-uu%ene(uu%nums_occ)
+         if(uu%nums > uu%nums_occ(is)) then
+            offset=-(qp%ene_hf(uu%nums_occ(is)+1,is)+qp%ene_hf(uu%nums_occ(is),is))/2.d0
          else
-            offset=-(uu%ene(uu%nums_occ)+dble(qp%ene_h(uu%nums_occ))-qp%ene_dft_h(uu%nums_occ))
+            offset=-qp%ene_hf(uu%nums_occ(is),is)
          endif
       endif
-   else
-      if(uu%nums > uu%nums_occ) then
-         offset=-(qp%ene_hf(uu%nums_occ+1)+qp%ene_hf(uu%nums_occ))/2.d0
-      else
-         offset=-qp%ene_hf(uu%nums_occ)
-      endif
-   endif
-   call free_memory(uu)
+ !  call free_memory(uu)
 
 !set remainders
 
-   allocate(remainder(options%max_i))
-   if(options%remainder==3 .or.options%remainder==4) then
-      remainder(:)=qp%ene_remainder(:)
-   else
-      remainder(:)=0.d0
-   endif
-
-
-
-   do ii=1,qp%max_i
-      if(.not. options%l_hf_energies) then
-         if(options%l_lda_hartree) then
-            call value_on_frequency(se,ii,qp%ene_dft_ks(ii)+offset,sigmac)
-            call derivative_on_frequency(se,ii,qp%ene_dft_ks(ii)+offset,dsigmac)
-         else
-            call value_on_frequency(se,ii,qp%ene_dft_ks(ii)+offset+dble(qp%ene_h(ii))-qp%ene_dft_h(ii),sigmac)
-            call derivative_on_frequency(se,ii,qp%ene_dft_ks(ii)+offset+dble(qp%ene_h(ii))-qp%ene_dft_h(ii),dsigmac)
-         endif
+      allocate(remainder(options%max_i))
+      if(options%remainder==3 .or.options%remainder==4) then
+         remainder(:)=qp%ene_remainder(:,1)
       else
-         call value_on_frequency(se,ii,qp%ene_hf(ii)+offset,sigmac)
-         call derivative_on_frequency(se,ii,qp%ene_hf(ii)+offset,dsigmac)
+         remainder(:)=0.d0
       endif
-      write(stdout,*) 'value, zeta:',ii,sigmac,dsigmac
-      zz=(1.d0,0.d0)-dsigmac
-      if(.not. options%l_hf_energies) then
-         qp%ene_gw(ii)=qp%ene_dft_ks(ii)+offset +qp%ene_h(ii)-qp%ene_dft_h(ii)+(sigmac+remainder(ii)+qp%ene_x(ii)-qp%ene_dft_xc(ii)&
-                     &  )/zz
-      else
-         qp%ene_gw(ii)=qp%ene_hf(ii)+offset+(sigmac+remainder(ii))/zz
-      endif
-      write(stdout,*) 'XC-DFT energy',ii,qp%ene_dft_xc(ii)
-      write(stdout,*) 'H-DFT energy',ii,qp%ene_dft_h(ii)*RYTOEV,qp%ene_h(ii)*RYTOEV
-      write(stdout,*) 'GW-PERT energy', ii,real(qp%ene_gw(ii)-offset)*RYTOEV
-      qp%ene_gw_pert(ii)=qp%ene_gw(ii)-offset
-!self-consistency loop
-      do it=1,10
-         call value_on_frequency_complex(se,ii,qp%ene_gw(ii),sigmac)
-         sigmac=sigmac+remainder(ii)
-         write(stdout,*) 'Iteration energy',it,sigmac
+
+
+
+      do ii=1,qp%max_i
          if(.not. options%l_hf_energies) then
-            qp%ene_gw(ii)=qp%ene_dft_ks(ii)+offset+sigmac+qp%ene_x(ii)-qp%ene_dft_xc(ii) &
-                         &   +qp%ene_h(ii)-qp%ene_dft_h(ii)
+            if(options%l_lda_hartree) then
+               call value_on_frequency(se,ii,qp%ene_dft_ks(ii,is)+offset,sigmac,is)
+               call derivative_on_frequency(se,ii,qp%ene_dft_ks(ii,is)+offset,dsigmac,is)
+            else
+               call value_on_frequency(se,ii,qp%ene_dft_ks(ii,is)+offset+dble(qp%ene_h(ii,is))-qp%ene_dft_h(ii,is),sigmac,is)
+               call derivative_on_frequency(se,ii,qp%ene_dft_ks(ii,is)+offset+dble(qp%ene_h(ii,is))-qp%ene_dft_h(ii,is),dsigmac,is)
+            endif
          else
-            qp%ene_gw(ii)=qp%ene_hf(ii)+offset+sigmac
+            call value_on_frequency(se,ii,qp%ene_hf(ii,is)+offset,sigmac,is)
+            call derivative_on_frequency(se,ii,qp%ene_hf(ii,is)+offset,dsigmac,is)
          endif
+         write(stdout,*) 'value, zeta:',ii,sigmac,dsigmac,is
+         zz=(1.d0,0.d0)-dsigmac
+         if(.not. options%l_hf_energies) then
+            qp%ene_gw(ii,is)=qp%ene_dft_ks(ii,is)+offset +qp%ene_h(ii,is)-qp%ene_dft_h(ii,is)+&
+                 & (sigmac+remainder(ii)+qp%ene_x(ii,is)-qp%ene_dft_xc(ii,is) )/zz
+         else
+            qp%ene_gw(ii,is)=qp%ene_hf(ii,is)+offset+(sigmac+remainder(ii))/zz
+         endif
+         write(stdout,*) 'XC-DFT energy',ii,qp%ene_dft_xc(ii,is)
+         write(stdout,*) 'H-DFT energy',ii,qp%ene_dft_h(ii,is)*RYTOEV,qp%ene_h(ii,is)*RYTOEV
+         write(stdout,*) 'GW-PERT energy', ii,real(qp%ene_gw(ii,is)-offset)*RYTOEV
+         qp%ene_gw_pert(ii,is)=qp%ene_gw(ii,is)-offset
+!self-consistency loop
+         do it=1,10
+            call value_on_frequency_complex(se,ii,qp%ene_gw(ii,is),sigmac,is)
+            sigmac=sigmac+remainder(ii)
+            write(stdout,*) 'Iteration energy',it,sigmac
+            if(.not. options%l_hf_energies) then
+               qp%ene_gw(ii,is)=qp%ene_dft_ks(ii,is)+offset+sigmac+qp%ene_x(ii,is)-qp%ene_dft_xc(ii,is) &
+                         &   +qp%ene_h(ii,is)-qp%ene_dft_h(ii,is)
+            else
+               qp%ene_gw(ii,is)=qp%ene_hf(ii,is)+offset+sigmac
+            endif
+         enddo
+         qp%ene_gw(ii,is)= qp%ene_gw(ii,is)-offset
+         call flush_unit(stdout)
       enddo
-      qp%ene_gw(ii)= qp%ene_gw(ii)-offset
-   enddo
 
 
-   deallocate(remainder)
+      deallocate(remainder)
 
-
+   enddo!spin
+   call free_memory(uu)
    return
  END SUBROUTINE create_quasi_particles
+
+
+ SUBROUTINE create_quasi_particle_on_real(options,qp,sr)
+!given the self-energy on real axis calculate the GW levels
+   USE io_global,        ONLY : stdout
+   USE basic_structures, ONLY : wannier_u, free_memory
+   USE self_energy_storage
+   USE input_gw,         ONLY : input_options
+   USE constants,        ONLY : tpi, RYTOEV
+   USE energies_gww,         ONLY : quasi_particles
+   USE kinds,            ONLY : DP
+
+   implicit none
+
+   TYPE(input_options) :: options! for prefix  
+   TYPE(quasi_particles) :: qp!the descriptor to be build
+   TYPE(self_on_real) :: sr!the descriptor for the self_energy                                                                                   
+
+
+   INTEGER :: ii,jj, it,is,ierr
+   TYPE(wannier_u) :: uu
+   COMPLEX(kind=DP) :: zz, sigmac,dsigmac,energy
+  
+!read in DFT energies
+   call read_data_pw_u(uu,options%prefix)
+
+!loop on spin
+
+   do is=1,uu%nspin
+      do ii=sr%i_min,sr%i_max
+         energy=dcmplx(qp%ene_dft_ks(ii,is),0.d0)
+         energy=qp%ene_gw(ii,is)!ATTENZIONE
+         call  self_on_real_value(sr,ii,is,energy,sigmac,ierr)
+         if(ierr/=0) then
+            write(stdout,*) 'OUT OF RANGE:self_on_real_value',energy
+            call flush_unit(stdout)
+            !stop!ATTENZIONE
+         endif
+         write(stdout,*) 'Iteration energy 0', dble(qp%ene_gw(ii,is))
+         qp%ene_gw(ii,is)=qp%ene_dft_ks(ii,is)+sigmac+qp%ene_x(ii,is)-qp%ene_dft_xc(ii,is) 
+         write(stdout,*) 'Iteration energy 1', dble(qp%ene_gw(ii,is))
+         
+!self-consistency loop 
+         do it=1,1000
+            call  self_on_real_value(sr,ii,is, qp%ene_gw(ii,is),sigmac,ierr)
+            if(ierr/=0) then
+               write(stdout,*) 'OUT OF RANGE:self_on_real_value',it,qp%ene_gw(ii,is)
+               call flush_unit(stdout)
+               !stop!ATTENZIONE
+            endif
+            write(stdout,*) 'Iteration energy',it,sigmac,dble(qp%ene_gw(ii,is))
+            call flush_unit(stdout)
+            qp%ene_gw(ii,is)=qp%ene_dft_ks(ii,is)+sigmac+qp%ene_x(ii,is)-qp%ene_dft_xc(ii,is) 
+         enddo
+      enddo
+   
+   enddo
+
+   return
+
+ END SUBROUTINE create_quasi_particle_on_real

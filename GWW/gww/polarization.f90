@@ -1,7 +1,12 @@
 !
-! Author: P. Umari
-! Modified by G. Stenuit
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+
   MODULE polarization
 !this module describes the structure for the polarization P
 ! and dressed iteraction W, imaginary time/frequency
@@ -14,7 +19,7 @@
         LOGICAL :: ontime!if .true. is on imaginary time, otherwise frequency
         REAL(kind=DP) :: time!imaginary time or frequency
         INTEGER :: numpw!number of states (products of wanniers)
-        REAL(kind=DP), DIMENSION(:,:), POINTER :: pw!the P or W
+        REAL(kind=DP), DIMENSION(:,:), POINTER :: pw!the P or W 
         COMPLEX(kind=DP) :: factor!complex factor to be multiplied to the real matrix pw
       END TYPE polaw
 
@@ -33,7 +38,7 @@
     SUBROUTINE free_memory_polaw(pw)
 !this subroutine deallocates the green descriptor
       implicit none
-      TYPE(polaw) pw
+      TYPE(polaw) pw 
       if(associated(pw%pw)) deallocate(pw%pw)
       nullify(pw%pw)
       return
@@ -53,8 +58,9 @@
 !this subroutine writes the green function on disk
 !the file name is taken from the label
 
-    USE io_files,             ONLY : find_free_unit, prefix
+    USE io_files,             ONLY : prefix
     implicit none
+    INTEGER, EXTERNAL :: find_free_unit
     TYPE(polaw) :: pw!the green function to be written
     LOGICAL :: debug! if .true. produces formatted output
 
@@ -69,11 +75,11 @@
       iung = find_free_unit()
       if(.not.debug) then
         open( unit=iung, file='polaw.'// nfile, status='unknown',form='unformatted')
-      else
+      else 
         open( unit=iung, file='polaw.'// nfile, status='unknown',form='formatted')
       endif
     else
-      write(nfile,'(5i1)') &
+      write(nfile,'(5i1)') &         
         & -pw%label/10000,mod(-pw%label,10000)/1000,mod(-pw%label,1000)/100,mod(-pw%label,100)/10,mod(-pw%label,10)
       iung = find_free_unit()
       if(.not.debug) then
@@ -109,7 +115,7 @@
     endif
 
     close(iung)
-
+    
     if(direct_file) then
        iung = find_free_unit()
        if(pw%label >= 0 ) then
@@ -122,31 +128,33 @@
        enddo
        close(iung)
     endif
-
+       
 
     return
    END SUBROUTINE
 
-   SUBROUTINE  read_polaw(label, pw,debug)
+   SUBROUTINE  read_polaw(label, pw,debug,l_verbose)
 !this subroutine reads the green function from disk
 !the file name is taken from the label
 
-    USE io_files,             ONLY : find_free_unit, prefix
+    USE io_files,             ONLY : prefix
     USE io_global,            ONLY : stdout
     implicit none
+    INTEGER, EXTERNAL :: find_free_unit
     TYPE(polaw) :: pw!the green function to be read
     INTEGER :: label! the label identifing the required green function
     LOGICAL :: debug!if true formatted files
+    LOGICAL, INTENT(in) :: l_verbose
 
     LOGICAL :: direct_file = .true.!if true uses direct- access file to read matrix from disk
 
     INTEGER :: iw, jw, iung
     CHARACTER(5) :: nfile
 
-    write(stdout,*) 'Read polaw1'!ATTENZIONE
+    if(l_verbose) write(stdout,*) 'Read polaw'!ATTENZIONE
 !first deallocate
     call free_memory_polaw(pw)
-     write(stdout,*) 'Read polaw2'!ATTENZIONE
+     if(l_verbose) write(stdout,*) 'Read polaw2'!ATTENZIONE
     if(label >= 0 ) then
       write(nfile,'(5i1)') label/10000,mod(label,10000)/1000,mod(label,1000)/100,mod(label,100)/10,mod(label,10)
       iung = find_free_unit()
@@ -177,7 +185,7 @@
       read(iung,*) pw%numpw
       read(iung,*) pw%factor
     endif
-     write(stdout,*) 'Read polaw3',pw%numpw!ATTENZIONE
+   write(stdout,*) 'Read polaw',pw%numpw!ATTENZIONE
 !now allocate
     allocate(pw%pw(pw%numpw,pw%numpw))
     if(.not. direct_file) then
@@ -194,7 +202,7 @@
        endif
     endif
     close(iung)
-     write(stdout,*) 'Read polaw4'!ATTENZIONE
+     if(l_verbose) write(stdout,*) 'Read polaw4'!ATTENZIONE
     if(direct_file) then
        iung = find_free_unit()
        if(label >= 0 ) then
@@ -202,16 +210,96 @@
        else
           open( unit=iung, file='polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
        endif
-       write(stdout,*) 'Read polaw5'!ATTENZIONE
+       if(l_verbose) write(stdout,*) 'Read polaw5'!ATTENZIONE
        do iw=1,pw%numpw
           read(unit=iung, rec=iw) pw%pw(:,iw)
        enddo
        close(iung)
     endif
-    write(stdout,*) 'Read polaw6'!ATTENZIONE
+    if(l_verbose) write(stdout,*) 'Read polaw6'!ATTENZIONE
 
     return
    END SUBROUTINE
+
+
+   SUBROUTINE  read_polaw_global(label, pw)
+!this subroutine reads the green function from disk 
+!the file name is taken from the label
+!the ionode_id distribute to all the processors
+
+    USE io_files,             ONLY : prefix
+    USE io_global,            ONLY : stdout, ionode, ionode_id
+    USE mp,                   ONLY : mp_barrier, mp_bcast
+
+    implicit none
+    INTEGER, EXTERNAL :: find_free_unit
+    TYPE(polaw) :: pw!the green function to be read
+    INTEGER :: label! the label identifing the required green function 
+   
+
+    LOGICAL :: direct_file = .true.!if true uses direct- access file to read matrix from disk
+
+    INTEGER :: iw, jw, iung
+    CHARACTER(5) :: nfile
+
+
+!first deallocate
+    call free_memory_polaw(pw)
+    if(ionode) then
+       if(label >= 0 ) then
+          write(nfile,'(5i1)') label/10000,mod(label,10000)/1000,mod(label,1000)/100,mod(label,100)/10,mod(label,10)
+          iung = find_free_unit()
+          open( unit=iung, file='polaw.'// nfile, status='old',form='unformatted')
+       else
+          write(nfile,'(5i1)') -label/10000,mod(-label,10000)/1000,mod(-label,1000)/100,mod(-label,100)/10,mod(-label,10)
+          iung = find_free_unit()
+          open( unit=iung, file='polaw.-'// nfile, status='old',form='unformatted')
+       endif
+       
+   
+       read(iung) pw%label
+       read(iung) pw%ontime
+       read(iung) pw%time
+       read(iung) pw%numpw
+       read(iung) pw%factor
+    endif
+    call mp_bcast(pw%label,ionode_id)
+    call mp_bcast(pw%ontime,ionode_id)
+    call mp_bcast(pw%time,ionode_id)
+    call mp_bcast(pw%numpw,ionode_id)
+    call mp_bcast(pw%factor,ionode_id)
+ 
+    allocate(pw%pw(pw%numpw,pw%numpw))
+    if(ionode) then
+       if(.not. direct_file) then
+          do iw=1,pw%numpw
+             read(iung)  pw%pw(1:pw%numpw,iw)
+          enddo
+       endif
+       close(iung)
+
+       if(direct_file) then
+          iung = find_free_unit()
+          if(label >= 0 ) then
+             open( unit=iung, file='polawd.'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          else
+             open( unit=iung, file='polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          endif
+          
+          do iw=1,pw%numpw
+             read(unit=iung, rec=iw) pw%pw(:,iw)
+          enddo
+          close(iung)
+       endif
+    endif
+    do iw=1,pw%numpw
+       call mp_barrier
+       call mp_bcast(pw%pw(:,iw),ionode_id)
+    enddo
+
+    return
+  END SUBROUTINE read_polaw_global
+
 
 
 
@@ -220,11 +308,12 @@
 !the file name is taken from the label
 !writes column from range_min to range_max
 
-    USE io_files,             ONLY : find_free_unit, prefix
+    USE io_files,             ONLY : prefix
     USE io_global,            ONLY : stdout
 
 
     implicit none
+    INTEGER, EXTERNAL :: find_free_unit
     TYPE(polaw) :: pw!the green function to be written
     LOGICAL :: debug! if .true. produces formatted output
     INTEGER, INTENT(in) :: range_min, range_max!range of column
@@ -316,11 +405,12 @@
 !the file name is taken from the label
 !reads columns from range_min to range_max
 
-    USE io_files,             ONLY : find_free_unit, prefix
+    USE io_files,             ONLY : prefix
     USE io_global,            ONLY : stdout
 
     implicit none
 
+    INTEGER, EXTERNAL :: find_free_unit
     TYPE(polaw) :: pw!the green function to be read
     INTEGER :: label! the label identifing the required green function
     LOGICAL :: debug!if true formatted files
@@ -432,9 +522,9 @@
 
 
    SUBROUTINE create_polarization(time,pr,gf_p,gf_m,qm,debug)
-!this subroutine set the polarization in imaginary time
+!this subroutine set the polarization in imaginary time 
 ! as P(r,r',it)=G(r,r',it)*G(r,r',-it)
-! for our basis
+! for our basis 
 ! P_{i,j}=\sum_{l,n,m,o} Q_{i,lm}Q_{j,mo}G_{lm}(it)G_{no}(-it)
 !THERE IS ALSO A SPIN FACTOR 2
 
@@ -464,7 +554,7 @@
       write(stdout,*) 'Subroutine polarization: times are wrong',gf_p%time,gf_m%time
       stop
    endif
-
+    
 !set pr
    pr%ontime=.true.
    pr%time=time
@@ -485,22 +575,22 @@
                o=qm%wp(jw)%ij(2,jp)
 
                pr%pw(iw,jw)=pr%pw(iw,jw)+qm%wp(iw)%o(ip)*qm%wp(jw)%o(jp)* &
-                  & gf_p%gf(l,m)*gf_m%gf(n,o)
+                  & gf_p%gf(l,m,1)*gf_m%gf(n,o,1)
 
 !couples are NOT ordered
               if(l/=n) then
                 pr%pw(iw,jw)=pr%pw(iw,jw)+qm%wp(iw)%o(ip)*qm%wp(jw)%o(jp)* &
-                  & gf_p%gf(n,m)*gf_m%gf(l,o)
+                  & gf_p%gf(n,m,1)*gf_m%gf(l,o,1)
               endif
 
               if(m/=o) then
                 pr%pw(iw,jw)=pr%pw(iw,jw)+qm%wp(iw)%o(ip)*qm%wp(jw)%o(jp)* &
-                  & gf_p%gf(l,o)*gf_m%gf(n,m)
+                  & gf_p%gf(l,o,1)*gf_m%gf(n,m,1)
               endif
 
               if(l/=n .AND. m/=o) then
                 pr%pw(iw,jw)=pr%pw(iw,jw)+qm%wp(iw)%o(ip)*qm%wp(jw)%o(jp)* &
-                  & gf_p%gf(n,o)*gf_m%gf(l,m)
+                  & gf_p%gf(n,o,1)*gf_m%gf(l,m,1)
               endif
            enddo
            pr%pw(jw,iw)=pr%pw(iw,jw)
@@ -512,20 +602,20 @@
     pr%factor=(0.d0,-1.d0)
 !now spin factor
     pr%pw(:,:)=2.d0*pr%pw(:,:)
-
+    
     return
 
   END subroutine
 
   SUBROUTINE calculate_w(vp,pp,ww,xc_together,l_symm_epsilon,l_head_epsilon,agz,head,l_divergence,inv_epsi, &
-                    &l_wing_epsilon, awing)
+                    &l_wing_epsilon, awing, l_verbose)
 !this subroutine calculates W=(1+vp)^{-1}v
 !this is meaningful only on frequency domain
 !lapack routines are used
     USE io_global,            ONLY : stdout
     USE basic_structures,     ONLY : v_pot, head_epsilon
 
-    implicit none
+    implicit none 
     TYPE(v_pot)  :: vp!coulomb potential
     TYPE(polaw)  :: pp!polarization on imaginary frequency, destroyed on exit
     TYPE(polaw)  :: ww!dressed interaction to be calculated
@@ -540,7 +630,7 @@
     REAL(kind=DP), INTENT(out) :: inv_epsi!head of the inverse dielectric matrix
     LOGICAL, INTENT(in) :: l_wing_epsilon!if true calculate the wings of the symmetrized dielectric matrix
     REAL(kind=DP), DIMENSION(:) :: awing!the terms A_ij wing_j
-
+    LOGICAL, INTENT(in) :: l_verbose
 
     INTEGER iw,jw,kw
     REAL(kind=DP), ALLOCATABLE, DIMENSION(:,:) :: dtmp!temporary array
@@ -621,16 +711,16 @@
    endif
 
    call dgetri(ww%numpw,dtmp,ww%numpw,ipiv,workd,-1,info)
-   write(stdout,*) 'Dimension', workd!ATTENZIONE
+   if(l_verbose) write(stdout,*) 'Dimension', workd!ATTENZIONE
    allocate(work(int(workd)))
    call dgetri(ww%numpw,dtmp,ww%numpw,ipiv,work,int(workd),info)
-
+   
    if(info /= 0) then
      write(stdout,*) 'Routine calculate_w: problem with zgetri :', info
      stop
    endif
 
-
+   
    if(.not.xc_together) then
       do iw=1,ww%numpw
          dtmp(iw,iw)=dtmp(iw,iw)-1.d0
@@ -651,7 +741,7 @@
       enddo
    endif
 
-   write(stdout,*) 'INV EPSI G=0,G=0', inv_epsi
+   if(l_verbose) write(stdout,*) 'INV EPSI G=0,G=0', inv_epsi
 
    if(.not. l_symm_epsilon) then
 !calculates (e-1 -1)v
@@ -721,9 +811,9 @@
 
    if(.not.l_hf_energies) then
       if(cp%nums > cp%nums_occ) then
-         offset=-(uu%ene(cp%nums_occ+1)+uu%ene(cp%nums_occ))/2.d0
+         offset=-(uu%ene(cp%nums_occ+1,1)+uu%ene(cp%nums_occ,1))/2.d0
       else
-         offset=-uu%ene(cp%nums_occ)
+         offset=-uu%ene(cp%nums_occ,1)
       endif
    else
        if(cp%nums > cp%nums_occ) then
@@ -737,10 +827,10 @@
   allocate(expene(cp%nums))
   if(.not.l_hf_energies) then
      do vv=1,cp%nums_occ
-        expene(vv)=exp((uu%ene(vv)+offset)*time)
+        expene(vv)=exp((uu%ene(vv,1)+offset)*time)
      enddo
      do cc=cp%nums_occ+1,cp%nums
-        expene(cc)=exp(-(uu%ene(cc)+offset)*time)
+        expene(cc)=exp(-(uu%ene(cc,1)+offset)*time)
      enddo
   else
      do vv=1,cp%nums_occ
@@ -795,7 +885,7 @@
     call free_memory(opi)
     opi%numpw=op%numpw
     allocate(opi%on_mat( opi%numpw, opi%numpw))
-    opi%on_mat(:,:)=op%on_mat(:,:)
+    opi%on_mat(:,:)=op%on_mat(:,:)   
 
    call dgetrf(opi%numpw,opi%numpw,opi%on_mat,opi%numpw,ipiv,info)
    if(info /= 0) then
@@ -826,7 +916,7 @@
     USE io_global, ONLY : stdout
     USE basic_structures, ONLY : ortho_polaw, free_memory
     USE mp_global,            ONLY : nproc,mpime
-
+    
     implicit none
 
     TYPE(ortho_polaw), INTENT(in) :: op !the descriptor of the orthonormalization matrix to be distributed
@@ -838,15 +928,15 @@
 
     opd%numpw = op%numpw
     opd%inverse = op%inverse
-
+    
      l_blk= op%numpw/nproc
      if(l_blk*nproc < op%numpw) l_blk = l_blk+1
      nbegin=mpime*l_blk+1
      nend=nbegin+l_blk-1
      if(nend > op%numpw) nend = op%numpw
-
+     
      allocate(opd%on_mat(op%numpw,l_blk))
-
+     
      do ii=nbegin,nend
         opd%on_mat(:,ii-nbegin+1)=op%on_mat(:,ii)
      enddo
@@ -861,7 +951,7 @@
 
     USE io_global, ONLY : stdout
     USE basic_structures, ONLY : ortho_polaw, free_memory
-    USE mp_global,            ONLY : nproc, mpime, world_comm
+    USE mp_global,            ONLY : nproc,mpime,world_comm!group
     USE parallel_include
 
     implicit none
@@ -884,18 +974,18 @@
 
      allocate(op%on_mat(op%numpw,l_blk*nproc))
 
-#ifdef __MPI
+#ifdef __PARA
       call MPI_ALLGATHER(opd%on_mat,l_blk*op%numpw,MPI_DOUBLE_PRECISION, op%on_mat, &
-           &    l_blk*op%numpw, MPI_DOUBLE_PRECISION, world_comm, ierr)
+           &    l_blk*op%numpw, MPI_DOUBLE_PRECISION,world_comm, ierr)
 #else
       op%on_mat(:,:)=opd%on_mat
 #endif
-
+     
 
      return
    END SUBROUTINE collect_ortho_polaw
-
-
+     
+  
 
 
 
@@ -908,13 +998,13 @@
 
     implicit none
 
-    TYPE(polaw), INTENT(inout) :: pw!data
+    TYPE(polaw), INTENT(inout) :: pw!data 
     TYPE(ortho_polaw), INTENT(in) :: op!trasform
 
     INTEGER :: iw,jw,kw
     REAL(kind=DP), ALLOCATABLE :: mat(:,:)
 
-
+    
 
     if(op%numpw /= pw%numpw) then
       write(stdout,*) 'ROUTINE ORTHONORMALIZE: BASIS INCONSISTENT'
@@ -931,11 +1021,11 @@
     call dgemm('N','T',op%numpw,op%numpw,op%numpw,1.d0,&
          & mat,op%numpw,op%on_mat,op%numpw,0.d0,pw%pw,op%numpw)
 
-
+     
     deallocate(mat)
 
     return
-
+   
   END SUBROUTINE
 
   SUBROUTINE orthonormalize_inverse(op,pw)
@@ -961,7 +1051,7 @@
     endif
 
     allocate(mat(op%numpw,op%numpw))
-
+ 
     call dgemm('T','N',op%numpw,op%numpw,op%numpw,1.d0,&
                  & op%on_mat,op%numpw,pw%pw,op%numpw,0.d0,mat,op%numpw)
 
@@ -1023,7 +1113,7 @@
 
     call dgemm('N','N',op%numpw,op%numpw,op%numpw,1.d0,mat,op%numpw,op%on_mat,op%numpw,0.d0,vp%vmat,op%numpw)
 
-
+    
 
 
     deallocate(mat)
@@ -1153,35 +1243,36 @@
     implicit none
 
     TYPE(v_pot), INTENT(in) :: vp !the descriptor of the coulombian matrix to be inverted
-    TYPE(v_pot), INTENT(out) :: vpi !the descriptor of the inverted coulombian matrix
+    TYPE(v_pot), INTENT(inout) :: vpi !the descriptor of the inverted coulombian matrix
 
-    INTEGER :: info,lwork
+    INTEGER :: info,lwork,i,j
     INTEGER, ALLOCATABLE, DIMENSION(:) :: ipiv
     REAL(kind=DP), ALLOCATABLE, DIMENSION(:) :: work
-    INTEGER :: i
+
+!call hangup ! debug
 
     call free_memory(vpi)
+
+!call hangup ! debug
 
     lwork=vp%numpw
     allocate(ipiv(vp%numpw))
     allocate(work(lwork))
 
+!call hangup ! debug
+
     vpi%numpw=vp%numpw
     allocate(vpi%vmat( vpi%numpw, vpi%numpw))
+!write(stdout,*) size(vpi%vmat,1), size(vpi%vmat,2), size(vp%vmat,1), size(vp%vmat,2)
+!call hangup ! debug
+!    vpi%vmat(:,:)=vp%vmat(:,:)  ! bug
+    do j = 1, size(vpi%vmat,2)
+      do i = 1, size(vpi%vmat,1)
+        vpi%vmat(i,j)=vp%vmat(i,j)
+      end do
+    end do
 
-   write(stdout,*) 'SUBROUTINE invert_v_pot; before vpi%vmat(:,:)=vp%vmat(:,:)'
-   call flush_unit(stdout)
-   !vpi%vmat(:,:)=vp%vmat(:,:)
-   do i=1,vp%numpw
-        vpi%vmat(:,i)=vp%vmat(:,i)
-    !!    do j=1,vp%numpw
-    !!        vpi%vmat(j,i)=vp%vmat(j,i)
-    !!    enddo
-   enddo
-
-   write(stdout,*) 'After vpi%vmat(:,:)=vp%vmat(:,:)'
-   call flush_unit(stdout)
-   !!!!!!! vpi%vmat(:,:)=vp%vmat(:,:)
+!call hangup ! debug
 
    call dgetrf(vpi%numpw,vpi%numpw,vpi%vmat,vpi%numpw,ipiv,info)
    if(info /= 0) then
@@ -1214,7 +1305,7 @@
    enddo
    return
  END SUBROUTINE fake_polarization_io
-
+   
   SUBROUTINE orthonormalize_vpot_inverse_para(op,vp)
 !this subroutine rotates the v_pot data on the basis of the trasform op
 !perform the trasform \sum_{i',j'} B_{i',i}P_{i',j'}B_{j',j}
@@ -1322,16 +1413,16 @@
 !calculates energy offset
 
    if(.not.l_hf_energies) then
-      if(uu%nums > uu%nums_occ) then
-         offset=-(uu%ene(uu%nums_occ+1)+uu%ene(uu%nums_occ))/2.d0
+      if(uu%nums > uu%nums_occ(1)) then
+         offset=-(uu%ene(uu%nums_occ(1)+1,1)+uu%ene(uu%nums_occ(1),1))/2.d0
       else
-         offset=-uu%ene(uu%nums_occ)
+         offset=-uu%ene(uu%nums_occ(1),1)
       endif
    else
-       if(uu%nums > uu%nums_occ) then
-         offset=-(ene_hf(uu%nums_occ+1)+ene_hf(uu%nums_occ))/2.d0
+       if(uu%nums > uu%nums_occ(1)) then
+         offset=-(ene_hf(uu%nums_occ(1)+1)+ene_hf(uu%nums_occ(1)))/2.d0
       else
-         offset=-ene_hf(uu%nums_occ)
+         offset=-ene_hf(uu%nums_occ(1))
       endif
    endif
 !calcualte exponentials of ks energies
@@ -1339,17 +1430,17 @@
   allocate(expene(uu%nums))
 
   if(.not.l_hf_energies) then
-     do vv=1,uu%nums_occ
-        expene(vv)=exp((uu%ene(vv)+offset)*time)
+     do vv=1,uu%nums_occ(1)
+        expene(vv)=exp((uu%ene(vv,1)+offset)*time)
      enddo
-     do cc=uu%nums_occ+1,uu%nums
-        expene(cc)=exp(-(uu%ene(cc)+offset)*time)
+     do cc=uu%nums_occ(1)+1,uu%nums
+        expene(cc)=exp(-(uu%ene(cc,1)+offset)*time)
      enddo
   else
-     do vv=1,uu%nums_occ
+     do vv=1,uu%nums_occ(1)
         expene(vv)=exp((ene_hf(vv)+offset)*time)
      enddo
-     do cc=uu%nums_occ+1,uu%nums
+     do cc=uu%nums_occ(1)+1,uu%nums
         expene(cc)=exp(-(ene_hf(cc)+offset)*time)
      enddo
   endif
@@ -1389,9 +1480,9 @@
 
       call free_memory_contraction_pola_state(cps)
    enddo
-   do jw=1,pr%numpw
-      do iw=jw,pr%numpw
-         pr%pw(jw,iw)=pr%pw(iw,jw)
+   do jw=1,pr%numpw 
+      do iw=jw,pr%numpw   
+         pr%pw(jw,iw)=pr%pw(iw,jw) 
       enddo
    enddo
 !   pr%pw(:,:)=(0.d0,-1.d0)*pr%pw(:,:)
@@ -1407,7 +1498,7 @@
  END SUBROUTINE create_polarization_contraction_state
 
 
-
+ 
  SUBROUTINE distribute_v_pot(vp,vpd)
 !this subroutine distributes the coulomb matrix
 ! among processors
@@ -1426,7 +1517,7 @@
     call free_memory(vpd)
 
     vpd%numpw = vp%numpw
-
+ 
 
      l_blk= vp%numpw/nproc
      if(l_blk*nproc < vp%numpw) l_blk = l_blk+1
@@ -1450,7 +1541,7 @@
 
     USE io_global, ONLY : stdout
     USE basic_structures, ONLY : v_pot, free_memory
-    USE mp_global,            ONLY : nproc, mpime, world_comm
+    USE mp_global,            ONLY : nproc,mpime,world_comm!group
     USE parallel_include
 
     implicit none
@@ -1472,9 +1563,9 @@
 
      allocate(vp%vmat(vp%numpw,l_blk*nproc))
 
-#ifdef __MPI
+#ifdef __PARA
       call MPI_ALLGATHER(vpd%vmat,l_blk*vp%numpw,MPI_DOUBLE_PRECISION, vp%vmat, &
-           &    l_blk*vp%numpw, MPI_DOUBLE_PRECISION, world_comm, ierr)
+           &    l_blk*vp%numpw, MPI_DOUBLE_PRECISION,world_comm, ierr)
 #else
       vp%vmat(:,:)=vpd%vmat(:,:)
 #endif
@@ -1569,7 +1660,7 @@
       sca=sca-agz(iw)**2.d0
    enddo
    alpha=1.d0/sqrt(sca)
-
+   
    write(stdout,*) 'ALPHA :', alpha
    call flush_unit(stdout)
 
@@ -1610,7 +1701,7 @@
        dtmp(ww%numpw+1,iw)=dtmp(ww%numpw+1,iw)+head*agz(iw)/alpha
        dtmp(iw,ww%numpw+1)=dtmp(iw,ww%numpw+1)+head*agz(iw)/alpha
     enddo
-
+   
 
 
 !if required add the wings
@@ -1748,8 +1839,8 @@
 
 
 
- SUBROUTINE create_polarization_file(uu, tf, prefix, nc_minus)
-
+ SUBROUTINE create_polarization_file(uu, tf, prefix)
+   
    USE basic_structures, ONLY : wannier_u, cprim_prod, free_memory, &
                               &initialize_memory_cprim_prod
    USE times_gw,  ONLY : times_freqs
@@ -1762,7 +1853,6 @@
    TYPE(wannier_u), INTENT(in) :: uu!for the energies
    TYPE(times_freqs) :: tf
    CHARACTER(LEN=256), INTENT(in) ::  prefix!to designate the PW files
-   INTEGER, INTENT(in) :: nc_minus!to be subtracted to number of conduction states
 
    INTEGER :: l_blk, nbegin, nend
    INTEGER :: it,iv,ic, iw, jw
@@ -1775,8 +1865,7 @@
 
    write(stdout,*) 'Routine create_polarization_file'
 
-   !!!allocate(exp_table(uu%nums-uu%nums_occ))
-   allocate(exp_table(uu%nums-uu%nums_occ-nc_minus))
+   allocate(exp_table(uu%nums-uu%nums_occ(1)))
 
 !loop on time
 
@@ -1784,28 +1873,27 @@
     if(l_blk*nproc < (tf%n+1)) l_blk = l_blk+1
     nbegin=mpime*l_blk
     nend=nbegin+l_blk-1
-
+    
     do it=nbegin,nend
 
 
        if(it<= tf%n) then
           call initialize_polaw(pp)
           l_first=.true.
-          do iv=1,uu%nums_occ
+          do iv=1,uu%nums_occ(1)
  !loop on v
              write(stdout,*) 'STATE', iv
              call flush_unit(stdout)
 
 !set table of exponentials
 
-             !!!do ic=uu%nums_occ+1,uu%nums
-             do ic=uu%nums_occ+1,uu%nums-nc_minus
-                exp_table(ic-uu%nums_occ)=exp((uu%ene(iv)-uu%ene(ic))*tf%times(it))
+             do ic=uu%nums_occ(1)+1,uu%nums
+                exp_table(ic-uu%nums_occ(1))=exp((uu%ene(iv,1)-uu%ene(ic,1))*tf%times(it))
              enddo
              call mp_barrier
              call initialize_memory_cprim_prod(cpp)
 
-   !!read in Svci
+   !!read in Svci 
              cpp%cprim=iv
               call read_data_pw_cprim_prod(cpp, prefix, .true., ok_read, .true.,.false.)
 !if required allocate polaw
@@ -1817,11 +1905,8 @@
                  l_first=.false.
               endif
 !!!!the following for using blas routine
-              allocate(cpmat_tmp(cpp%nums_cond-nc_minus,cpp%numpw))
-              call mytranspose(cpp%cpmat, cpp%numpw, cpmat_tmp, cpp%nums_cond-nc_minus, cpp%numpw, cpp%nums_cond-nc_minus)
-
-!!!              allocate(cpmat_tmp(cpp%nums_cond,cpp%numpw))
-!!!              call mytranspose(cpp%cpmat, cpp%numpw, cpmat_tmp, cpp%nums_cond, cpp%numpw, cpp%nums_cond)
+              allocate(cpmat_tmp(cpp%nums_cond,cpp%numpw))
+              call mytranspose(cpp%cpmat, cpp%numpw, cpmat_tmp, cpp%nums_cond, cpp%numpw, cpp%nums_cond)
               do iw=1,cpp%numpw
                  cpmat_tmp(:,iw)=cpmat_tmp(:,iw)*exp_table(:)
               enddo
@@ -1837,11 +1922,9 @@
 !              enddo
 
 
-!!              call dgemm('N','N',cpp%numpw,cpp%numpw,cpp%nums_cond,1.d0,cpp%cpmat,cpp%numpw,&
-!!                   &cpmat_tmp,cpp%nums_cond,1.d0,pp%pw,cpp%numpw)
+              call dgemm('N','N',cpp%numpw,cpp%numpw,cpp%nums_cond,1.d0,cpp%cpmat,cpp%numpw,&
+                   &cpmat_tmp,cpp%nums_cond,1.d0,pp%pw,cpp%numpw)
 
-              call dgemm('N','N',cpp%numpw,cpp%numpw,cpp%nums_cond-nc_minus,1.d0,cpp%cpmat,cpp%numpw,&
-                   &cpmat_tmp,cpp%nums_cond-nc_minus,1.d0,pp%pw,cpp%numpw)
               deallocate(cpmat_tmp)
              call free_memory(cpp)
           enddo
@@ -1857,7 +1940,7 @@
           call free_memory_polaw(pp)
           else
 !just parallelel reading of file
-             do iv=1,uu%nums_occ
+             do iv=1,uu%nums_occ(1)
                 call mp_barrier
                 call initialize_memory_cprim_prod(cpp)
                 cpp%cprim=iv
@@ -1892,10 +1975,23 @@
    REAL(kind=DP) :: loptwork
    INTEGER :: iw,jw,kw
 
+#ifdef __OPENMP
+   INTEGER :: ntids
+   INTEGER :: omp_get_num_threads, omp_get_max_threads
+   EXTERNAL omp_set_num_threads, omp_get_num_threads, omp_get_max_threads
+#endif
+
+
    allocate(e_va(numpw))
    allocate(tmp_pw(numpw, numpw))
 
    tmp_pw(:,:)=pw(:,:)
+
+#ifdef __OPENMP
+     ! go single-thread
+     ntids = omp_get_max_threads()
+     call omp_set_num_threads(1)
+#endif
 
 
 !check for optimal dimension
@@ -1912,6 +2008,10 @@
       stop
    endif
 
+#ifdef __OPENMP
+     ! go multi-thread
+     call omp_set_num_threads(ntids)
+#endif
 
 !do square root of eigenvector
    do iw=1,numpw
@@ -1921,20 +2021,20 @@
       endif
       e_va(iw)=dsqrt(e_va(iw))
    enddo
-
+   
 !reform the matrix
 
    pw(:,:)=0.d0
 
-
-   do kw=1,numpw
+! Carlo substitute with DGEMM
+   do kw=1,numpw  
       do jw=1,numpw
          do iw=1,numpw
             pw(iw,jw)=pw(iw,jw)+tmp_pw(iw,kw)*tmp_pw(jw,kw)*e_va(kw)
          enddo
       enddo
    enddo
-
+      
    deallocate(tmp_pw)
    deallocate(work)
    deallocate(e_va)
@@ -1958,12 +2058,12 @@
    implicit none
 
    REAL(kind=DP), INTENT(in) :: time! imaginary time tau
-   TYPE(wannier_u), INTENT(in) :: uu!for the energies and trasformation matrix
+   TYPE(wannier_u), INTENT(in) :: uu!for the energies and trasformation matrix               
    TYPE(polaw), INTENT(out)   :: pr!polarization P(it) to be created
    TYPE(q_mat), INTENT(in) :: qm ! for S matrices
+                      
 
-
-   INTEGER :: i,j,k, ip, ii, jj
+   INTEGER :: i,j,k, ip, ii, jj 
    INTEGER :: nums_cond!number of conduction states
    INTEGER :: iw,jw
    REAL(kind=DP), ALLOCATABLE :: v_val(:,:), exp_table_v(:), v_cond(:,:), exp_table_c(:)
@@ -1979,56 +2079,50 @@
    pr%time=time
    pr%numpw=qm%numpw
    pr%factor=(0.d0,-1.d0)
-!allocate
+!allocate                                                                                                                  
    allocate(pr%pw( pr%numpw,pr%numpw))
    pr%pw(:,:) =(0.d0,0.d0)
 
 
 
 !1)calculate V_v'v''= U_{vv'}U_{v,v''}exp(E_v \tau}
-   allocate(v_val(uu%nums_occ,uu%nums_occ))
-   allocate(exp_table_v(uu%nums_occ))
+   allocate(v_val(uu%nums_occ(1),uu%nums_occ(1)))
+   allocate(exp_table_v(uu%nums_occ(1)))
 
 !fermi_en is used to reduce the numerical error
-   fermi_en=(uu%ene(uu%nums_occ+1)+uu%ene(uu%nums_occ))/2.d0
-   exp_table_v(1:uu%nums_occ)=exp((uu%ene(1:uu%nums_occ)-fermi_en)*abs(time))
+   fermi_en=(uu%ene(uu%nums_occ(1)+1,1)+uu%ene(uu%nums_occ(1),1))/2.d0
+   exp_table_v(1:uu%nums_occ(1))=exp((uu%ene(1:uu%nums_occ(1),1)-fermi_en)*abs(time))
 
    v_val(:,:)=0.d0
-!   do i=1,uu%nums_occ
-!      do j=1,uu%nums_occ
-!         do k=1,uu%nums_occ
-!            v_val(i,j)=v_val(i,j)+uu%umat(k,i)*uu%umat(k,j)*exp_table_v(k)
-!         enddo
-!      enddo
-!   enddo
-   allocate(tmp_mat1(uu%nums_occ,uu%nums_occ), tmp_mat2(uu%nums_occ,uu%nums_occ))
 
-   tmp_mat1(1:uu%nums_occ,1:uu%nums_occ)=dble(uu%umat(1:uu%nums_occ,1:uu%nums_occ))
-   do i=1,uu%nums_occ
-      do j=1,uu%nums_occ
-         tmp_mat2(i,j)=dble(uu%umat(i,j))*exp_table_v(i)
+   allocate(tmp_mat1(uu%nums_occ(1),uu%nums_occ(1)), tmp_mat2(uu%nums_occ(1),uu%nums_occ(1)))
+
+   tmp_mat1(1:uu%nums_occ(1),1:uu%nums_occ(1))=dble(uu%umat(1:uu%nums_occ(1),1:uu%nums_occ(1),1))
+   do i=1,uu%nums_occ(1)
+      do j=1,uu%nums_occ(1)
+         tmp_mat2(i,j)=dble(uu%umat(i,j,1))*exp_table_v(i)
       enddo
    enddo
 
-   call dgemm('T','N',uu%nums_occ,uu%nums_occ,uu%nums_occ,1.d0,tmp_mat2,uu%nums_occ,tmp_mat1,uu%nums_occ,&
-        &0.d0,v_val,uu%nums_occ)
+   call dgemm('T','N',uu%nums_occ(1),uu%nums_occ(1),uu%nums_occ(1),1.d0,tmp_mat2,uu%nums_occ(1),tmp_mat1,uu%nums_occ(1),&
+        &0.d0,v_val,uu%nums_occ(1))
    deallocate(tmp_mat1,tmp_mat2)
    deallocate(exp_table_v)
 
 !2) calculate V_c'c''= U_{c,c'}U_{c,c''}exp(-E_c \tau}
-   nums_cond=uu%nums-uu%nums_occ
+   nums_cond=uu%nums-uu%nums_occ(1)
 
    allocate(v_cond(nums_cond,nums_cond))
    allocate(exp_table_c(nums_cond))
 
-   exp_table_c(1:nums_cond)=exp((-uu%ene(uu%nums_occ+1:uu%nums) +fermi_en)*abs(time))
+   exp_table_c(1:nums_cond)=exp((-uu%ene(uu%nums_occ(1)+1:uu%nums,1) +fermi_en)*abs(time))
 
    allocate(tmp_mat1(nums_cond,nums_cond), tmp_mat2(nums_cond,nums_cond))
 
-   tmp_mat1(1:nums_cond,1:nums_cond)=dble(uu%umat(uu%nums_occ+1:uu%nums,uu%nums_occ+1:uu%nums))
+   tmp_mat1(1:nums_cond,1:nums_cond)=dble(uu%umat(uu%nums_occ(1)+1:uu%nums,uu%nums_occ(1)+1:uu%nums,1))
    do i=1,nums_cond
       do j=1,nums_cond
-         tmp_mat2(i,j)=dble(uu%umat(uu%nums_occ+i,uu%nums_occ+j))*exp_table_c(i)
+         tmp_mat2(i,j)=dble(uu%umat(uu%nums_occ(1)+i,uu%nums_occ(1)+j,1))*exp_table_c(i)
       enddo
    enddo
 
@@ -2042,43 +2136,43 @@
    do iw=1,pr%numpw
 
 !calculate T_v''c'=S_{i,v'c'}V_{v',v''}
-      allocate(t(uu%nums_occ,nums_cond))
+      allocate(t(uu%nums_occ(1),nums_cond))
       t(:,:)=0.d0
       do ip=1,qm%wp(iw)%numij
          i=qm%wp(iw)%ij(1,ip)!valence only
          j=qm%wp(iw)%ij(2,ip)!valence and conduction
-         if(i>uu%nums_occ) then
+         if(i>uu%nums_occ(1)) then
             write(stdout,*) 'create_polarization_beta ERROR'
             call flush_unit(stdout)
             stop
          endif
 !only valence*conduction products are required
-         if(j>uu%nums_occ) then
-            do ii=1,uu%nums_occ
-               t(ii,j-uu%nums_occ)=t(ii,j-uu%nums_occ)+qm%wp(iw)%o(ip)*v_val(i,ii)
+         if(j>uu%nums_occ(1)) then
+            do ii=1,uu%nums_occ(1)
+               t(ii,j-uu%nums_occ(1))=t(ii,j-uu%nums_occ(1))+qm%wp(iw)%o(ip)*v_val(i,ii)
             enddo
          endif
       enddo
-
+   
 !calculate Q v''c''=T_{v''c'}V_{c'c''}
-      allocate( q(uu%nums_occ,nums_cond))
-      call dgemm('N','N',uu%nums_occ,nums_cond,nums_cond,1.d0,t,uu%nums_occ,v_cond,nums_cond,0.d0,&
-           &q,uu%nums_occ)
+      allocate( q(uu%nums_occ(1),nums_cond))
+      call dgemm('N','N',uu%nums_occ(1),nums_cond,nums_cond,1.d0,t,uu%nums_occ(1),v_cond,nums_cond,0.d0,&
+           &q,uu%nums_occ(1))
       deallocate(t)
-
+   
 !put q on a right order for multiplication with S_{j,v''c''}
 !WARNING WARNING ATTENZIONE
 !it suppose that the wp(:)%ij are all the same
       allocate(v(qm%wp(1)%numij))
       v(:)=0.d0
       do ip=1,qm%wp(iw)%numij
-         i=qm%wp(iw)%ij(1,ip)!valence only
+         i=qm%wp(iw)%ij(1,ip)!valence only                                                                        
          j=qm%wp(iw)%ij(2,ip)!valence and conduction
-         if(j > uu%nums_occ) then
-            v(ip)=q(i,j-uu%nums_occ)
+         if(j > uu%nums_occ(1)) then
+            v(ip)=q(i,j-uu%nums_occ(1))
          endif
       enddo
-
+    
       deallocate(q)
 !product with jw
       do jw=iw,pr%numpw
@@ -2088,8 +2182,8 @@
 
       deallocate(v)
    enddo
-!now spin factor
-
+!now spin factor 
+                                                                                                             
     pr%pw(:,:)=2.d0*pr%pw(:,:)
 
     deallocate(v_val,v_cond)
@@ -2099,7 +2193,7 @@
 
 
  SUBROUTINE create_polarization_upper(uu, tf, prefix)
-!this subroutine adds to the polarization the part from upper reduced states
+!this subroutine adds to the polarization the part from upper reduced states   
 
    USE basic_structures, ONLY : wannier_u, cprim_prod, free_memory, &
                               &initialize_memory, upper_states
@@ -2141,15 +2235,15 @@
     if(l_blk*nproc < (tf%n+1)) l_blk = l_blk+1
     nbegin=mpime*l_blk
     nend=nbegin+l_blk-1
-
+    
     do it=nbegin,nend
 
 
        if(it<= tf%n) then
 !read polarization
           call initialize_polaw(pp)
-          call read_polaw(it,pp,.false.)
-          do iv=1,uu%nums_occ
+          call read_polaw(it,pp,.false.,.false.)
+          do iv=1,uu%nums_occ(1)
  !loop on v
              write(stdout,*) 'STATE', iv
              call flush_unit(stdout)
@@ -2157,16 +2251,16 @@
 !set table of exponentials
 
              do ic=1,us%nums_reduced
-                exp_table(ic)=exp((uu%ene(iv)-us%ene(ic))*tf%times(it))
+                exp_table(ic)=exp((uu%ene(iv,1)-us%ene(ic))*tf%times(it))
              enddo
 
              call initialize_memory(cpp)
 
-   !!read in Svci
+   !!read in Svci 
              cpp%cprim=iv
              call read_data_pw_cprim_prod(cpp, prefix, .true., ok_read, .true.,.true.)
 !if required allocate polaw
-
+                 
 !!!!the following for using blas routine
               allocate(cpmat_tmp(us%nums_reduced,cpp%numpw))
               call mytranspose(cpp%cpmat, cpp%numpw, cpmat_tmp, us%nums_reduced, cpp%numpw, us%nums_reduced)
@@ -2198,7 +2292,7 @@
           call free_memory_polaw(pp)
           else
 !just parallelel reading of file
-             do iv=1,uu%nums_occ
+             do iv=1,uu%nums_occ(1)
                 call initialize_memory(cpp)
                 cpp%cprim=iv
                 call read_data_pw_cprim_prod(cpp, prefix, .true., ok_read, .true.,.true.)
@@ -2212,6 +2306,219 @@
    return
 
  END SUBROUTINE create_polarization_upper
+
+
+
+
+  SUBROUTINE calculate_w_g_l(vp,pp,ww,xc_together,l_head_epsilon,head,inv_epsi, &
+                    &l_wing_epsilon, awing, awing_c, l_verbose)
+!this subroutine calculates W=(1+vp)^{-1}v
+!this is meaningful only on frequency domain
+!lapack routines are used
+!it use exteded basis for G=0 term
+!version for lanczos chain scheme
+
+    USE io_global,            ONLY : stdout
+    USE basic_structures,     ONLY : v_pot, head_epsilon
+
+    implicit none
+    TYPE(v_pot)  :: vp!coulomb potential
+    TYPE(polaw)  :: pp!polarization on imaginary frequency, destroyed on exit
+    TYPE(polaw)  :: ww!dressed interaction to be calculated
+    LOGICAL :: xc_together!if true the entire W is taken, otherwise W-v
+    LOGICAL :: l_head_epsilon!if true add to the symmetrized form  of the dielectric matrix
+                             !the head terms
+    REAL(kind=DP) :: head(3)!term (G=0,G=0) of the symmetric dielectric matrix
+      REAL(kind=DP), INTENT(out) :: inv_epsi!head of the inverse dielectric matrix    
+    LOGICAL, INTENT(in) :: l_wing_epsilon!if true calculate the wings of the symmetrized dielectric matrix
+    REAL(kind=DP), DIMENSION(pp%numpw,3) :: awing!the terms A_ij wing_j
+    REAL(kind=DP), DIMENSION(pp%numpw,3) :: awing_c!the terms A_ij wing_j
+    LOGICAL, INTENT(in) :: l_verbose
+
+    INTEGER iw,jw,kw,ipol
+    REAL(kind=DP), ALLOCATABLE, DIMENSION(:,:) :: dtmp!temporary array
+    INTEGER, ALLOCATABLE, DIMENSION(:) :: ipiv
+    INTEGER :: info
+    REAL(kind=DP),ALLOCATABLE, DIMENSION(:) :: work
+    INTEGER :: lwork
+    REAL(kind=DP) sca
+    REAL(kind=DP) :: workd(1)
+
+    REAL(kind=DP) alpha
+    REAL(kind=DP) head_v
+    REAL(kind=DP), ALLOCATABLE :: pw_save(:,:)
+
+!deallocate if the case
+    call free_memory_polaw(ww)
+
+
+!check and set
+   if(pp%ontime) then
+      write(stdout,*) 'Routine calculate_w: frequencies required'
+      stop
+   endif
+   if(pp%numpw /= vp%numpw) then
+      write(stdout,*) 'Routine calculate_w: basis set does not correspond',pp%numpw,vp%numpw
+      stop
+   endif
+
+   ww%ontime=.false.
+   ww%time=pp%time
+   ww%label=pp%label
+   ww%numpw=pp%numpw
+   allocate(ww%pw(ww%numpw,ww%numpw))
+
+   allocate(dtmp(ww%numpw,ww%numpw))
+   allocate(ipiv(ww%numpw))
+
+   ww%pw(:,:)=0.d0
+
+   allocate(pw_save(pp%numpw,pp%numpw))
+   do ipol=1,3
+      if(l_verbose) write(stdout,*) 'MAX P:', maxval(pp%pw(:,:)), 'MIN P:', minval(pp%pw(:,:))
+      call flush_unit(stdout)
+      if(ipol==1) then
+         pw_save(:,:)=pp%pw(:,:)
+      else
+         pp%pw(:,:)=pw_save(:,:)
+      endif
+      dtmp(:,:)=0.d0
+
+      head_v=vp%vmat(vp%numpw,vp%numpw)
+
+!DEBUG
+      if(l_verbose) write(stdout,*) 'IRR POLA HEAD', pp%pw(pp%numpw,pp%numpw)
+      if(l_verbose) write(stdout,*) 'IRR POLA FIRST', pp%pw(1,1), l_wing_epsilon
+
+!      vp%vmat(vp%numpw,1:vp%numpw)=0.d0 !ATTENZIONE DEBUG
+!      vp%vmat(1:vp%numpw,vp%numpw)=0.d0
+      
+      pp%pw(pp%numpw,1:pp%numpw)=0.d0
+      pp%pw(1:pp%numpw,pp%numpw)=0.d0
+
+      if(l_wing_epsilon) then!ATTENZIONE
+!  0',i   ',0'                                                                   
+         do iw=1,ww%numpw-1
+            pp%pw(ww%numpw,iw)=awing(iw,ipol)
+            pp%pw(iw,ww%numpw)=pp%pw(ww%numpw,iw)
+         enddo
+
+      endif
+
+
+!symmetric case calculates -v^1/2 P v^1/2
+      call dgemm('N','N',ww%numpw,ww%numpw,ww%numpw,-1.d0*dble(pp%factor),&
+           &vp%vmat,ww%numpw,pp%pw,ww%numpw,0.d0,dtmp,ww%numpw)
+      pp%pw(1:ww%numpw,1:ww%numpw)=dtmp(1:ww%numpw,1:ww%numpw)
+      call dgemm('N','N',ww%numpw,ww%numpw,ww%numpw,1.d0,&
+           & pp%pw,ww%numpw,vp%vmat,ww%numpw,0.d0,dtmp,ww%numpw)
+   
+
+
+
+
+!if required add the head
+      if(l_head_epsilon) then
+
+
+!term O',0'  0',i  i,0'
+         dtmp(ww%numpw,ww%numpw)= head(ipol)
+         if(l_verbose) write(stdout,*) 'APPLYING HEAD', head!DEBUG
+      endif
+
+      do iw=1,ww%numpw
+         dtmp(iw,iw)=dtmp(iw,iw)+1.d0
+      enddo
+
+
+!inverse zmat
+
+      if(l_verbose) write(stdout,*) 'MAX D:', maxval(dtmp(:,:)), 'MIN D', minval(dtmp(:,:))
+
+      if(l_verbose) write(stdout,*) 'Before inversion'
+      call flush_unit(stdout)
+      call dgetrf(ww%numpw,ww%numpw,dtmp,ww%numpw,ipiv,info)
+      if(info /= 0) then
+         write(stdout,*) 'Routine calculate_w: problem with dgetrf :', info
+         stop
+      endif
+      if(l_verbose) write(stdout,*) 'Before inversion2'
+      call flush_unit(stdout)
+
+      call dgetri(ww%numpw,dtmp,ww%numpw,ipiv,workd,-1,info)
+      if(l_verbose) write(stdout,*) 'Dimension', workd,ww%numpw,info!ATTENZIONE
+      call flush_unit(stdout)
+      allocate(work(int(workd(1))))
+      call dgetri(ww%numpw,dtmp,ww%numpw,ipiv,work,int(workd(1)),info)
+
+      if(l_verbose) write(stdout,*) 'Out of dgetri'
+      call flush_unit(stdout)
+
+      if(l_verbose)  write(stdout,*) 'MAX D1:', maxval(dtmp(:,:)), 'MIN D1:', minval(dtmp(:,:))
+
+      if(info /= 0) then
+         write(stdout,*) 'Routine calculate_w: problem with zgetri :', info
+         stop
+      endif
+
+
+      if(.not.xc_together) then
+         do iw=1,ww%numpw
+            dtmp(iw,iw)=dtmp(iw,iw)-1.d0
+         enddo
+      endif
+
+
+      inv_epsi=0.d0
+
+!term i,j
+      !term 0',0'
+      inv_epsi=dtmp(ww%numpw,ww%numpw)
+      
+      write(stdout,*) 'INV EPSI G=0,G=0', inv_epsi, head_v
+      call flush_unit(stdout)
+      
+      vp%vmat(vp%numpw,vp%numpw)=head_v
+      dtmp(ww%numpw,1:ww%numpw-1)=0.d0
+      dtmp(1:ww%numpw-1,ww%numpw)=0.d0
+    
+!DEBUG   
+!   dtmp(:,:)=0.d0
+!   do iw=1,ww%numpw
+!      dtmp(iw,iw)=inv_epsi
+!   enddo
+!   dtmp(ww%numpw,ww%numpw)=0.d0
+
+!DEBUG
+      if(l_verbose) write(stdout,*) 'MAX D2:', maxval(dtmp(:,:)), 'MIN D2:', minval(dtmp(:,:))
+      call flush_unit(stdout)
+
+!calculates v^1/2 (e-1-1)v^1/2
+      call dgemm('N','N',ww%numpw,ww%numpw,ww%numpw,1.d0,&
+           & vp%vmat,ww%numpw,dtmp,ww%numpw,0.d0,pp%pw,ww%numpw)
+      call dgemm('N','N',ww%numpw,ww%numpw,ww%numpw,1.d0,&
+           & pp%pw,ww%numpw,vp%vmat,ww%numpw,1.d0,ww%pw,ww%numpw)
+  
+      if(l_verbose) write(stdout,*) 'MAX W:', maxval(ww%pw(:,:)), 'MIN W:', minval(ww%pw(:,:))
+      call flush_unit(stdout)
+   
+
+      deallocate(work)
+   enddo
+   deallocate(pw_save)
+   ww%pw(:,:)=ww%pw(:,:)/3.d0
+!   ww%pw(1:ww%numpw-1,1:ww%numpw-1)=0.d0
+!   ww%pw(:,ww%numpw)=0.d0
+   ww%factor=(1.d0,0.d0)
+
+   if(l_verbose) write(stdout,*) 'MAX:', maxval(ww%pw(:,:)), 'MIN:', minval(ww%pw(:,:))
+   call flush_unit(stdout)
+   
+
+   deallocate(dtmp,ipiv)
+   return
+ END SUBROUTINE calculate_w_g_l
+
 
 
 

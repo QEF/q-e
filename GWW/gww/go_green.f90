@@ -1,6 +1,13 @@
 !
-! P.Umari program GWW
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+
+
  SUBROUTINE go_green(tf, options, qp)
 !this subroutine at every imaginary time, calculate the green function
 !and save it on file
@@ -14,7 +21,7 @@
    USE io_global,          ONLY : stdout
    USE energies_gww,           ONLY : quasi_particles
    USE times_gw,        ONLY : times_freqs
-
+   
    implicit none
 
    TYPE(times_freqs), INTENT(in)     :: tf!time grid
@@ -45,18 +52,18 @@
          else
             time=tf%times(iw)
          endif
-         call create_green_part(gr,wu,time,options%debug,.false.,options%l_hf_energies, qp%ene_hf)
+         call create_green_part(gr,wu,time,options%debug,.false.,options%l_hf_energies, qp%ene_hf(:,1))
          gr%label=iw
          write(stdout,*) 'Green created: ', iw, time
          call write_green(gr,options%debug)
       endif
    enddo
-
+  
 !now insert the zero time negative one
-
+   
    if(is_my_last) then
       write(stdout,*) 'green 0'
-      call create_green_part(gr,wu,0.d0,options%debug,.true.,options%l_hf_energies, qp%ene_hf)
+      call create_green_part(gr,wu,0.d0,options%debug,.true.,options%l_hf_energies, qp%ene_hf(:,1))
       gr%label=0
       call write_green(gr,options%debug)
       write(stdout,*) 'green 0 created'
@@ -69,5 +76,5 @@
    return
 
  END SUBROUTINE
-
-
+ 
+ 

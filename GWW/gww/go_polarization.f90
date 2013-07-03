@@ -1,7 +1,13 @@
 !
-! P.Umari Program GWW
-! Modified by G. Stenuit
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+
+
  SUBROUTINE go_polarization(tf, options, qp)
 !this subroutines reads in the green functions and calculates
 !the polarization at every imaginary time
@@ -49,9 +55,9 @@
 
 !loop on time samples
       dt=options%tau/real(options%n)
-
+      
       write(stdout,*) 'GO POLARIZATION1' !ATTENZIONE
-
+      
       if(options%use_contractions .and. .not.options%l_pola_beta) then
          call read_data_pw_u(uu,options%prefix)
          write(stdout,*) 'Calculates contraction of polarization'
@@ -61,7 +67,7 @@
             call do_contraction_pola_state(qm, uu, options)
          endif
       endif
-
+      
       if(options%l_pola_beta) then
          call read_data_pw_u(uu,options%prefix)
       endif
@@ -83,9 +89,9 @@
                   call create_polarization(time,pp,gp,gm,qm,options%debug)
                else
                   if(.not.options%l_contraction_single_state) then
-                     call create_polarization_contraction(time,pp,cp,uu,options%l_hf_energies,qp%ene_hf)
+                     call create_polarization_contraction(time,pp,cp,uu,options%l_hf_energies,qp%ene_hf(:,1))
                   else
-                     call create_polarization_contraction_state(time,pp,uu,options%l_hf_energies,qp%ene_hf,options)
+                     call create_polarization_contraction_state(time,pp,uu,options%l_hf_energies,qp%ene_hf(:,1),options)
                   endif
                endif
             else
@@ -103,7 +109,7 @@
       enddo
 
       call mp_barrier
-
+      
       call free_memory(qm)
       call free_memory_green(gp)
       call free_memory_green(gm)
@@ -111,7 +117,7 @@
       call free_memory_contraction_pola(cp)
    else
       call read_data_pw_u(uu,options%prefix)
-      call create_polarization_file(uu, tf, options%prefix, options%nc_minus)
+      call create_polarization_file(uu, tf, options%prefix)
    endif
    if(options%l_pola_upper) then
       call create_polarization_upper(uu, tf, options%prefix)

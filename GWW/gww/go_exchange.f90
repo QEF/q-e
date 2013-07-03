@@ -1,6 +1,12 @@
 !
-! Author: P. Umari
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+
  SUBROUTINE go_exchange_main( options, qp)
 !this subroutines does:
 !1)creates and writes green function a t=0+
@@ -30,7 +36,7 @@
    TYPE(green)       :: gg!green function
    TYPE(q_mat)       :: qm!overlap of wannier products
    TYPE(wannier_u)   :: uu!transformation matrix ks to wannier
-
+   
    REAL(kind=DP)     :: dumm(1)
 
    nullify(cr%numl)
@@ -40,16 +46,16 @@
    call initialize_green(gg)
 
 
-   write(stdout,*) 'Routine go_exchange main1'
+   if(options%l_verbose) write(stdout,*) 'Routine go_exchange main1'
    call flush_unit(stdout)
 
    !read U matrix
    call read_data_pw_u(uu,options%prefix)
 !read overlap matrix Q
+  
+ !  call read_data_pw_q(qm,options%prefix,options%l_self_from_pola)
 
-   call read_data_pw_q(qm,options%prefix,options%l_self_from_pola)
-
-     write(stdout,*) 'Routine go_exchange main2'
+     if(options%l_verbose) write(stdout,*) 'Routine go_exchange main2'
      call flush_unit(stdout)
 
   if(is_my_time(0)) then
@@ -59,14 +65,15 @@
   endif
   call free_memory_green(gg)
   if(options%use_contractions) then
+     call read_data_pw_q(qm,options%prefix,options%l_self_from_pola)
 !in the following max_i defines the max number of KS states not appropriate for HF
 !the contraction qr can be defined HERE in another way wp:w_V w_i
      if(.not.options%l_contraction_single_state) then
         call  do_contraction(qm,uu,cr, options%max_i)
-        write(stdout,*) 'Routine go_exchange main2.2'
+        if(options%l_verbose) write(stdout,*) 'Routine go_exchange main2.2'
         call free_memory(uu)
         call free_memory(qm)
-        write(stdout,*) 'Routine go_exchange main2.3'
+        if(options%l_verbose) write(stdout,*) 'Routine go_exchange main2.3'
         call  write_contraction(cr,options)
      else
         call  do_contraction_index_state(qm,uu,options%max_i, options)
@@ -78,21 +85,21 @@
 
   if(.not.options%use_contractions) then
      call free_memory(uu)
-      call free_memory(qm)
+  !    call free_memory(qm)
   else
      if(.not.options%l_contraction_single_state) call free_memory_contraction(cr)
   endif
 
 
 
-  write(stdout,*) 'Routine go_exchange main3'
+  if(options%l_verbose) write(stdout,*) 'Routine go_exchange main3'
 
   call create_hf(options, qp)
 
-  write(*,*) 'go_exchange main hf_ene', qp%ene_hf(2)*RYTOEV !ATTENZIONE
+  if(options%l_verbose) write(*,*) 'go_exchange main hf_ene', qp%ene_hf(2,1)*RYTOEV!ATTENZIONE
 
   return
-
+   
 END SUBROUTINE go_exchange_main
 
 
@@ -105,7 +112,7 @@ END SUBROUTINE go_exchange_main
 
   SUBROUTINE go_exchange(options, ene_x, ene_h, n_max)
 !this subroutine calculates the terms, in imaginary time=0
-!<\Psi_i|\Sigma(it)_HF|\Psi_j>
+!<\Psi_i|\Sigma(it)_HF|\Psi_j> 
 !=O^{P}_n,kl G_{lm}V_{n,o} O^{P}_o,mp U_ki U^{+}_j,p
 !for n_max states
 !if required calculates also the hartree terms
@@ -114,7 +121,7 @@ END SUBROUTINE go_exchange_main
 
 
    USE kinds,                ONLY : DP
-   USE io_global,            ONLY : stdout
+   USE io_global,            ONLY : stdout 
    USE basic_structures,     ONLY : wannier_u, q_mat, v_pot, ortho_polaw,free_memory, v_pot_prim, wannier_u_prim
    USE green_function,       ONLY : green, read_green, free_memory_green, initialize_green
    USE input_gw,             ONLY : input_options
@@ -135,7 +142,7 @@ END SUBROUTINE go_exchange_main
    REAL(kind=DP) :: sene!self energy element
    TYPE(q_mat)  :: qm!descriptors of overlaps of othonormalized wannier producs with wannier products
    TYPE(wannier_u) :: uu!descriptor of transformation matrix from KS states to wanniers
-   TYPE(green) :: gf!descriptor of green function
+   TYPE(green) :: gf!descriptor of green function 
    TYPE(v_pot) :: vp!bare interaction
    TYPE(contraction) :: cr!for contracted products scheme
    TYPE(contraction_index) :: cri!for contracted products scheme, index part
@@ -167,7 +174,7 @@ END SUBROUTINE go_exchange_main
       endif
    endif
    write(stdout,*) 'contraction read'
-
+   
    if(.not.options%use_contractions) then
       call read_data_pw_u(uu,options%prefix)
       call read_data_pw_q(qm,options%prefix,.false.)
@@ -188,9 +195,9 @@ END SUBROUTINE go_exchange_main
      call orthonormalize_vpot_inverse_para(op,vp)
      if(options%l_lda_hartree) call free_memory(op)
    endif
-
+  
     write(stdout,*) 'invert potential inverted'
-
+   
    ene_x(:)=0.d0
    ene_h(:)=0.d0
 
@@ -200,12 +207,12 @@ END SUBROUTINE go_exchange_main
       call read_data_pw_u_prim(wu,options%prefix)
       allocate(qu(cri%numpw))
       qu(:)=0.d0
-      do v=1,uu%nums_occ
+      do v=1,uu%nums_occ(1)
          crs%state=v
          call read_contraction_state(cri,crs,options)
          do m=1,cri%numpw
             do vv=1,cri%numl(m)
-               qu(m)=qu(m)+crs%q(m,vv)*dble(uu%umat(v,cri%l(vv,m)))*2.d0!2. is for spin multiplicity
+               qu(m)=qu(m)+crs%q(m,vv)*dble(uu%umat(v,cri%l(vv,m),1))*2.d0!2. is for spin multiplicity
             enddo
          enddo
          call free_memory_contraction_state(crs)
@@ -247,15 +254,15 @@ END SUBROUTINE go_exchange_main
                  write(*,*) 'Interno', cr%numpw,cr%nums
                  allocate(qg(cr%numpw,cr%nums))
                  qg(:,:)=0.d0
-
+                 
                  do n=1,cr%numpw!loop on orthonormalized wannier products
                     do m=1,cr%nums
                        do l=1,cr%numl(n)
-                          qg(n,m)=qg(n,m)+dble(cr%q(n,l,i))*gf%gf_p(cr%l(l,n),m)
+                          qg(n,m)=qg(n,m)+dble(cr%q(n,l,i))*gf%gf_p(cr%l(l,n),m,1)
                        enddo
                     enddo
                  enddo
-
+                 
                  sene=0.d0
                  do n=1,cr%numpw!loop on orthonormalized wannier products
                     do o=1,cr%numpw!loop on orthonormalized wannier products
@@ -276,7 +283,7 @@ END SUBROUTINE go_exchange_main
                  do n=1,cri%numpw!loop on orthonormalized wannier products
                     do m=1,cri%nums
                        do l=1,cri%numl(n)
-                          qg(n,m)=qg(n,m)+crs%q(n,l)*gf%gf_p(cri%l(l,n),m)
+                          qg(n,m)=qg(n,m)+crs%q(n,l)*gf%gf_p(cri%l(l,n),m,1)
                        enddo
                     enddo
                  enddo
@@ -294,11 +301,11 @@ END SUBROUTINE go_exchange_main
                  if(.not.options%l_lda_hartree) then
 !calculate hartree term
                     ene_h(i)=0.d0
-                    if(i<=uu%nums_occ) then
+                    if(i<=uu%nums_occ(1)) then
                        do l=1,cri%numpw
                           do k=1,cri%numl(l)
                              do m=1,cri%numpw
-                                ene_h(i)=ene_h(i)+uu%umat(i,cri%l(k,l))*crs%q(l,k)*qu(m)*vp%vmat(l,m)
+                                ene_h(i)=ene_h(i)+uu%umat(i,cri%l(k,l),1)*crs%q(l,k)*qu(m)*vp%vmat(l,m)
                              enddo
                           enddo
                        enddo
@@ -306,7 +313,7 @@ END SUBROUTINE go_exchange_main
                        do l=1,vp_prim%numpw_prim
                           do m=1,cri%numpw
                              ene_h(i)=ene_h(i)+wu%umat(i-wu%nums_occ,vp_prim%ij(1,l))*&
-          & uu%umat(i,vp_prim%ij(2,l))*vp_prim%vmat(l,m)*ju(m)
+          & uu%umat(i,vp_prim%ij(2,l),1)*vp_prim%vmat(l,m)*ju(m)
                           enddo
                        enddo
                     endif
@@ -346,6 +353,7 @@ END SUBROUTINE go_exchange_main
     call free_memory_green(gf)
     return
   END SUBROUTINE go_exchange
+  
 
 
 
@@ -371,7 +379,6 @@ END SUBROUTINE go_exchange_main
 
 
 
-
-
-
+ 
+        
 

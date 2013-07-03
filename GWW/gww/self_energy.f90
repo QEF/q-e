@@ -1,13 +1,19 @@
 !
-! Author: P. Umari
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+
   SUBROUTINE self_energy(i,j,sene,time,qm,uu,gf,ww)
 !this subroutine calculates the terms, in imaginary time
-!<\Psi_i|\Sigma(it)|\Psi_j>
+!<\Psi_i|\Sigma(it)|\Psi_j> 
 !=O^{P}_n,kl G_{lm}W_{n,o} O^{P}_o,mp U_ki U^{+}_j,p
 
    USE kinds,                ONLY : DP
-   USE io_global,            ONLY : stdout
+   USE io_global,            ONLY : stdout 
    USE basic_structures,     ONLY : wannier_u, q_mat
    USE green_function,       ONLY : green
    USE polarization,         ONLY : polaw
@@ -20,7 +26,7 @@
    REAL(kind=DP) :: time!in output time correspondig to the calculated self energy
    TYPE(q_mat)  :: qm!descriptors of overlaps of othonormalized wannier producs with wannier products
    TYPE(wannier_u) :: uu!descriptor of transformation matrix from KS states to wanniers
-   TYPE(green) :: gf!descriptor of green function
+   TYPE(green) :: gf!descriptor of green function 
    TYPE(polaw) :: ww!descriptor of dressed interaction
 
    INTEGER :: k,l,m,n,o,p
@@ -69,26 +75,26 @@
 
                o_n=qm%wp(n)%o(nw)
                o_o=qm%wp(o)%o(ow)
-               sene=sene+o_n*gf%gf(l,m)*ww%pw(n,o)*o_o*conjg(uu%umat(i,k))*uu%umat(j,p)
+               sene=sene+o_n*gf%gf(l,m,1)*ww%pw(n,o)*o_o*conjg(uu%umat(i,k,1))*uu%umat(j,p,1)
                if(k/=l) then
-                 sene=sene+o_n*gf%gf(k,m)*ww%pw(n,o)*o_o*conjg(uu%umat(i,l))*uu%umat(j,p)
+                 sene=sene+o_n*gf%gf(k,m,1)*ww%pw(n,o)*o_o*conjg(uu%umat(i,l,1))*uu%umat(j,p,1)
                endif
 
                if(m/=p) then
-                 sene=sene+o_n*gf%gf(l,p)*ww%pw(n,o)*o_o*conjg(uu%umat(i,k))*uu%umat(j,m)
+                 sene=sene+o_n*gf%gf(l,p,1)*ww%pw(n,o)*o_o*conjg(uu%umat(i,k,1))*uu%umat(j,m,1)
                endif
 
                if(m/=p .AND. k/=l ) then
-                 sene=sene+o_n*gf%gf(k,p)*ww%pw(n,o)*o_o*conjg(uu%umat(i,l))*uu%umat(j,m)
+                 sene=sene+o_n*gf%gf(k,p,1)*ww%pw(n,o)*o_o*conjg(uu%umat(i,l,1))*uu%umat(j,m,1)
                endif
              end do
-          enddo
+          enddo  
        enddo
     enddo
     sene=sene*(0.d0,1.d0)
     return
  END SUBROUTINE
-
+ 
 
 
 
@@ -151,7 +157,7 @@
    do n=1,cr%numpw!loop on orthonormalized wannier products
      do m=1,cr%nums
        do l=1,cr%numl(n)
-         qg(n,m)=qg(n,m)+cr%q(n,l,i)*gf%gf(cr%l(l,n),m)
+         qg(n,m)=qg(n,m)+cr%q(n,l,i)*gf%gf(cr%l(l,n),m,1)
        enddo
      enddo
    enddo
@@ -165,21 +171,10 @@
        enddo
     enddo
   !  if(sene==0.d0) write(*,*) 'OPS', i
-
-
+    
+        
 
    time=ww%time
-
-!   sene=(0.d0,0.d0)
-!   do n=1,cr%numpw!loop on orthonormalized wannier products
-!      do o=1,cr%numpw!loop on orthonormalized wannier products
-!         do l=1,cr%numl(n)
-!            do m=1,cr%numl(o)
-!               sene=sene+gf%gf(cr%l(l,n),cr%l(m,o))*ww%pw(n,o)*cr%q(n,l,i)*conjg(cr%q(o,m,j))
-!             end do
-!          enddo
-!       enddo
-!    enddo
 
     sene=sene*(0.d0,1.d0)
     deallocate(qg)
@@ -213,12 +208,12 @@
       write(stdout,*) 'Routine self_energy_remainder: imaginary times required'
 !      stop
    endif
-
+   
    if(wp%numpw /= ww%numpw) then
       write(stdout,*) 'Routine self_energy_remainder: same numpw required'
       stop
    endif
-
+   
    if(i > wp%nums_psi) then
       write(stdout,*) 'Routine self_energy_remainder:  i too large',i,wp%nums_psi
       stop
@@ -232,7 +227,7 @@
       enddo
    enddo
 
-
+         
    return
  END SUBROUTINE self_energy_remainder
 
@@ -325,7 +320,7 @@
    COMPLEX(kind=DP) :: sene!self energy element
    REAL(kind=DP) :: time!in output time correspondig to the calculated self energy
    TYPE(contraction_index) :: cri!index description of contracted terms
-   TYPE(contraction_state) :: crs!state contraction
+   TYPE(contraction_state) :: crs!state contraction 
    TYPE(green) :: gf!descriptor of green function
    TYPE(polaw) :: ww!descriptor of dressed interaction
    REAL(kind=DP), ALLOCATABLE :: qg(:,:)!for the product Q^{P}_{n,l,i}G{l,m}
@@ -373,7 +368,7 @@
    allocate( qg_t( cri%nums, cri%numpw ) )
    allocate( gf_t( cri%nums, cri%nums ) )
 
-   CALL mytranspose( gf%gf_p, cri%nums, gf_t, cri%nums, cri%nums, cri%nums )
+   CALL mytranspose( gf%gf_p, cri%nums, gf_t, cri%nums, cri%nums, cri%nums )   
 
 
    qg_t(:,:)=0.d0
@@ -383,11 +378,11 @@
        !do m=1,cri%nums
        !  qg_t(m,n)=qg_t(m,n)+crs%q(n,l)*gf_t(m,cri%l(l,n))
        !enddo
-       CALL daxpy( cri%nums, crs%q(n,l), gf_t( 1, cri%l(l,n) ), 1, qg_t(1,n), 1 )
+       CALL daxpy( cri%nums, crs%q(n,l), gf_t( 1, cri%l(l,n) ), 1, qg_t(1,n), 1 )  
      enddo
    enddo
 
-   CALL mytranspose( qg_t, cri%nums, qg, cri%numpw, cri%nums, cri%numpw )
+   CALL mytranspose( qg_t, cri%nums, qg, cri%numpw, cri%nums, cri%numpw )   
    !do n=1,cri%nums
    !   do m=1,cri%numpw
    !      qg( m, n )  = qg_t( n, m )
@@ -429,7 +424,7 @@
 
        allocate(tmp_m2(cri%numl(o)))
        tmp_m2(1:cri%numl(o))=crsq_t(1:cri%numl(o),o)
-
+       
 
 
        allocate(tmp_q(cri%numl(o)))
@@ -472,6 +467,6 @@
 
 
 
-
-
+ 
+        
 
