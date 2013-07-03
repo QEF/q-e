@@ -1,0 +1,30 @@
+&control
+    calculation = 'scf',
+    restart_mode='from_scratch',
+    prefix='ch4',
+    tprnfor = .true.,
+    pseudo_dir = './',
+ /
+ &system
+    ibrav=  1,
+    celldm(1) =25.0,
+    nat=5,
+    ntyp= 2,
+    ecutwfc =40.0,
+    nbnd=5
+ /
+ &electrons
+    diagonalization='cg'
+    mixing_beta = 0.5,
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+ H  1.0   H.pz-vbc.UPF
+ C  12.0  C.pz-vbc.UPF
+ATOMIC_POSITIONS {bohr}
+H        1.198204546   1.198204546   1.198204546
+H       -1.198204546  -1.198204546   1.198204546
+H        1.198204546  -1.198204546  -1.198204546
+H       -1.198204546   1.198204546  -1.198204546
+C        0.000000000   0.000000000   0.000000000
+

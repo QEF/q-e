@@ -1,0 +1,9 @@
+&inputpw4gww    
+    prefix='ch4'
+    num_nbndv(1)=4
+    num_nbnds=5
+    l_truncated_coulomb=.true.
+    truncation_radius=7.5d0
+    numw_prod=50
+/
+

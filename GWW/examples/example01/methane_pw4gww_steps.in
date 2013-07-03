@@ -1,0 +1,14 @@
+&inputpw4gww    
+    prefix='ch4'
+    num_nbndv(1)=4
+    num_nbnds=5
+    l_truncated_coulomb=.true.
+    truncation_radius=7.5d0
+    numw_prod=50
+    nsteps_lanczos_self=30
+    restart_gww=2
+    lanczos_restart=3
+    s_first_state=4
+    s_last_state=4
+/
+
