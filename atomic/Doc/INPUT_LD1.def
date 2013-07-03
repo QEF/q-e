@@ -430,7 +430,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		
 		2 ... norm-conserving PP in separable form (obsolescent)
                       All calculations are done using SEPARABLE non-local form
-                      INMPORTANT: multiple projectors allowed but not properly
+                      IMPORTANT: multiple projectors allowed but not properly
                       implemented, use only if you know what you are doing
 
 		3 ... ultrasoft PP
@@ -581,7 +581,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		default { .false. }
 		status { Used only if which_augfun is 'PSQ'. }		
 		info {
-                  If .true. the augmetation functions are pseudized
+                  If .true. the augmentation functions are pseudized
                   from the origin to min(rcut(ns),rcut(ns1)) where ns 
                   and ns1 are the two channels for that Q. In this case
                   rmatch_augfun is not used.
@@ -628,7 +628,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
                projectors for the valence wavefunctions.
 
                In the default case, the GIPAW valence wavefunction and projectors
-               are independent from the PAW ones and must be then specificed as 
+               are independent from the PAW ones and must be then specified as 
 	       explained above in lgipaw_reconstruction.
 
                Setting this to .true. always implies lgipaw_reconstruction = .true.
@@ -845,7 +845,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		    }
 		    table test_wfs {
 			rows -start 1 -end nwfts {
-			    col elts -type CRATACTER { see { nls } }
+			    col elts -type CHARACTER { see { nls } }
 			    col nnts -type INTEGER { see { nns } }
 			    col llts -type INTEGER { see { lls } }
 			    col octs -type REAL    { see { ocs } }
