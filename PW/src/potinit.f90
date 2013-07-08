@@ -175,7 +175,11 @@ SUBROUTINE potinit()
         rho%of_r = rho%of_r / charge * nelec
      ELSE 
         WRITE( stdout, '(/,5X,"Starting from uniform charge")')
-        rho%of_r = nelec / omega
+        IF ( nspin == 2 ) THEN
+           rho%of_r(:,1:nspin) = nelec / omega / nspin
+        ELSE
+           rho%of_r(:,1) = nelec / omega
+        END IF
      ENDIF
      !
   ELSE IF ( .NOT. lscf .AND. ABS( charge - nelec ) > (1.D-3 * charge ) ) THEN

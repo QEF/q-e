@@ -31,7 +31,10 @@ Incompatible changes in svn version:
 
 Fixed in svn version:
 
-   * PWscf: Forces with finite electric field (lelfield=.ture.) and US PP
+   * PWscf: starting with uniform charge worked only for non-spin-polarized
+     calculations. Not a big deal unless one used HGH or other pseudopotentials
+     without atomic charge inbformation
+   * PWscf: Forces with finite electric field (lelfield=.true.) and US PP
      were incorrect in parallel execution
    * D3: bug when the crystal has symmetry but the small group of the 
      q-point has no symmetry.

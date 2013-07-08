@@ -90,10 +90,15 @@ SUBROUTINE wfcinit()
              &           I4," random wfc")' ) natomwfc, nbnd-natomwfc
      END IF
      !
-  ELSE IF ( TRIM(starting_wfc) == 'atomic+random' ) THEN
+  ELSE IF ( TRIM(starting_wfc) == 'atomic+random' .AND. natomwfc > 0) THEN
      !
-     WRITE( stdout, '(5X,"Starting wfc are ",I4," randomized atomic wfcs")' ) &
+     IF ( natomwfc >= nbnd ) THEN
+        WRITE( stdout, '(5X,"Starting wfc are ",I4," randomized atomic wfcs")')&
              natomwfc
+     ELSE
+        WRITE( stdout, '(5X,"Starting wfc are ",I4," randomized atomic wfcs + "&
+             &          ,I4," random wfc")' ) natomwfc, nbnd-natomwfc
+     END IF
      !
   ELSE
      !

@@ -35,10 +35,7 @@ SUBROUTINE force_us( forcenl )
   !
   IMPLICIT NONE
   !
-  ! ... the dummy variable
-  !
-  REAL(DP) :: forcenl(3,nat)
-  ! output: the nonlocal contribution
+  REAL(DP), INTENT(OUT) :: forcenl(3,nat) ! the nonlocal contribution
   !
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm )   
   !
