@@ -961,7 +961,7 @@ CONTAINS
   real(dp)                   :: dq0_dq                                    !! The derivative of the saturated q0 with respect to q.
   !                                                                       !! Needed by dq0_drho and dq0_dgradrho by the chain rule.
   
-  integer                    :: i_grid, index, count=0                    !! Indexing variables
+  integer                    :: i_grid, idx, count=0                    !! Indexing variables
  
   if (vdw_type==1) Z_ab = -0.8491D0
   if (vdw_type==2) Z_ab = -1.887D0
@@ -1014,10 +1014,10 @@ CONTAINS
      exponent = 0.0D0
      dq0_dq = 0.0D0
      
-     do index = 1, m_cut
+     do idx = 1, m_cut
         
-        exponent = exponent + ( (q/q_cut)**index)/index
-        dq0_dq = dq0_dq + ( (q/q_cut)**(index-1))
+        exponent = exponent + ( (q/q_cut)**idx)/idx
+        dq0_dq = dq0_dq + ( (q/q_cut)**(idx-1))
         
      end do
      
@@ -1152,7 +1152,7 @@ SUBROUTINE spline_interpolation (x, evaluation_points, values)
   
   real(dp), allocatable, save :: d2y_dx2(:,:)                 !! The second derivatives required to do the interpolation
   
-  integer :: i_grid, lower_bound, upper_bound, index, P_i     !! Some indexing variables
+  integer :: i_grid, lower_bound, upper_bound, idx, P_i     !! Some indexing variables
   
   real(dp), allocatable :: y(:)                               !! Temporary variables needed for the interpolation
   real(dp) :: a, b, c, d, dx                                  !!
@@ -1186,12 +1186,12 @@ SUBROUTINE spline_interpolation (x, evaluation_points, values)
      
      do while ( (upper_bound - lower_bound) > 1 )
         
-        index = (upper_bound+lower_bound)/2
+        idx = (upper_bound+lower_bound)/2
         
-        if ( evaluation_points(i_grid) > x(index) ) then
-           lower_bound = index 
+        if ( evaluation_points(i_grid) > x(idx) ) then
+           lower_bound = idx 
         else
-           upper_bound = index
+           upper_bound = idx
         end if
         
      end do
@@ -1242,7 +1242,7 @@ SUBROUTINE initialize_spline_interpolation (x, d2y_dx2)
   !                                                !! that holds the second derivatives required for 
   !                                                !! interpolating the function
 
-  integer :: Nx, P_i, index                        !! The total number of x points and some indexing
+  integer :: Nx, P_i, idx                        !! The total number of x points and some indexing
   !                                                !! variables
 
   real(dp), allocatable :: temp_array(:), y(:)     !! Some temporary arrays required.  y is the array
@@ -1272,23 +1272,23 @@ SUBROUTINE initialize_spline_interpolation (x, d2y_dx2)
      d2y_dx2(P_i,1) = 0.0D0
      temp_array(1) = 0.0D0
      
-     do index = 2, Nx-1
+     do idx = 2, Nx-1
         
-        temp1 = (x(index)-x(index-1))/(x(index+1)-x(index-1))
-        temp2 = temp1 * d2y_dx2(P_i,index-1) + 2.0D0
-        d2y_dx2(P_i,index) = (temp1-1.0D0)/temp2
-        temp_array(index) = (y(index+1)-y(index))/(x(index+1)-x(index)) &
-             - (y(index)-y(index-1))/(x(index)-x(index-1))
-        temp_array(index) = (6.0D0*temp_array(index)/(x(index+1)-x(index-1)) &
-             - temp1*temp_array(index-1))/temp2
+        temp1 = (x(idx)-x(idx-1))/(x(idx+1)-x(idx-1))
+        temp2 = temp1 * d2y_dx2(P_i,idx-1) + 2.0D0
+        d2y_dx2(P_i,idx) = (temp1-1.0D0)/temp2
+        temp_array(idx) = (y(idx+1)-y(idx))/(x(idx+1)-x(idx)) &
+             - (y(idx)-y(idx-1))/(x(idx)-x(idx-1))
+        temp_array(idx) = (6.0D0*temp_array(idx)/(x(idx+1)-x(idx-1)) &
+             - temp1*temp_array(idx-1))/temp2
         
      end do
      
      d2y_dx2(P_i,Nx) = 0.0D0
      
-     do index=Nx-1, 1, -1
+     do idx=Nx-1, 1, -1
         
-        d2y_dx2(P_i,index) = d2y_dx2(P_i,index) * d2y_dx2(P_i,index+1) + temp_array(index)
+        d2y_dx2(P_i,idx) = d2y_dx2(P_i,idx) * d2y_dx2(P_i,idx+1) + temp_array(idx)
         
      end do
 

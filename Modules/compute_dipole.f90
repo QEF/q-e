@@ -33,7 +33,7 @@ SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
   ! ... Local variables
   !
   REAL(DP) :: r(3), rhoir
-  INTEGER  :: i, j, k, ip, ir, ir_end, index, index0
+  INTEGER  :: i, j, k, ip, ir, ir_end, index0
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
   !
   ! ... Initialization
@@ -57,12 +57,11 @@ SUBROUTINE compute_dipole( nnr, nspin, rho, r0, dipole, quadrupole )
      !
      ! ... three dimensional indexes
      !
-     index = index0 + ir - 1
-     k     = index / (dfftp%nr1x*dfftp%nr2x)
-     index = index - (dfftp%nr1x*dfftp%nr2x)*k
-     j     = index / dfftp%nr1x
-     index = index - dfftp%nr1x*j
-     i     = index
+     i = index0 + ir - 1
+     k = i / (dfftp%nr1x*dfftp%nr2x)
+     i = i - (dfftp%nr1x*dfftp%nr2x)*k
+     j = i / dfftp%nr1x
+     i = i - dfftp%nr1x*j
      !
      DO ip = 1, 3
         r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &

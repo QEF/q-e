@@ -1929,9 +1929,9 @@ CONTAINS
   !==================================================================
   ! Internal routines
   !==================================================================
-  subroutine bsplvb(t,n,jhigh,index,x,left,biatx)
+  subroutine bsplvb(t,n,jhigh,idx,x,left,biatx)
     implicit none
-    integer, intent(in) :: n, jhigh, index, left
+    integer, intent(in) :: n, jhigh, idx, left
     real(dp), intent(in)                    :: x
     real(dp), dimension(n), intent(in)      :: t
     real(dp), dimension(jhigh), intent(out) :: biatx
@@ -1941,7 +1941,7 @@ CONTAINS
     real(dp), dimension(jhigh) :: dl, dr
 
 
-    if (index .eq. 1) then
+    if (idx .eq. 1) then
        j = 1
        biatx(1) = 1.0_dp
        if (j .ge. jhigh) return

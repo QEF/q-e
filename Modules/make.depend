@@ -132,6 +132,8 @@ mm_dispersion.o : mp_global.o
 mp.o : io_global.o
 mp.o : kind.o
 mp.o : parallel_include.o
+mp_atoms.o : mp.o
+mp_atoms.o : parallel_include.o
 mp_bands.o : mp.o
 mp_bands.o : parallel_include.o
 mp_base.o : kind.o
@@ -340,5 +342,8 @@ xml_io_base.o : mp_global.o
 xml_io_base.o : mp_wave.o
 xml_io_base.o : parser.o
 xml_io_base.o : wrappers.o
+zhpev_drv.o : io_global.o
 zhpev_drv.o : kind.o
+zhpev_drv.o : mp.o
+zhpev_drv.o : mp_global.o
 fft_scalar.o : ../include/fft_defs.h

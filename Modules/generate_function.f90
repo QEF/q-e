@@ -41,7 +41,7 @@ CONTAINS
       ! ... Local variables
       !
       INTEGER                   :: i, j, k, ir, ir_end, ip
-      INTEGER                   :: index, index0
+      INTEGER                   :: index0
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       REAL( DP )                :: scale, spr2, dist
@@ -75,12 +75,11 @@ CONTAINS
          !
          ! ... three dimensional indexes
          !
-         index = index0 + ir - 1
-         k     = index / (dfftp%nr1x*dfftp%nr2x)
-         index = index - (dfftp%nr1x*dfftp%nr2x)*k
-         j     = index / dfftp%nr1x
-         index = index - dfftp%nr1x*j
-         i     = index
+         i = index0 + ir - 1
+         k = i / (dfftp%nr1x*dfftp%nr2x)
+         i = i - (dfftp%nr1x*dfftp%nr2x)*k
+         j = i / dfftp%nr1x
+         i = i - dfftp%nr1x*j
          !
          DO ip = 1, 3
             r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -132,7 +131,7 @@ CONTAINS
       ! ... Local variables
       !
       INTEGER                   :: i, j, k, ir, ir_end, ip
-      INTEGER                   :: index, index0
+      INTEGER                   :: index0
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       REAL( DP )                :: scale, spr2, dist
@@ -166,12 +165,11 @@ CONTAINS
          !
          ! ... three dimensional indexes
          !
-         index = index0 + ir - 1
-         k     = index / (dfftp%nr1x*dfftp%nr2x)
-         index = index - (dfftp%nr1x*dfftp%nr2x)*k
-         j     = index / dfftp%nr1x
-         index = index - dfftp%nr1x*j
-         i     = index
+         i = index0 + ir - 1
+         k = i / (dfftp%nr1x*dfftp%nr2x)
+         i = i - (dfftp%nr1x*dfftp%nr2x)*k
+         j = i / dfftp%nr1x
+         i = i - dfftp%nr1x*j
          !
          DO ip = 1, 3
             r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -222,7 +220,7 @@ CONTAINS
       ! ... Local variables
       !
       INTEGER                   :: i, j, k, ir, ir_end, ip
-      INTEGER                   :: index, index0
+      INTEGER                   :: index0
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       REAL( DP )                :: dist, arg
@@ -255,12 +253,11 @@ CONTAINS
          !
          ! ... three dimensional indexes
          !
-         index = index0 + ir - 1
-         k     = index / (dfftp%nr1x*dfftp%nr2x)
-         index = index - (dfftp%nr1x*dfftp%nr2x)*k
-         j     = index / dfftp%nr1x
-         index = index - dfftp%nr1x*j
-         i     = index
+         i = index0 + ir - 1
+         k = i / (dfftp%nr1x*dfftp%nr2x)
+         i = i - (dfftp%nr1x*dfftp%nr2x)*k
+         j = i / dfftp%nr1x
+         i = i - dfftp%nr1x*j
          r = 0.D0
          !
          DO ip = 1, 3
@@ -317,7 +314,7 @@ CONTAINS
       ! ... Local variables
       !
       INTEGER                   :: i, j, k, ir, ir_end, ip
-      INTEGER                   :: index, index0
+      INTEGER                   :: index0
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       REAL( DP )                :: dist, arg
@@ -350,12 +347,11 @@ CONTAINS
          !
          ! ... three dimensional indexes
          !
-         index = index0 + ir - 1
-         k     = index / (dfftp%nr1x*dfftp%nr2x)
-         index = index - (dfftp%nr1x*dfftp%nr2x)*k
-         j     = index / dfftp%nr1x
-         index = index - dfftp%nr1x*j
-         i     = index
+         i = index0 + ir - 1
+         k = i / (dfftp%nr1x*dfftp%nr2x)
+         i = i - (dfftp%nr1x*dfftp%nr2x)*k
+         j = i / dfftp%nr1x
+         i = i - dfftp%nr1x*j
          !
          DO ip = 1, 3
             r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -402,7 +398,7 @@ CONTAINS
   REAL(DP), INTENT(IN) :: pos(3)
   REAL(DP), INTENT(OUT) :: axis( dfftp%nnr )
   !
-  INTEGER  :: i, j, k, ir, ir_end, ip, index, index0
+  INTEGER  :: i, j, k, ir, ir_end, ip, index0
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
   REAL(DP) :: r(3), s(3)
   !
@@ -428,12 +424,11 @@ CONTAINS
      !
      ! ... three dimensional indexes
      !
-     index = index0 + ir - 1
-     k     = index / (dfftp%nr1x*dfftp%nr2x)
-     index = index - (dfftp%nr1x*dfftp%nr2x)*k
-     j     = index / dfftp%nr1x
-     index = index - dfftp%nr1x*j
-     i     = index
+     i = index0 + ir - 1
+     k = i / (dfftp%nr1x*dfftp%nr2x)
+     i = i - (dfftp%nr1x*dfftp%nr2x)*k
+     j = i / dfftp%nr1x
+     i = i - dfftp%nr1x*j
      !
      DO ip = 1, 3
         r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -474,7 +469,7 @@ CONTAINS
   REAL(DP), INTENT(IN) :: pos(3)
   REAL(DP), INTENT(OUT) :: distance( 3, dfftp%nnr )
   !
-  INTEGER  :: i, j, k, ir, ir_end, ip, index, index0
+  INTEGER  :: i, j, k, ir, ir_end, ip, index0
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
   REAL(DP) :: r(3), s(3)
   !
@@ -500,12 +495,11 @@ CONTAINS
      !
      ! ... three dimensional indexes
      !
-     index = index0 + ir - 1
-     k     = index / (dfftp%nr1x*dfftp%nr2x)
-     index = index - (dfftp%nr1x*dfftp%nr2x)*k
-     j     = index / dfftp%nr1x
-     index = index - dfftp%nr1x*j
-     i     = index
+     i = index0 + ir - 1
+     k = i / (dfftp%nr1x*dfftp%nr2x)
+     i = i - (dfftp%nr1x*dfftp%nr2x)*k
+     j = i / dfftp%nr1x
+     i = i - dfftp%nr1x*j
      !
      DO ip = 1, 3
         r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
