@@ -270,7 +270,7 @@ program generate_kernel
   !                                                        !! calculations to do (  (Nqs^2 + Nqs)/2  )
 
   real(dp), allocatable :: phi(:,:), d2phi_dk2(:,:)        !! Arrays to store the kernel functions and their second derivatives.  They are
-  !                                                        !! stored as phi(radial_point, index)
+  !                                                        !! stored as phi(radial_point, idx)
 
   integer, allocatable :: indices(:,:), proc_indices(:,:)  !! indices holds the values of q1 and q2 as partitioned out to the processors.  It is an 
   !                                                        !! Ntotal x 2 array stored as indices(index of point number, q1:q2).  
@@ -281,7 +281,7 @@ program generate_kernel
   !                                                        !! number of jobs doesn't split evenly over the number of processors, starting index into the
   !                                                        !! indices array, ending index into the indices array.
 
-  integer :: index, proc_i, kernel_file, my_Nqs
+  integer :: idx, proc_i, kernel_file, my_Nqs
 
   ! Set up the parallel run using PWSCF methods.
   ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -409,17 +409,17 @@ program generate_kernel
   !! Now, we loop over all the pairs q1,q2 that are assigned to us and perform our calculations
   !! -----------------------------------------------------------------------------------------------------
 
-  do index = 1, my_Nqs
+  do idx = 1, my_Nqs
 
      ! First, get the value of phi(q1*r, q2*r) for each r and the particular values of q1 and q2 we are using
      ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
      do r_i = 1, Nr_points
 
-        d1 = q_mesh(indices(index+my_start_q-1, 1)) * (dr * r_i)
-        d2 = q_mesh(indices(index+my_start_q-1, 2)) * (dr * r_i)
+        d1 = q_mesh(indices(idx+my_start_q-1, 1)) * (dr * r_i)
+        d2 = q_mesh(indices(idx+my_start_q-1, 2)) * (dr * r_i)
 
-        phi(r_i, index) = phi_value(d1, d2)
+        phi(r_i, idx) = phi_value(d1, d2)
         
      end do
 
@@ -427,10 +427,10 @@ program generate_kernel
 
      ! Now, perform a radial FFT to turn our phi_alpha_beta(r) into phi_alpha_beta(k) needed for SOLER 
      ! equation 11
-     call radial_fft( phi(:,index) )
+     call radial_fft( phi(:,idx) )
      
      ! Determine the spline interpolation coefficients for the Fourier transformed kernel function
-     call set_up_splines( phi(:, index), d2phi_dk2(:, index) )
+     call set_up_splines( phi(:, idx), d2phi_dk2(:, idx) )
      
   end do
   
@@ -881,13 +881,13 @@ CONTAINS
 
     integer, intent(in) :: file                    !! Unit number of file to write to
 
-    integer :: index, ios                              !! Indexing variable
+    integer :: idx, ios                              !! Indexing variable
     
 
-    do index = 1, size(array,2)
+    do idx = 1, size(array,2)
        
-       ! write(file) array(:,index)
-       write (file, double_format, err=100, iostat=ios) array(:,index)    
+       ! write(file) array(:,idx)
+       write (file, double_format, err=100, iostat=ios) array(:,idx)    
     
     end do
 
