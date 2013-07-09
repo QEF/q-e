@@ -249,7 +249,7 @@ MODULE relax
   SAVE
   !
   REAL(DP) :: &
-       epse,                    &! threshold on total energy
+       epse = 0.0_dp,           &! threshold on total energy
        epsf,                    &! threshold on forces
        epsp,                    &! threshold on pressure
        starting_scf_threshold    ! self-explanatory

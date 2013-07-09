@@ -96,7 +96,7 @@ SUBROUTINE vcsmd()
            eold,                 & ! DFT energy at previous step
            uta, eka, eta, ekla, utl, etl, ut, ekint, edyn,  & ! other energies
            acu, ack, acp, acpv, avu, avk, avp, avpv,        & ! acc.& avrg. ener
-           tnew, pv,             & ! instantaneous temperature and p*vcell
+           tnew=0.0_dp, pv,      & ! instantaneous temperature and p*vcell
            sigmamet(3,3),        & ! sigma = avec^-1 * vcell = bg/alat*omega
            vx2(ntypx), vy2(ntypx), vz2(ntypx),     & ! work vectors
            vmean(ntypx), rms(ntypx), ekin(ntypx),  & ! work vectors
