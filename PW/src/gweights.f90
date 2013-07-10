@@ -14,10 +14,12 @@ subroutine gweights (nks, wk, nbnd, nelec, degauss, ngauss, &
   USE kinds
   implicit none
   !
-  integer, intent(in) :: nks, nbnd, ngauss
+  integer, intent(in) :: nks, nbnd, ngauss, is, isk(nks)
   real(DP), intent(in) :: wk (nks), et (nbnd, nks), nelec, degauss
-  real(DP), intent(out) :: wg (nbnd, nks), ef, demet
-  integer, intent(in) :: is, isk(nks)
+  ! wg must be (inout) and not (out) because if is/=0 only terms for
+  ! spin=is are initialized; the remaining terms should be kept, not lost
+  real(DP), intent(inout) :: wg (nbnd, nks)
+  real(DP), intent(out) :: ef, demet
   !
   integer :: kpoint, ibnd
   real(DP) , external :: wgauss, w1gauss, efermig
