@@ -562,7 +562,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      dr2_best = local_tf_ddot( wbest, wbest, ngm0 )
      !
-     IF ( target == 0.D0 ) target = 1.D-6 * dr2_best
+     IF ( target == 0.D0 ) target = MAX( 1.D-12, 1.D-6*dr2_best )
      !
      IF ( dr2_best < target ) THEN
         !
