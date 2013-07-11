@@ -456,6 +456,9 @@ SUBROUTINE newscf
   !-----------------------------------------------------------------------
   !
   USE pwcom
+  USE basis, ONLY: nbnd, starting_wfc 
+  USE wvfct, ONLY: btype
+  USE klist, ONLY: nkstot
   USE noncollin_module, ONLY: report
   USE symm_base,        ONLY : nsym
   USE io_files,      ONLY : iunigk, iunwfc, input_drho, output_drho
@@ -484,7 +487,12 @@ SUBROUTINE newscf
   wfc_order=0
   input_drho=' '
   output_drho=' '
+  starting_wfc='file'
   report=1
+  if ( .not. allocated (btype) ) then
+     allocate( btype( nbnd, nkstot ) )
+     btype(:,:) = 1
+  end if
   !
   !  since we use only Gamma we don't need symmetries
   !
@@ -505,7 +513,7 @@ SUBROUTINE newscf
   CALL openfil
   !
   CALL hinit1
-  CALL non_scf ( )
+  CALL electrons ( )
   !
   CLOSE(unit=iunwfc, status='keep')
   CLOSE(unit=iunigk, status='delete')
