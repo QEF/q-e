@@ -38,8 +38,7 @@ default :
 ###########################################################
 pw : bindir mods liblapack libblas libs libiotk libenviron
 	if test -d PW ; then \
-	( cd PW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+	( cd PW ; $(MAKE) $(MFLAGS) TLDEPS= all ) ; fi
 
 cp : bindir mods liblapack libblas libs libiotk
 	if test -d CPV ; then \

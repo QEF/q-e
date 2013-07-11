@@ -6,31 +6,25 @@ all: pw pwtools
 
 pw:	
 	if test -d src ; then \
-	( cd src ; if test "$(MAKE)" = "" ; then make $(MFLAGS) $@; \
-	else $(MAKE) $(MFLAGS) ; fi ) ; fi ; \
+	( cd src ; $(MAKE) $(MFLAGS)  ) ; fi 
 
 pwtools:
 	if test -d tools ; then \
-	( cd tools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) $@; \
-	else $(MAKE) $(MFLAGS) ; fi ) ; fi ; \
+	( cd tools ; $(MAKE) $(MFLAGS)  ) ; fi
 
 doc:
 	if test -d Doc ; then \
-	(cd Doc ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+	(cd Doc ; $(MAKE) $(MFLAGS) all  ) ; fi
 
 doc_clean:
 	if test -d Doc ; then \
-	(cd Doc ; if test "$(MAKE)" = "" ; then make $(MFLAGS) clean ; \
-	else $(MAKE) $(MFLAGS) clean ; fi ) ; fi
+	(cd Doc ; $(MAKE) $(MFLAGS) clean ; fi ) ; fi
 
 clean : examples_clean
 	if test -d src ; then \
-	( cd src ; if test "$(MAKE)" = "" ; then make clean ; \
-	else $(MAKE) clean ; fi ) ; fi ;\
+	( cd src ; $(MAKE) clean ) ; fi ;\
 	if test -d tools ; then \
-	( cd tools ; if test "$(MAKE)" = "" ; then make clean ; \
-	else $(MAKE) clean ; fi ) ; fi ;\
+	( cd tools ; $(MAKE) clean ) ; fi
 
 examples_clean:
 	if test -d examples ; then \
