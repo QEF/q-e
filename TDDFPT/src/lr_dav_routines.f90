@@ -470,7 +470,7 @@ contains
       endif
       if( dble(left2(ieign)) .gt. max_res )  max_res = dble(left2(ieign))
       
-      write (stdout,'(5x,"residue:",I5,2x,2F15.7)') ieign, dble(right2(ieign)), dble(left2(ieign))
+      write (stdout,'(5x,"Residue(Squared modulus):",I5,2x,2F15.7)') ieign, dble(right2(ieign)), dble(left2(ieign))
     enddo
  
     write(stdout,'(7x,"Largest residue:",5x,F20.12)') max_res

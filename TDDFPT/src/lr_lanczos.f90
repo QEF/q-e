@@ -57,7 +57,7 @@ CONTAINS
     !
     !   Local variables
     !
-    real(kind=dp) :: alpha, beta, gamma, temp
+    real(kind=dp) :: alpha, beta, gamma, angle
     !
     COMPLEX(kind=dp) :: zeta
     !
@@ -120,6 +120,11 @@ CONTAINS
       beta=dble(lr_dot(evc1(1,1,1,1),sevc1_new(1,1,1,1)))
     else
       beta=dble(lr_dot(evc1(1,1,1,1),sevc1(1,1,1,2)))
+      !call lr_apply_s(evc1(:,:,1,1),sevc1(:,:,1,1))
+      !angle=dble(lr_dot(evc1(1,1,1,1),sevc1(1,1,1,1)))*dble(lr_dot(evc1(1,1,1,2),sevc1(1,1,1,2)))
+      !angle=beta/sqrt(angle)
+      !angle = acos(angle)
+      !print *, "Pol: ", LR_polarization, "Iteration: ",LR_iteration, "Angle:", angle
     endif
 
     ! Beta is less than 0 is a serious error for pseudo hermitian algorithm

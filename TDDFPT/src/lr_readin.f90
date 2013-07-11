@@ -126,7 +126,7 @@ SUBROUTINE lr_readin
      print_spectrum=.true.
      start=0.0d0
      finish=1.0d0
-     step=0.01d0
+     step=0.001d0
      if_check_orth=.false.
      if_check_her=.false.
      if_random_init=.false.
