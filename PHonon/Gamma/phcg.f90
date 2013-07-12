@@ -456,7 +456,7 @@ SUBROUTINE newscf
   !-----------------------------------------------------------------------
   !
   USE pwcom
-  USE basis, ONLY: nbnd, starting_wfc 
+  USE basis, ONLY: starting_wfc 
   USE wvfct, ONLY: btype
   USE klist, ONLY: nkstot
   USE noncollin_module, ONLY: report
