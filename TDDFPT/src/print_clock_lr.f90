@@ -19,6 +19,7 @@ SUBROUTINE print_clock_lr()
    USE io_global,        ONLY : stdout
    USE mp_global,        ONLY : mpime, root
    USE realus,           ONLY : real_space,real_space_debug
+   use lr_variables,     only : davidson
    !
    IMPLICIT NONE
    !
@@ -28,7 +29,9 @@ SUBROUTINE print_clock_lr()
    !
    WRITE( stdout, * )
    !
-   CALL print_clock( 'lr_main' )
+   
+   if(.not. davidson) CALL print_clock( 'lr_main' )
+   if(davidson) CALL print_clock( 'lr_dav_main' )
    !
    CALL print_clock( 'lr_solve_e' )
    !
