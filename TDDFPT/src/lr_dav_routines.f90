@@ -427,6 +427,8 @@ contains
     kill_right(:)=.false.
     toadd=2*num_eign
 
+    call start_clock("calc_residue")
+
     do ieign = 1, num_eign
       if(poor_of_ram2) then ! If D_ C_ basis are not stored, we have to apply liouvillian again
         call lr_apply_liouvillian(right_full(:,:,:,ieign),right_res(:,:,:,ieign),svecwork(:,:,:),.true.) ! Apply lanczos
@@ -475,6 +477,7 @@ contains
  
     write(stdout,'(7x,"Largest residue:",5x,F20.12)') max_res
     if(max_res .lt. residue_conv_thr) dav_conv=.true.
+    call stop_clock("calc_residue")
    return
   end subroutine dav_calc_residue
   !-------------------------------------------------------------------------------
@@ -495,6 +498,8 @@ contains
     real (dp) :: temp
 
     if(dav_conv) return ! Already converged
+
+    call start_clock("expan_basis")
 
     if (precondition) then
       do ieign = 1, num_eign
@@ -567,6 +572,9 @@ contains
 	ploted(1)=.true.
       endif
     endif
+
+    call stop_clock("expan_basis")
+
     return
     end subroutine dav_expan_basis
   !-------------------------------------------------------------------------------
