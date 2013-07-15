@@ -1979,7 +1979,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		    col Mass_X -type REAL {
 			info {
 			    mass of the atomic species [amu: mass of C = 12]
-			    not used if calculation='scf', 'nscf', 'bands'
+			    Used only when performing Molecular Dynamics run
+                            or structural optimization runs using Damped MD.
+                            Not actually used in all other cases (but stored
+                            in data files, so phonon calculations will use
+                            these values unless other values are provided)
 			}
 		    }
 		    col PseudoPot_X -type CHARACTER {
