@@ -15,8 +15,9 @@ default :
 	@echo '  upf          utilities for pseudopotential conversion'
 	@echo '  tddfpt       time dependent dft code'
 	@echo '  gui          Graphical User Interface '
+	@echo '  gwl          GW with Lanczos chains '
 	@echo '  pwall        same as "make pw ph pp pwcond neb"'
-	@echo '  all          same as "make pwall cp ld1 upf tddfpt"'
+	@echo '  all          same as "make pwall cp ld1 upf tddfpt gwl"'
 	@echo '  xspectra     X-ray core-hole spectroscopy calculations '
 	@echo '  gipaw        NMR and EPR spectra'
 	@echo '  w90          Maximally localised Wannier Functions'
@@ -42,8 +43,7 @@ pw : bindir mods liblapack libblas libs libiotk libenviron
 
 cp : bindir mods liblapack libblas libs libiotk
 	if test -d CPV ; then \
-	( cd CPV ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+	( cd CPV ; $(MAKE) $(MFLAGS) TLDEPS= all ) ; fi
 
 ph : bindir mods libs pw
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile phonon
@@ -56,18 +56,20 @@ tddfpt : bindir mods libs pw ph
 
 pp : bindir mods libs pw
 	if test -d PP ; then \
-	( cd PP ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+	( cd PP ; $(MAKE) $(MFLAGS) TLDEPS= all ) ; fi
 
 pwcond : bindir mods libs pw pp
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 acfdt : bindir mods libs pw ph
 	if test -d ACFDT ; then \
-	( cd ACFDT ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+	( cd ACFDT ; $(MAKE) $(MFLAGS) TLDEPS= all ) ; fi
 
-gipaw : pw neb
+gwl : ph
+	if test -d GWW ; then \
+	( cd GWW ; $(MAKE) $(MFLAGS) TLDEPS= all ) ; fi
+
+gipaw : pw
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 ld1 : bindir liblapack libblas mods libs
@@ -75,13 +77,11 @@ ld1 : bindir liblapack libblas mods libs
 
 upf : mods libs
 	if test -d upftools ; then \
-	( cd upftools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+	( cd upftools ; $(MAKE) $(MFLAGS) TLDEPS= all ) ; fi
 
 pw_export : libiotk bindir mods libs pw
 	if test -d PP ; then \
-	( cd PP ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= pw_export.x ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= pw_export.x ; fi ) ; fi
+	( cd PP ; $(MAKE) $(MFLAGS) TLDEPS= pw_export.x ) ; fi
 
 xspectra : bindir mods libs pw
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
@@ -90,24 +90,21 @@ gui : touch-dummy
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 pwall : pw neb ph pp pwcond acfdt
-all   : pwall cp ld1 upf tddfpt
+all   : pwall cp ld1 upf tddfpt gwl
 
 ###########################################################
 # Auxiliary targets used by main targets:
 # compile modules, libraries, directory for binaries, etc
 ###########################################################
 mods : libiotk libelpa
-	( cd Modules ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
+	( cd Modules ; $(MAKE) $(MFLAGS) TLDEPS= all )
 libs : mods
-	( cd clib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
-	( cd flib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= $(FLIB_TARGETS) ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= $(FLIB_TARGETS) ; fi )
+	( cd clib ; $(MAKE) $(MFLAGS) TLDEPS= all )
+	( cd flib ; $(MAKE) $(MFLAGS) TLDEPS= $(FLIB_TARGETS) )
 
 libenviron :  mods
-	( if test -d Environ ; then cd Environ ; if test "$(MAKE)" = "" ;  \
-	then make $(MFLAGS) TLDEPS= all; else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ; fi )
+	( if test -d Environ ; then \
+	( cd Environ ; $(MAKE) $(MFLAGS) TLDEPS= all ) fi )
 
 bindir :
 	test -d bin || mkdir bin
@@ -123,7 +120,7 @@ liblapack: touch-dummy
 
 libelpa: touch-dummy
 	cd install ; $(MAKE) $(MFLAGS) -f extlibs_makefile $@
-	
+
 libiotk: touch-dummy
 	cd install ; $(MAKE) $(MFLAGS) -f extlibs_makefile $@
 
@@ -194,8 +191,7 @@ clean :
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
-		if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= clean ; \
-		else $(MAKE) $(MFLAGS) TLDEPS= clean ; fi ) \
+		$(MAKE) $(MFLAGS) TLDEPS= clean ) \
 	    fi \
 	done
 	- @(cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile clean)
@@ -235,9 +231,7 @@ tar :
 tar-gui :
 	@if test -d GUI/PWgui ; then \
 	    cd GUI/PWgui ; \
-	    if test "$(MAKE)" = "" ; then \
-		make $(MFLAGS) TLDEPS= clean svninit pwgui-source; \
-	    else $(MAKE) $(MFLAGS) TLDEPS= clean svninit pwgui-source; fi; \
+	    $(MAKE) $(MFLAGS) TLDEPS= clean svninit pwgui-source; \
 	    mv PWgui-*.tgz ../.. ; \
 	else \
 	    echo ; \
@@ -252,11 +246,10 @@ tar-gui :
 # "latex2html" and "convert" (from Image-Magick) are needed.
 doc : touch-dummy
 	if test -d Doc ; then \
-	( cd Doc ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+	( cd Doc ; $(MAKE) $(MFLAGS) TLDEPS= all ) ; fi
 	for dir in */Doc; do \
-	( if test -f $$dir/Makefile ; then cd $$dir; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi  ; fi ); done
+	( if test -f $$dir/Makefile ; then \
+	( cd $$dir; $(MAKE) $(MFLAGS) TLDEPS= all ) ; fi ) ;  done
 
 depend:
 	@echo 'Checking dependencies...'
