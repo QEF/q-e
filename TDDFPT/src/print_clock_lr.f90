@@ -31,13 +31,13 @@ SUBROUTINE print_clock_lr()
    !
    
    if(.not. davidson) CALL print_clock( 'lr_main' )
+   CALL print_clock( 'read_wf' )
+   CALL print_clock( 'lr_solve_e' )
    if(davidson) then
      CALL print_clock( 'lr_dav_main' )
      CALL print_clock( 'calc_residue' )
      CALL print_clock( 'expan_basis' )
    endif
-   !
-   CALL print_clock( 'lr_solve_e' )
    CALL print_clock( 'one_step' )
    !
    WRITE( stdout, * )

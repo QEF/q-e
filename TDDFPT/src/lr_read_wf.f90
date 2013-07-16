@@ -56,6 +56,7 @@ SUBROUTINE lr_read_wf()
   IF (lr_verbosity > 5) THEN
     WRITE(stdout,'("<lr_read_wf>")')
   ENDIF
+  call start_clock("read_wf")
   !
   IF ((nbnd_total>nbnd .and. davidson) .OR. project) THEN
      CALL virt_read()
@@ -78,6 +79,8 @@ SUBROUTINE lr_read_wf()
      ENDIF
   ENDIF
   !
+
+  call stop_clock("read_wf")
   RETURN
   !
   CONTAINS
