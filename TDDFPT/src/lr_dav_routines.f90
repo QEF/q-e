@@ -594,6 +594,7 @@ contains
     integer :: ib,ieign,ieign2,ia
     real(dp) :: temp
     
+    call start_clock("mGS_orth")
     ! first orthogonalize to old basis
     do ib = 1, num_basis
       do ieign = 1, num_eign
@@ -633,6 +634,7 @@ contains
           call lr_1to1orth(right_res(1,1,1,ieign2),right_res(1,1,1,ieign))
       enddo
     enddo
+    call stop_clock("mGS_orth")
     return
   end subroutine lr_mGS_orth
   !-------------------------------------------------------------------------------
@@ -654,6 +656,7 @@ contains
     integer :: ieign,ia
     real(dp) :: norm_res
   
+    call start_clock("mGS_orth_pp")
     do ieign = 1, num_eign
       if(.not. kill_left(ieign)) then
         norm_res = dble(lr_dot_us(left_res(1,1,1,ieign),left_res(1,1,1,ieign)))
@@ -677,6 +680,8 @@ contains
         endif
       endif
     enddo
+    call stop_clock("mGS_orth_pp")
+    return
   end subroutine lr_mGS_orth_pp
   !-------------------------------------------------------------------------------
 

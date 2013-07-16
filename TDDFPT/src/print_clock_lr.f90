@@ -48,6 +48,10 @@ SUBROUTINE print_clock_lr()
    CALL print_clock('lr_exx_int')
    CALL print_clock('lr_apply_no')
    CALL print_clock('lr_exx_noint')
+   if(davidson) then
+     CALL print_clock( 'mGS_orth' )
+     CALL print_clock( 'mGS_orth_pp' )
+   endif
    !
    WRITE( stdout, * )
    !

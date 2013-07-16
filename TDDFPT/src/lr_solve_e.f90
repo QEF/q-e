@@ -62,42 +62,29 @@ SUBROUTINE lr_solve_e
   IF( lr_verbosity > 1 ) &
        WRITE(stdout,'(5X,"lr_solve_e: alpha_pv=",1X,e12.5)') alpha_pv
 
-    DO ik=1,nks
-       !
+  DO ik=1,nks
        current_k=ik
-       !
        IF ( lsda ) current_spin = isk(ik)
-       !
        evc(:,:)=evc0(:,:,ik)
-       !
-       !
+
        npw=npw_k(ik)
        igk(:)=igk_k(:,ik)
-       !
+
        CALL init_us_2(npw,igk,xk(1,ik),vkb)
-       !
+
        !   Computes/reads P_c^+ x psi_kpoint into d0psi array
-       !
        IF ( n_ipol==3 ) THEN
-          !
-           DO ip=1,3
-             !
-             CALL lr_dvpsi_e(ik,ip,d0psi(:,:,ik,ip))
-             !
-          ENDDO
-          !
+         DO ip=1,3
+           CALL lr_dvpsi_e(ik,ip,d0psi(:,:,ik,ip))
+         ENDDO
        ELSEIF ( n_ipol==1 ) THEN
-         !
          CALL lr_dvpsi_e(ik,LR_polarization,d0psi(:,:,ik,1))
-         !
        ENDIF
-       !
-       !print *, "lr_solve_e, after lr_dvpsi_e"
-       !CALL lr_normalise( d0psi(:,:,1,1), anorm)
-    ENDDO
+  ENDDO
   !endif
   !
   IF (gstart == 2 .and. gamma_only) d0psi(1,:,:,:) = cmplx(dble(d0psi(1,:,:,:)),0.0d0,dp)
+
 !OBM!!! debug
 IF (test_case_no == 2) THEN
           PRINT *,"dumping d0psi"
@@ -116,38 +103,25 @@ IF (test_case_no == 2) THEN
 ENDIF
 !OBM!!! end of debug
 
-       !print *, "lr_solve_e before dump"
-       !CALL lr_normalise( d0psi(:,:,1,1), anorm)
-  !
   ! Writing d0psi for restart
-  !
   nwordd0psi = 2 * nbnd * npwx * nks
-  !
+
   !   Reading of files:
   !   This is a parallel read, done in wfc_dir
   tmp_dir_saved = tmp_dir
   IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
 
   DO ip = 1, n_ipol
-     !
      IF (n_ipol==1) CALL diropn ( iund0psi, 'd0psi.'//trim(int_to_char(LR_polarization)), nwordd0psi, exst)
      IF (n_ipol==3) CALL diropn ( iund0psi, 'd0psi.'//trim(int_to_char(ip)), nwordd0psi, exst)
-     !
      CALL davcio(d0psi(1,1,1,ip),nwordd0psi,iund0psi,1,1)
-     !
      CLOSE( UNIT = iund0psi)
-     !
   ENDDO
   ! End of file i/o
   tmp_dir = tmp_dir_saved
-  !
-  ! end writing
-  !
+
   CALL stop_clock ('lr_solve_e')
-  !
   WRITE(stdout,'(5X,"lr_wfcinit_spectrum: finished lr_solve_e")')
-  !
   RETURN
-  !
 END SUBROUTINE lr_solve_e
 !-------------------------------------------------------------------------
