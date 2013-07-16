@@ -72,7 +72,7 @@ CP_COMMAND="$PARA_PREFIX $BIN_DIR/cp.x $PARA_POSTFIX"
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running cp.x as: $CP_COMMAND"
-$ECHO "  running pw.x as: $PP_COMMAND"
+$ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
 
 # clean TMP_DIR
