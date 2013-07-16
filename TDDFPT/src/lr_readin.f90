@@ -133,7 +133,7 @@ SUBROUTINE lr_readin
      p_nbnd_occ=10
      p_nbnd_virt=10
      poor_of_ram=.false.
-     poor_of_ram2=.true.
+     poor_of_ram2=.false.
      max_iter=100
      conv_assistant=.false.
 
