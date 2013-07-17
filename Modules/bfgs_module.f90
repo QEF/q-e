@@ -249,11 +249,10 @@ CONTAINS
 #endif
       END IF
       !
-      stop_bfgs = conv_bfgs .OR. ( scf_iter >= nstep ) .OR. ( tr_min_hit > 1 )
+      ! ... converged (or useless to go on): quick return
       !
-      ! ... quick return if possible
-      !
-      IF ( stop_bfgs ) GOTO 1000
+      conv_bfgs = conv_bfgs .OR. ( tr_min_hit > 1 )
+      IF ( conv_bfgs ) GOTO 1000
       !
       ! ... some output is written
       !
@@ -429,7 +428,7 @@ CONTAINS
       !
       pos(:) = pos(:) + trust_radius * step(:)
       !
-1000  CONTINUE
+1000  stop_bfgs = conv_bfgs .OR. ( scf_iter >= nstep ) 
       ! ... input ions+cell variables
       IF ( lmovecell ) FORALL( i=1:3, j=1:3) h(i,j) = pos( n-9 + j+3*(i-1) )
       pos_in = pos(1:n-9)
@@ -914,11 +913,11 @@ CONTAINS
               &         I3," bfgs steps")' ) scf_iter, bfgs_iter
          IF ( lmovecell ) THEN
             WRITE( UNIT = stdout, &
-              & FMT = '(5X,"(criteria: energy < ",E8.2,", force < ",E8.2, &
-              &       ", cell < ",E8.2,")")') energy_thr, grad_thr, cell_thr
+              & FMT = '(5X,"(criteria: energy < ",ES8.1,", force < ",ES8.1, &
+              &       ", cell < ",ES8.1,")")') energy_thr, grad_thr, cell_thr
          ELSE
             WRITE( UNIT = stdout, &
-              & FMT = '(5X,"(criteria: energy < ",E8.2,", force < ",E8.2, &
+              & FMT = '(5X,"(criteria: energy < ",ES8.1,", force < ",ES8.1, &
               &                        ")")') energy_thr, grad_thr
          END IF
          WRITE( UNIT = stdout, &
