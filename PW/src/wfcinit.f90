@@ -33,7 +33,7 @@ SUBROUTINE wfcinit()
   IMPLICIT NONE
   !
   INTEGER :: ik, ierr
-  LOGICAL :: exst
+  LOGICAL :: exst_mem, exst_file
   !
   !
   CALL start_clock( 'wfcinit' )
@@ -46,12 +46,12 @@ SUBROUTINE wfcinit()
   ! ... open files/buffer for wavefunctions (nwordwfc set in openfil)
   ! ... io_level > 1 : open file, otherwise: open buffer
   !
-  CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst )
+  CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
   !
   ! ... now the various possible wavefunction initializations
   ! ... first a check: is "tmp_dir"/"prefix".wfc found on disk?
   !
-  IF ( TRIM(starting_wfc) == 'file' .AND. .NOT. exst) THEN
+  IF ( TRIM(starting_wfc) == 'file' .AND. .NOT. exst_file) THEN
      !
      ! ... "tmp_dir"/"prefix".wfc not found on disk: try to read
      ! ... wavefunctions in "collected" format from "prefix".save/, 
@@ -64,7 +64,7 @@ SUBROUTINE wfcinit()
         starting_wfc = 'atomic+random'
      END IF
      !
-  ELSE IF ( TRIM(starting_wfc) == 'file' .AND. exst) THEN
+  ELSE IF ( TRIM(starting_wfc) == 'file' .AND. exst_file) THEN
      !
      ! ... wavefunctions are read from file (or buffer) in routine 
      ! ... c_bands, but not if there is a single k-point. In such

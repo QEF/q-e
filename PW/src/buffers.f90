@@ -455,13 +455,16 @@ contains
   SUBROUTINE open_buffer (unit, extension, nword, io_level, exst, exst_file, direc)
     !---------------------------------------------------------------------------
     !
-    !   io_level>0: connect unit "unit" to file "wfc_fdir"/"prefix"."extension"
+    !   io_level>0: connect unit "unit" to file "wfc_dir"/"prefix"."extension"
+    !   (or "direc"/"prefix"."extension" if optional variable direc specified)
     !   for direct I/O access, with record length = nword complex numbers;
     !   on output, exst=T(F) if the file (does not) exists
     !
     !   io_level=0: in addition to opening unit "unit" as above, open a
     !   buffer for storing records of length nword complex numbers;
     !   on output, exst=T(F) if the buffer is already allocated
+    !
+    !   on output, optional variable exst_file=T(F) if file is present (absent)
     !
     USE io_files,  ONLY : diropn, wfc_dir
     !

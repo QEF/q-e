@@ -31,6 +31,8 @@ Incompatible changes in svn version:
 
 Fixed in svn version:
 
+   * PHonon: problem with the symmetry analysis in D_6h. The problem appeared
+     in special cases after the symmetry reshuffling made by the phonon code.
    * PWscf: starting with uniform charge worked only for non-spin-polarized
      calculations. Not a big deal unless one used HGH or other pseudopotentials
      without atomic charge information
