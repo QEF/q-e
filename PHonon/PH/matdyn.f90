@@ -199,7 +199,8 @@ PROGRAM matdyn
   !
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, fleig, at, dos,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, &
-       &           la2F, ndos, DeltaE, q_in_band_form, q_in_cryst_coord, fldyn,na_ifc, fd
+       &           la2F, ndos, DeltaE, q_in_band_form, q_in_cryst_coord, &
+       &           eigen_similarity, fldyn, na_ifc, fd
   !
   CALL mp_startup()
   CALL environment_start('MATDYN')
