@@ -33,11 +33,12 @@ subroutine phq_summary
   USE run_info, ONLY : title
   USE gamma_gamma,   ONLY : with_symmetry, nasr
   USE control_ph,    ONLY : lgamma_gamma, lnoloc, lrpa, zue, epsil, ldisp, &
-                            nmix_ph, alpha_mix, tr2_ph, zeu
+                            nmix_ph, alpha_mix, tr2_ph, zeu, search_sym
   USE freq_ph,       ONLY : fpol, nfs, fiu
   USE partial,       ONLY : atomo, nat_todo, all_comp, done_irr, comp_irr
   USE modes,         ONLY : u, npert, irotmq, minus_q, nsymq, nirr, &
                             name_rap_mode
+  USE rap_point_group, ONLY : gname
   USE qpoint,        ONLY : xq
   USE ramanm,        ONLY : lraman, elop
   USE control_flags, ONLY : iverbosity
@@ -240,6 +241,11 @@ subroutine phq_summary
   endif
 
   CALL print_ps_info ( )
+  IF (search_sym.AND.iverbosity==1) THEN
+     CALL write_group_info(.true.)
+  ELSE IF (search_sym) THEN
+     WRITE(stdout,'(/,5x,"Mode symmetry, ",a11," point group:")') gname  
+  ENDIF
 
   IF (lgamma_gamma) &
         WRITE(stdout,'(/5x,"k=gamma and q=gamma tricks are used")')
