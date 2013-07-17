@@ -17,7 +17,7 @@ SUBROUTINE ep_matrix_element_wannier()
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
   USE gvecs, ONLY: doublegrid
   USE fft_base, ONLY : dfftp, dffts
-  USE noncollin_module, ONLY : nspin_mag
+  USE noncollin_module, ONLY : nspin_mag, noncolin
   USE dynmat, ONLY : dyn, w2
   USE qpoint, ONLY : xq, nksq, ikks
   USE modes,  ONLY : npert, nirr
@@ -29,6 +29,12 @@ SUBROUTINE ep_matrix_element_wannier()
   USE klist, ONLY : xk
   USE wvfct, ONLY : npwx
   USE el_phon, ONLY: elph_mat, kpq, g_kpq, igqg, xk_gamma
+  USE phus,       ONLY : int3, int3_nc, int3_paw
+  USE uspp,                 ONLY: okvan
+  USE paw_variables, ONLY : okpaw
+  USE uspp_param, ONLY : nhm
+  USE lsda_mod, ONLY : nspin
+
   !
   IMPLICIT NONE
   !
@@ -87,6 +93,12 @@ SUBROUTINE ep_matrix_element_wannier()
   imode0 = 0
   DO irr = 1, nirr
      ALLOCATE (dvscfin (dfftp%nnr, nspin_mag , npert(irr)) )
+     IF (okvan) THEN
+        ALLOCATE (int3 ( nhm, nhm, npert(irr), nat, nspin_mag))
+        IF (okpaw) ALLOCATE (int3_paw (nhm, nhm, npert(irr), nat, nspin_mag))
+        IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, npert(irr), nat, nspin))
+     ENDIF
+
 !     if(ascii_dvscf) then
 !        DO ipert = 1, npert(irr)
 !           dvscfin(1:dfftp%nnr,:,ipert)=dvrot(1:dfftp%nnr,:,imode0+ipert)
@@ -113,6 +125,13 @@ SUBROUTINE ep_matrix_element_wannier()
      imode0 = imode0 + npert (irr)
      IF (doublegrid) DEALLOCATE (dvscfins)
      DEALLOCATE (dvscfin)
+
+     IF (okvan) THEN
+       DEALLOCATE (int3)
+       IF (okpaw) DEALLOCATE (int3_paw)
+       IF (noncolin) DEALLOCATE(int3_nc)
+     ENDIF
+
   ENDDO
   !
   ! now read the eigenvalues and eigenvectors of the dynamical matrix
