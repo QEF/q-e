@@ -47,14 +47,14 @@ INTEGER :: &
           has_e(12,24), &  ! if -1 the element is multiplied by -E
           which_irr(24)    ! See above 
 
-REAL(DP) :: smat(3,3,nrot), cmat(3,3), ax(3)
+REAL(DP) :: smat(3,3,nrot), cmat(3,3), ax(3), bx(3)
 REAL(DP) :: smate(3,3,2*nrot)
 COMPLEX(DP) :: d_spin(2,2,48), d_spine(2,2,96), c_spin(2,2)
 
-INTEGER :: done(96), irot, jrot, krot, iclass, i
+INTEGER :: done(96), irot, jrot, krot, iclass, i, other, other1
 INTEGER :: tipo_sym, set_e, ipol, axis, axis1, axis2, ts
 REAL(DP), PARAMETER :: eps = 1.d-7
-REAL(DP) :: angle_rot, angle_rot_s, ars, ax_save(3,3:5)
+REAL(DP) :: angle_rot, angle_rot_s, ars, ax_save(3,3:5), angle_vectors
 LOGICAL :: compare_mat_so, is_axis, first, first1, is_parallel
 LOGICAL :: done_ax(6)
 !
@@ -674,12 +674,24 @@ ELSEIF (code_group==23) THEN
          IF (nelem(iclass)==2) THEN
             which_irr(iclass)=3
          ELSE
-            IF (first) THEN
+            IF (first.AND.first1) THEN
                which_irr(iclass)=8
+               other=9
+               CALL versor(smat(1,1,elem(1,iclass)),ax)
+               first=.FALSE.
+            ELSEIF (first) THEN
+               CALL versor(smat(1,1,elem(1,iclass)),bx)
+               IF (MOD(INT(angle_vectors(ax,bx)),60)==0) THEN
+                  which_irr(iclass)=8
+                  other=9
+               ELSE
+                  which_irr(iclass)=9
+                  other=8
+               ENDIF
                first=.FALSE.
             ELSE
-               which_irr(iclass)=9
-            END IF 
+               which_irr(iclass)=other
+            END IF
          END IF
       ELSE IF (ts==2) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),10)
@@ -687,12 +699,24 @@ ELSEIF (code_group==23) THEN
           IF (nelem(iclass)==2) THEN
              which_irr(iclass)=12
           ELSE 
-             IF (first1) THEN
+             IF (first.AND.first1) THEN
                 which_irr(iclass)=17
+                other1=18
+                CALL mirror_axis(smat(1,1,elem(1,iclass)),ax)
+                first1=.FALSE.
+             ELSEIF (first1) THEN
+                CALL mirror_axis(smat(1,1,elem(1,iclass)),bx)
+                IF (MOD(INT(angle_vectors(ax,bx)),60)==0) THEN
+                   which_irr(iclass)=17
+                   other1=18
+                ELSE
+                   which_irr(iclass)=18
+                   other1=17
+                ENDIF
                 first1=.FALSE.
              ELSE
-                which_irr(iclass)=18
-             ENDIF
+                which_irr(iclass)=other1
+             END IF
           END IF
       ELSE IF (ts==6) THEN
          ars=angle_rot_s(smat(1,1,elem(1,iclass)))

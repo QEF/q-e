@@ -148,7 +148,7 @@ SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, sr, irt, xq,    &
            trace(iclass,igroup)=trace(iclass,igroup) + &
                 zdotc(3*nat,z(1,nu_i),1,rmode,1)
         END DO
-!              write(6,*) igroup,iclass, trace(iclass,igroup)
+!              write(6,*) 'group,class',igroup, iclass, trace(iclass,igroup)
      END DO
   END DO
   !
