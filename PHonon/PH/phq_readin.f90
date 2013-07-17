@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 PWSCF group
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,7 +19,6 @@ SUBROUTINE phq_readin()
   USE kinds,         ONLY : DP
   USE parameters,    ONLY : nsx
   USE ions_base,     ONLY : nat, ntyp => nsp
-  USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_bcast
   USE ions_base,     ONLY : amass, atm
   USE input_parameters, ONLY : max_seconds, nk1, nk2, nk3, k1, k2, k3
@@ -50,15 +49,17 @@ SUBROUTINE phq_readin()
   USE partial,       ONLY : atomo, nat_todo, nat_todo_input
   USE output,        ONLY : fildyn, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3, x_q, wq, nqs, lgamma_iq
-  USE io_files,      ONLY : tmp_dir, prefix
+  USE io_files,      ONLY : outdir, tmp_dir, prefix
   USE noncollin_module, ONLY : i_cons, noncolin
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : iverbosity, modenum, twfcollect
-  USE io_global,     ONLY : ionode, stdout
-  USE mp_global,     ONLY : nproc_pool, nproc_pool_file, &
-                            nimage, my_image_id, intra_image_comm,   &
-                            nproc_image_file, nproc_image, npool, &
-                            get_ntask_groups, nproc_bgrp_file, nproc_bgrp
+  USE io_global,     ONLY : meta_ionode, ionode, ionode_id, stdout
+  USE mp_images,     ONLY : nimage, my_image_id, intra_image_comm,   &
+                            me_image, nproc_image
+  USE mp_global,     ONLY : get_ntask_groups, nproc_pool_file, &
+                            nproc_bgrp_file, nproc_image_file
+  USE mp_pools,      ONLY : nproc_pool, npool 
+  USE mp_bands,      ONLY : nproc_bgrp
   USE paw_variables, ONLY : okpaw
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
   USE freq_ph,       ONLY : fpol, fiu, nfs
@@ -81,7 +82,7 @@ SUBROUTINE phq_readin()
     ! counter on types
   REAL(DP) :: amass_input(nsx)
     ! save masses read from input here
-  CHARACTER (LEN=256) :: outdir, filename
+  CHARACTER (LEN=256) :: filename
   !
   CHARACTER(LEN=80)          :: card
   CHARACTER(LEN=1), EXTERNAL :: capital
@@ -174,8 +175,13 @@ SUBROUTINE phq_readin()
   ! q2d, : if .true. the q list define a mesh in a square.
   ! low_directory_check : if .true. only the requested representations
   !                       are searched on file
-  !             
-  IF (ionode) THEN
+  ! 
+  ! Note: meta_ionode is a single processor that reads the input
+  !       (ionode is also a single processor but per image)
+  !       Data read from input is subsequently broadcast to all processors
+  !       from ionode_id (using the default communicator world_comm)
+  !
+  IF (meta_ionode) THEN
   !
   ! ... Input from file ?
   !
@@ -196,7 +202,7 @@ SUBROUTINE phq_readin()
   IF( imatches("&inputph", title) ) THEN
     WRITE(*, '(6x,a)') "Title line not specified: using 'default'."
     title='default'
-    IF (ionode) REWIND(5, iostat=ios)
+    IF (meta_ionode) REWIND(5, iostat=ios)
     CALL mp_bcast(ios, ionode_id )
     CALL errore('phq_readin', 'Title line missing from input.', abs(ios))
   ENDIF
@@ -283,23 +289,23 @@ SUBROUTINE phq_readin()
   !
   ! ...  reading the namelist inputph
   !
-  IF (ionode) READ( 5, INPUTPH, IOSTAT = ios )
-  !
+  IF (meta_ionode) READ( 5, INPUTPH, IOSTAT = ios )
   CALL mp_bcast(ios, ionode_id)
   CALL errore( 'phq_readin', 'reading inputph namelist', ABS( ios ) )
   !
-  IF (ionode) tmp_dir = trimcheck (outdir)
-
+  ! ...  broadcast all input variables
+  !
+  CALL bcast_ph_input ( )
+  CALL mp_bcast(nogg, ionode_id )
+  CALL mp_bcast(q2d, ionode_id )
+  CALL mp_bcast(q_in_band_form, ionode_id )
+  !
+  tmp_dir = trimcheck (outdir)
   drho_star%dir=trimcheck(drho_star%dir)
   dvscf_star%dir=trimcheck(dvscf_star%dir)
   ! filename for the star must always be automatically generated:
   IF(drho_star%ext(1:5)/='auto:')  drho_star%ext  = 'auto:'//drho_star%ext
   IF(dvscf_star%ext(1:5)/='auto:') dvscf_star%ext = 'auto:'//dvscf_star%ext
-
-  CALL bcast_ph_input ( )
-  CALL mp_bcast(nogg, ionode_id )
-  CALL mp_bcast(q2d, ionode_id )
-  CALL mp_bcast(q_in_band_form, ionode_id )
   !
   ! ... Check all namelist variables
   !
@@ -376,7 +382,7 @@ SUBROUTINE phq_readin()
   !
   !    reads the q point (just if ldisp = .false.)
   !
-  IF (ionode) THEN
+  IF (meta_ionode) THEN
      IF (qplot) THEN
         READ (5, *, iostat = ios) nqaux
      ELSE
@@ -389,7 +395,7 @@ SUBROUTINE phq_readin()
      CALL mp_bcast(nqaux, ionode_id)
      ALLOCATE(xqaux(3,nqaux))
      ALLOCATE(wqaux(nqaux))
-     IF (ionode) THEN
+     IF (meta_ionode) THEN
         DO iq=1, nqaux
            READ (5, *, iostat = ios) (xqaux (ipol,iq), ipol = 1, 3), wqaux(iq)
         ENDDO
@@ -424,7 +430,7 @@ SUBROUTINE phq_readin()
      IF ( .NOT. epsil) CALL errore ('phq_readin', &
                                     'fpol=.TRUE. needs epsil=.TRUE.', 1 )
      nfs=0
-     IF (ionode) THEN
+     IF (meta_ionode) THEN
         READ (5, *, iostat = ios) card
         IF ( TRIM(card)=='FREQUENCIES'.OR. &
              TRIM(card)=='frequencies'.OR. &
@@ -437,7 +443,7 @@ SUBROUTINE phq_readin()
      CALL mp_bcast(nfs, ionode_id )
      if (nfs < 1) call errore('phq_readin','Too few frequencies',1)
      ALLOCATE(fiu(nfs))
-     IF (ionode) THEN
+     IF (meta_ionode) THEN
         IF ( TRIM(card) == 'FREQUENCIES' .OR. &
              TRIM(card) == 'frequencies' .OR. &
              TRIM(card) == 'Frequencies' ) THEN
@@ -454,7 +460,6 @@ SUBROUTINE phq_readin()
      ALLOCATE(fiu(1))
      fiu=0.0_DP
   END IF
-
   !
   !
   !   Here we finished the reading of the input file.
@@ -499,8 +504,7 @@ SUBROUTINE phq_readin()
         CALL check_restart_recover(ext_recover, ext_restart)
         IF (.NOT.ext_recover.AND..NOT.ext_restart) tmp_dir_phq=tmp_dir_ph
      ENDIF
-
-
+     !
      filename=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/data-file.xml'
      IF (ionode) inquire (file =TRIM(filename), exist = exst)
      !
@@ -692,9 +696,7 @@ SUBROUTINE phq_readin()
   IF ( nat_todo < 0 .OR. nat_todo > nat ) &
      CALL errore ('phq_readin', 'nat_todo is wrong', 1)
   IF (nat_todo.NE.0) THEN
-     IF (ionode) &
-     READ (5, *, iostat = ios) (atomo (na), na = 1, &
-          nat_todo)
+     IF (meta_ionode) READ (5, *, iostat = ios) (atomo (na), na = 1, nat_todo)
      CALL mp_bcast(ios, ionode_id )
      CALL errore ('phq_readin', 'reading atoms', ABS (ios) )
      CALL mp_bcast(atomo, ionode_id )

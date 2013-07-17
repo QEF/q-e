@@ -27,7 +27,7 @@ subroutine bcast_ph_input ( )
   USE partial, ONLY : nat_todo
   USE freq_ph, ONLY : fpol
   USE output, ONLY : fildvscf, fildyn, fildrho
-  use io_files, ONLY : tmp_dir, prefix
+  use io_files, ONLY : outdir, prefix
   USE control_flags, only: iverbosity, modenum
   USE ramanm, ONLY: lraman, elop, dek, eth_rps, eth_ns
   USE input_parameters, ONLY: max_seconds
@@ -88,7 +88,6 @@ subroutine bcast_ph_input ( )
   CALL mp_bcast( elph_nbnd_max, ionode_id )
   CALL mp_bcast( el_ph_ngauss, ionode_id )
   CALL mp_bcast( el_ph_nsigma, ionode_id )
-
   !
   ! real*8
   !
@@ -107,7 +106,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (fildyn, ionode_id )
   call mp_bcast (fildvscf, ionode_id )
   call mp_bcast (fildrho, ionode_id )
-  call mp_bcast (tmp_dir, ionode_id )
+  call mp_bcast (outdir, ionode_id )
   call mp_bcast (prefix, ionode_id )
   call mp_bcast (electron_phonon, ionode_id )
   !
@@ -124,7 +123,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (dvscf_star%dir,   ionode_id)
   call mp_bcast (dvscf_star%ext,   ionode_id)
   call mp_bcast (dvscf_star%basis, ionode_id)
-  
+
 #endif
   return
 end subroutine bcast_ph_input
