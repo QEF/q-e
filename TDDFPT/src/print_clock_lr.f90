@@ -44,6 +44,10 @@ SUBROUTINE print_clock_lr()
    CALL print_clock( 'one_step' )
    !
    WRITE( stdout, * )
+
+   call print_clock('matrix')
+
+   WRITE( stdout, * )
    !
    CALL print_clock('lr_apply')
    CALL print_clock('lr_apply_int')

@@ -313,6 +313,7 @@ contains
   if(ionode) then
 #endif
     ! M_DC ~= M_D*M_C
+      call start_clock("matrix")
       call ZGEMM('N', 'N', num_basis,num_basis,num_basis,(1.0D0,0.0D0),M_D,&
                 num_basis_max,M_C,num_basis_max,(0.0D0,0.0D0), M,num_basis_max)
       call check("M_C")
@@ -326,6 +327,8 @@ contains
             eign_value(1,2), left_M, num_basis_max, right_M, num_basis_max,dummy_ILO,dummy_IHI,&
             dummy_SCALE, dummy_ABNRM,dummy_RCONDE, dummy_RCONDV,WORK,lwork,dummy_IWORK,INFO )  
     if(.not. INFO .eq. 0) stop "al_davidson: errors solving the DC in subspace"
+
+      call stop_clock("matrix")
  
     ! sort the solution
     do ibr = 1, num_basis
