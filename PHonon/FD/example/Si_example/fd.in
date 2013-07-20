@@ -14,6 +14,7 @@
  nrx1           = 2
  nrx2           = 2
  nrx3           = 2
+ innx           = 1
  de             = 0.01
 /
 
@@ -29,7 +30,7 @@
 &verbatim
 control =
 '
-prefix="silicon",
+prefix="silicon_fd",
 pseudo_dir="./",
 outdir="./"
 '

@@ -1,0 +1,14 @@
+&input
+  prefix='silicon'
+  nrx1=2,
+  nrx2=2,
+  nrx3=2,
+  de=0.01, 
+  file_force='./fd_files/force',
+  file_out='./silicon'
+  innx=1
+  nodispsym=.false.
+  noatsym=.false.
+  verbose=.true.
+  hex=.false.
+/

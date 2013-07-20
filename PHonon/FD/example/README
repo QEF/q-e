@@ -1,0 +1,19 @@
+Illustrates the calulations needed to generate the interatomic force constants file
+by using the finite displacements method
+
+1) make a self-consistent calculation 
+   cd $espresso_dir/PHonon/FD/example/inputfiles
+   $espresso_dir/bin/pw.x < si.scf.in > si.scf.out
+  
+2) create finite displacements in a supercell
+   $espresso_dir/bin/fd.x < fd.in > fd.out
+
+3) run all the finite displacements and extract the forces
+   sh ../../run_fd 
+
+4) generate the file "si_ifc.fc" of the interatomic force constants
+   $espresso_dir/bin/fd_ifc.x < fd_ifc.in
+   cat ./fd_files/header.txt > si_ifc.fc
+   echo "F" >> si_ifc.fc
+   cat ./silicon_ifc.fc >> si_ifc.fc
+
