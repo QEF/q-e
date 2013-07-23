@@ -1172,8 +1172,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             see { constrained_magnetization }
 	    default { 0.d0 }
 	    info {
-		value of the total magnetization to be maintained fixed when
-		constrained_magnetization='total'
+		total magnetization vector (x,y,z components) to be kept
+                fixed when constrained_magnetization='total'
 	    }
 	}
 	
