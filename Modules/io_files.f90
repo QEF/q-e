@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2010 Quantum ESPRESSO group
+! Copyright (C) 2002-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -348,18 +348,17 @@ SUBROUTINE davcio( vect, nword, unit, nrec, io )
   INTEGER :: ios
     ! integer variable for I/O control
   LOGICAL :: opnd
+  CHARACTER*256 :: name
   !
   !
   CALL start_clock( 'davcio' )
-  !
-  INQUIRE( UNIT = unit )
   !
   IF ( unit  <= 0 ) CALL errore(  'davcio', 'wrong unit', 1 )
   IF ( nrec  <= 0 ) CALL errore(  'davcio', 'wrong record number', 2 )
   IF ( nword <= 0 ) CALL errore(  'davcio', 'wrong record length', 3 )
   IF ( io    == 0 ) CALL infomsg( 'davcio', 'nothing to do?' )
   !
-  INQUIRE( UNIT = unit, OPENED = opnd )
+  INQUIRE( UNIT = unit, OPENED = opnd, NAME = name )
   !
   IF ( .NOT. opnd ) &
      CALL errore(  'davcio', 'unit is not opened', unit )
@@ -369,14 +368,14 @@ SUBROUTINE davcio( vect, nword, unit, nrec, io )
   IF ( io < 0 ) THEN
      !
      READ( UNIT = unit, REC = nrec, IOSTAT = ios ) vect
-     IF ( ios /= 0 ) &
-        CALL errore( 'davcio', 'error while reading from file', unit )
+     IF ( ios /= 0 ) CALL errore( 'davcio', &
+         & 'error while reading from file "' // TRIM(name) // '"', unit )
      !
   ELSE IF ( io > 0 ) THEN
      !
      WRITE( UNIT = unit, REC = nrec, IOSTAT = ios ) vect
-     IF ( ios /= 0 ) &
-        CALL errore( 'davcio', 'error while writing to file', unit )
+     IF ( ios /= 0 ) CALL errore( 'davcio', &
+         & 'error while writing from file "' // TRIM(name) // '"', unit )
      !
   END IF
   !
