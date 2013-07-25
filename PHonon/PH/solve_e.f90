@@ -340,6 +340,7 @@ subroutine solve_e
      !   for the three polarizations - symmetrize it
      !
      call mp_sum ( dvscfout, inter_pool_comm )
+     IF (okpaw) call mp_sum ( dbecsum, inter_pool_comm )
      if (.not.lgamma_gamma) then
         call psyme (dvscfout)
         IF ( noncolin.and.domag ) CALL psym_dmage(dvscfout)
