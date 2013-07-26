@@ -383,7 +383,7 @@
         WRITE( stdout,1959) avgs(9), avgs_run(9)
         WRITE( stdout,1990)
  1949   FORMAT(//,3X,'Averaged Physical Quantities',/ &
-              ,3X,'                  ',' accomulated','      this run')
+              ,3X,'                  ',' accumulated','      this run')
  1951   FORMAT(3X,'ekinc         : ',F14.5,F14.5,' (AU)')
  1952   FORMAT(3X,'ekin          : ',F14.5,F14.5,' (AU)')
  1953   FORMAT(3X,'epot          : ',F14.5,F14.5,' (AU)')
