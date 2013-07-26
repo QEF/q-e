@@ -219,9 +219,9 @@ in the development of \qe. Only registered users can post
 but messages from unregistered users are monitored and 
 approved if relevant.
 \item \texttt{q-e-commits}(medium traffic): for automatic
-commit messages (it is allowed to send replies to commit 
-messages in case of doubts or questions or remarks
-over a specific commit).
+commit messages. Note that replies to commit messages go
+to the mailing list: in case of doubts or questions or 
+remarks over a specific commit, feel free to reply.
 \end{itemize}
 \end{itemize}
 Everybody is encouraged to explore other capabilities of \qeforge.
@@ -1903,9 +1903,21 @@ To save your modified version into the repository:
 \begin{verbatim}
   svn commit
 \end{verbatim}
-If you also want to add a new file, before commiting give command
+Please explain in a few words what your commit is about! Use option
+\texttt{-m"comment"} or the editor of your choice.
+If you want to add a new file, or a new directory, before commiting 
+give command
 \begin{verbatim}
   svn add
+\end{verbatim}
+To remove a file/directory (if empty):
+\begin{verbatim}
+  svn delete
+\end{verbatim}
+You can move a file (a directory, a group of files, ...) into a different
+directory using command
+\begin{verbatim}
+  svn mv
 \end{verbatim}
 
 \subsection{Removing conflicts}
@@ -1918,30 +1930,71 @@ you may encounter two types of conflicts:
 \item Somebody else has changed something that has broken one
       or more functionalities of your modified version.
 \end{enumerate}
-In the former case, look into the conflicting section: in most cases,
-conflicts are trivial (format changes, white spaces) or easily solved 
-(the part of the code you were modifying has been moved to another place,
-for instance). In the latter case, sometimes the problem can also be
-trivially solved (a variable has changed name or has been moved, a
-subroutine is called with different arguments, etc.)
+Here we are concerned with kind 1. of conflicts, those that
+are noticed by SVN and produce, in addition to a message with
+a "C" in the first column before the conflicting file name:
+\begin{itemize}
+\item \texttt{conflicting-file} containing an attempted merge
+of your version with the SVN version, with conflicting sections
+indicated by
+\begin{verbatim}
+   <<<<<<<
+     (your version)
+   =======
+     (SVN version)
+   >>>>>>> 
+\end{verbatim}
+\item \texttt{conflicting-file.mine} containing your version
+\item two \texttt{conflicting-file.rXXXXX} containing the two most
+recent versions (\texttt{XXXXX} is the revision number) in SVN.
+\end{itemize}
+Look into the conflicting section(s): in most cases, conflicts are trivial 
+(format changes, white spaces) or easily solved (the part of the code you 
+were modifying has been moved to another place, or a variable has meanwhilke
+changed name, for instance). Edit \texttt{conflicting-file}, remove all other
+copies of \texttt{conflicting-file.*}, commit.
 
 Sometimes, the conflict is not so easy to solve. In this case, you
 can selectively update your repository at a given date, or at a given
-revision number, using command (ARG=revision number, or \{"date"\}):
+revision number, using command (XXXXX=revision number)
 \begin{verbatim}
-  svn update -r ARG
+  svn update -r XXXXX
 \end{verbatim}
-In this way you can locate which change is the culprit.
+You can also select a date, using \{"date"\} instead of the revision number.
+In this way you can locate which change(s) is (are) the culprit(s).
 The web-SVN interface:
 \begin{verbatim}
    http://qe-forge.org/gf/project/q-e/scmsvn
 \end{verbatim}
 will also be very helpful in locating the problem.
 Of course, communication with other developers will also help.
+The above paragraph applies as well to case 2. os conflicts, in
+presence or in absence of explicit SVN conflicts. If the reason for
+malfunctioning is not evident, you have to figure out when the
+problem started. Once this is done, itis usually straightforward
+to figure out why.
 
 \subsection{Merging branch and trunk}
 \label{SubSec:Merge}
-TO BE WRITTEN
+Let us assume that you have created a branch and that you are working
+in the directory of your branch. The simplest way to keep it aligned 
+with the trunk is the following command:
+\begin{verbatim}
+  svn merge ^/trunk/espresso
+\end{verbatim}
+The caret (\texttt{\^}) syntax is a shorthand for the entire URL of the trunk.
+Then you have to remove conflicts that can arise from incompatible changes 
+made in the trunk. Then you can commit your "aligned" branch (beware:
+the commit message is very large in size if you haven't merged recently;
+if so, it may never reach the \texttt{q-e-commits} mailing list).
+
+In order to merge a branch back into the trunk, the simplest procedure is
+to align first the branch with the trunk and commit it, as above; then,
+in a clean, not locally modified, trunk: 
+\begin{verbatim}
+  svn merge --reintegrate ^/branches/my-espresso-branch
+\end{verbatim}
+then, commit.
 
 \section{Bibliography}
 
