@@ -77,6 +77,8 @@ SUBROUTINE init_run()
   USE wavefunctions_module,     ONLY : cv0          ! Lingzhu Kong
   USE wannier_base,             ONLY : vnbsp        ! Lingzhu Kong
   USE cp_restart,               ONLY : cp_read_wfc_Kong  ! Lingzhu Kong
+  USE input_parameters,         ONLY : ts_vdw
+  USE tsvdw_module,             ONLY : tsvdw_initialize
   !
   IMPLICIT NONE
   !
@@ -140,6 +142,16 @@ SUBROUTINE init_run()
                          dfftp%nr2x, dfftp%npl, dfftp%nnr, dffts%nnr, nat, nax, nsp,   &
                          nspin, nbsp, nbspx, nupdwn, nkb, gstart, nudx, &
                          tpre, nbspx_bgrp )
+  ! 
+  !=======================================================================
+  !     Initialization of the TS-vdW code (RAD)
+  !=======================================================================
+  !
+  IF (ts_vdw.EQV..TRUE.) THEN
+    !
+    CALL tsvdw_initialize()
+    !
+  END IF
   !
   !  initialize wave functions descriptors and allocate wf
   !

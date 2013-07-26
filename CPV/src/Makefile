@@ -84,6 +84,7 @@ spline.o \
 spinsq.o \
 stop_run.o \
 stress.o \
+tsvdw.o \
 vol_clu.o \
 vofrho.o \
 wannier_base.o \

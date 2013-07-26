@@ -41,6 +41,8 @@
       USE io_global,         ONLY : ionode, ionode_id, stdout
       USE control_flags,     ONLY : lwfpbe0, lwfpbe0nscf  ! Lingzhu Kong
       USE energies,          ONLY : exx  ! Lingzhu Kong
+      USE input_parameters,  ONLY : ts_vdw
+      USE tsvdw_module,      ONLY : EtsvdW
       !
       IMPLICIT NONE
       !
@@ -257,7 +259,17 @@
       IF( ( MOD( nfi, iprint_stdout ) == 0 ) .OR. tfirst )  THEN
          !
          WRITE( stdout, * )
-         WRITE( stdout, 1947)
+         !
+         IF (ts_vdw.EQV..TRUE.) THEN
+           !
+           WRITE( stdout, 19470)
+           !
+         ELSE
+           !
+           WRITE( stdout, 1947)
+           !
+         END IF
+         !
          IF ( abivol .AND. pvar ) write(stdout,*) 'P = ', P_ext*au_gpa
          !
       END IF
@@ -276,8 +288,19 @@
          ' # of electrons within the isosurface = ', n_ele
 
       IF( .not. tcg ) THEN
-         WRITE( stdout, 1948 ) nfi, ekinc, temphc, tempp, etot, enthal, &
+         !
+         IF (ts_vdw.EQV..TRUE.) THEN
+           !
+           WRITE(stdout,19480) nfi, ekinc, temphc, tempp, etot, enthal, &
+                      econs, econt, vnhh(3,3), xnhh0(3,3), vnhp(1), xnhp0(1), EtsvdW
+           !
+         ELSE
+           !
+           WRITE(stdout, 1948) nfi, ekinc, temphc, tempp, etot, enthal, &
                       econs, econt, vnhh(3,3), xnhh0(3,3), vnhp(1),  xnhp0(1)
+           !
+         END IF
+         !
       ELSE
          IF ( MOD( nfi, iprint ) == 0 .OR. tfirst ) THEN
             !
@@ -309,7 +332,10 @@
 !1948  FORMAT( I5,1X,ES15.5,1X,ES11.1,1X,ES11.1,4(1X,ES15.5),4(1X,ES14.4) )
 1947  FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',11X,'etot',9X,'enthal', &
            & 10X,'econs',10X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
+19470 FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',11X,'etot',9X,'enthal', &
+           & 10X,'econs',10X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0',5X,'evdw')  ! GGA+TS-vdW
 1948  FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F14.5),4(1X,F7.4) )
+19480 FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F14.5),4(1X,F7.4),2X,F14.5 ) ! GGA+TS-vdW
 2948  FORMAT( I6,1X,ES18.10,1X,ES18.10,1X,ES18.10,4(1X,ES18.10),ES18.10, ES18.10, ES18.10 )
 2949  FORMAT( I6,1X,4(1X,ES18.10), ES18.10 )
       !

@@ -53,6 +53,10 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE fft_base,         ONLY: dfftp, dffts
       USE ldaU_cp,          ONLY: e_hubbard
       USE step_penalty,     ONLY: e_pen
+      USE input_parameters, ONLY: ts_vdw
+      USE tsvdw_module,     ONLY: tsvdw_calculate
+      USE tsvdw_module,     ONLY: EtsvdW,UtsvdW,FtsvdW,HtsvdW
+      USE mp_global,        ONLY: me_image
 
       IMPLICIT NONE
 !
@@ -98,6 +102,17 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 
       CALL start_clock( 'vofrho' )
 
+      !
+      !     TS-vdW calculation (RAD)
+      !
+      IF (ts_vdw.EQV..TRUE.) THEN
+        !
+        CALL start_clock( 'ts_vdw' )
+        CALL tsvdw_calculate(tau0)
+        CALL stop_clock( 'ts_vdw' )
+        !
+      END IF
+      !
       ci = ( 0.0d0, 1.0d0 )
       !
       !     wz = factor for g.neq.0 because of c*(g)=c(-g)
@@ -348,6 +363,39 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          denlc(:,:) = 0.0_dp
       END IF
       !
+      !     Add TS-vdW wavefunction forces to rhor here... (RAD)
+      !
+      IF (ts_vdw.EQV..TRUE.) THEN
+        !
+        IF (dffts%npp(me_image+1).NE.0) THEN
+          !
+          IF (nspin.EQ.1) THEN
+            !
+!$omp parallel do
+            DO ir=1,dffts%npp(me_image+1)*dfftp%nr1*dfftp%nr2
+              !
+              rhor(ir,1)=rhor(ir,1)+UtsvdW(ir)
+              !
+            END DO
+!$omp end parallel do
+            !
+          ELSE IF (nspin.EQ.2) THEN
+            !
+!$omp parallel do
+            DO ir=1,dffts%npp(me_image+1)*dfftp%nr1*dfftp%nr2
+              !
+              rhor(ir,1)=rhor(ir,1)+UtsvdW(ir)
+              rhor(ir,2)=rhor(ir,2)+UtsvdW(ir)
+              !
+            END DO
+!$omp end parallel do
+            !
+          END IF
+          !
+        END IF
+        !
+      END IF
+!
 !     rhor contains the xc potential in r-space
 !
 !     ===================================================================
@@ -425,6 +473,14 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !    add g-space ionic and core correction contributions to fion
          !
          fion = fion + fion1
+         !
+         !    Add TS-vdW ion forces to fion here... (RAD)
+         !
+         IF (ts_vdw.EQV..TRUE.) THEN
+           !
+           fion=fion+FtsvdW
+           !
+         END IF
 
       END IF
 
@@ -537,6 +593,15 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       etot = ekin + eht + epseu + enl + exc + ebac +e_hubbard + eextfor + e_pen
       !
+      !     Add TS-vdW energy to etot here... (RAD)
+      !
+      IF (ts_vdw.EQV..TRUE.) THEN
+        !
+        etot=etot+EtsvdW
+        !
+      END IF
+      !
+      !
       if (abivol) etot = etot + P_ext*volclu
       if (abisur) etot = etot + Surf_t*surfclu
       !
@@ -554,6 +619,14 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          detot = MATMUL( detmp(:,:), TRANSPOSE( ainv(:,:) ) )
          !
          detot = detot + denl + dxc
+         !
+         !     Add TS-vdW cell derivatives to detot here... (RAD)
+         !
+         IF (ts_vdw.EQV..TRUE.) THEN
+           !
+           detot = detot + HtsvdW
+           !
+         END IF
          !
       END IF
       !
@@ -610,6 +683,12 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
             WRITE( stdout,5555) ((dxc(i,j),j=1,3),i=1,3)
             WRITE( stdout,*) "kbar"
             detmp = -1.0d0 * MATMUL( dxc, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
+            WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+            !
+            WRITE( stdout,*) "derivative of e(TS-vdW)"
+            WRITE( stdout,5555) ((HtsvdW(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "kbar"
+            detmp = -1.0d0 * MATMUL( HtsvdW, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
             WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
          ENDIF
       ENDIF

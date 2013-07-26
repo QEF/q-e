@@ -260,6 +260,15 @@ MODULE input_parameters
           ! if memory = 'large' then QE tries to use (when implemented) algorithms using more memory
           !                     to enhance performance.
 
+        LOGICAL :: ts_vdw = .FALSE.
+          ! if .TRUE., include TS-vdW correction (Tkatchenko & Scheffler, Phys. Rev. Lett. 102, 073005 (2009))
+          ! if .FALSE., do not include TS-vdW correction
+        LOGICAL :: ts_vdw_isolated = .FALSE.
+          ! if .TRUE., TS-vdW correction for isolated system
+          ! if .FALSE., TS-vdW correction for periodic system
+        REAL(DP) :: ts_vdw_econv_thr = 1.0E-6_DP
+          ! convergence criterion for TS-vdW energy for periodic system 
+
 #if defined (__MS2)
         LOGICAL :: MS2_enabled = .false.       ! Enable the shared memory exchange in MS2
         CHARACTER(len=256) :: MS2_handler = ' '! Name for the shared memory handler in MS2
@@ -271,7 +280,8 @@ MODULE input_parameters
           forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
           gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
-          vdw_table_name, lorbm, memory
+          vdw_table_name, lorbm, memory, ts_vdw, ts_vdw_isolated,         &
+          ts_vdw_econv_thr
 
 
 #if defined ( __MS2)

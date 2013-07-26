@@ -927,6 +927,8 @@ SUBROUTINE terminate_run()
   USE cg_module,         ONLY : tcg, print_clock_tcg
   USE ldaU_cp,           ONLY : lda_plus_u
   USE mp,                ONLY : mp_report
+  USE input_parameters,  ONLY : ts_vdw
+  USE tsvdw_module,      ONLY : tsvdw_finalize
   !
   IMPLICIT NONE
   !
@@ -1019,6 +1021,19 @@ SUBROUTINE terminate_run()
   CALL print_clock('vl2vg')
   CALL print_clock('getpairv')
 !========================================================================
+  IF (ts_vdw.EQV..TRUE.) THEN
+    WRITE( stdout, '(/5x,"Called by tsvdw:")' )
+    CALL print_clock( 'ts_vdw' )
+    CALL print_clock( 'tsvdw_pair' )
+    CALL print_clock( 'tsvdw_rhotot' )
+    CALL print_clock( 'tsvdw_screen' )
+    CALL print_clock( 'tsvdw_veff' )
+    CALL print_clock( 'tsvdw_dveff' )
+    CALL print_clock( 'tsvdw_energy' )
+    CALL print_clock( 'tsvdw_wfforce' )
+    !
+    CALL tsvdw_finalize()
+  END IF
   !
   IF (tcg) call print_clock_tcg()
   !

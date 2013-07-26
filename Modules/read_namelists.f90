@@ -121,6 +121,9 @@ MODULE read_namelists_module
        !
        saverho = .TRUE.
        memory = 'default'
+       ts_vdw = .FALSE.
+       ts_vdw_isolated = .FALSE.
+       ts_vdw_econv_thr = 1.E-6_DP
        !
        RETURN
        !
@@ -733,6 +736,9 @@ MODULE read_namelists_module
        CALL mp_bcast( lecrpa,        ionode_id, intra_image_comm )
        CALL mp_bcast( vdw_table_name,ionode_id, intra_image_comm )
        CALL mp_bcast( memory,        ionode_id, intra_image_comm )
+       CALL mp_bcast( ts_vdw,           ionode_id, intra_image_comm )
+       CALL mp_bcast( ts_vdw_isolated,  ionode_id, intra_image_comm )
+       CALL mp_bcast( ts_vdw_econv_thr, ionode_id, intra_image_comm )
        !
        RETURN
        !
