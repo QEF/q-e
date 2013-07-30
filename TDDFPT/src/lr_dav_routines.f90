@@ -1334,6 +1334,7 @@ contains
     write(stdout,'(/5x,"Estimating the RAM requirements:")')
     write(stdout,'(10x,"For the basis sets:",5x,F10.2,5x,"M")') ram_vect/1048576
     write(stdout,'(10x,"For the eigenvectors:",5x,F10.2,5x,"M")') ram_eigen/1048576
+    write(stdout,'(10x,"Num_eign =",5x,I5,5x,"Num_basis_max =",5x,I5)') num_eign,num_basis_max
     write(stdout,'(5x,"Do make sure that you have enough RAM.",/)')
 
     return

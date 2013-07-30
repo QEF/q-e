@@ -64,6 +64,9 @@ SUBROUTINE lr_read_wf()
      CALL normal_read()
   ENDIF
 
+
+  WRITE(stdout,'(5x,"Finished reading wfc.")')
+
   evc(:,:)=evc0(:,:,1)
   IF ( dft_is_hybrid() ) THEN
      CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
@@ -78,6 +81,8 @@ SUBROUTINE lr_read_wf()
         ENDDO
      ENDIF
   ENDIF
+
+  WRITE(stdout,'(5x,"Finished exx setting.")')
   !
 
   call stop_clock("read_wf")
