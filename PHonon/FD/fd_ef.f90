@@ -387,7 +387,7 @@ if (lalpha)  then
 
   write(6,*)''
   do n=1,nmod
-  write(6,*), n
+  write(6,*) n
    do ii=1,3
      write(6,43) (alpha(ii,jj,n), jj=1,3)
    end do
