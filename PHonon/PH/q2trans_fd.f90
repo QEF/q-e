@@ -190,7 +190,7 @@ do na=1,ntyp
    READ(3,*) 
 end do
 do na=1,nat
-   READ (3,*), ndummy, ityp(na)
+   READ (3,*) ndummy, ityp(na)
 end do
 
 READ(3,*) dielec
