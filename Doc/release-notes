@@ -1,5 +1,6 @@
 New in svn version
 
+   * CP: Tkatchenko-Scheffler vdW correction
    * GWW replaced by GWL (using Lanczos chains)
    * turboTDDFT: pseudo_Hamiltonians, Davidson-like diagonalization
    * PWCOND with DFT+U
