@@ -95,7 +95,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
                 xk, yk, energy
                 xk, yk, energy
                 ..  ..  ..
-                enegies are written in eV and xk in units 2\pi/a.
+                energies are written in eV and xk in units 2\pi/a.
         }
 
       }           
