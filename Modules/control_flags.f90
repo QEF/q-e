@@ -177,6 +177,7 @@ MODULE control_flags
     lbfgs   =.FALSE., &! if .TRUE. the calc. is a relaxation based on BFGS
     lmd     =.FALSE., &! if .TRUE. the calc. is a dynamics
     llang   =.FALSE., &! if .TRUE. the calc. is Langevin dynamics
+    use_SMC =.FALSE., &! if .TRUE. use the Smart Monte Carlo method
     lwf     =.FALSE., &! if .TRUE. the calc. is with wannier functions
     !=================================================================
     !  Lingzhu Kong 

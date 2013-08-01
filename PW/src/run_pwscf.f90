@@ -34,8 +34,6 @@ SUBROUTINE run_pwscf ( exit_status )
   USE force_mod,        ONLY : lforce, lstres, sigma
   USE check_stop,       ONLY : check_stop_init, check_stop_now
   USE mp_images,        ONLY : intra_image_comm
-  use input_parameters, only : if_SMC
-  USE dynamics_module,        ONLY : smart_MC
 #if defined(__MS2)
   USE ms2,              ONLY : MS2_enabled,                 &
                                ms2_initialization,    &
@@ -134,7 +132,6 @@ SUBROUTINE run_pwscf ( exit_status )
         !
         ! ... ionic step (for molecular dynamics or optimization)
         !
-        if(if_SMC) call smart_MC()  ! for smart monte carlo method
         CALL move_ions()
         !
         ! ... then we save restart information for the new configuration

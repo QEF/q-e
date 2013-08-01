@@ -35,7 +35,7 @@ SUBROUTINE move_ions()
   USE ener,                   ONLY : etot
   USE force_mod,              ONLY : force, sigma
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, ldamped, &
-                                     lconstrain, conv_ions, &
+                                     lconstrain, conv_ions, use_SMC, &
                                      lmd, llang, history, tr2
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
@@ -45,6 +45,7 @@ SUBROUTINE move_ions()
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
   USE dynamics_module,        ONLY : verlet, langevin_md, proj_verlet
+  USE dynamics_module,        ONLY : smart_MC
   USE dfunct,                 only : newd
   !
   IMPLICIT NONE
@@ -60,6 +61,8 @@ SUBROUTINE move_ions()
   REAL(DP)              :: h(3,3), fcell(3,3)=0.d0, epsp1
   INTEGER,  ALLOCATABLE :: fixion(:)
   real(dp) :: tr
+  !
+  IF (use_SMC) CALL smart_MC()  ! for smart monte carlo method
   !
   ! ... only one node does the calculation in the parallel case
   !

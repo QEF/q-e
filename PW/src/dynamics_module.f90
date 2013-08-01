@@ -45,7 +45,7 @@ MODULE dynamics_module
          vel_defined,  &! if true, vel is used rather than tau_old to do the next step
          control_temp, &! if true a thermostat is used to control the temperature
          refold_pos,   &! if true the positions are refolded into the supercell
-         first_iter=.true. ! if it's the first ionic iteration
+         first_iter=.true. ! if this is the first ionic iteration
    CHARACTER(len=10) &
          thermostat    ! the thermostat used to control the temperature
    ! tau_smart and force_smart is used for smart Monte Carlo to store the atomic position of the
@@ -1517,7 +1517,7 @@ CONTAINS
    subroutine smart_MC()
       !-----------------------------------------------------------------------
       ! Routine to apply smart_MC
-      ! Implemeted by Xiaochuan Ge, Jul., 2013
+      ! Implemented by Xiaochuan Ge, Jul., 2013
       !
       ! At this moment works only with langevin dynamics !!
       ! For the formula see R.J.Rossky, JCP, 69, 4628(1978)
@@ -1526,7 +1526,7 @@ CONTAINS
      USE cell_base,      ONLY : alat
      USE ener,           ONLY : etot
      USE force_mod,      ONLY : force
-     USE control_flags,  ONLY : istep, nstep, conv_ions, lconstrain,llang
+     USE control_flags,  ONLY : istep, nstep, conv_ions, lconstrain, llang
      USE constraints_module, ONLY : remove_constr_force, check_constraint
      USE random_numbers, ONLY : randy
      use io_files,      only : prefix     
@@ -1537,7 +1537,7 @@ CONTAINS
      
      logical :: accept
      real(dp) :: kt,sigma2,&
-                 T_ij,T_ji,bolzman_ji,& ! bolzman_ji=exp[-(etot_new-etot_old)/kt]
+                 T_ij,T_ji,boltzman_ji,& ! boltzman_ji=exp[-(etot_new-etot_old)/kt]
                  p_smc                  ! *_smart means *_old, the quantity of the
                                         ! previous step
                                     
@@ -1577,9 +1577,9 @@ CONTAINS
      T_ij=exp(-T_ij/(2*sigma2))
      T_ji=exp(-T_ji/(2*sigma2))
  
-     bolzman_ji=exp(-(etot-etot_smart)/kt)
+     boltzman_ji=exp(-(etot-etot_smart)/kt)
 
-     p_smc=T_ji*bolzman_ji/T_ij
+     p_smc=T_ji*boltzman_ji/T_ij
 
      ! Decide if accept the new config
      if(randy() .le. p_smc) then

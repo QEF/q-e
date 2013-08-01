@@ -170,7 +170,7 @@ SUBROUTINE iosys()
                             lkpoint_dir_      => lkpoint_dir, &
                             tqr_              => tqr, &
                             io_level, ethr, lscf, lbfgs, lmd, &
-                            ldamped, lbands, llang,           &
+                            ldamped, lbands, llang, use_SMC,  &
                             lconstrain, restart, twfcollect, &
                             llondon, do_makov_payne, &
                             lecrpa_           => lecrpa, &
@@ -493,6 +493,10 @@ SUBROUTINE iosys()
                 & trim( calculation ) // ' not implemented', 1 )
      !
   END SELECT
+  !
+  use_SMC = if_SMC
+  IF ( use_SMC .AND. .NOT. llang ) &
+      CALL errore( 'iosys', 'smart_MC only with langevin dynamics' )
   !
   lstres = lmovecell .OR. ( tstress .and. lscf )
   !
