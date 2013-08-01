@@ -1386,6 +1386,7 @@ run_pwscf.o : ../../Modules/control_flags.o
 run_pwscf.o : ../../Modules/io_global.o
 run_pwscf.o : ../../Modules/mp_images.o
 run_pwscf.o : ../../Modules/parameters.o
+run_pwscf.o : dynamics_module.o
 run_pwscf.o : ms2.o
 run_pwscf.o : pwcom.o
 ruotaijk.o : ../../Modules/kind.o

@@ -38,15 +38,20 @@ MODULE dynamics_module
          delta_t       ! parameter used in thermalization
    INTEGER :: &
          nraise,      &! parameter used in thermalization
-         ndof          ! the number of degrees of freedom
+         ndof,        &! the number of degrees of freedom
+         num_accept=0  ! Number of the accepted proposal in Smart_MC
    LOGICAL :: &
          tavel=.FALSE.,&! if true, starting velocities were read from input
          vel_defined,  &! if true, vel is used rather than tau_old to do the next step
          control_temp, &! if true a thermostat is used to control the temperature
-         refold_pos     ! if true the positions are refolded into the supercell
+         refold_pos,   &! if true the positions are refolded into the supercell
+         first_iter=.true. ! if it's the first ionic iteration
    CHARACTER(len=10) &
          thermostat    ! the thermostat used to control the temperature
-   !
+   ! tau_smart and force_smart is used for smart Monte Carlo to store the atomic position of the
+   ! previous step.
+   REAL(DP), ALLOCATABLE :: tau_smart(:,:), force_smart(:,:)
+   real(dp) :: etot_smart
    REAL(DP), ALLOCATABLE :: tau_old(:,:), tau_new(:,:), tau_ref(:,:)
    REAL(DP), ALLOCATABLE :: vel(:,:), acc(:,:), chi(:,:)
    REAL(DP), ALLOCATABLE :: mass(:)
@@ -1507,4 +1512,100 @@ CONTAINS
       !
    END SUBROUTINE thermalize
    !
+
+   !-----------------------------------------------------------------------
+   subroutine smart_MC()
+      !-----------------------------------------------------------------------
+      ! Routine to apply smart_MC
+      ! Implemeted by Xiaochuan Ge, Jul., 2013
+      !
+      ! At this moment works only with langevin dynamics !!
+      ! For the formula see R.J.Rossky, JCP, 69, 4628(1978)
+      
+     USE ions_base,      ONLY : nat, ityp, tau, if_pos,atm
+     USE cell_base,      ONLY : alat
+     USE ener,           ONLY : etot
+     USE force_mod,      ONLY : force
+     USE control_flags,  ONLY : istep, nstep, conv_ions, lconstrain,llang
+     USE constraints_module, ONLY : remove_constr_force, check_constraint
+     USE random_numbers, ONLY : randy
+     use io_files,      only : prefix     
+     USE constants, ONLY : bohr_radius_angs
+
+     implicit none
+     
+     logical :: accept
+     real(dp) :: kt,sigma2,&
+                 T_ij,T_ji,bolzman_ji,& ! bolzman_ji=exp[-(etot_new-etot_old)/kt]
+                 p_smc                  ! *_smart means *_old, the quantity of the
+                                        ! previous step
+                                    
+     integer :: ia, ip
+
+     if(.not. llang) call errore( ' smart_MC ', "At this moment, smart_MC works&
+      &only with langevin." )
+
+      IF ( lconstrain ) THEN
+         ! ... we first remove the component of the force along the
+         ! ... constraint gradient ( this constitutes the initial
+         ! ... guess for the calculation of the lagrange multipliers )
+         CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
+      ENDIF
+
+     if(first_iter) then ! For the first iteration
+       allocate(tau_smart(3,nat))
+       allocate(force_smart(3,nat))
+       tau_smart=tau
+       etot_smart=etot
+       force_smart=force
+       first_iter=.false.
+       return
+     endif
+
+     kt = temperature / ry_to_kelvin
+     sigma2 =  2.D0*dt*kt 
+
+     T_ij=0.0d0
+     T_ji=0.0d0
+     do ia=1,nat
+       do ip = 1, 3
+         T_ij=T_ij+((tau(ip,ia)-tau_smart(ip,ia))*alat-dt*force_smart(ip,ia))**2
+         T_ji=T_ji+((tau_smart(ip,ia)-tau(ip,ia))*alat-dt*force(ip,ia))**2
+       enddo
+     enddo
+     T_ij=exp(-T_ij/(2*sigma2))
+     T_ji=exp(-T_ji/(2*sigma2))
+ 
+     bolzman_ji=exp(-(etot-etot_smart)/kt)
+
+     p_smc=T_ji*bolzman_ji/T_ij
+
+     ! Decide if accept the new config
+     if(randy() .le. p_smc) then
+       print *, "The new config is accepted"
+       num_accept=num_accept+1
+       tau_smart=tau
+       etot_smart=etot
+       force_smart=force
+     else
+       print *, "The new config is not accepted"
+       tau=tau_smart
+       etot=etot_smart
+       force=force_smart
+     endif
+
+     print *, "The current acceptance is :",dble(num_accept)/istep
+
+     ! Print the trajectory
+     OPEN(17,file="trajectory-"//trim(prefix)//".xyz",status="unknown",position='APPEND')
+     write(17,'(I5)') nat
+     write(17,'("# Step: ",I5,5x,"Total energy: ",F17.8,5x,"Ry")') istep-1, etot
+     do ia = 1, nat
+       WRITE( 17, '(A3,3X,3F14.9)') atm(ityp(ia)),tau(:,ia)*alat*bohr_radius_angs
+     enddo
+     close(17)
+
+     return
+   end subroutine smart_MC
+   
 END MODULE dynamics_module

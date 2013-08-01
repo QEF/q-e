@@ -1052,6 +1052,7 @@ MODULE read_namelists_module
        !
        CALL mp_bcast( phase_space,       ionode_id, intra_image_comm )
        CALL mp_bcast( ion_dynamics,      ionode_id, intra_image_comm )
+       CALL mp_bcast( if_SMC,            ionode_id, intra_image_comm )
        CALL mp_bcast( ion_radius,        ionode_id, intra_image_comm )
        CALL mp_bcast( ion_damping,       ionode_id, intra_image_comm )
        CALL mp_bcast( ion_positions,     ionode_id, intra_image_comm )
