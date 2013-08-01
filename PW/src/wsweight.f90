@@ -37,6 +37,17 @@ end subroutine wsinit
 function wsweight(r,rws,nrws)
 !-----------------------------------------------------------------------
 !
+! wsweights assigns this weight:
+! - if a point is inside the Wigner-Seitz cell:    weight=1
+! - if a point is outside the WS cell:             weight=0
+! - if a point q is on the border of the WS cell, it finds the number N 
+!   of translationally equivalent point q+G  (where G is a lattice vector)
+!   that are also on the border of the cell. Then: weight = 1/N
+
+! I.e. if a point is on the surface of the WS cell of a cubic lattice 
+! it will have weight 1/2; on the vertex of the WS it would be 1/8; 
+! the K point of an hexagonal lattice has weight 1/3 and so on.
+
   USE kinds, only : dp
   implicit none
   integer ir, nreq, nrws
