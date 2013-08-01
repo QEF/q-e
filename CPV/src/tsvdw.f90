@@ -982,6 +982,7 @@ PRIVATE :: GetVdWParam
   ! Initialization of rhotot array (local copy of the real-space charge density)...
   !
   ALLOCATE(rhotot(nr1*nr2*nr3)); rhotot=0.0_DP
+#ifdef __MPI
   !
   ! Initialization of rhor_tmp temporary buffers...
   !
@@ -1036,6 +1037,10 @@ PRIVATE :: GetVdWParam
   IF (ALLOCATED(rhor_tmp1))     DEALLOCATE(rhor_tmp1)
   IF (ALLOCATED(rhor_tmp2))     DEALLOCATE(rhor_tmp2)
   !
+#else
+  rhotot(:) = rhor(:,1)
+  IF (nspin == 2) rhotot(:) = rhotot(:) + rhor(:,2)
+#endif
   CALL stop_clock('tsvdw_rhotot')
   !
   RETURN
