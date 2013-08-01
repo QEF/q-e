@@ -30,6 +30,7 @@ engine_to_path_pos.o : ../../Modules/cell_base.o
 engine_to_path_pos.o : ../../Modules/ions_base.o
 engine_to_path_pos.o : ../../Modules/kind.o
 engine_to_path_pos.o : path_input_parameters_module.o
+engine_to_path_pos.o : path_io_units_module.o
 input.o : ../../Modules/constants.o
 input.o : ../../Modules/io_files.o
 input.o : ../../Modules/io_global.o

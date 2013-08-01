@@ -135,6 +135,7 @@ phcg.o : ../../Modules/ions_base.o
 phcg.o : ../../Modules/kind.o
 phcg.o : ../../Modules/mp_global.o
 phcg.o : ../../Modules/noncol.o
+phcg.o : ../../PW/src/atomic_wfc_mod.o
 phcg.o : ../../PW/src/pwcom.o
 phcg.o : ../../PW/src/scf_mod.o
 phcg.o : ../../PW/src/symm_base.o
