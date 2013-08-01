@@ -1760,7 +1760,7 @@ end subroutine self_basis_lanczos_real
 
       END DO
 
-#elif ! defined __PARA
+#else
 
       do J=1,nn
          DO I = 1, ngwl
@@ -1768,10 +1768,6 @@ end subroutine self_basis_lanczos_real
             PWT( ig_l2g(i)+lda*(J-1) ) = pw(i+ngwl*(J-1))
          END DO
       END do
-   enddo
-#else
-
-      CALL errore(' MERGEWF ',' no communication protocol ',0)
 
 #endif
 

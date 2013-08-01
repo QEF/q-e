@@ -340,6 +340,7 @@
 
       gid=comm
 
+#if defined __MPI
       allocate(npw1_loc(nproc),npw2_loc(nproc))
 !all procs gather correspondance arrays
       CALL MPI_ALLREDUCE( ngwl1, ngwl1_max, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
@@ -384,12 +385,11 @@
          enddo
       enddo
 
-      
-
       deallocate(npw1_loc,npw2_loc)
       deallocate(ig_l2g1_tot,ig_l2g2_tot)
       deallocate(pw1_tot,pw2_tot)
       deallocate(pw1_tmp,pw2_tmp)
       deallocate(pw_global)
+#endif
       return
     END SUBROUTINE reorderwfp_col

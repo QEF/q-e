@@ -75,19 +75,17 @@
 !  read in input structure
 
    call read_input_gww(options)
-#ifdef __PARA
+#ifdef __MPI
    if(options%l_verbose) then
       write(name_proc,'(5i1)') &
            & (mpime+1)/10000,mod(mpime+1,10000)/1000,mod(mpime+1,1000)/100,mod(mpime+1,100)/10,mod(mpime+1,10)
       OPEN( UNIT = stdout, FILE = './out_'//name_proc, STATUS = 'UNKNOWN' )
-#else
-      OPEN( UNIT = stdout, FILE = './out_00', STATUS = 'UNKNOWN' )
-#endif
-
-
    else
       if(.not.ionode) OPEN ( unit = stdout, file='/dev/null', status='unknown' )
    endif
+#else
+      OPEN( UNIT = stdout, FILE = './out_00', STATUS = 'UNKNOWN' )
+#endif
 
    call flush_unit(stdout)
    if(options%grid_freq/=5.and.options%grid_freq/=6) then

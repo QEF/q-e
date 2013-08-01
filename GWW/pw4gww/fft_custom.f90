@@ -415,7 +415,6 @@ CONTAINS
 
   fc%nrxxt  = fc%dfftt%nnr
 
-
   !
   ! nxx is just a copy
   !
@@ -438,8 +437,8 @@ CONTAINS
 
   ! nxx is just a copy
   !
-  nxx   = nrxxt
-  nxxs  = nrxxt
+  nxx   = fc%nrxxt
+  nxxs  = fc%nrxxt
 
   CALL fft_dlay_allocate( fc%dfftt, me_pool,root_pool,nproc_pool, intra_pool_comm,0,max(fc%nrx1t, fc%nrx3t),  fc%nrx2t  )
  
@@ -453,7 +452,7 @@ CONTAINS
   n2 = fc%nr2t + 1
   n3 = fc%nr3t + 1
 
-  ngmt = 0
+  fc%ngmt = 0
  
 
   ub =  (/  n1,  n2,  n3 /)

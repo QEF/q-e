@@ -90,7 +90,9 @@ MODULE exchange_custom
       INTEGER :: iorig, idest
       INTEGER,ALLOCATABLE :: z2proc_s(:),z2proc(:)
       INTEGER :: req, ierr
+#ifdef __MPI
       INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
       COMPLEX(kind=DP), ALLOCATABLE :: prods_g(:,:)
       COMPLEX(kind=DP), ALLOCATABLE :: psi_t(:),evc_g(:),vexc_g(:)
       REAL(kind=DP), ALLOCATABLE :: psi_r(:),psi_r_red(:,:,:),plane(:)
@@ -237,8 +239,9 @@ MODULE exchange_custom
       enddo
 
       nr3small_max=nr3small
+#ifdef __MPI
       CALL MPI_ALLREDUCE( nr3small, nr3small_max,1,MPI_INTEGER, MPI_MAX,intra_pool_comm, req,IERR )           
-      
+#endif
       
       allocate(b_plane(exx_cus%fft_g2r%nrx1t*exx_cus%fft_g2r%nrx2t,nr3small_max))
       allocate(b_iplane(nr3small_max),b_z(nr3small_max))
@@ -311,10 +314,10 @@ MODULE exchange_custom
                     enddo
                  enddo
 !send nplane
+#ifdef __MPI
                  idest=mod(me_pool+ip_delta,nproc)
                  CALL MPI_ISEND( nplane,1, MPI_INTEGER, idest, 0, intra_pool_comm, req,IERR ) 
                  CALL MPI_WAIT(req,istatus,ierr)
-                
 
                  if(nplane>0) then
                     CALL MPI_ISEND( b_plane,exx_cus%fft_g2r%nrx1t*exx_cus%fft_g2r%nrx2t*nplane, MPI_DOUBLE_PRECISION, &   
@@ -324,15 +327,13 @@ MODULE exchange_custom
                     CALL MPI_WAIT(req,istatus,ierr)
                     CALL MPI_ISEND( b_iplane,nplane, MPI_INTEGER,idest, 3, intra_pool_comm, req,IERR )
                     CALL MPI_WAIT(req,istatus,ierr)
-                    
-                    
-                 endif
+                endif
+#endif
           
-
-
               else
 !if I am receiver 
   !see if and what I have to receive
+#ifdef __MPI
                  iorig=me_pool-ip_delta
                  if(iorig<0) iorig=iorig+nproc
                  CALL MPI_RECV( nplane,1, MPI_INTEGER, iorig, 0, intra_pool_comm, istatus,IERR )
@@ -351,6 +352,7 @@ MODULE exchange_custom
                        enddo
                     enddo
                  endif
+#endif
               endif
            enddo
         enddo
@@ -653,6 +655,7 @@ MODULE exchange_custom
                   enddo
                enddo
 !send nplane
+#ifdef __MPI
                idest=mod(me_pool+ip_delta,nproc)
                CALL MPI_ISEND( nplane,1, MPI_INTEGER, idest, 0, intra_pool_comm, req,IERR ) 
                CALL MPI_WAIT(req,istatus,ierr)
@@ -665,12 +668,12 @@ MODULE exchange_custom
                   CALL MPI_WAIT(req,istatus,ierr)
                   
                endif
-          
-
+#endif
 
             else
 !if I am receiver 
   !see if and what I have to receive
+#ifdef __MPI
                iorig=me_pool-ip_delta
                if(iorig<0) iorig=iorig+nproc
                CALL MPI_RECV( nplane,1, MPI_INTEGER, iorig, 0, intra_pool_comm, istatus,IERR )
@@ -687,6 +690,7 @@ MODULE exchange_custom
                      enddo
                   enddo
                endif
+#endif
             endif
          enddo
       enddo
@@ -815,7 +819,9 @@ MODULE exchange_custom
       INTEGER :: iorig, idest
       INTEGER,ALLOCATABLE :: z2proc_s(:),z2proc(:)
       INTEGER :: req, ierr
+#ifdef __MPI
       INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
       COMPLEX(kind=DP), ALLOCATABLE :: prods_g(:)
       COMPLEX(kind=DP), ALLOCATABLE :: psi_t(:),evc_g(:)
       REAL(kind=DP), ALLOCATABLE :: psi_r(:)
@@ -978,9 +984,11 @@ MODULE exchange_custom
                             & prods((iz_s-rz_start_s)*(fft_small%nrx1t*fft_small%nrx2t)+iqq_s)+planes(iqq_s)
                      enddo
                   else
+#ifdef __MPI
                      CALL MPI_ISEND( planes, fft_small%nrx1t*fft_small%nrx2t, MPI_DOUBLE_PRECISION, &
                           &idest, iz, intra_pool_comm, req,IERR )
                      CALL MPI_WAIT(req,istatus,ierr)
+#endif
                   endif
                   
                else
@@ -988,9 +996,10 @@ MODULE exchange_custom
             !if Z o  small cell is mine receive it
                   if(z2proc_s(iz_s)==me_pool) then
                      iorig=z2proc(iz)
-
+#ifdef __MPI
                      CALL MPI_RECV( planes, fft_small%nrx1t*fft_small%nrx2t, MPI_DOUBLE_PRECISION, &
                           &iorig, iz, intra_pool_comm, istatus, IERR )
+#endif
                      do iqq_s=1,fft_small%nrx1t*fft_small%nrx2t
                         prods((iz_s-rz_start_s)*(fft_small%nrx1t*fft_small%nrx2t)+iqq_s)=&
                              &prods((iz_s-rz_start_s)*(fft_small%nrx1t*fft_small%nrx2t)+iqq_s)+planes(iqq_s)
@@ -1047,18 +1056,21 @@ MODULE exchange_custom
                         do iqq_s=1,fft_small%nrx1t*fft_small%nrx2t
                            planes(iqq_s)=prods((iz_s-rz_start_s)*(fft_small%nrx1t*fft_small%nrx2t)+iqq_s)
                         enddo
+#ifdef __MPI
                         CALL MPI_ISEND( planes, fft_small%nrx1t*fft_small%nrx2t, MPI_DOUBLE_PRECISION, &
                              &idest, iz, intra_pool_comm, req,IERR )
                         CALL MPI_WAIT(req,istatus,ierr)
+#endif
                      endif
 
                   else
                      !if Z on  large cell is mine receive it 
                      if(z2proc(iz)==me_pool) then
                         iorig=z2proc_s(iz_s)
-
+#ifdef __MPI
                         CALL MPI_RECV( planes, fft_small%nrx1t*fft_small%nrx2t, MPI_DOUBLE_PRECISION, &
                              &iorig, iz, intra_pool_comm, istatus, IERR )
+#endif
                         do jj=1,2
                            do kk=1,2
                               do iy_s=1,fft_small%nr2t
@@ -1144,8 +1156,9 @@ MODULE exchange_custom
       INTEGER iplane
       REAL(kind=DP), ALLOCATABLE :: plane(:)
       INTEGER :: req, ierr
+#ifdef __MPI
       INTEGER :: istatus(MPI_STATUS_SIZE)
-      
+#endif
 
       CALL start_clock('setup_exx')
 !setup parameters
@@ -1360,9 +1373,11 @@ MODULE exchange_custom
                          do iqq=1,exx_cus%fft_g2r%nrx1t*exx_cus%fft_g2r%nrx2t
                             plane(iqq)=exx_cus%wfc((iz-rz_start)*(exx_cus%fft_g2r%nrx1t*exx_cus%fft_g2r%nrx2t)+iqq,jv,is)
                          enddo
+#ifdef __MPI
                          CALL MPI_ISEND( plane,exx_cus%fft_g2r%nrx1t*exx_cus%fft_g2r%nrx2t, MPI_DOUBLE_PRECISION, &
                               &idest, iz, intra_pool_comm, req,IERR )
                          CALL MPI_WAIT(req,istatus,ierr)
+#endif
                       enddo
                    enddo
                endif
@@ -1375,9 +1390,10 @@ MODULE exchange_custom
                   iorig=z2proc(iz)
                   do is=1,exx_cus%nspin
                      do jv=1,exx_cus%nbndv(is)
-
+#ifdef __MPI
                         CALL MPI_RECV( plane, exx_cus%fft_g2r%nrx1t*exx_cus%fft_g2r%nrx2t, MPI_DOUBLE_PRECISION, &
                              &iorig, iz, intra_pool_comm, istatus, IERR )
+#endif
                         do iqq=1,exx_cus%fft_g2r%nrx1t*exx_cus%fft_g2r%nrx2t
                            exx_cus%wfc_red(iqq,iz_s-rz_start_s+1,iplane,jv,is)=plane(iqq)
                         enddo
