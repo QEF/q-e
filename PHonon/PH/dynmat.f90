@@ -70,6 +70,8 @@ end Module dynamical
 !                     (default: lplasma=.false.)
 !  filout  character output file containing frequencies and modes
 !                    (default: filout='dynmat.out')
+!  fileig  character output file containing frequencies and eigenvectors
+!                    (default: fileig=' ')
 !  filmol  character as above, in a format suitable for 'molden'
 !                    (default: filmol='dynmat.mold')
 !  filxsf  character as above, in axsf format suitable for xcrysden
@@ -87,7 +89,7 @@ end Module dynamical
       !
       implicit none
       integer, parameter :: ntypx = 10
-      character(len=256):: fildyn, filout, filmol, filxsf
+      character(len=256):: fildyn, filout, filmol, filxsf, fileig
       character(len=3) :: atm(ntypx)
       character(len=10) :: asr
       logical :: lread, gamma
@@ -102,7 +104,7 @@ end Module dynamical
       integer :: ibrav, nqs
       integer, allocatable :: itau(:)
       namelist /input/ amass, asr, axis, fildyn, filout, filmol, filxsf, &
-                       lperm, lplasma, q
+                       fileig, lperm, lplasma, q
       !
       ! code is parallel-compatible but not parallel
       !
@@ -117,6 +119,7 @@ end Module dynamical
       filout='dynmat.out'
       filmol='dynmat.mold'
       filxsf='dynmat.axsf'
+      fileig=' '
       amass(:)=0.0d0
       q(:)=0.0d0
       lperm=.false.
@@ -132,6 +135,7 @@ end Module dynamical
       CALL mp_bcast(fildyn,ionode_id)
       CALL mp_bcast(filout,ionode_id)
       CALL mp_bcast(filmol,ionode_id)
+      CALL mp_bcast(fileig,ionode_id)
       CALL mp_bcast(filxsf,ionode_id)
       CALL mp_bcast(q,ionode_id)
       !
@@ -206,6 +210,11 @@ end Module dynamical
          END IF
          CALL writemodes(nat,q_,w2,z,iout)
          IF(iout .ne. 6) close(unit=iout)
+         IF (fileig .ne. ' ') THEN
+           OPEN (unit=15,file=TRIM(fileig),status='unknown',form='formatted')
+           CALL write_eigenvectors (nat,ntyp,amass,ityp,q_,w2,z,15)
+           CLOSE (unit=15)
+         ENDIF
          CALL writemolden (filmol, gamma, nat, atm, a0, tau, ityp, w2, z)
          CALL writexsf (filxsf, gamma, nat, atm, a0, at, tau, ityp, z)
          IF (gamma) THEN 
