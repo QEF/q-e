@@ -1530,6 +1530,7 @@ CONTAINS
      USE constraints_module, ONLY : remove_constr_force, check_constraint
      USE random_numbers, ONLY : randy
      use io_files,      only : prefix     
+     use io_global,      only : ionode
      USE constants, ONLY : bohr_radius_angs
 
      implicit none
@@ -1582,28 +1583,34 @@ CONTAINS
 
      ! Decide if accept the new config
      if(randy() .le. p_smc) then
-       print *, "The new config is accepted"
+       write(stdout, '("The new config is accepted")')
        num_accept=num_accept+1
        tau_smart=tau
        etot_smart=etot
        force_smart=force
      else
-       print *, "The new config is not accepted"
+       write(stdout, '("The new config is not accepted")')
        tau=tau_smart
        etot=etot_smart
        force=force_smart
      endif
 
-     print *, "The current acceptance is :",dble(num_accept)/istep
+     write (stdout, '(5x,"The current acceptance is :",3x,F10.6)') dble(num_accept)/istep
 
      ! Print the trajectory
-     OPEN(17,file="trajectory-"//trim(prefix)//".xyz",status="unknown",position='APPEND')
-     write(17,'(I5)') nat
-     write(17,'("# Step: ",I5,5x,"Total energy: ",F17.8,5x,"Ry")') istep-1, etot
+#ifdef __MPI  
+     if(ionode) then
+#endif
+     OPEN(117,file="trajectory-"//trim(prefix)//".xyz",status="unknown",position='APPEND')
+     write(117,'(I5)') nat
+     write(117,'("# Step: ",I5,5x,"Total energy: ",F17.8,5x,"Ry")') istep-1, etot
      do ia = 1, nat
-       WRITE( 17, '(A3,3X,3F14.9)') atm(ityp(ia)),tau(:,ia)*alat*bohr_radius_angs
+       WRITE( 117, '(A3,3X,3F14.9)') atm(ityp(ia)),tau(:,ia)*alat*bohr_radius_angs
      enddo
-     close(17)
+     close(117)
+#ifdef __MPI  
+     endif
+#endif
 
      return
    end subroutine smart_MC
