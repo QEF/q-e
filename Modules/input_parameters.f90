@@ -1035,8 +1035,6 @@ MODULE input_parameters
 
         CHARACTER(len=80) :: ion_dynamics = 'none'
           ! set how ions should be moved
-        LOGICAL :: if_SMC = .false.
-          ! whether to use smart monte carlo in the dynamics
         CHARACTER(len=80) :: ion_dynamics_allowed(8)
         DATA ion_dynamics_allowed / 'none', 'sd', 'cg', 'langevin', &
                                     'damp', 'verlet', 'bfgs', 'beeman' /
@@ -1201,8 +1199,7 @@ MODULE input_parameters
                           wfc_extrapolation, nraise, remove_rigid_rot,         &
                           trust_radius_max, trust_radius_min,                  &
                           trust_radius_ini, w_1, w_2, bfgs_ndim, sic_rloc,     &
-                          fe_step, fe_nstep, sw_nstep, eq_nstep, g_amplitude,  &
-                          if_SMC
+                          fe_step, fe_nstep, sw_nstep, eq_nstep, g_amplitude
 
 
 !=----------------------------------------------------------------------------=!

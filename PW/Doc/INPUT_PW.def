@@ -1601,6 +1601,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		                           Newton's equation. For constrained 
                                            dynamics, see CONSTRAINTS card
                     'langevin'             ion dynamics is over-damped Langevin
+                    'langevin-smc'         over-damped Langevin with Smart Monte Carlo:
+                                           see R.J.Rossky, JCP, 69, 4628(1978)
+
 
 		CASE ( calculation = 'vc-relax' )
                     'bfgs' :   (default)   use BFGS quasi-newton algorithm;

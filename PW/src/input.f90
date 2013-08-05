@@ -297,7 +297,7 @@ SUBROUTINE iosys()
                                refold_pos, remove_rigid_rot, upscale,          &
                                pot_extrapolation,  wfc_extrapolation,          &
                                w_1, w_2, trust_radius_max, trust_radius_min,   &
-                               trust_radius_ini, bfgs_ndim,if_SMC
+                               trust_radius_ini, bfgs_ndim
   !
   ! ... CELL namelist
   !
@@ -393,10 +393,12 @@ SUBROUTINE iosys()
         !
         CONTINUE
         !
-     CASE( 'langevin' )
+     CASE( 'langevin', 'langevin-smc', 'langevin+smc' )
         !
         llang       = .true.
         temperature = tempw
+        use_SMC     = ( trim( ion_dynamics ) == 'langevin-smc' .OR. & 
+                        trim( ion_dynamics ) == 'langevin+smc' )
         !
      CASE DEFAULT
         !
@@ -493,10 +495,6 @@ SUBROUTINE iosys()
                 & trim( calculation ) // ' not implemented', 1 )
      !
   END SELECT
-  !
-  use_SMC = if_SMC
-  IF ( use_SMC .AND. .NOT. llang ) &
-      CALL errore( 'iosys', 'smart_MC only with langevin dynamics' )
   !
   lstres = lmovecell .OR. ( tstress .and. lscf )
   !
