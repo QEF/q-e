@@ -100,7 +100,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
      ALLOCATE( aux( dfft%nogrp * dfft%tg_nnr ) )
      ALLOCATE( YF ( dfft%nogrp * dfft%tg_nnr ) )
   ELSE
-     ALLOCATE( aux( dfft%tg_nnr ) )
+     ALLOCATE( aux( dfft%nnr ) )
   ENDIF
   !
   me_p = dfft%mype + 1
