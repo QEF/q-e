@@ -240,6 +240,7 @@ CONTAINS
 
     INTEGER :: npp( desc%nproc ), n3( desc%nproc ), nsp( desc%nproc )
     INTEGER :: np, nq, i, is, iss, i1, i2, m1, m2, n1, n2, ip
+    INTEGER :: ncpx, nppx
 
     !  Task-grouping C. Bekas
     !
@@ -315,21 +316,23 @@ CONTAINS
 
     !  Set fft local workspace dimension
 
+    nppx = 0
+    ncpx = 0
+    DO i = 1, desc%nproc
+       nppx = MAX( nppx, npp( i ) )
+       ncpx = MAX( ncpx, ncp( i ) )
+    END DO
+
     IF ( desc%nproc == 1 ) THEN
       desc%nnr  = nr1x * nr2x * nr3x
       desc%tg_nnr = desc%nnr
     ELSE
-      desc%nnr  = max( nr3x * ncp( 1 ), nr1x * nr2x * npp( 1 ) )
-      DO i = 2, desc%nproc
-         desc%nnr  = max( desc%nnr, nr3x * ncp( i ) )
-         desc%nnr  = max( desc%nnr, nr1x * nr2x * npp( i ) )
-      END DO
+      desc%nnr  = max( nr3x * ncpx, nr1x * nr2x * nppx )
+      desc%nnr  = max( desc%nnr, ncpx * nppx * desc%nproc )  ! this is required to use ALLTOALL instead of ALLTOALLV
       desc%nnr  = max( 1, desc%nnr ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
       desc%tg_nnr = desc%nnr
-      DO i = 1, desc%nproc
-         desc%tg_nnr = max( desc%tg_nnr, nr3x * ncp( i ) )
-         desc%tg_nnr = max( desc%tg_nnr, nr1x * nr2x * npp( i ) )
-      ENDDO
+      desc%tg_nnr = max( desc%tg_nnr, nr3x * ncpx )
+      desc%tg_nnr = max( desc%tg_nnr, nr1x * nr2x * nppx )
       desc%tg_nnr = max( 1, desc%tg_nnr ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
     ENDIF
 
