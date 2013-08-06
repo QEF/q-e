@@ -310,7 +310,7 @@ SUBROUTINE set_sym_bl ( )
   ft(:,:) = 0.0_dp
   IF ( .not. is_group ( nrot ) ) THEN
   !    This happens for instance for an hexagonal lattice with one axis 
-  !    oriented at 15 degrees from the x axis, the opther along (-1,1,0)
+  !    oriented at 15 degrees from the x axis, the other along (-1,1,0)
      CALL errore ('set_sym_bl', &
          'Symmetry group not a group! Use standard orientations for axis',1)
   ENDIF
