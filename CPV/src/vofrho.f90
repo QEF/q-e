@@ -53,7 +53,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE fft_base,         ONLY: dfftp, dffts
       USE ldaU_cp,          ONLY: e_hubbard
       USE step_penalty,     ONLY: e_pen
-      USE input_parameters, ONLY: ts_vdw
+      USE control_flags,    ONLY: ts_vdw
       USE tsvdw_module,     ONLY: tsvdw_calculate
       USE tsvdw_module,     ONLY: EtsvdW,UtsvdW,FtsvdW,HtsvdW
       USE mp_global,        ONLY: me_image
@@ -105,7 +105,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       !     TS-vdW calculation (RAD)
       !
-      IF (ts_vdw.EQV..TRUE.) THEN
+      IF (ts_vdw) THEN
         !
         CALL start_clock( 'ts_vdw' )
         CALL tsvdw_calculate(tau0)
@@ -365,7 +365,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       !     Add TS-vdW wavefunction forces to rhor here... (RAD)
       !
-      IF (ts_vdw.EQV..TRUE.) THEN
+      IF (ts_vdw) THEN
         !
         IF (dffts%npp(me_image+1).NE.0) THEN
           !
@@ -476,12 +476,8 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !
          !    Add TS-vdW ion forces to fion here... (RAD)
          !
-         IF (ts_vdw.EQV..TRUE.) THEN
-           !
-           fion=fion+FtsvdW
-           !
-         END IF
-
+         IF (ts_vdw) fion=fion+FtsvdW
+         !
       END IF
 
       DEALLOCATE( fion1 )
@@ -595,12 +591,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       !     Add TS-vdW energy to etot here... (RAD)
       !
-      IF (ts_vdw.EQV..TRUE.) THEN
-        !
-        etot=etot+EtsvdW
-        !
-      END IF
-      !
+      IF (ts_vdw)  etot=etot+EtsvdW
       !
       if (abivol) etot = etot + P_ext*volclu
       if (abisur) etot = etot + Surf_t*surfclu
@@ -622,11 +613,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !
          !     Add TS-vdW cell derivatives to detot here... (RAD)
          !
-         IF (ts_vdw.EQV..TRUE.) THEN
-           !
-           detot = detot + HtsvdW
-           !
-         END IF
+         IF (ts_vdw) detot = detot + HtsvdW
          !
       END IF
       !

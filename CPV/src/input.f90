@@ -188,7 +188,7 @@ MODULE input
      USE control_flags, ONLY : textfor
      USE control_flags, ONLY : do_makov_payne, twfcollect
      USE control_flags, ONLY : lwf, lwfnscf, lwfpbe0, lwfpbe0nscf ! Lingzhu Kong
-     USE control_flags, ONLY : llondon, smallmem
+     USE control_flags, ONLY : smallmem
      !
      ! ...  Other modules
      !
@@ -244,8 +244,6 @@ MODULE input
      forc_conv_thr_ = forc_conv_thr
      ekin_maxiter_  = electron_maxstep
      iesr           = iesr_inp
-     llondon        = london
-     !
      remove_rigid_rot_ = remove_rigid_rot
      !
      ! ... define memory- and disk-related internal switches
@@ -269,7 +267,6 @@ MODULE input
          do_makov_payne = .FALSE.
          !
      END SELECT
-      !
      !
      tefield_  = tefield
      epol_     = epol
@@ -752,10 +749,6 @@ MODULE input
    SUBROUTINE modules_setup()
      !-------------------------------------------------------------------------
      !
-     USE control_flags,    ONLY : lconstrain, tpre, thdyn, tksw
-
-     USE constants,        ONLY : amu_au, pi
-     !
      USE input_parameters, ONLY: ibrav , celldm , trd_ht, dt,                 &
            rd_ht, a, b, c, cosab, cosac, cosbc, ntyp , nat ,                  &
            na_inp , sp_pos , rd_pos , rd_vel, atom_mass, atom_label, if_pos,  &
@@ -795,8 +788,11 @@ MODULE input
                                   axis
      USE input_parameters, ONLY : lda_plus_u, Hubbard_U
      USE input_parameters, ONLY : step_pen, A_pen, alpha_pen, sigma_pen
-     USE input_parameters, ONLY : london, london_s6, london_rcut
+     USE input_parameters, ONLY : vdw_corr, london, london_s6, london_rcut, &
+                                  ts_vdw_isolated, ts_vdw_econv_thr
      !
+     USE constants,        ONLY : amu_au, pi
+     USE control_flags,    ONLY : lconstrain, tpre, thdyn, tksw
      USE ions_base,        ONLY : zv
      USE cell_base,        ONLY : cell_base_init, cell_dyn_init, at, cell_alat
      USE cell_nose,        ONLY : cell_nose_init
@@ -821,7 +817,9 @@ MODULE input
      USE funct,            ONLY : dft_is_nonlocc
      USE kernel_table,     ONLY : vdw_table_name_ => vdw_table_name, &
                                   initialize_kernel_table
+     USE control_flags,    ONLY : llondon, ts_vdw
      USE london_module,    ONLY : init_london, scal6, lon_rcut
+     USE tsvdw_module,     ONLY : vdw_isolated, vdw_econv_thr
      !
      IMPLICIT NONE
      !
@@ -953,10 +951,40 @@ MODULE input
      CALL ldaU_init0 ( ntyp, lda_plus_u, Hubbard_U )
      CALL ldaUpen_init( SIZE(sigma_pen), step_pen, sigma_pen, alpha_pen, A_pen )
      !
-     IF ( london) THEN
+     !  ... initialize variables for vdW (dispersions) corrections
+     !
+     SELECT CASE( TRIM( vdw_corr ) )
+         !
+       CASE( 'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d' )
+         !
+         llondon= .TRUE.
+         ts_vdw = .FALSE.
+         !
+       CASE( 'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler' )
+         !
+         llondon= .FALSE.
+         ts_vdw = .TRUE.
+         !
+       CASE DEFAULT
+         !
+         llondon= .FALSE.
+         ts_vdw = .FALSE.
+         !
+     END SELECT
+     ! 
+     IF ( london ) THEN
+        CALL infomsg("iosys","london is obsolete, use ''vdw_corr='grimme-d2''' instead")
+        IF (ts_vdw) CALL errore(,"iosys","must choose a unique vdW correction!", 1)
+        llondon = .TRUE.
+     END IF
+     !
+     IF ( llondon) THEN
         lon_rcut    = london_rcut
         scal6       = london_s6
         CALL init_london ( )
+     ELSE IF ( ts_vdw ) THEN
+        vdw_isolated = ts_vdw_isolated
+        vdw_econv_thr= ts_vdw_econv_thr
      END IF
      !
      ! ... initialize kernel table for nonlocal functionals

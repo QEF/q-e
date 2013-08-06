@@ -185,7 +185,6 @@ cpr.o : ../../Modules/constraints_module.o
 cpr.o : ../../Modules/control_flags.o
 cpr.o : ../../Modules/electrons_base.o
 cpr.o : ../../Modules/fft_base.o
-cpr.o : ../../Modules/input_parameters.o
 cpr.o : ../../Modules/io_files.o
 cpr.o : ../../Modules/io_global.o
 cpr.o : ../../Modules/ions_base.o
@@ -526,6 +525,7 @@ input.o : ldaUpen.o
 input.o : mainvar.o
 input.o : pres_ai_mod.o
 input.o : printout_base.o
+input.o : tsvdw.o
 input.o : wannier_base.o
 ions_nose.o : ../../Modules/constants.o
 ions_nose.o : ../../Modules/control_flags.o
@@ -731,7 +731,6 @@ pres_ai_mod.o : ../../Modules/parameters.o
 print_out.o : ../../Modules/cell_base.o
 print_out.o : ../../Modules/constants.o
 print_out.o : ../../Modules/control_flags.o
-print_out.o : ../../Modules/input_parameters.o
 print_out.o : ../../Modules/io_files.o
 print_out.o : ../../Modules/io_global.o
 print_out.o : ../../Modules/ions_base.o
@@ -923,7 +922,6 @@ tsvdw.o : ../../Modules/control_flags.o
 tsvdw.o : ../../Modules/electrons_base.o
 tsvdw.o : ../../Modules/fft_base.o
 tsvdw.o : ../../Modules/funct.o
-tsvdw.o : ../../Modules/input_parameters.o
 tsvdw.o : ../../Modules/io_global.o
 tsvdw.o : ../../Modules/ions_base.o
 tsvdw.o : ../../Modules/kind.o
@@ -939,7 +937,6 @@ vofrho.o : ../../Modules/electrons_base.o
 vofrho.o : ../../Modules/fft_base.o
 vofrho.o : ../../Modules/fft_interfaces.o
 vofrho.o : ../../Modules/funct.o
-vofrho.o : ../../Modules/input_parameters.o
 vofrho.o : ../../Modules/io_global.o
 vofrho.o : ../../Modules/ions_base.o
 vofrho.o : ../../Modules/kind.o

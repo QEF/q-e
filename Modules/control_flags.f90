@@ -188,7 +188,8 @@ MODULE control_flags
     lbands  =.FALSE., &! if .TRUE. the calc. is band structure
     lconstrain=.FALSE.,&! if .TRUE. the calc. is constraint
     ldamped =.FALSE., &! if .TRUE. the calc. is a damped dynamics
-    llondon =.FALSE., & ! if .TRUE. compute semi-empirical dispersion correction
+    llondon =.FALSE., & ! if .TRUE. compute Grimme D2 dispersion corrections
+    ts_vdw  =.FALSE., & ! as above for Tkatchenko-Scheffler disp.corrections
     restart =.FALSE.   ! if .TRUE. restart from results of a preceding run
   !
   ! ... pw self-consistency

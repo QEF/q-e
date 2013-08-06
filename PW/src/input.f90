@@ -172,7 +172,7 @@ SUBROUTINE iosys()
                             io_level, ethr, lscf, lbfgs, lmd, &
                             ldamped, lbands, llang, use_SMC,  &
                             lconstrain, restart, twfcollect, &
-                            llondon, do_makov_payne, &
+                            llondon, ts_vdw, do_makov_payne, &
                             lecrpa_           => lecrpa, &
                             smallmem
   USE control_flags, ONLY: scf_must_converge_ => scf_must_converge
@@ -260,9 +260,10 @@ SUBROUTINE iosys()
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
-                               starting_spin_angle,                           &
-                               assume_isolated, spline_ps, london, london_s6, &
-                               london_rcut, one_atom_occupations, &
+                               starting_spin_angle, assume_isolated,spline_ps,&
+                               vdw_corr, london, london_s6, london_rcut,      &
+                               ts_vdw_isolated, ts_vdw_econv_thr,             &
+                               one_atom_occupations,                          &
                                esm_bc, esm_efield, esm_w, esm_nfit
 #ifdef __ENVIRON
   !
@@ -1280,9 +1281,37 @@ SUBROUTINE iosys()
   !
   IF (trim(occupations) /= 'from_input') one_atom_occupations_=.false.
   !
-  llondon     = london
-  lon_rcut    = london_rcut
-  scal6       = london_s6
+  !  ... initialize variables for vdW (dispersions) corrections
+  !
+  SELECT CASE( TRIM( vdw_corr ) )
+    !
+    CASE( 'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d' )
+      !
+      llondon= .TRUE.
+      ts_vdw = .FALSE.
+      !
+    CASE( 'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler' )
+      !
+      llondon= .FALSE.
+      ts_vdw = .TRUE.
+      !
+    CASE DEFAULT
+      !
+      llondon= .FALSE.
+      ts_vdw = .FALSE.
+      !
+  END SELECT
+  IF (ts_vdw) CALL errore(,"iosys","Tkatchenko-Scheffler not implemented", 1)
+  IF ( london ) THEN
+     CALL infomsg("iosys","london is obsolete, use ''vdw_corr='grimme-d2''' instead")
+     llondon = .TRUE.
+  END IF
+  IF ( llondon) THEN
+     lon_rcut    = london_rcut
+     scal6       = london_s6
+     ! not sure if it can be called here
+     !   CALL init_london ( )
+  END IF
   !
 #if defined __MS2
   !

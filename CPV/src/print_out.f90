@@ -41,7 +41,7 @@
       USE io_global,         ONLY : ionode, ionode_id, stdout
       USE control_flags,     ONLY : lwfpbe0, lwfpbe0nscf  ! Lingzhu Kong
       USE energies,          ONLY : exx  ! Lingzhu Kong
-      USE input_parameters,  ONLY : ts_vdw
+      USE control_flags,     ONLY : ts_vdw
       USE tsvdw_module,      ONLY : EtsvdW
       !
       IMPLICIT NONE
@@ -260,7 +260,7 @@
          !
          WRITE( stdout, * )
          !
-         IF (ts_vdw.EQV..TRUE.) THEN
+         IF (ts_vdw) THEN
            !
            WRITE( stdout, 19470)
            !
@@ -289,7 +289,7 @@
 
       IF( .not. tcg ) THEN
          !
-         IF (ts_vdw.EQV..TRUE.) THEN
+         IF (ts_vdw) THEN
            !
            WRITE(stdout,19480) nfi, ekinc, temphc, tempp, etot, enthal, &
                       econs, econt, vnhh(3,3), xnhh0(3,3), vnhp(1), xnhp0(1), EtsvdW

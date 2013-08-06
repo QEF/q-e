@@ -27,8 +27,6 @@ USE funct,              ONLY: get_iexch          !retrieves type of exchange uti
 USE funct,              ONLY: get_icorr          !retrieves type of correlation utilized in functional
 USE funct,              ONLY: get_igcx           !retrieves type of gradient correction to exchange utilized in functional
 USE funct,              ONLY: get_igcc           !retrieves type of gradient correction to correlation utilized in functional
-USE input_parameters,   ONLY: ts_vdw_isolated    !isolated system control
-USE input_parameters,   ONLY: ts_vdw_econv_thr   !energy convergence threshold for periodic systems
 USE io_global,          ONLY: stdout             !print/write argument for standard output (to output file)
 USE ions_base,          ONLY: nat                !number of total atoms (all atomic species)
 USE ions_base,          ONLY: nsp                !number of unique atomic species
@@ -50,6 +48,8 @@ SAVE
 !
 ! PUBLIC variables 
 !
+LOGICAL, PUBLIC :: vdw_isolated    ! isolated system control
+REAL(DP), PUBLIC:: vdw_econv_thr   ! energy convergence threshold for periodic systems
 REAL(DP), PUBLIC :: EtsvdW                                   !the TS-vdW energy
 REAL(DP), DIMENSION(:), ALLOCATABLE, PUBLIC :: UtsvdW        !the TS-vdW wavefunction forces (dispersion potential)
 REAL(DP), DIMENSION(:,:), ALLOCATABLE, PUBLIC :: FtsvdW      !the TS-vdW ionic forces (-dE/dR)
@@ -413,7 +413,8 @@ PRIVATE :: GetVdWParam
     !
     WRITE(stdout,'(5X,"The magnitude of the atomic pseudo-density at the radial grid cutoff is ",ES13.6,".")') atrhor(icutrA)
     WRITE(stdout,'(5X,"Using this radial grid cutoff value of ",F25.15," au:")') atgrdr(icutrA)
-    WRITE(stdout,'(5X,"The free atom volume computed with this cutoff is ",F25.15," bohr^3 with an error of ",F6.3,"%.")') vfree(is),verr
+    WRITE(stdout,'(5X,"The free atom volume computed with this cutoff is ",F25.15," bohr^3 with an error of ",F6.3,"%.")') &
+         vfree(is),verr
     !
     ! Form 1st derivative of atrhor for input into cubic spline coefficient subroutine...
     !
@@ -2117,7 +2118,7 @@ PRIVATE :: GetVdWParam
     !
     ! Periodic convergence loop conditionals...
     !
-    IF ((ts_vdw_isolated.EQV..TRUE.).OR.(DABS(EtsvdW_period).LE.(ts_vdw_econv_thr))) periodic_converged=.TRUE.
+    IF ( vdw_isolated .OR. (ABS(EtsvdW_period) <= vdw_econv_thr) ) periodic_converged=.TRUE.
     !
     n_period=n_period+1
     !

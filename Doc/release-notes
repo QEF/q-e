@@ -16,6 +16,7 @@ New in svn version
 
 Incompatible changes in svn version:
 
+   * Input variable "london" should be replaced by " vdw_corr='Grimme-D2' "
    * Routine "electrons" doesn't deal any longer with non-scf cases;
      Use routine "non_scf" instead.
    * restart mechanism of pw.x changed a lot. It works ONLY if you stop

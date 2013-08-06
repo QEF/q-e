@@ -121,9 +121,6 @@ MODULE read_namelists_module
        !
        saverho = .TRUE.
        memory = 'default'
-       ts_vdw = .FALSE.
-       ts_vdw_isolated = .FALSE.
-       ts_vdw_econv_thr = 1.E-6_DP
        !
        RETURN
        !
@@ -238,11 +235,15 @@ MODULE read_namelists_module
        ! 
        real_space = .false.
        !
-       ! ... DFT-D
+       ! ... DFT-D, Tkatchenko-Scheffler
        !
+       vdw_corr    = 'none'
        london      = .false.
        london_s6   = 0.75_DP
        london_rcut = 200.00_DP
+       ts_vdw          = .FALSE.
+       ts_vdw_isolated = .FALSE.
+       ts_vdw_econv_thr = 1.E-6_DP
        !
 #ifdef __ENVIRON
        ! ... Environ
@@ -736,9 +737,6 @@ MODULE read_namelists_module
        CALL mp_bcast( lecrpa,        ionode_id, intra_image_comm )
        CALL mp_bcast( vdw_table_name,ionode_id, intra_image_comm )
        CALL mp_bcast( memory,        ionode_id, intra_image_comm )
-       CALL mp_bcast( ts_vdw,           ionode_id, intra_image_comm )
-       CALL mp_bcast( ts_vdw_isolated,  ionode_id, intra_image_comm )
-       CALL mp_bcast( ts_vdw_econv_thr, ionode_id, intra_image_comm )
        !
        RETURN
        !
@@ -847,6 +845,10 @@ MODULE read_namelists_module
        CALL mp_bcast( one_atom_occupations,      ionode_id, intra_image_comm )
        CALL mp_bcast( spline_ps,                 ionode_id, intra_image_comm )
        !
+       CALL mp_bcast( vdw_corr,                  ionode_id, intra_image_comm )
+       CALL mp_bcast( ts_vdw,                    ionode_id, intra_image_comm )
+       CALL mp_bcast( ts_vdw_isolated,           ionode_id, intra_image_comm )
+       CALL mp_bcast( ts_vdw_econv_thr,          ionode_id, intra_image_comm )
        CALL mp_bcast( london,                    ionode_id, intra_image_comm )
        CALL mp_bcast( london_s6,                 ionode_id, intra_image_comm )
        CALL mp_bcast( london_rcut,               ionode_id, intra_image_comm )

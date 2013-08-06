@@ -260,15 +260,6 @@ MODULE input_parameters
           ! if memory = 'large' then QE tries to use (when implemented) algorithms using more memory
           !                     to enhance performance.
 
-        LOGICAL :: ts_vdw = .FALSE.
-          ! if .TRUE., include TS-vdW correction (Tkatchenko & Scheffler, Phys. Rev. Lett. 102, 073005 (2009))
-          ! if .FALSE., do not include TS-vdW correction
-        LOGICAL :: ts_vdw_isolated = .FALSE.
-          ! if .TRUE., TS-vdW correction for isolated system
-          ! if .FALSE., TS-vdW correction for periodic system
-        REAL(DP) :: ts_vdw_econv_thr = 1.0E-6_DP
-          ! convergence criterion for TS-vdW energy for periodic system 
-
 #if defined (__MS2)
         LOGICAL :: MS2_enabled = .false.       ! Enable the shared memory exchange in MS2
         CHARACTER(len=256) :: MS2_handler = ' '! Name for the shared memory handler in MS2
@@ -280,8 +271,7 @@ MODULE input_parameters
           forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
           gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
-          vdw_table_name, lorbm, memory, ts_vdw, ts_vdw_isolated,         &
-          ts_vdw_econv_thr
+          vdw_table_name, lorbm, memory
 
 
 #if defined ( __MS2)
@@ -470,17 +460,35 @@ MODULE input_parameters
         LOGICAL :: one_atom_occupations=.false.
 
         CHARACTER(len=80) :: assume_isolated = 'none'
-          ! used to define corrections for isolated systems
-          ! other possibilities:
-          !  'makov-payne', 'martyna-tuckerman`, `dcc`, 'esm'
-!
+          ! possible corrections for isolated systems:
+          !  'none', 'makov-payne', 'martyna-tuckerman', 'esm'
+          ! plus ENVIRON-specific:
+          !  'slabx', 'slaby', 'slabz', 'pcc'
+
+        CHARACTER(len=80) :: vdw_corr = 'none'
+          ! semi-empirical van der Waals corrections
+          ! (not to be confused with nonlocal functionals,
+          !  specified in input_dft!). Default is 'none', allowed values:
+          !  'dft-d' or 'grimme-d2' [S.Grimme, J.Comp.Chem. 27, 1787 (2006)]
+          !  'ts', 'ts-vdW', 'tkatchenko-scheffler'
+          !  (Tkatchenko & Scheffler, Phys. Rev. Lett. 102, 073005 (2009))
+
         LOGICAL   :: london = .false.
-          ! if .true. compute semi-empirical dispersion term ( C6_ij / R_ij**6 )
-          ! other DFT-D parameters ( see PW/mm_dispersion.f90 )
-        REAL ( DP ) :: london_s6   =   0.75_DP , & ! default global scaling parameter for PBE
+          ! OBSOLESCENT: same as vdw_corr='grimme-d2'
+          ! other DFT-D parameters ( see Modules/mm_dispersion.f90 )
+          ! london_s6 = default global scaling parameter for PBE
+        REAL ( DP ) :: london_s6   =   0.75_DP , &
                        london_rcut = 200.00_DP
-#ifdef __ENVIRON
+
+        LOGICAL   :: ts_vdw = .false.
+          ! OBSOLESCENT: same as vdw_corr='Tkatchenko-Scheffler'
+        LOGICAL :: ts_vdw_isolated = .FALSE.
+          ! if .TRUE., TS-vdW correction for isolated system
+          ! if .FALSE., TS-vdW correction for periodic system
+        REAL(DP) :: ts_vdw_econv_thr = 1.0E-6_DP
+          ! convergence criterion for TS-vdW energy for periodic system 
 !
+#ifdef __ENVIRON
         LOGICAL   :: do_environ = .false.
 #endif
 !
@@ -527,8 +535,9 @@ MODULE input_parameters
              report,              &
              constrained_magnetization, B_field, fixed_magnetization,         &
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
-             tot_charge, tot_magnetization,                                   &
-             spline_ps, one_atom_occupations, london, london_s6, london_rcut, &
+             tot_charge, tot_magnetization, spline_ps, one_atom_occupations,  &
+             vdw_corr, london, london_s6, london_rcut,                        &
+             ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,                       &
              step_pen, A_pen, sigma_pen, alpha_pen, no_t_rev,                 &
              esm_bc, esm_efield, esm_w, esm_nfit, esm_debug, esm_debug_gpmax
 #ifdef __ENVIRON
