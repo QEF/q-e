@@ -219,13 +219,6 @@ CONTAINS
        CALL iotk_scan_dat_inside( xmlinputunit, tmpstr, ierr = ierr )
        cell_velocities = clean_str(tmpstr)
        !
-!    CASE ( 'CI_scheme' ) 
-!       CALL iotk_scan_dat_inside( xmlinputunit, tmpstr, ierr = ierr )
-!       CI_scheme = clean_str(tmpstr)
-       !
-    CASE ( 'comp_thr' ) 
-       CALL iotk_scan_dat_inside( xmlinputunit, comp_thr, ierr = ierr )
-       !
     CASE ( 'constrained_magnetization' ) 
        CALL iotk_scan_dat_inside( xmlinputunit, tmpstr, ierr = ierr )
        constrained_magnetization = clean_str(tmpstr)
@@ -335,9 +328,6 @@ CONTAINS
        !
     CASE ( 'eamp' ) 
        CALL iotk_scan_dat_inside( xmlinputunit, eamp, ierr = ierr )
-       !
-    CASE ( 'ecutcoarse' ) 
-       CALL iotk_scan_dat_inside( xmlinputunit, ecutcoarse, ierr = ierr )
        !
     CASE ( 'ekin_conv_thr' ) 
        CALL iotk_scan_dat_inside( xmlinputunit, ekin_conv_thr, ierr = ierr )
@@ -495,9 +485,6 @@ CONTAINS
     CASE ( 'mixing_beta' ) 
        CALL iotk_scan_dat_inside( xmlinputunit, mixing_beta, ierr = ierr )
        !
-    CASE ( 'mixing_charge_compensation' ) 
-       CALL iotk_scan_dat_inside( xmlinputunit, mixing_charge_compensation, ierr = ierr )
-       !
     CASE ( 'mixing_fixed_ns' ) 
        CALL iotk_scan_dat_inside( xmlinputunit, mixing_fixed_ns, ierr = ierr )
        !
@@ -507,9 +494,6 @@ CONTAINS
        !
     CASE ( 'mixing_ndim' ) 
        CALL iotk_scan_dat_inside( xmlinputunit, mixing_ndim, ierr = ierr )
-       !
-    CASE ( 'n_charge_compensation' ) 
-       CALL iotk_scan_dat_inside( xmlinputunit, n_charge_compensation, ierr = ierr )
        !
     CASE ( 'n_inner' ) 
        CALL iotk_scan_dat_inside( xmlinputunit, n_inner, ierr = ierr )
@@ -543,9 +527,6 @@ CONTAINS
        !
     CASE ( 'niter_cg_restart' ) 
        CALL iotk_scan_dat_inside( xmlinputunit, niter_cg_restart, ierr = ierr )
-       !
-    CASE ( 'nlev' ) 
-       CALL iotk_scan_dat_inside( xmlinputunit, nlev, ierr = ierr )
        !
     CASE ( 'noinv' ) 
        CALL iotk_scan_dat_inside( xmlinputunit, noinv, ierr = ierr )

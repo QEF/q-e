@@ -648,48 +648,6 @@ MODULE input_parameters
              env_ioncc_concentration, zion, rhopb,                     &
              solvent_temperature
 #endif
-!
-!=----------------------------------------------------------------------------=!
-!  EE Namelist Input Parameters
-!=----------------------------------------------------------------------------=!
-!
-! kinetic energy cutoff for the coarse (MultiGrid) grid
-        REAL(DP) :: ecutcoarse = 100.0d0
-! amount of "new" correction introduced when mixing
-        REAL(DP) :: mixing_charge_compensation = 1.0
-! error tolerance for the multigrid solver
-        REAL(DP) :: errtol = 1.d-22
-! how early in scf itarations should the corrective pot start being calculated
-        REAL(DP) :: comp_thr = 1.d-2
-! nlev number of grid levels in the multigrid solver
-        INTEGER :: nlev = 2
-! itmax maximum number of iterations in the multigrid solver
-        INTEGER :: itmax = 1000
-! whichbc 0 if aperiodic
-        INTEGER :: whichbc(3) = 0
-! sets after how many scf cycles the corrective potential should be calculated
-        INTEGER :: n_charge_compensation = 5
-!
-        INTEGER :: ncompx = 1
-        INTEGER :: ncompy = 1
-        INTEGER :: ncompz = 1
-          ! ONLY PWSCF
-!
-        INTEGER :: mr1 = 0
-        INTEGER :: mr2 = 0
-        INTEGER :: mr3 = 0
-
-        REAL(DP) :: cellmin( 3 ) = 0.D0
-          ! ONLY PWSCF
-
-        REAL(DP) :: cellmax( 3 ) = 1.D0
-
-        NAMELIST / ee / comp_thr,    &
-             ncompx,n_charge_compensation,              &
-             ncompy, ncompz,mixing_charge_compensation, &
-             mr1, mr2, mr3, ecutcoarse,                 &
-             errtol, nlev, itmax, whichbc,              &
-             cellmin, cellmax
 
 !=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters
