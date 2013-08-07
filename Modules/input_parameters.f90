@@ -1002,9 +1002,10 @@ MODULE input_parameters
 
         CHARACTER(len=80) :: ion_dynamics = 'none'
           ! set how ions should be moved
-        CHARACTER(len=80) :: ion_dynamics_allowed(8)
+        CHARACTER(len=80) :: ion_dynamics_allowed(9)
         DATA ion_dynamics_allowed / 'none', 'sd', 'cg', 'langevin', &
-                                    'damp', 'verlet', 'bfgs', 'beeman' /
+                                    'damp', 'verlet', 'bfgs', 'beeman',& 
+                                    'langevin-smc' /
 
         REAL(DP) :: ion_radius(nsx) = 0.5_DP
           ! pseudo-atomic radius of the i-th atomic species
