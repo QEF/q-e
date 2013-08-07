@@ -1301,7 +1301,7 @@ SUBROUTINE iosys()
       ts_vdw = .FALSE.
       !
   END SELECT
-  IF (ts_vdw) CALL errore(,"iosys","Tkatchenko-Scheffler not implemented", 1)
+  IF (ts_vdw) CALL errore("iosys","Tkatchenko-Scheffler not implemented", 1)
   IF ( london ) THEN
      CALL infomsg("iosys","london is obsolete, use ''vdw_corr='grimme-d2''' instead")
      llondon = .TRUE.
