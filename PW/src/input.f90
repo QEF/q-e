@@ -102,33 +102,7 @@ SUBROUTINE iosys()
   !
   USE martyna_tuckerman, ONLY: do_comp_mt
 #ifdef __ENVIRON
-  USE constants,    ONLY : rydberg_si, bohr_radius_si, amu_si, k_boltzmann_ry
-  USE environ_base, ONLY : do_environ_ => do_environ,                          &
-                           verbose_ => verbose,                                &
-                           environ_thr_ => environ_thr,                        &
-                           stype_ => stype,                                    &
-                           rhomax_ => rhomax,                                  &
-                           rhomin_ => rhomin,                                  &
-                           tbeta_ => tbeta,                                    &
-                           env_static_permittivity_ => env_static_permittivity,&
-                           eps_mode_ => eps_mode,                              &
-                           solvationrad_ => solvationrad,                      &
-                           atomicspread_ => atomicspread,                      &
-                           add_jellium_ => add_jellium,                        &
-                           ifdtype_ => ifdtype,                                &
-                           nfdpoint_ => nfdpoint,                              &
-                           mixtype_ => mixtype,                                &
-                           ndiis_ => ndiis,                                    &
-                           mixrhopol_ => mixrhopol,                            &
-                           tolrhopol_ => tolrhopol,                            &
-                           env_surface_tension_ => env_surface_tension,        &
-                           delta_ => delta,                                    &
-                           env_pressure_ => env_pressure,                      &
-                           env_periodicity, slab_axis,                         &
-                           env_ioncc_concentration_ => env_ioncc_concentration,&
-                           zion_ => zion,                                      &
-                           rhopb_ => rhopb,                                    &
-                           solvent_temperature_ => solvent_temperature
+  USE environ_base, ONLY : environ_base_init
 #endif
   !
   USE esm,           ONLY: do_comp_esm, &
@@ -251,12 +225,8 @@ SUBROUTINE iosys()
                                x_gamma_extrapolation, nqx1, nqx2, nqx3,     &
                                exxdiv_treatment, yukawa, ecutvcut,          &
                                exx_fraction, screening_parameter, ecutfock, &
-                               ! gau-pbe in
                                gau_parameter,                               &
-                               ! gau-pbe out
-#ifdef __ENVIRON
                                do_environ,                                  &
-#endif
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
@@ -269,7 +239,7 @@ SUBROUTINE iosys()
   !
   ! ... ENVIRON namelist
   !
-  USE input_parameters, ONLY : verbose, environ_thr, environ_type,      &
+  USE environ_input, ONLY : verbose, environ_thr, environ_type,      &
                                stype, rhomax, rhomin, tbeta,            &
                                env_static_permittivity, eps_mode,       &
                                solvationrad, atomicspread, add_jellium, &
@@ -1194,84 +1164,6 @@ SUBROUTINE iosys()
   w_1_              = w_1
   w_2_              = w_2
   !
-#ifdef __ENVIRON
-  !
-  ! ...  Environ
-  !
-  do_environ_   = do_environ
-  verbose_      = verbose
-  environ_thr_  = environ_thr
-  !
-  stype_    = stype
-  rhomax_   = rhomax
-  rhomin_   = rhomin
-  tbeta_    = tbeta
-  IF ( stype .EQ. 1 ) THEN
-    tbeta_  = LOG( rhomax / rhomin )
-  END IF
-  !
-  eps_mode_ = eps_mode
-  ALLOCATE( solvationrad_( ntyp ) )
-  solvationrad_( 1:ntyp ) = solvationrad( 1:ntyp )
-  ALLOCATE( atomicspread_( ntyp ) )
-  atomicspread_( 1:ntyp ) = atomicspread( 1:ntyp )
-  add_jellium_ = add_jellium
-  !
-  ifdtype_   = ifdtype
-  nfdpoint_  = nfdpoint
-  !
-  mixtype_   = mixtype
-  ndiis_     = ndiis
-  mixrhopol_ = mixrhopol
-  tolrhopol_ = tolrhopol
-  !
-  delta_     = delta
-  !
-  zion_      = zion
-  rhopb_     = rhopb
-  solvent_temperature_ = solvent_temperature
-  !
-  SELECT CASE (TRIM(environ_type))
-  ! if a specific environ is selected use hardcoded parameters
-  CASE ('vacuum')
-    ! vacuum, all flags off
-    env_static_permittivity_ = 1.D0
-    env_surface_tension_ = 0.D0
-    env_pressure_ = 0.D0
-    env_periodicity = 3
-    env_ioncc_concentration = 0.D0
-  CASE ('water')
-    ! water, experimental and SCCS tuned parameters
-    env_static_permittivity_ = 78.3D0
-    env_surface_tension_ = 50.D0*1.D-3*bohr_radius_si**2/rydberg_si
-    env_pressure_ = -0.35D0*1.D9/rydberg_si*bohr_radius_si**3
-    env_periodicity = 3
-    env_ioncc_concentration = 0.D0
-  CASE ('water-cation')
-    ! water, experimental and SCCS tuned parameters for cations
-    env_static_permittivity_ = 78.3D0
-    env_surface_tension_ = 5.D0*1.D-3*bohr_radius_si**2/rydberg_si
-    env_pressure_ = 0.125D0*1.D9/rydberg_si*bohr_radius_si**3
-    env_periodicity = 3
-    env_ioncc_concentration = 0.D0
-    rhomax_ = 0.0035
-    rhomin_ = 0.0002
-    tbeta_ = LOG( rhomax / rhomin )
-  CASE ('input')
-    ! take values from input, this is the default option
-    env_static_permittivity_ = env_static_permittivity
-    env_surface_tension_ = &
-      env_surface_tension*1.D-3*bohr_radius_si**2/rydberg_si
-    env_pressure_ = env_pressure*1.D9/rydberg_si*bohr_radius_si**3
-    env_periodicity = 3
-    env_ioncc_concentration_ = env_ioncc_concentration &
-    * bohr_radius_si**3 / amu_si
-  CASE DEFAULT
-    call errore ('iosys','unrecognized value for environ_type',1) 
-  END SELECT    
-  !
-#endif
-  !
   ! ... ESM
   !
   esm_bc_ = esm_bc
@@ -1321,6 +1213,10 @@ SUBROUTINE iosys()
   MS2_handler_ = MS2_handler
 #endif
   !
+  do_makov_payne  = .false.
+  do_comp_mt      = .false.
+  do_comp_esm     = .false.
+  !
   SELECT CASE( trim( assume_isolated ) )
       !
     CASE( 'makov-payne', 'm-p', 'mp' )
@@ -1329,9 +1225,6 @@ SUBROUTINE iosys()
       IF ( ibrav < 1 .OR. ibrav > 3 ) CALL errore(' iosys', &
               'Makov-Payne correction defined only for cubic lattices', 1)
       !
-      do_comp_mt     = .false.
-      do_comp_esm    = .false.
-      !
     CASE( 'dcc' )
       !
       CALL errore('iosys','density countercharge correction currently disabled',1)
@@ -1339,68 +1232,35 @@ SUBROUTINE iosys()
     CASE( 'martyna-tuckerman', 'm-t', 'mt' )
       !
       do_comp_mt     = .true.
-      do_makov_payne = .false.
-      do_comp_esm    = .false.
       !
     CASE( 'esm' )
       !
       do_comp_esm    = .true.
-      do_comp_mt     = .false.
-      do_makov_payne = .false.
       !
-#ifdef __ENVIRON
-    CASE( 'slabx' )
-      !
-      do_environ_     = .true.
-      env_periodicity = 2
-      slab_axis       = 1
-      do_makov_payne  = .false.
-      do_comp_mt      = .false.
-      do_comp_esm     = .false.
-      !
-    CASE( 'slaby' ) 
-      !
-      do_environ_     = .true.
-      env_periodicity = 2
-      slab_axis       = 2
-      do_makov_payne  = .false.
-      do_comp_mt      = .false.
-      do_comp_esm     = .false.
-      !
-    CASE( 'slabz' ) 
-      !
-      do_environ_     = .true.
-      env_periodicity = 2
-      slab_axis       = 3
-      do_makov_payne  = .false.
-      do_comp_mt      = .false.
-      do_comp_esm     = .false.
-      !
-    CASE( 'pcc' ) 
-      !
-      IF ( ibrav < 1 .OR. ibrav > 3 ) CALL errore(' iosys', &
-              'PCC correction defined only for cubic lattices', 1)
-      do_environ_     = .true.
-      env_periodicity = 0
-      do_makov_payne  = .false.
-      do_comp_mt      = .false.
-      do_comp_esm     = .false.
-      !
-#endif
-    CASE( 'none' )
-      !
-      do_makov_payne = .false.
-      do_comp_mt     = .false.
-      do_comp_esm    = .false.
-      !
-    CASE DEFAULT
-      !
-      call errore ('iosys','unrecognized value for assume_isolated',1)
   END SELECT
+
 #ifdef __ENVIRON
-  IF ( do_environ_ ) CALL environ_initions_allocate( nat_, ntyp )
-  IF ( env_ioncc_concentration .GT. 0.D0 .AND. env_periodicity .NE. 2 ) &
-      call errore ('iosys','ioncc requires slab boundary conditions',1)
+  !
+  IF ( TRIM(assume_isolated) == 'pcc' .AND. &
+       ibrav < 1 .OR. ibrav > 3 ) CALL errore(' iosys', &
+              'PCC correction defined only for cubic lattices', 1)
+  !
+  ! ...  Environ
+  !
+  CALL environ_base_init ( do_environ, assume_isolated,                &
+                           verbose, environ_thr, environ_type,         &
+                           stype, rhomax, rhomin, tbeta,               &
+                           env_static_permittivity, eps_mode,          &
+                           solvationrad(1:ntyp), atomicspread(1:ntyp), &
+                           add_jellium, ifdtype, nfdpoint,             &
+                           mixtype, ndiis, mixrhopol, tolrhopol,       &
+                           env_surface_tension, delta,                 &
+                           env_pressure,                               &
+                           env_ioncc_concentration, zion, rhopb,       &
+                           solvent_temperature )
+  !
+  IF ( do_environ ) CALL environ_initions_allocate( nat_, ntyp )
+  !
 #endif
   !
   ! ... read following cards

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2011 Quantum ESPRESSO group
+! Copyright (C) 2002-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,7 @@ MODULE read_namelists_module
   !----------------------------------------------------------------------------
   !
   !  ... this module handles the reading of input namelists
-  !  ... written by: Carlo Cavazzoni
+  !  ... written by Carlo Cavazzoni, with many additions
   !  --------------------------------------------------
   !
   USE kinds,     ONLY : DP
@@ -263,61 +263,6 @@ MODULE read_namelists_module
        RETURN
        !
      END SUBROUTINE
-
-#ifdef __ENVIRON
-     !=----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist ENVIRON
-     !
-     !=----------------------------------------------------------------------=!
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE environ_defaults( prog )
-       !-----------------------------------------------------------------------
-       !
-       IMPLICIT NONE
-       !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
-       !
-       !
-       verbose      = 0
-       environ_thr  = 1.D-1
-       environ_type = 'input'
-       !
-       stype   = 1
-       rhomax  = 0.005
-       rhomin  = 0.0001
-       tbeta   = 4.8
-       !
-       env_static_permittivity = 1.D0
-       eps_mode        = 'electronic'
-       solvationrad(:) = 3.D0
-       atomicspread(:) = 0.5D0
-       add_jellium = .false.
-       !
-       ifdtype  = 1
-       nfdpoint = 2
-       !
-       mixtype   = 'linear'
-       ndiis     = 1
-       mixrhopol = 0.5
-       tolrhopol = 1.D-10
-       !
-       env_surface_tension = 0.D0
-       delta = 0.00001D0
-       !
-       env_pressure = 0.D0
-       !
-       env_ioncc_concentration = 0.0D0
-       zion = 1.0D0
-       rhopb = 0.0001D0
-       solvent_temperature = 300.0D0
-       !
-       RETURN
-       !
-     END SUBROUTINE
-     !
-#endif
      !
      !=----------------------------------------------------------------------=!
      !
@@ -870,61 +815,6 @@ MODULE read_namelists_module
        RETURN
        !
      END SUBROUTINE
-#ifdef __ENVIRON
-     !=----------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist ENVIRON
-     !
-     !=----------------------------------------------------------------------=!
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE environ_bcast()
-       !-----------------------------------------------------------------------
-       !
-       USE io_global, ONLY : ionode_id
-       USE mp,        ONLY : mp_bcast
-       USE mp_images, ONLY : intra_image_comm
-       !
-       IMPLICIT NONE
-       !
-       CALL mp_bcast( verbose,                    ionode_id, intra_image_comm )
-       CALL mp_bcast( environ_thr,                ionode_id, intra_image_comm )
-       CALL mp_bcast( environ_type,               ionode_id, intra_image_comm )
-       !
-       CALL mp_bcast( stype,                      ionode_id, intra_image_comm )
-       CALL mp_bcast( rhomax,                     ionode_id, intra_image_comm )
-       CALL mp_bcast( rhomin,                     ionode_id, intra_image_comm )
-       CALL mp_bcast( tbeta,                      ionode_id, intra_image_comm )
-       !
-       CALL mp_bcast( env_static_permittivity,    ionode_id, intra_image_comm )
-       CALL mp_bcast( eps_mode,                   ionode_id, intra_image_comm )
-       CALL mp_bcast( solvationrad,               ionode_id, intra_image_comm )
-       CALL mp_bcast( atomicspread,               ionode_id, intra_image_comm )
-       CALL mp_bcast( add_jellium,                ionode_id, intra_image_comm )
-       !
-       CALL mp_bcast( ifdtype,                    ionode_id, intra_image_comm )
-       CALL mp_bcast( nfdpoint,                   ionode_id, intra_image_comm )
-       !
-       CALL mp_bcast( mixtype,                    ionode_id, intra_image_comm )
-       CALL mp_bcast( ndiis,                      ionode_id, intra_image_comm )
-       CALL mp_bcast( mixrhopol,                  ionode_id, intra_image_comm )
-       CALL mp_bcast( tolrhopol,                  ionode_id, intra_image_comm )
-       !
-       CALL mp_bcast( env_surface_tension,        ionode_id, intra_image_comm )
-       CALL mp_bcast( delta,                      ionode_id, intra_image_comm )
-       !
-       CALL mp_bcast( env_pressure,               ionode_id, intra_image_comm )
-       !
-       CALL mp_bcast( env_ioncc_concentration,    ionode_id, intra_image_comm )
-       CALL mp_bcast( zion,                       ionode_id, intra_image_comm )
-       CALL mp_bcast( rhopb,                      ionode_id, intra_image_comm )
-       CALL mp_bcast( solvent_temperature,        ionode_id, intra_image_comm )
-       !
-      RETURN
-       !
-     END SUBROUTINE
-     !
-#endif
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1798,6 +1688,9 @@ MODULE read_namelists_module
        USE io_global, ONLY : ionode, ionode_id
        USE mp,        ONLY : mp_bcast
        USE mp_images, ONLY : intra_image_comm
+#ifdef __ENVIRON
+       USE environ_input, ONLY : environ, environ_defaults, environ_bcast
+#endif
        !
        IMPLICIT NONE
        !
@@ -1833,9 +1726,6 @@ MODULE read_namelists_module
          CALL electrons_defaults( prog )
          CALL ions_defaults( prog )
          CALL cell_defaults( prog )
-#ifdef __ENVIRON
-         CALL environ_defaults( prog )
-#endif
        ENDIF
        !
        ! ... Here start reading standard input file
@@ -1876,8 +1766,6 @@ MODULE read_namelists_module
        CALL system_bcast( )
        !
        CALL system_checkin( prog )
-       !
-!       CALL allocate_input_ions( ntyp, nat )
        !
        ! ... ELECTRONS namelist
        !
@@ -1959,6 +1847,7 @@ MODULE read_namelists_module
        ! ... ENVIRON namelist
        !
        IF ( do_environ ) THEN
+          CALL environ_defaults( prog )
           ios = 0
           IF( ionode ) READ( unit_loc, environ, iostat = ios )
           CALL mp_bcast( ios, ionode_id, intra_image_comm )
