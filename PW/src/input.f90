@@ -226,7 +226,9 @@ SUBROUTINE iosys()
                                exxdiv_treatment, yukawa, ecutvcut,          &
                                exx_fraction, screening_parameter, ecutfock, &
                                gau_parameter,                               &
+#ifdef __ENVIRON
                                do_environ,                                  &
+#endif
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
