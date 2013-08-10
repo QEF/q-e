@@ -3,10 +3,10 @@
 ######## YOU MAY NEED TO EDIT THIS FILE TO MATCH YOUR CONFIGURATION ########
 
 # BIN_DIR = path of compiled executables
-#     Usually this is $TOPDIR/bin, where $TOPDIR is the root of the
+#     Usually this is $PREFIX/bin, where $PREFIX is the root of the
 #     Quantum ESPRESSO source tree.
 # PSEUDO_DIR = path of pseudopotentials required by the examples
-#     if required pseudopotebtials are not found in $PSEUDO_DIR, 
+#     if required pseudopotentials are not found in $PSEUDO_DIR, 
 #     example scripts will try to download them from NETWORK_PSEUDO
 # TMP_DIR = temporary directory to be used by the examples
 #     Make sure that it is writable by you and that it doesn't contain
@@ -17,10 +17,13 @@
 PREFIX=`cd ../../.. ; pwd`
 BIN_DIR=$PREFIX/bin
 PSEUDO_DIR=$PREFIX/pseudo
-NETWORK_PSEUDO=http://www.quantum-espresso.org/wp-content/uploads/upf_files/
-
 # Beware: everything in $TMP_DIR will be destroyed !
 TMP_DIR=$PREFIX/tempdir
+
+# There should be no need to change anything below this line
+
+NETWORK_PSEUDO=http://www.quantum-espresso.org/wp-content/uploads/upf_files/
+
 
 # wget or curl needed if some PP has to be downloaded from web site
 # script wizard will surely find a better way to find what is available
