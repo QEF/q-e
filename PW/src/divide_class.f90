@@ -949,7 +949,7 @@ IF (ts==4) THEN
 !   then the general case
 !
    DO ipol=1,3
-      ax(ipol)=sqrt((smat(ipol,ipol)+1.d0)/2.d0)
+      ax(ipol)=sqrt(ABS(smat(ipol,ipol)+1.d0)/2.d0)
    END DO
    
    DO ipol=1,3
