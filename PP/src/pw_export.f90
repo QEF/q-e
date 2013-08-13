@@ -754,6 +754,18 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
     CALL iotk_write_end  (50,"Eigenvalues")
   ENDIF
 
+  IF( ionode ) THEN
+    CALL iotk_write_attr (attr,"nspin",nspin,first=.true.)
+    CALL iotk_write_attr (attr,"nk",nkstot)
+    CALL iotk_write_attr (attr,"nbnd",nbnd)
+    CALL iotk_write_begin(50,"OCCUPATIONS",attr=attr)
+    DO ik=1,nkstot
+      CALL iotk_write_dat(50,"wg"//iotk_index(ik),wg(1:nbnd,ik))
+    ENDDO
+    CALL iotk_write_end  (50,"OCCUPATIONS")
+  ENDIF
+
+
 
   wfc_scal = 1.0d0
   twf0 = .true.
