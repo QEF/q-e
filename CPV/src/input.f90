@@ -974,7 +974,7 @@ MODULE input
      ! 
      IF ( london ) THEN
         CALL infomsg("iosys","london is obsolete, use ''vdw_corr='grimme-d2''' instead")
-        IF (ts_vdw) CALL errore(,"iosys","must choose a unique vdW correction!", 1)
+        IF (ts_vdw) CALL errore("iosys","must choose a unique vdW correction!", 1)
         llondon = .TRUE.
      END IF
      !
