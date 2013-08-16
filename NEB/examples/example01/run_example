@@ -80,7 +80,7 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 
 # NEB calculation. Automatic choice of the climbing image.
@@ -152,7 +152,7 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 
 # NEB calculation. Climbing image is not used
@@ -223,7 +223,7 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 
 # the name of the restart file is changed in order to conform to the
@@ -304,7 +304,7 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

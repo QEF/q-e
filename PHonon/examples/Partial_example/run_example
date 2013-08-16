@@ -88,7 +88,7 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 
 # Self consistent calculation for CH4
@@ -172,7 +172,7 @@ check_failure $?
 $ECHO " done"
 
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 
 $ECHO "  running the scf calculation for CH4...\c"

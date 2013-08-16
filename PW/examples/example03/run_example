@@ -76,7 +76,7 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 
 # MD in a 2-atom cell
@@ -119,7 +119,7 @@ awk '/Ekin/{ek=$3;et=$11; print it,time,ek,u,et}/Dynamics/{it=$5;time=$8}/^\!/{u
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 
 # MD in a 8-atom cell
@@ -168,7 +168,7 @@ awk '/Ekin/{ek=$3;et=$11; print it,time,ek,u,et}/Dynamics/{it=$5;time=$8}/^\!/{u
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 
 # MD in a 2-atom cell. Gamma+3X

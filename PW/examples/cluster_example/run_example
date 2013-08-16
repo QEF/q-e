@@ -95,7 +95,7 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 
 # self-consistent calculation
@@ -132,7 +132,7 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 
 grep -e bands --after=3 n.out-$a| grep -e " -"| tail -2| awk -v a=$a '{print a, $0}' >> n.eigenvalues
@@ -182,7 +182,7 @@ grep -e bands --after=3 nh4+.out-$a| grep -e " -"| tail -1| awk -v a=$a '{print 
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 # self-consistent calculation
 cat > h2o.in << EOF
@@ -225,7 +225,7 @@ grep -e bands --after=3 h2o.out-$a| grep -e " -"| tail -1| awk -v a=$a '{print a
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 $ECHO 
 

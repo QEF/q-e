@@ -1,6 +1,5 @@
  &control
     calculation='scf',
-
     tefield=.true.,
     dipfield=.true.,
  /

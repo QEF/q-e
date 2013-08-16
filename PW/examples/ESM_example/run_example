@@ -83,7 +83,7 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 
 # scf calculation for H2O with no ESM
@@ -156,7 +156,7 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 
 # scf calculation for Al(111) with ESM bc2 (metal-slab-metal), no field

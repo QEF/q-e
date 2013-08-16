@@ -77,7 +77,7 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/cp*
 $ECHO " done"
 
 cat > h2o.wannier.in << EOF
