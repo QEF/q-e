@@ -290,11 +290,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw2bg
 	}
 
 	var vxc_zero_rho_core -type LOGICAL {
-	    default { .FALSE. }
+	    default { .TRUE. }
 	    info {
 		set to .TRUE. to zero out NLCC or to .FALSE. to keep NLCC when computing
-		exchange-correlation potential. For details, see Hybertsen & Louie PRB 34,
-		5390 (1986), Eq. (38) and discussion afterwards
+		exchange-correlation potential. This flag has no effect for preudopotentials
+		without NLCC. BEWARE: setting vxc_zero_rho_core to .FALSE. will produce
+		incorrect results. This functionality is only included for testing purposes
+		and is not meant to be used in a production environment
 	    }
 	}
 

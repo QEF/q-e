@@ -200,7 +200,7 @@ PROGRAM pw2bgw
   vxc_diag_nmax = 0
   vxc_offdiag_nmin = 0
   vxc_offdiag_nmax = 0
-  vxc_zero_rho_core = .FALSE.
+  vxc_zero_rho_core = .TRUE.
   vscg_flag = .FALSE.
   vscg_file = 'VSC'
   vkbg_flag = .FALSE.
