@@ -1581,9 +1581,14 @@ CONTAINS
 
      p_smc=T_ji*boltzman_ji/T_ij
 
+     write(stdout, '(5x,"The old energy is:",3x,F10.6," Ry")') etot_smart
+     write(stdout, '(5x,"The new energy is:",3x,F10.6," Ry")') etot
+     write(stdout, '(5x,"The possibility to accept this step is:",3x,F10.6," Ry"/)') p_smc
+     write(stdout, '(5x,"Nervously waiting for the fate ..."/)')
+     
      ! Decide if accept the new config
      if(randy() .le. p_smc) then
-       write(stdout, '("The new config is accepted")')
+       write(stdout, '(5x,"The new config is accepted")')
        num_accept=num_accept+1
        tau_smart=tau
        etot_smart=etot
