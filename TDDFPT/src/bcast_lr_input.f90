@@ -96,6 +96,7 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (poor_of_ram2, ionode_id )
   CALL mp_bcast (max_iter, ionode_id )
   CALL mp_bcast (conv_assistant, ionode_id )
+  CALL mp_bcast (if_dft_spectrum, ionode_id )
   CALL mp_barrier()
   
 #endif

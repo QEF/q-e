@@ -73,6 +73,9 @@ PROGRAM lr_dav_main
   CALL lr_solve_e()
   DEALLOCATE( psic )
 
+  if( if_dft_spectrum) call dft_spectrum() ! If we just want to calculate the dft_spectrum
+                                           ! it is actually not necessary to do Davidson
+                                           ! iteration
   call lr_dav_alloc_init() ! allocate for davidson algorithm
   CALL lr_dav_set_init()
   
@@ -93,6 +96,7 @@ PROGRAM lr_dav_main
   enddo
   ! call check_hermitian()
   ! Extract physical meaning from the solution
+  
   call interpret_eign('END')
   ! The check_orth at the end may take quite a lot of time in the case of 
   ! USPP because we didn't store the S* vector basis. Turn this step on only

@@ -15,7 +15,8 @@ contains
     use kinds,         only : dp
     use wvfct,         only : nbnd, nbndx, et
     use lr_dav_variables, only : vc_couple,num_init,single_pole,energy_dif,&
-                                & energy_dif_order, p_nbnd_occ, p_nbnd_virt
+                                & energy_dif_order, p_nbnd_occ, p_nbnd_virt,&
+                                & if_dft_spectrum
     use lr_variables, only : nbnd_total
     use io_global,    only : stdout
     use lr_dav_debug
@@ -24,10 +25,12 @@ contains
     integer :: ib,ic,iv
     real(dp) :: temp
     
+    allocate(vc_couple(2,nbnd*(nbnd_total-nbnd))) ! 1. v  2. c  
     allocate(energy_dif(p_nbnd_occ*p_nbnd_virt))
     allocate(energy_dif_order(p_nbnd_occ*p_nbnd_virt))
-
-    write(stdout,'(5x,"Calculating the electron-hole pairs for initiating trial vectors ...",/)')
+    
+    if(.not. if_dft_spectrum) &
+      &write(stdout,'(5x,"Calculating the electron-hole pairs for initiating trial vectors ...",/)')
 
     if(single_pole) then
       write(stdout,'(/5x,"Single Pole Approximation is used to generate the initial vectors",/)')
@@ -82,7 +85,6 @@ contains
 
     call estimate_ram()
 
-    allocate(vc_couple(2,nbnd*(nbnd_total-nbnd))) ! 1. v  2. c  
     !allocate(D_vec_b(npwx,nbnd,nks,num_basis_max),stat=ierr) 
     !IF (ierr /= 0) call errore('lr_dav_alloc_init',"no enough memory",ierr) 
     !allocate(C_vec_b(npwx,nbnd,nks,num_basis_max),stat=ierr) 
@@ -190,7 +192,7 @@ contains
     num_basis_tot=num_init
     vec_b(:,:,:,:) = (0.0D0,0.0D0)
 
-    if (.not. if_random_init) then  ! set the initial basis set to be {|c><v|}
+    if (.not. if_random_init .or. if_dft_spectrum) then  ! set the initial basis set to be {|c><v|}
       write(stdout,'(5x,"Lowest energy electron-hole pairs are used as initial vectors ...")')
       CALL lr_dav_cvcouple()
       do ib = 1, num_init, 1
@@ -1398,6 +1400,7 @@ contains
 
     return
   end subroutine discharge_temp
+  !-------------------------------------------------------------------------------
 
   subroutine discharge()
     !-------------------------------------------------------------------------------
@@ -1449,5 +1452,78 @@ contains
         enddo
     return
   end subroutine discharge
+  !-------------------------------------------------------------------------------
+
+  subroutine dft_spectrum()
+    !-------------------------------------------------------------------------------
+    ! Created by X.Ge in Aug. 2013
+    !-------------------------------------------------------------------------------
+    ! This routine calculates the dft_spectrum(KS_spectrum), of which the energy
+    ! of the peak is the KS energy difference and the oscillation strength is
+    ! energy*|R_ij|^2
+
+    use kinds,         only : dp
+    use wvfct,         only : nbnd, nbndx, et
+    use lr_dav_variables, only : vc_couple,num_init,single_pole,energy_dif,&
+                                & energy_dif_order, p_nbnd_occ, p_nbnd_virt,PI
+    use lr_variables, only : nbnd_total,R
+    use charg_resp,           only : lr_calc_R
+    use io_global,    only : stdout,ionode
+    use io_files,      only : prefix
+    use lr_dav_debug
+
+    implicit none
+    integer :: ib,ic,iv,i
+    real(dp) :: energy,totF,F1,F2,F3
+    character(len=256) :: filename
+
+    write(stdout,'(/,/5x,"Calculating the KS spectrum ..."/)')
+    call lr_dav_cvcouple() ! First calculate the cv couple and sort the energy
+                           !difference
+
+    call lr_calc_R()       ! Calculate R
+
+#ifdef __MPI
+    if(ionode) then
+#endif
+    ! Print out Oscilation strength
+    write(stdout,'(/,/5x,"K-S Oscillator strengths")')
+    write(stdout,'(5x,"occ",1x,"con",8x,"R-x",14x,"R-y",14x,"R-z")')
+    do iv=nbnd-p_nbnd_occ+1, nbnd
+      do ic=1,p_nbnd_virt
+        write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,E16.8)') &
+             &iv,ic,dble(R(iv,ic,1)),dble(R(iv,ic,2)),dble(R(iv,ic,3))
+      enddo 
+    enddo
+    
+    ! Print out to standard output and eigen-file
+    filename = trim(prefix)  // "-dft.eigen"
+    OPEN(18,file=filename,status="unknown")
+    write(18,'("#",2x,"Energy(Ry)",10x,"total",13x,"X",13x,"Y",13x,"Z")')
+    write(stdout,'(5x,"The peaks of KS spectrum and their strength are:")')
+    write(stdout,'("#",5x,"occ",5x,"virt",5x,"Energy(Ry)",10x,"total",13x,"X",13x,"Y",13x,"Z")') 
+    
+    do ib=1, p_nbnd_occ*p_nbnd_virt
+      energy=energy_dif(energy_dif_order(ib))
+      iv=vc_couple(1,ib)
+      ic=vc_couple(2,ib)-nbnd
+      F1=dble(R(iv,ic,1))**2*2/(PI*3)
+      F2=dble(R(iv,ic,2))**2*2/(PI*3)
+      F3=dble(R(iv,ic,3))**2*2/(PI*3)
+      totF=F1+F2+F3
+      write(18,'(5E20.8)') energy,totF,F1,F2,F3
+      write(stdout,'(2I5,5E15.5)') iv,ic,energy,totF,F1,F2,F3
+    enddo
+#ifdef __MPI
+    endif
+#endif
+
+  CALL clean_pw( .false. )
+  WRITE(stdout,'(5x,"Finished KS spectrum calculation...")')
+  CALL stop_clock('lr_dav_main')
+  CALL print_clock_lr()
+  CALL stop_lr( .false. )
+
+  end subroutine dft_spectrum
 
 END MODULE lr_dav_routines
