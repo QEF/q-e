@@ -1538,7 +1538,7 @@ CONTAINS
      logical :: accept
      real(dp) :: kt,sigma2,&
                  T_ij,T_ji,boltzman_ji,& ! boltzman_ji=exp[-(etot_new-etot_old)/kt]
-                 p_smc                  ! *_smart means *_old, the quantity of the
+                 temp,p_smc                  ! *_smart means *_old, the quantity of the
                                         ! previous step
                                     
      integer :: ia, ip
@@ -1581,20 +1581,22 @@ CONTAINS
 
      p_smc=T_ji*boltzman_ji/T_ij
 
-     write(stdout, '(5x,"The old energy is:",3x,F10.6," Ry")') etot_smart
-     write(stdout, '(5x,"The new energy is:",3x,F10.6," Ry")') etot
-     write(stdout, '(5x,"The possibility to accept this step is:",3x,F10.6," Ry"/)') p_smc
+     write(stdout, '(5x,"The old energy is:",3x,F17.8," Ry")') etot_smart
+     write(stdout, '(5x,"The new energy is:",3x,F17.8," Ry")') etot
+     write(stdout, '(5x,"The possibility to accept this step is:",3x,F10.7/)') p_smc
      write(stdout, '(5x,"Nervously waiting for the fate ..."/)')
      
      ! Decide if accept the new config
-     if(randy() .le. p_smc) then
+     temp = randy()
+     write(stdout, '(5x,"The fate says:",5x,F10.7)') temp
+     if(temp .le. p_smc) then
        write(stdout, '(5x,"The new config is accepted")')
        num_accept=num_accept+1
        tau_smart=tau
        etot_smart=etot
        force_smart=force
      else
-       write(stdout, '("The new config is not accepted")')
+       write(stdout, '(5x,"The new config is not accepted")')
        tau=tau_smart
        etot=etot_smart
        force=force_smart
