@@ -8,7 +8,7 @@ IFLAGS=-I../../include
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../EE $(MOD_FLAG)../../PW/src $(MOD_FLAG).
+          $(MOD_FLAG)../../PW/src $(MOD_FLAG).
 
 #location of needed libraries
 LIBOBJS= ../../iotk/src/libiotk.a ../../flib/flib.a \
@@ -64,7 +64,7 @@ all : tldeps pw4gww.x
 
 pw4gww.x : pw4gww.o libpw4gww.a  $(PW4GWWOBJS) $(PWOBJS) $(QEMODS)  $(LIBMIN) 
 	$(LD) $(LDFLAGS) -o $@ \
-		pw4gww.o libpw4gww.a $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+		pw4gww.o libpw4gww.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
 	- ( cd ../../bin ; ln -fs ../GWW/pw4gww/$@ . )
  
 tldeps:

@@ -9,7 +9,7 @@ IFLAGS=-I../../include
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../EE $(MOD_FLAG)../../PHonon/PH $(MOD_FLAG)../../PW/src \
+          $(MOD_FLAG)../../PHonon/PH $(MOD_FLAG)../../PW/src \
 	  $(MOD_FLAG).
 
 #location of needed libraries

@@ -4,8 +4,9 @@
 
 include ../../make.sys
 
-# location of needed modules
+# location of needed modules and included files (if any)
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG).
+IFLAGS=
 
 LIBOBJS = ../../iotk/src/libiotk.a ../../flib/flib.a \
          ../../clib/clib.a ../../flib/ptools.a
