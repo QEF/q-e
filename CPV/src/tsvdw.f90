@@ -1429,7 +1429,7 @@ PRIVATE :: GetVdWParam
     !
 !$omp parallel do private(dq,dqA,dqAs,dqAmic,ir,dk1,rhoA,drhoA, &
 !$omp off1,dptmp1,dptmp2,dptmp3,dptmp4,dVAdRA,dptmp5,i,j), &
-!$omp reduction(+:dveffdh),reduction(+:dveffdR) 
+!$omp reduction(-:dveffdh),reduction(+:dveffdR) 
     DO iq=1,NsomegaAr(ia)
       !
       ! Compute global/cell reference frame Cartesian coordinates of given real-space grid point...
@@ -1554,7 +1554,7 @@ PRIVATE :: GetVdWParam
     !
 !$omp parallel do private(dqB,dqBs,dqBmic,ir,dk1,rhoB,drhoB,dVAdRB,dVBdRA, &
 !$omp i,j,ib,ibs,spcutB,spdB,ioff,boff), &
-!$omp reduction(+:dveffdR),reduction(+:dveffdh) 
+!$omp reduction(+:dveffdR),reduction(-:dveffdh) 
     DO ipair=1,npair(ia)
       !
       ! Connect pair number with atom...
@@ -1871,8 +1871,8 @@ PRIVATE :: GetVdWParam
 !$omp dAB,dAB2,FDVi,FDRi,FDRii,FCVi,FRRi,FRRii,n1,n2,n3,dsAB,dABimg2, &
 !$omp dABimg,dABimgn1,dABimgn2,dABimgn5,dABimgn6,edamp,fdamp,fdamp2,dptmp1, &
 !$omp dptmp2,i,j,vtmp1,vtmp2,D1A,D2A,D1B,D2B,D12A,D12B,ic), &
-!$omp reduction(+:EtsvdW_period),reduction(+:FtsvdW_period), &
-!$omp reduction(+:HtsvdW_period),reduction(+:predveffAdn_period)
+!$omp reduction(-:EtsvdW_period),reduction(+:FtsvdW_period), &
+!$omp reduction(+:HtsvdW_period),reduction(-:predveffAdn_period)
 !$omp do      
       DO ib=1,nat
         !

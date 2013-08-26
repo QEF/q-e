@@ -423,7 +423,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
            !
            etxc = etxc + e2*( ex + ec ) * rhox
            !
-           vtxc = vtxc + v(ir,1) * rho%of_r(ir,1) + v(ir,2) * rho%of_r(ir,2)
+           vtxc = vtxc + ( v(ir,1)*rho%of_r(ir,1) + v(ir,2)*rho%of_r(ir,2) )
            !
         END IF
         !

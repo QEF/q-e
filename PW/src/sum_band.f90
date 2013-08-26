@@ -73,7 +73,6 @@ SUBROUTINE sum_band()
      rho%kin_g(:,:)      = (0.D0, 0.D0)
   end if
   eband         = 0.D0
-
   !
   ! ... calculates weights of Kohn-Sham orbitals used in calculation of rho
   !

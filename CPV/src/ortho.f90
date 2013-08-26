@@ -35,7 +35,6 @@
       TYPE(la_descriptor),  INTENT(IN)  :: descla
       INTEGER,  INTENT(OUT) :: iter
       REAL(DP), INTENT(OUT) :: diff
-
       ! ... Locals
 
       REAL(DP),   ALLOCATABLE :: s(:,:), sig(:,:), tau(:,:), rhot(:,:)
