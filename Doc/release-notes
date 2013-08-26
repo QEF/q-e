@@ -25,7 +25,7 @@ Incompatible changes in svn version:
      Restarting from hard crashes is no longer supported.
    * Major restructuring of DFT+U and related modules in PW: related variables
      moved to module ldaU, "swfcatom" moved to module "basis"
-   * definition of "natomwfc" in PP/ follows the same login as in PW/
+   * definition of "nwordwfc" in PP/ follows the same login as in PW/
    * calls to "find_equiv_sites" and "writemodes" changed (fixed dimension
      "nax" removed)
    * call to "open_buffer" changed: unit must be a valid fortran unit > 0;
@@ -61,16 +61,16 @@ Fixed in patches to 5.0.2 version:
    * PHonon: in matdyn.x, displacement patterns were no longer correct
      if eigenvectors of the dynamical matrix were also written to file
    * PHonon: compatibility with files produced by previous releases
-     was broken if pool were used
-   * PHonon: symmetry Sq=-q+G introduced in v.5.0.2 could lead to bad 
-     phonons in some cases and has been disabled
+     was broken if pools were used
+   * VERY NASTY PHonon bug: symmetry Sq=-q+G introduced in v.5.0.2
+     could lead to bad phonons in some cases and has been disabled 
    * PHonon: effective charges eu + PAW were not accurate with pools;
      effective charges eu + US PP + spin-orbit nonmagnetic were not
      working in parallel.
    * Bug fix for NC pseudos with GIPAW info, for upf version 2 only:
      Pseudo local potential was incorrectly written and read. 
    * divide_class: wrong check for T_h
-   * PP: incorrect check in bands.f90 (v.5.0.2 only)
+   * PP: incorrect check yielding bogus error in bands.f90 (v.5.0.2 only)
    * CP wasn't working properly with USPP having distinct Q functions 
      for each value of l, due to the never ending l/l+1 problem
 
