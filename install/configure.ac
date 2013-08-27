@@ -88,14 +88,17 @@ AC_ARG_WITH(scalapack,
    [with_scalapack=1])
 
 AC_ARG_WITH(elpa,
-    [AS_HELP_STRING([--with-elpa],
-        [use elpa if available (default: no)])],
-    [if  test "$withval" = "yes" ; then
-       with_elpa=1
-    else
-       with_elpa=0
-    fi],
-    [with_elpa=0])
+   [AS_HELP_STRING([--with-elpa],
+       [(yes|no|<path>) Use ELPA. Self-compile or a <path> can be specified (default: no)])],
+   [if  test "$withval" = "yes" ; then
+      with_elpa=1
+   elif  test "$withval" = "no" ; then
+      with_elpa=0
+   else
+      with_elpa=2
+      with_elpa_path="$withval"   
+   fi],
+   [with_elpa=0])
 
 AC_ARG_WITH(internal-blas,
    [AS_HELP_STRING([--with-internal-blas],
@@ -1953,7 +1956,13 @@ done
 
 # ELPA iff SCALAPACK
 elpa_libs_switch="disabled"
-if test "$with_elpa" -eq 1 && test "$have_scalapack" -eq 1; then 
+if test "$with_elpa" -eq 2 && test "$have_scalapack" -eq 1; then
+    scalapack_libs="-L$with_elpa_path/lib -lelpa $scalapack_libs"
+    # ELPA includes for FORTRAN, works with 2013.08
+    try_iflags="$try_iflags -I$with_elpa_path/include -I$with_elpa_path/include/elpa/modules " 
+    try_dflags="$try_dflags -D__ELPA"
+fi
+if test "$with_elpa" -eq 1 && test "$have_scalapack" -eq 1; then
     scalapack_libs="\$(TOPDIR)/ELPA/libelpa.a $scalapack_libs"
     try_dflags="$try_dflags -D__ELPA"
     elpa_libs_switch="enabled"    
