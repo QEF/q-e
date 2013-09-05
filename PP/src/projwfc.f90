@@ -349,7 +349,6 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   USE gvecs,   ONLY: dual
   USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec
-  USE ldaU,  ONLY: lda_plus_u
   USE lsda_mod, ONLY: nspin, isk, current_spin
   USE symm_base, ONLY: nsym, irt, d1, d2, d3
   USE wvfct
@@ -381,6 +380,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/)
   INTEGER, ALLOCATABLE :: idx(:)
   LOGICAL :: lsym
+  LOGICAL :: freeswfcatom
   !
   !
   WRITE( stdout, '(/5x,"Calling projwave .... ")')
@@ -409,7 +409,12 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   ovps_aux  = (0.d0, 0.d0)
 
   !
-  IF (.not. lda_plus_u) ALLOCATE(swfcatom (npwx , natomwfc ) )
+  IF (.not. ALLOCATED(swfcatom)) THEN
+     ALLOCATE(swfcatom (npwx , natomwfc ) )
+     freeswfcatom = .true.
+  ELSE
+     freeswfcatom = .false.
+  ENDIF
   ALLOCATE(wfcatom (npwx, natomwfc) )
   ALLOCATE(overlap (natomwfc, natomwfc) )
   overlap= (0.d0,0.d0)
@@ -614,7 +619,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   CALL deallocate_bec_type (becp)
   DEALLOCATE (overlap)
   DEALLOCATE (wfcatom)
-  IF (.not. lda_plus_u) DEALLOCATE (swfcatom)
+  IF (freeswfcatom) DEALLOCATE (swfcatom)
   !
   !   vectors et and proj are distributed across the pools
   !   collect data for all k-points to the first pool
@@ -803,7 +808,6 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary )
   USE gvecs,   ONLY: dual
   USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec
-  USE ldaU,  ONLY: lda_plus_u
   USE lsda_mod, ONLY: nspin
   USE noncollin_module, ONLY: noncolin, npol, angle1, angle2
   USE symm_base, ONLY: nsym, irt, t_rev
@@ -825,6 +829,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary )
   CHARACTER(len=*) :: filproj
   LOGICAL :: lwrite_ovp, lbinary
   LOGICAL :: lsym
+  LOGICAL :: freeswfcatom
   !
   INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, ind, n, m, m1, n1, &
              n2, l, nwfc, nwfc1, lmax_wfc, is, nspin0, iunproj,    &
@@ -854,7 +859,12 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary )
   CALL fill_nlmchi ( natomwfc, nwfc, lmax_wfc )
   !
   ALLOCATE(wfcatom (npwx*npol,natomwfc) )
-  IF (.not. lda_plus_u) ALLOCATE(swfcatom (npwx*npol, natomwfc ) )
+  IF (.not. ALLOCATED(swfcatom)) THEN
+     ALLOCATE(swfcatom (npwx*npol, natomwfc ) )
+     freeswfcatom = .true.
+  ELSE
+     freeswfcatom = .false.
+  ENDIF
   CALL allocate_bec_type (nkb, natomwfc, becp )
   ALLOCATE(e (natomwfc) )
   ALLOCATE(work (natomwfc, natomwfc) )
@@ -1106,7 +1116,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary )
   CALL deallocate_bec_type (becp)
   DEALLOCATE (overlap)
   DEALLOCATE (wfcatom)
-  IF (.not. lda_plus_u) DEALLOCATE (swfcatom)
+  IF (freeswfcatom) DEALLOCATE (swfcatom)
   !
   !   vectors et and proj are distributed across the pools
   !   collect data for all k-points to the first pool
@@ -1510,7 +1520,6 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   USE gvecs,   ONLY: dual
   USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec
-  USE ldaU,  ONLY: lda_plus_u
   USE lsda_mod, ONLY: nspin, isk, current_spin
   USE symm_base, ONLY: nsym, irt, d1, d2, d3
   USE wvfct
@@ -1560,6 +1569,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/)
   INTEGER, ALLOCATABLE :: idx(:)
   LOGICAL :: lsym
+  LOGICAL :: freeswfcatom
   TYPE(la_descriptor) :: desc
   TYPE(la_descriptor), ALLOCATABLE :: desc_ip( :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
@@ -1627,7 +1637,12 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   ovps_aux  = (0.d0, 0.d0)
 
 
-  IF (.not. lda_plus_u) ALLOCATE(swfcatom (npwx , natomwfc ) )
+  IF (.not. ALLOCATED(swfcatom)) THEN
+     ALLOCATE(swfcatom (npwx , natomwfc ) )
+     freeswfcatom = .true.
+  ELSE
+     freeswfcatom = .false.
+  ENDIF
   ALLOCATE(wfcatom (npwx, natomwfc) )
   !
   ALLOCATE(e (natomwfc) )
@@ -1864,7 +1879,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   DEALLOCATE (e)
   !
   DEALLOCATE (wfcatom)
-  IF (.not. lda_plus_u) DEALLOCATE (swfcatom)
+  IF (freeswfcatom) DEALLOCATE (swfcatom)
   !
   CLOSE( unit=iunaux )
   !
