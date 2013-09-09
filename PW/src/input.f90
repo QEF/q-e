@@ -1244,7 +1244,7 @@ SUBROUTINE iosys()
 #ifdef __ENVIRON
   !
   IF ( TRIM(assume_isolated) == 'pcc' .AND. &
-       ibrav < 1 .OR. ibrav > 3 ) CALL errore(' iosys', &
+       ( ibrav < 1 .OR. ibrav > 3 ) ) CALL errore(' iosys', &
               'PCC correction defined only for cubic lattices', 1)
   !
   ! ...  Environ
