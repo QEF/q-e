@@ -9,7 +9,12 @@
 MODULE mp_global
   !----------------------------------------------------------------------------
   !
-  ! ... Wrapper module, for compatibility only, DO NOT USE ANY LONGER
+  ! ... Wrapper module, for compatibility. Contains a few "leftover" variables
+  ! ... used for checks (all the *_file variables, read from data file) and for
+  ! ... "task groups", plus the routine mp_startup initializing MPI.
+  ! ... Do not use this module to reference variables (e.g. communicators)
+  ! ... belonging to each of the various parallelization levels:
+  ! ... use the specific modules instead
   !
   USE mp_world
   USE mp_images
