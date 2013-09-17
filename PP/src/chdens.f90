@@ -463,7 +463,7 @@ SUBROUTINE chdens (filplot,plot_num)
                 ounit, rhotot)
         endif
 
-     ELSE
+     ELSEIF (ionode) THEN
         !
         ! GOPENMOL FORMAT
         !
