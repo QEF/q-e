@@ -89,12 +89,14 @@ module funct
   !              "blyp"  = "sla+b88+lyp+blyp"  = BLYP
   !              "pbe"   = "sla+pw+pbx+pbc"    = PBE
   !              "revpbe"= "sla+pw+rpb+pbc"    = revPBE (Zhang-Yang)
+  !              "pw86pbe" = "sla+pw+pw86+pbc" = PW86 exchange + PBE correlation
+  !              "b86bpbe" = "sla+pw+b86b+pbc" = B86b exchange + PBE correlation
   !              "pbesol"= "sla+pw+psx+psc"    = PBEsol
   !              "q2d"   = "sla+pw+q2dx+q2dc"  = PBEQ2D
   !              "hcth"  = "nox+noc+hcth+hcth" = HCTH/120
   !              "olyp"  = "nox+lyp+optx+blyp" = OLYP
   !              "wc"    = "sla+pw+wcx+pbc"    = Wu-Cohen
-  !              "sogga  = "sla+pw+sox+pbec"   = SOGGA
+  !              "sogga" = "sla+pw+sox+pbec"   = SOGGA
   !              "tpss"  = "sla+pw+tpss+tpss"  = TPSS Meta-GGA
   !              "m06l"  = "nox+noc+m6lx+m6lc" = M06L Meta-GGA
   !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
@@ -155,6 +157,8 @@ module funct
   ! gau-pbe in
   !              "gaup"   Gau-PBE hybrid exchange        igcx =20
   ! gau-pbe out
+  !              "pw86"   Perdew-Wang (1986) exchange    igcx =21
+  !              "b86b"   Becke (1986) exchange          igcx =22
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -265,8 +269,8 @@ module funct
   integer :: nxc, ncc, ngcx, ngcc, ncnl
 
 ! gau-pbe in
-!  parameter (nxc = 8, ncc =11, ngcx =19, ngcc = 12, ncnl=2)
-  parameter (nxc = 8, ncc =11, ngcx =20, ngcc = 12, ncnl=2)
+!  parameter (nxc = 8, ncc =11, ngcx =21, ngcc = 12, ncnl=2)
+  parameter (nxc = 8, ncc =11, ngcx =22, ngcc = 12, ncnl=2)
 ! gau-pbe out
 
   character (len=4) :: exc, corr
@@ -279,7 +283,7 @@ module funct
 
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
                'TPSS', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
-               'META', 'C09X', 'SOX', 'M6LX', 'Q2DX', 'GAUP' / 
+               'META', 'C09X', 'SOX', 'M6LX', 'Q2DX', 'GAUP', 'PW86', 'B86B' / 
 
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'TPSS',&
                 'B3LP', 'PSC', 'PBE', 'META', 'M6LC', 'Q2DC' / 
@@ -344,6 +348,24 @@ CONTAINS
        call set_dft_value (inlc, 0)
        dft_defined = .true.
        
+    elseif ('PW86PBE' .EQ. TRIM(dftout) ) then
+       ! special case : PW86PBE 
+       call set_dft_value (iexch,1) !Default
+       call set_dft_value (icorr,4)
+       call set_dft_value (igcx, 21)
+       call set_dft_value (igcc, 4)
+       call set_dft_value (inlc, 0)
+       dft_defined = .true.
+
+    elseif ('B86BPBE' .EQ. TRIM(dftout) ) then
+       ! special case : B86BPBE
+       call set_dft_value (iexch,1) !Default
+       call set_dft_value (icorr,4)
+       call set_dft_value (igcx, 22)
+       call set_dft_value (igcc, 4)
+       call set_dft_value (inlc, 0)
+       dft_defined = .true.
+
     else if ('RPBE' .EQ. TRIM(dftout)) then
     ! special case : RPBE
          call errore('set_dft_from_name', &
@@ -1421,6 +1443,10 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
        v1x = v1x - exx_fraction * v1xsr
        v2x = v2x - exx_fraction * v2xsr
      endif
+  elseif (igcx == 21) then ! 'pw86'
+     call pw86 (rho, grho, sx, v1x, v2x)
+  elseif (igcx == 22) then ! 'b86b'
+     call becke86b (rho, grho, sx, v1x, v2x)
  ! gau-pbe out
   else
      sx = 0.0_DP
@@ -1641,6 +1667,44 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
 
+   elseif (igcx == 21) then ! 'PW86'
+     if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
+        call pw86 (2.0_DP * rhoup, 4.0_DP * grhoup2, sxup, v1xup, v2xup)
+     else
+        sxup = 0.0_DP
+        v1xup = 0.0_DP
+        v2xup = 0.0_DP
+     endif
+     if (rhodw > small .and. sqrt (abs (grhodw2) ) > small) then
+        call pw86 (2.0_DP * rhodw, 4.0_DP * grhodw2, sxdw, v1xdw, v2xdw)
+     else
+        sxdw = 0.0_DP
+        v1xdw = 0.0_DP
+        v2xdw = 0.0_DP
+     endif
+     sx = 0.5_DP * (sxup + sxdw)
+     v2xup = 2.0_DP * v2xup
+     v2xdw = 2.0_DP * v2xdw
+
+   elseif (igcx == 22) then ! 'B86B'
+     if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
+        call becke86b (2.0_DP * rhoup, 4.0_DP * grhoup2, sxup, v1xup, v2xup)
+     else
+        sxup = 0.0_DP
+        v1xup = 0.0_DP
+        v2xup = 0.0_DP
+     endif
+     if (rhodw > small .and. sqrt (abs (grhodw2) ) > small) then
+        call becke86b (2.0_DP * rhodw, 4.0_DP * grhodw2, sxdw, v1xdw, v2xdw)
+     else
+        sxdw = 0.0_DP
+        v1xdw = 0.0_DP
+        v2xdw = 0.0_DP
+     endif
+     sx = 0.5_DP * (sxup + sxdw)
+     v2xup = 2.0_DP * v2xup
+     v2xdw = 2.0_DP * v2xdw
+
   ! case igcx == 5 (HCTH) and 6 (OPTX) not implemented
   ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
   ! routine: needs kinetic energy density in addition to rho and grad rho
@@ -1787,6 +1851,48 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
         endif
         if (rhodw(i) > small .and. sqrt(abs(grhodw2(i))) > small) then
            call wcx (2.0_DP * rhodw(i), 4.0_DP * grhodw2(i), sxdw(i), v1xdw(i), v2xdw(i))
+        else
+           sxdw(i) = 0.0_DP
+           v1xdw(i) = 0.0_DP
+           v2xdw(i) = 0.0_DP
+        endif
+     end do
+     sx = 0.5_DP * (sxup + sxdw)
+     v2xup = 2.0_DP * v2xup
+     v2xdw = 2.0_DP * v2xdw
+
+  case(21) ! 'pw86'
+     do i=1,length
+        if (rhoup(i) > small .and. sqrt(abs(grhoup2(i))) > small) then
+           call pw86 (2.0_DP * rhoup(i), 4.0_DP * grhoup2(i), sxup(i), v1xup(i), v2xup(i))
+        else
+           sxup(i) = 0.0_DP
+           v1xup(i) = 0.0_DP
+           v2xup(i) = 0.0_DP
+        endif
+        if (rhodw(i) > small .and. sqrt(abs(grhodw2(i))) > small) then
+           call pw86 (2.0_DP * rhodw(i), 4.0_DP * grhodw2(i), sxdw(i), v1xdw(i), v2xdw(i))
+        else
+           sxdw(i) = 0.0_DP
+           v1xdw(i) = 0.0_DP
+           v2xdw(i) = 0.0_DP
+        endif
+     end do
+     sx = 0.5_DP * (sxup + sxdw)
+     v2xup = 2.0_DP * v2xup
+     v2xdw = 2.0_DP * v2xdw
+
+  case(22) ! 'b86b'
+     do i=1,length
+        if (rhoup(i) > small .and. sqrt(abs(grhoup2(i))) > small) then
+           call becke86b (2.0_DP * rhoup(i), 4.0_DP * grhoup2(i), sxup(i), v1xup(i), v2xup(i))
+        else
+           sxup(i) = 0.0_DP
+           v1xup(i) = 0.0_DP
+           v2xup(i) = 0.0_DP
+        endif
+        if (rhodw(i) > small .and. sqrt(abs(grhodw2(i))) > small) then
+           call becke86b (2.0_DP * rhodw(i), 4.0_DP * grhodw2(i), sxdw(i), v1xdw(i), v2xdw(i))
         else
            sxdw(i) = 0.0_DP
            v1xdw(i) = 0.0_DP

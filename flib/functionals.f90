@@ -416,6 +416,39 @@ subroutine gl (rs, ec, vc)
 end subroutine gl
 !
 !-----------------------------------------------------------------------
+subroutine becke86b(rho, grho, sx, v1x, v2x)
+  !-----------------------------------------------------------------------
+  ! Becke 1986 gradient correction to exchange
+  ! xA.D. Becke, J. Chem. Phys. 85 (1986) 7184
+  !
+  USE kinds, ONLY : DP
+  implicit none
+  real(DP) :: rho, grho, sx, v1x, v2x
+  real(DP) :: arho, agrho, beta, gamma
+  parameter (beta = 0.00375_dp, gamma=0.007_dp)
+  real(dp) :: sgp1, sgp1_45, sgp1_95
+  real(dp) :: rdg2_43, rdg2_73, rdg2_83, rdg2_4, rdg4_5
+
+  arho = 0.5d0 * rho 
+  agrho = 0.25d0 * grho 
+
+  rdg2_43 = agrho / arho**(4d0/3d0)
+  rdg2_73 = rdg2_43 / arho
+  rdg2_83 = rdg2_43 * rdg2_43 / agrho
+  rdg2_4 = rdg2_43 * rdg2_83 / agrho
+  rdg4_5 = rdg2_73 * rdg2_83
+
+  sgp1 = 1d0 + gamma * rdg2_83
+  sgp1_45 = sgp1**(-4d0/5d0)
+  sgp1_95 = sgp1_45 / sgp1
+
+  sx = -2d0 * beta * agrho / arho**(4d0/3d0) * sgp1_45
+  v1x = -beta * (-4d0/3d0 * rdg2_73 * sgp1_45 + 32d0/15d0 * gamma * rdg4_5 * sgp1_95)
+  v2x = -beta * (sgp1_45 * rdg2_43 / agrho - 4d0/5d0 * gamma * rdg2_4 * sgp1_95)
+
+end subroutine becke86b
+!
+!-----------------------------------------------------------------------
 subroutine becke88 (rho, grho, sx, v1x, v2x)
   !-----------------------------------------------------------------------
   ! Becke exchange: A.D. Becke, PRA 38, 3098 (1988)
@@ -527,6 +560,43 @@ subroutine rPW86 (rho, grho, sx, v1x, v2x)
 
 end subroutine rPW86
 
+subroutine PW86 (rho, grho, sx, v1x, v2x)
+  !-----------------------------------------------------------------------
+  ! Perdew-Wang 1986 exchange gradient correction: PRB 33, 8800 (1986) 
+  ! 
+  USE kinds
+  implicit none
+
+  real(DP), intent(in) :: rho, grho
+  real(DP), intent(out) :: sx, v1x, v2x
+  real(DP) :: s, s_2, s_3, s_4, s_5, s_6, fs, grad_rho, df_ds
+  real(DP) :: a, b, c, s_prefactor, Ax, four_thirds
+  parameter( a = 1.296_dp, b = 14_dp, c = 0.2_dp, s_prefactor = 6.18733545256027_dp, &
+       Ax = -0.738558766382022_dp, four_thirds = 4._dp/3._dp)
+
+  grad_rho = sqrt(grho)
+
+  s = grad_rho/(s_prefactor*rho**(four_thirds))
+
+  s_2 = s**2
+  s_3 = s_2 * s
+  s_4 = s_2**2
+  s_5 = s_3 * s_2
+  s_6 = s_2 * s_4
+
+  !! Calculation of energy
+  fs = (1 + a*s_2 + b*s_4 + c*s_6)**(1.d0/15.d0)
+  sx = Ax * rho**(four_thirds) * (fs-1d0)
+
+  !! Calculation of the potential
+  df_ds = (1.d0/(15.d0*fs**(14d0)))*(2*a*s + 4*b*s_3 + 6*c*s_5)
+
+  v1x = Ax*(four_thirds)*(rho**(1.d0/3.d0)*(fs-1d0) &
+       -grad_rho/(s_prefactor * rho)*df_ds)
+
+  v2x = Ax * df_ds/(s_prefactor*grad_rho)
+
+end subroutine PW86
 !
 !---------------------------------------------------------------
 subroutine c09x (rho, grho, sx, v1x, v2x)
