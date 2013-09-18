@@ -191,6 +191,8 @@ module funct
   !              obpw    as above
   !              b88     A.D.Becke, PRA 38, 3098 (1988)
   !              p86     J.P.Perdew, PRB 33, 8822 (1986)
+  !              pw86    J.P.Perdew, PRB 33, 8800 (1986)
+  !              b86b    A.D.Becke, J.Chem.Phys. 85, 7184 (1986) 
   !              pbe     J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
   !              pw91    J.P.Perdew and Y. Wang, PRB 46, 6671 (1992)
   !              blyp    C.Lee, W.Yang, R.G.Parr, PRB 37, 785 (1988)
