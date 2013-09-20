@@ -254,17 +254,22 @@ mind. In all cases, you should learn how to use SVN: see Sect.\ref{Sec:SVN},
 \begin{itemize}
 \item[a)] If your project involves changes or additions affecting only 
 a small part of \qe, it is usually convenient to work directly on 
-the SVN trunk.
+the main SVN repository (the "trunk").
 \item[b)] 
 If your project involves major or extensive changes to the core of
 \qe, it may be a good idea to make a SVN "branch" and work on it.
+Note that your branch will necessarily be public, since the SVN
+trunk is public.
 \item[c)]
 If your project involves a major new addition (e.g. a new package),
 or if you do not want it to be public during its development,
 it may be a good idea to register it as a new \qeforge\ project
-with a separate SVN repository. It is possible to make it visible
-into the SVN repository of \qe. It is possible to restrict access
-to selected \qe\ developers, or to keep it private.
+with a separate SVN repository. It is possible to restrict access
+to selected \qe\ developers; or to keep it private; or to have
+two repositories, one public and one private. It is possible to 
+have the public repository automatically downloaded into the
+SVN copy of \qe (by defining a "svn propedit external"). 
+
 \end{itemize}
 
 For case a), you should from time to time update your copy (using command
@@ -2001,6 +2006,8 @@ in a clean, not locally modified, trunk:
   svn merge --reintegrate ^/branches/my-espresso-branch
 \end{verbatim}
 then, commit.
+
+Note that SVN can merge anything with anything, and this is a very useful.
 
 \section{Bibliography}
 
