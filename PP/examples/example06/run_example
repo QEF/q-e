@@ -144,6 +144,7 @@ cat > Fe.band_pbe.in << EOF
  &control
     calculation = 'bands'
     prefix='Fe',
+    point_label_type='BI'
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
@@ -173,8 +174,8 @@ ATOMIC_POSITIONS
 Fe  0.0000000   0.00000000   0.0  
 K_POINTS tpiba_b
 3
-1.0 0.0 0.0 40
-0.0 0.0 0.0 40
+H1  40
+gG  40
 0.0 0.0 1.0 1
 EOF
 $ECHO "  running the band calculation for Fe with PAW and spin-orbit...\c"
@@ -249,7 +250,6 @@ $ECHO "  Writing the bands on file fe.bands.ps...\c"
 gnuplot plot.gnu
 check_failure $?
 $ECHO " done"
-
 fi
 
 $ECHO

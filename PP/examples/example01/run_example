@@ -364,11 +364,11 @@ ATOMIC_POSITIONS
  Si 0.25 0.25 0.25
 K_POINTS tpiba_b
   5
-   0.5 0.5 0.5 20
-   0.0 0.0 0.0 20
-   0.0 0.0 1.0  0
+   L 20
+   gG 20
+X 0
    1.0 1.0 0.0 30
-   0.0 0.0 0.0  1
+   gG  1
 EOF
 $ECHO "  running the band-structure calculation for Si...\c"
 $PW_COMMAND < si.band.in > si.band.out
