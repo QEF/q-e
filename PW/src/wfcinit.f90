@@ -64,6 +64,8 @@ SUBROUTINE wfcinit()
         starting_wfc = 'atomic+random'
      END IF
      !
+     IF ( nks == 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, 1 )
+     !
   ELSE IF ( TRIM(starting_wfc) == 'file' .AND. exst_file) THEN
      !
      ! ... wavefunctions are read from file (or buffer) in routine 
