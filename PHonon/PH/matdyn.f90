@@ -396,6 +396,8 @@ PROGRAM matdyn
               IF (ionode) READ (5,*) (q(i,n),i=1,3)
            END DO
            CALL mp_bcast(q, ionode_id)
+           !
+           IF (q_in_cryst_coord)  CALL cryst_to_cart(nq,q,bg,+1)
         ELSE
            ALLOCATE(nqb(nq))
            ALLOCATE(xqaux(3,nq))
@@ -404,6 +406,7 @@ PROGRAM matdyn
            END DO
            CALL mp_bcast(xqaux, ionode_id)
            CALL mp_bcast(nqb, ionode_id)
+           IF (q_in_cryst_coord)  CALL cryst_to_cart(nq,xqaux,bg,+1)
            nqtot=SUM(nqb(1:nq-1))+1
            DO i=1,nq-1
               IF (nqb(i)==0) nqtot=nqtot+1
@@ -416,8 +419,6 @@ PROGRAM matdyn
            DEALLOCATE(xqaux)
            DEALLOCATE(nqb)
         END IF
-        !
-        IF (q_in_cryst_coord)  CALL cryst_to_cart(nq,q,bg,+1)
         ! 
      END IF
      !
