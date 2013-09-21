@@ -632,13 +632,22 @@ CONTAINS
    !
    SUBROUTINE card_kpoints( input_line )
       !
+      USE bz_form, ONLY : bz, set_label_type, allocate_bz, deallocate_bz, &
+                          init_bz, find_bz_type, find_letter_coordinate
+      USE input_parameters, ONLY : ibrav, celldm, point_label_type
       IMPLICIT NONE
       !
-      CHARACTER(len=256) :: input_line
-      INTEGER            :: i, j, ijk
+      CHARACTER(len=256) :: input_line, buffer
+      INTEGER            :: i, j
       INTEGER            :: nkaux
       INTEGER, ALLOCATABLE :: wkaux(:)
       REAL(DP), ALLOCATABLE :: xkaux(:,:)
+      INTEGER            :: npk_label, nch
+      CHARACTER(LEN=3), ALLOCATABLE :: letter(:)
+      INTEGER, ALLOCATABLE :: label_list(:)
+      INTEGER :: bzt
+      TYPE(bz) :: bz_struc
+      REAL(DP) :: at(3,3), bg(3,3), omega, xk_buffer(3)
       REAL(DP) :: delta, wk0
       REAL(DP) :: dkx(3), dky(3)
       LOGICAL, EXTERNAL  :: matches
@@ -704,14 +713,96 @@ CONTAINS
 !
             nkaux=nkstot
             ALLOCATE(xkaux(3,nkstot), wkaux(nkstot))
+            ALLOCATE ( letter(nkstot) )
+            ALLOCATE ( label_list(nkstot) )
+            npk_label=0
             DO i = 1, nkstot
                CALL read_line( input_line, end_of_file = tend, error = terr )
                IF (tend) GOTO 10
                IF (terr) GOTO 20
-               READ(input_line,*, END=10, ERR=20) xkaux(1,i), xkaux(2,i), &
-                                                  xkaux(3,i), wk0
-               wkaux(i) = NINT ( wk0 ) ! beware: wkaux is integer
+               DO j=1,256   ! loop over all characters of input_line
+                  IF ((ICHAR(input_line(j:j)) < 58 .AND. &   ! a digit
+                       ICHAR(input_line(j:j)) > 47) &
+                 .OR. ICHAR(input_line(j:j)) == 43 .OR. &    ! the + sign
+                      ICHAR(input_line(j:j))== 45 .OR. &     ! the - sign
+                      ICHAR(input_line(j:j))== 46 ) THEN     ! a dot .
+!
+!   This is a digit, therefore this line contains the coordinates of the
+!   k point. We read it and exit from the loop on the characters
+!
+                     READ(input_line,*, END=10, ERR=20) xkaux(1,i), &
+                                           xkaux(2,i), xkaux(3,i), wk0
+                     wkaux(i) = NINT ( wk0 ) ! beware: wkaux is integer
+                     EXIT
+                  ELSEIF ((ICHAR(input_line(j:j)) < 123 .AND. &
+                           ICHAR(input_line(j:j)) > 64))  THEN
+!
+!   This is a letter, not a space character. We read the next three 
+!   characters and save them in the letter array, save also which k point
+!   it is
+!
+                     npk_label=npk_label+1
+                     READ(input_line(j:),'(a3)') letter(npk_label)
+                     label_list(npk_label)=i
+!
+!  now we remove the letters from input_line and read the number of points
+!  of the line. The next two line should account for the case in which
+!  there is only one space between the letter and the number of points.
+!
+                     nch=3
+                     IF ( ICHAR(input_line(j+1:j+1))==32 .OR. &
+                          ICHAR(input_line(j+2:j+2))==32 ) nch=2
+                     buffer=input_line(j+nch:)
+                     READ(buffer,*,err=20) wkaux(i)
+                     EXIT
+                  ENDIF
+               ENDDO
             ENDDO
+            IF ( npk_label > 0 ) THEN
+!
+!           In this case some k points have been specified as letters.
+!           We need to transform these letters in coordinates
+!           Find the brillouin zone type
+!
+               CALL find_bz_type(ibrav, celldm, bzt)
+!
+!    generate direct lattice vectors 
+!
+               CALL latgen(ibrav,celldm,at(:,1),at(:,2),at(:,3),omega)
+!
+!   we use at in units of celldm(1)
+!
+               at=at/celldm(1)
+!
+! generate reciprocal lattice vectors
+!
+               CALL recips( at(:,1), at(:,2), at(:,3), bg(:,1), bg(:,2), &
+                                                       bg(:,3) )
+!
+! load the information on the Brillouin zone
+!
+               CALL set_label_type(bz_struc, point_label_type)
+               CALL allocate_bz(ibrav, bzt, bz_struc, celldm, at, bg )
+               CALL init_bz(bz_struc)
+!
+! find for each label the corresponding coordinates and save them
+! on the k point list
+!
+               DO i=1, npk_label
+                  CALL find_letter_coordinate(bz_struc, letter(i), xk_buffer)
+!
+!  The output of this routine is in cartesian coordinates. If the other
+!  k points are in crystal coordinates we transform xk_buffer to the bg
+!  base.
+!
+                  IF (k_points=='crystal') &
+                      CALL cryst_to_cart( 1, xk_buffer, at, -1 ) 
+                  xkaux(:,label_list(i))=xk_buffer(:)
+               ENDDO
+               CALL deallocate_bz(bz_struc)
+            ENDIF
+            DEALLOCATE(letter)
+            DEALLOCATE(label_list)
             ! Count k-points first
             nkstot=SUM(wkaux(1:nkaux-1))+1
             DO i=1,nkaux-1

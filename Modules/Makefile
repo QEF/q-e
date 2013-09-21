@@ -12,6 +12,7 @@ basic_algebra_routines.o \
 becmod.o \
 bfgs_module.o \
 bspline.o \
+bz_form.o \
 cell_base.o  \
 check_stop.o  \
 clocks.o \

@@ -251,6 +251,8 @@ MODULE input_parameters
 
         CHARACTER(len=256) :: vdw_table_name = ' '
 
+        CHARACTER(len=10) :: point_label_type='SC'
+
         CHARACTER(len=80) :: memory = 'default' 
           ! controls memory usage 
         CHARACTER(len=80) :: memory_allowed(3)
@@ -271,7 +273,7 @@ MODULE input_parameters
           forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
           gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
-          vdw_table_name, lorbm, memory
+          vdw_table_name, lorbm, memory, point_label_type
 
 
 #if defined ( __MS2)

@@ -8,6 +8,7 @@ release-notes      What is new in the current release + list of fixed bugs
                    (only those that were present in some official release)
 user-guide.tex     User guide
 developer-man.tex  Developers' manual
+brillouin_zone.tex Pictures of the labels defined inside the Brillouin zones.
 plumed_quick_ref.tex 
                    An introduction to the usage of PLUMED with QE
 constraints_HOWTO.tex
@@ -22,6 +23,7 @@ Printable versions of the *tex files are present in the released version:
 user-guide.pdf
 developer-man.pdf
 plumed_quick_ref.pdf  
+brillouin_zone.pdf
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU

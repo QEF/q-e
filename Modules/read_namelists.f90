@@ -672,6 +672,7 @@ MODULE read_namelists_module
        CALL mp_bcast( lberry,        ionode_id, intra_image_comm )
        CALL mp_bcast( gdir,          ionode_id, intra_image_comm )
        CALL mp_bcast( nppstr,        ionode_id, intra_image_comm )
+       CALL mp_bcast( point_label_type,   ionode_id, intra_image_comm )
        CALL mp_bcast( lkpoint_dir,   ionode_id, intra_image_comm )
        CALL mp_bcast( wf_collect,    ionode_id, intra_image_comm )
        CALL mp_bcast( printwfc,      ionode_id, intra_image_comm )
