@@ -190,6 +190,7 @@ MODULE control_flags
     ldamped =.FALSE., &! if .TRUE. the calc. is a damped dynamics
     llondon =.FALSE., & ! if .TRUE. compute Grimme D2 dispersion corrections
     ts_vdw  =.FALSE., & ! as above for Tkatchenko-Scheffler disp.corrections
+    lxdm    =.FALSE., & ! if .TRUE. compute XDM dispersion corrections
     restart =.FALSE.   ! if .TRUE. restart from results of a preceding run
   !
   ! ... pw self-consistency

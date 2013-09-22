@@ -38,7 +38,7 @@ SUBROUTINE forces()
   USE ldaU,          ONLY : lda_plus_u, U_projection
   USE extfield,      ONLY : tefield, forcefield
   USE control_flags, ONLY : gamma_only, remove_rigid_rot, textfor, &
-                            iverbosity, llondon
+                            iverbosity, llondon, lxdm
 #ifdef __ENVIRON
   USE environ_base,  ONLY : do_environ, env_static_permittivity, rhopol
   USE fft_interfaces,  ONLY : fwfft
@@ -48,6 +48,7 @@ SUBROUTINE forces()
   USE uspp,          ONLY : okvan
   USE martyna_tuckerman, ONLY: do_comp_mt, wg_corr_force
   USE london_module, ONLY : force_london
+  USE xdm_module,    ONLY : force_xdm
   !
   IMPLICIT NONE
   !
@@ -56,6 +57,7 @@ SUBROUTINE forces()
                            forcecc(:,:), &
                            forceion(:,:), &
                            force_disp(:,:),&
+                           force_disp_xdm(:,:),&
                            force_mt(:,:), &
                            forcescc(:,:), &
                            forces_bp_efield(:,:), &
@@ -116,7 +118,12 @@ SUBROUTINE forces()
     force_disp = force_london( alat , nat , ityp , at , bg , tau )
     !
   END IF
-
+  IF (lxdm) THEN
+     ALLOCATE (force_disp_xdm(3,nat))
+     force_disp_xdm = 0._dp
+     force_disp_xdm = force_xdm(nat)
+  end if
+     
   !
   ! ... The SCF contribution
   !
@@ -203,6 +210,7 @@ SUBROUTINE forces()
                          forcescc(ipol,na)
         !
         IF ( llondon ) force(ipol,na) = force(ipol,na) + force_disp(ipol,na)
+        IF ( lxdm ) force(ipol,na) = force(ipol,na) + force_disp_xdm(ipol,na)
         IF ( tefield ) force(ipol,na) = force(ipol,na) + forcefield(ipol,na)
         IF (lelfield)  force(ipol,na) = force(ipol,na) + forces_bp_efield(ipol,na)
         IF (do_comp_mt)force(ipol,na) = force(ipol,na) + force_mt(ipol,na) 
@@ -312,6 +320,13 @@ SUBROUTINE forces()
         END DO
      END IF
      !
+     IF (lxdm) THEN
+        WRITE( stdout, '(/,5x,"XDM contribution to forces:")')
+        DO na = 1, nat
+           WRITE( stdout, 9035) na, ityp(na), (force_disp_xdm(ipol,na), ipol = 1, 3)
+        END DO
+     END IF
+     !
   END IF
   !
   sumfor = 0.D0
@@ -342,8 +357,21 @@ SUBROUTINE forces()
      !
   END IF
   !
+  IF ( lxdm .AND. iverbosity > 0 ) THEN
+     !
+     sum_mm = 0.D0
+     DO na = 1, nat
+        sum_mm = sum_mm + &
+                 force_disp_xdm(1,na)**2 + force_disp_xdm(2,na)**2 + force_disp_xdm(3,na)**2
+     END DO
+     sum_mm = SQRT( sum_mm )
+     WRITE ( stdout, '(/,5x, "Total XDM Force = ",F12.6)') sum_mm
+     !
+  END IF
+  !
   DEALLOCATE( forcenl, forcelc, forcecc, forceh, forceion, forcescc )
   IF ( llondon )  DEALLOCATE ( force_disp )
+  IF ( lxdm ) DEALLOCATE( force_disp_xdm ) 
   IF ( lelfield ) DEALLOCATE ( forces_bp_efield )
   !
   lforce = .TRUE.

@@ -16,7 +16,7 @@ SUBROUTINE sum_band()
   !
   USE kinds,                ONLY : DP
   USE ener,                 ONLY : eband
-  USE control_flags,        ONLY : diago_full_acc, gamma_only, tqr
+  USE control_flags,        ONLY : diago_full_acc, gamma_only, tqr, lxdm
   USE cell_base,            ONLY : at, bg, omega, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
@@ -68,7 +68,7 @@ SUBROUTINE sum_band()
   becsum(:,:,:) = 0.D0
   rho%of_r(:,:)      = 0.D0
   rho%of_g(:,:)      = (0.D0, 0.D0)
-  if ( dft_is_meta() ) then
+  if ( dft_is_meta() .OR. lxdm ) then
      rho%kin_r(:,:)      = 0.D0
      rho%kin_g(:,:)      = (0.D0, 0.D0)
   end if
@@ -116,7 +116,7 @@ SUBROUTINE sum_band()
   ! ... specific routines are called to sum for each k point the contribution
   ! ... of the wavefunctions to the charge
   !
-  IF (dft_is_meta()) ALLOCATE (kplusg(npwx))
+  IF (dft_is_meta() .OR. lxdm) ALLOCATE (kplusg(npwx))
   IF ( gamma_only ) THEN
      !
      CALL sum_band_gamma()
@@ -126,7 +126,7 @@ SUBROUTINE sum_band()
      CALL sum_band_k()
      !
   END IF
-  IF (dft_is_meta()) DEALLOCATE (kplusg)
+  IF (dft_is_meta() .OR. lxdm) DEALLOCATE (kplusg)
   !
   IF( okpaw )  THEN
      rho%bec(:,:,:) = becsum(:,:,:) ! becsum is filled in sum_band_{k|gamma}
@@ -147,7 +147,7 @@ SUBROUTINE sum_band()
      DO is = 1, nspin
         !
         CALL interpolate( rho%of_r(1,is), rho%of_r(1,is), 1 )
-        if (dft_is_meta()) CALL interpolate(rho%kin_r(1,is),rho%kin_r(1,is),1)
+        if (dft_is_meta() .OR. lxdm) CALL interpolate(rho%kin_r(1,is),rho%kin_r(1,is),1)
         !
      END DO
      !
@@ -166,7 +166,7 @@ SUBROUTINE sum_band()
   ! ... reduce charge density across pools
   !
   CALL mp_sum( rho%of_r, inter_pool_comm )
-  if (dft_is_meta() ) CALL mp_sum( rho%kin_r, inter_pool_comm )
+  if (dft_is_meta() .OR. lxdm) CALL mp_sum( rho%kin_r, inter_pool_comm )
 #endif
   !
   ! ... bring the (unsymmetrized) rho(r) to G-space (use psic as work array)
@@ -183,7 +183,7 @@ SUBROUTINE sum_band()
   !
   ! ... same for rho_kin(G)
   !
-  IF ( dft_is_meta()) THEN
+  IF ( dft_is_meta() .OR. lxdm) THEN
      DO is = 1, nspin
         psic(:) = rho%kin_r(:,is)
         CALL fwfft ('Dense', psic, dfftp)
@@ -206,7 +206,7 @@ SUBROUTINE sum_band()
   !
   ! ... the same for rho%kin_r and rho%kin_g
   !
-  IF ( dft_is_meta()) THEN
+  IF ( dft_is_meta() .OR. lxdm) THEN
      DO is = 1, nspin
         !
         psic(:) = ( 0.D0, 0.D0 )
@@ -260,7 +260,7 @@ SUBROUTINE sum_band()
        !
        IF( dffts%have_task_groups ) THEN
           !
-          IF( dft_is_meta() ) &
+          IF( dft_is_meta() .OR. lxdm) &
              CALL errore( ' sum_band ', ' task groups with meta dft, not yet implemented ', 1 )
           !
           v_siz = dffts%tg_nnr * dffts%nogrp
@@ -403,7 +403,7 @@ SUBROUTINE sum_band()
                 !
              END IF
              !
-             IF (dft_is_meta()) THEN
+             IF (dft_is_meta() .OR. lxdm) THEN
                 DO j=1,3
                    psic(:) = ( 0.D0, 0.D0 )
                    !
@@ -597,7 +597,7 @@ SUBROUTINE sum_band()
        !
        use_tg = dffts%have_task_groups
        dffts%have_task_groups = ( dffts%have_task_groups ) .AND. &
-                  ( nbnd >= dffts%nogrp ) .AND. ( .NOT. dft_is_meta() )
+                  ( nbnd >= dffts%nogrp ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
        !
        incr = 1
        !
@@ -812,7 +812,7 @@ SUBROUTINE sum_band()
 
                 END IF
                 !
-                IF (dft_is_meta()) THEN
+                IF (dft_is_meta() .OR. lxdm) THEN
                    DO j=1,3
                       psic(:) = ( 0.D0, 0.D0 )
                       !

@@ -235,7 +235,7 @@ MODULE read_namelists_module
        ! 
        real_space = .false.
        !
-       ! ... DFT-D, Tkatchenko-Scheffler
+       ! ... DFT-D, Tkatchenko-Scheffler, XDM
        !
        vdw_corr    = 'none'
        london      = .false.
@@ -244,6 +244,9 @@ MODULE read_namelists_module
        ts_vdw          = .FALSE.
        ts_vdw_isolated = .FALSE.
        ts_vdw_econv_thr = 1.E-6_DP
+       xdm = .FALSE.
+       xdm_a1 = 0.6836_DP
+       xdm_a2 = 1.5045_DP
        !
 #ifdef __ENVIRON
        ! ... Environ
@@ -798,6 +801,9 @@ MODULE read_namelists_module
        CALL mp_bcast( london,                    ionode_id, intra_image_comm )
        CALL mp_bcast( london_s6,                 ionode_id, intra_image_comm )
        CALL mp_bcast( london_rcut,               ionode_id, intra_image_comm )
+       CALL mp_bcast( xdm,                       ionode_id, intra_image_comm )
+       CALL mp_bcast( xdm_a1,                    ionode_id, intra_image_comm )
+       CALL mp_bcast( xdm_a2,                    ionode_id, intra_image_comm )
        !
        CALL mp_bcast( no_t_rev,                  ionode_id, intra_image_comm )
 #ifdef __ENVIRON

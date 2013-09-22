@@ -147,6 +147,7 @@ SUBROUTINE iosys()
                             ldamped, lbands, llang, use_SMC,  &
                             lconstrain, restart, twfcollect, &
                             llondon, ts_vdw, do_makov_payne, &
+                            lxdm, &
                             lecrpa_           => lecrpa, &
                             smallmem
   USE control_flags, ONLY: scf_must_converge_ => scf_must_converge
@@ -235,6 +236,7 @@ SUBROUTINE iosys()
                                starting_spin_angle, assume_isolated,spline_ps,&
                                vdw_corr, london, london_s6, london_rcut,      &
                                ts_vdw_isolated, ts_vdw_econv_thr,             &
+                               xdm, xdm_a1, xdm_a2,                           &
                                one_atom_occupations,                          &
                                esm_bc, esm_efield, esm_w, esm_nfit
 #ifdef __ENVIRON
@@ -292,6 +294,7 @@ SUBROUTINE iosys()
   USE constraints_module,    ONLY : init_constraint
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
   USE london_module,         ONLY : init_london, lon_rcut, scal6
+  USE xdm_module,            ONLY : init_xdm, a1i, a2i
   USE us, ONLY : spline_ps_ => spline_ps
   !
   USE input_parameters,       ONLY : deallocate_input_parameters
@@ -1183,16 +1186,25 @@ SUBROUTINE iosys()
       !
       llondon= .TRUE.
       ts_vdw = .FALSE.
+      lxdm   = .FALSE.
       !
     CASE( 'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler' )
       !
       llondon= .FALSE.
       ts_vdw = .TRUE.
+      lxdm   = .FALSE.
+      !
+    CASE( 'XDM', 'xdm' )
+       !
+      llondon= .FALSE.
+      ts_vdw = .FALSE.
+      lxdm   = .TRUE.
       !
     CASE DEFAULT
       !
       llondon= .FALSE.
       ts_vdw = .FALSE.
+      lxdm   = .FALSE.
       !
   END SELECT
   IF (ts_vdw) CALL errore("iosys","Tkatchenko-Scheffler not implemented", 1)
@@ -1205,6 +1217,14 @@ SUBROUTINE iosys()
      scal6       = london_s6
      ! not sure if it can be called here
      !   CALL init_london ( )
+  END IF
+  IF ( xdm ) THEN
+     CALL infomsg("iosys","xdm is obsolete, use ''vdw_corr='xdm''' instead")
+     lxdm = .TRUE.
+  END IF
+  IF ( lxdm) THEN
+     a1i = xdm_a1
+     a2i = xdm_a2
   END IF
   !
 #if defined __MS2
@@ -1407,6 +1427,7 @@ SUBROUTINE iosys()
   ! ... allocate arrays for dispersion correction
   !
   IF ( llondon) CALL init_london ( )
+  IF ( lxdm) CALL init_xdm ( )
   !
   ! ... variables for constrained dynamics are set here
   !

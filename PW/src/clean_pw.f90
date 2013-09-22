@@ -53,6 +53,7 @@ SUBROUTINE clean_pw( lflag )
   USE wannier_new,          ONLY : use_wannier
   !
   USE london_module,        ONLY : dealloca_london
+  USE xdm_module,           ONLY : cleanup_xdm
   USE constraints_module,   ONLY : deallocate_constraint
   USE realus,               ONLY : deallocatenewdreal
   USE pseudo_types,         ONLY : deallocate_pseudo_upf
@@ -89,6 +90,7 @@ SUBROUTINE clean_pw( lflag )
      !
      CALL deallocate_bp_efield()
      CALL dealloca_london()
+     CALL cleanup_xdm()
      CALL deallocate_constraint()
      !
   END IF

@@ -257,6 +257,7 @@ clean_pw.o : realus.o
 clean_pw.o : scf_mod.o
 clean_pw.o : symm_base.o
 clean_pw.o : symme.o
+clean_pw.o : xdm_dispersion.o
 close_files.o : ../../Modules/control_flags.o
 close_files.o : ../../Modules/io_files.o
 close_files.o : ../../Modules/mp.o
@@ -404,6 +405,7 @@ electrons.o : paw_onecenter.o
 electrons.o : paw_symmetry.o
 electrons.o : pwcom.o
 electrons.o : scf_mod.o
+electrons.o : xdm_dispersion.o
 eqvect.o : ../../Modules/kind.o
 esm.o : ../../Modules/cell_base.o
 esm.o : ../../Modules/constants.o
@@ -546,6 +548,7 @@ forces.o : martyna_tuckerman.o
 forces.o : pwcom.o
 forces.o : scf_mod.o
 forces.o : symme.o
+forces.o : xdm_dispersion.o
 forces_bp_efield.o : ../../Modules/becmod.o
 forces_bp_efield.o : ../../Modules/cell_base.o
 forces_bp_efield.o : ../../Modules/constants.o
@@ -792,6 +795,7 @@ input.o : ../../Modules/cell_base.o
 input.o : ../../Modules/constants.o
 input.o : ../../Modules/constraints_module.o
 input.o : ../../Modules/control_flags.o
+input.o : ../../Modules/environ_input.o
 input.o : ../../Modules/fft_base.o
 input.o : ../../Modules/funct.o
 input.o : ../../Modules/input_parameters.o
@@ -825,6 +829,7 @@ input.o : pwcom.o
 input.o : realus.o
 input.o : start_k.o
 input.o : symm_base.o
+input.o : xdm_dispersion.o
 interpolate.o : ../../Modules/control_flags.o
 interpolate.o : ../../Modules/fft_base.o
 interpolate.o : ../../Modules/fft_interfaces.o
@@ -1457,6 +1462,7 @@ set_rhoc.o : ../../Modules/recvec.o
 set_rhoc.o : ../../Modules/uspp.o
 set_rhoc.o : pwcom.o
 set_rhoc.o : scf_mod.o
+set_vrs.o : ../../Modules/control_flags.o
 set_vrs.o : ../../Modules/fft_base.o
 set_vrs.o : ../../Modules/funct.o
 set_vrs.o : ../../Modules/kind.o
@@ -1626,6 +1632,7 @@ stress.o : ldaU.o
 stress.o : pwcom.o
 stress.o : scf_mod.o
 stress.o : symme.o
+stress.o : xdm_dispersion.o
 struct_fact.o : ../../Modules/constants.o
 struct_fact.o : ../../Modules/kind.o
 sum_band.o : ../../Modules/becmod.o
@@ -1874,6 +1881,21 @@ write_ns.o : ldaU.o
 write_ns.o : pwcom.o
 write_ns.o : scf_mod.o
 wsweight.o : ../../Modules/kind.o
+xdm_dispersion.o : ../../Modules/atom.o
+xdm_dispersion.o : ../../Modules/cell_base.o
+xdm_dispersion.o : ../../Modules/constants.o
+xdm_dispersion.o : ../../Modules/control_flags.o
+xdm_dispersion.o : ../../Modules/fft_base.o
+xdm_dispersion.o : ../../Modules/io_global.o
+xdm_dispersion.o : ../../Modules/ions_base.o
+xdm_dispersion.o : ../../Modules/kind.o
+xdm_dispersion.o : ../../Modules/mp_global.o
+xdm_dispersion.o : ../../Modules/paw_variables.o
+xdm_dispersion.o : ../../Modules/splinelib.o
+xdm_dispersion.o : ../../Modules/uspp.o
+xdm_dispersion.o : paw_onecenter.o
+xdm_dispersion.o : pwcom.o
+xdm_dispersion.o : scf_mod.o
 xk_wk_collect.o : ../../Modules/io_global.o
 xk_wk_collect.o : ../../Modules/kind.o
 xk_wk_collect.o : ../../Modules/mp.o

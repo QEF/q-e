@@ -1336,6 +1336,37 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
            }
          }
 
+         var xdm -type LOGICAL {
+           default { .FALSE. }
+           info {
+               if .TRUE. compute the XDM dispersion energy term.
+               See:
+                 A. D. Becke and E. R. Johnson, J. Chem. Phys. 127, 154108 (2007)
+		 A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 136, 174109 (2012)
+           }
+         }
+         var xdm_a1 -type REAL {
+           default { 0.6836 }
+           info {
+               Damping function parameter a1 (adimensional). This value should change
+	       with the exchange-correlation functional. The default corresponds to 
+               PW86PBE. 
+	       For other functionals, see:
+	          http://gatsby.ucmerced.edu/wiki/XDM_damping_function_parameters
+                  A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013) 
+           }
+         }
+         var xdm_a2 -type REAL {
+           default { 1.5045 }
+           info {
+               Damping function parameter a2 (angstrom). This value should change
+	       with the exchange-correlation functional. The default corresponds to 
+               PW86PBE. 
+	       For other functionals, see:
+	          http://gatsby.ucmerced.edu/wiki/XDM_damping_function_parameters
+                  A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013) 
+           }
+         }
 
     }
 

@@ -21,13 +21,14 @@ subroutine stress ( sigma )
   USE ldaU,          ONLY : lda_plus_u, U_projection
   USE lsda_mod,      ONLY : nspin
   USE scf,           ONLY : rho, rho_core, rhog_core
-  USE control_flags, ONLY : iverbosity, gamma_only, llondon
+  USE control_flags, ONLY : iverbosity, gamma_only, llondon, lxdm
   USE noncollin_module, ONLY : noncolin
   USE funct,         ONLY : dft_is_meta, dft_is_gradient 
   USE symme,         ONLY : symmatrix
   USE bp,            ONLY : lelfield
   USE uspp,          ONLY : okvan
   USE london_module, ONLY : stres_london
+  USE xdm_module,    ONLY : stress_xdm
   USE exx,           ONLY : exx_stress
   USE funct,         ONLY : dft_is_hybrid
   !
@@ -38,7 +39,7 @@ subroutine stress ( sigma )
   real(DP) :: sigmakin (3, 3), sigmaloc (3, 3), sigmahar (3, 3), &
        sigmaxc (3, 3), sigmaxcc (3, 3), sigmaewa (3, 3), sigmanlc (3, 3), &
        sigmabare (3, 3), sigmah (3, 3), sigmael( 3, 3), sigmaion(3, 3), &
-       sigmalon ( 3 , 3 ), sigma_nonloc_dft (3 ,3), sigmaexx(3,3)
+       sigmalon ( 3 , 3 ), sigmaxdm(3, 3), sigma_nonloc_dft (3 ,3), sigmaexx(3,3)
   integer :: l, m
   !
   WRITE( stdout, '(//5x,"entering subroutine stress ..."/)')
@@ -91,6 +92,10 @@ subroutine stress ( sigma )
   !
   IF ( llondon ) &
     sigmalon = stres_london ( alat , nat , ityp , at , bg , tau , omega )
+
+  ! xdm dispersion
+  sigmaxdm = 0._dp
+  if (lxdm) sigmaxdm = stress_xdm()
   !
   !  kinetic + nonlocal contribuition
   !
@@ -130,7 +135,8 @@ subroutine stress ( sigma )
   sigma(:,:) = sigmakin(:,:) + sigmaloc(:,:) + sigmahar(:,:) + &
                sigmaxc(:,:) + sigmaxcc(:,:) + sigmaewa(:,:) + &
                sigmanlc(:,:) + sigmah(:,:) + sigmael(:,:) +  &
-               sigmaion(:,:) + sigmalon(:,:) + sigma_nonloc_dft(:,:)
+               sigmaion(:,:) + sigmalon(:,:) + sigmaxdm(:,:) + &
+               sigma_nonloc_dft(:,:)
   !
   IF (dft_is_hybrid()) THEN
      sigmaexx = exx_stress()
@@ -160,6 +166,7 @@ subroutine stress ( sigma )
      (sigmaewa(l,1)*ry_kbar,sigmaewa(l,2)*ry_kbar,sigmaewa(l,3)*ry_kbar, l=1,3),&
      (sigmah  (l,1)*ry_kbar,sigmah  (l,2)*ry_kbar,sigmah  (l,3)*ry_kbar, l=1,3),&
      (sigmalon(l,1)*ry_kbar,sigmalon(l,2)*ry_kbar,sigmalon(l,3)*ry_kbar, l=1,3), &
+     (sigmaxdm(l,1)*ry_kbar,sigmaxdm(l,2)*ry_kbar,sigmaxdm(l,3)*ry_kbar, l=1,3), &
      (sigma_nonloc_dft(l,1)*ry_kbar,sigma_nonloc_dft(l,2)*ry_kbar,sigma_nonloc_dft(l,3)*ry_kbar, l=1,3)
 
   IF ( dft_is_hybrid() .AND. (iverbosity > 0) ) WRITE( stdout, 9006) &
@@ -189,6 +196,7 @@ subroutine stress ( sigma )
          &   5x,'ewald   stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'hubbard stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'london  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
+         &   5x,'XDM     stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'dft-nl  stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
 end subroutine stress
 

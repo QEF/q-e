@@ -394,7 +394,6 @@ projwfc.o : ../../Modules/uspp.o
 projwfc.o : ../../Modules/wavefunctions.o
 projwfc.o : ../../Modules/zhpev_drv.o
 projwfc.o : ../../PW/src/atomic_wfc_mod.o
-projwfc.o : ../../PW/src/ldaU.o
 projwfc.o : ../../PW/src/pwcom.o
 projwfc.o : ../../PW/src/symm_base.o
 projwfc.o : ../../iotk/src/iotk_module.o
