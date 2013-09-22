@@ -1,5 +1,6 @@
 New in svn version
 
+   * PW: partial support to the use of k-points label in the Brillouin zone
    * PW: Langevin dynamics with Smart Monte Carlo
    * CP: Tkatchenko-Scheffler vdW correction
    * GWW replaced by GWL (using Lanczos chains)
@@ -35,6 +36,8 @@ Incompatible changes in svn version:
 
 Fixed in svn version:
 
+   * PW: wave functions in collected format were not properly read
+     when k-point parallelization was active with one k-point per pool
    * PHonon: epsil + paw was not working with k-point parallelization.
    * PHonon: problem with the symmetry analysis in D_6h. The problem appeared
      in special cases after the symmetry reshuffling made by the phonon code.

@@ -64,6 +64,9 @@ SUBROUTINE wfcinit()
         starting_wfc = 'atomic+random'
      END IF
      !
+     ! ... workaround: with k-point parallelization and 1 k-point per pool,
+     ! ... pw_readfile does not leave evc properly initialized on all pools
+     !
      IF ( nks == 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, 1 )
      !
   ELSE IF ( TRIM(starting_wfc) == 'file' .AND. exst_file) THEN
