@@ -17,6 +17,7 @@ bfgs_module.o : constants.o
 bfgs_module.o : io_files.o
 bfgs_module.o : kind.o
 bspline.o : kind.o
+bz_form.o : kind.o
 cell_base.o : constants.o
 cell_base.o : control_flags.o
 cell_base.o : io_global.o
@@ -189,6 +190,7 @@ radial_grids.o : constants.o
 radial_grids.o : kind.o
 random_numbers.o : kind.o
 read_cards.o : autopilot.o
+read_cards.o : bz_form.o
 read_cards.o : constants.o
 read_cards.o : input_parameters.o
 read_cards.o : io_global.o

@@ -1462,7 +1462,6 @@ set_rhoc.o : ../../Modules/recvec.o
 set_rhoc.o : ../../Modules/uspp.o
 set_rhoc.o : pwcom.o
 set_rhoc.o : scf_mod.o
-set_vrs.o : ../../Modules/control_flags.o
 set_vrs.o : ../../Modules/fft_base.o
 set_vrs.o : ../../Modules/funct.o
 set_vrs.o : ../../Modules/kind.o
@@ -1889,6 +1888,7 @@ xdm_dispersion.o : ../../Modules/fft_base.o
 xdm_dispersion.o : ../../Modules/io_global.o
 xdm_dispersion.o : ../../Modules/ions_base.o
 xdm_dispersion.o : ../../Modules/kind.o
+xdm_dispersion.o : ../../Modules/mp.o
 xdm_dispersion.o : ../../Modules/mp_global.o
 xdm_dispersion.o : ../../Modules/paw_variables.o
 xdm_dispersion.o : ../../Modules/splinelib.o

@@ -599,7 +599,9 @@ subroutine pc_operator_t(state,evc_t,ispin, fc)
 
   TYPE(fft_cus), INTENT(in) :: fc
   COMPLEX(kind=DP), INTENT(inout) :: state(fc%npwt)!state to be projected
-  COMPLEX(kind=DP), INTENT(inout) :: evc_t(fc%npwt,num_nbndv(ispin))!valence states
+  ! COMPLEX(kind=DP), INTENT(inout) :: evc_t(fc%npwt,num_nbndv(ispin))
+  ! above syntax not accepted by all compilers
+  COMPLEX(kind=DP), INTENT(inout) :: evc_t(fc%npwt,*)!valence states
   INTEGER, INTENT(in) :: ispin!spin channel
 
   INTEGER :: iv,ig
@@ -1956,7 +1958,9 @@ subroutine pc_operator_t_m(numpw,state,evc_t,ispin,fc)
   INTEGER, INTENT(in) :: numpw!number of vectors
   INTEGER, INTENT(in) :: ispin!spin channel
   COMPLEX(kind=DP), INTENT(inout) :: state(fc%npwt,numpw)!state to be projected
-  COMPLEX(kind=DP), INTENT(inout) :: evc_t(fc%npwt,num_nbndv(ispin))!valence states
+  ! COMPLEX(kind=DP), INTENT(inout) :: evc_t(fc%npwt,num_nbndv(ispin))
+  ! above syntax not accepted by all compilers
+  COMPLEX(kind=DP), INTENT(inout) :: evc_t(fc%npwt,*)!valence states
 
   INTEGER :: ii,iv,ig
   REAL(kind=DP), ALLOCATABLE :: prod(:,:)
@@ -2004,7 +2008,9 @@ subroutine pc_operator_t_r(numpw,state,evc_r,ispin,fc)
   INTEGER, INTENT(in) :: numpw!number of vectors
   INTEGER, INTENT(in) :: ispin!spin channel
   REAL(kind=DP), INTENT(inout) :: state(fc%nrxxt,numpw)!state to be projected
-  REAL(kind=DP), INTENT(inout) :: evc_r(fc%nrxxt,num_nbndv(ispin))!valence states                        
+  ! REAL(kind=DP), INTENT(inout) :: evc_t(fc%nrxxt,num_nbndv(ispin))
+  ! above syntax not accepted by all compilers
+  REAL(kind=DP), INTENT(inout) :: evc_t(fc%nrxxt,*)!valence states
   INTEGER :: ii,iv,ig
   REAL(kind=DP), ALLOCATABLE :: prod(:,:)
 
