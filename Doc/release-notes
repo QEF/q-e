@@ -6,7 +6,8 @@ New in svn version
    * GWW replaced by GWL (using Lanczos chains)
    * turboTDDFT: pseudo_Hamiltonians, Davidson-like diagonalization
    * PWCOND with DFT+U
-   * New functionals: gau-pbe, PW86 (unrevised), B86B
+   * New functionals: gau-pbe, PW86 (unrevised), B86B, XDM (exchange-hole 
+     dipole moment) model of dispersions
    * Added the subdirectory FD in PHonon. Calculation of phonon dispersions 
      using the finite displacements supercell approach.
    * dynmat.x can calculate phonon contribution to dielectric tensor
@@ -36,8 +37,6 @@ Incompatible changes in svn version:
 
 Fixed in svn version:
 
-   * PW: wave functions in collected format were not properly read
-     when k-point parallelization was active with one k-point per pool
    * PHonon: epsil + paw was not working with k-point parallelization.
    * PHonon: problem with the symmetry analysis in D_6h. The problem appeared
      in special cases after the symmetry reshuffling made by the phonon code.
