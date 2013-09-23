@@ -69,10 +69,6 @@ module xdm_module
 
   ! factorials and lambda_l1,l2
   REAL(DP), PARAMETER :: fact(0:8) = REAL((/1,1,2,6,24,120,720,5040,40320/),DP)
-  REAL(DP), PARAMETER :: fll(3,3) = (/&
-     2._DP/3._DP, 1._DP       , 4._DP/3._DP,&
-     1._DP      , 14._DP/5._DP, 6._DP      ,&
-     4._DP/3._DP, 6._DP       , 132._DP/7._DP /)
 
 CONTAINS
 
