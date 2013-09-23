@@ -25,18 +25,20 @@ MODULE mp_world
 CONTAINS
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE mp_global_start ( )
+  SUBROUTINE mp_global_start ( my_world_comm , library_init )
     !-----------------------------------------------------------------------
     !
     IMPLICIT NONE
+    INTEGER, INTENT(IN) :: my_world_comm
+    LOGICAL, INTENT(IN) :: library_init
     !
+    world_comm = my_world_comm
     ! ... get the basic parameters from communications sub-system
     ! ... to handle processors
     ! ... nproc = number of processors
     ! ... mpime = processor number, starting from 0
-    ! ... world_comm = group index of all processors
     !
-    CALL mp_start( nproc, mpime, world_comm )
+    CALL mp_start( nproc, mpime, world_comm , init_mpi=library_init )
     !
     ! ... meta_ionode is true if this processor is the root processor
     ! ... of the world group - "ionode_world" would be a better name

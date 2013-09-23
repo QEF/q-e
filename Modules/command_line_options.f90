@@ -26,6 +26,8 @@ MODULE command_line_options
   INTEGER :: nargs = 0
   ! ... QE arguments read from command line
   INTEGER :: nimage_= 1, npool_= 1, npot_= 1, ndiag_ = 0, nband_= 1, ntg_= 1
+  ! ... Indicate if using library init
+  LOGICAL :: library_init = .FALSE.
   CHARACTER(LEN=80) :: input_file_ = ' '
   ! ... Command line arguments not identified
   CHARACTER(LEN=256) :: command_line = ' '
@@ -42,6 +44,10 @@ CONTAINS
      CHARACTER(LEN=6), EXTERNAL :: int_to_char
      !
      command_line = ' '
+     !
+     ! command line parameters have already been set via set_command_line()
+     IF (library_init) GO TO 20
+     !
      nargs = iargc()
      CALL mp_bcast ( nargs, root, world_comm )
      !
@@ -105,6 +111,24 @@ CONTAINS
      CALL mp_bcast( ndiag_ , root, world_comm ) 
      
   END SUBROUTINE get_command_line
+  !
+  ! command line flags set from library
+  SUBROUTINE set_command_line ( nimage, npot, npool, ntg, nband, ndiag)
+
+     IMPLICIT NONE
+
+     INTEGER, INTENT(IN), OPTIONAL :: nimage, npot, npool, ntg, nband, ndiag
+     !
+     IF ( PRESENT(nimage) ) nimage_ = nimage
+     IF ( PRESENT(npot)   ) npot_   = npot
+     IF ( PRESENT(npool)  ) npool_  = npool
+     IF ( PRESENT(ntg)    ) ntg_    = ntg
+     IF ( PRESENT(nband)  ) nband_  = nband
+     IF ( PRESENT(ndiag)  ) ndiag_  = ndiag
+     !
+     library_init = .TRUE.
+     !
+  END SUBROUTINE set_command_line
   !
 END MODULE command_line_options
 

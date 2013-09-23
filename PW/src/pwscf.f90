@@ -11,8 +11,7 @@ PROGRAM pwscf
   !
   ! ... Main program calling one instance of Plane Wave Self-Consistent Field code
   !
-  USE environment,       ONLY : environment_start, environment_end
-  USE io_global,         ONLY : ionode, ionode_id, stdout
+  USE environment,       ONLY : environment_start
   USE mp_global,         ONLY : mp_startup
   USE read_input,        ONLY : read_input_file
   USE command_line_options, ONLY: input_file_
@@ -31,6 +30,7 @@ PROGRAM pwscf
   CALL run_pwscf  ( exit_status )
   !
   CALL stop_run( exit_status )
+  CALL do_stop( exit_status )
   !
   STOP
   !

@@ -1268,7 +1268,6 @@ pwcom.o : ../../Modules/recvec.o
 pwcom.o : ldaU.o
 pwscf.o : ../../Modules/command_line_options.o
 pwscf.o : ../../Modules/environment.o
-pwscf.o : ../../Modules/io_global.o
 pwscf.o : ../../Modules/mp_global.o
 pwscf.o : ../../Modules/read_input.o
 qvan2.o : ../../Modules/kind.o

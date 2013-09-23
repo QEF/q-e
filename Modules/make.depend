@@ -153,6 +153,7 @@ mp_global.o : mp_images.o
 mp_global.o : mp_pools.o
 mp_global.o : mp_pots.o
 mp_global.o : mp_world.o
+mp_global.o : parallel_include.o
 mp_images.o : io_global.o
 mp_images.o : mp.o
 mp_images.o : parallel_include.o

@@ -44,7 +44,7 @@ MODULE mp_global
 CONTAINS
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE mp_startup ( start_images )
+  SUBROUTINE mp_startup ( my_world_comm, start_images, init_mpi )
     !-----------------------------------------------------------------------
     ! ... This wrapper subroutine initializes all parallelization levels.
     ! ... If option with_images=.true., processes are organized into images,
@@ -55,15 +55,25 @@ CONTAINS
     !
     USE command_line_options, ONLY : get_command_line, &
         nimage_, npool_, npot_, ndiag_, nband_, ntg_
-    IMPLICIT NONE
-    LOGICAL, INTENT(IN), OPTIONAL :: start_images
-    LOGICAL :: do_images
+    USE parallel_include
     !
-    CALL mp_global_start( )
+    IMPLICIT NONE
+    INTEGER, INTENT(IN), OPTIONAL :: my_world_comm
+    LOGICAL, INTENT(IN), OPTIONAL :: start_images, init_mpi
+    LOGICAL :: do_images, do_mpi_init
+    INTEGER :: my_comm
+    !
+    my_comm = MPI_COMM_WORLD
+    IF ( PRESENT(my_world_comm) ) my_comm = my_world_comm
+    !
+    do_mpi_init = .TRUE.
+    IF ( PRESENT(init_mpi) ) do_mpi_init = init_mpi
+    !
+    CALL mp_global_start( my_comm , do_mpi_init )
     CALL get_command_line ( )
     !
-    do_images = PRESENT(start_images) 
-    IF ( do_images ) do_images = start_images
+    do_images = .FALSE.
+    IF ( PRESENT(start_images) ) do_images = start_images
     IF ( do_images ) THEN
        CALL mp_start_images ( nimage_, world_comm )
     ELSE

@@ -52,6 +52,14 @@ SUBROUTINE stop_run( exit_status )
   !
   CALL clean_pw( .TRUE. )
   !
+END SUBROUTINE stop_run
+
+SUBROUTINE do_stop( exit_status )
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: exit_status
+  !
   IF ( exit_status == -1 ) THEN
      ! -1 is not an acceptable value for stop in fortran;
      ! convert it to 255
@@ -75,7 +83,7 @@ SUBROUTINE stop_run( exit_status )
      STOP 128
   END IF
   !
-END SUBROUTINE stop_run
+END SUBROUTINE do_stop
 !
 !----------------------------------------------------------------------------
 SUBROUTINE closefile()
