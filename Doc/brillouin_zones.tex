@@ -60,9 +60,11 @@ of the vertexes of the BZ and of particular points inside the BZ. These
 notes show the shape and orientation of the BZ used by QE. The principal 
 direct and reciprocal lattice vectors, as implemented 
 in the routine \texttt{latgen}, are illustrated here together with the labels 
-of each point. These labels can be given as input in a band calculation
-to define paths in the BZ. This feature is available with the option 
-\texttt{tpiba\_b} or \texttt{crystal\_b} in \texttt{bands} calculation. 
+of each point. These labels can be given as input in a band or phonon 
+calculation to define paths in the BZ. This feature is available with 
+the option \texttt{tpiba\_b} or \texttt{crystal\_b} in a \texttt{'bands'} 
+calculation or with the option \texttt{q\_in\_band\_form} in the input of the 
+\texttt{matdyn.x} code.
 Lines in reciprocal space are defined by giving the coordinates of the 
 starting and ending points and the number of points of each line.
 The coordinates of the starting and ending points can be 

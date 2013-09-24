@@ -632,8 +632,7 @@ CONTAINS
    !
    SUBROUTINE card_kpoints( input_line )
       !
-      USE bz_form, ONLY : bz, set_label_type, allocate_bz, deallocate_bz, &
-                          init_bz, find_bz_type, find_letter_coordinate
+      USE bz_form, ONLY : transform_label_coord
       USE input_parameters, ONLY : ibrav, celldm, point_label_type
       IMPLICIT NONE
       !
@@ -645,9 +644,6 @@ CONTAINS
       INTEGER            :: npk_label, nch
       CHARACTER(LEN=3), ALLOCATABLE :: letter(:)
       INTEGER, ALLOCATABLE :: label_list(:)
-      INTEGER :: bzt
-      TYPE(bz) :: bz_struc
-      REAL(DP) :: at(3,3), bg(3,3), omega, xk_buffer(3)
       REAL(DP) :: delta, wk0
       REAL(DP) :: dkx(3), dky(3)
       LOGICAL, EXTERNAL  :: matches
@@ -758,49 +754,10 @@ CONTAINS
                   ENDIF
                ENDDO
             ENDDO
-            IF ( npk_label > 0 ) THEN
-!
-!           In this case some k points have been specified as letters.
-!           We need to transform these letters in coordinates
-!           Find the brillouin zone type
-!
-               CALL find_bz_type(ibrav, celldm, bzt)
-!
-!    generate direct lattice vectors 
-!
-               CALL latgen(ibrav,celldm,at(:,1),at(:,2),at(:,3),omega)
-!
-!   we use at in units of celldm(1)
-!
-               at=at/celldm(1)
-!
-! generate reciprocal lattice vectors
-!
-               CALL recips( at(:,1), at(:,2), at(:,3), bg(:,1), bg(:,2), &
-                                                       bg(:,3) )
-!
-! load the information on the Brillouin zone
-!
-               CALL set_label_type(bz_struc, point_label_type)
-               CALL allocate_bz(ibrav, bzt, bz_struc, celldm, at, bg )
-               CALL init_bz(bz_struc)
-!
-! find for each label the corresponding coordinates and save them
-! on the k point list
-!
-               DO i=1, npk_label
-                  CALL find_letter_coordinate(bz_struc, letter(i), xk_buffer)
-!
-!  The output of this routine is in cartesian coordinates. If the other
-!  k points are in crystal coordinates we transform xk_buffer to the bg
-!  base.
-!
-                  IF (k_points=='crystal') &
-                      CALL cryst_to_cart( 1, xk_buffer, at, -1 ) 
-                  xkaux(:,label_list(i))=xk_buffer(:)
-               ENDDO
-               CALL deallocate_bz(bz_struc)
-            ENDIF
+            IF ( npk_label > 0 ) &
+               CALL transform_label_coord(ibrav, celldm, xkaux, letter, &
+                    label_list, npk_label, nkstot, k_points, point_label_type )
+
             DEALLOCATE(letter)
             DEALLOCATE(label_list)
             ! Count k-points first

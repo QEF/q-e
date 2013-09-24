@@ -140,6 +140,8 @@ PROGRAM matdyn
   USE constants,  ONLY : RY_TO_THZ, RY_TO_CMM1, amu_ry
   USE symm_base,  ONLY : set_sym
   USE rap_point_group,  ONLY : code_group
+  USE bz_form,    ONLY : transform_label_coord
+  USE parser,     ONLY : read_line
 
   USE ifconstants, ONLY : frc, atm, zeu, tau_blk, ityp_blk, m_loc
   !
@@ -196,11 +198,18 @@ PROGRAM matdyn
   INTEGER :: location(1), isig
   CHARACTER(LEN=6) :: int_to_char
   LOGICAL, ALLOCATABLE :: mask(:)
+  INTEGER            :: npk_label, nch
+  CHARACTER(LEN=3), ALLOCATABLE :: letter(:)
+  INTEGER, ALLOCATABLE :: label_list(:)
+  LOGICAL :: tend, terr
+  CHARACTER(LEN=256) :: input_line, buffer
+  CHARACTER(LEN=10) :: point_label_type
+  CHARACTER(len=80) :: k_points = 'tpiba'
   !
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, fleig, at, dos,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, &
        &           la2F, ndos, DeltaE, q_in_band_form, q_in_cryst_coord, &
-       &           eigen_similarity, fldyn, na_ifc, fd
+       &           eigen_similarity, fldyn, na_ifc, fd, point_label_type
   !
   CALL mp_startup()
   CALL environment_start('MATDYN')
@@ -239,6 +248,7 @@ PROGRAM matdyn
      q_in_cryst_coord = .FALSE.
      na_ifc=.FALSE.
      fd=.FALSE.
+     point_label_type='SC'
      !
      !
      IF (ionode) READ (5,input,IOSTAT=ios)
@@ -399,11 +409,62 @@ PROGRAM matdyn
            !
            IF (q_in_cryst_coord)  CALL cryst_to_cart(nq,q,bg,+1)
         ELSE
-           ALLOCATE(nqb(nq))
-           ALLOCATE(xqaux(3,nq))
-           DO n = 1,nq
-              IF (ionode) READ (5,*) (xqaux(i,n),i=1,3), nqb(n)
-           END DO
+           ALLOCATE( nqb(nq) )
+           ALLOCATE( xqaux(3,nq) )
+           ALLOCATE( letter(nq) )
+           ALLOCATE( label_list(nq) )
+           npk_label=0
+           DO n = 1, nq
+              CALL read_line( input_line, end_of_file = tend, error = terr )
+              IF (tend) CALL errore('matdyn','Missing lines',1)
+              IF (terr) CALL errore('matdyn','Error reading q points',1)
+              DO j=1,256   ! loop over all characters of input_line
+                 IF ( (ICHAR(input_line(j:j)) < 58 .AND. &   ! a digit
+                       ICHAR(input_line(j:j)) > 47)      &
+                   .OR.ICHAR(input_line(j:j)) == 43 .OR. &   ! the + sign
+                       ICHAR(input_line(j:j)) == 45 .OR. &   ! the - sign
+                       ICHAR(input_line(j:j)) == 46 ) THEN   ! a dot .
+!
+!   This is a digit, therefore this line contains the coordinates of the
+!   k point. We read it and exit from the loop on characters
+!
+                     READ(input_line,*) xqaux(1,n), xqaux(2,n), xqaux(3,n), &
+                                                    nqb(n)
+                     EXIT
+                 ELSEIF ((ICHAR(input_line(j:j)) < 123 .AND. &
+                          ICHAR(input_line(j:j)) > 64))  THEN
+!
+!   This is a letter, not a space character. We read the next three 
+!   characters and save them in the letter array, save also which k point
+!   it is
+!
+                    npk_label=npk_label+1
+                    READ(input_line(j:),'(a3)') letter(npk_label)
+                    label_list(npk_label)=n
+!
+!  now we remove the letters from input_line and read the number of points
+!  of the line. The next two line should account for the case in which
+!  there is only one space between the letter and the number of points.
+!
+                    nch=3
+                    IF ( ICHAR(input_line(j+1:j+1))==32 .OR. &
+                         ICHAR(input_line(j+2:j+2))==32 ) nch=2
+                    buffer=input_line(j+nch:)
+                    READ(buffer,*,err=20,iostat=ios) nqb(n)
+20                  IF (ios /=0) CALL errore('matdyn',&
+                                      'problem reading number of points',1)
+                    EXIT
+                 ENDIF
+              ENDDO
+           ENDDO
+           IF (q_in_cryst_coord) k_points='crystal'
+           IF ( npk_label > 0 ) &
+              CALL transform_label_coord(ibrav, celldm, xqaux, letter, &
+                   label_list, npk_label, nq, k_points, point_label_type )
+
+           DEALLOCATE(letter)
+           DEALLOCATE(label_list)
+
            CALL mp_bcast(xqaux, ionode_id)
            CALL mp_bcast(nqb, ionode_id)
            IF (q_in_cryst_coord)  CALL cryst_to_cart(nq,xqaux,bg,+1)
@@ -449,7 +510,7 @@ PROGRAM matdyn
      END IF
 
      ALLOCATE ( dyn(3,3,nat,nat), dyn_blk(3,3,nat_blk,nat_blk) )
-     ALLOCATE ( z(3*nat,3*nat), w2(3*nat,nq),f_of_q(3,3,nat,nat) )
+     ALLOCATE ( z(3*nat,3*nat), w2(3*nat,nq), f_of_q(3,3,nat,nat) )
      ALLOCATE ( tmp_w2(3*nat), abs_similarity(3*nat,3*nat), mask(3*nat) )
 
      if(la2F.and.ionode) open(unit=300,file='dyna2F',status='unknown')

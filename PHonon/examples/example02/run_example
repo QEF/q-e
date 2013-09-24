@@ -167,12 +167,12 @@ cat > matdyn.in <<EOF
     flfrc='alas444.fc', flfrq='alas.freq', q_in_band_form=.true.,
  /
  6
-  0.000 0.0 0.0   40
-  1.0   0.0 0.0   20
-  1.0   0.5 0.0   20
+  gG    40
+  X     20
+  W     20
   1.0   1.0 0.0   40
-  0.00  0.0 0.0   40
-  0.5   0.5 0.5    1
+  gG    40
+  L     1
 EOF
 
 $ECHO "  recalculating omega(q) from C(R)...\c"

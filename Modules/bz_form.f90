@@ -1915,4 +1915,67 @@ xk(:)=x0(:)+lambda*vect(:)
 RETURN
 END SUBROUTINE inter_plane_line
 
+SUBROUTINE transform_label_coord(ibrav, celldm, xk, letter, label_list, &
+                                 npk_label, nks, k_points, point_label_type )
+!
+!  This routine transforms the labels in the array letter into k points
+!  coordinates that are put in the array xk in the position indicated
+!  by label_list. If k_point='crystal' the coordinates are tranformed
+!  in the basis of the crystal. point_label_type selects the type of
+!  labels. npk_label is the size of the array letter and label_list,
+!  while nks is the size of the array xk.
+!
+IMPLICIT NONE
+INTEGER, INTENT(IN) :: npk_label
+INTEGER, INTENT(IN) :: nks
+INTEGER, INTENT(IN) :: ibrav
+INTEGER, INTENT(IN) :: label_list(npk_label)
+REAL(DP), INTENT(IN) :: celldm(6)
+REAL(DP), INTENT(INOUT) :: xk(3, nks)
+CHARACTER(LEN=3), INTENT(IN) :: letter(npk_label)
+CHARACTER(LEN=*), INTENT(IN) :: k_points, point_label_type
+INTEGER :: bzt, i
+REAL(DP) :: omega, at(3,3), bg(3,3), xk_buffer(3)
+TYPE(bz) :: bz_struc
+!
+!    Find the brillouin zone type
+!
+   CALL find_bz_type(ibrav, celldm, bzt)
+!
+!    generate direct lattice vectors 
+!
+   CALL latgen(ibrav,celldm,at(:,1),at(:,2),at(:,3),omega)
+!
+!   we use at in units of celldm(1)
+!
+   at=at/celldm(1)
+!
+! generate reciprocal lattice vectors
+!
+   CALL recips( at(:,1), at(:,2), at(:,3), bg(:,1), bg(:,2), bg(:,3) )
+!
+! load the information on the Brillouin zone
+!
+   CALL set_label_type(bz_struc, point_label_type)
+   CALL allocate_bz(ibrav, bzt, bz_struc, celldm, at, bg )
+   CALL init_bz(bz_struc)
+!
+! find for each label the corresponding coordinates and save them
+! on the k point list
+!
+   DO i=1, npk_label
+      CALL find_letter_coordinate(bz_struc, letter(i), xk_buffer)
+!
+!  The output of this routine is in cartesian coordinates. If the other
+!  k points are in crystal coordinates we transform xk_buffer to the bg
+!  base.
+!
+      IF (TRIM(k_points)=='crystal') &
+         CALL cryst_to_cart( 1, xk_buffer, at, -1 ) 
+      xk(:,label_list(i))=xk_buffer(:)
+   ENDDO
+  CALL deallocate_bz(bz_struc)
+RETURN
+END SUBROUTINE transform_label_coord
+
 END MODULE bz_form
