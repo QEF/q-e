@@ -85,7 +85,8 @@ program generate_kernel
   !! --------------------------------------------------------------------------------------------
 
   use mp,                   ONLY : mp_get, mp_end, mp_barrier
-  use mp_global,            ONLY : mp_startup, nproc, mpime
+  use mp_global,            ONLY : mp_startup
+  use mp_world,             ONLY : world_comm, nproc, mpime
   use kinds,                ONLY : dp
   use io_global,            ONLY : ionode, ionode_id
   use constants,            ONLY : pi
@@ -440,7 +441,7 @@ program generate_kernel
   !! Finally, we write out the results, after letting everybody catch up
   !! -----------------------------------------------------------------------------------------------------
 
-  call mp_barrier()
+  call mp_barrier( world_comm )
   call write_kernel_table_file(phi, d2phi_dk2)
 
   !! -----------------------------------------------------------------------------------------------------
