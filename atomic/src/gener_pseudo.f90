@@ -173,13 +173,13 @@ subroutine gener_pseudo
   do ns=1,nbeta
      nwf0=nstoae(ns)
      if (new(ns)) then
-        if(lpaw)then !AE scattering wfc normalized with rcutus
+!        if(lpaw)then !AE scattering wfc normalized with rcutus
            call set_psi_in(ikus(ns),lls(ns),jjs(ns),enls(ns),psipaw(1,ns),&
                                                         psipaw_rel(1,ns))
-        else
-           call set_psi_in(ik(ns),lls(ns),jjs(ns),enls(ns),psipaw(1,ns),&
-                                                        psipaw_rel(1,ns))
-        endif
+!        else
+!           call set_psi_in(ik(ns),lls(ns),jjs(ns),enls(ns),psipaw(1,ns),&
+!                                                        psipaw_rel(1,ns))
+!        endif
      else
         lam=lls(ns)
         nst=(lam+1)*2
