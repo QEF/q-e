@@ -39,6 +39,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
                                my_image_id, nimage, root_image
+  USE mp_world,         ONLY : world_comm
   USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum, mp_min
   USE path_io_routines, ONLY : new_image_init, get_new_image, &
                                stop_other_images
@@ -96,7 +97,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   !
   ! ... all processes are syncronized (needed to have a readable output)
   !
-  CALL mp_barrier()
+  CALL mp_barrier( world_comm )
   !
   IF ( nimage > 1 .AND. .NOT.first_last_opt ) THEN
      !
@@ -167,7 +168,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   ! ... finalization of the job (this point is also reached in case of error
   ! ... condition)
   !
-1 CALL mp_barrier()
+1 CALL mp_barrier( world_comm )
   !
   DEALLOCATE( tauold )
   !

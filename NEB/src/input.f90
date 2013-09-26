@@ -190,7 +190,7 @@ SUBROUTINE verify_neb_tmpdir( tmp_dir )
   USE path_input_parameters_module, ONLY : restart_mode
   USE io_files,         ONLY : prefix, xmlpun,  delete_if_present
   USE path_variables,   ONLY : num_of_images
-  USE mp_global,        ONLY : mpime, nproc
+  USE mp_world,         ONLY : world_comm, mpime, nproc
   USE io_global,        ONLY : meta_ionode
   USE mp,               ONLY : mp_barrier
   !
@@ -264,7 +264,7 @@ SUBROUTINE verify_neb_tmpdir( tmp_dir )
               !
            ENDIF
            !
-           CALL mp_barrier()
+           CALL mp_barrier( world_comm )
            !
         ENDDO
         !
