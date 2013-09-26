@@ -834,6 +834,7 @@ localdos.o : ../../Modules/wavefunctions.o
 localdos.o : ../../PW/src/buffers.o
 localdos.o : ../../PW/src/pwcom.o
 localdos.o : phcom.o
+matdyn.o : ../../Modules/bz_form.o
 matdyn.o : ../../Modules/cell_base.o
 matdyn.o : ../../Modules/constants.o
 matdyn.o : ../../Modules/environment.o
@@ -842,6 +843,7 @@ matdyn.o : ../../Modules/kind.o
 matdyn.o : ../../Modules/mp.o
 matdyn.o : ../../Modules/mp_global.o
 matdyn.o : ../../Modules/parameters.o
+matdyn.o : ../../Modules/parser.o
 matdyn.o : ../../PW/src/pwcom.o
 matdyn.o : ../../PW/src/symm_base.o
 matdyn.o : io_dyn_mat.o
