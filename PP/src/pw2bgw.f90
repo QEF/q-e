@@ -104,6 +104,7 @@ PROGRAM pw2bgw
   USE kinds, ONLY : DP
   USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_bcast
+  USE mp_world, ONLY : world_comm
   USE mp_global, ONLY : mp_startup
   USE paw_variables, ONLY : okpaw
   USE scf, ONLY : rho_core, rhog_core
@@ -164,7 +165,7 @@ PROGRAM pw2bgw
   character (len=1), external :: lowercase
 
 #ifdef __PARA
-  CALL mp_startup ( )
+  CALL mp_startup ( world_comm )
 #endif
   CALL environment_start ( codename )
 
@@ -903,7 +904,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
           wfng_buf ( ig, is ) = ( 0.0D0, 0.0D0 )
         ENDDO
 #ifdef __PARA
-        CALL mp_barrier ( )
+        CALL mp_barrier ( world_comm )
         CALL MPI_Scatter ( wfng_buf ( :, is ), ngkdist_l, MPI_DOUBLE_COMPLEX, &
         wfng_dist ( :, ib, is ), ngkdist_l, MPI_DOUBLE_COMPLEX, &
         ionode_id, world_comm, ierr )
@@ -936,7 +937,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
       DO ib = 1, nb
         DO is = 1, ns
 #ifdef __PARA
-          CALL mp_barrier ( )
+          CALL mp_barrier ( world_comm )
           CALL MPI_Gather ( wfng_dist ( :, ib, is ), ngkdist_l, &
           MPI_DOUBLE_COMPLEX, wfng_buf ( :, is ), ngkdist_l, &
           MPI_DOUBLE_COMPLEX, ionode_id, world_comm, ierr )
@@ -984,7 +985,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   DEALLOCATE ( smap )
   DEALLOCATE ( kmap )
 
-  CALL mp_barrier ( )
+  CALL mp_barrier ( world_comm )
 
   RETURN
 

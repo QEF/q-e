@@ -395,7 +395,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
       ENDDO
     ENDIF
 #ifdef __PARA
-    CALL mp_barrier ( )
+    CALL mp_barrier ( world_comm )
     CALL MPI_Scatter ( gk_buf, 3 * ngkdist_l, MPI_INTEGER, &
     gk_dist, 3 * ngkdist_l, MPI_INTEGER, &
     ionode_id, world_comm, ierr )
@@ -448,7 +448,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
       ENDIF
 #ifdef __PARA
       DO is = 1, ns
-        CALL mp_barrier ( )
+        CALL mp_barrier ( world_comm )
         CALL MPI_Scatter ( wfng_buf ( :, is ), ngkdist_l, MPI_DOUBLE_COMPLEX, &
         wfng_dist ( :, ib, is, ik ), ngkdist_l, MPI_DOUBLE_COMPLEX, &
         ionode_id, world_comm, ierr )
@@ -551,7 +551,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
       CALL iotk_write_dat ( iu, "K-POINT_COORDS", k ( :, ik ), ATTR = attr )
     ENDIF
 #ifdef __PARA
-    CALL mp_barrier ( )
+    CALL mp_barrier ( world_comm )
     CALL MPI_Gather ( igk_dist ( :, ik ) , ngkdist_l, MPI_INTEGER, &
     igk_buf, ngkdist_l, MPI_INTEGER, &
     ionode_id, world_comm, ierr )
@@ -609,7 +609,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
       ENDIF
       DO ib = 1, nb
 #ifdef __PARA
-        CALL mp_barrier ( )
+        CALL mp_barrier ( world_comm )
         CALL MPI_Gather ( wfng_dist ( :, ib, is, ik ), ngkdist_l, MPI_DOUBLE_COMPLEX, &
         wfng_buf ( :, is ), ngkdist_l, MPI_DOUBLE_COMPLEX, &
         ionode_id, world_comm, ierr )
@@ -636,7 +636,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
   DEALLOCATE ( wfng_buf )
   DEALLOCATE ( wfng_dist )
 
-  CALL mp_barrier ( )
+  CALL mp_barrier ( world_comm )
 
   RETURN
 
