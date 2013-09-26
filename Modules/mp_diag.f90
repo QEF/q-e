@@ -14,6 +14,7 @@ MODULE mp_diag
   ! The following variables are needed in order to set up the communicator
   ! for scalapack
   !
+  USE mp_world, ONLY : world_comm
   USE mp_pools, ONLY : npool, nproc_pool, my_pool_id
   USE mp_bands, ONLY : nbgrp, my_bgrp_id
   !
@@ -61,13 +62,17 @@ CONTAINS
     INTEGER :: ierr = 0
     !
     parent_nproc = mp_size( parent_comm )
+    np_blacs     = mp_size( world_comm )
+    me_blacs     = mp_rank( world_comm )
     !
 #if defined __SCALAPACK
-
-    ! define a 1D grid containing all MPI task of MPI_COMM_WORLD communicator
     !
-    CALL BLACS_PINFO( me_blacs, np_blacs )
-    CALL BLACS_GET( -1, 0, world_cntx )
+    ! define a 1D grid containing all MPI tasks of the global communicator
+    ! NOTE: world_cntx has the MPI communicator on entry and the BLACS context on exit
+    !       BLACS_GRID_INIT() will create a copy of the communicator, which can be
+    !       later retrieved using CALL BLACS_GET(world_cntx, 10, comm_copy)
+    !
+    world_cntx = world_comm
     CALL BLACS_GRIDINIT( world_cntx, 'Row', 1, np_blacs )
     !
 #endif
@@ -222,8 +227,8 @@ CONTAINS
     !  SCALAPACK is now independent of whatever level of parallelization
     !  is present on top of pool parallelization
     !
-    total_nproc = mp_size(mpi_comm_world)
-    total_mype = mp_rank(mpi_comm_world)
+    total_nproc = mp_size( world_comm )
+    total_mype = mp_rank( world_comm )
     nparent = total_nproc/npool/nproc_pool
     nproc_parent = total_nproc/nparent
     my_parent_id = total_mype/nproc_parent
@@ -238,8 +243,7 @@ CONTAINS
 
        DO i = 1, npool
 
-         CALL BLACS_GET( -1, 0, ortho_cntx_pe( i, k, j ) ) ! take a default value 
-
+         CALL BLACS_GET(world_cntx, 10, ortho_cntx_pe( i, k, j)) ! retrieve communicator of world context
          blacsmap = 0
          nprow = np_ortho(1)
          npcol = np_ortho(2)
@@ -251,9 +255,9 @@ CONTAINS
 
          END IF
 
-         ! All MPI tasks defined in world comm take part in the definition of the BLACS grid
+         ! All MPI tasks defined in the global communicator take part in the definition of the BLACS grid
 
-         CALL mp_sum( blacsmap ) 
+         CALL mp_sum( blacsmap, world_comm ) 
 
          CALL BLACS_GRIDMAP( ortho_cntx_pe(i,k,j), blacsmap, nprow, nprow, npcol )
 

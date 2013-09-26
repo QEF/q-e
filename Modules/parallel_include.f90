@@ -19,6 +19,7 @@
          ! dummy world and null communicator
          INTEGER, PARAMETER :: MPI_COMM_WORLD =  0
          INTEGER, PARAMETER :: MPI_COMM_NULL  = -1
+         INTEGER, PARAMETER :: MPI_COMM_SELF  = -2
 #endif
 
       END MODULE parallel_include

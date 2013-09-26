@@ -46,7 +46,7 @@ MODULE vdW_DF
   USE kinds,             ONLY : dp
   USE constants,         ONLY : pi, e2
   USE kernel_table,      ONLY : q_mesh, Nr_points, Nqs, r_max
-  USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier, mp_bcast_cv
+  USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier
   USE mp_global,         ONLY : me_pool, nproc_pool, intra_pool_comm, root_pool
   USE io_global,         ONLY : ionode
   USE fft_base,          ONLY : dfftp

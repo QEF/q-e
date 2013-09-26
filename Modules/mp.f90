@@ -21,18 +21,22 @@
       USE parallel_include
       !
       IMPLICIT NONE
+      PRIVATE
       ! XXX: defined for backward compatibility.
       !      remove after group argument has been made explicit
+      !      the world communicator is stored in the mp_world module.
       INTEGER :: global_comm = MPI_COMM_WORLD
-      ! when set to false, MPI_Init() and MPI_Finalize() are not called
-      ! needed for library interface
-      LOGICAL :: do_init_finalize = .TRUE.
+      ! when set to true, MPI_Finalize() is not called. needed for library interface
+      LOGICAL :: skip_finalize = .FALSE.
 
       PUBLIC :: mp_start, mp_abort, mp_end, &
         mp_bcast, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
-        mp_gather, mp_get, mp_put, mp_barrier, mp_report, mp_group_free, &
+        mp_gather, mp_alltoall, mp_get, mp_put, mp_barrier, mp_report, mp_group_free, &
         mp_root_sum, mp_comm_free, mp_comm_create, mp_comm_group, &
-        mp_group_create, mp_comm_split, mp_set_displs
+        mp_group_create, mp_comm_split, mp_set_displs, &
+        mp_circular_shift_left, &
+        mp_get_comm_null, mp_get_comm_self
+
 !
       INTERFACE mp_bcast
         MODULE PROCEDURE mp_bcast_i1, mp_bcast_r1, mp_bcast_c1, &
@@ -82,7 +86,7 @@
       END INTERFACE
 
 
-      CHARACTER(LEN=80), PRIVATE :: err_msg = ' '
+      CHARACTER(LEN=80) :: err_msg = ' '
 
 !------------------------------------------------------------------------------!
 !
@@ -142,26 +146,25 @@
 !
 !------------------------------------------------------------------------------!
 !..mp_start
-      SUBROUTINE mp_start(numtask, taskid, group, init_mpi)
+      SUBROUTINE mp_start(numtask, taskid, group)
 
 ! ...
         IMPLICIT NONE
         INTEGER, INTENT (OUT) :: numtask, taskid
         INTEGER, INTENT (IN)  :: group
-        LOGICAL, INTENT (IN), OPTIONAL  :: init_mpi
         INTEGER :: ierr
 ! ...
         ierr = 0
         numtask = 1
         taskid = 0
         global_comm = group
-        IF ( PRESENT(init_mpi) ) do_init_finalize = init_mpi
 
 #  if defined(__MPI)
-        IF (do_init_finalize) THEN
+        CALL mpi_initialized(skip_finalize, ierr)
+        IF (.NOT. skip_finalize) THEN
             CALL mpi_init(ierr)
-            IF (ierr/=0) CALL mp_stop( 8003 )
         END IF
+        IF (ierr/=0) CALL mp_stop( 8003 )
         CALL mpi_comm_rank(group,taskid,ierr)
         IF (ierr/=0) CALL mp_stop( 8005 )
 #if defined __HPM
@@ -218,7 +221,7 @@
         CALL f_hpmterminate( taskid )
 #endif
 
-        IF (do_init_finalize) THEN
+        IF (.NOT. skip_finalize) THEN
             CALL mpi_finalize(ierr)
             IF (ierr/=0) CALL mp_stop( 8004 )
         END IF
@@ -2331,26 +2334,17 @@ SUBROUTINE mp_circular_shift_left_d2d_complex( buf, itag, gid )
    RETURN
 END SUBROUTINE mp_circular_shift_left_d2d_complex
 
+FUNCTION mp_get_comm_null( )
+  IMPLICIT NONE
+  INTEGER :: mp_get_comm_null
+  mp_get_comm_null = MPI_COMM_NULL
+END FUNCTION mp_get_comm_null
 
-      FUNCTION mp_get_comm_null( )
-        IMPLICIT NONE
-        INTEGER :: mp_get_comm_null
-#if defined(__MPI)
-           mp_get_comm_null = MPI_COMM_NULL
-#else
-           mp_get_comm_null = 0
-#endif
-      END FUNCTION mp_get_comm_null
-
-      FUNCTION mp_get_comm_self( )
-        IMPLICIT NONE
-        INTEGER :: mp_get_comm_self
-#if defined(__MPI)
-           mp_get_comm_self = MPI_COMM_SELF
-#else
-           mp_get_comm_self = 0
-#endif
-      END FUNCTION mp_get_comm_self
+FUNCTION mp_get_comm_self( )
+  IMPLICIT NONE
+  INTEGER :: mp_get_comm_self
+  mp_get_comm_self = MPI_COMM_SELF
+END FUNCTION mp_get_comm_self
 
 !------------------------------------------------------------------------------!
     END MODULE mp

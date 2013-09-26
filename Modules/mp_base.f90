@@ -947,17 +947,3 @@ SUBROUTINE parallel_max_real( dim, ps, comm, root )
   RETURN
   !
 END SUBROUTINE parallel_max_real
-
-
-SUBROUTINE hangup()
-#if defined (__MPI)  
-  IMPLICIT NONE
-  INCLUDE 'mpif.h'
-  INTEGER IERR
-  CALL MPI_BARRIER( MPI_COMM_WORLD, ierr )
-  IF( ierr /= 0 ) CALL errore( ' hangup ', ' error in mpi_barrier ', ierr )
-  CALL MPI_FINALIZE( ierr )
-  IF( ierr /= 0 ) CALL errore( ' hangup ', ' error in mpi_finalize ', ierr )
-#endif
-  STOP 'hangup'
-END SUBROUTINE hangup
