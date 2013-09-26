@@ -1249,30 +1249,21 @@
     INTEGER, ALLOCATABLE, DIMENSION(:) :: ipiv
     REAL(kind=DP), ALLOCATABLE, DIMENSION(:) :: work
 
-!call hangup ! debug
-
     call free_memory(vpi)
-
-!call hangup ! debug
 
     lwork=vp%numpw
     allocate(ipiv(vp%numpw))
     allocate(work(lwork))
 
-!call hangup ! debug
-
     vpi%numpw=vp%numpw
     allocate(vpi%vmat( vpi%numpw, vpi%numpw))
 !write(stdout,*) size(vpi%vmat,1), size(vpi%vmat,2), size(vp%vmat,1), size(vp%vmat,2)
-!call hangup ! debug
 !    vpi%vmat(:,:)=vp%vmat(:,:)  ! bug
     do j = 1, size(vpi%vmat,2)
       do i = 1, size(vpi%vmat,1)
         vpi%vmat(i,j)=vp%vmat(i,j)
       end do
     end do
-
-!call hangup ! debug
 
    call dgetrf(vpi%numpw,vpi%numpw,vpi%vmat,vpi%numpw,ipiv,info)
    if(info /= 0) then
