@@ -230,6 +230,7 @@
     USE io_files,             ONLY : prefix
     USE io_global,            ONLY : stdout, ionode, ionode_id
     USE mp,                   ONLY : mp_barrier, mp_bcast
+    USE mp_world,             ONLY : world_comm
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -293,7 +294,7 @@
        endif
     endif
     do iw=1,pw%numpw
-       call mp_barrier
+       call mp_barrier( world_comm )
        call mp_bcast(pw%pw(:,iw),ionode_id)
     enddo
 
@@ -1283,7 +1284,8 @@
 
  SUBROUTINE fake_polarization_io(n)
 !this subroutine just call mp_barrier 2*n+1 times
-   USE mp,      ONLY : mp_barrier
+   USE mp,       ONLY : mp_barrier
+   USE mp_world, ONLY : world_comm
 
    implicit none
 
@@ -1292,7 +1294,7 @@
 !we take advantage of the t ==> -t symmetry
 !   do i=-n,n
    do i=0,n
-     call mp_barrier
+     call mp_barrier( world_comm )
    enddo
    return
  END SUBROUTINE fake_polarization_io
@@ -1835,7 +1837,7 @@
    USE basic_structures, ONLY : wannier_u, cprim_prod, free_memory, &
                               &initialize_memory_cprim_prod
    USE times_gw,  ONLY : times_freqs
-   USE mp_global,            ONLY : nproc,mpime
+   USE mp_world,   ONLY : world_comm, nproc,mpime
    USE io_global,  ONLY : stdout
    USE mp, ONLY : mp_barrier
 
@@ -1881,7 +1883,7 @@
              do ic=uu%nums_occ(1)+1,uu%nums
                 exp_table(ic-uu%nums_occ(1))=exp((uu%ene(iv,1)-uu%ene(ic,1))*tf%times(it))
              enddo
-             call mp_barrier
+             call mp_barrier( world_comm )
              call initialize_memory_cprim_prod(cpp)
 
    !!read in Svci 
@@ -1932,7 +1934,7 @@
           else
 !just parallelel reading of file
              do iv=1,uu%nums_occ(1)
-                call mp_barrier
+                call mp_barrier( world_comm )
                 call initialize_memory_cprim_prod(cpp)
                 cpp%cprim=iv
                 call read_data_pw_cprim_prod(cpp, prefix, .true., ok_read, .true.,.false.)

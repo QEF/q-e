@@ -25,6 +25,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
+   USE mp_world, ONLY : world_comm
    USE mp_global, ONLY : mpime,nproc, intra_pool_comm
    USE gvecs,              ONLY : nls, nlsm, doublegrid
    !USE exx, ONLY : exx_divergence_new, yukawa
@@ -565,6 +566,7 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
   USE gvect
   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
   USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
+  USE mp_world, ONLY : world_comm
   USE mp_global, ONLY : mpime,nproc
   USE wavefunctions_module, ONLY : evc, psic
   USE gvect
@@ -970,7 +972,7 @@ endif
            enddo
            close(iuns)
         endif
-        call mp_barrier
+        call mp_barrier( world_comm )
      enddo
 
 
@@ -1174,6 +1176,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
+   USE mp_world, ONLY : world_comm
    USE mp_global, ONLY : mpime,nproc, intra_pool_comm
    USE gvecs,              ONLY : nls, nlsm, doublegrid
    !USE exx, ONLY : exx_divergence_new, yukawa

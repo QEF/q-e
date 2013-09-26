@@ -21,7 +21,7 @@ CONTAINS
 
   !
   USE io_global,  ONLY : stdout, ionode
-  USE mp_global,  ONLY : nproc, mpime
+  USE mp_world,   ONLY : world_comm, nproc, mpime
   USE mp_global,  ONLY : mp_startup
   USE mp,         ONLY : mp_barrier
 
@@ -60,13 +60,14 @@ CONTAINS
 
     USE io_global,         ONLY : stdout, ionode
     USE mp,                ONLY : mp_barrier, mp_end
+    USE mp_world,          ONLY : world_comm
 
     IMPLICIT NONE
 
 #ifdef __PARA
 
     if(ionode) write(stdout,*) 'Stopping MPI environment'
-    call mp_barrier()
+    call mp_barrier( world_comm )
     call mp_end()
 #endif
 

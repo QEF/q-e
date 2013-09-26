@@ -213,6 +213,7 @@
     USE self_energy_storage, ONLY : self_storage, self_on_real
     USE para_gww,   ONLY : is_my_state_range
     USE mp,         ONLY : mp_sum,mp_barrier
+    USE mp_world,   ONLY : world_comm
     USE times_gw,   ONLY : times_freqs
 
     implicit none
@@ -496,7 +497,7 @@
     deallocate(a_old,b_old)
     deallocate(a_good,b_good)
 
-    call mp_barrier
+    call mp_barrier( world_comm )
     write(stdout,*) 'Out of create_self_energy_fit'
     call flush_unit(stdout)
 

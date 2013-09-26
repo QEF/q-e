@@ -15,6 +15,7 @@
        USE wvfct,                ONLY : npw
        USE io_global, ONLY : ionode_id
        USE mp, ONLY : mp_barrier, mp_bcast
+       USE mp_world, ONLY : world_comm
        USE io_files, ONLY : prefix, nwordwfc,iunwfc
        USE wvfct,                ONLY : nbnd, et, npwx
        USE io_global,            ONLY : stdout, ionode
@@ -219,7 +220,7 @@
              !write transformation matrix u on file
                if(ionode ) call write_wannier_matrix(e_xc,e_h,is)
                do ii=1,nbnd
-                  call mp_barrier
+                  call mp_barrier( world_comm )
                   call mp_bcast(u_trans(:,ii,is),ionode_id)
                enddo
 !u_trans TO BE BROADCASTED
@@ -362,7 +363,7 @@
                 endif
                 if(l_verbose) write(stdout,*) 'OUT OF RESTART_GWW1',numw_prod
                 call flush_unit(stdout)
-                call mp_barrier
+                call mp_barrier( world_comm )
 
              endif
              
@@ -493,7 +494,7 @@
             !    CALL davcio(evc,2*nwordwfc,iunwfc,1,-1)
             !    CALL dft_exchange(num_nbndv,num_nbnds,nset,e_x)
             !    CALL flush_unit( stdout )
-                   call mp_barrier
+                   call mp_barrier( world_comm )
                    call davcio(evc,2*nwordwfc,iunwfc,is,-1)
                    call start_clock('global_self')
                    if(.not.l_big_system) then

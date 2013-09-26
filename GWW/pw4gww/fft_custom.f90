@@ -168,6 +168,7 @@ CONTAINS
   USE mp,         ONLY : mp_sum, mp_max,mp_barrier
   USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool, my_image_id, &
                          nproc, inter_pool_comm,root_pool
+  USE mp_world,   ONLY : world_comm
   USE stick_base
   USE fft_scalar, ONLY : good_fft_dimension
   USE fft_types,  ONLY : fft_dlay_allocate, fft_dlay_set, fft_dlay_scalar
@@ -220,7 +221,7 @@ CONTAINS
   !  Subroutine body
   !
 
-  call mp_barrier
+  call mp_barrier( world_comm )
   write(stdout,*) 'ATT1.0'
   call flush_unit(stdout)
   
@@ -238,7 +239,7 @@ CONTAINS
   ! compute number of points per plane
   ncplane  = fc%nrx1t * fc%nrx2t
   ncplanes = fc%nrx1t * fc%nrx2t
-  call mp_barrier
+  call mp_barrier( world_comm )
   write(stdout,*) 'ATT1.1'
   call flush_unit(stdout)
 
@@ -257,7 +258,7 @@ CONTAINS
   !     Now compute for each point of the big plane how many column have
   !     non zero vectors on the smooth and thick mesh
   !
-  call mp_barrier
+  call mp_barrier( world_comm )
   write(stdout,*) 'ATT1.2'
   call flush_unit(stdout)
 
@@ -278,7 +279,7 @@ CONTAINS
 ! ...     The value of the element (i,j) of the map ( st ) is equal to the
 ! ...     number of G-vector belonging to the (i,j) stick.
 !
-  call mp_barrier
+  call mp_barrier( world_comm )
   write(stdout,*) 'ATT1.3'
   call flush_unit(stdout)
 
@@ -570,6 +571,7 @@ SUBROUTINE initialize_fft_custom(fc)
   USE io_global,          ONLY : stdout
   use control_flags, ONLY : gamma_only
   USE mp, ONLY : mp_barrier
+  USE mp_world, ONLY : world_comm
 
   implicit none
 
@@ -585,18 +587,18 @@ SUBROUTINE initialize_fft_custom(fc)
   fc%tpiba_t=tpiba
   fc%tpiba2_t=tpiba2
 
-  call mp_barrier
+  call mp_barrier( world_comm )
   write(stdout,*) 'ATT1'
   call flush_unit(stdout)
   call  set_custom_grid(fc)
 
-  call mp_barrier
+  call mp_barrier( world_comm )
   write(stdout,*) 'ATT2'
   call flush_unit(stdout)
 
   call data_structure_custom(fc)
 
-  call mp_barrier
+  call mp_barrier( world_comm )
   write(stdout,*) 'ATT3'
   call flush_unit(stdout)
   
@@ -621,6 +623,7 @@ SUBROUTINE initialize_fft_custom_cell(fc)
   USE io_global,          ONLY : stdout
   use control_flags, ONLY : gamma_only
   USE mp, ONLY : mp_barrier
+  USE mp_world, ONLY : world_comm
 
   implicit none
 
@@ -637,18 +640,18 @@ SUBROUTINE initialize_fft_custom_cell(fc)
   !fc%tpiba_t=tpiba
   !fc%tpiba2_t=tpiba2
 
-  call mp_barrier
+  call mp_barrier( world_comm )
   write(stdout,*) 'ATT1'
   call flush_unit(stdout)
   call  set_custom_grid(fc)
 
-  call mp_barrier
+  call mp_barrier( world_comm )
   write(stdout,*) 'ATT2'
   call flush_unit(stdout)
 
   call data_structure_custom(fc)
 
-  call mp_barrier
+  call mp_barrier( world_comm )
   write(stdout,*) 'ATT3'
   call flush_unit(stdout)
   

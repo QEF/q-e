@@ -20,6 +20,7 @@
    USE green_function,     ONLY : green, free_memory_green, write_green, create_green_part,initialize_green
    USE para_gww,           ONLY : is_my_time
    USE mp,                 ONLY : mp_barrier
+   USE mp_world,           ONLY : world_comm
    USE input_gw,           ONLY : input_options
    USE io_global,          ONLY : stdout, ionode
    USE kinds,              ONLY : DP
@@ -81,7 +82,7 @@
         call free_memory(qm)
     endif
   endif
-  call mp_barrier
+  call mp_barrier( world_comm )
 
   if(.not.options%use_contractions) then
      call free_memory(uu)

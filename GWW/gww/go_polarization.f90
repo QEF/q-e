@@ -24,6 +24,7 @@
                                            &do_contraction_pola_state
    USE para_gww,           ONLY : is_my_pola
    USE mp,                 ONLY : mp_barrier
+   USE mp_world,           ONLY : world_comm
    USE energies_gww,           ONLY : quasi_particles
    USE times_gw,           ONLY : times_freqs
 
@@ -108,7 +109,7 @@
          endif
       enddo
 
-      call mp_barrier
+      call mp_barrier( world_comm )
       
       call free_memory(qm)
       call free_memory_green(gp)

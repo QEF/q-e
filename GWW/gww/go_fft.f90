@@ -98,7 +98,7 @@
    USE polarization,       ONLY : polaw,free_memory_polaw,read_polaw_range, initialize_polaw,&
                                     &fake_polarization_io
    USE fft_gw
-   USE mp_global,          ONLY : mpime, nproc
+   USE mp_world,           ONLY : world_comm, mpime, nproc
    USE mp,                 ONLY : mp_barrier   	
    USE times_gw,           ONLY : times_freqs
 
@@ -157,7 +157,7 @@
          enddo
        enddo
 
-      call mp_barrier
+      call mp_barrier( world_comm )
 !sencond loop, read fftd, perform fftd, and update polaw's
  
       done_fft=0
@@ -216,7 +216,7 @@
    USE polarization,       ONLY : polaw,free_memory_polaw,read_polaw_range, initialize_polaw,&
                                     &fake_polarization_io
    USE fft_gw
-   USE mp_global,          ONLY : mpime, nproc, root
+   USE mp_world,           ONLY : world_comm, mpime, nproc, root
    USE mp,                 ONLY : mp_barrier, mp_bcast
    USE times_gw,           ONLY : times_freqs
 
@@ -275,7 +275,7 @@
  
       number_fft = ceiling( real(numpw)/ real(options%num_rows) )
 
-      call mp_barrier
+      call mp_barrier( world_comm )
 
       do iblk = 1, number_fft
          !

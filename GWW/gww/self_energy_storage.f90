@@ -135,6 +135,7 @@ CONTAINS
     USE io_global,          ONLY : stdout, ionode
     USE input_gw,           ONLY : input_options
     USE mp,                 ONLY : mp_barrier
+    USE mp_world,           ONLY : world_comm
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
     TYPE(self_storage) :: ss!the self_energy descriptor to be written on file
@@ -178,7 +179,7 @@ CONTAINS
        enddo
        close(iun)
     endif
-    call mp_barrier
+    call mp_barrier( world_comm )
   END SUBROUTINE write_self_storage_ondisk
 
   SUBROUTINE read_self_storage_ondisk(ss, options)
@@ -188,6 +189,7 @@ CONTAINS
     USE io_global,          ONLY : stdout, ionode, ionode_id
     USE input_gw,           ONLY : input_options
     USE mp,                 ONLY : mp_barrier, mp_bcast
+    USE mp_world,           ONLY : world_comm
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
     TYPE(self_storage) :: ss!the self_energy descriptor to be read from file
@@ -324,6 +326,7 @@ CONTAINS
 
     USE io_global,          ONLY : stdout, ionode
     USE mp,                 ONLY : mp_barrier
+    USE mp_world,           ONLY : world_comm
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
     TYPE(self_on_real),INTENT(in) :: sr!the self_energy descriptor to be written on file  
@@ -485,7 +488,7 @@ CONTAINS
    USE energies_gww,           ONLY : quasi_particles
    USE times_gw,           ONLY : times_freqs
    USE w_divergence
-   USE mp_global,            ONLY : nproc,mpime
+   USE mp_world,            ONLY : world_comm,nproc,mpime
 
    implicit none
 
@@ -886,6 +889,7 @@ END SUBROUTINE create_self_ontime
     USE io_global,      ONLY : stdout, ionode
     USE constants,      ONLY : pi
     USE mp,             ONLY : mp_barrier
+    USE mp_world,       ONLY : world_comm
     USE times_gw,       ONLY : times_freqs
 
     implicit none
@@ -1878,7 +1882,7 @@ END SUBROUTINE create_self_ontime
          &  distribute_v_pot, collect_v_pot
     USE mp,                ONLY : mp_sum, mp_barrier
     USE para_gww,          ONLY : is_my_pola
-    USE mp_global,            ONLY : nproc,mpime
+    USE mp_world,            ONLY : world_comm,nproc,mpime
     USE times_gw,  ONLY : times_freqs
 
 
@@ -2068,7 +2072,7 @@ END SUBROUTINE create_self_ontime
             !loop on c' states
          do ii=options%i_min,options%i_max
             cpp%cprim=ii
-            call mp_barrier
+            call mp_barrier( world_comm )
             if(.not.options%l_self_beta) then
                call read_data_pw_cprim_prod(cpp, options%prefix,.true.,ok_read,.false.,.false.)
             else
@@ -2137,7 +2141,7 @@ END SUBROUTINE create_self_ontime
          endif
          do ii=options%i_min,options%i_max
             cpp%cprim=ii
-            call mp_barrier
+            call mp_barrier( world_comm )
             if(.not.options%l_self_beta) then
                call read_data_pw_cprim_prod(cpp, options%prefix,.true.,ok_read,.false.,.false.)
             else

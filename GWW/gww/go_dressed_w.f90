@@ -22,6 +22,7 @@
    USE polarization
    USE para_gww,           ONLY : is_my_pola
    USE mp,                 ONLY : mp_barrier, mp_sum
+   USE mp_world,           ONLY : world_comm
    USE w_divergence
    USE start_end
 
@@ -214,6 +215,7 @@
    USE polarization
    USE para_gww,           ONLY : is_my_time
    USE mp,                 ONLY : mp_barrier
+   USE mp_world,           ONLY : world_comm
 
    implicit none
 
@@ -253,7 +255,7 @@
       write(stdout,*) 'SUM VCVC:', sum
    endif
 
-   call mp_barrier
+   call mp_barrier( world_comm )
 
    call free_memory_polaw(pp)
    call free_memory_polaw(ww)

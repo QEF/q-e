@@ -18,6 +18,7 @@
    USE green_function,     ONLY : green,create_green_part,write_green,free_memory_green,initialize_green
    USE para_gww,           ONLY : is_my_time, is_my_last
    USE mp,                 ONLY : mp_barrier
+   USE mp_world,           ONLY : world_comm
    USE io_global,          ONLY : stdout
    USE energies_gww,           ONLY : quasi_particles
    USE times_gw,        ONLY : times_freqs
@@ -69,7 +70,7 @@
       write(stdout,*) 'green 0 created'
    endif
 
-   call mp_barrier
+   call mp_barrier( world_comm )
 
    call free_memory_green(gr)
    call free_memory(wu)

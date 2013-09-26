@@ -836,6 +836,7 @@
       USE basic_structures,     ONLY : wannier_u, q_mat
       USE input_gw,             ONLY : input_options
       USE mp_global,            ONLY : mpime, nproc
+      USE mp_world,             ONLY : world_comm
       USE mp,                   ONLY : mp_barrier
       
       implicit none
@@ -856,7 +857,7 @@
             call free_memory_contraction_pola_state(cps)
          endif
       enddo
-      call mp_barrier
+      call mp_barrier( world_comm )
 
       return
     END SUBROUTINE do_contraction_pola_state

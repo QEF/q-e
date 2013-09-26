@@ -1134,6 +1134,7 @@ MODULE exchange_custom
       USE gvect
       USE mp_wave, ONLY : mergewf,splitwf
       USE mp, ONLY : mp_barrier, mp_sum
+      USE mp_world, ONLY : world_comm
 
       IMPLICIT NONE
 
@@ -1176,7 +1177,7 @@ MODULE exchange_custom
 
       exx_cus%fft_g2r%ecutt=ecutwfc
       exx_cus%fft_g2r%dual_t=dual
-      call mp_barrier
+      call mp_barrier( world_comm )
       write(stdout,*) 'Before initialize_fft_custom',exx_cus%fft_g2r%ecutt,exx_cus%fft_g2r%dual_t
       call flush_unit(stdout)
       call initialize_fft_custom(exx_cus%fft_g2r)

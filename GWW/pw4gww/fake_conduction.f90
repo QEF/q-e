@@ -38,6 +38,7 @@ CONTAINS
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_global, ONLY : mpime, nproc, intra_pool_comm
+   USE mp_world, ONLY: world_comm
    USE gvecs,              ONLY : nls, nlsm, doublegrid
 
    USE kinds, ONLY : DP
@@ -491,14 +492,14 @@ CONTAINS
 
   
   FIRST_LOOP: do iv=iv_start,num_nbndv_max
-     call mp_barrier
+     call mp_barrier( world_comm )
      write(stdout,*) 'FK state:', iv,fc%nrxxt,fc%npwt,num_fc
      CALL memstat( kilobytes )
      if(l_verbose)  write(stdout,*) 'memory1', kilobytes
      call flush_unit(stdout)
      
 
-     call mp_barrier 
+     call mp_barrier( world_comm )
      CALL memstat( kilobytes )
      if(l_verbose) write(stdout,*) 'memory2', kilobytes, ' new kb = ', &
                      (SIZE(wv_real)+SIZE(state_real)+SIZE(state_real2)+SIZE(state_g)*2)/128
@@ -512,13 +513,13 @@ CONTAINS
            psic(fc%nlt(igkt(1:fc%npwt)))  = evc_t(1:fc%npwt,iv,is)
            psic(fc%nltm(igkt(1:fc%npwt))) = CONJG( evc_t(1:fc%npwt,iv,is) )
 
-           call mp_barrier
+           call mp_barrier( world_comm )
            CALL memstat( kilobytes )
            if(l_verbose) write(stdout,*) 'memory3', kilobytes
            call flush_unit(stdout)
 
            CALL cft3t( fc, psic, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t, 2 )
-           call mp_barrier
+           call mp_barrier( world_comm )
            CALL memstat( kilobytes )
            if(l_verbose) write(stdout,*) 'memory4', kilobytes
            call flush_unit(stdout)
@@ -583,7 +584,7 @@ CONTAINS
      enddo!on spin
 
      if(l_verbose) write(stdout,*) 'End FFTs part'
-     call mp_barrier
+     call mp_barrier( world_comm )
      CALL memstat( kilobytes )
      if(l_verbose) write(stdout,*) 'memory5', kilobytes
      call flush_unit(stdout)
@@ -1162,7 +1163,7 @@ CONTAINS
  
 
 
-     call mp_barrier
+     call mp_barrier( world_comm )
         
      CALL memstat( kilobytes )
      if(l_verbose) write(stdout,*) 'memory9', kilobytes
@@ -1254,7 +1255,7 @@ CONTAINS
         if(l_verbose) write(stdout,*) 'memory10', kilobytes
         if(l_verbose) write(stdout,*) 'TOTAL NUMBER OF FCW STATES:', fcw_number,ii,dfftp%nnr,fc%nrxxt,wg(1,is)
         call flush_unit(stdout)
-        call mp_barrier
+        call mp_barrier( world_comm )
      
 !calculate contribution to D matrix
         if(nsize>0) then
@@ -1414,6 +1415,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, et, ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
+   USE mp_world, ONLY : world_comm
    USE mp_global, ONLY : mpime, nproc, intra_pool_comm
    USE gvecs,              ONLY : nls, nlsm,  doublegrid
    USE kinds, ONLY : DP
@@ -1708,7 +1710,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
 
   fcw_number=0
   FIRST_LOOP: do iv=1,num_nbndv(1)
-     call mp_barrier
+     call mp_barrier( world_comm )
      write(stdout,*) 'FK state:', iv,fc%nrxxt,fc%npwt,num_fc
      CALL memstat( kilobytes )
      write(stdout,*) 'memory1', kilobytes
@@ -1719,7 +1721,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
 
   !   allocate (wv_real(fc%nrxxt),state_real(fc%nrxxt),state_real2(fc%nrxxt),state_g(fc%npwt,num_fc))
   !   if(l_iter_algorithm) allocate (state_g_r(fc%nrxxt,num_fc))
-     call mp_barrier 
+     call mp_barrier( world_comm )
      CALL memstat( kilobytes )
      write(stdout,*) 'memory2', kilobytes, ' new kb = ', &
                      (SIZE(wv_real))/128
@@ -1729,13 +1731,13 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
      psic(fc%nlt(igkt(1:fc%npwt)))  = evc_t(1:fc%npwt,iv)
      psic(fc%nltm(igkt(1:fc%npwt))) = CONJG( evc_t(1:fc%npwt,iv) )
 
-     call mp_barrier
+     call mp_barrier( world_comm )
      CALL memstat( kilobytes )
      write(stdout,*) 'memory3', kilobytes
      call flush_unit(stdout)
 
     CALL cft3t( fc, psic, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t, 2 )
-    call mp_barrier
+    call mp_barrier( world_comm )
      CALL memstat( kilobytes )
      write(stdout,*) 'memory4', kilobytes
      call flush_unit(stdout)
@@ -1775,7 +1777,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
      
 
      write(stdout,*) 'End products part'
-     call mp_barrier
+     call mp_barrier( world_comm )
      CALL memstat( kilobytes )
      write(stdout,*) 'memory5', kilobytes
      call flush_unit(stdout)
@@ -2036,7 +2038,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
 
   !write(stdout,*) 'Att0'
   !   call flush_unit(stdout)
-  call mp_barrier
+  call mp_barrier( world_comm )
   
   CALL memstat( kilobytes )
   write(stdout,*) 'memory9', kilobytes
