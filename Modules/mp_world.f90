@@ -54,7 +54,7 @@ CONTAINS
   SUBROUTINE mp_global_end ( )
     !-----------------------------------------------------------------------
     !
-    CALL mp_barrier()
+    CALL mp_barrier( world_comm )
     CALL mp_end ()
     !
   END SUBROUTINE mp_global_end

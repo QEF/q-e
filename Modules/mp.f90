@@ -1835,13 +1835,10 @@
 
       SUBROUTINE mp_barrier(gid)
         IMPLICIT NONE
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
-        INTEGER :: group
+        INTEGER, INTENT(IN) :: gid
         INTEGER :: ierr
 #if defined(__MPI)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
-        CALL MPI_BARRIER(group,IERR)
+        CALL MPI_BARRIER(gid,IERR)
         IF (ierr/=0) CALL mp_stop( 8066 )
 #endif
       END SUBROUTINE mp_barrier
@@ -1852,17 +1849,13 @@
       FUNCTION mp_rank( comm )
         IMPLICIT NONE
         INTEGER :: mp_rank
-        INTEGER, OPTIONAL, INTENT(IN) :: comm
+        INTEGER, INTENT(IN) :: comm
         INTEGER :: ierr, taskid
 
         ierr = 0
         taskid = 0
 #if defined(__MPI)
-        IF( PRESENT( comm ) ) THEN
-           CALL mpi_comm_rank(comm,taskid,ierr)
-        ELSE
-           CALL mpi_comm_rank(global_comm,taskid,ierr)
-        END IF
+        CALL mpi_comm_rank(comm,taskid,ierr)
         IF (ierr/=0) CALL mp_stop( 8067 )
 #endif
         mp_rank = taskid
@@ -1874,17 +1867,13 @@
       FUNCTION mp_size( comm )
         IMPLICIT NONE
         INTEGER :: mp_size
-        INTEGER, OPTIONAL, INTENT(IN) :: comm
+        INTEGER, INTENT(IN) :: comm
         INTEGER :: ierr, numtask
 
         ierr = 0
         numtask = 1
 #if defined(__MPI)
-        IF( PRESENT( comm ) ) THEN
-           CALL mpi_comm_size(comm,numtask,ierr)
-        ELSE
-           CALL mpi_comm_size(global_comm,numtask,ierr)
-        END IF
+        CALL mpi_comm_size(comm,numtask,ierr)
         IF (ierr/=0) CALL mp_stop( 8068 )
 #endif
         mp_size = numtask
@@ -1914,13 +1903,12 @@
         REAL(DP) :: mydata(:)
         REAL(DP) :: alldata(:)
         INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER :: ierr, npe, myid
 
 #if defined (__MPI)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
+        group = gid
         CALL mpi_comm_size( group, npe, ierr )
         IF (ierr/=0) CALL mp_stop( 8069 )
         CALL mpi_comm_rank( group, myid, ierr )
@@ -1953,13 +1941,12 @@
         COMPLEX(DP) :: mydata(:)
         COMPLEX(DP) :: alldata(:)
         INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER :: ierr, npe, myid
 
 #if defined (__MPI)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
+        group = gid
         CALL mpi_comm_size( group, npe, ierr )
         IF (ierr/=0) CALL mp_stop( 8069 )
         CALL mpi_comm_rank( group, myid, ierr )
@@ -1992,13 +1979,12 @@
         INTEGER :: mydata(:)
         INTEGER :: alldata(:)
         INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER :: ierr, npe, myid
 
 #if defined (__MPI)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
+        group = gid
         CALL mpi_comm_size( group, npe, ierr )
         IF (ierr/=0) CALL mp_stop( 8069 )
         CALL mpi_comm_rank( group, myid, ierr )
@@ -2032,15 +2018,14 @@
         REAL(DP) :: mydata(:,:)  ! Warning first dimension is supposed constant!
         REAL(DP) :: alldata(:,:)
         INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER :: ierr, npe, myid, nsiz
         INTEGER, ALLOCATABLE :: nrecv(:), ndisp(:)
 
 
 #if defined (__MPI)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
+        group = gid
         CALL mpi_comm_size( group, npe, ierr )
         IF (ierr/=0) CALL mp_stop( 8069 )
         CALL mpi_comm_rank( group, myid, ierr )
@@ -2083,15 +2068,14 @@
         INTEGER :: mydata(:,:)  ! Warning first dimension is supposed constant!
         INTEGER :: alldata(:,:)
         INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER :: ierr, npe, myid, nsiz
         INTEGER, ALLOCATABLE :: nrecv(:), ndisp(:)
 
 
 #if defined (__MPI)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
+        group = gid
         CALL mpi_comm_size( group, npe, ierr )
         IF (ierr/=0) CALL mp_stop( 8069 )
         CALL mpi_comm_rank( group, myid, ierr )
@@ -2160,13 +2144,12 @@ SUBROUTINE mp_alltoall_c3d( sndbuf, rcvbuf, gid )
    IMPLICIT NONE
    COMPLEX(DP) :: sndbuf( :, :, : )
    COMPLEX(DP) :: rcvbuf( :, :, : )
-   INTEGER, OPTIONAL, INTENT(IN) :: gid
+   INTEGER, INTENT(IN) :: gid
    INTEGER :: nsiz, group, ierr, npe
 
 #if defined (__MPI)
 
-   group = global_comm
-   IF( PRESENT( gid ) ) group = gid
+   group = gid
 
    CALL mpi_comm_size( group, npe, ierr )
    IF (ierr/=0) CALL mp_stop( 8069 )
@@ -2197,13 +2180,12 @@ SUBROUTINE mp_alltoall_i3d( sndbuf, rcvbuf, gid )
    IMPLICIT NONE
    INTEGER :: sndbuf( :, :, : )
    INTEGER :: rcvbuf( :, :, : )
-   INTEGER, OPTIONAL, INTENT(IN) :: gid
+   INTEGER, INTENT(IN) :: gid
    INTEGER :: nsiz, group, ierr, npe
 
 #if defined (__MPI)
 
-   group = global_comm
-   IF( PRESENT( gid ) ) group = gid
+   group = gid
 
    CALL mpi_comm_size( group, npe, ierr )
    IF (ierr/=0) CALL mp_stop( 8069 )
@@ -2231,15 +2213,14 @@ SUBROUTINE mp_circular_shift_left_d2d_int( buf, itag, gid )
    IMPLICIT NONE
    INTEGER :: buf
    INTEGER, INTENT(IN) :: itag
-   INTEGER, OPTIONAL, INTENT(IN) :: gid
+   INTEGER, INTENT(IN) :: gid
    INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 
    INTEGER :: istatus( mpi_status_size )
    !
-   group = global_comm
-   IF( PRESENT( gid ) ) group = gid
+   group = gid
    !
    CALL mpi_comm_size( group, npe, ierr )
    IF (ierr/=0) CALL mp_stop( 8100 )
@@ -2268,15 +2249,14 @@ SUBROUTINE mp_circular_shift_left_d2d_double( buf, itag, gid )
    IMPLICIT NONE
    REAL(DP) :: buf( :, : )
    INTEGER, INTENT(IN) :: itag
-   INTEGER, OPTIONAL, INTENT(IN) :: gid
+   INTEGER, INTENT(IN) :: gid
    INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 
    INTEGER :: istatus( mpi_status_size )
    !
-   group = global_comm
-   IF( PRESENT( gid ) ) group = gid
+   group = gid
    !
    CALL mpi_comm_size( group, npe, ierr )
    IF (ierr/=0) CALL mp_stop( 8100 )
@@ -2303,15 +2283,14 @@ SUBROUTINE mp_circular_shift_left_d2d_complex( buf, itag, gid )
    IMPLICIT NONE
    COMPLEX(DP) :: buf( :, : )
    INTEGER, INTENT(IN) :: itag
-   INTEGER, OPTIONAL, INTENT(IN) :: gid
+   INTEGER, INTENT(IN) :: gid
    INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 
    INTEGER :: istatus( mpi_status_size )
    !
-   group = global_comm
-   IF( PRESENT( gid ) ) group = gid
+   group = gid
    !
    CALL mpi_comm_size( group, npe, ierr )
    IF (ierr/=0) CALL mp_stop( 8100 )
