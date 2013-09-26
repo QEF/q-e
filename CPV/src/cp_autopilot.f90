@@ -303,6 +303,7 @@ CONTAINS
     USE parser, ONLY: parse_unit
     USE io_global, ONLY: ionode, ionode_id
     USE mp,        ONLY : mp_bcast, mp_barrier
+    USE mp_world,  ONLY : world_comm
     IMPLICIT NONE
     INTEGER :: nfi
     LOGICAL :: file_p
@@ -346,7 +347,7 @@ CONTAINS
           ! Will reset PAUSE_P to false unless there is a PAUSE cmd
           ! The following call is MPI safe! It only generates side effects
           CALL parse_mailbox()
-          call mp_barrier()
+          call mp_barrier( world_comm )
           
           IF ( ionode ) THEN
             WRITE(*,*) '  Autopilot: Done reading mailbox' 
@@ -385,7 +386,7 @@ CONTAINS
           WRITE(*,*) '****************************************************'
           WRITE(*,*)
        END IF
-       call mp_barrier()
+       call mp_barrier( world_comm )
 
        ! update event_index to current
        event_index = event_index + 1

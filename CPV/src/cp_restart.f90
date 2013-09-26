@@ -61,6 +61,7 @@ MODULE cp_restart
                                            root_bgrp, intra_pool_comm
       USE mp_global,                ONLY : nproc_pot, nproc_bgrp, nproc_ortho, &
                                            get_ntask_groups
+      USE mp_world,                 ONLY : world_comm
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm, ngm_g
       USE gvecs,                    ONLY : ngms_g, ecuts, dual
@@ -911,7 +912,7 @@ MODULE cp_restart
       !
       IF ( ionode ) CALL iotk_close_write( iunpun )
       !
-      call mp_barrier()
+      call mp_barrier( world_comm )
       !
       IF( .NOT. twfcollect ) THEN
          !

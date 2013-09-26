@@ -1533,7 +1533,7 @@ END SUBROUTINE rhov
             !
             ! gather the charge density on the first node
             !
-            call mp_barrier()
+            call mp_barrier( intra_bgrp_comm )
             call mp_gather( rhor(:,is), rhodist, recvcount, displs, ionode_id, intra_bgrp_comm )
             !
             ! write the charge density to unit "rhounit" from first node only

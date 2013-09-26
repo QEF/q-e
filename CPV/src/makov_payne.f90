@@ -27,6 +27,7 @@ SUBROUTINE makov_payne(etot)
 #if defined __MPI
   USE mp_global,         ONLY : me_bgrp, nproc_bgrp, intra_bgrp_comm
   USE mp,                ONLY : mp_barrier
+  USE mp_world,          ONLY : world_comm
 #endif
 !
 IMPLICIT NONE
@@ -89,14 +90,14 @@ ALLOCATE( displs( nproc_bgrp ), recvcount( nproc_bgrp ) )
 !
 ! gather the charge density on the first node
 !
-   call mp_barrier()
+   call mp_barrier( world_comm )
    call mpi_gatherv( rhor(1,1), recvcount(me_bgrp+1), MPI_DOUBLE_PRECISION,&
  &                rhodist1,recvcount, displs, MPI_DOUBLE_PRECISION,&
  &                ionode_id, intra_bgrp_comm, ierr)
    call errore('mpi_gatherv','ierr<>0',ierr)
 !
 IF(nspin .eq. 2)THEN
-         call mp_barrier()
+         call mp_barrier( world_comm )
          call mpi_gatherv( rhor(1,2), recvcount(me_bgrp+1), MPI_DOUBLE_PRECISION,        &
      &                  rhodist2,recvcount, displs, MPI_DOUBLE_PRECISION,    &
      &                  ionode_id, intra_bgrp_comm, ierr)
