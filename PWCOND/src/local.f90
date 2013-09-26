@@ -162,6 +162,7 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
   USE cell_base, ONLY : at, tpiba2
   USE noncollin_module, ONLY : npol
   USE mp_global,        ONLY : nproc, me_pool, root_pool
+  USE mp_world,        ONLY : world_comm
   USE mp,         ONLY : mp_barrier, mp_bcast
   USE io_global, ONLY : ionode, ionode_id
   USE parallel_include
@@ -280,7 +281,7 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
   ENDDO
 
 #ifdef __MPI
-  CALL mp_barrier()
+  CALL mp_barrier(world_comm)
   CALL mp_bcast(n2d,ionode_id)
   CALL mp_bcast(psibase,ionode_id)
 #endif
@@ -303,6 +304,7 @@ subroutine local_2(nrz, nrzp, vppot, psiper, zkr)
   use cond, only : nrx, nry, ngper, n2d, gper, newbg
   !
   USE mp_global, ONLY : intra_pool_comm
+  USE mp_world, ONLY : world_comm
   !
 
   IMPLICIT NONE
@@ -390,7 +392,7 @@ subroutine local_2(nrz, nrzp, vppot, psiper, zkr)
   ENDDO
 
 #ifdef __MPI
-  CALL mp_barrier()
+  CALL mp_barrier(world_comm)
 #endif
 
   deallocate(amat)
