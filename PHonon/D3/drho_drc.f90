@@ -22,6 +22,7 @@ SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scalef)
   USE d3com
   USE uspp_param, ONLY : upf
   USE mp,         ONLY : mp_barrier
+  USE mp_world,   ONLY : world_comm
 
   IMPLICIT NONE
 
@@ -76,7 +77,7 @@ SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scalef)
      CALL davcio_drho2 (drhov, lrdrho, iudrho_x, ipert, + 1)
   ENDDO
 
-  CALL mp_barrier()
+  CALL mp_barrier( world_comm )
 
   DEALLOCATE (drhoc)
   DEALLOCATE (drhov)

@@ -21,6 +21,7 @@ SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
   USE io_global, ONLY : ionode_id, ionode
   USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, me_pool, root_pool
   USE mp,        ONLY : mp_bcast, mp_barrier
+  USE mp_world,  ONLY : world_comm
   USE fft_base,  ONLY : dfftp, cgather_sym
   !
   IMPLICIT NONE
@@ -42,7 +43,7 @@ SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
      !
      CALL cgather_sym (drho, ddrho)
      root = 0
-     CALL mp_barrier()
+     CALL mp_barrier( world_comm )
      IF ( ionode ) CALL davcio (ddrho, lrec, iunit, nrec, + 1)
   ELSEIF (isw < 0) THEN
      !

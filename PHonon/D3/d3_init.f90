@@ -17,6 +17,7 @@ SUBROUTINE d3_init
   USE phcom
   USE d3com
   USE mp,         ONLY : mp_barrier
+  USE mp_world,   ONLY : world_comm
   USE symm_base,  ONLY : s, ftau
   USE nlcc_ph,    ONLY : nlcc_any, drc
 
@@ -129,7 +130,7 @@ SUBROUTINE d3_init
      ENDDO
   ENDIF
 
-  CALL mp_barrier()
+  CALL mp_barrier( world_comm )
 
   DEALLOCATE(drhoscf)
 
