@@ -227,6 +227,7 @@ contains
                                      evc0, sevc0, d0psi
     use wvfct,                only : nbnd, npwx, npw
     use mp,                   only : mp_bcast,mp_barrier                  
+    use mp_world,             only : world_comm
     use lr_us
     use uspp,           only : okvan
     use lr_dav_variables
@@ -353,7 +354,7 @@ contains
 
 #ifdef __MPI
   endif
-  call mp_barrier()
+  call mp_barrier(world_comm)
   call mp_bcast(tr_energy,ionode_id)
   call mp_bcast(eign_value_order,ionode_id)
   call mp_bcast(left_M,ionode_id)
@@ -419,7 +420,6 @@ contains
     use kinds,  only : dp
     use io_global, only : stdout
     use wvfct,                only : nbnd, npwx, npw
-    use mp,                 only : mp_stop
     use lr_dav_debug
     use lr_us
     
@@ -795,6 +795,7 @@ contains
     use wvfct,                only : nbnd
     use io_global,            only : stdout,ionode,ionode_id
     use mp,                   only : mp_bcast,mp_barrier                  
+    use mp_world,             only : world_comm
     use lr_us
     
     implicit none
@@ -871,7 +872,7 @@ contains
 
 #ifdef __MPI
   endif
-  call mp_barrier()
+  call mp_barrier(world_comm)
   call mp_bcast(omegar,ionode_id)
   call mp_bcast(omegal,ionode_id)
 #endif
@@ -1106,7 +1107,8 @@ contains
     use realus,              only : fft_orbital_gamma, bfft_orbital_gamma
     use wavefunctions_module, only : psic
     use cell_base,              only : omega
-    use mp,                   only : mp_stop, mp_barrier
+    use mp,                   only : mp_barrier
+    use mp_world,               only : world_comm
 
     implicit none
     integer :: v1,c1,v2,c2,ia,ir
@@ -1122,8 +1124,8 @@ contains
     if(okvan) then
       write(stdout,'(10x,"At this moment single-pole is not available for USPP !!!",//)')
 #ifdef __MPI
-      call mp_barrier
-      call mp_stop(100)
+      call mp_barrier( world_comm )
+      call errore(" "," ", 100)
 #endif
       stop 
     endif
@@ -1171,6 +1173,7 @@ contains
     use gvect,                only : gstart
     use mp_global,            only : intra_bgrp_comm,mpime
     use mp,                   only : mp_sum, mp_barrier
+    use mp_world,             only : world_comm
    
     implicit none
     real(kind=dp), external   :: ddot
@@ -1181,7 +1184,7 @@ contains
     if(gstart==2) wfc_dot=wfc_dot-dble(x(1))*dble(y(1))
 
 #ifdef __MPI
-    call mp_barrier
+    call mp_barrier(world_comm)
     call mp_sum(wfc_dot,intra_bgrp_comm)
 #endif
 

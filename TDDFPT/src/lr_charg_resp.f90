@@ -189,6 +189,7 @@ CONTAINS
     USE mp,                   ONLY : mp_bcast, mp_barrier
     USE lr_variables,         ONLY : LR_polarization, itermax
     USE mp_global,                ONLY : inter_pool_comm, intra_bgrp_comm
+    USE mp_world,                ONLY : world_comm
     !
     IMPLICIT NONE
     !
@@ -253,7 +254,7 @@ CONTAINS
        !print *, "starting broadcast"
 #ifdef __MPI
     ENDIF
-    CALL mp_barrier()
+    CALL mp_barrier(world_comm)
     CALL mp_bcast (w_T_beta_store(:), ionode_id)
     CALL mp_bcast (w_T_gamma_store(:), ionode_id)
     CALL mp_bcast (w_T_zeta_store(:,:), ionode_id)
@@ -823,6 +824,7 @@ CONTAINS
     USE cell_base
     USE ions_base,                ONLY : nat, ityp, atm, ntyp => nsp, tau
     USE mp,                   ONLY : mp_barrier, mp_sum, mp_bcast, mp_get
+    USE mp_world,             ONLY : world_comm
     USE mp_global,            ONLY : me_image, intra_image_comm, me_bgrp, nproc_bgrp, &
          intra_bgrp_comm, my_bgrp_id
 
@@ -952,7 +954,7 @@ CONTAINS
                 ENDDO
                 !print *, "get 1=",rho_plane(1)," 2=",rho_plane(2)," ",dfftp%npp(i),"=",rho_plane(dfftp%npp(i))
              ENDIF
-             !call mp_barrier()
+             !call mp_barrier( world_comm )
              IF ( my_bgrp_id == iopool_id ) &
                                 !Send plane to ionode
                                 ! Send and recieve rho_plane,
@@ -960,7 +962,7 @@ CONTAINS
                   me_bgrp, ionode_pool, (i-1), i-1, intra_bgrp_comm )
 
              !
-             !call mp_barrier()
+             !call mp_barrier( world_comm )
              IF(ionode) THEN
                 rho_plane( (dfftp%ipp(i)+1):(dfftp%ipp(i)+dfftp%npp(i)) ) = rho_temp(1:dfftp%npp(i))
                 !print *, "get (",dfftp%ipp(i)+1,")=",rho_plane(dfftp%ipp(i)+1)," (",dfftp%ipp(i)+dfftp%npp(i),")=",rho_plane(dfftp%ipp(i)+dfftp%npp(i))
@@ -979,7 +981,7 @@ CONTAINS
                 !print *, rho_plane(i3)
              ENDDO
           ENDIF
-          CALL mp_barrier()
+          CALL mp_barrier( world_comm )
        ENDDO
     ENDDO
     !
@@ -988,7 +990,7 @@ CONTAINS
 
     IF (ionode) CLOSE(158)
 
-    CALL mp_barrier()
+    CALL mp_barrier( world_comm )
 
 #else
     !
@@ -1072,6 +1074,7 @@ CONTAINS
     USE cell_base
     USE ions_base,            ONLY : nat, ityp, atm, ntyp => nsp, tau
     USE mp,                   ONLY : mp_barrier, mp_sum, mp_bcast, mp_get
+    USE mp_world,             ONLY : world_comm
     USE mp_global,            ONLY : me_image, intra_image_comm, me_bgrp, nproc_bgrp, &
          intra_bgrp_comm, my_bgrp_id
 
@@ -1273,6 +1276,7 @@ CONTAINS
     USE cell_base
     USE ions_base,             ONLY : nat, ityp, atm, ntyp => nsp, tau
     USE mp,                   ONLY : mp_barrier, mp_sum, mp_bcast, mp_get
+    USE mp_world,             ONLY : world_comm
     USE mp_global,            ONLY : me_image, intra_image_comm, me_bgrp, nproc_bgrp, &
          intra_bgrp_comm, my_bgrp_id
 
@@ -1527,6 +1531,7 @@ CONTAINS
     USE cell_base
     USE ions_base,             ONLY : nat, ityp, atm, ntyp => nsp, tau
     USE mp,                    ONLY : mp_barrier, mp_sum
+    USE mp_world,              ONLY : world_comm
     USE mp_global,             ONLY : intra_bgrp_comm
     USE constants,             ONLY : BOHR_RADIUS_ANGS
     !
@@ -1582,7 +1587,7 @@ CONTAINS
        !
 #ifdef __MPI
     ENDIF
-    CALL mp_barrier()
+    CALL mp_barrier(world_comm)
 #endif
     CALL stop_clock( 'post-processing' )
     RETURN

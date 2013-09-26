@@ -179,7 +179,8 @@ contains
     use kinds,           only : dp
     use fft_base,             only : dffts
     use mp_global,            only : intra_bgrp_comm,mpime
-    use mp,                   only : mp_sum, mp_barrier,mp_stop
+    use mp_world,             only : world_comm
+    use mp,                   only : mp_sum, mp_barrier
     use lr_dav_variables
     USE cell_base,              ONLY : omega
     USE wavefunctions_module, ONLY : psic
@@ -204,7 +205,7 @@ contains
       call fft_orbital_gamma(wfck(:,:),1,1)  ! FFT: v  -> psic
       norm=DDOT(dffts%nnr,psic(:),2,banda,1)/tot_nnr
 #ifdef __MPI
-      call mp_barrier
+      call mp_barrier( world_comm )
       call mp_sum(norm,intra_bgrp_comm)
 #endif
       print *, norm
@@ -213,12 +214,12 @@ contains
       call fft_orbital_gamma(wfck(:,:),1,1)  ! FFT: v  -> psic
       norm=DDOT(dffts%nnr,psic(:),2,bandb,1)/tot_nnr
 #ifdef __MPI
-      call mp_barrier
+      call mp_barrier( world_comm )
       call mp_sum(norm,intra_bgrp_comm)
 #endif
       print *, norm
     enddo
-call mp_stop(100)
+!call mp_stop(100)
     return
   end subroutine check_revc0
   !-------------------------------------------------------------------------------

@@ -24,13 +24,14 @@ SUBROUTINE bcast_lr_input
   USE charg_resp,          ONLY: omeg, w_T_prefix, w_T_npol,epsil
   USE io_global,           ONLY: ionode, ionode_id
   USE mp_global,           ONLY: intra_image_comm
+  USE mp_world,            ONLY: world_comm
   USE exx,                 ONLY: ecutfock
 
   IMPLICIT NONE
   !
   !
   !
-  CALL mp_barrier()
+  CALL mp_barrier(world_comm)
   CALL mp_bcast (lr_io_level, ionode_id )
   CALL mp_bcast (itermax, ionode_id )
   CALL mp_bcast (itermax_int, ionode_id )
@@ -97,7 +98,7 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (max_iter, ionode_id )
   CALL mp_bcast (conv_assistant, ionode_id )
   CALL mp_bcast (if_dft_spectrum, ionode_id )
-  CALL mp_barrier()
+  CALL mp_barrier(world_comm)
   
 #endif
   RETURN

@@ -11,8 +11,9 @@ PROGRAM lr_calculate_spectrum
   USE global_version,      ONLY : version_number
   USE io_global,           ONLY : stdout,ionode, ionode_id
   USE environment,         ONLY: environment_start,environment_end
-  USE mp_global,           ONLY : mp_startup,mp_global_end,mp_barrier
-  USE mp,                  ONLY : mp_bcast
+  USE mp_global,           ONLY : mp_startup,mp_global_end
+  USE mp_world,            ONLY : world_comm
+  USE mp,                  ONLY : mp_bcast, mp_barrier
 
   IMPLICIT NONE
   !
@@ -582,7 +583,7 @@ CLOSE(17)
 ENDIF
 555 print *, "Calculation is finished."
 #ifdef __MPI
-  CALL mp_barrier ()
+  CALL mp_barrier (world_comm)
   CALL mp_global_end ()
 #endif
 
