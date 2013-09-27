@@ -62,10 +62,10 @@ CONTAINS
     INTEGER :: ierr = 0
     !
     parent_nproc = mp_size( parent_comm )
-    np_blacs     = mp_size( world_comm )
-    me_blacs     = mp_rank( world_comm )
     !
 #if defined __SCALAPACK
+    np_blacs     = mp_size( world_comm )
+    me_blacs     = mp_rank( world_comm )
     !
     ! define a 1D grid containing all MPI tasks of the global communicator
     ! NOTE: world_cntx has the MPI communicator on entry and the BLACS context on exit
