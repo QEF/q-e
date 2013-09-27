@@ -26,6 +26,7 @@ default :
 	@echo '  plumed       Metadynamics plugin for pw or cp'
 	@echo '  epw          Electron-Phonon Coupling with wannier functions, EPW package' 
 	@echo '  gpu          Download the latest QE-GPU package'
+	@echo '  couple       Library interface for coupling to external codes'
 	@echo '  clean        remove executables and objects'
 	@echo '  veryclean    revert distribution to the original status'
 	@echo '  tar          create a tarball of the source tree'
@@ -85,6 +86,10 @@ pw_export : libiotk bindir mods libs pw
 
 xspectra : bindir mods libs pw
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+
+couple : pw cp
+	if test -d COUPLE ; then \
+	( cd COUPLE ; $(MAKE) $(MFLAGS) TLDEPS= all ) ; fi
 
 gui : touch-dummy
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@

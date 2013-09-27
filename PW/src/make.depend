@@ -612,6 +612,7 @@ generate_vdW_kernel_table.o : ../../Modules/io_global.o
 generate_vdW_kernel_table.o : ../../Modules/kind.o
 generate_vdW_kernel_table.o : ../../Modules/mp.o
 generate_vdW_kernel_table.o : ../../Modules/mp_global.o
+generate_vdW_kernel_table.o : ../../Modules/mp_world.o
 get_locals.o : ../../Modules/cell_base.o
 get_locals.o : ../../Modules/fft_base.o
 get_locals.o : ../../Modules/ions_base.o

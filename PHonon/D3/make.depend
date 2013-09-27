@@ -56,6 +56,7 @@ d3_init.o : ../../Modules/atom.o
 d3_init.o : ../../Modules/fft_base.o
 d3_init.o : ../../Modules/ions_base.o
 d3_init.o : ../../Modules/mp.o
+d3_init.o : ../../Modules/mp_world.o
 d3_init.o : ../../Modules/uspp.o
 d3_init.o : ../../PHonon/PH/phcom.o
 d3_init.o : ../../PW/src/pwcom.o
@@ -174,6 +175,7 @@ davcio_drho2.o : ../../Modules/io_global.o
 davcio_drho2.o : ../../Modules/kind.o
 davcio_drho2.o : ../../Modules/mp.o
 davcio_drho2.o : ../../Modules/mp_global.o
+davcio_drho2.o : ../../Modules/mp_world.o
 davcio_drho2.o : ../../PHonon/PH/phcom.o
 davcio_drho2.o : ../../PW/src/pwcom.o
 dpsi_corr.o : ../../Modules/kind.o
@@ -218,6 +220,7 @@ drho_drc.o : ../../Modules/fft_interfaces.o
 drho_drc.o : ../../Modules/ions_base.o
 drho_drc.o : ../../Modules/kind.o
 drho_drc.o : ../../Modules/mp.o
+drho_drc.o : ../../Modules/mp_world.o
 drho_drc.o : ../../Modules/uspp.o
 drho_drc.o : ../../PHonon/PH/phcom.o
 drho_drc.o : ../../PW/src/pwcom.o

@@ -109,6 +109,7 @@ solve_head.o : ../../Modules/kind.o
 solve_head.o : ../../Modules/mp.o
 solve_head.o : ../../Modules/mp_global.o
 solve_head.o : ../../Modules/mp_wave.o
+solve_head.o : ../../Modules/mp_world.o
 solve_head.o : ../../Modules/recvec.o
 solve_head.o : ../../Modules/uspp.o
 solve_head.o : ../../Modules/wavefunctions.o

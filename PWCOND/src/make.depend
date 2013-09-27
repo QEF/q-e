@@ -97,6 +97,7 @@ local.o : ../../Modules/io_global.o
 local.o : ../../Modules/kind.o
 local.o : ../../Modules/mp.o
 local.o : ../../Modules/mp_global.o
+local.o : ../../Modules/mp_world.o
 local.o : ../../Modules/noncol.o
 local.o : ../../Modules/parallel_include.o
 local.o : condcom.o

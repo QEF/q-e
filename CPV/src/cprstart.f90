@@ -25,7 +25,6 @@ PROGRAM main
   USE environment,   ONLY : environment_start
   USE check_stop,    ONLY : check_stop_init
   USE mp_images,     ONLY : intra_image_comm
-  USE mp,            ONLY : mp_bcast
   USE command_line_options, ONLY : input_file_
   !
   IMPLICIT NONE
@@ -67,7 +66,8 @@ PROGRAM main
   !
   CALL cpr_loop( 1 )
   !
-  CALL stop_run( .TRUE. )
+  CALL stop_run()
+  CALL do_stop( .TRUE. )
   !
   STOP
   !

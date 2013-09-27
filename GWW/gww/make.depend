@@ -3,6 +3,7 @@ compact_product.o : ../../Modules/io_global.o
 compact_product.o : ../../Modules/kind.o
 compact_product.o : ../../Modules/mp.o
 compact_product.o : ../../Modules/mp_global.o
+compact_product.o : ../../Modules/mp_world.o
 compact_product.o : basic_structures.o
 compact_product.o : input_gw.o
 compact_product.o : para_gww.o
@@ -107,6 +108,7 @@ expansion.o : ../../Modules/io_files.o
 expansion.o : ../../Modules/io_global.o
 expansion.o : ../../Modules/kind.o
 expansion.o : ../../Modules/mp.o
+expansion.o : ../../Modules/mp_world.o
 expansion.o : input_gw.o
 expansion.o : para_gww.o
 expansion.o : self_energy_storage.o
@@ -117,6 +119,7 @@ fft_gw.o : ../../Modules/io_global.o
 fft_gw.o : ../../Modules/kind.o
 fft_gw.o : ../../Modules/mp.o
 fft_gw.o : ../../Modules/mp_global.o
+fft_gw.o : ../../Modules/mp_world.o
 fft_gw.o : ../../Modules/parallel_include.o
 fft_gw.o : polarization.o
 fft_gw.o : times_gw.o
@@ -127,6 +130,7 @@ fit_polynomial.o : ../../Modules/kind.o
 go_dressed_w.o : ../../Modules/io_global.o
 go_dressed_w.o : ../../Modules/kind.o
 go_dressed_w.o : ../../Modules/mp.o
+go_dressed_w.o : ../../Modules/mp_world.o
 go_dressed_w.o : basic_structures.o
 go_dressed_w.o : gv_time.o
 go_dressed_w.o : input_gw.o
@@ -137,6 +141,7 @@ go_exchange.o : ../../Modules/constants.o
 go_exchange.o : ../../Modules/io_global.o
 go_exchange.o : ../../Modules/kind.o
 go_exchange.o : ../../Modules/mp.o
+go_exchange.o : ../../Modules/mp_world.o
 go_exchange.o : basic_structures.o
 go_exchange.o : compact_product.o
 go_exchange.o : energies_gww.o
@@ -147,7 +152,7 @@ go_exchange.o : polarization.o
 go_fft.o : ../../Modules/io_global.o
 go_fft.o : ../../Modules/kind.o
 go_fft.o : ../../Modules/mp.o
-go_fft.o : ../../Modules/mp_global.o
+go_fft.o : ../../Modules/mp_world.o
 go_fft.o : fft_gw.o
 go_fft.o : input_gw.o
 go_fft.o : polarization.o
@@ -155,6 +160,7 @@ go_fft.o : times_gw.o
 go_green.o : ../../Modules/io_global.o
 go_green.o : ../../Modules/kind.o
 go_green.o : ../../Modules/mp.o
+go_green.o : ../../Modules/mp_world.o
 go_green.o : basic_structures.o
 go_green.o : energies_gww.o
 go_green.o : green_function.o
@@ -164,6 +170,7 @@ go_green.o : times_gw.o
 go_polarization.o : ../../Modules/io_global.o
 go_polarization.o : ../../Modules/kind.o
 go_polarization.o : ../../Modules/mp.o
+go_polarization.o : ../../Modules/mp_world.o
 go_polarization.o : basic_structures.o
 go_polarization.o : compact_product.o
 go_polarization.o : energies_gww.o
@@ -183,7 +190,7 @@ gv_time.o : ../../Modules/mp.o
 gv_time.o : times_gw.o
 gww.o : ../../Modules/io_global.o
 gww.o : ../../Modules/mp.o
-gww.o : ../../Modules/mp_global.o
+gww.o : ../../Modules/mp_world.o
 gww.o : contour.o
 gww.o : energies_gww.o
 gww.o : expansion.o
@@ -220,6 +227,7 @@ polarization.o : ../../Modules/io_global.o
 polarization.o : ../../Modules/kind.o
 polarization.o : ../../Modules/mp.o
 polarization.o : ../../Modules/mp_global.o
+polarization.o : ../../Modules/mp_world.o
 polarization.o : ../../Modules/parallel_include.o
 polarization.o : basic_structures.o
 polarization.o : compact_product.o
@@ -230,7 +238,7 @@ read_data_pw.o : ../../Modules/constants.o
 read_data_pw.o : ../../Modules/io_global.o
 read_data_pw.o : ../../Modules/kind.o
 read_data_pw.o : ../../Modules/mp.o
-read_data_pw.o : ../../Modules/mp_global.o
+read_data_pw.o : ../../Modules/mp_world.o
 read_data_pw.o : basic_structures.o
 remainder.o : ../../Modules/constants.o
 remainder.o : ../../Modules/io_global.o
@@ -255,6 +263,7 @@ self_energy_storage.o : ../../Modules/io_global.o
 self_energy_storage.o : ../../Modules/kind.o
 self_energy_storage.o : ../../Modules/mp.o
 self_energy_storage.o : ../../Modules/mp_global.o
+self_energy_storage.o : ../../Modules/mp_world.o
 self_energy_storage.o : basic_structures.o
 self_energy_storage.o : compact_product.o
 self_energy_storage.o : energies_gww.o
@@ -267,6 +276,7 @@ self_energy_storage.o : times_gw.o
 start_end.o : ../../Modules/io_global.o
 start_end.o : ../../Modules/mp.o
 start_end.o : ../../Modules/mp_global.o
+start_end.o : ../../Modules/mp_world.o
 times_gw.o : ../../Modules/constants.o
 times_gw.o : ../../Modules/io_global.o
 times_gw.o : ../../Modules/kind.o

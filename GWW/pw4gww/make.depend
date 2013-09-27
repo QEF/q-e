@@ -84,6 +84,7 @@ exchange_custom.o : ../../Modules/kind.o
 exchange_custom.o : ../../Modules/mp.o
 exchange_custom.o : ../../Modules/mp_global.o
 exchange_custom.o : ../../Modules/mp_wave.o
+exchange_custom.o : ../../Modules/mp_world.o
 exchange_custom.o : ../../Modules/recvec.o
 exchange_custom.o : ../../Modules/wavefunctions.o
 exchange_custom.o : ../../PW/src/pwcom.o
@@ -98,6 +99,7 @@ fake_conduction.o : ../../Modules/kind.o
 fake_conduction.o : ../../Modules/mp.o
 fake_conduction.o : ../../Modules/mp_global.o
 fake_conduction.o : ../../Modules/mp_wave.o
+fake_conduction.o : ../../Modules/mp_world.o
 fake_conduction.o : ../../Modules/noncol.o
 fake_conduction.o : ../../Modules/recvec.o
 fake_conduction.o : ../../Modules/uspp.o
@@ -117,6 +119,7 @@ fft_custom.o : ../../Modules/io_global.o
 fft_custom.o : ../../Modules/kind.o
 fft_custom.o : ../../Modules/mp.o
 fft_custom.o : ../../Modules/mp_global.o
+fft_custom.o : ../../Modules/mp_world.o
 fft_custom.o : ../../Modules/parallel_include.o
 fft_custom.o : ../../Modules/recvec.o
 fft_custom.o : ../../Modules/stick_base.o
@@ -249,6 +252,7 @@ produce_wannier_gamma.o : ../../Modules/funct.o
 produce_wannier_gamma.o : ../../Modules/io_files.o
 produce_wannier_gamma.o : ../../Modules/io_global.o
 produce_wannier_gamma.o : ../../Modules/mp.o
+produce_wannier_gamma.o : ../../Modules/mp_world.o
 produce_wannier_gamma.o : ../../Modules/recvec.o
 produce_wannier_gamma.o : ../../Modules/wavefunctions.o
 produce_wannier_gamma.o : ../../PW/src/exx.o
@@ -298,6 +302,7 @@ self_lanczos.o : ../../Modules/kind.o
 self_lanczos.o : ../../Modules/mp.o
 self_lanczos.o : ../../Modules/mp_global.o
 self_lanczos.o : ../../Modules/mp_wave.o
+self_lanczos.o : ../../Modules/mp_world.o
 self_lanczos.o : ../../Modules/parallel_include.o
 self_lanczos.o : ../../Modules/recvec.o
 self_lanczos.o : ../../Modules/wavefunctions.o
@@ -334,6 +339,7 @@ start_pw4gww.o : ../../Modules/mp_global.o
 stop_pp.o : ../../Modules/control_flags.o
 stop_pp.o : ../../Modules/io_files.o
 stop_pp.o : ../../Modules/mp.o
+stop_pp.o : ../../Modules/mp_world.o
 stop_pp.o : ../../Modules/parallel_include.o
 v_basis.o : ../../Modules/cell_base.o
 v_basis.o : ../../Modules/constants.o
