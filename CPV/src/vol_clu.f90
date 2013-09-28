@@ -47,7 +47,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       include 'mpif.h'
 #endif
 
-      real(kind=8) dx, dxx, xcc(4500)
+      real(kind=8) dx, dxx, xcc(4800)
       real(kind=8) weight0, wpiu, wmeno, maxr, minr
       real(kind=8) tau00(3), dist
       real(kind=8) rho_real(dfftp%nnr,nspin), rhoc
@@ -105,6 +105,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
 ! We smear the step function defining the volume and approximate its derivative
 ! with a gaussian. Here we sample the integral of this gaussian. It has to 
 ! be done once for ever
+! XXX: using an array for xcc() is a big waste. two scalar variables would do.
       dx = 5.d0*sigma/60.d0
       if (flag.eq.1) then
          dxx = dx/40.d0
