@@ -59,11 +59,13 @@ PROGRAM ev
       USE kinds, ONLY: DP
       USE constants, ONLY: bohr_radius_angs, ry_kbar
       USE ev_xml,    ONLY : write_evdata_xml
-      USE mp,        ONLY : mp_start
-      USE mp_global, ONLY : mp_global_end, nproc, mpime
+      USE mp_global, ONLY : mp_startup, mp_global_end
+      USE mp_world,  ONLY : world_comm
+      USE mp,        ONLY : mp_bcast
+      USE io_global, ONLY : ionode, ionode_id
       IMPLICIT NONE
       INTEGER, PARAMETER:: nmaxpar=4, nmaxpt=100, nseek=10000, nmin=4
-      INTEGER :: npar,npt,istat,ios,gid
+      INTEGER :: npar,npt,istat, ierr
       CHARACTER :: bravais*3, au_unit*3, filin*256
       REAL(DP) :: par(nmaxpar), deltapar(nmaxpar), parmin(nmaxpar), &
              parmax(nmaxpar), v0(nmaxpt), etot(nmaxpt), efit(nmaxpt), &
@@ -72,9 +74,9 @@ PROGRAM ev
       LOGICAL :: in_angstrom
       CHARACTER(LEN=256) :: fileout
   !
-  CALL mp_start( nproc, mpime, gid )
+  CALL mp_startup ( )
   !
-  IF ( mpime == 0 ) THEN
+  IF ( ionode ) THEN
 
       PRINT '(5x,"Lattice parameter or Volume are in (au, Ang) > ",$)'
       READ '(a)', au_unit
@@ -112,11 +114,11 @@ PROGRAM ev
       ENDIF
       PRINT '(5x,"Input file > ",$)'
       READ '(a)',filin
-      OPEN(unit=2,file=filin,status='old',form='formatted',iostat=ios)
-      IF (ios/=0) THEN
-         PRINT '(5x,"File ",A," cannot be opened, stopping")', trim(filin)
-         STOP
-      ENDIF
+      OPEN(unit=2,file=filin,status='old',form='formatted',iostat=ierr)
+      IF (ierr/=0) THEN
+         ierr= 1 
+         GO TO 99
+      END IF
   10  CONTINUE
       emin=1d10
       DO npt=1,nmaxpt
@@ -170,9 +172,21 @@ PROGRAM ev
             fileout)
 !
       CALL write_evdata_xml  &
-           (npt,fac,v0,etot,efit,istat,par,npar,emin,chisq,fileout)
+           (npt,fac,v0,etot,efit,istat,par,npar,emin,chisq,fileout, ierr)
 
-  ENDIF
+      IF (ierr /= 0) GO TO 99
+    ENDIF
+99  CALL mp_bcast ( ierr, ionode_id, world_comm )
+    IF ( ierr == 1) THEN
+       CALL errore( 'ev', 'file '//trim(filin)//' cannot be opened', ierr )
+    ELSE IF ( ierr == 2 ) THEN
+       CALL errore( 'ev', 'file '//trim(fileout)//' cannot be opened', ierr )
+    ELSE IF ( ierr == 11 ) THEN
+       CALL errore( 'write_evdata_xml', 'no free units to write ', ierr )
+    ELSE IF ( ierr == 12 ) THEN
+       CALL errore( 'write_evdata_xml', 'error opening the xml file ', ierr )
+    ENDIF
+
   CALL mp_global_end()
 
       STOP
@@ -266,11 +280,11 @@ PROGRAM ev
          IF (exst) PRINT '(5x,"Beware: file ",A," will be overwritten")',&
                   trim(filout)
          OPEN(unit=iun,file=filout,form='formatted',status='unknown', &
-              iostat=ios)
-         IF (ios /= 0) THEN
-            PRINT '(5x,"Cannot open file ",A)',trim(filout)
-            STOP
-         ENDIF
+              iostat=ierr)
+         IF (ierr/=0) THEN
+            ierr= 2 
+            GO TO 99
+         END IF
       ELSE
          iun=6
       ENDIF
@@ -362,11 +376,9 @@ PROGRAM ev
                etot(i)-efit(i), p(i)/gpa_kbar, epv(i), i=1,npt )
          end if
 
-
       ENDIF
-
       IF(filout/=' ') CLOSE(unit=iun)
-      RETURN
+ 99   RETURN
     END SUBROUTINE write_results
 !
 !-----------------------------------------------------------------------
