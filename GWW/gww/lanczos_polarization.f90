@@ -105,6 +105,7 @@
 
     USE io_files,             ONLY : prefix
     USE mp,                   ONLY : mp_barrier,mp_bcast, mp_sum
+    USE mp_world,             ONLY : world_comm
     USE io_global,            ONLY : ionode,ionode_id
     implicit none
 
@@ -128,9 +129,9 @@
        read(iunq) cql%numpw
        read(iunq) cql%numt
     endif
-    call mp_bcast(cql%ii,ionode_id)
-    call mp_bcast(cql%numpw,ionode_id)
-    call mp_bcast(cql%numt,ionode_id)
+    call mp_bcast(cql%ii,ionode_id,world_comm)
+    call mp_bcast(cql%numpw,ionode_id,world_comm)
+    call mp_bcast(cql%numt,ionode_id,world_comm)
 
     allocate(cql%qlm(cql%numpw,cql%numt))
 
@@ -141,10 +142,10 @@
           cql%qlm(1:cql%numpw,ii)=0.d0
        endif
        !call mp_barrier
-       !call mp_bcast(cql%qlm(1:cql%numpw,ii),ionode_id)
+       !call mp_bcast(cql%qlm(1:cql%numpw,ii),ionode_id,world_comm)
        !call mp_sum(cql%qlm(1:cql%numpw,ii))
    enddo
-   call mp_bcast(cql%qlm(:,:), ionode_id)
+   call mp_bcast(cql%qlm(:,:), ionode_id,world_comm)
    
     if(ionode) close(iunq)
 

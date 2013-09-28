@@ -59,6 +59,7 @@ PROGRAM pw2wannier90
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE mp_global,  ONLY : mp_startup, mpime, kunit
   USE mp,         ONLY : mp_bcast
+  USE mp_world,   ONLY : world_comm
   USE cell_base,  ONLY : at, bg
   USE lsda_mod,   ONLY : nspin, isk
   USE klist,      ONLY : nkstot
@@ -124,24 +125,24 @@ PROGRAM pw2wannier90
      ! back to all nodes
   ENDIF
   !
-  CALL mp_bcast(ios,ionode_id)
+  CALL mp_bcast(ios,ionode_id, world_comm)
   IF (ios /= 0) CALL errore( 'pw2wannier90', 'reading inputpp namelist', abs(ios))
   !
   ! broadcast input variable to all nodes
   !
-  CALL mp_bcast(outdir,ionode_id)
-  CALL mp_bcast(tmp_dir,ionode_id)
-  CALL mp_bcast(prefix,ionode_id)
-  CALL mp_bcast(seedname,ionode_id)
-  CALL mp_bcast(spin_component,ionode_id)
-  CALL mp_bcast(wan_mode,ionode_id)
-  CALL mp_bcast(wvfn_formatted,ionode_id)
-  CALL mp_bcast(write_unk,ionode_id)
-  CALL mp_bcast(write_amn,ionode_id)
-  CALL mp_bcast(write_mmn,ionode_id)
-  CALL mp_bcast(write_spn,ionode_id)
-  CALL mp_bcast(reduce_unk,ionode_id)
-  CALL mp_bcast(write_unkg,ionode_id)
+  CALL mp_bcast(outdir,ionode_id, world_comm)
+  CALL mp_bcast(tmp_dir,ionode_id, world_comm)
+  CALL mp_bcast(prefix,ionode_id, world_comm)
+  CALL mp_bcast(seedname,ionode_id, world_comm)
+  CALL mp_bcast(spin_component,ionode_id, world_comm)
+  CALL mp_bcast(wan_mode,ionode_id, world_comm)
+  CALL mp_bcast(wvfn_formatted,ionode_id, world_comm)
+  CALL mp_bcast(write_unk,ionode_id, world_comm)
+  CALL mp_bcast(write_amn,ionode_id, world_comm)
+  CALL mp_bcast(write_mmn,ionode_id, world_comm)
+  CALL mp_bcast(write_spn,ionode_id, world_comm)
+  CALL mp_bcast(reduce_unk,ionode_id, world_comm)
+  CALL mp_bcast(write_unkg,ionode_id, world_comm)
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -322,6 +323,7 @@ SUBROUTINE setup_nnkp
   USE klist,     ONLY : xk
   USE mp,        ONLY : mp_bcast, mp_sum
   USE mp_global, ONLY : intra_pool_comm
+  USE mp_world,  ONLY : world_comm
   USE wvfct,     ONLY : nbnd,npwx
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin
@@ -392,19 +394,19 @@ SUBROUTINE setup_nnkp
   ENDIF
 #endif
 
-  CALL mp_bcast(nnb,ionode_id)
-  CALL mp_bcast(kpb,ionode_id)
-  CALL mp_bcast(g_kpb,ionode_id)
-  CALL mp_bcast(num_bands,ionode_id)
-  CALL mp_bcast(n_wannier,ionode_id)
-  CALL mp_bcast(center_w,ionode_id)
-  CALL mp_bcast(l_w,ionode_id)
-  CALL mp_bcast(mr_w,ionode_id)
-  CALL mp_bcast(r_w,ionode_id)
-  CALL mp_bcast(zaxis,ionode_id)
-  CALL mp_bcast(xaxis,ionode_id)
-  CALL mp_bcast(alpha_w,ionode_id)
-  CALL mp_bcast(exclude_bands,ionode_id)
+  CALL mp_bcast(nnb,ionode_id, world_comm)
+  CALL mp_bcast(kpb,ionode_id, world_comm)
+  CALL mp_bcast(g_kpb,ionode_id, world_comm)
+  CALL mp_bcast(num_bands,ionode_id, world_comm)
+  CALL mp_bcast(n_wannier,ionode_id, world_comm)
+  CALL mp_bcast(center_w,ionode_id, world_comm)
+  CALL mp_bcast(l_w,ionode_id, world_comm)
+  CALL mp_bcast(mr_w,ionode_id, world_comm)
+  CALL mp_bcast(r_w,ionode_id, world_comm)
+  CALL mp_bcast(zaxis,ionode_id, world_comm)
+  CALL mp_bcast(xaxis,ionode_id, world_comm)
+  CALL mp_bcast(alpha_w,ionode_id, world_comm)
+  CALL mp_bcast(exclude_bands,ionode_id, world_comm)
 
   IF(noncolin) THEN
      n_proj=n_wannier/2
@@ -496,6 +498,7 @@ SUBROUTINE run_wannier
   USE io_global, ONLY : ionode, ionode_id
   USE ions_base, ONLY : nat
   USE mp,        ONLY : mp_bcast
+  USE mp_world,  ONLY : world_comm
   USE control_flags, ONLY : gamma_only
   USE wannier
 
@@ -516,12 +519,12 @@ SUBROUTINE run_wannier
   ENDIF
 #endif
 
-  CALL mp_bcast(u_mat,ionode_id)
-  CALL mp_bcast(u_mat_opt,ionode_id)
-  CALL mp_bcast(lwindow,ionode_id)
-  CALL mp_bcast(wann_centers,ionode_id)
-  CALL mp_bcast(wann_spreads,ionode_id)
-  CALL mp_bcast(spreads,ionode_id)
+  CALL mp_bcast(u_mat,ionode_id, world_comm)
+  CALL mp_bcast(u_mat_opt,ionode_id, world_comm)
+  CALL mp_bcast(lwindow,ionode_id, world_comm)
+  CALL mp_bcast(wann_centers,ionode_id, world_comm)
+  CALL mp_bcast(wann_spreads,ionode_id, world_comm)
+  CALL mp_bcast(spreads,ionode_id, world_comm)
 
   RETURN
 END SUBROUTINE run_wannier
@@ -596,6 +599,7 @@ SUBROUTINE read_nnkp
   USE klist,     ONLY : nkstot, xk
   USE mp,        ONLY : mp_bcast, mp_sum
   USE mp_global, ONLY : intra_pool_comm
+  USE mp_world,  ONLY : world_comm
   USE wvfct,     ONLY : npwx, nbnd
   USE noncollin_module, ONLY : noncolin
   USE wannier
@@ -693,8 +697,8 @@ SUBROUTINE read_nnkp
   ENDIF ! ionode
 
   ! Broadcast
-  CALL mp_bcast(rlatt,ionode_id)
-  CALL mp_bcast(glatt,ionode_id)
+  CALL mp_bcast(rlatt,ionode_id, world_comm)
+  CALL mp_bcast(glatt,ionode_id, world_comm)
 
   IF (ionode) THEN   ! read from ionode only
      CALL scan_file_to('projections')
@@ -702,7 +706,7 @@ SUBROUTINE read_nnkp
   ENDIF
 
   ! Broadcast
-  CALL mp_bcast(n_proj,ionode_id)
+  CALL mp_bcast(n_proj,ionode_id, world_comm)
 
   IF(noncolin) THEN
      n_wannier=n_proj*2
@@ -742,13 +746,13 @@ SUBROUTINE read_nnkp
   WRITE(stdout,*) ' - All guiding functions are given '
 
   ! Broadcast
-  CALL mp_bcast(center_w,ionode_id)
-  CALL mp_bcast(l_w,ionode_id)
-  CALL mp_bcast(mr_w,ionode_id)
-  CALL mp_bcast(r_w,ionode_id)
-  CALL mp_bcast(zaxis,ionode_id)
-  CALL mp_bcast(xaxis,ionode_id)
-  CALL mp_bcast(alpha_w,ionode_id)
+  CALL mp_bcast(center_w,ionode_id, world_comm)
+  CALL mp_bcast(l_w,ionode_id, world_comm)
+  CALL mp_bcast(mr_w,ionode_id, world_comm)
+  CALL mp_bcast(r_w,ionode_id, world_comm)
+  CALL mp_bcast(zaxis,ionode_id, world_comm)
+  CALL mp_bcast(xaxis,ionode_id, world_comm)
+  CALL mp_bcast(alpha_w,ionode_id, world_comm)
 
   !
   WRITE(stdout,*)
@@ -764,7 +768,7 @@ SUBROUTINE read_nnkp
   ENDIF
 
   ! Broadcast
-  CALL mp_bcast(nnb,ionode_id)
+  CALL mp_bcast(nnb,ionode_id, world_comm)
   !
   nnbx = max (nnbx, nnb )
   !
@@ -785,8 +789,8 @@ SUBROUTINE read_nnkp
   ENDIF
 
   ! Broadcast
-  CALL mp_bcast(kpb,ionode_id)
-  CALL mp_bcast(g_kpb,ionode_id)
+  CALL mp_bcast(kpb,ionode_id, world_comm)
+  CALL mp_bcast(g_kpb,ionode_id, world_comm)
 
   DO ik=1, iknum
      DO ib = 1, nnb
@@ -832,8 +836,8 @@ SUBROUTINE read_nnkp
   ENDIF
 
   ! Broadcast
-  CALL mp_bcast(nexband,ionode_id)
-  CALL mp_bcast(excluded_band,ionode_id)
+  CALL mp_bcast(nexband,ionode_id, world_comm)
+  CALL mp_bcast(excluded_band,ionode_id, world_comm)
 
   IF (ionode) CLOSE (iun_nnkp)   ! ionode only
 

@@ -18,6 +18,7 @@ subroutine descreening
   use kinds, only: dp
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
+  use mp_world,  only : world_comm
   use radial_grids, only: ndmx
   use ld1_parameters, only: nwfsx
   use ld1inc, only: grid, nlcc, vxt, lsd, vpstot, vpsloc, file_screen, &
@@ -103,7 +104,7 @@ subroutine descreening
   if (file_screen .ne.' ') then
      if (ionode) &
         open(unit=20,file=file_screen, status='unknown', iostat=ios, err=100 )
-100  call mp_bcast(ios, ionode_id)
+100  call mp_bcast(ios, ionode_id, world_comm)
      call errore('descreening','opening file'//file_screen,abs(ios))
      if (ionode) then
         do n=1,grid%mesh

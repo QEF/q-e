@@ -18,6 +18,7 @@ PROGRAM wannier_ham
   USE io_files,   ONLY : prefix, tmp_dir
   USE wannier_new, ONLY: nwan, use_energy_int
   USE mp,         ONLY : mp_bcast
+  USE mp_world,         ONLY : world_comm
   USE read_cards_module, ONLY : read_cards
   USE mp_global,     ONLY : mp_startup
   USE environment,   ONLY : environment_start
@@ -67,7 +68,7 @@ PROGRAM wannier_ham
 
   ENDIF
   !
-  CALL mp_bcast( ios, ionode_id )
+  CALL mp_bcast( ios, ionode_id, world_comm )
   IF ( ios /= 0 ) CALL errore('wannier_ham','reading inputpp namelist',abs(ios))
   CALL read_file
   CALL openfil_pp

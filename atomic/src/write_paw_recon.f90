@@ -11,6 +11,7 @@ subroutine write_paw_recon
   use kinds,     only : dp
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
+  use mp_world,  only : world_comm
   use ld1inc,    only : file_recon, nwf, nwfts, grid, llts, psi, phits, &
        lgipaw_reconstruction, wfc_ae_recon, wfc_ps_recon, nstoaets, &
        use_paw_as_gipaw
@@ -22,7 +23,7 @@ subroutine write_paw_recon
   if (ionode) &
        open(unit=51,file=file_recon,status='unknown', err=1111, &
        iostat=ios,form='formatted')
-1111 call mp_bcast(ios, ionode_id)      
+1111 call mp_bcast(ios, ionode_id, world_comm)      
   call errore('write_result','opening 51',abs(ios))
   
   iae=nwf

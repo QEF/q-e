@@ -153,7 +153,7 @@
                open( unit=iun, file='bands.dat', status='old',form='formatted')
                read(iun,*) n_gw_states
             endif
-            call mp_bcast(n_gw_states,ionode_id)
+            call mp_bcast(n_gw_states,ionode_id,world_comm)
             allocate(ene_gw(n_gw_states,1))
             if(ionode) then
                do ii=1,n_gw_states
@@ -161,7 +161,7 @@
                enddo
                close(iun)
             endif
-            call mp_bcast(ene_gw(:,1),ionode_id)
+            call mp_bcast(ene_gw(:,1),ionode_id,world_comm)
             ene_gw(:,1)=ene_gw(:,1)/rytoev
             delta_self=ene_gw(n_gw_states,1)-rdumm1/rytoev!offset for all the conduction states above those calculated
 !NOT_TO_BE_INCLUDED_END
@@ -221,7 +221,7 @@
                if(ionode ) call write_wannier_matrix(e_xc,e_h,is)
                do ii=1,nbnd
                   call mp_barrier( world_comm )
-                  call mp_bcast(u_trans(:,ii,is),ionode_id)
+                  call mp_bcast(u_trans(:,ii,is),ionode_id,world_comm)
                enddo
 !u_trans TO BE BROADCASTED
             enddo
@@ -345,7 +345,7 @@
                     allocate(uterms_tmp(numw_prod))
                     do iw=1,numw_prod
                        if(ionode) read(iunuterms) uterms_tmp(1:iw)
-                       call mp_bcast(uterms_tmp(1:iw), ionode_id)
+                       call mp_bcast(uterms_tmp(1:iw), ionode_id,world_comm)
                        do jw=1,iw
                           uterms(iw,jw)=uterms_tmp(jw)
                           uterms(jw,iw)=uterms(iw,jw)
@@ -388,7 +388,7 @@
                      n_list(2)=0
                   endif
                endif
-               call mp_bcast(n_list,ionode_id)
+               call mp_bcast(n_list,ionode_id,world_comm)
                allocate(i_list(max(n_list(1),n_list(2)),2))
                i_list=0
                if(ionode) then
@@ -403,7 +403,7 @@
                      close(iun2)
                   endif
                endif
-               call mp_bcast(i_list,ionode_id)
+               call mp_bcast(i_list,ionode_id,world_comm)
                s_first_state=1
                s_last_state=num_nbnds
             endif

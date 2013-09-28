@@ -23,6 +23,7 @@ PROGRAM do_bands
   USE noncollin_module, ONLY : i_cons
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
+  USE mp_world,  ONLY : world_comm
   !
   IMPLICIT NONE
   !
@@ -73,25 +74,25 @@ PROGRAM do_bands
   ENDIF
   !
   !
-  CALL mp_bcast( ios, ionode_id )
+  CALL mp_bcast( ios, ionode_id, world_comm )
   IF (ios /= 0) WRITE (stdout, &
     '("*** namelist &inputpp no longer valid: please use &bands instead")')
   IF (ios /= 0) CALL errore ('bands', 'reading bands namelist', abs(ios) )
   !
   ! ... Broadcast variables
   !
-  CALL mp_bcast( tmp_dir, ionode_id )
-  CALL mp_bcast( prefix, ionode_id )
-  CALL mp_bcast( filband, ionode_id )
-  CALL mp_bcast( filp, ionode_id )
-  CALL mp_bcast( spin_component, ionode_id )
-  CALL mp_bcast( firstk, ionode_id )
-  CALL mp_bcast( lastk, ionode_id )
-  CALL mp_bcast( lp, ionode_id )
-  CALL mp_bcast( lsym, ionode_id )
-  CALL mp_bcast( lsigma, ionode_id )
-  CALL mp_bcast( no_overlap, ionode_id )
-  CALL mp_bcast( plot_2d, ionode_id )
+  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
+  CALL mp_bcast( prefix, ionode_id, world_comm )
+  CALL mp_bcast( filband, ionode_id, world_comm )
+  CALL mp_bcast( filp, ionode_id, world_comm )
+  CALL mp_bcast( spin_component, ionode_id, world_comm )
+  CALL mp_bcast( firstk, ionode_id, world_comm )
+  CALL mp_bcast( lastk, ionode_id, world_comm )
+  CALL mp_bcast( lp, ionode_id, world_comm )
+  CALL mp_bcast( lsym, ionode_id, world_comm )
+  CALL mp_bcast( lsigma, ionode_id, world_comm )
+  CALL mp_bcast( no_overlap, ionode_id, world_comm )
+  CALL mp_bcast( plot_2d, ionode_id, world_comm )
 
   IF (plot_2d) THEN
      lsym=.false.
@@ -154,6 +155,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   USE wavefunctions_module, ONLY : evc
   USE io_global,            ONLY : ionode, ionode_id
   USE mp,                   ONLY : mp_bcast
+  USE mp_world,             ONLY : world_comm
   USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
                                    deallocate_bec_type
 
@@ -228,7 +230,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
      !
   ENDIF
   !
-  CALL mp_bcast( ios, ionode_id )
+  CALL mp_bcast( ios, ionode_id, world_comm )
   IF ( ios(0) /= 0 ) &
      CALL errore ('punch_band', 'Opening filband file', abs(ios(0)) )
   DO ipol=1,4
@@ -525,6 +527,7 @@ SUBROUTINE punch_band_2d(filband,spin_component)
    USE io_files, ONLY : iuntmp
    USE io_global, ONLY : ionode, ionode_id
    USE mp, ONLY : mp_bcast
+   USE mp_world, ONLY : world_comm
 
    IMPLICIT NONE
    CHARACTER(LEN=256),INTENT(IN) :: filband
@@ -587,7 +590,7 @@ loop_k:  DO j=start_k+2, nkstot
      filename=TRIM(filband) // '.' // TRIM(int_to_char(ibnd))
      IF (ionode) &
      open(unit=iuntmp,file=filename,status='unknown', err=100, iostat=ios)
-     CALL mp_bcast(ios,ionode_id)
+     CALL mp_bcast(ios,ionode_id, world_comm)
 100  CALL errore('punch_band_2d','Problem opening outputfile',ios)
      ijk=0
      DO i1=1,n1

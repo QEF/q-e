@@ -20,7 +20,8 @@ subroutine calculate_wing(n_set, orthonorm)
   USE gvect,                ONLY : mill, ngm, gstart,g,ngm_g, ig_l2g
   USE cell_base,            ONLY : tpiba
   USE mp_wave, ONLY : mergewf,splitwf
-  USE mp_global, ONLY : mpime, nproc, intra_pool_comm
+  USE mp_global, ONLY : intra_pool_comm
+  USE mp_world,  ONLY : mpime, nproc, world_comm
   USE wvfct,    ONLY :  npwx, npw
   USE cell_base, ONLY : at,bg
 
@@ -81,8 +82,8 @@ subroutine calculate_wing(n_set, orthonorm)
    endif
 
 
-   call mp_bcast(n_g, ionode_id)
-   call mp_bcast(omega_g, ionode_id)
+   call mp_bcast(n_g, ionode_id,world_comm)
+   call mp_bcast(omega_g, ionode_id,world_comm)
    allocate(freqs(n_g+1))
 
    if(ionode) then
@@ -94,8 +95,8 @@ subroutine calculate_wing(n_set, orthonorm)
   call flush_unit(stdout)
 
 
-   call mp_bcast(freqs(:), ionode_id)
-   call mp_bcast(ngm_k, ionode_id)
+   call mp_bcast(freqs(:), ionode_id,world_comm)
+   call mp_bcast(ngm_k, ionode_id,world_comm)
 
    allocate(e_head_g0(ngm_k))
    allocate(e_head(npw, n_g+1,3)) 

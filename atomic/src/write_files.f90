@@ -16,6 +16,7 @@ SUBROUTINE write_wfcfile(filename,wfc,elaux,num)
   USE ld1inc, ONLY  : grid
   USE radial_grids, ONLY  : ndmx
   USE mp,      ONLY : mp_bcast
+  USE mp_world,      ONLY : world_comm
 
   IMPLICIT NONE
   INTEGER, INTENT(in) :: num   ! the number of wavefunctions to write
@@ -28,7 +29,7 @@ SUBROUTINE write_wfcfile(filename,wfc,elaux,num)
 
   IF (ionode) &
      OPEN(unit=19,file=filename, status='unknown', iostat=ios, err=80)
-80 CALL mp_bcast(ios, ionode_id)
+80 CALL mp_bcast(ios, ionode_id,world_comm)
   CALL errore('write_wfcfile','opening file '//trim(filename),abs(ios))
   IF (ionode) THEN
      WRITE(19,'("#",12x,"r",38(18x,a2))') (elaux(n),n=1,num)
@@ -52,6 +53,7 @@ USE io_global, ONLY : ionode, ionode_id
 USE ld1inc, ONLY  : grid, lls
 USE radial_grids, ONLY  : ndmx
 USE mp,      ONLY : mp_bcast
+USE mp_world,      ONLY : world_comm
 
 IMPLICIT NONE
 INTEGER, INTENT(in) :: num   ! the number of wavefunctions to write
@@ -109,6 +111,7 @@ SUBROUTINE write_efun(filename,fun,x,npte,num)
 USE kinds, ONLY : DP
 USE io_global, ONLY : ionode, ionode_id
 USE mp,      ONLY : mp_bcast
+USE mp_world,      ONLY : world_comm
 
 IMPLICIT NONE
 INTEGER, INTENT(in) :: num   ! the number of wavefunctions to write
@@ -121,7 +124,7 @@ IF (filename == ' ') RETURN
 
 IF (ionode) &
    OPEN(unit=19,file=filename, status='unknown', iostat=ios, err=800)
-800  CALL mp_bcast(ios, ionode_id)
+800  CALL mp_bcast(ios, ionode_id, world_comm)
 CALL errore('write_wfcfile','opening file '//trim(filename),abs(ios))
 IF (ionode) THEN
    DO n=1,npte

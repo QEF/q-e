@@ -19,6 +19,7 @@ MODULE path_io_routines
   USE constants,  ONLY : pi, autoev, bohr_radius_angs, eV_to_kelvin
   USE io_global,  ONLY : meta_ionode, meta_ionode_id
   USE mp,         ONLY : mp_bcast
+  USE mp_world,   ONLY : world_comm
   !
   USE basic_algebra_routines
   !
@@ -335,23 +336,23 @@ MODULE path_io_routines
        !
        ! ... broadcast to all nodes
        !
-       CALL mp_bcast( istep_path,    meta_ionode_id )
-       CALL mp_bcast( nstep_path,    meta_ionode_id )
-       CALL mp_bcast( pending_image, meta_ionode_id )
+       CALL mp_bcast( istep_path,    meta_ionode_id, world_comm )
+       CALL mp_bcast( nstep_path,    meta_ionode_id, world_comm )
+       CALL mp_bcast( pending_image, meta_ionode_id, world_comm )
        !
-       CALL mp_bcast( pos,      meta_ionode_id )
-       CALL mp_bcast( fix_atom_pos,   meta_ionode_id )
-       CALL mp_bcast( pes,      meta_ionode_id )
-       CALL mp_bcast( grad_pes, meta_ionode_id )
+       CALL mp_bcast( pos,      meta_ionode_id, world_comm )
+       CALL mp_bcast( fix_atom_pos,   meta_ionode_id, world_comm )
+       CALL mp_bcast( pes,      meta_ionode_id, world_comm )
+       CALL mp_bcast( grad_pes, meta_ionode_id, world_comm )
        !
-       CALL mp_bcast( Emax,       meta_ionode_id )
-       CALL mp_bcast( Emin,       meta_ionode_id )
-       CALL mp_bcast( Emax_index, meta_ionode_id )
+       CALL mp_bcast( Emax,       meta_ionode_id, world_comm )
+       CALL mp_bcast( Emin,       meta_ionode_id, world_comm )
+       CALL mp_bcast( Emax_index, meta_ionode_id, world_comm )
        !
        IF ( lquick_min ) THEN
           !
-          CALL mp_bcast( frozen, meta_ionode_id )
-          CALL mp_bcast( posold, meta_ionode_id )
+          CALL mp_bcast( frozen, meta_ionode_id, world_comm )
+          CALL mp_bcast( posold, meta_ionode_id, world_comm )
           !
        END IF
        !

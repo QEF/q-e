@@ -172,7 +172,8 @@ CONTAINS
     USE paw_type,     ONLY : nullify_pseudo_paw, allocate_pseudo_paw
     USE io_global,    ONLY : stdout, ionode, ionode_id
     USE radial_grids, ONLY : allocate_radial_grid
-    USE mp,        only : mp_bcast
+    USE mp,           only : mp_bcast
+    USE mp_world,     only : world_comm
     IMPLICIT NONE
     TYPE(paw_t),      INTENT(OUT) :: pawset_
     REAL(dp), INTENT(IN)  :: zval
@@ -534,7 +535,7 @@ CONTAINS
     if (file_screen .ne.' ') then
         if (ionode) &
             open(unit=20,file=file_screen, status='unknown', iostat=ios, err=105 )
-105     call mp_bcast(ios, ionode_id)
+105     call mp_bcast(ios, ionode_id, world_comm)
         call errore('descreening','opening file'//file_screen,abs(ios))
         if (ionode) then
             write(20,'(a)') "#   n, r(n),       aeloc(n),   psloc(n),   pscharge(n)"

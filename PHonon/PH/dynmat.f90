@@ -80,6 +80,7 @@ end Module dynamical
       USE kinds, ONLY: DP
       USE mp,         ONLY : mp_bcast
       USE mp_global,  ONLY : mp_startup, mp_global_end
+      USE mp_world,   ONLY : world_comm
       USE io_global,  ONLY : ionode, ionode_id, stdout
       USE environment, ONLY : environment_start, environment_end
       USE io_dyn_mat,  ONLY : read_dyn_mat_param, read_dyn_mat_header, &
@@ -126,21 +127,21 @@ end Module dynamical
       lplasma=.false.
       !
       IF (ionode) read (5,input, iostat=ios)
-      CALL mp_bcast(ios, ionode_id)
+      CALL mp_bcast(ios, ionode_id, world_comm)
       CALL errore('dynmat', 'reading input namelist', ABS(ios))
       !
-      CALL mp_bcast(asr,ionode_id)
-      CALL mp_bcast(axis,ionode_id)
-      CALL mp_bcast(amass,ionode_id)
-      CALL mp_bcast(fildyn,ionode_id)
-      CALL mp_bcast(filout,ionode_id)
-      CALL mp_bcast(filmol,ionode_id)
-      CALL mp_bcast(fileig,ionode_id)
-      CALL mp_bcast(filxsf,ionode_id)
-      CALL mp_bcast(q,ionode_id)
+      CALL mp_bcast(asr,ionode_id, world_comm)
+      CALL mp_bcast(axis,ionode_id, world_comm)
+      CALL mp_bcast(amass,ionode_id, world_comm)
+      CALL mp_bcast(fildyn,ionode_id, world_comm)
+      CALL mp_bcast(filout,ionode_id, world_comm)
+      CALL mp_bcast(filmol,ionode_id, world_comm)
+      CALL mp_bcast(fileig,ionode_id, world_comm)
+      CALL mp_bcast(filxsf,ionode_id, world_comm)
+      CALL mp_bcast(q,ionode_id, world_comm)
       !
       IF (ionode) inquire(file=fildyn,exist=lread)
-      CALL mp_bcast(lread, ionode_id)
+      CALL mp_bcast(lread, ionode_id, world_comm)
       IF (lread) THEN
          IF (ionode) WRITE(6,'(/5x,a,a)') 'Reading Dynamical Matrix from file '&
                                          , TRIM(fildyn)

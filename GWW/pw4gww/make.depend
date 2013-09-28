@@ -10,6 +10,7 @@ calculate_wing.o : ../../Modules/kind.o
 calculate_wing.o : ../../Modules/mp.o
 calculate_wing.o : ../../Modules/mp_global.o
 calculate_wing.o : ../../Modules/mp_wave.o
+calculate_wing.o : ../../Modules/mp_world.o
 calculate_wing.o : ../../Modules/recvec.o
 calculate_wing.o : ../../PW/src/pwcom.o
 calculate_wing.o : wannier_gw.o
@@ -185,7 +186,7 @@ o_bands.o : ../../Modules/io_files.o
 o_bands.o : ../../Modules/io_global.o
 o_bands.o : ../../Modules/kind.o
 o_bands.o : ../../Modules/mp.o
-o_bands.o : ../../Modules/mp_global.o
+o_bands.o : ../../Modules/mp_world.o
 o_bands.o : ../../Modules/recvec.o
 o_bands.o : ../../Modules/uspp.o
 o_bands.o : ../../PW/src/g_psi_mod.o
@@ -273,6 +274,7 @@ pw4gww.o : ../../Modules/ions_base.o
 pw4gww.o : ../../Modules/kind.o
 pw4gww.o : ../../Modules/mp.o
 pw4gww.o : ../../Modules/mp_global.o
+pw4gww.o : ../../Modules/mp_world.o
 pw4gww.o : ../../Modules/recvec.o
 pw4gww.o : ../../Modules/uspp.o
 pw4gww.o : ../../Modules/wavefunctions.o
@@ -330,6 +332,7 @@ semicore_read.o : ../../Modules/kind.o
 semicore_read.o : ../../Modules/mp.o
 semicore_read.o : ../../Modules/mp_global.o
 semicore_read.o : ../../Modules/mp_wave.o
+semicore_read.o : ../../Modules/mp_world.o
 semicore_read.o : ../../Modules/recvec.o
 semicore_read.o : ../../Modules/wavefunctions.o
 semicore_read.o : ../../PW/src/pwcom.o

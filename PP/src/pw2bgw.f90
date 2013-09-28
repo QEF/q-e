@@ -228,43 +228,43 @@ PROGRAM pw2bgw
   ENDIF
 
   tmp_dir = trimcheck ( outdir )
-  CALL mp_bcast ( outdir, ionode_id )
-  CALL mp_bcast ( tmp_dir, ionode_id )
-  CALL mp_bcast ( prefix, ionode_id )
-  CALL mp_bcast ( real_or_complex, ionode_id )
-  CALL mp_bcast ( symm_type, ionode_id )
-  CALL mp_bcast ( wfng_flag, ionode_id )
-  CALL mp_bcast ( wfng_file, ionode_id )
-  CALL mp_bcast ( wfng_kgrid, ionode_id )
-  CALL mp_bcast ( wfng_nk1, ionode_id )
-  CALL mp_bcast ( wfng_nk2, ionode_id )
-  CALL mp_bcast ( wfng_nk3, ionode_id )
-  CALL mp_bcast ( wfng_dk1, ionode_id )
-  CALL mp_bcast ( wfng_dk2, ionode_id )
-  CALL mp_bcast ( wfng_dk3, ionode_id )
-  CALL mp_bcast ( wfng_occupation, ionode_id )
-  CALL mp_bcast ( wfng_nvmin, ionode_id )
-  CALL mp_bcast ( wfng_nvmax, ionode_id )
-  CALL mp_bcast ( rhog_flag, ionode_id )
-  CALL mp_bcast ( rhog_file, ionode_id )
-  CALL mp_bcast ( rhog_nvmin, ionode_id )
-  CALL mp_bcast ( rhog_nvmax, ionode_id )
-  CALL mp_bcast ( vxcg_flag, ionode_id )
-  CALL mp_bcast ( vxcg_file, ionode_id )
-  CALL mp_bcast ( vxc0_flag, ionode_id )
-  CALL mp_bcast ( vxc0_file, ionode_id )
-  CALL mp_bcast ( vxc_flag, ionode_id )
-  CALL mp_bcast ( vxc_integral, ionode_id )
-  CALL mp_bcast ( vxc_file, ionode_id )
-  CALL mp_bcast ( vxc_diag_nmin, ionode_id )
-  CALL mp_bcast ( vxc_diag_nmax, ionode_id )
-  CALL mp_bcast ( vxc_offdiag_nmin, ionode_id )
-  CALL mp_bcast ( vxc_offdiag_nmax, ionode_id )
-  CALL mp_bcast ( vxc_zero_rho_core, ionode_id )
-  CALL mp_bcast ( vscg_flag, ionode_id )
-  CALL mp_bcast ( vscg_file, ionode_id )
-  CALL mp_bcast ( vkbg_flag, ionode_id )
-  CALL mp_bcast ( vkbg_file, ionode_id )
+  CALL mp_bcast ( outdir, ionode_id, world_comm )
+  CALL mp_bcast ( tmp_dir, ionode_id, world_comm )
+  CALL mp_bcast ( prefix, ionode_id, world_comm )
+  CALL mp_bcast ( real_or_complex, ionode_id, world_comm )
+  CALL mp_bcast ( symm_type, ionode_id, world_comm )
+  CALL mp_bcast ( wfng_flag, ionode_id, world_comm )
+  CALL mp_bcast ( wfng_file, ionode_id, world_comm )
+  CALL mp_bcast ( wfng_kgrid, ionode_id, world_comm )
+  CALL mp_bcast ( wfng_nk1, ionode_id, world_comm )
+  CALL mp_bcast ( wfng_nk2, ionode_id, world_comm )
+  CALL mp_bcast ( wfng_nk3, ionode_id, world_comm )
+  CALL mp_bcast ( wfng_dk1, ionode_id, world_comm )
+  CALL mp_bcast ( wfng_dk2, ionode_id, world_comm )
+  CALL mp_bcast ( wfng_dk3, ionode_id, world_comm )
+  CALL mp_bcast ( wfng_occupation, ionode_id, world_comm )
+  CALL mp_bcast ( wfng_nvmin, ionode_id, world_comm )
+  CALL mp_bcast ( wfng_nvmax, ionode_id, world_comm )
+  CALL mp_bcast ( rhog_flag, ionode_id, world_comm )
+  CALL mp_bcast ( rhog_file, ionode_id, world_comm )
+  CALL mp_bcast ( rhog_nvmin, ionode_id, world_comm )
+  CALL mp_bcast ( rhog_nvmax, ionode_id, world_comm )
+  CALL mp_bcast ( vxcg_flag, ionode_id, world_comm )
+  CALL mp_bcast ( vxcg_file, ionode_id, world_comm )
+  CALL mp_bcast ( vxc0_flag, ionode_id, world_comm )
+  CALL mp_bcast ( vxc0_file, ionode_id, world_comm )
+  CALL mp_bcast ( vxc_flag, ionode_id, world_comm )
+  CALL mp_bcast ( vxc_integral, ionode_id, world_comm )
+  CALL mp_bcast ( vxc_file, ionode_id, world_comm )
+  CALL mp_bcast ( vxc_diag_nmin, ionode_id, world_comm )
+  CALL mp_bcast ( vxc_diag_nmax, ionode_id, world_comm )
+  CALL mp_bcast ( vxc_offdiag_nmin, ionode_id, world_comm )
+  CALL mp_bcast ( vxc_offdiag_nmax, ionode_id, world_comm )
+  CALL mp_bcast ( vxc_zero_rho_core, ionode_id, world_comm )
+  CALL mp_bcast ( vscg_flag, ionode_id, world_comm )
+  CALL mp_bcast ( vscg_file, ionode_id, world_comm )
+  CALL mp_bcast ( vkbg_flag, ionode_id, world_comm )
+  CALL mp_bcast ( vkbg_file, ionode_id, world_comm )
 
   CALL read_file ( )
 
@@ -411,9 +411,10 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   USE klist, ONLY : xk, wk, ngk, nks, nkstot
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum, mp_max, mp_get, mp_bcast, mp_barrier
-  USE mp_global, ONLY : mpime, nproc, world_comm, kunit, me_pool, &
+  USE mp_global, ONLY : mpime, nproc, kunit, me_pool, &
     root_pool, my_pool_id, npool, nproc_pool, intra_pool_comm
   USE mp_wave, ONLY : mergewf
+  USE mp_world, ONLY : world_comm
   USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE symm_base, ONLY : s, ftau, nsym
   USE wavefunctions_module, ONLY : evc
@@ -623,7 +624,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   ENDDO
 #ifdef __PARA
   CALL poolrecover ( et_g, nb, nk_g, nk_l )
-  CALL mp_bcast ( et_g, ionode_id )
+  CALL mp_bcast ( et_g, ionode_id, world_comm )
 #endif
 
   ALLOCATE ( wg_g ( nb, nk_g ) )

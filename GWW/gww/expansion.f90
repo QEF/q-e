@@ -135,6 +135,7 @@
      USE input_gw,             ONLY : input_options
      USE io_files,             ONLY : prefix
      USE mp,                   ONLY : mp_bcast
+     USE mp_world,             ONLY : world_comm
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -154,14 +155,14 @@
          read(iun) se%i_max_whole
       endif
 
-      call mp_bcast(se%max_i, ionode_id)
-      call mp_bcast(se%i_min, ionode_id)
-      call mp_bcast(se%i_max, ionode_id)
-      call mp_bcast(se%n_multipoles, ionode_id)
-      call mp_bcast(se%nspin, ionode_id)
-      call mp_bcast(se%whole_s, ionode_id)
-      call mp_bcast(se%i_min_whole, ionode_id)
-      call mp_bcast(se%i_max_whole, ionode_id)
+      call mp_bcast(se%max_i, ionode_id,world_comm)
+      call mp_bcast(se%i_min, ionode_id,world_comm)
+      call mp_bcast(se%i_max, ionode_id,world_comm)
+      call mp_bcast(se%n_multipoles, ionode_id,world_comm)
+      call mp_bcast(se%nspin, ionode_id,world_comm)
+      call mp_bcast(se%whole_s, ionode_id,world_comm)
+      call mp_bcast(se%i_min_whole, ionode_id,world_comm)
+      call mp_bcast(se%i_max_whole, ionode_id,world_comm)
 
       allocate(se%a_0(se%max_i,se%nspin),se%a(se%n_multipoles,se%max_i,se%nspin))
       allocate(se%b(se%n_multipoles,se%max_i,se%nspin))
@@ -172,9 +173,9 @@
          read(iun) se%b(1:se%n_multipoles,1:se%max_i,1:se%nspin)
       endif
       
-      call mp_bcast(se%a_0,ionode_id)
-      call mp_bcast(se%a, ionode_id)
-      call mp_bcast(se%b, ionode_id)
+      call mp_bcast(se%a_0,ionode_id,world_comm)
+      call mp_bcast(se%a, ionode_id,world_comm)
+      call mp_bcast(se%b, ionode_id,world_comm)
       
 
       if(se%whole_s) then
@@ -187,9 +188,9 @@
             read(iun) se%b_off(1:se%n_multipoles,se%i_min_whole:se%i_max_whole,1:se%max_i,1:se%nspin)
          endif
          
-         call mp_bcast(se%a_0_off,ionode_id)
-         call mp_bcast(se%a_off, ionode_id)
-         call mp_bcast(se%b_off, ionode_id)
+         call mp_bcast(se%a_0_off,ionode_id,world_comm)
+         call mp_bcast(se%a_off, ionode_id,world_comm)
+         call mp_bcast(se%b_off, ionode_id,world_comm)
 
       else
          nullify(se%a_0_off)

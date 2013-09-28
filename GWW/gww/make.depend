@@ -12,6 +12,7 @@ contour.o : ../../Modules/io_global.o
 contour.o : ../../Modules/kind.o
 contour.o : ../../Modules/mp.o
 contour.o : ../../Modules/mp_global.o
+contour.o : ../../Modules/mp_world.o
 contour.o : basic_structures.o
 contour.o : green_function.o
 contour.o : input_gw.o
@@ -50,6 +51,7 @@ do_polarization_lanczos.o : ../../Modules/io_global.o
 do_polarization_lanczos.o : ../../Modules/kind.o
 do_polarization_lanczos.o : ../../Modules/mp.o
 do_polarization_lanczos.o : ../../Modules/mp_global.o
+do_polarization_lanczos.o : ../../Modules/mp_world.o
 do_polarization_lanczos.o : ../../Modules/parallel_include.o
 do_polarization_lanczos.o : basic_structures.o
 do_polarization_lanczos.o : input_gw.o
@@ -61,6 +63,7 @@ do_self_lanczos.o : ../../Modules/io_global.o
 do_self_lanczos.o : ../../Modules/kind.o
 do_self_lanczos.o : ../../Modules/mp.o
 do_self_lanczos.o : ../../Modules/mp_global.o
+do_self_lanczos.o : ../../Modules/mp_world.o
 do_self_lanczos.o : basic_structures.o
 do_self_lanczos.o : green_function.o
 do_self_lanczos.o : input_gw.o
@@ -88,6 +91,7 @@ do_self_lanczos_time.o : ../../Modules/io_global.o
 do_self_lanczos_time.o : ../../Modules/kind.o
 do_self_lanczos_time.o : ../../Modules/mp.o
 do_self_lanczos_time.o : ../../Modules/mp_global.o
+do_self_lanczos_time.o : ../../Modules/mp_world.o
 do_self_lanczos_time.o : ../../Modules/parallel_include.o
 do_self_lanczos_time.o : basic_structures.o
 do_self_lanczos_time.o : green_function.o
@@ -102,6 +106,7 @@ energies_gww.o : ../../Modules/io_files.o
 energies_gww.o : ../../Modules/io_global.o
 energies_gww.o : ../../Modules/kind.o
 energies_gww.o : ../../Modules/mp.o
+energies_gww.o : ../../Modules/mp_world.o
 energies_gww.o : input_gw.o
 expansion.o : ../../Modules/constants.o
 expansion.o : ../../Modules/io_files.o
@@ -187,6 +192,7 @@ gv_time.o : ../../Modules/constants.o
 gv_time.o : ../../Modules/io_global.o
 gv_time.o : ../../Modules/kind.o
 gv_time.o : ../../Modules/mp.o
+gv_time.o : ../../Modules/mp_world.o
 gv_time.o : times_gw.o
 gww.o : ../../Modules/io_global.o
 gww.o : ../../Modules/mp.o
@@ -214,10 +220,12 @@ gww_fit.o : times_gw.o
 input_gw.o : ../../Modules/io_global.o
 input_gw.o : ../../Modules/kind.o
 input_gw.o : ../../Modules/mp.o
+input_gw.o : ../../Modules/mp_world.o
 lanczos_polarization.o : ../../Modules/io_files.o
 lanczos_polarization.o : ../../Modules/io_global.o
 lanczos_polarization.o : ../../Modules/kind.o
 lanczos_polarization.o : ../../Modules/mp.o
+lanczos_polarization.o : ../../Modules/mp_world.o
 lanczos_polarization.o : basic_structures.o
 para_gww.o : ../../Modules/io_global.o
 para_gww.o : ../../Modules/mp_global.o

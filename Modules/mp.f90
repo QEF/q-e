@@ -99,15 +99,14 @@
       SUBROUTINE mp_gather_i1(mydata, alldata, root, gid)
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: mydata, root
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER, INTENT(OUT) :: alldata(:)
         INTEGER :: ierr
 
 
 #if defined (__MPI)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
+        group = gid
         CALL MPI_GATHER(mydata, 1, MPI_INTEGER, alldata, 1, MPI_INTEGER, root, group, IERR)
         IF (ierr/=0) CALL mp_stop( 8001 )
 #else
@@ -122,7 +121,7 @@
       SUBROUTINE mp_gather_iv(mydata, alldata, root, gid)
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: mydata(:), root
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER, INTENT(OUT) :: alldata(:,:)
         INTEGER :: msglen, ierr
@@ -131,8 +130,7 @@
 #if defined (__MPI)
         msglen = SIZE(mydata)
         IF( msglen .NE. SIZE(alldata, 1) ) CALL mp_stop( 8000 )
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
+        group = gid
         CALL MPI_GATHER(mydata, msglen, MPI_INTEGER, alldata, msglen, MPI_INTEGER, root, group, IERR)
         IF (ierr/=0) CALL mp_stop( 8001 )
 #else
@@ -327,14 +325,13 @@
         IMPLICIT NONE
         INTEGER :: msg
         INTEGER :: source
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER :: msglen
 
 #if defined(__MPI)
         msglen = 1
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
+        group = gid
         CALL bcast_integer( msg, msglen, source, group )
 #endif
       END SUBROUTINE mp_bcast_i1

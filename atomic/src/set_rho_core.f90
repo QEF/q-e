@@ -17,6 +17,7 @@ subroutine set_rho_core
   use constants, only : pi
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
+  use mp_world,  only : world_comm
   use ld1inc, only : nlcc, grid, rhoc, aeccharge, psccharge, rcore, &
                      nwf, oc, rel, core_state, psi, file_core, new_core_ps,&
                      lpaw, lnc2paw
@@ -161,7 +162,7 @@ subroutine set_rho_core
      write(stdout,'(6x, "***Writing file ",a, " ***")') trim(file_core)
      if (ionode) &
         open(unit=26,file=file_core, status='unknown', iostat=ios, err=300 )
-300  call mp_bcast(ios, ionode_id)
+300  call mp_bcast(ios, ionode_id, world_comm)
      call errore('set_rho_core','opening file '//file_core,abs(ios))
      if (ionode) then
         if (totrho>1.d-6) then

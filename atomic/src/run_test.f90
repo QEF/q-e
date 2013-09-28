@@ -15,6 +15,7 @@ SUBROUTINE run_test
   use kinds, only : dp
   use io_global, only : ionode, ionode_id
   use mp,        only : mp_bcast
+  use mp_world,  only : world_comm
   use radial_grids, only : ndmx
   use ld1_parameters, only : nwfx
   use ld1inc,    only : file_tests, prefix, nconf, rel, etot0, &
@@ -47,7 +48,7 @@ SUBROUTINE run_test
   file_tests = trim(prefix)//'.test'
   if (ionode) &
      open(unit=13, file=file_tests, iostat=ios, err=1111, status='unknown')
-1111 call mp_bcast(ios, ionode_id)
+1111 call mp_bcast(ios, ionode_id, world_comm)
      call errore('run_test','opening file_tests',abs(ios))
 
   do nc=1,nconf

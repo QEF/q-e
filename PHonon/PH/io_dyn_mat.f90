@@ -18,6 +18,7 @@ MODULE io_dyn_mat
   USE kinds,     ONLY : DP
   USE io_global, ONLY : ionode, ionode_id
   USE mp_global, ONLY : intra_image_comm
+  USE mp_world,  ONLY : world_comm
   USE mp,        ONLY : mp_bcast
   !
   IMPLICIT NONE
@@ -285,8 +286,8 @@ MODULE io_dyn_mat
        CALL iotk_scan_end(iunout, "GEOMETRY_INFO" )
     ENDIF
 
-    CALL mp_bcast(ntyp, ionode_id)
-    CALL mp_bcast(nat, ionode_id)
+    CALL mp_bcast(ntyp, ionode_id, world_comm)
+    CALL mp_bcast(nat, ionode_id, world_comm)
 
     RETURN
     END SUBROUTINE read_dyn_mat_param
@@ -383,23 +384,23 @@ MODULE io_dyn_mat
           ENDIF
        ENDIF
     ENDIF
-    CALL mp_bcast(ibrav,ionode_id)
-    CALL mp_bcast(nspin_mag,ionode_id)
-    CALL mp_bcast(celldm,ionode_id)
-    CALL mp_bcast(at,ionode_id)
-    CALL mp_bcast(bg,ionode_id)
-    CALL mp_bcast(omega,ionode_id)
-    CALL mp_bcast(atm,ionode_id)
-    CALL mp_bcast(amass,ionode_id)
-    CALL mp_bcast(ityp,ionode_id)
-    CALL mp_bcast(tau,ionode_id)
-    CALL mp_bcast(m_loc,ionode_id)
-    CALL mp_bcast(nqs,ionode_id)
-    IF (PRESENT(lrigid)) CALL mp_bcast(lrigid,ionode_id)
-    IF (PRESENT(epsil))  CALL mp_bcast(epsil,ionode_id)
-    IF (PRESENT(zstareu)) CALL mp_bcast(zstareu,ionode_id)
-    IF (PRESENT(lraman)) CALL mp_bcast(lraman,ionode_id)
-    IF (PRESENT(ramtns)) CALL mp_bcast(ramtns,ionode_id)
+    CALL mp_bcast(ibrav,ionode_id, world_comm)
+    CALL mp_bcast(nspin_mag,ionode_id, world_comm)
+    CALL mp_bcast(celldm,ionode_id, world_comm)
+    CALL mp_bcast(at,ionode_id, world_comm)
+    CALL mp_bcast(bg,ionode_id, world_comm)
+    CALL mp_bcast(omega,ionode_id, world_comm)
+    CALL mp_bcast(atm,ionode_id, world_comm)
+    CALL mp_bcast(amass,ionode_id, world_comm)
+    CALL mp_bcast(ityp,ionode_id, world_comm)
+    CALL mp_bcast(tau,ionode_id, world_comm)
+    CALL mp_bcast(m_loc,ionode_id, world_comm)
+    CALL mp_bcast(nqs,ionode_id, world_comm)
+    IF (PRESENT(lrigid)) CALL mp_bcast(lrigid,ionode_id, world_comm)
+    IF (PRESENT(epsil))  CALL mp_bcast(epsil,ionode_id, world_comm)
+    IF (PRESENT(zstareu)) CALL mp_bcast(zstareu,ionode_id, world_comm)
+    IF (PRESENT(lraman)) CALL mp_bcast(lraman,ionode_id, world_comm)
+    IF (PRESENT(ramtns)) CALL mp_bcast(ramtns,ionode_id, world_comm)
 
     RETURN
     END SUBROUTINE read_dyn_mat_header
@@ -429,8 +430,8 @@ MODULE io_dyn_mat
 
        CALL iotk_scan_end(iunout, "DYNAMICAL_MAT_"//TRIM(iotk_index(iq)) )
     ENDIF
-    CALL mp_bcast(xq, ionode_id)
-    CALL mp_bcast(dyn, ionode_id)
+    CALL mp_bcast(xq, ionode_id, world_comm)
+    CALL mp_bcast(dyn, ionode_id, world_comm)
 
     RETURN
     END SUBROUTINE read_dyn_mat
@@ -465,8 +466,8 @@ MODULE io_dyn_mat
 
        CALL iotk_close_read( iunout )
     END IF
-    IF (PRESENT(omega)) CALL mp_bcast(omega, ionode_id)
-    IF (PRESENT(u)) CALL mp_bcast(u, ionode_id)
+    IF (PRESENT(omega)) CALL mp_bcast(omega, ionode_id, world_comm)
+    IF (PRESENT(u)) CALL mp_bcast(u, ionode_id, world_comm)
 
     RETURN
     END SUBROUTINE read_dyn_mat_tail
@@ -492,9 +493,9 @@ MODULE io_dyn_mat
 
        CALL iotk_scan_end( iunout, "INTERATOMIC_FORCE_CONSTANTS" )
     ENDIF
-    CALL mp_bcast(nr1, ionode_id)
-    CALL mp_bcast(nr2, ionode_id)
-    CALL mp_bcast(nr3, ionode_id)
+    CALL mp_bcast(nr1, ionode_id, world_comm)
+    CALL mp_bcast(nr2, ionode_id, world_comm)
+    CALL mp_bcast(nr3, ionode_id, world_comm)
     RETURN
     END SUBROUTINE read_ifc_param
 
@@ -534,7 +535,7 @@ MODULE io_dyn_mat
        CALL iotk_scan_end( iunout, "INTERATOMIC_FORCE_CONSTANTS" )
        CALL iotk_close_read( iunout )
     ENDIF
-    CALL mp_bcast(phid,ionode_id)
+    CALL mp_bcast(phid,ionode_id, world_comm)
 
     RETURN
     END SUBROUTINE read_ifc

@@ -18,6 +18,7 @@ SUBROUTINE chdens (filplot,plot_num)
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE io_files,   ONLY : nd_nmbr
   USE mp_global,  ONLY : nproc_pool
+  USE mp_world,   ONLY : world_comm
   USE mp,         ONLY : mp_bcast
   USE parameters, ONLY : ntypx
   USE constants,  ONLY :  pi, fpi
@@ -114,8 +115,8 @@ SUBROUTINE chdens (filplot,plot_num)
   !
   IF (ionode) READ (5, plot, iostat = ios)
   !
-  CALL mp_bcast( ios, ionode_id )
-  CALL mp_bcast( nfile, ionode_id )
+  CALL mp_bcast( ios, ionode_id, world_comm )
+  CALL mp_bcast( nfile, ionode_id, world_comm )
 
   IF (ios /= 0) THEN
      IF (nfile > nfilemax) THEN
@@ -128,20 +129,20 @@ SUBROUTINE chdens (filplot,plot_num)
      RETURN
   ENDIF
 
-  CALL mp_bcast( filepp, ionode_id )
-  CALL mp_bcast( weight, ionode_id )
-  CALL mp_bcast( iflag, ionode_id )
-  CALL mp_bcast( radius, ionode_id )
-  CALL mp_bcast( output_format, ionode_id )
-  CALL mp_bcast( fileout, ionode_id )
-  CALL mp_bcast( e1, ionode_id )
-  CALL mp_bcast( e2, ionode_id )
-  CALL mp_bcast( e3, ionode_id )
-  CALL mp_bcast( x0, ionode_id )
-  CALL mp_bcast( nx, ionode_id )
-  CALL mp_bcast( ny, ionode_id )
-  CALL mp_bcast( nz, ionode_id )
-  CALL mp_bcast( interpolation, ionode_id )
+  CALL mp_bcast( filepp, ionode_id, world_comm )
+  CALL mp_bcast( weight, ionode_id, world_comm )
+  CALL mp_bcast( iflag, ionode_id, world_comm )
+  CALL mp_bcast( radius, ionode_id, world_comm )
+  CALL mp_bcast( output_format, ionode_id, world_comm )
+  CALL mp_bcast( fileout, ionode_id, world_comm )
+  CALL mp_bcast( e1, ionode_id, world_comm )
+  CALL mp_bcast( e2, ionode_id, world_comm )
+  CALL mp_bcast( e3, ionode_id, world_comm )
+  CALL mp_bcast( x0, ionode_id, world_comm )
+  CALL mp_bcast( nx, ionode_id, world_comm )
+  CALL mp_bcast( ny, ionode_id, world_comm )
+  CALL mp_bcast( nz, ionode_id, world_comm )
+  CALL mp_bcast( interpolation, ionode_id, world_comm )
 
   IF (output_format == -1 .or. iflag == -1) THEN
      CALL infomsg ('chdens', 'output format not set, exiting' )
@@ -210,21 +211,21 @@ SUBROUTINE chdens (filplot,plot_num)
         CALL read_io_header(filepp (1), title, dfftp%nr1x, dfftp%nr2x, &
                 dfftp%nr3x, dfftp%nr1, dfftp%nr2, dfftp%nr3, nat, ntyp,&
                 ibrav, celldm, at, gcutm, dual, ecutwfc, idum )
-     CALL mp_bcast( title, ionode_id )
-     CALL mp_bcast( dfftp%nr1x, ionode_id )
-     CALL mp_bcast( dfftp%nr2x, ionode_id )
-     CALL mp_bcast( dfftp%nr3x, ionode_id )
-     CALL mp_bcast( dfftp%nr1, ionode_id )
-     CALL mp_bcast( dfftp%nr2, ionode_id )
-     CALL mp_bcast( dfftp%nr3, ionode_id )
-     CALL mp_bcast( nat, ionode_id )
-     CALL mp_bcast( ntyp, ionode_id )
-     CALL mp_bcast( ibrav, ionode_id )
-     CALL mp_bcast( celldm, ionode_id )
-     CALL mp_bcast( at, ionode_id )
-     CALL mp_bcast( gcutm, ionode_id )
-     CALL mp_bcast( dual, ionode_id )
-     CALL mp_bcast( ecutwfc, ionode_id )
+     CALL mp_bcast( title, ionode_id, world_comm )
+     CALL mp_bcast( dfftp%nr1x, ionode_id, world_comm )
+     CALL mp_bcast( dfftp%nr2x, ionode_id, world_comm )
+     CALL mp_bcast( dfftp%nr3x, ionode_id, world_comm )
+     CALL mp_bcast( dfftp%nr1, ionode_id, world_comm )
+     CALL mp_bcast( dfftp%nr2, ionode_id, world_comm )
+     CALL mp_bcast( dfftp%nr3, ionode_id, world_comm )
+     CALL mp_bcast( nat, ionode_id, world_comm )
+     CALL mp_bcast( ntyp, ionode_id, world_comm )
+     CALL mp_bcast( ibrav, ionode_id, world_comm )
+     CALL mp_bcast( celldm, ionode_id, world_comm )
+     CALL mp_bcast( at, ionode_id, world_comm )
+     CALL mp_bcast( gcutm, ionode_id, world_comm )
+     CALL mp_bcast( dual, ionode_id, world_comm )
+     CALL mp_bcast( ecutwfc, ionode_id, world_comm )
      !
      ! ... see comment above
      !

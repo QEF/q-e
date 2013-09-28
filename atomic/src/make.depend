@@ -21,6 +21,7 @@ atomic_paw.o : ../../Modules/funct.o
 atomic_paw.o : ../../Modules/io_global.o
 atomic_paw.o : ../../Modules/kind.o
 atomic_paw.o : ../../Modules/mp.o
+atomic_paw.o : ../../Modules/mp_world.o
 atomic_paw.o : ../../Modules/parameters.o
 atomic_paw.o : ../../Modules/radial_grids.o
 atomic_paw.o : ld1inc.o
@@ -85,6 +86,7 @@ default_conf.o : ../../Modules/kind.o
 descreening.o : ../../Modules/io_global.o
 descreening.o : ../../Modules/kind.o
 descreening.o : ../../Modules/mp.o
+descreening.o : ../../Modules/mp_world.o
 descreening.o : ../../Modules/radial_grids.o
 descreening.o : ld1inc.o
 descreening.o : parameters.o
@@ -192,6 +194,7 @@ ld1_readin.o : ../../Modules/funct.o
 ld1_readin.o : ../../Modules/io_global.o
 ld1_readin.o : ../../Modules/kind.o
 ld1_readin.o : ../../Modules/mp.o
+ld1_readin.o : ../../Modules/mp_world.o
 ld1_readin.o : ../../Modules/open_close_input_file.o
 ld1_readin.o : ../../Modules/parameters.o
 ld1_readin.o : ../../Modules/radial_grids.o
@@ -204,6 +207,7 @@ ld1_setup.o : ld1inc.o
 ld1_writeout.o : ../../Modules/funct.o
 ld1_writeout.o : ../../Modules/io_global.o
 ld1_writeout.o : ../../Modules/mp.o
+ld1_writeout.o : ../../Modules/mp_world.o
 ld1_writeout.o : ../../Modules/open_close_input_file.o
 ld1_writeout.o : ../../Modules/radial_grids.o
 ld1_writeout.o : ld1inc.o
@@ -282,6 +286,7 @@ run_pseudo.o : parameters.o
 run_test.o : ../../Modules/io_global.o
 run_test.o : ../../Modules/kind.o
 run_test.o : ../../Modules/mp.o
+run_test.o : ../../Modules/mp_world.o
 run_test.o : ../../Modules/radial_grids.o
 run_test.o : ld1inc.o
 run_test.o : parameters.o
@@ -301,6 +306,7 @@ set_rho_core.o : ../../Modules/constants.o
 set_rho_core.o : ../../Modules/io_global.o
 set_rho_core.o : ../../Modules/kind.o
 set_rho_core.o : ../../Modules/mp.o
+set_rho_core.o : ../../Modules/mp_world.o
 set_rho_core.o : ld1inc.o
 set_sl3.o : ../../Modules/kind.o
 sic_correction.o : ../../Modules/constants.o
@@ -343,11 +349,13 @@ write_cpmd.o : ../../Modules/kind.o
 write_files.o : ../../Modules/io_global.o
 write_files.o : ../../Modules/kind.o
 write_files.o : ../../Modules/mp.o
+write_files.o : ../../Modules/mp_world.o
 write_files.o : ../../Modules/radial_grids.o
 write_files.o : ld1inc.o
 write_paw_recon.o : ../../Modules/io_global.o
 write_paw_recon.o : ../../Modules/kind.o
 write_paw_recon.o : ../../Modules/mp.o
+write_paw_recon.o : ../../Modules/mp_world.o
 write_paw_recon.o : ld1inc.o
 write_pseudo.o : ../../Modules/constants.o
 write_pseudo.o : ../../Modules/funct.o
@@ -357,6 +365,7 @@ write_results.o : ../../Modules/funct.o
 write_results.o : ../../Modules/io_global.o
 write_results.o : ../../Modules/kind.o
 write_results.o : ../../Modules/mp.o
+write_results.o : ../../Modules/mp_world.o
 write_results.o : ../../Modules/radial_grids.o
 write_results.o : ld1inc.o
 write_resultsps.o : ../../Modules/constants.o

@@ -89,6 +89,7 @@ path_io_routines.o : ../../Modules/io_global.o
 path_io_routines.o : ../../Modules/ions_base.o
 path_io_routines.o : ../../Modules/kind.o
 path_io_routines.o : ../../Modules/mp.o
+path_io_routines.o : ../../Modules/mp_world.o
 path_io_routines.o : path_formats.o
 path_io_routines.o : path_input_parameters_module.o
 path_io_routines.o : path_io_units_module.o
@@ -110,6 +111,7 @@ path_read_cards_module.o : path_input_parameters_module.o
 path_read_namelists_module.o : ../../Modules/io_global.o
 path_read_namelists_module.o : ../../Modules/kind.o
 path_read_namelists_module.o : ../../Modules/mp.o
+path_read_namelists_module.o : ../../Modules/mp_world.o
 path_read_namelists_module.o : path_input_parameters_module.o
 path_reparametrisation.o : ../../Modules/basic_algebra_routines.o
 path_reparametrisation.o : ../../Modules/io_global.o

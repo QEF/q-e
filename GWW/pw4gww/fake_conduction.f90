@@ -463,11 +463,11 @@ CONTAINS
         endif
      endif
   endif
-  call mp_bcast(iv_start,ionode_id)
+  call mp_bcast(iv_start,ionode_id,world_comm)
 
   if(iv_start/=1) then
-     call mp_bcast(fcw_number,ionode_id)
-     call mp_bcast(fcw_numberx,ionode_id)
+     call mp_bcast(fcw_number,ionode_id,world_comm)
+     call mp_bcast(fcw_numberx,ionode_id,world_comm)
      fcw_number_oldx=fcw_numberx
      fcw_numberx_tmp=fcw_numberx
      fcw_number_old=fcw_number
@@ -766,7 +766,7 @@ CONTAINS
            else
               call mp_sum(omat)
            endif
-      !call mp_bcast(eigen(:), ionode_id)
+      !call mp_bcast(eigen(:), ionode_id,world_comm)
            call mp_sum(eigen(:))
         else
            if(l_verbose) write(stdout,*) 'Before diago_cg',max_state
@@ -2162,6 +2162,7 @@ end subroutine fake_conduction_wannier_real
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, et, ecutwfc, wg
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
+   USE mp_world, ONLY : world_comm
    USE mp_global, ONLY : mpime, nproc, intra_pool_comm
    USE gvecs,              ONLY : nls, nlsm, doublegrid
 
@@ -2598,11 +2599,11 @@ end subroutine fake_conduction_wannier_real
         endif
      endif
   endif
-  call mp_bcast(iv_start,ionode_id)
+  call mp_bcast(iv_start,ionode_id,world_comm)
 
   if(iv_start/=1) then
-     call mp_bcast(fcw_number,ionode_id)
-     call mp_bcast(fcw_numberx,ionode_id)
+     call mp_bcast(fcw_number,ionode_id,world_comm)
+     call mp_bcast(fcw_numberx,ionode_id,world_comm)
      fcw_number_oldx=fcw_numberx
      fcw_numberx_tmp=fcw_numberx
      fcw_number_old=fcw_number

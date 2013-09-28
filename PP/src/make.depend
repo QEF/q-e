@@ -77,6 +77,7 @@ bands.o : ../../Modules/ions_base.o
 bands.o : ../../Modules/kind.o
 bands.o : ../../Modules/mp.o
 bands.o : ../../Modules/mp_global.o
+bands.o : ../../Modules/mp_world.o
 bands.o : ../../Modules/noncol.o
 bands.o : ../../Modules/recvec.o
 bands.o : ../../Modules/uspp.o
@@ -93,6 +94,7 @@ bgw2pw.o : ../../Modules/ions_base.o
 bgw2pw.o : ../../Modules/kind.o
 bgw2pw.o : ../../Modules/mp.o
 bgw2pw.o : ../../Modules/mp_global.o
+bgw2pw.o : ../../Modules/mp_world.o
 bgw2pw.o : ../../Modules/parallel_include.o
 bgw2pw.o : ../../Modules/recvec.o
 bgw2pw.o : ../../Modules/wavefunctions.o
@@ -121,6 +123,7 @@ chdens.o : ../../Modules/ions_base.o
 chdens.o : ../../Modules/kind.o
 chdens.o : ../../Modules/mp.o
 chdens.o : ../../Modules/mp_global.o
+chdens.o : ../../Modules/mp_world.o
 chdens.o : ../../Modules/parameters.o
 chdens.o : ../../Modules/recvec.o
 chdens.o : ../../Modules/recvec_subs.o
@@ -191,6 +194,7 @@ dos.o : ../../Modules/io_global.o
 dos.o : ../../Modules/kind.o
 dos.o : ../../Modules/mp.o
 dos.o : ../../Modules/mp_global.o
+dos.o : ../../Modules/mp_world.o
 dos.o : ../../Modules/noncol.o
 dos.o : ../../PW/src/pwcom.o
 dosg.o : ../../Modules/kind.o
@@ -216,6 +220,7 @@ epsilon.o : ../../Modules/io_global.o
 epsilon.o : ../../Modules/kind.o
 epsilon.o : ../../Modules/mp.o
 epsilon.o : ../../Modules/mp_global.o
+epsilon.o : ../../Modules/mp_world.o
 epsilon.o : ../../Modules/recvec.o
 epsilon.o : ../../Modules/uspp.o
 epsilon.o : ../../Modules/wavefunctions.o
@@ -233,6 +238,7 @@ initial_state.o : ../../Modules/ions_base.o
 initial_state.o : ../../Modules/kind.o
 initial_state.o : ../../Modules/mp.o
 initial_state.o : ../../Modules/mp_global.o
+initial_state.o : ../../Modules/mp_world.o
 initial_state.o : ../../Modules/parameters.o
 initial_state.o : ../../Modules/uspp.o
 initial_state.o : ../../Modules/wavefunctions.o
@@ -314,6 +320,7 @@ pawplot.o : ../../Modules/ions_base.o
 pawplot.o : ../../Modules/kind.o
 pawplot.o : ../../Modules/mp.o
 pawplot.o : ../../Modules/mp_global.o
+pawplot.o : ../../Modules/mp_world.o
 pawplot.o : ../../Modules/noncol.o
 pawplot.o : ../../Modules/paw_variables.o
 pawplot.o : ../../Modules/recvec.o
@@ -333,6 +340,7 @@ plan_avg.o : ../../Modules/ions_base.o
 plan_avg.o : ../../Modules/kind.o
 plan_avg.o : ../../Modules/mp.o
 plan_avg.o : ../../Modules/mp_global.o
+plan_avg.o : ../../Modules/mp_world.o
 plan_avg.o : ../../Modules/noncol.o
 plan_avg.o : ../../Modules/recvec.o
 plan_avg.o : ../../Modules/run_info.o
@@ -351,6 +359,7 @@ poormanwannier.o : ../../Modules/ions_base.o
 poormanwannier.o : ../../Modules/kind.o
 poormanwannier.o : ../../Modules/mp.o
 poormanwannier.o : ../../Modules/mp_global.o
+poormanwannier.o : ../../Modules/mp_world.o
 poormanwannier.o : ../../Modules/recvec.o
 poormanwannier.o : ../../Modules/uspp.o
 poormanwannier.o : ../../Modules/wavefunctions.o
@@ -369,6 +378,7 @@ postproc.o : ../../Modules/ions_base.o
 postproc.o : ../../Modules/kind.o
 postproc.o : ../../Modules/mp.o
 postproc.o : ../../Modules/mp_global.o
+postproc.o : ../../Modules/mp_world.o
 postproc.o : ../../Modules/noncol.o
 postproc.o : ../../Modules/paw_variables.o
 postproc.o : ../../Modules/recvec.o
@@ -386,6 +396,7 @@ projwfc.o : ../../Modules/ions_base.o
 projwfc.o : ../../Modules/kind.o
 projwfc.o : ../../Modules/mp.o
 projwfc.o : ../../Modules/mp_global.o
+projwfc.o : ../../Modules/mp_world.o
 projwfc.o : ../../Modules/noncol.o
 projwfc.o : ../../Modules/ptoolkit.o
 projwfc.o : ../../Modules/recvec.o
@@ -472,6 +483,7 @@ pw2gw.o : ../../Modules/kind.o
 pw2gw.o : ../../Modules/mp.o
 pw2gw.o : ../../Modules/mp_global.o
 pw2gw.o : ../../Modules/mp_wave.o
+pw2gw.o : ../../Modules/mp_world.o
 pw2gw.o : ../../Modules/parallel_include.o
 pw2gw.o : ../../Modules/recvec.o
 pw2gw.o : ../../Modules/splinelib.o
@@ -493,6 +505,7 @@ pw2wannier90.o : ../../Modules/ions_base.o
 pw2wannier90.o : ../../Modules/kind.o
 pw2wannier90.o : ../../Modules/mp.o
 pw2wannier90.o : ../../Modules/mp_global.o
+pw2wannier90.o : ../../Modules/mp_world.o
 pw2wannier90.o : ../../Modules/noncol.o
 pw2wannier90.o : ../../Modules/random_numbers.o
 pw2wannier90.o : ../../Modules/recvec.o
@@ -554,6 +567,7 @@ sym_band.o : ../../Modules/ions_base.o
 sym_band.o : ../../Modules/kind.o
 sym_band.o : ../../Modules/mp.o
 sym_band.o : ../../Modules/mp_global.o
+sym_band.o : ../../Modules/mp_world.o
 sym_band.o : ../../Modules/noncol.o
 sym_band.o : ../../Modules/recvec.o
 sym_band.o : ../../Modules/uspp.o
@@ -568,6 +582,7 @@ wannier_ham.o : ../../Modules/io_global.o
 wannier_ham.o : ../../Modules/kind.o
 wannier_ham.o : ../../Modules/mp.o
 wannier_ham.o : ../../Modules/mp_global.o
+wannier_ham.o : ../../Modules/mp_world.o
 wannier_ham.o : ../../Modules/read_cards.o
 wannier_ham.o : ../../Modules/recvec.o
 wannier_ham.o : ../../Modules/wannier_new.o
@@ -589,6 +604,7 @@ wannier_plot.o : ../../Modules/ions_base.o
 wannier_plot.o : ../../Modules/kind.o
 wannier_plot.o : ../../Modules/mp.o
 wannier_plot.o : ../../Modules/mp_global.o
+wannier_plot.o : ../../Modules/mp_world.o
 wannier_plot.o : ../../Modules/recvec.o
 wannier_plot.o : ../../Modules/wannier_new.o
 wannier_plot.o : ../../PW/src/atomic_wfc_mod.o
@@ -634,6 +650,7 @@ write_p_avg.o : ../../Modules/ions_base.o
 write_p_avg.o : ../../Modules/kind.o
 write_p_avg.o : ../../Modules/mp.o
 write_p_avg.o : ../../Modules/mp_global.o
+write_p_avg.o : ../../Modules/mp_world.o
 write_p_avg.o : ../../Modules/noncol.o
 write_p_avg.o : ../../Modules/recvec.o
 write_p_avg.o : ../../Modules/uspp.o

@@ -26,6 +26,7 @@ PROGRAM do_dos
   USE lsda_mod,   ONLY : nspin
   USE noncollin_module, ONLY: noncolin
   USE mp,         ONLY : mp_bcast
+  USE mp_world,   ONLY : world_comm
   USE mp_global,     ONLY : mp_startup
   USE environment,   ONLY : environment_start
   !
@@ -74,15 +75,15 @@ PROGRAM do_dos
      !
   ENDIF
   !
-  CALL mp_bcast( ios, ionode_id )
+  CALL mp_bcast( ios, ionode_id, world_comm )
   IF (ios /= 0) WRITE (stdout, &
     '("*** namelist &inputpp no longer valid: please use &dos instead")')
   IF ( ios /= 0 ) CALL errore('dos','reading dos namelist',abs(ios))
   !
   ! ... Broadcast variables
   !
-  CALL mp_bcast( tmp_dir, ionode_id )
-  CALL mp_bcast( prefix, ionode_id )
+  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
+  CALL mp_bcast( prefix, ionode_id, world_comm )
   !
   CALL read_xml_file( )
   !

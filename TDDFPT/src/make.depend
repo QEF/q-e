@@ -310,6 +310,7 @@ lr_restart.o : ../../Modules/fft_base.o
 lr_restart.o : ../../Modules/io_files.o
 lr_restart.o : ../../Modules/io_global.o
 lr_restart.o : ../../Modules/mp.o
+lr_restart.o : ../../Modules/mp_world.o
 lr_restart.o : ../../Modules/noncol.o
 lr_restart.o : ../../Modules/recvec.o
 lr_restart.o : ../../Modules/uspp.o

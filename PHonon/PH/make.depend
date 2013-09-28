@@ -156,6 +156,7 @@ bcast_ph_input.o : ../../Modules/io_global.o
 bcast_ph_input.o : ../../Modules/ions_base.o
 bcast_ph_input.o : ../../Modules/mp.o
 bcast_ph_input.o : ../../Modules/mp_global.o
+bcast_ph_input.o : ../../Modules/mp_world.o
 bcast_ph_input.o : ../../Modules/run_info.o
 bcast_ph_input.o : dfile_star.o
 bcast_ph_input.o : elph.o
@@ -562,6 +563,7 @@ dynmat.o : ../../Modules/io_global.o
 dynmat.o : ../../Modules/kind.o
 dynmat.o : ../../Modules/mp.o
 dynmat.o : ../../Modules/mp_global.o
+dynmat.o : ../../Modules/mp_world.o
 dynmat.o : io_dyn_mat.o
 dynmat0.o : ../../Modules/cell_base.o
 dynmat0.o : ../../Modules/control_flags.o
@@ -805,6 +807,7 @@ io_dyn_mat.o : ../../Modules/io_global.o
 io_dyn_mat.o : ../../Modules/kind.o
 io_dyn_mat.o : ../../Modules/mp.o
 io_dyn_mat.o : ../../Modules/mp_global.o
+io_dyn_mat.o : ../../Modules/mp_world.o
 io_dyn_mat.o : ../../iotk/src/iotk_module.o
 io_dyn_mat_old.o : ../../Modules/cell_base.o
 io_dyn_mat_old.o : ../../Modules/constants.o
@@ -812,6 +815,7 @@ io_dyn_mat_old.o : ../../Modules/io_global.o
 io_dyn_mat_old.o : ../../Modules/ions_base.o
 io_dyn_mat_old.o : ../../Modules/kind.o
 io_dyn_mat_old.o : ../../Modules/mp.o
+io_dyn_mat_old.o : ../../Modules/mp_world.o
 io_dyn_mat_old.o : ../../Modules/run_info.o
 io_pattern.o : ../../Modules/cell_base.o
 io_pattern.o : ../../Modules/io_files.o
@@ -842,6 +846,7 @@ matdyn.o : ../../Modules/io_global.o
 matdyn.o : ../../Modules/kind.o
 matdyn.o : ../../Modules/mp.o
 matdyn.o : ../../Modules/mp_global.o
+matdyn.o : ../../Modules/mp_world.o
 matdyn.o : ../../Modules/parameters.o
 matdyn.o : ../../Modules/parser.o
 matdyn.o : ../../PW/src/pwcom.o
@@ -993,6 +998,7 @@ phq_readin.o : ../../Modules/mp_bands.o
 phq_readin.o : ../../Modules/mp_global.o
 phq_readin.o : ../../Modules/mp_images.o
 phq_readin.o : ../../Modules/mp_pools.o
+phq_readin.o : ../../Modules/mp_world.o
 phq_readin.o : ../../Modules/noncol.o
 phq_readin.o : ../../Modules/parameters.o
 phq_readin.o : ../../Modules/paw_variables.o
@@ -1136,6 +1142,7 @@ q2qstar.o : ../../Modules/ions_base.o
 q2qstar.o : ../../Modules/kind.o
 q2qstar.o : ../../Modules/mp.o
 q2qstar.o : ../../Modules/mp_global.o
+q2qstar.o : ../../Modules/mp_world.o
 q2qstar.o : ../../Modules/noncol.o
 q2qstar.o : ../../Modules/parameters.o
 q2qstar.o : ../../PW/src/symm_base.o
@@ -1151,6 +1158,7 @@ q2r.o : ../../Modules/io_global.o
 q2r.o : ../../Modules/kind.o
 q2r.o : ../../Modules/mp.o
 q2r.o : ../../Modules/mp_global.o
+q2r.o : ../../Modules/mp_world.o
 q2r.o : io_dyn_mat.o
 q2r.o : io_dyn_mat_old.o
 q2trans.o : ../../Modules/constants.o
@@ -1160,6 +1168,7 @@ q2trans.o : ../../Modules/io_global.o
 q2trans.o : ../../Modules/kind.o
 q2trans.o : ../../Modules/mp.o
 q2trans.o : ../../Modules/mp_global.o
+q2trans.o : ../../Modules/mp_world.o
 q2trans.o : ../../iotk/src/iotk_module.o
 q2trans.o : io_dyn_mat.o
 q2trans.o : io_dyn_mat_old.o
@@ -1170,6 +1179,7 @@ q2trans_fd.o : ../../Modules/io_global.o
 q2trans_fd.o : ../../Modules/kind.o
 q2trans_fd.o : ../../Modules/mp.o
 q2trans_fd.o : ../../Modules/mp_global.o
+q2trans_fd.o : ../../Modules/mp_world.o
 q2trans_fd.o : ../../iotk/src/iotk_module.o
 q2trans_fd.o : io_dyn_mat.o
 q2trans_fd.o : io_dyn_mat_old.o

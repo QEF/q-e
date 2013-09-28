@@ -107,6 +107,7 @@
       USE input_gw,             ONLY : input_options
       USE io_files,             ONLY : prefix
       USE mp,                   ONLY : mp_bcast
+      USE mp_world,             ONLY : world_comm
 
       implicit none
 
@@ -137,9 +138,9 @@
             read(iun,*) qp%whole_s
          endif
       endif
-      call mp_bcast(qp%max_i, ionode_id)
-      call mp_bcast(qp%nspin, ionode_id)
-      call mp_bcast(qp%whole_s, ionode_id)
+      call mp_bcast(qp%max_i, ionode_id,world_comm)
+      call mp_bcast(qp%nspin, ionode_id,world_comm)
+      call mp_bcast(qp%whole_s, ionode_id,world_comm)
       allocate(qp%ene_dft_ks(qp%max_i,qp%nspin))
       allocate(qp%ene_dft_xc(qp%max_i,qp%nspin))
       allocate(qp%ene_dft_h(qp%max_i,qp%nspin))
@@ -181,15 +182,15 @@
          enddo
          close(iun)
       endif
-      call mp_bcast(qp%ene_dft_ks(:,:),ionode_id)
-      call mp_bcast(qp%ene_dft_xc(:,:),ionode_id)
-      call mp_bcast(qp%ene_dft_h(:,:),ionode_id)
-      call mp_bcast(qp%ene_x(:,:),ionode_id)
-      call mp_bcast(qp%ene_h(:,:),ionode_id)
-      call mp_bcast(qp%ene_gw(:,:),ionode_id)
-      call mp_bcast(qp%ene_gw_pert(:,:),ionode_id)
-      call mp_bcast(qp%ene_hf(:,:),ionode_id)
-      if(l_remainder) call mp_bcast(qp%ene_remainder(:,:),ionode_id)
+      call mp_bcast(qp%ene_dft_ks(:,:),ionode_id,world_comm)
+      call mp_bcast(qp%ene_dft_xc(:,:),ionode_id,world_comm)
+      call mp_bcast(qp%ene_dft_h(:,:),ionode_id,world_comm)
+      call mp_bcast(qp%ene_x(:,:),ionode_id,world_comm)
+      call mp_bcast(qp%ene_h(:,:),ionode_id,world_comm)
+      call mp_bcast(qp%ene_gw(:,:),ionode_id,world_comm)
+      call mp_bcast(qp%ene_gw_pert(:,:),ionode_id,world_comm)
+      call mp_bcast(qp%ene_hf(:,:),ionode_id,world_comm)
+      if(l_remainder) call mp_bcast(qp%ene_remainder(:,:),ionode_id,world_comm)
 
 !if required re-read exchange energies
 

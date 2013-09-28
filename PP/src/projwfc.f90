@@ -23,6 +23,7 @@ PROGRAM do_projwfc
   USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir
   USE noncollin_module, ONLY : noncolin
   USE mp,               ONLY : mp_bcast
+  USE mp_world,         ONLY : world_comm
   USE mp_global,        ONLY : mp_startup, nproc_ortho
   USE environment,      ONLY : environment_start
   USE wvfct, ONLY: et, nbnd
@@ -90,7 +91,7 @@ PROGRAM do_projwfc
      !
   ENDIF
   !
-  CALL mp_bcast (ios, ionode_id )
+  CALL mp_bcast (ios, ionode_id, world_comm )
   !
   IF (ios /= 0) WRITE (stdout, &
     '("*** namelist &inputpp no longer valid: please use &projwfc instead")')
@@ -98,23 +99,23 @@ PROGRAM do_projwfc
   !
   ! ... Broadcast variables
   !
-  CALL mp_bcast( tmp_dir, ionode_id )
-  CALL mp_bcast( prefix,  ionode_id )
-  CALL mp_bcast( filproj,  ionode_id )
-  CALL mp_bcast( ngauss1, ionode_id )
-  CALL mp_bcast( degauss1,ionode_id )
-  CALL mp_bcast( DeltaE,  ionode_id )
-  CALL mp_bcast( lsym,  ionode_id )
-  CALL mp_bcast( Emin, ionode_id )
-  CALL mp_bcast( Emax, ionode_id )
-  CALL mp_bcast( lwrite_overlaps, ionode_id )
-  CALL mp_bcast( lbinary_data, ionode_id )
-  CALL mp_bcast( lgww, ionode_id )
+  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
+  CALL mp_bcast( prefix,  ionode_id, world_comm )
+  CALL mp_bcast( filproj,  ionode_id, world_comm )
+  CALL mp_bcast( ngauss1, ionode_id, world_comm )
+  CALL mp_bcast( degauss1,ionode_id, world_comm )
+  CALL mp_bcast( DeltaE,  ionode_id, world_comm )
+  CALL mp_bcast( lsym,  ionode_id, world_comm )
+  CALL mp_bcast( Emin, ionode_id, world_comm )
+  CALL mp_bcast( Emax, ionode_id, world_comm )
+  CALL mp_bcast( lwrite_overlaps, ionode_id, world_comm )
+  CALL mp_bcast( lbinary_data, ionode_id, world_comm )
+  CALL mp_bcast( lgww, ionode_id, world_comm )
   ! for projection on boxes
-  CALL mp_bcast( tdosinboxes, ionode_id )
-  CALL mp_bcast( n_proj_boxes, ionode_id )
-  CALL mp_bcast( irmin, ionode_id )
-  CALL mp_bcast( irmax, ionode_id )
+  CALL mp_bcast( tdosinboxes, ionode_id, world_comm )
+  CALL mp_bcast( n_proj_boxes, ionode_id, world_comm )
+  CALL mp_bcast( irmin, ionode_id, world_comm )
+  CALL mp_bcast( irmax, ionode_id, world_comm )
   !
   !   Now allocate space for pwscf variables, read and check them.
   !

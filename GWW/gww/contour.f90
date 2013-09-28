@@ -107,6 +107,7 @@ MODULE contour
       USE io_global,          ONLY : stdout, ionode,ionode_id
       USE input_gw,           ONLY : input_options
       USE mp,                 ONLY : mp_bcast
+      USE mp_world,           ONLY : world_comm
       implicit none
       INTEGER, EXTERNAL :: find_free_unit
       TYPE(w_poles) :: wp!the structure to be read
@@ -121,11 +122,11 @@ MODULE contour
          read(iun) wp%nspin
          read(iun) wp%n_multipoles
       endif
-      call mp_bcast(wp%max_i,ionode_id)
-      call mp_bcast(wp%i_min,ionode_id)
-      call mp_bcast(wp%i_max,ionode_id)
-      call mp_bcast(wp%nspin,ionode_id)
-      call mp_bcast(wp%n_multipoles,ionode_id)
+      call mp_bcast(wp%max_i,ionode_id,world_comm)
+      call mp_bcast(wp%i_min,ionode_id,world_comm)
+      call mp_bcast(wp%i_max,ionode_id,world_comm)
+      call mp_bcast(wp%nspin,ionode_id,world_comm)
+      call mp_bcast(wp%n_multipoles,ionode_id,world_comm)
       allocate(wp%a_0(wp%max_i,wp%max_i,wp%nspin))
       allocate(wp%a(wp%n_multipoles,wp%max_i,wp%max_i,wp%nspin))
       allocate(wp%b(wp%n_multipoles,wp%max_i,wp%max_i,wp%nspin))
@@ -135,9 +136,9 @@ MODULE contour
          read(iun) wp%b(1:wp%n_multipoles,1:wp%max_i,1:wp%max_i,1:wp%nspin)
          close(iun)
       endif
-      call mp_bcast(wp%a_0,ionode_id)
-      call mp_bcast(wp%a,ionode_id)
-      call mp_bcast(wp%b,ionode_id)
+      call mp_bcast(wp%a_0,ionode_id,world_comm)
+      call mp_bcast(wp%a,ionode_id,world_comm)
+      call mp_bcast(wp%b,ionode_id,world_comm)
 
       return
     END SUBROUTINE read_w_poles
@@ -173,6 +174,7 @@ MODULE contour
       USE io_global,          ONLY : stdout, ionode,ionode_id
       USE input_gw,           ONLY : input_options
       USE mp,                 ONLY : mp_bcast
+      USE mp_world,           ONLY : world_comm
       implicit none
       INTEGER, EXTERNAL :: find_free_unit
       TYPE(w_expectation),INTENT(out) :: we!the structure to be written                                                                                                 
@@ -188,11 +190,11 @@ MODULE contour
          read(iun) we%i_max
          read(iun) we%nspin
       endif
-      call mp_bcast(we%n,ionode_id)
-      call mp_bcast(we%max_i,ionode_id)
-      call mp_bcast(we%i_min,ionode_id)
-      call mp_bcast(we%i_max,ionode_id)
-      call mp_bcast(we%nspin,ionode_id)
+      call mp_bcast(we%n,ionode_id,world_comm)
+      call mp_bcast(we%max_i,ionode_id,world_comm)
+      call mp_bcast(we%i_min,ionode_id,world_comm)
+      call mp_bcast(we%i_max,ionode_id,world_comm)
+      call mp_bcast(we%nspin,ionode_id,world_comm)
       allocate(we%grid(we%n),we%diag(we%n,we%max_i,we%max_i,we%nspin))
       if(ionode) then
          read(iun) we%grid(1:we%n)
@@ -201,8 +203,8 @@ MODULE contour
          enddo
          close(iun)
       endif
-      call mp_bcast(we%grid,ionode_id)
-      call mp_bcast(we%diag,ionode_id)
+      call mp_bcast(we%grid,ionode_id,world_comm)
+      call mp_bcast(we%diag,ionode_id,world_comm)
       return
 
 

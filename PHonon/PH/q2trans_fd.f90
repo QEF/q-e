@@ -61,7 +61,8 @@ PROGRAM q2trans
 USE iotk_module  
 USE kinds,      ONLY : DP
   USE mp,         ONLY : mp_bcast
-  USE mp_global,  ONLY : nproc, mpime, mp_startup, mp_global_end
+  USE mp_global,  ONLY : mp_startup, mp_global_end
+  USE mp_world,   ONLY : nproc, mpime, world_comm
   USE dynamicalq, ONLY : phiq, tau, ityp, zeu
   USE fft_scalar, ONLY : cfft3d
   USE io_global, ONLY : ionode_id, ionode, stdout
@@ -147,7 +148,7 @@ INTEGER, PARAMETER         ::   &
      !
   IF (ionode)  READ ( 5, input, IOSTAT =ios )
  
-  CALL mp_bcast(ios, ionode_id)
+  CALL mp_bcast(ios, ionode_id, world_comm )
   CALL errore('q2r','error reading input namelist', abs(ios))
 
      !
@@ -567,6 +568,7 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
   USE fft_scalar, ONLY : cfft3d
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
+  USE mp_world,  ONLY : world_comm
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: nqtot, nat, nr1, nr2, nr3
@@ -608,10 +610,10 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
            READ(filea2F,*) deg, ef, dosscf
            READ(filea2F,*) nstar
         ENDIF
-        CALL mp_bcast(deg, ionode_id)
-        CALL mp_bcast(ef, ionode_id)
-        CALL mp_bcast(dosscf, ionode_id)
-        CALL mp_bcast(nstar, ionode_id)
+        CALL mp_bcast(deg, ionode_id, world_comm )
+        CALL mp_bcast(ef, ionode_id, world_comm )
+        CALL mp_bcast(dosscf, ionode_id, world_comm )
+        CALL mp_bcast(nstar, ionode_id, world_comm )
         !
         CALL read_gamma ( nstar, nat, filea2F, q, gaminp )
         !
@@ -712,6 +714,7 @@ subroutine read_gamma (nqs, nat, ifn, xq, gaminp)
   USE kinds, ONLY : DP
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
+  USE mp_world,  ONLY : world_comm
   implicit none
   !
   ! I/O variables
@@ -734,18 +737,18 @@ subroutine read_gamma (nqs, nat, ifn, xq, gaminp)
      !     write(*,*) 'xq    ',iq,(xq(i,iq),i=1,3)
         READ(ifn,*)
      END IF
-     CALL mp_bcast(xq(:,iq), ionode_id)
+     CALL mp_bcast(xq(:,iq), ionode_id, world_comm)
      do na=1,nat
         do nb=1,nat
            IF (ionode) read(ifn,*) i,j
-           CALL mp_bcast(i, ionode_id)
-           CALL mp_bcast(j, ionode_id)
+           CALL mp_bcast(i, ionode_id, world_comm)
+           CALL mp_bcast(j, ionode_id, world_comm)
            if (i.ne.na) call errore('read_gamma','wrong na read',na)
            if (j.ne.nb) call errore('read_gamma','wrong nb read',nb)
            do i=1,3
               IF (ionode) read (ifn,*) (phir(j),phii(j),j=1,3)
-              CALL mp_bcast(phir, ionode_id)
-              CALL mp_bcast(phii, ionode_id)
+              CALL mp_bcast(phir, ionode_id, world_comm)
+              CALL mp_bcast(phii, ionode_id, world_comm)
               do j = 1,3
                  gaminp(i,j,na,nb,iq) = CMPLX(phir(j),phii(j),kind=DP)
               end do

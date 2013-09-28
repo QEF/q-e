@@ -21,7 +21,7 @@
      USE mp,           ONLY : mp_sum, mp_barrier, mp_bcast
      USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
      USE mp_wave, ONLY : mergewf,splitwf
-     USE mp_global, ONLY : mpime, nproc, intra_pool_comm
+     USE mp_world, ONLY : mpime, nproc, world_comm
      USE fft_base,             ONLY : dfftp, dffts
      USE fft_interfaces,       ONLY : fwfft, invfft
      USE wavefunctions_module, ONLY : psic
@@ -96,15 +96,15 @@
        read(iun) n_semicore
        read(iun) npwx_g_sc
     endif
-    call mp_bcast( num_nbnds_sc, ionode_id)
-    call mp_bcast(n_semicore, ionode_id)
-    call mp_bcast(npwx_g_sc,ionode_id)
+    call mp_bcast( num_nbnds_sc, ionode_id,world_comm)
+    call mp_bcast(n_semicore, ionode_id,world_comm)
+    call mp_bcast(npwx_g_sc,ionode_id,world_comm)
     allocate(pp_sc(dfftp%nnr,n_semicore,num_nbnds))
 
     allocate(tmp_g(npwx_g_sc))
     allocate(et_sc(num_nbnds_sc))
     if(ionode)  read(iun) et_sc(1:num_nbnds_sc)
-    call mp_bcast(et_sc, ionode_id)
+    call mp_bcast(et_sc, ionode_id,world_comm)
     write(stdout,*) 'NUM. SEMICORE:', n_semicore
     write(stdout,*) 'NUM. BANDS SC:',num_nbnds_sc
     write(stdout,*) 'NUM. BANDS:',num_nbnds

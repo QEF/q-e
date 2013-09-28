@@ -25,6 +25,7 @@ PROGRAM Q2QSTAR
   USE parameters,         ONLY : ntypx
   USE mp,                 ONLY : mp_bcast
   USE mp_global,          ONLY : mp_startup, mp_global_end
+  USE mp_world,           ONLY : world_comm
   USE io_global,          ONLY : ionode_id, ionode, stdout
   USE environment,        ONLY : environment_start, environment_end
   ! symmetry
@@ -73,7 +74,7 @@ PROGRAM Q2QSTAR
   IF(nargs < 1) CALL errore(CODE, 'Argument is missing! Syntax: "q2qstar dynfile [outfile]"', 1)
   !
   CALL getarg(1, fildyn)
-  CALL mp_bcast(fildyn, ionode_id)
+  CALL mp_bcast(fildyn, ionode_id,world_comm)
   !
   ! check input
   IF (fildyn == ' ')  CALL errore (CODE,' bad fildyn',1)
@@ -85,7 +86,7 @@ PROGRAM Q2QSTAR
   ELSE
       filout = TRIM(fildyn)//".rot"
   ENDIF
-  CALL mp_bcast(filout, ionode_id)
+  CALL mp_bcast(filout, ionode_id,world_comm)
   !
   ! ######################### reading ######################### 
   XML_FORMAT_READ : &
@@ -109,7 +110,7 @@ PROGRAM Q2QSTAR
   ELSE XML_FORMAT_READ
     ! open file
     IF (ionode)OPEN (unit=1, file=fildyn,status='old',form='formatted',iostat=ierr)
-    CALL mp_bcast(ierr, ionode_id)
+    CALL mp_bcast(ierr, ionode_id,world_comm)
     IF (ierr /= 0) CALL errore(CODE,'file '//TRIM(fildyn)//' missing!',1)
     ! read everything, this use global variables
     ntyp = ntypx

@@ -73,7 +73,7 @@ subroutine solve_lanczos_complex(nbuf,alpha,e_mat,lc)
   USE basic_structures, ONLY : lanczos_chain, initialize_memory,free_memory
   USE io_global,        ONLY : stdout
   USE mp,               ONLY : mp_sum,mp_bcast
-  USE mp_global,        ONLY : nproc, mpime
+  USE mp_world,         ONLY : nproc, mpime, world_comm
 
   implicit none
 
@@ -108,7 +108,7 @@ subroutine solve_lanczos_complex(nbuf,alpha,e_mat,lc)
      endif
      !call mp_sum(tmp_mat(:,:))
      iproc=(io-1)/l_blk
-     call mp_bcast(tmp_mat(:,:), iproc)
+     call mp_bcast(tmp_mat(:,:), iproc, world_comm)
      omat(:,:)=dcmplx(tmp_mat(:,:),0.d0)
 
      do il=1,nbuf
@@ -173,7 +173,7 @@ subroutine do_self_lanczos(ss, tf ,options)
   USE polarization,      ONLY : polaw, free_memory_polaw, read_polaw, write_polaw,invert_v_pot, initialize_polaw, &
                                   & read_polaw_global
   USE mp,                ONLY : mp_sum, mp_bcast
-  USE mp_global,         ONLY : nproc,mpime
+  USE mp_world,          ONLY : nproc,mpime,world_comm
   USE times_gw,          ONLY : times_freqs
   USE self_energy_storage, ONLY : self_storage,write_self_storage_ondisk,free_memory_self_storage
   USE lanczos
@@ -454,10 +454,10 @@ subroutine do_self_lanczos(ss, tf ,options)
 !distribute ww%numpw
       if(.not.ionode) ww%numpw=0
       !call mp_sum(ww%numpw)
-      call mp_bcast(ww%numpw, ionode_id)
+      call mp_bcast(ww%numpw, ionode_id,world_comm)
       if(.not.ionode) ww%factor=(0.d0,0.d0)
       !call mp_sum(ww%factor)
-      call mp_bcast(ww%factor, ionode_id)
+      call mp_bcast(ww%factor, ionode_id,world_comm)
          
    endif
 !!loop on i KS states
@@ -702,9 +702,9 @@ subroutine do_self_lanczos(ss, tf ,options)
                      iproc=jw/l_blk_io
                      do kw=1,ww%numpw
                         !call mp_sum(ww%pw(:,kw))
-                         call mp_bcast(ww%pw(:,kw),iproc)
+                         call mp_bcast(ww%pw(:,kw),iproc,world_comm)
                      enddo
-                     !call mp_bcast(ww%pw(:,:),iproc)
+                     !call mp_bcast(ww%pw(:,:),iproc,world_comm)
                   endif
 
                   if(l_conv) then
@@ -843,8 +843,10 @@ subroutine do_self_lanczos(ss, tf ,options)
                      !   re_c_tmp(:,:)=re_c_mat(:,:,iw-nbegin_iw+1)
                      !   im_c_tmp(:,:)=im_c_mat(:,:,iw-nbegin_iw+1)
                      !endif
-                     !call mp_bcast(re_c_tmp(:,:),iw_proc(iw-iw_min+1))
-                     !call mp_bcast(im_c_tmp(:,:),iw_proc(iw-iw_min+1))
+                     !call
+                     !mp_bcast(re_c_tmp(:,:),iw_proc(iw-iw_min+1),world_comm)
+                     !call
+                     !mp_bcast(im_c_tmp(:,:),iw_proc(iw-iw_min+1),world_comm)
 
                         re_c_tmp(:,:)=re_c_mat(:,:,ipos,iw-nbegin_iw+1)
                         im_c_tmp(:,:)=im_c_mat(:,:,ipos,iw-nbegin_iw+1)!ATTENZIONE TUTTO DA FARE
@@ -941,7 +943,7 @@ subroutine solve_lanczos_fake_complex(lc)
   USE basic_structures, ONLY : lanczos_chain, initialize_memory,free_memory
   USE io_global,        ONLY : stdout
   USE mp,               ONLY : mp_sum,mp_bcast
-  USE mp_global,        ONLY : nproc,mpime
+  USE mp_world,         ONLY : nproc,mpime,world_comm
 
   implicit none
 
@@ -968,7 +970,7 @@ subroutine solve_lanczos_fake_complex(lc)
      endif
    !  call mp_sum(o_mat(:,:))!this should be much faster than mp_bcast
      iproc=(io-1)/l_blk
-     call mp_bcast(o_mat(:,:), iproc)
+     call mp_bcast(o_mat(:,:), iproc,world_comm)
 
 
   enddo

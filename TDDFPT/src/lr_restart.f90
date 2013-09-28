@@ -30,6 +30,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE io_global,            ONLY : ionode
   USE mp,                   ONLY : mp_bcast
+  USE mp_world,             ONLY : world_comm
   !use real_beta,            only : ccalbecr_gamma,s_psir,fft_orbital_gamma,bfft_orbital_gamma
   USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
                                     bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
@@ -134,11 +135,11 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   CLOSE(158)
 #ifdef __MPI
   ENDIF
-  CALL mp_bcast (iter_restart, ionode_id)
-  CALL mp_bcast (norm0(pol_index), ionode_id)
-  CALL mp_bcast (beta_store(pol_index,:), ionode_id)
-  CALL mp_bcast (gamma_store(pol_index,:), ionode_id)
-  CALL mp_bcast (zeta_store(pol_index,:,:), ionode_id)
+  CALL mp_bcast (iter_restart, ionode_id, world_comm)
+  CALL mp_bcast (norm0(pol_index), ionode_id, world_comm)
+  CALL mp_bcast (beta_store(pol_index,:), ionode_id, world_comm)
+  CALL mp_bcast (gamma_store(pol_index,:), ionode_id, world_comm)
+  CALL mp_bcast (zeta_store(pol_index,:,:), ionode_id, world_comm)
 #endif
   !
   !
@@ -175,7 +176,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
     CLOSE(158)
 #ifdef __MPI
   ENDIF
-  CALL mp_bcast (F, ionode_id)
+  CALL mp_bcast (F, ionode_id, world_comm)
 #endif
   ENDIF
 

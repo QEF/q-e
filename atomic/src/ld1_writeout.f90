@@ -17,6 +17,7 @@ subroutine ld1_writeout
   use radial_grids, only: ndmx
   use io_global, only : qestdin, stdout, ionode, ionode_id
   use mp,        only : mp_bcast
+  use mp_world,  only : world_comm
   use ld1inc, only : file_pseudopw, zed, grid, &
                      nconf , lpaw, rel, pawsetup, pseudotype, &
                      rhoc, vnl, phits, vpsloc, & 
@@ -55,7 +56,7 @@ subroutine ld1_writeout
   if (ionode) &
      open(unit=iunps, file=trim(file_pseudopw), status='unknown',  &
           form='formatted', err=50, iostat=ios)
-50  call mp_bcast(ios, ionode_id)
+50  call mp_bcast(ios, ionode_id, world_comm)
   call errore('ld1_writeout','opening file_pseudopw',abs(ios))
 
   if (ionode) then

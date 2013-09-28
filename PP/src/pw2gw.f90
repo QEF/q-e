@@ -20,6 +20,7 @@ PROGRAM pw2gw
   USE io_files,   ONLY : prefix, outdir, tmp_dir
   USE io_global,  ONLY : ionode, ionode_id
   USE mp,         ONLY : mp_bcast
+  USE mp_world,   ONLY : world_comm
   USE mp_global,  ONLY : kunit, nproc, mp_startup
   USE environment,ONLY : environment_start
   USE us,         ONLY : spline_ps
@@ -59,15 +60,15 @@ PROGRAM pw2gw
      !
   ENDIF
   !
-  CALL mp_bcast( ios, ionode_id )
+  CALL mp_bcast( ios, ionode_id, world_comm )
   IF (ios /= 0)   CALL errore('pw2gw', 'reading inputpp namelist', abs(ios))
   !
   ! ... Broadcast variables
   !
-  CALL mp_bcast( prefix, ionode_id )
-  CALL mp_bcast(tmp_dir, ionode_id )
-  CALL mp_bcast( what, ionode_id )
-  CALL mp_bcast( use_gmaps, ionode_id )
+  CALL mp_bcast( prefix, ionode_id, world_comm )
+  CALL mp_bcast(tmp_dir, ionode_id, world_comm )
+  CALL mp_bcast( what, ionode_id, world_comm )
+  CALL mp_bcast( use_gmaps, ionode_id, world_comm )
   !
 
   spline_ps = .false.
@@ -75,7 +76,7 @@ PROGRAM pw2gw
   CALL read_file
   CALL openfil_pp
   !
-  CALL mp_bcast(spline_ps, ionode_id)
+  CALL mp_bcast(spline_ps, ionode_id, world_comm)
 #if defined __MPI
   kunittmp = kunit
 #else

@@ -88,6 +88,7 @@ CONTAINS
     USE io_global,          ONLY : stdout, ionode,ionode_id
     USE input_gw,           ONLY : input_options
     USE mp,                 ONLY : mp_bcast
+    USE mp_world,           ONLY : world_comm
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -122,9 +123,9 @@ CONTAINS
           enddo
           close(iun)
        endif
-       call mp_bcast(sr%diag(:,ii,1),ionode_id)
+       call mp_bcast(sr%diag(:,ii,1),ionode_id,world_comm)
     enddo
-    call mp_bcast(sr%grid,ionode_id)
+    call mp_bcast(sr%grid,ionode_id,world_comm)
     return
   END SUBROUTINE create_self_on_real
 
@@ -220,17 +221,17 @@ CONTAINS
        
     endif
 
-    call mp_bcast(ss%ontime, ionode_id)
-    call mp_bcast(ss%whole_s, ionode_id)
-    call mp_bcast(ss%n, ionode_id)
-    call mp_bcast(ss%max_i, ionode_id)
-    call mp_bcast(ss%i_min, ionode_id)
-    call mp_bcast(ss%i_max, ionode_id)
-    call mp_bcast(ss%tau, ionode_id)
-    call mp_bcast(ss%n_grid_fit, ionode_id)
-    call mp_bcast(ss%i_min_whole, ionode_id)
-    call mp_bcast(ss%i_max_whole, ionode_id)
-    call mp_bcast(ss%nspin, ionode_id)
+    call mp_bcast(ss%ontime, ionode_id,world_comm)
+    call mp_bcast(ss%whole_s, ionode_id,world_comm)
+    call mp_bcast(ss%n, ionode_id,world_comm)
+    call mp_bcast(ss%max_i, ionode_id,world_comm)
+    call mp_bcast(ss%i_min, ionode_id,world_comm)
+    call mp_bcast(ss%i_max, ionode_id,world_comm)
+    call mp_bcast(ss%tau, ionode_id,world_comm)
+    call mp_bcast(ss%n_grid_fit, ionode_id,world_comm)
+    call mp_bcast(ss%i_min_whole, ionode_id,world_comm)
+    call mp_bcast(ss%i_max_whole, ionode_id,world_comm)
+    call mp_bcast(ss%nspin, ionode_id,world_comm)
 
 !check for consistency
     if(ss%max_i/=options%max_i) then
@@ -287,15 +288,15 @@ CONTAINS
        close(iun)
     endif
    
-    call mp_bcast(ss%diag, ionode_id)
+    call mp_bcast(ss%diag, ionode_id,world_comm)
     if(ss%whole_s) then
-       call mp_bcast(ss%whole, ionode_id)
+       call mp_bcast(ss%whole, ionode_id,world_comm)
     endif
    
    
-    call mp_bcast(ss%diag_freq_fit, ionode_id)
+    call mp_bcast(ss%diag_freq_fit, ionode_id,world_comm)
     if(ss%whole_s) then
-       call mp_bcast(ss%whole_freq_fit, ionode_id)
+       call mp_bcast(ss%whole_freq_fit, ionode_id,world_comm)
     endif
 
     return
@@ -361,6 +362,7 @@ CONTAINS
 
     USE io_global,          ONLY : stdout, ionode, ionode_id
     USE mp,                 ONLY : mp_bcast
+    USE mp_world,           ONLY : world_comm
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
     TYPE(self_on_real),INTENT(out) :: sr!the self_energy descriptor to be written on file                
@@ -381,11 +383,11 @@ CONTAINS
        read(iun) sr%i_max
        read(iun) sr%nspin
     endif
-    call mp_bcast(sr%n, ionode_id)
-    call mp_bcast(sr%max_i,ionode_id)
-    call mp_bcast(sr%i_min,ionode_id)
-    call mp_bcast(sr%i_max,ionode_id)
-    call mp_bcast(sr%nspin,ionode_id)
+    call mp_bcast(sr%n, ionode_id,world_comm)
+    call mp_bcast(sr%max_i,ionode_id,world_comm)
+    call mp_bcast(sr%i_min,ionode_id,world_comm)
+    call mp_bcast(sr%i_max,ionode_id,world_comm)
+    call mp_bcast(sr%nspin,ionode_id,world_comm)
     allocate(sr%grid(sr%n))
     allocate(sr%diag(sr%n,sr%max_i,sr%nspin))
     if(ionode) then
@@ -393,8 +395,8 @@ CONTAINS
        read(iun) sr%diag(1:sr%n,1:sr%max_i,1:sr%nspin)
        close(iun)
     endif
-    call mp_bcast(sr%grid,ionode_id)
-    call mp_bcast(sr%diag,ionode_id)
+    call mp_bcast(sr%grid,ionode_id,world_comm)
+    call mp_bcast(sr%diag,ionode_id,world_comm)
 
     return
   end subroutine read_self_on_real

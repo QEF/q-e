@@ -11,6 +11,7 @@ bcast_d3_input.o : ../../Modules/control_flags.o
 bcast_d3_input.o : ../../Modules/io_files.o
 bcast_d3_input.o : ../../Modules/ions_base.o
 bcast_d3_input.o : ../../Modules/mp.o
+bcast_d3_input.o : ../../Modules/mp_world.o
 bcast_d3_input.o : ../../Modules/run_info.o
 bcast_d3_input.o : ../../PHonon/PH/phcom.o
 bcast_d3_input.o : ../../PW/src/pwcom.o
@@ -69,6 +70,7 @@ d3_readin.o : ../../Modules/io_global.o
 d3_readin.o : ../../Modules/ions_base.o
 d3_readin.o : ../../Modules/mp.o
 d3_readin.o : ../../Modules/mp_global.o
+d3_readin.o : ../../Modules/mp_world.o
 d3_readin.o : ../../Modules/noncol.o
 d3_readin.o : ../../Modules/run_info.o
 d3_readin.o : ../../Modules/uspp.o
@@ -78,6 +80,7 @@ d3_readin.o : d3com.o
 d3_recover.o : ../../Modules/io_files.o
 d3_recover.o : ../../Modules/io_global.o
 d3_recover.o : ../../Modules/mp.o
+d3_recover.o : ../../Modules/mp_world.o
 d3_recover.o : ../../PHonon/PH/phcom.o
 d3_recover.o : ../../PW/src/pwcom.o
 d3_recover.o : d3com.o
@@ -294,6 +297,7 @@ psymd0rho.o : d3com.o
 qstar_d3.o : ../../Modules/kind.o
 read_ef.o : ../../Modules/io_global.o
 read_ef.o : ../../Modules/mp.o
+read_ef.o : ../../Modules/mp_world.o
 read_ef.o : ../../PW/src/pwcom.o
 read_ef.o : d3com.o
 rotate_and_add_d3.o : ../../Modules/constants.o
@@ -319,6 +323,7 @@ set_sym_irr.o : ../../Modules/constants.o
 set_sym_irr.o : ../../Modules/kind.o
 set_sym_irr.o : ../../Modules/mp.o
 set_sym_irr.o : ../../Modules/mp_global.o
+set_sym_irr.o : ../../Modules/mp_world.o
 solve_linter_d3.o : ../../Modules/cell_base.o
 solve_linter_d3.o : ../../Modules/fft_base.o
 solve_linter_d3.o : ../../Modules/io_files.o

@@ -131,6 +131,7 @@ PROGRAM matdyn
   !
   USE kinds,      ONLY : DP
   USE mp,         ONLY : mp_bcast
+  USE mp_world,   ONLY : world_comm
   USE mp_global,  ONLY : mp_startup, mp_global_end
   USE environment, ONLY : environment_start, environment_end
   USE io_global,  ONLY : ionode, ionode_id, stdout
@@ -252,34 +253,34 @@ PROGRAM matdyn
      !
      !
      IF (ionode) READ (5,input,IOSTAT=ios)
-     CALL mp_bcast(ios, ionode_id) 
+     CALL mp_bcast(ios, ionode_id, world_comm) 
      CALL errore('matdyn', 'reading input namelist', ABS(ios))
-     CALL mp_bcast(dos,ionode_id)
-     CALL mp_bcast(deltae,ionode_id)
-     CALL mp_bcast(ndos,ionode_id)
-     CALL mp_bcast(nk1,ionode_id)
-     CALL mp_bcast(nk2,ionode_id)
-     CALL mp_bcast(nk3,ionode_id)
-     CALL mp_bcast(asr,ionode_id)
-     CALL mp_bcast(readtau,ionode_id)
-     CALL mp_bcast(flfrc,ionode_id)
-     CALL mp_bcast(fldos,ionode_id)
-     CALL mp_bcast(flfrq,ionode_id)
-     CALL mp_bcast(flvec,ionode_id)
-     CALL mp_bcast(fleig,ionode_id)
-     CALL mp_bcast(fldyn,ionode_id)
-     CALL mp_bcast(fltau,ionode_id)
-     CALL mp_bcast(amass,ionode_id)
-     CALL mp_bcast(amass_blk,ionode_id)
-     CALL mp_bcast(at,ionode_id)
-     CALL mp_bcast(ntyp,ionode_id)
-     CALL mp_bcast(l1,ionode_id)
-     CALL mp_bcast(l2,ionode_id)
-     CALL mp_bcast(l3,ionode_id)
-     CALL mp_bcast(la2f,ionode_id)
-     CALL mp_bcast(q_in_band_form,ionode_id)
-     CALL mp_bcast(eigen_similarity,ionode_id)
-     CALL mp_bcast(q_in_cryst_coord,ionode_id)
+     CALL mp_bcast(dos,ionode_id, world_comm)
+     CALL mp_bcast(deltae,ionode_id, world_comm)
+     CALL mp_bcast(ndos,ionode_id, world_comm)
+     CALL mp_bcast(nk1,ionode_id, world_comm)
+     CALL mp_bcast(nk2,ionode_id, world_comm)
+     CALL mp_bcast(nk3,ionode_id, world_comm)
+     CALL mp_bcast(asr,ionode_id, world_comm)
+     CALL mp_bcast(readtau,ionode_id, world_comm)
+     CALL mp_bcast(flfrc,ionode_id, world_comm)
+     CALL mp_bcast(fldos,ionode_id, world_comm)
+     CALL mp_bcast(flfrq,ionode_id, world_comm)
+     CALL mp_bcast(flvec,ionode_id, world_comm)
+     CALL mp_bcast(fleig,ionode_id, world_comm)
+     CALL mp_bcast(fldyn,ionode_id, world_comm)
+     CALL mp_bcast(fltau,ionode_id, world_comm)
+     CALL mp_bcast(amass,ionode_id, world_comm)
+     CALL mp_bcast(amass_blk,ionode_id, world_comm)
+     CALL mp_bcast(at,ionode_id, world_comm)
+     CALL mp_bcast(ntyp,ionode_id, world_comm)
+     CALL mp_bcast(l1,ionode_id, world_comm)
+     CALL mp_bcast(l2,ionode_id, world_comm)
+     CALL mp_bcast(l3,ionode_id, world_comm)
+     CALL mp_bcast(la2f,ionode_id, world_comm)
+     CALL mp_bcast(q_in_band_form,ionode_id, world_comm)
+     CALL mp_bcast(eigen_similarity,ionode_id, world_comm)
+     CALL mp_bcast(q_in_cryst_coord,ionode_id, world_comm)
 
      !
      ! read force constants
@@ -398,14 +399,14 @@ PROGRAM matdyn
         ! read q-point list
         !
         IF (ionode) READ (5,*) nq
-        CALL mp_bcast(nq, ionode_id)
+        CALL mp_bcast(nq, ionode_id, world_comm)
         ALLOCATE ( q(3,nq) )
         ALLOCATE( tetra(1,1) )
         IF (.NOT.q_in_band_form) THEN
            DO n = 1,nq
               IF (ionode) READ (5,*) (q(i,n),i=1,3)
            END DO
-           CALL mp_bcast(q, ionode_id)
+           CALL mp_bcast(q, ionode_id, world_comm)
            !
            IF (q_in_cryst_coord)  CALL cryst_to_cart(nq,q,bg,+1)
         ELSE
@@ -465,8 +466,8 @@ PROGRAM matdyn
            DEALLOCATE(letter)
            DEALLOCATE(label_list)
 
-           CALL mp_bcast(xqaux, ionode_id)
-           CALL mp_bcast(nqb, ionode_id)
+           CALL mp_bcast(xqaux, ionode_id, world_comm)
+           CALL mp_bcast(nqb, ionode_id, world_comm)
            IF (q_in_cryst_coord)  CALL cryst_to_cart(nq,xqaux,bg,+1)
            nqtot=SUM(nqb(1:nq-1))+1
            DO i=1,nq-1
@@ -775,6 +776,7 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   USE ifconstants,ONLY : tau => tau_blk, ityp => ityp_blk, frc, zeu
   USE io_global,  ONLY : ionode, ionode_id, stdout
   USE mp,         ONLY : mp_bcast 
+  USE mp_world,   ONLY : world_comm 
   USE constants,  ONLY : amu_ry
   !
   IMPLICIT NONE
@@ -801,12 +803,12 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
         read(1,*) ((at(i,j),i=1,3),j=1,3)
      end if
   ENDIF
-  CALL mp_bcast(ntyp, ionode_id)
-  CALL mp_bcast(nat, ionode_id)
-  CALL mp_bcast(ibrav, ionode_id)
-  CALL mp_bcast(celldm, ionode_id)
+  CALL mp_bcast(ntyp, ionode_id, world_comm)
+  CALL mp_bcast(nat, ionode_id, world_comm)
+  CALL mp_bcast(ibrav, ionode_id, world_comm)
+  CALL mp_bcast(celldm, ionode_id, world_comm)
   IF (ibrav==0) THEN
-     CALL mp_bcast(at, ionode_id)
+     CALL mp_bcast(at, ionode_id, world_comm)
   ENDIF
   !
   CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
@@ -818,9 +820,9 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   !
   DO nt = 1,ntyp
      IF (ionode) READ(1,*) i,atm,amass_from_file
-     CALL mp_bcast(i,ionode_id)
-     CALL mp_bcast(atm,ionode_id)
-     CALL mp_bcast(amass_from_file,ionode_id)
+     CALL mp_bcast(i,ionode_id, world_comm)
+     CALL mp_bcast(atm,ionode_id, world_comm)
+     CALL mp_bcast(amass_from_file,ionode_id, world_comm)
      IF (i.NE.nt) CALL errore ('readfc','wrong data read',nt)
      IF (amass(nt).EQ.0.d0) THEN
         amass(nt) = amass_from_file/amu_ry
@@ -833,35 +835,35 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   !
   DO na=1,nat
      IF (ionode) READ(1,*) i,ityp(na),(tau(j,na),j=1,3)
-     CALL mp_bcast(i,ionode_id)
+     CALL mp_bcast(i,ionode_id, world_comm)
      IF (i.NE.na) CALL errore ('readfc','wrong data read',na)
   END DO
-  CALL mp_bcast(ityp,ionode_id)
-  CALL mp_bcast(tau,ionode_id)
+  CALL mp_bcast(ityp,ionode_id, world_comm)
+  CALL mp_bcast(tau,ionode_id, world_comm)
   !
   !  read macroscopic variable
   !
   IF (ionode) READ (1,*) has_zstar
-  CALL mp_bcast(has_zstar,ionode_id)
+  CALL mp_bcast(has_zstar,ionode_id, world_comm)
   IF (has_zstar) THEN
      IF (ionode) READ(1,*) ((epsil(i,j),j=1,3),i=1,3)
-     CALL mp_bcast(epsil,ionode_id)
+     CALL mp_bcast(epsil,ionode_id, world_comm)
      IF (ionode) THEN
         DO na=1,nat
            READ(1,*)
            READ(1,*) ((zeu(i,j,na),j=1,3),i=1,3)
         END DO
      ENDIF
-     CALL mp_bcast(zeu,ionode_id)
+     CALL mp_bcast(zeu,ionode_id, world_comm)
   ELSE
      zeu  (:,:,:) = 0.d0
      epsil(:,:) = 0.d0
   END IF
   !
   IF (ionode) READ (1,*) nr1,nr2,nr3
-  CALL mp_bcast(nr1,ionode_id)
-  CALL mp_bcast(nr2,ionode_id)
-  CALL mp_bcast(nr3,ionode_id)
+  CALL mp_bcast(nr1,ionode_id, world_comm)
+  CALL mp_bcast(nr2,ionode_id, world_comm)
+  CALL mp_bcast(nr3,ionode_id, world_comm)
   !
   !  read real-space interatomic force constants
   !
@@ -872,10 +874,10 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
         DO na=1,nat
            DO nb=1,nat
               IF (ionode) READ (1,*) ibid, jbid, nabid, nbbid
-              CALL mp_bcast(ibid,ionode_id)
-              CALL mp_bcast(jbid,ionode_id)
-              CALL mp_bcast(nabid,ionode_id)
-              CALL mp_bcast(nbbid,ionode_id)
+              CALL mp_bcast(ibid,ionode_id, world_comm)
+              CALL mp_bcast(jbid,ionode_id, world_comm)
+              CALL mp_bcast(nabid,ionode_id, world_comm)
+              CALL mp_bcast(nbbid,ionode_id, world_comm)
               IF(i .NE.ibid  .OR. j .NE.jbid .OR.                   &
                  na.NE.nabid .OR. nb.NE.nbbid)                      &
                  CALL errore  ('readfc','error in reading',1)
@@ -883,7 +885,7 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
                           frc(m1,m2,m3,i,j,na,nb),                  &
                            m1=1,nr1),m2=1,nr2),m3=1,nr3)
                
-              CALL mp_bcast(frc(:,:,:,i,j,na,nb),ionode_id)
+              CALL mp_bcast(frc(:,:,:,i,j,na,nb),ionode_id, world_comm)
            END DO
         END DO
      END DO
@@ -1913,6 +1915,7 @@ SUBROUTINE read_tau &
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : ionode_id, ionode
   USE mp,         ONLY : mp_bcast
+  USE mp_world,   ONLY : world_comm
   !
   IMPLICIT NONE
   !
@@ -1927,8 +1930,8 @@ SUBROUTINE read_tau &
   !
   DO na=1,nat
      IF (ionode) READ(5,*) (tau(i,na),i=1,3), ityp(na)
-     CALL mp_bcast(tau(:,na),ionode_id)
-     CALL mp_bcast(ityp(na),ionode_id)
+     CALL mp_bcast(tau(:,na),ionode_id, world_comm)
+     CALL mp_bcast(ityp(na),ionode_id, world_comm)
      IF (ityp(na).LE.0 .OR. ityp(na) .GT. ntyp) &
           CALL errore('read_tau',' wrong atomic type', na)
      DO na_blk=1,nat_blk
@@ -2030,6 +2033,7 @@ SUBROUTINE a2Fdos &
   USE kinds,      ONLY : DP
   USE io_global,   ONLY : ionode, ionode_id
   USE mp,          ONLY : mp_bcast
+  USE mp_world,    ONLY : world_comm
   USE mp_global,   ONLY : intra_image_comm
   USE ifconstants, ONLY : zeu, tau_blk
   USE constants,  ONLY : pi, RY_TO_THZ
@@ -2116,7 +2120,7 @@ SUBROUTINE a2Fdos &
               read(300,*) (z(na,m),m=1,nmodes)
            end do ! na
         ENDIF
-        CALL mp_bcast(z, ionode_id)
+        CALL mp_bcast(z, ionode_id, world_comm)
         
         !
         CALL setgam (q(1,n), gam, nat, at, bg, tau, itau_blk, nsc, alat, &
@@ -2437,6 +2441,7 @@ subroutine readfg ( ifn, nr1, nr2, nr3, nat, frcg )
   USE kinds,       ONLY : DP
   USE io_global,   ONLY : ionode, ionode_id, stdout
   USE mp,          ONLY : mp_bcast
+  USE mp_world,    ONLY : world_comm
   implicit none
   ! I/O variable
   integer, intent(in) ::  nr1,nr2,nr3, nat
@@ -2447,9 +2452,9 @@ subroutine readfg ( ifn, nr1, nr2, nr3, nat, frcg )
   !
   !
   IF (ionode) READ (ifn,*) m1, m2, m3
-  CALL mp_bcast(m1, ionode_id)
-  CALL mp_bcast(m2, ionode_id)
-  CALL mp_bcast(m3, ionode_id)
+  CALL mp_bcast(m1, ionode_id, world_comm)
+  CALL mp_bcast(m2, ionode_id, world_comm)
+  CALL mp_bcast(m3, ionode_id, world_comm)
   if ( m1 /= nr1 .or. m2 /= nr2 .or. m3 /= nr3) &
        call errore('readfg','inconsistent nr1, nr2, nr3 read',1)
   do i=1,3
@@ -2457,10 +2462,10 @@ subroutine readfg ( ifn, nr1, nr2, nr3, nat, frcg )
         do na=1,nat
            do nb=1,nat
               IF (ionode) read (ifn,*) ibid, jbid, nabid, nbbid
-              CALL mp_bcast(ibid, ionode_id)
-              CALL mp_bcast(jbid, ionode_id)
-              CALL mp_bcast(nabid, ionode_id)
-              CALL mp_bcast(nbbid, ionode_id)
+              CALL mp_bcast(ibid, ionode_id, world_comm)
+              CALL mp_bcast(jbid, ionode_id, world_comm)
+              CALL mp_bcast(nabid, ionode_id, world_comm)
+              CALL mp_bcast(nbbid, ionode_id, world_comm)
               
               if(i.ne.ibid.or.j.ne.jbid.or.na.ne.nabid.or.nb.ne.nbbid)  then
                   write(stdout,*) i,j,na,nb,'  <>  ', ibid, jbid, nabid, nbbid
@@ -2470,7 +2475,7 @@ subroutine readfg ( ifn, nr1, nr2, nr3, nat, frcg )
                                  frcg(m1,m2,m3,i,j,na,nb), &
                                  m1=1,nr1),m2=1,nr2),m3=1,nr3)
               endif
-              CALL mp_bcast(frcg(:,:,:,i,j,na,nb), ionode_id)
+              CALL mp_bcast(frcg(:,:,:,i,j,na,nb), ionode_id, world_comm)
            end do
         end do
      end do

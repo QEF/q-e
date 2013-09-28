@@ -35,6 +35,7 @@ SUBROUTINE set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
   USE constants, ONLY : tpi
   USE mp_global, ONLY : mpime, root
   USE mp,        ONLY : mp_bcast
+  USE mp_world,  ONLY : world_comm
   !
   IMPLICIT NONE
 !
@@ -223,17 +224,17 @@ SUBROUTINE set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
      !
   END IF
 
-  CALL mp_bcast (gi, root)
-  CALL mp_bcast (gimq, root)
-  CALL mp_bcast (t, root)
-  CALL mp_bcast (tmq, root)
-  CALL mp_bcast (u, root)
-  CALL mp_bcast (nsymq, root)
-  CALL mp_bcast (npert, root)
-  CALL mp_bcast (nirr, root)
-  CALL mp_bcast (irotmq, root)
-  CALL mp_bcast (irgq, root)
-  CALL mp_bcast (minus_q, root)
+  CALL mp_bcast (gi, root, world_comm)
+  CALL mp_bcast (gimq, root, world_comm)
+  CALL mp_bcast (t, root, world_comm)
+  CALL mp_bcast (tmq, root, world_comm)
+  CALL mp_bcast (u, root, world_comm)
+  CALL mp_bcast (nsymq, root, world_comm)
+  CALL mp_bcast (npert, root, world_comm)
+  CALL mp_bcast (nirr, root, world_comm)
+  CALL mp_bcast (irotmq, root, world_comm)
+  CALL mp_bcast (irgq, root, world_comm)
+  CALL mp_bcast (minus_q, root, world_comm)
 
   RETURN
 END SUBROUTINE set_sym_irr

@@ -72,6 +72,7 @@ SUBROUTINE extract (filplot,plot_num)
   USE noncollin_module, ONLY : i_cons
   USE paw_variables, ONLY : okpaw
   USE mp,        ONLY : mp_bcast
+  USE mp_world,  ONLY : world_comm
   USE constants, ONLY : rytoev
 
   IMPLICIT NONE
@@ -121,26 +122,26 @@ SUBROUTINE extract (filplot,plot_num)
      !
   ENDIF
   !
-  CALL mp_bcast (ios, ionode_id)
+  CALL mp_bcast (ios, ionode_id, world_comm)
   !
   IF ( ios /= 0) CALL errore ('postproc', 'reading inputpp namelist', abs(ios))
   !
   ! ... Broadcast variables
   !
-  CALL mp_bcast( tmp_dir, ionode_id )
-  CALL mp_bcast( prefix, ionode_id )
-  CALL mp_bcast( plot_num, ionode_id )
-  CALL mp_bcast( sample_bias, ionode_id )
-  CALL mp_bcast( spin_component, ionode_id )
-  CALL mp_bcast( z, ionode_id )
-  CALL mp_bcast( dz, ionode_id )
-  CALL mp_bcast( emin, ionode_id )
-  CALL mp_bcast( emax, ionode_id )
-  CALL mp_bcast( kband, ionode_id )
-  CALL mp_bcast( kpoint, ionode_id )
-  CALL mp_bcast( filplot, ionode_id )
-  CALL mp_bcast( lsign, ionode_id )
-  CALL mp_bcast( epsilon, ionode_id )
+  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
+  CALL mp_bcast( prefix, ionode_id, world_comm )
+  CALL mp_bcast( plot_num, ionode_id, world_comm )
+  CALL mp_bcast( sample_bias, ionode_id, world_comm )
+  CALL mp_bcast( spin_component, ionode_id, world_comm )
+  CALL mp_bcast( z, ionode_id, world_comm )
+  CALL mp_bcast( dz, ionode_id, world_comm )
+  CALL mp_bcast( emin, ionode_id, world_comm )
+  CALL mp_bcast( emax, ionode_id, world_comm )
+  CALL mp_bcast( kband, ionode_id, world_comm )
+  CALL mp_bcast( kpoint, ionode_id, world_comm )
+  CALL mp_bcast( filplot, ionode_id, world_comm )
+  CALL mp_bcast( lsign, ionode_id, world_comm )
+  CALL mp_bcast( epsilon, ionode_id, world_comm )
   !
   ! no task specified: do nothing and return
   !

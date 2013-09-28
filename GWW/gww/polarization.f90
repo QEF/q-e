@@ -264,11 +264,11 @@
        read(iung) pw%numpw
        read(iung) pw%factor
     endif
-    call mp_bcast(pw%label,ionode_id)
-    call mp_bcast(pw%ontime,ionode_id)
-    call mp_bcast(pw%time,ionode_id)
-    call mp_bcast(pw%numpw,ionode_id)
-    call mp_bcast(pw%factor,ionode_id)
+    call mp_bcast(pw%label,ionode_id,world_comm)
+    call mp_bcast(pw%ontime,ionode_id,world_comm)
+    call mp_bcast(pw%time,ionode_id,world_comm)
+    call mp_bcast(pw%numpw,ionode_id,world_comm)
+    call mp_bcast(pw%factor,ionode_id,world_comm)
  
     allocate(pw%pw(pw%numpw,pw%numpw))
     if(ionode) then
@@ -295,7 +295,7 @@
     endif
     do iw=1,pw%numpw
        call mp_barrier( world_comm )
-       call mp_bcast(pw%pw(:,iw),ionode_id)
+       call mp_bcast(pw%pw(:,iw),ionode_id,world_comm)
     enddo
 
     return

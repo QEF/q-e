@@ -252,9 +252,9 @@
          call read_polaw_range( 0, pw, options%debug, 1, 1, .true. )
          write(stdout,*) 'Dopo read_polaw_range'!ATTENZIONE
       end if
-      call mp_bcast( pw%numpw,  ipown )
-      call mp_bcast( pw%ontime, ipown )
-      call mp_bcast( pw%factor, ipown )
+      call mp_bcast( pw%numpw,  ipown, world_comm )
+      call mp_bcast( pw%ontime, ipown, world_comm )
+      call mp_bcast( pw%factor, ipown, world_comm )
 
       numpw  = pw%numpw
       ontime = pw%ontime

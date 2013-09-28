@@ -52,6 +52,7 @@ MODULE w_divergence
 
      USE io_global,            ONLY : stdout, ionode, ionode_id
      USE mp,                   ONLY : mp_bcast
+     USE mp_world,             ONLY : world_comm
 
      implicit none
 
@@ -71,9 +72,9 @@ MODULE w_divergence
         read(iun) gt%tau
      endif
 
-     call mp_bcast(gt%max_i, ionode_id)
-     call mp_bcast(gt%n, ionode_id)
-     call mp_bcast(gt%tau, ionode_id)
+     call mp_bcast(gt%max_i, ionode_id,world_comm)
+     call mp_bcast(gt%n, ionode_id,world_comm)
+     call mp_bcast(gt%tau, ionode_id,world_comm)
      
      allocate(gt%ex(gt%max_i,2*gt%n+2))
      allocate(gt%inv_epsi(2*gt%n+1))
@@ -89,7 +90,7 @@ MODULE w_divergence
         deallocate(buf)
      endif
 
-     call mp_bcast(gt%ex(:,:),ionode_id)
+     call mp_bcast(gt%ex(:,:),ionode_id,world_comm)
 
      return
    END SUBROUTINE read_data_pw_gv_time
@@ -128,6 +129,7 @@ MODULE w_divergence
 !read from file
      USE io_global,            ONLY : ionode, ionode_id
      USE mp,                   ONLY : mp_bcast
+     USE mp_world,             ONLY : world_comm
 
      implicit none
      INTEGER, EXTERNAL :: find_free_unit
@@ -146,11 +148,11 @@ MODULE w_divergence
          read(iun) gt%ontime
       endif
 
-      call mp_bcast(gt%n, ionode_id)
-      call mp_bcast(gt%omega, ionode_id)
-      call mp_bcast(gt%tau, ionode_id)
-      call mp_bcast(gt%max_i, ionode_id)
-      call mp_bcast(gt%ontime, ionode_id)
+      call mp_bcast(gt%n, ionode_id,world_comm)
+      call mp_bcast(gt%omega, ionode_id,world_comm)
+      call mp_bcast(gt%tau, ionode_id,world_comm)
+      call mp_bcast(gt%max_i, ionode_id,world_comm)
+      call mp_bcast(gt%ontime, ionode_id,world_comm)
 
       allocate(gt%ex(gt%max_i,2*gt%n+2))
       allocate(gt%inv_epsi(2*gt%n+1))
@@ -164,8 +166,8 @@ MODULE w_divergence
          close(iun)
       endif
       
-      call mp_bcast(gt%ex(:,:), ionode_id)
-      call mp_bcast(gt%inv_epsi(:), ionode_id)
+      call mp_bcast(gt%ex(:,:), ionode_id,world_comm)
+      call mp_bcast(gt%inv_epsi(:), ionode_id,world_comm)
 
       return
     END SUBROUTINE read_gv_time

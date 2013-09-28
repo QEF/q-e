@@ -12,6 +12,7 @@ subroutine write_results
   use kinds,        only : dp
   use io_global, only : stdout, ionode_id, ionode
   use mp,        only : mp_bcast
+  use mp_world,  only : world_comm
   use constants, only : eps6
   use ld1inc,    only : title, rel, zed, lsd, nspin, isic, latt, beta, tr2, &
                         grid, enzero, etot, ekin, encl, ehrt, evxt, ecxc, &
@@ -432,7 +433,7 @@ subroutine write_results
   if (file_charge.ne.' ') then
      if (ionode) &
         open(unit=20,file=file_charge, status='unknown', iostat=ios, err=100 )
-100  call mp_bcast(ios, ionode_id)
+100  call mp_bcast(ios, ionode_id, world_comm)
      call errore('write_results','opening file'//file_charge,abs(ios))
      if (ionode) then
         IF (lsd<1) THEN

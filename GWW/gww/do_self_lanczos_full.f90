@@ -124,7 +124,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
            n_list(2)=0
         endif
      endif
-     call mp_bcast(n_list,ionode_id)
+     call mp_bcast(n_list,ionode_id,world_comm)
      allocate(i_list(max(n_list(1),n_list(2)),2))
      i_list=0
      if(ionode) then
@@ -139,7 +139,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
            close(iun2)
         endif
      endif
-     call mp_bcast(i_list,ionode_id)
+     call mp_bcast(i_list,ionode_id,world_comm)
      n_cycles=n_list(1)
   endif
 
@@ -237,7 +237,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
         call free_memory_polaw(ww)
      enddo
      numpw=ww%numpw
-     call mp_bcast(numpw, ionode_id)
+     call mp_bcast(numpw, ionode_id,world_comm)
      if(nbegin > tf%n) allocate(pw_mat(numpw,numpw,l_blk))
 
 !Fourier trasform reducible polarizability matrices to imaginary time

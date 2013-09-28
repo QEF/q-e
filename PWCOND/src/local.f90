@@ -282,8 +282,8 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
 
 #ifdef __MPI
   CALL mp_barrier(world_comm)
-  CALL mp_bcast(n2d,ionode_id)
-  CALL mp_bcast(psibase,ionode_id)
+  CALL mp_bcast(n2d,ionode_id, world_comm)
+  CALL mp_bcast(psibase,ionode_id, world_comm)
 #endif
 
   deallocate( gp )

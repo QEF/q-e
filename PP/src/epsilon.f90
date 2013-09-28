@@ -137,6 +137,7 @@ PROGRAM epsilon
   USE kinds,       ONLY : DP
   USE io_global,   ONLY : stdout, ionode, ionode_id
   USE mp,          ONLY : mp_bcast
+  USE mp_world,    ONLY : world_comm
   USE iotk_module
   USE xml_io_base
   USE io_files,    ONLY : tmp_dir, prefix, outdir
@@ -208,7 +209,7 @@ PROGRAM epsilon
   !
   IF ( ionode ) READ (5, inputpp, IOSTAT=ios)
   !
-  CALL mp_bcast ( ios, ionode_id )
+  CALL mp_bcast ( ios, ionode_id, world_comm )
   IF (ios/=0) CALL errore('epsilon', 'reading namelist INPUTPP', abs(ios))
   !
   IF ( ionode ) THEN
@@ -219,26 +220,26 @@ PROGRAM epsilon
      !
   ENDIF
   !
-  CALL mp_bcast ( ios, ionode_id )
+  CALL mp_bcast ( ios, ionode_id, world_comm )
   IF (ios/=0) CALL errore('epsilon', 'reading namelist ENERGY_GRID', abs(ios))
   !
   ! ... Broadcast variables
   !
   IF (ionode) WRITE( stdout, "( 5x, 'Broadcasting variables...' ) " )
 
-  CALL mp_bcast( smeartype, ionode_id )
-  CALL mp_bcast( calculation, ionode_id )
-  CALL mp_bcast( prefix, ionode_id )
-  CALL mp_bcast( tmp_dir, ionode_id )
-  CALL mp_bcast( shift, ionode_id )
-  CALL mp_bcast( outdir, ionode_id )
-  CALL mp_bcast( intrasmear, ionode_id )
-  CALL mp_bcast( intersmear, ionode_id)
-  CALL mp_bcast( wmax, ionode_id )
-  CALL mp_bcast( wmin, ionode_id )
-  CALL mp_bcast( nw, ionode_id )
-  CALL mp_bcast( nbndmin, ionode_id )
-  CALL mp_bcast( nbndmax, ionode_id )
+  CALL mp_bcast( smeartype, ionode_id, world_comm )
+  CALL mp_bcast( calculation, ionode_id, world_comm )
+  CALL mp_bcast( prefix, ionode_id, world_comm )
+  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
+  CALL mp_bcast( shift, ionode_id, world_comm )
+  CALL mp_bcast( outdir, ionode_id, world_comm )
+  CALL mp_bcast( intrasmear, ionode_id, world_comm )
+  CALL mp_bcast( intersmear, ionode_id, world_comm)
+  CALL mp_bcast( wmax, ionode_id, world_comm )
+  CALL mp_bcast( wmin, ionode_id, world_comm )
+  CALL mp_bcast( nw, ionode_id, world_comm )
+  CALL mp_bcast( nbndmin, ionode_id, world_comm )
+  CALL mp_bcast( nbndmax, ionode_id, world_comm )
 
   !
   ! read PW simulation parameters from prefix.save/data-file.xml

@@ -218,6 +218,7 @@
     USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : stdout, ionode, ionode_id
     USE mp,                 ONLY : mp_bcast
+    USE mp_world,           ONLY : world_comm
 
     implicit none
 
@@ -253,9 +254,9 @@
        endif
     endif
 
-    call mp_bcast(cr%numpw, ionode_id)
-    call mp_bcast(cr%nums, ionode_id)
-    call mp_bcast(cr%max_i, ionode_id)
+    call mp_bcast(cr%numpw, ionode_id,world_comm)
+    call mp_bcast(cr%nums, ionode_id,world_comm)
+    call mp_bcast(cr%max_i, ionode_id,world_comm)
 
     maxl=cr%numpw!TEMPORARY SOLUTION ATTENZIONE
     maxl=cr%nums
@@ -294,11 +295,11 @@
           enddo
        endif
     endif
-    call mp_bcast(cr%numl(:), ionode_id)
-    call mp_bcast(cr%l(:,:), ionode_id)
+    call mp_bcast(cr%numl(:), ionode_id,world_comm)
+    call mp_bcast(cr%l(:,:), ionode_id,world_comm)
     write(stdout,*) 'CR-SEND L'
     do ii=1,cr%max_i
-       call mp_bcast(cr%q(:,:,ii), ionode_id)
+       call mp_bcast(cr%q(:,:,ii), ionode_id,world_comm)
        write(stdout,*) 'CR-SEND Q',ii
     enddo
     if(ionode) close(iun)
@@ -361,6 +362,7 @@
     USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : stdout, ionode, ionode_id
     USE mp,                 ONLY : mp_bcast
+    USE mp_world,           ONLY : world_comm
 
     implicit none
 
@@ -396,9 +398,9 @@
        endif
     endif
 
-    call mp_bcast(cr%numpw, ionode_id)
-    call mp_bcast(cr%nums, ionode_id)
-    call mp_bcast(cr%max_i, ionode_id)
+    call mp_bcast(cr%numpw, ionode_id,world_comm)
+    call mp_bcast(cr%nums, ionode_id,world_comm)
+    call mp_bcast(cr%max_i, ionode_id,world_comm)
 
     maxl=cr%nums
     allocate(cr%numl(cr%numpw))
@@ -424,8 +426,8 @@
           enddo
        endif
     endif
-    call mp_bcast(cr%numl(:), ionode_id)
-    call mp_bcast(cr%l(:,:), ionode_id)
+    call mp_bcast(cr%numl(:), ionode_id,world_comm)
+    call mp_bcast(cr%l(:,:), ionode_id,world_comm)
     write(stdout,*) 'CR-SEND L'
     if(ionode) close(iun)
   END SUBROUTINE read_contraction_index
@@ -1032,6 +1034,7 @@
     USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : ionode, ionode_id
     USE mp,                 ONLY : mp_bcast
+    USE mp_world,           ONLY : world_comm
     implicit none
 
     INTEGER, EXTERNAL :: find_free_unit
@@ -1066,10 +1069,10 @@
           read(iun,*) crs%state
        endif
     endif
-    call mp_bcast(crs%numpw, ionode_id)
-    call mp_bcast(crs%nums, ionode_id)
-    call mp_bcast( crs%max_i, ionode_id)
-    call mp_bcast(crs%state, ionode_id)
+    call mp_bcast(crs%numpw, ionode_id,world_comm)
+    call mp_bcast(crs%nums, ionode_id,world_comm)
+    call mp_bcast( crs%max_i, ionode_id,world_comm)
+    call mp_bcast(crs%state, ionode_id,world_comm)
 
     maxl=crs%nums
     allocate(crs%q(crs%numpw,maxl))
@@ -1089,7 +1092,7 @@
        close(iun)
     endif
     do iw=1,crs%numpw
-       call mp_bcast( crs%q(iw,1:cri%numl(iw)), ionode_id)
+       call mp_bcast( crs%q(iw,1:cri%numl(iw)), ionode_id,world_comm)
     enddo
     return
 

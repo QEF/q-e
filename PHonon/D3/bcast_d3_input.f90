@@ -18,6 +18,7 @@ subroutine bcast_d3_input
   use phcom
   use d3com
   use mp, only: mp_bcast
+  use mp_world, only: world_comm
   use io_files, only: prefix, tmp_dir
   use ions_base, only: amass
   use control_flags, only: iverbosity
@@ -28,33 +29,33 @@ subroutine bcast_d3_input
   !
   ! logicals
   !
-  call mp_bcast (lgamma, root)
-  call mp_bcast (wraux, root)
-  call mp_bcast (recv, root)
-  call mp_bcast (testflag,root)
+  call mp_bcast (lgamma, root, world_comm)
+  call mp_bcast (wraux, root, world_comm)
+  call mp_bcast (recv, root, world_comm)
+  call mp_bcast (testflag,root, world_comm)
   !
   ! integers
   !
-  call mp_bcast (iverbosity, root)
-  call mp_bcast (testint, root)
-  call mp_bcast (q0mode_todo, root)
-  call mp_bcast (istop, root)
+  call mp_bcast (iverbosity, root, world_comm)
+  call mp_bcast (testint, root, world_comm)
+  call mp_bcast (q0mode_todo, root, world_comm)
+  call mp_bcast (istop, root, world_comm)
   !
   ! real*8
   !
-  call mp_bcast (amass, root)
-  call mp_bcast (xq, root)
-  call mp_bcast (ethr_ph, root)
-  call mp_bcast (testreal, root)
+  call mp_bcast (amass, root, world_comm)
+  call mp_bcast (xq, root, world_comm)
+  call mp_bcast (ethr_ph, root, world_comm)
+  call mp_bcast (testreal, root, world_comm)
   !
   ! characters
   !
-  call mp_bcast (title, root)
-  call mp_bcast (fildyn, root)
-  call mp_bcast (fildrho, root)
-  call mp_bcast (fild0rho, root)
-  call mp_bcast (tmp_dir, root)
-  call mp_bcast (prefix, root)
+  call mp_bcast (title, root, world_comm)
+  call mp_bcast (fildyn, root, world_comm)
+  call mp_bcast (fildrho, root, world_comm)
+  call mp_bcast (fild0rho, root, world_comm)
+  call mp_bcast (tmp_dir, root, world_comm)
+  call mp_bcast (prefix, root, world_comm)
 #endif
   return
 end subroutine bcast_d3_input

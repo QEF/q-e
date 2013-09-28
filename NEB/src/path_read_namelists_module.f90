@@ -83,27 +83,28 @@ MODULE path_read_namelists_module
        !
        USE io_global, ONLY: ionode_id
        USE mp,        ONLY: mp_bcast
+       USE mp_world,  ONLY: world_comm
        USE path_input_parameters_module
        !
        IMPLICIT NONE
        !
        ! ... "path" variables broadcast
        !
-       CALL mp_bcast ( restart_mode,      ionode_id )
-       CALL mp_bcast ( string_method,     ionode_id ) 
-       CALL mp_bcast( num_of_images,      ionode_id )
-       CALL mp_bcast( first_last_opt,     ionode_id )
-       CALL mp_bcast( use_masses,         ionode_id )
-       CALL mp_bcast( use_freezing,       ionode_id )
-       CALL mp_bcast( fixed_tan,          ionode_id )
-       CALL mp_bcast( CI_scheme,          ionode_id )
-       CALL mp_bcast( opt_scheme,         ionode_id )
-       CALL mp_bcast( temp_req,           ionode_id )
-       CALL mp_bcast( ds,                 ionode_id )
-       CALL mp_bcast( k_max,              ionode_id )
-       CALL mp_bcast( k_min,              ionode_id )
-       CALL mp_bcast( path_thr,           ionode_id )
-       CALL mp_bcast( nstep_path,         ionode_id )
+       CALL mp_bcast ( restart_mode,      ionode_id, world_comm )
+       CALL mp_bcast ( string_method,     ionode_id, world_comm ) 
+       CALL mp_bcast( num_of_images,      ionode_id, world_comm )
+       CALL mp_bcast( first_last_opt,     ionode_id, world_comm )
+       CALL mp_bcast( use_masses,         ionode_id, world_comm )
+       CALL mp_bcast( use_freezing,       ionode_id, world_comm )
+       CALL mp_bcast( fixed_tan,          ionode_id, world_comm )
+       CALL mp_bcast( CI_scheme,          ionode_id, world_comm )
+       CALL mp_bcast( opt_scheme,         ionode_id, world_comm )
+       CALL mp_bcast( temp_req,           ionode_id, world_comm )
+       CALL mp_bcast( ds,                 ionode_id, world_comm )
+       CALL mp_bcast( k_max,              ionode_id, world_comm )
+       CALL mp_bcast( k_min,              ionode_id, world_comm )
+       CALL mp_bcast( path_thr,           ionode_id, world_comm )
+       CALL mp_bcast( nstep_path,         ionode_id, world_comm )
        !
        RETURN
        !
@@ -179,6 +180,7 @@ MODULE path_read_namelists_module
        !
        USE io_global, ONLY : ionode, ionode_id
        USE mp,        ONLY : mp_bcast
+       USE mp_world,  ONLY : world_comm
        !
        IMPLICIT NONE
        !
@@ -210,7 +212,7 @@ MODULE path_read_namelists_module
           READ( unit, path, iostat = ios )
           !
        END IF
-       CALL mp_bcast( ios, ionode_id )
+       CALL mp_bcast( ios, ionode_id, world_comm )
        IF( ios /= 0 ) THEN
           CALL errore( ' path_read_namelists ', &
                      & ' reading namelist path ', ABS(ios) )

@@ -181,6 +181,7 @@ PROGRAM PAWplot
   USE io_global,  ONLY : ionode, ionode_id, stdout
   USE mp_global,  ONLY : mp_startup
   USE mp,         ONLY : mp_bcast
+  USE mp_world,   ONLY : world_comm
   USE environment,ONLY : environment_start
   USE lsda_mod,   ONLY : nspin, current_spin
   USE cell_base,  ONLY : bg
@@ -242,23 +243,23 @@ PROGRAM PAWplot
      tmp_dir = trimcheck ( outdir )
      !
   ENDIF
-  CALL mp_bcast (ios, ionode_id)
+  CALL mp_bcast (ios, ionode_id, world_comm)
   IF ( ios /= 0) &
        CALL errore ('pawplot', 'reading inputpp namelist', abs(ios))
   !
   ! ... Broadcast variables
   !
-  CALL mp_bcast( e1, ionode_id )
-  CALL mp_bcast( e2, ionode_id )
-  CALL mp_bcast( e3, ionode_id )
-  CALL mp_bcast( x0, ionode_id )
-  CALL mp_bcast( nx, ionode_id )
-  CALL mp_bcast( ny, ionode_id )
-  CALL mp_bcast( nz, ionode_id )
-  CALL mp_bcast( tmp_dir, ionode_id )
-  CALL mp_bcast( prefix, ionode_id )
-  CALL mp_bcast( plot, ionode_id )
-  CALL mp_bcast( spin_component, ionode_id )
+  CALL mp_bcast( e1, ionode_id, world_comm )
+  CALL mp_bcast( e2, ionode_id, world_comm )
+  CALL mp_bcast( e3, ionode_id, world_comm )
+  CALL mp_bcast( x0, ionode_id, world_comm )
+  CALL mp_bcast( nx, ionode_id, world_comm )
+  CALL mp_bcast( ny, ionode_id, world_comm )
+  CALL mp_bcast( nz, ionode_id, world_comm )
+  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
+  CALL mp_bcast( prefix, ionode_id, world_comm )
+  CALL mp_bcast( plot, ionode_id, world_comm )
+  CALL mp_bcast( spin_component, ionode_id, world_comm )
   !
   !   Now allocate space for pwscf variables, read and check them.
   !

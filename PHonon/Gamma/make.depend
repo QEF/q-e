@@ -19,6 +19,7 @@ cg_readin.o : ../../Modules/ions_base.o
 cg_readin.o : ../../Modules/kind.o
 cg_readin.o : ../../Modules/mp.o
 cg_readin.o : ../../Modules/mp_global.o
+cg_readin.o : ../../Modules/mp_world.o
 cg_readin.o : ../../Modules/noncol.o
 cg_readin.o : ../../Modules/uspp.o
 cg_readin.o : ../../PW/src/pwcom.o

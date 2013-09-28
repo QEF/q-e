@@ -28,7 +28,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
   USE klist,                ONLY : xk
   USE control_flags,        ONLY : isolve
   USE io_files, ONLY : prefix, diropn
-  USE mp_global, ONLY : mpime, nproc
+  USE mp_world, ONLY : mpime, nproc, world_comm
   USE fft_base,             ONLY : dfftp, dffts
 
   implicit none
@@ -207,7 +207,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
         close(iunfcw)
      endif
  
-     call mp_bcast(fcw_number, ionode_id)
+     call mp_bcast(fcw_number, ionode_id,world_comm)
 
      if(numpw>fcw_number) then
         numpw=fcw_number
@@ -377,7 +377,7 @@ subroutine o_extra_pw( p_basis, numwp, numwp_max,cutoff)
   USE g_psi_mod,            ONLY : h_diag
   USE mp,                   ONLY : mp_sum,mp_bcast
   USE klist,                ONLY : xk
-  USE mp_global,            ONLY : mpime, nproc
+  USE mp_world,             ONLY : mpime, nproc, world_comm
   USE wannier_gw,           ONLY : optimal_options
 
   implicit none
@@ -462,7 +462,7 @@ subroutine  update_numwp(numwp, cutoff)
   USE g_psi_mod,            ONLY : h_diag
   USE mp,                   ONLY : mp_sum,mp_bcast
   USE klist,                ONLY : xk
-  USE mp_global, ONLY : mpime, nproc
+  USE mp_world,             ONLY : mpime, nproc, world_comm
 
 
 

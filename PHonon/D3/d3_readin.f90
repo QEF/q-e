@@ -25,6 +25,7 @@ SUBROUTINE d3_readin()
   USE io_global,     ONLY : ionode, ionode_id
   USE mp_global, ONLY : nbgrp, get_ntask_groups
   USE mp,            ONLY : mp_bcast
+  USE mp_world,      ONLY : world_comm
   !
   IMPLICIT NONE
   !
@@ -61,7 +62,7 @@ SUBROUTINE d3_readin()
      !
   END IF
   !
-  CALL mp_bcast(ios, ionode_id )
+  CALL mp_bcast(ios, ionode_id, world_comm )
   IF (ios/=0) CALL errore ('d3_readin', 'reading title ', ABS (ios) )
   !
   IF ( ionode ) THEN
@@ -92,7 +93,7 @@ SUBROUTINE d3_readin()
      !
   END IF
   !
-  CALL mp_bcast(ios, ionode_id )
+  CALL mp_bcast(ios, ionode_id, world_comm )
   IF (ios/=0) CALL errore ('d3_readin', 'reading inputph namelist', ABS (ios) )
   !
   IF ( ionode ) THEN
@@ -106,7 +107,7 @@ SUBROUTINE d3_readin()
      !
   END IF
   !
-  CALL mp_bcast(ios, ionode_id )
+  CALL mp_bcast(ios, ionode_id, world_comm )
   IF (ios/=0) CALL errore ('d3_readin', 'reading xq', ABS (ios) )
   !
   CALL bcast_d3_input()

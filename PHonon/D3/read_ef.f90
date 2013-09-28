@@ -16,6 +16,7 @@ SUBROUTINE read_ef()
   USE d3com
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_bcast
+  USE mp_world,  ONLY : world_comm
   !
   IMPLICIT NONE
   !
@@ -31,11 +32,11 @@ SUBROUTINE read_ef()
      !
   END IF
 
-100 CALL mp_bcast(ios, ionode_id)
+100 CALL mp_bcast(ios, ionode_id, world_comm)
 
   CALL errore ('d3_valence', 'reading iuef', ABS (ios) )
 
-  CALL mp_bcast( ef_sh, ionode_id )
+  CALL mp_bcast( ef_sh, ionode_id, world_comm )
 
   RETURN
 END SUBROUTINE read_ef

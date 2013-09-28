@@ -22,6 +22,7 @@ PROGRAM pmw
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE io_files,   ONLY : prefix, tmp_dir
   USE mp,         ONLY : mp_bcast
+  USE mp_world,   ONLY : world_comm
   USE mp_global,  ONLY : mp_startup
   USE environment,ONLY : environment_start
   !
@@ -59,15 +60,15 @@ PROGRAM pmw
      !
   ENDIF
   !
-  CALL mp_bcast( ios, ionode_id )
+  CALL mp_bcast( ios, ionode_id, world_comm )
   IF ( ios/=0 ) CALL errore ('pmwannier', 'reading inputpp namelist', abs(ios))
   !
   ! ... Broadcast variables
   !
-  CALL mp_bcast( tmp_dir, ionode_id )
-  CALL mp_bcast( prefix, ionode_id )
-  CALL mp_bcast( first_band, ionode_id )
-  CALL mp_bcast( last_band, ionode_id )
+  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
+  CALL mp_bcast( prefix, ionode_id, world_comm )
+  CALL mp_bcast( first_band, ionode_id, world_comm )
+  CALL mp_bcast( last_band, ionode_id, world_comm )
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
