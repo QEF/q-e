@@ -6,7 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 PROGRAM xctest
-  USE mp, ONLY: mp_start, mp_end
+  USE mp_global, ONLY: mp_startup, mp_global_end
+  USE io_global, ONLY: ionode
   USE kinds, ONLY: DP
   USE funct, ONLY: set_dft_from_indices
   IMPLICIT NONE
@@ -14,17 +15,18 @@ PROGRAM xctest
   INTEGER :: nspin = 2
   real(DP), ALLOCATABLE :: rhor( :, : )
   real(DP), ALLOCATABLE :: grhor( :, :, : )
-  INTEGER :: iexch,icorr,igcx,igcc
-  INTEGER :: nproc, mpime, gid
+  INTEGER :: iexch,icorr,igcx,igcc,inlc
+  INTEGER :: nproc, mpime
 
-  CALL mp_start(nproc, mpime, gid)
+  CALL mp_startup( )
 
-  if ( mpime == 0 ) then
+  if ( ionode ) then
   iexch=1
   icorr=3
   igcx=1
   igcc=3
-  CALL set_dft_from_indices(iexch,icorr,igcx,igcc)
+  inlc=0
+  CALL set_dft_from_indices(iexch,icorr,igcx,igcc,inlc)
 
   OPEN(unit=17,form='unformatted',status='old')
   READ(17) nnr, nspin
@@ -38,7 +40,7 @@ PROGRAM xctest
   CALL test_xc( nnr, nspin, rhor, grhor )
 
   end if
-  CALL mp_end()
+  CALL mp_global_end()
 END PROGRAM xctest
 
 SUBROUTINE test_gcxc( nnr, nspin, rhor, grhor )
