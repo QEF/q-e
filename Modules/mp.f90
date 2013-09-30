@@ -340,15 +340,12 @@
       SUBROUTINE mp_bcast_iv(msg,source,gid)
         IMPLICIT NONE
         INTEGER :: msg(:)
-        INTEGER :: source
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
-        INTEGER :: group
-        INTEGER :: msglen
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
+        INTEGER :: msglen
         msglen = size(msg)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
-        CALL bcast_integer( msg, msglen, source, group )
+        CALL bcast_integer( msg, msglen, source, gid )
 #endif
       END SUBROUTINE mp_bcast_iv
 !
@@ -356,15 +353,12 @@
       SUBROUTINE mp_bcast_im( msg, source, gid )
         IMPLICIT NONE
         INTEGER :: msg(:,:)
-        INTEGER :: source
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
-        INTEGER :: group
-        INTEGER :: msglen
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
+        INTEGER :: msglen
         msglen = size(msg)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
-        CALL bcast_integer( msg, msglen, source, group )
+        CALL bcast_integer( msg, msglen, source, gid )
 #endif
       END SUBROUTINE mp_bcast_im
 !
@@ -372,34 +366,29 @@
 !
 ! Carlo Cavazzoni
 !
-      SUBROUTINE mp_bcast_it(msg,source,gid)
+      SUBROUTINE mp_bcast_it( msg, source, gid )
         IMPLICIT NONE
         INTEGER :: msg(:,:,:)
-        INTEGER :: source
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
-        INTEGER :: group
-        INTEGER :: msglen
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
+        INTEGER :: msglen
         msglen = size(msg)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
-        CALL bcast_integer( msg, msglen, source, group )
+        CALL bcast_integer( msg, msglen, source, gid )
 #endif
       END SUBROUTINE mp_bcast_it
 !
 !------------------------------------------------------------------------------!
 !
-      SUBROUTINE mp_bcast_r1(msg,source,gid)
+      SUBROUTINE mp_bcast_r1( msg, source, gid )
         IMPLICIT NONE
         REAL (DP) :: msg
-        INTEGER :: msglen, source
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
-        INTEGER :: group
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
+        INTEGER :: msglen
         msglen = 1
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
-        CALL bcast_real( msg, msglen, source, group )
+        CALL bcast_real( msg, msglen, source, gid )
 #endif
       END SUBROUTINE mp_bcast_r1
 !
@@ -408,16 +397,13 @@
       SUBROUTINE mp_bcast_rv(msg,source,gid)
         IMPLICIT NONE
         REAL (DP) :: msg(:)
-        INTEGER :: source
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
-        INTEGER :: group
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
         INTEGER :: msglen
 
 #if defined(__MPI)
         msglen = size(msg)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
-        CALL bcast_real( msg, msglen, source, group )
+        CALL bcast_real( msg, msglen, source, gid )
 #endif
       END SUBROUTINE mp_bcast_rv
 !

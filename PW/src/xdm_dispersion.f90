@@ -711,6 +711,7 @@ CONTAINS
     USE scf,           ONLY : scf_type
     USE fft_base,      ONLY : dfftp
     USE mp_global,     ONLY : me_pool, mp_bcast, mp_sum, intra_image_comm
+    USE mp_world,      ONLY : world_comm
     USE io_global,     ONLY : ionode_id
     USE splinelib,     ONLY : spline, splint
     USE cell_base,     ONLY : at, bg, alat
@@ -751,12 +752,12 @@ CONTAINS
     END DO
     ALLOCATE(rho_lm(mm,ml**2,nat))
     rho_lm = 0._DP
-    CALL mp_bcast(rho_lm,ionode_id)
+    CALL mp_bcast(rho_lm,ionode_id,world_comm)
 
     ! count the number of processors per atom
     ALLOCATE(iatom(nat))
     iatom = 0
-    CALL mp_bcast(iatom,ionode_id)
+    CALL mp_bcast(iatom,ionode_id,world_comm)
     DO ia = 1, nat
        IF (ASSOCIATED(upf(ityp(ia))%paw%pfunc)) iatom(ia) = iatom(ia) + 1
     END DO

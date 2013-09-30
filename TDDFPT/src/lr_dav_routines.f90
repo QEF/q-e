@@ -355,10 +355,10 @@ contains
 #ifdef __MPI
   endif
   call mp_barrier(world_comm)
-  call mp_bcast(tr_energy,ionode_id)
-  call mp_bcast(eign_value_order,ionode_id)
-  call mp_bcast(left_M,ionode_id)
-  call mp_bcast(right_M,ionode_id)
+  call mp_bcast(tr_energy,ionode_id,world_comm)
+  call mp_bcast(eign_value_order,ionode_id,world_comm)
+  call mp_bcast(left_M,ionode_id,world_comm)
+  call mp_bcast(right_M,ionode_id,world_comm)
 #endif
 
     ! Recover eigenvectors in the whole space
@@ -873,8 +873,8 @@ contains
 #ifdef __MPI
   endif
   call mp_barrier(world_comm)
-  call mp_bcast(omegar,ionode_id)
-  call mp_bcast(omegal,ionode_id)
+  call mp_bcast(omegar,ionode_id,world_comm)
+  call mp_bcast(omegal,ionode_id,world_comm)
 #endif
 
       right_full(:,:,:,ieign)=right_full(:,:,:,ieign)/dble(omegar(ieign))      

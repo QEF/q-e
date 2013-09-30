@@ -13,6 +13,7 @@ SUBROUTINE q_points_wannier ( )
   USE io_global,      ONLY : stdout, ionode, ionode_id
   USE io_files,       ONLY : prefix
   USE mp,             ONLY : mp_bcast
+  USE mp_world,       ONLY : world_comm
   USE disp,           ONLY : nq1, nq2, nq3, x_q, nqs, lgamma_iq
   USE output,         ONLY : fildyn
   USE el_phon,        ONLY : wan_index_dyn
@@ -46,8 +47,8 @@ SUBROUTINE q_points_wannier ( )
 ! here read q_points
   CALL dfile_get_qlist(x_q, nqs, dvscf_star%ext, TRIM(dvscf_star%dir)//prefix, wan_index_dyn )
 
-  call mp_bcast(x_q,ionode_id)
-  call mp_bcast(wan_index_dyn, ionode_id)
+  call mp_bcast(x_q,ionode_id, world_comm)
+  call mp_bcast(wan_index_dyn, ionode_id, world_comm)
   
   !
   ! Check if the Gamma point is one of the points and put

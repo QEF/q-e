@@ -21,6 +21,7 @@ SUBROUTINE work_function (wf)
   USE cell_base, ONLY : omega, alat
   USE fft_base,  ONLY : grid_gather, dfftp
   USE mp,        ONLY : mp_bcast
+  USE mp_world,  ONLY : world_comm
 
   IMPLICIT NONE
 
@@ -130,7 +131,7 @@ SUBROUTINE work_function (wf)
   ENDDO
   wf = wf / nspin0
   !
-  CALL mp_bcast( wf, ionode_id )
+  CALL mp_bcast( wf, ionode_id, world_comm )
 
   WRITE( stdout, '(/5x,"Work function written on file workf")')
   WRITE( stdout, '( 5x,"Planar mean charge written on file charge")')

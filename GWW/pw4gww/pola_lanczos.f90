@@ -25,6 +25,7 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
+   USE mp_world, ONLY : world_comm
    USE mp_global, ONLY : mpime,nproc, intra_pool_comm
    USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE fft_custom_gwl
@@ -402,8 +403,8 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
            t_mat(:,:)=t_mat_hold(:,:)
            eigen(1:nstates)=t_eigen_hold(1:nstates)
         endif
-        call mp_bcast(t_mat,iv-ivv)
-        call mp_bcast(eigen(1:nstates),iv-ivv)
+        call mp_bcast(t_mat,iv-ivv,world_comm)
+        call mp_bcast(eigen(1:nstates),iv-ivv,world_comm)
 !if required imposes sum rule
 
 !        if(l_sumrule) then
@@ -465,7 +466,7 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
         if(iv-ivv == mpime) then
            t_mat(:,:)=t_mat_hold2(:,:)
         endif
-        call mp_bcast(t_mat,iv-ivv)
+        call mp_bcast(t_mat,iv-ivv,world_comm)
 
 
 
@@ -540,6 +541,7 @@ subroutine pc_operator(state,ispin,l_cond)
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
+   USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : num_nbndv,num_nbnds
    
   implicit none
@@ -589,6 +591,7 @@ subroutine pc_operator_t(state,evc_t,ispin, fc)
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
+   USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : num_nbndv
    USE fft_custom_gwl
    USE fft_base,             ONLY : dfftp, dffts
@@ -638,7 +641,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
   USE wavefunctions_module, ONLY : evc, psic
   USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
-  USE mp_global, ONLY : mpime, nproc
+  USE mp_world, ONLY : mpime, nproc, world_comm
   USE gvecs,              ONLY : nls, nlsm, doublegrid
   USE g_psi_mod,            ONLY : h_diag, s_diag
   USE becmod,           ONLY : becp,allocate_bec_type,deallocate_bec_type
@@ -1087,7 +1090,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
             if(nsize_ip >=1) then
                if(mpime==ip) omat(1:nstates,1:nsize_ip)=omat_tot(1:nstates,1:nsize_ip,it)
                do is=1,nsize_ip
-                  call mp_bcast(omat(1:nstates,is),ip)
+                  call mp_bcast(omat(1:nstates,is),ip,world_comm)
                   if(ionode) write(iunlan) omat(1:nstates,is)
                enddo
             endif
@@ -1129,6 +1132,7 @@ subroutine orthonormalize_two_manifolds( state1, n1,state2, n2, threshold, state
    USE gvect
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
+   USE mp_world, ONLY : world_comm
    USE fft_base,             ONLY : dfftp, dffts
    USE fft_interfaces,       ONLY : fwfft, invfft
    USE wannier_gw, ONLY : l_verbose
@@ -1205,10 +1209,10 @@ subroutine orthonormalize_two_manifolds( state1, n1,state2, n2, threshold, state
    call flush_unit(stdout)
 
    do ii=1,n1+n2
-      !call mp_bcast(omat(:,ii), ionode_id)
+      !call mp_bcast(omat(:,ii), ionode_id,world_comm)
       call mp_sum(omat(:,ii))
    enddo
-   !call mp_bcast(eigen(:), ionode_id)
+   !call mp_bcast(eigen(:), ionode_id,world_comm)
    call mp_sum(eigen(:))
 
    do ii=1,n1+n2
@@ -1273,6 +1277,7 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
   USE gvect
   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
   USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
+  USE mp_world, ONLY : world_comm
   USE wavefunctions_module, ONLY : evc, psic
   USE gvect
   USE gvecs,              ONLY : nls, nlsm, doublegrid
@@ -1338,7 +1343,7 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
         read(iuntmat) eigen(1:nstates)
         close(iuntmat)
      endif
-     call mp_bcast(eigen, ionode_id)
+     call mp_bcast(eigen, ionode_id,world_comm)
   endif
 
   allocate(old_basis(npw,nbuffer))
@@ -1385,7 +1390,7 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
            read(iuntmat) eigen(1:nstates)
            close(iuntmat)
         endif
-        call mp_bcast(eigen, ionode_id)
+        call mp_bcast(eigen, ionode_id,world_comm)
 
      endif
 
@@ -1581,6 +1586,7 @@ subroutine orthonormalize_two_manifolds_scalapack( state1, n1,state2, n2, thresh
    USE gvect
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
+   USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : p_mpime,p_nproc, npcol, nprow,icontxt,myrow,mycol
    
   implicit none
@@ -1720,7 +1726,7 @@ subroutine orthonormalize_two_manifolds_scalapack( state1, n1,state2, n2, thresh
                ilcol=indxg2l(ii,n_c,0,0,npcol)
                sca=tmp_mat(ilrow,ilcol)
             endif
-            call mp_bcast(sca, iproc)
+            call mp_bcast(sca, iproc,world_comm)
             state_out(:,n_out)=state_out(:,n_out)+sca*state1(:,jj)/dsqrt(eigen(ii))
 
          enddo
@@ -1733,7 +1739,7 @@ subroutine orthonormalize_two_manifolds_scalapack( state1, n1,state2, n2, thresh
                ilcol=indxg2l(ii,n_c,0,0,npcol)
                sca=tmp_mat(ilrow,ilcol)
             endif
-            call mp_bcast(sca, iproc)
+            call mp_bcast(sca, iproc,world_comm)
             state_out(:,n_out)=state_out(:,n_out)+sca*state2(:,jj)/dsqrt(eigen(ii))
          enddo
       endif
@@ -1760,6 +1766,7 @@ subroutine orthonormalize_two_manifolds_prj( state1, n1,state2, n2, threshold, s
    USE gvect
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
+   USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : l_verbose
 
   implicit none
@@ -1863,10 +1870,10 @@ subroutine orthonormalize_two_manifolds_prj( state1, n1,state2, n2, threshold, s
    call flush_unit(stdout)
 
    do ii=1,n2
-      !call mp_bcast(omat(:,ii), ionode_id)
+      !call mp_bcast(omat(:,ii), ionode_id,world_comm)
       call mp_sum(omat(:,ii))
    enddo
-   !call mp_bcast(eigen(:), ionode_id)
+   !call mp_bcast(eigen(:), ionode_id,world_comm)
    call mp_sum(eigen(:))
 
 !   do ii=1,n2
@@ -1916,6 +1923,7 @@ subroutine pc_operator_test(state)
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
+   USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : num_nbndv
 
   implicit none
@@ -1949,6 +1957,7 @@ subroutine pc_operator_t_m(numpw,state,evc_t,ispin,fc)
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
+   USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : num_nbndv
    USE fft_custom_gwl
 
@@ -1999,6 +2008,7 @@ subroutine pc_operator_t_r(numpw,state,evc_r,ispin,fc)
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
+   USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : num_nbndv
    USE fft_custom_gwl
 
@@ -2165,6 +2175,7 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_global, ONLY : mpime,nproc, intra_pool_comm
+   USE mp_world, ONLY : world_comm
    USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE fft_custom_gwl
    USE mp_wave, ONLY : mergewf,splitwf
@@ -2504,8 +2515,8 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
            t_mat(:,:)=t_mat_hold(:,:)
            eigen(1:nstates)=t_eigen_hold(1:nstates)
         endif
-        call mp_bcast(t_mat,iv-ivv)
-        call mp_bcast(eigen(1:nstates),iv-ivv)
+        call mp_bcast(t_mat,iv-ivv,world_comm)
+        call mp_bcast(eigen(1:nstates),iv-ivv,world_comm)
 !if required imposes sum rule
 
 !        if(l_sumrule) then
@@ -2567,7 +2578,7 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
         if(iv-ivv == mpime) then
            t_mat(:,:)=t_mat_hold2(:,:)
         endif
-        call mp_bcast(t_mat,iv-ivv)
+        call mp_bcast(t_mat,iv-ivv,world_comm)
 
 
 

@@ -459,8 +459,8 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
            t_mat(:,:)=t_mat_hold(:,:)
            eigen(1:nstates)=t_eigen_hold(1:nstates)
         endif
-        call mp_bcast(t_mat,iv-ivv)
-        call mp_bcast(eigen(1:nstates),iv-ivv)
+        call mp_bcast(t_mat,iv-ivv,world_comm)
+        call mp_bcast(eigen(1:nstates),iv-ivv,world_comm)
         if(ionode) then
            iuntmat = find_free_unit()
            write(nfile,'(4i1)') iv/1000,mod(iv,1000)/100,mod(iv,100)/10,mod(iv,10)
@@ -500,7 +500,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
         if(iv-ivv == mpime) then
            t_mat(:,:)=t_mat_hold2(:,:)
         endif
-        call mp_bcast(t_mat,iv-ivv)
+        call mp_bcast(t_mat,iv-ivv,world_comm)
 
         call dgemm('N','N',2*fc%npwt,nstates,numpw,1.d0,wp_prod(1,1,iv-ivv+1),2*fc%npwt,t_mat,numpw,0.d0,wp_g_t,2*fc%npwt)
 
@@ -681,7 +681,7 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
         read(iuntmat) s_eigen(1:nstates)
         close(iuntmat)
      endif
-     call mp_bcast(s_eigen, ionode_id)
+     call mp_bcast(s_eigen, ionode_id,world_comm)
   endif
   
 
@@ -772,7 +772,7 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
            read(iuntmat) s_eigen(1:nstates)
            close(iuntmat)
         endif
-        call mp_bcast(s_eigen, ionode_id)
+        call mp_bcast(s_eigen, ionode_id,world_comm)
      endif
 
 
@@ -869,10 +869,10 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
      call flush_unit(stdout)
      
      do ii=1,nglobal
-        !call mp_bcast(gtrail(:,ii), ionode_id)
+        !call mp_bcast(gtrail(:,ii), ionode_id,world_comm)
         call mp_sum(gtrail(:,ii))
      enddo
-     !call mp_bcast(eigen(:), ionode_id)
+     !call mp_bcast(eigen(:), ionode_id,world_comm)
      call mp_sum(eigen(:))
      
      do ii=1,nglobal
@@ -1541,8 +1541,8 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
            eigen(1:nstates)=t_eigen_hold(1:nstates)
         endif
         call start_clock('sl_mpbcast')
-        call mp_bcast(t_mat,iv-ivv)
-        call mp_bcast(eigen(1:nstates),iv-ivv)
+        call mp_bcast(t_mat,iv-ivv,world_comm)
+        call mp_bcast(eigen(1:nstates),iv-ivv,world_comm)
         call stop_clock('sl_mpbcast')
         if(ionode) then
            iuntmat = find_free_unit()
@@ -1584,7 +1584,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
            t_mat(:,:)=t_mat_hold2(:,:)
         endif
         call start_clock('sl_mpbcast')
-        call mp_bcast(t_mat,iv-ivv)
+        call mp_bcast(t_mat,iv-ivv,world_comm)
         call stop_clock('sl_mpbcast')
 
         call start_clock('sl_dgemm')

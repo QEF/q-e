@@ -255,10 +255,10 @@ CONTAINS
 #ifdef __MPI
     ENDIF
     CALL mp_barrier(world_comm)
-    CALL mp_bcast (w_T_beta_store(:), ionode_id)
-    CALL mp_bcast (w_T_gamma_store(:), ionode_id)
-    CALL mp_bcast (w_T_zeta_store(:,:), ionode_id)
-    CALL mp_bcast (w_T_norm0_store, ionode_id)
+    CALL mp_bcast (w_T_beta_store(:), ionode_id, world_comm)
+    CALL mp_bcast (w_T_gamma_store(:), ionode_id, world_comm)
+    CALL mp_bcast (w_T_zeta_store(:,:), ionode_id, world_comm)
+    CALL mp_bcast (w_T_norm0_store, ionode_id, world_comm)
 #endif
     !print *, "broadcast complete"
     WRITE(stdout,'(5x,I8,1x,"steps succesfully read for polarization index",1x,I3)') itermax,LR_polarization
