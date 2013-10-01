@@ -1195,6 +1195,7 @@ q_points_wannier.o : ../../Modules/io_global.o
 q_points_wannier.o : ../../Modules/kind.o
 q_points_wannier.o : ../../Modules/mp.o
 q_points_wannier.o : ../../Modules/mp_global.o
+q_points_wannier.o : ../../Modules/mp_world.o
 q_points_wannier.o : dfile_autoname.o
 q_points_wannier.o : dfile_star.o
 q_points_wannier.o : elph.o

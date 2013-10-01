@@ -137,7 +137,7 @@ ENDIF
      READ (5, lr_input, iostat = ios)
   ENDIF
 
-  CALL mp_bcast ( ios, ionode_id)
+  CALL mp_bcast ( ios, ionode_id , world_comm )
   CALL errore ('lr_readin', 'reading lr_input namelist', abs (ios) )
 
   if(trim(td)=="davidson" .or. trim(td)=='david') then

@@ -634,6 +634,7 @@ work_function.o : ../../Modules/fft_base.o
 work_function.o : ../../Modules/io_files.o
 work_function.o : ../../Modules/io_global.o
 work_function.o : ../../Modules/mp.o
+work_function.o : ../../Modules/mp_world.o
 work_function.o : ../../Modules/recvec.o
 work_function.o : ../../PW/src/pwcom.o
 work_function.o : ../../PW/src/scf_mod.o

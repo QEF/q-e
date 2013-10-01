@@ -224,6 +224,7 @@ pola_lanczos.o : ../../Modules/kind.o
 pola_lanczos.o : ../../Modules/mp.o
 pola_lanczos.o : ../../Modules/mp_global.o
 pola_lanczos.o : ../../Modules/mp_wave.o
+pola_lanczos.o : ../../Modules/mp_world.o
 pola_lanczos.o : ../../Modules/noncol.o
 pola_lanczos.o : ../../Modules/recvec.o
 pola_lanczos.o : ../../Modules/uspp.o

@@ -63,6 +63,7 @@ path_base.o : ../../Modules/ions_base.o
 path_base.o : ../../Modules/kind.o
 path_base.o : ../../Modules/mp.o
 path_base.o : ../../Modules/mp_global.o
+path_base.o : ../../Modules/mp_world.o
 path_base.o : ../../Modules/random_numbers.o
 path_base.o : path_formats.o
 path_base.o : path_input_parameters_module.o

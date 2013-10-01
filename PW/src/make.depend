@@ -1890,6 +1890,7 @@ xdm_dispersion.o : ../../Modules/ions_base.o
 xdm_dispersion.o : ../../Modules/kind.o
 xdm_dispersion.o : ../../Modules/mp.o
 xdm_dispersion.o : ../../Modules/mp_global.o
+xdm_dispersion.o : ../../Modules/mp_world.o
 xdm_dispersion.o : ../../Modules/paw_variables.o
 xdm_dispersion.o : ../../Modules/splinelib.o
 xdm_dispersion.o : ../../Modules/uspp.o

@@ -139,6 +139,8 @@ mm_dispersion.o : mp_world.o
 mp.o : io_global.o
 mp.o : kind.o
 mp.o : parallel_include.o
+mp_atoms.o : mp.o
+mp_atoms.o : parallel_include.o
 mp_bands.o : mp.o
 mp_bands.o : parallel_include.o
 mp_base.o : kind.o

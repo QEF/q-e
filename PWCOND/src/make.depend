@@ -128,6 +128,7 @@ poten.o : ../../Modules/fft_base.o
 poten.o : ../../Modules/fft_scalar.o
 poten.o : ../../Modules/io_global.o
 poten.o : ../../Modules/mp.o
+poten.o : ../../Modules/mp_world.o
 poten.o : ../../Modules/noncol.o
 poten.o : ../../PW/src/scf_mod.o
 poten.o : condcom.o

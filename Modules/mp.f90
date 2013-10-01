@@ -85,9 +85,6 @@
         MODULE PROCEDURE mp_circular_shift_left_d2d_int,mp_circular_shift_left_d2d_double,mp_circular_shift_left_d2d_complex
       END INTERFACE
 
-
-      CHARACTER(LEN=80) :: err_msg = ' '
-
 !------------------------------------------------------------------------------!
 !
     CONTAINS
@@ -182,19 +179,13 @@
 !------------------------------------------------------------------------------!
 !..mp_abort
 
-      SUBROUTINE mp_abort(errorcode)
+      SUBROUTINE mp_abort(errorcode,gid)
         IMPLICIT NONE
         INTEGER :: ierr
-        INTEGER, OPTIONAL :: errorcode
-        INTEGER :: errcode_internal
+        INTEGER, INTENT(IN):: errorcode, gid
 #ifdef __MPI
-        IF (PRESENT(errorcode)) THEN
-           errcode_internal = errorcode
-        ELSE
-           errcode_internal = 1
-        ENDIF
-        CALL mpi_abort(global_comm, errcode_internal, ierr)
-        CALL mpi_finalize(ierr)
+        CALL mpi_abort(global_comm, errorcode, ierr)
+        IF (.NOT. skip_finalize) CALL mpi_finalize(ierr)
 #endif
       END SUBROUTINE mp_abort
 !
@@ -1245,7 +1236,6 @@
         INTEGER, INTENT (IN) :: code
         INTEGER :: ierr
         WRITE( stdout, fmt='( "*** error in Message Passing (mp) module ***")' )
-        WRITE( stdout, fmt='( "*** error msg:  ",A60)' ) TRIM( err_msg )
         WRITE( stdout, fmt='( "*** error code: ",I5)' ) code
 #if defined(__MPI)
         CALL mpi_abort(global_comm,code,ierr)
