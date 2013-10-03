@@ -83,6 +83,7 @@ vc-md     As       Variable-cell dynamics (Wentzcovitch dynamics)
 vdw       C        Dispersion (van der Waals) interactions with DFT-D (Grimme)
 vdw1      C        Dispersion (van der Waals) interactions with vdW-DF  (nonlocal)
 vdw2      C        Dispersion (van der Waals) interactions with vdW-DF2 (nonlocal)
+xdm       C        XDM dispersion correction.
 
 Tests are still missing for:
   forces with core corrections
