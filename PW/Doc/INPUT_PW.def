@@ -1314,12 +1314,33 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
+         var vdw_corr -type CHARACTER {
+           default { 'none' }
+           info {
+                Type of Van der Waals correction. Allowed values:
+
+                   'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d': semiempirical Grimme's DFT-D2.
+                    Optional variables: "london_s6", "london_rcut"
+                    S. Grimme, J. Comp. Chem. 27, 1787 (2006),
+                    V. Barone et al., J. Comp. Chem. 30, 934 (2009). 
+
+                    'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler': Tkatchenko-Scheffler
+                     dispersion corrections with first-principle derived C6 coefficients
+                     (implemented in CP only). Optional variables: "ts_vdw_econv_thr", "ts_vdw_isolated"
+                     See A. Tkatchenko and M. Scheffler, Phys. Rev. Lett. 102, 073005 (2009)
+
+                    'XDM', 'xdm': Exchange-hole dipole-moment model. Optional variables: "xdm_a1", "xdm_a2"
+                     A. D. Becke and E. R. Johnson, J. Chem. Phys. 127, 154108 (2007)
+    		     A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 136, 174109 (2012)
+
+                Note that non-local functionals (eg vdw-DF) are NOT specified here but in "input_dft"
+           }
+         }
+
          var london -type LOGICAL {
            default { .FALSE. }
            info {
-               if .TRUE. compute semi-empirical dispersion term (DFT-D).
-               See S. Grimme, J. Comp. Chem. 27, 1787 (2006), and
-               V. Barone et al., J. Comp. Chem. 30, 934 (2009). 
+               OBSOLESCENT, same as vdw_corr='DFT-D'
            }
          }
 
@@ -1339,10 +1360,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
          var xdm -type LOGICAL {
            default { .FALSE. }
            info {
-               if .TRUE. compute the XDM dispersion energy term.
-               See:
-                 A. D. Becke and E. R. Johnson, J. Chem. Phys. 127, 154108 (2007)
-		 A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 136, 174109 (2012)
+               OBSOLESCENT, same as vdw_corr='xdm'
            }
          }
          var xdm_a1 -type REAL {
