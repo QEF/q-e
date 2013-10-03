@@ -656,6 +656,44 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                 implemented (no "alpha" or "J" terms)
             }
         }
+        var vdw_corr -type CHARACTER {
+          default { 'none' }
+          info {
+               Type of Van der Waals correction. Allowed values:
+
+                  'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d': semiempirical Grimme's DFT-D2.
+                   Optional variables: "london_s6", "london_rcut"
+                   S. Grimme, J. Comp. Chem. 27, 1787 (2006),
+                   V. Barone et al., J. Comp. Chem. 30, 934 (2009). 
+
+                   'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler': Tkatchenko-Scheffler
+                    dispersion corrections with first-principle derived C6 coefficients
+                    Optional variables: "ts_vdw_econv_thr", "ts_vdw_isolated"
+                    See A. Tkatchenko and M. Scheffler, Phys. Rev. Lett. 102, 073005 (2009)
+
+                   'XDM', 'xdm': Exchange-hole dipole-moment model. Optional variables: "xdm_a1", "xdm_a2"
+                    (implemented in PW only)
+                    A. D. Becke and E. R. Johnson, J. Chem. Phys. 127, 154108 (2007)
+ 		    A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 136, 174109 (2012)
+
+               Note that non-local functionals (eg vdw-DF) are NOT specified here but in "input_dft"
+          }
+        }
+
+        var london_s6 -type REAL {
+          default { 0.75 }
+          info {
+              global scaling parameter for DFT-D. Default is good for PBE.
+          }
+        }
+        var london_rcut -type REAL {
+          default { 200 }
+          info {
+              cutoff radius (a.u.) for dispersion interactions
+          }
+        }
+
+
         var assume_isolated -type CHARACTER {
             default { 'none' }
             info {
