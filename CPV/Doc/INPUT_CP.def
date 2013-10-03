@@ -693,6 +693,28 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
           }
         }
 
+        var ts_vdw -type LOGICAL {
+          default { .FALSE. }
+          info {
+             OBSOLESCENT, same as vdw_corr='TS'
+          }
+        }
+
+        var ts_vdw_econv_thr -type REAL {
+          default { 1.D-6 }
+          info {
+             Optional: controls the convergence of the vdW energy (and forces). The default value
+             is a safe choice, likely too safe, but you do not gain much in increasing it
+          }
+        }
+
+        var ts_vdw_isolated -type LOGICAL {
+          default { .FALSE. }
+          info {
+             Optional: set it to .TRUE. when computing the Tkatchenko-Scheffler vdW energy
+             for an isolated (non-periodic) system.
+          }
+        }
 
         var assume_isolated -type CHARACTER {
             default { 'none' }
