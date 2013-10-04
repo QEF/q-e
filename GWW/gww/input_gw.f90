@@ -16,7 +16,7 @@
    TYPE input_options
 !structure defining all the inputs required
       INTEGER :: n!number of time intervals in the positive or negative range, total of 2n+1 samples
-      REAL(kind=DP) :: tau=10.d0!imaginary positive time interval
+      REAL(kind=DP) :: tau=0.d0!imaginary positive time interval
       LOGICAL :: whole_s=.false.!if .true. also off-diagonal elements of self energy are calculated
       INTEGER :: max_i!maximum state to be calculated
       CHARACTER(len=256) :: prefix!prefix to designate the files same as in PW
@@ -180,6 +180,7 @@
 
        write(stdout,*) 'Number of intervals: ', ggwin%n
        write(stdout,*) 'Number of intervals for fit:', ggwin%n_fit
+       if(ggwin%tau==0.d0) ggwin%tau=2.d0/ggwin%omega*dble(ggwin%n)
        write(stdout,*) 'Maximum imaginary time: ',ggwin%tau
        write(stdout,*) 'Print whole Sigma: ', ggwin%whole_s
        write(stdout,*) 'Maximum state considered:', ggwin%max_i
