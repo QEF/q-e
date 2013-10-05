@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{5.0.2}
+\def\version{5.1svn}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -424,7 +424,9 @@ your machine, and set up things accordingly. Presently it is expected
 to work on most Linux 32- and 64-bit PCs (all Intel and AMD CPUs) and 
 PC clusters, SGI Altix, IBM SP and BlueGene machines, NEC SX, Cray XT
 machines, Mac OS X, MS-Windows PCs, and (for experts!) on several 
-GPU-accelerated hardware. 
+GPU-accelerated hardware. Detailed installation instructions for some
+specific HPC machines can be found in files \texttt{install/README.}{\em sys},
+where {\em sys} is the machine name.
 
 Instructions for the impatient:
 \begin{verbatim}
@@ -882,38 +884,6 @@ the testing phase can never be ruled out, it is very unlikely
 that this happens on the provided tests and examples. 
 \end{itemize}
 
-{\em Note:} "There is a known incompatibility problem between the calling 
-convention for Fortran functions that return complex values: there is the
-convention used by 
-g77/f2c, where in practice the compiler converts such functions to subroutines 
-with a further parameter for the return value; gfortran instead produces a 
-normal function returning a complex value (and maybe also ifort?).
-If your system libraries were compiled using g77 (which may happen for
-system-provided libraries in not-too-recent Linux distributions),
-and you instead use gfortran (or possibly ifort) to compile \qe, your code
-may crash or produce random results. This typically happens 
-during calls to \texttt{zdotc}, which is one the most commonly used
-complex-returning functions of BLAS+LAPACK.
-
-For further details see for instance this link:\\
-\texttt{http://www.macresearch.org/lapackblas-fortran-106\#comment-17071}\\
-or read the man page of gfortran under the flag \texttt{-ff2c}.
-
-If your code crashes during a call to \texttt{zdotc},
-one solution is to try to recompile \qe\ using the internal BLAS and LAPACK
-routines (using the \texttt{--with-internal-blas} and 
-\texttt{--with-internal-lapack} parameters of the configure script)
-to see if the problem disappears.
-
-Otherwise, there is another trick that can be possibly tried if you use gfortran
-and you can confirm that your problem is the one described above:
-add the \texttt{-ff2c} flag to all compilations with 
-gfortran (even if this is not necessarily the best thing to do: the best
-is to use libraries compiled with the same 
-compiler, or at least libraries that are verified to work with your compiler
-(for instance, if you use ifort, you may prefer to link to 
-the appropriate intel MKL libraries)" (info by Giovanni Pizzi, Jan. 2013).
-
 \subsubsection{Cray XE and XT machines}
 
 For Cray XE machines:
@@ -1025,10 +995,39 @@ from all \texttt{iotk} source files.
 
 \paragraph{Linux PCs with gfortran}
 
-Old gfortran versions often produce nonfunctional
-phonon executables (segmentation faults and the like); other versions
-miscompile iotk (the executables work but crash with a mysterious iotk
-error when reading from data files). Recent versions should be fine.
+Only recent versions (at least v.4.4) of gfortran properly compile \qe.
+Older versions often produce nonfunctional phonon executables 
+(segmentation faults and the like); other versions miscompile iotk 
+(the executables work but crash with a mysterious iotk
+error when reading from data files). 
+
+"There is a known incompatibility problem between the calling 
+convention for Fortran functions that return complex values: there is the
+convention used by 
+g77/f2c, where in practice the compiler converts such functions to subroutines 
+with a further parameter for the return value; gfortran instead produces a 
+normal function returning a complex value.
+If your system libraries were compiled using g77 (which may happen for
+system-provided libraries in not-too-recent Linux distributions),
+and you instead use gfortran to compile \qe, your code
+may crash or produce random results. This typically happens 
+during calls to \texttt{zdotc}, which is one the most commonly used
+complex-returning functions of BLAS+LAPACK.
+
+For further details see for instance this link:\\
+\texttt{http://www.macresearch.org/lapackblas-fortran-106\#comment-17071}\\
+or read the man page of gfortran under the flag \texttt{-ff2c}.
+
+If your code crashes during a call to \texttt{zdotc},
+try to recompile \qe\ using the internal BLAS and LAPACK
+routines (using the \texttt{--with-internal-blas} and 
+\texttt{--with-internal-lapack} parameters of the configure script)
+to see if the problem disappears; or, add the \texttt{-ff2c} flag"
+(info by Giovanni Pizzi, Jan. 2013).
+
+Note that a similar problem with complex functions exists with MKL libraries
+as well: if you compile with gfortran, link \texttt{-lmkl\_gf\_lp64},
+not \texttt{-lmkl\_intel\_lp64}, and the like for other architectures.
 
 If you experience problems in reading files produced by previous versions
 of \qe: ``gfortran used 64-bit record markers to allow writing of records 
