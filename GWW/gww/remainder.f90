@@ -20,6 +20,7 @@ SUBROUTINE remainder(options, qp)
    USE polarization,       ONLY : polaw,free_memory_polaw,read_polaw, initialize_polaw
    USE compact_product
    USE mp,                 ONLY : mp_sum, mp_bcast
+   USE mp_world,           ONLY : world_comm
    USE para_gww,           ONLY : is_my_time, is_my_pola, is_my_state
    USE energies_gww,           ONLY : quasi_particles
    USE constants,          ONLY : RYTOEV
@@ -239,6 +240,7 @@ SUBROUTINE addconduction_remainder(qp, options)
     USE polarization,      ONLY : polaw, free_memory_polaw, read_polaw, invert_v_pot, invert_ortho_polaw,&
          & orthonormalize_inverse, orthonormalize_vpot_para
     USE mp,                ONLY : mp_bcast
+    USE mp_world,          ONLY : world_comm
     USE para_gww,          ONLY : is_my_pola
     USE energies_gww,          ONLY : quasi_particles
 
@@ -376,7 +378,7 @@ SUBROUTINE addconduction_remainder(qp, options)
        enddo
        deallocate(gf_t)
     endif
-    call mp_bcast(sene, ionode_id)
+    call mp_bcast(sene, ionode_id, world_comm)
     do ii=1,options%max_i-wup%nums_occ
        qp%ene_remainder(ii+wup%nums_occ,1)=qp%ene_remainder(ii+wup%nums_occ,1)-0.5d0*dble(sene(ii))
        write(*,*) 'REMAINDER CONDUCTION', ii, 0.5d0*sene(ii)
@@ -407,6 +409,7 @@ SUBROUTINE addconduction_remainder(qp, options)
     USE polarization,      ONLY : polaw, free_memory_polaw, read_polaw, invert_v_pot, invert_ortho_polaw,&
          & orthonormalize_inverse, write_polaw, orthonormalize_vpot
     USE mp,                ONLY : mp_bcast
+    USE mp_world,          ONLY : world_comm
     USE para_gww,          ONLY : is_my_pola
 
 

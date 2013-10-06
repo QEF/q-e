@@ -42,9 +42,10 @@
       ik, nk, kunit, ispin, nspin, scal, wf0, t0, wfm, tm, ngw, gamma_only, nbnd, igl, ngwl )
 !
       USE mp_wave
-      USE mp, ONLY: mp_sum, mp_get, mp_bcast, mp_max
+      USE mp, ONLY: mp_sum, mp_get, mp_max
       USE mp_global, ONLY: mpime, nproc, root, me_pool, my_pool_id, &
-        nproc_pool, intra_pool_comm, root_pool, world_comm
+        nproc_pool, intra_pool_comm, root_pool
+      USE mp_world,  ONLY: world_comm
       USE io_global, ONLY: ionode, ionode_id
       USE iotk_module
 !
@@ -141,7 +142,7 @@
           CALL errore(' write_restart_wfc ',' wrong size ngl ', ierr )
 
         IF( ipsour /= ionode_id ) THEN
-          CALL mp_get( igwx, igwx, mpime, ionode_id, ipsour, 1 )
+          CALL mp_get( igwx, igwx, mpime, ionode_id, ipsour, 1, world_comm )
         ENDIF
 
         IF(ionode) THEN
@@ -219,7 +220,6 @@
 
     SUBROUTINE write_restart_wfc2(iuni, nbnd)
       USE io_global, ONLY: ionode, ionode_id
-      USE mp, ONLY: mp_bcast
       IMPLICIT NONE
       INTEGER, INTENT(in) :: iuni, nbnd
       LOGICAL :: twrite = .false.
@@ -276,6 +276,7 @@ PROGRAM pw_export
   USE iotk_module
   USE mp_global, ONLY : mp_startup, mpime, kunit
   USE mp, ONLY: mp_bcast
+  USE mp_world, ONLY: world_comm
   USE environment,   ONLY : environment_start
   !
   IMPLICIT NONE
@@ -332,16 +333,16 @@ PROGRAM pw_export
   ! ... Broadcasting variables
   !
   tmp_dir = trimcheck( outdir )
-  CALL mp_bcast( outdir, ionode_id )
-  CALL mp_bcast( tmp_dir, ionode_id )
-  CALL mp_bcast( prefix, ionode_id )
-  CALL mp_bcast( pp_file, ionode_id )
-  CALL mp_bcast( uspp_spsi, ionode_id )
-  CALL mp_bcast( ascii, ionode_id )
-  CALL mp_bcast( single_file, ionode_id )
-  CALL mp_bcast( raw, ionode_id )
-  CALL mp_bcast( pseudo_dir, ionode_id )
-  CALL mp_bcast( psfile, ionode_id )
+  CALL mp_bcast( outdir, ionode_id, world_comm )
+  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
+  CALL mp_bcast( prefix, ionode_id, world_comm )
+  CALL mp_bcast( pp_file, ionode_id, world_comm )
+  CALL mp_bcast( uspp_spsi, ionode_id, world_comm )
+  CALL mp_bcast( ascii, ionode_id, world_comm )
+  CALL mp_bcast( single_file, ionode_id, world_comm )
+  CALL mp_bcast( raw, ionode_id, world_comm )
+  CALL mp_bcast( pseudo_dir, ionode_id, world_comm )
+  CALL mp_bcast( psfile, ionode_id, world_comm )
 
 
   !

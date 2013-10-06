@@ -3,6 +3,7 @@ autopilot.o : input_parameters.o
 autopilot.o : io_global.o
 autopilot.o : kind.o
 autopilot.o : mp.o
+autopilot.o : mp_world.o
 autopilot.o : parser.o
 basic_algebra_routines.o : kind.o
 becmod.o : control_flags.o
@@ -139,8 +140,6 @@ mm_dispersion.o : mp_world.o
 mp.o : io_global.o
 mp.o : kind.o
 mp.o : parallel_include.o
-mp_atoms.o : mp.o
-mp_atoms.o : parallel_include.o
 mp_bands.o : mp.o
 mp_bands.o : parallel_include.o
 mp_base.o : kind.o
@@ -260,6 +259,7 @@ read_xml.o : ../iotk/src/iotk_unit_interf.o
 read_xml.o : input_parameters.o
 read_xml.o : io_global.o
 read_xml.o : mp.o
+read_xml.o : mp_world.o
 read_xml.o : read_namelists.o
 read_xml.o : read_xml_cards.o
 read_xml.o : read_xml_fields.o

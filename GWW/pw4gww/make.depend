@@ -416,6 +416,7 @@ write_wannier_matrix.o : ../../Modules/io_files.o
 write_wannier_matrix.o : ../../Modules/io_global.o
 write_wannier_matrix.o : ../../Modules/kind.o
 write_wannier_matrix.o : ../../Modules/mp.o
+write_wannier_matrix.o : ../../Modules/mp_world.o
 write_wannier_matrix.o : ../../PW/src/pwcom.o
 write_wannier_matrix.o : wannier_gw.o
 diago_cg.o : ../../include/f_defs.h

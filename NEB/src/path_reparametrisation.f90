@@ -19,6 +19,7 @@ MODULE path_reparametrisation
   USE path_io_units_module,  ONLY : iunpath
   USE io_global, ONLY : meta_ionode, meta_ionode_id
   USE mp,        ONLY : mp_bcast
+  USE mp_world,  ONLY : world_comm
   !
   USE basic_algebra_routines
   !
@@ -82,7 +83,7 @@ MODULE path_reparametrisation
          !
       END IF
       !
-      CALL mp_bcast( pos, meta_ionode_id )
+      CALL mp_bcast( pos, meta_ionode_id, world_comm )
       !
       RETURN
       !

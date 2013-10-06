@@ -40,7 +40,8 @@ SUBROUTINE lr_readin
   USE control_flags,       ONLY : tqr, twfcollect, ethr
   USE iotk_module
   USE charg_resp,          ONLY : w_T_prefix, omeg, w_T_npol, epsil
-  USE mp,                  ONLY : mp_bcast,mp_barrier
+  USE mp,                  ONLY : mp_bcast
+  USE mp_world,            ONLY : world_comm
   USE mp_global,           ONLY : my_pool_id, intra_image_comm, &
                                   & intra_bgrp_comm, nproc_image, &
                                   & nproc_pool, nproc_pool_file, &
@@ -213,7 +214,7 @@ SUBROUTINE lr_readin
   ENDIF
   !
   CALL bcast_lr_input
-  CALL mp_bcast(auto_rs, ionode_id)
+  CALL mp_bcast(auto_rs, ionode_id, world_comm)
 #endif
   !
   current_k = 1 ! Required for restart runs as this never gets initalised 

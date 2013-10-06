@@ -924,7 +924,7 @@ MODULE read_namelists_module
        CALL mp_bcast( occupation_constraints, ionode_id, intra_image_comm )
        !
        ! ... real space ...
-       CALL mp_bcast( real_space, ionode_id)
+       CALL mp_bcast( real_space,         ionode_id, intra_image_comm )
        CALL mp_bcast( adaptive_thr,       ionode_id, intra_image_comm )
        CALL mp_bcast( conv_thr_init,      ionode_id, intra_image_comm )
        CALL mp_bcast( conv_thr_multi,     ionode_id, intra_image_comm )

@@ -523,6 +523,7 @@ pw_export.o : ../../Modules/kind.o
 pw_export.o : ../../Modules/mp.o
 pw_export.o : ../../Modules/mp_global.o
 pw_export.o : ../../Modules/mp_wave.o
+pw_export.o : ../../Modules/mp_world.o
 pw_export.o : ../../Modules/parameters.o
 pw_export.o : ../../Modules/uspp.o
 pw_export.o : ../../Modules/version.o
@@ -624,6 +625,7 @@ wfck2r.o : ../../Modules/io_global.o
 wfck2r.o : ../../Modules/kind.o
 wfck2r.o : ../../Modules/mp.o
 wfck2r.o : ../../Modules/mp_global.o
+wfck2r.o : ../../Modules/mp_world.o
 wfck2r.o : ../../Modules/noncol.o
 wfck2r.o : ../../Modules/recvec.o
 wfck2r.o : ../../Modules/wavefunctions.o

@@ -99,6 +99,7 @@
   USE io_global, ONLY : stdout,ionode,ionode_id
   USE io_files, ONLY : prefix
   USE mp, ONLY : mp_bcast
+  USE mp_world, ONLY : world_comm
   USE lsda_mod, ONLY :nspin
 
   implicit none
@@ -130,7 +131,7 @@
 
      do iw=1,nbnd
         if(ionode) read(iunu) u_trans(1:nbnd,iw,is)
-        call mp_bcast(u_trans(1:nbnd,iw,is),ionode_id)       
+        call mp_bcast(u_trans(1:nbnd,iw,is),ionode_id,world_comm)       
      enddo
   enddo
   if(ionode) close(iunu)

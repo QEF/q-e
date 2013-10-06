@@ -19,6 +19,7 @@ MODULE path_opt_routines
   USE path_variables, ONLY : ds, pos, grad
   USE io_global,      ONLY : meta_ionode, meta_ionode_id
   USE mp,             ONLY : mp_bcast
+  USE mp_world,       ONLY : world_comm
   !
   USE basic_algebra_routines
   !
@@ -46,7 +47,7 @@ MODULE path_opt_routines
           !
        END IF
        !
-       CALL mp_bcast( pos, meta_ionode_id )
+       CALL mp_bcast( pos, meta_ionode_id, world_comm )
        !
        RETURN
        !
@@ -66,7 +67,7 @@ MODULE path_opt_routines
           !
        END IF
        !
-       CALL mp_bcast( pos, meta_ionode_id )
+       CALL mp_bcast( pos, meta_ionode_id, world_comm )
        !
        RETURN
        !
@@ -128,8 +129,8 @@ MODULE path_opt_routines
           !
        END IF
        !
-       CALL mp_bcast( pos,    meta_ionode_id )
-       CALL mp_bcast( posold, meta_ionode_id )
+       CALL mp_bcast( pos,    meta_ionode_id, world_comm )
+       CALL mp_bcast( posold, meta_ionode_id, world_comm )
        !
        RETURN
        !
@@ -294,7 +295,7 @@ MODULE path_opt_routines
           !
        END IF
        !
-       CALL mp_bcast( pos, meta_ionode_id )
+       CALL mp_bcast( pos, meta_ionode_id, world_comm )
        !
        DEALLOCATE( t )
        DEALLOCATE( g )
@@ -488,7 +489,7 @@ MODULE path_opt_routines
        !
        ! ... and distribute it
        !
-       CALL mp_bcast( pos, meta_ionode_id )
+       CALL mp_bcast( pos, meta_ionode_id, world_comm )
        !
        DEALLOCATE( df, dx, f, x, f_last, x_last, mask )
        !

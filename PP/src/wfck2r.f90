@@ -26,6 +26,7 @@ PROGRAM wfck2r
   USE klist,     ONLY : xk     , nks
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast, mp_barrier
+  USE mp_world,  ONLY : world_comm
   USE wavefunctions_module, ONLY : evc
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE gvect, ONLY : ngm, g 
@@ -76,8 +77,8 @@ PROGRAM wfck2r
   ! ... Broadcast variables
   !
 
-  CALL mp_bcast( tmp_dir, ionode_id )
-  CALL mp_bcast( prefix, ionode_id )
+  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
+  CALL mp_bcast( prefix, ionode_id, world_comm )
 
   !
   !   Now allocate space for pwscf variables, read and check them.

@@ -252,6 +252,7 @@ remainder.o : ../../Modules/constants.o
 remainder.o : ../../Modules/io_global.o
 remainder.o : ../../Modules/kind.o
 remainder.o : ../../Modules/mp.o
+remainder.o : ../../Modules/mp_world.o
 remainder.o : basic_structures.o
 remainder.o : compact_product.o
 remainder.o : energies_gww.o

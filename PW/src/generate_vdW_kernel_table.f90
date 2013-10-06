@@ -803,7 +803,7 @@ CONTAINS
 
     do proc_i = 1, nproc-1
        
-       call mp_get(phi, phi, mpime, 0, proc_i, 0)
+       call mp_get(phi, phi, mpime, 0, proc_i, 0, world_comm)
        
        if (ionode) then
           
@@ -835,7 +835,7 @@ CONTAINS
     
     do proc_i = 1, nproc-1
        
-       call mp_get(d2phi_dk2, d2phi_dk2, mpime, 0, proc_i, 0)
+       call mp_get(d2phi_dk2, d2phi_dk2, mpime, 0, proc_i, 0, world_comm)
        
        if (mpime == 0) then
           

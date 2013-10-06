@@ -102,6 +102,7 @@ path_opt_routines.o : ../../Modules/constants.o
 path_opt_routines.o : ../../Modules/io_global.o
 path_opt_routines.o : ../../Modules/kind.o
 path_opt_routines.o : ../../Modules/mp.o
+path_opt_routines.o : ../../Modules/mp_world.o
 path_opt_routines.o : path_io_units_module.o
 path_opt_routines.o : path_variables.o
 path_read_cards_module.o : ../../Modules/constants.o
@@ -118,6 +119,7 @@ path_reparametrisation.o : ../../Modules/basic_algebra_routines.o
 path_reparametrisation.o : ../../Modules/io_global.o
 path_reparametrisation.o : ../../Modules/kind.o
 path_reparametrisation.o : ../../Modules/mp.o
+path_reparametrisation.o : ../../Modules/mp_world.o
 path_reparametrisation.o : ../../Modules/splinelib.o
 path_reparametrisation.o : path_io_units_module.o
 path_reparametrisation.o : path_variables.o

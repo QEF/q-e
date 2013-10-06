@@ -17,6 +17,7 @@ program fd
   USE mp_global,  ONLY : mp_startup,mpime,kunit
   USE environment,ONLY : environment_start
   USE mp,         ONLY : mp_bcast
+  USE mp_world,   ONLY : world_comm
   USE cell_base,  ONLY : tpiba2, alat,omega, at, bg, ibrav, celldm
   USE ions_base,  ONLY : amass, nat, atm, zv, tau, ntyp => nsp, ityp
   USE kinds,      ONLY : dp 
@@ -106,9 +107,9 @@ program fd
     call system('mkdir '//trim(fd_outfile_dir))
   endif
 
-  CALL mp_bcast( outdir, ionode_id )
-  CALL mp_bcast( tmp_dir, ionode_id )
-  CALL mp_bcast( prefix, ionode_id )
+  CALL mp_bcast( outdir, ionode_id, world_comm )
+  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
+  CALL mp_bcast( prefix, ionode_id, world_comm )
 
   !reading the xml file
   call read_file

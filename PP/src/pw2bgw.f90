@@ -868,7 +868,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
       igwx = MAXVAL ( igwf_l2g ( 1 : local_pw ) )
     CALL mp_max ( igwx, intra_pool_comm )
     IF ( ipsour .NE. ionode_id ) &
-      CALL mp_get ( igwx, igwx, mpime, ionode_id, ipsour, 1 )
+      CALL mp_get ( igwx, igwx, mpime, ionode_id, ipsour, 1, world_comm )
     ierr = 0
     IF ( ik .GE. iks .AND. ik .LE. ike .AND. igwx .NE. ngk_g ( ik ) ) &
       ierr = 1
@@ -2728,7 +2728,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
       igwx = MAXVAL ( igwf_l2g ( 1 : local_pw ) )
     CALL mp_max ( igwx, intra_pool_comm )
     IF ( ipsour .NE. ionode_id ) &
-      CALL mp_get ( igwx, igwx, mpime, ionode_id, ipsour, 1 )
+      CALL mp_get ( igwx, igwx, mpime, ionode_id, ipsour, 1, world_comm )
     ierr = 0
     IF ( ik .GE. iks .AND. ik .LE. ike .AND. igwx .NE. ngk_g ( ik ) ) &
       ierr = 1

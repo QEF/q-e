@@ -330,7 +330,7 @@ CONTAINS
 
        file_p = .FALSE.
        IF ( ionode ) INQUIRE( FILE = TRIM( mbfile ), EXIST = file_p )
-       call mp_bcast(file_p, ionode_id)     
+       call mp_bcast(file_p, ionode_id,world_comm)
 
        IF ( file_p ) THEN
 

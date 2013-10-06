@@ -177,6 +177,7 @@ CONTAINS
 
     USE io_global, ONLY : ionode_id
     USE mp,        ONLY : mp_bcast
+    USE mp_world,  ONLY : world_comm
 
     IMPLICIT NONE
     !
@@ -190,7 +191,7 @@ CONTAINS
        ! if ierr < 0 errore writes the message but does not stop
        ierr = -1
        pause_p = .TRUE.
-       !call mp_bcast(pause_p, ionode_id)
+       !call mp_bcast(pause_p, ionode_id, world_comm)
     ELSE
        ! if ierr > 0 it stops
        ierr = 1
@@ -216,6 +217,7 @@ CONTAINS
   LOGICAL FUNCTION auto_check (ndr, outdir)
     USE io_global, ONLY: ionode, ionode_id
     USE mp,        ONLY : mp_bcast
+    USE mp_world,  ONLY : world_comm
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: ndr    !  I/O unit number
     CHARACTER(LEN=*), INTENT(IN) :: outdir
@@ -241,7 +243,7 @@ CONTAINS
 
        auto_check = restart_p
     END IF
-    CALL mp_bcast(auto_check, ionode_id)
+    CALL mp_bcast(auto_check, ionode_id, world_comm)
 
     return
 
@@ -311,6 +313,7 @@ CONTAINS
   SUBROUTINE card_autopilot( input_line )
     USE io_global, ONLY: ionode, ionode_id
     USE mp,        ONLY : mp_bcast
+    USE mp_world,  ONLY : world_comm
     IMPLICIT NONE
     INTEGER :: i, j, linelen
     CHARACTER(LEN=256) :: input_line
@@ -761,6 +764,7 @@ CONTAINS
   SUBROUTINE parse_mailbox ()
     USE io_global, ONLY: ionode, ionode_id
     USE mp,        ONLY : mp_bcast, mp_barrier
+    USE mp_world,  ONLY : world_comm
     IMPLICIT NONE
     INTEGER :: i
     CHARACTER(LEN=256) :: input_line
