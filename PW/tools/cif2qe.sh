@@ -2,10 +2,12 @@
 
 #
 # CIF to Quantum Espresso format converter
-#  Version 0.2
-#  Date: 06 Nov 2012
+#  Version 0.5  Date: 02-Oct-2013
+#  Version 0.4  Date: 12 Jun 2013
+#  Version 0.3  Date: 15 Nov 2012
+# tested with GNU awk v.4 - may not work with earlier versions
 #
-# Copyright (C) 2012 Carlo Nervi
+# Copyright (C) 2012-2013 Carlo Nervi
 # This file is distributed under the terms of the
 # GNU General Public License. See the file `License'
 # in the root directory of the present distribution,
@@ -13,7 +15,7 @@
 #
 
 if [ $# != 1 ]; then
- printf "Usage: cif2qe.sh File (.cif extension not required!)\n Requires File.cif\n"
+ printf "cif2qe.sh Version 0.5 - Usage: cif2qe.sh File (.cif extension not required!)\n Requires File.cif\n"
  exit
 fi
 
@@ -55,8 +57,14 @@ function eval(cmd,expression) {
  return l     
 }
 
-function norma(pat, repl, str) {
- gsub(pat, repl, str)
+#
+# In str sostituisce tutte le occorrenze di pat con il valore repl es:
+#   pat="x"  repl="0.945" str="x+1/2"
+#
+function norma(x, y, z, str) {
+ gsub("x", x, str)
+ gsub("y", y, str)
+ gsub("z", z, str)
  gsub(/--/, "+", str)
  val=eval(str)
  while (val < 0.) val+=1.
@@ -69,8 +77,27 @@ function abs(numero) {
  return numero
 }
 
+function parsex(str, field) {
+#
+# Consideriamo il testo fra due apostrofi singoli come una stringa
+# ritorna il campo field-esimo della stringa str
+#
+ c=0
+ str=str " "
+ while (str) {
+   match(str,/ *\47[^\47]*\47 * |[^ ]* /) 
+   f=substr(str,RSTART,RLENGTH)             # save what matched in f
+   gsub(/^ *\47?|\47? * $/,"",f)               # remove extra stuff
+   if ( ++c == field) { if (f!="") return f
+     else return $field
+   }
+ str=substr(str,RLENGTH+1)                 # "consume" what matched
+ }
+ return ""
+}
+
 # Salta il commento
-/^\#/ { next
+/^\#/||/^\;/ { next
 }
 
 /loop_/ { loop_switch=1; next }
@@ -87,7 +114,8 @@ function abs(numero) {
  } else {
    ivar=0
    loop_switch=0
-   Var2[$1]=$2
+   str=parsex($0, 2)
+   Var2[$1]=parsex($0, 2)
  }
 }
 
@@ -96,7 +124,7 @@ function abs(numero) {
  if (loop_switch==1 || loop_switch==2) {
   loop_switch=2
   for (i=0; i<Num_Var; i++) {
-    Array[Var[i]][jvar]=$(i+1)
+    Array[Var[i]][jvar]=parsex($0, i+1)
   }
   jvar++
   if (Var[0] ~ /^_atom/) natom++
@@ -126,28 +154,40 @@ END {
     ntyp++
   }
  }
+
  for (j=0; j<nsymm; j++) {
   if (split(Array["_symmetry_equiv_pos_as_xyz"][j], Tmp, ",") != 3) {
     print "Error in _symmetry_equiv_pos_as_xyz. Number of fields != 3: [1]=" Tmp[1] " [2]=" Tmp[2] " [3]=" Tmp[3]
     print "D: " Array["_symmetry_equiv_pos_as_xyz"][j] "  " Tmp[1] "  " Tmp[2] "  " Tmp[3]
     exit
   }
-  TS[j][1]=Tmp[1]; TS[j][2]=Tmp[2]; TS[j][3]=Tmp[3]      
-  p_X=norma("x", Array["_atom_site_fract_x"][0], Tmp[1])    
-  p_Y=norma("y", Array["_atom_site_fract_y"][0], Tmp[2])
-  p_Z=norma("z", Array["_atom_site_fract_z"][0], Tmp[3])
+  TS[j][1]=Tmp[1]; TS[j][2]=Tmp[2]; TS[j][3]=Tmp[3]
+  x=strtonum(Array["_atom_site_fract_x"][0])
+  y=strtonum(Array["_atom_site_fract_y"][0])
+  z=strtonum(Array["_atom_site_fract_z"][0])
+  f_x=strtonum(Array["_atom_site_fract_x"][0])
+  f_y=strtonum(Array["_atom_site_fract_y"][0])
+  f_z=strtonum(Array["_atom_site_fract_z"][0])
+  p_X=norma(f_x, f_y, f_z, Tmp[1])
+  p_Y=norma(f_x, f_y, f_z, Tmp[2])
+  p_Z=norma(f_x, f_y, f_z, Tmp[3])
   ff=0
   for (jj=0; jj<j; jj++) {
-    for (i=0; i<natom; i++) {                 
-    if (abs(p_X - norma("x", Array["_atom_site_fract_x"][i], TS[jj][1])) < tol && abs(p_Y - norma("y", Array["_atom_site_fract_y"][i], TS[jj][2])) < tol && \
-         abs(p_Z - norma("z", Array["_atom_site_fract_z"][i], TS[jj][3])) < tol ) ff=1
-  }
+    for (i=0; i<natom; i++) {
+      f_x=strtonum(Array["_atom_site_fract_x"][i])
+      f_y=strtonum(Array["_atom_site_fract_y"][i])
+      f_z=strtonum(Array["_atom_site_fract_z"][i])
+      if (abs(p_X - norma(f_x, f_y, f_z, TS[jj][1])) < tol && abs(p_Y - norma(f_x, f_y, f_z, TS[jj][2])) < tol && abs(p_Z - norma(f_x, f_y, f_z, TS[jj][3])) < tol ) ff=1
+    }
   }
   if (ff==1) continue
   for (i=0; i<natom; i++) {
-    save_X[totatom]=norma("x", Array["_atom_site_fract_x"][i], Tmp[1])
-    save_Y[totatom]=norma("y", Array["_atom_site_fract_y"][i], Tmp[2])
-    save_Z[totatom]=norma("z", Array["_atom_site_fract_z"][i], Tmp[3])
+    f_x=strtonum(Array["_atom_site_fract_x"][i])
+    f_y=strtonum(Array["_atom_site_fract_y"][i])
+    f_z=strtonum(Array["_atom_site_fract_z"][i])
+    save_X[totatom]=norma(f_x, f_y, f_z, Tmp[1])
+    save_Y[totatom]=norma(f_x, f_y, f_z, Tmp[2])
+    save_Z[totatom]=norma(f_x, f_y, f_z, Tmp[3])
   totatom++
   }
  }
