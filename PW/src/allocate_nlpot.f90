@@ -33,19 +33,22 @@ subroutine allocate_nlpot
   USE wvfct,            ONLY : npwx, npw, igk, g2kin, ecutwfc
   USE us,               ONLY : qrad, tab, tab_d2y, tab_at, dq, nqx, &
                                nqxq, spline_ps
-  USE uspp,             ONLY : indv, nhtol, nhtolm, ijtoh, qq, dvan, deeq, vkb,&
-                               nkb, nkbus, nhtoj, becsum, qq_so,dvan_so, deeq_nc
+  USE uspp,             ONLY : indv, nhtol, nhtolm, ijtoh, qq, dvan, deeq, &
+                               vkb, indv_ijkb0, okvan, nkb, nkbus, nhtoj, &
+                               becsum, qq_so,dvan_so, deeq_nc
   USE uspp_param,       ONLY : upf, lmaxq, lmaxkb, nh, nhm, nbetam
   USE spin_orb,         ONLY : lspinorb, fcoef
-  USE paw_variables,    ONLY : okpaw
   USE control_flags,    ONLY : program_name
   USE io_global,        ONLY : stdout
+  USE mp_global,        ONLY : mpime
+  USE exx,              ONLY : exx_n_plane_waves
   !
   implicit none
   !
   !    a few local variables
   !
-  integer :: nwfcm  
+  integer :: nwfcm
+  integer,allocatable :: ngkq(:)
   ! counters on atom type, atoms, beta functions
   !
   !   calculate number of PWs for all kpoints
@@ -53,6 +56,9 @@ subroutine allocate_nlpot
   allocate (ngk( nks ))
   !
   call n_plane_waves (ecutwfc, tpiba2, nks, xk, g, ngm, npwx, ngk)
+  !
+  ! more plane waves are required in the exx case (only with ultrasoft)
+  call exx_n_plane_waves (ecutwfc, tpiba2, g, ngm, npwx)
   !
   !   igk relates the index of PW k+G to index in the list of G vector
   !
@@ -68,6 +74,7 @@ subroutine allocate_nlpot
   allocate (nhtolm(nhm, nsp))    
   allocate (nhtoj(nhm, nsp))    
   allocate (ijtoh(nhm, nhm, nsp))
+  allocate (indv_ijkb0(nat))
   allocate (deeq( nhm, nhm, nat, nspin))    
   if (noncolin) then
      allocate (deeq_nc( nhm, nhm, nat, nspin))    
@@ -90,7 +97,7 @@ subroutine allocate_nlpot
   ! This routine is called also by the phonon code, in which case it should
   ! allocate an array that includes q+G vectors up to |q+G|_max <= |Gmax|+|q|
   !
-  nqxq = INT( ( (sqrt(gcutm) + qnorm ) / dq + 4) * cell_factor )
+  nqxq = INT( ( (sqrt(gcutm) + qnorm) / dq + 4) * cell_factor )
   lmaxq = 2*lmaxkb+1
   !
   if (lmaxq > 0) allocate (qrad( nqxq, nbetam*(nbetam+1)/2, lmaxq, nsp))    

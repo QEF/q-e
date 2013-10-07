@@ -935,6 +935,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		three-dimensional mesh for q (k1-k2) sampling of 
 		the Fock operator (EXX). Can be smaller than 
                 the number of k-points.
+
+		Currently this defaults to the size of the k-point mesh used.
+	 	In QE =< 5.0.2 it defaulted to nqx1=nqx2=nqx3=1.
 	    }
 	}
 

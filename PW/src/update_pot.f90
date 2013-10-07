@@ -232,6 +232,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
   USE io_rho_xml,           ONLY : write_rho, read_rho
   USE paw_variables,        ONLY : okpaw, ddd_paw
   USE paw_onecenter,        ONLY : PAW_potential
+  USE funct,                ONLY : stop_exx
   !
   IMPLICIT NONE
   !
@@ -248,7 +249,10 @@ SUBROUTINE extrapolate_charge( rho_extr )
      !
      ! ... calculate structure factors for the new positions
      !
-     IF ( lmovecell ) CALL scale_h()
+     IF ( lmovecell ) THEN
+       CALL scale_h()
+       CALL stop_exx()
+     ENDIF
      !
      CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
                       dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )

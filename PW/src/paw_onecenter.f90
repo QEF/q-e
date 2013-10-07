@@ -32,6 +32,7 @@ MODULE paw_onecenter
                              ! and derivatives of D^1-~D^1 coefficients
     PUBLIC :: PAW_rho_lm     ! uses becsum to generate one-center charges
                              ! (all-electron and pseudo) on radial grid
+    PUBLIC :: PAW_h_potential ! computes hartree potential, only used by paw_exx
     !
     INTEGER, SAVE :: paw_comm, me_paw, nproc_paw
     !
@@ -45,9 +46,8 @@ MODULE paw_onecenter
     !
     LOGICAL :: with_small_so = .FALSE.
     !
-    ! the following macro controls the use of several fine-grained clocks
-    ! set it to 'if(.false.) CALL' (without quotes) in order to disable them,
-    ! set it to 'CALL' to enable them.
+    ! the following global variable controls the use of several fine-grained clocks
+    ! set it to .false. in order to disable them, set it to .true. to enable them.
     !
     LOGICAL, PARAMETER :: TIMING = .false.
     !
@@ -96,7 +96,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
    ! fake cross band occupations to select only one pfunc at a time:
    REAL(DP)                :: becfake(nhm*(nhm+1)/2,nat,nspin)
    REAL(DP)                :: integral           ! workspace
-   REAL(DP)                :: energy_xc, energy_h, energy_tot
+   REAL(DP)                :: energy_tot
    REAL(DP)                :: sgn                ! +1 for AE -1 for PS
 
    CALL start_clock('PAW_pot')
@@ -117,7 +117,6 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
    !
    me_paw    = mp_rank( paw_comm )
    nproc_paw = mp_size( paw_comm )
-
    !
    atoms: DO ia = ia_s, ia_e
       !
@@ -175,8 +174,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
 
             ! First compute the Hartree potential (it does not depend on spin...):
             CALL PAW_h_potential(i, rho_lm, v_lm(:,:,1), energy)
-               !
-               !    
+            !
       ! NOTE: optional variables works recursively: e.g. if energy is not present here
             ! it will not be present in PAW_h_potential too!
             !IF (present(energy)) write(*,*) 'H',i%a,i_what,sgn*energy
@@ -206,8 +204,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
                      IF (i_what == AE) THEN
                         CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc, rho_lm)
                         IF (with_small_so) &
-                        CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc_rel, &
-                                           msmall_lm)
+                          CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc_rel, msmall_lm)
                      ELSE
                         CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%qfuncl)
                         !                  optional argument for pseudo part --> ^^^
@@ -220,16 +217,13 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
                            rho_lm(j,lm,is) = rho_lm(j,lm,is) * savedv_lm(j,lm,is)
                         END DO
                         ! Integrate!
-                        CALL simpson(kkbeta,rho_lm(1,lm,is),g(i%t)%rab(1),&
-                                                             integral)
+                        CALL simpson(kkbeta,rho_lm(1,lm,is),g(i%t)%rab(1), integral)
                         d(nmb,i%a,is) = d(nmb,i%a,is) + sgn * integral
                         IF (is>1.and.with_small_so.AND.i_what== AE ) THEN
                            DO j=1, imesh
-                              msmall_lm(j,lm,is)=msmall_lm(j,lm,is)*&
-                                                 g_lm(j,lm,is)
+                              msmall_lm(j,lm,is)=msmall_lm(j,lm,is)*g_lm(j,lm,is)
                            ENDDO
-                           CALL simpson(kkbeta,msmall_lm(1,lm,is),&
-                                                 g(i%t)%rab(1), integral)
+                           CALL simpson(kkbeta,msmall_lm(1,lm,is), g(i%t)%rab(1), integral)
                            d(nmb,i%a,is) = d(nmb,i%a,is) + sgn * integral
                         ENDIF
                      ENDDO
@@ -308,7 +302,7 @@ FUNCTION PAW_ddot(bec1,bec2)
     !
     atoms: DO ia = ia_s, ia_e
     !
-    i%a = ia           ! the index of the atom
+    i%a = ia          ! the index of the atom
     i%t = ityp(ia)    ! the type of atom ia
     i%m = g(i%t)%mesh ! radial mesh size for atom ia
     i%b = upf(i%t)%nbeta
@@ -357,11 +351,10 @@ FUNCTION PAW_ddot(bec1,bec2)
                DO lm = 1, i%l**2
                   ! I can use rho_lm_save as workspace
                   DO k = 1, i%m
-                      rho_lm_save(k,lm,1) = (rho_lm_save(k,lm,1)- &
-                      rho_lm_save(k,lm,2)) * (rho_lm(k,lm,1)-rho_lm(k,lm,2))
+                      rho_lm_save(k,lm,1) = (rho_lm_save(k,lm,1)- rho_lm_save(k,lm,2)) &
+                                          * (rho_lm(k,lm,1)-rho_lm(k,lm,2))
                   ENDDO
-                  CALL simpson (upf(i%t)%kkbeta,rho_lm_save(:,lm,1),&
-                                                g(i%t)%rab,integral)
+                  CALL simpson (upf(i%t)%kkbeta,rho_lm_save(:,lm,1),g(i%t)%rab,integral)
                   !
                   ! Sum all the energies in PAW_ddot
                   PAW_ddot = PAW_ddot + i_sign * integral * 0.5_DP* e2/pi
@@ -429,22 +422,14 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
 
     REAL(DP), ALLOCATABLE :: rho_rad(:,:)       ! workspace (only one radial slice of rho)
     !
-    REAL(DP), ALLOCATABLE :: msmall_rad(:,:)    ! workspace 
-    REAL(DP)              :: hatr(3)            ! aux, used to integrate energy
-
     REAL(DP), ALLOCATABLE :: e_rad(:)           ! aux, used to store radial slices of energy
     REAL(DP), ALLOCATABLE :: e_of_tid(:)        ! aux, for openmp parallel reduce
     REAL(DP)              :: e                  ! aux, used to integrate energy
     !
     INTEGER               :: ix,k               ! counters on directions and radial grid
     INTEGER               :: lsd                ! switch for local spin density
-
-    REAL(DP)              :: exc_ret, stmp
-    !
     REAL(DP)              :: arho, amag, zeta, ex, ec, vx(2), vc(2), vs
-    !
-    INTEGER               :: ipol, kpol
-
+    INTEGER               :: kpol
     INTEGER               :: mytid, ntids
 
 #ifdef __OPENMP
@@ -625,9 +610,9 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
 
     INTEGER  :: k, ix, is, lm                             ! counters on spin and mesh
     REAL(DP) :: sx,sc,v1x,v2x,v1c,v2c                     ! workspace
-    REAL(DP) :: v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw  ! workspace
+    REAL(DP) :: v1cup, v1cdw                              ! workspace
     REAL(DP) :: sgn, arho                                 ! workspace
-    REAL(DP) :: rup, rdw, co2                             ! workspace
+    REAL(DP) :: co2                                       ! workspace
     REAL(DP) :: rh, zeta, grh2
     REAL(DP), ALLOCATABLE :: rup_vec(:), rdw_vec(:)
     REAL(DP), ALLOCATABLE :: sx_vec(:)
@@ -1098,7 +1083,9 @@ SUBROUTINE PAW_h_potential(i, rho_lm, v_lm, energy)
         DO k = 1, i%m
             aux(k) = v_lm(k,lm) * SUM(rho_lm(k,lm,1:nspin_lsda))
         ENDDO
+        ! FIXME:
         CALL simpson (i%m, aux, g(i%t)%rab, e)
+!         CALL simpson (upf(i%t)%kkbeta, aux, g(i%t)%rab, e)
         !
         ! Sum all the energies in PAW_ddot
         energy = energy + e
@@ -1365,7 +1352,6 @@ SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe)
    REAL(DP)                :: integral_r           ! workspace
    REAL(DP)                :: integral_i           ! workspace
    REAL(DP)                :: sgn                ! +1 for AE -1 for PS
-   COMPLEX(DP)             :: sumd
    INTEGER  :: ipert
 
    CALL start_clock('PAW_dpot')
@@ -1418,8 +1404,7 @@ SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe)
                rho_core => upf(i%t)%paw%ae_rho_atc
                sgn = +1._dp
             ELSE
-               CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%ptfunc, &
-                                          rho_lm, upf(i%t)%qfuncl)
+               CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%qfuncl)
                rho_core => upf(i%t)%rho_atc 
                sgn = -1._dp                 
             ENDIF
@@ -1430,18 +1415,14 @@ SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe)
             DO ipert=1,npe
                IF (i_what == AE) THEN
                   becfake(:,ia,:)=DBLE(dbecsum(:,ia,:,ipert))
-                  CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc, &
-                                     drhor_lm(1,1,1,ipert))
+                  CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc, drhor_lm(1,1,1,ipert))
                   becfake(:,ia,:)=AIMAG(dbecsum(:,ia,:,ipert))
-                  CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc, &
-                                     drhoi_lm(1,1,1,ipert))
+                  CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc, drhoi_lm(1,1,1,ipert))
                ELSE
                   becfake(:,ia,:)=DBLE(dbecsum(:,ia,:,ipert))
-                  CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%ptfunc, &
-                                     drhor_lm(1,1,1,ipert), upf(i%t)%qfuncl)
+                  CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%ptfunc, drhor_lm(1,1,1,ipert), upf(i%t)%qfuncl)
                   becfake(:,ia,:)=AIMAG(dbecsum(:,ia,:,ipert))
-                  CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%ptfunc, &
-                                     drhoi_lm(1,1,1,ipert), upf(i%t)%qfuncl)
+                  CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%ptfunc, drhoi_lm(1,1,1,ipert), upf(i%t)%qfuncl)
                END IF
             END DO
 
@@ -1937,10 +1918,9 @@ REAL(DP), INTENT(OUT) :: segni_rad(i%m, rad(i%t)%nx)
              ! output: keep track of the spin direction
 
 REAL(DP) :: rho_rad(i%m, nspin)    ! auxiliary: the charge+mag along a line
-REAL(DP) :: msmall_rad(i%m, nspin)    ! auxiliary: the charge+mag along a line
 REAL(DP) :: rhoout_rad(i%m, rad(i%t)%nx, nspin_gga) ! auxiliary: rho up and down along a line
 REAL(DP) :: mag             ! modulus of the magnetization
-REAL(DP) :: m(3), hatr(3)
+REAL(DP) :: m(3)
 
 INTEGER :: ix, k, ipol, kpol      ! counter on mesh points
 
@@ -2016,14 +1996,9 @@ REAL(DP) :: vout_rad(i%m, nspin_gga)  ! auxiliary: the potential along a line
 
 REAL(DP) :: rho_rad(i%m, nspin)       ! auxiliary: the charge+mag along a line
 
-REAL(DP) :: msmall_rad(i%m, nspin)    ! auxiliary: the mag of small components
-                                      !            along a line
 REAL(DP) :: v_rad(i%m, rad(i%t)%nx, nspin) ! auxiliary: rho up and down along a line
 REAL(DP) :: g_rad(i%m, rad(i%t)%nx, nspin) ! auxiliary: rho up and down along a line
 REAL(DP) :: mag            ! modulus of the magnetization
-
-REAL(DP) :: hatr(3)           ! modulus of the magnetization
-
 integer :: ix, k, ipol, kpol     ! counter on mesh points
 
 IF (nspin /= 4) CALL errore('compute_pot_nonc','called in the wrong case',1)

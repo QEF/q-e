@@ -81,15 +81,16 @@ SUBROUTINE newq_compute(vr,deeq,skip_vltot)
   COMPLEX(DP) :: dtmp
   REAL(DP), ALLOCATABLE :: ylmk0(:,:), qmod(:)
     ! spherical harmonics, modulus of G
-  REAL(DP) :: fact, ddot
+  REAL(DP) :: ddot
+  INTEGER :: fact
 
   IF ( gamma_only ) THEN
      !
-     fact = 2.D0
+     fact = 2
      !
   ELSE
      !
-     fact = 1.D0
+     fact = 1
      !
   END IF
   !

@@ -30,14 +30,14 @@ subroutine init_us_1
   USE parameters,   ONLY : lmaxx
   USE constants,    ONLY : fpi, sqrt2
   USE atom,         ONLY : rgrid
-  USE ions_base,    ONLY : ntyp => nsp
+  USE ions_base,    ONLY : ntyp => nsp, ityp, nat
   USE cell_base,    ONLY : omega, tpiba
   USE gvect,        ONLY : g, gg
   USE lsda_mod,     ONLY : nspin
   USE us,           ONLY : nqxq, dq, nqx, tab, tab_d2y, qrad, spline_ps
   USE splinelib
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq, indv,&
-                           ap, aainit, qq_so, dvan_so, okvan
+                           ap, aainit, qq_so, dvan_so, okvan, indv_ijkb0
   USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
   USE spin_orb,     ONLY : lspinorb, rot_ylm, fcoef
   USE paw_variables,ONLY : okpaw
@@ -49,7 +49,7 @@ subroutine init_us_1
   !     here a few local variables
   !
   integer :: nt, ih, jh, nb, mb, ijv, l, m, ir, iq, is, startq, &
-       lastq, ilast, ndm
+       lastq, ilast, ndm, ia
   ! various counters
   real(DP), allocatable :: aux (:), aux1 (:), besr (:), qtot (:,:)
   ! various work space
@@ -147,6 +147,7 @@ subroutine init_us_1
            enddo
         enddo
      endif
+     !
      ! ijtoh map augmentation channel indexes ih and jh to composite
      ! "triangular" index ijh
      ijtoh(:,:,nt) = -1
@@ -157,6 +158,14 @@ subroutine init_us_1
              ijtoh(ih,jh,nt) = ijv
              ijtoh(jh,ih,nt) = ijv
          enddo
+     enddo
+     !
+     ! ijkb0 is just before the first beta "in the solid" for atom ia
+     ! i.e. ijkb0+1,.. ijkb0+nh(ityp(ia)) are the nh beta functions of
+     !      atom ia in the global list of beta functions
+     indv_ijkb0(1) = 0
+     do ia = 2,nat
+       indv_ijkb0(ia) = indv_ijkb0(ia-1)+nh(ityp(ia-1))
      enddo
      !
      !    From now on the only difference between KB and US pseudopotentials

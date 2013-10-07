@@ -62,7 +62,7 @@ for dir in $dirs; do
             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \           
                        $LEVEL2/PW/src  " ;;
 	GWW/gww )
-            DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \                                                                                           " ;;
+            DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules " ;;
         GWW/head )
              DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
                       $LEVEL2/PW/src $LEVEL2/PHonon/PH " ;;

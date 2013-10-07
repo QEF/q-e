@@ -18,7 +18,7 @@ subroutine n_plane_waves (ecutwfc, tpiba2, nks, xk, g, ngm, npwx, ngk)
   implicit none
   !
   integer, intent(in) :: nks, ngm
-  real(DP), intent(in) :: ecutwfc, tpiba2, xk (3, nks), g (3, ngm)
+  real(DP),intent(in) :: ecutwfc, tpiba2, xk (3, nks), g (3, ngm)
   !
   integer, intent(out) :: npwx, ngk (nks)
   !

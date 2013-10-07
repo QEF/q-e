@@ -92,6 +92,9 @@ CONTAINS
   !
   END FUNCTION n_atom_wfc
 END MODULE uspp_param
+
+! <<<<<<<<<<<<<<<~~~~<<<<<<<<<<<<<<<<-----------------
+
 MODULE uspp
   !
   ! Ultrasoft PPs:
@@ -103,8 +106,10 @@ MODULE uspp
   IMPLICIT NONE
   PRIVATE
   SAVE
-  PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, nkb, nkbus, &
-       vkb, dvan, deeq, qq, nhtoj, ijtoh, beta, becsum, deallocate_uspp
+  PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, indv_ijkb0, &
+            nkb, nkbus, vkb, dvan, deeq, qq, nhtoj, ijtoh, beta, &
+            becsum, deallocate_uspp
+       
   PUBLIC :: okvan, nlcc_any
   PUBLIC :: qq_so, dvan_so, deeq_nc 
   PUBLIC :: dbeta
@@ -125,7 +130,8 @@ MODULE uspp
        indv(:,:),        &! indes linking  atomic beta's to beta's in the solid
        nhtol(:,:),       &! correspondence n <-> angular momentum l
        nhtolm(:,:),      &! correspondence n <-> combined lm index for (l,m)
-       ijtoh(:,:,:)       ! correspondence beta indexes ih,jh -> composite index ijh
+       ijtoh(:,:,:),     &! correspondence beta indexes ih,jh -> composite index ijh
+       indv_ijkb0(:)      ! first beta (index in the solid) for each atom 
   !
   LOGICAL :: &
        okvan = .FALSE.,&  ! if .TRUE. at least one pseudo is Vanderbilt
@@ -312,21 +318,22 @@ CONTAINS
   SUBROUTINE deallocate_uspp()
     !-----------------------------------------------------------------------
     !
-    IF( ALLOCATED( nhtol ) )   DEALLOCATE( nhtol )
-    IF( ALLOCATED( indv ) )    DEALLOCATE( indv )
-    IF( ALLOCATED( nhtolm ) )  DEALLOCATE( nhtolm )
-    IF( ALLOCATED( nhtoj ) )   DEALLOCATE( nhtoj )
-    IF( ALLOCATED( ijtoh ) )   DEALLOCATE( ijtoh )
-    IF( ALLOCATED( vkb ) )     DEALLOCATE( vkb )
-    IF( ALLOCATED( becsum ) )  DEALLOCATE( becsum )
-    IF( ALLOCATED( qq ) )      DEALLOCATE( qq )
-    IF( ALLOCATED( dvan ) )    DEALLOCATE( dvan )
-    IF( ALLOCATED( deeq ) )    DEALLOCATE( deeq )
-    IF( ALLOCATED( qq_so ) )   DEALLOCATE( qq_so )
-    IF( ALLOCATED( dvan_so ) ) DEALLOCATE( dvan_so )
-    IF( ALLOCATED( deeq_nc ) ) DEALLOCATE( deeq_nc )
-    IF( ALLOCATED( beta ) )    DEALLOCATE( beta )
-    IF( ALLOCATED( dbeta ) )   DEALLOCATE( dbeta )
+    IF( ALLOCATED( nhtol ) )      DEALLOCATE( nhtol )
+    IF( ALLOCATED( indv ) )       DEALLOCATE( indv )
+    IF( ALLOCATED( nhtolm ) )     DEALLOCATE( nhtolm )
+    IF( ALLOCATED( nhtoj ) )      DEALLOCATE( nhtoj )
+    IF( ALLOCATED( indv_ijkb0 ) ) DEALLOCATE( indv_ijkb0 )
+    IF( ALLOCATED( ijtoh ) )      DEALLOCATE( ijtoh )
+    IF( ALLOCATED( vkb ) )        DEALLOCATE( vkb )
+    IF( ALLOCATED( becsum ) )     DEALLOCATE( becsum )
+    IF( ALLOCATED( qq ) )         DEALLOCATE( qq )
+    IF( ALLOCATED( dvan ) )       DEALLOCATE( dvan )
+    IF( ALLOCATED( deeq ) )       DEALLOCATE( deeq )
+    IF( ALLOCATED( qq_so ) )      DEALLOCATE( qq_so )
+    IF( ALLOCATED( dvan_so ) )    DEALLOCATE( dvan_so )
+    IF( ALLOCATED( deeq_nc ) )    DEALLOCATE( deeq_nc )
+    IF( ALLOCATED( beta ) )       DEALLOCATE( beta )
+    IF( ALLOCATED( dbeta ) )      DEALLOCATE( dbeta )
     !
   END SUBROUTINE deallocate_uspp
   !

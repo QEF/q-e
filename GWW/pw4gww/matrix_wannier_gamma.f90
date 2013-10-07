@@ -88,7 +88,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   USE io_files,             ONLY : diropn
   USE io_global,            ONLY : stdout
   USE gvecs,              ONLY : doublegrid
-  USE realus,  ONLY : qsave, box,maxbox
+  ! USE realus,  ONLY : qsave, box,maxbox
   USE wannier_gw, ONLY : becp_gw, expgsave, becp_gw_c, maxiter2,num_nbndv
   USE ions_base,            ONLY : nat, ntyp =>nsp, ityp
   USE uspp_param,           ONLY : lmaxq,upf,nh, nhm
@@ -342,9 +342,9 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
                 do ih = 1, nh(np)
                  do jh = ih, nh(np)
                     expgsave(ih,jh,na,mdir)=(0.d0,0.d0)
-                    do ir =1,maxbox(na)
+                    !do ir =1,maxbox(na)
                       ! expgsave(ih,jh,na,mdir)=expgsave(ih,jh,na,mdir)+qsave(ih,jh,na)%q(ir)*tmpexp(box(ir,na))
-                    enddo
+                    !enddo
                  enddo
                enddo
             endif

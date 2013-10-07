@@ -1744,6 +1744,8 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
   real(DP) :: rho(length), sxup(length), sxdw(length)
   integer :: iflag
   integer :: i
+  ! only used for HSE (igcx == 12):
+  real(DP) :: sxsr, v1xupsr, v2xupsr, v1xdwsr, v2xdwsr
   !
   !
   ! exchange
@@ -1793,7 +1795,7 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
      sx = 0.5_DP * (sxup + sxdw)
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
-  case(3,4,8,10)
+  case(3,4,8,10,12)
      ! igcx=3: PBE, igcx=4: revised PBE, igcx=8 PBE0, igcx=10: PBEsol
      if (igcx == 4) then
         iflag = 2
@@ -1814,6 +1816,19 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
         v1xdw = (1.0_DP - exx_fraction) * v1xdw
         v2xup = (1.0_DP - exx_fraction) * v2xup
         v2xdw = (1.0_DP - exx_fraction) * v2xdw
+     end if
+     if (igcx == 12 .and. exx_started ) then
+        ! in this case the subroutine is not really "vector"
+        DO i = 1, length
+          call pbexsr_lsd (rhoup(i), rhodw(i), grhoup2(i), grhodw2(i), sxsr,  &
+                           v1xupsr, v2xupsr, v1xdwsr, v2xdwsr, &
+                           screening_parameter)
+        sx(i)  = sx(i) - exx_fraction*sxsr
+        v1xup(i) = v1xup(i) - exx_fraction*v1xupsr
+        v2xup(i) = v2xup(i) - exx_fraction*v2xupsr
+        v1xdw(i) = v1xdw(i) - exx_fraction*v1xdwsr
+        v2xdw(i) = v2xdw(i) - exx_fraction*v2xdwsr
+        ENDDO
      end if
   case(9)
      do i=1,length

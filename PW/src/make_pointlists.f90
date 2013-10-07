@@ -46,7 +46,6 @@ SUBROUTINE make_pointlists
 
   ! In the parallel case, find the index-offset to account for the planes
   ! treated by other procs
-
 #if defined (__MPI)
       idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_bgrp+1)
 #else

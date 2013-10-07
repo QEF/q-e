@@ -15,6 +15,7 @@ SUBROUTINE print_clock_pw()
    USE io_global,          ONLY : stdout
    USE control_flags,      ONLY : isolve, iverbosity, gamma_only
    USE paw_variables,      ONLY : okpaw
+   USE uspp,               ONLY : okvan
    USE realus,             ONLY : real_space
    USE ldaU,               ONLY : lda_plus_U
    USE funct,              ONLY : dft_is_hybrid
@@ -175,7 +176,7 @@ SUBROUTINE print_clock_pw()
    ENDIF
    !
    IF ( dft_is_hybrid() ) THEN
-      WRITE( stdout, '(5X,"EXX routines")' )
+      WRITE( stdout, '(/,5X,"EXX routines")' )
       CALL print_clock( 'exx_grid' )
       CALL print_clock( 'exxinit' )
       CALL print_clock( 'vexx' )
@@ -184,11 +185,17 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'exxen2' )
       !CALL print_clock( 'exxen2_ngmloop' )
       CALL print_clock ('cycleig')
+      IF( okvan) THEN
+        WRITE( stdout, '(/,5X,"EXX+US routines")' )
+        CALL print_clock( 'becxx' )
+        CALL print_clock( 'addusxx' )
+        CALL print_clock( 'newdxx' )
+        CALL print_clock( 'nlxx_pot' )
+      ENDIF
    ENDIF
    !
    IF ( okpaw ) THEN
-      WRITE( stdout, * )
-      WRITE( stdout, '(5X,"PAW routines")' )
+      WRITE( stdout, '(/,5X,"PAW routines")' )
       ! radial routines:
       CALL print_clock ('PAW_pot')
       CALL print_clock ('PAW_newd')
@@ -208,6 +215,12 @@ SUBROUTINE print_clock_pw()
       CALL print_clock ('PAW_gcxc_v')
       CALL print_clock ('PAW_div')
       CALL print_clock ('PAW_grad')
+      IF ( dft_is_hybrid() ) THEN
+        WRITE( stdout, '(/,5X,"PAW+EXX routines")' )
+        CALL print_clock("PAW_newdxx")
+        CALL print_clock("PAW_xx_nrg")
+        CALL print_clock('PAW_keeq')
+      ENDIF
    END IF
    !
 #ifdef __ENVIRON

@@ -1,0 +1,622 @@
+!
+! Copyright (C) 2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+! Written by Lorenzo Paulatto (2012-2013) 
+! Gamma-only tricks by Simon Binnie
+! G-space code based on addusdens.f90 and compute_becsum.f90 
+! Real space code based on realus.f90
+!-----------------------------------------------------------------------
+MODULE us_exx
+  !-----------------------------------------------------------------------
+  ! Most of the USPP+EXX code is here.
+  ! Notes: 
+  !   * compute_becxx is still in exx.f90 as it uses plenty of global variables from there
+  !   * some tests and loops are done directly in exx.f90        
+  !   * PAW specific parts are in paw_exx.f90
+  !
+  USE kinds,   ONLY : DP
+  USE becmod,  ONLY : bec_type, calbec, ALLOCATE_bec_type, DEALLOCATE_bec_type
+  !
+  IMPLICIT NONE
+  SAVE
+  !
+  LOGICAL,PARAMETER :: dovanxx = .true. ! DEBUG option
+  !
+  TYPE(bec_type),ALLOCATABLE :: becxx(:) ! <beta_I|phi_j,k>, with the wavefunctions from exxbuff
+  ! the visible index is k; while I and J are inside bec_type
+
+  COMPLEX(DP),ALLOCATABLE :: becxx_gamma(:,:)  ! gamma only version of becxx%r
+                                               ! two bands stored per stripe 
+  ! FIXME: put somewhere else (there is a copy in exx)
+  REAL(DP),PARAMETER :: eps_occ  = 1.d-8 ! skip band where occupation is less than this
+                                          
+
+ CONTAINS ! ~~+~~---//--~~~-+
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE addusxx_g(rhoc, xkq, becphi, xk, becpsi)
+    !-----------------------------------------------------------------------
+    USE constants,           ONLY : tpi
+    USE ions_base,           ONLY : nat, ntyp => nsp, ityp, tau
+    USE uspp,                ONLY : nkb, vkb,  okvan, indv_ijkb0
+    USE uspp_param,          ONLY : upf, nh, nhm, lmaxq
+    USE fft_base,            ONLY : dffts
+    USE gvect,               ONLY : ngm, nl, nlm, g, &
+                                    eigts1, eigts2, eigts3, mill, gstart
+    USE gvecs,               ONLY : ngms, nls, nlsm
+    USE cell_base,           ONLY : tpiba
+    USE control_flags,       ONLY : gamma_only
+    ! ... k-points version
+    IMPLICIT NONE
+    !
+    ! In input I get a slice of <beta|left> and <beta|right> only for this kpoint and this band
+    COMPLEX(DP),INTENT(inout) :: rhoc(dffts%nnr)
+    COMPLEX(DP),INTENT(in)    :: becphi(nkb)
+    COMPLEX(DP),INTENT(in)    :: becpsi(nkb)
+    REAL(DP),   INTENT(in)    :: xkq(3), xk(3)
+    !
+    ! ... local variables
+    INTEGER :: ikb, jkb, ijkb0, ih, jh, na, np !, ijh
+    INTEGER :: ig
+    COMPLEX(DP) :: skk, becfac
+    !
+    REAL(DP),ALLOCATABLE    :: qmod(:), q(:,:), qq(:),  &! the modulus of G
+                               ylmk0(:,:)  ! the spherical harmonics
+    COMPLEX(DP),ALLOCATABLE :: qgm(:), aux(:), eigqts(:)
+    REAL(DP) :: arg
+    !
+    CALL start_clock( 'addusxx' )
+    !
+    ALLOCATE(ylmk0(ngms, lmaxq * lmaxq))    
+    ALLOCATE(qmod(ngms), qq(ngms), q(3,ngm))
+    ALLOCATE(qgm(ngms), aux(ngms))
+    !
+    IF(.not.(okvan .and. dovanxx)) RETURN
+    !
+    DO ig = 1, ngms
+      q(:,ig) = xk(:) - xkq(:) + g(:,ig)
+      qq(ig)  = SUM(q(:,ig)**2)
+      qmod(ig)= SQRT(qq(ig))
+    ENDDO
+    !
+    CALL ylmr2 (lmaxq * lmaxq, ngms, q, qq, ylmk0)
+    !
+    ALLOCATE(eigqts(nat))
+    DO na = 1, nat
+      arg = tpi* SUM( (xk(:) - xkq(:))*tau(:,na) )
+      eigqts(na) = CMPLX( COS(arg), -SIN(arg), kind=DP)
+    END DO
+    !
+    DO np = 1, ntyp
+      ONLY_FOR_USPP : &
+      IF ( upf(np)%tvanp .and. ANY(ityp(1:nat) == np) ) THEN
+        !
+        DO ih = 1, nh(np)
+        DO jh = 1, nh(np)
+            !
+            CALL qvan2(ngms, ih, jh, np, qmod, qgm, ylmk0)
+            !
+            ATOMS_LOOP : &
+            DO na = 1, nat
+            IF (ityp(na)==np) THEN
+                !
+                ! NOTE: the next line counts the number of beta in the atoms (not types!) before 
+                ! this one (na) this hack is necessary to minimize the number of calls to qvan2
+                ijkb0 = indv_ijkb0(na) !SUM(nh(ityp(1:na)))-nh(ityp(na)) 
+                ikb = ijkb0 + ih
+                jkb = ijkb0 + jh
+
+                becfac = CONJG(becphi(ikb))*becpsi(jkb)
+                !
+                DO ig = 1, ngms
+                    skk = eigts1(mill(1,ig), na) * &
+                          eigts2(mill(2,ig), na) * &
+                          eigts3(mill(3,ig), na)
+                    aux(ig) = qgm(ig)*eigqts(na)*skk*becfac
+                ENDDO
+                !
+                DO ig = 1,ngms
+                  rhoc(nls(ig)) = rhoc(nls(ig)) + aux(ig)
+                ENDDO
+                !
+                IF(gamma_only) THEN
+                  DO ig = gstart,ngms
+                    rhoc(nlsm(ig)) = rhoc(nlsm(ig)) + CONJG(aux(ig))
+                  ENDDO
+                ENDIF
+                !
+            END IF
+            ENDDO ATOMS_LOOP  ! nat
+            !
+        END DO ! jh
+        END DO ! ih
+      END IF &
+      ONLY_FOR_USPP 
+    ENDDO
+    !
+    DEALLOCATE( ylmk0, qmod, qgm, eigqts, aux)
+    !
+    CALL stop_clock( 'addusxx' )
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+  END SUBROUTINE addusxx_g
+  !-----------------------------------------------------------------------
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE newdxx_g(vc, xkq, becphi, xk, deexx)
+    !-----------------------------------------------------------------------
+    !
+    ! This subroutine computes some sort of EXX contribution to the non-local 
+    ! part of the hamiltonian. 
+    !   alpha_Ii = \int \sum_Jj Q_IJ(r) V^{i,j}_Fock <beta_J|phi_j> d^3(r)
+    ! The actual contribution will be (summed outside)
+    !  H = H+\sum_I |beta_I> alpha_Ii
+    ! 
+    USE constants,      ONLY : tpi
+    USE ions_base,      ONLY : nat, ntyp => nsp, ityp, tau
+    USE uspp,           ONLY : nkb, vkb,  okvan, indv_ijkb0
+    USE uspp_param,     ONLY : upf, nh, nhm, lmaxq
+    USE fft_base,       ONLY : dffts
+    USE gvect,          ONLY : ngm, nl, nlm, gg, g, gstart, &
+                               eigts1, eigts2, eigts3, mill
+    USE gvecs,          ONLY : ngms, nls
+    USE cell_base,      ONLY : tpiba, omega
+    USE control_flags,  ONLY : gamma_only
+    ! ... k-points version
+    IMPLICIT NONE
+    !
+    ! In input I get a slice of <beta|left> and <beta|right> only for this kpoint and this band
+    COMPLEX(DP),INTENT(in)    :: vc(dffts%nnr)
+    COMPLEX(DP),INTENT(in)    :: becphi(nkb)
+    COMPLEX(DP),INTENT(inout) :: deexx(nkb)
+    REAL(DP),INTENT(in)       :: xk(3), xkq(3)
+    !
+    ! ... local variables
+    INTEGER :: ikb, jkb, ijkb0, ih, jh, na, np !, ijh
+    INTEGER :: ig, fact
+    COMPLEX(DP) :: skk
+    !
+    REAL(DP),ALLOCATABLE    :: qmod (:), q(:,:), qq(:), &
+                               ylmk0 (:,:)  ! the spherical harmonics
+    COMPLEX(DP),ALLOCATABLE :: qgm(:),    & ! the Q(r) function
+                               auxvc(:), &  ! vc in order of |g|
+                               eigqts(:)
+    REAL(DP) :: arg
+    !
+    CALL start_clock( 'newdxx' )
+    !
+    fact=1
+    IF(gamma_only) fact=2
+    !
+    ALLOCATE(ylmk0(ngms, lmaxq**2))    
+    ALLOCATE(qgm(ngms))
+    ALLOCATE(auxvc(ngms))
+    ALLOCATE (qmod( ngms), qq(ngms), q(3,ngm))
+
+    !
+    IF(.not.(okvan .and. dovanxx)) RETURN
+    !
+    DO ig = 1, ngms
+      q(:,ig) = xk(:) - xkq(:) + g(:,ig)
+      qq(ig)  = SUM(q(:,ig)**2)
+      qmod(ig)= SQRT(qq (ig) )
+    ENDDO
+    CALL ylmr2 (lmaxq * lmaxq, ngms, q, qq, ylmk0)
+    !
+    ALLOCATE(eigqts(nat))
+    DO na = 1, nat
+      arg = tpi* SUM( (xk(:) - xkq(:))*tau(:,na) )
+      eigqts(na) = CMPLX( COS(arg), -SIN(arg), kind=DP)
+    END DO
+    !
+    ! reindex just once at the beginning
+    auxvc = (0._dp, 0._dp)
+    auxvc(1:ngms) = vc(nls(1:ngms) )
+    !
+    DO np = 1, ntyp
+      ONLY_FOR_USPP : &
+      IF ( upf(np)%tvanp ) THEN
+        DO ih = 1, nh(np)
+        DO jh = 1, nh(np)
+            !
+            CALL qvan2(ngms, ih, jh, np, qmod, qgm, ylmk0)
+            !
+            ATOMS_LOOP : &
+            DO na = 1, nat
+            IF (ityp(na)==np) THEN
+                !
+                ! NOTE: see addusxx_g for the next line:
+                ijkb0 = indv_ijkb0(na) !SUM(nh(ityp(1:na)))-nh(ityp(na)) 
+                ikb = ijkb0 + ih
+                jkb = ijkb0 + jh
+                !
+                DO ig = 1, ngms
+                    skk = eigts1(mill(1,ig), na) * &
+                          eigts2(mill(2,ig), na) * &
+                          eigts3(mill(3,ig), na)
+                    !
+                    deexx(ikb) = deexx(ikb) + becphi(jkb)*auxvc(ig)*fact*omega &
+                                             *CONJG(eigqts(na)*skk*qgm(ig)) ! \sum_J Q_IJ V_F
+                ENDDO
+                !
+                IF(gamma_only.and.gstart==2) THEN
+                    deexx(ikb) = deexx(ikb) - becphi(jkb)*auxvc(1)*omega &
+                                             *CONJG(eigqts(na)*skk*qgm(1))
+                ENDIF
+                !
+            END IF
+            ENDDO ATOMS_LOOP ! nat
+        ENDDO ! jh
+        ENDDO ! ih
+      END IF &
+      ONLY_FOR_USPP 
+    ENDDO
+    !
+    DEALLOCATE( ylmk0, qmod, qgm, auxvc, eigqts)
+    CALL stop_clock( 'newdxx' )
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+  END SUBROUTINE newdxx_g
+  !-----------------------------------------------------------------------
+  !
+!   !----------------------------------------------------------------------
+!   SUBROUTINE addusxx_force(forcenl)
+!     !----------------------------------------------------------------------
+!     !
+!     !   This routine computes the contribution to atomic forces due
+!     !   to the dependence of the Q function on the atomic position.
+!     !   On output: the contribution is added to forcenl
+!     !
+!     USE kinds,      ONLY : DP
+!     USE ions_base,  ONLY : nat, ntyp => nsp, ityp
+!     USE cell_base,  ONLY : omega, tpiba
+!     USE fft_base,   ONLY : dfftp
+!     USE gvect,      ONLY : ngm, nl, nlm, gg, g, eigts1, eigts2, eigts3, mill
+!     USE scf,        ONLY : v, vltot
+!     USE uspp,       ONLY : becsum, okvan
+!     USE uspp_param, ONLY : upf, lmaxq, nh, nhm
+!     USE mp_global,  ONLY : intra_bgrp_comm
+!     USE mp,         ONLY : mp_sum
+!     USE noncollin_module,   ONLY : nspin_mag
+!     USE control_flags,      ONLY : gamma_only
+!     USE fft_interfaces,     ONLY : fwfft
+!     !
+!     IMPLICIT NONE
+!     !
+!     REAL(DP) :: forcenl (3, nat)
+!     ! local variables
+!     INTEGER :: ig, ir, dim, nt, ih, jh, ijh, ipol, is, na
+!     COMPLEX(DP):: cfac
+!     REAL(DP) :: fact, ddot
+!     ! work space
+!     COMPLEX(DP),ALLOCATABLE :: aux(:,:), aux1(:,:), vg(:), qgm(:), eigqts(:)
+!     REAL(DP),ALLOCATABLE :: ddeeq(:,:,:,:), qmod(:), ylmk0(:,:)
+! 
+!     !
+!     if (.not.okvan) return
+!     !
+!     DO ig = 1, ngms
+!       q(:,ig) = xk(:) - xkq(:) + g(:,ig)
+!       qq(ig)  = SUM(q(:,ig)**2)
+!       qmod(ig)= SQRT(qq (ig) )
+!     ENDDO
+!     !
+!     ALLOCATE(eigqts(nat))
+!     DO na = 1, nat
+!       arg = tpi* SUM( (xk(:) - xkq(:))*tau(:,na) )
+!       eigqts(na) = CMPLX( COS(arg), -SIN(arg), kind=DP)
+!     END DO
+!     !
+!     IF (gamma_only) THEN
+!       fact = 2.d0
+!     ELSE
+!       fact = 1.d0
+!     ENDIF
+!     ALLOCATE (aux(ngm,nspin_mag))    
+!     !
+!     ! fourier transform of the total effective potential
+!     !
+!     ALLOCATE (vg(dfftp%nnr))    
+!     DO is = 1, nspin_mag
+!       IF (nspin_mag.eq.4.and.is.ne.1) then
+!           vg (:) = v%of_r(:,is)
+!       ELSE
+!           vg (:) = vltot (:) + v%of_r (:, is)
+!       ENDIF
+!       CALL fwfft ('Dense', vg, dfftp)
+!       aux (:, is) = vg (nl (:) ) * tpiba * (0.d0, -1.d0)
+!     ENDDO
+!     DEALLOCATE (vg)
+!     !
+!     ALLOCATE (aux1(ngm,3))    
+!     ALLOCATE (ddeeq( 3, (nhm*(nhm+1))/2,nat,nspin_mag))    
+!     ALLOCATE (qgm( ngm))
+!     ALLOCATE (qmod( ngm))    
+!     ALLOCATE (ylmk0(ngm,lmaxq*lmaxq))    
+!     !
+!     ddeeq(:,:,:,:) = 0.d0
+!     !
+!     CALL ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
+!     !
+!     qmod (:) = sqrt (gg (:) )
+!     !
+!     ! here we compute the integral Q*V for each atom,
+!     !       I = sum_G i G_a exp(-iR.G) Q_nm v^*
+!     !
+!     DO nt = 1, ntyp
+!       IF ( upf(nt)%tvanp ) then
+!           ijh = 1
+!           DO ih = 1, nh (nt)
+!             DO jh = ih, nh (nt)
+!                 call qvan2 (ngm, ih, jh, nt, qmod, qgm, ylmk0)
+!                 DO na = 1, nat
+!                   IF (ityp (na) == nt) then
+!                       !
+!                       ! The product of potential, structure factor and iG
+!                       !
+!                       DO is = 1, nspin_mag
+!                         DO ig = 1, ngm
+!                             cfac = aux(ig, is) * eigqts(na) * &
+!                                          CONJG(eigts1(mill(1,ig), na) *&
+!                                                eigts2(mill(2,ig), na) *&
+!                                                eigts3(mill(3,ig), na) )
+!                             aux1(ig, 1) = g(1, ig) * cfac
+!                             aux1(ig, 2) = g(2, ig) * cfac
+!                             aux1(ig, 3) = g(3, ig) * cfac
+!                         ENDDO
+!                         !
+!                         !    and the product with the Q functions
+!                         !    G=0 term gives no contribution
+!                         !
+!                         DO ipol = 1, 3
+!                             ddeeq (ipol, ijh, na, is) = omega * fact * &
+!                                 ddot (2 * ngm, aux1(1, ipol), 1, qgm, 1)
+!                         ENDDO
+!                       ENDDO
+!                   ENDIF
+!                 ENDDO
+!                 ijh = ijh + 1
+!             ENDDO
+!           ENDDO
+!       ENDIF
+! 
+!     ENDDO
+! 
+!     call mp_sum ( ddeeq, intra_bgrp_comm )
+!     !
+!     DO is = 1, nspin_mag
+!       DO na = 1, nat
+!           nt = ityp (na)
+!           dim = (nh (nt) * (nh (nt) + 1) ) / 2
+!           DO ipol = 1, 3
+!             DO ir = 1, dim
+!                 forcenl(ipol, na) = forcenl(ipol, na) + &
+!                     ddeeq(ipol, ir, na, is) * becsum(ir, na, is)
+!             ENDDO
+!           ENDDO
+!       ENDDO
+!     ENDDO
+!     !
+!     DEALLOCATE(ylmk0,qgm,qmod,ddeeq,aux1,aux,eigqts)
+!     RETURN
+!     !-----------------------------------------------------------------------
+!   END SUBROUTINE addusxx_force
+!   !-----------------------------------------------------------------------
+  !
+  !-----------------------------------------------------------------------
+   SUBROUTINE add_nlxx_pot(lda, hpsi, xkp, npwp, igkp, deexx, exxalfa)
+    !-----------------------------------------------------------------------
+    !
+    ! This subroutine computes some sort of EXX contribution to the non-local 
+    ! part of the hamiltonian. 
+    !   alpha_Ii = \int \sum_Jj Q_IJ(r) V^{i,j}_Fock <beta_J|phi_j> d^3(r)
+    ! The actual contribution will be (summed outside)
+    !  H = H+\sum_I |beta_I> alpha_Ii
+    ! 
+    USE ions_base,           ONLY : nat, ntyp => nsp, ityp
+    USE uspp,                ONLY : nkb, okvan
+    USE uspp_param,          ONLY : upf, nh
+    USE gvecs,               ONLY : nls
+    USE wvfct,               ONLY : nbnd, npwx !, ecutwfc
+    USE control_flags,       ONLY : gamma_only
+!     USE noncollin_module,     ONLY : npol
+
+    ! ... k-points version
+    IMPLICIT NONE
+    !
+    ! In input I get a slice of <beta|left> and <beta|right> only for this kpoint and this band
+    INTEGER,INTENT(in)        :: lda              ! leading dimension of hpsi
+    COMPLEX(DP),INTENT(inout) :: hpsi(lda)!*npol)   ! the hamiltonian
+    COMPLEX(DP),INTENT(in)    :: deexx(nkb)       ! \int \sum_J Q_IJ <beta_J|phi_i> d3r
+    REAL(DP),INTENT(in)       :: xkp(3)           ! current k point
+    REAL(DP),INTENT(in)       :: exxalfa       ! fraction of ex. exchange to add
+    INTEGER,INTENT(IN)        :: npwp, igkp(npwp)
+    !
+    ! ... local variables
+    INTEGER :: ikb, ijkb0, ih, na, np
+    INTEGER :: ig
+    !
+    COMPLEX(DP),ALLOCATABLE :: vkbp(:,:)  ! the <beta_I| function
+    COMPLEX(DP) :: fact
+    !
+    CALL start_clock( 'nlxx_pot' )
+    !
+    IF(.not.(okvan .and. dovanxx)) RETURN
+    !
+    ALLOCATE(vkbp(npwx,nkb))
+    !
+    CALL init_us_2(npwp, igkp, xkp, vkbp)
+    !
+    ijkb0 = 0
+    DO np = 1, ntyp
+      ONLY_FOR_USPP : &
+      IF ( upf(np)%tvanp ) THEN
+          DO na = 1, nat
+          IF (ityp(na)==np) THEN
+              DO ih = 1, nh(np)
+                ikb = ijkb0 + ih
+                !
+                IF(ABS(deexx(ikb))<eps_occ) CYCLE
+                fact = -exxalfa*deexx(ikb)
+                !
+                IF (gamma_only) THEN
+                   DO ig = 1,npwp
+                      hpsi(ig) = hpsi(ig) + DBLE(fact*vkbp(ig, ikb))
+                   ENDDO
+                ELSE
+                   DO ig = 1,npwp
+                      hpsi(ig) = hpsi(ig) + fact*vkbp(ig, ikb)
+                   ENDDO
+                ENDIF
+              ENDDO
+              ijkb0 = ijkb0 + nh(np)
+          END IF
+          ENDDO ! nat
+      ELSE ONLY_FOR_USPP 
+          DO na = 1, nat
+            IF ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
+          ENDDO
+      END IF &
+      ONLY_FOR_USPP 
+    ENDDO
+    !
+    DEALLOCATE(vkbp)
+    CALL stop_clock( 'nlxx_pot' )
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+  END SUBROUTINE add_nlxx_pot
+  !-----------------------------------------------------------------------
+  !
+  !------------------------------------------------------------------------
+  SUBROUTINE addusxx_r(rho,becphi,becpsi)
+    !------------------------------------------------------------------------
+    ! This routine adds to the two wavefunctions density the part which is due to
+    ! the US augmentation.
+    ! NOTE: the density in this case is NOT real and NOT normalized to 1, except when
+    !       (bec)phi and (bec)psi are equal.
+    USE ions_base,        ONLY : nat, ityp
+    USE cell_base,        ONLY : omega
+    USE fft_base,         ONLY : dffts
+    USE uspp,             ONLY : okvan, nkb, ijtoh, indv_ijkb0
+    USE uspp_param,       ONLY : upf, nh
+    USE spin_orb,         ONLY : domag
+    USE mp_global,        ONLY : inter_pool_comm, intra_bgrp_comm
+    USE mp,               ONLY : mp_sum
+    !
+    USE realus, ONLY : tabs
+    !
+    IMPLICIT NONE
+    !
+    COMPLEX(DP),INTENT(inout) :: rho(dffts%nnr)
+    COMPLEX(DP),INTENT(in)    :: becphi(nkb)
+    COMPLEX(DP),INTENT(in)    :: becpsi(nkb)
+    !
+    INTEGER :: ia, nt, ir, irb, ih, jh, mbia
+    INTEGER :: ikb, jkb, ijkb0
+    !
+    IF ( .not. okvan ) RETURN
+    CALL start_clock( 'addusxx' )
+    !
+    DO ia = 1, nat
+      !
+      mbia = tabs(ia)%maxbox
+      IF ( mbia == 0 ) CYCLE
+      !
+      nt = ityp(ia)
+      IF ( .not. upf(nt)%tvanp ) CYCLE
+        DO ih = 1, nh(nt)
+        DO jh = 1, nh(nt)
+            ijkb0 = indv_ijkb0(ia) !SUM(nh(ityp(1:ia)))-nh(ityp(ia)) 
+            ikb = ijkb0 + ih
+            jkb = ijkb0 + jh
+            !
+            DO ir = 1, mbia
+                irb = tabs(ia)%box(ir)
+                rho(irb) = rho(irb) + tabs(ia)%qr(ir,ijtoh(ih,jh,nt)) &
+                                         *CONJG(becphi(ikb))*becpsi(jkb)
+            ENDDO
+        ENDDO
+        ENDDO
+    ENDDO
+    !
+    CALL stop_clock( 'addusxx' )
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+  END SUBROUTINE addusxx_r
+  !-----------------------------------------------------------------------
+  !
+  !------------------------------------------------------------------------
+  SUBROUTINE newdxx_r(vr,becphi,deexx)
+    !------------------------------------------------------------------------
+    !   This routine computes the integral of the perturbed potential with
+    !   the Q function in real space
+    USE cell_base,        ONLY : omega
+    USE fft_base,         ONLY : dffts
+    USE ions_base,        ONLY : nat, ityp
+    USE uspp_param,       ONLY : upf, nh, nhm
+    USE uspp,             ONLY : nkb, ijtoh, indv_ijkb0
+    USE control_flags,    ONLY : tqr
+    USE noncollin_module, ONLY : nspin_mag
+    USE mp_global,        ONLY : intra_bgrp_comm
+    USE mp,               ONLY : mp_sum
+
+    USE realus, ONLY : tabs
+
+    IMPLICIT NONE
+    ! Input: potential , output: contribution to integral
+    COMPLEX(DP),INTENT(in)    :: vr(dffts%nnr)
+    COMPLEX(DP),INTENT(in)    :: becphi(nkb)
+    COMPLEX(DP),INTENT(inout) :: deexx(nkb)
+    !Internal
+    INTEGER     :: ia, ih, jh, ir, nt
+    INTEGER     :: mbia
+    INTEGER     :: ikb, jkb, ijkb0
+    REAL(DP)    :: domega
+    COMPLEX(DP) :: aux
+    !
+    domega = omega/(dffts%nr1*dffts%nr2*dffts%nr3)
+    !
+    DO ia = 1, nat
+      !
+      mbia = tabs(ia)%maxbox
+      IF ( mbia == 0 ) CYCLE
+      !
+      nt = ityp(ia)
+      IF ( .not. upf(nt)%tvanp ) CYCLE
+      !
+      DO ih = 1, nh(nt)
+      DO jh = 1, nh(nt)
+          ijkb0 = indv_ijkb0(ia) !SUM(nh(ityp(1:ia)))-nh(ityp(ia)) 
+          ikb = ijkb0 + ih
+          jkb = ijkb0 + jh
+          !
+          aux = 0._dp
+          DO ir = 1, mbia
+              aux = aux + tabs(ia)%qr(ir,ijtoh(ih,jh,nt))*vr(tabs(ia)%box(ir))
+          ENDDO
+          deexx(ikb) = deexx(ikb) + becphi(jkb)*domega*aux
+          !
+      ENDDO
+      ENDDO
+      !
+    ENDDO
+    !
+!     CALL mp_sum(  deexx(:,:,:,1:nspin_mag) , intra_bgrp_comm )
+  !------------------------------------------------------------------------
+  END SUBROUTINE newdxx_r
+  !------------------------------------------------------------------------
+  !
+!-----------------------------------------------------------------------
+END MODULE us_exx
+!-----------------------------------------------------------------------

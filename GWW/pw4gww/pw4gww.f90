@@ -66,7 +66,7 @@ program gwl_punch
   use mp, ONLY: mp_bcast
   use mp_world, ONLY: world_comm
   use control_flags, ONLY : gamma_only
-  use realus, ONLY : qpointlist
+  use realus, ONLY : generate_qpointlist
   use uspp, ONLY : okvan
   use ldaU, ONLY : lda_plus_u
   USE basis,                ONLY : swfcatom
@@ -449,7 +449,7 @@ program gwl_punch
 
 !
   if(l_verbose) write(stdout,*) 'PRIMA QPOINT',l_exchange, okvan!ATTENZIONE
-  IF ( okvan) CALL qpointlist()
+  IF ( okvan ) CALL generate_qpointlist()
 !
 ! -----------------------------------------------------
 ! now calculating the first wannier stuff (first in non_scf.f90)

@@ -134,7 +134,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
      CALL stop_clock( 'h_psi:vnl' )
      !
   END IF
-  IF ( exx_is_active() ) CALL vexx( lda, n, m, psi, hpsi )
+  IF ( exx_is_active() ) CALL vexx( lda, n, m, psi, hpsi, becp )
   !
   ! ... electric enthalpy if required
   !

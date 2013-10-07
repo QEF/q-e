@@ -20,7 +20,7 @@ SUBROUTINE hinit1()
   USE lsda_mod,      ONLY : nspin
   USE scf,           ONLY : vrs, vltot, v, kedtau
   USE control_flags, ONLY : tqr
-  USE realus,        ONLY : qpointlist
+  USE realus,        ONLY : generate_qpointlist
   USE wannier_new,   ONLY : use_wannier
   USE martyna_tuckerman, ONLY : tag_wg_corr_as_obsolete
   USE scf,           ONLY : rho
@@ -46,7 +46,7 @@ SUBROUTINE hinit1()
   !
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
   !
-  IF ( tqr ) CALL qpointlist()
+  IF ( tqr ) CALL generate_qpointlist()
   !
   ! ... update the D matrix and the PAW coefficients
   !

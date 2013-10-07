@@ -297,6 +297,7 @@ SUBROUTINE electrons_scf()
 #endif
   USE dfunct,                 only : newd
   USE esm,                  ONLY : do_comp_esm, esm_printpot
+  USE iso_c_binding,        ONLY : c_int
   !
   
   IMPLICIT NONE
@@ -312,7 +313,8 @@ SUBROUTINE electrons_scf()
       i,            &! counter on polarization
       idum,         &! dummy counter on iterations
       iter,         &! counter on iterations
-      ios, kilobytes
+      ios
+  INTEGER(kind=c_int) :: kilobytes
   REAL(DP) :: &
       tr2_min,     &! estimated error on energy coming from diagonalization
       descf,       &! correction for variational energy

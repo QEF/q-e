@@ -17,12 +17,7 @@ MODULE realus
   ! ... modified by O. Baris Malcioglu (2008)
   ! ... modified by P. Umari and G. Stenuit (2009)
   ! ... TODO : Write the k points part
-  !
-  INTEGER,  ALLOCATABLE :: box(:,:), maxbox(:)
-  REAL(DP), ALLOCATABLE :: qsave(:)
-  REAL(DP), ALLOCATABLE :: boxrad(:)
-  REAL(DP), ALLOCATABLE :: boxdist(:,:), xyz(:,:,:)
-  REAL(DP), ALLOCATABLE :: spher(:,:,:)
+  REAL(DP), ALLOCATABLE :: boxrad(:) ! radius of boxes, does not depend on the grid
   ! Beta function in real space
   INTEGER,  ALLOCATABLE :: box_beta(:,:), maxbox_beta(:)
   REAL(DP), ALLOCATABLE :: betasave(:,:,:)
@@ -48,7 +43,45 @@ MODULE realus
   COMPLEX(DP), ALLOCATABLE :: tg_vrs(:) !task groups linear V memory
   COMPLEX(DP), ALLOCATABLE :: psic_box_temp(:),tg_psic_box_temp(:)
   !
+  ! Contains the augmentation functions and related quantities, in realspace for a single atom
+  TYPE realsp_augmentation
+     REAL(DP),ALLOCATABLE :: qr(:,:) 
+        ! (maxbox,number_of_q_funcs) the Q functions sampled over R points
+     INTEGER,ALLOCATABLE  :: box(:) 
+        ! (maxbox) Index of point R in the global order of the R-space grid
+     INTEGER :: maxbox
+        !  number of R points in the augmentatiin sphere of this atom
+  END TYPE realsp_augmentation
+  ! Augmentation functions on the RHO (HARD) grid for all atoms
+  TYPE(realsp_augmentation),POINTER :: tabp(:) => null()
+  ! Augmentation functions on the SMOOTH grid for all atoms
+  TYPE(realsp_augmentation),POINTER :: tabs(:) => null()
+  !
   CONTAINS
+    !------------------------------------------------------------------------
+    SUBROUTINE generate_qpointlist
+      !------------------------------------------------------------------------
+      USE fft_base, ONLY : dfftp, dffts
+      USE funct,    ONLY : dft_is_hybrid
+      USE gvecs,    ONLY : doublegrid
+      IMPLICIT NONE
+      ! 1. initialize hard grid
+      CALL qpointlist(dfftp, tabp) 
+      !
+      ! 2. initialize smooth grid (only for EXX at this moment)
+      IF ( dft_is_hybrid() ) THEN
+        IF(doublegrid)THEN
+          CALL qpointlist(dffts, tabs)
+        ELSE
+          ! smooth and rho grid are the same if not double grid
+          tabs => tabp
+        ENDIF
+      ENDIF
+      !
+      RETURN
+      !------------------------------------------------------------------------
+    END SUBROUTINE generate_qpointlist
+    !------------------------------------------------------------------------
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_rs_status( dirname, ierr )
@@ -114,7 +147,6 @@ MODULE realus
      USE cell_base,            ONLY : tpiba2
      USE control_flags,        ONLY : tqr
      USE fft_base,             ONLY : dffts
-     USE wavefunctions_module, ONLY : psic
      USE io_global,            ONLY : stdout
 
 
@@ -148,21 +180,55 @@ MODULE realus
      ENDDO
 
      initialisation_level = initialisation_level + 7
+     IF (real_space_debug > 20 .and. real_space_debug < 30) THEN
+       real_space=.false.
+       IF (tqr) THEN
+         tqr = .false.
+         WRITE(stdout,'("Debug level forced tqr to be set false")')
+       ELSE
+         WRITE(stdout,'("tqr was already set false")')
+       ENDIF
+       real_space_debug=real_space_debug-20
+     ENDIF
 
     END SUBROUTINE init_realspace_vars
     !------------------------------------------------------------------------
     SUBROUTINE deallocatenewdreal()
       !------------------------------------------------------------------------
       !
-      IF ( allocated( box ) )     DEALLOCATE( box )
-      IF ( allocated( maxbox ) )  DEALLOCATE( maxbox )
-      IF ( allocated( qsave ) )   DEALLOCATE( qsave )
+      USE ions_base,  ONLY : nat
+      USE gvecs,      ONLY : doublegrid
+      IMPLICIT NONE
+      INTEGER :: ia
       IF ( allocated( boxrad ) )  DEALLOCATE( boxrad )
+      ! ------------ tabp ------------ 
+      IF ( associated( tabp) ) THEN
+        DO ia=1,nat
+          IF(allocated(tabp(ia)%qr))  DEALLOCATE(tabp(ia)%qr)
+          IF(allocated(tabp(ia)%box)) DEALLOCATE(tabp(ia)%box)
+          tabp(ia)%maxbox = 0
+        ENDDO
+        DEALLOCATE(tabp)
+      ENDIF
+      ! ------------ tabs ------------ 
+      IF(doublegrid)THEN
+        IF ( associated( tabs) ) THEN
+          DO ia=1,nat
+            IF(allocated(tabs(ia)%qr))  DEALLOCATE(tabs(ia)%qr)
+            IF(allocated(tabs(ia)%box)) DEALLOCATE(tabs(ia)%box)
+            tabs(ia)%maxbox = 0
+          ENDDO
+          DEALLOCATE(tabs)
+        ENDIF
+      ELSE
+        NULLIFY(tabs)
+      ENDIF
+
       !
     END SUBROUTINE deallocatenewdreal
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qpointlist()
+    SUBROUTINE qpointlist(dfft, tabp)
       !------------------------------------------------------------------------
       !
       ! ... This subroutine is the driver routine of the box system in this
@@ -179,7 +245,7 @@ MODULE realus
       ! ... centre of atom.
       ! ... In boxdist the distance from the centre.
       ! ... In spher the spherical harmonics computed for each box
-      ! ... In qsave the q value interpolated in these boxes.
+      ! ... In tabp the q value interpolated in these boxes.
       !
       ! ... Most of time is spent here; the calling routines are faster.
       !
@@ -189,13 +255,16 @@ MODULE realus
       USE uspp,       ONLY : okvan, indv, nhtol, nhtolm, ap, nhtoj, lpx, lpl
       USE uspp_param, ONLY : upf, lmaxq, nh, nhm
       USE atom,       ONLY : rgrid
-      USE fft_base,   ONLY : dfftp
+      USE fft_types,  ONLY : fft_dlay_descriptor
       USE mp_global,  ONLY : me_bgrp
       USE splinelib,  ONLY : spline, splint
       !
       IMPLICIT NONE
       !
-      INTEGER               :: qsdim, ia, mbia, iqs, iqsia
+      TYPE(fft_dlay_descriptor),INTENT(in)    :: dfft
+      TYPE(realsp_augmentation),POINTER,INTENT(inout) :: tabp(:)
+      !
+      INTEGER               :: qsdim, ia, mbia, iqs, iqsia, nfuncs
       INTEGER               :: indm, idimension, &
                                ih, jh, ijh, lllnbnt, lllmbnt
       INTEGER               :: roughestimate, goodestimate, lamx2, l, nt
@@ -211,15 +280,25 @@ MODULE realus
       REAL(DP)              :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz, aux
       REAL(DP)              :: inv_nr1, inv_nr2, inv_nr3, tau_ia(3), boxradsq_ia
       !
+      REAL(DP), ALLOCATABLE :: boxdist(:,:), xyz(:,:,:)
+      REAL(DP), ALLOCATABLE :: spher(:,:,:)
       !
       initialisation_level = 3
       IF ( .not. okvan ) RETURN
       !
       CALL start_clock( 'realus' )
       !
-      ! ... qsave is deallocated here to free the memory for the buffers
+      ! ... tabp is deallocated here to free the memory for the buffers
       !
-      IF ( allocated( qsave ) ) DEALLOCATE( qsave )
+      IF( associated(tabp) ) THEN
+        DO ia=1,nat
+          IF(allocated(tabp(ia)%qr))  DEALLOCATE(tabp(ia)%qr)
+          IF(allocated(tabp(ia)%box)) DEALLOCATE(tabp(ia)%box)
+          tabp(ia)%maxbox = 0
+        ENDDO
+        DEALLOCATE(tabp)
+      ENDIF
+      ALLOCATE(tabp(nat))
       !
       IF ( .not. allocated( boxrad ) ) THEN
          !
@@ -262,9 +341,9 @@ MODULE realus
       mby = mbr*sqrt( bg(2,1)**2 + bg(2,2)**2 + bg(2,3)**2 )
       mbz = mbr*sqrt( bg(3,1)**2 + bg(3,2)**2 + bg(3,3)**2 )
       !
-      dmbx = 2*anint( mbx*dfftp%nr1x ) + 2
-      dmby = 2*anint( mby*dfftp%nr2x ) + 2
-      dmbz = 2*anint( mbz*dfftp%nr3x ) + 2
+      dmbx = 2*anint( mbx*dfft%nr1x ) + 2
+      dmby = 2*anint( mby*dfft%nr2x ) + 2
+      dmbz = 2*anint( mbz*dfft%nr3x ) + 2
       !
       roughestimate = anint( dble( dmbx*dmby*dmbz ) * pi / 6.D0 )
       !
@@ -278,21 +357,17 @@ MODULE realus
       buffpoints(:,:) = 0
       buffdist(:,:) = 0.D0
       !
-      IF ( .not.allocated( maxbox ) ) ALLOCATE( maxbox( nat ) )
-      !
-      maxbox(:) = 0
-      !
       ! ... now we find the points
       !
 #if defined (__MPI)
-      idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_bgrp+1)
+      idx0 = dfft%nr1x*dfft%nr2x * sum ( dfft%npp(1:me_bgrp) )
 #else
       idx0 = 0
 #endif
       !
-      inv_nr1 = 1.D0 / dble( dfftp%nr1 )
-      inv_nr2 = 1.D0 / dble( dfftp%nr2 )
-      inv_nr3 = 1.D0 / dble( dfftp%nr3 )
+      inv_nr1 = 1.D0 / dble( dfft%nr1 )
+      inv_nr2 = 1.D0 / dble( dfft%nr2 )
+      inv_nr3 = 1.D0 / dble( dfft%nr3 )
       !
       DO ia = 1, nat
          !
@@ -306,20 +381,20 @@ MODULE realus
          tau_ia(2) = tau(2,ia)
          tau_ia(3) = tau(3,ia)
          !
-         DO ir = 1, dfftp%nr1x*dfftp%nr2x * dfftp%npl
+         DO ir = 1, dfft%nnr
             !
             ! ... three dimensional indices (i,j,k)
             !
             idx   = idx0 + ir - 1
-            k     = idx / (dfftp%nr1x*dfftp%nr2x)
-            idx   = idx - (dfftp%nr1x*dfftp%nr2x)*k
-            j     = idx / dfftp%nr1x
-            idx   = idx - dfftp%nr1x*j
+            k     = idx / (dfft%nr1x*dfft%nr2x)
+            idx   = idx - (dfft%nr1x*dfft%nr2x)*k
+            j     = idx / dfft%nr1x
+            idx   = idx - dfft%nr1x*j
             i     = idx
             !
             ! ... do not include points outside the physical range!
             !
-            IF ( i >= dfftp%nr1 .or. j >= dfftp%nr2 .or. k >= dfftp%nr3 ) CYCLE
+            IF ( i >= dfft%nr1 .or. j >= dfft%nr2 .or. k >= dfft%nr3 ) CYCLE
             !
             DO ipol = 1, 3
                posi(ipol) = dble( i )*inv_nr1*at(ipol,1) + &
@@ -338,8 +413,10 @@ MODULE realus
             !
             IF ( distsq < boxradsq_ia ) THEN
                !
-               mbia = maxbox(ia) + 1
-               maxbox(ia)          = mbia
+               mbia = tabp(ia)%maxbox + 1
+               IF(mbia>roughestimate) &
+                  CALL errore( 'qpointlist', 'rough-estimate is too rough', 3 )
+               tabp(ia)%maxbox     = mbia
                buffpoints(mbia,ia) = ir
                buffdist(mbia,ia)   = sqrt( distsq )*alat
                xyz(:,mbia,ia)      = posi(:)*alat
@@ -348,20 +425,22 @@ MODULE realus
          ENDDO
       ENDDO
       !
-      goodestimate = maxval( maxbox )
+      ! ... count the points and store them in a more convenient place
+      !
+      goodestimate = 0
+      DO ia = 1,nat
+        goodestimate = max( goodestimate, tabp(ia)%maxbox )
+        !
+        !IF ( allocated( tabp(ia)%box ) ) DEALLOCATE( tabp(ia)%box )
+        ALLOCATE( tabp(ia)%box(tabp(ia)%maxbox) )
+        tabp(ia)%box(:) = buffpoints(1:tabp(ia)%maxbox,ia)
+      ENDDO
       !
       IF ( goodestimate > roughestimate ) &
          CALL errore( 'qpointlist', 'rough-estimate is too rough', 2 )
       !
-      ! ... now store them in a more convenient place
-      !
-      IF ( allocated( box ) )     DEALLOCATE( box )
-      IF ( allocated( boxdist ) ) DEALLOCATE( boxdist )
-      !
-      ALLOCATE( box(     goodestimate, nat ) )
       ALLOCATE( boxdist( goodestimate, nat ) )
       !
-      box(:,:)     = buffpoints(1:goodestimate,:)
       boxdist(:,:) = buffdist(1:goodestimate,:)
       !
       DEALLOCATE( buffpoints )
@@ -384,7 +463,7 @@ MODULE realus
          !
          nt = ityp(ia)
          IF ( .not. upf(nt)%tvanp ) CYCLE
-         idimension = maxbox(ia)
+         idimension = tabp(ia)%maxbox
          ALLOCATE( rl( 3, idimension ), rl2( idimension ) )
 
          DO ir = 1, idimension
@@ -402,13 +481,13 @@ MODULE realus
       DEALLOCATE( xyz )
       !
       CALL stop_clock( 'realus:spher' )
-      CALL start_clock( 'realus:qsave' )
+      CALL start_clock( 'realus:tabp' )
       !
       ! ... let's do the main work
       !
       qsdim = 0
       DO ia = 1, nat
-         mbia = maxbox(ia)
+         mbia = tabp(ia)%maxbox
          IF ( mbia == 0 ) CYCLE
          nt = ityp(ia)
          IF ( .not. upf(nt)%tvanp ) CYCLE
@@ -419,16 +498,11 @@ MODULE realus
          ENDDO
       ENDDO
       !
-      !
-      ALLOCATE( qsave( qsdim ) )
-      !
-      qsave(:) = 0.D0
-      !
       ! ... the source is inspired by init_us_1
       !
       ! ... we perform two steps: first we compute for each l the qtot
       ! ... (radial q), then we interpolate it in our mesh, and then we
-      ! ... add it to qsave with the correct spherical harmonics
+      ! ... add it to tabp with the correct spherical harmonics
       !
       ! ... Q is read from pseudo and it is divided into two parts:
       ! ... in the inner radius a polinomial representation is known and so
@@ -440,7 +514,7 @@ MODULE realus
       !
       DO ia = 1, nat
          !
-         mbia = maxbox(ia)
+         mbia = tabp(ia)%maxbox
          IF ( mbia == 0 ) CYCLE
          !
          nt = ityp(ia)
@@ -456,6 +530,10 @@ MODULE realus
          ! ... the radii in x
          !
          xsp(:) = rgrid(nt)%r(1:upf(nt)%kkbeta)
+         !
+         nfuncs = (  nh(nt)**2+nh(nt)  )/2
+         ALLOCATE(tabp(ia)%qr(mbia, nfuncs))
+         tabp(ia)%qr=0._dp
          !
          DO l = 0, upf(nt)%nqlc - 1
             !
@@ -528,7 +606,7 @@ MODULE realus
                   !
                   CALL spline( xsp, ysp, first, second, wsp )
                   !
-                  DO ir = 1, maxbox(ia)
+                  DO ir = 1, tabp(ia)%maxbox
                      !
                      IF ( boxdist(ir,ia) < upf(nt)%rinner(l+1) ) THEN
                         !
@@ -557,8 +635,8 @@ MODULE realus
                            IF ( .not.( nb == indv(ih,nt) .and. &
                                        mb == indv(jh,nt) ) ) CYCLE
                            !
-                           DO lm = l*l+1, (l+1)*(l+1)
-                              qsave(iqs) = qsave(iqs) + &
+                           DO lm = l**2+1, (l+1)**2
+                              tabp(ia)%qr(ir,ijh) = tabp(ia)%qr(ir,ijh) + &
                                            qtot_int*spher(ir,lm,ia)*&
                                            ap(lm,nhtolm(ih,nt),nhtolm(jh,nt))
                            ENDDO
@@ -581,7 +659,7 @@ MODULE realus
       DEALLOCATE( boxdist )
       DEALLOCATE( spher )
       !
-      CALL stop_clock( 'realus:qsave' )
+      CALL stop_clock( 'realus:tabp' )
       CALL stop_clock( 'realus' )
       !
     END SUBROUTINE qpointlist
@@ -604,7 +682,7 @@ MODULE realus
       ! ... centre of atom.
       ! ... In boxdist the distance from the centre.
       ! ... In spher the spherical harmonics computed for each box
-      ! ... In qsave the q value interpolated in these boxes.
+      ! ... In tabp the q value interpolated in these boxes.
       !
       ! ... Most of time is spent here; the calling routines are faster.
       !
@@ -623,15 +701,14 @@ MODULE realus
       !
       IMPLICIT NONE
       !
-      INTEGER               :: betasdim, ia, it, mbia, iqs
-      INTEGER               :: indm, inbrx, idimension, &
-                               ilm, ih, jh, iih, ijh
-      INTEGER               :: roughestimate, goodestimate, lamx2, l, nt
+      INTEGER               :: betasdim, ia, it, mbia
+      INTEGER               :: indm, inbrx, idimension, ih
+      INTEGER               :: roughestimate, goodestimate, lamx2, nt
       INTEGER,  ALLOCATABLE :: buffpoints(:,:)
       REAL(DP), ALLOCATABLE :: buffdist(:,:)
       REAL(DP)              :: distsq, qtot_int, first, second
-      INTEGER               :: idx0, idx, indproc, ir
-      INTEGER               :: i, j, k, i0, j0, k0, ipol, lm, nb, mb, ijv, ilast
+      INTEGER               :: idx0, idx, ir
+      INTEGER               :: i, j, k, ipol, lm, nb
       REAL(DP)              :: posi(3)
       REAL(DP), ALLOCATABLE :: rl(:,:), rl2(:)
       REAL(DP), ALLOCATABLE :: tempspher(:,:), qtot(:,:,:), &
@@ -821,7 +898,7 @@ MODULE realus
       DEALLOCATE( xyz_beta )
       !
       CALL stop_clock( 'realus:spher' )
-      CALL start_clock( 'realus:qsave' )
+      CALL start_clock( 'realus:tabp' )
       !
       ! ... let's do the main work
       !
@@ -919,7 +996,7 @@ MODULE realus
       DEALLOCATE( boxdist_beta )
       DEALLOCATE( spher_beta )
       !
-      CALL stop_clock( 'realus:qsave' )
+      CALL stop_clock( 'realus:tabp' )
       CALL stop_clock( 'betapointlist' )
       !
     END SUBROUTINE betapointlist
@@ -934,11 +1011,12 @@ MODULE realus
       USE lsda_mod,         ONLY : nspin
       USE ions_base,        ONLY : nat, ityp
       USE uspp_param,       ONLY : upf, nh, nhm
+      USE uspp,             ONLY : ijtoh
       USE control_flags,    ONLY : tqr
       USE noncollin_module, ONLY : nspin_mag
       USE scf,              ONLY : vltot
-      USE mp_global,            ONLY : intra_bgrp_comm
-      USE mp,                   ONLY : mp_sum
+      USE mp_global,        ONLY : intra_bgrp_comm
+      USE mp,               ONLY : mp_sum
 
           IMPLICIT NONE
       !
@@ -950,10 +1028,10 @@ MODULE realus
       REAL(DP), ALLOCATABLE :: aux(:)
       !
       INTEGER               :: ia, ih, jh, is, ir, nt
-      INTEGER               :: mbia, nht, nhnt, iqs
+      INTEGER               :: mbia, nhnt, iqs
       !
-      IF (tqr .and. .not. allocated(maxbox)) THEN
-         CALL qpointlist()
+      IF (tqr .and. .not. associated(tabp)) THEN
+         CALL generate_qpointlist()
       ENDIF
 
       deeq(:,:,:,:) = 0.D0
@@ -972,7 +1050,7 @@ MODULE realus
          !
          DO ia = 1, nat
             !
-            mbia = maxbox(ia)
+            mbia = tabp(ia)%maxbox
             IF ( mbia == 0 ) CYCLE
             !
             nt = ityp(ia)
@@ -985,7 +1063,7 @@ MODULE realus
                   DO ir = 1, mbia
                      iqs = iqs + 1
                      deeq(ih,jh,ia,is)= deeq(ih,jh,ia,is) + &
-                                        qsave(iqs)*aux(box(ir,ia))
+                        tabp(ia)%qr(ir,ijtoh(ih,jh,nt))*aux(tabp(ia)%box(ir))
                   ENDDO
                   deeq(jh,ih,ia,is) = deeq(ih,jh,ia,is)
                ENDDO
@@ -1014,8 +1092,8 @@ MODULE realus
       !
       IMPLICIT NONE
       !
-      INTEGER               :: ia, ih, jh, is, ir, nt
-      INTEGER               :: mbia, nht, nhnt, iqs
+      INTEGER               :: ia, ih, jh, is, nt
+      INTEGER               :: nht, nhnt
       !
       IF ( .not. okvan ) THEN
          !
@@ -1374,9 +1452,11 @@ MODULE realus
       !
       !
       IF ( .not. okvan ) RETURN
-      tolerance = 1.D-4
-      ! Charge loss in real_space case is typically worse.
-      IF ( real_space ) tolerance = 1.D-2
+      tolerance = 1.d-3
+      IF ( real_space ) tolerance = 1.d-2 !Charge loss in real_space case is even worse.
+      !Final verdict: Mixing of Real Space paradigm and      !Q space paradigm results in fast but not so
+      ! accurate code. Not giving up though, I think
+      ! I can still increase the accuracy a bit...
       !
       CALL start_clock( 'addusdens' )
       !
@@ -1385,7 +1465,7 @@ MODULE realus
          iqs = 0
          DO ia = 1, nat
             !
-            mbia = maxbox(ia)
+            mbia = tabp(ia)%maxbox
             IF ( mbia == 0 ) CYCLE
             !
             nt = ityp(ia)
@@ -1397,9 +1477,9 @@ MODULE realus
                DO jh = ih, nhnt
                   ijh = ijh + 1
                   DO ir = 1, mbia
-                     irb = box(ir,ia)
+                     irb = tabp(ia)%box(ir)
                      iqs = iqs + 1
-                     rho_1(irb,is) = rho_1(irb,is) + qsave(iqs)*becsum(ijh,ia,is)
+                     rho_1(irb,is) = rho_1(irb,is) + tabp(ia)%qr(ir,ijh)*becsum(ijh,ia,is)
                   ENDDO
                ENDDO
             ENDDO
@@ -1415,14 +1495,14 @@ MODULE realus
        CALL mp_sum(  charge , intra_bgrp_comm )
        CALL mp_sum(  charge , inter_pool_comm )
 
-       IF ( abs( charge - nelec ) / charge > tolerance ) THEN
+       IF ( abs( charge - nelec ) / nelec > tolerance ) THEN
           !
           ! ... the error on the charge is too large
           !
-          WRITE (msg,'("expected ",f13.8,", found ",f13.8)') &
+          WRITE (msg,'("expected ",f10.6,", found ",f10.6)') &
              nelec, charge
-          CALL errore( 'addusdens_r', &
-             trim(msg)//': wrong charge, increase ecutrho', 1 )
+          CALL errore( 'addusdens_r', 'WRONG CHARGE '//trim(msg)//&
+                       ': ions may be overlapping or increase ecutrho', 1 )
           !
        ELSE
           !
@@ -1663,10 +1743,9 @@ MODULE realus
       !
       INTEGER :: ih, jh, iqs, jqs, ikb, jkb, nt, ia, ir, mbia
       REAL(DP) :: fac
-      REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2, bcr, bci
+      REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2
       !
       REAL(DP), EXTERNAL :: ddot
-      !
       !
       CALL start_clock( 's_psir' )
       IF( ( dffts%have_task_groups ) .and. ( m >= dffts%nogrp ) ) THEN
@@ -1753,7 +1832,6 @@ MODULE realus
       !
       INTEGER :: ih, jh, iqs, jqs, ikb, jkb, nt, ia, ir, mbia
       REAL(DP) :: fac
-      REAL(DP), ALLOCATABLE, DIMENSION(:) :: bcr, bci
       COMPLEX(DP) , ALLOCATABLE, DIMENSION(:) :: w1
       !
       REAL(DP), EXTERNAL :: ddot
@@ -1847,7 +1925,7 @@ MODULE realus
   !
   INTEGER :: ih, jh, iqs, jqs, ikb, jkb, nt, ia, ir, mbia
   REAL(DP) :: fac
-  REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2, bcr, bci
+  REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2
   !
   REAL(DP), EXTERNAL :: ddot
   !
@@ -1952,7 +2030,6 @@ MODULE realus
   !
   INTEGER :: ih, jh, iqs, jqs, ikb, jkb, nt, ia, ir, mbia
   REAL(DP) :: fac
-  REAL(DP), ALLOCATABLE, DIMENSION(:) ::  bcr, bci
   !
   COMPLEX(DP), ALLOCATABLE, DIMENSION(:) :: w1
   !
@@ -2051,16 +2128,10 @@ MODULE realus
     ! if this flag is true, the orbital is stored in temporary memory
 
     !Internal temporary variables
-    COMPLEX(DP) :: fp, fm,alpha
-
-    INTEGER :: i, j, incr, ierr, idx, ioff, nsiz
+    INTEGER :: j, idx, ioff
     LOGICAL :: use_tg
 
-    COMPLEX(DP), ALLOCATABLE :: psic_temp2(:)
-
     !Task groups
-    !COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
-    INTEGER :: recv_cnt( dffts%nogrp ), recv_displ( dffts%nogrp )
     INTEGER :: v_siz
 
     !The new task group version based on vloc_psi
@@ -2177,11 +2248,10 @@ MODULE realus
 
     !Internal temporary variables
     COMPLEX(DP) :: fp, fm
-    INTEGER :: i,  j, incr, ierr, idx, ioff, nsiz
+    INTEGER :: j, idx, ioff
     LOGICAL :: use_tg
 
     !Task groups
-    INTEGER :: recv_cnt( dffts%nogrp ), recv_displ( dffts%nogrp )
     INTEGER :: v_siz
     !print *, "->fourier space"
     CALL start_clock( 'bfft_orbital' )
@@ -2281,7 +2351,7 @@ MODULE realus
     !if this flag is true, the orbital is stored in temporary memory
 
     ! Internal variables
-    INTEGER :: j, ioff, idx
+    INTEGER :: ioff, idx
     LOGICAL :: use_tg
 
     CALL start_clock( 'fft_orbital' )
@@ -2360,7 +2430,7 @@ MODULE realus
     !if this flag is true, the orbital is stored in temporary memory
 
     ! Internal variables
-    INTEGER :: j, ioff, idx
+    INTEGER :: ioff, idx
     LOGICAL :: use_tg
 
    CALL start_clock( 'bfft_orbital' )
@@ -2425,15 +2495,10 @@ MODULE realus
 
     INTEGER, INTENT(in) :: ibnd,& ! Current index of the band currently being transformed
                            nbnd ! Total number of bands you want to transform
-
-
     !Internal temporary variables
-    COMPLEX(DP) :: fp, fm
-    INTEGER :: i,  j, incr, ierr, idx, ioff, nsiz
-
+    INTEGER :: j
     !Task groups
     REAL(DP),    ALLOCATABLE :: tg_v(:)
-    INTEGER :: recv_cnt( dffts%nogrp ), recv_displ( dffts%nogrp )
     INTEGER :: v_siz
     CALL start_clock( 'v_loc_psir' )
 
@@ -2461,6 +2526,8 @@ MODULE realus
 
 ! HERE starts the part added by GWW team
 
+! NOW start the part added by GWW team
+
     !
   SUBROUTINE adduspos_gamma_r(iw,jw,r_ij,ik,becp_iw,becp_jw)
   !----------------------------------------------------------------------
@@ -2474,7 +2541,7 @@ MODULE realus
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm, nl, nlm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE uspp,                 ONLY : okvan, becsum, nkb
+  USE uspp,                 ONLY : okvan, becsum, nkb, ijtoh
   USE uspp_param,           ONLY : upf, lmaxq, nh
   USE wvfct,                ONLY : wg
   USE control_flags,        ONLY : gamma_only
@@ -2521,7 +2588,7 @@ MODULE realus
            !
            DO ia = 1, nat
               !
-              mbia = maxbox(ia)
+              mbia = tabp(ia)%maxbox
               nt = ityp(ia)
               nhnt = nh(nt)
               !
@@ -2538,13 +2605,15 @@ MODULE realus
                     !
                     DO ir = 1, mbia
                        !
-                       irb = box(ir,ia)
+                       irb = tabp(ia)%box(ir)
                        iqs = iqs + 1
                        !
-                       r_ij(irb) = r_ij(irb) + qsave(iqs)*becp_iw(ikb)*becp_jw(jkb)*omega
+                       r_ij(irb) = r_ij(irb) + tabp(ia)%qr(ir,ijtoh(ih,jh,np))&
+                                              *becp_iw(ikb)*becp_jw(jkb)*omega
                        !
                        IF ( ih /= jh ) THEN
-                          r_ij(irb) = r_ij(irb) + qsave(iqs)*becp_iw(jkb)*becp_jw(ikb)*omega
+                          r_ij(irb) = r_ij(irb) + tabp(ia)%qr(ir,ijtoh(ih,jh,np))&
+                                                 *becp_iw(jkb)*becp_jw(ikb)*omega
                        ENDIF
                     ENDDO
                  ENDDO
@@ -2574,14 +2643,12 @@ MODULE realus
   !
   !  This routine adds the US term < Psi_iw|r><r|Psi_jw>
   !  to the array r_ij
-
-
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm, nl, nlm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE uspp,                 ONLY : okvan, becsum, nkb
+  USE uspp,                 ONLY : okvan, becsum, nkb, ijtoh
   USE uspp_param,           ONLY : upf, lmaxq, nh
   USE wvfct,                ONLY : wg
   USE control_flags,        ONLY : gamma_only
@@ -2593,7 +2660,6 @@ MODULE realus
   COMPLEX(kind=DP), INTENT(inout) :: r_ij(dfftp%nnr)!where to add the us term
   COMPLEX(kind=DP), INTENT(in) ::  becp_iw( nkb)!overlap of wfcs with us  projectors
   COMPLEX(kind=DP), INTENT(in) ::  becp_jw( nkb)!overlap of wfcs with us  projectors
-
   !     here the local variables
   !
   INTEGER :: na, ia, nt, nhnt, ir, ih, jh, is, mbia, irb, iqs
@@ -2616,7 +2682,7 @@ MODULE realus
            !
            DO ia = 1, nat
               !
-              mbia = maxbox(ia)
+              mbia = tabp(ia)%maxbox
               nt = ityp(ia)
               nhnt = nh(nt)
               !
@@ -2632,13 +2698,15 @@ MODULE realus
                     !
                     DO ir = 1, mbia
                        !
-                       irb = box(ir,ia)
+                       irb = tabp(ia)%box(ir)
                        iqs = iqs + 1
                        !
-                       r_ij(irb) = r_ij(irb) + qsave(iqs)*conjg(becp_iw(ikb))*becp_jw(jkb)*omega
+                       r_ij(irb) = r_ij(irb) + tabp(ia)%qr(ir,ijtoh(ih,jh,np))&
+                                              *conjg(becp_iw(ikb))*becp_jw(jkb)*omega
                        !
                        IF ( ih /= jh ) THEN
-                          r_ij(irb) = r_ij(irb) + qsave(iqs)*conjg(becp_iw(jkb))*becp_jw(ikb)*omega
+                          r_ij(irb) = r_ij(irb) + tabp(ia)%qr(ir,ijtoh(ih,jh,np))&
+                                                 *conjg(becp_iw(jkb))*becp_jw(ikb)*omega
                        ENDIF
                     ENDDO
                  ENDDO
@@ -2693,7 +2761,7 @@ MODULE realus
   !     here the local variables
   !
 
-  INTEGER :: na, ia, nhnt, nt, ir, ih, jh, is, mbia
+  INTEGER :: na, ia, nhnt, nt, ih, jh, is, mbia
   INTEGER :: ikb, jkb, ijkb0, np
   ! counters
 
@@ -2713,7 +2781,7 @@ MODULE realus
               !
               IF ( ityp(ia) /= np ) CYCLE
               !
-              mbia = maxbox(ia)
+              mbia = tabp(ia)%maxbox
               nt = ityp(ia)
               nhnt = nh(nt)
               !
@@ -2762,7 +2830,7 @@ MODULE realus
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm, nl, nlm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE uspp,                 ONLY : okvan, becsum, nkb, qq
+  USE uspp,                 ONLY : okvan, becsum, nkb, qq, ijtoh
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE wvfct,                ONLY : wg
   USE control_flags,        ONLY : gamma_only
@@ -2785,7 +2853,7 @@ MODULE realus
      !
      DO ia = 1, nat
         !
-        mbia = maxbox(ia)
+        mbia = tabp(ia)%maxbox
         !
         nt = ityp(ia)
         !
@@ -2800,10 +2868,10 @@ MODULE realus
               sca = 0.d0
               DO ir = 1, mbia
                  !
-                 irb = box(ir,ia)
+                 irb = tabp(ia)%box(ir)
                  iqs = iqs + 1
                  !
-                 sca=sca+op(irb)*qsave(iqs)
+                 sca=sca+op(irb)*tabp(ia)%qr(ir,ijtoh(ih,jh,nt))
               ENDDO
               !!!! call mp_sum(sca , intra_pool_comm)
               CALL mp_sum(sca)

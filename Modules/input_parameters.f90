@@ -403,11 +403,11 @@ MODULE input_parameters
         REAL(DP) :: alpha_pen(10) = 0.0_DP
 
           ! next group of variables PWSCF ONLY
-          !
-        INTEGER  :: nqx1 = 1, nqx2 = 1, nqx3=1
+          ! 
           !
         REAL(DP) :: exx_fraction = -1.0_DP      ! if negative, use defaults
         REAL(DP) :: screening_parameter = -1.0_DP
+        INTEGER  :: nqx1 = 0, nqx2 = 0, nqx3=0  ! use the same values as nk1, nk2, nk3
         !gau-pbe in
         REAL(DP) :: gau_parameter = -1.0_DP
         !gau-pbe out

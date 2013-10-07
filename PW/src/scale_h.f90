@@ -15,14 +15,16 @@ subroutine scale_h
   !
   USE kinds,      ONLY : dp
   USE io_global,  ONLY : stdout
-  USE ions_base,  ONLY : ntyp => nsp
   USE cell_base,  ONLY : bg, omega
   USE cellmd,     ONLY : at_old, omega_old
   USE gvect,      ONLY : g, gg, ngm
   USE klist,      ONLY : xk, wk, nkstot
-  USE us,         ONLY : nqxq, nqx, qrad, tab, tab_at, dq
+  USE us,         ONLY : nqxq, qrad, tab, tab_at, dq
   USE control_flags, ONLY : iverbosity
-  USE start_k,   ONLY : nks_start, xk_start
+  USE start_k,          ONLY : nks_start, xk_start
+  USE input_parameters, ONLY : k_points
+  USE exx,        ONLY : exx_grid_reinit
+  USE funct,      ONLY : dft_is_hybrid
 #ifdef __MPI
   USE mp,         ONLY : mp_max
   USE mp_global,  ONLY : intra_bgrp_comm
@@ -42,14 +44,15 @@ subroutine scale_h
   call cryst_to_cart (nkstot, xk, bg, + 1)
   call cryst_to_cart (nks_start, xk_start, at_old, - 1)
   call cryst_to_cart (nks_start, xk_start, bg, + 1)
-  IF ( iverbosity > 0 .OR. nkstot < 100) THEN
+  IF(k_points/='automatic' .and. k_points/='gamma')THEN
+  IF ( iverbosity > 0 .OR. nkstot < 100 ) THEN
      WRITE( stdout, '(5x,a)' ) 'NEW k-points:'
      do ik = 1, nkstot
-        WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
-             (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
+        WRITE( stdout, '(3f12.7,f12.7)') (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
      enddo
   ELSE
      WRITE( stdout, '(5x,a)' ) "NEW k-points: (use verbosity='high' to print them)"
+  ENDIF
   ENDIF
   !
   ! scale the g vectors (as well as gg and gl arrays)
@@ -78,6 +81,10 @@ subroutine scale_h
   ! recalculate the local part of the pseudopotential
   !
   call init_vloc ( )
+  !
+  ! for hybrid functionals
+  !
+  IF ( dft_is_hybrid() ) CALL exx_grid_reinit()
   !
   return
 end subroutine scale_h
