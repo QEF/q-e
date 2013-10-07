@@ -47,12 +47,11 @@ MODULE vdW_DF
   USE constants,         ONLY : pi, e2
   USE kernel_table,      ONLY : q_mesh, Nr_points, Nqs, r_max
   USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier
-  USE mp_global,         ONLY : me_pool, nproc_pool, intra_pool_comm, root_pool
-  USE io_global,         ONLY : ionode
+  USE mp_pools,          ONLY : me_pool, nproc_pool, intra_pool_comm, root_pool
+  USE io_global,         ONLY : ionode, stdout
   USE fft_base,          ONLY : dfftp
   USE fft_interfaces,    ONLY : fwfft, invfft 
   USE control_flags,     ONLY : iverbosity, gamma_only
-  USE io_global,         ONLY : stdout
  
   IMPLICIT NONE
   

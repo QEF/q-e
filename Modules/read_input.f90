@@ -32,7 +32,7 @@ MODULE read_input
      USE xml_input,             ONLY : xml_input_dump
      USE read_xml_module,       ONLY : read_xml
      USE mp,                    ONLY : mp_bcast
-     USE mp_global,             ONLY : intra_image_comm
+     USE mp_images,             ONLY : intra_image_comm
      USE iotk_module,           ONLY : iotk_attlenx
      USE open_close_input_file, ONLY : open_input_file, close_input_file
      !

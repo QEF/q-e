@@ -68,7 +68,7 @@ END SUBROUTINE plugin_arguments
   !
   ! broadcast plugin arguments
   !
-  USE mp_global, ONLY : mp_bcast
+  USE mp, ONLY : mp_bcast
   USE plugin_flags
   !
   IMPLICIT NONE

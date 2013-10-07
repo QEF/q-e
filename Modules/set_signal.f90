@@ -8,7 +8,8 @@ MODULE set_signal
 
 USE iso_c_binding
 USE io_global, ONLY : stdout
-USE mp_global, ONLY : root, world_comm, mp_bcast, mpime
+USE mp_world,  ONLY : root, world_comm, mpime
+USE mp, ONLY : mp_bcast
 
 IMPLICIT NONE
 

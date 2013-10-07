@@ -60,7 +60,7 @@ MODULE xml_io_base
       !
       USE wrappers,  ONLY : f_mkdir_safe
       USE mp,        ONLY : mp_barrier
-      USE mp_global, ONLY : me_image, intra_image_comm
+      USE mp_images, ONLY : me_image, intra_image_comm
       USE io_files,  ONLY : check_writable
       !
       CHARACTER(LEN=*), INTENT(IN) :: dirname
@@ -97,7 +97,7 @@ MODULE xml_io_base
       !
       USE wrappers,  ONLY : f_chdir
       USE mp,        ONLY : mp_barrier
-      USE mp_global, ONLY : me_image, intra_image_comm
+      USE mp_images, ONLY : me_image, intra_image_comm
       !
       CHARACTER(LEN=*), INTENT(IN) :: dirname
       !
@@ -199,7 +199,7 @@ MODULE xml_io_base
       !------------------------------------------------------------------------
       !
       ! KNK_nimage
-      ! USE mp_global, ONLY:  my_image_id
+      ! USE mp_images, ONLY:  my_image_id
       CHARACTER(LEN=256)           :: restart_dir
       CHARACTER(LEN=*), INTENT(IN) :: outdir
       INTEGER,          INTENT(IN) :: runit
@@ -238,7 +238,7 @@ MODULE xml_io_base
       !------------------------------------------------------------------------
       !
       USE io_global, ONLY : ionode, ionode_id
-      USE mp_global, ONLY : intra_image_comm
+      USE mp_images, ONLY : intra_image_comm
       !
       IMPLICIT NONE
       !
@@ -272,7 +272,7 @@ MODULE xml_io_base
       !------------------------------------------------------------------------
       !
       USE io_global, ONLY : ionode, ionode_id
-      USE mp_global, ONLY : intra_image_comm
+      USE mp_images, ONLY : intra_image_comm
       !
       IMPLICIT NONE
       !
@@ -299,7 +299,7 @@ MODULE xml_io_base
       !------------------------------------------------------------------------
       !
       USE io_global,         ONLY : ionode, ionode_id
-      USE mp_global,         ONLY : intra_image_comm
+      USE mp_images,         ONLY : intra_image_comm
       USE control_flags,     ONLY : lkpoint_dir, tqr
       !
       IMPLICIT NONE
@@ -420,7 +420,7 @@ MODULE xml_io_base
       ! ... a counter indicating the last successful printout iteration is saved
       !
       USE io_global, ONLY : ionode, ionode_id
-      USE mp_global, ONLY : intra_image_comm
+      USE mp_images, ONLY : intra_image_comm
       USE mp,        ONLY : mp_bcast
       !
       IMPLICIT NONE
@@ -473,7 +473,7 @@ MODULE xml_io_base
       ! ... is read here
       !
       USE io_global, ONLY : ionode, ionode_id
-      USE mp_global, ONLY : intra_image_comm
+      USE mp_images, ONLY : intra_image_comm
       USE mp,        ONLY : mp_bcast
       !
       IMPLICIT NONE
@@ -1642,7 +1642,8 @@ MODULE xml_io_base
       ! ... collecting the entire charge density on a single processor
       !
       USE io_global, ONLY : ionode, ionode_id
-      USE mp_global, ONLY : intra_bgrp_comm, intra_image_comm
+      USE mp_bands,  ONLY : intra_bgrp_comm
+      USE mp_images, ONLY : intra_image_comm
       USE mp,        ONLY : mp_put, mp_sum, mp_rank, mp_size
       !
       IMPLICIT NONE

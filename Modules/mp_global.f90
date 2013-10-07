@@ -60,7 +60,7 @@ CONTAINS
     IMPLICIT NONE
     INTEGER, INTENT(IN), OPTIONAL :: my_world_comm
     LOGICAL, INTENT(IN), OPTIONAL :: start_images
-    LOGICAL :: do_images, do_mpi_init
+    LOGICAL :: do_images
     INTEGER :: my_comm
     !
     my_comm = MPI_COMM_WORLD

@@ -109,7 +109,6 @@
 !  END manual
 
         USE mp, ONLY: mp_sum
-        USE mp_global, ONLY: mpime
 
         COMPLEX(DP), INTENT(INOUT) :: wf(:,:)
         INTEGER, INTENT(IN) :: gid
