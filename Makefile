@@ -101,7 +101,7 @@ all   : pwall cp ld1 upf tddfpt gwl
 # Auxiliary targets used by main targets:
 # compile modules, libraries, directory for binaries, etc
 ###########################################################
-mods : libiotk 
+mods : libiotk libelpa
 	( cd Modules ; $(MAKE) $(MFLAGS) TLDEPS= all )
 libs : mods
 	( cd clib ; $(MAKE) $(MFLAGS) TLDEPS= all )
