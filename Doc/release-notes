@@ -1,5 +1,6 @@
 New in svn version
 
+   * PW: Hybrid functionals for USPP and PAW (experimental)
    * PW: partial support to the use of k-points label in the Brillouin zone
    * PW: Langevin dynamics with Smart Monte Carlo
    * CP: Tkatchenko-Scheffler vdW correction
@@ -43,6 +44,7 @@ Incompatible changes in svn version:
 
 Fixed in svn version:
 
+   * PWscf: spin-polarized HSE for PAW was incorrectly implemented
    * PHonon: epsil + paw was not working with k-point parallelization.
    * PHonon: problem with the symmetry analysis in D_6h. The problem appeared
      in special cases after the symmetry reshuffling made by the phonon code.
