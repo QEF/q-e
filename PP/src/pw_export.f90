@@ -114,7 +114,7 @@
           IF( ( ikt >= iks ) .and. ( ikt <= ike ) ) THEN
             IF( me_pool == root_pool ) ipmask( mpime + 1 ) = 1
           ENDIF
-          CALL mp_sum( ipmask )
+          CALL mp_sum( ipmask, world_comm )
           DO i = 1, nproc
             IF( ipmask(i) == 1 ) ipsour = ( i - 1 )
           ENDDO
@@ -391,6 +391,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   USE mp_global,      ONLY : nproc, nproc_pool, mpime
   USE mp_global,      ONLY : my_pool_id, intra_pool_comm, inter_pool_comm
   USE mp,             ONLY : mp_sum, mp_max
+  USE mp_world,       ONLY : world_comm
 
   IMPLICIT NONE
 
@@ -519,7 +520,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   ALLOCATE( ngk_g( nkstot ) )
   ngk_g = 0
   ngk_g( iks:ike ) = ngk( 1:nks )
-  CALL mp_sum( ngk_g )
+  CALL mp_sum( ngk_g, world_comm )
 
   ! compute the Maximum G vector index among all G+k and processors
   npw_g = maxval( igk_l2g(:,:) )
@@ -702,7 +703,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
       ENDDO
     ENDIF
     !
-    CALL mp_sum( itmp1 )
+    CALL mp_sum( itmp1, world_comm )
     !
     ngg = 0
     DO  ig = 1, npw_g

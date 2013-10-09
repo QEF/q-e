@@ -249,6 +249,7 @@ CONTAINS
     USE lr_variables,     ONLY : n_ipol,LR_polarization,restart,bgz_suffix
     USE io_files,         ONLY: prefix, tmp_dir, nd_nmbr, wfc_dir
     USE mp,               ONLY : mp_bcast, mp_barrier,mp_sum
+    USE mp_world,         ONLY : world_comm
     USE io_global,        ONLY : ionode, ionode_id
 
     IMPLICIT NONE
@@ -353,7 +354,7 @@ CONTAINS
 
     !print *,"temp_restart",temp_restart
 #ifdef __MPI
-    CALL mp_sum(temp_restart)
+    CALL mp_sum(temp_restart,world_comm)
 #endif
     !print *, "current temp_restart", temp_restart
     IF (temp_restart > 0 ) THEN

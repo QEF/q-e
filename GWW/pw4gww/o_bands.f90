@@ -120,7 +120,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
               sca=sca+2.d0*dble(conjg(o_basis(ig,1))*psi_test(ig))
            enddo
            if(gstart==2) sca=sca-dble(conjg(o_basis(1,1))*psi_test(1))
-           call mp_sum(sca)
+           call mp_sum(sca,world_comm)
            write(stdout,*) 'Steepest:',sca
            
            o_basis(1:npw,1)= o_basis(1:npw,1)-lambda*psi_test(1:npw)
@@ -130,7 +130,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
               sca=sca+2.d0*dble(conjg(o_basis(ig,1))*o_basis(ig,1))
            enddo
            if(gstart==2) sca=sca-dble(conjg(o_basis(1,1))*o_basis(1,1))
-           call mp_sum(sca)
+           call mp_sum(sca,world_comm)
            sca=dsqrt(sca)
            o_basis(:,1)=o_basis(:,1)/sca
 
@@ -177,7 +177,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
            sca=sca+2.d0*dble(conjg(psi_test(ig))*psi_test(ig))
         enddo
         if(gstart==2) sca=sca-dble(conjg(psi_test(1))*psi_test(1))
-        call mp_sum(sca)
+        call mp_sum(sca,world_comm)
         sca=dsqrt(sca)
         psi_test(:)=psi_test(:)/sca
         sca=0.d0
@@ -185,7 +185,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
            sca=sca+2.d0*dble(conjg(o_basis(ig,iw))*psi_test(ig))
         enddo
         if(gstart==2) sca=sca-dble(conjg(o_basis(1,iw))*psi_test(1))
-        call mp_sum(sca)
+        call mp_sum(sca,world_comm)
         write(stdout,*) 'Eig prod:',iw,sca
 
      enddo
@@ -268,7 +268,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
         omat(:,:)=0.d0
         if(nsize>0) omat(1:fcw_number,nbegin:nend)=fcw_mat(1:fcw_number,1:nsize)
         do iw=1,fcw_number
-           call mp_sum(omat(:,iw))
+           call mp_sum(omat(:,iw),world_comm)
         enddo
              
         if(ionode) then
@@ -296,9 +296,9 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
            ovec(:,:)=0.d0
         endif
         do iw=1,numpw
-           call mp_sum(ovec(:,iw))
+           call mp_sum(ovec(:,iw),world_comm)
         enddo
-        call mp_sum(o_values(:))
+        call mp_sum(o_values(:),world_comm)
         deallocate(omat)
         do iw=1,numpw
            write(stdout,*) 'POLARIZABILITY eigen:', iw, o_values(iw)
@@ -319,7 +319,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
      do ig=1,npw
         if(g2kin(ig) <= cutoff) num_fc=num_fc+1
      enddo
-     call mp_sum(num_fc)
+     call mp_sum(num_fc,world_comm)
      num_fc=(num_fc-1)*2!G=0 excluded
   
      o_basis(:,:)=(0.d0,0.d0)
@@ -344,7 +344,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
         else
            ii=0
         endif
-        call mp_sum(ii)
+        call mp_sum(ii,world_comm)
      enddo
      if(ii/=num_fc) then
         write(stdout,*) 'ERRORE G STATES',ii
@@ -399,7 +399,7 @@ subroutine o_extra_pw( p_basis, numwp, numwp_max,cutoff)
   do ig=1,npw
      if(g2kin(ig) <= cutoff) num_fc=num_fc+1
   enddo
-  call mp_sum(num_fc)
+  call mp_sum(num_fc,world_comm)
   num_fc=(num_fc-1)*2!G=0 excluded           
   p_basis(:,numwp+1:numwp+num_fc)=(0.d0,0.d0)
   write(stdout,*) 'Number of G states added to the polarizability basis', num_fc
@@ -418,7 +418,7 @@ subroutine o_extra_pw( p_basis, numwp, numwp_max,cutoff)
      else
         ii=0
      endif
-     call mp_sum(ii)
+     call mp_sum(ii,world_comm)
   enddo
   if(ii/=num_fc+numwp) then
      write(stdout,*) 'ERRORE G STATES',ii
@@ -484,7 +484,7 @@ subroutine  update_numwp(numwp, cutoff)
   do ig=1,npw
      if(g2kin(ig) <= cutoff) num_fc=num_fc+1
   enddo
-  call mp_sum(num_fc)
+  call mp_sum(num_fc,world_comm)
   num_fc=(num_fc-1)*2!G=0 excluded              
 
   numwp=numwp+num_fc

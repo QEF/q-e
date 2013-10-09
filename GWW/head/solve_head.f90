@@ -312,7 +312,7 @@ subroutine solve_head
                 ps(1,1), nbnd )
 #ifdef __PARA
            !call reduce (2 * nbnd * nbnd_occ (ik), ps)
-           call mp_sum(ps(1:nbnd_occ (ik),1:nbnd_occ (ik)))
+           call mp_sum(ps(1:nbnd_occ (ik),1:nbnd_occ (ik)),world_comm)
 #endif
         ! dpsi is used as work space to store S|evc>
         !
@@ -452,7 +452,7 @@ subroutine solve_head
         do ig=1,ngm
            sca=sca+conjg(tmp_g(ig))*tmp_g(ig)
         enddo
-        call mp_sum(sca)
+        call mp_sum(sca,world_comm)
         write(stdout,*) 'POLA SCA', sca,ngm
 !loop on frequency
         do ig=gstart,ngm
@@ -503,7 +503,7 @@ subroutine solve_head
 
 !calculate total number of G for wave function
   npwx_g=ngm
-  call mp_sum(npwx_g)
+  call mp_sum(npwx_g,world_comm)
   allocate(e_head_g(ngm_g))
 
   if(ionode) then

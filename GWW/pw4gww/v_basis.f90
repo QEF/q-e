@@ -22,6 +22,7 @@ SUBROUTINE v_basis(numpw,o_basis,cutoff)
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
                                    npw, current_k
   USE mp,                   ONLY : mp_sum,mp_bcast
+  USE mp_world,             ONLY : world_comm
   USE klist,                ONLY : xk
   USE wannier_gw,           ONLY : l_truncated_coulomb,truncation_radius
   USE exx,                  ONLY : exx_divergence, exx_grid_init, yukawa
@@ -90,7 +91,7 @@ SUBROUTINE v_basis(numpw,o_basis,cutoff)
       enddo
    endif
    do ii=1,numpw
-      call mp_sum(vmat(:,ii))
+      call mp_sum(vmat(:,ii),world_comm)
    enddo
 
   
@@ -119,11 +120,11 @@ SUBROUTINE v_basis(numpw,o_basis,cutoff)
       vectors(:,:)=0.d0
       n_found=0
    endif
-   call mp_sum(n_found)
-   call mp_sum(eigen(1:n_found))
+   call mp_sum(n_found,world_comm)
+   call mp_sum(eigen(1:n_found),world_comm)
    do ii=1,n_found
       write(stdout,*) 'v_basis:',ii,eigen(ii)
-      call mp_sum(vectors(:,ii))
+      call mp_sum(vectors(:,ii),world_comm)
    enddo
    deallocate(vmat)
 

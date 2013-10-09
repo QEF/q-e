@@ -35,7 +35,8 @@ SUBROUTINE readpp ( input_dft, printout )
   ! set DFT to input_dft if present, to the value read in PP files otherwise
   !
   USE kinds,        ONLY: DP
-  USE mp, ONLY: mp_bcast, mp_sum
+  USE mp,           ONLY: mp_bcast, mp_sum
+  USE mp_world,     ONLY: world_comm
   USE io_global,    ONLY: stdout, ionode
   USE pseudo_types, ONLY: pseudo_upf, nullify_pseudo_upf, deallocate_pseudo_upf
   USE funct,        ONLY: enforce_input_dft, &
@@ -118,7 +119,7 @@ SUBROUTINE readpp ( input_dft, printout )
         file_pseudo  = TRIM (pseudo_dir_cur) // TRIM (psfile(nt))
         OPEN  (unit = iunps, file = file_pseudo, status = 'old', &
                form = 'formatted', action='read', iostat = ios)
-        CALL mp_sum (ios)
+        CALL mp_sum (ios,world_comm)
         IF ( ios /= 0 ) CALL infomsg &
                      ('readpp', 'file '//TRIM(file_pseudo)//' not found')
         !
@@ -133,7 +134,7 @@ SUBROUTINE readpp ( input_dft, printout )
         file_pseudo = TRIM (pseudo_dir) // TRIM (psfile(nt))
         OPEN  (unit = iunps, file = file_pseudo, status = 'old', &
                form = 'formatted', action='read', iostat = ios)
-        CALL mp_sum (ios)
+        CALL mp_sum (ios,world_comm)
         CALL errore('readpp', 'file '//TRIM(file_pseudo)//' not found',ABS(ios))
      END IF
      !

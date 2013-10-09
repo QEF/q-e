@@ -1194,14 +1194,11 @@
       SUBROUTINE mp_sum_i1(msg,gid)
         IMPLICIT NONE
         INTEGER, INTENT (INOUT) :: msg
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
-        INTEGER :: group
-        INTEGER :: msglen
+        INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
+        INTEGER :: msglen
         msglen = 1
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
-        CALL reduce_base_integer( msglen, msg, group, -1 )
+        CALL reduce_base_integer( msglen, msg, gid, -1 )
 #endif
       END SUBROUTINE mp_sum_i1
 !
@@ -1209,14 +1206,11 @@
       SUBROUTINE mp_sum_iv(msg,gid)
         IMPLICIT NONE
         INTEGER, INTENT (INOUT) :: msg(:)
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
-        INTEGER :: group
-        INTEGER :: msglen
+        INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
+        INTEGER :: msglen
         msglen = size(msg)
-        CALL reduce_base_integer( msglen, msg, group, -1 )
+        CALL reduce_base_integer( msglen, msg, gid, -1 )
 #endif
       END SUBROUTINE mp_sum_iv
 !
@@ -1225,14 +1219,11 @@
       SUBROUTINE mp_sum_im(msg,gid)
         IMPLICIT NONE
         INTEGER, INTENT (INOUT) :: msg(:,:)
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
-        INTEGER :: group
-        INTEGER :: msglen
+        INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
+        INTEGER :: msglen
         msglen = size(msg)
-        CALL reduce_base_integer( msglen, msg, group, -1 )
+        CALL reduce_base_integer( msglen, msg, gid, -1 )
 #endif
       END SUBROUTINE mp_sum_im
 !
@@ -1241,14 +1232,11 @@
       SUBROUTINE mp_sum_it(msg,gid)
         IMPLICIT NONE
         INTEGER, INTENT (INOUT) :: msg(:,:,:)
-        INTEGER, OPTIONAL, INTENT (IN) :: gid
-        INTEGER :: group
-        INTEGER :: msglen
+        INTEGER, INTENT (IN) :: gid
 #if defined(__MPI)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
+        INTEGER :: msglen
         msglen = size(msg)
-        CALL reduce_base_integer( msglen, msg, group, -1 )
+        CALL reduce_base_integer( msglen, msg, gid, -1 )
 #endif
       END SUBROUTINE mp_sum_it
 

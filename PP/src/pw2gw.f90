@@ -117,6 +117,7 @@ SUBROUTINE compute_gw( use_gmaps )
   USE mp_global, ONLY : mpime, kunit, nproc, intra_image_comm, npool
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_sum , mp_max
+  USE mp_world,  ONLY : world_comm
   USE mp_wave,   ONLY : mergewf
   USE parallel_include
   USE scf,       ONLY : rho, rho_core, rhog_core
@@ -336,7 +337,7 @@ SUBROUTINE compute_gw( use_gmaps )
 
   igwx_p = 0
   igwx_p( mpime + 1 ) = igwx
-  CALL mp_sum( igwx_p )
+  CALL mp_sum( igwx_p, world_comm )
 
   IF( mpime == 0 ) THEN
      !
@@ -702,7 +703,7 @@ SUBROUTINE compute_gw( use_gmaps )
                     rhotwx(3) = rhotwx(3) + xkgk(3) * ctemp
                  ENDDO
 
-                 CALL mp_sum( rhotwx )
+                 CALL mp_sum( rhotwx, world_comm )
 
                  IF (mpime == 0) THEN
                     rrhotwx(1)=tpiba2* real(rhotwx(1)*conjg(rhotwx(1)))
@@ -755,7 +756,7 @@ SUBROUTINE compute_gw( use_gmaps )
          ENDDO
  ! PG: this is the correct integral - 27/8/2010
          vxcdiag = vxcdiag * rytoev / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
-         CALL mp_sum( vxcdiag ) !, intra_pool_comm )
+         CALL mp_sum( vxcdiag, world_comm ) !, intra_pool_comm )
          ! ONLY FOR DEBUG!
          !IF (norma /= 1.0) THEN
          !   WRITE(*,*) "norma =", norma
@@ -850,6 +851,7 @@ SUBROUTINE write_gmaps ( kunit)
   USE mp_global, ONLY : nproc, nproc_pool, mpime
   USE mp_global, ONLY : my_pool_id, my_image_id, intra_pool_comm
   USE mp,        ONLY : mp_sum, mp_max
+  USE mp_world,  ONLY : world_comm 
 
 
   IMPLICIT NONE
@@ -927,7 +929,7 @@ SUBROUTINE write_gmaps ( kunit)
   ALLOCATE( ngk_gw( nkstot/nspin ) )
   ngk_g = 0
   ngk_g( iks:ike ) = ngk( 1:nks )
-  CALL mp_sum( ngk_g )
+  CALL mp_sum( ngk_g, world_comm )
 
   ! compute the Maximum G vector index among all G+k an processors
   npw_g = maxval( ig_l2g(:) ) ! ( igk_l2g(:,:) )
@@ -948,7 +950,7 @@ SUBROUTINE write_gmaps ( kunit)
         itmp( ig_l2g( ig ), 1 ) = ig_l2g( ig )
       ENDDO
     ENDIF
-    CALL mp_sum( itmp )
+    CALL mp_sum( itmp, world_comm )
     ngg = 0
     DO  ig = 1, npw_g
       IF( itmp( ig, 1 ) == ig ) THEN

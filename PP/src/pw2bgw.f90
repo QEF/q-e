@@ -721,7 +721,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   DO ik = 1, nk_l
     ngk_g ( ik + iks - 1 ) = ngk ( ik )
   ENDDO
-  CALL mp_sum ( ngk_g )
+  CALL mp_sum ( ngk_g, world_comm )
 
   npw_g = MAXVAL ( igk_l2g ( :, : ) )
   CALL mp_max ( npw_g )
@@ -806,7 +806,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
         itmp ( igk_l2g ( ig, ik - iks + 1 ) ) = igk_l2g ( ig, ik - iks + 1 )
       ENDDO
     ENDIF
-    CALL mp_sum ( itmp )
+    CALL mp_sum ( itmp, world_comm )
     ngg = 0
     DO ig = 1, npw_g
       IF ( itmp ( ig ) .EQ. ig ) THEN
@@ -855,7 +855,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
       IF ( ( ik .GE. iks ) .AND. ( ik .LE. ike ) ) THEN
         IF ( me_pool .EQ. root_pool ) ipmask ( mpime + 1 ) = 1
       ENDIF
-      CALL mp_sum ( ipmask )
+      CALL mp_sum ( ipmask, world_comm )
       DO j = 1, nproc
         IF ( ipmask ( j ) .EQ. 1 ) ipsour = j - 1
       ENDDO
@@ -1002,6 +1002,7 @@ SUBROUTINE real_wfng ( ik, ngkdist_l, nb, ns, energy, wfng_dist )
   USE kinds, ONLY : DP
   USE io_global, ONLY : ionode
   USE mp, ONLY : mp_sum
+  USE mp_world, ONLY : world_comm
 
   IMPLICIT NONE
 
@@ -1078,7 +1079,7 @@ SUBROUTINE real_wfng ( ik, ngkdist_l, nb, ns, energy, wfng_dist )
         DO ig = 1, ngkdist_l
           x = x + dble ( wfc ( ig ) ) **2
         ENDDO
-        CALL mp_sum ( x )
+        CALL mp_sum ( x, world_comm )
         IF ( x .LT. eps2 ) null_map ( inull ( i ), i ) = 0
         IF ( x .GT. eps2 ) null_map ( inull ( i ), i ) = 1
         inull ( i ) = inull ( i ) + 1
@@ -1086,7 +1087,7 @@ SUBROUTINE real_wfng ( ik, ngkdist_l, nb, ns, energy, wfng_dist )
         DO ig = 1, ngkdist_l
           x = x + aimag ( wfc ( ig ) ) **2
         ENDDO
-        CALL mp_sum ( x )
+        CALL mp_sum ( x, world_comm )
         IF ( x .LT. eps2 ) null_map ( inull ( i ), i ) = 0
         IF ( x .GT. eps2 ) null_map ( inull ( i ), i ) = 1
         inull ( i ) = inull ( i ) + 1
@@ -1130,7 +1131,7 @@ SUBROUTINE real_wfng ( ik, ngkdist_l, nb, ns, energy, wfng_dist )
         DO ig = 1, ngkdist_l
           x = x + phi ( ig, j ) **2
         ENDDO
-        CALL mp_sum ( x )
+        CALL mp_sum ( x, world_comm )
         x = sqrt ( x )
         DO ig = 1, ngkdist_l
           phi ( ig, j ) = phi ( ig, j ) / x
@@ -1152,7 +1153,7 @@ SUBROUTINE real_wfng ( ik, ngkdist_l, nb, ns, energy, wfng_dist )
           DO ig = 1, ngkdist_l
             x = x + phi ( ig, j + 1 ) * psi ( ig, k )
           ENDDO
-          CALL mp_sum ( x )
+          CALL mp_sum ( x, world_comm )
           DO ig = 1, ngkdist_l
             vec ( ig ) = vec ( ig ) - psi ( ig, k ) * x
           ENDDO
@@ -1161,7 +1162,7 @@ SUBROUTINE real_wfng ( ik, ngkdist_l, nb, ns, energy, wfng_dist )
         DO ig = 1, ngkdist_l
           x = x + vec ( ig ) **2
         ENDDO
-        CALL mp_sum ( x )
+        CALL mp_sum ( x, world_comm )
         x = sqrt ( x )
         IF ( x .GT. eps6 ) THEN
           reduced_span = reduced_span + 1
@@ -1218,6 +1219,7 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type, &
   USE kinds, ONLY : DP
   USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_sum
+  USE mp_world, ONLY : world_comm
   USE mp_global, ONLY : intra_pool_comm
   USE scf, ONLY : rho
   USE symm_base, ONLY : s, ftau, nsym
@@ -1426,6 +1428,7 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
   USE klist, ONLY : xk, nkstot
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum
+  USE mp_world, ONLY : world_comm
   USE mp_global, ONLY : kunit, my_pool_id, inter_pool_comm, npool
   USE noncollin_module, ONLY : nspin_mag
   USE scf, ONLY : rho
@@ -2609,7 +2612,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   DO ik = 1, nks
     ngk_g ( ik + iks - 1 ) = ngk ( ik )
   ENDDO
-  CALL mp_sum ( ngk_g )
+  CALL mp_sum ( ngk_g, world_comm )
   npw_g = MAXVAL ( igk_l2g ( :, : ) )
   CALL mp_max ( npw_g )
   npwx_g = MAXVAL ( ngk_g ( : ) )
@@ -2666,7 +2669,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
         itmp ( igk_l2g ( ig, ik - iks + 1 ) ) = igk_l2g ( ig, ik - iks + 1 )
       ENDDO
     ENDIF
-    CALL mp_sum ( itmp )
+    CALL mp_sum ( itmp, world_comm )
     ngg = 0
     DO ig = 1, npw_g
       IF ( itmp ( ig ) .EQ. ig ) THEN
@@ -2715,7 +2718,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
       IF ( ( ik .GE. iks ) .AND. ( ik .LE. ike ) ) THEN
         IF ( me_pool .EQ. root_pool ) ipmask ( mpime + 1 ) = 1
       ENDIF
-      CALL mp_sum ( ipmask )
+      CALL mp_sum ( ipmask, world_comm )
       DO j = 1, nproc
         IF ( ipmask ( j ) .EQ. 1 ) ipsour = j - 1
       ENDDO

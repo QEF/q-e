@@ -19,9 +19,9 @@
      USE kinds,                 ONLY : DP
      USE gvect,                 ONLY : ig_l2g
      USE mp,           ONLY : mp_sum, mp_barrier, mp_bcast
-     USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm 
-     USE mp_wave, ONLY : mergewf,splitwf
-     USE mp_global, ONLY : mpime, nproc, intra_pool_comm
+     USE mp_wave,      ONLY : mergewf,splitwf
+     USE mp_pools,     ONLY : intra_pool_comm, inter_pool_comm, intra_pool_comm
+     USE mp_world,     ONLY : world_comm, mpime, nproc
      USE fft_base,             ONLY : dfftp, dffts
      USE fft_interfaces,       ONLY : fwfft, invfft
      USE wavefunctions_module, ONLY : psic
@@ -66,7 +66,7 @@
 !write header of file with KS energies of all states (just in case..)
     
     npwx_g=npwx
-    call mp_sum(npwx_g)
+    call mp_sum(npwx_g, world_comm)
 
     if(ionode) then
        iun =  find_free_unit()

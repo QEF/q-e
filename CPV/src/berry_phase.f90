@@ -63,6 +63,7 @@
       USE io_global, only: ionode, stdout
       USE mp_global, ONLY: nproc_image, me_image, intra_image_comm
       USE mp, ONLY: mp_max, mp_sum
+      USE mp_world, ONLY: world_comm
       USE stick_base, ONLY : sticks_owner
       USE gvect, ONLY: ig_l2g, sortedig_l2g
 
@@ -89,7 +90,7 @@
       !  compute global number of G vectors
       !
       ngwt = ngw
-      CALL mp_sum( ngwt )
+      CALL mp_sum( ngwt, world_comm )
 
       CALL ln_setup( mill, ngwt )
 

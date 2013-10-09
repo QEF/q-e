@@ -532,6 +532,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use mp_global,      ONLY : nproc, nproc_pool, mpime
   use mp_global,      ONLY : my_pool_id, intra_pool_comm, inter_pool_comm
   use mp,             ONLY : mp_sum, mp_max
+  use mp_world,       ONLY : world_comm
   use ldaU,           ONLY : lda_plus_u
   USE basis,                ONLY : swfcatom
 
@@ -657,7 +658,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   allocate( ngk_g( nkstot ) )
   ngk_g = 0
   ngk_g( iks:ike ) = ngk( 1:nks )
-  CALL mp_sum( ngk_g )
+  CALL mp_sum( ngk_g, world_comm )
 
   ! compute the Maximum G vector index among all G+k and processors
   npw_g = MAXVAL( igk_l2g(:,:) )
@@ -687,7 +688,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
       END DO
     END IF
     !
-    CALL mp_sum( itmp1 )
+    CALL mp_sum( itmp1, world_comm )
     !
     ngg = 0
     DO  ig = 1, npw_g

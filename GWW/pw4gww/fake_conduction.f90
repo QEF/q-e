@@ -194,7 +194,7 @@ CONTAINS
   do ig=1,npw
      if(g2kin(ig) <= cutoff) num_fc=num_fc+1
   enddo
-  call mp_sum(num_fc)
+  call mp_sum(num_fc,world_comm)
   num_fc=(num_fc-1)*2+1
 
   if(.not.l_cond) then
@@ -245,7 +245,7 @@ CONTAINS
      else
         ii=0
      endif
-     call mp_sum(ii)
+     call mp_sum(ii,world_comm)
   enddo
 
   if(ii/=num_fc) then 
@@ -618,7 +618,7 @@ CONTAINS
            enddo
         endif
         do ii=1,num_fc_spin
-           call mp_sum(tmp_mat2(1:fcw_number,ii))
+           call mp_sum(tmp_mat2(1:fcw_number,ii),world_comm)
         enddo
         !call mp_sum(tmp_mat2)
 
@@ -677,7 +677,7 @@ CONTAINS
                  enddo
               enddo
            endif
-           call mp_sum(omat)
+           call mp_sum(omat,world_comm)
         else
            allocate(tmp_mat(num_fc_spin,l_blk))
            do ip=0,nproc-1
@@ -697,7 +697,7 @@ CONTAINS
                     enddo
                  endif
                  do ii=1,nsize_loc
-                    call mp_sum(tmp_mat(:,ii))
+                    call mp_sum(tmp_mat(:,ii),world_comm)
                  enddo
                  if(ip==mpime) then
                     omat(:,1:nsize_loc)=tmp_mat(:,1:nsize_loc)
@@ -759,15 +759,15 @@ CONTAINS
            call flush_unit(stdout)
          
            if(l_dsyevr) then
-              call mp_sum(n_out)
+              call mp_sum(n_out,world_comm)
               do iw=1,n_out
-                 call mp_sum(omat2(:,iw))
+                 call mp_sum(omat2(:,iw),world_comm)
               enddo
            else
-              call mp_sum(omat)
+              call mp_sum(omat,world_comm)
            endif
       !call mp_bcast(eigen(:), ionode_id,world_comm)
-           call mp_sum(eigen(:))
+           call mp_sum(eigen(:),world_comm)
         else
            if(l_verbose) write(stdout,*) 'Before diago_cg',max_state
            call flush_unit(stdout)
@@ -995,10 +995,10 @@ CONTAINS
                     ovec(jj)=ovec(jj) -dble(conjg(state_g(1,jj))*state_g(1,ii))
                  enddo
               endif
-              call mp_sum(ovec(1:num_built))
+              call mp_sum(ovec(1:num_built),world_comm)
               call dgemm('T','N',1,1,2*fc%npwt,2.d0,state_g(1,ii),2*fc%npwt,state_g(1,ii),2*fc%npwt,0.d0,sca2,1)
               if(fc%gstart_t==2) sca2=sca2-dble(conjg(state_g(1,ii))*state_g(1,ii))
-              call mp_sum(sca2)
+              call mp_sum(sca2,world_comm)
               sca1=0.d0
               do jj=1,num_built
                  sca1=sca1+ovec(jj)**2.d0
@@ -1011,7 +1011,7 @@ CONTAINS
                  call dgemm('T','N',1,1,2*fc%npwt,2.d0,state_g(1,num_built),&
                       &2*fc%npwt,state_g(1,num_built),2*fc%npwt,0.d0,ovec(num_built),1)
                  if(fc%gstart_t==2) ovec(num_built)=ovec(num_built)-dble(conjg(state_g(1,num_built))*state_g(1,num_built))
-                 call mp_sum(ovec(num_built))
+                 call mp_sum(ovec(num_built),world_comm)
                  ovec(num_built)=1.d0/dsqrt(ovec(num_built))
                  state_g(1:fc%npwt,num_built)=state_g(1:fc%npwt,num_built)*ovec(num_built)
 
@@ -1020,7 +1020,7 @@ CONTAINS
               call dgemm('T','N',1,1,2*fc%npwt,2.d0,state_g(1,ii),&
                    &2*fc%npwt,state_g(1,ii),2*fc%npwt,0.d0,ovec(1),1)
               if(fc%gstart_t==2) ovec(1)=ovec(1)-dble(conjg(state_g(1,ii))*state_g(1,ii))
-              call mp_sum(ovec(1))
+              call mp_sum(ovec(1),world_comm)
               if(ovec(1) >= s_cutoff) then
                  num_built=1
                  ovec(num_built)=1.d0/dsqrt(ovec(num_built))
@@ -1152,7 +1152,7 @@ CONTAINS
         do ir=1,fc%nrxxt
            sca1=sca1+wv_real_all(ir,iv)**2.d0
         enddo
-        call mp_sum(sca1)
+        call mp_sum(sca1,world_comm)
         if(l_verbose) write(stdout,*) 'Modulus:',fc%nrxxt,fc%nr1t*fc%nr2t*fc%nr3t, sca1/(dble(fc%nr1t*fc%nr2t*fc%nr3t))
         
   
@@ -1227,7 +1227,7 @@ CONTAINS
            enddo
         endif
  
-        call mp_sum(tmp_mat)
+        call mp_sum(tmp_mat,world_comm)
 
         if(l_frac) then
            if(ii<=num_fc) then
@@ -1273,7 +1273,7 @@ CONTAINS
                     sca2=sca2+2.d0*dble(conjg(state_g(ig,iv))*state_g(ig,iv))
                  enddo
                  if(fc%gstart_t==2) sca2=sca2-dble(state_g(1,iv))**2.d0
-                 call mp_sum(sca2)
+                 call mp_sum(sca2,world_comm)
                  write(stdout,*) 'Projection', ii,iv,sca1/sca2
               enddo
            endif
@@ -1569,7 +1569,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
   do ig=1,npw
      if(g2kin(ig) <= cutoff) num_fc=num_fc+1
   enddo
-  call mp_sum(num_fc)
+  call mp_sum(num_fc,world_comm)
   num_fc=(num_fc-1)*2+1
 
   allocate( state_fc( npw, num_fc ) )
@@ -1598,7 +1598,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
      else
         ii=0
      endif
-     call mp_sum(ii)
+     call mp_sum(ii,world_comm)
   enddo
 
   if(ii/=num_fc) then 
@@ -1826,7 +1826,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
            else
               sca2=0.d0
            endif
-           call mp_sum(sca2)
+           call mp_sum(sca2,world_comm)
            sca2=sca2/dble(fc%nr1t*fc%nr2t*fc%nr3t)
            sca2=1.d0/dsqrt(sca2)
            if(n_loc >= 1) fcw_state_r_loc(1:n_loc,1)=state_loc(1:n_loc)*sca2
@@ -1846,14 +1846,14 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
             else
                tmp_vec(1:fcw_number)=0.d0
             endif
-           call mp_sum(tmp_vec)
+           call mp_sum(tmp_vec,world_comm)
            tmp_vec(:)=tmp_vec(:)/dble(fc%nr1t*fc%nr2t*fc%nr3t)
            if(n_loc >=1) then
               call dgemm('T','N',1,1,n_loc,1.d0,state_loc,n_loc,state_loc,n_loc,0.d0,sca2,1)
            else
               sca2=0.d0
            endif
-           call mp_sum(sca2)
+           call mp_sum(sca2,world_comm)
            sca2=sca2/dble(fc%nr1t*fc%nr2t*fc%nr3t)
            sca1=0.d0
           
@@ -1991,7 +1991,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
         else
            tmp_mat(:,:)=0.d0
         endif
-        call mp_sum(tmp_mat)
+        call mp_sum(tmp_mat,world_comm)
         tmp_mat(:,:)=tmp_mat(:,:)/dble(fc%nr1t*fc%nr2t*fc%nr3t)
      
         CALL memstat( kilobytes )
@@ -2325,7 +2325,7 @@ end subroutine fake_conduction_wannier_real
      if(g2kin(ig) <= cutoff) num_fc=num_fc+1
   enddo
   call start_clock('mpsum')
-  call mp_sum(num_fc)
+  call mp_sum(num_fc,world_comm)
   call stop_clock('mpsum')
   num_fc=(num_fc-1)*2+1
 
@@ -2374,7 +2374,7 @@ end subroutine fake_conduction_wannier_real
         ii=0
      endif
      call start_clock('mpsum')
-     call mp_sum(ii)
+     call mp_sum(ii,world_comm)
      call stop_clock('mpsum')
   enddo
 
@@ -2703,11 +2703,11 @@ end subroutine fake_conduction_wannier_real
         call stop_clock('fc_dgemm')
         do ii=1,num_fc_spin
            call start_clock('mpsum')
-           call mp_sum(tmp_mat2(1:fcw_number,ii))
+           call mp_sum(tmp_mat2(1:fcw_number,ii),world_comm)
            call stop_clock('mpsum')
            tmp_mat2(1:fcw_number,ii)=tmp_mat2(1:fcw_number,ii)/dble(fc%nr1t*fc%nr2t*fc%nr3t)
         enddo
-        !call mp_sum(tmp_mat2)
+        !call mp_sum(tmp_mat2,world_comm)
         
         call start_clock('fc_dgemm')
         call dgemm('N','N',fc%nrxxt, num_fc_spin,fcw_number,-1.d0,fcw_state_r,fc%nrxxt,tmp_mat2,&
@@ -2760,14 +2760,14 @@ end subroutine fake_conduction_wannier_real
            call dgemm('T','N',num_built,1,fc%nrxxt,1.d0,state_g,fc%nrxxt,state_g(1,ii),fc%nrxxt,0.d0,ovec,num_fc_spin)
            call stop_clock('fc_dgemm')
            call start_clock('mpsum')
-           call mp_sum(ovec(1:num_built))
+           call mp_sum(ovec(1:num_built),world_comm)
            call stop_clock('mpsum')
            ovec(1:num_built)=ovec(1:num_built)/dble(fc%nr1t*fc%nr2t*fc%nr3t)
            call start_clock('fc_dgemm')
            call dgemm('T','N',1,1,fc%nrxxt,1.d0,state_g(1,ii),fc%nrxxt,state_g(1,ii),fc%nrxxt,0.d0,sca2,1)
            call stop_clock('fc_dgemm')
            call start_clock('mpsum')
-           call mp_sum(sca2)
+           call mp_sum(sca2,world_comm)
            call stop_clock('mpsum')
            sca2=sca2/dble(fc%nr1t*fc%nr2t*fc%nr3t)
            sca1=0.d0
@@ -2786,7 +2786,7 @@ end subroutine fake_conduction_wannier_real
                    &fc%nrxxt,state_g(1,num_built),fc%nrxxt,0.d0,ovec(num_built),1)
               call stop_clock('fc_dgemm')
               call start_clock('mpsum')
-              call mp_sum(ovec(num_built))
+              call mp_sum(ovec(num_built),world_comm)
               call stop_clock('mpsum')
               ovec(num_built)=ovec(num_built)/dble(fc%nr1t*fc%nr2t*fc%nr3t)
               ovec(num_built)=1.d0/dsqrt(ovec(num_built))
@@ -2799,7 +2799,7 @@ end subroutine fake_conduction_wannier_real
                 &fc%nrxxt,state_g(1,ii),fc%nrxxt,0.d0,ovec(1),1)
            call stop_clock('fc_dgemm')
            call start_clock('mpsum')
-           call mp_sum(ovec(1))
+           call mp_sum(ovec(1),world_comm)
            call stop_clock('mpsum')
            ovec(1)=ovec(1)/dble(fc%nr1t*fc%nr2t*fc%nr3t)
            if(ovec(1) >= s_cutoff) then
@@ -2934,7 +2934,7 @@ end subroutine fake_conduction_wannier_real
            sca1=sca1+wv_real_all(ir,iv)**2.d0
         enddo
         call start_clock('mpsum')
-        call mp_sum(sca1)
+        call mp_sum(sca1,world_comm)
         call stop_clock('mpsum')
         if(l_verbose) write(stdout,*) 'Modulus:',fc%nrxxt,fc%nr1t*fc%nr2t*fc%nr3t, sca1/(dble(fc%nr1t*fc%nr2t*fc%nr3t))
         
@@ -2962,7 +2962,7 @@ end subroutine fake_conduction_wannier_real
         call dgemm('T','N',fcw_number,num_nbndv(is),fc%nrxxt,1.d0,fcw_state_r,fc%nrxxt,state_g,fc%nrxxt,0.d0,tmp_mat,fcw_number)
         call stop_clock('fc_dgemm')
         call start_clock('mpsum')
-        call mp_sum(tmp_mat)
+        call mp_sum(tmp_mat,world_comm)
         call stop_clock('mpsum')
         tmp_mat=tmp_mat/dble(fc%nr1t*fc%nr2t*fc%nr3t)
 

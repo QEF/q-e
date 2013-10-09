@@ -38,6 +38,7 @@ USE mp_global,          ONLY: nproc_image        !number of processors
 USE mp_global,          ONLY: me_image           !processor number (0,1,...,nproc_image-1)
 USE mp_global,          ONLY: intra_image_comm   !standard MPI communicator
 USE mp_global,          ONLY: get_ntask_groups   !retrieve number of task groups
+USE mp_world,           ONLY: world_comm         !world communicator, not the same as MPI_COMM_WORLD!
 USE mp,                 ONLY: mp_sum             !MPI collection with sum
 USE parallel_include                             !MPI header
 USE uspp_param,         ONLY: upf                !atomic pseudo-potential data
@@ -1258,10 +1259,10 @@ PRIVATE :: GetVdWParam
   !
   ! Collect NsomegaA, NsomegaAr, gomegar, and rhosad over all processors and broadcast...
   !
-  CALL mp_sum(NsomegaA)
-  CALL mp_sum(NsomegaAr)
-  CALL mp_sum(gomegar)
-  CALL mp_sum(rhosad)
+  CALL mp_sum(NsomegaA,world_comm)
+  CALL mp_sum(NsomegaAr,world_comm)
+  CALL mp_sum(gomegar,world_comm)
+  CALL mp_sum(rhosad,world_comm)
   !
   ! Decompose gomegar to gomegaAr to save on memory storage...
   !
@@ -1362,7 +1363,7 @@ PRIVATE :: GetVdWParam
   !
   ! Collect veff over all processors and broadcast...
   !
-  CALL mp_sum(veff)
+  CALL mp_sum(veff,world_comm)
   !
   CALL stop_clock('tsvdw_veff')
   !
@@ -1713,8 +1714,8 @@ PRIVATE :: GetVdWParam
   !
   ! Collect dveffdR and dveffdh over all processors and broadcast...
   !
-  CALL mp_sum(dveffdR)
-  CALL mp_sum(dveffdh)
+  CALL mp_sum(dveffdR,world_comm)
+  CALL mp_sum(dveffdh,world_comm)
   !
   CALL stop_clock('tsvdw_dveff')
   !
@@ -2100,10 +2101,10 @@ PRIVATE :: GetVdWParam
     !
     ! Synchronize n_period contribution from all processors...
     !
-    CALL mp_sum(EtsvdW_period)
-    CALL mp_sum(FtsvdW_period)
-    CALL mp_sum(HtsvdW_period)
-    CALL mp_sum(predveffAdn_period)
+    CALL mp_sum(EtsvdW_period,world_comm)
+    CALL mp_sum(FtsvdW_period,world_comm)
+    CALL mp_sum(HtsvdW_period,world_comm)
+    CALL mp_sum(predveffAdn_period,world_comm)
     !
     ! Increment total quantities...
     !
@@ -2198,7 +2199,7 @@ PRIVATE :: GetVdWParam
   !
   ! Collect UtsvdWA over all processors and broadcast...
   !
-  CALL mp_sum(UtsvdWA)
+  CALL mp_sum(UtsvdWA,world_comm)
   !
   ! Partition out dispersion potential consistent with slabs of the charge density...
   !

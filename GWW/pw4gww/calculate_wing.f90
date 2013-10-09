@@ -49,7 +49,7 @@ subroutine calculate_wing(n_set, orthonorm)
   INTEGER, ALLOCATABLE :: k2g_ig_l2g(:)
 
   npwx_g=npwx
-  call mp_sum(npwx_g)
+  call mp_sum(npwx_g,world_comm)
 
 !read file .e_head
 
@@ -109,7 +109,7 @@ subroutine calculate_wing(n_set, orthonorm)
       !     do ig=1,ngm_k
       !        sca=sca+dble(e_head_g0(ig)*conjg(e_head_g0(ig)))
       !     enddo
-      !     call mp_sum(sca)
+      !     call mp_sum(sca,world_comm)
       !     write(stdout,*) 'POLA SCA0',ii, sca,ngm_k
 
            call splitwf(e_head(:, ii,ipol),e_head_g0,npw,k2g_ig_l2g,mpime,nproc,ionode_id,intra_pool_comm) 
@@ -119,7 +119,7 @@ subroutine calculate_wing(n_set, orthonorm)
       !        sca=sca+2.d0*dble(e_head(ig, ii,ipol)*conjg(e_head(ig, ii,ipol)))
       !     enddo
       !     if(gstart==2) sca=sca -dble(e_head(1, ii,ipol)*conjg(e_head(1, ii,ipol)))
-      !     call mp_sum(sca)
+      !     call mp_sum(sca,world_comm)
       !     write(stdout,*) 'POLA SCA',ii, sca,npw
         enddo
     enddo
@@ -171,7 +171,7 @@ subroutine calculate_wing(n_set, orthonorm)
 !                  sca=sca+2.d0*real(tmpspacei(ig,iw-(iiw-1)*n_set)*conjg(e_head(ig,i,ipol)))*fact(ig)
                    sca=sca+2.d0*dble((tmpspacei(ig,iw-(iiw-1)*n_set))*conjg(e_head(ig,i,ipol)))!*fact(ig)!ATTENZIONE
                enddo
-               call mp_sum(sca)
+               call mp_sum(sca,world_comm)
                wing(iw,i,ipol)=sca
 
 
