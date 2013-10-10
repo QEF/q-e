@@ -57,6 +57,7 @@ subroutine cgsolve_all_imfreq (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !
   USE kinds, only : DP
   USE mp,    only : mp_sum
+  USE mp_world, only : world_comm
   implicit none
   !
   !   first the I/O variables
@@ -159,7 +160,7 @@ subroutine cgsolve_all_imfreq (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         endif
      enddo
      kter_eff = kter_eff + DBLE (lbnd) / DBLE (nbnd)
-     call mp_sum(rho)
+     call mp_sum(rho, world_comm)
      !!!call reduce (lbnd, rho )
      do ibnd = nbnd, 1, -1
         if (conv(ibnd).eq.0) then
@@ -220,8 +221,8 @@ subroutine cgsolve_all_imfreq (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         end if
      end do
 
-     call mp_sum(a)
-     call mp_sum(c)
+     call mp_sum(a, world_comm)
+     call mp_sum(c, world_comm)
      !!!call reduce (lbnd, a)
      !!!call reduce (lbnd, c)
 

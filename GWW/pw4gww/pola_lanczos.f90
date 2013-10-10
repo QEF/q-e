@@ -267,7 +267,7 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
             enddo
          endif
          do ii=1,numpw
-            call mp_sum(omat(1:numpw,ii))
+            call mp_sum(omat(1:numpw,ii), world_comm)
          enddo
 !set up norms
 !         do ii=1,numpw
@@ -561,7 +561,7 @@ subroutine pc_operator(state,ispin,l_cond)
      do iv=1,num_nbndv(ispin)
         if(gstart==2) prod(iv)=prod(iv)-dble(conjg(evc(1,iv))*state(1))
      enddo
-     call mp_sum(prod(:))
+     call mp_sum(prod(:), world_comm)
      call dgemm('N','N',2*npw,1,num_nbndv(ispin),-1.d0,evc,2*npwx,prod,&
           &num_nbndv(ispin),1.d0,state,2*npw)
   else
@@ -571,7 +571,7 @@ subroutine pc_operator(state,ispin,l_cond)
      do iv=1,num_nbnds
         if(gstart==2) prod(iv)=prod(iv)-dble(conjg(evc(1,iv))*state(1))
      enddo
-     call mp_sum(prod(:))
+     call mp_sum(prod(:), world_comm)
      call dgemm('N','N',2*npw,1,num_nbnds,-1.d0,evc,2*npwx,prod,&
           &num_nbnds,1.d0,state,2*npw)
 
@@ -616,7 +616,7 @@ subroutine pc_operator_t(state,evc_t,ispin, fc)
   do iv=1,num_nbndv(ispin)
      if(fc%gstart_t==2) prod(iv)=prod(iv)-dble(conjg(evc_t(1,iv))*state(1))
   enddo
-  call mp_sum(prod(:))
+  call mp_sum(prod(:), world_comm)
   call dgemm('N','N',2*fc%npwt,1,num_nbndv(ispin),-1.d0,evc_t,2*fc%npwt,prod,&
        &num_nbndv(ispin),1.d0,state,2*fc%npwt)
 
@@ -762,7 +762,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
         enddo
         if(gstart==2) n_1(is)=n_1(is)-dble(conjg(u_0(1,is))*u_0(1,is))
      enddo
-     call mp_sum(n_1(1:nsize_ip))
+     call mp_sum(n_1(1:nsize_ip), world_comm)
      n_1(1:nsize_ip)=dsqrt(n_1(1:nsize_ip))
 
 !calculate alpha
@@ -773,7 +773,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
         enddo
         if(gstart==2) alpha(is)=alpha(is)-dble(conjg(psi_1(1,is))*u_0(1,is))
      enddo
-     call mp_sum(alpha(1:nsize_ip))
+     call mp_sum(alpha(1:nsize_ip), world_comm)
      alpha(1:nsize_ip)=alpha(1:nsize_ip)/n_1(1:nsize_ip)
 
 !calculate psi_2 and beta
@@ -787,7 +787,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
         enddo
         if(gstart==2) beta(is)=beta(is)-dble(conjg(psi_2(1,is))*psi_2(1,is))
      enddo
-     call mp_sum(beta(1:nsize_ip))
+     call mp_sum(beta(1:nsize_ip), world_comm)
      beta(1:nsize_ip)=dsqrt(beta(1:nsize_ip))
      do is=1,nsize_ip
         psi_2(:,is)=psi_2(:,is)/beta(is)
@@ -801,7 +801,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
         enddo
         if(gstart==2) d(1,is+nbegin_ip-1)=d(1,is+nbegin_ip-1)-dble(conjg(psi_1(1,is))*u_0(1,is))
      enddo
-     call mp_sum(d(1,nbegin_ip:nend_ip))
+     call mp_sum(d(1,nbegin_ip:nend_ip), world_comm)
 
      if(l_verbose) write(stdout,*) 'Lanczos Diagonal 1', d(1,nbegin_ip:nend_ip)
      call flush_unit(stdout)
@@ -815,7 +815,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
         enddo
         if(gstart==2) f(1,is+nbegin_ip-1)=f(1,is+nbegin_ip-1)-dble(conjg(psi_2(1,is))*u_0(1,is))
      enddo
-     call mp_sum(f(1,nbegin_ip:nend_ip))
+     call mp_sum(f(1,nbegin_ip:nend_ip), world_comm)
 
      if(l_verbose) write(stdout,*) 'ATTENZIONE1'
      call flush_unit(stdout)
@@ -831,7 +831,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
            enddo
         endif
         do ii=1,nsize_ip
-           call mp_sum(omat(:,ii))
+           call mp_sum(omat(:,ii), world_comm)
         enddo
         
         if(ip==mpime) omat_tot(1:nstates,1:nsize_ip,1)=omat(1:nstates,1:nsize_ip)
@@ -850,7 +850,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
         call flush_unit(stdout)
 
         do ii=1,nstates
-           call mp_sum(omat(:,ii))
+           call mp_sum(omat(:,ii), world_comm)
         enddo
 
         if(ionode) then
@@ -899,7 +899,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
            enddo
         endif
         do ii=1,nsize_ip
-           call mp_sum(omat(:,ii))
+           call mp_sum(omat(:,ii), world_comm)
         enddo
            
         if(ip==mpime) omat_tot(1:nstates,1:nsize_ip,2)=omat(1:nstates,1:nsize_ip)
@@ -917,7 +917,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
         call flush_unit(stdout)
 
         do ii=1,nstates
-           call mp_sum(omat(:,ii))
+           call mp_sum(omat(:,ii), world_comm)
         enddo
         if(ionode) then
            do is=1,nstates
@@ -950,7 +950,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
            enddo
            if(gstart==2) n_1(is)=n_1(is)-dble(conjg(u_1(1,is))*u_1(1,is))
         enddo
-        call mp_sum(n_1(1:nsize_ip))
+        call mp_sum(n_1(1:nsize_ip), world_comm)
         n_1(1:nsize_ip)=dsqrt(n_1(1:nsize_ip))
 
 !calculate alpha
@@ -961,7 +961,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
            enddo
            if(gstart==2) alpha(is)=alpha(is)-dble(conjg(psi_1(1,is))*u_1(1,is))
         enddo
-        call mp_sum(alpha(1:nsize_ip))
+        call mp_sum(alpha(1:nsize_ip), world_comm)
         alpha(1:nsize_ip)=alpha(1:nsize_ip)/n_1(1:nsize_ip)
 
 !calculate beta
@@ -972,7 +972,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
            enddo
            if(gstart==2) beta(is)=beta(is)-dble(conjg(psi_2(1,is))*u_1(1,is))
         enddo
-        call mp_sum(beta(1:nsize_ip))
+        call mp_sum(beta(1:nsize_ip), world_comm)
         beta(1:nsize_ip)=beta(1:nsize_ip)/n_1(1:nsize_ip)
 
 !calculate psi_3 and gamma
@@ -986,7 +986,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
            enddo
            if(gstart==2) gamma(is)=gamma(is)-dble(conjg(psi_3(1,is))*psi_3(1,is))
         enddo
-        call mp_sum(gamma(1:nsize_ip))
+        call mp_sum(gamma(1:nsize_ip), world_comm)
         gamma(1:nsize_ip)=dsqrt(gamma(1:nsize_ip))
         do is=1,nsize_ip
            psi_3(:,is)=psi_3(:,is)/gamma(is)
@@ -1003,7 +1003,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
            enddo
            if(gstart==2) d(it,is+nbegin_ip-1)=d(it,is+nbegin_ip-1)-dble(conjg(psi_2(1,is))*u_1(1,is))
         enddo
-        call mp_sum(d(it,nbegin_ip:nend_ip))
+        call mp_sum(d(it,nbegin_ip:nend_ip), world_comm)
 
 !calculate f
         do is=1,nsize_ip
@@ -1012,7 +1012,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
            enddo
            if(gstart==2) f(it,is+nbegin_ip-1)=f(it,is+nbegin_ip-1)-dble(conjg(psi_3(1,is))*u_1(1,is))
         enddo
-        call mp_sum(f(it,nbegin_ip:nend_ip))
+        call mp_sum(f(it,nbegin_ip:nend_ip), world_comm)
 
 !calculate overlap
         if(it /=nsteps) then
@@ -1026,7 +1026,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
                  enddo
               endif
               do ii=1,nsize_ip
-                 call mp_sum(omat(:,ii))
+                 call mp_sum(omat(:,ii), world_comm)
               enddo
               if(ip==mpime) omat_tot(1:nstates,1:nsize_ip,it+1)=omat(1:nstates,1:nsize_ip)
 
@@ -1041,7 +1041,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
                  enddo
               endif
               do ii=1,nstates
-                 call mp_sum(omat(:,ii))
+                 call mp_sum(omat(:,ii), world_comm)
               enddo
               if(ionode) then
                  do is=1,nstates
@@ -1175,7 +1175,7 @@ subroutine orthonormalize_two_manifolds( state1, n1,state2, n2, threshold, state
   call flush_unit(stdout)
 
   do ii=1,n2
-     call mp_sum(tmp_mat(:,ii))
+     call mp_sum(tmp_mat(:,ii), world_comm)
   enddo
   if(l_verbose) write(stdout,*) 'orthonormalize copy array'
   call flush_unit(stdout)
@@ -1210,10 +1210,10 @@ subroutine orthonormalize_two_manifolds( state1, n1,state2, n2, threshold, state
 
    do ii=1,n1+n2
       !call mp_bcast(omat(:,ii), ionode_id,world_comm)
-      call mp_sum(omat(:,ii))
+      call mp_sum(omat(:,ii), world_comm)
    enddo
    !call mp_bcast(eigen(:), ionode_id,world_comm)
-   call mp_sum(eigen(:))
+   call mp_sum(eigen(:), world_comm)
 
    do ii=1,n1+n2
       if(l_verbose) write(stdout,*) 'EIGEN:',ii, eigen(ii)
@@ -1457,7 +1457,7 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
            enddo
         enddo
      endif
-     call mp_sum(t_mat(:,:))
+     call mp_sum(t_mat(:,:), world_comm)
      if(ionode) then
         write(iuntmat) nglobal
         write(iuntmat) nstates_eff
@@ -1493,7 +1493,7 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
      write(stdout,*) 'TEST3'
      call flush_unit(stdout)
 
-     call mp_sum(t_mat(:,:))
+     call mp_sum(t_mat(:,:), world_comm)
 !!write diagonal terms
      do ii=1,nglobal
         sca=0.d0
@@ -1541,7 +1541,7 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
                  t_mat(jj,1)=t_mat(jj,1)-dble(conjg(old_basis(1,jj))*wp_prod(1))
               enddo
            endif
-           call mp_sum(t_mat(:,1))
+           call mp_sum(t_mat(:,1), world_comm)
            sca=0.d0
            do ii=1,nglobal
               sca=sca+t_mat(ii,1)**2.d0
@@ -1552,7 +1552,7 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
               sca1=sca1+2.d0*dble(conjg(wp_prod(ig))*wp_prod(ig))
            enddo
            if(gstart==2) sca1=sca1-dble(conjg(wp_prod(1))*wp_prod(1))
-           call mp_sum(sca1)
+           call mp_sum(sca1, world_comm)
          
            write(stdout,*) 'Projection',iv,iw,sca/sca1
            proj_tot=proj_tot+sca/sca1
@@ -1646,7 +1646,7 @@ subroutine orthonormalize_two_manifolds_scalapack( state1, n1,state2, n2, thresh
      do jj=1,n2
         sca=2.d0*ddot(2*npw,state1(:,ii),1,state2(:,jj),1) 
         if(gstart==2) sca=sca-dble(conjg(state1(1,ii))*state2(1,jj))
-        call mp_sum(sca)
+        call mp_sum(sca, world_comm)
         icrow = indxg2p(ii,n_r,0,0,nprow)
         iccol = indxg2p(jj+n1,n_c,0,0,npcol)
         iproc=icrow*npcol+iccol
@@ -1808,7 +1808,7 @@ subroutine orthonormalize_two_manifolds_prj( state1, n1,state2, n2, threshold, s
   call flush_unit(stdout)
 
   do ii=1,n2
-     call mp_sum(tmp_mat(:,ii))
+     call mp_sum(tmp_mat(:,ii), world_comm)
   enddo
 
   call dgemm('N','N',2*npw, n2,n1,-1.d0,state1,2*npw,tmp_mat,n1,1.d0,state2,2*npw)
@@ -1838,7 +1838,7 @@ subroutine orthonormalize_two_manifolds_prj( state1, n1,state2, n2, threshold, s
   call flush_unit(stdout)
 
   do ii=1,n2
-     call mp_sum(omat(:,ii))
+     call mp_sum(omat(:,ii), world_comm)
   enddo
 
  
@@ -1871,10 +1871,10 @@ subroutine orthonormalize_two_manifolds_prj( state1, n1,state2, n2, threshold, s
 
    do ii=1,n2
       !call mp_bcast(omat(:,ii), ionode_id,world_comm)
-      call mp_sum(omat(:,ii))
+      call mp_sum(omat(:,ii), world_comm)
    enddo
    !call mp_bcast(eigen(:), ionode_id,world_comm)
-   call mp_sum(eigen(:))
+   call mp_sum(eigen(:), world_comm)
 
 !   do ii=1,n2
    do ii=1,n2,n2-1
@@ -1938,7 +1938,7 @@ subroutine pc_operator_test(state)
   do iv=num_nbndv(1)+1,nbnd
      if(gstart==2) prod(iv-num_nbndv(1))=prod(iv-num_nbndv(1))-dble(conjg(evc(1,iv))*state(1))
   enddo
-  call mp_sum(prod(:))
+  call mp_sum(prod(:), world_comm)
   call dgemm('N','N',2*npw,1,nbnd-num_nbndv(1),1.d0,evc(:,num_nbndv(1)+1:nbnd),2*npwx,prod,nbnd-num_nbndv(1),0.d0,state,2*npw)
 
 
@@ -1987,7 +1987,7 @@ subroutine pc_operator_t_m(numpw,state,evc_t,ispin,fc)
     enddo
  endif
   do ii=1,numpw
-     call mp_sum(prod(:,ii))
+     call mp_sum(prod(:,ii), world_comm)
   enddo
   call dgemm('N','N',2*fc%npwt,numpw,num_nbndv(ispin),-1.d0,evc_t,2*fc%npwt,prod,&
        &num_nbndv(ispin),1.d0,state,2*fc%npwt)
@@ -2029,7 +2029,7 @@ subroutine pc_operator_t_r(numpw,state,evc_r,ispin,fc)
        & 0.d0,prod,num_nbndv(ispin))
 
   do ii=1,numpw
-     call mp_sum(prod(:,ii))
+     call mp_sum(prod(:,ii), world_comm)
      prod(:,ii)=prod(:,ii)/dble(fc%nr1t*fc%nr2t*fc%nr3t)
   enddo
   call dgemm('N','N',fc%nrxxt,numpw,num_nbndv(ispin),-1.d0,evc_r,fc%nrxxt,prod,&
@@ -2064,6 +2064,7 @@ subroutine  h_psi_self( lda, n, m, psi, hpsi )
   USE wavefunctions_module, ONLY : evc
   USE wannier_gw, ONLY : n_gw_states, ene_gw, delta_self
   USE mp, ONLY : mp_sum
+  USE mp_world, ONLY : world_comm
   !
   implicit none
 
@@ -2088,7 +2089,7 @@ subroutine  h_psi_self( lda, n, m, psi, hpsi )
         if(gstart==2) prod(ii,jj)=prod(ii,jj)-dble(conjg(evc(1,ii))*psi(1,jj))
      enddo
   enddo
-  call mp_sum(prod)
+  call mp_sum(prod,world_comm)
 
   do jj=1,m
      do ii=1,n_gw_states
@@ -2121,6 +2122,7 @@ subroutine  h_psi_scissor( ispin,lda, n, m, psi, hpsi )
   USE wavefunctions_module, ONLY : evc
   USE wannier_gw, ONLY : num_nbndv,scissor
   USE mp, ONLY : mp_sum
+  USE mp_world, ONLY : world_comm
   USE constants, ONLY : rytoev
 
   implicit none
@@ -2143,7 +2145,7 @@ subroutine  h_psi_scissor( ispin,lda, n, m, psi, hpsi )
         if(gstart==2) prod(ii,jj)=prod(ii,jj)-dble(conjg(evc(1,ii))*psi(1,jj))
      enddo
   enddo
-  call mp_sum(prod)
+  call mp_sum(prod,world_comm)
 
   do jj=1,m
      do ii=1,num_nbndv(ispin)
@@ -2377,7 +2379,7 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
          call dgemm('T','N',numpw,numpw,fc%nrxxt,1.d0,wp_prod(1,1,iv-ivv+1),fc%nrxxt,&
               &wp_prod(1,1,iv-ivv+1),fc%nrxxt,0.d0,omat,numpw)
          do ii=1,numpw
-            call mp_sum(omat(1:numpw,ii))
+            call mp_sum(omat(1:numpw,ii),world_comm)
             omat(1:numpw,ii)=omat(1:numpw,ii)/dble(fc%nr1t*fc%nr2t*fc%nr3t)
          enddo
          

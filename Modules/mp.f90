@@ -1245,14 +1245,11 @@
       SUBROUTINE mp_sum_r1(msg,gid)
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT) :: msg
-        INTEGER, OPTIONAL, INTENT (IN) :: gid
-        INTEGER :: group
-        INTEGER :: msglen
+        INTEGER, INTENT (IN) :: gid
 #if defined(__MPI)
+        INTEGER :: msglen
         msglen = 1
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
-        CALL reduce_base_real( msglen, msg, group, -1 )
+        CALL reduce_base_real( msglen, msg, gid, -1 )
 #endif
       END SUBROUTINE mp_sum_r1
 
@@ -1262,14 +1259,11 @@
       SUBROUTINE mp_sum_rv(msg,gid)
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT) :: msg(:)
-        INTEGER, OPTIONAL, INTENT (IN) :: gid
-        INTEGER :: group
-        INTEGER :: msglen
+        INTEGER, INTENT (IN) :: gid
 #if defined(__MPI)
+        INTEGER :: msglen
         msglen = size(msg)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
-        CALL reduce_base_real( msglen, msg, group, -1 )
+        CALL reduce_base_real( msglen, msg, gid, -1 )
 #endif
       END SUBROUTINE mp_sum_rv
 !
@@ -1279,14 +1273,11 @@
       SUBROUTINE mp_sum_rm(msg, gid)
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT) :: msg(:,:)
-        INTEGER, OPTIONAL, INTENT (IN) :: gid
-        INTEGER :: group
-        INTEGER :: msglen
+        INTEGER, INTENT (IN) :: gid
 #if defined(__MPI)
+        INTEGER :: msglen
         msglen = size(msg)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
-        CALL reduce_base_real( msglen, msg, group, -1 )
+        CALL reduce_base_real( msglen, msg, gid, -1 )
 #endif
       END SUBROUTINE mp_sum_rm
 
@@ -1296,25 +1287,20 @@
         REAL (DP), INTENT (IN)  :: msg(:,:)
         REAL (DP), INTENT (OUT) :: res(:,:)
         INTEGER,   INTENT (IN)  :: root
-        INTEGER, OPTIONAL, INTENT (IN) :: gid
-        INTEGER :: group
+        INTEGER,   INTENT (IN) :: gid
+#if defined(__MPI)
         INTEGER :: msglen, ierr, taskid
 
-#if defined(__MPI)
-
         msglen = size(msg)
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
 
-        CALL mpi_comm_rank( group, taskid, ierr)
+        CALL mpi_comm_rank( gid, taskid, ierr)
         IF( ierr /= 0 ) CALL mp_stop( 8059 )
         !
         IF( taskid == root ) THEN
            IF( msglen > size(res) ) CALL mp_stop( 8060 )
         END IF
 
-        CALL reduce_base_real_to( msglen, msg, res, group, root )
-
+        CALL reduce_base_real_to( msglen, msg, res, gid, root )
 
 #else
 
@@ -1330,26 +1316,20 @@
         COMPLEX (DP), INTENT (IN)  :: msg(:,:)
         COMPLEX (DP), INTENT (OUT) :: res(:,:)
         INTEGER,   INTENT (IN)  :: root
-        INTEGER, OPTIONAL, INTENT (IN) :: gid
-        INTEGER :: group
-        INTEGER :: msglen, ierr, taskid
-
+        INTEGER,  INTENT (IN) :: gid
 #if defined(__MPI)
+        INTEGER :: msglen, ierr, taskid
 
         msglen = size(msg)
 
-        group = global_comm
-        IF( PRESENT( gid ) ) group = gid
-
-        CALL mpi_comm_rank( group, taskid, ierr)
+        CALL mpi_comm_rank( gid, taskid, ierr)
         IF( ierr /= 0 ) CALL mp_stop( 8061 )
 
         IF( taskid == root ) THEN
            IF( msglen > size(res) ) CALL mp_stop( 8062 )
         END IF
 
-        CALL reduce_base_real_to( 2 * msglen, msg, res, group, root )
-
+        CALL reduce_base_real_to( 2 * msglen, msg, res, gid, root )
 
 #else
 

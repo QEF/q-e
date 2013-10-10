@@ -51,6 +51,7 @@ SUBROUTINE orbm_kubo()
   USE scf,                  ONLY : vrs, vltot, v, kedtau
   USE gvecs,                ONLY : doublegrid
   USE mp_global,            ONLY : intra_pool_comm,me_pool
+  USE mp_world,             ONLY : world_comm
 
   !  --- Avoid implicit definitions ---
   IMPLICIT NONE
@@ -370,7 +371,7 @@ SUBROUTINE orbm_kubo()
                         evc_kp(istart:iend,mb)
                     END IF
                   END DO
-                  CALL mp_sum(aux_kp_g(:))
+                  CALL mp_sum(aux_kp_g(:),world_comm)
             DO nb=1,nbnd
                   sca=(0.0d0,0.0d0)
                   DO ipol=1,npol
@@ -423,7 +424,7 @@ SUBROUTINE orbm_kubo()
                     temp2(mapgm_global(ig_l2g(igk_kp(1:npw_kp)),2))=&
                       evc_kp(istart:iend,nb)
                   END IF
-                  CALL mp_sum(temp2(:))
+                  CALL mp_sum(temp2(:),world_comm)
                 END IF
               END IF
               iend = istart+npw_k-1
@@ -510,8 +511,8 @@ SUBROUTINE orbm_kubo()
                     store2=store2+zdotc(npw_k,evcpm(npwx+1:npwx+npw_k,mb,2*eps_i(l)+sig-1),1, &
                                               evcpm(npwx+1:npwx+npw_k,nb,2*eps_j(l)+sigp-1),1)
                   END IF
-                  CALL mp_sum(store1)
-                  CALL mp_sum(store2)
+                  CALL mp_sum(store1,world_comm)
+                  CALL mp_sum(store2,world_comm)
                     mic=mic+DBLE(signum)*pref*gpar(:,l)/kpt_arr(l)*AIMAG(store1*store2)
                 END DO
               END DO
@@ -522,7 +523,7 @@ SUBROUTINE orbm_kubo()
       END DO ! loop over k-points
     END DO
   END DO
-  CALL mp_sum(mlc)
+  CALL mp_sum(mlc,world_comm)
 
   WRITE (stdout,*) ' '
   WRITE (stdout,*) '=============================================='

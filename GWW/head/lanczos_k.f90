@@ -22,7 +22,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
   USE wavefunctions_module, ONLY : evc, psic
   USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
-  USE mp_global, ONLY : mpime
+  USE mp_world, ONLY : mpime, world_comm
   USE gvecs,                ONLY : nls, nlsm, doublegrid
   USE g_psi_mod,            ONLY : h_diag, s_diag
   USE uspp,                 ONLY : vkb, nkb, okvan
@@ -73,7 +73,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
         n_1(is)=n_1(is)+dble(conjg(psi_1(ig,is))*psi_1(ig,is))
      enddo
   enddo
-  call mp_sum(n_1(:))
+  call mp_sum(n_1(:),world_comm)
   n_1(:)=dsqrt(n_1(:))
   do is=1,nstates
      psi_1(1:npw,is)=psi_1(1:npw,is)/n_1(is)
@@ -108,7 +108,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
         n_1(is)=n_1(is)+dble(conjg(u_0(ig,is))*u_0(ig,is))
      enddo
   enddo
-  call mp_sum(n_1(:))
+  call mp_sum(n_1(:),world_comm)
   n_1(:)=dsqrt(n_1(:))
    write(stdout,*) 'Lanczos N1', n_1(:)
   call flush_unit(stdout)
@@ -121,7 +121,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
         alpha(is)=alpha(is)+conjg(psi_1(ig,is))*u_0(ig,is)
      enddo
   enddo
-  call mp_sum(alpha(:))
+  call mp_sum(alpha(:),world_comm)
   alpha(:)=alpha(:)/n_1(:)
   write(stdout,*) 'Lanczos alpha', alpha(:)
   call flush_unit(stdout)
@@ -137,7 +137,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
         beta(is)=beta(is)+dble(conjg(psi_2(ig,is))*psi_2(ig,is))
      enddo
   enddo
-  call mp_sum(beta(:))
+  call mp_sum(beta(:),world_comm)
   beta(:)=dsqrt(beta(:))
   write(stdout,*) 'Lanczos beta', beta(:)
   call flush_unit(stdout)
@@ -156,7 +156,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
      enddo
   enddo
   do is=1,nstates
-     call mp_sum(d(1,is))
+     call mp_sum(d(1,is),world_comm)
   enddo
   write(stdout,*) 'Lanczos Diagonal 1', d(1,:)
     call flush_unit(stdout)
@@ -168,7 +168,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
      do ig=1,npw
         f(1,is)=f(1,is)+conjg(psi_2(ig,is))*u_0(ig,is)
      enddo
-     call mp_sum(f(1,is))
+     call mp_sum(f(1,is),world_comm)
   enddo
 
   write(stdout,*) 'ATTENZIONE1'
@@ -183,7 +183,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
      t_out(1:npw,1,is)=psi_1(1:npw,is)
      t_out(1:npw,2,is)=psi_2(1:npw,is)
   end do
-  call mp_sum(omat(1:2,1:3,1:nstates))
+  call mp_sum(omat(1:2,1:3,1:nstates),world_comm)
 
    
   !do iterate
@@ -207,7 +207,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
            n_1(is)=n_1(is)+dble(conjg(u_1(ig,is))*u_1(ig,is))
         enddo
      enddo
-     call mp_sum(n_1(:))
+     call mp_sum(n_1(:),world_comm)
      n_1(:)=dsqrt(n_1(:))
 
 !calculate alpha
@@ -217,7 +217,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
            alpha(is)=alpha(is)+conjg(psi_1(ig,is))*u_1(ig,is)
         enddo
      enddo
-     call mp_sum(alpha(:))
+     call mp_sum(alpha(:),world_comm)
      alpha(:)=alpha(:)/n_1(:)
 
 !calculate beta
@@ -227,7 +227,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
            delta(is)=delta(is)+conjg(psi_2(ig,is))*u_1(ig,is)
         enddo
      enddo
-     call mp_sum(delta(:))
+     call mp_sum(delta(:),world_comm)
      delta(:)=delta(:)/n_1(:)
 
 !calculate psi_3 and gamma
@@ -245,7 +245,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
            gamma(is)=gamma(is)+dble(conjg(psi_3(ig,is))*psi_3(ig,is))
         enddo
      enddo
-     call mp_sum(gamma(:))
+     call mp_sum(gamma(:),world_comm)
      gamma(:)=dsqrt(gamma(:))
      do is=1,nstates
         psi_3(:,is)=psi_3(:,is)/gamma(is)
@@ -259,7 +259,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
         do ig=1,npw
            d(it,is)=d(it,is)+dble(conjg(psi_2(ig,is))*u_1(ig,is))
         enddo
-         call mp_sum(d(it,is))
+         call mp_sum(d(it,is),world_comm)
      enddo
     
 
@@ -268,7 +268,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
         do ig=1,npw
            f(it,is)=f(it,is)+conjg(psi_3(ig,is))*u_1(ig,is)
         enddo
-        call mp_sum(f(it,is))
+        call mp_sum(f(it,is),world_comm)
      enddo
   
 
@@ -280,7 +280,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
            enddo
            t_out(1:npw,it+1,is)=psi_3(1:npw,is)
         end do
-        call mp_sum(omat(it+1,1:3,1:nstates))
+        call mp_sum(omat(it+1,1:3,1:nstates),world_comm)
      endif
         
 
@@ -322,6 +322,7 @@ subroutine  h_psi_scissor( ik,lda, n, m, psi, hpsi )
   USE wavefunctions_module, ONLY : evc
   USE wannier_gw, ONLY : scissor
   USE mp, ONLY : mp_sum
+  USE mp_world, ONLY : world_comm
   USE control_ph,           ONLY : nbnd_occ
 
   implicit none
@@ -344,7 +345,7 @@ subroutine  h_psi_scissor( ik,lda, n, m, psi, hpsi )
         if(gstart==2) prod(ii,jj)=prod(ii,jj)-dble(conjg(evc(1,ii))*psi(1,jj))
      enddo
   enddo
-  call mp_sum(prod)
+  call mp_sum(prod,world_comm)
 
   do jj=1,m
      do ii=1,nbnd_occ(ik)

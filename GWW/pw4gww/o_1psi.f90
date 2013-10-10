@@ -24,6 +24,7 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
   USE gvect,     ONLY : gstart
   USE mp_global, ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
+  USE mp_world,  ONLY : world_comm
   USE fft_base,  ONLY : dffts
   USE io_global, ONLY :stdout
    
@@ -103,7 +104,7 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
      !
      IF ( gstart == 2 ) lagrange(1:m) = lagrange(1:m) - psi(1,1:m) * spsi(1)
      !
-     CALL mp_sum( lagrange( 1:m ))
+     CALL mp_sum( lagrange( 1:m ), world_comm)
      !
      psi_norm = lagrange(m)
      !
@@ -137,7 +138,7 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
      !
      IF ( gstart == 2 ) e(m) = e(m) - psi(1,m) * hpsi(1)
      !
-     CALL mp_sum( e(m))
+     CALL mp_sum( e(m), world_comm)
      !
      ! ... start iteration for this band
      !
@@ -161,7 +162,7 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
            !
         END IF
         !
-        CALL mp_sum(  es )
+        CALL mp_sum(  es, world_comm )
         !
         es(1) = es(1) / es(2)
         !
@@ -183,7 +184,7 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
         IF ( gstart == 2 ) &
            lagrange(1:m-1) = lagrange(1:m-1) - psi(1,1:m-1) * scg(1)
         !
-        CALL mp_sum( lagrange( 1 : m-1 ))
+        CALL mp_sum( lagrange( 1 : m-1 ), world_comm)
         !
         DO j = 1, ( m - 1 )
            !
@@ -200,7 +201,7 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
            !
            IF ( gstart == 2 ) gg1 = gg1 - g(1) * g0(1)
            !
-           CALL mp_sum(  gg1 )
+           CALL mp_sum(  gg1, world_comm )
            !
         END IF
         !
@@ -214,7 +215,7 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
         !
         IF ( gstart == 2 ) gg = gg - g(1) * g0(1)
         !
-        CALL mp_sum(  gg )
+        CALL mp_sum(  gg, world_comm )
         !
         IF ( iter == 1 ) THEN
            !
@@ -259,7 +260,7 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
            sca=sca+2.d0*dble(conjg(cg(ig))*ppsi(ig))
         enddo
         if(gstart==2) sca=sca-dble(conjg(cg(1))*ppsi(1))
-        call mp_sum(sca)
+        call mp_sum(sca, world_comm)
        
      
         scg(1:npw)=cg(1:npw)
@@ -268,7 +269,7 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
         !
         IF ( gstart == 2 ) cg0 = cg0 - cg(1) * scg(1)
         !
-        CALL mp_sum(  cg0 )
+        CALL mp_sum(  cg0, world_comm )
         !
         cg0 = SQRT( cg0 )
         !
@@ -286,7 +287,7 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
         !
         a0 = a0 / cg0
         !
-        CALL mp_sum(  a0 )
+        CALL mp_sum(  a0, world_comm )
         !
         b0 = 2.D0 * ddot( npw2, cg(1), 1, ppsi(1), 1 )
         !
@@ -294,7 +295,7 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
         !
         b0 = b0 / cg0**2
         !
-        CALL mp_sum(  b0 )
+        CALL mp_sum(  b0, world_comm )
         !
         e0 = e(m)
         !
@@ -437,7 +438,7 @@ SUBROUTINE o_1psi_gamma( numv, v_states, psi, opsi,l_freq,hdiag, ptype,fcw_numbe
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, et
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
-   USE mp_global, ONLY : mpime, nproc
+   USE mp_world, ONLY : world_comm, mpime, nproc
    USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE kinds, ONLY : DP
    USE fft_base,             ONLY : dfftp, dffts
@@ -777,7 +778,7 @@ SUBROUTINE o_1psi_gamma( numv, v_states, psi, opsi,l_freq,hdiag, ptype,fcw_numbe
            p_terms(ii)=p_terms(ii)-dble(conjg(fcw_state(1,ii))*psi(1))
         enddo
      endif
-     call mp_sum(p_terms(:))
+     call mp_sum(p_terms(:),world_comm)
      
 !multiply to D matrix     
      l_blk= (fcw_number)/nproc
@@ -795,7 +796,7 @@ SUBROUTINE o_1psi_gamma( numv, v_states, psi, opsi,l_freq,hdiag, ptype,fcw_numbe
      endif
   
 !collect from processors
-     call mp_sum(s_terms)
+     call mp_sum(s_terms,world_comm)
 
 !multiply with gamma functions
      call dgemm('N','N',2*npw,1,fcw_number,-1.d0,fcw_state,2*npw,s_terms,fcw_number,0.d0,opsi,2*npw)
@@ -1042,7 +1043,7 @@ SUBROUTINE o_1psi_gamma_real( numv, v_states, psi, opsi)
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
-   USE mp_global, ONLY : mpime
+   USE mp_world, ONLY : mpime, world_comm
    USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE fft_base,             ONLY : dfftp, dffts
    USE fft_interfaces,       ONLY : fwfft, invfft
@@ -1082,7 +1083,7 @@ SUBROUTINE o_1psi_gamma_real( numv, v_states, psi, opsi)
      psi_r(1:dffts%nnr)=psi_v(1:dffts%nnr)*v_states(1:dffts%nnr, iv)
 !!project on conduction manifold
      call dgemm('T','N',numv,1,dffts%nnr,1.d0,v_states,dffts%nnr,psi_r,dffts%nnr,0.d0,prod,numv)
-     call mp_sum(prod(1:numv))
+     call mp_sum(prod(1:numv), world_comm)
      prod(:)=prod(:)/dble(dffts%nr1*dffts%nr2*dffts%nr3)
      call dgemm('N','N',dffts%nnr,1,numv,-1.d0,v_states,dffts%nnr,prod,numv,1.d0, psi_r,dffts%nnr)
 !
@@ -1130,6 +1131,7 @@ END SUBROUTINE o_1psi_gamma_real
    USE wannier_gw, ONLY : max_ngm
    USE gvect, ONLY : nl
    USE mp, ONLY : mp_sum
+   USE mp_world, ONLY : world_comm
    USE fft_base,             ONLY : dfftp, dffts
    USE fft_interfaces,       ONLY : fwfft, invfft
   
@@ -1184,7 +1186,7 @@ END SUBROUTINE o_1psi_gamma_real
          sca=sca+2.d0*dble(conjg(psi2(ig))*psi2(ig))
       enddo
       if(gstart==2) sca=sca-dble(conjg(psi2(1))*psi2(1))
-      call mp_sum(sca)
+      call mp_sum(sca,world_comm)
       sca=dsqrt(sca)
       psi2(:)=psi2(:)/sca
       sca=0.d0
@@ -1192,7 +1194,7 @@ END SUBROUTINE o_1psi_gamma_real
          sca=sca+2.d0*dble(conjg(psi1(ig))*psi2(ig))
       enddo
       if(gstart==2) sca=sca-dble(conjg(psi1(1))*psi2(1))
-      call mp_sum(sca)
+      call mp_sum(sca,world_comm)
       write(stdout,*) 'o basis test:',iw,sca
 
    enddo

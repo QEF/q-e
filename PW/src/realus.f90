@@ -2843,7 +2843,7 @@ MODULE realus
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   USE cell_base,            ONLY : omega
-  !  USE mp,                   ONLY : mp_sum
+  USE mp_world,             ONLY : world_comm
   USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -2881,7 +2881,7 @@ MODULE realus
                  sca=sca+op(irb)*tabp(ia)%qr(ir,ijtoh(ih,jh,nt))
               ENDDO
               !!!! call mp_sum(sca , intra_pool_comm)
-              CALL mp_sum(sca)
+              CALL mp_sum(sca, world_comm)
               sca=sca/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
               qq_op(ih,jh,ia)=sca
               qq_op(jh,ih,ia)=sca

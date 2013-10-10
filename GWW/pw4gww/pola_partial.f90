@@ -27,7 +27,8 @@ subroutine pola_partial(numpw,ispin)
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc,wg
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
-   USE mp_global, ONLY : mpime,nproc, intra_pool_comm
+   USE mp_world, ONLY : mpime,nproc, world_comm
+   USE mp_pools, ONLY : intra_pool_comm
    USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE fft_custom_gwl
    USE mp_wave, ONLY : mergewf,splitwf
@@ -147,7 +148,7 @@ subroutine pola_partial(numpw,ispin)
                  psi_psi_phi(ii)=psi_psi_phi(ii)-dble(conjg(p_basis_t(1,ii))*prod_g(1))
               enddo
            endif
-           call mp_sum(psi_psi_phi)
+           call mp_sum(psi_psi_phi,world_comm)
            if(ionode) write(iun) psi_psi_phi(1:numpw)
         enddo
      enddo

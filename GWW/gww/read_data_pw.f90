@@ -1249,7 +1249,7 @@ SUBROUTINE read_data_pw_lanczos_chain(lc, ii, prefix, l_pola,ispin)
        do it=1,lc%numt
           tmp_mat(1:lc%numt)=0.d0
           if(ionode) read(iunlc)  tmp_mat(1:lc%numt)
-          call mp_sum(tmp_mat(:))!this should be faster than mp_bcat
+          call mp_sum(tmp_mat(:),world_comm)!this should be faster than mp_bcat
           if(it >= nbegin .and. it <= nend) then
              lc%o_mat(1:lc%numt,is,it-nbegin+1)= tmp_mat(1:lc%numt)
           endif

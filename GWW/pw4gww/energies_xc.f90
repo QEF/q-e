@@ -38,6 +38,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
   USE constants,  ONLY :rytoev
   USE io_files, ONLY : diropn
   USE mp, ONLY : mp_sum, mp_barrier
+  USE mp_world, ONLY : world_comm
   USE control_flags,        ONLY : gamma_only
   USE funct,            ONLY : dft_is_meta
   USE fft_base,             ONLY : dfftp, dffts
@@ -152,7 +153,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
           do ig=1,n
              e_xc(ibnd)=e_xc(ibnd)+real(conjg(psi(ig,ibnd))*psic(nls(igk(ig))))
           enddo          
-          call mp_sum(e_xc(ibnd))
+          call mp_sum(e_xc(ibnd),world_comm)
           write(stdout,*) 'energies_xc :', ibnd, e_xc(ibnd)*rytoev
 !
           CALL stop_clock( 'secondfft' )
@@ -186,7 +187,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
           do ig=1,n
              e_h(ibnd)=e_h(ibnd)+real(conjg(psi(ig,ibnd))*psic(nls(igk(ig))))
           enddo
-          call mp_sum(e_h(ibnd))
+          call mp_sum(e_h(ibnd),world_comm)
           write(stdout,*) 'energies_h :', ibnd, e_h(ibnd)*rytoev
 
           CALL stop_clock( 'secondfft' )
@@ -209,6 +210,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        USE wavefunctions_module, ONLY : evc
        USE klist,                ONLY : xk
        USE mp, ONLY : mp_sum
+       USE mp_world, ONLY : world_comm
        USE gvect,  ONLY : gstart,g
        USE constants, ONLY : rytoev
        USE becmod,           ONLY : becp, calbec,allocate_bec_type,deallocate_bec_type
@@ -285,7 +287,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
                 et(ibnd,ispin)=et(ibnd,ispin)-dble(conjg(evc(1,ibnd))*hpsi(1,ibnd))
              endif
           enddo
-          call mp_sum(et(:,ispin))
+          call mp_sum(et(:,ispin),world_comm)
           if(l_scissor) then
              et(1:num_nbndv(ispin),ispin)=et(1:num_nbndv(ispin),ispin)+scissor/rytoev
           endif
@@ -307,7 +309,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
                   e_hub(ibnd)=e_hub(ibnd)-dble(conjg(psi(1,ibnd))*hpsi(1,ibnd))
                endif
             enddo
-            call mp_sum(e_hub(:))
+            call mp_sum(e_hub(:),world_comm)
             do ibnd=1,nbnd
                write(stdout,*) 'Hubbard U energy:',ibnd,e_hub(ibnd)*rytoev
             enddo
@@ -331,7 +333,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
                 if(gstart==2) then
                    exact_x(ibnd)=exact_x(ibnd)-dble(conjg(evc(1,ibnd))*hpsi(1,ibnd))
                 endif
-                call mp_sum(exact_x(ibnd))
+                call mp_sum(exact_x(ibnd),world_comm)
                 write(stdout,*) 'Exact exchange :',ibnd, exact_x(ibnd)
              enddo
 !NOT_TO_BE_INCLUDED_END
@@ -381,7 +383,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
              enddo
           endif
           deallocate(hpsi)
-          call mp_sum(et_off)
+          call mp_sum(et_off,world_comm)
 !write on file                                                                                                                          
           if(ionode) then
              iunu = find_free_unit()
@@ -423,7 +425,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
          enddo
          e_xc(ibnd)=e_xc(ibnd)/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
        
-         call mp_sum(e_xc(ibnd))
+         call mp_sum(e_xc(ibnd),world_comm)
 
 !ifrequired add the contribution from exact exchange for hybrids and HF
          if(dft_is_hybrid()) then
@@ -473,7 +475,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
            enddo
            e_h(ibnd)=e_h(ibnd)/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
          
-           call mp_sum(e_h(ibnd))
+           call mp_sum(e_h(ibnd),world_comm)
            write(stdout,*) 'Routine energies_h :', ibnd, e_h(ibnd)*rytoev
 
 !now hartree term

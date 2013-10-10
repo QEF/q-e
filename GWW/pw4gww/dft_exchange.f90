@@ -32,6 +32,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
  ! USE realus,  ONLY : adduspos_gamma_r
   USE cell_base,            ONLY : at, bg, omega
   USE mp, ONLY : mp_sum, mp_bcast
+  USE mp_world, ONLY : world_comm
   USE control_flags,        ONLY : gamma_only
   !USE exx, ONLY : exx_divergence_new, exx_grid_init, yukawa,exx_divergence_old
   USE fft_base,             ONLY : dfftp, dffts
@@ -238,7 +239,7 @@ endif
                      exc=exc+2.d0*dble(conjg(prod_g(ig))*prod_g(ig))*fac(ig)*wg(iv,isv)*dble(nspin)/2.d0
                   enddo
                   if(gstart==2) exc=exc-dble(prod_g(1))*dble(prod_g(1))*fac(1)*wg(iv,isv)*dble(nspin)/2.d0
-                  call mp_sum(exc)
+                  call mp_sum(exc,world_comm)
                   exc=-exc
                   e_x(js,isv)=e_x(js,isv)+exc
         
@@ -255,7 +256,7 @@ endif
                                 &prod_g2(ig,ks)*conjg(prod_g(ig))*fac(ig)
                         enddo
                         if(gstart==2) c_exc=c_exc-conjg(prod_g2(1,ks))*prod_g(1)*fac(1)
-                        call mp_sum(c_exc)
+                        call mp_sum(c_exc,world_comm)
                         c_exc=-c_exc
                         e_x_off(ks,js,isv)=e_x_off(ks,js,isv)+dble(c_exc)
                      enddo

@@ -130,6 +130,7 @@ END SUBROUTINE go_exchange_main
    USE polarization
    USE para_gww,             ONLY : is_my_state
    USE mp,                   ONLY : mp_sum
+   USE mp_world,             ONLY : world_comm
    USE constants, ONLY : RYTOEV
 
    implicit none
@@ -329,8 +330,8 @@ END SUBROUTINE go_exchange_main
            write(stdout,*) 'Exchange  energies', i,sene
         endif
      enddo
-     call mp_sum(ene_x(1:options%max_i))
-     if(.not.options%l_lda_hartree)  call mp_sum(ene_h(1:options%max_i))
+     call mp_sum(ene_x(1:options%max_i),world_comm)
+     if(.not.options%l_lda_hartree)  call mp_sum(ene_h(1:options%max_i),world_comm)
   endif
 
     if(.not.options%use_contractions) then

@@ -1181,7 +1181,7 @@
 
     USE io_global, ONLY : stdout
     USE basic_structures, ONLY : v_pot, ortho_polaw
-    USE mp_global,  ONLY : mpime, nproc
+    USE mp_world,  ONLY : mpime, nproc, world_comm
     USE mp,         ONLY : mp_sum
 
 
@@ -1209,7 +1209,7 @@
              enddo
           endif
        enddo
-       call mp_sum(mat(iw,:))
+       call mp_sum(mat(iw,:),world_comm)
     enddo
 
     vp%vmat(:,:)=0.d0
@@ -1221,7 +1221,7 @@
              enddo
           endif
        enddo
-       call mp_sum(vp%vmat(iw,:))
+       call mp_sum(vp%vmat(iw,:),world_comm)
     enddo
 
 
@@ -1306,7 +1306,7 @@
 
     USE io_global, ONLY : stdout
     USE basic_structures, ONLY : v_pot, ortho_polaw
-    USE mp_global,  ONLY : mpime, nproc
+    USE mp_world,  ONLY : world_comm, mpime, nproc
     USE mp,         ONLY : mp_sum
 
     implicit none
@@ -1333,7 +1333,7 @@
              enddo
           endif
        enddo
-       call mp_sum(mat(iw,:))
+       call mp_sum(mat(iw,:),world_comm)
     enddo
 
     vp%vmat(:,:)=0.d0
@@ -1345,7 +1345,7 @@
              enddo
           endif
        enddo
-       call mp_sum(vp%vmat(iw,:))
+       call mp_sum(vp%vmat(iw,:),world_comm)
     enddo
 
 

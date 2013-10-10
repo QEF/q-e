@@ -22,7 +22,7 @@ SUBROUTINE diago_cg_g(ndim,omat,smat,maxter,max_state,e,ovec,cutoff,ethr,found_s
   USE constants, ONLY : pi
   USE kinds,     ONLY : DP
   USE io_global,        ONLY : stdout
-  USE mp_global, ONLY : mpime,nproc
+  USE mp_world, ONLY : mpime,nproc,world_comm
   USE mp, ONLY : mp_sum
   USE random_numbers, ONLY : randy
   
@@ -124,7 +124,7 @@ SUBROUTINE diago_cg_g(ndim,omat,smat,maxter,max_state,e,ovec,cutoff,ethr,found_s
      call gradient_s(ovec(1:ndim,m),aux(1:ndim,2))
 
      CALL DGEMV( 'T', nsize, 2, 1.D0, aux(nbegin:nend,1:2), nsize, ovec(nbegin:nend,m), 1, 0.D0, rtmp, 1 )
-     call mp_sum(rtmp(1:2))
+     call mp_sum(rtmp(1:2),world_comm)
 
      hr(m,m,1) = rtmp(1)
      sr(m,m)   = rtmp(2)
@@ -146,8 +146,8 @@ SUBROUTINE diago_cg_g(ndim,omat,smat,maxter,max_state,e,ovec,cutoff,ethr,found_s
   write(stdout,*) 'ATTENZIONE2'
   call flush_unit(stdout)
 
-  call mp_sum(hr(:,:,1))
-  call mp_sum(sr(:,:))
+  call mp_sum(hr(:,:,1),world_comm)
+  call mp_sum(sr(:,:),world_comm)
   write(stdout,*) 'Call rdiaghg'
   call flush_unit(stdout)
 
@@ -175,7 +175,7 @@ SUBROUTINE diago_cg_g(ndim,omat,smat,maxter,max_state,e,ovec,cutoff,ethr,found_s
   ovec(:,:)=0.d0
   call dgemm('N','N',nsize,max_state,max_state,1.d0,ovec2(nbegin:nend,1:max_state),&
   &nsize,hr(1:max_state,1:max_state,2),max_state,0.d0,ovec(nbegin:nend,1:max_state),nsize)
-  call mp_sum(ovec(:,:))
+  call mp_sum(ovec(:,:),world_comm)
  
 
   deallocate(ovec2)
@@ -211,7 +211,7 @@ states:  DO m = 1, max_state
      !
      CALL DGEMV( 'T', nsize, m, 1.D0, ovec(nbegin:nend,1:m), nsize, spsi(nbegin:nend), 1, 0.D0, lagrange, 1 )
      !
-     call mp_sum(lagrange(1:m))
+     call mp_sum(lagrange(1:m),world_comm)
     
         !
      psi_norm = lagrange(m)
@@ -242,7 +242,7 @@ states:  DO m = 1, max_state
      !
      e(m) = DDOT( nsize, ovec(nbegin:nend,m), 1, hpsi(nbegin:nend), 1 )
      !
-     call mp_sum(e(m))
+     call mp_sum(e(m),world_comm)
      !
          !
      ! ... start iteration for this band
@@ -260,7 +260,7 @@ states:  DO m = 1, max_state
         es(1) = DDOT( nsize, spsi(nbegin:nend), 1, g(nbegin:nend), 1 )
         es(2) = DDOT( nsize, spsi(nbegin:nend), 1, ppsi(nbegin:nend), 1 )
        
-        call mp_sum(es(1:2))
+        call mp_sum(es(1:2),world_comm)
         !
         es(1) = es(1) / es(2)
         !
@@ -280,7 +280,7 @@ states:  DO m = 1, max_state
         CALL DGEMV( 'T', nsize, ( m - 1 ), 1.D0, &
                     ovec(nbegin:nend,1:m-1), nsize, scg(nbegin:nend), 1, 0.D0, lagrange, 1 )
         !
-        call mp_sum(lagrange(1:m-1))
+        call mp_sum(lagrange(1:m-1),world_comm)
         !
         !
         DO j = 1, ( m - 1 )
@@ -296,7 +296,7 @@ states:  DO m = 1, max_state
            !
            gg1 = DDOT( nsize, g(nbegin:nend), 1, g0(nbegin:nend), 1 )
            !
-           call mp_sum(gg1)
+           call mp_sum(gg1,world_comm)
            !
            !
         END IF
@@ -309,7 +309,7 @@ states:  DO m = 1, max_state
         !
         gg = DDOT( nsize, g(nbegin:nend), 1, g0(nbegin:nend), 1 )
         !
-        call mp_sum(gg)
+        call mp_sum(gg,world_comm)
         !
              !
         IF ( iter == 1 ) THEN
@@ -354,7 +354,7 @@ states:  DO m = 1, max_state
         !
         cg0 = DDOT( nsize, cg(nbegin:nend), 1, scg(nbegin:nend), 1 )
         !
-        call mp_sum(cg0)
+        call mp_sum(cg0,world_comm)
         !
         !
         cg0 = SQRT( cg0 )
@@ -372,14 +372,14 @@ states:  DO m = 1, max_state
         !
         a0 = a0 / cg0
         !
-        call mp_sum(a0)
+        call mp_sum(a0,world_comm)
         !
         b0 = DDOT( nsize, cg(nbegin:nend), 1, ppsi(nbegin:nend), 1 )
         !
         !
         b0 = b0 / cg0**2
         !
-        call mp_sum(b0)
+        call mp_sum(b0,world_comm)
 
         !
         e0 = e(m)
@@ -521,7 +521,7 @@ states:  DO m = 1, max_state
          call dgemm('T','N',nsize,1,ndim,1.d0,omat(1:ndim,1:nsize),ndim,vec,ndim,0.d0,grad(nbegin:nend),nsize)
       endif
          
-      call mp_sum(grad(1:ndim))
+      call mp_sum(grad(1:ndim),world_comm)
 
       return
 
@@ -541,7 +541,7 @@ states:  DO m = 1, max_state
          call dgemm('T','N',nsize,1,ndim,1.d0,smat(1:ndim,1:nsize),ndim,vec,ndim,0.d0,grad(nbegin:nend),nsize)
       endif
 
-      call mp_sum(grad(1:ndim))
+      call mp_sum(grad(1:ndim),world_comm)
 
       return
 

@@ -165,7 +165,7 @@
       endif
    enddo
 
-   call mp_sum(inv_epsi)
+   call mp_sum(inv_epsi,world_comm)
 
    call free_memory(vp)
    call free_memory_polaw(pp)

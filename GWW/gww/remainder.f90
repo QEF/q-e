@@ -214,7 +214,7 @@ SUBROUTINE remainder(options, qp)
       call free_memory_contraction_index(cri)
    endif
 
-  call mp_sum(qp%ene_remainder(:,1))
+  call mp_sum(qp%ene_remainder(:,1),world_comm)
 
   if(options%lconduction) call addconduction_remainder(qp, options)
 

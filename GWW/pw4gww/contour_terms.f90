@@ -19,7 +19,7 @@
     USE wannier_gw, ONLY : num_nbnds,num_nbndv,s_first_state,s_last_state, l_verbose
     USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
     USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
-    USE mp_global, ONLY : mpime,nproc
+    USE mp_world, ONLY : mpime,nproc,world_comm
     USE wavefunctions_module, ONLY : evc
     USE gvect,    ONLY : gstart
      
@@ -51,7 +51,7 @@
 !DEBUG
        
 
-    call mp_sum(c_mat)
+    call mp_sum(c_mat,world_comm)
 
     if(ionode) then
        iun= find_free_unit()

@@ -61,7 +61,7 @@ SUBROUTINE optimal_gram_schmidt(num_in,wfcs,lda,ithres,thres,num_out)
 !vectors which are above the give threshold
 
   USE kinds,                ONLY : DP
-  USE mp_global, ONLY : mpime, nproc
+  USE mp_world, ONLY : world_comm, mpime, nproc
   USE mp,                   ONLY : mp_sum,mp_bcast
   USE io_global,            ONLY : stdout, ionode,ionode_id
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
@@ -94,14 +94,14 @@ SUBROUTINE optimal_gram_schmidt(num_in,wfcs,lda,ithres,thres,num_out)
         if(gstart==2) then
            prod(1:num_out)=prod(1:num_out) - dble(wfcs(1,1:num_out)*conjg(wfcs(1,i)))
         endif
-        call mp_sum(prod(1:num_out))
+        call mp_sum(prod(1:num_out),world_comm)
         call dgemm('N','N',2*npw,1,num_out,-1.d0,wfcs,2*lda,prod,num_in,1.d0,wfcs(:,i),2*lda)
      endif
      sca = 2.d0*ddot(2*npw,wfcs(:,i),1,wfcs(:,i),1)
      if(gstart==2) then
         sca=sca-dble((wfcs(1,i)*conjg(wfcs(1,i))))
      endif
-     call mp_sum(sca)
+     call mp_sum(sca,world_comm)
      if(sca >= thres) then
         num_out=num_out+1
         sca=dsqrt(sca)

@@ -176,7 +176,7 @@
           enddo
        enddo
     endif
-    call mp_sum(o_mat)
+    call mp_sum(o_mat,world_comm)
     do ii=1,num_nbnds
        write(stdout,*) 'Orthonormality:',ii,o_mat(1:num_nbnds,ii)
     enddo
@@ -194,7 +194,7 @@
           enddo
        enddo
     endif
-    call mp_sum(o_mat)
+    call mp_sum(o_mat,world_comm)
 
     do ii=1,num_nbnds
        sca=0.d0
@@ -244,7 +244,7 @@
 !!do products
           call dgemv ('T',dfftp%nnr,n_semicore,1.d0,pp_sc(1,1,order(ii)),dfftp%nnr,tmp_r,1,0.d0,prods, 1)
 
-          call mp_sum(prods(1:n_semicore))
+          call mp_sum(prods(1:n_semicore),world_comm)
           prods(1:n_semicore)=prods(1:n_semicore)/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
 !! write on disk
           write(iunw) prods(1:n_semicore)

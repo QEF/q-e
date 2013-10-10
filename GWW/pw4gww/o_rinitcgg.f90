@@ -24,6 +24,7 @@ SUBROUTINE o_rinitcgg( npwx, npw, nstart, numwp, psi, o_evc, e, numv, v_states,h
   USE gvect, ONLY : gstart
   USE io_global, ONLY : stdout
   USE mp, ONLY : mp_sum
+  USE mp_world, ONLY : world_comm
   USE fft_base,             ONLY : dffts
   !
   IMPLICIT NONE
@@ -110,9 +111,9 @@ SUBROUTINE o_rinitcgg( npwx, npw, nstart, numwp, psi, o_evc, e, numv, v_states,h
   END DO
   !
   !CALL reduce(  nstart * nstart, hr(1,1,1) )
-  call mp_sum(hr(:,:,1))
+  call mp_sum(hr(:,:,1),world_comm)
   !CALL reduce(  nstart * nstart, sr(1,1) )
-  CALL mp_sum(sr(:,:))
+  CALL mp_sum(sr(:,:),world_comm)
   !
   ! ... diagonalize
   !

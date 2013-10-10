@@ -325,7 +325,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
                   enddo
                enddo
             endif
-            call mp_sum(fumat)
+            call mp_sum(fumat,world_comm)
             call DGEMM('N','N',2*fc%npwt,numpw,nfull,-1.d0,evc_t,2*fc%npwt,fumat,nfull,1.d0,wp_prod(1,1,iv-ivv+1),2*fc%npwt)
 
             deallocate(fumat)
@@ -347,7 +347,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
             enddo
          endif
          do ii=1,numpw-offset
-            call mp_sum(omat(1:numpw-offset,ii))
+            call mp_sum(omat(1:numpw-offset,ii),world_comm)
          enddo
 
          if(iv-ivv==mpime) then
@@ -827,7 +827,7 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
             enddo
          enddo
       endif
-      call mp_sum(o_t_psi(:,:))
+      call mp_sum(o_t_psi(:,:),world_comm)
       offset=(et(num_nbndv(1)+1,1)-et(num_nbndv(1),1))/2.d0
       if(l_verbose) write(stdout,*) 'GREENT 2'
      call flush_unit(stdout)
@@ -870,10 +870,10 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
      
      do ii=1,nglobal
         !call mp_bcast(gtrail(:,ii), ionode_id,world_comm)
-        call mp_sum(gtrail(:,ii))
+        call mp_sum(gtrail(:,ii),world_comm)
      enddo
      !call mp_bcast(eigen(:), ionode_id,world_comm)
-     call mp_sum(eigen(:))
+     call mp_sum(eigen(:),world_comm)
      
      do ii=1,nglobal
         if(l_verbose) write(stdout,*) 'EIGEN GTRAIL:',ii, eigen(ii)
@@ -1038,7 +1038,7 @@ endif
            enddo
         enddo
      endif
-     call mp_sum(t_mat(:,:))
+     call mp_sum(t_mat(:,:),world_comm)
      if(ionode) then
         write(iuntmat) nglobal
         write(iuntmat) nstates_eff
@@ -1074,7 +1074,7 @@ endif
      write(stdout,*) 'TEST3'
      call flush_unit(stdout)
 
-     call mp_sum(t_mat(:,:))
+     call mp_sum(t_mat(:,:),world_comm)
 !!write diagonal terms
      do ii=1,nglobal
         sca=0.d0
@@ -1123,7 +1123,7 @@ endif
                  t_mat(jj,1)=t_mat(jj,1)-dble(conjg(old_basis(1,jj))*wp_prod(1))
               enddo
            endif
-           call mp_sum(t_mat(:,1))
+           call mp_sum(t_mat(:,1),world_comm)
            sca=0.d0
            do ii=1,nglobal
               sca=sca+t_mat(ii,1)**2.d0
@@ -1134,7 +1134,7 @@ endif
               sca1=sca1+2.d0*dble(conjg(wp_prod(ig))*wp_prod(ig))
            enddo
            if(gstart==2) sca1=sca1-dble(conjg(wp_prod(1))*wp_prod(1))
-           call mp_sum(sca1)
+           call mp_sum(sca1,world_comm)
          
            write(stdout,*) 'Projection',iv,iw,sca/sca1,sca1
            proj_tot=proj_tot+sca/sca1
@@ -1427,7 +1427,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
      &fc%nrxxt,wp_prod(1,offset+1,iv-ivv+1),fc%nrxxt,0.d0,omat,numpw)
          call stop_clock('sl_dgemm')
          do ii=1,numpw-offset
-            call mp_sum(omat(1:numpw-offset,ii))
+            call mp_sum(omat(1:numpw-offset,ii),world_comm)
             omat(1:numpw-offset,ii)=omat(1:numpw-offset,ii)/dble(fc%nr1t*fc%nr2t*fc%nr3t)
          enddo
 
