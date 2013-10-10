@@ -325,18 +325,21 @@ INTEGER, PARAMETER         ::   &
      ALLOCATE (frc(nr1,nr2,nr3,3,3,nat,nat) )
 
 allo_dir: SELECT CASE (idir)
-	 CASE(1)
-     ALLOCATE (ifc(3,3,nat,nat,nr1) )
-	 ALLOCATE (kfc(3*nat,3*nat,nr1/2+1) )
-     ALLOCATE (k00(3*nat*(nr1/2+1),3*nat*(nr1/2+1) ), k01(3*nat*(nr1/2+1),3*nat*(nr1/2+1) ) )
+     CASE(1)
+        ALLOCATE (ifc(3,3,nat,nat,nr1) )
+        ALLOCATE (kfc(3*nat,3*nat,nr1/2+1) )
+        ALLOCATE (k00(3*nat*(nr1/2+1),3*nat*(nr1/2+1) ), &
+                  k01(3*nat*(nr1/2+1),3*nat*(nr1/2+1) ) )
      CASE(2)
-     ALLOCATE (ifc(3,3,nat,nat,nr2) )
-	 ALLOCATE (kfc(3*nat,3*nat,nr2/2+1) )
-     ALLOCATE (k00(3*nat*(nr2/2+1),3*nat*(nr2/2+1) ), k01(3*nat*(nr2/2+1),3*nat*(nr2/2+1) ) )
+        ALLOCATE (ifc(3,3,nat,nat,nr2) )
+        ALLOCATE (kfc(3*nat,3*nat,nr2/2+1) )
+        ALLOCATE (k00(3*nat*(nr2/2+1),3*nat*(nr2/2+1) ), &
+                  k01(3*nat*(nr2/2+1),3*nat*(nr2/2+1) ) )
      CASE(3)
-     ALLOCATE (ifc(3,3,nat,nat,nr3) )
-	 ALLOCATE (kfc(3*nat,3*nat,nr3/2+1) )
-     ALLOCATE (k00(3*nat*(nr3/2+1),3*nat*(nr3/2+1) ), k01(3*nat*(nr3/2+1),3*nat*(nr3/2+1) ) )
+        ALLOCATE (ifc(3,3,nat,nat,nr3) )
+        ALLOCATE (kfc(3*nat,3*nat,nr3/2+1) )
+        ALLOCATE (k00(3*nat*(nr3/2+1),3*nat*(nr3/2+1) ), &
+                  k01(3*nat*(nr3/2+1),3*nat*(nr3/2+1) ) )
 END SELECT allo_dir
 
      ALLOCATE (ifc0(3,3,nat,nat) )
@@ -485,7 +488,7 @@ CASE(2)
            DO na2=1,nat
               DO m2=1,nr2
                     DO m1=1,nr1
-              		   DO m3=1,nr3
+                       DO m3=1,nr3
                        ! for transport in one-dim systems
                        IF(onedim) THEN
                           IF(m1.eq.1.and.m3.eq.1) ifc(j1,j2,na1,na2,m2)=ifc3(j1,j2,na1,na2,m1,m2,m3)

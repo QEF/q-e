@@ -255,7 +255,7 @@
           write(stdout,*) 'Use truncated Extended interaction'
           ggwin%w_divergence=3
        endif
-       	if(ggwin%l_self_time) write(stdout,*) 'Calculate Self-energy through FT'
+        if(ggwin%l_self_time) write(stdout,*) 'Calculate Self-energy through FT'
         if(ggwin%l_g_grid) write(stdout,*) 'Uses dedicated grid for G'
         if(ggwin%whole_s) then
            if(ggwin%i_min_whole==0) ggwin%i_min_whole=ggwin%i_min

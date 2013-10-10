@@ -639,7 +639,7 @@ subroutine do_self_lanczos_time(ss, tf ,options,l_real_axis,energy)
                           e_mat_double(1:lc%numt, 1:nsize_t)=dble(re_e_mat_single(1:lc%numt, nbegin_t:nend_t, iw-nbegin_g+1))
                        
                           call dgemm('T','N',numl,nsize_t,numt,1.d0,ttl_j%tt_mat,numt,e_mat_double,numt,0.d0,&
-	                           &tmp_mat(1,nbegin_t),numl)
+                           &tmp_mat(1,nbegin_t),numl)
                        endif
                     enddo
                     

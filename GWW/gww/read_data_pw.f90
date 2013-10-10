@@ -217,7 +217,7 @@
           read(iunq) qm%wp(iw)%o(1:qm%wp(iw)%numij)
        end if
        call mp_bcast(qm%wp(iw)%ij(:,:), ionode_id, world_comm)
-       call mp_bcast(qm%wp(iw)%o(:), ionode_id, world_comm)	
+       call mp_bcast(qm%wp(iw)%o(:), ionode_id, world_comm)
     enddo
 
 

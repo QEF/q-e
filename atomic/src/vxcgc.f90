@@ -69,7 +69,7 @@ subroutine vxcgc ( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
         dv1_cc= 0.0_dp
         dv2_cc= 0.0_dp
         !
-	vtau(:) = 0.0_dp
+        vtau(:) = 0.0_dp
         ! 
        do i=1,mesh
            arho=abs(rhoaux(i,1)) 

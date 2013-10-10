@@ -136,7 +136,7 @@
    do ispin=1,options%nspin
 
       if(options%starting_point <= 2 .and. options%ending_point >=2 ) then
-         if(options%l_t_wannier) then	
+         if(options%l_t_wannier) then
             call calculate_compact_pola_lanczos(options,ispin)
          endif
          

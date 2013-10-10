@@ -59,7 +59,7 @@ MODULE path_base
       USE control_flags,    ONLY : conv_elec
       USE ions_base,        ONLY : amass, ityp
       USE io_files,         ONLY : prefix, tmp_dir
-      USE mp_global,        ONLY : nimage	
+      USE mp_global,        ONLY : nimage
       USE path_input_parameters_module, ONLY : pos_      => pos, &
                                    climbing_ => climbing, &
                                    input_images, nstep_path_ => nstep_path

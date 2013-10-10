@@ -120,7 +120,7 @@
 
         write(stdout,*) 'DB1',tf%n
        ! allocate(tf%times(-tf%n:tf%n),tf%weights_time(-tf%n:tf%n))
-	write(stdout,*) 'DB2'
+        write(stdout,*) 'DB2'
         if(tf%grid_freq/=5.and.tf%grid_freq/=6) then
            allocate(tf%freqs(-tf%n:tf%n),tf%weights_freq(-tf%n:tf%n),tf%freqs_eff(-tf%n:tf%n))
            nullify(tf%whois_freq)

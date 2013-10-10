@@ -175,7 +175,7 @@ subroutine solve_lanczos(nbuf, alpha,e_mat,lc, l_verbose)
 
           !   call dgemm('N','N',lc%numt,1,lc%num_steps,1.d0,o_mat(1,1,io-nbegin+1),lc%numt,tr(1,io-nbegin+1),lc%num_steps,1.d0,e_mat(1,io,iv),lc%numt)
            enddo
-  	   if(l_verbose) write(stdout,*) 'dgemv done'
+           if(l_verbose) write(stdout,*) 'dgemv done'
            if(l_verbose) call flush_unit(stdout)
 
         enddo!on iv

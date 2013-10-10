@@ -528,7 +528,7 @@ PRIVATE :: GetVdWParam
     ! Throughout the remainder of the code, to map the atomic quantities onto the real-space mesh, we will be
     ! utilizing the Taylor series form of linear interpolation, given by:
     !
-    ! 		y(x) = LIA + LIB*(x-x(k))	y'(x) = dLIA + dLIB*(x-x(k)) 
+    !   y(x) = LIA + LIB*(x-x(k))    y'(x) = dLIA + dLIB*(x-x(k)) 
     !
     ! for x(k) <= x <= x(k+1)...
     !
@@ -569,7 +569,7 @@ PRIVATE :: GetVdWParam
   END DO !is
   !
   ! Compute free heteronuclear C6 coefficient matrix...
-  !	C6ABfree(A,B)=[2*C6AAfree(A)*C6AAfree(B)]/[(dpfree(B)/dpfree(A))*C6AAfree(A)+(dpfree(A)/dpfree(B))*C6AAfree(B)]
+  !  C6ABfree(A,B)=[2*C6AAfree(A)*C6AAfree(B)]/[(dpfree(B)/dpfree(A))*C6AAfree(A)+(dpfree(A)/dpfree(B))*C6AAfree(B)]
   !
   DO is=1,nsp
     !
@@ -1337,9 +1337,9 @@ PRIVATE :: GetVdWParam
       !
       ! Compute veff integrand and complete dispersion potential (functional derivative of veff(A) wrt charge density)...
       !
-      !		veff(A) = INT [|r-rA|^3*rhoA(|r-rA|)*rhotot(r)/rhosad(r)]
+      !        veff(A) = INT [|r-rA|^3*rhoA(|r-rA|)*rhotot(r)/rhosad(r)]
       !
-      !		dveff(A)/dn(r) = |r-rA|^3*rhoA(|r-rA|)/rhosad(r)
+      !       dveff(A)/dn(r) = |r-rA|^3*rhoA(|r-rA|)/rhosad(r)
       !
       off1=somegaA(iq,1,iproc)+(somegaA(iq,2,iproc)-1)*nr1+(somegaA(iq,3,iproc)-1)*nr1*nr2    !global offset [nr1,nr2,nr3]
       dveffAdn(iq,iproc)=dveffAdn(iq,iproc)/rhosad(off1)
@@ -1781,7 +1781,7 @@ PRIVATE :: GetVdWParam
       vB=(veff(ib)/vfree(ibs))
       !
       ! Effective heteronuclear C6 coefficient matrix...
-      !	C6ABeff(A,B)=(veff(A)/vfree(A))*(veff(B)/vfree(B))*C6ABfree(A,B)
+      ! C6ABeff(A,B)=(veff(A)/vfree(A))*(veff(B)/vfree(B))*C6ABfree(A,B)
       !
       C6ABeff(ia,ib)=(vA*vB)*C6ABfree(ias,ibs) 
       !

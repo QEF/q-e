@@ -99,7 +99,7 @@
                                     &fake_polarization_io
    USE fft_gw
    USE mp_world,           ONLY : world_comm, mpime, nproc
-   USE mp,                 ONLY : mp_barrier   	
+   USE mp,                 ONLY : mp_barrier
    USE times_gw,           ONLY : times_freqs
 
 
