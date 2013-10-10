@@ -373,9 +373,7 @@ subroutine vcinit (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
   endif
 
   return
-1001 format(/,'     new values for : kinetic energy =   ',f18.12,/, &
-       &          '                      potential energy = ',f18.12,/, &
-       &          '                      total energy =     ',f18.12,/)
+
 end subroutine vcinit
 !*
 !*
@@ -891,10 +889,6 @@ subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   call updg (avec, avecd, g, gd, gm1, gmgd, sigma, vcell)
 
   return
-109 format(1x,'at quench alpha = ',f7.4,' nstep = ',i4,/)
-1001 format(/,'     new values for : kinetic energy =   ',f18.12,/, &
-       &         '                      potential energy = ',f18.12,/, &
-       &         '                      total energy =     ',f18.12,/)
 end subroutine vcmove
 !*
 !*
@@ -1092,10 +1086,7 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
   endif
 
   return
-801 format(1x,5f14.10)
-901 format(/,10x, 'initial conditions',/)
 
-1999 format(1x,//)
 end subroutine ranv
 !*
 !*

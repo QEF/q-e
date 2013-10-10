@@ -272,10 +272,8 @@
   30  FORMAT(2X,'STEP:',I7,1X,F10.2)
  1002 FORMAT(/,3X,'Eigenvalues (eV), kp = ',I3, ' , spin = ',I2,/)
  1004 FORMAT(10F8.2)
- 1006 FORMAT(/,3X,'Electronic Gap (eV) = ',F8.2,/)
  1010 FORMAT(3X,'Eigenvalues (eV), kp = ',I3, ' , spin = ',I2)
  1020 FORMAT(10F8.2)
- 1021 FORMAT(3X,'Electronic Gap (eV) = ',F8.2)
       !
       RETURN
    END SUBROUTINE print_eigenvalues

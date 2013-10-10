@@ -574,7 +574,7 @@ contains
     if(conv_assistant) then
       if(max_res .lt. 10*residue_conv_thr .and. .not. ploted(1)) then
         call interpret_eign('10')
-	ploted(1)=.true.
+        ploted(1)=.true.
       endif
     endif
 

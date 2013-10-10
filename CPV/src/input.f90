@@ -1033,8 +1033,6 @@ MODULE input
 505 FORMAT(   3X,'MD Simulation time step            = ',F10.2)
 510 FORMAT(   3X,'Electronic fictitious mass (emass) = ',F10.2)
 511 FORMAT(   3X,'emass cut-off                      = ',F10.2)
-509 FORMAT(   3X,'Verlet algorithm for electron dynamics')
-502 FORMAT(   3X,'An initial quench is performed')
 
     RETURN
   END SUBROUTINE input_info

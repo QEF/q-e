@@ -187,10 +187,10 @@
     !    WRITE( stdout,110) QNOSEP,TEMPW
     !    WRITE( stdout,120) GLIB
     !    WRITE( stdout,130) NSVAR
- 100  FORMAT(//' * Temperature control of ions with nose thermostat'/)
- 110  FORMAT(3X,'nose mass:',F12.4,' temperature (K):',F12.4)
- 120  FORMAT(3X,'ionic degrees of freedom:        ',F5.0)
- 130  FORMAT(3X,'time steps per nose oscillation: ',I5,//)
+! 100  FORMAT(//' * Temperature control of ions with nose thermostat'/)
+! 110  FORMAT(3X,'nose mass:',F12.4,' temperature (K):',F12.4)
+! 120  FORMAT(3X,'ionic degrees of freedom:        ',F5.0)
+! 130  FORMAT(3X,'time steps per nose oscillation: ',I5,//)
 
     return
   end subroutine ions_nose_init

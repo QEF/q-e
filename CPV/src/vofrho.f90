@@ -344,7 +344,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !
          ! ... UGLY HACK WARNING: nlc adds nonlocal term (Ry) to input energy
          !
-	 enlc = 0.0_dp
+         enlc = 0.0_dp
          CALL nlc( rhosave, rhocsave, enlc, vtxc, rhor )
          CALL mp_sum( enlc, intra_bgrp_comm )
          exc = exc + enlc / e2

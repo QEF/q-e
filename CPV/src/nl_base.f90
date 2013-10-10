@@ -672,10 +672,10 @@ subroutine dennl_x( bec_bgrp, dbec, drhovan, denl, descla )
 !  detmp = denl
 !  detmp = MATMUL( detmp(:,:), TRANSPOSE( h ) )
 !  WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
-5555  format(1x,f12.5,1x,f12.5,1x,f12.5/                                &
-     &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
-     &       1x,f12.5,1x,f12.5,1x,f12.5//)
-
+!5555  format(1x,f12.5,1x,f12.5,1x,f12.5/                                &
+!     &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
+!     &       1x,f12.5,1x,f12.5,1x,f12.5//)
+!
   !
   return
 end subroutine dennl_x

@@ -1792,8 +1792,8 @@
 #if defined(__MPI)
 #  if defined (__MP_STAT)
         WRITE( stdout, 20 )
+20      FORMAT(3X,'please use an MPI profiler to analyze communications ')
 #  endif
-20      FORMAT(3X,'please use an MPI profiler to analisy communications ')
 #else
         WRITE( stdout, *)
 #endif

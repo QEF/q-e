@@ -87,7 +87,7 @@ CONTAINS
               narg = narg + 1
            CASE ( '-nd', '-ndiag', '-northo', '-nproc_diag', '-nproc_ortho') 
               CALL getarg ( narg, arg )
-              READ ( arg, *, ERR = 15, END = 15) ndiag_	
+              READ ( arg, *, ERR = 15, END = 15) ndiag_
               narg = narg + 1
            CASE DEFAULT
               command_line = TRIM(command_line) // ' ' // TRIM(arg)

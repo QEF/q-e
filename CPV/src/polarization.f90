@@ -327,9 +327,6 @@
 !
       FIRST=.false.
 !
-  100 FORMAT(3F10.5,3(2X,F10.5))
-  20  FORMAT(6X,3(F18.10,2X))
-  10  FORMAT(6X,I6)
       RETURN
       END subroutine ddipole
 

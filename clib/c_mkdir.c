@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
@@ -25,7 +26,7 @@ int check_writable_dir(const char *filename) {
       fprintf( stderr , "\ncheck_writable_dir fail: file '%s' exists but is NOT a directory\n", filename ) ;
       return -2; /* not a directory */
     }
-    /* if ( ! (sb.st_mode & S_IWUSR) )        return -4; /* not writeble by owner */
+    /* if ( ! (sb.st_mode & S_IWUSR) )        return -4; */ /* not writeble by owner */
     /* return 0 if I can read, write and execute (enter) this directory, -1 otherwise
        note: we do not actually need R_OK in Quantum-ESPRESSO;
              W_OK is definitely needed, about X_OK I'm not sure */
@@ -39,7 +40,7 @@ int check_writable_dir(const char *filename) {
 
 int c_mkdir_safe( const char * dirname )
 {
-   int i, retval = -1 ;
+   int retval = -1 ;
 
    /* return directly -1 if directory exists and is writable */
    if ( check_writable_dir(dirname) == 0) return -1;

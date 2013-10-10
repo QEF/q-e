@@ -211,12 +211,9 @@ SUBROUTINE electrons()
   !
   ! ... formats
   !
-9002 FORMAT(/'     Self-consistent Calculation' )
 9066 FORMAT( '     est. exchange err (dexx)  =',F17.8,' Ry' )
 9101 FORMAT(/'     End of self-consistent calculation' )
-9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
 9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
-9122 FORMAT(/'     WARNING: convergence NOT achieved after ',i3,' iterations' )
 9121 FORMAT(/'     scf convergence threshold =',1PE17.1,' Ry' )
   !
 END SUBROUTINE electrons
@@ -778,9 +775,6 @@ SUBROUTINE electrons_scf()
 9101 FORMAT(/'     End of self-consistent calculation' )
 9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
 9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
-9122 FORMAT(/'     WARNING: convergence NOT achieved after ',i3,' iterations' )
-9121 FORMAT(/'     scf convergence threshold =',1PE17.1,' Ry' )
-9200 FORMAT(/'     add environment contribution to local potential')
   !
   CONTAINS
      !
@@ -1124,7 +1118,6 @@ SUBROUTINE electrons_scf()
 9069 FORMAT( '     scf correction            =',F17.8,' Ry' )
 9070 FORMAT( '     smearing contrib. (-TS)   =',F17.8,' Ry' )
 9071 FORMAT( '     Magnetic field            =',3F12.7,' Ry' )
-9072 FORMAT( '     Magnetic field            =',F12.7, ' Ry' )
 9073 FORMAT( '     lambda                    =',F11.2,' Ry' )
 9074 FORMAT( '     Dispersion Correction     =',F17.8,' Ry' )
 9075 FORMAT( '     Dispersion XDM Correction =',F17.8,' Ry' )

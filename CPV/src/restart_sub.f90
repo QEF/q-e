@@ -176,16 +176,4 @@ SUBROUTINE from_restart( )
    !
    RETURN
    !
-100 FORMAT( /,3X,'MD PARAMETERS READ FROM RESTART FILE',/ &
-             ,3X,'------------------------------------' )
-110 FORMAT(   3X,'Cell variables From RESTART file' )
-120 FORMAT(   3X,'Cell variables From INPUT file' )
-130 FORMAT(   3X,'Ions positions From RESTART file' )
-140 FORMAT(   3X,'Ions positions From INPUT file' )
-150 FORMAT(   3X,'Ions Velocities From RESTART file' )
-155 FORMAT(   3X,'Ions Velocities set to ZERO' )
-160 FORMAT(   3X,'Ions Velocities From STANDARD INPUT' )
-170 FORMAT(   3X,'Electronic Velocities From RESTART file' )
-180 FORMAT(   3X,'Electronic Velocities set to ZERO' )
-   !
 END SUBROUTINE from_restart
