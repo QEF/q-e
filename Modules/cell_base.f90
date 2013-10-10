@@ -128,6 +128,7 @@
     celldm = celldm_
     a = a_ ; b = b_ ; c = c_ ; cosab = cosab_ ; cosac = cosac_ ; cosbc = cosbc_
     cell_units = cell_units_
+    units = 0.0_DP
     !
     IF ( trd_ht ) THEN
       !

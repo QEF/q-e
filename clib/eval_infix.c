@@ -240,7 +240,7 @@ BOOL is_empty_val()
 /* ritorna un valore diverso da zero per "e", "E", "d o "D", o se il carattere prima lo era */
 BOOL is_scientific(char strChar)
 {
-    BOOL static was_scientific = FALSE;
+    static BOOL was_scientific = FALSE;
 
     if (was_scientific)
     {
@@ -470,7 +470,6 @@ double BinaryOperation(double left, double right, char op, char* strError)
 /* Calcola e restituisce il risultato di un'espressione in forma infissa */
 double EvalInfix(const char *strExpression, char * strError)
 {
-    int i = 0;
     Token tok;
     Token tok_temp;
     double left, right;
@@ -485,6 +484,7 @@ double EvalInfix(const char *strExpression, char * strError)
     if ( strError[0] != '\0' )
         return 0.0;
 
+    left = right = 0.0;
     while ( (PreviousTokenType = GetNextToken(strExpression, &tok, TRUE)) != EOL )
     {
         if ( tok.Type == UNKNOWN )

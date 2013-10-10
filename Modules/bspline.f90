@@ -263,6 +263,7 @@ CONTAINS
 
   ierr = 0
   routine = 'dbsval'
+  dbsval = 0.0_dp
   !
   !     check if xknot(i) <= xknot(i+1) and calculation of i so that
   !     xknot(i) <= x < xknot(i+1)
@@ -345,6 +346,7 @@ CONTAINS
 
   ierr = 0
   routine = 'dbsder'
+  dbsder = 0.0_dp
   !
   !     check if xknot(i) <= xknot(i+1) and calculation of i so that
   !     xknot(i) <= x < xknot(i+1)
@@ -898,6 +900,7 @@ CONTAINS
 
   routine = 'dbs2vl'
   ierr = 0
+  dbs2vl = 0.0_dp
   !
   !     check if knot(i) <= knot(i+1) and calculation of i so that
   !     knot(i) <= x < knot(i+1)
@@ -994,6 +997,7 @@ CONTAINS
 
   routine = 'dbs2dr'
   ierr = 0
+  dbs2dr = 0.0_dp
   !
   !     check if knot(i) <= knot(i+1) and calculation of i so that
   !     knot(i) <= x < knot(i+1)
@@ -1495,6 +1499,7 @@ CONTAINS
 
   routine = 'dbs3vl'
   ierr = 0
+  dbs3vl = 0.0_dp
   !
   !     check if knot(i) <= knot(i+1) and calculation of i so that
   !     knot(i) <= x < knot(i+1)
@@ -1587,6 +1592,7 @@ CONTAINS
 
   routine = 'dbs3dr'
   ierr = 0
+  dbs3dr = 0.0_dp
   !
   !     check if knot(i) <= knot(i+1) and calculation of i so that
   !     knot(i) <= x < knot(i+1)

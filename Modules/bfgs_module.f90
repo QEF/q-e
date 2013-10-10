@@ -169,6 +169,7 @@ CONTAINS
       REAL(DP) :: hinv(3,3),g(3,3),ginv(3,3),garbage, omega
       !
       !
+      lwolfe=.false.
       n = SIZE( pos_in ) + 9
       nat = size (pos_in) / 3
       if (nat*3 /= size (pos_in)) call errore('bfgs',' strange dimension',1)

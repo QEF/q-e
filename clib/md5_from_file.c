@@ -76,6 +76,7 @@ void get_md5(const char *file, char *md5, int err)
  
      FILE *fp;
      char *data;
+     int i;
      md5_state_t state;
      md5_byte_t digest[16];
      
@@ -100,8 +101,7 @@ void get_md5(const char *file, char *md5, int err)
      md5_append(&state,(const md5_byte_t *)data,strlen(data));
      md5_finish(&state,digest);
 
-     int i=0;
-     for(i;i<16;i++){
+     for(i=0;i<16;i++){
 	   snprintf(md5+i*2,sizeof(md5),"%02x",digest[i]);
      }
      fclose(fp);
