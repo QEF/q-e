@@ -49,7 +49,7 @@ MODULE realus
         ! (maxbox,number_of_q_funcs) the Q functions sampled over R points
      INTEGER,ALLOCATABLE  :: box(:) 
         ! (maxbox) Index of point R in the global order of the R-space grid
-     INTEGER :: maxbox
+     INTEGER :: maxbox = 0
         !  number of R points in the augmentatiin sphere of this atom
   END TYPE realsp_augmentation
   ! Augmentation functions on the RHO (HARD) grid for all atoms
@@ -61,19 +61,24 @@ MODULE realus
     !------------------------------------------------------------------------
     SUBROUTINE generate_qpointlist
       !------------------------------------------------------------------------
-      USE fft_base, ONLY : dfftp, dffts
-      USE funct,    ONLY : dft_is_hybrid
-      USE gvecs,    ONLY : doublegrid
+      USE fft_base,     ONLY : dfftp, dffts
+      USE funct,        ONLY : dft_is_hybrid
+      USE gvecs,        ONLY : doublegrid
+      USE io_global,    ONLY : stdout
       IMPLICIT NONE
+      !
       ! 1. initialize hard grid
+      WRITE(stdout, '(/,5x,a)') "Initializing real-space augmentation for DENSE grid"
       CALL qpointlist(dfftp, tabp) 
       !
       ! 2. initialize smooth grid (only for EXX at this moment)
       IF ( dft_is_hybrid() ) THEN
         IF(doublegrid)THEN
+          WRITE(stdout, '(5x,a)') "Initializing real-space augmentation for SMOOTH grid"
           CALL qpointlist(dffts, tabs)
         ELSE
           ! smooth and rho grid are the same if not double grid
+          WRITE(stdout, '(7x,a)') " SMOOTH grid -> DENSE grid"
           tabs => tabp
         ENDIF
       ENDIF
@@ -294,11 +299,12 @@ MODULE realus
         DO ia=1,nat
           IF(allocated(tabp(ia)%qr))  DEALLOCATE(tabp(ia)%qr)
           IF(allocated(tabp(ia)%box)) DEALLOCATE(tabp(ia)%box)
-          tabp(ia)%maxbox = 0
         ENDDO
         DEALLOCATE(tabp)
       ENDIF
+      !
       ALLOCATE(tabp(nat))
+
       !
       IF ( .not. allocated( boxrad ) ) THEN
          !
@@ -414,8 +420,9 @@ MODULE realus
             IF ( distsq < boxradsq_ia ) THEN
                !
                mbia = tabp(ia)%maxbox + 1
-               IF(mbia>roughestimate) &
+               IF(mbia>roughestimate) THEN
                   CALL errore( 'qpointlist', 'rough-estimate is too rough', 3 )
+               ENDIF
                tabp(ia)%maxbox     = mbia
                buffpoints(mbia,ia) = ir
                buffdist(mbia,ia)   = sqrt( distsq )*alat
