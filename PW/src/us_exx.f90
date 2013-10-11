@@ -37,6 +37,31 @@ MODULE us_exx
 
  CONTAINS ! ~~+~~---//--~~~-+
   !
+  FUNCTION bexg_merge( w, m,n, imin, imax, i)
+    ! used at Gamma point when number of bands is odd,
+    ! especially for band parallelisation when band group is odd
+    ! returns w(i)+i w(i+1) if imin<=i<imax
+    !         w(i)          if i==imax
+    !         iw(i+1)       if i==imin-1
+    !         0             otherwise
+    COMPLEX(DP) :: bexg_merge(m)
+    !
+    REAL(DP),INTENT(in) :: w(m,n)
+    INTEGER,INTENT(in)  :: m,n, imin, imax, i
+    !
+    bexg_merge = (0._dp, 0._dp)
+    IF(imin<=i .and. i<imax) THEN
+      bexg_merge = CMPLX(w(:,i),w(:,i+1), kind=DP)
+    ELSE IF(i==imax) THEN
+      bexg_merge = CMPLX(w(:,i),   0._dp, kind=DP)
+    ELSE IF(i+1==imin) THEN
+      bexg_merge = CMPLX( 0._dp,w(:,i+1), kind=DP)
+    ELSE
+      bexg_merge = CMPLX( 0._dp,   0._dp, kind=DP)
+    ENDIF
+    RETURN
+  END FUNCTION bexg_merge
+  !
   !-----------------------------------------------------------------------
   SUBROUTINE addusxx_g(rhoc, xkq, becphi, xk, becpsi)
     !-----------------------------------------------------------------------

@@ -19,8 +19,7 @@ MODULE exx
   ! FIXME: move down when ready
   USE mp_global,  ONLY : npool
   ! FIXME: put in subroutines
-  USE us_exx,  ONLY : newdxx_g, newdxx_r, addusxx_g, addusxx_r, dovanxx, becxx, add_nlxx_pot, &
-                      eps_occ_usxx => eps_occ
+  USE us_exx,  ONLY : dovanxx, eps_occ_usxx => eps_occ
   USE control_flags, ONLY : tqr
 
   IMPLICIT NONE
@@ -115,6 +114,9 @@ MODULE exx
               fock1 = 0.0_DP, & !   sum <psi|vx(phi)|psi>
               fock2 = 0.0_DP, & !   sum <psi|vx(psi)|psi>
               dexx  = 0.0_DP    !   fock1  - 0.5*(fock2+fock0)
+  REAL(DP) :: fock0x = 0.0_DP, & !   sum <phi|Vx(phi)|phi>
+              fock1x = 0.0_DP, & !   sum <psi|vx(phi)|psi>
+              fock2x = 0.0_DP    !   sum <psi|vx(psi)|psi>
 
   !
   ! custom fft grids
@@ -123,7 +125,7 @@ MODULE exx
   TYPE(fft_cus) exx_fft_r2g     ! Grid for real space -> restricted G space
   REAL(DP)  :: ecutfock         ! energy cutoff for custom grid
   REAL(DP)  :: exx_dual = 4.0_DP! dual for the custom grid
-CONTAINS
+ CONTAINS
 !#define _CX(A)  CMPLX(##A,0._dp,kind=DP)
 #define _CX(A)  CMPLX(A,0._dp,kind=DP)
   !------------------------------------------------------------------------
@@ -233,6 +235,7 @@ CONTAINS
     !------------------------------------------------------------------------
     !
     USE becmod, ONLY : deallocate_bec_type, is_allocated_bec_type, bec_type
+    USE us_exx, ONLY : becxx
     IMPLICIT NONE
     INTEGER :: ikq
     !
@@ -250,7 +253,6 @@ CONTAINS
       ENDDO
       DEALLOCATE(becxx)
    ENDIF
-!     IF(allocated(becxx_gamma))  DEALLOCATE(becxx_gamma)
     !
     CALL exx_fft_destroy()
     !
@@ -694,6 +696,7 @@ CONTAINS
   END SUBROUTINE exx_grid_check
   !------------------------------------------------------------------------
   !
+  !------------------------------------------------------------------------
   SUBROUTINE exx_restart(l_exx_was_active)
      !------------------------------------------------------------------------
      !This SUBROUTINE is called when restarting an exx calculation
@@ -751,6 +754,7 @@ CONTAINS
     USE fft_interfaces,       ONLY : invfft
     USE becmod,               ONLY : allocate_bec_type, is_allocated_bec_type, bec_type
     USE uspp,                 ONLY : nkb, okvan
+    USE us_exx,               ONLY : becxx
     USE paw_variables,        ONLY : okpaw
     USE paw_exx,              ONLY : dopawxx, PAW_init_keeq
 
@@ -786,20 +790,20 @@ CONTAINS
     ! Beware: not the same as nrxxs in parallel case
     IF(gamma_only) THEN
        CALL exx_fft_create()
-       nxxs=exx_fft_g2r%dfftt%nr1x *exx_fft_g2r%dfftt%nr2x *exx_fft_g2r%dfftt%nr3x 
+       nxxs =exx_fft_g2r%dfftt%nr1x *exx_fft_g2r%dfftt%nr2x *exx_fft_g2r%dfftt%nr3x 
        nrxxs= exx_fft_g2r%dfftt%nnr
-       nr1 = exx_fft_g2r%dfftt%nr1
-       nr2 = exx_fft_g2r%dfftt%nr2
-       nr3 = exx_fft_g2r%dfftt%nr3
+       nr1  = exx_fft_g2r%dfftt%nr1
+       nr2  = exx_fft_g2r%dfftt%nr2
+       nr3  = exx_fft_g2r%dfftt%nr3
        nr1x = exx_fft_g2r%dfftt%nr1x
        nr2x = exx_fft_g2r%dfftt%nr2x
        nr3x = exx_fft_g2r%dfftt%nr3x
     ELSE
        nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
        nrxxs= dffts%nnr
-       nr1 = dffts%nr1
-       nr2 = dffts%nr2
-       nr3 = dffts%nr3
+       nr1  = dffts%nr1
+       nr2  = dffts%nr2
+       nr3  = dffts%nr3
        nr1x = dffts%nr1x
        nr2x = dffts%nr2x
        nr3x = dffts%nr3x
@@ -852,10 +856,10 @@ CONTAINS
        !gau-pbe in
        gau_scrlen = get_gau_parameter()
        !gau-pbe out
-       exxdiv = exx_divergence() 
+       exxdiv  = exx_divergence() 
        exxalfa = get_exx_fraction()
        !
-       CALL start_exx
+       CALL start_exx()
     ENDIF
 
     IF (.NOT.allocated (wg_collect)) ALLOCATE(wg_collect(nbnd,nkstot))
@@ -914,8 +918,7 @@ CONTAINS
 !           WRITE(*,'("c",5f15.6)') (x_occupation(ibnd,index_xk(ikq)), ibnd=1,nbnd)
 !        ENDDO
 !     ENDDO
-
-       !
+    !
     !   This is parallelized over pool. Each pool computes only its k-points
     !
     KPOINTS_LOOP : &
@@ -1106,6 +1109,7 @@ CONTAINS
     USE fft_base,             ONLY : dffts
     USE fft_interfaces,       ONLY : fwfft
     USE control_flags,        ONLY : gamma_only
+    USE us_exx,               ONLY : becxx
 
     IMPLICIT NONE
     !
@@ -1121,9 +1125,9 @@ CONTAINS
     !       this way we are wasting some memory, but the fault is with uspp that should not use global
     !       variables for temporary data (lp-2012-10-03)
     !
-    CALL start_clock('becxx')
-    !
     IF(.not. (okvan  .and. dovanxx) ) RETURN
+    !
+    CALL start_clock('becxx')
     !
     gcutwfc = ecutwfc / tpiba2
     ALLOCATE(igkq(npwx))
@@ -1205,12 +1209,11 @@ CONTAINS
     !
     USE constants,      ONLY : fpi, e2, pi
     USE cell_base,      ONLY : omega
-    USE gvect,          ONLY : ngm
+    USE gvect,          ONLY : ngm, g
     USE gvecs,          ONLY : nls, ngms
     USE wvfct,          ONLY : npwx, npw, igk, current_k, ecutwfc
     USE control_flags,  ONLY : gamma_only
     USE klist,          ONLY : xk, nks, nkstot
-    USE gvect,          ONLY : g
     USE fft_base,       ONLY : dffts
     USE fft_interfaces, ONLY : fwfft, invfft
     USE becmod,         ONLY : bec_type
@@ -1219,7 +1222,8 @@ CONTAINS
     USE mp,             ONLY : mp_sum, mp_barrier
     USE uspp,           ONLY : nkb, okvan
     USE paw_variables,  ONLY : okpaw
-    USE paw_exx, ONLY : dopawxx, PAW_newdxx
+    USE us_exx,         ONLY : bexg_merge, becxx, addusxx_g, addusxx_r, newdxx_g, newdxx_r, add_nlxx_pot
+    USE paw_exx,        ONLY : dopawxx, PAW_newdxx
 
 
     IMPLICIT NONE
@@ -1282,7 +1286,7 @@ CONTAINS
     ENDIF
     !
     LOOP_ON_PSI_BANDS : &
-    DO im=1,m !for each band of psi (the k cycle is outside band)
+    DO im = 1,m !for each band of psi (the k cycle is outside band)
        IF(okvan .and. dovanxx) deexx(:) = (0._dp, 0._dp)
       !
        IF (noncolin) THEN
@@ -1342,7 +1346,7 @@ CONTAINS
         !
         ikq  = index_xkq(current_ik,iq)
         ik   = index_xk(ikq)
-        xkq = xkq_collect(:,ikq)
+        xkq  = xkq_collect(:,ikq)
         !
         ! calculate the 1/|r-r'| (actually, k+q+g) factor and place it in fac
         IF(gamma_only) THEN
@@ -1378,12 +1382,11 @@ CONTAINS
               ELSE
                   x2 = x_occupation(ibnd+1,  ik)
               ENDIF
-              IF ( ABS(x1) < 1.d-6 .AND.  ABS(x2) < 1.d-6 ) CYCLE
+              IF ( ABS(x1) < eps_occ .AND.  ABS(x2) < eps_occ ) CYCLE
               !!
               !!loads the phi from file
               !!CALL davcio ( tempphic, exx_nwordwfc, iunexx, &
               !!                    (ikq-1)*half_nbnd+h_ibnd, -1 )
-              
               !
               !calculate rho in real space
 !$omp parallel do default(shared), private(ir)
@@ -1394,25 +1397,22 @@ CONTAINS
 !$omp end parallel do
               !
               !brings it to G-space
-              IF (ecutfock == 4.d0 * ecutwfc) THEN
+              CUSTOMWAVE : IF (ecutfock == 4.d0 * ecutwfc) THEN
                  !
                  !   >>>> add augmentation in REAL SPACE here
                  IF(okvan .and. dovanxx .AND. TQR) THEN
-                    CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd)),   _CX(becpsi%r(:,im)))
-                    IF(ibnd<ibnd_end) &
-                    CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,im)))
-                  ENDIF
-
+                    CALL addusxx_r(rhoc, &
+                                   bexg_merge(becxx(ikq)%r, nkb, m, ibnd_start, ibnd_end, ibnd), &
+                                    _CX(becpsi%r(:,im)) )
+                 ENDIF
                  !
                  CALL fwfft ('Custom', rhoc, exx_fft_r2g%dfftt)
                  !   >>>> add augmentation in G SPACE here
                  IF(okvan .and. dovanxx .AND. .NOT. TQR) THEN
-                    CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd)), &
-                                   xk_collect(:,current_ik), _CX(becpsi%r(:,im)))
-                    IF(ibnd<ibnd_end) &
-                    CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd+1)), &
-                                   xk_collect(:,current_ik), _CX(becpsi%r(:,im)))
-                  ENDIF
+                        CALL addusxx_g(rhoc, xkq, &
+                           bexg_merge(becxx(ikq)%r, nkb, m, ibnd_start, ibnd_end, ibnd), &
+                           xk_collect(:,current_ik), _CX(becpsi%r(:,im)) )
+                 ENDIF
                  !   >>>> charge density done
 
                  vc(:) = ( 0._dp, 0._dp )
@@ -1426,24 +1426,22 @@ CONTAINS
                  ENDDO
 !$omp end parallel do
                  !
-                 !brings back v in real space
-
                  vc = CMPLX( x1 * DBLE (vc), x2 * AIMAG(vc) ,kind=DP)/ nqs
 
+                 !   >>>>  compute <psi|H_fock G SPACE here
                  IF(okvan .and. dovanxx .and. .not. TQR) THEN
-                    CALL newdxx_g(vc, xkq, _CX(becxx(ikq)%r(:,ibnd)), &
-                                xk_collect(:,current_ik), deexx)
-                    IF(ibnd<ibnd_end) &
-                    CALL newdxx_g(vc, xkq, _CX(becxx(ikq)%r(:,ibnd+1)), &
+                    CALL newdxx_g(vc, xkq, &
+                                bexg_merge(becxx(ikq)%r, nkb, m, ibnd_start, ibnd_end, ibnd), &
                                 xk_collect(:,current_ik), deexx)
                  ENDIF
                  !
+                 !brings back v in real space
                  CALL invfft ('Custom', vc, exx_fft_r2g%dfftt) 
                  !
+                 !   >>>>  compute <psi|H_fock REAL SPACE here
                  IF(okvan .and. dovanxx .and. TQR) THEN
-                    CALL newdxx_r(vc, _CX(becxx(ikq)%r(:,ibnd)), deexx)
-                    IF(ibnd<ibnd_end) &
-                    CALL newdxx_r(vc, _CX(becxx(ikq)%r(:,ibnd+1)), deexx)
+                    CALL newdxx_r(vc, bexg_merge(becxx(ikq)%r, nkb, m, ibnd_start, ibnd_end, ibnd),&
+                                  deexx)
                  ENDIF
                  !
                  IF(okpaw .and. dopawxx) THEN
@@ -1454,9 +1452,24 @@ CONTAINS
                                              _CX(becpsi%r(:,im)), deexx)
                  ENDIF
                  !
-              ELSE
+              ELSE CUSTOMWAVE ! XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+                 !
+                 !   >>>> add augmentation in REAL SPACE here
+                 IF(okvan .and. dovanxx .AND. TQR) THEN
+                    CALL addusxx_r(rhoc, &
+                                   bexg_merge(becxx(ikq)%r, nkb, m, ibnd_start, ibnd_end, ibnd), &
+                                    _CX(becpsi%r(:,im)) )
+                 ENDIF
                  !
                  CALL fwfft ('CustomWave', rhoc, exx_fft_r2g%dfftt)
+                 !
+                 !   >>>> add augmentation in G SPACE here
+                 IF(okvan .and. dovanxx .AND. .NOT. TQR) THEN
+                        CALL addusxx_g(rhoc, xkq, &
+                           bexg_merge(becxx(ikq)%r, nkb, m, ibnd_start, ibnd_end, ibnd), &
+                           xk_collect(:,current_ik), _CX(becpsi%r(:,im)) )
+                 ENDIF
+                 !
                  vc(:) = ( 0._dp, 0._dp )
                  !
 !$omp parallel do default(shared), private(ig)
@@ -1470,11 +1483,32 @@ CONTAINS
                  !
 
                  vc = CMPLX( x1 * DBLE (vc), x2 * AIMAG(vc) ,kind=DP)/ nqs
-
+                 !
+                 !   >>>>  compute <psi|H_fock G SPACE here
+                 IF(okvan .and. dovanxx .and. .not. TQR) THEN
+                    CALL newdxx_g(vc, xkq, &
+                                bexg_merge(becxx(ikq)%r, nkb, m, ibnd_start, ibnd_end, ibnd), &
+                                xk_collect(:,current_ik), deexx)
+                 ENDIF
+                 !
                  !brings back v in real space
                  CALL invfft ('CustomWave', vc, exx_fft_r2g%dfftt) 
                  !
-              ENDIF
+                 !   >>>>  compute <psi|H_fock REAL SPACE here
+                 IF(okvan .and. dovanxx .and. TQR) THEN
+                    CALL newdxx_r(vc, bexg_merge(becxx(ikq)%r, nkb, m, ibnd_start, ibnd_end, ibnd),&
+                                  deexx)
+                 ENDIF
+                 !
+                 IF(okpaw .and. dopawxx) THEN
+                     CALL PAW_newdxx(x1/nqs, _CX(becxx(ikq)%r(:,ibnd)), &
+                                             _CX(becpsi%r(:,im)), deexx)
+                    IF(ibnd<ibnd_end) &
+                     CALL PAW_newdxx(x2/nqs, _CX(becxx(ikq)%r(:,ibnd+1)), &
+                                             _CX(becpsi%r(:,im)), deexx)
+                 ENDIF
+                 !
+              ENDIF CUSTOMWAVE
               !
               !accumulates over bands and k points
               !
@@ -1520,26 +1554,22 @@ CONTAINS
                 ENDDO
 !$omp end parallel do
             ENDIF
-            !   >>>> add augmentation in real space HERE
-            IF(okvan .and. dovanxx .AND. TQR) & ! augment the "charge" in real space
+            !   >>>> add augmentation in REAL space HERE
+            IF(okvan .and. dovanxx .AND. TQR) THEN ! augment the "charge" in real space
               CALL addusxx_r(rhoc, becxx(ikq)%k(:,ibnd), becpsi%k(:,im))
-            !   >>>> brings it to G-space
+            ENDIF
             !
+            !   >>>> brings it to G-space
             CALL fwfft('Smooth', rhoc, dffts)
+            !
             !   >>>> add augmentation in G space HERE
-            IF(okvan .and. dovanxx .AND. .NOT. TQR) &! augment the "charge" in G space
+            IF(okvan .and. dovanxx .AND. .NOT. TQR) THEN
               CALL addusxx_g(rhoc, xkq, becxx(ikq)%k(:,ibnd),  &
                              xk_collect(:,current_ik), becpsi%k(:,im))
+            ENDIF
             !   >>>> charge done
             !
             vc(:) = ( 0._dp, 0._dp )
-            !
-            ! compute alpha_I,j,k+q = \sum_J \int <beta_J|phi_j,k+q> V_i,j,k,q Q_I,J(r) d3r
-            ! Add ultrasoft contribution (RECIPROCAL SPACE)
-            IF(okvan .and. dovanxx .AND. .NOT. TQR) THEN
-              CALL newdxx_g(vc, xkq, becxx(ikq)%k(:,ibnd), &
-                                xk_collect(:,current_ik), deexx)
-            ENDIF
             !
 !$omp parallel do default(shared), private(ig)
             DO ig = 1, ngms
@@ -1548,12 +1578,21 @@ CONTAINS
             ENDDO
 !$omp end parallel do
             !
+            ! Add ultrasoft contribution (RECIPROCAL SPACE)
+            ! compute alpha_I,j,k+q = \sum_J \int <beta_J|phi_j,k+q> V_i,j,k,q Q_I,J(r) d3r
+            IF(okvan .and. dovanxx .AND. .NOT. TQR) THEN
+              CALL newdxx_g(vc, xkq, becxx(ikq)%k(:,ibnd), &
+                                xk_collect(:,current_ik), deexx)
+            ENDIF
+            !
             !brings back v in real space
             CALL invfft ('Smooth', vc, dffts)
+            !
             ! Add ultrasoft contribution (REAL SPACE)
             IF(okvan .and. dovanxx .AND. TQR) &
               CALL newdxx_r(vc, becxx(ikq)%k(:,ibnd),deexx)
-            ! Add PAW contribution
+            !
+            ! Add PAW one-center contribution
             IF(okpaw .and. dopawxx) THEN
               CALL PAW_newdxx(x_occupation(ibnd,ik)/nqs, &
                               becxx(ikq)%k(:,ibnd), becpsi%k(:,im), deexx)
@@ -1776,7 +1815,7 @@ CONTAINS
     COMPLEX(DP),EXTERNAL :: ZDOTC
     !
     exxenergy=0._dp
-    RETURN
+!     RETURN
     
     CALL start_clock ('exxenergy')
 
@@ -1860,6 +1899,7 @@ CONTAINS
     USE becmod,                  ONLY : bec_type, allocate_bec_type, deallocate_bec_type, calbec
     USE paw_variables,           ONLY : okpaw
     USE paw_exx,                 ONLY : dopawxx, PAW_xx_energy
+    USE us_exx,                  ONLY : bexg_merge, becxx, addusxx_g, addusxx_r
     !
     IMPLICIT NONE
     !
@@ -2008,14 +2048,13 @@ CONTAINS
                   ELSE
                       x1 = x_occupation(ibnd,ik)
                   ENDIF
-                  IF ( abs(x1) < eps_occ .and. abs(x2) < eps_occ ) CYCLE
                   !
                   IF ( ibnd < ibnd_end ) THEN
                       x2 = x_occupation(ibnd+1,ik)
                   ELSE
                       x2 = 0.0_dp
                   ENDIF
-                  IF ( abs(x1) < 1.d-6 .and. abs(x2) < 1.d-6 ) cycle
+                  IF ( abs(x1) < eps_occ .and. abs(x2) < eps_occ ) CYCLE IBND_LOOP_GAM
                   !
                   !!loads the phi from file
                   !!CALL davcio (tempphic, exx_nwordwfc, iunexx, &
@@ -2033,15 +2072,20 @@ CONTAINS
                   !
                   IF_ECUTFOCK : &
                   IF (ecutfock == 4.d0 * ecutwfc) THEN
+                    !
+                    IF(okvan .and. dovanxx .and. TQR) THEN
+                      CALL addusxx_r(rhoc, &
+                                     bexg_merge(becxx(ikq)%r, nkb, nbnd, ibnd_start, ibnd_end, ibnd), &
+                                     _CX(becpsi%r(:,jbnd)) )
+                    ENDIF
+                    !
                     !brings it to G-space
                     CALL fwfft ('Custom', rhoc, exx_fft_r2g%dfftt)
                     !
-                    IF(okvan .and. dovanxx) THEN
-                      CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd)), &
-                          xk_collect(:,current_ik), _CX(becpsi%r(:,jbnd)))
-                      IF(ibnd<nbnd) &
-                      CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd+1)), &
-                          xk_collect(:,current_ik), _CX(becpsi%r(:,jbnd)))
+                    IF(okvan .and. dovanxx .and. .not.TQR) THEN
+                        CALL addusxx_g(rhoc, xkq, &
+                           bexg_merge(becxx(ikq)%r, nkb, nbnd, ibnd_start, ibnd_end, ibnd), &
+                           xk_collect(:,current_ik), _CX(becpsi%r(:,jbnd)) )
                     ENDIF
                     !
                     vc = 0._dp
@@ -2056,8 +2100,20 @@ CONTAINS
                     !
                   ELSE IF_ECUTFOCK
                     !
+                    IF(okvan .and. dovanxx .and. TQR) THEN
+                      CALL addusxx_r(rhoc, &
+                                     bexg_merge(becxx(ikq)%r, nkb, nbnd, ibnd_start, ibnd_end, ibnd), &
+                                     _CX(becpsi%r(:,jbnd)) )
+                    ENDIF
+                    !
                     !brings it to G-space
                     CALL fwfft ('CustomWave', rhoc, exx_fft_r2g%dfftt)
+                    !
+                    IF(okvan .and. dovanxx .and. .not.TQR) THEN
+                        CALL addusxx_g(rhoc, xkq, &
+                           bexg_merge(becxx(ikq)%r, nkb, nbnd, ibnd_start, ibnd_end, ibnd), &
+                           xk_collect(:,current_ik), _CX(becpsi%r(:,jbnd)) )
+                    ENDIF
                     !
                     vc = 0._dp
 !$omp parallel do  default(shared), private(ig),  reduction(+:vc)
@@ -2596,7 +2652,6 @@ CONTAINS
     !-----------------------------------------------------------------------
   END FUNCTION exx_stress
   !-----------------------------------------------------------------------
-  !
 !-----------------------------------------------------------------------
 END MODULE exx
 !-----------------------------------------------------------------------
