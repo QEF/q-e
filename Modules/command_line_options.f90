@@ -28,9 +28,9 @@ MODULE command_line_options
   INTEGER :: nimage_= 1, npool_= 1, npot_= 1, ndiag_ = 0, nband_= 1, ntg_= 1
   ! ... Indicate if using library init
   LOGICAL :: library_init = .FALSE.
-  CHARACTER(LEN=80) :: input_file_ = ' '
+  CHARACTER(LEN=256) :: input_file_ = ' '
   ! ... Command line arguments not identified
-  CHARACTER(LEN=256) :: command_line = ' '
+  CHARACTER(LEN=512) :: command_line = ' '
   !
 CONTAINS
   !
@@ -40,7 +40,7 @@ CONTAINS
      INTEGER :: narg
      ! Do not define iargc as external: gfortran doesn't like it
      INTEGER :: iargc
-     CHARACTER(LEN=80) :: arg 
+     CHARACTER(LEN=256) :: arg 
      CHARACTER(LEN=6), EXTERNAL :: int_to_char
      !
      command_line = ' '
