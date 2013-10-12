@@ -33,7 +33,7 @@ lanczos_k.o : ../../Modules/io_files.o
 lanczos_k.o : ../../Modules/io_global.o
 lanczos_k.o : ../../Modules/kind.o
 lanczos_k.o : ../../Modules/mp.o
-lanczos_k.o : ../../Modules/mp_global.o
+lanczos_k.o : ../../Modules/mp_world.o
 lanczos_k.o : ../../Modules/noncol.o
 lanczos_k.o : ../../Modules/recvec.o
 lanczos_k.o : ../../Modules/uspp.o

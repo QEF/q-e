@@ -11,7 +11,6 @@ contour.o : ../../Modules/constants.o
 contour.o : ../../Modules/io_global.o
 contour.o : ../../Modules/kind.o
 contour.o : ../../Modules/mp.o
-contour.o : ../../Modules/mp_global.o
 contour.o : ../../Modules/mp_world.o
 contour.o : basic_structures.o
 contour.o : green_function.o
@@ -76,7 +75,7 @@ do_self_lanczos_full.o : ../../Modules/constants.o
 do_self_lanczos_full.o : ../../Modules/io_global.o
 do_self_lanczos_full.o : ../../Modules/kind.o
 do_self_lanczos_full.o : ../../Modules/mp.o
-do_self_lanczos_full.o : ../../Modules/mp_global.o
+do_self_lanczos_full.o : ../../Modules/mp_world.o
 do_self_lanczos_full.o : ../../Modules/parallel_include.o
 do_self_lanczos_full.o : basic_structures.o
 do_self_lanczos_full.o : green_function.o
@@ -90,7 +89,6 @@ do_self_lanczos_time.o : ../../Modules/constants.o
 do_self_lanczos_time.o : ../../Modules/io_global.o
 do_self_lanczos_time.o : ../../Modules/kind.o
 do_self_lanczos_time.o : ../../Modules/mp.o
-do_self_lanczos_time.o : ../../Modules/mp_global.o
 do_self_lanczos_time.o : ../../Modules/mp_world.o
 do_self_lanczos_time.o : ../../Modules/parallel_include.o
 do_self_lanczos_time.o : basic_structures.o
@@ -271,7 +269,6 @@ self_energy_storage.o : ../../Modules/fft_scalar.o
 self_energy_storage.o : ../../Modules/io_global.o
 self_energy_storage.o : ../../Modules/kind.o
 self_energy_storage.o : ../../Modules/mp.o
-self_energy_storage.o : ../../Modules/mp_global.o
 self_energy_storage.o : ../../Modules/mp_world.o
 self_energy_storage.o : basic_structures.o
 self_energy_storage.o : compact_product.o

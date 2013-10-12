@@ -232,6 +232,7 @@ read_pseudo.o : io_global.o
 read_pseudo.o : ions_base.o
 read_pseudo.o : kind.o
 read_pseudo.o : mp.o
+read_pseudo.o : mp_world.o
 read_pseudo.o : pseudo_types.o
 read_pseudo.o : radial_grids.o
 read_pseudo.o : read_uspp.o
@@ -350,6 +351,7 @@ xml_io_base.o : io_files.o
 xml_io_base.o : io_global.o
 xml_io_base.o : kind.o
 xml_io_base.o : mp.o
+xml_io_base.o : mp_bands.o
 xml_io_base.o : mp_images.o
 xml_io_base.o : mp_wave.o
 xml_io_base.o : parser.o

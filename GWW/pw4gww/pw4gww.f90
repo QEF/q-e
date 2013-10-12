@@ -662,7 +662,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   ! compute the Maximum G vector index among all G+k and processors
   npw_g = MAXVAL( igk_l2g(:,:) )
-  CALL mp_max( npw_g )
+  CALL mp_max( npw_g, world_comm )
 
   ! compute the Maximum number of G vector among all k points
   npwx_g = MAXVAL( ngk_g( 1:nkstot ) )

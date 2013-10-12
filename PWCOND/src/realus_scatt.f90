@@ -36,7 +36,7 @@ MODULE realus_scatt
 
    IF ( .NOT. okvan ) RETURN
 
-   CALL qpointlist()
+   CALL qpointlist(dfftp, tabp)
 
 !--   Finds roughestimate
    mbr = MAXVAL( boxrad(:) )
@@ -106,7 +106,7 @@ MODULE realus_scatt
    USE lsda_mod,         ONLY : nspin
    USE scf,              ONLY : rho
    USE realus
-   USE uspp,             ONLY : okvan, becsum
+   USE uspp,             ONLY : okvan, becsum, ijtoh
    USE uspp_param,       ONLY : upf, nhm, nh
    USE noncollin_module, ONLY : noncolin
    USE spin_orb,         ONLY : domag
@@ -123,7 +123,7 @@ MODULE realus_scatt
    DO is = 1, nspin0
      iqs = 0
      DO ia = 1, nat
-        mbia = maxbox(ia)
+        mbia = tabp(ia)%maxbox
         IF ( mbia == 0 ) CYCLE
         nt = ityp(ia)
         IF ( .NOT. upf(nt)%tvanp ) CYCLE
@@ -133,12 +133,12 @@ MODULE realus_scatt
            DO jh = ih, nhnt
               ijh = ijh + 1
               DO ir = 1, mbia
-                 irb = box(ir,ia)
+                 irb = tabp(ia)%box(ir)
                  iqs = iqs + 1
                  if(orig_or_copy(ir,ia).eq.1) then
-                  rho%of_r(irb,is) = rho%of_r(irb,is) + qsave(iqs)*becsum_orig(ijh,ia,is)
+                  rho%of_r(irb,is) = rho%of_r(irb,is) + tabp(ia)%qr(ir,ijtoh(ih,jh,nt))*becsum_orig(ijh,ia,is)
                  else
-                  rho%of_r(irb,is) = rho%of_r(irb,is) + qsave(iqs)*becsum(ijh,ia,is)
+                  rho%of_r(irb,is) = rho%of_r(irb,is) + tabp(ia)%qr(ir,ijtoh(ih,jh,nt))*becsum(ijh,ia,is)
                  endif
               ENDDO
            ENDDO

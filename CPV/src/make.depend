@@ -1,6 +1,7 @@
 berry_phase.o : ../../Modules/io_global.o
 berry_phase.o : ../../Modules/mp.o
 berry_phase.o : ../../Modules/mp_global.o
+berry_phase.o : ../../Modules/mp_world.o
 berry_phase.o : ../../Modules/recvec.o
 berry_phase.o : ../../Modules/stick_base.o
 berryion.o : ../../Modules/cell_base.o
@@ -927,6 +928,7 @@ tsvdw.o : ../../Modules/ions_base.o
 tsvdw.o : ../../Modules/kind.o
 tsvdw.o : ../../Modules/mp.o
 tsvdw.o : ../../Modules/mp_global.o
+tsvdw.o : ../../Modules/mp_world.o
 tsvdw.o : ../../Modules/parallel_include.o
 tsvdw.o : ../../Modules/uspp.o
 tsvdw.o : mainvar.o

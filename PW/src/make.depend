@@ -106,6 +106,7 @@ allocate_nlpot.o : ../../Modules/noncol.o
 allocate_nlpot.o : ../../Modules/recvec.o
 allocate_nlpot.o : ../../Modules/uspp.o
 allocate_nlpot.o : exx.o
+allocate_nlpot.o : ldaU.o
 allocate_nlpot.o : pwcom.o
 allocate_nlpot.o : scf_mod.o
 allocate_wfc.o : ../../Modules/io_global.o
@@ -170,6 +171,7 @@ bp_mod.o : ../../Modules/cell_base.o
 bp_mod.o : ../../Modules/fft_base.o
 bp_mod.o : ../../Modules/kind.o
 bp_mod.o : ../../Modules/mp.o
+bp_mod.o : ../../Modules/mp_world.o
 bp_mod.o : ../../Modules/recvec.o
 bp_qvan3.o : ../../Modules/ions_base.o
 bp_qvan3.o : ../../Modules/kind.o
@@ -207,6 +209,7 @@ c_phase_field.o : ../../Modules/ions_base.o
 c_phase_field.o : ../../Modules/kind.o
 c_phase_field.o : ../../Modules/mp.o
 c_phase_field.o : ../../Modules/mp_global.o
+c_phase_field.o : ../../Modules/mp_world.o
 c_phase_field.o : ../../Modules/noncol.o
 c_phase_field.o : ../../Modules/recvec.o
 c_phase_field.o : ../../Modules/uspp.o
@@ -564,6 +567,7 @@ forces_bp_efield.o : ../../Modules/ions_base.o
 forces_bp_efield.o : ../../Modules/kind.o
 forces_bp_efield.o : ../../Modules/mp.o
 forces_bp_efield.o : ../../Modules/mp_global.o
+forces_bp_efield.o : ../../Modules/mp_world.o
 forces_bp_efield.o : ../../Modules/recvec.o
 forces_bp_efield.o : ../../Modules/uspp.o
 forces_bp_efield.o : ../../Modules/wavefunctions.o
@@ -669,6 +673,7 @@ h_epsi_her_set.o : ../../Modules/ions_base.o
 h_epsi_her_set.o : ../../Modules/kind.o
 h_epsi_her_set.o : ../../Modules/mp.o
 h_epsi_her_set.o : ../../Modules/mp_global.o
+h_epsi_her_set.o : ../../Modules/mp_world.o
 h_epsi_her_set.o : ../../Modules/noncol.o
 h_epsi_her_set.o : ../../Modules/recvec.o
 h_epsi_her_set.o : ../../Modules/uspp.o
@@ -1051,6 +1056,7 @@ orbm_kubo.o : ../../Modules/io_global.o
 orbm_kubo.o : ../../Modules/kind.o
 orbm_kubo.o : ../../Modules/mp.o
 orbm_kubo.o : ../../Modules/mp_global.o
+orbm_kubo.o : ../../Modules/mp_world.o
 orbm_kubo.o : ../../Modules/noncol.o
 orbm_kubo.o : ../../Modules/recvec.o
 orbm_kubo.o : ../../Modules/uspp.o
@@ -1191,7 +1197,7 @@ print_clock_pw.o : ../../Modules/funct.o
 print_clock_pw.o : ../../Modules/io_global.o
 print_clock_pw.o : ../../Modules/paw_variables.o
 print_clock_pw.o : ../../Modules/uspp.o
-print_clock_pw.o : pwcom.o
+print_clock_pw.o : ldaU.o
 print_clock_pw.o : realus.o
 print_ks_energies.o : ../../Modules/constants.o
 print_ks_energies.o : ../../Modules/control_flags.o
@@ -1355,6 +1361,7 @@ realus.o : ../../Modules/ions_base.o
 realus.o : ../../Modules/kind.o
 realus.o : ../../Modules/mp.o
 realus.o : ../../Modules/mp_global.o
+realus.o : ../../Modules/mp_world.o
 realus.o : ../../Modules/noncol.o
 realus.o : ../../Modules/recvec.o
 realus.o : ../../Modules/splinelib.o
@@ -1437,6 +1444,7 @@ save_in_electrons.o : ../../Modules/kind.o
 save_in_electrons.o : pwcom.o
 scale_h.o : ../../Modules/cell_base.o
 scale_h.o : ../../Modules/control_flags.o
+scale_h.o : ../../Modules/funct.o
 scale_h.o : ../../Modules/input_parameters.o
 scale_h.o : ../../Modules/io_global.o
 scale_h.o : ../../Modules/kind.o

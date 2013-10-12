@@ -229,6 +229,7 @@ lr_main.o : ../../Modules/ions_base.o
 lr_main.o : ../../Modules/kind.o
 lr_main.o : ../../Modules/mp.o
 lr_main.o : ../../Modules/mp_global.o
+lr_main.o : ../../Modules/mp_world.o
 lr_main.o : ../../Modules/uspp.o
 lr_main.o : ../../Modules/version.o
 lr_main.o : ../../Modules/wavefunctions.o

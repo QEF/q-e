@@ -106,7 +106,7 @@ subroutine solve_lanczos_complex(nbuf,alpha,e_mat,lc)
      if(io >= nbegin .and. io <= nend) then
         tmp_mat(:,:)=lc%o_mat(:,:,io-nbegin+1)
      endif
-     !call mp_sum(tmp_mat(:,:))
+     !call mp_sum(tmp_mat(:,:),world_comm)
      iproc=(io-1)/l_blk
      call mp_bcast(tmp_mat(:,:), iproc, world_comm)
      omat(:,:)=dcmplx(tmp_mat(:,:),0.d0)
@@ -453,10 +453,10 @@ subroutine do_self_lanczos(ss, tf ,options)
       enddo
 !distribute ww%numpw
       if(.not.ionode) ww%numpw=0
-      !call mp_sum(ww%numpw)
+      !call mp_sum(ww%numpw,world_comm)
       call mp_bcast(ww%numpw, ionode_id,world_comm)
       if(.not.ionode) ww%factor=(0.d0,0.d0)
-      !call mp_sum(ww%factor)
+      !call mp_sum(ww%factor,world_comm)
       call mp_bcast(ww%factor, ionode_id,world_comm)
          
    endif
@@ -701,7 +701,7 @@ subroutine do_self_lanczos(ss, tf ,options)
                      endif
                      iproc=jw/l_blk_io
                      do kw=1,ww%numpw
-                        !call mp_sum(ww%pw(:,kw))
+                        !call mp_sum(ww%pw(:,kw),world_comm)
                          call mp_bcast(ww%pw(:,kw),iproc,world_comm)
                      enddo
                      !call mp_bcast(ww%pw(:,:),iproc,world_comm)
@@ -871,7 +871,7 @@ subroutine do_self_lanczos(ss, tf ,options)
                endif
             enddo
             if(.not.l_conv) then
-               call mp_sum(gw_tab(:,:))
+               call mp_sum(gw_tab(:,:),world_comm)
                do ix=nbegin_freq,nbegin_freq+l_blk_freq-1
                   if(ix<=ss%n) then
                      do jw=-tf%n,tf%n
@@ -916,7 +916,7 @@ subroutine do_self_lanczos(ss, tf ,options)
        endif
 
 !set global factor
-   call mp_sum(ss%diag(:,:,:))
+   call mp_sum(ss%diag(:,:,:),world_comm)
    if(l_conv) then
       ss%diag(:,:,:)=ss%diag(:,:,:)*(1.d0/tpi)
    else
@@ -968,7 +968,7 @@ subroutine solve_lanczos_fake_complex(lc)
      if(io >= nbegin .and. io <= nend) then
         o_mat(:,:)=lc%o_mat(:,:,io-nbegin+1)
      endif
-   !  call mp_sum(o_mat(:,:))!this should be much faster than mp_bcast
+   !  call mp_sum(o_mat(:,:),world_comm)!this should be much faster than mp_bcast
      iproc=(io-1)/l_blk
      call mp_bcast(o_mat(:,:), iproc,world_comm)
 

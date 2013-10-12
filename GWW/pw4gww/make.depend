@@ -23,7 +23,7 @@ contour_terms.o : ../../Modules/io_files.o
 contour_terms.o : ../../Modules/io_global.o
 contour_terms.o : ../../Modules/kind.o
 contour_terms.o : ../../Modules/mp.o
-contour_terms.o : ../../Modules/mp_global.o
+contour_terms.o : ../../Modules/mp_world.o
 contour_terms.o : ../../Modules/recvec.o
 contour_terms.o : ../../Modules/wavefunctions.o
 contour_terms.o : ../../PW/src/pwcom.o
@@ -39,6 +39,7 @@ dft_exchange.o : ../../Modules/ions_base.o
 dft_exchange.o : ../../Modules/kind.o
 dft_exchange.o : ../../Modules/mp.o
 dft_exchange.o : ../../Modules/mp_global.o
+dft_exchange.o : ../../Modules/mp_world.o
 dft_exchange.o : ../../Modules/recvec.o
 dft_exchange.o : ../../Modules/uspp.o
 dft_exchange.o : ../../Modules/wavefunctions.o
@@ -50,13 +51,13 @@ diago_cg.o : ../../Modules/constants.o
 diago_cg.o : ../../Modules/io_global.o
 diago_cg.o : ../../Modules/kind.o
 diago_cg.o : ../../Modules/mp.o
-diago_cg.o : ../../Modules/mp_global.o
+diago_cg.o : ../../Modules/mp_world.o
 diago_cg.o : ../../Modules/random_numbers.o
 diago_cg_g.o : ../../Modules/constants.o
 diago_cg_g.o : ../../Modules/io_global.o
 diago_cg_g.o : ../../Modules/kind.o
 diago_cg_g.o : ../../Modules/mp.o
-diago_cg_g.o : ../../Modules/mp_global.o
+diago_cg_g.o : ../../Modules/mp_world.o
 diago_cg_g.o : ../../Modules/random_numbers.o
 energies_xc.o : ../../Modules/becmod.o
 energies_xc.o : ../../Modules/cell_base.o
@@ -69,6 +70,7 @@ energies_xc.o : ../../Modules/io_files.o
 energies_xc.o : ../../Modules/io_global.o
 energies_xc.o : ../../Modules/kind.o
 energies_xc.o : ../../Modules/mp.o
+energies_xc.o : ../../Modules/mp_world.o
 energies_xc.o : ../../Modules/recvec.o
 energies_xc.o : ../../Modules/uspp.o
 energies_xc.o : ../../Modules/wavefunctions.o
@@ -152,10 +154,10 @@ matrix_wannier_gamma.o : ../../Modules/ions_base.o
 matrix_wannier_gamma.o : ../../Modules/kind.o
 matrix_wannier_gamma.o : ../../Modules/mp.o
 matrix_wannier_gamma.o : ../../Modules/mp_global.o
+matrix_wannier_gamma.o : ../../Modules/mp_world.o
 matrix_wannier_gamma.o : ../../Modules/recvec.o
 matrix_wannier_gamma.o : ../../Modules/uspp.o
 matrix_wannier_gamma.o : ../../PW/src/pwcom.o
-matrix_wannier_gamma.o : ../../PW/src/realus.o
 matrix_wannier_gamma.o : wannier_gw.o
 mp_wave_parallel.o : ../../Modules/io_global.o
 mp_wave_parallel.o : ../../Modules/kind.o
@@ -170,6 +172,7 @@ o_1psi.o : ../../Modules/io_global.o
 o_1psi.o : ../../Modules/kind.o
 o_1psi.o : ../../Modules/mp.o
 o_1psi.o : ../../Modules/mp_global.o
+o_1psi.o : ../../Modules/mp_world.o
 o_1psi.o : ../../Modules/random_numbers.o
 o_1psi.o : ../../Modules/recvec.o
 o_1psi.o : ../../Modules/uspp.o
@@ -196,6 +199,7 @@ o_rinitcgg.o : ../../Modules/fft_base.o
 o_rinitcgg.o : ../../Modules/io_global.o
 o_rinitcgg.o : ../../Modules/kind.o
 o_rinitcgg.o : ../../Modules/mp.o
+o_rinitcgg.o : ../../Modules/mp_world.o
 o_rinitcgg.o : ../../Modules/recvec.o
 openfil_pw4gww.o : ../../Modules/control_flags.o
 openfil_pw4gww.o : ../../Modules/io_files.o
@@ -209,7 +213,7 @@ openfil_pw4gww.o : ../../PW/src/pwcom.o
 optimal.o : ../../Modules/io_global.o
 optimal.o : ../../Modules/kind.o
 optimal.o : ../../Modules/mp.o
-optimal.o : ../../Modules/mp_global.o
+optimal.o : ../../Modules/mp_world.o
 optimal.o : ../../Modules/recvec.o
 optimal.o : ../../PW/src/pwcom.o
 optimal.o : wannier_gw.o
@@ -241,8 +245,9 @@ pola_partial.o : ../../Modules/io_files.o
 pola_partial.o : ../../Modules/io_global.o
 pola_partial.o : ../../Modules/kind.o
 pola_partial.o : ../../Modules/mp.o
-pola_partial.o : ../../Modules/mp_global.o
+pola_partial.o : ../../Modules/mp_pools.o
 pola_partial.o : ../../Modules/mp_wave.o
+pola_partial.o : ../../Modules/mp_world.o
 pola_partial.o : ../../Modules/recvec.o
 pola_partial.o : ../../Modules/wavefunctions.o
 pola_partial.o : ../../PW/src/pwcom.o
@@ -318,8 +323,9 @@ semicore.o : ../../Modules/io_files.o
 semicore.o : ../../Modules/io_global.o
 semicore.o : ../../Modules/kind.o
 semicore.o : ../../Modules/mp.o
-semicore.o : ../../Modules/mp_global.o
+semicore.o : ../../Modules/mp_pools.o
 semicore.o : ../../Modules/mp_wave.o
+semicore.o : ../../Modules/mp_world.o
 semicore.o : ../../Modules/recvec.o
 semicore.o : ../../Modules/wavefunctions.o
 semicore.o : ../../PW/src/pwcom.o
@@ -350,6 +356,7 @@ v_basis.o : ../../Modules/constants.o
 v_basis.o : ../../Modules/io_global.o
 v_basis.o : ../../Modules/kind.o
 v_basis.o : ../../Modules/mp.o
+v_basis.o : ../../Modules/mp_world.o
 v_basis.o : ../../Modules/recvec.o
 v_basis.o : ../../PW/src/exx.o
 v_basis.o : ../../PW/src/pwcom.o
@@ -373,8 +380,9 @@ wannier_bse.o : ../../Modules/io_files.o
 wannier_bse.o : ../../Modules/io_global.o
 wannier_bse.o : ../../Modules/kind.o
 wannier_bse.o : ../../Modules/mp.o
-wannier_bse.o : ../../Modules/mp_global.o
+wannier_bse.o : ../../Modules/mp_pools.o
 wannier_bse.o : ../../Modules/mp_wave.o
+wannier_bse.o : ../../Modules/mp_world.o
 wannier_bse.o : ../../Modules/recvec.o
 wannier_bse.o : ../../Modules/wavefunctions.o
 wannier_bse.o : ../../PW/src/pwcom.o
@@ -391,7 +399,8 @@ wannier_uterms.o : ../../Modules/io_files.o
 wannier_uterms.o : ../../Modules/io_global.o
 wannier_uterms.o : ../../Modules/kind.o
 wannier_uterms.o : ../../Modules/mp.o
-wannier_uterms.o : ../../Modules/mp_global.o
+wannier_uterms.o : ../../Modules/mp_pools.o
+wannier_uterms.o : ../../Modules/mp_world.o
 wannier_uterms.o : ../../Modules/recvec.o
 wannier_uterms.o : ../../PW/src/atomic_wfc_mod.o
 wannier_uterms.o : ../../PW/src/pwcom.o

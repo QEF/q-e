@@ -533,7 +533,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
     IF ( ik .GE. iks .AND. ik .LE. ike .AND. is .NE. isk ( ik ) ) &
       ierr = ierr + 1
   ENDDO
-  CALL mp_max ( ierr )
+  CALL mp_max ( ierr, world_comm )
   IF ( ierr .GT. 0 ) &
     CALL errore ( 'write_wfng', 'smap', ierr )
 
@@ -724,7 +724,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   CALL mp_sum ( ngk_g, world_comm )
 
   npw_g = MAXVAL ( igk_l2g ( :, : ) )
-  CALL mp_max ( npw_g )
+  CALL mp_max ( npw_g, world_comm )
 
   npwx_g = MAXVAL ( ngk_g ( : ) )
 
@@ -872,7 +872,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
     ierr = 0
     IF ( ik .GE. iks .AND. ik .LE. ike .AND. igwx .NE. ngk_g ( ik ) ) &
       ierr = 1
-    CALL mp_max ( ierr )
+    CALL mp_max ( ierr, world_comm )
     IF ( ierr .GT. 0 ) &
       CALL errore ( 'write_wfng', 'igwx ngk_g', ierr )
 
@@ -2580,7 +2580,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
     IF ( ik .GE. iks .AND. ik .LE. ike .AND. is .NE. isk ( ik ) ) &
       ierr = ierr + 1
   ENDDO
-  CALL mp_max ( ierr )
+  CALL mp_max ( ierr, world_comm )
   IF ( ierr .GT. 0 ) &
     CALL errore ( 'write_vkbg', 'smap', ierr )
 
@@ -2614,7 +2614,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   ENDDO
   CALL mp_sum ( ngk_g, world_comm )
   npw_g = MAXVAL ( igk_l2g ( :, : ) )
-  CALL mp_max ( npw_g )
+  CALL mp_max ( npw_g, world_comm )
   npwx_g = MAXVAL ( ngk_g ( : ) )
 
   CALL cryst_to_cart (nkstot, xk, at, -1)
@@ -2735,7 +2735,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
     ierr = 0
     IF ( ik .GE. iks .AND. ik .LE. ike .AND. igwx .NE. ngk_g ( ik ) ) &
       ierr = 1
-    CALL mp_max ( ierr )
+    CALL mp_max ( ierr, world_comm )
     IF ( ierr .GT. 0 ) &
       CALL errore ( 'write_vkbg', 'igwx ngk_g', ierr )
 

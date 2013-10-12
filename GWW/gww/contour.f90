@@ -222,7 +222,7 @@ MODULE contour
       USE polarization,      ONLY : polaw, free_memory_polaw, read_polaw, write_polaw,invert_v_pot, initialize_polaw, &
            & read_polaw_global
       USE mp,                ONLY : mp_sum, mp_bcast
-      USE mp_global,         ONLY : nproc,mpime,world_comm
+      USE mp_world,          ONLY : nproc,mpime,world_comm
       USE times_gw,          ONLY : times_freqs
       USE self_energy_storage, ONLY : self_storage,write_self_storage_ondisk,free_memory_self_storage
       USE lanczos
@@ -304,7 +304,7 @@ MODULE contour
          enddo
          if(.not.options%l_big_system) call free_memory(ct)
       enddo
-      call mp_sum(we%diag)
+      call mp_sum(we%diag,world_comm)
 !now set up frequency grid
       we%grid(1:we%n)=dcmplx(0.d0,tf%freqs(0:tf%n))
 
@@ -324,6 +324,7 @@ MODULE contour
       USE input_gw,   ONLY : input_options
       USE para_gww,   ONLY : is_my_state_range
       USE mp,         ONLY : mp_sum
+      USE mp_world,   ONLY : world_comm
  
     implicit none
 
@@ -400,9 +401,9 @@ MODULE contour
                 
              endif
           enddo
-          call mp_sum(wp%a_0(:,ii,is))
-          call mp_sum(wp%a(:,:,ii,is))
-          call mp_sum(wp%b(:,:,ii,is))
+          call mp_sum(wp%a_0(:,ii,is),world_comm)
+          call mp_sum(wp%a(:,:,ii,is),world_comm)
+          call mp_sum(wp%b(:,:,ii,is),world_comm)
 
        enddo
     enddo

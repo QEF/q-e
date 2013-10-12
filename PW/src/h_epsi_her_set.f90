@@ -38,6 +38,7 @@ subroutine h_epsi_her_set(pdir, e_field)
   USE fixed_occ
   USE mp,        ONLY : mp_sum
   USE mp_global, ONLY : intra_bgrp_comm
+  USE mp_world,  ONLY : world_comm
   USE becmod,    ONLY : calbec
   !
   implicit none
@@ -584,8 +585,8 @@ subroutine h_epsi_her_set(pdir, e_field)
                   aux_g(mapgp_global(ig_l2g(igk0(ig)),pdir))=evct(ig,mb)
                   IF (noncolin) aux_g_2(mapgp_global(ig_l2g(igk0(ig)),pdir))=evct(ig+npwx,mb)
                 enddo
-                call mp_sum(aux_g(:))
-                IF (noncolin) call mp_sum(aux_g_2(:))
+                call mp_sum(aux_g(:),world_comm)
+                IF (noncolin) call mp_sum(aux_g_2(:),world_comm)
               END IF
 
          DO nb=1,nbnd
@@ -707,8 +708,8 @@ subroutine h_epsi_her_set(pdir, e_field)
                   IF (noncolin) aux_g_2(mapgp_global(ig_l2g(igk0(ig)),pdir))=evct(ig+npwx,nb)
                enddo
 !put evct on global  array
-               call mp_sum(aux_g(:))
-               IF (noncolin) call mp_sum(aux_g_2(:))
+               call mp_sum(aux_g(:),world_comm)
+               IF (noncolin) call mp_sum(aux_g_2(:),world_comm)
                do m=1,nbnd
                   do ig=1,npw1
                      evcm(ig,m,pdir)=evcm(ig,m,pdir)+mat(nb,m)*aux_g(ig_l2g(igk1(ig)))
@@ -1018,8 +1019,8 @@ subroutine h_epsi_her_set(pdir, e_field)
                      aux_g(mapgm_global(ig_l2g(igk0(ig)),pdir))=evct(ig,mb)
                      IF (noncolin) aux_g_2(mapgm_global(ig_l2g(igk0(ig)),pdir))=evct(ig+npwx,mb)
                   enddo
-                  call mp_sum(aux_g(:))
-                  IF (noncolin) call mp_sum(aux_g_2(:))
+                  call mp_sum(aux_g(:),world_comm)
+                  IF (noncolin) call mp_sum(aux_g_2(:),world_comm)
                end if
 
       DO nb=1,nbnd
@@ -1136,8 +1137,8 @@ subroutine h_epsi_her_set(pdir, e_field)
                IF (noncolin) aux_g_2(mapgm_global(ig_l2g(igk0(ig)),pdir))=evct(ig+npwx,nb)
             enddo
 !put evct on global  array
-            call mp_sum(aux_g(:))
-            IF (noncolin) call mp_sum(aux_g_2(:))
+            call mp_sum(aux_g(:),world_comm)
+            IF (noncolin) call mp_sum(aux_g_2(:),world_comm)
             do m=1,nbnd
                do ig=1,npw1
                   evcp(ig,m,pdir)=evcp(ig,m,pdir)+mat(nb,m)*aux_g(ig_l2g(igk1(ig)))

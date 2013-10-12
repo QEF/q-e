@@ -70,6 +70,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
    USE fixed_occ
    USE gvect,   ONLY : ig_l2g
    USE mp,                   ONLY : mp_sum
+   USE mp_world,             ONLY : world_comm
    USE mp_global,            ONLY : intra_bgrp_comm
    USE becmod,               ONLY : calbec
 !  --- Avoid implicit definitions ---
@@ -399,7 +400,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                           CALL ZGEMM( 'C', 'N', nkb, nbnd, npw0, ( 1.D0, 0.D0 ),   &
                           vkb1, npwx, psi, npwx, ( 0.D0, 0.D0 ),      &
                           dbecp0(1,1,ipol), nkb )
-                          call mp_sum(dbecp0(1:nkb,1:nbnd,ipol))
+                          call mp_sum(dbecp0(1:nkb,1:nbnd,ipol),world_comm)
                   ENDDO
                endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
@@ -420,7 +421,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                              CALL ZGEMM( 'C', 'N', nkb, nbnd, npw1, ( 1.D0, 0.D0 ),   &
                              vkb1, npwx, psi1, npwx, ( 0.D0, 0.D0 ),      &
                              dbecp_bp(1,1,ipol), nkb )
-                             call mp_sum(dbecp_bp(1:nkb,1:nbnd,ipol))
+                             call mp_sum(dbecp_bp(1:nkb,1:nbnd,ipol),world_comm)
                      ENDDO
                   endif
                ELSE
@@ -441,7 +442,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                              CALL ZGEMM( 'C', 'N', nkb, nbnd, npw1, ( 1.D0, 0.D0 ),   &
                              vkb1, npwx, psi1, npwx, ( 0.D0, 0.D0 ),      &
                              dbecp_bp(1,1,ipol), nkb )
-                             call mp_sum(dbecp_bp(1:nkb,1:nbnd,ipol))
+                             call mp_sum(dbecp_bp(1:nkb,1:nbnd,ipol),world_comm)
                      ENDDO
                   endif
                ENDIF
@@ -521,14 +522,14 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                            do ig=1,npw1
                               aux_g(mapgm_global(ig_l2g(igk1(ig)),pdir))=psi1(ig,mb)
                            enddo
-                           call mp_sum(aux_g(:))
+                           call mp_sum(aux_g(:),world_comm)
                            sca=(0.d0,0.d0)
 ! do scalar product
                            do ig=1,ngm
                               sca=sca+conjg(aux0(ig))*aux_g(ig_l2g(ig))
                            enddo
 ! do mp_sum
-                           call mp_sum(sca)
+                           call mp_sum(sca,world_comm)
                            mat(nb,mb)=sca
                            deallocate(aux_g)
                         ENDIF

@@ -332,7 +332,7 @@ SUBROUTINE compute_gw( use_gmaps )
   ENDDO
 
   igwxx = maxval( ig_l2g( 1:ngw ) )
-  CALL mp_max( igwxx )
+  CALL mp_max( igwxx, world_comm )
   IF (ionode) WRITE(*,*) "NDIMCP = ", igwxx
 
   igwx_p = 0
@@ -933,7 +933,7 @@ SUBROUTINE write_gmaps ( kunit)
 
   ! compute the Maximum G vector index among all G+k an processors
   npw_g = maxval( ig_l2g(:) ) ! ( igk_l2g(:,:) )
-  CALL mp_max( npw_g )
+  CALL mp_max( npw_g, world_comm )
 
   ! compute the Maximum number of G vector among all k points
   npwx_g = maxval( ngk_g( 1:nkstot ) )

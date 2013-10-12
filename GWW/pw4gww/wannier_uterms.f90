@@ -15,7 +15,8 @@
 
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : prefix, diropn
-  use mp_global,            ONLY : nproc_pool, me_pool
+  use mp_pools,            ONLY : nproc_pool, me_pool
+  use mp_world,            ONLY : world_comm
   USE kinds,    ONLY : DP
   USE gvect
   USE basis
@@ -159,7 +160,7 @@
             if(gstart==2) tmpspacej(1,jw)=0.5d0*tmpspacej(1,jw)
          enddo
          call zgemm('C','N',n_set,n_set,ngm_max,(1.d0,0.d0),tmpspacei,max_ngm,tmpspacej,max_ngm,(0.d0,0.d0),umat_tmp,n_set)
-         call mp_sum(umat_tmp(:,:))
+         call mp_sum(umat_tmp(:,:),world_comm)
          do iw=iw_min,iw_max
             do jw=jw_min,jw_max
                uterms(iw,jw)=2.d0*dble(umat_tmp(iw-iw_min+1,jw-jw_min+1))

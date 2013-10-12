@@ -515,7 +515,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
     ENDDO
   ENDDO
   DEALLOCATE ( itmp )
-  CALL mp_max ( npw_g )
+  CALL mp_max ( npw_g, world_comm )
 
   CALL create_directory ( output_dir_name )
   DO ik = 1, nk

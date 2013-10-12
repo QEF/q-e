@@ -21,7 +21,7 @@ subroutine do_reducible_pola(tf ,options)
   USE polarization,      ONLY : polaw, free_memory_polaw, read_polaw, write_polaw,invert_v_pot, initialize_polaw, &
                                   & read_polaw_global
   USE mp,                ONLY : mp_sum, mp_bcast
-  USE mp_global,         ONLY : nproc,mpime,world_comm
+  USE mp_world,          ONLY : nproc,mpime,world_comm
   USE times_gw,          ONLY : times_freqs
   USE self_energy_storage, ONLY : self_storage,write_self_storage_ondisk,free_memory_self_storage
   USE lanczos
@@ -107,7 +107,7 @@ subroutine do_self_lanczos_time(ss, tf ,options,l_real_axis,energy)
   USE polarization,      ONLY : polaw, free_memory_polaw, read_polaw, write_polaw,invert_v_pot, initialize_polaw, &
                                   & read_polaw_global
   USE mp,                ONLY : mp_sum, mp_bcast
-  USE mp_global,         ONLY : nproc,mpime,world_comm
+  USE mp_world,          ONLY : nproc,mpime,world_comm
   USE times_gw,          ONLY : times_freqs
   USE self_energy_storage, ONLY : self_storage,write_self_storage_ondisk,free_memory_self_storage
   USE lanczos
@@ -826,10 +826,10 @@ subroutine do_self_lanczos_time(ss, tf ,options,l_real_axis,energy)
 
 !mp_sum for distributing on all processors
            if(ii==jj) then
-              call mp_sum(ss%diag(ii,1:2*ss%n+1,is))
+              call mp_sum(ss%diag(ii,1:2*ss%n+1,is),world_comm)
            endif
            if(ss%whole_s) then
-              call mp_sum(ss%whole(jj,ii,1:2*ss%n+1,is))
+              call mp_sum(ss%whole(jj,ii,1:2*ss%n+1,is),world_comm)
            endif
 
      

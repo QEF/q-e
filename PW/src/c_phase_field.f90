@@ -43,6 +43,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    USE gvect,   ONLY : ig_l2g
    USE mp,                   ONLY : mp_sum
    USE mp_global,            ONLY : intra_bgrp_comm
+   USE mp_world,             ONLY : world_comm
    USE becmod,               ONLY : calbec
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE
@@ -443,8 +444,8 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
                            aux_g(mapgm_global(ig_l2g(igk1(ig)),pdir))=psi1(ig,mb)
                            IF(noncolin) aux_g_2(mapgm_global(ig_l2g(igk1(ig)),pdir))=psi1(ig+npwx,mb)
                         ENDDO
-                        CALL mp_sum(aux_g(:))
-                        IF (noncolin) CALL mp_sum(aux_g_2(:)) !non-collinear
+                        CALL mp_sum(aux_g(:),world_comm)
+                        IF (noncolin) CALL mp_sum(aux_g_2(:),world_comm) !non-collinear
                         DO ig=1,ngm
                            aux(ig) = aux_g(ig_l2g(ig))
                            IF (noncolin) aux_2(ig) = aux_g_2(ig_l2g(ig))

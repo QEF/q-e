@@ -403,9 +403,9 @@
              call flush_unit(stdout)
           endif
        enddo
-       call mp_sum(se%a_0(:,is))
-       call mp_sum(se%a(:,:,is))
-       call mp_sum(se%b(:,:,is))
+       call mp_sum(se%a_0(:,is),world_comm)
+       call mp_sum(se%a(:,:,is),world_comm)
+       call mp_sum(se%b(:,:,is),world_comm)
    
 
 !!!!!!!!!!!now  off diagonal part
@@ -485,9 +485,9 @@
 
 
           enddo
-          call mp_sum(se%a_0_off(:,:,is))
-          call mp_sum(se%a_off(:,:,:,is))
-          call mp_sum(se%b_off(:,:,:,is))
+          call mp_sum(se%a_0_off(:,:,is),world_comm)
+          call mp_sum(se%a_off(:,:,:,is),world_comm)
+          call mp_sum(se%b_off(:,:,:,is),world_comm)
           
 
 

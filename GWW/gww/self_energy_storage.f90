@@ -843,9 +843,9 @@ CONTAINS
     
     
     if(ss%whole_s) then
-       call mp_sum(ss%whole(:,:,:,:))
+       call mp_sum(ss%whole(:,:,:,:),world_comm)
     else
-       call mp_sum(ss%diag(:,:,:))
+       call mp_sum(ss%diag(:,:,:),world_comm)
     end if
     
     call free_memory(uu)
@@ -1276,7 +1276,7 @@ END SUBROUTINE create_self_ontime
          &  distribute_v_pot, collect_v_pot
     USE mp,                ONLY : mp_sum
     USE para_gww,          ONLY : is_my_pola
-    USE mp_global,            ONLY : nproc,mpime
+    USE mp_world,          ONLY : world_comm,nproc,mpime
   
     implicit none
 
@@ -1493,7 +1493,7 @@ END SUBROUTINE create_self_ontime
           endif
        endif
     enddo
-    call mp_sum(sene(-ss%n:0,:))
+    call mp_sum(sene(-ss%n:0,:),world_comm)
     do ii=1,ss%i_max-wup%nums_occ
        do it=-ss%n,0
           ss%diag(ii+wup%nums_occ,it+ss%n+1,1)=ss%diag(ii+wup%nums_occ, it+ss%n+1,1)+sene(it,ii)
@@ -1667,7 +1667,7 @@ END SUBROUTINE create_self_ontime
          &  distribute_v_pot, collect_v_pot
     USE mp,                ONLY : mp_sum
     USE para_gww,          ONLY : is_my_pola
-    USE mp_global,            ONLY : nproc,mpime
+    USE mp_world,            ONLY : world_comm,nproc,mpime
     USE times_gw,  ONLY : times_freqs
 
 
@@ -1849,7 +1849,7 @@ END SUBROUTINE create_self_ontime
          enddo
       endif
    enddo
-   call mp_sum(sene(-ss%n:0,:))
+   call mp_sum(sene(-ss%n:0,:),world_comm)
    do ii=max(options%i_min,wu%nums_occ(1)+1),options%i_max
        do it=-ss%n,0
           ss%diag(ii,it+ss%n+1,1)=ss%diag(ii, it+ss%n+1,1)+sene(it,ii)
@@ -2159,7 +2159,7 @@ END SUBROUTINE create_self_ontime
          enddo
       endif
    enddo
-   call mp_sum(sene(-ss%n:ss%n,:))
+   call mp_sum(sene(-ss%n:ss%n,:),world_comm)
    do ii=options%i_min,options%i_max
        do it=-ss%n,ss%n
           ss%diag(ii,it+ss%n+1,1)=ss%diag(ii, it+ss%n+1,1)+sene(it,ii)
@@ -2203,7 +2203,7 @@ END SUBROUTINE create_self_ontime
          &  distribute_v_pot, collect_v_pot
     USE mp,                ONLY : mp_sum
     USE para_gww,          ONLY : is_my_pola
-    USE mp_global,            ONLY : nproc,mpime
+    USE mp_world,            ONLY : world_comm,nproc,mpime
     USE times_gw,  ONLY : times_freqs
 
 
@@ -2425,7 +2425,7 @@ END SUBROUTINE create_self_ontime
          enddo
       endif
    enddo
-   call mp_sum(sene(-ss%n:ss%n,:))
+   call mp_sum(sene(-ss%n:ss%n,:),world_comm)
    do ii=options%i_min,options%i_max
        do it=-ss%n,ss%n
           ss%diag(ii,it+ss%n+1,1)=ss%diag(ii, it+ss%n+1,1)+sene(it,ii)

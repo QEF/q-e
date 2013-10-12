@@ -95,6 +95,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   USE lsda_mod,             ONLY : nspin
   USE mp_global,            ONLY : intra_image_comm, me_pool
   USE mp,                   ONLY : mp_bcast,mp_barrier,mp_sum
+  USE mp_world,             ONLY : world_comm
   USE fft_base,             ONLY : dffts,dfftp
   USE wvfct,    ONLY : nbnd, ecutwfc
 
@@ -245,7 +246,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
                     sca=sca+tmpreal(ir)*tmpexp2(ir,mdir)
                  enddo
                  sca=sca/dble(dffts%nr1*dffts%nr2*dffts%nr3)
-                 call mp_sum(sca)
+                 call mp_sum(sca,world_comm)
                  !call reduce(2,sca)
 
                  matsincos(iw,jw,mdir)=dble(sca)
@@ -356,7 +357,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
      
 #ifdef __PARA
  !    call reduce (2  *maxval(nh) *maxval(nh)* nat, expgsave(:,:,:,mdir))
-     call mp_sum( expgsave(:,:,:,mdir))
+     call mp_sum( expgsave(:,:,:,mdir),world_comm)
 #endif
 
 
