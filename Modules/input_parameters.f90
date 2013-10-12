@@ -249,6 +249,8 @@ MODULE input_parameters
           ! if true symmetry in scf run is neglected for RPA Ec calculation
           ! 
 
+        LOGICAL :: tqmmm = .FALSE.    ! QM/MM coupling. enabled if .true.
+
         CHARACTER(len=256) :: vdw_table_name = ' '
 
         CHARACTER(len=10) :: point_label_type='SC'
@@ -262,6 +264,7 @@ MODULE input_parameters
           ! if memory = 'large' then QE tries to use (when implemented) algorithms using more memory
           !                     to enhance performance.
 
+! XXX may go away at some point
 #if defined (__MS2)
         LOGICAL :: MS2_enabled = .false.       ! Enable the shared memory exchange in MS2
         CHARACTER(len=256) :: MS2_handler = ' '! Name for the shared memory handler in MS2
@@ -273,8 +276,7 @@ MODULE input_parameters
           forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
           gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
-          vdw_table_name, lorbm, memory, point_label_type
-
+          tqmmm, vdw_table_name, lorbm, memory, point_label_type
 
 #if defined ( __MS2)
         NAMELIST / control / MS2_enabled, MS2_handler

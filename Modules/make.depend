@@ -190,6 +190,15 @@ ptoolkit.o : dspev_drv.o
 ptoolkit.o : kind.o
 ptoolkit.o : parallel_include.o
 ptoolkit.o : zhpev_drv.o
+qmmm.o : cell_base.o
+qmmm.o : constants.o
+qmmm.o : input_parameters.o
+qmmm.o : io_global.o
+qmmm.o : ions_base.o
+qmmm.o : kind.o
+qmmm.o : mp.o
+qmmm.o : mp_world.o
+qmmm.o : parallel_include.o
 radial_grids.o : constants.o
 radial_grids.o : kind.o
 random_numbers.o : kind.o

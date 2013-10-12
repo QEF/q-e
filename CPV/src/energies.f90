@@ -167,7 +167,7 @@
               END IF
           ELSE
              !
- 999         WRITE( stdout,100) etot, ekin, eht, esr, eself, epseu, enl, exc, vave
+             WRITE( stdout,100) etot, ekin, eht, esr, eself, epseu, enl, exc, vave
 
 !====================================================================================
 !Lingzhu Kong

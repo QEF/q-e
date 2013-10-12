@@ -190,7 +190,7 @@ clean :
 	touch make.sys 
 	for dir in \
 		CPV Modules PP PW \
-		ACFDT \
+		ACFDT COUPLE \
 		clib flib pwtools upftools \
 		dev-tools extlibs Environ \
 	; do \

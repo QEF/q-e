@@ -399,7 +399,7 @@ MODULE london_module
       !
       !
 #if defined (__MPI)
-999 CALL mp_sum ( energy_london , intra_image_comm )
+    CALL mp_sum ( energy_london , intra_image_comm )
 #endif
     !
     RETURN
@@ -538,7 +538,7 @@ MODULE london_module
       END DO
       !
 #if defined (__MPI)
-999 CALL mp_sum ( force_london , intra_image_comm )
+    CALL mp_sum ( force_london , intra_image_comm )
 #endif
     !
     RETURN
@@ -694,7 +694,7 @@ MODULE london_module
       stres_london ( : , : ) = - stres_london ( : , : ) / ( 2.d0 * omega )
       !
 #if defined (__MPI)
-999 CALL mp_sum ( stres_london , intra_image_comm )
+    CALL mp_sum ( stres_london , intra_image_comm )
 #endif
     !
     RETURN

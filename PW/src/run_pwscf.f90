@@ -31,14 +31,11 @@ SUBROUTINE run_pwscf ( exit_status )
   USE cell_base,        ONLY : fix_volume, fix_area
   USE control_flags,    ONLY : conv_elec, gamma_only, lscf
   USE control_flags,    ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
-  USE force_mod,        ONLY : lforce, lstres, sigma
+  USE force_mod,        ONLY : lforce, lstres, sigma, force
   USE check_stop,       ONLY : check_stop_init, check_stop_now
   USE mp_images,        ONLY : intra_image_comm
-#if defined(__MS2)
-  USE ms2,              ONLY : MS2_enabled,                 &
-                               ms2_initialization,    &
-                               set_positions, return_forces
-#endif
+  USE qmmm,             ONLY : qmmm_initialization, qmmm_shutdown, &
+                               qmmm_update_positions, qmmm_update_forces
   !
   IMPLICIT NONE
   INTEGER, INTENT(OUT) :: exit_status
@@ -49,6 +46,11 @@ SUBROUTINE run_pwscf ( exit_status )
   !
   IF (ionode) CALL plugin_arguments()
   CALL plugin_arguments_bcast( ionode_id, intra_image_comm )
+  !
+  ! ... needs to come before iosys() so some input flags can be
+  !     overridden without needing to write PWscf specific code.
+  ! 
+  CALL qmmm_initialization()
   !
   ! ... convert to internal variables
   !
@@ -63,15 +65,9 @@ SUBROUTINE run_pwscf ( exit_status )
   !
   CALL check_stop_init()
   !
-#if defined(__MS2)
-  CALL ms2_initialization()
-#endif
-  !
   CALL setup ()
   !
-#if defined(__MS2)
-  CALL set_positions()
-#endif
+  CALL qmmm_update_positions()
   !
   CALL init_run()
   !
@@ -124,6 +120,10 @@ SUBROUTINE run_pwscf ( exit_status )
      !
      IF ( lstres ) CALL stress ( sigma )
      !
+     ! ... send out forces to MM code in QM/MM run
+     !
+     CALL qmmm_update_forces(force)
+     !
      IF ( lmd .OR. lbfgs ) THEN
         !
         if (fix_volume) CALL impose_deviatoric_stress(sigma)
@@ -143,19 +143,17 @@ SUBROUTINE run_pwscf ( exit_status )
      !
      CALL stop_clock( 'ions' )
      !
-#if defined(__MS2)
-     CALL return_forces()
-#endif
      ! ... exit condition (ionic convergence) is checked here
      !
      IF ( conv_ions ) EXIT main_loop
      !
+     ! ... receive new positions from MM code in QM/MM run
+     !
+     CALL qmmm_update_positions()
+     !
      ! ... terms of the hamiltonian depending upon nuclear positions
      ! ... are reinitialized here
      !
-#if defined(__MS2)
-     CALL set_positions()
-#endif
      IF ( lmd .OR. lbfgs ) CALL hinit1()
      !
   END DO main_loop
@@ -164,6 +162,8 @@ SUBROUTINE run_pwscf ( exit_status )
   !
   IF ( .not. lmd) CALL pw2casino()
   CALL punch('all')
+  !
+  CALL qmmm_shutdown()
   !
   IF ( .NOT. conv_ions )  exit_status =  3
   RETURN

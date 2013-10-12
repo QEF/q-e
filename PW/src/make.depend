@@ -820,6 +820,7 @@ input.o : ../../Modules/mp.o
 input.o : ../../Modules/mp_global.o
 input.o : ../../Modules/mp_images.o
 input.o : ../../Modules/noncol.o
+input.o : ../../Modules/qmmm.o
 input.o : ../../Modules/read_namelists.o
 input.o : ../../Modules/read_pseudo.o
 input.o : ../../Modules/recvec.o
@@ -835,7 +836,6 @@ input.o : esm.o
 input.o : exx.o
 input.o : ldaU.o
 input.o : martyna_tuckerman.o
-input.o : ms2.o
 input.o : pwcom.o
 input.o : realus.o
 input.o : start_k.o
@@ -956,7 +956,6 @@ move_ions.o : dynamics_module.o
 move_ions.o : newd.o
 move_ions.o : pwcom.o
 move_ions.o : symm_base.o
-ms2.o : ../../Modules/mp.o
 n_plane_waves.o : ../../Modules/kind.o
 n_plane_waves.o : ../../Modules/mp.o
 n_plane_waves.o : ../../Modules/mp_global.o
@@ -1416,7 +1415,7 @@ run_pwscf.o : ../../Modules/control_flags.o
 run_pwscf.o : ../../Modules/io_global.o
 run_pwscf.o : ../../Modules/mp_images.o
 run_pwscf.o : ../../Modules/parameters.o
-run_pwscf.o : ms2.o
+run_pwscf.o : ../../Modules/qmmm.o
 run_pwscf.o : pwcom.o
 ruotaijk.o : ../../Modules/kind.o
 s_1psi.o : ../../Modules/becmod.o
@@ -1500,10 +1499,10 @@ setlocal.o : ../../Modules/ions_base.o
 setlocal.o : ../../Modules/kind.o
 setlocal.o : ../../Modules/mp.o
 setlocal.o : ../../Modules/mp_global.o
+setlocal.o : ../../Modules/qmmm.o
 setlocal.o : ../../Modules/recvec.o
 setlocal.o : esm.o
 setlocal.o : martyna_tuckerman.o
-setlocal.o : ms2.o
 setlocal.o : pwcom.o
 setlocal.o : scf_mod.o
 setqf.o : ../../Modules/kind.o

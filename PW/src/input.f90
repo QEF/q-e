@@ -190,10 +190,8 @@ SUBROUTINE iosys()
 
   USE read_pseudo_mod,       ONLY : readpp
 
-#if defined __MS2
-  USE MS2,                   ONLY : MS2_enabled_ => MS2_enabled, &
-                                    MS2_handler_ => MS2_handler
-#endif
+  USE qmmm, ONLY : qmmm_config
+
   !
   ! ... CONTROL namelist
   !
@@ -203,11 +201,8 @@ SUBROUTINE iosys()
                                pseudo_dir, disk_io, tefield, dipfield, lberry, &
                                gdir, nppstr, wf_collect,lelfield,lorbm,efield, &
                                nberrycyc, lkpoint_dir, efield_cart, lecrpa,    &
-                               vdw_table_name, memory
+                               vdw_table_name, memory, tqmmm
 
-#if defined __MS2
-  USE input_parameters, ONLY : MS2_enabled, MS2_handler
-#endif
   !
   ! ... SYSTEM namelist
   !
@@ -1227,13 +1222,9 @@ SUBROUTINE iosys()
      a2i = xdm_a2
   END IF
   !
-#if defined __MS2
+  ! QM/MM specific parameters
   !
-  ! MS2 specific parameters
-  !
-  MS2_enabled_ = MS2_enabled
-  MS2_handler_ = MS2_handler
-#endif
+  IF (.NOT. tqmmm) CALL qmmm_config( mode=-1 )
   !
   do_makov_payne  = .false.
   do_comp_mt      = .false.

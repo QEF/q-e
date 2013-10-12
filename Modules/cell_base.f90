@@ -761,7 +761,6 @@
       WRITE( stdout, 340 ) omega
     END IF
 
-300 FORMAT( 3X, 'ibrav = ',I4)
 305 FORMAT( 3X, 'alat  = ',F14.8)
 310 FORMAT( 3X, 'a1    = ',3F14.8)
 320 FORMAT( 3X, 'a2    = ',3F14.8)

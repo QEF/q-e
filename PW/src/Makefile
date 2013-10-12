@@ -126,7 +126,6 @@ martyna_tuckerman.o \
 memory_report.o \
 mix_rho.o \
 move_ions.o \
-ms2.o \
 multable.o \
 n_plane_waves.o \
 new_ns.o \

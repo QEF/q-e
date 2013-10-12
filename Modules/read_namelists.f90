@@ -118,6 +118,7 @@ MODULE read_namelists_module
        nberrycyc  = 1
        lkpoint_dir = .TRUE.
        lecrpa   = .FALSE.   
+       tqmmm = .FALSE.
        !
        saverho = .TRUE.
        memory = 'default'
@@ -684,6 +685,7 @@ MODULE read_namelists_module
        CALL mp_bcast( nberrycyc,     ionode_id, intra_image_comm )
        CALL mp_bcast( saverho,       ionode_id, intra_image_comm )
        CALL mp_bcast( lecrpa,        ionode_id, intra_image_comm )
+       CALL mp_bcast( tqmmm,         ionode_id, intra_image_comm )
        CALL mp_bcast( vdw_table_name,ionode_id, intra_image_comm )
        CALL mp_bcast( memory,        ionode_id, intra_image_comm )
        !

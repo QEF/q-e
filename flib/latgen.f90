@@ -330,7 +330,7 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
   !
   !  calculate unit-cell volume omega
   !
-100 omega=0.d0
+  omega=0.d0
   s=1.d0
   i=1
   j=2
