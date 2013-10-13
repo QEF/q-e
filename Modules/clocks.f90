@@ -93,7 +93,7 @@ SUBROUTINE start_clock( label )
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
 #if defined (__TRACE)
-  USE mp_global, ONLY : mpime
+  USE mp_world,  ONLY : mpime
 #endif
   USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
                         t0cpu, t0wall, trace_depth
@@ -164,7 +164,7 @@ SUBROUTINE stop_clock( label )
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
 #if defined (__TRACE)
-  USE mp_global, ONLY : mpime
+  USE mp_world,  ONLY : mpime
 #endif
   USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
                         notrunning, called, t0cpu, t0wall, trace_depth
@@ -285,7 +285,7 @@ SUBROUTINE print_this_clock( n )
 ! ... See comments below about parallel case
 !
 !  USE mp,        ONLY : mp_max
-!  USE mp_global, ONLY : intra_image_comm, my_image_id
+!  USE mp_images, ONLY : intra_image_comm, my_image_id
   !
   IMPLICIT NONE
   !
@@ -429,7 +429,7 @@ FUNCTION get_clock( label )
 ! ... See comments in subroutine print_this_clock about parallel case
 !
 !  USE mp,        ONLY : mp_max
-!  USE mp_global, ONLY : intra_image_comm
+!  USE mp_images, ONLY : intra_image_comm
   !
   IMPLICIT NONE
   !

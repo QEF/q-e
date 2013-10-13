@@ -1462,7 +1462,7 @@ CONTAINS
   SUBROUTINE pzheevd_drv( tv, n, nb, h, w, ortho_cntx )
 
      USE kinds,     ONLY : DP
-     USE mp_global, ONLY : ortho_comm
+     USE mp_diag,   ONLY : ortho_comm
      USE mp,        ONLY : mp_barrier
 #ifdef __ELPA
      USE elpa1

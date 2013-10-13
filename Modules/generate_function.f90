@@ -27,7 +27,7 @@ CONTAINS
       USE constants,        ONLY : sqrtpi
       USE cell_base,        ONLY : at, bg, alat
       USE fft_base,         ONLY : dfftp
-      USE mp_global,        ONLY : me_bgrp, intra_bgrp_comm
+      USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
       !
       IMPLICIT NONE
       !
@@ -117,7 +117,7 @@ CONTAINS
       USE constants,        ONLY: sqrtpi
       USE cell_base,        ONLY : at, bg, alat
       USE fft_base,         ONLY : dfftp
-      USE mp_global,        ONLY : me_bgrp, intra_bgrp_comm
+      USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
       !
       IMPLICIT NONE
       !
@@ -206,7 +206,7 @@ CONTAINS
       USE kinds,            ONLY : DP
       USE cell_base,        ONLY : at, bg, alat
       USE fft_base,         ONLY : dfftp
-      USE mp_global,        ONLY : me_bgrp, intra_bgrp_comm
+      USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
       !
       IMPLICIT NONE
       !
@@ -300,7 +300,7 @@ CONTAINS
       USE kinds,            ONLY : DP
       USE cell_base,        ONLY : at, bg, alat
       USE fft_base,         ONLY : dfftp
-      USE mp_global,        ONLY : me_bgrp, intra_bgrp_comm
+      USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
       !
       IMPLICIT NONE
       !
@@ -391,7 +391,7 @@ CONTAINS
    USE kinds,            ONLY : DP
    USE cell_base,        ONLY : at, bg, alat
    USE fft_base,         ONLY : dfftp
-   USE mp_global,        ONLY : me_bgrp, intra_bgrp_comm
+   USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
   !
   INTEGER, INTENT(IN) :: nnr
   INTEGER, INTENT(IN) :: icor
@@ -463,7 +463,7 @@ CONTAINS
    USE kinds,            ONLY : DP
    USE cell_base,        ONLY : at, bg, alat
    USE fft_base,         ONLY : dfftp
-   USE mp_global,        ONLY : me_bgrp, intra_bgrp_comm
+   USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
   !
   INTEGER, INTENT(IN) :: nnr
   REAL(DP), INTENT(IN) :: pos(3)

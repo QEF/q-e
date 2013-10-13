@@ -211,7 +211,7 @@
 ! ... declare modules
       USE kinds, ONLY: DP
       USE mp, ONLY: mp_max, mp_min, mp_sum
-      USE mp_global, ONLY: me_image, nproc_image,  intra_image_comm
+      USE mp_images, ONLY: me_image, nproc_image,  intra_image_comm
 
       IMPLICIT NONE
 

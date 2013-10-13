@@ -75,7 +75,7 @@ MODULE check_stop
        !-----------------------------------------------------------------------
        !
        USE mp,         ONLY : mp_bcast
-       USE mp_global,  ONLY : intra_image_comm
+       USE mp_images,  ONLY : intra_image_comm
        USE io_global,  ONLY : ionode, ionode_id, meta_ionode, stdout
        USE io_files,   ONLY : tmp_dir, exit_file, iunexit
 #if defined __TRAP_SIGUSR1

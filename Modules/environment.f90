@@ -13,8 +13,12 @@ MODULE environment
   USE kinds, ONLY: DP
   USE io_files, ONLY: crash_file, nd_nmbr
   USE io_global, ONLY: stdout, meta_ionode
-  USE mp_global, ONLY: me_image, my_image_id, root_image, nimage, &
-      nproc_image, nproc, npool, nproc_bgrp, nbgrp, get_ntask_groups
+  USE mp_global, ONLY: get_ntask_groups
+  USE mp_world,  ONLY: nproc
+  USE mp_images, ONLY: me_image, my_image_id, root_image, nimage, &
+      nproc_image
+  USE mp_pools,  ONLY: npool
+  USE mp_bands,  ONLY: nproc_bgrp, nbgrp
   USE global_version, ONLY: version_number, svn_revision
 
   IMPLICIT NONE

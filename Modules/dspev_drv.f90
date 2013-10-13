@@ -650,7 +650,8 @@ CONTAINS
 
   SUBROUTINE pdsyevd_drv( tv, n, nb, s, lds, w, ortho_cntx )
      USE kinds,     ONLY : DP
-     USE mp_global,   ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm,root_bgrp,ortho_comm
+     USE mp_bands,  ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
+     USE mp_diag,   ONLY: ortho_comm
 #ifdef __ELPA
      USE elpa1
 #endif

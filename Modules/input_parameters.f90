@@ -264,12 +264,6 @@ MODULE input_parameters
           ! if memory = 'large' then QE tries to use (when implemented) algorithms using more memory
           !                     to enhance performance.
 
-! XXX may go away at some point
-#if defined (__MS2)
-        LOGICAL :: MS2_enabled = .false.       ! Enable the shared memory exchange in MS2
-        CHARACTER(len=256) :: MS2_handler = ' '! Name for the shared memory handler in MS2
-#endif
-
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir,   &
           prefix, wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr,      &
@@ -277,10 +271,6 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
           tqmmm, vdw_table_name, lorbm, memory, point_label_type
-
-#if defined ( __MS2)
-        NAMELIST / control / MS2_enabled, MS2_handler
-#endif
 
 !
 !=----------------------------------------------------------------------------=!

@@ -300,7 +300,7 @@ MODULE london_module
     ! and scal6 is a global scaling factor
     !
 #if defined __MPI
-    USE mp_global,    ONLY : me_image , nproc_image, intra_image_comm
+    USE mp_images,    ONLY : me_image , nproc_image, intra_image_comm
     USE mp,           ONLY : mp_sum
 #endif
     !
@@ -414,7 +414,7 @@ MODULE london_module
     !
     !
 #if defined __MPI
-    USE mp_global,    ONLY : me_image , nproc_image , intra_image_comm
+    USE mp_images,    ONLY : me_image , nproc_image , intra_image_comm
     USE mp,           ONLY : mp_sum
 #endif
     !
@@ -554,7 +554,7 @@ MODULE london_module
     !
     !
 #if defined __MPI
-    USE mp_global,    ONLY : me_image , nproc_image , intra_image_comm
+    USE mp_images,    ONLY : me_image , nproc_image , intra_image_comm
     USE mp,           ONLY : mp_sum
 #endif
     !

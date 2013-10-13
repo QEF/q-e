@@ -77,8 +77,8 @@ CONTAINS
   SUBROUTINE calbec_bec_type ( npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
     !_
-    USE mp_global, ONLY: intra_bgrp_comm
-    USE mp, ONLY: mp_size, mp_rank, mp_get_comm_null
+    USE mp_bands, ONLY: intra_bgrp_comm
+    USE mp,       ONLY: mp_size, mp_rank, mp_get_comm_null
     !
     IMPLICIT NONE
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
@@ -141,7 +141,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE calbec_gamma_nocomm ( npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
-    USE mp_global, ONLY: intra_bgrp_comm
+    USE mp_bands, ONLY: intra_bgrp_comm
     IMPLICIT NONE
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
     REAL (DP), INTENT (out) :: betapsi(:,:)
@@ -223,8 +223,8 @@ CONTAINS
     ! ... matrix times matrix with summation index (k=1,npw) running on
     ! ... G-vectors or PWs : betapsi(i,j) = \sum_k beta^*(i,k) psi(k,j)
     !
-    USE mp_global, ONLY : intra_bgrp_comm
-    USE mp,        ONLY : mp_sum
+    USE mp_bands, ONLY : intra_bgrp_comm
+    USE mp,       ONLY : mp_sum
 
     IMPLICIT NONE
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)
@@ -283,8 +283,8 @@ CONTAINS
     ! ... betapsi(i,1,j) = \sum_k=1,npw beta^*(i,k) psi(k,j)
     ! ... betapsi(i,2,j) = \sum_k=1,npw beta^*(i,k) psi(k+npwx,j)
     !
-    USE mp_global, ONLY : intra_bgrp_comm
-    USE mp,        ONLY : mp_sum
+    USE mp_bands, ONLY : intra_bgrp_comm
+    USE mp,       ONLY : mp_sum
 
     IMPLICIT NONE
     COMPLEX (DP), INTENT (in) :: beta(:,:), psi(:,:)

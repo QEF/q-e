@@ -24,8 +24,8 @@ SUBROUTINE errore( calling_routine, message, ierr )
   ! ... error, unit 0 (the message will appear in the error files 
   ! ... produced by loadleveler).
   !
-  USE mp, ONLY : mp_abort
-  USE mp_global, ONLY : mpime, world_comm
+  USE mp,        ONLY : mp_abort
+  USE mp_world,  ONLY : mpime, world_comm
   USE io_global, ONLY : stdout
   USE io_files,  ONLY : crash_file
 #if defined(__PTRACE) && defined(__INTEL)
