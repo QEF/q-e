@@ -41,8 +41,9 @@ PROGRAM lr_dav_main
   USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,check_vector_gamma
   !
   IMPLICIT NONE
-  INTEGER            :: ibnd_occ,ibnd_virt,ibnd
+  INTEGER            :: ibnd_occ,ibnd_virt,ibnd,ip
   LOGICAL            :: rflag, nomsg
+  complex(dp)            :: temp
 
 #ifdef __MPI
   CALL mp_startup ( )

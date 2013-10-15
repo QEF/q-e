@@ -57,7 +57,7 @@ PROGRAM lr_main
   INTEGER            :: ip,pol_index,ibnd_occ,ibnd_virt,ibnd
   INTEGER            :: iter_restart,iteration
   LOGICAL            :: rflag, nomsg, tg_tmp
-  COMPLEX(kind=dp)   :: sum_F,sum_c
+  COMPLEX(kind=dp)   :: sum_F,sum_c,temp
   !
   !
   pol_index=1
@@ -101,6 +101,12 @@ PROGRAM lr_main
   ELSE
      CALL lr_solve_e()
   ENDIF
+
+  !do ip = 1, n_ipol
+  !  temp=wfc_dot(ibnd)
+  !enddo
+
+  
   dffts%have_task_groups = tg_tmp
   !
   DEALLOCATE( psic )

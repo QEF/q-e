@@ -28,7 +28,7 @@ SUBROUTINE lr_solve_e
   USE io_files,             ONLY : diropn, tmp_dir, wfc_dir
   USE klist,                ONLY : nks, xk, degauss
   USE lr_variables,         ONLY : nwordd0psi, iund0psi,LR_polarization, test_case_no
-  USE lr_variables,         ONLY : n_ipol, evc0, d0psi, evc1, lr_verbosity
+  USE lr_variables,         ONLY : n_ipol, evc0, d0psi, evc1,lr_verbosity,d0psi_rs
   USE realus,               ONLY : igk_k,npw_k
   USE lsda_mod,             ONLY : lsda, isk, current_spin
   USE uspp,                 ONLY : vkb
@@ -36,7 +36,7 @@ SUBROUTINE lr_solve_e
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : evc
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
-  USE mp,                   ONLY : mp_max,mp_min
+  USE mp,                   ONLY : mp_max,mp_min,mp_barrier
   USE realus,               ONLY : real_space, real_space_debug!, dvpsir_e
   USE control_ph,           ONLY : alpha_pv
 
@@ -119,9 +119,115 @@ ENDIF
   ENDDO
   ! End of file i/o
   tmp_dir = tmp_dir_saved
+  
+  if(d0psi_rs == .true.) call compute_d0psi_rs(n_ipol)
 
   CALL stop_clock ('lr_solve_e')
   WRITE(stdout,'(5X,"lr_wfcinit_spectrum: finished lr_solve_e")')
   RETURN
+
+contains
+!--------------------------------------------------------------------
+SUBROUTINE compute_d0psi_rs(  n_ipol )
+!--------------------------------------------------------------------
+!
+! ... original code from routine compute_dipole
+! ... modified to calculate the d0psi in the real space
+! ... by Xiaochuan Ge, Oct, 2013
+!
+  USE kinds,            ONLY : DP
+  USE cell_base,        ONLY : at, bg, alat, omega
+  USE fft_base,         ONLY : dfftp,dffts
+  USE mp_global,        ONLY : me_bgrp, intra_bgrp_comm
+  use mp,               only : mp_barrier
+  use io_global,    only : stdout
+  USE wvfct,            ONLY : nbnd,npwx
+  use klist,            only : nks
+  use lr_variables,     only : evc0,sevc0,d0psi
+  use wavefunctions_module, only : psic
+  use uspp,           only : okvan
+  use realus,          only :  bfft_orbital_gamma,fft_orbital_gamma
+  !
+  IMPLICIT NONE
+  !
+  ! ... Define variables
+  complex(dp) :: wfck(npwx,1)
+
+  ! ... Local variables
+  REAL(DP),allocatable :: r(:,:)
+  complex(dp),allocatable :: psic_temp(:)
+  INTEGER  :: i, j, k, ip, ir, ir_end, index0,ib,n_ipol
+  REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
+
+  if(.not. allocated(psic)) allocate(psic(dfftp%nnr))
+  allocate(psic_temp(dfftp%nnr))
+  allocate(r(dfftp%nnr,n_ipol))
+
+  ! ... Initialization
+  write(stdout,'(5x,"Calculating d0psi in the real space."//)')
+  if(okvan) then
+      write(stdout,'(10x,"At this moment d0psi_rs is not available for USPP !!!",//)')
+#ifdef __MPI
+      call mp_barrier(intra_bgrp_comm)
+ !     call mp_stop(100)
+#endif
+      stop
+  endif
+
+
+  ! Calculat r
+  inv_nr1 = 1.D0 / DBLE( dfftp%nr1 )
+  inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
+  inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
+
+#if defined (__MPI)
+  index0 = dfftp%nr1x*dfftp%nr2x*SUM(dfftp%npp(1:me_bgrp))
+  ir_end = MIN(dfftp%nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
+#else
+  index0 = 0
+  ir_end = dfftp%nnr
+#endif
+  !
+  DO ir = 1, ir_end 
+     !
+     ! ... three dimensional indexes
+     i = index0 + ir - 1
+     k = i / (dfftp%nr1x*dfftp%nr2x)
+     i = i - (dfftp%nr1x*dfftp%nr2x)*k
+     j = i / dfftp%nr1x
+     i = i - dfftp%nr1x*j
+
+     DO ip = 1, n_ipol
+        r(ir,ip) = DBLE( i )*inv_nr1*at(ip,1) + &
+                DBLE( j )*inv_nr2*at(ip,2) + &
+                DBLE( k )*inv_nr3*at(ip,3)
+     END DO
+  enddo
+
+   do ib = 1, nbnd 
+     wfck(:,1)=evc0(:,ib,1)
+     call fft_orbital_gamma(wfck(:,:),1,1)
+     psic_temp(:)=psic(:)
+     DO ip = 1, n_ipol
+       ! Apply dipole operator
+       do ir = 1, dfftp%nnr
+         psic(ir)=r(ir,ip)*alat*psic_temp(ir)
+       enddo
+       ! Convert to g space
+       call bfft_orbital_gamma(wfck(:,:),1,1) 
+       d0psi(:,ib,1,ip)=wfck(:,1)
+     enddo
+   enddo
+  
+   ! orthogonalized batch orbitals to occupied minifold
+   do ip = 1, n_ipol
+     CALL lr_ortho(d0psi(:,:,:,ip), evc0(:,:,1), 1, 1, sevc0(:,:,1),.true.)
+   enddo
+
+  deallocate(r)
+  deallocate(psic_temp)
+  RETURN
+
+  END SUBROUTINE compute_d0psi_rs
+!----------------------------------------------------------------------------
 END SUBROUTINE lr_solve_e
-!-------------------------------------------------------------------------

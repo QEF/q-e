@@ -61,6 +61,7 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (bgz_suffix, ionode_id, world_comm )
   call mp_bcast (scissor, ionode_id, world_comm)
   CALL mp_bcast (ecutfock, ionode_id, world_comm )
+  CALL mp_bcast (d0psi_rs, ionode_id,world_comm )
   !print *, "bcast lr input finished"
   !print *, "variables"
   !print *, "prefix=", prefix
