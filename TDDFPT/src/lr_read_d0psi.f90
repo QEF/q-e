@@ -23,9 +23,8 @@ SUBROUTINE lr_read_d0psi()
   LOGICAL :: exst
   CHARACTER(len=256) :: tmp_dir_saved
   !
-  IF (lr_verbosity > 5) THEN
-    WRITE(stdout,'("<lr_read_d0psi>")')
-  ENDIF
+  WRITE( stdout, '(/5x,"Reading d0psi")' )
+
   nwordd0psi = 2 * nbnd * npwx * nks
   !
   ! This is a parallel read, done in wfc_dir
