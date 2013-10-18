@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2005-2012 Quantum ESPRESSO group
+! Copyright (C) 2005-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,8 +16,6 @@ MODULE exx
   USE io_global,            ONLY : ionode
   USE fft_custom,           ONLY : fft_cus
   !
-  ! FIXME: move down when ready
-  USE mp_global,  ONLY : npool
   ! FIXME: put in subroutines
   USE us_exx,  ONLY : dovanxx, eps_occ_usxx => eps_occ
   USE control_flags, ONLY : tqr
@@ -126,7 +124,6 @@ MODULE exx
   REAL(DP)  :: ecutfock         ! energy cutoff for custom grid
   REAL(DP)  :: exx_dual = 4.0_DP! dual for the custom grid
  CONTAINS
-!#define _CX(A)  CMPLX(##A,0._dp,kind=DP)
 #define _CX(A)  CMPLX(A,0._dp,kind=DP)
   !------------------------------------------------------------------------
   SUBROUTINE exx_grid_convert( psi, npw, fft, psi_t, sign, igkt )
@@ -140,7 +137,7 @@ MODULE exx
     ! sign < 0 goes from the grid defined in fft to the smooth grid 
     !
 
-    USE mp_global,  ONLY : me_bgrp, nproc_bgrp, intra_bgrp_comm
+    USE mp_bands,   ONLY : me_bgrp, nproc_bgrp, intra_bgrp_comm
     USE fft_custom, ONLY : reorderwfp_col
     USE gvect,      ONLY : ig_l2g
 
@@ -285,6 +282,7 @@ MODULE exx
     USE wvfct,      ONLY : nbnd
     USE io_global,  ONLY : stdout
     USE start_k,    ONLY : nk1,nk2,nk3
+    USE mp_pools,   ONLY : npool
     !
     IMPLICIT NONE
     !
@@ -620,9 +618,7 @@ MODULE exx
         atws(:,2) = atws(:,2) * nq2
         atws(:,3) = atws(:,3) * nq3
         !
-        !CALL start_clock ('exx_vcut_init')
         CALL vcut_init( vcut, atws, ecutvcut )
-        !CALL stop_clock ('exx_vcut_init')
         !
         IF ( ionode ) CALL vcut_info( stdout, vcut )
         !          
@@ -636,9 +632,10 @@ MODULE exx
   !------------------------------------------------------------------------
   SUBROUTINE exx_grid_check ( )
     !------------------------------------------------------------------------
-    USE symm_base, ONLY : s
-    USE cell_base, ONLY : at
-    USE klist,     ONLY : nkstot, xk
+    USE symm_base,  ONLY : s
+    USE cell_base,  ONLY : at
+    USE klist,      ONLY : nkstot, xk
+    USE mp_pools,   ONLY : npool
     IMPLICIT NONE
     REAL(DP) :: sxk(3), dxk(3), xk_cryst(3), xkk_cryst(3)
     INTEGER :: iq1, iq2, iq3, isym, ik, ikk, ikq, iq
@@ -708,10 +705,8 @@ MODULE exx
      LOGICAL, INTENT(IN) :: l_exx_was_active
 
      IF (.not. l_exx_was_active ) return ! nothing had happpened yet
-     !!
+     !
      exx_nwordwfc=2*dffts%nnr
-     !iunexx = find_free_unit()
-     !CALL diropn(iunexx,'exx', exx_nwordwfc, exst) 
      erfc_scrlen = get_screening_parameter()
      exxdiv = exx_divergence() 
      exxalfa = get_exx_fraction()
@@ -740,9 +735,9 @@ MODULE exx
     USE control_flags,        ONLY : gamma_only
     USE klist,                ONLY : ngk, nks, nkstot
     USE symm_base,            ONLY : nsym, s, sr, ftau
-    USE mp_global,            ONLY : nproc_pool, me_pool, nproc_bgrp, me_bgrp, &
-                                     init_index_over_band, inter_bgrp_comm, &
-                                     inter_pool_comm, ibnd_start, ibnd_end
+    USE mp_pools,             ONLY : npool, nproc_pool, me_pool, inter_pool_comm
+    USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, init_index_over_band,&
+                                     inter_bgrp_comm, ibnd_start, ibnd_end
     USE mp,                   ONLY : mp_sum
     USE funct,                ONLY : get_exx_fraction, start_exx, exx_is_active, &
                                      !gau-pbe in
@@ -850,8 +845,6 @@ MODULE exx
     rir = 0
     exx_nwordwfc=2*nrxxs
     IF (.not.exx_is_active()) THEN 
-       !iunexx = find_free_unit()
-       !CALL diropn(iunexx,'exx', exx_nwordwfc, exst) 
        erfc_scrlen = get_screening_parameter()
        !gau-pbe in
        gau_scrlen = get_gau_parameter()
@@ -909,15 +902,6 @@ MODULE exx
           x_occupation(1:nbnd,ik) = 0._dp
        ENDIF
     ENDDO
-!     DO ik=1,nkstot
-!        WRITE(*,'("=====",i3,"=====")')  ik
-!        DO iq=1,nqs
-!           ikq  = index_xkq(ik,iq)
-!           WRITE(*,'("a",3i3,)')  iq, ikq, index_xk(ikq)
-!           WRITE(*,'("b",5x,3f8.3)') xkq_collect( :, index_xk(ikq))
-!           WRITE(*,'("c",5f15.6)') (x_occupation(ibnd,index_xk(ikq)), ibnd=1,nbnd)
-!        ENDDO
-!     ENDDO
     !
     !   This is parallelized over pool. Each pool computes only its k-points
     !
@@ -937,7 +921,6 @@ MODULE exx
        IF_GAMMA_ONLY : & 
        IF (gamma_only) THEN
           !
-          !half_nbnd = ( nbnd + 1 ) / 2
           h_ibnd = ibnd_start/2
           !
           IF(MOD(ibnd_start,2)==0) THEN
@@ -979,7 +962,6 @@ MODULE exx
                    CALL errore('exxinit','index_sym < 0 with gamma_only (!?)',1)
 
                 exxbuff(1:nrxxs,h_ibnd,ikq)=psic(1:nrxxs)
-                !CALL davcio(psic,exx_nwordwfc,iunexx,(ikq-1)*half_nbnd+h_ibnd,1)
              ENDDO
           END DO
           !
@@ -1047,7 +1029,6 @@ MODULE exx
                   IF (index_sym(ikq) < 0 ) psic(1:nrxxs) = CONJG(psic(1:nrxxs))
                   exxbuff(1:nrxxs,ibnd,ikq)=psic(1:nrxxs)
                   !
-                  !CALL davcio(psic,exx_nwordwfc,iunexx,(ikq-1)*nbnd+ibnd,1)
                 ENDIF ! noncolinear
              ENDDO
              !
@@ -1137,10 +1118,7 @@ MODULE exx
     !
     DO ikq = 1,nkqs
       ! each pool only does its own k-points, then it calls mp_sum (to be tested)
-      ! IF ( index_xk(ikq) /= current_ik) CYCLE
-      !
       ! bands count is reset at each k-point
-      h_ibnd=0
       !
       ! prepare the g-vectors mapping
       CALL gk_sort(xkq_collect(:, ikq), ngm, g, gcutwfc, npwq, igkq, g2kin )
@@ -1149,6 +1127,7 @@ MODULE exx
       !
       ! take rotated phi to G space
       IF (gamma_only) THEN
+         h_ibnd=0
          DO ibnd = 1,nbnd,2
             h_ibnd = h_ibnd + 1
             phi(:) = exxbuff(:,h_ibnd,ikq)
@@ -1217,12 +1196,13 @@ MODULE exx
     USE fft_base,       ONLY : dffts
     USE fft_interfaces, ONLY : fwfft, invfft
     USE becmod,         ONLY : bec_type
-    USE mp_global,      ONLY : ibnd_start, ibnd_end, &
-                               inter_bgrp_comm, intra_bgrp_comm, my_bgrp_id, nbgrp
+    USE mp_bands,       ONLY : ibnd_start, ibnd_end, inter_bgrp_comm, &
+                               intra_bgrp_comm, my_bgrp_id, nbgrp
     USE mp,             ONLY : mp_sum, mp_barrier
     USE uspp,           ONLY : nkb, okvan
     USE paw_variables,  ONLY : okpaw
-    USE us_exx,         ONLY : bexg_merge, becxx, addusxx_g, addusxx_r, newdxx_g, newdxx_r, add_nlxx_pot
+    USE us_exx,         ONLY : bexg_merge, becxx, addusxx_g, addusxx_r, &
+                               newdxx_g, newdxx_r, add_nlxx_pot
     USE paw_exx,        ONLY : dopawxx, PAW_newdxx
 
 
@@ -1358,7 +1338,6 @@ MODULE exx
         IF_GAMMA_ONLY : &
         IF (gamma_only) THEN
             !
-            !half_nbnd = ( nbnd + 1 ) / 2
             h_ibnd = ibnd_start/2
             !
             IF(MOD(ibnd_start,2)==0) THEN
@@ -1383,10 +1362,6 @@ MODULE exx
                   x2 = x_occupation(ibnd+1,  ik)
               ENDIF
               IF ( ABS(x1) < eps_occ .AND.  ABS(x2) < eps_occ ) CYCLE
-              !!
-              !!loads the phi from file
-              !!CALL davcio ( tempphic, exx_nwordwfc, iunexx, &
-              !!                    (ikq-1)*half_nbnd+h_ibnd, -1 )
               !
               !calculate rho in real space
 !$omp parallel do default(shared), private(ir)
@@ -1428,8 +1403,6 @@ MODULE exx
                   !                 
               ENDDO
 !$omp end parallel do
-              !
-              !!!vc = CMPLX( x1 * DBLE (vc), x2 * AIMAG(vc) ,kind=DP)/ nqs
               !
               !   >>>>  compute <psi|H_fock G SPACE here
               IF(okvan .and. dovanxx .and. .not. TQR) THEN
@@ -1583,7 +1556,6 @@ MODULE exx
       IF(okvan.and.dovanxx) THEN
         CALL mp_sum(deexx,intra_bgrp_comm)
         CALL mp_sum(deexx,inter_bgrp_comm)
-        !CALL mp_sum(deexx,intra_pool_comm) !intra pool and inter bgrp are the same thing
       ENDIF
       !
       IF (noncolin) THEN
@@ -1680,7 +1652,6 @@ MODULE exx
     INTEGER :: ig !Counters 
     REAL(DP) :: q(3), qq, x
     
-    !CALL start_clock ('vexx_ngmloop')
     DO ig=1,ngm
       !
       q(:)= xk(:) - xkq(:) + g(:,ig)
@@ -1736,7 +1707,6 @@ MODULE exx
       ENDIF
       !
     ENDDO
-    !CALL stop_clock ('vexx_ngmloop')
   END SUBROUTINE g2_convolution
   !-----------------------------------------------------------------------
 
@@ -1753,7 +1723,8 @@ MODULE exx
     USE wavefunctions_module,   ONLY : evc
     USE lsda_mod,               ONLY : lsda, current_spin, isk
     USE klist,                  ONLY : ngk, nks, xk
-    USE mp_global,              ONLY : inter_pool_comm, intra_bgrp_comm, intra_bgrp_comm, nbgrp
+    USE mp_pools,               ONLY : inter_pool_comm
+    USE mp_bands,               ONLY : intra_bgrp_comm, intra_bgrp_comm, nbgrp
     USE mp,                     ONLY : mp_sum
     USE becmod,                 ONLY : bec_type, allocate_bec_type, deallocate_bec_type, calbec
     USE uspp,                   ONLY : okvan,nkb,vkb
@@ -1839,9 +1810,9 @@ MODULE exx
     USE wavefunctions_module,    ONLY : evc
     USE klist,                   ONLY : xk, ngk, nks, nkstot
     USE lsda_mod,                ONLY : lsda, current_spin, isk
-    USE mp_global,               ONLY : inter_pool_comm, inter_image_comm, &
-                                        inter_bgrp_comm, intra_bgrp_comm, nbgrp
-    USE mp_global,               ONLY : my_image_id, nimage, ibnd_start, ibnd_end
+    USE mp_pools,                ONLY : inter_pool_comm
+    USE mp_bands,                ONLY : inter_bgrp_comm, intra_bgrp_comm, &
+                                        nbgrp, ibnd_start, ibnd_end
     USE mp,                      ONLY : mp_sum
     USE fft_base,                ONLY : dffts
     USE fft_interfaces,          ONLY : fwfft, invfft
@@ -1980,7 +1951,6 @@ MODULE exx
             IF (gamma_only) THEN
               h_ibnd = 0
               !
-              !half_nbnd = ( nbnd + 1 ) / 2
               h_ibnd = ibnd_start/2
               !
               IF(MOD(ibnd_start,2)==0) THEN
@@ -2007,12 +1977,6 @@ MODULE exx
                     x2 = 0.0_dp
                 ENDIF
                 IF ( abs(x1) < eps_occ .and. abs(x2) < eps_occ ) CYCLE IBND_LOOP_GAM
-                !
-                !!loads the phi from file
-                !!CALL davcio (tempphic, exx_nwordwfc, iunexx, &
-                !!                       (ikq-1)*half_nbnd+h_ibnd, -1 )
-                !!
-                !
                 !calculate rho in real space
 !$omp parallel do default(shared), private(ir)
                 DO ir = 1, nrxxs
@@ -2087,9 +2051,6 @@ MODULE exx
                       ENDDO
 !$omp end parallel do
                    ELSE
-                      !!CALL davcio (tempphic, exx_nwordwfc, iunexx, &
-                      !!                       (ikq-1)*nbnd+ibnd, -1 )
-
                       !calculate rho in real space
 !$omp parallel do  default(shared), private(ir)
                       DO ir = 1, nrxxs
@@ -2140,10 +2101,6 @@ MODULE exx
 
     DEALLOCATE(rhoc, fac )
     CALL deallocate_bec_type(becpsi)
-
-!
-! Was used for image parallelization
-!    CALL mp_sum( energy, inter_image_comm )
 !
     CALL mp_sum( energy, inter_bgrp_comm )
     CALL mp_sum( energy, intra_bgrp_comm )
@@ -2166,7 +2123,7 @@ MODULE exx
      USE wvfct,          ONLY : ecutwfc
      USE io_global,      ONLY : stdout
      USE control_flags,  ONLY : gamma_only
-     USE mp_global,      ONLY : intra_bgrp_comm
+     USE mp_bands,       ONLY : intra_bgrp_comm
      USE mp,             ONLY : mp_sum
 
      IMPLICIT NONE
@@ -2271,8 +2228,6 @@ MODULE exx
      if( erf_scrlen > 0) aa = 1._dp/sqrt((alpha+1._dp/4.d0/erf_scrlen**2)*0.25d0*fpi)
      div = div - e2*omega * aa
 
-!     div = div - e2*omega/sqrt(alpha*0.25d0*fpi)
-
      exx_divergence = div * nqs
      CALL stop_clock ('exx_div')
 
@@ -2300,8 +2255,9 @@ MODULE exx
     USE klist,                ONLY : xk, ngk, nks
     USE lsda_mod,             ONLY : lsda, current_spin, isk
     USE gvect,                ONLY : g, nl
-    USE mp_global,            ONLY : inter_pool_comm, inter_bgrp_comm, intra_bgrp_comm, &
-                                     my_image_id, nimage, ibnd_start, ibnd_end
+    USE mp_pools,             ONLY : npool, inter_pool_comm
+    USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, &
+                                     ibnd_start, ibnd_end
     USE mp,                   ONLY : mp_sum 
     USE fft_base,             ONLY : dffts
     USE fft_interfaces,       ONLY : fwfft, invfft
@@ -2339,9 +2295,6 @@ MODULE exx
 
     IF ( nks > 1 ) rewind( iunigk )
     !
-    ! Was used for image parallelization
-    ! nqi = nqs/nimage
-    !
     nqi=nqs
     !
     ! loop over k-points
@@ -2377,9 +2330,6 @@ MODULE exx
 
             DO iqi = 1, nqi
                 ! 
-                ! Was used for image parallelization
-                ! iq = iqi + nqi*my_image_id
-                !
                 iq=iqi
                 !
                 ikq  = index_xkq(current_k,iq)
@@ -2476,7 +2426,6 @@ MODULE exx
 
                 IF (gamma_only) THEN
                     !
-                    !half_nbnd = ( nbnd + 1 ) / 2
                     h_ibnd = ibnd_start/2
                     !
                     IF(MOD(ibnd_start,2)==0) THEN
@@ -2566,9 +2515,6 @@ MODULE exx
 
     deALLOCATE(tempphic, temppsic, rhoc, fac, fac_tens, fac_stress )
     !
-    ! Was used for image parallelization
-    !  CALL mp_sum( exx_stress_, inter_image_comm )
-    ! 
     CALL mp_sum( exx_stress_, intra_bgrp_comm )
     CALL mp_sum( exx_stress_, inter_bgrp_comm )
     CALL mp_sum( exx_stress_, inter_pool_comm )

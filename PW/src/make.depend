@@ -451,7 +451,8 @@ exx.o : ../../Modules/io_files.o
 exx.o : ../../Modules/io_global.o
 exx.o : ../../Modules/kind.o
 exx.o : ../../Modules/mp.o
-exx.o : ../../Modules/mp_global.o
+exx.o : ../../Modules/mp_bands.o
+exx.o : ../../Modules/mp_pools.o
 exx.o : ../../Modules/noncol.o
 exx.o : ../../Modules/paw_variables.o
 exx.o : ../../Modules/recvec.o
