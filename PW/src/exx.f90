@@ -1992,114 +1992,79 @@ MODULE exx
               !
               IBND_LOOP_GAM : &
               DO ibnd = ibnd_loop_start, ibnd_end, 2       !for each band of psi
-                  !
-                  h_ibnd = h_ibnd + 1
-                  !
-                  IF ( ibnd < ibnd_start ) THEN
-                      x1 = 0.0_dp
-                  ELSE
-                      x1 = x_occupation(ibnd,ik)
-                  ENDIF
-                  !
-                  IF ( ibnd < ibnd_end ) THEN
-                      x2 = x_occupation(ibnd+1,ik)
-                  ELSE
-                      x2 = 0.0_dp
-                  ENDIF
-                  IF ( abs(x1) < eps_occ .and. abs(x2) < eps_occ ) CYCLE IBND_LOOP_GAM
-                  !
-                  !!loads the phi from file
-                  !!CALL davcio (tempphic, exx_nwordwfc, iunexx, &
-                  !!                       (ikq-1)*half_nbnd+h_ibnd, -1 )
-                  !!
-                  !
-                  !calculate rho in real space
+                !
+                h_ibnd = h_ibnd + 1
+                !
+                IF ( ibnd < ibnd_start ) THEN
+                    x1 = 0.0_dp
+                ELSE
+                    x1 = x_occupation(ibnd,ik)
+                ENDIF
+                !
+                IF ( ibnd < ibnd_end ) THEN
+                    x2 = x_occupation(ibnd+1,ik)
+                ELSE
+                    x2 = 0.0_dp
+                ENDIF
+                IF ( abs(x1) < eps_occ .and. abs(x2) < eps_occ ) CYCLE IBND_LOOP_GAM
+                !
+                !!loads the phi from file
+                !!CALL davcio (tempphic, exx_nwordwfc, iunexx, &
+                !!                       (ikq-1)*half_nbnd+h_ibnd, -1 )
+                !!
+                !
+                !calculate rho in real space
 !$omp parallel do default(shared), private(ir)
-                  DO ir = 1, nrxxs
-                      tempphic(ir) = exxbuff(ir,h_ibnd,ikq)
-                      rhoc(ir)=CONJG(tempphic(ir))*temppsic(ir) / omega
-                  ENDDO
+                DO ir = 1, nrxxs
+                    tempphic(ir) = exxbuff(ir,h_ibnd,ikq)
+                    rhoc(ir)=CONJG(tempphic(ir))*temppsic(ir) / omega
+                ENDDO
 !$omp end parallel do
 
-                  !
-                  IF_ECUTFOCK : &
-                  IF (ecutfock == 4.d0 * ecutwfc) THEN
-                    !
-                    IF(okvan .and. dovanxx.and.TQR) THEN
-                      IF(ibnd>=ibnd_start) &
-                      CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd)), _CX(becpsi%r(:,jbnd)))
-                      IF(ibnd<ibnd_end) &
-                      CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,jbnd)))
-                    ENDIF
-                    !
-                    !brings it to G-space
-                    CALL fwfft ('Custom', rhoc, exx_fft_r2g%dfftt)
-                    !
-                    IF(okvan .and. dovanxx .and..not.TQR) THEN
-                      IF(ibnd>=ibnd_start) &
-                      CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd)), &
-                          xk_collect(:,current_ik), _CX(becpsi%r(:,jbnd)))
-                      IF(ibnd<ibnd_end) &
-                      CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd+1)), &
-                          xk_collect(:,current_ik), _CX(becpsi%r(:,jbnd)))
-                    ENDIF
-                    !
-                    vc = 0._dp
-!$omp parallel do  default(shared), private(ig), reduction(+:vc)
-                    DO ig = 1,exx_fft_r2g%ngmt
-                       vc = vc + fac(ig) * x1 * &
-                            ABS( rhoc(exx_fft_r2g%nlt(ig)) + CONJG(rhoc(exx_fft_r2g%nltm(ig))) )**2
-                       vc = vc + fac(ig) * x2 * &
-                            ABS( rhoc(exx_fft_r2g%nlt(ig)) - CONJG(rhoc(exx_fft_r2g%nltm(ig))) )**2
-                    END DO
-!$omp end parallel do 
-                    !
-                  ELSE IF_ECUTFOCK
-                    !
-                    IF(okvan .and. dovanxx.and.TQR) THEN
-                      IF(ibnd>=ibnd_start) &
-                      CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd)), _CX(becpsi%r(:,jbnd)))
-                      IF(ibnd<ibnd_end) &
-                      CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,jbnd)))
-                    ENDIF
-                    !
-                    !brings it to G-space
-                    CALL fwfft ('CustomWave', rhoc, exx_fft_r2g%dfftt)
-                    !
-                    IF(okvan .and. dovanxx .and..not.TQR) THEN
-                      IF(ibnd>=ibnd_start) &
-                      CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd)), &
-                          xk_collect(:,current_ik), _CX(becpsi%r(:,jbnd)))
-                      IF(ibnd<ibnd_end) &
-                      CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd+1)), &
-                          xk_collect(:,current_ik), _CX(becpsi%r(:,jbnd)))
-                    ENDIF
-                    !
-                    vc = 0._dp
+                !
+                !
+                IF(okvan .and. dovanxx.and.TQR) THEN
+                  IF(ibnd>=ibnd_start) &
+                  CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd)), _CX(becpsi%r(:,jbnd)))
+                  IF(ibnd<ibnd_end) &
+                  CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,jbnd)))
+                ENDIF
+                !
+                !brings it to G-space
+                CALL fwfft ('CustomWave', rhoc, exx_fft_r2g%dfftt)
+                !
+                IF(okvan .and. dovanxx .and..not.TQR) THEN
+                  IF(ibnd>=ibnd_start) &
+                  CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd)), &
+                      xk_collect(:,current_ik), _CX(becpsi%r(:,jbnd)))
+                  IF(ibnd<ibnd_end) &
+                  CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd+1)), &
+                      xk_collect(:,current_ik), _CX(becpsi%r(:,jbnd)))
+                ENDIF
+                !
+                vc = 0._dp
 !$omp parallel do  default(shared), private(ig),  reduction(+:vc)
-                    DO ig = 1,exx_fft_r2g%npwt
-                       vc = vc + fac(ig) * x1 * &
-                            ABS( rhoc(exx_fft_r2g%nlt(ig)) + CONJG(rhoc(exx_fft_r2g%nltm(ig))) )**2
-                       vc = vc + fac(ig) * x2 * &
-                            ABS( rhoc(exx_fft_r2g%nlt(ig)) - CONJG(rhoc(exx_fft_r2g%nltm(ig))) )**2
-                    END DO
+                DO ig = 1,exx_fft_r2g%npwt
+                   vc = vc + fac(ig) * x1 * &
+                        ABS( rhoc(exx_fft_r2g%nlt(ig)) + CONJG(rhoc(exx_fft_r2g%nltm(ig))) )**2
+                   vc = vc + fac(ig) * x2 * &
+                        ABS( rhoc(exx_fft_r2g%nlt(ig)) - CONJG(rhoc(exx_fft_r2g%nltm(ig))) )**2
+                END DO
 !$omp end parallel do
-                  ENDIF &
-                  IF_ECUTFOCK
-                  !
-                  vc = vc * omega * 0.25d0 / nqs
-                  energy = energy - exxalfa * vc * wg(jbnd,ikk)
-                  ! gau-pbe see latar
-                  !
-                   IF(okpaw.and.dopawxx) THEN
-                      IF(ibnd>=ibnd_start) &
-                      energy = energy +exxalfa*wg(jbnd,ikk)*&
-                            x1 * PAW_xx_energy(_CX(becxx(ikq)%r(:,ibnd)),_CX(becpsi%r(:,jbnd)) )
-                      IF(ibnd<ibnd_end) &
-                      energy = energy +exxalfa*wg(jbnd,ikk)*&
-                            x2 * PAW_xx_energy(_CX(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,jbnd)) ) 
-                   ENDIF
-                  !
+                !
+                vc = vc * omega * 0.25d0 / nqs
+                energy = energy - exxalfa * vc * wg(jbnd,ikk)
+                ! gau-pbe see latar
+                !
+                IF(okpaw.and.dopawxx) THEN
+                   IF(ibnd>=ibnd_start) &
+                   energy = energy +exxalfa*wg(jbnd,ikk)*&
+                         x1 * PAW_xx_energy(_CX(becxx(ikq)%r(:,ibnd)),_CX(becpsi%r(:,jbnd)) )
+                   IF(ibnd<ibnd_end) &
+                   energy = energy +exxalfa*wg(jbnd,ikk)*&
+                         x2 * PAW_xx_energy(_CX(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,jbnd)) ) 
+                ENDIF
+                !
                 END DO &
                 IBND_LOOP_GAM
                 !
