@@ -1397,140 +1397,70 @@ MODULE exx
 !$omp end parallel do
               !
               !brings it to G-space
-              CUSTOMWAVE : IF (ecutfock == 4.d0 * ecutwfc) THEN
-                 !
-                 !   >>>> add augmentation in REAL SPACE here
-                 IF(okvan .and. dovanxx .AND. TQR) THEN
-                    IF(ibnd>=ibnd_start) &
-                    CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd)),   _CX(becpsi%r(:,im)))
-                    IF(ibnd<ibnd_end) &
-                    CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,im)))
-                  ENDIF
-                 !
-                 CALL fwfft ('Custom', rhoc, exx_fft_r2g%dfftt)
-                 !   >>>> add augmentation in G SPACE here
-                 IF(okvan .and. dovanxx .AND. .NOT. TQR) THEN
-                    IF(ibnd>=ibnd_start) &
-                    CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd)), &
-                                   xk_collect(:,current_ik), _CX(becpsi%r(:,im)))
-                    IF(ibnd<ibnd_end) &
-                    CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd+1)), &
-                                   xk_collect(:,current_ik), _CX(becpsi%r(:,im)))
-                 ENDIF
-                 !   >>>> charge density done
-
-                 vc(:) = ( 0._dp, 0._dp )
-                 !
+              !
+              !   >>>> add augmentation in REAL SPACE here
+              IF(okvan .and. dovanxx .AND. TQR) THEN
+                 IF(ibnd>=ibnd_start) &
+                 CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd)),   _CX(becpsi%r(:,im)))
+                 IF(ibnd<ibnd_end) &
+                 CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,im)))
+              ENDIF
+              !
+              CALL fwfft ('CustomWave', rhoc, exx_fft_r2g%dfftt)
+              !   >>>> add augmentation in G SPACE here
+              IF(okvan .and. dovanxx .AND. .NOT. TQR) THEN
+                 IF(ibnd>=ibnd_start) &
+                 CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd)), &
+                                xk_collect(:,current_ik), _CX(becpsi%r(:,im)))
+                 IF(ibnd<ibnd_end) &
+                 CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd+1)), &
+                                xk_collect(:,current_ik), _CX(becpsi%r(:,im)))
+              ENDIF
+              !   >>>> charge density done
+              !
+              vc(:) = ( 0._dp, 0._dp )
+              !
 !$omp parallel do default(shared), private(ig)
-                 DO ig = 1, exx_fft_r2g%ngmt
-                     ! 
-                     vc(exx_fft_r2g%nlt(ig))   = fac(ig) * rhoc(exx_fft_r2g%nlt(ig)) 
-                     vc(exx_fft_r2g%nltm(ig)) =  fac(ig) * rhoc(exx_fft_r2g%nltm(ig)) 
-                     !                 
-                 ENDDO
+              DO ig = 1, exx_fft_r2g%npwt
+                  ! 
+                  vc(exx_fft_r2g%nlt(ig))   = fac(ig) * rhoc(exx_fft_r2g%nlt(ig)) 
+                  vc(exx_fft_r2g%nltm(ig)) =  fac(ig) * rhoc(exx_fft_r2g%nltm(ig)) 
+                  !                 
+              ENDDO
 !$omp end parallel do
-                 !
-                 vc = CMPLX( x1 * DBLE (vc), x2 * AIMAG(vc) ,kind=DP)/ nqs
-
-                 !   >>>>  compute <psi|H_fock G SPACE here
-                 IF(okvan .and. dovanxx .and. .not. TQR) THEN
-                    IF(ibnd>=ibnd_start) &
-                    CALL newdxx_g(vc, xkq, _CX(becxx(ikq)%r(:,ibnd)), &
-                                xk_collect(:,current_ik), deexx)
-                    IF(ibnd<ibnd_end) &
-                    CALL newdxx_g(vc, xkq, _CX(becxx(ikq)%r(:,ibnd+1)), &
-                                xk_collect(:,current_ik), deexx)
-                 ENDIF
-                 !
-                 !brings back v in real space
-                 CALL invfft ('Custom', vc, exx_fft_r2g%dfftt) 
-                 !
-                 !   >>>>  compute <psi|H_fock REAL SPACE here
-                 IF(okvan .and. dovanxx .and. TQR) THEN
-                    IF(ibnd>=ibnd_start) &
-                    CALL newdxx_r(vc, _CX(becxx(ikq)%r(:,ibnd)), deexx)
-                    IF(ibnd<ibnd_end) &
-                    CALL newdxx_r(vc, _CX(becxx(ikq)%r(:,ibnd+1)), deexx)
-                 ENDIF
-
-                 !
-                 IF(okpaw .and. dopawxx) THEN
-                    IF(ibnd>=ibnd_start) &
-                    CALL PAW_newdxx(x1/nqs, _CX(becxx(ikq)%r(:,ibnd)), &
-                                            _CX(becpsi%r(:,im)), deexx)
-                    IF(ibnd<ibnd_end) &
-                    CALL PAW_newdxx(x2/nqs, _CX(becxx(ikq)%r(:,ibnd+1)), &
-                                            _CX(becpsi%r(:,im)), deexx)
-                 ENDIF
-                 !
-              ELSE CUSTOMWAVE ! XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-                 !
-                 !   >>>> add augmentation in REAL SPACE here
-                 IF(okvan .and. dovanxx .AND. TQR) THEN
-                    IF(ibnd>=ibnd_start) &
-                    CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd)),   _CX(becpsi%r(:,im)))
-                    IF(ibnd<ibnd_end) &
-                    CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,im)))
-                  ENDIF
-                 !
-                 CALL fwfft ('CustomWave', rhoc, exx_fft_r2g%dfftt)
-                 !   >>>> add augmentation in G SPACE here
-                 IF(okvan .and. dovanxx .AND. .NOT. TQR) THEN
-                    IF(ibnd>=ibnd_start) &
-                    CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd)), &
-                                   xk_collect(:,current_ik), _CX(becpsi%r(:,im)))
-                    IF(ibnd<ibnd_end) &
-                    CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd+1)), &
-                                   xk_collect(:,current_ik), _CX(becpsi%r(:,im)))
-                 ENDIF
-                 !   >>>> charge density done
-                 !
-                 vc(:) = ( 0._dp, 0._dp )
-                 !
-!$omp parallel do default(shared), private(ig)
-                 DO ig = 1, exx_fft_r2g%npwt
-                     ! 
-                     vc(exx_fft_r2g%nlt(ig))   = fac(ig) * rhoc(exx_fft_r2g%nlt(ig)) 
-                     vc(exx_fft_r2g%nltm(ig)) =  fac(ig) * rhoc(exx_fft_r2g%nltm(ig)) 
-                     !                 
-                 ENDDO
-!$omp end parallel do
-                 !
-
-                 vc = CMPLX( x1 * DBLE (vc), x2 * AIMAG(vc) ,kind=DP)/ nqs
-                 !
-                 !   >>>>  compute <psi|H_fock G SPACE here
-                 IF(okvan .and. dovanxx .and. .not. TQR) THEN
-                    IF(ibnd>=ibnd_start) &
-                    CALL newdxx_g(vc, xkq, _CX(becxx(ikq)%r(:,ibnd)), &
-                                xk_collect(:,current_ik), deexx)
-                    IF(ibnd<ibnd_end) &
-                    CALL newdxx_g(vc, xkq, _CX(becxx(ikq)%r(:,ibnd+1)), &
-                                xk_collect(:,current_ik), deexx)
-                 ENDIF
-
-                 !
-                 !brings back v in real space
-                 CALL invfft ('CustomWave', vc, exx_fft_r2g%dfftt) 
-                 !
-                 !   >>>>  compute <psi|H_fock REAL SPACE here
-                 IF(okvan .and. dovanxx .and. TQR) THEN
-                    IF(ibnd>=ibnd_start) &
-                    CALL newdxx_r(vc, _CX(becxx(ikq)%r(:,ibnd)), deexx)
-                    IF(ibnd<ibnd_end) &
-                    CALL newdxx_r(vc, _CX(becxx(ikq)%r(:,ibnd+1)), deexx)
-                 ENDIF
-                 !
-                 IF(okpaw .and. dopawxx) THEN
-                    IF(ibnd>=ibnd_start) &
-                    CALL PAW_newdxx(x1/nqs, _CX(becxx(ikq)%r(:,ibnd)), &
-                                            _CX(becpsi%r(:,im)), deexx)
-                    IF(ibnd<ibnd_end) &
-                    CALL PAW_newdxx(x2/nqs, _CX(becxx(ikq)%r(:,ibnd+1)), &
-                                            _CX(becpsi%r(:,im)), deexx)
-                 ENDIF
-                 !
-              ENDIF CUSTOMWAVE
+              !
+              !!!vc = CMPLX( x1 * DBLE (vc), x2 * AIMAG(vc) ,kind=DP)/ nqs
+              !
+              !   >>>>  compute <psi|H_fock G SPACE here
+              IF(okvan .and. dovanxx .and. .not. TQR) THEN
+                 IF(ibnd>=ibnd_start) &
+                 CALL newdxx_g(vc, xkq, _CX(becxx(ikq)%r(:,ibnd)), &
+                             xk_collect(:,current_ik), deexx)
+                 IF(ibnd<ibnd_end) &
+                 CALL newdxx_g(vc, xkq, _CX(becxx(ikq)%r(:,ibnd+1)), &
+                             xk_collect(:,current_ik), deexx)
+              ENDIF
+              !
+              !brings back v in real space
+              CALL invfft ('CustomWave', vc, exx_fft_r2g%dfftt) 
+              !
+              !   >>>>  compute <psi|H_fock REAL SPACE here
+              IF(okvan .and. dovanxx .and. TQR) THEN
+                 IF(ibnd>=ibnd_start) &
+                 CALL newdxx_r(vc, _CX(becxx(ikq)%r(:,ibnd)), deexx)
+                 IF(ibnd<ibnd_end) &
+                 CALL newdxx_r(vc, _CX(becxx(ikq)%r(:,ibnd+1)), deexx)
+              ENDIF
+              !
+              IF(okpaw .and. dopawxx) THEN
+                 IF(ibnd>=ibnd_start) &
+                 CALL PAW_newdxx(x1/nqs, _CX(becxx(ikq)%r(:,ibnd)), &
+                                         _CX(becpsi%r(:,im)), deexx)
+                 IF(ibnd<ibnd_end) &
+                 CALL PAW_newdxx(x2/nqs, _CX(becxx(ikq)%r(:,ibnd+1)), &
+                                         _CX(becpsi%r(:,im)), deexx)
+              ENDIF
+              !
               !
               !accumulates over bands and k points
               !
