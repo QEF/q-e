@@ -1379,7 +1379,7 @@ MODULE exx
                  IF(ibnd>=ibnd_start) &
                  CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd)),   _CX(becpsi%r(:,im)))
                  IF(ibnd<ibnd_end) &
-                 CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,im)))
+                 CALL addusxx_r(rhoc, _CY(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,im)))
               ENDIF
               !
               CALL fwfft ('CustomWave', rhoc, exx_fft_r2g%dfftt)
@@ -1389,7 +1389,7 @@ MODULE exx
                  CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd)), &
                                 xk_collect(:,current_ik), _CX(becpsi%r(:,im)))
                  IF(ibnd<ibnd_end) &
-                 CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd+1)), &
+                 CALL addusxx_g(rhoc, xkq, _CY(becxx(ikq)%r(:,ibnd+1)), &
                                 xk_collect(:,current_ik), _CX(becpsi%r(:,im)))
               ENDIF
               !   >>>> charge density done
@@ -1411,7 +1411,7 @@ MODULE exx
                  CALL newdxx_g(vc, xkq, _CX(becxx(ikq)%r(:,ibnd)), &
                              xk_collect(:,current_ik), deexx)
                  IF(ibnd<ibnd_end) &
-                 CALL newdxx_g(vc, xkq, _CX(becxx(ikq)%r(:,ibnd+1)), &
+                 CALL newdxx_g(vc, xkq, _CY(becxx(ikq)%r(:,ibnd+1)), &
                              xk_collect(:,current_ik), deexx)
               ENDIF
               !
@@ -1423,7 +1423,7 @@ MODULE exx
                  IF(ibnd>=ibnd_start) &
                  CALL newdxx_r(vc, _CX(becxx(ikq)%r(:,ibnd)), deexx)
                  IF(ibnd<ibnd_end) &
-                 CALL newdxx_r(vc, _CX(becxx(ikq)%r(:,ibnd+1)), deexx)
+                 CALL newdxx_r(vc, _CY(becxx(ikq)%r(:,ibnd+1)), deexx)
               ENDIF
               !
               IF(okpaw .and. dopawxx) THEN
