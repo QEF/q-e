@@ -775,6 +775,9 @@ SUBROUTINE electrons_scf()
 9101 FORMAT(/'     End of self-consistent calculation' )
 9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
 9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
+#ifdef __ENVIRON
+9200 FORMAT(/'     add environment contribution to local potential')
+#endif
   !
   CONTAINS
      !
@@ -1135,7 +1138,6 @@ SUBROUTINE electrons_scf()
             /'     estimated scf accuracy    <',1PE17.1,' Ry' )
 9085 FORMAT(/'     total all-electron energy =',0PF17.6,' Ry' )
 #ifdef __ENVIRON
-9200 FORMAT(/'     add environment contribution to local potential')
 9201 FORMAT( '     solvation energy          =',F17.8,' Ry' ) 
 9202 FORMAT( '     cavitation energy         =',F17.8,' Ry' ) 
 9203 FORMAT( '     PV energy                 =',F17.8,' Ry' ) 
