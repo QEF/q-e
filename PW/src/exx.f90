@@ -125,6 +125,7 @@ MODULE exx
   REAL(DP)  :: exx_dual = 4.0_DP! dual for the custom grid
  CONTAINS
 #define _CX(A)  CMPLX(A,0._dp,kind=DP)
+#define _CY(A)  CMPLX(0._dp,A,kind=DP)
   !------------------------------------------------------------------------
   SUBROUTINE exx_grid_convert( psi, npw, fft, psi_t, sign, igkt )
     !------------------------------------------------------------------------
@@ -1991,7 +1992,7 @@ MODULE exx
                   IF(ibnd>=ibnd_start) &
                   CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd)), _CX(becpsi%r(:,jbnd)))
                   IF(ibnd<ibnd_end) &
-                  CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,jbnd)))
+                  CALL addusxx_r(rhoc, _CY(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,jbnd)))
                 ENDIF
                 !
                 !brings it to G-space
@@ -2002,7 +2003,7 @@ MODULE exx
                   CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd)), &
                       xk_collect(:,current_ik), _CX(becpsi%r(:,jbnd)))
                   IF(ibnd<ibnd_end) &
-                  CALL addusxx_g(rhoc, xkq, _CX(becxx(ikq)%r(:,ibnd+1)), &
+                  CALL addusxx_g(rhoc, xkq, _CY(becxx(ikq)%r(:,ibnd+1)), &
                       xk_collect(:,current_ik), _CX(becpsi%r(:,jbnd)))
                 ENDIF
                 !
