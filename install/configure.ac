@@ -1412,7 +1412,7 @@ then
                         FFLAGS="$test_fflags"
                         LDFLAGS="$test_ldflags $try_loption"
                         LIBS=""
-                        AC_SEARCH_LIBS(dgemm, blas-3 blas, have_blas=1
+                        AC_SEARCH_LIBS(dgemm, blas-3 openblas blas, have_blas=1
                                        blas_libs="$try_loption $LIBS")
                         if test "$ac_cv_search_dgemm" != "no"
                         then break ; fi
@@ -1927,6 +1927,14 @@ fi
        LIBS="$mpi_libs $scalapack_libs"
        AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
                       try_dflags="$try_dflags -D__SCALAPACK")
+       test "$have_scalapack" -eq 1 && break
+# scalapack (including blacs), no -L options
+       unset ac_cv_search_pdgemr2d # clear cached value
+       scalapack_libs="-lscalapack"
+       LIBS="$mpi_libs $scalapack_libs"
+       LDFLAGS=""
+       AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
+                   try_dflags="$try_dflags -D__SCALAPACK")
        test "$have_scalapack" -eq 1 && break
 # scalapack + blacs, no -L options
        unset ac_cv_search_pdgemr2d # clear cached value
