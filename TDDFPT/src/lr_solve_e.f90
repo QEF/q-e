@@ -105,7 +105,7 @@ ENDIF
 
   ! XC.Ge compute d0psi in real-space, will overwrite the d0psi calculated
   ! before
-  if(d0psi_rs == .true.) call compute_d0psi_rs(n_ipol)
+  if(d0psi_rs .eqv. .true.) call compute_d0psi_rs(n_ipol)
 
   ! Writing d0psi for restart
   nwordd0psi = 2 * nbnd * npwx * nks

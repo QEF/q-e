@@ -37,7 +37,7 @@ all : tldeps head.x
 head.x : head.o $(LIBOBJS) $(HEADOBJS) $(LIBPWPH) $(LIBMIN)
 	$(LD) $(LDFLAGS) -o head.x head.o \
 		 $(HEADOBJS) $(LIBPWPH)  $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
-	- ( cd ../../bin ; ln -fs ../GWL/head/head.x . )
+	- ( cd ../../bin ; ln -fs ../GWW/head/head.x . )
 
 tldeps:
 	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
