@@ -1,0 +1,456 @@
+ rank 6 of 7 is reserved
+ rank 7 of 7 is reserved
+ Calling CPV library interface with these flags:
+ communicator index:            3
+ communicator size:             6
+ nimage:            1
+ npot:              1
+ npool:             1
+ ntaskg:            1
+ nband:             1
+ ndiag:             4
+ input:  "/home/akohlmey/compile/espresso-qmmm/COUPLE/tests/h2o-mt-blyp.cp.in"
+
+     Program CP v.5.1.a (svn rev. mpi-refactor) starts on 27Sep2013 at 11:53:31 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     6 processors
+     R & G space division:  proc/nbgrp/npool/nimage =       6
+     Reading input from /home/akohlmey/compile/espresso-qmmm/COUPLE/tests/h2o-mt-blyp.cp.in
+
+   Job Title:  Water Molecule
+
+
+   Atomic Pseudopotentials Parameters
+   ----------------------------------
+
+   Reading pseudopotential for specie #  1 from file :
+   /home/akohlmey/compile/espresso-qmmm/pseudo/O.blyp-mt.UPF
+   file type is UPF v.1
+
+   Reading pseudopotential for specie #  2 from file :
+   /home/akohlmey/compile/espresso-qmmm/pseudo/H.blyp-vbc.UPF
+   file type is UPF v.1
+
+
+   Main Simulation Parameters (from input)
+   ---------------------------------------
+   Restart Mode       =      -1   from_scratch   
+   Number of MD Steps =     100
+   Print out every          100 MD Steps
+   Reads from unit    =      51
+   Writes to unit     =      51
+   MD Simulation time step            =       5.00
+   Electronic fictitious mass (emass) =     400.00
+   emass cut-off                      =       2.50
+
+   Simulation Cell Parameters (from input)
+   external pressure       =            0.00 [KBar]
+   wmass (calculated)      =         2493.41 [AU]
+   ibrav =   14
+   alat  =    12.00000000
+   a1    =    12.00000000    0.00000000    0.00000000
+   a2    =     0.00000000   12.00000000    0.00000000
+   a3    =     0.00000000    0.00000000   12.00000000
+
+   b1    =     0.08333333    0.00000000    0.00000000
+   b2    =     0.00000000    0.08333333    0.00000000
+   b3    =     0.00000000    0.00000000    0.08333333
+   omega =    1728.00000000
+
+   Energy Cut-offs
+   ---------------
+   Ecutwfc =   80.0 Ry,      Ecutrho =  320.0 Ry,      Ecuts =  320.0 Ry
+   Gcutwfc =   17.1     ,    Gcutrho =   34.2          Gcuts =   34.2
+   NOTA BENE: refg, mmx =   0.050000  7680
+   Eigenvalues calculated without the kinetic term contribution
+   Orthog. with lagrange multipliers : eps =   0.10E-07,  max =  20
+   verlet algorithm for electron dynamics
+   with friction frice =  0.2000 , grease =  1.0000
+   Electron dynamics : the temperature is not controlled
+   initial random displacement of el. coordinates with  amplitude=  0.020000
+
+   Electronic states
+   -----------------
+   Number of Electron =     8, of States =     4
+   Occupation numbers :
+   2.00 2.00 2.00 2.00
+
+
+   Exchange and correlations functionals
+   -------------------------------------
+     Exchange-correlation      =  SLA  LYP  B88  BLYP ( 1  3  1  3 0)
+
+
+   Ions Simulation Parameters
+   --------------------------
+   Ions are not allowed to move
+   Ionic position (from input)
+   sorted by specie, and converted to real a.u. coordinates
+   Species   1 atoms =    1 mass =     29166.22 (a.u.),        16.00 (amu) rcmax =   0.80 (a.u.)
+        0.009900     0.009900     0.000000
+   Species   2 atoms =    2 mass =      1822.89 (a.u.),         1.00 (amu) rcmax =   0.80 (a.u.)
+        1.832500    -0.224300    -0.000100
+       -0.224300     1.832500     0.000200
+   Ionic position read from input file
+
+
+   Cell Dynamics Parameters (from STDIN)
+   -------------------------------------
+   internal stress tensor calculated
+   Starting cell generated from CELLDM
+   Constant VOLUME Molecular dynamics
+   cell parameters are not allowed to move
+
+   Verbosity: iverbosity =  1
+
+
+
+   Simulation dimensions initialization
+   ------------------------------------
+
+   unit vectors of full simulation cell
+   in real space:                         in reciprocal space (units 2pi/alat):
+   1    12.0000    0.0000    0.0000              1.0000    0.0000    0.0000
+   2     0.0000   12.0000    0.0000              0.0000    1.0000    0.0000
+   3     0.0000    0.0000   12.0000              0.0000    0.0000    1.0000
+
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         611     611    152                27836    27836    3468
+     Max         614     614    156                27842    27842    3472
+     Sum        3673    3673    917               167037   167037   20815
+     Tot        1837    1837    459
+
+
+   Real Mesh
+   ---------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    72    72    72      72    72    12       1     1     6
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     72    72    72
+   Local number of cell to store the grid ( nrxx ) =      62208
+   Number of x-y planes for each processors: 
+   nr3l =    12   12   12   12   12   12
+
+   Smooth Real Mesh
+   ----------------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    72    72    72      72    72    12       1     1     6
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     72    72    72
+   Local number of cell to store the grid ( nrxx ) =      62208
+   Number of x-y planes for each processors: 
+   nr3sl =    12   12   12   12   12   12
+
+   Reciprocal Space Mesh
+   ---------------------
+   Large Mesh
+     Global(ngm_g)    MinLocal       MaxLocal      Average
+          83519          13918          13921       13919.83
+   Smooth Mesh
+     Global(ngms_g)   MinLocal       MaxLocal      Average
+          83519          13918          13921       13919.83
+   Wave function Mesh
+     Global(ngw_g)    MinLocal       MaxLocal      Average
+          10408           1734           1736        1734.67
+
+
+   System geometry initialization
+   ------------------------------
+
+   Matrix Multiplication Performances
+   ortho mmul, time for parallel driver      =   0.00011 with    4 procs
+
+   Constraints matrixes will be distributed block like on
+   ortho sub-group =    2*   2 procs
+
+
+
+   Pseudopotentials initialization
+   -------------------------------
+
+
+   Common initialization
+
+   Specie:     1
+   1  indv=  1   ang. mom=  0
+
+                        dion 
+   0.2253
+
+   Specie:     2
+
+                        dion 
+
+   Short Legend and Physical Units in the Output
+   ---------------------------------------------
+   NFI    [int]          - step index
+   EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics
+   TEMPH  [K]            - Temperature of the fictitious cell dynamics
+   TEMP   [K]            - Ionic temperature
+   ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)
+   ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
+   ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
+   ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
+
+
+
+   Wave Initialization: random initial wave-functions
+   Occupation number from init
+   nbnd =     4
+    2.00 2.00 2.00 2.00
+
+   formf: eself=    18.94976
+   formf:     vps(g=0)=  -0.0061912     rhops(g=0)=  -0.0033232
+   formf: sum_g vps(g)=  -4.3546661 sum_g rhops(g)=  -1.0540044
+   formf:     vps(g=0)=  -0.0011639     rhops(g=0)=  -0.0005539
+   formf: sum_g vps(g)=  -2.5239226 sum_g rhops(g)=  -0.1756674
+   Delta V(G=0):   0.009308Ry,    0.253295eV
+
+   from rhoofr: total integrated electronic density
+   in g-space =      8.000000   in r-space =     8.000000
+
+  nfi    ekinc  temph  tempp           etot         enthal          econs          econt    vnhh   xnhh0    vnhp   xnhp0
+    1  1.45743    0.0    0.0       16.61845       16.61845       16.61845       18.07588  0.0000  0.0000  0.0000  0.0000
+    2  3.37031    0.0    0.0       12.61697       12.61697       12.61697       15.98727  0.0000  0.0000  0.0000  0.0000
+    3  4.81260    0.0    0.0        7.78398        7.78398        7.78398       12.59658  0.0000  0.0000  0.0000  0.0000
+    4  5.48116    0.0    0.0        2.96217        2.96217        2.96217        8.44333  0.0000  0.0000  0.0000  0.0000
+    5  5.49239    0.0    0.0       -1.45144       -1.45144       -1.45144        4.04095  0.0000  0.0000  0.0000  0.0000
+    6  4.83753    0.0    0.0       -4.98322       -4.98322       -4.98322       -0.14570  0.0000  0.0000  0.0000  0.0000
+    7  3.53392    0.0    0.0       -6.98224       -6.98224       -6.98224       -3.44832  0.0000  0.0000  0.0000  0.0000
+    8  2.15219    0.0    0.0       -7.72794       -7.72794       -7.72794       -5.57576  0.0000  0.0000  0.0000  0.0000
+    9  1.32264    0.0    0.0       -8.20443       -8.20443       -8.20443       -6.88179  0.0000  0.0000  0.0000  0.0000
+   10  1.04393    0.0    0.0       -8.86827       -8.86827       -8.86827       -7.82433  0.0000  0.0000  0.0000  0.0000
+   11  0.97593    0.0    0.0       -9.62712       -9.62712       -9.62712       -8.65119  0.0000  0.0000  0.0000  0.0000
+   12  0.89782    0.0    0.0      -10.30456      -10.30456      -10.30456       -9.40674  0.0000  0.0000  0.0000  0.0000
+   13  0.78413    0.0    0.0      -10.85644      -10.85644      -10.85644      -10.07232  0.0000  0.0000  0.0000  0.0000
+   14  0.68263    0.0    0.0      -11.33250      -11.33250      -11.33250      -10.64987  0.0000  0.0000  0.0000  0.0000
+   15  0.61986    0.0    0.0      -11.78505      -11.78505      -11.78505      -11.16519  0.0000  0.0000  0.0000  0.0000
+   16  0.59021    0.0    0.0      -12.23682      -12.23682      -12.23682      -11.64660  0.0000  0.0000  0.0000  0.0000
+   17  0.57793    0.0    0.0      -12.69056      -12.69056      -12.69056      -12.11263  0.0000  0.0000  0.0000  0.0000
+   18  0.57140    0.0    0.0      -13.14295      -13.14295      -13.14295      -12.57155  0.0000  0.0000  0.0000  0.0000
+   19  0.56508    0.0    0.0      -13.59059      -13.59059      -13.59059      -13.02551  0.0000  0.0000  0.0000  0.0000
+   20  0.55658    0.0    0.0      -14.03047      -14.03047      -14.03047      -13.47389  0.0000  0.0000  0.0000  0.0000
+   21  0.54381    0.0    0.0      -14.45812      -14.45812      -14.45812      -13.91431  0.0000  0.0000  0.0000  0.0000
+   22  0.52411    0.0    0.0      -14.86634      -14.86634      -14.86634      -14.34223  0.0000  0.0000  0.0000  0.0000
+   23  0.49509    0.0    0.0      -15.24590      -15.24590      -15.24590      -14.75082  0.0000  0.0000  0.0000  0.0000
+   24  0.45610    0.0    0.0      -15.58802      -15.58802      -15.58802      -15.13193  0.0000  0.0000  0.0000  0.0000
+   25  0.40886    0.0    0.0      -15.88687      -15.88687      -15.88687      -15.47801  0.0000  0.0000  0.0000  0.0000
+   26  0.35685    0.0    0.0      -16.14069      -16.14069      -16.14069      -15.78384  0.0000  0.0000  0.0000  0.0000
+   27  0.30407    0.0    0.0      -16.35141      -16.35141      -16.35141      -16.04734  0.0000  0.0000  0.0000  0.0000
+   28  0.25391    0.0    0.0      -16.52336      -16.52336      -16.52336      -16.26945  0.0000  0.0000  0.0000  0.0000
+   29  0.20861    0.0    0.0      -16.66194      -16.66194      -16.66194      -16.45333  0.0000  0.0000  0.0000  0.0000
+   30  0.16924    0.0    0.0      -16.77266      -16.77266      -16.77266      -16.60342  0.0000  0.0000  0.0000  0.0000
+   31  0.13600    0.0    0.0      -16.86059      -16.86059      -16.86059      -16.72459  0.0000  0.0000  0.0000  0.0000
+   32  0.10849    0.0    0.0      -16.93010      -16.93010      -16.93010      -16.82161  0.0000  0.0000  0.0000  0.0000
+   33  0.08605    0.0    0.0      -16.98483      -16.98483      -16.98483      -16.89878  0.0000  0.0000  0.0000  0.0000
+   34  0.06790    0.0    0.0      -17.02773      -17.02773      -17.02773      -16.95984  0.0000  0.0000  0.0000  0.0000
+   35  0.05332    0.0    0.0      -17.06121      -17.06121      -17.06121      -17.00789  0.0000  0.0000  0.0000  0.0000
+   36  0.04166    0.0    0.0      -17.08720      -17.08720      -17.08720      -17.04554  0.0000  0.0000  0.0000  0.0000
+   37  0.03241    0.0    0.0      -17.10729      -17.10729      -17.10729      -17.07488  0.0000  0.0000  0.0000  0.0000
+   38  0.02512    0.0    0.0      -17.12277      -17.12277      -17.12277      -17.09766  0.0000  0.0000  0.0000  0.0000
+   39  0.01941    0.0    0.0      -17.13469      -17.13469      -17.13469      -17.11528  0.0000  0.0000  0.0000  0.0000
+   40  0.01497    0.0    0.0      -17.14387      -17.14387      -17.14387      -17.12889  0.0000  0.0000  0.0000  0.0000
+   41  0.01155    0.0    0.0      -17.15093      -17.15093      -17.15093      -17.13938  0.0000  0.0000  0.0000  0.0000
+   42  0.00892    0.0    0.0      -17.15639      -17.15639      -17.15639      -17.14747  0.0000  0.0000  0.0000  0.0000
+   43  0.00690    0.0    0.0      -17.16063      -17.16063      -17.16063      -17.15372  0.0000  0.0000  0.0000  0.0000
+   44  0.00537    0.0    0.0      -17.16394      -17.16394      -17.16394      -17.15857  0.0000  0.0000  0.0000  0.0000
+   45  0.00419    0.0    0.0      -17.16655      -17.16655      -17.16655      -17.16236  0.0000  0.0000  0.0000  0.0000
+   46  0.00330    0.0    0.0      -17.16862      -17.16862      -17.16862      -17.16532  0.0000  0.0000  0.0000  0.0000
+   47  0.00261    0.0    0.0      -17.17028      -17.17028      -17.17028      -17.16767  0.0000  0.0000  0.0000  0.0000
+   48  0.00209    0.0    0.0      -17.17162      -17.17162      -17.17162      -17.16953  0.0000  0.0000  0.0000  0.0000
+   49  0.00169    0.0    0.0      -17.17271      -17.17271      -17.17271      -17.17103  0.0000  0.0000  0.0000  0.0000
+   50  0.00137    0.0    0.0      -17.17361      -17.17361      -17.17361      -17.17224  0.0000  0.0000  0.0000  0.0000
+   51  0.00113    0.0    0.0      -17.17436      -17.17436      -17.17436      -17.17323  0.0000  0.0000  0.0000  0.0000
+   52  0.00093    0.0    0.0      -17.17498      -17.17498      -17.17498      -17.17405  0.0000  0.0000  0.0000  0.0000
+   53  0.00078    0.0    0.0      -17.17550      -17.17550      -17.17550      -17.17472  0.0000  0.0000  0.0000  0.0000
+   54  0.00065    0.0    0.0      -17.17594      -17.17594      -17.17594      -17.17529  0.0000  0.0000  0.0000  0.0000
+   55  0.00054    0.0    0.0      -17.17631      -17.17631      -17.17631      -17.17576  0.0000  0.0000  0.0000  0.0000
+   56  0.00046    0.0    0.0      -17.17662      -17.17662      -17.17662      -17.17616  0.0000  0.0000  0.0000  0.0000
+   57  0.00039    0.0    0.0      -17.17688      -17.17688      -17.17688      -17.17650  0.0000  0.0000  0.0000  0.0000
+   58  0.00033    0.0    0.0      -17.17711      -17.17711      -17.17711      -17.17678  0.0000  0.0000  0.0000  0.0000
+   59  0.00028    0.0    0.0      -17.17730      -17.17730      -17.17730      -17.17702  0.0000  0.0000  0.0000  0.0000
+   60  0.00024    0.0    0.0      -17.17746      -17.17746      -17.17746      -17.17723  0.0000  0.0000  0.0000  0.0000
+   61  0.00020    0.0    0.0      -17.17760      -17.17760      -17.17760      -17.17740  0.0000  0.0000  0.0000  0.0000
+   62  0.00017    0.0    0.0      -17.17772      -17.17772      -17.17772      -17.17755  0.0000  0.0000  0.0000  0.0000
+   63  0.00015    0.0    0.0      -17.17782      -17.17782      -17.17782      -17.17767  0.0000  0.0000  0.0000  0.0000
+   64  0.00012    0.0    0.0      -17.17791      -17.17791      -17.17791      -17.17778  0.0000  0.0000  0.0000  0.0000
+   65  0.00011    0.0    0.0      -17.17798      -17.17798      -17.17798      -17.17787  0.0000  0.0000  0.0000  0.0000
+   66  0.00009    0.0    0.0      -17.17804      -17.17804      -17.17804      -17.17795  0.0000  0.0000  0.0000  0.0000
+   67  0.00008    0.0    0.0      -17.17810      -17.17810      -17.17810      -17.17802  0.0000  0.0000  0.0000  0.0000
+   68  0.00007    0.0    0.0      -17.17814      -17.17814      -17.17814      -17.17808  0.0000  0.0000  0.0000  0.0000
+   69  0.00006    0.0    0.0      -17.17818      -17.17818      -17.17818      -17.17813  0.0000  0.0000  0.0000  0.0000
+   70  0.00005    0.0    0.0      -17.17822      -17.17822      -17.17822      -17.17817  0.0000  0.0000  0.0000  0.0000
+   71  0.00004    0.0    0.0      -17.17824      -17.17824      -17.17824      -17.17820  0.0000  0.0000  0.0000  0.0000
+   72  0.00004    0.0    0.0      -17.17827      -17.17827      -17.17827      -17.17823  0.0000  0.0000  0.0000  0.0000
+   73  0.00003    0.0    0.0      -17.17829      -17.17829      -17.17829      -17.17826  0.0000  0.0000  0.0000  0.0000
+   74  0.00003    0.0    0.0      -17.17831      -17.17831      -17.17831      -17.17828  0.0000  0.0000  0.0000  0.0000
+   75  0.00002    0.0    0.0      -17.17832      -17.17832      -17.17832      -17.17830  0.0000  0.0000  0.0000  0.0000
+   76  0.00002    0.0    0.0      -17.17834      -17.17834      -17.17834      -17.17832  0.0000  0.0000  0.0000  0.0000
+   77  0.00002    0.0    0.0      -17.17835      -17.17835      -17.17835      -17.17833  0.0000  0.0000  0.0000  0.0000
+   78  0.00001    0.0    0.0      -17.17836      -17.17836      -17.17836      -17.17834  0.0000  0.0000  0.0000  0.0000
+   79  0.00001    0.0    0.0      -17.17837      -17.17837      -17.17837      -17.17836  0.0000  0.0000  0.0000  0.0000
+   80  0.00001    0.0    0.0      -17.17837      -17.17837      -17.17837      -17.17836  0.0000  0.0000  0.0000  0.0000
+   81  0.00001    0.0    0.0      -17.17838      -17.17838      -17.17838      -17.17837  0.0000  0.0000  0.0000  0.0000
+   82  0.00001    0.0    0.0      -17.17839      -17.17839      -17.17839      -17.17838  0.0000  0.0000  0.0000  0.0000
+   83  0.00001    0.0    0.0      -17.17839      -17.17839      -17.17839      -17.17838  0.0000  0.0000  0.0000  0.0000
+   84  0.00001    0.0    0.0      -17.17839      -17.17839      -17.17839      -17.17839  0.0000  0.0000  0.0000  0.0000
+   85  0.00000    0.0    0.0      -17.17840      -17.17840      -17.17840      -17.17839  0.0000  0.0000  0.0000  0.0000
+   86  0.00000    0.0    0.0      -17.17840      -17.17840      -17.17840      -17.17840  0.0000  0.0000  0.0000  0.0000
+   87  0.00000    0.0    0.0      -17.17840      -17.17840      -17.17840      -17.17840  0.0000  0.0000  0.0000  0.0000
+   88  0.00000    0.0    0.0      -17.17841      -17.17841      -17.17841      -17.17840  0.0000  0.0000  0.0000  0.0000
+   89  0.00000    0.0    0.0      -17.17841      -17.17841      -17.17841      -17.17841  0.0000  0.0000  0.0000  0.0000
+   90  0.00000    0.0    0.0      -17.17841      -17.17841      -17.17841      -17.17841  0.0000  0.0000  0.0000  0.0000
+   91  0.00000    0.0    0.0      -17.17841      -17.17841      -17.17841      -17.17841  0.0000  0.0000  0.0000  0.0000
+   92  0.00000    0.0    0.0      -17.17841      -17.17841      -17.17841      -17.17841  0.0000  0.0000  0.0000  0.0000
+   93  0.00000    0.0    0.0      -17.17841      -17.17841      -17.17841      -17.17841  0.0000  0.0000  0.0000  0.0000
+   94  0.00000    0.0    0.0      -17.17841      -17.17841      -17.17841      -17.17841  0.0000  0.0000  0.0000  0.0000
+   95  0.00000    0.0    0.0      -17.17841      -17.17841      -17.17841      -17.17841  0.0000  0.0000  0.0000  0.0000
+   96  0.00000    0.0    0.0      -17.17842      -17.17842      -17.17842      -17.17841  0.0000  0.0000  0.0000  0.0000
+   97  0.00000    0.0    0.0      -17.17842      -17.17842      -17.17842      -17.17841  0.0000  0.0000  0.0000  0.0000
+   98  0.00000    0.0    0.0      -17.17842      -17.17842      -17.17842      -17.17842  0.0000  0.0000  0.0000  0.0000
+   99  0.00000    0.0    0.0      -17.17842      -17.17842      -17.17842      -17.17842  0.0000  0.0000  0.0000  0.0000
+
+ * Physical Quantities at step:   100
+
+
+                total energy =      -17.17842 Hartree a.u.
+              kinetic energy =       12.58528 Hartree a.u.
+        electrostatic energy =      -18.19051 Hartree a.u.
+                         esr =        0.14128 Hartree a.u.
+                       eself =       18.94976 Hartree a.u.
+      pseudopotential energy =       -9.32929 Hartree a.u.
+  n-l pseudopotential energy =        1.95843 Hartree a.u.
+ exchange-correlation energy =       -4.20234 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
+
+
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -24.73  -12.71   -8.94   -6.91
+
+   Allocated memory (kb) =     27472
+
+   CELL_PARAMETERS
+   12.00000000    0.00000000    0.00000000
+    0.00000000   12.00000000    0.00000000
+    0.00000000    0.00000000   12.00000000
+
+   System Density [g/cm^3] :     0.1167
+
+
+   Center of mass square displacement (a.u.):   0.000000
+
+   Total stress (GPa)
+       -0.21050589         0.02998249        -0.00360890
+        0.02998249        -0.21060143        -0.00234024
+       -0.00360890        -0.00234024        -0.08844614
+   ATOMIC_POSITIONS
+   O    0.990000E-02  0.990000E-02  0.000000E+00
+   H    0.183250E+01 -0.224300E+00 -0.100000E-03
+   H   -0.224300E+00  0.183250E+01  0.200000E-03
+
+   ATOMIC_VELOCITIES
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   H    0.000000E+00  0.000000E+00  0.000000E+00
+   H    0.000000E+00  0.000000E+00  0.000000E+00
+
+   Forces acting on atoms (au):
+   O    0.235873E-02  0.235085E-02  0.270774E-03
+   H   -0.242591E-02  0.605181E-03  0.162770E-03
+   H    0.607669E-03 -0.241643E-02  0.100089E-03
+
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   Mean Square Displacement (a.u.)
+        1   0.00E+00     0.0000E+00
+        2   0.00E+00     0.0000E+00
+  100  0.00000    0.0    0.0      -17.17842      -17.17842      -17.17842      -17.17842  0.0000  0.0000  0.0000  0.0000
+
+   writing restart file: /home/akohlmey/compile/espresso-qmmm/tmp//h2o_51.save
+   restart file written in    0.136 sec.
+
+
+
+   Averaged Physical Quantities
+                      accumulated      this run
+   ekinc         :        0.44687       0.44687 (AU)
+   ekin          :       11.30009      11.30009 (AU)
+   epot          :      -28.24112     -28.24112 (AU)
+   total energy  :      -14.77337     -14.77337 (AU)
+   temperature   :        0.00000       0.00000 (K )
+   enthalpy      :      -14.77337     -14.77337 (AU)
+   econs         :      -14.77337     -14.77337 (AU)
+   pressure      :        7.21895       7.21895 (Gpa)
+   volume        :     1728.00000    1728.00000 (AU)
+
+
+     initialize   :      0.89s CPU      1.58s WALL (       1 calls)
+     main_loop    :     17.68s CPU     33.27s WALL (     100 calls)
+
+     Called by main_loop:
+     move_electro :     17.38s CPU     32.63s WALL (     100 calls)
+     ortho        :      0.18s CPU      0.38s WALL (     101 calls)
+     updatc       :      0.02s CPU      0.05s WALL (     101 calls)
+     strucf       :      0.00s CPU      0.00s WALL (       1 calls)
+     calbec       :      0.01s CPU      0.02s WALL (     102 calls)
+
+     Called by move_electrons:
+     rhoofr       :      2.41s CPU      4.35s WALL (     101 calls)
+     vofrho       :     13.47s CPU     25.50s WALL (     101 calls)
+     dforce       :      1.62s CPU      3.00s WALL (     202 calls)
+     calphi       :      0.01s CPU      0.01s WALL (     101 calls)
+     nlfl         :      0.00s CPU      0.01s WALL (     101 calls)
+
+     Called by ortho:
+     ortho_iter   :      0.08s CPU      0.17s WALL (     101 calls)
+     rsg          :      0.04s CPU      0.09s WALL (     101 calls)
+     rhoset       :      0.02s CPU      0.05s WALL (     101 calls)
+     sigset       :      0.02s CPU      0.04s WALL (     101 calls)
+     tauset       :      0.02s CPU      0.03s WALL (     101 calls)
+
+     Small boxes:
+
+     Low-level routines:
+     prefor       :      0.00s CPU      0.00s WALL (     101 calls)
+     nlfq         :      0.03s CPU      0.08s WALL (     101 calls)
+     nlsm1        :      0.01s CPU      0.02s WALL (     102 calls)
+     nlsm2        :      0.03s CPU      0.08s WALL (     101 calls)
+     fft          :      4.16s CPU      8.69s WALL (     808 calls)
+     ffts         :      1.05s CPU      1.91s WALL (     202 calls)
+     fftw         :      2.25s CPU      4.24s WALL (     606 calls)
+     fft_scatter  :      2.70s CPU      9.94s WALL (    1616 calls)
+     betagx       :      0.25s CPU      0.34s WALL (       1 calls)
+     qradx        :      0.00s CPU      0.00s WALL (       1 calls)
+     gram         :      0.00s CPU      0.00s WALL (       1 calls)
+     nlinit       :      0.66s CPU      1.12s WALL (       1 calls)
+     init_dim     :      0.03s CPU      0.06s WALL (       1 calls)
+     newnlinit    :      0.03s CPU      0.18s WALL (       1 calls)
+     from_scratch :      0.20s CPU      0.39s WALL (       1 calls)
+     ortho_iter   :      0.08s CPU      0.17s WALL (     101 calls)
+
+
+     CP           :    18.66s CPU        35.03s WALL
+
+
+   This run was terminated on:  11:54: 6  27Sep2013            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
+ rank 1 return value is: 0
+ rank 4 return value is: 0
+ rank 5 return value is: 0
+ rank 0 return value is: 0
+ rank 2 return value is: 0
+ rank 3 return value is: 0

@@ -1,0 +1,25 @@
+Example Programs for the Library Interface to Quantum ESPRESSO
+
+The programs in this directory demonstrate how the library
+interface can be used. The following examples are provided.
+To compile first do "make couple" on the top level and then
+compile with either make -f Makefile.gfortran or 
+make -f Makefile.ifort depending whether you used gcc/gfortran
+or icc/ifort to compile Quantume ESPRESSO.
+
+c2pw.x and f2pw.x
+=================
+These programs mimick the pw.x executable and provide the
+same command line flags with the additional flag -nreserve
+(or -nres, or -nr) which "reserves" the requested number of
+processors and thus is an example for how some other subroutines
+can be run alongside pw.x using the same MPI infrastructure.
+The c2pw.x program is written in C++, f2pw.x in Fortran and
+they show how to pass along the necessary flags and input
+to the library with either C or Fortran bindings.
+
+c2cp.x and f2cp.x
+=================
+These programs mimick the cp.x executable in the same way
+as c2pw.x and f2pw.x follow the pw.x code.
+

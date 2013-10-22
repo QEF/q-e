@@ -1,0 +1,14 @@
+Library Interface to Quantum ESPRESSO
+
+This package allows calling programs of the Quantum Espresso package as
+subroutines. At the moment this feature is restricted to do something
+similar to calling an executable with the corresponding flags through
+the system() command. This is useful for building hybrid parallel programs
+where multiple executables, or multiple copies of the same executable
+are sharing a single MPI communicator and need to exchange information
+during the run.
+
+Additional APIs will be added as the need arises.
+
+Authors:
+Axel Kohlmeyer <akohlmey@gmail.com>

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+rm -r pwscf.* > /dev/null 2>&1
+rm *.out > /dev/null 2>&1
+exit 0
