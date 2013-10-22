@@ -1773,7 +1773,6 @@ us_exx.o : ../../Modules/fft_base.o
 us_exx.o : ../../Modules/ions_base.o
 us_exx.o : ../../Modules/kind.o
 us_exx.o : ../../Modules/mp.o
-us_exx.o : ../../Modules/mp_global.o
 us_exx.o : ../../Modules/noncol.o
 us_exx.o : ../../Modules/recvec.o
 us_exx.o : ../../Modules/uspp.o
@@ -1821,7 +1820,7 @@ vhpsi.o : ../../Modules/control_flags.o
 vhpsi.o : ../../Modules/ions_base.o
 vhpsi.o : ../../Modules/kind.o
 vhpsi.o : ../../Modules/mp.o
-vhpsi.o : ../../Modules/mp_global.o
+vhpsi.o : ../../Modules/mp_bands.o
 vhpsi.o : ../../Modules/noncol.o
 vhpsi.o : ldaU.o
 vhpsi.o : pwcom.o
@@ -1832,7 +1831,7 @@ vloc_of_g.o : esm.o
 vloc_psi.o : ../../Modules/fft_base.o
 vloc_psi.o : ../../Modules/fft_interfaces.o
 vloc_psi.o : ../../Modules/kind.o
-vloc_psi.o : ../../Modules/mp_global.o
+vloc_psi.o : ../../Modules/mp_bands.o
 vloc_psi.o : ../../Modules/noncol.o
 vloc_psi.o : ../../Modules/parallel_include.o
 vloc_psi.o : ../../Modules/recvec.o
@@ -1930,7 +1929,8 @@ xdm_dispersion.o : ../../Modules/io_global.o
 xdm_dispersion.o : ../../Modules/ions_base.o
 xdm_dispersion.o : ../../Modules/kind.o
 xdm_dispersion.o : ../../Modules/mp.o
-xdm_dispersion.o : ../../Modules/mp_global.o
+xdm_dispersion.o : ../../Modules/mp_images.o
+xdm_dispersion.o : ../../Modules/mp_pools.o
 xdm_dispersion.o : ../../Modules/mp_world.o
 xdm_dispersion.o : ../../Modules/paw_variables.o
 xdm_dispersion.o : ../../Modules/splinelib.o
@@ -1941,5 +1941,5 @@ xdm_dispersion.o : scf_mod.o
 xk_wk_collect.o : ../../Modules/io_global.o
 xk_wk_collect.o : ../../Modules/kind.o
 xk_wk_collect.o : ../../Modules/mp.o
-xk_wk_collect.o : ../../Modules/mp_global.o
+xk_wk_collect.o : ../../Modules/mp_pools.o
 xk_wk_collect.o : pwcom.o

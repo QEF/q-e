@@ -184,7 +184,8 @@ CONTAINS
     USE lsda_mod, ONLY: nspin
     USE atom, ONLY: msh, rgrid
     USE splinelib, ONLY : splint
-    USE mp_global, ONLY : me_image, nproc_image, me_pool, intra_image_comm
+    USE mp_images, ONLY : me_image, nproc_image, intra_image_comm
+    USE mp_pools,  ONLY : me_pool
     USE mp, ONLY : mp_sum
 
     REAL(DP) :: evdw
@@ -710,7 +711,9 @@ CONTAINS
     USE uspp_param,    ONLY : nh, nhm, upf
     USE scf,           ONLY : scf_type
     USE fft_base,      ONLY : dfftp
-    USE mp_global,     ONLY : me_pool, mp_bcast, mp_sum, intra_image_comm
+    USE mp,            ONLY : mp_bcast, mp_sum
+    USE mp_pools,      ONLY : me_pool
+    USE mp_images,     ONLY : intra_image_comm
     USE mp_world,      ONLY : world_comm
     USE io_global,     ONLY : ionode_id
     USE splinelib,     ONLY : spline, splint
@@ -883,7 +886,7 @@ CONTAINS
     USE fft_base,  ONLY : dfftp
     USE splinelib, ONLY : splint
     use cell_base, ONLY : alat
-    USE mp_global, ONLY : me_pool
+    USE mp_pools,  ONLY : me_pool
     implicit none
 
     real(DP), intent(out) :: rhoc(dfftp%nnr) ! core density in the real-space grid

@@ -28,8 +28,7 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
   USE cell_base,     ONLY : at, bg, alat
   USE fft_base,      ONLY : dfftp
   USE mp,            ONLY : mp_sum
-  USE mp_global,     ONLY : me_pool, intra_pool_comm, &
-                            me_bgrp, intra_bgrp_comm
+  USE mp_bands,      ONLY : me_bgrp, intra_bgrp_comm
   USE fft_base,      ONLY : grid_scatter
 
   IMPLICIT NONE

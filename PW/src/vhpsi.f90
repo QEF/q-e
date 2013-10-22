@@ -105,7 +105,7 @@ subroutine vhpsi_nc (ldap, np, mps, psip, hpsi)
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp
   USE noncollin_module, ONLY : npol
   USE wvfct,            ONLY : npwx
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   !
   implicit none

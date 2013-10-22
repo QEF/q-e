@@ -16,7 +16,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   USE kinds,   ONLY : DP
   USE gvecs, ONLY : nls, nlsm
   USE wvfct,   ONLY : igk
-  USE mp_global,     ONLY : me_pool, me_bgrp
+  USE mp_bands,      ONLY : me_bgrp
   USE fft_base,      ONLY : dffts, tg_gather
   USE fft_interfaces,ONLY : fwfft, invfft
   USE wavefunctions_module,  ONLY: psic
@@ -206,7 +206,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   USE kinds,   ONLY : DP
   USE gvecs, ONLY : nls, nlsm
   USE wvfct,   ONLY : igk
-  USE mp_global,     ONLY : me_pool, me_bgrp
+  USE mp_bands,      ONLY : me_bgrp
   USE fft_base,      ONLY : dffts, tg_gather
   USE fft_interfaces,ONLY : fwfft, invfft
   USE wavefunctions_module,  ONLY: psic
@@ -362,7 +362,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   USE kinds,   ONLY : DP
   USE gvecs, ONLY : nls, nlsm
   USE wvfct,   ONLY : igk
-  USE mp_global,     ONLY : me_pool, me_bgrp
+  USE mp_bands,      ONLY : me_bgrp
   USE fft_base,      ONLY : dffts, dfftp, tg_gather
   USE fft_interfaces,ONLY : fwfft, invfft
   USE lsda_mod,      ONLY : nspin

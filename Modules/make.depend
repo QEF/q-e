@@ -79,7 +79,7 @@ fd_gradient.o : cell_base.o
 fd_gradient.o : fft_base.o
 fd_gradient.o : kind.o
 fd_gradient.o : mp.o
-fd_gradient.o : mp_global.o
+fd_gradient.o : mp_bands.o
 fft_base.o : fft_types.o
 fft_base.o : kind.o
 fft_base.o : mp.o
@@ -145,8 +145,6 @@ mm_dispersion.o : mp_world.o
 mp.o : io_global.o
 mp.o : kind.o
 mp.o : parallel_include.o
-mp_atoms.o : mp.o
-mp_atoms.o : parallel_include.o
 mp_bands.o : mp.o
 mp_bands.o : parallel_include.o
 mp_base.o : kind.o

@@ -308,7 +308,7 @@ MODULE us_exx
 !     USE scf,        ONLY : v, vltot
 !     USE uspp,       ONLY : becsum, okvan
 !     USE uspp_param, ONLY : upf, lmaxq, nh, nhm
-!     USE mp_global,  ONLY : intra_bgrp_comm
+!     USE mp_bands,   ONLY : intra_bgrp_comm
 !     USE mp,         ONLY : mp_sum
 !     USE noncollin_module,   ONLY : nspin_mag
 !     USE control_flags,      ONLY : gamma_only
@@ -535,8 +535,6 @@ MODULE us_exx
     USE uspp,             ONLY : okvan, nkb, ijtoh, indv_ijkb0
     USE uspp_param,       ONLY : upf, nh
     USE spin_orb,         ONLY : domag
-    USE mp_global,        ONLY : inter_pool_comm, intra_bgrp_comm
-    USE mp,               ONLY : mp_sum
     !
     USE realus, ONLY : tabs
     !
@@ -593,7 +591,6 @@ MODULE us_exx
     USE uspp,             ONLY : nkb, ijtoh, indv_ijkb0
     USE control_flags,    ONLY : tqr
     USE noncollin_module, ONLY : nspin_mag
-    USE mp_global,        ONLY : intra_bgrp_comm
     USE mp,               ONLY : mp_sum
 
     USE realus, ONLY : tabs
@@ -637,7 +634,6 @@ MODULE us_exx
       !
     ENDDO
     !
-!     CALL mp_sum(  deexx(:,:,:,1:nspin_mag) , intra_bgrp_comm )
   !------------------------------------------------------------------------
   END SUBROUTINE newdxx_r
   !------------------------------------------------------------------------

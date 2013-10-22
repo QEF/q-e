@@ -16,8 +16,8 @@ SUBROUTINE xk_wk_collect( xk_collect, wk_collect, xk, wk, nkstot, nks )
   !
   USE io_global, only : stdout
   USE kinds,     ONLY : DP
-  USE mp_global, ONLY : my_pool_id, npool, kunit
-  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_pools,  ONLY : my_pool_id, npool, kunit, &
+                        inter_pool_comm, intra_pool_comm
   USE mp,        ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -77,8 +77,7 @@ SUBROUTINE wg_all(wg_collect, wg, nkstot, nks )
   ! ... This routine collects all the weights and copy them in all pools.
   !
   USE kinds,     ONLY : DP
-  USE mp_global, ONLY : my_pool_id, npool, kunit
-  USE mp_global, ONLY : inter_pool_comm
+  USE mp_pools,  ONLY : my_pool_id, npool, kunit, inter_pool_comm
   USE mp,        ONLY : mp_sum
   USE wvfct,     ONLY : nbnd
   !
@@ -136,7 +135,7 @@ INTEGER FUNCTION find_current_k(ik, nkstot, nks)
   !
   !
   USE kinds,     ONLY : DP
-  USE mp_global, ONLY : my_pool_id, npool, kunit
+  USE mp_pools,  ONLY : my_pool_id, npool, kunit
   !
   IMPLICIT NONE
   !
@@ -186,8 +185,7 @@ SUBROUTINE xk_collect( xk_col, xk, nkstot, nks )
   ! ... number of k-points
   !
   USE kinds,     ONLY : DP
-  USE mp_global, ONLY : my_pool_id, npool, kunit
-  USE mp_global, ONLY : inter_pool_comm
+  USE mp_pools,  ONLY : my_pool_id, npool, kunit, inter_pool_comm
   USE mp,        ONLY : mp_sum
   !
   IMPLICIT NONE
