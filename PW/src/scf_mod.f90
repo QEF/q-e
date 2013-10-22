@@ -481,7 +481,7 @@ CONTAINS
   USE spin_orb,      ONLY : domag
   USE control_flags, ONLY : gamma_only
   USE paw_onecenter, ONLY : paw_ddot
-  USE mp_global,     ONLY : intra_bgrp_comm
+  USE mp_bands,      ONLY : intra_bgrp_comm
   USE mp,            ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -620,7 +620,7 @@ FUNCTION tauk_ddot( rho1, rho2, gf )
   USE cell_base,     ONLY : omega, tpiba2
   USE gvect,         ONLY : gg, gstart
   USE control_flags, ONLY : gamma_only
-  USE mp_global,     ONLY : intra_bgrp_comm
+  USE mp_bands,      ONLY : intra_bgrp_comm
   USE mp,            ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -767,7 +767,7 @@ END FUNCTION ns_ddot
   USE cell_base,     ONLY : omega, tpiba2
   USE gvect,         ONLY : gg, gstart
   USE control_flags, ONLY : gamma_only
-  USE mp_global,     ONLY : intra_bgrp_comm
+  USE mp_bands,      ONLY : intra_bgrp_comm
   USE mp,            ONLY : mp_sum
   !
   IMPLICIT NONE

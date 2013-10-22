@@ -37,7 +37,8 @@ SUBROUTINE sum_band()
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   USE spin_orb,             ONLY : lspinorb, domag, fcoef
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, btype
-  USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
+  USE mp_pools,             ONLY : inter_pool_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE funct,                ONLY : dft_is_meta
   USE paw_symmetry,         ONLY : PAW_symmetrize
@@ -233,7 +234,7 @@ SUBROUTINE sum_band()
        ! ... gamma version
        !
        USE becmod,        ONLY : bec_type, becp, calbec
-       USE mp_global,     ONLY : me_bgrp
+       USE mp_bands,      ONLY : me_bgrp
        USE mp,            ONLY : mp_sum, mp_get_comm_null
        !
        IMPLICIT NONE
@@ -564,8 +565,8 @@ SUBROUTINE sum_band()
        ! ... k-points version
        !
        USE becmod, ONLY : bec_type, becp, calbec
-       USE mp_global,     ONLY : me_bgrp
-       USE mp,            ONLY : mp_sum
+       USE mp_bands,     ONLY : me_bgrp
+       USE mp,           ONLY : mp_sum
        !
        IMPLICIT NONE
        !

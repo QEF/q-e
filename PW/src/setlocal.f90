@@ -24,7 +24,7 @@ SUBROUTINE setlocal
   USE fft_interfaces,ONLY : invfft
   USE gvect,     ONLY : nl, nlm, ngm
   USE control_flags, ONLY : gamma_only
-  USE mp_global, ONLY : intra_pool_comm, intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE martyna_tuckerman, ONLY : wg_corr_loc, do_comp_mt
   USE esm,       ONLY : esm_local, esm_bc, do_comp_esm

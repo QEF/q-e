@@ -71,7 +71,7 @@ SUBROUTINE setup()
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el, nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
   USE funct,              ONLY : set_dft_from_name
-  USE mp_global,          ONLY : kunit
+  USE mp_pools,           ONLY : kunit
   USE spin_orb,           ONLY : lspinorb, domag
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
@@ -593,7 +593,7 @@ END SUBROUTINE setup
 LOGICAL FUNCTION check_para_diag( nbnd )
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
-  USE mp_global,        ONLY : np_ortho
+  USE mp_diag,          ONLY : np_ortho
   USE control_flags,    ONLY : gamma_only
 
   IMPLICIT NONE

@@ -14,8 +14,8 @@ function sumkg (et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
   !
   !
   USE kinds
-  USE mp_global, ONLY : inter_pool_comm
-  USE mp,        ONLY : mp_sum
+  USE mp_pools, ONLY : inter_pool_comm
+  USE mp,       ONLY : mp_sum
   implicit none
   ! Output variable
   real(DP) :: sumkg

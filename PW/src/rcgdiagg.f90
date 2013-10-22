@@ -20,7 +20,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
   USE constants, ONLY : pi
   USE kinds,     ONLY : DP
   USE gvect,     ONLY : gstart
-  USE mp_global, ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   !
   IMPLICIT NONE

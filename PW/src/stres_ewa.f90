@@ -15,7 +15,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   USE kinds
   USE constants, only : tpi, e2, eps6
-  USE mp_global, ONLY : intra_pool_comm, intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
 
   implicit none

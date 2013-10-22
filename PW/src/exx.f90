@@ -2108,6 +2108,7 @@ MODULE exx
     CALL mp_sum( energy, inter_pool_comm )
     !
     exxenergy2 = energy
+    print *, exxenergy2
     !
     CALL stop_clock ('exxen2')
 

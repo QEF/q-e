@@ -99,7 +99,7 @@ MODULE realus
       USE io_global,     ONLY : ionode,ionode_id
       USE io_files,      ONLY : iunpun, xmlpun
       USE mp,            ONLY : mp_bcast
-      USE mp_global,     ONLY : intra_image_comm
+      USE mp_images,     ONLY : intra_image_comm
       USE control_flags, ONLY : tqr
       !
       IMPLICIT NONE
@@ -261,7 +261,7 @@ MODULE realus
       USE uspp_param, ONLY : upf, lmaxq, nh, nhm
       USE atom,       ONLY : rgrid
       USE fft_types,  ONLY : fft_dlay_descriptor
-      USE mp_global,  ONLY : me_bgrp
+      USE mp_bands,   ONLY : me_bgrp
       USE splinelib,  ONLY : spline, splint
       !
       IMPLICIT NONE
@@ -702,7 +702,7 @@ MODULE realus
       USE uspp_param, ONLY : upf, lmaxq, nh, nhm
       USE atom,       ONLY : rgrid
       USE fft_base,   ONLY : dffts
-      USE mp_global,  ONLY : me_bgrp
+      USE mp_bands,   ONLY : me_bgrp
       USE splinelib,  ONLY : spline, splint
       USE ions_base,  ONLY : ntyp => nsp
       !
@@ -1022,7 +1022,7 @@ MODULE realus
       USE control_flags,    ONLY : tqr
       USE noncollin_module, ONLY : nspin_mag
       USE scf,              ONLY : vltot
-      USE mp_global,        ONLY : intra_bgrp_comm
+      USE mp_bands,         ONLY : intra_bgrp_comm
       USE mp,               ONLY : mp_sum
 
           IMPLICIT NONE
@@ -1442,7 +1442,8 @@ MODULE realus
       USE uspp_param,       ONLY : upf, nh
       USE noncollin_module, ONLY : noncolin, nspin_mag, nspin_lsda
       USE spin_orb,         ONLY : domag
-      USE mp_global,        ONLY : inter_pool_comm, intra_bgrp_comm
+      USE mp_pools,         ONLY : inter_pool_comm
+      USE mp_bands,         ONLY : intra_bgrp_comm
       USE mp,               ONLY : mp_sum
 
       !
@@ -1551,7 +1552,7 @@ MODULE realus
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
     USE uspp_param,            ONLY : nh, nhm
     USE fft_base,              ONLY : tg_gather, dffts
-    USE mp_global,             ONLY : me_bgrp, intra_bgrp_comm
+    USE mp_bands,              ONLY : me_bgrp, intra_bgrp_comm
     USE mp,        ONLY : mp_sum
     !
     IMPLICIT NONE
@@ -1657,7 +1658,7 @@ MODULE realus
     USE uspp_param,            ONLY : nh, nhm
     USE becmod,                ONLY : bec_type, becp
     USE fft_base,              ONLY : tg_gather, dffts
-    USE mp_global,             ONLY : me_bgrp
+    USE mp_bands,              ONLY : me_bgrp
     !
     IMPLICIT NONE
     !
@@ -1742,7 +1743,7 @@ MODULE realus
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : tg_gather, dffts
-      USE mp_global,              ONLY : me_bgrp
+      USE mp_bands,               ONLY : me_bgrp
       !
       IMPLICIT NONE
       !
@@ -1831,7 +1832,7 @@ MODULE realus
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : tg_gather, dffts
-      USE mp_global,              ONLY : me_bgrp
+      USE mp_bands,               ONLY : me_bgrp
       !
       IMPLICIT NONE
       !
@@ -1924,7 +1925,7 @@ MODULE realus
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : tg_gather, dffts
-  USE mp_global,              ONLY : me_bgrp
+  USE mp_bands,               ONLY : me_bgrp
   !
   IMPLICIT NONE
   !
@@ -2029,7 +2030,7 @@ MODULE realus
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : tg_gather, dffts
-  USE mp_global,              ONLY : me_bgrp
+  USE mp_bands,               ONLY : me_bgrp
   !
   IMPLICIT NONE
   !
@@ -2123,7 +2124,7 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts, tg_gather
     USE fft_interfaces,ONLY : invfft
-    USE mp_global,     ONLY : me_bgrp
+    USE mp_bands,      ONLY : me_bgrp
 
     IMPLICIT NONE
 
@@ -2241,7 +2242,7 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts, tg_gather
     USE fft_interfaces,ONLY : fwfft
-    USE mp_global,     ONLY : me_bgrp
+    USE mp_bands,      ONLY : me_bgrp
 
     IMPLICIT NONE
 
@@ -2345,7 +2346,7 @@ MODULE realus
     USE gvecs,                    ONLY : nls, nlsm, doublegrid
     USE fft_base,                 ONLY : dffts
     USE fft_interfaces,           ONLY : invfft
-    USE mp_global,                ONLY : me_bgrp
+    USE mp_bands,                 ONLY : me_bgrp
 
     IMPLICIT NONE
 
@@ -2425,7 +2426,7 @@ MODULE realus
     USE kinds,                    ONLY : DP
     USE fft_base,                 ONLY : dffts
     USE fft_interfaces,           ONLY : fwfft
-    USE mp_global,                ONLY : me_bgrp
+    USE mp_bands,                 ONLY : me_bgrp
 
     IMPLICIT NONE
 
@@ -2493,7 +2494,7 @@ MODULE realus
     USE gvecs,       ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts, tg_gather
-    USE mp_global,     ONLY : me_bgrp
+    USE mp_bands,      ONLY : me_bgrp
     USE scf,           ONLY : vrs
     USE lsda_mod,      ONLY : current_spin
 
@@ -2556,7 +2557,7 @@ MODULE realus
   USE io_global,            ONLY : stdout
   USE cell_base,            ONLY : omega
   !
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -2755,7 +2756,7 @@ MODULE realus
   USE wavefunctions_module, ONLY : psic
   USE cell_base,            ONLY : omega
   !
-  USE mp_global,            ONLY : intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -2880,7 +2881,6 @@ MODULE realus
                  !
                  sca=sca+op(irb)*tabp(ia)%qr(ir,ijtoh(ih,jh,nt))
               ENDDO
-              !!!! call mp_sum(sca , intra_pool_comm)
               CALL mp_sum(sca, world_comm)
               sca=sca/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
               qq_op(ih,jh,ia)=sca

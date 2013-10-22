@@ -27,7 +27,7 @@ subroutine set_rhoc
   USE lsda_mod,  ONLY : nspin
   USE vlocal,    ONLY : strf
   USE control_flags, ONLY : gamma_only
-  USE mp_global, ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   !
   implicit none

@@ -464,8 +464,8 @@ CONTAINS
     !
     !  Initialize arrays needed for parallel symmetrization
     ! 
-    USE mp_global, ONLY : nproc_bgrp, me_bgrp, intra_bgrp_comm
     USE parallel_include
+    USE mp_bands, ONLY : nproc_bgrp, me_bgrp, intra_bgrp_comm
     USE gvect, ONLY : ngm, gcutm, g, gg
     !
     IMPLICIT NONE
@@ -556,7 +556,7 @@ CONTAINS
     !  Initialize G-vector shells needed for symmetrization
     ! 
     USE constants, ONLY : eps8
-    USE mp_global, ONLY : nproc_bgrp
+    USE mp_bands,  ONLY : nproc_bgrp
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: ngm_
@@ -668,10 +668,8 @@ gloop:    DO jg=iig,ngm_
     !
     USE constants,            ONLY : eps8, eps6
     USE gvect,                ONLY : ngm, g
-#ifdef __MPI
     USE parallel_include
-    USE mp_global,            ONLY : intra_bgrp_comm
-#endif
+    USE mp_bands,             ONLY : intra_bgrp_comm
     !
     IMPLICIT NONE
     !

@@ -22,7 +22,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   ! ... S is an overlap matrix, evc is a complex vector
   !
   USE kinds,            ONLY : DP
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands ,        ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -481,10 +481,9 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE mp_global,        ONLY : nbgrp, nproc_bgrp, me_bgrp, & 
-                               intra_bgrp_comm, root_bgrp, &
-                               ortho_comm, np_ortho, me_ortho, ortho_comm_id, &
-                               leg_ortho
+  USE mp_bands,  ONLY : intra_bgrp_comm
+  USE mp_diag,   ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, &
+                        leg_ortho
   USE descriptors,      ONLY : la_descriptor, descla_init , descla_local_dims
   USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier

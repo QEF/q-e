@@ -21,7 +21,7 @@ subroutine stres_har (sigmahar)
   USE scf,       ONLY: rho
   USE control_flags,        ONLY: gamma_only
   USE wavefunctions_module, ONLY : psic
-  USE mp_global, ONLY: intra_pool_comm, intra_bgrp_comm
+  USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none

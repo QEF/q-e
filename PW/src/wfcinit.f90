@@ -182,7 +182,7 @@ SUBROUTINE init_wfc ( ik )
   USE noncollin_module,     ONLY : npol
   USE wavefunctions_module, ONLY : evc
   USE random_numbers,       ONLY : randy
-  USE mp_global,            ONLY : intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE control_flags,        ONLY : gamma_only
   !
   IMPLICIT NONE

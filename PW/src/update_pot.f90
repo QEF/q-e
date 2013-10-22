@@ -69,7 +69,7 @@ SUBROUTINE update_pot()
   USE gvect,         ONLY : ngm, g
   USE vlocal,        ONLY : strf
   USE mp,            ONLY : mp_bcast
-  USE mp_global,     ONLY : intra_image_comm
+  USE mp_images,     ONLY : intra_image_comm
   !
   IMPLICIT NONE
   !
@@ -472,7 +472,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE control_flags,        ONLY : gamma_only
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp, calbec
-  USE mp_global,            ONLY : intra_image_comm
+  USE mp_images,            ONLY : intra_image_comm
   USE mp,                   ONLY : mp_barrier
   !
   IMPLICIT NONE

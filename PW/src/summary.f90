@@ -46,7 +46,7 @@ SUBROUTINE summary()
   USE uspp_param,      ONLY : upf
   USE wvfct,           ONLY : nbnd, ecutwfc, qcutz, ecfixed, q2sigma
   USE lsda_mod,        ONLY : nspin
-  USE mp_global,       ONLY : intra_bgrp_comm
+  USE mp_bands,        ONLY : intra_bgrp_comm
   USE mp,              ONLY : mp_sum
 #ifdef __ENVIRON
   USE environ_base,    ONLY : do_environ

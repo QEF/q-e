@@ -25,10 +25,8 @@ subroutine scale_h
   USE input_parameters, ONLY : k_points
   USE exx,        ONLY : exx_grid_reinit
   USE funct,      ONLY : dft_is_hybrid
-#ifdef __MPI
   USE mp,         ONLY : mp_max
-  USE mp_global,  ONLY : intra_bgrp_comm
-#endif
+  USE mp_bands,   ONLY : intra_bgrp_comm
   !
   implicit none
   !
@@ -64,9 +62,9 @@ subroutine scale_h
      gg (ig) = g(1, ig) * g(1, ig) + g(2, ig) * g(2, ig) + g(3, ig) * g(3, ig)
      gg_max = max(gg(ig), gg_max)
   enddo
-#ifdef __MPI
+
   CALL mp_max (gg_max, intra_bgrp_comm)
-#endif
+
   if(nqxq < int(sqrt(gg_max)/dq)+4) then
      call errore('scale_h', 'Not enough space allocated for radial FFT: '//&
                           'try restarting with a larger cell_factor.',1)

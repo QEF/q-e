@@ -17,7 +17,7 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   !
   USE kinds,         ONLY : DP
   USE control_flags, ONLY : gamma_only 
-  USE mp_global,     ONLY : intra_bgrp_comm
+  USE mp_bands,      ONLY : intra_bgrp_comm
   USE mp,            ONLY : mp_sum 
   !
   IMPLICIT NONE
@@ -123,9 +123,8 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
   !
   USE kinds,            ONLY : DP
   USE control_flags,    ONLY : gamma_only 
-  USE mp_global,        ONLY : nbgrp, nproc_bgrp, me_bgrp, root_bgrp, &
-                               intra_bgrp_comm, &
-                               ortho_comm, np_ortho, me_ortho, ortho_comm_id,&
+  USE mp_bands,         ONLY : intra_bgrp_comm
+  USE mp_diag,          ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id,&
                                leg_ortho
   USE descriptors,      ONLY : la_descriptor, descla_init
   USE parallel_toolkit, ONLY : dsqmred, dsqmdst, dsqmsym

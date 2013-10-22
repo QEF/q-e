@@ -16,7 +16,7 @@ subroutine stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
   USE noncollin_module, ONLY : noncolin
   use funct,            ONLY : gcxc, gcx_spin, gcc_spin, gcc_spin_more, &
                                dft_is_gradient, get_igcc
-  USE mp_global,        ONLY : intra_pool_comm, intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   !
   IMPLICIT NONE

@@ -233,7 +233,8 @@ cegterg.o : ../../Modules/descriptors.o
 cegterg.o : ../../Modules/io_global.o
 cegterg.o : ../../Modules/kind.o
 cegterg.o : ../../Modules/mp.o
-cegterg.o : ../../Modules/mp_global.o
+cegterg.o : ../../Modules/mp_bands.o
+cegterg.o : ../../Modules/mp_diag.o
 cegterg.o : ../../Modules/ptoolkit.o
 clean_pw.o : ../../Modules/atom.o
 clean_pw.o : ../../Modules/constraints_module.o
@@ -1298,7 +1299,7 @@ qvan2.o : pwcom.o
 rcgdiagg.o : ../../Modules/constants.o
 rcgdiagg.o : ../../Modules/kind.o
 rcgdiagg.o : ../../Modules/mp.o
-rcgdiagg.o : ../../Modules/mp_global.o
+rcgdiagg.o : ../../Modules/mp_bands.o
 rcgdiagg.o : ../../Modules/recvec.o
 rdiagh.o : ../../Modules/kind.o
 rdiagh.o : ../../Modules/mp.o
@@ -1307,7 +1308,8 @@ rdiaghg.o : ../../Modules/descriptors.o
 rdiaghg.o : ../../Modules/dspev_drv.o
 rdiaghg.o : ../../Modules/kind.o
 rdiaghg.o : ../../Modules/mp.o
-rdiaghg.o : ../../Modules/mp_global.o
+rdiaghg.o : ../../Modules/mp_bands.o
+rdiaghg.o : ../../Modules/mp_diag.o
 read_conf_from_file.o : ../../Modules/cell_base.o
 read_conf_from_file.o : ../../Modules/io_files.o
 read_conf_from_file.o : ../../Modules/io_global.o
@@ -1360,7 +1362,9 @@ realus.o : ../../Modules/io_global.o
 realus.o : ../../Modules/ions_base.o
 realus.o : ../../Modules/kind.o
 realus.o : ../../Modules/mp.o
-realus.o : ../../Modules/mp_global.o
+realus.o : ../../Modules/mp_bands.o
+realus.o : ../../Modules/mp_images.o
+realus.o : ../../Modules/mp_pools.o
 realus.o : ../../Modules/mp_world.o
 realus.o : ../../Modules/noncol.o
 realus.o : ../../Modules/recvec.o
@@ -1374,7 +1378,8 @@ regterg.o : ../../Modules/descriptors.o
 regterg.o : ../../Modules/io_global.o
 regterg.o : ../../Modules/kind.o
 regterg.o : ../../Modules/mp.o
-regterg.o : ../../Modules/mp_global.o
+regterg.o : ../../Modules/mp_bands.o
+regterg.o : ../../Modules/mp_diag.o
 regterg.o : ../../Modules/ptoolkit.o
 remove_atomic_rho.o : ../../Modules/fft_base.o
 remove_atomic_rho.o : ../../Modules/io_files.o
@@ -1403,12 +1408,14 @@ rotate_wfc_gamma.o : ../../Modules/control_flags.o
 rotate_wfc_gamma.o : ../../Modules/descriptors.o
 rotate_wfc_gamma.o : ../../Modules/kind.o
 rotate_wfc_gamma.o : ../../Modules/mp.o
-rotate_wfc_gamma.o : ../../Modules/mp_global.o
+rotate_wfc_gamma.o : ../../Modules/mp_bands.o
+rotate_wfc_gamma.o : ../../Modules/mp_diag.o
 rotate_wfc_gamma.o : ../../Modules/ptoolkit.o
 rotate_wfc_k.o : ../../Modules/descriptors.o
 rotate_wfc_k.o : ../../Modules/kind.o
 rotate_wfc_k.o : ../../Modules/mp.o
-rotate_wfc_k.o : ../../Modules/mp_global.o
+rotate_wfc_k.o : ../../Modules/mp_bands.o
+rotate_wfc_k.o : ../../Modules/mp_diag.o
 rotate_wfc_k.o : ../../Modules/ptoolkit.o
 run_pwscf.o : ../../Modules/cell_base.o
 run_pwscf.o : ../../Modules/check_stop.o
@@ -1449,7 +1456,7 @@ scale_h.o : ../../Modules/input_parameters.o
 scale_h.o : ../../Modules/io_global.o
 scale_h.o : ../../Modules/kind.o
 scale_h.o : ../../Modules/mp.o
-scale_h.o : ../../Modules/mp_global.o
+scale_h.o : ../../Modules/mp_bands.o
 scale_h.o : ../../Modules/recvec.o
 scale_h.o : exx.o
 scale_h.o : pwcom.o
@@ -1463,7 +1470,7 @@ scf_mod.o : ../../Modules/funct.o
 scf_mod.o : ../../Modules/ions_base.o
 scf_mod.o : ../../Modules/kind.o
 scf_mod.o : ../../Modules/mp.o
-scf_mod.o : ../../Modules/mp_global.o
+scf_mod.o : ../../Modules/mp_bands.o
 scf_mod.o : ../../Modules/paw_variables.o
 scf_mod.o : ../../Modules/recvec.o
 scf_mod.o : ../../Modules/uspp.o
@@ -1483,7 +1490,7 @@ set_rhoc.o : ../../Modules/io_global.o
 set_rhoc.o : ../../Modules/ions_base.o
 set_rhoc.o : ../../Modules/kind.o
 set_rhoc.o : ../../Modules/mp.o
-set_rhoc.o : ../../Modules/mp_global.o
+set_rhoc.o : ../../Modules/mp_bands.o
 set_rhoc.o : ../../Modules/recvec.o
 set_rhoc.o : ../../Modules/uspp.o
 set_rhoc.o : pwcom.o
@@ -1499,7 +1506,7 @@ setlocal.o : ../../Modules/fft_interfaces.o
 setlocal.o : ../../Modules/ions_base.o
 setlocal.o : ../../Modules/kind.o
 setlocal.o : ../../Modules/mp.o
-setlocal.o : ../../Modules/mp_global.o
+setlocal.o : ../../Modules/mp_bands.o
 setlocal.o : ../../Modules/qmmm.o
 setlocal.o : ../../Modules/recvec.o
 setlocal.o : esm.o
@@ -1518,7 +1525,8 @@ setup.o : ../../Modules/io_files.o
 setup.o : ../../Modules/io_global.o
 setup.o : ../../Modules/ions_base.o
 setup.o : ../../Modules/kind.o
-setup.o : ../../Modules/mp_global.o
+setup.o : ../../Modules/mp_diag.o
+setup.o : ../../Modules/mp_pools.o
 setup.o : ../../Modules/noncol.o
 setup.o : ../../Modules/parameters.o
 setup.o : ../../Modules/paw_variables.o
@@ -1548,7 +1556,7 @@ stres_cc.o : ../../Modules/fft_interfaces.o
 stres_cc.o : ../../Modules/ions_base.o
 stres_cc.o : ../../Modules/kind.o
 stres_cc.o : ../../Modules/mp.o
-stres_cc.o : ../../Modules/mp_global.o
+stres_cc.o : ../../Modules/mp_bands.o
 stres_cc.o : ../../Modules/recvec.o
 stres_cc.o : ../../Modules/uspp.o
 stres_cc.o : ../../Modules/wavefunctions.o
@@ -1557,11 +1565,11 @@ stres_cc.o : scf_mod.o
 stres_ewa.o : ../../Modules/constants.o
 stres_ewa.o : ../../Modules/kind.o
 stres_ewa.o : ../../Modules/mp.o
-stres_ewa.o : ../../Modules/mp_global.o
+stres_ewa.o : ../../Modules/mp_bands.o
 stres_gradcorr.o : ../../Modules/funct.o
 stres_gradcorr.o : ../../Modules/kind.o
 stres_gradcorr.o : ../../Modules/mp.o
-stres_gradcorr.o : ../../Modules/mp_global.o
+stres_gradcorr.o : ../../Modules/mp_bands.o
 stres_gradcorr.o : ../../Modules/noncol.o
 stres_har.o : ../../Modules/cell_base.o
 stres_har.o : ../../Modules/constants.o
@@ -1570,7 +1578,7 @@ stres_har.o : ../../Modules/fft_base.o
 stres_har.o : ../../Modules/fft_interfaces.o
 stres_har.o : ../../Modules/kind.o
 stres_har.o : ../../Modules/mp.o
-stres_har.o : ../../Modules/mp_global.o
+stres_har.o : ../../Modules/mp_bands.o
 stres_har.o : ../../Modules/recvec.o
 stres_har.o : ../../Modules/wavefunctions.o
 stres_har.o : pwcom.o
@@ -1600,7 +1608,8 @@ stres_knl.o : ../../Modules/control_flags.o
 stres_knl.o : ../../Modules/io_files.o
 stres_knl.o : ../../Modules/kind.o
 stres_knl.o : ../../Modules/mp.o
-stres_knl.o : ../../Modules/mp_global.o
+stres_knl.o : ../../Modules/mp_bands.o
+stres_knl.o : ../../Modules/mp_pools.o
 stres_knl.o : ../../Modules/noncol.o
 stres_knl.o : ../../Modules/recvec.o
 stres_knl.o : ../../Modules/wavefunctions.o
@@ -1615,7 +1624,7 @@ stres_loc.o : ../../Modules/fft_interfaces.o
 stres_loc.o : ../../Modules/ions_base.o
 stres_loc.o : ../../Modules/kind.o
 stres_loc.o : ../../Modules/mp.o
-stres_loc.o : ../../Modules/mp_global.o
+stres_loc.o : ../../Modules/mp_bands.o
 stres_loc.o : ../../Modules/noncol.o
 stres_loc.o : ../../Modules/recvec.o
 stres_loc.o : ../../Modules/uspp.o
@@ -1626,7 +1635,6 @@ stres_nonloc_dft.o : ../../Modules/fft_base.o
 stres_nonloc_dft.o : ../../Modules/funct.o
 stres_nonloc_dft.o : ../../Modules/kind.o
 stres_nonloc_dft.o : ../../Modules/mp.o
-stres_nonloc_dft.o : ../../Modules/mp_global.o
 stres_nonloc_dft.o : ../../Modules/xc_vdW_DF.o
 stres_us.o : ../../Modules/becmod.o
 stres_us.o : ../../Modules/constants.o
@@ -1634,7 +1642,8 @@ stres_us.o : ../../Modules/control_flags.o
 stres_us.o : ../../Modules/ions_base.o
 stres_us.o : ../../Modules/kind.o
 stres_us.o : ../../Modules/mp.o
-stres_us.o : ../../Modules/mp_global.o
+stres_us.o : ../../Modules/mp_bands.o
+stres_us.o : ../../Modules/mp_pools.o
 stres_us.o : ../../Modules/noncol.o
 stres_us.o : ../../Modules/uspp.o
 stres_us.o : ../../Modules/wavefunctions.o
@@ -1670,7 +1679,8 @@ sum_band.o : ../../Modules/io_files.o
 sum_band.o : ../../Modules/ions_base.o
 sum_band.o : ../../Modules/kind.o
 sum_band.o : ../../Modules/mp.o
-sum_band.o : ../../Modules/mp_global.o
+sum_band.o : ../../Modules/mp_bands.o
+sum_band.o : ../../Modules/mp_pools.o
 sum_band.o : ../../Modules/noncol.o
 sum_band.o : ../../Modules/paw_variables.o
 sum_band.o : ../../Modules/recvec.o
@@ -1685,7 +1695,7 @@ sum_band.o : scf_mod.o
 sum_band.o : symme.o
 sumkg.o : ../../Modules/kind.o
 sumkg.o : ../../Modules/mp.o
-sumkg.o : ../../Modules/mp_global.o
+sumkg.o : ../../Modules/mp_pools.o
 sumkt.o : ../../Modules/kind.o
 summary.o : ../../Modules/atom.o
 summary.o : ../../Modules/cell_base.o
@@ -1699,7 +1709,7 @@ summary.o : ../../Modules/ions_base.o
 summary.o : ../../Modules/kernel_table.o
 summary.o : ../../Modules/kind.o
 summary.o : ../../Modules/mp.o
-summary.o : ../../Modules/mp_global.o
+summary.o : ../../Modules/mp_bands.o
 summary.o : ../../Modules/noncol.o
 summary.o : ../../Modules/recvec.o
 summary.o : ../../Modules/run_info.o
@@ -1717,7 +1727,7 @@ symm_base.o : ../../Modules/kind.o
 symme.o : ../../Modules/cell_base.o
 symme.o : ../../Modules/constants.o
 symme.o : ../../Modules/kind.o
-symme.o : ../../Modules/mp_global.o
+symme.o : ../../Modules/mp_bands.o
 symme.o : ../../Modules/parallel_include.o
 symme.o : ../../Modules/recvec.o
 symme.o : symm_base.o
@@ -1753,7 +1763,7 @@ update_pot.o : ../../Modules/io_global.o
 update_pot.o : ../../Modules/ions_base.o
 update_pot.o : ../../Modules/kind.o
 update_pot.o : ../../Modules/mp.o
-update_pot.o : ../../Modules/mp_global.o
+update_pot.o : ../../Modules/mp_images.o
 update_pot.o : ../../Modules/noncol.o
 update_pot.o : ../../Modules/paw_variables.o
 update_pot.o : ../../Modules/recvec.o
@@ -1793,7 +1803,7 @@ v_of_rho.o : ../../Modules/io_global.o
 v_of_rho.o : ../../Modules/ions_base.o
 v_of_rho.o : ../../Modules/kind.o
 v_of_rho.o : ../../Modules/mp.o
-v_of_rho.o : ../../Modules/mp_global.o
+v_of_rho.o : ../../Modules/mp_bands.o
 v_of_rho.o : ../../Modules/noncol.o
 v_of_rho.o : ../../Modules/recvec.o
 v_of_rho.o : esm.o
@@ -1889,7 +1899,8 @@ wannier_proj.o : pwcom.o
 weights.o : ../../Modules/io_global.o
 weights.o : ../../Modules/kind.o
 weights.o : ../../Modules/mp.o
-weights.o : ../../Modules/mp_global.o
+weights.o : ../../Modules/mp_images.o
+weights.o : ../../Modules/mp_pools.o
 weights.o : pwcom.o
 wfcinit.o : ../../Modules/becmod.o
 wfcinit.o : ../../Modules/cell_base.o
@@ -1898,7 +1909,7 @@ wfcinit.o : ../../Modules/control_flags.o
 wfcinit.o : ../../Modules/io_files.o
 wfcinit.o : ../../Modules/io_global.o
 wfcinit.o : ../../Modules/kind.o
-wfcinit.o : ../../Modules/mp_global.o
+wfcinit.o : ../../Modules/mp_bands.o
 wfcinit.o : ../../Modules/noncol.o
 wfcinit.o : ../../Modules/random_numbers.o
 wfcinit.o : ../../Modules/recvec.o

@@ -22,7 +22,8 @@ SUBROUTINE weights()
   USE ktetra,               ONLY : ltetra, ntetra, tetra
   USE lsda_mod,             ONLY : nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, wg, et
-  USE mp_global,            ONLY : intra_image_comm, inter_pool_comm
+  USE mp_images,            ONLY : intra_image_comm
+  USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE io_global,            ONLY : ionode, ionode_id
   !

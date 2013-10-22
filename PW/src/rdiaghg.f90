@@ -45,7 +45,7 @@ SUBROUTINE rdiaghg_compute( n, m, h, s, ldh, e, v )
   !
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_bcast
-  USE mp_global,        ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
+  USE mp_bands,         ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
   !
   IMPLICIT NONE
   !
@@ -210,10 +210,10 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_bcast
-  USE mp_global,        ONLY : root_bgrp, intra_bgrp_comm
+  USE mp_bands,         ONLY : root_bgrp, intra_bgrp_comm
   USE descriptors,      ONLY : la_descriptor
 #if defined __SCALAPACK
-  USE mp_global,        ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho
+  USE mp_diag,          ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho
   USE dspev_module,     ONLY : pdsyevd_drv
 #endif
   !

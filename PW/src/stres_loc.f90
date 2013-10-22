@@ -24,7 +24,7 @@ subroutine stres_loc (sigmaloc)
   USE wavefunctions_module, ONLY : psic
   USE uspp_param,           ONLY : upf
   USE noncollin_module,     ONLY : nspin_lsda
-  USE mp_global,            ONLY : intra_pool_comm, intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
   implicit none

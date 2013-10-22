@@ -103,7 +103,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
                                get_igcx, get_igcc
   USE scf,              ONLY : scf_type
   USE mp,               ONLY : mp_sum
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
   !
   IMPLICIT NONE
   !
@@ -326,7 +326,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE spin_orb,         ONLY : domag
   USE funct,            ONLY : xc, xc_spin
   USE scf,              ONLY : scf_type
-  USE mp_global,        ONLY : intra_pool_comm, intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
 
   !
@@ -527,7 +527,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   USE lsda_mod,  ONLY : nspin
   USE cell_base, ONLY : omega, tpiba2
   USE control_flags, ONLY : gamma_only
-  USE mp_global, ONLY: intra_pool_comm, intra_bgrp_comm
+  USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
   USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt
   USE esm,       ONLY: do_comp_esm, esm_hartree, esm_bc

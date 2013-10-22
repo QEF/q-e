@@ -13,7 +13,7 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   ! ... Serial version of rotate_wfc for colinear, k-point calculations
   !
   USE kinds,         ONLY : DP
-  USE mp_global,     ONLY : intra_bgrp_comm
+  USE mp_bands,      ONLY : intra_bgrp_comm
   USE mp,            ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -112,9 +112,8 @@ SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   ! ... Subroutine with distributed matrices, written by Carlo Cavazzoni
   !
   USE kinds,            ONLY : DP
-  USE mp_global,        ONLY : intra_bgrp_comm, &
-                               nbgrp, nproc_bgrp, me_bgrp, root_bgrp, &
-                               ortho_comm, np_ortho, me_ortho, ortho_comm_id,&
+  USE mp_bands,         ONLY : intra_bgrp_comm
+  USE mp_diag,          ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id,&
                                leg_ortho
   USE descriptors,      ONLY : descla_init , la_descriptor
   USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst
