@@ -422,6 +422,8 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   CHARACTER(iotk_attlenx) :: attr
   COMPLEX(DP), ALLOCATABLE :: sevc (:,:)
 
+  REAL(DP), ALLOCATABLE :: raux(:)
+
   IF( nkstot > 0 ) THEN
 
      IF( ( kunit < 1 ) .or. ( mod( nkstot, kunit ) /= 0 ) ) &
@@ -739,7 +741,9 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 #ifdef __MPI
   CALL poolrecover (et, nbnd, nkstot, nks)
 #endif
-
+!
+  ALLOCATE(raux(1:nbnd))
+!
 
   WRITE(0,*) "Writing band structure"
 
@@ -762,13 +766,22 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
     CALL iotk_write_attr (attr,"nbnd",nbnd)
     CALL iotk_write_begin(50,"OCCUPATIONS",attr=attr)
     DO ik=1,nkstot
-      CALL iotk_write_dat(50,"wg"//iotk_index(ik),wg(1:nbnd,ik))
+      IF ( wk(ik) == 0.D0 ) THEN
+        !
+        raux = wg(:,ik)
+        !
+      ELSE
+        !
+        raux = wg(:,ik) / wk(ik)
+        !
+      END IF
+      CALL iotk_write_dat(50,"wg"//iotk_index(ik),raux(1:nbnd))
     ENDDO
     CALL iotk_write_end  (50,"OCCUPATIONS")
   ENDIF
-
-
-
+  !
+  DEALLOCATE(raux)
+  !
   wfc_scal = 1.0d0
   twf0 = .true.
   twfm = .false.
