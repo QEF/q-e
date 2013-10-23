@@ -22,11 +22,8 @@
       !
       IMPLICIT NONE
       PRIVATE
-      ! XXX: defined for backward compatibility.
-      !      remove after group argument has been made explicit
-      !      the world communicator is stored in the mp_world module.
-      INTEGER :: global_comm = MPI_COMM_WORLD
-      ! when set to true, MPI_Finalize() is not called. needed for library interface
+      ! when set to true, MPI_Finalize() is not called.
+      ! needed for library interface
       LOGICAL :: skip_finalize = .FALSE.
 
       PUBLIC :: mp_start, mp_abort, mp_end, &
@@ -152,7 +149,6 @@
         ierr = 0
         numtask = 1
         taskid = 0
-        global_comm = group
 
 #  if defined(__MPI)
         CALL mpi_initialized(skip_finalize, ierr)
@@ -184,7 +180,7 @@
         INTEGER :: ierr
         INTEGER, INTENT(IN):: errorcode, gid
 #ifdef __MPI
-        CALL mpi_abort(global_comm, errorcode, ierr)
+        CALL mpi_abort(gid, errorcode, ierr)
         IF (.NOT. skip_finalize) CALL mpi_finalize(ierr)
 #endif
       END SUBROUTINE mp_abort
@@ -192,8 +188,9 @@
 !------------------------------------------------------------------------------!
 !..mp_end
 
-      SUBROUTINE mp_end
+      SUBROUTINE mp_end(groupid)
         IMPLICIT NONE
+        INTEGER, INTENT(IN) :: groupid
         INTEGER :: ierr, taskid
 
         ierr = 0
@@ -204,7 +201,7 @@
 #endif
 
 #if defined(__MPI)
-        CALL mpi_comm_rank( global_comm, taskid, ierr)
+        CALL mpi_comm_rank( groupid, taskid, ierr)
 #if defined __HPM
         !   terminate the IBM Harware performance monitor
         CALL f_hpmterminate( taskid )
@@ -1184,7 +1181,8 @@
         WRITE( stdout, fmt='( "*** error in Message Passing (mp) module ***")' )
         WRITE( stdout, fmt='( "*** error code: ",I5)' ) code
 #if defined(__MPI)
-        CALL mpi_abort(global_comm,code,ierr)
+        ! abort with extreme prejudice across the entire MPI set of tasks
+        CALL mpi_abort(MPI_COMM_WORLD,code,ierr)
 #endif
         STOP
       END SUBROUTINE mp_stop

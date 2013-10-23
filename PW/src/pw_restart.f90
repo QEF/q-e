@@ -30,8 +30,9 @@ MODULE pw_restart
   USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
                         qexml_version, qexml_version_init, pseudo_dir
   USE io_global, ONLY : ionode, ionode_id
-  USE mp_global, ONLY : my_pool_id, intra_pool_comm, &
-                        my_bgrp_id, intra_image_comm, intra_bgrp_comm
+  USE mp_images, ONLY : intra_image_comm
+  USE mp_pools,  ONLY : my_pool_id
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_bcast, mp_sum, mp_max
   USE parser,    ONLY : version_compare
   !
@@ -117,11 +118,14 @@ MODULE pw_restart
       USE extfield,             ONLY : tefield, dipfield, edir, &
                                        emaxpos, eopreg, eamp
       USE io_rho_xml,           ONLY : write_rho
-      USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool, &
-                                       nproc_image, nproc_bgrp, me_bgrp, &
-                                       nproc_pot, nproc_ortho, &
-                                       root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm, &
-                                       root_bgrp, intra_bgrp_comm, inter_bgrp_comm, nbgrp, get_ntask_groups, ntask_groups_file
+      USE mp_global,            ONLY : nproc,get_ntask_groups,ntask_groups_file
+      USE mp_images,            ONLY : nproc_image
+      USE mp_pools,             ONLY : kunit, nproc_pool, me_pool, root_pool, &
+                                       intra_pool_comm, inter_pool_comm
+      USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, root_bgrp, &
+                                       intra_bgrp_comm, inter_bgrp_comm, nbgrp
+      USE mp_pots,              ONLY : nproc_pot
+      USE mp_diag,              ONLY : nproc_ortho
       USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
                                        !gau-pbe in
                                        get_gau_parameter, &
@@ -972,7 +976,7 @@ MODULE pw_restart
       USE io_rho_xml,    ONLY : read_rho
       USE scf,           ONLY : rho
       USE lsda_mod,      ONLY : nspin
-      USE mp_global,     ONLY : intra_pool_comm, intra_bgrp_comm
+      USE mp_bands,      ONLY : intra_bgrp_comm
       USE mp,            ONLY : mp_sum
       !
       IMPLICIT NONE
@@ -1275,7 +1279,8 @@ MODULE pw_restart
       USE klist,            ONLY : nkstot, nelec
       USE wvfct,            ONLY : nbnd, npwx, ecutwfc
       USE control_flags,    ONLY : gamma_only
-      USE mp_global,        ONLY : kunit, nproc_file, nproc_pool_file, &
+      USE mp_pools,         ONLY : kunit
+      USE mp_global,        ONLY : nproc_file, nproc_pool_file, &
                                    nproc_image_file, ntask_groups_file, &
                                    nproc_pot_file, nproc_bgrp_file, &
                                    nproc_ortho_file
@@ -2942,10 +2947,10 @@ MODULE pw_restart
       USE buffers,              ONLY : save_buffer
       USE gvect,                ONLY : ngm, ngm_g, g, ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
-      USE mp_global,            ONLY : kunit, nproc_image, intra_image_comm, &
-                                       nproc_pool, me_pool, root_pool, &
-                                       intra_pool_comm, inter_pool_comm, &
-                                       me_bgrp, nbgrp, root_bgrp, &
+      USE mp_images,            ONLY : nproc_image, intra_image_comm
+      USE mp_pools,             ONLY : kunit, nproc_pool, me_pool, root_pool, &
+                                       intra_pool_comm, inter_pool_comm
+      USE mp_bands,             ONLY : me_bgrp, nbgrp, root_bgrp, &
                                        intra_bgrp_comm,  inter_bgrp_comm
       !
       IMPLICIT NONE

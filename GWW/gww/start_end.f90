@@ -68,7 +68,7 @@ CONTAINS
 
     if(ionode) write(stdout,*) 'Stopping MPI environment'
     call mp_barrier( world_comm )
-    call mp_end()
+    call mp_end( world_comm )
 #endif
 
     return

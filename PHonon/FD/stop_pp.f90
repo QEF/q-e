@@ -39,7 +39,7 @@ subroutine stop_pp
   ! call mpi_finalize (info)
 #endif
  
-  call mp_end()
+  call mp_end( world_comm )
 
 #ifdef __T3E
   !

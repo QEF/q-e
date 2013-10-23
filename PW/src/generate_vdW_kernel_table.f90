@@ -447,7 +447,7 @@ program generate_kernel
   !! -----------------------------------------------------------------------------------------------------
 
   !! Finalize the mpi run using the PWSCF method
-  call mp_end()               
+  call mp_end( world_comm )               
 
   deallocate( phi, d2phi_dk2, indices, proc_indices )
 

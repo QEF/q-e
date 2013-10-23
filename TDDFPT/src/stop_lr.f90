@@ -96,7 +96,7 @@ SUBROUTINE stop_lr( full_run  )
   !
   CALL mp_barrier(world_comm)
   !
-  CALL mp_end()
+  CALL mp_end(world_comm)
   !
 #if defined (__T3E)
   !
