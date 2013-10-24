@@ -39,7 +39,7 @@ SUBROUTINE move_ions()
                                      lmd, llang, history, tr2
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
-  USE mp_global,              ONLY : intra_image_comm
+  USE mp_images,              ONLY : intra_image_comm
   USE io_global,              ONLY : ionode_id, ionode
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs

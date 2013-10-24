@@ -2,7 +2,7 @@ MODULE pw2blip
    USE kinds, ONLY: DP
 
    USE io_global, ONLY: ionode, ionode_id
-   USE mp_global, ONLY: me_pool,nproc_pool,intra_pool_comm
+   USE mp_pools, ONLY: me_pool,nproc_pool,intra_pool_comm
    USE mp, ONLY: mp_get
    USE control_flags, ONLY: gamma_only
    USE constants, ONLY: tpi

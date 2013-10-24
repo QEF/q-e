@@ -190,7 +190,7 @@ SUBROUTINE ortho_swfc ( normalize_only, m, wfc, swfc )
   !
   USE kinds,      ONLY : DP
   USE wvfct,      ONLY : npwx, npw
-  USE mp_global,  ONLY : intra_bgrp_comm
+  USE mp_bands,   ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   USE noncollin_module, ONLY : noncolin, npol
   !

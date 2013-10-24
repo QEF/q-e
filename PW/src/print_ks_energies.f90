@@ -24,8 +24,7 @@ SUBROUTINE print_ks_energies()
   USE wvfct,                ONLY : nbnd, et, wg
   USE fixed_occ,            ONLY : f_inp, tfixed_occ, one_atom_occupations
   USE control_flags,        ONLY : conv_elec, lbands, iverbosity
-  USE mp_global,            ONLY : root_pool, intra_pool_comm, inter_pool_comm
-  USE mp_global,            ONLY : root_bgrp, intra_bgrp_comm, inter_bgrp_comm
+  USE mp_bands,             ONLY : root_bgrp, intra_bgrp_comm, inter_bgrp_comm
   USE mp,                   ONLY : mp_sum, mp_bcast
   !
   IMPLICIT NONE

@@ -30,7 +30,7 @@ MODULE paw_exx
     USE uspp_param,     ONLY : upf, nh
     USE uspp,           ONLY : nkb
     USE paw_variables,  ONLY : okpaw
-    USE mp_global,      ONLY : me_image
+    USE mp_images,      ONLY : me_image
     USE uspp,           ONLY : indv_ijkb0
     IMPLICIT NONE
     !
@@ -137,7 +137,7 @@ MODULE paw_exx
     USE ions_base,          ONLY : nat, ityp, ntyp => nsp
     USE uspp_param,         ONLY : nh, upf
     USE uspp,               ONLY : nkb
-    USE mp_global,          ONLY : me_image
+    USE mp_images,          ONLY : me_image
     IMPLICIT NONE
     COMPLEX(DP),INTENT(in) :: becphi(nkb), becpsi(nkb)
     !

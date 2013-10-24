@@ -30,7 +30,7 @@ SUBROUTINE new_evc()
   USE gvect,                ONLY : gstart
   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
   USE buffers,              ONLY : get_buffer, save_buffer
-  USE mp_global,            ONLY : intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
 
   IMPLICIT NONE
@@ -93,9 +93,8 @@ SUBROUTINE new_evc()
            ENDIF
         ENDDO
      ENDDO
-#ifdef __MPI
+
      CALL mp_sum ( proj, intra_bgrp_comm )
-#endif
 
      IF ( iverbosity > 0 ) THEN
         DO ibnd=1,nbnd

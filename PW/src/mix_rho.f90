@@ -373,7 +373,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   USE kinds,                ONLY : DP
   USE constants,            ONLY : e2, pi, tpi, fpi, eps8, eps32
   USE cell_base,            ONLY : omega, tpiba2
-  USE gvecs,              ONLY : nls, nlsm
+  USE gvecs,                ONLY : nls, nlsm
   USE gvect,                ONLY : gg, ngm, nl, nlm
   USE wavefunctions_module, ONLY : psic
   USE klist,                ONLY : nelec
@@ -381,7 +381,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   USE control_flags,        ONLY : ngm0, gamma_only
   USE scf,                  ONLY : mix_type, local_tf_ddot
   USE mp,                   ONLY : mp_sum
-  USE mp_global,            ONLY : intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   !

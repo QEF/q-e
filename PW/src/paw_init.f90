@@ -80,7 +80,7 @@ SUBROUTINE PAW_post_init()
     ! this routine does nothing at this moment...
     USE ions_base,          ONLY : nat, ntyp=>nsp, ityp
     USE uspp_param,         ONLY : upf
-    USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm
+    USE mp_images,          ONLY : me_image, nproc_image, intra_image_comm
     USE mp,                 ONLY : mp_sum
     USE io_global,          ONLY : stdout, ionode
     USE control_flags,      ONLY : iverbosity
@@ -237,7 +237,7 @@ SUBROUTINE PAW_init_onecenter()
     USE spin_orb,           ONLY : domag
     USE noncollin_module,   ONLY : noncolin
     USE funct,              ONLY : dft_is_gradient
-    USE mp_global,          ONLY : me_image, nproc_image
+    USE mp_images,          ONLY : me_image, nproc_image
     USE mp,                 ONLY : mp_sum
 
     INTEGER :: nt, lmax_safe, lmax_add, ia, ia_s, ia_e, na, mykey, max_mesh, &
@@ -333,7 +333,7 @@ END SUBROUTINE PAW_init_onecenter
 SUBROUTINE PAW_increase_lm(incr)
     USE ions_base,          ONLY : nat, ityp, ntyp => nsp
     USE paw_variables,      ONLY : rad, paw_is_init
-    USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm
+    USE mp_images,          ONLY : me_image, nproc_image, intra_image_comm
     USE io_global,          ONLY : stdout, ionode
 
     INTEGER,INTENT(IN) :: incr ! required increase in lm precision

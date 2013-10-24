@@ -39,7 +39,7 @@ MODULE io_rho_xml
       USE io_files,         ONLY : seqopn
       USE io_global,        ONLY : ionode, ionode_id, stdout
       USE scf,              ONLY : scf_type
-      USE mp_global,        ONLY : intra_image_comm
+      USE mp_images,        ONLY : intra_image_comm
       USE mp,               ONLY : mp_bcast
 
       !
@@ -105,7 +105,7 @@ MODULE io_rho_xml
       USE io_files,         ONLY : seqopn
       USE io_global,        ONLY : ionode, ionode_id, stdout
       USE scf,              ONLY : scf_type
-      USE mp_global,        ONLY : intra_image_comm
+      USE mp_images,        ONLY : intra_image_comm
       USE mp,               ONLY : mp_bcast, mp_sum
       !
       IMPLICIT NONE
@@ -189,8 +189,8 @@ MODULE io_rho_xml
       USE io_files, ONLY : tmp_dir, prefix
       USE fft_base, ONLY : dfftp
       USE spin_orb, ONLY : domag
-      USE io_global, ONLY : ionode
-      USE mp_global, ONLY : intra_bgrp_comm, inter_bgrp_comm
+      USE io_global,ONLY : ionode
+      USE mp_bands, ONLY : intra_bgrp_comm, inter_bgrp_comm
       !
       IMPLICIT NONE
       !
@@ -280,8 +280,6 @@ MODULE io_rho_xml
       USE io_files,  ONLY : tmp_dir, prefix
       USE fft_base,  ONLY : dfftp
       USE spin_orb,  ONLY : domag
-      USE mp_global, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_pool, me_pool
-      USE mp_global, ONLY : intra_image_comm
       USE io_global, ONLY : ionode
       !
       IMPLICIT NONE

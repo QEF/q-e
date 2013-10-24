@@ -13,8 +13,8 @@ subroutine n_plane_waves (ecutwfc, tpiba2, nks, xk, g, ngm, npwx, ngk)
   ! Find number of plane waves for each k-point
   !
   USE kinds, only: DP
-  USE mp,        ONLY : mp_max
-  USE mp_global, ONLY : inter_pool_comm
+  USE mp,       ONLY : mp_max
+  USE mp_pools, ONLY : inter_pool_comm
   implicit none
   !
   integer, intent(in) :: nks, ngm

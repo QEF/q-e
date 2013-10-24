@@ -21,7 +21,7 @@ SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )
   ! ... Not a smart implementation!
   !
   USE kinds,     ONLY : DP
-  USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, &
+  USE mp_pools,  ONLY : intra_pool_comm, inter_pool_comm, &
                         my_pool_id, npool, me_pool, root_pool, kunit
   USE mp,        ONLY : mp_bcast  
   !
@@ -79,8 +79,8 @@ SUBROUTINE poolrecover( vec, length, nkstot, nks )
   ! ... distributed vector
   !
   USE kinds,     ONLY : DP
-  USE mp_global, ONLY : inter_pool_comm, intra_image_comm, &
-                        npool, me_pool, root_pool, my_pool_id, kunit
+  USE mp_images, ONLY : intra_image_comm
+  USE mp_pools,  ONLY : inter_pool_comm, npool, me_pool, root_pool, my_pool_id, kunit
   USE mp,        ONLY : mp_barrier  
   USE parallel_include    
   !
@@ -154,8 +154,8 @@ SUBROUTINE ipoolrecover( ivec, length, nkstot, nks )
   !
   ! ... as above, for an integer vector
   !
-  USE mp_global, ONLY : inter_pool_comm, intra_image_comm, &
-                        npool, me_pool, root_pool, my_pool_id, kunit
+  USE mp_images, ONLY : intra_image_comm
+  USE mp_pools,  ONLY : inter_pool_comm, npool, me_pool, root_pool, my_pool_id, kunit
   USE mp,        ONLY : mp_barrier  
   USE parallel_include    
   !

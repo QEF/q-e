@@ -50,7 +50,7 @@ SUBROUTINE orbm_kubo()
   USE uspp,                 ONLY : nkb,vkb
   USE scf,                  ONLY : vrs, vltot, v, kedtau
   USE gvecs,                ONLY : doublegrid
-  USE mp_global,            ONLY : intra_pool_comm,me_pool
+  USE mp_pools,             ONLY : intra_pool_comm
   USE mp_world,             ONLY : world_comm
 
   !  --- Avoid implicit definitions ---

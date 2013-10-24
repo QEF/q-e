@@ -59,7 +59,7 @@ SUBROUTINE newq_compute(vr,deeq,skip_vltot)
   USE wavefunctions_module, ONLY : psic
   USE spin_orb,             ONLY : lspinorb, domag
   USE noncollin_module,     ONLY : nspin_mag
-  USE mp_global,            ONLY : intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE

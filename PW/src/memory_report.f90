@@ -22,7 +22,7 @@ SUBROUTINE memory_report()
   USE lsda_mod,  ONLY : nspin
   USE noncollin_module,     ONLY : npol
   USE control_flags, ONLY: isolve, nmix, gamma_only, lscf
-  USE mp_global, ONLY : np_ortho
+  USE mp_diag,   ONLY : np_ortho
   !
   IMPLICIT NONE
   !

@@ -25,7 +25,7 @@ SUBROUTINE make_pointlists
   USE io_global,  ONLY : stdout
   USE ions_base,  ONLY : nat, tau, ntyp => nsp, ityp
   USE cell_base,  ONLY : at, bg, alat
-  USE mp_global,  ONLY : me_bgrp
+  USE mp_bands,   ONLY : me_bgrp
   USE fft_base,   ONLY : dfftp
 
   USE noncollin_module, ONLY : factlist, pointlist, r_m

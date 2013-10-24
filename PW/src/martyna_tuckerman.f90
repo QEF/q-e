@@ -86,7 +86,7 @@ CONTAINS
   SUBROUTINE wg_corr_force( omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, nspin, rho, force )
 !----------------------------------------------------------------------------
   USE cell_base, ONLY : tpiba
-  USE mp_global, ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   INTEGER, INTENT(IN) :: nat, ntyp, ityp(nat), ngm, nspin
   REAL(DP), INTENT(IN) :: omega, zv(ntyp), tau(3,nat), g(3,ngm)
@@ -122,7 +122,7 @@ CONTAINS
 !----------------------------------------------------------------------------
   SUBROUTINE init_wg_corr
 !----------------------------------------------------------------------------
-  USE mp_global,     ONLY : me_bgrp
+  USE mp_bands,      ONLY : me_bgrp
   USE fft_base,      ONLY : dfftp
   USE fft_interfaces,ONLY : fwfft, invfft
   USE control_flags, ONLY : gamma_only_ => gamma_only

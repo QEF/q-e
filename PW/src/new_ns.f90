@@ -36,7 +36,7 @@ SUBROUTINE new_ns(ns)
   USE wavefunctions_module, ONLY : evc
   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordwfcU, iunhub
   USE buffers,              ONLY : get_buffer
-  USE mp_global,            ONLY : inter_pool_comm
+  USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE becmod,               ONLY : bec_type, calbec, &
                                    allocate_bec_type, deallocate_bec_type
@@ -305,7 +305,8 @@ SUBROUTINE new_ns_nc(ns)
   USE gvect,                ONLY : gstart
   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordwfcU, iunhub
   USE buffers,              ONLY : get_buffer
-  USE mp_global,            ONLY : intra_bgrp_comm, inter_pool_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
 
   IMPLICIT NONE
@@ -353,9 +354,7 @@ SUBROUTINE new_ns_nc(ns)
          proj(i, ibnd) = zdotc (npwx*npol, wfcU (1, i), 1, evc (1, ibnd), 1)
        ENDDO
      ENDDO
-#ifdef __MPI
      CALL mp_sum ( proj, intra_bgrp_comm )
-#endif
      !
      ! compute the occupation matrix
      !

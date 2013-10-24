@@ -46,7 +46,7 @@ SUBROUTINE potinit()
   USE io_files,             ONLY : tmp_dir, prefix, input_drho
   USE spin_orb,             ONLY : domag
   USE mp,                   ONLY : mp_sum
-  USE mp_global,            ONLY : intra_image_comm, intra_bgrp_comm
+  USE mp_bands ,            ONLY : intra_bgrp_comm
   USE io_global,            ONLY : ionode, ionode_id
   USE pw_restart,           ONLY : pw_readfile
   USE io_rho_xml,           ONLY : read_rho

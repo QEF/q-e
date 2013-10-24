@@ -26,7 +26,8 @@ PROGRAM manypw
   USE input_parameters,  ONLY : outdir
   USE environment,       ONLY : environment_start, environment_end
   USE io_global,         ONLY : ionode, ionode_id, stdout
-  USE mp_global,         ONLY : mp_startup, my_image_id
+  USE mp_global,         ONLY : mp_startup
+  USE mp_images,         ONLY : my_image_id
   USE read_input,        ONLY : read_input_file
   USE command_line_options, ONLY: input_file_
   !

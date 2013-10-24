@@ -8,7 +8,7 @@
 MODULE paw_symmetry
     !
     USE kinds,          ONLY : DP
-    USE mp_global,      ONLY : nproc_image, me_image, intra_image_comm
+    USE mp_images,      ONLY : nproc_image, me_image, intra_image_comm
     USE mp,             ONLY : mp_sum
     !
     IMPLICIT NONE

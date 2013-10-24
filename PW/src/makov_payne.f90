@@ -207,7 +207,7 @@ SUBROUTINE vacuum_level( x0, zion )
   USE cell_base, ONLY : at, alat, tpiba, tpiba2
   USE ions_base, ONLY : nsp
   USE vlocal,    ONLY : strf, vloc
-  USE mp_global, ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE control_flags, ONLY : gamma_only
   USE basic_algebra_routines, ONLY : norm

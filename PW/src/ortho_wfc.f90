@@ -13,7 +13,7 @@ SUBROUTINE ortho_wfc(lda,ldb,wfc,ierr)
 
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
-  USE mp_global,  ONLY : intra_bgrp_comm
+  USE mp_bands,   ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   USE noncollin_module, ONLY : noncolin, npol
   
@@ -42,9 +42,7 @@ SUBROUTINE ortho_wfc(lda,ldb,wfc,ierr)
   CALL ZGEMM ('n', 'c', lda, lda, ldb, (1.d0, 0.d0), &
        wfc, lda, wfc, lda, (0.d0, 0.d0), overlap, lda)
     
-#ifdef __MPI
   CALL mp_sum(  overlap, intra_bgrp_comm )
-#endif
 
   ! find O^-.5
   !

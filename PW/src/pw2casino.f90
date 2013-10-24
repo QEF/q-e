@@ -14,7 +14,8 @@ SUBROUTINE pw2casino()
   !
   USE kinds,         ONLY : DP
   !
-  USE mp_global,     ONLY : npool, nimage
+  USE mp_images,     ONLY : nimage
+  USE mp_pools,      ONLY : npool
   !
   USE control_flags, ONLY : istep, nstep
   !
