@@ -174,7 +174,7 @@ subroutine wannier_bse(ispin,w_wfcs,o_mat)
         psic(1:fc%nrxxt)=ww_prod(1:fc%nrxxt)
         CALL cft3t(fc, psic, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t, -2 )
         ww_prodg(1:fc%npwt) = psic(fc%nlt(1:fc%npwt))
-        !if(fc%gstart_t==2) ww_prodg(1)=dble(ww_prodg(1))! DEBUG MI SA CHE E SBAGLIATO
+      
 
         if(fc%dual_t==4.d0) then
            ww_prodg2(:)=ww_prodg(:)
@@ -239,6 +239,8 @@ subroutine wannier_bse(ispin,w_wfcs,o_mat)
    endif  
 
    allocate(z(numw_prod))
+   z(1:numw_prod)=0.d0
+
 
    do iv=1, num_nbndv(ispin)
      do jv=1, num_nbndv(ispin)
