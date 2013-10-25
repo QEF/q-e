@@ -30,14 +30,14 @@ function to_do_before_patch () {
 
 function to_do_after_patch () {
   {
-    echo -n "ADDSON_OBJECTS= \$(ADDSON_OBJECTS)"
+    echo -n "ADDSON_OBJECTS=" 
     for file in $destination/$LINKED_FILES
       do f=${file##*/}
       echo " \\"
       echo -n "	${f%.f90}.o"
     done
     echo
-    echo -n "ADDSON_SRC= \$(ADDSON_SRC)"
+    echo -n "ADDSON_SRC="
     for file in $destination/$LINKED_FILES
       do f=${file##*/}
       echo " \\"

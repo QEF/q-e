@@ -33,6 +33,15 @@ case "$3" in
     ln -s $file $destination/$WHERE_LINKS/$base
   done
 
+  echo "-- modifying $WHERE_LINKS/Makefile"
+  sed < $destination/$WHERE_LINKS/Makefile.original > $destination/$WHERE_LINKS/tmp.1 '/make.sys/ a\
+  include addson.inc \
+   '
+  sed < $destination/$WHERE_LINKS/tmp.1 > $destination/$WHERE_LINKS/Makefile '/= \\/ a\
+  \$(ADDSON_OBJECTS) \\\
+   '
+  rm $destination/$WHERE_LINKS/tmp.1
+
   echo "-- Executing post script"
   to_do_after_patch
 
