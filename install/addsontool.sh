@@ -20,7 +20,7 @@ case "$3" in
   echo "* I will try to patch needed files for integrated compilation ..."
   
 #-------------------
-
+  echo "-- Executing pre script"
   to_do_before_patch
 
   echo "-- Setting up symlinks"
