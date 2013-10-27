@@ -109,7 +109,7 @@ solve_head.o : ../../Modules/io_global.o
 solve_head.o : ../../Modules/ions_base.o
 solve_head.o : ../../Modules/kind.o
 solve_head.o : ../../Modules/mp.o
-solve_head.o : ../../Modules/mp_global.o
+solve_head.o : ../../Modules/mp_pools.o
 solve_head.o : ../../Modules/mp_wave.o
 solve_head.o : ../../Modules/mp_world.o
 solve_head.o : ../../Modules/recvec.o

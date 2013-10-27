@@ -343,7 +343,7 @@
     USE io_global,           ONLY : stdout
     USE constants,           ONLY : eps8, pi
     USE times_gw,            ONLY : times_freqs
-    USE mp_global,           ONLY : nproc, mpime,world_comm! group
+    USE mp_world,            ONLY : nproc, mpime,world_comm! group
     USE parallel_include
 
     implicit none
@@ -581,7 +581,7 @@
     USE  io_global,           ONLY : stdout
     USE  constants,           ONLY : eps8, pi
     USE  mp,                  ONLY : mp_barrier
-    USE  mp_global,           ONLY : mpime, nproc, world_comm!group
+    USE  mp_world,            ONLY : mpime, nproc, world_comm!group
     USE  times_gw,            ONLY : times_freqs
     USE  parallel_include
 

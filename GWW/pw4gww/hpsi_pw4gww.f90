@@ -15,7 +15,7 @@
     USE kinds,    ONLY : DP
     USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
     USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
-    USE mp_global, ONLY : mpime, nproc
+    USE mp_world, ONLY : mpime, nproc
    
 
     implicit none

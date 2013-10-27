@@ -20,7 +20,8 @@
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
-   USE mp_global, ONLY : mpime,nproc, intra_pool_comm
+   USE mp_pools, ONLY : intra_pool_comm
+   USE mp_world, ONLY : mpime,nproc
    USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE mp_wave, ONLY : mergewf,splitwf
    USE fft_base,             ONLY : dfftp, dffts

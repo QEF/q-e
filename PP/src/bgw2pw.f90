@@ -184,8 +184,8 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
   USE klist, ONLY : xk, nks, nkstot
   USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_bcast, mp_sum, mp_max, mp_barrier
-  USE mp_world, ONLY : world_comm
-  USE mp_global, ONLY : nproc, kunit, npool, my_pool_id, intra_pool_comm
+  USE mp_world, ONLY : world_comm, nproc
+  USE mp_pools, ONLY : kunit, npool, my_pool_id, intra_pool_comm
   USE symm_base, ONLY : s, nsym
   USE xml_io_base, ONLY : create_directory, kpoint_dir, wfc_filename
 #ifdef __PARA
@@ -663,7 +663,7 @@ SUBROUTINE write_cd ( input_file_name, real_or_complex, output_dir_name )
   USE kinds, ONLY : DP
   USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_bcast, mp_sum
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_pools, ONLY : intra_pool_comm
   USE mp_world, ONLY : world_comm
   USE scf, ONLY : rho
   USE symm_base, ONLY : s, nsym

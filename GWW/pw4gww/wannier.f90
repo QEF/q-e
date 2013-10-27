@@ -31,7 +31,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, ispin)
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
   USE wannier_gw
   USE mp, ONLY : mp_sum, mp_bcast, mp_barrier
-  USE mp_global,  ONLY : mpime, nproc
+  USE mp_world,  ONLY : mpime, nproc
   USE control_flags,  ONLY : gamma_only
   
   implicit none

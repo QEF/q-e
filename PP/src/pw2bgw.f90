@@ -411,10 +411,10 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   USE klist, ONLY : xk, wk, ngk, nks, nkstot
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum, mp_max, mp_get, mp_bcast, mp_barrier
-  USE mp_global, ONLY : mpime, nproc, kunit, me_pool, &
+  USE mp_pools, ONLY : kunit, me_pool, &
     root_pool, my_pool_id, npool, nproc_pool, intra_pool_comm
   USE mp_wave, ONLY : mergewf
-  USE mp_world, ONLY : world_comm
+  USE mp_world, ONLY : mpime, nproc, world_comm
   USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE symm_base, ONLY : s, ftau, nsym
   USE wavefunctions_module, ONLY : evc
@@ -1220,7 +1220,7 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type, &
   USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_sum
   USE mp_world, ONLY : world_comm
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_pools, ONLY : intra_pool_comm
   USE scf, ONLY : rho
   USE symm_base, ONLY : s, ftau, nsym
 
@@ -1429,7 +1429,7 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum
   USE mp_world, ONLY : world_comm
-  USE mp_global, ONLY : kunit, my_pool_id, inter_pool_comm, npool
+  USE mp_pools, ONLY : kunit, my_pool_id, inter_pool_comm, npool
   USE noncollin_module, ONLY : nspin_mag
   USE scf, ONLY : rho
   USE symme, ONLY : sym_rho, sym_rho_init
@@ -1507,7 +1507,7 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
   USE kinds, ONLY : DP
   USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_sum
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_pools, ONLY : intra_pool_comm
   USE scf, ONLY : rho, rho_core, rhog_core
   USE symm_base, ONLY : s, ftau, nsym
   USE wavefunctions_module, ONLY : psic
@@ -1718,7 +1718,7 @@ SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core )
   USE kinds, ONLY : DP
   USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_sum
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_pools, ONLY : intra_pool_comm
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module, ONLY : psic
 
@@ -1811,7 +1811,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   USE klist, ONLY : xk, nkstot
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum
-  USE mp_global, ONLY : kunit, my_pool_id, intra_pool_comm, &
+  USE mp_pools, ONLY : kunit, my_pool_id, intra_pool_comm, &
     inter_pool_comm, npool
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module, ONLY : evc, psic
@@ -2003,7 +2003,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   USE klist, ONLY : xk, nkstot
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum
-  USE mp_global, ONLY : kunit, my_pool_id, intra_pool_comm, &
+  USE mp_pools, ONLY : kunit, my_pool_id, intra_pool_comm, &
     inter_pool_comm, npool
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module, ONLY : evc, psic
@@ -2215,7 +2215,7 @@ SUBROUTINE write_vscg ( output_file_name, real_or_complex, symm_type )
   USE kinds, ONLY : DP
   USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_sum
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_pools, ONLY : intra_pool_comm
   USE scf, ONLY : vltot, v
   USE symm_base, ONLY : s, ftau, nsym
   USE wavefunctions_module, ONLY : psic
@@ -2424,8 +2424,9 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   USE klist, ONLY : xk, wk, ngk, nks, nkstot
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum, mp_max, mp_get, mp_barrier
-  USE mp_global, ONLY : mpime, nproc, world_comm, kunit, me_pool, &
-    root_pool, my_pool_id, npool, nproc_pool, intra_pool_comm
+  USE mp_world, ONLY : mpime, nproc, world_comm
+  USE mp_pools, ONLY : kunit, me_pool, root_pool, my_pool_id, npool, &
+                       nproc_pool, intra_pool_comm
   USE mp_wave, ONLY : mergewf
   USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE symm_base, ONLY : s, ftau, nsym

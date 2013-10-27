@@ -31,7 +31,7 @@ subroutine init_representations()
   USE ph_restart,    ONLY : ph_writefile
   USE control_flags, ONLY : modenum, noinv
   USE mp,            ONLY : mp_bcast
-  USE mp_global,     ONLY : root, world_comm
+  USE mp_world,      ONLY : root, world_comm
 
   implicit none
 

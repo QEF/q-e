@@ -17,7 +17,7 @@ subroutine calculate_compact_pola_lanczos(options,ispin)
    USE basic_structures,   ONLY : wannier_u,vt_mat_lanczos,tt_mat_lanczos,initialize_memory,free_memory
    USE lanczos,            ONLY : compact_q_lanczos,initialize_compact_q_lanczos,&
       &free_memory_compact_q_lanczos,do_compact_q_lanczos,write_compact_q_lanczos
-   USE mp_global,          ONLY : nproc,mpime
+   USE mp_world,           ONLY : nproc,mpime
    USE io_global,          ONLY : stdout 
 
   implicit none
@@ -604,10 +604,11 @@ subroutine solve_lanczos_2(numpw,numt,numl,nbuf,mbuf, alpha,lc, iv0,nbndv,&
   USE basic_structures, ONLY : lanczos_chain, initialize_memory,free_memory 
   USE io_global,        ONLY : stdout
   USE mp,               ONLY : mp_sum, mp_bcast
-  USE mp_global,        ONLY : nproc,mpime,world_comm
+  USE mp_world,         ONLY : nproc,mpime,world_comm
   USE parallel_include
-  USE lanczos,          ONLY : compact_q_lanczos,initialize_compact_q_lanczos,free_memory_compact_q_lanczos,&
-       &read_compact_q_lanczos
+  USE lanczos,          ONLY : compact_q_lanczos,initialize_compact_q_lanczos,&
+                               free_memory_compact_q_lanczos, &
+                               read_compact_q_lanczos
 
   USE polarization,     ONLY : polaw
 

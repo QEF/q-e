@@ -178,7 +178,7 @@ contains
     use wvfct,           only : nbnd, npwx
     use kinds,           only : dp
     use fft_base,             only : dffts
-    use mp_global,            only : intra_bgrp_comm,mpime
+    use mp_global,            only : intra_bgrp_comm
     use mp_world,             only : world_comm
     use mp,                   only : mp_sum, mp_barrier
     use lr_dav_variables

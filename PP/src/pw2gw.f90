@@ -20,8 +20,9 @@ PROGRAM pw2gw
   USE io_files,   ONLY : prefix, outdir, tmp_dir
   USE io_global,  ONLY : ionode, ionode_id
   USE mp,         ONLY : mp_bcast
-  USE mp_world,   ONLY : world_comm
-  USE mp_global,  ONLY : kunit, nproc, mp_startup
+  USE mp_world,   ONLY : world_comm, nproc
+  USE mp_global,  ONLY : mp_startup
+  USE mp_pools,   ONLY : kunit
   USE environment,ONLY : environment_start
   USE us,         ONLY : spline_ps
   !
@@ -114,10 +115,10 @@ SUBROUTINE compute_gw( use_gmaps )
   USE lsda_mod,      ONLY : nspin
   USE io_files,      ONLY : nwordwfc, iunwfc
   USE wavefunctions_module, ONLY : evc, psic
-  USE mp_global, ONLY : mpime, kunit, nproc, intra_image_comm, npool
+  USE mp_global, ONLY : intra_image_comm, npool
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_sum , mp_max
-  USE mp_world,  ONLY : world_comm
+  USE mp_world,  ONLY : world_comm, mpime, nproc
   USE mp_wave,   ONLY : mergewf
   USE parallel_include
   USE scf,       ONLY : rho, rho_core, rhog_core
@@ -848,10 +849,10 @@ SUBROUTINE write_gmaps ( kunit)
   USE wavefunctions_module,  ONLY : evc
   USE io_files,  ONLY : nd_nmbr, tmp_dir, prefix, iunwfc, nwordwfc
   USE io_global, ONLY : ionode
-  USE mp_global, ONLY : nproc, nproc_pool, mpime
-  USE mp_global, ONLY : my_pool_id, my_image_id, intra_pool_comm
+  USE mp_images, ONLY : my_image_id
+  USE mp_global, ONLY : nproc_pool, my_pool_id, my_image_id, intra_pool_comm
   USE mp,        ONLY : mp_sum, mp_max
-  USE mp_world,  ONLY : world_comm 
+  USE mp_world,  ONLY : world_comm, nproc, mpime
 
 
   IMPLICIT NONE

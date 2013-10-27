@@ -322,7 +322,6 @@ set_efsh.o : d3com.o
 set_sym_irr.o : ../../Modules/constants.o
 set_sym_irr.o : ../../Modules/kind.o
 set_sym_irr.o : ../../Modules/mp.o
-set_sym_irr.o : ../../Modules/mp_global.o
 set_sym_irr.o : ../../Modules/mp_world.o
 solve_linter_d3.o : ../../Modules/cell_base.o
 solve_linter_d3.o : ../../Modules/fft_base.o

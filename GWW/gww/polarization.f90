@@ -916,7 +916,7 @@
 
     USE io_global, ONLY : stdout
     USE basic_structures, ONLY : ortho_polaw, free_memory
-    USE mp_global,            ONLY : nproc,mpime
+    USE mp_world,         ONLY : nproc,mpime
     
     implicit none
 
@@ -952,7 +952,7 @@
 
     USE io_global, ONLY : stdout
     USE basic_structures, ONLY : ortho_polaw, free_memory
-    USE mp_global,            ONLY : nproc,mpime,world_comm!group
+    USE mp_world,         ONLY : nproc,mpime,world_comm!group
     USE parallel_include
 
     implicit none
@@ -1498,7 +1498,7 @@
 
     USE io_global, ONLY : stdout
     USE basic_structures, ONLY : v_pot, free_memory
-    USE mp_global,            ONLY : nproc,mpime
+    USE mp_world,         ONLY : nproc,mpime
 
     implicit none
 
@@ -1534,7 +1534,7 @@
 
     USE io_global, ONLY : stdout
     USE basic_structures, ONLY : v_pot, free_memory
-    USE mp_global,            ONLY : nproc,mpime,world_comm!group
+    USE mp_world,         ONLY : nproc,mpime,world_comm!group
     USE parallel_include
 
     implicit none
@@ -2190,8 +2190,8 @@
 
    USE basic_structures, ONLY : wannier_u, cprim_prod, free_memory, &
                               &initialize_memory, upper_states
-   USE times_gw,  ONLY : times_freqs
-   USE mp_global,            ONLY : nproc,mpime
+   USE times_gw,   ONLY : times_freqs
+   USE mp_world,   ONLY : nproc,mpime
    USE io_global,  ONLY : stdout
 
    implicit none

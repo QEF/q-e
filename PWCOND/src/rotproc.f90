@@ -31,7 +31,8 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : npol
   USE parallel_include
-  USE mp_global,        ONLY : nproc, me_pool, intra_pool_comm
+  USE mp_world,         ONLY : nproc
+  USE mp_pools,         ONLY : me_pool, intra_pool_comm
   USE mp,               ONLY : mp_sum
   use cond,             ONLY : lorb, funz0
 

@@ -43,9 +43,9 @@
 !
       USE mp_wave
       USE mp, ONLY: mp_sum, mp_get, mp_max
-      USE mp_global, ONLY: mpime, nproc, root, me_pool, my_pool_id, &
+      USE mp_pools, ONLY: me_pool, my_pool_id, &
         nproc_pool, intra_pool_comm, root_pool
-      USE mp_world,  ONLY: world_comm
+      USE mp_world,  ONLY: mpime, nproc, root, world_comm
       USE io_global, ONLY: ionode, ionode_id
       USE iotk_module
 !
@@ -274,9 +274,10 @@ PROGRAM pw_export
   USE io_files,  ONLY : prefix, tmp_dir, outdir
   USE ions_base, ONLY : ntype => nsp
   USE iotk_module
-  USE mp_global, ONLY : mp_startup, mpime, kunit
-  USE mp, ONLY: mp_bcast
-  USE mp_world, ONLY: world_comm
+  USE mp_global, ONLY : mp_startup
+  USE mp_pools,  ONLY : kunit
+  USE mp_world,  ONLY: world_comm
+  USE mp,        ONLY: mp_bcast
   USE environment,   ONLY : environment_start
   !
   IMPLICIT NONE
@@ -388,10 +389,10 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   USE io_base_export, ONLY : write_restart_wfc
   USE io_global,      ONLY : ionode, stdout
   USE ions_base,      ONLY : atm, nat, ityp, tau, nsp
-  USE mp_global,      ONLY : nproc, nproc_pool, mpime
-  USE mp_global,      ONLY : my_pool_id, intra_pool_comm, inter_pool_comm
+  USE mp_pools,       ONLY : my_pool_id, intra_pool_comm, inter_pool_comm, &
+                             nproc_pool
   USE mp,             ONLY : mp_sum, mp_max
-  USE mp_world,       ONLY : world_comm
+  USE mp_world,       ONLY : world_comm, nproc
 
   IMPLICIT NONE
 

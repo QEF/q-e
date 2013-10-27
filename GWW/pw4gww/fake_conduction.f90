@@ -37,8 +37,8 @@ CONTAINS
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, et, ecutwfc, wg
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
-   USE mp_global, ONLY : mpime, nproc, intra_pool_comm
-   USE mp_world, ONLY: world_comm
+   USE mp_pools, ONLY : intra_pool_comm
+   USE mp_world, ONLY: world_comm, mpime, nproc
    USE gvecs,              ONLY : nls, nlsm, doublegrid
 
    USE kinds, ONLY : DP
@@ -1415,8 +1415,8 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, et, ecutwfc
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
-   USE mp_world, ONLY : world_comm
-   USE mp_global, ONLY : mpime, nproc, intra_pool_comm
+   USE mp_world, ONLY : world_comm, mpime, nproc
+   USE mp_pools, ONLY : intra_pool_comm
    USE gvecs,              ONLY : nls, nlsm,  doublegrid
    USE kinds, ONLY : DP
    USE io_files, ONLY : prefix, diropn
@@ -2162,8 +2162,8 @@ end subroutine fake_conduction_wannier_real
    USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, et, ecutwfc, wg
    USE wavefunctions_module, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
-   USE mp_world, ONLY : world_comm
-   USE mp_global, ONLY : mpime, nproc, intra_pool_comm
+   USE mp_world, ONLY : world_comm, mpime, nproc
+   USE mp_pools, ONLY : intra_pool_comm
    USE gvecs,              ONLY : nls, nlsm, doublegrid
 
    USE kinds, ONLY : DP

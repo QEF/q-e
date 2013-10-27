@@ -45,21 +45,21 @@ subroutine solve_head
   USE becmod,                ONLY : becp,calbec
   USE uspp_param,            ONLY : nhm
   use phcom
-  USE wannier_gw,            ONLY : n_gauss, omega_gauss, grid_type, nsteps_lanczos,second_grid_n,second_grid_i,&
-                                      &l_scissor,scissor
-  USE control_ph,            ONLY : tr2_ph
-  USE gvect,                 ONLY : ig_l2g
-  USE mp,           ONLY : mp_sum, mp_barrier, mp_bcast
-  USE mp_world, ONLY : world_comm
+  USE wannier_gw,           ONLY : n_gauss, omega_gauss, grid_type,&
+                                   nsteps_lanczos,second_grid_n,second_grid_i,&
+                                   l_scissor,scissor
+  USE control_ph,           ONLY : tr2_ph
+  USE gvect,                ONLY : ig_l2g
+  USE mp,                   ONLY : mp_sum, mp_barrier, mp_bcast
+  USE mp_world,             ONLY : world_comm, mpime, nproc
   USE uspp,                 ONLY : nkb, vkb
 !  USE symme, ONLY: s
-  USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_pools,             ONLY : inter_pool_comm, intra_pool_comm
   USE symme, only : crys_to_cart, symmatrix
   USE mp_wave, ONLY : mergewf,splitwf
-  USE mp_global, ONLY : mpime, nproc, intra_pool_comm
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
-  USE buffers,               ONLY : get_buffer
+  USE buffers,              ONLY : get_buffer
   USE constants,            ONLY : rytoev
 
   implicit none

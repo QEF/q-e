@@ -5,7 +5,7 @@ program fd_raman
   use io_files,   ONLY : prefix, tmp_dir, outdir
   use io_files,   ONLY : psfile, pseudo_dir
   use io_global,  ONLY : stdout, ionode, ionode_id
-  USE mp_global,  ONLY : mp_startup,mpime,kunit
+  USE mp_global,  ONLY : mp_startup
   USE environment,ONLY : environment_start
   USE mp,         ONLY : mp_bcast
   USE cell_base,  ONLY : tpiba2, alat,omega, at, bg, ibrav, celldm
@@ -28,7 +28,7 @@ program fd_raman
 
   implicit none
   character(len=9) :: code = 'FD_RAMAN'
-  integer :: ios, kunittmp
+  integer :: ios
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   character(len=200) :: pp_file
   logical :: uspp_spsi, ascii, single_file, raw, disp_only

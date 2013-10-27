@@ -837,8 +837,7 @@
       USE io_global,            ONLY : stdout, ionode
       USE basic_structures,     ONLY : wannier_u, q_mat
       USE input_gw,             ONLY : input_options
-      USE mp_global,            ONLY : mpime, nproc
-      USE mp_world,             ONLY : world_comm
+      USE mp_world,             ONLY : mpime, nproc, world_comm
       USE mp,                   ONLY : mp_barrier
       
       implicit none
@@ -874,7 +873,7 @@
 
       USE io_global,            ONLY : stdout
       USE basic_structures,     ONLY : wannier_u, q_mat
-      USE mp_global,            ONLY : mpime, nproc
+      USE mp_world,             ONLY : mpime, nproc
       USE mp,                   ONLY : mp_sum
 
      implicit none

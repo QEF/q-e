@@ -42,7 +42,7 @@ CONTAINS
 !calculation, parallelization is achieved on imaginary times
 !and frequencies
 
-    USE mp_global, ONLY : mpime, nproc
+    USE mp_world,  ONLY : mpime, nproc
     USE io_global, ONLY : stdout
 
     implicit none

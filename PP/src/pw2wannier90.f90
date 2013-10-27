@@ -57,7 +57,7 @@ PROGRAM pw2wannier90
   !------------------------------------------------------------------------
   !
   USE io_global,  ONLY : stdout, ionode, ionode_id
-  USE mp_global,  ONLY : mp_startup, mpime, kunit
+  USE mp_global,  ONLY : mp_startup
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
   USE cell_base,  ONLY : at, bg
@@ -1702,7 +1702,8 @@ END SUBROUTINE write_plot
 
 SUBROUTINE write_parity
 
-   USE mp_global,            ONLY : mpime,nproc,intra_pool_comm
+   USE mp_global,            ONLY : intra_pool_comm
+   USE mp_world,             ONLY : mpime, nproc
    USE mp,                   ONLY : mp_sum
    USE io_global,            ONLY : stdout, ionode
    USE wvfct,                ONLY : nbnd, npw, igk, g2kin, ecutwfc

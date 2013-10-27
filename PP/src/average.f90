@@ -41,8 +41,8 @@ PROGRAM average
   USE klist,                ONLY : nks
   USE parameters,           ONLY : ntypx
   USE constants,            ONLY : pi
-  USE run_info,        ONLY : title
-  USE io_global,            ONLY : stdout
+  USE run_info,             ONLY : title
+  USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : ibrav, alat, omega, celldm, tpiba, &
                                    tpiba2, at, bg
   USE gvect,                ONLY : gcutm
@@ -56,7 +56,7 @@ PROGRAM average
   USE wavefunctions_module, ONLY : psic
   USE io_files,             ONLY : iunpun
   USE scf,                  ONLY : rho
-  USE mp_global,            ONLY : mpime, root, mp_startup
+  USE mp_global,            ONLY : mp_startup
   USE environment,          ONLY : environment_start
   !
   IMPLICIT NONE
@@ -114,7 +114,7 @@ PROGRAM average
   !
   ! Works for parallel machines but only for one processor !!!
   !
-  IF ( mpime == root ) THEN
+  IF ( ionode ) THEN
      !
      inunit = 5
      READ (inunit, *, err = 1100, iostat = ios) nfile

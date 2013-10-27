@@ -398,7 +398,7 @@
       USE kinds,              ONLY: DP
       USE mp,                 ONLY: mp_sum, mp_max, mp_min
       USE mp_wave,            ONLY: splitwf
-      USE mp_global,          ONLY: me_bgrp, nproc_bgrp, root_bgrp, intra_bgrp_comm, mpime
+      USE mp_global,          ONLY: me_bgrp, nproc_bgrp, root_bgrp, intra_bgrp_comm
       USE gvect,              ONLY: ig_l2g, gstart
       USE gvect,              ONLY: mill, gg
       USE gvecw,              ONLY: ngw, ngw_g

@@ -101,7 +101,6 @@ allocate_nlpot.o : ../../Modules/cell_base.o
 allocate_nlpot.o : ../../Modules/control_flags.o
 allocate_nlpot.o : ../../Modules/io_global.o
 allocate_nlpot.o : ../../Modules/ions_base.o
-allocate_nlpot.o : ../../Modules/mp_global.o
 allocate_nlpot.o : ../../Modules/noncol.o
 allocate_nlpot.o : ../../Modules/recvec.o
 allocate_nlpot.o : ../../Modules/uspp.o
@@ -1273,6 +1272,7 @@ pw_restart.o : ../../Modules/mp_global.o
 pw_restart.o : ../../Modules/mp_images.o
 pw_restart.o : ../../Modules/mp_pools.o
 pw_restart.o : ../../Modules/mp_pots.o
+pw_restart.o : ../../Modules/mp_world.o
 pw_restart.o : ../../Modules/noncol.o
 pw_restart.o : ../../Modules/parser.o
 pw_restart.o : ../../Modules/recvec.o

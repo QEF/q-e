@@ -40,7 +40,6 @@ subroutine allocate_nlpot
   USE spin_orb,         ONLY : lspinorb, fcoef
   USE control_flags,    ONLY : program_name
   USE io_global,        ONLY : stdout
-  USE mp_global,        ONLY : mpime
   USE exx,              ONLY : exx_n_plane_waves
   !
   implicit none

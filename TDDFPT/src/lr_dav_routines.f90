@@ -1171,7 +1171,7 @@ contains
     use wvfct,                only : npwx, npw
     use lr_dav_variables 
     use gvect,                only : gstart
-    use mp_global,            only : intra_bgrp_comm,mpime
+    use mp_global,            only : intra_bgrp_comm
     use mp,                   only : mp_sum, mp_barrier
     use mp_world,             only : world_comm
    

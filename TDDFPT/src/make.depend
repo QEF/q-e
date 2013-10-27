@@ -375,7 +375,7 @@ lr_write_restart.o : ../../PW/src/pwcom.o
 lr_write_restart.o : lr_charg_resp.o
 lr_write_restart.o : lr_variables.o
 print_clock_lr.o : ../../Modules/io_global.o
-print_clock_lr.o : ../../Modules/mp_global.o
+print_clock_lr.o : ../../Modules/mp_world.o
 print_clock_lr.o : ../../PW/src/realus.o
 print_clock_lr.o : lr_variables.o
 sd0psi.o : ../../Modules/becmod.o

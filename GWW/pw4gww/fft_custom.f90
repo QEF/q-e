@@ -167,8 +167,8 @@ CONTAINS
 !                         ngms, ngms_l, ngms_g, gcutms
   USE mp,         ONLY : mp_sum, mp_max,mp_barrier
   USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool, my_image_id, &
-                         nproc, inter_pool_comm,root_pool
-  USE mp_world,   ONLY : world_comm
+                         inter_pool_comm,root_pool
+  USE mp_world,   ONLY : world_comm, nproc
   USE stick_base
   USE fft_scalar, ONLY : good_fft_dimension
   USE fft_types,  ONLY : fft_dlay_allocate, fft_dlay_set, fft_dlay_scalar

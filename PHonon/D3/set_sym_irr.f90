@@ -33,9 +33,8 @@ SUBROUTINE set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 
   USE kinds,     ONLY : DP
   USE constants, ONLY : tpi
-  USE mp_global, ONLY : mpime, root
   USE mp,        ONLY : mp_bcast
-  USE mp_world,  ONLY : world_comm
+  USE mp_world,  ONLY : world_comm, mpime, root
   !
   IMPLICIT NONE
 !

@@ -13,7 +13,7 @@ subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , n_plane_waves ,
   USE fft_interfaces,      ONLY : fwfft
   USE gvecs,                ONLY : nls
   USE io_global,             ONLY : ionode_id, ionode
-  USE mp_global,            ONLY : inter_pool_comm, mpime
+  USE mp_global,            ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_bcast
   
 !

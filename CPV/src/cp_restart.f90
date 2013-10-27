@@ -54,14 +54,14 @@ MODULE cp_restart
       USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, &
                                            nwordwfc, tmp_dir, diropn
       USE mp_global,                ONLY : intra_image_comm, me_image, &
-                                           nproc_pool, nproc_image, nproc, &
+                                           nproc_image, &
+                                           nproc_pool, intra_pool_comm, &
                                            me_bgrp, nproc_bgrp, &
                                            my_bgrp_id, intra_bgrp_comm, &
-                                           intra_image_comm, inter_bgrp_comm, &
-                                           root_bgrp, intra_pool_comm
+                                           inter_bgrp_comm, root_bgrp
       USE mp_global,                ONLY : nproc_pot, nproc_bgrp, nproc_ortho, &
                                            get_ntask_groups
-      USE mp_world,                 ONLY : world_comm
+      USE mp_world,                 ONLY : world_comm, nproc
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm, ngm_g
       USE gvecs,                    ONLY : ngms_g, ecuts, dual

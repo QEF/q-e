@@ -62,12 +62,12 @@ MODULE exchange_custom
 !experimental version work just with factor 1/2
 
       USE io_global, ONLY : stdout, ionode,ionode_id
-      USE mp_global, ONLY : me_pool,nproc,intra_pool_comm
+      USE mp_global, ONLY : me_pool,intra_pool_comm
       USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
       USE constants, ONLY : e2, pi, tpi, fpi, RYTOEV
       USE wavefunctions_module, ONLY : psic
       USE mp, ONLY : mp_sum
-      USE mp_world, ONLY : world_comm
+      USE mp_world, ONLY : world_comm, nproc
       USE wvfct,    ONLY : npwx, npw, wg
       USE gvect
       USE mp_wave, ONLY : mergewf,splitwf
@@ -793,12 +793,12 @@ MODULE exchange_custom
 !experimental version work just with factor 1/2
 
       USE io_global, ONLY : stdout, ionode,ionode_id
-      USE mp_global, ONLY : me_pool,nproc,intra_pool_comm
+      USE mp_global, ONLY : me_pool,intra_pool_comm
       USE cell_base, ONLY : at, alat, tpiba, omega, tpiba2,bg
       USE constants, ONLY : e2, pi, tpi, fpi, RYTOEV
       USE wavefunctions_module, ONLY : psic
       USE mp,        ONLY : mp_sum
-      USE mp_world,  ONLY : world_comm
+      USE mp_world,  ONLY : world_comm, nproc
       USE wvfct,     ONLY : npwx, npw
       USE gvect
       USE mp_wave,   ONLY : mergewf,splitwf
@@ -1132,11 +1132,11 @@ MODULE exchange_custom
       USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
       USE constants, ONLY : e2, pi, tpi, fpi, RYTOEV
       USE wavefunctions_module, ONLY : psic
-      USE mp_global, ONLY : mpime, nproc, intra_pool_comm, me_pool
+      USE mp_global, ONLY : intra_pool_comm, me_pool
       USE gvect
       USE mp_wave, ONLY : mergewf,splitwf
       USE mp, ONLY : mp_barrier, mp_sum
-      USE mp_world, ONLY : world_comm
+      USE mp_world, ONLY : world_comm, mpime, nproc
 
       IMPLICIT NONE
 
@@ -1463,14 +1463,15 @@ MODULE exchange_custom
     SUBROUTINE fock_cus(psi,xpsi,exx_cus)
 !apply Fock operator to a wavefunction
 
-      USE io_global,  ONLY : stdout, ionode, ionode_id
-      USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
+      USE io_global, ONLY : stdout, ionode, ionode_id
+      USE wvfct,     ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
       USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
       USE constants, ONLY : e2, pi, tpi, fpi, RYTOEV
       USE wavefunctions_module, ONLY : psic
-      USE mp_global, ONLY : mpime, nproc, intra_pool_comm
       USE gvect
-      USE mp_wave, ONLY : mergewf,splitwf
+      USE mp_pools,  ONLY : intra_pool_comm
+      USE mp_world,  ONLY : mpime, nproc
+      USE mp_wave,   ONLY : mergewf,splitwf
 
 
       IMPLICIT NONE

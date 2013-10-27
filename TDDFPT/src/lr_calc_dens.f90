@@ -40,7 +40,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE io_files,               ONLY : tmp_dir, prefix
   USE mp,                     ONLY : mp_sum
   USE mp_global,              ONLY : inter_pool_comm, intra_bgrp_comm,&
-                                     & nproc, inter_bgrp_comm 
+                                     inter_bgrp_comm 
   USE realus,                 ONLY : igk_k,npw_k, addusdens_r
   USE charg_resp,             ONLY : w_T, lr_dump_rho_tot_cube,&
                                      & lr_dump_rho_tot_xyzd, &

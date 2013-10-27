@@ -17,7 +17,7 @@ subroutine calculate_compact_self_lanczos(options)
    USE basic_structures,   ONLY : wannier_u,vt_mat_lanczos,tt_mat_lanczos,initialize_memory,free_memory
    USE lanczos,            ONLY : compact_q_lanczos,initialize_compact_q_lanczos,&
       &free_memory_compact_q_lanczos,do_compact_q_lanczos,write_compact_q_lanczos
-   USE mp_global,          ONLY : nproc,mpime
+   USE mp_world,          ONLY : nproc,mpime
    USE io_global,          ONLY : ionode
 
 

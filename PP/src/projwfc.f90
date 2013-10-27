@@ -1512,7 +1512,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   !-----------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout, ionode
-  USE run_info, ONLY: title
+  USE run_info,  ONLY: title
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE basis,     ONLY : natomwfc, swfcatom
   USE cell_base
@@ -1534,7 +1534,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
                                intra_pool_comm, me_image, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id, &
-                               leg_ortho, mpime
+                               leg_ortho
   USE wavefunctions_module, ONLY: evc
   USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst, zsqmcll, dsqmsym
   USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
@@ -1591,8 +1591,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   ! Open file as temporary storage
   !
   iunaux = find_free_unit()
-  WRITE( auxname, fmt='(I6.1)' ) mpime
-  auxname = TRIM(tmp_dir) // TRIM(ADJUSTL(prefix)) // '.AUX' // TRIM(ADJUSTL(auxname))
+  auxname = TRIM(tmp_dir) // TRIM(ADJUSTL(prefix)) // '.AUX' // TRIM(nd_nmbr)
   OPEN( unit=iunaux, file=trim(auxname), status='unknown', form='unformatted')
   !
   !

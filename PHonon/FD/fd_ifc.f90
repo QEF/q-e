@@ -16,7 +16,7 @@ program fd_ifc
   use io_files,   ONLY : prefix, tmp_dir, outdir
   use io_files,   ONLY : psfile, pseudo_dir
   use io_global,  ONLY : stdout, ionode, ionode_id
-  USE mp_global,  ONLY : mp_startup,mpime,kunit,mp_global_end
+  USE mp_global,  ONLY : mp_startup,mp_global_end
   USE environment,ONLY : environment_start,environment_end
   USE mp,         ONLY : mp_bcast
   USE cell_base,  ONLY : tpiba2, alat,omega, at, bg, ibrav, celldm

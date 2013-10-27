@@ -2,7 +2,6 @@ basic_structures.o : ../../Modules/kind.o
 compact_product.o : ../../Modules/io_global.o
 compact_product.o : ../../Modules/kind.o
 compact_product.o : ../../Modules/mp.o
-compact_product.o : ../../Modules/mp_global.o
 compact_product.o : ../../Modules/mp_world.o
 compact_product.o : basic_structures.o
 compact_product.o : input_gw.o
@@ -49,7 +48,6 @@ do_contour.o : self_energy_storage.o
 do_polarization_lanczos.o : ../../Modules/io_global.o
 do_polarization_lanczos.o : ../../Modules/kind.o
 do_polarization_lanczos.o : ../../Modules/mp.o
-do_polarization_lanczos.o : ../../Modules/mp_global.o
 do_polarization_lanczos.o : ../../Modules/mp_world.o
 do_polarization_lanczos.o : ../../Modules/parallel_include.o
 do_polarization_lanczos.o : basic_structures.o
@@ -61,7 +59,6 @@ do_self_lanczos.o : ../../Modules/constants.o
 do_self_lanczos.o : ../../Modules/io_global.o
 do_self_lanczos.o : ../../Modules/kind.o
 do_self_lanczos.o : ../../Modules/mp.o
-do_self_lanczos.o : ../../Modules/mp_global.o
 do_self_lanczos.o : ../../Modules/mp_world.o
 do_self_lanczos.o : basic_structures.o
 do_self_lanczos.o : green_function.o
@@ -121,7 +118,6 @@ fft_gw.o : ../../Modules/fft_scalar.o
 fft_gw.o : ../../Modules/io_global.o
 fft_gw.o : ../../Modules/kind.o
 fft_gw.o : ../../Modules/mp.o
-fft_gw.o : ../../Modules/mp_global.o
 fft_gw.o : ../../Modules/mp_world.o
 fft_gw.o : ../../Modules/parallel_include.o
 fft_gw.o : polarization.o
@@ -206,7 +202,7 @@ gww.o : start_end.o
 gww.o : times_gw.o
 gww_fit.o : ../../Modules/constants.o
 gww_fit.o : ../../Modules/io_global.o
-gww_fit.o : ../../Modules/mp_global.o
+gww_fit.o : ../../Modules/mp_world.o
 gww_fit.o : energies_gww.o
 gww_fit.o : expansion.o
 gww_fit.o : gv_time.o
@@ -226,13 +222,12 @@ lanczos_polarization.o : ../../Modules/mp.o
 lanczos_polarization.o : ../../Modules/mp_world.o
 lanczos_polarization.o : basic_structures.o
 para_gww.o : ../../Modules/io_global.o
-para_gww.o : ../../Modules/mp_global.o
+para_gww.o : ../../Modules/mp_world.o
 polarization.o : ../../Modules/constants.o
 polarization.o : ../../Modules/io_files.o
 polarization.o : ../../Modules/io_global.o
 polarization.o : ../../Modules/kind.o
 polarization.o : ../../Modules/mp.o
-polarization.o : ../../Modules/mp_global.o
 polarization.o : ../../Modules/mp_world.o
 polarization.o : ../../Modules/parallel_include.o
 polarization.o : basic_structures.o
@@ -289,6 +284,6 @@ times_gw.o : ../../Modules/kind.o
 times_gw.o : input_gw.o
 vcprim.o : ../../Modules/io_global.o
 vcprim.o : ../../Modules/kind.o
-vcprim.o : ../../Modules/mp_global.o
+vcprim.o : ../../Modules/mp_world.o
 vcprim.o : ../../Modules/parallel_include.o
 vcprim.o : basic_structures.o

@@ -797,6 +797,7 @@ init_representations.o : ../../Modules/ions_base.o
 init_representations.o : ../../Modules/kind.o
 init_representations.o : ../../Modules/mp.o
 init_representations.o : ../../Modules/mp_global.o
+init_representations.o : ../../Modules/mp_world.o
 init_representations.o : ../../PW/src/symm_base.o
 init_representations.o : elph.o
 init_representations.o : ph_restart.o

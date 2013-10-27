@@ -14,7 +14,7 @@ PROGRAM do_bands
   ! IMPORTANT: since v.5 namelist name is &bands and no longer &inputpp
   !
   USE io_files,  ONLY : prefix, tmp_dir
-  USE mp_global, ONLY : npool, nproc, nproc_pool, nproc_file, &
+  USE mp_global, ONLY : npool, nproc_pool, nproc_file, &
                         nproc_pool_file, mp_startup
   USE control_flags, ONLY : twfcollect, gamma_only
   USE environment,   ONLY : environment_start

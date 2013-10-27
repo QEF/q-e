@@ -118,7 +118,8 @@ MODULE pw_restart
       USE extfield,             ONLY : tefield, dipfield, edir, &
                                        emaxpos, eopreg, eamp
       USE io_rho_xml,           ONLY : write_rho
-      USE mp_global,            ONLY : nproc,get_ntask_groups,ntask_groups_file
+      USE mp_global,            ONLY : get_ntask_groups
+      USE mp_world,             ONLY : nproc
       USE mp_images,            ONLY : nproc_image
       USE mp_pools,             ONLY : kunit, nproc_pool, me_pool, root_pool, &
                                        intra_pool_comm, inter_pool_comm

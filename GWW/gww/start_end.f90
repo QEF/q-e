@@ -21,21 +21,12 @@ CONTAINS
 
   !
   USE io_global,  ONLY : stdout, ionode
-  USE mp_world,   ONLY : world_comm, nproc, mpime
+  USE mp_world,   ONLY : nproc
   USE mp_global,  ONLY : mp_startup
-  USE mp,         ONLY : mp_barrier
 
   IMPLICIT NONE
-  CHARACTER(5) :: name_proc
-  INTEGER :: gid
 
 #ifdef __PARA
-
-
-!  CALL mp_start( nproc, mpime, gid )
-!  CALL mp_barrier()
-!  CALL io_global_start( mpime, 0 )
-!  CALL mp_global_start_new( 0, mpime, gid, nproc )
 
   CALL mp_startup()
 
@@ -43,14 +34,8 @@ CONTAINS
      write(stdout,*) 'MPI PARALLEL VERSION'
      write(stdout,*) 'Number of procs: ', nproc
   endif
-!  write(name_proc,'(5i1)') &
-!       & (mpime+1)/10000,mod(mpime+1,10000)/1000,mod(mpime+1,1000)/100,mod(mpime+1,100)/10,mod(mpime+1,10)
-!ATTENZIONE
-!  OPEN( UNIT = stdout, FILE = './out_'//name_proc, STATUS = 'UNKNOWN' )
-#else
-!  OPEN( UNIT = stdout, FILE = './out_00', STATUS = 'UNKNOWN' )
-#endif
 
+#endif
   return
 
   END SUBROUTINE startup

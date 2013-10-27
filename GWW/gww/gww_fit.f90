@@ -17,7 +17,7 @@
    USE  expansion
    USE  energies_gww
    USE  start_end
-   USE  mp_global,           ONLY : mpime
+   USE  mp_world,           ONLY : mpime
    USE  para_gww
    USE  times_gw
    USE  w_divergence

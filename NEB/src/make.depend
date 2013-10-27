@@ -47,6 +47,7 @@ neb.o : ../../Modules/environment.o
 neb.o : ../../Modules/io_global.o
 neb.o : ../../Modules/mp.o
 neb.o : ../../Modules/mp_global.o
+neb.o : ../../Modules/mp_world.o
 neb.o : ../../Modules/read_input.o
 neb.o : path_base.o
 neb.o : path_input_parameters_module.o

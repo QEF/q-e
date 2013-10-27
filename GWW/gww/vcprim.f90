@@ -152,8 +152,8 @@ END SUBROUTINE add_vcprim_conduction
 SUBROUTINE distribute_qmat(qm,qmd)
 !this subroutine distributes q_mat on parallel processors
   USE kinds, ONLY : DP
-  USE basic_structures,     ONLY : q_mat,wannier_P
-  USE mp_global,            ONLY : nproc,mpime
+  USE basic_structures,    ONLY : q_mat,wannier_P
+  USE mp_world,            ONLY : nproc,mpime
 
   implicit none
 
@@ -197,7 +197,7 @@ SUBROUTINE collect_cprim_prod(cpp,cppd)
 
   USE kinds, ONLY : DP
   USE basic_structures,     ONLY : cprim_prod, free_memory
-  USE mp_global,            ONLY : nproc,mpime, world_comm!group
+  USE mp_world,             ONLY : nproc,mpime, world_comm!group
   USE io_global,            ONLY : stdout
   USE parallel_include
 
@@ -265,7 +265,7 @@ SUBROUTINE distribute_v_pot_prim(vp,vpd)
 
   USE kinds, ONLY : DP
   USE basic_structures,     ONLY : v_pot_prim, free_memory
-  USE mp_global,            ONLY : nproc,mpime, world_comm!group
+  USE mp_world,             ONLY : nproc,mpime, world_comm!group
   USE io_global,            ONLY : stdout
   USE parallel_include
 

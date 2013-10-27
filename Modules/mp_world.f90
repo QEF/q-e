@@ -22,21 +22,20 @@ MODULE mp_world
   INTEGER :: root  = 0  ! index of the root processor
   INTEGER :: world_comm = 0  ! communicator
   !
+  PRIVATE
+  PUBLIC ::nproc, mpime, root, world_comm, mp_world_start, mp_world_end
+  !
 CONTAINS
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE mp_global_start ( my_world_comm )
+  SUBROUTINE mp_world_start ( my_world_comm )
     !-----------------------------------------------------------------------
     !
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: my_world_comm
+    ! communicator is taken from input
     !
     world_comm = my_world_comm
-    ! ... get the basic parameters from communications sub-system
-    ! ... to handle processors
-    ! ... nproc = number of processors
-    ! ... mpime = processor number, starting from 0
-    !
     CALL mp_start( nproc, mpime, world_comm )
     !
     ! ... meta_ionode is true if this processor is the root processor
@@ -48,15 +47,15 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE mp_global_start
+  END SUBROUTINE mp_world_start
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE mp_global_end ( )
+  SUBROUTINE mp_world_end ( )
     !-----------------------------------------------------------------------
     !
     CALL mp_barrier( world_comm )
     CALL mp_end ( world_comm )
     !
-  END SUBROUTINE mp_global_end
+  END SUBROUTINE mp_world_end
   !
 END MODULE mp_world

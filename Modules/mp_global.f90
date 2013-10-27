@@ -11,12 +11,13 @@ MODULE mp_global
   !
   ! ... Wrapper module, for compatibility. Contains a few "leftover" variables
   ! ... used for checks (all the *_file variables, read from data file) and for
-  ! ... "task groups", plus the routine mp_startup initializing MPI.
+  ! ... "task groups", plus the routine mp_startup initializing MPI, plus the
+  ! ... routine mp_global_end stopping MPI.
   ! ... Do not use this module to reference variables (e.g. communicators)
   ! ... belonging to each of the various parallelization levels:
   ! ... use the specific modules instead
   !
-  USE mp_world
+  USE mp_world, ONLY: mp_world_start, mp_world_end
   USE mp_images
   USE mp_pools
   USE mp_pots
@@ -66,7 +67,7 @@ CONTAINS
     my_comm = MPI_COMM_WORLD
     IF ( PRESENT(my_world_comm) ) my_comm = my_world_comm
     !
-    CALL mp_global_start( my_comm )
+    CALL mp_world_start( my_comm )
     CALL get_command_line ( )
     !
     do_images = .FALSE.
@@ -87,7 +88,17 @@ CONTAINS
     !
   END SUBROUTINE mp_startup
   !
+  !-----------------------------------------------------------------------
+  SUBROUTINE mp_global_end ( )
+    !-----------------------------------------------------------------------
+    !
+    CALL mp_world_end( )
+    !
+  END SUBROUTINE mp_global_end
+  !
+  !-----------------------------------------------------------------------
   FUNCTION get_ntask_groups()
+    !-----------------------------------------------------------------------
      IMPLICIT NONE
      INTEGER :: get_ntask_groups
      get_ntask_groups = ntask_groups

@@ -17,7 +17,7 @@ SUBROUTINE print_clock_lr()
    ! Modified by Osman Baris Malcioglu (2009)
 
    USE io_global,        ONLY : stdout
-   USE mp_global,        ONLY : mpime, root
+   USE mp_world,         ONLY : mpime, root
    USE realus,           ONLY : real_space,real_space_debug
    use lr_variables,     only : davidson
    !

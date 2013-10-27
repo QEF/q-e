@@ -13,7 +13,7 @@ SUBROUTINE print_clock_pwcond()
    ! ... it tries to construct the calling tree of the program.
    !
    USE io_global,     ONLY : stdout
-   USE mp_global,     ONLY : mpime, root
+   USE mp_world,      ONLY : mpime, root
    USE cond,          ONLY : ikind
    !
    IMPLICIT NONE

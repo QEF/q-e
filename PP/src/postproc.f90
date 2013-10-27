@@ -67,7 +67,7 @@ SUBROUTINE extract (filplot,plot_num)
   USE vlocal,    ONLY : strf
   USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, ionode_id
-  USE mp_global,     ONLY : nproc, nproc_pool, nproc_file, nproc_pool_file
+  USE mp_global,     ONLY : nproc_pool, nproc_file, nproc_pool_file
   USE control_flags, ONLY : twfcollect
   USE noncollin_module, ONLY : i_cons
   USE paw_variables, ONLY : okpaw

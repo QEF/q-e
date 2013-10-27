@@ -15,7 +15,8 @@ PROGRAM neb
   USE environment,       ONLY : environment_start, environment_end
   USE check_stop,        ONLY : check_stop_init
   USE mp,                ONLY : mp_bcast
-  USE mp_global,         ONLY : mp_startup, nimage, world_comm, mpime, root
+  USE mp_global,         ONLY : mp_startup
+  USE mp_world,          ONLY : world_comm, mpime, root
   USE read_input,        ONLY : read_input_file
   USE command_line_options,  ONLY : input_file_
   !
