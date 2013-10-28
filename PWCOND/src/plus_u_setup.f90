@@ -37,7 +37,7 @@ subroutine plus_u_setup(natih, lsr)
   if (lda_plus_u_kind.eq.1) call errore('plus_u_setup','Full LDA+U not yet implemented',1)
 
   WRITE( stdout, '(/,/,5x,"Simplified LDA+U calculation (l_max = ",i1, &
-         ") with parameters (eV):")') Hubbard_lmax
+        & ") with parameters (eV):")') Hubbard_lmax
   WRITE( stdout, '(5x,A)') &
          "atomic species    L          U    alpha       J0     beta"
   DO it = 1, ntyp
