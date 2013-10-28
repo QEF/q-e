@@ -6,7 +6,7 @@ cd "$destination"
 if [ "$#" -eq 0 ];
 then
  echo "USAGE :"
- echo "$NAME  WHERE_SOURCE WHERE_LINKS (-patch) (-revert)   "
+ echo "$NAME  ADDSON_NAME WHERE_SOURCE WHERE_LINKS (-patch) (-revert)   "
  echo "WHERE_SOURCE is the relative path to the sources of the Addson code "
  echo "WHERE_LINKS is the relative path to the QE directory where the addson sources have to be linked"
  echo " -patch  : apply patch to Makefiles " 
@@ -15,7 +15,7 @@ then
  exit
 fi
 
-case "$3" in
+case "$4" in
 (-patch)
   echo "* I will try to patch needed files for integrated compilation ..."
   
@@ -32,14 +32,16 @@ case "$3" in
     fi
     ln -s $file $destination/$WHERE_LINKS/$base
   done
-
+  
+  tmp_var=\$\(${ADDSON_NAME}_OBJECTS\)
+  
   echo "-- modifying $WHERE_LINKS/Makefile"
-  sed < $destination/$WHERE_LINKS/Makefile.original > $destination/$WHERE_LINKS/tmp.1 '/make.sys/ a\
+  sed < $destination/$WHERE_LINKS/Makefile.pre$ADDSON_NAME > $destination/$WHERE_LINKS/tmp.1 '/make.sys/ a\
   include addson.inc \
    '
   sed < $destination/$WHERE_LINKS/tmp.1 > $destination/$WHERE_LINKS/Makefile '/= \\/ a\
-  \$(ADDSON_OBJECTS) \\\
-   '
+  '"${tmp_var}"' \\'
+  
   rm $destination/$WHERE_LINKS/tmp.1
 
   echo "-- Executing post script"
@@ -67,10 +69,10 @@ case "$3" in
 
 
 
-  echo "-- Restoring .original files"
-  PREADDSON=$(find . -name "*.original")
+  echo "-- Restoring .pre$ADDSON_NAME files"
+  PREADDSON=$(find . -name "*.pre*")
   if ! test "$PREADDSON" ; then
-    echo "-- I cannot find any .original file"
+    echo "-- I cannot find any .pre$ADDSON_NAME file"
     echo "* ABORT"
     exit
   fi

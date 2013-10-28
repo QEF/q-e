@@ -14,30 +14,31 @@ destination="$PWD"
 echo "root directory of host package: $destination"
 
 # bisogna prendere il nome del plugin in input
-#ADDSON_NAME="$1"
+ADDSON_NAME="$1"
 
-LINKED_FILES="$1/*.f90"
-WHERE_LINKS="$2/"
+LINKED_FILES="$2/*.f90"
+WHERE_LINKS="$3/"
 
+echo "The NAME of the addson is: $ADDSON_NAME"
 echo "LINKED_FILES are: $LINKED_FILES"
 echo "WHERE_LINKS are: $WHERE_LINKS"
 
 function to_do_before_patch () {
   echo > /dev/null
-  cp $destination/make.sys $destination/make.sys.original
-  cp $destination/$WHERE_LINKS/Makefile $destination/$WHERE_LINKS/Makefile.original
+  cp $destination/make.sys $destination/make.sys.pre$ADDSON_NAME
+  cp $destination/$WHERE_LINKS/Makefile $destination/$WHERE_LINKS/Makefile.pre$ADDSON_NAME
 }
 
 function to_do_after_patch () {
   {
-    echo -n "ADDSON_OBJECTS=" 
+    echo -n "${ADDSON_NAME}_OBJECTS=" 
     for file in $destination/$LINKED_FILES
       do f=${file##*/}
       echo " \\"
       echo -n "	${f%.f90}.o"
     done
     echo
-    echo -n "ADDSON_SRC="
+    echo -n "${ADDSON_NAME}_SRC="
     for file in $destination/$LINKED_FILES
       do f=${file##*/}
       echo " \\"
@@ -55,8 +56,8 @@ function to_do_before_revert () {
 
 function to_do_after_revert () {
   echo > /dev/null
-  mv $destination/make.sys.original $destination/make.sys
-  mv $destination/$WHERE_LINKS/Makefile.original $destination/$WHERE_LINKS/Makefile
+  mv $destination/make.sys.pre$ADDSON_NAME $destination/make.sys
+  mv $destination/$WHERE_LINKS/Makefile.pre$ADDSON_NAME $destination/$WHERE_LINKS/Makefile
 }
 
 #########
