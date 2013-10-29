@@ -15,9 +15,23 @@ then
            PHonon/Gamma PHonon/PH PHonon/D3 PHonon/FD atomic/src XSpectra/src \
            ACDFT NEB/src Environ/src TDDFPT/src GIPAW/src GWW/pw4gww GWW/gww GWW/head" 
           
+elif
+    test $1 = "-addson" 
+then
+    echo "The script for adding new dependencies is runing"
+    echo "USAGE $0 -addson DIR DEPENDENCY_DIRS"
+    echo "$0 assumes that the new dependencies are in $TOPDIR/../"
+#    ninput=$#
+#    echo "number of input arguments: $ninput"
+    dirs=$2
+    shift
+    shift
+    add_deps=$*
+    echo "dependencies in $add_deps will be searched for $dirs"
 else
     dirs=$*
 fi
+
 
 for dir in $dirs; do
 
@@ -47,7 +61,7 @@ for dir in $dirs; do
                       $LEVEL1/PW/src $LEVEL1/PHonon/PH" ;;
 
 	PW/src | Environ/src )
-	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules" ;;
+	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules $LEVEL2/$add_deps" ;;
 	PW/tools | PWCOND/src | PHonon/FD )
 	     DEPENDS="$LEVEL2/include $LEVEL2/PW/src $LEVEL2/iotk/src $LEVEL2/Modules" ;;
 	CPV/src | atomic/src | GWW/gww )
@@ -70,6 +84,9 @@ for dir in $dirs; do
 	TDDFPT/src )
              DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
                       $LEVEL2/PW/src $LEVEL2/PHonon/PH" ;;
+    *)
+# if addson needs a make.depend file
+	DEPENDS="$add_deps"
 
     esac
 
@@ -114,6 +131,8 @@ for dir in $dirs; do
        else
            echo directory $DIR : ok
        fi
+    else
+       echo $DIR not present in $TOPDIR 
     fi
 done
 if test "$notfound" = ""
