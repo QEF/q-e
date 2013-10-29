@@ -86,7 +86,7 @@ for dir in $dirs; do
                       $LEVEL2/PW/src $LEVEL2/PHonon/PH" ;;
     *)
 # if addson needs a make.depend file
-	DEPENDS="$add_deps"
+	DEPENDS="$DEPENDS $add_deps"
 
     esac
 
@@ -132,7 +132,7 @@ for dir in $dirs; do
            echo directory $DIR : ok
        fi
     else
-       echo $DIR not present in $TOPDIR 
+       echo WARNING: $DIR not present in $TOPDIR 
     fi
 done
 if test "$notfound" = ""
