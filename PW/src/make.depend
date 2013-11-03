@@ -13,7 +13,7 @@ add_bfield.o : ../../Modules/io_global.o
 add_bfield.o : ../../Modules/ions_base.o
 add_bfield.o : ../../Modules/kind.o
 add_bfield.o : ../../Modules/mp.o
-add_bfield.o : ../../Modules/mp_global.o
+add_bfield.o : ../../Modules/mp_bands.o
 add_bfield.o : ../../Modules/noncol.o
 add_bfield.o : pwcom.o
 add_efield.o : ../../Modules/cell_base.o
@@ -24,7 +24,8 @@ add_efield.o : ../../Modules/io_global.o
 add_efield.o : ../../Modules/ions_base.o
 add_efield.o : ../../Modules/kind.o
 add_efield.o : ../../Modules/mp.o
-add_efield.o : ../../Modules/mp_global.o
+add_efield.o : ../../Modules/mp_bands.o
+add_efield.o : ../../Modules/mp_images.o
 add_efield.o : pwcom.o
 add_paw_to_deeq.o : ../../Modules/ions_base.o
 add_paw_to_deeq.o : ../../Modules/kind.o
@@ -62,7 +63,7 @@ addusforce.o : ../../Modules/fft_interfaces.o
 addusforce.o : ../../Modules/ions_base.o
 addusforce.o : ../../Modules/kind.o
 addusforce.o : ../../Modules/mp.o
-addusforce.o : ../../Modules/mp_global.o
+addusforce.o : ../../Modules/mp_bands.o
 addusforce.o : ../../Modules/noncol.o
 addusforce.o : ../../Modules/recvec.o
 addusforce.o : ../../Modules/uspp.o
@@ -124,7 +125,7 @@ atomic_rho.o : ../../Modules/io_global.o
 atomic_rho.o : ../../Modules/ions_base.o
 atomic_rho.o : ../../Modules/kind.o
 atomic_rho.o : ../../Modules/mp.o
-atomic_rho.o : ../../Modules/mp_global.o
+atomic_rho.o : ../../Modules/mp_bands.o
 atomic_rho.o : ../../Modules/noncol.o
 atomic_rho.o : ../../Modules/recvec.o
 atomic_rho.o : ../../Modules/uspp.o
@@ -324,7 +325,8 @@ data_structure.o : ../../Modules/cell_base.o
 data_structure.o : ../../Modules/fft_base.o
 data_structure.o : ../../Modules/kind.o
 data_structure.o : ../../Modules/mp.o
-data_structure.o : ../../Modules/mp_global.o
+data_structure.o : ../../Modules/mp_bands.o
+data_structure.o : ../../Modules/mp_pools.o
 data_structure.o : ../../Modules/recvec.o
 data_structure.o : ../../Modules/stick_set.o
 data_structure.o : pwcom.o
@@ -333,7 +335,7 @@ data_structure_custom.o : ../../Modules/fft_base.o
 data_structure_custom.o : ../../Modules/fft_custom.o
 data_structure_custom.o : ../../Modules/kind.o
 data_structure_custom.o : ../../Modules/mp.o
-data_structure_custom.o : ../../Modules/mp_global.o
+data_structure_custom.o : ../../Modules/mp_bands.o
 data_structure_custom.o : ../../Modules/recvec.o
 data_structure_custom.o : ../../Modules/stick_set.o
 data_structure_custom.o : pwcom.o

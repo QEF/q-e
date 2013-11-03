@@ -195,7 +195,7 @@ ch_psi_all.o : ../../Modules/control_flags.o
 ch_psi_all.o : ../../Modules/fft_base.o
 ch_psi_all.o : ../../Modules/kind.o
 ch_psi_all.o : ../../Modules/mp.o
-ch_psi_all.o : ../../Modules/mp_global.o
+ch_psi_all.o : ../../Modules/mp_bands.o
 ch_psi_all.o : ../../Modules/noncol.o
 ch_psi_all.o : ../../Modules/uspp.o
 ch_psi_all.o : ../../Modules/wavefunctions.o
@@ -662,7 +662,9 @@ elphon.o : ../../Modules/io_global.o
 elphon.o : ../../Modules/ions_base.o
 elphon.o : ../../Modules/kind.o
 elphon.o : ../../Modules/mp.o
+elphon.o : ../../Modules/mp_bands.o
 elphon.o : ../../Modules/mp_global.o
+elphon.o : ../../Modules/mp_pools.o
 elphon.o : ../../Modules/noncol.o
 elphon.o : ../../Modules/parameters.o
 elphon.o : ../../Modules/paw_variables.o
@@ -745,7 +747,7 @@ incdrhoscf.o : ../../Modules/fft_interfaces.o
 incdrhoscf.o : ../../Modules/ions_base.o
 incdrhoscf.o : ../../Modules/kind.o
 incdrhoscf.o : ../../Modules/mp.o
-incdrhoscf.o : ../../Modules/mp_global.o
+incdrhoscf.o : ../../Modules/mp_bands.o
 incdrhoscf.o : ../../Modules/recvec.o
 incdrhoscf.o : ../../Modules/uspp.o
 incdrhoscf.o : ../../Modules/wavefunctions.o
@@ -757,7 +759,7 @@ incdrhoscf_nc.o : ../../Modules/fft_interfaces.o
 incdrhoscf_nc.o : ../../Modules/ions_base.o
 incdrhoscf_nc.o : ../../Modules/kind.o
 incdrhoscf_nc.o : ../../Modules/mp.o
-incdrhoscf_nc.o : ../../Modules/mp_global.o
+incdrhoscf_nc.o : ../../Modules/mp_bands.o
 incdrhoscf_nc.o : ../../Modules/noncol.o
 incdrhoscf_nc.o : ../../Modules/recvec.o
 incdrhoscf_nc.o : ../../Modules/uspp.o
@@ -1259,7 +1261,7 @@ run_nscf.o : ../../Modules/control_flags.o
 run_nscf.o : ../../Modules/fft_base.o
 run_nscf.o : ../../Modules/io_files.o
 run_nscf.o : ../../Modules/io_global.o
-run_nscf.o : ../../Modules/mp_global.o
+run_nscf.o : ../../Modules/mp_bands.o
 run_nscf.o : ../../PW/src/atomic_wfc_mod.o
 run_nscf.o : ../../PW/src/pwcom.o
 run_nscf.o : ../../PW/src/scf_mod.o
@@ -1366,7 +1368,8 @@ solve_e.o : ../../Modules/io_global.o
 solve_e.o : ../../Modules/ions_base.o
 solve_e.o : ../../Modules/kind.o
 solve_e.o : ../../Modules/mp.o
-solve_e.o : ../../Modules/mp_global.o
+solve_e.o : ../../Modules/mp_bands.o
+solve_e.o : ../../Modules/mp_pools.o
 solve_e.o : ../../Modules/noncol.o
 solve_e.o : ../../Modules/paw_variables.o
 solve_e.o : ../../Modules/recvec.o
@@ -1431,7 +1434,9 @@ solve_linter.o : ../../Modules/io_global.o
 solve_linter.o : ../../Modules/ions_base.o
 solve_linter.o : ../../Modules/kind.o
 solve_linter.o : ../../Modules/mp.o
+solve_linter.o : ../../Modules/mp_bands.o
 solve_linter.o : ../../Modules/mp_global.o
+solve_linter.o : ../../Modules/mp_pools.o
 solve_linter.o : ../../Modules/noncol.o
 solve_linter.o : ../../Modules/paw_variables.o
 solve_linter.o : ../../Modules/recvec.o

@@ -1025,7 +1025,7 @@ END SUBROUTINE wl_to_color
     filename=trim(prefix)//".plot"
     OPEN(17,file=filename,status="unknown")
     write(17,'("#",2x,"Energy(Ry)",10x,"total",13x,"X",13x,"Y",13x,"Z")')
-    write(17,'("#  Broadening is: ",5x,F10.7,5x"Ry")') epsil
+    write(17,'("#  Broadening is: ",5x,F10.7,5x,"Ry")') epsil
     istep=1
     do while( .not. istep .gt. nstep )
       write(17,'(5E20.8)') absorption(istep,1),absorption(istep,1)*absorption(istep,2),&

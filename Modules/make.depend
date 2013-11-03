@@ -66,7 +66,6 @@ environment.o : io_files.o
 environment.o : io_global.o
 environment.o : kind.o
 environment.o : mp_bands.o
-environment.o : mp_global.o
 environment.o : mp_images.o
 environment.o : mp_pools.o
 environment.o : mp_world.o
