@@ -10,8 +10,8 @@ MODULE mp_global
   !----------------------------------------------------------------------------
   !
   ! ... Wrapper module, for compatibility. Contains a few "leftover" variables
-  ! ... used for checks (all the *_file variables, read from data file) and for
-  ! ... "task groups", plus the routine mp_startup initializing MPI, plus the
+  ! ... used for checks (all the *_file variables, read from data file),
+  ! ... plus the routine mp_startup initializing MPI, plus the
   ! ... routine mp_global_end stopping MPI.
   ! ... Do not use this module to reference variables (e.g. communicators)
   ! ... belonging to each of the various parallelization levels:
@@ -36,11 +36,6 @@ MODULE mp_global
   INTEGER :: nproc_ortho_file = 1
   INTEGER :: nproc_bgrp_file  = 1
   INTEGER :: ntask_groups_file= 1
-  !
-  ! ... "task" groups (for band parallelization of FFT)
-  !
-  INTEGER :: ntask_groups = 1  ! number of proc. in an orbital "task group" 
-  PRIVATE :: ntask_groups
   !
 CONTAINS
   !
@@ -80,8 +75,7 @@ CONTAINS
     !
     CALL mp_start_pots  ( npot_, intra_image_comm )
     CALL mp_start_pools ( npool_, intra_image_comm )
-    CALL mp_start_bands ( nband_, intra_pool_comm )
-    ntask_groups = ntg_
+    CALL mp_start_bands ( nband_, ntg_, intra_pool_comm )
     CALL mp_start_diag  ( ndiag_, intra_bgrp_comm )
     !
     RETURN
@@ -95,14 +89,5 @@ CONTAINS
     CALL mp_world_end( )
     !
   END SUBROUTINE mp_global_end
-  !
-  !-----------------------------------------------------------------------
-  FUNCTION get_ntask_groups()
-    !-----------------------------------------------------------------------
-     IMPLICIT NONE
-     INTEGER :: get_ntask_groups
-     get_ntask_groups = ntask_groups
-     RETURN
-  END FUNCTION get_ntask_groups
   !
 END MODULE mp_global

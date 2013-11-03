@@ -57,10 +57,10 @@ SUBROUTINE phq_readin()
   USE io_global,     ONLY : meta_ionode, ionode, ionode_id, stdout
   USE mp_images,     ONLY : nimage, my_image_id, intra_image_comm,   &
                             me_image, nproc_image
-  USE mp_global,     ONLY : get_ntask_groups, nproc_pool_file, &
+  USE mp_global,     ONLY : nproc_pool_file, &
                             nproc_bgrp_file, nproc_image_file
   USE mp_pools,      ONLY : nproc_pool, npool 
-  USE mp_bands,      ONLY : nproc_bgrp
+  USE mp_bands,      ONLY : nproc_bgrp, ntask_groups
   USE paw_variables, ONLY : okpaw
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
   USE freq_ph,       ONLY : fpol, fiu, nfs
@@ -599,11 +599,10 @@ SUBROUTINE phq_readin()
   IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
      CALL errore('phq_readin',&
      'pw.x run with a different number of pools. Use wf_collect=.true.',1)
-
-!
-!   Task groups not used in phonon. Activated only in some places
-!
-  IF (get_ntask_groups() > 1) dffts%have_task_groups=.FALSE.
+  !
+  !   Task groups not used in phonon. Activated only in some places
+  !
+  IF (ntask_groups > 1) dffts%have_task_groups=.FALSE.
 
   IF (nproc_bgrp_file /= nproc_bgrp .AND. .NOT. twfcollect) &
      CALL errore('phq_readin','pw.x run with different band parallelization',1)

@@ -42,8 +42,8 @@
       USE electrons_module,     ONLY: bmeshset
       USE electrons_base,       ONLY: distribute_bands
       USE problem_size,         ONLY: cpsizes
-      USE mp_global,            ONLY: me_bgrp, root_bgrp, nproc_bgrp, nbgrp, my_bgrp_id, intra_bgrp_comm
-      USE mp_global,            ONLY: get_ntask_groups
+      USE mp_bands,             ONLY: me_bgrp, root_bgrp, nproc_bgrp, nbgrp, &
+                                      my_bgrp_id, intra_bgrp_comm, ntask_groups
       USE uspp,                 ONLY: okvan, nlcc_any
 
       implicit none
@@ -51,7 +51,7 @@
       integer  :: i
       real(dp) :: rat1, rat2, rat3
       real(dp) :: bg(3,3), tpiba2 
-      integer :: ng_, ngs_, ngm_ , ngw_ , nogrp_
+      integer :: ng_, ngs_, ngm_ , ngw_ 
 
       CALL start_clock( 'init_dim' )
 
@@ -109,10 +109,10 @@
       ! ... set the sticks mesh and distribute g vectors among processors
       ! ... pstickset lso sets the local real-space grid dimensions
       !
-      nogrp_ = get_ntask_groups()
 
       CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
-        dfftp, dffts, ngw_ , ngm_ , ngs_ , me_bgrp, root_bgrp, nproc_bgrp, intra_bgrp_comm, nogrp_ )
+        dfftp, dffts, ngw_ , ngm_ , ngs_ , me_bgrp, root_bgrp, &
+        nproc_bgrp, intra_bgrp_comm, ntask_groups )
       !
       !
       ! ... Initialize reciprocal space local and global dimensions

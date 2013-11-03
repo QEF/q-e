@@ -13,12 +13,11 @@ MODULE environment
   USE kinds, ONLY: DP
   USE io_files, ONLY: crash_file, nd_nmbr
   USE io_global, ONLY: stdout, meta_ionode
-  USE mp_global, ONLY: get_ntask_groups
   USE mp_world,  ONLY: nproc
   USE mp_images, ONLY: me_image, my_image_id, root_image, nimage, &
       nproc_image
   USE mp_pools,  ONLY: npool
-  USE mp_bands,  ONLY: nproc_bgrp, nbgrp
+  USE mp_bands,  ONLY: ntask_groups, nproc_bgrp, nbgrp
   USE global_version, ONLY: version_number, svn_revision
 
   IMPLICIT NONE
@@ -205,9 +204,9 @@ CONTAINS
          '(5X,"band groups division:  nbgrp     = ",I7)' ) nbgrp
     IF ( nproc_bgrp > 1 ) WRITE( stdout, &
          '(5X,"R & G space division:  proc/nbgrp/npool/nimage = ",I7)' ) nproc_bgrp
-    IF ( get_ntask_groups() > 1 ) WRITE( stdout, &
+    IF ( ntask_groups > 1 ) WRITE( stdout, &
          '(5X,"wavefunctions fft division:  fft and procs/group = ",2I7)' ) &
-         get_ntask_groups(), nproc_bgrp / get_ntask_groups()
+         ntask_groups, nproc_bgrp / ntask_groups
     !
   END SUBROUTINE parallel_info
 

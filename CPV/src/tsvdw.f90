@@ -34,10 +34,9 @@ USE ions_base,          ONLY: na                 !number of atoms within each at
 USE ions_base,          ONLY: ityp               !ityp(i):=type/species of ith atom
 USE ions_base,          ONLY: atm                !atm(j):=name of jth atomic species (3 characters)
 USE kinds,              ONLY: DP                 !double-precision kind (selected_real_kind(14,200))
-USE mp_global,          ONLY: nproc_image        !number of processors
-USE mp_global,          ONLY: me_image           !processor number (0,1,...,nproc_image-1)
-USE mp_global,          ONLY: intra_image_comm   !standard MPI communicator
-USE mp_global,          ONLY: get_ntask_groups   !retrieve number of task groups
+USE mp_images,          ONLY: nproc_image        !number of processors
+USE mp_images,          ONLY: me_image           !processor number (0,1,...,nproc_image-1)
+USE mp_images,          ONLY: intra_image_comm   !standard MPI communicator
 USE mp_world,           ONLY: world_comm         !world communicator, not the same as MPI_COMM_WORLD!
 USE mp,                 ONLY: mp_sum             !MPI collection with sum
 USE parallel_include                             !MPI header

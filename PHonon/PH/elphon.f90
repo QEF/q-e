@@ -275,7 +275,8 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE control_ph, ONLY : trans, lgamma, current_iq
   USE ph_restart, ONLY : ph_writefile
   USE spin_orb,   ONLY : domag
-  USE mp_global,  ONLY: intra_bgrp_comm, npool, get_ntask_groups
+  USE mp_bands,   ONLY: intra_bgrp_comm, ntask_groups
+  USE mp_pools,   ONLY: npool
   USE mp,        ONLY: mp_sum
 
   IMPLICIT NONE
@@ -291,7 +292,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   COMPLEX(DP), EXTERNAL :: zdotc
   !
   IF (.NOT. comp_elph(irr) .OR. done_elph(irr)) RETURN
-  IF ( get_ntask_groups() > 1 ) dffts%have_task_groups=.TRUE.
+  IF ( ntask_groups > 1 ) dffts%have_task_groups=.TRUE.
 
   ALLOCATE (aux1    (dffts%nnr, npol))
   ALLOCATE (elphmat ( nbnd , nbnd , npe))
@@ -359,7 +360,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
         !
         ! calculate dvscf_q*psi_k
         !
-        IF ( get_ntask_groups() > 1 ) dffts%have_task_groups=.TRUE.
+        IF ( ntask_groups > 1 ) dffts%have_task_groups=.TRUE.
         IF ( dffts%have_task_groups ) THEN
            IF (noncolin) THEN
               CALL tg_cgather( dffts, dvscfins(:,1,ipert), tg_dv(:,1))
@@ -432,7 +433,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   DEALLOCATE (elphmat)
   DEALLOCATE (aux1)
   DEALLOCATE (aux2)
-  IF ( get_ntask_groups() > 1) dffts%have_task_groups=.TRUE.
+  IF ( ntask_groups > 1) dffts%have_task_groups=.TRUE.
   IF ( dffts%have_task_groups ) THEN
      DEALLOCATE( tg_dv )
      DEALLOCATE( tg_psic )

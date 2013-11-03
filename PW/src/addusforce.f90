@@ -23,7 +23,7 @@ subroutine addusforce (forcenl)
   USE scf,        ONLY : v, vltot
   USE uspp,       ONLY : becsum, okvan
   USE uspp_param, ONLY : upf, lmaxq, nh, nhm
-  USE mp_global,  ONLY : intra_bgrp_comm
+  USE mp_bands,   ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   USE control_flags, ONLY : gamma_only
   USE fft_interfaces,ONLY : fwfft
@@ -122,9 +122,7 @@ subroutine addusforce (forcenl)
      endif
 
   enddo
-#ifdef __MPI
   call mp_sum ( ddeeq, intra_bgrp_comm )
-#endif
   !            WRITE( stdout,'( "dmatrix atom ",i4)') na
   !            do ih = 1, nh(nt)
   !               WRITE( stdout,'(8f9.4)') (ddeeq(ipol,ih,jh,na),jh=1,nh(nt))

@@ -54,7 +54,8 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   USE io_global,     ONLY : stdout,ionode
   USE control_flags, ONLY : mixing_beta
   USE lsda_mod,      ONLY : nspin
-  USE mp_global,     ONLY : intra_image_comm, me_bgrp, intra_bgrp_comm
+  USE mp_images,     ONLY : intra_image_comm
+  USE mp_bands,      ONLY : me_bgrp
   USE fft_base,      ONLY : dfftp
   USE mp,            ONLY : mp_bcast, mp_sum
   USE control_flags, ONLY : iverbosity
@@ -115,10 +116,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
      CALL compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
     
      tot_dipole  = -e_dipole + ion_dipole
-
-#ifdef __MPI
      CALL mp_bcast(tot_dipole, 0, intra_image_comm)
-#endif
   !  
   !  E_{TOT} = -e^{2} \left( eamp - dip \right) dip \frac{\Omega}{4\pi} 
   !

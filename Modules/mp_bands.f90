@@ -26,6 +26,10 @@ MODULE mp_bands
   INTEGER :: inter_bgrp_comm  = 0  ! inter band group communicator
   INTEGER :: intra_bgrp_comm  = 0  ! intra band group communicator  
   !
+  ! ... "task" groups (for band parallelization of FFT)
+  !
+  INTEGER :: ntask_groups = 1  ! number of proc. in an orbital "task group"
+  !
   ! ... The following variables not set during initialization but later
   !
   INTEGER :: ibnd_start = 0 ! starting band index
@@ -34,7 +38,7 @@ MODULE mp_bands
 CONTAINS
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE mp_start_bands( nband_, parent_comm )
+  SUBROUTINE mp_start_bands( nband_, ntg_, parent_comm )
     !---------------------------------------------------------------------------
     !
     ! ... Divide processors (of the "parent_comm" group) into bands pools
@@ -45,6 +49,7 @@ CONTAINS
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: nband_, parent_comm
+    INTEGER, INTENT(IN), OPTIONAL :: ntg_
     !
     INTEGER :: parent_nproc = 1, parent_mype = 0, ierr = 0
     !
@@ -92,6 +97,10 @@ CONTAINS
     !
     IF ( ierr /= 0 ) CALL errore( 'init_bands', &
                      'inter band group communicator initialization', ABS(ierr) )
+    !
+    IF ( PRESENT(ntg_) ) THEN
+       ntask_groups = ntg_
+    END IF
     !
 #endif
     RETURN

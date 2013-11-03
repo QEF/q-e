@@ -32,7 +32,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE grid_irr_iq,     ONLY : done_bands
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der, ir_point, delta_vrs
   USE scf,             ONLY : vrs
-  USE mp_global,       ONLY : get_ntask_groups
+  USE mp_bands,        ONLY : ntask_groups
 
  !
   IMPLICIT NONE
@@ -111,12 +111,12 @@ SUBROUTINE run_nscf(do_band, iq)
   !
 
   bands_computed=.TRUE.
-!
-!  PWscf has run with task groups if available, but in the phonon 
-!  they are not used, apart in particular points. In that case it is
-!  activated.
-!
-  IF (get_ntask_groups()>1) dffts%have_task_groups=.FALSE.
+  !
+  !  PWscf has run with task groups if available, but in the phonon 
+  !  they are not used, apart in particular points, where they are
+  !  activated.
+  !
+  IF (ntask_groups > 1) dffts%have_task_groups=.FALSE.
   !
   CALL stop_clock( 'PWSCF' )
   !

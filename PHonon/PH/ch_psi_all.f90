@@ -30,7 +30,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE eqv,                  ONLY : evq
   USE qpoint,               ONLY : ikqs
 
-  USE mp_global,            ONLY : intra_bgrp_comm, get_ntask_groups
+  USE mp_bands,             ONLY : intra_bgrp_comm, ntask_groups
   USE mp,                   ONLY : mp_sum
 
   !Needed only for TDDFPT
@@ -66,10 +66,10 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   INTEGER, ALLOCATABLE :: ibuf(:)
 
   CALL start_clock ('ch_psi')
-!
-!  This routine is task groups aware
-!
-  IF (get_ntask_groups() > 1) dffts%have_task_groups=.TRUE.
+  !
+  !  This routine is task groups aware
+  !
+  IF (ntask_groups > 1) dffts%have_task_groups=.TRUE.
 
   ALLOCATE (ps  ( nbnd , m))
   ALLOCATE (hpsi( npwx*npol , m))

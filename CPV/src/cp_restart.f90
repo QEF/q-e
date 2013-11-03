@@ -53,14 +53,15 @@ MODULE cp_restart
       USE control_flags,            ONLY : tksw, lwfpbe0nscf, lwfnscf ! Lingzhu Kong
       USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, &
                                            nwordwfc, tmp_dir, diropn
-      USE mp_global,                ONLY : intra_image_comm, me_image, &
-                                           nproc_image, &
-                                           nproc_pool, intra_pool_comm, &
-                                           me_bgrp, nproc_bgrp, &
+      USE mp_images,                ONLY : intra_image_comm, me_image, &
+                                           nproc_image
+      USE mp_pools,                 ONLY : nproc_pool, intra_pool_comm
+      USE mp_bands,                 ONLY : me_bgrp, nproc_bgrp, &
                                            my_bgrp_id, intra_bgrp_comm, &
-                                           inter_bgrp_comm, root_bgrp
-      USE mp_global,                ONLY : nproc_pot, nproc_bgrp, nproc_ortho, &
-                                           get_ntask_groups
+                                           inter_bgrp_comm, root_bgrp, &
+                                           ntask_groups
+      USE mp_pots,                  ONLY : nproc_pot
+      USE mp_diag,                  ONLY : nproc_ortho
       USE mp_world,                 ONLY : world_comm, nproc
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm, ngm_g
@@ -158,7 +159,6 @@ MODULE cp_restart
       CHARACTER(LEN=256)    :: wfc_dir
       LOGICAL               :: exst
       INTEGER               :: inlc
-      INTEGER               :: ntask_groups
       !
       ! ... subroutine body
       !
@@ -400,7 +400,6 @@ MODULE cp_restart
 ! ... PARALLELISM
 !-------------------------------------------------------------------------------
          !
-         ntask_groups=get_ntask_groups()
          CALL write_para( kunit, nproc, nproc_pool, nproc_image, ntask_groups, &
                           nproc_pot, nproc_bgrp, nproc_ortho )
          !

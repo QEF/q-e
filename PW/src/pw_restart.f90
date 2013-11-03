@@ -118,13 +118,13 @@ MODULE pw_restart
       USE extfield,             ONLY : tefield, dipfield, edir, &
                                        emaxpos, eopreg, eamp
       USE io_rho_xml,           ONLY : write_rho
-      USE mp_global,            ONLY : get_ntask_groups
       USE mp_world,             ONLY : nproc
       USE mp_images,            ONLY : nproc_image
       USE mp_pools,             ONLY : kunit, nproc_pool, me_pool, root_pool, &
                                        intra_pool_comm, inter_pool_comm
       USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, root_bgrp, &
-                                       intra_bgrp_comm, inter_bgrp_comm, nbgrp
+                                       intra_bgrp_comm, inter_bgrp_comm, &
+                                       nbgrp, ntask_groups
       USE mp_pots,              ONLY : nproc_pot
       USE mp_diag,              ONLY : nproc_ortho
       USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
@@ -148,7 +148,7 @@ MODULE pw_restart
       CHARACTER(LEN=256)    :: dirname, filename
       INTEGER               :: i, ig, ik, ngg, ierr, ipol, ik_eff, num_k_points
       INTEGER               :: npool, nkbl, nkl, nkr, npwx_g
-      INTEGER               :: ike, iks, npw_g, ispin, inlc, ntask_groups
+      INTEGER               :: ike, iks, npw_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
       LOGICAL               :: lwfc, lrho
@@ -451,7 +451,6 @@ MODULE pw_restart
 ! ... PARALLELISM
 !-------------------------------------------------------------------------------
          !
-         ntask_groups=get_ntask_groups()
          CALL write_para( kunit, nproc, nproc_pool, nproc_image, ntask_groups,&
                           nproc_pot, nproc_bgrp, nproc_ortho ) 
          !

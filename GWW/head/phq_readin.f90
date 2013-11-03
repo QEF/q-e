@@ -54,11 +54,11 @@ SUBROUTINE phq_readin()
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : iverbosity, modenum, twfcollect,io_level
   USE io_global,     ONLY : ionode, stdout
-  USE mp_global,     ONLY : nproc_pool, nproc_pool_file, &
-                            nimage, my_image_id,    &
-                            nproc_image_file, nproc_image, npool, &
-                            get_ntask_groups, ntask_groups_file,  &
-                            nproc_bgrp_file
+  USE mp_global,     ONLY : nproc_pool_file, nproc_image_file, &
+                            ntask_groups_file, nproc_bgrp_file
+  USE mp_images,     ONLY : nimage, my_image_id, nproc_image
+  USE mp_pools,      ONLY : nproc_pool, npool
+  USE mp_bands,      ONLY : ntask_groups
   USE paw_variables, ONLY : okpaw
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
   USE freq_ph,       ONLY : fpol, fiu, nfs
@@ -499,7 +499,7 @@ SUBROUTINE phq_readin()
      CALL errore('phq_readin',&
      'pw.x run with a different number of pools. Use wf_collect=.true.',1)
 
-  IF (get_ntask_groups() > 1) &
+  IF (ntask_groups > 1) &
      CALL errore('phq_readin','task_groups not available in phonon',1)
 
   IF (nproc_bgrp_file /= nproc_pool_file) &

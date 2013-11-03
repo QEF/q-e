@@ -19,7 +19,7 @@ SUBROUTINE cg_readin()
   USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, ionode_id
   USE noncollin_module, ONLY : noncolin
-  USE mp_global, ONLY : nbgrp, get_ntask_groups
+  USE mp_bands,  ONLY : nbgrp, ntask_groups
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm
   !
@@ -92,13 +92,13 @@ SUBROUTINE cg_readin()
   !
   IF (.not. gamma_only) CALL errore('cg_readin', &
       'need pw.x data file produced using Gamma tricks',1)
-!
-!   Task groups not used. 
-!
-  IF (get_ntask_groups() > 1) dffts%have_task_groups=.FALSE.
-!
-!   band group not available
-!
+  !
+  !   Task groups not used. 
+  !
+  IF (ntask_groups > 1) dffts%have_task_groups=.FALSE.
+  !
+  !   band group not available
+  !
   IF (nbgrp /=1 ) &
      CALL errore('cg_readin','band parallelization not available',1)
 

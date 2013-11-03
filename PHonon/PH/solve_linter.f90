@@ -64,8 +64,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE dfile_autoname,       ONLY : dfile_name
   USE save_ph,              ONLY : tmp_dir_save
   ! used oly to write the restart file
-  USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm, &
-                                   get_ntask_groups, me_bgrp
+  USE mp_pools,             ONLY : inter_pool_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm, ntask_groups, me_bgrp
   USE mp,                   ONLY : mp_sum
   !
   implicit none
@@ -141,7 +141,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
 !
 !  This routine is task group aware
 !
-  IF ( get_ntask_groups() > 1 ) dffts%have_task_groups=.TRUE.
+  IF ( ntask_groups > 1 ) dffts%have_task_groups=.TRUE.
 
   allocate (dvscfin ( dfftp%nnr , nspin_mag , npe))
   if (doublegrid) then
@@ -298,7 +298,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               ! dvscf_q from previous iteration (mix_potential)
               !
               call start_clock ('vpsifft')
-              IF ( get_ntask_groups() > 1 ) dffts%have_task_groups=.TRUE.
+              IF ( ntask_groups > 1 ) dffts%have_task_groups=.TRUE.
               IF( dffts%have_task_groups ) THEN
                  IF (noncolin) THEN
                     CALL tg_cgather( dffts, dvscfins(:,1,ipert), &
@@ -598,7 +598,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   if (doublegrid) deallocate (dvscfins)
   deallocate (dvscfin)
   deallocate(aux2)
-  IF ( get_ntask_groups() > 1) dffts%have_task_groups=.TRUE.
+  IF ( ntask_groups > 1) dffts%have_task_groups=.TRUE.
   IF ( dffts%have_task_groups ) THEN
      DEALLOCATE( tg_dv )
      DEALLOCATE( tg_psic )

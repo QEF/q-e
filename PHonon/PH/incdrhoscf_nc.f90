@@ -28,7 +28,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   USE wavefunctions_module,  ONLY: evc
   USE qpoint,    ONLY : npwq, igkq, ikks
   USE control_ph, ONLY : nbnd_occ
-  USE mp_global,  ONLY : me_bgrp, inter_bgrp_comm, get_ntask_groups
+  USE mp_bands,   ONLY : me_bgrp, inter_bgrp_comm, ntask_groups
   USE mp,         ONLY : mp_sum
 
   implicit none
@@ -61,7 +61,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   ! counters
 
   call start_clock ('incdrhoscf')
-  IF (get_ntask_groups() > 1 ) dffts%have_task_groups=.TRUE.
+  IF (ntask_groups > 1 ) dffts%have_task_groups=.TRUE.
   allocate (dpsic(dffts%nnr, npol))
   allocate (psi  (dffts%nnr, npol))
   allocate (aux(dfftp%nnr,nspin_mag))

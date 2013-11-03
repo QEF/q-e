@@ -30,7 +30,7 @@ SUBROUTINE add_bfield (v,rho)
   USE cell_base,        ONLY : omega
   USE fft_base,         ONLY : dfftp
   USE lsda_mod,         ONLY : nspin
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE noncollin_module, ONLY : bfield, lambda, i_cons, mcons, &
                                pointlist, factlist, noncolin
