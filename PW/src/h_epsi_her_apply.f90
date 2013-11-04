@@ -19,6 +19,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
 
   USE noncollin_module,     ONLY : noncolin, npol
   USE kinds,    ONLY : DP
+  USE spin_orb, ONLY: lspinorb
   USE us
   USE wvfct,    ONLY : igk, npwx, npw, nbnd, ik => current_k
   USE ldaU,     ONLY : lda_plus_u
@@ -34,7 +35,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   USE constants, ONLY : e2, pi, tpi, fpi
   USE fixed_occ
   USE io_global, ONLY : stdout
-  USE becmod,    ONLY : calbec
+  USE becmod,    ONLY : calbec,bec_type,allocate_bec_type,deallocate_bec_type
   USE mp_global, ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   !
@@ -53,10 +54,10 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   COMPLEX(DP), EXTERNAL :: zdotc
   
   COMPLEX(DP), ALLOCATABLE  :: evct(:,:)!temporary array
-  COMPLEX(DP) :: ps(nkb,nbnd)
+  COMPLEX(DP) :: ps(nkb,nbnd*npol)
 
-  COMPLEX(DP) :: becp0(nkb,nbnd)
 
+  TYPE(bec_type) :: becp0
   INTEGER :: nkbtona(nkb)
    INTEGER :: nkbtonh(nkb)
   COMPLEX(DP) :: sca, sca1, pref
@@ -69,7 +70,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   if(ABS(e_field)<eps) return
   
   ALLOCATE( evct(npwx*npol,nbnd))
-
+  call allocate_bec_type(nkb,nbnd,becp0)
   if(okvan) then
 !  --- Initialize arrays ---
      jkb_bp=0
@@ -113,8 +114,20 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
               jkb1 = jkb - nhjkb
               DO j = 1,nhjkbm
                  ! bec_evcel is relative to ik
-                 pref = pref+CONJG(bec_evcel(jkb,mb))*becp0(jkb1+j,nb) &
-                      *qq(nhjkb,j,np)
+                 if(lspinorb) then
+                    pref = pref+CONJG(bec_evcel%nc(jkb,1,mb))*becp0%nc(jkb1+j,1,nb) &
+                         *qq_so(nhjkb,j,1,np)
+                     pref = pref+CONJG(bec_evcel%nc(jkb,1,mb))*becp0%nc(jkb1+j,2,nb) &
+                         *qq_so(nhjkb,j,2,np)
+                     pref = pref+CONJG(bec_evcel%nc(jkb,2,mb))*becp0%nc(jkb1+j,1,nb) &
+                          *qq_so(nhjkb,j,3,np)
+                     pref = pref+CONJG(bec_evcel%nc(jkb,2,mb))*becp0%nc(jkb1+j,2,nb) &
+                          *qq_so(nhjkb,j,4,np)
+
+                 else
+                    pref = pref+CONJG(bec_evcel%k(jkb,mb))*becp0%k(jkb1+j,nb) &
+                         *qq(nhjkb,j,np)
+                 endif
               ENDDO
            ENDDO
            sca= sca + pref
@@ -152,7 +165,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
      else ! US case
 
 ! copy evcel into evct
-        do ig=1,npwx*nbnd
+        do ig=1,npwx*nbnd*npol
            evct(ig,1)=evcel(ig,1)
         enddo
 !  calculate S|evct>
@@ -167,9 +180,21 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
                        jkb = ijkb0 + jh
                        do ih = 1, nh (nt)
                           ikb = ijkb0 + ih
-                           ps (ikb, ibnd) = ps (ikb, ibnd) + &
-                               qq(ih,jh,nt)* bec_evcel(jkb,ibnd)
+                          if(lspinorb) then
+                             ps (ikb, (ibnd-1)*npol+1) = ps (ikb, (ibnd-1)*npol+1) + &
+                                  qq_so(ih,jh,1,nt)* bec_evcel%nc(jkb,1,ibnd)
+                              ps (ikb, (ibnd-1)*npol+1) = ps (ikb, (ibnd-1)*npol+1) + &
+                                  qq_so(ih,jh,2,nt)* bec_evcel%nc(jkb,2,ibnd)
+                              ps (ikb, (ibnd-1)*npol+2) = ps (ikb, (ibnd-1)*npol+2) + &
+                                   qq_so(ih,jh,3,nt)* bec_evcel%nc(jkb,1,ibnd)
+                              ps (ikb, (ibnd-1)*npol+2) = ps (ikb, (ibnd-1)*npol+2) + &
+                                   qq_so(ih,jh,4,nt)* bec_evcel%nc(jkb,2,ibnd)
 
+
+                          else
+                             ps (ikb, ibnd) = ps (ikb, ibnd) + &
+                                  qq(ih,jh,nt)* bec_evcel%k(jkb,ibnd)
+                          endif
                        enddo
                     enddo
                  enddo
@@ -177,11 +202,15 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
               endif
            enddo
         enddo
-        call ZGEMM ('N', 'N', npw, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the last ik read
+        call ZGEMM ('N', 'N', npw, nbnd*npol , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the last ik read
              npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx)
         do mb=1,nbnd!index on states of evcel       
            sca = zdotc(npw,evcelm(1,mb,pdir),1,psi(1,nb),1)
-           sca1 = zdotc(npw,evcelp(1,mb,pdir),1,psi(1,nb),1)         
+           sca1 = zdotc(npw,evcelp(1,mb,pdir),1,psi(1,nb),1)
+           if(noncolin) then
+              sca = sca+zdotc(npw,evcelm(1+npwx,mb,pdir),1,psi(1+npwx,nb),1)
+              sca1 = sca1+zdotc(npw,evcelp(1+npwx,mb,pdir),1,psi(1+npwx,nb),1)
+           endif
            call mp_sum( sca, intra_bgrp_comm )
            call mp_sum( sca1, intra_bgrp_comm )
 
@@ -189,6 +218,11 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
 
               hpsi(ig,nb) = hpsi(ig,nb) + &
                    &     CONJG(fact_hepsi(ik,pdir))*evct(ig,mb)*(sca-sca1)
+              if(noncolin) then
+                 hpsi(ig+npwx,nb) = hpsi(ig+npwx,nb) + &
+                   &     CONJG(fact_hepsi(ik,pdir))*evct(ig+npwx,mb)*(sca-sca1)
+
+              endif
            enddo
         enddo
 
@@ -197,7 +231,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
 
   DEALLOCATE( evct)
 
-
+  call deallocate_bec_type(becp0)
 
   
 !  --

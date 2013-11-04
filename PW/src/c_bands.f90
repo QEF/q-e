@@ -382,9 +382,8 @@ CONTAINS
        !
        IF ( okvan ) THEN
           !
-          ALLOCATE( bec_evcel ( nkb, nbnd ), STAT=ierr )
-          IF( ierr /= 0 ) CALL errore( ' diag_bands_k ', &
-                             ' cannot allocate bec_evcel ', ABS( ierr ) )
+          call allocate_bec_type(nkb,nbnd,bec_evcel)
+          
           !
           CALL calbec(npw, vkb, evcel, bec_evcel)
           !
@@ -486,7 +485,7 @@ CONTAINS
        !
     END IF
     !
-    IF ( lelfield .AND. okvan ) DEALLOCATE( bec_evcel )
+    IF ( lelfield .AND. okvan ) call deallocate_bec_type( bec_evcel) 
     !
     RETURN
     !

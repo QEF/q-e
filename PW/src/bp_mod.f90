@@ -12,6 +12,7 @@ MODULE bp
   ! ... The variables needed for the Berry phase polarization calculation
   !
   USE kinds, ONLY: DP
+  USE becmod, ONLY : bec_type
   !
   SAVE
   PRIVATE
@@ -39,8 +40,9 @@ MODULE bp
                      ! wavefunctions for  storing projectors for  electric field operator
   COMPLEX(DP), ALLOCATABLE, TARGET :: fact_hepsi(:,:)
                      ! factors for hermitean electric field operators
-  COMPLEX(DP), ALLOCATABLE, TARGET :: bec_evcel(:,:) 
-                     !for storing bec's factors with evcel
+  !COMPLEX(DP), ALLOCATABLE, TARGET :: bec_evcel(:,:) 
+  !                   !for storing bec's factors with evcel
+  TYPE(bec_type) :: bec_evcel
   INTEGER, ALLOCATABLE, TARGET :: mapgp_global(:,:)
                      ! map for G'= G+1 correspondence
   INTEGER, ALLOCATABLE, TARGET :: mapgm_global(:,:)
