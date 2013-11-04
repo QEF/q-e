@@ -44,7 +44,8 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    USE mp,                   ONLY : mp_sum
    USE mp_global,            ONLY : intra_bgrp_comm
    USE mp_world,             ONLY : world_comm
-   USE becmod,               ONLY : calbec
+   USE becmod,    ONLY : calbec,bec_type,allocate_bec_type,deallocate_bec_type
+   USE spin_orb, ONLY: lspinorb
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE
 
@@ -118,9 +119,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    ! For noncollinear calculations
    COMPLEX(dp), ALLOCATABLE :: aux_2(:)
    COMPLEX(dp), ALLOCATABLE :: aux0_2(:)
-   COMPLEX(dp) :: becp0(nkb,nbnd)
-   COMPLEX(dp) :: becp_bp(nkb,nbnd)
-   COMPLEX(dp) , ALLOCATABLE :: cphik(:)
+    COMPLEX(dp) , ALLOCATABLE :: cphik(:)
    COMPLEX(dp) :: det
    COMPLEX(dp) :: mat(nbnd,nbnd)
    COMPLEX(dp) :: pref
@@ -143,7 +142,8 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    COMPLEX(kind=DP) :: sca
    COMPLEX(kind=DP), ALLOCATABLE :: aux_g(:)
    COMPLEX(kind=DP), ALLOCATABLE :: aux_g_2(:) ! noncollinear case
-
+   TYPE(bec_type) :: becp0, becp_bp
+   COMPLEX(DP), ALLOCATABLE :: q_dk_so(:,:,:,:)
 
 !  -------------------------------------------------------------------------   !
 !                               INITIALIZATIONS
@@ -167,6 +167,12 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    endif
 
 
+   if(okvan) then
+      call allocate_bec_type(nkb,nbnd,becp0)
+      call allocate_bec_type(nkb,nbnd,becp_bp)
+      IF (lspinorb) ALLOCATE(q_dk_so(nhm,nhm,4,ntyp))
+   endif
+   
    pola=0.d0 !set to 0 electronic polarization   
    zeta_tot=(1.d0,0.d0)
 
@@ -300,6 +306,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
             ENDDO
          endif
       ENDDO
+      IF (lspinorb) CALL transform_qq_so(q_dk,q_dk_so)
    endif
    
 !  -------------------------------------------------------------------------   !
@@ -317,7 +324,11 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
          IF ( nspin == 2 .AND. tfixed_occ) THEN
             l_cal(nb) = ( f_inp(nb,is) /= 0.0_dp )
          ELSE
-            l_cal(nb) = ( nb <= NINT ( nelec/2.0_dp ) )
+             IF (noncolin) THEN
+                l_cal(nb) = ( nb <= NINT ( nelec) )
+             ELSE
+                l_cal(nb) = ( nb <= NINT ( nelec/2.0_dp ) )
+             ENDIF
          ENDIF
       END DO
        
@@ -487,8 +498,21 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
                               nhjkbm = nh(np)
                               jkb1 = jkb - nhjkb
                               DO j = 1,nhjkbm
-                                 pref = pref+CONJG(becp0(jkb,nb))*becp_bp(jkb1+j,mb) &
-                                      *q_dk(nhjkb,j,np)*struc(na)
+                                 if(lspinorb) then
+                                    pref = pref+CONJG(becp0%nc(jkb,1,nb))*becp_bp%nc(jkb1+j,1,mb) &
+                                         *q_dk_so(nhjkb,j,1,np)*struc(na)
+                                    pref = pref+CONJG(becp0%nc(jkb,1,nb))*becp_bp%nc(jkb1+j,2,mb) &
+                                         *q_dk_so(nhjkb,j,2,np)*struc(na)
+                                    pref = pref+CONJG(becp0%nc(jkb,2,nb))*becp_bp%nc(jkb1+j,1,mb) &
+                                         *q_dk_so(nhjkb,j,3,np)*struc(na)
+                                    pref = pref+CONJG(becp0%nc(jkb,2,nb))*becp_bp%nc(jkb1+j,2,mb) &
+                                         *q_dk_so(nhjkb,j,4,np)*struc(na)
+                                    
+                                 else
+
+                                    pref = pref+CONJG(becp0%k(jkb,nb))*becp_bp%k(jkb1+j,mb) &
+                                         *q_dk(nhjkb,j,np)*struc(na)
+                                 endif
                               ENDDO
                            ENDDO
                       
@@ -586,6 +610,12 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    DEALLOCATE(psi1)
    IF (ALLOCATED(aux_2)) DEALLOCATE(aux_2)
    IF (ALLOCATED(aux0_2)) DEALLOCATE(aux0_2)
+
+   if(okvan) then
+      call deallocate_bec_type(becp0)
+      call deallocate_bec_type(becp_bp)
+      IF (lspinorb) DEALLOCATE(q_dk_so)
+   endif
 !------------------------------------------------------------------------------!
 
 END SUBROUTINE c_phase_field
