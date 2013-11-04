@@ -1,21 +1,21 @@
 include ../make.sys
 
-all: libminpack pw4gwwa heada gwwa
+all: libminpack pw4gwwa heada gwwa  
 
 libminpack:
 	cd minpack ; $(MAKE) all
 
-pw4gwwa: libminpack
+pw4gwwa:
 	cd pw4gww ; $(MAKE) all
 
-heada: pw4gwwa
+heada:
 	cd head ; $(MAKE) all
 
-gwwa: libminpack
+gwwa:
 	cd gww ; $(MAKE) all
 
 clean: 
-	cd pw4gww ; $(MAKE) clean
-	cd head ; $(MAKE) clean
-	cd gww ; $(MAKE) clean
-	cd minpack ; $(MAKE) clean
+	cd pw4gww ; $(MAKE) $@; \
+	cd ../head ; $(MAKE) $@; \
+	cd ../gww ; $(MAKE) $@; \
+        cd ../minpack ; $(MAKE) $@
