@@ -97,7 +97,8 @@ read_file_xspectra.o : ../../Modules/io_global.o
 read_file_xspectra.o : ../../Modules/ions_base.o
 read_file_xspectra.o : ../../Modules/kind.o
 read_file_xspectra.o : ../../Modules/mp.o
-read_file_xspectra.o : ../../Modules/mp_global.o
+read_file_xspectra.o : ../../Modules/mp_pools.o
+read_file_xspectra.o : ../../Modules/mp_world.o
 read_file_xspectra.o : ../../Modules/noncol.o
 read_file_xspectra.o : ../../Modules/parser.o
 read_file_xspectra.o : ../../Modules/paw_variables.o
@@ -133,6 +134,8 @@ xspectra.o : ../../Modules/ions_base.o
 xspectra.o : ../../Modules/kind.o
 xspectra.o : ../../Modules/mp.o
 xspectra.o : ../../Modules/mp_global.o
+xspectra.o : ../../Modules/mp_pools.o
+xspectra.o : ../../Modules/mp_world.o
 xspectra.o : ../../Modules/noncol.o
 xspectra.o : ../../Modules/parallel_include.o
 xspectra.o : ../../Modules/parameters.o

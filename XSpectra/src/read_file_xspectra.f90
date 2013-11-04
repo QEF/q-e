@@ -42,7 +42,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
   USE buffers,              ONLY : open_buffer, close_buffer
   USE uspp_param,           ONLY : upf
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
-  USE mp_global,            ONLY : kunit
+  USE mp_pools,             ONLY : kunit
   USE pw_restart,           ONLY : pw_readfile
   USE xml_io_base,          ONLY : pp_check_file
   USE uspp,                 ONLY : okvan, becsum
@@ -382,8 +382,9 @@ SUBROUTINE read_file_xspectra(xread_wf)
       USE io_global,          ONLY : ionode_id 
       USE klist,              ONLY : npk
       USE constants,          ONLY : degspin
-      USE parser,             ONLY :  read_line
-      use mp,                 ONLY : mp_bcast
+      USE parser,             ONLY : read_line
+      USE mp,                 ONLY : mp_bcast
+      USE mp_world,           ONLY : world_comm ! not sure about this
       implicit none
       INTEGER               :: npool, nkl, nkr, nkbl, iks, ike
       CHARACTER(LEN=256)         :: input_line
@@ -399,12 +400,12 @@ SUBROUTINE read_file_xspectra(xread_wf)
       IF ( nk1 <= 0 .OR. nk2 <= 0 .OR. nk3 <= 0 ) CALL errore &
            ('card_kpoints', 'invalid values for nk1, nk2, nk3', 1)
       
-      CALL mp_bcast( k1,  ionode_id )
-      CALL mp_bcast( k2,  ionode_id )
-      CALL mp_bcast( k3,  ionode_id )
-      CALL mp_bcast( nk1,  ionode_id )
-      CALL mp_bcast( nk2,  ionode_id )
-      CALL mp_bcast( nk3,  ionode_id )
+      CALL mp_bcast( k1,  ionode_id, world_comm )
+      CALL mp_bcast( k2,  ionode_id, world_comm )
+      CALL mp_bcast( k3,  ionode_id, world_comm )
+      CALL mp_bcast( nk1,  ionode_id,world_comm )
+      CALL mp_bcast( nk2,  ionode_id,world_comm )
+      CALL mp_bcast( nk3,  ionode_id,world_comm )
       
       !     if(nsym.eq.1) then
       nks=nk1*nk2*nk3

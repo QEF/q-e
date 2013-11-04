@@ -44,7 +44,9 @@ PROGRAM X_Spectra
   USE lsda_mod,    ONLY : nspin,lsda,isk,current_spin
   USE noncollin_module,     ONLY : noncolin
   USE mp,         ONLY : mp_bcast, mp_sum             !parallelization
-  USE mp_global,  ONLY : intra_pool_comm, nproc, npool, mp_startup, mp_global_end
+  USE mp_global,  ONLY : mp_startup, mp_global_end
+  USE mp_pools,   ONLY : intra_pool_comm, npool
+  USE mp_world,   ONLY : nproc, world_comm
   USE control_flags, ONLY : gamma_only
   USE environment,   ONLY : environment_start
 
@@ -270,56 +272,56 @@ PROGRAM X_Spectra
   ! $   Variables broadcasting 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-  CALL mp_bcast( calculation, ionode_id)
-  CALL mp_bcast( tmp_dir, ionode_id ) 
-  CALL mp_bcast( prefix,  ionode_id )
-  CALL mp_bcast( outdir,  ionode_id ) 
-  CALL mp_bcast( xnepoint,  ionode_id ) 
-  CALL mp_bcast( xniter,  ionode_id ) 
-  CALL mp_bcast( xcheck_conv,  ionode_id ) 
-  CALL mp_bcast( xang_mom,  ionode_id ) 
-  CALL mp_bcast( xgamma,  ionode_id ) 
-  CALL mp_bcast( xerror,  ionode_id ) 
-  CALL mp_bcast( xemin,  ionode_id ) 
-  CALL mp_bcast( xemax,  ionode_id ) 
-  CALL mp_bcast( show_status, ionode_id)
+  CALL mp_bcast( calculation, ionode_id, world_comm )
+  CALL mp_bcast( tmp_dir, ionode_id, world_comm ) 
+  CALL mp_bcast( prefix,  ionode_id, world_comm )
+  CALL mp_bcast( outdir,  ionode_id, world_comm ) 
+  CALL mp_bcast( xnepoint,  ionode_id, world_comm ) 
+  CALL mp_bcast( xniter,  ionode_id, world_comm ) 
+  CALL mp_bcast( xcheck_conv,  ionode_id, world_comm ) 
+  CALL mp_bcast( xang_mom,  ionode_id, world_comm ) 
+  CALL mp_bcast( xgamma,  ionode_id, world_comm ) 
+  CALL mp_bcast( xerror,  ionode_id, world_comm ) 
+  CALL mp_bcast( xemin,  ionode_id, world_comm ) 
+  CALL mp_bcast( xemax,  ionode_id, world_comm ) 
+  CALL mp_bcast( show_status, ionode_id, world_comm)
 
-  CALL mp_bcast( xkvec,  ionode_id ) 
-  CALL mp_bcast( xepsilon,  ionode_id ) 
+  CALL mp_bcast( xkvec,  ionode_id, world_comm ) 
+  CALL mp_bcast( xepsilon,  ionode_id, world_comm ) 
 
-  CALL mp_bcast( xonly_plot,  ionode_id ) 
-  CALL mp_bcast( filerecon,  ionode_id ) 
-  CALL mp_bcast( filecore,  ionode_id ) 
-  CALL mp_bcast( xiabs,  ionode_id ) 
-  CALL mp_bcast( r_paw,  ionode_id ) 
-  CALL mp_bcast( xread_wf,  ionode_id ) 
-  CALL mp_bcast( x_save_file,  ionode_id ) 
-  CALL mp_bcast( xcoordcrys,  ionode_id ) 
-  CALL mp_bcast( ef_r,  ionode_id )   
-  CALL mp_bcast( cut_occ_states, ionode_id )
-  CALL mp_bcast( terminator, ionode_id )
-  CALL mp_bcast( wf_collect, ionode_id )
-  CALL mp_bcast( twfcollect, ionode_id )
+  CALL mp_bcast( xonly_plot,  ionode_id, world_comm ) 
+  CALL mp_bcast( filerecon,  ionode_id, world_comm ) 
+  CALL mp_bcast( filecore,  ionode_id, world_comm ) 
+  CALL mp_bcast( xiabs,  ionode_id, world_comm ) 
+  CALL mp_bcast( r_paw,  ionode_id, world_comm ) 
+  CALL mp_bcast( xread_wf,  ionode_id, world_comm ) 
+  CALL mp_bcast( x_save_file,  ionode_id, world_comm ) 
+  CALL mp_bcast( xcoordcrys,  ionode_id, world_comm ) 
+  CALL mp_bcast( ef_r,  ionode_id, world_comm )   
+  CALL mp_bcast( cut_occ_states, ionode_id, world_comm )
+  CALL mp_bcast( terminator, ionode_id, world_comm )
+  CALL mp_bcast( wf_collect, ionode_id, world_comm )
+  CALL mp_bcast( twfcollect, ionode_id, world_comm )
 
-  CALL mp_bcast( U_projection_type, ionode_id )
+  CALL mp_bcast( U_projection_type, ionode_id, world_comm )
 
-  CALL mp_bcast( gamma_mode, ionode_id )
-  CALL mp_bcast( gamma_energy, ionode_id )
-  CALL mp_bcast( gamma_value, ionode_id )
+  CALL mp_bcast( gamma_mode, ionode_id, world_comm )
+  CALL mp_bcast( gamma_energy, ionode_id, world_comm )
+  CALL mp_bcast( gamma_value, ionode_id, world_comm )
 
-  CALL mp_bcast( cut_ierror, ionode_id )
-  CALL mp_bcast( cut_stepu, ionode_id )
-  CALL mp_bcast( cut_stepl, ionode_id )
-  CALL mp_bcast( cut_startt, ionode_id )
-  CALL mp_bcast( cut_tinf, ionode_id )
-  CALL mp_bcast( cut_tsup, ionode_id )
-  CALL mp_bcast( cut_desmooth, ionode_id )
-  CALL mp_bcast( cut_nmemu, ionode_id )
-  CALL mp_bcast( cut_nmeml, ionode_id )
+  CALL mp_bcast( cut_ierror, ionode_id, world_comm )
+  CALL mp_bcast( cut_stepu, ionode_id, world_comm )
+  CALL mp_bcast( cut_stepl, ionode_id, world_comm )
+  CALL mp_bcast( cut_startt, ionode_id, world_comm )
+  CALL mp_bcast( cut_tinf, ionode_id, world_comm )
+  CALL mp_bcast( cut_tsup, ionode_id, world_comm )
+  CALL mp_bcast( cut_desmooth, ionode_id, world_comm )
+  CALL mp_bcast( cut_nmemu, ionode_id, world_comm )
+  CALL mp_bcast( cut_nmeml, ionode_id, world_comm )
 
 ! restart
-  CALL mp_bcast( time_limit, ionode_id )
-  CALL mp_bcast( restart_mode, ionode_id )
+  CALL mp_bcast( time_limit, ionode_id, world_comm )
+  CALL mp_bcast( restart_mode, ionode_id, world_comm )
 
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -882,16 +884,17 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
        xk,                & ! k-points coordinates
        wk                   ! k-points weight
   USE gvect,            ONLY: g, ngm, ngl
-  USE fft_base,        ONLY: dfftp
-  USE paw_gipaw,       ONLY : &
+  USE fft_base,         ONLY: dfftp
+  USE paw_gipaw,        ONLY : &
        paw_vkb,             & ! |p> projectors
        paw_becp,            & ! product of projectors and wf.
        paw_nkb,             & ! total number of beta functions, with st.fact.
        paw_lmaxkb,paw_recon
   USE becmod,          ONLY : becp, allocate_bec_type, deallocate_bec_type !CG
   USE scf,             ONLY : vltot, vrs, v, kedtau
-  USE gvecs,         ONLY : doublegrid
-  USE mp_global,       ONLY : intra_pool_comm, root_pool, world_comm
+  USE gvecs,           ONLY : doublegrid
+  USE mp_world,        ONLY : world_comm
+  USE mp_pools,        ONLY : intra_pool_comm, root_pool
   USE mp,              ONLY : mp_sum, mp_bcast, mp_barrier !CG
   USE io_global,       ONLY : ionode
 
@@ -1273,7 +1276,8 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
   USE becmod, ONLY:becp, allocate_bec_type, deallocate_bec_type ! CG
   USE scf, ONLY: vltot,v,vrs, kedtau !CG
   USE gvecs, ONLY : doublegrid
-  USE mp_global,  ONLY : intra_pool_comm, root_pool, world_comm ! CG
+  USE mp_pools,   ONLY : intra_pool_comm, root_pool
+  USE mp_world,   ONLY : world_comm
   USE mp,         ONLY : mp_sum,mp_barrier, mp_bcast !CG
   USE xspectra,  ONLY:  xiabs,xanes_qua,xang_mom,xniter,xnitermax,xkvec,xepsilon,&
                         save_file_kind, calculated, time_limit
@@ -3386,8 +3390,9 @@ SUBROUTINE verify_hpsi
        paw_lmaxkb,paw_recon
   USE becmod,     ONLY : becp, calbec, allocate_bec_type, deallocate_bec_type !CG
   USE scf,        ONLY : vltot, vrs, v, kedtau !CG
-  USE gvecs,    ONLY : doublegrid
-  USE mp_global,  ONLY : intra_pool_comm, mpime,my_pool_id, npool
+  USE gvecs,      ONLY : doublegrid
+  USE mp_pools,   ONLY : intra_pool_comm, my_pool_id, npool
+  USE mp_world,   ONLY : mpime
   USE mp,         ONLY : mp_sum
   USE xspectra,      ONLY : xiabs, xanes_dip, xang_mom, xniter, xnitermax, xepsilon
   USE atom,       ONLY : rgrid, msh
