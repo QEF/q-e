@@ -15,7 +15,14 @@
 #include <time.h>
 #include "c_defs.h"
 #include <unistd.h>
+
+#if defined(_WIN32)
+#include <direct.h>
+#endif
+
 int check_writable_dir(const char *filename) {
+
+#if !defined(_WIN32)
     struct stat sb;
     /* lstat follows symlinks */
     if (lstat(filename, &sb) == -1) {
@@ -30,6 +37,8 @@ int check_writable_dir(const char *filename) {
     /* return 0 if I can read, write and execute (enter) this directory, -1 otherwise
        note: we do not actually need R_OK in Quantum-ESPRESSO;
              W_OK is definitely needed, about X_OK I'm not sure */
+#endif
+
     if ( access(filename, W_OK|R_OK|X_OK ) ) {
       fprintf( stderr , "\ncheck_writable_dir fail: insufficient permissions to access '%s'\n", filename ) ;
       return -1; /* no permissions  */
@@ -44,10 +53,13 @@ int c_mkdir_safe( const char * dirname )
 
    /* return directly -1 if directory exists and is writable */
    if ( check_writable_dir(dirname) == 0) return -1;
-   
+
+#if defined(_WIN32)
+   retval = _mkdir( dirname ) ;
+#else
    mode_t mode = 0777 ;
    retval = mkdir( dirname , mode ) ;
-   
+#endif
    if ( retval == -1  && errno != EEXIST ) {
      fprintf( stderr , "\nmkdir fail: [%d] %s\n" , errno , strerror( errno ) ) ;
      retval = 1 ;

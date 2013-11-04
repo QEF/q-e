@@ -6,8 +6,14 @@
   or http://www.gnu.org/copyleft/gpl.txt .
 */
 
+#if defined(_WIN32)
+#include <windows.h>
+#include <sys/time.h>
+#include <stdint.h>
+#else
 #include <sys/time.h>
 #include <sys/resource.h>
+#endif
 #include <unistd.h>
 
 #include "c_defs.h"
@@ -33,10 +39,23 @@ double F77_FUNC(scnds,SCNDS) ( )
 */
 
 {
-        static struct rusage T;
+    double sec=0.0;
 
-        getrusage(RUSAGE_SELF, &T);
+#if defined(_WIN32)
+    // from MSDN docs.
+    FILETIME ct,et,kt,ut;
+    union { FILETIME ft; uint64_t ui; } cpu;
+    if (GetProcessTimes(GetCurrentProcess(),&ct,&et,&kt,&ut)) {
+        cpu.ft = ut;
+        sec = cpu.ui * 0.0000001;
+    }
+#else
+    static struct rusage T;
 
-        return ((double)T.ru_utime.tv_sec + ((double)T.ru_utime.tv_usec)/1000000.0);
+    getrusage(RUSAGE_SELF, &T);
+
+    sec = ((double)T.ru_utime.tv_sec + ((double)T.ru_utime.tv_usec)/1000000.0);
+#endif
+    return sec;
 }
 

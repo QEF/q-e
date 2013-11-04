@@ -28,7 +28,7 @@ SUBROUTINE c_bands( iter )
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions_module, ONLY : evc
   USE bp,                   ONLY : lelfield
-  USE mp_global,            ONLY : npool, kunit, inter_pool_comm
+  USE mp_pools,             ONLY : npool, kunit, inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
   !
@@ -177,7 +177,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE becmod,               ONLY : bec_type, becp, calbec, &
                                    allocate_bec_type, deallocate_bec_type
   USE klist,                ONLY : nks
-  USE mp_global,            ONLY : nproc_bgrp, intra_bgrp_comm
+  USE mp_bands,             ONLY : nproc_bgrp, intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -592,7 +592,7 @@ SUBROUTINE c_bands_nscf( )
   USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions_module, ONLY : evc
-  USE mp_global,            ONLY : npool, kunit, inter_pool_comm
+  USE mp_pools,             ONLY : npool, kunit, inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
   !

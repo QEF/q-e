@@ -17,7 +17,7 @@ SUBROUTINE close_files(lflag)
   USE io_files,      ONLY : prefix, iunwfc, iunigk, iunsat, &
                             iunhub, iunefield, iunefieldm, iunefieldp
   USE buffers,       ONLY : close_buffer
-  USE mp_global,     ONLY : intra_image_comm
+  USE mp_images,     ONLY : intra_image_comm
   USE mp,            ONLY : mp_barrier
   USE wannier_new,   ONLY : use_wannier
   USE bp,            ONLY : lelfield

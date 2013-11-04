@@ -203,6 +203,8 @@ then
                 *-pc-cygwin )           arch=cygwin ;;
                 sx*-nec* )              arch=necsx  ;;
                 powerpc64-*-linux-gnu ) arch=ppc64  ;;
+                *-*-mingw32 )           arch=mingw32;;
+                *-*-mingw64 )           arch=mingw64;;
                 * )                     AC_MSG_WARN(incorrect host name ?)
         ;;
         esac
@@ -246,6 +248,9 @@ crayxt* )
         ;;
 mac686 | cygwin )
         try_f90="ifort $try_f90"
+        ;;
+mingw* )
+        ld="$F90"
         ;;
 necsx )
         sxopt=`echo $host|awk '{print substr($1,1,3)}'`
@@ -600,7 +605,7 @@ ia32:path* | ia64:path* | x86_64:path* )
         try_ldflags=""
         try_ldflags_static="-static"
         ;;
-*:gfortran )
+*:*gfortran )
         if test "$use_debug" -eq 1; then
             try_fflags="-O3 -g  -Wall -fbounds-check -frange-check"
         else

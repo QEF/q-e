@@ -23,7 +23,7 @@ SUBROUTINE iosys()
   USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             ry_kbar, amu_ry, bohr_radius_angs, eps8
-  USE mp_global,     ONLY : npool, nproc_pool
+  USE mp_pools,      ONLY : npool
   !
   USE io_global,     ONLY : stdout, ionode, ionode_id
   !

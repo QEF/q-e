@@ -15,7 +15,7 @@ gwwa: libminpack
 	cd gww ; $(MAKE) all
 
 clean: 
-	cd pw4gww ; $(MAKE) $@
-	cd head ; $(MAKE) $@
-	cd gww ; $(MAKE) $@
-	cd minpack ; $(MAKE) $@
+	cd pw4gww ; $(MAKE) clean
+	cd head ; $(MAKE) clean
+	cd gww ; $(MAKE) clean
+	cd minpack ; $(MAKE) clean

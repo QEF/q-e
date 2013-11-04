@@ -30,7 +30,7 @@ SUBROUTINE compute_becsum(iflag)
   USE paw_symmetry,         ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : calbec
-  USE mp_global,            ONLY : inter_pool_comm
+  USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE scf,                  ONLY : rho
   !
@@ -66,9 +66,7 @@ SUBROUTINE compute_becsum(iflag)
   !
   IF( okpaw )  THEN
      rho%bec(:,:,:) = becsum(:,:,:)
-#ifdef __MPI
      CALL mp_sum(rho%bec, inter_pool_comm)
-#endif
      CALL PAW_symmetrize(rho%bec)
   ENDIF
   !

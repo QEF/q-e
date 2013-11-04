@@ -272,8 +272,8 @@ SUBROUTINE electrons_scf()
   USE uspp,                 ONLY : okvan
   USE exx,                  ONLY : exxenergy2, fock0, fock1, fock2
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
-  USE mp_global,            ONLY : intra_bgrp_comm, inter_pool_comm, &
-                                   root_pool, my_pool_id
+  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp_pools,             ONLY : root_pool, my_pool_id, inter_pool_comm
   USE mp,                   ONLY : mp_sum, mp_bcast
   !
   USE london_module,        ONLY : energy_london
