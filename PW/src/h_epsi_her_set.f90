@@ -38,7 +38,7 @@ subroutine h_epsi_her_set(pdir, e_field)
   USE constants, ONLY : e2, pi, tpi, fpi
   USE fixed_occ
   USE mp,        ONLY : mp_sum
-  USE mp_global, ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp_world,  ONLY : world_comm
   USE becmod,    ONLY : bec_type, becp, calbec,allocate_bec_type, deallocate_bec_type
   !

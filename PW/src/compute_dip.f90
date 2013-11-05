@@ -81,7 +81,7 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg, omega, alat, saw
   USE fft_base,   ONLY : dfftp
-  USE mp_global,  ONLY : me_bgrp, intra_bgrp_comm
+  USE mp_bands,   ONLY : me_bgrp, intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   !
   IMPLICIT NONE

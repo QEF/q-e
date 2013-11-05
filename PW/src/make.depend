@@ -153,7 +153,7 @@ bp_c_phase.o : ../../Modules/io_global.o
 bp_c_phase.o : ../../Modules/ions_base.o
 bp_c_phase.o : ../../Modules/kind.o
 bp_c_phase.o : ../../Modules/mp.o
-bp_c_phase.o : ../../Modules/mp_global.o
+bp_c_phase.o : ../../Modules/mp_bands.o
 bp_c_phase.o : ../../Modules/noncol.o
 bp_c_phase.o : ../../Modules/recvec.o
 bp_c_phase.o : ../../Modules/uspp.o
@@ -167,6 +167,7 @@ bp_calc_btq.o : ../../Modules/constants.o
 bp_calc_btq.o : ../../Modules/ions_base.o
 bp_calc_btq.o : ../../Modules/kind.o
 bp_calc_btq.o : ../../Modules/uspp.o
+bp_mod.o : ../../Modules/becmod.o
 bp_mod.o : ../../Modules/cell_base.o
 bp_mod.o : ../../Modules/fft_base.o
 bp_mod.o : ../../Modules/kind.o
@@ -187,7 +188,8 @@ c_bands.o : ../../Modules/io_files.o
 c_bands.o : ../../Modules/io_global.o
 c_bands.o : ../../Modules/kind.o
 c_bands.o : ../../Modules/mp.o
-c_bands.o : ../../Modules/mp_global.o
+c_bands.o : ../../Modules/mp_bands.o
+c_bands.o : ../../Modules/mp_pools.o
 c_bands.o : ../../Modules/noncol.o
 c_bands.o : ../../Modules/recvec.o
 c_bands.o : ../../Modules/uspp.o
@@ -208,7 +210,7 @@ c_phase_field.o : ../../Modules/io_global.o
 c_phase_field.o : ../../Modules/ions_base.o
 c_phase_field.o : ../../Modules/kind.o
 c_phase_field.o : ../../Modules/mp.o
-c_phase_field.o : ../../Modules/mp_global.o
+c_phase_field.o : ../../Modules/mp_bands.o
 c_phase_field.o : ../../Modules/mp_world.o
 c_phase_field.o : ../../Modules/noncol.o
 c_phase_field.o : ../../Modules/recvec.o
@@ -219,14 +221,15 @@ c_phase_field.o : pwcom.o
 ccgdiagg.o : ../../Modules/constants.o
 ccgdiagg.o : ../../Modules/kind.o
 ccgdiagg.o : ../../Modules/mp.o
-ccgdiagg.o : ../../Modules/mp_global.o
+ccgdiagg.o : ../../Modules/mp_bands.o
 cdiagh.o : ../../Modules/kind.o
 cdiagh.o : ../../Modules/mp.o
-cdiagh.o : ../../Modules/mp_global.o
+cdiagh.o : ../../Modules/mp_bands.o
 cdiaghg.o : ../../Modules/descriptors.o
 cdiaghg.o : ../../Modules/kind.o
 cdiaghg.o : ../../Modules/mp.o
-cdiaghg.o : ../../Modules/mp_global.o
+cdiaghg.o : ../../Modules/mp_bands.o
+cdiaghg.o : ../../Modules/mp_diag.o
 cdiaghg.o : ../../Modules/ptoolkit.o
 cdiaghg.o : ../../Modules/zhpev_drv.o
 cegterg.o : ../../Modules/descriptors.o
@@ -265,7 +268,7 @@ clean_pw.o : xdm_dispersion.o
 close_files.o : ../../Modules/control_flags.o
 close_files.o : ../../Modules/io_files.o
 close_files.o : ../../Modules/mp.o
-close_files.o : ../../Modules/mp_global.o
+close_files.o : ../../Modules/mp_images.o
 close_files.o : ../../Modules/wannier_new.o
 close_files.o : bp_mod.o
 close_files.o : buffers.o
@@ -278,7 +281,7 @@ compute_becsum.o : ../../Modules/io_files.o
 compute_becsum.o : ../../Modules/ions_base.o
 compute_becsum.o : ../../Modules/kind.o
 compute_becsum.o : ../../Modules/mp.o
-compute_becsum.o : ../../Modules/mp_global.o
+compute_becsum.o : ../../Modules/mp_pools.o
 compute_becsum.o : ../../Modules/noncol.o
 compute_becsum.o : ../../Modules/paw_variables.o
 compute_becsum.o : ../../Modules/recvec.o
@@ -300,7 +303,7 @@ compute_dip.o : ../../Modules/io_global.o
 compute_dip.o : ../../Modules/ions_base.o
 compute_dip.o : ../../Modules/kind.o
 compute_dip.o : ../../Modules/mp.o
-compute_dip.o : ../../Modules/mp_global.o
+compute_dip.o : ../../Modules/mp_bands.o
 compute_dip.o : pwcom.o
 compute_qdipol.o : ../../Modules/atom.o
 compute_qdipol.o : ../../Modules/constants.o
@@ -351,7 +354,7 @@ divide_class_so.o : ../../Modules/noncol.o
 divide_class_so.o : pwcom.o
 divide_et_impera.o : ../../Modules/io_global.o
 divide_et_impera.o : ../../Modules/kind.o
-divide_et_impera.o : ../../Modules/mp_global.o
+divide_et_impera.o : ../../Modules/mp_pools.o
 dqvan2.o : ../../Modules/kind.o
 dqvan2.o : ../../Modules/recvec.o
 dqvan2.o : ../../Modules/uspp.o
@@ -376,7 +379,7 @@ efermig.o : ../../Modules/constants.o
 efermig.o : ../../Modules/io_global.o
 efermig.o : ../../Modules/kind.o
 efermig.o : ../../Modules/mp.o
-efermig.o : ../../Modules/mp_global.o
+efermig.o : ../../Modules/mp_pools.o
 efermit.o : ../../Modules/constants.o
 efermit.o : ../../Modules/io_global.o
 efermit.o : ../../Modules/kind.o
@@ -392,7 +395,8 @@ electrons.o : ../../Modules/ions_base.o
 electrons.o : ../../Modules/kind.o
 electrons.o : ../../Modules/mm_dispersion.o
 electrons.o : ../../Modules/mp.o
-electrons.o : ../../Modules/mp_global.o
+electrons.o : ../../Modules/mp_bands.o
+electrons.o : ../../Modules/mp_pools.o
 electrons.o : ../../Modules/noncol.o
 electrons.o : ../../Modules/paw_variables.o
 electrons.o : ../../Modules/recvec.o
@@ -421,7 +425,7 @@ esm.o : ../../Modules/io_global.o
 esm.o : ../../Modules/ions_base.o
 esm.o : ../../Modules/kind.o
 esm.o : ../../Modules/mp.o
-esm.o : ../../Modules/mp_global.o
+esm.o : ../../Modules/mp_bands.o
 esm.o : ../../Modules/recvec.o
 esm.o : ../../Modules/uspp.o
 esm.o : pwcom.o
@@ -429,7 +433,7 @@ esm.o : scf_mod.o
 ewald.o : ../../Modules/constants.o
 ewald.o : ../../Modules/kind.o
 ewald.o : ../../Modules/mp.o
-ewald.o : ../../Modules/mp_global.o
+ewald.o : ../../Modules/mp_bands.o
 ewald.o : esm.o
 ewald.o : martyna_tuckerman.o
 ewald_dipole.o : ../../Modules/cell_base.o
@@ -437,7 +441,7 @@ ewald_dipole.o : ../../Modules/constants.o
 ewald_dipole.o : ../../Modules/ions_base.o
 ewald_dipole.o : ../../Modules/kind.o
 ewald_dipole.o : ../../Modules/mp.o
-ewald_dipole.o : ../../Modules/mp_global.o
+ewald_dipole.o : ../../Modules/mp_bands.o
 ewald_dipole.o : ../../Modules/recvec.o
 ewald_dipole.o : pwcom.o
 exx.o : ../../Modules/becmod.o
@@ -476,7 +480,7 @@ force_cc.o : ../../Modules/fft_interfaces.o
 force_cc.o : ../../Modules/ions_base.o
 force_cc.o : ../../Modules/kind.o
 force_cc.o : ../../Modules/mp.o
-force_cc.o : ../../Modules/mp_global.o
+force_cc.o : ../../Modules/mp_bands.o
 force_cc.o : ../../Modules/noncol.o
 force_cc.o : ../../Modules/recvec.o
 force_cc.o : ../../Modules/uspp.o
@@ -492,7 +496,7 @@ force_corr.o : ../../Modules/fft_interfaces.o
 force_corr.o : ../../Modules/ions_base.o
 force_corr.o : ../../Modules/kind.o
 force_corr.o : ../../Modules/mp.o
-force_corr.o : ../../Modules/mp_global.o
+force_corr.o : ../../Modules/mp_bands.o
 force_corr.o : ../../Modules/recvec.o
 force_corr.o : ../../Modules/uspp.o
 force_corr.o : ../../Modules/wavefunctions.o
@@ -501,7 +505,7 @@ force_corr.o : scf_mod.o
 force_ew.o : ../../Modules/constants.o
 force_ew.o : ../../Modules/kind.o
 force_ew.o : ../../Modules/mp.o
-force_ew.o : ../../Modules/mp_global.o
+force_ew.o : ../../Modules/mp_bands.o
 force_ew.o : esm.o
 force_hub.o : ../../Modules/becmod.o
 force_hub.o : ../../Modules/cell_base.o
@@ -510,7 +514,7 @@ force_hub.o : ../../Modules/io_files.o
 force_hub.o : ../../Modules/ions_base.o
 force_hub.o : ../../Modules/kind.o
 force_hub.o : ../../Modules/mp.o
-force_hub.o : ../../Modules/mp_global.o
+force_hub.o : ../../Modules/mp_bands.o
 force_hub.o : ../../Modules/mp_pools.o
 force_hub.o : ../../Modules/recvec.o
 force_hub.o : ../../Modules/uspp.o
@@ -526,7 +530,7 @@ force_lc.o : ../../Modules/fft_base.o
 force_lc.o : ../../Modules/fft_interfaces.o
 force_lc.o : ../../Modules/kind.o
 force_lc.o : ../../Modules/mp.o
-force_lc.o : ../../Modules/mp_global.o
+force_lc.o : ../../Modules/mp_bands.o
 force_lc.o : esm.o
 force_us.o : ../../Modules/becmod.o
 force_us.o : ../../Modules/cell_base.o
@@ -535,7 +539,8 @@ force_us.o : ../../Modules/io_files.o
 force_us.o : ../../Modules/ions_base.o
 force_us.o : ../../Modules/kind.o
 force_us.o : ../../Modules/mp.o
-force_us.o : ../../Modules/mp_global.o
+force_us.o : ../../Modules/mp_bands.o
+force_us.o : ../../Modules/mp_pools.o
 force_us.o : ../../Modules/noncol.o
 force_us.o : ../../Modules/recvec.o
 force_us.o : ../../Modules/uspp.o
@@ -569,8 +574,9 @@ forces_bp_efield.o : ../../Modules/io_global.o
 forces_bp_efield.o : ../../Modules/ions_base.o
 forces_bp_efield.o : ../../Modules/kind.o
 forces_bp_efield.o : ../../Modules/mp.o
-forces_bp_efield.o : ../../Modules/mp_global.o
+forces_bp_efield.o : ../../Modules/mp_bands.o
 forces_bp_efield.o : ../../Modules/mp_world.o
+forces_bp_efield.o : ../../Modules/noncol.o
 forces_bp_efield.o : ../../Modules/recvec.o
 forces_bp_efield.o : ../../Modules/uspp.o
 forces_bp_efield.o : ../../Modules/wavefunctions.o
@@ -630,7 +636,7 @@ get_locals.o : ../../Modules/fft_base.o
 get_locals.o : ../../Modules/ions_base.o
 get_locals.o : ../../Modules/kind.o
 get_locals.o : ../../Modules/mp.o
-get_locals.o : ../../Modules/mp_global.o
+get_locals.o : ../../Modules/mp_bands.o
 get_locals.o : ../../Modules/noncol.o
 get_locals.o : pwcom.o
 gk_sort.o : ../../Modules/constants.o
@@ -659,7 +665,7 @@ h_epsi_her_apply.o : ../../Modules/io_global.o
 h_epsi_her_apply.o : ../../Modules/ions_base.o
 h_epsi_her_apply.o : ../../Modules/kind.o
 h_epsi_her_apply.o : ../../Modules/mp.o
-h_epsi_her_apply.o : ../../Modules/mp_global.o
+h_epsi_her_apply.o : ../../Modules/mp_bands.o
 h_epsi_her_apply.o : ../../Modules/noncol.o
 h_epsi_her_apply.o : ../../Modules/recvec.o
 h_epsi_her_apply.o : ../../Modules/uspp.o
@@ -675,7 +681,7 @@ h_epsi_her_set.o : ../../Modules/io_files.o
 h_epsi_her_set.o : ../../Modules/ions_base.o
 h_epsi_her_set.o : ../../Modules/kind.o
 h_epsi_her_set.o : ../../Modules/mp.o
-h_epsi_her_set.o : ../../Modules/mp_global.o
+h_epsi_her_set.o : ../../Modules/mp_bands.o
 h_epsi_her_set.o : ../../Modules/mp_world.o
 h_epsi_her_set.o : ../../Modules/noncol.o
 h_epsi_her_set.o : ../../Modules/recvec.o
@@ -741,7 +747,7 @@ init_at_1.o : ../../Modules/constants.o
 init_at_1.o : ../../Modules/ions_base.o
 init_at_1.o : ../../Modules/kind.o
 init_at_1.o : ../../Modules/mp.o
-init_at_1.o : ../../Modules/mp_global.o
+init_at_1.o : ../../Modules/mp_bands.o
 init_at_1.o : ../../Modules/uspp.o
 init_at_1.o : pwcom.o
 init_ns.o : ../../Modules/ions_base.o
@@ -782,7 +788,7 @@ init_us_1.o : ../../Modules/constants.o
 init_us_1.o : ../../Modules/ions_base.o
 init_us_1.o : ../../Modules/kind.o
 init_us_1.o : ../../Modules/mp.o
-init_us_1.o : ../../Modules/mp_global.o
+init_us_1.o : ../../Modules/mp_bands.o
 init_us_1.o : ../../Modules/parameters.o
 init_us_1.o : ../../Modules/paw_variables.o
 init_us_1.o : ../../Modules/recvec.o
@@ -820,8 +826,8 @@ input.o : ../../Modules/kernel_table.o
 input.o : ../../Modules/kind.o
 input.o : ../../Modules/mm_dispersion.o
 input.o : ../../Modules/mp.o
-input.o : ../../Modules/mp_global.o
 input.o : ../../Modules/mp_images.o
+input.o : ../../Modules/mp_pools.o
 input.o : ../../Modules/noncol.o
 input.o : ../../Modules/qmmm.o
 input.o : ../../Modules/read_namelists.o

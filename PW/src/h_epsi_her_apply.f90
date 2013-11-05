@@ -36,7 +36,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   USE fixed_occ
   USE io_global, ONLY : stdout
   USE becmod,    ONLY : calbec,bec_type,allocate_bec_type,deallocate_bec_type
-  USE mp_global, ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   !
   implicit none

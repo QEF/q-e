@@ -14,7 +14,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
   ! ... hermitean matrix H. On output, the matrix is unchanged
   !
   USE kinds,            ONLY : DP
-  USE mp_global,        ONLY : nbgrp, me_bgrp, root_bgrp, intra_bgrp_comm
+  USE mp_bands,         ONLY : nbgrp, me_bgrp, root_bgrp, intra_bgrp_comm
   USE mp,               ONLY : mp_bcast
   !
   IMPLICIT NONE

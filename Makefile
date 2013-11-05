@@ -16,9 +16,9 @@ default :
 	@echo '  tddfpt       time dependent dft code'
 	@echo '  gui          Graphical User Interface '
 	@echo '  gwl          GW with Lanczos chains '
+	@echo '  xspectra     X-ray core-hole spectroscopy calculations '
 	@echo '  pwall        same as "make pw ph pp pwcond neb"'
 	@echo '  all          same as "make pwall cp ld1 upf tddfpt gwl"'
-	@echo '  xspectra     X-ray core-hole spectroscopy calculations '
 	@echo '  gipaw        NMR and EPR spectra'
 	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  want         Quantum Transport with Wannier functions'
@@ -95,7 +95,7 @@ gui : touch-dummy
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 pwall : pw neb ph pp pwcond acfdt
-all   : pwall cp ld1 upf tddfpt gwl
+all   : pwall cp ld1 upf tddfpt gwl xspectra
 
 ###########################################################
 # Auxiliary targets used by main targets:

@@ -93,7 +93,11 @@ CONTAINS
                trim(int_to_char( me_image))
           OPEN ( unit = stdout, file = TRIM(uname),status='unknown')
        ELSE
+#if defined(_WIN32)
+          OPEN ( unit = stdout, file='NUL:', status='unknown' )
+#else
           OPEN ( unit = stdout, file='/dev/null', status='unknown' )
+#endif
        END IF
 
     END IF

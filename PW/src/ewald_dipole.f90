@@ -22,7 +22,7 @@ subroutine ewald_dipole (tens,dipole)
   USE cell_base , ONLY : tpiba2, omega, alat, at, bg
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE vlocal ,    ONLY : strf
-  USE mp_global,  ONLY : intra_bgrp_comm
+  USE mp_bands,   ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   !
   implicit none
@@ -92,7 +92,7 @@ subroutine ewald_dipole (tens,dipole)
   ewaldg = e2 / 2.d0 * fpi / omega * ewaldg !Temp to compare with paratec
 !  ewaldg = e2 * fpi / omega * ewaldg
   !
-  call mp_sum(  ewaldg, intra_bgrp_comm ) !2 because ewaldg is complex
+  call mp_sum(  ewaldg, intra_bgrp_comm )
   !
   ! R-space sum here (only for the processor that contains G=0)
   !
@@ -134,7 +134,7 @@ subroutine ewald_dipole (tens,dipole)
  endif
  ewaldr = e2 *  ewaldr
  !
- call mp_sum(  ewaldr, intra_bgrp_comm ) !2 because ewaldr is complex
+ call mp_sum(  ewaldr, intra_bgrp_comm )
  ! 
  tens=ewaldg+ewaldr
 

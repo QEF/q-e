@@ -113,7 +113,7 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
   USE cell_base, ONLY : omega, alat, tpiba, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
   USE fft_scalar,       ONLY : cft_1z
-  USE mp_global,        ONLY : intra_bgrp_comm, me_bgrp
+  USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
   !
@@ -603,7 +603,6 @@ subroutine esm_local (aux)
   USE lsda_mod,         ONLY : nspin
   USE fft_scalar,       ONLY : cft_1z
   USE fft_base,         ONLY : dfftp
-  USE mp_global,        ONLY : me_bgrp
   !
   implicit none
   COMPLEX(DP)             :: aux( dfftp%nnr )     ! aux contains v_loc_short(G) (input) and v_loc(G) (output)
@@ -1291,7 +1290,7 @@ SUBROUTINE esm_printpot ()
   USE scf,                  ONLY : rho, vltot
   USE lsda_mod,             ONLY : nspin
   USE mp,                   ONLY : mp_sum
-  USE mp_global,            ONLY : intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE fft_base,             ONLY : dfftp
   USE io_global,            ONLY : ionode, stdout
   USE constants,            ONLY : rytoev, bohr_radius_angs

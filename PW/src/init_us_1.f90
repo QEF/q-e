@@ -41,7 +41,7 @@ subroutine init_us_1
   USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
   USE spin_orb,     ONLY : lspinorb, rot_ylm, fcoef
   USE paw_variables,ONLY : okpaw
-  USE mp_global,    ONLY : intra_bgrp_comm
+  USE mp_bands,     ONLY : intra_bgrp_comm
   USE mp,           ONLY : mp_sum
   !
   implicit none
@@ -315,9 +315,7 @@ subroutine init_us_1
            ! l
         enddo
         qrad (:, :, :, nt) = qrad (:, :, :, nt)*prefr
-#ifdef __MPI
         call mp_sum ( qrad (:, :, :, nt), intra_bgrp_comm )
-#endif
      endif
      ! ntyp
   enddo
@@ -400,9 +398,7 @@ subroutine init_us_1
      enddo
   enddo
 
-#ifdef __MPI
   call mp_sum(  tab, intra_bgrp_comm )
-#endif
 
   ! initialize spline interpolation
   if (spline_ps) then

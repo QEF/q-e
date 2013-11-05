@@ -42,7 +42,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    USE fixed_occ
    USE gvect,   ONLY : ig_l2g
    USE mp,                   ONLY : mp_sum
-   USE mp_global,            ONLY : intra_bgrp_comm
+   USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp_world,             ONLY : world_comm
    USE becmod,    ONLY : calbec,bec_type,allocate_bec_type,deallocate_bec_type
    USE spin_orb, ONLY: lspinorb

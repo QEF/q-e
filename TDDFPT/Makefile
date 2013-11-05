@@ -7,19 +7,15 @@ default: all
 all:
 	if [ ! -d bin ] ; then mkdir bin; fi;
 	if test -d src ; then \
-	( cd src ; if test "$(MAKE)" = "" ; then make $(MFLAGS) $@ ; \
-	else $(MAKE) $(MFLAGS) $@ ; fi ) ; fi ; \
+	( cd src ; $(MAKE) $(MFLAGS) $@ ; ) ; fi ; \
 	if test -d tools ; then \
-	( cd tools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) $@ ; \
-	else $(MAKE) $(MFLAGS) $@ ; fi ) ; fi ; \
+	( cd tools ; $(MAKE) $(MFLAGS) $@ ; ) ; fi ; \
 
 clean :
 	if test -d src ; then \
-	( cd src ; if test "$(MAKE)" = "" ; then make clean; \
-	else $(MAKE) clean ; fi ) ; fi ;\
+	( cd src ; $(MAKE) clean ; ) ; fi ;\
 	if test -d tools ; then \
-	( cd tools ; if test "$(MAKE)" = "" ; then make clean ; \
-	else $(MAKE) clean ; fi ) ; fi
+	( cd tools ; $(MAKE) clean ; ) ; fi
 
 distclean: clean
 

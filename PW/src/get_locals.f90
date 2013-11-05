@@ -19,7 +19,7 @@
       USE ions_base,  ONLY : nat
       USE cell_base,  ONLY : omega
       USE lsda_mod,   ONLY : nspin
-      USE mp_global,  ONLY : intra_bgrp_comm
+      USE mp_bands,   ONLY : intra_bgrp_comm
       USE mp,         ONLY : mp_sum
       USE fft_base,   ONLY : dfftp
       USE noncollin_module, ONLY : pointlist, factlist, noncolin

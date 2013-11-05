@@ -17,7 +17,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   !
   USE kinds
   USE constants, ONLY : tpi, e2
-  USE mp_global, ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE martyna_tuckerman, ONLY : wg_corr_ewald, do_comp_mt
   USE esm,       ONLY : do_comp_esm, esm_bc, esm_ewald

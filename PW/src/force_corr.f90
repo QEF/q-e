@@ -30,7 +30,7 @@ subroutine force_corr (forcescc)
   USE scf,                  ONLY : vnew
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
-  USE mp_global,            ONLY : intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
   implicit none
