@@ -1,5 +1,6 @@
 New in svn version
 
+   * Calling QE from external codes made easier: see new subdirectory COUPLE
    * PW: Hybrid functionals for USPP and PAW (experimental)
    * PW: partial support to the use of k-points label in the Brillouin zone
    * PW: Langevin dynamics with Smart Monte Carlo
