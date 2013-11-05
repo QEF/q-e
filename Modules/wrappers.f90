@@ -143,7 +143,7 @@ CONTAINS
   SUBROUTINE f_getcwd(output)
     CHARACTER(kind=c_char,len=*),INTENT(out) :: output
     TYPE(c_ptr) :: buffer
-    INTEGER(C_LONG) :: length,i
+    INTEGER(C_SIZE_T) :: length,i  ! was kind=C_LONG, which fails on WIN32
     length=LEN(output)
     buffer=getcwd(output,length)
     DO i=1,length
