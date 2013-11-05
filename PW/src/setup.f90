@@ -600,14 +600,19 @@ LOGICAL FUNCTION check_para_diag( nbnd )
 
   INTEGER, INTENT(IN) :: nbnd
   LOGICAL, SAVE :: first = .TRUE.
+  LOGICAL, SAVE :: saved_value = .FALSE.
 
-  IF( .NOT. first ) RETURN
+  IF( .NOT. first ) then
+      check_para_diag = saved_value
+      RETURN
+  end if
   first = .FALSE.
   !
   IF( np_ortho(1) > nbnd ) &
      CALL errore ('check_para_diag', 'Too few bands for required ndiag',nbnd)
   !
   check_para_diag = ( np_ortho( 1 ) > 1 .AND. np_ortho( 2 ) > 1 )
+  saved_value = check_para_diag
   !
   IF ( ionode ) THEN
      !

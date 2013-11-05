@@ -1026,7 +1026,6 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
      enddo
   enddo
 
-  !!IF( ( descla( 1 )%active_node > 0 ) .OR. ( descla( 2 )%active_node > 0 ) ) THEN
   IF (allocated(tmpbec)) THEN
      DEALLOCATE ( tmpbec, tmpdh, temp )
   END IF

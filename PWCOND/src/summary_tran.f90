@@ -233,7 +233,7 @@ enddo
    do j = -k, k  
     do l = -k, k 
 
-     ktmp(:) = xyk_full_cart(:,i)+bg(:,1)*j+bg(:,2)*l
+     ktmp(:) = xyk_full_cart(:,i)+bg(1:2,1)*j+bg(1:2,2)*l
      f = ktmp(1).ge.xmin.and.ktmp(1).le.xmax.and.   &
          ktmp(2).ge.ymin.and.ktmp(2).le.ymax
 

@@ -37,7 +37,7 @@ unsigned j;
 
 if(lb<ub)
         {
-        if(j = _rearr(lb,ub))
+        if((j = _rearr(lb,ub)))
         _quick(lb,j-1);
         _quick(j+1,ub);
         }

@@ -3216,8 +3216,9 @@ END SUBROUTINE jacobi_rotation
 #ifdef __MPI
        CALL mpi_allreduce (myt0, t0, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                            intra_image_comm, ierr)
+#else
+       t0 = myt0
 #endif
-!      t0 = myt0
        if(mod(ini,10) == 0)print *, 'spread at ', ini, ' = ', t0
        IF(ABS(t0-oldt0).LT.tolw) THEN
          WRITE(*,*) "MLWF Generated at Step",ini
