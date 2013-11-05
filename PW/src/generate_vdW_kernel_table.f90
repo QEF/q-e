@@ -60,7 +60,13 @@ program generate_kernel
   !! again, N is the number of q points chosen.  However, parallelization
   !! on this scale is unnecessary.  In testing the code runs in under a
   !! minute on 16 Intel Xeon processors.
-  
+
+  !! IMPORTANT NOTICE: results are very sensitive to compilation details.
+  !! In particular, the usage of FMA (Fused Multiply-and-Add) instructions
+  !! used by modern CPU such as AMD Interlagos (Bulldozer), Intel Ivy Bridge,
+  !!  may affect quite heavily some components of the kernel table 
+  !! (communication by Ake Sandberg, Umea University). In practice this should
+  !! not be a problem, since most affected elements are the less relevant ones.
 
   !! Some of the algorithms here are somewhat modified versions of those found
   !! in the book: 
