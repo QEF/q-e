@@ -36,7 +36,7 @@ all : tldeps head.x
 
 head.x : head.o $(LIBOBJS) $(HEADOBJS) $(LIBPWPH) $(LIBMIN)
 	$(LD) $(LDFLAGS) -o head.x head.o \
-		 $(HEADOBJS) $(LIBPWPH)  $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+		 $(HEADOBJS) $(LIBPWPH)  $(QEMODS) $(LIBOBJS) $(LIBMIN) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../GWW/head/head.x . )
 
 tldeps:

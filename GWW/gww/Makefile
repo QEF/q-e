@@ -61,12 +61,12 @@ all : tldeps gww.x gww_fit.x libgww.a
 
 gww.x : gww.o $(GWWOBJS) $(LIBOBJS) $(QEMODS)  $(LIBMIN)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		gww.o $(GWWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+		gww.o $(GWWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(LIBS)
 	- ( cd ../../bin; ln -fs ../GWW/gww/$@ . )
 
 gww_fit.x : gww_fit.o $(GWWOBJS) $(LIBOBJS) $(QEMODS) $(LIBMIN)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-	gww_fit.o $(GWWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+	gww_fit.o $(GWWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(LIBS)
 	- ( cd ../../bin; ln -fs ../GWW/gww/$@ . )
 
 libgww.a : $(GWWOBJS)

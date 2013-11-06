@@ -15,7 +15,7 @@ gwwa:
 	cd gww ; $(MAKE) all
 
 clean: 
-	cd pw4gww ; $(MAKE) $@; \
-	cd ../head ; $(MAKE) $@; \
-	cd ../gww ; $(MAKE) $@; \
-        cd ../minpack ; $(MAKE) $@
+	( cd pw4gww  ; $(MAKE) $(MFLAGS) clean )
+	( cd head    ; $(MAKE) $(MFLAGS) clean )
+	( cd gww     ; $(MAKE) $(MFLAGS) clean )
+	( cd minpack ; $(MAKE) $(MFLAGS) clean )
