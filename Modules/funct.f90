@@ -106,9 +106,9 @@ module funct
   !              "vdw-df2"="sla+pw+rw86+vdw2"  = vdW-DF2
   !              "vdw-df-c09"="sla+pw+c09x+vdw1"
   !              "vdw-df2-c09"="sla+pw+c09x+vdw2"
-  !              "vdw-df3"="sla+pw+obk88+vdw1"  = vdW-DF3
-  !              "vdw-df4"="sla+pw+ob86b+vdw1"  = vdW-DF4
-  !              "optbk88"="sla+pw+obk88"       = optB88
+  !              "vdw-df3"="sla+pw+obk8+vdw1"  = vdW-DF3
+  !              "vdw-df4"="sla+pw+ob86+vdw1"  = vdW-DF4
+  !              "optbk88"="sla+pw+obk8"       = optB88
   ! or by any nonconflicting combination of the following keywords
   ! (case-insensitive):
   !
@@ -159,8 +159,8 @@ module funct
   !              "gaup"   Gau-PBE hybrid exchange        igcx =20
   !              "pw86"   Perdew-Wang (1986) exchange    igcx =21
   !              "b86b"   Becke (1986) exchange          igcx =22
-  !              "obk88"  optB88  exchange               igcx =23
-  !              "ob86b"  optB86b exchange               igcx =24
+  !              "obk8"   optB88  exchange               igcx =23
+  !              "ob86"   optB86b exchange               igcx =24
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -285,7 +285,7 @@ module funct
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
                'TPSS', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
                'META', 'C09X', 'SOX', 'M6LX', 'Q2DX', 'GAUP', 'PW86', 'B86B', &
-               'OBK88','OB86B' / 
+               'OBK8','OB86' / 
 
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'TPSS',&
                'B3LP', 'PSC', 'PBE', 'META', 'M6LC', 'Q2DC' / 
@@ -422,7 +422,7 @@ CONTAINS
     ! Special case vdW-DF4, or optB86b+vdW
        call set_dft_value (iexch, 1)
        call set_dft_value (icorr, 4)
-       call set_dft_value (igcx, 21)
+       call set_dft_value (igcx, 24)
        call set_dft_value (igcc, 0)
        call set_dft_value (inlc, 1)       
        dft_defined = .true.
@@ -431,7 +431,7 @@ CONTAINS
     ! Special case vdW-DF3, or optB88+vdW
        call set_dft_value (iexch, 1)
        call set_dft_value (icorr, 4)
-       call set_dft_value (igcx, 20)
+       call set_dft_value (igcx, 23)
        call set_dft_value (igcc, 0)
        call set_dft_value (inlc, 1)       
        dft_defined = .true.
@@ -440,7 +440,7 @@ CONTAINS
     ! Special case optB88 (without vdW)
        call set_dft_value (iexch, 1)
        call set_dft_value (icorr, 4)
-       call set_dft_value (igcx, 20)
+       call set_dft_value (igcx, 23)
        call set_dft_value (igcc, 1)
        call set_dft_value (inlc, 0)       
        dft_defined = .true.
@@ -449,7 +449,7 @@ CONTAINS
     ! Special case optB86b (without vdW)
        call set_dft_value (iexch, 1)
        call set_dft_value (icorr, 4)
-       call set_dft_value (igcx, 21)
+       call set_dft_value (igcx, 24)
        call set_dft_value (igcc, 1)
        call set_dft_value (inlc, 0)       
        dft_defined = .true.
