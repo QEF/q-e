@@ -1,24 +1,23 @@
 
-     Program PWSCF v.4.99       starts on  6Jan2012 at 11:30:27 
+     Program PWSCF v.5.0.2 (svn rev. 10582M) starts on  6Nov2013 at 18:56:54 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
 
      Serial version
+     Reading input from /home/giannozz/trunk/espresso/PW/tests/vdw1.in
 
      Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-     Reading input from /home/giannozz/trunk/espresso/tests/vdw1.in
 
      IMPORTANT: XC functional enforced from input :
-     Exchange-correlation      = VDW-DF ( 1 4 4 0 1)
-     EXX-fraction              =        0.00
+     Exchange-correlation      = VDW-DF ( 1  4  4  0 1)
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
@@ -45,8 +44,7 @@
      convergence threshold     =      1.0E-06
      mixing beta               =       0.5000
      number of iterations used =           20  plain     mixing
-     Exchange-correlation      = VDW-DF ( 1 4 4 0 1)
-     EXX-fraction              =        0.00
+     Exchange-correlation      = VDW-DF ( 1  4  4  0 1)
 
      celldm(1)=   4.660000  celldm(2)=   0.000000  celldm(3)=   2.600000
      celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
@@ -76,7 +74,7 @@
 
 
      vdW kernel table read from file vdW_kernel_table
-     MD5 check sum: 2a73cc23e28154503cc02d2bc612f0de
+     MD5 check sum: f53da8562cfe6bfda6a1b4f380354fea
 
      atomic species   valence    mass     pseudopotential
         C              4.00    12.00000     C ( 1.00)
@@ -102,55 +100,68 @@
      Smooth grid:     1175 G-vectors     FFT dimensions: (  15,  15,  36)
 
      Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.03 Mb     (    144,   12)
-        NL pseudopotentials             0.07 Mb     (    144,   32)
-        Each V/rho on FFT grid          0.53 Mb     (  34560)
-        Each G-vector array             0.04 Mb     (   5458)
-        G-vector shells                 0.00 Mb     (    616)
+        Kohn-Sham Wavefunctions         0.03 Mb     (     144,   12)
+        NL pseudopotentials             0.07 Mb     (     144,   32)
+        Each V/rho on FFT grid          0.53 Mb     (   34560)
+        Each G-vector array             0.04 Mb     (    5458)
+        G-vector shells                 0.00 Mb     (     616)
      Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.05 Mb     (    144,   48)
-        Each subspace H/S matrix        0.02 Mb     (  48,  48)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (     32,   12)
-        Arrays for rho mixing          10.55 Mb     (  34560,  20)
+        Auxiliary wavefunctions         0.05 Mb     (     144,   48)
+        Each subspace H/S matrix        0.02 Mb     (      48,   48)
+        Each <psi_i|beta_j> matrix      0.00 Mb     (      32,   12)
+        Arrays for rho mixing          10.55 Mb     (   34560,   20)
 
      Initial potential from superposition of free atoms
 
      starting charge   15.99984, renormalised to   16.00000
 
 
----------------------------------------------------------------------------------
-Carrying out vdW-DF run using the following parameters:
+     ************************************************************************
+     *
+     * You are using vdW-DF for exchange-correlation in this calculation.
+     * Please cite the following three references that made this development
+     * possible:
+     *
+     *   M. Dion, H. Rydberg, E. Schroder, D. C. Langreth, and
+     *   B. I. Lundqvist, Phys. Rev. Lett. 92, 246401 (2004).
+     *
+     *   T. Thonhauser, V. R. Cooper, S. Li, A. Puzder, P. Hyldgaard, and
+     *   D. C. Langreth, Phys. Rev. B 76, 125112 (2007).
+     *
+     *   G. Roman-Perez and J. M. Soler, Phys. Rev. Lett. 103, 096102 (2009).
+     *
+     *
+     * If you are using vdW-DF2, please also cite:
+     *
+     *   K. Lee, E. D. Murray, L. Kong, B. I. Lundqvist, and
+     *   D. C. Langreth, Phys. Rev. B 82, 081101(R) (2010).
+     *
+     *
+     * If you are calculating the stress with vdW-DF, please also cite:
+     *
+     *   R. Sabatini, E. Kucukbenli, B. Kolb, T. Thonhauser, and
+     *   S. de Gironcoli, J. Phys.: Condens. Matter 24, 424209 (2012).
+     *
+     ************************************************************************
 
-Nqs =      20    Nr_points =    1024   r_max =   100.000
-q_mesh =       0.00001000
-     0.04494208
-     0.09755937
-     0.15916263
-     0.23128650
-     0.31572767
-     0.41458969
-     0.53033537
-     0.66584808
-     0.82450364
-     1.01025438
-     1.22772762
-     1.48234092
-     1.78043706
-     2.12944203
-     2.53805004
-     3.01644009
-     3.57652955
-     4.23227104
-     5.00000000
+     Carrying out vdW-DF run using the following parameters:
 
-Gradients computed in Reciprocal space
+     Nqs =      20    Nr_points =    1024   r_max =   100.000
+     q_mesh =
+               0.00001000     0.04494208     0.09755937     0.15916263
+               0.23128650     0.31572767     0.41458969     0.53033537
+               0.66584808     0.82450364     1.01025438     1.22772762
+               1.48234092     1.78043706     2.12944203     2.53805004
+               3.01644009     3.57652955     4.23227104     5.00000000
 
----------------------------------------------------------------------------------
+     Gradients computed in reciprocal space
+
+     ************************************************************************
 
 
      Starting wfc are   16 randomized atomic wfcs
 
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        1.6 secs
 
      per-process dynamical memory:    25.9 Mb
 
@@ -160,7 +171,7 @@ Gradients computed in Reciprocal space
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is        0.9 secs
+     total cpu time spent up to now is        1.9 secs
 
      total energy              =     -44.45696809 Ry
      Harris-Foulkes estimate   =     -44.69576610 Ry
@@ -170,7 +181,7 @@ Gradients computed in Reciprocal space
      Davidson diagonalization with overlap
      ethr =  4.45E-03,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        2.2 secs
 
      total energy              =     -44.46599905 Ry
      Harris-Foulkes estimate   =     -44.49235092 Ry
@@ -180,7 +191,7 @@ Gradients computed in Reciprocal space
      Davidson diagonalization with overlap
      ethr =  6.44E-04,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        2.5 secs
 
      total energy              =     -44.47719945 Ry
      Harris-Foulkes estimate   =     -44.47620498 Ry
@@ -190,7 +201,7 @@ Gradients computed in Reciprocal space
      Davidson diagonalization with overlap
      ethr =  2.39E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.4 secs
+     total cpu time spent up to now is        2.7 secs
 
      total energy              =     -44.47742467 Ry
      Harris-Foulkes estimate   =     -44.47739004 Ry
@@ -200,7 +211,7 @@ Gradients computed in Reciprocal space
      Davidson diagonalization with overlap
      ethr =  2.64E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.6 secs
+     total cpu time spent up to now is        3.0 secs
 
      total energy              =     -44.47744794 Ry
      Harris-Foulkes estimate   =     -44.47743314 Ry
@@ -210,7 +221,7 @@ Gradients computed in Reciprocal space
      Davidson diagonalization with overlap
      ethr =  8.63E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        1.8 secs
+     total cpu time spent up to now is        3.2 secs
 
      End of self-consistent calculation
 
@@ -271,51 +282,51 @@ Gradients computed in Reciprocal space
 
      Writing output data file pwscf.save
  
-     init_run     :      0.30s CPU      0.31s WALL (       1 calls)
-     electrons    :      0.99s CPU      1.07s WALL (       1 calls)
-     forces       :      0.03s CPU      0.03s WALL (       1 calls)
-     stress       :      0.33s CPU      0.34s WALL (       1 calls)
+     init_run     :      0.36s CPU      0.75s WALL (       1 calls)
+     electrons    :      1.33s CPU      1.62s WALL (       1 calls)
+     forces       :      0.04s CPU      0.05s WALL (       1 calls)
+     stress       :      0.38s CPU      0.47s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     potinit      :      0.14s CPU      0.15s WALL (       1 calls)
+     wfcinit      :      0.01s CPU      0.16s WALL (       1 calls)
+     potinit      :      0.20s CPU      0.28s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.02s CPU      0.03s WALL (       6 calls)
-     sum_band     :      0.08s CPU      0.09s WALL (       6 calls)
-     v_of_rho     :      0.91s CPU      0.99s WALL (       7 calls)
-     newd         :      0.07s CPU      0.07s WALL (       7 calls)
-     mix_rho      :      0.01s CPU      0.01s WALL (       6 calls)
-     vdW_energy   :      0.18s CPU      0.22s WALL (       7 calls)
-     vdW_ffts     :      0.19s CPU      0.19s WALL (      16 calls)
-     vdW_v        :      0.19s CPU      0.19s WALL (       7 calls)
+     c_bands      :      0.03s CPU      0.07s WALL (       6 calls)
+     sum_band     :      0.10s CPU      0.10s WALL (       6 calls)
+     v_of_rho     :      1.29s CPU      1.51s WALL (       7 calls)
+     newd         :      0.08s CPU      0.08s WALL (       7 calls)
+     mix_rho      :      0.01s CPU      0.02s WALL (       6 calls)
+     vdW_energy   :      0.24s CPU      0.30s WALL (       7 calls)
+     vdW_ffts     :      0.41s CPU      0.46s WALL (      16 calls)
+     vdW_v        :      0.23s CPU      0.24s WALL (       7 calls)
 
      Called by c_bands:
      init_us_2    :      0.00s CPU      0.00s WALL (      13 calls)
-     regterg      :      0.02s CPU      0.03s WALL (       6 calls)
+     regterg      :      0.03s CPU      0.07s WALL (       6 calls)
 
      Called by *egterg:
-     h_psi        :      0.01s CPU      0.02s WALL (      21 calls)
+     h_psi        :      0.01s CPU      0.06s WALL (      21 calls)
      s_psi        :      0.00s CPU      0.00s WALL (      21 calls)
      g_psi        :      0.00s CPU      0.00s WALL (      14 calls)
-     rdiaghg      :      0.01s CPU      0.01s WALL (      20 calls)
+     rdiaghg      :      0.01s CPU      0.13s WALL (      20 calls)
 
      Called by h_psi:
      add_vuspsi   :      0.00s CPU      0.00s WALL (      21 calls)
 
      General routines
-     calbec       :      0.00s CPU      0.00s WALL (      32 calls)
-     fft          :      0.29s CPU      0.29s WALL (     510 calls)
+     calbec       :      0.00s CPU      0.03s WALL (      32 calls)
+     fft          :      0.62s CPU      0.68s WALL (     510 calls)
      ffts         :      0.00s CPU      0.00s WALL (      13 calls)
-     fftw         :      0.00s CPU      0.02s WALL (     230 calls)
-     interpolate  :      0.01s CPU      0.01s WALL (      13 calls)
-     davcio       :      0.00s CPU      0.00s WALL (       6 calls)
+     fftw         :      0.01s CPU      0.03s WALL (     230 calls)
+     interpolate  :      0.02s CPU      0.02s WALL (      13 calls)
+     davcio       :      0.00s CPU      0.01s WALL (       1 calls)
  
  
-     PWSCF        :     2.07s CPU         2.58s WALL
+     PWSCF        :     2.28s CPU         3.94s WALL
 
  
-   This run was terminated on:  11:30:29   6Jan2012            
+   This run was terminated on:  18:56:58   6Nov2013            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

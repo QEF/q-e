@@ -81,8 +81,7 @@ vc-relax  As       Variable-cell optimization (both damped dynamics and bfgs)
 vc-md     As       Variable-cell dynamics (Wentzcovitch dynamics)
                    at zero pressure and under an external pressure
 vdw       C        Dispersion (van der Waals) interactions with DFT-D (Grimme)
-vdw1      C        Dispersion (van der Waals) interactions with vdW-DF  (nonlocal)
-vdw2      C        Dispersion (van der Waals) interactions with vdW-DF2 (nonlocal)
+vdw[1-4]  C        As above, with vdW-DF[1-4] (nonlocal) functionals
 xdm       C        XDM dispersion correction.
 
 Tests are still missing for:
