@@ -4,7 +4,7 @@
 
 !* Creation Date : 25-12-2012
 
-!* Last Modified : Wed Jun  5 10:41:14 2013
+!* Last Modified : Wed Nov  6 15:18:46 2013
 
 !* Created By : Marco Buongiorno Nardelli 
 
@@ -124,7 +124,7 @@ READ(5,input,IOSTAT=ios)
 IF (ios /= 0) CALL errore ('FD_IFC', 'reading input namelist', ABS(ios) )
 
 !reading the xml file
-call read_file
+call read_xml_file
 
     if (verbose) then
     write(6,*) '**************************************************'
@@ -188,10 +188,11 @@ IF (nat == 0) stop 'no atoms!'
 
     natdp = 1
     atdp(1)=1
+    
     na=1
 
     ! natdp             # of non equivalent atoms
-    ! atdp(natdp)       index on non equivalent atoms
+    ! atdp(natdp)       index of non equivalent atoms
     ! neq(na)           # of atoms equivalent to na (including na itself (identity always isym=1))
     ! ieq(na,1:neq(na)) list of equivalent atoms (including identity) => ieq(na,2:neq(na)) are the
     !                   equivalent atoms (ieq(na,1) is displaced, the others are not)
@@ -492,7 +493,7 @@ IF ( ALLOCATED( irt ) ) DEALLOCATE( irt )
 ALLOCATE( irt(48,natx))
 
    call find_sym_ifc( natx, atomx, itypx )
-
+  
    do k=1,natdp
       j=atdp(k)  ! loop over the non equivalent atoms (displaced)
       do i=2,neq(j)  ! loop over the equivalent atoms for each of the non equivalent ones
@@ -500,7 +501,7 @@ ALLOCATE( irt(48,natx))
          isym=seq(j,i)
          do inn=1,innx
             do na=1,natx
-               force(inn,:,:,na,nb)=matmul(matmul(sr(:,:,isym),force(inn,:,:,irt(isym,na),j)),sr(:,:,invs(isym)))
+               force(inn,:,:,na,nb)=matmul(matmul(sr(:,:,isym),force(inn,:,:,irt(invs(isym),na),j)),sr(:,:,invs(isym)))
             end do
          end do
       end do
