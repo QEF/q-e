@@ -4,7 +4,7 @@
 
 !* Creation Date : 15-05-2013
 
-!* Last Modified : Fri May 31 15:18:48 2013
+!* Last Modified : Wed Nov  6 08:40:35 2013
 
 !* Created By : Marco Buongiorno Nardelli 
 
@@ -112,7 +112,7 @@ program fd
   CALL mp_bcast( prefix, ionode_id, world_comm )
 
   !reading the xml file
-  call read_file
+  call read_xml_file
 
   if (ionode) then
     write(6,*) '**************************************************'
