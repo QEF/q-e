@@ -38,61 +38,66 @@ default :
 ###########################################################
 # Main targets
 ###########################################################
+# The syntax "( cd PW ; $(MAKE) $(MFLAGS) TLDEPS= all || exit 1)" below
+# guarantees that error code 1 is returned in case of error and make stops
+# If "|| exit 1" is not present, the error code from make in subdirectories
+# is not returned and make goes on even if compilation has failed
+#
 pw : bindir mods liblapack libblas libs libiotk libenviron
 	if test -d PW ; then \
-	( cd PW ; $(MAKE) $(MFLAGS) TLDEPS= all ) ; fi
+	( cd PW ; $(MAKE) $(MFLAGS) TLDEPS= all || exit 1) ; fi
 
 cp : bindir mods liblapack libblas libs libiotk
 	if test -d CPV ; then \
-	( cd CPV ; $(MAKE) $(MFLAGS) TLDEPS= all ) ; fi
+	( cd CPV ; $(MAKE) $(MFLAGS) TLDEPS= all || exit 1) ; fi
 
 ph : bindir mods libs pw
-	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile phonon
+	( cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile phonon || exit 1 )
 
 neb : bindir mods libs pw
-	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+	( cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@ || exit 1 )
 
 tddfpt : bindir mods libs pw ph
-	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+	( cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@ || exit 1 )
 
 pp : bindir mods libs pw
 	if test -d PP ; then \
-	( cd PP ; $(MAKE) $(MFLAGS) TLDEPS= all ) ; fi
+	( cd PP ; $(MAKE) $(MFLAGS) TLDEPS= all || exit 1 ) ; fi
 
 pwcond : bindir mods libs pw pp
-	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+	( cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@ || exit 1 )
 
 acfdt : bindir mods libs pw ph
 	if test -d ACFDT ; then \
-	( cd ACFDT ; $(MAKE) $(MFLAGS) TLDEPS= all ) ; fi
+	( cd ACFDT ; $(MAKE) $(MFLAGS) TLDEPS= all || exit 1 ) ; fi
 
 gwl : ph
 	if test -d GWW ; then \
-	( cd GWW ; $(MAKE) $(MFLAGS) TLDEPS= all ) ; fi
+	( cd GWW ; $(MAKE) $(MFLAGS) TLDEPS= all || exit 1 ) ; fi
 
 gipaw : pw
-	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+	( cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@ || exit 1 )
 
 ld1 : bindir liblapack libblas mods libs
-	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+	( cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@ || exit 1 )
 
 upf : mods libs
 	if test -d upftools ; then \
-	( cd upftools ; $(MAKE) $(MFLAGS) TLDEPS= all ) ; fi
+	( cd upftools ; $(MAKE) $(MFLAGS) TLDEPS= all || exit 1 ) ; fi
 
 pw_export : libiotk bindir mods libs pw
 	if test -d PP ; then \
-	( cd PP ; $(MAKE) $(MFLAGS) TLDEPS= pw_export.x ) ; fi
+	( cd PP ; $(MAKE) $(MFLAGS) TLDEPS= pw_export.x || exit 1 ) ; fi
 
 xspectra : bindir mods libs pw
-	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+	( cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@ || exit 1 )
 
 couple : pw cp
 	if test -d COUPLE ; then \
-	( cd COUPLE ; $(MAKE) $(MFLAGS) TLDEPS= all ) ; fi
+	( cd COUPLE ; $(MAKE) $(MFLAGS) TLDEPS= all || exit 1 ) ; fi
 
 gui : touch-dummy
-	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+	( cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@ || exit 1 )
 
 pwall : pw neb ph pp pwcond acfdt
 all   : pwall cp ld1 upf tddfpt gwl xspectra
@@ -102,10 +107,10 @@ all   : pwall cp ld1 upf tddfpt gwl xspectra
 # compile modules, libraries, directory for binaries, etc
 ###########################################################
 mods : libiotk libelpa
-	( cd Modules ; $(MAKE) $(MFLAGS) TLDEPS= all )
+	( cd Modules ; $(MAKE) $(MFLAGS) TLDEPS= all || exit 1 )
 libs : mods
-	( cd clib ; $(MAKE) $(MFLAGS) TLDEPS= all )
-	( cd flib ; $(MAKE) $(MFLAGS) TLDEPS= $(FLIB_TARGETS) )
+	( cd clib ; $(MAKE) $(MFLAGS) TLDEPS= all || exit 1 )
+	( cd flib ; $(MAKE) $(MFLAGS) TLDEPS= $(FLIB_TARGETS) || exit 1 )
 
 libenviron :  mods
 	( if test -d Environ ; then \
@@ -137,22 +142,22 @@ libiotk: touch-dummy
 #########################################################
 
 w90: bindir libblas liblapack
-	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+	( cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@ || exit 1 )
 
 want : touch-dummy
-	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+	( cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@ || exit 1 )
 
 yambo: touch-dummy
-	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+	( cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@ || exit 1 )
 
 plumed: touch-dummy
-	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+	( cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@ || exit 1 )
 
 epw: touch-dummy
-	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+	( cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@ || exit 1 )
 
 gpu: touch-dummy
-	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+	( cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@ || exit 1 )
 
 touch-dummy :
 	$(dummy-variable)

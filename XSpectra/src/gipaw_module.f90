@@ -171,30 +171,31 @@ CONTAINS
   SUBROUTINE gipaw_bcast_input
 #ifdef __MPI
     USE mp,            ONLY : mp_bcast
+    USE mp_world,      ONLY : world_comm
     USE io_files,      ONLY : prefix, tmp_dir
     USE us,            ONLY : spline_ps
     implicit none
     integer :: root = 0
-    call mp_bcast(job, root)
-    call mp_bcast(prefix, root)
-    call mp_bcast(tmp_dir, root)
-    call mp_bcast(conv_threshold, root)
-    call mp_bcast(q_gipaw, root)
-    call mp_bcast(iverbosity, root)
-    call mp_bcast(filcurr, root)
-    call mp_bcast(filfield, root)
-    call mp_bcast(read_recon_in_paratec_fmt, root)
-    call mp_bcast(file_reconstruction, root)
-    call mp_bcast(use_nmr_macroscopic_shape, root)
-    call mp_bcast(nmr_macroscopic_shape, root)
-    call mp_bcast(spline_ps, root)
-    call mp_bcast(isolve, root)
-    call mp_bcast ( hfi_output_unit, root )
-    call mp_bcast ( hfi_isotope, root )
-    call mp_bcast ( hfi_nuclear_g_factor, root )
-    call mp_bcast ( radial_integral_splines, root )
-    CALL mp_bcast ( hfi_via_reconstruction_only, root )
-    CALL mp_bcast ( hfi_extrapolation_npoints, root )
+    call mp_bcast(job, root, world_comm)
+    call mp_bcast(prefix, root, world_comm)
+    call mp_bcast(tmp_dir, root, world_comm)
+    call mp_bcast(conv_threshold, root, world_comm)
+    call mp_bcast(q_gipaw, root, world_comm)
+    call mp_bcast(iverbosity, root, world_comm)
+    call mp_bcast(filcurr, root, world_comm)
+    call mp_bcast(filfield, root, world_comm)
+    call mp_bcast(read_recon_in_paratec_fmt, root, world_comm)
+    call mp_bcast(file_reconstruction, root, world_comm)
+    call mp_bcast(use_nmr_macroscopic_shape, root, world_comm)
+    call mp_bcast(nmr_macroscopic_shape, root, world_comm)
+    call mp_bcast(spline_ps, root, world_comm)
+    call mp_bcast(isolve, root, world_comm)
+    call mp_bcast(hfi_output_unit, root, world_comm)
+    call mp_bcast(hfi_isotope, root, world_comm)
+    call mp_bcast(hfi_nuclear_g_factor, root, world_comm)
+    call mp_bcast(radial_integral_splines, root, world_comm)
+    CALL mp_bcast(hfi_via_reconstruction_only, root, world_comm)
+    CALL mp_bcast(hfi_extrapolation_npoints, root, world_comm)
 #endif
   END SUBROUTINE gipaw_bcast_input
 
