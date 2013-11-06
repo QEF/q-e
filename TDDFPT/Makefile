@@ -1,21 +1,20 @@
 # Makefile for TDDFPT
-#Modified for v4.0 by obm
 #
 
 default: all
 
-all:
-	if [ ! -d bin ] ; then mkdir bin; fi;
-	if test -d src ; then \
-	( cd src ; $(MAKE) $(MFLAGS) $@ ; ) ; fi ; \
-	if test -d tools ; then \
-	( cd tools ; $(MAKE) $(MFLAGS) $@ ; ) ; fi ; \
+all: bindir
+	( cd src ; if test "$(MAKE)" = "" ; then make $@ || exit 1; \
+	else $(MAKE) $@ || exit 1; fi )
+	( cd tools ; if test "$(MAKE)" = "" ; then make $@; \
+	else $(MAKE) $@  || exit 1; fi )
+
+bindir:
+	test -d bin || mkdir bin
 
 clean :
-	if test -d src ; then \
-	( cd src ; $(MAKE) clean ; ) ; fi ;\
-	if test -d tools ; then \
-	( cd tools ; $(MAKE) clean ; ) ; fi
+	( cd src ; $(MAKE) clean )
+	( cd tools ; $(MAKE) clean )
 
 distclean: clean
 

@@ -19,7 +19,7 @@ EXTLIBS=liblapack libblas libiotk
 ###########################################################
 ld1:  uncompress-ld1
 	if test -d ../atomic; then \
-	cd ../atomic; $(MAKE) all; cd ../bin; ln -fs ../atomic/src/ld1.x . ; fi
+	cd ../atomic; $(MAKE) all || exit 1; cd ../bin; ln -fs ../atomic/src/ld1.x . ; fi
 	touch make-ld1
 uncompress-ld1: touch-dummy
 	@(if test ! -s ../archive/$(LD1).tar.gz && test ! -d ../atomic ; then \
@@ -39,7 +39,7 @@ uncompress-ld1: touch-dummy
 ###########################################################
 xspectra:  uncompress-xspectra
 	if test -d ../XSpectra; then \
-	cd ../XSpectra; $(MAKE) all; cd ../bin; ln -fs ../XSpectra/src/xspectra.x . ; fi
+	cd ../XSpectra; $(MAKE) all || exit 1; cd ../bin; ln -fs ../XSpectra/src/xspectra.x . ; fi
 	touch make-xspectra
 uncompress-xspectra: touch-dummy
 	@(if test ! -s ../archive/$(XSPECTRA).tar.gz && test ! -d ../XSpectra ; then \
@@ -59,7 +59,7 @@ uncompress-xspectra: touch-dummy
 ###########################################################
 pwcond:  uncompress-pwcond
 	if test -d ../PWCOND; then \
-	cd ../PWCOND; $(MAKE) all; cd ../bin; ln -fs ../PWCOND/src/pwcond.x . ; fi
+	cd ../PWCOND; $(MAKE) all || exit 1; cd ../bin; ln -fs ../PWCOND/src/pwcond.x . ; fi
 	touch make-pwcond
 uncompress-pwcond: touch-dummy
 	@(if test ! -s ../archive/$(PWCOND).tar.gz && test ! -d ../PWCOND ; then \
@@ -80,7 +80,7 @@ uncompress-pwcond: touch-dummy
 ###########################################################
 neb:  uncompress-neb
 	if test -d ../NEB; then \
-	cd ../NEB; $(MAKE) all; cd ../bin; ln -fs ../NEB/src/neb.x . ; fi
+	cd ../NEB; $(MAKE) all || exit 1; cd ../bin; ln -fs ../NEB/src/neb.x . ; fi
 	touch make-neb
 uncompress-neb: touch-dummy
 	@(if test ! -s ../archive/$(NEB).tar.gz && test ! -d ../NEB ; then \
@@ -100,7 +100,7 @@ uncompress-neb: touch-dummy
 ###########################################################
 tddfpt:  uncompress-tddfpt
 	if test -d ../TDDFPT; then \
-	cd ../TDDFPT; $(MAKE) all; cd ../bin; ln -fs ../TDDFPT/src/turbo_lanczos.x . ; \
+	cd ../TDDFPT; $(MAKE) all || exit 1; cd ../bin; ln -fs ../TDDFPT/src/turbo_lanczos.x . ; \
 	ln -fs ../TDDFPT/tools/turbo_spectrum.x . ; fi
 	touch make-tddfpt
 uncompress-tddfpt: touch-dummy
@@ -121,7 +121,7 @@ uncompress-tddfpt: touch-dummy
 ###########################################################
 phonon:  uncompress-phonon
 	if test -d ../PHonon; then \
-	cd ../PHonon; $(MAKE) all; cd ../bin; \
+	cd ../PHonon; $(MAKE) all || exit 1; cd ../bin; \
 	ln -fs ../PHonon/PH/ph.x . ; \
 	ln -fs ../PHonon/PH/dynmat.x . ; \
 	ln -fs ../PHonon/PH/matdyn.x . ; \
@@ -152,7 +152,7 @@ uncompress-phonon: touch-dummy
 #gipaw:  uncompress-gipaw configure-gipaw
 gipaw:  download-gipaw configure-gipaw
 	if test -d ../GIPAW; then \
-	cd ../GIPAW; $(MAKE) all; cd ../bin; ln -fs ../GIPAW/bin/gipaw.x . ; fi
+	cd ../GIPAW; $(MAKE) all || exit 1; cd ../bin; ln -fs ../GIPAW/bin/gipaw.x . ; fi
 	touch make-gipaw
 download-gipaw:
 	@echo "GIPAW 5 is not ready for distribution. Donwloading the development version."
@@ -181,7 +181,7 @@ configure-gipaw: touch-dummy
 ###########################################################
 epw: 
 	if test -d ../EPW; then \
-	cd ../EPW; $(MAKE) all; cd ../bin; ln -fs ../EPW/bin/epw.x . ; fi
+	cd ../EPW; $(MAKE) all || exit 1; cd ../bin; ln -fs ../EPW/bin/epw.x . ; fi
 	-(cd ../bin; ln -fs ../EPW/src/epw.x .)
 	touch make-epw
 
@@ -191,7 +191,7 @@ epw:
 
 w90: uncompress-w90 configure-w90
 	if test -d ../W90; then \
-	cd ../W90; $(MAKE) all; cd ../bin; ln -fs ../W90/wannier90.x . ; fi
+	cd ../W90; $(MAKE) all || exit 1; cd ../bin; ln -fs ../W90/wannier90.x . ; fi
 	-(cd ../bin; ln -fs ../W90/wannier90.x .)
 	touch make-w90
 uncompress-w90: touch-dummy
@@ -220,7 +220,7 @@ configure-w90: touch-dummy
 
 want: extlibs uncompress-want configure-want
 	if test -d ../WANT; then \
-	cd ../WANT; $(MAKE) all; fi
+	cd ../WANT; $(MAKE) all || exit 1; fi
 #	- ( cd ../bin ; ln -sf ../WANT/bin/* . ) 
 	touch ./make-want
 uncompress-want: touch-dummy
@@ -269,7 +269,7 @@ configure-want: touch-dummy
 
 yambo: extlibs uncompress-yambo configure-yambo
 	if test -d ../YAMBO; then \
-	cd ../YAMBO; $(MAKE) all; fi
+	cd ../YAMBO; $(MAKE) all || exit 1; fi
 	touch ./make-yambo
 uncompress-yambo: touch-dummy
 	@(if test ! -s ../archive/$(YAMBO).tar.gz && test ! -d ../YAMBO ; then \

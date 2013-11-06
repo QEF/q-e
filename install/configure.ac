@@ -189,7 +189,7 @@ if test "$host" != "" ; then ranlib=echo; fi
 cross_compiling=yes
 if test "$host" = "" ; then host=$build; fi
 
-# identify architecture
+# identify host architecture
 if test "$arch" = ""
 then
         case $host in
@@ -205,7 +205,7 @@ then
                 powerpc64-*-linux-gnu ) arch=ppc64  ;;
                 *-*-mingw32 )           arch=mingw32;;
                 *-*-mingw64 )           arch=mingw64;;
-                * )                     AC_MSG_WARN(incorrect host name ?)
+                * )                     AC_MSG_WARN(Unrecognized build architecture)
         ;;
         esac
 	    # workaround for Cray-XT machines
@@ -214,7 +214,7 @@ then
         test -d /bgsys && arch=ppc64-bg
         test -f /bgsys/drivers/ppcfloor/bin/runjob && arch=ppc64-bgq
 fi
-echo checking architecture... $arch
+echo detected architecture... $arch
 
 # candidate archiver and archiver flags
 try_ar="ar"
@@ -617,7 +617,7 @@ ia32:path* | ia64:path* | x86_64:path* )
         try_f90flags="\$(FFLAGS) -x f95-cpp-input"
         try_fflags_noopt="-O0 -g"
         try_ldflags="-g"
-	try_ldflags_openmp="-fopenmp"
+        try_ldflags_openmp="-fopenmp"
         try_dflags="$try_dflags -D__GFORTRAN -D__STD_F95"
         try_ldflags_static="-static"
         ;;
