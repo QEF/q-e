@@ -9,7 +9,7 @@ New in svn version
    * turboTDDFT: pseudo_Hamiltonians, Davidson-like diagonalization
    * PWCOND with DFT+U
    * New functionals: gau-pbe, PW86 (unrevised), B86B, XDM (exchange-hole 
-     dipole moment) model of dispersions
+     dipole moment) model of dispersions, vdW-DF3, ddW-DF4 (Klimes et al)
    * Added the subdirectory FD in PHonon. Calculation of phonon dispersions 
      using the finite displacements supercell approach.
    * dynmat.x can calculate phonon contribution to dielectric tensor

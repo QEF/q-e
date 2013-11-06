@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004-2012 Quantum ESPRESSO group
+! Copyright (C) 2004-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -54,9 +54,8 @@ module funct
   PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
   PUBLIC  :: set_exx_fraction
   PUBLIC  :: set_screening_parameter, get_screening_parameter
-  !gau-pbe in
   PUBLIC  :: set_gau_parameter, get_gau_parameter
-  !gau-pbe out
+
   ! additional subroutines/functions for finite size corrections
   PUBLIC  :: dft_has_finite_size_correction, set_finite_size_volume
   ! driver subroutines computing XC
@@ -107,6 +106,9 @@ module funct
   !              "vdw-df2"="sla+pw+rw86+vdw2"  = vdW-DF2
   !              "vdw-df-c09"="sla+pw+c09x+vdw1"
   !              "vdw-df2-c09"="sla+pw+c09x+vdw2"
+  !              "vdw-df3"="sla+pw+obk88+vdw1"  = vdW-DF3
+  !              "vdw-df4"="sla+pw+ob86b+vdw1"  = vdW-DF4
+  !              "optbk88"="sla+pw+obk88"       = optB88
   ! or by any nonconflicting combination of the following keywords
   ! (case-insensitive):
   !
@@ -154,11 +156,11 @@ module funct
   !              "sox"    sogga                          igcx =17
   !              "m6lx"   M06L exchange Meta-GGA         igcx =18
   !              "q2dx"   Q2D exchange grad corr         igcx =19
-  ! gau-pbe in
   !              "gaup"   Gau-PBE hybrid exchange        igcx =20
-  ! gau-pbe out
   !              "pw86"   Perdew-Wang (1986) exchange    igcx =21
   !              "b86b"   Becke (1986) exchange          igcx =22
+  !              "obk88"  optB88  exchange               igcx =23
+  !              "ob86b"  optB86b exchange               igcx =24
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -177,8 +179,10 @@ module funct
   !
   ! Van der Waals functionals (nonlocal term only)
   !             "nonlc"   none                           inlc =0 (default)
-  !              "vdw1"    vdW-DF1                        inlc =1
-  !              "vdw2"    vdW-DF2                        inlc =2
+  !              "vdw1"   vdW-DF1                        inlc =1
+  !              "vdw2"   vdW-DF2                        inlc =2
+  !              "vdw3"   vdW-DF3                        inlc =3
+  !              "vdw4"   vdW-DF4                        inlc =4
   !
   ! References:
   !              pz      J.P.Perdew and A.Zunger, PRB 23, 5048 (1981) 
@@ -212,6 +216,8 @@ module funct
   !              vdW-DF  M. Dion et al., PRL 92, 246401 (2004)
   !                      T. Thonhauser et al., PRB 76, 125112 (2007)
   !              vdw-DF2 Lee et al., Phys. Rev. B 82, 081101 (2010)
+  !              vdw-DF3  Klimes et al, J. Phys. Cond. Matter, 22, 022201 (2010)
+  !              vdw-DF4  Klimes et al, Phys. Rev. B, 83, 195131 (2011)
   !              c09x    V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
   !              tpss    J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria, 
   !                      PRL 91, 146401 (2003)
@@ -239,9 +245,7 @@ module funct
   integer :: inlc  = notset
   real(DP):: exx_fraction = 0.0_DP
   real(DP):: screening_parameter = 0.0_DP
-  !gau-pbe in
   real(DP):: gau_parameter = 0.0_DP
-  !gau-pbe out
   logical :: isgradient  = .false.
   logical :: ismeta      = .false.
   logical :: ishybrid    = .false.
@@ -269,12 +273,7 @@ module funct
   !
   ! data
   integer :: nxc, ncc, ngcx, ngcc, ncnl
-
-! gau-pbe in
-!  parameter (nxc = 8, ncc =11, ngcx =21, ngcc = 12, ncnl=2)
-  parameter (nxc = 8, ncc =11, ngcx =22, ngcc = 12, ncnl=2)
-! gau-pbe out
-
+  parameter (nxc = 8, ncc =11, ngcx =24, ngcc = 12, ncnl=4)
   character (len=4) :: exc, corr
   character (len=4) :: gradx, gradc, nonlocc
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc), nonlocc (0: ncnl)
@@ -285,12 +284,13 @@ module funct
 
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
                'TPSS', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
-               'META', 'C09X', 'SOX', 'M6LX', 'Q2DX', 'GAUP', 'PW86', 'B86B' / 
+               'META', 'C09X', 'SOX', 'M6LX', 'Q2DX', 'GAUP', 'PW86', 'B86B', &
+               'OBK88','OB86B' / 
 
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'TPSS',&
-                'B3LP', 'PSC', 'PBE', 'META', 'M6LC', 'Q2DC' / 
+               'B3LP', 'PSC', 'PBE', 'META', 'M6LC', 'Q2DC' / 
 
-  data nonlocc / '    ', 'VDW1', 'VDW2' / 
+  data nonlocc / '    ', 'VDW1', 'VDW2', 'VDW3', 'VDW4' / 
 
 CONTAINS
   !-----------------------------------------------------------------------
@@ -391,7 +391,6 @@ CONTAINS
        call set_dft_value (inlc,0) !Default       
        dft_defined = .true.
 
-! gau-pbe in
    else if (matches ('GAUP', dftout) ) then
     ! special case : GAUPBE
        call set_dft_value (iexch,1) !Default
@@ -400,7 +399,6 @@ CONTAINS
        call set_dft_value (igcc, 4)
        call set_dft_value (inlc,0) !Default
        dft_defined = .true.
-! gau-pbe out
        
     else if ('PBESOL'.EQ. TRIM(dftout) ) then
     ! special case : PBEsol
@@ -418,6 +416,42 @@ CONTAINS
        call set_dft_value (igcx,19)
        call set_dft_value (igcc,12)
        call set_dft_value (inlc,0) !Default       
+       dft_defined = .true.
+
+    else if ('VDW-DF4' .EQ. TRIM(dftout)) then
+    ! Special case vdW-DF4, or optB86b+vdW
+       call set_dft_value (iexch, 1)
+       call set_dft_value (icorr, 4)
+       call set_dft_value (igcx, 21)
+       call set_dft_value (igcc, 0)
+       call set_dft_value (inlc, 1)       
+       dft_defined = .true.
+       
+    else if ('VDW-DF3' .EQ. TRIM(dftout)) then
+    ! Special case vdW-DF3, or optB88+vdW
+       call set_dft_value (iexch, 1)
+       call set_dft_value (icorr, 4)
+       call set_dft_value (igcx, 20)
+       call set_dft_value (igcc, 0)
+       call set_dft_value (inlc, 1)       
+       dft_defined = .true.
+       
+    else if ('OPTBK88' .EQ. TRIM(dftout)) then
+    ! Special case optB88 (without vdW)
+       call set_dft_value (iexch, 1)
+       call set_dft_value (icorr, 4)
+       call set_dft_value (igcx, 20)
+       call set_dft_value (igcc, 1)
+       call set_dft_value (inlc, 0)       
+       dft_defined = .true.
+       
+    else if ('OPTB86B' .EQ. TRIM(dftout)) then
+    ! Special case optB86b (without vdW)
+       call set_dft_value (iexch, 1)
+       call set_dft_value (icorr, 4)
+       call set_dft_value (igcx, 21)
+       call set_dft_value (igcc, 1)
+       call set_dft_value (inlc, 0)       
        dft_defined = .true.
        
     else if ('VDW-DF2-C09' .EQ. TRIM(dftout) ) then
@@ -446,6 +480,7 @@ CONTAINS
        call set_dft_value (igcc, 0)
        call set_dft_value (inlc, 2)
        dft_defined = .true.
+
        
     else if ('VDW-DF' .EQ. TRIM(dftout)) then
     ! Special case vdW-DF
@@ -455,7 +490,7 @@ CONTAINS
        call set_dft_value (igcc, 0)
        call set_dft_value (inlc, 1)       
        dft_defined = .true.
-       
+
     else if ('PBE' .EQ. TRIM(dftout) ) then
     ! special case : PBE
        call set_dft_value (iexch,1) !Default    
@@ -723,12 +758,11 @@ CONTAINS
        exx_fraction = 0.25_DP
        screening_parameter = 0.106_DP
     END IF
-! gau-pbe in
+    ! gau-pbe
     IF ( igcx ==20 ) THEN
        exx_fraction = 0.24_DP
        gau_parameter = 0.150_DP
     END IF
-! gau-pbe out
     ! HF or OEP
     IF ( iexch==4 .or. iexch==5 ) exx_fraction = 1.0_DP
     !B3LYP
@@ -856,7 +890,6 @@ CONTAINS
      get_screening_parameter = screening_parameter
      return
   end function get_screening_parameter
- ! gau-pbe in
   !-----------------------------------------------------------------------
   subroutine set_gau_parameter (gauparm_)
      implicit none
@@ -871,7 +904,6 @@ CONTAINS
      get_gau_parameter = gau_parameter
      return
   end function get_gau_parameter
- ! gau-pbe out
   !-----------------------------------------------------------------------
   function get_iexch ()
      integer get_iexch
@@ -1026,10 +1058,8 @@ CONTAINS
      shortname_ = 'Q2D'
   else if (iexch_==1.and.icorr_==4.and.igcx_==12.and.igcc_==4) then
      shortname_ = 'HSE'
-! gau-pbe in
   else if (iexch_==1.and.icorr_==4.and.igcx_==20.and.igcc_==4) then
      shortname_ = 'GAUPBE'
-! gau-pbe out
   else if (iexch_==1.and.icorr_==4.and.igcx_==11.and.igcc_==4) then
      shortname_ = 'WC'
   else if (iexch_==7.and.(icorr_==10.or.icorr_==2).and.igcx_==9.and. &
@@ -1434,9 +1464,8 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call rPW86 (rho, grho, sx, v1x, v2x)
   elseif (igcx ==16) then ! 'C09x'
      call c09x (rho, grho, sx, v1x, v2x)
-  elseif (igcx ==19) then ! 'pbesol'
+  elseif (igcx ==19) then ! 'pbeq2d'
      call pbex (rho, grho, 4, sx, v1x, v2x)
- ! gau-pbe in
   elseif (igcx ==20) then ! 'gau-pbe'
      call pbex (rho, grho, 1, sx, v1x, v2x)
      if(exx_started) then
@@ -1449,7 +1478,10 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call pw86 (rho, grho, sx, v1x, v2x)
   elseif (igcx == 22) then ! 'b86b'
      call becke86b (rho, grho, sx, v1x, v2x)
- ! gau-pbe out
+  elseif (igcx == 23) then ! 'optB88'
+     call pbex (rho, grho, 5, sx, v1x, v2x)
+  elseif (igcx == 24) then ! 'optB86b'
+     call pbex (rho, grho, 6, sx, v1x, v2x)
   else
      sx = 0.0_DP
      v1x = 0.0_DP
@@ -1561,13 +1593,9 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
   elseif (igcx == 3 .or. igcx == 4 .or. igcx == 8 .or. &
-! gau-pbe in
-!          igcx == 10 .or. igcx == 12) then
           igcx == 10 .or. igcx == 12 .or. igcx == 20) then
      ! igcx=3: PBE, igcx=4: revised PBE, igcx=8: PBE0, igcx=10: PBEsol
-     !! igcx=12: HSE
      ! igcx=12: HSE,  igcx=20: gau-pbe
-! gau-pbe out
      if (igcx == 4) then
         iflag = 2
      elseif (igcx == 10) then
@@ -1604,27 +1632,25 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
         call pbexsr_lsd (rhoup, rhodw, grhoup2, grhodw2, sxsr,  &
                          v1xupsr, v2xupsr, v1xdwsr, v2xdwsr, &
                          screening_parameter)
-!        write(*,*) sxsr,v1xsr,v2xsr
         sx  = sx - exx_fraction*sxsr
         v1xup = v1xup - exx_fraction*v1xupsr
         v2xup = v2xup - exx_fraction*v2xupsr
         v1xdw = v1xdw - exx_fraction*v1xdwsr
         v2xdw = v2xdw - exx_fraction*v2xdwsr
      end if
-! gau-pbe in 
-     if (igcx == 20 .and. exx_started ) then
 
+     if (igcx == 20 .and. exx_started ) then
+	! gau-pbe
         call pbexgau_lsd (rhoup, rhodw, grhoup2, grhodw2, sxsr,  &
                          v1xupsr, v2xupsr, v1xdwsr, v2xdwsr, &
                          gau_parameter)
-!        write(*,*) sxsr,v1xsr,v2xsr
         sx  = sx - exx_fraction*sxsr
         v1xup = v1xup - exx_fraction*v1xupsr
         v2xup = v2xup - exx_fraction*v2xupsr
         v1xdw = v1xdw - exx_fraction*v1xdwsr
         v2xdw = v2xdw - exx_fraction*v2xdwsr
      end if
-! gau-pbe out
+
   elseif (igcx == 9) then
      if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
         call becke88_spin (rhoup, grhoup2, sxup, v1xup, v2xup)
@@ -2062,7 +2088,7 @@ subroutine nlc (rho_valence, rho_core, enl, vnl, v)
   REAL(DP), INTENT(INOUT) :: v(:,:)
   REAL(DP), INTENT(INOUT) :: enl, vnl
 
-  if (inlc == 1 .or. inlc == 2) then
+  if (inlc == 1 .or. inlc == 2 .or. inlc == 3 .or. inlc == 4 ) then
      
      vdw_type = inlc
      call xc_vdW_DF(rho_valence, rho_core, enl, vnl, v)
