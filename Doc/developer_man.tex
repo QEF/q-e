@@ -552,16 +552,19 @@ default :
 {\em If no target specified, ask for one, giving a list of possibilities}
 \begin{verbatim}
 pw : bindir mods liblapack libblas libs libiotk libenviron
-   if test -d PW ; then \
-   ( cd PW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all;\
-     else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+    if test -d PW ; then \
+    ( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
+
 \end{verbatim}
 {\em Target {\tt pw}: first check the list of dependencies {\tt bindir
 mods ...} etc., do what is needed; then go into {\tt PW/} and give command
-{\tt make all}}
+{\tt make all}. Note the use of {\tt exit 1}, which is required to forward
+the exit status of the sub-directory make to this makefile, since the section
+in parenthesis is run in a subshell and the {\tt if / fi} block will otherwise
+``hide'' its the return status and make will continue in case of errors. }
 \begin{verbatim}
 neb : bindir mods libs pw
-    cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+    ( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 \end{verbatim}
 {\em Target {\tt neb}: do all of the above, then go into directory
 {\tt install/} where {\tt make neb} using {\tt plugins\_makefile}
@@ -569,7 +572,7 @@ as Makefile will check if NEB is there, download from the network if not,
 compile and link it}
 \begin{verbatim}
 libblas : touch-dummy
-     cd install ; $(MAKE) $(MFLAGS) -f extlibs_makefile $@
+     cd install ; $(MAKE) -f extlibs_makefile $@
 \end{verbatim}
 {\em Target {\tt libblas}: this is an external library, that may or may
 not be needed, depending upon what is written in {\tt make.sys}. If
@@ -582,16 +585,21 @@ compile and build the library}
 Second-level \Makefile\ contains only targets related to a given
 subdirectory or package. Sample contents:
 \begin{verbatim}
+sinclude ../make.sys
 default : all
 all: pw pwtools
-pw:
-   if test -d src ; then \
-   ( cd src ; if test "$(MAKE)" = "" ; then make $(MFLAGS) $@; \
-     else $(MAKE) $(MFLAGS) ; fi ) ; fi ; \
+pw:     
+    ( cd src ; $(MAKE) all || exit 1 )
+
+pwtools: pw
+    ( cd tools ; $(MAKE) all || exit 1 )
+
 ...
 \end{verbatim}
 {\em Target {\tt pw}: go into {\tt src/} if it exists, and (apart 
-from \texttt{make} wizardry) give command {\tt make pw}.
+from \texttt{make} wizardry) give command {\tt make pw}. It is important
+to note that {\tt pwtools} has to depend on {\tt pw} or else this
+makefile will break when calling parallel make using {\tt make -j\# }
 Other targets are quite similar: go into a subdirectory, e.g.
 {\tt Doc/} and '{\tt make} something', e.g. {\tt make clean}.}
 
@@ -662,7 +670,7 @@ libpw.a : $(PWLIBS)
 \begin{verbatim}
 tldeps:
        test -n "$(TLDEPS)" && ( cd ../.. ;
-       $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+       $(MAKE) $(TLDEPS) || exit 1) || :
 \end{verbatim}
 {\em second part of the TLDEPS machinery}
 \begin{verbatim}
@@ -1297,7 +1305,7 @@ IF ( ionode ) THEN
    OPEN ( ..., IOSTAT=ierr )
    ...
 END IF
-CALL mp_bcast( ierr, ... )
+CALL mp_bcast( ierr, ... , world_comm )
 CALL errore( 'routine','error', ierr )
 \end{verbatim}
 The same applies to all operations performed on a single processor,
@@ -1855,7 +1863,7 @@ read\_namelists.f90 )
  \begin{verbatim}
                 subroutine control_bcast( )
                 ...
-                call mp_bcast( pippo )
+                call mp_bcast( pippo, world_comm )
                 ...
                 end subroutine
 \end{verbatim}

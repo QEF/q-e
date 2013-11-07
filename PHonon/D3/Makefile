@@ -69,19 +69,15 @@ PHOBJS = ../../PHonon/PH/libph.a
 PWOBJS = ../../PW/src/libpw.a
 QEMODS = ../../Modules/libqemod.a
 
-TLDEPS= bindir mods libs pw
-TLDEPS2 = phonon
-
-all : tldeps tldeps2 d3.x
+all : tldeps d3.x
 
 d3.x : $(D3OBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o d3.x $(D3OBJS) \
 		$(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/D3/d3.x . )
-tldeps:
-	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
-tldeps2:
-	test -n "$(TLDEPS2)" && ( cd ../ ; $(MAKE) $(MFLAGS) $(TLDEPS2) || exit 1) || :
+
+tldeps :
+	( cd .. ; $(MAKE) phonon || exit 1 )
 
 clean :
 	- /bin/rm -f d3.x *.o *~ *.F90 *.d *.i *.mod *.L

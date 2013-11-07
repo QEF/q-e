@@ -21,7 +21,7 @@ libblas_external : fake_blas_external
 
 fake_blas_external :
 	touch fake_libblas.a
-	rm fake_libblas.a
+	-rm fake_libblas.a
 
 libblas_internal:
 	if test ! -d ../BLAS; then \
@@ -39,7 +39,7 @@ liblapack_external : fake_lapack_external
 
 fake_lapack_external :
 	touch fake_liblapack.a
-	rm fake_liblapack.a
+	-rm fake_liblapack.a
 
 liblapack_internal:
 	if test ! -d ../lapack-3.2; then \
@@ -72,7 +72,7 @@ libelpa_disabled : fake_elpa_external
 
 fake_elpa_external :
 	touch fake_libelpa.a
-	rm fake_libelpa.a
+	-rm fake_libelpa.a
 
 libelpa_enabled:
 	if test ! -d ../ELPA; then \

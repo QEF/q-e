@@ -1545,7 +1545,7 @@ MODULE xml_io_base
       !
       IF ( ionode ) THEN 
          CALL iotk_open_write( rhounit, FILE = rho_file,  BINARY = rho_binary, IERR = ierr )
-         CALL errore( 'write_rho_xml', 'cannot open' // TRIM( rho_file ) // ' file for writing', ierr )
+         CALL errore( 'write_rho_xml', 'cannot open ' // TRIM( rho_file ) // ' file for writing', ierr )
       END IF 
       !
       IF ( ionode ) THEN

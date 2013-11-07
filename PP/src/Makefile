@@ -191,8 +191,9 @@ bgw2pw.x : bgw2pw.o libpp.a $(MODULES) $(LIBOBJS)
 		bgw2pw.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-tldeps:
-	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+tldeps :
+	if test -n "$(TLDEPS)" ; then \
+	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
 	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.L libpp.a

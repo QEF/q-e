@@ -264,8 +264,9 @@ fqha.x : fqha.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
                  $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
-tldeps:
-	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+tldeps :
+	if test -n "$(TLDEPS)" ; then \
+	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 libph.a : $(PHOBJS) $(RAMANOBJS)
 	$(AR) $(ARFLAGS) $@ $?
@@ -274,7 +275,7 @@ libph.a : $(PHOBJS) $(RAMANOBJS)
 libphaux.a : $(PHAUXOBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
-	
+
 clean :
 	- /bin/rm -f *.x *.o *.a *~ *.F90 *.d *.mod *.i *.L
 	- /bin/rm -rf ../../bin/ph.x ../../bin/dynmat.x ../../bin/matdyn.x \

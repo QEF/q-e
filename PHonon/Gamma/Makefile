@@ -50,8 +50,9 @@ phcg.x : $(PWOBJS) $(CGOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o phcg.x \
 		$(CGOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/Gamma/phcg.x . )
-tldeps:
-	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+tldeps :
+	if test -n "$(TLDEPS)" ; then \
+	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
 	- /bin/rm -f *.x *.o *.d *.i *~ *.F90 *.mod *.L

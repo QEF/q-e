@@ -121,8 +121,9 @@ ld1.x: $(LD1OBJS) ld1.o $(LD1MODS) $(QEMODS) $(LIBOBJS)
 		ld1.o $(LD1OBJS) $(LD1MODS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../atomic/src/ld1.x . )
 
-tldeps:
-	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+tldeps :
+	if test -n "$(TLDEPS)" ; then \
+	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean:
 	- /bin/rm -f *.o *.F90 *.x *~ *.d *.mod *.tmp.* *.L

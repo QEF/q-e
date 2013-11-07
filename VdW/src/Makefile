@@ -35,15 +35,16 @@ LIBOBJS = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src
 TLDEPS= bindir mods libs pw ph pp
 
 all : tldeps vdw.x
- 
+
 vdw.x : vdw.o $(VdWOBJS) $(PPOBJS) $(PWOBJS) $(PHOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ vdw.o \
 		$(VdWOBJS) $(PPOBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) \
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../VdW/src/$@ . )
 
-tldeps:
-	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+tldeps :
+	if test -n "$(TLDEPS)" ; then \
+	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
 	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.L

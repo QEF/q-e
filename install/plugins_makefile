@@ -389,7 +389,7 @@ configure-sax: touch-dummy
 # extlibs
 ###################################
 extlibs:
-	test -n "$(EXTLIBS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(EXTLIBS) || exit 1) || :
+	test -n "$(EXTLIBS)" && ( cd .. ; $(MAKE) $(EXTLIBS) || exit 1) || :
 
 ##########################################################
 # GUI

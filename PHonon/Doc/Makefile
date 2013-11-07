@@ -21,7 +21,7 @@ $(PDFS): %.pdf: %.tex
 
 clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) *~
-	- rm -rf user_guide/
+	- rm -rf user_guide/ developer_man/
 	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml
 	- rm -rf input_xx.xsl
 	- rm -rf ../../Doc/INPUT_PH.* ../../Doc/INPUT_D3.*

@@ -24,7 +24,7 @@ minpacklib.a : $(MINOBJS)
 	$(AR) $(ARFLAGS) $@ $(MINOBJS)
 
 clean :
-	- /bin/rm -f minpacklib.a *.o 
+	- /bin/rm -fv minpacklib.a *.o 
 
 include make.depend
 

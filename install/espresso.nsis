@@ -66,11 +66,12 @@ Section "${QE4WIN}"
 
   CreateDirectory "$SMPROGRAMS\${QE4WIN}"
   CreateShortCut  "$SMPROGRAMS\${QE4WIN}\Uninstall.lnk"        "$INSTDIR\Uninstall.exe"          "" ""
-  CreateShortCut  "$SMPROGRAMS\${QE4WIN}\README.lnk"           "$INSTDIR\doc\README.txt"             "" ""
+  CreateShortCut  "$SMPROGRAMS\${QE4WIN}\README.lnk"           "$INSTDIR\README.txt"             "" ""
   CreateShortCut  "$SMPROGRAMS\${QE4WIN}\Input Reference.lnk"  "$INSTDIR\doc\qe-input-ref.html"  "" ""
-  CreateShortCut  "$SMPROGRAMS\${QE4WIN}\User Guide.lnk"       "$INSTDIR\doc\user_guide.html"    "" ""
-  CreateShortCut  "$SMPROGRAMS\${QE4WIN}\License.lnk"          "$INSTDIR\doc\License.txt"            "" ""
-  CreateShortCut  "$SMPROGRAMS\${QE4WIN}\Release Notes.lnk"    "$INSTDIR\doc\Release-Notes.txt"      "" ""
+  CreateShortCut  "$SMPROGRAMS\${QE4WIN}\Documentation.lnk"    "$WINDIR\explorer.exe"    \
+                                                             '/e,"$INSTDIR\doc"'    ""
+  CreateShortCut  "$SMPROGRAMS\${QE4WIN}\License.lnk"          "$INSTDIR\License.txt"            "" ""
+  CreateShortCut  "$SMPROGRAMS\${QE4WIN}\Release Notes.lnk"    "$INSTDIR\Release-Notes.txt"      "" ""
 
 !insertmacro CreateInternetShortcut "$SMPROGRAMS\${QE4WIN}\Quantum ESPRESSO Home Page" \
   "http://www.quantum-espresso.org" "" "0"
@@ -78,6 +79,10 @@ Section "${QE4WIN}"
   SetOutPath "$INSTDIR"
   CreateDirectory "$INSTDIR\bin"
   CreateDirectory "$INSTDIR\doc"
+  CreateDirectory "$INSTDIR\pseudo"
+  File qe-docs/License.txt
+  File qe-docs/README.txt
+  File qe-docs/Release-Notes.txt
 
   SetOutPath "$INSTDIR\bin"
   File ${MINGW}/${LIBGCC}
@@ -88,16 +93,17 @@ Section "${QE4WIN}"
   File qe-${VARIANT}-${BIT}/*.dll
 
   SetOutPath "$INSTDIR\doc"
-  File qe-docs/License.txt
-  File qe-docs/README.txt
-  File qe-docs/Release-Notes.txt
   File qe-docs/qe-input-ref.html
   File qe-docs/QE-logo.jpg
-  File qe-docs/user_guide/*
+  File qe-docs/*.pdf
+
+  SetOutPath "$INSTDIR\pseudo"
+  File espresso-current/pseudo/*.UPF
 
   ${EnvVarUpdate} $0 "PATH"              "A" "HKLM" "${MPICHDIR}"
   ${EnvVarUpdate} $0 "PATH"              "A" "HKLM" "$INSTDIR\bin"
-#  ${EnvVarUpdate} $0 "LAMMPS_POTENTIALS" "A" "HKLM" "$INSTDIR\Potentials"
+  ${EnvVarUpdate} $0 "ESPRESSO_PSEUDO"   "A" "HKLM" "$INSTDIR\pseudo"
+#  ${EnvVarUpdate} $0 "ESPRESSO_TMPDIR"   "A" "HKLM" "$AppData\Local\Temp"
 SectionEnd
 
 function un.onInit
@@ -110,7 +116,8 @@ Section "Uninstall"
 
   ${un.EnvVarUpdate} $0 "PATH"              "R" "HKLM" "${MPICHDIR}"
   ${un.EnvVarUpdate} $0 "PATH"              "R" "HKLM" "$INSTDIR\bin"
-#  ${un.EnvVarUpdate} $0 "LAMMPS_POTENTIALS" "R" "HKLM" "$INSTDIR\Potentials"
+  ${un.EnvVarUpdate} $0 "ESPRESSO_PSEUDO"   "R" "HKLM" "$INSTDIR\pseudo"
+#  ${un.EnvVarUpdate} $0 "ESPRESSO_TMPDIR"   "R" "HKLM" "$AppData\Local\Temp"
 
   RMDir /r "$SMPROGRAMS\${QE4WIN}"
 
@@ -118,6 +125,7 @@ Section "Uninstall"
   Delete /REBOOTOK   "$INSTDIR\Uninstall.exe"
   RMDir /r /REBOOTOK "$INSTDIR\bin"
   RMDir /r /REBOOTOK "$INSTDIR\doc"
+  RMDir /r /REBOOTOK "$INSTDIR\pseudo"
   RMDir /REBOOTOK "$INSTDIR"
 SectionEnd
 

@@ -1,31 +1,26 @@
 # Makefile for PostProc
-# Adapted from TDDFPT main Makefile
+sinclude ../make.sys
 
 default: all
 
-all: pp
-
-pp:	
+all:
 	if test -d src ; then \
-	( cd src ; if test "$(MAKE)" = "" ; then make $(MFLAGS) $@; \
-	else $(MAKE) $(MFLAGS) ; fi ) ; fi ; \
-
-clean : example_clean
-	if test -d src ; then \
-	( cd src ; if test "$(MAKE)" = "" ; then make clean ; \
-	else $(MAKE) clean ; fi ) ; fi ;\
-
-example_clean:
-	if test -d examples ; then \
-	( cd examples ; ./clean_all ) ; fi 
+	( cd src ; $(MAKE) || exit 1 ) ; fi
 
 doc:
 	if test -d Doc ; then \
-	(cd Doc ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+	(cd Doc ; $(MAKE) all || exit 1 ) ; fi
+
 doc_clean:
 	if test -d Doc ; then \
-	(cd Doc ; if test "$(MAKE)" = "" ; then make $(MFLAGS) clean ; \
-	else $(MAKE) $(MFLAGS) clean ; fi ) ; fi
+	(cd Doc ; $(MAKE) clean ) ; fi
+
+clean : examples_clean
+	if test -d src ; then \
+	( cd src ; $(MAKE) clean ) ; fi
+
+examples_clean:
+	if test -d examples ; then \
+	( cd examples ; ./clean_all ) ; fi
 
 distclean: clean doc_clean

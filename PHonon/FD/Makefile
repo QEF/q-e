@@ -29,19 +29,19 @@ fd_ifc.x : fd_ifc.o libfd.a  $(FDOBJS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 	fd_ifc.o libfd.a $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
 	- ( cd ../../bin ; ln -fs ../PHonon/FD/$@ . )
- 
 
 fd.x : fd.o libfd.a  $(FDOBJS) $(PWOBJS) $(QEMODS)  
 	$(LD) $(LDFLAGS) -o $@ \
 	fd.o libfd.a $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
 	- ( cd ../../bin ; ln -fs ../PHonon/FD/$@ . )
- 
+
 fd_ef.x : fd_ef.o libfd.a  $(FDOBJS) $(PWOBJS) $(QEMODS)  
 	$(LD) $(LDFLAGS) -o $@ \
 	fd_ef.o libfd.a $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
 	- ( cd ../../bin ; ln -fs ../PHonon/FD/$@ . )
-tldeps:
-	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+tldeps :
+	if test -n "$(TLDEPS)" ; then \
+	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 libfd.a : $(FDOBJS)
 	$(AR) $(ARFLAGS) $@ $?

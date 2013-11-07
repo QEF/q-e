@@ -9,6 +9,7 @@ gipaw_module.o : ../../Modules/ions_base.o
 gipaw_module.o : ../../Modules/kind.o
 gipaw_module.o : ../../Modules/mp.o
 gipaw_module.o : ../../Modules/mp_global.o
+gipaw_module.o : ../../Modules/mp_world.o
 gipaw_module.o : ../../Modules/noncol.o
 gipaw_module.o : ../../Modules/parameters.o
 gipaw_module.o : ../../Modules/recvec.o

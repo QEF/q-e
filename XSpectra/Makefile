@@ -1,14 +1,19 @@
 # Makefile for XSpectra
+sinclude ../make.sys
 
 default: all
 
 all:
-	( cd src ; if test "$(MAKE)" = "" ; then make $@ || exit 1 ; \
-	else $(MAKE) $@ || exit 1 ; fi )
+	( cd src ; $(MAKE) all || exit 1 )
 
 clean :
-	( cd src ; if test "$(MAKE)" = "" ; then make clean ; \
-	else $(MAKE) clean ; fi )
+	( cd src ; $(MAKE) clean )
+
+doc:
+	:
+
+doc_clean:
+	:
 
 distclean: clean
 

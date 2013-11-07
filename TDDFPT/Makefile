@@ -1,20 +1,22 @@
 # Makefile for TDDFPT
-#
+sinclude ../make.sys
 
 default: all
 
-all: bindir
-	( cd src ; if test "$(MAKE)" = "" ; then make $@ || exit 1; \
-	else $(MAKE) $@ || exit 1; fi )
-	( cd tools ; if test "$(MAKE)" = "" ; then make $@; \
-	else $(MAKE) $@  || exit 1; fi )
+all: bindir tddfpt tddfptools
 
 bindir:
-	test -d bin || mkdir bin
+	if [ ! -d bin ] ; then mkdir bin; fi;
+
+tddfpt:
+	( cd src ; $(MAKE) all || exit 1 ) 
+
+tddfptools:
+	( cd tools ; $(MAKE) all || exit  1 )
 
 clean :
-	( cd src ; $(MAKE) clean )
-	( cd tools ; $(MAKE) clean )
+	( cd src ; $(MAKE) clean ; )
+	( cd tools ; $(MAKE) clean ; )
 
 distclean: clean
 

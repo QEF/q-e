@@ -102,10 +102,9 @@ QEMODS=../../Modules/libqemod.a
 
 TLDEPS= bindir mods libs libiotk
 
-LIBOBJS        = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
+LIBOBJS= ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
 
-all : cp
-cp : tldeps libcp.a cp.x cppp.x wfdd.x
+all : tldeps libcp.a cp.x cppp.x wfdd.x
 
 cp.x : cprstart.o libcp.a $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o cp.x cprstart.o \
@@ -130,9 +129,9 @@ wfdd.x : wfdd.o
 	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/$@ . )
 
-
-tldeps:
-	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+tldeps :
+	if test -n "$(TLDEPS)" ; then \
+	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
 	- /bin/rm -f cppp.x *.o *.mod cpver.h *.i core* *.F90 fort* \

@@ -66,16 +66,17 @@ pw4gww.x : pw4gww.o libpw4gww.a  $(PW4GWWOBJS) $(PWOBJS) $(QEMODS)  $(LIBMIN)
 	$(LD) $(LDFLAGS) -o $@ \
 	pw4gww.o libpw4gww.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../GWW/pw4gww/$@ . )
- 
-tldeps:
-	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+
+tldeps :
+	if test -n "$(TLDEPS)" ; then \
+	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 libpw4gww.a : $(PW4GWWOBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
 clean :
-	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.L libpw4gww.a
+	- /bin/rm -fv *.x *.o *~ *.F90 *.d *.mod *.i *.L libpw4gww.a
 
 include make.depend
 # DO NOT DELETE

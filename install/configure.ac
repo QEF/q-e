@@ -1,4 +1,4 @@
-AC_INIT(ESPRESSO, 5.0.2, , espresso)
+AC_INIT(ESPRESSO, 5.1.svn, , espresso)
 # ----------------------------
 # Non-standard precious variables
 # ----------------------------
@@ -1078,7 +1078,8 @@ then
                 ;;
 
         x86_64:* )
-                try_libdirs="/opt/intel/Compiler/*/*/mkl/lib/em64t
+                try_libdirs="/opt/intel/composer*/mkl/lib/intel64
+                             /opt/intel/Compiler/*/*/mkl/lib/em64t
                              /opt/intel/mkl/*/lib/em64t
                              /opt/intel/mkl*/lib/em64t
                              /opt/intel/mkl/lib"
@@ -1140,7 +1141,8 @@ then
 
         ia32:* )
                 # check for mkl (in several directories)
-                try_libdirs="/opt/intel/Compiler/*/*/mkl/lib/32
+                try_libdirs="/opt/intel/composer*/mkl/lib/ia32
+                             /opt/intel/Compiler/*/*/mkl/lib/32
                              /opt/intel/mkl/*/lib/32
                              /opt/intel/mkl*/lib/32
                              /opt/intel/mkl/lib"

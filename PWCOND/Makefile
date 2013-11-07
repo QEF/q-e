@@ -1,27 +1,22 @@
 # Makefile for PWCOND
+# Adapted from TDDFPT main Makefile
 
 default: all
 
 all:
-	( cd src ; if test "$(MAKE)" = "" ; then make all || exit 1; \
-	else $(MAKE) all || exit 1 ; fi )
-
-clean : clean_examples
-	( cd src ; if test "$(MAKE)" = "" ; then make clean ; \
-	else $(MAKE) clean ; fi )
-
-clean_examples :
-	( cd examples ; ./clean_all)
+	( cd src ; $(MAKE) all || exit 1 )
 
 doc:
-	(cd Doc ; if test "$(MAKE)" = "" ; then make all || exit 1 ; \
-	else $(MAKE) all || exit 1 ; fi )
+	( cd Doc ; $(MAKE) all || exit 1 )
 
 doc_clean:
-	(cd Doc ; if test "$(MAKE)" = "" ; then make clean ; \
-	else $(MAKE) clean ; fi )
+	( cd Doc ; $(MAKE) clean )
+
+clean : examples_clean
+	( cd src ; $(MAKE) clean )
+
+examples_clean:
+	if test -d examples ; then \
+	( cd examples ; ./clean_all ) ; fi 
 
 distclean: clean doc_clean
-
-
-

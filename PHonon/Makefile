@@ -1,4 +1,5 @@
 # Makefile for PH
+sinclude ../make.sys
 
 default: all
 
@@ -6,64 +7,47 @@ default: all
 all: phonon phgamma_only third_order finite_diffs
 
 phonon:
-	if test -d PH ; then \
-	( cd PH ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+	( cd PH ; $(MAKE) all || exit 1 )
+
 phgamma_only:
-	if test -d Gamma; then \
-	( cd Gamma ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
-third_order:
-	if test -d D3; then \
-	( cd D3 ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+	( cd Gamma ; $(MAKE) all || exit 1 )
+
+third_order: phonon
+	( cd D3 ; $(MAKE) all || exit 1 )
+
 finite_diffs:
-	if test -d FD; then \
-	( cd FD ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+	( cd FD ; $(MAKE) all || exit 1 )
+
 #third_order_q:
-#	if test -d D3q; then \
-#	( cd D3q ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all; \
-#	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+#	( cd D3q ; $(MAKE) all || exit 1 )
 
 clean: phonon_clean phgamma_only_clean third_order_clean examples_clean finite_diffs_clean #third_order_q_clean
 
 phonon_clean:
-	if test -d PH ; then \
-	( cd PH ; if test "$(MAKE)" = "" ; then make clean ; \
-	else $(MAKE) clean ; fi ) ; fi
+	( cd PH ; $(MAKE) clean )
 
 phgamma_only_clean:
-	if test -d Gamma ; then \
-	( cd Gamma ; if test "$(MAKE)" = ""; then make clean; \
-	else $(MAKE) clean ; fi ) ; fi
+	( cd Gamma ; $(MAKE) clean )
 
 third_order_clean:
-	if test -d D3 ; then \
-	( cd D3 ; if test "$(MAKE)" = ""; then make clean; \
-	else $(MAKE) clean ; fi ) ; fi
+	( cd D3 ; $(MAKE) clean )
+
+#third_order_q_clean:
+#	( cd D3q ; $(MAKE) clean )
 
 finite_diffs_clean:
-	if test -d FD ; then \
-	( cd FD ; if test "$(MAKE)" = ""; then make clean; \
-	else $(MAKE) clean ; fi ) ; fi
+	( cd FD ; $(MAKE) clean )
 
 examples_clean:
 	if test -d examples ; then \
 	( cd examples ; ./clean_all ) ; fi
 
-#third_order_q_clean:
-#	if test -d D3q ; then \
-#	( cd D3q ; if test "$(MAKE)" = ""; then make clean; \
-#	else $(MAKE) clean ; fi ) ; fi
-
 doc:
 	if test -d Doc ; then \
-	(cd Doc ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+	( cd Doc ; $(MAKE) all || exit 1 ) ; fi
+
 doc_clean:
 	if test -d Doc ; then \
-	(cd Doc ; if test "$(MAKE)" = "" ; then make $(MFLAGS) clean ; \
-	else $(MAKE) $(MFLAGS) clean ; fi ) ; fi
+	(cd Doc ; $(MAKE) clean ) ; fi
 
 distclean: clean doc_clean

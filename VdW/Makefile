@@ -1,17 +1,13 @@
 # Makefile for VdW
+sinclude ../make.sys
 
 default: all
 
-all: vdw
-
-vdw:	
+all:	
 	@echo "VdW no longer maintained"
-#	if test -d src ; then \
-#	( cd src ; if test "$(MAKE)" = "" ; then make $(MFLAGS) $@; \
-#	else $(MAKE) $(MFLAGS) ; fi ) ; fi ; \
+#	( cd src ; $(MAKE) all || exit 1 )
 
 clean :
-	( cd src ; if test "$(MAKE)" = "" ; then make clean ; \
-	else $(MAKE) clean ; fi )
+	( cd src ; $(MAKE) clean ; )
 
 distclean: clean

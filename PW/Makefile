@@ -1,4 +1,5 @@
 # Makefile for PW
+sinclude ../make.sys
 
 default: all
 
@@ -11,17 +12,17 @@ pwtools: pw
 	( cd tools ; $(MAKE) all || exit 1 )
 
 doc:
-	(cd Doc ; $(MAKE) $(MFLAGS) all || exit 1 )
+	( cd Doc ; $(MAKE) all || exit 1 )
 
 doc_clean:
-	(cd Doc ; $(MAKE) $(MFLAGS) clean ; fi )
+	( cd Doc ; $(MAKE) clean )
 
 clean : examples_clean
 	( cd src ; $(MAKE) clean )
 	( cd tools ; $(MAKE) clean )
 
 examples_clean:
-	( cd examples ; ./clean_all )
-
+	if test -d examples ; then \
+	( cd examples ; ./clean_all ) ; fi 
 
 distclean: clean doc_clean

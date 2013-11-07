@@ -1,20 +1,21 @@
 # Makefile for COUPLE
 
+sinclude ../make.sys
+
 default: all
 
 all: libcouple
 
 libcouple:	
-	if test -d src ; then \
-	( cd src ; $(MAKE) $(MFLAGS)  ) ; fi 
+	( cd src ; $(MAKE) all || exit 1 ) 
 
 doc:
 	if test -d Doc ; then \
-	(cd Doc ; $(MAKE) $(MFLAGS) all  ) ; fi
+	( cd Doc ; $(MAKE) all || exit 1) ; fi
 
 doc_clean:
 	if test -d Doc ; then \
-	(cd Doc ; $(MAKE) $(MFLAGS) clean ; fi ) ; fi
+	( cd Doc ; $(MAKE) clean ; fi ) ; fi
 
 clean : examples_clean tests_clean
 	if test -d src ; then \

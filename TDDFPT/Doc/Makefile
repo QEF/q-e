@@ -6,9 +6,10 @@ doc:  all
 all:  defs
 
 clean:
-	- rm -rf input_xx.xsl
-	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml
-	- rm -rf ../../Doc/INPUT_{Spectrum,Lanczos}.*
+	- rm -f input_xx.xsl
+	- rm -f INPUT_*.html INPUT_*.xml
+	- rm -f INPUT_{Spectrum,Lanczos}.txt
+	- rm -f ../../Doc/INPUT_{Spectrum,Lanczos}.*
 
 
 defs: link_input_xx INPUT_Lanczos.html INPUT_Lanczos.txt INPUT_Spectrum.html INPUT_Spectrum.txt link_on_main_doc

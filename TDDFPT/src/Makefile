@@ -48,13 +48,13 @@ lr_us.o\
 lr_dav_debug.o
 
 TLDEPS=bindir libs pw ph
- 
-all :  tldeps turbo_lanczos.x turbo_davidson.x
+
+all :  tldeps libtddfpt.a turbo_lanczos.x turbo_davidson.x
 
 libtddfpt.a : $(LROBJS) 
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
-	
+
 turbo_lanczos.x : lr_main.o libtddfpt.a $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		lr_main.o libtddfpt.a $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
@@ -71,9 +71,9 @@ dene.x : obm_tests.o
 	$(MPIF90) $(LDFLAGS) -o dene.x \
         $(PWOBJS) $(PHOBJS) obm_tests.o $(QEMODS) $(LIBOBJS) $(LIBS)
 
-tldeps:
-	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
-
+tldeps :
+	if test -n "$(TLDEPS)" ; then \
+	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
 	- /bin/rm -f ../bin/turbo_lanczos.x ../bin/turbo_davidson.x *.x *.o *~ *.d *.mod *.i work.pc *.a
