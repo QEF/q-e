@@ -705,6 +705,14 @@ CONTAINS
      CALL SOLVE_EVP_REAL(n,  n,   s, lds,    w,  vv, lds     ,nb  ,mpi_comm_rows, mpi_comm_cols)
      IF( tv )  s = vv
      IF( ALLOCATED( vv ) ) DEALLOCATE( vv )
+
+     CALL MPI_Comm_free( mpi_comm_rows, info )
+     IF( info /= 0 ) &
+        CALL errore( " pdsyevd_drv ", " in mpi_comm_free 1 ", ABS( info ) )
+
+     CALL MPI_Comm_free( mpi_comm_cols, info )
+     IF( info /= 0 ) &
+        CALL errore( " pdsyevd_drv ", " in mpi_comm_free 2 ", ABS( info ) )
 #else
      CALL PDSYEVD( jobv, 'L', n, s, 1, 1, desch, w, vv, 1, 1, desch, rtmp, lwork, itmp, liwork, info )
 

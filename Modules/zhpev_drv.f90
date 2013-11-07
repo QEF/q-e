@@ -1511,6 +1511,14 @@ CONTAINS
                           mpi_comm_rows, mpi_comm_cols)
      h = v
 
+     CALL MPI_Comm_free( mpi_comm_rows, info )
+     IF( info /= 0 ) &
+        CALL errore( " pzheevd_drv ", " in mpi_comm_free 1 ", ABS( info ) )
+
+     CALL MPI_Comm_free( mpi_comm_cols, info )
+     IF( info /= 0 ) &
+        CALL errore( " pzheevd_drv ", " in mpi_comm_free 2 ", ABS( info ) )
+
 #else
 !
 
