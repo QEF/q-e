@@ -290,6 +290,8 @@ SUBROUTINE convert_uspp
      ocw(i)  = oc (i)
      lchiw(i)=lchi(i)
   ENDDO
+
+  print *, "I got this exfact", exfact
   IF ( exfact==0) THEN
      iexch=1; icorr=1; igcx=0; igcc=0 ! Perdew-Zunger
   ELSEIF ( exfact==1) THEN
@@ -302,6 +304,9 @@ SUBROUTINE convert_uspp
      iexch=1; icorr=4; igcx=2; igcc=2 ! Perdew-Wang 91
   ELSEIF (exfact== 5) THEN
      iexch=1; icorr=4; igcx=3; igcc=4 ! Perdew-Becke-Erkerhof
+  ELSEIF (exfact== 6) THEN
+     iexch=1; icorr=4; igcx=10; igcc=8 ! PBEsol
+     print *, "I got the PBEsol correctly"
   ELSE
      WRITE (6,'("convert: wrong xc in pseudopotential ",f12.6)') exfact
      STOP

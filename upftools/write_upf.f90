@@ -417,14 +417,24 @@ END SUBROUTINE write_upf_v1
   ! The data used to convert iexch, icorr, igcx, igcc
   ! into a user-readable string
   !
-  INTEGER, PARAMETER :: nxc = 6, ncc = 9, ngcx = 4, ngcc = 5
-  CHARACTER (len=20) :: exc, corr, gradx, gradc
-  DIMENSION exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0:ngcc)
-  data exc / 'NOX ', 'SLA ', 'SL1 ', 'RXC ', 'OEP ', 'HF  ', 'PB0X' /
-  data corr / 'NOC ', 'PZ  ', 'VWN ', 'LYP ', 'PW  ', 'WIG ', 'HL  ',&
-              'OBZ ', 'OBW ', 'GL  ' /
-  data gradx / 'NOGX', 'B88 ', 'GGX ', 'PBE ', 'TPSS' /
-  data gradc / 'NOGC', 'P86 ', 'GGC ', 'BLYP', 'PBE ', 'TPSS' /
+  integer :: nxc, ncc, ngcx, ngcc, ncnl
+
+  parameter (nxc = 8, ncc =11, ngcx =19, ngcc = 12)
+
+  character (len=4) :: exc, corr
+  character (len=4) :: gradx, gradc
+  dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
+
+  data exc / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF', 'PB0X', 'B3LP', 'KZK' /
+  data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
+              'OBW', 'GL' , 'B3LP', 'KZK' /
+
+  data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
+               'TPSS', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
+               'META', 'C09X', 'SOX', 'M6LX', 'Q2DX' /
+
+  data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'TPSS',&
+                'B3LP', 'PSC', 'PBE', 'META', 'M6LC', 'Q2DC' /
 
   IF (iexch==1.and.igcx==0.and.igcc==0) THEN
      shortname = corr(icorr)
@@ -440,6 +450,8 @@ END SUBROUTINE write_upf_v1
      shortname = 'PBE'
   ELSEIF (iexch==1.and.icorr==4.and.igcx==4.and.igcc==5) THEN
      shortname = 'TPSS'
+  ELSEIF (iexch==1.and.icorr==4.and.igcx==10.and.igcc==8) THEN
+     shortname = 'PBESOL'
   ELSE
      shortname = ' '
   ENDIF
