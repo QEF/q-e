@@ -1387,8 +1387,8 @@ SUBROUTINE iosys()
   ! ... read the vdw kernel table if needed
   !
   inlc = get_inlc()
-  if (inlc == 1 .or. inlc == 2) then
-      call initialize_kernel_table()
+  if (inlc > 0) then
+      call initialize_kernel_table(inlc)
   endif
   !
   ! ... if DFT finite size corrections are needed, define the appropriate volume

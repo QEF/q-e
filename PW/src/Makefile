@@ -239,7 +239,7 @@ TLDEPS=bindir mods libs liblapack libblas libenviron
 
 LIBOBJS	= ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
 
-all : tldeps pw.x manypw.x generate_vdW_kernel_table.x
+all : tldeps pw.x manypw.x generate_vdW_kernel_table.x generate_rVV10_kernel_table.x
 
 pw.x : $(PWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
@@ -266,6 +266,12 @@ generate_vdW_kernel_table.x : libpw.a generate_vdW_kernel_table.o
 	$(LD) $(LDFLAGS) -o $@ \
 		generate_vdW_kernel_table.o $(QEMODS) libpw.a $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin; ln -fs ../PW/src/$@ . )
+
+generate_rVV10_kernel_table.x : libpw.a generate_rVV10_kernel_table.o
+	$(LD) $(LDFLAGS) -o $@ \
+		generate_rVV10_kernel_table.o $(QEMODS) libpw.a $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin; ln -fs ../PW/src/$@ . )
+
 
 include make.depend
 

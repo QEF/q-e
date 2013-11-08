@@ -40,8 +40,7 @@ SUBROUTINE nonloccorr( rho, rho_core, enl, vnl, v )
   !
   ! Everything is summed inside the proc
   !
-  CALL nlc( rho, rho_core, enl, vnl, v )
-
+  CALL nlc( rho, rho_core, nspin, enl, vnl, v )
   !
   RETURN
   !

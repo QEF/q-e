@@ -59,7 +59,7 @@ MODULE vdW_DF
   integer :: vdw_type = 1
 
   private  
-  public :: xc_vdW_DF, stress_vdW_DF, interpolate_kernel, print_sigma, dv_drho_vdw, vdw_type 
+  public :: xc_vdW_DF, stress_vdW_DF, interpolate_kernel, vdw_type, numerical_gradient, initialize_spline_interpolation
 
 CONTAINS
 
@@ -68,7 +68,7 @@ CONTAINS
 !!                                       |  XC_VDW_DF  |
 !!                                       |_____________|
 
-  SUBROUTINE xc_vdW_DF(rho_valence, rho_core, etxc, vtxc, v)
+  SUBROUTINE xc_vdW_DF(rho_valence, rho_core, nspin, etxc, vtxc, v)
     
     !! Modules to include
     !! -------------------------------------------------------------------------
@@ -83,6 +83,7 @@ CONTAINS
     !                                               _
     real(dp), intent(IN) :: rho_valence(:,:)       !
     real(dp), intent(IN) :: rho_core(:)            !  PWSCF input variables 
+    INTEGER,  INTENT(IN) :: nspin                  !
     real(dp), intent(inout) :: etxc, vtxc, v(:,:)  !_  
    
     
@@ -155,6 +156,7 @@ CONTAINS
     !! --------------------------------------------------------------------------------------------------------
 
     call errore('xc_vdW_DF','vdW functional not implemented for spin polarized runs', size(rho_valence,2)-1)
+    if (nspin>2) call errore('xc_vdW_DF','vdW functional not implemented for nspin > 2', nspin)
 
     !! --------------------------------------------------------------------------------------------------------
 
@@ -279,6 +281,11 @@ CONTAINS
     !! ---------------------------------------------------------------------------------------
     !! Add together the valence and core charge densities to get the total charge density    
     total_rho = rho_valence(:,1) + rho_core(:)
+    if (nspin == 2) then
+      total_rho = rho_valence(:,1) + rho_valence(:,2) + rho_core(:)
+    else
+      total_rho = rho_valence(:,1) + rho_core(:)
+    endif
 
 #ifdef FFTGRADIENT
     !! -------------------------------------------------------------------------
@@ -439,7 +446,8 @@ CONTAINS
 
     
     v(:,1) = v(:,1) + e2*potential(:)
-    
+    if (nspin == 2) v(:,2) = v(:,2) + e2*potential(:)
+
     call stop_clock( 'vdW_v' )
 
     !! -----------------------------------------------------------------------
@@ -451,7 +459,7 @@ CONTAINS
  
     do i_grid = 1, dfftp%nnr
        
-       vtxc = vtxc + e2*grid_cell_volume*rho_valence(i_grid,1)*potential(i_grid)
+       vtxc = vtxc + e2*grid_cell_volume*total_rho(i_grid)*potential(i_grid)
     
     end do
 
@@ -522,7 +530,7 @@ CONTAINS
 !!                                       |  STRESS_VDW_DF  |
 !!                                       |_________________|
 
-  SUBROUTINE stress_vdW_DF(rho_valence, rho_core, sigma)
+  SUBROUTINE stress_vdW_DF(rho_valence, rho_core, nspin, sigma)
 
       USE fft_base,        ONLY : dfftp
       use gvect,           ONLY : ngm, nl, g, nlm
@@ -532,6 +540,7 @@ CONTAINS
 
       real(dp), intent(IN) :: rho_valence(:,:)           !
       real(dp), intent(IN) :: rho_core(:)                ! Input variables 
+      INTEGER,  INTENT(IN) :: nspin                      !
       real(dp), intent(inout) :: sigma(3,3)              !  
 
       real(dp), allocatable :: gradient_rho(:,:)         !
@@ -562,7 +571,9 @@ CONTAINS
       !!   Tests
       !! --------------------------------------------------------------------------------------------------------
 
-      call errore('xc_vdW_DF','vdW functional not implemented for spin polarized runs', size(rho_valence,2)-1)
+      !call errore('xc_vdW_DF','vdW functional not implemented for spin polarized runs', size(rho_valence,2)-1)
+      if (nspin>2) call errore('xc_vdW_DF','vdW functional not implemented for nspin > 2', nspin)
+
       !IF ( gamma_only) CALL errore ('xc_vdW_DF', &
       !  & 'vdW functional not implemented for gamma point calculations. &
       !  & Use kpoints automatic and specify the gamma point explicitly', 2)
@@ -617,7 +628,11 @@ CONTAINS
       !! Charge
       !! ---------------------------------------------------------------------------------------
 
-      total_rho = rho_valence(:,1) + rho_core(:)
+      if (nspin == 2) then
+        total_rho = rho_valence(:,1) + rho_valence(:,2) + rho_core(:)
+      else
+        total_rho = rho_valence(:,1) + rho_core(:)
+      endif
 
 #ifdef FFTGRADIENT
       !! -------------------------------------------------------------------------
@@ -669,11 +684,9 @@ CONTAINS
       !! ---------------------------------------------------------------------------------------
       CALL stress_vdW_DF_gradient(total_rho, gradient_rho, q0, dq0_drho, &
                                   dq0_dgradrho, thetas, sigma_grad)
-      CALL print_sigma(sigma_grad, "VDW GRADIENT")
-
+      
       CALL stress_vdW_DF_kernel(total_rho, q0, thetas, sigma_ker)
-      CALL print_sigma(sigma_ker, "VDW KERNEL")
-
+      
       sigma = - (sigma_grad + sigma_ker) 
 
       do l = 1, 3
@@ -681,8 +694,6 @@ CONTAINS
             sigma (m, l) = sigma (l, m)
          enddo
       enddo
-
-      CALL print_sigma(sigma, "VDW ALL")
 
       deallocate( gradient_rho, total_rho, q0, dq0_drho, dq0_dgradrho, thetas )
  
@@ -2150,6 +2161,8 @@ subroutine get_potential(q0, dq0_drho, dq0_dgradrho, N, gradient_rho, u_vdW, pot
      at_inverse(2,:) = at_inverse(2,:) * dble(dfftp%nr2x)
      at_inverse(3,:) = at_inverse(3,:) * dble(dfftp%nr3x)
 
+     at_inverse = transpose(at_inverse)
+     
      have_at_inverse = .true.
 
   end if

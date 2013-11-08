@@ -238,8 +238,8 @@ SUBROUTINE read_xml_file()
   ! ... read the vdw kernel table if needed
   !
   inlc = get_inlc()
-  if (inlc == 1 .or. inlc ==2 ) then
-      call initialize_kernel_table()
+  if (inlc > 0 ) then
+      call initialize_kernel_table(inlc)
   endif
   !
   okpaw = ANY ( upf(1:nsp)%tpawp )

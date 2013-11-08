@@ -95,6 +95,7 @@ wave_base.o \
 wavefunctions.o \
 write_upf_v2.o \
 xc_vdW_DF.o \
+xc_rVV10.o \
 xml_input.o \
 xml_io_base.o \
 zhpev_drv.o \

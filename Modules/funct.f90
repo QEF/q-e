@@ -181,9 +181,7 @@ module funct
   !             "nonlc"   none                           inlc =0 (default)
   !              "vdw1"   vdW-DF1                        inlc =1
   !              "vdw2"   vdW-DF2                        inlc =2
-  !              "vdw3"   vdW-DF3                        inlc =3
-  !              "vdw4"   vdW-DF4                        inlc =4
-  !
+  !              "vv10"   rVV10                          inlc =3  
   ! References:
   !              pz      J.P.Perdew and A.Zunger, PRB 23, 5048 (1981) 
   !              vwn     S.H.Vosko, L.Wilk, M.Nusair, Can.J.Phys. 58,1200(1980)
@@ -224,6 +222,7 @@ module funct
   !              sogga   Y. Zhao and D. G. Truhlar, JCP 128, 184109 (2008)
   !              m06l    Y. Zhao and D. G. Truhlar, JCP 125, 194101 (2006)
   !              gau-pbe J.-W. Song, K. Yamashita, K. Hirao JCP 135, 071103 (2011)
+  !              rVV10   R. Sabatini et al. Phys. Rev. B 87, 041108(R) (2013)
   !
   ! NOTE ABOUT HSE: there are two slight deviations with respect to the HSE06 
   ! functional as it is in Gaussian code (that is considered as the reference
@@ -273,7 +272,7 @@ module funct
   !
   ! data
   integer :: nxc, ncc, ngcx, ngcc, ncnl
-  parameter (nxc = 8, ncc =11, ngcx =24, ngcc = 12, ncnl=4)
+  parameter (nxc = 8, ncc =11, ngcx =24, ngcc = 12, ncnl=3)
   character (len=4) :: exc, corr
   character (len=4) :: gradx, gradc, nonlocc
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc), nonlocc (0: ncnl)
@@ -290,7 +289,7 @@ module funct
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'TPSS',&
                'B3LP', 'PSC', 'PBE', 'META', 'M6LC', 'Q2DC' / 
 
-  data nonlocc / '    ', 'VDW1', 'VDW2', 'VDW3', 'VDW4' / 
+  data nonlocc / '    ', 'VDW1', 'VDW2', 'VV10' / 
 
 CONTAINS
   !-----------------------------------------------------------------------
@@ -407,6 +406,15 @@ CONTAINS
        call set_dft_value (igcx,10)
        call set_dft_value (igcc, 8)
        call set_dft_value (inlc,0) !Default       
+       dft_defined = .true.
+
+    else if ('RVV10' .EQ. TRIM(dftout) ) then
+    ! Special case rVV10
+       call set_dft_value (iexch, 1)
+       call set_dft_value (icorr, 4)
+       call set_dft_value (igcx, 13)
+       call set_dft_value (igcc, 4)
+       call set_dft_value (inlc, 3)
        dft_defined = .true.
 
     else if ('PBEQ2D' .EQ. TRIM(dftout) .OR. 'Q2D'.EQ. TRIM(dftout) ) then
@@ -682,6 +690,9 @@ CONTAINS
     ! ----------------------------------------------------------------
 
     ! Back compatibility - TO BE REMOVED
+
+    if (igcx == 13 .and. iexch /= 1) &
+         call errore('set_dft_from_name','rPW86 no longer contains Slater exchange, add it explicitly',-igcx)
  
     if (igcx == 14) igcx = 3 ! PBE -> PBX
     if (igcc == 9) igcc = 4  ! PBE -> PBC
@@ -1075,6 +1086,12 @@ CONTAINS
      shortname_ = 'VDW-DF-C09'
   else if (iexch_==1.and.icorr_==4.and.igcx_==16.and.igcc_==0.and.inlc_==2) then
      shortname_ = 'VDW-DF2-C09'
+  else if (iexch_==1.and.icorr_==4.and.igcx_==13.and.igcc_==4.and.inlc_==3) then
+     shortname_ = 'RVV10'
+  else if (iexch_==1.and.icorr_==4.and.igcx_==24.and.igcc_==0.and.inlc_==1) then
+     shortname_ = 'VDW-DF4'
+  else if (iexch_==1.and.icorr_==4.and.igcx_==23.and.igcc_==0.and.inlc_==1) then
+     shortname_ = 'VDW-DF3'
   else if (iexch_==0.and.icorr_==0.and.igcx_==18.and.igcc_==11) then
      shortname_ = 'M06L'
   else if (iexch_==1.and.icorr_==4.and.igcx_==17.and.igcc_==4) then
@@ -2069,7 +2086,7 @@ end subroutine gcc_spin
 !-----------------------------------------------------------------------
 ! 
 !-----------------------------------------------------------------------
-subroutine nlc (rho_valence, rho_core, enl, vnl, v)
+subroutine nlc (rho_valence, rho_core, nspin, enl, vnl, v)
   !-----------------------------------------------------------------------
   !     non local correction for the correlation
   !
@@ -2081,17 +2098,23 @@ subroutine nlc (rho_valence, rho_core, enl, vnl, v)
   !
 
   USE vdW_DF, ONLY: xc_vdW_DF, vdw_type
+  USE rVV10,  ONLY: xc_rVV10
  
   implicit none
   
   REAL(DP), INTENT(IN) :: rho_valence(:,:), rho_core(:)
+  INTEGER, INTENT(IN)  :: nspin
   REAL(DP), INTENT(INOUT) :: v(:,:)
   REAL(DP), INTENT(INOUT) :: enl, vnl
 
-  if (inlc == 1 .or. inlc == 2 .or. inlc == 3 .or. inlc == 4 ) then
+  if (inlc == 1 .or. inlc == 2) then
      
      vdw_type = inlc
-     call xc_vdW_DF(rho_valence, rho_core, enl, vnl, v)
+     call xc_vdW_DF(rho_valence, rho_core, nspin, enl, vnl, v)
+
+  elseif (inlc == 3) then
+
+      call xc_rVV10(rho_valence, rho_core, nspin, enl, vnl, v)
   
   else
      enl = 0.0_DP

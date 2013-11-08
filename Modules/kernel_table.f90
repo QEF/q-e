@@ -86,8 +86,10 @@ CONTAINS
   !!  Subroutine that actually reads the kernel file and stores the parameters.  This routine
   !!  is called only once, at the start of a vdW run.  
 
-  subroutine initialize_kernel_table()
+  subroutine initialize_kernel_table(inlc)
     
+    integer, INTENT(IN) :: inlc
+
     integer :: q1_i, q2_i                           !! Indexing variables
 
     integer :: kernel_file                          !! The unit number for the kernel file
@@ -112,8 +114,12 @@ CONTAINS
     !!
 
     if (TRIM(vdw_table_name)==' ') then
-       
+      
+      if (inlc==3) then
+        vdw_table_name='rVV10_kernel_table'
+      else
         vdw_table_name='vdW_kernel_table'
+      endif   
     
     endif
  
