@@ -99,6 +99,8 @@ Section "${QE4WIN}"
 
   SetOutPath "$INSTDIR\pseudo"
   File espresso-current/pseudo/*.UPF
+  File espresso-current/pseudo/*.van
+  File espresso-current/pseudo/*.bhs
 
   ${EnvVarUpdate} $0 "PATH"              "A" "HKLM" "${MPICHDIR}"
   ${EnvVarUpdate} $0 "PATH"              "A" "HKLM" "$INSTDIR\bin"

@@ -81,7 +81,7 @@ gipaw : pw
 ld1 : bindir liblapack libblas mods libs
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-upf : mods libs
+upf : mods libs liblapack libblas
 	if test -d upftools ; then \
 	( cd upftools ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 

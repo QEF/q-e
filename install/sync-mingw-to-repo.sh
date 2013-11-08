@@ -6,20 +6,20 @@
 prune_exe () {
   dir=$1
   ref=$(date +%s)
-  old=999999999
 
   for bit in 32 64
   do \
     for var in serial mpich2
     do \
-      for exe in ${dir}/qe4win-*svn20[0-9][0-9]-${bit}bit-${var}.exe
+      old=999999999
+      for exe in ${dir}/qe4win-*svn20[0-9][0-9]*-${bit}bit-${var}.exe
       do \
         [ -f ${exe} ] || continue
         # re-set symbolic link to latest entry
-        p=$(echo ${exe} | sed -e 's@^\(.*/\)\(qe4win-.*\)\(20[0-9][0-9]\+\)\(\.exe\)$@\1@')
-        r=$(echo ${exe} | sed -e 's@^\(.*/\)\(qe4win-.*\)\(20[0-9][0-9]\+\)\(\.exe\)$@\2@')
-        t=$(echo ${exe} | sed -e 's@^\(.*/\)\(qe4win-.*\)\(20[0-9][0-9]\+\)\(\.exe\)$@\3@')
-        e=$(echo ${exe} | sed -e 's@^\(.*/\)\(qe4win-.*\)\(20[0-9][0-9]\+\)\(\.exe\)$@\4@')
+        p=$(echo ${exe} | sed -e 's@^\(.*/\)\(qe4win-.*\)\(20[0-9][0-9]\+\).*\(\.exe\)$@\1@')
+        r=$(echo ${exe} | sed -e 's@^\(.*/\)\(qe4win-.*\)\(20[0-9][0-9]\+\).*\(\.exe\)$@\2@')
+        t=$(echo ${exe} | sed -e 's@^\(.*/\)\(qe4win-.*\)\(20[0-9][0-9]\+\).*\(\.exe\)$@\3@')
+        e=$(echo ${exe} | sed -e 's@^\(.*/\)\(qe4win-.*\)\(20[0-9][0-9]\+\).*\(\.exe\)$@\4@')
 
         # compute age difference in days
         y=$(echo ${t} | cut -c 1-4)
@@ -31,8 +31,8 @@ prune_exe () {
         if [ $age -lt $old ] 
         then
           old=$age
-          sym="${r}${t}${e}"
-          sto="${p}${r}latest${e}"
+          sym="${r}${t}-${bit}bit-${var}${e}"
+          sto="${p}${r}-latest-${bit}bit-${var}${e}"
         fi
 
         # NOTE: to simplify the math, for the following we
