@@ -953,6 +953,7 @@ vofrho.o : ../../Modules/mp_global.o
 vofrho.o : ../../Modules/recvec.o
 vofrho.o : ../../Modules/sic.o
 vofrho.o : ../../Modules/uspp.o
+vofrho.o : ../../Modules/xc_rVV10.o
 vofrho.o : ../../Modules/xc_vdW_DF.o
 vofrho.o : cp_interfaces.o
 vofrho.o : energies.o

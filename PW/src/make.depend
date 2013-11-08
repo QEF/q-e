@@ -625,6 +625,12 @@ gen_us_dy.o : ../../Modules/recvec.o
 gen_us_dy.o : ../../Modules/splinelib.o
 gen_us_dy.o : ../../Modules/uspp.o
 gen_us_dy.o : pwcom.o
+generate_rVV10_kernel_table.o : ../../Modules/constants.o
+generate_rVV10_kernel_table.o : ../../Modules/io_global.o
+generate_rVV10_kernel_table.o : ../../Modules/kind.o
+generate_rVV10_kernel_table.o : ../../Modules/mp.o
+generate_rVV10_kernel_table.o : ../../Modules/mp_global.o
+generate_rVV10_kernel_table.o : ../../Modules/mp_world.o
 generate_vdW_kernel_table.o : ../../Modules/constants.o
 generate_vdW_kernel_table.o : ../../Modules/io_global.o
 generate_vdW_kernel_table.o : ../../Modules/kind.o
@@ -1653,6 +1659,7 @@ stres_nonloc_dft.o : ../../Modules/fft_base.o
 stres_nonloc_dft.o : ../../Modules/funct.o
 stres_nonloc_dft.o : ../../Modules/kind.o
 stres_nonloc_dft.o : ../../Modules/mp.o
+stres_nonloc_dft.o : ../../Modules/xc_rVV10.o
 stres_nonloc_dft.o : ../../Modules/xc_vdW_DF.o
 stres_us.o : ../../Modules/becmod.o
 stres_us.o : ../../Modules/constants.o

@@ -106,6 +106,7 @@ fft_scalar.o : kind.o
 fft_types.o : io_global.o
 funct.o : io_global.o
 funct.o : kind.o
+funct.o : xc_rVV10.o
 funct.o : xc_vdW_DF.o
 generate_function.o : cell_base.o
 generate_function.o : constants.o
@@ -339,6 +340,19 @@ write_upf_v2.o : kind.o
 write_upf_v2.o : pseudo_types.o
 write_upf_v2.o : radial_grids.o
 ws_base.o : kind.o
+xc_rVV10.o : cell_base.o
+xc_rVV10.o : constants.o
+xc_rVV10.o : control_flags.o
+xc_rVV10.o : fft_base.o
+xc_rVV10.o : fft_interfaces.o
+xc_rVV10.o : fft_scalar.o
+xc_rVV10.o : input_parameters.o
+xc_rVV10.o : io_global.o
+xc_rVV10.o : kernel_table.o
+xc_rVV10.o : kind.o
+xc_rVV10.o : mp.o
+xc_rVV10.o : mp_global.o
+xc_rVV10.o : recvec.o
 xc_vdW_DF.o : cell_base.o
 xc_vdW_DF.o : constants.o
 xc_vdW_DF.o : control_flags.o
