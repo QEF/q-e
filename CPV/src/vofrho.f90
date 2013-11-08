@@ -41,8 +41,9 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                                   detot6, dekin6, dps6, dh6, dsr6, dxc6, denl6
       USE mp,               ONLY: mp_sum
       USE mp_global,        ONLY: intra_bgrp_comm
-      USE funct,            ONLY: dft_is_meta, dft_is_nonlocc, nlc
+      USE funct,            ONLY: dft_is_meta, dft_is_nonlocc, nlc, get_inlc
       USE vdW_DF,           ONLY: stress_vdW_DF
+      use rVV10,            ONLY: stress_rVV10 
       USE pres_ai_mod,      ONLY: abivol, abisur, v_vol, P_ext, volclu,  &
                                   Surf_t, surfclu
       USE fft_interfaces,   ONLY: fwfft, invfft
@@ -71,7 +72,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       COMPLEX(DP) :: sfac(:,:)
       INTEGER     :: irb(:,:)
       !
-      INTEGER iss, isup, isdw, ig, ir, i, j, k, ij, is, ia
+      INTEGER iss, isup, isdw, ig, ir, i, j, k, ij, is, ia, inlc
       REAL(DP) :: vtxc, vave, ebac, wz, eh, ehpre, enlc
       COMPLEX(DP)  fp, fm, ci, drhop, zpseu, zh
       COMPLEX(DP), ALLOCATABLE :: rhotmp(:), vtemp(:)
@@ -345,7 +346,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          ! ... UGLY HACK WARNING: nlc adds nonlocal term (Ry) to input energy
          !
          enlc = 0.0_dp
-         CALL nlc( rhosave, rhocsave, enlc, vtxc, rhor )
+         CALL nlc( rhosave, rhocsave, nspin, enlc, vtxc, rhor )
          CALL mp_sum( enlc, intra_bgrp_comm )
          exc = exc + enlc / e2
          !
@@ -354,7 +355,16 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !
          IF ( tpre ) THEN
              denlc(:,:) = 0.0_dp
-             CALL stress_vdW_DF( rhosave, rhocsave, denlc )
+             inlc = get_inlc()
+
+             if (inlc==1 .or. inlc==2) then
+               if (nspin>2) call errore('stres_vdW_DF', 'vdW+DF non implemented in spin polarized calculations',1)
+               CALL stress_vdW_DF(rhosave, rhocsave, nspin, denlc )
+             elseif (inlc == 3) then
+               if (nspin>2) call errore('stress_rVV10', 'rVV10 non implemented with nspin>2',1)
+               CALL stress_rVV10(rhosave, rhocsave, nspin, denlc )
+             end if
+
              CALL mp_sum( denlc, intra_bgrp_comm )
              dxc(:,:) = dxc(:,:) - omega/e2 * MATMUL(denlc,TRANSPOSE(ainv))
          END IF
