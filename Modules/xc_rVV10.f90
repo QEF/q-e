@@ -667,7 +667,8 @@ CONTAINS
     do i_grid = 1, Ngrid_points
   
       if (total_rho(i_grid) > epsr ) then 
-       thetas(i_grid,:) = thetas(i_grid,:) * (1.0 / (3.0 * sqrt(pi) * ( b_value**(3.0/2.0) ) ) ) * (total_rho(i_grid) / pi)**(3.0/4.0)
+       thetas(i_grid,:) = thetas(i_grid,:) * (1.0 / (3.0 * sqrt(pi) &
+         * ( b_value**(3.0/2.0) ) ) ) * (total_rho(i_grid) / pi)**(3.0/4.0)
       else
        thetas(i_grid,:) = 0.0d0
       endif
