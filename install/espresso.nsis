@@ -89,8 +89,7 @@ Section "${QE4WIN}"
   File ${MINGW}/libgfortran-3.dll
   File ${MINGW}/libquadmath-0.dll
 
-  File qe-${VARIANT}-${BIT}/*.exe
-  File qe-${VARIANT}-${BIT}/*.dll
+  File qe-${VARIANT}-${BIT}/*.*
 
   SetOutPath "$INSTDIR\doc"
   File qe-docs/qe-input-ref.html

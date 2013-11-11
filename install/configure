@@ -5112,7 +5112,7 @@ ia32:path* | ia64:path* | x86_64:path* )
         try_fflags_openmp="-fopenmp"
         try_f90flags="\$(FFLAGS) -x f95-cpp-input"
         try_fflags_noopt="-O0 -g"
-        try_ldflags="-g"
+        try_ldflags="-g -pthread"
         try_ldflags_openmp="-fopenmp"
         try_dflags="$try_dflags -D__GFORTRAN -D__STD_F95"
         try_ldflags_static="-static"
@@ -5363,8 +5363,8 @@ echo setting CPP... $cpp
 
 echo $ECHO_N "setting CPPFLAGS... $ECHO_C"
 case $cpp in
-        cpp)  try_cppflags="-P -traditional" ;;
-        fpp)  try_cppflags="-P"              ;;
+        cpp)  try_cppflags="-P -C -traditional" ;;
+        fpp)  try_cppflags="-P -C "              ;;
         *)    try_cppflags=""                ;;
 esac
 if test "$cppflags" = "" ; then cppflags=$try_cppflags ; fi
