@@ -120,6 +120,9 @@ SUBROUTINE electrons()
      CALL electrons_scf ( )
      !
      IF ( .NOT. dft_is_hybrid() ) RETURN
+     !
+     ! ... From now on: hybrid DFT only
+     !
      IF ( stopped_by_user .OR. .NOT. conv_elec ) THEN
         conv_elec=.FALSE.
         IF ( .NOT. first) THEN
@@ -135,8 +138,6 @@ SUBROUTINE electrons()
         END IF
         RETURN
      END IF
-     !
-     ! ... From now on: hybrid DFT only
      !
      first =  first .AND. .NOT. exx_is_active ( )
      CALL exxinit()
@@ -182,13 +183,13 @@ SUBROUTINE electrons()
            RETURN
         END IF
         !
-     END IF
+        IF ( adapt_thr ) THEN
+           tr2 = MAX(tr2_multi * dexx, tr2_final)
+           WRITE( stdout, 9121 ) tr2
+        ENDIF
+     ENDIF
      !
      WRITE( stdout,'(5x,"EXX: now go back to refine exchange calculation")')
-     IF ( adapt_thr ) THEN
-        tr2 = MAX(tr2_multi * dexx, tr2_final)
-        WRITE( stdout, 9121 ) tr2
-     ENDIF
      !
      IF ( check_stop_now() ) THEN
         conv_elec=.FALSE.

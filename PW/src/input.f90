@@ -1204,7 +1204,7 @@ SUBROUTINE iosys()
   END SELECT
   IF (ts_vdw) CALL errore("iosys","Tkatchenko-Scheffler not implemented", 1)
   IF ( london ) THEN
-     CALL infomsg("iosys","london is obsolete, use ''vdw_corr='grimme-d2''' instead")
+     CALL infomsg("iosys","london is obsolete, use ""vdw_corr='grimme-d2'"" instead")
      llondon = .TRUE.
   END IF
   IF ( llondon) THEN
@@ -1214,7 +1214,7 @@ SUBROUTINE iosys()
      !   CALL init_london ( )
   END IF
   IF ( xdm ) THEN
-     CALL infomsg("iosys","xdm is obsolete, use ''vdw_corr='xdm''' instead")
+     CALL infomsg("iosys","xdm is obsolete, use ""vdw_corr='xdm'"" instead")
      lxdm = .TRUE.
   END IF
   IF ( lxdm) THEN
