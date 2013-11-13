@@ -68,9 +68,11 @@ SUBROUTINE electrons()
   first = .true.
   tr2_final = tr2
   IF (dft_is_hybrid() .AND. adapt_thr ) tr2= tr2_init
-  fock0 = 0.D0
-  fock1 = 0.D0
-  fock2 = 0.D0
+  IF (.NOT. exx_is_active () ) THEN
+     fock0 = 0.D0
+     fock1 = 0.D0
+     fock2 = 0.D0
+  END IF
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%  Iterate hybrid functional  %%%%%%%%%%%%%%%%%%%%%
@@ -155,8 +157,6 @@ SUBROUTINE electrons()
         CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
              nspin, doublegrid )
         !
-        ! WRITE( stdout, * ) fock0
-        !
      ELSE
         !
         fock0 = fock2
@@ -175,7 +175,6 @@ SUBROUTINE electrons()
         etot = etot  - dexx
         hwf_energy = hwf_energy - dexx
         !
-        ! WRITE( stdout, * ) fock0, fock1, fock2
         WRITE( stdout, 9066 ) dexx
         !
         IF ( dexx < tr2_final ) THEN
