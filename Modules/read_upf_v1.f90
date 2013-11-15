@@ -648,11 +648,12 @@ SUBROUTINE read_pseudo_gipaw ( upf, iunps )
   implicit none
   !
   INTEGER :: iunps
+  REAL (dp) :: version
   TYPE ( pseudo_upf ), INTENT ( INOUT ) :: upf
   !
-  
   CALL scan_begin ( iunps, "GIPAW_FORMAT_VERSION", .false. )
-  READ ( iunps, *, err=100, end=100 ) upf%gipaw_data_format
+  READ ( iunps, *, err=100, end=100 ) version
+  upf%gipaw_data_format = INT(version)
   CALL scan_end ( iunps, "GIPAW_FORMAT_VERSION" )
   
   IF ( upf%gipaw_data_format == 1 .or. upf%gipaw_data_format == 0 ) THEN

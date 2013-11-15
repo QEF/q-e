@@ -112,10 +112,6 @@ MODULE exx
               fock1 = 0.0_DP, & !   sum <psi|vx(phi)|psi>
               fock2 = 0.0_DP, & !   sum <psi|vx(psi)|psi>
               dexx  = 0.0_DP    !   fock1  - 0.5*(fock2+fock0)
-  REAL(DP) :: fock0x = 0.0_DP, & !   sum <phi|Vx(phi)|phi>
-              fock1x = 0.0_DP, & !   sum <psi|vx(phi)|psi>
-              fock2x = 0.0_DP    !   sum <psi|vx(psi)|psi>
-
   !
   ! custom fft grids
   !
