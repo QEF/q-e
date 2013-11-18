@@ -11,6 +11,7 @@ SUBROUTINE electrons()
   !----------------------------------------------------------------------------
   !
   ! ... General self-consistency loop, also for hybrid functionals
+  ! ... For non-hybrid functionals it just calls "electron_scf"
   !
   USE kinds,                ONLY : DP
   USE check_stop,           ONLY : check_stop_now, stopped_by_user
@@ -61,18 +62,17 @@ SUBROUTINE electrons()
       tr2_final     ! final threshold for exx minimization 
                     ! when using adaptive thresholds.
   LOGICAL :: &
-      first, exst
+      first, no_printout, exst
   !
   !
   iter = 0
   first = .true.
   tr2_final = tr2
+  no_printout = dft_is_hybrid()
   IF (dft_is_hybrid() .AND. adapt_thr ) tr2= tr2_init
-  IF (.NOT. exx_is_active () ) THEN
-     fock0 = 0.D0
-     fock1 = 0.D0
-     fock2 = 0.D0
-  END IF
+  fock0 = 0.D0
+  fock1 = 0.D0
+  IF (.NOT. exx_is_active () ) fock2 = 0.D0
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%  Iterate hybrid functional  %%%%%%%%%%%%%%%%%%%%%
@@ -119,7 +119,10 @@ SUBROUTINE electrons()
      !
      iter = iter + 1
      !
-     CALL electrons_scf ( )
+     ! ... Self-consistency loop. For hybrid functionals the exchange potential
+     ! ... is calculated with the orbitals at previous step (none at first step)
+     !
+     CALL electrons_scf ( no_printout )
      !
      IF ( .NOT. dft_is_hybrid() ) RETURN
      !
@@ -142,14 +145,21 @@ SUBROUTINE electrons()
      END IF
      !
      first =  first .AND. .NOT. exx_is_active ( )
-     CALL exxinit()
+     !
+     ! "first" is true if the scf step was performed without exact exchange
      !
      IF ( first ) THEN
         !
         first = .false.
+        !
+        ! Activate exact exchange, set orbitals used in its calculation,
+        ! then calculate exchange energy (will be useful at next step)
+        !
+        CALL exxinit()
         fock2 = exxenergy2()
         !
-        ! ... Potential must be re-calculated because XC functional has changed
+        ! Recalculate potential because XC functional has changed,
+        ! start self-consistency loop on exchange
         !
         CALL v_of_rho( rho, rho_core, rhog_core, &
              ehart, etxc, vtxc, eth, etotefield, charge, v)
@@ -159,23 +169,35 @@ SUBROUTINE electrons()
         !
      ELSE
         !
+        ! fock1 is the exchange energy calculated for orbitals at step n,
+        !       using orbitals at step n-1 in the expression of exchange
+        !
+        fock1 = exxenergy2()
+        !
+        ! Set new orbitals for the calculation of the exchange term
+        !
+        CALL exxinit()
+        !
+        ! fock2 is the exchange energy calculated for orbitals at step n,
+        !       using orbitals at step n in the expression of exchange 
+        ! fock0 is fock2 at previous step
+        !
         fock0 = fock2
         fock2 = exxenergy2()
+        !
+        ! check for convergence. dexx is positive definite: if it isn't,
+        ! there is some numerical problem. One such cause could be that
+        ! the treatment of the divergence in exact exchange has failed. 
+        !
         dexx = fock1 - 0.5D0*(fock0+fock2)
-        !
-        ! dexx is by definition positive definite. If it is less than
-        ! 0 there is some numerical problem. One such cause could be
-        ! that the exx divergence treatment has failed. 
-        !
         IF ( dexx < 0d0 ) CALL errore( 'electrons', 'dexx is negative! &
-           &  Check that exxdiv_treatment is appropriate for the system.', 1 )
+           &  Check that exxdiv_treatment is appropriate for the system', 1 )
         !
-        ! FIXME: this is the total energy that should be printed on output
-        !
-        etot = etot  - dexx
-        hwf_energy = hwf_energy - dexx
-        !
-        WRITE( stdout, 9066 ) dexx
+        etot = etot + 0.5D0*fock2 - fock1
+        hwf_energy = hwf_energy + 0.5D0*fock2 - fock1
+        WRITE( stdout, 9066 ) etot, hwf_energy, dexx
+        WRITE( stdout, 9062 ) - fock1
+        WRITE( stdout, 9064 ) 0.5D0*fock2
         !
         IF ( dexx < tr2_final ) THEN
            WRITE( stdout, 9101 )
@@ -188,7 +210,7 @@ SUBROUTINE electrons()
         ENDIF
      ENDIF
      !
-     WRITE( stdout,'(5x,"EXX: now go back to refine exchange calculation")')
+     WRITE( stdout,'(/5x,"EXX: now go back to refine exchange calculation")')
      !
      IF ( check_stop_now() ) THEN
         conv_elec=.FALSE.
@@ -211,15 +233,19 @@ SUBROUTINE electrons()
   !
   ! ... formats
   !
-9066 FORMAT( '     est. exchange err (dexx)  =',F17.8,' Ry' )
-9101 FORMAT(/'     End of self-consistent calculation' )
-9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
+9062 FORMAT( '     - averaged Fock potential =',0PF17.8,' Ry' )
+9064 FORMAT( '     + Fock energy             =',0PF17.8,' Ry' )
+9066 FORMAT(/'!    total energy              =',0PF17.8,' Ry' &
+            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
+            /'     est. exchange err (dexx)  =',0PF17.8,' Ry' )
+9101 FORMAT(/'     EXX self-consistency reached' )
+9120 FORMAT(/'     EXX convergence NOT achieved after ',i3,' iterations: stopping' )
 9121 FORMAT(/'     scf convergence threshold =',1PE17.1,' Ry' )
   !
 END SUBROUTINE electrons
 !
 !----------------------------------------------------------------------------
-SUBROUTINE electrons_scf()
+SUBROUTINE electrons_scf ( no_printout )
   !----------------------------------------------------------------------------
   !
   ! ... This routine is a driver of the self-consistent cycle.
@@ -228,7 +254,7 @@ SUBROUTINE electrons_scf()
   ! ... the routine v_of_rho to compute the new potential and the routine
   ! ... mix_rho to mix input and output charge densities.
   ! ... It prints on output the total energy and its decomposition in
-  ! ... the separate contributions.
+  ! ... the separate contributions (unless no_printout is .true.)
   !
   USE kinds,                ONLY : DP
   USE check_stop,           ONLY : check_stop_now, stopped_by_user
@@ -270,8 +296,6 @@ SUBROUTINE electrons_scf()
   USE spin_orb,             ONLY : domag
   USE io_rho_xml,           ONLY : write_rho
   USE uspp,                 ONLY : okvan
-  USE exx,                  ONLY : exxenergy2, fock0, fock1, fock2
-  USE funct,                ONLY : dft_is_hybrid, exx_is_active
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : root_pool, my_pool_id, inter_pool_comm
   USE mp,                   ONLY : mp_sum, mp_bcast
@@ -292,12 +316,14 @@ SUBROUTINE electrons_scf()
                                    deenviron, esolvent, ecavity, epressure, &
                                    eperiodic, eioncc
 #endif
-  USE dfunct,                 only : newd
+  USE dfunct,               ONLY : newd
   USE esm,                  ONLY : do_comp_esm, esm_printpot
   USE iso_c_binding,        ONLY : c_int
   !
   
   IMPLICIT NONE
+  !
+  LOGICAL, INTENT (IN) :: no_printout
   !
   ! ... a few local variables
   !
@@ -595,8 +621,6 @@ SUBROUTINE electrons_scf()
            !
         END IF 
         !
-        IF ( exx_is_active() ) fock1 = exxenergy2()
-        !
         ! ... if we didn't cycle before we can exit the do-loop
         !
         EXIT scf_step
@@ -607,18 +631,18 @@ SUBROUTINE electrons_scf()
      ! ... computes the external environment contribution to energy and potential
      !
      IF ( do_environ  )  THEN
-       !
-       vltot = vltot_zero
-       !
-       CALL calc_eenviron( dfftp%nnr, nspin, rhoin%of_r, deenviron, esolvent, &
-                           ecavity, epressure, eperiodic, eioncc )
-       !
-       update_venviron = .NOT. conv_elec .AND. dr2 .LT. environ_thr
-       !
-       IF ( update_venviron ) WRITE( stdout, 9200 )
-       !
-       CALL calc_venviron( update_venviron, dfftp%nnr, nspin, dr2, rhoin%of_r, vltot )
-       !
+        !
+        vltot = vltot_zero
+        !
+        CALL calc_eenviron( dfftp%nnr, nspin, rhoin%of_r, deenviron, esolvent, &
+                            ecavity, epressure, eperiodic, eioncc )
+        !
+        update_venviron = .NOT. conv_elec .AND. dr2 .LT. environ_thr
+        !
+        IF ( update_venviron ) WRITE( stdout, 9200 )
+        !
+        CALL calc_venviron( update_venviron, dfftp%nnr, nspin, dr2, rhoin%of_r, vltot )
+        !
      END IF
 #endif
      !
@@ -647,11 +671,11 @@ SUBROUTINE electrons_scf()
      IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
         !
         IF ( lda_plus_U .AND. iverbosity == 0 ) THEN
-          IF (noncolin) THEN
-            CALL write_ns_nc()
-          ELSE
-            CALL write_ns()
-          ENDIF
+           IF (noncolin) THEN
+              CALL write_ns_nc()
+           ELSE
+              CALL write_ns()
+           ENDIF
         ENDIF
         CALL print_ks_energies()
         !
@@ -689,11 +713,6 @@ SUBROUTINE electrons_scf()
         etot = etot + exdm
         hwf_energy = hwf_energy + exdm
      end if
-     ! 
-     If ( exx_is_active () ) THEN
-        etot = etot - 0.5D0*fock2
-        hwf_energy = hwf_energy -0.5D0*fock2
-     END IF
      !
      IF ( tefield ) THEN
         etot = etot + etotefield
@@ -708,7 +727,7 @@ SUBROUTINE electrons_scf()
                               epressure + eperiodic + eioncc
 #endif
      !
-     CALL print_energies ( )
+     IF ( .NOT. no_printout ) CALL print_energies ( )
      !
      IF ( conv_elec ) THEN
         !
@@ -1042,11 +1061,6 @@ SUBROUTINE electrons_scf()
           !
           IF ( lxdm ) WRITE ( stdout , 9075 ) exdm
           !
-          IF ( dft_is_hybrid()) THEN
-             WRITE( stdout, 9062 ) - fock1
-             WRITE( stdout, 9064 ) 0.5D0*fock2
-          ENDIF
-          !
           IF ( textfor)             WRITE( stdout, &
                '(/5x,"Energy of the external Forces = ", F18.8)' ) eext
           IF ( tefield )            WRITE( stdout, 9061 ) etotefield
@@ -1114,8 +1128,6 @@ SUBROUTINE electrons_scf()
             /'     xc contribution           =',F17.8,' Ry' &
             /'     ewald contribution        =',F17.8,' Ry' )
 9061 FORMAT( '     electric field correction =',F17.8,' Ry' )
-9062 FORMAT( '     - averaged Fock potential =',F17.8,' Ry' )
-9064 FORMAT( '     + Fock energy             =',F17.8,' Ry' )
 9065 FORMAT( '     Hubbard energy            =',F17.8,' Ry' )
 9067 FORMAT( '     one-center paw contrib.   =',F17.8,' Ry' )
 9069 FORMAT( '     scf correction            =',F17.8,' Ry' )
