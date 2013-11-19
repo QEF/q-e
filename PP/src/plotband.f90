@@ -210,7 +210,7 @@ PROGRAM plotband
 !
            npoints(nlines) = npoints(nlines)+1
            nlines=nlines+1
-           IF (nlines>99) CALL errore('plotband','too many lines',1)
+           IF (nlines>max_lines) CALL errore('plotband','too many lines',1)
            npoints(nlines) = 1
            point(nlines)=n
         ENDIF
