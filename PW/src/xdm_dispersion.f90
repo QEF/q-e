@@ -184,8 +184,8 @@ CONTAINS
     USE lsda_mod, ONLY: nspin
     USE atom, ONLY: msh, rgrid
     USE splinelib, ONLY : splint
-    USE mp_pools,  ONLY : me_pool, inter_pool_comm
     USE mp_images, ONLY : me_image, nproc_image, intra_image_comm
+    USE mp_pools,  ONLY : me_pool
     USE mp, ONLY : mp_sum
 
     REAL(DP) :: evdw
@@ -381,8 +381,8 @@ CONTAINS
           END DO ! iat
        END DO ! ispin
 #ifdef __MPI
-       CALL mp_sum(avol,inter_pool_comm)
-       CALL mp_sum(ml,inter_pool_comm)
+       CALL mp_sum(avol,intra_image_comm)
+       CALL mp_sum(ml,intra_image_comm)
 #endif
        avol = avol * omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
        ml = ml * omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
@@ -712,7 +712,7 @@ CONTAINS
     USE scf,           ONLY : scf_type
     USE fft_base,      ONLY : dfftp
     USE mp,            ONLY : mp_bcast, mp_sum
-    USE mp_pools,      ONLY : me_pool, inter_pool_comm
+    USE mp_pools,      ONLY : me_pool
     USE mp_images,     ONLY : intra_image_comm
     USE mp_world,      ONLY : world_comm
     USE io_global,     ONLY : ionode_id
