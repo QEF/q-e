@@ -469,8 +469,6 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
 
   INTEGER, EXTERNAL :: atomic_number
 
-  CALL check_inversion ( real_or_complex, nsym, s, nspin, .true., .true. )
-
   IF ( real_or_complex .EQ. 1 .OR. nspin .GT. 1 ) THEN
     proc_wf = .TRUE.
   ELSE
@@ -614,6 +612,8 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
       translation ( j, i ) = t2 ( j ) * tpi
     ENDDO
   ENDDO
+
+  CALL check_inversion ( real_or_complex, nsym, s, nspin, .true., .true., translation )
 
   ALLOCATE ( et_g ( nb, nk_g ) )
 
@@ -1244,8 +1244,6 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type, &
 
   INTEGER, EXTERNAL :: atomic_number
 
-  CALL check_inversion ( real_or_complex, nsym, s, nspin, .true., .true. )
-
   CALL date_and_tim ( cdate, ctime )
   WRITE ( sdate, '(A2,"-",A3,"-",A4,21X)' ) cdate(1:2), cdate(3:5), cdate(6:9)
   WRITE ( stime, '(A8,24X)' ) ctime(1:8)
@@ -1309,6 +1307,8 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type, &
       translation ( j, i ) = t2 ( j ) * tpi
     ENDDO
   ENDDO
+
+  CALL check_inversion ( real_or_complex, nsym, s, nspin, .true., .true., translation )
 
   alat2 = alat ** 2
   recvol = 8.0D0 * pi**3 / omega
@@ -1532,8 +1532,6 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
 
   INTEGER, EXTERNAL :: atomic_number
 
-  CALL check_inversion ( real_or_complex, nsym, s, nspin, .true., .true. )
-
   CALL date_and_tim ( cdate, ctime )
   WRITE ( sdate, '(A2,"-",A3,"-",A4,21X)' ) cdate(1:2), cdate(3:5), cdate(6:9)
   WRITE ( stime, '(A8,24X)' ) ctime(1:8)
@@ -1598,6 +1596,8 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
       translation ( j, i ) = t2 ( j ) * tpi
     ENDDO
   ENDDO
+
+  CALL check_inversion ( real_or_complex, nsym, s, nspin, .true., .true., translation )
 
   alat2 = alat ** 2
   recvol = 8.0D0 * pi**3 / omega
@@ -2239,8 +2239,6 @@ SUBROUTINE write_vscg ( output_file_name, real_or_complex, symm_type )
 
   INTEGER, EXTERNAL :: atomic_number
 
-  CALL check_inversion ( real_or_complex, nsym, s, nspin, .true., .true. )
-
   CALL date_and_tim ( cdate, ctime )
   WRITE ( sdate, '(A2,"-",A3,"-",A4,21X)' ) cdate(1:2), cdate(3:5), cdate(6:9)
   WRITE ( stime, '(A8,24X)' ) ctime(1:8)
@@ -2307,6 +2305,8 @@ SUBROUTINE write_vscg ( output_file_name, real_or_complex, symm_type )
       translation ( j, i ) = t2 ( j ) * tpi
     ENDDO
   ENDDO
+
+  CALL check_inversion ( real_or_complex, nsym, s, nspin, .true., .true., translation )
 
   alat2 = alat ** 2
   recvol = 8.0D0 * pi**3 / omega
@@ -2789,26 +2789,33 @@ END SUBROUTINE write_vkbg
 
 !-------------------------------------------------------------------------------
 
-subroutine check_inversion(real_or_complex, ntran, mtrx, nspin, warn, real_need_inv)
+subroutine check_inversion(real_or_complex, ntran, mtrx, nspin, warn, real_need_inv, tnp)
 
-! check_inversion    Originally By David A. Strubbe    Last Modified 10/14/2010
+! check_inversion    Originally By David A. Strubbe    Last Modified 11/18/2013
 ! Check whether our choice of real/complex version is appropriate given the
 ! presence or absence of inversion symmetry.
 
+  USE constants, ONLY : eps6
   USE io_global, ONLY : ionode
+  USE kinds, ONLY : DP
 
   implicit none
 
   integer, intent(in) :: real_or_complex
   integer, intent(in) :: ntran
-  integer, intent(in) :: mtrx(3, 3, 48)
+  integer, intent(in) :: mtrx(3, 3, 48) !< symmetry operations matrices
   integer, intent(in) :: nspin
-  logical, intent(in) :: warn ! set to false to suppress warnings, for converters
-  logical, intent(in) :: real_need_inv ! use for generating routines to block real without inversion
+  logical, intent(in) :: warn !< set to false to suppress warnings, for converters
+  logical, intent(in) :: real_need_inv !< use for generating routines to block real without inversion
+     !! this is not always true so that it is possible to run real without using symmetries
+  real(DP), optional, intent(in) :: tnp(3, 48) !< fractional translations.
+     !! optional only to avoid changing external interface for library.
 
   integer :: invflag, isym, ii, jj, itest
+  logical :: origin_inv
 
   invflag = 0
+  origin_inv = .false.
   do isym = 1, ntran
     itest = 0
     do ii = 1, 3
@@ -2820,27 +2827,43 @@ subroutine check_inversion(real_or_complex, ntran, mtrx, nspin, warn, real_need_
         endif
       enddo
     enddo
-    if(itest .eq. 0) invflag = invflag + 1
-    if(invflag .gt. 1) call errore('check_inversion', 'More than one inversion symmetry operation is present.', invflag)
+    if(itest .eq. 0) then
+      invflag = invflag + 1
+      if(present(tnp)) then
+        if(sum(abs(tnp(1:3, isym))) < eps6) origin_inv = .true.
+      else
+        origin_inv = .true.
+      endif
+    endif
   enddo
+  if(invflag > 0 .and. .not. origin_inv) then
+    write(0, '(a)') "WARNING: Inversion symmetry is present only with a fractional translation."
+    write(0, '(a)') "Apply the translation so inversion is about the origin, to be able to use the real version."
+  endif
+  if(invflag .gt. 1) write(0, '(a)') "WARNING: More than one inversion symmetry operation is present."
+
+  if(invflag > 0 .and. .not. present(tnp)) then
+    write(0, '(a)') "WARNING: check_inversion did not receive fractional translations."
+    write(0, '(a)') "Cannot confirm that inversion symmetry is about the origin for use of real version."
+  endif
 
   if(real_or_complex .eq. 2) then
-    if(invflag .ne. 0 .and. warn .and. nspin == 1) then
-      if(ionode) write(6, '(a)') 'WARNING: Inversion symmetry is present. The real version would be faster.'
+    if(origin_inv .and. warn .and. nspin == 1) then
+      if(ionode) &
+        write(0, '(a)') "WARNING: Inversion symmetry about the origin is present. The real version would be faster."
     endif
   else
-    if(invflag .eq. 0) then
+    if(.not. origin_inv) then
       if(real_need_inv) then
-        call errore('check_inversion', 'The real version cannot be used without inversion symmetry.', -1)
+        call errore("check_inversion", "The real version cannot be used without inversion symmetry about the origin.", -1)
       endif
       if(ionode) then
-        write(6, '(a)') 'WARNING: Inversion symmetry is absent in symmetries used to reduce k-grid.'
-        write(6, '(a)') 'Be sure inversion is still a spatial symmetry, or you must use complex version instead.'
+        write(0, '(a)') "WARNING: Inversion symmetry about the origin is absent in symmetries used to reduce k-grid."
+        write(0, '(a)') "Be sure inversion about the origin is still a spatial symmetry, or you must use complex version instead."
       endif
     endif
-    if(nspin .eq. 2) then
-      call errore('check_inversion', &
-        'Real version may only be used for spin-unpolarized calculations.', nspin)
+    if(nspin > 1) then
+      call errore("check_inversion", "Real version may only be used for spin-unpolarized calculations.", nspin)
     endif
   endif
 
