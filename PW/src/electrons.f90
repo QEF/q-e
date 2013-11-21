@@ -195,7 +195,11 @@ SUBROUTINE electrons()
         !
         etot = etot + 0.5D0*fock2 - fock1
         hwf_energy = hwf_energy + 0.5D0*fock2 - fock1
-        WRITE( stdout, 9066 ) etot, hwf_energy, dexx
+        IF ( dexx < tr2_final ) THEN
+           WRITE( stdout, 9066 ) '!', etot, hwf_energy, dexx
+        ELSE
+           WRITE( stdout, 9066 ) ' ', etot, hwf_energy, dexx
+        END IF
         WRITE( stdout, 9062 ) - fock1
         WRITE( stdout, 9064 ) 0.5D0*fock2
         !
@@ -235,7 +239,7 @@ SUBROUTINE electrons()
   !
 9062 FORMAT( '     - averaged Fock potential =',0PF17.8,' Ry' )
 9064 FORMAT( '     + Fock energy             =',0PF17.8,' Ry' )
-9066 FORMAT(/'!    total energy              =',0PF17.8,' Ry' &
+9066 FORMAT(/,A1,'    total energy              =',0PF17.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
             /'     est. exchange err (dexx)  =',0PF17.8,' Ry' )
 9101 FORMAT(/'     EXX self-consistency reached' )
@@ -320,7 +324,6 @@ SUBROUTINE electrons_scf ( no_printout )
   USE esm,                  ONLY : do_comp_esm, esm_printpot
   USE iso_c_binding,        ONLY : c_int
   !
-  
   IMPLICIT NONE
   !
   LOGICAL, INTENT (IN) :: no_printout

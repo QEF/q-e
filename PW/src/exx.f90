@@ -1941,7 +1941,7 @@ MODULE exx
               CALL g2_convolution(exx_fft_r2g%ngmt, exx_fft_r2g%gt, xk(:,current_ik), xkq, fac) 
               fac(exx_fft_r2g%gstart_t:) = 2 * fac(exx_fft_r2g%gstart_t:)
             ELSE
-                CALL g2_convolution(ngms, g, xk(:,current_ik), xkq, fac)
+               CALL g2_convolution(ngms, g, xk(:,current_ik), xkq, fac)
             ENDIF
 
             IF_GAMMA_ONLY : &
@@ -2015,7 +2015,7 @@ MODULE exx
                 !
                 vc = vc * omega * 0.25d0 / nqs
                 energy = energy - exxalfa * vc * wg(jbnd,ikk)
-                ! gau-pbe see latar
+                ! gau-pbe see later
                 !
                 IF(okpaw.and.dopawxx) THEN
                    IF(ibnd>=ibnd_start) &
