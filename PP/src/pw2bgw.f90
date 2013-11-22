@@ -2808,7 +2808,7 @@ subroutine check_inversion(real_or_complex, ntran, mtrx, nspin, warn, real_need_
   logical, intent(in) :: warn !< set to false to suppress warnings, for converters
   logical, intent(in) :: real_need_inv !< use for generating routines to block real without inversion
      !! this is not always true so that it is possible to run real without using symmetries
-  real(DP), optional, intent(in) :: tnp(3, 48) !< fractional translations.
+  real(DP), intent(in) :: tnp(3, 48) !< fractional translations.
      !! optional only to avoid changing external interface for library.
 
   integer :: invflag, isym, ii, jj, itest
@@ -2829,11 +2829,11 @@ subroutine check_inversion(real_or_complex, ntran, mtrx, nspin, warn, real_need_
     enddo
     if(itest .eq. 0) then
       invflag = invflag + 1
-      if(present(tnp)) then
+      !if(present(tnp)) then
         if(sum(abs(tnp(1:3, isym))) < eps6) origin_inv = .true.
-      else
-        origin_inv = .true.
-      endif
+      !else
+      !  origin_inv = .true.
+      !endif
     endif
   enddo
   if(invflag > 0 .and. .not. origin_inv) then
@@ -2842,10 +2842,10 @@ subroutine check_inversion(real_or_complex, ntran, mtrx, nspin, warn, real_need_
   endif
   if(invflag .gt. 1) write(0, '(a)') "WARNING: More than one inversion symmetry operation is present."
 
-  if(invflag > 0 .and. .not. present(tnp)) then
-    write(0, '(a)') "WARNING: check_inversion did not receive fractional translations."
-    write(0, '(a)') "Cannot confirm that inversion symmetry is about the origin for use of real version."
-  endif
+!  if(invflag > 0 .and. .not. present(tnp)) then
+!    write(0, '(a)') "WARNING: check_inversion did not receive fractional translations."
+!    write(0, '(a)') "Cannot confirm that inversion symmetry is about the origin for use of real version."
+!  endif
 
   if(real_or_complex .eq. 2) then
     if(origin_inv .and. warn .and. nspin == 1) then
