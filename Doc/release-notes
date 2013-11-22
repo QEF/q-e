@@ -29,17 +29,18 @@ Incompatible changes in svn version:
      to low-level MPI libraries.
    * Input variable "london" should be replaced by " vdw_corr='Grimme-D2' "
    * Routine "electrons" doesn't deal any longer with non-scf cases;
-     Use routine "non_scf" instead.
-   * restart mechanism of pw.x changed a lot. It works ONLY if you stop
+     use routine "non_scf" instead. For hybrid functionals, the loops over
+     the charge density and over the exchange potential have been separated.
+   * Restart mechanism of pw.x changed a lot. It works ONLY if you stop
      the code cleanly with the prefix.EXIT file, or by setting "max_seconds";
      disk_io='high' no longer needed (use it ONLY if tight with memory)
      Restarting from hard crashes is no longer supported.
    * Major restructuring of DFT+U and related modules in PW: related variables
      moved to module ldaU, "swfcatom" moved to module "basis"
-   * definition of "nwordwfc" in PP/ follows the same login as in PW/
-   * calls to "find_equiv_sites" and "writemodes" changed (fixed dimension
+   * Definition of "nwordwfc" in PP/ follows the same login as in PW/
+   * Calls to "find_equiv_sites" and "writemodes" changed (fixed dimension
      "nax" removed)
-   * call to "open_buffer" changed: unit must be a valid fortran unit > 0;
+   * Call to "open_buffer" changed: unit must be a valid fortran unit > 0;
      max number of records is no longer specified; a new flag explicitly
      specifies if writing to RAM buffer is required. Functionalities of 
      Modules/buffers.f90 have been considerably modified and extended.
@@ -59,7 +60,7 @@ Fixed in svn version:
      q-point has no symmetry.
    * Bogus "file not found" error in pp.x when extracting quantities not
      requiring wave functions if these were "collected" - v.5.0.2 only
-   * some quantities calculated in real space (including the charge itself
+   * Some quantities calculated in real space (including the charge itself
      when tqr=.true.) were not always accurately computed in parallel
      execution if the number of planes wasn't the same for all processors
    * Bogus symmetry error in NEB due to missing re-initialization

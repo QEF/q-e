@@ -306,9 +306,6 @@ MODULE london_module
     !
     IMPLICIT NONE
     !
-    !INTEGER , PARAMETER :: mxr = 500000
-    ! local:    max number of r ( see rgen )
-    !
     INTEGER :: ata , atb , nrm , nr
     ! locals : 
     ! ata , atb : atom counters
@@ -399,7 +396,6 @@ MODULE london_module
       !
       energy_london = scal6 * 0.5d0 * energy_london
       !
-      !
 #if defined (__MPI)
     CALL mp_sum ( energy_london , intra_image_comm )
 #endif
@@ -421,9 +417,6 @@ MODULE london_module
 #endif
     !
     IMPLICIT NONE
-    !
-    !INTEGER , PARAMETER :: mxr = 500000
-    ! local:    max number of r ( see rgen )
     !
     INTEGER :: ata , atb , nrm , nr , ipol
     ! locals :
@@ -561,9 +554,6 @@ MODULE london_module
 #endif
     !
     IMPLICIT NONE
-    !
-    !INTEGER , PARAMETER :: mxr = 500000
-    ! local:    max number of r ( see rgen )
     !
     INTEGER :: ata , atb , nrm , nr , ipol , lpol , spol
     ! locals :
@@ -708,8 +698,6 @@ MODULE london_module
    !---------------------------------------------------------------------------
    !
    SUBROUTINE dealloca_london
-   !
-   ! 
    !
    IMPLICIT NONE
    !
