@@ -182,13 +182,20 @@ MODULE exx
   !------------------------------------------------------------------------
   SUBROUTINE exx_fft_create ()
     USE wvfct,        ONLY : ecutwfc, npw
-    USE gvect,        ONLY : ig_l2g
+    USE gvect,        ONLY : ecutrho, ig_l2g
+    USE uspp,         ONLY : okvan
+    USE paw_variables,ONLY : okpaw
+    USE control_flags,ONLY : gamma_only
 
     IMPLICIT NONE
 
     IF(ecutfock <= 0.0_DP) ecutfock = 4.0_DP*ecutwfc
     IF(ecutfock < ecutwfc) CALL errore('exx_fft_create', &
             'ecutfock can not be smaller than ecutwfc!', 1) 
+    IF(ecutfock < ecutrho .AND. .NOT.gamma_only)  CALL infomsg &
+        ('exx_fft_create','Warning: ecutfock implemented only for Gamma')
+    IF(ecutfock < ecutrho .AND. (okvan .OR. okpaw)) CALL errore &
+        ('exx_fft_create','ecutfock not implemented with US or PAW',2)
 
     ! Initalise the g2r grid that allows us to put the wavefunction
     ! onto the new (smaller) grid for rho.
