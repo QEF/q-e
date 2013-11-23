@@ -1385,7 +1385,7 @@ MODULE exx
                  CALL addusxx_r(rhoc, _CY(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,im)))
               ENDIF
               !
-              CALL fwfft ('CustomWave', rhoc, exx_fft_r2g%dfftt)
+              CALL fwfft ('Custom', rhoc, exx_fft_r2g%dfftt)
               !   >>>> add augmentation in G SPACE here
               IF(okvan .and. dovanxx .AND. .NOT. TQR) THEN
                  IF(ibnd>=ibnd_start) &
@@ -1400,7 +1400,7 @@ MODULE exx
               vc(:) = ( 0._dp, 0._dp )
               !
 !$omp parallel do default(shared), private(ig)
-              DO ig = 1, exx_fft_r2g%npwt
+              DO ig = 1, exx_fft_r2g%ngmt
                   ! 
                   vc(exx_fft_r2g%nlt(ig))   = fac(ig) * rhoc(exx_fft_r2g%nlt(ig)) 
                   vc(exx_fft_r2g%nltm(ig)) =  fac(ig) * rhoc(exx_fft_r2g%nltm(ig)) 
@@ -1419,7 +1419,7 @@ MODULE exx
               ENDIF
               !
               !brings back v in real space
-              CALL invfft ('CustomWave', vc, exx_fft_r2g%dfftt) 
+              CALL invfft ('Custom', vc, exx_fft_r2g%dfftt) 
               !
               !   >>>>  compute <psi|H_fock REAL SPACE here
               IF(okvan .and. dovanxx .and. TQR) THEN
@@ -1999,7 +1999,7 @@ MODULE exx
                 ENDIF
                 !
                 !brings it to G-space
-                CALL fwfft ('CustomWave', rhoc, exx_fft_r2g%dfftt)
+                CALL fwfft ('Custom', rhoc, exx_fft_r2g%dfftt)
                 !
                 IF(okvan .and. dovanxx .and..not.TQR) THEN
                   IF(ibnd>=ibnd_start) &
@@ -2012,7 +2012,7 @@ MODULE exx
                 !
                 vc = 0._dp
 !$omp parallel do  default(shared), private(ig),  reduction(+:vc)
-                DO ig = 1,exx_fft_r2g%npwt
+                DO ig = 1,exx_fft_r2g%ngmt
                    vc = vc + fac(ig) * x1 * &
                         ABS( rhoc(exx_fft_r2g%nlt(ig)) + CONJG(rhoc(exx_fft_r2g%nltm(ig))) )**2
                    vc = vc + fac(ig) * x2 * &
