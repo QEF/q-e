@@ -784,16 +784,16 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   !
   IMPLICIT NONE
   ! I/O variable
-  CHARACTER(LEN=256) flfrc
-  INTEGER ibrav, nr1,nr2,nr3,nat, ntyp
-  REAL(DP) alat, at(3,3), epsil(3,3)
-  LOGICAL has_zstar
+  CHARACTER(LEN=256) :: flfrc
+  INTEGER :: ibrav, nr1,nr2,nr3,nat, ntyp
+  REAL(DP) :: alat, at(3,3), epsil(3,3)
+  LOGICAL :: has_zstar
   ! local variables
-  INTEGER i, j, na, nb, m1,m2,m3
-  INTEGER ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
-  REAL(DP) amass(ntyp), amass_from_file, celldm(6), omega
-  INTEGER nt
-  CHARACTER(LEN=3) atm
+  INTEGER :: i, j, na, nb, m1,m2,m3
+  INTEGER :: ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
+  REAL(DP) :: amass(ntyp), amass_from_file, celldm(6), omega
+  INTEGER :: nt
+  CHARACTER(LEN=3) :: atm
   !
   !
   IF (ionode) OPEN (unit=1,file=flfrc,status='old',form='formatted')
