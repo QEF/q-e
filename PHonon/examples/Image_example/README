@@ -1,6 +1,11 @@
 This example tests the use of images in ph.x. It computes the phonon 
 dispersions of AlAs as in example02 and the dispersions of Al as in example14.
 
+NB: This example requires PARA_IMAGE_PREFIX and PARA_IMAGE_POSTFIX to be
+set in environment_variables file. The image calculation must run with
+a number of processors equal to the number of images multiplied by the number
+of processors used in the pw.x run.
+
 The calculation (run_example) proceeds as follows:
 
 1) make a self-consistent calculation for AlAs without images
