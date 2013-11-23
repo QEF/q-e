@@ -137,7 +137,7 @@ PROGRAM matdyn
   USE io_global,  ONLY : ionode, ionode_id, stdout
   USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                          read_ifc_param, read_ifc
-  USE cell_base,  ONLY : at, bg
+  USE cell_base,  ONLY : at, bg, celldm
   USE constants,  ONLY : RY_TO_THZ, RY_TO_CMM1, amu_ry
   USE symm_base,  ONLY : set_sym
   USE rap_point_group,  ONLY : code_group
@@ -183,7 +183,7 @@ PROGRAM matdyn
   LOGICAL :: readtau, la2F, xmlifc, lo_to_split, na_ifc, fd
   !
   REAL(DP) :: qhat(3), qh, DeltaE, Emin=0._dp, Emax, E, DOSofE(1), qq
-  REAL(DP) :: celldm(6), delta, pathL
+  REAL(DP) :: delta, pathL
   REAL(DP), ALLOCATABLE :: xqaux(:,:)
   INTEGER, ALLOCATABLE :: nqb(:)
   INTEGER :: n, i, j, it, nq, nqx, na, nb, ndos, iout, nqtot, iout_dyn, iout_eig
@@ -777,6 +777,7 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   !
   USE kinds,      ONLY : DP
   USE ifconstants,ONLY : tau => tau_blk, ityp => ityp_blk, frc, zeu
+  USE cell_base,  ONLY : celldm
   USE io_global,  ONLY : ionode, ionode_id, stdout
   USE mp,         ONLY : mp_bcast 
   USE mp_world,   ONLY : world_comm 
@@ -791,7 +792,7 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   ! local variables
   INTEGER :: i, j, na, nb, m1,m2,m3
   INTEGER :: ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
-  REAL(DP) :: amass(ntyp), amass_from_file, celldm(6), omega
+  REAL(DP) :: amass(ntyp), amass_from_file, omega
   INTEGER :: nt
   CHARACTER(LEN=3) :: atm
   !
