@@ -43,10 +43,7 @@ MODULE exx
                                          ! x_occupation(nbnd,nks) the weight of 
                                          ! auxiliary functions in the density matrix
   COMPLEX(DP), ALLOCATABLE :: exxbuff(:,:,:)
-                                         ! temporay buffer to store wfc 
-  COMPLEX(DP), ALLOCATABLE :: exxbuff_nc(:,:,:,:)
-                                         ! temporay buffer to store wfc in the
-                                         ! noncollinear case
+                                         ! temporary buffer for wfc storage
   !
   !
   ! let xk(:,ik) + xq(:,iq) = xkq(:,ikq) = S(isym)*xk(ik') + G
@@ -727,9 +724,8 @@ MODULE exx
   SUBROUTINE exxinit()
   !------------------------------------------------------------------------
 
-    !This SUBROUTINE is run before the first H_psi() of each iteration.
-    !It saves the wavefunctions for the right density matrix. in real space
-    !It saves all the wavefunctions in a single file called prefix.exx
+    ! This SUBROUTINE is run before the first H_psi() of each iteration.
+    ! It saves the wavefunctions for the right density matrix, in real space
     !
     USE wavefunctions_module, ONLY : evc  
     USE io_files,             ONLY : nwordwfc, iunwfc, iunigk
@@ -743,11 +739,8 @@ MODULE exx
     USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, init_index_over_band,&
                                      inter_bgrp_comm, ibnd_start, ibnd_end
     USE mp,                   ONLY : mp_sum
-    USE funct,                ONLY : get_exx_fraction, start_exx, exx_is_active, &
-                                     !gau-pbe in
-                                     !get_screening_parameter 
+    USE funct,                ONLY : get_exx_fraction, start_exx,exx_is_active,&
                                      get_screening_parameter, get_gau_parameter
-                                     !gau-pbe out 
     USE fft_base,             ONLY : cgather_smooth, cscatter_smooth,&
                                      dffts, cgather_custom, cscatter_custom
     USE fft_interfaces,       ONLY : invfft
@@ -758,7 +751,7 @@ MODULE exx
     USE paw_exx,              ONLY : dopawxx, PAW_init_keeq
 
     IMPLICIT NONE
-    INTEGER :: ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq!, iq
+    INTEGER :: ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq, ig
     INTEGER :: h_ibnd
     INTEGER :: ibnd_loop_start, ibnd_buff_start, ibnd_buff_end
     INTEGER :: ipol, jpol
@@ -772,8 +765,6 @@ MODULE exx
     COMPLEX(DP) :: d_spin(2,2,48)
     INTEGER :: current_ik
     logical, allocatable :: ispresent(:)
-
-    
     integer       :: find_current_k
 
     CALL start_clock ('exxinit')
@@ -849,10 +840,9 @@ MODULE exx
     rir = 0
     exx_nwordwfc=2*nrxxs
     IF (.not.exx_is_active()) THEN 
+       !
        erfc_scrlen = get_screening_parameter()
-       !gau-pbe in
        gau_scrlen = get_gau_parameter()
-       !gau-pbe out
        exxdiv  = exx_divergence() 
        exxalfa = get_exx_fraction()
        !
@@ -879,7 +869,8 @@ MODULE exx
                mod(s(3, 2, isym) * nr2, nr3) /= 0 .or. &
                mod(s(1, 3, isym) * nr3, nr1) /= 0 .or. &
                mod(s(2, 3, isym) * nr3, nr2) /= 0 ) THEN
-             CALL errore ('exxinit',' EXX smooth grid is not compatible with symmetry: change ecutfock',isym)
+             CALL errore ('exxinit',' EXX smooth grid is not compatible with symmetry: &
+                                    & change ecutfock',isym)
           ENDIF
           DO ir=1, nxxs
              rir(ir,isym) = ir
@@ -887,7 +878,7 @@ MODULE exx
           DO k = 1, nr3
              DO j = 1, nr2
                 DO i = 1, nr1
-                   CALL ruotaijk (s(1,1,isym), ftau(1,isym), i, j, k, nr1,nr2,nr3, ri, rj, rk )
+                   CALL ruotaijk (s(1,1,isym), ftau(1,isym), i,j,k, nr1,nr2,nr3, ri,rj,rk)
                    ir =   i + ( j-1)*nr1x + ( k-1)*nr1x*nr2x
                    rir(ir,isym) = ri + (rj-1)*nr1x + (rk-1)*nr1x*nr2x
                 ENDDO
@@ -940,13 +931,17 @@ MODULE exx
              temppsic(:) = ( 0._dp, 0._dp )
              !
              if ( ibnd < ibnd_end ) then
-                temppsic(exx_fft_g2r%nlt(1:exx_fft_g2r%npwt)) = tempevc(1:exx_fft_g2r%npwt,ibnd)  &
-                          + ( 0._dp, 1._dp ) * tempevc(1:exx_fft_g2r%npwt,ibnd+1)
-                temppsic(exx_fft_g2r%nltm(1:exx_fft_g2r%npwt)) = CONJG( tempevc(1:exx_fft_g2r%npwt,ibnd) ) &
-                          + ( 0._dp, 1._dp ) * CONJG( tempevc(1:exx_fft_g2r%npwt,ibnd+1) )
+                DO ig=1,exx_fft_g2r%npwt
+                   temppsic(exx_fft_g2r%nlt(ig))  = tempevc(ig,ibnd)  &
+                        + ( 0._dp, 1._dp ) * tempevc(ig,ibnd+1)
+                   temppsic(exx_fft_g2r%nltm(ig)) = CONJG( tempevc(ig,ibnd) ) &
+                        + ( 0._dp, 1._dp ) * CONJG( tempevc(ig,ibnd+1) )
+                END DO
              else
-                temppsic(exx_fft_g2r%nlt (1:exx_fft_g2r%npwt)) = tempevc(1:exx_fft_g2r%npwt,ibnd) 
-                temppsic(exx_fft_g2r%nltm(1:exx_fft_g2r%npwt)) = CONJG( tempevc(1:exx_fft_g2r%npwt,ibnd) ) 
+                DO ig=1,exx_fft_g2r%npwt
+                   temppsic(exx_fft_g2r%nlt (ig)) = tempevc(ig,ibnd) 
+                   temppsic(exx_fft_g2r%nltm(ig)) = CONJG( tempevc(ig,ibnd) ) 
+                END DO
              end if
 
              CALL invfft ('CustomWave', temppsic, exx_fft_g2r%dfftt)
