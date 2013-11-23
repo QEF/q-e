@@ -277,10 +277,13 @@ PROGRAM matdyn
      CALL mp_bcast(l1,ionode_id, world_comm)
      CALL mp_bcast(l2,ionode_id, world_comm)
      CALL mp_bcast(l3,ionode_id, world_comm)
+     CALL mp_bcast(na_ifc,ionode_id, world_comm)
+     CALL mp_bcast(fd,ionode_id, world_comm)
      CALL mp_bcast(la2f,ionode_id, world_comm)
      CALL mp_bcast(q_in_band_form,ionode_id, world_comm)
      CALL mp_bcast(eigen_similarity,ionode_id, world_comm)
      CALL mp_bcast(q_in_cryst_coord,ionode_id, world_comm)
+     CALL mp_bcast(point_label_type,ionode_id, world_comm)
 
      !
      ! read force constants
