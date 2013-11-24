@@ -63,8 +63,16 @@ MODULE us_exx
   END FUNCTION bexg_merge
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE addusxx_g(rhoc, xkq, becphi, xk, becpsi)
+  SUBROUTINE addusxx_g(rhoc, xkq, xk, flag, becphi_c, becpsi_c, becphi_r, becpsi_r )
     !-----------------------------------------------------------------------
+    ! 
+    ! Add US contribution to rhoc for hybrid functionals
+    !   flag = 'c': add complex contribution
+    !   flag = 'r': add real contribution to the real part of rhoc 
+    !   flag = 'i': add real contribution to the imaginary part
+    ! The two latter cases are used together with gamma tricks to store contributions
+    ! from two bands into the real and the imaginary part separately
+    !
     USE constants,           ONLY : tpi
     USE ions_base,           ONLY : nat, ntyp => nsp, ityp, tau
     USE uspp,                ONLY : nkb, vkb,  okvan, indv_ijkb0
@@ -75,32 +83,45 @@ MODULE us_exx
     USE gvecs,               ONLY : ngms, nls, nlsm
     USE cell_base,           ONLY : tpiba
     USE control_flags,       ONLY : gamma_only
-    ! ... k-points version
     IMPLICIT NONE
     !
     ! In input I get a slice of <beta|left> and <beta|right> only for this kpoint and this band
     COMPLEX(DP),INTENT(inout) :: rhoc(dffts%nnr)
-    COMPLEX(DP),INTENT(in)    :: becphi(nkb)
-    COMPLEX(DP),INTENT(in)    :: becpsi(nkb)
+    COMPLEX(DP),INTENT(in), OPTIONAL  :: becphi_c(nkb), becpsi_c(nkb)
+    REAL(DP),   INTENT(in), OPTIONAL  :: becphi_r(nkb), becpsi_r(nkb)
     REAL(DP),   INTENT(in)    :: xkq(3), xk(3)
+    CHARACTER(LEN=1), INTENT(in) :: flag
     !
     ! ... local variables
-    INTEGER :: ikb, jkb, ijkb0, ih, jh, na, np !, ijh
-    INTEGER :: ig
-    COMPLEX(DP) :: skk, becfac
     !
     REAL(DP),ALLOCATABLE    :: qmod(:), q(:,:), qq(:),  &! the modulus of G
                                ylmk0(:,:)  ! the spherical harmonics
     COMPLEX(DP),ALLOCATABLE :: qgm(:), aux(:), eigqts(:)
-    REAL(DP) :: arg
+    INTEGER :: ikb, jkb, ijkb0, ih, jh, na, np, ig
+    COMPLEX(DP) :: skk, becfac_c
+    REAL(DP) :: arg, becfac_r
+    LOGICAL :: add_complex, add_real, add_imaginary
     !
+    IF(.not.(okvan .and. dovanxx)) RETURN
     CALL start_clock( 'addusxx' )
+    !
+    add_complex = ( flag=='c' .OR. flag=='C' )
+    add_real    = ( flag=='r' .OR. flag=='R' )
+    add_imaginary=( flag=='i' .OR. flag=='I' )
+    IF ( .NOT. (add_complex .OR. add_real .OR. add_imaginary) ) &
+       CALL errore('addusxx_g', 'called with incorrect flag: '//flag, 1 )
+    IF ( .NOT. gamma_only .AND. ( add_real .OR. add_imaginary) ) &
+       CALL errore('addusxx_g', 'need gamma tricks for this flag: '//flag, 2 )
+    IF ( gamma_only .AND. add_complex ) &
+       CALL errore('addusxx_g', 'gamma trick not goos for this flag: '//flag, 3 )
+    IF ( ( add_complex .AND. (.NOT. PRESENT(becphi_c) .OR. .NOT. PRESENT(becpsi_c) ) ) .OR. &
+         ( add_real    .AND. (.NOT. PRESENT(becphi_r) .OR. .NOT. PRESENT(becpsi_r) ) ) .OR. &
+         ( add_imaginary.AND.(.NOT. PRESENT(becphi_r) .OR. .NOT. PRESENT(becpsi_r) ) ) )    &
+       CALL errore('addusxx_g', 'called with incorrect arguments', 2 )
     !
     ALLOCATE(ylmk0(ngms, lmaxq * lmaxq))    
     ALLOCATE(qmod(ngms), qq(ngms), q(3,ngm))
     ALLOCATE(qgm(ngms), aux(ngms))
-    !
-    IF(.not.(okvan .and. dovanxx)) RETURN
     !
     DO ig = 1, ngms
       q(:,ig) = xk(:) - xkq(:) + g(:,ig)
@@ -135,22 +156,35 @@ MODULE us_exx
                 ikb = ijkb0 + ih
                 jkb = ijkb0 + jh
 
-                becfac = CONJG(becphi(ikb))*becpsi(jkb)
-                !
-                DO ig = 1, ngms
-                    skk = eigts1(mill(1,ig), na) * &
-                          eigts2(mill(2,ig), na) * &
-                          eigts3(mill(3,ig), na)
-                    aux(ig) = qgm(ig)*eigqts(na)*skk*becfac
-                ENDDO
+                IF ( add_complex ) THEN
+                   becfac_c = CONJG(becphi_c(ikb))*becpsi_c(jkb)
+                   DO ig = 1, ngms
+                      skk = eigts1(mill(1,ig), na) * &
+                            eigts2(mill(2,ig), na) * &
+                            eigts3(mill(3,ig), na)
+                      aux(ig) = qgm(ig)*eigqts(na)*skk*becfac_c
+                   ENDDO
+                ELSE
+                   becfac_r = becphi_r(ikb)*becpsi_r(jkb)
+                   DO ig = 1, ngms
+                      skk = eigts1(mill(1,ig), na) * &
+                            eigts2(mill(2,ig), na) * &
+                            eigts3(mill(3,ig), na)
+                      aux(ig) = qgm(ig)*eigqts(na)*skk*becfac_r
+                   ENDDO
+                END IF
                 !
                 DO ig = 1,ngms
                   rhoc(nls(ig)) = rhoc(nls(ig)) + aux(ig)
                 ENDDO
                 !
-                IF(gamma_only) THEN
+                IF(add_real) THEN
                   DO ig = gstart,ngms
                     rhoc(nlsm(ig)) = rhoc(nlsm(ig)) + CONJG(aux(ig))
+                  ENDDO
+                ELSE IF(add_imaginary) THEN
+                  DO ig = gstart,ngms
+                    rhoc(nlsm(ig)) = rhoc(nlsm(ig)) - CONJG(aux(ig))
                   ENDDO
                 ENDIF
                 !
