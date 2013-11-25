@@ -433,7 +433,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
                       IMPORTANT: multiple projectors allowed but not properly
                       implemented, use only if you know what you are doing
 
-		3 ... ultrasoft PP
+		3 ... ultrasoft PP or PAW
 	    }
 	}
 
@@ -473,7 +473,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 
 		* lloc=-1 or lloc=-2 pseudizes the all-electron potential
                   if lloc=-2 the original recipe of Troullier-Martins
-		  is used (izero first and second derivatives at r=0)
+		  is used (zero first and second derivatives at r=0)
 		* lloc>-1 uses the corresponding channel as local PP
 
 		NB: if lloc>-1, the corresponding channel must be the last in the
@@ -497,7 +497,8 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	    default { .false. }
 	    info {
 		If .true. produce a PP with the nonlinear core
-		correction of Froyen, Cohen, and Louie.
+		correction of Louie, Froyen, and Cohen
+                [PRB 26, 1738 (1982)].
 	    }
 	}
 
@@ -522,14 +523,14 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	    info { 
 		* .true. for Troullier-Martins pseudization [PRB 43, 1993 (1991)]
 
-		* .false. for Rabe-Rappe-Kaxiras-Joannopoulos pseudization 
+		* .false. for Rappe-Rabe-Kaxiras-Joannopoulos pseudization 
 		  [PRB 41, 1227 (1990), erratum PRB 44, 13175 (1991)]
 	    }
 	}
 
 	var rho0  -type REAL { 
 	    info { 
-		Charge at the origin: when the Rabe-Rappe-Kaxiras-Joannopoulos
+		Charge at the origin: when the Rappe-Rabe-Kaxiras-Joannopoulos
 		method with 3 Bessel functions fails, specifying rho0 > 0
 		may allow to override the problem (using 4 Bessel functions).
 		Typical values are in the order of 0.01-0.02
@@ -940,7 +941,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 
 	    text {	    
                 * The Hartree results in Phys. Rev. 59, 299 (1940) or in
-                  Phys. Rev. 59, 306 (1940) can be reproduced with
+                  Phys. Rev. 59, 306 (1940) can be reproduced with:
         
 		    rel=0,
 		    isic=1,
