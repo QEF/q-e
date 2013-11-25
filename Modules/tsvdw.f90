@@ -19,7 +19,6 @@ USE cell_base,          ONLY: ainv               !h^-1 matrix for converting bet
 USE cell_base,          ONLY: omega              !cell volume (in au^3)
 USE constants,          ONLY: pi                 !pi in double-precision
 USE control_flags,      ONLY: lwfpbe0            !if .TRUE. then PBE0 calculation using Wannier orbitals is turned on ... BS 
-USE cp_main_variables,  ONLY: rhor               !charge density on the dense real-space mesh
 USE electrons_base,     ONLY: nspin              !spin unpolarized (npsin=1) vs. spin polarized (nspin=2) specification
 USE fft_base,           ONLY: dffts              !FFT derived data type
 USE fft_base,           ONLY: dfftp              !FFT derived data type 
@@ -589,7 +588,7 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   !
   !--------------------------------------------------------------------------------------------------------------
-  SUBROUTINE tsvdw_calculate(tauin)
+  SUBROUTINE tsvdw_calculate(tauin, rhor)
   !--------------------------------------------------------------------------------------------------------------
   ! TS-vdW Management Code: Manages entire calculation of TS-vdW energy, wavefunction forces, and ion forces via
   ! calls to PRIVATE subroutines below (called in each MD step). The calls to tsvdw_initialize and tsvdw_finalize
@@ -600,6 +599,7 @@ PRIVATE :: GetVdWParam
   !
   ! I/O variables
   !
+  REAL(DP), INTENT(IN) :: rhor(:,:)
   REAL(DP) :: tauin(3,nat)
   !
   ! Parallel initialization...
@@ -616,7 +616,7 @@ PRIVATE :: GetVdWParam
   !
   ! Obtain molecular charge density given on the real-space mesh...
   !
-  CALL tsvdw_rhotot()
+  CALL tsvdw_rhotot( rhor )
   !
   ! Determine spherical atomic integration domains and atom overlap (bit array)...
   ! Compute molecular pro-density (superposition of atomic densities) on the real-space mesh...
@@ -968,10 +968,12 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   !
   !--------------------------------------------------------------------------------------------------------------
-  SUBROUTINE tsvdw_rhotot()
+  SUBROUTINE tsvdw_rhotot( rhor )
   !--------------------------------------------------------------------------------------------------------------
   !
   IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: rhor(:,:)
   !
   ! Local variables
   !

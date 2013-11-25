@@ -202,6 +202,7 @@ cpr.o : ../../Modules/mp.o
 cpr.o : ../../Modules/mp_global.o
 cpr.o : ../../Modules/recvec.o
 cpr.o : ../../Modules/timestep.o
+cpr.o : ../../Modules/tsvdw.o
 cpr.o : ../../Modules/uspp.o
 cpr.o : ../../Modules/wave_base.o
 cpr.o : ../../Modules/wavefunctions.o
@@ -224,7 +225,6 @@ cpr.o : modules.o
 cpr.o : ortho_base.o
 cpr.o : pres_ai_mod.o
 cpr.o : smallbox_gvec.o
-cpr.o : tsvdw.o
 cpr.o : wannier.o
 cpr_loop.o : ../../Modules/ions_base.o
 cpr_loop.o : ../../Modules/kind.o
@@ -450,6 +450,7 @@ init_run.o : ../../Modules/mp.o
 init_run.o : ../../Modules/mp_bands.o
 init_run.o : ../../Modules/recvec.o
 init_run.o : ../../Modules/timestep.o
+init_run.o : ../../Modules/tsvdw.o
 init_run.o : ../../Modules/uspp.o
 init_run.o : ../../Modules/wavefunctions.o
 init_run.o : ../../Modules/wrappers.o
@@ -472,7 +473,6 @@ init_run.o : modules.o
 init_run.o : ortho_base.o
 init_run.o : printout_base.o
 init_run.o : smallbox_gvec.o
-init_run.o : tsvdw.o
 init_run.o : wannier.o
 init_run.o : wannier_base.o
 init_run.o : wave_types.o
@@ -517,6 +517,7 @@ input.o : ../../Modules/read_pseudo.o
 input.o : ../../Modules/run_info.o
 input.o : ../../Modules/sic.o
 input.o : ../../Modules/timestep.o
+input.o : ../../Modules/tsvdw.o
 input.o : ../../Modules/uspp.o
 input.o : ../../Modules/wave_base.o
 input.o : cell_nose.o
@@ -533,7 +534,6 @@ input.o : ldaUpen.o
 input.o : mainvar.o
 input.o : pres_ai_mod.o
 input.o : printout_base.o
-input.o : tsvdw.o
 input.o : wannier_base.o
 ions_nose.o : ../../Modules/constants.o
 ions_nose.o : ../../Modules/control_flags.o
@@ -745,6 +745,7 @@ print_out.o : ../../Modules/io_global.o
 print_out.o : ../../Modules/ions_base.o
 print_out.o : ../../Modules/kind.o
 print_out.o : ../../Modules/sic.o
+print_out.o : ../../Modules/tsvdw.o
 print_out.o : ../../Modules/xml_io_base.o
 print_out.o : cg.o
 print_out.o : efield.o
@@ -754,7 +755,6 @@ print_out.o : mainvar.o
 print_out.o : polarization.o
 print_out.o : pres_ai_mod.o
 print_out.o : printout_base.o
-print_out.o : tsvdw.o
 printout_base.o : ../../Modules/io_global.o
 printout_base.o : ../../Modules/kind.o
 printout_base.o : ../../Modules/mp.o
@@ -923,21 +923,6 @@ stress.o : ../../Modules/recvec.o
 stress.o : cp_interfaces.o
 stress.o : gvecw.o
 stress.o : modules.o
-tsvdw.o : ../../Modules/cell_base.o
-tsvdw.o : ../../Modules/constants.o
-tsvdw.o : ../../Modules/control_flags.o
-tsvdw.o : ../../Modules/electrons_base.o
-tsvdw.o : ../../Modules/fft_base.o
-tsvdw.o : ../../Modules/funct.o
-tsvdw.o : ../../Modules/io_global.o
-tsvdw.o : ../../Modules/ions_base.o
-tsvdw.o : ../../Modules/kind.o
-tsvdw.o : ../../Modules/mp.o
-tsvdw.o : ../../Modules/mp_images.o
-tsvdw.o : ../../Modules/mp_world.o
-tsvdw.o : ../../Modules/parallel_include.o
-tsvdw.o : ../../Modules/uspp.o
-tsvdw.o : mainvar.o
 vofrho.o : ../../Modules/cell_base.o
 vofrho.o : ../../Modules/constants.o
 vofrho.o : ../../Modules/control_flags.o
@@ -952,6 +937,7 @@ vofrho.o : ../../Modules/mp.o
 vofrho.o : ../../Modules/mp_global.o
 vofrho.o : ../../Modules/recvec.o
 vofrho.o : ../../Modules/sic.o
+vofrho.o : ../../Modules/tsvdw.o
 vofrho.o : ../../Modules/uspp.o
 vofrho.o : ../../Modules/xc_rVV10.o
 vofrho.o : ../../Modules/xc_vdW_DF.o
@@ -962,7 +948,6 @@ vofrho.o : ldaUpen.o
 vofrho.o : modules.o
 vofrho.o : pres_ai_mod.o
 vofrho.o : smallbox_gvec.o
-vofrho.o : tsvdw.o
 vol_clu.o : ../../Modules/cell_base.o
 vol_clu.o : ../../Modules/constants.o
 vol_clu.o : ../../Modules/control_flags.o

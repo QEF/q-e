@@ -109,7 +109,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       IF (ts_vdw) THEN
         !
         CALL start_clock( 'ts_vdw' )
-        CALL tsvdw_calculate(tau0)
+        CALL tsvdw_calculate(tau0,rhor)
         CALL stop_clock( 'ts_vdw' )
         !
       END IF
