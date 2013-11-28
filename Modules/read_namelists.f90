@@ -108,6 +108,9 @@ MODULE read_namelists_module
        disk_io  = 'default'
        dipfield = .FALSE.
        lberry   = .FALSE.
+       lcalc_z2 = .FALSE.
+       z2_m_threshold = 0.8d0
+       z2_z_threshold = 0.05d0
        gdir     = 0
        nppstr   = 0
        wf_collect = .FALSE.
@@ -674,6 +677,9 @@ MODULE read_namelists_module
        CALL mp_bcast( tefield2,      ionode_id, intra_image_comm )
        CALL mp_bcast( dipfield,      ionode_id, intra_image_comm )
        CALL mp_bcast( lberry,        ionode_id, intra_image_comm )
+       CALL mp_bcast( lcalc_z2,      ionode_id, intra_image_comm )
+       CALL mp_bcast( z2_m_threshold,ionode_id, intra_image_comm )
+       CALL mp_bcast( z2_z_threshold,ionode_id, intra_image_comm )
        CALL mp_bcast( gdir,          ionode_id, intra_image_comm )
        CALL mp_bcast( nppstr,        ionode_id, intra_image_comm )
        CALL mp_bcast( point_label_type,   ionode_id, intra_image_comm )
@@ -1215,6 +1221,8 @@ MODULE read_namelists_module
              CALL infomsg( sub_name,' dipfield not yet implemented ')
           IF( lberry ) &
              CALL infomsg( sub_name,' lberry not implemented yet ')
+          IF( lcalc_z2 ) &
+             CALL infomsg( sub_name,' lcalc_z2 incompatible with CP ')
           IF( gdir /= 0 ) &
              CALL infomsg( sub_name,' gdir not used ')
           IF( nppstr /= 0 ) &
