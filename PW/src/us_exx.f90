@@ -164,6 +164,23 @@ MODULE us_exx
                             eigts3(mill(3,ig), na)
                       aux(ig) = qgm(ig)*eigqts(na)*skk*becfac_c
                    ENDDO
+                   DO ig = 1,ngms
+                     rhoc(nls(ig)) = rhoc(nls(ig)) + aux(ig)
+                   ENDDO
+                ELSE IF ( add_real ) THEN
+                   becfac_r = becphi_r(ikb)*becpsi_r(jkb)
+                   DO ig = 1, ngms
+                      skk = eigts1(mill(1,ig), na) * &
+                            eigts2(mill(2,ig), na) * &
+                            eigts3(mill(3,ig), na)
+                      aux(ig) = qgm(ig)*eigqts(na)*skk*becfac_r
+                   ENDDO
+                   DO ig = 1,ngms
+                     rhoc(nls(ig)) = rhoc(nls(ig)) + aux(ig)
+                   ENDDO
+                   DO ig = gstart,ngms
+                      rhoc(nlsm(ig)) = rhoc(nlsm(ig)) + CONJG(aux(ig))
+                   ENDDO
                 ELSE
                    becfac_r = becphi_r(ikb)*becpsi_r(jkb)
                    DO ig = 1, ngms
@@ -172,20 +189,13 @@ MODULE us_exx
                             eigts3(mill(3,ig), na)
                       aux(ig) = qgm(ig)*eigqts(na)*skk*becfac_r
                    ENDDO
-                END IF
-                !
-                DO ig = 1,ngms
-                  rhoc(nls(ig)) = rhoc(nls(ig)) + aux(ig)
-                ENDDO
-                !
-                IF(add_real) THEN
-                  DO ig = gstart,ngms
-                    rhoc(nlsm(ig)) = rhoc(nlsm(ig)) + CONJG(aux(ig))
-                  ENDDO
-                ELSE IF(add_imaginary) THEN
-                  DO ig = gstart,ngms
-                    rhoc(nlsm(ig)) = rhoc(nlsm(ig)) - CONJG(aux(ig))
-                  ENDDO
+                   DO ig = 1,ngms
+                      rhoc(nls(ig)) = rhoc(nls(ig)) - (0.0_dp,1.0_dp)*aux(ig)
+                   ENDDO
+                   DO ig = gstart,ngms
+                      rhoc(nlsm(ig)) = rhoc(nlsm(ig)) - &
+                                       (0.0_dp,1.0_dp)*CONJG(aux(ig))
+                   ENDDO
                 ENDIF
                 !
             END IF
@@ -559,10 +569,14 @@ MODULE us_exx
   !------------------------------------------------------------------------
   SUBROUTINE addusxx_r(rho,becphi,becpsi)
     !------------------------------------------------------------------------
-    ! This routine adds to the two wavefunctions density the part which is due to
-    ! the US augmentation.
-    ! NOTE: the density in this case is NOT real and NOT normalized to 1, except when
-    !       (bec)phi and (bec)psi are equal.
+    ! This routine adds to the two wavefunctions density (in real space) 
+    ! the part which is due to the US augmentation.
+    ! NOTE: the density in this case is NOT real and NOT normalized to 1, 
+    !       except when (bec)phi and (bec)psi are equal, or with gamma tricks.
+    ! With gamma tricks: input rho must contain contributions from band 1
+    ! in real part, from band 2 in imaginary part; call routine twice, with
+    ! becphi=<beta|phi(1)> (real), then with becphi=i*<beta|phi(2)> (imaginary)
+    !
     USE ions_base,        ONLY : nat, ityp
     USE cell_base,        ONLY : omega
     USE fft_base,         ONLY : dffts
