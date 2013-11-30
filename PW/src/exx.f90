@@ -549,15 +549,12 @@ MODULE exx
 !     DO i = 1,nq
 !       qnorm = MAX(qnorm,  SQRT(SUM(xkq(:,i)**2))  )
 !     ENDDO
-!     print*,"qnorm1", qnorm
 
     DO i = 1,nq
     DO j = 1,nks
       qnorm = MAX(qnorm, SQRT( SUM((xk(:,j)-xkq(:,i))**2) ))
     ENDDO
     ENDDO
-!     print*,"qnorm2", qnorm
-
   
     RETURN
     !------------------------------------------------------------------------
@@ -1413,11 +1410,11 @@ MODULE exx
               !   >>>>  compute <psi|H_fock G SPACE here
               IF(okvan .and. dovanxx .and. .not. TQR) THEN
                  IF(ibnd>=ibnd_start) &
-                 CALL newdxx_g(vc, xkq, _CX(becxx(ikq)%r(:,ibnd)), &
-                             xk_collect(:,current_ik), deexx)
+                 CALL newdxx_g(vc, xkq, xk_collect(:,current_ik), &
+                               'r', deexx, becphi_r=x1*becxx(ikq)%r(:,ibnd))
                  IF(ibnd<ibnd_end) &
-                 CALL newdxx_g(vc, xkq, _CY(becxx(ikq)%r(:,ibnd+1)), &
-                             xk_collect(:,current_ik), deexx)
+                 CALL newdxx_g(vc, xkq, xk_collect(:,current_ik), &
+                               'i', deexx,becphi_r=x2*becxx(ikq)%r(:,ibnd+1))
               ENDIF
               !
               !brings back v in real space
@@ -1426,9 +1423,9 @@ MODULE exx
               !   >>>>  compute <psi|H_fock REAL SPACE here
               IF(okvan .and. dovanxx .and. TQR) THEN
                  IF(ibnd>=ibnd_start) &
-                 CALL newdxx_r(vc, _CX(becxx(ikq)%r(:,ibnd)), deexx)
+                 CALL newdxx_r(vc, _CX(x1*becxx(ikq)%r(:,ibnd)), deexx)
                  IF(ibnd<ibnd_end) &
-                 CALL newdxx_r(vc, _CY(becxx(ikq)%r(:,ibnd+1)), deexx)
+                 CALL newdxx_r(vc, _CY(x2*becxx(ikq)%r(:,ibnd+1)), deexx)
               ENDIF
               !
               IF(okpaw .and. dopawxx) THEN
@@ -1440,8 +1437,7 @@ MODULE exx
                                          _CX(becpsi%r(:,im)), deexx)
               ENDIF
               !
-              !
-              !accumulates over bands and k points
+              ! accumulates over bands and k points
               !
 !$omp parallel do default(shared), private(ir)
               DO ir = 1, nrxxs
@@ -1509,8 +1505,8 @@ MODULE exx
             ! Add ultrasoft contribution (RECIPROCAL SPACE)
             ! compute alpha_I,j,k+q = \sum_J \int <beta_J|phi_j,k+q> V_i,j,k,q Q_I,J(r) d3r
             IF(okvan .and. dovanxx .AND. .NOT. TQR) THEN
-              CALL newdxx_g(vc, xkq, becxx(ikq)%k(:,ibnd), &
-                                xk_collect(:,current_ik), deexx)
+              CALL newdxx_g(vc, xkq, xk_collect(:,current_ik), &
+                            'c', deexx, becphi_c=becxx(ikq)%k(:,ibnd))
             ENDIF
             !
             !brings back v in real space
@@ -1528,18 +1524,14 @@ MODULE exx
             !
             !accumulates over bands and k points
             IF (noncolin) THEN
-                !
                 DO ipol=1,npol
-                    !
 !$omp parallel do default(shared), private(ir)
                     DO ir = 1, nrxxs
                         result_nc(ir,ipol)= result_nc(ir,ipol) &
                                            +vc(ir) * tempphic_nc(ir,ipol)
                     ENDDO
 !$omp end parallel do
-                    !
                 ENDDO
-                !
             ELSE
 !$omp parallel do default(shared), private(ir)
                 DO ir = 1, nrxxs
@@ -1577,38 +1569,37 @@ MODULE exx
              hpsi(ig,im)=hpsi(ig,im) - exxalfa*result(exx_fft_g2r%nlt(ig))
          ENDDO
 !$omp end parallel do
-         IF(okvan .and. dovanxx) CALL add_nlxx_pot(lda, hpsi(:,im), xkp, npw, igk, deexx, exxalfa)
-         !
       ELSE
-          IF (noncolin) THEN
-              !brings back result in G-space
-              CALL fwfft ('Wave', result_nc(:,1), dffts)
-              CALL fwfft ('Wave', result_nc(:,2), dffts)
-              !
-              !adds it to hpsi
+         IF (noncolin) THEN
+            !brings back result in G-space
+            CALL fwfft ('Wave', result_nc(:,1), dffts)
+            CALL fwfft ('Wave', result_nc(:,2), dffts)
+            !
+            !adds it to hpsi
 !$omp parallel do default(shared), private(ig)
-              DO ig = 1, n
-                  hpsi(ig,im)       = hpsi(ig,im)       - exxalfa*result_nc(nls(igk(ig)),1)
-              ENDDO
+            DO ig = 1, n
+               hpsi(ig,im)     = hpsi(ig,im)     - exxalfa*result_nc(nls(igk(ig)),1)
+            ENDDO
 !$omp end parallel do
 !$omp parallel do default(shared), private(ig)
-              DO ig = 1, n
-                  hpsi(lda+ig,im)   = hpsi(lda+ig,im)   - exxalfa*result_nc(nls(igk(ig)),2)
-              ENDDO
+            DO ig = 1, n
+                hpsi(lda+ig,im) = hpsi(lda+ig,im) - exxalfa*result_nc(nls(igk(ig)),2)
+            ENDDO
 !$omp end parallel do
-              !
+            !
           ELSE
-              CALL fwfft ('Wave', result, dffts)
-              !
-              !adds it to hpsi
+            CALL fwfft ('Wave', result, dffts)
+            !
+            !adds it to hpsi
 !$omp parallel do default(shared), private(ig)
-              DO ig = 1, npw
-                  hpsi(ig,im)=hpsi(ig,im) - exxalfa*result(nls(igk(ig)))
-              ENDDO
+            DO ig = 1, npw
+                hpsi(ig,im)=hpsi(ig,im) - exxalfa*result(nls(igk(ig)))
+            ENDDO
 !$omp end parallel do
-            ! add non-local \sum_I |beta_I> \alpha_Ii (the sum on i is outside)
-            IF(okvan .and. dovanxx) CALL add_nlxx_pot(lda, hpsi(:,im), xkp, npw, igk, deexx, exxalfa)
           ENDIF
+          ! add non-local \sum_I |beta_I> \alpha_Ii (the sum on i is outside)
+          IF(okvan .and. dovanxx) CALL add_nlxx_pot(lda, hpsi(:,im), xkp, &
+                                                    npw, igk, deexx, exxalfa)
           !
       ENDIF
       !
