@@ -118,7 +118,7 @@ MODULE exx
   REAL(DP)  :: exx_dual = 4.0_DP! dual for the custom grid
  CONTAINS
 #define _CX(A)  CMPLX(A,0._dp,kind=DP)
-#define _CY(A)  CMPLX(0._dp,A,kind=DP)
+#define _CY(A)  CMPLX(0._dp,-A,kind=DP)
   !------------------------------------------------------------------------
   SUBROUTINE exx_grid_convert( psi, npw, fft, psi_t, sign, igkt )
     !------------------------------------------------------------------------
@@ -1365,10 +1365,13 @@ MODULE exx
               ! calculate rho in real space. Gamma tricks are used. 
               ! temppsic is real; tempphic contains one band in the real part, 
               ! another one in the imaginary part; the same applies to rhoc
+              !
 !$omp parallel do default(shared), private(ir)
               DO ir = 1, nrxxs
                   tempphic(ir) = exxbuff(ir,h_ibnd,ikq)
-                  rhoc(ir)     = CONJG(tempphic(ir))*temppsic(ir) / omega
+                  rhoc(ir) = CMPLX( DBLE(tempphic(ir))*DBLE(temppsic(ir)),&
+                                   AIMAG(tempphic(ir))*DBLE(temppsic(ir)),&
+                                   KIND=dp) / omega
               ENDDO
 !$omp end parallel do
               !
@@ -1442,11 +1445,8 @@ MODULE exx
               !
 !$omp parallel do default(shared), private(ir)
               DO ir = 1, nrxxs
-                  !
-                  vc(ir) = CMPLX( x1 * DBLE (vc(ir)), x2 * AIMAG(vc(ir)) ,kind=DP)/ nqs
-                  !
-                  result(ir) = result(ir) + DBLE( vc(ir) * tempphic(ir) )
-                  !
+                  result(ir) = result(ir)+x1* DBLE(vc(ir))* DBLE(tempphic(ir))&
+                                         +x2*AIMAG(vc(ir))*AIMAG(tempphic(ir))
               ENDDO
 !$omp end parallel do
               !
@@ -1897,10 +1897,8 @@ MODULE exx
              !
 !$omp parallel do default(shared), private(ig)
              DO ig = 1, exx_fft_g2r%npwt
-                 !
                  temppsic(exx_fft_g2r%nlt(ig))  = evc(ig,jbnd) 
                  temppsic(exx_fft_g2r%nltm(ig)) = CONJG(evc(ig,jbnd))
-                 !
              ENDDO
 !$omp end parallel do
              !
@@ -1951,10 +1949,8 @@ MODULE exx
 
             IF_GAMMA_ONLY : &
             IF (gamma_only) THEN
-              h_ibnd = 0
               !
               h_ibnd = ibnd_start/2
-              !
               IF(MOD(ibnd_start,2)==0) THEN
                  h_ibnd=h_ibnd-1
                  ibnd_loop_start=ibnd_start-1
@@ -1979,11 +1975,16 @@ MODULE exx
                     x2 = 0.0_dp
                 ENDIF
                 IF ( abs(x1) < eps_occ .and. abs(x2) < eps_occ ) CYCLE IBND_LOOP_GAM
-                !calculate rho in real space
+                ! calculate rho in real space. Gamma tricks are used. 
+                ! temppsic is real; tempphic contains band 1 in the real part, 
+                ! band 2 in the imaginary part; the same applies to rhoc
+                !
 !$omp parallel do default(shared), private(ir)
                 DO ir = 1, nrxxs
                     tempphic(ir) = exxbuff(ir,h_ibnd,ikq)
-                    rhoc(ir)=CONJG(tempphic(ir))*temppsic(ir) / omega
+                    rhoc(ir) = CMPLX( DBLE(tempphic(ir))*DBLE(temppsic(ir)),&
+                                     AIMAG(tempphic(ir))*DBLE(temppsic(ir)),&
+                                     KIND=dp) / omega
                 ENDDO
 !$omp end parallel do
                 !
@@ -2067,7 +2068,7 @@ MODULE exx
                    IF(okvan .and. dovanxx .AND. TQR) & 
                       CALL addusxx_r(rhoc, becxx(ikq)%k(:,ibnd), becpsi%k(:,jbnd))
                    !
-                   ! bring it to G-space
+                   ! bring rhoc to G-space
                    CALL fwfft ('Smooth', rhoc, dffts)
                    ! augment the "charge" in G space
                    IF(okvan .and. dovanxx .AND. .NOT. TQR) & 

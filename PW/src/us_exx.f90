@@ -148,7 +148,7 @@ MODULE us_exx
             !
             ATOMS_LOOP : &
             DO na = 1, nat
-            IF (ityp(na)==np) THEN
+              IF (ityp(na)==np) THEN
                 !
                 ! NOTE: the next line counts the number of beta in the atoms (not types!) before 
                 ! this one (na) this hack is necessary to minimize the number of calls to qvan2
@@ -167,7 +167,7 @@ MODULE us_exx
                    DO ig = 1,ngms
                      rhoc(nls(ig)) = rhoc(nls(ig)) + aux(ig)
                    ENDDO
-                ELSE IF ( add_real ) THEN
+                ELSE 
                    becfac_r = becphi_r(ikb)*becpsi_r(jkb)
                    DO ig = 1, ngms
                       skk = eigts1(mill(1,ig), na) * &
@@ -175,30 +175,25 @@ MODULE us_exx
                             eigts3(mill(3,ig), na)
                       aux(ig) = qgm(ig)*eigqts(na)*skk*becfac_r
                    ENDDO
-                   DO ig = 1,ngms
-                     rhoc(nls(ig)) = rhoc(nls(ig)) + aux(ig)
-                   ENDDO
-                   DO ig = gstart,ngms
-                      rhoc(nlsm(ig)) = rhoc(nlsm(ig)) + CONJG(aux(ig))
-                   ENDDO
-                ELSE
-                   becfac_r = becphi_r(ikb)*becpsi_r(jkb)
-                   DO ig = 1, ngms
-                      skk = eigts1(mill(1,ig), na) * &
-                            eigts2(mill(2,ig), na) * &
-                            eigts3(mill(3,ig), na)
-                      aux(ig) = qgm(ig)*eigqts(na)*skk*becfac_r
-                   ENDDO
-                   DO ig = 1,ngms
-                      rhoc(nls(ig)) = rhoc(nls(ig)) - (0.0_dp,1.0_dp)*aux(ig)
-                   ENDDO
-                   DO ig = gstart,ngms
-                      rhoc(nlsm(ig)) = rhoc(nlsm(ig)) - &
-                                       (0.0_dp,1.0_dp)*CONJG(aux(ig))
-                   ENDDO
+                   IF ( add_real ) THEN
+                      DO ig = 1,ngms
+                         rhoc(nls(ig)) = rhoc(nls(ig)) + aux(ig)
+                      ENDDO
+                      DO ig = gstart,ngms
+                         rhoc(nlsm(ig)) = rhoc(nlsm(ig)) + CONJG(aux(ig))
+                      ENDDO
+                   ELSE IF ( add_imaginary ) THEN
+                      DO ig = 1,ngms
+                         rhoc(nls(ig)) = rhoc(nls(ig)) + (0.0_dp,1.0_dp)*aux(ig)
+                      ENDDO
+                      DO ig = gstart,ngms
+                         rhoc(nlsm(ig)) = rhoc(nlsm(ig)) + &
+                                          (0.0_dp,1.0_dp)*CONJG(aux(ig))
+                      ENDDO
+                   ENDIF
                 ENDIF
                 !
-            END IF
+              END IF
             ENDDO ATOMS_LOOP  ! nat
             !
         END DO ! jh
