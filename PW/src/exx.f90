@@ -1377,9 +1377,9 @@ MODULE exx
               !   >>>> add augmentation in REAL SPACE here
               IF(okvan .and. dovanxx .AND. TQR) THEN
                  IF(ibnd>=ibnd_start) &
-                 CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd)),   _CX(becpsi%r(:,im)))
+                 CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd)), _CX(becpsi%r(:,im)))
                  IF(ibnd<ibnd_end) &
-                 CALL addusxx_r(rhoc, _CY(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,im)))
+                 CALL addusxx_r(rhoc,_CY(becxx(ikq)%r(:,ibnd+1)),_CX(becpsi%r(:,im)))
               ENDIF
               !
               CALL fwfft ('Custom', rhoc, exx_fft_r2g%dfftt)
@@ -1423,9 +1423,11 @@ MODULE exx
               !   >>>>  compute <psi|H_fock REAL SPACE here
               IF(okvan .and. dovanxx .and. TQR) THEN
                  IF(ibnd>=ibnd_start) &
-                 CALL newdxx_r(vc, _CX(x1*becxx(ikq)%r(:,ibnd)), deexx)
+                 CALL newdxx_r(vc, CMPLX(x1*becxx(ikq)%r(:,ibnd), 0.0_dp, &
+                                         KIND=dp), deexx)
                  IF(ibnd<ibnd_end) &
-                 CALL newdxx_r(vc, _CY(x2*becxx(ikq)%r(:,ibnd+1)), deexx)
+                 CALL newdxx_r(vc, CMPLX(0.0_dp,x2*becxx(ikq)%r(:,ibnd+1), &
+                                         KIND=dp), deexx)
               ENDIF
               !
               IF(okpaw .and. dopawxx) THEN
@@ -1597,11 +1599,11 @@ MODULE exx
             ENDDO
 !$omp end parallel do
           ENDIF
-          ! add non-local \sum_I |beta_I> \alpha_Ii (the sum on i is outside)
-          IF(okvan .and. dovanxx) CALL add_nlxx_pot(lda, hpsi(:,im), xkp, &
-                                                    npw, igk, deexx, exxalfa)
           !
       ENDIF
+      ! add non-local \sum_I |beta_I> \alpha_Ii (the sum on i is outside)
+      IF(okvan .and. dovanxx) CALL add_nlxx_pot(lda, hpsi(:,im), xkp, &
+                                                npw, igk, deexx, exxalfa)
       !
     END DO &
     LOOP_ON_PSI_BANDS
@@ -1984,7 +1986,7 @@ MODULE exx
                   IF(ibnd>=ibnd_start) &
                   CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd)), _CX(becpsi%r(:,jbnd)))
                   IF(ibnd<ibnd_end) &
-                  CALL addusxx_r(rhoc, _CY(becxx(ikq)%r(:,ibnd+1)), _CX(becpsi%r(:,jbnd)))
+                  CALL addusxx_r(rhoc,_CY(becxx(ikq)%r(:,ibnd+1)),_CX(becpsi%r(:,jbnd)))
                 ENDIF
                 !
                 ! bring rhoc to G-space

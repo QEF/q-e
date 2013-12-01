@@ -569,25 +569,19 @@ MODULE us_exx
       ONLY_FOR_USPP : &
       IF ( upf(np)%tvanp ) THEN
           DO na = 1, nat
-          IF (ityp(na)==np) THEN
+            IF (ityp(na)==np) THEN
               DO ih = 1, nh(np)
                 ikb = ijkb0 + ih
                 !
                 IF(ABS(deexx(ikb))<eps_occ) CYCLE
                 fact = -exxalfa*deexx(ikb)
                 !
-                IF (gamma_only) THEN
-                   DO ig = 1,npwp
-                      hpsi(ig) = hpsi(ig) + DBLE(fact*vkbp(ig, ikb))
-                   ENDDO
-                ELSE
-                   DO ig = 1,npwp
-                      hpsi(ig) = hpsi(ig) + fact*vkbp(ig, ikb)
-                   ENDDO
-                ENDIF
+                DO ig = 1,npwp
+                   hpsi(ig) = hpsi(ig) + fact*vkbp(ig, ikb)
+                ENDDO
               ENDDO
               ijkb0 = ijkb0 + nh(np)
-          END IF
+            END IF
           ENDDO ! nat
       ELSE ONLY_FOR_USPP 
           DO na = 1, nat
@@ -615,7 +609,7 @@ MODULE us_exx
     !       except when (bec)phi and (bec)psi are equal, or with gamma tricks.
     ! With gamma tricks: input rho must contain contributions from band 1
     ! in real part, from band 2 in imaginary part; call routine twice, with
-    ! becphi=<beta|phi(1)> (real), then with becphi=i*<beta|phi(2)> (imaginary)
+    ! becphi=<beta|phi(1)> (real), then with becphi=-i*<beta|phi(2)> (imaginary)
     !
     USE ions_base,        ONLY : nat, ityp
     USE cell_base,        ONLY : omega
