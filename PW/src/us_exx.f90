@@ -554,7 +554,6 @@ MODULE us_exx
     INTEGER :: ig
     !
     COMPLEX(DP),ALLOCATABLE :: vkbp(:,:)  ! the <beta_I| function
-    COMPLEX(DP) :: fact
     !
     CALL start_clock( 'nlxx_pot' )
     !
@@ -574,11 +573,16 @@ MODULE us_exx
                 ikb = ijkb0 + ih
                 !
                 IF(ABS(deexx(ikb))<eps_occ) CYCLE
-                fact = -exxalfa*deexx(ikb)
                 !
-                DO ig = 1,npwp
-                   hpsi(ig) = hpsi(ig) + fact*vkbp(ig, ikb)
-                ENDDO
+                IF (gamma_only) THEN
+                   DO ig = 1,npwp
+                      hpsi(ig) = hpsi(ig)-exxalfa*DBLE(deexx(ikb))*vkbp(ig,ikb)
+                   ENDDO
+                ELSE
+                   DO ig = 1,npwp
+                      hpsi(ig) = hpsi(ig) - exxalfa*deexx(ikb)*vkbp(ig,ikb)
+                   ENDDO
+                ENDIF
               ENDDO
               ijkb0 = ijkb0 + nh(np)
             END IF

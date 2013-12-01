@@ -1387,11 +1387,11 @@ MODULE exx
               IF(okvan .and. dovanxx .AND. .NOT. TQR) THEN
                  ! contribution from one band added to real (in real space) part of rhoc
                  IF(ibnd>=ibnd_start) &
-                      CALL addusxx_g(rhoc, xkq,  xk_collect(:,current_ik), 'r', &
+                      CALL addusxx_g(rhoc, xkq,  xkp, 'r', &
                       becphi_r=becxx(ikq)%r(:,ibnd), becpsi_r=becpsi%r(:,im) )
                  ! contribution from following band added to imaginary (in real space) part of rhoc
                  IF(ibnd<ibnd_end) &
-                      CALL addusxx_g(rhoc, xkq,  xk_collect(:,current_ik), 'i', &
+                      CALL addusxx_g(rhoc, xkq,  xkp, 'i', &
                       becphi_r=becxx(ikq)%r(:,ibnd+1), becpsi_r=becpsi%r(:,im) )
               ENDIF
               !   >>>> charge density done
@@ -1410,10 +1410,10 @@ MODULE exx
               !   >>>>  compute <psi|H_fock G SPACE here
               IF(okvan .and. dovanxx .and. .not. TQR) THEN
                  IF(ibnd>=ibnd_start) &
-                 CALL newdxx_g(vc, xkq, xk_collect(:,current_ik), &
+                 CALL newdxx_g(vc, xkq, xkp, &
                                'r', deexx, becphi_r=x1*becxx(ikq)%r(:,ibnd))
                  IF(ibnd<ibnd_end) &
-                 CALL newdxx_g(vc, xkq, xk_collect(:,current_ik), &
+                 CALL newdxx_g(vc, xkq, xkp, &
                                'i', deexx,becphi_r=x2*becxx(ikq)%r(:,ibnd+1))
               ENDIF
               !
@@ -1426,7 +1426,7 @@ MODULE exx
                  CALL newdxx_r(vc, CMPLX(x1*becxx(ikq)%r(:,ibnd), 0.0_dp, &
                                          KIND=dp), deexx)
                  IF(ibnd<ibnd_end) &
-                 CALL newdxx_r(vc, CMPLX(0.0_dp,x2*becxx(ikq)%r(:,ibnd+1), &
+                 CALL newdxx_r(vc, CMPLX(0.0_dp,-x2*becxx(ikq)%r(:,ibnd+1), &
                                          KIND=dp), deexx)
               ENDIF
               !
@@ -1490,7 +1490,7 @@ MODULE exx
             !
             !   >>>> add augmentation in G space HERE
             IF(okvan .and. dovanxx .AND. .NOT. TQR) THEN
-              CALL addusxx_g(rhoc, xkq, xk_collect(:,current_ik), 'c', &
+              CALL addusxx_g(rhoc, xkq, xkp, 'c', &
                    becphi_c=becxx(ikq)%k(:,ibnd),becpsi_c=becpsi%k(:,im))
             ENDIF
             !   >>>> charge done
@@ -1507,7 +1507,7 @@ MODULE exx
             ! Add ultrasoft contribution (RECIPROCAL SPACE)
             ! compute alpha_I,j,k+q = \sum_J \int <beta_J|phi_j,k+q> V_i,j,k,q Q_I,J(r) d3r
             IF(okvan .and. dovanxx .AND. .NOT. TQR) THEN
-              CALL newdxx_g(vc, xkq, xk_collect(:,current_ik), &
+              CALL newdxx_g(vc, xkq, xkp, &
                             'c', deexx, becphi_c=becxx(ikq)%k(:,ibnd))
             ENDIF
             !
@@ -1831,7 +1831,7 @@ MODULE exx
     INTEGER  :: jbnd, ibnd, ik, ikk, ig, ikq, iq, ir
     INTEGER  :: h_ibnd, nrxxs, current_ik, ibnd_loop_start
     REAL(DP) :: x1, x2
-    REAL(DP) :: xkq(3), vc
+    REAL(DP) :: xkq(3), xkp(3), vc
     ! temp array for vcut_spheric
     INTEGER,        EXTERNAL :: find_current_k
 
@@ -1865,6 +1865,7 @@ MODULE exx
     IKK_LOOP : &
     DO ikk=1,nks
        current_ik=find_current_k(ikk,nkstot,nks)
+       xkp = xk_collect(:,current_ik)
        !
        IF ( lsda ) current_spin = isk(ikk)
        npw = ngk (ikk)
@@ -1994,10 +1995,10 @@ MODULE exx
                 !
                 IF(okvan .and. dovanxx .and..not.TQR) THEN
                   IF(ibnd>=ibnd_start ) &
-                       CALL addusxx_g( rhoc, xkq, xk_collect(:,current_ik), 'r', &
+                       CALL addusxx_g( rhoc, xkq, xkp, 'r', &
                        becphi_r=becxx(ikq)%r(:,ibnd), becpsi_r=becpsi%r(:,jbnd) )
                   IF(ibnd<ibnd_end) &
-                       CALL addusxx_g( rhoc, xkq, xk_collect(:,current_ik), 'i', &
+                       CALL addusxx_g( rhoc, xkq, xkp, 'i', &
                         becphi_r=becxx(ikq)%r(:,ibnd+1), becpsi_r=becpsi%r(:,jbnd) )
                 ENDIF
                 !
@@ -2065,7 +2066,7 @@ MODULE exx
                    CALL fwfft ('Smooth', rhoc, dffts)
                    ! augment the "charge" in G space
                    IF(okvan .and. dovanxx .AND. .NOT. TQR) & 
-                        CALL addusxx_g(rhoc, xkq, xk_collect(:,current_ik), 'c', &
+                        CALL addusxx_g(rhoc, xkq, xkp, 'c', &
                         becphi_c=becxx(ikq)%k(:,ibnd),becpsi_c=becpsi%k(:,jbnd))
                    !
                    vc = 0._dp
