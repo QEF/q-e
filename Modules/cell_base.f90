@@ -556,6 +556,26 @@
 
 !------------------------------------------------------------------------------!
 
+  SUBROUTINE set_h_ainv()
+    !
+    ! CP-PW compatibility: align CP arrays H and ainv to at and bg
+    !
+    IMPLICIT NONE
+    !
+    write(stdout,*) 'alat=',alat
+    write(stdout,*) 'at=',at
+    write(stdout,*) 'bg=',bg
+    !
+    h(:,:) = at(:,:)*alat
+    !
+    ainv(1,:) = bg(:,1)/alat
+    ainv(2,:) = bg(:,2)/alat
+    ainv(3,:) = bg(:,3)/alat
+    !
+  END SUBROUTINE set_h_ainv
+
+!------------------------------------------------------------------------------!
+
   SUBROUTINE cell_dyn_init( trd_ht, rd_ht, wc_ , total_ions_mass , press_ , &
                frich_ , greash_ , cell_dofree )
 

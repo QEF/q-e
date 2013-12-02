@@ -38,7 +38,7 @@ SUBROUTINE forces()
   USE ldaU,          ONLY : lda_plus_u, U_projection
   USE extfield,      ONLY : tefield, forcefield
   USE control_flags, ONLY : gamma_only, remove_rigid_rot, textfor, &
-                            iverbosity, llondon, lxdm
+                            iverbosity, llondon, lxdm, ts_vdw
 #ifdef __ENVIRON
   USE environ_base,  ONLY : do_environ, env_static_permittivity, rhopol
   USE fft_interfaces,  ONLY : fwfft
@@ -49,6 +49,7 @@ SUBROUTINE forces()
   USE martyna_tuckerman, ONLY: do_comp_mt, wg_corr_force
   USE london_module, ONLY : force_london
   USE xdm_module,    ONLY : force_xdm
+  USE tsvdw_module,  ONLY : FtsvdW
   !
   IMPLICIT NONE
   !
@@ -210,7 +211,9 @@ SUBROUTINE forces()
                          forcescc(ipol,na)
         !
         IF ( llondon ) force(ipol,na) = force(ipol,na) + force_disp(ipol,na)
-        IF ( lxdm ) force(ipol,na) = force(ipol,na) + force_disp_xdm(ipol,na)
+        IF ( lxdm )    force(ipol,na) = force(ipol,na) + force_disp_xdm(ipol,na)
+        ! factor 2 converts from Ha to Ry a.u.
+        IF ( ts_vdw )  force(ipol,na) = force(ipol,na) + 2.0_dp*FtsvdW(ipol,na)
         IF ( tefield ) force(ipol,na) = force(ipol,na) + forcefield(ipol,na)
         IF (lelfield)  force(ipol,na) = force(ipol,na) + forces_bp_efield(ipol,na)
         IF (do_comp_mt)force(ipol,na) = force(ipol,na) + force_mt(ipol,na) 
@@ -324,6 +327,13 @@ SUBROUTINE forces()
         WRITE( stdout, '(/,5x,"XDM contribution to forces:")')
         DO na = 1, nat
            WRITE( stdout, 9035) na, ityp(na), (force_disp_xdm(ipol,na), ipol = 1, 3)
+        END DO
+     END IF
+     !
+     IF ( ts_vdw) THEN
+        WRITE( stdout, '(/,5x,"TS-VDW contribution to forces:")')
+        DO na = 1, nat
+           WRITE( stdout, 9035) na, ityp(na), (2.0d0*FtsvdW(ipol,na), ipol=1,3)
         END DO
      END IF
      !

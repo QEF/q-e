@@ -789,7 +789,7 @@ MODULE input
      USE input_parameters, ONLY : lda_plus_u, Hubbard_U
      USE input_parameters, ONLY : step_pen, A_pen, alpha_pen, sigma_pen
      USE input_parameters, ONLY : vdw_corr, london, london_s6, london_rcut, &
-                                  ts_vdw_isolated, ts_vdw_econv_thr
+                                  ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr
      !
      USE constants,        ONLY : amu_au, pi
      USE control_flags,    ONLY : lconstrain, tpre, thdyn, tksw
@@ -817,7 +817,7 @@ MODULE input
      USE funct,            ONLY : dft_is_nonlocc, get_inlc
      USE kernel_table,     ONLY : vdw_table_name_ => vdw_table_name, &
                                   initialize_kernel_table
-     USE control_flags,    ONLY : llondon, ts_vdw
+     USE control_flags,    ONLY : llondon, ts_vdw_ => ts_vdw
      USE london_module,    ONLY : init_london, scal6, lon_rcut
      USE tsvdw_module,     ONLY : vdw_isolated, vdw_econv_thr
      !
@@ -958,26 +958,30 @@ MODULE input
        CASE( 'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d' )
          !
          llondon= .TRUE.
-         ts_vdw = .FALSE.
+         ts_vdw_= .FALSE.
          !
        CASE( 'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler' )
          !
          llondon= .FALSE.
-         ts_vdw = .TRUE.
+         ts_vdw_= .TRUE.
          !
        CASE DEFAULT
          !
          llondon= .FALSE.
-         ts_vdw = .FALSE.
+         ts_vdw_= .FALSE.
          !
      END SELECT
      ! 
+     IF ( ts_vdw ) THEN
+        CALL infomsg("iosys","ts_vdw is obsolete, use ''vdw_corr='ts-vdw''' instead")
+        ts_vdw_ = .TRUE.
+     END IF
      IF ( london ) THEN
         CALL infomsg("iosys","london is obsolete, use ''vdw_corr='grimme-d2''' instead")
-        IF (ts_vdw) CALL errore("iosys","must choose a unique vdW correction!", 1)
         llondon = .TRUE.
      END IF
-     !
+     IF (ts_vdw_.AND.llondon) CALL errore("iosys", &
+                                    "must choose a unique vdW correction!", 1)
      IF ( llondon) THEN
         lon_rcut    = london_rcut
         scal6       = london_s6

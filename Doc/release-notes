@@ -2,14 +2,14 @@ New in svn version
 
    * Calling QE from external codes made easier: see new subdirectory COUPLE
    * PW: Hybrid functionals for USPP and PAW (experimental)
-   * PW: partial support to the use of k-points label in the Brillouin zone
+   * PW: partial support to the use of k-point labels in the Brillouin zone
    * PW: Langevin dynamics with Smart Monte Carlo
-   * CP: Tkatchenko-Scheffler vdW correction
+   * CP and PW: Tkatchenko-Scheffler vdW correction (experimental)
    * GWW replaced by GWL (using Lanczos chains)
    * turboTDDFT: pseudo_Hamiltonians, Davidson-like diagonalization
    * PWCOND with DFT+U
    * New functionals: gau-pbe, PW86 (unrevised), B86B, XDM (exchange-hole 
-     dipole moment) model of dispersions, vdW-DF3, ddW-DF4 (Klimes et al),
+     dipole moment) model of dispersions, vdW-DF3, vdW-DF4 (Klimes et al),
      rVV10
    * Added the subdirectory FD in PHonon. Calculation of phonon dispersions 
      using the finite displacements supercell approach.
@@ -37,7 +37,7 @@ Incompatible changes in svn version:
      Restarting from hard crashes is no longer supported.
    * Major restructuring of DFT+U and related modules in PW: related variables
      moved to module ldaU, "swfcatom" moved to module "basis"
-   * Definition of "nwordwfc" in PP/ follows the same login as in PW/
+   * Definition of "nwordwfc" in PP/ follows the same logic as in PW/
    * Calls to "find_equiv_sites" and "writemodes" changed (fixed dimension
      "nax" removed)
    * Call to "open_buffer" changed: unit must be a valid fortran unit > 0;

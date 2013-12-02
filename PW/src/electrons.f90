@@ -287,7 +287,7 @@ SUBROUTINE electrons_scf ( no_printout )
                                    iprint, istep, conv_elec, &
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
-                                   llondon, scf_must_converge, lxdm
+                                   llondon, scf_must_converge, lxdm, ts_vdw
   USE io_files,             ONLY : iunwfc, iunmix, nwordwfc, output_drho, &
                                    iunres, iunefield, seqopn
   USE buffers,              ONLY : save_buffer, close_buffer
@@ -306,6 +306,7 @@ SUBROUTINE electrons_scf ( no_printout )
   !
   USE london_module,        ONLY : energy_london
   USE xdm_module,           ONLY : energy_xdm
+  USE tsvdw_module,         ONLY : EtsvdW
   !
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
   USE paw_onecenter,        ONLY : PAW_potential
@@ -716,6 +717,11 @@ SUBROUTINE electrons_scf ( no_printout )
         etot = etot + exdm
         hwf_energy = hwf_energy + exdm
      end if
+     IF (ts_vdw) THEN
+        ! factor 2 converts from Ha to Ry units
+        etot = etot + 2.0d0*EtsvdW
+        hwf_energy = hwf_energy + 2.0d0*EtsvdW
+     END IF
      !
      IF ( tefield ) THEN
         etot = etot + etotefield
@@ -1061,8 +1067,8 @@ SUBROUTINE electrons_scf ( no_printout )
                ( eband + deband ), ehart, ( etxc - etxcc ), ewld
           !
           IF ( llondon ) WRITE ( stdout , 9074 ) elondon
-          !
-          IF ( lxdm ) WRITE ( stdout , 9075 ) exdm
+          IF ( lxdm )    WRITE ( stdout , 9075 ) exdm
+          IF ( ts_vdw )  WRITE ( stdout , 9076 ) 2.0d0*EtsvdW
           !
           IF ( textfor)             WRITE( stdout, &
                '(/5x,"Energy of the external Forces = ", F18.8)' ) eext
@@ -1139,6 +1145,7 @@ SUBROUTINE electrons_scf ( no_printout )
 9073 FORMAT( '     lambda                    =',F11.2,' Ry' )
 9074 FORMAT( '     Dispersion Correction     =',F17.8,' Ry' )
 9075 FORMAT( '     Dispersion XDM Correction =',F17.8,' Ry' )
+9076 FORMAT( '     Dispersion T-S Correction =',F17.8,' Ry' )
 9080 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
             /'     estimated scf accuracy    <',0PF17.8,' Ry' )

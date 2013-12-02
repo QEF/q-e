@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,10 +19,13 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ngm
   USE noncollin_module, ONLY : noncolin, nspin_lsda
-  USE ions_base,        ONLY : nat
+  USE ions_base,        ONLY : nat, tau
   USE ldaU,             ONLY : lda_plus_U 
   USE funct,            ONLY : dft_is_meta
   USE scf,              ONLY : scf_type
+  USE cell_base,        ONLY : alat
+  USE control_flags,    ONLY : ts_vdw
+  USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
   !
   IMPLICIT NONE
   !
@@ -44,7 +47,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   REAL(DP), INTENT(INOUT) :: etotefield
     ! electric field energy - inout due to the screwed logic of add_efield
   ! ! 
-  INTEGER :: is
+  INTEGER :: is, ir
   !
   CALL start_clock( 'v_of_rho' )
   !
@@ -67,11 +70,11 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   ! ... LDA+U: build up Hubbard potential 
   !
   if (lda_plus_u) then
-   if(noncolin) then
-    call v_hubbard_nc(rho%ns_nc,v%ns_nc,eth)
-   else
-    call v_hubbard(rho%ns,v%ns,eth)
-   endif
+     if(noncolin) then
+        call v_hubbard_nc(rho%ns_nc,v%ns_nc,eth)
+     else
+        call v_hubbard(rho%ns,v%ns,eth)
+     endif
   endif
   !
   ! ... add an electric field
@@ -79,6 +82,17 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   DO is = 1, nspin_lsda
      CALL add_efield(v%of_r(1,is), etotefield, rho%of_r, .false. )
   END DO
+  !
+  ! ... add Tkatchenko-Scheffler potential (factor 2: Ha -> Ry)
+  ! 
+  IF (ts_vdw) THEN
+     CALL tsvdw_calculate(tau*alat,rho%of_r)
+     DO is = 1, nspin_lsda
+        DO ir=1,dfftp%nnr
+           v%of_r(ir,is)=v%of_r(ir,is)+2.0d0*UtsvdW(ir)
+        END DO
+     END DO
+  END IF
   !
   CALL stop_clock( 'v_of_rho' )
   !
