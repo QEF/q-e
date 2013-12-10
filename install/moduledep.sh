@@ -28,7 +28,7 @@ rm -f moduledep.tmp1 moduledep.tmp2 # destroy previous contents
 # each line is of the form:
 # file_name.o : @module_name@
 # cast all module names to lowercase because Fortran is case insensitive
-egrep -i "^ *use " $sources |             # look for "USE name"
+egrep -H -i "^ *use " $sources |             # look for "USE name"
 sed 's/f90:/o /
      s/,/ /' |                            # replace extension, insert space
 #                                         #   and remove trailing comma
@@ -38,7 +38,7 @@ sort | uniq > moduledep.tmp1              # remove duplicates
 # create list of available modules
 # for each module, create a line of the form:
 # s/@module_name@/file_name/g
-egrep -i "^ *module " $sources_all |           # look for "MODULE name"
+egrep -H -i "^ *module " $sources_all |           # look for "MODULE name"
 sed 's/f90:/o /
      s/\//\\\//g' |                            # replace extension, insert
 #                                              #   space and escape slashes

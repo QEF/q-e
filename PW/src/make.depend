@@ -400,6 +400,7 @@ electrons.o : ../../Modules/mp_pools.o
 electrons.o : ../../Modules/noncol.o
 electrons.o : ../../Modules/paw_variables.o
 electrons.o : ../../Modules/recvec.o
+electrons.o : ../../Modules/tsvdw.o
 electrons.o : ../../Modules/uspp.o
 electrons.o : ../../Modules/wavefunctions.o
 electrons.o : atomic_wfc_mod.o
@@ -557,6 +558,7 @@ forces.o : ../../Modules/ions_base.o
 forces.o : ../../Modules/kind.o
 forces.o : ../../Modules/mm_dispersion.o
 forces.o : ../../Modules/recvec.o
+forces.o : ../../Modules/tsvdw.o
 forces.o : ../../Modules/uspp.o
 forces.o : bp_mod.o
 forces.o : ldaU.o
@@ -779,6 +781,7 @@ init_run.o : ../../Modules/ions_base.o
 init_run.o : ../../Modules/mp_bands.o
 init_run.o : ../../Modules/paw_variables.o
 init_run.o : ../../Modules/recvec_subs.o
+init_run.o : ../../Modules/tsvdw.o
 init_run.o : ../../Modules/uspp.o
 init_run.o : ../../Modules/wannier_new.o
 init_run.o : bp_mod.o
@@ -840,6 +843,7 @@ input.o : ../../Modules/read_namelists.o
 input.o : ../../Modules/read_pseudo.o
 input.o : ../../Modules/recvec.o
 input.o : ../../Modules/run_info.o
+input.o : ../../Modules/tsvdw.o
 input.o : ../../Modules/uspp.o
 input.o : ../../Modules/wannier_new.o
 input.o : ../../Modules/wrappers.o
@@ -1831,6 +1835,7 @@ v_of_rho.o : ../../Modules/mp.o
 v_of_rho.o : ../../Modules/mp_bands.o
 v_of_rho.o : ../../Modules/noncol.o
 v_of_rho.o : ../../Modules/recvec.o
+v_of_rho.o : ../../Modules/tsvdw.o
 v_of_rho.o : esm.o
 v_of_rho.o : ldaU.o
 v_of_rho.o : martyna_tuckerman.o
@@ -1982,6 +1987,7 @@ xk_wk_collect.o : pwcom.o
 z2_c_phase.o : ../../Modules/becmod.o
 z2_c_phase.o : ../../Modules/cell_base.o
 z2_c_phase.o : ../../Modules/constants.o
+z2_c_phase.o : ../../Modules/control_flags.o
 z2_c_phase.o : ../../Modules/fft_base.o
 z2_c_phase.o : ../../Modules/io_files.o
 z2_c_phase.o : ../../Modules/io_global.o

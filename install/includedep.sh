@@ -26,7 +26,7 @@ sed 's/[^ ]*\*\.h//g'`     # remove the "dir/*.h" that remain
 # create list of include dependencies
 # each line is of the form:
 # file_name.o : @include_file.h@
-egrep '^ *# *include *"' $sources |  # look for #include "..." statements
+egrep -H '^ *# *include *"' $sources |  # look for #include "..." statements
 #                                    #   ignore #include <...> ones
 sed 's/f90:/o /
      s/c:/o /
