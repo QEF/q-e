@@ -7,22 +7,21 @@
 !
 !
 !--------------------------------------------------------------------
-SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
+SUBROUTINE stm (sample_bias, stmdos, istates)
   !--------------------------------------------------------------------
   !
   !     This routine calculates an stm image defined as the local density
   !     of states at the fermi energy.
   !     The bias of the sample is decided by sample_bias, states between
   !     ef and ef + sample_bias are taken into account.
-  !     It needs the workfunction wf. On output wf contains the number of
-  !     states used to compute the image.
+  !     On output istates is the number of states used to compute the image.
   !     The slab must be oriented with the main axis along celldm(3).
   !     It may not properly work if the slab has two symmetric surfaces.
   !
   USE kinds, ONLY: DP
   USE constants, ONLY: tpi, rytoev
   USE io_global, ONLY : stdout
-  USE cell_base, ONLY: tpiba2, tpiba, omega, at, alat
+  USE cell_base, ONLY: tpiba2, tpiba, omega, at
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
   USE gvect, ONLY: ngm, g, nl, nlm
@@ -38,21 +37,18 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
   USE mp,        ONLY : mp_max, mp_min, mp_sum
   USE mp_global, ONLY : inter_pool_comm
   USE fft_base,  ONLY : grid_gather
-!
+  !
   IMPLICIT NONE
-  real(DP) :: sample_bias, z, dz, stmdos (dfftp%nr1x*dfftp%nr2x*dfftp%nr3x)
+  !
+  REAL(DP), INTENT(IN) :: sample_bias
+  REAL(DP), INTENT(OUT):: stmdos (dfftp%nr1x*dfftp%nr2x*dfftp%nr3x)
   ! the stm density of states
+  INTEGER, INTENT(OUT):: istates
+  ! the number of states to compute the image
   !
   !    And here the local variables
   !
-
-  LOGICAL :: uguale
-
-  INTEGER :: istates, igs, npws, ir, irx, iry, irz, ig, ibnd, &
-       ik, nbnd_ocp, first_band, last_band
-  ! the number of states to compute the image
-  ! counter on surface g vectors
-  ! number of surface g vectors
+  INTEGER :: ir, ig, ibnd, ik, nbnd_ocp, first_band, last_band
   ! counters on 3D r points
   ! counter on g vectors
   ! counter on bands
@@ -61,20 +57,18 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
   ! first band close enough to the specified energy range [down1:up1]
   ! last  band close enough to the specified energy range [down1:up1]
 
-  real(DP) :: emin, emax, fac, wf, wf1, x, y, zz, &
+  real(DP) :: emin, emax, x, y, &
        w1, w2, up, up1, down, down1, t0, scnds
   COMPLEX(DP), PARAMETER :: i= (0.d0, 1.d0)
 
   real(DP), ALLOCATABLE :: gs (:,:)
-  COMPLEX(DP), ALLOCATABLE :: a (:), psi (:,:)
-  ! the coefficients of the matching wfc
+  COMPLEX(DP), ALLOCATABLE :: psi (:,:)
   ! plane stm wfc
 
   real(DP), EXTERNAL :: w0gauss
 
   t0 = scnds ()
   ALLOCATE (gs( 2, npwx))
-  ALLOCATE (a ( npwx))
   ALLOCATE (psi(dfftp%nr1x, dfftp%nr2x))
   !
   stmdos(:) = 0.d0
@@ -245,18 +239,12 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
   stmdos(:) = rho%of_r(:,1)
 #endif
   DEALLOCATE(psi)
-  DEALLOCATE(a)
   DEALLOCATE(gs)
   WRITE( stdout, '(/5x,"STM:",f10.2,"s cpu time")') scnds ()-t0
   !
-  !     use wf to store istates
-  !
-  wf = istates
 #ifdef __MPI
-  CALL mp_sum( wf, inter_pool_comm )
+  CALL mp_sum( istates, inter_pool_comm )
 #endif
-  z = z / alat
 
-  dz = dz / alat
   RETURN
 END SUBROUTINE stm

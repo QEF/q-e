@@ -42,14 +42,12 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   CHARACTER(len=*) :: filplot
   INTEGER :: kpoint, kband, spin_component, plot_num
   LOGICAL :: lsign
-  REAL(DP) :: sample_bias, z, dz, dummy
-  REAL(DP) :: emin, emax, wf, charge, epsilon
-
-  INTEGER :: is, ipol
+  REAL(DP) :: sample_bias, dummy
+  REAL(DP) :: emin, emax, z, dz, charge, epsilon
+  INTEGER :: is, ipol, istates
 #ifdef __MPI
   ! auxiliary vector (parallel case)
   REAL(DP), ALLOCATABLE :: raux1 (:)
-
 #endif
   ! auxiliary vector
   REAL(DP), ALLOCATABLE :: raux (:), raux2(:,:)
@@ -134,14 +132,13 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ELSEIF (plot_num == 5) THEN
 
      IF (noncolin) CALL errore('punch_plot','not implemented yet',1)
-     CALL work_function (wf)
 #ifdef __MPI
-     CALL stm (wf, sample_bias, z, dz, raux1)
+     CALL stm (sample_bias, raux1, istates)
 #else
-     CALL stm (wf, sample_bias, z, dz, raux)
+     CALL stm (sample_bias, raux,  istates)
 #endif
      WRITE (title, '(" Bias in eV = ",f10.4," # states",i4)') &
-             sample_bias * rytoev, nint (wf)
+             sample_bias * rytoev, istates
 
   ELSEIF (plot_num == 6) THEN
      !
