@@ -844,7 +844,6 @@ input.o : ../../Modules/read_pseudo.o
 input.o : ../../Modules/recvec.o
 input.o : ../../Modules/run_info.o
 input.o : ../../Modules/tsvdw.o
-input.o : ../../Modules/uspp.o
 input.o : ../../Modules/wannier_new.o
 input.o : ../../Modules/wrappers.o
 input.o : a2fmod.o

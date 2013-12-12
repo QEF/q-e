@@ -62,7 +62,7 @@ SUBROUTINE setup()
                                  find_sym, inverse_s, no_t_rev
   USE wvfct,              ONLY : nbnd, nbndx, ecutwfc
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, david, lecrpa,  &
-                                 isolve, niter, noinv, &
+                                 isolve, niter, noinv, ts_vdw, &
                                  lbands, use_para_diag, gamma_only
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : upf, n_atom_wfc
@@ -94,8 +94,17 @@ SUBROUTINE setup()
   !
   okvan = ANY( upf(:)%tvanp )
   okpaw = ANY( upf(1:ntyp)%tpawp )
-  IF ( dft_is_meta() .AND. okvan ) &
-     CALL errore( 'setup', 'US and Meta-GGA not yet implemented', 1 )
+  !
+  ! ... check for features not implemented with US-PP or PAW
+  !
+  IF ( okvan .OR. okpaw ) THEN
+     IF ( dft_is_meta() ) CALL errore( 'setup', &
+                          'US/PAW and Meta-GGA not yet implemented', 1 )
+     IF ( noncolin .AND. (lberry.OR.lelfield) )  CALL errore( 'iosys', &
+       'Noncolinear Berry Phase/electric fields not implemented with USPP', 1 )
+     IF  (ts_vdw ) CALL errore ('iosys',&
+                    'Tkatchenko-Scheffler not implemented with USPP',1)
+  END IF
 
   IF ( dft_is_hybrid() ) THEN
      IF (.NOT. lscf) CALL errore( 'setup ', &
