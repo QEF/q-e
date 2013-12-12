@@ -1021,7 +1021,7 @@ PRIVATE :: GetVdWParam
   !
   IF (nspin.EQ.2) THEN
     !
-    CALL MPI_ALLGATHERV(rhor(1,2),dffts%npp(me_bgrp)*nr1*nr2,&
+    CALL MPI_ALLGATHERV(rhor(1,2),dffts%npp(me_bgrp+1)*nr1*nr2,&
         MPI_DOUBLE_PRECISION,rhor_tmp2(1),recvcount,rdispls,&
         MPI_DOUBLE_PRECISION,intra_bgrp_comm,ierr)
     !
