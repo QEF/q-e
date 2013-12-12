@@ -562,9 +562,9 @@
     !
     IMPLICIT NONE
     !
-    write(stdout,*) 'alat=',alat
-    write(stdout,*) 'at=',at
-    write(stdout,*) 'bg=',bg
+    !write(stdout,*) 'alat=',alat
+    !write(stdout,*) 'at=',at
+    !write(stdout,*) 'bg=',bg
     !
     h(:,:) = at(:,:)*alat
     !

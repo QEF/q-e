@@ -19,7 +19,6 @@ USE cell_base,          ONLY: ainv               !h^-1 matrix for converting bet
 USE cell_base,          ONLY: omega              !cell volume (in au^3)
 USE constants,          ONLY: pi                 !pi in double-precision
 USE control_flags,      ONLY: lwfpbe0            !if .TRUE. then PBE0 calculation using Wannier orbitals is turned on ... BS 
-USE electrons_base,     ONLY: nspin              !spin unpolarized (npsin=1) vs. spin polarized (nspin=2) specification
 USE fft_base,           ONLY: dffts              !FFT derived data type
 USE fft_base,           ONLY: dfftp              !FFT derived data type 
 USE funct,              ONLY: get_iexch          !retrieves type of exchange utilized in functional
@@ -979,7 +978,7 @@ PRIVATE :: GetVdWParam
   !
   ! Local variables
   !
-  INTEGER :: ir,ierr
+  INTEGER :: ir,ierr,nspin
   REAL(DP), DIMENSION(:), ALLOCATABLE :: rhor_tmp1,rhor_tmp2
   !  
   CALL start_clock('tsvdw_rhotot')
@@ -987,6 +986,8 @@ PRIVATE :: GetVdWParam
   ! Initialization of rhotot array (local copy of the real-space charge density)...
   !
   ALLOCATE(rhotot(nr1*nr2*nr3)); rhotot=0.0_DP
+  nspin = SIZE(rhor,2)
+  IF ( nspin < 1 .OR.  nspin > 2 ) CALL errore ('tsvdw','invalid nspin',1)
 #ifdef __MPI
   !
   ! Initialization of rhor_tmp temporary buffers...

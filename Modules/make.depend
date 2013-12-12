@@ -317,7 +317,6 @@ timestep.o : kind.o
 tsvdw.o : cell_base.o
 tsvdw.o : constants.o
 tsvdw.o : control_flags.o
-tsvdw.o : electrons_base.o
 tsvdw.o : fft_base.o
 tsvdw.o : funct.o
 tsvdw.o : io_global.o

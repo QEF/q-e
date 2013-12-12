@@ -257,7 +257,7 @@ SUBROUTINE readpp ( input_dft, printout )
      !
   enddo
   !
-  ! more intializations
+  ! more initializations
   !
   okvan = ( nvb > 0 )
   nlcc_any = ANY ( upf(1:ntyp)%nlcc )
