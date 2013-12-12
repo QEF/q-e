@@ -324,8 +324,8 @@ tsvdw.o : io_global.o
 tsvdw.o : ions_base.o
 tsvdw.o : kind.o
 tsvdw.o : mp.o
+tsvdw.o : mp_bands.o
 tsvdw.o : mp_images.o
-tsvdw.o : mp_world.o
 tsvdw.o : parallel_include.o
 tsvdw.o : uspp.o
 upf.o : ../iotk/src/iotk_module.o

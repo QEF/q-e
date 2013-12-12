@@ -33,10 +33,14 @@ USE ions_base,          ONLY: na                 !number of atoms within each at
 USE ions_base,          ONLY: ityp               !ityp(i):=type/species of ith atom
 USE ions_base,          ONLY: atm                !atm(j):=name of jth atomic species (3 characters)
 USE kinds,              ONLY: DP                 !double-precision kind (selected_real_kind(14,200))
+! the charge density is parallelized over the "band group" or processors
+USE mp_bands,           ONLY: nproc_bgrp         !number of processors
+USE mp_bands,           ONLY: me_bgrp            !processor number (0,1,...,nproc_bgrp-1)
+USE mp_bands,           ONLY: intra_bgrp_comm    !standard MPI communicator
+! atoms are parallelized over the "image group"
 USE mp_images,          ONLY: nproc_image        !number of processors
 USE mp_images,          ONLY: me_image           !processor number (0,1,...,nproc_image-1)
 USE mp_images,          ONLY: intra_image_comm   !standard MPI communicator
-USE mp_world,           ONLY: world_comm         !world communicator, not the same as MPI_COMM_WORLD!
 USE mp,                 ONLY: mp_sum             !MPI collection with sum
 USE parallel_include                             !MPI header
 USE uspp_param,         ONLY: upf                !atomic pseudo-potential data
@@ -169,7 +173,7 @@ PRIVATE :: GetVdWParam
   ALLOCATE(FtsvdW(3,nat)); FtsvdW=0.0_DP
   ALLOCATE(HtsvdW(3,3)); HtsvdW=0.0_DP
   !
-  Ndim=MAX(nr1*nr2,dffts%npp(me_image+1)*nr1*nr2)
+  Ndim=MAX(nr1*nr2,dffts%npp(me_bgrp+1)*nr1*nr2)
   ALLOCATE(UtsvdW(Ndim)); UtsvdW=0.0_DP
   !
   ! Set ddamp damping function parameter (set to 20 and functional independent)...
@@ -672,8 +676,6 @@ PRIVATE :: GetVdWParam
   ALLOCATE(recvcount(nproc_image)); recvcount=0
   ALLOCATE(istatus(nproc_image)); istatus=0
   !
-  nstates=0
-  !
   ! Assign workload of atoms over nproc_image processors
   !
   IF (nat.LE.nproc_image) THEN
@@ -979,7 +981,7 @@ PRIVATE :: GetVdWParam
   !
   INTEGER :: ir,ierr
   REAL(DP), DIMENSION(:), ALLOCATABLE :: rhor_tmp1,rhor_tmp2
-  !
+  !  
   CALL start_clock('tsvdw_rhotot')
   !
   ! Initialization of rhotot array (local copy of the real-space charge density)...
@@ -999,7 +1001,7 @@ PRIVATE :: GetVdWParam
   !
   ! Collect distributed rhor and broadcast to all processors...
   !
-  DO iproc=1,nproc_image
+  DO iproc=1,nproc_bgrp
     !
     recvcount(iproc)=dffts%npp(iproc)*nr1*nr2
     !
@@ -1007,21 +1009,21 @@ PRIVATE :: GetVdWParam
   !
   rdispls(1) = 0
   !
-  DO iproc=2,nproc_image
+  DO iproc=2,nproc_bgrp
     !
     rdispls(iproc)=rdispls(iproc-1)+recvcount(iproc-1)
     !
   END DO
   !
-  CALL MPI_ALLGATHERV(rhor(1,1),dffts%npp(me)*nr1*nr2,&
+  CALL MPI_ALLGATHERV(rhor(1,1),dffts%npp(me_bgrp+1)*nr1*nr2,&
       MPI_DOUBLE_PRECISION,rhor_tmp1(1),recvcount,rdispls,&
-      MPI_DOUBLE_PRECISION,intra_image_comm,ierr)
+      MPI_DOUBLE_PRECISION,intra_bgrp_comm,ierr)
   !
   IF (nspin.EQ.2) THEN
     !
-    CALL MPI_ALLGATHERV(rhor(1,2),dffts%npp(me)*nr1*nr2,&
+    CALL MPI_ALLGATHERV(rhor(1,2),dffts%npp(me_bgrp)*nr1*nr2,&
         MPI_DOUBLE_PRECISION,rhor_tmp2(1),recvcount,rdispls,&
-        MPI_DOUBLE_PRECISION,intra_image_comm,ierr)
+        MPI_DOUBLE_PRECISION,intra_bgrp_comm,ierr)
     !
   END IF
   ! 
@@ -1260,10 +1262,10 @@ PRIVATE :: GetVdWParam
   !
   ! Collect NsomegaA, NsomegaAr, gomegar, and rhosad over all processors and broadcast...
   !
-  CALL mp_sum(NsomegaA,world_comm)
-  CALL mp_sum(NsomegaAr,world_comm)
-  CALL mp_sum(gomegar,world_comm)
-  CALL mp_sum(rhosad,world_comm)
+  CALL mp_sum(NsomegaA,intra_image_comm)
+  CALL mp_sum(NsomegaAr,intra_image_comm)
+  CALL mp_sum(gomegar,intra_image_comm)
+  CALL mp_sum(rhosad,intra_image_comm)
   !
   ! Decompose gomegar to gomegaAr to save on memory storage...
   !
@@ -1364,7 +1366,7 @@ PRIVATE :: GetVdWParam
   !
   ! Collect veff over all processors and broadcast...
   !
-  CALL mp_sum(veff,world_comm)
+  CALL mp_sum(veff,intra_image_comm)
   !
   CALL stop_clock('tsvdw_veff')
   !
@@ -1715,8 +1717,8 @@ PRIVATE :: GetVdWParam
   !
   ! Collect dveffdR and dveffdh over all processors and broadcast...
   !
-  CALL mp_sum(dveffdR,world_comm)
-  CALL mp_sum(dveffdh,world_comm)
+  CALL mp_sum(dveffdR,intra_image_comm)
+  CALL mp_sum(dveffdh,intra_image_comm)
   !
   CALL stop_clock('tsvdw_dveff')
   !
@@ -2102,10 +2104,10 @@ PRIVATE :: GetVdWParam
     !
     ! Synchronize n_period contribution from all processors...
     !
-    CALL mp_sum(EtsvdW_period,world_comm)
-    CALL mp_sum(FtsvdW_period,world_comm)
-    CALL mp_sum(HtsvdW_period,world_comm)
-    CALL mp_sum(predveffAdn_period,world_comm)
+    CALL mp_sum(EtsvdW_period,intra_image_comm)
+    CALL mp_sum(FtsvdW_period,intra_image_comm)
+    CALL mp_sum(HtsvdW_period,intra_image_comm)
+    CALL mp_sum(predveffAdn_period,intra_image_comm)
     !
     ! Increment total quantities...
     !
@@ -2200,16 +2202,16 @@ PRIVATE :: GetVdWParam
   !
   ! Collect UtsvdWA over all processors and broadcast...
   !
-  CALL mp_sum(UtsvdWA,world_comm)
+  CALL mp_sum(UtsvdWA,intra_image_comm)
   !
   ! Partition out dispersion potential consistent with slabs of the charge density...
   !
-  IF (dffts%npp(me_image+1).NE.0) THEN
+  IF (dffts%npp(me_bgrp+1).NE.0) THEN
     !
 !$omp parallel do 
-    DO ip=1,dffts%npp(me_image+1)*nr1*nr2
+    DO ip=1,dffts%npp(me_bgrp+1)*nr1*nr2
       !
-      UtsvdW(ip)=UtsvdWA(ip+rdispls(me_image+1)) 
+      UtsvdW(ip)=UtsvdWA(ip+rdispls(me_bgrp+1)) 
       !
     END DO
 !$omp end parallel do 
