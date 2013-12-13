@@ -1,7 +1,5 @@
  &control
-    calculation = 'scf',
-    tstress = .FALSE.,
-    tprnfor = .TRUE.,
+    calculation = 'relax',
  /
  &system
     ibrav = 1,
@@ -15,6 +13,8 @@
     x_gamma_extrapolation = .TRUE.
  /
  &electrons
+ /
+ &ions
  /
 ATOMIC_SPECIES
  O 16.0d0 O.blyp-mt.UPF

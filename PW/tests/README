@@ -12,7 +12,7 @@ atom       O       occupancies from input, also with spin polarization
 berry     PbTiO3   scf: Q function in real space (tqr=.true.)
                    nscf: Berry phase calculation (with and without empty bands)
 b3lyp-O    O       B3LYP hybrid functional (spin polarized), Gamma
-b3lyp-h2o  H2O     B3LYP hybrid functional, un polarized, Gamma
+b3lyp-h2o  H2O     structural optimization with B3LYP, unpolarized, Gamma
 cluster  N,NH4,H2O Martyna-Tuckermann method for isolated systems
            NH4     Makov-Payne correction for isolated systems
 dipole    CO on Ni dipole field correction
