@@ -61,15 +61,15 @@ SUBROUTINE init_clocks( go )
   !
   USE kinds,  ONLY : DP
   USE mytime, ONLY : called, t0cpu, cputime, no, notrunning, maxclock, &
-       clock_label, walltime, t0wall
+       clock_label, walltime, t0wall, nclock
   !
   IMPLICIT NONE
   !
   LOGICAL :: go
   INTEGER :: n
   !
-  !
   no = .not. go
+  nclock = 0
   !
   DO n = 1, maxclock
      !
