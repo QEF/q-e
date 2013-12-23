@@ -44,7 +44,7 @@ CONTAINS
 !this subroutine kills the MPI environment
 
     USE io_global,         ONLY : stdout, ionode
-    USE mp_global          ONLY : mp_global_end
+    USE mp_global,         ONLY : mp_global_end
 
     IMPLICIT NONE
 
