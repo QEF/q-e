@@ -275,7 +275,6 @@ self_energy_storage.o : para_gww.o
 self_energy_storage.o : polarization.o
 self_energy_storage.o : times_gw.o
 start_end.o : ../../Modules/io_global.o
-start_end.o : ../../Modules/mp.o
 start_end.o : ../../Modules/mp_global.o
 start_end.o : ../../Modules/mp_world.o
 times_gw.o : ../../Modules/constants.o

@@ -90,8 +90,8 @@ program generate_kernel
   !! Use some PWSCF modules.  In particular, we need the parallelization modules.
   !! --------------------------------------------------------------------------------------------
 
-  use mp,                   ONLY : mp_get, mp_end, mp_barrier
-  use mp_global,            ONLY : mp_startup
+  use mp,                   ONLY : mp_get, mp_barrier
+  use mp_global,            ONLY : mp_startup, mp_global_end
   use mp_world,             ONLY : world_comm, nproc, mpime
   use kinds,                ONLY : dp
   use io_global,            ONLY : ionode, ionode_id
@@ -453,7 +453,7 @@ program generate_kernel
   !! -----------------------------------------------------------------------------------------------------
 
   !! Finalize the mpi run using the PWSCF method
-  call mp_end( world_comm )               
+  call mp_global_end( )               
 
   deallocate( phi, d2phi_dk2, indices, proc_indices )
 

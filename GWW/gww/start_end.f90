@@ -44,16 +44,14 @@ CONTAINS
 !this subroutine kills the MPI environment
 
     USE io_global,         ONLY : stdout, ionode
-    USE mp,                ONLY : mp_barrier, mp_end
-    USE mp_world,          ONLY : world_comm
+    USE mp_global          ONLY : mp_global_end
 
     IMPLICIT NONE
 
 #ifdef __PARA
 
     if(ionode) write(stdout,*) 'Stopping MPI environment'
-    call mp_barrier( world_comm )
-    call mp_end( world_comm )
+    call mp_global_end( )
 #endif
 
     return

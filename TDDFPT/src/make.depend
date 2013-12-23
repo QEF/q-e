@@ -391,7 +391,6 @@ stop_lr.o : ../../Modules/io_files.o
 stop_lr.o : ../../Modules/io_global.o
 stop_lr.o : ../../Modules/ions_base.o
 stop_lr.o : ../../Modules/kind.o
-stop_lr.o : ../../Modules/mp.o
-stop_lr.o : ../../Modules/mp_world.o
+stop_lr.o : ../../Modules/mp_global.o
 stop_lr.o : ../../Modules/parallel_include.o
 stop_lr.o : lr_variables.o
