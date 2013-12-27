@@ -1,0 +1,47 @@
+
+
+
+This example shows how to create Infrared and Raman spectra using pw.x, ph.x and dynmat.x
+
+The example is divided on two parts, the first one is an example of a molecule (CO2) and the second one is a solid (ZnO-Wurtzite) which are computed in a similar way, but with some small differences. With metals the occupation is determined by smearing and as it is a solid there should be more k-points. For the phonon calculation, the "epsil" should be set to .false. for ZnO, otherwise the code will not be able to compute the dielectric constant and will crash. But it can be set to .true. in the case of CO2.
+
+Each section consists of 4 steps:
+
+1) Optimize the wavefunction by performing an Self Consistent Field (scf) calculation with pw.x
+   Input          Outputs
+   co2.scf.in     co2.scf.out  (CO2.*  in the temporal folder)
+   zno.scf.in     zno.scf.out  (ZNO.*  in the temporal folder)
+
+2) Calculate the vibrational frequencies (normal modes/phonons) with ph.x
+   Input                                Outputs
+   co2.ph.in (< CO2.* from the $tmp)    co2.ph.out, dmat.co2
+   zno.ph.in (< ZNO.* from the $tmp)    zno.ph.out, dmat.zno
+
+
+3) Extract the phonon information from ph.x output using dynmat.x
+   Input                      Output
+   co2.dm.in (< dmat.co2)     co2.dm.out
+   zno.dm.in (< dmat.zno)     zno.dm.out
+
+4) Parse the dynmat.x output section that contains the spectra data and plot it with gnuplot 
+   Input                      Output
+   plot_command_co2.cmd     Pop-Up gnuplot graph window
+   plot_command_zno.cmd     Pop-Up gnuplot graph window
+
+
+
+
+
+When runing in parallel (4 cores), it takes some 17 min to run on a i7-2,83GHz machine. 
+
+
+Julen Larrucea,
+HMI-Group, University of Bremen, Germany. 
+www.larrucea.eu
+Acknowledgements to Nicola Seriani and Tatjana Dabrowski for discussion and support.
+
+
+
+
+
+

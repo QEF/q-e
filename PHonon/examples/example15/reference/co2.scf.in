@@ -1,0 +1,28 @@
+&CONTROL
+  calculation  = "scf",
+  prefix       = "CO2",
+  pseudo_dir   = "/home/larrucea/Software/MM/espresso-5.0.2/pseudo",
+  outdir       = "/home/larrucea/tmp",
+/
+&SYSTEM
+  ibrav     = 1,
+  celldm(1) =14.0,
+  nat       = 3,
+  ntyp      = 2,
+  ecutwfc   = 80.D0, !better 120
+/
+&ELECTRONS
+  conv_thr    = 1.D-8,
+  mixing_beta = 0.7,
+/
+&IONS
+/
+ATOMIC_SPECIES
+  C 12.010  C.pbe-hgh.UPF
+  O 15.999  O.pbe-hgh.UPF
+ATOMIC_POSITIONS (angstrom)
+C        3.000042068   3.000042068   3.544613556
+O        3.835408973   3.835408973   3.543705292
+O        2.164548959   2.164548959   3.543681153
+K_POINTS (automatic)
+1 1 1 0 0 0

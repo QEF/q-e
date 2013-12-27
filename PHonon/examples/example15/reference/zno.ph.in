@@ -1,0 +1,13 @@
+Normal modes for Wurtzite
+ &inputph
+  tr2_ph=1.0d-14,
+  prefix='ZNO',
+  amass(1)=65.409,
+  amass(2)=15.999,
+  outdir='/home/larrucea/tmp'
+  epsil=.false.,
+  trans=.true.,
+  asr=.true.
+  fildyn='dmat.zno'
+ /
+ 0.0 0.0 0.0
