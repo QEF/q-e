@@ -1412,8 +1412,8 @@ CONTAINS
         ALLOCATE( rwork( MAX(1, 3*n-2) ), zwork( MAX(1, 2*n-1)) )
         CALL ZHPEV(jobz, uplo, n, ap, w, z, ldz, zwork, rwork, INFO)
         DEALLOCATE( rwork, zwork )
-        IF( info .NE. 0 ) THEN
-          CALL errore( ' dspev_drv ', ' diagonalization failed ',info )
+        IF( INFO .NE. 0 ) THEN
+          CALL errore( ' dspev_drv ', ' diagonalization failed ',INFO )
         END IF
 #endif
         RETURN
@@ -1463,7 +1463,7 @@ CONTAINS
 
      USE kinds,     ONLY : DP
      USE mp_diag,   ONLY : ortho_comm
-     USE mp,        ONLY : mp_barrier
+     USE mp,        ONLY : mp_comm_free
 #ifdef __ELPA
      USE elpa1
 #endif
@@ -1498,7 +1498,7 @@ CONTAINS
         ALLOCATE( v( SIZE( h, 1 ), SIZE( h, 2 ) ) )
         jobv = 'V'
      ELSE
-        CALL errore( ' pzheevd_drv ', ' pzheevd does not compute eigenvalue only ', ABS( info ) )
+        CALL errore('pzheevd_drv', 'pzheevd does not compute eigenvalue only',1)
      END IF
 
      call descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, size(h,1), info )
@@ -1511,13 +1511,8 @@ CONTAINS
                           mpi_comm_rows, mpi_comm_cols)
      h = v
 
-     CALL MPI_Comm_free( mpi_comm_rows, info )
-     IF( info /= 0 ) &
-        CALL errore( " pzheevd_drv ", " in mpi_comm_free 1 ", ABS( info ) )
-
-     CALL MPI_Comm_free( mpi_comm_cols, info )
-     IF( info /= 0 ) &
-        CALL errore( " pzheevd_drv ", " in mpi_comm_free 2 ", ABS( info ) )
+     CALL mp_comm_free( mpi_comm_rows )
+     CALL mp_comm_free( mpi_comm_cols )
 
 #else
 !

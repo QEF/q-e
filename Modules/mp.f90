@@ -22,11 +22,8 @@
       !
       IMPLICIT NONE
       PRIVATE
-      ! when set to true, MPI_Finalize() is not called.
-      ! needed for library interface
-      LOGICAL :: skip_finalize = .FALSE.
 
-      PUBLIC :: mp_start, mp_abort, mp_end, &
+      PUBLIC :: mp_start, mp_abort, mp_stop, mp_end, &
         mp_bcast, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
         mp_gather, mp_alltoall, mp_get, mp_put, mp_barrier, mp_report, mp_group_free, &
         mp_root_sum, mp_comm_free, mp_comm_create, mp_comm_group, &
@@ -102,7 +99,7 @@
 #if defined (__MPI)
         group = gid
         CALL MPI_GATHER(mydata, 1, MPI_INTEGER, alldata, 1, MPI_INTEGER, root, group, IERR)
-        IF (ierr/=0) CALL mp_stop( 8001 )
+        IF (ierr/=0) CALL mp_stop( 8013 )
 #else
         alldata(1) = mydata
 #endif
@@ -123,13 +120,13 @@
 
 #if defined (__MPI)
         msglen = SIZE(mydata)
-        IF( msglen .NE. SIZE(alldata, 1) ) CALL mp_stop( 8000 )
+        IF( msglen .NE. SIZE(alldata, 1) ) CALL mp_stop( 8014 )
         group = gid
         CALL MPI_GATHER(mydata, msglen, MPI_INTEGER, alldata, msglen, MPI_INTEGER, root, group, IERR)
-        IF (ierr/=0) CALL mp_stop( 8001 )
+        IF (ierr/=0) CALL mp_stop( 8014 )
 #else
         msglen = SIZE(mydata)
-        IF( msglen .NE. SIZE(alldata, 1) ) CALL mp_stop( 8002 )
+        IF( msglen .NE. SIZE(alldata, 1) ) CALL mp_stop( 8014 )
         alldata(:,1) = mydata(:)
 #endif
         RETURN
@@ -151,11 +148,7 @@
         taskid = 0
 
 #  if defined(__MPI)
-        CALL mpi_initialized(skip_finalize, ierr)
-        IF (.NOT. skip_finalize) THEN
-            CALL mpi_init(ierr)
-        END IF
-        IF (ierr/=0) CALL mp_stop( 8003 )
+        IF (ierr/=0) CALL mp_stop( 8004 )
         CALL mpi_comm_rank(group,taskid,ierr)
         IF (ierr/=0) CALL mp_stop( 8005 )
 #if defined __HPM
@@ -181,7 +174,6 @@
         INTEGER, INTENT(IN):: errorcode, gid
 #ifdef __MPI
         CALL mpi_abort(gid, errorcode, ierr)
-        IF (.NOT. skip_finalize) CALL mpi_finalize(ierr)
 #endif
       END SUBROUTINE mp_abort
 !
@@ -206,11 +198,6 @@
         !   terminate the IBM Hardware performance monitor
         CALL f_hpmterminate( taskid )
 #endif
-
-        IF (.NOT. skip_finalize) THEN
-            CALL mpi_finalize(ierr)
-            IF (ierr/=0) CALL mp_stop( 8004 )
-        END IF
 #endif
         RETURN
       END SUBROUTINE mp_end

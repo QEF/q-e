@@ -652,6 +652,7 @@ CONTAINS
      USE kinds,     ONLY : DP
      USE mp_bands,  ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
      USE mp_diag,   ONLY: ortho_comm
+     USE mp,        ONLY: mp_comm_free
 #ifdef __ELPA
      USE elpa1
 #endif
@@ -687,7 +688,7 @@ CONTAINS
         ALLOCATE( vv( SIZE( s, 1 ), SIZE( s, 2 ) ) )
         jobv = 'V'
      ELSE
-        CALL errore( ' pdsyevd_drv ', ' PDSYEVD does not compute eigenvalue only ', ABS( info ) )
+        CALL errore('pdsyevd_drv','PDSYEVD does not compute eigenvalue only',1)
      END IF
 
      CALL descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, SIZE( s, 1 ) , info )
@@ -706,13 +707,8 @@ CONTAINS
      IF( tv )  s = vv
      IF( ALLOCATED( vv ) ) DEALLOCATE( vv )
 
-     CALL MPI_Comm_free( mpi_comm_rows, info )
-     IF( info /= 0 ) &
-        CALL errore( " pdsyevd_drv ", " in mpi_comm_free 1 ", ABS( info ) )
-
-     CALL MPI_Comm_free( mpi_comm_cols, info )
-     IF( info /= 0 ) &
-        CALL errore( " pdsyevd_drv ", " in mpi_comm_free 2 ", ABS( info ) )
+     CALL mp_comm_free ( mpi_comm_rows )
+     CALL mp_comm_free ( mpi_comm_cols )
 #else
      CALL PDSYEVD( jobv, 'L', n, s, 1, 1, desch, w, vv, 1, 1, desch, rtmp, lwork, itmp, liwork, info )
 
