@@ -73,7 +73,7 @@ MODULE cp_restart
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            amass, iforce, ind_bck
       USE funct,                    ONLY : get_dft_name, get_inlc
-      USE ldaU_cp,                  ONLY : lda_plus_U, ns, ldmx
+      USE ldaU_cp,                  ONLY : lda_plus_U, ns
       USE energies,                 ONLY : enthal, ekin, eht, esr, eself, &
                                            epseu, enl, exc, vave
       USE mp,                       ONLY : mp_sum, mp_barrier
@@ -466,8 +466,7 @@ MODULE cp_restart
             ! ugly hack to remove .save from dirname
             filename = dirname (1:i-4) // 'occup'
             OPEN (UNIT=iunout,FILE=filename,FORM ='formatted',STATUS='unknown')
-            WRITE( iunout, * , iostat = ierr) & 
-               ((( (ns(ia,is,i,j), i=1,ldmx), j=1,ldmx), is=1,nspin), ia=1,nat)
+            WRITE( iunout, * , iostat = ierr) ns
          END IF
          CALL mp_bcast( ierr, ionode_id, intra_image_comm )
          IF ( ierr/=0 ) CALL errore('cp_writefile', 'Writing ldaU ns', 1)

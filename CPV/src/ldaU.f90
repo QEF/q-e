@@ -142,7 +142,7 @@ end module ldaU_cp
      &        ('setup','lda_plus_u calculation but Hubbard_l not set',1)
       !
       ldmx = 2 * Hubbard_lmax + 1
-      allocate(ns(nat,nspin,ldmx,ldmx))
+      allocate(ns(ldmx,ldmx,nat,nspin))
       !
       return
       end subroutine ldaU_init
@@ -241,12 +241,12 @@ end module ldaU_cp
                do m1 = 1, 2*Hubbard_l(is) + 1
                   do m2 = m1, 2*Hubbard_l(is) + 1
                      do i = 1,n
-                      ns(iat,ispin(i),m1,m2) = ns(iat,ispin(i),m1,m2) + &
+                      ns(m1,m2,iat,ispin(i)) = ns(m1,m2,iat,ispin(i)) + &
      &                               f(i) * proj(i,k+m2) * proj(i,k+m1)
                      end do
                   end do
                   do m2 = m1+1, 2*Hubbard_l(is) + 1
-                     ns(iat,:,m2,m1) = ns(iat,:,m1,m2)
+                     ns(m2,m1,iat,:) = ns(m1,m2,iat,:)
                   end do
                end do
             end if
@@ -263,10 +263,10 @@ end module ldaU_cp
                 do isp = 1,nspin
                    do m1 = 1, 2*Hubbard_l(is) + 1
                      e_hubbard = e_hubbard + 0.5d0 * Hubbard_U(is) *    &
-     &                           ns(iat,isp,m1,m1)
+     &                           ns(m1,m1,iat,isp)
                      do m2 = 1, 2*Hubbard_l(is) + 1
                         e_hubbard = e_hubbard - 0.5d0 * Hubbard_U(is) * &
-     &                              ns(iat,isp,m1,m2) * ns(iat,isp,m2,m1)
+     &                              ns(m1,m2,iat,isp) * ns(m2,m1,iat,isp)
                      end do
                    end do
                 end do
@@ -291,7 +291,7 @@ end module ldaU_cp
                      tempsi(m1,i) = proj (i,offset(is,ia)+m1)
                      do m2 = 1, ldim
                         tempsi(m1,i) = tempsi(m1,i) - &
-                                       2.0_dp*ns(iat,ispin(i),m1,m2) * &
+                                       2.0_dp*ns(m1,m2,iat,ispin(i)) * &
                                                proj (i,offset(is,ia)+m2)
                      enddo
                      tempsi(m1,i) = tempsi(m1,i) * Hubbard_U(is)/2.d0*f(i)
@@ -324,7 +324,7 @@ end module ldaU_cp
                      do m1 = 1, 2 * Hubbard_l(is) + 1
                         do m2 = m1, 2 * Hubbard_l(is) + 1
                            k = k + 1
-                           f1 (k) = ns (iat, isp, m2, m1)
+                           f1 (k) = ns (m2,m1,iat,isp)
                         enddo
                      enddo
                      CALL dspev_drv( 'V', 'L', 2*Hubbard_l(is)+1, f1, &
@@ -361,7 +361,7 @@ end module ldaU_cp
       if ( tfor .or. tprnfor ) then
         call start_clock('new_ns:forc')
         allocate (bp(nhsa,n), dbp(nhsa,nx,3), wdb(nhsa,n_atomic_wfc,3))
-        allocate(dns(nat,nspin,ldmx,ldmx))
+        allocate(dns(ldmx,ldmx,nat,nspin))
         allocate (spsi(ngw,n))
 !
         call nlsm1 ( n, 1, nsp, eigr, c, bp )
@@ -384,11 +384,11 @@ end module ldaU_cp
                         do isp = 1,nspin
                            do m2 = 1,2*Hubbard_l(is) + 1
                               forceh(ipol,alpha) = forceh(ipol,alpha) -   &
-     &                        Hubbard_U(is) * 0.5d0 * dns(iat,isp,m2,m2)
+     &                        Hubbard_U(is) * 0.5d0 * dns(m2,m2,iat,isp)
                               do m1 = 1,2*Hubbard_l(is) + 1
                                  forceh(ipol,alpha) = forceh(ipol,alpha) + &
-     &                           Hubbard_U(is)*ns(iat,isp,m2,m1)*       &
-     &                           dns(iat,isp,m1,m2)
+     &                           Hubbard_U(is)*ns(m2,m1,iat,isp)*       &
+     &                           dns(m1,m2,iat,isp)
                               end do
                            end do
                         end do
@@ -403,7 +403,7 @@ end module ldaU_cp
                               do m1 = 1, 2 * Hubbard_l(is) + 1
                                  do m2 = m1, 2 * Hubbard_l(is) + 1
                                     k = k + 1
-                                    f1 (k) = ns (iat, isp, m2, m1)
+                                    f1 (k) = ns (m2,m1,iat,isp)
                                  enddo
                               enddo
                               CALL dspev_drv( 'V', 'L', 2 * Hubbard_l(is) + 1,&
@@ -415,7 +415,7 @@ end module ldaU_cp
                                  do m2 = 1,2*Hubbard_l(is) + 1
                                     force_pen(ipol,alpha) =                &
      &                              force_pen(ipol,alpha) +                &
-     &                              g_value * dns(iat,isp,m1,m2)           &
+     &                              g_value * dns(m1,m2,iat,isp)           &
      &                               * vet(m1,2*Hubbard_l(is)+1)           &
                                      * vet(m2,2*Hubbard_l(is)+1)
                                  end do
@@ -498,7 +498,7 @@ end module ldaU_cp
             if (Hubbard_U(is).ne.0.d0) then
                do isp = 1, nspin
                    do m1 = 1, 2 * Hubbard_l(is) + 1
-                      nsuma = nsuma + ns (iat, isp, m1, m1)
+                      nsuma = nsuma + ns (m1,m1,iat,isp)
                    end do
                end do
                if (nspin.eq.1) nsuma = 2.d0 * nsuma
@@ -512,7 +512,7 @@ end module ldaU_cp
                   do m1 = 1, 2 * Hubbard_l(is) + 1
                      do m2 = m1, 2 * Hubbard_l(is) + 1
                         k = k + 1
-                        f1 ( k ) = ns (iat, isp, m2, m1)
+                        f1 ( k ) = ns (m2,m1,iat,isp)
                      enddo
                   enddo
 
@@ -529,7 +529,7 @@ end module ldaU_cp
                   end do
                   write(6,*) 'occupations'
                   do m1 = 1, 2*Hubbard_l(is)+1
-                     write (6,'(7(f6.3,1x))') (ns(iat,isp,m1,m2),m2=1,    &
+                     write (6,'(7(f6.3,1x))') (ns(m1,m2,iat,isp),m2=1,    &
      &                     2*Hubbard_l(is)+1)
                   end do
                end do
@@ -573,7 +573,7 @@ end module ldaU_cp
       real(DP),     intent(in) :: proj(n,n_atomic_wfc)
       complex (DP), intent(in) :: spsi(ngw,n)
 ! output
-      real (DP),   intent(out) :: dns(nat,nspin,ldmx,ldmx)
+      real (DP),   intent(out) :: dns(ldmx,ldmx,nat,nspin)
 !
 !     dns !derivative of ns(:,:,:,:) w.r.t. tau
 !
@@ -601,14 +601,14 @@ end module ldaU_cp
                do m1 = 1, ldim
                   do m2 = m1, ldim
                      do ibnd = 1,n
-                        dns(iat,ispin(ibnd),m1,m2) =                    &
-     &                  dns(iat,ispin(ibnd),m1,m2) +                    &
+                        dns(m1,m2,iat,ispin(ibnd)) =                    &
+     &                  dns(m1,m2,iat,ispin(ibnd)) +                    &
      &                   f(ibnd)*REAL(  proj(ibnd,offset(is,ia)+m1) *   &
      &                   (dproj(ibnd,offset(is,ia)+m2))  +              &
      &                         dproj(ibnd,offset(is,ia)+m1)  *          &
      &                         (proj(ibnd,offset(is,ia)+m2)) )
                      end do
-                     dns(iat,:,m2,m1) = dns(iat,:,m1,m2)
+                     dns(m2,m1,iat,:) = dns(m1,m2,iat,:)
                   end do
                end do
             end if
@@ -628,7 +628,7 @@ end module ldaU_cp
 !
 ! This routine computes the first derivative of the projection
 ! <\fi^{at}_{I,m1}|S|\psi_{k,v,s}> with respect to the atomic displacement
-! u(alpha,ipol) (we remember that ns_{I,s,m1,m2} = \sum_{k,v}
+! u(alpha,ipol) (we remember that ns_{m1,m2,I,s} = \sum_{k,v}
 ! f_{kv} <\fi^{at}_{I,m1}|S|\psi_{k,v,s}><\psi_{k,v,s}|S|\fi^{at}_{I,m2}>)
 !
       use ions_base, only: na, nat
