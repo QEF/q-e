@@ -121,7 +121,7 @@
 
         IF( dffts%have_task_groups ) THEN
            !
-           !  The potential in rhos is distributed accros all processors
+           !  The potential in rhos is distributed across all processors
            !  We need to redistribute it so that it is completely contained in the
            !  processors of an orbital TASK-GROUP
            !
@@ -151,9 +151,6 @@
 
               if( tefield .OR. tefield2 ) then
                  CALL errore( ' runcp_uspp ', ' electric field with task group not implemented yet ', 1 )
-              end if
-              if( lda_plus_u ) then
-                 CALL errore( ' runcp_uspp ', ' lda_plus_u with task group not implemented yet ', 1 )
               end if
 
               IF( nspin > 1 .AND. ispin_bgrp(i) /= ispin_bgrp( MIN( nbsp_bgrp, i+incr-1 ) ) ) THEN
@@ -215,17 +212,29 @@
                  CALL dforce( i, bec_bgrp, vkb, c0_bgrp, c2, c3, tg_rhos, tg_rhos_siz, ispin_bgrp, f_bgrp, nbsp_bgrp, nspin )
 
               END IF
+              IF ( lda_plus_u ) THEN
+                 idx_in = 1
+                 DO idx = 1, incr, 2
+                    ii = i+idx-1
+                    IF( ii <= nbsp_bgrp ) THEN
+                       c2( (idx_in-1)*ngw+1 : idx_in*ngw ) = &
+                       c2( (idx_in-1)*ngw+1 : idx_in*ngw ) - vupsi(1:ngw,ii)
+                       c3( (idx_in-1)*ngw+1 : idx_in*ngw ) = &
+                       c3( (idx_in-1)*ngw+1 : idx_in*ngw ) - vupsi(1:ngw,ii+1)
+                    END IF
+                    idx_in = idx_in + 1
+                 ENDDO
+              END IF
 
            ELSE
 
-              CALL dforce( i, bec_bgrp, vkb, c0_bgrp, c2, c3, rhos, SIZE(rhos,1), ispin_bgrp, f_bgrp, nbsp_bgrp, nspin )
+              CALL dforce( i, bec_bgrp, vkb, c0_bgrp, c2, c3, rhos, &
+                           SIZE(rhos,1), ispin_bgrp, f_bgrp, nbsp_bgrp, nspin )
+              IF ( lda_plus_u ) THEN
+                 c2(:) = c2(:) - vupsi(:,i)
+                 c3(:) = c3(:) - vupsi(:,i+1)
+              END IF
 
-           END IF
-
-
-           IF ( lda_plus_u ) THEN
-              c2(:) = c2(:) - vupsi(:,i)
-              c3(:) = c3(:) - vupsi(:,i+1)
            END IF
 
            IF( tefield ) THEN
