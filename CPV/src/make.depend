@@ -567,7 +567,13 @@ ldaU.o : ../../Modules/uspp.o
 ldaU.o : cp_interfaces.o
 ldaU.o : gvecw.o
 ldaU.o : ldaUpen.o
+ldaUpen.o : ../../Modules/constants.o
+ldaUpen.o : ../../Modules/dspev_drv.o
+ldaUpen.o : ../../Modules/electrons_base.o
+ldaUpen.o : ../../Modules/ions_base.o
 ldaUpen.o : ../../Modules/kind.o
+ldaUpen.o : gvecw.o
+ldaUpen.o : ldaU.o
 mainvar.o : ../../Modules/cell_base.o
 mainvar.o : ../../Modules/control_flags.o
 mainvar.o : ../../Modules/descriptors.o
@@ -944,7 +950,6 @@ vofrho.o : ../../Modules/xc_vdW_DF.o
 vofrho.o : cp_interfaces.o
 vofrho.o : energies.o
 vofrho.o : ldaU.o
-vofrho.o : ldaUpen.o
 vofrho.o : modules.o
 vofrho.o : pres_ai_mod.o
 vofrho.o : smallbox_gvec.o

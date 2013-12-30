@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2011 Quantum ESPRESSO group
+! Copyright (C) 2011-2014 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -165,28 +165,18 @@ end module ldaU_cp
       use electrons_base,     only: nspin, n => nbsp, nx => nbspx, ispin, f
       USE ldaU_cp,            ONLY: Hubbard_U, Hubbard_l, ldmx
       USE ldaU_cp,            ONLY: n_atomic_wfc, ns, e_hubbard
-      USE step_penalty,       ONLY: E_pen, A_pen, sigma_pen, alpha_pen
-      USE step_penalty,       ONLY: step_pen
-      USE dspev_module,       only: dspev_drv
+      USE step_penalty,       ONLY: penalty_e, penalty_f
       USE mp_global,          only: nbgrp
       USE cp_interfaces,      only: nlsm1, nlsm2_bgrp
 !
       implicit none
-#ifdef __MPI
-      include 'mpif.h'
-#endif
       complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat), betae(ngw,nhsa)
       complex(DP), intent(out) :: hpsi(ngw,nx)
       real(DP), INTENT(OUT) :: forceh(3,nat)
 !
-      complex(DP), allocatable:: wfc(:,:), swfc(:,:),dphi(:,:,:),   &
-     &                               spsi(:,:), hpsi_pen(:,:)
-      real(DP), allocatable   :: becwfc(:,:), bp(:,:),              &
-     &                               dbp(:,:,:), wdb(:,:,:)
+      complex(DP), allocatable:: wfc(:,:), swfc(:,:), spsi(:,:)
+      real(DP), allocatable   :: becwfc(:,:), bp(:,:), dbp(:,:,:), wdb(:,:,:)
       real(DP), allocatable   :: dns(:,:,:,:), proj(:,:), tempsi(:,:)
-      real(DP), allocatable   :: lambda(:), f1(:), vet(:,:)
-      real(DP) :: force_pen(3,nat)
-      real(DP)                :: ntot, x_value, g_value, step_value
       integer is, ia, iat, nb, isp, l, m, m1, m2, k, i, counter, ldim, ig
       integer iv, jv, inl, jnl,alpha,alpha_a,alpha_s,ipol
       integer, allocatable ::  offset (:,:)
@@ -195,7 +185,6 @@ end module ldaU_cp
          ' parallelization over bands not yet implemented ', 1 )
       call start_clock('new_ns')
 !
-      allocate(f1(ldmx*ldmx), vet(ldmx,ldmx), lambda(ldmx) )
       allocate(wfc(ngw,n_atomic_wfc))
       allocate(becwfc(nhsa,n_atomic_wfc))
       allocate(swfc(ngw,n_atomic_wfc))
@@ -307,56 +296,11 @@ end module ldaU_cp
 !
 !      Calculate the potential and energy due to constraint
 !
-      IF ( step_pen ) THEN
-         allocate(hpsi_pen(ngw,nx)) 
-         hpsi_pen(:,:)=0.d0
-
-         iat=0
-         E_pen=0
-         do is = 1,nsp
-            do ia = 1, na(is)
-               iat = iat + 1
-              if (Hubbard_U(is).ne.0.d0) then
-               do isp = 1, nspin
-                  if (A_pen(iat,isp).ne.0.0) then
-                     k = 0
-                     f1=0.0
-                     do m1 = 1, 2 * Hubbard_l(is) + 1
-                        do m2 = m1, 2 * Hubbard_l(is) + 1
-                           k = k + 1
-                           f1 (k) = ns (m2,m1,iat,isp)
-                        enddo
-                     enddo
-                     CALL dspev_drv( 'V', 'L', 2*Hubbard_l(is)+1, f1, &
-                                     lambda, vet, ldmx  )
-                     x_value=alpha_pen(iat)-lambda(2*Hubbard_l(is)+1)
-                     call stepfn(A_pen(iat,isp),sigma_pen(iat),x_value, &
-     &                           g_value,step_value)
-                     do i=1, n
-                        do m1 = 1, 2 * Hubbard_l(is) + 1
-                           do m2 = 1, 2 * Hubbard_l(is) + 1
-                              tempsi=-1.d0*f(i)*proj (i,offset(is,ia)+m1) * &
-                                      vet(m1,2*Hubbard_l(is)+1) * &
-                                      vet(m2,2*Hubbard_l(is)+1) * g_value
-                              call ZAXPY (ngw,tempsi,swfc(1,offset(is,ia)+m2),&
-                                          1,hpsi_pen(1,i),1)
-                           enddo
-                        enddo
-                     end do
-                     E_pen=E_pen+step_value
-                  end if
-               enddo
-              endif
-            enddo
-         enddo
-         hpsi(:,:) = hpsi(:,:) + hpsi_pen (:,:)
-         DEALLOCATE (hpsi_pen)
-      endif
+      CALL  penalty_e ( offset, swfc, proj, e_hubbard, hpsi )
 !
 ! Calculate the contribution to forces on ions due to U and constraint
 !
       forceh=0.d0
-      force_pen=0.d0
 
       if ( tfor .or. tprnfor ) then
         call start_clock('new_ns:forc')
@@ -393,36 +337,8 @@ end module ldaU_cp
                            end do
                         end do
                      end if
-! Occupation constraint add here
-                     if (step_pen) then
-                        do isp = 1, nspin
-                           if ((A_pen(iat,isp).ne.0.0).and.           &
-      &                       (Hubbard_U(is).ne.0.d0)) then
-                              k = 0
-                              f1=0.0
-                              do m1 = 1, 2 * Hubbard_l(is) + 1
-                                 do m2 = m1, 2 * Hubbard_l(is) + 1
-                                    k = k + 1
-                                    f1 (k) = ns (m2,m1,iat,isp)
-                                 enddo
-                              enddo
-                              CALL dspev_drv( 'V', 'L', 2 * Hubbard_l(is) + 1,&
-                                              f1, lambda, vet, ldmx  )
-                              x_value=alpha_pen(iat)-lambda(2*Hubbard_l(is)+1)
-                              call stepfn(A_pen(iat,isp),sigma_pen(iat),x_value,g_value,&
-     &                             step_value)
-                              do m1 = 1,2*Hubbard_l(is) + 1
-                                 do m2 = 1,2*Hubbard_l(is) + 1
-                                    force_pen(ipol,alpha) =                &
-     &                              force_pen(ipol,alpha) +                &
-     &                              g_value * dns(m1,m2,iat,isp)           &
-     &                               * vet(m1,2*Hubbard_l(is)+1)           &
-                                     * vet(m2,2*Hubbard_l(is)+1)
-                                 end do
-                              end do
-                           endif
-                        end do
-                     end if
+! Occupation constraint added here to forceh(ipol,alpha)
+                     CALL penalty_f ( is, iat, dns, forceh(ipol,alpha) )
                   end do
                end do
             end do
@@ -432,15 +348,12 @@ end module ldaU_cp
         ! seems to yield a wrong factor here ... PG
         !if (nspin.eq.1) then
         !   forceh = 2.d0 * forceh
-        !   force_pen=2.d0 * force_pen
         !end if
-        forceh = forceh + force_pen
         !
         deallocate ( spsi, dns, bp, dbp, wdb)
         call stop_clock('new_ns:forc')
       end if
       deallocate ( wfc, becwfc, proj, offset, swfc)
-      deallocate ( f1, vet, lambda )
       !
       call stop_clock('new_ns')
       !
@@ -463,7 +376,7 @@ end module ldaU_cp
       USE ldaU_cp,          ONLY: Hubbard_U, Hubbard_l, ldmx
       USE ldaU_cp,          ONLY: n_atomic_wfc, ns, e_hubbard
       use dspev_module,     only : dspev_drv
-      USE step_penalty,     ONLY: step_pen, A_pen, sigma_pen, alpha_pen
+      USE step_penalty,     ONLY: write_pen
 
       implicit none
 
@@ -473,16 +386,7 @@ end module ldaU_cp
   real(DP) :: lambda (ldmx), nsum, nsuma
   write (*,*) 'enter write_ns'
 
-  if (step_pen) then
-     do isp=1,nspin
-        write (6,'(6(a,i2,a,i2,a,f8.4,6x))') &
-        ('A_pen(',is,',',isp,') =', A_pen(is,isp),is=1,nsp)
-     enddo
-     write (6,'(6(a,i2,a,f8.4,6x))') &
-           ('sigma_pen(',is,') =', sigma_pen(is), is=1,nsp)
-     write (6,'(6(a,i2,a,f8.4,6x))') &
-        ('alpha_pen(',is,') =', alpha_pen(is), is=1,nsp)
-  endif
+  CALL write_pen (nsp, nspin)
 
   write (6,'(6(a,i2,a,f8.4,6x))') &
         ('U(',is,') =', Hubbard_U(is) * autoev, is=1,nsp)
@@ -742,35 +646,6 @@ end module ldaU_cp
       deallocate (wfcdbeta)
       return
       end subroutine dprojdtau
-!-----------------------------------------------------------------------
-      subroutine stepfn(A,sigma,x_value,g_value,step_value)
-!-----------------------------------------------------------------------
-!     This subroutine calculates the value of the gaussian and step
-!     functions with a given x_value. A and sigma are given in the
-!     input file. ... to be used in occupation_constraint...
-!
-      USE constants, ONLY : pi
-      implicit none
-      real(kind=8) A, sigma, x_value, g_value, step_value
-      real(kind=8) x
-      integer i
-      step_value=0.0d0
-      g_value=0.0d0
-!
-      do i=1,100000
-         x=x_value + (i-100000)/100000.0d0*(x_value + 5.d0*sigma)
-!
-! Integrate from 5 sigma before the x_value
-!
-         g_value=A*dexp(-x*x/(2*sigma*sigma))/(sigma*dsqrt(2*pi))
-!         write(6,*) 'step', step_value,'g',g_value
-!         if (g_value.le.0.0) g_value=0.0
-         if ((x_value+5*sigma).ge.0.0d0) then
-         step_value=step_value+g_value/100000.0d0*(x_value+5.d0*sigma)
-         end if
-      end do
-      return
-      end subroutine stepfn
 !
 !-----------------------------------------------------------------------
       SUBROUTINE projwfc_hub( c, nx, eigr, betae, n, n_atomic_wfc,  &
