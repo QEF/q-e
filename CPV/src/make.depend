@@ -573,7 +573,6 @@ ldaUpen.o : ../../Modules/electrons_base.o
 ldaUpen.o : ../../Modules/ions_base.o
 ldaUpen.o : ../../Modules/kind.o
 ldaUpen.o : gvecw.o
-ldaUpen.o : ldaU.o
 mainvar.o : ../../Modules/cell_base.o
 mainvar.o : ../../Modules/control_flags.o
 mainvar.o : ../../Modules/descriptors.o
