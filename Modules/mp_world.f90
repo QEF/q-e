@@ -46,12 +46,14 @@ CONTAINS
     !
     ! ... check if mpi is already initialized (library mode) or not
     ! 
+#if defined(__MPI)
     CALL mpi_initialized ( library_mode, ierr)
     IF (ierr/=0) CALL mp_stop( 8000 )
     IF (.NOT. library_mode ) THEN
        CALL mpi_init(ierr)
        IF (ierr/=0) CALL mp_stop( 8001 )
     END IF
+#endif
     !
     CALL mp_start( nproc, mpime, world_comm )
     !
@@ -73,10 +75,12 @@ CONTAINS
     !
     CALL mp_barrier( world_comm )
     CALL mp_end ( world_comm )
+#if defined(__MPI)
     IF (.NOT. library_mode ) THEN
        CALL mpi_finalize(ierr)
        IF (ierr/=0) CALL mp_stop( 8002 )
     END IF
+#endif
     !
   END SUBROUTINE mp_world_end
   !
