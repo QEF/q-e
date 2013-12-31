@@ -566,7 +566,9 @@ ldaU.o : ../../Modules/recvec.o
 ldaU.o : ../../Modules/uspp.o
 ldaU.o : cp_interfaces.o
 ldaU.o : gvecw.o
+ldaU.o : ldaU_cp.o
 ldaU.o : ldaUpen.o
+ldaUpen.o : ldaU_cp.o
 ldaUpen.o : ../../Modules/constants.o
 ldaUpen.o : ../../Modules/dspev_drv.o
 ldaUpen.o : ../../Modules/electrons_base.o
