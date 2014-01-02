@@ -1250,7 +1250,7 @@ subroutine cpbe2d(rho,grho,sc,v1c,v2c)
 END subroutine cpbe2d
 !
 !---------------------------------------------------------------
-subroutine sogga (rho, grho2, sx, v1x, v2x)
+subroutine sogga (rho, grho, sx, v1x, v2x)
   !-------------------------------------------------------------
   !
   ! SOGGA exchange
@@ -1261,14 +1261,14 @@ subroutine sogga (rho, grho2, sx, v1x, v2x)
 
   implicit none
 
-  real(dp), intent(in)    :: rho, grho2
+  real(dp), intent(in)    :: rho, grho
   real(dp), intent(out)   :: sx, v1x, v2x
-  ! input: charge and squared gradient
+  ! input: charge and abs gradient
   ! output: energy
   ! output: potential
 
   ! local variables
-  real(dp)                :: grho, rho43, xs, xs2, dxs2_drho, dxs2_dgrho2
+  real(dp)                :: rho43, xs, xs2, dxs2_drho, dxs2_dgrho2
   real(dp)                :: CX, denom, C1, C2, Fso, Fpbe, ex, Fx, dFx_dxs2, dex_drho
 
   real(dp), parameter     :: one = 1.0_dp, two=2.0_dp, three = 3.0_dp,                &
@@ -1286,8 +1286,6 @@ subroutine sogga (rho, grho2, sx, v1x, v2x)
   C1    =  mu / denom
   C2    =  mu / (kapa * denom)
 
-
-  grho  = sqrt(grho2)
   rho43 = rho**f43
   xs    = grho / rho43
   xs2   = xs * xs

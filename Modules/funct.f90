@@ -1481,6 +1481,8 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call rPW86 (rho, grho, sx, v1x, v2x)
   elseif (igcx ==16) then ! 'C09x'
      call c09x (rho, grho, sx, v1x, v2x)
+  elseif (igcx ==17) then ! 'sogga'
+     call sogga(rho, grho, sx, v1x, v2x)
   elseif (igcx ==19) then ! 'pbeq2d'
      call pbex (rho, grho, 4, sx, v1x, v2x)
   elseif (igcx ==20) then ! 'gau-pbe'
