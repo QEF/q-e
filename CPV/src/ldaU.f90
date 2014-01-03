@@ -17,7 +17,6 @@
       USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus, qq
       USE uspp_param, ONLY: nh, nvb, ish
       USE gvecw, ONLY: ngw
-      USE constants, ONLY: pi, fpi
       IMPLICIT NONE
 ! input
       INTEGER, INTENT(in)         :: n_atomic_wfc1
@@ -75,19 +74,10 @@
       integer, external :: set_hubbard_l
 
       IF ( .NOT.lda_plus_u ) RETURN
-! allocate vupsi
+      ! FIXME: wasteful allocation, should be removed
       allocate(vupsi(ngw,nx))
       vupsi=(0.0d0,0.0d0)
 
-      n_atomic_wfc=0
-      do is=1,nsp
-         do nb = 1,upf(is)%nwfc
-            l = upf(is)%lchi(nb)
-            n_atomic_wfc = n_atomic_wfc + (2*l+1)*na(is)
-         end do
-         !
-      end do
-!
       Hubbard_lmax = -1
       do is=1,nsp
          if (Hubbard_U(is).ne.0.d0) then 
@@ -136,7 +126,7 @@
       complex(DP), allocatable:: wfc(:,:), swfc(:,:), spsi(:,:)
       real(DP), allocatable   :: becwfc(:,:), bp(:,:), dbp(:,:,:), wdb(:,:,:)
       real(DP), allocatable   :: dns(:,:,:,:), proj(:,:), tempsi(:,:)
-      integer is, ia, iat, nb, isp, l, m, m1, m2, k, i, counter, ldim, ig
+      integer is, ia, iat, nb, isp, l, m, m1, m2, k, i, ldim, ig
       integer iv, jv, inl, jnl,alpha,alpha_a,alpha_s,ipol
       integer, allocatable ::  offset (:,:)
 !
@@ -144,40 +134,29 @@
          ' parallelization over bands not yet implemented ', 1 )
       call start_clock('new_ns')
 !
+      allocate(offset(nsp,nat))
+      offset(:,:) = -1
+      ! offset = -1 means "not a Hubbard wfc"
+      n_atomic_wfc = 0
+      do is = 1, nsp
+         do ia = 1, na(is)
+            do i = 1, upf(is)%nwfc
+               l = upf(is)%lchi(i)
+               if (l == Hubbard_l(is)) offset (is,ia) = n_atomic_wfc
+               n_atomic_wfc = n_atomic_wfc + 2 * l + 1
+            end do
+         end do
+      end do
+      !
       allocate(wfc(ngw,n_atomic_wfc))
       allocate(becwfc(nhsa,n_atomic_wfc))
       allocate(swfc(ngw,n_atomic_wfc))
       allocate(proj(n,n_atomic_wfc))
-      allocate(offset(nsp,nat))
-!
-      counter = 0
-      do is = 1, nsp
-         do ia = 1, na(is)
-            offset (is,ia) = counter
-            do i = 1, upf(is)%nwfc
-               l = upf(is)%lchi(i)
-               counter = counter + 2 * l + 1
-            end do
-         end do
-      end do
-      if (counter.ne.n_atomic_wfc) call errore ('new_ns','nstart<>counter',1)
-!
-! calculate proj = <c|S|wfc>
-!
-      CALL projwfc_hub( c, nx, eigr, betae, n, n_atomic_wfc, &
-     &                  offset, wfc, becwfc, swfc, proj )
       !
-      counter = 0
-      do is = 1, nsp
-         do ia = 1, na(is)
-            do i = 1, upf(is)%nwfc
-               l = upf(is)%lchi(i)
-               if (l.eq.Hubbard_l(is)) offset (is,ia) = counter
-               counter = counter + 2 * l + 1
-            end do
-         end do
-      end do
-      if (counter.ne.n_atomic_wfc) call errore ('new_ns','nstart<>counter',1)
+      ! calculate proj = <c|S|wfc>
+      !
+      CALL projwfc_hub( c, nx, eigr, betae, n, n_atomic_wfc, &
+     &                  offset, Hubbard_l, wfc, becwfc, swfc, proj )
       !
       ns(:,:,:,:) = 0.d0
       iat = 0
@@ -278,7 +257,7 @@
             alpha=alpha+1
             do ipol = 1,3
                call dndtau(alpha_a,alpha_s,becwfc,spsi,bp,dbp,wdb,      &
-     &                    offset,c,wfc,eigr,betae,proj,ipol,dns)
+     &                     offset,wfc,eigr,betae,proj,ipol,dns)
                iat=0
                do is = 1, nsp
                   do ia=1, na(is)
@@ -406,9 +385,7 @@
 !
 !-------------------------------------------------------------------------
       subroutine dndtau(alpha_a,alpha_s,becwfc,spsi,bp,dbp,wdb,         &
-     &                  offset,c,wfc,                                   &
-     &                  eigr,betae,                                     &
-     &                  proj,ipol,dns)
+     &                  offset,wfc,eigr,betae, proj,ipol,dns)
 !-----------------------------------------------------------------------
 !
 ! This routine computes the derivative of the ns with respect to the ionic
@@ -424,11 +401,11 @@
       USE kinds,          ONLY: DP
 !
       implicit none
-      integer ibnd,is,i,ia,counter, m1,m2, l, iat, alpha, ldim
+      integer ibnd,is,i,ia, m1,m2, l, iat, alpha, ldim
 ! input
       integer,      intent(in) :: offset(nsp,nat)
       integer,      intent(in) :: alpha_a,alpha_s,ipol
-      real(DP),     intent(in) :: wfc(ngw,n_atomic_wfc),  c(2,ngw,nx),  &
+      real(DP),     intent(in) :: wfc(ngw,n_atomic_wfc),                &
      &                            eigr(2,ngw,nat),betae(2,ngw,nhsa),    &
      &                            becwfc(nhsa,n_atomic_wfc),            &
      &                            bp(nhsa,n), dbp(nhsa,nx,3),           &
@@ -449,8 +426,8 @@
 !
       dns(:,:,:,:) = 0.d0
 !
-      call dprojdtau(c,wfc,becwfc,spsi,bp,dbp,wdb,eigr,alpha_a,     &
-     &                   alpha_s,ipol,offset(alpha_s,alpha_a),dproj)
+      call dprojdtau(wfc,becwfc,spsi,bp,dbp,wdb,eigr,alpha_a,     &
+     &               alpha_s,ipol,offset(alpha_s,alpha_a),dproj)
 !
 ! compute the derivative of occupation numbers (the quantities dn(m1,m2))
 ! of the atomic orbitals. They are real quantities as well as n(m1,m2)
@@ -483,9 +460,8 @@
       return
       end subroutine dndtau
 !
-!
 !-----------------------------------------------------------------------
-      subroutine dprojdtau(c,wfc,becwfc,spsi,bp,dbp,wdb,eigr,alpha_a,    &
+      subroutine dprojdtau(wfc,becwfc,spsi,bp,dbp,wdb,eigr,alpha_a,    &
      &                     alpha_s,ipol,offset,dproj)
 !-----------------------------------------------------------------------
 !
@@ -513,11 +489,10 @@
 ! input: the component of displacement
 ! input: the offset of the wfcs of the atom "alpha_a,alpha_s"
        complex (DP), intent(in) :: spsi(ngw,n),                     &
-     &                  c(ngw,nx), eigr(ngw,nat)
-! input: the atomic wfc
-! input: S|evc>
+     &                   eigr(ngw,nat)
+! input: S|evc>, structure factors
        real(DP), intent(in) ::becwfc(nhsa,n_atomic_wfc),            &
-     &                            wfc(2,ngw,n_atomic_wfc),              &
+     &                          wfc(2,ngw,n_atomic_wfc),            &
      &            bp(nhsa,n), dbp(nhsa,nx,3), wdb(nhsa,n_atomic_wfc,3)
        real(DP), intent(out) :: dproj(n,n_atomic_wfc)
 ! output: the derivative of the projection
@@ -608,7 +583,7 @@
 !
 !-----------------------------------------------------------------------
       SUBROUTINE projwfc_hub( c, nx, eigr, betae, n, n_atomic_wfc,  &
-     &                        offset, wfc, becwfc, swfc, proj )
+     &                        offset, Hubbard_l, wfc, becwfc, swfc, proj )
 !-----------------------------------------------------------------------
       !
       ! Projection on atomic wavefunctions
@@ -625,7 +600,8 @@
       USE cp_interfaces,      only: nlsm1
 !
       IMPLICIT NONE
-      INTEGER,     INTENT(IN) :: nx, n, n_atomic_wfc, offset(nsp,nat)
+      INTEGER,     INTENT(IN) :: nx, n, n_atomic_wfc, offset(nsp,nat), &
+                                 Hubbard_l(nsp)
       COMPLEX(DP), INTENT(IN) :: c( ngw, nx ), eigr(ngw,nat), betae(ngw,nhsa)
 !
       COMPLEX(DP), INTENT(OUT):: wfc(ngw,n_atomic_wfc),    &
@@ -639,7 +615,7 @@
       !
       ! calculate wfc = atomic states
       !
-      CALL atomic_wfc_hub( offset, eigr, n_atomic_wfc, wfc )
+      CALL atomic_wfc_hub( offset, Hubbard_l, eigr, n_atomic_wfc, wfc )
       !
       ! calculate bec = <beta|wfc>
       !
@@ -663,7 +639,7 @@
       END SUBROUTINE projwfc_hub
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE atomic_wfc_hub( offset, eigr, n_atomic_wfc, wfc )
+      SUBROUTINE atomic_wfc_hub( offset, Hubbard_l, eigr, n_atomic_wfc, wfc )
 !-----------------------------------------------------------------------
 !
 ! Compute atomic wavefunctions (not orthogonalized) in G-space
@@ -672,15 +648,14 @@
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart, gg, g
       USE ions_base,          ONLY: nsp, na, nat
-      USE cell_base,          ONLY: tpiba, omega !#@@@
+      USE cell_base,          ONLY: tpiba, omega
       USE atom,               ONLY: rgrid
       USE uspp_param,         ONLY: upf
-!#@@@@
       USE constants,          ONLY: fpi
-!#@@@@
 !
       IMPLICIT NONE
-      INTEGER,     INTENT(in) :: n_atomic_wfc, offset(nsp,nat)
+      INTEGER,     INTENT(in) :: n_atomic_wfc, offset(nsp,nat), &
+                                 Hubbard_l(nsp)
       COMPLEX(DP), INTENT(in) :: eigr( ngw, nat )
       COMPLEX(DP), INTENT(out):: wfc( ngw, n_atomic_wfc )
 !
@@ -712,12 +687,13 @@
       isa = 0
       DO is=1,nsp
          !
-         !   radial fourier transform of the chi functions
-         !   NOTA BENE: chi is r times the radial part of the atomic wavefunction
+         !   radial fourier transform of the chi functions. NOTA BENE:
+         !   chi is r times the radial part of the atomic wavefunction
          !
          natwfc=0
          DO nb = 1,upf(is)%nwfc
             l = upf(is)%lchi(nb)
+            IF ( l /= Hubbard_l(is) ) GO TO 10 
             DO i=1,ngw
                CALL sph_bes (rgrid(is)%mesh, rgrid(is)%r, q(i), l, jl)
                DO ir=1,rgrid(is)%mesh
@@ -737,6 +713,7 @@
                          eigr(:,ia+isa) * ylm(:,lm)*chiq(:)
                ENDDO
             ENDDO
+  10        CONTINUE
          ENDDO
          isa = isa + na(is)
       ENDDO
@@ -744,11 +721,9 @@
       IF ( natwfc+offset(nsp,na(nsp)) .NE. n_atomic_wfc) &
          CALL errore('atomic_wfc','unexpected error',natwfc)
 !
-!#@@@@
       do i = 1,n_atomic_wfc
         call dscal(2*ngw,fpi/sqrt(omega),wfc(1,i),1)
       end do
-!#@@@@
       DEALLOCATE(q, chiq, vchi, jl, ylm)
 !
       RETURN
