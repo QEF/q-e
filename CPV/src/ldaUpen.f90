@@ -84,7 +84,7 @@ CONTAINS
 !
       IMPLICIT NONE
       INTEGER,     intent(in) :: offset(nsp,nat)
-      REAL(dp),    intent(in) :: proj(n,nwfcU)
+      REAL(dp),    intent(in) :: proj(nwfcU,n)
       COMPLEX(dp), intent(in) :: swfc(ngw,nwfcU)
       REAL(dp),    intent(inout) :: e_hubbard
       COMPLEX(dp), intent(inout) :: hpsi(ngw,nx)
@@ -120,7 +120,7 @@ CONTAINS
                      do i=1, n
                         do m1 = 1, 2 * Hubbard_l(is) + 1
                            do m2 = 1, 2 * Hubbard_l(is) + 1
-                              tempsi=-1.d0*f(i)*proj (i,offset(is,ia)+m1) * &
+                              tempsi=-1.d0*f(i)*proj (offset(is,ia)+m1,i) * &
                                       vet(m1,2*Hubbard_l(is)+1) * &
                                       vet(m2,2*Hubbard_l(is)+1) * g_value
                               ! add to hpsi

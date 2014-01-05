@@ -151,9 +151,9 @@
       allocate(wfcU(ngw,nwfcU))
       allocate(becwfc(nhsa,nwfcU))
       allocate(swfc(ngw,nwfcU))
-      allocate(proj(n,nwfcU))
+      allocate(proj(nwfcU,n))
       !
-      ! calculate proj = <c|S|wfc>
+      ! calculate proj = <wfcU|S|c>
       !
       CALL projwfc_hub( c, nx, eigr, betae, n, nwfcU, &
      &                  offset, Hubbard_l, wfcU, becwfc, swfc, proj )
@@ -169,7 +169,7 @@
                   do m2 = m1, 2*Hubbard_l(is) + 1
                      do i = 1,n
                       ns(m1,m2,iat,ispin(i)) = ns(m1,m2,iat,ispin(i)) + &
-     &                               f(i) * proj(i,k+m2) * proj(i,k+m1)
+     &                               f(i) * proj(k+m2,i) * proj(k+m1,i)
                      end do
                   end do
                   do m2 = m1+1, 2*Hubbard_l(is) + 1
@@ -215,11 +215,11 @@
                ldim = 2*Hubbard_l(is) + 1
                do i=1, n
                   do m1 = 1, ldim
-                     tempsi(m1,i) = proj (i,offset(is,ia)+m1)
+                     tempsi(m1,i) = proj (offset(is,ia)+m1,i)
                      do m2 = 1, ldim
                         tempsi(m1,i) = tempsi(m1,i) - &
                                        2.0_dp*ns(m1,m2,iat,ispin(i)) * &
-                                               proj (i,offset(is,ia)+m2)
+                                               proj (offset(is,ia)+m2,i)
                      enddo
                      tempsi(m1,i) = tempsi(m1,i) * Hubbard_U(is)/2.d0*f(i)
                   enddo
@@ -410,7 +410,7 @@
      &                            becwfc(nhsa,nwfcU),            &
      &                            bp(nhsa,n), dbp(nhsa,nx,3),           &
                                   wdb(nhsa,nwfcU,3)
-      real(DP),     intent(in) :: proj(n,nwfcU)
+      real(DP),     intent(in) :: proj(nwfcU,n)
       complex (DP), intent(in) :: spsi(ngw,n)
 ! output
       real (DP),   intent(out) :: dns(ldmx,ldmx,nat,nspin)
@@ -419,10 +419,10 @@
 !
       real (DP),   allocatable :: dproj(:,:)
 !
-!     dproj(n,nwfcU) ! derivative of proj(:,:) w.r.t. tau 
+!     dproj(nwfcU,n) ! derivative of proj(:,:) w.r.t. tau 
 !
       CALL start_clock('dndtau')
-      allocate (dproj(n,nwfcU) )
+      allocate (dproj(nwfcU,n) )
 !
       dns(:,:,:,:) = 0.d0
 !
@@ -443,10 +443,10 @@
                      do ibnd = 1,n
                         dns(m1,m2,iat,ispin(ibnd)) =                    &
      &                  dns(m1,m2,iat,ispin(ibnd)) +                    &
-     &                   f(ibnd)*REAL(  proj(ibnd,offset(is,ia)+m1) *   &
-     &                   (dproj(ibnd,offset(is,ia)+m2))  +              &
-     &                         dproj(ibnd,offset(is,ia)+m1)  *          &
-     &                         (proj(ibnd,offset(is,ia)+m2)) )
+     &                   f(ibnd)*REAL(  proj(offset(is,ia)+m1,ibnd) *   &
+     &                                (dproj(offset(is,ia)+m2,ibnd))+   &
+     &                                 dproj(offset(is,ia)+m1,ibnd) *   &
+     &                                 (proj(offset(is,ia)+m2,ibnd)) )
                      end do
                      dns(m2,m1,iat,:) = dns(m1,m2,iat,:)
                   end do
@@ -494,12 +494,12 @@
        real(DP), intent(in) ::becwfc(nhsa,nwfcU),            &
      &                          wfcU(2,ngw,nwfcU),           &
      &            bp(nhsa,n), dbp(nhsa,nx,3), wdb(nhsa,nwfcU,3)
-       real(DP), intent(out) :: dproj(n,nwfcU)
+       real(DP), intent(out) :: dproj(nwfcU,n)
 ! output: the derivative of the projection
 !
       integer i,ig,m1,ibnd,iwf,ia,is,iv,jv,ldim,alpha,l,m,k,inl
 !
-      real(kind=8), allocatable :: gk(:)
+      real(kind=8), allocatable :: gk(:), dproj0(:,:)
 !
       complex (DP), allocatable :: dwfc(:,:)
       real (DP), allocatable :: betapsi(:,:), dbetapsi(:,:), &
@@ -517,8 +517,7 @@
 !
       if (Hubbard_U(alpha_s).ne.0.d0) then
          !
-         allocate ( dwfc(ngw,ldim) )
-         allocate ( gk(ngw) )
+         allocate ( dwfc(ngw,ldim), dproj0(ldim,n), gk(ngw) )
          !
          do ig=1,ngw
             gk(ig)=g(ipol,ig)*tpiba 
@@ -529,14 +528,14 @@
          end do
          !
          CALL dgemm( 'C', 'N', n, ldim, 2*ngw, 2.0_DP, spsi, 2*ngw, dwfc, &
-                    2*ngw, 0.0_DP, dproj(1,offset+1), n )
+                    2*ngw, 0.0_DP, dproj0, n )
          IF ( gstart == 2 ) &
             CALL dger( n, ldim, -1.0_DP, spsi, 2*ngw, dwfc, 2*ngw, &
-                       dproj(1,offset+1), n )
-         call mp_sum( dproj, intra_bgrp_comm )
+                       dproj0, n )
+         call mp_sum( dproj0, intra_bgrp_comm )
          !
-         deallocate (gk)
-         deallocate (dwfc)
+         dproj(offset+1:offset+ldim,:) = dproj0(:,:)
+         deallocate (gk, dproj0, dwfc)
          !
       end if
       !
@@ -567,7 +566,7 @@
       do iv=1,nh(alpha_s)
          do m=1,nwfcU
             do ibnd=1,n
-               dproj(ibnd,m) =dproj(ibnd,m) +                           &
+               dproj(m,ibnd) =dproj(m,ibnd) +                           &
      &                         ( wfcdbeta(m,iv)*betapsi(ibnd,iv) +      &
      &                           wfcbeta(m,iv)*dbetapsi(ibnd,iv) )
             end do
@@ -606,7 +605,7 @@
 !
       COMPLEX(DP), INTENT(OUT):: wfcU(ngw, nwfcU),    &
      &                           swfc(ngw, nwfcU)
-      real(DP), intent(out):: becwfc(nhsa,nwfcU), proj(n,nwfcU)
+      real(DP), intent(out):: becwfc(nhsa,nwfcU), proj(nwfcU,n)
       INTEGER :: is, ia, nb, l, m, k, i
       !
       IF ( nwfcU .EQ. 0 ) RETURN
@@ -625,12 +624,12 @@
       !
       CALL s_wfc( nwfcU, becwfc, betae, wfcU, swfc )
       !
-      ! calculate proj = <c|S|wfc>
+      ! calculate proj = <wfcU|S|c>
       !
-      CALL dgemm( 'C', 'N', n, nwfcU, 2*ngw, 2.0_DP, c, 2*ngw, swfc, &
-                    2*ngw, 0.0_DP, proj, n )
+      CALL dgemm( 'C', 'N', nwfcU, n, 2*ngw, 2.0_DP, swfc, 2*ngw, c, &
+                    2*ngw, 0.0_DP, proj, nwfcU )
       IF ( gstart == 2 ) &
-         CALL dger( n, nwfcU, -1.0_DP, c, 2*ngw, swfc, 2*ngw, proj, n )
+         CALL dger( nwfcU, n,  -1.0_DP, swfc, 2*ngw, c, 2*ngw, proj, nwfcU )
       CALL mp_sum( proj, intra_bgrp_comm )
 !
       CALL stop_clock('projwfc_hub')
