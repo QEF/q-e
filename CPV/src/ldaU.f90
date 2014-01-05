@@ -527,11 +527,11 @@
             end do
          end do
          !
-         CALL dgemm( 'C', 'N', n, ldim, 2*ngw, 2.0_DP, spsi, 2*ngw, dwfc, &
-                    2*ngw, 0.0_DP, dproj0, n )
+         CALL dgemm( 'C', 'N', ldim, n, 2*ngw, 2.0_DP, dwfc, 2*ngw, spsi, &
+                    2*ngw, 0.0_DP, dproj0, ldim )
          IF ( gstart == 2 ) &
-            CALL dger( n, ldim, -1.0_DP, spsi, 2*ngw, dwfc, 2*ngw, &
-                       dproj0, n )
+            CALL dger( ldim, n, -1.0_DP, dwfc, 2*ngw, spsi, 2*ngw, &
+                       dproj0, ldim )
          call mp_sum( dproj0, intra_bgrp_comm )
          !
          dproj(offset+1:offset+ldim,:) = dproj0(:,:)
