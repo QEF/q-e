@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-------------------------------------------------------------------------
-      SUBROUTINE s_wfc(n_atomic_wfc1,becwfc,betae,wfc,swfc)
+      SUBROUTINE s_wfc(nwfc,becwfc,betae,wfc,swfc)
 !-----------------------------------------------------------------------
 !
 !     input: wfc, becwfc=<wfc|beta>, betae=|beta>
@@ -19,19 +19,19 @@
       USE gvecw, ONLY: ngw
       IMPLICIT NONE
 ! input
-      INTEGER, INTENT(in)         :: n_atomic_wfc1
+      INTEGER, INTENT(in)     :: nwfc
       COMPLEX(DP), INTENT(in) :: betae(ngw,nhsa),                   &
-     &                               wfc(ngw,n_atomic_wfc1)
-      REAL(DP), INTENT(in)    :: becwfc(nhsa,n_atomic_wfc1)
+     &                             wfc(ngw,nwfc)
+      REAL(DP), INTENT(in)    :: becwfc(nhsa,nwfc)
 ! output
-      COMPLEX(DP), INTENT(out):: swfc(ngw,n_atomic_wfc1)
+      COMPLEX(DP), INTENT(out):: swfc(ngw,nwfc)
 ! local
-      INTEGER is, iv, jv, ia, inl, jnl, i
-      REAL(DP) qtemp(nhsavb,n_atomic_wfc1)
+      INTEGER :: is, iv, jv, ia, inl, jnl, i
+      REAL(DP) :: qtemp(nhsavb,nwfc)
 !
       swfc = wfc
 !
-      IF (nvb.GT.0) THEN
+      IF (nvb > 0) THEN
          qtemp=0.d0
          DO is=1,nvb
             DO iv=1,nh(is)
@@ -40,7 +40,7 @@
                      DO ia=1,na(is)
                         inl=ish(is)+(iv-1)*na(is)+ia
                         jnl=ish(is)+(jv-1)*na(is)+ia
-                        DO i=1,n_atomic_wfc1
+                        DO i=1,nwfc
                            qtemp(inl,i) = qtemp(inl,i) +                &
      &                                    qq(iv,jv,is)*becwfc(jnl,i)
                         END DO
@@ -51,7 +51,7 @@
          END DO
 !
          CALL dgemm &
-              ('N','N',2*ngw,n_atomic_wfc1,nhsavb,1.0d0,betae,2*ngw,&
+              ('N','N',2*ngw,nwfc,nhsavb,1.0d0,betae,2*ngw,&
                qtemp,nhsavb,1.0d0,swfc,2*ngw)
 !
       END IF
@@ -62,7 +62,7 @@
       subroutine ldaU_init
 !-----------------------------------------------------------------------
 !
-      use ldaU_cp,          ONLY: n_atomic_wfc, lda_plus_u, Hubbard_U
+      use ldaU_cp,          ONLY: nwfcU, lda_plus_u, Hubbard_U
       use ldaU_cp,          ONLY: Hubbard_lmax, Hubbard_l, ldmx, ns, vupsi
       use ions_base,        only: na, nsp, nat, atm
       use gvecw,            only: ngw
@@ -113,7 +113,7 @@
       USE uspp_param,         ONLY: upf
       use electrons_base,     only: nspin, n => nbsp, nx => nbspx, ispin, f
       USE ldaU_cp,            ONLY: Hubbard_U, Hubbard_l, ldmx
-      USE ldaU_cp,            ONLY: n_atomic_wfc, ns, e_hubbard
+      USE ldaU_cp,            ONLY: nwfcU, ns, e_hubbard
       USE step_penalty,       ONLY: penalty_e, penalty_f
       USE mp_global,          only: nbgrp
       USE cp_interfaces,      only: nlsm1, nlsm2_bgrp
@@ -123,7 +123,7 @@
       complex(DP), intent(out) :: hpsi(ngw,nx)
       real(DP), INTENT(OUT) :: forceh(3,nat)
 !
-      complex(DP), allocatable:: wfc(:,:), swfc(:,:), spsi(:,:)
+      complex(DP), allocatable:: wfcU(:,:), swfc(:,:), spsi(:,:)
       real(DP), allocatable   :: becwfc(:,:), bp(:,:), dbp(:,:,:), wdb(:,:,:)
       real(DP), allocatable   :: dns(:,:,:,:), proj(:,:), tempsi(:,:)
       integer is, ia, iat, nb, isp, l, m, m1, m2, k, i, ldim, ig
@@ -137,26 +137,26 @@
       allocate(offset(nsp,nat))
       offset(:,:) = -1
       ! offset = -1 means "not a Hubbard wfc"
-      n_atomic_wfc = 0
+      nwfcU = 0
       do is = 1, nsp
          do ia = 1, na(is)
             do i = 1, upf(is)%nwfc
                l = upf(is)%lchi(i)
-               if (l == Hubbard_l(is)) offset (is,ia) = n_atomic_wfc
-               n_atomic_wfc = n_atomic_wfc + 2 * l + 1
+               if (l == Hubbard_l(is)) offset (is,ia) = nwfcU
+               nwfcU = nwfcU + 2 * l + 1
             end do
          end do
       end do
       !
-      allocate(wfc(ngw,n_atomic_wfc))
-      allocate(becwfc(nhsa,n_atomic_wfc))
-      allocate(swfc(ngw,n_atomic_wfc))
-      allocate(proj(n,n_atomic_wfc))
+      allocate(wfcU(ngw,nwfcU))
+      allocate(becwfc(nhsa,nwfcU))
+      allocate(swfc(ngw,nwfcU))
+      allocate(proj(n,nwfcU))
       !
       ! calculate proj = <c|S|wfc>
       !
-      CALL projwfc_hub( c, nx, eigr, betae, n, n_atomic_wfc, &
-     &                  offset, Hubbard_l, wfc, becwfc, swfc, proj )
+      CALL projwfc_hub( c, nx, eigr, betae, n, nwfcU, &
+     &                  offset, Hubbard_l, wfcU, becwfc, swfc, proj )
       !
       ns(:,:,:,:) = 0.d0
       iat = 0
@@ -242,14 +242,14 @@
 
       if ( tfor .or. tprnfor ) then
         call start_clock('new_ns:forc')
-        allocate (bp(nhsa,n), dbp(nhsa,nx,3), wdb(nhsa,n_atomic_wfc,3))
+        allocate (bp(nhsa,n), dbp(nhsa,nx,3), wdb(nhsa,nwfcU,3))
         allocate(dns(ldmx,ldmx,nat,nspin))
         allocate (spsi(ngw,n))
 !
         call nlsm1 ( n, 1, nsp, eigr, c, bp )
         call s_wfc ( n, bp, betae, c, spsi )
         call nlsm2_bgrp( ngw, nhsa, eigr, c, dbp, nx, n )
-        call nlsm2_bgrp( ngw, nhsa, eigr, wfc, wdb, n_atomic_wfc, n_atomic_wfc )
+        call nlsm2_bgrp( ngw, nhsa, eigr, wfcU, wdb, nwfcU, nwfcU )
 !
         alpha=0
         do alpha_s = 1, nsp
@@ -257,7 +257,7 @@
             alpha=alpha+1
             do ipol = 1,3
                call dndtau(alpha_a,alpha_s,becwfc,spsi,bp,dbp,wdb,      &
-     &                     offset,wfc,eigr,betae,proj,ipol,dns)
+     &                     offset,wfcU,eigr,betae,proj,ipol,dns)
                iat=0
                do is = 1, nsp
                   do ia=1, na(is)
@@ -291,7 +291,7 @@
         deallocate ( spsi, dns, bp, dbp, wdb)
         call stop_clock('new_ns:forc')
       end if
-      deallocate ( wfc, becwfc, proj, offset, swfc)
+      deallocate ( wfcU, becwfc, proj, offset, swfc)
       !
       call stop_clock('new_ns')
       !
@@ -312,7 +312,7 @@
       use ions_base,        only: na, nat, nsp
       use gvecw,            only: ngw
       USE ldaU_cp,          ONLY: Hubbard_U, Hubbard_l, ldmx
-      USE ldaU_cp,          ONLY: n_atomic_wfc, ns, e_hubbard
+      USE ldaU_cp,          ONLY: nwfcU, ns, e_hubbard
       use dspev_module,     only : dspev_drv
       USE step_penalty,     ONLY: write_pen
 
@@ -385,7 +385,7 @@
 !
 !-------------------------------------------------------------------------
       subroutine dndtau(alpha_a,alpha_s,becwfc,spsi,bp,dbp,wdb,         &
-     &                  offset,wfc,eigr,betae, proj,ipol,dns)
+     &                  offset,wfcU,eigr,betae, proj,ipol,dns)
 !-----------------------------------------------------------------------
 !
 ! This routine computes the derivative of the ns with respect to the ionic
@@ -397,7 +397,7 @@
       use electrons_base, only: nspin, n => nbsp, nx => nbspx, ispin, f
       USE uspp,           ONLY: nhsa=>nkb
       USE ldaU_cp,        ONLY: Hubbard_U, Hubbard_l, ldmx
-      USE ldaU_cp,        ONLY: n_atomic_wfc, ns
+      USE ldaU_cp,        ONLY: nwfcU, ns
       USE kinds,          ONLY: DP
 !
       implicit none
@@ -405,12 +405,12 @@
 ! input
       integer,      intent(in) :: offset(nsp,nat)
       integer,      intent(in) :: alpha_a,alpha_s,ipol
-      real(DP),     intent(in) :: wfc(ngw,n_atomic_wfc),                &
+      real(DP),     intent(in) :: wfcU(ngw,nwfcU),                &
      &                            eigr(2,ngw,nat),betae(2,ngw,nhsa),    &
-     &                            becwfc(nhsa,n_atomic_wfc),            &
+     &                            becwfc(nhsa,nwfcU),            &
      &                            bp(nhsa,n), dbp(nhsa,nx,3),           &
-                                  wdb(nhsa,n_atomic_wfc,3)
-      real(DP),     intent(in) :: proj(n,n_atomic_wfc)
+                                  wdb(nhsa,nwfcU,3)
+      real(DP),     intent(in) :: proj(n,nwfcU)
       complex (DP), intent(in) :: spsi(ngw,n)
 ! output
       real (DP),   intent(out) :: dns(ldmx,ldmx,nat,nspin)
@@ -419,14 +419,14 @@
 !
       real (DP),   allocatable :: dproj(:,:)
 !
-!     dproj(n,n_atomic_wfc) ! derivative of proj(:,:) w.r.t. tau 
+!     dproj(n,nwfcU) ! derivative of proj(:,:) w.r.t. tau 
 !
       CALL start_clock('dndtau')
-      allocate (dproj(n,n_atomic_wfc) )
+      allocate (dproj(n,nwfcU) )
 !
       dns(:,:,:,:) = 0.d0
 !
-      call dprojdtau(wfc,becwfc,spsi,bp,dbp,wdb,eigr,alpha_a,     &
+      call dprojdtau(wfcU,becwfc,spsi,bp,dbp,wdb,eigr,alpha_a,     &
      &               alpha_s,ipol,offset(alpha_s,alpha_a),dproj)
 !
 ! compute the derivative of occupation numbers (the quantities dn(m1,m2))
@@ -461,7 +461,7 @@
       end subroutine dndtau
 !
 !-----------------------------------------------------------------------
-      subroutine dprojdtau(wfc,becwfc,spsi,bp,dbp,wdb,eigr,alpha_a,    &
+      subroutine dprojdtau(wfcU,becwfc,spsi,bp,dbp,wdb,eigr,alpha_a,    &
      &                     alpha_s,ipol,offset,dproj)
 !-----------------------------------------------------------------------
 !
@@ -476,7 +476,7 @@
       use electrons_base, only: n => nbsp, nx => nbspx
       USE uspp,           ONLY: nhsa=>nkb, qq
       USE ldaU_cp,        ONLY: Hubbard_U, Hubbard_l
-      USE ldaU_cp,        ONLY: n_atomic_wfc
+      USE ldaU_cp,        ONLY: nwfcU
       use cell_base,      ONLY: tpiba
       USE uspp_param,     only: nh, ish
       use mp_global,      only: intra_bgrp_comm
@@ -491,10 +491,10 @@
        complex (DP), intent(in) :: spsi(ngw,n),                     &
      &                   eigr(ngw,nat)
 ! input: S|evc>, structure factors
-       real(DP), intent(in) ::becwfc(nhsa,n_atomic_wfc),            &
-     &                          wfc(2,ngw,n_atomic_wfc),            &
-     &            bp(nhsa,n), dbp(nhsa,nx,3), wdb(nhsa,n_atomic_wfc,3)
-       real(DP), intent(out) :: dproj(n,n_atomic_wfc)
+       real(DP), intent(in) ::becwfc(nhsa,nwfcU),            &
+     &                          wfcU(2,ngw,nwfcU),           &
+     &            bp(nhsa,n), dbp(nhsa,nx,3), wdb(nhsa,nwfcU,3)
+       real(DP), intent(out) :: dproj(n,nwfcU)
 ! output: the derivative of the projection
 !
       integer i,ig,m1,ibnd,iwf,ia,is,iv,jv,ldim,alpha,l,m,k,inl
@@ -507,8 +507,8 @@
 !      dwfc(ngw,ldmx),             ! the derivative of the atomic d wfc
 !      betapsi(n,nh),              ! <evc|beta>
 !      dbetapsi(n,nh),             ! <evc|dbeta>
-!      wfcbeta(n_atomic_wfc,nh),   ! <wfc|beta>
-!      wfcdbeta(n_atomic_wfc,nh),  ! <wfc|dbeta>
+!      wfcbeta(nwfcU,nh),   ! <wfc|beta>
+!      wfcdbeta(nwfcU,nh),  ! <wfc|dbeta>
 
       ldim = 2 * Hubbard_l(alpha_s) + 1
       dproj(:,:)=0.d0
@@ -523,8 +523,8 @@
          do ig=1,ngw
             gk(ig)=g(ipol,ig)*tpiba 
             do m1=1,ldim
-               dwfc(ig,m1) = CMPLX (gk(ig)*wfc(2,ig,offset+m1),      &
-     &                             -gk(ig)*wfc(1,ig,offset+m1), kind=dp )
+               dwfc(ig,m1) = CMPLX (gk(ig)*wfcU(2,ig,offset+m1),      &
+     &                             -gk(ig)*wfcU(1,ig,offset+m1), kind=dp )
             end do
          end do
          !
@@ -542,8 +542,8 @@
       !
       allocate (  betapsi(n,nh(alpha_s)) )
       allocate ( dbetapsi(n,nh(alpha_s)) )
-      allocate (  wfcbeta(n_atomic_wfc,nh(alpha_s)) )
-      allocate ( wfcdbeta(n_atomic_wfc,nh(alpha_s)) )
+      allocate (  wfcbeta(nwfcU,nh(alpha_s)) )
+      allocate ( wfcdbeta(nwfcU,nh(alpha_s)) )
       !
       wfcbeta (:,:)=0.0_dp
       wfcdbeta(:,:)=0.0_dp
@@ -557,7 +557,7 @@
          !
          do jv=1,nh(alpha_s)
             inl=ish(alpha_s)+(jv-1)*na(alpha_s)+alpha_a
-            do m=1,n_atomic_wfc
+            do m=1,nwfcU
                wfcbeta(m,iv) = wfcbeta(m,iv) + qq(iv,jv,alpha_s)*becwfc(inl,m)
                wfcdbeta(m,iv)=wfcdbeta(m,iv) + qq(iv,jv,alpha_s)*wdb(inl,m,ipol)
             end do
@@ -565,7 +565,7 @@
       end do
       !
       do iv=1,nh(alpha_s)
-         do m=1,n_atomic_wfc
+         do m=1,nwfcU
             do ibnd=1,n
                dproj(ibnd,m) =dproj(ibnd,m) +                           &
      &                         ( wfcdbeta(m,iv)*betapsi(ibnd,iv) +      &
@@ -582,8 +582,8 @@
       end subroutine dprojdtau
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE projwfc_hub( c, nx, eigr, betae, n, n_atomic_wfc,  &
-     &                        offset, Hubbard_l, wfc, becwfc, swfc, proj )
+      SUBROUTINE projwfc_hub( c, nx, eigr, betae, n, nwfcU,  &
+     &                        offset, Hubbard_l, wfcU, becwfc, swfc, proj )
 !-----------------------------------------------------------------------
       !
       ! Projection on atomic wavefunctions
@@ -600,37 +600,37 @@
       USE cp_interfaces,      only: nlsm1
 !
       IMPLICIT NONE
-      INTEGER,     INTENT(IN) :: nx, n, n_atomic_wfc, offset(nsp,nat), &
+      INTEGER,     INTENT(IN) :: nx, n, nwfcU, offset(nsp,nat), &
                                  Hubbard_l(nsp)
       COMPLEX(DP), INTENT(IN) :: c( ngw, nx ), eigr(ngw,nat), betae(ngw,nhsa)
 !
-      COMPLEX(DP), INTENT(OUT):: wfc(ngw,n_atomic_wfc),    &
-     & swfc( ngw, n_atomic_wfc )
-      real(DP), intent(out):: becwfc(nhsa,n_atomic_wfc), proj(n,n_atomic_wfc)
+      COMPLEX(DP), INTENT(OUT):: wfcU(ngw, nwfcU),    &
+     &                           swfc(ngw, nwfcU)
+      real(DP), intent(out):: becwfc(nhsa,nwfcU), proj(n,nwfcU)
       INTEGER :: is, ia, nb, l, m, k, i
       !
-      IF ( n_atomic_wfc .EQ. 0 ) RETURN
+      IF ( nwfcU .EQ. 0 ) RETURN
       !
       CALL start_clock('projwfc_hub')
       !
-      ! calculate wfc = atomic states
+      ! calculate wfcU = atomic states with associated Hubbard U
       !
-      CALL atomic_wfc_hub( offset, Hubbard_l, eigr, n_atomic_wfc, wfc )
+      CALL atomic_wfc_hub( offset, Hubbard_l, eigr, nwfcU, wfcU )
       !
       ! calculate bec = <beta|wfc>
       !
-      CALL nlsm1( n_atomic_wfc, 1, nsp, eigr, wfc, becwfc )
+      CALL nlsm1( nwfcU, 1, nsp, eigr, wfcU, becwfc )
       !
       ! calculate swfc = S|wfc>
       !
-      CALL s_wfc( n_atomic_wfc, becwfc, betae, wfc, swfc )
+      CALL s_wfc( nwfcU, becwfc, betae, wfcU, swfc )
       !
       ! calculate proj = <c|S|wfc>
       !
-      CALL dgemm( 'C', 'N', n, n_atomic_wfc, 2*ngw, 2.0_DP, c, 2*ngw, swfc, &
+      CALL dgemm( 'C', 'N', n, nwfcU, 2*ngw, 2.0_DP, c, 2*ngw, swfc, &
                     2*ngw, 0.0_DP, proj, n )
       IF ( gstart == 2 ) &
-         CALL dger( n, n_atomic_wfc, -1.0_DP, c, 2*ngw, swfc, 2*ngw, proj, n )
+         CALL dger( n, nwfcU, -1.0_DP, c, 2*ngw, swfc, 2*ngw, proj, n )
       CALL mp_sum( proj, intra_bgrp_comm )
 !
       CALL stop_clock('projwfc_hub')
@@ -639,7 +639,7 @@
       END SUBROUTINE projwfc_hub
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE atomic_wfc_hub( offset, Hubbard_l, eigr, n_atomic_wfc, wfc )
+      SUBROUTINE atomic_wfc_hub( offset, Hubbard_l, eigr, nwfcU, wfcU )
 !-----------------------------------------------------------------------
 !
 ! Compute atomic wavefunctions (not orthogonalized) in G-space
@@ -654,10 +654,10 @@
       USE constants,          ONLY: fpi
 !
       IMPLICIT NONE
-      INTEGER,     INTENT(in) :: n_atomic_wfc, offset(nsp,nat), &
+      INTEGER,     INTENT(in) :: nwfcU, offset(nsp,nat), &
                                  Hubbard_l(nsp)
       COMPLEX(DP), INTENT(in) :: eigr( ngw, nat )
-      COMPLEX(DP), INTENT(out):: wfc( ngw, n_atomic_wfc )
+      COMPLEX(DP), INTENT(out):: wfcU( ngw, nwfcU )
 !
       INTEGER :: natwfc, ndm, is, ia, ir, nb, l, m, lm, i, lmax_wfc, isa
       REAL(DP), ALLOCATABLE ::  ylm(:,:), q(:), jl(:), vchi(:), chiq(:)
@@ -709,7 +709,7 @@
                lm = l**2 + m
                natwfc = natwfc + 1
                DO ia = 1, na(is)
-                  wfc(:,natwfc+offset(is,ia)) = (0.d0,1.d0)**l * &
+                  wfcU(:,natwfc+offset(is,ia)) = (0.d0,1.d0)**l * &
                          eigr(:,ia+isa) * ylm(:,lm)*chiq(:)
                ENDDO
             ENDDO
@@ -718,11 +718,11 @@
          isa = isa + na(is)
       ENDDO
 !
-      IF ( natwfc+offset(nsp,na(nsp)) .NE. n_atomic_wfc) &
+      IF ( natwfc+offset(nsp,na(nsp)) .NE. nwfcU) &
          CALL errore('atomic_wfc','unexpected error',natwfc)
 !
-      do i = 1,n_atomic_wfc
-        call dscal(2*ngw,fpi/sqrt(omega),wfc(1,i),1)
+      do i = 1,nwfcU
+        call dscal(2*ngw,fpi/sqrt(omega),wfcU(1,i),1)
       end do
       DEALLOCATE(q, chiq, vchi, jl, ylm)
 !

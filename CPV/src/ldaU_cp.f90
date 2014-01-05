@@ -15,7 +15,7 @@ MODULE ldaU_cp
   real(DP) :: Hubbard_U(nsx)
   real(DP) :: e_hubbard = 0.d0
   real(DP), allocatable :: ns(:,:,:,:)
-  integer :: Hubbard_l(nsx), Hubbard_lmax=0, ldmx=0, n_atomic_wfc
+  integer :: Hubbard_l(nsx), Hubbard_lmax=0, ldmx=0, nwfcU
   logical :: lda_plus_u
   COMPLEX(DP), allocatable::  vupsi(:,:)
   !

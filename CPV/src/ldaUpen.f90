@@ -79,14 +79,13 @@ CONTAINS
       USE ions_base,          ONLY: na, nat, nsp
       USE gvecw,              ONLY: ngw
       USE electrons_base,     ONLY: nspin, n => nbsp, nx => nbspx, ispin, f
-      USE ldaU_cp,            ONLY: Hubbard_U, Hubbard_l, ldmx, n_atomic_wfc,&
-                                    ns
+      USE ldaU_cp,            ONLY: Hubbard_U, Hubbard_l, ldmx, nwfcU, ns
       USE dspev_module,       ONLY: dspev_drv
 !
       IMPLICIT NONE
       INTEGER,     intent(in) :: offset(nsp,nat)
-      REAL(dp),    intent(in) :: proj(n,n_atomic_wfc)
-      COMPLEX(dp), intent(in) :: swfc(ngw,n_atomic_wfc)
+      REAL(dp),    intent(in) :: proj(n,nwfcU)
+      COMPLEX(dp), intent(in) :: swfc(ngw,nwfcU)
       REAL(dp),    intent(inout) :: e_hubbard
       COMPLEX(dp), intent(inout) :: hpsi(ngw,nx)
 !
@@ -151,8 +150,7 @@ CONTAINS
       USE ions_base,          ONLY: na, nat, nsp
       USE gvecw,              ONLY: ngw
       USE electrons_base,     ONLY: nspin, n => nbsp, nx => nbspx, ispin, f
-      USE ldaU_cp,            ONLY: Hubbard_U, Hubbard_l, ldmx, n_atomic_wfc,&
-                                    ns
+      USE ldaU_cp,            ONLY: Hubbard_U, Hubbard_l, ldmx, nwfcU, ns
       USE dspev_module,       ONLY: dspev_drv
 !
       IMPLICIT NONE
