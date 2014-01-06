@@ -115,7 +115,10 @@
       USE ldaU_cp,            ONLY: Hubbard_U, Hubbard_l, ldmx
       USE ldaU_cp,            ONLY: nwfcU, ns, e_hubbard
       USE step_penalty,       ONLY: penalty_e, penalty_f
-      USE mp_global,          only: nbgrp
+      USE mp,                 ONLY: mp_sum
+      USE mp_pools,           ONLY: inter_pool_comm, intra_pool_comm, me_pool,&
+                                    nproc_pool
+      USE mp_bands,           only: nbgrp
       USE cp_interfaces,      only: nlsm1, nlsm2_bgrp
 !
       implicit none
@@ -129,6 +132,7 @@
       integer is, ia, iat, nb, isp, l, m, m1, m2, k, i, ldim, ig
       integer iv, jv, inl, jnl,alpha,alpha_a,alpha_s,ipol
       integer, allocatable ::  offset (:,:)
+      INTEGER :: nb_s, nb_e, mykey
 !
       if( nbgrp > 1 ) call errore(' new_ns ', &
          ' parallelization over bands not yet implemented ', 1 )
@@ -224,6 +228,16 @@
                      tempsi(m1,i) = tempsi(m1,i) * Hubbard_U(is)/2.d0*f(i)
                   enddo
                enddo
+               ! FIXME: proj depends upon band spin,
+               !        must be done separately for spin up and spin down
+               !tempsi(1:ldim,:) = proj (offset(is,ia)+1:offset(is,ia)+ldim,:)
+               !CALL dgemm ( 'N','N', ldim, n, ldim,-2.0_dp, &
+               !              ns(1,1,iat,ispin(i))), ldim,   &
+               !              proj(offset(is,ia)+1,1), nwfcU,&
+               !              1.0_dp, tempsi, ldim )
+               ! FIXME: this depends upon band occupations
+               !tempsi(1:ldim,:) = tempsi(1:ldim,:) * Hubbard_U(is)/2.d0*f(i)
+               !
                CALL dgemm ( 'N','N', 2*ngw, n, ldim, 1.0_dp, &
                              swfc(1,offset(is,ia)+1), 2*ngw, tempsi, &
                              ldmx, 1.0_dp, hpsi, 2*ngw )
@@ -250,14 +264,23 @@
         call s_wfc ( n, bp, betae, c, spsi )
         call nlsm2_bgrp( ngw, nhsa, eigr, c, dbp, nx, n )
         call nlsm2_bgrp( ngw, nhsa, eigr, wfcU, wdb, nwfcU, nwfcU )
-!
+        !
+        ! poor-man parallelization over bands
+        ! - if nproc_pool=1   : nb_s=1, nb_e=n, mykey=0
+        ! - if nproc_pool<=nbnd:each processor calculates band nb_s to nb_e; mykey=0
+        ! - if nproc_pool>nbnd :each processor takes care of band na_s=nb_e;
+        !   mykey labels how many times each band appears (mykey=0 first time etc.)
+        !
+        CALL block_distribute( n, me_pool, nproc_pool, nb_s, nb_e, mykey )
+        ! 
         alpha=0
         do alpha_s = 1, nsp
          do alpha_a = 1, na(alpha_s)
             alpha=alpha+1
             do ipol = 1,3
-               call dndtau(alpha_a,alpha_s,becwfc,spsi,bp,dbp,wdb,      &
-     &                     offset,wfcU,eigr,betae,proj,ipol,dns)
+               call dndtau(alpha_a,alpha_s,becwfc,spsi,bp,dbp,wdb,          &
+                           offset,wfcU,eigr,betae,proj,ipol,nb_s,nb_e,mykey,&
+                           dns)
                iat=0
                do is = 1, nsp
                   do ia=1, na(is)
@@ -282,6 +305,7 @@
             end do
          end do
         end do
+        CALL mp_sum( forceh, inter_pool_comm )
         ! I am not sure why the following instruction (present in PW)
         ! seems to yield a wrong factor here ... PG
         !if (nspin.eq.1) then
@@ -291,6 +315,7 @@
         deallocate ( spsi, dns, bp, dbp, wdb)
         call stop_clock('new_ns:forc')
       end if
+      !
       deallocate ( wfcU, becwfc, proj, offset, swfc)
       !
       call stop_clock('new_ns')
@@ -385,7 +410,8 @@
 !
 !-------------------------------------------------------------------------
       subroutine dndtau(alpha_a,alpha_s,becwfc,spsi,bp,dbp,wdb,         &
-     &                  offset,wfcU,eigr,betae, proj,ipol,dns)
+                        offset,wfcU,eigr,betae, proj,ipol,nb_s,nb_e,mykey,&
+                        dns)
 !-----------------------------------------------------------------------
 !
 ! This routine computes the derivative of the ns with respect to the ionic
@@ -399,12 +425,14 @@
       USE ldaU_cp,        ONLY: Hubbard_U, Hubbard_l, ldmx
       USE ldaU_cp,        ONLY: nwfcU, ns
       USE kinds,          ONLY: DP
+      USE mp,             ONLY: mp_sum
+      USE mp_pools,       ONLY: intra_pool_comm
 !
       implicit none
-      integer ibnd,is,i,ia, m1,m2, l, iat, alpha, ldim
 ! input
       integer,      intent(in) :: offset(nsp,nat)
       integer,      intent(in) :: alpha_a,alpha_s,ipol
+      INTEGER,      INTENT(in) :: nb_s, nb_e, mykey
       real(DP),     intent(in) :: wfcU(ngw,nwfcU),                &
      &                            eigr(2,ngw,nat),betae(2,ngw,nhsa),    &
      &                            becwfc(nhsa,nwfcU),            &
@@ -414,24 +442,28 @@
       complex (DP), intent(in) :: spsi(ngw,n)
 ! output
       real (DP),   intent(out) :: dns(ldmx,ldmx,nat,nspin)
+!     dns   derivative of ns(:,:,:,:) w.r.t. tau
 !
-!     dns !derivative of ns(:,:,:,:) w.r.t. tau
-!
+      integer ibnd,is,i,ia, m1,m2, l, iat, alpha, ldim
       real (DP),   allocatable :: dproj(:,:)
-!
-!     dproj(nwfcU,n) ! derivative of proj(:,:) w.r.t. tau 
+!     dproj(nwfcU,n)   derivative of proj(:,:) w.r.t. tau 
 !
       CALL start_clock('dndtau')
-      allocate (dproj(nwfcU,n) )
-!
-      dns(:,:,:,:) = 0.d0
-!
+      !
+      allocate (dproj(nwfcU,nb_s:nb_e) )
       call dprojdtau(wfcU,becwfc,spsi,bp,dbp,wdb,eigr,alpha_a,     &
-     &               alpha_s,ipol,offset(alpha_s,alpha_a),dproj)
-!
-! compute the derivative of occupation numbers (the quantities dn(m1,m2))
-! of the atomic orbitals. They are real quantities as well as n(m1,m2)
-!
+                     alpha_s,ipol,offset(alpha_s,alpha_a),nb_s,nb_e,mykey, &
+                     dproj)
+      !
+      ! compute the derivative of occupation numbers (the quantities dn(m1,m2))
+      ! of the atomic orbitals. They are real quantities as well as n(m1,m2)
+      !
+      dns(:,:,:,:) = 0.d0
+      !
+      ! band parallelization. If each band appears more than once
+      ! compute its contribution only once (i.e. when mykey=0)
+      !
+      IF ( mykey /= 0 ) GO TO 10
       iat=0
       do is=1,nsp
          do ia = 1,na(is)
@@ -440,7 +472,7 @@
                ldim = 2*Hubbard_l(is) + 1
                do m1 = 1, ldim
                   do m2 = m1, ldim
-                     do ibnd = 1,n
+                     do ibnd = nb_s,nb_e
                         dns(m1,m2,iat,ispin(ibnd)) =                    &
      &                  dns(m1,m2,iat,ispin(ibnd)) +                    &
      &                   f(ibnd)*REAL(  proj(offset(is,ia)+m1,ibnd) *   &
@@ -454,15 +486,16 @@
             end if
          end do
       end do
-      CALL stop_clock('dndtau')
 !
-      deallocate (dproj)
+ 10   deallocate (dproj)
+      CALL mp_sum(dns, intra_pool_comm)
+      CALL stop_clock('dndtau')
       return
       end subroutine dndtau
 !
 !-----------------------------------------------------------------------
       subroutine dprojdtau(wfcU,becwfc,spsi,bp,dbp,wdb,eigr,alpha_a,    &
-     &                     alpha_s,ipol,offset,dproj)
+                           alpha_s,ipol,offset,nb_s,nb_e,mykey,dproj)
 !-----------------------------------------------------------------------
 !
 ! This routine computes the first derivative of the projection
@@ -484,17 +517,18 @@
       USE kinds,          ONLY: DP
 !
        implicit none
-       integer alpha_a, alpha_s,ipol, offset
+       integer, INTENT(in) :: alpha_a, alpha_s,ipol, offset
 ! input: the displaced atom
 ! input: the component of displacement
 ! input: the offset of the wfcs of the atom "alpha_a,alpha_s"
+       INTEGER, INTENT(in) :: nb_s, nb_e, mykey
        complex (DP), intent(in) :: spsi(ngw,n),                     &
      &                   eigr(ngw,nat)
 ! input: S|evc>, structure factors
        real(DP), intent(in) ::becwfc(nhsa,nwfcU),            &
      &                          wfcU(2,ngw,nwfcU),           &
      &            bp(nhsa,n), dbp(nhsa,nx,3), wdb(nhsa,nwfcU,3)
-       real(DP), intent(out) :: dproj(nwfcU,n)
+       real(DP), intent(out) :: dproj(nwfcU,nb_s:nb_e)
 ! output: the derivative of the projection
 !
       integer i,ig,m1,ibnd,iwf,ia,is,iv,jv,ldim,alpha,l,m,k,inl
@@ -534,7 +568,8 @@
                        dproj0, ldim )
          call mp_sum( dproj0, intra_bgrp_comm )
          !
-         dproj(offset+1:offset+ldim,:) = dproj0(:,:)
+         ! copy to dproj results for the bands treated by this processor
+         dproj(offset+1:offset+ldim,:) = dproj0(:,nb_s:nb_e)
          deallocate (gk, dproj0, dwfc)
          !
       end if
@@ -549,7 +584,7 @@
       !
       do iv=1,nh(alpha_s)
          inl=ish(alpha_s)+(iv-1)*na(alpha_s)+alpha_a
-         do i=1,n
+         do i=nb_s,nb_e
             betapsi(i,iv)=bp(inl,i)
             dbetapsi(i,iv)=dbp(inl,i,ipol)
          end do
@@ -563,15 +598,18 @@
          end do
       end do
       !
-      do iv=1,nh(alpha_s)
-         do m=1,nwfcU
-            do ibnd=1,n
-               dproj(m,ibnd) =dproj(m,ibnd) +                           &
-     &                         ( wfcdbeta(m,iv)*betapsi(ibnd,iv) +      &
+      IF ( mykey == 0 ) THEN
+         do iv=1,nh(alpha_s)
+            do m=1,nwfcU
+               do ibnd=nb_s,nb_e
+                  dproj(m,ibnd) =dproj(m,ibnd) +                           &
+     &                        ( wfcdbeta(m,iv)*betapsi(ibnd,iv) +      &
      &                           wfcbeta(m,iv)*dbetapsi(ibnd,iv) )
+               end do
             end do
          end do
-      end do
+      end if
+      ! end band parallelization - only dproj(1,nb_s:nb_e) are calculated
       !
       deallocate (betapsi)
       deallocate (dbetapsi)
