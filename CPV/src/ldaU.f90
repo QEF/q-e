@@ -115,9 +115,7 @@
       USE ldaU_cp,            ONLY: Hubbard_U, Hubbard_l, ldmx
       USE ldaU_cp,            ONLY: nwfcU, ns, e_hubbard
       USE step_penalty,       ONLY: penalty_e, penalty_f
-      USE mp,                 ONLY: mp_sum
-      USE mp_pools,           ONLY: inter_pool_comm, intra_pool_comm, me_pool,&
-                                    nproc_pool
+      USE mp_pools,           ONLY: intra_pool_comm, me_pool, nproc_pool
       USE mp_bands,           only: nbgrp
       USE cp_interfaces,      only: nlsm1, nlsm2_bgrp
 !
@@ -305,7 +303,7 @@
             end do
          end do
         end do
-        CALL mp_sum( forceh, inter_pool_comm )
+        !
         ! I am not sure why the following instruction (present in PW)
         ! seems to yield a wrong factor here ... PG
         !if (nspin.eq.1) then
@@ -347,7 +345,6 @@
   real(DP), allocatable   :: ftemp1(:), ftemp2(:), f1 (:), vet (:,:)
 
   real(DP) :: lambda (ldmx), nsum, nsuma
-  write (*,*) 'enter write_ns'
 
   CALL write_pen (nsp, nspin)
 
