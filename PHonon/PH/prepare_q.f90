@@ -30,7 +30,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   USE grid_irr_iq,     ONLY : irr_iq, done_irr_iq, done_bands
   USE control_ph,      ONLY : ldisp, lgamma, epsil, trans, zue, zeu, &
                               start_irr, last_irr, current_iq, newgrid, &
-                              tmp_dir_ph, tmp_dir_phq, lqdir, qplot
+                              tmp_dir_ph, tmp_dir_phq, lqdir, qplot, always_run
   USE io_files,        ONLY : prefix
   USE ramanm,          ONLY : lraman, elop
   USE freq_ph,         ONLY : fpol
@@ -153,7 +153,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
 ! with qplot we redo the bands at gamma if it is not the first point
 ! of the list.
 !
-  IF (qplot.AND.iq /= 1) setup_pw=.true.
+  IF ((qplot.AND.iq /= 1).OR.always_run) setup_pw=.true.
 
   do_band=.FALSE.
   DO irr=start_irr, MIN(ABS(last_irr),irr_iq(iq))

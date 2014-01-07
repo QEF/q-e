@@ -332,6 +332,10 @@ MODULE control_ph
              done_start_zstar=.FALSE., &!
              only_wfc=.FALSE.,  &! if .TRUE. computes only bands
              only_init=.FALSE.,  &! if .TRUE. computes only initial stuff
+             with_ext_images=.FALSE., & ! if .TRUE. use an external driver
+                                        ! to decide what each image does.
+             always_run=.FALSE., & ! if .TRUE. the code do not stop after
+                                   ! doing partial representations
              recover,     &! if .TRUE. the run restarts
              low_directory_check=.FALSE., & ! if .TRUE. search on the phsave 
                            ! directory only the representations requested 

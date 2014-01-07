@@ -38,6 +38,7 @@ subroutine dynmatrix_new(iq_)
   USE ph_restart,    ONLY : ph_writefile
   USE partial,       ONLY : all_comp, comp_irr, done_irr, nat_todo_input
   USE units_ph,      ONLY : iudyn
+  USE control_ph,    ONLY : always_run
   USE noncollin_module, ONLY : m_loc, nspin_mag
   USE output,        ONLY : fildyn
   USE io_dyn_mat,    ONLY : write_dyn_mat_header
@@ -125,7 +126,7 @@ subroutine dynmatrix_new(iq_)
   IF ( .NOT. ldiag_loc ) THEN
      DO irr=0,nirr
         IF (.NOT.done_irr(irr)) THEN
-           IF (.not.ldisp) THEN
+           IF (.not.ldisp.AND..NOT.always_run) THEN
               WRITE(stdout, '(/,5x,"Stopping because representation", &
                                  & i5, " is not done")') irr
               CALL close_phq(.TRUE.)

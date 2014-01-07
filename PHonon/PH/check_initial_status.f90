@@ -81,7 +81,8 @@ SUBROUTINE check_initial_status(auxdyn)
                               tmp_dir_ph, lgamma, &
                               ext_recover, ext_restart, tmp_dir_phq, lqdir, &
                               start_irr, last_irr, newgrid, qplot, &
-                              done_zeu, done_start_zstar, done_epsil, done_zue
+                              done_zeu, done_start_zstar, done_epsil, &
+                              done_zue, with_ext_images
   USE save_ph,         ONLY : tmp_dir_save
   USE units_ph,        ONLY : iudyn
   USE ph_restart,      ONLY : check_directory_phsave, check_available_bands,&
@@ -177,7 +178,7 @@ SUBROUTINE check_initial_status(auxdyn)
 !
 ! If there are more than one image, divide the work among the images
 !
-  IF (nimage > 1) CALL image_q_irr()
+  IF (nimage > 1 .AND. .NOT. with_ext_images) CALL image_q_irr()
 !
   IF (recover) THEN
 !
