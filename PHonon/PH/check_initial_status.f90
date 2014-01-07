@@ -80,7 +80,8 @@ SUBROUTINE check_initial_status(auxdyn)
                               start_q, last_q, current_iq, &
                               tmp_dir_ph, lgamma, &
                               ext_recover, ext_restart, tmp_dir_phq, lqdir, &
-                              start_irr, last_irr, newgrid, qplot
+                              start_irr, last_irr, newgrid, qplot, &
+                              done_zeu, done_start_zstar, done_epsil, done_zue
   USE save_ph,         ONLY : tmp_dir_save
   USE units_ph,        ONLY : iudyn
   USE ph_restart,      ONLY : check_directory_phsave, check_available_bands,&
@@ -234,6 +235,11 @@ SUBROUTINE check_initial_status(auxdyn)
      ELSEIF (iq_start<0) THEN
         CALL errore('check_initial_status','wrong iq_start',1)
      ENDIF
+  ELSE
+     done_zeu=.FALSE.
+     done_start_zstar=.FALSE.
+     done_epsil=.FALSE.
+     done_zue=.FALSE.
   ENDIF
   !
   !  Create a new directory where the ph variables are saved and copy
