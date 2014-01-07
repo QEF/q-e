@@ -20,7 +20,7 @@ SUBROUTINE close_phq( flag )
   USE buffers,       ONLY : close_buffer
   USE uspp,          ONLY : okvan
   USE units_ph,      ONLY : iuwfc, iudwf, iubar, iudrhous, iuebar, iudrho, &
-                            iudvscf, iucom, iudvkb3, iuint3paw
+                            iudvscf, iucom, iudvkb3, iuint3paw, iudyn
   USE control_ph,    ONLY : zue, epsil, only_wfc
   USE recover_mod,   ONLY : clean_recover
   USE output,        ONLY : fildrho, fildvscf
@@ -106,6 +106,11 @@ SUBROUTINE close_phq( flag )
     INQUIRE( UNIT=iunwfcwann, OPENED=opnd ) 
     IF (opnd) CLOSE( UNIT = iunwfcwann, STATUS = 'KEEP' ) 
   ENDIF
+
+  IF (ionode) THEN
+     INQUIRE( UNIT=iudyn, OPENED=opnd )
+     IF (opnd) CLOSE( UNIT = iudyn, STATUS = 'KEEP' )
+  END IF
   !
   RETURN
   !
