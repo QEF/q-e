@@ -127,6 +127,7 @@ subroutine initialize_grid_variables()
   USE el_phon,       ONLY : elph
   USE io_global,     ONLY : stdout
   USE mp_global,     ONLY : mp_global_end
+  USE environment,   ONLY : environment_end
 
   implicit none
 
@@ -142,7 +143,7 @@ subroutine initialize_grid_variables()
 
   DO iq=1, nqs
 !
-!  Only the modes calculated by node zero are sent to all images
+!  Read from file the modes and the representations
 !
      CALL ph_readfile('data_u', iq, 0, ierr)
      IF (ierr /= 0) call errore('initialize_grid_variables',&
@@ -185,6 +186,7 @@ subroutine initialize_grid_variables()
      write(stdout,'(/,5x, "The code stops because there is nothing to do")') 
      CALL clean_pw(.FALSE.)
      CALL close_files(.FALSE.)
+     CALL environment_end('PHONON')
      CALL mp_global_end()
      STOP
   ENDIF
