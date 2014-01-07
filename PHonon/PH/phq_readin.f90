@@ -54,7 +54,7 @@ SUBROUTINE phq_readin()
   USE noncollin_module, ONLY : i_cons, noncolin
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : iverbosity, modenum, twfcollect
-  USE io_global,     ONLY : meta_ionode, ionode, ionode_id, stdout
+  USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode, ionode_id, stdout
   USE mp_images,     ONLY : nimage, my_image_id, intra_image_comm,   &
                             me_image, nproc_image
   USE mp_global,     ONLY : nproc_pool_file, &
@@ -194,9 +194,9 @@ SUBROUTINE phq_readin()
   !
   ENDIF
   !
-  CALL mp_bcast(ios, ionode_id, world_comm )
+  CALL mp_bcast(ios, meta_ionode_id, world_comm )
   CALL errore( 'phq_readin', 'reading title ', ABS( ios ) )
-  CALL mp_bcast(title, ionode_id, world_comm  )
+  CALL mp_bcast(title, meta_ionode_id, world_comm  )
   !
   ! Rewind the input if the title is actually the beginning of inputph namelist
   !
@@ -204,7 +204,7 @@ SUBROUTINE phq_readin()
     WRITE(*, '(6x,a)') "Title line not specified: using 'default'."
     title='default'
     IF (meta_ionode) REWIND(5, iostat=ios)
-    CALL mp_bcast(ios, ionode_id, world_comm  )
+    CALL mp_bcast(ios, meta_ionode_id, world_comm  )
     CALL errore('phq_readin', 'Title line missing from input.', abs(ios))
   ENDIF
   !
@@ -238,8 +238,10 @@ SUBROUTINE phq_readin()
   elop         = .FALSE.
   max_seconds  =  1.E+7_DP
   reduce_io    = .FALSE.
-  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
-  IF ( TRIM( outdir ) == ' ' ) outdir = './'
+  IF ( TRIM(outdir) == './') THEN
+     CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+     IF ( TRIM( outdir ) == ' ' ) outdir = './'
+  ENDIF
   prefix       = 'pwscf'
   fildyn       = 'matdyn'
   fildrho      = ' '
@@ -290,16 +292,16 @@ SUBROUTINE phq_readin()
   !
   ! ...  reading the namelist inputph
   !
-  IF (meta_ionode) READ( 5, INPUTPH, IOSTAT = ios )
-  CALL mp_bcast(ios, ionode_id, world_comm )
+  IF (meta_ionode) READ( 5, INPUTPH, ERR=30, IOSTAT = ios )
+30  CALL mp_bcast(ios, meta_ionode_id, world_comm )
   CALL errore( 'phq_readin', 'reading inputph namelist', ABS( ios ) )
   !
   ! ...  broadcast all input variables
   !
   CALL bcast_ph_input ( )
-  CALL mp_bcast(nogg, ionode_id, world_comm  )
-  CALL mp_bcast(q2d, ionode_id, world_comm  )
-  CALL mp_bcast(q_in_band_form, ionode_id, world_comm  )
+  CALL mp_bcast(nogg, meta_ionode_id, world_comm  )
+  CALL mp_bcast(q2d, meta_ionode_id, world_comm  )
+  CALL mp_bcast(q_in_band_form, meta_ionode_id, world_comm  )
   !
   tmp_dir = trimcheck (outdir)
   drho_star%dir=trimcheck(drho_star%dir)
@@ -390,10 +392,10 @@ SUBROUTINE phq_readin()
         IF (.NOT. ldisp) READ (5, *, iostat = ios) (xq (ipol), ipol = 1, 3)
      ENDIF
   END IF
-  CALL mp_bcast(ios, ionode_id, world_comm )
+  CALL mp_bcast(ios, meta_ionode_id, world_comm )
   CALL errore ('phq_readin', 'reading xq', ABS (ios) )
   IF (qplot) THEN
-     CALL mp_bcast(nqaux, ionode_id, world_comm )
+     CALL mp_bcast(nqaux, meta_ionode_id, world_comm )
      ALLOCATE(xqaux(3,nqaux))
      ALLOCATE(wqaux(nqaux))
      IF (meta_ionode) THEN
@@ -401,12 +403,12 @@ SUBROUTINE phq_readin()
            READ (5, *, iostat = ios) (xqaux (ipol,iq), ipol = 1, 3), wqaux(iq)
         ENDDO
      ENDIF
-     CALL mp_bcast(ios, ionode_id, world_comm )
+     CALL mp_bcast(ios, meta_ionode_id, world_comm )
      CALL errore ('phq_readin', 'reading xq', ABS (ios) )
-     CALL mp_bcast(xqaux, ionode_id, world_comm )
-     CALL mp_bcast(wqaux, ionode_id, world_comm )
+     CALL mp_bcast(xqaux, meta_ionode_id, world_comm )
+     CALL mp_bcast(wqaux, meta_ionode_id, world_comm )
   ELSE
-     CALL mp_bcast(xq, ionode_id, world_comm  )
+     CALL mp_bcast(xq, meta_ionode_id, world_comm  )
   ENDIF
   
   IF (.NOT.ldisp) THEN
@@ -439,9 +441,9 @@ SUBROUTINE phq_readin()
            READ (5, *, iostat = ios) nfs
         ENDIF
      ENDIF
-     CALL mp_bcast(ios, ionode_id, world_comm  )
+     CALL mp_bcast(ios, meta_ionode_id, world_comm  )
      CALL errore ('phq_readin', 'reading number of FREQUENCIES', ABS(ios) )
-     CALL mp_bcast(nfs, ionode_id, world_comm  )
+     CALL mp_bcast(nfs, meta_ionode_id, world_comm  )
      if (nfs < 1) call errore('phq_readin','Too few frequencies',1)
      ALLOCATE(fiu(nfs))
      IF (meta_ionode) THEN
@@ -453,9 +455,9 @@ SUBROUTINE phq_readin()
            END DO
         END IF
      END IF
-     CALL mp_bcast(ios, ionode_id, world_comm )
+     CALL mp_bcast(ios, meta_ionode_id, world_comm )
      CALL errore ('phq_readin', 'reading FREQUENCIES card', ABS(ios) )
-     CALL mp_bcast(fiu, ionode_id, world_comm  )
+     CALL mp_bcast(fiu, meta_ionode_id, world_comm  )
   ELSE
      nfs=1
      ALLOCATE(fiu(1))
@@ -697,9 +699,9 @@ SUBROUTINE phq_readin()
      CALL errore ('phq_readin', 'nat_todo is wrong', 1)
   IF (nat_todo.NE.0) THEN
      IF (meta_ionode) READ (5, *, iostat = ios) (atomo (na), na = 1, nat_todo)
-     CALL mp_bcast(ios, ionode_id, world_comm  )
+     CALL mp_bcast(ios, meta_ionode_id, world_comm  )
      CALL errore ('phq_readin', 'reading atoms', ABS (ios) )
-     CALL mp_bcast(atomo, ionode_id, world_comm  )
+     CALL mp_bcast(atomo, meta_ionode_id, world_comm  )
   ENDIF
   nat_todo_input=nat_todo
 
