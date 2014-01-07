@@ -176,7 +176,7 @@ subroutine phq_recover
 ! We check here if everything has been done
 !
   all_done=.true.
-  DO irr = 1, nirr
+  DO irr = 0, nirr
      IF ( comp_irr(irr) .AND. .NOT.done_irr(irr)  ) all_done=.false.
   ENDDO
   IF (rec_code_read < 2) THEN
