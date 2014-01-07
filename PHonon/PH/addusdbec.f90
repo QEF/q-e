@@ -23,7 +23,7 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   USE qpoint, ONLY : npwq, ikks
   USE control_ph, ONLY : nbnd_occ
   !
-  USE mp_global, ONLY : intra_bgrp_comm
+  USE mp_bands, ONLY : intra_bgrp_comm
   !
   implicit none
   !

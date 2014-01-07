@@ -29,7 +29,8 @@ subroutine dielec_test
   USE units_ph, ONLY : lrwfc, iuwfc
 
   USE ramanm, ONLY : a1j, a2j, lrd2w, iud2w
-  USE mp_global,ONLY : inter_pool_comm, intra_bgrp_comm
+  USE mp_pools, ONLY : inter_pool_comm
+  USE mp_bands, ONLY : intra_bgrp_comm
   USE mp,       ONLY : mp_sum
 
   implicit none

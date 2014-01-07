@@ -31,7 +31,7 @@ subroutine add_zstar_ue_us(imode0,npe)
   USE modes,      ONLY : u
   USE units_ph,   ONLY : iucom, lrcom, iuwfc, lrwfc
 
-  USE mp_global, ONLY: intra_bgrp_comm
+  USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none

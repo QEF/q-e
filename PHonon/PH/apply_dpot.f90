@@ -13,7 +13,7 @@ SUBROUTINE apply_dpot(nrxxs, aux1, dv, current_spin)
   USE kinds, ONLY : DP
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE spin_orb, ONLY : domag
-  USE mp_global, ONLY : me_bgrp
+  USE mp_bands, ONLY : me_bgrp
   USE fft_base,  ONLY : dffts
 
   IMPLICIT NONE

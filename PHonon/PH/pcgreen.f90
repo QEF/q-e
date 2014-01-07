@@ -18,7 +18,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   use kinds, only : DP
   USE wvfct,     ONLY : nbnd, npw, npwx, g2kin
   USE wavefunctions_module,  ONLY: evc
-  USE mp_global, ONLY: intra_bgrp_comm
+  USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
   USE eqv,       ONLY: dpsi, dvpsi, eprec
   USE control_ph, ONLY : nbnd_occ

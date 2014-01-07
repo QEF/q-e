@@ -27,7 +27,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
   USE spin_orb,  ONLY : lspinorb
   USE phus,      ONLY : int1, int1_nc, int2, int2_so, becp1, alphap
 
-  USE mp_global, ONLY: intra_bgrp_comm
+  USE mp_bands, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none

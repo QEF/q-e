@@ -32,7 +32,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE eqv,       ONLY : dpsi, evq
   USE control_ph, ONLY : nbnd_occ
   USE phus,      ONLY  : becp1, alphap
-  USE mp_global, ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE becmod,    ONLY : bec_type
 

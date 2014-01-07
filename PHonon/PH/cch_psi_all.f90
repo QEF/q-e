@@ -24,7 +24,7 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
   USE eqv,  ONLY : evq
   USE qpoint, ONLY : ikqs
 
-  USE mp_global, ONLY: intra_bgrp_comm
+  USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none

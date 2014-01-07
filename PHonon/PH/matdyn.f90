@@ -2038,7 +2038,7 @@ SUBROUTINE a2Fdos &
   USE io_global,   ONLY : ionode, ionode_id
   USE mp,          ONLY : mp_bcast
   USE mp_world,    ONLY : world_comm
-  USE mp_global,   ONLY : intra_image_comm
+  USE mp_images,   ONLY : intra_image_comm
   USE ifconstants, ONLY : zeu, tau_blk
   USE constants,  ONLY : pi, RY_TO_THZ
   !

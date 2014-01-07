@@ -20,7 +20,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   USE lsda_mod,  ONLY : nspin
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
 
-  USE mp_global, ONLY: intra_bgrp_comm
+  USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none

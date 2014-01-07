@@ -15,7 +15,7 @@ SUBROUTINE psyme (dvtosym)
   USE kinds,     ONLY : DP
   USE fft_base, ONLY : dfftp
   USE noncollin_module, ONLY : nspin_mag
-  USE mp_global, ONLY : me_bgrp
+  USE mp_bands, ONLY : me_bgrp
   USE fft_base,  ONLY : dfftp, cgather_sym
   !
   IMPLICIT NONE

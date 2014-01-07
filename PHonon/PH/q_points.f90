@@ -16,7 +16,7 @@ SUBROUTINE q_points ( )
   USE symm_base, ONLY : nsym, s, time_reversal, t_rev, invs
   USE cell_base, ONLY : at, bg
   USE control_ph, ONLY : search_sym
-  USE mp_global,  ONLY : intra_image_comm
+  USE mp_images,  ONLY : intra_image_comm
   USE mp,         ONLY : mp_bcast
 
   implicit none

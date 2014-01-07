@@ -29,7 +29,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE control_ph, ONLY: nbnd_occ
   USE eqv,       ONLY : evq, dpsi
   USE modes,     ONLY : u
-  USE mp_global, ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE becmod,    ONLY : bec_type
 

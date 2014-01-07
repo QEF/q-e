@@ -14,8 +14,7 @@ SUBROUTINE el_ph_collect( nmodes, el_ph_mat, el_ph_mat_collect, nksqtot, nksq )
   !
   USE io_global, only : stdout
   USE kinds,     ONLY : DP
-  USE mp_global, ONLY : my_pool_id, npool, kunit
-  USE mp_global, ONLY : inter_pool_comm
+  USE mp_pools, ONLY : my_pool_id, npool, kunit, inter_pool_comm
   USE mp,        ONLY : mp_sum
   USE ions_base, ONLY : nat
   USE wvfct,     ONLY : nbnd
@@ -73,8 +72,7 @@ SUBROUTINE el_ph_distribute( nmodes, el_ph_mat, el_ph_mat_collect, nksqtot, nksq
   !
   USE io_global, only : stdout
   USE kinds,     ONLY : DP
-  USE mp_global, ONLY : my_pool_id, npool, kunit
-  USE mp_global, ONLY : inter_pool_comm
+  USE mp_pools, ONLY : my_pool_id, npool, kunit, inter_pool_comm
   USE mp,        ONLY : mp_sum
   USE ions_base, ONLY : nat
   USE wvfct,     ONLY : nbnd

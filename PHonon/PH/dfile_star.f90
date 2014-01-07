@@ -115,7 +115,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   USE dfile_autoname,   ONLY : dfile_name
   USE control_ph,       ONLY : search_sym
   USE noncollin_module, ONLY : nspin_mag
-  USE mp_global,        ONLY : intra_image_comm
+  USE mp_images,        ONLY : intra_image_comm
   USE mp,               ONLY : mp_bcast
   USE wrappers,         ONLY : f_mkdir_safe
   !

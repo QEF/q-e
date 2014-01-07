@@ -13,7 +13,7 @@ subroutine psyme2 (dvtosym)
   !
 
   use kinds, only : DP
-  USE mp_global, ONLY: me_bgrp
+  USE mp_bands, ONLY: me_bgrp
   USE fft_base,  ONLY: dfftp, cgather_sym
   implicit none
 

@@ -29,7 +29,8 @@ subroutine polariz ( iw, iu )
   USE qpoint,       ONLY : nksq
   USE ph_restart,   ONLY : ph_writefile
   USE cell_base,    ONLY : omega
-  USE mp_global,    ONLY : inter_pool_comm, intra_bgrp_comm
+  USE mp_pools,     ONLY : inter_pool_comm
+  USE mp_bands,     ONLY : intra_bgrp_comm
   USE mp,           ONLY : mp_sum
   !
   IMPLICIT NONE

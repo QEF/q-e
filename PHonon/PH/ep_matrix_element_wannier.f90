@@ -24,7 +24,7 @@ SUBROUTINE ep_matrix_element_wannier()
   USE control_ph, ONLY : trans
   USE units_ph, ONLY : iudyn, lrdrho, iudvscf
   USE io_global, ONLY : stdout
-  USE mp_global, ONLY : me_pool, root_pool
+  USE mp_pools,  ONLY : me_pool, root_pool
   USE modes, ONLY : u
   USE klist, ONLY : xk
   USE wvfct, ONLY : npwx
@@ -168,7 +168,8 @@ SUBROUTINE elphsum_wannier(q_index)
   USE klist, ONLY : xk, nelec
   USE wvfct, ONLY : nbnd, et
   USE el_phon
-  USE mp_global, ONLY : me_pool, root_pool, inter_pool_comm, npool, intra_bgrp_comm
+  USE mp_pools,  ONLY : me_pool, root_pool, inter_pool_comm, npool
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE io_global, ONLY : stdout,ionode
   USE io_files,  ONLY : prefix
   USE qpoint, ONLY : xq, nksq, ikks, ikqs
@@ -339,7 +340,8 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE eqv,      ONLY : dvpsi!, evq
   USE qpoint,   ONLY : igkq, npwq, nksq, ikks, ikqs
   USE control_ph, ONLY : trans, lgamma
-  USE mp_global, ONLY: intra_bgrp_comm, me_pool, root_pool
+  USE mp_bands,  ONLY: intra_bgrp_comm
+  USE mp_pools,  ONLY: me_pool, root_pool
   USE mp,        ONLY: mp_sum
   USE ions_base, ONLY : nat
   USE io_global, ONLY : stdout
@@ -515,7 +517,7 @@ subroutine get_equivalent_kpq(xk,xq,kpq,g_kpq, igqg)
   USE qpoint, ONLY : nksq, ikks
   USE gvect, ONLY: g, gg
   USE qpoint, ONLY : nksq
-  USE mp_global, ONLY : intra_bgrp_comm
+  USE mp_bands, ONLY : intra_bgrp_comm
   USE mp, ONLY : mp_sum
   ! WARNING g_kpq mesh is an integer
   implicit none

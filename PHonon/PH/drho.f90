@@ -37,7 +37,8 @@ subroutine drho
   USE phus,       ONLY : becsumort, alphap, becp1
   USE units_ph,   ONLY : lrdrhous, iudrhous
 
-  USE mp_global,  ONLY : inter_pool_comm, intra_bgrp_comm
+  USE mp_pools,   ONLY : inter_pool_comm
+  USE mp_bands,   ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   USE becmod,     ONLY : bec_type, allocate_bec_type, deallocate_bec_type
 

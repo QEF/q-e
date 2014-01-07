@@ -25,7 +25,7 @@ USE ener, ONLY : ef
 USE control_ph,  ONLY : alpha_pv, nbnd_occ
 USE becmod,      ONLY : bec_type, becp, calbec
 USE uspp,        ONLY : vkb, okvan
-USE mp_global,   ONLY : intra_bgrp_comm
+USE mp_bands,    ONLY : intra_bgrp_comm
 USE mp,          ONLY : mp_sum
 USE control_flags, ONLY : gamma_only
 USE realus,      ONLY : npw_k

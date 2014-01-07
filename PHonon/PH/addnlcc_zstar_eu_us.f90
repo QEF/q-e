@@ -24,7 +24,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   USE eqv,    ONLY : dmuxc
   USE gc_ph,   ONLY: grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
 
-  USE mp_global, ONLY : my_pool_id
+  USE mp_pools, ONLY : my_pool_id
 
 
   IMPLICIT NONE

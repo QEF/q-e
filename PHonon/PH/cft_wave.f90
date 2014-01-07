@@ -86,7 +86,7 @@ subroutine cft_wave_tg (evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
   USE fft_base,   ONLY: dffts
   USE fft_interfaces, ONLY: fwfft, invfft
   USE gvecs, ONLY : nls
-  USE mp_global, ONLY : me_bgrp
+  USE mp_bands, ONLY : me_bgrp
   use noncollin_module, ONLY : noncolin, npol
   use qpoint, ONLY : npwq, igkq
 

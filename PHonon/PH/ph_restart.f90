@@ -20,7 +20,7 @@ MODULE ph_restart
                         qexml_version, qexml_version_init
   USE control_ph, ONLY : tmp_dir_ph
   USE io_global, ONLY : ionode, ionode_id
-  USE mp_global, ONLY : intra_image_comm
+  USE mp_images, ONLY : intra_image_comm
   USE mp,        ONLY : mp_bcast
   !
   IMPLICIT NONE
@@ -778,7 +778,7 @@ MODULE ph_restart
     USE el_phon,    ONLY : el_ph_mat_rec, el_ph_mat_rec_col, done_elph, elph
     USE modes,      ONLY : npert
     USE wvfct,      ONLY : nbnd
-    USE mp_global,  ONLY : npool
+    USE mp_pools,   ONLY : npool
     
     IMPLICIT NONE
     INTEGER,          INTENT(in) :: irr
@@ -1268,7 +1268,7 @@ MODULE ph_restart
       USE io_global,    ONLY : ionode, ionode_id
       USE xml_io_base,  ONLY : create_directory
       USE freq_ph,      ONLY : fpol
-      USE mp_global,    ONLY : intra_image_comm
+      USE mp_images,    ONLY : intra_image_comm
       USE mp,           ONLY : mp_bcast
 
       IMPLICIT NONE

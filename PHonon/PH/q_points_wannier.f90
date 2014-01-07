@@ -21,7 +21,7 @@ SUBROUTINE q_points_wannier ( )
   USE dfile_star,     ONLY : dvscf_star
   USE io_files,       ONLY : prefix
   USE control_ph,     ONLY : last_q
-  USE mp_global,      ONLY : intra_image_comm
+  USE mp_images,      ONLY : intra_image_comm
 
   implicit none
 

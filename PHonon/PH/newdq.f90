@@ -30,7 +30,7 @@ subroutine newdq (dvscf, npe)
   USE qpoint,               ONLY : xq, eigqts
   USE control_ph,           ONLY : lgamma
 
-  USE mp_global, ONLY: intra_bgrp_comm
+  USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none

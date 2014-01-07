@@ -33,7 +33,8 @@ subroutine zstar_eu
   USE control_ph,ONLY : nbnd_occ, done_zeu
   USE ph_restart, ONLY : ph_writefile
 
-  USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm
+  USE mp_pools,              ONLY : inter_pool_comm
+  USE mp_bands,              ONLY : intra_bgrp_comm
   USE mp,                    ONLY : mp_sum
 
   implicit none

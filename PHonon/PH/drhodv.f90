@@ -41,7 +41,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE units_ph, ONLY : lrdwf, iudwf
   USE control_ph, ONLY : lgamma
 
-  USE mp_global,        ONLY : inter_pool_comm
+  USE mp_pools,         ONLY : inter_pool_comm
   USE mp,               ONLY : mp_sum
 
   implicit none

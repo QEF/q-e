@@ -36,7 +36,8 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   USE phus,      ONLY : becsumort, int3_paw
   USE units_ph,  ONLY : iudrhous, lrdrhous
 
-  USE mp_global, ONLY : inter_pool_comm, intra_bgrp_comm
+  USE mp_pools,  ONLY : inter_pool_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   implicit none
 

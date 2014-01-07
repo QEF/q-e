@@ -28,8 +28,10 @@ subroutine el_opt
   USE ramanm,     ONLY : eloptns, jab, lrchf, iuchf, done_elop
   USE io_global, ONLY: ionode_id
   USE mp, ONLY: mp_bcast, mp_sum
-  USE mp_global, ONLY: my_bgrp_id, inter_pool_comm, intra_bgrp_comm, &
-                      intra_image_comm
+  USE mp_bands,  ONLY: my_bgrp_id, intra_bgrp_comm
+  USE mp_pools , ONLY: inter_pool_comm
+  USE mp_images, ONLY: intra_image_comm
+
   implicit none
 
   logical wr_all

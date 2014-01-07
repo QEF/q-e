@@ -34,7 +34,7 @@ SUBROUTINE elphon()
                          read_dyn_mat, read_dyn_mat_tail
   USE units_ph, ONLY : iudyn, lrdrho, iudvscf, iuint3paw, lint3paw
   USE dfile_star,    ONLY : dvscf_star
-  USE mp_global, ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
+  USE mp_bands,  ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
   USE mp,        ONLY : mp_bcast
   USE io_global, ONLY: stdout
   !
@@ -469,7 +469,8 @@ SUBROUTINE elphsum ( )
   USE dynmat,      ONLY : dyn, w2
   USE io_global,   ONLY : stdout, ionode, ionode_id
   USE xml_io_base, ONLY : create_directory
-  USE mp_global,   ONLY : my_pool_id, npool, kunit, intra_image_comm
+  USE mp_pools,    ONLY : my_pool_id, npool, kunit
+  USE mp_images,   ONLY : intra_image_comm
   USE mp,          ONLY : mp_bcast
   USE control_ph,  ONLY : lgamma, tmp_dir_phq, xmldyn, current_iq
   USE save_ph,     ONLY : tmp_dir_save
@@ -924,7 +925,8 @@ SUBROUTINE elphsum_simple
   USE klist, ONLY : xk, nelec, nks, wk
   USE wvfct, ONLY : nbnd, et
   USE el_phon, ONLY : el_ph_mat, el_ph_nsigma, el_ph_ngauss, el_ph_sigma
-  USE mp_global, ONLY : inter_pool_comm, npool, intra_image_comm
+  USE mp_pools,  ONLY : inter_pool_comm, npool
+  USE mp_images, ONLY : intra_image_comm
   USE qpoint, ONLY : xq, nksq, ikks, ikqs
   USE output, ONLY : fildyn
   USE dynmat, ONLY : dyn, w2
@@ -1118,7 +1120,7 @@ FUNCTION dos_ef (ngauss, degauss, ef, et, wk, nks, nbnd)
   !-----------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
-  USE mp_global, ONLY : inter_pool_comm
+  USE mp_pools, ONLY : inter_pool_comm
   USE mp,        ONLY : mp_sum
   IMPLICIT NONE
   REAL(DP) :: dos_ef

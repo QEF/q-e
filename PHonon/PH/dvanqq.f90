@@ -39,7 +39,7 @@ subroutine dvanqq
   USE qpoint, ONLY : eigqts, xq
   USE control_ph, ONLY : rec_code_read, lgamma
 
-  USE mp_global, ONLY: intra_bgrp_comm
+  USE mp_bands, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none

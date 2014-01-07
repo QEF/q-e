@@ -29,7 +29,8 @@ subroutine dvpsi_e2
   USE units_ph,        ONLY : lrdrho, iudrho, lrdwf, iudwf, lrwfc, iuwfc
   USE control_ph,      ONLY : nbnd_occ
   USE ramanm,          ONLY : lrba2, iuba2, lrchf, iuchf, a1j, a2j
-  USE mp_global, ONLY: my_pool_id, inter_pool_comm, intra_bgrp_comm
+  USE mp_pools,        ONLY : my_pool_id, inter_pool_comm
+  USE mp_bands,        ONLY : intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none

@@ -26,7 +26,7 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
   USE phus,    ONLY : becp1
   USE control_ph, ONLY : nbnd_occ
   !
-  USE mp_global, ONLY : intra_bgrp_comm
+  USE mp_bands, ONLY : intra_bgrp_comm
   !
   implicit none
   !

@@ -10,7 +10,7 @@
   USE disp,       ONLY : nqs, omega_disp, x_q, done_iq
   USE control_ph, ONLY : qplot
   USE el_phon,    ONLY : elph_simple, gamma_disp, el_ph_nsigma
-  USE mp_global,  ONLY : nimage
+  USE mp_images,  ONLY : nimage
   USE output,     ONLY : fildyn
   USE io_global,  ONLY : ionode
 

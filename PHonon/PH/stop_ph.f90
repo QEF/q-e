@@ -12,7 +12,8 @@ SUBROUTINE stop_ph( flag )
   ! ... Synchronize processes before stopping.
   !
   USE kinds, ONLY : DP
-  USE mp_global, ONLY : mp_global_end, nimage
+  USE mp_global, ONLY : mp_global_end
+  USE mp_images, ONLY : nimage
   USE ph_restart,      ONLY : destroy_status_run
   USE save_ph,         ONLY : clean_input_variables
   USE environment,        ONLY : environment_end

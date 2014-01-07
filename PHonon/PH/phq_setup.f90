@@ -97,7 +97,7 @@ subroutine phq_setup
                             done_elop
 
   USE mp,            ONLY : mp_max, mp_min
-  USE mp_global,     ONLY : inter_pool_comm, npool
+  USE mp_pools,      ONLY : inter_pool_comm, npool
   !
   USE acfdtest,      ONLY : acfdt_is_active, acfdt_num_der
 

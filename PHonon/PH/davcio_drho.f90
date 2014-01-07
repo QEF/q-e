@@ -18,7 +18,8 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   USE kinds,     ONLY : DP
   USE fft_base,  ONLY : dfftp, cgather_sym, cscatter_sym
   USE io_global, ONLY : ionode, ionode_id
-  USE mp_global, ONLY : inter_pool_comm, me_pool, intra_image_comm
+  USE mp_pools,  ONLY : inter_pool_comm, me_pool
+  USE mp_images, ONLY : intra_image_comm
   USE mp,        ONLY : mp_bcast, mp_barrier
   USE noncollin_module,  ONLY : nspin_mag
   !

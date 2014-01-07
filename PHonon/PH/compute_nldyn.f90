@@ -30,7 +30,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                         int2_so, int1_nc
   USE control_ph, ONLY : nbnd_occ, rec_code_read
 
-  USE mp_global, ONLY: intra_bgrp_comm
+  USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
   USE becmod,    ONLY : bec_type
 

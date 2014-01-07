@@ -32,8 +32,9 @@ subroutine raman_mat
   USE units_ph, ONLY : lrdwf, iudwf, lrwfc, iuwfc
   USE qpoint,   ONLY : npwq, nksq
   USE ramanm,   ONLY : ramtns, jab, a1j, a2j, lrd2w, iud2w
-  USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
-  USE mp,                   ONLY : mp_sum
+  USE mp_pools, ONLY : inter_pool_comm
+  USE mp_bands, ONLY : intra_bgrp_comm
+  USE mp,       ONLY : mp_sum
   implicit none
 
   logical :: wr_all

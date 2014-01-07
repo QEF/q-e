@@ -371,7 +371,7 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
   USE kinds, ONLY : DP
   USE fft_scalar, ONLY : cfft3d
   USE io_global, ONLY : ionode, ionode_id, stdout
-  USE mp_global, ONLY : intra_image_comm
+  USE mp_images, ONLY : intra_image_comm
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm
   !

@@ -23,7 +23,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   USE constants, ONLY: e2, tpi, fpi
-  USE mp_global, ONLY: intra_bgrp_comm
+  USE mp_bands, ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
 
   implicit none

@@ -611,7 +611,7 @@ END SUBROUTINE solve_linter
 
 SUBROUTINE setmixout(in1, in2, mix, dvscfout, dbecsum, ndim, flag )
 USE kinds, ONLY : DP
-USE mp_global, ONLY : intra_bgrp_comm
+USE mp_bands, ONLY : intra_bgrp_comm
 USE mp, ONLY : mp_sum
 IMPLICIT NONE
 INTEGER :: in1, in2, flag, ndim, startb, lastb
@@ -633,7 +633,7 @@ END SUBROUTINE setmixout
 
 SUBROUTINE check_all_convt(convt)
   USE mp,        ONLY : mp_sum
-  USE mp_global, ONLY : nproc_image, me_image, intra_image_comm
+  USE mp_images, ONLY : nproc_image, me_image, intra_image_comm
   IMPLICIT NONE
   LOGICAL,INTENT(in) :: convt
   INTEGER,ALLOCATABLE :: convt_check(:)

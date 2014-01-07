@@ -45,7 +45,8 @@ subroutine solve_e_fpol ( iw )
   USE qpoint,                ONLY : nksq, npwq, igkq
   USE units_ph,              ONLY : lrdwf, iudwf, lrwfc, iuwfc, iudrho, &
                                     lrdrho
-  USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm
+  USE mp_pools,              ONLY : inter_pool_comm
+  USE mp_bands,              ONLY : intra_bgrp_comm
   USE mp,                    ONLY : mp_sum
 
   implicit none

@@ -36,7 +36,7 @@ SUBROUTINE openfilq()
   USE noncollin_module,ONLY : npol, nspin_mag
   USE paw_variables,   ONLY : okpaw
   USE control_flags,   ONLY : twfcollect
-  USE mp_global,       ONLY : me_bgrp
+  USE mp_bands,        ONLY : me_bgrp
   USE io_global,       ONLY : ionode,stdout
   USE buffers,         ONLY : open_buffer
   USE ramanm,          ONLY : lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2

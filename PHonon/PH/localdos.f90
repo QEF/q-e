@@ -38,7 +38,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   USE units_ph,   ONLY : iuwfc, lrwfc
 
   USE io_files, ONLY: iunigk
-  USE mp_global,        ONLY : inter_pool_comm
+  USE mp_pools,        ONLY : inter_pool_comm
   USE mp,               ONLY : mp_sum
 
   implicit none

@@ -23,7 +23,7 @@ subroutine set_irr_sym_new ( t, tmq, npertx )
   USE modes,     ONLY : nsymq, u, irotmq, nirr, npert, rtau, minus_q
   USE control_flags, ONLY : modenum
   USE mp,        ONLY : mp_bcast
-  USE mp_global, ONLY : intra_image_comm
+  USE mp_images, ONLY : intra_image_comm
   USE io_global, ONLY : ionode_id
   implicit none
 !

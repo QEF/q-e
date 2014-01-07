@@ -15,7 +15,8 @@ subroutine zstar_eu_us
   !
   USE kinds,     ONLY : DP
   USE mp,        ONLY : mp_sum
-  USE mp_global, ONLY : inter_pool_comm, intra_bgrp_comm
+  USE mp_pools,  ONLY : inter_pool_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE buffers,   ONLY : get_buffer
@@ -39,7 +40,7 @@ subroutine zstar_eu_us
   USE nlcc_ph,    ONLY : nlcc_any
   USE units_ph,   ONLY : lrdwf, iucom, lrcom, lrebar, iuebar, lrdrhous, &
                          iudrhous, iudwf, lrwfc, iuwfc
-  USE mp_global, ONLY : nproc_pool, npool
+  USE mp_pools, ONLY : nproc_pool, npool
 
   !
   implicit none

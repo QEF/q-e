@@ -38,7 +38,7 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
 
   use mp, only: mp_bcast
   use io_global, only : ionode_id
-  use mp_global, only : intra_image_comm
+  use mp_images, only : intra_image_comm
 
   implicit none
 !

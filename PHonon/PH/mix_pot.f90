@@ -29,7 +29,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !    vout      vout-vin
   !    conv      true if dr2.le.tr2
   USE kinds, only : DP
-  USE mp_global,       ONLY : intra_bgrp_comm
+  USE mp_bands,        ONLY : intra_bgrp_comm
   USE mp,              ONLY : mp_sum
   USE io_files,        ONLY : diropn
   implicit none

@@ -37,7 +37,8 @@ subroutine solve_e2
   USE recover_mod, ONLY : read_rec, write_rec
 
   USE check_stop, ONLY: check_stop_now
-  USE mp_global,  ONLY : inter_pool_comm, intra_bgrp_comm
+  USE mp_pools,   ONLY : inter_pool_comm
+  USE mp_bands,   ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   implicit none
 
