@@ -26,8 +26,9 @@ MODULE mp_pools
   INTEGER :: inter_pool_comm  = 0  ! inter pool communicator
   INTEGER :: intra_pool_comm  = 0  ! intra pool communicator
   !
-  ! ... Obscure parallelization info, maybe obsolete
-  INTEGER :: kunit = 1  ! granularity of k-point distribution
+  INTEGER :: kunit = 1  ! granularity of k-point distribution 
+                        ! kunit=1 standard case. In phonon k and k+q must
+                        ! be on the same pool, so kunit=2.
   ! 
 CONTAINS
   !
@@ -35,7 +36,7 @@ CONTAINS
   SUBROUTINE mp_start_pools( npool_, parent_comm )
     !---------------------------------------------------------------------------
     !
-    ! ... Divide processors (of the "parent_comm" group) into "pots"
+    ! ... Divide processors (of the "parent_comm" group) into "pools"
     ! ... Requires: npool_, read from command line
     ! ...           parent_comm, typically world_comm = group of all processors
     !
@@ -54,13 +55,16 @@ CONTAINS
     ! ... by a call to routine get_command_line
     !
     npool = npool_
+    IF ( npool < 1 .OR. npool > parent_nproc ) CALL errore( 'mp_start_pools',&
+                          'invalid number of pools, out of range', 1 )
+
+    IF ( MOD( parent_nproc, npool ) /= 0 ) CALL errore( 'mp_start_pools', &
+           'invalid number of pools, parent_nproc /= nproc_pool * npool', 1 )  
     !
     ! ... number of cpus per pool of k-points (created inside each parent group)
     !
     nproc_pool = parent_nproc / npool
     !
-    IF ( MOD( parent_nproc, npool ) /= 0 ) CALL errore( 'init_pools', &
-           'invalid number of pools, parent_nproc /= nproc_pool * npool', 1 )  
     !
     ! ... my_pool_id  =  pool index for this processor    ( 0 : npool - 1 )
     ! ... me_pool     =  processor index within the pool  ( 0 : nproc_pool - 1 )
@@ -74,7 +78,7 @@ CONTAINS
     !
     CALL MPI_COMM_SPLIT( parent_comm, my_pool_id, parent_mype, intra_pool_comm, ierr )
     !
-    IF ( ierr /= 0 ) CALL errore( 'init_pools', &
+    IF ( ierr /= 0 ) CALL errore( 'mp_start_pools', &
                           'intra pool communicator initialization', ABS(ierr) )
     !
     CALL mp_barrier( parent_comm )
@@ -83,7 +87,7 @@ CONTAINS
     !
     CALL MPI_COMM_SPLIT( parent_comm, me_pool, parent_mype, inter_pool_comm, ierr )
     !
-    IF ( ierr /= 0 ) CALL errore( 'init_pools', &
+    IF ( ierr /= 0 ) CALL errore( 'mp_start_pools', &
                           'inter pool communicator initialization', ABS(ierr) )
     !
 #endif

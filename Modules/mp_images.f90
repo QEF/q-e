@@ -55,9 +55,9 @@ CONTAINS
     nimage = nimage_
     !
     IF ( nimage < 1 .OR. nimage > parent_nproc ) &
-       CALL errore( 'init_images', 'invalid number of images, out of range', 1 )
+       CALL errore( 'mp_start_images', 'invalid number of images, out of range', 1 )
     IF ( MOD( parent_nproc, nimage ) /= 0 ) &
-       CALL errore( 'init_images', 'n. of images must be divisor of nproc', 1 )
+       CALL errore( 'mp_start_images', 'n. of images must be divisor of nproc', 1 )
     !
     ! ... set number of cpus per image
     !
@@ -78,7 +78,7 @@ CONTAINS
     CALL MPI_COMM_SPLIT ( parent_comm, my_image_id, parent_mype, &
                           intra_image_comm, ierr )
     IF ( ierr /= 0 ) CALL errore &
-       ( 'init_images', 'intra image communicator initialization', ABS(ierr) )
+       ( 'mp_start_images', 'intra image communicator initialization', ABS(ierr) )
     !
     CALL mp_barrier( parent_comm )
     !
@@ -87,7 +87,7 @@ CONTAINS
     CALL MPI_COMM_SPLIT( parent_comm, me_image, parent_mype, &
                          inter_image_comm, ierr )
     IF ( ierr /= 0 ) CALL errore &
-       ( 'init_images', 'inter image communicator initialization', ABS(ierr) )
+       ( 'mp_start_images', 'inter image communicator initialization', ABS(ierr) )
     !
     ! ... set processor that performs I/O
     !

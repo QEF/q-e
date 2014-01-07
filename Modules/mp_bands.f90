@@ -41,7 +41,7 @@ CONTAINS
   SUBROUTINE mp_start_bands( nband_, ntg_, parent_comm )
     !---------------------------------------------------------------------------
     !
-    ! ... Divide processors (of the "parent_comm" group) into bands pools
+    ! ... Divide processors (of the "parent_comm" group) into nband_ pools
     ! ... Requires: nband_, read from command line
     ! ...           parent_comm, typically processors of a k-point pool
     ! ...           (intra_pool_comm)
@@ -63,9 +63,9 @@ CONTAINS
     !
     nbgrp = nband_
     !
-    IF ( nbgrp < 1 .OR. nbgrp > parent_nproc ) CALL errore( 'init_bands', &
+    IF ( nbgrp < 1 .OR. nbgrp > parent_nproc ) CALL errore( 'mp_start_bands',&
                           'invalid number of band groups, out of range', 1 )
-    IF ( MOD( parent_nproc, nbgrp ) /= 0 ) CALL errore( 'init_bands', &
+    IF ( MOD( parent_nproc, nbgrp ) /= 0 ) CALL errore( 'mp_start_bands', &
         'n. of band groups  must be divisor of parent_nproc', 1 )
     ! 
     ! ... Set number of processors per band group
@@ -86,7 +86,7 @@ CONTAINS
     !
     CALL MPI_COMM_SPLIT( parent_comm, my_bgrp_id, parent_mype, intra_bgrp_comm, ierr )
     !
-    IF ( ierr /= 0 ) CALL errore( 'init_bands', &
+    IF ( ierr /= 0 ) CALL errore( 'mp_start_bands', &
                      'intra band group communicator initialization', ABS(ierr) )
     !
     CALL mp_barrier( parent_comm )
@@ -95,7 +95,7 @@ CONTAINS
     !     
     CALL MPI_COMM_SPLIT( parent_comm, me_bgrp, parent_mype, inter_bgrp_comm, ierr )  
     !
-    IF ( ierr /= 0 ) CALL errore( 'init_bands', &
+    IF ( ierr /= 0 ) CALL errore( 'mp_start_bands', &
                      'inter band group communicator initialization', ABS(ierr) )
     !
     IF ( PRESENT(ntg_) ) THEN
