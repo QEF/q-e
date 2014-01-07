@@ -60,6 +60,7 @@ dfile_autoname.o \
 dfile_star.o \
 dgradcorr.o \
 dielec.o \
+do_phonon.o \
 drho.o \
 drhodv.o \
 drhodvloc.o \

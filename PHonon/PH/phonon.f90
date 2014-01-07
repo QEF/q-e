@@ -12,17 +12,8 @@ PROGRAM phonon
   ! ... This is the main driver of the phonon code.
   ! ... It reads all the quantities calculated by pwscf, it
   ! ... checks if some recover file is present and determines
-  ! ... which calculation needs to be done. Finally, it makes
-  ! ... a loop over the q points. At a generic q, if necessary it
-  ! ... recalculates the band structure calling pwscf again.
-  ! ... Then it can calculate the response to an atomic displacement,
-  ! ... the dynamical matrix at that q, and the electron-phonon
-  ! ... interaction at that q. At q=0 it can calculate the linear response
-  ! ... to an electric field perturbation and hence the dielectric
-  ! ... constant, the Born effective charges and the polarizability
-  ! ... at imaginary frequencies.
-  ! ... At q=0, from the second order response to an electric field,
-  ! ... it can calculate also the electro-optic and the raman tensors.
+  ! ... which calculation needs to be done. Finally, it calls do_phonon
+  ! ... that does the loop over the q points.
   ! ... Presently implemented:
   ! ... dynamical matrix (q/=0)   NC [4], US [4], PAW [4]
   ! ... dynamical matrix (q=0)    NC [5], US [5], PAW [4]
@@ -49,15 +40,11 @@ PROGRAM phonon
   ! [9] ? + External Electric field
   ! [10] ? + nonperiodic boundary conditions.
 
-  USE disp,            ONLY : nqs
-  USE control_ph,      ONLY : epsil, trans, bands_computed, qplot, only_init, &
-                              only_wfc
-  USE el_phon,         ONLY : elph, elph_mat, elph_simple
-  USE output,          ONLY : fildrho
+  USE control_ph,      ONLY : bands_computed, qplot
   USE check_stop,      ONLY : check_stop_init
   USE ph_restart,      ONLY : ph_writefile
-  USE mp_global,       ONLY: mp_startup, nimage
-  USE environment,     ONLY: environment_start
+  USE mp_global,       ONLY : mp_startup
+  USE environment,     ONLY : environment_start
 
   !
   IMPLICIT NONE
@@ -83,76 +70,9 @@ PROGRAM phonon
   !
   CALL check_initial_status(auxdyn)
   !
-  DO iq = 1, nqs
-     !
-     CALL prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
-     !
-     !  If this q is not done in this run, cycle
-     !
-     IF (.NOT.do_iq) CYCLE
-     !
-     !  If necessary the bands are recalculated
-     !
-     IF (setup_pw) CALL run_nscf(do_band, iq)
-     !
-     !  If only_wfc=.TRUE. the code computes only the wavefunctions 
-     !
-     IF (only_wfc) GOTO 100
-     !
-     !  Initialize the quantities which do not depend on
-     !  the linear response of the system
-     !
-     CALL initialize_ph()
-     !
-     !  electric field perturbation
-     !
-     IF (epsil) CALL phescf()
-     !
-     !  IF only_init is .true. the code computes only the initialization parts.
-     !
-     IF (only_init) GOTO 100
-     !
-     !  phonon perturbation
-     !
-     IF ( trans ) THEN
-        !
-        CALL phqscf()
-        CALL dynmatrix_new(iq)
-        !
-     END IF
-     !
-     call rotate_dvscf_star(iq)
-     !
-     !  electron-phonon interaction
-     !
-     IF ( elph ) THEN
-        !
-        IF ( .NOT. trans ) THEN
-           !
-           CALL dvanqq()
-           IF ( elph_mat ) then
-              call ep_matrix_element_wannier()
-           ELSE
-              CALL elphon()
-           END IF
-           !
-        END IF
-        !
-        IF ( elph_mat ) then
-           call elphsum_wannier(iq)
-        ELSEIF( elph_simple ) then
-           CALL elphsum_simple()
-        ELSE
-           CALL elphsum()
-        END IF
-        !
-     END IF
-     !
-     ! ... cleanup of the variables for the next q point
-     !
-100  CALL clean_pw_ph(iq)
-     !
-  END DO
+  ! ... Do the loop over the q points and irreps.
+  !
+  CALL do_phonon(auxdyn)
   !
   !  reset the status of the recover files
   !
