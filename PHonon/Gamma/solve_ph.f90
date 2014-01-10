@@ -10,13 +10,18 @@
 SUBROUTINE solve_ph ( )
   !-----------------------------------------------------------------------
   !
-  USE io_global,             ONLY : stdout, ionode
+  USE io_global,             ONLY : stdout, ionode,ionode_id
   USE io_files,              ONLY : iunres, seqopn
-  USE pwcom
+  USE mp_world,              ONLY : world_comm
+  USE mp,                    ONLY : mp_bcast
   USE uspp,                  ONLY : nkb
   USE wavefunctions_module,  ONLY : evc
   USE becmod,                ONLY : bec_type, becp, calbec, &
                                     allocate_bec_type, deallocate_bec_type
+  USE klist,                 ONLY : xk
+  USE wvfct,                 ONLY : nbnd, npwx, npw, g2kin, igk, et
+  USE gvect,                 ONLY : g
+  USE cell_base,             ONLY : tpiba2
   USE cgcom
 
   IMPLICIT NONE
@@ -63,11 +68,16 @@ SUBROUTINE solve_ph ( )
   !  check if a restart file exists
   !
   IF (recover) THEN
-     CALL seqopn( iunres, 'restartph', 'FORMATTED', exst )
+     IF (ionode) CALL seqopn( iunres, 'restartph', 'FORMATTED', exst )
+     CALL mp_bcast(exst,ionode_id,world_comm)
      IF (.not. exst) GOTO 1
-     READ (iunres,*,err=1,END=1) mode_done
-     READ (iunres,*,err=1,END=1) dyn
-     CLOSE(unit=iunres)
+     IF (ionode) THEN
+        READ (iunres,*,err=1,END=1) mode_done
+        READ (iunres,*,err=1,END=1) dyn
+        CLOSE(unit=iunres)
+     END IF
+     CALL mp_bcast(mode_done,ionode_id,world_comm)
+     CALL mp_bcast(dyn,ionode_id,world_comm)
      PRINT '("  Phonon: modes up to mode ",i3," already done")', mode_done
      GOTO 2
 1    CLOSE(unit=iunres)

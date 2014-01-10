@@ -104,9 +104,12 @@ SUBROUTINE cg_dchi(dchi_dtau)
   !
   USE constants,  ONLY : bohr_radius_angs
   USE ions_base,  ONLY : nat, tau
-  USE io_global,  ONLY : stdout, ionode
+  USE io_global,  ONLY : stdout, ionode, ionode_id
   USE io_files,   ONLY : iunres, seqopn
-  USE pwcom
+  USE mp_world,   ONLY : world_comm
+  USE mp,         ONLY : mp_bcast
+  USE cell_base,  ONLY : omega, alat
+  USE constants,  ONLY : fpi
   USE cgcom
 
   IMPLICIT NONE
@@ -130,11 +133,18 @@ SUBROUTINE cg_dchi(dchi_dtau)
   nd_  =1
   dchi_dtau(:,:,:,:) = 0.d0
   IF (recover) THEN
-     CALL seqopn( iunres, 'restart_d', 'FORMATTED', exst )
+     IF (ionode) CALL seqopn( iunres, 'restart_d', 'FORMATTED', exst )
+     CALL mp_bcast(exst,ionode_id,world_comm)
      IF ( .not. exst) GOTO 1
-     READ(iunres,*,err=1,END=1) na_,ipol_,nd_
-     READ(iunres,*,err=1,END=1) dchi_dtau
-     CLOSE(unit=iunres)
+     IF (ionode) THEN
+        READ(iunres,*,err=1,END=1) na_,ipol_,nd_
+        READ(iunres,*,err=1,END=1) dchi_dtau
+        CLOSE(unit=iunres)
+     END IF
+     CALL mp_bcast(na_,ionode_id,world_comm)
+     CALL mp_bcast(ipol_,ionode_id,world_comm)
+     CALL mp_bcast(nd,ionode_id,world_comm)
+     CALL mp_bcast(dchi_dtau,ionode_id,world_comm)
      IF (na_<=nat) THEN
         WRITE( stdout,'(5x,"Restarting from atom ",i2,",  pol ",i1,      &
           &        ", nd=",i1)') na_,ipol_,nd_
@@ -255,12 +265,14 @@ END SUBROUTINE cg_dchi
 SUBROUTINE cg_eps0dyn(w2,dynout)
   !-----------------------------------------------------------------------
   !
-  USE constants,  ONLY : bohr_radius_angs
+  USE constants,  ONLY : bohr_radius_angs, fpi
+  USE cell_base,  ONLY : at, bg, omega
   USE ions_base,  ONLY : nat, tau, ityp, amass
-  USE io_global,  ONLY : stdout, ionode
+  USE io_global,  ONLY : stdout, ionode, ionode_id
   USE io_files,   ONLY : iunres, seqopn
-  USE pwcom
   USE symm_base,  ONLY : nsym, s, invs, irt
+  USE mp_world,   ONLY : world_comm
+  USE mp,         ONLY : mp_bcast
   USE cgcom
   !
   IMPLICIT NONE
@@ -277,11 +289,16 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
      !   verify if already calculated
      !
      IF (recover) THEN
-        CALL seqopn( iunres, 'restart_e', 'FORMATTED', exst )
+        IF (ionode) CALL seqopn( iunres, 'restart_e', 'FORMATTED', exst )
+        CALL mp_bcast(exst,ionode_id,world_comm)
         IF (.not. exst) GOTO 1
-        READ(iunres,*,END=1,err=1) epsilon0
-        READ(iunres,*,END=1,err=1) zstar
-        CLOSE(unit=iunres)
+        IF (ionode) THEN
+           READ(iunres,*,END=1,err=1) epsilon0
+           READ(iunres,*,END=1,err=1) zstar
+           CLOSE(unit=iunres)
+        END IF
+        CALL mp_bcast(epsilon0,ionode_id,world_comm)
+        CALL mp_bcast(zstar,ionode_id,world_comm)
         GOTO 2
         !
 1       CLOSE(unit=iunres, status='delete')
@@ -336,14 +353,22 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
      !   verify if already calculated
      !
      IF (recover) THEN
-        CALL seqopn( iunres, 'restartph', 'FORMATTED', exst )
+        IF (ionode) CALL seqopn( iunres, 'restartph', 'FORMATTED', exst )
+        CALL mp_bcast(exst,ionode_id,world_comm)
         IF (.not. exst) GOTO 10
-        READ (iunres,*,err=10,END=10) mode_done
+        IF (ionode) READ (iunres,*,err=10,END=10) mode_done
+        CALL mp_bcast(mode_done,ionode_id,world_comm)
         IF (mode_done==nmodes+1) THEN
-           READ(iunres,*,END=10,err=10) dyn
-           READ(iunres,*,END=10,err=10) w2
-           CLOSE(unit=iunres)
+           IF (ionode) THEN
+              READ(iunres,*,END=10,err=10) dyn
+              READ(iunres,*,END=10,err=10) w2
+              CLOSE(unit=iunres)
+           ENDIF
+           CALL mp_bcast(dyn,ionode_id,world_comm)
+           CALL mp_bcast(w2,ionode_id,world_comm)
            GOTO 20
+        ELSE
+           IF (ionode) CLOSE(unit=iunres)
         ENDIF
         !
 10      CLOSE(unit=iunres, status='delete')
@@ -392,14 +417,15 @@ END SUBROUTINE cg_eps0dyn
 SUBROUTINE cg_neweps
   !-----------------------------------------------------------------------
   !
-  USE constants, ONLY : bohr_radius_angs
+  USE constants, ONLY : bohr_radius_angs, fpi
   USE io_global, ONLY : stdout
+  USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, tau
-  USE pwcom
   USE fft_base,  ONLY : dfftp
-  USE scf, ONLY : rho, rho_core
+  USE scf,       ONLY : rho, rho_core
+  USE lsda_mod,  ONLY : current_spin
+  USE funct,     ONLY : dmxc
   USE cgcom
-  USE funct, ONLY: dmxc
   !
   IMPLICIT NONE
 
@@ -455,13 +481,16 @@ END SUBROUTINE cg_neweps
 SUBROUTINE newscf
   !-----------------------------------------------------------------------
   !
-  USE pwcom
   USE basis, ONLY: starting_wfc 
+  USE cellmd,ONLY: lmovecell
+  USE gvecs, ONLY: doublegrid
   USE wvfct, ONLY: btype
   USE klist, ONLY: nkstot
+  USE wvfct, ONLY: nbnd, nbndx, qcutz
   USE noncollin_module, ONLY: report
-  USE symm_base,        ONLY : nsym
+  USE symm_base,     ONLY : nsym
   USE io_files,      ONLY : iunigk, iunwfc, input_drho, output_drho
+  USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : restart, io_level, lscf, istep, iprint, &
                             pot_order, wfc_order, david, max_cg_iter, &
                             isolve, tr2, ethr, mixing_beta, nmix, niter
@@ -571,11 +600,12 @@ SUBROUTINE raman_cs2(w2,dynout)
   !
   !  calculate d X/d u  (u=phonon mode) with finite differences
   !
-  USE constants,  ONLY : bohr_radius_angs, ry_to_thz, ry_to_cmm1, amu_ry
+  USE constants,  ONLY : bohr_radius_angs, ry_to_thz, ry_to_cmm1, amu_ry,&
+                         fpi
   USE ions_base,  ONLY : nat, tau
-  USE io_global,  ONLY :  stdout, ionode
+  USE io_global,  ONLY : stdout, ionode
   USE io_files,   ONLY : iunres, seqopn
-  USE pwcom
+  USE cell_base,  ONLY : omega, alat
   USE cgcom
   !
   IMPLICIT NONE

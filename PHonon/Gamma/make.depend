@@ -124,6 +124,7 @@ h_h.o : cgcom.o
 macro.o : ../../Modules/io_files.o
 macro.o : ../../PW/src/pwcom.o
 macro.o : cgcom.o
+phcg.o : ../../Modules/cell_base.o
 phcg.o : ../../Modules/check_stop.o
 phcg.o : ../../Modules/constants.o
 phcg.o : ../../Modules/control_flags.o
@@ -134,9 +135,13 @@ phcg.o : ../../Modules/io_files.o
 phcg.o : ../../Modules/io_global.o
 phcg.o : ../../Modules/ions_base.o
 phcg.o : ../../Modules/kind.o
+phcg.o : ../../Modules/mp.o
 phcg.o : ../../Modules/mp_global.o
+phcg.o : ../../Modules/mp_world.o
 phcg.o : ../../Modules/noncol.o
+phcg.o : ../../Modules/recvec.o
 phcg.o : ../../PW/src/atomic_wfc_mod.o
+phcg.o : ../../PW/src/ldaU.o
 phcg.o : ../../PW/src/pwcom.o
 phcg.o : ../../PW/src/scf_mod.o
 phcg.o : ../../PW/src/symm_base.o
@@ -168,8 +173,12 @@ solve_e.o : ../../Modules/wavefunctions.o
 solve_e.o : ../../PW/src/pwcom.o
 solve_e.o : cgcom.o
 solve_ph.o : ../../Modules/becmod.o
+solve_ph.o : ../../Modules/cell_base.o
 solve_ph.o : ../../Modules/io_files.o
 solve_ph.o : ../../Modules/io_global.o
+solve_ph.o : ../../Modules/mp.o
+solve_ph.o : ../../Modules/mp_world.o
+solve_ph.o : ../../Modules/recvec.o
 solve_ph.o : ../../Modules/uspp.o
 solve_ph.o : ../../Modules/wavefunctions.o
 solve_ph.o : ../../PW/src/pwcom.o
