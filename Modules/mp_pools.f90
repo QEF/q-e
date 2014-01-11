@@ -9,7 +9,7 @@
 MODULE mp_pools
   !----------------------------------------------------------------------------
   !
-  USE mp, ONLY : mp_barrier, mp_size, mp_rank
+  USE mp, ONLY : mp_barrier, mp_size, mp_rank, mp_comm_split
   USE parallel_include
   !
   IMPLICIT NONE 
@@ -44,7 +44,7 @@ CONTAINS
     !
     INTEGER, INTENT(IN) :: npool_, parent_comm
     !
-    INTEGER :: parent_nproc = 1, parent_mype  = 0, ierr = 0
+    INTEGER :: parent_nproc = 1, parent_mype  = 0
     !
 #if defined (__MPI)
     !
@@ -76,19 +76,13 @@ CONTAINS
     !
     ! ... the intra_pool_comm communicator is created
     !
-    CALL MPI_COMM_SPLIT( parent_comm, my_pool_id, parent_mype, intra_pool_comm, ierr )
-    !
-    IF ( ierr /= 0 ) CALL errore( 'mp_start_pools', &
-                          'intra pool communicator initialization', ABS(ierr) )
+    CALL mp_comm_split ( parent_comm, my_pool_id, parent_mype, intra_pool_comm )
     !
     CALL mp_barrier( parent_comm )
     !
     ! ... the inter_pool_comm communicator is created
     !
-    CALL MPI_COMM_SPLIT( parent_comm, me_pool, parent_mype, inter_pool_comm, ierr )
-    !
-    IF ( ierr /= 0 ) CALL errore( 'mp_start_pools', &
-                          'inter pool communicator initialization', ABS(ierr) )
+    CALL mp_comm_split ( parent_comm, me_pool, parent_mype, inter_pool_comm )
     !
 #endif
     !

@@ -294,24 +294,21 @@ subroutine seqopn (unit, extension, formatt, exst, tmp_dir_)
   else
     tempfile = trim(tmp_dir) // trim(filename)
   end if
-  if ( trim(nd_nmbr) == '1' .or. trim(nd_nmbr) == '01'.or. &
-       trim(nd_nmbr) == '001' .or. trim(nd_nmbr) == '0001'.or. &
-       trim(nd_nmbr) == '00001' .or. trim(nd_nmbr) == '000001' ) then
+  if ( trim(nd_nmbr) /= '1'     .and. trim(nd_nmbr) /= '01'   .and. &
+       trim(nd_nmbr) /= '001'   .and. trim(nd_nmbr) /= '0001' .and. &
+       trim(nd_nmbr) /= '00001' .and. trim(nd_nmbr) /= '000001' ) then
      !
      ! do not add processor number to files opened by processor 1
      ! in parallel execution: if only the first processor writes,
      ! we do not want the filename to be dependent on the number
      ! of processors
      !
-     !tempfile = tempfile
-  else
      tempfile = trim(tempfile) // nd_nmbr
   end if
   inquire (file = tempfile, exist = exst)
   !
   !    Open the file
   !
-
   open (unit = unit, file = tempfile, form = formatt, status = &
        'unknown', iostat = ios)
 

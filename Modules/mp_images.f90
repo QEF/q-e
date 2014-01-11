@@ -9,7 +9,7 @@
 MODULE mp_images
   !----------------------------------------------------------------------------
   !
-  USE mp, ONLY : mp_barrier, mp_bcast, mp_size, mp_rank
+  USE mp, ONLY : mp_barrier, mp_bcast, mp_size, mp_rank, mp_comm_split
   USE io_global, ONLY : ionode, ionode_id
   USE parallel_include
   !
@@ -40,7 +40,7 @@ CONTAINS
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nimage_, parent_comm
     !
-    INTEGER :: parent_nproc, parent_mype, ierr = 0
+    INTEGER :: parent_nproc, parent_mype
     !
     ! ... nothing needed to be done in serial calculation
     !
@@ -75,19 +75,15 @@ CONTAINS
     !
     ! ... the intra_image_comm communicator is created
     !
-    CALL MPI_COMM_SPLIT ( parent_comm, my_image_id, parent_mype, &
-                          intra_image_comm, ierr )
-    IF ( ierr /= 0 ) CALL errore &
-       ( 'mp_start_images', 'intra image communicator initialization', ABS(ierr) )
+    CALL mp_comm_split ( parent_comm, my_image_id, parent_mype, &
+                          intra_image_comm )
     !
     CALL mp_barrier( parent_comm )
     !
     ! ... the inter_image_comm communicator is created
     !
-    CALL MPI_COMM_SPLIT( parent_comm, me_image, parent_mype, &
-                         inter_image_comm, ierr )
-    IF ( ierr /= 0 ) CALL errore &
-       ( 'mp_start_images', 'inter image communicator initialization', ABS(ierr) )
+    CALL mp_comm_split ( parent_comm, me_image, parent_mype, &
+                         inter_image_comm )
     !
     ! ... set processor that performs I/O
     !

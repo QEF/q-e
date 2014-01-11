@@ -52,6 +52,7 @@ constraints_module.o : kind.o
 control_flags.o : kind.o
 control_flags.o : parameters.o
 dspev_drv.o : kind.o
+dspev_drv.o : mp.o
 dspev_drv.o : mp_bands.o
 dspev_drv.o : mp_diag.o
 electrons_base.o : constants.o
@@ -155,6 +156,7 @@ mp_diag.o : mp_pools.o
 mp_diag.o : mp_world.o
 mp_diag.o : parallel_include.o
 mp_global.o : command_line_options.o
+mp_global.o : mp.o
 mp_global.o : mp_bands.o
 mp_global.o : mp_diag.o
 mp_global.o : mp_images.o

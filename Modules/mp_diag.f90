@@ -9,7 +9,7 @@
 MODULE mp_diag
   !----------------------------------------------------------------------------
   !
-  USE mp, ONLY : mp_size, mp_rank, mp_sum, mp_comm_free
+  USE mp, ONLY : mp_size, mp_rank, mp_sum, mp_comm_free, mp_comm_split
   !
   ! The following variables are needed in order to set up the communicator
   ! for scalapack
@@ -193,9 +193,7 @@ CONTAINS
     !
     !  initialize the communicator for the new group by splitting the input communicator
     !
-    CALL MPI_COMM_SPLIT( comm_all, color, key, ortho_comm, ierr )
-    IF( ierr /= 0 ) &
-         CALL errore( " init_ortho_group ", " initializing ortho group communicator ", ierr )
+    CALL mp_comm_split ( comm_all, color, key, ortho_comm )
     !
     !  Computes coordinates of the processors, in row maior order
     !
@@ -213,8 +211,8 @@ CONTAINS
        IF( me_ortho1*leg_ortho /= me_all ) &
             CALL errore( " init_ortho_group ", " wrong rank assignment in ortho group ", ierr )
 
-       CALL MPI_COMM_SPLIT( ortho_comm, me_ortho(2), me_ortho(1), ortho_col_comm, ierr )
-       CALL MPI_COMM_SPLIT( ortho_comm, me_ortho(1), me_ortho(2), ortho_row_comm, ierr )
+       CALL mp_comm_split( ortho_comm, me_ortho(2), me_ortho(1), ortho_col_comm)
+       CALL mp_comm_split( ortho_comm, me_ortho(1), me_ortho(2), ortho_row_comm)
 
     else
        ortho_comm_id = 0

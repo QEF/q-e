@@ -9,7 +9,7 @@
 MODULE mp_bands
   !----------------------------------------------------------------------------
   !
-  USE mp, ONLY : mp_barrier, mp_bcast, mp_size, mp_rank
+  USE mp, ONLY : mp_barrier, mp_bcast, mp_size, mp_rank, mp_comm_split
   USE parallel_include
   !
   IMPLICIT NONE 
@@ -51,7 +51,7 @@ CONTAINS
     INTEGER, INTENT(IN) :: nband_, parent_comm
     INTEGER, INTENT(IN), OPTIONAL :: ntg_
     !
-    INTEGER :: parent_nproc = 1, parent_mype = 0, ierr = 0
+    INTEGER :: parent_nproc = 1, parent_mype = 0
     !
 #if defined (__MPI)
     !
@@ -84,19 +84,13 @@ CONTAINS
     !
     ! ... the intra_bgrp_comm communicator is created
     !
-    CALL MPI_COMM_SPLIT( parent_comm, my_bgrp_id, parent_mype, intra_bgrp_comm, ierr )
-    !
-    IF ( ierr /= 0 ) CALL errore( 'mp_start_bands', &
-                     'intra band group communicator initialization', ABS(ierr) )
+    CALL mp_comm_split( parent_comm, my_bgrp_id, parent_mype, intra_bgrp_comm )
     !
     CALL mp_barrier( parent_comm )
     !
     ! ... the inter_bgrp_comm communicator is created                     
     !     
-    CALL MPI_COMM_SPLIT( parent_comm, me_bgrp, parent_mype, inter_bgrp_comm, ierr )  
-    !
-    IF ( ierr /= 0 ) CALL errore( 'mp_start_bands', &
-                     'inter band group communicator initialization', ABS(ierr) )
+    CALL mp_comm_split( parent_comm, me_bgrp, parent_mype, inter_bgrp_comm )  
     !
     IF ( PRESENT(ntg_) ) THEN
        ntask_groups = ntg_
@@ -112,7 +106,7 @@ CONTAINS
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: comm, nbnd
 
-    INTEGER :: npe, myrank, ierror, rest, k
+    INTEGER :: npe, myrank, rest, k
 
     myrank = mp_rank(comm)
     npe = mp_size(comm)
