@@ -88,7 +88,7 @@ CONTAINS
     !
     USE mp, ONLY : mp_comm_free
     !
-    CALL mp_comm_free( ortho_comm )
+    CALL clean_ortho_group ( )
     CALL mp_comm_free ( intra_pot_comm )
     CALL mp_comm_free ( inter_pot_comm )
     CALL mp_comm_free ( intra_bgrp_comm )
@@ -96,6 +96,8 @@ CONTAINS
     CALL mp_comm_free ( intra_pool_comm )
     CALL mp_comm_free ( inter_pool_comm )
     CALL mp_world_end( )
+    !
+    RETURN
     !
   END SUBROUTINE mp_global_end
   !

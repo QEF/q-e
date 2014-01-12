@@ -133,20 +133,7 @@ CONTAINS
     nproc_try = MIN( nproc_try_in, nproc_all )
     nproc_try = MAX( nproc_try, 1 )
 
-    IF( .NOT. first ) THEN
-       !  
-       !  free resources associated to the communicator
-       !
-       CALL mp_comm_free( ortho_comm )
-       !
-#if defined __SCALAPACK
-       IF(  ortho_comm_id > 0  ) THEN
-          CALL BLACS_GRIDEXIT( ortho_cntx )
-       ENDIF
-       ortho_cntx = -1
-#endif
-       !
-    END IF
+    IF( .NOT. first ) CALL clean_ortho_group ( ) 
 
     !  find the square closer (but lower) to nproc_try
     !
@@ -299,5 +286,21 @@ CONTAINS
 
     RETURN
   END SUBROUTINE init_ortho_group
+  !
+  SUBROUTINE clean_ortho_group ( )
+    !  
+    !  free resources associated to the communicator
+    !
+    CALL mp_comm_free( ortho_comm )
+    IF(  ortho_comm_id > 0  ) THEN
+       CALL mp_comm_free( ortho_col_comm )
+       CALL mp_comm_free( ortho_row_comm )
+    ENDIF
+#if defined __SCALAPACK
+    IF(  ortho_comm_id > 0  ) CALL BLACS_GRIDEXIT( ortho_cntx )
+    ortho_cntx = -1
+#endif
+    !
+  END SUBROUTINE clean_ortho_group
   !
 END MODULE mp_diag
