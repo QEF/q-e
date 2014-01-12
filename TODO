@@ -1,4 +1,4 @@
-TODO LIST - September 2012
+TODO LIST - January 2014
 
 0) Suspected bugs/problems:
   0.1  something happened to elf calculation between 4.1 to 4.2
@@ -8,6 +8,7 @@ TODO LIST - September 2012
   0.5  Small energy differences between PW and CP - maybe PP-related, 
        but might also be a problem of Ewald calculation in CP ("raggio"?)
   0.6  Numerical instabilities with: BLYP; TPSS; noncollinear GGA; LDA+U
+  0.7  Strange numbers from phonon code in some specific cases
 
 1) Organization
 1.0 Binary packages
@@ -37,8 +38,7 @@ TODO LIST - September 2012
 2.1 Better (and shorter) FAQ list. Notably missing:
     - hardware for QE
     - segmentation fault (present but not visible enough)
-2.2 QE-Tutorial: should be moved to the svn of qe-forge.
-2.3 Documentation on how to generate PP for GIPAW calculation is missing
+2.2 Documentation on how to generate PP for GIPAW calculation is missing
 
 3) Pseudopotentials 
 
@@ -65,9 +65,8 @@ TODO LIST - September 2012
   4.0.2 Better-structured relaxation and molecular dynamics (including the
         variable-cell case), with more extensive integration of PW and CP
         (langevin code)
-  4.0.4 Accurate cleaning of exx.f90. "If" loop in Vexx is confusing. 
-        Exx_divergence is confusing and contains some suspect values.
-  4.0.5 Martyna-Tuckerman has to be extended to any system dimensionality and 
+  4.0.3 Exx_divergence is confusing and contains some suspect values.
+  4.0.4 Martyna-Tuckerman has to be extended to any system dimensionality and 
         to exx, using coulomb_vcut trick.
 
 4.1  New developments to be added (sooner or later):
@@ -78,7 +77,7 @@ TODO LIST - September 2012
   4.1.5 EPW (electron-phonon with Wannier stuff): released, 
         has to be aligned with current version
   4.1.6 Converse NMR
-  4.1.7 QM-MM with MS2 plugin
+  4.1.7 QM-MM with MPI
   4.1.8 Wannier-based exact-exchange in CP (available)
 
 4.2 Small new developments, desirable or to be added:
@@ -115,8 +114,7 @@ TODO LIST - September 2012
          (things like g(r) from MD simulations). Also: for ev.x,
          write output file with E(V) for direct plotting of EOS
   4.2.11 Gamma: same input as for PH
-  4.2.12 Cleanup of the 'prefix.EXIT' stuff. Stop with signals?
-         Also: stop with 'prefix.EXIT' and restart in D3 and Gamma (KK)
+  4.2.12 Stop with 'prefix.EXIT' and restart in D3 and Gamma (KK)
   4.2.13 Various defaults for CP (proposed from Princeton):
        - emass(emass=300), dt (dt=7), for preconditioning cutoff (3)
        - automatic box grid for USPP from radii of augmented charge
@@ -164,11 +162,8 @@ TODO LIST - September 2012
           and not the two vector separately ... compute it in one single
           call. In this way S|psi> is inexpensive
   4.3.2 Try the new "Density-Matrix-Based" diagonalization algorithm
-  4.3.3 image parallelization of the phonon code: irreps and q-vectors
-        should be distributed across processors/grid computers.
-        Could be done in the same way as for NEB?
-  4.3.4 PH: use charge mixing instead of potential mixing
-  4.3.5 D3: verify status of parallelization, clean it up if needed
+  4.3.3 PH: use charge mixing instead of potential mixing
+  4.3.4 D3: verify status of parallelization, clean it up if needed
 
 4.4 Cleanup
   4.4.1 Increase modularization by 
@@ -266,8 +261,6 @@ TODO LIST - September 2012
 
 5) Files and I/O
 
- 5.1 The "buffer" trick to keep wfc in memory wasn't such a great idea 
-     after all: a better approach would be to have a k-point index
  5.2 Scratch files are a big mess. It should be possible to open files
      in places other than tmp_dir without resorting to obscure coding.
      This is especially serious for PH, D3 etc

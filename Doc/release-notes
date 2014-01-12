@@ -48,6 +48,7 @@ Incompatible changes in svn version:
 Fixed in svn version:
 
    * PWscf: spin-polarized HSE for PAW was incorrectly implemented
+   * PHonon: Gamma-specific code wasn't properly restarting in parallel
    * PHonon: epsil + paw was not working with k-point parallelization.
    * PHonon: problem with the symmetry analysis in D_6h. The problem appeared
      in special cases after the symmetry reshuffling made by the phonon code.
