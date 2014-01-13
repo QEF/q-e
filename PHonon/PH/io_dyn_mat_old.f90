@@ -135,11 +135,11 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
         CALL mp_bcast(at, ionode_id, world_comm)
      ENDIF
 
-     IF (ntyp.GT.nat) CALL errore('read_file','ntyp.gt.nat!!',ntyp)
+     IF (ntyp.GT.nat) CALL errore('read_dyn_from_file','ntyp.gt.nat!!',ntyp)
      DO nt = 1,ntyp
         IF (ionode) READ(1,*) i,atm(nt),amass(nt)
         CALL mp_bcast(i, ionode_id, world_comm)
-        IF (i.NE.nt) CALL errore('read_file','wrong data read',nt)
+        IF (i.NE.nt) CALL errore('read_dyn_from_file','wrong data read',nt)
      END DO
      CALL mp_bcast(atm, ionode_id, world_comm)
      CALL mp_bcast(amass, ionode_id, world_comm)
@@ -147,7 +147,7 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
      DO na=1,nat
         IF (ionode) READ(1,*) i,ityp(na),(tau(j,na),j=1,3)
         CALL mp_bcast(i, ionode_id, world_comm)
-        IF (i.NE.na) CALL errore('read_file','wrong data read',na)
+        IF (i.NE.na) CALL errore('read_dyn_from_file','wrong data read',na)
      END DO
      CALL mp_bcast(ityp, ionode_id, world_comm)
      CALL mp_bcast(tau, ionode_id, world_comm)
@@ -166,12 +166,12 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
      CALL mp_bcast(nat1, ionode_id, world_comm)
      CALL mp_bcast(ibrav1, ionode_id, world_comm)
      CALL mp_bcast(celldm1, ionode_id, world_comm)
-     IF (ntyp1.NE.ntyp) CALL errore('read_file','wrong ntyp',1)
-     IF (nat1.NE.nat) CALL errore('read_file','wrong nat',1)
-     IF (ibrav1.NE.ibrav) CALL errore('read_file','wrong ibrav',1)
+     IF (ntyp1.NE.ntyp) CALL errore('read_dyn_from_file','wrong ntyp',1)
+     IF (nat1.NE.nat) CALL errore('read_dyn_from_file','wrong nat',1)
+     IF (ibrav1.NE.ibrav) CALL errore('read_dyn_from_file','wrong ibrav',1)
      DO i=1,6
         IF( abs (celldm1(i)-celldm(i)) > eps8 ) &
-             CALL errore('read_file','wrong celldm',i)
+             CALL errore('read_dyn_from_file','wrong celldm',i)
      END DO
      if (ibrav==0) then
          IF (ionode) read (1,'(a)') atm1 ! for compatibility
@@ -180,7 +180,7 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
          do i=1,3
             do j=1,3
                if( abs (at1(i,j)-at(i,j)) > eps8) &
-                 CALL errore('read_file','wrong at(i,j)',i+3*(j-1))
+                 CALL errore('read_dyn_from_file','wrong at(i,j)',i+3*(j-1))
             end do
          end do
      end if
@@ -189,22 +189,22 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
         CALL mp_bcast(i, ionode_id, world_comm)
         CALL mp_bcast(atm1, ionode_id, world_comm)
         CALL mp_bcast(amass1, ionode_id, world_comm)
-        IF (i.NE.nt) CALL errore('read_file','wrong data read',nt)
-        IF (atm1.NE.atm(nt)) CALL errore('read_file','wrong atm',nt)
+        IF (i.NE.nt) CALL errore('read_dyn_from_file','wrong data read',nt)
+        IF (atm1.NE.atm(nt)) CALL errore('read_dyn_from_file','wrong atm',nt)
         IF (abs(amass1-amass(nt)) > eps8 ) &
-             CALL errore('read_file','wrong amass',nt)
+             CALL errore('read_dyn_from_file','wrong amass',nt)
      END DO
      DO na=1,nat
         IF (ionode) READ(1,*) i,ityp1,(tau1(j),j=1,3)
         CALL mp_bcast(i, ionode_id, world_comm)
         CALL mp_bcast(ityp1, ionode_id, world_comm)
         CALL mp_bcast(tau1, ionode_id, world_comm)
-        IF (i.NE.na) CALL errore('read_file','wrong data read',na)
-        IF (ityp1.NE.ityp(na)) CALL errore('read_file','wrong ityp',na)
+        IF (i.NE.na) CALL errore('read_dyn_from_file','wrong data read',na)
+        IF (ityp1.NE.ityp(na)) CALL errore('read_dyn_from_file','wrong ityp',na)
         IF ( abs (tau1(1)-tau(1,na)) > eps8 .OR. &
              abs (tau1(2)-tau(2,na)) > eps8 .OR. &
              abs (tau1(3)-tau(3,na)) > eps8 ) &
-             CALL errore('read_file','wrong tau',na)
+             CALL errore('read_dyn_from_file','wrong tau',na)
      END DO
   END IF
   !
@@ -219,7 +219,7 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
   IF(ios==0) CALL mp_bcast(line, ionode_id, world_comm)
   !
   IF (ios/=0 .or. line(6:14).NE.'Dynamical') THEN
-     IF (nqs.EQ.0) CALL errore('read_file',' stop with nqs=0 !!',1)
+     IF (nqs.EQ.0) CALL errore('read_dyn_from_file',' stop with nqs=0 !!',1)
      q2 = xq(1,nqs)**2 + xq(2,nqs)**2 + xq(3,nqs)**2
      IF (q2.NE.0.d0) RETURN
      DO WHILE (line(6:15).NE.'Dielectric')
@@ -267,8 +267,8 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
         IF (ionode) READ(1,*) i,j
         CALL mp_bcast(i, ionode_id, world_comm)
         CALL mp_bcast(j, ionode_id, world_comm)
-        IF (i.NE.na) CALL errore('read_file','wrong na read',na)
-        IF (j.NE.nb) CALL errore('read_file','wrong nb read',nb)
+        IF (i.NE.na) CALL errore('read_dyn_from_file','wrong na read',na)
+        IF (j.NE.nb) CALL errore('read_dyn_from_file','wrong nb read',nb)
         DO i=1,3
            IF (ionode) READ (1,*) (phir(j),phii(j),j=1,3)
            CALL mp_bcast(phir, ionode_id, world_comm)
