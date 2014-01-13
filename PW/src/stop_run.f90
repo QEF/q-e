@@ -46,11 +46,11 @@ SUBROUTINE stop_run( exit_status )
   !
   CALL print_clock_pw()
   !
+  CALL clean_pw( .TRUE. )
+  !
   CALL environment_end( 'PWSCF' )
   !
   CALL mp_global_end ()
-  !
-  CALL clean_pw( .TRUE. )
   !
 END SUBROUTINE stop_run
 
