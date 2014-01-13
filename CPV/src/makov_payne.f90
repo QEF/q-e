@@ -14,8 +14,8 @@ SUBROUTINE makov_payne(etot)
 !
 ! CP Modules
   USE kinds,             ONLY : DP
-  USE ions_base,         ONLY : nat, zv
-  USE ions_positions,    ONLY : tau0, ityp
+  USE ions_base,         ONLY : nat, zv, ityp, ind_srt
+  USE ions_positions,    ONLY : tau0
   USE io_global,         ONLY : stdout, ionode, ionode_id
   USE constants,         ONLY : pi, autoev, au_debye
   USE cp_main_variables, ONLY : rhor
@@ -64,7 +64,7 @@ REAL(KIND=DP), ALLOCATABLE:: rhodist2(:)
   & rgx(dfftp%nr1x),rgy(dfftp%nr2x),rgz(dfftp%nr3x),zvv(nat) )
  !
  DO i=1,nat
-  zvv(i)=zv(ityp(i)) 
+  zvv(i)=zv(ityp(ind_srt(i))) 
   DO j=1,3
    r(i,j)=tau0(j,i)
   ENDDO
