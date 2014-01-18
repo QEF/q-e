@@ -11,8 +11,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
       (2) writes the desired quantity to file in a suitable format for
           various types of plotting and various plotting programs
 
-      The input data of this program are read from standard input
-      or from a file and have the following format:
+      The input data of this program is read from standard input
+      or from file and has the following format:
 
       NAMELIST &INPUTPP
          containing the variables for step (1), followed by
@@ -31,6 +31,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
       also allows plotting of a linear combination (for instance,
       charge differences) by saving two intermediate files and
       combining them (see variables "weight" and "filepp" in &plot)
+
+      All output quantities are in ATOMIC (RYDBERG) UNITS unless
+      otherwise explicitly specified.
     }
 
     namelist INPUTPP {
@@ -68,6 +71,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 		   2  = local ionic potential V_bare
 
 		   3  = local density of states at e_fermi
+                        (number of states per volume, in bohr^3,
+                         per energy unit, in Ry) 
 
 		   4  = local density of electronic entropy
 
