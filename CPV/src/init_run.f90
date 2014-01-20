@@ -15,7 +15,8 @@ SUBROUTINE init_run()
   !
   USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : nbeg, nomore, lwf, iverbosity, iprint, &
-                                       ndr, ndw, tfor, tprnfor, tpre, force_pairing
+                                       ndr, ndw, tfor, tprnfor, tpre, ts_vdw, &
+                                       force_pairing
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, ityp, cdms
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
@@ -77,7 +78,6 @@ SUBROUTINE init_run()
   USE wavefunctions_module,     ONLY : cv0          ! Lingzhu Kong
   USE wannier_base,             ONLY : vnbsp        ! Lingzhu Kong
   USE cp_restart,               ONLY : cp_read_wfc_Kong  ! Lingzhu Kong
-  USE input_parameters,         ONLY : ts_vdw
   USE tsvdw_module,             ONLY : tsvdw_initialize
   !
   IMPLICIT NONE
@@ -147,11 +147,7 @@ SUBROUTINE init_run()
   !     Initialization of the TS-vdW code (RAD)
   !=======================================================================
   !
-  IF (ts_vdw.EQV..TRUE.) THEN
-    !
-    CALL tsvdw_initialize()
-    !
-  END IF
+  IF (ts_vdw) CALL tsvdw_initialize()
   !
   !  initialize wave functions descriptors and allocate wf
   !
