@@ -226,15 +226,6 @@
                      tempsi(m1,i) = tempsi(m1,i) * Hubbard_U(is)/2.d0*f(i)
                   enddo
                enddo
-               ! FIXME: proj depends upon band spin,
-               !        must be done separately for spin up and spin down
-               !tempsi(1:ldim,:) = proj (offset(is,ia)+1:offset(is,ia)+ldim,:)
-               !CALL dgemm ( 'N','N', ldim, n, ldim,-2.0_dp, &
-               !              ns(1,1,iat,ispin(i))), ldim,   &
-               !              proj(offset(is,ia)+1,1), nwfcU,&
-               !              1.0_dp, tempsi, ldim )
-               ! FIXME: this depends upon band occupations
-               !tempsi(1:ldim,:) = tempsi(1:ldim,:) * Hubbard_U(is)/2.d0*f(i)
                !
                CALL dgemm ( 'N','N', 2*ngw, n, ldim, 1.0_dp, &
                              swfc(1,offset(is,ia)+1), 2*ngw, tempsi, &
@@ -530,17 +521,17 @@
 !
       integer i,ig,m1,ibnd,iwf,ia,is,iv,jv,ldim,alpha,l,m,k,inl
 !
-      real(kind=8), allocatable :: gk(:), dproj0(:,:)
-!
+      real(dp), allocatable :: dproj0(:,:)
+      real(dp) :: gvec
       complex (DP), allocatable :: dwfc(:,:)
       real (DP), allocatable :: betapsi(:,:), dbetapsi(:,:), &
-     &                          wfcbeta(:,:),wfcdbeta(:,:)
-!      dwfc(ngw,ldmx),             ! the derivative of the atomic d wfc
-!      betapsi(n,nh),              ! <evc|beta>
-!      dbetapsi(n,nh),             ! <evc|dbeta>
+     &                          wfcbeta(:,:),wfcdbeta(:,:), auxwfc(:,:)
+!      dwfc(ngw,ldmx),      ! the derivative of the atomic Hubbard wfc
+!      betapsi(nh,n),       ! <beta|evc>
+!      dbetapsi(nh,n),      ! <dbeta|evc>
 !      wfcbeta(nwfcU,nh),   ! <wfc|beta>
 !      wfcdbeta(nwfcU,nh),  ! <wfc|dbeta>
-
+ 
       ldim = 2 * Hubbard_l(alpha_s) + 1
       dproj(:,:)=0.d0
 !
@@ -548,68 +539,83 @@
 !
       if (Hubbard_U(alpha_s).ne.0.d0) then
          !
-         allocate ( dwfc(ngw,ldim), dproj0(ldim,n), gk(ngw) )
+         allocate ( dwfc(ngw,ldim), dproj0(ldim,n) )
          !
          do ig=1,ngw
-            gk(ig)=g(ipol,ig)*tpiba 
+            gvec = g(ipol,ig)*tpiba 
             do m1=1,ldim
-               dwfc(ig,m1) = CMPLX (gk(ig)*wfcU(2,ig,offset+m1),      &
-     &                             -gk(ig)*wfcU(1,ig,offset+m1), kind=dp )
+               dwfc(ig,m1) = CMPLX (gvec*wfcU(2,ig,offset+m1),      &
+     &                             -gvec*wfcU(1,ig,offset+m1), kind=dp )
             end do
          end do
+         !
+         ! no need to calculate the G=0 term: it is zero
          !
          CALL dgemm( 'C', 'N', ldim, n, 2*ngw, 2.0_DP, dwfc, 2*ngw, spsi, &
                     2*ngw, 0.0_DP, dproj0, ldim )
-         IF ( gstart == 2 ) &
-            CALL dger( ldim, n, -1.0_DP, dwfc, 2*ngw, spsi, 2*ngw, &
-                       dproj0, ldim )
          call mp_sum( dproj0, intra_bgrp_comm )
          !
          ! copy to dproj results for the bands treated by this processor
+         !
          dproj(offset+1:offset+ldim,:) = dproj0(:,nb_s:nb_e)
-         deallocate (gk, dproj0, dwfc)
+         deallocate (dproj0, dwfc)
          !
       end if
       !
-      allocate (  betapsi(n,nh(alpha_s)) )
-      allocate ( dbetapsi(n,nh(alpha_s)) )
       allocate (  wfcbeta(nwfcU,nh(alpha_s)) )
       allocate ( wfcdbeta(nwfcU,nh(alpha_s)) )
-      !
-      wfcbeta (:,:)=0.0_dp
-      wfcdbeta(:,:)=0.0_dp
+      allocate (   auxwfc(nwfcU,nh(alpha_s)) )
       !
       do iv=1,nh(alpha_s)
          inl=ish(alpha_s)+(iv-1)*na(alpha_s)+alpha_a
-         do i=nb_s,nb_e
-            betapsi(i,iv)=bp(inl,i)
-            dbetapsi(i,iv)=dbp(inl,i,ipol)
-         end do
-         !
-         do jv=1,nh(alpha_s)
-            inl=ish(alpha_s)+(jv-1)*na(alpha_s)+alpha_a
-            do m=1,nwfcU
-               wfcbeta(m,iv) = wfcbeta(m,iv) + qq(iv,jv,alpha_s)*becwfc(inl,m)
-               wfcdbeta(m,iv)=wfcdbeta(m,iv) + qq(iv,jv,alpha_s)*wdb(inl,m,ipol)
-            end do
+         do m=1,nwfcU
+            auxwfc(m,iv) = becwfc(inl,m)
          end do
       end do
+      ! following dgemm performs (note that qq is symmetric)
+      ! wfcbeta(m,iv) = sum_jv qq(iv,jv,alpha_s)*auxwfc(m,jv)
+      CALL dgemm( 'N', 'N', nwfcU, nh(alpha_s), nh(alpha_s), 1.0_DP, &
+                  auxwfc, nwfcU, qq(1,1,alpha_s), nh(alpha_s), &
+                  0.0_DP, wfcbeta, nwfcU )
+      do iv=1,nh(alpha_s)
+         inl=ish(alpha_s)+(iv-1)*na(alpha_s)+alpha_a
+         do m=1,nwfcU
+            auxwfc(m,iv) = wdb(inl,m,ipol)
+         end do
+      end do
+      ! as above with wfcbeta(m,iv) => wfcdbeta
+      CALL dgemm( 'N', 'N', nwfcU, nh(alpha_s), nh(alpha_s), 1.0_DP, &
+                  auxwfc, nwfcU, qq(1,1,alpha_s), nh(alpha_s), &
+                  0.0_DP, wfcdbeta, nwfcU )
+      deallocate(auxwfc)
       !
       IF ( mykey == 0 ) THEN
+         allocate (  betapsi(nh(alpha_s),nb_s:nb_e) )
+         allocate ( dbetapsi(nh(alpha_s),nb_s:nb_e) )
          do iv=1,nh(alpha_s)
-            do m=1,nwfcU
-               do ibnd=nb_s,nb_e
-                  dproj(m,ibnd) =dproj(m,ibnd) +                           &
-     &                        ( wfcdbeta(m,iv)*betapsi(ibnd,iv) +      &
-     &                           wfcbeta(m,iv)*dbetapsi(ibnd,iv) )
-               end do
+            inl=ish(alpha_s)+(iv-1)*na(alpha_s)+alpha_a
+            do i=nb_s,nb_e
+               betapsi (iv,i)=bp(inl,i)
+               dbetapsi(iv,i)=dbp(inl,i,ipol)
             end do
          end do
+         !
+         ! dproj(m,i) = \sum_iv wfcdbeta(m,iv)*betapsi (iv,i) +
+         !                      wfcbeta (m,iv)*dbetapsi(iv,i) 
+         !
+         CALL dgemm( 'N', 'N', nwfcU, nb_e-nb_s+1, nh(alpha_s), 1.0_DP, &
+                  wfcdbeta, nwfcU, betapsi(1,nb_s), nh(alpha_s), &
+                  1.0_DP, dproj(1,nb_s), nwfcU )
+         CALL dgemm( 'N', 'N', nwfcU, nb_e-nb_s+1, nh(alpha_s), 1.0_DP, &
+                  wfcbeta, nwfcU, dbetapsi(1,nb_s), nh(alpha_s), &
+                  1.0_DP, dproj(1,nb_s), nwfcU )
+         !
+         deallocate (dbetapsi)
+         deallocate (betapsi)
+         !
       end if
       ! end band parallelization - only dproj(1,nb_s:nb_e) are calculated
       !
-      deallocate (betapsi)
-      deallocate (dbetapsi)
       deallocate (wfcbeta)
       deallocate (wfcdbeta)
       return
