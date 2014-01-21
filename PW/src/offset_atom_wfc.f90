@@ -6,12 +6,13 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-!----------------------------------------------------------------------------
 SUBROUTINE offset_atom_wfc( nat, offset )
   !----------------------------------------------------------------------------
   !
-  ! For each Hubbard atom, compute the index of the projector in the
-  ! list of atomic wavefunctions
+  ! For each Hubbard atom, compute the index of the projector in the list of
+  ! atomic wavefunctions. IMPORTANT NOTICE: if there is more than one state
+  ! with the chosen value of Hubbard_l, the one selected for U calculation is
+  ! the last state with the given l, but with strictly positive occupation, 
   !
   USE uspp_param,       ONLY : upf
   USE noncollin_module, ONLY : noncolin
