@@ -23,7 +23,7 @@
                                     printout_pos, printout_cell, printout_stress
       USE constants,         ONLY : au_gpa, bohr_radius_cm, amu_au, &
                                     BOHR_RADIUS_ANGS, pi
-      USE ions_base,         ONLY : na, nsp, nat, ind_bck, atm, ityp, amass, cdmi, &
+      USE ions_base,         ONLY : na, nsp, nat, ind_bck, atm, amass, cdmi, &
                                     ions_cofmass, ions_displacement, label_srt
       USE cell_base,         ONLY : s_to_r, get_volume
       USE efield_module,     ONLY : tefield, pberryel, pberryion, &

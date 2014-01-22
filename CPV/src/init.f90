@@ -215,10 +215,8 @@
       use io_global,        only: stdout, ionode
       use mp_global,        only: nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
       USE io_files,         ONLY: tmp_dir     
-      use ions_base,        only: na, nsp, nat, tau_srt, ind_srt, if_pos, atm,&
-                                  amass
+      use ions_base,        only: na, nsp, nat, tau_srt, ind_srt, if_pos
       use cell_base,        only: at, alat, r_to_s, cell_init, deth
-
       use cell_base,        only: ibrav, ainv, h, hold, tcell_base_init
       USE ions_positions,   ONLY: allocate_ions_positions, tau0, taus
       use cp_restart,       only: cp_read_cell

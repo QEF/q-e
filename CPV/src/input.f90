@@ -986,7 +986,7 @@ MODULE input
         lon_rcut    = london_rcut
         scal6       = london_s6
         CALL init_london ( )
-     ELSE IF ( ts_vdw ) THEN
+     ELSE IF ( ts_vdw_ ) THEN
         vdw_isolated = ts_vdw_isolated
         vdw_econv_thr= ts_vdw_econv_thr
      END IF

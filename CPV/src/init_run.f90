@@ -18,7 +18,7 @@ SUBROUTINE init_run()
                                        ndr, ndw, tfor, tprnfor, tpre, ts_vdw, &
                                        force_pairing
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
-  USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, ityp, cdms
+  USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
                                        vels, velsm, velsp, fion, fionm
   USE gvecw,                    ONLY : ngw, ngw_g, ggp

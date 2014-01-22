@@ -19,7 +19,7 @@ MODULE ions_positions
   REAL(DP), TARGET, ALLOCATABLE :: taus(:,:), tausm(:,:), tausp(:,:)
   REAL(DP), TARGET, ALLOCATABLE :: vels(:,:), velsm(:,:), velsp(:,:)
   REAL(DP), TARGET, ALLOCATABLE :: fion(:,:), fionm(:,:), fionp(:,:)
-  INTEGER,  TARGET, ALLOCATABLE :: ityp(:), mobil(:,:)
+  !INTEGER,  TARGET, ALLOCATABLE :: ityp(:), mobil(:,:)
   !
   CONTAINS 
   !
@@ -47,8 +47,8 @@ MODULE ions_positions
      IF( ALLOCATED( fion  ) ) DEALLOCATE( fion  )
      IF( ALLOCATED( fionm ) ) DEALLOCATE( fionm )
      IF( ALLOCATED( fionp ) ) DEALLOCATE( fionp )
-     IF( ALLOCATED( ityp  ) ) DEALLOCATE( ityp  )
-     IF( ALLOCATED( mobil ) ) DEALLOCATE( mobil )
+     !IF( ALLOCATED( ityp  ) ) DEALLOCATE( ityp  )
+     !IF( ALLOCATED( mobil ) ) DEALLOCATE( mobil )
      !
      ALLOCATE( tau0( 3, nat ) )
      ALLOCATE( taum( 3, nat ) )
@@ -62,8 +62,8 @@ MODULE ions_positions
      ALLOCATE( fion( 3, nat )  )
      ALLOCATE( fionm( 3, nat ) )
      ALLOCATE( fionp( 3, nat ) )
-     ALLOCATE( ityp( nat ) )
-     ALLOCATE( mobil( 3, nat ) )
+     !ALLOCATE( ityp( nat ) )
+     !ALLOCATE( mobil( 3, nat ) )
      !
      RETURN
   END SUBROUTINE allocate_ions_positions
@@ -83,8 +83,8 @@ MODULE ions_positions
      IF( ALLOCATED( fion  ) ) DEALLOCATE( fion  )
      IF( ALLOCATED( fionm ) ) DEALLOCATE( fionm )
      IF( ALLOCATED( fionp ) ) DEALLOCATE( fionp )
-     IF( ALLOCATED( ityp  ) ) DEALLOCATE( ityp  )
-     IF( ALLOCATED( mobil ) ) DEALLOCATE( mobil )
+     !IF( ALLOCATED( ityp  ) ) DEALLOCATE( ityp  )
+     !IF( ALLOCATED( mobil ) ) DEALLOCATE( mobil )
      RETURN
   END SUBROUTINE deallocate_ions_positions
 
