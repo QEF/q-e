@@ -132,8 +132,7 @@ module funct
   !              "obz"    Ortiz-Ballone form for PZ      icorr=7
   !              "obw"    Ortiz-Ballone form for PW      icorr=8
   !              "gl"     Gunnarson-Lunqvist             icorr=9
-  !              "b3lp"   B3LYP (same as "vwn")          icorr=10
-  !              "kzk"    Finite-size corrections        icorr=11
+  !              "kzk"    Finite-size corrections        icorr=10
   !
   ! Gradient Correction on Exchange:
   !              "nogx"   none                           igcx =0 (default)
@@ -272,14 +271,14 @@ module funct
   !
   ! data
   integer :: nxc, ncc, ngcx, ngcc, ncnl
-  parameter (nxc = 8, ncc =11, ngcx =24, ngcc = 12, ncnl=3)
+  parameter (nxc = 8, ncc =10, ngcx =24, ngcc = 12, ncnl=3)
   character (len=4) :: exc, corr
   character (len=4) :: gradx, gradc, nonlocc
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc), nonlocc (0: ncnl)
 
   data exc / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF', 'PB0X', 'B3LP', 'KZK' /
   data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
-              'OBW', 'GL' , 'B3LP', 'KZK' /
+              'OBW', 'GL' , 'KZK' /
 
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
                'TPSS', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
@@ -781,7 +780,7 @@ CONTAINS
                                   exx_fraction = 0.2_DP
     ishybrid = ( exx_fraction /= 0.0_DP )
 
-    has_finite_size_correction = ( iexch==8 .or. icorr==11)
+    has_finite_size_correction = ( iexch==8 .or. icorr==10)
 
     return
   end subroutine set_auxiliary_flags
@@ -1212,9 +1211,7 @@ subroutine xc (rho, ex, ec, vx, vc)
      call pw (rs, 2, ec, vc)
   elseif (icorr == 9) then
      call gl (rs, ec, vc)
-  elseif (icorr ==10) then ! b3lyp
-     call vwn (rs, ec, vc)
-  elseif (icorr ==11) then
+  elseif (icorr ==10) then
      if (.NOT. finite_size_cell_volume_set) call errore ('XC',&
           'finite size corrected correlation used w/o initialization',1)
      call pzKZK (rs, ec, vc, finite_size_cell_volume)
