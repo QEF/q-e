@@ -241,7 +241,7 @@ SUBROUTINE iosys()
   !
   ! ... ENVIRON namelist
   !
-  USE environ_input, ONLY : verbose, environ_thr, environ_type,      &
+  USE environ_input, ONLY :    verbose, environ_thr, environ_type,      &
                                stype, rhomax, rhomin, tbeta,            &
                                env_static_permittivity, eps_mode,       &
                                solvationrad, atomicspread, add_jellium, &
@@ -250,7 +250,11 @@ SUBROUTINE iosys()
                                env_surface_tension, delta,              &
                                env_pressure,                            &
                                env_ioncc_concentration, zion, rhopb,    &
-                               solvent_temperature
+                               solvent_temperature,                     &
+                               env_extcharge_n, extcharge_origin,       &
+                               extcharge_dim, extcharge_axis,           &
+                               extcharge_pos, extcharge_spread,         &
+                               extcharge_charge
 #endif
   !
   ! ... ELECTRONS namelist
@@ -1285,7 +1289,11 @@ SUBROUTINE iosys()
                            env_surface_tension, delta,                 &
                            env_pressure,                               &
                            env_ioncc_concentration, zion, rhopb,       &
-                           solvent_temperature )
+                           solvent_temperature,                        &
+                           env_extcharge_n, extcharge_origin,          & 
+                           extcharge_dim, extcharge_axis,              &
+                           extcharge_pos, extcharge_spread,            & 
+                           extcharge_charge )
   !
   IF ( do_environ ) CALL environ_initions_allocate( nat_, ntyp )
   !

@@ -72,9 +72,9 @@ MODULE environ_input
         !          on atomic positions of width equal to atomicspread(ityp)
         REAL(DP) :: solvationrad(nsx) = 3.D0
         ! solvationrad radius of the solvation shell for each species when the
-        ! ionic dielectric function is adopted
+        ! ionic dielectric function is adopted, in internal units (a.u.)
         REAL(DP) :: atomicspread(nsx) = 0.5D0
-        ! gaussian spreads of the atomic density of charge
+        ! gaussian spreads of the atomic density of charge, in internal units (a.u.)
         LOGICAL :: add_jellium = .false.
         ! depending on periodic boundary corrections, one may need to explicitly
         ! polarize the compensatinig jellium background
@@ -123,6 +123,26 @@ MODULE environ_input
         ! density threshold for the onset of ionic countercharge
         REAL(DP) :: solvent_temperature = 300.D0
         ! temperature of the solution
+!
+! External charges parameters
+!
+        REAL(DP) :: env_extcharge_n = 0
+        ! number of fixed external gaussian points/lines/planes of charges to be used 
+        ! in the calculation
+        REAL(DP) :: extcharge_origin(3) = 0.D0
+        ! positions of the external charges are expressed with respect to this 
+        ! origin or (if no origin is specified) wrt the center of mass of the system
+        REAL(DP) :: extcharge_dim(nsx) = 0
+        ! dimensionality of the external charge, 0=point, 1=line, 2=plane
+        REAL(DP) :: extcharge_axis(nsx) = 1
+        ! axis along which the lines are placed or ortogonal to which the planes are placed
+        ! 1=X, 2=Y, 3=Z
+        REAL(DP) :: extcharge_spread(nsx) = 0.5D0
+        ! gaussian spread to be used in the generation of the ext. charges (in a.u.)
+        REAL(DP) :: extcharge_charge(nsx) = 0.D0
+        ! charge of the external object in internal units (opposite of reality)
+        REAL(DP) :: extcharge_pos(3,nsx) = 0.D0
+        ! position of the external object in internal units (a.u.)
 
         NAMELIST / environ /                                           &
              verbose, environ_thr, environ_type,                       &
@@ -134,7 +154,10 @@ MODULE environ_input
              env_surface_tension, delta,                               &
              env_pressure,                                             &
              env_ioncc_concentration, zion, rhopb,                     &
-             solvent_temperature
+             solvent_temperature,                                      &
+             env_extcharge_n, extcharge_origin, extcharge_dim,         &
+             extcharge_axis, extcharge_spread, extcharge_charge,       &
+             extcharge_pos
 
   CONTAINS
      !
@@ -185,6 +208,14 @@ MODULE environ_input
        zion = 1.0D0
        rhopb = 0.0001D0
        solvent_temperature = 300.0D0
+       !
+       env_extcharge_n = 0
+       extcharge_origin(:) = 0.0D0
+       extcharge_dim(:)    = 0
+       extcharge_axis(:)   = 3
+       extcharge_spread(:) = 0.D0
+       extcharge_charge(:) = 0.D0
+       extcharge_pos(:,:)  = 0.D0
        !
        RETURN
        !
@@ -238,6 +269,14 @@ MODULE environ_input
        CALL mp_bcast( zion,                       ionode_id, intra_image_comm )
        CALL mp_bcast( rhopb,                      ionode_id, intra_image_comm )
        CALL mp_bcast( solvent_temperature,        ionode_id, intra_image_comm )
+       !
+       CALL mp_bcast( env_extcharge_n,            ionode_id, intra_image_comm )
+       CALL mp_bcast( extcharge_origin,           ionode_id, intra_image_comm )
+       CALL mp_bcast( extcharge_dim,              ionode_id, intra_image_comm )
+       CALL mp_bcast( extcharge_axis,             ionode_id, intra_image_comm )
+       CALL mp_bcast( extcharge_charge,           ionode_id, intra_image_comm )
+       CALL mp_bcast( extcharge_spread,           ionode_id, intra_image_comm )
+       CALL mp_bcast( extcharge_pos,              ionode_id, intra_image_comm )
        !
       RETURN
        !

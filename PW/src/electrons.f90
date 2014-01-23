@@ -318,8 +318,9 @@ SUBROUTINE electrons_scf ( no_printout )
                                    env_static_permittivity,                 & 
                                    env_surface_tension, env_pressure,       &
                                    env_periodicity, env_ioncc_concentration,&
-                                   deenviron, esolvent, ecavity, epressure, &
-                                   eperiodic, eioncc
+                                   env_extcharge_n, deenviron, esolvent,    &
+                                   ecavity, epressure, eperiodic, eioncc,   &
+                                   eextcharge
 #endif
   USE dfunct,               ONLY : newd
   USE esm,                  ONLY : do_comp_esm, esm_printpot
@@ -639,7 +640,7 @@ SUBROUTINE electrons_scf ( no_printout )
         vltot = vltot_zero
         !
         CALL calc_eenviron( dfftp%nnr, nspin, rhoin%of_r, deenviron, esolvent, &
-                            ecavity, epressure, eperiodic, eioncc )
+                            ecavity, epressure, eperiodic, eioncc, eextcharge )
         !
         update_venviron = .NOT. conv_elec .AND. dr2 .LT. environ_thr
         !
@@ -733,7 +734,7 @@ SUBROUTINE electrons_scf ( no_printout )
      ! ... adds the external environment contribution to the energy
      !
      IF ( do_environ ) etot = etot + deenviron + esolvent + ecavity + & 
-                              epressure + eperiodic + eioncc
+                              epressure + eperiodic + eioncc + eextcharge
 #endif
      !
      IF ( .NOT. no_printout ) CALL print_energies ( )
@@ -1109,6 +1110,7 @@ SUBROUTINE electrons_scf ( no_printout )
           ELSE IF ( env_periodicity .NE. 3 ) THEN
              WRITE( stdout, 9204 ) eperiodic
           ENDIF
+          IF ( env_extcharge_n .GT. 0 ) WRITE( stdout, 9206 ) eextcharge
        ENDIF
        !
 #endif
@@ -1165,6 +1167,7 @@ SUBROUTINE electrons_scf ( no_printout )
 9203 FORMAT( '     PV energy                 =',F17.8,' Ry' ) 
 9204 FORMAT( '     periodic energy correct.  =',F17.8,' Ry' )
 9205 FORMAT( '     ionic charge energy       =',F17.8,' Ry' )
+9206 FORMAT( '     external charges energy   =',F17.8,' Ry' ) 
 #endif
 
   END SUBROUTINE print_energies

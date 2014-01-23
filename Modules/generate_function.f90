@@ -20,20 +20,22 @@ MODULE generate_function
  
 CONTAINS
 !----------------------------------------------------------------------
-      SUBROUTINE generate_gaussian( nnr, charge, spread, pos, rho )
+      SUBROUTINE generate_gaussian( nnr, dim, axis, charge, spread, pos, rho )
 !----------------------------------------------------------------------
       !
       USE kinds,            ONLY : DP
       USE constants,        ONLY : sqrtpi
-      USE cell_base,        ONLY : at, bg, alat
+      USE io_global,        ONLY : stdout
+      USE cell_base,        ONLY : at, bg, alat, omega
       USE fft_base,         ONLY : dfftp
+      USE mp,               ONLY : mp_sum
       USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
       !
       IMPLICIT NONE
       !
       ! ... Declares variables
       !
-      INTEGER, INTENT(IN)       :: nnr
+      INTEGER, INTENT(IN)       :: nnr, dim, axis
       REAL( DP ), INTENT(IN)    :: charge, spread
       REAL( DP ), INTENT(IN)    :: pos( 3 )
       REAL( DP ), INTENT(INOUT) :: rho( nnr )
@@ -44,7 +46,7 @@ CONTAINS
       INTEGER                   :: index0
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
-      REAL( DP )                :: scale, spr2, dist
+      REAL( DP )                :: scale, spr2, dist, lenght
       REAL( DP )                :: r( 3 ), s( 3 )
       REAL( DP ), ALLOCATABLE   :: rholocal ( : )
       !
@@ -66,7 +68,19 @@ CONTAINS
       ir_end = nnr
 #endif  
       !
-      scale = charge / ( sqrtpi * spread )**3
+      IF (axis.LT.1.OR.axis.GT.3) &
+           WRITE(stdout,*)'WARNING: wrong axis in generate_gaussian'
+      IF ( dim .EQ. 0 ) THEN
+        scale = charge / ( sqrtpi * spread )**3
+      ELSE IF ( dim .EQ. 1 ) THEN
+        lenght = at(axis,axis) * alat
+        scale = charge / lenght / ( sqrtpi * spread )**2
+      ELSE IF ( dim .EQ. 2 ) THEN
+        lenght = at(axis,axis) * alat
+        scale = charge * lenght / omega / ( sqrtpi * spread )
+      ELSE 
+        WRITE(stdout,*)'WARNING: wrong dim in generate_gaussian'
+      ENDIF
       spr2 = ( spread / alat )**2
       ALLOCATE( rholocal( nnr ) )
       rholocal = 0.D0
@@ -89,6 +103,16 @@ CONTAINS
          !
          r(:) = pos(:) - r(:) 
          !
+         !  ... possibly 2D or 1D gaussians
+         !
+         IF ( dim .EQ. 1) THEN
+           r(axis) = 0.D0
+         ELSE IF ( dim .EQ. 2 ) THEN
+           DO i = 1, 3
+             IF ( i .NE. axis ) r(i) = 0.D0
+           ENDDO
+         END IF
+         !
          ! ... minimum image convention
          !
          s(:) = MATMUL( r(:), bg(:,:) )
@@ -110,12 +134,13 @@ CONTAINS
       END SUBROUTINE generate_gaussian
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
-      SUBROUTINE generate_gradgaussian( nnr, charge, spread, pos, gradrho )
+      SUBROUTINE generate_gradgaussian( nnr, dim, axis, charge, spread, pos, gradrho )
 !----------------------------------------------------------------------
       !
-      USE kinds,            ONLY: DP
-      USE constants,        ONLY: sqrtpi
-      USE cell_base,        ONLY : at, bg, alat
+      USE kinds,            ONLY : DP
+      USE constants,        ONLY : sqrtpi
+      USE io_global,        ONLY : stdout
+      USE cell_base,        ONLY : at, bg, alat, omega
       USE fft_base,         ONLY : dfftp
       USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
       !
@@ -123,7 +148,7 @@ CONTAINS
       !
       ! ... Declares variables
       !
-      INTEGER, INTENT(IN)       :: nnr
+      INTEGER, INTENT(IN)       :: nnr, dim, axis
       REAL( DP ), INTENT(IN)    :: charge, spread
       REAL( DP ), INTENT(IN)    :: pos( 3 )
       REAL( DP ), INTENT(INOUT) :: gradrho( 3, nnr )
@@ -134,7 +159,7 @@ CONTAINS
       INTEGER                   :: index0
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
-      REAL( DP )                :: scale, spr2, dist
+      REAL( DP )                :: scale, spr2, dist, lenght
       REAL( DP )                :: r( 3 ), s( 3 )
       REAL( DP ), ALLOCATABLE   :: gradrholocal ( :, : )
       !
@@ -156,7 +181,19 @@ CONTAINS
       ir_end = nnr
 #endif  
       !
-      scale = 2.d0 * charge / sqrtpi**3 / spread**5
+      IF (axis.LT.1.OR.axis.GT.3) &
+           WRITE(stdout,*)'WARNING: wrong axis in generate_gaussian'
+      IF ( dim .EQ. 0 ) THEN
+        scale = charge / ( sqrtpi * spread )**3
+      ELSE IF ( dim .EQ. 1 ) THEN
+        lenght = at(axis,axis) * alat
+        scale = charge / lenght / ( sqrtpi * spread )**2
+      ELSE IF ( dim .EQ. 2 ) THEN
+        lenght = at(axis,axis) * alat
+        scale = charge * lenght / omega / ( sqrtpi * spread )
+      ELSE 
+        WRITE(stdout,*)'WARNING: wrong dim in generate_gaussian'
+      ENDIF
       spr2 = ( spread / alat )**2
       ALLOCATE( gradrholocal( 3, nnr ) )
       gradrholocal = 0.D0
@@ -178,6 +215,16 @@ CONTAINS
          END DO
          !
          r(:) = pos(:) - r(:) 
+         !
+         !  ... possibly 2D or 1D gaussians
+         !
+         IF ( dim .EQ. 1) THEN
+           r(axis) = 0.D0
+         ELSE IF ( dim .EQ. 2 ) THEN
+           DO i = 1, 3
+             IF ( i .NE. axis ) r(i) = 0.D0
+           ENDDO
+         END IF
          !
          ! ... minimum image convention
          !
