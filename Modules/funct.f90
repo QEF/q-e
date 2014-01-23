@@ -80,8 +80,12 @@ module funct
   character (len=25) :: dft = 'not set'
   character (len=6)  :: dft_shortname = ' '
   !
-  ! dft is the exchange-correlation functional, described by
-  ! one of the following keywords ("dft_shortname"):
+  ! "dft" is the exchange-correlation functional label, described either 
+  ! by short names listed below, or by a series of keywords (everything
+  ! is case-insensitive). "dft_shortname" contains one of the short names
+  ! listed below (deduced from from "dft" as read from input or PP files)
+  !
+  !           short name       complete name       Short description
   !              "pz"    = "sla+pz"            = Perdew-Zunger LDA
   !              "bp"    = "b88+p86"           = Becke-Perdew grad.corr.
   !              "pw91"  = "sla+pw+ggx+ggc"    = PW91 (aka GGA)
@@ -104,13 +108,13 @@ module funct
   !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
   !              "vdw-df"= "sla+pw+rpb+vdw1"   = vdW-DF
   !              "vdw-df2"="sla+pw+rw86+vdw2"  = vdW-DF2
-  !              "vdw-df-c09"="sla+pw+c09x+vdw1"
-  !              "vdw-df2-c09"="sla+pw+c09x+vdw2"
+  !              "vdw-df-c09"="sla+pw+c09x+vdw1"  = vdW-DF-C09
+  !              "vdw-df2-c09"="sla+pw+c09x+vdw2" = vdW-DF2-C09
   !              "vdw-df3"="sla+pw+obk8+vdw1"  = vdW-DF3
   !              "vdw-df4"="sla+pw+ob86+vdw1"  = vdW-DF4
   !              "optbk88"="sla+pw+obk8"       = optB88
-  ! or by any nonconflicting combination of the following keywords
-  ! (case-insensitive):
+  !
+  ! Any nonconflicting combination of the following keywords is acceptable:
   !
   ! Exchange:    "nox"    none                           iexch=0
   !              "sla"    Slater (alpha=2/3)             iexch=1 (default)
@@ -181,6 +185,10 @@ module funct
   !              "vdw1"   vdW-DF1                        inlc =1
   !              "vdw2"   vdW-DF2                        inlc =2
   !              "vv10"   rVV10                          inlc =3  
+  !
+  ! Note: as a rule, all keywords should be unique, and should be different
+  ! from the short name, but there are a few exceptions.
+  !
   ! References:
   !              pz      J.P.Perdew and A.Zunger, PRB 23, 5048 (1981) 
   !              vwn     S.H.Vosko, L.Wilk, M.Nusair, Can.J.Phys. 58,1200(1980)
@@ -333,7 +341,7 @@ CONTAINS
 
     !
     ! ----------------------------------------------
-    ! FIRST WE CHECK ALL THE SPECIAL NAMES
+    ! FIRST WE CHECK ALL THE SHORT NAMES
     ! Note: comparison is now done via exact matching
     !       not using function "matches"
     ! ----------------------------------------------
