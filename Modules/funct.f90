@@ -1072,8 +1072,7 @@ CONTAINS
      shortname_ = 'GAUPBE'
   else if (iexch_==1.and.icorr_==4.and.igcx_==11.and.igcc_==4) then
      shortname_ = 'WC'
-  else if (iexch_==7.and.(icorr_==10.or.icorr_==2).and.igcx_==9.and. &
-           igcc_==7) then
+  else if (iexch_==7.and.icorr_==2.and.igcx_==9.and. igcc_==7) then
      shortname_ = 'B3LYP'
   else if (iexch_==0.and.icorr_==3.and.igcx_==6.and.igcc_==3) then
      shortname_ = 'OLYP'
