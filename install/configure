@@ -2772,6 +2772,7 @@ then
         case $host in
                 ia64-*-linux-gnu )      arch=ia64   ;;
                 x86_64-*-linux-gnu )    arch=x86_64 ;;
+                arm-*linux* )           arch=arm    ;;
                 *-pc-linux-gnu )        arch=ia32   ;;
                 *-ibm-aix* )            arch=aix    ;;
                 sparc-sun-* )           arch=sparc  ;;
@@ -2810,6 +2811,9 @@ try_dflags=""
 case $arch in
 ia32 | ia64 | x86_64 )
         try_f90="ifort pgf90 pathf95 sunf95 openf95 $try_f90"
+        ;;
+arm )
+        try_f90="$try_f90"
         ;;
 solaris )
         try_f90="sunf95 $try_f90"
