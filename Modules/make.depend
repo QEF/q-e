@@ -112,7 +112,9 @@ funct.o : xc_vdW_DF.o
 generate_function.o : cell_base.o
 generate_function.o : constants.o
 generate_function.o : fft_base.o
+generate_function.o : io_global.o
 generate_function.o : kind.o
+generate_function.o : mp.o
 generate_function.o : mp_bands.o
 griddim.o : fft_scalar.o
 griddim.o : fft_types.o

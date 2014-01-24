@@ -76,7 +76,9 @@
         MODULE PROCEDURE mp_alltoall_c3d, mp_alltoall_i3d
       END INTERFACE
       INTERFACE mp_circular_shift_left
-        MODULE PROCEDURE mp_circular_shift_left_d2d_int,mp_circular_shift_left_d2d_double,mp_circular_shift_left_d2d_complex &
+        MODULE PROCEDURE mp_circular_shift_left_d2d_int, &
+          mp_circular_shift_left_d2d_double, &
+          mp_circular_shift_left_d2d_complex, &
           mp_circular_shift_left_d2d_integer
       END INTERFACE
 
