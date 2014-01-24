@@ -76,7 +76,8 @@
         MODULE PROCEDURE mp_alltoall_c3d, mp_alltoall_i3d
       END INTERFACE
       INTERFACE mp_circular_shift_left
-        MODULE PROCEDURE mp_circular_shift_left_d2d_int,mp_circular_shift_left_d2d_double,mp_circular_shift_left_d2d_complex
+        MODULE PROCEDURE mp_circular_shift_left_d2d_int,mp_circular_shift_left_d2d_double,mp_circular_shift_left_d2d_complex &
+          mp_circular_shift_left_d2d_integer
       END INTERFACE
 
 !------------------------------------------------------------------------------!
@@ -2046,6 +2047,39 @@ SUBROUTINE mp_circular_shift_left_d2d_int( buf, itag, gid )
    RETURN
 END SUBROUTINE mp_circular_shift_left_d2d_int
 
+SUBROUTINE mp_circular_shift_left_d2d_integer( buf, itag, gid )
+   IMPLICIT NONE
+   INTEGER :: buf(:,:)
+   INTEGER, INTENT(IN) :: itag
+   INTEGER, INTENT(IN) :: gid
+   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+
+#if defined (__MPI)
+
+   INTEGER :: istatus( mpi_status_size )
+   !
+   group = gid
+   !
+   CALL mpi_comm_size( group, npe, ierr )
+   IF (ierr/=0) CALL mp_stop( 8100 )
+   CALL mpi_comm_rank( group, mype, ierr )
+   IF (ierr/=0) CALL mp_stop( 8101 )
+   !
+   sour = mype + 1
+   IF( sour == npe ) sour = 0
+   dest = mype - 1
+   IF( dest == -1 ) dest = npe - 1
+   !
+   CALL MPI_Sendrecv_replace( buf, SIZE(buf), MPI_INTEGER, &
+        dest, itag, sour, itag, group, istatus, ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 8102 )
+   !
+#else
+   ! do nothing
+#endif
+   RETURN
+END SUBROUTINE mp_circular_shift_left_d2d_integer
 
 
 SUBROUTINE mp_circular_shift_left_d2d_double( buf, itag, gid )
