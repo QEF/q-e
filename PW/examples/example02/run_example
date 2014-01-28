@@ -123,7 +123,7 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/CO*
 $ECHO " done"
 
 # self-consistent calculation
@@ -131,6 +131,7 @@ cat > al001.rx.in << EOF
 &CONTROL
   calculation = "relax",
   pseudo_dir  = "$PSEUDO_DIR",
+  prefix      = "Al"
   outdir      = "$TMP_DIR",
 /
 &SYSTEM
@@ -174,7 +175,7 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/Al*
 $ECHO " done"
 
 # self-consistent calculation
@@ -185,6 +186,7 @@ cat > al001.mm.in << EOF
   dt          = 30.D0,
   pseudo_dir  = "$PSEUDO_DIR",
   outdir      = "$TMP_DIR",
+  prefix      = "Al"
 /
 &SYSTEM
   ibrav       = 6,
@@ -225,6 +227,11 @@ EOF
 $ECHO "  running the geometry relaxation for Al (001) using damped MD...\c"
 $PW_COMMAND < al001.mm.in > al001.mm.out
 check_failure $?
+$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/Al*
 $ECHO " done"
 
 $ECHO
