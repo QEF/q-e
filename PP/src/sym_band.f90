@@ -34,7 +34,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   USE wavefunctions_module, ONLY : evc
   USE io_global,            ONLY : ionode, ionode_id, stdout
   USE mp,                   ONLY : mp_bcast
-  USE mp_world,             ONLY : world_comm
+  USE mp_images,            ONLY : intra_image_comm
   !
   IMPLICIT NONE
   !
@@ -79,7 +79,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
      REWIND (iunout)
   ENDIF
 
-  CALL mp_bcast ( ios, ionode_id, world_comm )
+  CALL mp_bcast ( ios, ionode_id, intra_image_comm )
   IF ( ios /= 0) CALL errore ('sym_band', 'Opening filband file', abs (ios) )
 
   DO ik = nks1, nks2
