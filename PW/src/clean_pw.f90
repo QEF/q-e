@@ -79,7 +79,7 @@ SUBROUTINE clean_pw( lflag )
         END DO
         DEALLOCATE( upf )
      END IF
-     DEALLOCATE (msh)
+     IF (ALLOCATED(msh)) DEALLOCATE (msh)
      CALL deallocate_radial_grid(rgrid)
      !
      CALL deallocate_ions_base()
