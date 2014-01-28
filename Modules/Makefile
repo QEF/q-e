@@ -16,6 +16,7 @@ bz_form.o \
 cell_base.o  \
 check_stop.o  \
 clocks.o \
+command_line_options.o \
 compute_dipole.o \
 constants.o \
 constraints_module.o \
@@ -45,16 +46,15 @@ kernel_table.o \
 kind.o \
 mm_dispersion.o \
 mp.o \
+mp_bands.o \
 mp_base.o \
+mp_diag.o \
 mp_global.o \
-mp_wave.o \
-mp_world.o \
 mp_images.o \
 mp_pots.o \
 mp_pools.o \
-mp_bands.o \
-mp_diag.o \
-command_line_options.o \
+mp_wave.o \
+mp_world.o \
 noncol.o \
 open_close_input_file.o \
 parallel_include.o \
@@ -68,6 +68,7 @@ ptoolkit.o \
 qmmm.o \
 radial_grids.o \
 random_numbers.o \
+read_cards.o \
 read_input.o \
 read_namelists.o \
 read_ncpp.o \
@@ -88,22 +89,21 @@ stick_base.o \
 stick_set.o \
 timestep.o\
 tsvdw.o\
-version.o \
 upf.o \
 upf_to_internal.o \
 uspp.o \
+version.o \
+wannier_new.o \
 wave_base.o \
 wavefunctions.o \
+wrappers.o\
 write_upf_v2.o \
+ws_base.o \
 xc_vdW_DF.o \
 xc_rVV10.o \
 xml_input.o \
 xml_io_base.o \
-zhpev_drv.o \
-wannier_new.o \
-wrappers.o\
-ws_base.o \
-read_cards.o
+zhpev_drv.o 
 
 
 all : version version.o libqemod.a
