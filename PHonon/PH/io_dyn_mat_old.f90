@@ -92,7 +92,7 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
   USE dynamicalq, ONLY: phiq, tau, ityp, zeu
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
-  USE mp_world,  ONLY : world_comm
+  USE mp_images,  ONLY : intra_image_comm
   !
   IMPLICIT NONE
   !
@@ -127,30 +127,30 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
            read (1,*) ((at(i,j),i=1,3),j=1,3)
         end if
      END IF
-     CALL mp_bcast(ntyp, ionode_id, world_comm)
-     CALL mp_bcast(nat, ionode_id, world_comm)
-     CALL mp_bcast(ibrav, ionode_id, world_comm)
-     CALL mp_bcast(celldm, ionode_id, world_comm)
+     CALL mp_bcast(ntyp, ionode_id, intra_image_comm)
+     CALL mp_bcast(nat, ionode_id, intra_image_comm)
+     CALL mp_bcast(ibrav, ionode_id, intra_image_comm)
+     CALL mp_bcast(celldm, ionode_id, intra_image_comm)
      IF (ibrav==0) THEN
-        CALL mp_bcast(at, ionode_id, world_comm)
+        CALL mp_bcast(at, ionode_id, intra_image_comm)
      ENDIF
 
      IF (ntyp.GT.nat) CALL errore('read_dyn_from_file','ntyp.gt.nat!!',ntyp)
      DO nt = 1,ntyp
         IF (ionode) READ(1,*) i,atm(nt),amass(nt)
-        CALL mp_bcast(i, ionode_id, world_comm)
+        CALL mp_bcast(i, ionode_id, intra_image_comm)
         IF (i.NE.nt) CALL errore('read_dyn_from_file','wrong data read',nt)
      END DO
-     CALL mp_bcast(atm, ionode_id, world_comm)
-     CALL mp_bcast(amass, ionode_id, world_comm)
+     CALL mp_bcast(atm, ionode_id, intra_image_comm)
+     CALL mp_bcast(amass, ionode_id, intra_image_comm)
      ALLOCATE ( ityp(nat), tau(3,nat) )
      DO na=1,nat
         IF (ionode) READ(1,*) i,ityp(na),(tau(j,na),j=1,3)
-        CALL mp_bcast(i, ionode_id, world_comm)
+        CALL mp_bcast(i, ionode_id, intra_image_comm)
         IF (i.NE.na) CALL errore('read_dyn_from_file','wrong data read',na)
      END DO
-     CALL mp_bcast(ityp, ionode_id, world_comm)
-     CALL mp_bcast(tau, ionode_id, world_comm)
+     CALL mp_bcast(ityp, ionode_id, intra_image_comm)
+     CALL mp_bcast(tau, ionode_id, intra_image_comm)
      !
      ALLOCATE ( phiq (3,3,nat,nat,48), zeu (3,3,nat) )
      !
@@ -162,10 +162,10 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
      ! check cell information with previous one
      !
      IF (ionode) READ(1,*) ntyp1,nat1,ibrav1,(celldm1(i),i=1,6)
-     CALL mp_bcast(ntyp1, ionode_id, world_comm)
-     CALL mp_bcast(nat1, ionode_id, world_comm)
-     CALL mp_bcast(ibrav1, ionode_id, world_comm)
-     CALL mp_bcast(celldm1, ionode_id, world_comm)
+     CALL mp_bcast(ntyp1, ionode_id, intra_image_comm)
+     CALL mp_bcast(nat1, ionode_id, intra_image_comm)
+     CALL mp_bcast(ibrav1, ionode_id, intra_image_comm)
+     CALL mp_bcast(celldm1, ionode_id, intra_image_comm)
      IF (ntyp1.NE.ntyp) CALL errore('read_dyn_from_file','wrong ntyp',1)
      IF (nat1.NE.nat) CALL errore('read_dyn_from_file','wrong nat',1)
      IF (ibrav1.NE.ibrav) CALL errore('read_dyn_from_file','wrong ibrav',1)
@@ -176,7 +176,7 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
      if (ibrav==0) then
          IF (ionode) read (1,'(a)') atm1 ! for compatibility
          IF (ionode) read (1,*) ((at1(i,j),i=1,3),j=1,3)
-         CALL mp_bcast(at1, ionode_id, world_comm)
+         CALL mp_bcast(at1, ionode_id, intra_image_comm)
          do i=1,3
             do j=1,3
                if( abs (at1(i,j)-at(i,j)) > eps8) &
@@ -186,9 +186,9 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
      end if
      DO nt = 1,ntyp
         IF (ionode) READ(1,*) i,atm1,amass1
-        CALL mp_bcast(i, ionode_id, world_comm)
-        CALL mp_bcast(atm1, ionode_id, world_comm)
-        CALL mp_bcast(amass1, ionode_id, world_comm)
+        CALL mp_bcast(i, ionode_id, intra_image_comm)
+        CALL mp_bcast(atm1, ionode_id, intra_image_comm)
+        CALL mp_bcast(amass1, ionode_id, intra_image_comm)
         IF (i.NE.nt) CALL errore('read_dyn_from_file','wrong data read',nt)
         IF (atm1.NE.atm(nt)) CALL errore('read_dyn_from_file','wrong atm',nt)
         IF (abs(amass1-amass(nt)) > eps8 ) &
@@ -196,9 +196,9 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
      END DO
      DO na=1,nat
         IF (ionode) READ(1,*) i,ityp1,(tau1(j),j=1,3)
-        CALL mp_bcast(i, ionode_id, world_comm)
-        CALL mp_bcast(ityp1, ionode_id, world_comm)
-        CALL mp_bcast(tau1, ionode_id, world_comm)
+        CALL mp_bcast(i, ionode_id, intra_image_comm)
+        CALL mp_bcast(ityp1, ionode_id, intra_image_comm)
+        CALL mp_bcast(tau1, ionode_id, intra_image_comm)
         IF (i.NE.na) CALL errore('read_dyn_from_file','wrong data read',na)
         IF (ityp1.NE.ityp(na)) CALL errore('read_dyn_from_file','wrong ityp',na)
         IF ( abs (tau1(1)-tau(1,na)) > eps8 .OR. &
@@ -215,8 +215,8 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
      READ(1,*,iostat=ios)
      IF(ios==0) READ(1,'(a)',iostat=ios) line
   ENDIF
-  CALL mp_bcast(ios, ionode_id, world_comm)
-  IF(ios==0) CALL mp_bcast(line, ionode_id, world_comm)
+  CALL mp_bcast(ios, ionode_id, intra_image_comm)
+  IF(ios==0) CALL mp_bcast(line, ionode_id, intra_image_comm)
   !
   IF (ios/=0 .or. line(6:14).NE.'Dynamical') THEN
      IF (nqs.EQ.0) CALL errore('read_dyn_from_file',' stop with nqs=0 !!',1)
@@ -224,9 +224,9 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
      IF (q2.NE.0.d0) RETURN
      DO WHILE (line(6:15).NE.'Dielectric')
         IF (ionode) READ(1,'(a)',iostat=ios) line
-        CALL mp_bcast(ios, ionode_id, world_comm)
+        CALL mp_bcast(ios, ionode_id, intra_image_comm)
         IF (ios /=0) GOTO 200
-        CALL mp_bcast(line,ionode_id, world_comm)
+        CALL mp_bcast(line,ionode_id, intra_image_comm)
      END DO
      lrigid=.TRUE.
      IF (ionode) THEN
@@ -235,7 +235,7 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
         READ(1,*)
         READ(1,*)
      ENDIF
-     CALL mp_bcast(epsil,ionode_id, world_comm)
+     CALL mp_bcast(epsil,ionode_id, intra_image_comm)
      WRITE (stdout,*) 'macroscopic fields =',lrigid
      WRITE (stdout,'(3f10.5)') ((epsil(i,j),j=1,3),i=1,3)
      IF (ionode) THEN
@@ -246,7 +246,7 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
            WRITE (stdout,'(3f10.5)') ((zeu(i,j,na),j=1,3),i=1,3)
         END DO
      END IF
-     CALL mp_bcast(zeu,ionode_id, world_comm)
+     CALL mp_bcast(zeu,ionode_id, intra_image_comm)
      RETURN
 200  WRITE (stdout,*) ' Dielectric Tensor not found'
      lrigid=.FALSE.
@@ -260,19 +260,19 @@ SUBROUTINE read_dyn_from_file( nqs, xq, epsil, lrigid, &
      READ(line(11:75),*) (xq(i,nqs),i=1,3)
      READ(1,*)
   ENDIF
-  CALL mp_bcast(xq(:,nqs), ionode_id, world_comm)
+  CALL mp_bcast(xq(:,nqs), ionode_id, intra_image_comm)
   !
   DO na=1,nat
      DO nb=1,nat
         IF (ionode) READ(1,*) i,j
-        CALL mp_bcast(i, ionode_id, world_comm)
-        CALL mp_bcast(j, ionode_id, world_comm)
+        CALL mp_bcast(i, ionode_id, intra_image_comm)
+        CALL mp_bcast(j, ionode_id, intra_image_comm)
         IF (i.NE.na) CALL errore('read_dyn_from_file','wrong na read',na)
         IF (j.NE.nb) CALL errore('read_dyn_from_file','wrong nb read',nb)
         DO i=1,3
            IF (ionode) READ (1,*) (phir(j),phii(j),j=1,3)
-           CALL mp_bcast(phir, ionode_id, world_comm)
-           CALL mp_bcast(phii, ionode_id, world_comm)
+           CALL mp_bcast(phir, ionode_id, intra_image_comm)
+           CALL mp_bcast(phii, ionode_id, intra_image_comm)
            DO j = 1,3
               phiq (i,j,na,nb,nqs) = CMPLX(phir(j),phii(j),kind=DP)
            END DO
