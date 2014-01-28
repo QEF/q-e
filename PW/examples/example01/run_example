@@ -183,7 +183,7 @@ EOF
 
     # clean TMP_DIR
     $ECHO "  cleaning $TMP_DIR...\c"
-    rm -rf $TMP_DIR/pwscf*
+    rm -rf $TMP_DIR/silicon*
     $ECHO " done"
 
     # self-consistent calculation
@@ -334,7 +334,7 @@ EOF
 
     # clean TMP_DIR
     $ECHO "  cleaning $TMP_DIR...\c"
-    rm -rf $TMP_DIR/pwscf*
+    rm -rf $TMP_DIR/al*
     $ECHO " done"
 
     # self-consistent calculation
@@ -427,7 +427,7 @@ EOF
 
     # clean TMP_DIR
     $ECHO "  cleaning $TMP_DIR...\c"
-    rm -rf $TMP_DIR/pwscf*
+    rm -rf $TMP_DIR/cu*
     $ECHO " done"
 
     # self-consistent calculation
@@ -579,7 +579,10 @@ EOF
     $PW_COMMAND < ni.band.$diago.in > ni.band.$diago.out|
     check_failure $?
     $ECHO " done"
-done
 
+    $ECHO "  cleaning $TMP_DIR...\c"
+    rm -rf $TMP_DIR/ni*
+    $ECHO " done"
+done
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"
