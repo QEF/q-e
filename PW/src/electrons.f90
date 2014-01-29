@@ -45,6 +45,11 @@ SUBROUTINE electrons()
   USE paw_onecenter,        ONLY : PAW_potential
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
+#ifdef __ENVIRON
+  USE environ_base,         ONLY : do_environ, vltot_zero
+  USE cell_base,            ONLY : at, alat, omega
+  USE ions_base,            ONLY : zv, nat, nsp, ityp, tau
+#endif
   !
   !
   IMPLICIT NONE
@@ -73,6 +78,14 @@ SUBROUTINE electrons()
   fock0 = 0.D0
   fock1 = 0.D0
   IF (.NOT. exx_is_active () ) fock2 = 0.D0
+#ifdef __ENVIRON
+  IF ( do_environ ) THEN
+    vltot_zero = vltot
+    CALL environ_initions( dfftp%nnr, nat, nsp, ityp, zv, tau, alat ) 
+    CALL environ_initcell( dfftp%nnr, dfftp%nr1*dfftp%nr2*dfftp%nr3, &
+                           omega, alat, at ) 
+  END IF
+#endif
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%  Iterate hybrid functional  %%%%%%%%%%%%%%%%%%%%%
@@ -378,14 +391,13 @@ SUBROUTINE electrons_scf ( no_printout )
   !
   CALL start_clock( 'electrons' )
   !
-#ifdef __ENVIRON
-  IF ( do_environ ) THEN
-    vltot_zero = vltot
-    CALL environ_initions( dfftp%nnr, nat, nsp, ityp, zv, tau, alat ) 
-    CALL environ_initcell( dfftp%nnr, dfftp%nr1*dfftp%nr2*dfftp%nr3, &
-                           omega, alat, at ) 
-  END IF
-#endif
+!#ifdef __ENVIRON
+!  IF ( do_environ ) THEN
+!    CALL environ_initions( dfftp%nnr, nat, nsp, ityp, zv, tau, alat ) 
+!    CALL environ_initcell( dfftp%nnr, dfftp%nr1*dfftp%nr2*dfftp%nr3, &
+!                           omega, alat, at ) 
+!  END IF
+!#endif
   CALL flush_unit( stdout )
   !
   ! ... calculates the ewald contribution to total energy
@@ -647,7 +659,7 @@ SUBROUTINE electrons_scf ( no_printout )
         IF ( update_venviron ) WRITE( stdout, 9200 )
         !
         CALL calc_venviron( update_venviron, dfftp%nnr, nspin, dr2, rhoin%of_r, vltot )
-        !
+        ! 
      END IF
 #endif
      !
