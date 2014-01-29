@@ -4,7 +4,7 @@
 
 !* Creation Date : 25-12-2012
 
-!* Last Modified : Thu Nov 21 14:34:23 2013
+!* Last Modified : Wed Jan 29 10:08:24 2014
 
 !* Created By : Marco Buongiorno Nardelli 
 
@@ -365,7 +365,10 @@ end if
    if(n /= 0) print*, '      ***********turning off symmetries might be a better option**********'
    if(n /= 0) print*, '      ***********                  CAUTION                      **********'
    natdp=natdp+n
-   nodispsym=.true.
+   if(.not.nodispsym) print*, '      ***********                  CAUTION                      **********'
+   if(.not.nodispsym) print*, '      *********** more displacements could be needed in large   **********'
+   if(.not.nodispsym) print*, '      ***********           many atoms unit cells               **********'
+   if(.not.nodispsym) print*, '      ***********                  CAUTION                      **********'
    
    else
 
