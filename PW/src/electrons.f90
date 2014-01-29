@@ -391,13 +391,6 @@ SUBROUTINE electrons_scf ( no_printout )
   !
   CALL start_clock( 'electrons' )
   !
-!#ifdef __ENVIRON
-!  IF ( do_environ ) THEN
-!    CALL environ_initions( dfftp%nnr, nat, nsp, ityp, zv, tau, alat ) 
-!    CALL environ_initcell( dfftp%nnr, dfftp%nr1*dfftp%nr2*dfftp%nr3, &
-!                           omega, alat, at ) 
-!  END IF
-!#endif
   CALL flush_unit( stdout )
   !
   ! ... calculates the ewald contribution to total energy
