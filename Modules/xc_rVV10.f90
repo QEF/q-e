@@ -15,10 +15,9 @@ MODULE rVV10
   USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier
   USE mp_global,         ONLY : me_pool, nproc_pool, intra_pool_comm, root_pool
   USE io_global,         ONLY : ionode
-  USE input_parameters,  ONLY : verbosity
   USE fft_base,          ONLY : dfftp
   USE fft_interfaces,    ONLY : fwfft, invfft 
-  USE control_flags,     ONLY : gamma_only
+  USE control_flags,     ONLY : gamma_only, iverbosity
   USE io_global,         ONLY : stdout
  
   IMPLICIT NONE
@@ -100,7 +99,8 @@ CONTAINS
 
        first_iteration = .false.
       
-       if (ionode .and. verbosity .ne. "minimal") then
+       if (ionode .and. iverbosity > -1 ) then
+
           
           write(*,'(/ /A )') "---------------------------------------------------------------------------------"
           write(*,'(A /)') "Carrying out rVV10 run using the following parameters:"
@@ -164,7 +164,7 @@ CONTAINS
 
     !! Print stuff if verbose run
     !!
-    if (verbosity .eq. "high") then
+    if (iverbosity > 1) then
 
        call mp_sum(Ec_nl,intra_pool_comm)
        if (ionode) write(*,'(/ / A /)') "     ----------------------------------------------------------------"

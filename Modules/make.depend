@@ -363,7 +363,6 @@ xc_rVV10.o : control_flags.o
 xc_rVV10.o : fft_base.o
 xc_rVV10.o : fft_interfaces.o
 xc_rVV10.o : fft_scalar.o
-xc_rVV10.o : input_parameters.o
 xc_rVV10.o : io_global.o
 xc_rVV10.o : kernel_table.o
 xc_rVV10.o : kind.o
