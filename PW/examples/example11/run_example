@@ -81,11 +81,6 @@ $ECHO
 $ECHO "  running pw.x     as: $PW_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 # self-consistent calculation for bcc-Fe with fully relativistic PAW-PP
 cat > Fe.scf_pbe.in << EOF
  &control
@@ -168,6 +163,12 @@ $ECHO "  running the band calculation for Fe with PAW and spin-orbit...\c"
 $PW_COMMAND < Fe.band_pbe.in > Fe.band_pbe.out
 check_failure $?
 $ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/Fe*
+$ECHO " done"
+
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

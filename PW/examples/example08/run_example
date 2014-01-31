@@ -79,11 +79,6 @@ $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 # self-consistent calculation with standard LDA
 cat > feo_LDA.in << EOF
 FeO
@@ -136,7 +131,7 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/feo_af*
 $ECHO " done"
 
 # self-consistent calculation with standard ns initial value
@@ -190,7 +185,7 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/feo_af*
 $ECHO " done"
 
 # self-consistent calculation with user-defined ns initial value
@@ -243,6 +238,11 @@ $ECHO "  running scf for FeO in LDA+U using user-defined ns initial matrices...\
 $PW_COMMAND < feo_user_ns.in > feo_user_ns.out
 check_failure $?
 $ECHO " done"
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/feo_af*
+$ECHO " done"
+
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"

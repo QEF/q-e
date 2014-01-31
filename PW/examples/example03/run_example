@@ -74,11 +74,6 @@ $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 # MD in a 2-atom cell
 cat > si.md2.in << EOF
  &control
@@ -209,6 +204,11 @@ EOF
 $ECHO "  running the MD calculation for Si in a 2 atom cell. G3X-points...\c"
 $PW_COMMAND < si.md2_G3X.in > si.md2_G3X.out
 check_failure $?
+$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 
 awk '/Ekin/{ek=$3;et=$11; print it,time,ek,u,et} \

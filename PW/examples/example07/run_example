@@ -76,11 +76,6 @@ $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 # self-consistent calculation
 cat > pt.scf.in << EOF
 Pt
@@ -167,6 +162,11 @@ $ECHO "  running the non-scf calculation for Pt with spin-orbit coupling...\c"
 $PW_COMMAND < pt.nscf.in > pt.nscf.out
 check_failure $?
 $ECHO " done"
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/Pt*
+$ECHO " done"
+
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

@@ -76,11 +76,6 @@ $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 # self-consistent calculation
 cat > fe.scf.in << EOF
 Fe
@@ -194,7 +189,7 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/fe*
 $ECHO " done"
 
 # self-consistent calculation with penalty functional
@@ -295,7 +290,7 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/fe*
 $ECHO " done"
 
 # scf calculation with penalty functional (total magnetization constrained)
@@ -340,7 +335,7 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/fe*
 $ECHO " done"
 
 # self-consistent calculation
@@ -437,7 +432,7 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/cu*
 $ECHO " done"
 
 # self-consistent calculation with cg diagonalization
@@ -477,7 +472,7 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/cu*
 $ECHO " done"
 
 # self-consistent calculation with diis diagonalization
@@ -517,7 +512,7 @@ EOF
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/cu*
 $ECHO " done"
 
 # self-consistent calculation
@@ -676,7 +671,7 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/ni*
 $ECHO " done"
 
 # self-consistent calculation + relaxation of atoms
@@ -720,6 +715,11 @@ $ECHO "  running scf calculation with relax for oxygen molecule...\c"
 $PW_COMMAND < o2.relax.in > o2.relax.out
 check_failure $?
 $ECHO " done"
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/o.*
+$ECHO " done"
+
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

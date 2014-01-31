@@ -77,13 +77,6 @@ $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
 
-
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
-
 cat > si.scf.efield.in << EOF
 &control
     calculation='scf'
@@ -164,6 +157,11 @@ EOF
 $ECHO "  running the PW calculation for bulk Si E_field=0.001  a.u. ...\c"
 $PW_COMMAND < si.scf.efield2.in > si.scf.efield2.out
 check_failure $?
+$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/silicon*
 $ECHO " done"
 
 $ECHO

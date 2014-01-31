@@ -74,11 +74,6 @@ $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 cat > c4h6.pw.metaGGA.in << EOF
  &control
     calculation='scf',
@@ -115,6 +110,12 @@ $ECHO "  running the pw.x SCF calculation...\c"
 $PW_COMMAND < c4h6.pw.metaGGA.in > c4h6.pw.metaGGA.out
 check_failure $?
 $ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/pwscf*
+$ECHO " done"
+
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"

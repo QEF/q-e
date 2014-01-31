@@ -76,11 +76,6 @@ $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 # VCS-MD calculation
 cat > As.vcs00.in << EOF
  &CONTROL
@@ -320,6 +315,12 @@ EOF
 $ECHO "  running the bfgs vc-relax calculation for As at 500 kbar. \c"
 $PW_COMMAND < As.bfgs500.in > As.bfgs500.out
 $ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/pwscf*
+$ECHO " done"
+
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"

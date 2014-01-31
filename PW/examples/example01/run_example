@@ -76,11 +76,6 @@ $ECHO
 
 for diago in david cg ; do
 
-    # clean TMP_DIR
-    $ECHO "  cleaning $TMP_DIR...\c"
-    rm -rf $TMP_DIR/pwscf*
-    $ECHO " done"
-
     # self-consistent calculation
     cat > si.scf.$diago.in << EOF
  &control

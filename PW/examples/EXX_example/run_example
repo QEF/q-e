@@ -81,11 +81,6 @@ $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 $ECHO
 $ECHO "  running PBE0 calculation for Si with nq=1,2,4 \c"
 $ECHO
@@ -136,7 +131,10 @@ $PW_COMMAND < si.in > si.PBE0_nq=${nq}.out
 $ECHO " done"
 grep -e ! si.PBE0_nq=${nq}.out | tail -1
 
-#rm -f si.in
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/silicon*
+$ECHO " done"
 
 done
 
@@ -188,7 +186,10 @@ $PW_COMMAND < si.in > si.hse_nq=${nq}.out
 $ECHO " done"
 grep -e ! si.hse_nq=${nq}.out | tail -1
 
-#rm -f si.in
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/silicon*
+$ECHO " done"
 
 done
 
@@ -241,7 +242,10 @@ $PW_COMMAND < si.in > si.gaupbe_nq=${nq}.out
 $ECHO " done"
 grep -e ! si.gaupbe_nq=${nq}.out | tail -1
 
-#rm -f si.in
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/silicon*
+$ECHO " done"
 
 done
 
@@ -265,7 +269,6 @@ if [ "$xc" = "gaupbe" ] ; then ecutvcut=0.0 ; fi
 ps=1nlcc
 ecut=80
 
-rm -fr $TMP_DIR/*
 cat > o.inp << EOF
 &CONTROL
                  calculation = 'scf' ,
@@ -307,7 +310,11 @@ $ECHO "  running oxygen atom..\c"
 $PW_COMMAND < o.inp > o.$xc.$ps.out-$ecut
 $ECHO " done"
 
-rm -fr $TMP_DIR/*
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/o.*
+$ECHO " done"
+
 cat > c.inp << EOF
 &CONTROL
                  calculation = 'scf' ,
@@ -349,7 +356,11 @@ $ECHO "  running carbon atom..\c"
 $PW_COMMAND < c.inp > c.$xc.$ps.out-$ecut
 $ECHO " done"
 
-rm -fr $TMP_DIR/*
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/c.*
+$ECHO " done"
+
 cat > n.inp << EOF
 &CONTROL
                  calculation = 'scf' ,
@@ -391,7 +402,11 @@ $ECHO "  running nitrogen atom..\c"
 $PW_COMMAND < n.inp > n.$xc.$ps.out-$ecut
 $ECHO " done"
 
-rm -fr $TMP_DIR/*
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/n.*
+$ECHO " done"
+
 b=0.3169 
 cat > n2.inp << EOF
 &CONTROL
@@ -434,7 +449,10 @@ $ECHO "  running n2 molecule..\c"
 $PW_COMMAND < n2.inp > n2.$xc.$ps.out-$ecut
 $ECHO " done"
 
-rm -fr $TMP_DIR/*
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/n2.*
+$ECHO " done"
 
 b=0.3256
 cat > co.inp << EOF
@@ -479,7 +497,11 @@ $ECHO "  running co molecule..\c"
 $PW_COMMAND < co.inp > co.$xc.$ps.out-$ecut
 $ECHO " done" 
 
-rm -fr $TMP_DIR/*
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/n2.*
+$ECHO " done"
+
 b=0.3478
 cat > o2.inp << EOF
 &CONTROL
@@ -524,6 +546,11 @@ EOF
 $ECHO "  running o2 molecule..\c"
 $PW_COMMAND < o2.inp > o2.$xc.$ps.out-$ecut
 $ECHO " done"
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/o2.*
+$ECHO " done"
+
 $ECHO
 cat > summarize << EOF
 grep -e ! n.$xc.$ps.out-$ecut  | tail -1 | awk '{print \$5}' > N
@@ -541,6 +568,4 @@ sh summarize
 $ECHO 
 done
 
-#rm -f *.inp
-rm -fr $TMP_DIR/*
 $ECHO "$EXAMPLE_DIR : done"

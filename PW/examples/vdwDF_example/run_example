@@ -103,11 +103,6 @@ $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 #
 # Graphite cell relaxation
 #
@@ -173,6 +168,10 @@ $PW_COMMAND < graphite.scf.in > graphite.scf.out
 check_failure $?
 $ECHO " done"
 
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/graphite*
+$ECHO " done"
 
 #
 # self-consistent calculation
@@ -229,6 +228,11 @@ $PW_COMMAND < water.scf.in > water.scf.out
 check_failure $?
 $ECHO " done"
 
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/water_vdw*
+$ECHO " done"
+
 #
 # self-consistent calculation
 # for Argon dimer 
@@ -281,6 +285,11 @@ $ECHO "  running the scf calculation for argon dimer...\c"
 #$PW_COMMAND < Ar.scf.in > Ar.scf.out
 #check_failure $?
 #$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/ar_vdw*
+$ECHO " done"
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"

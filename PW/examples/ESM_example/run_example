@@ -81,11 +81,6 @@ $ECHO
 $ECHO "  running pw.x     as: $PW_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 # scf calculation for H2O with no ESM
 cat > H2O.noesm.in << EOF
  &control
@@ -156,7 +151,7 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/H2O*
 $ECHO " done"
 
 # scf calculation for Al(111) with ESM bc2 (metal-slab-metal), no field
@@ -380,6 +375,11 @@ $ECHO "  (+0.005e charged)...\c"
 $PW_COMMAND < Al111.bc3_p005.in > Al111.bc3_p005.out
 check_failure $?
 $ECHO " done"
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/Al111*
+$ECHO " done"
+
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"
