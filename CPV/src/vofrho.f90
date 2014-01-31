@@ -25,6 +25,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                                   tprnfor, iesr, textfor
       USE io_global,        ONLY: stdout
       USE ions_base,        ONLY: nsp, na, nat, rcmax, compute_eextfor
+      USE ions_base,        ONLY: ind_srt, ind_bck
       USE gvecs
       USE gvect,            ONLY: ngm, nl, nlm
       USE cell_base,        ONLY: omega, r_to_s
@@ -108,7 +109,10 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       IF (ts_vdw) THEN
         !
         CALL start_clock( 'ts_vdw' )
-        CALL tsvdw_calculate(tau0,rhor)
+        ALLOCATE (stmp(3,nat))
+        stmp(:,:) = tau0(:,ind_bck(:))
+        CALL tsvdw_calculate(stmp,rhor)
+        DEALLOCATE (stmp)
         CALL stop_clock( 'ts_vdw' )
         !
       END IF
@@ -485,8 +489,11 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !
          !    Add TS-vdW ion forces to fion here... (RAD)
          !
-         IF (ts_vdw) fion=fion+FtsvdW
-         !
+         IF (ts_vdw) THEN
+            fion1(:,:) = FtsvdW(:,ind_srt(:))
+            fion = fion + fion1
+            !fion=fion+FtsvdW
+         END IF
       END IF
 
       DEALLOCATE( fion1 )
