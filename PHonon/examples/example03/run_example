@@ -90,7 +90,8 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/aluminum*
+rm -rf $TMP_DIR/_ph0/aluminum*
 $ECHO "  done"
 
 #
@@ -100,7 +101,7 @@ cat > al.scf.fit.in << EOF
  &control
     calculation='scf'
     restart_mode='from_scratch',
-    prefix='al',
+    prefix='aluminum',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
@@ -132,7 +133,7 @@ cat > al.scf.in << EOF
  &control
     calculation='scf'
     restart_mode='from_scratch',
-    prefix='al',
+    prefix='aluminum',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
@@ -161,7 +162,7 @@ cat > al.elph.in << EOF
 Electron-phonon coefficients for Al
  &inputph
   tr2_ph=1.0d-10,
-  prefix='al',
+  prefix='aluminum',
   fildvscf='aldv',
   amass(1)=26.98,
   outdir='$TMP_DIR/',
