@@ -87,7 +87,8 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/sih4*
+rm -rf $TMP_DIR/_ph0/sih4*
 $ECHO " done"
 
 # self-consistent calculation

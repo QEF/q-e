@@ -98,7 +98,8 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/aluminum*
+rm -rf $TMP_DIR/_ph0/aluminum*
 $ECHO "  done"
 #
 #  SCF at k-mesh good enough for phonons
@@ -107,7 +108,7 @@ cat > al.scf.in << EOF
  &control
    calculation='scf'
    restart_mode='from_scratch',
-   prefix='al',
+   prefix='aluminum',
    pseudo_dir = '$PSEUDO_DIR/',
    outdir='$TMP_DIR/'
  /
@@ -138,7 +139,7 @@ cat > al.ph.disp.in << EOF
 Phonon dispersions for Al
  &inputph
   tr2_ph=1.0d-10,
-  prefix='al',
+  prefix='aluminum',
   amass(1)=26.98,
   outdir='$TMP_DIR/',
   fildyn='al.disp.dyn',
@@ -198,7 +199,7 @@ cat > al.ph.in << EOF
 Phonon dispersions for Al
  &inputph
   tr2_ph=1.0d-10,
-  prefix='al',
+  prefix='aluminum',
   amass(1)=26.98,
   outdir='$TMP_DIR/',
   fildyn='al.dyn',

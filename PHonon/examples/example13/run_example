@@ -86,7 +86,8 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/silicon*
+rm -rf $TMP_DIR/_ph0/silicon*
 $ECHO " done"
 
 # self-consistent calculation
@@ -94,7 +95,7 @@ cat > si.scf.in << EOF
  &control
     calculation = 'scf'
     restart_mode='from_scratch',
-    prefix='si',
+    prefix='silicon',
     tstress = .true.
     tprnfor = .true.
     pseudo_dir = '$PSEUDO_DIR/',
@@ -126,7 +127,7 @@ cat > si.phG.in << EOF
 phonons of Si at Gamma
  &inputph
   tr2_ph=1.0d-12,
-  prefix='si',
+  prefix='silicon',
   epsil=.false.,
   trans=.true.,
   zue=.false.,
@@ -147,7 +148,7 @@ $ECHO " done"
 cat > si.d3G.in << EOF
 Anharm at Gamma
 &inputph
-   prefix = 'si',
+   prefix = 'silicon',
    fildrho = 'si.drho_G',
    fild0rho = 'si.drho_G',
    amass(1) = 28.0855,
@@ -166,10 +167,9 @@ cat > si.phX.in << EOF
 phonons of Si at the X-point
  &inputph
   tr2_ph=1.0d-12,
-  prefix='si',
+  prefix='silicon',
   trans=.true.,
   amass(1)=28.0855,
-  amass(2)=28.0855,
   outdir='$TMP_DIR/',
   fildyn='si.dyn_X',
   fildrho='si.drho_X',
@@ -185,7 +185,7 @@ $ECHO " done"
 cat > si.d3X.in << EOF
 Anharm at the X-point
 &inputph
-   prefix = 'si',
+   prefix = 'silicon',
    fildrho = 'si.drho_X',
    fild0rho = 'si.drho_G',
    amass(1) = 28.0855,
