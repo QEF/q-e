@@ -79,7 +79,8 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/platinum*
+rm -rf $TMP_DIR/_ph0/platinum*
 $ECHO " done"
 
 # self-consistent calculation
@@ -89,7 +90,7 @@ Pt
  &control
     calculation = 'scf'
     restart_mode='from_scratch',
-    prefix='Pt',
+    prefix='platinum',
     tprnfor = .true.,
     tstress =.true.,
     pseudo_dir = '$PSEUDO_DIR/',
@@ -128,7 +129,7 @@ phonons of Pt at Gamma
 
   amass(1)=195.078,
 
-  prefix='Pt',
+  prefix='platinum',
   outdir='$TMP_DIR'
   fildyn='ptdyn',
   tr2_ph=1.0d-16,
@@ -144,7 +145,7 @@ cat > pt.phX.in << EOF
 phonons of Pt at X
  &inputph
   amass(1)=195.078,
-  prefix='Pt',
+  prefix='platinum',
   outdir='$TMP_DIR'
   fildyn='ptdyn',
   tr2_ph=1.0d-16,
