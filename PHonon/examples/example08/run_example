@@ -86,7 +86,8 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/carbon*
+rm -rf $TMP_DIR/_ph0/carbon*
 $ECHO " done"
 
 # self-consistent calculation for C with PAW-PP
@@ -94,7 +95,7 @@ cat > c.scf.in << EOF
  &control
     calculation='scf',
     restart_mode='from_scratch',
-    prefix='C',
+    prefix='carbon',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
@@ -130,7 +131,7 @@ phonons of C at Gamma
   tr2_ph=1.0d-14,
   epsil=.true.,
   zue=.true.
-  prefix='C',
+  prefix='carbon',
   fildyn='Cg.dyn',
   outdir='$TMP_DIR/'
  /
@@ -146,7 +147,7 @@ cat > c.phX.in << EOF
 phonons of C at X
  &inputph
   tr2_ph=1.0d-14,
-  prefix='C',
+  prefix='carbon',
   fildyn='CX.dyn',
   outdir='$TMP_DIR/'
  /
@@ -157,12 +158,18 @@ $PH_COMMAND < c.phX.in > c.phX.out
 check_failure $?
 $ECHO " done"
 
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/copper*
+rm -rf $TMP_DIR/_ph0/copper*
+$ECHO " done"
+
 # self-consistent calculation for Cu PBE with PAW-PP
 cat > Cu.scf_pbe.in << EOF
  &control
     calculation='scf',
     restart_mode='from_scratch',
-    prefix='Cu',
+    prefix='copper',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
@@ -195,7 +202,7 @@ cat > Cu.phG_pbe.in << EOF
 phonons of Cu at Gamma
  &inputph
   tr2_ph=1.0d-14,
-  prefix='Cu',
+  prefix='copper',
   fildyn='Cug.dyn',
   outdir='$TMP_DIR/'
  /
@@ -206,6 +213,11 @@ $PH_COMMAND < Cu.phG_pbe.in > Cu.phG_pbe.out
 check_failure $?
 $ECHO " done"
 
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/ch4*
+rm -rf $TMP_DIR/_ph0/ch4*
+$ECHO " done"
 
 # Self consistent calculation for CH4
 cat > ch4.scf.in << EOF

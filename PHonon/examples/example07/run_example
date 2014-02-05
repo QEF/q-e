@@ -83,7 +83,8 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/Pt_pbe*
+rm -rf $TMP_DIR/_ph0/Pt_pbe*
 $ECHO " done"
 
 
@@ -167,12 +168,18 @@ $ECHO " done"
 # self-consistent calculation. This example demonstrates the use of the 
 # noncollinear calculation together with gga-pbe in the spin-polarized case. 
 #
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/nickel*
+rm -rf $TMP_DIR/_ph0/nickel*
+$ECHO " done"
+#
 cat > ni.scf.in << EOF
  &control
     calculation='scf'
     restart_mode='from_scratch',
     tprnfor = .true.
-    prefix='ni',
+    prefix='nickel',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
@@ -213,7 +220,7 @@ cat > ni.phG.in << EOF
 phonons of Ni at Gamma
  &inputph
   tr2_ph=1.0d-16,
-  prefix='ni',
+  prefix='nickel',
   fildyn='niG.dyn',
   outdir='$TMP_DIR'
  /
@@ -230,7 +237,7 @@ cat > ni.phX.in << EOF
 phonons of Ni at X
  &inputph
   tr2_ph=1.0d-16,
-  prefix='ni',
+  prefix='nickel',
   fildyn='nix.dyn',
   outdir='$TMP_DIR/'
  /
@@ -245,6 +252,11 @@ $ECHO " done"
 # self-consistent calculation. This example demonstrates the use of the 
 # noncollinear calculations together with gga-pbe and spin-orbit
 # in the spin-polarized case. 
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/ni_so*
+rm -rf $TMP_DIR/_ph0/ni_so*
+$ECHO " done"
 
 cat > ni_so.scf.in << EOF
  &control

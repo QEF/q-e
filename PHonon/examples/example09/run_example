@@ -79,7 +79,8 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/ch4*
+rm -rf $TMP_DIR/_ph0/ch4*
 $ECHO " done"
 
 

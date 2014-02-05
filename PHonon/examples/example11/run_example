@@ -86,7 +86,8 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/gold*
+rm -rf $TMP_DIR/_ph0/gold*
 $ECHO " done"
 
 # self-consistent calculation for Au with PAW-PP
@@ -94,7 +95,7 @@ cat > Au.scf_pz.in << EOF
  &control
     calculation='scf',
     restart_mode='from_scratch',
-    prefix='Au',
+    prefix='gold',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
@@ -129,7 +130,7 @@ cat > Au.phG_pz.in << EOF
 phonons of Au at Gamma
  &inputph
   tr2_ph=1.0d-14,
-  prefix='Au',
+  prefix='gold',
   fildyn='Aug.dyn',
   outdir='$TMP_DIR/'
  /
@@ -145,7 +146,7 @@ cat > Au.phX_pz.in << EOF
 phonons of Au at X
  &inputph
   tr2_ph=1.0d-14,
-  prefix='Au',
+  prefix='gold',
   fildyn='AuX.dyn',
   outdir='$TMP_DIR/'
  /

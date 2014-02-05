@@ -81,7 +81,8 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/Si_pbe*
+rm -rf $TMP_DIR/_ph0/Si_pbe*
 $ECHO " done"
 #
 # self-consistent calculation. This example demonstrates the use of spin-orbit
@@ -140,11 +141,17 @@ $ECHO " done"
 # For diamond these quantities are calculated in example02. The same 
 # calculation is repeated here after setting noncolin=.true. 
 # 
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/carbon*
+rm -rf $TMP_DIR/_ph0/carbon*
+$ECHO " done"
+#
 cat > c.scf.in << EOF
  &control
     calculation='scf',
     restart_mode='from_scratch',
-    prefix='C',
+    prefix='carbon',
     pseudo_dir = '$PSEUDO_DIR',
     outdir='$TMP_DIR'
  /
@@ -176,7 +183,7 @@ phonons of C at Gamma
  &inputph
   tr2_ph=1.0d-14,
   epsil=.true.,
-  prefix='C',
+  prefix='carbon',
   outdir='$TMP_DIR'
  /
 0.0 0.0 0.0
@@ -184,6 +191,12 @@ EOF
 $ECHO "  running ph.x at Gamma for C with noncolin=.true....\c"
 $PH_COMMAND < c.phG.in > c.phG.out
 check_failure $?
+$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/o2_mol*
+rm -rf $TMP_DIR/_ph0/o2_mol*
 $ECHO " done"
 
 cat > o2.scf.in << EOF
@@ -240,6 +253,12 @@ EOF
 $ECHO "  running ph.x at Gamma for O2 with LSDA and constrained magnetization...\c"
 $PH_COMMAND < o2.phG.in > o2.phG.out
 check_failure $?
+$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/o2_nc_mol*
+rm -rf $TMP_DIR/_ph0/o2_nc_mol*
 $ECHO " done"
 
 cat > o2_nc.scf.in << EOF
