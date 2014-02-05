@@ -199,6 +199,9 @@ ptoolkit.o : dspev_drv.o
 ptoolkit.o : kind.o
 ptoolkit.o : parallel_include.o
 ptoolkit.o : zhpev_drv.o
+qexml.o : ../iotk/src/iotk_module.o
+qexml.o : io_files.o
+qexml.o : kind.o
 qmmm.o : cell_base.o
 qmmm.o : constants.o
 qmmm.o : input_parameters.o
@@ -388,7 +391,6 @@ xml_input.o : kind.o
 xml_input.o : version.o
 xml_input.o : xml_io_base.o
 xml_io_base.o : ../iotk/src/iotk_module.o
-xml_io_base.o : constants.o
 xml_io_base.o : control_flags.o
 xml_io_base.o : io_files.o
 xml_io_base.o : io_global.o

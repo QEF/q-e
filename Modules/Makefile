@@ -65,6 +65,7 @@ plugin_flags.o \
 plugin_arguments.o \
 pseudo_types.o \
 ptoolkit.o \
+qexml.o \
 qmmm.o \
 radial_grids.o \
 random_numbers.o \

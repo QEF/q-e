@@ -187,7 +187,8 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
   USE mp_world, ONLY : world_comm, nproc
   USE mp_pools, ONLY : kunit, npool, my_pool_id, intra_pool_comm
   USE symm_base, ONLY : s, nsym
-  USE xml_io_base, ONLY : create_directory, kpoint_dir, wfc_filename
+  USE xml_io_base, ONLY : create_directory
+  USE qexml_module, ONLY : qexml_kpoint_dirname, qexml_wfc_filename
 #ifdef __PARA
   USE parallel_include, ONLY : MPI_INTEGER, MPI_DOUBLE_COMPLEX
 #endif
@@ -519,7 +520,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
 
   CALL create_directory ( output_dir_name )
   DO ik = 1, nk
-    CALL create_directory ( kpoint_dir ( output_dir_name, ik ) )
+    CALL create_directory (qexml_kpoint_dirname( output_dir_name, ik ) )
   ENDDO
 
   filename = TRIM ( output_dir_name ) // '/gvectors.dat'
@@ -541,7 +542,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
 
   DO ik = 1, nk
 
-    filename = TRIM ( wfc_filename ( output_dir_name, 'gkvectors', ik ) )
+    filename = TRIM ( qexml_wfc_filename ( output_dir_name, 'gkvectors', ik ) )
 
     IF ( ionode ) THEN
       CALL iotk_open_write ( iu, FILE = TRIM ( filename ), ROOT="GK-VECTORS", BINARY = .TRUE. )
@@ -571,9 +572,9 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
     DO is = 1, ns
 
       IF ( ns .GT. 1 ) THEN
-        filename = TRIM ( wfc_filename ( output_dir_name, 'eigenval', ik, is, EXTENSION = 'xml' ) )
+        filename = TRIM ( qexml_wfc_filename ( output_dir_name, 'eigenval', ik, is, EXTENSION = 'xml' ) )
       ELSE
-        filename = TRIM ( wfc_filename ( output_dir_name, 'eigenval', ik, EXTENSION = 'xml' ) )
+        filename = TRIM ( qexml_wfc_filename ( output_dir_name, 'eigenval', ik, EXTENSION = 'xml' ) )
       ENDIF
 
       IF ( ionode ) THEN
@@ -590,9 +591,9 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
       ENDIF
 
       IF ( ns .GT. 1 ) THEN
-        filename = TRIM ( wfc_filename ( output_dir_name, 'evc', ik, is ) )
+        filename = TRIM ( qexml_wfc_filename ( output_dir_name, 'evc', ik, is ) )
       ELSE
-        filename = TRIM ( wfc_filename ( output_dir_name, 'evc', ik ) )
+        filename = TRIM ( qexml_wfc_filename ( output_dir_name, 'evc', ik ) )
       ENDIF
 
       IF ( ionode ) THEN

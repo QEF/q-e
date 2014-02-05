@@ -1292,6 +1292,7 @@ pw_restart.o : ../../Modules/mp_pots.o
 pw_restart.o : ../../Modules/mp_world.o
 pw_restart.o : ../../Modules/noncol.o
 pw_restart.o : ../../Modules/parser.o
+pw_restart.o : ../../Modules/qexml.o
 pw_restart.o : ../../Modules/recvec.o
 pw_restart.o : ../../Modules/run_info.o
 pw_restart.o : ../../Modules/version.o

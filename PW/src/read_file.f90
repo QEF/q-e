@@ -150,8 +150,7 @@ SUBROUTINE read_xml_file()
   !
   ! ... allocate space for atomic positions, symmetries, forces, tetrahedra
   !
-  IF ( nat < 0 ) &
-     CALL errore( 'read_xml_file', 'wrong number of atoms', 1 )
+  IF ( nat < 0 ) CALL errore( 'read_xml_file', 'wrong number of atoms', 1 )
   !
   ! ... allocation
   !
@@ -168,6 +167,7 @@ SUBROUTINE read_xml_file()
   !
   CALL set_dimensions()
   CALL realspace_grids_init ( dfftp, dffts, at, bg, gcutm, gcutms )
+
   !
   ! ... check whether LSDA
   !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2005-2013 Quantum ESPRESSO group
+! Copyright (C) 2005-2014 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,21 +12,33 @@ MODULE pw_restart
   !
   ! ... this module contains methods to read and write data produced by PWscf
   !
-  ! ... written by Carlo Sbraccia (2005)
+  ! ... originally written by Carlo Sbraccia  (2005)
+  !
   !
   USE iotk_module
-  USE xml_io_base, ONLY : default_fmt_version => fmt_version, rho_binary, &
-                          kpoint_dir, write_control, write_xc, write_occ, &
-                          attr, wfc_filename, write_eig, write_wfc, &
-                          write_exx, write_spin, write_cell, write_header, &
-                          write_moving_cell, write_para, write_ions, &
-                          write_symmetry, write_efield, write_planewaves, &
-                          write_magnetization, write_bz, save_history, &
-                          create_directory, read_wfc
-                            
+  !
+  USE qexml_module,ONLY : qexml_init,qexml_openfile, qexml_closefile, &
+                          qexml_write_header, qexml_write_control ,   &
+                          qexml_write_cell, qexml_write_moving_cell,  &
+                          qexml_write_ions, qexml_write_symmetry,     &
+                          qexml_write_efield, qexml_write_planewaves, &
+                          qexml_write_spin, qexml_write_magnetization, &
+                          qexml_write_xc, qexml_write_exx, qexml_write_occ, &
+                          qexml_write_bz,qexml_write_para, qexml_write_bands_info, &
+                          qexml_write_bands_pw, qexml_wfc_filename, &
+                          default_fmt_version => qexml_default_version, &
+                          qexml_save_history, qexml_kpoint_dirname, &
+                          qexml_read_header, qexml_read_cell, qexml_read_moving_cell, &
+                          qexml_read_planewaves, qexml_read_ions, qexml_read_spin, &
+                          qexml_read_magnetization, qexml_read_xc, qexml_read_occ, qexml_read_bz, &
+                          qexml_read_bands_info, qexml_read_bands_pw, qexml_read_symmetry, &
+                          qexml_read_efield, qexml_read_para, qexml_read_exx
+  !
+  USE xml_io_base, ONLY :  rho_binary,read_wfc, write_wfc, create_directory
+  !
   !
   USE kinds,     ONLY : DP
-  USE constants, ONLY : e2
+  USE constants, ONLY : e2, PI
   USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
                         qexml_version, qexml_version_init, pseudo_dir
   USE io_global, ONLY : ionode, ionode_id
@@ -62,11 +74,6 @@ MODULE pw_restart
              lwfc_read    = .FALSE., &
              lsymm_read   = .FALSE.
   !
-  ! variables to describe qexml current version
-  ! and back compatibility
-  !
-  LOGICAL :: qexml_version_before_1_4_0 = .FALSE.
-  !
   !
   CONTAINS
     !
@@ -81,7 +88,7 @@ MODULE pw_restart
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
                                        ibrav, celldm
-      USE gvect,   ONLY : ig_l2g
+      USE gvect,                ONLY : ig_l2g
       USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, if_pos
       USE noncollin_module,     ONLY : noncolin, npol
       USE io_files,             ONLY : nwordwfc, iunwfc, iunigk, psfile
@@ -90,14 +97,14 @@ MODULE pw_restart
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, qnorm, &
                                        lgauss, ngauss, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw
-      USE start_k,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
+      USE start_k,              ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                        nks_start, xk_start, wk_start
       USE ktetra,               ONLY : ntetra, tetra, ltetra
       USE gvect,                ONLY : ngm, ngm_g, g, mill
       USE fft_base,             ONLY : dfftp
       USE basis,                ONLY : natomwfc
-      USE gvecs,              ONLY : ngms_g, dual
-      USE fft_base,           ONLY : dffts
+      USE gvecs,                ONLY : ngms_g, dual
+      USE fft_base,             ONLY : dffts
       USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, &
                                        igk, nbnd, ecutwfc
       USE ener,                 ONLY : ef, ef_up, ef_dw
@@ -128,16 +135,13 @@ MODULE pw_restart
       USE mp_pots,              ONLY : nproc_pot
       USE mp_diag,              ONLY : nproc_ortho
       USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
-                                       !gau-pbe in
                                        get_gau_parameter, &
-                                       !gau-pbe out
                                        get_screening_parameter, exx_is_active
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
       USE cellmd,               ONLY : lmovecell, cell_factor 
-      !
-      USE martyna_tuckerman, ONLY: do_comp_mt
-      USE esm,               ONLY: do_comp_esm
+      USE martyna_tuckerman,    ONLY : do_comp_mt
+      USE esm,                  ONLY : do_comp_esm
       
       !
       IMPLICIT NONE
@@ -146,13 +150,13 @@ MODULE pw_restart
       !
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname, filename
-      INTEGER               :: i, ig, ik, ngg, ierr, ipol, ik_eff, num_k_points
+      INTEGER               :: i, ig, ik, ngg, ierr, ipol, num_k_points
       INTEGER               :: npool, nkbl, nkl, nkr, npwx_g
       INTEGER               :: ike, iks, npw_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
       LOGICAL               :: lwfc, lrho
-      REAL(DP), ALLOCATABLE :: raux(:)
+      CHARACTER(iotk_attlenx)  :: attr
       !
       !
       SELECT CASE( what )
@@ -174,7 +178,7 @@ MODULE pw_restart
          !
          CALL errore( 'pw_writefile', 'unexpected case: '//TRIM(what), 1 )
          ! 
-     END SELECT
+      END SELECT
       !
       IF ( ionode ) THEN
          !
@@ -207,7 +211,7 @@ MODULE pw_restart
          !
          DO i = 1, num_k_points
             !
-            CALL create_directory( kpoint_dir( dirname, i ) )
+            CALL create_directory( qexml_kpoint_dirname( dirname, i ) )
             !
          END DO
          !
@@ -299,6 +303,7 @@ MODULE pw_restart
       !
       CALL mp_sum( ngk_g, inter_pool_comm)
       CALL mp_sum( ngk_g, intra_pool_comm)
+      !
       ngk_g = ngk_g / nbgrp
       !
       ! ... compute the maximum G vector index among all G+k an processors
@@ -328,8 +333,9 @@ MODULE pw_restart
          !
          ! ... open XML descriptor
          !
-         CALL iotk_open_write( iunpun, FILE = TRIM( dirname ) // '/' // &
-                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+         CALL qexml_init( iunpun )
+         CALL qexml_openfile( TRIM( dirname ) // '/' // TRIM( xmlpun ), &
+                              'write', BINARY = .FALSE., IERR = ierr  )
          !
          IF (.NOT.(lkpoint_dir)) &
             CALL iotk_open_write( iunout, FILE = TRIM( dirname ) // '/' // &
@@ -350,63 +356,67 @@ MODULE pw_restart
 ! ... HEADER
 !-------------------------------------------------------------------------------
          !
-         CALL write_header( "PWSCF", TRIM(version_number) )
+         CALL qexml_write_header( "PWSCF", TRIM(version_number) )
          !
 !-------------------------------------------------------------------------------
 ! ... CONTROL 
 !-------------------------------------------------------------------------------
          !
-         CALL write_control( PP_CHECK_FLAG=conv_ions, LKPOINT_DIR=lkpoint_dir, &
+         CALL qexml_write_control( PP_CHECK_FLAG=conv_ions, LKPOINT_DIR=lkpoint_dir, &
                              Q_REAL_SPACE=tqr, BETA_REAL_SPACE=real_space )
          !
 !-------------------------------------------------------------------------------
 ! ... CELL
 !-------------------------------------------------------------------------------
          !
-         CALL write_cell( ibrav, celldm, alat, &
+         CALL qexml_write_cell( ibrav, celldm, alat, &
                           at(:,1), at(:,2), at(:,3), bg(:,1), bg(:,2), bg(:,3), &
+                          "Bohr","Bohr","2 pi / a", &
                           do_makov_payne, do_comp_mt, do_comp_esm )
-         IF (lmovecell) CALL write_moving_cell(lmovecell, cell_factor)
+         !
+         IF (lmovecell) CALL qexml_write_moving_cell(lmovecell, cell_factor)
          !
 !-------------------------------------------------------------------------------
 ! ... IONS
 !-------------------------------------------------------------------------------
          !
-         CALL write_ions( nsp, nat, atm, ityp, psfile, &
-                          pseudo_dir, amass, tau, if_pos, dirname, alat )
+         CALL qexml_write_ions( nsp, nat, atm, ityp, psfile, &
+                       pseudo_dir, amass, 'a.m.u.', tau, 'Bohr', if_pos, dirname, alat )
          !
 !-------------------------------------------------------------------------------
 ! ... SYMMETRIES
 !-------------------------------------------------------------------------------
          !
-         CALL write_symmetry( ibrav, nrot, nsym, invsym, noinv, &
-                              time_reversal, no_t_rev, ft, s, sname, irt,  &
+         CALL qexml_write_symmetry( ibrav, nrot, nsym, invsym, noinv, &
+                              time_reversal, no_t_rev, ft, s, sname, "Crystal", irt,  &
                               nat, t_rev )
          !
 !-------------------------------------------------------------------------------
 ! ... ELECTRIC FIELD
 !-------------------------------------------------------------------------------
          !
-         CALL write_efield( tefield, dipfield, edir, emaxpos, eopreg, eamp) 
+         CALL qexml_write_efield( tefield, dipfield, edir, emaxpos, eopreg, eamp) 
          !
 !
 !-------------------------------------------------------------------------------
 ! ... PLANE_WAVES
 !-------------------------------------------------------------------------------
          !
-         CALL write_planewaves( ecutwfc, dual, npwx_g, gamma_only, dfftp%nr1, dfftp%nr2, &
-                                dfftp%nr3, ngm_g, dffts%nr1, dffts%nr2, dffts%nr3, ngms_g, dfftp%nr1, &
-                                dfftp%nr2, dfftp%nr3, mill_g, lwfc )
+         CALL qexml_write_planewaves( ecutwfc/e2, ecutwfc*dual/e2, npwx_g, gamma_only, &
+                                dfftp%nr1, dfftp%nr2, dfftp%nr3, ngm_g, &
+                                dffts%nr1, dffts%nr2, dffts%nr3, ngms_g, dfftp%nr1, &
+                                dfftp%nr2, dfftp%nr3, mill_g, lwfc,'Hartree' )
          !
 !-------------------------------------------------------------------------------
 ! ... SPIN
 !-------------------------------------------------------------------------------
          !
-         CALL write_spin( lsda, noncolin, npol, lspinorb, domag )
+         CALL qexml_write_spin( lsda, noncolin, npol, lspinorb, domag )
          !
-         CALL write_magnetization(starting_magnetization, angle1, angle2, nsp, &
+         CALL qexml_write_magnetization(starting_magnetization, &
+                                  angle1*180.0_DP/PI , angle2*180.0_DP/PI, nsp, &
                                   two_fermi_energies, i_cons, mcons, bfield, &
-                                  ef_up/e2, ef_dw/e2, nelup, neldw, lambda)
+                                  ef_up/e2, ef_dw/e2, nelup, neldw, lambda,'Hartree')
          !
 !-------------------------------------------------------------------------------
 ! ... EXCHANGE_CORRELATION
@@ -415,44 +425,45 @@ MODULE pw_restart
          dft_name = get_dft_name()
          inlc = get_inlc()
          !
-         CALL write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = lda_plus_u, &
+         CALL qexml_write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = lda_plus_u,      &
                         LDA_PLUS_U_KIND = lda_plus_u_kind, U_PROJECTION = U_projection, &
                         HUBBARD_LMAX = Hubbard_lmax, HUBBARD_L = Hubbard_l, &
                         HUBBARD_U = Hubbard_U, HUBBARD_J = Hubbard_J, &
                         HUBBARD_J0 = Hubbard_J0, HUBBARD_BETA = Hubbard_beta, &
-                        HUBBARD_ALPHA = Hubbard_alpha, INLC = inlc, VDW_TABLE_NAME = vdw_table_name, &
+                        HUBBARD_ALPHA = Hubbard_alpha, &
+                        INLC = inlc, VDW_TABLE_NAME = vdw_table_name, &
                         PSEUDO_DIR = pseudo_dir, DIRNAME = dirname)
-         IF ( dft_is_hybrid() ) CALL write_exx &
-                         ( x_gamma_extrapolation, nq1, nq2, nq3, &
+
+
+         IF ( dft_is_hybrid() ) CALL qexml_write_exx &
+                       ( x_gamma_extrapolation, nq1, nq2, nq3, &
                          exxdiv_treatment, yukawa, ecutvcut, &
-                         get_exx_fraction(), &
-                         !gau-pbe in
-                         get_gau_parameter(), &
-                         !gau-pbe out
+                         get_exx_fraction(), get_gau_parameter(), &
                          get_screening_parameter(), exx_is_active() )
          !
 !-------------------------------------------------------------------------------
 ! ... OCCUPATIONS
 !-------------------------------------------------------------------------------
          !
-         CALL write_occ( LGAUSS = lgauss, NGAUSS = ngauss, &
-                         DEGAUSS = degauss, LTETRA = ltetra, NTETRA = ntetra, &
+         CALL qexml_write_occ( LGAUSS = lgauss, NGAUSS = ngauss, &
+                         DEGAUSS = degauss/e2,DEGAUSS_UNITS='Hartree', LTETRA = ltetra, NTETRA = ntetra, &
                          TETRA = tetra, TFIXED_OCC = tfixed_occ, LSDA = lsda, &
-                         NSTATES_UP = nbnd, NSTATES_DOWN = nbnd, F_INP = f_inp )
+                         NSTATES_UP = nbnd, NSTATES_DW = nbnd, INPUT_OCC = f_inp )
          !
 !-------------------------------------------------------------------------------
 ! ... BRILLOUIN_ZONE
 !-------------------------------------------------------------------------------
          !
-         CALL write_bz( num_k_points, xk, wk, k1, k2, k3, nk1, nk2, nk3, &
-                        qnorm, nks_start, xk_start, wk_start )
+         CALL qexml_write_bz( num_k_points, xk, wk, k1, k2, k3, nk1, nk2, nk3, &
+                        '2 pi / a',qnorm, nks_start, xk_start, wk_start )
          !
 !-------------------------------------------------------------------------------
 ! ... PARALLELISM
 !-------------------------------------------------------------------------------
          !
-         CALL write_para( kunit, nproc, nproc_pool, nproc_image, ntask_groups,&
-                          nproc_pot, nproc_bgrp, nproc_ortho ) 
+         !
+         CALL qexml_write_para( kunit, nproc, nproc_pool, nproc_image, ntask_groups,&
+                          nproc_pot, nproc_bgrp, nproc_ortho )
          !
 !-------------------------------------------------------------------------------
 ! ... CHARGE DENSITY
@@ -469,224 +480,31 @@ MODULE pw_restart
 ! ... BAND_STRUCTURE_INFO
 !-------------------------------------------------------------------------------
          !
-         CALL iotk_write_begin( iunpun, "BAND_STRUCTURE_INFO" )
+         CALL qexml_write_bands_info(  num_k_points, natomwfc, &
+                                       nbnd, nbnd, nbnd, &
+                                       nspin, nelec,NINT(nelup),NINT(neldw), &
+                                       "Hartree", "2 pi / a", &
+                                       ef=ef/e2, two_fermi_energies=two_fermi_energies ,&
+                                       ef_up=ef_up/e2, ef_down=ef_dw/e2, noncolin=noncolin )
          !
-         CALL iotk_write_dat  ( iunpun, "NUMBER_OF_K-POINTS", num_k_points )
-         !
-         CALL iotk_write_dat  ( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin )
-         !
-         CALL iotk_write_dat  ( iunpun, "NON-COLINEAR_CALCULATION", noncolin )
-         !
-         CALL iotk_write_dat  ( iunpun, "NUMBER_OF_ATOMIC_WFC", natomwfc )
-         !
-         IF ( nspin == 2 ) THEN
-            ! Compatibility with CP
-            CALL iotk_write_attr( attr, "UP", nbnd, FIRST = .TRUE. )
-            CALL iotk_write_attr( attr, "DW", nbnd )
-            CALL iotk_write_dat( iunpun, &
-                                 "NUMBER_OF_BANDS", nbnd, ATTR = attr )
-            CALL iotk_write_attr( attr, "UP", NINT(nelup), FIRST = .TRUE. )
-            CALL iotk_write_attr( attr, "DW", NINT(neldw) )
-            CALL iotk_write_dat( iunpun, &
-                                 "NUMBER_OF_ELECTRONS", nelec, ATTR = attr )
-         ELSE
-         !
-            CALL iotk_write_dat  ( iunpun, "NUMBER_OF_BANDS", nbnd )
-            CALL iotk_write_dat  ( iunpun, "NUMBER_OF_ELECTRONS", nelec )
-         END IF
-         !
-         CALL iotk_write_attr ( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
-         CALL iotk_write_empty( iunpun, "UNITS_FOR_K-POINTS", ATTR = attr )
-         !
-         CALL iotk_write_attr ( attr, "UNITS", "Hartree", FIRST = .TRUE. )
-         CALL iotk_write_empty( iunpun, "UNITS_FOR_ENERGIES", ATTR = attr )
-         !
-         ! Fermi energy units in Hartree
-         !
-         IF (two_fermi_energies) THEN
-             !
-             CALL iotk_write_dat(iunpun,"TWO_FERMI_ENERGIES",two_fermi_energies)
-             CALL iotk_write_dat( iunpun, "ELECTRONS_UP", nelup )
-             CALL iotk_write_dat( iunpun, "ELECTRONS_DOWN", neldw )
-             CALL iotk_write_dat( iunpun, "FERMI_ENERGY_UP", ef_up / e2 )
-             CALL iotk_write_dat( iunpun, "FERMI_ENERGY_DOWN", ef_dw / e2 )
-             !
-         ELSE
-             !
-             CALL iotk_write_dat( iunpun, "FERMI_ENERGY", ef / e2)
-             !
-         ENDIF
-         !
-         CALL iotk_write_end  ( iunpun, "BAND_STRUCTURE_INFO" )
-         !
-         !
-         CALL iotk_write_begin( iunpun, "EIGENVALUES" )
-         !
-      END IF
-      !
-      ALLOCATE( raux( nbnd) )
-      !
 !-------------------------------------------------------------------------------
 ! ... EIGENVALUES
 !-------------------------------------------------------------------------------
-      !
-      k_points_loop1: DO ik = 1, num_k_points
          !
-         IF ( ionode ) THEN
-            !
-            CALL iotk_write_begin( iunpun, "K-POINT" // TRIM( iotk_index( ik ) ) )
-            !
-            CALL iotk_write_dat( iunpun, "K-POINT_COORDS", xk(:,ik), COLUMNS=3 )
-            !            
-            CALL iotk_write_dat( iunpun, "WEIGHT", wk(ik) )
-            !
-            !
-            IF ( nspin == 2 ) THEN
-               !
-               ispin = 1
-               !
-               IF (lkpoint_dir) THEN
-                  filename=wfc_filename(".",'eigenval1', ik, EXTENSION='xml',&
-                                      DIR=lkpoint_dir )
-                  !
-                  CALL iotk_link( iunpun, "DATAFILE.1", &
-                               filename, CREATE = .FALSE., BINARY = .FALSE. )
-               ELSE
-                  CALL iotk_write_begin( iunout, &
-                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_UP" )
-               ENDIF
-               !
-               IF ( wk(ik) == 0.D0 ) THEN
-                  !
-                  raux = wg(:,ik)
-                  !
-               ELSE
-                  !
-                  raux = wg(:,ik) / wk(ik)
-                  !
-               END IF
-               !
-               IF (lkpoint_dir) THEN
-                  filename = wfc_filename( dirname, 'eigenval1', ik, &
-                                   EXTENSION='xml',  DIR=lkpoint_dir )
-                  !
-                   CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, &
-                     "Hartree", OCC = raux(:), IK=ik, ISPIN=ispin )
-               ELSE
-                   filename=' '
-                   CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, &
-                     "Hartree", OCC = raux(:), IK=ik, ISPIN=ispin,  &
-                                LKPOINT_DIR=.FALSE. )
-               ENDIF
-               !
-               ispin = 2
-               !
-               ik_eff = ik + num_k_points
-               !
-               IF (lkpoint_dir) THEN
-                  filename = wfc_filename( ".", 'eigenval2', ik, &
-                          EXTENSION='xml',  DIR=lkpoint_dir )
-                  !
-                  CALL iotk_link( iunpun, "DATAFILE.2", &
-                               filename, CREATE = .FALSE., BINARY = .FALSE. )
-               ELSE
-                  CALL iotk_write_end( iunout, &
-                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_UP" )
-                  CALL iotk_write_begin( iunout, &
-                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_DW" )
-               ENDIF
-               !
-               IF ( wk(ik_eff) == 0.D0 ) THEN
-                  !
-                  raux = wg(:,ik_eff)
-                  !
-               ELSE
-                  !
-                  raux = wg(:,ik_eff) / wk(ik_eff)
-                  !
-               END IF
-               !
-               IF (lkpoint_dir) THEN
-                  filename = wfc_filename( dirname, 'eigenval2', ik, &
-                             EXTENSION = 'xml',  DIR=lkpoint_dir )
-                  !
-                  CALL write_eig( iunout, filename, nbnd, et(:, ik_eff) / e2, &
-                               "Hartree", OCC = raux(:), IK = ik, ISPIN = ispin)
-               ELSE
-                  filename=' '
-                  CALL write_eig( iunout, filename, nbnd, et(:, ik_eff) / e2, &
-                               "Hartree", OCC = raux(:), IK = ik, &
-                                         ISPIN = ispin, LKPOINT_DIR=.false.)
-                  CALL iotk_write_end( iunout, &
-                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_DW" )
-
-               ENDIF
-               !
-            ELSE
-               !
-               IF (lkpoint_dir) THEN
-                  filename = wfc_filename( ".", 'eigenval', ik, &
-                          EXTENSION='xml',  DIR=lkpoint_dir )
-                  !
-                  CALL iotk_link( iunpun, "DATAFILE", &
-                               filename, CREATE = .FALSE., BINARY = .FALSE. )
-               ELSE
-                  CALL iotk_write_begin( iunout, &
-                             "DATA_EIG"//TRIM( iotk_index( ik ) ) )
-               ENDIF
-               !
-               IF ( wk(ik) == 0.D0 ) THEN
-                  !
-                  raux(:) = wg(:,ik)
-                  !
-               ELSE
-                  !
-                  raux(:) = wg(:,ik) / wk(ik)
-                  !
-               END IF
-               !
-               IF (lkpoint_dir) THEN
-                  filename = wfc_filename( dirname, 'eigenval', ik, &
-                             EXTENSION='xml',  DIR=lkpoint_dir )
-                  !
-                  CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, &
-                               "Hartree", OCC = raux(:), IK = ik )
-               ELSE
-                  filename=' '
-                  CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, &
-                               "Hartree", OCC = raux(:), IK = ik, &
-                                 LKPOINT_DIR=.false. )
-                  CALL iotk_write_end( iunout, &
-                             "DATA_EIG"//TRIM( iotk_index( ik ) ) )
-               ENDIF
-                  !
-            END IF
-            !
-            CALL iotk_write_end( iunpun, "K-POINT" // TRIM( iotk_index( ik ) ) )
-            !
-         END IF
+         CALL qexml_write_bands_pw( nbnd, num_k_points, nspin, xk, wk, wg,et/e2,"Hartree" , lkpoint_dir , iunout , dirname )
          !
-      ENDDO k_points_loop1
-      !
-      !
-      IF (.NOT.lkpoint_dir.AND.ionode) CALL iotk_close_write( iunout )
-      !
-      DEALLOCATE ( raux )
-      ! 
-      ! 
-      IF ( ionode ) THEN 
          !
-         CALL iotk_write_end( iunpun, "EIGENVALUES" )
+         IF (.NOT. lkpoint_dir ) CALL iotk_close_write( iunout )
+         !
+!-------------------------------------------------------------------------------
+! ... EIGENVECTORS
+!-------------------------------------------------------------------------------
          !
          CALL iotk_write_begin( iunpun, "EIGENVECTORS" )
          !
          CALL iotk_write_dat  ( iunpun, "MAX_NUMBER_OF_GK-VECTORS", npwx_g )
          !
       END IF
-      !
-!-------------------------------------------------------------------------------
-! ... EIGENVECTORS
-!-------------------------------------------------------------------------------
       !
       k_points_loop2: DO ik = 1, num_k_points
          !
@@ -700,23 +518,23 @@ MODULE pw_restart
             !
             IF ( lwfc ) THEN
                !
-               filename = wfc_filename( ".", 'gkvectors', ik, DIR=lkpoint_dir )
+               filename = qexml_wfc_filename( ".", 'gkvectors', ik, DIR=lkpoint_dir )
                !
                CALL iotk_link( iunpun, "GK-VECTORS", &
                                filename, CREATE = .FALSE., BINARY = .TRUE. )
                !
-               filename = wfc_filename( dirname, 'gkvectors', ik, &
+               filename = qexml_wfc_filename( dirname, 'gkvectors', ik, &
                                          DIR=lkpoint_dir )
             END IF
             !
          END IF
          !
          IF ( lwfc ) THEN
-           !
-           IF ( .NOT. smallmem ) CALL write_gk( iunout, ik, filename )
-           !
-           CALL write_this_wfc ( iunout, ik )
-           !
+            !
+            IF ( .NOT. smallmem ) CALL write_gk( iunout, ik, filename )
+            !
+            CALL write_this_wfc ( iunout, ik )
+            !
          END IF
          !
          IF ( ionode ) THEN
@@ -731,7 +549,8 @@ MODULE pw_restart
          !
          CALL iotk_write_end( iunpun, "EIGENVECTORS" )
          !
-         CALL iotk_close_write( iunpun )
+         CALL qexml_closefile( 'write', IERR=ierr)
+         !
          !
          CALL delete_if_present( TRIM( dirname ) // '/' // TRIM( xmlpun ) // '.bck' )
          !
@@ -744,9 +563,10 @@ MODULE pw_restart
 ! ... CHARGE-DENSITY FILES
 !-------------------------------------------------------------------------------
       !
+      ! ... do not overwrite the scf charge density with a non-scf one
       ! ... also writes rho%ns if lda+U and rho%bec if PAW
       !
-      IF ( lrho ) CALL write_rho( rho, nspin )
+      IF ( lscf ) CALL write_rho( rho, nspin )
 !-------------------------------------------------------------------------------
 ! ... END RESTART SECTIONS
 !-------------------------------------------------------------------------------
@@ -754,7 +574,12 @@ MODULE pw_restart
       DEALLOCATE( mill_g )
       DEALLOCATE( ngk_g )
       !
-      CALL save_history( dirname, istep )
+      IF (ionode) CALL qexml_save_history( dirname, istep, ierr )
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      CALL errore( 'pw_writefile ', &
+                   'cannot save history', ierr )
       !
       RETURN
       !
@@ -842,6 +667,7 @@ MODULE pw_restart
           !
           INTEGER, INTENT(IN) :: iun, ik
           CHARACTER(LEN=256)  :: filename
+          INTEGER :: ispin,ik_eff
           !
           ! ... wavefunctions
           !
@@ -851,7 +677,7 @@ MODULE pw_restart
              !
              ispin = isk(ik)
              !
-             IF ( ( nks > 1 ) .AND. ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
+             IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                 !
                 CALL get_buffer ( evc, nwordwfc, iunwfc, (ik-iks+1) )
                 !
@@ -859,13 +685,13 @@ MODULE pw_restart
              !
              IF ( ionode ) THEN
                 !
-                filename = wfc_filename( ".", 'evc', ik, ispin, &
+                filename = qexml_wfc_filename( ".", 'evc', ik, ispin, &
                                                      DIR=lkpoint_dir )
                 !
                 CALL iotk_link( iunpun, "WFC" // TRIM( iotk_index (ispin) ), &
                                   filename, CREATE = .FALSE., BINARY = .TRUE. )
                 !
-                filename = wfc_filename( dirname, 'evc', ik, ispin, & 
+                filename = qexml_wfc_filename( dirname, 'evc', ik, ispin, & 
                                            DIR=lkpoint_dir )
                 !
              END IF
@@ -887,13 +713,13 @@ MODULE pw_restart
              !
              IF ( ionode ) THEN
                 !
-                filename = wfc_filename( ".", 'evc', ik, ispin, &
+                filename = qexml_wfc_filename( ".", 'evc', ik, ispin, &
                                                      DIR=lkpoint_dir )
                 !
                 CALL iotk_link( iunpun, "WFC"//TRIM( iotk_index( ispin ) ), &
                                 filename, CREATE = .FALSE., BINARY = .TRUE. )
                 !
-                filename = wfc_filename( dirname, 'evc', ik, ispin, &
+                filename = qexml_wfc_filename( dirname, 'evc', ik, ispin, &
                             DIR=lkpoint_dir )
                 !
              END IF
@@ -903,7 +729,7 @@ MODULE pw_restart
                              ngk(ik_eff-iks+1), filename, 1.D0, &
                              ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
              !
-           ELSE
+          ELSE
              !
              IF ( ( nks > 1 ) .AND. ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                 !
@@ -917,13 +743,13 @@ MODULE pw_restart
                    !
                    IF ( ionode ) THEN
                       !
-                      filename = wfc_filename( ".", 'evc', ik, ipol, &
+                      filename = qexml_wfc_filename( ".", 'evc', ik, ipol, &
                                               DIR=lkpoint_dir )
                       !
                       CALL iotk_link(iunpun,"WFC"//TRIM(iotk_index(ipol)), &
                                filename, CREATE = .FALSE., BINARY = .TRUE. )
                       !
-                      filename = wfc_filename( dirname, 'evc', ik, ipol, &
+                      filename = qexml_wfc_filename( dirname, 'evc', ik, ipol, &
                              DIR=lkpoint_dir)
                       !
                    END IF
@@ -945,12 +771,12 @@ MODULE pw_restart
                 !
                 IF ( ionode ) THEN
                    !
-                   filename = wfc_filename( ".", 'evc', ik, DIR=lkpoint_dir )
+                   filename = qexml_wfc_filename( ".", 'evc', ik, DIR=lkpoint_dir )
                    !
                    CALL iotk_link( iunpun, "WFC", filename, &
                                    CREATE = .FALSE., BINARY = .TRUE. )
                    !
-                   filename = wfc_filename( dirname, 'evc', ik, &
+                   filename =qexml_wfc_filename( dirname, 'evc', ik, &
                                                       DIR=lkpoint_dir )
                    !
                 END IF
@@ -987,8 +813,11 @@ MODULE pw_restart
       CHARACTER(LEN=256) :: dirname
       LOGICAL            :: lcell, lpw, lions, lspin, linit_mag, &
                             lxc, locc, lbz, lbs, lwfc, lheader,          &
-                            lsymm, lrho, lefield
+                            lsymm, lrho, lefield, ldim, &
+                            lef, lexx
       !
+      LOGICAL            :: need_qexml
+      INTEGER            :: tmp
       !
       ierr = 0
       !
@@ -996,15 +825,17 @@ MODULE pw_restart
       !
       ! ... look for an empty unit
       !
-      IF (ionode) CALL iotk_free_unit( iunout, ierr )
-
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      CALL iotk_free_unit( iunout, ierr )
       !
       CALL errore( 'pw_readfile', &
                    'no free units to read wavefunctions', ierr )
-
+      !
+      need_qexml = .FALSE.
       !
       lheader = .NOT. qexml_version_init
+      IF (lheader) need_qexml = .TRUE.
+      !
+      ldim    = .FALSE.
       lcell   = .FALSE.
       lpw     = .FALSE.
       lions   = .FALSE.
@@ -1018,26 +849,31 @@ MODULE pw_restart
       lsymm   = .FALSE.
       lrho    = .FALSE.
       lefield = .FALSE.
+      lef     = .FALSE.
+      lexx    = .FALSE.
       !
       SELECT CASE( what )
       CASE( 'header' )
          !
          lheader = .TRUE.
+         need_qexml = .TRUE.
          !
       CASE( 'dim' )
          !
-         CALL read_dim( dirname, ierr )
-         !
-         lbz = .TRUE.
+         ldim = .TRUE.
+         lbz  = .TRUE.
+         need_qexml = .TRUE.
          !
       CASE( 'pseudo' )
          !
          lions = .TRUE.
+         need_qexml = .TRUE.
          !
       CASE( 'config' )
          !
          lcell = .TRUE.
          lions = .TRUE.
+         need_qexml = .TRUE.
          !
       CASE( 'rho' )
          !
@@ -1047,6 +883,7 @@ MODULE pw_restart
          !
          lpw   = .TRUE.
          lwfc  = .TRUE.
+         need_qexml = .TRUE.
          !
       CASE( 'nowave' )
          !
@@ -1061,6 +898,7 @@ MODULE pw_restart
          lbs     = .TRUE.
          lsymm   = .TRUE.
          lefield = .TRUE.
+         need_qexml = .TRUE.
          !
       CASE( 'all' )
          !
@@ -1077,6 +915,7 @@ MODULE pw_restart
          lsymm   = .TRUE.
          lefield = .TRUE.
          lrho    = .TRUE.
+         need_qexml = .TRUE.
          !
       CASE( 'reset' )
          !
@@ -1095,11 +934,13 @@ MODULE pw_restart
          !
       CASE( 'ef' )
          !
-         CALL read_ef( dirname, ierr )
-         RETURN
+         lef        = .TRUE.
+         need_qexml = .TRUE.
+         !
       CASE( 'exx' )
-         CALL read_exx(dirname, ierr)
-         RETURN
+         !
+         lexx       = .TRUE.
+         need_qexml = .TRUE.
          !
       END SELECT
       !
@@ -1107,93 +948,105 @@ MODULE pw_restart
          CALL errore( 'pw_readfile', 'qexml version not set', 71 )
       !
       !
-      IF ( lheader ) THEN 
+      IF (  ionode .AND. need_qexml ) THEN
          !
-         CALL read_header( dirname, ierr )
+         CALL qexml_init( iunpun )
+         CALL qexml_openfile( TRIM( dirname ) // '/' // TRIM( xmlpun ), &
+                              'read', BINARY = .FALSE., IERR = ierr  )
          !
-         ! to be as safe as possible
+      ENDIF
+      !
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      IF ( ierr /=0 ) RETURN
+      !
+      IF ( lheader ) THEN
          !
-         IF ( ierr /= 0 ) THEN
-             !
-             qexml_version = TRIM( default_fmt_version )
-             qexml_version_init = .TRUE.
-             !
-         ENDIF
+         CALL read_header( ierr )
          !
-         ierr = 0 
+         IF ( ierr > 0 ) GOTO 100
+         !
+      ENDIF
+      !
+      IF ( ldim ) THEN
+         !
+         CALL read_dim( ierr )
+         !
+         IF ( ierr > 0 ) GOTO 100
          !
       ENDIF
       !
       IF ( lcell ) THEN
          !
-         CALL read_cell( dirname, ierr )
-         IF ( ierr > 0 ) RETURN
+         CALL read_cell( ierr )
+         IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lpw ) THEN
          !
-         CALL read_planewaves( dirname, ierr )
-         IF ( ierr > 0 ) RETURN
+         CALL read_planewaves( ierr )
+         IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lions ) THEN
          !
          CALL read_ions( dirname, ierr )
-         IF ( ierr > 0 ) RETURN
+         IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lspin ) THEN
          !
-         CALL read_spin( dirname, ierr )
-         IF ( ierr > 0 ) RETURN
+         CALL read_spin( ierr )
+         IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF (linit_mag) THEN
          !
-         CALL read_magnetization( dirname, ierr )
-         IF ( ierr > 0 ) RETURN
+         CALL read_magnetization( ierr )
+         IF ( ierr > 0 ) GOTO 100
          !
       ENDIF
       IF ( lxc ) THEN
          !
-         CALL read_xc( dirname, ierr )
-         IF ( ierr > 0 ) RETURN
+         CALL read_xc( ierr )
+         IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( locc ) THEN
          !
-         CALL read_occupations( dirname, ierr )
-         IF ( ierr > 0 ) RETURN
+         CALL read_occupations( ierr )
+         IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lbz ) THEN
          !
-         CALL read_brillouin_zone( dirname, ierr )
-         IF ( ierr > 0 ) RETURN
+         CALL read_brillouin_zone( ierr )
+         IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lbs ) THEN
          !
          CALL read_band_structure( dirname, ierr )
-         IF ( ierr > 0 ) RETURN
+         IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lwfc ) THEN
          !
          CALL read_wavefunctions( dirname, ierr )
-         IF ( ierr > 0 ) RETURN
+         IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lsymm ) THEN
          !
-         CALL read_symmetry( dirname, ierr )
-         IF ( ierr > 0 ) RETURN
+         CALL read_symmetry( ierr )
+         IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lefield ) THEN
          !
-         CALL read_efield( dirname, ierr )
-         IF ( ierr > 0 ) RETURN
+         CALL read_efield( ierr )
+         IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lrho ) THEN
@@ -1203,65 +1056,73 @@ MODULE pw_restart
          CALL read_rho( rho, nspin )
          !
       END IF
+      IF ( lef ) THEN
+         !
+         CALL read_ef( ierr )
+         IF ( ierr > 0 ) GOTO 100
+         !
+      END IF
+      IF ( lexx ) THEN
+         !
+         CALL read_exx( ierr )
+         IF ( ierr > 0 ) GOTO 100
+         !
+      END IF
       !
+      IF (ionode .AND. need_qexml) THEN
+         !
+         CALL qexml_closefile( 'read', IERR=ierr)
+         !
+      ENDIF
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      IF ( ierr > 0 ) RETURN
+      !
+      !
+      RETURN
+      !
+      ! necessary because sometimes the error does not block execution
+100   IF (ionode .AND. need_qexml) THEN
+         CALL qexml_closefile( 'read', IERR=tmp)
+      ENDIF
       RETURN
       !
     END SUBROUTINE pw_readfile
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_header( dirname, ierr )
+    SUBROUTINE read_header( ierr )
       !------------------------------------------------------------------------
       !
       ! ... this routine reads the format version of the current xml datafile
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
-
+      !
       ierr = 0
+      !
       IF ( qexml_version_init ) RETURN
       !
-      IF ( ionode ) &
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
+      IF ( ionode ) THEN
+         !
+         CALL qexml_read_header( FORMAT_VERSION = qexml_version, ierr = ierr )
+         !
+         qexml_version_init = .TRUE.
+         !
+      ENDIF
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr /=0 ) RETURN
       !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_scan_begin( iunpun, "HEADER" )
-         !
-         CALL iotk_scan_empty( iunpun, "FORMAT", ATTR=attr )
-         !
-         CALL iotk_scan_attr( attr, "VERSION", qexml_version )
-         !
-         qexml_version_init = .TRUE.
-         !
-         CALL iotk_scan_end( iunpun, "HEADER" )
-         !
-         !
-         CALL iotk_close_read( iunpun )
-         !
-      ENDIF
-      !
       CALL mp_bcast( qexml_version,       ionode_id, intra_image_comm )
       CALL mp_bcast( qexml_version_init,  ionode_id, intra_image_comm )
-      
       !
-      ! init logical variables for versioning
-      !
-      qexml_version_before_1_4_0 = .FALSE.
-      !
-      IF ( TRIM( version_compare( qexml_version, "1.4.0" )) == "older" ) &
-         qexml_version_before_1_4_0 = .TRUE.
       !
     END SUBROUTINE read_header
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_dim( dirname, ierr )
+    SUBROUTINE read_dim( ierr )
       !------------------------------------------------------------------------
       !
       ! ... this routine collects array dimensions from various sections
@@ -1287,122 +1148,63 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      !CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
       INTEGER  :: npwx_
       LOGICAL  :: found, found2
+      CHARACTER(iotk_attlenx)  :: attr
       !
       !
       ! ... first the entire CELL section is read
+      ! ... 
+      ierr=0
       !
-      CALL read_cell( dirname, ierr )
-      !
-      IF ( ierr > 0 ) RETURN
-      !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
-         !
-      END IF
-      !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      IF ( ierr > 0 ) RETURN
-      !
-      ! ... then selected tags are read from the other sections
+      CALL read_cell( ierr )
+      IF ( ierr /= 0) GOTO 100
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "IONS" )
+         CALL qexml_read_ions( NAT=nat, NSP=nsp, IERR=ierr)
+         IF ( ierr /= 0) GOTO 100
          !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_ATOMS", nat )
-         !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_SPECIES", nsp )         
-         !
-         CALL iotk_scan_end( iunpun, "IONS" )
-         !
-         CALL iotk_scan_begin( iunpun, "SYMMETRIES", FOUND = found )
+         CALL qexml_read_symmetry(NSYM=nsym, FOUND=found, IERR=ierr)
+         IF ( ierr /= 0) GOTO 100
          !
          IF ( .NOT. found ) THEN
             !
             nsym = 1
             !
-         ELSE
-            !
-            CALL iotk_scan_dat( iunpun, "NUMBER_OF_SYMMETRIES", nsym )
-            !
-            CALL iotk_scan_end( iunpun, "SYMMETRIES" )
-            !
-         END IF
+         ENDIF
          !
-         CALL iotk_scan_begin( iunpun, "PLANE_WAVES" )
-         !
-         CALL iotk_scan_dat( iunpun, "WFC_CUTOFF", ecutwfc )
-         !
-         CALL iotk_scan_dat( iunpun, "RHO_CUTOFF", ecutrho )
+         CALL qexml_read_planewaves(  ECUTWFC=ecutwfc, ECUTRHO=ecutrho, NPWX=npwx_,GAMMA_ONLY=gamma_only, &
+                                      NR1  = dfftp%nr1, NR2  = dfftp%nr2, NR3  = dfftp%nr3, NGM  = ngm_g, &
+                                      NR1S = dffts%nr1, NR2S = dffts%nr2, NR3S = dffts%nr3, NGMS = ngms_g, IERR=ierr )
+         IF ( ierr /= 0) GOTO 100
          !
          ecutwfc = ecutwfc * e2
          ecutrho = ecutrho * e2
          !
          dual = ecutrho / ecutwfc
          !
-         CALL iotk_scan_dat( iunpun, "MAX_NUMBER_OF_GK-VECTORS", npwx_ )
+         CALL qexml_read_spin( LSDA = lsda, NONCOLIN = noncolin, IERR=ierr )
+         IF ( ierr /= 0) GOTO 100
          !
-         CALL iotk_scan_dat( iunpun, "GAMMA_ONLY", gamma_only )
+         CALL qexml_read_occ( NTETRA = ntetra, IERR=ierr )
+         IF ( ierr /= 0) GOTO 100
          !
-         CALL iotk_scan_empty( iunpun, "FFT_GRID", attr )
-         CALL iotk_scan_attr( attr, "nr1", dfftp%nr1 )
-         CALL iotk_scan_attr( attr, "nr2", dfftp%nr2 )
-         CALL iotk_scan_attr( attr, "nr3", dfftp%nr3 )
-         !
-         CALL iotk_scan_dat( iunpun, "GVECT_NUMBER", ngm_g )
-         !
-         CALL iotk_scan_empty( iunpun, "SMOOTH_FFT_GRID", attr )
-         CALL iotk_scan_attr( attr, "nr1s", dffts%nr1 )
-         CALL iotk_scan_attr( attr, "nr2s", dffts%nr2 )
-         CALL iotk_scan_attr( attr, "nr3s", dffts%nr3 )
-         !
-         CALL iotk_scan_dat( iunpun, "SMOOTH_GVECT_NUMBER", ngms_g )
-         !
-         CALL iotk_scan_end( iunpun, "PLANE_WAVES" )
-         !
-         CALL iotk_scan_begin( iunpun, "SPIN" )
-         !
-         CALL iotk_scan_dat( iunpun, "LSDA", lsda )
-         !
-         CALL iotk_scan_dat( iunpun, "NON-COLINEAR_CALCULATION", &
-              noncolin, FOUND = found )
-         !
-         IF ( .NOT. found ) noncolin = .FALSE.
-         !
-         CALL iotk_scan_end( iunpun, "SPIN" )
-         !
-         CALL iotk_scan_begin( iunpun, "OCCUPATIONS" )
-         !
-         CALL iotk_scan_dat( iunpun, &
-                             "NUMBER_OF_TETRAHEDRA", ntetra, DEFAULT = 0 )
-         !
-         CALL iotk_scan_end( iunpun, "OCCUPATIONS" )
-         !
-         CALL iotk_scan_begin( iunpun, "BRILLOUIN_ZONE" )
-         !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_K-POINTS", nkstot )
+         CALL qexml_read_bz( NUM_K_POINTS= nkstot, IERR =  ierr )
+         IF ( ierr /= 0) GOTO 100
          !
          IF ( lsda ) nkstot = nkstot * 2
          !
-         CALL iotk_scan_end( iunpun, "BRILLOUIN_ZONE" )
+         CALL qexml_read_bands_info( NBND=nbnd, NELEC=nelec, IERR=ierr )
+         IF ( ierr /= 0) GOTO 100
          !
-         CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE_INFO" )
-         !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_ELECTRONS", nelec )
-         !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_BANDS", nbnd )
-         !
-         CALL iotk_scan_end( iunpun, "BAND_STRUCTURE_INFO" )
-         !
-         CALL iotk_scan_begin( iunpun, "PARALLELISM", FOUND = found )
+         CALL qexml_read_para( KUNIT=kunit, NPROC=nproc_file, NPROC_POOL=nproc_pool_file, &
+              NPROC_IMAGE=nproc_image_file, NTASK_GROUPS = ntask_groups_file, &
+              NPROC_POT=nproc_pot_file, NPROC_BGRP=nproc_bgrp_file, NPROC_ORTHO=nproc_ortho_file, FOUND=found, IERR=ierr )
+         IF ( ierr /= 0) GOTO 100
          !
          IF ( .NOT. found ) THEN
             !
@@ -1415,48 +1217,13 @@ MODULE pw_restart
             nproc_bgrp_file=1
             nproc_ortho_file=1
             !
-         ELSE
-            !
-            CALL iotk_scan_dat( iunpun, &
-                 "GRANULARITY_OF_K-POINTS_DISTRIBUTION", kunit )
-            !
-            CALL iotk_scan_dat( iunpun, &
-                              "NUMBER_OF_PROCESSORS", nproc_file, &
-                               FOUND=found2 )
-            IF ( .NOT. found2) nproc_file=1 ! compatibility
-            !
-            CALL iotk_scan_dat( iunpun, &
-                            "NUMBER_OF_PROCESSORS_PER_POOL", nproc_pool_file,&
-                               FOUND=found2 )
-            IF ( .NOT. found2) nproc_pool_file=1 ! compatibility
-
-            CALL iotk_scan_dat( iunpun, &
-                            "NUMBER_OF_PROCESSORS_PER_IMAGE", nproc_image_file,&
-                               FOUND=found2 )
-            IF ( .NOT. found2) nproc_image_file=1 ! compatibility
-            !
-            CALL iotk_scan_dat( iunpun, &
-                      "NUMBER_OF_PROCESSORS_PER_TASKGROUP", ntask_groups_file,&
-                               FOUND=found2 )
-            IF ( .NOT. found2) ntask_groups_file=1 ! compatibility
-            CALL iotk_scan_dat( iunpun, "NUMBER_OF_PROCESSORS_PER_POT", &
-                               nproc_pot_file, FOUND=found2 )
-            IF ( .NOT. found2) nproc_pot_file=1 ! compatibility
-            CALL iotk_scan_dat( iunpun, "NUMBER_OF_PROCESSORS_PER_BAND_GROUP", &
-                               nproc_bgrp_file,  FOUND=found2 )
-            IF ( .NOT. found2) nproc_bgrp_file=nproc_pool_file ! compatibility
-            CALL iotk_scan_dat( iunpun, &
-                           "NUMBER_OF_PROCESSORS_PER_DIAGONALIZATION", &
-                               nproc_ortho_file, FOUND=found2 )
-            IF ( .NOT. found2) nproc_ortho_file=1 ! compatibility
-            !
-            CALL iotk_scan_end( iunpun, "PARALLELISM" )
-            !
-         END IF
-         !
-         CALL iotk_close_read( iunpun )
+         ENDIF
          !
       END IF
+      !
+100   CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      IF ( ierr > 0 ) RETURN
       !
       CALL mp_bcast( nat,        ionode_id, intra_image_comm )
       CALL mp_bcast( nsp,        ionode_id, intra_image_comm )
@@ -1466,13 +1233,13 @@ MODULE pw_restart
       CALL mp_bcast( dual,       ionode_id, intra_image_comm )
       CALL mp_bcast( npwx_,      ionode_id, intra_image_comm )
       CALL mp_bcast( gamma_only, ionode_id, intra_image_comm )
-      CALL mp_bcast( dfftp%nr1,        ionode_id, intra_image_comm )
-      CALL mp_bcast( dfftp%nr2,        ionode_id, intra_image_comm )
-      CALL mp_bcast( dfftp%nr3,        ionode_id, intra_image_comm )
+      CALL mp_bcast( dfftp%nr1,  ionode_id, intra_image_comm )
+      CALL mp_bcast( dfftp%nr2,  ionode_id, intra_image_comm )
+      CALL mp_bcast( dfftp%nr3,  ionode_id, intra_image_comm )
       CALL mp_bcast( ngm_g,      ionode_id, intra_image_comm )
-      CALL mp_bcast( dffts%nr1,       ionode_id, intra_image_comm )
-      CALL mp_bcast( dffts%nr2,       ionode_id, intra_image_comm )
-      CALL mp_bcast( dffts%nr3,       ionode_id, intra_image_comm )
+      CALL mp_bcast( dffts%nr1,  ionode_id, intra_image_comm )
+      CALL mp_bcast( dffts%nr2,  ionode_id, intra_image_comm )
+      CALL mp_bcast( dffts%nr3,  ionode_id, intra_image_comm )
       CALL mp_bcast( ngms_g,     ionode_id, intra_image_comm )
       CALL mp_bcast( lsda,       ionode_id, intra_image_comm )
       CALL mp_bcast( noncolin,   ionode_id, intra_image_comm )
@@ -1482,58 +1249,52 @@ MODULE pw_restart
       CALL mp_bcast( nbnd,       ionode_id, intra_image_comm )
       CALL mp_bcast( kunit,      ionode_id, intra_image_comm )
       CALL mp_bcast( nproc_file, ionode_id, intra_image_comm )
-      CALL mp_bcast( nproc_pool_file, ionode_id, intra_image_comm )
-      CALL mp_bcast( nproc_image_file, ionode_id, intra_image_comm )
-      CALL mp_bcast( ntask_groups_file, ionode_id, intra_image_comm )
-      CALL mp_bcast( nproc_pot_file, ionode_id, intra_image_comm )
-      CALL mp_bcast( nproc_bgrp_file, ionode_id, intra_image_comm )
-      CALL mp_bcast( nproc_ortho_file, ionode_id, intra_image_comm )
+      CALL mp_bcast( nproc_pool_file,    ionode_id, intra_image_comm )
+      CALL mp_bcast( nproc_image_file,   ionode_id, intra_image_comm )
+      CALL mp_bcast( ntask_groups_file,  ionode_id, intra_image_comm )
+      CALL mp_bcast( nproc_pot_file,     ionode_id, intra_image_comm )
+      CALL mp_bcast( nproc_bgrp_file,    ionode_id, intra_image_comm )
+      CALL mp_bcast( nproc_ortho_file,   ionode_id, intra_image_comm )
       !
       RETURN
       !
     END SUBROUTINE read_dim
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_cell( dirname, ierr )
+    SUBROUTINE read_cell( ierr )
       !------------------------------------------------------------------------
       !
-      USE constants, ONLY : pi
-      USE run_info,  ONLY: title
-      USE cell_base, ONLY : ibrav, alat, at, bg, celldm
-      USE cell_base, ONLY : tpiba, tpiba2, omega
-      USE cellmd,    ONLY : lmovecell, cell_factor
-      USE control_flags, ONLY : do_makov_payne
-      USE martyna_tuckerman, ONLY: do_comp_mt
-      USE esm,           ONLY: do_comp_esm
+      USE run_info,          ONLY : title
+      USE cell_base,         ONLY : ibrav, alat, at, bg, celldm
+      USE cell_base,         ONLY : tpiba, tpiba2, omega
+      USE cellmd,            ONLY : lmovecell, cell_factor
+      USE control_flags,     ONLY : do_makov_payne
+      USE martyna_tuckerman, ONLY : do_comp_mt
+      USE esm,               ONLY : do_comp_esm
       
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
-      LOGICAL :: found
       CHARACTER(LEN=80) :: bravais_lattice, es_corr
       !
       !
       ierr = 0
       IF ( lcell_read ) RETURN
       !
-      IF ( ionode ) &
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
+      IF ( ionode ) THEN
+         !
+         CALL qexml_read_cell( BRAVAIS_LATTICE=bravais_lattice,CELLDM=celldm, ALAT=alat, &
+              A1=at(:,1), A2=at(:,2), A3=at(:,3), ES_CORR=es_corr, IERR=ierr )
+         !
+      END IF
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
       IF ( ierr > 0 ) RETURN
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "CELL" )
-         !
-         CALL iotk_scan_dat( iunpun, "NON-PERIODIC_CELL_CORRECTION", &
-                             es_corr, FOUND=found )
-         IF ( .NOT. found ) es_corr="None"
          SELECT CASE ( TRIM(es_corr))
          CASE ("Makov-Payne")
             do_makov_payne = .true.
@@ -1552,9 +1313,6 @@ MODULE pw_restart
             do_comp_mt     = .false.
             do_comp_esm    = .false.
          END SELECT
-         !
-         CALL iotk_scan_dat( iunpun, &
-                             "BRAVAIS_LATTICE", bravais_lattice )
          !
          SELECT CASE ( TRIM(bravais_lattice) )
          CASE( "free" )
@@ -1587,33 +1345,14 @@ MODULE pw_restart
             ibrav = 13
          CASE( "Triclinic P" )
             ibrav = 14
-         CASE( "Trigonal R (3-fold axis <111>)" )
-            ibrav = -5
-         CASE( "Orthorhombic base-centered(bco), alt. axes" )
-            ibrav = -9
-         CASE( "Monoclinic P, alt. axis (unique axis b)" )
-            ibrav = -12
          CASE DEFAULT
-            CALL infomsg('read_cell',&
-                 'Unexpected value for bravais_lattice string in XML, ' // &
-                 'setting ibrav=0')
             ibrav = 0
          END SELECT
-         !
-         CALL iotk_scan_dat( iunpun, "LATTICE_PARAMETER", alat )
          !
          ! ... some internal variables
          !
          tpiba  = 2.D0 * pi / alat
          tpiba2 = tpiba**2 
-         !
-         CALL iotk_scan_dat( iunpun, "CELL_DIMENSIONS", celldm )
-         !
-         CALL iotk_scan_begin( iunpun, "DIRECT_LATTICE_VECTORS" )
-         CALL iotk_scan_dat(   iunpun, "a1", at(:,1) )
-         CALL iotk_scan_dat(   iunpun, "a2", at(:,2) )
-         CALL iotk_scan_dat(   iunpun, "a3", at(:,3) )
-         CALL iotk_scan_end(   iunpun, "DIRECT_LATTICE_VECTORS" )
          !
          ! ... to alat units
          !
@@ -1625,17 +1364,13 @@ MODULE pw_restart
          !
          CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
          !
-         CALL iotk_scan_end( iunpun, "CELL" )
+         CALL qexml_read_moving_cell(lmovecell, cell_factor, ierr)
          !
-         CALL iotk_scan_begin( iunpun, "MOVING_CELL", found=lmovecell )
-         IF (lmovecell) THEN
-            CALL iotk_scan_dat( iunpun, "CELL_FACTOR", cell_factor)
-            CALL iotk_scan_end( iunpun, "MOVING_CELL"  )
-         END IF
-         !
-         CALL iotk_close_read( iunpun )
          !
       END IF
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      IF ( ierr > 0 ) RETURN
       !
       CALL mp_bcast( ibrav,     ionode_id, intra_image_comm )
       CALL mp_bcast( alat,      ionode_id, intra_image_comm )
@@ -1685,75 +1420,29 @@ MODULE pw_restart
       IF ( .NOT. lcell_read ) &
          CALL errore( 'read_ions', 'read cell first', 1 )
       !
-      IF ( ionode ) &
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
-      !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      IF ( ierr > 0 ) RETURN
-      !
       ! this is where PP files should be read from
       !
       pseudo_dir_cur = trimcheck ( dirname ) 
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "IONS" )
-         !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_ATOMS", nat )
-         !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_SPECIES", nsp )
-         !
-         DO i = 1, nsp
-            !
-            IF ( qexml_version_before_1_4_0 ) THEN
-               !
-               CALL iotk_scan_dat( iunpun, "ATOM_TYPE", atm(i) )
-               CALL iotk_scan_dat( iunpun, TRIM( atm(i) ) // "_MASS", amass(i) )
-               CALL iotk_scan_dat( iunpun, &
-                                   "PSEUDO_FOR_" // TRIM( atm(i) ), psfile(i) )
-               !
-            ELSE
-               !
-               ! current version
-               !
-               CALL iotk_scan_begin( iunpun, "SPECIE"//TRIM(iotk_index(i)) )
-               !
-               CALL iotk_scan_dat( iunpun, "ATOM_TYPE", atm(i) )
-               CALL iotk_scan_dat( iunpun, "MASS", amass(i) )
-               CALL iotk_scan_dat( iunpun, "PSEUDO", psfile(i) )
-               !
-               CALL iotk_scan_end( iunpun, "SPECIE"//TRIM(iotk_index(i)) )
-               !
-            ENDIF
-            !
-         ENDDO
-         !
-         ! this is the original location of PP files
-         !
-         CALL iotk_scan_dat( iunpun, "PSEUDO_DIR", pseudo_dir )
+         CALL qexml_read_ions( NSP=nsp, NAT=nat, ATM=atm, ITYP=ityp, &
+                               PSFILE=psfile, AMASS=amass, &
+                                TAU=tau, IF_POS=if_pos, IERR=ierr )
          !
       ENDIF
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      IF ( ierr > 0 ) RETURN
       !
       IF ( ionode ) THEN
          !
          DO i = 1, nat
             !
-            CALL iotk_scan_empty( iunpun, &
-                                  "ATOM" // TRIM( iotk_index(i) ), attr )
-            !
-            CALL iotk_scan_attr( attr, "INDEX",  ityp(i) )
-            CALL iotk_scan_attr( attr, "tau",    tau(:,i) )
-            CALL iotk_scan_attr( attr, "if_pos", if_pos(:,i) )
-            !
             tau(:,i) = tau(:,i) / alat
             !
          END DO
-         !
-         CALL iotk_scan_end( iunpun, "IONS" )
-         !
-         CALL iotk_close_read( iunpun )
          !
       END IF
       !
@@ -1774,7 +1463,7 @@ MODULE pw_restart
     END SUBROUTINE read_ions
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_symmetry( dirname, ierr )
+    SUBROUTINE read_symmetry( ierr )
       !------------------------------------------------------------------------
       !
       USE symm_base,       ONLY : nrot, nsym, invsym, s, ft,ftau, irt, t_rev, &
@@ -1785,10 +1474,10 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
+      CHARACTER(iotk_attlenx)  :: attr
       !
-      INTEGER  :: i, nat_
+      INTEGER  :: i
       LOGICAL  :: found
       !
       ierr = 0
@@ -1797,17 +1486,20 @@ MODULE pw_restart
       IF ( .NOT. lpw_read ) &
          CALL errore( 'read_symmetry', 'read planewaves first', 1 )
       !
-      IF ( ionode ) &
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
+      IF ( ionode ) THEN
+         !
+         CALL qexml_read_symmetry( NSYM=nsym, NROT=nrot, INVSYM=invsym, NOINV=noinv, &
+              TIME_REVERSAL=time_reversal, NO_T_REV=no_t_rev, &
+              TRASL=ft, S=s, SNAME=sname, T_REV=t_rev, &
+              IRT=irt, FOUND=found, IERR=ierr )
+         !
+      ENDIF
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
       IF ( ionode ) THEN
-         !
-         CALL iotk_scan_begin( iunpun, "SYMMETRIES", FOUND = found )
          !
          IF ( .NOT. found ) THEN
             !
@@ -1832,41 +1524,11 @@ MODULE pw_restart
             !
          ELSE
             !
-            CALL iotk_scan_dat( iunpun, "NUMBER_OF_SYMMETRIES", nsym )
-            CALL iotk_scan_dat( iunpun, "NUMBER_OF_BRAVAIS_SYMMETRIES", &
-                             nrot, FOUND = found )
-            IF (.NOT. found) nrot = nsym
-            !
-            CALL iotk_scan_dat( iunpun, "INVERSION_SYMMETRY", invsym )
-            CALL iotk_scan_dat( iunpun, "DO_NOT_USE_TIME_REVERSAL", &
-                             noinv, FOUND = found )
-            IF (.NOT. found) noinv = .FALSE.
-            CALL iotk_scan_dat( iunpun, "TIME_REVERSAL_FLAG", &
-                             time_reversal, FOUND = found )
-            IF (.NOT. found) time_reversal = .TRUE.
-            CALL iotk_scan_dat( iunpun, "NO_TIME_REV_OPERATIONS", &
-                             no_t_rev, FOUND = found )
-            IF (.NOT. found) no_t_rev = .FALSE.
-            !
-            CALL iotk_scan_dat( iunpun, "NUMBER_OF_ATOMS", nat_ )
-            !
             DO i = 1, nsym
-               !
-               CALL iotk_scan_begin( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
-               !
-               CALL iotk_scan_empty( iunpun, "INFO", ATTR = attr )
-               CALL iotk_scan_attr( attr, "NAME",  sname(i) )
-               CALL iotk_scan_attr( attr, "T_REV", t_rev(i) )
-               !
-               CALL iotk_scan_dat( iunpun, "ROTATION", s(:,:,i) )
-               CALL iotk_scan_dat( iunpun, "FRACTIONAL_TRANSLATION", ft(:,i) )
-               CALL iotk_scan_dat( iunpun, "EQUIVALENT_IONS", irt(i,1:nat_) )
                !
                ftau(1,i) = NINT( ft(1,i)*DBLE( dfftp%nr1 ) )
                ftau(2,i) = NINT( ft(2,i)*DBLE( dfftp%nr2 ) )
                ftau(3,i) = NINT( ft(3,i)*DBLE( dfftp%nr3 ) )
-               !
-               CALL iotk_scan_end( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
                !
             END DO
             !
@@ -1876,21 +1538,8 @@ MODULE pw_restart
             CALL inverse_s ()
             CALL s_axis_to_cart ()
             !
-            DO i = nsym+1, nrot
-               !
-               CALL iotk_scan_begin( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
-               CALL iotk_scan_empty( iunpun, "INFO", ATTR = attr )
-               CALL iotk_scan_attr( attr, "NAME",  sname(i) )
-               CALL iotk_scan_dat( iunpun, "ROTATION", s(:,:,i) )
-               CALL iotk_scan_end( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
-               !
-            END DO
-            !
-            CALL iotk_scan_end( iunpun, "SYMMETRIES" )
-            !
          END IF
          !
-         CALL iotk_close_read( iunpun )
          !
       END IF
       !
@@ -1899,7 +1548,7 @@ MODULE pw_restart
       CALL mp_bcast( invsym, ionode_id, intra_image_comm )
       CALL mp_bcast( noinv,  ionode_id, intra_image_comm )
       CALL mp_bcast( time_reversal,  ionode_id, intra_image_comm )
-      CALL mp_bcast( no_t_rev,  ionode_id, intra_image_comm )
+      CALL mp_bcast( no_t_rev,       ionode_id, intra_image_comm )
       CALL mp_bcast( s,      ionode_id, intra_image_comm )
       CALL mp_bcast( ftau,   ionode_id, intra_image_comm )
       CALL mp_bcast( ft,     ionode_id, intra_image_comm )
@@ -1916,56 +1565,35 @@ MODULE pw_restart
     END SUBROUTINE read_symmetry
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_efield( dirname, ierr )
+    SUBROUTINE read_efield( ierr )
       !----------------------------------------------------------------------
       !
       USE extfield, ONLY : tefield, dipfield, edir, emaxpos, eopreg, eamp
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       LOGICAL                       :: found
       !
       ierr = 0
       IF ( lefield_read ) RETURN
       !
-      IF ( ionode ) &
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
+      !
+      IF ( ionode ) THEN
+         !
+         CALL qexml_read_efield( TEFIELD=tefield, DIPFIELD=dipfield, EDIR=edir, &
+                                 EMAXPOS=emaxpos, EOPREG=eopreg, EAMP=eamp, &
+                                 FOUND=found, IERR=ierr )
+      ENDIF
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
-      IF ( ionode ) THEN
+      IF ( (ionode).AND.(.NOT.found) ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "ELECTRIC_FIELD", FOUND = found )
-         !
-         IF ( found ) THEN
-            !
-            CALL iotk_scan_dat( iunpun, "HAS_ELECTRIC_FIELD", tefield )
-            !
-            CALL iotk_scan_dat( iunpun, "HAS_DIPOLE_CORRECTION", dipfield )
-            !
-            CALL iotk_scan_dat( iunpun, "FIELD_DIRECTION", edir )
-            !
-            CALL iotk_scan_dat( iunpun, "MAXIMUM_POSITION", emaxpos )
-            !
-            CALL iotk_scan_dat( iunpun, "INVERSE_REGION", eopreg )
-            !
-            CALL iotk_scan_dat( iunpun, "FIELD_AMPLITUDE", eamp )
-            !
-            CALL iotk_scan_end( iunpun, "ELECTRIC_FIELD" )
-            !
-         ELSE
-            !
-            tefield  = .FALSE.
-            dipfield = .FALSE.
-            !
-         END IF
-         !
-         CALL iotk_close_read( iunpun )
+         tefield  = .FALSE.
+         dipfield = .FALSE.
          !
       END IF
       !
@@ -1983,7 +1611,7 @@ MODULE pw_restart
     END SUBROUTINE read_efield
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_planewaves( dirname, ierr )
+    SUBROUTINE read_planewaves( ierr )
       !------------------------------------------------------------------------
       !
       USE gvect,           ONLY : ngm_g, ecutrho
@@ -1995,7 +1623,6 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
       INTEGER  :: npwx_
@@ -2003,48 +1630,23 @@ MODULE pw_restart
       ierr = 0
       IF ( lpw_read ) RETURN
       !
-      IF ( ionode ) &
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
       !
+      IF ( ionode ) CALL qexml_read_planewaves( ECUTWFC=ecutwfc, ECUTRHO=ecutrho, NPWX=npwx_, &
+                                     GAMMA_ONLY=gamma_only, &
+                                     NR1 = dfftp%nr1, NR2 = dfftp%nr2, NR3 = dfftp%nr3, NGM=ngm_g, &
+                                     NR1S= dffts%nr1, NR2S= dffts%nr2, NR3S= dffts%nr3, &
+                                     NGMS=ngms_g, IERR=ierr )
+
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "PLANE_WAVES" )
-         !
-         CALL iotk_scan_dat( iunpun, "WFC_CUTOFF", ecutwfc )
-         !
-         CALL iotk_scan_dat( iunpun, "RHO_CUTOFF", ecutrho )
-         !
          ecutwfc = ecutwfc * e2
          ecutrho = ecutrho * e2
          !
          dual = ecutrho / ecutwfc
-         !
-         CALL iotk_scan_dat( iunpun, "MAX_NUMBER_OF_GK-VECTORS", npwx_ )
-         !
-         CALL iotk_scan_dat( iunpun, "GAMMA_ONLY", gamma_only )
-         !
-         CALL iotk_scan_empty( iunpun, "FFT_GRID", attr )
-         CALL iotk_scan_attr( attr, "nr1", dfftp%nr1 )
-         CALL iotk_scan_attr( attr, "nr2", dfftp%nr2 )
-         CALL iotk_scan_attr( attr, "nr3", dfftp%nr3 )
-         !
-         CALL iotk_scan_dat( iunpun, "GVECT_NUMBER", ngm_g )
-         !
-         CALL iotk_scan_empty( iunpun, "SMOOTH_FFT_GRID", attr )
-         CALL iotk_scan_attr( attr, "nr1s", dffts%nr1 )
-         CALL iotk_scan_attr( attr, "nr2s", dffts%nr2 )
-         CALL iotk_scan_attr( attr, "nr3s", dffts%nr3 )
-         !
-         CALL iotk_scan_dat( iunpun, "SMOOTH_GVECT_NUMBER", ngms_g )
-         !
-         CALL iotk_scan_end( iunpun, "PLANE_WAVES" )
-         !
-         CALL iotk_close_read( iunpun )
          !
       END IF
       !
@@ -2069,7 +1671,7 @@ MODULE pw_restart
     END SUBROUTINE read_planewaves  
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_spin( dirname, ierr )
+    SUBROUTINE read_spin( ierr )
       !------------------------------------------------------------------------
       !
       USE spin_orb,         ONLY : lspinorb, domag
@@ -2078,7 +1680,6 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
       LOGICAL :: found
@@ -2086,23 +1687,9 @@ MODULE pw_restart
       ierr = 0
       IF ( lspin_read ) RETURN
       !
-      IF ( ionode ) &
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
-      !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      IF ( ierr > 0 ) RETURN
-      !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "SPIN" )
-         !
-         CALL iotk_scan_dat( iunpun, "LSDA", lsda )
-         !
-         CALL iotk_scan_dat( iunpun, "NON-COLINEAR_CALCULATION", &
-              noncolin, FOUND = found )
-         IF ( .not. found ) noncolin = .FALSE.
+         CALL qexml_read_spin( lsda, noncolin, npol, lspinorb, domag, ierr )
          !
          IF ( lsda ) THEN
             !
@@ -2117,28 +1704,6 @@ MODULE pw_restart
             nspin = 1
             !
          END IF
-         !
-         IF ( noncolin ) THEN
-            !
-            CALL iotk_scan_dat( iunpun, "SPINOR_DIM", npol )
-            !
-         ELSE
-            !
-            npol = 1
-            !
-         END IF
-         !
-         CALL iotk_scan_dat( iunpun, "SPIN-ORBIT_CALCULATION", &
-              lspinorb, FOUND = found )
-         IF ( .NOT. found ) lspinorb = .FALSE.
-         !
-         CALL iotk_scan_dat( iunpun, "SPIN-ORBIT_DOMAG", domag, &
-               FOUND = found )
-         IF ( .NOT. found ) domag = .FALSE.
-         !
-         CALL iotk_scan_end( iunpun, "SPIN" )
-         !
-         CALL iotk_close_read( iunpun )
          !
       END IF
       !
@@ -2156,10 +1721,9 @@ MODULE pw_restart
     END SUBROUTINE read_spin
     !
     !--------------------------------------------------------------------------
-    SUBROUTINE read_magnetization( dirname, ierr )
+    SUBROUTINE read_magnetization( ierr )
       !------------------------------------------------------------------------
       !
-      USE constants,        ONLY : PI
       USE klist,            ONLY : two_fermi_energies, nelup, neldw
       USE ener,             ONLY : ef_up, ef_dw
       USE lsda_mod,         ONLY : starting_magnetization
@@ -2168,7 +1732,6 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
       LOGICAL :: found
@@ -2177,86 +1740,24 @@ MODULE pw_restart
       ierr = 0
       IF ( lstarting_mag_read ) RETURN
       !
-      IF ( ionode ) &
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
-      !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      IF ( ierr > 0 ) RETURN
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "MAGNETIZATION_INIT", FOUND = found )
+         CALL qexml_read_magnetization(STARTING_MAGNETIZATION=starting_magnetization, &
+              ANGLE1=angle1, ANGLE2=angle2, &
+              TWO_FERMI_ENERGIES=two_fermi_energies, I_CONS=i_cons, MCONS=mcons, &
+              BFIELD=bfield, EF_UP=ef_up, EF_DW=ef_dw, NELUP=nelup, NELDW=neldw, &
+              LAMBDA=lambda, FOUND=found, IERR= ierr)
          !
-         IF( found ) THEN
-            !
-            CALL iotk_scan_dat(iunpun,"CONSTRAINT_MAG", i_cons)
-
-            CALL iotk_scan_dat( iunpun, "NUMBER_OF_SPECIES", nsp )
-            !
-            DO i=1,nsp
-               !
-               CALL iotk_scan_begin( iunpun, "SPECIE"//TRIM(iotk_index(i)) )
-               !
-               CALL iotk_scan_dat( iunpun, "STARTING_MAGNETIZATION", &
-                         starting_magnetization(i) )
-               CALL iotk_scan_dat( iunpun, "ANGLE1", angle1(i) )
-               CALL iotk_scan_dat( iunpun, "ANGLE2", angle2(i) )
-               !
-               angle1(i)=angle1(i)*PI/180.d0
-               angle2(i)=angle2(i)*PI/180.d0
-               !
-               IF (i_cons==1.OR.i_cons==2) THEN
-                  !
-                  CALL iotk_scan_dat( iunpun, "CONSTRANT_1", mcons(1,i) )
-                  CALL iotk_scan_dat( iunpun, "CONSTRANT_2", mcons(2,i) )
-                  CALL iotk_scan_dat( iunpun, "CONSTRANT_3", mcons(3,i) )
-                  !
-               ENDIF
-               !
-               CALL iotk_scan_end( iunpun, "SPECIE"//TRIM(iotk_index(i)) )
-               !
-            ENDDO
-
-            IF (i_cons==3) THEN
-               !
-               CALL iotk_scan_dat( iunpun, "FIXED_MAGNETIZATION_1", mcons(1,1) )
-               CALL iotk_scan_dat( iunpun, "FIXED_MAGNETIZATION_2", mcons(2,1) )
-               CALL iotk_scan_dat( iunpun, "FIXED_MAGNETIZATION_3", mcons(3,1) )
-               !
-            ELSE IF (i_cons==4) THEN
-               ! 
-               CALL iotk_scan_dat( iunpun, "MAGNETIC_FIELD_1", bfield(1) )
-               CALL iotk_scan_dat( iunpun, "MAGNETIC_FIELD_2", bfield(2) )
-               CALL iotk_scan_dat( iunpun, "MAGNETIC_FIELD_3", bfield(3) )
-               !
-            ENDIF
-            !
-            CALL iotk_scan_dat(iunpun,"TWO_FERMI_ENERGIES", &
-                 two_fermi_energies, FOUND = found)
-            IF ( .not. found ) two_fermi_energies=.FALSE.
-            !
-            IF (two_fermi_energies) THEN
-                !
-                CALL iotk_scan_dat( iunpun, "FIXED_MAGNETIZATION", mcons(3,1) )
-                CALL iotk_scan_dat( iunpun, "ELECTRONS_UP", nelup )
-                CALL iotk_scan_dat( iunpun, "ELECTRONS_DOWN", neldw )
-                CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_UP", ef_up )
-                CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_DOWN", ef_dw )
-                !
-                ef_up = ef_up * e2 
-                ef_dw = ef_dw * e2 
-                !
-            ENDIF
-            !
-            IF (i_cons>0) CALL iotk_scan_dat(iunpun,"LAMBDA",lambda)
-            !
-            CALL iotk_scan_end( iunpun, "MAGNETIZATION_INIT" )
-            ! 
-         END IF
+         angle1(:)=angle1(:)*PI/180.d0
+         angle2(:)=angle2(:)*PI/180.d0
          !
-         CALL iotk_close_read( iunpun )
+         IF (two_fermi_energies) THEN
+            !
+            ef_up = ef_up * e2 
+            ef_dw = ef_dw * e2
+            !
+         ENDIF
          !
       END IF
       !
@@ -2286,25 +1787,23 @@ MODULE pw_restart
     END SUBROUTINE read_magnetization
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_xc( dirname, ierr )
+    SUBROUTINE read_xc( ierr )
       !------------------------------------------------------------------------
       !
       USE ions_base, ONLY : nsp
       USE funct,     ONLY : enforce_input_dft
-
-      USE ldaU,      ONLY : lda_plus_u, lda_plus_u_kind, U_projection, &
-                            Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_J, &
-                            Hubbard_alpha, Hubbard_J0, Hubbard_beta
+      USE ldaU,      ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, &
+                            Hubbard_l, Hubbard_U, Hubbard_J, Hubbard_alpha, &
+                            Hubbard_J0, Hubbard_beta, U_projection
       USE kernel_table, ONLY : vdw_table_name
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
       CHARACTER(LEN=20) :: dft_name
       INTEGER           :: nsp_, inlc
-      LOGICAL           :: found, nomsg = .true.
+      LOGICAL           :: nomsg = .true.
       !
       ierr = 0
       IF ( lxc_read ) RETURN
@@ -2312,65 +1811,12 @@ MODULE pw_restart
       IF ( .NOT. lions_read ) &
          CALL errore( 'read_xc', 'read ions first', 1 )
       !
-      IF ( ionode ) &
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
-      !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      IF ( ierr > 0 ) RETURN
-      !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "EXCHANGE_CORRELATION" )
-         !
-         CALL iotk_scan_dat( iunpun, "DFT", dft_name )
-         !
-         CALL iotk_scan_dat( iunpun, "LDA_PLUS_U_CALCULATION", lda_plus_u, &
-                             FOUND = found )
-         IF ( .NOT. found ) lda_plus_u = .FALSE.
-         !
-         IF ( lda_plus_u ) THEN
-            !
-            CALL iotk_scan_dat( iunpun, "NUMBER_OF_SPECIES", nsp_ )
-            CALL iotk_scan_dat( iunpun, "HUBBARD_LMAX", Hubbard_lmax )
-            CALL iotk_scan_dat( iunpun, "HUBBARD_L", Hubbard_l(1:nsp_) )
-            CALL iotk_scan_dat( iunpun, "HUBBARD_U", Hubbard_U(1:nsp_) )
-            CALL iotk_scan_dat( iunpun, "HUBBARD_ALPHA", Hubbard_alpha(1:nsp_) )
-            CALL iotk_scan_dat( iunpun, "U_PROJECTION_TYPE", U_projection, &
-                                FOUND = found )
-            IF ( .NOT. found ) U_projection='atomic' ! compatibility
-            !
-            CALL iotk_scan_dat( iunpun, "LDA_PLUS_U_KIND", lda_plus_u_kind, &
-                                FOUND = found )
-            IF ( .NOT. found ) THEN
-               lda_plus_u_kind = 0 ! compatibility
-            ELSE
-               CALL iotk_scan_dat( iunpun, "HUBBARD_J", Hubbard_J(1:3,1:nsp_) )
-               CALL iotk_scan_dat( iunpun, "HUBBARD_J0", Hubbard_J0(1:nsp_) )
-               CALL iotk_scan_dat( iunpun, "HUBBARD_BETA",Hubbard_beta(1:nsp_) )
-            END IF
-            !
-         END IF
-
-         !
-         ! Vdw DF 
-         !
-         CALL iotk_scan_dat( iunpun, "NON_LOCAL_DF", inlc, FOUND = found )
-         IF ( found ) THEN 
-            !
-            IF ( inlc == 1 .OR. inlc == 2 ) THEN
-               !
-               CALL iotk_scan_dat( iunpun, "VDW_KERNEL_NAME", vdw_table_name )
-               !
-            END IF
-         ELSE
-            inlc = 0
-         ENDIF
-         !
-         CALL iotk_scan_end( iunpun, "EXCHANGE_CORRELATION" )
-         !
-         CALL iotk_close_read( iunpun )
+         CALL qexml_read_xc( dft_name, lda_plus_u, lda_plus_u_kind, U_projection,&
+                             Hubbard_lmax, Hubbard_l, nsp_, Hubbard_U, Hubbard_J, &
+                             Hubbard_J0, Hubbard_alpha, Hubbard_beta, &
+                             inlc, vdw_table_name,  ierr )
          !
       END IF
       !
@@ -2383,7 +1829,6 @@ MODULE pw_restart
          CALL mp_bcast( lda_plus_u_kind, ionode_id, intra_image_comm )
          CALL mp_bcast( Hubbard_lmax,  ionode_id, intra_image_comm )
          CALL mp_bcast( Hubbard_l ,    ionode_id, intra_image_comm )
-         CALL mp_bcast( U_projection,  ionode_id, intra_image_comm )
          CALL mp_bcast( Hubbard_U,     ionode_id, intra_image_comm )
          CALL mp_bcast( Hubbard_J,     ionode_id, intra_image_comm )
          CALL mp_bcast( Hubbard_J0,    ionode_id, intra_image_comm )
@@ -2406,7 +1851,7 @@ MODULE pw_restart
     END SUBROUTINE read_xc
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_brillouin_zone( dirname, ierr )
+    SUBROUTINE read_brillouin_zone( ierr )
       !------------------------------------------------------------------------
       !
       USE lsda_mod, ONLY : lsda
@@ -2417,8 +1862,8 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
+      CHARACTER(iotk_attlenx)  :: attr
       !
       INTEGER :: i, ik, num_k_points
       LOGICAL :: found
@@ -2426,42 +1871,19 @@ MODULE pw_restart
       ierr = 0
       IF ( lbz_read ) RETURN
       !
-      IF ( ionode ) &
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
-      !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      IF ( ierr > 0 ) RETURN
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "BRILLOUIN_ZONE" )
-         !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_K-POINTS", num_k_points )
-        
+         ! xk_start and wk_start are ALLOCATABLE inside the function
+         CALL qexml_read_bz( NUM_K_POINTS=num_k_points, XK=xk, WK=wk, K1=k1, K2=k2, K3=k3, &
+              NK1=nk1, NK2=nk2, NK3=nk3, &
+              NKS_START=nks_start, XK_START=xk_start, WK_START=wk_start, QNORM=qnorm, IERR=ierr )
          !
          nkstot = num_k_points
          !
          IF ( lsda ) nkstot = num_k_points * 2
          !
-         CALL iotk_scan_empty( iunpun, "MONKHORST_PACK_GRID", attr )
-         CALL iotk_scan_attr( attr, "nk1", nk1 )
-         CALL iotk_scan_attr( attr, "nk2", nk2 )
-         CALL iotk_scan_attr( attr, "nk3", nk3 )   
-         CALL iotk_scan_empty( iunpun, "MONKHORST_PACK_OFFSET", attr )
-         CALL iotk_scan_attr( attr, "k1", k1 )
-         CALL iotk_scan_attr( attr, "k2", k2 )
-         CALL iotk_scan_attr( attr, "k3", k3 )   
-         !
          DO ik = 1, num_k_points
-            !
-            CALL iotk_scan_empty( iunpun, "K-POINT" // &
-                                & TRIM( iotk_index( ik ) ), attr )
-            !
-            CALL iotk_scan_attr( attr, "XYZ", xk(:,ik) )
-            !
-            CALL iotk_scan_attr( attr, "WEIGHT", wk(ik) )
             !
             IF ( lsda ) THEN
                !
@@ -2472,48 +1894,6 @@ MODULE pw_restart
             END IF
             !
          END DO
-         CALL iotk_scan_dat( iunpun, "STARTING_K-POINTS", nks_start, &
-                             FOUND = found )
-         IF (.NOT. found) nks_start=0
-         IF (nks_start > 0 ) THEN
-            IF (.NOT.ALLOCATED(xk_start)) ALLOCATE(xk_start(3,nks_start))
-            IF (.NOT.ALLOCATED(wk_start)) ALLOCATE(wk_start(nks_start))
-         END IF
-         DO ik = 1, nks_start
-            !
-            CALL iotk_scan_empty( iunpun, "K-POINT_START" // &
-                                & TRIM( iotk_index( ik ) ), attr )
-            !
-            CALL iotk_scan_attr( attr, "XYZ", xk_start(:,ik) )
-            !
-            CALL iotk_scan_attr( attr, "WEIGHT", wk_start(ik) )
-            !
-         END DO
-         !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_BRAVAIS_SYMMETRIES", &
-                             nrot, FOUND = found )
-         IF (.NOT. found) THEN
-            nrot=0
-         ELSE IF (nrot > 0 .AND. nrot < 49 ) THEN
-            DO i = 1, nrot
-               CALL iotk_scan_begin( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
-               !
-               CALL iotk_scan_empty( iunpun, "INFO", ATTR = attr )
-               CALL iotk_scan_attr( attr, "NAME",  sname(i) )
-               CALL iotk_scan_dat( iunpun, "ROTATION", s(:,:,i) )
-               CALL iotk_scan_end( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
-               !
-            END DO
-         ELSE
-            CALL errore ( 'read_brillouin zone', & 
-                'incorrect number of symmetries for lattice', nrot )
-         END IF
-         !
-         CALL iotk_scan_dat( iunpun, "NORM-OF-Q", qnorm, FOUND = found )
-         IF (.not. found) qnorm=0.0_DP
-
-         CALL iotk_scan_end( iunpun, "BRILLOUIN_ZONE" )
-         CALL iotk_close_read( iunpun )
          !
       END IF
       !
@@ -2548,7 +1928,7 @@ MODULE pw_restart
     END SUBROUTINE read_brillouin_zone
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_occupations( dirname, ierr )
+    SUBROUTINE read_occupations( ierr )
       !------------------------------------------------------------------------
       !
       USE lsda_mod,       ONLY : lsda, nspin
@@ -2560,8 +1940,8 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
+      CHARACTER(iotk_attlenx)  :: attr
       !
       INTEGER :: i
       LOGICAL :: found
@@ -2569,9 +1949,26 @@ MODULE pw_restart
       ierr = 0
       IF ( locc_read ) RETURN
       !
-      IF ( ionode ) &
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
+      IF ( ionode ) THEN
+         !
+         ! necessary to don't send nbnd and nspin as input in read_occ
+         IF ( .NOT. ALLOCATED( f_inp ) ) THEN
+            !
+            IF ( nspin == 4 ) THEN
+               ALLOCATE( f_inp( nbnd, 1 ) )
+            ELSE
+               ALLOCATE( f_inp( nbnd, nspin ) )
+            ENDIF
+            !
+         ENDIF
+         !
+         f_inp( :, :) = 0.0d0
+         !
+         CALL qexml_read_occ( LGAUSS=lgauss, NGAUSS=ngauss, DEGAUSS=degauss, &
+                               LTETRA=ltetra, NTETRA=ntetra, TETRA=tetra, TFIXED_OCC=tfixed_occ, &
+                               NSTATES_UP=nupdwn(1), NSTATES_DW=nupdwn(2), INPUT_OCC=f_inp, IERR=ierr )
+         !
+      ENDIF
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
@@ -2579,15 +1976,8 @@ MODULE pw_restart
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "OCCUPATIONS" )
-         !
-         CALL iotk_scan_dat( iunpun, "SMEARING_METHOD", lgauss, &
-              FOUND = found )
-         IF ( .NOT. found ) lgauss = .FALSE.
-         !
          IF ( lgauss ) THEN
             !
-            CALL iotk_scan_dat( iunpun, "SMEARING_TYPE", ngauss )
             SELECT CASE (ngauss )
             CASE (0)
                smearing = 'gaussian'
@@ -2598,11 +1988,9 @@ MODULE pw_restart
             CASE (-99)
                smearing = 'Fermi-Dirac'
             CASE DEFAULT
-                 CALL errore('read_occupations',&
-                              'wrong smearing index', abs(1000+ngauss) )
+               CALL errore('read_occupations',&
+                    'wrong smearing index', abs(1000+ngauss) )
             END SELECT
-            !
-            CALL iotk_scan_dat( iunpun, "SMEARING_PARAMETER", degauss )
             !
             degauss = degauss * e2
             !
@@ -2613,80 +2001,18 @@ MODULE pw_restart
             !
          END IF
          !
-         CALL iotk_scan_dat( iunpun, "TETRAHEDRON_METHOD", ltetra, &
-              FOUND = found )
-         IF ( .NOT. found ) ltetra = .FALSE.
-         !
-         IF ( ltetra ) THEN
-            !
-            CALL iotk_scan_dat( iunpun, "NUMBER_OF_TETRAHEDRA", ntetra )
-            !
-            DO i = 1, ntetra
-               !
-               CALL iotk_scan_dat( iunpun, "TETRAHEDRON" // &
-                                 & iotk_index( i ), tetra(1:4,i) )
-               !
-            END DO
-            !
-         ELSE
+         IF ( .NOT. ltetra ) THEN
             !
             ntetra = 0
             !
          END IF
          !
-         CALL iotk_scan_dat( iunpun, "FIXED_OCCUPATIONS", tfixed_occ, &
-              FOUND = found )
-         IF ( .NOT. found ) tfixed_occ = .FALSE.
+         IF ( .NOT. tfixed_occ ) THEN
+            !
+            DEALLOCATE( f_inp )
+            !
+         ENDIF
          !
-         IF ( tfixed_occ ) THEN
-            !
-            CALL iotk_scan_empty( iunpun, "INFO", ATTR=attr, FOUND=found )
-            !
-            IF ( .NOT. found ) THEN
-               !
-               nupdwn(1:2) = nbnd
-               !
-            ELSE
-               !
-               IF ( qexml_version_before_1_4_0 ) THEN
-                  !
-                  CALL iotk_scan_attr( attr, "nelup", nupdwn(1) )
-                  CALL iotk_scan_attr( attr, "neldw", nupdwn(2) )
-                  !
-               ELSE
-                  !
-                  ! current version
-                  !
-                  CALL iotk_scan_attr( attr, "nstates_up", nupdwn(1) )
-                  CALL iotk_scan_attr( attr, "nstates_down", nupdwn(2) )
-                  !
-               ENDIF
-               !
-            ENDIF
-            !
-            IF ( .NOT. ALLOCATED( f_inp ) ) THEN
-               !
-               IF ( nspin == 4 ) THEN
-                  ALLOCATE( f_inp( nbnd, 1 ) )
-               ELSE
-                  ALLOCATE( f_inp( nbnd, nspin ) )
-               ENDIF
-               !
-            ENDIF
-            !
-            f_inp( :, :) = 0.0d0
-            !
-            CALL iotk_scan_dat( iunpun, "INPUT_OCC_UP", f_inp(1:nupdwn(1),1) )
-            !
-            IF ( lsda ) THEN
-               CALL iotk_scan_dat( iunpun, "INPUT_OCC_DOWN", f_inp(1:nupdwn(2),2) )
-            ENDIF
-            !
-         END IF
-         !
-         CALL iotk_scan_end( iunpun, "OCCUPATIONS" )
-         !
-         CALL iotk_close_read( iunpun )
          !
       END IF
       !
@@ -2753,6 +2079,7 @@ MODULE pw_restart
       !
       INTEGER :: ik, ik_eff, num_k_points
       LOGICAL :: found, two_fermi_energies_
+      CHARACTER(LEN=256) :: filename
       !
       ierr = 0
       IF ( lbs_read ) RETURN
@@ -2762,61 +2089,27 @@ MODULE pw_restart
       IF ( .NOT. lbz_read ) &
          CALL errore( 'read_band_structure', 'read band_structure first', 1 )
       !
-      IF ( ionode ) &
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
+      !
+      IF ( ionode ) THEN
+         ! we don't need to read nspin, noncolin
+         CALL qexml_read_bands_info( NBND=nbnd, NUM_K_POINTS=num_k_points, NATOMWFC=natomwfc, &
+                                     NELEC=nelec, EF=ef, TWO_FERMI_ENERGIES=two_fermi_energies_, &
+                                     EF_UP=ef_up, EF_DW=ef_dw, IERR=ierr )
+         !
+      ENDIF
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
-      IF (.NOT.lkpoint_dir) THEN
-         !
-         IF ( ionode ) &
-            CALL iotk_open_read( iunout, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun )//'.eig', IERR = ierr )
-         !
-         CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-         !
-         IF ( ierr > 0 ) RETURN
-         !
-      END IF
-      !
       IF ( ionode ) THEN
-         !
-         CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE_INFO" )
-         !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_ELECTRONS", nelec )
-         !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_ATOMIC_WFC", natomwfc, &
-              FOUND = found )
-         IF ( .NOT. found ) natomwfc = 0
-         !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_BANDS", nbnd )
-         !
-         CALL iotk_scan_dat( iunpun, "FERMI_ENERGY", ef, FOUND = found )
-         !
-         IF ( found ) THEN
+         IF ( .NOT. two_fermi_energies_) THEN
             ef = ef * e2
          ELSE
             ef = 0.d0
+            ef_up = ef_up * e2
+            ef_dw = ef_dw * e2
          END IF
-         !
-         CALL iotk_scan_dat( iunpun, "TWO_FERMI_ENERGIES", &
-                 two_fermi_energies_, FOUND = found)
-         IF ( .not. found ) two_fermi_energies_=.FALSE.
-         !
-         IF ( two_fermi_energies_ ) THEN
-             !
-             CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_UP", ef_up )
-             CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_DOWN", ef_dw )
-             !
-             ef_up = ef_up * e2
-             ef_dw = ef_dw * e2
-             !
-         ENDIF
-         !
-         CALL iotk_scan_end( iunpun, "BAND_STRUCTURE_INFO" )
          !
       END IF
       !
@@ -2826,94 +2119,19 @@ MODULE pw_restart
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "EIGENVALUES" )
+         IF (.NOT.lkpoint_dir) filename = TRIM( dirname ) // '/' // TRIM( xmlpun )//'.eig'
          !
-         k_points_loop: DO ik = 1, num_k_points
-            !
-            CALL iotk_scan_begin( iunpun, &
-                                  "K-POINT" // TRIM( iotk_index( ik ) ) )
-            !
-            IF ( lsda ) THEN
-               !
-               isk(ik) = 1
-               !
-               IF (lkpoint_dir) THEN
-                  CALL iotk_scan_begin(iunpun, "DATAFILE"//TRIM(iotk_index(1)) &
-                                             , FOUND = found)
-                  IF (.NOT. found ) GO TO 10 ! workaround: PW-CP compatibility
-                  CALL iotk_scan_dat  ( iunpun, "EIGENVALUES", et(:,ik)  )
-                  CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", wg(:,ik) )
-                  CALL iotk_scan_end(iunpun, "DATAFILE"//TRIM(iotk_index(1)) )
-               ELSE
-                  CALL iotk_scan_begin( iunout, &
-                  "DATA_EIG"//TRIM( iotk_index(ik) )//"_SPIN_UP", FOUND=found )
-                  IF (.NOT. found ) GO TO 10 ! workaround: PW-CP compatibility
-                  CALL iotk_scan_dat  ( iunout, "EIGENVALUES", et(:,ik)  )
-                  CALL iotk_scan_dat  ( iunout, "OCCUPATIONS", wg(:,ik) )
-                  CALL iotk_scan_end( iunout, &
-                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_UP")
-               ENDIF
-               !
-  10           CONTINUE
-               ik_eff = ik + num_k_points
-               isk(ik_eff) = 2
-               !
-               IF (lkpoint_dir) THEN
-                  CALL iotk_scan_begin(iunpun,"DATAFILE"//TRIM(iotk_index(2)) &
-                                             , FOUND = found)
-                  IF (.NOT. found ) GO TO 20 ! workaround: PW-CP compatibility
-                  CALL iotk_scan_dat  ( iunpun, "EIGENVALUES", et(:,ik_eff) )
-                  CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", wg(:,ik_eff) )
-                  CALL iotk_scan_end( iunpun, "DATAFILE"//TRIM(iotk_index(2)) )
-               ELSE
-                  CALL iotk_scan_begin( iunout, &
-                  "DATA_EIG"//TRIM( iotk_index(ik) )//"_SPIN_DW", FOUND=found )
-                  IF (.NOT. found ) GO TO 20 ! workaround: PW-CP compatibility
-                  CALL iotk_scan_dat  ( iunout, "EIGENVALUES", et(:,ik_eff) )
-                  CALL iotk_scan_dat  ( iunout, "OCCUPATIONS", wg(:,ik_eff) )
-                  CALL iotk_scan_end( iunout, &
-                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_DW")
-               ENDIF
-  20           CONTINUE
-               !
-            ELSE
-               !
-               isk(ik) = 1
-               !
-               IF (lkpoint_dir) THEN
-                  CALL iotk_scan_begin( iunpun, "DATAFILE" , FOUND = found)
-                  IF (.NOT. found ) GO TO 15 ! workaround: PW-CP compatibility
-                  CALL iotk_scan_dat  ( iunpun, "EIGENVALUES", et(:,ik) )
-                  CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", wg(:,ik) )
-                  CALL iotk_scan_end  ( iunpun, "DATAFILE" )
-               ELSE
-                  CALL iotk_scan_begin( iunout, &
-                  "DATA_EIG"//TRIM( iotk_index(ik) ), FOUND = found )
-                  IF (.NOT. found ) GO TO 15 ! workaround: PW-CP compatibility
-                  CALL iotk_scan_dat  ( iunout, "EIGENVALUES", et(:,ik) )
-                  CALL iotk_scan_dat  ( iunout, "OCCUPATIONS", wg(:,ik) )
-                  CALL iotk_scan_end( iunout, &
-                             "DATA_EIG"//TRIM( iotk_index( ik ) ))
-               ENDIF
-  15           CONTINUE
-               !
-            END IF
-            !
-            CALL iotk_scan_end( iunpun, "K-POINT" // TRIM( iotk_index( ik ) ) )
-            !
-         END DO k_points_loop
+         CALL qexml_read_bands_pw( num_k_points, nbnd, nkstot, lsda, lkpoint_dir, filename , ISK=isk, ET=et, WG=wg , IERR=ierr)
          !
          et(:,:) = et(:,:) * e2
          !
          FORALL( ik = 1:nkstot ) wg(:,ik) = wg(:,ik)*wk(ik)
          !
-         CALL iotk_scan_end( iunpun, "EIGENVALUES" )
-         !
-         CALL iotk_close_read( iunpun )
-         !
-         IF (.NOT.lkpoint_dir) CALL iotk_close_read( iunout )
-         !
       END IF
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      IF ( ierr > 0 ) RETURN
       !
       CALL mp_bcast( nelec,    ionode_id, intra_image_comm )
       CALL mp_bcast( natomwfc, ionode_id, intra_image_comm )
@@ -2933,9 +2151,8 @@ MODULE pw_restart
     SUBROUTINE read_wavefunctions( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      ! ... This routines reads wavefunctions from "collected" file format,
-      ! ... rewriting them to file or buffer "iunwfc", in "distributed" format
-      ! ... FIXME: re-writing wasteful for a single k-point
+      ! ... This routines reads wavefunctions from the new file format and
+      ! ... writes them into the old format
       !
       USE control_flags,        ONLY : twfcollect, lkpoint_dir
       USE cell_base,            ONLY : tpiba2
@@ -2967,7 +2184,12 @@ MODULE pw_restart
       INTEGER, ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:)
       LOGICAL              :: opnd
       REAL(DP)             :: scalef
+
       !
+      ! The ierr output var is actually not given any value
+      ! except this initialization
+      !
+      ierr = 0
       !
       IF ( iunwfc > 0 ) THEN
          !
@@ -2979,14 +2201,16 @@ MODULE pw_restart
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
+         !CALL iotk_open_read( iunpun+1, FILE = TRIM( dirname ) // '/' // &
+         !                   & TRIM( xmlpun ), IERR = ierr )
          !
+         !PRINT*,TRIM( dirname ) // '/' // &
+         !                   & TRIM( xmlpun )
       END IF
       !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
-      IF ( ierr > 0 ) RETURN
+      !IF ( ierr > 0 ) RETURN
       !
       IF ( nkstot > 0 ) THEN
          !
@@ -3061,7 +2285,6 @@ MODULE pw_restart
       !
       CALL mp_sum( ngk_g, inter_pool_comm )
       CALL mp_sum( ngk_g, intra_pool_comm )
-      !
       ngk_g = ngk_g / nbgrp
       !
       ! ... compute the Maximum G vector index among all G+k an processors
@@ -3145,16 +2368,15 @@ MODULE pw_restart
             !
             IF ( ionode ) THEN
                !
-               filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin, &
+               filename = TRIM( qexml_wfc_filename( dirname, 'evc', ik, ispin, &
                                   DIR=lkpoint_dir ) )
                !
             END IF
             !
             CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
-                           ngk(ik-iks+1), filename, scalef, ionode,      &
-                           root_pool, intra_pool_comm, inter_pool_comm,  &
-                           intra_image_comm )
+                           ngk(ik-iks+1), filename, scalef, &
+                           ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
             !
             IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                !
@@ -3171,16 +2393,15 @@ MODULE pw_restart
             !
             IF ( ionode ) THEN
                !
-               filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin, &
+               filename = TRIM( qexml_wfc_filename( dirname, 'evc', ik, ispin, &
                                 DIR=lkpoint_dir ) )
                !
             END IF
             !
             CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:,ik_eff-iks+1),   &
-                           ngk(ik_eff-iks+1), filename, scalef, ionode,      &
-                           root_pool, intra_pool_comm, inter_pool_comm,      &
-                           intra_image_comm )
+                           ngk(ik_eff-iks+1), filename, scalef, &
+                           ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
             !
             IF ( ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
                !
@@ -3200,7 +2421,7 @@ MODULE pw_restart
                   !
                   IF ( ionode ) THEN
                      !
-                     filename = TRIM( wfc_filename( dirname, 'evc', ik, ipol, &
+                     filename = TRIM( qexml_wfc_filename( dirname, 'evc', ik, ipol, &
                                          DIR=lkpoint_dir ) )
                      !
                   END IF
@@ -3220,16 +2441,15 @@ MODULE pw_restart
                !
                IF ( ionode ) THEN
                   !
-                  filename = TRIM( wfc_filename( dirname, 'evc', ik, &
+                  filename = TRIM( qexml_wfc_filename( dirname, 'evc', ik, &
                                          DIR=lkpoint_dir ) )
                   !
                END IF
                !
                CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,         &
                               evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),      &
-                              ngk(ik-iks+1), filename, scalef, ionode,         &
-                              root_pool, intra_pool_comm, inter_pool_comm,     &
-                              intra_image_comm )
+                              ngk(ik-iks+1), filename, scalef, &
+                              ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
                !
             END IF
             !
@@ -3260,7 +2480,7 @@ MODULE pw_restart
          !
          CALL iotk_scan_end( iunpun, "EIGENVECTORS" )
          !
-         CALL iotk_close_read( iunpun )
+         !CALL iotk_close_read( iunpun )
          !
       END IF
       !
@@ -3269,7 +2489,7 @@ MODULE pw_restart
     END SUBROUTINE read_wavefunctions
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_ef( dirname, ierr )
+    SUBROUTINE read_ef( ierr )
       !------------------------------------------------------------------------
       !
       ! ... this routine reads only the Fermi energy
@@ -3278,16 +2498,16 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      !CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
-      LOGICAL :: found
+      LOGICAL :: found, two_fermi_energies
       !
+      ! ... then selected tags are read from the other sections
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
+         CALL qexml_read_bands_info( EF = ef , TWO_FERMI_ENERGIES=two_fermi_energies, IERR=ierr )
          !
       END IF
       !
@@ -3295,13 +2515,9 @@ MODULE pw_restart
       !
       IF ( ierr > 0 ) RETURN
       !
-      ! ... then selected tags are read from the other sections
-      !
-      IF ( ionode ) THEN
+      IF (ionode) THEN
          !
-         CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE_INFO" )
-         !
-         CALL iotk_scan_dat( iunpun, "FERMI_ENERGY", ef, FOUND = found )
+         found = .NOT. two_fermi_energies
          !
          IF (found) THEN
             ef = ef * e2
@@ -3309,69 +2525,43 @@ MODULE pw_restart
             ef = 0.d0
          END IF
          !
-         CALL iotk_scan_end( iunpun, "BAND_STRUCTURE_INFO" )
       END IF
       !
       CALL mp_bcast( ef, ionode_id, intra_image_comm )
-      !
-      IF ( ionode ) CALL iotk_close_read( iunpun )
       !
       RETURN
       !
     END SUBROUTINE read_ef
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_exx( dirname, ierr )
+    SUBROUTINE read_exx( ierr )
       !------------------------------------------------------------------------
       !
       ! ... read EXX variables
       !
       USE funct,                ONLY : set_exx_fraction, set_screening_parameter, &
-                                       !gau-pbe in
-                                       set_gau_parameter, &
-                                       !gau-pbe out
-                                       enforce_input_dft, start_exx
+                                       set_gau_parameter, enforce_input_dft, start_exx
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
-      REAL(DP) :: exx_fraction, screening_parameter
-      !gau-pbe in
-      REAL(DP) :: gau_parameter
-      !gau-pbe out
+      REAL(DP) :: exx_fraction, screening_parameter, gau_parameter
       LOGICAL :: exx_is_active, found
       !
       IF ( ionode ) THEN
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
-      END IF
+         CALL qexml_read_exx( X_GAMMA_EXTRAPOLATION=x_gamma_extrapolation, &
+              NQX1=nq1, NQX2=nq2, NQX3=nq3, EXXDIV_TREATMENT=exxdiv_treatment, &
+              YUKAWA = yukawa, ECUTVCUT=ecutvcut, EXX_FRACTION=exx_fraction, &
+              SCREENING_PARAMETER=screening_parameter, GAU_PARAMETER=gau_parameter, &
+              EXX_IS_ACTIVE=exx_is_active, FOUND=found, IERR=ierr )
+         !
+      ENDIF
+      !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       IF ( ierr > 0 ) RETURN
-      IF ( ionode ) THEN
-         CALL iotk_scan_begin( iunpun, "EXACT_EXCHANGE", FOUND = found )
-      END IF
+      !
       CALL mp_bcast( found, ionode_id, intra_image_comm )
-      IF ( ionode ) THEN
-         IF ( found ) THEN
-            CALL iotk_scan_dat(iunpun, "x_gamma_extrapolation", x_gamma_extrapolation)
-            CALL iotk_scan_dat(iunpun, "nqx1", nq1)
-            CALL iotk_scan_dat(iunpun, "nqx2", nq2)
-            CALL iotk_scan_dat(iunpun, "nqx3", nq3)
-            CALL iotk_scan_dat(iunpun, "exxdiv_treatment", exxdiv_treatment)
-            CALL iotk_scan_dat(iunpun, "yukawa", yukawa)
-            CALL iotk_scan_dat(iunpun, "ecutvcut", ecutvcut)
-            CALL iotk_scan_dat(iunpun, "exx_fraction", exx_fraction)
-            CALL iotk_scan_dat(iunpun, "screening_parameter", screening_parameter)
-            !gau-pbe in
-            CALL iotk_scan_dat(iunpun, "gau_parameter", gau_parameter)
-            !gau-pbe out
-            CALL iotk_scan_dat(iunpun, "exx_is_active", exx_is_active)
-            CALL iotk_scan_end( iunpun, "EXACT_EXCHANGE" )
-         END IF
-         CALL iotk_close_read( iunpun )
-      END IF
       !
       IF ( .NOT. found ) RETURN
       !
@@ -3384,16 +2574,12 @@ MODULE pw_restart
       CALL mp_bcast( ecutvcut, ionode_id, intra_image_comm )
       CALL mp_bcast( exx_fraction, ionode_id, intra_image_comm )
       CALL mp_bcast( screening_parameter, ionode_id, intra_image_comm )
-      !gau-pbe in
       CALL mp_bcast( gau_parameter, ionode_id, intra_image_comm )
-      !gau-pbe out
       CALL mp_bcast( exx_is_active, ionode_id, intra_image_comm )
       !
       CALL set_exx_fraction(exx_fraction)
       CALL set_screening_parameter(screening_parameter)
-      !gau-pbe in
-      call set_gau_parameter(gau_parameter)
-      !gau-pbe out
+      CALL set_gau_parameter(gau_parameter)
       IF (exx_is_active) CALL start_exx( ) 
       !
       RETURN

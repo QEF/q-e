@@ -10,7 +10,7 @@
 !
 MODULE xml_input
 
-   USE xml_io_base
+   USE xml_io_base, ONLY : attr
    USE iotk_module
    USE kinds
 

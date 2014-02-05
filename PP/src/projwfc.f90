@@ -99,23 +99,24 @@ PROGRAM do_projwfc
   !
   ! ... Broadcast variables
   !
-  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
-  CALL mp_bcast( prefix,  ionode_id, world_comm )
-  CALL mp_bcast( filproj,  ionode_id, world_comm )
-  CALL mp_bcast( ngauss1, ionode_id, world_comm )
-  CALL mp_bcast( degauss1,ionode_id, world_comm )
-  CALL mp_bcast( DeltaE,  ionode_id, world_comm )
-  CALL mp_bcast( lsym,  ionode_id, world_comm )
-  CALL mp_bcast( Emin, ionode_id, world_comm )
-  CALL mp_bcast( Emax, ionode_id, world_comm )
+  CALL mp_bcast( tmp_dir,   ionode_id, world_comm )
+  CALL mp_bcast( prefix,    ionode_id, world_comm )
+  CALL mp_bcast( filproj,   ionode_id, world_comm )
+  CALL mp_bcast( ngauss1,   ionode_id, world_comm )
+  CALL mp_bcast( degauss1,  ionode_id, world_comm )
+  CALL mp_bcast( DeltaE,    ionode_id, world_comm )
+  CALL mp_bcast( lsym,      ionode_id, world_comm )
+  CALL mp_bcast( Emin,      ionode_id, world_comm )
+  CALL mp_bcast( Emax,      ionode_id, world_comm )
   CALL mp_bcast( lwrite_overlaps, ionode_id, world_comm )
-  CALL mp_bcast( lbinary_data, ionode_id, world_comm )
-  CALL mp_bcast( lgww, ionode_id, world_comm )
+  CALL mp_bcast( lbinary_data,    ionode_id, world_comm )
+  CALL mp_bcast( lgww,      ionode_id, world_comm )
   ! for projection on boxes
-  CALL mp_bcast( tdosinboxes, ionode_id, world_comm )
-  CALL mp_bcast( n_proj_boxes, ionode_id, world_comm )
-  CALL mp_bcast( irmin, ionode_id, world_comm )
-  CALL mp_bcast( irmax, ionode_id, world_comm )
+  CALL mp_bcast( tdosinboxes,     ionode_id, world_comm )
+  CALL mp_bcast( n_proj_boxes,    ionode_id, world_comm )
+  CALL mp_bcast( irmin,     ionode_id, world_comm )
+  CALL mp_bcast( irmax,     ionode_id, world_comm )
+
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
