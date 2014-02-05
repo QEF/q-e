@@ -41,6 +41,7 @@ SUBROUTINE forces()
                             iverbosity, llondon, lxdm, ts_vdw
 #ifdef __ENVIRON
   USE environ_base,  ONLY : do_environ, env_static_permittivity, rhopol
+  USE environ_base,  ONLY : env_extcharge_n, rhoexternal
   USE fft_interfaces,  ONLY : fwfft
 #endif
   USE bp,            ONLY : lelfield, gdir, l3dstring, efield_cart, &
@@ -65,7 +66,7 @@ SUBROUTINE forces()
                            forceh(:,:)
     ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
 #ifdef __ENVIRON
-  REAL(DP), ALLOCATABLE :: force_environ(:,:)
+  REAL(DP), ALLOCATABLE :: force_environ(:,:), force_external(:,:)
   COMPLEX(DP), ALLOCATABLE :: aux(:)
 #endif
 
@@ -165,6 +166,18 @@ SUBROUTINE forces()
     CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
                    g, rhopol, nl, 1, gstart, gamma_only, vloc, &
                    force_environ )
+    ! 
+    ! ... Computes here the external charges contribution
+    !
+    IF ( env_extcharge_n .GT. 0 ) THEN 
+      ALLOCATE( force_external ( 3, nat ) )
+      force_external = 0.0_DP
+      CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
+                   g, rhoexternal, nl, 1, gstart, gamma_only, vloc, &
+                   force_external )
+      force_environ = force_environ + force_external
+      DEALLOCATE( force_external )
+    ENDIF
     !
     ! ... Add the other environment contributions
     !
@@ -217,8 +230,6 @@ SUBROUTINE forces()
         IF ( tefield ) force(ipol,na) = force(ipol,na) + forcefield(ipol,na)
         IF (lelfield)  force(ipol,na) = force(ipol,na) + forces_bp_efield(ipol,na)
         IF (do_comp_mt)force(ipol,na) = force(ipol,na) + force_mt(ipol,na) 
-! DCC
-!        IF (do_comp) force(ipol,na) = force(ipol,na) + force_vcorr(ipol,na)
 #ifdef __ENVIRON
         IF (do_environ) force(ipol,na) = force(ipol,na) + force_environ(ipol,na)
 #endif
