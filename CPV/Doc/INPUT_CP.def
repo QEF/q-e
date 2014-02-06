@@ -1067,8 +1067,9 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                                as in tolp = 'old_time_step_value' in au
                'random'      : start the simulation with random atomic velocities
                'from_input'  : restart the simulation with atomic velocities read
-                               from standard input
-                               ( see the card 'ATOMIC_VELOCITIES' )
+                               from standard input - see card 'ATOMIC_VELOCITIES'
+                               BEWARE: works only if restart_mode='from_scratch',
+                               tested only with electrons_dynamics='cg'
                'zero'        : restart the simulation with atomic velocities set
                                to zero
             }

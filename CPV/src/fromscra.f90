@@ -9,13 +9,13 @@
 SUBROUTINE from_scratch( )
     !
     USE kinds,                ONLY : DP
-    USE control_flags,        ONLY : tranp, trane, iverbosity, tpre, tcarpar,  &
+    USE control_flags,        ONLY : tranp, trane, iverbosity, tpre, tv0rd, &
                                      tzeroc, tzerop, tzeroe, tfor, thdyn, &
                                      lwf, tprnfor, tortho, amprp, ampre,  &
                                      tsde, ortho_eps, ortho_max, &
                                      force_pairing
-    USE ions_positions,       ONLY : taus, tau0, tausm, vels, fion, fionm
-    USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel
+    USE ions_positions,       ONLY : taus, tau0, tausm, vels, velsm, fion, fionm
+    USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel, vel_srt
     USE ions_base,            ONLY : cdmi, nat, iforce
     USE ions_nose,            ONLY : xnhp0, xnhpm, vnhp
     USE cell_base,            ONLY : ainv, h, s_to_r, ibrav, omega, press, &
@@ -140,11 +140,25 @@ SUBROUTINE from_scratch( )
     !
     CALL occn_info( f )
     !
-    vels = 0.D0
     hold = h
     velh = 0.0d0
     fion = 0.0d0
-    tausm = taus
+    !
+    IF ( tv0rd .AND. tfor ) THEN
+       !
+       ! ... vel_srt=starting velocities, read from input, are brough to
+       ! ... scaled axis and copied into array vels. Since velocites are
+       ! ... not actually used by the Verlet algorithm, we set tau(t-dt)
+       ! ... to tausm=tau(t)-v*delta t so that the Verlet algorithm will 
+       ! ... start with the correct velocity
+       !
+       CALL r_to_s( vel_srt, vels, na, nsp, ainv )
+       tausm(:,:) =  taus(:,:) - vels(:,:)*delt
+       velsm(:,:) =  vels(:,:)
+    ELSE
+       vels = 0.D0
+       tausm = taus
+    END IF
     !
     ! ... compute local form factors
     !
