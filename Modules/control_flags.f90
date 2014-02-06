@@ -35,7 +35,7 @@ MODULE control_flags
   PUBLIC :: tbeg, nomore, nbeg, isave, iprint, tv0rd, nv0rd, tzeroc, tzerop, &
             tfor, tpre, tzeroe, tsde, tsdp, tsdc, taurdr,                    &
             ndr, ndw, tortho, ortho_eps, ortho_max, tstress, tprnfor,        &
-            timing, memchk, tprnsfac, tcarpar,                               &
+            timing, memchk, tprnsfac,                                        &
             trane,dt_old,ampre, tranp, amprp, tdipole, t_diis, t_diis_simple,&
             t_diis_rot, tnosee, tnosep, tnoseh, tcp, tcap, tdamp, tdampions, &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
@@ -74,7 +74,6 @@ MODULE control_flags
   LOGICAL :: timing        = .FALSE. ! print out timing information
   LOGICAL :: memchk        = .FALSE. ! check for memory leakage
   LOGICAL :: tprnsfac      = .FALSE. ! print out structure factor
-  LOGICAL :: tcarpar       = .FALSE. ! tcarpar is set TRUE for a "pure" Car Parrinello simulation
   LOGICAL :: tdamp         = .FALSE. ! Use damped dynamics for electrons
   LOGICAL :: tdampions     = .FALSE. ! Use damped dynamics for ions
   LOGICAL :: tatomicwfc    = .FALSE. ! Use atomic wavefunctions as starting guess for ch. density
@@ -309,16 +308,6 @@ MODULE control_flags
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
-      !
-      ! ... Car Parrinello simulation
-      !
-      tcarpar = .TRUE.
-      !
-      IF ( t_diis .OR. tsteepdesc ) THEN
-         !
-         tcarpar = .FALSE.
-         !
-      END IF
       !
       ! ... if thdyn = .FALSE. set TSDC and TZEROC to .FALSE. too.
       !
