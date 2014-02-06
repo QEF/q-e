@@ -78,7 +78,8 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/silicon*
+rm -rf $TMP_DIR/_ph0/silicon*
 $ECHO " done"
 $ECHO 
 
@@ -87,7 +88,7 @@ cat > si.scf.in << EOF
  &control
     calculation='scf',
     restart_mode='from_scratch',
-    prefix='si'
+    prefix='silicon'
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
@@ -127,7 +128,7 @@ cat > si.phG.in1 << EOF
 phonons of Si at Gamma
  &inputph
   tr2_ph=1.0d-14,
-  prefix='si',
+  prefix='silicon',
   epsil=.true.,
   max_seconds=1,
   amass(1)=28.08,
@@ -144,7 +145,7 @@ cat > si.phG.in2 << EOF
 phonons of Si at Gamma
  &inputph
   tr2_ph=1.0d-14,
-  prefix='si',
+  prefix='silicon',
   epsil=.true.,
   recover=.true.,
   amass(1)=28.08,
@@ -159,13 +160,20 @@ check_failure $?
 $ECHO " done"
 $ECHO
 
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/nickel*
+rm -rf $TMP_DIR/_ph0/nickel*
+$ECHO " done"
+$ECHO 
+
 # self-consistent calculation for Ni with US-PP
 cat > ni.scf.in << EOF
  &control
     calculation='scf'
     restart_mode='from_scratch',
     tprnfor = .true.
-    prefix='ni',
+    prefix='nickel',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
@@ -200,7 +208,7 @@ cat > ni.phX.in1 << EOF
 phonons of Ni at X
  &inputph
   tr2_ph=1.0d-14,
-  prefix='ni',
+  prefix='nickel',
   amass(1)=58.6934,
   max_seconds=6,
   fildyn='nix.dyn',
@@ -217,7 +225,7 @@ cat > ni.phX.in2 << EOF
 phonons of Ni at X
  &inputph
   tr2_ph=1.0d-14,
-  prefix='ni',
+  prefix='nickel',
   amass(1)=58.6934,
   recover=.true.,
   fildyn='nix.dyn',
@@ -231,12 +239,19 @@ check_failure $?
 $ECHO " done"
 $ECHO
 
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/copper*
+rm -rf $TMP_DIR/_ph0/copper*
+$ECHO " done"
+$ECHO 
+
 # self-consistent calculation for PAW Cu PBE with PAW-PP
 cat > Cu.scf_pbe.in << EOF
  &control
     calculation='scf',
     restart_mode='from_scratch',
-    prefix='Cu',
+    prefix='copper',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
@@ -269,7 +284,7 @@ cat > Cu.phG_pbe.in1 << EOF
 phonons of Cu at Gamma
  &inputph
   tr2_ph=1.0d-14,
-  prefix='Cu',
+  prefix='copper',
   max_seconds=5,
   fildyn='Cug.dyn',
   outdir='$TMP_DIR/'
@@ -284,7 +299,7 @@ cat > Cu.phG_pbe.in2 << EOF
 phonons of Cu at Gamma
  &inputph
   tr2_ph=1.0d-14,
-  prefix='Cu',
+  prefix='copper',
   recover=.true.,
   fildyn='Cug.dyn',
   outdir='$TMP_DIR/'
@@ -297,12 +312,18 @@ check_failure $?
 $ECHO " done"
 $ECHO
 
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/gold*
+rm -rf $TMP_DIR/_ph0/gold*
+$ECHO " done"
+$ECHO 
+
 # self-consistent calculation for PAW Au with spin-orbit
 cat > Au.scf_rel.in << EOF
  &control
     calculation='scf',
     restart_mode='from_scratch',
-    prefix='Au',
+    prefix='gold',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
@@ -337,7 +358,7 @@ cat > Au.phX_rel.in1 << EOF
 phonons of Au at X
  &inputph
   tr2_ph=1.0d-14,
-  prefix='Au',
+  prefix='gold',
   max_seconds=15,
   fildyn='AuX.dyn',
   outdir='$TMP_DIR/'
@@ -352,7 +373,7 @@ cat > Au.phX_rel.in2 << EOF
 phonons of Au at X
  &inputph
   tr2_ph=1.0d-14,
-  prefix='Au',
+  prefix='gold',
   recover=.true.,
   fildyn='AuX.dyn',
   outdir='$TMP_DIR/'
@@ -365,7 +386,8 @@ check_failure $?
 $ECHO " done"
 
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/copper*
+rm -rf $TMP_DIR/_ph0/copper*
 $ECHO " done"
 $ECHO 
 
@@ -374,7 +396,7 @@ cat > Cu.scf_pbe.in << EOF
  &control
     calculation='scf',
     restart_mode='from_scratch',
-    prefix='Cu',
+    prefix='copper',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
@@ -407,7 +429,7 @@ cat > Cu.phX_pbe_one_mode.in1 << EOF
 phonons of Cu at X
  &inputph
   tr2_ph=1.0d-14,
-  prefix='Cu',
+  prefix='copper',
   max_seconds=12,
   modenum=2,
   fildyn='Cux.dyn',
@@ -424,7 +446,7 @@ cat > Cu.phX_pbe_one_mode.in2 << EOF
 phonons of Cu at X
  &inputph
   tr2_ph=1.0d-14,
-  prefix='Cu',
+  prefix='copper',
   modenum=2,
   recover=.true.,
   fildyn='Cux.dyn',

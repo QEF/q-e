@@ -92,14 +92,15 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/aluminum*
+rm -rf $TMP_DIR/_ph0/aluminum*
 $ECHO " done"
 $ECHO 
 
 #
 # SCF at dense k-mesh, good enough for electronic DOS
 #
-PREFIX='al'
+PREFIX='aluminum'
 cat > al.scf.fit.in << EOF
  &control
     calculation='scf'
@@ -160,6 +161,7 @@ $ECHO "  running the scf calculation...\c"
 $PW_COMMAND < al.scf.in > al.scf.out
 check_failure $?
 $ECHO "  done"
+
 cat > al.elph.in << EOF
 Electron-phonon coefficients for Al
  &inputph
@@ -214,8 +216,6 @@ $ECHO "  running q2r...\c"
 $Q2R_COMMAND < q2r.in > q2r.out
 check_failure $?
 $ECHO "  done"
-#
-#
 #
 cat > matdyn.in.dos << EOF
  &input
