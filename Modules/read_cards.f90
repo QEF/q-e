@@ -532,7 +532,7 @@ CONTAINS
          CALL errore( ' card_atomic_forces ', ' two occurrences ', 2 )
       ENDIF
       !
-      IF( .not. taspc ) THEN
+      IF( .not. tapos ) THEN
          CALL errore( ' card_atomic_forces ', &
                      & ' ATOMIC_SPECIES must be present before ', 2 )
       ENDIF
@@ -1126,7 +1126,7 @@ CONTAINS
          CALL errore( ' card_ion_velocities ', ' two occurrences', 2 )
       ENDIF
       !
-      IF( .not. taspc ) THEN
+      IF( .not. tapos ) THEN
          CALL errore( ' card_ion_velocities ', &
                      & ' ATOMIC_SPECIES must be present before ', 2 )
       ENDIF
