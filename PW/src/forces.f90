@@ -181,7 +181,7 @@ SUBROUTINE forces()
     !
     ! ... Add the other environment contributions
     !
-    CALL calc_fenviron( dfftp%nnr, nat, force_environ )
+    CALL calc_fenviron( dfftp%nnr, nspin, nat, rho%of_r, force_environ )
     !
   END IF
   !
