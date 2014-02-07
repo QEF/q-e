@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi, dvpsi)
+subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi)
   !----------------------------------------------------------------------
   !
   ! On output: dpsi contains [H,x_ipol] | psi_ik > in crystal axis 
@@ -36,7 +36,7 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi, dvpsi)
   USE control_flags,   ONLY : gamma_only
 
   implicit none
-  COMPLEX(DP), INTENT(OUT)    :: dpsi(npwx*npol,nbnd), dvpsi(npwx*npol,nbnd)
+  COMPLEX(DP), INTENT(OUT)    :: dpsi(npwx*npol,nbnd)
   TYPE(bec_type), INTENT(IN)  :: becp1 ! dimensions ( nkb, nbnd )
   TYPE(bec_type), INTENT(INOUT) :: becp2 ! dimensions ( nkb, nbnd )
   !
@@ -51,15 +51,13 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi, dvpsi)
   real(DP), allocatable  :: gk (:,:)
   ! the derivative of |k+G|
   complex(DP), allocatable :: ps2(:,:,:), dvkb (:,:), dvkb1 (:,:),  &
-       work (:,:), psc(:,:,:,:), aux(:), deff_nc(:,:,:,:)
+       work (:,:), psc(:,:,:,:), deff_nc(:,:,:,:)
   REAL(DP), allocatable :: deff(:,:,:)
   !
 
   CALL start_clock ('commutator_Hx_psi')
   dpsi=(0.d0, 0.d0)
-  dvpsi=(0.d0, 0.d0)
   !
-  allocate (aux ( npwx*npol ))
   allocate (gk ( 3, npwx))    
   do ig = 1, npw
      gk (1:3, ig) = (xk (1:3, ik) + g (1:3, igk (ig) ) ) * tpiba
@@ -223,13 +221,11 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi, dvpsi)
   END IF
   deallocate (work)
 
-  111 continue
-
   IF (nkb > 0) THEN
      deallocate (dvkb1, dvkb)
   END IF
 
-  deallocate (aux)
+  111 continue
 
   call stop_clock ('commutator_Hx_psi')
   return

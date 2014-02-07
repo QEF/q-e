@@ -825,7 +825,6 @@ io_dyn_mat.o : ../../Modules/io_global.o
 io_dyn_mat.o : ../../Modules/kind.o
 io_dyn_mat.o : ../../Modules/mp.o
 io_dyn_mat.o : ../../Modules/mp_images.o
-io_dyn_mat.o : ../../Modules/mp_world.o
 io_dyn_mat.o : ../../iotk/src/iotk_module.o
 io_dyn_mat_old.o : ../../Modules/cell_base.o
 io_dyn_mat_old.o : ../../Modules/constants.o
@@ -833,7 +832,7 @@ io_dyn_mat_old.o : ../../Modules/io_global.o
 io_dyn_mat_old.o : ../../Modules/ions_base.o
 io_dyn_mat_old.o : ../../Modules/kind.o
 io_dyn_mat_old.o : ../../Modules/mp.o
-io_dyn_mat_old.o : ../../Modules/mp_world.o
+io_dyn_mat_old.o : ../../Modules/mp_images.o
 io_dyn_mat_old.o : ../../Modules/run_info.o
 io_pattern.o : ../../Modules/cell_base.o
 io_pattern.o : ../../Modules/io_files.o
