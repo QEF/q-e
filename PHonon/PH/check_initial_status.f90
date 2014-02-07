@@ -82,7 +82,7 @@ SUBROUTINE check_initial_status(auxdyn)
                               ext_recover, ext_restart, tmp_dir_phq, lqdir, &
                               start_irr, last_irr, newgrid, qplot, &
                               done_zeu, done_start_zstar, done_epsil, &
-                              done_zue, with_ext_images
+                              done_zue, with_ext_images, always_run
   USE save_ph,         ONLY : tmp_dir_save
   USE units_ph,        ONLY : iudyn
   USE ph_restart,      ONLY : check_directory_phsave, check_available_bands,&
@@ -257,7 +257,7 @@ SUBROUTINE check_initial_status(auxdyn)
   ELSE  
      ! this is the standard treatment
      IF ( ( ( ldisp.OR..NOT.lgamma .OR. modenum/=0 ) .AND. (.NOT.lqdir) ) &
-          .OR. newgrid ) CALL write_rho( rho, nspin )
+          .OR. newgrid .OR. always_run ) CALL write_rho( rho, nspin )
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
   !
