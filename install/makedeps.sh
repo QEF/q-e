@@ -81,7 +81,7 @@ for dir in $dirs; do
              DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
                       $LEVEL2/PW/src $LEVEL2/PHonon/PH " ;;
 
-	TDDFPT/src )
+	TDDFPT/src | Environ/src )
              DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
                       $LEVEL2/PW/src $LEVEL2/PHonon/PH" ;;
     *)
@@ -119,6 +119,18 @@ for dir in $dirs; do
         then
             mv make.depend make.depend.tmp
             sed '/@environ_base@/d' make.depend.tmp > make.depend
+        fi
+
+        if test "$DIR" = "TDDFPT/src"
+        then
+            mv make.depend make.depend.tmp
+            sed '/@environ_base@/d' make.depend.tmp > make.depend
+        fi
+
+        if test "$DIR" = "TDDFPT/src"
+        then
+            mv make.depend make.depend.tmp
+            sed '/@solvent_tddfpt@/d' make.depend.tmp > make.depend
         fi
 
         rm -f make.depend.tmp
