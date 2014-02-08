@@ -92,7 +92,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
 
   CALL allocate_bec_type ( nkb, nbnd, becp2 )
 
-  CALL commutator_Hx_psi (ik, nbnd_occ(ik), becp1, becp2, ipol, d0psi, dvpsi )
+  CALL commutator_Hx_psi (ik, nbnd_occ(ik), becp1, becp2, ipol, d0psi )
   !
   !    orthogonalize d0psi to the valence subspace: ps = <evc|d0psi>
   !    Apply -P^+_c
