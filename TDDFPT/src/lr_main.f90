@@ -46,6 +46,9 @@ PROGRAM lr_main
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE funct,                 ONLY : dft_is_hybrid
   USE fft_base,              ONLY : dffts
+#ifdef __ENVIRON
+  USE environ_base,          ONLY : do_environ
+#endif
 
   !Debugging
   USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,check_vector_gamma
@@ -72,12 +75,23 @@ PROGRAM lr_main
   IF (lr_verbosity > 5) THEN
      WRITE(stdout,'("<lr_main>")')
   ENDIF
-  !Let the phonon routines know that they are doing tddfpt.
+  !
+  ! Let the PHonon and Environ routines know that 
+  ! they are doing tddfpt.
+  !
   tddfpt=.TRUE.
   !
   !   Reading input file and PWSCF xml, some initialisation
   !
   CALL lr_readin ( )
+  !
+  ! Writing a summary to the standard output 
+  ! about Environ variables
+  !
+#ifdef __ENVIRON
+  IF ( do_environ ) CALL environ_summary()
+#endif
+  !
   CALL check_stop_init()
   !
   !   Initialisation of degauss/openshell related stuff

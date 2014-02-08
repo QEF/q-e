@@ -51,6 +51,11 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   USE mp,                   ONLY : mp_sum, mp_barrier
   USE mp_global,            ONLY : intra_bgrp_comm
   use lr_exx_kernel
+#ifdef __ENVIRON
+  USE environ_base,         ONLY : do_environ
+  USE scf,                  ONLY : rho
+  USE solvent_tddfpt,       ONLY : calc_vsolvent_tddfpt
+#endif
   !
   !
   IMPLICIT NONE
@@ -69,6 +74,12 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   !
   REAL(kind=dp), ALLOCATABLE :: dvrs(:,:), dvrss(:)
   REAL(kind=dp), ALLOCATABLE :: d_deeq(:,:,:,:)
+  !
+  ! Environ related arrays
+  !
+  REAL(kind=dp), ALLOCATABLE :: &
+          dv_pol(:), &  ! response polarization potential
+          dv_epsilon(:) ! response dielectric potential
   !
   COMPLEX(kind=dp), ALLOCATABLE :: dvrs_temp(:,:)   
   COMPLEX(kind=dp), ALLOCATABLE :: spsi1(:,:)
@@ -149,6 +160,32 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
            ALLOCATE ( dvrs(dfftp%nnr, nspin) ) 
            dvrs=DBLE(dvrs_temp)
            DEALLOCATE(dvrs_temp)
+           !
+#ifdef __ENVIRON
+           !
+           IF ( do_environ ) THEN
+              !
+              ALLOCATE( dv_pol(dfftp%nnr) )
+              ALLOCATE( dv_epsilon(dfftp%nnr) )
+              dv_pol(:) = 0.0d0
+              dv_epsilon(:) = 0.0d0
+              !
+              WRITE( stdout, '(5x,"ENVIRON: Calculate the response &
+                          & polarization and dielectric potentials")' )
+              !
+              CALL calc_vsolvent_tddfpt(dfftp%nnr, nspin, rho%of_r(:,1), &
+                                       & rho_1(:,1), dv_pol, dv_epsilon)
+              !
+              ! Add the response polarization and dielectric potentials
+              ! to the response HXC potential.
+              !
+              dvrs(:,1) = dvrs(:,1) + dv_pol(:) + dv_epsilon(:)
+              !
+              DEALLOCATE( dv_pol )
+              DEALLOCATE( dv_epsilon )
+              !
+           ENDIF
+#endif
            !
         ELSE
            dvrsc(:,1)=rho_1c(:,1)

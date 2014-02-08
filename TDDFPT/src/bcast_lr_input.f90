@@ -20,12 +20,16 @@ SUBROUTINE bcast_lr_input
   USE realus,              ONLY: real_space, real_space_debug
   USE mp,                  ONLY: mp_bcast, mp_barrier
   USE io_files,            ONLY: tmp_dir, prefix, wfc_dir
-  USE control_flags,       ONLY: tqr
+  USE control_flags,       ONLY: tqr, tddfpt
   USE charg_resp,          ONLY: omeg, w_T_prefix, w_T_npol,epsil
   USE io_global,           ONLY: ionode, ionode_id
   USE mp_global,           ONLY: intra_image_comm
   USE mp_world,            ONLY: world_comm
   USE exx,                 ONLY: ecutfock
+#ifdef __ENVIRON
+  USE input_parameters,    ONLY: do_environ
+  USE environ_input,       ONLY: environ_bcast
+#endif
 
   IMPLICIT NONE
   !
@@ -46,7 +50,6 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (LR_polarization, ionode_id, world_comm )
   CALL mp_bcast (ltammd, ionode_id, world_comm )
   CALL mp_bcast (pseudo_hermitian, ionode_id, world_comm )
-  !call mp_bcast (broadening, ionode_id, world_comm )
   CALL mp_bcast (real_space, ionode_id, world_comm )
   CALL mp_bcast (real_space_debug, ionode_id, world_comm )
   CALL mp_bcast (tqr, ionode_id, world_comm )
@@ -62,14 +65,11 @@ SUBROUTINE bcast_lr_input
   call mp_bcast (scissor, ionode_id, world_comm)
   CALL mp_bcast (ecutfock, ionode_id, world_comm )
   CALL mp_bcast (d0psi_rs, ionode_id,world_comm )
-  !print *, "bcast lr input finished"
-  !print *, "variables"
-  !print *, "prefix=", prefix
-  !print *, "tmp_dir", tmp_dir
-  !print *, "w_T_prefix=", w_T_prefix
-  !print *, "charge_response=",charge_response
-  !print *, "omeg=",omeg
-  !print *, "test_case_no=",test_case_no
+  CALL mp_bcast (tddfpt, ionode_id, world_comm )
+#ifdef __ENVIRON
+  CALL mp_bcast (do_environ, ionode_id, world_comm )
+  IF (do_environ) CALL environ_bcast()
+#endif
 
   ! for lr_dav
   CALL mp_bcast (davidson, ionode_id, world_comm )

@@ -27,6 +27,10 @@ SUBROUTINE stop_lr( full_run  )
   ! For gaussian cube file
   USE ions_base,  ONLY : nat, ityp, atm, ntyp => nsp, tau
   USE cell_base,  ONLY : celldm, at, bg
+#ifdef __ENVIRON
+  USE environ_base,         ONLY : do_environ
+  USE solvent_tddfpt,       ONLY : solvent_clean_tddfpt
+#endif
   !
   IMPLICIT NONE
   !
@@ -90,6 +94,14 @@ SUBROUTINE stop_lr( full_run  )
   !   Deallocate lr variables
   !
   CALL lr_dealloc()
+  !
+#ifdef __ENVIRON
+  !
+  ! Deallocate Environ related arrays
+  !
+  IF (do_environ) CALL solvent_clean_tddfpt()
+  !
+#endif
   !
   CALL environment_end(code)
   !

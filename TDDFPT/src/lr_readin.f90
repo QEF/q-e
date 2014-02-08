@@ -19,7 +19,7 @@ SUBROUTINE lr_readin
   USE io_files,            ONLY : tmp_dir, prefix, wfc_dir
   USE lsda_mod,            ONLY : current_spin, nspin
   USE control_flags,       ONLY : twfcollect,use_para_diag
-  USE scf,                 ONLY : vltot, v, vrs, vnew, &
+  USE scf,                 ONLY : vltot, v, vrs, vnew, rho, &
                                   & destroy_scf_type
   USE fft_base,            ONLY : dfftp
   USE gvecs,               ONLY : doublegrid
@@ -51,6 +51,29 @@ SUBROUTINE lr_readin
   USE DFUNCT,              ONLY : newd
   USE vlocal,              ONLY : strf
   USE exx,                 ONLY : ecutfock
+#ifdef __ENVIRON
+  USE input_parameters,    ONLY : do_environ, assume_isolated
+  USE environ_base,        ONLY : environ_base_init
+  USE environ_input,       ONLY : verbose, environ_thr, environ_type,      &
+                                  stype, rhomax, rhomin, tbeta,            &
+                                  env_static_permittivity, eps_mode,       &
+                                  env_optical_permittivity,                &
+                                  solvationrad, atomicspread, add_jellium, &
+                                  ifdtype, nfdpoint,                       &
+                                  mixtype, ndiis, mixrhopol, tolrhopol,    &
+                                  env_surface_tension, delta,              &
+                                  env_pressure,                            &
+                                  env_ioncc_concentration, zion, rhopb,    &
+                                  solvent_temperature,                     &
+                                  env_extcharge_n, extcharge_origin,       &
+                                  extcharge_dim, extcharge_axis,           &
+                                  extcharge_pos, extcharge_spread,         &
+                                  extcharge_charge,                        &
+                                  environ, environ_defaults
+  USE ions_base,           ONLY : nsp, ityp, zv, tau, nat
+  USE cell_base,           ONLY : at, alat, omega
+  USE solvent_tddfpt,      ONLY : solvent_initbase_tddfpt
+#endif
 
 
   IMPLICIT NONE
@@ -67,6 +90,9 @@ SUBROUTINE lr_readin
   !
   NAMELIST / lr_input / restart, restart_step ,lr_verbosity, prefix, outdir, test_case_no, wfcdir, disk_io, max_seconds
   NAMELIST / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, charge_response, tqr, auto_rs, no_hxc, n_ipol, &
+#ifdef __ENVIRON
+                          do_environ, &
+#endif
        & project, scissor, ecutfock, pseudo_hermitian,d0psi_rs
   NAMELIST / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int
   namelist / lr_dav / num_eign, num_init, num_basis_max, residue_conv_thr, precondition,dav_debug, reference,single_pole,&
@@ -111,6 +137,9 @@ SUBROUTINE lr_readin
      eig_dir='./'
      scissor = 0.d0
      ecutfock = -1d0
+#ifdef __ENVIRON
+     do_environ = .false.
+#endif
 
      ! For lr_dav
      num_eign=1
@@ -157,6 +186,22 @@ SUBROUTINE lr_readin
        READ (5, lr_dav, err = 299, iostat = ios)
 299    CALL errore ('lr_readin', 'reading lr_dav namelist', ABS (ios) )
      endif
+     !
+#ifdef __ENVIRON
+     !
+     !   Reading the namelist Environ
+     !
+     IF ( do_environ ) THEN
+       !
+       CALL environ_defaults( 'TDDFPT' )
+       !
+       READ (5, environ, err = 203, iostat = ios )
+203    CALL errore ('lr_readin', 'reading namelist environ', ABS (ios) )
+       !
+     ENDIF
+     !
+#endif
+     !
      !   Reading the namelist lr_post
      IF (charge_response == 1) THEN
         READ (5, lr_post, err = 202, iostat = ios)
@@ -231,6 +276,71 @@ SUBROUTINE lr_readin
   !   Now PWSCF XML file will be read, and various initialisations will be done
   !
   CALL read_file()
+  !
+  ! Copy data read from input file (in subroutine "read_input_file") and
+  ! stored in modules input_parameters into internal modules of Environ module
+  !
+#ifdef __ENVIRON
+  !
+  IF ( do_environ ) THEN
+     !
+     !!!!!!!!!!!!!!!!!!!!!!!!!!! Initialisation !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !
+     ! Copied from PW/src/input.f90
+     ! Note: in the routine "environ_base_init" the variable do_environ (from 
+     ! environ_base) is defined according to do_environ (from input_parameters).
+     ! In the Environ code the variable do_environ (from environ_base) is used.
+     !
+     ! Warning: There is something strange with the variable 'assume_isolated'!
+     ! It is not used currently.
+     !
+     CALL environ_base_init ( do_environ, assume_isolated,                &
+                              verbose, environ_thr, environ_type,         &
+                              stype, rhomax, rhomin, tbeta,               &
+                              env_static_permittivity,                    &
+                              env_optical_permittivity, eps_mode,         &
+                              solvationrad(1:nsp), atomicspread(1:nsp),   &
+                              add_jellium, ifdtype, nfdpoint,             &
+                              mixtype, ndiis, mixrhopol, tolrhopol,       &
+                              env_surface_tension, delta,                 &
+                              env_pressure,                               &
+                              env_ioncc_concentration, zion, rhopb,       &
+                              solvent_temperature,                        &
+                              env_extcharge_n, extcharge_origin,          &
+                              extcharge_dim, extcharge_axis,              &
+                              extcharge_pos, extcharge_spread,            &
+                              extcharge_charge )
+     !
+     CALL environ_initions_allocate(nat, nsp)
+     !
+     ! Taken from PW/src/init_run.f90
+     ! 
+     CALL environ_initbase( dfftp%nnr )
+     !
+     ! Taken from PW/src/electrons.f90
+     !
+     CALL environ_initions( dfftp%nnr, nat, nsp, ityp, zv, tau, alat )
+     CALL environ_initcell( dfftp%nnr, dfftp%nr1*dfftp%nr2*dfftp%nr3, omega, alat, at )
+     !
+     ! Compute additional unperturbed potentials due to the presence of the environment
+     ! and add them to the SCF (H+XC) potential.
+     !
+     WRITE( stdout, '(/5x,"Computing and adding the polarization potentials to H+XC potential")' )
+     !
+     CALL calc_venviron( .TRUE., dfftp%nnr, nspin, 0.0d0, rho%of_r, v%of_r(:,1))
+     !
+     ! Now, once the Environ potentials were computed we can deallocate numerous 
+     ! Environ arrays because they are not needed any longer.
+     !
+     CALL environ_clean( .TRUE. )
+     !
+     ! Allocations for TDDFPT
+     !
+     CALL solvent_initbase_tddfpt(ifdtype, nfdpoint, dfftp%nnr)
+     !
+  ENDIF
+  !
+#endif
   !
   !   Set wfc_dir - this is done here because read_file sets wfc_dir = tmp_dir
   !   FIXME:,if wfcdir is not present in input, wfc_dir is set to "undefined"
