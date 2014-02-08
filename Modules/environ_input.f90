@@ -59,6 +59,9 @@ MODULE environ_input
         REAL(DP) :: env_static_permittivity = 1.D0
         ! static dielectric permittivity of the solvation model. If set equal
         ! to one (=vacuum) no dielectric effects
+        REAL(DP) :: env_optical_permittivity = 1.D0
+        ! optical dielectric permittivity of the solvation model. If set equal
+        ! to one (=vacuum) no dielectric effects. Needed only for the TDDFTPT.
         CHARACTER( LEN = 256 ) :: eps_mode = 'electronic'
         !  eps_mode method for calculating the density that sets 
         !  the dielectric constant
@@ -148,6 +151,7 @@ MODULE environ_input
              verbose, environ_thr, environ_type,                       &
              stype, rhomax, rhomin, tbeta,                             &
              env_static_permittivity, eps_mode,                        &
+             env_optical_permittivity,                                 &
              solvationrad, atomicspread, add_jellium,                  &
              ifdtype, nfdpoint,                                        &
              mixtype, ndiis, mixrhopol, tolrhopol,                     &
@@ -186,6 +190,7 @@ MODULE environ_input
        tbeta   = 4.8
        !
        env_static_permittivity = 1.D0
+       env_optical_permittivity = 1.D0
        eps_mode        = 'electronic'
        solvationrad(:) = 3.D0
        atomicspread(:) = 0.5D0
@@ -247,6 +252,7 @@ MODULE environ_input
        CALL mp_bcast( tbeta,                      ionode_id, intra_image_comm )
        !
        CALL mp_bcast( env_static_permittivity,    ionode_id, intra_image_comm )
+       CALL mp_bcast( env_optical_permittivity,   ionode_id, intra_image_comm )
        CALL mp_bcast( eps_mode,                   ionode_id, intra_image_comm )
        CALL mp_bcast( solvationrad,               ionode_id, intra_image_comm )
        CALL mp_bcast( atomicspread,               ionode_id, intra_image_comm )
