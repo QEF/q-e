@@ -244,6 +244,7 @@ SUBROUTINE iosys()
   USE environ_input, ONLY :    verbose, environ_thr, environ_type,      &
                                stype, rhomax, rhomin, tbeta,            &
                                env_static_permittivity, eps_mode,       &
+                               env_optical_permittivity,                &
                                solvationrad, atomicspread, add_jellium, &
                                ifdtype, nfdpoint,                       &
                                mixtype, ndiis, mixrhopol, tolrhopol,    &
@@ -1282,7 +1283,8 @@ SUBROUTINE iosys()
   CALL environ_base_init ( do_environ, assume_isolated,                &
                            verbose, environ_thr, environ_type,         &
                            stype, rhomax, rhomin, tbeta,               &
-                           env_static_permittivity, eps_mode,          &
+                           env_static_permittivity,                    &
+                           env_optical_permittivity, eps_mode,         &
                            solvationrad(1:ntyp), atomicspread(1:ntyp), &
                            add_jellium, ifdtype, nfdpoint,             &
                            mixtype, ndiis, mixrhopol, tolrhopol,       &
