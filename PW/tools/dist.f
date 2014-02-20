@@ -38,7 +38,7 @@
       real*8 at(3,3), bg(3,3), celldm(6), omega, d(ndistx)
       real*8 tau(3,nax), dr(3), dd, dn1, dn2, dn3, dmin, dmax, scalef
       real*8 angolo(nnx*(nnx-1)/2), drv(3), drn(3,nnx), temp, rtemp(3)
-      real*8 fact, pi
+      real*8 fact, pi, arg
       parameter (fact=0.529177d0, pi=3.141592653589793d0)
       logical crys, matches
       external capital, matches
@@ -309,10 +309,12 @@
             do nn1=1,nn
                do nn2=nn1+1,nn
                   nd=nd+1
-                  angolo(nd) = 360/(2*pi) * acos (scalef**2 *
-     &                 ( drn(1,nn1)*drn(1,nn2) +                        
-     &                   drn(2,nn1)*drn(2,nn2) +                        
-     &                   drn(3,nn1)*drn(3,nn2) ) / d(nn1) / d(nn2) )
+                  arg = scalef**2 *
+     &                 ( drn(1,nn1)*drn(1,nn2) +
+     &                   drn(2,nn1)*drn(2,nn2) +
+     &                   drn(3,nn1)*drn(3,nn2) ) / d(nn1) / d(nn2)
+                  if(abs(arg)>1.d0) arg = sign(1.d0, arg)
+                  angolo(nd) = 360/(2*pi) * acos ( arg )
                end do
             end do
             if (nd.ne.nn*(nn-1)/2) call errore('dist','internal err.',2)
