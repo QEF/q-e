@@ -604,7 +604,7 @@
              call davcio(evc,2*nwordwfc,iunwfc,is,-1)
              
              tmp_rot(:,:)=dble(u_trans(:,:,is))
-             !call rotate_wannier_gamma( tmp_rot,1,0)!DEBUG
+             call rotate_wannier_gamma( tmp_rot,1,0)
              
              if(.not.l_truncated_coulomb) call read_vg0
              call wannier_bse(is,evc,o_mat)
