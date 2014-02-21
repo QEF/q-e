@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2014 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,8 @@
 ! taking into account periodicity
 !
 ! Input file:
-!   first line contains  nat, ibrav, celldm(1-6)
+!   first line contains  nat, ibrav                if ibrav = 0
+!                        nat, ibrav, celldm(1-6)   if ibrav/= 0
 !   if (ibrav.eq.0) :
 !       card CELL_PARAMETERS
 !       a(1,1) a(2,1) a(3,1)
@@ -47,7 +48,8 @@
       call get_file ( filename ) 
       open(unit=1,file=filename,form='formatted',status='old')
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Begin data reading
-      read(1,*) nat, ibrav, celldm
+      read(1,'(a)') line
+      read(line,*) nat, ibrav
       if (nat.le.0.or.nat.gt.nax) call errore ('dist','wrong nat',1)
       if (ibrav.lt.0.or.ibrav.gt.14) call errore('dist','wrong ibrav',1)
       if (ibrav.eq.0) then
@@ -63,8 +65,14 @@
          end if
 !
          if (celldm (1).eq.0.d0) then
-! input at are in atomic units: define alat
-            celldm (1) = sqrt(at(1,1)**2+at(1,2)**2+at(1,3)**2)
+! set the lattice parameter from primitive vectors at
+            if ( matches('ANGSTROM', line) ) then
+! input at in angstrom
+               celldm (1) = sqrt(at(1,1)**2+at(1,2)**2+at(1,3)**2)/fact
+            else
+! input at in atomic units (default)
+               celldm (1) = sqrt(at(1,1)**2+at(1,2)**2+at(1,3)**2)
+            end if
             do i=1,3
                at(i,1) = at(i,1)/celldm(1)
                at(i,2) = at(i,2)/celldm(1)
@@ -72,6 +80,7 @@
             end do
          end if
       else
+         read(line,*) nat, ibrav, celldm(:)
 ! generate cell unit vectors 
          call latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
          do i=1,3
