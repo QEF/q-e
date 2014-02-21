@@ -229,7 +229,7 @@ tar :
 	# do not include unneeded stuff 
 	find ./ -type f | grep -v -e /.svn/ -e'/\.' -e'\.o$$' \
              -e'\.mod$$' -e'\.a$$' -e'\.d$$' -e'\.i$$' -e'\.F90$$' -e'\.x$$' \
-	     -e'~$$' -e'\./GUI' | xargs tar rvf espresso.tar
+	     -e'~$$' -e'\./GUI' -e '\./tempdir' | xargs tar rvf espresso.tar
 	gzip espresso.tar
 
 #########################################################
