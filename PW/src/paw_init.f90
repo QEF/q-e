@@ -434,7 +434,7 @@ SUBROUTINE PAW_rad_init(l, ls, rad)
     n = (rad%lmax+2)/2
     ALLOCATE(x(n),w(n))
     ! compute weights for theta integration
-    CALL weights(x,w,n)
+    CALL gauss_weights(x,w,n)
 
     ! number of integration directions
     rad%nx = n*nphi !(rad%lmax+1)
@@ -531,7 +531,7 @@ SUBROUTINE PAW_rad_init(l, ls, rad)
  CONTAINS
     ! Computes weights for gaussian integrals,
     ! from numerical recipes
-    SUBROUTINE weights(x,w,n)
+    SUBROUTINE gauss_weights(x,w,n)
     USE constants, ONLY : pi, eps => eps12
     implicit none
     integer :: n, i,j,m
@@ -559,7 +559,7 @@ SUBROUTINE PAW_rad_init(l, ls, rad)
         w(n+1-i) = w(i)
     end do
 
-    END SUBROUTINE weights
+    END SUBROUTINE gauss_weights
 END SUBROUTINE PAW_rad_init 
 
 END MODULE paw_init
