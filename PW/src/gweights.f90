@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2014 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,9 @@
 subroutine gweights (nks, wk, nbnd, nelec, degauss, ngauss, &
      et, ef, demet, wg, is, isk)
   !--------------------------------------------------------------------
-  !     calculates weights with the gaussian spreading technique
+  !     calculates Ef and weights with the gaussian spreading technique
+  ! ... Wrapper routine: computes first Ef, then the weights
+  !
   USE kinds
   implicit none
   !
@@ -21,13 +23,40 @@ subroutine gweights (nks, wk, nbnd, nelec, degauss, ngauss, &
   real(DP), intent(inout) :: wg (nbnd, nks)
   real(DP), intent(out) :: ef, demet
   !
-  integer :: kpoint, ibnd
-  real(DP) , external :: wgauss, w1gauss, efermig
-
+  real(DP), external :: efermig
+  
   ! Calculate the Fermi energy ef
 
-
   ef = efermig (et, nbnd, nks, nelec, wk, degauss, ngauss, is, isk)
+
+  ! Calculate weights
+
+  CALL gweights_only (nks, wk, is, isk, nbnd, nelec, degauss, &
+     ngauss, et, ef, demet, wg)
+
+  return
+end subroutine gweights
+!
+!--------------------------------------------------------------------
+subroutine gweights_only (nks, wk, is, isk, nbnd, nelec, degauss, &
+     ngauss, et, ef, demet, wg)
+  !--------------------------------------------------------------------
+  !     calculates weights with the gaussian spreading technique
+  !     Fermi energy is provided in input
+  !
+  USE kinds
+  implicit none
+  !
+  integer, intent(in) :: nks, nbnd, ngauss, is, isk(nks)
+  real(DP), intent(in) :: wk (nks), et (nbnd, nks), nelec, degauss, ef
+  ! wg must be (inout) and not (out) because if is/=0 only terms for
+  ! spin=is are initialized; the remaining terms should be kept, not lost
+  real(DP), intent(inout) :: wg (nbnd, nks)
+  real(DP), intent(out) :: demet
+  !
+  integer :: kpoint, ibnd
+  real(DP) , external :: wgauss, w1gauss
+
   demet = 0.d0
   do kpoint = 1, nks
      if (is /= 0) then
@@ -52,4 +81,4 @@ subroutine gweights (nks, wk, nbnd, nelec, degauss, ngauss, &
 
   enddo
   return
-end subroutine gweights
+end subroutine gweights_only

@@ -10,21 +10,21 @@ subroutine tweights (nks, nspin, nbnd, nelec, ntetra, tetra, et, &
      ef, wg, is, isk )
   !--------------------------------------------------------------------
   !
-  ! ... calculates weights with the tetrahedron method (P.E.Bloechl)
-  ! ... Generalization to noncollinear case courtesy of Yurii Timrov
-
+  ! ... calculates Ef and weights with the tetrahedron method (P.E.Bloechl)
+  ! ... Wrapper routine: computes first Ef, then the weights
+  !
   USE kinds
   implicit none
   ! I/O variables
-  integer, intent(in) :: nks, nspin, nbnd, ntetra, tetra (4, ntetra)
+  integer, intent(in) :: nks, nspin, is, isk(nks), nbnd, ntetra, &
+       tetra (4, ntetra)
   real(DP), intent(in) :: et (nbnd, nks), nelec
-  real(DP), intent(out) :: wg (nbnd, nks), ef
-  integer, intent(in) :: is, isk(nks)
+  ! wg must be (inout) and not (out) because if is/=0 only terms for
+  ! spin=is are initialized; the remaining terms should be kept, not lost
+  real(DP), intent(inout) :: wg (nbnd, nks)
+  real(DP), intent(out) :: ef
   ! local variables
   real(DP), external :: efermit
-  real(DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra (4), dosef
-  integer :: ik, ibnd, nt, nk, ns, i, kp1, kp2, kp3, kp4, itetra (4)
-  integer :: nspin_lsda
 
   ! Calculate the Fermi energy ef
 
@@ -33,6 +33,35 @@ subroutine tweights (nks, nspin, nbnd, nelec, ntetra, tetra, et, &
   ! if efermit cannot find a sensible value for Ef it returns Ef=1d10
   !
   if (abs(ef) > 1.0d8) call errore ('tweights', 'bad Fermi energy ',1)
+  !
+  CALL tweights_only (nks, nspin, is, isk, nbnd, nelec, ntetra, &
+       tetra, et, ef, wg)
+  !
+  return
+end subroutine tweights
+
+!--------------------------------------------------------------------
+subroutine tweights_only (nks, nspin, is, isk, nbnd, nelec, ntetra, &
+     tetra, et, ef, wg)
+  !--------------------------------------------------------------------
+  !
+  ! ... calculates weights with the tetrahedron method (P.E.Bloechl)
+  ! ... Fermi energy has to be calculated in previous step
+  ! ... Generalization to noncollinear case courtesy of Yurii Timrov
+
+  USE kinds
+  implicit none
+  ! I/O variables
+  integer, intent(in) :: nks, nspin, is, isk(nks), nbnd, ntetra, &
+       tetra (4, ntetra)
+  real(DP), intent(in) :: et (nbnd, nks), nelec, ef
+  ! wg must be (inout) and not (out) because if is/=0 only terms for
+  ! spin=is are initialized; the remaining terms should be kept, not lost
+  real(DP), intent(inout) :: wg (nbnd, nks)
+  ! local variables
+  real(DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra (4), dosef
+  integer :: ik, ibnd, nt, nk, ns, i, kp1, kp2, kp3, kp4, itetra (4)
+  integer :: nspin_lsda
   !
   do ik = 1, nks
      if (is /= 0) then
@@ -154,6 +183,6 @@ subroutine tweights (nks, nspin, nbnd, nelec, ntetra, tetra, et, &
   enddo
   ! add correct spin normalization (2 for LDA, 1 for all other cases)
   IF ( nspin == 1 ) wg (:,1:nks) = wg (:,1:nks) * 2.d0
-
+  !
   return
-end subroutine tweights
+end subroutine tweights_only

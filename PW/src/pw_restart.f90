@@ -2494,40 +2494,41 @@ MODULE pw_restart
       !
       ! ... this routine reads only the Fermi energy
       !
-      USE ener, ONLY : ef
+      USE ener,  ONLY : ef, ef_up, ef_dw
+      USE klist, ONLY : two_fermi_energies
       !
       IMPLICIT NONE
-      !
-      !CHARACTER(LEN=*), INTENT(IN)  :: dirname
-      INTEGER,          INTENT(OUT) :: ierr
-      !
-      LOGICAL :: found, two_fermi_energies
+      INTEGER, INTENT(OUT) :: ierr
       !
       ! ... then selected tags are read from the other sections
       !
       IF ( ionode ) THEN
          !
-         CALL qexml_read_bands_info( EF = ef , TWO_FERMI_ENERGIES=two_fermi_energies, IERR=ierr )
+         CALL qexml_read_bands_info( EF = ef , TWO_FERMI_ENERGIES=two_fermi_energies, EF_UP=ef_up, EF_DW=ef_dw, IERR=ierr )
          !
       END IF
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
       IF ( ierr > 0 ) RETURN
       !
       IF (ionode) THEN
          !
-         found = .NOT. two_fermi_energies
-         !
-         IF (found) THEN
+         IF (.NOT. two_fermi_energies) THEN
             ef = ef * e2
+            ef_up = 0.d0
+            ef_dw = 0.d0
          ELSE
             ef = 0.d0
+            ef_up = ef_up * e2
+            ef_dw = ef_dw * e2
          END IF
          !
       END IF
       !
+      CALL mp_bcast( two_fermi_energies, ionode_id, intra_image_comm )
       CALL mp_bcast( ef, ionode_id, intra_image_comm )
+      CALL mp_bcast( ef_up, ionode_id, intra_image_comm )
+      CALL mp_bcast( ef_dw, ionode_id, intra_image_comm )
       !
       RETURN
       !
