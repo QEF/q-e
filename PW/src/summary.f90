@@ -142,6 +142,8 @@ SUBROUTINE summary()
           &  'width of the smooth step-function  =',F21.4,' Ry',/ )
      !
   END IF
+
+  CALL plugin_summary()
  
 #ifdef __ENVIRON
   IF ( do_environ ) CALL environ_summary()
