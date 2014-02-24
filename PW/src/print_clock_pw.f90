@@ -223,6 +223,7 @@ SUBROUTINE print_clock_pw()
       ENDIF
    END IF
    !
+   CALL plugin_clock()
 #ifdef __ENVIRON
    IF ( do_environ ) call environ_clock( stdout )
 #endif
