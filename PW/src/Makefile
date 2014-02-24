@@ -142,6 +142,8 @@ paw_exx.o \
 paw_init.o \
 paw_onecenter.o \
 paw_symmetry.o \
+plugin_clock.o \
+plugin_summary.o \
 plugin_initialization.o \
 plugin_forces.o \
 plus_u_full.o \
