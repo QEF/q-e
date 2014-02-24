@@ -28,5 +28,6 @@ MODULE plugin_flags
   CHARACTER(LEN=256), PUBLIC :: plugin_name
   LOGICAL, PUBLIC :: use_plumed
   LOGICAL, PUBLIC :: use_pw2casino
+  LOGICAL, PUBLIC :: use_environ 
   !
 END MODULE plugin_flags

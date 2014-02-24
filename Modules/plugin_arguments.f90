@@ -37,6 +37,7 @@ SUBROUTINE plugin_arguments()
   ! add here more plugins
   use_plumed = .false.
   use_pw2casino = .false.
+  use_environ = .false.
   !
   DO iiarg = 1, nargs 
     CALL getarg( iiarg, plugin_name)
@@ -53,6 +54,9 @@ SUBROUTINE plugin_arguments()
           use_plumed = .true.
        END IF
        IF ( TRIM(arg)=='pw2casino' ) THEN
+          use_pw2casino = .true.
+       ENDIF
+       IF ( TRIM(arg)=='environ' ) THEN
           use_pw2casino = .true.
        ENDIF
     ENDIF
