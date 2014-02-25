@@ -192,6 +192,8 @@ SUBROUTINE clean_pw( lflag )
   if (use_wannier) CALL wannier_clean()
   !
   CALL deallocate_exx ( ) 
+  !
+  CALL plugin_clean( lflag )
 #ifdef __ENVIRON
   ! ... additional arrays for external environment 
   !
