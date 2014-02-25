@@ -27,7 +27,7 @@ function to_do_before_patch () {
   echo > /dev/null
   cp $destination/make.sys $destination/make.sys.pre$ADDSON_NAME
   cp $destination/$WHERE_LINKS/Makefile $destination/$WHERE_LINKS/Makefile.pre$ADDSON_NAME
-  if test -e $destination/make.depends ; then \
+  if test -e $destination/$WHERE_LINKS/make.depends ; then \
     cp $destination/$WHERE_LINKS/make.depends $destination/$WHERE_LINKS/make.depends.pre$ADDSON_NAME ; fi
 }
 
