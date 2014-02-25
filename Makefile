@@ -43,7 +43,7 @@ default :
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
 #
-pw : bindir mods liblapack libblas libs libiotk libenviron
+pw : bindir mods liblapack libblas libs libiotk 
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
@@ -111,10 +111,6 @@ mods : libiotk libelpa
 libs : mods
 	( cd clib ; $(MAKE) TLDEPS= all || exit 1 )
 	( cd flib ; $(MAKE) TLDEPS= $(FLIB_TARGETS) || exit 1 )
-
-libenviron :  mods
-	( if test -d Environ ; then \
-	( cd Environ ; $(MAKE) TLDEPS= all ) fi )
 
 bindir :
 	test -d bin || mkdir bin
