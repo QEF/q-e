@@ -27,8 +27,9 @@ function to_do_before_patch () {
   echo > /dev/null
   cp $destination/make.sys $destination/make.sys.pre$ADDSON_NAME
   cp $destination/$WHERE_LINKS/Makefile $destination/$WHERE_LINKS/Makefile.pre$ADDSON_NAME
-  if test -e $destination/$WHERE_LINKS/make.depends ; then \
-    cp $destination/$WHERE_LINKS/make.depends $destination/$WHERE_LINKS/make.depends.pre$ADDSON_NAME ; fi
+  if test -e $destination/$WHERE_LINKS/make.depend ; then 
+    cp $destination/$WHERE_LINKS/make.depend $destination/$WHERE_LINKS/make.depend.pre$ADDSON_NAME
+  fi
 }
 
 function to_do_after_patch () {
@@ -60,8 +61,8 @@ function to_do_after_revert () {
   echo > /dev/null
   mv $destination/make.sys.pre$ADDSON_NAME $destination/make.sys
   mv $destination/$WHERE_LINKS/Makefile.pre$ADDSON_NAME $destination/$WHERE_LINKS/Makefile
-  if test -e $destination/$WHERE_LINKS/make.depends.pre$ADDSON_NAME ; then \
-  mv $destination/$WHERE_LINKS/make.depends.pre$ADDSON_NAME $destination/$WHERE_LINKS/make.depends ; fi
+  if test -e $destination/$WHERE_LINKS/make.depend.pre$ADDSON_NAME ; then \
+  mv $destination/$WHERE_LINKS/make.depend.pre$ADDSON_NAME $destination/$WHERE_LINKS/make.depend ; fi
 }
 
 #########

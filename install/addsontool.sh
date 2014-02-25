@@ -30,6 +30,7 @@ case "$4" in
       echo "PATCH ERROR: file $base is already in $WHERE_LINKS"
       exit 1
     fi
+#    echo "$destination/$WHERE_LINKS/$base"
     ln -s $file $destination/$WHERE_LINKS/$base
   done
   
@@ -59,10 +60,11 @@ case "$4" in
   echo "-- Removing symlinks"
   for file in $destination/$LINKED_FILES ; do
     base="${file##*/}"
-    if test -e $destination/$WHERE_LINKS/$base ; then
-      rm $destination/$WHERE_LINKS/$base 
+    if test -e $destination/$WHERE_LINKS/$base ; then \
+#      echo "$destination/$WHERE_LINKS/$base" ; \
+      rm $destination/$WHERE_LINKS/$base ; \
     else
-      echo "where_links base: destination$WHERE_LINKS/$base"
+      echo "where_links base: $destination/$WHERE_LINKS/$base"
       echo "PATCH WARNING: file $base is not in $destination/$WHERE_LINKS"
     fi
   done
