@@ -234,6 +234,7 @@ wannier_check.o \
 wannier_clean.o \
 wannier_occ.o \
 wannier_enrg.o \
+plugin_clean.o \
 
 QEMODS=../../Modules/libqemod.a
 
