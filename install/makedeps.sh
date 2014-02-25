@@ -13,7 +13,7 @@ if test $# = 0
 then
     dirs=" Modules clib PW/src CPV/src flib PW/tools upftools PP/src PWCOND/src\
            PHonon/Gamma PHonon/PH PHonon/D3 PHonon/FD atomic/src XSpectra/src \
-           ACDFT NEB/src Environ/src TDDFPT/src GIPAW/src GWW/pw4gww GWW/gww GWW/head" 
+           ACDFT NEB/src TDDFPT/src GIPAW/src GWW/pw4gww GWW/gww GWW/head" 
           
 elif
     test $1 = "-addson" 
@@ -60,7 +60,7 @@ for dir in $dirs; do
              DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/Modules \
                       $LEVEL1/PW/src $LEVEL1/PHonon/PH" ;;
 
-	PW/src | Environ/src )
+	PW/src )
 	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules $LEVEL2/$add_deps" ;;
 	PW/tools | PWCOND/src | PHonon/FD )
 	     DEPENDS="$LEVEL2/include $LEVEL2/PW/src $LEVEL2/iotk/src $LEVEL2/Modules" ;;
@@ -81,7 +81,7 @@ for dir in $dirs; do
              DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
                       $LEVEL2/PW/src $LEVEL2/PHonon/PH " ;;
 
-	TDDFPT/src | Environ/src )
+	TDDFPT/src )
              DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
                       $LEVEL2/PW/src $LEVEL2/PHonon/PH" ;;
     *)
