@@ -61,7 +61,7 @@ for dir in $dirs; do
                       $LEVEL1/PW/src $LEVEL1/PHonon/PH" ;;
 
 	PW/src )
-	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules $LEVEL2/$add_deps" ;;
+	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules" ;;
 	PW/tools | PWCOND/src | PHonon/FD )
 	     DEPENDS="$LEVEL2/include $LEVEL2/PW/src $LEVEL2/iotk/src $LEVEL2/Modules" ;;
 	CPV/src | atomic/src | GWW/gww )
