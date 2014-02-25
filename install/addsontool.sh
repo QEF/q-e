@@ -37,7 +37,7 @@ case "$4" in
   
   echo "-- modifying $WHERE_LINKS/Makefile"
   sed < $destination/$WHERE_LINKS/Makefile.pre$ADDSON_NAME > $destination/$WHERE_LINKS/tmp.1 '/make.sys/ a\
-  include addson.inc \
+  include '"${ADDSON_NAME}"'.inc \
    '
   sed < $destination/$WHERE_LINKS/tmp.1 > $destination/$WHERE_LINKS/Makefile '/= \\/ a\
   '"${tmp_var}"' \\'
