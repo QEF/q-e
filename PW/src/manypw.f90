@@ -67,6 +67,7 @@ PROGRAM manypw
      !
   END IF
   !
+  CALL start_clock('PWSCF')
   CALL read_input_file ( prog='PW', input_file_=filin )
   !
   ! ... Set image-specific value for "outdir", starting from input value
