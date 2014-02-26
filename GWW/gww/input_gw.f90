@@ -19,8 +19,8 @@
       REAL(kind=DP) :: tau=0.d0!imaginary positive time interval
       LOGICAL :: whole_s=.false.!if .true. also off-diagonal elements of self energy are calculated
       INTEGER :: max_i!maximum state to be calculated
-      CHARACTER(len=256) :: prefix!prefix to designate the files same as in PW
-      CHARACTER(len=256) :: outdir!outdir to designate the files same as in PW
+      CHARACTER(len=256) :: prefix = 'prefix'!prefix to designate the files same as in PW
+      CHARACTER(len=256) :: outdir = './'!outdir to designate the files same as in PW
       INTEGER :: num_rows=50!number of rows of polarization to be taken together for FFT
       LOGICAL :: xc_together=.false.!if true exchange and correlation treated together, usually NOT
       LOGICAL :: debug=.false.!if .true. debug output is considered
@@ -174,6 +174,7 @@
        !close(iun)
        read(*, NML=inputgww)
 !OBM: file handling in a more QE manner
+     IF ( TRIM( ggwin%outdir ) == ' ' ) ggwin%outdir = './'
      outdir = trimcheck(ggwin%outdir)
      tmp_dir = outdir
      prefix = trim(ggwin%prefix)

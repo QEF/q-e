@@ -667,7 +667,7 @@
 
     if(ionode) then
        iun = find_free_unit()
-       open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'.head', status='old',form='unformatted')
+       open( unit=iun, file=trim(tmp_dir)//'/_ph0/'//trim(prefix)//'.head', status='old',form='unformatted')
        read(iun) he%n
        read(iun) he%omega
     endif

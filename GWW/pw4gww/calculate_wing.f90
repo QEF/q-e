@@ -76,7 +76,7 @@ subroutine calculate_wing(n_set, orthonorm)
   
   if(ionode) then
       iun =  find_free_unit()
-      open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.e_head', status='old',form='unformatted')
+      open( unit= iun, file=trim(tmp_dir)//'/_ph0/'//trim(prefix)//'.e_head', status='old',form='unformatted')
       read(iun) n_g
       read(iun) omega_g
    endif
