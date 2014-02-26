@@ -105,6 +105,7 @@ SUBROUTINE iosys()
   USE martyna_tuckerman, ONLY: do_comp_mt
 #ifdef __ENVIRON
   USE environ_base, ONLY : environ_base_init
+  USE environ_init, ONLY : environ_initions_allocate
 #endif
   !
   USE esm,           ONLY: do_comp_esm, &

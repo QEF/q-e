@@ -43,6 +43,7 @@ SUBROUTINE forces()
   USE environ_base,  ONLY : do_environ, env_static_permittivity, rhopol
   USE environ_base,  ONLY : env_extcharge_n, rhoexternal
   USE fft_interfaces,  ONLY : fwfft
+  USE environ_main,  ONLY : calc_fenviron
 #endif
   USE bp,            ONLY : lelfield, gdir, l3dstring, efield_cart, &
                             efield_cry,efield
@@ -66,10 +67,14 @@ SUBROUTINE forces()
                            forceh(:,:)
     ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
 #ifdef __ENVIRON
-  REAL(DP), ALLOCATABLE :: force_environ(:,:), force_external(:,:)
-  COMPLEX(DP), ALLOCATABLE :: aux(:)
+  REAL(DP), ALLOCATABLE :: force_environ(:,:), force_tmp(:,:)
 #endif
-
+!
+! aux is used to store a possible additional density
+! now defined in real space
+!
+  COMPLEX(DP), ALLOCATABLE :: auxg(:), auxr(:)
+!
   REAL(DP) :: sumfor, sumscf, sum_mm
   REAL(DP),PARAMETER :: eps = 1.e-12_dp
   INTEGER  :: ipol, na
@@ -134,55 +139,71 @@ SUBROUTINE forces()
   IF (do_comp_mt) THEN
     !
     ALLOCATE ( force_mt ( 3 , nat ) )
-#ifdef __ENVIRON
-    IF ( do_environ .AND. env_static_permittivity .GT. 1.D0 ) THEN
-      ALLOCATE( aux( dfftp%nnr ) )
-      aux(:) = CMPLX(rhopol( : ),0.D0,kind=dp) 
-      CALL fwfft ('Dense', aux, dfftp)
-      rho%of_g(:,1) = rho%of_g(:,1) + aux(nl(:))
-    ENDIF
-#endif
-    CALL wg_corr_force( omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, &
+    CALL wg_corr_force( .true.,omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, &
                         nspin, rho%of_g, force_mt )
-#ifdef __ENVIRON
-    IF ( do_environ .AND. env_static_permittivity .GT. 1.D0  ) THEN
-      rho%of_g(:,1) = rho%of_g(:,1) - aux(nl(:))
-      DEALLOCATE(aux)
-    ENDIF
-#endif
-
   END IF
+  !
 #ifdef __ENVIRON
   IF (do_environ) THEN
     !
-    ! ... The external environment contribution
+    ALLOCATE(force_tmp(3,nat))
+    ALLOCATE(force_environ(3,nat))
     !
-    ALLOCATE ( force_environ ( 3 , nat ) )
-    force_environ = 0.0_DP
-    ! 
+    force_environ=0.0_dp
+    !
+    if(do_comp_mt) then
+      force_tmp=0.0_dp
+      ALLOCATE(auxr(dfftp%nnr))
+      ALLOCATE(auxg(ngm))
+      auxg = CMPLX(0.0_dp,0.0_dp)
+      auxr = CMPLX(0.0_dp,0.0_dp)
+      if(env_static_permittivity .GT. 1.D0) auxr = CMPLX(rhopol(:),0.0, kind=DP)
+      if(env_extcharge_n .GT. 0) auxr = auxr + CMPLX(rhoexternal(:),0.0, kind=DP) 
+      CALL fwfft ('Dense', auxr, dfftp)
+      auxg(:)=auxr(nl(:))
+      CALL wg_corr_force(.false.,omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, &
+                        1, auxg, force_tmp)
+      force_environ = force_environ + force_tmp
+      DEALLOCATE(auxr,auxg)
+      WRITE( stdout, '(5x,"Tmp environment correction to forces")')
+      DO na = 1, nat
+         WRITE( stdout, 9035) na, ityp(na), ( force_tmp(ipol,na), ipol = 1, 3 )
+      END DO
+    endif 
     ! ... Computes here the solvent contribution
     !
-    IF ( env_static_permittivity .GT. 1.D0 ) & 
-    CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
-                   g, rhopol, nl, 1, gstart, gamma_only, vloc, &
-                   force_environ )
+    IF ( env_static_permittivity .GT. 1.D0 ) THEN
+      force_tmp=0.0_dp 
+      CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
+                     g, rhopol, nl, 1, gstart, gamma_only, vloc, &
+                     force_tmp )
+      force_environ = force_environ + force_tmp
+    ENDIF
     ! 
     ! ... Computes here the external charges contribution
     !
     IF ( env_extcharge_n .GT. 0 ) THEN 
-      ALLOCATE( force_external ( 3, nat ) )
-      force_external = 0.0_DP
+      force_tmp = 0.0_DP
       CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
                    g, rhoexternal, nl, 1, gstart, gamma_only, vloc, &
-                   force_external )
-      force_environ = force_environ + force_external
-      DEALLOCATE( force_external )
+                   force_tmp )
+      force_environ = force_environ + force_tmp
     ENDIF
     !
     ! ... Add the other environment contributions
     !
     CALL calc_fenviron( dfftp%nnr, nspin, nat, rho%of_r, force_environ )
     !
+    DEALLOCATE(force_tmp)
+    !
+    WRITE( stdout, '(5x,"The external environment correction to forces")')
+    DO na = 1, nat
+       WRITE( stdout, 9035) na, ityp(na), ( force_environ(ipol,na), ipol = 1, 3 )
+    END DO
+    !
+    force = force_environ
+    !
+    DEALLOCATE(force_environ)
   END IF
   !
 #endif
@@ -216,7 +237,8 @@ SUBROUTINE forces()
      !
      DO na = 1, nat
         !
-        force(ipol,na) = forcenl(ipol,na)  + &
+        force(ipol,na) = force(ipol,na)    + &
+                         forcenl(ipol,na)  + &
                          forceion(ipol,na) + &
                          forcelc(ipol,na)  + &
                          forcecc(ipol,na)  + &
@@ -230,9 +252,6 @@ SUBROUTINE forces()
         IF ( tefield ) force(ipol,na) = force(ipol,na) + forcefield(ipol,na)
         IF (lelfield)  force(ipol,na) = force(ipol,na) + forces_bp_efield(ipol,na)
         IF (do_comp_mt)force(ipol,na) = force(ipol,na) + force_mt(ipol,na) 
-#ifdef __ENVIRON
-        IF (do_environ) force(ipol,na) = force(ipol,na) + force_environ(ipol,na)
-#endif
 
         sumfor = sumfor + force(ipol,na)
         !
@@ -318,14 +337,6 @@ SUBROUTINE forces()
      DO na = 1, nat
         WRITE( stdout, 9035) na, ityp(na), ( forcescc(ipol,na), ipol = 1, 3 )
      END DO
-#ifdef __ENVIRON
-     IF ( do_environ ) THEN
-        WRITE( stdout, '(5x,"The external environment correction to forces")')
-        DO na = 1, nat
-           WRITE( stdout, 9035) na, ityp(na), ( force_environ(ipol,na), ipol = 1, 3 )
-        END DO
-     END IF  
-#endif
      !
      IF ( llondon) THEN
         WRITE( stdout, '(/,5x,"Dispersion contribution to forces:")')
@@ -404,9 +415,6 @@ SUBROUTINE forces()
                    &  "reduce conv_thr to get better values")')
   !
   IF(ALLOCATED(force_mt))   DEALLOCATE( force_mt )
-#ifdef __ENVIRON
-  IF(ALLOCATED(force_environ)) DEALLOCATE( force_environ )
-#endif
 
   RETURN
   !

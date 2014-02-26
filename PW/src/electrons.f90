@@ -49,6 +49,7 @@ SUBROUTINE electrons()
   USE environ_base,         ONLY : do_environ, vltot_zero
   USE cell_base,            ONLY : at, alat, omega
   USE ions_base,            ONLY : zv, nat, nsp, ityp, tau
+  USE environ_init,         ONLY : environ_initions, environ_initcell
 #endif
   !
   !
@@ -334,6 +335,7 @@ SUBROUTINE electrons_scf ( no_printout )
                                    env_extcharge_n, deenviron, esolvent,    &
                                    ecavity, epressure, eperiodic, eioncc,   &
                                    eextcharge
+ USE environ_main,          ONLY : calc_eenviron, calc_venviron
 #endif
   USE dfunct,               ONLY : newd
   USE esm,                  ONLY : do_comp_esm, esm_printpot
@@ -1059,6 +1061,9 @@ SUBROUTINE electrons_scf ( no_printout )
        !
        USE constants, ONLY : eps8
        USE control_flags, ONLY : lmd
+#ifdef __ENVIRON
+       USE environ_info, ONLY : environ_print_energies
+#endif      
        !
        IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
           !
@@ -1107,15 +1112,7 @@ SUBROUTINE electrons_scf ( no_printout )
        !
 #ifdef __ENVIRON
        IF ( do_environ )  THEN
-          IF ( env_static_permittivity .GT. 1.D0 ) WRITE( stdout, 9201 ) esolvent
-          IF ( env_surface_tension .GT. 0.D0 ) WRITE( stdout, 9202 ) ecavity
-          IF ( env_pressure .NE. 0.D0 ) WRITE( stdout, 9203 ) epressure
-          IF ( env_ioncc_concentration .GT. 0.D0 ) THEN 
-             WRITE( stdout, 9205 ) eioncc
-          ELSE IF ( env_periodicity .NE. 3 ) THEN
-             WRITE( stdout, 9204 ) eperiodic
-          ENDIF
-          IF ( env_extcharge_n .GT. 0 ) WRITE( stdout, 9206 ) eextcharge
+         CALL environ_print_energies()
        ENDIF
        !
 #endif
@@ -1166,14 +1163,6 @@ SUBROUTINE electrons_scf ( no_printout )
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
             /'     estimated scf accuracy    <',1PE17.1,' Ry' )
 9085 FORMAT(/'     total all-electron energy =',0PF17.6,' Ry' )
-#ifdef __ENVIRON
-9201 FORMAT( '     solvation energy          =',F17.8,' Ry' ) 
-9202 FORMAT( '     cavitation energy         =',F17.8,' Ry' ) 
-9203 FORMAT( '     PV energy                 =',F17.8,' Ry' ) 
-9204 FORMAT( '     periodic energy correct.  =',F17.8,' Ry' )
-9205 FORMAT( '     ionic charge energy       =',F17.8,' Ry' )
-9206 FORMAT( '     external charges energy   =',F17.8,' Ry' ) 
-#endif
 
   END SUBROUTINE print_energies
   !

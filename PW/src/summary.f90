@@ -50,6 +50,7 @@ SUBROUTINE summary()
   USE mp,              ONLY : mp_sum
 #ifdef __ENVIRON
   USE environ_base,    ONLY : do_environ
+  USE environ_info,    ONLY : environ_summary
 #endif
   USE esm,             ONLY : do_comp_esm, esm_summary
   USE martyna_tuckerman,ONLY: do_comp_mt

@@ -27,6 +27,7 @@ SUBROUTINE init_run()
 #ifdef __ENVIRON
   USE fft_base,           ONLY : dfftp
   USE environ_base,       ONLY : do_environ
+  USE environ_init,       ONLY : environ_initbase
 #endif
   USE recvec_subs,        ONLY : ggen
   USE wannier_new,        ONLY : use_wannier    

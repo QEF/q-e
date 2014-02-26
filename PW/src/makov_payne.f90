@@ -24,6 +24,7 @@ SUBROUTINE makov_payne( etot )
   USE lsda_mod,  ONLY : nspin
 #ifdef __ENVIRON
   USE environ_base, ONLY : do_environ
+  USE environ_mp,  ONLY : environ_makov_payne
 #endif
   !
   IMPLICIT NONE
@@ -75,6 +76,7 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   USE io_global,  ONLY : ionode
 #ifdef __ENVIRON
   USE environ_base, ONLY : do_environ
+  USE environ_mp, ONLY : environ_write_dipole
 #endif
   !
   IMPLICIT NONE

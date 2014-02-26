@@ -8,7 +8,7 @@
 #undef TESTING
 MODULE martyna_tuckerman
   !
-  ! ... The variables needed to the Martyna-Tuckeman method for isolated
+  ! ... The variables needed to the Martyna-Tuckerman method for isolated
   !     systems
   !
   USE kinds, ONLY: dp
@@ -24,7 +24,7 @@ MODULE martyna_tuckerman
   LOGICAL :: do_comp_mt = .FALSE.
   LOGICAL :: gamma_only = .FALSE.
   integer :: gstart = 1
-  !
+    !
   SAVE
 
   PRIVATE
@@ -83,7 +83,8 @@ CONTAINS
   RETURN
   END SUBROUTINE wg_corr_loc
 !----------------------------------------------------------------------------
-  SUBROUTINE wg_corr_force( omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, nspin, rho, force )
+  SUBROUTINE wg_corr_force( lnuclei, omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, nspin, &
+                            rho, force )
 !----------------------------------------------------------------------------
   USE cell_base, ONLY : tpiba
   USE mp_bands,  ONLY : intra_bgrp_comm
@@ -91,17 +92,21 @@ CONTAINS
   INTEGER, INTENT(IN) :: nat, ntyp, ityp(nat), ngm, nspin
   REAL(DP), INTENT(IN) :: omega, zv(ntyp), tau(3,nat), g(3,ngm)
   COMPLEX(DP), INTENT(IN) :: strf(ngm,ntyp), rho(ngm,nspin)
+  LOGICAL, INTENT(IN) :: lnuclei
+  ! this variable is used in wg_corr_force to select if
+  ! corr should be done on rho and nuclei or only on rho
   REAL(DP), INTENT(OUT) :: force(3,nat)
   INTEGER :: ig, na
   REAL (DP) :: arg
   COMPLEX(DP), ALLOCATABLE :: v(:)
   COMPLEX(DP) :: rho_tot
-
+  !
   IF (.NOT.wg_corr_is_updated) CALL init_wg_corr
-!
+  !
   allocate ( v(ngm) )
   do ig=1,ngm
-     rho_tot = rho(ig,1) - SUM(zv(1:ntyp)*strf(ig,1:ntyp)) / omega
+     rho_tot = rho(ig,1)
+     if(lnuclei) rho_tot = rho_tot - SUM(zv(1:ntyp)*strf(ig,1:ntyp)) / omega
      if (nspin==2) rho_tot = rho_tot + rho(ig,2)
      v(ig) = e2 * wg_corr(ig) * rho_tot
   end do
