@@ -21,7 +21,6 @@ bcast_ph_input.o \
 close_phq.o \
 lanczos_k.o \
 openfilq.o \
-phq_init.o \
 phq_readin.o \
 solve_head.o 
 

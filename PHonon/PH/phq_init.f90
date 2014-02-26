@@ -62,6 +62,7 @@ SUBROUTINE phq_init()
   USE acfdtest,            ONLY : acfdt_is_active, acfdt_num_der
   USE el_phon,             ONLY : elph_mat, iunwfcwann, npwq_refolded, &
                            kpq,g_kpq,igqg,xk_gamma, lrwfcr
+  USE wannier_gw,           ONLY : l_head
   !
   IMPLICIT NONE
   !
@@ -82,7 +83,6 @@ SUBROUTINE phq_init()
   COMPLEX(DP), ALLOCATABLE :: aux1(:,:)
     ! used to compute alphap
   COMPLEX(DP), EXTERNAL :: zdotc
-
   !
   !
   IF (all_done) RETURN
@@ -112,6 +112,7 @@ SUBROUTINE phq_init()
   DO nt = 1, ntyp
      !
      IF (upf(nt)%tcoulombp) then
+        print *,"OBM msh(nt)",msh(nt)
         CALL setlocq_coul ( xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1,nt) )
      ELSE
         CALL setlocq( xq, rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r,&
@@ -282,7 +283,7 @@ SUBROUTINE phq_init()
   CALL dvanqq()
   CALL drho()
   !
-  IF ( ( epsil .OR. zue ) .AND. okvan ) THEN
+  IF ( ( epsil .OR. zue .OR. l_head) .AND. okvan ) THEN
      CALL compute_qdipol(dpqq)
      IF (lspinorb) CALL compute_qdipol_so(dpqq, dpqq_so)
      CALL qdipol_cryst()

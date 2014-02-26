@@ -10,24 +10,6 @@
 !
 #include "f_defs.h"
 
-
-module wannier_gw
-  USE kinds, ONLY: DP
-  
-  SAVE
-  LOGICAL :: l_head!if true calculates the head of the symmetrized dielectric matrix -1
-  INTEGER :: n_gauss!number of frequency steps for head calculation
-  REAL(kind=DP) :: omega_gauss!period for frequency calculation
-  INTEGER :: grid_type!0 GL -T,T 2 GL 0 T 3 Equally spaced 0 Omega
-  INTEGER :: nsteps_lanczos!number of lanczos steps
-    !options for grid_freq=5
-  INTEGER :: second_grid_n!sub spacing for second grid
-  INTEGER :: second_grid_i!max regular step using the second grid
-  LOGICAL :: l_scissor!if true displaces occupied manifold of scissor
-  REAL(kind=DP) :: scissor!see above
-
-end module wannier_gw
-
 !
 !-----------------------------------------------------------------------
 subroutine solve_head

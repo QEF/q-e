@@ -53,6 +53,9 @@ PROGRAM head
   !USE path_io_routines, ONLY : io_path_start
   USE environment,     ONLY: environment_start
   USE wannier_gw,     ONLY : l_head
+  USE control_ph,      ONLY : epsil, trans, qplot, only_init, &
+                              only_wfc
+  USE el_phon,         ONLY : elph, elph_mat, elph_simple
   !
   IMPLICIT NONE
   !
@@ -101,7 +104,8 @@ PROGRAM head
      !
      !  If necessary the bands are recalculated
      !
-     IF (setup_pw) CALL run_pwscf(do_band)
+     !IF (setup_pw) CALL run_pwscf(do_band)
+     IF (setup_pw) CALL run_nscf(do_band, iq)
      !
      !  Initialize the quantities which do not depend on
      !  the linear response of the system
@@ -112,7 +116,7 @@ PROGRAM head
      !
 
      IF (epsil) CALL phescf()
-
+     
      if(l_head) then
 
         call solve_head

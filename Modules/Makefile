@@ -95,6 +95,7 @@ upf.o \
 upf_to_internal.o \
 uspp.o \
 version.o \
+wannier_gw.o\
 wannier_new.o \
 wave_base.o \
 wavefunctions.o \
