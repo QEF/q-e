@@ -27,7 +27,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE klist,                ONLY : xk
   USE control_flags,        ONLY : isolve
-  USE io_files, ONLY : prefix, diropn
+  USE io_files, ONLY : prefix, tmp_dir, diropn
   USE mp_world, ONLY : mpime, nproc, world_comm
   USE fft_base,             ONLY : dfftp, dffts
 
@@ -202,7 +202,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
      !read from file
      if(ionode) then
         iunfcw = find_free_unit()
-        open(unit=iunfcw,file=trim(prefix)//'.nfcws',status='old')
+        open(unit=iunfcw,file=trim(tmp_dir)//trim(prefix)//'.nfcws',status='old')
         read(iunfcw,*) fcw_number
         close(iunfcw)
      endif

@@ -13,7 +13,7 @@
   subroutine semicore(n_semicore, num_nbnds,ispin)
 !NOT_TO_BE_INCLUDED_START
      USE io_global,             ONLY : stdout, ionode,ionode_id
-     USE io_files,              ONLY : diropn,prefix, iunigk
+     USE io_files,              ONLY : diropn,prefix,tmp_dir, iunigk
      use pwcom
      USE wavefunctions_module,  ONLY : evc
      USE kinds,                 ONLY : DP
@@ -71,9 +71,9 @@
     if(ionode) then
        iun =  find_free_unit()
        if(ispin==1) then
-          open( unit= iun, file=trim(prefix)//'.sc_states', status='unknown',form='unformatted')
+          open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.sc_states', status='unknown',form='unformatted')
        else
-          open( unit= iun, file=trim(prefix)//'.sc_states2', status='unknown',form='unformatted')
+          open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.sc_states2', status='unknown',form='unformatted')
        endif
        write(iun) num_nbnds
        write(iun) n_semicore

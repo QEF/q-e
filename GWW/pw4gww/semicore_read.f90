@@ -13,7 +13,7 @@
   subroutine semicore_read(num_nbnds,numpw, ispin)
 !NOT_TO_BE_INCLUDED_START
      USE io_global,             ONLY : stdout, ionode,ionode_id
-     USE io_files,              ONLY : diropn,prefix, iunigk
+     USE io_files,              ONLY : diropn,prefix, tmp_dir, iunigk
      use pwcom
      USE wavefunctions_module,  ONLY : evc
      USE kinds,                 ONLY : DP
@@ -88,9 +88,9 @@
     if(ionode) then
        iun =  find_free_unit()
        if(ispin==1) then
-          open( unit= iun, file=trim(prefix)//'.sc_states', status='old',form='unformatted')
+          open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.sc_states', status='old',form='unformatted')
        else
-          open( unit= iun, file=trim(prefix)//'.sc_states2', status='old',form='unformatted')
+          open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.sc_states2', status='old',form='unformatted')
        endif
        read(iun) num_nbnds_sc
        read(iun) n_semicore
@@ -113,9 +113,9 @@
 !write header on file for each spin channel
     iunw =  find_free_unit()
     if(ispin==1) then
-       open( unit= iunw, file=trim(prefix)//'.sc_gvphi', status='unknown',form='unformatted')
+       open( unit= iunw, file=trim(tmp_dir)//trim(prefix)//'.sc_gvphi', status='unknown',form='unformatted')
     else
-       open( unit= iunw, file=trim(prefix)//'.sc_gvphi2', status='unknown',form='unformatted')
+       open( unit= iunw, file=trim(tmp_dir)//trim(prefix)//'.sc_gvphi2', status='unknown',form='unformatted')
     endif
     write(iunw) n_semicore
     write(iunw) et_sc(1:n_semicore)

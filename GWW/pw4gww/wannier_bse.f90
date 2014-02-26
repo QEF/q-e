@@ -14,7 +14,7 @@
 subroutine wannier_bse(ispin,w_wfcs,o_mat)
 
    USE io_global,            ONLY : stdout, ionode, ionode_id
-   USE io_files,             ONLY :  prefix, diropn
+   USE io_files,             ONLY :  prefix, tmp_dir, diropn
    USE kinds,    ONLY : DP
    USE wannier_gw, ONLY : num_nbndv,dual_bse,s_bse,l_truncated_coulomb,truncation_radius,vg_q,&
                           max_ngm,numw_prod
@@ -122,8 +122,8 @@ subroutine wannier_bse(ispin,w_wfcs,o_mat)
    if(ionode) then 
      iunu = find_free_unit()
   
-     if (ispin==1) open(unit=iunu,file=trim(prefix)//'.wbse1',status='unknown',form='unformatted')
-     if (ispin==2) open(unit=iunu,file=trim(prefix)//'.wbse2',status='unknown',form='unformatted')
+     if (ispin==1) open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.wbse1',status='unknown',form='unformatted')
+     if (ispin==2) open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.wbse2',status='unknown',form='unformatted')
 
      write(iunu) num_nbndv(ispin)
      write(iunu) s_bse
@@ -230,8 +230,8 @@ subroutine wannier_bse(ispin,w_wfcs,o_mat)
 
    if(ionode) then 
      iunz = find_free_unit()
-     if (ispin==1) open(unit=iunz,file=trim(prefix)//'.zbse1',status='unknown',form='unformatted')
-     if (ispin==2) open(unit=iunz,file=trim(prefix)//'.zbse2',status='unknown',form='unformatted')
+     if (ispin==1) open(unit=iunz,file=trim(tmp_dir)//trim(prefix)//'.zbse1',status='unknown',form='unformatted')
+     if (ispin==2) open(unit=iunz,file=trim(tmp_dir)//trim(prefix)//'.zbse2',status='unknown',form='unformatted')
      write(iunz) num_nbndv(ispin)
      write(iunz) s_bse 
      write (iunz) np_max
@@ -277,8 +277,8 @@ subroutine wannier_bse(ispin,w_wfcs,o_mat)
 
    if(ionode) then 
      iuni = find_free_unit()
-     if (ispin==1) open(unit=iuni,file=trim(prefix)//'.iwwbse1',status='unknown',form='unformatted')
-     if (ispin==2) open(unit=iuni,file=trim(prefix)//'.iwwbse2',status='unknown',form='unformatted')
+     if (ispin==1) open(unit=iuni,file=trim(tmp_dir)//trim(prefix)//'.iwwbse1',status='unknown',form='unformatted')
+     if (ispin==2) open(unit=iuni,file=trim(tmp_dir)//trim(prefix)//'.iwwbse2',status='unknown',form='unformatted')
      write(iuni) num_nbndv(ispin)
      write(iuni) s_bse 
      write (iuni) np_max

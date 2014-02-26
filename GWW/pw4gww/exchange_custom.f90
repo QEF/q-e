@@ -1661,7 +1661,7 @@ MODULE exchange_custom
       USE mp, ONLY : mp_sum
       USE mp_world, ONLY : world_comm
       USE gvect, ONLY : gstart
-      USE io_files, ONLY : prefix, nwordwfc,iunwfc
+      USE io_files, ONLY : prefix, tmp_dir, nwordwfc,iunwfc
 
       IMPLICIT NONE
 

@@ -18,7 +18,7 @@ subroutine pola_partial(numpw,ispin)
 !the occupancies are from  variable wg and ste to range 0,1            
 
    USE io_global,            ONLY : stdout, ionode, ionode_id
-   USE io_files,             ONLY : prefix, diropn
+   USE io_files,             ONLY : prefix, tmp_dir, diropn
    USE kinds,    ONLY : DP
    USE wannier_gw
    USE gvect
@@ -112,9 +112,9 @@ subroutine pola_partial(numpw,ispin)
      if(ionode) then
         iun=find_free_unit()
         if(ispin==1) then
-           open( unit= iun, file=trim(prefix)//'.occ_mat', status='unknown',form='unformatted')
+           open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.occ_mat', status='unknown',form='unformatted')
         else
-           open( unit= iun, file=trim(prefix)//'.occ_mat2', status='unknown',form='unformatted')
+           open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.occ_mat2', status='unknown',form='unformatted')
         endif
         write(iun) num_nbndv_min(ispin)
         write(iun) num_nbndv(ispin)

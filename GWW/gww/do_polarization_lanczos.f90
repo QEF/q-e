@@ -248,6 +248,7 @@ subroutine do_polarization_lanczos(tf,options,ispin)
   USE times_gw,           ONLY : times_freqs
   USE polarization,       ONLY : polaw,initialize_polaw,free_memory_polaw,write_polaw,read_polaw
   USE mp,                 ONLY : mp_bcast
+      USE io_files,  ONLY : prefix, tmp_dir
  
 
   implicit none
@@ -423,14 +424,14 @@ subroutine do_polarization_lanczos(tf,options,ispin)
 !check for restart
    if(ionode) then
 
-     inquire(file='restart_polaw', exist = exst)
+     inquire(file=trim(tmp_dir)//trim(prefix)//'-'//'restart_polaw', exist = exst)
      if(.not. exst .or. ispin==2) then
         off_nbegin=0
         iv_begin=1
         l_do_restart=.false.
      else
         iunrestart =  find_free_unit()
-        open( unit= iunrestart, file='restart_polaw', status='old')
+        open( unit= iunrestart, file=trim(tmp_dir)//trim(prefix)//'-'//'restart_polaw', status='old')
         read(iunrestart,*) off_nbegin
         read(iunrestart,*) iv_begin
         close(iunrestart)
@@ -532,7 +533,7 @@ subroutine do_polarization_lanczos(tf,options,ispin)
                 call write_polaw(pw,options%debug)
                 if(ionode) then
                    iunrestart =  find_free_unit()
-                   open( unit= iunrestart, file='restart_polaw', status='unknown')
+                   open( unit= iunrestart, file=trim(tmp_dir)//trim(prefix)//'-'//'restart_polaw', status='unknown')
                    write(iunrestart,*) iw-nbegin
                    write(iunrestart,*) iv
                    close(iunrestart)
@@ -542,7 +543,7 @@ subroutine do_polarization_lanczos(tf,options,ispin)
 !!write polarization on disk
           if(ionode) then
              iunrestart =  find_free_unit()
-             open( unit= iunrestart, file='restart_polaw', status='unknown')
+             open( unit= iunrestart, file=trim(tmp_dir)//trim(prefix)//'-'//'restart_polaw', status='unknown')
              write(iunrestart,*) iw-nbegin
              write(iunrestart,*) iv
              close(iunrestart)
@@ -571,7 +572,7 @@ subroutine do_polarization_lanczos(tf,options,ispin)
  enddo
  if(ionode) then
     iunrestart =  find_free_unit()
-    open( unit= iunrestart, file='restart_polaw', status='unknown')
+    open( unit= iunrestart, file=trim(tmp_dir)//trim(prefix)//'-'//'restart_polaw', status='unknown')
     write(iunrestart,*) -1
     write(iunrestart,*) -1
     close(iunrestart)

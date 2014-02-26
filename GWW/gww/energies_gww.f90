@@ -41,7 +41,7 @@
 !ATTENZIONE HF energies not implemented YET
       USE io_global,            ONLY : stdout, ionode
       USE input_gw,             ONLY : input_options
-      USE io_files,             ONLY : prefix
+      USE io_files,             ONLY : prefix,tmp_dir
 
       implicit none
 
@@ -56,9 +56,9 @@
       if(ionode) then
          iun = find_free_unit()
          if(.not. options%debug) then
-            open(unit=iun, file='quasi_particles', status='unknown',form='unformatted')
+            open(unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'quasi_particles', status='unknown',form='unformatted')
          else
-            open(unit=iun, file='quasi_particles', status='unknown',form='formatted')
+            open(unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'quasi_particles', status='unknown',form='formatted')
          endif
          
          if(.not. options%debug) then
@@ -105,7 +105,7 @@
 !HF energies not implemented YET
       USE io_global,            ONLY : stdout, ionode, ionode_id
       USE input_gw,             ONLY : input_options
-      USE io_files,             ONLY : prefix
+      USE io_files,             ONLY : prefix,tmp_dir
       USE mp,                   ONLY : mp_bcast
       USE mp_world,             ONLY : world_comm
 
@@ -123,9 +123,9 @@
       if(ionode) then
          iun = find_free_unit()
          if(.not. options%debug) then
-            open(unit=iun, file='quasi_particles', status='old',form='unformatted')
+            open(unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'quasi_particles', status='old',form='unformatted')
          else
-            open(unit=iun, file='quasi_particles', status='old',form='formatted')
+            open(unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'quasi_particles', status='old',form='formatted')
          endif
 
          if(.not. options%debug) then
@@ -327,6 +327,7 @@
   USE io_global, ONLY : stdout, ionode
   USE constants, ONLY : RYTOEV
   USE mp,        ONLY : mp_barrier
+    USE io_files,             ONLY : prefix,tmp_dir
  
 
   implicit none
@@ -351,7 +352,7 @@
 !write bands.dat file
 
      iun =  find_free_unit()
-     open( unit=iun, file='bands.dat', status='unknown',form='formatted')
+     open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'bands.dat', status='unknown',form='formatted')
      write(iun,'(i8)') qp%max_i
      write(iun,'(i8)') qp%nspin
      do is=1,qp%nspin

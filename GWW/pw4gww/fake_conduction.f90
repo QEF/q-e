@@ -42,7 +42,7 @@ CONTAINS
    USE gvecs,              ONLY : nls, nlsm, doublegrid
 
    USE kinds, ONLY : DP
-   USE io_files, ONLY : prefix, diropn
+   USE io_files, ONLY : prefix, tmp_dir, diropn
    USE g_psi_mod,            ONLY : h_diag, s_diag
    USE noncollin_module,     ONLY : noncolin, npol
    USE becmod,           ONLY : becp
@@ -311,12 +311,12 @@ CONTAINS
 !if required orthonormalize the projected plane_waves or read from disk
 
      l_do_optimal=.false.
-     inquire(file=trim(prefix)//'.restart_fk0_status', exist = exst)
+     inquire(file=trim(tmp_dir)//trim(prefix)//'.restart_fk0_status', exist = exst)
      if(.not. exst) then
         l_do_optimal=.true.
      else
         iunrestart0 =  find_free_unit()
-        open( unit= iunrestart0, file=trim(prefix)//'.restart_fk0_status', status='old')
+        open( unit= iunrestart0, file=trim(tmp_dir)//trim(prefix)//'.restart_fk0_status', status='old')
         read(iunrestart0,*) iv_start
         close(iunrestart0)
         if(iv_start<1 ) l_do_optimal=.true.
@@ -446,12 +446,12 @@ CONTAINS
 !check for restart
  if(ionode) then
 
-     inquire(file=trim(prefix)//'.restart_fk0_status', exist = exst)
+     inquire(file=trim(tmp_dir)//trim(prefix)//'.restart_fk0_status', exist = exst)
      if(.not. exst) then
         iv_start=1
      else
         iunrestart0 =  find_free_unit()
-        open( unit= iunrestart0, file=trim(prefix)//'.restart_fk0_status', status='old')
+        open( unit= iunrestart0, file=trim(tmp_dir)//trim(prefix)//'.restart_fk0_status', status='old')
         read(iunrestart0,*) iv_start
         read(iunrestart0,*) fcw_number
         read(iunrestart0,*) fcw_numberx
@@ -1086,7 +1086,7 @@ CONTAINS
      if(l_verbose) write(stdout,*) 'memory6.8', kilobytes
      call flush_unit(stdout)
      iunrestart0 =  find_free_unit()
-     open( unit= iunrestart0, file=trim(prefix)//'.restart_fk0_status', status='unknown')
+     open( unit= iunrestart0, file=trim(tmp_dir)//trim(prefix)//'.restart_fk0_status', status='unknown')
      write(iunrestart0,*) iv
      write(iunrestart0,*) fcw_number
      write(iunrestart0,*) fcw_numberx
@@ -1311,7 +1311,7 @@ CONTAINS
   !write number of states
 
   if(ionode) then
-     open(unit=iunfcw,file=trim(prefix)//'.nfcws',status='unknown')
+     open(unit=iunfcw,file=trim(tmp_dir)//trim(prefix)//'.nfcws',status='unknown')
      write(iunfcw,*) fcw_number
      close(iunfcw)
   endif
@@ -1329,7 +1329,7 @@ CONTAINS
 
 
   iunrestart0 =  find_free_unit()
-  open( unit= iunrestart0, file=trim(prefix)//'.restart_fk0_status', status='unknown')
+  open( unit= iunrestart0, file=trim(tmp_dir)//trim(prefix)//'.restart_fk0_status', status='unknown')
   write(iunrestart0,*) -1
   write(iunrestart0,*) fcw_number
   write(iunrestart0,*) fcw_numberx
@@ -1419,7 +1419,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
    USE mp_pools, ONLY : intra_pool_comm
    USE gvecs,              ONLY : nls, nlsm,  doublegrid
    USE kinds, ONLY : DP
-   USE io_files, ONLY : prefix, diropn
+   USE io_files, ONLY : prefix, tmp_dir, diropn
    USE g_psi_mod,            ONLY : h_diag, s_diag
    USE noncollin_module,     ONLY : noncolin, npol
    USE becmod,           ONLY : becp
@@ -2074,7 +2074,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
   !write number of states
 
   if(ionode) then
-     open(unit=iunfcw,file=trim(prefix)//'.nfcws',status='unknown')
+     open(unit=iunfcw,file=trim(tmp_dir)//trim(prefix)//'.nfcws',status='unknown')
      write(iunfcw,*) fcw_number
      close(iunfcw)
   endif
@@ -2167,7 +2167,7 @@ end subroutine fake_conduction_wannier_real
    USE gvecs,              ONLY : nls, nlsm, doublegrid
 
    USE kinds, ONLY : DP
-   USE io_files, ONLY : prefix, diropn
+   USE io_files, ONLY : prefix, tmp_dir, diropn
    USE g_psi_mod,            ONLY : h_diag, s_diag
    USE noncollin_module,     ONLY : noncolin, npol
    USE becmod,           ONLY : becp
@@ -2437,12 +2437,12 @@ end subroutine fake_conduction_wannier_real
 !if required orthonormalize the projected plane_waves or read from disk
 
      l_do_optimal=.false.
-     inquire(file=trim(prefix)//'.restart_fk0_status', exist = exst)
+     inquire(file=trim(tmp_dir)//trim(prefix)//'.restart_fk0_status', exist = exst)
      if(.not. exst) then
         l_do_optimal=.true.
      else
         iunrestart0 =  find_free_unit()
-        open( unit= iunrestart0, file=trim(prefix)//'.restart_fk0_status', status='old')
+        open( unit= iunrestart0, file=trim(tmp_dir)//trim(prefix)//'.restart_fk0_status', status='old')
         read(iunrestart0,*) iv_start
         close(iunrestart0)
         if(iv_start<1 ) l_do_optimal=.true.
@@ -2582,12 +2582,12 @@ end subroutine fake_conduction_wannier_real
 !check for restart
  if(ionode) then
 
-     inquire(file=trim(prefix)//'.restart_fk0_status', exist = exst)
+     inquire(file=trim(tmp_dir)//trim(prefix)//'.restart_fk0_status', exist = exst)
      if(.not. exst) then
         iv_start=1
      else
         iunrestart0 =  find_free_unit()
-        open( unit= iunrestart0, file=trim(prefix)//'.restart_fk0_status', status='old')
+        open( unit= iunrestart0, file=trim(tmp_dir)//trim(prefix)//'.restart_fk0_status', status='old')
         read(iunrestart0,*) iv_start
         read(iunrestart0,*) fcw_number
         read(iunrestart0,*) fcw_numberx
@@ -2867,7 +2867,7 @@ end subroutine fake_conduction_wannier_real
      if(l_verbose) write(stdout,*) 'memory6.8', kilobytes
      call flush_unit(stdout)
      iunrestart0 =  find_free_unit()
-     open( unit= iunrestart0, file=trim(prefix)//'.restart_fk0_status', status='unknown')
+     open( unit= iunrestart0, file=trim(tmp_dir)//trim(prefix)//'.restart_fk0_status', status='unknown')
      write(iunrestart0,*) iv
      write(iunrestart0,*) fcw_number
      write(iunrestart0,*) fcw_numberx
@@ -3054,7 +3054,7 @@ end subroutine fake_conduction_wannier_real
   !write number of states
 
   if(ionode) then
-     open(unit=iunfcw,file=trim(prefix)//'.nfcws',status='unknown')
+     open(unit=iunfcw,file=trim(tmp_dir)//trim(prefix)//'.nfcws',status='unknown')
      write(iunfcw,*) fcw_number
      close(iunfcw)
   endif
@@ -3072,7 +3072,7 @@ end subroutine fake_conduction_wannier_real
 
 
   iunrestart0 =  find_free_unit()
-  open( unit= iunrestart0, file=trim(prefix)//'.restart_fk0_status', status='unknown')
+  open( unit= iunrestart0, file=trim(tmp_dir)//trim(prefix)//'.restart_fk0_status', status='unknown')
   write(iunrestart0,*) -1
   write(iunrestart0,*) fcw_number
   write(iunrestart0,*) fcw_numberx

@@ -82,6 +82,7 @@ MODULE contour
       USE io_global,          ONLY : stdout, ionode
       USE input_gw,           ONLY : input_options
       USE mp,                 ONLY : mp_barrier
+     USE io_files,             ONLY : prefix,tmp_dir
       implicit none
       INTEGER, EXTERNAL :: find_free_unit
       TYPE(w_poles) :: wp!the structure to be written 
@@ -89,7 +90,7 @@ MODULE contour
 
       if(ionode) then
          iun = find_free_unit()
-         open( unit=iun, file='wpoles', status='unknown',form='unformatted')
+         open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'wpoles', status='unknown',form='unformatted')
          write(iun) wp%max_i
          write(iun) wp%i_min
          write(iun) wp%i_max
@@ -108,6 +109,7 @@ MODULE contour
       USE input_gw,           ONLY : input_options
       USE mp,                 ONLY : mp_bcast
       USE mp_world,           ONLY : world_comm
+     USE io_files,             ONLY : prefix,tmp_dir
       implicit none
       INTEGER, EXTERNAL :: find_free_unit
       TYPE(w_poles) :: wp!the structure to be read
@@ -115,7 +117,7 @@ MODULE contour
 
       if(ionode) then
          iun = find_free_unit()
-         open( unit=iun, file='wpoles', status='old',form='unformatted')
+         open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'wpoles', status='old',form='unformatted')
          read(iun) wp%max_i
          read(iun) wp%i_min
          read(iun) wp%i_max
@@ -147,6 +149,8 @@ MODULE contour
       USE io_global,          ONLY : stdout, ionode
       USE input_gw,           ONLY : input_options
       USE mp,                 ONLY : mp_barrier
+      USE io_files,  ONLY : prefix, tmp_dir
+      
       implicit none
       INTEGER, EXTERNAL :: find_free_unit
       TYPE(w_expectation) :: we!the structure to be written              
@@ -155,7 +159,7 @@ MODULE contour
 
       if(ionode) then
          iun = find_free_unit()
-         open( unit=iun, file='wexpectation', status='unknown',form='unformatted')
+         open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'wexpectation', status='unknown',form='unformatted')
          write(iun) we%n
          write(iun) we%max_i
          write(iun) we%i_min
@@ -175,6 +179,8 @@ MODULE contour
       USE input_gw,           ONLY : input_options
       USE mp,                 ONLY : mp_bcast
       USE mp_world,           ONLY : world_comm
+      USE io_files,           ONLY : prefix, tmp_dir
+
       implicit none
       INTEGER, EXTERNAL :: find_free_unit
       TYPE(w_expectation),INTENT(out) :: we!the structure to be written                                                                                                 
@@ -183,7 +189,7 @@ MODULE contour
 
       if(ionode) then
          iun = find_free_unit()
-         open( unit=iun, file='wexpectation', status='old',form='unformatted')
+         open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'wexpectation', status='old',form='unformatted')
          read(iun) we%n
          read(iun) we%max_i
          read(iun) we%i_min

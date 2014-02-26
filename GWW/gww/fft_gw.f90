@@ -51,6 +51,7 @@
  SUBROUTINE read_fft_data(label,fftd,debug)
 !this subroutine reads the fft descriptor from file
 !we take care of the t ==> -t symmetry
+      USE io_files,  ONLY : prefix, tmp_dir
    implicit none
    INTEGER, EXTERNAL :: find_free_unit
    TYPE(fft_data) :: fftd
@@ -68,18 +69,18 @@
         & label/10000,mod(label,10000)/1000,mod(label,1000)/100,mod(label,100)/10,mod(label,10)
       iunf = find_free_unit()
       if(.not.debug) then
-        open( unit=iunf, file='fftdata.'// nfile, status='old',form='unformatted')
+        open( unit=iunf, file=trim(tmp_dir)//trim(prefix)//'-'//'fftdata.'// nfile, status='old',form='unformatted')
       else
-        open( unit=iunf, file='fftdata.'// nfile, status='old',form='formatted')
+        open( unit=iunf, file=trim(tmp_dir)//trim(prefix)//'-'//'fftdata.'// nfile, status='old',form='formatted')
       endif
     else
       write(nfile,'(5i1)') &
         & -label/10000,mod(-label,10000)/1000,mod(-label,1000)/100,mod(-label,100)/10,mod(-label,10)
       iunf = find_free_unit()
       if(.not.debug) then
-        open( unit=iunf, file='fftdata.-'// nfile, status='old',form='unformatted')
+        open( unit=iunf, file=trim(tmp_dir)//trim(prefix)//'-'//'fftdata.-'// nfile, status='old',form='unformatted')
       else
-        open( unit=iunf, file='fftdata.-'// nfile, status='old',form='formatted')
+        open( unit=iunf, file=trim(tmp_dir)//trim(prefix)//'-'//'fftdata.-'// nfile, status='old',form='formatted')
       endif
 
     endif
@@ -131,6 +132,7 @@
  SUBROUTINE write_fft_data(fftd,debug)
 !this subroutine writes the fft descriptor on file
 !we take care of the t ==> -t symmetry
+   USE io_files,  ONLY : prefix, tmp_dir
    implicit none
    INTEGER, EXTERNAL :: find_free_unit
    TYPE(fft_data) :: fftd
@@ -146,18 +148,18 @@
         & fftd%label/10000,mod(fftd%label,10000)/1000,mod(fftd%label,1000)/100,mod(fftd%label,100)/10,mod(fftd%label,10)
       iunf = find_free_unit()
       if(.not.debug) then
-        open( unit=iunf, file='fftdata.'// nfile, status='unknown',form='unformatted')
+        open( unit=iunf, file=trim(tmp_dir)//trim(prefix)//'-'//'fftdata.'// nfile, status='unknown',form='unformatted')
       else
-        open( unit=iunf, file='fftdata.'// nfile, status='unknown',form='formatted')
+        open( unit=iunf, file=trim(tmp_dir)//trim(prefix)//'-'//'fftdata.'// nfile, status='unknown',form='formatted')
       endif
     else
       write(nfile,'(5i1)') &
         & -fftd%label/10000,mod(-fftd%label,10000)/1000,mod(-fftd%label,1000)/100,mod(-fftd%label,100)/10,mod(-fftd%label,10)
       iunf = find_free_unit()
       if(.not.debug) then
-        open( unit=iunf, file='fftdata.-'// nfile, status='unknown',form='unformatted')
+        open( unit=iunf, file=trim(tmp_dir)//trim(prefix)//'-'//'fftdata.-'// nfile, status='unknown',form='unformatted')
       else
-        open( unit=iunf, file='fftdata.-'// nfile, status='unknown',form='formatted')
+        open( unit=iunf, file=trim(tmp_dir)//trim(prefix)//'-'//'fftdata.-'// nfile, status='unknown',form='formatted')
       endif
     endif
 

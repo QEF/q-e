@@ -58,7 +58,7 @@
 !this subroutine writes the green function on disk
 !the file name is taken from the label
 
-    USE io_files,             ONLY : prefix
+    USE io_files,             ONLY : prefix,tmp_dir
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
     TYPE(polaw) :: pw!the green function to be written
@@ -74,18 +74,18 @@
         & pw%label/10000,mod(pw%label,10000)/1000,mod(pw%label,1000)/100,mod(pw%label,100)/10,mod(pw%label,10)
       iung = find_free_unit()
       if(.not.debug) then
-        open( unit=iung, file='polaw.'// nfile, status='unknown',form='unformatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.'// nfile, status='unknown',form='unformatted')
       else 
-        open( unit=iung, file='polaw.'// nfile, status='unknown',form='formatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.'// nfile, status='unknown',form='formatted')
       endif
     else
       write(nfile,'(5i1)') &         
         & -pw%label/10000,mod(-pw%label,10000)/1000,mod(-pw%label,1000)/100,mod(-pw%label,100)/10,mod(-pw%label,10)
       iung = find_free_unit()
       if(.not.debug) then
-        open( unit=iung, file='polaw.-'// nfile, status='unknown',form='unformatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.-'// nfile, status='unknown',form='unformatted')
       else
-        open( unit=iung, file='polaw.-'// nfile, status='unknown',form='formatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.-'// nfile, status='unknown',form='formatted')
       endif
     endif
     if(.not.debug) then
@@ -119,9 +119,9 @@
     if(direct_file) then
        iung = find_free_unit()
        if(pw%label >= 0 ) then
-          open( unit=iung, file='polawd.'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
        else
-          open( unit=iung, file='polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
        endif
        do iw=1,pw%numpw
           write(unit=iung, rec=iw) pw%pw(:,iw)
@@ -137,7 +137,7 @@
 !this subroutine reads the green function from disk
 !the file name is taken from the label
 
-    USE io_files,             ONLY : prefix
+    USE io_files,             ONLY : prefix,tmp_dir
     USE io_global,            ONLY : stdout
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -159,17 +159,17 @@
       write(nfile,'(5i1)') label/10000,mod(label,10000)/1000,mod(label,1000)/100,mod(label,100)/10,mod(label,10)
       iung = find_free_unit()
       if(.not.debug) then
-        open( unit=iung, file='polaw.'// nfile, status='old',form='unformatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.'// nfile, status='old',form='unformatted')
       else
-        open( unit=iung, file='polaw.'// nfile, status='old',form='formatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.'// nfile, status='old',form='formatted')
       endif
     else
       write(nfile,'(5i1)') -label/10000,mod(-label,10000)/1000,mod(-label,1000)/100,mod(-label,100)/10,mod(-label,10)
       iung = find_free_unit()
       if(.not.debug) then
-        open( unit=iung, file='polaw.-'// nfile, status='old',form='unformatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.-'// nfile, status='old',form='unformatted')
       else
-        open( unit=iung, file='polaw.-'// nfile, status='old',form='formatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.-'// nfile, status='old',form='formatted')
       endif
     endif
     if(.not.debug) then
@@ -206,9 +206,9 @@
     if(direct_file) then
        iung = find_free_unit()
        if(label >= 0 ) then
-          open( unit=iung, file='polawd.'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
        else
-          open( unit=iung, file='polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
        endif
        if(l_verbose) write(stdout,*) 'Read polaw5'!ATTENZIONE
        do iw=1,pw%numpw
@@ -227,7 +227,7 @@
 !the file name is taken from the label
 !the ionode_id distribute to all the processors
 
-    USE io_files,             ONLY : prefix
+    USE io_files,             ONLY : prefix,tmp_dir
     USE io_global,            ONLY : stdout, ionode, ionode_id
     USE mp,                   ONLY : mp_barrier, mp_bcast
     USE mp_world,             ONLY : world_comm
@@ -250,11 +250,11 @@
        if(label >= 0 ) then
           write(nfile,'(5i1)') label/10000,mod(label,10000)/1000,mod(label,1000)/100,mod(label,100)/10,mod(label,10)
           iung = find_free_unit()
-          open( unit=iung, file='polaw.'// nfile, status='old',form='unformatted')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.'// nfile, status='old',form='unformatted')
        else
           write(nfile,'(5i1)') -label/10000,mod(-label,10000)/1000,mod(-label,1000)/100,mod(-label,100)/10,mod(-label,10)
           iung = find_free_unit()
-          open( unit=iung, file='polaw.-'// nfile, status='old',form='unformatted')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.-'// nfile, status='old',form='unformatted')
        endif
        
    
@@ -282,9 +282,9 @@
        if(direct_file) then
           iung = find_free_unit()
           if(label >= 0 ) then
-             open( unit=iung, file='polawd.'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+             open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
           else
-             open( unit=iung, file='polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+             open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
           endif
           
           do iw=1,pw%numpw
@@ -309,7 +309,7 @@
 !the file name is taken from the label
 !writes column from range_min to range_max
 
-    USE io_files,             ONLY : prefix
+    USE io_files,             ONLY : prefix,tmp_dir
     USE io_global,            ONLY : stdout
 
 
@@ -340,18 +340,18 @@
         & pw%label/10000,mod(pw%label,10000)/1000,mod(pw%label,1000)/100,mod(pw%label,100)/10,mod(pw%label,10)
       iung = find_free_unit()
       if(.not.debug) then
-        open( unit=iung, file='polaw.'// nfile, status='unknown',form='unformatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.'// nfile, status='unknown',form='unformatted')
       else
-        open( unit=iung, file='polaw.'// nfile, status='unknown',form='formatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.'// nfile, status='unknown',form='formatted')
       endif
     else
       write(nfile,'(5i1)') &
         & -pw%label/10000,mod(-pw%label,10000)/1000,mod(-pw%label,1000)/100,mod(-pw%label,100)/10,mod(-pw%label,10)
       iung = find_free_unit()
       if(.not.debug) then
-        open( unit=iung, file='polaw.-'// nfile, status='unknown',form='unformatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.-'// nfile, status='unknown',form='unformatted')
       else
-        open( unit=iung, file='polaw.-'// nfile, status='unknown',form='formatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.-'// nfile, status='unknown',form='formatted')
       endif
     endif
     if(.not.debug) then
@@ -385,9 +385,9 @@
     if(direct_file) then
        iung = find_free_unit()
        if(pw%label >= 0 ) then
-          open( unit=iung, file='polawd.'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
        else
-          open( unit=iung, file='polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
        endif
        do iw=range_min,range_max
           iww = iw
@@ -406,7 +406,7 @@
 !the file name is taken from the label
 !reads columns from range_min to range_max
 
-    USE io_files,             ONLY : prefix
+    USE io_files,             ONLY : prefix,tmp_dir
     USE io_global,            ONLY : stdout
 
     implicit none
@@ -443,17 +443,17 @@
       write(nfile,'(5i1)') label/10000,mod(label,10000)/1000,mod(label,1000)/100,mod(label,100)/10,mod(label,10)
       iung = find_free_unit()
       if(.not.debug) then
-        open( unit=iung, file='polaw.'// nfile, status='old',form='unformatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.'// nfile, status='old',form='unformatted')
       else
-        open( unit=iung, file='polaw.'// nfile, status='old',form='formatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.'// nfile, status='old',form='formatted')
       endif
     else
       write(nfile,'(5i1)') -label/10000,mod(-label,10000)/1000,mod(-label,1000)/100,mod(-label,100)/10,mod(-label,10)
       iung = find_free_unit()
       if(.not.debug) then
-        open( unit=iung, file='polaw.-'// nfile, status='old',form='unformatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.-'// nfile, status='old',form='unformatted')
       else
-        open( unit=iung, file='polaw.-'// nfile, status='old',form='formatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polaw.-'// nfile, status='old',form='formatted')
       endif
     endif
     if(.not.debug) then
@@ -502,9 +502,9 @@
 
        iung = find_free_unit()
        if(label >= 0 ) then
-          open( unit=iung, file='polawd.'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
        else
-          open( unit=iung, file='polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
        endif
        do iw=range_min, range_max
           iww = iw

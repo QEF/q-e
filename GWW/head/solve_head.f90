@@ -37,7 +37,7 @@ subroutine solve_head
   !
   USE ions_base,             ONLY : nat
   USE io_global,             ONLY : stdout, ionode,ionode_id
-  USE io_files,              ONLY : diropn,prefix, iunigk
+  USE io_files,              ONLY : diropn,prefix, iunigk, tmp_dir
   use pwcom
   USE check_stop,            ONLY : max_seconds
   USE wavefunctions_module,  ONLY : evc
@@ -483,7 +483,7 @@ subroutine solve_head
 
   if(ionode) then
      iun =  find_free_unit()
-     open( unit= iun, file=trim(prefix)//'.head', status='unknown',form='unformatted')
+     open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.head', status='unknown',form='unformatted')
      write(iun) n_gauss
      write(iun) omega_gauss
      write(iun) freqs(1:n_gauss+1)
@@ -508,7 +508,7 @@ subroutine solve_head
 
   if(ionode) then
      iun =  find_free_unit()
-     open( unit= iun, file=trim(prefix)//'.e_head', status='unknown',form='unformatted')
+     open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.e_head', status='unknown',form='unformatted')
      write(iun) n_gauss
      write(iun) omega_gauss
      write(iun) freqs(1:n_gauss+1)
@@ -536,7 +536,7 @@ subroutine solve_head
   if(ionode) close(iun)
 
  ! if(ionode) then
- !    open( unit= iun, file=trim(prefix)//'.e_head', status='old',position='rewind',form='unformatted')
+ !    open( unit= iun, file=trim(tmp_dir)//trim(prefix)////'.e_head', status='old',position='rewind',form='unformatted')
  !    read(iun) idumm
  !    read(iun) rdumm
  !    read(iun) head_tmp(1:n_gauss+1)

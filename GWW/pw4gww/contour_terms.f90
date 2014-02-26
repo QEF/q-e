@@ -14,7 +14,7 @@
   subroutine contour_terms(n_s,s_basis,ispin,istate)
 !NOT_TO_BE_INCLUDED_START
     USE io_global,            ONLY : stdout, ionode, ionode_id
-    USE io_files,             ONLY : prefix, nwordwfc,iunwfc
+    USE io_files,             ONLY : prefix, tmp_dir, nwordwfc,iunwfc
     USE kinds,    ONLY : DP
     USE wannier_gw, ONLY : num_nbnds,num_nbndv,s_first_state,s_last_state, l_verbose
     USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
@@ -57,9 +57,9 @@
        iun= find_free_unit()
         write(nfile,'(4i1)') istate/1000,mod(istate,1000)/100,mod(istate,100)/10,mod(istate,10)
        if(ispin==1) then
-          open( unit= iun, file=trim(prefix)//'.s_contour'//nfile , status='unknown',form='unformatted')
+          open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.s_contour'//nfile , status='unknown',form='unformatted')
        else
-          open( unit= iun, file=trim(prefix)//'.s_contour2'//nfile , status='unknown',form='unformatted')
+          open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.s_contour2'//nfile , status='unknown',form='unformatted')
        endif
        write(iun) num_nbnds
        write(iun) n_s

@@ -20,6 +20,7 @@
       LOGICAL :: whole_s=.false.!if .true. also off-diagonal elements of self energy are calculated
       INTEGER :: max_i!maximum state to be calculated
       CHARACTER(len=256) :: prefix!prefix to designate the files same as in PW
+      CHARACTER(len=256) :: outdir!outdir to designate the files same as in PW
       INTEGER :: num_rows=50!number of rows of polarization to be taken together for FFT
       LOGICAL :: xc_together=.false.!if true exchange and correlation treated together, usually NOT
       LOGICAL :: debug=.false.!if .true. debug output is considered
@@ -151,8 +152,11 @@
     USE io_global,            ONLY : stdout, ionode, ionode_id
     USE mp,                   ONLY : mp_bcast
     USE mp_world,             ONLY : world_comm
-
+    USE io_files,             ONLY :  tmp_dir,outdir,prefix
+   
     implicit none
+
+    CHARACTER(LEN=256), EXTERNAL :: trimcheck
 
     INTEGER, EXTERNAL :: find_free_unit
 
@@ -169,6 +173,10 @@
        !read(iun, NML=inputgww)
        !close(iun)
        read(*, NML=inputgww)
+!OBM: file handling in a more QE manner
+     outdir = trimcheck(ggwin%outdir)
+     tmp_dir = outdir
+     prefix = trim(ggwin%prefix)
 !set up parameter for calculation with Lanczos scheme
      
        if(ggwin%l_self_lanczos.and.ggwin%l_lanczos_conv.and. .not. ggwin%l_self_time) then
@@ -177,7 +185,7 @@
           ggwin%n_grid_fit=ggwin%n
        endif
 !writes on screen
-
+       
        write(stdout,*) 'Number of intervals: ', ggwin%n
        write(stdout,*) 'Number of intervals for fit:', ggwin%n_fit
        if(ggwin%tau==0.d0) ggwin%tau=2.d0/ggwin%omega*dble(ggwin%n)
@@ -274,7 +282,9 @@
         if(ggwin%l_full) write(stdout,*) 'FULL RELATIVISTIC CALCULATION with:', ggwin%n_full
      endif
 #ifdef __PARA
-
+    CALL mp_bcast( outdir,ionode_id, world_comm )
+    CALL mp_bcast( tmp_dir,ionode_id, world_comm )
+    CALL mp_bcast( prefix,ionode_id, world_comm )
     call mp_bcast(ggwin%n,ionode_id,world_comm)
     call mp_bcast(ggwin%tau,ionode_id,world_comm)
     call mp_bcast(ggwin%whole_s,ionode_id,world_comm)

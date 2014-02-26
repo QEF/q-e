@@ -160,6 +160,7 @@
    
     USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : ionode
+    USE io_files,             ONLY : prefix,tmp_dir
     implicit none
 
     INTEGER, EXTERNAL :: find_free_unit
@@ -171,9 +172,9 @@
     if(ionode) then
        iun = find_free_unit()
        if(.not. options%debug) then
-          open( unit=iun, file='contraction', status='unknown',form='unformatted')
+          open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction', status='unknown',form='unformatted')
        else
-          open( unit=iun, file='contraction', status='unknown',form='formatted')
+          open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction', status='unknown',form='formatted')
        endif
 
        if(.not.options%debug) then
@@ -219,6 +220,7 @@
     USE io_global,          ONLY : stdout, ionode, ionode_id
     USE mp,                 ONLY : mp_bcast
     USE mp_world,           ONLY : world_comm
+    USE io_files,             ONLY : prefix,tmp_dir
 
     implicit none
 
@@ -232,9 +234,9 @@
     if(ionode) then 
        iun = find_free_unit()
        if(.not. options%debug) then
-          open( unit=iun, file='contraction', status='old',form='unformatted')
+          open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction', status='old',form='unformatted')
        else
-          open( unit=iun, file='contraction', status='old',form='formatted')
+          open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction', status='old',form='formatted')
        endif
     endif
 
@@ -314,6 +316,7 @@
 
     USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : ionode
+    USE io_files,             ONLY : prefix,tmp_dir
     implicit none
 
     INTEGER, EXTERNAL :: find_free_unit
@@ -325,9 +328,9 @@
     if(ionode) then
        iun = find_free_unit()
        if(.not. options%debug) then
-          open( unit=iun, file='contraction_index', status='unknown',form='unformatted')
+          open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction_index', status='unknown',form='unformatted')
        else
-          open( unit=iun, file='contraction_index', status='unknown',form='formatted')
+          open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction_index', status='unknown',form='formatted')
        endif
 
        if(.not.options%debug) then
@@ -363,6 +366,7 @@
     USE io_global,          ONLY : stdout, ionode, ionode_id
     USE mp,                 ONLY : mp_bcast
     USE mp_world,           ONLY : world_comm
+    USE io_files,             ONLY : prefix,tmp_dir
 
     implicit none
 
@@ -376,9 +380,9 @@
     if(ionode) then
        iun = find_free_unit()
        if(.not. options%debug) then
-          open( unit=iun, file='contraction_index', status='old',form='unformatted')
+          open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction_index', status='old',form='unformatted')
        else
-          open( unit=iun, file='contraction_index', status='old',form='formatted')
+          open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction_index', status='old',form='formatted')
        endif
     endif
 
@@ -438,6 +442,7 @@
 
      USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : ionode
+    USE io_files,             ONLY : prefix,tmp_dir
     implicit none
 
     INTEGER, EXTERNAL :: find_free_unit
@@ -452,9 +457,9 @@
          & crs%state/10000,mod(crs%state,10000)/1000,mod(crs%state,1000)/100,mod(crs%state,100)/10,mod(crs%state,10)
     iun = find_free_unit()
     if(.not. options%debug) then
-       open( unit=iun, file='contraction'// nfile, status='unknown',form='unformatted')
+       open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction'// nfile, status='unknown',form='unformatted')
     else
-       open( unit=iun, file='contraction'// nfile, status='unknown',form='formatted')
+       open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction'// nfile, status='unknown',form='formatted')
     endif
 
     if(.not.options%debug) then
@@ -489,6 +494,7 @@
 
      USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : ionode
+    USE io_files,             ONLY : prefix,tmp_dir
     implicit none
 
     INTEGER, EXTERNAL :: find_free_unit
@@ -505,9 +511,9 @@
          & crs%state/10000,mod(crs%state,10000)/1000,mod(crs%state,1000)/100,mod(crs%state,100)/10,mod(crs%state,10)
     iun = find_free_unit()
     if(.not. options%debug) then
-       open( unit=iun, file='contraction'// nfile, status='old',form='unformatted')
+       open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction'// nfile, status='old',form='unformatted')
     else
-       open( unit=iun, file='contraction'// nfile, status='old',form='formatted')
+       open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction'// nfile, status='old',form='formatted')
     endif
 
     if(.not.options%debug) then
@@ -929,6 +935,7 @@
 
     USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : ionode
+    USE io_files,             ONLY : prefix,tmp_dir
     implicit none
 
     INTEGER, EXTERNAL :: find_free_unit
@@ -944,9 +951,9 @@
          & cps%state/10000,mod(cps%state,10000)/1000,mod(cps%state,1000)/100,mod(cps%state,100)/10,mod(cps%state,10)
     iun = find_free_unit()
     if(.not. options%debug) then
-       open( unit=iun, file='contraction_pola'// nfile, status='old',form='unformatted')
+       open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction_pola'// nfile, status='old',form='unformatted')
     else
-       open( unit=iun, file='contraction_pola'// nfile, status='old',form='formatted')
+       open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction_pola'// nfile, status='old',form='formatted')
     endif
 
     if(.not.options%debug) then
@@ -983,6 +990,7 @@
 
     USE input_gw,           ONLY : input_options
     USE io_global,          ONLY : ionode
+    USE io_files,             ONLY : prefix,tmp_dir
     implicit none
 
     INTEGER, EXTERNAL :: find_free_unit
@@ -998,9 +1006,9 @@
          & cps%state/10000,mod(cps%state,10000)/1000,mod(cps%state,1000)/100,mod(cps%state,100)/10,mod(cps%state,10)
     iun = find_free_unit()
     if(.not. options%debug) then
-       open( unit=iun, file='contraction_pola'// nfile, status='unknown',form='unformatted')
+       open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction_pola'// nfile, status='unknown',form='unformatted')
     else
-       open( unit=iun, file='contraction_pola'// nfile, status='unknown',form='formatted')
+       open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction_pola'// nfile, status='unknown',form='formatted')
     endif
 
     if(.not.options%debug) then
@@ -1034,6 +1042,8 @@
     USE io_global,          ONLY : ionode, ionode_id
     USE mp,                 ONLY : mp_bcast
     USE mp_world,           ONLY : world_comm
+    USE io_files,           ONLY : prefix, tmp_dir
+
     implicit none
 
     INTEGER, EXTERNAL :: find_free_unit
@@ -1051,9 +1061,9 @@
          & crs%state/10000,mod(crs%state,10000)/1000,mod(crs%state,1000)/100,mod(crs%state,100)/10,mod(crs%state,10)
        iun = find_free_unit()
        if(.not. options%debug) then
-          open( unit=iun, file='contraction'// nfile, status='old',form='unformatted')
+          open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction'// nfile, status='old',form='unformatted')
        else
-          open( unit=iun, file='contraction'// nfile, status='old',form='formatted')
+          open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'contraction'// nfile, status='old',form='formatted')
        endif
 
        if(.not.options%debug) then

@@ -11,7 +11,7 @@
   subroutine write_pola_basis(numpw)
 
     USE io_global,            ONLY : stdout, ionode, ionode_id
-   USE io_files,             ONLY : prefix, diropn
+   USE io_files,             ONLY : prefix, tmp_dir, diropn
    USE kinds,    ONLY : DP
    USE wannier_gw
    USE gvect

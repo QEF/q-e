@@ -291,7 +291,7 @@
 !this subroutine writes the green function on disk
 !the file name is taken from the label
 
-    USE io_files,             ONLY : prefix
+    USE io_files,             ONLY : prefix,tmp_dir
     implicit none
 
     INTEGER, EXTERNAL :: find_free_unit
@@ -306,18 +306,18 @@
          & gr%label/10000,mod(gr%label,10000)/1000,mod(gr%label,1000)/100,mod(gr%label,100)/10,mod(gr%label,10)
       iung = find_free_unit()
       if(.not. debug) then
-        open( unit=iung, file='green.'// nfile, status='unknown',form='unformatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'green.'// nfile, status='unknown',form='unformatted')
       else
-        open( unit=iung, file='green.'// nfile, status='unknown',form='formatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'green.'// nfile, status='unknown',form='formatted')
       endif
     else
       write(nfile,'(5i1)') &          
       & -gr%label/10000,mod(-gr%label,10000)/1000,mod(-gr%label,1000)/100,mod(-gr%label,100)/10,mod(-gr%label,10)
       iung = find_free_unit()
       if(.not.debug) then
-        open( unit=iung, file='green.-'// nfile, status='unknown',form='unformatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'green.-'// nfile, status='unknown',form='unformatted')
       else
-        open( unit=iung, file='green.-'// nfile, status='unknown',form='formatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'green.-'// nfile, status='unknown',form='formatted')
       endif
     endif
     if(.not.debug) then
@@ -373,7 +373,7 @@
 !this subroutine reads the green function from disk
 !the file name is taken from the label
 
-    USE io_files,             ONLY : prefix
+    USE io_files,             ONLY : prefix,tmp_dir
     implicit none
 
     INTEGER, EXTERNAL :: find_free_unit
@@ -392,17 +392,17 @@
       write(nfile,'(5i1)') label/10000,mod(label,10000)/1000,mod(label,1000)/100,mod(label,100)/10,mod(label,10)  
       iung = find_free_unit()
       if(.not.debug) then
-        open( unit=iung, file='green.'// nfile, status='old',form='unformatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'green.'// nfile, status='old',form='unformatted')
       else
-        open( unit=iung, file='green.'// nfile, status='old',form='formatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'green.'// nfile, status='old',form='formatted')
       endif
     else
       write(nfile,'(5i1)') -label/10000,mod(-label,10000)/1000,mod(-label,1000)/100,mod(-label,100)/10,mod(-label,10)
       iung = find_free_unit()
       if(.not.debug) then
-        open( unit=iung, file='green.-'// nfile, status='old',form='unformatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'green.-'// nfile, status='old',form='unformatted')
       else
-        open( unit=iung, file='green.-'// nfile, status='old',form='formatted')
+        open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'green.-'// nfile, status='old',form='formatted')
       endif
     endif
     if(.not.debug) then

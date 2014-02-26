@@ -95,7 +95,7 @@
 !this subroutine writes the multipole expansion on disk
      USE io_global,            ONLY : stdout, ionode
      USE input_gw,             ONLY : input_options
-     USE io_files,             ONLY : prefix
+     USE io_files,             ONLY : prefix,tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -104,7 +104,7 @@
     INTEGER :: iun
     if(ionode) then
          iun = find_free_unit()
-         open(unit=iun, file='self_expansion', status='unknown',form='unformatted')
+         open(unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'self_expansion', status='unknown',form='unformatted')
          write(iun) se%max_i
          write(iun) se%i_min
          write(iun) se%i_max
@@ -133,7 +133,7 @@
 
      USE io_global,            ONLY : stdout, ionode, ionode_id
      USE input_gw,             ONLY : input_options
-     USE io_files,             ONLY : prefix
+     USE io_files,             ONLY : prefix,tmp_dir
      USE mp,                   ONLY : mp_bcast
      USE mp_world,             ONLY : world_comm
 
@@ -144,7 +144,7 @@
     INTEGER :: iun
     if(ionode) then
          iun = find_free_unit()
-         open(unit=iun, file='self_expansion', status='old',form='unformatted')
+         open(unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'self_expansion', status='old',form='unformatted')
          read(iun) se%max_i
          read(iun) se%i_min
          read(iun) se%i_max
@@ -538,6 +538,7 @@
    USE io_global,            ONLY : ionode
    USE para_gww,             ONLY : is_my_state_range
    USE times_gw,             ONLY : times_freqs
+      USE io_files,  ONLY : prefix, tmp_dir
 
    implicit none
    INTEGER, EXTERNAL :: find_free_unit
@@ -570,9 +571,9 @@
 !openfile
             iun = find_free_unit()
             if(is==1) then
-               open( unit=iun, file='re_on_im'// nfile, status='unknown',form='formatted')
+               open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'re_on_im'// nfile, status='unknown',form='formatted')
             else
-               open( unit=iun, file='re_on_im2'// nfile, status='unknown',form='formatted')
+               open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'re_on_im2'// nfile, status='unknown',form='formatted')
             endif
 
             do jj=-ss%n_grid_fit,ss%n_grid_fit
@@ -601,9 +602,9 @@
 !openfile
             iun = find_free_unit()
             if(is==1) then
-               open( unit=iun, file='im_on_im'// nfile, status='unknown',form='formatted')
+               open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'im_on_im'// nfile, status='unknown',form='formatted')
             else
-               open( unit=iun, file='im_on_im2'// nfile, status='unknown',form='formatted')
+               open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'im_on_im2'// nfile, status='unknown',form='formatted')
             endif
 
             do jj=-ss%n_grid_fit,ss%n_grid_fit
@@ -643,9 +644,9 @@
 !openfile                            
                   iun = find_free_unit()
                   if(is==1) then
-                     open( unit=iun, file='off_re_on_im'// nfile // '_' // mfile, status='unknown',form='formatted')
+                     open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'off_re_on_im'// nfile // '_' // mfile, status='unknown',form='formatted')
                   else
-                     open( unit=iun, file='off_re_on_im2'// nfile // '_' // mfile, status='unknown',form='formatted')
+                     open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'off_re_on_im2'// nfile // '_' // mfile, status='unknown',form='formatted')
 
                   endif
                   do jj=-ss%n_grid_fit,ss%n_grid_fit
@@ -673,9 +674,9 @@
 !openfile                                  
                   iun = find_free_unit()
                   if(is==1) then
-                     open( unit=iun, file='off_im_on_im'// nfile // '_' // mfile, status='unknown',form='formatted')
+                     open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'off_im_on_im'// nfile // '_' // mfile, status='unknown',form='formatted')
                   else
-                     open( unit=iun, file='off_im_on_im2'// nfile // '_' // mfile, status='unknown',form='formatted')
+                     open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'off_im_on_im2'// nfile // '_' // mfile, status='unknown',form='formatted')
                   endif
                   do jj=-ss%n_grid_fit,ss%n_grid_fit
 !allocate and set data arrays

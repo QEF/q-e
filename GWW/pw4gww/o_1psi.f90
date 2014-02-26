@@ -1125,7 +1125,7 @@ END SUBROUTINE o_1psi_gamma_real
    USE wavefunctions_module, ONLY : evc, psic
    USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE wavefunctions_module, ONLY : psic
-   USE io_files,  ONLY : prefix, diropn
+   USE io_files,  ONLY : prefix, tmp_dir, diropn
    USE gvect,     ONLY : ngm, gg,gstart
    USE cell_base, ONLY: tpiba2
    USE wannier_gw, ONLY : max_ngm

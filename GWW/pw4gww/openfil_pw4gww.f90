@@ -20,7 +20,7 @@ SUBROUTINE openfil_pw4gww()
   USE kinds,          ONLY : DP
   USE wvfct,          ONLY : nbnd, npwx
   use control_flags,  ONLY:  twfcollect
-  USE io_files,       ONLY : prefix, iunwfc, nwordwfc, iunsat, nwordatwfc, diropn
+  USE io_files,       ONLY : prefix, tmp_dir, iunwfc, nwordwfc, iunsat, nwordatwfc, diropn
   USE noncollin_module, ONLY : npol
   USE ldaU,             ONLY : lda_plus_u
   USE basis,            ONLY : natomwfc

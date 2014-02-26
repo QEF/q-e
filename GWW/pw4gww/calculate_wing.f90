@@ -13,7 +13,7 @@ subroutine calculate_wing(n_set, orthonorm)
 !\Sum_G <G|\tilde{w^P_i}>\epsilon(G'=0, G, iw)
 ! it requires the file .e_head 
   USE io_global,            ONLY : stdout, ionode, ionode_id
-  USE io_files,             ONLY : prefix, diropn
+  USE io_files,             ONLY : prefix, tmp_dir, diropn
   USE kinds,                ONLY : DP
   USE wannier_gw
   USE mp,                   ONLY : mp_bcast, mp_sum
@@ -76,7 +76,7 @@ subroutine calculate_wing(n_set, orthonorm)
   
   if(ionode) then
       iun =  find_free_unit()
-      open( unit= iun, file=trim(prefix)//'.e_head', status='old',form='unformatted')
+      open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.e_head', status='old',form='unformatted')
       read(iun) n_g
       read(iun) omega_g
    endif
@@ -189,7 +189,7 @@ subroutine calculate_wing(n_set, orthonorm)
 
     if(ionode) then
        iun =  find_free_unit()
-       open( unit= iun, file=trim(prefix)//'.wing', status='unknown',form='unformatted')
+       open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.wing', status='unknown',form='unformatted')
        write(iun) n_g
        write(iun) omega_g
        write(iun) numw_prod

@@ -22,6 +22,7 @@
    USE  times_gw
    USE  w_divergence
    USE constants,            ONLY : RYTOEV
+   USE io_files,  ONLY :  prefix,tmp_dir
 
 
    implicit none
@@ -81,7 +82,7 @@
    allocate(qp%ene_gw(options%max_i,qp%nspin))
    allocate(qp%ene_gw_pert(options%max_i,qp%nspin))
    allocate(order(options%max_i))
-   open( unit=iun, file='bands.dat', status='old',form='formatted')
+   open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'bands.dat', status='old',form='formatted')
    read(iun,*) i_homo
    do ii=1,options%max_i
       read(iun,*) idumm,qp%ene_dft_ks(ii,1),rdumm1,rdumm2,qp%ene_hf(ii,1)
@@ -101,7 +102,7 @@
    ss%nspin=1
 
    if(options%l_order) then
-      open( unit=iun, file='order.dat', status='old',form='formatted')
+      open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'order.dat', status='old',form='formatted')
       do ii=1,options%max_i
          read(iun,*) idumm,order(ii),ddumm
       enddo
@@ -120,8 +121,8 @@
       !write(nfile,'(5i1)') &
       !     & ifil/10000,mod(ifil,10000)/1000,mod(ifil,1000)/100,mod(ifil,100)/10,mod(ifil,10)
       iun1 = find_free_unit()
-      open( unit=iun1, file='re_on_im'// nfile, status='old',form='formatted')
-      open( unit=iun2, file='im_on_im'// nfile, status='old',form='formatted')
+      open( unit=iun1, file=trim(tmp_dir)//trim(prefix)//'-'//'re_on_im'// nfile, status='old',form='formatted')
+      open( unit=iun2, file=trim(tmp_dir)//trim(prefix)//'-'//'im_on_im'// nfile, status='old',form='formatted')
       do jj=-ss%n_grid_fit,ss%n_grid_fit
           read(iun1,*) rdumm1,rdumm2,ss_r,rdumm3
           read(iun2,*) rdumm1,rdumm2,ss_i,rdumm3

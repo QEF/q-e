@@ -16,7 +16,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
 !the minimal orthonormal basis for the Psi_i(r)*(v(r,r')*w^P'_i(r')) products
 
    USE io_global,            ONLY : stdout, ionode, ionode_id
-   USE io_files,             ONLY : prefix, diropn
+   USE io_files,             ONLY : prefix, tmp_dir, diropn
    USE kinds,    ONLY : DP
    USE wannier_gw
    USE gvect
@@ -465,9 +465,9 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
            iuntmat = find_free_unit()
            write(nfile,'(4i1)') iv/1000,mod(iv,1000)/100,mod(iv,100)/10,mod(iv,10)
            if(ispin==1) then
-              open( unit= iuntmat, file=trim(prefix)//'.s_mat_lanczos'//nfile, status='unknown',form='unformatted')
+              open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.s_mat_lanczos'//nfile, status='unknown',form='unformatted')
            else
-              open( unit= iuntmat, file=trim(prefix)//'.s_mat_lanczos2'//nfile, status='unknown',form='unformatted')
+              open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.s_mat_lanczos2'//nfile, status='unknown',form='unformatted')
            endif
            write(iuntmat) iv
            write(iuntmat) num_nbndv(1)!for compatibility with polarization file
@@ -484,9 +484,9 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
            iuntmat = find_free_unit()
            write(nfile,'(4i1)') iv/1000,mod(iv,1000)/100,mod(iv,100)/10,mod(iv,10)
            if(ispin==1) then
-              open( unit= iuntmat, file=trim(prefix)//'.s_eig_lanczos'//nfile, status='unknown',form='unformatted')
+              open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.s_eig_lanczos'//nfile, status='unknown',form='unformatted')
            else
-              open( unit= iuntmat, file=trim(prefix)//'.s_eig_lanczos2'//nfile, status='unknown',form='unformatted')
+              open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.s_eig_lanczos2'//nfile, status='unknown',form='unformatted')
            endif
            write(iuntmat) nstates
            write(iuntmat) eigen(1:nstates)
@@ -558,7 +558,7 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
 !construct a global basis for the lanczos calculation of the
 !self-energy
   USE io_global,            ONLY : stdout, ionode, ionode_id
-  USE io_files,             ONLY : prefix, diropn
+  USE io_files,             ONLY : prefix, tmp_dir, diropn
   USE kinds,    ONLY : DP
   USE wannier_gw, ONLY : num_nbnds,max_ngm,l_truncated_coulomb,truncation_radius,&
                                &num_nbndv,l_pmatrix,vg_q,s_first_state,s_last_state, l_verbose,&
@@ -672,9 +672,9 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
         iuntmat = find_free_unit()
         write(nfile,'(4i1)') iv/1000,mod(iv,1000)/100,mod(iv,100)/10,mod(iv,10)
         if(ispin==1) then
-           open( unit= iuntmat, file=trim(prefix)//'.s_eig_lanczos'//nfile, status='old',form='unformatted')
+           open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.s_eig_lanczos'//nfile, status='old',form='unformatted')
         else
-           open( unit= iuntmat, file=trim(prefix)//'.s_eig_lanczos2'//nfile, status='old',form='unformatted')
+           open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.s_eig_lanczos2'//nfile, status='old',form='unformatted')
         endif
         read(iuntmat) idumm
         read(iuntmat) s_eigen(1:nstates)
@@ -763,9 +763,9 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
            iuntmat = find_free_unit()
            write(nfile,'(4i1)') iv/1000,mod(iv,1000)/100,mod(iv,100)/10,mod(iv,10)
            if(ispin==1) then
-              open( unit= iuntmat, file=trim(prefix)//'.s_eig_lanczos'//nfile, status='old',form='unformatted')
+              open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.s_eig_lanczos'//nfile, status='old',form='unformatted')
            else
-              open( unit= iuntmat, file=trim(prefix)//'.s_eig_lanczos2'//nfile, status='old',form='unformatted')
+              open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.s_eig_lanczos2'//nfile, status='old',form='unformatted')
            endif
            read(iuntmat) idumm
            read(iuntmat) s_eigen(1:nstates)
@@ -1011,9 +1011,9 @@ endif
      if(ionode) then
         iuntmat=find_free_unit()
         if(ispin==1) then
-           open( unit= iuntmat, file=trim(prefix)//'.st_mat_lanczos'//nfile, status='unknown',form='unformatted')
+           open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.st_mat_lanczos'//nfile, status='unknown',form='unformatted')
         else
-           open( unit= iuntmat, file=trim(prefix)//'.st_mat_lanczos2'//nfile, status='unknown',form='unformatted')
+           open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.st_mat_lanczos2'//nfile, status='unknown',form='unformatted')
         endif
      endif
 !     do ip=0,nproc-1,3
@@ -1166,7 +1166,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
 !the minimal orthonormal basis for the Psi_i(r)*(v(r,r')*w^P'_i(r')) products
 
    USE io_global,            ONLY : stdout, ionode, ionode_id
-   USE io_files,             ONLY : prefix, diropn
+   USE io_files,             ONLY : prefix, tmp_dir, diropn
    USE kinds,    ONLY : DP
    USE wannier_gw
    USE gvect
@@ -1547,9 +1547,9 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
            iuntmat = find_free_unit()
            write(nfile,'(4i1)') iv/1000,mod(iv,1000)/100,mod(iv,100)/10,mod(iv,10)
            if(ispin==1) then
-              open( unit= iuntmat, file=trim(prefix)//'.s_mat_lanczos'//nfile, status='unknown',form='unformatted')
+              open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.s_mat_lanczos'//nfile, status='unknown',form='unformatted')
            else
-              open( unit= iuntmat, file=trim(prefix)//'.s_mat_lanczos2'//nfile, status='unknown',form='unformatted')
+              open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.s_mat_lanczos2'//nfile, status='unknown',form='unformatted')
            endif
            write(iuntmat) iv
            write(iuntmat) num_nbndv(1)!for compatibility with polarization file
@@ -1566,9 +1566,9 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
            iuntmat = find_free_unit()
            write(nfile,'(4i1)') iv/1000,mod(iv,1000)/100,mod(iv,100)/10,mod(iv,10)
            if(ispin==1) then
-              open( unit= iuntmat, file=trim(prefix)//'.s_eig_lanczos'//nfile, status='unknown',form='unformatted')
+              open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.s_eig_lanczos'//nfile, status='unknown',form='unformatted')
            else
-              open( unit= iuntmat, file=trim(prefix)//'.s_eig_lanczos2'//nfile, status='unknown',form='unformatted')
+              open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.s_eig_lanczos2'//nfile, status='unknown',form='unformatted')
            endif
            write(iuntmat) nstates
            write(iuntmat) eigen(1:nstates)

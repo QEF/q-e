@@ -89,6 +89,7 @@ CONTAINS
     USE input_gw,           ONLY : input_options
     USE mp,                 ONLY : mp_bcast
     USE mp_world,           ONLY : world_comm
+    USE io_files,             ONLY : prefix,tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -114,7 +115,7 @@ CONTAINS
             & ii/10000,mod(ii,10000)/1000,mod(ii,1000)/100,mod(ii,100)/10,mod(ii,10)
        if(ionode) then
           iun = find_free_unit()
-          open( unit=iun, file='self_on_real'// nfile, status='unknown',form='formatted')
+          open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'self_on_real'// nfile, status='unknown',form='formatted')
           do iw=1,options%n_real_axis
              read(iun,*)  x, y1, y2
              if(x<-0.315) y1=y1+0.266184-0.004408
@@ -137,6 +138,7 @@ CONTAINS
     USE input_gw,           ONLY : input_options
     USE mp,                 ONLY : mp_barrier
     USE mp_world,           ONLY : world_comm
+    USE io_files,             ONLY : prefix,tmp_dir
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
     TYPE(self_storage) :: ss!the self_energy descriptor to be written on file
@@ -147,7 +149,7 @@ CONTAINS
     if(ionode) then
        iun = find_free_unit()
      
-       open( unit=iun, file='storage', status='unknown',form='unformatted')
+       open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'storage', status='unknown',form='unformatted')
        
        write(iun) ss%ontime
        write(iun) ss%whole_s
@@ -191,6 +193,7 @@ CONTAINS
     USE input_gw,           ONLY : input_options
     USE mp,                 ONLY : mp_barrier, mp_bcast
     USE mp_world,           ONLY : world_comm
+     USE io_files,             ONLY : prefix,tmp_dir
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
     TYPE(self_storage) :: ss!the self_energy descriptor to be read from file
@@ -200,7 +203,7 @@ CONTAINS
 
     if(ionode) then
        iun = find_free_unit()
-       open( unit=iun, file='storage', status='old',form='unformatted')
+       open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'storage', status='old',form='unformatted')
     endif
 
   !  call free_memory_self_storage(ss)
@@ -328,6 +331,7 @@ CONTAINS
     USE io_global,          ONLY : stdout, ionode
     USE mp,                 ONLY : mp_barrier
     USE mp_world,           ONLY : world_comm
+     USE io_files,             ONLY : prefix,tmp_dir
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
     TYPE(self_on_real),INTENT(in) :: sr!the self_energy descriptor to be written on file  
@@ -338,9 +342,9 @@ CONTAINS
     if(ionode) then
        iun = find_free_unit()
        if(ifile==0) then
-          open( unit=iun, file='self_on_realA', status='unknown',form='unformatted')
+          open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'self_on_realA', status='unknown',form='unformatted')
        else
-          open( unit=iun, file='self_on_realB', status='unknown',form='unformatted')
+          open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'self_on_realB', status='unknown',form='unformatted')
        endif
        write(iun) sr%n
        write(iun) sr%max_i
@@ -363,6 +367,7 @@ CONTAINS
     USE io_global,          ONLY : stdout, ionode, ionode_id
     USE mp,                 ONLY : mp_bcast
     USE mp_world,           ONLY : world_comm
+     USE io_files,             ONLY : prefix,tmp_dir
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
     TYPE(self_on_real),INTENT(out) :: sr!the self_energy descriptor to be written on file                
@@ -373,9 +378,9 @@ CONTAINS
     if(ionode) then
        iun = find_free_unit()
        if(ifile==0) then
-          open( unit=iun, file='self_on_realA', status='old',form='unformatted')
+          open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'self_on_realA', status='old',form='unformatted')
        else
-          open( unit=iun, file='self_on_realB', status='old',form='unformatted')
+          open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'self_on_realB', status='old',form='unformatted')
        endif
        read(iun) sr%n
        read(iun) sr%max_i
@@ -2457,6 +2462,7 @@ END SUBROUTINE create_self_ontime
 !self energy on real axis
 
    USE io_global, ONLY : ionode
+   USE io_files,             ONLY : prefix,tmp_dir
   
    implicit none
    INTEGER, EXTERNAL :: find_free_unit
@@ -2476,9 +2482,9 @@ END SUBROUTINE create_self_ontime
          !openfile
             iun = find_free_unit()
             if(is==1) then
-               open( unit=iun, file='self_on_real'// nfile, status='unknown',form='formatted')
+               open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'self_on_real'// nfile, status='unknown',form='formatted')
             else
-               open( unit=iun, file='self_on_real'// nfile, status='unknown',form='formatted')
+               open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'self_on_real'// nfile, status='unknown',form='formatted')
             endif
             do ie=1,sr%n
                write(iun,*) dble(sr%grid(ie)),dble(sr%diag(ie,ii,is)),dimag(sr%diag(ie,ii,is))

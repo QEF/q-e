@@ -75,7 +75,7 @@
 !this subroutine writes the compact_q_lanczos function on disk  
 !the file name is taken from the label                                                                     
 
-    USE io_files,             ONLY : prefix
+    USE io_files,             ONLY : prefix,tmp_dir
     implicit none
 
     INTEGER, EXTERNAL :: find_free_unit
@@ -87,7 +87,7 @@
     write(nfile,'(5i1)') &
         & cql%ii/10000,mod(cql%ii,10000)/1000,mod(cql%ii,1000)/100,mod(cql%ii,100)/10,mod(cql%ii,10)
     iunq = find_free_unit()    
-    open( unit=iunq, file='q_lanczos.'// nfile, status='unknown',form='unformatted')
+    open( unit=iunq, file=trim(tmp_dir)//trim(prefix)//'-'//'q_lanczos.'// nfile, status='unknown',form='unformatted')
     
     write(iunq) cql%ii
     write(iunq) cql%numpw
@@ -103,7 +103,7 @@
      SUBROUTINE read_compact_q_lanczos(cql, iv)
 !this subroutine reads the compact_q_lanczos function from disk     
 
-    USE io_files,             ONLY : prefix
+    USE io_files,             ONLY : prefix,tmp_dir
     USE mp,                   ONLY : mp_barrier,mp_bcast, mp_sum
     USE mp_world,             ONLY : world_comm
     USE io_global,            ONLY : ionode,ionode_id
@@ -124,7 +124,7 @@
         & cql%ii/10000,mod(cql%ii,10000)/1000,mod(cql%ii,1000)/100,mod(cql%ii,100)/10,mod(cql%ii,10)
     if(ionode) then
        iunq = find_free_unit()
-       open( unit=iunq, file='q_lanczos.'// nfile, status='old',form='unformatted')       
+       open( unit=iunq, file=trim(tmp_dir)//trim(prefix)//'-'//'q_lanczos.'// nfile, status='old',form='unformatted')       
        read(iunq) cql%ii
        read(iunq) cql%numpw
        read(iunq) cql%numt
@@ -205,7 +205,7 @@
 !this subroutine writes the lanczos matrix  on disk  
 !the file name is taken from the label                                                                     
 
-    USE io_files,             ONLY : prefix
+    USE io_files,             ONLY : prefix,tmp_dir
     implicit none
 
     INTEGER, EXTERNAL :: find_free_unit
@@ -218,12 +218,12 @@
        write(nfile,'(5i1)') &
          & lm%iw/10000,mod(lm%iw,10000)/1000,mod(lm%iw,1000)/100,mod(lm%iw,100)/10,mod(lm%iw,10)
        iunm = find_free_unit()    
-       open( unit=iunm, file='emat_lanczos.'// nfile, status='unknown',form='unformatted')
+       open( unit=iunm, file=trim(tmp_dir)//trim(prefix)//'-'//'emat_lanczos.'// nfile, status='unknown',form='unformatted')
     else
        write(nfile,'(5i1)') &
          & -lm%iw/10000,mod(-lm%iw,10000)/1000,mod(-lm%iw,1000)/100,mod(-lm%iw,100)/10,mod(-lm%iw,10)
        iunm = find_free_unit()
-       open( unit=iunm, file='emat_lanczos.-'// nfile, status='unknown',form='unformatted')
+       open( unit=iunm, file=trim(tmp_dir)//trim(prefix)//'-'//'emat_lanczos.-'// nfile, status='unknown',form='unformatted')
     endif
     write(iunm) lm%iw
     write(iunm) lm%numt
@@ -239,7 +239,7 @@
 !this subroutine reads the lanczos matrix  from disk
 !the file name is taken from the label
 !it does not allocate the matrix  
-    USE io_files,             ONLY : prefix
+    USE io_files,             ONLY : prefix,tmp_dir
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
     TYPE(lanczos_matrix) :: lm!the matrix to be read
@@ -254,12 +254,12 @@
        write(nfile,'(5i1)') &
             & lm%iw/10000,mod(lm%iw,10000)/1000,mod(lm%iw,1000)/100,mod(lm%iw,100)/10,mod(lm%iw,10)
        iunm = find_free_unit()
-       open( unit=iunm, file='emat_lanczos.'// nfile, status='old',form='unformatted')
+       open( unit=iunm, file=trim(tmp_dir)//trim(prefix)//'-'//'emat_lanczos.'// nfile, status='old',form='unformatted')
     else
        write(nfile,'(5i1)') &
             & -lm%iw/10000,mod(-lm%iw,10000)/1000,mod(-lm%iw,1000)/100,mod(-lm%iw,100)/10,mod(-lm%iw,10)
        iunm = find_free_unit()
-       open( unit=iunm, file='emat_lanczos.-'// nfile, status='unknown',form='unformatted')
+       open( unit=iunm, file=trim(tmp_dir)//trim(prefix)//'-'//'emat_lanczos.-'// nfile, status='unknown',form='unformatted')
     endif
     read(iunm) lm%iw
     read(iunm) lm%numt

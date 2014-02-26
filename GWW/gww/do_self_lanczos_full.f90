@@ -29,6 +29,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
   USE constants,          ONLY : tpi,pi
   USE start_end ! debug
   USE parallel_include
+  USE io_files,  ONLY : prefix, tmp_dir
 
   implicit none
 
@@ -114,11 +115,11 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
   if(options%l_list) then
      if(ionode) then
         iun =  find_free_unit()
-        open( unit=iun, file='list_1.dat', status='old')
+        open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'list_1.dat', status='old')
         read(iun,*) n_list(1)
         if(uu%nspin==2) then
            iun2 =  find_free_unit()
-           open( unit=iun2, file='list_2.dat', status='old')
+           open( unit=iun2, file=trim(tmp_dir)//trim(prefix)//'-'//'list_2.dat', status='old')
            read(iun,*) n_list(2)
         else
            n_list(2)=0

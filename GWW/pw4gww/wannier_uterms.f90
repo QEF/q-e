@@ -14,7 +14,7 @@
 !if required used truncation formula of Onida, PRB 62, 4927 (2000)
 
   USE io_global,            ONLY : stdout, ionode
-  USE io_files,             ONLY : prefix, diropn
+  USE io_files,             ONLY : prefix, tmp_dir, diropn
   use mp_pools,            ONLY : nproc_pool, me_pool
   use mp_world,            ONLY : world_comm
   USE kinds,    ONLY : DP
@@ -123,7 +123,7 @@
    !open output file
    if(ionode) then
       iunuterms =  find_free_unit()
-       open( unit= iunuterms, file=trim(prefix)//'.uterms', status='unknown',form='unformatted')
+       open( unit= iunuterms, file=trim(tmp_dir)//trim(prefix)//'.uterms', status='unknown',form='unformatted')
     endif
 
    uterms(:,:)=0.d0
@@ -229,7 +229,7 @@
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2, bg
    USE constants, ONLY : e2, pi, tpi, fpi
    USE io_global, ONLY : stdout, ionode
-   USE io_files,  ONLY : prefix, diropn
+   USE io_files,  ONLY : prefix, tmp_dir, diropn
 
    implicit none
 
@@ -315,7 +315,7 @@
    if(gstart==2) write(stdout,*) 'V(G=0) = ',vg_q(1) 
 !   if(ionode) then
 !      iun = find_free_unit()
-!      open( unit= iun, file=trim(prefix)//'.vg_q', status='unknown',form='unformatted')
+!      open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.vg_q', status='unknown',form='unformatted')
 !      write(iun) vg_q(1:npw)
 !      close(iun)
 !   endif
@@ -337,7 +337,7 @@
    USE wannier_gw, ONLY : vg_q
    USE wvfct,    ONLY : npw,npwx
    USE io_global, ONLY : stdout, ionode, ionode_id
-   USE io_files,  ONLY : prefix,diropn
+   USE io_files,  ONLY : prefix, tmp_dir,diropn
    USE mp,        ONLY : mp_bcast
 
    implicit none
@@ -349,7 +349,7 @@
 
 !   if(ionode) then
 !      iun = find_free_unit()
-!      open( unit= iun, file=trim(prefix)//'.vg_q', status='old',form='unformatted')
+!      open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.vg_q', status='old',form='unformatted')
 !      read(iun) vg_q(1:npw)
 !      close(iun)
 !   endif

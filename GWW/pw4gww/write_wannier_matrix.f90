@@ -19,7 +19,7 @@
   USE wannier_gw, ONLY : u_trans, num_nbndv, l_selfconsistent,ene_gw,delta_self,n_gw_states
   USE wvfct,    ONLY : et,nbnd
   USE io_global, ONLY : stdout
-  USE io_files, ONLY : prefix
+  USE io_files, ONLY : prefix, tmp_dir
   USE lsda_mod,    ONLY : nspin
 
   implicit none
@@ -51,7 +51,7 @@
 
   iunu = find_free_unit()
   
-  open(unit=iunu,file=trim(prefix)//'.wannier',status='unknown',form='unformatted')
+  open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.wannier',status='unknown',form='unformatted')
 
   write(iunu) nspin
   write(iunu) nbnd
@@ -97,7 +97,7 @@
   USE wannier_gw, ONLY : u_trans, num_nbndv
   USE wvfct,    ONLY : et,nbnd
   USE io_global, ONLY : stdout,ionode,ionode_id
-  USE io_files, ONLY : prefix
+  USE io_files, ONLY : prefix, tmp_dir
   USE mp, ONLY : mp_bcast
   USE mp_world, ONLY : world_comm
   USE lsda_mod, ONLY :nspin
@@ -115,7 +115,7 @@
 
   if(ionode) then
      iunu = find_free_unit()
-     open(unit=iunu,file=trim(prefix)//'.wannier',status='old',form='unformatted')
+     open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.wannier',status='old',form='unformatted')
   
      read(iunu) idumm
      read(iunu) idumm

@@ -21,6 +21,7 @@
     USE basic_structures
     USE mp,                   ONLY : mp_bcast, mp_barrier
     USE mp_world,             ONLY : world_comm
+    USE io_files,  ONLY : tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -32,7 +33,7 @@
 
     if(ionode) then
        iunu = find_free_unit()
-       open( unit=iunu, file=trim(prefix)//'.wannier', status='old',form='unformatted')
+       open( unit=iunu, file=trim(tmp_dir)//trim(prefix)//'.wannier', status='old',form='unformatted')
 
 !read in basis length
        read(iunu) wu%nspin
@@ -93,6 +94,7 @@
     USE basic_structures
     USE mp,                   ONLY : mp_bcast,mp_barrier
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -109,18 +111,18 @@
     if(ionode) then
        iunv=find_free_unit()
        if(ort==1) then
-          open( unit=iunv, file=trim(prefix)//'.vpot', status='old',form='unformatted')
+          open( unit=iunv, file=trim(tmp_dir)//trim(prefix)//'.vpot', status='old',form='unformatted')
        else if (ort==0) then
           if(.not.l_zero) then
-             open( unit=iunv, file=trim(prefix)//'.vpot_no', status='old',form='unformatted')
+             open( unit=iunv, file=trim(tmp_dir)//trim(prefix)//'.vpot_no', status='old',form='unformatted')
           else
-             open( unit=iunv, file=trim(prefix)//'.vpot_no_zero', status='old',form='unformatted')
+             open( unit=iunv, file=trim(tmp_dir)//trim(prefix)//'.vpot_no_zero', status='old',form='unformatted')
           endif
        else if (ort==2) then
           if(.not.l_zero) then
-             open( unit=iunv, file=trim(prefix)//'.vpot_no_sym', status='old',form='unformatted')
+             open( unit=iunv, file=trim(tmp_dir)//trim(prefix)//'.vpot_no_sym', status='old',form='unformatted')
           else
-             open( unit=iunv, file=trim(prefix)//'.vpot_no_sym_zero', status='old',form='unformatted')
+             open( unit=iunv, file=trim(tmp_dir)//trim(prefix)//'.vpot_no_sym_zero', status='old',form='unformatted')
           endif
        endif
 !read in basis length
@@ -172,6 +174,7 @@
     USE basic_structures
     USE mp,                   ONLY : mp_bcast, mp_barrier
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -186,9 +189,9 @@
     if(ionode) then
        iunq=find_free_unit()
        if(.not.l_v_products) then
-          open( unit=iunq, file=trim(prefix)//'.wp', status='old',form='unformatted')
+          open( unit=iunq, file=trim(tmp_dir)//trim(prefix)//'.wp', status='old',form='unformatted')
        else
-          open( unit=iunq, file=trim(prefix)//'.wp_v', status='old',form='unformatted')
+          open( unit=iunq, file=trim(tmp_dir)//trim(prefix)//'.wp_v', status='old',form='unformatted')
        endif
 
 !read in basis length
@@ -241,6 +244,7 @@
     USE basic_structures,     ONLY : ortho_polaw, free_memory
     USE mp,                   ONLY : mp_bcast, mp_barrier
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -254,7 +258,7 @@
 
     if(ionode) then
        iunq=find_free_unit()
-       open( unit=iunq, file=trim(prefix)//'.orthonorm', status='old',form='unformatted')
+       open( unit=iunq, file=trim(tmp_dir)//trim(prefix)//'.orthonorm', status='old',form='unformatted')
 
 !read in basis length
        read(iunq) op%numpw
@@ -287,6 +291,7 @@
     USE basic_structures,     ONLY : wp_psi, free_memory
     USE mp,                   ONLY : mp_bcast
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY : tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -301,7 +306,7 @@
 
     if(ionode) then
        iunq=find_free_unit()
-       open( unit=iunq, file=trim(prefix)//'.wpwp_psi', status='old',form='unformatted')
+       open( unit=iunq, file=trim(tmp_dir)//trim(prefix)//'.wpwp_psi', status='old',form='unformatted')
 
 !read in basis length
        read(iunq) wp%numpw
@@ -338,6 +343,7 @@
     USE basic_structures
     USE mp,                   ONLY : mp_bcast, mp_barrier
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -349,7 +355,7 @@
 
     if(ionode) then
        iunu = find_free_unit()
-       open( unit=iunu, file=trim(prefix)//'.wannier_prim', status='old',form='unformatted')
+       open( unit=iunu, file=trim(tmp_dir)//trim(prefix)//'.wannier_prim', status='old',form='unformatted')
 
 !read in basis length
        read(iunu) wu%nums_prim
@@ -391,6 +397,7 @@
     USE basic_structures
     USE mp,                   ONLY : mp_bcast, mp_barrier
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -404,9 +411,9 @@
     if(ionode) then
        iunu = find_free_unit()
        if(.not. l_zero) then
-          open( unit=iunu, file=trim(prefix)//'.uterms_prim', status='old',form='unformatted')
+          open( unit=iunu, file=trim(tmp_dir)//trim(prefix)//'.uterms_prim', status='old',form='unformatted')
        else
-          open( unit=iunu, file=trim(prefix)//'.uterms_prim_zero', status='old',form='unformatted')
+          open( unit=iunu, file=trim(tmp_dir)//trim(prefix)//'.uterms_prim_zero', status='old',form='unformatted')
        endif
 
 !read in basis length
@@ -437,7 +444,7 @@
 
     if(ionode) then
        iunu = find_free_unit()
-       open( unit=iunu, file=trim(prefix)//'.ij_prim', status='old',form='unformatted')
+       open( unit=iunu, file=trim(tmp_dir)//trim(prefix)//'.ij_prim', status='old',form='unformatted')
        do iw=1,vp%numpw_prim
           read(iunu) vp%ij(1,iw),vp%ij(2,iw)
        enddo
@@ -466,6 +473,7 @@
     USE basic_structures,     ONLY : wp_psi_cutoff_index, free_memory
     USE mp,                   ONLY : mp_bcast
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -477,7 +485,7 @@
 
     if(ionode) then
        iuni=find_free_unit()
-       open( unit=iuni, file=trim(prefix)//'.wpwp_psi_index', status='old',form='unformatted')
+       open( unit=iuni, file=trim(tmp_dir)//trim(prefix)//'.wpwp_psi_index', status='old',form='unformatted')
 !read in basis length
        read(iuni) wpi%numpw
        read(iuni) wpi%nums_psi
@@ -511,6 +519,7 @@
     USE basic_structures,     ONLY : wp_psi_cutoff_index, wp_psi_cutoff_data,free_memory
     USE mp,                   ONLY : mp_bcast
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -531,7 +540,7 @@
 
     if(ionode) then
        iund=find_free_unit()
-       open( unit=iund, file=trim(prefix)//'.wpwp_psi', status='old',form='unformatted')
+       open( unit=iund, file=trim(tmp_dir)//trim(prefix)//'.wpwp_psi', status='old',form='unformatted')
 !read in basis length
        do i=1,wp%nums_psi*wp%numpwpw
           read(iund) pos,state,w
@@ -557,6 +566,7 @@
     USE basic_structures
     USE mp,                   ONLY : mp_bcast
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -572,7 +582,7 @@
 
     if(ionode) then
        iunu = find_free_unit()
-       open( unit=iunu, file=trim(prefix)//'.exchange', status='old',form='unformatted')
+       open( unit=iunu, file=trim(tmp_dir)//trim(prefix)//'.exchange', status='old',form='unformatted')
        read(iunu) ndata
        allocate(buf(ndata))
        do is=1,nspin
@@ -597,6 +607,7 @@
     USE basic_structures
     USE mp,                   ONLY : mp_bcast
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -612,7 +623,7 @@
 
     if(ionode) then
        iunu = find_free_unit()
-       open( unit=iunu, file=trim(prefix)//'.exchange_off', status='old',form='unformatted')
+       open( unit=iunu, file=trim(tmp_dir)//trim(prefix)//'.exchange_off', status='old',form='unformatted')
        read(iunu) ndata
        allocate(buf(ndata))
        do is=1,nspin
@@ -642,6 +653,7 @@
     USE basic_structures,     ONLY : head_epsilon
     USE mp,                   ONLY : mp_bcast, mp_barrier
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -655,7 +667,7 @@
 
     if(ionode) then
        iun = find_free_unit()
-       open( unit=iun, file=trim(prefix)//'.head', status='old',form='unformatted')
+       open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'.head', status='old',form='unformatted')
        read(iun) he%n
        read(iun) he%omega
     endif
@@ -676,7 +688,7 @@
     
     if(ionode) then
        iun = find_free_unit()
-       open( unit=iun, file=trim(prefix)//'.wing', status='old',form='unformatted')
+       open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'.wing', status='old',form='unformatted')
        read(iun) idumm
        read(iun) rdumm
        if(idumm /= he%n) then
@@ -717,7 +729,7 @@
     if(l_gzero) then
        if(ionode) then
           iun = find_free_unit()
-          open( unit=iun, file=trim(prefix)//'.gzero', status='old',form='unformatted')
+          open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'.gzero', status='old',form='unformatted')
           read(iun) idumm
            if(idumm /= he%numpw) then
              write(stdout,*) 'WING: PROBLEM WITH NUMPW', idumm, he%numpw
@@ -748,6 +760,7 @@
     USE basic_structures,     ONLY : cprim_prod,free_memory
     USE mp,                   ONLY : mp_bcast, mp_barrier
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
 
@@ -770,15 +783,15 @@
                & cpp%cprim/1000,mod(cpp%cprim,1000)/100,mod(cpp%cprim,100)/10,mod(cpp%cprim,10)
           if(.not.l_upper) then
              if(.not. l_vc) then
-                inquire(file=trim(prefix)//'.cprim.'//nfile,exist=ok_read)
+                inquire(file=trim(tmp_dir)//trim(prefix)//'.cprim.'//nfile,exist=ok_read)
              else
-                inquire(file=trim(prefix)//'.vcprim.'//nfile,exist=ok_read)
+                inquire(file=trim(tmp_dir)//trim(prefix)//'.vcprim.'//nfile,exist=ok_read)
              endif
           else
              if(.not. l_vc) then
-                inquire(file=trim(prefix)//'.cprim_up.'//nfile,exist=ok_read)
+                inquire(file=trim(tmp_dir)//trim(prefix)//'.cprim_up.'//nfile,exist=ok_read)
              else
-                inquire(file=trim(prefix)//'.vcprim_up.'//nfile,exist=ok_read)
+                inquire(file=trim(tmp_dir)//trim(prefix)//'.vcprim_up.'//nfile,exist=ok_read)
              endif
           endif
        endif
@@ -792,22 +805,22 @@
             & cpp%cprim/1000,mod(cpp%cprim,1000)/100,mod(cpp%cprim,100)/10,mod(cpp%cprim,10)
        if(.not.l_upper) then
           if(l_vcw_overlap) then
-             open( unit= iunsterms, file=trim(prefix)//'.vcw_overlap.'//nfile, status='old',form='unformatted')
+             open( unit= iunsterms, file=trim(tmp_dir)//trim(prefix)//'.vcw_overlap.'//nfile, status='old',form='unformatted')
           else
              if(.not. l_vc) then
-                open( unit= iunsterms, file=trim(prefix)//'.cprim.'//nfile, status='old',form='unformatted')
+                open( unit= iunsterms, file=trim(tmp_dir)//trim(prefix)//'.cprim.'//nfile, status='old',form='unformatted')
              else
-                open( unit= iunsterms, file=trim(prefix)//'.vcprim.'//nfile, status='old',form='unformatted')
+                open( unit= iunsterms, file=trim(tmp_dir)//trim(prefix)//'.vcprim.'//nfile, status='old',form='unformatted')
              endif
           endif
        else
            if(l_vcw_overlap) then
-             open( unit= iunsterms, file=trim(prefix)//'.vcw_up_overlap.'//nfile, status='old',form='unformatted')
+             open( unit= iunsterms, file=trim(tmp_dir)//trim(prefix)//'.vcw_up_overlap.'//nfile, status='old',form='unformatted')
           else
              if(.not. l_vc) then
-                open( unit= iunsterms, file=trim(prefix)//'.cprim_up.'//nfile, status='old',form='unformatted')
+                open( unit= iunsterms, file=trim(tmp_dir)//trim(prefix)//'.cprim_up.'//nfile, status='old',form='unformatted')
              else
-                open( unit= iunsterms, file=trim(prefix)//'.vcprim_up.'//nfile, status='old',form='unformatted')
+                open( unit= iunsterms, file=trim(tmp_dir)//trim(prefix)//'.vcprim_up.'//nfile, status='old',form='unformatted')
              endif
           endif
        endif
@@ -862,6 +875,7 @@
     USE basic_structures
     USE mp,                   ONLY : mp_bcast
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -874,7 +888,7 @@
 
     if(ionode) then
        iunu = find_free_unit()
-       open( unit=iunu, file=trim(prefix)//'.dft_xc', status='old',form='unformatted')
+       open( unit=iunu, file=trim(tmp_dir)//trim(prefix)//'.dft_xc', status='old',form='unformatted')
        read(iunu) nn
        do i=1,max_i
           read(iunu) ene_dft_xc(i)
@@ -895,6 +909,7 @@
     USE basic_structures
     USE mp,                   ONLY : mp_bcast
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -909,9 +924,9 @@
     if(ionode) then
        iunu = find_free_unit()
        if(ispin==1) then
-          open(unit=iunu,file=trim(prefix)//'.exc_off',status='old',form='unformatted')
+          open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.exc_off',status='old',form='unformatted')
        else
-          open(unit=iunu,file=trim(prefix)//'.exc_off2',status='old',form='unformatted')
+          open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.exc_off2',status='old',form='unformatted')
        endif
        read(iunu) nn
        do ibnd=1,nn
@@ -935,6 +950,7 @@
     USE basic_structures
     USE mp,                   ONLY : mp_bcast
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -946,7 +962,7 @@
 
     if(ionode) then
        iunu = find_free_unit()
-       open( unit=iunu, file=trim(prefix)//'.upper', status='old',form='unformatted')
+       open( unit=iunu, file=trim(tmp_dir)//trim(prefix)//'.upper', status='old',form='unformatted')
        read(iunu) us%nums_tot
        read(iunu) us%nums
        read(iunu) us%nums_occ
@@ -979,6 +995,7 @@ SUBROUTINE read_data_pw_vt_mat_lanczos(vtl, ii, prefix, l_pola, ispin)
     USE basic_structures,     ONLY : vt_mat_lanczos,free_memory,initialize_memory
     USE mp,                   ONLY : mp_bcast, mp_barrier, mp_sum
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
     
@@ -1006,15 +1023,15 @@ SUBROUTINE read_data_pw_vt_mat_lanczos(vtl, ii, prefix, l_pola, ispin)
        iuntmat=find_free_unit()
        if(ispin==1) then
           if(l_pola) then
-             open( unit= iuntmat, file=trim(prefix)//'.p_mat_lanczos'//nfile, status='old',form='unformatted')
+             open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.p_mat_lanczos'//nfile, status='old',form='unformatted')
           else
-             open( unit= iuntmat, file=trim(prefix)//'.s_mat_lanczos'//nfile, status='old',form='unformatted')
+             open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.s_mat_lanczos'//nfile, status='old',form='unformatted')
           endif
        else
           if(l_pola) then
-             open( unit= iuntmat, file=trim(prefix)//'.p_mat_lanczos2'//nfile, status='old',form='unformatted')
+             open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.p_mat_lanczos2'//nfile, status='old',form='unformatted')
           else
-             open( unit= iuntmat, file=trim(prefix)//'.s_mat_lanczos2'//nfile, status='old',form='unformatted')
+             open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.s_mat_lanczos2'//nfile, status='old',form='unformatted')
           endif
        endif
        
@@ -1063,6 +1080,7 @@ SUBROUTINE read_data_pw_vt_mat_lanczos(vtl, ii, prefix, l_pola, ispin)
     USE basic_structures,     ONLY : mat_lanczos_full,free_memory,initialize_memory
     USE mp,                   ONLY : mp_bcast, mp_barrier, mp_sum
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
 
@@ -1083,7 +1101,7 @@ SUBROUTINE read_data_pw_vt_mat_lanczos(vtl, ii, prefix, l_pola, ispin)
 
     if(ionode) then
        iun=find_free_unit()
-       open( unit= iun, file=trim(prefix)//'.s_mat_lanczos_full'//nfile, status='old',form='unformatted')
+       open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.s_mat_lanczos_full'//nfile, status='old',form='unformatted')
        read(iun) idumm
        read(iun) fl%numpw
        read(iun) fl%nums
@@ -1116,6 +1134,7 @@ SUBROUTINE read_data_pw_tt_mat_lanczos(ttl, ii, prefix, l_pola,ispin)
     USE basic_structures,     ONLY : tt_mat_lanczos,free_memory,initialize_memory
     USE mp,                   ONLY : mp_bcast, mp_barrier, mp_sum
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -1141,15 +1160,15 @@ SUBROUTINE read_data_pw_tt_mat_lanczos(ttl, ii, prefix, l_pola,ispin)
        iuntmat=find_free_unit()
        if(ispin==1) then
           if(l_pola) then
-             open( unit= iuntmat, file=trim(prefix)//'.pt_mat_lanczos'//nfile, status='old',form='unformatted')
+             open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.pt_mat_lanczos'//nfile, status='old',form='unformatted')
           else
-             open( unit= iuntmat, file=trim(prefix)//'.st_mat_lanczos'//nfile, status='old',form='unformatted')
+             open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.st_mat_lanczos'//nfile, status='old',form='unformatted')
           endif
        else
           if(l_pola) then
-             open( unit= iuntmat, file=trim(prefix)//'.pt_mat_lanczos2'//nfile, status='old',form='unformatted')
+             open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.pt_mat_lanczos2'//nfile, status='old',form='unformatted')
           else
-             open( unit= iuntmat, file=trim(prefix)//'.st_mat_lanczos2'//nfile, status='old',form='unformatted')
+             open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.st_mat_lanczos2'//nfile, status='old',form='unformatted')
           endif
        endif
        read(iuntmat) ttl%numt
@@ -1188,6 +1207,7 @@ SUBROUTINE read_data_pw_lanczos_chain(lc, ii, prefix, l_pola,ispin)
     USE basic_structures,     ONLY : lanczos_chain,free_memory,initialize_memory
     USE mp,                   ONLY : mp_bcast, mp_barrier, mp_sum
     USE mp_world,             ONLY : nproc,mpime, world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
     INTEGER, EXTERNAL :: find_free_unit
@@ -1215,15 +1235,15 @@ SUBROUTINE read_data_pw_lanczos_chain(lc, ii, prefix, l_pola,ispin)
        iunlc=find_free_unit()
        if(ispin==1) then
           if(l_pola) then
-             open( unit= iunlc, file=trim(prefix)//'.p_iter_lanczos', status='old',form='unformatted')
+             open( unit= iunlc, file=trim(tmp_dir)//trim(prefix)//'.p_iter_lanczos', status='old',form='unformatted')
           else
-             open( unit= iunlc, file=trim(prefix)//'.s_iter_lanczos'//'_'//nfile, status='old',form='unformatted')
+             open( unit= iunlc, file=trim(tmp_dir)//trim(prefix)//'.s_iter_lanczos'//'_'//nfile, status='old',form='unformatted')
           endif
        else
           if(l_pola) then
-             open( unit= iunlc, file=trim(prefix)//'.p_iter_lanczos2', status='old',form='unformatted')
+             open( unit= iunlc, file=trim(tmp_dir)//trim(prefix)//'.p_iter_lanczos2', status='old',form='unformatted')
           else
-             open( unit= iunlc, file=trim(prefix)//'.s_iter_lanczos2'//'_'//nfile, status='old',form='unformatted')
+             open( unit= iunlc, file=trim(tmp_dir)//trim(prefix)//'.s_iter_lanczos2'//'_'//nfile, status='old',form='unformatted')
           endif
        endif
        read(iunlc) lc%numt
@@ -1285,6 +1305,7 @@ SUBROUTINE read_data_pw_vt_mat_lanczos_single(vtl, ii, prefix, l_pola)
 !single processor version
     USE kinds,                ONLY : DP
     USE basic_structures,     ONLY : vt_mat_lanczos,free_memory,initialize_memory
+   USE io_files,  ONLY :  tmp_dir
 
 
     implicit none
@@ -1311,9 +1332,9 @@ SUBROUTINE read_data_pw_vt_mat_lanczos_single(vtl, ii, prefix, l_pola)
 
     iuntmat=find_free_unit()
     if(l_pola) then
-       open( unit= iuntmat, file=trim(prefix)//'.p_mat_lanczos'//nfile, status='old',form='unformatted')
+       open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.p_mat_lanczos'//nfile, status='old',form='unformatted')
     else
-       open( unit= iuntmat, file=trim(prefix)//'.s_mat_lanczos'//nfile, status='old',form='unformatted')
+       open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.s_mat_lanczos'//nfile, status='old',form='unformatted')
     endif
        
     read(iuntmat) vtl%ii
@@ -1346,6 +1367,7 @@ SUBROUTINE read_data_pw_tt_mat_lanczos_single(ttl, ii, prefix, l_pola)
     USE basic_structures,     ONLY : tt_mat_lanczos,free_memory,initialize_memory
     USE mp,                   ONLY : mp_bcast, mp_barrier
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
 
@@ -1370,9 +1392,9 @@ SUBROUTINE read_data_pw_tt_mat_lanczos_single(ttl, ii, prefix, l_pola)
 
     iuntmat=find_free_unit()
     if(l_pola) then
-       open( unit= iuntmat, file=trim(prefix)//'.pt_mat_lanczos'//nfile, status='old',form='unformatted')
+       open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.pt_mat_lanczos'//nfile, status='old',form='unformatted')
     else
-       open( unit= iuntmat, file=trim(prefix)//'.st_mat_lanczos'//nfile, status='old',form='unformatted')
+       open( unit= iuntmat, file=trim(tmp_dir)//trim(prefix)//'.st_mat_lanczos'//nfile, status='old',form='unformatted')
     endif
     
     read(iuntmat) ttl%numt
@@ -1403,6 +1425,7 @@ SUBROUTINE read_data_pw_tt_mat_lanczos_single(ttl, ii, prefix, l_pola)
     USE basic_structures,     ONLY : full_prods,free_memory,initialize_memory
     USE mp,                   ONLY : mp_bcast, mp_barrier, mp_sum
     USE mp_world,             ONLY : world_comm
+   USE io_files,  ONLY :  tmp_dir
 
     implicit none
 
@@ -1414,7 +1437,7 @@ SUBROUTINE read_data_pw_tt_mat_lanczos_single(ttl, ii, prefix, l_pola)
 
     iun=find_free_unit()
     if(ionode) then
-       open( unit= iun, file=trim(prefix)//'.prod_full', status='old',form='unformatted')
+       open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.prod_full', status='old',form='unformatted')
        read(iun) fp%nums
        read(iun) fp%nbnd
        read(iun) fp%numpw
@@ -1452,6 +1475,7 @@ SUBROUTINE read_data_pw_partial_occ(po, prefix, ispin)
   USE mp,                   ONLY : mp_bcast, mp_barrier
   USE mp_world,             ONLY : world_comm
   USE io_global,            ONLY : ionode, ionode_id
+   USE io_files,  ONLY :  tmp_dir
 
   implicit none
   INTEGER, EXTERNAL :: find_free_unit
@@ -1465,9 +1489,9 @@ SUBROUTINE read_data_pw_partial_occ(po, prefix, ispin)
   if(ionode) then
      iun=find_free_unit()
      if(ispin==1) then
-        open( unit= iun, file=trim(prefix)//'.occ_mat', status='old',form='unformatted')
+        open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.occ_mat', status='old',form='unformatted')
      else
-        open( unit= iun, file=trim(prefix)//'.occ_mat2', status='old',form='unformatted')
+        open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.occ_mat2', status='old',form='unformatted')
      endif
      read(iun) po%nums_occ_min
      read(iun) po%nums_occ
@@ -1500,6 +1524,7 @@ SUBROUTINE read_data_pw_semicore(sc, prefix, ispin)
   USE mp,                   ONLY : mp_bcast, mp_barrier
   USE mp_world,             ONLY : world_comm
   USE io_global,            ONLY : ionode, ionode_id
+   USE io_files,  ONLY :  tmp_dir
 
   implicit none
   INTEGER, EXTERNAL :: find_free_unit
@@ -1513,9 +1538,9 @@ SUBROUTINE read_data_pw_semicore(sc, prefix, ispin)
   if(ionode) then
      iun=find_free_unit()
      if(ispin==1) then
-        open( unit= iun, file=trim(prefix)//'.sc_gvphi', status='old',form='unformatted')
+        open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.sc_gvphi', status='old',form='unformatted')
      else
-        open( unit= iun, file=trim(prefix)//'.sc_gvphi2', status='old',form='unformatted')
+        open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.sc_gvphi2', status='old',form='unformatted')
      endif
      read(iun) sc%n_semicore
   endif
@@ -1562,6 +1587,7 @@ SUBROUTINE read_data_pw_contour(ct,prefix,ispin,istate)
   USE mp,                   ONLY : mp_bcast, mp_barrier
   USE mp_world,             ONLY : world_comm
   USE io_global,            ONLY : ionode, ionode_id
+  USE io_files,  ONLY :  tmp_dir
 
   implicit none
   INTEGER, EXTERNAL :: find_free_unit
@@ -1577,9 +1603,9 @@ SUBROUTINE read_data_pw_contour(ct,prefix,ispin,istate)
      iun=find_free_unit()
       write(nfile,'(4i1)') istate/1000,mod(istate,1000)/100,mod(istate,100)/10,mod(istate,10)
      if(ispin==1) then
-        open( unit= iun, file=trim(prefix)//'.s_contour'//nfile, status='old',form='unformatted')
+        open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.s_contour'//nfile, status='old',form='unformatted')
      else
-        open( unit= iun, file=trim(prefix)//'.s_contour'//nfile, status='old',form='unformatted')
+        open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.s_contour'//nfile, status='old',form='unformatted')
      endif
      read(iun) ct%nums
      read(iun) ct%numt

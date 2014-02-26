@@ -14,7 +14,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
 
   
   USE io_global,            ONLY : stdout, ionode, ionode_id
-  USE io_files,             ONLY : prefix, iunwfc, nwordwfc, iunigk
+  USE io_files,             ONLY : prefix, tmp_dir, iunwfc, nwordwfc, iunigk
   USE mp_global,            ONLY : nproc_pool, me_pool
   USE kinds,    ONLY : DP
   USE basis
@@ -277,7 +277,7 @@ endif
 
    if(ionode) then
       iun = find_free_unit()
-      open(unit=iun,file=trim(prefix)//'.exchange',status='unknown',form='unformatted')
+      open(unit=iun,file=trim(tmp_dir)//trim(prefix)//'.exchange',status='unknown',form='unformatted')
       write(iun) nbnd_s
       do isv=1,nspin
 !NOT_TO_BE_INCLUDED_START
@@ -300,7 +300,7 @@ endif
       !write on file
 
          iun = find_free_unit()
-         open(unit=iun,file=trim(prefix)//'.exchange_off',status='unknown',form='unformatted')
+         open(unit=iun,file=trim(tmp_dir)//trim(prefix)//'.exchange_off',status='unknown',form='unformatted')
          write(iun) nbnd_s
          do isv=1,nspin
             do js=1,nbnd_s

@@ -53,6 +53,7 @@ MODULE w_divergence
      USE io_global,            ONLY : stdout, ionode, ionode_id
      USE mp,                   ONLY : mp_bcast
      USE mp_world,             ONLY : world_comm
+     USE io_files,             ONLY : tmp_dir
 
      implicit none
 
@@ -66,7 +67,7 @@ MODULE w_divergence
 
      if(ionode) then
         iun = find_free_unit()
-        open( unit=iun, file=trim(prefix)//'.gv_time', status='old',form='unformatted')
+        open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'.gv_time', status='old',form='unformatted')
         read(iun) gt%max_i
         read(iun) gt%n
         read(iun) gt%tau
@@ -100,6 +101,7 @@ MODULE w_divergence
    SUBROUTINE write_gv_time(gt)
 !save on file
      USE io_global,            ONLY : ionode
+     USE io_files,             ONLY : prefix,tmp_dir
          
      implicit none
      INTEGER, EXTERNAL :: find_free_unit
@@ -109,7 +111,7 @@ MODULE w_divergence
      
      if(ionode) then
          iun = find_free_unit()
-         open(unit=iun, file='gv_time', status='unknown',form='unformatted')
+         open(unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'gv_time', status='unknown',form='unformatted')
 
          write(iun) gt%n
          write(iun) gt%omega
@@ -130,6 +132,8 @@ MODULE w_divergence
      USE io_global,            ONLY : ionode, ionode_id
      USE mp,                   ONLY : mp_bcast
      USE mp_world,             ONLY : world_comm
+     USE io_files,             ONLY : prefix,tmp_dir
+    
 
      implicit none
      INTEGER, EXTERNAL :: find_free_unit
@@ -139,7 +143,7 @@ MODULE w_divergence
 
      if(ionode) then
          iun = find_free_unit()
-         open(unit=iun, file='gv_time', status='old',form='unformatted')
+         open(unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'gv_time', status='old',form='unformatted')
 
          read(iun) gt%n
          read(iun) gt%omega

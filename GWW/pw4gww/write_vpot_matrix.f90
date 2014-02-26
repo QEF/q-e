@@ -16,7 +16,7 @@
   USE kinds, ONLY : DP
   USE wannier_gw, ONLY : numw_prod
   USE io_global, ONLY : stdout
-  USE io_files, ONLY : prefix
+  USE io_files, ONLY : prefix, tmp_dir
 
 
   implicit none
@@ -31,17 +31,17 @@
   iunu = find_free_unit()
 
   if(ort == 1) then
-     open(unit=iunu,file=trim(prefix)//'.vpot',status='unknown',form='unformatted')
-     !     open(unit=iunu,file=trim(prefix)//'.vpot',status='unknown',form='formatted')
+     open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.vpot',status='unknown',form='unformatted')
+     !     open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.vpot',status='unknown',form='formatted')
   else if(ort==0) then 
-     open(unit=iunu,file=trim(prefix)//'.vpot_no',status='unknown',form='unformatted')
-!     open(unit=iunu,file=trim(prefix)//'.vpot_no',status='unknown',form='formatted')
+     open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.vpot_no',status='unknown',form='unformatted')
+!     open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.vpot_no',status='unknown',form='formatted')
   else if(ort==2) then
-     open(unit=iunu,file=trim(prefix)//'.vpot_no_sym',status='unknown',form='unformatted')
+     open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.vpot_no_sym',status='unknown',form='unformatted')
   else if(ort==3) then
-     open(unit=iunu,file=trim(prefix)//'.vpot_no_zero',status='unknown',form='unformatted')
+     open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.vpot_no_zero',status='unknown',form='unformatted')
   else if(ort==4) then
-     open(unit=iunu,file=trim(prefix)//'.vpot_no_sym_zero',status='unknown',form='unformatted')
+     open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.vpot_no_sym_zero',status='unknown',form='unformatted')
   endif
 
   write(iunu) numw_prod

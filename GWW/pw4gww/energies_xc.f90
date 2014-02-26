@@ -216,7 +216,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        USE becmod,           ONLY : becp, calbec,allocate_bec_type,deallocate_bec_type
        USE cell_base,            ONLY : tpiba2
        USE io_global, ONLY : ionode
-       USE io_files, ONLY :prefix
+       USE io_files, ONLY :prefix,tmp_dir
      USE exx, ONLY : exxalfa
 
        implicit none
@@ -388,9 +388,9 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
           if(ionode) then
              iunu = find_free_unit()
              if(ispin==1) then
-                open(unit=iunu,file=trim(prefix)//'.exc_off',status='unknown',form='unformatted')
+                open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.exc_off',status='unknown',form='unformatted')
              else
-                open(unit=iunu,file=trim(prefix)//'.exc_off2',status='unknown',form='unformatted')
+                open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.exc_off2',status='unknown',form='unformatted')
              endif
              write(iunu) nbnd
              do ibnd=1,nbnd
@@ -508,7 +508,7 @@ SUBROUTINE write_energies_xc(e_xc)
 
   USE kinds, ONLY : DP
   USE wannier_gw, ONLY : num_nbnds, l_verbose
-  USE io_files, ONLY : prefix
+  USE io_files, ONLY : prefix,tmp_dir
   USE io_global, ONLY : ionode
   USE wvfct,    ONLY : nbnd
   USE lsda_mod, ONLY : nspin
@@ -525,7 +525,7 @@ SUBROUTINE write_energies_xc(e_xc)
   if(ionode) then
      iunu = find_free_unit()
      
-     open(unit=iunu,file=trim(prefix)//'.dft_xc',status='unknown',form='unformatted')
+     open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.dft_xc',status='unknown',form='unformatted')
   
      write(iunu) nbnd
   
