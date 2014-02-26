@@ -142,6 +142,9 @@ paw_exx.o \
 paw_init.o \
 paw_onecenter.o \
 paw_symmetry.o \
+plugin_init_ions.o \
+plugin_init_cell.o \
+plugin_clean.o \
 plugin_clock.o \
 plugin_summary.o \
 plugin_initialization.o \
@@ -233,12 +236,11 @@ wannier_init.o \
 wannier_check.o \
 wannier_clean.o \
 wannier_occ.o \
-wannier_enrg.o \
-plugin_clean.o \
+wannier_enrg.o 
 
 QEMODS=../../Modules/libqemod.a
 
-TLDEPS=bindir mods libs liblapack libblas libenviron
+TLDEPS=bindir mods libs liblapack libblas
 
 LIBOBJS	= ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
 
