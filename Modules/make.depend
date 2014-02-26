@@ -192,6 +192,8 @@ plugin_arguments.o : mp.o
 plugin_arguments.o : plugin_flags.o
 plugin_flags.o : kind.o
 plugin_flags.o : parameters.o
+plugin_variables.o : kind.o
+plugin_variables.o : parameters.o
 pseudo_types.o : kind.o
 pseudo_types.o : radial_grids.o
 ptoolkit.o : descriptors.o

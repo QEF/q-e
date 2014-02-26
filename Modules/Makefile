@@ -63,6 +63,7 @@ parser.o \
 paw_variables.o \
 plugin_flags.o \
 plugin_arguments.o \
+plugin_variables.o \
 pseudo_types.o \
 ptoolkit.o \
 qexml.o \
