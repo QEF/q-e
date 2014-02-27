@@ -22,6 +22,8 @@ MODULE plugin_variables
   !
   PRIVATE
   !
+  PUBLIC :: plugin_etot
+  !
   REAL(DP) :: plugin_etot
   !
 END MODULE plugin_variables
