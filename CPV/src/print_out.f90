@@ -322,7 +322,7 @@
       !
       !
 255   FORMAT( '     ',A5,A8,3(1X,A12),A6 )
-256   FORMAT( 'Step ',I5,1X,I7,1X,ES12.5,1X,ES12.5,1X,ES12.5,1X,I5 )
+256   FORMAT( 'Step ',I5,1X,I7,1X,F13.6,1X,F13.6,1X,F13.6,1X,I5 )
 1000  FORMAT(/,3X,'Center of mass square displacement (a.u.): ',F10.6,/)
 1944  FORMAT(//'   Partial temperatures (for each ionic specie) ', &
              /,'   Species  Temp (K)   Mean Square Displacement (a.u.)')
@@ -334,7 +334,7 @@
            & 10X,'econs',10X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
 19470 FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',11X,'etot',9X,'enthal', &
            & 10X,'econs',10X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0',5X,'evdw')  ! GGA+TS-vdW
-1948  FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F14.5),4(1X,F7.4) )
+1948  FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F14.6),4(1X,F7.4) )
 19480 FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F14.5),4(1X,F7.4),2X,F14.5 ) ! GGA+TS-vdW
 2948  FORMAT( I6,1X,ES18.10,1X,ES18.10,1X,ES18.10,4(1X,ES18.10),ES18.10, ES18.10, ES18.10 )
 2949  FORMAT( I6,1X,4(1X,ES18.10), ES18.10 )

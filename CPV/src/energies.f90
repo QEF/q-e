@@ -214,7 +214,7 @@
 15        FORMAT(6X,' sic exchange-correla energy = ',F18.10,' Hartree a.u.', 1X, 'corr. factor = ',F6.3)
 16        FORMAT(6X,'       external force energy = ',F18.10,' Hartree a.u.')
 
-  100 format(//'                total energy = ',f14.5,' Hartree a.u.'/ &
+  100 format(//'                total energy = ',f20.11,' Hartree a.u.'/ &
      &         '              kinetic energy = ',f14.5,' Hartree a.u.'/ &
      &         '        electrostatic energy = ',f14.5,' Hartree a.u.'/ &
      &         '                         esr = ',f14.5,' Hartree a.u.'/ &

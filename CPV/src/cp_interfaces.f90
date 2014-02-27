@@ -781,7 +781,8 @@
 
    INTERFACE move_electrons
       SUBROUTINE move_electrons_x( &
-         nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_bgrp, phi_bgrp, enthal, enb, enbi, fccc, ccc, dt2bye, stress )
+         nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_bgrp, phi_bgrp, enthal, enb, &
+            &  enbi, fccc, ccc, dt2bye, stress,l_cprestart )
          USE kinds,         ONLY: DP
          IMPLICIT NONE
          INTEGER,  INTENT(IN)    :: nfi
@@ -795,6 +796,7 @@
          REAL(DP)                :: enthal
          REAL(DP)                :: ei_unp
          REAL(DP)                :: stress(3,3)
+         LOGICAL, INTENT(in)     :: l_cprestart
       END SUBROUTINE
    END INTERFACE
 

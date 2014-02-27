@@ -10,7 +10,7 @@
 !
    subroutine runcg_uspp( nfi, tfirst, tlast, eigr, bec, irb, eigrb, &
       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, fion, ema0bg, becdr, &
-      lambdap, lambda, nlam, vpot, c0, cm, phi, dbec  )
+      lambdap, lambda, nlam, vpot, c0, cm, phi, dbec,l_cprestart  )
 
       use kinds, only: dp
       use control_flags, only: iprint, thdyn, tpre, iverbosity, &
@@ -45,7 +45,7 @@
                                            deeq, qq, nlcc_any
       use uspp_param,               only : nh, nvb, ish
       use cg_module,                only : ene_ok,  maxiter,niter_cg_restart, &
-                                           conv_thr, passop, enever, itercg
+                                           conv_thr, passop, enever, itercg,c0old
       use ions_positions,           only : tau0
       use efield_module,            only : tefield, evalue, ctable, qmat, detq, ipolp, &
                                            berry_energy, ctabin, gqq, gqqm, df, pberryel, &
@@ -66,6 +66,9 @@
 !
       implicit none
 !
+
+      LOGICAL, INTENT(in) :: l_cprestart !if true prepares a CG->CP restart
+
       CHARACTER(LEN=80) :: uname
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       integer :: nfi, nlam
@@ -126,6 +129,9 @@
       integer iter3
       real(DP)  passof,passov !step to minimum: effective, estimated
       real(DP)  ene0,ene1,dene0,enesti !energy terms for linear minimization along hi
+
+      INTEGER :: i_max
+      REAL(kind=DP) :: max_sca
    
       nrlx = MAXVAL(descla(:)%nrlx)
 
@@ -193,6 +199,9 @@
       !set index on number of converged iterations
 
       numok = 0
+
+!initialize  z0t
+      call id_matrix_init( descla, nspin )
 
       allocate(hpsi(ngw,nbspx),hpsi0(ngw,nbspx),gi(ngw,nbspx),hi(ngw,nbspx))
       do while ( itercg .lt. maxiter .and. (.not.ltresh) )
@@ -764,7 +773,7 @@
           c0(:,:)=cm(:,:)
           restartcg=.true.
           ene_ok=.false.
-        end if
+       end if
         
         if(tens.and.newscheme) enever=enever-entropy
  
@@ -883,7 +892,7 @@
               gi(1,i+1)=CMPLX(DBLE(gi(1,i+1)),0.d0,kind=DP)
             endif
           end if
-        enddo
+       enddo
 
         ALLOCATE( lambda_repl( nudx, nudx ) )
         !
@@ -909,13 +918,90 @@
                  lambda_repl( j, i ) = lambda_repl( i, j )
               enddo
            enddo
-           !
            CALL mp_sum( lambda_repl, intra_bgrp_comm )
-           !
+                     !
            CALL distribute_lambda( lambda_repl, lambda( :, :, is ), descla( is ) )
            !
         end do
+        
+        if(l_cprestart .and. .not.tens .and. nspin==1 .and. nvb<1) then
 
+!if required project c0 on previous manifold of occupied states                                                                                    
+!NOT IMPLEMENTED YET FOR ENSEMBLE DFT AND NSPIN==2
+!NOT IMPLEMENTED FOR US PSEUDOPOTENTIALS
+
+           lambda_repl=0.d0
+            do i = 1, nss
+               do j = 1, nss
+                  ii = i + istart - 1
+                  jj = j + istart - 1
+                  do ig = 1, ngw
+                     lambda_repl( i, j ) = lambda_repl( i, j ) + &
+                          2.d0 * DBLE( CONJG( c0old( ig, ii ) ) * c0( ig, jj) )
+                  enddo
+                  if( gstart == 2 ) then
+                     lambda_repl( i, j ) = lambda_repl( i, j ) - &
+                          DBLE( CONJG( c0old( 1, ii ) ) * c0( 1, jj ) )
+                  endif
+               enddo
+            enddo
+            CALL mp_sum( lambda_repl, intra_bgrp_comm )
+
+
+            cm(:,:)=c0(:,:)
+            c0=(0.d0,0.d0)
+            do i=1,nss
+               do j=1,nss
+                  c0(1:ngw,i)=c0(1:ngw,i)+lambda_repl(i,j)*cm(1:ngw,j)
+               enddo
+            enddo
+          
+            call calbec (1,nsp,eigr,c0,bec)
+            CALL gram_bgrp( betae, bec, nhsa, c0, ngw )
+            call calbec(1,nsp,eigr,c0,bec)
+          
+
+
+            do i=1,nbsp,2
+               call dforce(i,bec,betae,c0,c2,c3,rhos,dffts%nnr,ispin,f,nbsp,nspin)
+               
+               do ig=1,ngw
+                  gi(ig,  i)=c2(ig)
+                  if(i+1 <= nbsp) then
+                     gi(ig,i+1)=c3(ig)
+                  endif
+               end do
+               if (gstart==2) then
+                  gi(1,  i)=CMPLX(DBLE(gi(1,  i)),0.d0,kind=DP)
+                  if(i+1 <= nbsp) then
+                     gi(1,i+1)=CMPLX(DBLE(gi(1,i+1)),0.d0,kind=DP)
+                  endif
+               end if
+            enddo
+         
+            lambda_repl = 0.d0
+            do i = 1, nss
+               do j = i, nss
+                  ii = i + istart - 1
+                  jj = j + istart - 1
+                  do ig = 1, ngw
+                     lambda_repl( i, j ) = lambda_repl( i, j ) - &
+                          2.d0 * DBLE( CONJG( c0( ig, ii ) ) * gi( ig, jj) )
+                  enddo
+                  if( gstart == 2 ) then
+                     lambda_repl( i, j ) = lambda_repl( i, j ) + &
+                          DBLE( CONJG( c0( 1, ii ) ) * gi( 1, jj ) )
+                  endif
+                  lambda_repl( j, i ) = lambda_repl( i, j )
+               enddo
+            enddo
+            
+            CALL mp_sum( lambda_repl, intra_bgrp_comm )
+            CALL distribute_lambda( lambda_repl, lambda( :, :, 1 ), descla( 1 ) )
+            cm(:,:)=c0(:,:)
+            call calbec (1,nsp,eigr,cm,becm)
+
+         endif
         DEALLOCATE( lambda_repl )
   
         if ( tens ) then

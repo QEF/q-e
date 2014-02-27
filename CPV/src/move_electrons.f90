@@ -8,7 +8,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
-            cm_bgrp, phi_bgrp, enthal, enb, enbi, fccc, ccc, dt2bye, stress )
+            cm_bgrp, phi_bgrp, enthal, enb, enbi, fccc, ccc, dt2bye, stress, l_cprestart )
   !----------------------------------------------------------------------------
   !
   ! ... this routine updates the electronic degrees of freedom
@@ -59,6 +59,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
   REAL(DP)                :: ei_unp
   REAL(DP)                :: stress(3,3)
   REAL(DP)                :: dum
+  LOGICAL, INTENT(in)     :: l_cprestart
   !
   INTEGER :: i, j, is, n2
   !
@@ -68,7 +69,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
      CALL runcg_uspp( nfi, tfirst, tlast, eigr, bec_bgrp, irb, eigrb, &
                       rhor, rhog, rhos, rhoc, eigts1, eigts2, eigts3, sfac, &
                       fion, ema0bg, becdr_bgrp, lambdap, lambda, SIZE(lambda,1), vpot, c0_bgrp, &
-                      cm_bgrp, phi_bgrp, dbec  )
+                      cm_bgrp, phi_bgrp, dbec, l_cprestart  )
      !
      CALL compute_stress( stress, detot, h, omega )
      !
