@@ -22,6 +22,7 @@ SUBROUTINE print_clock_lr()
    use lr_variables,     only : davidson
 #ifdef __ENVIRON
    USE environ_base,     ONLY : do_environ
+   USE environ_info,     ONLY : environ_clock
 #endif   
    !
    IMPLICIT NONE

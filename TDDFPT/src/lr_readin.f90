@@ -73,6 +73,10 @@ SUBROUTINE lr_readin
   USE ions_base,           ONLY : nsp, ityp, zv, tau, nat
   USE cell_base,           ONLY : at, alat, omega
   USE solvent_tddfpt,      ONLY : solvent_initbase_tddfpt
+  USE environ_init,        ONLY : environ_initions, environ_initcell,      &
+                                  environ_clean, environ_initbase,         &
+                                  environ_initions_allocate
+  USE environ_main,        ONLY : calc_venviron
 #endif
 
 

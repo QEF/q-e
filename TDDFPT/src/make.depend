@@ -26,6 +26,7 @@ lr_alloc_init.o : lr_charg_resp.o
 lr_alloc_init.o : lr_variables.o
 lr_apply_liouvillian.o : ../../Modules/cell_base.o
 lr_apply_liouvillian.o : ../../Modules/control_flags.o
+lr_apply_liouvillian.o : ../../Modules/environ_mod.o
 lr_apply_liouvillian.o : ../../Modules/fft_base.o
 lr_apply_liouvillian.o : ../../Modules/fft_interfaces.o
 lr_apply_liouvillian.o : ../../Modules/io_global.o
@@ -34,6 +35,7 @@ lr_apply_liouvillian.o : ../../Modules/kind.o
 lr_apply_liouvillian.o : ../../Modules/mp.o
 lr_apply_liouvillian.o : ../../Modules/mp_global.o
 lr_apply_liouvillian.o : ../../Modules/recvec.o
+lr_apply_liouvillian.o : ../../Modules/solvent_tddfpt.o
 lr_apply_liouvillian.o : ../../Modules/uspp.o
 lr_apply_liouvillian.o : ../../Modules/wavefunctions.o
 lr_apply_liouvillian.o : ../../PW/src/newd.o
@@ -223,6 +225,8 @@ lr_lanczos.o : lr_us.o
 lr_lanczos.o : lr_variables.o
 lr_main.o : ../../Modules/check_stop.o
 lr_main.o : ../../Modules/control_flags.o
+lr_main.o : ../../Modules/environ_info.o
+lr_main.o : ../../Modules/environ_mod.o
 lr_main.o : ../../Modules/environment.o
 lr_main.o : ../../Modules/fft_base.o
 lr_main.o : ../../Modules/funct.o
@@ -288,7 +292,10 @@ lr_read_wf.o : lr_exx_kernel.o
 lr_read_wf.o : lr_variables.o
 lr_readin.o : ../../Modules/cell_base.o
 lr_readin.o : ../../Modules/control_flags.o
+lr_readin.o : ../../Modules/environ_init.o
 lr_readin.o : ../../Modules/environ_input.o
+lr_readin.o : ../../Modules/environ_main.o
+lr_readin.o : ../../Modules/environ_mod.o
 lr_readin.o : ../../Modules/fft_base.o
 lr_readin.o : ../../Modules/funct.o
 lr_readin.o : ../../Modules/input_parameters.o
@@ -301,6 +308,7 @@ lr_readin.o : ../../Modules/mp_global.o
 lr_readin.o : ../../Modules/mp_world.o
 lr_readin.o : ../../Modules/paw_variables.o
 lr_readin.o : ../../Modules/recvec.o
+lr_readin.o : ../../Modules/solvent_tddfpt.o
 lr_readin.o : ../../Modules/uspp.o
 lr_readin.o : ../../PW/src/exx.o
 lr_readin.o : ../../PW/src/newd.o
@@ -380,6 +388,8 @@ lr_write_restart.o : ../../Modules/noncol.o
 lr_write_restart.o : ../../PW/src/pwcom.o
 lr_write_restart.o : lr_charg_resp.o
 lr_write_restart.o : lr_variables.o
+print_clock_lr.o : ../../Modules/environ_info.o
+print_clock_lr.o : ../../Modules/environ_mod.o
 print_clock_lr.o : ../../Modules/io_global.o
 print_clock_lr.o : ../../Modules/mp_world.o
 print_clock_lr.o : ../../PW/src/realus.o
@@ -392,6 +402,7 @@ sd0psi.o : ../../PW/src/pwcom.o
 sd0psi.o : ../../PW/src/realus.o
 sd0psi.o : lr_variables.o
 stop_lr.o : ../../Modules/cell_base.o
+stop_lr.o : ../../Modules/environ_mod.o
 stop_lr.o : ../../Modules/environment.o
 stop_lr.o : ../../Modules/io_files.o
 stop_lr.o : ../../Modules/io_global.o
@@ -399,4 +410,5 @@ stop_lr.o : ../../Modules/ions_base.o
 stop_lr.o : ../../Modules/kind.o
 stop_lr.o : ../../Modules/mp_global.o
 stop_lr.o : ../../Modules/parallel_include.o
+stop_lr.o : ../../Modules/solvent_tddfpt.o
 stop_lr.o : lr_variables.o

@@ -48,6 +48,7 @@ PROGRAM lr_main
   USE fft_base,              ONLY : dffts
 #ifdef __ENVIRON
   USE environ_base,          ONLY : do_environ
+  USE environ_info,          ONLY : environ_summary
 #endif
 
   !Debugging
