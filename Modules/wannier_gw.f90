@@ -15,7 +15,7 @@ MODULE wannier_gw
   !
   SAVE
   !
-  LOGICAL :: l_head!if true calculates the head of the symmetrized dielectric matrix -1
+  LOGICAL :: l_head =.FALSE.!if true calculates the head of the symmetrized dielectric matrix -1
   INTEGER :: n_gauss!number of frequency steps for head calculation
   REAL(kind=DP) :: omega_gauss!period for frequency calculation
   INTEGER :: grid_type!0 GL -T,T 2 GL 0 T 3 Equally spaced 0 Omega
