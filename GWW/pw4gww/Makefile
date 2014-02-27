@@ -17,7 +17,6 @@ LIBOBJS= ../../iotk/src/libiotk.a ../../flib/flib.a \
 PW4GWWOBJS = \
 allocate_wannier.o \
 produce_wannier_gamma.o \
-wannier_gw.o \
 start_pw4gww.o \
 stop_pp.o \
 openfil_pw4gww.o \
