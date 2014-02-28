@@ -572,7 +572,7 @@ sym_band.o : ../../Modules/ions_base.o
 sym_band.o : ../../Modules/kind.o
 sym_band.o : ../../Modules/mp.o
 sym_band.o : ../../Modules/mp_global.o
-sym_band.o : ../../Modules/mp_world.o
+sym_band.o : ../../Modules/mp_images.o
 sym_band.o : ../../Modules/noncol.o
 sym_band.o : ../../Modules/recvec.o
 sym_band.o : ../../Modules/uspp.o

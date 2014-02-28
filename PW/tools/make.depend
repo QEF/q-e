@@ -2,6 +2,7 @@ dist.o : ../../Modules/cell_base.o
 dist.o : ../../Modules/command_line_options.o
 dist.o : ../../Modules/constants.o
 dist.o : ../../Modules/environment.o
+dist.o : ../../Modules/io_global.o
 dist.o : ../../Modules/ions_base.o
 dist.o : ../../Modules/kind.o
 dist.o : ../../Modules/mp_global.o

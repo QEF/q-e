@@ -1,4 +1,5 @@
 basic_structures.o : ../../Modules/kind.o
+compact_product.o : ../../Modules/io_files.o
 compact_product.o : ../../Modules/io_global.o
 compact_product.o : ../../Modules/kind.o
 compact_product.o : ../../Modules/mp.o
@@ -7,6 +8,7 @@ compact_product.o : basic_structures.o
 compact_product.o : input_gw.o
 compact_product.o : para_gww.o
 contour.o : ../../Modules/constants.o
+contour.o : ../../Modules/io_files.o
 contour.o : ../../Modules/io_global.o
 contour.o : ../../Modules/kind.o
 contour.o : ../../Modules/mp.o
@@ -45,6 +47,7 @@ do_contour.o : basic_structures.o
 do_contour.o : contour.o
 do_contour.o : input_gw.o
 do_contour.o : self_energy_storage.o
+do_polarization_lanczos.o : ../../Modules/io_files.o
 do_polarization_lanczos.o : ../../Modules/io_global.o
 do_polarization_lanczos.o : ../../Modules/kind.o
 do_polarization_lanczos.o : ../../Modules/mp.o
@@ -69,6 +72,7 @@ do_self_lanczos.o : self_energy_storage.o
 do_self_lanczos.o : start_end.o
 do_self_lanczos.o : times_gw.o
 do_self_lanczos_full.o : ../../Modules/constants.o
+do_self_lanczos_full.o : ../../Modules/io_files.o
 do_self_lanczos_full.o : ../../Modules/io_global.o
 do_self_lanczos_full.o : ../../Modules/kind.o
 do_self_lanczos_full.o : ../../Modules/mp.o
@@ -83,6 +87,7 @@ do_self_lanczos_full.o : self_energy_storage.o
 do_self_lanczos_full.o : start_end.o
 do_self_lanczos_full.o : times_gw.o
 do_self_lanczos_time.o : ../../Modules/constants.o
+do_self_lanczos_time.o : ../../Modules/io_files.o
 do_self_lanczos_time.o : ../../Modules/io_global.o
 do_self_lanczos_time.o : ../../Modules/kind.o
 do_self_lanczos_time.o : ../../Modules/mp.o
@@ -115,6 +120,7 @@ expansion.o : self_energy_storage.o
 expansion.o : times_gw.o
 fft_gw.o : ../../Modules/constants.o
 fft_gw.o : ../../Modules/fft_scalar.o
+fft_gw.o : ../../Modules/io_files.o
 fft_gw.o : ../../Modules/io_global.o
 fft_gw.o : ../../Modules/kind.o
 fft_gw.o : ../../Modules/mp.o
@@ -183,11 +189,13 @@ green_function.o : ../../Modules/io_global.o
 green_function.o : ../../Modules/kind.o
 green_function.o : basic_structures.o
 gv_time.o : ../../Modules/constants.o
+gv_time.o : ../../Modules/io_files.o
 gv_time.o : ../../Modules/io_global.o
 gv_time.o : ../../Modules/kind.o
 gv_time.o : ../../Modules/mp.o
 gv_time.o : ../../Modules/mp_world.o
 gv_time.o : times_gw.o
+gww.o : ../../Modules/io_files.o
 gww.o : ../../Modules/io_global.o
 gww.o : ../../Modules/mp.o
 gww.o : ../../Modules/mp_world.o
@@ -201,6 +209,7 @@ gww.o : self_energy_storage.o
 gww.o : start_end.o
 gww.o : times_gw.o
 gww_fit.o : ../../Modules/constants.o
+gww_fit.o : ../../Modules/io_files.o
 gww_fit.o : ../../Modules/io_global.o
 gww_fit.o : ../../Modules/mp_world.o
 gww_fit.o : energies_gww.o
@@ -211,6 +220,7 @@ gww_fit.o : para_gww.o
 gww_fit.o : self_energy_storage.o
 gww_fit.o : start_end.o
 gww_fit.o : times_gw.o
+input_gw.o : ../../Modules/io_files.o
 input_gw.o : ../../Modules/io_global.o
 input_gw.o : ../../Modules/kind.o
 input_gw.o : ../../Modules/mp.o
@@ -236,6 +246,7 @@ polarization.o : green_function.o
 polarization.o : input_gw.o
 polarization.o : times_gw.o
 read_data_pw.o : ../../Modules/constants.o
+read_data_pw.o : ../../Modules/io_files.o
 read_data_pw.o : ../../Modules/io_global.o
 read_data_pw.o : ../../Modules/kind.o
 read_data_pw.o : ../../Modules/mp.o
@@ -261,6 +272,7 @@ self_energy.o : green_function.o
 self_energy.o : polarization.o
 self_energy_storage.o : ../../Modules/constants.o
 self_energy_storage.o : ../../Modules/fft_scalar.o
+self_energy_storage.o : ../../Modules/io_files.o
 self_energy_storage.o : ../../Modules/io_global.o
 self_energy_storage.o : ../../Modules/kind.o
 self_energy_storage.o : ../../Modules/mp.o

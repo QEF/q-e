@@ -998,6 +998,7 @@ phq_init.o : ../../Modules/mp_bands.o
 phq_init.o : ../../Modules/noncol.o
 phq_init.o : ../../Modules/recvec.o
 phq_init.o : ../../Modules/uspp.o
+phq_init.o : ../../Modules/wannier_gw.o
 phq_init.o : ../../Modules/wavefunctions.o
 phq_init.o : ../../PW/src/buffers.o
 phq_init.o : ../../PW/src/pwcom.o

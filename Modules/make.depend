@@ -351,6 +351,10 @@ uspp.o : kind.o
 uspp.o : parameters.o
 uspp.o : pseudo_types.o
 uspp.o : random_numbers.o
+wannier_gw.o : cell_base.o
+wannier_gw.o : io_global.o
+wannier_gw.o : kind.o
+wannier_gw.o : recvec.o
 wannier_new.o : kind.o
 wave_base.o : kind.o
 wave_base.o : mp.o
