@@ -88,6 +88,7 @@ SUBROUTINE electrons()
   !
 #ifdef __ENVIRON
   IF ( do_environ ) THEN
+    vltot_zero = vltot
     CALL environ_initions( dfftp%nnr, nat, nsp, ityp, zv, tau, alat ) 
     CALL environ_initcell( dfftp%nnr, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
                            omega, alat, at ) 
@@ -647,10 +648,6 @@ SUBROUTINE electrons_scf ( no_printout )
         !
      END DO scf_step
      !
-     ! ... define the total local potential (external + scf)
-     !
-     CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
-     !
      plugin_etot = 0.0_dp
      !
      CALL plugin_scf_energy()
@@ -662,7 +659,8 @@ SUBROUTINE electrons_scf ( no_printout )
      !
      IF ( do_environ  )  THEN
         !
-        vltot_zero = 0.0_dp
+        vltot = vltot_zero
+        !vltot_zero = 0.0_dp
         !
         CALL calc_eenviron( dfftp%nnr, nspin, rhoin%of_r, deenviron, esolvent, &
                             ecavity, epressure, eperiodic, eioncc, eextcharge )
@@ -673,12 +671,16 @@ SUBROUTINE electrons_scf ( no_printout )
         !
         IF ( update_venviron ) WRITE( stdout, 9200 )
         !
-        CALL calc_venviron( update_venviron, dfftp%nnr, nspin, dr2, rhoin%of_r, vltot_zero )
+        CALL calc_venviron( update_venviron, dfftp%nnr, nspin, dr2, rhoin%of_r, vltot )
         ! 
-        CALL sum_vrs( dfftp%nnr, nspin, vltot_zero, vrs, vrs)
+        !CALL sum_vrs( dfftp%nnr, nspin, vltot, vrs, vrs)
         ! 
      END IF
 #endif
+     !
+     ! ... define the total local potential (external + scf)
+     !
+     CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
      !
      ! ... interpolate the total local potential
      !
