@@ -667,6 +667,8 @@ SUBROUTINE electrons_scf ( no_printout )
         CALL calc_eenviron( dfftp%nnr, nspin, rhoin%of_r, deenviron, esolvent, &
                             ecavity, epressure, eperiodic, eioncc, eextcharge )
         !
+        plugin_etot = plugin_etot + deenviron + esolvent + ecavity + epressure + eperiodic + eioncc + eextcharge
+        !
         update_venviron = .NOT. conv_elec .AND. dr2 .LT. environ_thr
         !
         IF ( update_venviron ) WRITE( stdout, 9200 )
