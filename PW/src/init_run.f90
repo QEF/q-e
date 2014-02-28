@@ -26,7 +26,8 @@ SUBROUTINE init_run()
   USE funct,              ONLY : dft_is_hybrid
 #ifdef __ENVIRON
   USE fft_base,           ONLY : dfftp
-  USE environ_base,       ONLY : do_environ
+  USE mp_bands,           ONLY : me_bgrp
+  USE environ_base,       ONLY : do_environ, ir_end
   USE environ_init,       ONLY : environ_initbase
 #endif
   USE recvec_subs,        ONLY : ggen
@@ -81,6 +82,7 @@ SUBROUTINE init_run()
   CALL allocate_bp_efield()
   CALL bp_global_map()
 #ifdef __ENVIRON
+  ir_end = MIN(dfftp%nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
   IF ( do_environ ) CALL environ_initbase( dfftp%nnr )
 #endif
   !

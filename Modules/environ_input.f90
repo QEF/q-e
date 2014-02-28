@@ -118,7 +118,11 @@ MODULE environ_input
 !
 ! Ionic countercharge parameters
 !
-        REAL(DP) :: env_ioncc_concentration = 0.D0
+        INTEGER :: env_ioncc_level = 0
+        ! level of accuracy in ioncc
+        INTEGER :: nrep = 0
+        ! number of replicas of unit cell along slab_axis
+        REAL(DP) :: cion = 1.D0
         ! molar concentration of ionic countercharge (M=mol/L)
         REAL(DP) :: zion = 1.D0
         ! valence of ionic countercharge
@@ -134,7 +138,7 @@ MODULE environ_input
         ! in the calculation
         REAL(DP) :: extcharge_origin(3) = 0.D0
         ! positions of the external charges are expressed with respect to this 
-        ! origin or (if no origin is specified) wrt the center of mass of the system
+        ! origin or (if no origin is specified) wrt the center of atomic charge of the system
         REAL(DP) :: extcharge_dim(nsx) = 0
         ! dimensionality of the external charge, 0=point, 1=line, 2=plane
         REAL(DP) :: extcharge_axis(nsx) = 1
@@ -157,7 +161,7 @@ MODULE environ_input
              mixtype, ndiis, mixrhopol, tolrhopol,                     &
              env_surface_tension, delta,                               &
              env_pressure,                                             &
-             env_ioncc_concentration, zion, rhopb,                     &
+             env_ioncc_level, nrep, cion, zion, rhopb,                 &
              solvent_temperature,                                      &
              env_extcharge_n, extcharge_origin, extcharge_dim,         &
              extcharge_axis, extcharge_spread, extcharge_charge,       &
@@ -209,7 +213,9 @@ MODULE environ_input
        !
        env_pressure = 0.D0
        !
-       env_ioncc_concentration = 0.0D0
+       env_ioncc_level = 0
+       nrep = 0
+       cion = 1.0D0
        zion = 1.0D0
        rhopb = 0.0001D0
        solvent_temperature = 300.0D0
@@ -271,7 +277,9 @@ MODULE environ_input
        !
        CALL mp_bcast( env_pressure,               ionode_id, intra_image_comm )
        !
-       CALL mp_bcast( env_ioncc_concentration,    ionode_id, intra_image_comm )
+       CALL mp_bcast( env_ioncc_level,            ionode_id, intra_image_comm )
+       CALL mp_bcast( nrep,                       ionode_id, intra_image_comm )
+       CALL mp_bcast( cion,                       ionode_id, intra_image_comm )
        CALL mp_bcast( zion,                       ionode_id, intra_image_comm )
        CALL mp_bcast( rhopb,                      ionode_id, intra_image_comm )
        CALL mp_bcast( solvent_temperature,        ionode_id, intra_image_comm )

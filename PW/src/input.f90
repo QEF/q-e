@@ -251,7 +251,7 @@ SUBROUTINE iosys()
                                mixtype, ndiis, mixrhopol, tolrhopol,    &
                                env_surface_tension, delta,              &
                                env_pressure,                            &
-                               env_ioncc_concentration, zion, rhopb,    &
+                               env_ioncc_level, nrep, cion, zion, rhopb,&
                                solvent_temperature,                     &
                                env_extcharge_n, extcharge_origin,       &
                                extcharge_dim, extcharge_axis,           &
@@ -1291,7 +1291,7 @@ SUBROUTINE iosys()
                            mixtype, ndiis, mixrhopol, tolrhopol,       &
                            env_surface_tension, delta,                 &
                            env_pressure,                               &
-                           env_ioncc_concentration, zion, rhopb,       &
+                           env_ioncc_level, nrep, cion, zion, rhopb,   &
                            solvent_temperature,                        &
                            env_extcharge_n, extcharge_origin,          & 
                            extcharge_dim, extcharge_axis,              &

@@ -89,7 +89,7 @@ SUBROUTINE electrons()
 #ifdef __ENVIRON
   IF ( do_environ ) THEN
     CALL environ_initions( dfftp%nnr, nat, nsp, ityp, zv, tau, alat ) 
-    CALL environ_initcell( dfftp%nnr, dfftp%nr1*dfftp%nr2*dfftp%nr3, &
+    CALL environ_initcell( dfftp%nnr, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
                            omega, alat, at ) 
   END IF
 #endif
@@ -337,7 +337,7 @@ SUBROUTINE electrons_scf ( no_printout )
                                    vltot_zero, environ_thr,                 &
                                    env_static_permittivity,                 & 
                                    env_surface_tension, env_pressure,       &
-                                   env_periodicity, env_ioncc_concentration,&
+                                   env_periodicity, env_ioncc_level,        &
                                    env_extcharge_n, deenviron, esolvent,    &
                                    ecavity, epressure, eperiodic, eioncc,   &
                                    eextcharge
@@ -1131,9 +1131,7 @@ SUBROUTINE electrons_scf ( no_printout )
        CALL plugin_print_energies()
        !
 #ifdef __ENVIRON
-       IF ( do_environ )  THEN
-         CALL environ_print_energies()
-       ENDIF
+       IF ( do_environ ) CALL environ_print_energies()
        !
 #endif
        !
