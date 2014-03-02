@@ -4,7 +4,7 @@
 
 !* Creation Date : 25-12-2012
 
-!* Last Modified : Wed Jan 29 10:08:24 2014
+!* Last Modified : Wed Jan 29 09:50:17 2014
 
 !* Created By : Marco Buongiorno Nardelli 
 
@@ -42,7 +42,7 @@ CHARACTER(4), ALLOCATABLE    :: atom_name(:)
 CHARACTER(50)    :: fileout, file_out, file_in, file_force, file_force3, file_rmsd
 CHARACTER(50)    :: cna,ci,cnb,cj,cnc,ck,cbx,cr,cs,ttemp,cnx
 
-INTEGER :: na, nb, nc, i, j, k, n, ierr, nrx, nbx, nr, natx, nax, ncx, ns, inn,innx
+INTEGER :: na, nb, nc, i, j, k, n, ierr, idum, nrx, nrh, nbx, nr, nrr, natx, nax, ncx, ns, nave, ntemp,inn,innx
 INTEGER :: nrx1, nrx2, nrx3, nrr1, nrr2, nrr3, nr1, nr2, nr3, nbb, nr1a,nr2a,nr3a,nr1b,nr2b,nr3b, nat_0
 REAL(KIND=DP) :: de, d_ave, d_ave_ave,sumd3, msdtot, phi_ijj, phi_ikk,phiddum
 
@@ -61,19 +61,20 @@ REAL(KIND=DP),    ALLOCATABLE     :: phidD3(:,:,:,:,:,:)
 REAL(KIND=DP),    ALLOCATABLE     :: phid_symm3(:,:,:,:,:,:)
 
 INTEGER, ALLOCATABLE :: inat(:,:,:,:)
-INTEGER, ALLOCATABLE :: ieq(:,:),seq(:,:),neq(:), atdp(:)
+INTEGER, ALLOCATABLE :: ieq(:,:),seq(:,:),neq(:), atdp(:), sydp(:)
 LOGICAL :: atom_in_list
 real(kind=dp)     :: r1(3),r2(3),r3(3),rr(3,3),bg_0(3,3),at_0(3,3)
 REAL(KIND=DP),    ALLOCATABLE     :: taut(:,:)
 INTEGER :: ipol, apol, natdp, ios
 
 
-INTEGER :: isym, ii, ij, iii, iij
-INTEGER, ALLOCATABLE  ::  sxy(:), sxz(:), syz(:), irtx(:,:), irt0(:,:), cirt(:)
+INTEGER :: nclass_ref   ! The number of classes of the point group
+INTEGER :: isym
+INTEGER, ALLOCATABLE  ::  sxy(:), sxz(:), syz(:)
 REAL (dp) :: ft1, ft2, ft3
 
   REAL (dp) :: d(3,3),rd(3,3),dhex(3,3), dcub(3,3), dhexm1(3,3), da, tmp(3)
-  REAL (dp) :: accep=1.0d-7
+  REAL (dp) :: accep=1.0d-5
   LOGICAL, ALLOCATABLE :: move_sl(:,:)
   LOGICAL, EXTERNAL :: eqdisp
 
@@ -103,7 +104,7 @@ NAMELIST /input/ prefix, de, nrx, nrx1, nrx2, nrx3, ld3, file_force, file_force3
 prefix=' '
 nrx1 = 1
 nrx2 = 1
-nrx3 = 1
+nrx2 = 1
 innx=2
 de = 0.002 ! in Angstrom
 verbose =.false.
@@ -155,10 +156,10 @@ call read_xml_file
       atom_name(na)=atm(ityp(na))
     enddo
     do na=1,nat
-      taut(:,na) = tau(:,na)!*alat*bohr_radius_angs
+      taut(:,na) = tau(:,na)*alat*bohr_radius_angs
     enddo
     WRITE( stdout, '(/,5x,"Atomic coordiantes")')
-    WRITE( stdout, '(5x,"site n.     atom                  positions (alat)")')
+    WRITE( stdout, '(5x,"site n.     atom                  positions (Angs)")')
     WRITE( stdout, '(6x,i4,8x,a6," tau(",i4,") = (",3f12.7,"  )")') &
       (na, atom_name(na), na, (taut(ipol,na), ipol=1,3), na=1,nat)
     
@@ -167,16 +168,63 @@ call read_xml_file
    end if
 IF (nat == 0) stop 'no atoms!'
 
+! find equivalent atoms and check that forces have been calculated
 
-   if (verbose) then
-   do isym=1,nsym
-      print*, 'isym', isym
-      write(*,'(20i5)') (irt(isym,na),na=1,nat)
-   end do
-   print*,'========================='
-   end if
+    write(6,*) ''
+    write(6,*) '**************************************************'
+    write(6,*) '* Info on equivalent atoms and displacements:    *'
+    write(6,*) '**************************************************'
+    write(6,*) ''
 
-   natx=nat*nrx1*nrx2*nrx3
+    ALLOCATE (ieq(nat,nsym))
+    allocate (neq(nat))
+    allocate (seq(nat,nsym))
+    allocate (atdp(nat))
+
+    ieq=0
+    seq=0
+    neq=0
+    atdp=0
+
+    natdp = 1
+    atdp(1)=1
+    
+    na=1
+
+    ! natdp             # of non equivalent atoms
+    ! atdp(natdp)       index of non equivalent atoms
+    ! neq(na)           # of atoms equivalent to na (including na itself (identity always isym=1))
+    ! ieq(na,1:neq(na)) list of equivalent atoms (including identity) => ieq(na,2:neq(na)) are the
+    !                   equivalent atoms (ieq(na,1) is displaced, the others are not)
+    ! seq(na,1:neq(na)) list of symmetry operations for equivalent atoms (including identity, seq(na,1)) => 
+    !                   seq(na,2:neq(na)) are the operations that map equivalent atoms in the displaced one
+
+    call equiv_atoms (na,nsym,irt(:,na),ieq(na,:),seq(na,:),neq(na))
+    outer: do na=2,nat
+       do j=1,na-1
+          do k=1,neq(j)
+             if(na == ieq(j,k)) then
+               cycle outer
+             end if
+          end do
+       end do
+       call equiv_atoms (na,nsym,irt(:,na),ieq(na,:),seq(na,:),neq(na))
+       natdp=natdp+1
+       atdp(natdp)=na
+    end do outer
+
+    if (noatsym) then
+       natdp =nat
+       do j=1,nat
+          atdp(j)=j
+       end do
+    end if
+
+    write(*,fmt='(a,i0)') 'Number of independent atoms: ',natdp
+    write(*,advance='no',fmt='(a)') 'Read forces for displaced atom(s):'
+    write(*,*) atdp(1:natdp)
+
+    natx=nat*nrx1*nrx2*nrx3
 
 ! define equivalent atoms in the supercell
 ! the indexing has to match the order of the atoms in the supercell constructed in fd.f90
@@ -242,11 +290,7 @@ end if
    ALLOCATE(itypx(natx))
    ALLOCATE(atomx(3,natx))
    ALLOCATE(ttomx(3,natx))
-   ALLOCATE(irtx(48,natx))
-   ALLOCATE(irt0(48,nat_0))
-   ALLOCATE(cirt(natx))
 
-   irt0(:,:)=irt(:,:)
    nax=0
    do nr1=1,nrx1
      do nr2=1,nrx2
@@ -254,7 +298,7 @@ end if
          do na=1,nat_0
            nax=nax+1
            do i=1,3
-              atomx(i,nax)=tau(i,na)+(nr1-1)*at(i,1)+(nr2-1)*at(i,2)+(nr3-1)*at(i,3)
+            atomx(i,nax)=tau(i,na)+(nr1-1)*at(i,1)+(nr2-1)*at(i,2)+(nr3-1)*at(i,3)
            enddo
            itypx(nax)=ityp(na)
          enddo
@@ -275,125 +319,34 @@ end if
    at(:,2)=nrx2*at(:,2)
    at(:,3)=nrx3*at(:,3)
    CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
-
-   ! find the center of the supercell
-   
-   allocate (temp(3))
-   temp(:) = 0.5*(at(:,1)+at(:,2)+at(:,3)) 
-   
-! find equivalent atoms and check that forces have been calculated
-
-    write(6,*) ''
-    write(6,*) '**************************************************'
-    write(6,*) '* Info on equivalent atoms and displacements:    *'
-    write(6,*) '**************************************************'
-    write(6,*) ''
-
-    IF ( ALLOCATED( irt ) ) DEALLOCATE( irt )
-    ALLOCATE( irt(48,natx))
-
-    irt(:,:)=0
-    call find_sym_ifc( natx, atomx, itypx )
-
-    irtx(:,:)=irt(:,:)
-
-    if (verbose) then
-    do isym=1,nsym
-       print*, 'isym', isym
-       write(*,'(20i5)') (irtx(isym,na),na=1,natx)
-    end do
-    print*,'========================='
-    end if
-
-    ALLOCATE (ieq(nat,nsym))
-    allocate (neq(nat))
-    allocate (seq(nat,nsym))
-    allocate (atdp(nat))
-
-    ieq=0
-    seq=0
-    neq=0
-    atdp=0
-
-    natdp = 1
-    atdp(1)=1
-    
-    na=1
-
-    if (.not.noatsym) then
-
-    ! natdp             # of non equivalent atoms
-    ! atdp(natdp)       index of non equivalent atoms
-    ! neq(na)           # of atoms equivalent to na (including na itself (identity always isym=1))
-    ! ieq(na,1:neq(na)) list of equivalent atoms (including identity) => ieq(na,2:neq(na)) are the
-    !                   equivalent atoms (ieq(na,1) is displaced, the others are not)
-    ! seq(na,1:neq(na)) list of symmetry operations for equivalent atoms (including identity, seq(na,1)) => 
-    !                   seq(na,2:neq(na)) are the operations that map equivalent atoms in the displaced one
-
-    call equiv_atoms (na,nsym,irt0(:,na),ieq(na,:),seq(na,:),neq(na))
-    outer: do na=2,nat
-       do j=1,na-1
-          do k=1,neq(j)
-             if(na == ieq(j,k)) then
-               cycle outer
-             end if
-          end do
-       end do
-       call equiv_atoms (na,nsym,irt0(:,na),ieq(na,:),seq(na,:),neq(na))
-       natdp=natdp+1
-       atdp(natdp)=na
-    end do outer
-
-   n=0
-   do k=1,natdp
-      j=atdp(k)  ! loop over the non equivalent atoms (displaced)
-      do i=2,neq(j)  ! loop over the equivalent atoms for each of the non equivalent ones
-         nb=ieq(j,i)
-         isym=seq(j,i)
-         if(irt(isym,nb) /= j) then
-           n=n+1
-           print*, nb,' and ',j,' are not equivalent in the supercell'
-           atdp(natdp+n)=nb
-           ieq(j,i)=j
-           seq(j,i)=1
-         end if
-      end do
-   end do
-   if(n /= 0) print*, n,' more atoms need to be displaced ', atdp(natdp+1:natdp+n)
-   if(n /= 0) print*, '      ***********                  CAUTION                      **********'
-   if(n /= 0) print*, '      ***********if forces are not present the program will stop**********'
-   if(n /= 0) print*, '      ***********turning off symmetries might be a better option**********'
-   if(n /= 0) print*, '      ***********                  CAUTION                      **********'
-   natdp=natdp+n
-   if(.not.nodispsym) print*, '      ***********                  CAUTION                      **********'
-   if(.not.nodispsym) print*, '      *********** more displacements could be needed in large   **********'
-   if(.not.nodispsym) print*, '      ***********           many atoms unit cells               **********'
-   if(.not.nodispsym) print*, '      ***********                  CAUTION                      **********'
-   
-   else
-
-       natdp =nat
-       do j=1,nat
-          atdp(j)=j
-       end do
-
-    end if
-
-    write(*,fmt='(a,i0)') 'Number of independent atoms: ',natdp
-    write(*,advance='no',fmt='(a)') 'Read forces for displaced atom(s):'
-    write(*,*) atdp(1:natdp)
    
    if ( .not.nodispsym ) then
 
+   IF ( ALLOCATED( irt ) ) DEALLOCATE( irt )
+   ALLOCATE( irt(48,natx))
+   
    do k=1,natdp
       nb=atdp(k)
+ ! center on the nb atom to find the correct symmetry operations
+      do na=1,natx
+         ttomx(:,na) = atomx(:,na) - atomx(:,nb)
+      end do
 
-      if (hex) then
-         d=dhex
-         call invmat (3, dhex, dhexm1, da)
-      else
-         d=dcub
-      end if
+      call find_sym_ifc( natx, ttomx, itypx )
+
+!if (verbose) then
+!do na=1,natx
+!write(*,'(24i3)') (irt(i,na),i=1,nsym)
+!end do
+!print*, '============='
+!end if 
+
+if (hex) then
+   d=dhex
+   call invmat (3, dhex, dhexm1, da)
+else
+   d=dcub
+end if
 
     ! find if the cartesian displacements are independent also in the supercell (as it should be!) and identify one
     ! symmetry operation to rotate forces
@@ -463,7 +416,7 @@ do inn=1,innx
             write(cj,*) j
             cj=adjustl(cj)
             file_in=TRIM(file_force)//'.'//TRIM(cnx)//'.'//TRIM(cj)//'.'//TRIM(cnb)
-            if (verbose) print*, 'reading ',file_in
+            print*, 'reading ',file_in
             OPEN(2,FILE=TRIM(file_in),FORM='formatted')
             do na=1,natx
                read(2,*) force(inn,1,j,na,nb),force(inn,2,j,na,nb),force(inn,3,j,na,nb)
@@ -484,32 +437,39 @@ if (.not.nodispsym) then
 do inn=1,innx
    do k=1,natdp
       nb=atdp(k)
+ ! center on the nb atom to find the correct symmetry operations
+      do na=1,natx
+         ttomx(:,na) = atomx(:,na) - atomx(:,nb)
+      end do
+
+      call find_sym_ifc( natx, ttomx, itypx )
+
       if (.not.move_sl(2,nb) .and. sxy(nb) .ne. 0) then
          do na=1,natx
             if (.not.hex) then 
-            force(inn,:,2,na,nb) = sr(:,1,sxy(nb)) * force(inn,1,1,irtx(invs(sxy(nb)),na),nb) + &
-                                   sr(:,2,sxy(nb)) * force(inn,2,1,irtx(invs(sxy(nb)),na),nb) + &
-                                   sr(:,3,sxy(nb)) * force(inn,3,1,irtx(invs(sxy(nb)),na),nb)
+            force(inn,:,2,na,nb) = sr(:,1,sxy(nb)) * force(inn,1,1,irt(invs(sxy(nb)),na),nb) + &
+                                   sr(:,2,sxy(nb)) * force(inn,2,1,irt(invs(sxy(nb)),na),nb) + &
+                                   sr(:,3,sxy(nb)) * force(inn,3,1,irt(invs(sxy(nb)),na),nb)
             else 
-            tmp(:) = sr(:,1,sxy(nb)) * force(inn,1,1,irtx(invs(sxy(nb)),na),nb) + &
-                     sr(:,2,sxy(nb)) * force(inn,2,1,irtx(invs(sxy(nb)),na),nb) + &
-                     sr(:,3,sxy(nb)) * force(inn,3,1,irtx(invs(sxy(nb)),na),nb)
+            tmp(:) = sr(:,1,sxy(nb)) * force(inn,1,1,irt(invs(sxy(nb)),na),nb) + &
+                     sr(:,2,sxy(nb)) * force(inn,2,1,irt(invs(sxy(nb)),na),nb) + &
+                     sr(:,3,sxy(nb)) * force(inn,3,1,irt(invs(sxy(nb)),na),nb)
             force(inn,:,2,na,nb) = dhexm1(:,1) * tmp(1) + dhexm1(:,2) * tmp(2) + dhexm1(:,3) * tmp(3)
             end if
          end do
       end if
       if (.not.move_sl(3,nb) .and. sxz(nb) .ne. 0) then
          do na=1,natx
-            force(inn,:,3,na,nb) = sr(:,1,sxz(nb)) * force(inn,1,1,irtx(invs(sxz(nb)),na),nb) + &
-                                   sr(:,2,sxz(nb)) * force(inn,2,1,irtx(invs(sxz(nb)),na),nb) + &
-                                   sr(:,3,sxz(nb)) * force(inn,3,1,irtx(invs(sxz(nb)),na),nb)
+            force(inn,:,3,na,nb) = sr(:,1,sxz(nb)) * force(inn,1,1,irt(invs(sxz(nb)),na),nb) + &
+                                   sr(:,2,sxz(nb)) * force(inn,2,1,irt(invs(sxz(nb)),na),nb) + &
+                                   sr(:,3,sxz(nb)) * force(inn,3,1,irt(invs(sxz(nb)),na),nb)
          end do
       end if
       if (.not.move_sl(3,nb) .and. syz(nb) .ne. 0) then
          do na=1,natx
-            force(inn,:,3,na,nb) = sr(:,1,syz(nb)) * force(inn,1,2,irtx(invs(syz(nb)),na),nb) + &
-                                   sr(:,2,syz(nb)) * force(inn,2,2,irtx(invs(syz(nb)),na),nb) + &
-                                   sr(:,3,syz(nb)) * force(inn,3,2,irtx(invs(syz(nb)),na),nb)
+            force(inn,:,3,na,nb) = sr(:,1,syz(nb)) * force(inn,1,2,irt(invs(syz(nb)),na),nb) + &
+                                   sr(:,2,syz(nb)) * force(inn,2,2,irt(invs(syz(nb)),na),nb) + &
+                                   sr(:,3,syz(nb)) * force(inn,3,2,irt(invs(syz(nb)),na),nb)
          end do
       end if
    end do
@@ -529,31 +489,25 @@ if (natdp .ne. nat_0) then
     ! seq(na,1:neq(na)) list of symmetry operations for equivalent atoms (including identity, seq(na,1)) => 
     !                   seq(na,2:neq(na)) are the operations that map equivalent atoms in the displaced one
 
-   rotate: do k=1,natdp
+IF ( ALLOCATED( irt ) ) DEALLOCATE( irt )
+ALLOCATE( irt(48,natx))
+
+   call find_sym_ifc( natx, atomx, itypx )
+  
+   do k=1,natdp
       j=atdp(k)  ! loop over the non equivalent atoms (displaced)
       do i=2,neq(j)  ! loop over the equivalent atoms for each of the non equivalent ones
          nb=ieq(j,i)
          isym=seq(j,i)
-         if (nb==j .and. isym==1) cycle rotate
-         cirt(:)=irt(isym,:)
          do inn=1,innx
             do na=1,natx
-               do ii=1,3
-                  do ij=1,3
-                     do iii=1,3
-                        do iij=1,3
-                           force(inn,ii,ij,cirt(na),nb) = force(inn,ii,ij,cirt(na),nb) + &
-                           force(inn,iii,iij,na,j)*sr(ii,iii,isym)*sr(ij,iij,isym) 
-                        end do
-                     end do
-                  end do
-               end do
+               force(inn,:,:,na,nb)=matmul(matmul(sr(:,:,isym),force(inn,:,:,irt(invs(isym),na),j)),sr(:,:,invs(isym)))
             end do
          end do
       end do
-   end do rotate
-
+   end do
 end if
+
 
 ! write forces so far
 
@@ -644,10 +598,10 @@ if (innx == 1) then
 
    ! symmetrize
 
-!   IF ( ALLOCATED( irt ) ) DEALLOCATE( irt )
-!   ALLOCATE( irt(48,natx))
-!   call find_sym_ifc( natx, atomx, itypx )
-   call symifc (natx, phid_symm, irtx)
+   IF ( ALLOCATED( irt ) ) DEALLOCATE( irt )
+   ALLOCATE( irt(48,natx))
+   call find_sym_ifc( natx, atomx, itypx )
+   call symifc (natx, phid_symm, irt)
 
 end if
 
@@ -831,7 +785,8 @@ do i=1,3
          do na=1,natx
             do nb=1,natx
                do nc=1,natx
-                  phidD3(i,j,k,na,nb,nc)=(-0.5d0)*(force3(1,i,j,k,na,nb,nc)+force3(2,i,j,k,na,nb,nc))/de**2 !-0.5*(phid3(i,j,j,na,nb,nb)+phid3(i,k,k,na,nc,nc))
+                  phidD3(i,j,k,na,nb,nc)=(-0.5d0)*(force3(1,i,j,k,na,nb,nc)+force3(2,i,j,k,na,nb,nc))/de**2
+!-0.5*(phid3(i,j,j,na,nb,nb)+phid3(i,k,k,na,nc,nc))
                end do
             end do
          end do
@@ -964,37 +919,6 @@ subroutine equiv_atoms(na,nsym,example,res,pos,k)
   write(*,advance='no',fmt='(a)') 'for symmetry operation(s):  '
   write(*,*) pos(1:k)
 end subroutine equiv_atoms
-
-subroutine equiv_atomsx(na,nsym,example,xeample,res,pos,k)
-  implicit none
-  integer :: nsym
-  integer :: example(nsym),xeample(nsym),na         ! The input
-  integer :: res(nsym),pos(nsym)  ! The output
-  integer :: k                   ! The number of unique elements
-  integer :: i, j
-
-  k = 1
-  res(1) = example(1)
-  pos(1) = 1
-  outer: do i=2,size(example)
-     do j=1,k
-        if (res(j) == example(i) .or. example(i) == na .and. &
-            res(j) == xeample(i) .or. xeample(i) == na) then
-           ! Found a match so start looking again
-           cycle outer
-        end if
-     end do
-     ! No match found so add it to the output
-     k = k + 1
-     res(k) = example(i)
-     pos(k) = i
-  end do outer
-
-  write(*,advance='no',fmt='(a,i0,a,i0,a)') 'Atom ',na, ' has ',k,' equivalent(s): '
-  write(*,*) res(1:k)
-  write(*,advance='no',fmt='(a)') 'for symmetry operation(s):  '
-  write(*,*) pos(1:k)
-end subroutine equiv_atomsx
 
    SUBROUTINE symifc (nat, tens, irts)
      !-----------------------------------------------------------------------
