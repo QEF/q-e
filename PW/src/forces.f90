@@ -89,6 +89,7 @@ SUBROUTINE forces()
   !    
   forcescc(:,:) = 0.D0
   forceh(:,:)   = 0.D0
+  force (:,:)   = 0.D0
   !
   WRITE( stdout, '(/,5x,"Forces acting on atoms (Ry/au):", / )')
   !
