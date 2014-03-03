@@ -47,7 +47,7 @@ SUBROUTINE electrons()
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
 #ifdef __ENVIRON
   USE environ_base,         ONLY : do_environ, vltot_zero
-  USE cell_base,            ONLY : at, alat, omega
+  USE cell_base,            ONLY : at, alat, omega, ibrav
   USE ions_base,            ONLY : zv, nat, nsp, ityp, tau
   USE environ_init,         ONLY : environ_initions, environ_initcell
 #endif
@@ -91,7 +91,7 @@ SUBROUTINE electrons()
     vltot_zero = vltot
     CALL environ_initions( dfftp%nnr, nat, nsp, ityp, zv, tau, alat ) 
     CALL environ_initcell( dfftp%nnr, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
-                           omega, alat, at ) 
+                           ibrav, omega, alat, at ) 
   END IF
 #endif
   !

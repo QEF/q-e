@@ -52,11 +52,11 @@ SUBROUTINE makov_payne( etot )
   !
   CALL compute_dipole( dfftp%nnr, nspin, rho%of_r, x0, e_dipole, e_quadrupole )
   !
-#ifdef __ENVIRON
-  IF ( do_environ ) CALL environ_makov_payne( dfftp%nnr, nspin, rho%of_r, x0 )
-#endif
-  !
   CALL write_dipole( etot, x0, e_dipole, e_quadrupole, qq )
+  !
+#ifdef __ENVIRON
+  IF ( do_environ ) CALL environ_makov_payne( dfftp%nnr, nspin, rho%of_r, x0, etot )
+#endif
   !
   CALL vacuum_level( x0, zvtot )
   !
@@ -74,10 +74,6 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   USE ions_base,  ONLY : nat, ityp, tau, zv
   USE cell_base,  ONLY : at, bg, omega, alat, ibrav
   USE io_global,  ONLY : ionode
-#ifdef __ENVIRON
-  USE environ_base, ONLY : do_environ
-  USE environ_mp, ONLY : environ_write_dipole
-#endif
   !
   IMPLICIT NONE
   !
@@ -187,10 +183,6 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   WRITE( stdout,'(/"!    Total+Makov-Payne energy  = ",F16.8," Ry")' ) &
       etot - corr1 - corr2 
   !
-#ifdef __ENVIRON
-  IF ( do_environ ) CALL environ_write_dipole(etot, qq, dipole, quadrupole, corr1, corr2)
-#endif
-  !
   RETURN
   !
 END SUBROUTINE write_dipole
@@ -213,12 +205,6 @@ SUBROUTINE vacuum_level( x0, zion )
   USE mp,        ONLY : mp_sum
   USE control_flags, ONLY : gamma_only
   USE basic_algebra_routines, ONLY : norm
-#ifdef __ENVIRON
-  USE environ_base,   ONLY : do_environ, env_static_permittivity, vsolvent
-  USE fft_base,       ONLY : dfftp
-  USE fft_interfaces, ONLY : fwfft
-  USE gvect,          ONLY : nl
-#endif
   !
   IMPLICIT NONE
   !
@@ -235,9 +221,6 @@ SUBROUTINE vacuum_level( x0, zion )
   REAL(DP), PARAMETER      :: x(3) = (/ 0.5D0, 0.0D0, 0.0D0 /), &
                               y(3) = (/ 0.0D0, 0.5D0, 0.0D0 /), &
                               z(3) = (/ 0.0D0, 0.0D0, 0.5D0 /)
-#ifdef __ENVIRON
-  COMPLEX(DP), ALLOCATABLE    :: vaux(:)
-#endif
   !
   !
   IF ( .NOT.gamma_only ) RETURN
@@ -282,26 +265,6 @@ SUBROUTINE vacuum_level( x0, zion )
      vg(ig) = vg(ig) + CMPLX( rgtot_re, rgtot_im ,kind=DP)*fac
      !
   END DO
-  !
-#ifdef __ENVIRON  
-  !
-  IF ( do_environ .AND. env_static_permittivity .GT. 1.D0 ) THEN
-     !
-     ALLOCATE( vaux( dfftp%nnr ) )
-     vaux = CMPLX( vsolvent( : ), 0.D0 )
-     CALL fwfft ('Dense', vaux, dfftp)
-     !
-     DO ig = gstart, ngm
-        !
-        vg(ig) = vg(ig) + vaux(nl(ig))
-        !
-     ENDDO
-     !
-     DEALLOCATE( vaux )
-     !
-  END IF
-  !
-#endif
   !
   first_point = npts
   !
@@ -398,10 +361,6 @@ SUBROUTINE vacuum_level( x0, zion )
      ! ... qq is therefore the total (positive) charge  of the system
      !
      qq = ( zion - qqr )
-     !
-#ifdef __ENVIRON
-     IF ( do_environ ) qq = qq / env_static_permittivity
-#endif
      !
      ! ... that by Gauss theorem gives a monopole average potential on the 
      ! ... sphere seen by electrons of: - qq e2 / r
