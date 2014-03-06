@@ -605,23 +605,20 @@ MODULE input
 
       ! ... Starting/Restarting ionic velocities
 
-      tcap_         = .FALSE.
+      tzerop_= .FALSE.
+      tv0rd_ = .FALSE.
+      tcap_  = .FALSE.
       SELECT CASE ( TRIM(ion_velocities) )
         CASE ('default')
-          tzerop_ = .FALSE.
-          tv0rd_ = .FALSE.
-          tcap_ = .FALSE.
+          CONTINUE
         CASE ('change_step')
-          tzerop_ = .FALSE.
-          tv0rd_ = .FALSE.
-          tcap_ = .FALSE.
           dt_old_ = tolp
         CASE ('zero')
-          tzerop_ = .TRUE.
-          tv0rd_ = .FALSE.
+          tzerop_= .TRUE.
         CASE ('from_input')
-          tzerop_ = .TRUE.
           tv0rd_  = .TRUE.
+          IF( .NOT. tavel  ) CALL errore(' iosys ', &
+                               ' ION_VELOCITIES not present in stdin ', 1 )
         CASE ('random')
           tcap_ = .TRUE.
         CASE DEFAULT
@@ -738,9 +735,6 @@ MODULE input
 
       IF( .NOT. trd_ht .AND. ibrav == 0 ) &
         CALL errore(' iosys ',' ibrav = 0 but CELL_PARAMETERS not present in stdin ', 1 )
-
-      IF( .NOT. tavel .AND. TRIM(ion_velocities)=='from_input' ) &
-        CALL errore(' iosys ',' ION_VELOCITIES not present in stdin ', 1 )
 
       RETURN
    END SUBROUTINE set_control_flags

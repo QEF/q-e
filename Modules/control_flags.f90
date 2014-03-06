@@ -32,7 +32,7 @@ MODULE control_flags
      !
   END TYPE convergence_criteria
   !
-  PUBLIC :: tbeg, nomore, nbeg, isave, iprint, tv0rd, nv0rd, tzeroc, tzerop, &
+  PUBLIC :: tbeg, nomore, nbeg, isave, iprint, tv0rd, tzeroc, tzerop, &
             tfor, tpre, tzeroe, tsde, tsdp, tsdc, taurdr,                    &
             ndr, ndw, tortho, ortho_eps, ortho_max, tstress, tprnfor,        &
             timing, memchk, tprnsfac,                                        &
@@ -108,7 +108,6 @@ MODULE control_flags
   INTEGER :: nomore = 0 !
   INTEGER :: iprint =10 ! print output every iprint step
   INTEGER :: isave  = 0 ! write restart to ndr unit every isave step
-  INTEGER :: nv0rd  = 0 !
   !
   ! ... .TRUE. if only gamma point is used
   !

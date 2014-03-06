@@ -9,9 +9,10 @@
 SUBROUTINE from_restart( )
    !
    USE kinds,                 ONLY : DP
-   USE control_flags,         ONLY : tbeg, taurdr, tfor, tsdp, tv0rd, &
-                                     iverbosity, tsde, tzeroe, tzerop, nbeg, tranp, amprp, thdyn, &
-                                     tzeroc, force_pairing, trhor, ampre, trane, tpre, dt_old
+   USE control_flags,         ONLY : tbeg, taurdr, tfor, tsdp, iverbosity, &
+                                     tsde, tzeroe, tzerop, nbeg, tranp, amprp,&
+                                     thdyn, tzeroc, force_pairing, trhor, &
+                                     ampre, trane, tpre, dt_old
    USE wavefunctions_module,  ONLY : c0_bgrp, cm_bgrp
    USE electrons_module,      ONLY : occn_info
    USE electrons_base,        ONLY : nspin, iupdwn, nupdwn, f, nbsp, nbsp_bgrp
@@ -71,11 +72,10 @@ SUBROUTINE from_restart( )
    !
    IF ( tzerop .AND. tfor ) THEN
       !
-      CALL r_to_s( vel_srt, vels, na, nsp, ainv )
-      !
+      vel_srt(:,:) = 0.0_dp
+      vels(:,:) = 0.0_dp
       CALL set_velocities( tausm, taus, vels, iforce, nat, delt )
-      !
-      IF( tzerop ) WRITE( stdout, '(" Ionic velocities set to zero")' )
+      WRITE( stdout, '(" Ionic velocities set to zero")' )
       !
    END IF
    !

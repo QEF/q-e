@@ -274,8 +274,8 @@
          !  Print info about input parameter for ion dynamic
 
          USE io_global,     ONLY: ionode, stdout
-         USE control_flags, ONLY: tranp, amprp, tnosep, tolp, tfor, tsdp, tzerop, &
-                                  tv0rd, taurdr, nv0rd, nbeg, tcp, tcap
+         USE control_flags, ONLY: tranp, amprp, tnosep, tolp, tfor, tsdp, &
+                                  tzerop, tv0rd, taurdr, nbeg, tcp, tcap
          USE ions_base,     ONLY: tau_srt, if_pos, ind_srt, nsp, na, &
                                   amass, nat, fricp, greasp, rcmax
          USE ions_nose,     ONLY: tempw, ndega
@@ -299,12 +299,10 @@
            END IF
            WRITE( stdout, 523 ) ndega
            WRITE( stdout, 524 ) fricp, greasp
-           IF( tzerop ) then
-             IF( tv0rd ) THEN
-               WRITE( stdout, 850 ) nv0rd
-             ELSE
+           IF( tv0rd ) THEN
+              WRITE( stdout, 850 ) 
+           ELSE IF ( tzerop ) THEN
                WRITE( stdout, 635 )
-             ENDIF 
            ENDIF
          END IF 
               
@@ -412,7 +410,7 @@
   661 FORMAT(   3X,'Ionic position will be re-read from restart file')
   662 FORMAT(   3X,'Ionic position read from input file')
 
-  850 FORMAT(   3X,'Initial ion velocities read from unit : ',I4)
+  850 FORMAT(   3X,'Initial ion velocities read from input')
 
  1000 FORMAT(3X,'Species ',I3,' atoms = ',I4,' mass = ',F12.2, ' (a.u.), ', &
                & F12.2, ' (amu)', ' rcmax = ', F6.2, ' (a.u.)' )

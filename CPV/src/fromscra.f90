@@ -10,7 +10,7 @@ SUBROUTINE from_scratch( )
     !
     USE kinds,                ONLY : DP
     USE control_flags,        ONLY : tranp, trane, iverbosity, tpre, tv0rd, &
-                                     tzeroc, tzerop, tzeroe, tfor, thdyn, &
+                                     tfor, thdyn, &
                                      lwf, tprnfor, tortho, amprp, ampre,  &
                                      tsde, ortho_eps, ortho_max, &
                                      force_pairing

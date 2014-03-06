@@ -41,7 +41,6 @@ MODULE dynamics_module
          ndof,        &! the number of degrees of freedom
          num_accept=0  ! Number of the accepted proposal in Smart_MC
    LOGICAL :: &
-         tavel=.FALSE.,&! if true, starting velocities were read from input
          vel_defined,  &! if true, vel is used rather than tau_old to do the next step
          control_temp, &! if true a thermostat is used to control the temperature
          refold_pos,   &! if true the positions are refolded into the supercell
@@ -126,7 +125,7 @@ CONTAINS
       USE ener,           ONLY : etot
       USE force_mod,      ONLY : force, lstres
       USE control_flags,  ONLY : istep, nstep, conv_ions, lconstrain, &
-                                 lfixatom
+                                 lfixatom, tv0rd
       !
       USE constraints_module, ONLY : nconstr, check_constraint
       USE constraints_module, ONLY : remove_constr_force, remove_constr_vec
@@ -497,7 +496,7 @@ CONTAINS
             !
          ENDDO
          !
-         IF ( tavel ) THEN ! initial velocities available from input file
+         IF ( tv0rd ) THEN ! initial velocities available from input file
             !
             vel(:,:) = vel(:,:) / alat
             !
