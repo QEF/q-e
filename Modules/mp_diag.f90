@@ -297,7 +297,7 @@ CONTAINS
        CALL mp_comm_free( ortho_row_comm )
     ENDIF
 #if defined __SCALAPACK
-    IF(  ortho_comm_id > 0  ) CALL BLACS_GRIDEXIT( ortho_cntx )
+    IF(  ortho_cntx /= -1 ) CALL BLACS_GRIDEXIT( ortho_cntx )
     ortho_cntx = -1
 #endif
     !
