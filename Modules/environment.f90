@@ -77,8 +77,11 @@ CONTAINS
        IF( exst ) THEN
           crashunit = find_free_unit()
           OPEN( UNIT=crashunit, FILE=TRIM(crash_file), STATUS='OLD',IOSTAT=ios )
-          IF(ios==0) CLOSE( UNIT=crashunit, STATUS='DELETE', IOSTAT=ios )
-          IF(ios/=0) WRITE(stdout,'(5x,"Remark: CRASH file could not ne deleted")')
+          IF (ios==0) THEN
+             CLOSE( UNIT=crashunit, STATUS='DELETE', IOSTAT=ios )
+          ELSE
+             WRITE(stdout,'(5x,"Remark: CRASH file could not be deleted")')
+          END IF
        END IF
 
     ELSE
