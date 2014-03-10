@@ -802,10 +802,10 @@ SUBROUTINE electrons_scf ( no_printout )
   !
 10  CALL flush_unit( stdout )
   !
-  ! ... exiting: write the charge density to file
+  ! ... exiting: write (unless disables) the charge density to file
   ! ... (also write ldaU ns coefficients and PAW becsum)
   !
-  CALL write_rho( rho, nspin )
+  IF ( io_level > -1 ) CALL write_rho( rho, nspin )
   !
   ! ... delete mixing info if converged, keep it if not
   !

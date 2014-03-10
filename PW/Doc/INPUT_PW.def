@@ -279,17 +279,20 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                'high':   save all data to disk at each SCF step
 
                'medium': save wavefunctions at each SCF step unless
-                         there is a single k-point per process
+                         there is a single k-point per process (in which
+                         case the behavior is the same as 'low')
 
                'low' :   store wfc in memory, save only at the end
 
-               'none':   do not save wfc, not even at the end
-                         (only for 'scf', 'nscf', 'bands' calculations)
+               'none':   do not save anything, not even at the end
+                         ('scf', 'nscf', 'bands' calculations; some data
+                          may be written anyway for other calculations)
 
                Note that the amount of needed RAM increases as the amount
                of I/O decreases! IMPORTANT: default has been changed to 'low'.
                It is no longer needed to specify 'high' in order to be able
                to restart from an interrupted calculation (see "restart_mode")
+               but you cannot restart from disk_io='none'
 	    }
 	}
 
