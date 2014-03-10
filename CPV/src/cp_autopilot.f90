@@ -100,7 +100,7 @@ CONTAINS
          & ion_temperature, fnosep, nhpcl, nhptyp, nhgrp, fnhscl, ndega, nat
     use ions_nose, ONLY: tempw
     USE control_flags, only: tsde, tsdp, tfor, tcp, tnosep, isave,iprint,&
-                             tconvthrs, tolp,ldamped, &
+                             tconvthrs, tolp, &
                              ekin_conv_thr, forc_conv_thr, etot_conv_thr
     USE control_flags, only: tsteepdesc_    => tsteepdesc, &
                              tdamp_         => tdamp,      &
@@ -215,7 +215,6 @@ CONTAINS
           tfor = .true.
           fricp= 0.d0
        case ('DAMP')
-          ldamped    = .TRUE.
           tsdp = .false.
           tfor = .true.
           tdampions_ = .TRUE.

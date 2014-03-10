@@ -170,7 +170,6 @@ MODULE control_flags
   ! ... logical flags controlling the execution
   !
   LOGICAL, PUBLIC :: &
-    lfixatom=.FALSE., &! if .TRUE. some atom is kept fixed
     lscf    =.FALSE., &! if .TRUE. the calc. is selfconsistent
     lbfgs   =.FALSE., &! if .TRUE. the calc. is a relaxation based on BFGS
     lmd     =.FALSE., &! if .TRUE. the calc. is a dynamics

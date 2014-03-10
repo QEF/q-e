@@ -1494,7 +1494,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm, extfor
   USE fixed_occ,          ONLY : tfixed_occ, f_inp_ => f_inp
   USE ions_base,          ONLY : if_pos_ =>  if_pos, amass, fixatom
-  USE control_flags,      ONLY : lfixatom, textfor, tv0rd
+  USE control_flags,      ONLY : textfor, tv0rd
   !
   IMPLICIT NONE
   !
@@ -1556,7 +1556,6 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   !
   if_pos_(:,:) = if_pos(:,1:nat)
   fixatom = COUNT( if_pos_(1,:)==0 .AND. if_pos_(2,:)==0 .AND. if_pos_(3,:)==0 )
-  lfixatom = ANY ( if_pos_ == 0 )
   !
   tau_format = trim( atomic_positions )
   !

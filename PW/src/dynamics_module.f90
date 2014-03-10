@@ -124,8 +124,7 @@ CONTAINS
       USE cell_base,      ONLY : alat, omega
       USE ener,           ONLY : etot
       USE force_mod,      ONLY : force, lstres
-      USE control_flags,  ONLY : istep, nstep, conv_ions, lconstrain, &
-                                 lfixatom, tv0rd
+      USE control_flags,  ONLY : istep, nstep, conv_ions, lconstrain, tv0rd
       !
       USE constraints_module, ONLY : nconstr, check_constraint
       USE constraints_module, ONLY : remove_constr_force, remove_constr_vec
@@ -149,7 +148,7 @@ CONTAINS
       !
       ! ... the number of degrees of freedom
       !
-      IF ( any( if_pos(:,:) == 0 ) ) THEN
+      IF ( ANY( if_pos(:,:) == 0 ) ) THEN
          !
          ndof = 3*nat - count( if_pos(:,:) == 0 ) - nconstr
          !
@@ -225,15 +224,12 @@ CONTAINS
       !
       IF ( control_temp ) CALL apply_thermostat()
       !
-      IF ( lconstrain ) THEN
-         !
-         ! ... we first remove the component of the force along the
-         ! ... constraint gradient ( this constitutes the initial
-         ! ... guess for the calculation of the lagrange multipliers )
-         !
+      ! ... we first remove the component of the force along the
+      ! ... constraint gradient ( this constitutes the initial
+      ! ... guess for the calculation of the lagrange multipliers )
+      !
+      IF ( lconstrain ) &
          CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
-         !
-      ENDIF
       !
       ! ... calculate accelerations in a.u. units / alat
       !
@@ -243,14 +239,11 @@ CONTAINS
       !
       IF (vel_defined) THEN
          !
-         IF ( lconstrain ) THEN
-            !
-            ! ... remove the component of the velocity along the
-            ! ... constraint gradient
-            !
+         ! ... remove the component of the velocity along the
+         ! ... constraint gradient
+         !
+         IF ( lconstrain ) &
             CALL remove_constr_vec( nat, tau, if_pos, ityp, alat, vel )
-            !
-         ENDIF
          !
          tau_new(:,:) = tau(:,:) + vel(:,:) * dt + 0.5_DP * acc(:,:) * dt**2
          tau_old(:,:) = tau(:,:) - vel(:,:) * dt + 0.5_DP * acc(:,:) * dt**2
@@ -261,7 +254,7 @@ CONTAINS
          !
       ENDIF
       !
-      IF ( all( if_pos(:,:) == 1 ) ) THEN
+      IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
          !
          ! ... if no atom has been fixed  we compute the displacement of the
          ! ... center of mass and we subtract it from the displaced positions
@@ -376,9 +369,6 @@ CONTAINS
       !
       tau(:,:) = tau_new(:,:)
       !
-      !!!IF ( nat == 2 ) &
-      !!!   PRINT *, "DISTANCE = ", dnrm2( 3, ( tau(:,1) - tau(:,2) ), 1 ) * ALAT
-      !
 #if ! defined (__REDUCE_OUTPUT)
       !
       CALL output_tau( .false., .false. )
@@ -396,7 +386,7 @@ CONTAINS
               ((kstress(1,1)+kstress(2,2)+kstress(3,3))/3.d0*ry_kbar), &
               (kstress(i,1)*ry_kbar,kstress(i,2)*ry_kbar,kstress(i,3)*ry_kbar, i=1,3)
       !
-      IF ( .not.( lconstrain .or. lfixatom ) ) THEN
+      IF ( .not.( lconstrain .or. ANY( if_pos(:,:) == 0 ) ) ) THEN
          !
          ! ... total linear momentum must be zero if all atoms move
          !
@@ -682,16 +672,6 @@ CONTAINS
             !
          ENDIF
          !
-         !IF ( thermostat == 'langevin' ) THEN
-         !   !
-         !   ! ... vel is used already multiplied by the time step
-         !   !
-         !   vel(:,:) = dt*vel(:,:)
-         !   !
-         !   RETURN
-         !   !
-         !END IF
-         !
          IF ( invsym ) THEN
             !
             ! ... if there is inversion symmetry, equivalent atoms have
@@ -716,18 +696,12 @@ CONTAINS
             !
             ml(:) = 0.D0
             !
-            IF ( .not. lfixatom ) THEN
+            IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
                !
-               total_mass = 0.D0
-               !
+               total_mass = SUM ( mass(1:nat) )
                DO na = 1, nat
-                  !
-                  total_mass = total_mass + mass(na)
-                  !
                   ml(:) = ml(:) + mass(na)*vel(:,na)
-                  !
                ENDDO
-               !
                ml(:) = ml(:) / total_mass
                !
             ENDIF
@@ -904,7 +878,7 @@ CONTAINS
       !
       tau_new(:,:) = tau(:,:) + step(:,:)*min( norm_step, step_max / alat )
       !
-      IF ( all( if_pos(:,:) == 1 ) ) THEN
+      IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
          !
          ! ... if no atom has been fixed  we compute the displacement of the
          ! ... center of mass and we subtract it from the displaced positions
@@ -1062,7 +1036,7 @@ CONTAINS
       !
       tau_new(:,:) = tau(:,:) + ( dt*force(:,:) + chi(:,:) ) / alat
       !
-      IF ( all( if_pos(:,:) == 1 ) ) THEN
+      IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
          !
          ! ... here we compute the displacement of the center of mass and we
          ! ... subtract it from the displaced positions

@@ -40,7 +40,7 @@ SUBROUTINE vcsmd()
   USE ions_base,       ONLY : amass, if_pos 
   USE relax,           ONLY : epse, epsf, epsp
   USE force_mod,       ONLY : force, sigma
-  USE control_flags,   ONLY : nstep, istep, tolp, conv_ions, lconstrain, lfixatom 
+  USE control_flags,   ONLY : nstep, istep, tolp, conv_ions, lconstrain
   USE parameters,      ONLY : ntypx
   USE ener,            ONLY : etot
   USE io_files,        ONLY : prefix, delete_if_present, seqopn
