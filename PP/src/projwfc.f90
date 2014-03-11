@@ -375,11 +375,15 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   ! Some workspace for k-point calculation ...
   REAL   (DP), ALLOCATABLE ::roverlap(:,:), rwork1(:),rproj0(:,:)
   ! ... or for gamma-point.
-  REAL(DP), ALLOCATABLE :: charges(:,:,:), proj1 (:)
+  REAL(DP), ALLOCATABLE :: charges(:,:,:), charges_lm(:,:,:,:), proj1 (:)
   REAL(DP) :: psum, totcharge(2)
   INTEGER  :: nksinit, nkslast
   CHARACTER(len=256) :: filename
   CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/)
+  CHARACTER (len=7)  :: lm_label(1:7,1:3)=reshape( (/ &
+    'z      ','x      ','y      ','       ','       ','       ','       ', &
+    'z2     ','xz     ','yz     ','x2-y2  ','xy     ','       ','       ', &
+    'z3     ','xz2    ','yz2    ','zx2-zy2','xyz    ','x3-3xy2','3yx2-y3' /), (/7,3/) )
   INTEGER, ALLOCATABLE :: idx(:)
   LOGICAL :: lsym
   LOGICAL :: freeswfcatom
@@ -735,7 +739,9 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
      ! estimate partial charges (Loewdin) on each atom
      !
      ALLOCATE ( charges (nat, 0:lmax_wfc, nspin ) )
+     ALLOCATE ( charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin ) )
      charges = 0.0d0
+     charges_lm = 0.d0
      DO ik = 1, nkstot
         IF ( nspin == 1 ) THEN
            current_spin = 1
@@ -748,7 +754,10 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
            DO nwfc = 1, natomwfc
               na= nlmchi(nwfc)%na
               l = nlmchi(nwfc)%l
+              m = nlmchi(nwfc)%m
               charges(na,l,current_spin) = charges(na,l,current_spin) + &
+                   wg (ibnd,ik) * proj (nwfc, ibnd, ik)
+              charges_lm(na,l,m,current_spin) = charges_lm(na,l,m,current_spin) + &
                    wg (ibnd,ik) * proj (nwfc, ibnd, ik)
            ENDDO
         ENDDO
@@ -761,15 +770,39 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
            totcharge(is) = SUM(charges(na,0:lmax_wfc,is))
         ENDDO
         IF ( nspin == 1) THEN
-           WRITE( stdout, 2000) na, totcharge(1), &
-                ( l_label(l), charges(na,l,1), l= 0,lmax_wfc)
+           DO l = 0, lmax_wfc
+              WRITE(stdout, 2000,advance='no') na, totcharge(1), l_label(l), charges(na,l,1)
+              IF (l /= 0) THEN
+                 DO m = 1, 2*l+1
+                    WRITE( stdout,'(A1,A,''='',F8.4,'', '')',advance='no') &
+                       l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
+                 ENDDO
+              ENDIF
+              WRITE(stdout,*)
+           ENDDO
         ELSEIF ( nspin == 2) THEN
            WRITE( stdout, 2000) na, totcharge(1) + totcharge(2), &
                 ( l_label(l), charges(na,l,1) + charges(na,l,2), l=0,lmax_wfc)
-           WRITE( stdout, 2001) totcharge(1), &
-                ( l_label(l), charges(na,l,1), l= 0,lmax_wfc)
-           WRITE( stdout, 2002) totcharge(2), &
-                ( l_label(l), charges(na,l,2), l= 0,lmax_wfc)
+           DO l = 0, lmax_wfc
+              WRITE(stdout,2001,advance='no') totcharge(1), l_label(l), charges(na,l,1)
+              IF (l /= 0) THEN
+                 DO m = 1, 2*l+1
+                    WRITE( stdout,'(A1,A,''='',F8.4,'', '')',advance='no') &
+                       l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
+                 ENDDO
+              ENDIF
+              WRITE(stdout,*)
+           ENDDO
+           DO l = 0, lmax_wfc
+              WRITE(stdout,2002,advance='no') totcharge(2), l_label(l), charges(na,l,2)
+              IF (l /= 0) THEN
+                 DO m = 1, 2*l+1
+                    WRITE( stdout,'(A1,A,''='',F8.4,'', '')',advance='no') &
+                       l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,2)
+                 ENDDO
+              ENDIF
+              WRITE(stdout,*)
+           ENDDO
            WRITE( stdout, 2003) totcharge(1) - totcharge(2), &
                 ( l_label(l), charges(na,l,1) - charges(na,l,2), l=0,lmax_wfc)
         ENDIF
@@ -788,7 +821,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
      ! by measuring how much of the subspace of the Hamiltonian
      ! eigenstates falls outside the subspace spanned by the atomic basis
      !
-     DEALLOCATE (charges)
+     DEALLOCATE (charges, charges_lm)
      !
   ENDIF
   !
