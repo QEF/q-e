@@ -2688,6 +2688,8 @@ CONTAINS
             IF (ierr/=0) RETURN
             CALL iotk_scan_attr( attr, "UNITS", energy_units_, IERR=ierr )
             !
+            ALLOCATE( mcons_(3,1) )
+            !
             CALL iotk_scan_dat( iunit, "FIXED_MAGNETIZATION", mcons_(3,1) )
             CALL iotk_scan_dat( iunit, "ELECTRONS_UP", nelup_ )
             CALL iotk_scan_dat( iunit, "ELECTRONS_DOWN", neldw_ )
@@ -2700,6 +2702,8 @@ CONTAINS
             IF (present(nelup) ) nelup = nelup_
             IF (present(neldw) ) neldw = neldw_
             IF (present(energy_units) ) energy_units = trim(energy_units_)
+            !
+            DEALLOCATE( mcons_)
             !
          ENDIF
          !
@@ -4014,7 +4018,7 @@ CONTAINS
 10          CONTINUE
             !
             ik_eff = ik + num_k_points
-            isk(ik_eff) = 2
+            isk_(ik_eff) = 2
             !
             IF (lkpoint_dir) THEN
                CALL iotk_scan_begin(iunit,"DATAFILE"//TRIM(iotk_index(2)) &
