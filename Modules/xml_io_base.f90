@@ -880,16 +880,23 @@ MODULE xml_io_base
       INTEGER                  :: iks, ike, ikt, igwx
       INTEGER                  :: ngroup, ipsour
       INTEGER,     ALLOCATABLE :: ipmask(:)
-      INTEGER                  :: me_in_group, nproc_in_group, io_in_parent, nproc_in_parent, me_in_parent
+      INTEGER                  :: me_in_group, nproc_in_group, io_in_parent, nproc_in_parent, me_in_parent, my_group, io_group
       COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       !
       ngroup          = mp_size( inter_group_comm )
+      my_group        = mp_rank( inter_group_comm )
       me_in_group     = mp_rank( intra_group_comm )
       nproc_in_group  = mp_size( intra_group_comm )
       me_in_parent    = mp_rank( parent_group_comm )
       nproc_in_parent = mp_size( parent_group_comm )
       !
       ALLOCATE( ipmask( nproc_in_parent ) )
+      !
+      ! find out the group containing the ionode
+      !
+      io_group = 0
+      IF( ionode ) io_group = my_group
+      CALL mp_sum( io_group, parent_group_comm )
       !
       io_in_parent = 0
       IF( ionode ) io_in_parent = me_in_parent
@@ -929,13 +936,20 @@ MODULE xml_io_base
          !
          IF ( ngroup > 1 ) THEN
             !
-            IF ( ikt >= iks .AND. ikt <= ike ) &      
-               CALL mergewf( wf0(:,j), wtmp, ngwl, igl, me_in_group, &
-                             nproc_in_group, root_in_group, intra_group_comm )
-            !
-            IF ( ipsour /= io_in_parent ) &
-               CALL mp_get( wtmp, wtmp, me_in_parent, &
-                            io_in_parent, ipsour, j, parent_group_comm )
+            IF( nk > 1 ) THEN
+               IF ( ikt >= iks .AND. ikt <= ike ) &      
+                  CALL mergewf( wf0(:,j), wtmp, ngwl, igl, me_in_group, &
+                                nproc_in_group, root_in_group, intra_group_comm )
+               !
+               IF ( ipsour /= io_in_parent ) &
+                  CALL mp_get( wtmp, wtmp, me_in_parent, &
+                               io_in_parent, ipsour, j, parent_group_comm )
+               !
+            ELSE IF( my_group == io_group ) THEN
+               !
+               CALL mergewf( wf0(:,j), wtmp, ngwl, igl, &
+                             me_in_group, nproc_in_group, root_in_group, intra_group_comm )
+            END IF
             !
          ELSE
             !
@@ -1000,18 +1014,27 @@ MODULE xml_io_base
       INTEGER                  :: ngroup, ipdest
       INTEGER,     ALLOCATABLE :: ipmask(:)
       LOGICAL                  :: flink_
-      INTEGER                  :: me_in_group, nproc_in_group, io_in_parent, nproc_in_parent, me_in_parent
+      INTEGER                  :: me_in_group, nproc_in_group, io_in_parent, nproc_in_parent, me_in_parent, my_group, io_group
       !
       flink_ = .FALSE.
       IF( PRESENT( flink ) ) flink_ = flink
       !
       ngroup          = mp_size( inter_group_comm )
+      my_group        = mp_rank( inter_group_comm )
       me_in_group     = mp_rank( intra_group_comm )
       nproc_in_group  = mp_size( intra_group_comm )
       me_in_parent    = mp_rank( parent_group_comm )
       nproc_in_parent = mp_size( parent_group_comm )
       !
       ALLOCATE( ipmask( nproc_in_parent ) )
+      !
+      ! find out the group containing the ionode
+      !
+      io_group = 0
+      IF( ionode ) io_group = my_group
+      CALL mp_sum( io_group, parent_group_comm )
+      !
+      ! find out the io task id in the parent group
       !
       io_in_parent = 0
       IF( ionode ) io_in_parent = me_in_parent
@@ -1080,13 +1103,21 @@ MODULE xml_io_base
             !
             IF ( ngroup > 1 ) THEN
                !
-               IF ( ipdest /= io_in_parent ) &
-                  CALL mp_put( wtmp, wtmp, me_in_parent, &
+               IF( nk_ > 1 ) THEN
+                  !
+                  IF ( ipdest /= io_in_parent ) &
+                     CALL mp_put( wtmp, wtmp, me_in_parent, &
                                io_in_parent, ipdest, j, parent_group_comm )
-               !
-               IF ( ( ikt >= iks ) .AND. ( ikt <= ike ) ) &
-                  CALL splitwf( wf(:,j), wtmp, ngwl, igl, me_in_group, &
+                  !
+                  IF ( ( ikt >= iks ) .AND. ( ikt <= ike ) ) &
+                     CALL splitwf( wf(:,j), wtmp, ngwl, igl, me_in_group, &
                                 nproc_in_group, root_in_group, intra_group_comm )
+                  !
+               ELSE IF( my_group == io_group ) THEN
+
+                  CALL splitwf( wf(:,j), wtmp, ngwl, igl, &
+                             me_in_group, nproc_in_group, root_in_group, intra_group_comm )
+               END IF
                !
             ELSE
                !
