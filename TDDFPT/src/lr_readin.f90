@@ -53,7 +53,7 @@ SUBROUTINE lr_readin
   USE exx,                 ONLY : ecutfock
 #ifdef __ENVIRON
   USE input_parameters,    ONLY : do_environ, assume_isolated
-  USE environ_base,        ONLY : environ_base_init
+  USE environ_base,        ONLY : environ_base_init, ir_end
   USE environ_input,       ONLY : verbose, environ_thr, environ_type,      &
                                   stype, rhomax, rhomin, tbeta,            &
                                   env_static_permittivity, eps_mode,       &
@@ -63,7 +63,7 @@ SUBROUTINE lr_readin
                                   mixtype, ndiis, mixrhopol, tolrhopol,    &
                                   env_surface_tension, delta,              &
                                   env_pressure,                            &
-                                  env_ioncc_concentration, zion, rhopb,    &
+                                  env_ioncc_level, nrep, cion, zion, rhopb,&
                                   solvent_temperature,                     &
                                   env_extcharge_n, extcharge_origin,       &
                                   extcharge_dim, extcharge_axis,           &
@@ -71,12 +71,13 @@ SUBROUTINE lr_readin
                                   extcharge_charge,                        &
                                   environ, environ_defaults
   USE ions_base,           ONLY : nsp, ityp, zv, tau, nat
-  USE cell_base,           ONLY : at, alat, omega
+  USE cell_base,           ONLY : at, alat, omega, ibrav
   USE solvent_tddfpt,      ONLY : solvent_initbase_tddfpt
   USE environ_init,        ONLY : environ_initions, environ_initcell,      &
                                   environ_clean, environ_initbase,         &
                                   environ_initions_allocate
   USE environ_main,        ONLY : calc_venviron
+  USE mp_bands,            ONLY : me_bgrp
 #endif
 
 
@@ -308,7 +309,7 @@ SUBROUTINE lr_readin
                               mixtype, ndiis, mixrhopol, tolrhopol,       &
                               env_surface_tension, delta,                 &
                               env_pressure,                               &
-                              env_ioncc_concentration, zion, rhopb,       &
+                              env_ioncc_level, nrep, cion, zion, rhopb,   &
                               solvent_temperature,                        &
                               env_extcharge_n, extcharge_origin,          &
                               extcharge_dim, extcharge_axis,              &
@@ -318,18 +319,19 @@ SUBROUTINE lr_readin
      CALL environ_initions_allocate(nat, nsp)
      !
      ! Taken from PW/src/init_run.f90
-     ! 
+     !
+     ir_end = MIN(dfftp%nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1)) 
      CALL environ_initbase( dfftp%nnr )
      !
      ! Taken from PW/src/electrons.f90
      !
      CALL environ_initions( dfftp%nnr, nat, nsp, ityp, zv, tau, alat )
-     CALL environ_initcell( dfftp%nnr, dfftp%nr1*dfftp%nr2*dfftp%nr3, omega, alat, at )
+     CALL environ_initcell( dfftp%nnr, dfftp%nr1, dfftp%nr2, dfftp%nr3, ibrav, omega, alat, at )
      !
      ! Compute additional unperturbed potentials due to the presence of the environment
-     ! and add them to the SCF (H+XC) potential.
+     ! and add them to the SCF (HXC) potential.
      !
-     WRITE( stdout, '(/5x,"Computing and adding the polarization potentials to H+XC potential")' )
+     WRITE( stdout, '(/5x,"Computing and adding the polarization potentials to HXC potential")' )
      !
      CALL calc_venviron( .TRUE., dfftp%nnr, nspin, 0.0d0, rho%of_r, v%of_r(:,1))
      !
