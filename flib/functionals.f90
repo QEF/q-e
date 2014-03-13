@@ -807,6 +807,7 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   ! iflag=4  PBEQ2D: L. Chiodo et al., PRL 108, 126402 (2012)
   ! iflag=5  optB88: Klimes et al., J. Phys. Cond. Matter, 22, 022201 (2010)
   ! iflag=6  optB86b: Klimes et al., Phys. Rev. B 83, 195131 (2011)
+  ! iflag=7  ev: Engel and Vosko, PRB 47, 13164 (1991)
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : pi
@@ -833,11 +834,13 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
        c2 = 3.093667726280136_DP, c5 = 4._DP * third, &
        c6 = c2*2.51984210, c7=5._DP/6._DP, c8=0.8_DP ! (3pi^2)^(1/3)*2^(4/3)
   ! parameters of the functional
-  real(DP) :: k (6), mu(6)
+  real(DP) :: k (6), mu(6), ev(6)
   !           pbe        rpbe        pbesol   pbeq2d      optB88  optB86b
   data k / 0.804_DP,   1.2450D0,   0.804_DP , 0.804_DP ,    0.0 ,  0.0 /, &
        mu/ 0.21951_DP, 0.21951_DP, 0.12345679012345679012_DP,             &
-                                   0.12345679012345679,     0.22 , 0.1234/
+                                   0.12345679012345679,     0.22 , 0.1234/, &
+       ev / 1.647127_DP, 0.980118_DP, 0.017399_DP, 1.523671_DP, 0.367229_DP, &
+                                   0.011282_DP /  ! a and b parameters of Engel and Vosko
   agrho = sqrt (grho)
   kf = c2 * rho**third
   dsg = 0.5_DP / kf
@@ -866,6 +869,11 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   elseif ( iflag == 6) then
      p=mu(iflag)*s1*s1
      fx =  p / ( 1 + p )**c8
+  elseif ( iflag == 7) then
+     s=s2*s2
+     f1 =  1 + ev(1)*s2 + ev(2)*s + ev(3)*s*s2
+     f2 =  1 + ev(4)*s2 + ev(5)*s + ev(6)*s*s2
+     fx = f1 / f2 - 1
   else
      f1 = s2 * mu(iflag) / k (iflag)
      f2 = 1._DP + f1
@@ -894,6 +902,10 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
      dfx=2*fx/s1-fx/dfx1*(ab*c+ab*s1/sqrt(p*p+1)*c6)
   elseif (iflag == 6) then
      dfx=2*mu(iflag)*s1*fx*(1+(1-c8)*p)/(p*(1+p))
+  elseif (iflag == 7) then
+    dfx  =  ev(1) + 2*ev(2)*s2 + 3*ev(3)*s  
+    dfx1 =  ev(4) + 2*ev(5)*s2 + 3*ev(6)*s 
+    dfx  = 2 * s1 * ( dfx - f1*dfx1/f2 ) / f2
   else
      dfx1 = f2 * f2
      dfx = 2._DP * mu(iflag) * s1 / dfx1

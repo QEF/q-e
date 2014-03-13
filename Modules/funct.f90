@@ -113,6 +113,7 @@ module funct
   !              "vdw-df3"="sla+pw+obk8+vdw1"  = vdW-DF3
   !              "vdw-df4"="sla+pw+ob86+vdw1"  = vdW-DF4
   !              "optbk88"="sla+pw+obk8"       = optB88
+  !              "ev93"  = "sla+pw+evx+nogc"   = Engel-Vosko
   !
   ! Any nonconflicting combination of the following keywords is acceptable:
   !
@@ -164,6 +165,7 @@ module funct
   !              "b86b"   Becke (1986) exchange          igcx =22
   !              "obk8"   optB88  exchange               igcx =23
   !              "ob86"   optB86b exchange               igcx =24
+  !              "evx"    Engel-Vosko exchange           igc  = 25
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -230,6 +232,7 @@ module funct
   !              m06l    Y. Zhao and D. G. Truhlar, JCP 125, 194101 (2006)
   !              gau-pbe J.-W. Song, K. Yamashita, K. Hirao JCP 135, 071103 (2011)
   !              rVV10   R. Sabatini et al. Phys. Rev. B 87, 041108(R) (2013)
+  !              ev93     Engel-Vosko, Phys. Rev. B 47, 13164 (1993)
   !
   ! NOTE ABOUT HSE: there are two slight deviations with respect to the HSE06 
   ! functional as it is in Gaussian code (that is considered as the reference
@@ -279,7 +282,7 @@ module funct
   !
   ! data
   integer :: nxc, ncc, ngcx, ngcc, ncnl
-  parameter (nxc = 8, ncc =10, ngcx =24, ngcc = 12, ncnl=3)
+  parameter (nxc = 8, ncc =10, ngcx =25, ngcc = 12, ncnl=3)
   character (len=4) :: exc, corr
   character (len=4) :: gradx, gradc, nonlocc
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc), nonlocc (0: ncnl)
@@ -291,7 +294,7 @@ module funct
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
                'TPSS', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
                'META', 'C09X', 'SOX', 'M6LX', 'Q2DX', 'GAUP', 'PW86', 'B86B', &
-               'OBK8','OB86' / 
+               'OBK8','OB86', 'EVX' / 
 
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'TPSS',&
                'B3LP', 'PSC', 'PBE', 'META', 'M6LC', 'Q2DC' / 
@@ -642,6 +645,16 @@ CONTAINS
        call set_dft_value (inlc,0) ! Default  
        dft_defined = .true.
     
+    ! special case : Engel-Vosko
+    else if ( matches( 'EV93', dftout ) ) THEN
+       !
+       CALL set_dft_value( iexch, 1 ) ! 
+       CALL set_dft_value( icorr, 4 ) ! 
+       CALL set_dft_value( igcx,  25 )
+       CALL set_dft_value( igcc,  0)
+       call set_dft_value (inlc,0) ! Default  
+       dft_defined = .true.
+
     END IF
 
     !
@@ -1102,6 +1115,8 @@ CONTAINS
      shortname_ = 'M06L'
   else if (iexch_==1.and.icorr_==4.and.igcx_==17.and.igcc_==4) then
      shortname_ = 'SOGGA'
+  else if (iexch_==1.and.icorr_==4.and.igcx_==25.and.igcc_==0) then
+     shortname_ = 'EV93'
   else
      shortname_ = ' '
   end if
@@ -1505,6 +1520,8 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call pbex (rho, grho, 5, sx, v1x, v2x)
   elseif (igcx == 24) then ! 'optB86b'
      call pbex (rho, grho, 6, sx, v1x, v2x)
+  elseif (igcx == 25) then ! 'ev93'
+     call pbex (rho, grho, 7, sx, v1x, v2x)
   else
      sx = 0.0_DP
      v1x = 0.0_DP
@@ -1616,13 +1633,15 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
   elseif (igcx == 3 .or. igcx == 4 .or. igcx == 8 .or. &
-          igcx == 10 .or. igcx == 12 .or. igcx == 20) then
+          igcx == 10 .or. igcx == 12 .or. igcx == 20 .or. igcx == 25) then
      ! igcx=3: PBE, igcx=4: revised PBE, igcx=8: PBE0, igcx=10: PBEsol
-     ! igcx=12: HSE,  igcx=20: gau-pbe
+     ! igcx=12: HSE,  igcx=20: gau-pbe, igcx=25: ev93
      if (igcx == 4) then
         iflag = 2
      elseif (igcx == 10) then
         iflag = 3
+     elseif (igcx == 25) then
+        iflag = 7
      else
         iflag = 1
      endif
@@ -1844,12 +1863,15 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
      sx = 0.5_DP * (sxup + sxdw)
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
-  case(3,4,8,10,12)
-     ! igcx=3: PBE, igcx=4: revised PBE, igcx=8 PBE0, igcx=10: PBEsol
+  case(3,4,8,10,12,25)
+     ! igcx=3: PBE, igcx=4: revised PBE, igcx=8 PBE0, igcx=10: PBEsol, 
+     ! igcx=25: EV93
      if (igcx == 4) then
         iflag = 2
      elseif (igcx == 10) then
         iflag = 3
+     elseif (igcx == 25) then
+        iflag = 7
      else
         iflag = 1
      endif
