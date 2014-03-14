@@ -3555,7 +3555,7 @@ CONTAINS
       IF ( present( tfixed_occ ))       tfixed_occ  = tfixed_occ_
       IF ( present( ngauss ))           ngauss      = ngauss_
       IF ( present( ntetra ))           ntetra      = ntetra_
-      IF ( present( degauss ))          degauss     = degauss
+      IF ( present( degauss ))          degauss     = degauss_
       IF ( present( degauss_units ))    degauss_units  = trim(degauss_units_)
       IF ( present( nstates_up ))       nstates_up  = nstates_up_
       IF ( present( nstates_dw ))       nstates_dw  = nstates_dw_
