@@ -34,7 +34,7 @@ SUBROUTINE lr_readin
   USE ktetra,              ONLY : ltetra
   USE realus,              ONLY : real_space, real_space_debug,&
                                   & init_realspace_vars, qpointlist,&
-                                  & betapointlist, read_rs_status, newd_r 
+                                  & betapointlist, newd_r 
   USE funct,               ONLY : dft_is_meta
   USE io_global,           ONLY : stdout
   USE control_flags,       ONLY : tqr, twfcollect, ethr
@@ -270,7 +270,7 @@ SUBROUTINE lr_readin
   !
   current_k = 1 ! Required for restart runs as this never gets initalised 
   outdir = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
-  IF (auto_rs) CALL read_rs_status( outdir, ierr )
+  IF (auto_rs) CALL read_rs_status( outdir, tqr, real_space, ierr )
   IF (real_space) real_space_debug=99
   IF (real_space_debug > 0) real_space=.TRUE.
   IF (lr_verbosity > 1) THEN
@@ -502,5 +502,59 @@ CONTAINS
     RETURN
     !
   END SUBROUTINE input_sanity
+  !
+  !------------------------------------------------------------------------
+  SUBROUTINE read_rs_status( dirname, tqr, real_space, ierr )
+    !------------------------------------------------------------------------
+    !
+    ! This subroutine reads the real space control flags from a pwscf punch card
+    ! OBM 2009 - FIXME: should be moved to qexml.f90
+    !
+      USE iotk_module
+      USE io_global,     ONLY : ionode,ionode_id
+      USE io_files,      ONLY : iunpun, xmlpun
+      USE mp,            ONLY : mp_bcast
+      USE mp_images,     ONLY : intra_image_comm
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(len=*), INTENT(in)  :: dirname
+      LOGICAL,          INTENT(out) :: tqr, real_space
+      INTEGER,          INTENT(out) :: ierr
+      !
+      !
+      IF ( ionode ) THEN
+          !
+          ! ... look for an empty unit
+          !
+          CALL iotk_free_unit( iunpun, ierr )
+          !
+          CALL errore( 'realus->read_rs_status', 'no free units to read real space flags', ierr )
+          !
+          CALL iotk_open_read( iunpun, FILE = trim( dirname ) // '/' // &
+                            & trim( xmlpun ), IERR = ierr )
+          !
+      ENDIF
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
+         CALL iotk_scan_begin( iunpun, "CONTROL" )
+         !
+         CALL iotk_scan_dat( iunpun, "Q_REAL_SPACE", tqr )
+         CALL iotk_scan_dat( iunpun, "BETA_REAL_SPACE", real_space )
+         !
+         CALL iotk_scan_end( iunpun, "CONTROL" )
+         !
+         CALL iotk_close_read( iunpun )
+      ENDIF
+      CALL mp_bcast( tqr,  ionode_id, intra_image_comm )
+      CALL mp_bcast( real_space,    ionode_id, intra_image_comm )
+      !
+      RETURN
+      !
+    END SUBROUTINE read_rs_status
 
 END SUBROUTINE lr_readin

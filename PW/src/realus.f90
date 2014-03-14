@@ -87,60 +87,6 @@ MODULE realus
       !------------------------------------------------------------------------
     END SUBROUTINE generate_qpointlist
     !------------------------------------------------------------------------
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE read_rs_status( dirname, ierr )
-    !------------------------------------------------------------------------
-    !
-    ! This subroutine reads the real space control flags from a pwscf punch card
-    ! OBM 2009 - FIXME: should be moved to qexml.f90
-    !
-      USE iotk_module
-      USE io_global,     ONLY : ionode,ionode_id
-      USE io_files,      ONLY : iunpun, xmlpun
-      USE mp,            ONLY : mp_bcast
-      USE mp_images,     ONLY : intra_image_comm
-      USE control_flags, ONLY : tqr
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(len=*), INTENT(in)  :: dirname
-      INTEGER,          INTENT(out) :: ierr
-      !
-      !
-      IF ( ionode ) THEN
-          !
-          ! ... look for an empty unit
-          !
-          CALL iotk_free_unit( iunpun, ierr )
-          !
-          CALL errore( 'realus->read_rs_status', 'no free units to read real space flags', ierr )
-          !
-          CALL iotk_open_read( iunpun, FILE = trim( dirname ) // '/' // &
-                            & trim( xmlpun ), IERR = ierr )
-          !
-      ENDIF
-      !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      IF ( ierr > 0 ) RETURN
-      !
-      IF ( ionode ) THEN
-         CALL iotk_scan_begin( iunpun, "CONTROL" )
-         !
-         CALL iotk_scan_dat( iunpun, "Q_REAL_SPACE", tqr )
-         CALL iotk_scan_dat( iunpun, "BETA_REAL_SPACE", real_space )
-         !
-         CALL iotk_scan_end( iunpun, "CONTROL" )
-         !
-         CALL iotk_close_read( iunpun )
-      ENDIF
-      CALL mp_bcast( tqr,  ionode_id, intra_image_comm )
-      CALL mp_bcast( real_space,    ionode_id, intra_image_comm )
-      !
-      RETURN
-      !
-    END SUBROUTINE read_rs_status
     !----------------------------------------------------------------------------
     SUBROUTINE init_realspace_vars()
     !---------------------------------------------------------------------------
