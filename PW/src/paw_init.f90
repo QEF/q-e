@@ -286,10 +286,11 @@ SUBROUTINE PAW_init_onecenter()
     !
     types : &
     DO nt = 1,ntyp
-        ! only allocate radial grid integrator for atomic species
-        ! that are actually present on this parallel node:
-        DO ia = ia_s, ia_e
-        IF (ityp(ia) == nt ) THEN
+      IF(.not.upf(nt)%tpawp) CYCLE types
+      ! only allocate radial grid integrator for atomic species
+      ! that are actually present on this parallel node:
+      DO ia = ia_s, ia_e
+         IF (ityp(ia) == nt ) THEN
             IF (upf(nt)%lmax_rho == 0) THEN
                 ! no need for more than one direction, when it is spherical!
                 lmax_safe = 0
@@ -316,8 +317,8 @@ SUBROUTINE PAW_init_onecenter()
             max_nx = MAX( max_nx, rad(nt)%nx )
             !
             CYCLE types
-        ENDIF
-        ENDDO
+         ENDIF
+      ENDDO
     ENDDO types
     IF (noncolin.and.domag) ALLOCATE(vs_rad(max_mesh,max_nx,nat))
 

@@ -170,7 +170,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
          CALL iotk_scan_attr(attr, 'total_psenergy', upf%etotps,    default=0._dp)
          CALL iotk_scan_attr(attr, 'wfc_cutoff',     upf%ecutwfc,   default=0._dp)
          CALL iotk_scan_attr(attr, 'rho_cutoff',     upf%ecutrho,   default=0._dp)
-         CALL iotk_scan_attr(attr, 'l_max',          upf%lmax)
+         CALL iotk_scan_attr(attr, 'l_max',          upf%lmax,      default=0)
          CALL iotk_scan_attr(attr, 'l_max_rho',      upf%lmax_rho,  default=2*upf%lmax)
          CALL iotk_scan_attr(attr, 'l_local',        upf%lloc,      default=0)
          CALL iotk_scan_attr(attr, 'mesh_size',      upf%mesh)
