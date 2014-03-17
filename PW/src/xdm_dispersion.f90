@@ -83,19 +83,12 @@ CONTAINS
 
     INTEGER :: i, j, ialloc, nn
     REAL(DP), ALLOCATABLE :: d1y(:), d2y(:)
-    LOGICAL :: ispaw
 
-    ! PAW?
-    ispaw = .TRUE.
-    DO i = 1, ntyp
-       ispaw = ispaw .AND. upf(i)%tpawp
-    END DO
-    IF (.NOT.ispaw) THEN
+    IF ( .NOT. ALL (upf(1:ntyp)%tpawp) ) &
        CALL errore("init_xdm","XDM only implemented for PAW",1)
-    ENDIF
 
     ! allocate c6, etc.
-    ALLOCATE(cx(nat,nat,2:4),rvdw(nat,nat))
+    ALLOCATE(cx(nat,nat,2:4),rvdw(nat,nat),STAT=ialloc)
     IF (ialloc /= 0) CALL alloc_failed("c6, c8, c10, rvdw")
     ALLOCATE(alpha(nat),ml(3,nat),STAT=ialloc)
     IF (ialloc /= 0) CALL alloc_failed("ml, alpha")
