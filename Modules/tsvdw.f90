@@ -1951,10 +1951,17 @@ PRIVATE :: GetVdWParam
                 !
                 ! Precompute inverse powers of incremented distance between atom A and atom B...
                 !
-                dABimgn1=1.0_DP/dABimg
-                dABimgn2=dABimgn1*dABimgn1
-                dABimgn5=dABimgn2*dABimgn2*dABimgn1
-                dABimgn6=dABimgn5*dABimgn1
+                IF ( dABimg > 0.0_dp ) THEN
+                   dABimgn1=1.0_DP/dABimg
+                   dABimgn2=dABimgn1*dABimgn1
+                   dABimgn5=dABimgn2*dABimgn2*dABimgn1
+                   dABimgn6=dABimgn5*dABimgn1
+                ELSE
+                   dABimgn1=0.0_DP
+                   dABimgn2=0.0_DP
+                   dABimgn5=0.0_DP
+                   dABimgn6=0.0_DP
+                END IF
                 !
                 ! Precompute damping function (fdamp) and damping function exponential (edamp)...
                 ! 
