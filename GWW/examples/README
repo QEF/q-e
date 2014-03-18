@@ -4,9 +4,11 @@ to run examples do
 
 from the following directories: 
 
-example01 computes the GW quasi-particle energies in C6H6 (Benzene molecule) 
+example01 computes the GW quasi-particle energies in CH4 (Methene molecule) 
 
-example02 computes the GW quasi-particle energies in bulk Si (extended system)
-           Note: in order to accelerate this example, used as a daily distribution test,
-               it is using parameters giving particularly unconverged results, the
+example02 computes the GW quasi-particle energies in bulk Si (how to treat extended system)
+             Note: in order to accelerate this example, used as a daily distribution test,
+                     it is using parameters (a small 8-atom simulation cell whose Brillouin's zone 
+                     is sample onlt at the Gamma point) giving quite unconverged results
+
 

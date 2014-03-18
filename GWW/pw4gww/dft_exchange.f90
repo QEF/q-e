@@ -100,17 +100,6 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
       fac(1:npw)=vg_q(1:npw)
    endif
 
-if (ionode) then
-   iunu = find_free_unit()
-   open(iunu,file='fac.dat',status='unknown',form='formatted')
-   do ig=1,ngm
-      write(iunu,*) ig, fac(ig)
-   enddo
-   close(iunu)
-endif
-
- 
-      
    e_x(:,:)=0.d0
    CALL gk_sort(xk(1,1),ngm,g,ecutwfc/tpiba2, &
               &    npw0,igk0,g2kin_bp)

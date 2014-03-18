@@ -119,9 +119,11 @@
     if(direct_file) then
        iung = find_free_unit()
        if(pw%label >= 0 ) then
-          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.'// nfile, &
+               &status='unknown',recl=pw%numpw*DP,access='direct')
        else
-          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.-'// nfile, &
+               &status='unknown',recl=pw%numpw*DP,access='direct')
        endif
        do iw=1,pw%numpw
           write(unit=iung, rec=iw) pw%pw(:,iw)
@@ -206,9 +208,11 @@
     if(direct_file) then
        iung = find_free_unit()
        if(label >= 0 ) then
-          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.'// nfile, &
+               &status='unknown',recl=pw%numpw*DP,access='direct')
        else
-          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.-'// nfile, &
+               &status='unknown',recl=pw%numpw*DP,access='direct')
        endif
        if(l_verbose) write(stdout,*) 'Read polaw5'!ATTENZIONE
        do iw=1,pw%numpw
@@ -282,9 +286,11 @@
        if(direct_file) then
           iung = find_free_unit()
           if(label >= 0 ) then
-             open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+             open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.'// nfile, &
+                  &status='unknown',recl=pw%numpw*DP,access='direct')
           else
-             open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+             open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.-'// nfile, &
+                  &status='unknown',recl=pw%numpw*DP,access='direct')
           endif
           
           do iw=1,pw%numpw
@@ -385,9 +391,11 @@
     if(direct_file) then
        iung = find_free_unit()
        if(pw%label >= 0 ) then
-          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.'// nfile, &
+               &status='unknown',recl=pw%numpw*DP,access='direct')
        else
-          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.-'// nfile, &
+               &status='unknown',recl=pw%numpw*DP,access='direct')
        endif
        do iw=range_min,range_max
           iww = iw
@@ -502,9 +510,11 @@
 
        iung = find_free_unit()
        if(label >= 0 ) then
-          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.'// nfile, &
+               &status='unknown',recl=pw%numpw*DP,access='direct')
        else
-          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.-'// nfile, status='unknown',recl=pw%numpw*DP,access='direct')
+          open( unit=iung, file=trim(tmp_dir)//trim(prefix)//'-'//'polawd.-'// nfile, &
+               &status='unknown',recl=pw%numpw*DP,access='direct')
        endif
        do iw=range_min, range_max
           iww = iw

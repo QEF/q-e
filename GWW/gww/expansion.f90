@@ -644,9 +644,11 @@
 !openfile                            
                   iun = find_free_unit()
                   if(is==1) then
-                     open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'off_re_on_im'// nfile // '_' // mfile, status='unknown',form='formatted')
+                     open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'off_re_on_im'// nfile // '_' // mfile, &
+                          &status='unknown',form='formatted')
                   else
-                     open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'off_re_on_im2'// nfile // '_' // mfile, status='unknown',form='formatted')
+                     open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'off_re_on_im2'// nfile // '_' // mfile, &
+                          &status='unknown',form='formatted')
 
                   endif
                   do jj=-ss%n_grid_fit,ss%n_grid_fit
@@ -674,9 +676,11 @@
 !openfile                                  
                   iun = find_free_unit()
                   if(is==1) then
-                     open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'off_im_on_im'// nfile // '_' // mfile, status='unknown',form='formatted')
+                     open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'off_im_on_im'// nfile // '_' // mfile, &
+                          &status='unknown',form='formatted')
                   else
-                     open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'off_im_on_im2'// nfile // '_' // mfile, status='unknown',form='formatted')
+                     open( unit=iun, file=trim(tmp_dir)//trim(prefix)//'-'//'off_im_on_im2'// nfile // '_' // mfile, &
+                          &status='unknown',form='formatted')
                   endif
                   do jj=-ss%n_grid_fit,ss%n_grid_fit
 !allocate and set data arrays

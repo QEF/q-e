@@ -1251,6 +1251,7 @@ SUBROUTINE read_data_pw_lanczos_chain(lc, ii, prefix, l_pola,ispin)
        read(iunlc) lc%num_steps
     endif
 
+    write(*,*) lc%numt,  lc%ii,lc%num_steps
     call mp_bcast(lc%numt,ionode_id, world_comm)
     call mp_bcast(lc%num_steps,ionode_id, world_comm)
     
