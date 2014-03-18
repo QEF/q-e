@@ -53,7 +53,7 @@
 
    call startup
 
-   CALL remove_stack_limit ( )
+   !CALL remove_stack_limit ( )
 
 #ifdef __OPENMP
      ntids=omp_get_max_threads()
@@ -61,7 +61,6 @@
 #endif
 
 
-   write(stdout,*)  'PROGRAM GWL: Version 0.92'
 
 #ifdef __OPENMP
    write(stdout,*)  'ntids = ', ntids

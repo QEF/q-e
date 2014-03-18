@@ -9,10 +9,11 @@
 
 
 MODULE start_end
-!this module contains routines to initialize the MPI environment
-
+    !this module contains routines to initialize the MPI environment
+    IMPLICIT NONE
+    CHARACTER (len=10), PARAMETER :: code = 'GWW'
 #ifdef __OPENMP
-  INTEGER, SAVE :: ntids
+    INTEGER, SAVE :: ntids
 #endif
 
 CONTAINS
@@ -23,18 +24,24 @@ CONTAINS
   USE io_global,  ONLY : stdout, ionode
   USE mp_world,   ONLY : nproc
   USE mp_global,  ONLY : mp_startup
-
+  USE environment,           ONLY: environment_start
+  
   IMPLICIT NONE
 
 #ifdef __PARA
-
   CALL mp_startup()
-
+#endif
+  
+  CALL environment_start ( code )
+  
+#ifdef __PARA
   if(ionode) then
      write(stdout,*) 'MPI PARALLEL VERSION'
      write(stdout,*) 'Number of procs: ', nproc
+     write(stdout,*)  'GWL: Version 0.92'
   endif
-
+#else 
+   write(stdout,*)  'GWL: Version 0.92'
 #endif
   return
 
