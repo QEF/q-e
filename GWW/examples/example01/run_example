@@ -1,0 +1,184 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x pw4gww.x gww. x to calculate"
+$ECHO "the GW QP levels of CH4"
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x pw4gww.x gww.x"
+PSEUDO_LIST="C.pz-vbc.UPF H.pz-vbc.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO
+PW4GWW_COMMAND="$PARA_PREFIX $BIN_DIR/pw4gww.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw4gww.x as: $PW4GWW_COMMAND"
+$ECHO
+GWW_COMMAND="$PARA_PREFIX $BIN_DIR/gww.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running gww.x as: $GWW_COMMAND"
+$ECHO
+
+
+    # self-consistent calculation
+    cat > methane_scf.in << EOF
+&control
+    calculation = 'scf',
+    restart_mode='from_scratch',
+    prefix='ch4',
+    tprnfor = .true.,
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=  1,
+    celldm(1) =15.0,
+    nat=5,
+    ntyp= 2,
+    ecutwfc =40.0,
+    nbnd=5
+ /
+ &electrons
+    diagonalization='cg'
+    mixing_beta = 0.5,
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+ H  1.0   H.pz-vbc.UPF
+ C  12.0  C.pz-vbc.UPF
+ATOMIC_POSITIONS {bohr}
+H        1.198204546   1.198204546   1.198204546
+H       -1.198204546  -1.198204546   1.198204546
+H        1.198204546  -1.198204546  -1.198204546
+H       -1.198204546   1.198204546  -1.198204546
+C        0.000000000   0.000000000   0.000000000
+
+EOF
+    $ECHO "  running the scf calculation for methane...\c"
+    $PW_COMMAND < methane_scf.in > methane_scf.out
+    check_failure $?
+    $ECHO " done"
+
+    # 
+    cat > methane_pw4gww.in << EOF
+&inputpw4gww    
+    prefix='ch4'
+    num_nbndv(1)=4
+    num_nbnds=5
+    l_truncated_coulomb=.true.
+    truncation_radius=7.5d0
+    numw_prod=50
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+/
+
+EOF
+    $ECHO "  running the pw4gww calculation for methane...\c"
+    $PW4GWW_COMMAND < methane_pw4gww.in > methane_pw4gww.out
+    check_failure $?
+    $ECHO " done"
+
+
+    # 
+    cat > methane_gww.in << EOF
+&inputgww
+ggwin%prefix='ch4'
+ggwin%max_i=5,
+ggwin%i_min=1
+ggwin%i_max=5
+ggwin%omega=20
+ggwin%n=118,
+ggwin%tau=11.8
+ggwin%grid_freq=5
+ggwin%second_grid_i=3
+ggwin%second_grid_n=10
+ggwin%omega_fit=20
+ggwin%n_grid_fit=240
+ggwin%n_fit=120,
+ggwin%n_multipoles=2
+ggwin%l_truncated_coulomb=.true.
+ggwin%outdir='$TMP_DIR'
+/
+
+EOF
+    $ECHO "  running the gww calculation for methane...\c"
+    $GWW_COMMAND < methane_gww.in > methane_gww.out
+    check_failure $?
+    $ECHO " done"
+
+    #copy self_energy files
+    $ECHO  "copying self-energy files..\c"
+    cp $TMP_DIR/ch4-im_on_im* .
+    cp $TMP_DIR/ch4-re_on_im* .
+	 
+
+    # clean TMP_DIR
+    $ECHO "  cleaning $TMP_DIR...\c"
+    rm -rf $TMP_DIR/ch4*
+    $ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"
