@@ -11,7 +11,7 @@ case $ibrav  in
 2)   cp $QHA_DIR/tetrahedra/ttrinp_fcc ./ttrinp ;;
 3)   cp $QHA_DIR/tetrahedra/ttrinp_bcc ./ttrinp ;;
 4)   c2a1=`head -1 $FC_file | cut -c 36-44`
-     c2a=`echo "scale=8;$c2a1/2" | bc -l`
+     c2a=`echo "scale=8;1/$c2a1/2" | bc -l`
      sed 's/X/'$c2a'/g' $QHA_DIR/tetrahedra/ttrinp_hcp > ./ttrinp ;;
 5)   echo "Trigonal R: not implemented yet"
      exit ;;
