@@ -15,6 +15,7 @@ SUBROUTINE chdens (filplot,plot_num)
   !
   !      DESCRIPTION of the INPUT: see file INPUT_PP in Doc/
   !
+  USE kinds,      ONLY : dp
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE io_files,   ONLY : nd_nmbr
   USE mp_global,  ONLY : nproc_pool
@@ -22,17 +23,17 @@ SUBROUTINE chdens (filplot,plot_num)
   USE mp,         ONLY : mp_bcast
   USE parameters, ONLY : ntypx
   USE constants,  ONLY :  pi, fpi
-  USE cell_base
+  USE cell_base,  ONLY : at, bg, celldm, ibrav, alat, omega, tpiba, tpiba2
   USE ions_base,  ONLY : nat, ityp, atm, ntyp => nsp, tau, zv
   USE lsda_mod,   ONLY : nspin
   USE fft_base,   ONLY : grid_scatter, dfftp, dffts
   USE fft_interfaces,  ONLY : fwfft
   USE grid_subroutines,ONLY : realspace_grids_init
-  USE gvect
-  USE gvecs
+  USE gvect,         ONLY : ngm, nl, g, gcutm
+  USE gvecs,         ONLY : gcutms, doublegrid, dual, ecuts 
   USE recvec_subs,   ONLY: ggen 
   USE wvfct,         ONLY: ecutwfc
-  USE run_info, ONLY: title
+  USE run_info,      ONLY: title
   USE control_flags, ONLY: gamma_only
   USE wavefunctions_module,  ONLY: psic
 
