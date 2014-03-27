@@ -104,11 +104,6 @@ $ECHO "  running average.x as: $AVG_COMMAND"
 $ECHO "  running gnuplot as:    $GP_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR ...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 # self-consistent calculation for Al(100)
 cat > Al100.in << EOF
 &CONTROL
@@ -279,7 +274,7 @@ set yr [-12:9]
 set ytics -12, 1, 9
 set xlabel "Length (Angstroms)" 
 set ylabel "Energy (eV)" 
-set key 11,6.5
+# set key 11,6.5
 set size sq 1,1
 set label 1 "V_{Vacuum}" at 18.2, 5.4
 set label 2 "E_{Fermi, Slab}" at 18.2, 1.6
@@ -315,8 +310,6 @@ $ECHO " done"
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR ...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
+rm -rf $TMP_DIR/pwscf.*
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"
