@@ -143,6 +143,7 @@ SUBROUTINE projection (first_band, last_band)
   !
   ALLOCATE(proj (natomwfc, nbnd, nkstot) )
   ALLOCATE(wfcatom (npwx, natomwfc) )
+  ALLOCATE(swfcatom (npwx , natomwfc ) )
   ! Allocate the array containing <beta|wfcatom>
   CALL allocate_bec_type ( nkb, natomwfc, becp)
 
@@ -262,7 +263,7 @@ SUBROUTINE projection (first_band, last_band)
 
      CALL ZGESVD( 'A', 'A', ldim1, ldim2, pp, ldim1, ew, u_m, ldim1, &
                   w_m, ldim2, work, lwork, rwork, info )
-     CALL errore ('projection','Singular Value Deconposition failed', abs(info))
+     CALL errore ('projection','Singular Value Decomposition failed', abs(info))
      DO i = 1, ldim1
         WRITE ( stdout, * ) ew(i)
         WRITE ( stdout, '(8(2f5.2,2x))') u_m(:,i)
@@ -320,15 +321,15 @@ SUBROUTINE projection (first_band, last_band)
 
      CALL davcio (swfcatom, 2*nwordatwfc, iunsat, ik, 1)
 
-
      ! on k-points
   ENDDO
   !
   CALL deallocate_bec_type (becp)
   !
-
+  DEALLOCATE (pp, u_m, w_m, work, ew, rwork)
+  DEALLOCATE (swfcatom)
   DEALLOCATE (wfcatom)
-
   DEALLOCATE (proj)
+
   RETURN
 END SUBROUTINE projection
