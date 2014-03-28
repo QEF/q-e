@@ -91,11 +91,6 @@ $ECHO "  running bands.x as:    $BANDS_COMMAND"
 $ECHO "  running plotband.x as: $PLOTBAND_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 # self-consistent calculation
 cat > si.scf.in << EOF
  &control
@@ -475,5 +470,10 @@ $GP_COMMAND gnuplot1.tmp
 check_failure $?
 $ECHO " done"
 fi
+$ECHO
+
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/si.*
+
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

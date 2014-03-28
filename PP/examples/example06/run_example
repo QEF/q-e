@@ -94,11 +94,6 @@ $ECHO "  running bands.x  as: $BAND_COMMAND"
 $ECHO "  running plotband.x  as: $PLOTBAND_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 # self-consistent calculation for bcc-Fe with fully relativistic PAW-PP
 cat > Fe.scf_pbe.in << EOF
  &control
@@ -252,5 +247,7 @@ check_failure $?
 $ECHO " done"
 fi
 
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/Fe.*
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

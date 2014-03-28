@@ -94,12 +94,6 @@ $ECHO "  running wannier90.x as   : $WAN_COMMAND"
 $ECHO "  running pw2wannier90.x as: $PW2WAN_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-$ECHO
-
 # self-consistent calculation for diamond
 cat > diamond.scf.in << EOF
  &control
@@ -392,11 +386,7 @@ EOF
 #clean TMP_DIR
 $ECHO
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
-$ECHO
-
+rm -rf $TMP_DIR/di.*
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"
 $ECHO

@@ -76,13 +76,8 @@ $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO "  running wannier_ham.x as: $HAM_COMMAND"
 $ECHO
 
-    # clean TMP_DIR
-    $ECHO "  cleaning $TMP_DIR...\c"
-    rm -rf $TMP_DIR/pwscf*
-    $ECHO " done"
-
-    # self-consistent calculation
-    cat > NiO.scf.in << EOF
+# self-consistent calculation
+cat > NiO.scf.in << EOF
     &control
      calculation = 'scf'
      prefix='NiO',
@@ -113,13 +108,13 @@ $ECHO
     K_POINTS automatic
      4 4 4 0 0 0
 EOF
-    $ECHO "  running the scf calculation for NiO...\c"
-    $PW_COMMAND < NiO.scf.in > NiO.scf.out
-    check_failure $?
-    $ECHO " done"
+$ECHO "  running the scf calculation for NiO...\c"
+$PW_COMMAND < NiO.scf.in > NiO.scf.out
+check_failure $?
+$ECHO " done"
     
-    # nscf calculation
-    cat > NiO.nscf.in << EOF
+# nscf calculation
+cat > NiO.nscf.in << EOF
     &control
      calculation = 'nscf'
      prefix='NiO',
@@ -190,16 +185,13 @@ WANNIER_AC
  p 3 1.0
 /
 EOF
-    $ECHO "  running the hamiltonian generation...\c"
-    $HAM_COMMAND < wannier_hamilt.in > wannier_hamilt.out
-    cp $TMP_DIR/hamilt ./
-    $ECHO " done"
+$ECHO "  running the hamiltonian generation...\c"
+$HAM_COMMAND < wannier_hamilt.in > wannier_hamilt.out
+$ECHO " done"
 
-    # clean TMP_DIR
-    $ECHO "  cleaning $TMP_DIR...\c"
-    rm -rf $TMP_DIR/pwscf*
-    $ECHO " done"
-
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/NiO.*
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"

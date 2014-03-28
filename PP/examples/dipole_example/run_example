@@ -89,11 +89,6 @@ $ECHO "  running average.x as: $AVERAGE_COMMAND"
 $ECHO "  running gnuplot as:    $GP_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 #
 # Run the calculation for the Ni+CO slab with the dipole correction
 # emaxpos, the starting of the potential inversion, has to be carefully
@@ -378,6 +373,8 @@ $ECHO " done"
 rm water.gnuplot
 fi
 
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/ni+co.* $TMP_DIR/water.*
 
 $ECHO "Calculations done."
 $ECHO ""

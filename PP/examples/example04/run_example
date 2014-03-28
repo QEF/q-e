@@ -78,11 +78,6 @@ $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO "  running bands.x as: $BANDS_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 # self-consistent calculation
 cat > pt.scf.in << EOF
 Pt
@@ -182,6 +177,9 @@ EOF
 $ECHO "  running the symmetry analysis for Pt bands...\c"
 $BANDS_COMMAND < pt.bands.in > pt.bands.out
 $ECHO " done"
+
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/Pt.*
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

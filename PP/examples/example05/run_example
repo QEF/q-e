@@ -81,11 +81,6 @@ $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO "  running pmw.x as: $PMW_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 # self-consistent calculation with standard LDA
 cat > feo_LDA.in << EOF
 FeO
@@ -197,6 +192,9 @@ $ECHO "  3) running scf for FeO in LDA+U using Wannier projectors...\c"
 $PW_COMMAND < feo_wannier.in > feo_wannier.out
 check_failure $?
 $ECHO " done"
+
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/feo_af.*
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"

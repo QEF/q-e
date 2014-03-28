@@ -90,11 +90,6 @@ $ECHO "  running kvecs_FS.x as:  $KVECS_COMMAND"
 $ECHO "  running bands_FS.x as:  $BANDS_COMMAND"
 $ECHO
  
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 # self-consistent calculation
 cat > ni.scf.in << EOF
  &control
@@ -694,6 +689,9 @@ mv Bands_FS.bxsf  ni.fs_NSP.bxsf
 $ECHO
 $ECHO "  Fermi surface plot: use 'xcrysden --bxsf ni.fs_NSP.bxsf' to plot ...\c"
 $ECHO " done"
+
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/ni.*
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

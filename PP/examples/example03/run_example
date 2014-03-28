@@ -90,11 +90,6 @@ $ECHO "  running sumpdos.x as: $SUMPDOS_COMMAND"
 $ECHO "  running gnuplot as:   $GP_COMMAND"
 $ECHO
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 # self-consistent calculation
 cat > AlAs110re.scf.in << EOF
  &control
@@ -229,6 +224,56 @@ $PLOTRHO_COMMAND < AlAs110.plotrho-.in > AlAs110.plotrho-.out
 check_failure $?
 $ECHO " done"
 
+# post-processing for stm images (negative bias, constant current)
+cat > AlAs110.pp_isostm-.in << EOF
+ &inputpp
+ /
+ &plot
+    nfile=1
+    filepp(1)='AlAsresm-1.0'
+    weight(1)=1.0
+    iflag=2
+    output_format=7    
+    fileout='AlAs110.pp_isostm-.dat'
+    e1(1)=7.0, e1(2)=0.0,     e1(3)=0.0
+    e2(1)=0.0, e2(2)=7.07107, e2(3)=0.0
+    nx=150, ny=150
+    isostm_flag=.true.
+    isovalue=0.00005
+    heightmin=0.4
+    heightmax=0.75
+    direction=1
+ /
+EOF
+$ECHO
+$ECHO "  STM image, negative bias and constant current...\c"
+$PP_COMMAND < AlAs110.pp_isostm-.in > AlAs110.pp_isostm-.out
+check_failure $?
+$ECHO " done"
+
+# run gnuplot to do the figure
+if [ "$GP_COMMAND" = "" ]; then
+    break
+else
+cat > gnuplot.tmp <<EOF
+set term postscript enhanced color solid lw 3 24
+set output 'AlAs110-1.0eV.isoplot.ps'
+set xlabel "x (bohr)"
+set ylabel "y (bohr)"
+set pm3d map
+set size ratio -1
+set palette rgb 21,22,23
+set tics out
+unset key
+splot [0:51.972][0:52.500] 'AlAs110.pp_isostm-.dat'
+EOF
+$ECHO
+$ECHO "  plotting results ...\c"
+$GP_COMMAND < gnuplot.tmp
+$ECHO " done"
+rm gnuplot.tmp
+fi
+
 # post-processing for stm images (as before, but positive bias)
 cat > AlAs110.pp_stm+.in << EOF
  &inputpp
@@ -267,6 +312,56 @@ $ECHO "  running plotrho on positive bias data...\c"
 $PLOTRHO_COMMAND < AlAs110.plotrho+.in > AlAs110.plotrho+.out
 check_failure $?
 $ECHO " done"
+
+# post-processing for stm images (positive bias, constant current)
+cat > AlAs110.pp_isostm+.in << EOF
+ &inputpp
+ /
+ &plot
+    nfile=1
+    filepp(1)='AlAsresm+1.0'
+    weight(1)=1.0
+    iflag=2
+    output_format=7    
+    fileout='AlAs110.pp_isostm+.dat'
+    e1(1)=7.0, e1(2)=0.0,     e1(3)=0.0
+    e2(1)=0.0, e2(2)=7.07107, e2(3)=0.0
+    nx=150, ny=150
+    isostm_flag=.true.
+    isovalue=0.00005
+    heightmin=0.4
+    heightmax=0.75
+    direction=1
+ /
+EOF
+$ECHO
+$ECHO "  STM image, positive bias and constant current...\c"
+$PP_COMMAND < AlAs110.pp_isostm+.in > AlAs110.pp_isostm+.out
+check_failure $?
+$ECHO " done"
+
+# run gnuplot to do the figure
+if [ "$GP_COMMAND" = "" ]; then
+    break
+else
+cat > gnuplot.tmp <<EOF
+set term postscript enhanced color solid lw 3 24
+set output 'AlAs110+1.0eV.isoplot.ps'
+set xlabel "x (bohr)"
+set ylabel "y (bohr)"
+set pm3d map
+set size ratio -1
+set palette rgb 21,22,23
+set tics out
+unset key
+splot [0:51.972][0:52.500] 'AlAs110.pp_isostm+.dat'
+EOF
+$ECHO
+$ECHO "  plotting results ...\c"
+$GP_COMMAND < gnuplot.tmp
+$ECHO " done"
+rm gnuplot.tmp
+fi
 
 # Projection of the DOS on volumes (boxes)
 cat > AlAs110.box.projwfc.in << EOF
@@ -369,5 +464,9 @@ $ECHO "  To visualize a volume in which the DOS is integrated, execute:"
 $ECHO "    xcrysden --xsf results/AlAs110.box#1.xsf"
 $ECHO "  and plot the isosurface corresponding to isovalue 0.5"
 
+$ECHO
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/AlAs110.*
 $ECHO
 $ECHO " $EXAMPLE_DIR: done"
