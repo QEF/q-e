@@ -3967,7 +3967,7 @@ CONTAINS
       !
       INTEGER,   INTENT(in) :: num_k_points, nbnd, nkstot
       LOGICAL,   INTENT(in) :: lsda, lkpoint_dir
-      CHARACTER, INTENT(in) :: filename
+      CHARACTER(LEN=*), INTENT(in) :: filename
       INTEGER,   INTENT(out), OPTIONAL :: isk(:)
       REAL(DP),  INTENT(out), OPTIONAL :: et(:,:), wg(:,:)
       INTEGER,   INTENT(out):: ierr
