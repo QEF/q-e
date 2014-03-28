@@ -41,6 +41,7 @@ PROGRAM pmw
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'PMW' )
+  IF ( ionode )  CALL input_from_file ( )
   !
   !   set default values for variables in namelist
   !
