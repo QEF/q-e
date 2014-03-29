@@ -1829,6 +1829,7 @@ MODULE pw_restart
          CALL mp_bcast( lda_plus_u_kind, ionode_id, intra_image_comm )
          CALL mp_bcast( Hubbard_lmax,  ionode_id, intra_image_comm )
          CALL mp_bcast( Hubbard_l ,    ionode_id, intra_image_comm )
+         CALL mp_bcast( U_projection,  ionode_id, intra_image_comm )
          CALL mp_bcast( Hubbard_U,     ionode_id, intra_image_comm )
          CALL mp_bcast( Hubbard_J,     ionode_id, intra_image_comm )
          CALL mp_bcast( Hubbard_J0,    ionode_id, intra_image_comm )
