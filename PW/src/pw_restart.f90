@@ -964,7 +964,7 @@ MODULE pw_restart
       IF ( lheader ) THEN
          !
          CALL read_header( ierr )
-         !
+         IF ( ierr > 0 ) ierr = 1
          IF ( ierr > 0 ) GOTO 100
          !
       ENDIF
@@ -972,7 +972,7 @@ MODULE pw_restart
       IF ( ldim ) THEN
          !
          CALL read_dim( ierr )
-         !
+         IF ( ierr > 0 ) ierr = 2
          IF ( ierr > 0 ) GOTO 100
          !
       ENDIF
@@ -980,72 +980,84 @@ MODULE pw_restart
       IF ( lcell ) THEN
          !
          CALL read_cell( ierr )
+         IF ( ierr > 0 ) ierr = 3
          IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lpw ) THEN
          !
          CALL read_planewaves( ierr )
+         IF ( ierr > 0 ) ierr = 4
          IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lions ) THEN
          !
          CALL read_ions( dirname, ierr )
+         IF ( ierr > 0 ) ierr = 5
          IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lspin ) THEN
          !
          CALL read_spin( ierr )
+         IF ( ierr > 0 ) ierr = 6
          IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF (linit_mag) THEN
          !
          CALL read_magnetization( ierr )
+         IF ( ierr > 0 ) ierr = 7
          IF ( ierr > 0 ) GOTO 100
          !
       ENDIF
       IF ( lxc ) THEN
          !
          CALL read_xc( ierr )
+         IF ( ierr > 0 ) ierr = 8
          IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( locc ) THEN
          !
          CALL read_occupations( ierr )
+         IF ( ierr > 0 ) ierr = 9
          IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lbz ) THEN
          !
          CALL read_brillouin_zone( ierr )
+         IF ( ierr > 0 ) ierr = 10
          IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lbs ) THEN
          !
          CALL read_band_structure( dirname, ierr )
+         IF ( ierr > 0 ) ierr = 11
          IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lwfc ) THEN
          !
          CALL read_wavefunctions( dirname, ierr )
+         IF ( ierr > 0 ) ierr = 12
          IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lsymm ) THEN
          !
          CALL read_symmetry( ierr )
+         IF ( ierr > 0 ) ierr = 13
          IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lefield ) THEN
          !
          CALL read_efield( ierr )
+         IF ( ierr > 0 ) ierr = 14
          IF ( ierr > 0 ) GOTO 100
          !
       END IF
@@ -1059,12 +1071,14 @@ MODULE pw_restart
       IF ( lef ) THEN
          !
          CALL read_ef( ierr )
+         IF ( ierr > 0 ) ierr = 15
          IF ( ierr > 0 ) GOTO 100
          !
       END IF
       IF ( lexx ) THEN
          !
          CALL read_exx( ierr )
+         IF ( ierr > 0 ) ierr = 16
          IF ( ierr > 0 ) GOTO 100
          !
       END IF
@@ -1076,8 +1090,8 @@ MODULE pw_restart
       ENDIF
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      IF ( ierr > 0 ) RETURN
-      !
+      IF ( ierr > 0 ) ierr = 17
+      IF ( ierr > 0 ) GO TO 100
       !
       RETURN
       !
@@ -1085,6 +1099,7 @@ MODULE pw_restart
 100   IF (ionode .AND. need_qexml) THEN
          CALL qexml_closefile( 'read', IERR=tmp)
       ENDIF
+      CALL errore('pw_readfile','erore!',ierr)
       RETURN
       !
     END SUBROUTINE pw_readfile
