@@ -93,6 +93,6 @@ SUBROUTINE orthoUwfc_k(ik)
   !
   RETURN
      
-END SUBROUTINE init_xanes_ldau_2
+END SUBROUTINE orthoUwfc_k(ik)
 
 
