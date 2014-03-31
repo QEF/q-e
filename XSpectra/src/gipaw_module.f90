@@ -82,7 +82,6 @@ MODULE gipaw_module
 
   !<apsi>
   CHARACTER(256) :: file_reconstruction ( ntypx )
-  LOGICAL :: read_recon_in_paratec_fmt
   REAL(dp) :: rc(ntypx,0:lmaxx)
   COMPLEX(dp), ALLOCATABLE :: paw_becp2 ( :, : )
   REAL(dp), ALLOCATABLE, DIMENSION ( :, : ) :: lx, ly, lz
@@ -119,7 +118,6 @@ CONTAINS
     INTEGER :: ios
     NAMELIST /inputgipaw/ job, prefix, tmp_dir, conv_threshold, &
                          q_gipaw, iverbosity, filcurr, filfield, &
-                         read_recon_in_paratec_fmt, &
                          file_reconstruction, use_nmr_macroscopic_shape, &
                          nmr_macroscopic_shape, spline_ps, isolve, &
                          q_efg, hfi_output_unit, hfi_isotope, &
@@ -140,7 +138,6 @@ CONTAINS
     iverbosity = 0
     filcurr = ' '
     filfield = ' '
-    read_recon_in_paratec_fmt = .FALSE.
     file_reconstruction ( : ) = " "
     use_nmr_macroscopic_shape = .TRUE.
     nmr_macroscopic_shape = 2.0_dp / 3.0_dp
@@ -184,7 +181,6 @@ CONTAINS
     call mp_bcast(iverbosity, root, world_comm)
     call mp_bcast(filcurr, root, world_comm)
     call mp_bcast(filfield, root, world_comm)
-    call mp_bcast(read_recon_in_paratec_fmt, root, world_comm)
     call mp_bcast(file_reconstruction, root, world_comm)
     call mp_bcast(use_nmr_macroscopic_shape, root, world_comm)
     call mp_bcast(nmr_macroscopic_shape, root, world_comm)
@@ -327,7 +323,7 @@ CONTAINS
     USE klist,         ONLY : xk, degauss, ngauss, nks, nelec
     USE constants,     ONLY : degspin, pi
     USE paw_gipaw,     ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp, &
-                              read_recon, read_recon_paratec, set_paw_upf
+                              read_recon, set_paw_upf
     USE symm_base,     ONLY : nsym, s
     USE uspp_param,    ONLY : upf
     USE mp_global,     ONLY : inter_pool_comm
@@ -380,22 +376,9 @@ CONTAINS
 
     ! Read in qe format
     DO nt = 1, ntyp
-       IF ( read_recon_in_paratec_fmt ) THEN
-
-          ! Read in paratec format
-          CALL read_recon_paratec ( file_reconstruction(nt), nt, &
-               paw_recon(nt), vloc_set )
-          IF ( .NOT. vloc_set .AND. job == "g-tensor" ) THEN
-             CALL errore ( "gipaw_setup", &
-                  "no local potential set in read_recon_paratec", 1 )
-             stop
-          END IF
-
-       ELSE
-          CALL set_paw_upf (nt, upf(nt))
-          CALL read_recon ( file_reconstruction(nt), nt, paw_recon(nt) )
-          !!!paw_recon(nt)%paw_nbeta = 0
-       END IF
+       CALL set_paw_upf (nt, upf(nt))
+       CALL read_recon ( file_reconstruction(nt), nt, paw_recon(nt) )
+       !!!paw_recon(nt)%paw_nbeta = 0
     END DO
 
     if ( iverbosity > 20 ) then
