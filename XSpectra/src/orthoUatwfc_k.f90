@@ -93,6 +93,6 @@ SUBROUTINE orthoUwfc_k(ik)
   !
   RETURN
      
-END SUBROUTINE orthoUwfc_k(ik)
+END SUBROUTINE orthoUwfc_k
 
 
