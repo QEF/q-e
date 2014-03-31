@@ -16,11 +16,12 @@ PROGRAM X_Spectra
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
   USE ktetra,          ONLY : ltetra, ntetra, tetra
   USE start_k,         ONLY : nk1, nk2, nk3, k1, k2, k3
-  USE wvfct,           ONLY : npwx,nbnd,npw,igk,et! et(nbnd,nkstot)
+  USE wvfct,           ONLY : npwx,nbnd,npw,igk,et, wg! et(nbnd,nkstot)
   USE radial_grids,    ONLY : ndmx
   USE atom,            ONLY : rgrid
   USE becmod,          ONLY : becp
   USE uspp,            ONLY : vkb, nkb, okvan 
+  USE uspp_param,           ONLY : upf
   USE xspectra
   USE ener,            ONLY : ef, ef_up, ef_dw !Fermi energy
   USE symm_base,       ONLY : nsym,s
@@ -29,8 +30,8 @@ PROGRAM X_Spectra
        paw_becp,            & ! product of projectors and wf.
        paw_nkb,             & ! total number of beta functions, with st.fact.
        paw_lmaxkb,          &
-       paw_recon
-
+       paw_recon,           &
+       set_paw_upf
   USE klist,       ONLY : &
        nkstot,            & ! total number of k-points
        nks,               & ! number of k-points for local pool
@@ -40,7 +41,6 @@ PROGRAM X_Spectra
        npk,               &
        degauss,lgauss,ngauss,    &
        two_fermi_energies
-
   USE lsda_mod,    ONLY : nspin,lsda,isk,current_spin
   USE noncollin_module,     ONLY : noncolin
   USE mp,         ONLY : mp_bcast, mp_sum             !parallelization
@@ -368,11 +368,15 @@ PROGRAM X_Spectra
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      !    read pwscf structural and k-points infos, also ditributes across the pools
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-     write(stdout,*) 'bef'
 
-     CALL read_file_xspectra(xread_wf)
+     CALL read_file()
 
-     write(stdout,*) 'af'
+     ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+     !    initialize everything as in a nscf calculation
+     ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+     call reset_k_points_and_reinit_nscf()
+
      IF(xread_wf) THEN
         WRITE(stdout,*) ' '
         IF (okvan) THEN
@@ -384,31 +388,6 @@ PROGRAM X_Spectra
      ENDIF
      WRITE(stdout,*) 'k-points : nkstot=', nkstot
 
-     ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-     !    WRITE out crystal structure, kpoints list etc.
-     ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-
-     WRITE(stdout,*) '-------------- Crystal Structure ------------ '
-     WRITE(stdout,*) 'celldm(1:6)'
-     WRITE(stdout,'(3f14.8)') (celldm(i),i=1,3)
-     WRITE(stdout,'(3f14.8)') (celldm(i),i=4,6)
-     WRITE(stdout,*) 'direct lattice vectors'
-     DO i=1,3
-        WRITE(stdout,'(3f14.8)') (at(i,j),j=1,3)
-     ENDDO
-     WRITE(stdout,*) 'reciprocal lattice vectors'
-     DO i=1,3
-        WRITE(stdout,'(3f14.8)') (bg(i,j),j=1,3)
-     ENDDO
-
-     WRITE(stdout,*) 'nks=',nks,' nkstot=',nkstot 
-     WRITE(stdout,*) ' ----k-point list [units 2*pi/celldm(1)], weight---------'
-
-     DO i=1,nkstot
-        WRITE(stdout,'(1i6,4f14.8)') i,(xk(j,i) , j=1,3),wk(i)
-     ENDDO
-     WRITE(stdout,*) '-------------------------------------------------'     
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
      ! normalize xkvec and xepsilon
@@ -445,7 +424,7 @@ PROGRAM X_Spectra
      !  is the type associated to xiabs existing ?
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-
+     
      i=0
      DO na=1,nat
         IF(ityp(na).EQ.xiabs) i=i+1
@@ -458,24 +437,17 @@ PROGRAM X_Spectra
      !  Reads reconstruction files
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
+     DO nt = 1, ntyp
+        call set_paw_upf(nt, upf(nt))
+     ENDDO
+
+
      CALL read_core_abs(filecore,core_wfn)
+     
+
      IF ( .NOT. paw_recon(xiabs)%gipaw_data_in_upf_file ) &
           CALL read_recon ( filerecon(xiabs), xiabs, paw_recon(xiabs) ) !*apsi
 
-     ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-     !  Reads potentials and so on from post processing
-     ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
-
-     IF(.NOT.twfcollect) THEN
-        !
-        ! ... nwordwfc is the number of complex words in wavefunctions
-        !
-        nwordwfc = nbnd * npwx ! * npol not implemented
-        CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
-        IF ( .not. exst ) CALL errore ('xspectra', &
-             'file '//trim( prefix )//'.wfc'//' not found',1)
-        !
-     END iF
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      !  Assign paw radii to species (this will become soon obsolete)
@@ -484,9 +456,11 @@ PROGRAM X_Spectra
      !  read recon should be parallelized
      !
 
+
      DO nt=1,ntyp
-        IF ((.NOT.paw_recon(nt)%gipaw_data_in_upf_file).AND.( paw_recon(nt)%paw_nbeta.NE.0))&
-             CALL errore( 'xspectra, paw_recon', 'paw_nbeta not null',1)
+        IF ((.NOT.paw_recon(nt)%gipaw_data_in_upf_file)) then
+           paw_recon(nt)%paw_nbeta=0
+        ENDIF
         DO  j=1,paw_recon(nt)%paw_nbeta
            il=paw_recon(nt)%psphi(j)%label%l
            IF(xiabs.EQ.nt.AND.DABS(r_paw(il)).lt.1.d-6) THEN
@@ -716,6 +690,8 @@ PROGRAM X_Spectra
 
   xnitermax=xniter
 
+
+
   IF(xonly_plot) THEN
      CALL read_header_save_file(x_save_file)
      nks = nkstot
@@ -775,6 +751,7 @@ PROGRAM X_Spectra
         IF(xang_mom.EQ.1) THEN
            save_file_version=1
            save_file_kind='xanes_dipole'
+
            CALL xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosity)
            ! open save file and write everything
            CALL write_save_file(a,b,xnorm,ncalcv,x_save_file)
@@ -800,8 +777,6 @@ PROGRAM X_Spectra
      CALL errore( 'Main', 'rxes Not yet implemented',1)
   ELSEIF(TRIM(calculation).EQ.'bethe_salpeter') THEN
      CALL errore( 'Main', 'bethe_salpeter Not yet implemented',1)
-  ELSEIF(TRIM(calculation).EQ.'hpsi') THEN
-     CALL verify_hpsi
   ENDIF
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -875,6 +850,8 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp
   USE wvfct,           ONLY : npwx, nbndx, nbnd, npw, igk, g2kin, et,&
                               current_k, ecutwfc
+  USE symm_base,       ONLY : d1,d2,d3
+  USE noncollin_module,     ONLY : noncolin
   USE lsda_mod,        ONLY : nspin,lsda,isk,current_spin
   USE cell_base,       ONLY: tpiba2, bg
   USE wavefunctions_module, ONLY: evc
@@ -908,10 +885,12 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
   !       msh ,     &!msh(ntypx)the point at rcut=end of radial integration
   !       r   
   USE radin_mod
+  USE basis,                ONLY : natomwfc
 
   USE uspp,   ONLY : vkb, nkb, okvan !CG
+  USE uspp_param,       ONLY : upf
 
-  USE ldaU,   ONLY : lda_plus_u
+  USE ldaU,   ONLY : lda_plus_u, init_lda_plus_u 
   !<CG>
   USE xspectra_paw_variables, ONLY : xspectra_paw_nhm
   !</CG>
@@ -1033,10 +1012,8 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
   CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,dfftp%nnr,nspin,doublegrid)
   !</CG>
 
-  !  CALL newd   ! CG
 
-  IF (lda_plus_u) CALL init_xanes_ldau
-
+  
   DO ik=1,nks
 
      IF (calculated(1,ik).EQ.1) CYCLE
@@ -1075,10 +1052,9 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
      !<CG>        
      CALL init_gipaw_2(npw,igk,xk(1,ik),paw_vkb)
      !</CG>
-     CALL init_us_2(npw,igk,xk(1,ik),vkb)
+     if(.not.lda_plus_u) CALL init_us_2(npw,igk,xk(1,ik),vkb)
+     IF (lda_plus_u) CALL orthoUwfc_k(ik)
 
-     ! initialise (not orthogonalized) atomic wfc if lda_plus_u=T 
-     IF (lda_plus_u) CALL init_xanes_ldau_2(ik)
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      ! Angular Matrix element
@@ -1147,6 +1123,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
 
      ENDDO
      psiwfc(1:npw)=psiwfc(1:npw)*SQRT(fpi)/3.0
+
 
 
 
@@ -1289,6 +1266,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
   USE radin_mod
   USE uspp,   ONLY : vkb, nkb, okvan !CG
   USE ldaU,   ONLY : lda_plus_u
+  USE basis,                ONLY : natomwfc
   !<CG>
   USE xspectra_paw_variables, ONLY : xspectra_paw_nhm
   !</CG>
@@ -1366,7 +1344,6 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
 
   ! I check that the fondamental orthogonality condition of paw is satisfied:
 
-  !     nr=mesh(xiabs)  ! extended up to all the points in the mesh.
   nr=msh(xiabs)  ! extended up to all the NON ZERO points in the mesh.
 
 
@@ -1435,7 +1412,8 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
   CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,dfftp%nnr,nspin,doublegrid)
   !</CG>
 
-  IF (lda_plus_u) CALL init_xanes_ldau
+
+
 
   DO ik=1,nks
      IF (calculated(1,ik).EQ.1) CYCLE
@@ -1472,10 +1450,9 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
      !<CG>
      CALL init_gipaw_2(npw,igk,xk(1,ik),paw_vkb)
      !</CG>
-     CALL init_us_2(npw,igk,xk(1,ik),vkb)
+     if(.not.lda_plus_u) CALL init_us_2(npw,igk,xk(1,ik),vkb)
+     IF (lda_plus_u) CALL orthoUwfc_k(ik)
 
-     ! initialise orthogonalized atomic wfc if lda_plus_u=T
-     IF (lda_plus_u) CALL init_xanes_ldau_2(ik)
 
      !
      ! Here I define human projectors
@@ -1578,11 +1555,13 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
 
      ENDDO
 
+
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      ! Starting Lanczos
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-     CALL allocate_bec_type(nkb,1, becp) ! CG
+!     CALL allocate_bec_type(nkb,1, becp) ! CG
+     CALL allocate_bec_type(nkb,natomwfc, becp) 
 
      !<CG>
      IF (okvan) THEN
@@ -3362,195 +3341,6 @@ SUBROUTINE write_status_of_the_code
   WRITE (stdout,*) '================================================='
 
 END SUBROUTINE write_status_of_the_code
-
-!<CG>
-SUBROUTINE verify_hpsi
-  USE io_files,         ONLY : nwordwfc, iunwfc, diropn
-  USE io_global,        ONLY : stdout     ! Modules/io_global.f90
-  USE kinds,            ONLY : DP
-  USE parameters,       ONLY : ntypx
-  USE radial_grids,     ONLY : ndmx
-  USE ions_base,        ONLY : nat, ntyp => nsp, ityp
-  USE wvfct,            ONLY : npwx, nbndx, nbnd, npw, igk, g2kin, et,&
-                               current_k, ecutwfc
-  USE lsda_mod,         ONLY : nspin,lsda,isk,current_spin
-  USE cell_base,        ONLY: tpiba2, bg
-  USE wavefunctions_module, ONLY: evc
-  USE klist,            ONLY : &
-       nkstot,            & ! total number of k-points
-       nks,               & ! number of k-points per pool
-       xk,                & ! k-points coordinates
-       wk                   ! k-points weight
-  USE gvect,            ONLY: g,ngm,ngl
-  USE fft_base,         ONLY : dfftp
-  USE paw_gipaw,        ONLY : &
-       paw_vkb,             & ! |p> projectors
-       paw_becp,            & ! product of projectors and wf.
-       paw_nkb,             & ! total number of beta functions, with st.fact.
-       paw_lmaxkb,paw_recon
-  USE becmod,     ONLY : becp, calbec, allocate_bec_type, deallocate_bec_type !CG
-  USE scf,        ONLY : vltot, vrs, v, kedtau !CG
-  USE gvecs,      ONLY : doublegrid
-  USE mp_pools,   ONLY : intra_pool_comm, my_pool_id, npool
-  USE mp_world,   ONLY : mpime
-  USE mp,         ONLY : mp_sum
-  USE xspectra,      ONLY : xiabs, xanes_dip, xang_mom, xniter, xnitermax, xepsilon
-  USE atom,       ONLY : rgrid, msh
-  USE radin_mod
-  USE uspp,   ONLY : vkb, nkb, okvan
-  USE ldaU,   ONLY : lda_plus_u
-  USE xspectra_paw_variables, ONLY : xspectra_paw_nhm
-  USE wavefunctions_module, ONLY: evc
-  USE uspp_param, ONLY : upf
-
-  IMPLICIT NONE
-  INTEGER :: is,ik,iabso,nr,ip,jp,l,j,icrd,ip_l,nrc,nt,na,i
-  INTEGER :: ipx,ipx_0,ipy,ipz,nline,nrest,npw_partial
-  REAL (dp) v_of_0
-  REAL (dp) norm
-  COMPLEX(KIND=DP) :: zdotc
-  COMPLEX(dp), ALLOCATABLE :: paw_vkb_cplx(:,:)
-  REAL(dp) :: normps
-  EXTERNAL zdotc
-  EXTERNAL zdscal
-
-  COMPLEX(dp), ALLOCATABLE :: psiwfc(:)
-
-  INTEGER :: ipw
-  COMPLEX(dp) :: prodscal, hevc(npwx), vecteur(npwx), prodscal_part, normtemp
-  INTEGER :: indice, numk, nkppool, ind2, rest, mpimea, mpimeb
-  LOGICAL :: exst, opnd
-  CHARACTER ( LEN=32) :: filehpsi, filenumber
-  REAL(dp) :: maxdiff
-  COMPLEX (dp) :: vecteuraux(npwx,1), vecteuraux2(npwx,1), sm1spsi(npwx)
-  COMPLEX(dp) :: psi_h_psi,  psi_psi,  psi_s_psi, psi_sm1s_psi
-  REAL(dp) :: difference
-
-  CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,dfftp%nnr,nspin,doublegrid)
-  IF (lda_plus_u) CALL init_xanes_ldau
-
-  mpimea=mpime
-  filenumber=' '
-
-  DO  j=1, 3
-     mpimeb=mod(mpimea,10)
-     filenumber=char(mpimeb+48)//filenumber
-     mpimea=mpimea/10
-  ENDDO
-
-  filehpsi='hpsi_'//TRIM(filenumber)//'.out'
-  open(unit=1000+mpime,file=filehpsi,form='formatted',status='unknown')
-  rewind(1000+mpime)
-
-  maxdiff=0.d0
-
-  DO ik=1,nks
-     current_k=ik
-     IF(lsda) current_spin=isk(ik)
-     !gk_sort  sort k-points and exit kinetic energies
-     CALL gk_sort(xk (1,ik),ngm,g,ecutwfc/tpiba2,npw,igk,g2kin)  !CHECK
-     g2kin=g2kin*tpiba2                                          !CHECK
-     npw_partial = npw
-     CALL mp_sum( npw_partial, intra_pool_comm )
-     CALL init_gipaw_2(npw,igk,xk(1,ik),paw_vkb)
-     CALL init_us_2(npw,igk,xk(1,ik),vkb)
-     IF (lda_plus_u) CALL init_xanes_ldau_2(ik)
-     CALL allocate_bec_type(nkb,1,becp)
-
-     WRITE(1000+mpime,*) 'lda_plus_u=', lda_plus_u
-     WRITE(1000+mpime,*) 'mypoolid=', my_pool_id,' ik=', ik
-     WRITE(1000+mpime,*) 'npool=', npool, ' nkstot=', nkstot
-     WRITE(1000+mpime,*) 'nwordwfc=', nwordwfc, ' iunwfc=', iunwfc
-
-     !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-     ! open saved eigenvectors
-     !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-     inquire (unit = iunwfc, opened = opnd)
-     IF (.NOT.opnd)   CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
-     CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
-
-     numk=0
-     nkppool=nkstot/npool
-     rest=nkstot-nkppool*npool
-     DO indice=0, my_pool_id-1
-        numk=numk+nkppool
-        IF (indice<rest) numk=numk+1
-     ENDDO
-     numk=numk+ik
-     WRITE(1000+mpime,*) 'npw=', npw, 'npwx=', npwx
-     !WRITE(1000+mpime,*) 'ns(1,1,1,1)=', ns(1,1,1,1)
-     !WRITE(1000+mpime,*) 'natomwfc=', natomwfc
-     !WRITE(1000+mpime,*) 'swfcatom=', ((swfcatom(ind2, indice), ind2=1,3), indice=1, natomwfc)
-
-     DO indice=1, nbnd
-        ! calculating <psi | psi>
-        psi_psi=zdotc(npw,evc(:,indice),1,evc(:,indice),1)
-        CALL mp_sum( psi_psi, intra_pool_comm )
-        ! calculating <psi | H | psi >
-        hevc(:)=(0.d0,0.d0)
-        CALL h_psi( npwx, npw,1, evc(:,indice), hevc )
-        psi_h_psi=zdotc(npw,evc(:,indice),1,hevc,1)
-        CALL mp_sum( psi_h_psi, intra_pool_comm )
-        difference=abs(psi_h_psi-et(indice,numk)*psi_psi)
-
-        ! calculating <psi | S | psi > if ultrasoft
-        IF (okvan)  THEN
-           becp%k(:,:)=0.d0
-           vecteuraux(:,1)=evc(:,indice)
-           CALL calbec(npw,vkb,vecteuraux,becp,1)
-           CALL s_psi( npwx,npw, 1, vecteuraux,vecteuraux2)
-           vecteur(:)=vecteuraux2(:,1)
-           psi_s_psi=zdotc(npw,evc(:,indice),1,vecteur,1)
-           CALL mp_sum( psi_s_psi, intra_pool_comm )
-           CALL sm1_psi(.true.,npwx, npw, 1, vecteuraux2, vecteuraux)
-           sm1spsi(:)=vecteuraux(:,1)
-           psi_sm1s_psi=zdotc(npw,evc(:,indice),1,sm1spsi,1)
-           CALL mp_sum( psi_sm1s_psi, intra_pool_comm )
-        ENDIF
-        ! printing the result
-        IF (okvan) THEN
-           difference=abs(psi_h_psi-et(indice,numk)*psi_s_psi)
-           WRITE(1000+mpime,*) 'k-point', ik, 'absolute k =', numk
-           WRITE(1000+mpime,*) 'bande : ', indice
-           WRITE(1000+mpime,*) 'current spin=', current_spin
-           WRITE(1000+mpime,*) 'et(bande,ik)=', et(indice, numk)
-           WRITE(1000+mpime,*) '|<psi|psi>|=',abs(psi_psi)
-           WRITE(1000+mpime,*) '|<psi|S|psi>|=',abs(psi_s_psi)
-           WRITE(1000+mpime,*) '|<psi|S^-1*S|psi>|=',abs(psi_sm1s_psi)
-           WRITE(1000+mpime,*) '|<psi|H|psi>|=',abs(psi_h_psi)
-           WRITE(1000+mpime,*) '|<psi|H|psi>-E*<psi|psi>|=',abs(psi_h_psi-et(indice,numk)*psi_psi)
-           WRITE(1000+mpime,*) '|<psi|H|psi>-E*<psi|S|psi>|=', difference
-        ELSE
-           difference=abs(psi_h_psi-et(indice,numk)*psi_psi)
-           WRITE(1000+mpime,*) 'k-point', ik, 'absolute k =', numk
-           WRITE(1000+mpime,*) 'bande : ', indice
-           WRITE(1000+mpime,*) 'current spin=', current_spin
-           WRITE(1000+mpime,*) 'et(bande,ik)=', et(indice, numk)
-           WRITE(1000+mpime,*) '|<psi|psi>|=',abs(psi_psi)
-           WRITE(1000+mpime,*) '|<psi|H|psi>|=',abs(psi_h_psi)
-           WRITE(1000+mpime,*) '|<psi|H|psi>-E*<psi|psi>|=', difference
-        ENDIF
-
-        IF (difference > maxdiff)  maxdiff=difference
-        IF (difference > 1.d-4) WRITE(1000+mpime,*) 'warning : difference too big'
-
-        WRITE(1000+mpime,*) ' '
-     ENDDO
-     WRITE(1000+mpime,*) '--------------------- END ------------------ '
-     CALL deallocate_bec_type(becp)
-  ENDDO  !on k points
-
-  close(1000+mpime)
-
-  WRITE(stdout,*) '> h_psi test : maximum difference on master node is ', maxdiff
-
-END SUBROUTINE verify_hpsi
-
-
-
-
-
-
 
 
 
