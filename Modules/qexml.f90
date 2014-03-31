@@ -3395,7 +3395,7 @@ CONTAINS
          IF ( present( lda_plus_u_kind ) ) lda_plus_u_kind       = lda_plus_u_kind_
          IF ( present( U_projection ) )    U_projection          = U_projection_
          IF ( present( Hubbard_lmax ) )    Hubbard_lmax          = Hubbard_lmax_
-         IF ( present( Hubbard_l ) )       Hubbard_l(1:Hubbard_lmax_)   = Hubbard_l_(:)
+         IF ( present( Hubbard_l ) )       Hubbard_l(1:nsp_)     = Hubbard_l_(:)
          IF ( present( Hubbard_U ) )       Hubbard_U(1:nsp_)     = Hubbard_U_(1:nsp_)
          IF ( present( Hubbard_J ) )       Hubbard_J(1:3,1:nsp_) = Hubbard_J_(1:3,1:nsp_)
          IF ( present( Hubbard_J0 ) )      Hubbard_J0(1:nsp_)    = Hubbard_J0_(1:nsp_)
