@@ -2,21 +2,39 @@
 
 #
 # CIF to Quantum Espresso format converter
+#  Version 1.0  Date: 15-Mar-2014  First Full conversion
 #  Version 0.5  Date: 02-Oct-2013
 #  Version 0.4  Date: 12 Jun 2013
 #  Version 0.3  Date: 15 Nov 2012
-# tested with GNU awk v.4 - may not work with earlier versions
 #
-# Copyright (C) 2012-2013 Carlo Nervi
+# Copyright (C) 2012-2014 Carlo Nervi
 # This file is distributed under the terms of the
 # GNU General Public License. See the file `License'
 # in the root directory of the present distribution,
 # or http://www.gnu.org/copyleft/gpl.txt .
 #
+# Tested with GNU awk v.4 - doesn't work with earlier gawk versions
+# Use dos2unix to strip carriage returns at the end of the .cif files!!!!
+#
+# symmetry x,-y+1/2,z+y without ''
+#
 
-if [ $# != 1 ]; then
- printf "cif2qe.sh Version 0.5 - Usage: cif2qe.sh File (.cif extension not required!)\n Requires File.cif\n"
+version="1.0"
+USAGE="cif2qe.sh Version ${version}\nUsage: cif2qe.sh [-i] File\n    ( -i uses the ibrav of QE. Do not add .cif extension!) -  Requires File.cif\n"
+if [ $# == 0 -o $# -gt 2 ]; then
+ printf "$USAGE"
  exit
+fi
+
+do_ibrav=0
+if [ $# == 2 ]; then
+ if [ $1 == "-i" ]; then
+  do_ibrav=1
+  shift
+ else
+  printf "$USAGE"
+  exit
+ fi
 fi
 
 if [ ! -f $1.cif ]; then
@@ -24,10 +42,10 @@ if [ ! -f $1.cif ]; then
  exit
 fi
 
-awk -v FILE="$1" '
+awk -v FILE="$1" -v VERSION="$version" -v do_IBRAV=$do_ibrav '
 
 BEGIN {
- bohr = 0.52917720859
+ bohr = 0.52917721092
  nfield=split("H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr " \
               "Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb " \
               "Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf " \
@@ -39,6 +57,31 @@ BEGIN {
        "180.948 183.84 186.207 190.23 192.217 195.078 196.966 200.59 204.383 207.2 208.98 209 210 222 223 226 227 232.038 231.036 238.029 " \
        "237 244 243 247 247 251 252 257 258 259 262 261 262 266 264 277 268", AtomMass, " ")
  for (i=1; i<=nfield; i++) Atoms[AtomSymb[i]] = AtomMass[i]
+
+#
+# nKey             = number of recognized Keywords
+# KeyW[0][1..nKey] = recognized Keywords
+# KeyW[1][1..nKey] = first synonym
+# ...                  ....
+#
+
+ nsynon=2
+ nKey=13
+
+ KeyW[0][1] ="_cell_length_a";               KeyW[1][1]="" 
+ KeyW[0][2] ="_cell_length_b";               KeyW[1][2]=""
+ KeyW[0][3] ="_cell_length_c";               KeyW[1][3]=""
+ KeyW[0][4] ="_cell_angle_alpha";            KeyW[1][4]=""
+ KeyW[0][5] ="_cell_angle_beta";             KeyW[1][5]=""
+ KeyW[0][6] ="_cell_angle_gamma";            KeyW[1][6]=""
+ KeyW[0][7] ="_atom_site_type_symbol";       KeyW[1][7]=""
+ KeyW[0][8] ="_atom_site_fract_x";           KeyW[1][8]=""
+ KeyW[0][9] ="_atom_site_fract_y";           KeyW[1][9]=""
+ KeyW[0][10]="_atom_site_fract_z";           KeyW[1][10]=""
+ KeyW[0][11]="_symmetry_equiv_pos_as_xyz";   KeyW[1][11]="_space_group_symop_operation_xyz"
+ KeyW[0][12]="_symmetry_cell_setting";       KeyW[1][12]="_space_group_crystal_system"
+ KeyW[0][13]="_symmetry_Int_Tables_number";  KeyW[1][13]="_space_group_IT_number"
+
 #
 #Tolerance for recognize identical atoms generate by symmetry
 #
@@ -46,8 +89,60 @@ BEGIN {
 #
 # Separation (in A) to generate K Points
 #
- separation=0.04
+ separation=0.07
  totatom=0
+
+#
+# International Tables
+#
+# 1-2 Triclinic, 3-15 Monoclinic, 16-74 Orthorhombic, 75-142 Tetragonal, 143-167 Trigonal, 168-194 Hexagonal, 195-230 Cubic
+
+split("P1 P-1 " \
+   "P2 P2(1) C2 Pm Pc Cm Cc P2/m P2(1)/m C2/m P2/c P2(1)/c C2/c " \
+   "P222 P222(1) P2(1)2(1)2 P2(1)2(1)2(1) C222(1) C222 F222 I222 I2(1)2(1)2(1) Pmm2 Pmc2(1) Pcc2 Pma2 Pca2(1) Pnc2 Pmn2(1) Pba2 Pna2(1) Pnn2 " \
+       "Cmm2 Cmc2(1) Ccc2 Amm2 Abm2 Ama2 Aba2 Fmm2 Fdd2 Imm2 Iba2 Ima2 Pmmm Pnnn Pccm Pban Pmma Pnna Pmna Pcca Pbam Pccn Pbcm Pnnm Pmmn Pbcn Pbca " \
+       "Pnma Cmcm Cmca Cmmm Cccm Cmma Ccca Fmmm Fddd Immm Ibam Ibca Imma " \
+   "P4 P4(1) P4(2) P4(3) I4 I4(1) P-4 I-4 P4/m P4(2)/m P4/n P4(2)/n I4/m I4(1)/a P422 P42(1)2 P4(1)22 P4(1)2(1)2 P4(2)22 P4(2)2(1)2 P4(3)22 " \
+       "P4(3)2(1)2 I422 I4(1)22 P4mm P4bm P4(2)cm P4(2)nm P4cc P4nc P4(2)mc P4(2)bc I4mm I4cm I4(1)md I4(1)cd P-42m P-42c P-42(1)m P-42(1)c " \
+       "P-4m2 P-4c2 P-4b2 P-4n2 I-4m2 I-4c2 I-42m I-42d P4/mmm P4/mcc P4/nbm P4/nnc P4/mbm P4/mnc P4/nmm P4/ncc P4(2)/mmc P4(2)/mcm P4(2)/nbc " \
+       "P4(2)/nnm P4(2)/mbc P4(2)/mnm P4(2)/nmc P4(2)/ncm I4/mmm I4/mcm I4(1)/amd I4(1)/acd " \
+   "P3 P3(1) P3(2) R3 P-3 R-3 P312 P321 P3(1)12 P3(1)21 P3(2)12 P3(2)21 R32 P3m1 P31m P3c1 P31c R3m R3c P-31m P-31c P-3m1 P-3c1 R-3m R-3c " \
+       "P6 P6(1) P6(5) P6(2) P6(4) P6(3) P-6 P6/m P6(3)/m P622 P6(1)22 P6(5)22 P6(2)22 P6(4)22 P6(3)22 P6mm P6cc P6(3)cm P6(3)mc P-6m2 P-6c2 P-62m " \
+       "P-62c P6/mmm P6/mcc P6(3)/mcm P6(3)/mmc " \
+   "P23 F23 I23 P2(1)3 I2(1)3 Pm-3 Pn-3 Fm-3 Fd-3 Im-3 Pa-3 Ia-3 P432 P4(2)32 F432 F4(1)32 I432 P4(3)32 P4(1)32 I4(1)32 P-43m F4-3m I-43m P-43n " \
+       "F-43c I-43d Pm-3m Pn-3n Pm-3n Pn-3m Fm-3m Fm-3c Fd-3m Fd-3c Im-3m Ia-3d", Int_Tables, " ")
+}
+
+function parseX(str, field) {
+#
+# Consideriamo il testo fra due apostrofi singoli come una stringa
+# ritorna il campo field-esimo della stringa str
+#
+ c=0
+ str=str " "
+ while (str) {
+   match(str,/ *\47[^\47]*\47 * |[^ ]* /) 
+   f=substr(str,RSTART,RLENGTH)             # save what matched in f
+   gsub(/^ *\47?|\47? * $/,"",f)               # remove extra stuff
+   if ( ++c == field) { if (f!="") return f
+     else return $field
+   }
+ str=substr(str,RLENGTH+1)                 # "consume" what matched
+ }
+ return ""
+}
+
+function search_K(str) {
+ i0=0
+ for (i1=1; i1<=nKey; i1++) {
+   for (i2=0; i2<nsynon; i2++) {
+#     printf "KeyW[%i][%i]=%s == %s\n", i2, i1, KeyW[i2][i1], str
+#     if (KeyW[i2][i1] == str) printf "FOUND %s in [%i]\n", str, i1
+     if (KeyW[i2][i1] == str) return i1
+   }
+ }
+# printf "[%s] NOT FOUND\n", str
+ return 0
 }
 
 function eval(cmd,expression) {
@@ -77,58 +172,100 @@ function abs(numero) {
  return numero
 }
 
-function parsex(str, field) {
+function Find_Lattice(a,b,c,alpha,beta,gamma) {
 #
-# Consideriamo il testo fra due apostrofi singoli come una stringa
-# ritorna il campo field-esimo della stringa str
+# find the bravais lattice name from lattice parameters
 #
- c=0
- str=str " "
- while (str) {
-   match(str,/ *\47[^\47]*\47 * |[^ ]* /) 
-   f=substr(str,RSTART,RLENGTH)             # save what matched in f
-   gsub(/^ *\47?|\47? * $/,"",f)               # remove extra stuff
-   if ( ++c == field) { if (f!="") return f
-     else return $field
-   }
- str=substr(str,RLENGTH+1)                 # "consume" what matched
+
+ thr = 1.e-4
+ reticolo=""
+ if ( (abs(alpha-90.0)<thr) && (abs(gamma-90.0)<thr) ) {
+   if (abs(beta-90.0)<thr) {
+     if ( (abs(a-b)<thr) && (abs(a-c)<thr) ) reticolo = "cubic";
+     else if ( abs(a-b)<thr ) reticolo = "tetragonal";
+     else reticolo = "orthorhombic";
+   } else reticolo = "monoclinic"
+ } else if ( (abs(alpha-90.0)<thr) && (abs(beta-90.0)<thr) && (abs(gamma-120.0)<thr) ) reticolo = "hexagonal";
+   else if ( (abs(alpha-beta)<thr) && (abs(alpha-gamma)<thr) && (abs(a-b)<thr) && (abs(a-c)<thr) ) reticolo = "rhombohedral";
+ else  reticolo = "triclinic"
+ return reticolo
+}
+
+function Find_ibrav(spacegroup, reticolo) {
+ ibrav=0
+ primitive=match(spacegroup, "P")
+ bodycentered=match(spacegroup, "I")
+ facecentered=match(spacegroup, "F")
+ basecentered=match(spacegroup, "C")
+ switch (reticolo) {
+ case "cubic":
+   if (primitive) ibrav=1
+   if (facecentered) ibrav=2
+   if (bodycentered) ibrav=3
+   break
+ case "tetragonal":
+   if (primitive) ibrav=6
+   if (bodycentered) ibrav=7
+   break
+ case "orthorhombic":
+   if (primitive) ibrav=8
+   if (basecentered) ibrav=9
+   if (facecentered) ibrav=10
+   if (bodycentered) ibrav=11
+   break;
+ case "monoclinic":
+   if (primitive) ibrav=-12
+   if (basecentered) ibrav=13
+   break
+ case "triclinic":
+   ibrav=14
+   break
+ case "hexagonal":
+   ibrav=4
+   break
+ case "rhombohedral":
+   if (primitive) ibrav=4; else ibrav=5
+   break
+ default: ibrav=0
  }
- return ""
+ return ibrav
+}
+
+function test_Var(test_type) {
+ is_present=0
+ for (i=0; i<Num_Var; i++) if (Var[i] == test_type) is_present=1
+ return is_present
 }
 
 # Salta il commento
-/^\#/||/^\;/ { next
-}
+$1 ~ /^\#/||/^\;/ { next }
 
-/loop_/ { loop_switch=1; next }
+$1 ~ /loop_/ { loop_switch=1; next }
 
-
-/^_/ {
+$1 ~ /^_/ {
  jvar=0
+ tmp=search_K($1)
  if (loop_switch==1) {
-  Var[ivar]=$1
-  ivar++
+  if (tmp > 0) Var[ivar++]=KeyW[0][tmp]; else Var[ivar++]=$1
   Num_Var=ivar
-  if ($1 ~ /^_symmetry/) nsymm=0
-  if ($1 ~ /^_atom/) natom=0
  } else {
    ivar=0
    loop_switch=0
-   str=parsex($0, 2)
-   Var2[$1]=parsex($0, 2)
+   if (tmp > 0) Var2[KeyW[0][tmp]]=$2
  }
 }
 
-/^[^_]/ {
+$1 ~ /^[^_]/ {
  ivar=0
  if (loop_switch==1 || loop_switch==2) {
   loop_switch=2
   for (i=0; i<Num_Var; i++) {
-    Array[Var[i]][jvar]=parsex($0, i+1)
+    Array[Var[i]][jvar]=parseX($0, i+1)
   }
   jvar++
-  if (Var[0] ~ /^_atom/) natom++
-  if (Var[0] ~ /^_symmetry/) nsymm++
+  i = test_Var("_atom_site_type_symbol") + test_Var("_atom_site_fract_x")
+  if (i == 2) natom++
+  nsymm = nsymm + test_Var("_symmetry_equiv_pos_as_xyz")
  } else {
   jvar=0
   loop_switch=0
@@ -139,9 +276,17 @@ END {
  a=strtonum(Var2["_cell_length_a"])
  b=strtonum(Var2["_cell_length_b"])
  c=strtonum(Var2["_cell_length_c"])
- alpha=strtonum(Var2["_cell_angle_alpha"])/180.0*3.14159265358979323846
- beta=strtonum(Var2["_cell_angle_beta"])/180.0*3.14159265358979323846
- gamma=strtonum(Var2["_cell_angle_gamma"])/180.0*3.14159265358979323846
+ alpha=strtonum(Var2["_cell_angle_alpha"])
+ beta=strtonum(Var2["_cell_angle_beta"])
+ gamma=strtonum(Var2["_cell_angle_gamma"])
+ alphar=alpha/180.0*3.14159265358979323846
+ betar=beta/180.0*3.14159265358979323846
+ gammar=gamma/180.0*3.14159265358979323846
+ reticolo=Find_Lattice(a,b,c,alpha,beta,gamma)
+ tmpspacegroup=Var2["_symmetry_space_group"]
+ tmptablenumber=Var2["_symmetry_Int_Tables_number"]
+ if (tmptablenumber > 0 ) tmpspacegroup=Int_Tables[tmptablenumber]
+ ibrav=Find_ibrav(tmpspacegroup, reticolo)
  KP_x = int(1./(a*separation)+0.5)
  KP_y = int(1./(b*separation)+0.5)
  KP_z = int(1./(c*separation)+0.5)
@@ -191,11 +336,21 @@ END {
   totatom++
   }
  }
+ print "! Generated by using cif2qe Version " VERSION " - Date: " strftime()
+ print "!   _symmetry_space_group_name_H-M = "  Var2["_symmetry_space_group"]
+ print "!   _symmetry_Int_Tables_number = " tmptablenumber
+ print "!   _symmetry_cell_setting = " Var2["_symmetry_cell_setting"]
+ print "! a=" a "  b=" b "  c=" c "  alpha=" alpha "  beta=" beta "  gamma=" gamma
+ print "! Found by cif2qe: lattice = " reticolo "    Space group = " Int_Tables[tmptablenumber] "   ibrav = " ibrav
+ print "!"
+ print "! Symmetry found:"
+ for (j=0; j<nsymm; j++) {
+   printf "! %3i %30s    ", j+1, Array["_symmetry_equiv_pos_as_xyz"][j] 
+   split(Array["_symmetry_equiv_pos_as_xyz"][j], Tmp, ",")
+   printf "[%s]  [%s]  [%s]\n", Tmp[1], Tmp[2], Tmp[3]
+ }
  print "&CONTROL"
  print "                       title = \x027" FILE "\x027"
-# print "!   _symmetry_space_group_name_H-M = " Var2["_symmetry_space_group"]
-# print "!   _symmetry_Int_Tables_number = " Var2["_symmetry_Int_Tables_number"]
-# print "!   _symmetry_cell_setting = " Var2["_symmetry_cell_setting"]
  print "                 calculation = \x027" "relax\x027"
  print "                restart_mode = \x027" "from_scratch\x027"
  print "                      outdir = \x027" "./1\x027"
@@ -203,19 +358,61 @@ END {
  print "                      prefix = \x027" FILE "\x027"
  print "                     disk_io = \x027" "none\x027"
  print "                   verbosity = \x027" "default\x027"
- print "               etot_conv_thr = 0.00001"
- print "               forc_conv_thr = 0.0001"
- print "                       nstep = 680"
+ print "               etot_conv_thr = 0.0001"
+ print "               forc_conv_thr = 0.001"
+ print "                       nstep = 400"
  print "                     tstress = .true."
  print "                     tprnfor = .true."
  print " /"
  print " &SYSTEM"
- print "                       ibrav = 0"
+ if (do_IBRAV == 1 && ibrav != 0) {
+   print "                       ibrav = " ibrav
+   printf "                   celldm(1) = %19.15f\n", a/bohr
+   switch (ibrav) {
+    case 4:
+    case 6:
+    case 7:
+     printf "                   celldm(3) = %19.15f\n", c/a
+     break
+    case 5:
+    case -5:
+     printf "                   celldm(4) = %19.15f\n", cos(alphar)
+     break
+    case 14:
+     printf "                   celldm(2) = %19.15f, celldm(3) = %19.15f\n", b/a, c/a
+     printf "                   celldm(4) = %19.15f\n", cos(alphar)
+     printf "                   celldm(5) = %19.15f\n", cos(betar)
+     printf "                   celldm(6) = %19.15f\n", cos(gammar)
+     break
+    case -12:
+     printf "                   celldm(2) = %19.15f, celldm(3) = %19.15f\n", b/a, c/a
+     printf "                   celldm(5) = %19.15f\n", cos(betar)
+     break
+    case 13:
+     printf "                   celldm(2) = %19.15f, celldm(3) = %19.15f\n", b/a, c/a
+     printf "                   celldm(4) = %19.15f\n", cos(gammar)
+     break
+    case 8:
+    case 9:
+    case 10:
+    case 11:
+     printf "                   celldm(2) = %19.15f, celldm(3) = %19.15f\n", b/a, c/a
+     break
+    case 12:
+     printf "                   celldm(2) = %19.15f, celldm(3) = %19.15f\n", b/a, c/a
+     printf "                   celldm(4) = %19.15f\n", cos(gammar)
+     break
+    case 1:
+    case 2:
+    case 3:
+   }
+ } else print "                       ibrav = 0"
  print "                         nat = " totatom
  print "                        ntyp = " ntyp
- print "                     ecutwfc = 60"
- print "                     ecutrho = 600"
- print "!                      london = .true."
+ print "                     ecutwfc = 50"
+ print "                     ecutrho = 400"
+ print "                      london = .true."
+ print "                   london_s6 = 0.75"
  print " /"
  print " &ELECTRONS"
  print "            electron_maxstep = 200"
@@ -231,32 +428,28 @@ END {
  print "&IONS"
  print "                ion_dynamics = \x027" "bfgs\x027"
  print " /"
- print "\n"
- print "ATOMIC_SPECIES"
- for (i=0; i<ntyp; i++) printf "  %3s  %14.10f  %s.pbe-van_ak.UPF\n", AtomTyp[i], Atoms[AtomTyp[i]], AtomTyp[i];
+ print "\nATOMIC_SPECIES"
+ for (i=0; i<ntyp; i++) printf "  %3s  %14.10f  %s.pbe-n-rrkjus_psl.0.1.UPF\n", AtomTyp[i], Atoms[AtomTyp[i]], AtomTyp[i];
 
  print "\nATOMIC_POSITIONS crystal"
  for (i=0; i<totatom; i++)
    printf "%2s   %19.15f   %19.15f   %19.15f\n", Array["_atom_site_type_symbol"][i % natom], save_X[i], save_Y[i], save_Z[i]
  print "\nK_POINTS automatic"
- print KP_x "  " KP_y "  " KP_z "   0 0 0\n"
+ print KP_x "  " KP_y "  " KP_z "   0 0 0"
 
- cell_px[0]=a
- cell_py[0]=0.0
- cell_pz[0]=0.0
- cell_px[1]=b*cos(gamma)
- cell_py[1]=b*sin(gamma)
- cell_pz[1]=0.0
- cell_px[2]=c*cos(beta)
- cell_py[2]=c*(cos(alpha)-cos(beta)*cos(gamma))/sin(gamma)
- cell_pz[2]=c*sqrt(1.0 - cos(alpha)^2 - cos(beta)^2 - cos(gamma)^2 + 2*cos(alpha)*cos(beta)*cos(gamma))/sin(gamma)
-
- print "\nCELL_PARAMETERS"
-# Debug:
-# print "a=" a "  b=" b "  c=" c "   alfa=" alpha "   beta=" beta "   gamma=" gamma
-# for (i=0; i<3; i++) printf "  %19.15f   %19.15f   %19.15f\n", cell_px[i], cell_py[i], cell_pz[i];
- for (i=0; i<3; i++) printf "  %19.15f   %19.15f   %19.15f\n", cell_px[i]/bohr, cell_py[i]/bohr, cell_pz[i]/bohr;
-
+ if (do_IBRAV == 0) {
+   cell_px[0]=a
+   cell_py[0]=0.0
+   cell_pz[0]=0.0
+   cell_px[1]=b*cos(gammar)
+   cell_py[1]=b*sin(gammar)
+   cell_pz[1]=0.0
+   cell_px[2]=c*cos(betar)
+   cell_py[2]=c*(cos(alphar)-cos(betar)*cos(gammar))/sin(gammar)
+   cell_pz[2]=c*sqrt(1.0 - cos(alphar)^2 - cos(betar)^2 - cos(gammar)^2 + 2*cos(alphar)*cos(betar)*cos(gammar))/sin(gammar)
+   print "\nCELL_PARAMETERS"
+   for (i=0; i<3; i++) printf "  %19.15f   %19.15f   %19.15f\n", cell_px[i]/bohr, cell_py[i]/bohr, cell_pz[i]/bohr;
+ }
  print "\n\n"
 
 } ' $1.cif
