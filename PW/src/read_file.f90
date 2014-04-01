@@ -266,7 +266,7 @@ SUBROUTINE read_xml_file()
   !
   IF ( lda_plus_u ) THEN
      ALLOCATE ( oatwfc(nat) )
-     CALL offset_atom_wfc ( nat, oatwfc )
+     CALL offset_atom_wfc ( nat, oatwfc, ierr )
   ENDIF
   !
   CALL allocate_wfc()

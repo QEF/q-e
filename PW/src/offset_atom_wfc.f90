@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-SUBROUTINE offset_atom_wfc( nat, offset )
+SUBROUTINE offset_atom_wfc( nat, offset, counter )
   !----------------------------------------------------------------------------
   !
   ! For each Hubbard atom, compute the index of the projector in the list of
@@ -22,10 +22,9 @@ SUBROUTINE offset_atom_wfc( nat, offset )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)  :: nat
+  INTEGER, INTENT(OUT) :: offset(nat), counter
   !
-  INTEGER, INTENT(OUT) :: offset(nat)
-  !
-  INTEGER  :: counter, na, nt, n
+  INTEGER  :: na, nt, n
   !
   !
   counter = 0

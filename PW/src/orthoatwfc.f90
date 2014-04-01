@@ -16,7 +16,7 @@ SUBROUTINE orthoUwfc
   ! "swfcatom" must NOT be allocated on input.
   !
   USE kinds,      ONLY : DP
-  USE buffers,    ONLY : save_buffer
+  USE buffers,    ONLY : get_buffer, save_buffer
   USE io_global,  ONLY : stdout
   USE io_files,   ONLY : iunhub, nwordwfcU, iunigk
   USE ions_base,  ONLY : nat
@@ -44,7 +44,14 @@ SUBROUTINE orthoUwfc
      WRITE( stdout,*) 'Beta functions used for LDA+U Projector'
      RETURN
   ELSE IF (U_projection=="file") THEN
+     !
+     ! Read atomic wavefunctions from file (produced by pmw.x). In this case,
+     ! U-specific atomic wavefunctions wfcU coincide with atomic wavefunctions 
+     !
      WRITE( stdout,*) 'LDA+U Projector read from file '
+     DO ik = 1, nks
+        CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
+     END DO
      RETURN
   ELSE IF (U_projection=="atomic") THEN
      orthogonalize_wfc = .FALSE.

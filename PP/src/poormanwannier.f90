@@ -139,7 +139,7 @@ SUBROUTINE projection (first_band, last_band)
   IF ( gamma_only ) WRITE( stdout, '(5x,"gamma-point specific algorithms are used")')
   !
   nwordatwfc = npwx * natomwfc
-  CALL diropn( iunsat, 'satwfc', 2*nwordatwfc, exst )
+  CALL diropn( iunsat, 'hub', 2*nwordatwfc, exst )
   !
   ALLOCATE(proj (natomwfc, nbnd, nkstot) )
   ALLOCATE(wfcatom (npwx, natomwfc) )

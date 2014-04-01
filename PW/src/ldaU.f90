@@ -136,16 +136,23 @@ CONTAINS
          CALL errore( 'init_lda_plus_u', 'Hubbard_l should not be > 3 ', 1 )
 
     ! compute index of atomic wfcs used as projectors
+
     IF ( .NOT.allocated(oatwfc)) ALLOCATE ( oatwfc(nat) )
-    CALL offset_atom_wfc ( nat, oatwfc )
-    !
+    CALL offset_atom_wfc ( nat, oatwfc, nwfcU )
+    ! nwfcU is set to natomwfc by the routine above
     IF ( .NOT.allocated(offsetU)) ALLOCATE ( offsetU(nat) )
-    nwfcU = 0
-    DO na=1,nat
-       offsetU(na) = nwfcU
-       nt = ityp(na)
-       IF ( is_hubbard(nt) ) nwfcU = nwfcU + 2*hubbard_l(nt)+1
-    END DO
+    IF ( U_projection == 'file' ) THEN
+       ! If reading from file, dims and offsets for wfcU and wfcatom coincide
+       offsetU(:) = oatwfc(:)
+    ELSE
+       ! If not reading from file, dims and offset for wfcU and wfcatom differ
+       nwfcU = 0
+       DO na=1,nat
+          offsetU(na) = nwfcU
+          nt = ityp(na)
+          IF ( is_hubbard(nt) ) nwfcU = nwfcU + 2*hubbard_l(nt)+1
+       END DO
+    END IF
     !
   END SUBROUTINE init_lda_plus_u
   !
