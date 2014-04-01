@@ -11,10 +11,12 @@ XOBJS = \
 ./xspectra_mod.o \
 ./radin_mod.o \
 ./mygetK.o \
-./read_file_xspectra.o \
 ./ipoolscatter.o \
-./init_xspectra_ldau.o \
-./lr_sm1_psi.o
+./lr_sm1_psi.o \
+./orthoUatwfc_k.o \
+./read_k_points.o \
+./reset_k_points_and_reinit.o
+
 
 GIPAWOBJS=./paw_gipaw.o \
 ./gipaw_module.o \
