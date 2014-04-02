@@ -76,10 +76,11 @@
         MODULE PROCEDURE mp_alltoall_c3d, mp_alltoall_i3d
       END INTERFACE
       INTERFACE mp_circular_shift_left
-        MODULE PROCEDURE mp_circular_shift_left_d2d_int, &
-          mp_circular_shift_left_d2d_double, &
-          mp_circular_shift_left_d2d_complex, &
-          mp_circular_shift_left_d2d_integer
+        MODULE PROCEDURE mp_circular_shift_left_i0, &
+          mp_circular_shift_left_i1, &
+          mp_circular_shift_left_i2, &
+          mp_circular_shift_left_r2d, &
+          mp_circular_shift_left_c2d
       END INTERFACE
 
 !------------------------------------------------------------------------------!
@@ -2015,7 +2016,7 @@ SUBROUTINE mp_alltoall_i3d( sndbuf, rcvbuf, gid )
    RETURN
 END SUBROUTINE mp_alltoall_i3d
 
-SUBROUTINE mp_circular_shift_left_d2d_int( buf, itag, gid )
+SUBROUTINE mp_circular_shift_left_i0( buf, itag, gid )
    IMPLICIT NONE
    INTEGER :: buf
    INTEGER, INTENT(IN) :: itag
@@ -2047,9 +2048,45 @@ SUBROUTINE mp_circular_shift_left_d2d_int( buf, itag, gid )
    ! do nothing
 #endif
    RETURN
-END SUBROUTINE mp_circular_shift_left_d2d_int
+END SUBROUTINE mp_circular_shift_left_i0
 
-SUBROUTINE mp_circular_shift_left_d2d_integer( buf, itag, gid )
+
+SUBROUTINE mp_circular_shift_left_i1( buf, itag, gid )
+   IMPLICIT NONE
+   INTEGER :: buf(:)
+   INTEGER, INTENT(IN) :: itag
+   INTEGER, INTENT(IN) :: gid
+   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+
+#if defined (__MPI)
+
+   INTEGER :: istatus( mpi_status_size )
+   !
+   group = gid
+   !
+   CALL mpi_comm_size( group, npe, ierr )
+   IF (ierr/=0) CALL mp_stop( 8100 )
+   CALL mpi_comm_rank( group, mype, ierr )
+   IF (ierr/=0) CALL mp_stop( 8101 )
+   !
+   sour = mype + 1
+   IF( sour == npe ) sour = 0
+   dest = mype - 1
+   IF( dest == -1 ) dest = npe - 1
+   !
+   CALL MPI_Sendrecv_replace( buf, SIZE(buf), MPI_INTEGER, &
+        dest, itag, sour, itag, group, istatus, ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 8102 )
+   !
+#else
+   ! do nothing
+#endif
+   RETURN
+END SUBROUTINE mp_circular_shift_left_i1
+
+
+SUBROUTINE mp_circular_shift_left_i2( buf, itag, gid )
    IMPLICIT NONE
    INTEGER :: buf(:,:)
    INTEGER, INTENT(IN) :: itag
@@ -2081,10 +2118,10 @@ SUBROUTINE mp_circular_shift_left_d2d_integer( buf, itag, gid )
    ! do nothing
 #endif
    RETURN
-END SUBROUTINE mp_circular_shift_left_d2d_integer
+END SUBROUTINE mp_circular_shift_left_i2
 
 
-SUBROUTINE mp_circular_shift_left_d2d_double( buf, itag, gid )
+SUBROUTINE mp_circular_shift_left_r2d( buf, itag, gid )
    IMPLICIT NONE
    REAL(DP) :: buf( :, : )
    INTEGER, INTENT(IN) :: itag
@@ -2116,9 +2153,9 @@ SUBROUTINE mp_circular_shift_left_d2d_double( buf, itag, gid )
    ! do nothing
 #endif
    RETURN
-END SUBROUTINE mp_circular_shift_left_d2d_double
+END SUBROUTINE mp_circular_shift_left_r2d
 
-SUBROUTINE mp_circular_shift_left_d2d_complex( buf, itag, gid )
+SUBROUTINE mp_circular_shift_left_c2d( buf, itag, gid )
    IMPLICIT NONE
    COMPLEX(DP) :: buf( :, : )
    INTEGER, INTENT(IN) :: itag
@@ -2150,7 +2187,7 @@ SUBROUTINE mp_circular_shift_left_d2d_complex( buf, itag, gid )
    ! do nothing
 #endif
    RETURN
-END SUBROUTINE mp_circular_shift_left_d2d_complex
+END SUBROUTINE mp_circular_shift_left_c2d
 
 FUNCTION mp_get_comm_null( )
   IMPLICIT NONE
