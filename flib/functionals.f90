@@ -419,7 +419,7 @@ end subroutine gl
 subroutine becke86b(rho, grho, sx, v1x, v2x)
   !-----------------------------------------------------------------------
   ! Becke 1986 gradient correction to exchange
-  ! xA.D. Becke, J. Chem. Phys. 85 (1986) 7184
+  ! A.D. Becke, J. Chem. Phys. 85 (1986) 7184
   !
   USE kinds, ONLY : DP
   implicit none
@@ -664,7 +664,71 @@ subroutine c09x (rho, grho, sx, v1x, v2x)
   sx = sx * rho
   return
 end subroutine c09x
-
+!---------------------------------------------------------------
+subroutine b86b (rho, grho, iflag, sx, v1x, v2x)
+  !---------------------------------------------------------------
+  ! Becke exchange (without Slater exchange):
+  ! iflag=1: A. D. Becke, J. Chem. Phys. 85, 7184 (1986) (B86b)
+  ! iflag=2: J. Klimes, Phys. Rev. B 83, 195131 (2011). (OptB86b)
+  ! iflag=3: I. Hamada, Phys. Rev. B 89, 121103(R) (B86R)
+  !
+  ! Ikutaro Hamada - HAMADA.Ikutaro@nims.go.jp
+  ! National Institute for Materials Science
+  !
+  USE kinds, ONLY : DP
+  USE constants, ONLY : pi
+  implicit none
+  real(DP) :: rho, grho, sx, v1x, v2x
+  ! input: charge and squared gradient
+  ! output: energy
+  ! output: potential
+  integer :: iflag
+  ! local variables
+  real(DP) :: kf, agrho, s1, s2, ds, dsg, exunif, fx
+  ! (3*pi2*|rho|)^(1/3)
+  ! |grho|
+  ! |grho|/(2*kf*|rho|)
+  ! s^2
+  ! n*ds/dn
+  ! n*ds/d(gn)
+  ! exchange energy LDA part
+  ! exchange energy gradient part
+  real(DP) :: dxunif, dfx, f1, f2, f3, dfx1
+  ! numerical coefficients (NB: c2=(3 pi^2)^(1/3) )
+  real(DP) :: third, c1, c2, c5
+  parameter (third = 1.d0 / 3.d0, c1 = 0.75d0 / pi , &
+       c2 = 3.093667726280136d0, c5 = 4.d0 * third)
+  ! parameters of the functional
+  real(DP) :: k (3), mu(3)
+  data k / 0.5757d0, 1.0000d0, 0.711357d0/, &
+       mu/ 0.2449d0, 0.1234d0, 0.1234d0  /
+  !
+  agrho = sqrt (grho)
+  kf = c2 * rho**third
+  dsg = 0.5d0 / kf
+  s1 = agrho * dsg / rho
+  s2 = s1 * s1
+  ds = - c5 * s1
+  !
+  !   Energy
+  !
+  f1=mu(iflag)*s2
+  f2=1.d0+mu(iflag)*s2/k(iflag)
+  f3=f2**(4.d0/5.d0)
+  fx= f1/f3
+  exunif = - c1 * kf
+  sx = exunif * fx
+  !
+  !   Potential
+  !
+  dxunif = exunif * third
+  dfx1 = 1.d0+(1.d0/5.d0)*mu(iflag)*s2/k(iflag)
+  dfx = 2.d0* mu(iflag) * s1 * dfx1 / (f2 * f3)
+  v1x = sx + dxunif * fx + exunif * dfx * ds
+  v2x = exunif * dfx * dsg / agrho
+  sx = sx * rho
+  return
+end subroutine b86b
 !
 !-----------------------------------------------------------------------
 subroutine perdew86 (rho, grho, sc, v1c, v2c)

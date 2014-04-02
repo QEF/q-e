@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004-2013 Quantum ESPRESSO group
+! Copyright (C) 2004-2014 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -111,7 +111,8 @@ module funct
   !              "vdw-df-c09"="sla+pw+c09x+vdw1"  = vdW-DF-C09
   !              "vdw-df2-c09"="sla+pw+c09x+vdw2" = vdW-DF2-C09
   !              "vdw-df3"="sla+pw+obk8+vdw1"  = vdW-DF3
-  !              "vdw-df4"="sla+pw+ob86+vdw1"  = vdW-DF4
+  !              "vdw-df4"="sla+pw+o86b+vdw1"  = vdW-DF4
+  !              "optb86b-vdw" = same as         vdW-DF4
   !              "optbk88"="sla+pw+obk8"       = optB88
   !              "ev93"  = "sla+pw+evx+nogc"   = Engel-Vosko
   !
@@ -164,8 +165,9 @@ module funct
   !              "pw86"   Perdew-Wang (1986) exchange    igcx =21
   !              "b86b"   Becke (1986) exchange          igcx =22
   !              "obk8"   optB88  exchange               igcx =23
-  !              "ob86"   optB86b exchange               igcx =24
-  !              "evx"    Engel-Vosko exchange           igc  = 25
+  !              "o86b"   optB86b exchange               igcx =24
+  !              "evx"    Engel-Vosko exchange           igcx =25
+  !              "b86r"   revised Becke (b86b)           igcx =26
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -204,6 +206,8 @@ module funct
   !              p86     J.P.Perdew, PRB 33, 8822 (1986)
   !              pw86    J.P.Perdew, PRB 33, 8800 (1986)
   !              b86b    A.D.Becke, J.Chem.Phys. 85, 7184 (1986) 
+  !              o86b    Klimes, Bowler, Michaelides, PRB 83, 195131 (2011)
+  !              b86r    I. Hamada, Phys. Rev. B 89, 121103(R) (2014)
   !              pbe     J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
   !              pw91    J.P.Perdew and Y. Wang, PRB 46, 6671 (1992)
   !              blyp    C.Lee, W.Yang, R.G.Parr, PRB 37, 785 (1988)
@@ -223,6 +227,7 @@ module funct
   !              vdW-DF  M. Dion et al., PRL 92, 246401 (2004)
   !                      T. Thonhauser et al., PRB 76, 125112 (2007)
   !              vdw-DF2 Lee et al., Phys. Rev. B 82, 081101 (2010)
+  !              rev-vdW-DF2 I. Hamada, Phys. Rev. B 89, 121103(R) (2014)
   !              vdw-DF3  Klimes et al, J. Phys. Cond. Matter, 22, 022201 (2010)
   !              vdw-DF4  Klimes et al, Phys. Rev. B, 83, 195131 (2011)
   !              c09x    V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
@@ -282,7 +287,7 @@ module funct
   !
   ! data
   integer :: nxc, ncc, ngcx, ngcc, ncnl
-  parameter (nxc = 8, ncc =10, ngcx =25, ngcc = 12, ncnl=3)
+  parameter (nxc = 8, ncc =10, ngcx =26, ngcc = 12, ncnl=3)
   character (len=4) :: exc, corr
   character (len=4) :: gradx, gradc, nonlocc
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc), nonlocc (0: ncnl)
@@ -294,7 +299,7 @@ module funct
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
                'TPSS', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
                'META', 'C09X', 'SOX', 'M6LX', 'Q2DX', 'GAUP', 'PW86', 'B86B', &
-               'OBK8','OB86', 'EVX' / 
+               'OBK8', 'OB86', 'EVX', 'B86R' / 
 
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'TPSS',&
                'B3LP', 'PSC', 'PBE', 'META', 'M6LC', 'Q2DC' / 
@@ -436,7 +441,17 @@ CONTAINS
        call set_dft_value (inlc,0) !Default       
        dft_defined = .true.
 
-    else if ('VDW-DF4' .EQ. TRIM(dftout)) then
+    else if ('REV-VDW-DF2' .EQ. TRIM(dftout) ) then
+    ! Special case vdW-DF2 with B86R (rev-vdW-DF2)
+       call set_dft_value (iexch, 1)
+       call set_dft_value (icorr, 4)
+       call set_dft_value (igcx, 26)
+       call set_dft_value (igcc, 0)
+       call set_dft_value (inlc, 2)
+       dft_defined = .true.
+
+    else if ('VDW-DF4' .EQ. TRIM(dftout) .OR. &
+             'OPTB86B-VDW' .EQ. TRIM(dftout) ) then
     ! Special case vdW-DF4, or optB86b+vdW
        call set_dft_value (iexch, 1)
        call set_dft_value (icorr, 4)
@@ -499,7 +514,6 @@ CONTAINS
        call set_dft_value (inlc, 2)
        dft_defined = .true.
 
-       
     else if ('VDW-DF' .EQ. TRIM(dftout)) then
     ! Special case vdW-DF
        call set_dft_value (iexch, 1)
@@ -1109,8 +1123,11 @@ CONTAINS
      shortname_ = 'RVV10'
   else if (iexch_==1.and.icorr_==4.and.igcx_==24.and.igcc_==0.and.inlc_==1) then
      shortname_ = 'VDW-DF4'
+     ! also possible: shortname_ = 'OPTB86B-VDW'
   else if (iexch_==1.and.icorr_==4.and.igcx_==23.and.igcc_==0.and.inlc_==1) then
      shortname_ = 'VDW-DF3'
+  else if (iexch_==1.and.icorr_==4.and.igcx_==26.and.igcc_==0.and.inlc_==2) then
+     shortname_ = 'REV-VDW-DF2'
   else if (iexch_==0.and.icorr_==0.and.igcx_==18.and.igcc_==11) then
      shortname_ = 'M06L'
   else if (iexch_==1.and.icorr_==4.and.igcx_==17.and.igcc_==4) then
@@ -1120,6 +1137,7 @@ CONTAINS
   else
      shortname_ = ' '
   end if
+
   write(longname_,'(5a5)') exc(iexch_),corr(icorr_),gradx(igcx_),gradc(igcc_),nonlocc(inlc_)
   
   return
@@ -1516,12 +1534,16 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call pw86 (rho, grho, sx, v1x, v2x)
   elseif (igcx == 22) then ! 'b86b'
      call becke86b (rho, grho, sx, v1x, v2x)
+     ! call b86b (rho, grho, 1, sx, v1x, v2x)
   elseif (igcx == 23) then ! 'optB88'
      call pbex (rho, grho, 5, sx, v1x, v2x)
   elseif (igcx == 24) then ! 'optB86b'
      call pbex (rho, grho, 6, sx, v1x, v2x)
+     ! call b86b (rho, grho, 2, sx, v1x, v2x)
   elseif (igcx == 25) then ! 'ev93'
      call pbex (rho, grho, 7, sx, v1x, v2x)
+  elseif (igcx == 26) then ! 'b86r'
+     call b86b (rho, grho, 3, sx, v1x, v2x)
   else
      sx = 0.0_DP
      v1x = 0.0_DP
@@ -1682,7 +1704,7 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
      end if
 
      if (igcx == 20 .and. exx_started ) then
-	! gau-pbe
+        ! gau-pbe
         call pbexgau_lsd (rhoup, rhodw, grhoup2, grhodw2, sxsr,  &
                          v1xupsr, v2xupsr, v1xdwsr, v2xdwsr, &
                          gau_parameter)
