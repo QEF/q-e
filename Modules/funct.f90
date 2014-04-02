@@ -111,7 +111,7 @@ module funct
   !              "vdw-df-c09"="sla+pw+c09x+vdw1"  = vdW-DF-C09
   !              "vdw-df2-c09"="sla+pw+c09x+vdw2" = vdW-DF2-C09
   !              "vdw-df3"="sla+pw+obk8+vdw1"  = vdW-DF3
-  !              "vdw-df4"="sla+pw+o86b+vdw1"  = vdW-DF4
+  !              "vdw-df4"="sla+pw+ob86+vdw1"  = vdW-DF4
   !              "optb86b-vdw" = same as         vdW-DF4
   !              "optbk88"="sla+pw+obk8"       = optB88
   !              "ev93"  = "sla+pw+evx+nogc"   = Engel-Vosko
@@ -165,7 +165,7 @@ module funct
   !              "pw86"   Perdew-Wang (1986) exchange    igcx =21
   !              "b86b"   Becke (1986) exchange          igcx =22
   !              "obk8"   optB88  exchange               igcx =23
-  !              "o86b"   optB86b exchange               igcx =24
+  !              "ob86"   optB86b exchange               igcx =24
   !              "evx"    Engel-Vosko exchange           igcx =25
   !              "b86r"   revised Becke (b86b)           igcx =26
   !
@@ -206,7 +206,7 @@ module funct
   !              p86     J.P.Perdew, PRB 33, 8822 (1986)
   !              pw86    J.P.Perdew, PRB 33, 8800 (1986)
   !              b86b    A.D.Becke, J.Chem.Phys. 85, 7184 (1986) 
-  !              o86b    Klimes, Bowler, Michaelides, PRB 83, 195131 (2011)
+  !              ob86    Klimes, Bowler, Michaelides, PRB 83, 195131 (2011)
   !              b86r    I. Hamada, Phys. Rev. B 89, 121103(R) (2014)
   !              pbe     J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
   !              pw91    J.P.Perdew and Y. Wang, PRB 46, 6671 (1992)
