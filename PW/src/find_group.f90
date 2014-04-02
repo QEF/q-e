@@ -244,3 +244,42 @@ ELSE
    call errore('tipo_sym','symmetry not recognized',1)
 ENDIF
 END FUNCTION tipo_sym
+!
+!--------------------------------------------------------------------------
+FUNCTION laue_class(code)
+!--------------------------------------------------------------------------
+! This function receives a code of the point group and provides the
+! code of the point group that defines the Laue class (that is the point 
+! group obtained by multipling by inversion).
+! The order is the following:
+!
+!   1  "C_1 " -> 2   11 "D_6 " -> 23  21 "D_3h" -> 23  31 "O   " -> 32
+!   2  "C_i " -> 2   12 "C_2v" -> 20  22 "D_4h" -> 22  32 "O_h " -> 32
+!   3  "C_s " -> 16  13 "C_3v" -> 25  23 "D_6h" -> 23
+!   4  "C_2 " -> 16  14 "C_4v" -> 22  24 "D_2d" -> 22
+!   5  "C_3 " -> 27  15 "C_6v" -> 23  25 "D_3d" -> 25
+!   6  "C_4 " -> 18  16 "C_2h" -> 16  26 "S_4 " -> 18
+!   7  "C_6 " -> 19  17 "C_3h" -> 19  27 "S_6 " -> 27
+!   8  "D_2 " -> 20  18 "C_4h" -> 18  28 "T   " -> 29
+!   9  "D_3 " -> 25  19 "C_6h" -> 19  29 "T_h " -> 29
+!   10 "D_4 " -> 22  20 "D_2h" -> 20  30 "T_d " -> 32
+!
+IMPLICIT NONE
+
+INTEGER :: code
+INTEGER :: laue_class
+
+INTEGER :: laue(32)
+
+DATA  laue  / 2,   2, 16, 16, 27, 18, 19, 20, 25, 22,  &
+              23, 20, 25, 22, 23, 16, 19, 18, 19, 20,  &
+              23, 22, 23, 22, 25, 18, 27, 29, 29, 32,  &
+              32, 32 /
+
+IF (code < 1 .OR. code > 32 ) CALL errore('laue_class','code is out of range',1)
+
+laue_class=laue(code)
+
+RETURN
+END FUNCTION laue_class
+
