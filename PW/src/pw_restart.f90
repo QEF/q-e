@@ -811,6 +811,7 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       CHARACTER(LEN=256) :: dirname
+      CHARACTER(LEN=80)  :: errmsg
       LOGICAL            :: lcell, lpw, lions, lspin, linit_mag, &
                             lxc, locc, lbz, lbs, lwfc, lheader,          &
                             lsymm, lrho, lefield, ldim, &
@@ -956,7 +957,6 @@ MODULE pw_restart
          !
       ENDIF
       !
-      !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr /=0 ) RETURN
@@ -964,122 +964,155 @@ MODULE pw_restart
       IF ( lheader ) THEN
          !
          CALL read_header( ierr )
-         IF ( ierr > 0 ) ierr = 1
-         IF ( ierr > 0 ) GOTO 100
+         IF ( ierr > 0 ) THEN
+            errmsg='error reading header of xml data file'
+            GOTO 100
+         END IF
          !
       ENDIF
       !
       IF ( ldim ) THEN
          !
          CALL read_dim( ierr )
-         IF ( ierr > 0 ) ierr = 2
-         IF ( ierr > 0 ) GOTO 100
+         IF ( ierr > 0 ) THEN
+            errmsg='error reading dimensions in xml data file'
+            GOTO 100
+         END IF
          !
       ENDIF
       !
       IF ( lcell ) THEN
          !
          CALL read_cell( ierr )
-         IF ( ierr > 0 ) ierr = 3
-         IF ( ierr > 0 ) GOTO 100
+         IF ( ierr > 0 ) THEN
+            errmsg='error reading cell info in xml data file'
+            GOTO 100
+         END IF
          !
       END IF
       IF ( lpw ) THEN
          !
          CALL read_planewaves( ierr )
-         IF ( ierr > 0 ) ierr = 4
-         IF ( ierr > 0 ) GOTO 100
+         IF ( ierr > 0 ) THEN
+            errmsg='error reading plane-wave info in xml data file'
+            GOTO 100
+         END IF
          !
       END IF
       IF ( lions ) THEN
          !
          CALL read_ions( dirname, ierr )
-         IF ( ierr > 0 ) ierr = 5
-         IF ( ierr > 0 ) GOTO 100
+         IF ( ierr > 0 ) THEN
+            errmsg='error reading info on ions in xml data file'
+            GOTO 100
+         END IF
          !
       END IF
       IF ( lspin ) THEN
          !
          CALL read_spin( ierr )
-         IF ( ierr > 0 ) ierr = 6
-         IF ( ierr > 0 ) GOTO 100
+         IF ( ierr > 0 ) THEN
+            errmsg='error reading spin in xml data file'
+            GOTO 100
+         END IF
          !
       END IF
       IF (linit_mag) THEN
          !
-         CALL read_magnetization( ierr )
-         IF ( ierr > 0 ) ierr = 7
-         IF ( ierr > 0 ) GOTO 100
-         !
+         CALL read_magnetization( ierr ) 
+         IF ( ierr > 0 ) THEN
+            errmsg='error reading magnetization in xml data file'
+            GOTO 100
+         END IF
+        !
       ENDIF
       IF ( lxc ) THEN
          !
          CALL read_xc( ierr )
-         IF ( ierr > 0 ) ierr = 8
-         IF ( ierr > 0 ) GOTO 100
+         IF ( ierr > 0 ) THEN
+            errmsg='error reading XC functional in xml data file'
+            GOTO 100
+         END IF
          !
       END IF
       IF ( locc ) THEN
          !
          CALL read_occupations( ierr )
-         IF ( ierr > 0 ) ierr = 9
-         IF ( ierr > 0 ) GOTO 100
+         IF ( ierr > 0 ) THEN
+            errmsg='error reading occupation numbers in xml data file'
+            GOTO 100
+         END IF
          !
       END IF
       IF ( lbz ) THEN
          !
          CALL read_brillouin_zone( ierr )
-         IF ( ierr > 0 ) ierr = 10
-         IF ( ierr > 0 ) GOTO 100
+         IF ( ierr > 0 ) THEN
+            errmsg='error reading Brillouin Zone in xml data file'
+            GOTO 100
+         END IF
          !
       END IF
       IF ( lbs ) THEN
          !
          CALL read_band_structure( dirname, ierr )
-         IF ( ierr > 0 ) ierr = 11
-         IF ( ierr > 0 ) GOTO 100
+         IF ( ierr > 0 ) THEN
+            errmsg='error reading band structure in xml data file'
+            GOTO 100
+         END IF
          !
       END IF
       IF ( lwfc ) THEN
          !
          CALL read_wavefunctions( dirname, ierr )
-         IF ( ierr > 0 ) ierr = 12
-         IF ( ierr > 0 ) GOTO 100
+         IF ( ierr > 0 ) THEN
+            errmsg='error reading wavefunctions in xml data file'
+            GOTO 100
+         END IF
          !
       END IF
       IF ( lsymm ) THEN
          !
          CALL read_symmetry( ierr )
-         IF ( ierr > 0 ) ierr = 13
-         IF ( ierr > 0 ) GOTO 100
+         IF ( ierr > 0 ) THEN
+            errmsg='error reading symmetry in xml data file'
+            GOTO 100
+         END IF
          !
       END IF
       IF ( lefield ) THEN
          !
          CALL read_efield( ierr )
-         IF ( ierr > 0 ) ierr = 14
-         IF ( ierr > 0 ) GOTO 100
+         IF ( ierr > 0 ) THEN
+            errmsg='error reading electric fields in xml data file'
+            GOTO 100
+         END IF
          !
       END IF
       IF ( lrho ) THEN
          !
          ! ... to read the charge-density we use the routine from io_rho_xml 
          ! ... it also reads ns for ldaU and becsum for PAW
+         !
          CALL read_rho( rho, nspin )
          !
       END IF
       IF ( lef ) THEN
          !
          CALL read_ef( ierr )
-         IF ( ierr > 0 ) ierr = 15
-         IF ( ierr > 0 ) GOTO 100
+         IF ( ierr > 0 ) THEN
+            errmsg='error reading Fermi energy in xml data file'
+            GOTO 100
+         END IF
          !
       END IF
       IF ( lexx ) THEN
          !
          CALL read_exx( ierr )
-         IF ( ierr > 0 ) ierr = 16
-         IF ( ierr > 0 ) GOTO 100
+         IF ( ierr > 0 ) THEN
+            errmsg='error reading hybrid functional in xml data file'
+            GOTO 100
+         END IF
          !
       END IF
       !
@@ -1090,17 +1123,20 @@ MODULE pw_restart
       ENDIF
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      IF ( ierr > 0 ) ierr = 17
-      IF ( ierr > 0 ) GO TO 100
+      IF ( ierr > 0 ) THEN
+         errmsg='error closing xml data file'
+         GOTO 100
+      END IF
       !
       RETURN
       !
-      ! necessary because sometimes the error does not block execution
-100   IF (ionode .AND. need_qexml) THEN
-         CALL qexml_closefile( 'read', IERR=tmp)
-      ENDIF
-      CALL errore('pw_readfile','erore!',ierr)
-      RETURN
+      ! uncomment to continue execution after an error occurs
+      ! 100 IF (ionode .AND. need_qexml) THEN
+      !        CALL qexml_closefile( 'read', IERR=tmp)
+      !     ENDIF
+      !     RETURN
+      ! comment to continue execution after an error occurs
+100   CALL errore('pw_readfile',TRIM(errmsg),ierr)
       !
     END SUBROUTINE pw_readfile
     !
