@@ -1479,7 +1479,8 @@ MODULE pw_restart
          !
          CALL qexml_read_ions( NSP=nsp, NAT=nat, ATM=atm, ITYP=ityp, &
                                PSFILE=psfile, AMASS=amass, &
-                                TAU=tau, IF_POS=if_pos, IERR=ierr )
+                               TAU=tau, IF_POS=if_pos, PSEUDO_DIR=pseudo_dir, &
+                               IERR=ierr )
          !
       ENDIF
       !

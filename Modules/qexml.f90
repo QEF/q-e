@@ -2455,7 +2455,7 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexml_read_ions( nsp, nat, atm, ityp, psfile, amass, amass_units, &
-                                tau, tau_units, if_pos, ierr )
+                                tau, tau_units, if_pos, pseudo_dir, ierr )
       !------------------------------------------------------------------------
       !
       INTEGER,          OPTIONAL, INTENT(out) :: nsp, nat
@@ -2467,6 +2467,7 @@ CONTAINS
       REAL(DP),         OPTIONAL, INTENT(out) :: tau(:,:)
       INTEGER,          OPTIONAL, INTENT(out) :: if_pos(:,:)
       CHARACTER(len=*), OPTIONAL, INTENT(out) :: tau_units
+      CHARACTER(len=*), OPTIONAL, INTENT(out) :: pseudo_dir
       INTEGER,                    INTENT(out) :: ierr
       !
       INTEGER                     :: nat_, nsp_
@@ -2474,6 +2475,7 @@ CONTAINS
       INTEGER,        ALLOCATABLE :: ityp_(:)
       CHARACTER(3),   ALLOCATABLE :: atm_(:)
       CHARACTER(256), ALLOCATABLE :: psfile_(:)
+      CHARACTER(256)              :: pseudo_dir_
       REAL(DP),       ALLOCATABLE :: amass_(:)
       REAL(DP),       ALLOCATABLE :: tau_(:,:)
       INTEGER,        ALLOCATABLE :: if_pos_(:,:)
@@ -2538,6 +2540,8 @@ CONTAINS
          !
       ENDDO
       !
+      CALL iotk_scan_dat( iunit, "PSEUDO_DIR", pseudo_dir_ )
+      !
       CALL iotk_scan_empty( iunit, "UNITS_FOR_ATOMIC_POSITIONS", ATTR=attr, IERR=ierr )
       IF (ierr/=0) RETURN
       CALL iotk_scan_attr( attr, "UNITS", tau_units_, IERR=ierr )
@@ -2576,6 +2580,7 @@ CONTAINS
       IF ( present(tau_units) )   tau_units      = trim(tau_units_)
       IF ( present(tau) )         tau(1:3, 1:nat_)    = tau_
       IF ( present(if_pos) )      if_pos(1:3, 1:nat_) = if_pos_
+      IF ( present(pseudo_dir) )  pseudo_dir = pseudo_dir_
       !
       DEALLOCATE( atm_ )
       DEALLOCATE( amass_ )
