@@ -100,12 +100,15 @@ module funct
   !              "olyp"  = "nox+lyp+optx+blyp" = OLYP
   !              "wc"    = "sla+pw+wcx+pbc"    = Wu-Cohen
   !              "sogga" = "sla+pw+sox+pbec"   = SOGGA
+  !              "optbk88"="sla+pw+obk8"       = optB88
+  !              "ev93"  = "sla+pw+evx+nogc"   = Engel-Vosko
   !              "tpss"  = "sla+pw+tpss+tpss"  = TPSS Meta-GGA
   !              "m06l"  = "nox+noc+m6lx+m6lc" = M06L Meta-GGA
   !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
   !              "hse"   = "sla+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof 
   !                                              (HSE 06, see note below)
   !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
+  !              "gaup"  = "sla+pw+gaup+pbc"   = Gau-PBE
   !              "vdw-df"= "sla+pw+rpb+vdw1"   = vdW-DF
   !              "vdw-df2"="sla+pw+rw86+vdw2"  = vdW-DF2
   !              "vdw-df-c09"="sla+pw+c09x+vdw1"  = vdW-DF-C09
@@ -113,8 +116,6 @@ module funct
   !              "vdw-df3"="sla+pw+obk8+vdw1"  = vdW-DF3
   !              "vdw-df4"="sla+pw+ob86+vdw1"  = vdW-DF4
   !              "optb86b-vdw" = same as         vdW-DF4
-  !              "optbk88"="sla+pw+obk8"       = optB88
-  !              "ev93"  = "sla+pw+evx+nogc"   = Engel-Vosko
   !
   ! Any nonconflicting combination of the following keywords is acceptable:
   !
