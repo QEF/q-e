@@ -112,7 +112,6 @@ SUBROUTINE phq_init()
   DO nt = 1, ntyp
      !
      IF (upf(nt)%tcoulombp) then
-        print *,"OBM msh(nt)",msh(nt)
         CALL setlocq_coul ( xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1,nt) )
      ELSE
         CALL setlocq( xq, rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r,&
