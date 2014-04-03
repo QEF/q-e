@@ -15,9 +15,11 @@ b3lyp-O    O       B3LYP hybrid functional (spin polarized), Gamma
 b3lyp-h2o  H2O     structural optimization with B3LYP, unpolarized, Gamma
 cluster  N,NH4,H2O Martyna-Tuckermann method for isolated systems
            NH4     Makov-Payne correction for isolated systems
+dft*       Si      Various flavours of XC (GGA, no hybrid-meta-nonlocal XC)
 dipole    CO on Ni dipole field correction
 electric   Si      finite electric field using Berry's phase approach
 eval_infix Si      parser
+gau-pbe    Si      GAU-PBE functional
 hse-si111  Si      HSE hybrid functional, nq=1
 hse-si222  Si      HSE hybrid functional, nq=2
 hse-si444  Si      HSE hybrid functional, nq=4
@@ -82,6 +84,7 @@ vc-md     As       Variable-cell dynamics (Wentzcovitch dynamics)
                    at zero pressure and under an external pressure
 vdw-d     C        Dispersion (van der Waals) interactions with DFT-D (Grimme)
 vdw[1-4]  C        As above, with vdW-DF[1-4] (nonlocal) functionals
+vdw5      C        As above, with vdW-DF-C09  (nonlocal) functionals
 vdw-ts    C        As above, Tkatchenko-Scheffler
 xdm       C        XDM dispersion correction.
 
