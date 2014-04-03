@@ -18,7 +18,6 @@ MODULE io_dyn_mat
   USE kinds,     ONLY : DP
   USE io_global, ONLY : ionode, ionode_id
   USE mp_images, ONLY : intra_image_comm
-  USE mp_images, ONLY : intra_image_comm
   USE mp,        ONLY : mp_bcast
   !
   IMPLICIT NONE
