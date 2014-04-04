@@ -299,6 +299,7 @@ lr_readin.o : ../../Modules/kind.o
 lr_readin.o : ../../Modules/mp.o
 lr_readin.o : ../../Modules/mp_bands.o
 lr_readin.o : ../../Modules/mp_global.o
+lr_readin.o : ../../Modules/mp_images.o
 lr_readin.o : ../../Modules/mp_world.o
 lr_readin.o : ../../Modules/paw_variables.o
 lr_readin.o : ../../Modules/recvec.o

@@ -115,21 +115,13 @@ for dir in $dirs; do
             sed 's/@fftw.c@/fftw.c/' make.depend.tmp > make.depend
         fi
 
-        if test "$DIR" = "PW/src"
+        if test "$DIR" = "PW/src" || test "$DIR" = "TDDFPT/src"
         then
-            mv make.depend make.depend.tmp
-            sed '/@environ_base@/d' make.depend.tmp > make.depend
-        fi
-
-        if test "$DIR" = "TDDFPT/src"
-        then
-            mv make.depend make.depend.tmp
-            sed '/@environ_base@/d' make.depend.tmp > make.depend
-        fi
-
-        if test "$DIR" = "TDDFPT/src"
-        then
-            mv make.depend make.depend.tmp
+            sed '/@environ_base@/d' make.depend > make.depend.tmp
+            sed '/@environ_info@/d' make.depend.tmp > make.depend
+            sed '/@environ_init@/d' make.depend > make.depend.tmp
+            sed '/@environ_main@/d' make.depend.tmp > make.depend
+            sed '/@environ_mp@/d'   make.depend > make.depend.tmp
             sed '/@solvent_tddfpt@/d' make.depend.tmp > make.depend
         fi
 
