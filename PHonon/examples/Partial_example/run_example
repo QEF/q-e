@@ -173,7 +173,8 @@ check_failure $?
 $ECHO " done"
 
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
+rm -rf $TMP_DIR/ch4*
+rm -rf $TMP_DIR/_ph0/ch4*
 $ECHO " done"
 
 $ECHO "  running the scf calculation for CH4...\c"
