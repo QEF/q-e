@@ -637,8 +637,7 @@ subroutine solve_lanczos_2(numpw,numt,numl,nbuf,mbuf, alpha,lc, iv0,nbndv,&
   LOGICAL, INTENT(in) :: l_verbose
 
   INTEGER :: io,info
-!  COMPLEX(kind=DP), ALLOCATABLE :: dl(:),du(:),d(:),t(:)
-  COMPLEX(kind=DP) :: dl(100),du(100),d(100),t(100)
+  COMPLEX(kind=DP), ALLOCATABLE :: dl(:),du(:),d(:),t(:)
   REAL(kind=DP), ALLOCATABLE :: tr(:,:)
   INTEGER :: l_blk,nbegin,nend
   REAL(kind=DP), ALLOCATABLE :: e_mat_ip(:,:)
@@ -667,7 +666,7 @@ subroutine solve_lanczos_2(numpw,numt,numl,nbuf,mbuf, alpha,lc, iv0,nbndv,&
   else
      factor=-2.d0
   endif
- ! allocate(dl(lc%num_steps-1),du(lc%num_steps-1),d(lc%num_steps),t(lc%num_steps))
+  allocate(dl(lc%num_steps-1),du(lc%num_steps-1),d(lc%num_steps),t(lc%num_steps))
  
 
   ierr=0
@@ -813,7 +812,7 @@ subroutine solve_lanczos_2(numpw,numt,numl,nbuf,mbuf, alpha,lc, iv0,nbndv,&
                  stop
               endif
 !!calculate term
-              tr(:,io-nbegin+1)=dble(t(:))
+              tr(1:lc%num_steps,io-nbegin+1)=dble(t(1:lc%num_steps))
            enddo
 !$OMP END DO 
 !           deallocate(dl,du,d,t)
@@ -907,7 +906,7 @@ subroutine solve_lanczos_2(numpw,numt,numl,nbuf,mbuf, alpha,lc, iv0,nbndv,&
   if(l_qo) deallocate(qo_mat)
   deallocate(displ,recvcounts)
   deallocate(e_mat_ip)
-  !deallocate(dl,du,d,t)
+  deallocate(dl,du,d,t)
   deallocate(tr)
   if(l_t_wannier) then
      deallocate(tmp_mat)
