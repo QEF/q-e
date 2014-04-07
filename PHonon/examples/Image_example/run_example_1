@@ -149,7 +149,7 @@ Phonon dispersions for Al
   nq1=4, nq2=4, nq3=4,
  /
 EOF
-$ECHO "  running the ph calculation...\c"
+$ECHO "  running the ph calculation using images...\c"
 $PH_IMAGE_COMMAND < al.ph.disp.in > al.ph.disp.out
 check_failure $?
 $ECHO "  done"
