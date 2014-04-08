@@ -91,6 +91,7 @@ SUBROUTINE run_nscf(do_band, iq)
 !
      CALL punch( 'config' )
      CALL stop_run( -1 )
+     CALL do_stop( 1 )
   ENDIF
 
   !
