@@ -225,16 +225,7 @@ SUBROUTINE print_clock_pw()
    END IF
 
    call print_clock('h_epsi_set')
-   call print_clock('h_epsi_set_van')
    call print_clock('h_epsi_apply')
-   call print_clock('h_eps_ap_van')
-   call print_clock('h_eps_van2')
-   call print_clock('h_epsi_set1')
-   call print_clock('h_epsi_set2')
-   call print_clock('h_epsi_set3')
-   call print_clock('h_epsi_set4')
-   call print_clock('h_epsi_set41')
-   call print_clock('h_epsi_set31')
    call print_clock('c_phase_field')
   !
    CALL plugin_clock()

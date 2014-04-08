@@ -348,7 +348,7 @@ SUBROUTINE electrons_scf ( no_printout )
   USE esm,                  ONLY : do_comp_esm, esm_printpot
   USE iso_c_binding,        ONLY : c_int
   !
-  !USE plugin_variables,     ONLY : plugin_etot
+  USE plugin_variables,     ONLY : plugin_etot
   !
   IMPLICIT NONE
   !
@@ -648,7 +648,7 @@ SUBROUTINE electrons_scf ( no_printout )
         !
      END DO scf_step
      !
-     !plugin_etot = 0.0_dp
+     plugin_etot = 0.0_dp
      !
      CALL plugin_scf_energy()
      !
@@ -762,7 +762,7 @@ SUBROUTINE electrons_scf ( no_printout )
      !
      ! ... adds possible external contribution from plugins to the energy
      !
-     etot = etot! + !plugin_etot 
+     etot = etot + plugin_etot 
      !
      IF ( .NOT. no_printout ) CALL print_energies ( )
      !

@@ -168,7 +168,6 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
    REAL(dp) :: dkfact
    COMPLEX(dp) :: zeta_tot
 
-   LOGICAL :: l_para! if true new parallel treatment
    COMPLEX(kind=DP) :: sca
    COMPLEX(kind=DP), ALLOCATABLE :: aux_g(:),aux_g_mpi(:,:),aux_proc(:,:),aux_rcv(:,:)
    COMPLEX(DP), ALLOCATABLE :: dbecp0(:,:,:), dbecp_bp(:,:,:),vkb1(:,:)
@@ -193,7 +192,6 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
 !  -------------------------------------------------------------------------   !
 
 
-!   call start_clock('fb_tot')
 
 
    allocate(ind_g(nproc))
@@ -220,12 +218,6 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
       IF (lspinorb) ALLOCATE(q_dk_so(nhm,nhm,4,ntyp))
    endif
 
-   if(pdir==3) then
-      l_para=.false.
-   else
-      l_para=.true.
-   endif
-
 
    pola=0.d0 !set to 0 electronic polarization   
    zeta_tot=(1.d0,0.d0)
@@ -239,13 +231,14 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
 
 !  --- Recalculate FFT correspondence (see ggen.f90) ---
    ALLOCATE (ln (-dfftp%nr1:dfftp%nr1, -dfftp%nr2:dfftp%nr2, -dfftp%nr3:dfftp%nr3) )
+   ln=0
    DO ng=1,ngm
       mk1=nint(g(1,ng)*at(1,1)+g(2,ng)*at(2,1)+g(3,ng)*at(3,1))
       mk2=nint(g(1,ng)*at(1,2)+g(2,ng)*at(2,2)+g(3,ng)*at(3,2))
       mk3=nint(g(1,ng)*at(1,3)+g(2,ng)*at(2,3)+g(3,ng)*at(3,3))
       ln(mk1,mk2,mk3) = ng
    END DO
-
+   call mp_sum(ln,world_comm)
    if (okvan) then
 !  --- Initialize arrays ---
       jkb_bp=0
@@ -417,13 +410,13 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
 
 !        --- Start loop over parallel k-points ---
          DO kpar = 1,nppstr_3d(pdir)+1
-!            call start_clock('fb_1')
+
 !           --- Set index of k-point ---
             kpoint = kpoint + 1
 
 !           --- Calculate dot products between wavefunctions and betas ---
             IF (kpar /= 1 ) THEN
-!               call start_clock('fb_5')
+
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
                CALL gk_sort(xk(1,nx_el(kpoint-1,pdir)),ngm,g,ecutwfc/tpiba2, &
                             npw0,igk0,g2kin_bp) 
@@ -444,11 +437,11 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                           call mp_sum(dbecp0(1:nkb,1:nbnd*npol,ipol),world_comm)
                   ENDDO
                endif
-!               call stop_clock('fb_5')
+
            
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
                IF (kpar /= (nppstr_3d(pdir)+1)) THEN
-!                  call start_clock('fb_3')
+
                   CALL gk_sort(xk(1,nx_el(kpoint,pdir)),ngm,g,ecutwfc/tpiba2, &
                                npw1,igk1,g2kin_bp)        
                   CALL get_buffer (psi1,nwordwfc,iunwfc,nx_el(kpoint,pdir))
@@ -468,9 +461,9 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                              call mp_sum(dbecp_bp(1:nkb,1:nbnd*npol,ipol),world_comm)
                      ENDDO
                   endif
-!                  call stop_clock('fb_3')
+
                ELSE
-!                  call start_clock('fb_4')
+
                   kstart = kpoint-(nppstr_3d(pdir)+1)+1
                   CALL gk_sort(xk(1,nx_el(kstart,pdir)),ngm,g,ecutwfc/tpiba2, &
                                npw1,igk1,g2kin_bp)  
@@ -491,62 +484,11 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                              call mp_sum(dbecp_bp(1:nkb,1:nbnd*npol,ipol),world_comm)
                      ENDDO
                   endif
-!                  call stop_clock('fb_4')
+
                ENDIF
            
 !              --- Matrix elements calculation ---
 
-!               call start_clock('fb_2')
-               
-               IF (kpar == (nppstr_3d(pdir)+1) .and. .not.l_para) THEN
-!                  call start_clock('fb_2_1')
-                  map_g(:) = 0
-                  do ig=1,npw1
-!                          --- If k'=k+G_o, the relation psi_k+G_o (G-G_o) ---
-!                          --- = psi_k(G) is used, gpar=G_o, gtr = G-G_o ---
-                           
-                     gtr(1)=g(1,igk1(ig)) - gpar(1)
-                     gtr(2)=g(2,igk1(ig)) - gpar(2) 
-                     gtr(3)=g(3,igk1(ig)) - gpar(3) 
-!                          --- Find crystal coordinates of gtr, n1,n2,n3 ---
-!                          --- and the position ng in the ngm array ---
-                     IF (gtr(1)**2+gtr(2)**2+gtr(3)**2 <= gcutm) THEN
-                        n1=NINT(gtr(1)*at(1,1)+gtr(2)*at(2,1) &
-                             +gtr(3)*at(3,1))
-                        n2=NINT(gtr(1)*at(1,2)+gtr(2)*at(2,2) &
-                             +gtr(3)*at(3,2))
-                        n3=NINT(gtr(1)*at(1,3)+gtr(2)*at(2,3) &
-                             +gtr(3)*at(3,3))
-                        ng=ln(n1,n2,n3) 
-                        IF ( (ABS(g(1,ng)-gtr(1)) > eps) .OR. &
-                             (ABS(g(2,ng)-gtr(2)) > eps) .OR. &
-                             (ABS(g(3,ng)-gtr(3)) > eps) ) THEN
-                           WRITE(6,*) ' error: translated G=', &
-                                gtr(1),gtr(2),gtr(3), &
-                                &     ' with crystal coordinates',n1,n2,n3, &
-                                &     ' corresponds to ng=',ng,' but G(ng)=', &
-                                &     g(1,ng),g(2,ng),g(3,ng)
-                           WRITE(6,*) ' probably because G_par is NOT', &
-                                &    ' a reciprocal lattice vector '
-                           WRITE(6,*) ' Possible choices as smallest ', &
-                                ' G_par:'
-                           DO i=1,50
-                              WRITE(6,*) ' i=',i,'   G=', &
-                                   g(1,i),g(2,i),g(3,i)
-                           ENDDO
-                           STOP
-                        ENDIF
-                     ELSE 
-                        WRITE(6,*) ' |gtr| > gcutm  for gtr=', &
-                             gtr(1),gtr(2),gtr(3) 
-                        STOP
-                     END IF
-                     map_g(ig)=ng
-                  enddo 
-!                  call stop_clock('fb_2_1')
-               ENDIF
-
-!               call start_clock('fb_2_2')
                mat=(0.d0,0.d0)
                DO nb=1,nbnd
                   aux=(0.d0,0.d0)
@@ -586,28 +528,11 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                            call mp_sum( mat(nb,mb), intra_bgrp_comm )
                         END IF
                      END DO
-                  ELSE IF( .not. l_para) THEN
-                     DO mb=1,nbnd
-                        IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
-                           IF ( nb == mb )  mat(nb,mb)=1.d0
-                        ELSE
-                           
-                           do ig=1,npw1
-                              aux(map_g(ig))=psi1(ig,mb)
-                           enddo
-                           IF(noncolin) THEN
-                              do ig=1,npw1
-                                 aux_2(map_g(ig))=psi1(ig+npwx,mb)
-                              enddo
-                           END IF
-                        end IF
-                     end DO
-                  end IF
-               end DO
+                  END IF
+               END DO
            
-               IF (kpar == (nppstr_3d(pdir)+1).and. l_para) THEN
+               IF (kpar == (nppstr_3d(pdir)+1) ) THEN
                      
-!                  call start_clock('fb_2_3')
 ! allocate global array
                   
                   allocate(aux_g(ngm_g),aux_g_mpi(ngmx,nproc),aux_g_mpi_ind(ngmx,nproc))
@@ -662,7 +587,6 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                         enddo
 
                         
-!                        call start_clock('fb_2_sum')
 #if defined (__MPI)
                         CALL MPI_ALLTOALL( aux_proc, max_aux, MPI_DOUBLE_COMPLEX,  &
                              aux_rcv, max_aux, MPI_DOUBLE_COMPLEX, world_comm, ierr )
@@ -672,8 +596,6 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                         aux_rcv(1:max_aux)=aux_proc(1:max_aux)
                         aux_rcv_ind(1:max_aux)=aux_proc_ind(1:max_aux)
 #endif
-!                        call stop_clock('fb_2_sum')
-                        
 
                         
                         do nb=1,nbnd
@@ -742,7 +664,6 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                      enddo
                   enddo
                   deallocate(aux_g,aux_g_mpi,aux_g_mpi_ind)
-!                  call stop_clock('fb_2_3')
                   
                          
                ENDIF
@@ -751,7 +672,6 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                      IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
                       
 
-!                     call start_clock('fb_2_4')
 !                    --- Calculate the augmented part: ij=KB projectors, ---
 !                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
 !                    --- <beta_jR|u_mk'> e^i(k-k')*R =                   ---
@@ -784,28 +704,24 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                       
                            mat(nb,mb) = mat(nb,mb) + pref
                         endif
-!                        call stop_clock('fb_2_4')
                      endif !on l_cal
                   ENDDO
                ENDDO
                
-!               call stop_clock('fb_2_2')
-!               call stop_clock('fb_2')
-               !              --- Calculate matrix determinant ---
+!              --- Calculate matrix determinant ---
 
 ! calculate inverse
-!               call start_clock('fb_6')
+!              
 
                CALL zgefa(mat,nbnd,nbnd,ivpt,info)
                CALL errore('forces_us_efield','error in zgefa',abs(info))
                CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
 
-!               call stop_clock('fb_6')
                
 !calculate terms
-!               call start_clock('fb_7')
+
                forces_tmp(:,:)=(0.d0,0.d0)
-              ! call start_clock('fb_7')
+
                if(okvan) then
                   allocate(fbmatb_1(nkb,npol,nkb,npol),fbmata_1(nbnd,nkb,npol))
                   allocate(fbmatb_2(nkb,npol,nkb,npol,3),fbmata_2(nbnd,nkb,npol,3))
@@ -932,16 +848,13 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                   deallocate(fbmata_2,fbmatb_2)
                   deallocate(fbmata_3,fbmatb_3)
                endif
-               !call stop_clock('fb_7')
+
                forces_bp(:,:)=forces_bp(:,:)+fact*aimag(forces_tmp(:,:))*wstring(istring)
-!               call stop_clock('fb_7')
-             
 
 !           --- End of dot products between wavefunctions and betas ---
             ENDIF
 
 !        --- End loop over parallel k-points ---
-!            call stop_clock('fb_1')
           
          END DO
          kpoint=kpoint-1
@@ -976,22 +889,6 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
    DEALLOCATE(dbecp0,dbecp0_ord,dbecp_bp,dbecp_bp_ord)
 
    DEALLOCATE(ind_g)
-
-!   call stop_clock('fb_tot')
-!   call print_clock('fb_tot')
-!   call print_clock('fb_1')
-!   call print_clock('fb_2')
-!   call print_clock('fb_2_1')
-!   call print_clock('fb_2_2')
-!   call print_clock('fb_2_3')
-!   call print_clock('fb_2_4')
-!   call print_clock('fb_2_sum')
-!   call print_clock('fb_3')
-!   call print_clock('fb_4')
-!   call print_clock('fb_5')
-!   call print_clock('fb_6')
-!   call print_clock('fb_7')
-
 
 
 !------------------------------------------------------------------------------!

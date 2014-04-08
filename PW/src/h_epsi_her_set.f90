@@ -236,7 +236,7 @@ subroutine h_epsi_her_set(pdir, e_field)
       END DO
 
       ik_stringa=mod(ik-1,nppstr_3d(pdir))+1
-      !nstring=nks/nppstr_3d(pdir)
+     
  
       if(okvan) then
 !  --- Initialize arrays ---
@@ -340,7 +340,7 @@ subroutine h_epsi_her_set(pdir, e_field)
 
 !       
       if(ik_stringa /= 1) then
-         call start_clock('h_epsi_set1')
+
          CALL gk_sort(xk(1,nx_el(ik-1,pdir)),ngm,g,ecutwfc/tpiba2, &
               &    npw0,igk0,g2kin_bp) 
          CALL get_buffer (evct,nwordwfc,iunwfc,nx_el(ik-1,pdir))
@@ -535,12 +535,11 @@ subroutine h_epsi_her_set(pdir, e_field)
                enddo
             enddo
          endif
-         call stop_clock('h_epsi_set1')
+
  
 !           --- End of dot products between wavefunctions and betas ---
       ELSE !(ik_stringa == 1)
-         call start_clock('h_epsi_set2')
-
+      
          CALL gk_sort(xk(1,nx_el(ik+nppstr_3d(pdir)-1,pdir)),ngm,g,ecutwfc/tpiba2, &
            &   npw0,igk0,g2kin_bp) 
          CALL get_buffer (evct,nwordwfc,iunwfc,nx_el(ik+nppstr_3d(pdir)-1,pdir))
@@ -835,7 +834,7 @@ subroutine h_epsi_her_set(pdir, e_field)
                enddo
             enddo
          endif
-         call stop_clock('h_epsi_set2')
+
       ENDIF
 
 ! calculate  S-1(k,k+1)
@@ -843,7 +842,6 @@ subroutine h_epsi_her_set(pdir, e_field)
     
 !       
       if(ik_stringa /= nppstr_3d(pdir)) then
-         call start_clock('h_epsi_set3')
          CALL gk_sort(xk(1,nx_el(ik+1,pdir)),ngm,g,ecutwfc/tpiba2, &
            &    npw0,igk0,g2kin_bp) 
          CALL get_buffer (evct,nwordwfc,iunwfc,nx_el(ik+1,pdir))
@@ -883,7 +881,6 @@ subroutine h_epsi_her_set(pdir, e_field)
 
         IF(mdone(nx_el(ik+1,pdir))==0) THEN
          mat=(0.d0,0.d0)
-         call start_clock('h_epsi_set31')
          allocate(aux0vec(ngm,nbnd),aux1vec(ngm,nbnd))
          aux0vec=(0.d0,0.d0)
          aux1vec=(0.d0,0.d0)
@@ -915,39 +912,11 @@ subroutine h_epsi_her_set(pdir, e_field)
          endif
          deallocate(aux0vec,aux1vec)
 
-!         DO nb=1,nbnd
-!            DO mb=1,nbnd
-!               IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
-!                  IF ( nb == mb )  mat(nb,mb)=1.d0
-!               ELSE
-!                  aux=(0.d0,0.d0)
-!                  aux0=(0.d0,0.d0)
-!                  IF(noncolin) aux_2=(0.d0,0.d0)
-!                  IF(noncolin) aux0_2=(0.d0,0.d0)
-!                  DO ig=1,npw1
-!                     aux0(igk1(ig))=evcel(ig,nb)
-!                     if (noncolin) aux0_2(igk1(ig))=evcel(ig+npwx,nb)
-!                  END DO
-!                  DO ig=1,npw0
-!                     aux(igk0(ig))=evct(ig,mb)
-!                     if (noncolin) aux_2(igk0(ig))=evct(ig+npwx,mb)
-!                  END DO
-!                  mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
-!                  if (noncolin) mat(nb,mb)=mat(nb,mb)+zdotc(ngm,aux0_2,1,aux_2,1)
 
-!                    --- Calculate the augmented part: ij=KB projectors, ---
-!                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
-!                    --- <beta_jR|u_mk'> e^i(k-k')*R =                   ---
-!                    --- also <u_nk|beta_iR>=<psi_nk|beta_iR> = becp^*   ---
-
-!            endif
-!         END DO
-!      END DO
-      call stop_clock('h_epsi_set31')
       !
       call mp_sum( mat, intra_bgrp_comm )
       !
-      call start_clock('h_epsi_set_van')
+
       DO nb=1,nbnd
          DO mb=1,nbnd
             IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
@@ -982,7 +951,7 @@ subroutine h_epsi_her_set(pdir, e_field)
             ENDIF
          ENDDO
       ENDDO
-      call stop_clock('h_epsi_set_van')
+
 
 !              --- Calculate matrix inverse ---
       CALL zgefa(mat,nbnd,nbnd,ivpt,info)
@@ -1055,8 +1024,7 @@ subroutine h_epsi_her_set(pdir, e_field)
 
          call ZGEMM ('N', 'N', npw1, nbnd*npol , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the last ik read
                  npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx)
-         call start_clock('h_epsi_set31')
-         
+                 
          evct(npw1+1:npwx,1:nbnd)=(0.d0,0.d0)
          if(noncolin) evct(npwx+npw1+1:2*npwx,1:nbnd)=(0.d0,0.d0)
          evcp(npw1+1:npwx,1:nbnd,pdir)=(0.d0,0.d0)
@@ -1071,23 +1039,13 @@ subroutine h_epsi_her_set(pdir, e_field)
 
 
 
-   !      do m=1,nbnd
-   !         do nb=1,nbnd
-   !            do ig=1,npw1
-   !               evcp(ig,m,pdir)=evcp(ig,m,pdir) + mat(nb,m)*evct(ig,nb)
-   !            enddo
-   !            if(noncolin) then
-   !               evcp(ig+npwx,m,pdir)=evcp(ig+npwx,m,pdir) + mat(nb,m)*evct(ig+npwx,nb)
-   !            endif
-   !         enddo
-   !      enddo
-         call stop_clock('h_epsi_set31')
+
       endif
          
 !           --- End of dot products between wavefunctions and betas ---
-      call stop_clock('h_epsi_set3')
+     
    else
-      call start_clock('h_epsi_set4')
+     
       CALL gk_sort(xk(1,nx_el(ik-nppstr_3d(pdir)+1,pdir)),ngm,g,ecutwfc/tpiba2, &
            &    npw0,igk0,g2kin_bp) 
       CALL get_buffer (evct,nwordwfc,iunwfc,nx_el(ik-nppstr_3d(pdir)+1,pdir))
@@ -1301,7 +1259,7 @@ subroutine h_epsi_her_set(pdir, e_field)
             ENDIF
          enddo
       else
-         call start_clock('h_epsi_set41')
+
 !allocate
          allocate(aux_g(ngm_g))
          IF (noncolin) allocate(aux_g_2(ngm_g))
@@ -1326,7 +1284,6 @@ subroutine h_epsi_her_set(pdir, e_field)
          enddo
           deallocate(aux_g)
           IF (noncolin) deallocate(aux_g_2)
-          call stop_clock('h_epsi_set41')
        endif
       if(okvan) then
          evct(:,:) =  (0.d0, 0.d0)
@@ -1375,7 +1332,7 @@ subroutine h_epsi_her_set(pdir, e_field)
             enddo
          enddo
       endif
-      call stop_clock('h_epsi_set4')
+
    ENDIF
    
 
