@@ -19,7 +19,8 @@ MODULE bp
   PUBLIC:: lberry, lelfield, lorbm, gdir, nppstr, nberrycyc, evcel, evcelp, evcelm, &
            fact_hepsi, bec_evcel, mapgp_global, mapgm_global, nppstr_3d, &
            ion_pol, el_pol, fc_pol, l_el_pol_old, el_pol_old, el_pol_acc, &
-           nx_el, l3dstring, efield, efield_cart, efield_cry, transform_el
+           nx_el, l3dstring, efield, efield_cart, efield_cry, transform_el,&
+           mapg_owner
   PUBLIC :: lcalc_z2, z2_m_threshold, z2_z_threshold
   PUBLIC :: allocate_bp_efield, deallocate_bp_efield, bp_global_map
   !
@@ -65,6 +66,7 @@ MODULE bp
   REAL(DP) :: efield_cart(3)   ! electric field vector in cartesian units
   REAL(DP) :: efield_cry(3)    ! electric field vector in crystal units
   REAL(DP) :: transform_el(3,3)! transformation matrix from cartesian coordinates to normed reciprocal space
+  INTEGER, ALLOCATABLE :: mapg_owner(:,:)
 !
 CONTAINS
  
@@ -79,6 +81,7 @@ CONTAINS
    IF ( lberry .OR. lelfield .OR. lorbm .OR. lcalc_z2) THEN
       ALLOCATE(mapgp_global(ngm_g,3))
       ALLOCATE(mapgm_global(ngm_g,3))
+      ALLOCATE(mapg_owner(2,ngm_g))
    ENDIF
 
    l_el_pol_old=.false.
@@ -97,6 +100,7 @@ CONTAINS
       IF ( ALLOCATED(mapgp_global) ) DEALLOCATE(mapgp_global)
       IF ( ALLOCATED(mapgm_global) ) DEALLOCATE(mapgm_global)
       IF ( ALLOCATED(nx_el) ) DEALLOCATE(nx_el)
+      IF ( ALLOCATED(mapg_owner) ) DEALLOCATE (mapg_owner)
    ENDIF
 
    RETURN
@@ -107,7 +111,7 @@ CONTAINS
     !this subroutine sets up the global correspondence map G+1 and G-1
 
     USE mp,                   ONLY : mp_sum
-    USE mp_world,             ONLY : world_comm
+    USE mp_world,             ONLY : world_comm,mpime,nproc
     USE gvect,                ONLY : ngm_g, g, ngm, ig_l2g
     USE fft_base,             ONLY : dfftp
     USE cell_base,            ONLY : at
@@ -159,8 +163,15 @@ CONTAINS
           mapgm_global(ig,idir)=ln_g(imk(1),imk(2),imk(3))
        ENDDO
     ENDDO
-    DEALLOCATE(ln_g,g_ln)
 
+    mapg_owner=0
+    DO ig=1,ngm
+       mapg_owner(1,ig_l2g(ig))=mpime+1
+       mapg_owner(2,ig_l2g(ig))=ig
+    END DO
+    call mp_sum(mapg_owner, world_comm)
+
+    DEALLOCATE(ln_g,g_ln)
 
     RETURN
 

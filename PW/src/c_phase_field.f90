@@ -114,11 +114,11 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    REAL(dp), ALLOCATABLE :: wstring(:)
    REAL(dp) :: ylm_dk(lmaxq*lmaxq)
    REAL(dp) :: zeta_mod
-   COMPLEX(dp), ALLOCATABLE :: aux(:)
-   COMPLEX(dp), ALLOCATABLE :: aux0(:)
+   COMPLEX(dp), ALLOCATABLE :: aux(:,:)
+   COMPLEX(dp), ALLOCATABLE :: aux0(:,:)
    ! For noncollinear calculations
-   COMPLEX(dp), ALLOCATABLE :: aux_2(:)
-   COMPLEX(dp), ALLOCATABLE :: aux0_2(:)
+   COMPLEX(dp), ALLOCATABLE :: aux_2(:,:)
+   COMPLEX(dp), ALLOCATABLE :: aux0_2(:,:)
     COMPLEX(dp) , ALLOCATABLE :: cphik(:)
    COMPLEX(dp) :: det
    COMPLEX(dp) :: mat(nbnd,nbnd)
@@ -148,15 +148,18 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
 !  -------------------------------------------------------------------------   !
 !                               INITIALIZATIONS
 !  -------------------------------------------------------------------------   !
+
+   call start_clock('c_phase_field')
+
    ALLOCATE (psi1(npol*npwx,nbnd))
    ALLOCATE (psi(npol*npwx,nbnd))
-   ALLOCATE (aux(ngm))
-   ALLOCATE (aux0(ngm))
+   ALLOCATE (aux(ngm,nbnd))
+   ALLOCATE (aux0(ngm,nbnd))
    nspinnc=nspin
    IF (noncolin) THEN
       nspinnc=1
-      ALLOCATE (aux_2(ngm))
-      ALLOCATE (aux0_2(ngm))
+      ALLOCATE (aux_2(ngm,nbnd))
+      ALLOCATE (aux0_2(ngm,nbnd))
    END IF
    ALLOCATE (map_g(npwx))
    ALLOCATE (l_cal(nbnd))
@@ -428,21 +431,21 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
                ENDIF
 
                mat=(0.d0,0.d0)
+               aux=(0.d0,0.d0)
+               if(noncolin) aux_2=(0.d0,0.d0)
                DO mb=1,nbnd
                   IF ( .NOT. l_cal(mb) ) THEN
                      mat(mb,mb)=(1.d0, 0.d0)
                   ELSE
-                     aux=(0.d0,0.d0)
-                     IF (noncolin) aux_2=(0.d0,0.d0)
                      IF (kpar /= (nppstr_3d(pdir)+1)) THEN
                         DO ig=1,npw1
-                           aux(igk1(ig))=psi1(ig,mb)
-                           IF (noncolin) aux_2(igk1(ig))=psi1(ig+npwx,mb)
+                           aux(igk1(ig),mb)=psi1(ig,mb)
+                           IF (noncolin) aux_2(igk1(ig),mb)=psi1(ig+npwx,mb)
                         ENDDO
                      ELSE IF( .not. l_para) THEN
                         DO ig=1,npw1
-                           aux(map_g(ig))=psi1(ig,mb)
-                           IF (noncolin) aux_2(map_g(ig))=psi1(ig+npwx,mb)
+                           aux(map_g(ig),mb)=psi1(ig,mb)
+                           IF (noncolin) aux_2(map_g(ig),mb)=psi1(ig+npwx,mb)
                         ENDDO
                      ELSE
 ! allocate global array
@@ -458,27 +461,40 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
                         CALL mp_sum(aux_g(:),world_comm)
                         IF (noncolin) CALL mp_sum(aux_g_2(:),world_comm) !non-collinear
                         DO ig=1,ngm
-                           aux(ig) = aux_g(ig_l2g(ig))
-                           IF (noncolin) aux_2(ig) = aux_g_2(ig_l2g(ig))
+                           aux(ig,mb) = aux_g(ig_l2g(ig))
+                           IF (noncolin) aux_2(ig,mb) = aux_g_2(ig_l2g(ig))
                         ENDDO
                         DEALLOCATE (aux_g)
                         IF(noncolin) DEALLOCATE (aux_g_2)
                      END IF
-                     DO nb=1,nbnd
-                        IF ( l_cal(nb) ) THEN
-                           aux0=(0.d0,0.d0)
-                           IF(noncolin) aux0_2=(0.d0,0.d0)
-                           DO ig=1,npw0
-                              aux0(igk0(ig))=psi(ig,nb)
-                              IF(noncolin) aux0_2(igk0(ig))=psi(ig+npwx,nb)
-                           END DO
-! do scalar product
-                           mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
-                           IF (noncolin) mat(nb,mb) = mat(nb,mb)+zdotc(ngm,aux0_2,1,aux_2,1)
-                        END IF                           
-                     ENDDO
                   END IF
+               END DO
+               aux0=(0.d0,0.d0)
+               if(noncolin) aux0_2=(0.d0,0.d0)
+               DO nb=1,nbnd
+                  DO ig=1,npw0
+                     aux0(igk0(ig),nb)=psi(ig,nb)
+                     IF(noncolin) aux0_2(igk0(ig),nb)=psi(ig+npwx,nb)
+                  END DO
                ENDDO
+               call ZGEMM('C','N',nbnd,nbnd,ngm,(1.d0,0.d0),aux0,ngm,aux,ngm,(0.d0,0.d0),mat,nbnd)
+               if(noncolin) call ZGEMM('C','N',nbnd,nbnd,ngm,(1.d0,0.d0),aux0_2,ngm,aux_2,ngm,(1.d0,0.d0),mat,nbnd)
+
+           !    DO nb=1,nbnd
+           !       IF ( l_cal(nb) ) THEN
+           !                aux0=(0.d0,0.d0)
+           !                IF(noncolin) aux0_2=(0.d0,0.d0)
+           !                DO ig=1,npw0
+           !                   aux0(igk0(ig))=psi(ig,nb)
+           !                   IF(noncolin) aux0_2(igk0(ig))=psi(ig+npwx,nb)
+           !                END DO
+! do scalar product
+           !                mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
+           !                IF (noncolin) mat(nb,mb) = mat(nb,mb)+zdotc(ngm,aux0_2,1,aux_2,1)
+           !             END IF                           
+           !          ENDDO
+           !       END IF
+           !    ENDDO
 !
                CALL  mp_sum( mat, intra_bgrp_comm )
 
@@ -616,6 +632,8 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
       call deallocate_bec_type(becp_bp)
       IF (lspinorb) DEALLOCATE(q_dk_so)
    endif
+   call stop_clock('c_phase_field')
+
 !------------------------------------------------------------------------------!
 
 END SUBROUTINE c_phase_field

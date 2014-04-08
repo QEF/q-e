@@ -100,8 +100,8 @@ SUBROUTINE setup()
   IF ( okvan .OR. okpaw ) THEN
      IF ( dft_is_meta() ) CALL errore( 'setup', &
                           'US/PAW and Meta-GGA not yet implemented', 1 )
-     IF ( noncolin .AND. (lberry.OR.lelfield) )  CALL errore( 'iosys', &
-       'Noncolinear Berry Phase/electric fields not implemented with USPP', 1 )
+     IF ( noncolin .AND. lberry)  CALL errore( 'iosys', &
+       'Noncolinear Berry Phase/electric not implemented with USPP', 1 )
      IF  (ts_vdw ) CALL errore ('iosys',&
                     'Tkatchenko-Scheffler not implemented with USPP',1)
   END IF
