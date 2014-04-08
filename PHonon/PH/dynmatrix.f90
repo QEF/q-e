@@ -172,7 +172,6 @@ subroutine dynmatrix_new(iq_)
   !
   if (epsil) call write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
   IF (zue.AND..NOT.done_zue) THEN
-     done_zue=.TRUE.
      IF (lgamma_gamma) THEN
         ALLOCATE(zstar(3,3,nat))
         zstar(:,:,:) = 0.d0
@@ -200,6 +199,7 @@ subroutine dynmatrix_new(iq_)
               zstarue(:,na,icart)=zstar(:,icart,na)
            ENDDO
         ENDDO
+        done_zue=.TRUE.
         CALL summarize_zue()
         DEALLOCATE(zstar)
      ELSE
