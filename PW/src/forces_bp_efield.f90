@@ -15,6 +15,7 @@ SUBROUTINE forces_ion_efield (forces_bp, pdir, e_field)
   USE cell_base,            ONLY : at
   USE ions_base,            ONLY : nat,zv, ityp
 
+
   implicit none
 
   INTEGER, INTENT(in) :: pdir!direction on which the polarization is calculated
@@ -26,12 +27,9 @@ SUBROUTINE forces_ion_efield (forces_bp, pdir, e_field)
   REAL(DP) :: a(3),sca
 
   e=dsqrt(2.d0)
-!  a(:)=at(:,pdir)
-!  sca=dsqrt(a(1)**2.d0 + a(2)**2.d0 + a(3)**2.d0)
-!  a(:)=a(:)/sca
+
 
   do i=1,nat
-!     forces_bp(:,i)=forces_bp(:,i)+ e*e_field*zv(ityp(i))*a(:) !ATTENZIONE
       forces_bp(pdir,i)=forces_bp(pdir,i)+ e*e_field*zv(ityp(i))
   enddo
   
@@ -193,7 +191,6 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
 
 
 
-
    allocate(ind_g(nproc))
 
    nspin_eff=nspin
@@ -238,7 +235,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
       mk3=nint(g(1,ng)*at(1,3)+g(2,ng)*at(2,3)+g(3,ng)*at(3,3))
       ln(mk1,mk2,mk3) = ng
    END DO
-   call mp_sum(ln,world_comm)
+   call mp_sum(ln,intra_bgrp_comm)
    if (okvan) then
 !  --- Initialize arrays ---
       jkb_bp=0
@@ -434,7 +431,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                           CALL ZGEMM( 'C', 'N', nkb, nbnd*npol, npw0, ( 1.D0, 0.D0 ),   &
                           vkb1, npwx, psi, npwx, ( 0.D0, 0.D0 ),      &
                           dbecp0(1,1,ipol), nkb )
-                          call mp_sum(dbecp0(1:nkb,1:nbnd*npol,ipol),world_comm)
+                          call mp_sum(dbecp0(1:nkb,1:nbnd*npol,ipol),intra_bgrp_comm)
                   ENDDO
                endif
 
@@ -458,7 +455,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                              CALL ZGEMM( 'C', 'N', nkb, nbnd*npol, npw1, ( 1.D0, 0.D0 ),   &
                              vkb1, npwx, psi1, npwx, ( 0.D0, 0.D0 ),      &
                              dbecp_bp(1,1,ipol), nkb )
-                             call mp_sum(dbecp_bp(1:nkb,1:nbnd*npol,ipol),world_comm)
+                             call mp_sum(dbecp_bp(1:nkb,1:nbnd*npol,ipol),intra_bgrp_comm)
                      ENDDO
                   endif
 
@@ -481,7 +478,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                              CALL ZGEMM( 'C', 'N', nkb, nbnd*npol, npw1, ( 1.D0, 0.D0 ),   &
                              vkb1, npwx, psi1, npwx, ( 0.D0, 0.D0 ),      &
                              dbecp_bp(1,1,ipol), nkb )
-                             call mp_sum(dbecp_bp(1:nkb,1:nbnd*npol,ipol),world_comm)
+                             call mp_sum(dbecp_bp(1:nkb,1:nbnd*npol,ipol),intra_bgrp_comm)
                      ENDDO
                   endif
 
@@ -567,7 +564,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                         max_aux_proc=max_aux
 
 #if defined (__MPI)                        
-                        CALL MPI_ALLREDUCE( max_aux_proc,max_aux,1,MPI_INTEGER, MPI_MAX,world_comm, req,IERR )
+                        CALL MPI_ALLREDUCE( max_aux_proc,max_aux,1,MPI_INTEGER, MPI_MAX,intra_bgrp_comm, req,IERR )
 #endif
                         allocate(aux_proc(max_aux,nproc),aux_proc_ind(max_aux,nproc))
                         allocate(aux_rcv(max_aux,nproc),aux_rcv_ind(max_aux,nproc))
@@ -589,12 +586,12 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                         
 #if defined (__MPI)
                         CALL MPI_ALLTOALL( aux_proc, max_aux, MPI_DOUBLE_COMPLEX,  &
-                             aux_rcv, max_aux, MPI_DOUBLE_COMPLEX, world_comm, ierr )
+                             aux_rcv, max_aux, MPI_DOUBLE_COMPLEX, intra_bgrp_comm, ierr )
                         CALL MPI_ALLTOALL( aux_proc_ind, max_aux, MPI_INTEGER,  &
-                             aux_rcv_ind, max_aux, MPI_INTEGER, world_comm, ierr )
+                             aux_rcv_ind, max_aux, MPI_INTEGER, intra_bgrp_comm, ierr )
 #else
-                        aux_rcv(1:max_aux)=aux_proc(1:max_aux)
-                        aux_rcv_ind(1:max_aux)=aux_proc_ind(1:max_aux)
+                        aux_rcv(1:max_aux,1)=aux_proc(1:max_aux,1)
+                        aux_rcv_ind(1:max_aux,1)=aux_proc_ind(1:max_aux,1)
 #endif
 
                         
@@ -654,7 +651,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                               endif
                            enddo
                                  
-                           call mp_sum(sca,world_comm)
+                           call mp_sum(sca,intra_bgrp_comm)
                            mat(nb,mb)=mat(nb,mb)+sca
                         endif
                         enddo

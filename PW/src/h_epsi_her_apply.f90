@@ -106,10 +106,9 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   call mp_sum( sca_mat, intra_bgrp_comm )
   if(okvan) then
      call start_clock('h_eps_van2')
-    ! do nb=1,nbande
       
 !apply w_k 
-      !  do mb=1,nbnd!index on states of evcel
+
       
         do nb=1,nbande
            DO jkb=1,nkb
@@ -150,27 +149,10 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
                  sca_mat(mb,nb)=sca_mat(mb,nb)+pref
               END DO
 
-               !  if(lspinorb) then
-               !     pref = pref+CONJG(bec_evcel%nc(jkb,1,mb))*becp0%nc(jkb1+j,1,nb) &
-               !          *qq_so(nhjkb,j,1,np)
-               !     pref = pref+CONJG(bec_evcel%nc(jkb,1,mb))*becp0%nc(jkb1+j,2,nb) &
-               !          *qq_so(nhjkb,j,2,np)
-               !     pref = pref+CONJG(bec_evcel%nc(jkb,2,mb))*becp0%nc(jkb1+j,1,nb) &
-               !          *qq_so(nhjkb,j,3,np)
-               !     pref = pref+CONJG(bec_evcel%nc(jkb,2,mb))*becp0%nc(jkb1+j,2,nb) &
-               !          *qq_so(nhjkb,j,4,np)
-!   
-!                 else
-!                    pref = pref+CONJG(bec_evcel%k(jkb,mb))*becp0%k(jkb1+j,nb) &
-!                         *qq(nhjkb,j,np)
-!                 endif
+
            ENDDO
         ENDDO
-        !sca= sca + pref
-        
-           !sca_mat(mb,nb)=sca_mat(mb,nb)+pref
-     !end do
-     !end do
+
      call stop_clock('h_eps_van2')
   end if
   call ZGEMM('N','N',npw,nbande,nbnd,fact_hepsi(ik,pdir),evcelm(1,1,pdir),npwx*npol,&
@@ -272,31 +254,6 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
              &sca_mat,nbnd,(1.d0,0.d0),hpsi(1+npwx,1),npwx*npol)
      endif
 
-!!!!!
-!
-!     do nb=1,nbande
-!        do mb=1,nbnd!index on states of evcel       
-!              sca = zdotc(npw,evcelm(1,mb,pdir),1,psi(1,nb),1)
-!           sca1 = zdotc(npw,evcelp(1,mb,pdir),1,psi(1,nb),1)
-!           if(noncolin) then
-!              sca = sca+zdotc(npw,evcelm(1+npwx,mb,pdir),1,psi(1+npwx,nb),1)
-!              sca1 = sca1+zdotc(npw,evcelp(1+npwx,mb,pdir),1,psi(1+npwx,nb),1)
-!           endif
-!           call mp_sum( sca, intra_bgrp_comm )
-!           call mp_sum( sca1, intra_bgrp_comm )
-
-!           do ig=1,npw
-!
-!              hpsi(ig,nb) = hpsi(ig,nb) + &
-!                   &     CONJG(fact_hepsi(ik,pdir))*evct(ig,mb)*(sca-sca1)
-!              if(noncolin) then
-!                 hpsi(ig+npwx,nb) = hpsi(ig+npwx,nb) + &
-!                   &     CONJG(fact_hepsi(ik,pdir))*evct(ig+npwx,mb)*(sca-sca1)
-!
-!              endif
-!           enddo
-!        enddo
-!     end do
      call stop_clock('h_eps_ap_van')
   END if
 
