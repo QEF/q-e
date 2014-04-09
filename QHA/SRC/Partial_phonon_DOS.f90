@@ -13,7 +13,7 @@
 ! isaev@ifm.liu.se
 ! Eyvaz.Isaev@fysik.uu.se
 !
-! An auxiallary program to calculate atom projected phonon density of states
+! An auxiliary program to calculate atom projected phonon density of states
 ! In this program all quantities to integrate over the BZ are calculated 
 ! and collected in partial_DOS file
 !
@@ -41,7 +41,7 @@
 	
 	do modes=1,nmodes
 
-	read(9,'(11X, I2, 3X,F15.6,8X,f15.6,8X)') nmode,omega_THz, omega_cm
+	read(9,'(11X, I5, 3X,F15.6,8X,f15.6,8X)') nmode,omega_THz, omega_cm
 !
 	    do iatom=1,natoms
 	    read(9, '(2x,f10.6,f11.6,f13.6,f11.6,f13.6,f11.6,5x)') &
