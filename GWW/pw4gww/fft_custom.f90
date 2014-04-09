@@ -74,6 +74,7 @@ CONTAINS
   !
   USE io_global,  ONLY : stdout
   use fft_scalar, only: allowed
+  USE fft_base,             ONLY : dfftp
   implicit none
 
   type(fft_cus) :: fc
@@ -146,6 +147,11 @@ CONTAINS
   !    here we compute nr3s if it is not in input
   !
   
+  if(fc%dual_t==4.d0) then
+     fc%nr1t=dfftp%nr1
+     fc%nr2t=dfftp%nr2
+     fc%nr3t=dfftp%nr3
+  endif
   !
   
     return
@@ -933,16 +939,17 @@ SUBROUTINE cft3t( fc, f, n1, n2, n3, nx1, nx2, nx3, sign )
   TYPE(fft_cus) :: fc
   INTEGER,     INTENT(IN)    :: n1, n2, n3, nx1, nx2, nx3, sign
 
+
 #if defined (__PARA) && !defined(__USE_3D_FFT)
 !
   COMPLEX(DP), INTENT(INOUT) :: f( fc%dfftt%nnr )
   !
   ! ... call the general purpose parallel driver
   !
-  call start_clock('cft3t')
 
+  call start_clock('cft3t')
   CALL tg_cft3s( f, fc%dfftt, sign )
-  !write(stdout,*) fc%dfftt%nr1,fc%dfftt%nr1x,fc%dfftt%nr2,fc%dfftt%nr2x,fc%dfftt%nr3,fc%dfftt%nr3x
+  call stop_clock('cft3t')
   !
 #else
   !
@@ -983,7 +990,7 @@ SUBROUTINE cft3t( fc, f, n1, n2, n3, nx1, nx2, nx3, sign )
   !
 #endif
   !
-   call stop_clock('cft3t')
+
   RETURN
   !
 END SUBROUTINE cft3t

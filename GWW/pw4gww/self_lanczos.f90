@@ -210,28 +210,26 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
   else
      call reorderwfp_col(numpw,npw,fc%npwt,p_basis(1,1),p_basis_t(1,1), npw,fc%npwt, &
       & ig_l2g,fc%ig_l2gt,fc%ngmt_g,mpime, nproc,intra_pool_comm )
-     !do ii=1,numpw
-     !   call mergewf(p_basis(:,ii),evc_g,npw,ig_l2g,mpime,nproc,ionode_id,intra_pool_comm)
-     !   call splitwf(p_basis_t(:,ii),evc_g,fc%npwt,fc%ig_l2gt,mpime,nproc,ionode_id,intra_pool_comm)
-     !enddo
-     !trasform to real space
-     allocate(p_basis_r(fc%nrxxt,numpw))
-     do ii=1,numpw,2
-        psic(:)=(0.d0,0.d0)
-        if(ii==numpw) then
-           psic(fc%nlt(1:fc%npwt))  = p_basis_t(1:fc%npwt,ii)
-           psic(fc%nltm(1:fc%npwt)) = CONJG( p_basis_t(1:fc%npwt,ii) )
-        else
-           psic(fc%nlt(1:fc%npwt))=p_basis_t(1:fc%npwt,ii)+(0.d0,1.d0)*p_basis_t(1:fc%npwt,ii+1)
-           psic(fc%nltm(1:fc%npwt)) = CONJG( p_basis_t(1:fc%npwt,ii) )+(0.d0,1.d0)*CONJG( p_basis_t(1:fc%npwt,ii+1) )
-        endif
-        CALL cft3t( fc, psic, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t, 2 )
-        p_basis_r(1:fc%nrxxt,ii)= DBLE(psic(1:fc%nrxxt))
-        if(ii/=numpw) p_basis_r(1:fc%nrxxt,ii+1)= DIMAG(psic(1:fc%nrxxt))
-
-     enddo
-
   endif
+    
+     !trasform to real space
+  allocate(p_basis_r(fc%nrxxt,numpw))
+  do ii=1,numpw,2
+     psic(:)=(0.d0,0.d0)
+     if(ii==numpw) then
+        psic(fc%nlt(1:fc%npwt))  = p_basis_t(1:fc%npwt,ii)
+        psic(fc%nltm(1:fc%npwt)) = CONJG( p_basis_t(1:fc%npwt,ii) )
+     else
+        psic(fc%nlt(1:fc%npwt))=p_basis_t(1:fc%npwt,ii)+(0.d0,1.d0)*p_basis_t(1:fc%npwt,ii+1)
+        psic(fc%nltm(1:fc%npwt)) = CONJG( p_basis_t(1:fc%npwt,ii) )+(0.d0,1.d0)*CONJG( p_basis_t(1:fc%npwt,ii+1) )
+     endif
+     CALL cft3t( fc, psic, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t, 2 )
+     p_basis_r(1:fc%nrxxt,ii)= DBLE(psic(1:fc%nrxxt))
+     if(ii/=numpw) p_basis_r(1:fc%nrxxt,ii+1)= DIMAG(psic(1:fc%nrxxt))
+     
+  enddo
+
+  
 
 !now valence wavefunctions are put on the ordering of the reduced grid
   allocate(evc_t(fc%npwt,num_nbnds))

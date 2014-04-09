@@ -84,8 +84,6 @@
    else
       if(.not.ionode) OPEN ( unit = stdout, file='/dev/null', status='unknown' )
    endif
-#else
-      OPEN( UNIT = stdout, FILE = trim(tmp_dir)//trim(prefix)//'-out_00', STATUS = 'UNKNOWN' )
 #endif
 
    call flush_unit(stdout)

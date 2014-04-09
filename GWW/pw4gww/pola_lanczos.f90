@@ -152,23 +152,24 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
      !   call mergewf(p_basis(:,ii),evc_g,npw,ig_l2g,mpime,nproc,ionode_id,intra_pool_comm)
      !   call splitwf(p_basis_t(:,ii),evc_g,fc%npwt,fc%ig_l2gt,mpime,nproc,ionode_id,intra_pool_comm)
      !enddo
-!trasform to real space
-     allocate(p_basis_r(fc%nrxxt,numpw))
-     do ii=1,numpw,2
-        psic(:)=(0.d0,0.d0)
-        if(ii==numpw) then
-           psic(fc%nlt(1:fc%npwt))  = p_basis_t(1:fc%npwt,ii)
-           psic(fc%nltm(1:fc%npwt)) = CONJG( p_basis_t(1:fc%npwt,ii) )
-        else
-           psic(fc%nlt(1:fc%npwt))=p_basis_t(1:fc%npwt,ii)+(0.d0,1.d0)*p_basis_t(1:fc%npwt,ii+1)
-           psic(fc%nltm(1:fc%npwt)) = CONJG( p_basis_t(1:fc%npwt,ii) )+(0.d0,1.d0)*CONJG( p_basis_t(1:fc%npwt,ii+1) )
-        endif
-        CALL cft3t(fc, psic, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t, 2 )
-        p_basis_r(1:fc%nrxxt,ii)= DBLE(psic(1:fc%nrxxt))
-        if(ii/=numpw) p_basis_r(1:fc%nrxxt,ii+1)= DIMAG(psic(1:fc%nrxxt))
-
-     enddo
   endif
+!trasform to real space
+  allocate(p_basis_r(fc%nrxxt,numpw))
+  do ii=1,numpw,2
+     psic(:)=(0.d0,0.d0)
+     if(ii==numpw) then
+        psic(fc%nlt(1:fc%npwt))  = p_basis_t(1:fc%npwt,ii)
+        psic(fc%nltm(1:fc%npwt)) = CONJG( p_basis_t(1:fc%npwt,ii) )
+     else
+        psic(fc%nlt(1:fc%npwt))=p_basis_t(1:fc%npwt,ii)+(0.d0,1.d0)*p_basis_t(1:fc%npwt,ii+1)
+        psic(fc%nltm(1:fc%npwt)) = CONJG( p_basis_t(1:fc%npwt,ii) )+(0.d0,1.d0)*CONJG( p_basis_t(1:fc%npwt,ii+1) )
+     endif
+     CALL cft3t(fc, psic, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t, 2 )
+     p_basis_r(1:fc%nrxxt,ii)= DBLE(psic(1:fc%nrxxt))
+     if(ii/=numpw) p_basis_r(1:fc%nrxxt,ii+1)= DIMAG(psic(1:fc%nrxxt))
+     
+  enddo
+  
 
 
 !now valence wavefunctions are put on the ordering of the reduced grid
@@ -178,10 +179,6 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
   else
      call reorderwfp_col(num_nbndv(ispin),npw,fc%npwt,evc(1,1),evc_t(1,1), npw,fc%npwt, &
            & ig_l2g,fc%ig_l2gt,fc%ngmt_g,mpime, nproc,intra_pool_comm )
-     !do iv=1,num_nbndv(ispin)
-     !   call mergewf(evc(:,iv),evc_g,npw,ig_l2g,mpime,nproc,ionode_id,intra_pool_comm)
-     !   call splitwf(evc_t(:,iv),evc_g,fc%npwt,fc%ig_l2gt,mpime,nproc,ionode_id,intra_pool_comm)
-     !enddo
   endif
 
 
@@ -227,23 +224,27 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
                call flush_unit(stdout)
                stop
             endif
+
            tmp_r(1:fc%nrxxt)=p_basis_r(1:fc%nrxxt,ii)*wv_real(1:fc%nrxxt)
-           
+          
             if(ii/=numpw) then
                tmp_r2(1:fc%nrxxt)=p_basis_r(1:fc%nrxxt,ii+1)*wv_real(1:fc%nrxxt) 
             else
                tmp_r2(1:fc%nrxxt)=0.d0
             endif
+
+           
 !!form products with w_v and trasfrom in G space
             psic(1:fc%nrxxt)=dcmplx(tmp_r(1:fc%nrxxt),tmp_r2(1:fc%nrxxt))
             CALL cft3t(fc, psic, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t, -2 )
+          
             if(ii==numpw) then
                wp_prod(1:fc%npwt, ii,iv-ivv+1) = psic(fc%nlt(1:fc%npwt))
             else
                wp_prod(1:fc%npwt, ii,iv-ivv+1)= 0.5d0*(psic(fc%nlt(1:fc%npwt))+conjg( psic(fc%nltm(1:fc%npwt))))
                wp_prod(1:fc%npwt, ii+1,iv-ivv+1)= (0.d0,-0.5d0)*(psic(fc%nlt(1:fc%npwt)) - conjg(psic(fc%nltm(1:fc%npwt))))
             endif
-
+            
          enddo
          if(l_verbose) write(stdout,*) 'do pc_operator'
          call flush_unit(stdout)

@@ -344,8 +344,9 @@ CONTAINS
      
   !now state_fc are put on the ordering of the redueced grid, if required
   allocate(state_fc_t(fc%npwt,num_fc_eff_max,nspin))
-  if(l_do_optimal) then
-     if(fc%dual_t==4.d0) then
+ 
+ if(l_do_optimal) then
+    if(fc%dual_t==4.d0) then
         do is=1,nspin
            state_fc_t(1:fc%npwt,1:num_fc_eff(is),is)=state_fc(1:fc%npwt,1:num_fc_eff(is),is)
         enddo
@@ -353,12 +354,10 @@ CONTAINS
         do is=1,nspin
            call reorderwfp_col (num_fc_eff(is),npw,fc%npwt,state_fc(1,1,is),state_fc_t(1,1,is), npw,fc%npwt, &
                 & ig_l2g,fc%ig_l2gt,fc%ngmt_g,mpime, nproc,intra_pool_comm )
-           !do ii=1,num_fc_eff(is)
-           !   call mergewf(state_fc(:,ii,is),evc_g,npw,ig_l2g,mpime,nproc,ionode_id,intra_pool_comm)
-           !   call splitwf(state_fc_t(:,ii,is),evc_g,fc%npwt,fc%ig_l2gt,mpime,nproc,ionode_id,intra_pool_comm)
-           !enddo
         enddo
      endif
+    
+
      iun_oap = find_free_unit()
      CALL diropn( iun_oap, 'oap', fc%npwt*2, exst )
      do ii=1,num_fc_eff(1)
@@ -378,6 +377,7 @@ CONTAINS
 
 
   endif
+ 
   deallocate(state_fc)
   if(l_iter_algorithm) then
       allocate(state_fc_r(fc%nrxxt,num_fc_eff_max,nspin))
@@ -391,7 +391,11 @@ CONTAINS
                psic(fc%nlt(1:fc%npwt))=state_fc_t(1:fc%npwt,ii,is)+(0.d0,1.d0)*state_fc_t(1:fc%npwt,ii+1,is)
                psic(fc%nltm(1:fc%npwt)) = CONJG( state_fc_t(1:fc%npwt,ii,is) )+(0.d0,1.d0)*CONJG( state_fc_t(1:fc%npwt,ii+1,is) )
             endif
+            
+
             CALL cft3t( fc, psic, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t, 2 )
+           
+
             state_fc_r(1:fc%nrxxt,ii,is)= DBLE(psic(1:fc%nrxxt))
             if(ii/=num_fc_eff(is)) state_fc_r(1:fc%nrxxt,ii+1,is)= DIMAG(psic(1:fc%nrxxt))
          enddo

@@ -305,6 +305,11 @@ program gwl_punch
 !      ENDIF
       !
   ENDIF
+#ifndef __MPI
+  dual_pb=4.d0
+  dual_vs=4.d0
+  dual_vt=4.d0
+#endif
 !-------------------------------------------------------------------------
   ! ... Broadcasting variables
 !------------------------------------------------------------------------
@@ -319,12 +324,6 @@ program gwl_punch
   CALL mp_bcast( raw, ionode_id, world_comm )
   CALL mp_bcast( pseudo_dir, ionode_id, world_comm )
   CALL mp_bcast( psfile, ionode_id, world_comm )
-
-
-  !
-!      CALL mp_bcast( nppstr,        ionode_id, world_comm )
-!
-     
   CALL mp_bcast( lwannier,      ionode_id, world_comm )
   CALL mp_bcast( wannier_thres, ionode_id, world_comm)
   CALL mp_bcast( num_nbndv,     ionode_id, world_comm )
