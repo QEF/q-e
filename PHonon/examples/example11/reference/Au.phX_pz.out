@@ -1,42 +1,44 @@
 
-     Program PHONON v.5.0.2 (svn rev. 9400) starts on  7Dec2012 at 16:40:23 
+     Program PHONON v.5.0.99 (svn rev. 10851) starts on  9Apr2014 at 16: 4:23 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/quote.php
+     http://www.quantum-espresso.org/quote
 
-     Serial version
-
-     Ultrasoft (Vanderbilt) Pseudopotentials
+     Parallel version (MPI), running on     4 processors
+     R & G space division:  proc/nbgrp/npool/nimage =       4
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1s, nr2s, nr3s values from input
 
      IMPORTANT: XC functional enforced from input :
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1 1 0 0 0)
-     EXX-fraction              =        0.00
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0)
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
                file Au.rel-pz-kjpaw.UPF: wavefunction(s)  6S 6P 6P 5D renormalized
- 
-     G-vector sticks info
+
+     Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         148      70     22                 2458      782     152
+     Max         149      71     23                 2462      788     153
      Sum         595     283     91                 9841     3143     609
- 
+
 
      Calculation of q =    1.0000000   0.0000000   0.0000000
- 
-     G-vector sticks info
+
+     Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         148      70     30                 2458      782     222
+     Max         149      71     31                 2462      790     225
      Sum         595     283    121                 9841     3143     893
- 
+
 
 
      bravais-lattice index     =            2
@@ -48,8 +50,7 @@
      number of Kohn-Sham states=           20
      kinetic-energy cutoff     =      35.0000  Ry
      charge density cutoff     =     300.0000  Ry
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1 1 0 0 0)
-     EXX-fraction              =        0.00
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0)
      Non magnetic calculation with spin-orbit
 
 
@@ -68,7 +69,7 @@
 
 
      PseudoPot. # 1 for Au read from file:
-     /home/giannozz/trunk/espresso/pseudo/Au.rel-pz-kjpaw.UPF
+     /home/espresso/SVN/espresso/pseudo/Au.rel-pz-kjpaw.UPF
      MD5 check sum: 5d4760394a1c1c8d002f32975df2ea42
      Pseudo is Projector augmented-wave + core cor, Zval = 11.0
      Generated using "atomic" code by A. Dal Corso  (Quantum ESPRESSO distribution)
@@ -147,277 +148,274 @@
      Smooth grid:     3143 G-vectors     FFT dimensions: (  24,  24,  24)
 
      Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.24 Mb     (    800,   20)
-        NL pseudopotentials             0.21 Mb     (    400,   34)
-        Each V/rho on FFT grid          0.41 Mb     (  27000)
-        Each G-vector array             0.08 Mb     (   9841)
-        G-vector shells                 0.00 Mb     (    151)
+        Kohn-Sham Wavefunctions         0.06 Mb     (     212,   20)
+        NL pseudopotentials             0.05 Mb     (     106,   34)
+        Each V/rho on FFT grid          0.11 Mb     (    7200)
+        Each G-vector array             0.02 Mb     (    2462)
+        G-vector shells                 0.00 Mb     (     149)
      Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         0.98 Mb     (    800,   80)
-        Each subspace H/S matrix        0.10 Mb     (  80,  80)
-        Each <psi_i|beta_j> matrix      0.02 Mb     (     34,   2,   20)
+        Auxiliary wavefunctions         0.26 Mb     (     212,   80)
+        Each subspace H/S matrix        0.10 Mb     (      80,   80)
+        Each <psi_i|beta_j> matrix      0.02 Mb     (      34,   2,   20)
 
      The potential is recalculated from file :
-     /home/giannozz/tmp/_ph0/Au.save/charge-density.dat
+     /home/espresso/SVN/espresso/tempdir/_ph0/gold.save/charge-density.dat
 
      Starting wfc are   18 atomic +    2 random wfc
-
-     total cpu time spent up to now is        1.8 secs
-
-     per-process dynamical memory:    41.5 Mb
+     Checking if some PAW data can be deallocated... 
 
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  9.09E-11,  avg # of iterations = 14.2
+     ethr =  9.09E-11,  avg # of iterations = 14.3
 
-     total cpu time spent up to now is       10.7 secs
+     total cpu time spent up to now is        6.4 secs
 
      End of band structure calculation
 
-          k =-0.1250 0.1250 0.1250     band energies (ev):
+          k =-0.1250 0.1250 0.1250 (   381 PWs)   bands (ev):
 
-     6.4062   6.4062  10.6221  10.6221  10.7066  10.7066  11.9335  11.9335
-    12.9483  12.9483  13.1560  13.1560  31.9172  31.9172  32.8940  32.8940
+     6.4062   6.4062  10.6221  10.6221  10.7066  10.7066  11.9334  11.9334
+    12.9482  12.9482  13.1560  13.1560  31.9172  31.9172  32.8941  32.8941
     35.5687  35.5687  36.5512  36.5512
 
-          k = 0.8750 0.1250 0.1250     band energies (ev):
+          k = 0.8750 0.1250 0.1250 (   400 PWs)   bands (ev):
 
-     8.9336   8.9336   9.2538   9.2538  12.9211  12.9211  13.6018  13.6018
-    14.5410  14.5410  17.1199  17.1199  22.6293  22.6293  25.5058  25.5058
+     8.9336   8.9336   9.2538   9.2538  12.9210  12.9210  13.6018  13.6018
+    14.5409  14.5409  17.1198  17.1198  22.6293  22.6293  25.5058  25.5058
     27.5802  27.5802  34.2842  34.2842
 
-          k =-0.3750 0.3750-0.1250     band energies (ev):
+          k =-0.3750 0.3750-0.1250 (   393 PWs)   bands (ev):
 
-     8.5027   8.5027  10.5479  10.5479  10.9417  10.9417  12.1383  12.1383
+     8.5027   8.5027  10.5479  10.5479  10.9416  10.9416  12.1382  12.1382
     12.8982  12.8982  14.3202  14.3202  25.8425  25.8425  30.6839  30.6839
     33.8623  33.8623  37.4672  37.4672
 
-          k = 0.6250 0.3750-0.1250     band energies (ev):
+          k = 0.6250 0.3750-0.1250 (   397 PWs)   bands (ev):
 
      9.4157   9.4157  10.3807  10.3807  10.8935  10.8935  12.4891  12.4891
-    13.6561  13.6561  16.0181  16.0181  23.0412  23.0412  28.0460  28.0460
+    13.6561  13.6561  16.0180  16.0180  23.0412  23.0412  28.0460  28.0460
     30.9462  30.9462  35.4363  35.4363
 
-          k = 0.3750-0.3750 0.6250     band energies (ev):
+          k = 0.3750-0.3750 0.6250 (   391 PWs)   bands (ev):
 
-     8.7867   8.7867  10.5079  10.5079  11.7134  11.7134  12.5209  12.5209
-    14.1841  14.1841  16.3366  16.3366  19.7669  19.7669  30.7327  30.7327
+     8.7866   8.7866  10.5079  10.5079  11.7133  11.7133  12.5208  12.5208
+    14.1841  14.1841  16.3365  16.3365  19.7669  19.7669  30.7327  30.7327
     32.1095  32.1095  33.2173  33.2173
 
-          k = 1.3750-0.3750 0.6250     band energies (ev):
+          k = 1.3750-0.3750 0.6250 (   391 PWs)   bands (ev):
 
-     8.7867   8.7867  10.5079  10.5079  11.7134  11.7134  12.5209  12.5209
-    14.1841  14.1841  16.3366  16.3366  19.7669  19.7669  30.7327  30.7327
+     8.7866   8.7866  10.5079  10.5079  11.7133  11.7133  12.5208  12.5208
+    14.1841  14.1841  16.3365  16.3365  19.7669  19.7669  30.7327  30.7327
     32.1095  32.1095  33.2173  33.2173
 
-          k = 0.1250-0.1250 0.3750     band energies (ev):
+          k = 0.1250-0.1250 0.3750 (   384 PWs)   bands (ev):
 
-     7.6802   7.6802  10.3030  10.3030  10.9489  10.9489  12.2875  12.2875
-    12.7620  12.7620  13.5563  13.5563  29.2220  29.2220  33.0612  33.0612
+     7.6801   7.6801  10.3029  10.3029  10.9489  10.9489  12.2875  12.2875
+    12.7619  12.7619  13.5563  13.5563  29.2219  29.2219  33.0612  33.0612
     33.3980  33.3980  35.8539  35.8539
 
-          k = 1.1250-0.1250 0.3750     band energies (ev):
+          k = 1.1250-0.1250 0.3750 (   393 PWs)   bands (ev):
 
-     9.5612   9.5612   9.9956   9.9956  11.3471  11.3471  13.0245  13.0245
-    14.2398  14.2398  19.1959  19.1959  21.1711  21.1711  24.8293  24.8293
-    27.4713  27.4713  36.3249  36.3249
+     9.5612   9.5612   9.9956   9.9956  11.3470  11.3470  13.0245  13.0245
+    14.2397  14.2397  19.1959  19.1959  21.1711  21.1711  24.8293  24.8293
+    27.4712  27.4712  36.3249  36.3249
 
-          k =-0.1250 0.6250 0.1250     band energies (ev):
+          k =-0.1250 0.6250 0.1250 (   397 PWs)   bands (ev):
 
-     9.0441   9.0441   9.7126   9.7126  11.4268  11.4268  12.8710  12.8710
+     9.0441   9.0441   9.7126   9.7126  11.4267  11.4267  12.8710  12.8710
     13.7613  13.7613  14.5224  14.5224  26.0550  26.0550  29.3971  29.3971
-    30.6295  30.6295  33.8515  33.8515
+    30.6294  30.6294  33.8515  33.8515
 
-          k = 0.8750 0.6250 0.1250     band energies (ev):
+          k = 0.8750 0.6250 0.1250 (   393 PWs)   bands (ev):
 
-     9.5612   9.5612   9.9956   9.9956  11.3471  11.3471  13.0245  13.0245
-    14.2398  14.2398  19.1959  19.1959  21.1711  21.1711  24.8293  24.8293
-    27.4713  27.4713  36.3249  36.3249
+     9.5612   9.5612   9.9956   9.9956  11.3470  11.3470  13.0245  13.0245
+    14.2397  14.2397  19.1959  19.1959  21.1711  21.1711  24.8293  24.8293
+    27.4712  27.4712  36.3249  36.3249
 
-          k = 0.6250-0.1250 0.8750     band energies (ev):
+          k = 0.6250-0.1250 0.8750 (   393 PWs)   bands (ev):
 
-     9.5612   9.5612   9.9956   9.9956  11.3471  11.3471  13.0245  13.0245
-    14.2398  14.2398  19.1959  19.1959  21.1711  21.1711  24.8293  24.8293
-    27.4713  27.4713  36.3249  36.3249
+     9.5612   9.5612   9.9956   9.9956  11.3470  11.3470  13.0245  13.0245
+    14.2397  14.2397  19.1959  19.1959  21.1711  21.1711  24.8293  24.8293
+    27.4712  27.4712  36.3249  36.3249
 
-          k = 1.6250-0.1250 0.8750     band energies (ev):
+          k = 1.6250-0.1250 0.8750 (   393 PWs)   bands (ev):
 
-     9.5612   9.5612   9.9956   9.9956  11.3471  11.3471  13.0245  13.0245
-    14.2398  14.2398  19.1959  19.1959  21.1711  21.1711  24.8293  24.8293
-    27.4713  27.4713  36.3249  36.3249
+     9.5612   9.5612   9.9956   9.9956  11.3470  11.3470  13.0245  13.0245
+    14.2397  14.2397  19.1959  19.1959  21.1711  21.1711  24.8293  24.8293
+    27.4712  27.4712  36.3249  36.3249
 
-          k = 0.3750 0.1250 0.6250     band energies (ev):
+          k = 0.3750 0.1250 0.6250 (   397 PWs)   bands (ev):
 
      9.4157   9.4157  10.3807  10.3807  10.8935  10.8935  12.4891  12.4891
-    13.6561  13.6561  16.0181  16.0181  23.0412  23.0412  28.0460  28.0460
+    13.6561  13.6561  16.0180  16.0180  23.0412  23.0412  28.0460  28.0460
     30.9462  30.9462  35.4363  35.4363
 
-          k = 1.3750 0.1250 0.6250     band energies (ev):
+          k = 1.3750 0.1250 0.6250 (   396 PWs)   bands (ev):
 
-     9.5214   9.5214  10.3476  10.3476  11.4231  11.4231  12.4138  12.4138
-    13.8023  13.8023  17.9831  17.9831  20.8995  20.8995  25.9885  25.9885
+     9.5213   9.5213  10.3476  10.3476  11.4231  11.4231  12.4137  12.4137
+    13.8023  13.8023  17.9831  17.9831  20.8995  20.8995  25.9884  25.9884
     31.7109  31.7109  33.3295  33.3295
 
-          k =-0.1250-0.8750 0.1250     band energies (ev):
+          k =-0.1250-0.8750 0.1250 (   400 PWs)   bands (ev):
 
-     8.9336   8.9336   9.2538   9.2538  12.9211  12.9211  13.6018  13.6018
-    14.5410  14.5410  17.1199  17.1199  22.6293  22.6293  25.5058  25.5058
+     8.9336   8.9336   9.2538   9.2538  12.9210  12.9210  13.6018  13.6018
+    14.5409  14.5409  17.1198  17.1198  22.6293  22.6293  25.5058  25.5058
     27.5802  27.5802  34.2842  34.2842
 
-          k = 0.8750-0.8750 0.1250     band energies (ev):
+          k = 0.8750-0.8750 0.1250 (   400 PWs)   bands (ev):
 
-     8.9336   8.9336   9.2538   9.2538  12.9211  12.9211  13.6018  13.6018
-    14.5410  14.5410  17.1199  17.1199  22.6293  22.6293  25.5058  25.5058
+     8.9336   8.9336   9.2538   9.2538  12.9210  12.9210  13.6018  13.6018
+    14.5409  14.5409  17.1198  17.1198  22.6293  22.6293  25.5058  25.5058
     27.5802  27.5802  34.2842  34.2842
 
-          k =-0.3750 0.3750 0.3750     band energies (ev):
+          k =-0.3750 0.3750 0.3750 (   395 PWs)   bands (ev):
 
-     8.3735   8.3735  10.6002  10.6002  11.8248  11.8248  12.4557  12.4557
-    13.6700  13.6700  14.1630  14.1630  22.3390  22.3390  31.6435  31.6435
-    33.9030  33.9030  35.6464  35.6464
+     8.3735   8.3735  10.6002  10.6002  11.8247  11.8247  12.4556  12.4556
+    13.6699  13.6699  14.1630  14.1630  22.3390  22.3390  31.6435  31.6435
+    33.9030  33.9030  35.6463  35.6463
 
-          k = 0.6250 0.3750 0.3750     band energies (ev):
+          k = 0.6250 0.3750 0.3750 (   391 PWs)   bands (ev):
 
-     8.7867   8.7867  10.5079  10.5079  11.7134  11.7134  12.5209  12.5209
-    14.1841  14.1841  16.3366  16.3366  19.7669  19.7669  30.7327  30.7327
+     8.7866   8.7866  10.5079  10.5079  11.7133  11.7133  12.5208  12.5208
+    14.1841  14.1841  16.3365  16.3365  19.7669  19.7669  30.7327  30.7327
     32.1095  32.1095  33.2173  33.2173
 
-          k = 0.3750-0.3750 1.1250     band energies (ev):
+          k = 0.3750-0.3750 1.1250 (   396 PWs)   bands (ev):
 
-     9.5214   9.5214  10.3476  10.3476  11.4231  11.4231  12.4138  12.4138
-    13.8023  13.8023  17.9831  17.9831  20.8995  20.8995  25.9885  25.9885
+     9.5213   9.5213  10.3476  10.3476  11.4231  11.4231  12.4137  12.4137
+    13.8023  13.8023  17.9831  17.9831  20.8995  20.8995  25.9884  25.9884
     31.7109  31.7109  33.3295  33.3295
 
-          k = 1.3750-0.3750 1.1250     band energies (ev):
+          k = 1.3750-0.3750 1.1250 (   397 PWs)   bands (ev):
 
      9.4157   9.4157  10.3807  10.3807  10.8935  10.8935  12.4891  12.4891
-    13.6561  13.6561  16.0181  16.0181  23.0412  23.0412  28.0460  28.0460
+    13.6561  13.6561  16.0180  16.0180  23.0412  23.0412  28.0460  28.0460
     30.9462  30.9462  35.4363  35.4363
 
-          k =-0.1250-0.3750 0.3750     band energies (ev):
+          k =-0.1250-0.3750 0.3750 (   393 PWs)   bands (ev):
 
-     8.5027   8.5027  10.5479  10.5479  10.9417  10.9417  12.1383  12.1383
+     8.5027   8.5027  10.5479  10.5479  10.9416  10.9416  12.1382  12.1382
     12.8982  12.8982  14.3202  14.3202  25.8425  25.8425  30.6839  30.6839
     33.8623  33.8623  37.4672  37.4672
 
-          k = 0.8750-0.3750 0.3750     band energies (ev):
+          k = 0.8750-0.3750 0.3750 (   396 PWs)   bands (ev):
 
-     9.5214   9.5214  10.3476  10.3476  11.4231  11.4231  12.4138  12.4138
-    13.8023  13.8023  17.9831  17.9831  20.8995  20.8995  25.9885  25.9885
+     9.5213   9.5213  10.3476  10.3476  11.4231  11.4231  12.4137  12.4137
+    13.8023  13.8023  17.9831  17.9831  20.8995  20.8995  25.9884  25.9884
     31.7109  31.7109  33.3295  33.3295
 
-          k = 0.6250 0.3750-0.3750     band energies (ev):
+          k = 0.6250 0.3750-0.3750 (   391 PWs)   bands (ev):
 
-     8.7867   8.7867  10.5079  10.5079  11.7134  11.7134  12.5209  12.5209
-    14.1841  14.1841  16.3366  16.3366  19.7669  19.7669  30.7327  30.7327
+     8.7866   8.7866  10.5079  10.5079  11.7133  11.7133  12.5208  12.5208
+    14.1841  14.1841  16.3365  16.3365  19.7669  19.7669  30.7327  30.7327
     32.1095  32.1095  33.2173  33.2173
 
-          k = 1.6250 0.3750-0.3750     band energies (ev):
+          k = 1.6250 0.3750-0.3750 (   395 PWs)   bands (ev):
 
-     8.3735   8.3735  10.6002  10.6002  11.8248  11.8248  12.4557  12.4557
-    13.6700  13.6700  14.1630  14.1630  22.3390  22.3390  31.6435  31.6435
-    33.9030  33.9030  35.6464  35.6464
+     8.3735   8.3735  10.6002  10.6002  11.8247  11.8247  12.4556  12.4556
+    13.6699  13.6699  14.1630  14.1630  22.3390  22.3390  31.6435  31.6435
+    33.9030  33.9030  35.6463  35.6463
 
-          k = 0.3750 0.1250-0.1250     band energies (ev):
+          k = 0.3750 0.1250-0.1250 (   384 PWs)   bands (ev):
 
-     7.6802   7.6802  10.3030  10.3030  10.9489  10.9489  12.2875  12.2875
-    12.7620  12.7620  13.5563  13.5563  29.2220  29.2220  33.0612  33.0612
+     7.6801   7.6801  10.3029  10.3029  10.9489  10.9489  12.2875  12.2875
+    12.7619  12.7619  13.5563  13.5563  29.2219  29.2219  33.0612  33.0612
     33.3980  33.3980  35.8539  35.8539
 
-          k = 1.3750 0.1250-0.1250     band energies (ev):
+          k = 1.3750 0.1250-0.1250 (   397 PWs)   bands (ev):
 
-     9.0441   9.0441   9.7126   9.7126  11.4268  11.4268  12.8710  12.8710
+     9.0441   9.0441   9.7126   9.7126  11.4267  11.4267  12.8710  12.8710
     13.7613  13.7613  14.5224  14.5224  26.0550  26.0550  29.3971  29.3971
-    30.6295  30.6295  33.8515  33.8515
+    30.6294  30.6294  33.8515  33.8515
 
-          k = 0.6250 0.1250-0.1250     band energies (ev):
+          k = 0.6250 0.1250-0.1250 (   397 PWs)   bands (ev):
 
-     9.0441   9.0441   9.7126   9.7126  11.4268  11.4268  12.8710  12.8710
+     9.0441   9.0441   9.7126   9.7126  11.4267  11.4267  12.8710  12.8710
     13.7613  13.7613  14.5224  14.5224  26.0550  26.0550  29.3971  29.3971
-    30.6295  30.6295  33.8515  33.8515
+    30.6294  30.6294  33.8515  33.8515
 
-          k = 1.6250 0.1250-0.1250     band energies (ev):
+          k = 1.6250 0.1250-0.1250 (   384 PWs)   bands (ev):
 
-     7.6802   7.6802  10.3030  10.3030  10.9489  10.9489  12.2875  12.2875
-    12.7620  12.7620  13.5563  13.5563  29.2220  29.2220  33.0612  33.0612
+     7.6801   7.6801  10.3029  10.3029  10.9489  10.9489  12.2875  12.2875
+    12.7619  12.7619  13.5563  13.5563  29.2219  29.2219  33.0612  33.0612
     33.3980  33.3980  35.8539  35.8539
 
-          k =-0.1250 0.8750 0.6250     band energies (ev):
+          k =-0.1250 0.8750 0.6250 (   393 PWs)   bands (ev):
 
-     9.5612   9.5612   9.9956   9.9956  11.3471  11.3471  13.0245  13.0245
-    14.2398  14.2398  19.1959  19.1959  21.1711  21.1711  24.8293  24.8293
-    27.4713  27.4713  36.3249  36.3249
+     9.5612   9.5612   9.9956   9.9956  11.3470  11.3470  13.0245  13.0245
+    14.2397  14.2397  19.1959  19.1959  21.1711  21.1711  24.8293  24.8293
+    27.4712  27.4712  36.3249  36.3249
 
-          k = 0.8750 0.8750 0.6250     band energies (ev):
+          k = 0.8750 0.8750 0.6250 (   384 PWs)   bands (ev):
 
-     7.6802   7.6802  10.3030  10.3030  10.9489  10.9489  12.2875  12.2875
-    12.7620  12.7620  13.5563  13.5563  29.2220  29.2220  33.0612  33.0612
+     7.6801   7.6801  10.3029  10.3029  10.9489  10.9489  12.2875  12.2875
+    12.7619  12.7619  13.5563  13.5563  29.2219  29.2219  33.0612  33.0612
     33.3980  33.3980  35.8539  35.8539
 
-          k = 0.8750 0.6250-0.1250     band energies (ev):
+          k = 0.8750 0.6250-0.1250 (   393 PWs)   bands (ev):
 
-     9.5612   9.5612   9.9956   9.9956  11.3471  11.3471  13.0245  13.0245
-    14.2398  14.2398  19.1959  19.1959  21.1711  21.1711  24.8293  24.8293
-    27.4713  27.4713  36.3249  36.3249
+     9.5612   9.5612   9.9956   9.9956  11.3470  11.3470  13.0245  13.0245
+    14.2397  14.2397  19.1959  19.1959  21.1711  21.1711  24.8293  24.8293
+    27.4712  27.4712  36.3249  36.3249
 
-          k = 1.8750 0.6250-0.1250     band energies (ev):
+          k = 1.8750 0.6250-0.1250 (   397 PWs)   bands (ev):
 
-     9.0441   9.0441   9.7126   9.7126  11.4268  11.4268  12.8710  12.8710
+     9.0441   9.0441   9.7126   9.7126  11.4267  11.4267  12.8710  12.8710
     13.7613  13.7613  14.5224  14.5224  26.0550  26.0550  29.3971  29.3971
-    30.6295  30.6295  33.8515  33.8515
+    30.6294  30.6294  33.8515  33.8515
 
-          k = 0.1250 0.6250 0.3750     band energies (ev):
-
-     9.4157   9.4157  10.3807  10.3807  10.8935  10.8935  12.4891  12.4891
-    13.6561  13.6561  16.0181  16.0181  23.0412  23.0412  28.0460  28.0460
-    30.9462  30.9462  35.4363  35.4363
-
-          k = 1.1250 0.6250 0.3750     band energies (ev):
+          k = 0.1250 0.6250 0.3750 (   397 PWs)   bands (ev):
 
      9.4157   9.4157  10.3807  10.3807  10.8935  10.8935  12.4891  12.4891
-    13.6561  13.6561  16.0181  16.0181  23.0412  23.0412  28.0460  28.0460
+    13.6561  13.6561  16.0180  16.0180  23.0412  23.0412  28.0460  28.0460
     30.9462  30.9462  35.4363  35.4363
 
-          k = 0.6250 0.3750 0.1250     band energies (ev):
+          k = 1.1250 0.6250 0.3750 (   397 PWs)   bands (ev):
 
      9.4157   9.4157  10.3807  10.3807  10.8935  10.8935  12.4891  12.4891
-    13.6561  13.6561  16.0181  16.0181  23.0412  23.0412  28.0460  28.0460
+    13.6561  13.6561  16.0180  16.0180  23.0412  23.0412  28.0460  28.0460
     30.9462  30.9462  35.4363  35.4363
 
-          k = 1.6250 0.3750 0.1250     band energies (ev):
+          k = 0.6250 0.3750 0.1250 (   397 PWs)   bands (ev):
 
-     8.5027   8.5027  10.5479  10.5479  10.9417  10.9417  12.1383  12.1383
+     9.4157   9.4157  10.3807  10.3807  10.8935  10.8935  12.4891  12.4891
+    13.6561  13.6561  16.0180  16.0180  23.0412  23.0412  28.0460  28.0460
+    30.9462  30.9462  35.4363  35.4363
+
+          k = 1.6250 0.3750 0.1250 (   393 PWs)   bands (ev):
+
+     8.5027   8.5027  10.5479  10.5479  10.9416  10.9416  12.1382  12.1382
     12.8982  12.8982  14.3202  14.3202  25.8425  25.8425  30.6839  30.6839
     33.8623  33.8623  37.4672  37.4672
 
-          k =-0.8750 0.1250-0.1250     band energies (ev):
+          k =-0.8750 0.1250-0.1250 (   400 PWs)   bands (ev):
 
-     8.9336   8.9336   9.2538   9.2538  12.9211  12.9211  13.6018  13.6018
-    14.5410  14.5410  17.1199  17.1199  22.6293  22.6293  25.5058  25.5058
+     8.9336   8.9336   9.2538   9.2538  12.9210  12.9210  13.6018  13.6018
+    14.5409  14.5409  17.1198  17.1198  22.6293  22.6293  25.5058  25.5058
     27.5802  27.5802  34.2842  34.2842
 
-          k = 0.1250 0.1250-0.1250     band energies (ev):
+          k = 0.1250 0.1250-0.1250 (   381 PWs)   bands (ev):
 
-     6.4062   6.4062  10.6221  10.6221  10.7066  10.7066  11.9335  11.9335
-    12.9483  12.9483  13.1560  13.1560  31.9172  31.9172  32.8940  32.8940
+     6.4062   6.4062  10.6221  10.6221  10.7066  10.7066  11.9334  11.9334
+    12.9482  12.9482  13.1560  13.1560  31.9172  31.9172  32.8941  32.8941
     35.5687  35.5687  36.5512  36.5512
 
-          k = 1.1250 0.3750-0.3750     band energies (ev):
+          k = 1.1250 0.3750-0.3750 (   396 PWs)   bands (ev):
 
-     9.5214   9.5214  10.3476  10.3476  11.4231  11.4231  12.4138  12.4138
-    13.8023  13.8023  17.9831  17.9831  20.8995  20.8995  25.9885  25.9885
+     9.5213   9.5213  10.3476  10.3476  11.4231  11.4231  12.4137  12.4137
+    13.8023  13.8023  17.9831  17.9831  20.8995  20.8995  25.9884  25.9884
     31.7109  31.7109  33.3295  33.3295
 
-          k = 2.1250 0.3750-0.3750     band energies (ev):
+          k = 2.1250 0.3750-0.3750 (   393 PWs)   bands (ev):
 
-     8.5027   8.5027  10.5479  10.5479  10.9417  10.9417  12.1383  12.1383
+     8.5027   8.5027  10.5479  10.5479  10.9416  10.9416  12.1382  12.1382
     12.8982  12.8982  14.3202  14.3202  25.8425  25.8425  30.6839  30.6839
     33.8623  33.8623  37.4672  37.4672
 
-     the Fermi energy is    16.1641 ev
+     the Fermi energy is    16.1640 ev
 
-     Writing output data file Au.save
+     Writing output data file gold.save
 
                                                                                 
 
@@ -431,8 +429,7 @@
      convergence threshold     =      1.0E-14
      beta                      =       0.7000
      number of iterations used =            4
-     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1 1 0 0 0)
-     EXX-fraction              =        0.00
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC ( 1  1  0  0 0)
      Non magnetic calculation with spin-orbit
 
      celldm(1)=    7.66600  celldm(2)=    0.00000  celldm(3)=    0.00000
@@ -451,19 +448,19 @@
 
      Atoms inside the unit cell: 
 
-   Cartesian axes
+     Cartesian axes
 
      site n.  atom      mass           positions (alat units)
-           1        Au 196.9666   tau(    1) = (    0.00000    0.00000    0.00000  )
+        1     Au 196.9666   tau(    1) = (    0.00000    0.00000    0.00000  )
 
      Computing dynamical matrix for 
                     q = (   1.0000000   0.0000000   0.0000000 )
- 
+
      17 Sym.Ops. (with q -> -q+G )
 
 
-     G cutoff =  446.5799  (   9841 G-vectors)     FFT grid: ( 30, 30, 30)
-     G cutoff =  208.4039  (   3143 G-vectors)  smooth grid: ( 24, 24, 24)
+     G cutoff =  446.5799  (   2462 G-vectors)     FFT grid: ( 30, 30, 30)
+     G cutoff =  208.4039  (    782 G-vectors)  smooth grid: ( 24, 24, 24)
 
      number of k points=    40  Methfessel-Paxton smearing, width (Ry)=  0.0400
                        cart. coord. in units 2pi/alat
@@ -509,7 +506,7 @@
         k(   40) = (   2.1250000   0.3750000  -0.3750000), wk =   0.0000000
 
      PseudoPot. # 1 for Au read from file:
-     /home/giannozz/trunk/espresso/pseudo/Au.rel-pz-kjpaw.UPF
+     /home/espresso/SVN/espresso/pseudo/Au.rel-pz-kjpaw.UPF
      MD5 check sum: 5d4760394a1c1c8d002f32975df2ea42
      Pseudo is Projector augmented-wave + core cor, Zval = 11.0
      Generated using "atomic" code by A. Dal Corso  (Quantum ESPRESSO distribution)
@@ -528,6 +525,8 @@
      Q(r) pseudized with 0 coefficients 
 
 
+     Mode symmetry, D_4h(4/mmm) point group:
+
 
      Atomic displacements:
      There are   2 irreducible representations
@@ -539,7 +538,7 @@
 
 
      Alpha used in Ewald sum =   2.8000
-     PHONON       :    22.51s CPU        23.83s WALL
+     PHONON       :    11.26s CPU        11.32s WALL
 
 
 
@@ -547,23 +546,23 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    26.7 secs   av.it.:   6.9
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.401E-03
+      iter #   1 total cpu time :    13.2 secs   av.it.:   6.9
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  3.537E-04
 
-      iter #   2 total cpu time :    29.6 secs   av.it.:   9.0
-      thresh= 0.200E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.311E-03
+      iter #   2 total cpu time :    15.1 secs   av.it.:   9.1
+      thresh= 1.881E-03 alpha_mix =  0.700 |ddv_scf|^2 =  2.743E-04
 
-      iter #   3 total cpu time :    32.6 secs   av.it.:   8.3
-      thresh= 0.176E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.612E-08
+      iter #   3 total cpu time :    16.9 secs   av.it.:   8.3
+      thresh= 1.656E-03 alpha_mix =  0.700 |ddv_scf|^2 =  5.396E-09
 
-      iter #   4 total cpu time :    35.7 secs   av.it.:   9.1
-      thresh= 0.782E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.278E-09
+      iter #   4 total cpu time :    18.8 secs   av.it.:   9.1
+      thresh= 7.345E-06 alpha_mix =  0.700 |ddv_scf|^2 =  2.441E-10
 
-      iter #   5 total cpu time :    38.6 secs   av.it.:   8.8
-      thresh= 0.167E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.963E-12
+      iter #   5 total cpu time :    20.7 secs   av.it.:   8.9
+      thresh= 1.563E-06 alpha_mix =  0.700 |ddv_scf|^2 =  8.529E-13
 
-      iter #   6 total cpu time :    41.6 secs   av.it.:   8.7
-      thresh= 0.981E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.309E-14
+      iter #   6 total cpu time :    22.6 secs   av.it.:   8.8
+      thresh= 9.235E-08 alpha_mix =  0.700 |ddv_scf|^2 =  2.715E-15
 
      End of self-consistent calculation
 
@@ -574,28 +573,28 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    47.6 secs   av.it.:   6.2
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.862E-05
+      iter #   1 total cpu time :    26.2 secs   av.it.:   6.3
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  7.593E-06
 
-      iter #   2 total cpu time :    53.5 secs   av.it.:  10.0
-      thresh= 0.294E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.682E-06
+      iter #   2 total cpu time :    30.1 secs   av.it.:  10.0
+      thresh= 2.756E-04 alpha_mix =  0.700 |ddv_scf|^2 =  6.010E-07
 
-      iter #   3 total cpu time :    59.6 secs   av.it.:   9.7
-      thresh= 0.826E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.564E-09
+      iter #   3 total cpu time :    34.0 secs   av.it.:   9.7
+      thresh= 7.752E-05 alpha_mix =  0.700 |ddv_scf|^2 =  4.984E-10
 
-      iter #   4 total cpu time :    65.5 secs   av.it.:  10.1
-      thresh= 0.238E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.286E-11
+      iter #   4 total cpu time :    37.9 secs   av.it.:  10.1
+      thresh= 2.233E-06 alpha_mix =  0.700 |ddv_scf|^2 =  2.512E-12
 
-      iter #   5 total cpu time :    71.2 secs   av.it.:   9.4
-      thresh= 0.169E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.364E-13
+      iter #   5 total cpu time :    41.6 secs   av.it.:   9.2
+      thresh= 1.585E-07 alpha_mix =  0.700 |ddv_scf|^2 =  3.207E-14
 
-      iter #   6 total cpu time :    77.0 secs   av.it.:   9.2
-      thresh= 0.191E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.360E-15
+      iter #   6 total cpu time :    45.3 secs   av.it.:   9.1
+      thresh= 1.791E-08 alpha_mix =  0.700 |ddv_scf|^2 =  3.177E-16
 
      End of self-consistent calculation
 
      Convergence has been achieved 
- 
+
      Number of q in the star =    3
      List of q in the star:
           1   1.000000000   0.000000000   0.000000000
@@ -607,134 +606,136 @@
      q = (    1.000000000   0.000000000   0.000000000 ) 
 
  **************************************************************************
-     omega(    1) =       2.576249 [THz] =      85.934404 [cm-1]
-     omega(    2) =       2.576249 [THz] =      85.934404 [cm-1]
-     omega(    3) =       4.652323 [THz] =     155.184802 [cm-1]
+     freq (    1) =       2.575901 [THz] =      85.922824 [cm-1]
+     freq (    2) =       2.575901 [THz] =      85.922824 [cm-1]
+     freq (    3) =       4.652097 [THz] =     155.177247 [cm-1]
  **************************************************************************
 
      Mode symmetry, D_4h(4/mmm) point group:
 
-     omega(  1 -  2) =         85.9  [cm-1]   --> E_u  X_5' M_5'     
-     omega(  3 -  3) =        155.2  [cm-1]   --> A_2u X_4' M_4'     
- 
-     init_run     :      1.78s CPU      1.84s WALL (       1 calls)
-     electrons    :      8.26s CPU      8.88s WALL (       1 calls)
+     freq (  1 -  2) =         85.9  [cm-1]   --> E_u  X_5' M_5'     
+     freq (  3 -  3) =        155.2  [cm-1]   --> A_2u X_4' M_4'     
+
+     init_run     :      0.79s CPU      0.80s WALL (       1 calls)
+     electrons    :      5.56s CPU      5.59s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     potinit      :      0.14s CPU      0.14s WALL (       1 calls)
+     potinit      :      0.15s CPU      0.15s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      8.26s CPU      8.88s WALL (       1 calls)
-     v_of_rho     :      0.01s CPU      0.01s WALL (       2 calls)
-     newd         :      0.24s CPU      0.25s WALL (       2 calls)
+     c_bands      :      5.55s CPU      5.58s WALL (       1 calls)
+     v_of_rho     :      0.00s CPU      0.00s WALL (       2 calls)
+     newd         :      0.12s CPU      0.12s WALL (       2 calls)
 
      Called by c_bands:
-     init_us_2    :      0.10s CPU      0.12s WALL (     400 calls)
-     cegterg      :      7.42s CPU      7.83s WALL (      40 calls)
+     init_us_2    :      0.03s CPU      0.04s WALL (     400 calls)
+     cegterg      :      5.07s CPU      5.09s WALL (      40 calls)
 
      Called by *egterg:
-     h_psi        :      5.02s CPU      5.32s WALL (     647 calls)
-     s_psi        :      3.40s CPU      3.71s WALL (    8967 calls)
-     g_psi        :      0.23s CPU      0.20s WALL (     567 calls)
-     cdiaghg      :      0.89s CPU      0.97s WALL (     607 calls)
+     h_psi        :      3.44s CPU      3.47s WALL (     651 calls)
+     s_psi        :      2.53s CPU      2.57s WALL (    8983 calls)
+     g_psi        :      0.02s CPU      0.02s WALL (     571 calls)
+     cdiaghg      :      0.98s CPU      0.99s WALL (     611 calls)
 
      Called by h_psi:
-     add_vuspsi   :      1.70s CPU      1.74s WALL (    4627 calls)
+     add_vuspsi   :      1.26s CPU      1.27s WALL (    4637 calls)
 
      General routines
-     calbec       :      2.94s CPU      3.14s WALL (    9907 calls)
-     fft          :      0.10s CPU      0.08s WALL (     189 calls)
-     ffts         :      0.02s CPU      0.02s WALL (     116 calls)
-     fftw         :     24.85s CPU     26.49s WALL (  220976 calls)
+     calbec       :      2.23s CPU      2.20s WALL (    9923 calls)
+     fft          :      0.05s CPU      0.05s WALL (     189 calls)
+     ffts         :      0.01s CPU      0.02s WALL (     116 calls)
+     fftw         :     20.70s CPU     20.74s WALL (  220964 calls)
      interpolate  :      0.01s CPU      0.01s WALL (       8 calls)
-     davcio       :      0.29s CPU      1.77s WALL (    1823 calls)
- 
- 
+     davcio       :      0.01s CPU      0.07s WALL (    1823 calls)
+
+     Parallel routines
+     fft_scatter  :      3.64s CPU      3.16s WALL (  221269 calls)
+
      PAW routines
-     PAW_pot      :      0.24s CPU      0.25s WALL (       2 calls)
- 
-     PHONON       :  1m11.90s CPU     1m17.24s WALL
+     PAW_pot      :      0.28s CPU      0.28s WALL (       2 calls)
+
+     PHONON       :    45.01s CPU        45.42s WALL
 
      INITIALIZATION: 
      phq_setup    :      0.01s CPU      0.01s WALL (       1 calls)
-     phq_init     :      9.40s CPU      9.74s WALL (       1 calls)
- 
-     phq_init     :      9.40s CPU      9.74s WALL (       1 calls)
-     set_drhoc    :      1.09s CPU      1.13s WALL (       3 calls)
-     init_vloc    :      0.00s CPU      0.00s WALL (       2 calls)
-     init_us_1    :      2.63s CPU      2.72s WALL (       2 calls)
-     newd         :      0.24s CPU      0.25s WALL (       2 calls)
-     dvanqq       :      0.76s CPU      0.79s WALL (       1 calls)
-     drho         :      6.97s CPU      7.21s WALL (       1 calls)
- 
-     DYNAMICAL MATRIX:
-     dynmat0      :      1.11s CPU      1.15s WALL (       1 calls)
-     phqscf       :     49.38s CPU     53.39s WALL (       1 calls)
-     dynmatrix    :      0.01s CPU      0.01s WALL (       1 calls)
- 
-     phqscf       :     49.38s CPU     53.39s WALL (       1 calls)
-     solve_linter :     48.96s CPU     52.93s WALL (       2 calls)
-     drhodv       :      0.42s CPU      0.45s WALL (       2 calls)
- 
-     dynmat0      :      1.11s CPU      1.15s WALL (       1 calls)
-     dynmat_us    :      0.38s CPU      0.39s WALL (       1 calls)
-     d2ionq       :      0.00s CPU      0.00s WALL (       1 calls)
-     dynmatcc     :      0.73s CPU      0.76s WALL (       1 calls)
- 
-     dynmat_us    :      0.38s CPU      0.39s WALL (       1 calls)
-     addusdynmat  :      0.02s CPU      0.02s WALL (       1 calls)
- 
-     phqscf       :     49.38s CPU     53.39s WALL (       1 calls)
-     solve_linter :     48.96s CPU     52.93s WALL (       2 calls)
- 
-     solve_linter :     48.96s CPU     52.93s WALL (       2 calls)
-     dvqpsi_us    :      1.63s CPU      1.73s WALL (      60 calls)
-     ortho        :      0.58s CPU      0.69s WALL (     360 calls)
-     cgsolve      :     30.53s CPU     32.00s WALL (     360 calls)
-     incdrhoscf   :      2.67s CPU      2.87s WALL (     360 calls)
-     addusddens   :      2.87s CPU      2.98s WALL (      14 calls)
-     vpsifft      :      2.15s CPU      2.34s WALL (     300 calls)
-     dv_of_drho   :      0.05s CPU      0.05s WALL (      18 calls)
-     mix_pot      :      0.04s CPU      0.09s WALL (      12 calls)
-     symdvscf     :      0.46s CPU      0.48s WALL (      12 calls)
-     newdq        :      3.36s CPU      3.49s WALL (      12 calls)
-     adddvscf     :      0.45s CPU      0.43s WALL (     300 calls)
-     drhodvus     :      0.00s CPU      0.00s WALL (       2 calls)
- 
-     dvqpsi_us    :      1.63s CPU      1.73s WALL (      60 calls)
-     dvqpsi_us_on :      0.79s CPU      0.81s WALL (      60 calls)
- 
-     cgsolve      :     30.53s CPU     32.00s WALL (     360 calls)
-     ch_psi       :     30.07s CPU     31.39s WALL (    3980 calls)
- 
-     ch_psi       :     30.07s CPU     31.39s WALL (    3980 calls)
-     h_psiq       :     26.14s CPU     27.31s WALL (    3980 calls)
-     last         :      3.81s CPU      3.96s WALL (    3980 calls)
- 
-     h_psiq       :     26.14s CPU     27.31s WALL (    3980 calls)
-     firstfft     :     10.64s CPU     11.28s WALL (   38608 calls)
-     secondfft    :      9.54s CPU      9.90s WALL (   38608 calls)
-     add_vuspsi   :      1.70s CPU      1.74s WALL (    4627 calls)
- 
-     incdrhoscf   :      2.67s CPU      2.87s WALL (     360 calls)
- 
-     drhodvus     :      0.00s CPU      0.00s WALL (       2 calls)
- 
-      General routines
-     calbec       :      2.94s CPU      3.14s WALL (    9907 calls)
-     fft          :      0.10s CPU      0.08s WALL (     189 calls)
-     ffts         :      0.02s CPU      0.02s WALL (     116 calls)
-     fftw         :     24.85s CPU     26.49s WALL (  220976 calls)
-     cinterpolate :      0.04s CPU      0.03s WALL (      39 calls)
-     davcio       :      0.29s CPU      1.77s WALL (    1823 calls)
-     write_rec    :      0.03s CPU      0.06s WALL (      14 calls)
- 
- 
-     PHONON       :  1m11.90s CPU     1m17.24s WALL
+     phq_init     :      3.12s CPU      3.12s WALL (       1 calls)
 
- 
-   This run was terminated on:  16:41:40   7Dec2012            
+     phq_init     :      3.12s CPU      3.12s WALL (       1 calls)
+     set_drhoc    :      0.33s CPU      0.33s WALL (       3 calls)
+     init_vloc    :      0.01s CPU      0.01s WALL (       2 calls)
+     init_us_1    :      0.90s CPU      0.90s WALL (       2 calls)
+     newd         :      0.12s CPU      0.12s WALL (       2 calls)
+     dvanqq       :      0.26s CPU      0.26s WALL (       1 calls)
+     drho         :      2.15s CPU      2.15s WALL (       1 calls)
+
+     DYNAMICAL MATRIX:
+     dynmat0      :      0.49s CPU      0.49s WALL (       1 calls)
+     phqscf       :     33.75s CPU     34.09s WALL (       1 calls)
+     dynmatrix    :      0.01s CPU      0.01s WALL (       1 calls)
+
+     phqscf       :     33.75s CPU     34.09s WALL (       1 calls)
+     solve_linter :     33.57s CPU     33.90s WALL (       2 calls)
+     drhodv       :      0.18s CPU      0.18s WALL (       2 calls)
+
+     dynmat0      :      0.49s CPU      0.49s WALL (       1 calls)
+     dynmat_us    :      0.26s CPU      0.26s WALL (       1 calls)
+     d2ionq       :      0.00s CPU      0.00s WALL (       1 calls)
+     dynmatcc     :      0.22s CPU      0.22s WALL (       1 calls)
+
+     dynmat_us    :      0.26s CPU      0.26s WALL (       1 calls)
+     addusdynmat  :      0.02s CPU      0.02s WALL (       1 calls)
+
+     phqscf       :     33.75s CPU     34.09s WALL (       1 calls)
+     solve_linter :     33.57s CPU     33.90s WALL (       2 calls)
+
+     solve_linter :     33.57s CPU     33.90s WALL (       2 calls)
+     dvqpsi_us    :      1.31s CPU      1.32s WALL (      60 calls)
+     ortho        :      0.45s CPU      0.47s WALL (     360 calls)
+     cgsolve      :     21.74s CPU     21.96s WALL (     360 calls)
+     incdrhoscf   :      1.90s CPU      1.91s WALL (     360 calls)
+     addusddens   :      0.97s CPU      0.96s WALL (      14 calls)
+     vpsifft      :      1.38s CPU      1.38s WALL (     300 calls)
+     dv_of_drho   :      0.02s CPU      0.02s WALL (      18 calls)
+     mix_pot      :      0.01s CPU      0.03s WALL (      12 calls)
+     psymdvscf    :      0.38s CPU      0.38s WALL (      12 calls)
+     newdq        :      1.15s CPU      1.15s WALL (      12 calls)
+     adddvscf     :      0.30s CPU      0.30s WALL (     300 calls)
+     drhodvus     :      0.00s CPU      0.00s WALL (       2 calls)
+
+     dvqpsi_us    :      1.31s CPU      1.32s WALL (      60 calls)
+     dvqpsi_us_on :      0.84s CPU      0.85s WALL (      60 calls)
+
+     cgsolve      :     21.74s CPU     21.96s WALL (     360 calls)
+     ch_psi       :     21.50s CPU     21.71s WALL (    3986 calls)
+
+     ch_psi       :     21.50s CPU     21.71s WALL (    3986 calls)
+     h_psiq       :     18.98s CPU     19.20s WALL (    3986 calls)
+     last         :      2.47s CPU      2.46s WALL (    3986 calls)
+
+     h_psiq       :     18.98s CPU     19.20s WALL (    3986 calls)
+     firstfft     :      8.06s CPU      8.17s WALL (   38600 calls)
+     secondfft    :      7.34s CPU      7.36s WALL (   38600 calls)
+     add_vuspsi   :      1.26s CPU      1.27s WALL (    4637 calls)
+
+     incdrhoscf   :      1.90s CPU      1.91s WALL (     360 calls)
+
+     drhodvus     :      0.00s CPU      0.00s WALL (       2 calls)
+
+      General routines
+     calbec       :      2.23s CPU      2.20s WALL (    9923 calls)
+     fft          :      0.05s CPU      0.05s WALL (     189 calls)
+     ffts         :      0.01s CPU      0.02s WALL (     116 calls)
+     fftw         :     20.70s CPU     20.74s WALL (  220964 calls)
+     cinterpolate :      0.01s CPU      0.02s WALL (      39 calls)
+     davcio       :      0.01s CPU      0.07s WALL (    1823 calls)
+     write_rec    :      0.02s CPU      0.02s WALL (      14 calls)
+
+
+     PHONON       :    45.01s CPU        45.42s WALL
+
+
+   This run was terminated on:  16: 5: 9   9Apr2014            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

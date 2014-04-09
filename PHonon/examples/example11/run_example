@@ -115,7 +115,7 @@ cat > Au.scf_pz.in << EOF
  /
 ATOMIC_SPECIES
 Au   0.0  Au.rel-pz-kjpaw.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS (alat)
  Au  0.00 0.00 0.00
 K_POINTS AUTOMATIC
 4 4 4 1 1 1
