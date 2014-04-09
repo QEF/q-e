@@ -570,6 +570,7 @@ forces.o : symme.o
 forces.o : xdm_dispersion.o
 forces_bp_efield.o : ../../Modules/becmod.o
 forces_bp_efield.o : ../../Modules/cell_base.o
+forces_bp_efield.o : ../../Modules/clocks.o
 forces_bp_efield.o : ../../Modules/constants.o
 forces_bp_efield.o : ../../Modules/fft_base.o
 forces_bp_efield.o : ../../Modules/io_files.o
@@ -580,6 +581,7 @@ forces_bp_efield.o : ../../Modules/mp.o
 forces_bp_efield.o : ../../Modules/mp_bands.o
 forces_bp_efield.o : ../../Modules/mp_world.o
 forces_bp_efield.o : ../../Modules/noncol.o
+forces_bp_efield.o : ../../Modules/parallel_include.o
 forces_bp_efield.o : ../../Modules/recvec.o
 forces_bp_efield.o : ../../Modules/uspp.o
 forces_bp_efield.o : ../../Modules/wavefunctions.o

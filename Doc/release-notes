@@ -1,4 +1,4 @@
-New in svn version
+New in 5.1 version:
 
    * Calling QE from external codes made easier: see new subdirectory COUPLE
    * PW: Hybrid functionals for USPP and PAW (experimental)
@@ -10,7 +10,7 @@ New in svn version
    * PWCOND with DFT+U
    * New functionals: gau-pbe, PW86 (unrevised), B86B, XDM (exchange-hole 
      dipole moment) model of dispersions, vdW-DF3, vdW-DF4 (Klimes et al),
-     rVV10
+     rVV10, optB86b-vdW, rev-vdW-DF2 
    * Added the subdirectory FD in PHonon. Calculation of phonon dispersions 
      using the finite displacements supercell approach.
    * dynmat.x can calculate phonon contribution to dielectric tensor
@@ -19,7 +19,7 @@ New in svn version
      pseudopotentials)
    * "image" parallelization re-introduced in pw.x: see code "manypw.x"
 
-Incompatible changes in svn version:
+Incompatible changes in 5.1 version:
 
    * Initialization of MPI modified in order to simplify usage of QE routines
      from external codes. It is now possible to run an instance of QE into a
@@ -45,7 +45,7 @@ Incompatible changes in svn version:
      specifies if writing to RAM buffer is required. Functionalities of 
      Modules/buffers.f90 have been considerably modified and extended.
 
-Fixed in svn version:
+Fixed in 5.1 version:
 
    * PWscf: spin-polarized HSE for PAW was incorrectly implemented
    * PHonon: Gamma-specific code wasn't properly restarting in parallel
