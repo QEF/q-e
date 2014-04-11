@@ -331,10 +331,5 @@ $PH_COMMAND < ni.phX.in > ni.phX.out
 check_failure $?
 $ECHO " done"
 
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/pwscf*
-$ECHO " done"
-
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"
