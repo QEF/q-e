@@ -97,11 +97,9 @@ fi
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/CO2*
+rm -rf $TMP_DIR/_ph0/CO2*
 $ECHO " done"
-
-
-
 
 
 # self-consistent calculation for CO2
@@ -212,6 +210,11 @@ else
    
 fi
 
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/ZNO*
+rm -rf $TMP_DIR/_ph0/ZNO*
+$ECHO " done"
 
 
 
@@ -241,7 +244,7 @@ CELL_PARAMETERS alat
 ATOMIC_SPECIES
   Zn 65.409  Zn.pbe-d-hgh.UPF
   O  15.999  O.pbe-hgh.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS (alat)
 Zn       2.010975287   0.487933254  -0.051360548
 Zn       1.234717421   0.199473387   0.448322227
 O        1.051679030   0.488287222  -0.051814333
@@ -272,7 +275,7 @@ Normal modes for Wurtzite
  /
  0.0 0.0 0.0
 EOF
-$ECHO "  running phonon calculation of CO2...\c"
+$ECHO "  running phonon calculation of ZnO...\c"
 $PH_COMMAND < zno.ph.in > zno.ph.out
 check_failure $?
 $ECHO " done"
