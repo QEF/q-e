@@ -30,7 +30,9 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   USE grid_irr_iq,     ONLY : irr_iq, done_irr_iq, done_bands
   USE control_ph,      ONLY : ldisp, lgamma, epsil, trans, zue, zeu, &
                               start_irr, last_irr, current_iq, newgrid, &
-                              tmp_dir_ph, tmp_dir_phq, lqdir, qplot, always_run
+                              tmp_dir_ph, tmp_dir_phq, lqdir, qplot, &
+                              always_run, where_rec, rec_code
+  USE ph_restart,      ONLY : ph_writefile
   USE io_files,        ONLY : prefix
   USE ramanm,          ONLY : lraman, elop
   USE freq_ph,         ONLY : fpol
@@ -43,7 +45,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   LOGICAL, INTENT(OUT) :: do_band, do_iq, setup_pw
   CHARACTER (LEN=256), INTENT(IN) :: auxdyn
   CHARACTER (LEN=6), EXTERNAL :: int_to_char
-  INTEGER :: irr
+  INTEGER :: irr, ierr
   !
   do_iq=.TRUE.
   !
@@ -140,6 +142,13 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   ELSE
      lgamma=lgamma_iq(iq)
   ENDIF
+  !
+  !  Save the current status of the run: all the flags, the list of q,
+  !  and the current q, the fact that we are before the bands
+  !
+  where_rec='init_rep..'
+  rec_code=-50
+  CALL ph_writefile('status_ph',iq,0,ierr)
   !
   ! ... In the case:
   !     of q = 0 and one of nk1, nk2 or nk3 = 0 (newgrid=.false.)

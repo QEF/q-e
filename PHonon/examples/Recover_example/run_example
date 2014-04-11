@@ -102,7 +102,7 @@ cat > si.scf.in << EOF
  /
 ATOMIC_SPECIES
  Si  28.086  Si.pz-vbc.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS (alat)
  Si 0.00 0.00 0.00
  Si 0.25 0.25 0.25
 K_POINTS
@@ -184,6 +184,9 @@ cat > ni.scf.in << EOF
     degauss=0.02,
     smearing='mp',
     occupations='smearing',
+    nr1=27,
+    nr2=27,
+    nr3=27,
     ecutwfc =27.0
     ecutrho =300.0
  /
@@ -193,7 +196,7 @@ cat > ni.scf.in << EOF
  /
 ATOMIC_SPECIES
  Ni  58.6934  Ni.pbe-nd-rrkjus.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS (alat)
  Ni 0.00 0.00 0.00
 K_POINTS AUTOMATIC
 4 4 4 1 1 1
@@ -264,12 +267,13 @@ cat > Cu.scf_pbe.in << EOF
     ecutrho = 700.0
  /
  &electrons
+    startingwfc='atomic'
     mixing_beta = 0.7
     conv_thr =  1.0d-9
  /
 ATOMIC_SPECIES
 Cu   0.0  Cu.pbe-kjpaw.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS (alat)
  Cu  0.00 0.00 0.00
 K_POINTS AUTOMATIC
 4 4 4 1 1 1
@@ -343,7 +347,7 @@ cat > Au.scf_rel.in << EOF
  /
 ATOMIC_SPECIES
 Au   0.0  Au.rel-pz-kjpaw.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS (alat)
 Au  0.00 0.00 0.00
 K_POINTS AUTOMATIC
 4 4 4 1 1 1
@@ -414,7 +418,7 @@ cat > Cu.scf_pbe.in << EOF
  /
 ATOMIC_SPECIES
 Cu   0.0  Cu.pbe-kjpaw.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS (alat)
  Cu  0.00 0.00 0.00
 K_POINTS AUTOMATIC
 4 4 4 1 1 1

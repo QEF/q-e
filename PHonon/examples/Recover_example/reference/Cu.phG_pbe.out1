@@ -1,31 +1,40 @@
 
-     Program PHONON v.4.1       starts on 10Nov2009 at 17:18: 2 
+     Program PHONON v.5.0.99 (svn rev. 10851) starts on 11Apr2014 at 12: 2:54 
 
      This program is part of the open-source Quantum ESPRESSO suite
-     for quantum simulation of materials; please acknowledge
+     for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
+     http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI), running on     4 processors
+     R & G space division:  proc/nbgrp/npool/nimage =       4
 
-     Ultrasoft (Vanderbilt) Pseudopotentials
+   Info: using nr1, nr2, nr3 values from input
 
-     Planes per process (thick) : nr3 = 45 npp =  45 ncplane = 2025
-     Planes per process (smooth): nr3s= 18 npps=  18 ncplanes=  324
- 
-     Proc/  planes cols     G    planes cols    G      columns  G
-     Pool       (dense grid)       (smooth grid)      (wavefct grid)
-        1    45   1159    25821   18    199     1837     73      411
- 
+   Info: using nr1s, nr2s, nr3s values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      =  SLA  PW   PBX  PBC ( 1  4  3  4 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         289      49     18                 6454      453     102
+     Max         290      50     19                 6456      462     104
+     Sum        1159     199     73                25821     1837     411
+
 
      Calculation of q =    0.0000000   0.0000000   0.0000000
 
                                                                                 
 
      bravais-lattice index     =            2
-     lattice parameter (a_0)   =       6.9000  a.u.
+     lattice parameter (alat)  =       6.9000  a.u.
      unit-cell volume          =      82.1273 (a.u.)^3
      number of atoms/cell      =            1
      number of atomic types    =            1
@@ -34,18 +43,18 @@
      convergence threshold     =      1.0E-14
      beta                      =       0.7000
      number of iterations used =            4
-     Exchange-correlation      =  SLA  PW   PBX  PBC (1434)
+     Exchange-correlation      =  SLA  PW   PBX  PBC ( 1  4  3  4 0)
 
 
      celldm(1)=    6.90000  celldm(2)=    0.00000  celldm(3)=    0.00000
      celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
 
-     crystal axes: (cart. coord. in units of a_0)
+     crystal axes: (cart. coord. in units of alat)
                a(1) = ( -0.5000  0.0000  0.5000 )  
                a(2) = (  0.0000  0.5000  0.5000 )  
                a(3) = ( -0.5000  0.5000  0.0000 )  
 
-     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
                b(1) = ( -1.0000 -1.0000  1.0000 )  
                b(2) = (  1.0000  1.0000  1.0000 )  
                b(3) = ( -1.0000  1.0000 -1.0000 )  
@@ -53,21 +62,22 @@
 
      Atoms inside the unit cell: 
 
-   Cartesian axes
+     Cartesian axes
 
-     site n.  atom      mass           positions (a_0 units)
-        1        Cu  63.5460   tau( 1) = (    0.00000    0.00000    0.00000  )
+     site n.  atom      mass           positions (alat units)
+        1     Cu  63.5460   tau(    1) = (    0.00000    0.00000    0.00000  )
 
      Computing dynamical matrix for 
                     q = (   0.0000000   0.0000000   0.0000000 )
- 
+
      49 Sym.Ops. (with q -> -q+G )
 
 
-     G cutoff =  844.1828  (  25821 G-vectors)     FFT grid: ( 45, 45, 45)
-     G cutoff =  144.7170  (   1837 G-vectors)  smooth grid: ( 18, 18, 18)
-     number of k points=   10  gaussian broad. (Ry)=  0.0100     ngauss =   1
-                       cart. coord. in units 2pi/a_0
+     G cutoff =  844.1828  (   6455 G-vectors)     FFT grid: ( 45, 45, 45)
+     G cutoff =  144.7170  (    461 G-vectors)  smooth grid: ( 18, 18, 18)
+
+     number of k points=    10  Methfessel-Paxton smearing, width (Ry)=  0.0100
+                       cart. coord. in units 2pi/alat
         k(    1) = (  -0.1250000   0.1250000   0.1250000), wk =   0.0625000
         k(    2) = (  -0.3750000   0.3750000  -0.1250000), wk =   0.1875000
         k(    3) = (   0.3750000  -0.3750000   0.6250000), wk =   0.1875000
@@ -79,7 +89,9 @@
         k(    9) = (  -0.3750000   0.3750000   0.3750000), wk =   0.0625000
         k(   10) = (   0.3750000  -0.3750000   1.1250000), wk =   0.1875000
 
-     PseudoPot. # 1 for Cu read from file Cu.pbe-paw_kj.UPF
+     PseudoPot. # 1 for Cu read from file:
+     /home/espresso/SVN/espresso/pseudo/Cu.pbe-kjpaw.UPF
+     MD5 check sum: ea8dc1758ef72f6b0f3e07e3ad212d69
      Pseudo is Projector augmented-wave + core cor, Zval = 11.0
      Generated using "atomic" code by A. Dal Corso (espresso distribution)
      Shape of augmentation charge: BESSEL
@@ -93,103 +105,125 @@
      Q(r) pseudized with 0 coefficients 
 
 
+     Mode symmetry, O_h (m-3m)  point group:
+
 
      Atomic displacements:
      There are   1 irreducible representations
 
-     Representation     1      3 modes -T_1u G_15  G_4- To be done
+     Representation     1      3 modes -T_1u G_15  G_4-  To be done
 
 
 
      Alpha used in Ewald sum =   2.8000
-     PHONON       :     9.00s CPU time,        9.06s wall time
+     PHONON       :     2.34s CPU         2.37s WALL
 
 
 
      Representation #  1 modes #   1  2  3
 
      Self-consistent Calculation
- 
-     Pert. #  1: Fermi energy shift (Ry) =     0.0000E+00     0.3135E-37
-     Pert. #  2: Fermi energy shift (Ry) =     0.2800E-25    -0.7562E-36
-     Pert. #  3: Fermi energy shift (Ry) =     0.0000E+00     0.3135E-37
 
-      iter #   1 total cpu time :    17.8 secs   av.it.:   5.4
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.939E-06
+     Pert. #  1: Fermi energy shift (Ry) =    -6.8932E-26    -1.2539E-37
+     Pert. #  2: Fermi energy shift (Ry) =    -4.4806E-25     1.2539E-37
+     Pert. #  3: Fermi energy shift (Ry) =    -1.7233E-26    -1.2539E-37
+
+      iter #   1 total cpu time :     4.9 secs   av.it.:   5.4
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  8.259E-07
+
+     Pert. #  1: Fermi energy shift (Ry) =    -6.8932E-26    -9.7958E-40
+     Pert. #  2: Fermi energy shift (Ry) =    -2.7573E-25    -2.4489E-40
+     Pert. #  3: Fermi energy shift (Ry) =     2.7573E-25    -4.8979E-40
+
+      iter #   2 total cpu time :     7.6 secs   av.it.:  10.3
+      thresh= 9.088E-05 alpha_mix =  0.700 |ddv_scf|^2 =  2.594E-08
 
      Maximum CPU time exceeded
 
      max_seconds     =       5.00
-     elapsed seconds =      14.81
- 
-     PHONON       :    17.85s CPU time,       18.03s wall time
+     elapsed seconds =       6.66
+
+     PHONON       :     7.48s CPU         7.63s WALL
 
      INITIALIZATION: 
-     phq_setup    :     0.36s CPU
-     phq_init     :     5.43s CPU
- 
-     phq_init     :     5.43s CPU
-     set_drhoc    :     3.60s CPU (       3 calls,   1.198 s avg)
-     init_vloc    :     0.00s CPU
-     init_us_1    :     1.46s CPU
-     newd         :     0.12s CPU
-     dvanqq       :     0.75s CPU
-     drho         :     0.42s CPU
- 
+     phq_setup    :      0.08s CPU      0.08s WALL (       1 calls)
+     phq_init     :      1.31s CPU      1.31s WALL (       1 calls)
+
+     phq_init     :      1.31s CPU      1.31s WALL (       1 calls)
+     set_drhoc    :      0.80s CPU      0.80s WALL (       3 calls)
+     init_vloc    :      0.01s CPU      0.01s WALL (       1 calls)
+     init_us_1    :      0.25s CPU      0.25s WALL (       1 calls)
+     newd         :      0.03s CPU      0.03s WALL (       1 calls)
+     dvanqq       :      0.16s CPU      0.16s WALL (       1 calls)
+     drho         :      0.10s CPU      0.11s WALL (       1 calls)
+
      DYNAMICAL MATRIX:
-     dynmat0      :     2.59s CPU
-     phqscf       :     8.85s CPU
- 
-     phqscf       :     8.85s CPU
-     solve_linter :     8.85s CPU
- 
-     dynmat0      :     2.59s CPU
-     dynmat_us    :     0.02s CPU
-     d2ionq       :     0.00s CPU
-     dynmatcc     :     2.56s CPU
- 
-     dynmat_us    :     0.02s CPU
-     addusdynmat  :     0.00s CPU
- 
-     phqscf       :     8.85s CPU
-     solve_linter :     8.85s CPU
- 
-     solve_linter :     8.85s CPU
-     dvqpsi_us    :     0.18s CPU (      30 calls,   0.006 s avg)
-     ortho        :     0.00s CPU (      30 calls,   0.000 s avg)
-     cgsolve      :     0.67s CPU (      30 calls,   0.022 s avg)
-     incdrhoscf   :     0.08s CPU (      30 calls,   0.003 s avg)
-     addusddens   :     0.46s CPU (       2 calls,   0.231 s avg)
-     dv_of_drho   :     0.30s CPU (       3 calls,   0.099 s avg)
-     mix_pot      :     0.01s CPU
-     ef_shift     :     0.03s CPU
-     localdos     :     0.16s CPU
-     psymdvscf    :     0.54s CPU
-     newdq        :     0.37s CPU
- 
-     dvqpsi_us    :     0.18s CPU (      30 calls,   0.006 s avg)
-     dvqpsi_us_on :     0.03s CPU (      30 calls,   0.001 s avg)
- 
-     cgsolve      :     0.67s CPU (      30 calls,   0.022 s avg)
-     ch_psi       :     0.67s CPU (     221 calls,   0.003 s avg)
- 
-     ch_psi       :     0.67s CPU (     221 calls,   0.003 s avg)
-     h_psiq       :     0.64s CPU (     221 calls,   0.003 s avg)
-     last         :     0.03s CPU (     221 calls,   0.000 s avg)
- 
-     h_psiq       :     0.64s CPU (     221 calls,   0.003 s avg)
-     firstfft     :     0.37s CPU (    1001 calls,   0.000 s avg)
-     secondfft    :     0.24s CPU (    1001 calls,   0.000 s avg)
-     add_vuspsi   :     0.01s CPU (     221 calls,   0.000 s avg)
- 
-     incdrhoscf   :     0.08s CPU (      30 calls,   0.003 s avg)
-     addusdbec    :     0.01s CPU (      60 calls,   0.000 s avg)
- 
- 
+     dynmat0      :      0.57s CPU      0.57s WALL (       1 calls)
+     phqscf       :      5.14s CPU      5.26s WALL (       1 calls)
+
+     phqscf       :      5.14s CPU      5.26s WALL (       2 calls)
+     solve_linter :      5.14s CPU      5.26s WALL (       1 calls)
+
+     dynmat0      :      0.57s CPU      0.57s WALL (       1 calls)
+     dynmat_us    :      0.01s CPU      0.01s WALL (       1 calls)
+     d2ionq       :      0.00s CPU      0.00s WALL (       1 calls)
+     dynmatcc     :      0.56s CPU      0.56s WALL (       1 calls)
+
+     dynmat_us    :      0.01s CPU      0.01s WALL (       1 calls)
+     addusdynmat  :      0.00s CPU      0.00s WALL (       1 calls)
+
+     phqscf       :      5.14s CPU      5.26s WALL (       3 calls)
+     solve_linter :      5.14s CPU      5.26s WALL (       2 calls)
+
+     solve_linter :      5.14s CPU      5.26s WALL (       3 calls)
+     dvqpsi_us    :      0.05s CPU      0.05s WALL (      30 calls)
+     ortho        :      0.00s CPU      0.01s WALL (      60 calls)
+     cgsolve      :      0.53s CPU      0.54s WALL (      60 calls)
+     incdrhoscf   :      0.04s CPU      0.04s WALL (      60 calls)
+     addusddens   :      0.14s CPU      0.15s WALL (       3 calls)
+     vpsifft      :      0.02s CPU      0.02s WALL (      30 calls)
+     dv_of_drho   :      0.12s CPU      0.12s WALL (       6 calls)
+     mix_pot      :      0.01s CPU      0.02s WALL (       2 calls)
+     ef_shift     :      0.01s CPU      0.01s WALL (       2 calls)
+     localdos     :      0.03s CPU      0.04s WALL (       1 calls)
+     psymdvscf    :      1.16s CPU      1.16s WALL (       2 calls)
+     newdq        :      0.15s CPU      0.15s WALL (       2 calls)
+     adddvscf     :      0.00s CPU      0.00s WALL (      30 calls)
+
+     dvqpsi_us    :      0.05s CPU      0.05s WALL (      30 calls)
+     dvqpsi_us_on :      0.02s CPU      0.02s WALL (      30 calls)
+
+     cgsolve      :      0.53s CPU      0.54s WALL (      60 calls)
+     ch_psi       :      0.52s CPU      0.53s WALL (     597 calls)
+
+     ch_psi       :      0.52s CPU      0.53s WALL (     597 calls)
+     h_psiq       :      0.49s CPU      0.49s WALL (     597 calls)
+     last         :      0.03s CPU      0.03s WALL (     597 calls)
+
+     h_psiq       :      0.49s CPU      0.49s WALL (     597 calls)
+     firstfft     :      0.28s CPU      0.30s WALL (    2817 calls)
+     secondfft    :      0.16s CPU      0.14s WALL (    2817 calls)
+     add_vuspsi   :      0.01s CPU      0.01s WALL (     597 calls)
+
+     incdrhoscf   :      0.04s CPU      0.04s WALL (      60 calls)
+     addusdbec    :      0.00s CPU      0.00s WALL (      90 calls)
+
+
       General routines
-     calbec       :     0.03s CPU (     642 calls,   0.000 s avg)
-     cft3s        :     1.19s CPU (    3404 calls,   0.000 s avg)
-     cinterpolate :     0.06s CPU (      10 calls,   0.006 s avg)
-     davcio       :     0.00s CPU (     118 calls,   0.000 s avg)
-     write_rec    :     0.00s CPU
- 
+     calbec       :      0.03s CPU      0.03s WALL (    1454 calls)
+     fft          :      0.14s CPU      0.15s WALL (     142 calls)
+     ffts         :      0.01s CPU      0.01s WALL (     107 calls)
+     fftw         :      0.40s CPU      0.39s WALL (    7531 calls)
+     cinterpolate :      0.02s CPU      0.02s WALL (      16 calls)
+     davcio       :      0.00s CPU      0.01s WALL (     227 calls)
+     write_rec    :      0.00s CPU      0.00s WALL (       2 calls)
+
+
+     PHONON       :     7.48s CPU         7.63s WALL
+
+
+   This run was terminated on:  12: 3: 2  11Apr2014            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
