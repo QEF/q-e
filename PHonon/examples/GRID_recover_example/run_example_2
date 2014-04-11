@@ -98,7 +98,8 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/alas*
+rm -rf $TMP_DIR/_ph*/alas*
 $ECHO " done"
 
 # self-consistent calculation
@@ -123,7 +124,7 @@ cat > alas.scf.in << EOF
 ATOMIC_SPECIES
  Al  26.98  Al.pz-vbc.UPF
  As  74.92  As.pz-bhs.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS (alat)
  Al 0.00 0.00 0.00
  As 0.25 0.25 0.25
 K_POINTS
