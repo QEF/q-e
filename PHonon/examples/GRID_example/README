@@ -3,7 +3,7 @@ allows to split a phonon calculation into relatively small jobs, each
 runing a subset of linear-response calculations for a small number of
 wave-vectors or irreps or compbinations. The jobs can then be run
 independently and the final results collected. Documentation is available
-here: :Calculation of Phonon Dispersions on the GRID using Quantum ESPRESSO",
+here: "Calculation of Phonon Dispersions on the GRID using Quantum ESPRESSO",
 R. di Meo, A. Dal Corso, P. Giannozzi, and S. Cozzini, in
 "Chemistry and Material Science Applications on Grid Infrastructures", Editors:
 S. Cozzini, A. Lagana', ICTP Lecture Notes Series, Vol.24, pp.165-183 (2009)

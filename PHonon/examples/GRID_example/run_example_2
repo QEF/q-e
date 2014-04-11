@@ -90,7 +90,8 @@ $ECHO
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+rm -rf $TMP_DIR/al*
+rm -rf $TMP_DIR/_ph0/al*
 $ECHO "  done"
 
 #
@@ -116,7 +117,7 @@ cat > al.scf.fit.in << EOF
  /
 ATOMIC_SPECIES
  Al  26.98 Al.pz-vbc.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS (alat)
  Al 0.00 0.00 0.00
 K_POINTS {automatic}
  16 16 16  0 0 0
@@ -147,7 +148,7 @@ cat > al.scf.in << EOF
  /
 ATOMIC_SPECIES
  Al  26.98 Al.pz-vbc.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS (alat)
  Al 0.00 0.00 0.00
 K_POINTS {automatic}
  8 8 8  0 0 0
