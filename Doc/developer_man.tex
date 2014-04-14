@@ -1309,7 +1309,7 @@ IF ( ionode ) THEN
    OPEN ( ..., IOSTAT=ierr )
    ...
 END IF
-CALL mp_bcast( ierr, ... , world_comm )
+CALL mp_bcast( ierr, ... , intra_image_comm )
 CALL errore( 'routine','error', ierr )
 \end{verbatim}
 The same applies to all operations performed on a single processor,
@@ -1867,7 +1867,7 @@ read\_namelists.f90 )
  \begin{verbatim}
                 subroutine control_bcast( )
                 ...
-                call mp_bcast( pippo, world_comm )
+                call mp_bcast( pippo, intra_image_comm )
                 ...
                 end subroutine
 \end{verbatim}
