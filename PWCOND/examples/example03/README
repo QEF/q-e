@@ -1,9 +1,9 @@
 
 This example shows how to use pw.x and pwcond.x to compute the complex band 
-structure (CBS) and transmittace within DFT+U for an Au monatomic chain with 
+structure (CBS) and transmittance within DFT+U for an Au monatomic chain with
 a CO impurity. The Hubbard potential is included in the coefficients of the 
 non-local part of the pseudopotential (PP), as described in:
-http://www.sissa.it/cm/thesis/2010/SclauzeroG_PhDthesis.pdf
+G. Sclauzero, A. Dal Corso, Phys. Rev. B 87, 085108 (2013)
 
 The plain LDA result is compared with the LDA+U result (using U=3 eV), 
 therefore the following calculations are performed first without, and 
