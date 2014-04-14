@@ -53,7 +53,8 @@ SUBROUTINE read_file()
   ! ... Not sure which ones (if any) should be done here
   !
   CALL init_us_1()
-  IF (lda_plus_U .AND. (U_projection == 'pseudo')) CALL init_q_aeps()
+  !
+  IF (lda_plus_u .AND. (U_projection == 'pseudo')) CALL init_q_aeps()
   !
   IF (okpaw) THEN
      becsum = rho%bec
@@ -112,12 +113,13 @@ SUBROUTINE read_xml_file()
   USE uspp_param,           ONLY : upf
   USE paw_variables,        ONLY : okpaw, ddd_PAW
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
-  USE ldaU,                 ONLY : lda_plus_u, eth, oatwfc
+  USE ldaU,                 ONLY : lda_plus_u, eth, oatwfc, init_lda_plus_u
   USE control_flags,        ONLY : gamma_only
   USE funct,                ONLY : get_inlc, get_dft_name
   USE kernel_table,         ONLY : initialize_kernel_table
   USE esm,                  ONLY : do_comp_esm, esm_ggen_2d
   !
+  IMPLICIT NONE
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, inlc
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
   REAL(DP) :: sr(3,3,48)
@@ -265,8 +267,7 @@ SUBROUTINE read_xml_file()
   ENDIF
   !
   IF ( lda_plus_u ) THEN
-     ALLOCATE ( oatwfc(nat) )
-     CALL offset_atom_wfc ( nat, oatwfc, ierr )
+     CALL init_lda_plus_u ( upf(1:nsp)%psd, noncolin )
   ENDIF
   !
   CALL allocate_wfc()
