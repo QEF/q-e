@@ -61,7 +61,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   INTEGER :: nkbtona(nkb)
    INTEGER :: nkbtonh(nkb)
   COMPLEX(DP) :: sca, sca1, pref
-  INTEGER nb,mb, jkb, nhjkb, na, np, nhjkbm,jkb1,i,j
+  INTEGER nb,mb, jkb, nhjkb, na, np, nhjkbm,jkb1,i,j,iv
   INTEGER :: jkb_bp,nt,ig, ijkb0,ibnd,jh,ih,ikb
   REAL(dp) :: eps
   COMPLEX(kind=DP), ALLOCATABLE :: sca_mat(:,:),sca_mat1(:,:)
@@ -191,8 +191,10 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
           
      call start_clock('h_eps_ap_van')
 ! copy evcel into evct
-     do ig=1,npwx*nbnd*npol
-        evct(ig,1)=evcel(ig,1)
+     do iv=1,nbnd
+        do ig=1,npwx*npol
+           evct(ig,iv)=evcel(ig,iv)
+        enddo
      enddo
 !  calculate S|evct>
      call start_clock('h_eps_van2')
