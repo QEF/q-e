@@ -1107,6 +1107,7 @@ prepare_q.o : ../../Modules/io_files.o
 prepare_q.o : ../../Modules/io_global.o
 prepare_q.o : ../../PW/src/pwcom.o
 prepare_q.o : elph.o
+prepare_q.o : ph_restart.o
 prepare_q.o : phcom.o
 prepare_q.o : ramanm.o
 prepare_sym_analysis.o : ../../Modules/kind.o

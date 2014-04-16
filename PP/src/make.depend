@@ -517,6 +517,7 @@ pw2wannier90.o : ../../Modules/recvec.o
 pw2wannier90.o : ../../Modules/uspp.o
 pw2wannier90.o : ../../Modules/wavefunctions.o
 pw2wannier90.o : ../../PW/src/pwcom.o
+pw2wannier90.o : ../../PW/src/scf_mod.o
 pw_export.o : ../../Modules/becmod.o
 pw_export.o : ../../Modules/control_flags.o
 pw_export.o : ../../Modules/environment.o

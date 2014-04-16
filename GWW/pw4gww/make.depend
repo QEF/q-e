@@ -116,6 +116,7 @@ fake_conduction.o : mp_wave_parallel.o
 fft_custom.o : ../../Modules/cell_base.o
 fft_custom.o : ../../Modules/constants.o
 fft_custom.o : ../../Modules/control_flags.o
+fft_custom.o : ../../Modules/fft_base.o
 fft_custom.o : ../../Modules/fft_parallel.o
 fft_custom.o : ../../Modules/fft_scalar.o
 fft_custom.o : ../../Modules/fft_types.o

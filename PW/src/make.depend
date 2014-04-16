@@ -693,7 +693,6 @@ h_epsi_her_set.o : ../../Modules/ions_base.o
 h_epsi_her_set.o : ../../Modules/kind.o
 h_epsi_her_set.o : ../../Modules/mp.o
 h_epsi_her_set.o : ../../Modules/mp_bands.o
-h_epsi_her_set.o : ../../Modules/mp_world.o
 h_epsi_her_set.o : ../../Modules/noncol.o
 h_epsi_her_set.o : ../../Modules/recvec.o
 h_epsi_her_set.o : ../../Modules/uspp.o
@@ -1414,7 +1413,6 @@ realus.o : ../../Modules/kind.o
 realus.o : ../../Modules/mp.o
 realus.o : ../../Modules/mp_bands.o
 realus.o : ../../Modules/mp_pools.o
-realus.o : ../../Modules/mp_world.o
 realus.o : ../../Modules/noncol.o
 realus.o : ../../Modules/recvec.o
 realus.o : ../../Modules/splinelib.o
@@ -1992,7 +1990,6 @@ xdm_dispersion.o : ../../Modules/kind.o
 xdm_dispersion.o : ../../Modules/mp.o
 xdm_dispersion.o : ../../Modules/mp_images.o
 xdm_dispersion.o : ../../Modules/mp_pools.o
-xdm_dispersion.o : ../../Modules/mp_world.o
 xdm_dispersion.o : ../../Modules/paw_variables.o
 xdm_dispersion.o : ../../Modules/splinelib.o
 xdm_dispersion.o : ../../Modules/uspp.o
