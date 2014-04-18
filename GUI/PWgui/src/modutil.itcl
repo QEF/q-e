@@ -52,6 +52,73 @@ proc ::pwscf::readFilter::replaceFlag {line reference args} {
 }
 #******
 
+
+#****f* module/Functions
+# SYNOPSIS
+proc ::pwscf::readFilter::replaceVarFlag {line var optsList} {
+    # PURPOSE
+    # Handle properly multiple flags with the same meaning, that is,
+    # for example: map 'methfessel-paxton', or 'm-p', or 'mp' --> 'methfessel-paxton'
+    # EXAMPLE
+    #  readFilter::replaceVarFlag $line $var optList
+    # ARGUMENTS
+    # * line -- line of input to replace the flag to a reference value
+    # * var  -- name of the variable for which to replace a flag to a reference flag
+    # * optList -- kind of double-list of options (the first option-value is taken as a reference), i.e.:
+    #              set optList {
+    #		           {'gaussian' 'gauss'}
+    #		           {'methfessel-paxton' 'm-p' 'mp'}
+    #		           {'marzari-vanderbilt' 'cold' 'm-v' 'mv'}
+    #		           {'fermi-dirac' 'f-d' 'fd'}
+    #		   }
+    # SOURCE
+
+    if { ! [string match *${var}* $line] } { return $line }
+
+    set substituted 0
+
+    set spl [split $line =] 
+    set nl  [llength $spl]
+    
+    set new_spl [lindex $spl 0]
+    
+    for {set i 1} {$i < $nl} {incr i} {
+
+	set var_   [string trim [lindex [lindex $spl [expr $i - 1]] end] ,]
+	set value_ [lindex $spl  $i]
+	
+	if { $var_ == $var } {
+
+	    # ok we find the proper variable; replace its flag with the reference value
+
+	    foreach opts $optsList {
+		#
+		set reference [lindex $opts 0]
+		set flags     [lrange $opts 1 end]
+		    
+		foreach flag $flags {
+		    #
+		    if { [regexp ${flag} $value_] } {
+			#
+			set value_ [regsub $flag $value_ $reference]
+			set substituted 1
+			break
+		    }
+		}
+	    }
+	}	
+	lappend new_spl $value_
+    }
+    
+    if { $substituted } {
+	set line [join $new_spl =]
+    }
+
+    return $line
+}
+#******
+
+
 proc ::pwscf::readFilter::logicalFlag {line} {
     # PURPOSE
     # Convert all variants of .TRUE. .true. .T. .t. ---> .true.
