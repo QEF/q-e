@@ -570,6 +570,12 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			'vcut_ws'
 			'none'
 		    }
+		    -textvalue {
+			gygi-baldereschi
+			vcut_spherical
+			vcut_ws
+			none
+		    }
 		}
 
 		var ecutvcut {
@@ -745,15 +751,40 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		separator -label "--- Semi-empirical van der Waals (aka DFT-D) ---"
 
 		group vdW {
-		    var london {
-			-label "Compute the semi-empirical dispersion term \[aka DFT-D\] (london):"
-			-textvalue {Yes No}
-			-value     {.true. .false.}
-			-widget    radiobox
+
+		    var vdw_corr {
+			-label "Type of Van der Waals correction (vdw_corr):"
+			-textvalue {Grimme-D2   XDM   None}
+			-value     {'grimme-d2' 'xdm' ''}
+			-widget    optionmenu
 		    }  
 
-		    var london_s6 -label "Global scaling parameter for DFT-D (london_s6):" -validate fortranposreal
-		    var london_rcut -label "Cutoff radius for dispersion interactions \[in a.u.\] (london_rcut):" -validate fortranposreal
+		    group dftdG {
+			var london_s6 -label "Global scaling parameter for DFT-D (london_s6):" -validate fortranposreal
+			var london_rcut -label "Cutoff radius for dispersion interactions \[in a.u.\] (london_rcut):" -validate fortranposreal
+		    }
+
+		    group xdmG {
+			var xdm_a1 -label "Damping function parameter a1 (xdm_a1):" -validate fortranreal
+			var xdm_a2 -label "Damping function parameter a1 (xdm_a2):" -validate fortranreal
+		    }
+
+		    group vdw_obsolete -name "Obsolete vdW variables:" -decor normal {
+			
+			var london {
+			    -label "Compute the semi-empirical dispersion term \[aka DFT-D\] (london):"
+			    -textvalue {Yes No}
+			    -value     {.true. .false.}
+			    -widget    radiobox
+			}  
+			
+			var xdm {
+			    -label "Compute the XDM-type dispersion term (xdm):"
+			    -textvalue {Yes No}
+			    -value     {.true. .false.}
+			    -widget    radiobox
+			}  
+		    }
 		}
 
 		separator -label "--- FFT mesh (hard grid) for charge density ---"

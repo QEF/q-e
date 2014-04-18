@@ -487,21 +487,34 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 	}
 	
 	if { $what == {} } {	    
-	    # VARIABLE: occupations; handle multiple flags
+	    
 	    #---------------------------------------------
-	    # 'gaussian', 'gauss'                       --> 'gaussian'
-	    # 'methfessel-paxton', 'm-p', 'mp'          --> 'methfessel-paxton'
-	    # 'marzari-vanderbilt', 'cold', 'm-v', 'mv' --> 'marzari-vanderbilt'
-	    # 'fermi-dirac', 'f-d', 'fd'                --> 'fermi-dirac'
-	    set _line [readFilter::replaceFlag $_line gaussian gauss]
-	    set _line [readFilter::replaceFlag $_line methfessel-paxton m-p mp]
-	    set _line [readFilter::replaceFlag $_line marzari-vanderbilt cold m-v mv]
-	    set _line [readFilter::replaceFlag $_line fermi-dirac f-d fd]
+	    # VARIABLES: handle multiple flags options
+	    #---------------------------------------------
+	    foreach {var optList} {
+		smearing {
+		    {'gaussian' 'gauss'}
+		    {'methfessel-paxton' 'm-p' 'mp'}
+		    {'marzari-vanderbilt' 'cold' 'm-v' 'mv'}
+		    {'fermi-dirac' 'f-d' 'fd'}
+		}
+		assume_isolated {
+		    {'makov-payne' 'm-p' 'mp'}
+		    {'martyna-tuckerman' 'm-t' 'mt'}
+		}
+		vdw_corr {
+		    {'grimme-d2' 'Grimme-D2' 'DFT-D' 'dft-d'}
+		    {'ts-vdw' 'TS' 'ts' 'ts-vdW'}
+		    {'XDM' 'xdm'}
+		}
+	    } {		
+		set _line [readFilter::replaceVarFlag $_line $var $optList]
+	    }
     
-	    # VARIABLE: diagonalization; handle multiple flags
-	    #-------------------------------------------------
-	    # 'david' 'david_overlap' 'david_nooverlap' --> 'david'
-	    set _line [readFilter::replaceFlag $_line david david_overlap david_nooverlap]
+	    # # VARIABLE: diagonalization; handle multiple flags
+	    # #-------------------------------------------------
+	    # # 'david' 'david_overlap' 'david_nooverlap' --> 'david'
+	    # set _line [readFilter::replaceFlag $_line david david_overlap david_nooverlap]
 
 	    # logical VARIABLES: use only .true. and .false.
 	    #-----------------------------------------------

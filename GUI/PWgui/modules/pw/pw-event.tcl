@@ -305,14 +305,39 @@ tracevar assume_isolated w {
 
 tracevar london w {
     if { [vartextvalue london] == "Yes" } { 
-	widget london_s6   enable 
-	widget london_rcut enable
+	groupwidget dftdG enable 
     } else  {
-	widget london_s6   disable 
-	widget london_rcut disable
+	groupwidget dftdG disable 
     }
 }
 
+tracevar london w {
+    if { [vartextvalue london] == "Yes" } { 
+	groupwidget dftdG enable 
+    } else  {
+	groupwidget dftdG disable 
+    }
+}
+
+tracevar xdm w {
+    if { [vartextvalue xdm] == "Yes" } { 
+	groupwidget xdmG enable 
+    } else  {
+	groupwidget xdmG disable 
+    }
+}
+
+tracevar vdw_corr w {
+    groupwidget dftdG disable
+    groupwidget xdmG  disable 
+    if { [varvalue vdw_corr] == "'grimme-d2'" } {
+	groupwidget dftdG enable 
+	groupwidget xdmG  disable 
+    } elseif { [varvalue vdw_corr] == "'xdm'" } {
+	groupwidget dftdG disable 
+	groupwidget xdmG  enable 
+    }
+}
 
 # ------------------------------------------------------------------------
 #  Page: ELECTRONS
@@ -494,16 +519,16 @@ postprocess {
     varset lda_plus_u      -value {}
     varset occupations     -value {}
     varset assume_isolated -value {}
+    varset vdw_corr        -value {}
     varset london          -value {}
+    varset xdm             -value {}
     varset adaptive_thr    -value {}
     varset diagonalization -value {}
     varset ion_dynamics    -value {}
     varset K_POINTS_flags  -value automatic
     varset CELL_PARAMETERS_flags -value {}
 
-    # so far the only constraint-type is "1"
-    #tableset constraints_table 1 1 -value 1
-
     # unused variables
     groupwidget unused_1 disable
+    #groupwidget vdw_obsolete disable    
 }
