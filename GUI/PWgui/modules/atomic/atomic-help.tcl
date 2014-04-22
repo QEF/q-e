@@ -782,10 +782,10 @@ help pseudotype -helpfmt helpdoc -helptext {
 
 2 ... norm-conserving PP in separable form (obsolescent)
       All calculations are done using SEPARABLE non-local form
-      INMPORTANT: multiple projectors allowed but not properly
+      IMPORTANT: multiple projectors allowed but not properly
       implemented, use only if you know what you are doing
 
-3 ... ultrasoft PP
+3 ... ultrasoft PP or PAW
          </pre></blockquote>
 </ul>      
       
@@ -858,7 +858,7 @@ Angular momentum of the local channel.
 
 * lloc=-1 or lloc=-2 pseudizes the all-electron potential
   if lloc=-2 the original recipe of Troullier-Martins
-  is used (izero first and second derivatives at r=0)
+  is used (zero first and second derivatives at r=0)
 * lloc&gt;-1 uses the corresponding channel as local PP
 
 NB: if lloc&gt;-1, the corresponding channel must be the last in the
@@ -903,7 +903,8 @@ help nlcc -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 If .true. produce a PP with the nonlinear core
-correction of Froyen, Cohen, and Louie.
+correction of Louie, Froyen, and Cohen
+[PRB 26, 1738 (1982)].
          </pre></blockquote>
 </ul>      
       
@@ -961,7 +962,7 @@ help tm -helpfmt helpdoc -helptext {
 <blockquote><pre>
 * .true. for Troullier-Martins pseudization [PRB 43, 1993 (1991)]
 
-* .false. for Rabe-Rappe-Kaxiras-Joannopoulos pseudization
+* .false. for Rappe-Rabe-Kaxiras-Joannopoulos pseudization
   [PRB 41, 1227 (1990), erratum PRB 44, 13175 (1991)]
          </pre></blockquote>
 </ul>      
@@ -980,7 +981,7 @@ help rho0 -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Charge at the origin: when the Rabe-Rappe-Kaxiras-Joannopoulos
+Charge at the origin: when the Rappe-Rabe-Kaxiras-Joannopoulos
 method with 3 Bessel functions fails, specifying rho0 &gt; 0
 may allow to override the problem (using 4 Bessel functions).
 Typical values are in the order of 0.01-0.02
@@ -1076,7 +1077,7 @@ help rmatch_augfun_nc -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If .true. the augmetation functions are pseudized
+If .true. the augmentation functions are pseudized
 from the origin to min(rcut(ns),rcut(ns1)) where ns
 and ns1 are the two channels for that Q. In this case
 rmatch_augfun is not used.
@@ -1154,7 +1155,7 @@ The GIPAW reconstruction to be performed using the PAW data and
 projectors for the valence wavefunctions.
 
 In the default case, the GIPAW valence wavefunction and projectors
-are independent from the PAW ones and must be then specificed as
+are independent from the PAW ones and must be then specified as
 explained above in lgipaw_reconstruction.
 
 Setting this to .true. always implies lgipaw_reconstruction = .true.
@@ -1607,7 +1608,7 @@ grouphelp {test_wfs_10 test_wfs_11 test_wfs_12 test_wfs_13 test_wfs_14 test_wfs_
     <ul>
 <li> <em>Variable: </em><big><b>elts</b></big>
 </li>
-<br><li> <em>Type: </em>CRATACTER</li>
+<br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>See: </em> nls
                         </li>
 <br>

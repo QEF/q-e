@@ -251,7 +251,7 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 		    -textvalue {
 			"Norm Conserving, one channel per angular momentum"
 			"Norm Conserving, more than one channel per angular momentum"
-			"UltraSoft"}
+			"Ultrasoft PP or PAW"}
 		    -value     {1 2 3}
 		}
 		var file_pseudopw {
