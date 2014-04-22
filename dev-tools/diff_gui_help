@@ -1,0 +1,56 @@
+#!/bin/sh
+# the next line restarts using tclsh \
+exec tclsh "$0" "$@"
+
+#
+# Usage:   diff_gui_help module
+#          ( module = pw, ph, pp, neb,  projwfc, bands, dos, atomic, or d3 )
+#
+# Requirements: execute the check_gui first !!!
+#             
+# Purpose: compares the current PWgui help file with the one in $topdir/GUI/PWgui/modules/$module/
+#
+
+proc Usage {} {
+    global argv0
+
+    puts stderr [subst {
+  Usage: $argv0 module
+  
+  Where module is one of:
+  
+  \tpw
+  \tph 
+  \tneb
+  \tpp 
+  \tprojwfc
+  \tdos
+  \tbands
+  \tatomic
+  \td3
+    }]
+    exit 1
+}
+
+if { $argc != 1 } {
+    Usage
+}
+
+set module  [lindex $argv 0]
+set basedir [file normalize [file dirname [info script]]]
+set topdir  [file normalize [file join $basedir ..]]
+
+# PWgui's modules dir 
+
+set pwguidir  [file join $topdir GUI PWgui]
+set moduledir [file join $pwguidir modules]
+
+if { ! [file exists $module-help.tcl] } {
+    puts stderr "ERROR: run the \"check_gui $module\" first ..."
+    exit 1
+}
+
+exec tkdiff $module-help.tcl [file join $moduledir $module $module-help.tcl]
+
+# ok, we are done; since we loaded Tk, we need an explicit exit !!!
+exit 0
