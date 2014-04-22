@@ -56,20 +56,60 @@ tracevar reps_type w {
 }
 
 tracevar nat_todo w {
-    if { [varvalue nat_todo] < 1 } {
-	groupwidget atom_disp_line disable 
+    if { [varvalue nat_todo] == "" } {
+	widget nat_todo_list disable
     } else {
-	groupwidget atom_disp_line enable
+	if { [varvalue nat_todo] < 1 } {
+	    widget nat_todo_list disable 
+	} else {
+	    widget nat_todo_list enable
+	}
     }
 }
 
+
+tracevar qplot w {
+    if { [varvalue qplot] == ".true." } {
+	groupwidget qPointsSpec enable
+	groupwidget xq_list     disable
+    } else {
+	groupwidget qPointsSpec disable
+	groupwidget xq_list     enable
+    }
+}
+
+tracevar nqs w {
+    set nqs [varvalue nqs]
+    widgetconfigure qPoints  -rows $nqs
+}
+
+
+# help postproccessing (hack for help of dvscf_star & drho_star structures)
+    
+foreach ident {dvscf_star drho_star} {
+    
+    set obj      [_getObjFromVarident $ident]
+    set id       [$obj getIdFromVarident $ident]
+    set helptext [$obj getOptionValue $id helptext]
+    
+    foreach elem {open dir ext basis pat} {
+	help ${ident}_$elem -helpfmt helpdoc -helptext $helptext
+    }
+}
+
+
 postprocess {
-    varset ldisp  -value  .false.
-    varset lraman -value  .false.
-    varset elop   -value  .false.
-    varset trans  -value  .true.
-    varset epsil  -value  .false.
-    varset recover -value .false.
-    varset fpol   -value  .false.
-    varset reps_type -value {}
+    widget dvscf_star forget
+    widget drho_star  forget
+
+    varset ldisp     -value  .false.
+    varset lraman    -value  .false.
+    varset elop      -value  .false.
+    varset trans     -value  .true.
+    varset epsil     -value  .false.
+    varset recover   -value  .false.
+    varset fpol      -value  .false.
+    varset reps_type -value  {}
+    varset nat_todo  -value  {}
+    varset qplot     -value  {}
 }

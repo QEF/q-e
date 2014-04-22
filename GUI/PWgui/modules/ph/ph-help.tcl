@@ -430,6 +430,107 @@ help recover -helpfmt helpdoc -helptext {
 
 
 # ------------------------------------------------------------------------
+help low_directory_check -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>low_directory_check</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true. search in the phsave directory only the
+                 quantities requested in input.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help only_init -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>only_init</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true. only the bands and other
+                  initialization quantities are calculated.
+                  (used for GRID parallelization)
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help qplot -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>qplot</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre> If .true. a list of q points is read from input.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help q2d -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>q2d</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true. three q points and relative weights are
+           read from input. The three q points define the rectangle
+           q(:,1) + l (q(:,2)-q(:,1)) + m (q(:,3)-q(:,1)) where
+           0&lt; l,m &lt; 1. The weights are integer and those of points two
+           and three are the number of points in the two directions.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help q_in_band_form -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>q_in_band_form</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+This flag is used only when qplot is .true. and q2d is
+          .false.. When .true. each couple of q points q(:,i+1) and
+          q(:,i) define the line from q(:,i) to q(:,i+1) and nq
+          points are generated along that line. nq is the weigth of
+          q(:,i). When .false. only the list of q points given as
+          input is calculated. The weights are not used.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help electron_phonon -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>electron_phonon</b></big>
@@ -763,7 +864,7 @@ Choose the subset of atoms to be used in the linear response
 calculation: "nat_todo" atoms, specified in input (see below)
 are displaced. Can be used to estimate modes for a molecule
 adsorbed over a surface without performing a full fledged
-calculation. Use with care, at your own risk,m and be aware
+calculation. Use with care, at your own risk, and be aware
 that this is an approximation and may not work.
 IMPORTANT:
    * nat_todo &lt;= nat
@@ -936,7 +1037,7 @@ Notice that the defaults are different.
 grouphelp {xq1 xq2 xq3} -helpfmt helpdoc -helptext {
     <ul>
 <li> <em>Variables: </em><big><b> xq(1)  xq(2)  xq(3)
-         </b></big>
+               </b></big>
 </li>
 <br><li> <em>Type: </em>REAL</li>
 <br><li> <em>Description:</em>
@@ -944,9 +1045,54 @@ grouphelp {xq1 xq2 xq3} -helpfmt helpdoc -helptext {
 <blockquote><pre>
 The phonon wavevector, in units of 2pi/a0
 (a0 = lattice parameter).
-Not used if ldisp=.true.
-         </pre></blockquote>
+Not used if ldisp=.true. or qplot=.true.
+               </pre></blockquote>
 </ul>  
+    
+}
+
+
+# ------------------------------------------------------------------------
+help nqs -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>nqs</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Number of q points in the list. Used only if qplot=.true.
+                     </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help qPoints -helpfmt helpdoc -helptext {
+    <ul>
+<li> <em>Variables: </em><big><b>xq1, xq2, xq3</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+q-point coordinates; used only with ldisp=.true. and qplot=.true.
+The phonon wavevector, in units of 2pi/a0 (a0 = lattice parameter).
+The meaning of these q points and their weights nq depend on the
+flags q2d and q_in_band_form. (NB: nq is integer)
+                        </pre></blockquote>
+</ul><ul>
+<li> <em>Variable: </em><big><b>nq</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+The weight of the q-point; the meaning of nq depends
+on the flags q2d and q_in_band_form.
+                        </pre></blockquote>
+</ul>   
     
 }
 

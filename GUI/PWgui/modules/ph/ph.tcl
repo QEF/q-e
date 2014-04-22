@@ -313,6 +313,41 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 		    -widget    radiobox
 		}
 
+		var low_directory_check {
+		    -label "(low_directory_check):"
+		    -textvalue {Yes No}
+		    -value     {.true. .false.}
+		    -widget    radiobox
+		}
+		
+		var only_init {
+		    -label "Calculate only bands and other initialization quantities (only_init):"
+		    -textvalue {Yes No}
+		    -value     {.true. .false.}
+		    -widget    radiobox
+		}
+		
+		var qplot {
+		    -label "Read a list of q-points from input (qplot):"
+		    -textvalue {Yes No}
+		    -value     {.true. .false.}
+		    -widget    radiobox
+		}
+		
+		var q2d {
+		    -label "(q2d):"
+		    -textvalue {Yes No}
+		    -value     {.true. .false.}
+		    -widget    radiobox
+		}
+		
+		var q_in_band_form {
+		    -label "(q_in_band_form):"
+		    -textvalue {Yes No}
+		    -value     {.true. .false.}
+		    -widget    radiobox
+		}
+		
 		var lqdir {
 		    -label     "Creates inside outdir a separate subdirectory for each q vector (lqdir):"
 		    -textvalue {Yes No}
@@ -474,6 +509,20 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    }
 	}
 
+	group qPointsSpec -name "q-points specification" -decor normal {
+	    line nqs_line -decor none {
+		var nqs -label "Number of q-points:" -validate posint -widget spinint -default 1 -outfmt %3d
+	    }
+	    table qPoints {
+		-caption "Enter q-points coordinates and weights:"
+		-head     {xq1 xq2 xq3 nq}
+		-validate {fortranreal fortranreal fortranreal int}
+		-cols     4
+		-rows     1
+		-outfmt   {%13.8f  %13.8f  %13.8f  %3d}
+	    }
+	}
+
 	line atom_disp_line -name "List of atoms to displace:" {
 	    var nat_todo_list {
 		-label "Indices of atoms (comma or whitespace separated):"
@@ -489,21 +538,4 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
     # source the HELP file
     # ------------------------------------------------------------------------
     source ph-help.tcl
-
-    # help postproccessing (hack for help of dvscf_star & drho_stur structures)
-    
-    foreach ident {dvscf_star drho_star} {
-	    
-	set obj      [_getObjFromVarident $ident]
-	set id       [$obj getIdFromVarident $ident]
-	set helptext [$obj getOptionValue $id helptext]
-	
-	foreach elem {open dir ext basis pat} {
-	    help ${ident}_$elem -helpfmt helpdoc -helptext $helptext
-	}
-    }
-    postprocess {
-	widget dvscf_star forget
-	widget drho_star forget
-    }
 }
