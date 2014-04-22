@@ -164,6 +164,28 @@ Also the first and the last configurations are optimized
 
 
 # ------------------------------------------------------------------------
+help minimum_image -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>minimum_image</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Assume a "minimum image criterion" to build the path. If an atom
+moves by more than half the length of a crystal axis between one
+image and the next in the input (before interpolation),
+an appropriate periodic replica of that atom is chosen.
+Useful to avoid jumps in the initial reaction path.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help temp_req -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>temp_req</b></big>

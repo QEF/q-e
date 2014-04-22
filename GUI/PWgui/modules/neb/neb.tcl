@@ -68,13 +68,6 @@ module NEB -title "PWSCF GUI: module NEB.x" -script {
 	    }
 	    -widget optionmenu
 	}
-
-	var first_last_opt {
-	    -label "Optimize also the first and the last configurations (first_last_opt):"
-	    -textvalue { Yes No }
-	    -value     { .TRUE. .FALSE. }
-	    -widget    radiobox
-	}
 	
 	var CI_scheme {
 	    -label "Type of climbing image scheme (CI_scheme):"
@@ -90,7 +83,21 @@ module NEB -title "PWSCF GUI: module NEB.x" -script {
 	    }
 	    -widget optionmenu
 	}
-	
+
+	var first_last_opt {
+	    -label "Optimize also the first and the last configurations (first_last_opt):"
+	    -textvalue { Yes No }
+	    -value     { .TRUE. .FALSE. }
+	    -widget    radiobox
+	}
+
+	var minimum_image {
+	    -label     "Use a minimum image criterion (minimum_image):"
+	    -textvalue { Yes No }
+	    -value     { .TRUE. .FALSE. }
+	    -widget    radiobox
+	}
+
 	var temp_req {
 	    -label    "Temperature used for langevin dynamics of the string (temp_req):"
 	    -validate fortranposreal
