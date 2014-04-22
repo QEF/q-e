@@ -31,11 +31,15 @@ help outdir -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>outdir</b></big>
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Default: </em> './'
+<br><li> <em>Default: </em>
+value of the ESPRESSO_TMPDIR environment variable if set;
+current directory ('./') otherwise
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> directory containing the input file
+<blockquote><pre>
+directory containing the input data,
+i.e. the same as in pw.x
          </pre></blockquote>
 </ul>      
       
