@@ -1,7 +1,12 @@
+Tue Apr 22 2014  Anton Kokalj (tone.kokalj@ijs.si)
+	* open.itcl: improving the parsing of Fortran namelist (the
+	parsing was incorrect if the comment character was present in the
+	last line before the end-of-namelist character)
+
 Tue Dec  2 2008  Anton Kokalj (tone.kokalj@ijs.si)
 	* gui.itcl: adding kind of limited-support for mouse-wheel to
 		scrolled notebook's pages
-	
+
 Thu May  8 2008 Anton Kokalj (tone.kokalj@ijs.si)
 	* store.itcl: adding storeModuleItems public method to moduleObj
 		(for more info see file: store.itcl)
@@ -15,7 +20,7 @@ Thu May  8 2008 Anton Kokalj (tone.kokalj@ijs.si)
 	* help.itcl: adding "helpdoc" format for help.
 	* making code compatible with Itcl namespace awareness (i.e. class
 		--> itcl::class, ...)
-	
+
 Fri Feb 15 2008 Anton Kokalj (tone.kokalj@ijs.si)
 	* adding forget&create states to groupwidget GUIB keyword. For
 		this purpose, the objWidgetArray(WIDGET,$obj) arrays
@@ -51,11 +56,11 @@ Wed Feb 13 2008 Anton Kokalj (tone.kokalj@ijs.si)
 		counts all tab/pages that are created, and arrays are
 		indexed according to it with index2tabsCounter($index)
 		array, where $index is the current index of the tab.
-		
+
 Mon Feb 11 2008 Anton Kokalj (tone.kokalj@ijs.si)
 	* table.itcl: table's cells can contain the optionemu widget.
 	* optionmenuhelp.itcl: adding -nohelp option to optionmenuhelp widget.
-	
+
 Thu Feb  7 2008 Anton Kokalj (tone.kokalj@ijs.si)
 	* namelist's variables of string type are automatically quoted
 		when saving the input file. The
@@ -69,7 +74,7 @@ Thu Feb  7 2008 Anton Kokalj (tone.kokalj@ijs.si)
 		then columns >= optionalcols are optional
 	* table.itcl: fixing bug in ::guib::keywidgets::Table::_addCol:
 		using _widget method intead of calling entry Tk-command.
-	
+
 Mon Sep 26 13:25:34 CEST 2005
 	* moduleObj.itcl: adding optionSetDefault and _scopedName
 		methods. Making all necessary for the -validate module's
@@ -86,7 +91,7 @@ Mon Sep 26 13:25:34 CEST 2005
 		functions. tku::errorDialog and tku::warningDialog
 		deprecated, use tclu::errorDialog and
 		tclu::warningDialog instead. Adding tku::exitApp function.
-	
+
 Mon Aug 25 2005  Anton Kokalj (tone.kokalj@ijs.si)
 	* validate.itcl: adding int and real validators
 
@@ -98,11 +103,11 @@ Tue Feb 01 2005  Anton Kokalj (tone.kokalj@ijs.si)
 	* validate.itcl, spininthelp.itcl: adding the "binary" (i.e. 0/1)
 		validator
 	* lib/tclUtils.tcl: fixing a small bug in ::tclu::warningDialog.
-	
+
 Sat Jan 29 2005 Anton Kokalj (tone.kokalj@ijs.si)
 	* lib/tclUtils.tcl: fixing typo in
 		::tclu::_error_or_warning_dialog routine
-	
+
 Mon Sep 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* gui.itcl: adding "getSelected saveFile" query. Making "save" and
 		"saveAs" methods public
@@ -116,19 +121,19 @@ Mon Sep 13 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* table.itcl: table's checkbutton didn't display updated text upon
 		variable's value change. Fixed by using -textvariable
 		option. The method _checkbuttonText not used anymore.
-	
+
 Sat Sep 04 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* adding a "scriptvar" Guib keywords (=script variables used inside
 		the module definition files)
-	
+
 Tue Apr 06 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* open.itcl: adding ::guib::moduleObj::readFileError and
 		::guib::moduleObj::readFileWrongFormat for dealing with
 		wrong-formatted input files
-	
+
 Mon Apr 05 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* guibKeywords.itcl: adding a check if help's $ident is valid
-	
+
 Fri Apr 02 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* improving error handling mechanism for
 		::guib::moduleObj::readFile method (i.e. reading an input
@@ -136,7 +141,7 @@ Fri Apr 02 2004 Anton Kokalj (tone.kokalj@ijs.si)
 		purpose. The problem was that when a syntax error was
 		present in the input file, this could cause Guib to enter
 		into an invinite loop (spotted by Mickael Profeta)
-	
+
 Mon Feb 24 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* updating doc/usage.tex file and doc/usage/diagrams
 	* adding doc/usage/diagrams/Makefile
@@ -154,5 +159,5 @@ Fri Feb 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
 Tue Feb 17 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* adding help button component to table widget
 	* ChangeLog: the beginning of the ChangeLog
-	
+
 ChangeLog ends here
