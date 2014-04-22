@@ -50,7 +50,5 @@ if { ! [file exists $module-help.tcl] } {
     exit 1
 }
 
-exec tkdiff $module-help.tcl [file join $moduledir $module $module-help.tcl]
+catch {exec tkdiff $module-help.tcl [file join $moduledir $module $module-help.tcl]}
 
-# ok, we are done; since we loaded Tk, we need an explicit exit !!!
-exit 0
