@@ -28,10 +28,15 @@ help outdir -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>outdir</b></big>
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em>
+value of the ESPRESSO_TMPDIR environment variable if set;
+current directory ('./') otherwise
+         </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-temporary directory where pw.x files resides
+directory containing the input data,
+i.e. the same as in pw.x
          </pre></blockquote>
 </ul>      
       
@@ -147,7 +152,7 @@ filband.# with the format:
 xk, yk, energy
 xk, yk, energy
 ..  ..  ..
-enegies are written in eV and xk in units 2\pi/a.
+energies are written in eV and xk in units 2\pi/a.
          </pre></blockquote>
 </ul>      
       
