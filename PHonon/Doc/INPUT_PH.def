@@ -14,7 +14,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	   ...
 	/
 
-	xq(1) xq(2) xq(3)
+	[ xq(1) xq(2) xq(3) ]                        # if ldisp != .true.  and  qplot != .true.
+
+        [ nqs                                        # if qplot == .true. 
+          xq(1,i)    xq(2,i)    xq(3,1)    nq(1)              
+          ...
+	  xq(1,nqs)  xq(2,nqs)  xq(3,nqs)  nq(nqs) ]     
+
 	[ atom(1)  atom(2)  ... atom(nat_todo) ]     # if "nat_todo" was specified
     }
 
@@ -407,7 +413,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		    calculation: "nat_todo" atoms, specified in input (see below)
 		    are displaced. Can be used to estimate modes for a molecule
 		    adsorbed over a surface without performing a full fledged
-		    calculation. Use with care, at your own risk,m and be aware
+		    calculation. Use with care, at your own risk, and be aware
 		    that this is an approximation and may not work.
 		    IMPORTANT:
 		       * nat_todo <= nat
@@ -524,39 +530,58 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
     }
 
 
-    linecard {
-	list xq_list -type REAL {
-	    format { xq(1)  xq(2)  xq(3) }
-	    info {
-		The phonon wavevector, in units of 2pi/a0
-		(a0 = lattice parameter).
-		Not used if ldisp=.true. or qplot=.true.
+    choose {
+	when -test "ldisp != .true.   and   qplot != .true." {
+
+	    linecard {
+		list xq_list -type REAL {
+		    format { xq(1)  xq(2)  xq(3) }
+		    info {
+			The phonon wavevector, in units of 2pi/a0
+			(a0 = lattice parameter).
+			Not used if ldisp=.true. or qplot=.true.
+		    }
+		}
+	    }
+	} 
+	elsewhen -test "qplot == .true." {
+
+	    label { Specification q points when qplot=.true. }
+
+	    card qPointsSpecs -nameless 1 {
+		syntax {
+		    line {
+			var nqs -type INTEGER {
+			    info { Number of q points in the list. Used only if qplot=.true.
+			    }
+			}
+		    }
+		    
+		    table qPoints {
+			rows -start 1 -end nqs {
+			    colgroup -type REAL {
+				info {
+                                    q-point coordinates; used only with ldisp=.true. and qplot=.true.
+				    The phonon wavevector, in units of 2pi/a0 (a0 = lattice parameter). 
+				    The meaning of these q points and their weights nq depend on the 
+				    flags q2d and q_in_band_form. (NB: nq is integer)
+				}
+				col xq1
+				col xq2
+				col xq3
+			    }
+			    col nq -type INTEGER {
+				info { 
+				    The weight of the q-point; the meaning of nq depends 
+				    on the flags q2d and q_in_band_form. }
+			    }
+			}
+		    }
+		}
 	    }
 	}
     }
 
- group {
-            label { Specification q points when qplot=.true. }
-
-    var nqs -type INTEGER {
-        default { none }
-            info { Number of q points in the list. Used only if qplot=.true.
-            }
-        }
-
-
-        list xq_list_qplot -type REAL {
-	    format { xq(1)  xq(2)  xq(3) nq } 
-	    info {
-		Used only with ldisp=.true. and qplot=.true.
-		The phonon wavevector, in units of 2pi/a0
-		(a0 = lattice parameter). The meaning of these q 
-		points and their weights nq depend on the flags q2d and 
-		q_in_band_form. (NB: nq is integer)
-	    }
-	}
-    }
-	
     choose {
 	when -test "nat_todo was specified" {
 	    linecard {
@@ -569,7 +594,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		}
 	    }
 	}
-     }
+    }
 
     section -title { ADDITIONAL INFORMATION } {
 
