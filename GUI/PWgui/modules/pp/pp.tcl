@@ -42,16 +42,17 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    "|psi|^2"
 		    "|psi|^2 (noncollinear case)"
 		    "electron localization function (ELF)"
-		    "reduced density gradient"
+		    "charge density minus superposition of atomic densities"
 		    "integrated local density of states (ILDOS)"
 		    "electrostatic potential (= V_bare + V_H)"
 		    "sawtooth electric field potential"
 		    "noncolinear magnetization"
 		    "all-electron valence charge density (for PAW)"
 		    "exchange-correlation magnetic field (for noncollinear)"
+		    "reduced density gradient"
 		    "product of density and 2nd-eigenvalue of density Hessian matrix"
 		}
-		-value { 0 1 2 3 4 5 6 7 7 8 9 10 11 12 13 17 18 19 }
+		-value { 0 1 2 3 4 5 6 7 7 8 9 10 11 12 13 17 18 19 20 }
 		-fmt %d
 	    }
 	    var spin_component {
@@ -170,15 +171,22 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 	    var output_format {
 		-label     "Format of the output (output_format):"
 		-textvalue {
-		    "XCRYSDEN's XSF format"
-		    "XCRYSDEN's XSF format (whole unit cell)"
-		    "format suitable for gnuplot"
-		    "format suitable for contour.x"
-		    "format suitable for plotrho"
-		    "format suitable for gOpenMol"
-		    "Gaussian cube-file format"
+		    "XCRYSDEN's XSF format (2D or 3D)" 
+		    "XCRYSDEN's XSF format (whole unit cell) (3D)"
+		    "format suitable for gnuplot (1D)"
+		    "format suitable for contour.x (2D)"
+		    "format suitable for plotrho (2D)"
+		    "format suitable for gOpenMol (3D)"
+		    "Gaussian cube-file format (3D)"
+		    "format suitable for gnuplot (2D)"
 		}
-		-value     { 3 5 0 1 2 4 6 }
+		-value     { 3 5 0 1 2 4 6 7 }
+		-widget    optionmenu
+	    }
+	    var interpolation { 
+		-label     "Interpolation (interpolation):"
+		-value     { 'fourier' 'bspline' }
+		-textvalue { Fourier bspline }
 		-widget    optionmenu
 	    }
 	    

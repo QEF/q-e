@@ -28,10 +28,15 @@ help outdir -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>outdir</b></big>
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em>
+value of the ESPRESSO_TMPDIR environment variable if set;
+current directory ('./') otherwise
+         </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-temporary directory where pw.x files resides
+directory containing the input data,
+i.e. the same as in pw.x
          </pre></blockquote>
 </ul>      
       
@@ -66,17 +71,20 @@ help plot_num -helpfmt helpdoc -helptext {
 <blockquote><pre>
 selects what to save in filplot:
 
-   0  = charge
+   0  = electron (pseudo-)charge density
 
    1  = total potential V_bare + V_H + V_xc
 
    2  = local ionic potential V_bare
 
    3  = local density of states at e_fermi
+        (number of states per volume, in bohr^3,
+         per energy unit, in Ry)
 
    4  = local density of electronic entropy
 
    5  = STM images
+        Tersoff and Hamann, PRB 31, 805 (1985)
 
    6  = spin polarization (rho(up)-rho(down))
 
@@ -89,10 +97,7 @@ selects what to save in filplot:
 
    8  = electron localization function (ELF)
 
-   9  = Reduced density gradient
-        (J. Chem. Theory Comput. 7, 625 (2011))
-        Set the isosurface between 0.3 and 0.6 to plot the
-        non-covalent interactions (see also plot_num = 19)
+   9  = charge density minus superposition of atomic densities
 
    10 = integrated local density of states (ILDOS)
         from emin to emax (emin, emax in eV)
@@ -111,8 +116,14 @@ selects what to save in filplot:
    18 = The exchange and correlation magnetic field in
         the noncollinear case
 
-   19 = Product of the electron density (charge) and the second
-        eigenvalue of the electron-density Hessian matrix
+   19 = Reduced density gradient
+        (J. Chem. Theory Comput. 7, 625 (2011))
+        Set the isosurface between 0.3 and 0.6 to plot the
+        non-covalent interactions (see also plot_num = 20)
+
+   20 = Product of the electron density (charge) and the second
+        eigenvalue of the electron-density Hessian matrix;
+        used to colorize the RDG plot (plot_num = 19)
          </pre></blockquote>
 </ul>      
       
@@ -440,6 +451,24 @@ help fileout -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 name of the file to which the plot is written
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help interpolation -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>interpolation</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> "fourier"
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+type of interpolation: "fourier" or "bspline" (EXPERIMENTAL!)
          </pre></blockquote>
 </ul>      
       
