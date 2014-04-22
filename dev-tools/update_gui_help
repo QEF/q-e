@@ -4,7 +4,7 @@ exec tclsh "$0" "$@"
 
 #
 # Usage:   update_gui_help module
-#          ( module = pw, ph, pp, projwfc, atomic, or d3 )
+#          ( module = pw, ph, pp, neb, projwfc, dos, bands, atomic, or d3 )
 #
 # Requirements: execute the check_gui first !!!
 #             
@@ -23,8 +23,11 @@ proc Usage {} {
   
   \tpw
   \tph 
+  \tneb
   \tpp 
   \tprojwfc
+  \tdos
+  \tbands
   \tatomic
   \td3
     }]
