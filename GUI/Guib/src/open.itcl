@@ -286,6 +286,13 @@ itcl::body ::guib::moduleObj::_open {obj fileChannel} {
 		    # varname = varvalue pairs until the end of line ...
 			
 		    while { $readline != {} } {
+
+			# check for comment-character "!" 
+
+			if { [string match ! [string range [lindex $readline 0] 0 0]] } {
+			    # ignore the rest of line. 
+			    break
+			}
 			set varIdent  [_openReadNamelistVar $childObj $fileChannel]
 			set varValue  [_openReadNamelistValue]
 			varset $varIdent -value $varValue
@@ -554,12 +561,6 @@ itcl::body ::guib::moduleObj::_openGets {fileChannel} {
 
 itcl::body ::guib::moduleObj::_openReadNamelistVar {obj fileChannel} {
 
-    # check for comment "!" 
-    if { [string match ! [string range [lindex $readline 0] 0 0]] } {
-	# ignore the rest of line. 
-	# Therefore simply read the next line
-	set readline [_openGets $fileChannel]
-    }
     set ind [string first = $readline]
 
     if { $ind <= 0 } {
