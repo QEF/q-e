@@ -167,15 +167,14 @@ SUBROUTINE extract (filplot,plot_num)
          (plot_num==8).or.(plot_num==10)
   IF ( needwf ) THEN
      CALL read_file ( )
+     IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
+        CALL errore('postproc', &
+        'pw.x run with a different number of procs/pools. Use wf_collect=.true.',1)
      CALL openfil_pp ( )
   ELSE
      CALL read_xml_file ( )
   END IF
   !
-  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect .and. needwf)  &
-     CALL errore('postproc',&
-     'pw.x run with a different number of procs/pools. Use wf_collect=.true.',1)
-
   IF ( ( two_fermi_energies .or. i_cons /= 0) .and. &
        ( plot_num==3 .or. plot_num==4 .or. plot_num==5 ) ) &
      CALL errore('postproc',&
