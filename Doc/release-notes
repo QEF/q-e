@@ -6,7 +6,8 @@ New in 5.1 version:
    * PW: Langevin dynamics with Smart Monte Carlo
    * CP and PW: Tkatchenko-Scheffler vdW correction (experimental)
    * GWW replaced by GWL (using Lanczos chains)
-   * turboTDDFT: pseudo_Hamiltonians, Davidson-like diagonalization
+   * turboTDDFT: pseudo_Hermitian Lanczos algorithm and 
+     Davidson-like diagonalization added
    * PWCOND with DFT+U
    * New functionals: gau-pbe, PW86 (unrevised), B86B, XDM (exchange-hole 
      dipole moment) model of dispersions, vdW-DF3, vdW-DF4 (Klimes et al),
