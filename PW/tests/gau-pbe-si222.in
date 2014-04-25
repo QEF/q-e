@@ -5,9 +5,9 @@
  &system    
     ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
     ecutwfc =12.0,  nbnd = 8,
-    input_dft='gaup', nqx1=1, nqx2=1, nqx3=1, 
-    exxdiv_treatment='gygi-baldereschi'
-    x_gamma_extrapolation = .true.
+    input_dft='gaup', nqx1=2, nqx2=2, nqx3=2, 
+    exxdiv_treatment='none'
+    x_gamma_extrapolation = .false.
  /
  &electrons
  /
