@@ -111,7 +111,7 @@
   3) perform calculations in q-grids that are shifted away from gamma so that
      the 0/0 term is not needed. This create some extra complication in the
      coding and cannot be used with Gamma-only k-point integration.
-     In some tests it didn:t seem superior to option 2) ... it was never
+     In some tests it didn't seem superior to option 2) ... it was never
      fully implemented and now it has been removed.
   4) use the value at small (q+G) to estimate the (q+G)->0 limit. This
      again has been tried and found to offer, for low order numerical

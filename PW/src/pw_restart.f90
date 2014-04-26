@@ -948,7 +948,6 @@ MODULE pw_restart
       IF ( .NOT. lheader .AND. .NOT. qexml_version_init) &
          CALL errore( 'pw_readfile', 'qexml version not set', 71 )
       !
-      !
       IF (  ionode .AND. need_qexml ) THEN
          !
          CALL qexml_init( iunpun )
@@ -958,8 +957,10 @@ MODULE pw_restart
       ENDIF
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      IF ( ierr /=0 ) RETURN
+      IF ( ierr /=0 ) THEN
+         errmsg='error opening xml data file'
+         GOTO 100
+      END IF
       !
       IF ( lheader ) THEN
          !
