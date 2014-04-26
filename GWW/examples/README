@@ -10,5 +10,5 @@ example02 computes the GW quasi-particle energies in bulk Si (how to treat exten
              Note: in order to accelerate this example, used as a daily distribution test,
                      it is using parameters (a small 8-atom simulation cell whose Brillouin's zone 
                      is sample onlt at the Gamma point) giving quite unconverged results
-
+example03  uses projwfc to plot GW DOS of CH4, example01 must be run before.
 

@@ -173,7 +173,7 @@ EOF
     $ECHO  "copying self-energy files..\c"
     cp $TMP_DIR/ch4-im_on_im* .
     cp $TMP_DIR/ch4-re_on_im* .
-	 
+    cp $TMP_DIR/ch4-bands.dat .	 
 
     # clean TMP_DIR
     $ECHO "  cleaning $TMP_DIR...\c"

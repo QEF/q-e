@@ -23,7 +23,7 @@ $ECHO "the orbital decomposition of the total DOS from GWA energies"
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x projwfc.x"
-PSEUDO_LIST="C.pbe-rrkjus.UPF H.pbe-rrkjus.UPF"
+PSEUDO_LIST="C.pz-vbc.UPF H.pz-vbc.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -70,7 +70,7 @@ done
 $ECHO " done"
 
 # check if bands.dat exist !
-if test ! -r ../../example01/results/bands.dat ; then
+if test ! -r ../../example01/results/ch4-bands.dat ; then
       $ECHO
       $ECHO "ERROR: ../../example01/results/bands.dat not existent or not readable"
       $ECHO "Please run example01 FIRST !!"
@@ -94,107 +94,97 @@ rm -rf $TMP_DIR/pwscf*
 $ECHO " done"
 
 # self-consistent calculation at Gamma
-cat > benzene.scf.in << EOF
- &control
-    calculation='scf'
+    cat > methane_scf.in << EOF
+&control
+    calculation = 'scf',
     restart_mode='from_scratch',
+    prefix='ch4',
+    tprnfor = .true.,
     pseudo_dir = '$PSEUDO_DIR/',
-    prefix='benzene'
     outdir='$TMP_DIR/'
  /
  &system
-    ibrav= 8, celldm(1)= 20,celldm(2)= 1, celldm(3)=1,
-    nat=  12, ntyp= 2,
-    ecutwfc = 25.0, nosym=.true.
-    ecutrho= 200.d0
+    ibrav=  1,
+    celldm(1) =15.0,
+    nat=5,
+    ntyp= 2,
+    ecutwfc =40.0,
  /
  &electrons
-    diagonalization='cg',
-    conv_thr =  1.0d-10,
+    diagonalization='cg'
     mixing_beta = 0.5,
-    startingwfc='random',
+    conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
- C  1. C.pbe-rrkjus.UPF 
- H   1.  H.pbe-rrkjus.UPF
+ H  1.0   H.pz-vbc.UPF
+ C  12.0  C.pz-vbc.UPF
 ATOMIC_POSITIONS {bohr}
-C   1.321864  2.289536  0.000
-C  -1.321864  2.289536  0.000
-C  -2.643728  0.000000  0.000
-C  -1.321865 -2.289535  0.000
-C   1.321864 -2.289536  0.000
-C   2.643728 -0.000001  0.000
-H   2.362159  4.091379  0.000
-H  -2.362158  4.091379  0.000
-H  -4.724317  0.000001  0.000
-H  -2.362160 -4.091378  0.000
-H   2.362158 -4.091379  0.000
-H   4.724317 -0.000001  0.000
+H        1.198204546   1.198204546   1.198204546
+H       -1.198204546  -1.198204546   1.198204546
+H        1.198204546  -1.198204546  -1.198204546
+H       -1.198204546   1.198204546  -1.198204546
+C        0.000000000   0.000000000   0.000000000
 EOF
-$ECHO "  running the scf calculation for benzene molecule...\c"
-$PW_COMMAND < benzene.scf.in > benzene.scf.out
+$ECHO "  running the scf calculation for methane molecule...\c"
+$PW_COMMAND < methane_scf.in > methane_scf.out
 check_failure $?
 $ECHO " done"
 
 
 # non self-consistent calculation at Gamma
-cat > benzene.nscf.in << EOF
- &control
-    calculation='nscf'
+    cat > methane_nscf.in << EOF
+&control
+    calculation = 'nscf',
     restart_mode='from_scratch',
+    prefix='ch4',
+    tprnfor = .true.,
     pseudo_dir = '$PSEUDO_DIR/',
-    prefix='benzene'
     outdir='$TMP_DIR/'
  /
  &system
-    ibrav= 8, celldm(1)= 20,celldm(2)= 1, celldm(3)=1,
-    nat=  12, ntyp= 2,
-    ecutwfc = 25.0, nosym=.true., nbnd = 20
-    ecutrho= 200.d0
+    ibrav=  1,
+    celldm(1) =15.0,
+    nat=5,
+    ntyp= 2,
+    ecutwfc =40.0,
+    nbnd=5
  /
  &electrons
-    diagonalization='cg',
-    conv_thr =  1.0d-10,
+    diagonalization='cg'
     mixing_beta = 0.5,
+    conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
- C  1. C.pbe-rrkjus.UPF
- H   1.  H.pbe-rrkjus.UPF
+ H  1.0   H.pz-vbc.UPF
+ C  12.0  C.pz-vbc.UPF
 ATOMIC_POSITIONS {bohr}
-C   1.321864  2.289536  0.000
-C  -1.321864  2.289536  0.000
-C  -2.643728  0.000000  0.000
-C  -1.321865 -2.289535  0.000
-C   1.321864 -2.289536  0.000
-C   2.643728 -0.000001  0.000
-H   2.362159  4.091379  0.000
-H  -2.362158  4.091379  0.000
-H  -4.724317  0.000001  0.000
-H  -2.362160 -4.091378  0.000
-H   2.362158 -4.091379  0.000
-H   4.724317 -0.000001  0.000
+H        1.198204546   1.198204546   1.198204546
+H       -1.198204546  -1.198204546   1.198204546
+H        1.198204546  -1.198204546  -1.198204546
+H       -1.198204546   1.198204546  -1.198204546
+C        0.000000000   0.000000000   0.000000000
 EOF
-$ECHO "  running the non scf calculation for benzene molecule...\c"
-$PW_COMMAND < benzene.nscf.in > benzene.nscf.out
+$ECHO "  running the non scf calculation for methane molecule...\c"
+$PW_COMMAND < methane_nscf.in > methane_nscf.out
 check_failure $?
 $ECHO " done"
 
 # copy the bands.dat file from example01
 $ECHO "Copy the bands.dat file generated in example01 ...\c"
-cp ../../example01/results/bands.dat .
+cp ../../example01/results/ch4-bands.dat bands.dat
 
 # projwfc calculation at Gamma
-cat > benzene.pdos_pp.in << EOF
-&inputpp
+cat > methane.pdos_pp.in << EOF
+&projwfc
    outdir='$TMP_DIR/'
-   prefix='benzene'
+   prefix='ch4'
    lgww=.true.
    Emin=-30.0, Emax=5.0, DeltaE=0.05,
    ngauss=0, degauss=0.01559
 /
 EOF
 $ECHO "  running the projwfc calculation at Gamma for C6H6...\c"
-$PROJWFC_COMMAND < benzene.pdos_pp.in > benzene.pdos_pp.out
+$PROJWFC_COMMAND < methane.pdos_pp.in > methane.pdos_pp.out
 check_failure $?
 $ECHO " done"
 
