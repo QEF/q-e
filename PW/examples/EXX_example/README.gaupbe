@@ -1,12 +1,14 @@
  HOW TO USE GAU-PBE HYBRID FUNCTIONAL?
- keyword is input_dft='gaupbe' and it should be used simultaneouly with the keyword of exxdiv_treatment='none' and x_gamma_extrapolation = .false.
+ keyword is input_dft='gaupbe' and it should be used simultaneouly with 
+ keyword exxdiv_treatment='none' and x_gamma_extrapolation = .false.
  for example,
 
     input_dft='gaupbe', 
     exxdiv_treatment='none'
     x_gamma_extrapolation = .false.
 
-gau-pbe hybrid functional is free from integrable singularity problem, which enables to decrease k and q grids compared with other hybrid functionals.
+gau-pbe hybrid functional is free from integrable singularity problem, which
+enables to decrease k and q grids compared with other hybrid functionals.
 
   Please report problems and suggestions to QE developers (in particolar:
   Jong-Won Song <joshua.sjw@gmail.com>

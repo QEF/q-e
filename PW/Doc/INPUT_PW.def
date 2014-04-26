@@ -919,9 +919,18 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 vcut_spherical : appropriate for cubic and quasi-cubic supercells
                 vcut_ws : appropriate for strongly anisotropic supercells, see also
                           ecutvcut.
-                none : sets Coulomb potential at G,q=0 to 0.0
+                none : sets Coulomb potential at G,q=0 to 0.0 (required for GAU-PBE)
             }
         }
+
+        var x_gamma_extrapolation -type LOGICAL {
+            default {.true.}
+            info {
+                Specific for EXX. If true, extrapolate the G=0 term of the
+                potential (see README in examples/EXX_example for more)
+                Set this to .false. for GAU-PBE.
+            }
+         }
 
         var ecutvcut -type REAL { default { 0.0 Ry }; see { exxdiv_treatment } 
             info {

@@ -5,6 +5,7 @@
  WHICH FUNCTIONALS ARE IMPLEMENTED ?
   The following hybrid functionals are implemented: Hartree-Fock, PBE0,
   B3LYP, HSE (see Modules/functionals.f90 for updated info and more details). 
+  The GAU-PBE functional (free from divergences at q->0) is also implemented.
   Usually in PWscf the functional to be used is read from pseudopotential
   files but we do not have so far a pseudopotential generator for hybrid
   functionals so one needs to use pseudopotentials generated with some other
@@ -86,11 +87,14 @@
   approximated by gamma point value only).
 
  DIVERGENCE AT q->0
-  The BZ integral to be performed has a diverging kernel when (q+G)->0. 
+  The BZ integral to be performed has a diverging kernel when (q+G)->0
+  (except GAU-PBE, for which there is no divergent term: set
+   exxdiv_treatment='none', x_gamma_extrapolation=.false.)
   This is dealt with by adding and subtracting a term with the same
   divergence that can be integrated analytically and performing
   numerically the integration for the non divergent residue
-  [Gygi-Baldereschi, PRB 34, 4405 (1986)].
+  (variable exxdiv_treatment='gygi-baldereschi', default)
+  [Gygi-Baldereschi, PRB 34, 4405 (1986)] 
   One problem is left: the now non divergent q=0 term is not easily determined
   since it is a 0/0 (non analytic) limit. Several options have been considered:
   1) just discard it ... this is not a good idea in general because it 
@@ -107,8 +111,8 @@
   3) perform calculations in q-grids that are shifted away from gamma so that
      the 0/0 term is not needed. This create some extra complication in the
      coding and cannot be used with Gamma-only k-point integration.
-     In some tests it didn;t seem superior to option 2) ... it was never
-     ully implemented and now it has been removed.
+     In some tests it didn:t seem superior to option 2) ... it was never
+     fully implemented and now it has been removed.
   4) use the value at small (q+G) to estimate the (q+G)->0 limit. This
      again has been tried and found to offer, for low order numerical
      differentiation, no better results that option 2). It is possible
