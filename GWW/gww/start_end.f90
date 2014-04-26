@@ -38,10 +38,10 @@ CONTAINS
   if(ionode) then
      write(stdout,*) 'MPI PARALLEL VERSION'
      write(stdout,*) 'Number of procs: ', nproc
-     write(stdout,*)  'GWL: Version 0.92'
+     write(stdout,*)  'GWL: Version 1.00'
   endif
 #else 
-   write(stdout,*)  'GWL: Version 0.92'
+   write(stdout,*)  'GWL: Version 1.00'
 #endif
   return
 
