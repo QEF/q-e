@@ -11,7 +11,7 @@
 # of plumed (www.plumed-code.org)
 
 destination="$PWD"
-echo "root directory of host package: $destination"
+#echo "root directory of host package: $destination"
 
 # bisogna prendere il nome del plugin in input
 ADDSON_NAME="$1"
@@ -19,9 +19,9 @@ ADDSON_NAME="$1"
 LINKED_FILES="$2/*.f90"
 WHERE_LINKS="$3/"
 
-echo "The NAME of the addson is: $ADDSON_NAME"
-echo "LINKED_FILES are: $LINKED_FILES"
-echo "WHERE_LINKS are: $WHERE_LINKS"
+#echo "The NAME of the addson is: $ADDSON_NAME"
+#echo "LINKED_FILES are: $LINKED_FILES"
+#echo "WHERE_LINKS are: $WHERE_LINKS"
 
 function to_do_before_patch () {
   echo > /dev/null

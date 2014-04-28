@@ -1,17 +1,21 @@
 #!/bin/bash
 
 # everything is performed in the destination directory
+# this script has to be run by addsonpatch.sh
+# do not execut it manually
+
 cd "$destination"
 
 if [ "$#" -eq 0 ];
 then
- echo "USAGE :"
- echo "$NAME  ADDSON_NAME WHERE_SOURCE WHERE_LINKS (-patch) (-revert)   "
+ echo "[ USAGE :"
+ echo "./install/addsonpatch.sh  ADDSON_NAME WHERE_SOURCE WHERE_LINKS (-patch) (-revert)   "
+ echo "The script has to be run from the Quantum ESPRESSO root directory"
  echo "WHERE_SOURCE is the relative path to the sources of the Addson code "
  echo "WHERE_LINKS is the relative path to the QE directory where the addson sources have to be linked"
  echo " -patch  : apply patch to Makefiles " 
  echo " -revert : revert Makefiles to original "
- echo " )"
+ echo " ]"
  exit
 fi
 
