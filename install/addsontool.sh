@@ -25,6 +25,49 @@ case "$4" in
   
 #-------------------
   echo "-- Executing pre script"
+
+  command -v patch &>/dev/null || { echo "I require patch command but it's not installed. Aborting." >&2; exit 1;  }
+
+#------------------- first, check if GNU patch works
+  cat > test_patch1 << \EOF
+  alfa
+  beta
+EOF
+
+  cat > test_patch2 << \EOF
+  alfa
+  gamma
+EOF
+
+  cat > test_patch3 << \EOF_EOF
+  patch -c -l -b -F 3 --suffix=.pre$ADDSON_NAME "./test_patch1" << \EOF
+EOF_EOF
+
+  diff -c test_patch1 test_patch2 >> test_patch3
+
+  echo EOF >> test_patch3
+
+  bash test_patch3 &> test_patch4
+
+  status=$?
+  if [ $status -ne 0 ]
+  then
+    echo "patch does not work! Error message:"
+    echo "**********"
+    cat test_patch4
+    echo "**********"
+    echo "Please install a recent version of the GNU patch utility and try again."
+    exit
+  fi
+
+  rm test_patch1 test_patch2 test_patch3 test_patch4
+  if [ -e test_patch1.pre$ADDSON_NAME ]
+  then
+    rm test_patch1.pre$ADDSON_NAME
+  fi
+#-------------------
+
+
   to_do_before_patch
 
   echo "-- Setting up symlinks"
