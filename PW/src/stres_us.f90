@@ -27,7 +27,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : noncolin, npol
   USE mp_pools,             ONLY : me_pool, root_pool
-  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp, calbec
   USE mp,                   ONLY : mp_sum, mp_get_comm_null, mp_circular_shift_left 
@@ -326,7 +326,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        evps = 0.D0
        ! ... diagonal contribution
        !
-       IF ( me_pool /= root_pool ) GO TO 100
+       IF ( me_bgrp /= root_bgrp ) GO TO 100
        !
        ! ... the contribution is calculated only on one processor because
        ! ... partial results are later summed over all processors
