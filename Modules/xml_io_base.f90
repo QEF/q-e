@@ -44,7 +44,7 @@ MODULE xml_io_base
   !
   PUBLIC :: read_wfc, write_wfc, read_rho_xml, write_rho_xml, &
             save_print_counter, read_print_counter
-  PUBLIC :: create_directory, change_directory, copy_file, &
+  PUBLIC :: create_directory, change_directory, &
             check_file_exst, pp_check_file, restart_dir
   !
   PUBLIC :: write_header ! needed by ph_restart.f90
@@ -116,43 +116,6 @@ MODULE xml_io_base
       RETURN
       !
     END SUBROUTINE change_directory
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE copy_file( file_in, file_out )
-      !------------------------------------------------------------------------
-      !
-      CHARACTER(LEN=*), INTENT(IN) :: file_in, file_out
-      !
-      CHARACTER(LEN=256) :: string
-      INTEGER            :: iun_in, iun_out, ierr
-      !
-      !
-      IF ( .NOT. ionode ) RETURN
-      !
-      CALL iotk_free_unit( iun_in,  ierr )
-      CALL iotk_free_unit( iun_out, ierr )
-      !
-      CALL errore( 'copy_file', 'no free units available', ierr )
-      !
-      OPEN( UNIT = iun_in,  FILE = file_in,  STATUS = "OLD" )
-      OPEN( UNIT = iun_out, FILE = file_out, STATUS = "UNKNOWN" )         
-      !
-      copy_loop: DO
-         !
-         READ( UNIT = iun_in, FMT = '(A256)', IOSTAT = ierr ) string
-         !
-         IF ( ierr < 0 ) EXIT copy_loop
-         !
-         WRITE( UNIT = iun_out, FMT = '(A)' ) TRIM( string )
-         !
-      END DO copy_loop
-      !
-      CLOSE( UNIT = iun_in )
-      CLOSE( UNIT = iun_out )
-      !
-      RETURN
-      !
-    END SUBROUTINE
     !
     !------------------------------------------------------------------------
     FUNCTION restart_dir( outdir, runit )
