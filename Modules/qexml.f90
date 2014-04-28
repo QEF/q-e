@@ -874,6 +874,8 @@ CONTAINS
                                  if_pos, dirname, pos_unit )
       !------------------------------------------------------------------------
       !
+      USE wrappers, ONLY: f_copy
+      !
       INTEGER,          INTENT(in) :: nsp, nat
       INTEGER,          INTENT(in) :: ityp(:)
       CHARACTER(len=*), INTENT(in) :: atm(:)
@@ -910,14 +912,18 @@ CONTAINS
          !
          CALL iotk_write_dat( ounit, "ATOM_TYPE", atm(i) )
          !
+         CALL iotk_write_dat( ounit, "MASS", amass(i) )
+         !
+         CALL iotk_write_dat( ounit, "PSEUDO", trim( psfile(i) ) )
+         !
+         CALL iotk_write_end( ounit, "SPECIE"//trim(iotk_index(i)) )
+         !
+         ! copy pseudopotential file into data directory
+         !
          IF ( pseudo_dir(flen:flen) /= '/' ) THEN
-            !
             file_pseudo_in = pseudo_dir(1:flen) // '/' // TRIM(psfile(i))
-            !
          ELSE
-            !
             file_pseudo_in = pseudo_dir(1:flen) // TRIM(psfile(i))
-            !
          ENDIF
          !
          IF ( dirname(flen2:flen2) /= '/' ) THEN
@@ -927,21 +933,16 @@ CONTAINS
          END IF
          !
          IF ( file_pseudo_in .ne. file_pseudo_out ) THEN
+            !
             INQUIRE ( FILE=file_pseudo_in, EXIST = pseudo_exists )
             IF ( pseudo_exists ) THEN
-               CALL qexml_copy_file( TRIM( file_pseudo_in ), TRIM( file_pseudo_out ), ierrl )
+               ierrl = f_copy( file_pseudo_in, file_pseudo_out )
             ELSE
                CALL infomsg( 'write_ions', &
                    'file ' // TRIM( file_pseudo_in) // ' not present' )
             END IF
+            !
          END IF
-         !
-         CALL iotk_write_dat( ounit, "MASS", amass(i) )
-         !
-         CALL iotk_write_dat( ounit, "PSEUDO", trim( psfile(i) ) )
-         !
-         !
-         CALL iotk_write_end( ounit, "SPECIE"//trim(iotk_index(i)) )
          !
       ENDDO
       !
