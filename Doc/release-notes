@@ -1,5 +1,6 @@
 New in 5.1 version:
 
+   * "Cold restart" for Car-Parrinello dynamics
    * Calling QE from external codes made easier: see new subdirectory COUPLE
    * PW: Hybrid functionals for USPP and PAW (experimental)
    * PW: partial support to the use of k-point labels in the Brillouin zone
@@ -12,10 +13,9 @@ New in 5.1 version:
    * New functionals: gau-pbe, PW86 (unrevised), B86B, XDM (exchange-hole 
      dipole moment) model of dispersions, vdW-DF3, vdW-DF4 (Klimes et al),
      rVV10, optB86b-vdW, rev-vdW-DF2 
-   * Added the subdirectory FD in PHonon. Calculation of phonon dispersions 
-     using the finite displacements supercell approach.
+   * PHonon: Calculation of phonon dispersions using the finite displacements 
+     supercell approach. See subdirectory FD/ in PHonon.
    * dynmat.x can calculate phonon contribution to dielectric tensor
-   * CELL_PARAMETERS written on output using the same format as in input
    * turboTDDFT now supports hybrid functionals (only with norm-conserving
      pseudopotentials)
    * "image" parallelization re-introduced in pw.x: see code "manypw.x"
@@ -68,7 +68,7 @@ Fixed in 5.1 version:
    * Bogus symmetry error in NEB due to missing re-initialization
      of fractional translations
 
-Fixed in patches to 5.0.2 version:
+Fixed in 5.0.3 version:
 
    * PW, PP, PHonon: files for DFT+U produced by previous versions
      could no longer be read
