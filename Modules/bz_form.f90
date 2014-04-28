@@ -121,7 +121,7 @@ ELSEIF (ibz==7) THEN
    bz_struc%nlett=8
 ELSEIF (ibz==8) THEN
 !
-!  face centered orthorombic (1/a^2 > 1/b^2 + 1/c^2) bz
+!  face centered orthorombic (1/a^2 > 1/b^2 + 1/c^2) bz case 1
 !
    bz_struc%nfaces=12
    bz_struc%nvertices=18
@@ -129,7 +129,7 @@ ELSEIF (ibz==8) THEN
    CALL check_orthorombic(bz_struc)
 ELSEIF (ibz==9) THEN
 !
-!  face centered orthorombic (1/a^2 < 1/b^2 + 1/c^2) bz
+!  face centered orthorombic (1/a^2 < 1/b^2 + 1/c^2) bz case 2
 !
    bz_struc%nfaces=14
    bz_struc%nvertices=24
@@ -137,7 +137,7 @@ ELSEIF (ibz==9) THEN
    CALL check_orthorombic(bz_struc)
 ELSEIF (ibz==10) THEN
 !
-!  face centered orthorombic (1/a^2 = 1/b^2 + 1/c^2) bz
+!  face centered orthorombic (1/a^2 = 1/b^2 + 1/c^2) bz case 3
 !
    bz_struc%nfaces=12
    bz_struc%nvertices=14
@@ -273,9 +273,6 @@ IF ( ibz ==1) THEN
       bz_struc%letter_coord(:,5)=0.5_DP*( bz_struc%bg(:,1) )
    ENDIF
 
-   bz_struc%xaxis=1
-   bz_struc%yaxis=2
-   bz_struc%zaxis=5
    CALL find_axis_coordinates(bz_struc)
 
 ELSEIF (ibz==2) THEN
@@ -374,9 +371,6 @@ ELSEIF (ibz==2) THEN
       bz_struc%letter_coord(:,13) =0.5_DP*(bz_struc%bg(:,2) - bz_struc%bg(:,1))
    ENDIF
 
-   bz_struc%xaxis=1
-   bz_struc%yaxis=2
-   bz_struc%zaxis=5
    CALL find_axis_coordinates(bz_struc)
 
 ELSEIF (ibz==3) THEN
@@ -445,9 +439,6 @@ ELSEIF (ibz==3) THEN
       bz_struc%letter_coord(:,5) = bz_struc%vertex_coord(:,1)
    ENDIF
 
-   bz_struc%xaxis=5
-   bz_struc%yaxis=6
-   bz_struc%zaxis=6
    CALL find_axis_coordinates(bz_struc)
 
 
@@ -485,9 +476,6 @@ ELSEIF (ibz==4) THEN
                                      + bz_struc%bg(:,3))
    bz_struc%letter_coord(:,6) = 0.5_DP*(bz_struc%bg(:,2) + bz_struc%bg(:,3))
 
-   bz_struc%xaxis=1
-   bz_struc%yaxis=2
-   bz_struc%zaxis=5
    CALL find_axis_coordinates(bz_struc)
 
 ELSEIF (ibz==5) THEN
@@ -539,9 +527,6 @@ ELSEIF (ibz==5) THEN
    bz_struc%letter_coord(:,6) = bz_struc%vertex_coord(:,9)
    bz_struc%letter_coord(:,7) = bz_struc%vertex_coord(:,2)
 
-   bz_struc%xaxis=1
-   bz_struc%yaxis=2
-   bz_struc%zaxis=5
    CALL find_axis_coordinates(bz_struc)
 
 ELSEIF (ibz==6) THEN
@@ -629,9 +614,6 @@ ELSEIF (ibz==6) THEN
       bz_struc%letter_coord(3,15)=-0.5_DP*(bz_struc%bg(3,1) + bz_struc%bg(3,2))
    ENDIF
 
-   bz_struc%xaxis=5
-   bz_struc%yaxis=6
-   bz_struc%zaxis=13
    CALL find_axis_coordinates(bz_struc)
 
 ELSEIF (ibz==7) THEN
@@ -672,9 +654,6 @@ ELSEIF (ibz==7) THEN
    bz_struc%letter_coord(:,7) = 0.5_DP*(bz_struc%bg(:,2)+bz_struc%bg(:,3))
    bz_struc%letter_coord(:,8) = 0.5_DP*bz_struc%bg(:,3)
 
-   bz_struc%xaxis=1
-   bz_struc%yaxis=2
-   bz_struc%zaxis=5
    CALL find_axis_coordinates(bz_struc)
 
 ELSEIF (ibz==8) THEN
@@ -770,16 +749,13 @@ ELSEIF (ibz==8) THEN
    bz_struc%letter_coord(:,9) = 0.5_DP*(bz_struc%vertex_coord(:,4) &
                                       + bz_struc%vertex_coord(:,6))
 
-   bz_struc%xaxis=1
-   bz_struc%yaxis=2
-   bz_struc%zaxis=7
    CALL find_axis_coordinates(bz_struc)
 
    CALL adjust_orthorombic(bz_struc)
 
 ELSEIF (ibz==9) THEN
 !
-!  face centered orthorombic (1/a^2 < 1/b^2 + 1/c^2) bz
+!  face centered orthorombic (1/a^2 < 1/b^2 + 1/c^2) bz case 2
 !
    bz_struc%normal(:,1)=bz_struc%bg(:,1) + bz_struc%bg(:,2)
    bz_struc%normal(:,2)=bz_struc%bg(:,2) + bz_struc%bg(:,3)
@@ -895,9 +871,6 @@ ELSEIF (ibz==9) THEN
    bz_struc%letter_coord(:,11) = 0.5_DP*(bz_struc%bg(:,1) + bz_struc%bg(:,3))
 
 
-   bz_struc%xaxis=1
-   bz_struc%yaxis=2
-   bz_struc%zaxis=5
    CALL find_axis_coordinates(bz_struc)
 
    CALL adjust_orthorombic(bz_struc)
@@ -992,10 +965,6 @@ ELSEIF (ibz==10) THEN
    bz_struc%letter_coord(:,6) = bz_struc%vertex_coord(:,3)
    bz_struc%letter_coord(:,7) = bz_struc%vertex_coord(:,2)
    bz_struc%letter_coord(:,8) = 0.5_DP*(bz_struc%bg(:,2) + bz_struc%bg(:,3))
-
-   bz_struc%xaxis=1
-   bz_struc%yaxis=2
-   bz_struc%zaxis=7
 
    CALL find_axis_coordinates(bz_struc)
    CALL adjust_orthorombic(bz_struc)
@@ -1191,10 +1160,6 @@ ELSEIF (ibz==11) THEN
                                        + bz_struc%bg(:,3))
 
 
-   bz_struc%xaxis=5
-   bz_struc%yaxis=6
-   bz_struc%zaxis=13
-
    CALL find_axis_coordinates(bz_struc)
    CALL adjust_orthorombic(bz_struc)
 
@@ -1266,9 +1231,6 @@ ELSEIF (ibz==12) THEN
                                         bz_struc%bg(:,3))
    bz_struc%letter_coord(:,10) = 0.5_DP*bz_struc%bg(:,3)
 
-   bz_struc%xaxis=1
-   bz_struc%yaxis=2
-   bz_struc%zaxis=7
    CALL find_axis_coordinates(bz_struc)
 
    CALL adjust_one_face_centered_orthorombic(bz_struc)
@@ -1311,9 +1273,6 @@ ELSEIF (ibz==13) THEN
    bz_struc%letter_coord(:,5) = 0.5_DP*(bz_struc%bg(:,1)+bz_struc%bg(:,3))
    bz_struc%letter_coord(:,6) = bz_struc%vertex_coord(:,1) 
 
-   bz_struc%xaxis=1
-   bz_struc%yaxis=2
-   bz_struc%zaxis=7
    CALL find_axis_coordinates(bz_struc)
 !
 ELSEIF (ibz==14) THEN
@@ -1383,9 +1342,6 @@ ELSEIF (ibz==14) THEN
    bz_struc%letter_coord(:,11) = bz_struc%vertex_coord(:,13)
    bz_struc%letter_coord(:,12) = 0.5_DP*(bz_struc%vertex_coord(:,13)+ &
                                          bz_struc%vertex_coord(:,14))
-   bz_struc%xaxis=6
-   bz_struc%yaxis=2
-   bz_struc%zaxis=7
    CALL find_axis_coordinates(bz_struc)
 
 ELSEIF (ibz==15) THEN
@@ -1447,9 +1403,6 @@ ELSEIF (ibz==15) THEN
    bz_struc%letter_coord(:,7) = 0.5_DP * bz_struc%bg(:,2)
    bz_struc%letter_coord(:,8) = bz_struc%vertex_coord(:,7)
 
-   bz_struc%xaxis=1
-   bz_struc%yaxis=2
-   bz_struc%zaxis=7
    CALL find_axis_coordinates(bz_struc)
 !
 ELSE
@@ -1780,6 +1733,36 @@ ENDIF
 RETURN
 END SUBROUTINE adjust_orthorombic
 
+SUBROUTINE adjust_orthorombic_vect(bz_struc,vect)
+!
+!   This routine rotates the coordinates of a vector of bz_struc
+!   so that they correspond to the original orthorombic lattice
+!
+IMPLICIT NONE
+TYPE(bz), INTENT(IN) :: bz_struc
+REAL(DP), INTENT(INOUT) :: vect(3)
+REAL(DP) :: buffer
+
+IF (bz_struc%switch_b_c) THEN
+   buffer = vect(2)
+   vect(2)=vect(3)
+   vect(3)=buffer
+ENDIF
+
+IF (bz_struc%switch_a_b) THEN
+   buffer = vect(1)
+   vect(1)=vect(2)
+   vect(2)=buffer
+ELSEIF (bz_struc%rotate_a_b_c) THEN
+   buffer = vect(3)
+   vect(3)=vect(1)
+   vect(1)=vect(2)
+   vect(2)=buffer
+ENDIF
+
+RETURN
+END SUBROUTINE adjust_orthorombic_vect
+
 SUBROUTINE adjust_one_face_centered_orthorombic(bz_struc)
 !
 !   This routine rotates the coordinates of the x, y, z points of bz_struc
@@ -1867,22 +1850,53 @@ END SUBROUTINE canonical_celldm
 SUBROUTINE find_axis_coordinates(bz_struc)
 IMPLICIT NONE
 TYPE(bz), INTENT(INOUT) :: bz_struc
-REAL(DP) :: x0(3), vect(3)
+REAL(DP) :: x0(3), vect(3), xi(3), xmin
+INTEGER :: ifaces
 
 x0 = 0.0_DP
 vect=0.0_DP
 vect(1)=1.0_DP
-CALL inter_plane_line(x0, vect, bz_struc%normal(:,bz_struc%xaxis), bz_struc%xi)
+xmin=1.D20
+DO ifaces=1, bz_struc%nfaces
+   IF (ABS(bz_struc%normal(1,ifaces)) > 1.d-9) THEN
+      CALL inter_plane_line(x0, vect, bz_struc%normal(:,ifaces), xi)
+      IF (xi(1) > 0.0_DP .AND. xi(1) < xmin) THEN
+         bz_struc%xi=xi
+         bz_struc%xaxis=ifaces
+         xmin=xi(1)
+      ENDIF
+   ENDIF
+ENDDO
 
 x0 = 0.0_DP
 vect=0.0_DP
 vect(2)=1.0_DP
-CALL inter_plane_line(x0, vect, bz_struc%normal(:,bz_struc%yaxis), bz_struc%yi)
+xmin=1.D20
+DO ifaces=1, bz_struc%nfaces
+   IF (ABS(bz_struc%normal(2,ifaces)) > 1.d-9) THEN
+      CALL inter_plane_line(x0, vect, bz_struc%normal(:,ifaces), xi)
+      IF (xi(2) > 0.0_DP .AND. xi(2) < xmin) THEN
+         bz_struc%yi=xi
+         bz_struc%yaxis=ifaces
+         xmin=xi(2)
+      ENDIF
+   ENDIF
+ENDDO
 
 x0 = 0.0_DP
 vect=0.0_DP
 vect(3)=1.0_DP
-CALL inter_plane_line(x0, vect, bz_struc%normal(:,bz_struc%zaxis), bz_struc%zi)
+xmin=1.D20
+DO ifaces=1, bz_struc%nfaces
+   IF (ABS(bz_struc%normal(3,ifaces)) > 1.d-9) THEN
+      CALL inter_plane_line(x0, vect, bz_struc%normal(:,ifaces), xi)
+      IF (xi(3) > 0.0_DP .AND. xi(3) < xmin) THEN
+         bz_struc%zi=xi
+         bz_struc%zaxis=ifaces
+         xmin=xi(3)
+      ENDIF
+   ENDIF
+ENDDO
 
 RETURN
 END SUBROUTINE 
