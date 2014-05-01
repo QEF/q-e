@@ -60,7 +60,7 @@ SUBROUTINE new_ns(ns)
   !
   ! D_Sl for l=1, l=2 and l=3 are already initialized, for l=0 D_S0 is 1
   !
-  ! Offset of atomic wavefunctions initialized in setup and stored in oatwfc
+  ! Offset of atomic wavefunctions initialized in setup and stored in offsetU
   !
   nr (:,:,:,:) = 0.d0
   ns (:,:,:,:) = 0.d0

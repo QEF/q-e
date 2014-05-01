@@ -36,7 +36,7 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
 
   CALL start_clock('vhpsi')
   !
-  ! Offset of atomic wavefunctions initialized in setup and stored in oatwfc
+  ! Offset of atomic wavefunctions initialized in setup and stored in offsetU
   !
   CALL allocate_bec_type ( nwfcU,mps, proj )
   CALL calbec (np, wfcU, psip, proj)

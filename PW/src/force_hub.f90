@@ -20,7 +20,7 @@ SUBROUTINE force_hub(forceh)
    USE cell_base,            ONLY : at, bg
    USE ldaU,                 ONLY : hubbard_lmax, hubbard_l, U_projection, &
                                     nwfcU, wfcU, is_hubbard, lda_plus_u_kind, &
-                                    oatwfc, copy_U_wfc, offsetU
+                                    copy_U_wfc, offsetU
    USE basis,                ONLY : natomwfc
    USE symme,                ONLY : symvector
    USE io_files,             ONLY : prefix

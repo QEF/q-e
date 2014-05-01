@@ -126,7 +126,7 @@ SUBROUTINE dndepsilon ( ipol,jpol,ldim,dns )
    USE control_flags,        ONLY : gamma_only   
    USE klist,                ONLY : nks, xk, ngk
    USE ldaU,                 ONLY : wfcU, nwfcU, offsetU, Hubbard_l, &
-                                    is_hubbard, oatwfc, copy_U_wfc
+                                    is_hubbard, copy_U_wfc
    USE basis,                ONLY : natomwfc
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
@@ -174,7 +174,7 @@ SUBROUTINE dndepsilon ( ipol,jpol,ldim,dns )
    !
    ! D_Sl for l=1 and l=2 are already initialized, for l=0 D_S0 is 1
    !
-   ! Offset of atomic wavefunctions initialized in setup and stored in oatwfc
+   ! Offset of atomic wavefunctions initialized in setup and stored in offsetU
   
    dns(:,:,:,:) = 0.d0
    !

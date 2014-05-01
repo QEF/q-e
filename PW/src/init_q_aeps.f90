@@ -19,7 +19,7 @@ SUBROUTINE init_q_aeps ( )
    USE ions_base,  ONLY : ntyp => nsp, ityp, nat
    USE atom,       ONLY : rgrid, msh
    USE lsda_mod,   ONLY : nspin
-   USE ldaU,       ONLY : q_ae, q_ps, Hubbard_l, oatwfc, &
+   USE ldaU,       ONLY : q_ae, q_ps, Hubbard_l, &
                           U_projection, is_hubbard, nwfcU, offsetU
    USE uspp_param, ONLY : nbetam, nh, nhm, upf
    USE uspp,       ONLY : indv, nhtol, nhtolm, nkb
