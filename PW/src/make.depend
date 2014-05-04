@@ -893,6 +893,7 @@ lchk_tauxk.o : ../../Modules/kind.o
 ldaU.o : ../../Modules/ions_base.o
 ldaU.o : ../../Modules/kind.o
 ldaU.o : ../../Modules/parameters.o
+ldaU.o : atomic_wfc_mod.o
 make_pointlists.o : ../../Modules/cell_base.o
 make_pointlists.o : ../../Modules/fft_base.o
 make_pointlists.o : ../../Modules/io_global.o
@@ -1055,7 +1056,6 @@ ns_adj.o : scf_mod.o
 offset_atom_wfc.o : ../../Modules/ions_base.o
 offset_atom_wfc.o : ../../Modules/noncol.o
 offset_atom_wfc.o : ../../Modules/uspp.o
-offset_atom_wfc.o : atomic_wfc_mod.o
 offset_atom_wfc.o : ldaU.o
 openfil.o : ../../Modules/control_flags.o
 openfil.o : ../../Modules/io_files.o
