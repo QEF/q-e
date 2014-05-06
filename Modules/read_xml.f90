@@ -62,15 +62,8 @@ CONTAINS
     CASE ('PW')
        !
        CALL read_xml_common( attr, 'PW' )
-       !
-       !
        CALL read_xml_pw()
        !
-       !
-!    CASE ('NEB')
-!       !
-!       CALL read_xml_common( attr, 'PW' )
-!       !
     CASE ('CP')
        !
        CALL read_xml_common( attr, 'CP' )
