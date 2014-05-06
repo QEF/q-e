@@ -29,12 +29,12 @@ LOGICAL FUNCTION test_input_xml (myunit)
       READ ( myunit,'(A)', ERR=10, END=10) dummy
    END DO
 
-   ! remove blanks from line, clean trailing characters
+   ! remove blanks from line, convert to capital, clean trailing characters
 
    j=1
    DO i=1, LEN_TRIM(dummy) 
       IF ( dummy(i:i) /= ' ' ) THEN
-         IF ( i > j ) dummy(j:j) = capital(dummy(i:i))
+         dummy(j:j) = capital(dummy(i:i))
          j=j+1
       END IF
    END DO
