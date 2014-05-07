@@ -330,14 +330,8 @@ SUBROUTINE electrons_scf ( no_printout )
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
 #ifdef __ENVIRON
   USE environ_base,         ONLY : do_environ, update_venviron,             &
-                                   vltot_zero, environ_thr,                 &
-                                   env_static_permittivity,                 & 
-                                   env_surface_tension, env_pressure,       &
-                                   env_periodicity, env_ioncc_level,        &
-                                   env_extcharge_n, deenviron, esolvent,    &
-                                   ecavity, epressure, eperiodic, eioncc,   &
-                                   eextcharge
- USE environ_main,          ONLY : calc_eenviron, calc_venviron
+                                   vltot_zero, environ_thr                 
+ USE environ_main,          ONLY : calc_venviron
 #endif
   USE dfunct,               ONLY : newd
   USE esm,                  ONLY : do_comp_esm, esm_printpot
@@ -657,15 +651,11 @@ SUBROUTINE electrons_scf ( no_printout )
         vltot = vltot_zero
         !vltot_zero = 0.0_dp
         !
-        CALL calc_eenviron( dfftp%nnr, nspin, rhoin%of_r, deenviron, esolvent, &
-                            ecavity, epressure, eperiodic, eioncc, eextcharge )
-        !
-        plugin_etot = plugin_etot + deenviron + esolvent + ecavity + epressure + eperiodic + eioncc + eextcharge
-        !
-        update_venviron = .NOT. conv_elec .AND. dr2 .LT. environ_thr
-        !
-        IF ( update_venviron ) WRITE( stdout, 9200 )
-        !
+        update_venviron = .NOT. conv_elec .AND. dr2 .LT. environ_thr 
+        ! 
+        IF ( update_venviron ) WRITE( stdout, 9200 ) 
+9200 FORMAT(/'     add environment contribution to local potential')
+
         CALL calc_venviron( update_venviron, dfftp%nnr, nspin, dr2, rhoin%of_r, vltot )
         ! 
         !CALL sum_vrs( dfftp%nnr, nspin, vltot, vrs, vrs)
@@ -826,9 +816,6 @@ SUBROUTINE electrons_scf ( no_printout )
 9101 FORMAT(/'     End of self-consistent calculation' )
 9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
 9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
-#ifdef __ENVIRON
-9200 FORMAT(/'     add environment contribution to local potential')
-#endif
   !
   CONTAINS
      !

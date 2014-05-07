@@ -6,16 +6,31 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE plugin_scf_energy()
-  !----------------------------------------------------------------------------
-  !
-  USE io_global,        ONLY : stdout, ionode
-  USE kinds,            ONLY : DP
-  USE io_files,         ONLY : tmp_dir
-  !
-  USE plugin_flags
-  !
-  IMPLICIT NONE
-  !
-  !
+SUBROUTINE plugin_scf_energy(plugin_etot,rhoin)
+!----------------------------------------------------------------------------
+!
+USE io_global,        ONLY : stdout, ionode
+USE kinds,            ONLY : DP
+USE io_files,         ONLY : tmp_dir
+!
+USE fft_base,         ONLY : dfftp
+USE lsda_mod,         ONLY : nspin
+USE scf,              ONLY : scf_type
+!
+USE plugin_flags
+!
+! ***Environ MODULES BEGIN***
+! ***Environ MODULES END***
+!
+IMPLICIT NONE
+!
+real(DP), intent(in) :: plugin_etot
+type(scf_type), intent(in) :: rhoin
+!
+! ***Environ VARIABLES BEGIN***
+! ***Environ VARIABLES END***
+!
+! ***Environ CALLS BEGIN***
+! ***Environ CALLS END***
+!
 END SUBROUTINE plugin_scf_energy
