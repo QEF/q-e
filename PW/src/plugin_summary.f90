@@ -7,6 +7,21 @@
 !
 subroutine plugin_summary()
 !
+! This routine is used for printing
+! plugins summary
+! DO NOT REMOVE THE TAGS ! ***ADDSON_NAME KIND_OF_PATCH***
+!
+USE plugin_flags
+!
+! ***Environ MODULES BEGIN***
+! ***Environ MODULES END***
+!
 implicit none
+!
+! ***Environ VARIABLES BEGIN***
+! ***Environ VARIABLES END***
+!
+! ***Environ CALLS BEGIN***
+! ***Environ CALLS END***
 !
 end subroutine plugin_summary
