@@ -1176,6 +1176,7 @@ CONTAINS
        ! ... automatic generation of k-points
        !
        nkstot = 0
+       ALLOCATE ( xk(3,1), wk(1) )
        CALL iotk_scan_dat( xmlinputunit, 'mesh', tmp, ierr = ierr )
        IF ( ierr /= 0 ) CALL errore( 'card_xml_kpoints', 'error reading data inside mesh &
             &node', abs( ierr ) )
