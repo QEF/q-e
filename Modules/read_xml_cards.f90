@@ -1128,7 +1128,7 @@ CONTAINS
     LOGICAL :: kband = .FALSE.
     CHARACTER( len = 20 ) :: type
     CHARACTER( len = iotk_attlenx ) :: attr2
-    INTEGER :: i,j, nk, nkaux, ierr
+    INTEGER :: i,j, nk, ndiv, nkaux, ierr
     INTEGER, DIMENSION( 6 ) :: tmp
     REAL( DP ), DIMENSION( : , : ), ALLOCATABLE :: points_tmp
     REAL( DP ) :: delta
@@ -1226,30 +1226,34 @@ CONTAINS
           !
           ALLOCATE ( xk(3,nkstot), wk(nkstot) )
           !
-          nk = 0
-          DO i = 1, nkaux-1
+          nk = 1
+          wk(nk) = 0.0_dp
+          xk(:, nk) = points_tmp(1:3, 1 )
+          !
+          DO i = 2, nkaux
              !
-             delta = 1.0_DP/points_tmp(4,i)
+             ndiv = NINT(points_tmp(4,i-1))
+             delta = 1.0_DP/ndiv
              !
-             DO j=0, NINT(points_tmp(4,i))-1
+             DO j=1, ndiv
                 !
                 nk = nk+1
                 IF ( nk > SIZE (xk,2)  ) CALL errore &
                      ('card_xml_kpoints', 'too many k-points',nkstot)
                 !
-                xk( :, nk ) = points_tmp(1:3, i ) + &
-                              delta*j*( points_tmp(1:3,i+1)-points_tmp(1:3,i) ) 
-                wk(nk)=1.0_DP
+                xk( :, nk ) = points_tmp(1:3, i-1 ) + &
+                              delta*j*( points_tmp(1:3,i)-points_tmp(1:3,i-1) ) 
+                wk(nk) = wk(nk-1) + &
+                           SQRT( (xk(1,nk)-xk(1,nk-1))**2 +   &
+                                 (xk(2,nk)-xk(2,nk-1))**2 +   &
+                                 (xk(3,nk)-xk(3,nk-1))**2 )
                 !
              ENDDO
              !
           ENDDO
           !
-          nk = nk + 1
           IF ( nk /= SIZE (xk,2)  ) CALL errore &
                ('card_xml_kpoints', 'internal error in k-point computation',nk)
-          xk( :, nk ) = points_tmp(1:3, nkaux )
-          wk( nk ) = 1.0_DP
           !
        ELSE
           !
