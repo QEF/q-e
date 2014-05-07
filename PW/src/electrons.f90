@@ -1081,9 +1081,6 @@ SUBROUTINE electrons_scf ( no_printout )
        !
        USE constants, ONLY : eps8
        USE control_flags, ONLY : lmd
-#ifdef __ENVIRON
-       USE environ_info, ONLY : environ_print_energies
-#endif      
        !
        IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
           !
@@ -1131,11 +1128,6 @@ SUBROUTINE electrons_scf ( no_printout )
        END IF
        !
        CALL plugin_print_energies()
-       !
-#ifdef __ENVIRON
-       IF ( do_environ ) CALL environ_print_energies()
-       !
-#endif
        !
        IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
        !
