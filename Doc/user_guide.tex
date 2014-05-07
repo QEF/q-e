@@ -176,8 +176,8 @@ bugs, helped in porting to new architectures, wrote some code,
 contributed in some way or another at some stage, follows:
 \begin{quote}
   {\AA}ke Sandgren, Audrius Alkauskas, Alain Allouche, Francesco Antoniella,
-  Uli Aschauer,  Francesca Baletto, Gerardo Ballabio, Mauro Boero, 
-  Claudia Bungaro, Paolo Cazzato, Gabriele Cipriani, Jiayu Dai,
+  Uli Aschauer,  Francesca Baletto, Gerardo Ballabio, Mauro Boero, Pietro
+  Bonf\`a, Claudia Bungaro, Paolo Cazzato, Gabriele Cipriani, Jiayu Dai,
   Cesar Da Silva, Alberto Debernardi, Gernot Deinzer, Marco Govoni,
   Thomas Gruber,
   Martin Hilgeman, Yosuke Kanai, Axel Kohlmeyer, Konstantin Kudin,
@@ -966,8 +966,8 @@ that runs on different machines, compile it on the oldest machine you have
 If you get errors like {\em IPO Error: unresolved : \_\_svml\_cos2}
 at the linking stage, your compiler is optimized to use the SSE
 version of sine, cosine etc. contained in the SVML library. Append
-\texttt{-lsvml} to the list of libraries in your \texttt{make.sys} file (info by Axel
-Kohlmeyer, oct.2007). 
+\texttt{-lsvml} to the list of libraries in your \texttt{make.sys} 
+file (info by Axel Kohlmeyer, oct.2007). 
 
 \paragraph{Linux PCs with Portland compiler (pgf90)}
 
@@ -1605,13 +1605,16 @@ and writes to it) but you may run into trouble anyway if you
 need to access your files that are scattered in an unpredictable
 way across disks residing on different nodes.
 
-You can use input variable \texttt{disk\_io='minimal'}, or even 
-\texttt{'none'}, if you run
-into trouble (or into angry system managers) with excessive I/O with \pwx. 
-The code will store wavefunctions into RAM during the calculation.
-Note however that this will increase your memory usage and may limit 
-or prevent restarting from interrupted runs. For very large runs,
-you may also want to use \texttt{wf\_collect=.false.} and (CP only)
+You can use input variable \texttt{disk\_io} to reduce the the
+amount of I/O done by \pwx. Since v.5.1, the dafault value is 
+\texttt{disk\_io='low'}, so the code will store wavefunctions 
+into RAM and not on disk during the calculation. Specify
+\texttt{disk\_io='medium'} only if you have too many k-points 
+and you run into trouble with memory; choose \texttt{disk\_io='none'} 
+if you do not need to keep final data files. 
+
+For very large \cpx\ runs, you may consider using 
+\texttt{wf\_collect=.false.}, \texttt{memory='small'} and
 \texttt{saverho=.false.} to reduce I/O to the strict minimum.
 
 \subsection{Tricks and problems}
