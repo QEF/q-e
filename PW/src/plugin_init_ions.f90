@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2010 Quantum ESPRESSO group
+! Copyright (C) 2014 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,15 +7,21 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE plugin_init_ions()
-  !----------------------------------------------------------------------------
-  !
-  USE io_global,        ONLY : stdout, ionode
-  USE kinds,            ONLY : DP
-  USE io_files,         ONLY : tmp_dir
-  !
-  USE plugin_flags
-  !
-  IMPLICIT NONE
-  !
-  !
+!----------------------------------------------------------------------------
+!
+USE kinds,            ONLY : DP
+USE fft_base,  ONLY : dfftp
+USE plugin_flags
+!
+! ***Environ MODULES BEGIN***
+! ***Environ MODULES END***
+!
+IMPLICIT NONE
+!
+! ***Environ VARIABLES BEGIN***
+! ***Environ VARIABLES END***
+!
+! ***Environ CALLS BEGIN***
+! ***Environ CALLS END***
+!
 END SUBROUTINE plugin_init_ions
