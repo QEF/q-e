@@ -18,8 +18,6 @@ USE mp_bands,  ONLY : me_bgrp
 !
 implicit none
 !
-LOGICAL, INTENT(IN) :: lflag
-!
 ! ***Environ VARIABLES BEGIN***
 ! ***Environ VARIABLES END***
 !
