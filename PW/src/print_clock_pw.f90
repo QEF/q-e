@@ -19,10 +19,6 @@ SUBROUTINE print_clock_pw()
    USE realus,             ONLY : real_space
    USE ldaU,               ONLY : lda_plus_U
    USE funct,              ONLY : dft_is_hybrid
-#ifdef __ENVIRON
-   USE environ_base,       ONLY : do_environ
-   USE environ_info,       ONLY : environ_clock
-#endif
    !
    IMPLICIT NONE
    !
@@ -227,11 +223,8 @@ SUBROUTINE print_clock_pw()
    call print_clock('h_epsi_set')
    call print_clock('h_epsi_apply')
    call print_clock('c_phase_field')
-  !
+   !
    CALL plugin_clock()
-#ifdef __ENVIRON
-   IF ( do_environ ) call environ_clock( stdout )
-#endif
    !
    RETURN
    !
