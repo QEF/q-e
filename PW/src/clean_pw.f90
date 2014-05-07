@@ -59,10 +59,6 @@ SUBROUTINE clean_pw( lflag )
   USE pseudo_types,         ONLY : deallocate_pseudo_upf
   USE bp,                   ONLY : deallocate_bp_efield
   USE exx,                  ONLY : deallocate_exx
-#ifdef __ENVIRON
-  USE environ_base,         ONLY : do_environ
-  USE environ_init,         ONLY : environ_clean
-#endif
   !
   IMPLICIT NONE
   !
@@ -195,12 +191,6 @@ SUBROUTINE clean_pw( lflag )
   CALL deallocate_exx ( ) 
   !
   CALL plugin_clean( lflag )
-#ifdef __ENVIRON
-  ! ... additional arrays for external environment 
-  !
-  CALL environ_clean( lflag )
-  !
-#endif
   !
   RETURN
   !
