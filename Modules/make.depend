@@ -284,7 +284,7 @@ read_xml.o : ../iotk/src/iotk_unit_interf.o
 read_xml.o : input_parameters.o
 read_xml.o : io_global.o
 read_xml.o : mp.o
-read_xml.o : mp_world.o
+read_xml.o : mp_images.o
 read_xml.o : read_namelists.o
 read_xml.o : read_xml_cards.o
 read_xml.o : read_xml_fields.o
@@ -294,7 +294,7 @@ read_xml_cards.o : input_parameters.o
 read_xml_cards.o : io_global.o
 read_xml_cards.o : kind.o
 read_xml_cards.o : mp.o
-read_xml_cards.o : mp_world.o
+read_xml_cards.o : mp_images.o
 read_xml_cards.o : read_namelists.o
 read_xml_cards.o : read_xml_fields.o
 read_xml_fields.o : ../iotk/src/iotk_module.o

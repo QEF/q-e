@@ -131,7 +131,7 @@ for dir in $dirs; do
            echo directory $DIR : ok
        fi
     else
-       echo Directory $DIR not present in $TOPDIR 
+       echo directory $DIR : not present in $TOPDIR 
     fi
 done
 if test "$notfound" = ""
