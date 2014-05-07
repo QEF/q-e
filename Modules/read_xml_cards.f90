@@ -1128,10 +1128,9 @@ CONTAINS
     LOGICAL :: kband = .FALSE.
     CHARACTER( len = 20 ) :: type
     CHARACTER( len = iotk_attlenx ) :: attr2
-    INTEGER :: i,j, nkaux, ierr
+    INTEGER :: i,j, nk, nkaux, ierr
     INTEGER, DIMENSION( 6 ) :: tmp
-    INTEGER, DIMENSION( : ), ALLOCATABLE :: wkaux
-    REAL( DP ), DIMENSION( : , : ), ALLOCATABLE :: points_tmp, xkaux
+    REAL( DP ), DIMENSION( : , : ), ALLOCATABLE :: points_tmp
     REAL( DP ) :: delta
     !
     !
@@ -1210,63 +1209,60 @@ CONTAINS
        IF ( ierr /= 0 ) CALL errore( 'card_xml_kpoints', 'error reading attribute npoints of mesh &
             &node', abs( ierr ) )
        !
-       !
-       !IF ( nkstot > size( xk, 2 )  ) CALL errore &
-       !     ('card_xml_kpoints', 'too many k-points', nkstot)
-       !
        allocate( points_tmp(4,nkstot) )
        !
        CALL iotk_scan_dat_inside( xmlinputunit, points_tmp, ierr = ierr )
        IF ( ierr /= 0 ) CALL errore( 'card_xml_kpoints', 'error reading data inside mesh &
             &node', abs( ierr ) )
        !
-       ALLOCATE ( xk(3,nkstot), wk(nkstot) )
-       !
-       xk( :, 1:nkstot ) = points_tmp( 1:3, : )
-       wk( 1:nkstot ) = points_tmp( 4, : )
-       !
-       deallocate( points_tmp )
-       !
-       CALL iotk_scan_end( xmlinputunit, 'mesh', ierr = ierr )
-       IF ( ierr /= 0 ) CALL errore( 'card_xml_kpoints', 'error scanning end of mesh &
-            &node', abs( ierr ) )
-       !
-       !
        IF ( kband ) THEN
           !
           nkaux=nkstot
-          !
-          allocate( xkaux( 3, nkstot ) )
-          allocate( wkaux( nkstot ) )
-          !
-          xkaux( :, 1:nkstot ) = xk( :, 1:nkstot )
-          wkaux( 1:nkstot ) = nint( wk(1:nkstot) )
           nkstot = 0
+          DO i = 1, nkaux-1
+             nkstot = nkstot + NINT ( points_tmp(4,i) )
+          END DO
+          nkstot = nkstot + 1
           !
+          ALLOCATE ( xk(3,nkstot), wk(nkstot) )
+          !
+          nk = 0
           DO i = 1, nkaux-1
              !
-             delta = 1.0_DP/wkaux(i)
+             delta = 1.0_DP/points_tmp(4,i)
              !
-             DO j=0, wkaux(i)-1
+             DO j=0, NINT(points_tmp(4,i))-1
                 !
-                nkstot=nkstot+1
-                IF ( nkstot > SIZE (xk,2)  ) CALL errore &
+                nk = nk+1
+                IF ( nk > SIZE (xk,2)  ) CALL errore &
                      ('card_xml_kpoints', 'too many k-points',nkstot)
                 !
-                xk( :, nkstot ) = xkaux( :, i ) + delta*j*( xkaux(:,i+1) - xkaux(:,i) ) 
-                wk(nkstot)=1.0_DP
+                xk( :, nk ) = points_tmp(1:3, i ) + &
+                              delta*j*( points_tmp(1:3,i+1)-points_tmp(1:3,i) ) 
+                wk(nk)=1.0_DP
                 !
              ENDDO
              !
           ENDDO
           !
-          nkstot = nkstot + 1
-          xk( :, nkstot ) = xkaux( :, nkaux )
-          wk( nkstot ) = 1.0_DP
+          nk = nk + 1
+          IF ( nk /= SIZE (xk,2)  ) CALL errore &
+               ('card_xml_kpoints', 'internal error in k-point computation',nk)
+          xk( :, nk ) = points_tmp(1:3, nkaux )
+          wk( nk ) = 1.0_DP
           !
-          deallocate(xkaux)
-          deallocate(wkaux)
-       ENDIF
+       ELSE
+          !
+          ALLOCATE ( xk(3,nkstot), wk(nkstot) )
+          xk( :, 1:nkstot ) = points_tmp( 1:3, : )
+          wk( 1:nkstot ) = points_tmp( 4, : )
+          !
+       END IF
+       deallocate( points_tmp )
+       !
+       CALL iotk_scan_end( xmlinputunit, 'mesh', ierr = ierr )
+       IF ( ierr /= 0 ) CALL errore( 'card_xml_kpoints', 'error scanning end of mesh &
+            &node', abs( ierr ) )
        !
     ELSE IF ( k_points == 'gamma' ) THEN
        !
