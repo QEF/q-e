@@ -392,7 +392,7 @@ PROGRAM pw2bgw
 
   STOP
 
-END PROGRAM pw2bgw
+CONTAINS
 
 !-------------------------------------------------------------------------------
 
@@ -1007,8 +1007,8 @@ SUBROUTINE real_wfng ( ik, ngkdist_l, nb, ns, energy, wfng_dist )
   IMPLICIT NONE
 
   integer, intent (in) :: ik, ngkdist_l, nb, ns
-  real (DP), intent (in) :: energy ( nb, ns )
-  complex (DP), intent (inout) :: wfng_dist ( ngkdist_l, nb, ns )
+  real (DP), intent (in) :: energy ( :, : ) ! ( nb, ns )
+  complex (DP), intent (inout) :: wfng_dist ( :, :, : ) ! ( ngkdist_l, nb, ns )
 
   real (DP), PARAMETER :: eps2 = 1.0D-2
   real (DP), PARAMETER :: eps5 = 1.0D-5
@@ -2872,4 +2872,6 @@ subroutine check_inversion(real_or_complex, ntran, mtrx, nspin, warn, real_need_
 end subroutine check_inversion
 
 !-------------------------------------------------------------------------------
+
+END PROGRAM pw2bgw
 

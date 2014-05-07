@@ -164,7 +164,7 @@ PROGRAM bgw2pw
 
   STOP
 
-END PROGRAM bgw2pw
+CONTAINS
 
 !-------------------------------------------------------------------------------
 
@@ -962,4 +962,6 @@ subroutine check_inversion(real_or_complex, ntran, mtrx, nspin, warn, real_need_
 end subroutine check_inversion
 
 !-------------------------------------------------------------------------------
+
+END PROGRAM bgw2pw
 
