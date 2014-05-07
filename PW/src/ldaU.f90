@@ -168,20 +168,28 @@ CONTAINS
   !
   END SUBROUTINE deallocate_ldaU
   !
-  SUBROUTINE copy_U_wfc ( swfcatom )
+  SUBROUTINE copy_U_wfc ( swfcatom, noncolin )
   !
   !  Copy (orthogonalized) atomic wavefunctions "swfcatom"
   !  having a Hubbard U correction to array "wfcU"
   !
   IMPLICIT NONE
   COMPLEX (KIND=dp), INTENT (IN) :: swfcatom(:,:)
+  LOGICAL, INTENT(IN), OPTIONAL :: noncolin
+  LOGICAL :: twice
   INTEGER :: na, nt, m1, m2
 
+  IF ( PRESENT (noncolin) ) THEN
+     twice = noncolin
+  ELSE
+     twice = .FALSE.
+  END IF
   DO na=1,nat
      nt = ityp(na)
      if ( is_hubbard(nt) ) then
         m1 = 1
         m2 = 2*hubbard_l(nt)+1
+        IF ( twice ) m2 = 2*m2
         wfcU(:,offsetU(na)+m1:offsetU(na)+m2) = swfcatom(:,oatwfc(na)+m1:oatwfc(na)+m2)
      end if
   END DO

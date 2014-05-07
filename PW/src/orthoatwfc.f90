@@ -101,7 +101,7 @@ SUBROUTINE orthoUwfc
      ! copy atomic wavefunctions with Hubbard U term only in wfcU
      ! save to unit iunhub
      !
-     CALL copy_U_wfc (swfcatom)
+     CALL copy_U_wfc (swfcatom, noncolin)
      IF ( nks > 1 ) &
           CALL save_buffer (wfcU, nwordwfcU, iunhub, ik)
      !
