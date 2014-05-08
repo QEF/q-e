@@ -147,6 +147,7 @@ plugin_scf_energy.o \
 plugin_scf_potential.o \
 plugin_init_ions.o \
 plugin_init_cell.o \
+plugin_init_potential.o \
 plugin_initbase.o \
 plugin_clean.o \
 plugin_clock.o \

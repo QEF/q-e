@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2010 Quantum ESPRESSO group
+! Copyright (C) 2014 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,6 +8,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE plugin_scf_energy(plugin_etot,rhoin)
 !----------------------------------------------------------------------------
+! This routine is used to calculate plugin energy related quantities
+! that needs to be solved inside the scf cycle
 !
 USE io_global,        ONLY : stdout, ionode
 USE kinds,            ONLY : DP

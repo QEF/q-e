@@ -46,10 +46,6 @@ SUBROUTINE electrons()
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
   !
-#ifdef __ENVIRON
-  USE environ_base,         ONLY : do_environ, vltot_zero
-#endif
-  !
   !
   IMPLICIT NONE
   !
@@ -84,11 +80,7 @@ SUBROUTINE electrons()
   CALL plugin_init_ions()
   CALL plugin_init_cell()
   !
-#ifdef __ENVIRON
-  IF ( do_environ ) THEN
-    vltot_zero = vltot
-  END IF
-#endif
+  CALL plugin_init_potential()
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%  Iterate hybrid functional  %%%%%%%%%%%%%%%%%%%%%
