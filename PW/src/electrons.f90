@@ -626,9 +626,9 @@ SUBROUTINE electrons_scf ( no_printout )
      !
      plugin_etot = 0.0_dp
      !
-     CALL plugin_scf_energy()
+     CALL plugin_scf_energy(plugin_etot,rhoin)
      !
-     CALL plugin_scf_potential()
+     CALL plugin_scf_potential(rhoin,conv_elec,dr2)
      !
      ! ... define the total local potential (external + scf)
      !

@@ -22,11 +22,10 @@ SUBROUTINE makov_payne( etot )
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho
   USE lsda_mod,  ONLY : nspin
-#ifdef __ENVIRON
-  USE environ_base, ONLY : do_environ
-  USE environ_mp,  ONLY : environ_makov_payne
-#endif
-  !
+!
+! ***Environ MODULES BEGIN***
+! ***Environ MODULES END***
+!
   IMPLICIT NONE
   !
   REAL(DP), INTENT(IN) :: etot
@@ -54,9 +53,8 @@ SUBROUTINE makov_payne( etot )
   !
   CALL write_dipole( etot, x0, e_dipole, e_quadrupole, qq )
   !
-#ifdef __ENVIRON
-  IF ( do_environ ) CALL environ_makov_payne( dfftp%nnr, nspin, rho%of_r, x0, etot )
-#endif
+! ***Environ CALLS BEGIN***
+! ***Environ CALLS END***
   !
   CALL vacuum_level( x0, zvtot )
   !
