@@ -13,6 +13,8 @@ then
  echo " addsonpatch.sh has to be run from the Quantum ESPRESSO root directory"
  echo "WHERE_SOURCE is the relative path to the sources of the Addson code "
  echo "WHERE_LINKS is the relative path to the QE directory where the addson sources have to be linked"
+ echo "at the moment it only allows for pure f90 routines to be linked in flib"
+ echo "or pure f90 modules to be linked in Modules"
  echo " -patch  : apply patch to Makefiles " 
  echo " -revert : revert Makefiles to original "
  echo " ]"
@@ -28,7 +30,7 @@ case "$4" in
 
   command -v patch &>/dev/null || { echo "I require patch command but it's not installed. Aborting." >&2; exit 1;  }
 
-#------------------- first, check if GNU patch works
+#------------------- check if GNU patch works
   cat > test_patch1 << \EOF
   alfa
   beta
@@ -65,9 +67,44 @@ EOF_EOF
   then
     rm test_patch1.pre$ADDSON_NAME
   fi
-#-------------------
+#-------------------------------------------
+#------------------- check if GNU sed works
+  cat > test_sed1 << \EOF
+  alfa
+  beta
+EOF
 
+  cat > test_sed2 << \EOF
+  alfa
+  gamma
+  beta
+EOF
 
+  sed '/alfa/ a\
+  gamma' test_sed1 > tmp.1
+
+  mv tmp.1 test_sed1
+
+  diff -c test_sed1 test_sed2 >> test_sed3
+
+  echo EOF >> test_sed3
+
+  bash test_sed3 &> test_sed4
+
+  status=$?
+  if [ $status -ne 0 ]
+  then
+    echo "sed does not work! Error message:"
+    echo "**********"
+    cat test_sed4
+    echo "**********"
+    echo "Please install a recent version of the GNU sed utility and try again."
+    exit
+  fi
+
+  rm test_sed1 test_sed2 test_sed3 test_sed4 tmp.1
+# -----------------------------------------
+# -----------------------------------------
   to_do_before_patch
 
   echo "-- Setting up symlinks"
