@@ -320,11 +320,6 @@ SUBROUTINE electrons_scf ( no_printout )
   USE paw_onecenter,        ONLY : PAW_potential
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
-#ifdef __ENVIRON
-  USE environ_base,         ONLY : do_environ, update_venviron,             &
-                                   vltot_zero, environ_thr                 
- USE environ_main,          ONLY : calc_venviron
-#endif
   USE dfunct,               ONLY : newd
   USE esm,                  ONLY : do_comp_esm, esm_printpot
   USE iso_c_binding,        ONLY : c_int
@@ -634,26 +629,6 @@ SUBROUTINE electrons_scf ( no_printout )
      CALL plugin_scf_energy()
      !
      CALL plugin_scf_potential()
-     !
-#ifdef __ENVIRON
-     ! ... computes the external environment contribution to energy and potential
-     !
-     IF ( do_environ  )  THEN
-        !
-        vltot = vltot_zero
-        !vltot_zero = 0.0_dp
-        !
-        update_venviron = .NOT. conv_elec .AND. dr2 .LT. environ_thr 
-        ! 
-        IF ( update_venviron ) WRITE( stdout, 9200 ) 
-9200 FORMAT(/'     add environment contribution to local potential')
-
-        CALL calc_venviron( update_venviron, dfftp%nnr, nspin, dr2, rhoin%of_r, vltot )
-        ! 
-        !CALL sum_vrs( dfftp%nnr, nspin, vltot, vrs, vrs)
-        ! 
-     END IF
-#endif
      !
      ! ... define the total local potential (external + scf)
      !
