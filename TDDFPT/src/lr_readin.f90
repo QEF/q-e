@@ -54,22 +54,8 @@ SUBROUTINE lr_readin
 #ifdef __ENVIRON
   USE input_parameters,    ONLY : do_environ, assume_isolated
   USE environ_base,        ONLY : environ_base_init, ir_end
-  USE environ_input,       ONLY : verbose, environ_thr, environ_type,      &
-                                  stype, rhomax, rhomin, tbeta,            &
-                                  env_static_permittivity, eps_mode,       &
-                                  env_optical_permittivity,                &
-                                  solvationrad, atomicspread, add_jellium, &
-                                  ifdtype, nfdpoint,                       &
-                                  mixtype, ndiis, mixrhopol, tolrhopol,    &
-                                  env_surface_tension, delta,              &
-                                  env_pressure,                            &
-                                  env_ioncc_level, nrep, cion, zion, rhopb,&
-                                  solvent_temperature,                     &
-                                  env_extcharge_n, extcharge_origin,       &
-                                  extcharge_dim, extcharge_axis,           &
-                                  extcharge_pos, extcharge_spread,         &
-                                  extcharge_charge,                        &
-                                  environ, environ_defaults
+  USE environ_input,       ONLY : read_environ
+  USE environ_base,        ONLY : ifdtype, nfdpoint
   USE ions_base,           ONLY : nsp, ityp, zv, tau, nat
   USE cell_base,           ONLY : at, alat, omega, ibrav
   USE solvent_tddfpt,      ONLY : solvent_initbase_tddfpt
@@ -192,20 +178,6 @@ SUBROUTINE lr_readin
 299    CALL errore ('lr_readin', 'reading lr_dav namelist', ABS (ios) )
      endif
      !
-#ifdef __ENVIRON
-     !
-     !   Reading the namelist Environ
-     !
-     IF ( do_environ ) THEN
-       !
-       CALL environ_defaults( 'TDDFPT' )
-       !
-       READ (5, environ, err = 203, iostat = ios )
-203    CALL errore ('lr_readin', 'reading namelist environ', ABS (ios) )
-       !
-     ENDIF
-     !
-#endif
      !
      !   Reading the namelist lr_post
      IF (charge_response == 1) THEN
@@ -299,24 +271,7 @@ SUBROUTINE lr_readin
      ! Warning: There is something strange with the variable 'assume_isolated'!
      ! It is not used currently.
      !
-     CALL environ_base_init ( do_environ, assume_isolated,                &
-                              verbose, environ_thr, environ_type,         &
-                              stype, rhomax, rhomin, tbeta,               &
-                              env_static_permittivity,                    &
-                              env_optical_permittivity, eps_mode,         &
-                              solvationrad(1:nsp), atomicspread(1:nsp),   &
-                              add_jellium, ifdtype, nfdpoint,             &
-                              mixtype, ndiis, mixrhopol, tolrhopol,       &
-                              env_surface_tension, delta,                 &
-                              env_pressure,                               &
-                              env_ioncc_level, nrep, cion, zion, rhopb,   &
-                              solvent_temperature,                        &
-                              env_extcharge_n, extcharge_origin,          &
-                              extcharge_dim, extcharge_axis,              &
-                              extcharge_pos, extcharge_spread,            &
-                              extcharge_charge )
-     !
-     CALL environ_initions_allocate(nat, nsp)
+     CALL read_environ( do_environ, nat, nsp, assume_isolated, ibrav )
      !
      ! Taken from PW/src/init_run.f90
      !
