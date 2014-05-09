@@ -57,7 +57,7 @@ SUBROUTINE plugin_arguments()
           use_pw2casino = .true.
        ENDIF
        IF ( TRIM(arg)=='environ' ) THEN
-          use_pw2casino = .true.
+          use_environ = .true.
        ENDIF
     ENDIF
   ENDDO
@@ -83,6 +83,8 @@ END SUBROUTINE plugin_arguments
   CALL mp_bcast(use_plumed,root,comm)
   !
   CALL mp_bcast(use_pw2casino,root,comm)
+  !
+  CALL mp_bcast(use_environ,root,comm)
   !
 !  write(0,*) "use_plumed: ", use_plumed
   !
