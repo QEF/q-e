@@ -103,10 +103,6 @@ SUBROUTINE iosys()
                             niter_with_fixed_ns, starting_ns, U_projection
   !
   USE martyna_tuckerman, ONLY: do_comp_mt
-#ifdef __ENVIRON
-  USE environ_base, ONLY : environ_base_init
-  USE environ_init, ONLY : environ_initions_allocate
-#endif
   !
   USE esm,           ONLY: do_comp_esm, &
                            esm_bc_ => esm_bc, &
@@ -226,9 +222,6 @@ SUBROUTINE iosys()
                                exxdiv_treatment, yukawa, ecutvcut,          &
                                exx_fraction, screening_parameter, ecutfock, &
                                gau_parameter,                               &
-#ifdef __ENVIRON
-                               do_environ,                                  &
-#endif
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
@@ -238,26 +231,6 @@ SUBROUTINE iosys()
                                xdm, xdm_a1, xdm_a2,                           &
                                one_atom_occupations,                          &
                                esm_bc, esm_efield, esm_w, esm_nfit
-#ifdef __ENVIRON
-  !
-  ! ... ENVIRON namelist
-  !
-  USE environ_input, ONLY :    verbose, environ_thr, environ_type,      &
-                               stype, rhomax, rhomin, tbeta,            &
-                               env_static_permittivity, eps_mode,       &
-                               env_optical_permittivity,                &
-                               solvationrad, atomicspread, add_jellium, &
-                               ifdtype, nfdpoint,                       &
-                               mixtype, ndiis, mixrhopol, tolrhopol,    &
-                               env_surface_tension, delta,              &
-                               env_pressure,                            &
-                               env_ioncc_level, nrep, cion, zion, rhopb,&
-                               solvent_temperature,                     &
-                               env_extcharge_n, extcharge_origin,       &
-                               extcharge_dim, extcharge_axis,           &
-                               extcharge_pos, extcharge_spread,         &
-                               extcharge_charge
-#endif
   !
   ! ... ELECTRONS namelist
   !
@@ -1272,35 +1245,8 @@ SUBROUTINE iosys()
       do_comp_esm    = .true.
       !
   END SELECT
-
-#ifdef __ENVIRON
   !
-  IF ( TRIM(assume_isolated) == 'pcc' .AND. &
-       ( ibrav < 1 .OR. ibrav > 3 ) ) CALL errore(' iosys', &
-              'PCC correction defined only for cubic lattices', 1)
-  !
-  ! ...  Environ
-  !
-  CALL environ_base_init ( do_environ, assume_isolated,                &
-                           verbose, environ_thr, environ_type,         &
-                           stype, rhomax, rhomin, tbeta,               &
-                           env_static_permittivity,                    &
-                           env_optical_permittivity, eps_mode,         &
-                           solvationrad(1:ntyp), atomicspread(1:ntyp), &
-                           add_jellium, ifdtype, nfdpoint,             &
-                           mixtype, ndiis, mixrhopol, tolrhopol,       &
-                           env_surface_tension, delta,                 &
-                           env_pressure,                               &
-                           env_ioncc_level, nrep, cion, zion, rhopb,   &
-                           solvent_temperature,                        &
-                           env_extcharge_n, extcharge_origin,          & 
-                           extcharge_dim, extcharge_axis,              &
-                           extcharge_pos, extcharge_spread,            & 
-                           extcharge_charge )
-  !
-  IF ( do_environ ) CALL environ_initions_allocate( nat_, ntyp )
-  !
-#endif
+  CALL plugin_read_input()
   !
   ! ... read following cards
   !
