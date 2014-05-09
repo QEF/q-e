@@ -58,11 +58,6 @@ dspev_drv.o : mp_diag.o
 electrons_base.o : constants.o
 electrons_base.o : io_global.o
 electrons_base.o : kind.o
-environ_input.o : io_global.o
-environ_input.o : kind.o
-environ_input.o : mp.o
-environ_input.o : mp_images.o
-environ_input.o : parameters.o
 environment.o : io_files.o
 environment.o : io_global.o
 environment.o : kind.o
@@ -238,7 +233,6 @@ read_input.o : read_namelists.o
 read_input.o : read_xml.o
 read_input.o : xml_input.o
 read_namelists.o : constants.o
-read_namelists.o : environ_input.o
 read_namelists.o : input_parameters.o
 read_namelists.o : io_global.o
 read_namelists.o : kind.o

@@ -1705,9 +1705,6 @@ MODULE read_namelists_module
        USE io_global, ONLY : ionode, ionode_id
        USE mp,        ONLY : mp_bcast
        USE mp_images, ONLY : intra_image_comm
-#ifdef __ENVIRON
-       USE environ_input, ONLY : environ, environ_defaults, environ_bcast
-#endif
        !
        IMPLICIT NONE
        !
@@ -1859,20 +1856,6 @@ MODULE read_namelists_module
        END IF
        !
        CALL press_ai_bcast()
-#ifdef __ENVIRON
-       !
-       ! ... ENVIRON namelist
-       !
-       IF ( do_environ ) THEN
-          CALL environ_defaults( prog )
-          ios = 0
-          IF( ionode ) READ( unit_loc, environ, iostat = ios )
-          CALL mp_bcast( ios, ionode_id, intra_image_comm )
-          IF( ios /= 0 ) CALL errore( ' read_namelists ', &
-                                    & ' reading namelist environ ', ABS(ios) )
-       END IF
-       CALL environ_bcast()
-#endif
        !
        ! ... WANNIER NAMELIST
        !
