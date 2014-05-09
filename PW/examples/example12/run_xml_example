@@ -107,11 +107,12 @@ cat > Fe.scf_pbe.xml << EOF
 			<property name="starting_magnetization">
 				<real>0.5</real>
 			</property>	
-            <property name="hubbard_u">
+                        <property name="hubbard_u">
 				<real>2.2</real>
 			</property>			
-            <property name="hubbard_j0">
-				<real>1.75</real>
+                        <property name="hubbard_j">
+			<real rank="1" n1="3">
+				1.75 0.0 0.0</real>
 			</property>	
 			<property name="angle1">
 				<real>90.0</real>
@@ -170,6 +171,14 @@ cat > Fe.scf_pbe.xml << EOF
 		</parameter>
 		
 	</field>
+
+        <field name="XC_Functional">
+                <parameter name="lda_plus_u">
+                        <logical>
+                                true
+                        </logical>
+                </parameter>
+        </field>
 	
 	<field name="Options">
 
@@ -187,7 +196,7 @@ cat > Fe.scf_pbe.xml << EOF
 		
 		<parameter name="degauss">
 			<real>
-				0.04
+				0.01
 			</real>
 		</parameter>			
 		
@@ -252,11 +261,12 @@ cat > Fe.band_pbe.xml << EOF
 			<property name="starting_magnetization">
 				<real>0.5</real>
 			</property>
-            <property name="hubbard_u">
+                        <property name="hubbard_u">
 				<real>2.2</real>
 			</property>			
-            <property name="hubbard_j0">
-				<real>1.75</real>
+                        <property name="hubbard_j">
+			<real rank="1" n1="3">
+				1.75 0.0 0.0</real>
 			</property>	
 			<property name="angle1">
 				<real>90.0</real>
@@ -315,6 +325,14 @@ cat > Fe.band_pbe.xml << EOF
 		</parameter>
 		
 	</field>
+
+        <field name="XC_Functional">
+                <parameter name="lda_plus_u">
+                        <logical>
+                                true
+                        </logical>
+                </parameter>
+        </field>
 	
 	<field name="Options">
 

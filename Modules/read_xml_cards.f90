@@ -86,6 +86,7 @@ CONTAINS
     CASE ('ATOMIC_SPECIES')
        atom_mass = 0.0_DP
        hubbard_u = 0.0_DP
+       hubbard_j = 0.0_DP
        hubbard_j0 = 0.0_DP
        hubbard_alpha = 0.0_DP
        hubbard_beta = 0.0_DP
@@ -194,6 +195,7 @@ CONTAINS
        CALL mp_bcast( atom_label, ionode_id, intra_image_comm )
        CALL mp_bcast( taspc, ionode_id, intra_image_comm )
        CALL mp_bcast( hubbard_u, ionode_id, intra_image_comm )
+       CALL mp_bcast( hubbard_j, ionode_id, intra_image_comm )
        CALL mp_bcast( hubbard_j0, ionode_id, intra_image_comm )
        CALL mp_bcast( hubbard_alpha, ionode_id, intra_image_comm )
        CALL mp_bcast( hubbard_beta, ionode_id, intra_image_comm )
@@ -210,12 +212,10 @@ CONTAINS
     CASE ( 'ATOMIC_LIST' )
        CALL mp_bcast( atomic_positions, ionode_id, intra_image_comm )
        CALL mp_bcast( nat, ionode_id, intra_image_comm )
-!       CALL mp_bcast( num_of_images, ionode_id, intra_image_comm )
        ! ... ionode has already done it inside card_xml_atomic_list
        IF (.not.ionode) THEN
           CALL allocate_input_ions( ntyp, nat )
        END IF
-!       CALL mp_bcast( pos, ionode_id )
        CALL mp_bcast( if_pos, ionode_id, intra_image_comm )
        CALL mp_bcast( na_inp, ionode_id, intra_image_comm )
        CALL mp_bcast( sp_pos, ionode_id, intra_image_comm )
@@ -708,6 +708,10 @@ CONTAINS
          !
       CASE ( 'hubbard_u' )
          CALL iotk_scan_dat_inside( xmlinputunit, hubbard_u( is ),&
+              ierr = ierr)
+         !
+      CASE ( 'hubbard_j' )
+         CALL iotk_scan_dat_inside( xmlinputunit, hubbard_j( :, is ),&
               ierr = ierr)
          !
       CASE ( 'hubbard_j0' )
