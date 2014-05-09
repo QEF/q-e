@@ -26,7 +26,7 @@ USE plugin_flags
 !
 IMPLICIT NONE
 !
-real(DP), intent(in) :: plugin_etot
+real(DP), intent(inout) :: plugin_etot
 type(scf_type), intent(in) :: rhoin
 !
 ! ***Environ VARIABLES BEGIN***
