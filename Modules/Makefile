@@ -26,7 +26,6 @@ descriptors.o \
 dspev_drv.o \
 electrons_base.o \
 environment.o \
-environ_input.o \
 error_handler.o \
 fd_gradient.o \
 fft_base.o \
