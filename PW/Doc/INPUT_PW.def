@@ -760,10 +760,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 		'fixed' :       for insulators with a gap
 
-		'from_input' :  The occupation are read from input file.
-                                Requires "nbnd" to be set in input.
-                                Occupations should be consistent with the
-                                value of "tot_charge". 
+		'from_input' :  The occupation are read from input file,
+                                card OCCUPATIONS. Option valid only for a
+                                single k-point, requires "nbnd" to be set 
+                                in input. Occupations should be consistent 
+                                with the value of "tot_charge".
 	    }
 	}
 
