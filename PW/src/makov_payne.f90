@@ -22,6 +22,7 @@ SUBROUTINE makov_payne( etot )
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho
   USE lsda_mod,  ONLY : nspin
+  USE plugin_flags
 !
 ! ***Environ MODULES BEGIN***
 ! ***Environ MODULES END***
