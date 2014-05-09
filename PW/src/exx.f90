@@ -92,10 +92,10 @@ MODULE exx
   !
   ! erf screening
   REAL(DP)          :: erf_scrlen = 0._dp
-  ! gau-screening
-  !gau-pbe in
+  !
+  ! gau-pbe screening
   REAL (DP)         :: gau_scrlen = 0.d0
-  !gau-pbe out
+  !
   ! cutoff techniques
   LOGICAL           :: use_coulomb_vcut_ws = .FALSE.
   LOGICAL           :: use_coulomb_vcut_spheric = .FALSE.
@@ -1674,13 +1674,11 @@ MODULE exx
           !
           fac(ig) = vcut_spheric_get(vcut,q)
           !
-      !gau-pbe in
       ELSE IF(gau_scrlen > 0) THEN
           fac(ig)=e2*((pi/gau_scrlen)**(1.5d0))* &
                       EXP(-qq/4.d0/gau_scrlen) * grid_factor
           IF (on_double_grid) fac(ig) = 0._dp
-      !gau-pbe out
-      !
+          !
       ELSE IF (qq > eps_qdiv) THEN
           !
           IF ( erfc_scrlen > 0  ) THEN
@@ -2295,7 +2293,6 @@ MODULE exx
                       fac_stress(ig) = 0._dp   ! not implemented
                       IF (gamma_only .and. qq > 1.d-8) fac(ig) = 2.d0 * fac(ig) 
 
-                  !gau-pbe in
                   ELSE IF (gau_scrlen > 0) then
                       fac(ig)=e2*((pi/gau_scrlen)**(1.5d0))* &
                             exp(-qq/4.d0/gau_scrlen) * grid_factor
@@ -2306,7 +2303,6 @@ MODULE exx
                       IF (gamma_only) fac_stress(ig) = 2.d0 * fac_stress(ig)
                       IF (on_double_grid) fac(ig) = 0._dp
                       IF (on_double_grid) fac_stress(ig) = 0._dp
-                 !gau-pbe out see later more
 
                   ELSE IF (qq > 1.d-8) THEN
                       IF ( erfc_scrlen > 0 ) THEN

@@ -1306,12 +1306,8 @@ MODULE read_namelists_module
           IF( ANY(starting_magnetization /= SM_NOT_SET ) ) &
              CALL infomsg( sub_name ,&
                           & ' starting_magnetization is not used in CP ')
-!          IF( lda_plus_U ) &
-!             CALL infomsg( sub_name ,' lda_plus_U is not used in CP ')
           IF( la2F ) &
              CALL infomsg( sub_name ,' la2F is not used in CP ')
-!          IF( ANY(Hubbard_U /= 0.0_DP) ) &
-!             CALL infomsg( sub_name ,' Hubbard_U is not used in CP ')
           IF( ANY(Hubbard_alpha /= 0.0_DP) ) &
              CALL infomsg( sub_name ,' Hubbard_alpha is not used in CP ')
           IF( nosym ) &
