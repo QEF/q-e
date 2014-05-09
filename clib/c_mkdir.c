@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2003-2007 Quantum ESPRESSO group
+  Copyright (C) 2003-2014 Quantum ESPRESSO group
   This file is distributed under the terms of the
   GNU General Public License. See the file `License'
   in the root directory of the present distribution,
@@ -23,19 +23,10 @@
 int check_writable_dir(const char *filename) {
 
     struct stat sb;
-#if defined(_WIN32)
-    /* windows has no symlinks so we use stat(2) */
     if (stat(filename, &sb) == -1) {
       return -3; /* does not exist */
       /* note: this happens also if looking for "dir/" when there is a file called "dir" */
     }
-#else
-    /* lstat follows symlinks */
-    if (lstat(filename, &sb) == -1) {
-      return -3; /* does not exist */
-      /* note: this happens also if looking for "dir/" when there is a file called "dir" */
-    }
-#endif
     if ( (sb.st_mode & S_IFMT) != S_IFDIR) {
       fprintf( stderr , "\ncheck_writable_dir fail: file '%s' exists but is NOT a directory\n", filename ) ;
       return -2; /* not a directory */
