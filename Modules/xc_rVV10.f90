@@ -209,8 +209,13 @@ CONTAINS
     grid_cell_volume = omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)  
  
     do i_grid = 1, dfftp%nnr
-       vtxc = vtxc + grid_cell_volume*total_rho(i_grid)*potential(i_grid)
+       vtxc = vtxc + grid_cell_volume*rho_valence(i_grid,1)*potential(i_grid)
     end do
+    if (nspin==2) then
+       do i_grid = 1, dfftp%nnr
+          vtxc = vtxc + grid_cell_volume*rho_valence(i_grid,2)*potential(i_grid)
+       end do
+    endif
 
     deallocate(potential)  
 
