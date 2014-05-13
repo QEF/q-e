@@ -1237,21 +1237,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                          "Periodic boundary conditions in ab initio
                          calculations" , Phys.Rev.B 51, 4014 (1995)
 
-                'dcc' :  density counter charge correction CURRENTLY DISABLED
-                         The electrostatic problem is solved in open boundary
-                         conditions (OBC). This approach provides the correct
-                         scf potential and energies (not just a correction to
-                         energies as 'mp'). BEWARE: the molecule should be 
-                         centered around the middle of the cell, not around 
-                         the origin (0,0,0).
-                         Theory described in:
-                         I.Dabo, B.Kozinsky, N.E.Singh-Miller and N.Marzari,
-                         "Electrostatic periodic boundary conditions and
-                         real-space corrections", Phys.Rev.B 77, 115139 (2008)
-
-                'martyna-tuckerman', 'm-t', 'mt' : Martyna-Tuckerman correction.
-                         As for the dcc correction the scf potential is also
-                         corrected. Implementation adapted from:
+                'martyna-tuckerman', 'm-t', 'mt' : Martyna-Tuckerman correction
+                         to both total energy and scf potential. Adapted from:
                          G.J. Martyna, and M.E. Tuckerman,
                          "A reciprocal space based method for treating long
                          range interactions in ab-initio and force-field-based
