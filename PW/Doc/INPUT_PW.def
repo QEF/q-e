@@ -958,8 +958,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    default { .FALSE. }
 	    status {
 		DFT+U (formerly known as LDA+U) currently works only for 
-                a few selected elements. Modify PW/set_hubbard_l.f90 and 
-                PW/tabd.f90 if you plan to use DFT+U with an element that 
+                a few selected elements. Modify flib/set_hubbard_l.f90 and 
+                PW/src/tabd.f90 if you plan to use DFT+U with an element that 
                 is not configured there.
 	    }
 	    info { 
@@ -1061,7 +1061,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 		'file':         use the information from file "prefix".atwfc that must
                                 have been generated previously, for instance by pmw.x
-                                (see PP/poormanwannier.f90 for details).
+                                (see PP/src/poormanwannier.f90 for details).
 
                 'pseudo':       use the pseudopotential projectors. The charge density
                                 outside the atomic core radii is excluded.
