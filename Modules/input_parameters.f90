@@ -497,10 +497,6 @@ MODULE input_parameters
         REAL(DP) :: xdm_a2 = 1.5045_DP
           ! xdm_a1 and xdm_a2 -- parameters for the BJ damping function
           ! The default values are for the b86bpbe functional.
-
-#ifdef __ENVIRON
-        LOGICAL   :: do_environ = .false.
-#endif
           !
         CHARACTER(LEN=3) :: esm_bc = 'pbc'
           ! 'pbc': ordinary calculation with periodic boundary conditions

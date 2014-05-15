@@ -252,12 +252,6 @@ MODULE read_namelists_module
        xdm_a1 = 0.6836_DP
        xdm_a2 = 1.5045_DP
        !
-#ifdef __ENVIRON
-       ! ... Environ
-       !
-       do_environ = .false. 
-       !
-#endif
        ! ... ESM
        !
        esm_bc='pbc'
@@ -814,9 +808,6 @@ MODULE read_namelists_module
        CALL mp_bcast( xdm_a2,                    ionode_id, intra_image_comm )
        !
        CALL mp_bcast( no_t_rev,                  ionode_id, intra_image_comm )
-#ifdef __ENVIRON
-       CALL mp_bcast( do_environ,                ionode_id, intra_image_comm )
-#endif
        !
        ! ... ESM method broadcast
        !
