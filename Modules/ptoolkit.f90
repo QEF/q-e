@@ -4564,7 +4564,7 @@ SUBROUTINE sqr_zsetmat( what, n, alpha, a, lda, desc )
            END DO
         ELSE IF( desc%myc == desc%myr ) THEN
            DO j = 1, desc%nc
-              DO i = j - 1, desc%nr
+              DO i = j + 1, desc%nr
                  a( i, j ) = alpha
               END DO
            END DO
