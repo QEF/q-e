@@ -370,7 +370,6 @@ SUBROUTINE electrons_scf ( no_printout )
   IF ( istep > 0 ) ethr = 1.D-6
   !
   IF ( restart ) CALL restart_in_electrons (iter, dr2, ethr, et )
-IF (restart) print *, 'SGRUNT! iter letto =',iter,dr2,ethr
   !
   WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
   !
