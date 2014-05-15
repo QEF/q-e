@@ -23,7 +23,19 @@ fi
 
 case "$4" in
 (-patch)
+
   echo "* I will try to patch needed files for integrated compilation ..."
+
+  if test -e "${ADDSON_NAME}_PATCH" ; then
+    echo "-- File $destination/${ADDSON_NAME}_PATCH exists"
+    echo "-- I guess you have already patched $ADDSON_NAME"
+    echo "-- Please unpatch it first, or start from a clean source tree"
+    echo "-- See you later..."
+    echo "* ABORT"
+    exit
+  fi
+  echo "#Please do not remove or modify this file"                    >  ${ADDSON_NAME}_PATCH
+  echo "#It is keeps track of the steps for patching $ADDSON package" >> ${ADDSON_NAME}_PATCH
   
 #-------------------
   echo "-- Executing pre script"
@@ -42,7 +54,7 @@ EOF
 EOF
 
   cat > test_patch3 << \EOF_EOF
-  patch -c -l -b -F 3 --suffix=.pre$ADDSON_NAME "./test_patch1" << \EOF
+  patch -c -l -b -F 3 --suffix=.pre "./test_patch1" << \EOF
 EOF_EOF
 
   diff -c test_patch1 test_patch2 >> test_patch3
@@ -63,11 +75,14 @@ EOF_EOF
   fi
 
   rm test_patch1 test_patch2 test_patch3 test_patch4
-  if [ -e test_patch1.pre$ADDSON_NAME ]
+  if [ -e test_patch1.pre ]
   then
-    rm test_patch1.pre$ADDSON_NAME
+    rm test_patch1.pre
   fi
 #-------------------------------------------
+
+  command -v sed &>/dev/null || { echo "I require sed command but it's not installed. Aborting." >&2; exit 1;  }
+
 #------------------- check if GNU sed works
   cat > test_sed1 << \EOF
   alfa
@@ -87,7 +102,7 @@ EOF
 
   diff -c test_sed1 test_sed2 >> test_sed3
 
-  echo EOF >> test_sed3
+#  echo EOF >> test_sed3
 
   bash test_sed3 &> test_sed4
 
@@ -102,7 +117,7 @@ EOF
     exit
   fi
 
-  rm test_sed1 test_sed2 test_sed3 test_sed4 tmp.1
+  rm test_sed1 test_sed2 test_sed3 test_sed4
 # -----------------------------------------
 # -----------------------------------------
   to_do_before_patch
@@ -162,7 +177,8 @@ EOF
     echo "* ABORT"
     exit
   fi
-
+  
+  rm ${ADDSON_NAME}_PATCH
 
   echo "-- Executing post script"
   to_do_after_revert

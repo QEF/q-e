@@ -19,9 +19,9 @@ ADDSON_NAME="$1"
 LINKED_FILES="$2/*.f90"
 WHERE_LINKS="$3/"
 
-#echo "The NAME of the addson is: $ADDSON_NAME"
-#echo "LINKED_FILES are: $LINKED_FILES"
-#echo "WHERE_LINKS are: $WHERE_LINKS"
+echo "The NAME of the addson is: $ADDSON_NAME"
+echo "LINKED_FILES are: $LINKED_FILES"
+echo "WHERE_LINKS are: $WHERE_LINKS"
 
 function to_do_before_patch () {
   echo > /dev/null
