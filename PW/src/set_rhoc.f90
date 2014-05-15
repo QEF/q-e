@@ -29,6 +29,7 @@ subroutine set_rhoc
   USE control_flags, ONLY : gamma_only
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
+  USE scf
   !
   implicit none
   !
@@ -43,10 +44,7 @@ subroutine set_rhoc
   ! used to check the core charge
   real(DP) ::  vtxcc
   ! dummy xc energy term
-  real(DP) , allocatable ::  dum(:,:)
-  ! dummy array containing rho=0
-  complex(DP) , allocatable ::  dumg(:,:)
-  ! dummy array containing rhog=0
+  type(scf_type) :: dum
 
   integer :: ir, nt, ng
   ! counter on mesh points
