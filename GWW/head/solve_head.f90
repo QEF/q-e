@@ -59,8 +59,6 @@ subroutine solve_head
  
   complex(DP) , allocatable ::    ps (:,:)
 
-  complex(DP), EXTERNAL :: ZDOTC      ! the scalar product function
-
   logical :: conv_root, exst
   ! conv_root: true if linear system is converged
 

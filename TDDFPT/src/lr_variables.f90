@@ -256,9 +256,9 @@ IMPLICIT NONE
   COMPLEX(kind=dp),INTENT(in)  :: x(:)
   !local
   COMPLEX(kind=dp) :: temp_f
-  COMPLEX(kind=dp), EXTERNAL    :: ZDOTC
+  COMPLEX(kind=dp), EXTERNAL    :: zdotc
 
-      temp_f = ZDOTC(npw_k(1),x(:),1,x(:),1)
+      temp_f = zdotc(npw_k(1),x(:),1,x(:),1)
 #ifdef __MPI
        CALL mp_sum(temp_f, intra_bgrp_comm)
 #endif

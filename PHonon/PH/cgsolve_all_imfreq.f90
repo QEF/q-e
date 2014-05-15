@@ -98,7 +98,7 @@ subroutine cgsolve_all_imfreq (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !  the delta gradient
   !  the conjugate gradient
   !  work space
-  complex(DP) ::  dcgamma, dclambda, ZDOTC
+  complex(DP) ::  dcgamma, dclambda, zdotc
   !  the ratio between rho
   !  step length
   !  the scalar product
@@ -156,7 +156,7 @@ subroutine cgsolve_all_imfreq (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            lbnd = lbnd+1
            call ZCOPY (ndim, g (1, ibnd), 1, h (1, ibnd), 1)
            call cg_psi(ndmx, ndim, 1, h(1,ibnd), h_diag(1,ibnd) )
-           rho(lbnd) = ZDOTC (ndim, h(1,ibnd), 1, g(1,ibnd), 1)
+           rho(lbnd) = zdotc (ndim, h(1,ibnd), 1, g(1,ibnd), 1)
         endif
      enddo
      kter_eff = kter_eff + DBLE (lbnd) / DBLE (nbnd)
@@ -216,8 +216,8 @@ subroutine cgsolve_all_imfreq (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
-           a(lbnd) = ZDOTC (ndim, h(1,ibnd), 1, g(1,ibnd), 1)
-           c(lbnd) = ZDOTC (ndim, h(1,ibnd), 1, t(1,lbnd), 1)
+           a(lbnd) = zdotc (ndim, h(1,ibnd), 1, g(1,ibnd), 1)
+           c(lbnd) = zdotc (ndim, h(1,ibnd), 1, t(1,lbnd), 1)
         end if
      end do
 

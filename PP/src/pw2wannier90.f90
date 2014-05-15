@@ -1468,14 +1468,14 @@ SUBROUTINE compute_spin
             if(excluded_band(m)) cycle !ivo
             DO n=1,m
                if(excluded_band(n)) cycle !ivo
-               cdum1=ZDOTC(npw,evc(1,n),1,evc(npwx+1,m),1)
+               cdum1=zdotc(npw,evc(1,n),1,evc(npwx+1,m),1)
                call mp_sum(cdum1,intra_pool_comm)
-               cdum2=ZDOTC(npw,evc(npwx+1,n),1,evc(1,m),1)
+               cdum2=zdotc(npw,evc(npwx+1,n),1,evc(1,m),1)
                call mp_sum(cdum2,intra_pool_comm)
                sigma_x=cdum1+cdum2
                sigma_y=cmplx_i*(cdum2-cdum1)
-               sigma_z=ZDOTC(npw,evc(1,n),1,evc(1,m),1)&
-                    -ZDOTC(npw,evc(npwx+1,n),1,evc(npwx+1,m),1)
+               sigma_z=zdotc(npw,evc(1,n),1,evc(1,m),1)&
+                    -zdotc(npw,evc(npwx+1,n),1,evc(npwx+1,m),1)
                call mp_sum(sigma_z,intra_pool_comm)
                counter=counter+1
                spn(1,counter)=sigma_x
@@ -1804,10 +1804,10 @@ SUBROUTINE compute_orb
                    do n = 1, nbnd  ! loop over bands of already computed ket
                       if (excluded_band(n)) cycle
                       if(noncolin) then
-                         mmn = ZDOTC (npw, aux_nc(1,1),1,H_evc(1,n),1) + &
-                              ZDOTC (npw, aux_nc(1,2),1,H_evc(1+npwx,n),1)
+                         mmn = zdotc (npw, aux_nc(1,1),1,H_evc(1,n),1) + &
+                              zdotc (npw, aux_nc(1,2),1,H_evc(1+npwx,n),1)
                       else 
-                         mmn = ZDOTC (npw, aux,1,H_evc(1,n),1)
+                         mmn = zdotc (npw, aux,1,H_evc(1,n),1)
                       end if
                       mmn = mmn * rytoev ! because wannier90 works in eV
                       call mp_sum(mmn, intra_pool_comm)
@@ -1820,10 +1820,10 @@ SUBROUTINE compute_orb
                    do n = 1, nbnd  ! loop over bands of already computed ket
                       if (excluded_band(n)) cycle
                       if(noncolin) then
-                         mmn = ZDOTC (npw, aux_nc(1,1),1,evc_aux(1,n),1) + &
-                              ZDOTC (npw, aux_nc(1,2),1,evc_aux(1+npwx,n),1)
+                         mmn = zdotc (npw, aux_nc(1,1),1,evc_aux(1,n),1) + &
+                              zdotc (npw, aux_nc(1,2),1,evc_aux(1+npwx,n),1)
                       else 
-                         mmn = ZDOTC (npw, aux,1,evc_aux(1,n),1)
+                         mmn = zdotc (npw, aux,1,evc_aux(1,n),1)
                       end if
                       call mp_sum(mmn, intra_pool_comm)
 !                      if (ionode) write (iun_uIu) mmn

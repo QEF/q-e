@@ -11,7 +11,7 @@
 
 
 subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
-!this subroutine calculte the self-energy on time using fourier trasfrom using the lanczos scheme
+!this subroutine calculates the self-energy on time using fourier transform with the lanczos scheme
 
   USE kinds,             ONLY : DP
   USE io_global,         ONLY : stdout, ionode, ionode_id
@@ -69,7 +69,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
   REAL(kind=DP), ALLOCATABLE :: tmp_mat1(:,:),tmp_mat2(:,:)
   REAL(kind=DP), ALLOCATABLE :: g_tmp(:,:), g_dumm(:,:), re_h_mat(:,:),im_h_mat(:,:)
   REAL(kind=DP), EXTERNAL :: DDOT
-  COMPLEX(kind=DP), EXTERNAL :: ZDOTC
+  COMPLEX(kind=DP), EXTERNAL :: zdotc
   
   LOGICAL :: l_single=.false.!if true e_mat is saved in single precision 
 
@@ -526,7 +526,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
                                &fp%gmat(1,ipol,iv,ii),1,(0.d0,0.d0),tmp_vec,1)
                     
                           ss%diag(ii,it+ss%n+1,is)= ss%diag(ii,it+ss%n+1,is)- &
-                            &ZDOTC(numpw,fp%gmat(1,ipol,iv,ii),1,tmp_vec,1)*factor
+                            &zdotc(numpw,fp%gmat(1,ipol,iv,ii),1,tmp_vec,1)*factor
                     
                           
                        enddo
@@ -544,7 +544,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
                                   &fp%gmat(1,ipol,ic,ii),1,(0.d0,0.d0),tmp_vec,1)
                         
                              ss%diag(ii,ss%n+1-it,is)= ss%diag(ii,ss%n+1-it,is)+ &
-                                  &ZDOTC(numpw,tmp_vec,1,fp%gmat(1,ipol,ic,ii),1)*factor
+                                  &zdotc(numpw,tmp_vec,1,fp%gmat(1,ipol,ic,ii),1)*factor
                           enddo
 
                        enddo

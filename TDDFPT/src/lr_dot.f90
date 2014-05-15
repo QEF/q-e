@@ -35,7 +35,7 @@ FUNCTION lr_dot(x,y)
   INTEGER :: ibnd
   INTEGER :: ik
   real(kind=dp), EXTERNAL    :: DDOT
-  COMPLEX(kind=dp), EXTERNAL :: ZDOTC
+  COMPLEX(kind=dp), EXTERNAL :: zdotc
   !
   IF (lr_verbosity > 5) THEN
      WRITE(stdout,'("<lr_dot>")')
@@ -89,7 +89,7 @@ CONTAINS
     DO ik=1,nks
        DO ibnd=1,nbnd
           !
-          temp_k=temp_k+wg(ibnd,ik)*ZDOTC(npw_k(ik),x(1,ibnd,ik),1,y(1,ibnd,ik),1)
+          temp_k=temp_k+wg(ibnd,ik)*zdotc(npw_k(ik),x(1,ibnd,ik),1,y(1,ibnd,ik),1)
           !
        ENDDO
     ENDDO

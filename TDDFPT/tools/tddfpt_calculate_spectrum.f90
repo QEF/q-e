@@ -939,7 +939,7 @@ COMPLEX(kind=dp), INTENT(out) :: chi(:,:)
         !chi = - <zeta|w_t>
         ! Notice that brodening has a positive sign, thus the abs. coefficient is Im(tr(chi)) not -Im(Tr(chi)) as usual
         DO ip2=1,n_ipol
-              chi(ip,ip2)=ZDOTC(itermax,zeta_store(ip,ip2,:),1,r(ip,:),1)
+              chi(ip,ip2)=zdotc(itermax,zeta_store(ip,ip2,:),1,r(ip,:),1)
               chi(ip,ip2)=chi(ip,ip2)*cmplx(norm0(ip),0.0d0,dp)
               ! The response charge density is defined as 2.*evc0*q, see Eq. (43) in JCP 128, 154105 (2008). The dipole is therefore
               ! given by 2.*degspin* zeta^T * (w-T^itermax)^-1 * e_1. See also Eq. (15) in that paper.

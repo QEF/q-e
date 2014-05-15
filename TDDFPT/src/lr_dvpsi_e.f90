@@ -225,7 +225,7 @@ CONTAINS
     COMPLEX(KIND=DP), ALLOCATABLE :: work (:,:)
 
     REAL(KIND=DP), EXTERNAL :: ddot
-    COMPLEX(KIND=DP), EXTERNAL :: ZDOTC
+    COMPLEX(KIND=DP), EXTERNAL :: zdotc
     ! the scalar products
 
     ALLOCATE (work(npwx,nbnd))
@@ -246,7 +246,7 @@ CONTAINS
           !
           eprec(ibnd)=1.35d0*eprec(ibnd)
        ELSE
-          eprec(ibnd)=1.35d0*ZDOTC(npw_k(ik),evc(1,ibnd),1,work,1)
+          eprec(ibnd)=1.35d0*zdotc(npw_k(ik),evc(1,ibnd),1,work,1)
        ENDIF
        !
     ENDDO

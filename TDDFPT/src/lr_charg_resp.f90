@@ -468,7 +468,7 @@ CONTAINS
     IF (project) THEN
        DO ip=1,w_T_npol
           !
-          chi(LR_polarization,ip)=ZDOTC(itermax,w_T_zeta_store(ip,:),1,w_T(:),1)
+          chi(LR_polarization,ip)=zdotc(itermax,w_T_zeta_store(ip,:),1,w_T(:),1)
           chi(LR_polarization,ip)=chi(LR_polarization,ip)*cmplx(w_T_norm0_store,0.0d0,dp)
           !
           WRITE(stdout,'(5X,"Chi_",I1,"_",I1,"=",2(E15.5,1x))') LR_polarization,ip,chi(LR_polarization,ip)
