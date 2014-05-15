@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE restart_in_electrons (iter, dr2, et)
+SUBROUTINE restart_in_electrons (iter, dr2, ethr, et)
   !-----------------------------------------------------------------------
   USE kinds,         ONLY: dp
   USE io_global,     ONLY: stdout
@@ -16,18 +16,18 @@ SUBROUTINE restart_in_electrons (iter, dr2, et)
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT (out) :: iter
-  REAL(dp), INTENT(out) :: dr2, et(nbnd,nks)
+  INTEGER, INTENT (inout) :: iter
+  REAL(dp), INTENT(inout) :: dr2, ethr, et(nbnd,nks)
   !
   REAL(dp), ALLOCATABLE :: et_(:,:)
-  REAL(dp):: dr2_
+  REAL(dp):: dr2_, ethr_
   INTEGER :: ios
   LOGICAL :: exst
   !
   CALL seqopn (iunres, 'restart_scf', 'formatted', exst)
   IF ( exst ) THEN
      ios = 0
-     READ (iunres, *, iostat=ios) iter, dr2_
+     READ (iunres, *, iostat=ios) iter, dr2_, ethr_
      IF ( ios /= 0 ) THEN
         iter = 0
      ELSE IF ( iter < 1 ) THEN
@@ -41,6 +41,7 @@ SUBROUTINE restart_in_electrons (iter, dr2, et)
            WRITE( stdout, &
            '(5x,"Calculation restarted from scf iteration #",i6)' ) iter + 1
            dr2 = dr2_
+           ethr= ethr_
            et (:,:) = et_(:,:)
         END IF
         DEALLOCATE (et_)

@@ -45,9 +45,11 @@ SUBROUTINE c_bands( iter )
   ! ik_: k-point already done in a previous run
   LOGICAL :: exst
   !
-  ik_ = 0
-  IF ( restart ) CALL restart_in_cbands(ik_, ethr, et )
   CALL start_clock( 'c_bands' )
+  !
+  ik_ = 0
+  avg_iter = 0.D0
+  IF ( restart ) CALL restart_in_cbands(ik_, ethr, avg_iter, et )
   !
   IF ( isolve == 0 ) THEN
      WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
@@ -56,8 +58,6 @@ SUBROUTINE c_bands( iter )
   ELSE
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
   END IF
-  !
-  avg_iter = 0.D0
   !
   if ( nks > 1 ) REWIND( iunigk )
   !
@@ -120,7 +120,7 @@ SUBROUTINE c_bands( iter )
      !
      IF (ik .le. nkdum) THEN
         IF (check_stop_now()) THEN
-           CALL save_in_cbands(ik, ethr, et )
+           CALL save_in_cbands(ik, ethr, avg_iter, et )
            RETURN
         END IF
      ENDIF
@@ -607,10 +607,11 @@ SUBROUTINE c_bands_nscf( )
   !
   REAL(DP), EXTERNAL :: get_clock
   !
-  ik_ = 0
-  IF ( restart ) CALL restart_in_cbands(ik_, ethr, et )
-  !
   CALL start_clock( 'c_bands' )
+  !
+  ik_ = 0
+  avg_iter = 0.D0
+  IF ( restart ) CALL restart_in_cbands(ik_, ethr, avg_iter, et )
   !
   IF ( isolve == 0 ) THEN
      WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
@@ -619,8 +620,6 @@ SUBROUTINE c_bands_nscf( )
   ELSE
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
   END IF
-  !
-  avg_iter = 0.D0
   !
   if ( nks > 1 ) REWIND( iunigk )
   !
@@ -692,7 +691,7 @@ SUBROUTINE c_bands_nscf( )
         ! ... save wavefunctions to file
         !
         IF (check_stop_now()) THEN
-           CALL save_in_cbands(ik, ethr, et )
+           CALL save_in_cbands(ik, ethr, avg_iter, et )
            RETURN
         END IF
      ENDIF

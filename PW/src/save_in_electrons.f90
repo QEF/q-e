@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE save_in_electrons (iter, dr2, et)
+SUBROUTINE save_in_electrons (iter, dr2, ethr, et)
   !-----------------------------------------------------------------------
   USE kinds,         ONLY: dp
   USE io_files,      ONLY: iunres, seqopn
@@ -16,16 +16,13 @@ SUBROUTINE save_in_electrons (iter, dr2, et)
   IMPLICIT NONE
   !
   INTEGER, INTENT (in) :: iter
-  REAL(dp), INTENT(in) :: dr2, et(nbnd,nks)
+  REAL(dp), INTENT(in) :: dr2, ethr, et(nbnd,nks)
   !
   LOGICAL :: exst
   !
   CALL seqopn (iunres, 'restart_scf', 'formatted', exst)
-  WRITE (iunres, *) iter, dr2
+  WRITE (iunres, *) iter, dr2, ethr
   WRITE (iunres, *) et(1:nbnd,1:nks)
-!  write (iunres)  exx_is_active(), fock0, fock1, fock2, dexx
-!  IF ( exx_is_active() )  write (iunres) &
-!     ( (x_occupation (ibnd, ik), ibnd = 1, nbnd), ik = 1, nks)
   CLOSE ( unit=iunres, status='keep')
   !
 END SUBROUTINE save_in_electrons

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE save_in_cbands (ik, ethr, et)
+SUBROUTINE save_in_cbands (ik, ethr, avg_iter, et)
   !-----------------------------------------------------------------------
   USE kinds,         ONLY: dp
   USE io_files,      ONLY: iunres, seqopn
@@ -16,19 +16,19 @@ SUBROUTINE save_in_cbands (ik, ethr, et)
   IMPLICIT NONE
   !
   INTEGER, INTENT (in) :: ik
-  REAL(dp), INTENT(in) :: ethr, et(nbnd,nks)
+  REAL(dp), INTENT(in) :: ethr, avg_iter, et(nbnd,nks)
   !
   LOGICAL :: exst
   !
   CALL seqopn (iunres, 'restart_k', 'formatted', exst)
-  WRITE (iunres, *) ik, ethr
+  WRITE (iunres, *) ik, ethr, avg_iter
   WRITE (iunres, *) et(1:nbnd,1:nks)
   CLOSE ( unit=iunres, status='keep')
   !
 END SUBROUTINE save_in_cbands
 !
 !-----------------------------------------------------------------------
-SUBROUTINE restart_in_cbands (ik, ethr, et)
+SUBROUTINE restart_in_cbands (ik, ethr, avg_iter, et)
   !-----------------------------------------------------------------------
   USE kinds,         ONLY: dp
   USE io_global,     ONLY: stdout
@@ -38,18 +38,18 @@ SUBROUTINE restart_in_cbands (ik, ethr, et)
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT (out) :: ik
-  REAL(dp), INTENT(out) :: ethr, et(nbnd,nks)
+  INTEGER, INTENT (inout) :: ik
+  REAL(dp), INTENT(inout) :: ethr, avg_iter, et(nbnd,nks)
   !
   REAL(dp), ALLOCATABLE :: et_(:,:)
-  REAL(dp):: ethr_
+  REAL(dp):: ethr_, avg_iter_
   INTEGER :: ios
   LOGICAL :: exst
   !
   CALL seqopn (iunres, 'restart_k', 'formatted', exst)
   IF ( exst ) THEN
      ios = 0
-     READ (iunres, *, iostat=ios) ik, ethr_
+     READ (iunres, *, iostat=ios) ik, ethr_, avg_iter_
      IF ( ios /= 0 ) THEN
         ik = 0
      ELSE IF ( ik < 1 .OR. ik > nks ) THEN
@@ -63,6 +63,7 @@ SUBROUTINE restart_in_cbands (ik, ethr, et)
            WRITE( stdout, &
            '(5x,"Calculation restarted from kpoint #",i6)' ) ik + 1
            ethr = ethr_
+           avg_iter = avg_iter_
            et (:,:) = et_(:,:)
         END IF
         DEALLOCATE (et_)

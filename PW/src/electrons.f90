@@ -369,7 +369,8 @@ SUBROUTINE electrons_scf ( no_printout )
   !
   IF ( istep > 0 ) ethr = 1.D-6
   !
-  IF ( restart ) CALL restart_in_electrons (iter, dr2, et )
+  IF ( restart ) CALL restart_in_electrons (iter, dr2, ethr, et )
+IF (restart) print *, 'SGRUNT! iter letto =',iter,dr2,ethr
   !
   WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
   !
@@ -406,7 +407,7 @@ SUBROUTINE electrons_scf ( no_printout )
      !
      IF ( check_stop_now() ) THEN
         conv_elec=.FALSE.
-        CALL save_in_electrons (iter, dr2, et )
+        CALL save_in_electrons (iter, dr2, ethr, et )
         GO TO 10
      END IF
      iter = iter + 1
@@ -459,7 +460,7 @@ SUBROUTINE electrons_scf ( no_printout )
         !
         IF ( stopped_by_user ) THEN
            conv_elec=.FALSE.
-           CALL save_in_electrons (iter-1, dr2, et )
+           CALL save_in_electrons (iter-1, dr2, ethr, et )
            GO TO 10
         END IF
         !
