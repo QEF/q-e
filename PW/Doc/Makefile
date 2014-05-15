@@ -23,7 +23,7 @@ clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) *~
 	- rm -rf user_guide/
 	- rm -rf input_xx.xsl
-	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml
+	- rm -f INPUT_PW.html INPUT_PW.txt INPUT_PW.xml
 	- rm -rf ../../Doc/INPUT_PW.*
 
 
