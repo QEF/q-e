@@ -272,7 +272,7 @@ SUBROUTINE lr_readin
      ! Warning: There is something strange with the variable 'assume_isolated'!
      ! It is not used currently.
      !
-     CALL read_environ( use_environ, nat, nsp, assume_isolated, ibrav )
+     CALL read_environ( nat, nsp, assume_isolated, ibrav )
      !
      ! Taken from PW/src/init_run.f90
      !
