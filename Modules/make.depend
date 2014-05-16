@@ -402,6 +402,7 @@ xml_io_base.o : mp_images.o
 xml_io_base.o : mp_wave.o
 xml_io_base.o : parser.o
 xml_io_base.o : wrappers.o
+zdotc_wrapper.o : kind.o
 zhpev_drv.o : io_global.o
 zhpev_drv.o : kind.o
 zhpev_drv.o : mp.o
