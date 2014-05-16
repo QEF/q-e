@@ -1025,7 +1025,7 @@ Note that a similar problem with complex functions exists with MKL libraries
 as well: if you compile with gfortran, link \texttt{-lmkl\_gf\_lp64},
 not \texttt{-lmkl\_intel\_lp64}, and the like for other architectures.
 Since v.5.1, you may use the following workaround:
-add preprocessing option \texttt{-Dzdotc=zdotc\_mac} to \texttt{DFLAGS}.
+add preprocessing option \texttt{-Dzdotc=zdotc\_wrapper} to \texttt{DFLAGS}.
 
 If you experience problems in reading files produced by previous versions
 of \qe: ``gfortran used 64-bit record markers to allow writing of records 
@@ -1178,7 +1178,7 @@ at all!).
 If \qe\ does not work for some reason on a PC cluster,
 try first if it works in serial execution. A frequent problem with parallel
 execution is that \qe\ does not read from standard input,
-due to the configuration of MPI libraries.
+due to the configuration of MPI libraries: see Sec.\ref{SubSec:badpara}.
 If you are dissatisfied with the performances in parallel execution,
 see Sec.\ref{Sec:para} and in particular Sec.\ref{SubSec:badpara}.
 
@@ -1192,7 +1192,7 @@ Parallel compilation with OpenMPI also works.
 Mysterious crashes, occurring when \texttt{zdotc} is called, are due
 to the same incompatibility of complex functions with some optimized 
 BLAS as reported in the "Linux PCs with gfortran" paragraph. Workaround:
-add preprocessing option \texttt{-Dzdotc=zdotc\_mac} to \texttt{DFLAGS}.
+add preprocessing option \texttt{-Dzdotc=zdotc\_wrapper} to \texttt{DFLAGS}.
 
 \paragraph{Detailed installation instructions for Mac OS X 10.6}
 
