@@ -52,7 +52,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   USE mp_global,            ONLY : intra_bgrp_comm
   use lr_exx_kernel
 #ifdef __ENVIRON
-  USE environ_base,         ONLY : do_environ
+  USE plugin_flags,         ONLY : use_environ
   USE scf,                  ONLY : rho
   USE solvent_tddfpt,       ONLY : calc_vsolvent_tddfpt
 #endif
@@ -163,7 +163,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
            !
 #ifdef __ENVIRON
            !
-           IF ( do_environ ) THEN
+           IF ( use_environ ) THEN
               !
               ALLOCATE( dv_pol(dfftp%nnr) )
               ALLOCATE( dv_epsilon(dfftp%nnr) )

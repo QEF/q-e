@@ -47,7 +47,7 @@ PROGRAM lr_main
   USE funct,                 ONLY : dft_is_hybrid
   USE fft_base,              ONLY : dffts
 #ifdef __ENVIRON
-  USE environ_base,          ONLY : do_environ
+  USE plugin_flags,          ONLY : use_environ
   USE environ_info,          ONLY : environ_summary
 #endif
 
@@ -90,7 +90,7 @@ PROGRAM lr_main
   ! about Environ variables
   !
 #ifdef __ENVIRON
-  IF ( do_environ ) CALL environ_summary()
+  IF ( use_environ ) CALL environ_summary()
 #endif
   !
   CALL check_stop_init()

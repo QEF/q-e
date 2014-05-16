@@ -27,7 +27,7 @@ SUBROUTINE bcast_lr_input
   USE mp_world,            ONLY: world_comm
   USE exx,                 ONLY: ecutfock
 #ifdef __ENVIRON
-  USE input_parameters,    ONLY: do_environ
+  USE plugin_flags,        ONLY: use_environ
   USE environ_input,       ONLY: environ_bcast
 #endif
 
@@ -67,8 +67,7 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (d0psi_rs, ionode_id,world_comm )
   CALL mp_bcast (tddfpt, ionode_id, world_comm )
 #ifdef __ENVIRON
-  CALL mp_bcast (do_environ, ionode_id, world_comm )
-  IF (do_environ) CALL environ_bcast()
+  IF (use_environ) CALL environ_bcast()
 #endif
 
   ! for lr_dav

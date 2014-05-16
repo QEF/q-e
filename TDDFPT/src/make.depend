@@ -1,11 +1,10 @@
 bcast_lr_input.o : ../../Modules/control_flags.o
-bcast_lr_input.o : ../../Modules/environ_input.o
-bcast_lr_input.o : ../../Modules/input_parameters.o
 bcast_lr_input.o : ../../Modules/io_files.o
 bcast_lr_input.o : ../../Modules/io_global.o
 bcast_lr_input.o : ../../Modules/mp.o
 bcast_lr_input.o : ../../Modules/mp_global.o
 bcast_lr_input.o : ../../Modules/mp_world.o
+bcast_lr_input.o : ../../Modules/plugin_flags.o
 bcast_lr_input.o : ../../PW/src/exx.o
 bcast_lr_input.o : ../../PW/src/realus.o
 bcast_lr_input.o : lr_charg_resp.o
@@ -33,6 +32,7 @@ lr_apply_liouvillian.o : ../../Modules/ions_base.o
 lr_apply_liouvillian.o : ../../Modules/kind.o
 lr_apply_liouvillian.o : ../../Modules/mp.o
 lr_apply_liouvillian.o : ../../Modules/mp_global.o
+lr_apply_liouvillian.o : ../../Modules/plugin_flags.o
 lr_apply_liouvillian.o : ../../Modules/recvec.o
 lr_apply_liouvillian.o : ../../Modules/uspp.o
 lr_apply_liouvillian.o : ../../Modules/wavefunctions.o
@@ -233,6 +233,7 @@ lr_main.o : ../../Modules/kind.o
 lr_main.o : ../../Modules/mp.o
 lr_main.o : ../../Modules/mp_global.o
 lr_main.o : ../../Modules/mp_world.o
+lr_main.o : ../../Modules/plugin_flags.o
 lr_main.o : ../../Modules/uspp.o
 lr_main.o : ../../Modules/version.o
 lr_main.o : ../../Modules/wavefunctions.o
@@ -288,7 +289,6 @@ lr_read_wf.o : lr_exx_kernel.o
 lr_read_wf.o : lr_variables.o
 lr_readin.o : ../../Modules/cell_base.o
 lr_readin.o : ../../Modules/control_flags.o
-lr_readin.o : ../../Modules/environ_input.o
 lr_readin.o : ../../Modules/fft_base.o
 lr_readin.o : ../../Modules/funct.o
 lr_readin.o : ../../Modules/input_parameters.o
@@ -302,6 +302,7 @@ lr_readin.o : ../../Modules/mp_global.o
 lr_readin.o : ../../Modules/mp_images.o
 lr_readin.o : ../../Modules/mp_world.o
 lr_readin.o : ../../Modules/paw_variables.o
+lr_readin.o : ../../Modules/plugin_flags.o
 lr_readin.o : ../../Modules/recvec.o
 lr_readin.o : ../../Modules/uspp.o
 lr_readin.o : ../../PW/src/exx.o
@@ -384,6 +385,7 @@ lr_write_restart.o : lr_charg_resp.o
 lr_write_restart.o : lr_variables.o
 print_clock_lr.o : ../../Modules/io_global.o
 print_clock_lr.o : ../../Modules/mp_world.o
+print_clock_lr.o : ../../Modules/plugin_flags.o
 print_clock_lr.o : ../../PW/src/realus.o
 print_clock_lr.o : lr_variables.o
 sd0psi.o : ../../Modules/becmod.o
@@ -401,4 +403,5 @@ stop_lr.o : ../../Modules/ions_base.o
 stop_lr.o : ../../Modules/kind.o
 stop_lr.o : ../../Modules/mp_global.o
 stop_lr.o : ../../Modules/parallel_include.o
+stop_lr.o : ../../Modules/plugin_flags.o
 stop_lr.o : lr_variables.o

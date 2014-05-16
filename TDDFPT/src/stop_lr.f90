@@ -28,7 +28,7 @@ SUBROUTINE stop_lr( full_run  )
   USE ions_base,  ONLY : nat, ityp, atm, ntyp => nsp, tau
   USE cell_base,  ONLY : celldm, at, bg
 #ifdef __ENVIRON
-  USE environ_base,         ONLY : do_environ
+  USE plugin_flags,         ONLY : use_environ
   USE solvent_tddfpt,       ONLY : solvent_clean_tddfpt
 #endif
   !
@@ -99,7 +99,7 @@ SUBROUTINE stop_lr( full_run  )
   !
   ! Deallocate Environ related arrays
   !
-  IF (do_environ) CALL solvent_clean_tddfpt()
+  IF (use_environ) CALL solvent_clean_tddfpt()
   !
 #endif
   !

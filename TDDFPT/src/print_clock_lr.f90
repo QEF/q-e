@@ -21,7 +21,7 @@ SUBROUTINE print_clock_lr()
    USE realus,           ONLY : real_space,real_space_debug
    use lr_variables,     only : davidson
 #ifdef __ENVIRON
-   USE environ_base,     ONLY : do_environ
+   USE plugin_flags,     ONLY : use_environ
    USE environ_info,     ONLY : environ_clock
 #endif   
    !
@@ -130,7 +130,7 @@ SUBROUTINE print_clock_lr()
 #endif
    !
 #ifdef __ENVIRON
-   IF ( do_environ ) CALL environ_clock( stdout )
+   IF ( use_environ ) CALL environ_clock( stdout )
 #endif
    !
    WRITE( stdout, '(5X,"EXX routines")' )

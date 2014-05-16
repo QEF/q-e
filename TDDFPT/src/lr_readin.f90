@@ -52,7 +52,7 @@ SUBROUTINE lr_readin
   USE vlocal,              ONLY : strf
   USE exx,                 ONLY : ecutfock
 #ifdef __ENVIRON
-  USE input_parameters,    ONLY : do_environ, assume_isolated
+  USE input_parameters,    ONLY : assume_isolated
   USE environ_base,        ONLY : environ_base_init, ir_end
   USE environ_input,       ONLY : read_environ
   USE environ_base,        ONLY : ifdtype, nfdpoint
@@ -64,8 +64,8 @@ SUBROUTINE lr_readin
                                   environ_initions_allocate
   USE environ_main,        ONLY : calc_venviron
   USE mp_bands,            ONLY : me_bgrp
+  USE plugin_flags,        ONLY : use_environ
 #endif
-
 
   IMPLICIT NONE
   !
@@ -81,9 +81,6 @@ SUBROUTINE lr_readin
   !
   NAMELIST / lr_input / restart, restart_step ,lr_verbosity, prefix, outdir, test_case_no, wfcdir, disk_io, max_seconds
   NAMELIST / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, charge_response, tqr, auto_rs, no_hxc, n_ipol, &
-#ifdef __ENVIRON
-                          do_environ, &
-#endif
        & project, scissor, ecutfock, pseudo_hermitian,d0psi_rs
   NAMELIST / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int
   namelist / lr_dav / num_eign, num_init, num_basis_max, residue_conv_thr, precondition,dav_debug, reference,single_pole,&
@@ -128,9 +125,6 @@ SUBROUTINE lr_readin
      eig_dir='./'
      scissor = 0.d0
      ecutfock = -1d0
-#ifdef __ENVIRON
-     do_environ = .false.
-#endif
 
      ! For lr_dav
      num_eign=1
@@ -159,7 +153,14 @@ SUBROUTINE lr_readin
      max_iter=100
      conv_assistant=.false.
      if_dft_spectrum=.false.
-
+     !
+     ! ------------------------------------------------------
+     ! Reading possible plugin arguments -environ -plumed ...
+     ! ------------------------------------------------------
+     IF(ionode) CALL plugin_arguments()
+     CALL plugin_arguments_bcast(ionode_id, intra_image_comm)
+     ! ------------------------------------------------------
+     !
      !   Reading the namelist lr_input
      CALL input_from_file( )
      !
@@ -259,19 +260,19 @@ SUBROUTINE lr_readin
   !
 #ifdef __ENVIRON
   !
-  IF ( do_environ ) THEN
+  IF ( use_environ ) THEN
      !
      !!!!!!!!!!!!!!!!!!!!!!!!!!! Initialisation !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !
      ! Copied from PW/src/input.f90
-     ! Note: in the routine "environ_base_init" the variable do_environ (from 
-     ! environ_base) is defined according to do_environ (from input_parameters).
-     ! In the Environ code the variable do_environ (from environ_base) is used.
+     ! Note: in the routine "environ_base_init" the variable use_environ (from 
+     ! environ_base) is defined according to use_environ (from input_parameters).
+     ! In the Environ code the variable use_environ (from environ_base) is used.
      !
      ! Warning: There is something strange with the variable 'assume_isolated'!
      ! It is not used currently.
      !
-     CALL read_environ( do_environ, nat, nsp, assume_isolated, ibrav )
+     CALL read_environ( use_environ, nat, nsp, assume_isolated, ibrav )
      !
      ! Taken from PW/src/init_run.f90
      !
