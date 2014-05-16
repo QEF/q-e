@@ -8,7 +8,6 @@
 &lr_control
     itermax=500,
     pseudo_hermitian = .true.
-    do_environ = .true.
     no_hxc = .false.
     ipol=4
     n_ipol = 3
