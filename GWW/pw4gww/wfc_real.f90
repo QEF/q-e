@@ -6,9 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-!
-#include "f_defs.h"
-!
 !----------------------------------------------------------------------------
 SUBROUTINE wfc_gamma_real(itask,ispin)
 

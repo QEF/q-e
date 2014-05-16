@@ -6,10 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-
-!
-#include "f_defs.h"
-!
 !----------------------------------------------------------------------------
 SUBROUTINE o_rinitcgg( npwx, npw, nstart, numwp, psi, o_evc, e, numv, v_states,hdiag,ptype,fcw_number,fcw_state,fcw_mat,ethr)
   !----------------------------------------------------------------------------

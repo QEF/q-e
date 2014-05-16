@@ -6,11 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-
-!
-!
-#include "f_defs.h"
-!
 !----------------------------------------------------------------------------
 SUBROUTINE diago_cg_g(ndim,omat,smat,maxter,max_state,e,ovec,cutoff,ethr,found_state,l_para)
   !----------------------------------------------------------------------------
