@@ -112,12 +112,14 @@ for dir in $dirs; do
 
         if test "$DIR" = "PW/src" || test "$DIR" = "TDDFPT/src"
         then
-            sed '/@environ_base@/d' make.depend > make.depend.tmp
-            sed '/@environ_info@/d' make.depend.tmp > make.depend
-            sed '/@environ_init@/d' make.depend > make.depend.tmp
-            sed '/@environ_main@/d' make.depend.tmp > make.depend
-            sed '/@environ_mp@/d'   make.depend > make.depend.tmp
-            sed '/@solvent_tddfpt@/d' make.depend.tmp > make.depend
+            sed '/@environ_base@/d'  make.depend > make.depend.tmp
+            sed '/@environ_input@/d' make.depend.tmp > make.depend
+            sed '/@environ_info@/d'  make.depend > make.depend.tmp
+            sed '/@environ_init@/d'  make.depend.tmp > make.depend
+            sed '/@environ_main@/d'  make.depend > make.depend.tmp
+            sed '/@environ_mp@/d'    make.depend.tmp > make.depend
+            sed '/@solvent_tddfpt@/d' make.depend > make.depend.tmp
+            mv make.depend.tmp make.depend
         fi
 
         rm -f make.depend.tmp
