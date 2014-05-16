@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{5.1svn}
+\def\version{5.1}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -129,8 +129,10 @@ data is available for most packages in files \texttt{INPUT\_*.txt} and
 The \qe\ codes work on many different types of Unix machines,
 including parallel machines using both OpenMP and MPI 
 (Message Passing Interface) and GPU-accelerated machines.
-Running \qe\ on Mac OS X and MS-Windows is also possible: 
-see section \ref{Sec:Installation}.
+\qe\ also runs on Mac OS X and MS-Windows machines:
+see section \ref{Sec:Installation}. A GPU-enabled version
+of most important codes is available on GitHub:
+\texttt{https://github.com/fspiga/QE-GPU}.
 
 Further documentation, beyond what is provided in this guide, can be found in:
 \begin{itemize}
@@ -329,7 +331,7 @@ installing on is directly connected to the internet and has
 either \texttt{wget} or \texttt{curl} installed and working. 
 If you run into trouble, manually download each required package 
 into subdirectory \texttt{archive/}, {\em not unpacking or
-or uncompressing it}:
+uncompressing it}:
 command \texttt{make} will take care of this during installation. 
 
 Package \texttt{GWL} needs a manual download and installation:
@@ -786,7 +788,7 @@ directory containing other data: the examples will clean it!
 If you have compiled the parallel version of \qe\ (this
 is the default if parallel libraries are detected), you will usually
 have to specify a launcher program (such as \texttt{mpirun} or 
-\texttt{mpiexec}) and the number of processors: see Sec.\ref{SubSec:para} for
+\texttt{mpiexec}) and the number of processors: see Sec.\ref{Sec:para} for
 details. In order to do that, edit again the \texttt{environment\_variables} 
 file
 and set the PARA\_PREFIX and PARA\_POSTFIX variables as needed. 
@@ -978,17 +980,6 @@ the Portland Group web site, \texttt{http://www.pgroup.com/}).
 
 \paragraph{Linux PCs with Pathscale compiler}
 
-Version 2.99 of the Pathscale EKO compiler (web site
-\texttt{http://www.pathscale.com/})
-works and is recognized by
-\configure, but the preprocessing command, \texttt{pathcc -E},
-causes a mysterious error in compilation of iotk and should be replaced by
-\begin{verbatim}
-   /lib/cpp -P --traditional
-\end{verbatim}
-The MVAPICH parallel environment with Pathscale compilers also works
-(info by Paolo Giannozzi, July 2008). 
-
 Version 3.1 and version 4 (open source!) of the Pathscale EKO compiler
 also work (info by Cezary Sliwa, April 2011, and Carlo Nervi, June 2011).
 In case of mysterious errors while compiling \texttt{iotk},
@@ -1033,6 +1024,8 @@ to see if the problem disappears; or, add the \texttt{-ff2c} flag"
 Note that a similar problem with complex functions exists with MKL libraries
 as well: if you compile with gfortran, link \texttt{-lmkl\_gf\_lp64},
 not \texttt{-lmkl\_intel\_lp64}, and the like for other architectures.
+Since v.5.1, you may use the following workaround:
+add preprocessing option \texttt{-Dzdotc=zdotc\_mac} to \texttt{DFLAGS}.
 
 If you experience problems in reading files produced by previous versions
 of \qe: ``gfortran used 64-bit record markers to allow writing of records 
@@ -1085,7 +1078,8 @@ Sliwa, April 2011).
 \paragraph{Linux PCs with Intel compiler (ifort)}
 
 The Intel compiler, ifort, is available for free for personal 
-usage (\texttt{http://software.intel.com/}). It seem to produce the faster executables, 
+usage (\texttt{http://software.intel.com/}). It seems to produce 
+the faster executables, 
 at least on Intel CPUs, but not all versions work as expected.
 ifort versions $<9.1$ are not recommended, due to the presence of subtle 
 and insidious bugs. In case of trouble, update your version with 
@@ -1121,22 +1115,9 @@ than previous versions on 64-bit CPUs (info by P. Giannozzi, March 2011).
 ifort 11.0.081, MKL 10.1.1.019, OpenMP 1.3.3. The problem disappeared
 with ifort 11.1.056 and MKL 10.2.2.025 (Carlo Nervi, Oct. 2009).
 
-{\bf ifort v.10}: On 64-bit AMD CPUs, at least some versions of ifort 10.1 
-miscompile subroutine \texttt{write\_rho\_xml} in 
-\texttt{Module/xml\_io\_base.f90} with -O2
-optimization. Using -O1 instead solves the problem (info by Carlo
-Cavazzoni, March 2008). 
-
-"The intel compiler version 10.1.008 miscompiles a lot of codes (I have proof 
-for CP2K and CPMD) and needs to be updated in any case" (info by Axel
-Kohlmeyer, May 2008).
- 
-{\bf ifort v.9}: The latest (July 2006) 32-bit version of ifort 9.1
-works. Earlier versions yielded {\em Compiler Internal Error}.
-    
 \paragraph{Linux PCs with MKL libraries}
-On Intel CPUs it is very convenient to use Intel MKL libraries. They can be
-also used for AMD CPU, selecting the appropriate machine-optimized
+On Intel CPUs it is very convenient to use Intel MKL libraries.
+They can be also used for AMD CPU, selecting the appropriate machine-optimized
 libraries, and also together with non-Intel compilers. Note however
 that recent versions of MKL (10.2 and following) do not perform
 well on AMD machines.
@@ -1147,10 +1128,7 @@ By default the non-threaded version of MKL is linked, unless option
 refer to the following web page to find the correct way to link MKL:\\
 \texttt{http://software.intel.com/en-us/articles/intel-mkl-link-line-advisor/}.
 
-MKL contains optimized FFT routines and a FFTW interface, to be separately
-compiled. For 64-bit Intel Core2 processors, they are slightly faster than 
-FFTW (MKL v.10, FFTW v.3 fortran interface, reported by P. Giannozzi,
-November 2008). 
+Recent MKL versions also contain optimized FFT routines and a FFTW interface.
 
 For parallel (MPI) execution on multiprocessor (SMP) machines, set the
 environmental variable OMP\_NUM\_THREADS to 1 unless you know what you 
@@ -1193,7 +1171,7 @@ Unfortunately this not always happens. In fact:
 \end{itemize}
 
 Apart from such problems, \qe\ compiles and works on all non-buggy, properly
-configured hardware and software combinations. You may have to
+configured hardware and software combinations. In some cases you may have to
 recompile MPI libraries: not all MPI installations contain support for
 the fortran-90 compiler of your choice (or for any fortran-90 compiler
 at all!). 
@@ -1201,37 +1179,21 @@ at all!).
 If \qe\ does not work for some reason on a PC cluster,
 try first if it works in serial execution. A frequent problem with parallel
 execution is that \qe\ does not read from standard input,
-due to the configuration of MPI libraries: see Sec.\ref{SubSec:para}.
-
+due to the configuration of MPI libraries.
 If you are dissatisfied with the performances in parallel execution,
 see Sec.\ref{Sec:para} and in particular Sec.\ref{SubSec:badpara}.
 
-\subsubsection{Intel Mac OS X}
+\subsubsection{Mac OS}
 
 Newer Mac OS-X machines (10.4 and later) with Intel CPUs are supported 
 by \configure,
 with gcc4+g95, gfortran, and the Intel compiler ifort with MKL libraries.
-Parallel compilation with OpenMPI also works.
+Parallel compilation with OpenMPI also works. 
 
-\paragraph{Intel Mac OS X with ifort}
-
-"Uninstall darwin ports, fink and developer tools. The presence of all of
-those at the same time generates many spooky events in the compilation
-procedure.  I installed just the developer tools from apple, the intel
-fortran compiler and everything went on great" (Info by Riccardo Sabatini, 
-Nov. 2007)
-
-\paragraph{Intel Mac OS X 10.4 with g95 and gfortran}
-
-An updated version of Developer Tools (XCode 2.4.1 or 2.5), that can be 
-downloaded from Apple, may be needed. Some tests fails with mysterious 
-errors, that disappear if
-fortran BLAS are linked instead of system Atlas libraries. Use: 
-\begin{verbatim}
-   BLAS_LIBS_SWITCH = internal
-   BLAS_LIBS      = /path/to/espresso/BLAS/blas.a -latlas
-\end{verbatim}
-(Info by Paolo Giannozzi, jan.2008, updated April 2010)
+Mysterious crashes, occurring when \texttt{zdotc} is called, are due
+to the same incompatibility of complex functions with some optimized 
+BLAS as reported in the "Linux PCs with gfortran" paragraph. Workaround:
+add preprocessing option \texttt{-Dzdotc=zdotc\_mac} to \texttt{DFLAGS}.
 
 \paragraph{Detailed installation instructions for Mac OS X 10.6}
 
@@ -1374,7 +1336,6 @@ and OpenMP threads in a controlled manner, forget about mixed
 OpenMP-MPI parallelization.
 
 \subsection{Running on parallel machines}
-\label{SubSec:para}
 
 Parallel execution is strongly system- and installation-dependent. 
 Typically one has to specify:
@@ -1617,6 +1578,7 @@ For very large \cpx\ runs, you may consider using
 \texttt{saverho=.false.} to reduce I/O to the strict minimum.
 
 \subsection{Tricks and problems}
+\label{SubSec:badpara}
 
 \paragraph{Trouble with input files}
 Some implementations of the MPI library have problems with input 
