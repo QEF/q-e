@@ -106,4 +106,3 @@ solve_head.o : ../../PHonon/PH/phcom.o
 solve_head.o : ../../PW/src/buffers.o
 solve_head.o : ../../PW/src/pwcom.o
 solve_head.o : ../../PW/src/symme.o
-solve_head.o : ../../include/f_defs.h

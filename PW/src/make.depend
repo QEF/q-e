@@ -558,6 +558,7 @@ forces.o : ../../Modules/io_global.o
 forces.o : ../../Modules/ions_base.o
 forces.o : ../../Modules/kind.o
 forces.o : ../../Modules/mm_dispersion.o
+forces.o : ../../Modules/plugin_flags.o
 forces.o : ../../Modules/recvec.o
 forces.o : ../../Modules/tsvdw.o
 forces.o : ../../Modules/uspp.o

@@ -425,7 +425,3 @@ write_wannier_matrix.o : ../../Modules/mp.o
 write_wannier_matrix.o : ../../Modules/mp_world.o
 write_wannier_matrix.o : ../../Modules/wannier_gw.o
 write_wannier_matrix.o : ../../PW/src/pwcom.o
-diago_cg.o : ../../include/f_defs.h
-diago_cg_g.o : ../../include/f_defs.h
-o_rinitcgg.o : ../../include/f_defs.h
-wfc_real.o : ../../include/f_defs.h
