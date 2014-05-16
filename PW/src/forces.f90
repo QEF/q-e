@@ -39,8 +39,9 @@ SUBROUTINE forces()
   USE extfield,      ONLY : tefield, forcefield
   USE control_flags, ONLY : gamma_only, remove_rigid_rot, textfor, &
                             iverbosity, llondon, lxdm, ts_vdw
+  USE plugin_flags
 #ifdef __ENVIRON
-  USE environ_base,  ONLY : do_environ, env_static_permittivity, rhopol
+  USE environ_base,  ONLY : env_static_permittivity, rhopol
   USE environ_base,  ONLY : env_extcharge_n, rhoexternal
   USE fft_interfaces,  ONLY : fwfft
   USE environ_main,  ONLY : calc_fenviron
@@ -145,7 +146,7 @@ SUBROUTINE forces()
   END IF
   !
 #ifdef __ENVIRON
-  IF (do_environ) THEN
+  IF (use_environ) THEN
     !
     ALLOCATE(force_tmp(3,nat))
     ALLOCATE(force_environ(3,nat))
