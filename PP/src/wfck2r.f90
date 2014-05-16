@@ -5,8 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!#include "f_defs.h"
-!
 ! -----------------------------------------------------------------
 ! This program reads the prefix.wfc in G-space written by QE and 
 ! writes it in real space prefix.wfc_r.
