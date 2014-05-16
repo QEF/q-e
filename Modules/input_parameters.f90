@@ -534,9 +534,6 @@ MODULE input_parameters
              nqx1, nqx2, nqx3, ecutfock,                                      &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
              exx_fraction, screening_parameter,                               &
-#ifdef __ENVIRON
-             do_environ,                                                      &
-#endif
              noncolin, lspinorb, starting_spin_angle, lambda, angle1, angle2, &
              report,              &
              constrained_magnetization, B_field, fixed_magnetization,         &
