@@ -112,10 +112,10 @@ zhpev_drv.o
 all : version version.o libqemod.a
 
 ## If no update_version is found, or it is not executable,
-## just copy the versfion.f90.in (that contains 'version=unknown').
-## We use cat and not cp so that version.f90 has a new timestamp, and
-## version.f90 is recompiled.
-## We use the innder if to avoid recompilation at each make.
+## just copy version.f90.in (that contains 'version=unknown').
+## We use cat and not cp so that version.f90 has a new timestamp,
+## forcing recompilation of version.f90.
+## We use the inner if to avoid recompilation at each make.
 version:
 	- ( if test -x ../install/update_version ; then \
 	../install/update_version; \
@@ -131,10 +131,10 @@ libqemod.a: 	$(MODULES)
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *.F90 *.mod *.L version.f90
 
-# In this way, the script for generating version.f90 always runs (possibly
-# updating the version is you run svn update).
-# the update_version script should take care of not changing the file if the
-# svn version did not change
+# In this way, the script for generating version.f90 always runs
+# (possibly updating the version if you execute "svn update").
+# the update_version script should take care of not changing the file 
+# if the svn version did not change
 .PHONY: version all clean
 
 include make.depend
