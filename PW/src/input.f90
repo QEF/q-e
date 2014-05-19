@@ -1204,8 +1204,6 @@ SUBROUTINE iosys()
   IF ( llondon) THEN
      lon_rcut    = london_rcut
      scal6       = london_s6
-     ! not sure if it can be called here
-     !   CALL init_london ( )
   END IF
   IF ( lxdm ) THEN
      a1i = xdm_a1
