@@ -102,8 +102,8 @@
       LOGICAL :: l_pola_lanczos=.true.!if true calculate the polarization through a lanczos scheme
       LOGICAL :: l_self_lanczos=.true.!if true calculate the self-energy through a lanczos scheme
       LOGICAL :: l_lanczos_conv=.true.!if the convolution is done analytically
-      INTEGER :: n_set=100!block lenght over frequency in do_self_lanczos
-      INTEGER :: n_set_ii=5!block lenght over KS states in do_self_lanczos
+      INTEGER :: n_set=100!block length over frequency in do_self_lanczos
+      INTEGER :: n_set_ii=5!block length over KS states in do_self_lanczos
       INTEGER :: n_set_pola=4!block length over valence states in do_pola_lanczos
       INTEGER :: n_set_self=1!block length over frequency states in do_self_lanczos
       LOGICAL :: l_yet_pola=.false.!if true it assumes that (restarting at point 6) the 

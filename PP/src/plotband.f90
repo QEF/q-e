@@ -128,7 +128,7 @@ PROGRAM plotband
 !
         IF (k(1,n)**2+k(2,n)**2+k(3,n)**2 < 1.0d-9) high_symmetry(n)=.true.
 !
-!   save the typical lenght of dk
+!   save the typical length of dk
 !
         IF (n==2) dxmod_save = sqrt( k1(1)**2 + k1(2)**2 + k1(3)**2)
 

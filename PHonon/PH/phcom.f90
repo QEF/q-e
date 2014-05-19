@@ -421,7 +421,7 @@ MODULE units_ph
        lrcom,     & ! the length  of the bare commutator in US case
        iudvkb3, lrdvkb3, &
        iuint3paw, & ! the unit of the int3_paw coefficients
-       lint3paw     ! the lenght of the int3_paw coefficients
+       lint3paw     ! the length of the int3_paw coefficients
   ! the unit with the products
   ! the length of the products
 

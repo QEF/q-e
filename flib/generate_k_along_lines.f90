@@ -3,10 +3,10 @@ SUBROUTINE generate_k_along_lines(nkaux, xkaux, wkaux, xk, wk, nkstot)
 !  This routine recieves as input a set of k point (xkaux) and integer weights
 !  (wkaux) and generates a set of k points along the lines 
 !  xkaux(:,i+1)-xkaux(:,i). Each line contains wkaux(i) points.
-!  The weights of each k point wk(i) is the lenght of the path from xk(:,1)
-!  to xk(i). Points with wkaux=0 do not increase the path lenght.
+!  The weights of each k point wk(i) is the length of the path from xk(:,1)
+!  to xk(i). Points with wkaux=0 do not increase the path length.
 !  The total number of output points must be nkstot, and xk and wk must
-!  be array of lenght nkstot.
+!  be array of length nkstot.
 !
 USE kinds, ONLY : DP
 IMPLICIT NONE

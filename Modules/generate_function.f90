@@ -132,7 +132,7 @@ CONTAINS
       INTEGER                   :: index0
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
-      REAL( DP )                :: scale, spr2, dist, lenght
+      REAL( DP )                :: scale, spr2, dist, length
       REAL( DP )                :: r( 3 ), s( 3 )
       REAL( DP ), ALLOCATABLE   :: rholocal ( : )
       !
@@ -159,11 +159,11 @@ CONTAINS
       IF ( dim .EQ. 0 ) THEN
         scale = charge / ( sqrtpi * spread )**3
       ELSE IF ( dim .EQ. 1 ) THEN
-        lenght = at(axis,axis) * alat
-        scale = charge / lenght / ( sqrtpi * spread )**2
+        length = at(axis,axis) * alat
+        scale = charge / length / ( sqrtpi * spread )**2
       ELSE IF ( dim .EQ. 2 ) THEN
-        lenght = at(axis,axis) * alat
-        scale = charge * lenght / omega / ( sqrtpi * spread )
+        length = at(axis,axis) * alat
+        scale = charge * length / omega / ( sqrtpi * spread )
       ELSE 
         WRITE(stdout,*)'WARNING: wrong dim in generate_gaussian'
       ENDIF
@@ -245,7 +245,7 @@ CONTAINS
       INTEGER                   :: index0
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
-      REAL( DP )                :: scale, spr2, dist, lenght
+      REAL( DP )                :: scale, spr2, dist, length
       REAL( DP )                :: r( 3 ), s( 3 )
       REAL( DP ), ALLOCATABLE   :: gradrholocal ( :, : )
       !
@@ -272,11 +272,11 @@ CONTAINS
       IF ( dim .EQ. 0 ) THEN
         scale = charge / ( sqrtpi * spread )**3
       ELSE IF ( dim .EQ. 1 ) THEN
-        lenght = at(axis,axis) * alat
-        scale = charge / lenght / ( sqrtpi * spread )**2
+        length = at(axis,axis) * alat
+        scale = charge / length / ( sqrtpi * spread )**2
       ELSE IF ( dim .EQ. 2 ) THEN
-        lenght = at(axis,axis) * alat
-        scale = charge * lenght / omega / ( sqrtpi * spread )
+        length = at(axis,axis) * alat
+        scale = charge * length / omega / ( sqrtpi * spread )
       ELSE 
         WRITE(stdout,*)'WARNING: wrong dim in generate_gaussian'
       ENDIF
