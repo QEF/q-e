@@ -139,7 +139,6 @@ mm_dispersion.o : ions_base.o
 mm_dispersion.o : kind.o
 mm_dispersion.o : mp.o
 mm_dispersion.o : mp_images.o
-mm_dispersion.o : mp_world.o
 mp.o : io_global.o
 mp.o : kind.o
 mp.o : parallel_include.o

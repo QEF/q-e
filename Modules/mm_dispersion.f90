@@ -68,7 +68,7 @@ MODULE london_module
       !
 #if defined __MPI
       USE mp,                  ONLY : mp_bcast
-      USE mp_world,            ONLY : world_comm
+      USE mp_images,           ONLY : intra_image_comm
 #endif
       !
       IMPLICIT NONE
@@ -270,10 +270,10 @@ MODULE london_module
 #if defined __MPI
       ! broadcast data to all processors
       !
-      CALL mp_bcast ( C6_ij,  ionode_id, world_comm )
-      CALL mp_bcast ( R_sum,  ionode_id, world_comm )
-      CALL mp_bcast ( r_cut,  ionode_id, world_comm )
-      CALL mp_bcast ( mxr  ,  ionode_id, world_comm )
+      CALL mp_bcast ( C6_ij,  ionode_id, intra_image_comm )
+      CALL mp_bcast ( R_sum,  ionode_id, intra_image_comm )
+      CALL mp_bcast ( r_cut,  ionode_id, intra_image_comm )
+      CALL mp_bcast ( mxr  ,  ionode_id, intra_image_comm )
       !
 #endif
       !
