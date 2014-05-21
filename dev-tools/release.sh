@@ -1,79 +1,82 @@
 #!/bin/sh -x
 
-# Run this as "./dev-tools/release.sh"
+tempdir=$HOME/Downloads
+version=5.1
 
 # make sure there is no locale setting creating unneeded differences.
 LC_ALL=C
 export LC_ALL
 
-#
-VERSION=5.0.1
-ESPRESSO_DIR=espresso-$VERSION
-GUI=PWgui-$VERSION
-# options (yes/no)
-do_doc=yes
-do_GUI=no
-do_ChangeLogs=no
+mkdir $tempdir
+cd $tempdir
+# get the svn copy
+svn checkout http://qeforge.qe-forge.org/svn/q-e/trunk/espresso
+mv espresso/ espresso-$version/
 
-# BEWARE: 
+cd espresso-$version
+
+# remove all .svn directories, clean
+find . -type d -name .svn -exec /bin/rm -rf {} \;
+touch make.sys
+make veryclean
+rm archive/plumed-1.3-qe.tar.gz archive/PLUMED-latest.tar.gz
+
+# generate documentation - NOTA BENE:
 # in order to build the .html and .txt documentation in Doc, 
 # "tcl", "tcllib", "xsltproc" are needed
 # in order to build the .pdf files in Doc, "pdflatex" is needed
 # in order to build html files for user guide and developer manual,
 # "latex2html" and "convert" (from Image-Magick) are needed
 
-if test -d $ESPRESSO_DIR; then /bin/rm -rf $ESPRESSO_DIR; fi
-if test -d $ESPRESSO_DIR-Save; then /bin/rm -rf $ESPRESSO_DIR-Save; fi
-/bin/rm espresso-$VERSION.tar.gz  espresso-$VERSION.lst
-/bin/rm espresso-$VERSION-examples.tar.gz  espresso-$VERSION-examples.lst
-if test "$do_GUI" = "yes" ; then /bin/rm $GUI.tar.gz  $GUI.lst ; fi
+touch make.sys
+make doc
 
-# produce updated ChangeLogs
-
-if test "$do_ChangeLogs" = "yes" ; then
-  make log
-  mv ChangeLog Doc/ChangeLog-$VERSION
-  mv ChangeLog.html Doc/ChangeLog-$VERSION.html
-fi
-
-# produce documentation
-if test "$do_doc" = "yes" ; then
-  make doc
-fi
-
-# package using Makefile
-
-make tar
-if test "$do_GUI" = "yes" ; then make tar-gui PWGUI_VERSION=$VERSION ; fi
-
-# unpackage in directory with version
-
-mkdir $ESPRESSO_DIR $ESPRESSO_DIR-Save
-cd $ESPRESSO_DIR 
-tar -xzf ../espresso.tar.gz
-/bin/rm ../espresso.tar.gz
-if test "$do_GUI" = "yes" ; then
-  tar -xzf ../$GUI.tgz
-  /bin/rm ../$GUI.tgz 
-fi
+# generate version.f90
+cd Modules
+make version.f90
 cd ..
 
-if test "$do_GUI" = "yes" ; then
-  tar -cvzf $GUI.tar.gz $ESPRESSO_DIR/$GUI >  $GUI.lst
-  mv  $ESPRESSO_DIR/$GUI $ESPRESSO_DIR-Save/
-  echo "$GUI.tar.gz saved in directory:" `pwd`
-  echo "List of files in $GUI.lst"
-fi
+# generate PWGUI
 
-tar -cvzf espresso-$VERSION-examples.tar.gz  $ESPRESSO_DIR/examples \
-    $ESPRESSO_DIR/pseudo $ESPRESSO_DIR/tests $ESPRESSO_DIR/cptests  \
-    > espresso-$VERSION-examples.lst
-mv $ESPRESSO_DIR/examples $ESPRESSO_DIR/pseudo $ESPRESSO_DIR/tests \
-   $ESPRESSO_DIR/cptests $ESPRESSO_DIR-Save/
-echo "espresso-$VERSION-examples.tar.gz saved in directory:" `pwd`
-echo "List of files in espresso-$VERSION-examples.lst"
+make tar-gui PWGUI_VERSION=$version 
+tar -xzvf PWgui-$version.tgz
+/bin/rm PWgui-$version.tgz
+#
+cd ..
+tar -cvzf PWgui-$version.tar.gz    espresso-$version/PWgui-$version
 
-tar -cvzf espresso-$VERSION.tar.gz  $ESPRESSO_DIR >  espresso-$VERSION.lst
-echo "espresso-$VERSION.tar.gz saved in directory:" `pwd`
-echo "List of files in espresso-$VERSION.lst"
+tar -czvf espresso-$version.tar.gz espresso-$version/archive \
+                                   espresso-$version/bin \
+                                   espresso-$version/clib \
+                                   espresso-$version/configure \
+                                   espresso-$version/COUPLE \
+                                   espresso-$version/CPV \
+                                   espresso-$version/dev-tools \
+                                   espresso-$version/Doc \
+                                   espresso-$version/environment_variables \
+                                   espresso-$version/flib \
+                                   espresso-$version/Makefile \
+                                   espresso-$version/include \
+                                   espresso-$version/install \
+                                   espresso-$version/Licence \
+                                   espresso-$version/Modules \
+                                   espresso-$version/PP \
+                                   espresso-$version/pseudo \
+                                   espresso-$version/PW \
+                                   espresso-$version/README \
+                                   espresso-$version/upftools
+#
+# Packages, ready for automatic unpacking
+
+cd espresso-$version
+tar -czvf PHonon-$version.tar.gz   PHonon \
+                                   PlotPhon \
+                                   QHA
+tar -czvf NEB-$version.tar.gz      NEB
+tar -czvf PWCOND-$version.tar.gz   PWCOND
+tar -czvf XSpectra-$version.tar.gz XSpectra
+tar -czvf GWW-$version.tar.gz      GWW
+tar -czvf GIPAW-$version.tar.gz    GIPAW
+tar -czvf TDDFPT-$version.tar.gz   TDDFPT
+tar -czvf atomic-$version.tar.gz   atomic
 
