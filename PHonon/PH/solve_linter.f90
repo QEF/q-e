@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2014 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -67,7 +67,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm, ntask_groups, me_bgrp
   USE mp,                   ONLY : mp_sum
-  !
+  USE efermi_shift,         ONLY : ef_shift, ef_shift_paw,  def
   implicit none
 
   integer :: irr, npe, imode0
@@ -577,6 +577,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                          imode0 + ipert, +1 )
            IF (okpaw.AND.me_bgrp==0) CALL davcio( int3_paw(:,:,ipert,:,:), lint3paw, &
                                                   iuint3paw, imode0+ipert, + 1 )
+           if(lmetq0) dvscfin(:,:,ipert) = dvscfin(:,:,ipert)-def(ipert)
         end do
         if (elph) call elphel (irr, npe, imode0, dvscfins)
      end if

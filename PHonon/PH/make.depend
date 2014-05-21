@@ -1470,6 +1470,7 @@ solve_linter.o : ../../PW/src/paw_symmetry.o
 solve_linter.o : ../../PW/src/pwcom.o
 solve_linter.o : ../../PW/src/scf_mod.o
 solve_linter.o : dfile_autoname.o
+solve_linter.o : ef_shift.o
 solve_linter.o : elph.o
 solve_linter.o : phcom.o
 solve_linter.o : save_ph_input.o

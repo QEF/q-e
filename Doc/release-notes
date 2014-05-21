@@ -48,6 +48,9 @@ Incompatible changes in 5.1 version:
 
 Fixed in 5.1 version:
 
+   * PHonon: a the term accounting for Fermi energy shift was missing in
+     Delta V_{scf}, leading to a discontinuity at q=0 for metals. This
+     could affect electron-phonon coefficients and related quantities.
    * PWscf: spin-polarized HSE for PAW was incorrectly implemented
    * PHonon: Gamma-specific code wasn't properly restarting in parallel
    * PHonon: epsil + paw was not working with k-point parallelization.

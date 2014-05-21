@@ -1,9 +1,18 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2014 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
+
+MODULE efermi_shift
+  USE kinds, ONLY : DP
+  REAL(DP),SAVE,PUBLIC :: def(3)
+  ! the change of the Fermi energy for each pert.
+  ! NB: def(3) should be def (npertx), but it is used only at Gamma
+  !     where the dimension of irreps never exceeds 3
+  CONTAINS
+
 !-----------------------------------------------------------------------
 subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   !-----------------------------------------------------------------------
@@ -56,12 +65,9 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   !
   !--> these quantities may be complex since perturbation may be
 
-  complex(DP) :: delta_n, wfshift, def(3)
+  complex(DP) :: delta_n, wfshift
   ! the change in electron number
   ! the shift coefficient for the wavefunction
-  ! the change of the Fermi energy for each pert.
-  ! NB: def(3) should be def (npertx) but then it cannot be saved
-  !     anyway at Gamma the dimension of irreps never exceeds 3
 
   real(DP), external :: w0gauss
   ! the smeared delta function
@@ -74,7 +80,6 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   ! record number
   ! record position of wfc at k
   ! auxiliary for spin
-  save def
   !
   ! determines Fermi energy shift (such that each pertubation is neutral)
   !
@@ -297,3 +302,5 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   call stop_clock ('ef_shift')
   return
 end subroutine ef_shift_paw
+
+END MODULE efermi_shift
