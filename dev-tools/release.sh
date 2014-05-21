@@ -9,17 +9,28 @@ export LC_ALL
 
 mkdir $tempdir
 cd $tempdir
+/bin/rm -rf espresso/ espresso-$version
 # get the svn copy
 svn checkout http://qeforge.qe-forge.org/svn/q-e/trunk/espresso
 mv espresso/ espresso-$version/
 
 cd espresso-$version
 
+# generate version.f90 (requires svn files)
+touch make.sys
+cd Modules
+make version.f90
+# save version.f90 (make veryclean removes it)
+mv version.f90 ..
+cd ..
+
 # remove all .svn directories, clean
 find . -type d -name .svn -exec /bin/rm -rf {} \;
-touch make.sys
 make veryclean
 rm archive/plumed-1.3-qe.tar.gz archive/PLUMED-latest.tar.gz
+
+# restore version.f90 
+mv version.f90 Modules/
 
 # generate documentation - NOTA BENE:
 # in order to build the .html and .txt documentation in Doc, 
@@ -30,11 +41,6 @@ rm archive/plumed-1.3-qe.tar.gz archive/PLUMED-latest.tar.gz
 
 touch make.sys
 make doc
-
-# generate version.f90
-cd Modules
-make version.f90
-cd ..
 
 # generate PWGUI
 
