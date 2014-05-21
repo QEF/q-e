@@ -1,7 +1,7 @@
 #!/bin/sh -x
 
 tempdir=$HOME/Downloads
-version=5.1
+version=5.1rc3
 
 # make sure there is no locale setting creating unneeded differences.
 LC_ALL=C
@@ -75,14 +75,14 @@ tar -czvf espresso-$version.tar.gz espresso-$version/archive \
 # Packages, ready for automatic unpacking
 
 cd espresso-$version
-tar -czvf PHonon-$version.tar.gz   PHonon \
+tar -czvf ../PHonon-$version.tar.gz   PHonon \
                                    PlotPhon \
                                    QHA
-tar -czvf NEB-$version.tar.gz      NEB
-tar -czvf PWCOND-$version.tar.gz   PWCOND
-tar -czvf XSpectra-$version.tar.gz XSpectra
-tar -czvf GWW-$version.tar.gz      GWW
-tar -czvf GIPAW-$version.tar.gz    GIPAW
-tar -czvf TDDFPT-$version.tar.gz   TDDFPT
-tar -czvf atomic-$version.tar.gz   atomic
+tar -czvf ../NEB-$version.tar.gz      NEB
+tar -czvf ../PWCOND-$version.tar.gz   PWCOND
+tar -czvf ../XSpectra-$version.tar.gz XSpectra
+tar -czvf ../GWW-$version.tar.gz      GWW
+tar -czvf ../GIPAW-$version.tar.gz    GIPAW
+tar -czvf ../TDDFPT-$version.tar.gz   TDDFPT
+tar -czvf ../atomic-$version.tar.gz   atomic
 
