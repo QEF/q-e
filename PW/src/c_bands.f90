@@ -67,19 +67,21 @@ SUBROUTINE c_bands( iter )
      !
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
+     npw = ngk(ik)
      !
      ! ... Reads the list of indices k+G <-> G of this k point
      !
      IF ( nks > 1 ) READ( iunigk ) igk
      !
-     npw = ngk(ik)
+     ! ... Dirty restart trick: iunigk is sequential so it has to be read
+     ! ... for all k-points, or else the wrong igk would be read.
+     ! ... Calculated wavefunctions have to be read from buffer.
+     ! ... (not for a single k-point: this is done in wfcinit, 
+     ! ...  directly from file, in order to avoid wasting memory)
      !
-     ! ... Dirty trick: iunigk is sequential so it has to be read by all 
-     ! ... k-points even when restarting or else wrong igk would be read
-     ! ... Read from file already calculated wavefunctions
-     !
-     IF ( ik < ik_+1) THEN
-        CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+     IF ( ik < ik_+1 ) THEN
+        IF ( nks > 1 .OR. lelfield ) &
+           CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
         CYCLE k_loop
      END IF
      !
@@ -630,17 +632,17 @@ SUBROUTINE c_bands_nscf( )
      !
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
+     npw = ngk(ik)
      !
      ! ... Reads the list of indices k+G <-> G of this k point
      !
      IF ( nks > 1 ) READ( iunigk ) igk
-     npw = ngk(ik)
      !
-     ! ... Dirty trick: iunigk is sequential so it has to be read by all 
-     ! ... k-points even when restarting or else wrong igk would be read
-     ! ... Read from file already calculated wavefunctions
+     ! ... Dirty restart trick: iunigk is sequential so it has to be read
+     ! ... for all k-points, or else the wrong igk would be read.
+     ! ... Calculated wavefunctions have to be read from buffer.
      !
-     IF ( ik < ik_+1) THEN
+     IF ( ik < ik_+1 ) THEN
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
         CYCLE k_loop
      END IF

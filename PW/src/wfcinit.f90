@@ -76,7 +76,7 @@ SUBROUTINE wfcinit()
      ! ... a case, we read wavefunctions (directly from file in 
      ! ... order to avoid a useless buffer allocation) here
      !
-     IF ( nks == 1 ) CALL davcio ( evc, 2*nwordwfc, iunwfc, 1, -1 )
+     IF ( nks == 1 ) CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
      !
   END IF
   !
