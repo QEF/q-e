@@ -154,6 +154,7 @@ plugin_clock.o \
 plugin_summary.o \
 plugin_initialization.o \
 plugin_ext_forces.o \
+plugin_int_forces.o \
 plugin_read_input.o \
 plus_u_full.o \
 potinit.o \

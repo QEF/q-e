@@ -40,12 +40,6 @@ SUBROUTINE forces()
   USE control_flags, ONLY : gamma_only, remove_rigid_rot, textfor, &
                             iverbosity, llondon, lxdm, ts_vdw
   USE plugin_flags
-#ifdef __ENVIRON
-  USE environ_base,  ONLY : env_static_permittivity, rhopol
-  USE environ_base,  ONLY : env_extcharge_n, rhoexternal
-  USE fft_interfaces,  ONLY : fwfft
-  USE environ_main,  ONLY : calc_fenviron
-#endif
   USE bp,            ONLY : lelfield, gdir, l3dstring, efield_cart, &
                             efield_cry,efield
   USE uspp,          ONLY : okvan
@@ -67,9 +61,6 @@ SUBROUTINE forces()
                            forces_bp_efield(:,:), &
                            forceh(:,:)
     ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
-#ifdef __ENVIRON
-  REAL(DP), ALLOCATABLE :: force_environ(:,:), force_tmp(:,:)
-#endif
 !
 ! aux is used to store a possible additional density
 ! now defined in real space
@@ -145,70 +136,9 @@ SUBROUTINE forces()
                         nspin, rho%of_g, force_mt )
   END IF
   !
-#ifdef __ENVIRON
-  IF (use_environ) THEN
-    !
-    ALLOCATE(force_tmp(3,nat))
-    ALLOCATE(force_environ(3,nat))
-    !
-    force_environ=0.0_dp
-    !
-    if(do_comp_mt) then
-      force_tmp=0.0_dp
-      ALLOCATE(auxr(dfftp%nnr))
-      ALLOCATE(auxg(ngm))
-      auxg = CMPLX(0.0_dp,0.0_dp)
-      auxr = CMPLX(0.0_dp,0.0_dp)
-      if(env_static_permittivity .GT. 1.D0) auxr = CMPLX(rhopol(:),0.0, kind=DP)
-      if(env_extcharge_n .GT. 0) auxr = auxr + CMPLX(rhoexternal(:),0.0, kind=DP) 
-      CALL fwfft ('Dense', auxr, dfftp)
-      auxg(:)=auxr(nl(:))
-      CALL wg_corr_force(.false.,omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, &
-                        1, auxg, force_tmp)
-      force_environ = force_environ + force_tmp
-      DEALLOCATE(auxr,auxg)
-      WRITE( stdout, '(5x,"Tmp environment correction to forces")')
-      DO na = 1, nat
-         WRITE( stdout, 9035) na, ityp(na), ( force_tmp(ipol,na), ipol = 1, 3 )
-      END DO
-    endif 
-    ! ... Computes here the solvent contribution
-    !
-    IF ( env_static_permittivity .GT. 1.D0 ) THEN
-      force_tmp=0.0_dp 
-      CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
-                     g, rhopol, nl, 1, gstart, gamma_only, vloc, &
-                     force_tmp )
-      force_environ = force_environ + force_tmp
-    ENDIF
-    ! 
-    ! ... Computes here the external charges contribution
-    !
-    IF ( env_extcharge_n .GT. 0 ) THEN 
-      force_tmp = 0.0_DP
-      CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
-                   g, rhoexternal, nl, 1, gstart, gamma_only, vloc, &
-                   force_tmp )
-      force_environ = force_environ + force_tmp
-    ENDIF
-    !
-    ! ... Add the other environment contributions
-    !
-    CALL calc_fenviron( dfftp%nnr, nspin, nat, rho%of_r, force_environ )
-    !
-    DEALLOCATE(force_tmp)
-    !
-    WRITE( stdout, '(5x,"The external environment correction to forces")')
-    DO na = 1, nat
-       WRITE( stdout, 9035) na, ityp(na), ( force_environ(ipol,na), ipol = 1, 3 )
-    END DO
-    !
-    force = force_environ
-    !
-    DEALLOCATE(force_environ)
-  END IF
+  ! ... call void routine for user define/ plugin patches on internal forces
   !
-#endif
+  call plugin_int_forces()
   !
   ! Berry's phase electric field terms
   !
