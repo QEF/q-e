@@ -331,8 +331,8 @@ uncompress-plumed: touch-dummy
 patch-plumed: touch-dummy
 	if test -d ../PLUMED; then \
 	(cd ../PLUMED ; export plumedir="`pwd`" ; \
-	cp  patches/plumedpatch_qespresso_5.0.sh ../ ; \
-	cd ../ ; ./plumedpatch_qespresso_5.0.sh -patch) ; fi	
+	cp  patches/plumedpatch_qespresso_5.1.sh ../ ; \
+	cd ../ ; ./plumedpatch_qespresso_5.1.sh -patch) ; fi	
 	touch ./patch-plumed
 
 ##################################
@@ -550,14 +550,14 @@ yambo_veryclean: yambo_clean
 plumed_clean:
 	if test -d ../PLUMED; then (cd ../PLUMED; \
 	export plumedir="`pwd`" ; \
-	cd ../ ; ./plumedpatch_qespresso_5.0.sh -revert); fi
+	cd ../ ; ./plumedpatch_qespresso_5.1.sh -revert); fi
 	cd ../PW ; $(MAKE) clean; cd ../CPV ; $(MAKE) clean
 	rm -rf ./make-plumed ./patch-plumed
 
 plumed_veryclean: plumed_clean
 	if test -d ../PLUMED; then (rm -R -f ../PLUMED); fi
 	if test -d ../$(PLUMED); then (rm -R -f ../$(PLUMED)); fi
-	rm -rf ./uncompress-plumed ../plumedpatch_qespresso_5.0.sh
+	rm -rf ./uncompress-plumed ../plumedpatch_qespresso_5.1.sh
 
 sax_clean:
 	if test -d ../SaX; then (cd ../SaX; \
