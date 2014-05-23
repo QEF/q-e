@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE plugin_forces()
+SUBROUTINE plugin_ext_forces()
   !----------------------------------------------------------------------------
   !
   !
@@ -21,4 +21,4 @@ SUBROUTINE plugin_forces()
   IMPLICIT NONE
   !
   !
-END SUBROUTINE plugin_forces
+END SUBROUTINE plugin_ext_forces

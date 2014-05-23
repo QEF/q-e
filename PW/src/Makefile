@@ -153,7 +153,7 @@ plugin_clean.o \
 plugin_clock.o \
 plugin_summary.o \
 plugin_initialization.o \
-plugin_forces.o \
+plugin_ext_forces.o \
 plugin_read_input.o \
 plus_u_full.o \
 potinit.o \

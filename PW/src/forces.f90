@@ -290,9 +290,9 @@ SUBROUTINE forces()
   !
   IF( textfor ) force(:,:) = force(:,:) + extfor(:,:)
   !
-  ! ... call void routine for user define/ plugin patches on forces
+  ! ... call void routine for user define/ plugin patches on external forces
   !
-  CALL plugin_forces()
+  CALL plugin_ext_forces()
   !
   ! ... write on output the forces
   !
