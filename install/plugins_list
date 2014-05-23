@@ -39,7 +39,7 @@ PHONON_URL=$(URL)$(PHONON).tar.gz
 TDDFPT=tddfpt-5.1.0
 TDDFPT_URL=$(URL)$(TDDFPT).tar.gz
 #
-GUI=PWgui-5.0.1
+GUI=PWgui-5.1.0
 GUI_URL=$(URL)$(GUI).tgz
 #
 GPU=v14.03.0
