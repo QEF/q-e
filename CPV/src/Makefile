@@ -62,7 +62,7 @@ ortho_base.o \
 ortho.o \
 phasefactor.o \
 plugin_initialization.o \
-plugin_forces.o \
+plugin_ext_forces.o \
 polarization.o \
 potentials.o \
 pres_ai_mod.o \
