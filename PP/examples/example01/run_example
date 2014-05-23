@@ -205,8 +205,6 @@ set pm3d
 set palette model HSV functions gray*0.75, 1, 0.9
 set view 0,0
 #
-f(z)=z**1.2  
-#
 alat=10.2
 set xra[0:1.4142136*alat]
 set yra [0.:alat]
@@ -220,7 +218,7 @@ set colorbox
 #
 set out 'si.charge.png'
 set title "Si charge"
-splot 'si.rho_new.dat' u 1:2:(f(\$3)) w pm3d
+splot 'si.rho_new.dat' u 1:2:3 w pm3d
 EOF
 $ECHO "  generating si.charge.png...\c"
 $GP_COMMAND < gnuplot.tmp
