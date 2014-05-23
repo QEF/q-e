@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2014 Quantum ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -573,11 +573,14 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      call drhodvus (irr, imode0, dvscfin, npe)
      if (fildvscf.ne.' ') then
         do ipert = 1, npe
+           if(lmetq0) then
+                dvscfin(:,:,ipert) = dvscfin(:,:,ipert)-def(ipert)
+                if (doublegrid) dvscfins(:,:,ipert) = dvscfins(:,:,ipert)-def(ipert)
+           endif
            call davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
                          imode0 + ipert, +1 )
            IF (okpaw.AND.me_bgrp==0) CALL davcio( int3_paw(:,:,ipert,:,:), lint3paw, &
                                                   iuint3paw, imode0+ipert, + 1 )
-           if(lmetq0) dvscfin(:,:,ipert) = dvscfin(:,:,ipert)-def(ipert)
         end do
         if (elph) call elphel (irr, npe, imode0, dvscfins)
      end if
