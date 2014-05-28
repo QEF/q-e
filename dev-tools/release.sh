@@ -77,7 +77,7 @@ cd espresso-$version
 tar -czvf ../PHonon-$version.tar.gz   PHonon PlotPhon QHA
 tar -czvf ../neb-$version.tar.gz      NEB
 tar -czvf ../pwcond-$version.tar.gz   PWCOND
-tar -czvf ../XSpectra-$version.tar.gz XSpectra
+tar -czvf ../xspectra-$version.tar.gz XSpectra
 tar -czvf ../GWW-$version.tar.gz      GWW
 #tar -czvf ../GIPAW-$version.tar.gz    GIPAW
 tar -czvf ../tddfpt-$version.tar.gz   TDDFPT
