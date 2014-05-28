@@ -1194,6 +1194,7 @@ plugin_initialization.o : ../../Modules/plugin_flags.o
 plugin_int_forces.o : ../../Modules/cell_base.o
 plugin_int_forces.o : ../../Modules/control_flags.o
 plugin_int_forces.o : ../../Modules/fft_base.o
+plugin_int_forces.o : ../../Modules/fft_interfaces.o
 plugin_int_forces.o : ../../Modules/io_files.o
 plugin_int_forces.o : ../../Modules/io_global.o
 plugin_int_forces.o : ../../Modules/ions_base.o
