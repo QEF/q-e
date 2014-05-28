@@ -75,11 +75,11 @@ tar -czvf espresso-$version.tar.gz espresso-$version/archive \
 
 cd espresso-$version
 tar -czvf ../PHonon-$version.tar.gz   PHonon PlotPhon QHA
-tar -czvf ../NEB-$version.tar.gz      NEB
-tar -czvf ../PWCOND-$version.tar.gz   PWCOND
+tar -czvf ../neb-$version.tar.gz      NEB
+tar -czvf ../pwcond-$version.tar.gz   PWCOND
 tar -czvf ../XSpectra-$version.tar.gz XSpectra
 tar -czvf ../GWW-$version.tar.gz      GWW
-tar -czvf ../GIPAW-$version.tar.gz    GIPAW
-tar -czvf ../TDDFPT-$version.tar.gz   TDDFPT
+#tar -czvf ../GIPAW-$version.tar.gz    GIPAW
+tar -czvf ../tddfpt-$version.tar.gz   TDDFPT
 tar -czvf ../atomic-$version.tar.gz   atomic
 
