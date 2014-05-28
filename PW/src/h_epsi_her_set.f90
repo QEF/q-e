@@ -529,7 +529,9 @@ subroutine h_epsi_her_set(pdir, e_field)
                      evcm(ig,m,pdir)=evcm(ig,m,pdir) + mat(nb,m)*evct(ig,nb)
                   enddo
                   if(noncolin) then
-                     evcm(ig+npwx,m,pdir)=evcm(ig+npwx,m,pdir) + mat(nb,m)*evct(ig+npwx,nb)
+                     do ig=1,npw1
+                        evcm(ig+npwx,m,pdir)=evcm(ig+npwx,m,pdir) + mat(nb,m)*evct(ig+npwx,nb)
+                     enddo
                   endif
                enddo
             enddo
@@ -898,7 +900,7 @@ subroutine h_epsi_her_set(pdir, e_field)
              aux0vec=(0.d0,0.d0)
              aux1vec=(0.d0,0.d0)
              do nb=1,nbnd
-               DO ig=1,npw0
+               DO ig=1,npw1
                   aux0vec(igk1(ig),nb)=evcel(ig+npwx,nb)
                END DO
             end do
