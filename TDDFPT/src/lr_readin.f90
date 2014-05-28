@@ -157,8 +157,7 @@ SUBROUTINE lr_readin
      ! ------------------------------------------------------
      ! Reading possible plugin arguments -environ -plumed ...
      ! ------------------------------------------------------
-     IF(ionode) CALL plugin_arguments()
-     CALL plugin_arguments_bcast(ionode_id, intra_image_comm)
+     CALL plugin_arguments()
      ! ------------------------------------------------------
      !
      !   Reading the namelist lr_input
@@ -233,7 +232,7 @@ SUBROUTINE lr_readin
         !
         lr_io_level = 1
      END SELECT
-     
+
 #ifdef __MPI
   ENDIF
   !

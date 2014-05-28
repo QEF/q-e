@@ -66,6 +66,7 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (ecutfock, ionode_id, world_comm )
   CALL mp_bcast (d0psi_rs, ionode_id,world_comm )
   CALL mp_bcast (tddfpt, ionode_id, world_comm )
+  CALL plugin_arguments_bcast(ionode_id, world_comm)
 #ifdef __ENVIRON
   IF (use_environ) CALL environ_bcast()
 #endif
@@ -99,7 +100,7 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (conv_assistant, ionode_id, world_comm )
   CALL mp_bcast (if_dft_spectrum, ionode_id, world_comm )
   CALL mp_barrier(world_comm)
-  
+
 #endif
   RETURN
 END SUBROUTINE bcast_lr_input
