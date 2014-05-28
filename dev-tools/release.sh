@@ -52,7 +52,6 @@ cd ..
 tar -cvzf PWgui-$version.tar.gz    espresso-$version/PWgui-$version
 
 tar -czvf espresso-$version.tar.gz espresso-$version/archive \
-                                   espresso-$version/bin \
                                    espresso-$version/clib \
                                    espresso-$version/configure \
                                    espresso-$version/COUPLE \
@@ -64,7 +63,7 @@ tar -czvf espresso-$version.tar.gz espresso-$version/archive \
                                    espresso-$version/Makefile \
                                    espresso-$version/include \
                                    espresso-$version/install \
-                                   espresso-$version/Licence \
+                                   espresso-$version/License \
                                    espresso-$version/Modules \
                                    espresso-$version/PP \
                                    espresso-$version/pseudo \
