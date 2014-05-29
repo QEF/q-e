@@ -47,9 +47,10 @@ make doc
 make tar-gui PWGUI_VERSION=$version 
 tar -xzvf PWgui-$version.tgz
 /bin/rm PWgui-$version.tgz
-#
+
 cd ..
-tar -cvzf PWgui-$version.tar.gz    espresso-$version/PWgui-$version
+
+# core espresso
 
 tar -czvf espresso-$version.tar.gz espresso-$version/archive \
                                    espresso-$version/clib \
@@ -74,6 +75,7 @@ tar -czvf espresso-$version.tar.gz espresso-$version/archive \
 # Packages, ready for automatic unpacking
 
 cd espresso-$version
+tar -cvzf ../PWgui-$version.tar.gz    PWgui-$version
 tar -czvf ../PHonon-$version.tar.gz   PHonon PlotPhon QHA
 tar -czvf ../neb-$version.tar.gz      NEB
 tar -czvf ../pwcond-$version.tar.gz   PWCOND
