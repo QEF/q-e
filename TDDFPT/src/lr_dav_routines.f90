@@ -174,7 +174,7 @@ contains
     use wvfct,         only : nbnd, npwx, et
     use lr_dav_variables
     use lr_variables,         only : evc0, sevc0 ,revc0, evc0_virt,&
-                                   & sevc0_virt, nbnd_total,davidson
+                                   & sevc0_virt, nbnd_total, davidson, restart
     use io_global,    only : stdout
     use wvfct,       only : g2kin,npwx,nbnd,et,npw
     use gvect,                only : gstart
@@ -185,13 +185,23 @@ contains
     implicit none
     integer :: ib,ia,ipw,ibnd
     real(dp) :: temp,R,R2
-
+    !
+    ! If restart=.true. read variables from the saved data
+    !
+    if (restart) then
+       write(stdout,'(5x,"Restarting davidson calculation ...")')
+       vec_b(:,:,:,:) = (0.0D0,0.0D0)
+       CALL lr_restart_dav()
+       num_basis_tot = num_basis
+       goto 101
+    endif
+    !
     write(stdout,'(5x,"Initiating variables for davidson ...")')
     ! set initial basis
     num_basis=num_init
     num_basis_tot=num_init
     vec_b(:,:,:,:) = (0.0D0,0.0D0)
-
+    !
     if (.not. if_random_init .or. if_dft_spectrum) then  ! set the initial basis set to be {|c><v|}
       write(stdout,'(5x,"Lowest energy electron-hole pairs are used as initial vectors ...")')
       CALL lr_dav_cvcouple()
@@ -204,13 +214,200 @@ contains
     else ! Random initial
       call random_init()
     endif
+    !
     num_basis_old=0
-    dav_conv=.false.
     dav_iter=0
+101 continue
+    dav_conv=.false.
     ! call check_orth()
     write(stdout,'(5x,"Finished initiating.")')
+    !
+    RETURN
+    !
   END subroutine  lr_dav_set_init
   !-------------------------------------------------------------------------------
+
+  subroutine lr_write_restart_dav()
+    !---------------------------------------------------------------------
+    !  Created by I. Timrov in May 2014
+    !---------------------------------------------------------------------
+    !  This routine writes information for restart. 
+    !
+    USE io_files,          ONLY : tmp_dir, prefix, diropn
+    USE io_global,         ONLY : ionode, stdout
+    USE lr_dav_variables,  ONLY : num_basis, num_basis_old, num_basis_max, &
+                                  & vec_b, M_C, M_D, dav_iter, &
+                                  & C_vec_b, D_vec_b, poor_of_ram2
+    USE lr_variables,      ONLY : nwordrestart, iunrestart
+    USE wvfct,             ONLY : nbnd, npwx
+    USE klist,             ONLY : nks
+    !
+    IMPLICIT NONE
+    CHARACTER(len=256) :: tempfile, filename
+    INTEGER :: free_unit
+    INTEGER, EXTERNAL :: find_free_unit
+    LOGICAL :: exst
+    !
+    WRITE(stdout,'(5x,"Writing data for restart...")')
+    !
+    ! Ionode only operations
+    !
+#ifdef __MPI
+  IF (ionode) THEN
+#endif
+    !
+    filename = trim(prefix) // ".restart_davidson_basis" 
+    tempfile = trim(tmp_dir) // trim(filename)
+    !
+    free_unit = find_free_unit()
+    !
+    OPEN (free_unit, file = tempfile, form = 'formatted', status = 'unknown') 
+    !
+    WRITE(free_unit,*) dav_iter 
+    WRITE(free_unit,*) num_basis 
+    WRITE(free_unit,*) num_basis_old
+    !
+    CLOSE( unit = free_unit )
+    !
+#ifdef __MPI
+  ENDIF
+#endif
+    !
+    ! Parallel writing 
+    !
+    ! Note: In order to restart the Davidson calculation, in principle, 
+    ! we can store only vectors vec_b, and then recalculate all related 
+    ! quantities as D_vec_b, C_vec_b, M_C, and M_D. But since the
+    ! recalculation of these quantities is computationally expensive,
+    ! we store also them to the disc together with vec_b.
+    !
+    ! Writing of vectors vec_b, D_vec_b, and C_vec_b
+    !
+    nwordrestart = 2 * npwx * nbnd * nks * num_basis_max
+    !
+    CALL diropn ( iunrestart, 'restart_davidson_vec_b.', nwordrestart, exst)
+    CALL davcio(vec_b(:,:,:,:), nwordrestart, iunrestart, 1, 1)
+    IF ( .NOT. poor_of_ram2 ) THEN
+       CALL davcio(D_vec_b(:,:,:,:), nwordrestart, iunrestart, 2, 1) 
+       CALL davcio(C_vec_b(:,:,:,:), nwordrestart, iunrestart, 3, 1) 
+    ENDIF
+    ! 
+    CLOSE( unit = iunrestart)
+    !
+    ! Writing of matrices M_C and M_D
+    !
+    nwordrestart = 2 * num_basis_max * num_basis_max   
+    !
+    CALL diropn ( iunrestart, 'restart_davidson_M_C_and_M_D.', nwordrestart, exst)
+    CALL davcio(M_C(:,:), nwordrestart, iunrestart, 1, 1)
+    CALL davcio(M_D(:,:), nwordrestart, iunrestart, 2, 1)
+    !
+    CLOSE( unit = iunrestart)  
+    !
+    RETURN
+    !
+  end subroutine lr_write_restart_dav
+
+
+  subroutine lr_restart_dav()
+    !---------------------------------------------------------------------
+    !  Created by I. Timrov in May 2014
+    !---------------------------------------------------------------------
+    !  This routine reads information for restart. 
+    !
+    USE io_files,          ONLY : tmp_dir, prefix, diropn
+    USE io_global,         ONLY : ionode, stdout, ionode_id
+    USE lr_dav_variables,  ONLY : num_basis, num_basis_old, num_basis_max, &
+                                  & vec_b, svec_b, M_C, M_D, poor_of_ram,  &
+                                  & dav_iter, D_vec_b, C_vec_b, poor_of_ram2
+    USE lr_variables,      ONLY : nwordrestart, iunrestart, restart
+    USE wvfct,             ONLY : nbnd, npwx
+    USE klist,             ONLY : nks
+    USE mp_world,          ONLY : world_comm
+    USE mp,                ONLY : mp_bcast
+    USE uspp,              ONLY : okvan
+    USE lr_us,             ONLY : lr_apply_s
+    !
+    IMPLICIT NONE
+    CHARACTER(len=256) :: tempfile, filename
+    INTEGER :: free_unit, ib
+    INTEGER, EXTERNAL :: find_free_unit
+    LOGICAL :: exst
+    !
+    IF (.NOT.restart) RETURN
+    !
+    WRITE(stdout,'(5x,"Reading data for restart...")')
+    !
+    ! Ionode only operations
+    !
+#ifdef __MPI
+  IF (ionode) THEN
+#endif
+    !
+    filename = trim(prefix) // ".restart_davidson_basis"
+    tempfile = trim(tmp_dir) // trim(filename)
+    !
+    INQUIRE (file = tempfile, exist = exst)
+    !
+    IF (.not.exst) THEN
+       WRITE(stdout,*) "WARNING: " // trim(filename) // " does not exist"
+       CALL errore('lr_restart_dav', 'Restart is not possible because of missing restart files...', 1)       
+    ENDIF
+    !
+    free_unit = find_free_unit()
+    !
+    OPEN (free_unit, file = tempfile, form = 'formatted', status = 'old')
+    !
+    READ(free_unit,*) dav_iter
+    READ(free_unit,*) num_basis
+    READ(free_unit,*) num_basis_old
+    !
+    CLOSE( unit = free_unit )
+    !
+#ifdef __MPI
+  ENDIF
+  CALL mp_bcast (dav_iter, ionode_id, world_comm)
+  CALL mp_bcast (num_basis, ionode_id, world_comm)
+  CALL mp_bcast (num_basis_old, ionode_id, world_comm)
+#endif
+    !
+    ! Parallel reading
+    !
+    ! Reading of vectors vec_b, D_vec_b, and C_vec_b
+    !
+    nwordrestart = 2 * npwx * nbnd * nks * num_basis_max
+    !
+    CALL diropn ( iunrestart, 'restart_davidson_vec_b.', nwordrestart, exst)
+    CALL davcio(vec_b(:,:,:,:), nwordrestart, iunrestart, 1, -1)
+    IF ( .NOT. poor_of_ram2 ) THEN
+       CALL davcio(D_vec_b(:,:,:,:), nwordrestart, iunrestart, 2, -1)
+       CALL davcio(C_vec_b(:,:,:,:), nwordrestart, iunrestart, 3, -1)
+    ENDIF
+    ! 
+    CLOSE( unit = iunrestart)
+    !
+    ! USPP case: Recomputing S * vec_b
+    !
+    IF (.NOT. poor_of_ram .AND. okvan) THEN
+       DO ib = 1, num_basis
+          CALL lr_apply_s(vec_b(:,:,1,ib),svec_b(:,:,1,ib))
+       ENDDO
+    ENDIF
+    !
+    ! Reading of matrices M_C and M_D
+    !
+    nwordrestart = 2 * num_basis_max * num_basis_max
+    !
+    CALL diropn ( iunrestart, 'restart_davidson_M_C_and_M_D.', nwordrestart, exst)
+    CALL davcio(M_C(:,:), nwordrestart, iunrestart, 1, -1)
+    CALL davcio(M_D(:,:), nwordrestart, iunrestart, 2, -1)
+    !
+    CLOSE( unit = iunrestart)
+    !
+    RETURN
+    !
+  end subroutine lr_restart_dav 
+
 
   subroutine one_dav_step()
     !-------------------------------------------------------------------------------
@@ -254,7 +451,7 @@ contains
     write(stdout,'(/7x,"==============================")') 
     write(stdout,'(/7x,"Davidson iteration:",1x,I8)') dav_iter
     write(stdout,'(7x,"num of basis:",I5,3x,"total built basis:",I5)') num_basis,num_basis_tot
-
+    
     ! Add new matrix elements to the M_C and M_D(in the subspace)(part 1)
     do ibr = num_basis_old+1, num_basis
       if(.not.ltammd) then
@@ -371,7 +568,7 @@ contains
       enddo
     enddo
     !call check("recover")
-
+ 
     call stop_clock('one_step')
     RETURN
   END subroutine one_dav_step

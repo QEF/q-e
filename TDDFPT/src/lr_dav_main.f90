@@ -94,6 +94,14 @@ PROGRAM lr_dav_main
       call one_dav_step()
       call dav_calc_residue()
       call dav_expan_basis()
+      ! 
+      ! Check to see if the wall time limit has been exceeded.
+      !
+      if ( check_stop_now() ) then
+         call lr_write_restart_dav() 
+         goto 100
+      endif
+      !
   enddo
   ! call check_hermitian()
   ! Extract physical meaning from the solution
@@ -104,6 +112,7 @@ PROGRAM lr_dav_main
   ! in cases of debugging
   ! call check_orth() 
 
+100 continue
   !   Deallocate pw variables
   CALL clean_pw( .false. )
   WRITE(stdout,'(5x,"Finished linear response calculation...")')
