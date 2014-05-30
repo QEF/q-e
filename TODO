@@ -1,16 +1,16 @@
 
 TODO (datafile & High throughput & reproducibility specific) - Oct 2012
 
-0) XML input update (does it work with current version? Can it be improved?)
+0) XML input: can it be improved?
 1) XML input in AIDA (what do we need to have these two working in harmony?)
 2) Datafile recording _all_ input info for reproducibility (some format decisions have to be made here) 
 3) Storing make.sys ? Does it make sense?
 4) Run time writing strategies at each scf step (do we really want this? can a new,optional "scf_history" file suffice? like bfgs history?)
 5) Datafile writing strategies for (vc)relax/md (data-file.0.xml 1.xml ...? giving the option to have the first and the last only)
 6) Finally, writing the output data in the datafile, fixing the redundant or missing pieces, and changing the language a bit so an outsider too can understand the content without too much suffering. 
-7) or better, writint a documentation for the tags used... 
+7) or better, writing a documentation for the tags used... 
 
-TODO LIST - January 2014
+TODO LIST - May 2014
 
 0) Suspected bugs/problems:
   0.1  something happened to elf calculation between 4.1 to 4.2
@@ -21,11 +21,19 @@ TODO LIST - January 2014
        but might also be a problem of Ewald calculation in CP ("raggio"?)
   0.6  Numerical instabilities with: BLYP; TPSS; noncollinear GGA; LDA+U
   0.7  Strange numbers from phonon code in some specific cases
+  0.8  tqr results are "noisy"
+  0.9  ntg + nbgrp incompatibility in at least one case
+  1.0  "S matrix not positive definite"
 
 1) Organization
 1.0 Binary packages
-  1.0.0 At least Debian/RPM for Linux
+  1.0.0 Debian compatibility:
+        - one directory per package (notable offender: PHonon/PlotPhon/QHA.
+          Move PlotPhon and QHA into PHonon or make separate packages?)
+        - directory name and tarball name should be the same
+        - No Java binaries (ColorCalculator)
 1.3 svn/packaging:
+  1.3.1 automatic download for GWL
   1.3.2 run source-normalizer script dev-tools/src-normal
   1.3.3 Files in flib/ use modules in Modules/, while files in Modules/
         in turn call files in flib/. This kind of circular dependency
@@ -283,12 +291,7 @@ TODO LIST - January 2014
  5.4 Some inconsistencies between PW and CP in the xml file format
      (and inconsistencies with the documentation). Also: CP should
      behave like PW and create a directory if not existent
- 5.5 Use qexml for xml file processing so that a single, easily
-     exportable routine, is used everywhere. By reading the xml
-     file in parallel, this should be simple (if the xml file is not
-     accessible by all processors, we can just make a local copy 
-     with a small C routine and read it).
-     This is also an opportunity to update the file format with
+ 5.5 XML files:
      1) removal of obsolete variables,
      2) addition of variables that should be present,
      3) possibility to reduce the number of files and directories

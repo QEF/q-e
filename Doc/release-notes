@@ -1,3 +1,6 @@
+Fixed in svn version:
+   * Minor bug in ESM implementation
+
 New in 5.1 version:
 
    * "Cold restart" for Car-Parrinello dynamics
@@ -48,6 +51,7 @@ Incompatible changes in 5.1 version:
 
 Fixed in 5.1 version:
 
+   * PWscf: bug in finite electric field in noncolinear case
    * PHonon: G=0 component of the deformation potential at q=0 was incorrect
      (the contribution from the average coulomb potential, i.e. the integral 
       of the Coulomb contribution on the unit cell, was missing). For more 
