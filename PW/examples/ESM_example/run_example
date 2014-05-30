@@ -280,8 +280,8 @@ Al 0.00000    0.00000    7.01481
  K_POINTS automatic
  8 8 1 0 0 0
 EOF
-$ECHO "  running the scf calculation for Al(111) with ESM bc3 (metal-slab-metal)"
-$ECHO "  (neutrally charged)...\c"
+$ECHO "  running the scf calculation for Al(111) with ESM bc3 (vacuum-slab-metal)"
+$ECHO "  (neutral, uncharged)...\c"
 $PW_COMMAND < Al111.bc3.in > Al111.bc3.out
 check_failure $?
 $ECHO " done"

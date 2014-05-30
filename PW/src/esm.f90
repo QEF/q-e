@@ -301,7 +301,7 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
         else if (esm_bc.eq.'bc3') then
            vg2(iz)=vg2(iz)-tpi*(z**2+2.d0*z*z0)*rg3 &
                           -fpi*tmp1                 &
-                          -fpi*ci*(z-z0)*tmp2       &
+                          -fpi*ci*(z-z1)*tmp2       &
                           -fpi*ci*(z1-z0)*tmp3
         endif
      enddo
@@ -323,14 +323,14 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
         f1=f1-tpi*z_r**2*rg3 &
              -tpi*(z_r+z1)*tmp1/z1 &
              +tpi*(z_r-z1)*tmp2/z1 &
-             -fpi*z*(z1-z0)/z1*tmp3 &
-             +fpi  *(z1-z0)   *tmp4
+             -fpi*z_r*(z1-z0)/z1*tmp3 &
+             +fpi    *(z1-z0)   *tmp4
         f1=f1+tpi*(2.d0*z1-z0)*z0*rg3
         f2=f2-tpi*z_l**2*rg3 &
              -tpi*(z_l+z1)*tmp1/z1 &
              +tpi*(z_l-z1)*tmp2/z1 &
-             -fpi*z*(z1-z0)/z1*tmp3 &
-             +fpi  *(z1-z0)   *tmp4
+             -fpi*z_l*(z1-z0)/z1*tmp3 &
+             +fpi    *(z1-z0)   *tmp4
         f2=f2+tpi*(2.d0*z1-z0)*z0*rg3
         f3=f3-fpi*z_r*rg3-tpi*tmp1/z1+tpi*tmp2/z1-fpi*(z1-z0)/z1*tmp3
         f4=f4-fpi*z_l*rg3-tpi*tmp1/z1+tpi*tmp2/z1-fpi*(z1-z0)/z1*tmp3
@@ -696,7 +696,7 @@ subroutine esm_local (aux)
 
      vg2(1:dfftp%nr3)=(0.d0,0.d0)
 ! for smoothing
-     f1=0.d0; f2=0.d0; f3=0.d0; f4=0.d0
+     f1=(0.d0,0.d0); f2=(0.d0,0.d0); f3=(0.d0,0.d0); f4=(0.d0,0.d0)
      nz_l=dfftp%nr3/2+1+esm_nfit
      nz_r=dfftp%nr3/2+1-esm_nfit
      z_l=dble(nz_l-1)*L/dble(dfftp%nr3)-L
