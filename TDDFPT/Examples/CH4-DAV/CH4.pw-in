@@ -4,7 +4,7 @@
     restart_mode='from_scratch',
     pseudo_dir = '../pseudo',
     outdir='./out',
-    prefix='ch4'
+    prefix='CH4'
     etot_conv_thr=1d-6
  /
  &system
@@ -16,11 +16,7 @@
     ecutwfc = 25,
 /
  &electrons
-
  /
-&ions
-/
-
 ATOMIC_SPECIES
 C 1.0 C.pz-vbc.UPF
 H 1.0 H.pz-vbc.UPF

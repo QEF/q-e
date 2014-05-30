@@ -1,22 +1,20 @@
 &lr_input
-    prefix="ch4",
+    prefix="CH4",
     outdir='./out',
-    restart_step=250,
+    restart=.false.
 /
 &lr_dav
-        num_eign=20
-        num_init=40
-        num_basis_max=300
-        residue_conv_thr=1.0E-4
-        start=0.4
-        finish=1.5
-        step=0.0002
-        broadening=0.005
-        reference=0.5
-        p_nbnd_occ=4
-        p_nbnd_virt=15
-        poor_of_ram=.false.
-        poor_of_ram2=.false.
-
+    num_eign=20
+    num_init=40
+    num_basis_max=300
+    residue_conv_thr=1.0E-4
+    start=0.4
+    finish=1.5
+    step=0.0002
+    broadening=0.005
+    reference=0.5
+    p_nbnd_occ=4
+    p_nbnd_virt=15
+    poor_of_ram=.false.
+    poor_of_ram2=.false.
 /
-

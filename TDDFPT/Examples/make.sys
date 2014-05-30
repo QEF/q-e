@@ -1,4 +1,4 @@
-.SUFFIXES : .pw-in .tddfpt-in .tddfpt_pp-in .pw-out .tddfpt-out .tddfpt_pp-out .tddfpt-st-in .tddfpt-st-out .tddfpt-in-s2 .tddfpt-out-s2 .tddfpt-in-s2-2 .tddfpt-out-s2-2 .pw-ref .tddfpt-ref .tddfpt-ref-s2 .tddfpt-ref-s2-2
+.SUFFIXES : .pw-in .tddfpt-in .tddfpt_pp-in .dav-in .pw-out .tddfpt-out .tddfpt_pp-out .dav-out .tddfpt-st-in .tddfpt-st-out .tddfpt-in-s2 .tddfpt-out-s2 .tddfpt-in-s2-2 .tddfpt-out-s2-2 .pw-ref .tddfpt-ref .tddfpt-ref-s2 .tddfpt-ref-s2-2
 
 ##################################################
 #   RECOMMENDED USER EDITABLE PART STARTS HERE   #
@@ -9,7 +9,8 @@
 
 RUNNER = 
 PWSCF = "../../../bin/pw.x" 
-TDDFPT = "../../../bin/turbo_lanczos.x"
+TDDFPT_LANCZOS = "../../../bin/turbo_lanczos.x"
+TDDFPT_DAVIDSON = "../../../bin/turbo_davidson.x"
 TDDFPT_PP = "../../../bin/turbo_spectrum.x"
 
 
@@ -31,16 +32,21 @@ check_move_cube = "../tools/check_move_cube.sh"
 	$(RUNNER) $(TDDFPT_PP) < $< > $@
 
 .tddfpt-in.tddfpt-out:
-	$(RUNNER) $(TDDFPT) < $< > $@
+	$(RUNNER) $(TDDFPT_LANCZOS) < $< > $@
 
 .tddfpt-st-in.tddfpt-st-out:
-	$(RUNNER) $(TDDFPT) < $< > $@
+	$(RUNNER) $(TDDFPT_LANCZOS) < $< > $@
 
 .tddfpt-in-s2.tddfpt-out-s2:
-	$(RUNNER) $(TDDFPT) < $< > $@
+	$(RUNNER) $(TDDFPT_LANCZOS) < $< > $@
 
 .tddfpt-in-s2-2.tddfpt-out-s2-2:
-	$(RUNNER) $(TDDFPT) < $< > $@
+	$(RUNNER) $(TDDFPT_LANCZOS) < $< > $@
+
+
+.dav-in.dav-out:
+	$(RUNNER) $(TDDFPT_DAVIDSON) < $< > $@
+
 
 
 
