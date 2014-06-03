@@ -15,7 +15,7 @@ W90_URL=$(URL)$(W90).tar.gz
 SAX=sax-2.0.3
 SAX_URL=$(URL)$(SAX).tar.gz
 #
-GIPAW=qe-gipaw-5.0
+GIPAW=qe-gipaw-5.1
 GIPAW_URL=$(URL)$(GIPAW).tar.gz
 #
 PLUMED=plumed-1.3-qe
