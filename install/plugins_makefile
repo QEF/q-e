@@ -159,11 +159,10 @@ uncompress-gipaw: touch-dummy
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/$(GIPAW).tar.gz $(GIPAW_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	exit 1 ; fi ; fi ; fi ) && \
 	echo "*** Unable to download qe-gipaw. Test whether curl or wget is installed and working," ; \
 	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
 	echo "*** $(GIPAW).tar.gz from $(GIPAW_URL)." ; \
-	exit 1
+	exit 1 ; fi ; fi ; fi )
 	if test ! -d ../GIPAW; then \
 	(gzip -dc ../archive/$(GIPAW).tar.gz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s $(GIPAW) GIPAW) ; fi 
