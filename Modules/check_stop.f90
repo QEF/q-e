@@ -41,7 +41,7 @@ MODULE check_stop
        USE input_parameters, ONLY : max_seconds_ => max_seconds
        USE io_global,        ONLY : stdout
        USE io_files,         ONLY : prefix, exit_file
-#if defined __TRAP_SIGUSR1
+#if defined(__TRAP_SIGUSR1) || defined(__TERMINATE_GRACEFULLY)
        USE set_signal,       ONLY : signal_trap_init
 #endif
        !
@@ -62,7 +62,7 @@ MODULE check_stop
        init_second = cclock()
        tinit   = .TRUE.
        !
-#if defined __TRAP_SIGUSR1
+#if defined(__TRAP_SIGUSR1) || defined(__TERMINATE_GRACEFULLY)
        CALL signal_trap_init ( )
 #endif
        !
@@ -78,7 +78,7 @@ MODULE check_stop
        USE mp_images,  ONLY : intra_image_comm
        USE io_global,  ONLY : ionode, ionode_id, meta_ionode, stdout
        USE io_files,   ONLY : tmp_dir, exit_file, iunexit
-#if defined __TRAP_SIGUSR1
+#if defined(__TRAP_SIGUSR1) || defined(__TERMINATE_GRACEFULLY)
        USE set_signal, ONLY : signal_detected
 #endif
        !
@@ -143,7 +143,7 @@ MODULE check_stop
           !
        END IF
        !
-#if defined __TRAP_SIGUSR1
+#if defined(__TRAP_SIGUSR1) || defined(__TERMINATE_GRACEFULLY)
        signaled = signal_detected()
        check_stop_now = check_stop_now .OR. signaled
        tex = tex .OR. signaled
