@@ -992,6 +992,45 @@ FFT parallelization should be an integer divisor of $N_3$.
 \end{itemize}
 \end{itemize}
 
+\subsection{Restarting}
+
+Since QE 5.1 restarting from an arbitrary point of the code is no more supported.
+
+The code must terminate properly in order for restart to be possible. A clean stop can be triggered by one the following three conditions:
+\begin{enumerate}
+\item The amount of time specified by the input variable max\_seconds is reached
+\item A file named "\$prefix.EXIT" is found in the execution directory, \$prefix is the prefix specified in the control namelist
+\item (experimental) The code is compiled with signal-trapping support and one of the trapped signals is received (see the next section for details).
+\end{enumerate}
+
+After the condition is met, the code will try to stop cleanly as soon as possible, which can take a while for large calculation. Writing the files to disk can also be a long process. In order to be safe you need to reserve sufficient time for the stop process to complete.
+
+If the previous execution of the code has stopped properly, restarting is possible setting restart\_mode=``restart'' in the control namelist.
+
+\subsubsection{Signal trapping}
+In order to compile signal-trapping add \mbox{"-D\_\_TERMINATE\_GRACEFULLY"} to \mbox{MANUAL\_DFLAGS} in the make.sys file. Currently the code intercepts \mbox{SIGINT}, \mbox{SIGTERM}, \mbox{SIGUSR1}, \mbox{SIGUSR2}, \mbox{SIGXCPU}; signals can be added or removed editing the file {\tt clib/custom\_signals.c}.
+
+Common queue systems will send a signal some time before killing a job. The exact behaviour depends on the queue systems and could be configured. Some examples:
+  
+With PBS:
+\begin{itemize}
+  \item send the default signal (\mbox{SIGTERM}) 120 seconds before the end:\\
+  {\tt \#PBS -l signal=@120}
+
+  \item send signal SIGUSR1 10 minutes before the end:\\
+  {\tt \#PBS -l signal=SIGUSR1@600}
+
+  \item you cand also send a signal manually with qsig
+  \item or send a signal and then stop:\\
+   {\tt qdel -W 120 jobid}\\
+  will send SIGTERM, wait 2 minutes than force stop.
+\end{itemize}
+
+With LoadLeveler (untested): the \mbox{SIGXCPU} signal will be sent when wall \emph{softlimit} is reached, it will then stop the job when \emph{hardlimit} is reached. You can specify both limits as:\\
+  {\tt \# @ wall\_clock\_limit = hardlimit,softlimit}\\
+    e.g. you can give pw.x thirty minutes to stop using:\\
+  {\tt \# @ wall\_clock\_limit = 5:00,4:30}\\
+
 \section{Troubleshooting}
 
 \paragraph{pw.x says 'error while loading shared libraries' or
@@ -1155,7 +1194,8 @@ failure of an I/O operation.
   NFS implementation is unable to work under heavy load 
 \item If it happens while restarting from a previous calculation: you
   might be restarting from the wrong place, or from wrong  data, or
-  the files might be corrupted. 
+  the files might be corrupted. Note that, since QE 5.1, restarting from
+  arbitrary places is no more supported: the code must terminate cleanly.
 \item If you are running two or more instances of \pwx\ at
   the same time, check if you are using the same file names in the 
   same temporary directory. For instance, if you submit a series of
