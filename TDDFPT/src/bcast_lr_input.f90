@@ -26,14 +26,8 @@ SUBROUTINE bcast_lr_input
   USE mp_global,           ONLY: intra_image_comm
   USE mp_world,            ONLY: world_comm
   USE exx,                 ONLY: ecutfock
-#ifdef __ENVIRON
-  USE plugin_flags,        ONLY: use_environ
-  USE environ_input,       ONLY: environ_bcast
-#endif
 
   IMPLICIT NONE
-  !
-  !
   !
   CALL mp_barrier(world_comm)
   CALL mp_bcast (lr_io_level, ionode_id, world_comm )
@@ -67,9 +61,6 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (d0psi_rs, ionode_id,world_comm )
   CALL mp_bcast (tddfpt, ionode_id, world_comm )
   CALL plugin_arguments_bcast(ionode_id, world_comm)
-#ifdef __ENVIRON
-  IF (use_environ) CALL environ_bcast()
-#endif
 
   ! for lr_dav
   CALL mp_bcast (davidson, ionode_id, world_comm )
