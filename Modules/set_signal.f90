@@ -142,7 +142,7 @@ SUBROUTINE signal_trap_init
   CALL set_signal_USR1(custom_handler)
 #endif
 #ifdef __TERMINATE_GRACEFULLY
-  WRITE(stdout, FMT='(/,5x,a)') "Signal trapping enabled: code will terminate cleanly with SIGINT, SIGTERM, SIGUSR1, SIGUSR2"
+  WRITE(stdout, FMT='(/,5x,a)') "Signal trapping enabled: code will terminate cleanly with SIGINT, SIGTERM, SIGUSR1, SIGUSR2, SIGXCPU"
   WRITE(stdout, FMT='(5x,a)') "Type CTRL-C twice to terminate immediately (no restart possible!)"
   CALL set_TERMINATE_GRACEFULLY(custom_handler)
 #endif

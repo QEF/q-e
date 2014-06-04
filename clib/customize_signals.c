@@ -35,6 +35,8 @@ int init_TERMINATE_GRACEFULLY(void (*new_handler)(int))
   if(fail) return -SIGUSR1;
   fail = init_signal(SIGUSR2,  new_handler);
   if(fail) return -SIGUSR2;
+  fail = init_signal(SIGXCPU,  new_handler);
+  if(fail) return -SIGXCPU;
   return 0;
 }
 
