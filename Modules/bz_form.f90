@@ -2086,7 +2086,7 @@ SUBROUTINE find_n1n2_monoclinic(n1, n2, idir, bz_struc)
 !
 !   This routine finds the six reciprocal lattices closest to the origin and
 !   order them in order of increasing angle with the x-axis. These are the six
-!   normals to the faces of the monoclinic reciprocal lattice.
+!   normals to the faces of the monoclinic Brillouin zone.
 !
 USE constants, ONLY : pi
 IMPLICIT NONE
@@ -2099,7 +2099,7 @@ INTEGER :: npx_
 LOGICAL :: done
 !
 !  Search among (2*npx+1)**2 vectors. Not all cases are covered by this
-!  search, but the largest part of them should be.
+!  search, but the largest part should be.
 !
 npx_=bz_struc%npx
 min_mod=0.0_DP
@@ -2182,7 +2182,7 @@ IF (nfound /= 6) CALL errore('find_n1n2_monoclinic','Problem with nfound',1)
 !  now order the six vectors, according to the angle they form with the x axis
 !
 !
-!  If n1 or n2 is a the limit of the checked cell, tell the user to
+!  If n1 or n2 is at the limit of the checked cell, tell the user to
 !  double the parameter npx
 !
 DO ivect=1,6
