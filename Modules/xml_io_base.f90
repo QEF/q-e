@@ -47,8 +47,6 @@ MODULE xml_io_base
   PUBLIC :: create_directory, change_directory, &
             check_file_exst, pp_check_file, restart_dir
   !
-  PUBLIC :: write_header ! needed by ph_restart.f90
-  !
   CONTAINS
     !
     !------------------------------------------------------------------------
@@ -528,32 +526,6 @@ MODULE xml_io_base
       RETURN
       !
     END SUBROUTINE set_kpoints_vars
-    !
-    !
-    ! ... writing subroutines
-    !
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE write_header( creator_name, creator_version ) 
-      !------------------------------------------------------------------------
-      !
-      IMPLICIT NONE
-      CHARACTER(LEN=*), INTENT(IN) :: creator_name, creator_version
-
-
-      CALL iotk_write_begin( iunpun, "HEADER" )
-      !
-      CALL iotk_write_attr(attr, "NAME",TRIM(fmt_name), FIRST=.TRUE.)
-      CALL iotk_write_attr(attr, "VERSION",TRIM(fmt_version) )
-      CALL iotk_write_empty( iunpun, "FORMAT", ATTR=attr )
-      !
-      CALL iotk_write_attr(attr, "NAME",TRIM(creator_name), FIRST=.TRUE.)
-      CALL iotk_write_attr(attr, "VERSION",TRIM(creator_version) )
-      CALL iotk_write_empty( iunpun, "CREATOR", ATTR=attr )
-      !
-      CALL iotk_write_end( iunpun, "HEADER" )
-      !
-    END SUBROUTINE write_header
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_rho_xml( rho_file_base, rho, &

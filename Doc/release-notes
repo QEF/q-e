@@ -1,4 +1,11 @@
+New in svn version:
+   * PW: the code can capture "signals". typically sent by batch queues
+     when allowed time is close to expire, and terminate gracefully.
+     Experimental, to be enabled at compile time (see the user guide)
+   * TDDFPT: Implemented a restart option in turbo_Davidson
+
 Fixed in svn version:
+   * Strange compilation bug on some IBM machines
    * Minor bug in ESM implementation
 
 New in 5.1 version:
