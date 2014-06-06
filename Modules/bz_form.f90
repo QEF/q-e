@@ -8,6 +8,7 @@
 MODULE bz_form
     !
     USE kinds, ONLY : DP
+    USE io_global, ONLY : stdout
     IMPLICIT NONE
     PUBLIC
     SAVE
@@ -38,6 +39,8 @@ TYPE bz
     !                        see www.cryst.ehu.es/cryst/get_kvec.html
     ! Bradley-Cracknell (BC) The mathematical theory of symmetry in solids
                             ! is a subset of BI, so use the former
+
+    INTEGER :: npx = 8
  
     INTEGER :: ibrav              ! the bravais lattice index
     REAL(DP) :: celldm(6)         ! the new celldm parameter. In the orthorombic
@@ -180,6 +183,13 @@ ELSEIF (ibz==15) THEN
    bz_struc%nfaces=12
    bz_struc%nvertices=14
    bz_struc%nlett=8
+ELSEIF (ibz==16) THEN
+!
+!  simple monoclinic lattice
+!
+   bz_struc%nfaces=8
+   bz_struc%nvertices=12
+   bz_struc%nlett=6
 ELSE
    CALL errore('allocate_bz','Brillouin zone type not available',1)
 ENDIF
@@ -214,7 +224,7 @@ TYPE(bz) :: bz_struc
 CHARACTER(LEN=*) :: label
 
 IF (TRIM(label)/='SC'.AND.TRIM(label)/='BI'.AND.TRIM(label)/='BC') THEN
-   WRITE(6,'("Label type not recognized, using default SC")')
+   WRITE(stdout,'("Label type not recognized, using default SC")')
    bz_struc%letter_type='SC'
    RETURN
 ENDIF
@@ -227,7 +237,8 @@ END SUBROUTINE
 SUBROUTINE init_bz(bz_struc)
 IMPLICIT NONE
 TYPE(bz), INTENT(INOUT) :: bz_struc
-INTEGER :: ibz
+INTEGER :: n1(6), n2(6), i
+INTEGER :: ibz, idir, idir1
 
 bz_struc%letter_list(1)='gG '
 bz_struc%letter_coord(:,1)=0.0_DP
@@ -1167,12 +1178,21 @@ ELSEIF (ibz==12) THEN
 !
 !  one face centered orthorombic bz
 !
-   bz_struc%normal(:,1) =  bz_struc%bg(:,1)
-   bz_struc%normal(:,2) =  bz_struc%bg(:,1) + bz_struc%bg(:,2)
-   bz_struc%normal(:,3) =  bz_struc%bg(:,2) 
-   bz_struc%normal(:,4) = -bz_struc%bg(:,1)
-   bz_struc%normal(:,5) = -( bz_struc%bg(:,1) + bz_struc%bg(:,2) )
-   bz_struc%normal(:,6) = -bz_struc%bg(:,2)
+   IF (bz_struc%ibrav==9) THEN
+      bz_struc%normal(:,1) =  bz_struc%bg(:,1)
+      bz_struc%normal(:,2) =  bz_struc%bg(:,1) + bz_struc%bg(:,2)
+      bz_struc%normal(:,3) =  bz_struc%bg(:,2) 
+      bz_struc%normal(:,4) = -bz_struc%bg(:,1)
+      bz_struc%normal(:,5) = -( bz_struc%bg(:,1) + bz_struc%bg(:,2) )
+      bz_struc%normal(:,6) = -bz_struc%bg(:,2)
+   ELSE
+      bz_struc%normal(:,1) =  bz_struc%bg(:,2)
+      bz_struc%normal(:,2) =  bz_struc%bg(:,2) - bz_struc%bg(:,1)
+      bz_struc%normal(:,3) = -bz_struc%bg(:,1) 
+      bz_struc%normal(:,4) = -bz_struc%bg(:,2)
+      bz_struc%normal(:,5) =  bz_struc%bg(:,1) - bz_struc%bg(:,2) 
+      bz_struc%normal(:,6) =  bz_struc%bg(:,1)
+   ENDIF
    bz_struc%normal(:,7) =  bz_struc%bg(:,3)
    bz_struc%normal(:,8) = -bz_struc%bg(:,3)
 
@@ -1217,7 +1237,6 @@ ELSEIF (ibz==12) THEN
 
    bz_struc%letter_coord(:,2) = 0.5_DP*(bz_struc%vertex_coord(:,1)+ &
                                         bz_struc%vertex_coord(:,7))
-   bz_struc%letter_coord(:,3) = 0.5_DP*bz_struc%bg(:,1)
    bz_struc%letter_coord(:,4) = 0.5_DP*(bz_struc%vertex_coord(:,2)+ &
                                         bz_struc%vertex_coord(:,8))
    bz_struc%letter_coord(:,5) = 0.5_DP*(bz_struc%vertex_coord(:,2)+ &
@@ -1225,11 +1244,17 @@ ELSEIF (ibz==12) THEN
    bz_struc%letter_coord(:,6) = 0.5_DP*(bz_struc%vertex_coord(:,2) + &
                                bz_struc%vertex_coord(:,9) + bz_struc%bg(:,3))
    bz_struc%letter_coord(:,7) = bz_struc%vertex_coord(:,2) 
-   bz_struc%letter_coord(:,8) = 0.5_DP*(bz_struc%bg(:,1) + bz_struc%bg(:,3))
    bz_struc%letter_coord(:,9) = 0.5_DP*(bz_struc%vertex_coord(:,1) + &
                                         bz_struc%vertex_coord(:,7) + &
                                         bz_struc%bg(:,3))
    bz_struc%letter_coord(:,10) = 0.5_DP*bz_struc%bg(:,3)
+   IF (bz_struc%ibrav==9) THEN
+      bz_struc%letter_coord(:,3) = 0.5_DP*bz_struc%bg(:,1)
+      bz_struc%letter_coord(:,8) = 0.5_DP*(bz_struc%bg(:,1) + bz_struc%bg(:,3))
+   ELSE
+      bz_struc%letter_coord(:,3) = 0.5_DP*bz_struc%bg(:,2)
+      bz_struc%letter_coord(:,8) = 0.5_DP*(bz_struc%bg(:,2) + bz_struc%bg(:,3))
+   ENDIF
 
    CALL find_axis_coordinates(bz_struc)
 
@@ -1405,6 +1430,65 @@ ELSEIF (ibz==15) THEN
 
    CALL find_axis_coordinates(bz_struc)
 !
+ELSEIF (ibz==16) THEN
+!
+!  Simple monoclinic lattice
+!
+   IF (bz_struc%ibrav==12) THEN
+      idir=2
+      idir1=3
+   ELSE
+      idir=3
+      idir1=2
+   ENDIF
+   CALL find_n1n2_monoclinic(n1, n2, idir, bz_struc)
+
+   DO i=1,6 
+      bz_struc%normal(:,i) = n1(i) * bz_struc%bg(:,1) + n2(i) *&
+                             bz_struc%bg(:,idir)
+   END DO
+   bz_struc%normal(:,7) =   bz_struc%bg(:,idir1) 
+   bz_struc%normal(:,8) = - bz_struc%bg(:,idir1) 
+
+   bz_struc%indsur(:,1) = (/ 4, 1,  7,  8, 2 /)
+   bz_struc%indsur(:,2) = (/ 4, 2,  8,  9, 3 /)
+   bz_struc%indsur(:,3) = (/ 4, 3,  9, 10, 4 /)
+   bz_struc%indsur(:,4) = (/ 4, 4, 10, 11, 5 /)
+   bz_struc%indsur(:,5) = (/ 4, 5, 11, 12, 6 /)
+   bz_struc%indsur(:,6) = (/ 4, 6, 12,  7, 1 /)
+   bz_struc%indsur(:,7) = (/ 6, 1,  2,  3,  4,  5, 6 /)
+   bz_struc%indsur(:,8) = (/ 6, 7,  8,  9, 10, 11, 12 /)
+
+   CALL find_vertices(bz_struc) 
+   CALL compute_vertices(bz_struc) 
+
+   bz_struc%letter_coord(:,2) = 0.5_DP* (bz_struc%vertex_coord(:,1) + &
+                                         bz_struc%vertex_coord(:,12) )
+   bz_struc%letter_coord(:,3) = 0.5_DP* (bz_struc%vertex_coord(:,2) + &
+                                         bz_struc%vertex_coord(:,9) )
+   bz_struc%letter_coord(:,4) = 0.5_DP* bz_struc%bg(:,idir1) 
+   bz_struc%letter_coord(:,5) = bz_struc%letter_coord(:,idir1) + &
+                                         bz_struc%letter_coord(:,4)
+   bz_struc%letter_coord(:,6) = bz_struc%letter_coord(:,idir) + &
+                                         bz_struc%letter_coord(:,4)
+
+
+   IF (bz_struc%ibrav==12) THEN
+      bz_struc%letter_list(2)=' X '
+      bz_struc%letter_list(3)=' Y '
+      bz_struc%letter_list(4)=' Z '
+      bz_struc%letter_list(5)=' D '
+      bz_struc%letter_list(6)=' A '
+   ELSE
+      bz_struc%letter_list(2)=' X '
+      bz_struc%letter_list(3)=' Z '
+      bz_struc%letter_list(4)=' Y '
+      bz_struc%letter_list(5)=' A '
+      bz_struc%letter_list(6)=' D '
+   ENDIF
+
+   CALL find_axis_coordinates(bz_struc)
+
 ELSE
    CALL errore('init_bz','Brillouin zone type not available init_bz')
 ENDIF
@@ -1532,7 +1616,7 @@ ELSEIF (ibrav==7) THEN
    ENDIF
 ELSEIF (ibrav==8) THEN
    ibz=7
-ELSEIF (ibrav==9) THEN
+ELSEIF ( ibrav==9 .OR. ibrav==-9 ) THEN
    ibz=12
 ELSEIF (ibrav==10) THEN
    celldm_c=celldm
@@ -1551,7 +1635,9 @@ ELSEIF (ibrav==10) THEN
    ENDIF
 ELSEIF (ibrav==11) THEN
    ibz=11
-ELSEIF (ibrav==12.OR.ibrav==13.OR.ibrav==14) THEN
+ELSEIF (ibrav==12.OR.ibrav==-12) THEN
+   ibz=16
+ELSEIF (ibrav==13.OR.ibrav==14) THEN
    CALL errore('find_bz_type','This ibrav is not supported',1)
 ELSE
    CALL errore('find_bz_type','Wrong ibrav',1)
@@ -1636,6 +1722,7 @@ END SUBROUTINE check_orthorombic
 SUBROUTINE direct_and_reciprocal_lattice(bz_struc)
 IMPLICIT NONE
 TYPE(bz), INTENT(INOUT) :: bz_struc
+REAL(DP) :: alat
 !
 !  generate direct lattice vectors
 !
@@ -1644,6 +1731,9 @@ bz_struc%at(:,2),bz_struc%at(:,3),bz_struc%omega)
 !
 !  generate reciprocal lattice vectors
 !
+alat = bz_struc%celldm(1)
+bz_struc%at(:,:) = bz_struc%at(:,:) / alat
+
 CALL recips( bz_struc%at(:,1), bz_struc%at(:,2), bz_struc%at(:,3), &
              bz_struc%bg(:,1), bz_struc%bg(:,2), bz_struc%bg(:,3) )
 
@@ -1991,5 +2081,129 @@ TYPE(bz) :: bz_struc
   CALL deallocate_bz(bz_struc)
 RETURN
 END SUBROUTINE transform_label_coord
+
+SUBROUTINE find_n1n2_monoclinic(n1, n2, idir, bz_struc)
+!
+!   This routine finds the six reciprocal lattices closest to the origin and
+!   order them in order of increasing angle with the x-axis. These are the six
+!   normals to the faces of the monoclinic reciprocal lattice.
+!
+USE constants, ONLY : pi
+IMPLICIT NONE
+INTEGER, INTENT(IN) :: idir
+INTEGER, INTENT(INOUT) :: n1(6), n2(6)
+TYPE(bz), INTENT(INOUT) :: bz_struc
+INTEGER :: in1, in2, ind(6), inaux(6), nfound, ivect, isub, i
+REAL(DP) :: min_mod, max_mod, modul, vect(3), save_mod(6), save_angle(6), angle
+INTEGER :: npx_
+LOGICAL :: done
+!
+!  Search among (2*npx+1)**2 vectors. Not all cases are covered by this
+!  search, but the largest part of them should be.
+!
+npx_=bz_struc%npx
+min_mod=0.0_DP
+nfound=0
+DO in1=-npx_,npx_
+   DO in2=-npx_,npx_
+      IF ( in1 == 0 .AND. in2 == 0 ) CYCLE
+      vect(1:3)= in1 * bz_struc%bg(1:3,1) + in2 * bz_struc%bg(1:3,idir)
+      modul = SQRT( vect(1) ** 2 + vect(2) ** 2 + vect(3) ** 2 ) 
+      angle = ACOS( vect(1) / modul )
+      IF (vect(idir) < 0.0_DP ) angle= 2.0_DP * pi - angle
+!
+!    Check that if new vector is a multiple of one already found
+!
+      done=.FALSE.
+      DO ivect=1, nfound
+         done=done.OR.(ABS(angle-save_angle(ivect))< 1.D-7)
+      ENDDO
+      IF ( done ) THEN
+!
+!    In this case the new vector is a multiple of one vector already found.
+!    Substitute if its modulus is lower
+!
+         DO ivect=1, nfound
+            IF (ABS(angle-save_angle(ivect))< 1.D-7 .AND. &
+                                          modul < save_mod(ivect)) THEN
+               n1(ivect)=in1
+               n2(ivect)=in2
+               save_mod(ivect)=modul
+               save_angle(ivect)=angle
+            END IF
+         ENDDO
+!
+!   ricompute the maximum modulus of the found vectors
+!
+         min_mod=0.0_DP
+         DO ivect=1, nfound
+            IF (save_mod(ivect) > min_mod) min_mod=save_mod(ivect)
+         ENDDO
+      ELSE
+         IF ( nfound < 6 .OR. modul < min_mod ) THEN
+            IF (nfound < 6 ) THEN
+!
+!    In this case we have not yet found six vectors. 
+!
+               nfound = nfound + 1
+               n1(nfound)=in1
+               n2(nfound)=in2
+               save_mod(nfound) = modul
+               save_angle(nfound) = angle
+               IF (modul > min_mod) min_mod = modul
+            ELSE
+!
+!    In this case we substitute the vector with maximum modulus with this one
+!
+               max_mod=0.0_DP
+               isub=0
+               DO ivect=1,6
+                  IF (save_mod(ivect) > max_mod) THEN
+                     isub = ivect
+                     max_mod=save_mod(ivect)
+                  ENDIF
+               END DO
+               IF (isub==0) CALL errore('find_n1n2_monoclinic','Problem with isub',1)
+               n1(isub)=in1
+               n2(isub)=in2
+               save_mod(isub)=modul
+               save_angle(isub)=angle
+               min_mod=0.0_DP
+               DO ivect=1, 6
+                  IF (save_mod(ivect) > min_mod) min_mod=save_mod(ivect)
+               ENDDO
+            ENDIF
+         ENDIF
+      ENDIF
+   ENDDO
+ENDDO
+IF (nfound /= 6) CALL errore('find_n1n2_monoclinic','Problem with nfound',1)
+!
+!  now order the six vectors, according to the angle they form with the x axis
+!
+!
+!  If n1 or n2 is a the limit of the checked cell, tell the user to
+!  double the parameter npx
+!
+DO ivect=1,6
+   IF (n1(ivect)==npx_ .OR. n2(ivect)==npx_) &
+      CALL errore('find_n1n2_monoclinic','Difficult monoclinic cell, &
+                                                  &double npx',1)
+ENDDO
+!
+!  now order the six vectors, according to the angle they form with the x axis
+!
+ind(1)=0
+CALL hpsort(6, save_angle, ind)
+!
+!  order n1 and n2
+!
+inaux=n1
+n1(:) =inaux(ind(:))
+inaux=n2
+n2(:) =inaux(ind(:))
+
+RETURN
+END SUBROUTINE find_n1n2_monoclinic
 
 END MODULE bz_form
