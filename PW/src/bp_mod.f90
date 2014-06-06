@@ -23,6 +23,7 @@ MODULE bp
            mapg_owner
   PUBLIC :: lcalc_z2, z2_m_threshold, z2_z_threshold
   PUBLIC :: allocate_bp_efield, deallocate_bp_efield, bp_global_map
+  PUBLIC :: pdl_tot
   !
   LOGICAL :: &
        lberry  =.false., & ! if .TRUE. calculate polarization using Berry phase
@@ -67,6 +68,7 @@ MODULE bp
   REAL(DP) :: efield_cry(3)    ! electric field vector in crystal units
   REAL(DP) :: transform_el(3,3)! transformation matrix from cartesian coordinates to normed reciprocal space
   INTEGER, ALLOCATABLE :: mapg_owner(:,:)
+  REAL(DP) :: pdl_tot         ! the total phase calculated from bp_c_phase
 !
 CONTAINS
  
@@ -111,7 +113,7 @@ CONTAINS
     !this subroutine sets up the global correspondence map G+1 and G-1
 
     USE mp,                   ONLY : mp_sum
-    USE mp_world,             ONLY : world_comm,mpime,nproc
+    USE mp_images,            ONLY : me_image, intra_image_comm
     USE gvect,                ONLY : ngm_g, g, ngm, ig_l2g
     USE fft_base,             ONLY : dfftp
     USE cell_base,            ONLY : at
@@ -137,7 +139,7 @@ CONTAINS
        mk3=nint(g(1,ig)*at(1,3)+g(2,ig)*at(2,3)+g(3,ig)*at(3,3))
        ln_g(mk1,mk2,mk3)=ig_l2g(ig)
     ENDDO
-    CALL mp_sum(ln_g(:,:,:),world_comm)
+    CALL mp_sum(ln_g(:,:,:),intra_image_comm)
 
 
     g_ln(:,:)= 0!it means also not found
@@ -149,7 +151,7 @@ CONTAINS
        g_ln(2,ig_l2g(ig))=mk2
        g_ln(3,ig_l2g(ig))=mk3
     ENDDO
-    CALL mp_sum(g_ln(:,:),world_comm)
+    CALL mp_sum(g_ln(:,:),intra_image_comm)
 
 !loop on direction
     DO idir=1,3
@@ -166,10 +168,10 @@ CONTAINS
 
     mapg_owner=0
     DO ig=1,ngm
-       mapg_owner(1,ig_l2g(ig))=mpime+1
+       mapg_owner(1,ig_l2g(ig))=me_image+1
        mapg_owner(2,ig_l2g(ig))=ig
     END DO
-    call mp_sum(mapg_owner, world_comm)
+    call mp_sum(mapg_owner, intra_image_comm)
 
     DEALLOCATE(ln_g,g_ln)
 
