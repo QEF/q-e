@@ -461,7 +461,7 @@ SUBROUTINE print_vdw_info
   integer :: inlc
 
   inlc = get_inlc()
-  if (inlc==1 .or. inlc==2) then
+  if (inlc==1 .or. inlc==2 .or. inlc==3) then
 
       WRITE( stdout, '(/5x,"vdW kernel table read from file ",a)')&
              TRIM (vdw_table_name)

@@ -1353,8 +1353,8 @@ CONTAINS
       !
       CALL iotk_write_dat( ounit, "NON_LOCAL_DF", inlc )
 
-      IF ( inlc == 1 .OR. inlc ==2 ) THEN
-          
+      IF ( inlc == 1 .OR. inlc ==2 .OR. inlc == 3 ) THEN
+
          IF ( .NOT. PRESENT( vdw_table_name ) .OR. &
               .NOT. PRESENT( pseudo_dir ) .OR. &
               .NOT. PRESENT( dirname )) &
@@ -3376,7 +3376,7 @@ CONTAINS
       CALL iotk_scan_dat( iunit, "NON_LOCAL_DF", inlc_, FOUND = found )
       IF ( found ) THEN
          !
-         IF ( inlc_ == 1 .OR. inlc_ == 2 ) THEN
+         IF ( inlc_ == 1 .OR. inlc_ == 2 .OR. inlc == 3 ) THEN
             !
             CALL iotk_scan_dat( iunit, "VDW_KERNEL_NAME", vdw_table_name_ )
             !
@@ -3419,7 +3419,7 @@ CONTAINS
       !
       IF (present(inlc) ) inlc = inlc_
       !
-      IF ( inlc_ == 1 .OR. inlc_ == 2 ) THEN
+      IF ( inlc_ == 1 .OR. inlc_ == 2 .OR. inlc_ == 3 ) THEN
          IF (present( vdw_table_name) )  vdw_table_name =  vdw_table_name_
       ENDIF
       !
