@@ -161,7 +161,8 @@ CONTAINS
           if (.not. file_exists) then
 
              !! No "vdW_kernel_table" file could be found.  Time to die.
-             call errore('read_kernel_table', 'No \"vdW_kernel_table\" file could be found',1)
+             call errore('read_kernel_table', &
+                         TRIM(kernel_file_name)//' file could be found',1)
 
           end if
 
