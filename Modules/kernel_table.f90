@@ -150,23 +150,8 @@ CONTAINS
        kernel_file_name = trim(pseudo_dir)//'/'//vdw_table_name
        inquire(file=kernel_file_name, exist=file_exists)
 
-       if (.not. file_exists) then
-
-          !! Finally, try the default pw_dir/PW/vdW_kernel_table file
-          !! --------------------------------------------------------------------------------------
-  
-          kernel_file_name = 'DEFAULT_KERNEL_TABLE_FILE'
-          inquire(file=kernel_file_name, exist=file_exists)
-          
-          if (.not. file_exists) then
-
-             !! No "vdW_kernel_table" file could be found.  Time to die.
-             call errore('read_kernel_table', &
-                         TRIM(kernel_file_name)//' file could be found',1)
-
-          end if
-
-       end if
+       if (.not. file_exists) call errore('read_kernel_table', &
+                         TRIM(vdw_table_name)//' file could be found',1)
 
     end if
 

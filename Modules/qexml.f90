@@ -3299,7 +3299,7 @@ CONTAINS
       !
       INTEGER,                    INTENT(out) :: ierr
       !
-      CHARACTER(256)          :: dft_, vdw_table_name_, U_projection_
+      CHARACTER(LEN=256)      :: dft_, vdw_table_name_, U_projection_
       LOGICAL                 :: lda_plus_u_, found
       INTEGER                 :: Hubbard_lmax_, nsp_,lda_plus_u_kind_, inlc_
       INTEGER,    ALLOCATABLE :: Hubbard_l_(:)
@@ -3376,21 +3376,18 @@ CONTAINS
       CALL iotk_scan_dat( iunit, "NON_LOCAL_DF", inlc_, FOUND = found )
       IF ( found ) THEN
          !
-         IF ( inlc_ == 1 .OR. inlc_ == 2 .OR. inlc == 3 ) THEN
-            !
+         IF ( inlc_ == 1 .OR. inlc_ == 2 .OR. inlc_ == 3 ) &
             CALL iotk_scan_dat( iunit, "VDW_KERNEL_NAME", vdw_table_name_ )
-            !
-         ENDIF
          !
       ELSE
          !
          inlc_ = 0
+         vdw_table_name_ = ' '
          !
       ENDIF
       !
       CALL iotk_scan_end( iunit, "EXCHANGE_CORRELATION", IERR=ierr )
       IF ( ierr/=0 ) RETURN
-      !
       !
       IF ( present( dft ) )           dft           = dft_
       IF ( present( lda_plus_u ) )    lda_plus_u    = lda_plus_u_
@@ -3418,10 +3415,7 @@ CONTAINS
       ENDIF
       !
       IF (present(inlc) ) inlc = inlc_
-      !
-      IF ( inlc_ == 1 .OR. inlc_ == 2 .OR. inlc_ == 3 ) THEN
-         IF (present( vdw_table_name) )  vdw_table_name =  vdw_table_name_
-      ENDIF
+      IF (present( vdw_table_name) )  vdw_table_name =  vdw_table_name_
       !
       !
     END SUBROUTINE qexml_read_xc

@@ -131,10 +131,12 @@ libqemod.a: 	$(MODULES)
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *.F90 *.mod *.L version.f90
 
-# In this way, the script for generating version.f90 always runs
-# (possibly updating the version if you execute "svn update").
-# the update_version script should take care of not changing the file 
-# if the svn version did not change
+# .PHONY forces execution of a rule irrespective of the presence of an
+# updated file with the same name of the rule. In this way, the script 
+# that generates version.f90 always runs, updating the version if you 
+# execute "svn update". The update_version script takes care of not
+# changing the file if the svn version did not change
+
 .PHONY: version all clean
 
 include make.depend
