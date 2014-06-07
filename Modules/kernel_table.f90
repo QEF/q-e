@@ -68,7 +68,7 @@ MODULE kernel_table
   !                                                    !! kernel matrix at each of the q points.  Stored as  
   !                                                    !! d2phi_dk2(k_point, q1_value, q2_value)
   !
-  character(len=256) :: vdw_table_name                 !! If present from input use this name
+  character(len=256) :: vdw_table_name = ' '           !! If present from input use this name
   CHARACTER(LEN=30)  :: double_format = "(1p4e23.14)"
   CHARACTER(len=32)  :: vdw_kernel_md5_cksum = 'NOT SET'
   !
