@@ -280,6 +280,10 @@ PROGRAM pw2bgw
   if (okpaw) call errore ( 'pw2bgw', 'BGW cannot use PAW.', 4 )
   if (gamma_only) call errore ( 'pw2bgw', 'BGW cannot use gamma-only run.', 5 )
   if (nspin == 4) call errore ( 'pw2bgw', 'BGW cannot use spinors.', 6 )
+  if (real_or_complex == 1 .AND. vxc_flag .AND. vxc_offdiag_nmax > 0) &
+    call errore ( 'pw2bgw', 'Off-diagonal matrix elements of Vxc ' // &
+    'with real wavefunctions are not implemented, compute them in ' // &
+    'Sigma using Vxc(G).', 7)
 
   CALL openfil_pp ( )
 
