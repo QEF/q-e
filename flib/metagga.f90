@@ -415,7 +415,7 @@ subroutine tpsscc_spin(rho,zeta,grhoup,grhodw, &
      sc    = 0.0_DP
      v1cup = 0.0_DP
      v1cdw = 0.0_DP
-	 
+ 
      v2cup(:) = 0.0_DP
      v2cdw(:) = 0.0_DP
 
