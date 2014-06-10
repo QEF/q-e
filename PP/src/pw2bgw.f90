@@ -283,7 +283,7 @@ PROGRAM pw2bgw
   if (real_or_complex == 1 .AND. vxc_flag .AND. vxc_offdiag_nmax > 0) &
     call errore ( 'pw2bgw', 'Off-diagonal matrix elements of Vxc ' // &
     'with real wavefunctions are not implemented, compute them in ' // &
-    'Sigma using Vxc(G).', 7)
+    'Sigma using VXC.', 7)
 
   CALL openfil_pp ( )
 
