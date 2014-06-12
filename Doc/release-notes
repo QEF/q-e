@@ -7,6 +7,8 @@ New in svn version:
 
 Fixed in svn version:
 
+   * PHonon: the recently introduced fix to the G=0 component of the 
+     deformation potential at q=0 was not working properly
    * Kernel table for rVV10 nonlocal functional was not written to file,
      breaking restart and postprocessing (no problem for scf)
    * Strange compilation bug on some IBM machines

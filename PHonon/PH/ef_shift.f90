@@ -7,7 +7,7 @@
 
 MODULE efermi_shift
   USE kinds, ONLY : DP
-  REAL(DP),SAVE,PUBLIC :: def(3)
+  COMPLEX(DP),SAVE,PUBLIC :: def(3)
   ! the change of the Fermi energy for each pert.
   ! NB: def(3) should be def (npertx), but it is used only at Gamma
   !     where the dimension of irreps never exceeds 3
@@ -100,7 +100,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
      ! symmetrizes the Fermi energy shift
      !
      if (.not.lgamma_gamma) call sym_def (def, irr)
-     WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =", 2es15.4)')&
+     WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =",2es15.4)')&
           (ipert, def (ipert) , ipert = 1, npert (irr) )
      !
      ! corrects the density response accordingly...
@@ -211,12 +211,9 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   !
   !--> these quantities may be complex since perturbation may be
 
-  complex(DP) :: delta_n, wfshift, def(3)
+  complex(DP) :: delta_n, wfshift
   ! the change in electron number
   ! the shift coefficient for the wavefunction
-  ! the change of the Fermi energy for each pert.
-  ! NB: def(3) should be def (npertx) but then it cannot be saved
-  !     anyway at Gamma the dimension of irreps never exceeds 3
 
   real(DP), external :: w0gauss
   ! the smeared delta function
@@ -228,7 +225,6 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   ! counter on perturbations
   ! record number
   ! record position of wfc at k
-  save def
   !
   ! determines Fermi energy shift (such that each pertubation is neutral)
   !
