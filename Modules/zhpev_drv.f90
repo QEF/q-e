@@ -1464,7 +1464,7 @@ CONTAINS
      USE kinds,     ONLY : DP
      USE mp_diag,   ONLY : ortho_comm
      USE mp,        ONLY : mp_comm_free
-#ifdef __ELPA
+#if defined(__ELPA)
      USE elpa1
 #endif
      IMPLICIT NONE
@@ -1489,7 +1489,7 @@ CONTAINS
      INTEGER     :: LWORK, LRWORK, LIWORK
      INTEGER     :: desch( 10 ), info
      CHARACTER   :: jobv
-#ifdef __ELPA
+#if defined(__ELPA)
      INTEGER     :: nprow,npcol,my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols
 #endif 
 
@@ -1502,12 +1502,11 @@ CONTAINS
      END IF
 
      call descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, size(h,1), info )
-#ifdef __ELPA
+     
+#if defined(__ELPA)
      CALL BLACS_Gridinfo( ortho_cntx, nprow, npcol, my_prow, my_pcol )
-
-     call GET_ELPA_ROW_COL_COMMS(ortho_comm, my_prow, my_pcol,mpi_comm_rows,mpi_comm_cols)
-
-     call solve_evp_complex(n, n, h, size(h,1), w, v, size(h,1), nb, &
+     CALL get_elpa_row_col_comms(ortho_comm, my_prow, my_pcol,mpi_comm_rows,mpi_comm_cols)
+     CALL solve_evp_complex(n, n, h, size(h,1), w, v, size(h,1), nb, &
                           mpi_comm_rows, mpi_comm_cols)
      h = v
 

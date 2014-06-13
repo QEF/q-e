@@ -1975,14 +1975,20 @@ fi
     fi   
 done
 
-# ELPA iff SCALAPACK
+# ELPA iff SCALAPACK (statically linked)
 elpa_libs_switch="disabled"
 if test "$with_elpa" -eq 2 && test "$have_scalapack" -eq 1; then
-    scalapack_libs="-L$with_elpa_path/lib -lelpa $scalapack_libs"
-    # ELPA includes for FORTRAN, works with 2013.08
-    try_iflags="$try_iflags -I$with_elpa_path/include -I$with_elpa_path/include/elpa/modules " 
-    try_dflags="$try_dflags -D__ELPA"
+    if test "$use_openmp" -eq 1 ; then
+        scalapack_libs="$with_elpa_path/lib/libelpa_mt.a $scalapack_libs"
+        try_iflags="$try_iflags -I$with_elpa_path/include/elpa/modules "
+        try_dflags="$try_dflags -D__ELPA"
+    else
+        scalapack_libs="$with_elpa_path/libelpa.a $scalapack_libs"
+        try_iflags="$try_iflags -I$with_elpa_path/include/elpa/modules "
+        try_dflags="$try_dflags -D__ELPA"
+    fi
 fi
+
 if test "$with_elpa" -eq 1 && test "$have_scalapack" -eq 1; then
     scalapack_libs="\$(TOPDIR)/ELPA/libelpa.a $scalapack_libs"
     try_dflags="$try_dflags -D__ELPA"
