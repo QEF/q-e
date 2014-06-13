@@ -309,7 +309,6 @@ PROGRAM matdyn
         CALL readfc ( flfrc, nr1, nr2, nr3, epsil, nat_blk, &
             ibrav, alat, at_blk, ntyp_blk, &
             amass_blk, omega_blk, has_zstar)
-        print*,'alat', alat
      ENDIF
      !
      CALL recips ( at_blk(1,1),at_blk(1,2),at_blk(1,3),  &
