@@ -1,0 +1,9 @@
+# Compile for CoclorCalculator
+cd src 
+javac *.java
+jar cfm ColorCalculator5.jar Manifest.txt *.class org com
+mv ColorCalculator5.jar ..
+cd .. 
+
+
+

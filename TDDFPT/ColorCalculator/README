@@ -1,9 +1,9 @@
-RGB calculator, by Ge Xiaochuan, Version 5
-Modified from version4 by XC.G  21.May.2012
+RGB calculator Version 5
+Modified from version4 ( Alessandro Da Rugna ) by Ge Xiaochuan  21.May.2012
 New features: automatical sorting and interpolation algorithm is added 
 
 There are two *.jar in the directory, one for version 4 and one for version 5.
-By typing "java -jar ColorCalcolator5.jar" in the terminal the user interface
+By typing "java -jar ColorCalculator5.jar" in the terminal the user interface
 will be launched and you can choose example input files on the left of the 
 interface, the corresponding color and RGB values will be displayed on the 
 right.
@@ -18,3 +18,9 @@ For using your own input, just simply create a file ith the suffix .dat in
 which the first column is the wavelength(nm) and the second column is the
 absorption strength. Keep the input file in the same directory then you can 
 see it in the UI. 
+
+==========================
+For modifying and re-compiling
+
+./src/*.java are source files, once been modified, simply run ./Install for recompiling. 
+Certain packages may be requested for compiling such as javac. 
