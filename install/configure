@@ -11211,7 +11211,7 @@ if test "$with_elpa" -eq 2 && test "$have_scalapack" -eq 1; then
         try_iflags="$try_iflags -I$with_elpa_path/include/elpa/modules "
         try_dflags="$try_dflags -D__ELPA"
     else
-        scalapack_libs="$with_elpa_path/libelpa.a $scalapack_libs"
+        scalapack_libs="$with_elpa_path/lib/libelpa.a $scalapack_libs"
         try_iflags="$try_iflags -I$with_elpa_path/include/elpa/modules "
         try_dflags="$try_dflags -D__ELPA"
     fi
