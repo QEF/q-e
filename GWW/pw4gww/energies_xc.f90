@@ -55,25 +55,25 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
   ! ... input/output arguments
   !
   INTEGER          :: lda, n, m
-  COMPLEX(DP) :: psi(lda,m) 
+  COMPLEX(DP) :: psi(lda,m)
   REAL(kind=DP) :: e_xc(m), e_h(m)
-  INTEGER, INTENT(in) :: ispin !spin 1,2 
+  INTEGER, INTENT(in) :: ispin !spin 1,2
 
   REAL(kind=DP), ALLOCATABLE :: vr(:,:)
   !
   !
   CALL start_clock( 'h_psi' )
   allocate(vr(dfftp%nnr,nspin))
-  !  
+  !
   IF ( gamma_only ) THEN
      !
      CALL energies_xc_gamma()
      !
-  ELSE  
+  ELSE
      !
      CALL energies_xc_k( )
      !
-  END IF  
+  END IF
 
   !
   CALL stop_clock( 'h_psi' )
@@ -94,7 +94,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        !
        IMPLICIT NONE
        !
-      
+
        INTEGER :: ibnd, j,is, ig
        REAL(dp) :: etxc,vtxc
        REAL(kind=DP) :: ehart, charge
@@ -117,7 +117,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
       else
          CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vr )
       endif
-    
+
 
        do is=1,nspin
           vrs(:,is)=vr(:,is)
@@ -133,7 +133,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
           psic(nls(igk(1:n))) = psi(1:n,ibnd)
           !
           CALL invfft ('Wave', psic, dffts)
-         
+
           !
           CALL stop_clock( 'firstfft' )
           !
@@ -152,7 +152,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
           e_xc(ibnd)=0.d0
           do ig=1,n
              e_xc(ibnd)=e_xc(ibnd)+real(conjg(psi(ig,ibnd))*psic(nls(igk(ig))))
-          enddo          
+          enddo
           call mp_sum(e_xc(ibnd),world_comm)
           write(stdout,*) 'energies_xc :', ibnd, e_xc(ibnd)*rytoev
 !
@@ -168,19 +168,19 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 
 
        DO ibnd = 1, m
-        
+
           CALL start_clock( 'firstfft' )
           psic(1:dffts%nnr) = ( 0.D0, 0.D0 )
           psic(nls(igk(1:n))) = psi(1:n,ibnd)
-        
+
           CALL invfft ('Wave', psic, dffts)
-        
-        
+
+
           CALL stop_clock( 'firstfft' )
-        
-        
+
+
           psic(1:dffts%nnr) = psic(1:dffts%nnr) * vrs(1:dffts%nnr,1)
-        
+
           CALL start_clock( 'secondfft' )
           CALL fwfft ('Wave', psic, dffts)
           e_h(ibnd)=0.d0
@@ -192,17 +192,17 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 
           CALL stop_clock( 'secondfft' )
 
-       enddo!                                       
+       enddo!
 
        !
        !
        !
        RETURN
        !
-     END SUBROUTINE energies_xc_k     
+     END SUBROUTINE energies_xc_k
      SUBROUTINE energies_xc_gamma
- 
-       USE uspp, ONLY : okvan   
+
+       USE uspp, ONLY : okvan
        USE wannier_gw, ONLY : becp_gw, restart_gww,l_whole_s,l_verbose,&
                                &l_scissor,scissor,num_nbndv
       ! USE realus,  ONLY : adduspos_gamma_r
@@ -231,7 +231,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        REAL(kind=DP), ALLOCATABLE :: rho_fake_core(:)
        COMPLEX(kind=DP), ALLOCATABLE :: hpsi(:,:)
        REAL(kind=DP), ALLOCATABLE :: exact_x(:)
-       REAL(kind=DP), ALLOCATABLE :: e_hub(:)!Hubbard contribution to KS energies 
+       REAL(kind=DP), ALLOCATABLE :: e_hub(:)!Hubbard contribution to KS energies
        REAL(kind=DP), ALLOCATABLE :: et_off(:,:)!off-diagonal energies
 
 
@@ -245,7 +245,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
          if(l_verbose) write(stdout,*) 'ATTENZIONE1'
          call flush_unit(stdout)
          !allocate( becp%r( nkb, nbnd ) )
-         call allocate_bec_type ( nkb, nbnd, becp)        
+         call allocate_bec_type ( nkb, nbnd, becp)
          if(l_verbose) write(stdout,*) 'ATTENZIONE2'
          call flush_unit(stdout)
 
@@ -267,8 +267,8 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 
          if(l_verbose)write(stdout,*) 'ATTENZIONE5'
           call flush_unit(stdout)
-          
-     
+
+
  !         exxalfa=0.d0!ATTENZIONE
          call h_psi( npwx, npw, nbnd, psi, hpsi )
          et(:,ispin)=0.d0
@@ -299,7 +299,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
          if ( lda_plus_u ) then
             hpsi(:,:)=(0.d0,0.d0)
             CALL vhpsi( npwx, npw, nbnd, psi, hpsi )
-           
+
             do ibnd=1,nbnd
 
                do ig=1,npw
@@ -346,14 +346,14 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 
 
        allocate(psi_r(dfftp%nnr),psi_rs(dfftp%nnr))
-       
+
        iunwfcreal=find_free_unit()
-       CALL diropn( iunwfcreal, 'real_whole', dfftp%nnr, exst )
+       CALL diropn( iunwfcreal, 'real_whole', dffts%nnr, exst )
 
 
 !calculate xc potential on fine grid
 
-       
+
        if(.not.allocated(vr)) write(stdout,*) 'vr not allocated'
        allocate(rho_fake_core(dfftp%nnr))
        rho_fake_core(:)=0.d0
@@ -384,7 +384,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
           endif
           deallocate(hpsi)
           call mp_sum(et_off,world_comm)
-!write on file                                                                                                                          
+!write on file
           if(ionode) then
              iunu = find_free_unit()
              if(ispin==1) then
@@ -424,7 +424,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
            e_xc(ibnd)=e_xc(ibnd)+psi_r(ir)*vr(ir,ispin)!the 1 is for the spin NOT IMPLEMENTED YET
          enddo
          e_xc(ibnd)=e_xc(ibnd)/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
-       
+
          call mp_sum(e_xc(ibnd),world_comm)
 
 !ifrequired add the contribution from exact exchange for hybrids and HF
@@ -435,12 +435,12 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
          endif
 
          write(stdout,*) 'Routine energies_xc :', ibnd, e_xc(ibnd)*rytoev
-   
+
 !now hartree term
 
 
       enddo
-       
+
 !if required add to e_xc Hubbard U terms
 
       if(lda_plus_u) then
@@ -462,7 +462,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
            else
               psi_r(:)=psi_rs(:)
            endif
-           
+
            do ir=1,dfftp%nnr
               psi_r(ir)=psi_r(ir)**2.d0
            enddo
@@ -474,7 +474,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
               e_h(ibnd)=e_h(ibnd)+psi_r(ir)*vr(ir,ispin)
            enddo
            e_h(ibnd)=e_h(ibnd)/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
-         
+
            call mp_sum(e_h(ibnd),world_comm)
            write(stdout,*) 'Routine energies_h :', ibnd, e_h(ibnd)*rytoev
 
@@ -497,7 +497,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 !NOT_TO_BE_INCLUDED_END
       endif
 
-      return     
+      return
 
      END SUBROUTINE energies_xc_gamma
      !
@@ -516,19 +516,19 @@ SUBROUTINE write_energies_xc(e_xc)
   implicit none
 
   INTEGER, EXTERNAL :: find_free_unit
-  
+
   REAL(kind=DP) :: e_xc(nbnd,nspin)!exchange and correlation energies
 
   INTEGER :: iunu, iw
- 
+
 
   if(ionode) then
      iunu = find_free_unit()
-     
+
      open(unit=iunu,file=trim(tmp_dir)//trim(prefix)//'.dft_xc',status='unknown',form='unformatted')
-  
+
      write(iunu) nbnd
-  
+
 
      do iw=1,nbnd
         write(iunu) e_xc(iw,1)

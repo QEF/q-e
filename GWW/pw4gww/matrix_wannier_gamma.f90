@@ -11,7 +11,7 @@
 
   subroutine write_wfc_grid_2
 !this subroutine read real wavefunctions from file
-!on the small charge grid, and write on the 
+!on the small charge grid, and write on the
 !wavefunction grid in real space
 
 
@@ -40,7 +40,7 @@
   CALL diropn( iunwfcreal, 'real_whole', dffts%nnr, exst )
 
   iunwfcreal2=find_free_unit()
-  CALL diropn( iunwfcreal2, 'real_whole2', nrxxs2, exst )
+  CALL diropn( iunwfcreal2, 'real_whole-2', nrxxs2, exst )
 
 
   allocate(tmprealis(dffts%nnr))
@@ -205,7 +205,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
 
   write(stdout,*) 'MATRIX BIG2'
   call flush_unit(stdout)
-  
+
   do iiw=1,nbnd_eff/n_set+1
      write(stdout,*) 'MATRIX IIW',iiw
      call flush_unit(stdout)
@@ -231,7 +231,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
               jw_begin=(jjw-1)*n_set+1
            endif
            do jw=jw_begin,min(jjw*n_set,nbnd_eff)
-           
+
               tmpreal(:)=tmprealis(:,iw-(iiw-1)*n_set)*tmprealjs(:,jw-(jjw-1)*n_set)
 
 !put on fine grid
@@ -257,7 +257,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
                  !matp(jw,iw,mdir)=sca
               enddo
 
-            
+
            enddo
         enddo
      enddo
@@ -315,7 +315,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
          nr3_start=nr3_end+1
          nr3_end=nr3_end+dfftp%npp(ii)
       end do
-  
+
       do iz=1,dfftp%npp(me_pool+1)
          do iy=1,dfftp%nr2
             do ix=1,dfftp%nr1
@@ -354,7 +354,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
      enddo
 
      expgsave(:,:,:,mdir)=expgsave(:,:,:,mdir)*omega/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
-     
+
 #ifdef __PARA
  !    call reduce (2  *maxval(nh) *maxval(nh)* nat, expgsave(:,:,:,mdir))
      call mp_sum( expgsave(:,:,:,mdir),world_comm)
@@ -386,7 +386,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
                             matsincos(iw,jw,mdir+3)=matsincos(iw,jw,mdir+3)+&
                                  &dimag(expgsave(ih,jh,na,mdir) * becp_gw_c(ikb,iw,1)*becp_gw_c(jkb,jw,1))
                         endif
-                         
+
                       else
                          if(itask /= 1) then
                             !matp(iw,jw,mdir)=matp(iw,jw,mdir)+expgsave(jh,ih,na,mdir)  * becp_gw(ikb,iw,1)*becp_gw(jkb,jw,1)
