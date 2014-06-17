@@ -4,9 +4,9 @@
     restart=.false.
 /
 &lr_dav
-    num_eign=20
-    num_init=40
-    num_basis_max=300
+    num_eign=2
+    num_init=4
+    num_basis_max=10
     residue_conv_thr=1.0E-4
     start=0.4
     finish=1.5
