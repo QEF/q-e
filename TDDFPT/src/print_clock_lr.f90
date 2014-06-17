@@ -43,6 +43,7 @@ SUBROUTINE print_clock_lr()
    if(davidson) then
      CALL print_clock( 'calc_residue' )
      CALL print_clock( 'expan_basis' )
+     CALL print_clock( 'lr_discharge' )
    endif
 
    CALL print_clock( 'one_step' )

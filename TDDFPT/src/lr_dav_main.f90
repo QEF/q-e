@@ -96,7 +96,6 @@ PROGRAM lr_dav_main
       call dav_expan_basis()
       ! 
       ! Check to see if the wall time limit has been exceeded.
-      !
       if ( check_stop_now() ) then
          call lr_write_restart_dav() 
          goto 100

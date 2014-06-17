@@ -434,16 +434,8 @@ contains
     implicit none
     complex(kind=dp),external :: lr_dot
     integer :: ik, ip, ibnd,ig, pol_index, ibr, ibl, ieign,ios
-    CHARACTER(len=6), external :: int_to_char
     real(dp) :: inner
     real(DP), external ::  get_clock
-
-    ! dummy variables for math routines
-    integer :: dummy_ILO, dummy_IHI,dummy_IWORK
-    real(dp) :: dummy_ABNRM,&
-                dummy_SCALE(num_basis_max),&
-                dummy_RCONDE(num_basis_max),&
-                dummy_RCONDV(num_basis_max)
 
     call start_clock('one_step')
     write( stdout, 9000 ) get_clock( 'lr_dav_main' )
@@ -508,17 +500,56 @@ contains
       endif
     enddo
 
+    call solve_M_DC()
+    if(num_basis+2*num_eign .gt. num_basis_max) call lr_discharge()
+
+    call stop_clock('one_step')
+    RETURN
+  END subroutine one_dav_step
+  !-------------------------------------------------------------------------------
+
+  subroutine solve_M_DC()
+    !-------------------------------------------------------------------------------
+    ! Created by X.Ge in Jan. 2013
+    !-------------------------------------------------------------------------------
+    ! Calculate matrix M_DC and solve the problem in subspace
+        use io_global,            only : ionode, stdout,ionode_id
+    use kinds,                only : dp
+    use lr_variables,         only : ltammd,&
+                                     evc0, sevc0, d0psi
+    use wvfct,                only : nbnd, npwx, npw
+    use mp,                   only : mp_bcast,mp_barrier
+    use mp_world,             only : world_comm
+    use lr_us
+    use uspp,           only : okvan
+    use lr_dav_variables
+    use lr_dav_debug
+    use lr_us
+
+    implicit none
+    complex(kind=dp),external :: lr_dot
+    integer :: ik, ip, ibnd,ig, ibr, ibl, ieign,ios
+
+    ! dummy variables for math routines
+    integer :: dummy_ILO, dummy_IHI,dummy_IWORK
+    real(dp) :: dummy_ABNRM,&
+                dummy_SCALE(num_basis_max),&
+                dummy_RCONDE(num_basis_max),&
+                dummy_RCONDV(num_basis_max)
+
+    call start_clock('Solve M_DC')
+
 #ifdef __MPI
   ! This part is calculated in serial
   if(ionode) then
 #endif
     ! M_DC ~= M_D*M_C
-      call start_clock("matrix")
-      call ZGEMM('N', 'N', num_basis,num_basis,num_basis,(1.0D0,0.0D0),M_D,&
-                num_basis_max,M_C,num_basis_max,(0.0D0,0.0D0), M,num_basis_max)
-      call check("M_C")
-      call check("M_D")
-      call check("M")
+    call start_clock("matrix")
+    call ZGEMM('N', 'N', num_basis,num_basis,num_basis,(1.0D0,0.0D0),M_D,&
+               num_basis_max,M_C,num_basis_max,(0.0D0,0.0D0), M,num_basis_max)
+    call check("M_C")
+    call check("M_D")
+    call check("M")
 
     ! Solve M_DC
     ! It is dangerous to be "solved", use its shadow avatar in order to protect the original one
@@ -528,7 +559,7 @@ contains
             dummy_SCALE, dummy_ABNRM,dummy_RCONDE, dummy_RCONDV,WORK,lwork,dummy_IWORK,INFO )  
     if(.not. INFO .eq. 0) stop "al_davidson: errors solving the DC in subspace"
 
-      call stop_clock("matrix")
+    call stop_clock("matrix")
  
     ! sort the solution
     do ibr = 1, num_basis
@@ -567,12 +598,12 @@ contains
         right_full(:,:,1,ieign)=right_full(:,:,1,ieign)+right_M(ibr,eign_value_order(ieign))*vec_b(:,:,1,ibr)
       enddo
     enddo
-    !call check("recover")
- 
-    call stop_clock('one_step')
-    RETURN
-  END subroutine one_dav_step
+
+    call stop_clock('Solve M_DC')
+    return
+  end subroutine solve_M_DC
   !-------------------------------------------------------------------------------
+ 
 
   subroutine xc_sort_array_get_order(array,N,sort_order)
     !-------------------------------------------------------------------------------
@@ -646,7 +677,7 @@ contains
         enddo
       endif
      
-      ! The reason of useing this method
+      ! The reason of using this method
       call lr_1to1orth(right_res(1,1,1,ieign),left_full(1,1,1,ieign))
       call lr_1to1orth(left_res(1,1,1,ieign),right_full(1,1,1,ieign))
       ! Instead of this will be explained in the document
@@ -750,7 +781,6 @@ contains
       dav_conv=.true.
     else
       num_basis_old=num_basis
-      if(num_basis+toadd .gt. num_basis_max) call discharge_temp()
       num_basis_tot=num_basis_tot+toadd
       ! Expand the basis
       do ieign = 1, num_eign
@@ -1543,115 +1573,174 @@ contains
   end subroutine estimate_ram
   !-------------------------------------------------------------------------------
 
-  subroutine discharge_temp()
+  subroutine lr_discharge()
     !-------------------------------------------------------------------------------
-    ! Created by X.Ge in Jun. 2013
+    ! Created by X.Ge in Jun. 2014
     !-------------------------------------------------------------------------------
-    ! This routine discharges the basis set keeping only 2*num_eign best vectors for the
-    ! basis and through aways others in order to make space for the new vectors
+    ! This routine discharges the basis set keeping only n ( num_eign <= n <= 2*num_eign ) 
+    ! best vectors for the  basis and through aways others in order to make space for the 
+    ! new vectors
 
     use lr_dav_variables
     use kinds,    only : dp
     use uspp,     only : okvan
-    use io_global,     only : stdout
+    use io_global,     only : stdout, ionode,ionode_id
+    USE mp_world,          ONLY : world_comm
     use wvfct,         only : nbnd,npwx
     use klist,             only : nks
     use lr_us
+    use lr_variables,    only : evc0, sevc0
 
     implicit none
-    integer :: ieign,ib,ia
+    integer :: ieign,ibr, ieign2,ierr, num_basis_new, nwords, ia,ib,ic
+    real(dp) :: temp
+    complex(kind=dp),external :: lr_dot
+    real(kind=dp),allocatable :: sv(:),  &      ! Singular values
+                                 U(:,:), &      ! Matrix U
+                                 VT(:,:), &     ! Matrix V^T
+                                 LR_M(:,:),&    ! Combine left_M and right_M
+                                 MR(:,:),  &     ! Rotation matrix from evc_b to evc_b_new
+                                 MM(:,:)        ! LR_M^T * LR_M
 
-    write(stdout,'(/5x,"!!!! The basis set has arrived its maximum size, now discharge it",/5x,&
-                  &"to make space for the following calculation.")')
-
-    ! Set the new vec_b and s_vec_b
-    do ieign = 1, num_eign
-      vec_b(:,:,:,2*ieign-1)=right_full(:,:,:,ieign)
-      vec_b(:,:,:,2*ieign)=left_full(:,:,:,ieign)
-    enddo
-
-    ! GS orthogonalization, twice for numerical stability
-    ! 1st
-    do ib = 1, 2*num_eign
-      call lr_norm(vec_b(1,1,1,ib))
-      do ia = ib+1, num_init
-        call lr_1to1orth(vec_b(1,1,1,ia),vec_b(1,1,1,ib))
-      enddo
-    enddo
-    ! 2nd
-    do ib = 1, 2*num_eign
-      call lr_norm(vec_b(1,1,1,ib))
-      do ia = ib+1, num_init
-        call lr_1to1orth(vec_b(1,1,1,ia),vec_b(1,1,1,ib))
-      enddo
-      if(.not. poor_of_ram .and. okvan) &
-        &call lr_apply_s(vec_b(:,:,1,ib),svec_b(:,:,1,ib))
-    enddo
-
-    if(.not. poor_of_ram .and. okvan) then
-      do ieign = 1 , 2*num_eign
-        call lr_apply_s(vec_b(:,:,:,ieign),svec_b(:,:,:,ieign))
-      enddo
-    endif
+    complex(kind=dp),allocatable :: vec_b_temp(:,:,:,:),&    ! Cache for vec_b 
+                                    MRZ(:,:),&    ! Avatar of MR, but in complex domain
+                                    MRZ_temp(:,:)
  
+    call start_clock("lr_discharge")
 
-    num_basis_old=0
-    num_basis=2*num_eign
+    allocate(sv(2*num_eign))
+    allocate(U(2*num_eign,2*num_eign))
+    allocate(VT(2*num_eign,2*num_eign))
+    allocate(LR_M(num_basis,2*num_eign))
+    allocate(MR(num_basis,2*num_eign))
+    allocate(MRZ(num_basis,2*num_eign))
+    allocate(MRZ_temp(num_basis,2*num_eign))
+    allocate(MM(2*num_eign,2*num_eign))
 
-    return
-  end subroutine discharge_temp
-  !-------------------------------------------------------------------------------
-
-  subroutine discharge()
-    !-------------------------------------------------------------------------------
-    ! Created by X.Ge in Jun. 2013
-    !-------------------------------------------------------------------------------
-    ! This routine discharges the basis set keeping only 2*num_eign best vectors for the
-    ! basis and through aways others in order to make space for the new vectors
-
-    use lr_dav_variables
-    use kinds,    only : dp
-    use uspp,     only : okvan
-    use io_global,     only : stdout
-    use wvfct,         only : nbnd,npwx
-    use klist,             only : nks
-    use lr_us
-
-    implicit none
-    integer :: ieign,ibr
-
-    write(stdout,'(/5x,"!!!! The basis set has arrived its maximum size, now discharge it",/5x,&
+#ifdef __MPI
+    if(ionode) then
+#endif
+    write(stdout,'(/5x,"!!!! The basis set is close to its maximum size, now discharge it",/5x,&
                   &"to make space for the following calculation.")')
+      
+    ! Put left_M and right_M together
+    ! Be aware that l/r_M contains info for the new vec_b 
+    LR_M(1:num_basis,1:num_eign)=left_M(1:num_basis,eign_value_order(1:num_eign))
+    LR_M(1:num_basis,num_eign+1:2*num_eign)=right_M(1:num_basis,eign_value_order(1:num_eign))
+      
+    ! The column vectors in LR_M are not ortho-normalized,
+    ! therefore cannot be used directly as basis.
+    ! Calculate the overlap matrix: MM = LR_M^T * LR_M
+    call DGEMM('C', 'N', 2*num_eign, 2*num_eign, num_basis, 1.0D0, LR_M, num_basis, &
+               LR_M, num_basis, 0.0D0, MM, 2*num_eign)
 
-    ! Set the new vec_b and s_vec_b
-    do ieign = 1, num_eign
-      vec_b(:,:,:,2*ieign-1)=right_full(:,:,:,ieign)
-      vec_b(:,:,:,2*ieign)=left_full(:,:,:,ieign)
-      call lr_apply_s(vec_b(:,:,:,2*ieign-1),svec_b(:,:,:,2*ieign-1))
-      call lr_apply_s(vec_b(:,:,:,2*ieign),svec_b(:,:,:,2*ieign))
+    ! Using SVD to sort out orthonormal basis vectors from 2*num_eign vectors 
+    ! SVD: Since MM is symmetric, VT (same as U) is not really needed here
+    call DGESVD( 'A','A', 2*num_eign, 2*num_eign, MM, 2*num_eign, sv, U,&
+                2*num_eign,VT, 2*num_eign, work, lwork, info)
+    if(.not. INFO .eq. 0) stop "al_davidson: errors solving the DC in subspace"
+
+    ! Re-build ortho-normal basis
+    num_basis_new=0
+    do ieign = 1, 2*num_eign ! Keep only components with large enough singularity values
+      if(sv(ieign) .gt. residue_conv_thr) then
+        ! After this step, the column vectors of (LR_M * U) are normal-orthogonalized
+        U(:,ieign)=U(:,ieign)/sqrt(sv(ieign)) 
+        num_basis_new=num_basis_new+1
+      endif
     enddo
 
-    ! If needed set the new D_vec_b and C_vec_b
-    if(.not. poor_of_ram2) then
-      right_full(:,:,:,:)=0.0d0
-      left_full(:,:,:,:)=0.0d0
-      do ieign = 1, num_eign
-        do ibr = 1, num_basis
-          left_full(:,:,1,ieign)=left_full(:,:,1,ieign)+left_M(ibr,eign_value_order(ieign))*vec_b(:,:,1,ibr)
-          right_full(:,:,1,ieign)=right_full(:,:,1,ieign)+right_M(ibr,eign_value_order(ieign))*vec_b(:,:,1,ibr)
-        enddo
-      enddo
-  
+    ! Calculate the rotation Matrix: MR = LR_M * U
+    call DGEMM('N', 'N', num_basis, num_basis_new, 2*num_eign, 1.0D0, LR_M, num_basis, &
+               U, 2*num_eign, 0.0D0, MR, num_basis)
+
+#ifdef __MPI
+    ENDIF
+    CALL mp_bcast (MR, ionode_id, world_comm)
+    CALL mp_bcast (num_basis_new, ionode_id, world_comm)
+#endif
+
+    allocate(vec_b_temp(npwx,nbnd,nks,num_basis),stat=ierr) 
+    IF (ierr /= 0) call errore('lr_discharge',"no enough memory",ierr)
+    nwords = npwx*nbnd*nks
+
+    ! Set the new vec_b and s_vec_b
+    ! Rotation: vec_b_new = vec_b * U
+    MRZ(:,:)=cmplx(MR(:,:),0.0d0)
+    ! set vec_b
+    call ZGEMM('N', 'N', nwords, num_basis_new, &
+               num_basis, (1.0D0,0.0d0), vec_b, nwords, &
+               MRZ, num_basis, (0.0D0,0.0D0), vec_b_temp, nwords)
+    
+    vec_b=cmplx(0.0d0,0.0d0)
+    vec_b(:,:,:,1:num_basis_new)=vec_b_temp(:,:,:,1:num_basis_new)
+
+    ! Set s_vec_b if needed
+    if(.not. poor_of_ram .and. okvan) then 
+      call ZGEMM('N', 'N', nwords, num_basis_new, &
+               num_basis, (1.0D0,0.0d0), vec_b, nwords, &
+               MRZ, num_basis, (0.0D0,0.0D0), vec_b_temp, nwords)
+
+      svec_b=cmplx(0.0d0,0.0d0)
+      svec_b(:,:,:,1:num_basis_new)=vec_b_temp(:,:,:,1:num_basis_new)
     endif
 
-        left_res(:,:,:,ieign)=0.0d0
-        right_res(:,:,:,ieign)=0.0d0
-        do ibr = 1, num_basis
-          right_res(:,:,1,ieign)=right_res(:,:,1,ieign)+right_M(ibr,eign_value_order(ieign))*C_vec_b(:,:,1,ibr)
-          left_res(:,:,1,ieign)=left_res(:,:,1,ieign)+left_M(ibr,eign_value_order(ieign))*D_vec_b(:,:,1,ibr)
-        enddo
+#ifdef __MPI
+    if(ionode) then
+#endif
+    ! Re-build M_D and M_C 
+    ! MR^T * M_D * MR --> M_D
+    call ZGEMM('N', 'N', num_basis, num_basis_new, num_basis, (1.0D0,0.0D0), M_D, num_basis_max,&
+               MRZ, num_basis, (0.0D0,0.0D0), MRZ_temp, num_basis)
+
+    call ZGEMM('C', 'N', num_basis_new, num_basis_new, num_basis, (1.0D0,0.0D0), MRZ, num_basis,&
+              MRZ_temp, num_basis, (0.0D0,0.0D0), M_D, num_basis_max)
+
+    ! MR^T * M_C * MR --> M_C
+    call ZGEMM('N', 'N', num_basis, num_basis_new, num_basis, (1.0D0,0.0D0), M_C, num_basis_max,&
+               MRZ, num_basis, (0.0D0,0.0D0), MRZ_temp, num_basis)
+
+    call ZGEMM('C', 'N', num_basis_new, num_basis_new, num_basis, (1.0D0,0.0D0), MRZ, num_basis,&
+              MRZ_temp, num_basis, (0.0D0,0.0D0), M_C, num_basis_max)    
+
+#ifdef __MPI
+    ENDIF
+    CALL mp_bcast (M_D, ionode_id, world_comm)
+    CALL mp_bcast (M_C, ionode_id, world_comm)
+#endif
+   
+    ! If needed rebuild the D_vec_b and C_vec_b
+    if(.not. poor_of_ram2) then
+      ! First D_vec_b
+      call ZGEMM('N', 'N', nwords, num_basis_new, &
+               num_basis, (1.0D0,0.0d0),D_vec_b, nwords, &
+               MRZ, num_basis, (0.0D0,0.0D0), vec_b_temp, nwords)
+
+      D_vec_b=cmplx(0.0d0,0.0d0)
+      D_vec_b(:,:,:,1:num_basis_new)=vec_b_temp(:,:,:,1:num_basis_new)
+
+      ! Then C_vec_b
+      call ZGEMM('N', 'N', nwords, num_basis_new, &
+               num_basis, (1.0D0,0.0d0),C_vec_b, nwords, &
+               MRZ, num_basis, (0.0D0,0.0D0), vec_b_temp, nwords)
+
+      C_vec_b=cmplx(0.0d0,0.0d0)
+      C_vec_b(:,:,:,1:num_basis_new)=vec_b_temp(:,:,:,1:num_basis_new)
+    endif
+
+    ! Recalculate eigenproblem in the new subspace
+    num_basis=num_basis_new
+    write(stdout,'(/7x,"-------------------")') 
+    write(stdout,'(/7x,"After the discharging ...")') 
+    write(stdout,'(7x,"num of basis:",I5,3x,"total built basis:",I5)') num_basis,num_basis_tot
+    call solve_M_DC()
+
+    deallocate(sv,U,VT,MR,MRZ,LR_M,MM,MRZ_temp)
+    deallocate(vec_b_temp)
+
+    call stop_clock("lr_discharge")
     return
-  end subroutine discharge
+  end subroutine lr_discharge
   !-------------------------------------------------------------------------------
 
   subroutine dft_spectrum()
