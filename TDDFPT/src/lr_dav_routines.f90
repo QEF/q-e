@@ -653,7 +653,10 @@ contains
     
     implicit none
     integer :: ieign, flag,ibr
+    logical :: discharged
     complex(kind=dp) :: temp(npwx,nbnd)
+
+    discharged = .false. 
 
 110 continue
     max_res=0
@@ -706,7 +709,8 @@ contains
       endif
       if( dble(left2(ieign)) .gt. max_res )  max_res = dble(left2(ieign))
       
-      write (stdout,'(5x,"Residue(Squared modulus):",I5,2x,2F15.7)') ieign, dble(right2(ieign)), dble(left2(ieign))
+      write (stdout,'(5x,"Residue(Squared modulus):",I5,2x,2F15.7)') ieign, &
+       dble(right2(ieign)), dble(left2(ieign))
     enddo
  
     write(stdout,'(7x,"Largest residue:",5x,F20.12)') max_res
@@ -715,6 +719,10 @@ contains
     
     ! Forseen that the number of basis will be too large
     if(num_basis+toadd .gt. num_basis_max) then
+      if(discharged) &
+        call errore('lr_discharge',"The num_basis_max is too small that even discharge &
+                    cannot work. Please increase its value in the input.",1)
+      discharged = .true.
       call lr_discharge()
       goto 110
     endif
