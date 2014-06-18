@@ -501,7 +501,6 @@ contains
     enddo
 
     call solve_M_DC()
-    if(num_basis+2*num_eign .gt. num_basis_max) call lr_discharge()
 
     call stop_clock('one_step')
     RETURN
@@ -643,7 +642,8 @@ contains
     use lr_dav_variables, only : right_res,left_res,svecwork,C_vec_b,D_vec_b,&
                                  kill_left,kill_right,poor_of_ram2,right2,left2,&
                                  right_full,left_full,eign_value_order,residue_conv_thr,&
-                                 toadd,left_M,right_M,num_eign,dav_conv,num_basis,zero,max_res
+                                 toadd,left_M,right_M,num_eign,dav_conv,num_basis,zero,max_res,&
+                                 num_basis_max
     use lr_variables,    only : evc0, sevc0
     use kinds,  only : dp
     use io_global, only : stdout
@@ -655,6 +655,7 @@ contains
     integer :: ieign, flag,ibr
     complex(kind=dp) :: temp(npwx,nbnd)
 
+110 continue
     max_res=0
     kill_left(:)=.false.
     kill_right(:)=.false.
@@ -711,6 +712,13 @@ contains
     write(stdout,'(7x,"Largest residue:",5x,F20.12)') max_res
     if(max_res .lt. residue_conv_thr) dav_conv=.true.
     call stop_clock("calc_residue")
+    
+    ! Forseen that the number of basis will be too large
+    if(num_basis+toadd .gt. num_basis_max) then
+      call lr_discharge()
+      goto 110
+    endif
+
    return
   end subroutine dav_calc_residue
   !-------------------------------------------------------------------------------
