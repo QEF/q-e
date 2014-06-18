@@ -192,7 +192,6 @@ contains
        write(stdout,'(5x,"Restarting davidson calculation ...")')
        vec_b(:,:,:,:) = (0.0D0,0.0D0)
        CALL lr_restart_dav()
-       num_basis_tot = num_basis
        goto 101
     endif
     !
@@ -237,7 +236,7 @@ contains
     USE io_global,         ONLY : ionode, stdout
     USE lr_dav_variables,  ONLY : num_basis, num_basis_old, num_basis_max, &
                                   & vec_b, M_C, M_D, dav_iter, &
-                                  & C_vec_b, D_vec_b, poor_of_ram2
+                                  & C_vec_b, D_vec_b, poor_of_ram2,num_basis_tot
     USE lr_variables,      ONLY : nwordrestart, iunrestart
     USE wvfct,             ONLY : nbnd, npwx
     USE klist,             ONLY : nks
@@ -266,6 +265,7 @@ contains
     WRITE(free_unit,*) dav_iter 
     WRITE(free_unit,*) num_basis 
     WRITE(free_unit,*) num_basis_old
+    WRITE(free_unit,*) num_basis_tot
     !
     CLOSE( unit = free_unit )
     !
@@ -319,7 +319,8 @@ contains
     USE io_global,         ONLY : ionode, stdout, ionode_id
     USE lr_dav_variables,  ONLY : num_basis, num_basis_old, num_basis_max, &
                                   & vec_b, svec_b, M_C, M_D, poor_of_ram,  &
-                                  & dav_iter, D_vec_b, C_vec_b, poor_of_ram2
+                                  & dav_iter, D_vec_b, C_vec_b, poor_of_ram2,&
+                                  & num_basis_tot
     USE lr_variables,      ONLY : nwordrestart, iunrestart, restart
     USE wvfct,             ONLY : nbnd, npwx
     USE klist,             ONLY : nks
@@ -361,6 +362,7 @@ contains
     READ(free_unit,*) dav_iter
     READ(free_unit,*) num_basis
     READ(free_unit,*) num_basis_old
+    READ(free_unit,*) num_basis_tot
     !
     CLOSE( unit = free_unit )
     !
