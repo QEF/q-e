@@ -1602,6 +1602,7 @@ contains
     use uspp,     only : okvan
     use io_global,     only : stdout, ionode,ionode_id
     USE mp_world,          ONLY : world_comm
+    USE mp,                ONLY : mp_bcast
     use wvfct,         only : nbnd,npwx
     use klist,             only : nks
     use lr_us
