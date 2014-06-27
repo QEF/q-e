@@ -43,6 +43,7 @@ PROGRAM do_bands
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'BANDS' )
+  CALL start_clock('bands')
   !
   !   set default values for variables in namelist
   !
@@ -126,6 +127,8 @@ PROGRAM do_bands
      IF (lp) CALL write_p_avg(filp,spin_component,firstk,lastk)
   END IF
   !
+  CALL print_clock('bands')
+  CALL stop_clock('bands')
   CALL stop_pp
   STOP
 END PROGRAM do_bands
