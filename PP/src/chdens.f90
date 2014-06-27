@@ -18,7 +18,7 @@ SUBROUTINE chdens (filplot,plot_num)
   USE kinds,      ONLY : dp
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE io_files,   ONLY : nd_nmbr
-  USE mp_global,  ONLY : nproc_pool
+  USE mp_pools,   ONLY : nproc_pool
   USE mp_world,   ONLY : world_comm
   USE mp,         ONLY : mp_bcast
   USE parameters, ONLY : ntypx
@@ -551,7 +551,7 @@ SUBROUTINE plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   USE kinds, ONLY : DP
   USE constants, ONLY:  pi
   USE io_global, ONLY : stdout, ionode
-  USE mp_global,  ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
 
   IMPLICIT NONE
@@ -680,7 +680,7 @@ SUBROUTINE plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   USE kinds, ONLY : DP
   USE constants, ONLY : pi
   USE io_global, ONLY : stdout, ionode
-  USE mp_global,  ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   IMPLICIT NONE
   INTEGER :: nx, ny, ngm, nat, ityp (nat), output_format, ounit
@@ -826,7 +826,7 @@ SUBROUTINE plot_2ds (nx, ny, x0, ngm, g, rhog, output_format, ounit)
   USE kinds, ONLY : DP
   USE constants, ONLY:  pi
   USE io_global, ONLY : stdout, ionode
-  USE mp_global,  ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -944,7 +944,7 @@ SUBROUTINE plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
   USE kinds, ONLY : DP
   USE constants, ONLY:  pi
   USE io_global, ONLY : stdout, ionode
-  USE mp_global,  ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
   IMPLICIT NONE
   INTEGER :: nat, ityp (nat), ngm, nx, ny, nz, output_format, ounit

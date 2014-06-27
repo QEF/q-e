@@ -28,7 +28,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   USE wavefunctions_module, ONLY : evc
   USE io_global,            ONLY : ionode, ionode_id, stdout
   USE mp,                   ONLY : mp_bcast, mp_sum
-  USE mp_global,            ONLY : intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_world,             ONLY : world_comm
   !
   IMPLICIT NONE
