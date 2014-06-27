@@ -15,8 +15,7 @@ SUBROUTINE xk_et_collect( xk_collect, et_collect, xk, et, nkstot, nks, nbnd )
   ! ... number of k-points
   !
   USE kinds,     ONLY : DP
-  USE mp_global, ONLY : my_pool_id, npool, kunit
-  USE mp_global, ONLY : inter_pool_comm
+  USE mp_pools,  ONLY : my_pool_id, npool, kunit, inter_pool_comm
   USE mp,        ONLY : mp_sum
   !
   IMPLICIT NONE
