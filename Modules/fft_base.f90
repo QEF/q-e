@@ -50,8 +50,7 @@
         PUBLIC :: cscatter_sym, cscatter_smooth, cscatter_custom
         PUBLIC :: gather_smooth, scatter_smooth
         PUBLIC :: tg_gather, tg_cgather
-
-
+        PUBLIC :: cgather_sym_many, cscatter_sym_many
 
 !=----------------------------------------------------------------------=!
       CONTAINS
@@ -1140,6 +1139,162 @@ SUBROUTINE tg_cgather( dffts, v, tg_v )
 #endif
 
 END SUBROUTINE tg_cgather
+
+!
+!-----------------------------------------------------------------------
+SUBROUTINE cgather_sym_many( f_in, f_out, nbnd, nbnd_proc, start_nbnd_proc )
+  !-----------------------------------------------------------------------
+  !
+  ! ... Written by A. Dal Corso
+  !
+  ! ... This routine generalizes cgather_sym, receiveng nbnd complex 
+  ! ... distributed functions and collecting nbnd_proc(dfftp%mype+1) 
+  ! ... functions in each processor.
+  ! ... start_nbnd_proc(dfftp%mype+1), says where the data for each processor
+  ! ... start in the distributed variable
+  ! ... COMPLEX*16  f_in  = distributed variable (nrxx,nbnd)
+  ! ... COMPLEX*16  f_out = gathered variable (nr1x*nr2x*nr3x, 
+  !                                             nbnd_proc(dfftp%mype+1))
+  !
+  USE mp,        ONLY : mp_barrier
+  USE parallel_include
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: nbnd, nbnd_proc(dfftp%nproc), start_nbnd_proc(dfftp%nproc)
+  COMPLEX(DP) :: f_in(dfftp%nnr,nbnd)
+  COMPLEX(DP) :: f_out(dfftp%nnp*dfftp%nr3x,nbnd_proc(dfftp%mype+1))
+  !
+#if defined (__MPI)
+  !
+  INTEGER :: proc, info
+  INTEGER :: ibnd, jbnd
+  INTEGER :: displs(0:dfftp%nproc-1), recvcount(0:dfftp%nproc-1)
+  !
+  !
+  CALL start_clock( 'cgather' )
+  !
+  DO proc = 0, ( dfftp%nproc - 1 )
+     !
+     recvcount(proc) = 2 * dfftp%nnp * dfftp%npp(proc+1)
+     !
+     IF ( proc == 0 ) THEN
+        !
+        displs(proc) = 0
+        !
+     ELSE
+        !
+        displs(proc) = displs(proc-1) + recvcount(proc-1)
+        !
+     ENDIF
+     !
+  ENDDO
+  !
+  CALL mp_barrier( dfftp%comm )
+  !
+  DO proc = 0, dfftp%nproc - 1
+     DO ibnd = 1, nbnd_proc(proc+1)
+        jbnd = start_nbnd_proc(proc+1) + ibnd - 1
+        CALL MPI_GATHERV( f_in(1,jbnd), recvcount(dfftp%mype), &
+                        MPI_DOUBLE_PRECISION, f_out(1,ibnd), recvcount, &
+                        displs, MPI_DOUBLE_PRECISION, proc, dfftp%comm, info )
+     END DO
+  END DO
+  !
+  CALL errore( 'cgather_sym_many', 'info<>0', info )
+  !
+!  CALL mp_barrier( dfftp%comm )
+  !
+  CALL stop_clock( 'cgather' )
+  !
+#else
+  CALL errore('cgather_sym_many', 'do not use in serial execution', 1)
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE cgather_sym_many
+!
+!----------------------------------------------------------------------------
+SUBROUTINE cscatter_sym_many( f_in, f_out, target_ibnd, nbnd, nbnd_proc, &
+                              start_nbnd_proc   )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Written by A. Dal Corso
+  !
+  ! ... generalizes cscatter_sym. It assumes that each processor has
+  ! ... a certain number of bands (nbnd_proc(dfftp%mype+1)). The processor 
+  ! ... that has target_ibnd scatters it to all the other processors 
+  ! ... that receive a distributed part of the target function. 
+  ! ... start_nbnd_proc(dfftp%mype+1) is used to identify the processor
+  ! ... that has the required band
+  !
+  ! ... COMPLEX*16  f_in  = gathered variable (nr1x*nr2x*nr3x,
+  !                                                nbnd_proc(dfftp%mype+1) )
+  ! ... COMPLEX*16  f_out = distributed variable (nrxx)
+  !
+  USE mp,        ONLY : mp_barrier
+  USE kinds,     ONLY : DP
+  USE parallel_include
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: nbnd, nbnd_proc(dfftp%nproc), start_nbnd_proc(dfftp%nproc)
+  COMPLEX(DP) :: f_in(dfftp%nnp*dfftp%nr3x,nbnd_proc(dfftp%mype+1))
+  COMPLEX(DP) :: f_out(dfftp%nnr)
+  INTEGER :: target_ibnd
+  !
+#if defined (__MPI)
+  !
+  INTEGER :: proc, info
+  INTEGER :: displs(0:dfftp%nproc-1), sendcount(0:dfftp%nproc-1)
+  INTEGER :: ibnd, jbnd
+  !
+  !
+  CALL start_clock( 'cscatter_sym' )
+  !
+  DO proc = 0, ( dfftp%nproc - 1 )
+     !
+     sendcount(proc) = 2 * dfftp%nnp * dfftp%npp(proc+1)
+     !
+     IF ( proc == 0 ) THEN
+        !
+        displs(proc) = 0
+        !
+     ELSE
+        !
+        displs(proc) = displs(proc-1) + sendcount(proc-1)
+        !
+     ENDIF
+     !
+  ENDDO
+  !
+  f_out = (0.0_DP, 0.0_DP)
+  !
+  CALL mp_barrier( dfftp%comm )
+  !
+  DO proc = 0, dfftp%nproc - 1
+     DO ibnd = 1, nbnd_proc(proc+1)
+        jbnd = start_nbnd_proc(proc+1) + ibnd - 1
+        IF (jbnd==target_ibnd) &
+        CALL MPI_SCATTERV( f_in(1,ibnd), sendcount, displs, &
+               MPI_DOUBLE_PRECISION, f_out, sendcount(dfftp%mype), &
+               MPI_DOUBLE_PRECISION, proc, dfftp%comm, info )
+     ENDDO
+  ENDDO
+  !
+  CALL errore( 'cscatter_sym_many', 'info<>0', info )
+  !
+  CALL stop_clock( 'cscatter_sym' )
+  !
+#else
+  CALL errore('cscatter_sym_many', 'do not use in serial execution', 1)
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE cscatter_sym_many
+
 
 !=----------------------------------------------------------------------=!
    END MODULE fft_base
