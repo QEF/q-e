@@ -657,9 +657,10 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
 
     DO ik = 1, nk_l
       DO ib = 1, nb
-        wg_g ( ib, ik ) = wg ( ib, ik ) 
-        IF ( abs ( wk ( ik ) ) .GT. eps6 ) THEN
-          wg_g ( ib, ik ) = wg_g ( ib, ik ) / wk ( ik ) 
+        IF ( wk(ik) == 0.D0 ) THEN
+          wg_g(ib,ik) = wg(ib,ik)
+        ELSE
+          wg_g(ib,ik) = wg(ib,ik) / wk(ik)
         ENDIF
       ENDDO
     ENDDO
