@@ -768,8 +768,15 @@ CONTAINS
             !  generate the points along the lines
             !
             CALL generate_k_along_lines(nkaux, xkaux, wkaux, xk, wk, nkstot)
+            !
+            !  workaround: discard current wk (contains the length of k-path, 
+            !  never used), replace with wk=1 so that band occupations (wg)
+            !  are correctly written to file - needed by BerkeleyGW interface
+            !
+            wk(:) = 1.0_dp
             DEALLOCATE(xkaux)
             DEALLOCATE(wkaux)
+            !
          ELSEIF (kband_plane) THEN
 !
 !        Generate a uniform mesh of k points on the plane defined by
