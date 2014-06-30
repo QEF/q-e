@@ -12,6 +12,12 @@
 !#define __NORMALIZE_BETAMIX
 !
 #ifdef __GFORTRAN
+#if (__GNUC__<4) || ((__GNUC__==4) && (__GNUC_MINOR__<8))
+#define __GFORTRAN_HACK
+#endif
+#endif
+
+#ifdef __GFORTRAN_HACK   
 ! gfortran hack - for some mysterious reason gfortran doesn't save
 !                 derived-type variables even with the SAVE attribute
 MODULE mix_save
@@ -49,7 +55,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
                              high_frequency_mixing, &
                              mix_type_COPY, mix_type_SCAL
   USE io_global,     ONLY : stdout
-#ifdef __GFORTRAN
+#ifdef __GFORTRAN_HACK
   USE mix_save
 #endif
   !
@@ -97,7 +103,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   !
   INTEGER, SAVE :: &
     mixrho_iter = 0    ! history of mixing
-#ifndef __GFORTRAN
+#ifndef __GFORTRAN_HACK
   TYPE(mix_type), ALLOCATABLE, SAVE :: &
     df(:),        &! information from preceding iterations
     dv(:)          !     "  "       "     "        "  "
