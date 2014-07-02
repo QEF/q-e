@@ -783,7 +783,7 @@ subroutine solve_lanczos_2(numpw,numt,numl,nbuf,mbuf, alpha,lc, iv0,nbndv,&
      call mp_bcast(nbuf_ip, iproc,world_comm)
      if(nbuf_ip >0) then
         allocate(alpha_ip(nbuf_ip))
-        if(iproc==mpime) alpha_ip(:)=alpha(:)
+        if(iproc==mpime) alpha_ip(1:nbuf_ip)=alpha(1:nbuf_ip)
         call mp_bcast(alpha_ip,iproc,world_comm)
         !loop on freuqency
         pw_ip(:,:)=0.d0
