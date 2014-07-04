@@ -155,6 +155,7 @@ function find_root   ( l, xt1, xt2, eps, iret )
   iret = 0
   !
   if ( sign(f1,f2) == f1 ) then
+     find_root = 0.0_dp
      iret = 1
      return
   end if
