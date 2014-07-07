@@ -12,8 +12,7 @@ subroutine stres_nonloc_dft( rho, rho_core, nspin, sigma_nonloc_dft )
   !----------------------------------------------------------------------------
   !
   USE kinds,            ONLY : DP
-  use funct,            ONLY : gcxc, gcx_spin, gcc_spin, gcc_spin_more, &
-                               dft_is_gradient, get_igcc, get_inlc 
+  use funct,            ONLY : get_igcc, get_inlc 
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
   USE vdW_DF,           ONLY : stress_vdW_DF
