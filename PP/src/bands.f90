@@ -156,7 +156,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   USE uspp_param,           ONLY : upf, nh, nhm
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
-  USE io_global,            ONLY : ionode, ionode_id
+  USE io_global,            ONLY : ionode, ionode_id, stdout
   USE mp,                   ONLY : mp_bcast
   USE mp_world,             ONLY : world_comm
   USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
@@ -200,7 +200,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   ! threshold (Ry) for degenerate states
   REAL(DP) :: minene
   COMPLEX(DP), EXTERNAL :: cgracsc, cgracsc_nc
- ! scalar product with the S matrix
+  ! scalar product with the S matrix
 
   IF (filband == ' ') RETURN
   DO ipol=1,4
@@ -456,6 +456,9 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   !
   IF ( ionode ) THEN
      !
+     CALL punch_plottable_bands ( filband, nks1tot, nks2tot, nkstot, nbnd, &
+                                  xk, et )
+     !
      DO ik=nks1tot,nks2tot
         IF (ik == nks1) THEN
            WRITE (iunpun, '(" &plot nbnd=",i4,", nks=",i6," /")') &
@@ -498,6 +501,8 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   !
   IF ( ionode ) THEN
      CLOSE (iunpun)
+     WRITE ( stdout, &
+          '(5x,"Bands written to file ",A)') TRIM(filband)
      DO ipol=1,4
         IF (lsigma(ipol)) CLOSE(iunpun_sigma(ipol))
      ENDDO
@@ -612,3 +617,157 @@ loop_k:  DO j=start_k+2, nkstot
 
   RETURN
   END
+!
+!----------------------------------------------------------------------------
+SUBROUTINE punch_plottable_bands ( filband, nks1tot, nks2tot, nkstot, nbnd, &
+                                   xk, et )
+  !---------------------------------------------------------------------------
+  !
+  USE kinds, ONLY : dp
+  IMPLICIT NONE
+  CHARACTER(LEN=*), INTENT(IN) :: filband
+  INTEGER, INTENT(IN) :: nks1tot, nks2tot, nkstot, nbnd
+  REAL(dp), INTENT(IN) :: xk(3,nkstot), et(nbnd,nkstot)
+  !
+  INTEGER, PARAMETER :: max_lines = 100, stdout=6, iunpun0=19
+  INTEGER:: ios, i, n, nlines, npoints(max_lines), point(max_lines)
+  LOGICAL :: high_symmetry(nkstot), opnd
+  REAL(dp) :: k1(3), k2(3), kx(nkstot), ps, dxmod, dxmod_save
+  !
+  !
+  IF ( nks1tot < 1 .OR. nks2tot > nkstot .OR. nkstot < 1 .OR. nbnd < 1 ) THEN
+     CALL infomsg('punch_plottable_bands','incorrect input data, exiting')
+     RETURN
+  END IF
+  ios = 0
+  OPEN (unit = iunpun0, file = TRIM(filband)//'.gnu', status = 'unknown',&
+       form = 'formatted', iostat = ios)
+  IF ( ios /= 0 ) THEN
+     WRITE ( stdout, &
+          '(/,5x,"Error opening plottable file ",A)') TRIM(filband)//'.gnu'
+     RETURN
+  END IF
+  !
+  !  Find high-symmetry points (poor man's algorithm)
+  !
+  DO n=nks1tot,nks2tot
+     IF (n==nks1tot .OR. n==nks2tot) THEN
+        high_symmetry(n) = .true.
+     ELSE
+        k1(:) = xk(:,n) - xk(:,n-1)
+        k2(:) = xk(:,n+1) - xk(:,n)
+        IF ( k1(1)*k1(1) + k1(2)*k1(2) + k1(3)*k1(3) < 1.0d-8 .OR. &
+             k2(1)*k2(1) + k2(2)*k2(2) + k2(3)*k2(3) < 1.0d-8 ) THEN
+           CALL infomsg('punch_plottable_bands','two consecutive same k, exiting')
+           RETURN
+        END IF
+        ps = ( k1(1)*k2(1) + k1(2)*k2(2) + k1(3)*k2(3) ) / &
+             sqrt( k1(1)*k1(1) + k1(2)*k1(2) + k1(3)*k1(3) ) / &
+             sqrt( k2(1)*k2(1) + k2(2)*k2(2) + k2(3)*k2(3) )
+        high_symmetry(n) = (ABS(ps-1.d0) >1.0d-4)
+        !
+        !  The gamma point is a high symmetry point
+        !
+        IF (xk(1,n)**2+xk(2,n)**2+xk(3,n)**2 < 1.0d-8) high_symmetry(n)=.true.
+        !
+        !   save the typical length of dk
+        !
+        IF (n==2) dxmod_save = sqrt( k1(1)**2 + k1(2)**2 + k1(3)**2)
+     ENDIF
+  ENDDO
+
+  kx(nks1tot) = 0.0_dp
+  DO n=nks1tot+1,nks2tot
+     dxmod=sqrt ( (xk(1,n)-xk(1,n-1))**2 + &
+                  (xk(2,n)-xk(2,n-1))**2 + &
+                  (xk(3,n)-xk(3,n-1))**2 )
+     IF (dxmod > 5*dxmod_save) THEN
+        !
+        !   A big jump in dxmod is a sign that the point xk(:,n) and xk(:,n-1)
+        !   are quite distant and belong to two different lines. We put them on
+        !   the same point in the graph 
+        !
+        kx(n)=kx(n-1)
+     ELSEIF (dxmod > 1.d-4) THEN
+        !
+        !  This is the usual case. The two points xk(:,n) and xk(:,n-1) are in
+        !  the same path.
+        !
+        kx(n) = kx(n-1) +  dxmod
+        dxmod_save = dxmod
+     ELSE
+        !
+        !  This is the case in which dxmod is almost zero. The two points
+        !  coincide in the graph, but we do not save dxmod.
+        !
+        kx(n) = kx(n-1) +  dxmod
+        !
+     ENDIF
+  ENDDO
+  !
+  !  Now we compute how many paths there are: nlines
+  !  The first point of this path: point(iline)
+  !  How many points are in each path: npoints(iline)
+  !
+  DO n=nks1tot,nks2tot
+     IF (high_symmetry(n)) THEN
+        IF (n==nks1tot) THEN
+           !
+           !   first point. Initialize the number of lines, and the number of point
+           !   and say that this line start at the first point
+           !
+           nlines=1
+           npoints(1)=1
+           point(1)=1
+        ELSEIF (n==nks2tot) THEN
+           !
+           !    Last point. Here we save the last point of this line, but
+           !    do not increase the number of lines
+           !
+           npoints(nlines) = npoints(nlines)+1
+           point(nlines+1)=n
+        ELSE
+           !
+           !   Middle line. The current line has one more points, and there is
+           !   a new line that has to be initialized. It has one point and its
+           !   first point is the current k.
+           !
+           npoints(nlines) = npoints(nlines)+1
+           nlines=nlines+1
+           IF (nlines>max_lines) THEN
+              CALL infomsg('punch_plottable_bands','too many lines, exiting')
+              RETURN
+           END IF
+           npoints(nlines) = 1
+           point(nlines)=n
+        ENDIF
+        !
+        WRITE( stdout,'(5x,"high-symmetry point: ",3f7.4,&
+                         &"   x coordinate",f9.4)') (xk(i,n),i=1,3), kx(n)
+     ELSE
+        !
+        !   This k is not an high symmetry line so we just increase the number
+        !   of points of this line.
+        !
+        npoints(nlines) = npoints(nlines)+1
+     ENDIF
+  ENDDO
+  !
+  !  Write odd bands from left to right, even ones from right to left
+  !
+  DO i=1,nbnd
+     IF ( mod(i,2) /= 0) THEN
+        WRITE (iunpun0,'(2f10.4)') (kx(n), et(i,n),n=nks1tot,nks2tot)
+     ELSE
+        WRITE (iunpun0,'(2f10.4)') (kx(n), et(i,n),n=nks2tot,nks1tot,-1)
+     ENDIF
+  ENDDO
+  !
+  WRITE ( stdout, &
+       '(/,5x,"Plottable bands written to file ",A)') TRIM(filband)//'.gnu'
+  CLOSE(unit=iunpun0, STATUS='KEEP')
+
+  RETURN
+  !
+END SUBROUTINE punch_plottable_bands
+
