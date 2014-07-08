@@ -91,19 +91,19 @@ properties within
 Density-Functional Theory (DFT), using a Plane-Wave (PW) basis set and pseudopotentials (PP).
 In particular:
 \begin{itemize}
-  \item ground-state energy and one-electron (Kohn-Sham) orbitals;
-  \item atomic forces, stresses, and structural optimization;
-  \item molecular dynamics on the ground-state Born-Oppenheimer surface,  also with variable cell;
+  \item ground-state energy and one-electron (Kohn-Sham) orbitals, 
+        atomic forces, stresses;
+  \item structural optimization, also with variable cell;
+  \item molecular dynamics on the Born-Oppenheimer surface, also with variable cell;
   \item macroscopic polarization and finite electric fields via 
-  the modern theory of polarization (Berry Phases).
-  \item the modern theory of polarization (Berry Phases).
-  \item modern theory of orbital magnetization.
+  the modern theory of polarization (Berry Phases);
+  \item modern theory of orbital magnetization;
   \item free-energy surface calculation at fixed cell through meta-dynamics, if patched with PLUMED.
 \end{itemize}
 All of the above works for both insulators and metals, 
 in any crystal structure, for many exchange-correlation (XC) functionals
-(including spin polarization, DFT+U, nonlocal VdW functional,
-hybrid functionals), for
+(including spin polarization, DFT+U, meta-GGA, nonlocal and hybrid 
+functionals), for
 norm-conserving (Hamann-Schluter-Chiang) PPs (NCPPs) in 
 separable form or Ultrasoft (Vanderbilt) PPs (USPPs)
 or Projector Augmented Waves (PAW) method.
@@ -115,14 +115,13 @@ but are instead carried out by \texttt{neb.x} (see main user guide),
 a dedicated code for path optimization which can use \PWscf\ as 
 computational engine.
 
-
 \subsection{People}
 
-The \PWscf\ package (which included \PHonon\ 
-and \PostProc\ in earlier releases)
+The \PWscf\ package (which in earlier releases included
+\PHonon\ and \PostProc)
 was originally developed by Stefano Baroni, Stefano
-de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi (Univ. Udine), and many others.
-We quote in particular:
+de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi (Univ. Udine), 
+and many others. We quote in particular:
 \begin{itemize}
   \item David Vanderbilt's group at Rutgers for Berry's phase
   calculations;
@@ -139,17 +138,27 @@ We quote in particular:
   \item Lorenzo Paulatto (Univ.Paris VI) for PAW implementation, 
   built upon previous work by Guido Fratesi (Univ.Milano Bicocca)
   and Riccardo Mazzarello (ETHZ-USI Lugano);
-  \item Dario Alf\`e, Mike Towler (University College London), 
-   Norbert Nemec (U.Cambridge) for interface with \texttt{CASINO};
   \item Matteo Cococcioni (Univ. Minnesota) for DFT+U implementation;
+\end{itemize}
+and the more recent contributors:
+\begin{itemize}
+  \item Jong-Won Song (RIKEN) for Gau-PBE functional;
+  \item Alberto Otero de la Roza (Merced Univ.) for XDM (exchange-hole 
+   dipole moment) model of dispersions, PW86 (unrevised) and B86B functionals;
+  \item Hannu-Pekka Komsa (CSEA/Lausanne) for the HSE functional;
   \item Gabriele Sclauzero (IRRMA Lausanne) for DFT+U
-   with on-site occupations obtained from pseudopotential projectors;
-  \item Alexander Smogunov (CEA) for extended and noncollinear DFT+U
-  implementation;
-  \item Burak Himmetoglou (Univ. Minnesota) for DFT+U+J implementation;
+        with on-site occupations obtained from pseudopotential projectors;
+  \item Alexander Smogunov (CEA) for DFT+U with noncollinear magnetization;
+  \item Burak Himmetoglou (UCSB) for DFT+U+J;
+  \item Xiaochuan Ge (SISSA) for Smart MonteCarlo Langevin dynamics;
   \item Andrei Malashevich (Univ. Berkeley) for calculation of orbital
-   magnetization.
-  \item J.-W. Song for Gau-PBE implementation
+        magnetization;
+  \item Minoru Otani (AIST), Yoshio Miura (Tohoku U.), 
+        Nicephore Bonet (MIT), Nicola Marzari (Univ. Oxford), 
+        Brandon Wood (LLNL), Tadashi Ogitsu (LLNL), for ESM,
+        Effective Screening Method (PRB 73, 115407 [2006]);
+  \item Dario Alf\`e, Mike Towler (University College London), 
+        Norbert Nemec (U.Cambridge) for the interface with \texttt{CASINO}.
 \end{itemize}
 
 % \texttt{PWgui} was written by Anton Kokalj (IJS Ljubljana) and is 
@@ -157,38 +166,8 @@ We quote in particular:
 
 % \texttt{iotk} (\texttt{http://www.s3.infm.it/iotk}) was written by Giovanni Bussi  (SISSA)  .
 
-Other relevant contributions to \PWscf:
-\begin{itemize}
-  \item Axel Kohlmeyer contributed libraries and utilities to call \PWscf
-  from external codes (see the \texttt{COUPLE} sub-directory), made the
-  parallelization more modular and usable by external codes.
-  \item Ikutaro Hamada (NIMS, Japan) contributed OPTB86B-vdW and REV-vdW-DF2
-   functionals.
-  \item Alberto Otero de la Roza (Merced Univ.) contributed XDM (exchange-hole 
-   dipole moment) model of dispersions, PW86 (unrevised) and B86B functionals.
-  \item Xiaochuan Ge (SISSA) contributed Smart MonteCarlo Langevin dynamics
-  \item Yves Ferro (Univ. Provence) contributed SOGGA and M06L functionals
-  \item Minoru Otani (AIST), Yoshio Miura (Tohoku U.), 
-  Nicephore Bonet (MIT), Nicola Marzari (Univ. Oxford), 
-  Brandon Wood (LLNL), Tadashi Ogitsu (LLNL), contributed
-  Effective Screening Method (PRB 73, 115407 [2006])
-  \item Brian Kolb and Timo Thonhauser (Wake Forest University)
-  implemented the vdW-DF and vdW-DF2 functionals, with support from
-  Riccardo Sabatini and Stefano de Gironcoli (SISSA and DEMOCRITOS);
-  \item Hannu-Pekka Komsa (CSEA/Lausanne) contributed
-  the HSE functional;
-  \item Dispersions interaction in the framework of DFT-D were
-  contributed by Daniel Forrer (Padua Univ.) and Michele Pavone
-  (Naples Univ. Federico II);
- \item Filippo Spiga (ICHEC) contributed the
-  mixed MPI-OpenMP parallelization;
-  \item The initial BlueGene porting was done by Costas Bekas and
-  Alessandro Curioni (IBM Zurich).
-\end{itemize}
-
 This guide was mostly written by Paolo Giannozzi.
-Mike Towler
-wrote the \PWscf\ to \texttt{CASINO} subsection.
+Mike Towler wrote the \PWscf\ to \texttt{CASINO} subsection.
 
  \subsection{Terms of use}
 

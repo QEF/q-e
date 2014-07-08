@@ -124,7 +124,8 @@ chdens.o : ../../Modules/io_global.o
 chdens.o : ../../Modules/ions_base.o
 chdens.o : ../../Modules/kind.o
 chdens.o : ../../Modules/mp.o
-chdens.o : ../../Modules/mp_global.o
+chdens.o : ../../Modules/mp_bands.o
+chdens.o : ../../Modules/mp_pools.o
 chdens.o : ../../Modules/mp_world.o
 chdens.o : ../../Modules/parameters.o
 chdens.o : ../../Modules/recvec.o
@@ -572,6 +573,7 @@ sym_band.o : ../../Modules/io_global.o
 sym_band.o : ../../Modules/ions_base.o
 sym_band.o : ../../Modules/kind.o
 sym_band.o : ../../Modules/mp.o
+sym_band.o : ../../Modules/mp_bands.o
 sym_band.o : ../../Modules/mp_global.o
 sym_band.o : ../../Modules/mp_images.o
 sym_band.o : ../../Modules/noncol.o
@@ -657,7 +659,7 @@ write_p_avg.o : ../../Modules/io_global.o
 write_p_avg.o : ../../Modules/ions_base.o
 write_p_avg.o : ../../Modules/kind.o
 write_p_avg.o : ../../Modules/mp.o
-write_p_avg.o : ../../Modules/mp_global.o
+write_p_avg.o : ../../Modules/mp_bands.o
 write_p_avg.o : ../../Modules/mp_world.o
 write_p_avg.o : ../../Modules/noncol.o
 write_p_avg.o : ../../Modules/recvec.o
@@ -678,6 +680,6 @@ xctest.o : ../../Modules/kind.o
 xctest.o : ../../Modules/mp_global.o
 xk_et_collect.o : ../../Modules/kind.o
 xk_et_collect.o : ../../Modules/mp.o
-xk_et_collect.o : ../../Modules/mp_global.o
+xk_et_collect.o : ../../Modules/mp_pools.o
 xsf.o : ../../Modules/constants.o
 xsf.o : ../../Modules/kind.o

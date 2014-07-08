@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2014 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,13 +12,32 @@ subroutine slater (rs, ex, vx)
   !        Slater exchange with alpha=2/3
   !
   USE kinds, ONLY : DP
+#ifdef __LIBXC
+  use xc_f90_types_m
+  use xc_f90_lib_m
+#endif
   implicit none
-  real(DP) :: rs, ex, vx
-  real(DP), parameter  :: f= -0.687247939924714d0, alpha = 2.0d0/3.0d0
+  real(dp), intent(in) :: rs
+  real(dp), intent(out):: ex, vx
+#ifdef __LIBXC  
+  real(dp):: rho 
+  real(dp), parameter :: pi34 = 0.6203504908994d0 ! pi34=(3/4pi)^(1/3)
+  integer :: func_id = 1  ! Slater Exchange
+  integer :: size = 1
+  TYPE(xc_f90_pointer_t) :: xc_func
+  TYPE(xc_f90_pointer_t) :: xc_info
+  
+  rho = (pi34/rs)**3
+  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)    
+  call xc_f90_lda_exc_vxc(xc_func, size, rho ,ex, vx)  
+  call xc_f90_func_end(xc_func)  
+#else
+  real(dp), parameter  :: f= -0.687247939924714d0, alpha = 2.0d0/3.0d0
   ! f = -9/8*(3/2pi)^(2/3)
   !
   ex = f * alpha / rs
   vx = 4.d0 / 3.d0 * f * alpha / rs
+#endif
   !
   return
 end subroutine slater
@@ -127,10 +146,30 @@ subroutine pz (rs, iflag, ec, vc)
   !     iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
   !
   USE kinds, ONLY : DP
+#ifdef __LIBXC
+  use xc_f90_types_m
+  use xc_f90_lib_m
+#endif
   implicit none
-  real(DP) :: rs, ec, vc
-  integer :: iflag
-  !
+  real(dp), intent(in) :: rs
+  real(dp), intent(out):: ec, vc
+  integer, intent(in)  :: iflag
+#ifdef __LIBXC
+  real(dp):: rho 
+  real(dp), parameter :: pi34 = 0.6203504908994d0 ! pi34=(3/4pi)^(1/3)
+  integer :: func_id = 9   ! Perdew & Zunger
+    integer :: size = 1
+  TYPE(xc_f90_pointer_t) :: xc_func
+  TYPE(xc_f90_pointer_t) :: xc_info
+
+  if (iflag.eq.1)  func_id = 9   ! Perdew & Zunger
+  if (iflag.eq.2)  func_id = 11  ! Ortiz & Ballone (PZ)
+
+  rho = (pi34/rs)**3
+  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)    
+  call xc_f90_lda_exc_vxc(xc_func, size, rho, ec, vc)  
+  call xc_f90_func_end(xc_func)  
+#else
   real(DP) :: a (2), b (2), c (2), d (2), gc (2), b1 (2), b2 (2)
   real(DP) :: lnrs, rs12, ox, dox
   !
@@ -156,6 +195,7 @@ subroutine pz (rs, iflag, ec, vc)
      ec = gc (iflag) / ox
      vc = ec * dox / ox
   endif
+#endif
   !
   return
 end subroutine pz
@@ -311,10 +351,30 @@ subroutine pw (rs, iflag, ec, vc)
   !     iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
   !
   USE kinds, ONLY : DP
+#ifdef __LIBXC
+  use xc_f90_types_m
+  use xc_f90_lib_m
+#endif
   implicit none
-  real(DP) :: rs, ec, vc
-  integer :: iflag
-  !
+  real(dp), intent(in) :: rs
+  real(dp), intent(out):: ec, vc
+  integer, intent(in) :: iflag 
+#ifdef __LIBXC
+  real(dp):: rho 
+  real(dp), parameter :: pi34 = 0.6203504908994d0 ! pi34=(3/4pi)^(1/3)
+  integer :: func_id = 12   ! Perdew & Zunger
+  integer :: size = 1
+  TYPE(xc_f90_pointer_t) :: xc_func
+  TYPE(xc_f90_pointer_t) :: xc_info
+
+  if (iflag.eq.1)  func_id = 12  ! Perdew & Wang
+  if (iflag.eq.2)  func_id = 14  ! Ortiz & Ballone (PW)
+
+  rho =  (pi34/rs)**3
+  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)    
+  call xc_f90_lda_exc_vxc(xc_func,size , rho, ec, vc)
+  call xc_f90_func_end(xc_func)  
+#else
   real(DP) :: a, b1, b2, c0, c1, c2, c3, d0, d1
   parameter (a = 0.031091d0, b1 = 7.5957d0, b2 = 3.5876d0, c0 = a, &
        c1 = 0.046644d0, c2 = 0.00664d0, c3 = 0.01043d0, d0 = 0.4335d0, &
@@ -352,7 +412,7 @@ subroutine pw (rs, iflag, ec, vc)
           * olog - 2.d0 / 3.d0 * a * (1.d0 + a1 (iflag) * rs) * dom / &
           (om * (om + 1.d0) )
   endif
-  !
+#endif
   return
 end subroutine pw
 !
@@ -875,12 +935,45 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : pi
+#ifdef __LIBXC
+  use xc_f90_types_m
+  use xc_f90_lib_m
+#endif
   implicit none
-  real(DP) :: rho, grho, sx, v1x, v2x
+  real(dp), intent(in) :: rho, grho
   ! input: charge and squared gradient
-  ! output: energy
-  ! output: potential
-  integer :: iflag
+  real(dp), intent(out):: sx, v1x, v2x
+  ! output: energy, potential
+  integer, intent(in) :: iflag
+#ifdef __LIBXC
+  ! local variables
+  integer :: func_id = -1 ! not set
+  integer :: size = 1
+  TYPE(xc_f90_pointer_t) :: xc_func
+  TYPE(xc_f90_pointer_t) :: xc_info
+  real(dp) :: exc, ex_lda = 0.0d0 , vx_lda = 0.0d0
+
+  if (iflag.eq.1)  func_id = 101
+  if (iflag.eq.2)  func_id = 102
+  if (iflag.eq.3)  func_id = 116
+  if (iflag.eq.5)  func_id = 141
+  if (func_id==-1) call errore('pbex','case not implemented with libxc',iflag)
+
+  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)    
+  call xc_f90_gga_exc_vxc(xc_func, size, rho, grho, exc, v1x, v2x)  
+  call xc_f90_func_end(xc_func)  
+
+  ! remove Slater term for compatibility with QE  
+  call xc_f90_func_init(xc_func, xc_info, 1, XC_UNPOLARIZED)       
+  call xc_f90_lda_exc_vxc(xc_func, size, rho, ex_lda, vx_lda)  
+  call xc_f90_func_end(xc_func) 
+  exc = exc - ex_lda 
+  v1x = v1x - vx_lda 
+  
+  sx = exc * rho  ! e_x = rho * \epsilon_x
+  v2x = v2x*2.0_dp
+
+#else
   ! local variables
   real(DP) :: kf, agrho, s1, s2, ds, dsg, exunif, fx
   ! (3*pi2*|rho|)^(1/3)
@@ -976,8 +1069,8 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   end if
   v1x = sx + dxunif * fx + exunif * dfx * ds
   v2x = exunif * dfx * dsg / agrho
-
   sx = sx * rho
+#endif
   return
 end subroutine pbex
 !
@@ -1057,9 +1150,40 @@ subroutine pbec (rho, grho, iflag, sc, v1c, v2c)
   ! iflag=3: L. Chiodo et al, PRL 108, 126402 (2012)  (PBEQ2D)
   !
   USE kinds, ONLY : DP
+#ifdef __LIBXC
+  use xc_f90_types_m
+  use xc_f90_lib_m
+#endif
   implicit none
   integer, intent(in) :: iflag
-  real(DP) :: rho, grho, sc, v1c, v2c
+  real(DP), intent(in) :: rho, grho
+  real(DP), intent(out):: sc, v1c, v2c
+#ifdef __LIBXC
+  ! local variables
+  integer :: func_id = -1 ! not set
+  integer :: size = 1
+  TYPE(xc_f90_pointer_t) :: xc_func
+  TYPE(xc_f90_pointer_t) :: xc_info
+  real(dp) :: exc, ec_lda = 0.0d0 , vc_lda = 0.0d0
+
+  if (iflag.eq.1)  func_id = 130
+  if (iflag.eq.2)  func_id = 133
+  if (iflag.eq.3)  call errore('pbec','case not implemented with libxc',iflag)
+
+  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)      
+  call xc_f90_gga_exc_vxc(xc_func, size, rho, grho, exc, v1c, v2c)       
+  call xc_f90_func_end(xc_func) 
+  ! remove PW correlation for compatibility with QE  
+  call xc_f90_func_init(xc_func, xc_info, 12, XC_UNPOLARIZED)    
+  call xc_f90_lda_exc_vxc(xc_func,size , rho, ec_lda, vc_lda)
+  call xc_f90_func_end(xc_func) 
+  exc = exc - ec_lda 
+  v1c = v1c - vc_lda
+  
+  sc = exc * rho  ! e_x = rho * \epsilon_x
+  v2c = v2c*2.0_dp
+
+#else
   real(DP), parameter :: ga = 0.031091d0
   real(DP) :: be (3)
 !             pbe           pbesol   pbeq2d
@@ -1096,6 +1220,7 @@ subroutine pbec (rho, grho, iflag, sc, v1c, v2c)
      v1c=v1c+v1c2D
      v2c=v2c+v2c2D
   endif
+#endif
   !
   return
 end subroutine pbec

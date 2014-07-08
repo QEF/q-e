@@ -11,6 +11,7 @@
 MODULE xml_input
 
    USE xml_io_base, ONLY : attr
+   USE qexml_module, ONLY : qexml_write_header
    USE iotk_module
    USE kinds
 
@@ -35,8 +36,6 @@ MODULE xml_input
       CHARACTER(LEN=256) :: filename
       INTEGER            :: ierr
 
-      return
-
       filename = 'qe_input.xml'
       
       IF ( ionode ) THEN
@@ -57,7 +56,7 @@ MODULE xml_input
          CALL iotk_write_attr( attr, "xmlns:tns", "http://www.deisa.org/pwscf/3_2" )
          CALL iotk_write_begin( iunpun, "schema", attr )
 
-         CALL write_header( "Quantum ESPRESSO", TRIM(version_number) )
+         CALL qexml_write_header( "Quantum ESPRESSO", TRIM(version_number) )
 
          CALL iotk_write_attr( attr, "section_type", "namelist", FIRST = .TRUE. )
          CALL iotk_write_begin( iunpun, "CONTROLS", attr )

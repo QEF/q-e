@@ -172,7 +172,7 @@ bp_mod.o : ../../Modules/cell_base.o
 bp_mod.o : ../../Modules/fft_base.o
 bp_mod.o : ../../Modules/kind.o
 bp_mod.o : ../../Modules/mp.o
-bp_mod.o : ../../Modules/mp_world.o
+bp_mod.o : ../../Modules/mp_images.o
 bp_mod.o : ../../Modules/recvec.o
 bp_qvan3.o : ../../Modules/ions_base.o
 bp_qvan3.o : ../../Modules/kind.o
@@ -1834,7 +1834,6 @@ update_pot.o : ../../Modules/constants.o
 update_pot.o : ../../Modules/control_flags.o
 update_pot.o : ../../Modules/fft_base.o
 update_pot.o : ../../Modules/fft_interfaces.o
-update_pot.o : ../../Modules/funct.o
 update_pot.o : ../../Modules/io_files.o
 update_pot.o : ../../Modules/io_global.o
 update_pot.o : ../../Modules/ions_base.o

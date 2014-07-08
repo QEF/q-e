@@ -344,6 +344,7 @@ lr_sm1_psi.o : ../../Modules/uspp.o
 lr_sm1_psi.o : ../../PW/src/pwcom.o
 lr_sm1_psi.o : ../../PW/src/realus.o
 lr_sm1_psi.o : lr_variables.o
+lr_solve_e.o : ../../Modules/becmod.o
 lr_solve_e.o : ../../Modules/cell_base.o
 lr_solve_e.o : ../../Modules/control_flags.o
 lr_solve_e.o : ../../Modules/fft_base.o

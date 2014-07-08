@@ -11,7 +11,8 @@
 !                        META-GGA FUNCTIONALS
 !
 !  Available functionals : 
-!           - TPSS
+!           - TPSS (Tao, Perdew, Staroverov & Scuseria)
+!           - TB09 (via libxc)
 !           - M06L
 !
 !=========================================================================
@@ -24,8 +25,7 @@
 !-------------------------------------------------------------------------
 subroutine tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
   !-----------------------------------------------------------------------
-  !     tpss metaGGA corrections for exchange and correlation - Hartree a.u.
-  !
+  !     TPSS metaGGA corrections for exchange and correlation - Hartree a.u.
   !
   !       input:  rho, grho=|\nabla rho|^2, tau = kinetic energy density
   !               definition:  E_x = \int E_x(rho,grho) dr
@@ -36,13 +36,47 @@ subroutine tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
   !                       v3x= D(E_x)/D(tau)
   !
   USE kinds,            ONLY : DP
-
+#ifdef __LIBXC
+  use xc_f90_types_m
+  use xc_f90_lib_m
+#endif
   implicit none  
+  real(DP), intent(in) :: rho, grho, tau
+  real(dp), intent(out):: sx, sc, v1x, v2x, v3x, v1c, v2c, v3c
+#ifdef __LIBXC
+  TYPE(xc_f90_pointer_t) :: xc_func
+  TYPE(xc_f90_pointer_t) :: xc_info
+  integer :: size = 1
+  integer :: func_id = 202  !
+  real(dp) :: lapl_rho, vlapl_rho ! not used in TPSS
+ 
+  lapl_rho = grho
 
-  real(DP) :: rho, grho, tau,sx, sc, v1x, v2x,v3x,v1c,v2c,v3c
-  real(DP) :: small  
-  parameter (small = 1.E-10_DP) 
-  ! exchange
+  ! exchange  
+  func_id = 202
+  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)    
+  call xc_f90_mgga_exc_vxc(xc_func, size, rho, grho, lapl_rho, 0.5_dp*tau,&
+                               sx, v1x, v2x, vlapl_rho, v3x)  
+  call xc_f90_func_end(xc_func)	
+  
+  sx  = sx * rho
+  v2x = v2x*2.0_dp
+  v3x = 0.5_dp*v3x
+
+  ! correlation
+  func_id = 231  ! Perdew, Tao, Staroverov & Scuseria correlation  
+  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)   
+  call xc_f90_mgga_exc_vxc(xc_func,size , rho, grho, lapl_rho, 0.5_dp*tau,&
+                               sc, v1c, v2c, vlapl_rho, v3c)  
+  call xc_f90_func_end(xc_func)
+
+  sc  = sc * rho
+  v2c = v2c*2.0_dp
+  v3c = 0.5_dp*v3c       
+
+#else
+  real(DP), parameter :: small = 1.E-10_DP
+
   if (rho.le.small) then  
      sx = 0.0_DP  
      v1x = 0.0_DP  
@@ -54,9 +88,12 @@ subroutine tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
      v3c=0.0_DP
      return
   end if
+  ! exchange
   call metax(rho,grho,tau,sx,v1x,v2x,v3x)
-  !
+  ! correlation
   call metac(rho,grho,tau,sc,v1c,v2c,v3c)
+  !
+#endif
   !
   return  
 end subroutine tpsscxc
@@ -1348,11 +1385,58 @@ end subroutine gvt4
 !                          END M06L
 !
 !=========================================================================
+!
+!                          TB09
+!-----------------------------------------------------------------------
 
+subroutine tb09cxc(rho, grho, tau, sx, sc, v1x, v2x,v3x,v1c, v2c,v3c)
 
-
+  USE kinds,            ONLY : DP
+#ifdef __LIBXC
+  use xc_f90_types_m
+  use xc_f90_lib_m
+#endif
+  implicit none  
+  real(DP), intent(in) :: rho, grho, tau
+  real(dp), intent(out):: sx, sc, v1x, v2x, v3x, v1c, v2c, v3c
+#ifdef __LIBXC
+  TYPE(xc_f90_pointer_t) :: xc_func
+  TYPE(xc_f90_pointer_t) :: xc_info
+  integer :: size = 1
+  integer :: func_id = 208  !Tran & Blaha correction to Becke & Johnson
+  real(dp) :: lapl_rho, vlapl_rho ! not used in TB09
   
+  lapl_rho = grho
+  
+  ! ---------------------------- Exchange
+  
+  func_id = 208  !Tran & Blaha correction to Becke & Johnson  -- TB09 
+ 
+  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)    
+  call xc_f90_mgga_vxc(xc_func, size, rho, grho, lapl_rho, 0.5_dp*tau, &
+      v1x, v2x, vlapl_rho, v3x)  
+  call xc_f90_func_end(xc_func)	
+  
+  sx = 0.0d0		       
+  v2x = v2x*2.0_dp
+  v3x = v3x*0.5_dp
 
+  ! ---------------------------- Correlation  
   
+  func_id = 231  ! Perdew, Tao, Staroverov & Scuseria correlation  -- TPSS
   
+  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)   
+  call xc_f90_mgga_exc_vxc(xc_func, size, rho, grho, lapl_rho, 0.5_dp*tau, &
+     sc, v1c, v2c, vlapl_rho, v3c)  
+  call xc_f90_func_end(xc_func)
+
+  sc = sc * rho			       
+  v2c = v2c*2.0_dp
+  v3c = v3c*0.5_dp
+#else
+  call errore('tb09','need libxc',1)
+#endif
+end subroutine tb09cxc
+
+!c     ==================================================================
 

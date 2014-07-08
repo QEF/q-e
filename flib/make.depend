@@ -11,6 +11,7 @@ erf.o : ../Modules/kind.o
 expint.o : ../Modules/kind.o
 functionals.o : ../Modules/constants.o
 functionals.o : ../Modules/kind.o
+functionals.o : ../Modules/libxc.o
 generate_k_along_lines.o : ../Modules/kind.o
 invmat.o : ../Modules/kind.o
 invmat_complex.o : ../Modules/kind.o
@@ -20,6 +21,7 @@ lsda_functionals.o : ../Modules/constants.o
 lsda_functionals.o : ../Modules/kind.o
 metagga.o : ../Modules/constants.o
 metagga.o : ../Modules/kind.o
+metagga.o : ../Modules/libxc.o
 more_functionals.o : ../Modules/constants.o
 more_functionals.o : ../Modules/kind.o
 plot_io.o : ../Modules/io_global.o

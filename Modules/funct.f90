@@ -104,6 +104,7 @@ module funct
   !              "ev93"  = "sla+pw+evx+nogc"   = Engel-Vosko
   !              "tpss"  = "sla+pw+tpss+tpss"  = TPSS Meta-GGA
   !              "m06l"  = "nox+noc+m6lx+m6lc" = M06L Meta-GGA
+  !              "tb09"  = "sla+pw+tb09+tb09"  = TB09 Meta-GGA
   !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
   !              "hse"   = "sla+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof 
   !                                              (HSE 06, see note below)
@@ -157,7 +158,7 @@ module funct
   !              "hse"    HSE screened exchange          igcx =12
   !              "rw86"   revised PW86                   igcx =13
   !              "pbe"    same as PBX, back-comp.        igcx =14
-  !              "meta"   same as TPSS, back-comp.       igcx =15
+  !              "tb09"   TB09 meta-GGA                  igcx =15
   !              "c09x"   Cooper 09                      igcx =16
   !              "sox"    sogga                          igcx =17
   !              "m6lx"   M06L exchange Meta-GGA         igcx =18
@@ -181,7 +182,7 @@ module funct
   !              "b3lp"   B3LYP (Lee-Yang-Parr*0.81)     igcc =7
   !              "psc"    PBEsol corr                    igcc =8
   !              "pbe"    same as PBX, back-comp.        igcc =9
-  !              "meta"   same as TPSS, back-comp.       igcc =10
+  !              "tb09"   TB09 meta-GGA                  igcx =10
   !              "m6lc"   M06L corr  Meta-GGA            igcc =11
   !              "q2dc"   Q2D correlation grad corr      igcc =12
   !
@@ -234,6 +235,7 @@ module funct
   !              c09x    V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
   !              tpss    J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria, 
   !                      PRL 91, 146401 (2003)
+  !              tb09    F Tran and P Blaha, Phys.Rev.Lett. 102, 226401 (2009) 
   !              sogga   Y. Zhao and D. G. Truhlar, JCP 128, 184109 (2008)
   !              m06l    Y. Zhao and D. G. Truhlar, JCP 125, 194101 (2006)
   !              gau-pbe J.-W. Song, K. Yamashita, K. Hirao JCP 135, 071103 (2011)
@@ -299,11 +301,11 @@ module funct
 
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
                'TPSS', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
-               'META', 'C09X', 'SOX', 'M6LX', 'Q2DX', 'GAUP', 'PW86', 'B86B', &
+               'TB09', 'C09X', 'SOX', 'M6LX', 'Q2DX', 'GAUP', 'PW86', 'B86B', &
                'OBK8', 'OB86', 'EVX', 'B86R' / 
 
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'TPSS',&
-               'B3LP', 'PSC', 'PBE', 'META', 'M6LC', 'Q2DC' / 
+               'B3LP', 'PSC', 'PBE', 'TB09', 'M6LC', 'Q2DC' / 
 
   data nonlocc / '    ', 'VDW1', 'VDW2', 'VV10' / 
 
@@ -604,6 +606,13 @@ CONTAINS
        CALL set_dft_value( igcc,  6 )
        call set_dft_value (inlc,0) !Default    
        dft_defined = .true.
+    ! special case : TB09 meta-GGA Exc
+    else IF ('TB09'.EQ. TRIM(dftout ) ) THEN
+       CALL set_dft_value( iexch, 1 )
+       CALL set_dft_value( icorr, 4 )
+       CALL set_dft_value( igcx, 15 )
+       CALL set_dft_value( igcc, 10 )
+       call set_dft_value (inlc,0) !Default    
               
     ! special cases : OEP no GC part (nor LDA...) and no correlation by default
     else IF ('OEP' .EQ. TRIM(dftout) ) THEN
@@ -732,9 +741,6 @@ CONTAINS
     if (igcx == 14) igcx = 3 ! PBE -> PBX
     if (igcc == 9) igcc = 4  ! PBE -> PBC
 
-    if (igcx == 15) igcx = 7 ! TPSS -> META
-    if (igcc == 10) igcc = 6 ! TPSS -> META
-
     if (igcx == 6) &
          call errore('set_dft_from_name','OPTX untested! please test',-igcx)
          
@@ -795,7 +801,7 @@ CONTAINS
 
     isnonlocc = (inlc > 0)
 
-    ismeta     =  (igcx == 7) .or. (igcx == 18)
+    ismeta    =  (igcx == 7) .or. (igcx == 15) .or. (igcx == 18)
 
     ! PBE0
     IF ( iexch==6 .or. igcx ==8 ) exx_fraction = 0.25_DP
@@ -2205,17 +2211,13 @@ subroutine tau_xc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
   !_________________________________________________________________________
   
   if     (igcx == 7  .and. igcc == 6) then
-  
      call tpsscxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-     
+  elseif (igcx == 15 .and. igcc == 10) then
+     call  tb09cxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
   elseif (igcx == 18 .and. igcc == 11) then
-  
      call   m06lxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-     
   else
-  
      call errore('v_xc_meta','wrong igcx and/or igcc',1)
-     
   end if
   
   return
