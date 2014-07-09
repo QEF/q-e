@@ -1,5 +1,26 @@
 set dir [file dirname [info script]]
-lappend auto_path $dir [file join $dir .. .. GUI Guib lib]
+
+# do we use the svn version
+
+set libdir [file join $dir .. .. GUI Guib lib]
+#
+if { [file isdirectory $libdir] } {    
+    lappend auto_path $dir $libdir
+
+} else {
+    # do we use the tarball version
+
+    set libdir [glob -nocomplain -directory [file join $dir .. ..]  \
+                    [file join PWgui-* lib Guib-* lib]]
+    #
+    if { $libdir != {} && [file isdirectory $libdir] } {
+        lappend auto_path $dir $libdir
+
+    } else {
+        puts stderr "no usable directory containing the tclu library found; you need to download the PWgui package"
+        exit 1
+    }
+}
 
 package require tclu 0.9
 package require struct::tree  2.1
