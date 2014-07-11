@@ -436,7 +436,7 @@ MODULE london_module
     ! ityp : type of each atom
     !
     REAL ( DP ) :: dist , f_damp , dtau ( 3 ) , force_london ( 3 , nat ) , &
-                   dist6 , dist7 , exparg , expval , par , fac , add
+                   dist6 , dist7 , exparg , expval , par , fac , add, aux(3)
     ! locals :
     ! dist         : distance R_ij between the current pair of atoms
     ! f_damp       :  damping function
@@ -501,7 +501,8 @@ MODULE london_module
            !
            par = beta / ( R_sum ( ityp ( atb ) , ityp ( ata ) ) )
            !
-!$omp parallel do private(nr,dist,dist6,dist7,exparg,expval,fac,add,ipol) default(shared), reduction(+:force_london)
+           aux(:) = 0.d0
+!$omp parallel do private(nr,dist,dist6,dist7,exparg,expval,fac,add,ipol) default(shared), reduction(+:aux)
            DO nr = 1 , nrm
             !
             dist  = alat * sqrt ( dist2 ( nr ) )
@@ -515,8 +516,8 @@ MODULE london_module
             add = 6.d0 / dist
             !
             DO ipol = 1 , 3
-              !
-              force_london ( ipol , ata ) = force_london ( ipol , ata ) + &
+              ! workaround for OpenMP on Intel compilers
+              aux(ipol) = aux(ipol) + &
                            ( scal6 / ( 1 + expval ) * fac * &
                            ( - par * expval / ( 1.d0 + expval ) + add ) * &
                            r ( ipol , nr ) * alat / dist )
@@ -525,6 +526,9 @@ MODULE london_module
             !
            END DO
 !$omp end parallel do 
+           DO ipol = 1 , 3
+              force_london ( ipol , ata ) = force_london ( ipol , ata ) + aux(ipol)
+           ENDDO
            !
          END IF
          !
