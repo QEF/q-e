@@ -36,6 +36,10 @@ PROGRAM lr_dav_main
   use lr_dav_routines
   use lr_dav_variables
   use lr_dav_debug
+#ifdef __ENVIRON
+  USE plugin_flags,          ONLY : use_environ
+  USE environ_info,          ONLY : environ_summary
+#endif
 
   !Debugging
   USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,check_vector_gamma
@@ -55,6 +59,12 @@ PROGRAM lr_dav_main
 
   !   Reading input file and PWSCF xml, some initialisation
   CALL lr_readin ( )
+
+  ! Writing a summary to the standard output about Environ variables
+#ifdef __ENVIRON
+  IF ( use_environ ) CALL environ_summary()
+#endif
+ 
   CALL check_stop_init()
 
   CALL lr_init_nfo() !Initialisation of degauss/openshell related stuff

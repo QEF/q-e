@@ -170,8 +170,10 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
               dv_pol(:) = 0.0d0
               dv_epsilon(:) = 0.0d0
               !
-              WRITE( stdout, '(5x,"ENVIRON: Calculate the response &
-                          & polarization and dielectric potentials")' )
+              IF (.not.davidson) THEN
+                 WRITE( stdout, '(5x,"ENVIRON: Calculate the response &
+                             & polarization and dielectric potentials")' )
+              ENDIF
               !
               CALL calc_vsolvent_tddfpt(dfftp%nnr, nspin, rho%of_r(:,1), &
                                        & rho_1(:,1), dv_pol, dv_epsilon)
