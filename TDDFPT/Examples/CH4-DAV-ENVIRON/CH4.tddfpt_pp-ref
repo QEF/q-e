@@ -1,0 +1,18 @@
+ Warning: Only a single cpu will be used!
+
+     Program TDDFPT_PP v.5.1 (svn rev. 11078M) starts on 12Jul2014 at 14: 7:49 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+    The spectrum is in file: 
+ CH4.plot                                                                       
+                                                                                
+                                                                                
+                    
+ Calculation is finished.
