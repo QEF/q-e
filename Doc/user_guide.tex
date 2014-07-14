@@ -172,16 +172,40 @@ Paolo Giannozzi (Univ.Udine, Italy) and Layla Martin-Samos
 of the CINECA National Supercomputing Center in Bologna under 
 the responsibility of Carlo Cavazzoni.
 
-Main contributors to \qe, in addition to the authors of the paper 
-mentioned in Sect.\ref{SubSec:Terms}, are acknowledged in the 
-documentation of each package. An alphabetic list of further
+Contributors to \qe, beyond the authors of the paper 
+mentioned in Sect.\ref{SubSec:Terms}, include:
+\begin{itemize}
+  \item Axel Kohlmeyer for libraries and utilities to call \qe\
+  from external codes (see the \texttt{COUPLE} sub-directory), made the
+  parallelization more modular and usable by external codes;
+  \item \`Eric Germaneau for TB09 meta-GGA functional, using \texttt{libxc};
+  \item Yves Ferro (Univ. Provence) for SOGGA and M06L functionals;
+  \item Robert DiStasio et al. (Princeton) for Tkatchenko-Scheffler
+  vdW corrections;
+  \item Ikutaro Hamada (NIMS, Japan) for OPTB86B-vdW and REV-vdW-DF2
+   functionals;
+  \item Brian Kolb and Timo Thonhauser (Wake Forest University)
+  for the vdW-DF and vdW-DF2 functionals, with support from
+  Riccardo Sabatini and Stefano de Gironcoli (SISSA and DEMOCRITOS);
+  \item  Daniel Forrer (Padua Univ.) and Michele Pavone
+  (Naples Univ. Federico II) for dispersions interaction in the 
+  framework of DFT-D;
+  \item Filippo Spiga (Cambridge) for mixed MPI-OpenMP parallelization;
+  \item Costas Bekas and Alessandro Curioni (IBM Zurich) for the initial
+  BlueGene porting.
+\end{itemize}
+
+Contributors to specific \qe\ packages are acknowledged in the 
+documentation of each package.
+
+An alphabetic list of further
 contributors who answered questions on the mailing list, found 
 bugs, helped in porting to new architectures, wrote some code,
 contributed in some way or another at some stage, follows:
 \begin{quote}
   {\AA}ke Sandgren, Audrius Alkauskas, Alain Allouche, Francesco Antoniella,
   Uli Aschauer,  Francesca Baletto, Gerardo Ballabio, Mauro Boero, Pietro
-  Bonf\`a, Claudia Bungaro, Paolo Cazzato, Gabriele Cipriani, Ismaila Dabo,
+  Bonf\`a, Claudia Bungaro, Paolo Cazzato, Gabriele Cipriani, 
   Jiayu Dai, Cesar Da Silva, Alberto Debernardi, Gernot Deinzer, Marco Govoni,
   Thomas Gruber, Martin Hilgeman, Yosuke Kanai, Konstantin Kudin,
   Nicolas Lacorne, Stephane Lefranc, Sergey Lisenkov, Kurt Maeder,

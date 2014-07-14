@@ -1,5 +1,6 @@
 New in svn version:
 
+   * PW: TB09 meta-GGA functional (requires libxc)
    * PW: the code can capture "signals". typically sent by batch queues
      when allowed time is close to expire, and terminate gracefully.
      Experimental, to be enabled at compile time (see the user guide)
