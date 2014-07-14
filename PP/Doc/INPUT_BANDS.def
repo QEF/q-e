@@ -67,6 +67,21 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
 	    }
 	}
 
+        var lp -type LOGICAL {
+            default { .false. }
+            info {
+                If .true. matrix elements of the momentum operator p between
+                conduction and valence bands are written to file "filp" 
+            }
+
+        }      
+        var filp -type CHARACTER {
+            default { 'p_avg.dat' }
+            info {
+                If "lp" is set to .true., file name for matrix elements of p
+	    }
+
+        }      
 	var lsym -type LOGICAL {
 	    info {
 		If .true. the bands are classified according to the
