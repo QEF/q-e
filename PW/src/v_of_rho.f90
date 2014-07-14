@@ -113,8 +113,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega, alat
   USE spin_orb,         ONLY : domag
-  USE funct,            ONLY : xc, xc_spin, tau_xc, tau_xc_spin, &
-                               get_igcx, get_igcc
+  USE funct,            ONLY : xc, xc_spin, tau_xc, tau_xc_spin, get_meta
   USE scf,              ONLY : scf_type
   USE mp,               ONLY : mp_sum
   USE mp_bands,         ONLY : intra_bgrp_comm
@@ -252,7 +251,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
           !
           ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
           !
-          if (get_igcx()==7.AND.get_igcc()==6) then  ! tpss functional
+          if (get_meta()==1) then  ! tpss functional
             !
             h(:,k,1) = (v2xup * grhoup(:) + v2cup_vec(:)) * e2
             h(:,k,2) = (v2xdw * grhodw(:) + v2cdw_vec(:)) * e2
@@ -325,6 +324,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   RETURN
   !
 END SUBROUTINE v_xc_meta
+!
 SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !----------------------------------------------------------------------------
   !

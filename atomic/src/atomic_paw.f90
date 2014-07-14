@@ -167,7 +167,8 @@ CONTAINS
        phis, betas,  qvan, kindiff,                                  &
        nlcc, aerhoc, psrhoc, aevtot, psvtot, which_paw_augfun,rel     )
 
-    USE funct,        ONLY : dft_name, get_iexch, get_icorr, get_igcx, get_igcc, get_inlc
+    USE funct,        ONLY : dft_name, get_iexch, get_icorr, get_igcx, &
+                             get_igcc, get_inlc, get_meta
     USE ld1inc,       ONLY : zed, file_screen
     USE paw_type,     ONLY : nullify_pseudo_paw, allocate_pseudo_paw
     USE io_global,    ONLY : stdout, ionode, ionode_id
@@ -548,8 +549,8 @@ CONTAINS
     endif
     !
     write(pawset_%dft,'(80x)') !fill it with spaces
-    CALL dft_name (get_iexch(), get_icorr(), get_igcx(), get_igcc(), get_inlc(), pawset_%dft, shortname)
-    !
+    CALL dft_name (get_iexch(), get_icorr(), get_igcx(), get_igcc(), &
+                   get_inlc(), get_meta(), pawset_%dft, shortname)
     !
     ! Generate the paw hamiltonian for test (should be equal to the US one)
     CALL new_paw_hamiltonian (vps, ddd, etot, &
