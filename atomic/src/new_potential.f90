@@ -15,7 +15,7 @@ subroutine new_potential &
   use constants, only: fpi, e2
   use radial_grids, only: radial_grid_type, hartree
   use kinds, only : DP
-  use funct, only : get_iexch, dft_is_meta, dft_is_gradient, exc_t, vxc_t
+  use funct, only : get_iexch, dft_is_meta, dft_is_gradient
   use ld1inc, only : nwf, vx, vxc, exc, excgga, tau, vtau
   implicit none
   type(radial_grid_type),intent(in):: grid
@@ -23,7 +23,7 @@ subroutine new_potential &
   logical :: nlcc, gga, oep, meta
   integer :: ndm,mesh,lsd,latt,i,is,nu, nspin, ierr
   real(DP):: rho(ndm,2),vxcp(2),vnew(ndm,2),vxt(ndm),vh(ndm), rhoc(ndm)
-  real(DP):: zed,enne,rh(2),rhc
+  real(DP):: zed,enne,rh(2),rhc, exc_t
   real(DP),allocatable:: vgc(:,:), egc(:), rhotot(:)
 !  real(DP),allocatable:: vx(:,:)
   real(DP),allocatable:: dchi0(:,:)

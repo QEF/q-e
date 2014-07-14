@@ -554,7 +554,8 @@ CONTAINS
     !
     ! Generate the paw hamiltonian for test (should be equal to the US one)
     CALL new_paw_hamiltonian (vps, ddd, etot, &
-       pawset_, pawset_%nwfc, pawset_%l, pawset_%jj, nspin, spin, pawset_%oc, pawset_%pswfc, pawset_%enl, energy, dddion)
+       pawset_, pawset_%nwfc, pawset_%l, pawset_%jj, nspin, spin, pawset_%oc, &
+       pawset_%pswfc, pawset_%enl, energy, dddion)
     pawset_%dion(1:nbeta,1:nbeta)=dddion(1:nbeta,1:nbeta)
     WRITE(stdout,'(/5x,A,f12.6,A)') 'Estimated PAW energy =',etot,' Ryd'
     WRITE(stdout,'(/5x,A)') 'The PAW screened D coefficients'
@@ -772,7 +773,7 @@ CONTAINS
   !
   SUBROUTINE compute_onecenter_energy ( totenergy_, veff_, &
        pawset_, vcharge_, nlcc_, ccharge_, nspin_, iint, vloc, energies_ , unit_)
-    USE funct, ONLY: dft_is_gradient, exc_t, vxc_t !igcx, igcc
+    USE funct, ONLY: dft_is_gradient
     USE radial_grids, ONLY: hartree
     USE io_global, ONLY : stdout, ionode
     IMPLICIT NONE
@@ -790,7 +791,8 @@ CONTAINS
     !
     REAL(dp), PARAMETER :: rho_eq_0(ndmx) = ZERO ! ccharge=0 when nlcc=.f.
     !
-    REAL(dp) :: &
+    REAL(dp) ::        &
+         exc_t,        &   ! exchange-correlation function
          eh, exc, edc, & ! hartree, xc and double counting energies
          eloc,         & ! local energy
          rhovtot(ndmx), & ! total valence charge

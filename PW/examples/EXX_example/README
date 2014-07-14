@@ -129,7 +129,7 @@
   In order to avoid this problem you have 2 possibilities:
     1) change your supercell to a cubic one (all nki*ai of similar value)
     2) use a real-space Wigner-Seitz cutoff. For this you have to turn on
-       exxidv_treatment="vcut_ws" and converge your results with respect to
+       exxdiv_treatment="vcut_ws" and converge your results with respect to
        ecutvcut (reciprocal space cutoff for the correction, i.e.:
        coulomb=1/(q+G)**2 for (q+G)**2> ecutvcut, 
        coulomb=cutoffed_coulomb for (q+G)**2 < ecutvcut). 

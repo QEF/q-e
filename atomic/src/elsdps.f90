@@ -23,9 +23,10 @@ subroutine elsdps
        etots, pseudotype, phits, ikk, nbeta, betas, bmat, &
        nwfts, rel, jjts, llts, octs, enlts, jjs, lls, &
        vxc, exc, excgga
-  use funct, only : dft_is_gradient, exc_t
+  use funct, only : dft_is_gradient
   implicit none
   real(DP) :: &
+       exc_t,         &   ! exchange-correlation function
        int_0_inf_dr,  &   ! the integral function
        rh0(2),        &   ! the charge in a given point
        rhc,           &   ! core charge in a given point

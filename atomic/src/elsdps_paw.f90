@@ -19,9 +19,10 @@ subroutine elsdps_paw( )
   use ld1inc, only : nlcc, grid, nspin, rhoc, lsd, &
        encl, ehrt, ecxc, evxt, ekin, ecc, epseu,  &
        nwfts, enlts, octs, paw_energy
-  use funct, only : dft_is_gradient, exc_t
+  use funct, only : dft_is_gradient
   implicit none
   real(DP) :: &
+       exc_t,         &   ! exchange-correlation function
        int_0_inf_dr,  &   ! the integral function
        rh0(2),        &   ! the charge in a given point
        rhc,           &   ! core charge in a given point
