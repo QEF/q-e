@@ -30,7 +30,7 @@ subroutine v_of_rho_at (rho,rhoc,vh,vxc,exc,excgga,vnew,nlcc,iflag)
   !
   logical :: gga, oep
   integer :: i,is,nu,ierr
-  real(DP):: vxcp(2),rh(2),rhc, exc_t
+  real(DP):: vxcp(2),rh(2),rhc, excp
   real(DP),allocatable:: vgc(:,:), egc(:), rhotot(:)
   real(DP),allocatable:: dchi0(:,:)
 
@@ -59,11 +59,11 @@ subroutine v_of_rho_at (rho,rhoc,vh,vxc,exc,excgga,vnew,nlcc,iflag)
         rh(is) = rho(i,is)/grid%r2(i)/fpi
      end do
      if (nlcc) rhc = rhoc(i)/grid%r2(i)/fpi
-     call vxc_t(rh,rhc,lsd,vxcp)
+     call vxc_t(lsd,rh,rhc,excp,vxcp)
      do is=1,nspin
         vxc(i,is)=vxcp(is)
      end do
-     exc(i)=exc_t(rh,rhc,lsd)
+     exc(i)=excp
   end do
   !
   ! if gga add gga exchange and correlation potential

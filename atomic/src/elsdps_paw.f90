@@ -22,7 +22,7 @@ subroutine elsdps_paw( )
   use funct, only : dft_is_gradient
   implicit none
   real(DP) :: &
-       exc_t,         &   ! exchange-correlation function
+       excc, vxcc(2), &   ! exch-corr energy from core charge
        int_0_inf_dr,  &   ! the integral function
        rh0(2),        &   ! the charge in a given point
        rhc,           &   ! core charge in a given point
@@ -52,7 +52,8 @@ subroutine elsdps_paw( )
      rh0(2)=0.0_DP
      do i=1,grid%mesh
         rhc= rhoc(i)/grid%r2(i)/fpi
-        exccc(i) = exc_t(rh0,rhc,lsd)*rhoc(i) 
+        call vxc_t(lsd,rh0,rhc,excc,vxcc)
+        exccc(i) = excc*rhoc(i) 
      enddo
      if (dft_is_gradient()) then
         allocate(rho_aux(ndmx,2), stat=ierr)

@@ -23,7 +23,7 @@ subroutine new_potential &
   logical :: nlcc, gga, oep, meta
   integer :: ndm,mesh,lsd,latt,i,is,nu, nspin, ierr
   real(DP):: rho(ndm,2),vxcp(2),vnew(ndm,2),vxt(ndm),vh(ndm), rhoc(ndm)
-  real(DP):: zed,enne,rh(2),rhc, exc_t
+  real(DP):: zed,enne,rh(2),rhc, excp
   real(DP),allocatable:: vgc(:,:), egc(:), rhotot(:)
 !  real(DP),allocatable:: vx(:,:)
   real(DP),allocatable:: dchi0(:,:)
@@ -66,8 +66,8 @@ subroutine new_potential &
         vxcp(:)=0.0_dp
         exc(i) =0.0_dp
      else
-        call vxc_t(rh,rhc,lsd,vxcp)
-        exc(i)=exc_t(rh,rhc,lsd)
+        call vxc_t(lsd,rh,rhc,excp,vxcp)
+        exc(i)=excp
      endif
      do is=1,nspin
         vxc(i,is)=vxcp(is)

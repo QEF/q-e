@@ -7,23 +7,24 @@
 !
 !
 !---------------------------------------------------------------
-subroutine vxc_t(rho,rhoc,lsd,vxc)
+subroutine vxc_t(lsd,rho,rhoc,exc,vxc)
   !---------------------------------------------------------------
   !
-  !  this function returns the XC potential in LDA or LSDA approximation
+  !  this function returns the XC potential and energy in LDA or
+  !  LSDA approximation
   !
-  use io_global, only : stdout
   use kinds, only : DP
   use funct, only : xc, xc_spin
-   implicit none
-  integer:: lsd
-  real(DP):: vxc(2), rho(2),rhoc,arho,zeta
-  real(DP):: vx(2), vc(2), ex, ec
+  implicit none
+  integer, intent(in)  :: lsd
+  real(DP), intent(in) :: rho(2), rhoc
+  real(DP), intent(out):: exc, vxc(2)
+  real(DP):: arho, zeta, vx(2), vc(2), ex, ec
   !
   real(DP), parameter :: e2=2.0_dp, eps=1.e-30_dp
 
   vxc(1)=0.0_dp
-  if (lsd.eq.1) vxc(2)=0.0_dp
+  exc=0.0_dp
 
   if (lsd.eq.0) then
      !
@@ -33,11 +34,13 @@ subroutine vxc_t(rho,rhoc,lsd,vxc)
      if (arho.gt.eps) then      
         call xc(arho,ex,ec,vx(1),vc(1))
         vxc(1)=e2*(vx(1)+vc(1))
+        exc   =e2*(ex+ec)
      endif
   else
      !
      !     LSDA case
      !
+     vxc(2)=0.0_dp
      arho = abs(rho(1)+rho(2)+rhoc)
      if (arho.gt.eps) then      
         zeta = (rho(1)-rho(2)) / arho
@@ -47,54 +50,12 @@ subroutine vxc_t(rho,rhoc,lsd,vxc)
         call xc_spin(arho,zeta,ex,ec,vx(1),vx(2),vc(1),vc(2))
         vxc(1) = e2*(vx(1)+vc(1))
         vxc(2) = e2*(vx(2)+vc(2))
+        exc    = e2*(ex+ec)
      endif
   endif
 
   return
 end subroutine vxc_t
-!---------------------------------------------------------------
-function exc_t(rho,rhoc,lsd)
-  !---------------------------------------------------------------
-  !
-  use kinds, only : DP
-  use funct, only : xc, xc_spin
-  implicit none
-  integer:: lsd
-  real(DP) :: exc_t, rho(2),arho,rhot, zeta,rhoc
-  real(DP) :: ex, ec, vx(2), vc(2)
-
-  real(DP),parameter:: e2 =2.0_DP
-
-  exc_t=0.0_DP
-
-  if(lsd == 0) then
-     !
-     !     LDA case
-     !
-     rhot = rho(1) + rhoc
-     arho = abs(rhot)
-     if (arho.gt.1.e-30_DP) then      
-        call xc(arho,ex,ec,vx(1),vc(1))
-        exc_t=e2*(ex+ec)
-     endif
-  else
-     !
-     !     LSDA case
-     !
-     rhot = rho(1)+rho(2)+rhoc
-     arho = abs(rhot)
-     if (arho.gt.1.e-30_DP) then      
-        zeta = (rho(1)-rho(2)) / arho
-        ! In atomic this cannot happen, but in PAW zeta can become
-        ! a little larger than 1, or smaller than -1:
-        if( abs(zeta) > 1._dp) zeta = sign(1._dp, zeta)
-        call xc_spin(arho,zeta,ex,ec,vx(1),vx(2),vc(1),vc(2))
-        exc_t=e2*(ex+ec)
-     endif
-  endif
-
-  return
-end function exc_t
 !
 !---------------------------------------------------------------
 subroutine vxcgc ( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &

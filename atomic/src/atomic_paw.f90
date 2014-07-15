@@ -792,7 +792,6 @@ CONTAINS
     REAL(dp), PARAMETER :: rho_eq_0(ndmx) = ZERO ! ccharge=0 when nlcc=.f.
     !
     REAL(dp) ::        &
-         exc_t,        &   ! exchange-correlation function
          eh, exc, edc, & ! hartree, xc and double counting energies
          eloc,         & ! local energy
          rhovtot(ndmx), & ! total valence charge
@@ -851,12 +850,12 @@ CONTAINS
           rh(is) = vcharge_(i,is)/pawset_%grid%r2(i)/FPI
        ENDDO
        IF (nlcc_) rhc = ccharge_(i)/pawset_%grid%r2(i)/FPI
-       CALL vxc_t(rh,rhc,lsd,vxcr)
+       CALL vxc_t(lsd,rh,rhc,exc,vxcr)
        vxc(i,1:nspin_)=vxcr(1:nspin_)
        IF (nlcc_) THEN
-          aux(i)=exc_t(rh,rhc,lsd) * (rhovtot(i)+ccharge_(i))
+          aux(i)=exc * (rhovtot(i)+ccharge_(i))
        ELSE
-          aux(i)=exc_t(rh,rhc,lsd) *  rhovtot(i)
+          aux(i)=exc *  rhovtot(i)
        END IF
     END DO
     IF (dft_is_gradient()) THEN
