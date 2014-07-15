@@ -607,6 +607,7 @@ makov_payne.o : ../../Modules/parallel_include.o
 makov_payne.o : gvecw.o
 makov_payne.o : ions_positions.o
 makov_payne.o : mainvar.o
+metaxc.o : ../../Modules/funct.o
 metaxc.o : ../../Modules/kind.o
 modules.o : ../../Modules/kind.o
 modules.o : ../../Modules/uspp.o

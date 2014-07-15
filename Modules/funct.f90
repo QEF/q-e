@@ -2054,9 +2054,9 @@ end subroutine tau_xc
 !
 !
 !-----------------------------------------------------------------------
-subroutine tau_xc_spin (rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec,       &
-           &            v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw, v1cup, v1cdw,   &
-           &            v2cup, v2cdw, v2cup_vec, v2cdw_vec, v3cup, v3cdw)
+subroutine tau_xc_spin (rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec,   &
+           &            v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw, v1cup, v1cdw,&
+           &            v2cup, v2cdw, v3cup, v3cdw)
 
 !-----------------------------------------------------------------------
   !
@@ -2068,8 +2068,8 @@ subroutine tau_xc_spin (rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec,     
   real(dp), dimension (3), intent(in) :: grhoup, grhodw
   
   real(dp), intent(out)               :: ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
-                                      &  v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw
-  real(dp), dimension(3), intent(out) :: v2cup_vec, v2cdw_vec
+                                      &  v1cup, v1cdw, v3cup, v3cdw
+  real(dp), dimension(3), intent(out) :: v2cup, v2cdw
   
   !
   !  Local variables
@@ -2085,10 +2085,7 @@ subroutine tau_xc_spin (rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec,     
   
   v2cup         = zero
   v2cdw         = zero
-  v2cup_vec (:) = zero
-  v2cdw_vec (:) = zero
-  
-  
+
   do ipol=1,3
      grhoup2 = grhoup2 + grhoup(ipol)**2
      grhodw2 = grhodw2 + grhodw(ipol)**2
@@ -2106,14 +2103,14 @@ subroutine tau_xc_spin (rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec,     
      atau =  tauup + taudw    ! KE-density in Hartree
 
      call tpsscc_spin(rh,zeta,grhoup,grhodw, atau,ec,              &
-     &                v1cup,v1cdw,v2cup_vec,v2cdw_vec,v3cup, v3cdw) 
+     &                v1cup,v1cdw,v2cup,v2cdw,v3cup, v3cdw) 
   
   
   elseif (imeta == 2) then
   
      call   m06lxc_spin (rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &
             &            ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
-            &            v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw)
+            &            v1cup, v1cdw, v2cup(1), v2cdw(1), v3cup, v3cdw)
      
   else
   
