@@ -11,7 +11,8 @@
 MODULE xml_input
 
    USE xml_io_base, ONLY : attr
-   USE qexml_module, ONLY : qexml_write_header
+   USE qexml_module, ONLY: qexml_init, qexml_write_header, qexml_openfile, &
+                           qexml_closefile
    USE iotk_module
    USE kinds
 
@@ -44,7 +45,8 @@ MODULE xml_input
          !
          WRITE( stdout, '(/,3X,"Dumping input parameters",/)' )
          !
-         CALL iotk_open_write( iunpun, FILE = filename, BINARY = .FALSE., IERR = ierr )
+         CALL qexml_init( iunpun )
+         CALL qexml_openfile( filename, 'write', .FALSE., ierr )
          !
       END IF
 
@@ -100,7 +102,7 @@ MODULE xml_input
 
       END IF
 
-      IF ( ionode ) CALL iotk_close_write( iunpun )
+      IF ( ionode ) CALL qexml_closefile( 'write', IERR=ierr )
 
       RETURN
    END SUBROUTINE
