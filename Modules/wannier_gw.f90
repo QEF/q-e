@@ -199,6 +199,13 @@ MODULE wannier_gw
   LOGICAL :: l_full!if true prepare data for further post-processing for a full-relativistic calculation
   INTEGER :: n_full!numeber of proper relativistic states in G of GW
 
+!variables for splitting the head calculation in blocks in order to reduce memory usage
+!no effect on results
+
+  INTEGER :: len_head_block_freq!length of blocks on frequency
+  INTEGER :: len_head_block_wfc!length of blocks on unperturbed occupied wfcs 
+
+
   INTERFACE free_memory
 
   MODULE PROCEDURE free_complex,free_real
