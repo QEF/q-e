@@ -68,7 +68,7 @@ SUBROUTINE phq_readin()
                             el_ph_sigma, el_ph_nsigma, el_ph_ngauss,auxdvscf
   USE dfile_star,    ONLY : drho_star, dvscf_star
   USE wannier_gw,    ONLY : l_head, omega_gauss, n_gauss, grid_type, nsteps_lanczos,second_grid_n,second_grid_i,&
-                                &l_scissor,scissor
+                                &l_scissor,scissor, len_head_block_freq, len_head_block_wfc
   USE save_ph, ONLY : save_ph_input_variables
  !
   IMPLICIT NONE
@@ -108,7 +108,7 @@ SUBROUTINE phq_readin()
                        elph_nbnd_min, elph_nbnd_max, el_ph_ngauss,el_ph_nsigma, el_ph_sigma,  &
                        electron_phonon,&
                        l_head, omega_gauss, n_gauss, grid_type,nsteps_lanczos,l_scissor,scissor,&
-                       second_grid_n,second_grid_i
+                       second_grid_n,second_grid_i,len_head_block_wfc,len_head_block_freq
 
 
   ! tr2_ph       : convergence threshold
@@ -256,6 +256,8 @@ SUBROUTINE phq_readin()
   k1       = 0
   k2       = 0
   k3       = 0
+  len_head_block_freq=0
+  len_head_block_wfc=0
   !
 
   drho_star%open = .FALSE.

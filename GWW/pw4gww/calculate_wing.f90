@@ -101,28 +101,13 @@ subroutine calculate_wing(n_set, orthonorm)
    allocate(e_head_g0(ngm_k))
    allocate(e_head(npw, n_g+1,3)) 
    e_head(:,:,:) = (0.d0,0.d0)  
-   do ipol=1,3
-       do ii=1,n_g+1
-          e_head_g0(:)=(0.d0,0.d0)
-          if(ionode) read(iun) e_head_g0(1:ngm_k)
-      !    sca=0.d0
-      !     do ig=1,ngm_k
-      !        sca=sca+dble(e_head_g0(ig)*conjg(e_head_g0(ig)))
-      !     enddo
-      !     call mp_sum(sca,world_comm)
-      !     write(stdout,*) 'POLA SCA0',ii, sca,ngm_k
-
-           call splitwf(e_head(:, ii,ipol),e_head_g0,npw,k2g_ig_l2g,mpime,nproc,ionode_id,intra_pool_comm) 
-   
-      !     sca=0.d0
-      !     do ig=1,npw 
-      !        sca=sca+2.d0*dble(e_head(ig, ii,ipol)*conjg(e_head(ig, ii,ipol)))
-      !     enddo
-      !     if(gstart==2) sca=sca -dble(e_head(1, ii,ipol)*conjg(e_head(1, ii,ipol)))
-      !     call mp_sum(sca,world_comm)
-      !     write(stdout,*) 'POLA SCA',ii, sca,npw
-        enddo
-    enddo
+   do ii=1,n_g+1
+      do ipol=1,3
+         e_head_g0(:)=(0.d0,0.d0)
+         if(ionode) read(iun) e_head_g0(1:ngm_k)
+         call splitwf(e_head(:, ii,ipol),e_head_g0,npw,k2g_ig_l2g,mpime,nproc,ionode_id,intra_pool_comm) 
+      enddo
+   enddo
     if(ionode) close(iun)
 
    write(stdout,*) 'ATT1'

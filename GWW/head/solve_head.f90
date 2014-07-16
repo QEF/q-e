@@ -25,7 +25,8 @@ subroutine solve_head
   use phcom
   USE wannier_gw,           ONLY : n_gauss, omega_gauss, grid_type,&
                                    nsteps_lanczos,second_grid_n,second_grid_i,&
-                                   l_scissor,scissor
+                                   l_scissor,scissor,len_head_block_freq, &
+                                   len_head_block_wfc
   USE control_ph,           ONLY : tr2_ph
   USE gvect,                ONLY : ig_l2g
   USE mp,                   ONLY : mp_sum, mp_barrier, mp_bcast
@@ -74,7 +75,7 @@ subroutine solve_head
   REAL(kind=DP), ALLOCATABLE :: head(:,:),head_tmp(:)
   COMPLEX(kind=DP) :: sca, sca2
   REAL(kind=DP), ALLOCATABLE :: x(:),w(:), freqs(:)
-  COMPLEX(kind=DP), ALLOCATABLE :: e_head(:,:)!wing of symmetric dielectric matrix (for G of local processor)
+ ! COMPLEX(kind=DP), ALLOCATABLE :: e_head(:,:)!wing of symmetric dielectric matrix (for G of local processor)
   COMPLEX(kind=DP), ALLOCATABLE :: e_head_g(:),e_head_g_tmp(:,:,:)
   COMPLEX(kind=DP), ALLOCATABLE :: e_head_pol(:,:,:)
   INTEGER :: i, j,k,iun
@@ -94,6 +95,11 @@ subroutine solve_head
   INTEGER :: n
   INTEGER :: npwx_g
 
+  INTEGER :: ib,lenb,first_b,last_b,n_block,nbnd_block
+
+  INTEGER :: freq_block, m_block,first_f,last_f,lenf,im
+
+
   write(stdout,*) 'Routine solve_head'
   call flush_unit(stdout)
 
@@ -102,15 +108,15 @@ subroutine solve_head
      n_gauss=n+second_grid_n*(1+second_grid_i*2)
   endif
 
-  allocate(e_head(npw,n_gauss+1))
-  allocate(e_head_pol(ngm,n_gauss+1,3))
-  e_head(:,:) =(0.d0,0.d0)  
+  !allocate(e_head(npw,n_gauss+1))
+  !allocate(e_head_pol(ngm,n_gauss+1,3))
+  !e_head(:,:) =(0.d0,0.d0)  
   allocate(x(2*n_gauss+1),w(2*n_gauss+1), freqs(n_gauss+1))
   allocate(head(n_gauss+1,3),head_tmp(n_gauss+1))
   head(:,:)=0.d0
   allocate(psi_v(dffts%nnr, nbnd), prod(dfftp%nnr))
   allocate (tmp_g(ngm))
-  allocate( pola_charge(dfftp%nnr,nspin,3,n_gauss+1))
+ ! allocate( pola_charge(dfftp%nnr,nspin,3,n_gauss+1))
   allocate(epsilon_g(3,3,n_gauss+1))
   allocate(psi_tmp(npwx))
 
@@ -118,8 +124,10 @@ subroutine solve_head
 
 
   epsilon_g(:,:,:)=0.d0
-  e_head_pol(:,:,:)=0.d0
-  pola_charge(:,:,:,:)=0.d0
+!  e_head_pol(:,:,:)=0.d0
+!  pola_charge(:,:,:,:)=0.d0
+
+
 !setup Gauss Legendre frequency grid
 !IT'S OF CAPITAL IMPORTANCE TO NULLIFY THE FOLLOWING ARRAYS
   x(:)=0.d0
@@ -169,17 +177,6 @@ subroutine solve_head
      enddo
      
 
-!     freqs(1)=0.d0
-!     do i=1,10
-!        freqs(i+1)=(omega_gauss/dble(10*n))*dble(i)-0.5d0*omega_gauss/dble(10*n)
-!     enddo
-!     freqs(11+1)=omega_gauss/dble(n)
-!     do i=1,5
-!        freqs(i+12)=(omega_gauss/dble(10*n))*dble(i)+ omega_gauss/dble(n)-0.5d0*omega_gauss/dble(10*n)
-!     enddo
-!     do i=2,n
-!        freqs(16+i)=(omega_gauss/dble(n))*dble(i)
-!     enddo
 
   endif
   do i=1,n_gauss+1
@@ -225,150 +222,210 @@ subroutine solve_head
 
   if(.not.l_scissor) scissor=0.d0
 
-!loop on k points
-  if (nksq.gt.1) rewind (unit = iunigk)
-  do ik=1, nksq
-     allocate (dpsi_ipol(npwx,nbnd_occ(ik),3))
-     allocate(t_out(npwx,nsteps_lanczos,nbnd_occ(ik)))
-     write(stdout,*) 'ik:', ik
-     call flush_unit(stdout)
-     weight = wk (ik)
-     ww = fpi * weight / omega
-
-     if (lsda) current_spin = isk (ik)
-     if (nksq.gt.1) then
-        read (iunigk, err = 100, iostat = ios) npw, igk
-100     call errore ('solve_head', 'reading igk', abs (ios) )
+!loop on frequency blocks
+  if(len_head_block_freq==0) then
+     freq_block=n_gauss+1
+     m_block=1
+  else
+     m_block=(n_gauss+1)/len_head_block_freq
+     if(m_block*len_head_block_freq < (n_gauss+1)) m_block=m_block+1
+     if(len_head_block_freq>(n_gauss+1)) then
+        freq_block=n_gauss+1
+     else
+        freq_block=len_head_block_freq
      endif
+  endif
+
+!loop on frequency blocks
+  do im=1,m_block
+
+     epsilon_g=0.d0
+
+   write(stdout,*) 'FREQUENCY BLOCK : ', im
+   
+     first_f=(im-1)*freq_block+1
+     last_f=im*freq_block
+     if(last_f>(n_gauss+1)) last_f=n_gauss+1
+     lenf=last_f-first_f+1
+     
+     allocate( pola_charge(dfftp%nnr,nspin,3,lenf))  
+     allocate(e_head_pol(ngm,lenf,3))
+
+     e_head_pol(:,:,:)=0.d0
+     pola_charge(:,:,:,:)=0.d0
+
+
+
+!loop on k points
+     if (nksq.gt.1) rewind (unit = iunigk)
+     do ik=1, nksq
+        if(len_head_block_wfc==0) then
+           nbnd_block=nbnd_occ(ik)
+           n_block=1
+        else
+           n_block=nbnd_occ(ik)/len_head_block_wfc
+           if(n_block*len_head_block_wfc < nbnd_occ(ik)) n_block=n_block+1
+           if(len_head_block_wfc>nbnd_occ(ik)) then
+              nbnd_block=nbnd_occ(ik)
+           else
+              nbnd_block=len_head_block_wfc
+           endif
+        endif
+
+
+
+        write(stdout,*) 'ik:', ik
+        call flush_unit(stdout)
+        weight = wk (ik)
+        ww = fpi * weight / omega
+      
+        if (lsda) current_spin = isk (ik)
+        if (nksq.gt.1) then
+           read (iunigk, err = 100, iostat = ios) npw, igk
+100     call errore ('solve_head', 'reading igk', abs (ios) )
+        endif
      !
      ! reads unperturbed wavefuctions psi_k in G_space, for all bands
      !
     ! if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
-    if (nksq.gt.1)  call get_buffer(evc, lrwfc, iuwfc, ik)
-     npwq = npw
-     call init_us_2 (npw, igk, xk (1, ik), vkb)
-
+        if (nksq.gt.1)  call get_buffer(evc, lrwfc, iuwfc, ik)
+        npwq = npw
+        call init_us_2 (npw, igk, xk (1, ik), vkb)
+        
      !trasform valence wavefunctions to real space
-     do ibnd=1,nbnd
-        psi_v(:,ibnd) = ( 0.D0, 0.D0 )
-        psi_v(nls(igk(1:npw)),ibnd) = evc(1:npw,ibnd)
-        CALL invfft ('Wave',  psi_v(:,ibnd), dffts)
-     enddo
+        do ibnd=1,nbnd
+           psi_v(:,ibnd) = ( 0.D0, 0.D0 )
+           psi_v(nls(igk(1:npw)),ibnd) = evc(1:npw,ibnd)
+           CALL invfft ('Wave',  psi_v(:,ibnd), dffts)
+        enddo
 
 
      !
      ! compute the kinetic energy
      !
-     do ig = 1, npwq
-        g2kin (ig) = ( (xk (1,ik ) + g (1,igk (ig)) ) **2 + &
-             (xk (2,ik ) + g (2,igk (ig)) ) **2 + &
-             (xk (3,ik ) + g (3,igk (ig)) ) **2 ) * tpiba2
-     enddo
-     !
-     dpsi_ipol(:,:,:)=(0.d0,0.d0)
+        do ig = 1, npwq
+           g2kin (ig) = ( (xk (1,ik ) + g (1,igk (ig)) ) **2 + &
+                (xk (2,ik ) + g (2,igk (ig)) ) **2 + &
+                (xk (3,ik ) + g (3,igk (ig)) ) **2 ) * tpiba2
+        enddo
+      !
+        do ib=1,n_block
 
+           write(stdout,*) 'BLOCK : ', ib
+        
+           first_b=(ib-1)*nbnd_block+1
+           last_b=ib*nbnd_block
+           if(last_b>nbnd_occ(ik)) last_b=nbnd_occ(ik)
+           lenb=last_b-first_b+1
+           
+           allocate (dpsi_ipol(npwx,lenb,3))
+           allocate(t_out(npwx,nsteps_lanczos,lenb))
+
+           dpsi_ipol(:,:,:)=(0.d0,0.d0)
+        
 
 !loop on carthesian directions
-     do ipol = 1,3
-        write(stdout,*) 'ipol:', ipol
-        call flush_unit(stdout)
+           do ipol = 1,3
+              write(stdout,*) 'ipol:', ipol
+              call flush_unit(stdout)
         !
         ! computes/reads P_c^+ x psi_kpoint into dvpsi array
         !
 
-        do jpol=1,3
+              do jpol=1,3
          
-           call dvpsi_e (ik, jpol)
-        
+                 call dvpsi_e (ik, jpol)
+              
           !
         ! Orthogonalize dvpsi to valence states: ps = <evc|dvpsi>
         !
-           CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
-                (1.d0,0.d0), evc(1,1), npwx, dvpsi(1,1), npwx, (0.d0,0.d0), &
-                ps(1,1), nbnd )
+                 CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
+                      (1.d0,0.d0), evc(1,1), npwx, dvpsi(1,1), npwx, (0.d0,0.d0), &
+                      ps(1,1), nbnd )
 #ifdef __PARA
            !call reduce (2 * nbnd * nbnd_occ (ik), ps)
-           call mp_sum(ps(1:nbnd_occ (ik),1:nbnd_occ (ik)),world_comm)
+                 call mp_sum(ps(1:nbnd_occ (ik),1:nbnd_occ (ik)),world_comm)
 #endif
         ! dpsi is used as work space to store S|evc>
         !
-           !CALL ccalbec (nkb, npwx, npw, nbnd_occ(ik), becp, vkb, evc)
-           CALL calbec(npw,vkb,evc,becp,nbnd_occ(ik))
-           CALL s_psi (npwx, npw, nbnd_occ(ik), evc, dpsi)
+
+                 CALL calbec(npw,vkb,evc,becp,nbnd_occ(ik))
+                 CALL s_psi (npwx, npw, nbnd_occ(ik), evc, dpsi)
            !
         
         ! |dvpsi> = - (|dvpsi> - S|evc><evc|dvpsi>)
         ! note the change of sign!
            !
-           CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
-                (1.d0,0.d0), dpsi(1,1), npwx, ps(1,1), nbnd, (-1.d0,0.d0), &
-                dvpsi(1,1), npwx )
+                 CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
+                    (1.d0,0.d0), dpsi(1,1), npwx, ps(1,1), nbnd, (-1.d0,0.d0), &
+                    dvpsi(1,1), npwx )
 !create lanczos chain for dvpsi
-           dpsi_ipol(1:npw,1:nbnd_occ(ik),jpol)=dvpsi(1:npw,1:nbnd_occ(ik))
-        enddo
-        dvpsi(1:npw,1:nbnd_occ(ik))=dpsi_ipol(1:npw,1:nbnd_occ(ik),ipol)
-
-
-        allocate(d(nsteps_lanczos,nbnd_occ(ik)),f(nsteps_lanczos,nbnd_occ(ik)))
-        allocate(omat(nsteps_lanczos,3,nbnd_occ(ik)))
-        write(stdout,*) 'before lanczos_state_k'
+                 dpsi_ipol(1:npw,1:lenb,jpol)=dvpsi(1:npw,first_b:last_b)
+              enddo
+              dvpsi(1:npw,1:lenb)=dpsi_ipol(1:npw,1:lenb,ipol)
+            
+            
+              allocate(d(nsteps_lanczos,lenb),f(nsteps_lanczos,lenb))
+              allocate(omat(nsteps_lanczos,3,lenb))
+              write(stdout,*) 'before lanczos_state_k'
      
 
 
 
-        call lanczos_state_k(ik,nbnd_occ(ik), nsteps_lanczos ,dvpsi,d,f,omat,dpsi_ipol,t_out)
-        write(stdout,*) 'after lanczos_state_k'
+              call lanczos_state_k(ik,lenb, nsteps_lanczos ,dvpsi,d,f,omat,dpsi_ipol,t_out)
+              write(stdout,*) 'after lanczos_state_k'
 !loop on frequency
-        allocate(z_dl(nsteps_lanczos-1),z_d(nsteps_lanczos),z_du(nsteps_lanczos-1),z_b(nsteps_lanczos))
-        do i=1,n_gauss+1
+              allocate(z_dl(nsteps_lanczos-1),z_d(nsteps_lanczos),z_du(nsteps_lanczos-1),z_b(nsteps_lanczos))
+              do i=1,lenf
 !loop on valence states
-           do iv=1,nbnd_occ(ik)
+                 do iv=1,lenb
 !invert Hamiltonian
-              z_dl(1:nsteps_lanczos-1)=conjg(f(1:nsteps_lanczos-1,iv))
-              z_du(1:nsteps_lanczos-1)=f(1:nsteps_lanczos-1,iv)
-              z_d(1:nsteps_lanczos)=d(1:nsteps_lanczos,iv)+dcmplx(-et(iv,ik)-scissor/rytoev,freqs(i))
-              z_b(:)=(0.d0,0.d0)
-              z_b(1)=dble(omat(1,ipol,iv))
-              call zgtsv(nsteps_lanczos,1,z_dl,z_d,z_du,z_b,nsteps_lanczos,info)
-              if(info/=0) then
-                 write(stdout,*) 'problems with ZGTSV'
-                 call flush_unit(stdout)
-                 stop
-              endif
-              do jpol=1,3
+                    z_dl(1:nsteps_lanczos-1)=conjg(f(1:nsteps_lanczos-1,iv))
+                    z_du(1:nsteps_lanczos-1)=f(1:nsteps_lanczos-1,iv)
+                    z_d(1:nsteps_lanczos)=d(1:nsteps_lanczos,iv)+dcmplx(-et(first_b+iv-1,ik)-scissor/rytoev,freqs(first_f+i-1))
+                    z_b(:)=(0.d0,0.d0)
+                    z_b(1)=dble(omat(1,ipol,iv))
+                    call zgtsv(nsteps_lanczos,1,z_dl,z_d,z_du,z_b,nsteps_lanczos,info)
+                    if(info/=0) then
+                       write(stdout,*) 'problems with ZGTSV'
+                       call flush_unit(stdout)
+                       stop
+                    endif
+                    do jpol=1,3
 !multiply with overlap factors
-                 call zgemm('T','N',1,1,nsteps_lanczos,(1.d0,0.d0),omat(:,jpol,iv),nsteps_lanczos&
+                       call zgemm('T','N',1,1,nsteps_lanczos,(1.d0,0.d0),omat(:,jpol,iv),nsteps_lanczos&
      &,z_b,nsteps_lanczos,(0.d0,0.d0),csca,1)
 !update epsilon array NO SYMMETRIES for the moment
-                 epsilon_g(jpol,ipol,i)=epsilon_g(jpol,ipol,i)+4.d0*ww*dble(csca)
-              enddo
+                       epsilon_g(jpol,ipol,i)=epsilon_g(jpol,ipol,i)+4.d0*ww*dble(csca)
+                    enddo
 !update part for wing calculation 
-              call zgemm('N','N',npw,1,nsteps_lanczos,(1.d0,0.d0),t_out(:,:,iv),npwx,z_b,nsteps_lanczos,&
-                   &(0.d0,0.d0),psi_tmp,npwx) 
+                    call zgemm('N','N',npw,1,nsteps_lanczos,(1.d0,0.d0),t_out(:,:,iv),npwx,z_b,nsteps_lanczos,&
+                         &(0.d0,0.d0),psi_tmp,npwx) 
 !fourier trasform
-              prod(:) = ( 0.D0, 0.D0 )
-              prod(nls(igk(1:npw))) = psi_tmp(1:npw)
-              CALL invfft ('Wave', prod, dffts)
+                    prod(:) = ( 0.D0, 0.D0 )
+                    prod(nls(igk(1:npw))) = psi_tmp(1:npw)
+                    CALL invfft ('Wave', prod, dffts)
            
 
 !      product dpsi * psi_v
-              prod(1:dffts%nnr)=conjg(prod(1:dffts%nnr))*psi_v(1:dffts%nnr,iv)
-              if(doublegrid) then
-                 call cinterpolate(prod,prod,1)
-              endif
+                    prod(1:dffts%nnr)=conjg(prod(1:dffts%nnr))*psi_v(1:dffts%nnr,first_b+iv-1)
+                    if(doublegrid) then
+                       call cinterpolate(prod,prod,1)
+                    endif
 
 !US part STLL TO BE ADDED!!
-              pola_charge(1:dffts%nnr,1,ipol,i)=pola_charge(1:dffts%nnr,1,ipol,i)-prod(1:dffts%nnr)*ww
+                    pola_charge(1:dffts%nnr,1,ipol,i)=pola_charge(1:dffts%nnr,1,ipol,i)-prod(1:dffts%nnr)*ww
 
 
+                 enddo
+              enddo
+              deallocate(z_dl,z_d,z_du,z_b)
+              deallocate(d,f,omat)
            enddo
-        enddo
-        deallocate(z_dl,z_d,z_du,z_b)
-        deallocate(d,f,omat)
-     enddo
-     deallocate(dpsi_ipol)
-     deallocate(t_out)
-  enddo
+           deallocate(dpsi_ipol)
+           deallocate(t_out)
+        end do!on ib
+     enddo! on ik
 
 !print out results
 
@@ -378,96 +435,58 @@ subroutine solve_head
 !      symmetrize
 !
 
-  do i=1,n_gauss+1
-     WRITE( stdout,'(/,10x,"Unsymmetrized in crystal axis ",/)')
-     WRITE( stdout,'(10x,"(",3f15.5," )")') ((epsilon_g(ipol,jpol,i),&
+     do i=1,lenf
+        WRITE( stdout,'(/,10x,"Unsymmetrized in crystal axis ",/)')
+        WRITE( stdout,'(10x,"(",3f15.5," )")') ((epsilon_g(ipol,jpol,i),&
           &                                ipol=1,3),jpol=1,3)
 
   !   call symtns (epsilon_g(:,:,i), nsym, s)
   !
   !    pass to cartesian axis
   !
-     WRITE( stdout,'(/,10x,"Symmetrized in crystal axis ",/)')
-     WRITE( stdout,'(10x,"(",3f15.5," )")') ((epsilon_g(ipol,jpol,i),&
+        WRITE( stdout,'(/,10x,"Symmetrized in crystal axis ",/)')
+        WRITE( stdout,'(10x,"(",3f15.5," )")') ((epsilon_g(ipol,jpol,i),&
        &                                ipol=1,3),jpol=1,3)
   !   call trntns (epsilon_g(:,:,i), at, bg, 1)
 
-     call crys_to_cart ( epsilon_g(:,:,i) )
-     call symmatrix ( epsilon_g(:,:,i))
+        call crys_to_cart ( epsilon_g(:,:,i) )
+        call symmatrix ( epsilon_g(:,:,i))
   !
   ! add the diagonal part
   !
-!  do ipol = 1, 3
-!     epsilon (ipol, ipol) = epsilon (ipol, ipol) + 1.d0
-!  enddo
+
   !
   !  and print the result
   !
-     WRITE( stdout, '(/,10x,"Dielectric constant in cartesian axis ",/)')
-  
-     WRITE( stdout, '(10x,"(",3f18.9," )")') ((epsilon_g(ipol,jpol,i), ipol=1,3), jpol=1,3)
+        WRITE( stdout, '(/,10x,"Dielectric constant in cartesian axis ",/)')
+        
+        WRITE( stdout, '(10x,"(",3f18.9," )")') ((epsilon_g(ipol,jpol,i), ipol=1,3), jpol=1,3)
 
-     head(i,1)=epsilon_g(1,1,i)
-     head(i,2)=epsilon_g(2,2,i)
-     head(i,3)=epsilon_g(3,3,i)
+        head(first_f+i-1,1)=epsilon_g(1,1,i)
+        head(first_f+i-1,2)=epsilon_g(2,2,i)
+        head(first_f+i-1,3)=epsilon_g(3,3,i)
 
 
 #ifdef __PARA
-     call mp_sum ( pola_charge(:,:,:,i) , inter_pool_comm )
-     call psyme (pola_charge(:,:,:,i))
+        call mp_sum ( pola_charge(:,:,:,i) , inter_pool_comm )
+        call psyme (pola_charge(:,:,:,i))
 #else
-     call syme (pola_charge(:,:,:,i))
+        call syme (pola_charge(:,:,:,i))
 #endif
      
-     do ipol=1,3
-        CALL fwfft ('Dense',  pola_charge(1:dfftp%nnr,1,ipol,i), dfftp)
-        tmp_g(:)=(0.d0,0.d0)
-        !tmp_g(gstart:npw)=pola_charge(nl(igk(gstart:ngm)),1,ipol,i)
-        tmp_g(gstart:ngm)=pola_charge(nl(gstart:ngm),1,ipol,i) 
-        sca=(0.d0,0.d0)
-        do ig=1,ngm
-           sca=sca+conjg(tmp_g(ig))*tmp_g(ig)
-        enddo
-        call mp_sum(sca,world_comm)
-        write(stdout,*) 'POLA SCA', sca,ngm
+        do ipol=1,3
+           CALL fwfft ('Dense',  pola_charge(1:dfftp%nnr,1,ipol,i), dfftp)
+           tmp_g(:)=(0.d0,0.d0)
+           tmp_g(gstart:ngm)=pola_charge(nl(gstart:ngm),1,ipol,i) 
+          
 !loop on frequency
-        do ig=gstart,ngm
-           e_head_pol(ig,i,ipol)=-4.d0*tmp_g(ig)
+           do ig=gstart,ngm
+              e_head_pol(ig,i,ipol)=-4.d0*tmp_g(ig)
+           enddo
         enddo
-     enddo
        
 
-!TD writes on files
-
-     if(ionode) then
-        
-        write(stdout,*) 'HEAD:',freqs(i),head(i,1),head(i,2),head(i,3)
-        
-        write(stdout,*) 'E_HEAD :', i
-        write(stdout,*) i,e_head_pol(2,i,1)
-        write(stdout,*) i,e_head_pol(2,i,2)
-        write(stdout,*) i,e_head_pol(2,i,3)
-        
-     endif
-
-     call flush_unit(stdout)
-
-
-  enddo
-
-!writes on file head
-
-  if(ionode) then
-     iun =  find_free_unit()
-     open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.head', status='unknown',form='unformatted')
-     write(iun) n_gauss
-     write(iun) omega_gauss
-     write(iun) freqs(1:n_gauss+1)
-     write(iun) head(1:n_gauss+1,1)
-     write(iun) head(1:n_gauss+1,2)
-     write(iun) head(1:n_gauss+1,3)
-     close(iun)
-  endif
+     enddo
 
 
 !writes on file wings
@@ -478,87 +497,76 @@ subroutine solve_head
 
 
 !calculate total number of G for wave function
-  npwx_g=ngm
-  call mp_sum(npwx_g,world_comm)
-  allocate(e_head_g(ngm_g))
+     npwx_g=ngm
+     call mp_sum(npwx_g,world_comm)
+     allocate(e_head_g(ngm_g))
 
-  if(ionode) then
-     iun =  find_free_unit()
-     open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.e_head', status='unknown',form='unformatted')
-     write(iun) n_gauss
-     write(iun) omega_gauss
-     write(iun) freqs(1:n_gauss+1)
-     write(iun) npwx_g
-   endif
+     if(ionode) then
+        iun =  find_free_unit()
+        if(im==1) then
+           open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.e_head', status='unknown',form='unformatted')
+           write(iun) n_gauss
+           write(iun) omega_gauss
+           write(iun) freqs(1:n_gauss+1)
+           write(iun) npwx_g
+        else
+           open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.e_head', status='old',form='unformatted',&
+                &position='append')
+        endif
+     endif
 
-   call mp_barrier( world_comm )
-
-
-   do ipol=1,3
-      do i=1,n_gauss+1
-         e_head_g(:)=(0.d0,0.d0)
-         
-
-         call mergewf(e_head_pol(:,i,ipol),e_head_g ,ngm,ig_l2g,mpime,nproc,ionode_id,intra_pool_comm)
-         if(ionode) then
-           ! do ig=1,npwx_g
-               write(iun) e_head_g(1:npwx_g)
-           ! enddo
-         endif
-      enddo
-   enddo
-   call mp_barrier( world_comm )
-   write(stdout,*) 'ATT02'
-  if(ionode) close(iun)
-
- ! if(ionode) then
- !    open( unit= iun, file=trim(tmp_dir)//trim(prefix)////'.e_head', status='old',position='rewind',form='unformatted')
- !    read(iun) idumm
- !    read(iun) rdumm
- !    read(iun) head_tmp(1:n_gauss+1)
- !    read(iun) idumm
- !    allocate(e_head_g_tmp(n_gauss+1,npwx_g,3))
- !    do ipol=1,3
- !       do ii=1,n_gauss+1
- !          do ig=1,npwx_g
- !             read(iun) e_head_g_tmp(ii,ig,ipol)
- !          enddo
- !       enddo
- !    enddo
+     call mp_barrier( world_comm )
      
- !    rewind(iun)
- !    write(iun) n_gauss
- !    write(iun) omega_gauss
- !    write(iun) freqs(1:n_gauss+1)
- !    write(iun) npwx_g
- !    do ipol=1,3
- !       do ig=1,npwx_g
- !          write(iun) e_head_g_tmp(1:n_gauss+1,ig,ipol)
- !       enddo
- !    enddo
-     close(iun)
- 
- !    deallocate(e_head_g_tmp)
- ! endif
- 
+     
+     do i=1,lenf
+        do ipol=1,3
+           e_head_g(:)=(0.d0,0.d0)
+           call mergewf(e_head_pol(:,i,ipol),e_head_g ,ngm,ig_l2g,mpime,nproc,ionode_id,intra_pool_comm)
+           if(ionode) then
+              write(iun) e_head_g(1:npwx_g)
+           endif
+        enddo
+     enddo
+     call mp_barrier( world_comm )
+     write(stdout,*) 'ATT02'
+     if(ionode) close(iun)
 
-  call mp_barrier( world_comm )
-  write(stdout,*) 'ATT1'
-  
-  deallocate(e_head_g)
+     call mp_barrier( world_comm )
+     write(stdout,*) 'ATT1'
+     deallocate(pola_charge)
+     deallocate(e_head_pol)
+     deallocate(e_head_g)
+  end do!im
+
+!writes on file head
+
+     if(ionode) then
+        iun =  find_free_unit()
+        open( unit= iun, file=trim(tmp_dir)//trim(prefix)//'.head', status='unknown',form='unformatted')
+        write(iun) n_gauss
+        write(iun) omega_gauss
+        write(iun) freqs(1:n_gauss+1)
+        write(iun) head(1:n_gauss+1,1)
+        write(iun) head(1:n_gauss+1,2)
+        write(iun) head(1:n_gauss+1,3)
+        close(iun)
+     endif
+
+
+
   deallocate(psi_tmp)
   deallocate(prod)
   
   deallocate (ps)
   deallocate(psi_v)
-  deallocate(pola_charge)
+ 
   
     
 
   deallocate(head,head_tmp,freqs)
-  deallocate(e_head, tmp_g)
+  deallocate( tmp_g)
   deallocate(epsilon_g)
-  deallocate(e_head_pol)
+
   
 
    call mp_barrier( world_comm )
