@@ -114,7 +114,7 @@ subroutine solve_head
   allocate(x(2*n_gauss+1),w(2*n_gauss+1), freqs(n_gauss+1))
   allocate(head(n_gauss+1,3),head_tmp(n_gauss+1))
   head(:,:)=0.d0
-  allocate(psi_v(dffts%nnr, nbnd), prod(dfftp%nnr))
+  allocate(prod(dfftp%nnr))
   allocate (tmp_g(ngm))
  ! allocate( pola_charge(dfftp%nnr,nspin,3,n_gauss+1))
   allocate(epsilon_g(3,3,n_gauss+1))
@@ -291,13 +291,7 @@ subroutine solve_head
         if (nksq.gt.1)  call get_buffer(evc, lrwfc, iuwfc, ik)
         npwq = npw
         call init_us_2 (npw, igk, xk (1, ik), vkb)
-        
-     !trasform valence wavefunctions to real space
-        do ibnd=1,nbnd
-           psi_v(:,ibnd) = ( 0.D0, 0.D0 )
-           psi_v(nls(igk(1:npw)),ibnd) = evc(1:npw,ibnd)
-           CALL invfft ('Wave',  psi_v(:,ibnd), dffts)
-        enddo
+
 
 
      !
@@ -320,9 +314,19 @@ subroutine solve_head
            
            allocate (dpsi_ipol(npwx,lenb,3))
            allocate(t_out(npwx,nsteps_lanczos,lenb))
+           allocate(psi_v(dffts%nnr, lenb))
 
            dpsi_ipol(:,:,:)=(0.d0,0.d0)
         
+
+           !trasform valence wavefunctions to real space                                                                                        
+           do ibnd=1,lenb
+              psi_v(:,ibnd) = ( 0.D0, 0.D0 )
+              psi_v(nls(igk(1:npw)),ibnd) = evc(1:npw,first_b+ibnd-1)
+              CALL invfft ('Wave',  psi_v(:,ibnd), dffts)
+           enddo
+
+
 
 !loop on carthesian directions
            do ipol = 1,3
@@ -408,7 +412,7 @@ subroutine solve_head
            
 
 !      product dpsi * psi_v
-                    prod(1:dffts%nnr)=conjg(prod(1:dffts%nnr))*psi_v(1:dffts%nnr,first_b+iv-1)
+                    prod(1:dffts%nnr)=conjg(prod(1:dffts%nnr))*psi_v(1:dffts%nnr,iv)
                     if(doublegrid) then
                        call cinterpolate(prod,prod,1)
                     endif
@@ -424,6 +428,7 @@ subroutine solve_head
            enddo
            deallocate(dpsi_ipol)
            deallocate(t_out)
+           deallocate(psi_v)
         end do!on ib
      enddo! on ik
 
@@ -558,7 +563,7 @@ subroutine solve_head
   deallocate(prod)
   
   deallocate (ps)
-  deallocate(psi_v)
+
  
   
     
