@@ -40,9 +40,9 @@ TDDFPT=tddfpt-5.1
 TDDFPT_URL=$(URL)$(TDDFPT).tar.gz
 #
 GUI=PWgui-5.1
-GUI_URL=$(URL)$(GUI).tgz
+GUI_URL=$(URL)$(GUI).tar.gz
 #
-GPU=v14.03.0
+GPU=v14.06.0
 #GPU_URL=$(URL)$(GPU).tar.gz
 GPU_URL=https://github.com/fspiga/QE-GPU/archive/$(GPU).tar.gz
 #
