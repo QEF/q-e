@@ -562,7 +562,9 @@ SUBROUTINE raman_cs(dynout,dchi_dtau)
   USE constants, ONLY : amu_ry
   USE ions_base, ONLY : nat
   USE io_global, ONLY : stdout
+  USE cgcom,     ONLY : nmodes
   !
+  IMPLICIT NONE
   REAL(DP) :: dynout(3*nat,3*nat), dchi_dtau(3,3,3,nat)
   !
   INTEGER :: nu, na, ipol, jpol, lpol

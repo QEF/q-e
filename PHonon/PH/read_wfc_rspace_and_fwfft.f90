@@ -16,7 +16,7 @@ subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , n_plane_waves ,
   USE mp_pools,            ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_bcast
   
-!
+  IMPLICIT NONE
   INTEGER, INTENT (IN)      :: ik                    ! k-point to read
   INTEGER, INTENT (IN)      :: lrec                  ! length of the record
   INTEGER, INTENT (IN)      :: n_plane_waves         ! number of plane waves
@@ -24,7 +24,7 @@ subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , n_plane_waves ,
   INTEGER, INTENT (IN)      :: igmap(npwx)           ! index for the mapping of the g
   COMPLEX(DP), INTENT (OUT) :: evc(npol*npwx,nbnd)   ! wavefunction in g space
 ! internal
-  INTEGER                   :: ibnd, ig
+  INTEGER                   :: ibnd, ig, is
   COMPLEX(DP), ALLOCATABLE  :: evc_r(:,:), dist_evc_r(:,:)
 
   allocate( evc_r( dffts%nnr, npol ) )

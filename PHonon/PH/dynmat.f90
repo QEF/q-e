@@ -1068,7 +1068,7 @@ subroutine polar_mode_permittivity( nat, eps0, z, zstar, w2, omega, lplasma)
   USE constants, ONLY : pi, tpi, fpi, eps4, eps8, eps12, &
                        ELECTRON_SI, BOHR_RADIUS_SI, AMU_SI, C_SI, &
                        EPSNOUGHT_SI, AMU_RY, RY_TO_CMM1, RY_TO_THZ
-
+  implicit none
   !number of atoms
   integer, intent(in) :: nat
  
@@ -1106,7 +1106,7 @@ subroutine polar_mode_permittivity( nat, eps0, z, zstar, w2, omega, lplasma)
   real(DP) :: meffc(3)
  
   !total effective plasma frequency
-  real(DP) :: weff_tot
+  real(DP) :: weff_tot, freq
  
   !polar mode contribution to the permittivity
   real(DP) :: deps(3,3)
@@ -1118,6 +1118,7 @@ subroutine polar_mode_permittivity( nat, eps0, z, zstar, w2, omega, lplasma)
   real(DP) :: plasma_frequency_si 
   !Conversion factor for permittivity from Rydberg atomic units to SI
   real(DP) :: permittivity_si 
+
   ! some compiler do not like SQRT in initialization expressions
   plasma_frequency_si = ELECTRON_SI/sqrt(EPSNOUGHT_SI*BOHR_RADIUS_SI**3*AMU_SI)
   permittivity_si = plasma_frequency_si**2 / (fpi * pi)

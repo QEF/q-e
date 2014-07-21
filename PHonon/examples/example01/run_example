@@ -87,7 +87,7 @@ $ECHO " done"
 # self-consistent calculation
 cat > si.scf.in << EOF
  &control
-    calculation='scf',
+    calculation='vc-relax',
     restart_mode='from_scratch',
     prefix='silicon'
     pseudo_dir = '$PSEUDO_DIR/',
@@ -101,6 +101,8 @@ cat > si.scf.in << EOF
     mixing_beta = 0.7
     conv_thr =  1.0d-8
  /
+ &ions /
+ &cell /
 ATOMIC_SPECIES
  Si  28.086  Si.pz-vbc.UPF
 ATOMIC_POSITIONS (alat)
