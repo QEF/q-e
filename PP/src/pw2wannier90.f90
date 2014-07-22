@@ -780,7 +780,7 @@ SUBROUTINE read_nnkp
      IF(numk/=iknum) THEN
         WRITE(stdout,*)  ' Something wrong! '
         WRITE(stdout,*)  ' numk=',numk, ' iknum=',iknum
-        
+        CALL errore( 'pw2wannier90', 'Wrong number of k-points', numk)
      ENDIF
      DO i=1,numk
         READ(iun_nnkp,*) xx(1), xx(2), xx(3)
