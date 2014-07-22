@@ -15,8 +15,8 @@
 ! Jonathan Yates and Arash Mostofi
 !
 ! Known limitations:
-!  spinors and orbital magnetisation term are not
-!  yet inplimented for ultrasofts or PAW 
+!  spinors and orbital magnetisation term are not yet
+!  implemented for ultrasoft pseudopotentials or PAW 
 !
 !
 !
@@ -82,7 +82,7 @@ PROGRAM pw2wannier90
   !------------------------------------------------------------------------
   !
   USE io_global,  ONLY : stdout, ionode, ionode_id
-  USE mp_global,  ONLY : mp_startup
+  USE mp_global,  ONLY : mp_startup, npool, nproc_pool, nproc_pool_file
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
   USE cell_base,  ONLY : at, bg
@@ -90,7 +90,7 @@ PROGRAM pw2wannier90
   USE klist,      ONLY : nkstot
   USE io_files,   ONLY : prefix, tmp_dir
   USE noncollin_module, ONLY : noncolin
-  USE control_flags,    ONLY : gamma_only
+  USE control_flags,    ONLY : gamma_only, twfcollect
   USE environment,ONLY : environment_start
   USE wvfct,      ONLY : ecutwfc
   USE wannier
@@ -183,6 +183,10 @@ PROGRAM pw2wannier90
   CALL mp_bcast(reduce_unk,ionode_id, world_comm)
   CALL mp_bcast(write_unkg,ionode_id, world_comm)
   !
+  ! Check: kpoint distribution with pools not implemented
+  !
+  IF ( npool > 1 ) CALL errore( 'pw2wannier90', 'pools not implemented', npool )
+  !
   !   Now allocate space for pwscf variables, read and check them.
   !
   logwann = .true.
@@ -193,9 +197,12 @@ PROGRAM pw2wannier90
   !
   IF (noncolin.and.gamma_only) CALL errore('pw2wannier90',&
        'Non-collinear and gamma_only not implemented',1)
-
-  ! Here we should trap restarts from a different number of nodes.
-  ! or attempts at kpoint distribution
+  !
+  ! Here we trap restarts from a different number of nodes.
+  !
+  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
+     CALL errore('pw2wannier90', &
+     'pw.x run on a different number of procs/pools. Use wf_collect=.true.',1)
   !
   SELECT CASE ( trim( spin_component ) )
   CASE ( 'up' )
@@ -703,8 +710,8 @@ SUBROUTINE read_nnkp
 
      INQUIRE(file=trim(seedname)//".nnkp",exist=have_nnkp)
      IF(.not. have_nnkp) THEN
-        WRITE(stdout,*) ' Could not find the file '//trim(seedname)//'.nnkp'
-        STOP
+        CALL errore( 'pw2wannier90', 'Could not find the file '&
+           &//trim(seedname)//'.nnkp', 1 )
      ENDIF
 
      iun_nnkp = find_free_unit()
@@ -722,8 +729,8 @@ SUBROUTINE read_nnkp
 
      CALL scan_file_to('real_lattice',found)
      if(.not.found) then
-        WRITE(stdout,*) ' Could not find real_lattice block in '//trim(seedname)//'.nnkp'
-        STOP
+        CALL errore( 'pw2wannier90', 'Could not find real_lattice block in '&
+           &//trim(seedname)//'.nnkp', 1 )
      endif
      DO j=1,3
         READ(iun_nnkp,*) (rlatt(i,j),i=1,3)
@@ -736,7 +743,7 @@ SUBROUTINE read_nnkp
            IF(abs(rlatt(i,j)-at(i,j))>eps6) THEN
               WRITE(stdout,*)  ' Something wrong! '
               WRITE(stdout,*)  ' rlatt(i,j) =',rlatt(i,j),  ' at(i,j)=',at(i,j)
-              STOP
+              CALL errore( 'pw2wannier90', 'Direct lattice mismatch', 3*j+i )
            ENDIF
         ENDDO
      ENDDO
@@ -744,8 +751,8 @@ SUBROUTINE read_nnkp
 
      CALL scan_file_to('recip_lattice',found)
      if(.not.found) then
-        WRITE(stdout,*) ' Could not find recip_lattice block in '//trim(seedname)//'.nnkp'
-        STOP
+        CALL errore( 'pw2wannier90', 'Could not find recip_lattice block in '&
+           &//trim(seedname)//'.nnkp', 1 )
      endif
      DO j=1,3
         READ(iun_nnkp,*) (glatt(i,j),i=1,3)
@@ -758,7 +765,7 @@ SUBROUTINE read_nnkp
            IF(abs(glatt(i,j)-bg(i,j))>eps6) THEN
               WRITE(stdout,*)  ' Something wrong! '
               WRITE(stdout,*)  ' glatt(i,j)=',glatt(i,j), ' bg(i,j)=',bg(i,j)
-              STOP
+              CALL errore( 'pw2wannier90', 'Reciprocal lattice mismatch', 3*j+i )
            ENDIF
         ENDDO
      ENDDO
@@ -766,14 +773,14 @@ SUBROUTINE read_nnkp
 
      CALL scan_file_to('kpoints',found)
      if(.not.found) then
-        WRITE(stdout,*) ' Could not find kpoints block in '//trim(seedname)//'.nnkp'
-        STOP
+        CALL errore( 'pw2wannier90', 'Could not find kpoints block in '&
+           &//trim(seedname)//'.nnkp', 1 )
      endif
      READ(iun_nnkp,*) numk
      IF(numk/=iknum) THEN
         WRITE(stdout,*)  ' Something wrong! '
         WRITE(stdout,*)  ' numk=',numk, ' iknum=',iknum
-        STOP
+        
      ENDIF
      DO i=1,numk
         READ(iun_nnkp,*) xx(1), xx(2), xx(3)
@@ -785,7 +792,7 @@ SUBROUTINE read_nnkp
            WRITE(stdout,*) ' k-point ',i,' is wrong'
            WRITE(stdout,*) xx(1), xx(2), xx(3)
            WRITE(stdout,*) xk(1,i), xk(2,i), xk(3,i)
-           STOP
+           CALL errore( 'pw2wannier90', 'problems with k-points', i )
         ENDIF
      ENDDO
      WRITE(stdout,*) ' - K-points are ok'
@@ -806,15 +813,15 @@ SUBROUTINE read_nnkp
            if(found) then
               old_spinor_proj=.true.
            else
-              WRITE(stdout,*) ' Could not find projections block in '//trim(seedname)//'.nnkp'
-              STOP
+              CALL errore( 'pw2wannier90', 'Could not find projections block in '&
+                 &//trim(seedname)//'.nnkp', 1 )
            endif
         end if
      else
         CALL scan_file_to('projections',found)
         if(.not.found) then
-           WRITE(stdout,*) ' Could not find projections block in '//trim(seedname)//'.nnkp'
-           STOP           
+           CALL errore( 'pw2wannier90', 'Could not find projections block in '&
+              &//trim(seedname)//'.nnkp', 1 )
         endif
      endif
      READ(iun_nnkp,*) n_proj
@@ -893,8 +900,8 @@ SUBROUTINE read_nnkp
   IF (ionode) THEN   ! read from ionode only
      CALL scan_file_to('nnkpts',found)
      if(.not.found) then
-        WRITE(stdout,*) ' Could not find nnkpts block in '//trim(seedname)//'.nnkp'
-        STOP
+        CALL errore( 'pw2wannier90', 'Could not find nnkpts block in '&
+           &//trim(seedname)//'.nnkp', 1 )
      endif
      READ (iun_nnkp,*) nnb
   ENDIF
@@ -958,8 +965,8 @@ SUBROUTINE read_nnkp
   IF (ionode) THEN     ! read from ionode only
      CALL scan_file_to('exclude_bands',found)
      if(.not.found) then
-        WRITE(stdout,*) ' Could not find exclude_bands block in '//trim(seedname)//'.nnkp'
-        STOP
+        CALL errore( 'pw2wannier90', 'Could not find exclude_bands block in '&
+           &//trim(seedname)//'.nnkp', 1 )
      endif
      READ (iun_nnkp,*) nexband
      excluded_band(1:nbnd)=.false.
