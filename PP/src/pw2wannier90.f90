@@ -887,8 +887,10 @@ SUBROUTINE read_nnkp
   CALL mp_bcast(zaxis,ionode_id, world_comm)
   CALL mp_bcast(xaxis,ionode_id, world_comm)
   CALL mp_bcast(alpha_w,ionode_id, world_comm)
-  CALL mp_bcast(spin_eig,ionode_id, world_comm)
-  CALL mp_bcast(spin_qaxis,ionode_id, world_comm)
+  if(noncolin.and..not.old_spinor_proj) then
+     CALL mp_bcast(spin_eig,ionode_id, world_comm)
+     CALL mp_bcast(spin_qaxis,ionode_id, world_comm)
+  end if
   !
   WRITE(stdout,*)
   WRITE(stdout,*) 'Projections:'
