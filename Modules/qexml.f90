@@ -2630,7 +2630,7 @@ CONTAINS
          ALLOCATE( angle1_(nsp_) )
          ALLOCATE( angle2_(nsp_) )
 
-         IF ( i_cons_ ==1 .OR. i_cons==2 ) ALLOCATE( mcons_(3,nsp_) )
+         IF ( i_cons_ ==1 .OR. i_cons_ ==2 ) ALLOCATE( mcons_(3,nsp_) )
          !
          DO i=1,nsp_
             !
