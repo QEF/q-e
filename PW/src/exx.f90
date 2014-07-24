@@ -1797,6 +1797,7 @@ MODULE exx
        JBND_LOOP : &
        DO jbnd = 1, nbnd     !for each band of psi (the k cycle is outside band)
           !
+          IF ( ABS(wg(jbnd,ikk)) < eps_occ) CYCLE
           IF (noncolin) THEN
               temppsic_nc = ( 0._dp, 0._dp )
           ELSE
