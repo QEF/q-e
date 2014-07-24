@@ -99,6 +99,10 @@ SUBROUTINE esm_ggen_2d()
 !**** imill_2d(h,k) = 2d index of vector with h,k indices
 !**** ng_2d = total number of 2d g vectors on this proc
 
+! Workaround for initialization of "planes" fw_planz and bw_planz in cft_1z
+! These planes are shared among OpenMP threads. We need to make a plane outside
+! OpenMP parallelization to avoid unexpected destroy and generation of planes
+
   ALLOCATE(vg2_in(dfftp%nr3x),vg2(dfftp%nr3x))
   vg2_in(:) = 0d0
   vg2(:) = 0d0
