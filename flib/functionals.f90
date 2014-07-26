@@ -658,6 +658,55 @@ subroutine PW86 (rho, grho, sx, v1x, v2x)
 
 end subroutine PW86
 !
+!-----------------------------------------------------------------------
+subroutine cx13 (rho, grho, sx, v1x, v2x)
+  !-----------------------------------------------------------------------
+  ! The new exchange partner for a vdW-DF1-cx suggested
+  ! by K. Berland and P. Hyldgaard, see PRB 89, 035412 (2014), 
+  ! to test the plasmon nature of the vdW-DF1 inner functional.
+  !
+  USE kinds
+  implicit none
+  real(DP), intent(in) :: rho, grho
+  real(DP), intent(out) :: sx, v1x, v2x
+  real(DP) :: s, s_2, s_3, s_4, s_5, s_6, fs, fs_rPW86, df_rPW86_ds, grad_rho, df_ds
+  real(DP) :: alp, beta, a, b, c, s_prefactor, Ax, four_thirds, mu_LM
+  parameter( alp = 0.021789d0, beta=1.15d0,  a = 1.851d0, b = 17.33d0, c = 0.163d0, mu_LM = 0.09434d0, &
+       s_prefactor = 6.18733545256027d0, &
+       Ax = -0.738558766382022d0, four_thirds = 4.d0/3.d0)
+
+  grad_rho = sqrt(grho)
+
+  s = grad_rho/(s_prefactor*rho**(four_thirds))
+
+  s_2 = s*s
+  s_3 = s_2 * s
+  s_4 = s_2 * s_2
+  s_5 = s_3 * s_2
+  s_6 = s_2 * s_2 *s_2
+
+
+  !! Calculation of energy
+  fs_rPW86 = (1 + a*s_2 + b*s_4 + c*s_6)**(1.d0/15.d0)
+  fs = 1.d0/(1+alp*s_6) * (1 + mu_LM *s_2) &
+       +  alp*s_6/(beta+alp*s_6)*fs_rPW86
+
+  sx = Ax * rho**(four_thirds) * (fs -1.0D0)
+
+
+  !! Calculation of the potential
+  df_rPW86_ds = (1.d0/(15.d0*fs_rPW86**(14.0D0)))*(2*a*s + 4*b*s_3 + 6*c*s_5)
+
+  df_ds = 1.d0/(1+alp*s_6)**2*( 2.0d0*mu_LM*s*(1+alp*s_6) - 6.0d0*alp*s_5*( 1 + mu_LM*s_2))  &
+         + alp*s_6/(beta+alp*s_6)*df_rPW86_ds  &
+         + 6.0d0*alp*s_5*fs_rPW86/(beta+alp*s_6)*(1- alp*s_6/(beta + alp*s_6))
+
+  v1x = Ax*(four_thirds)*(rho**(1.d0/3.d0)*(fs -1.0D0) &
+       -grad_rho/(s_prefactor * rho)*df_ds)
+  v2x = Ax * df_ds/(s_prefactor*grad_rho)
+
+end subroutine cx13
+!
 !---------------------------------------------------------------
 subroutine c09x (rho, grho, sx, v1x, v2x)
   !---------------------------------------------------------------

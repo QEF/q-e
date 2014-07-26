@@ -110,13 +110,14 @@ module funct
   !                                              (HSE 06, see note below)
   !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
   !              "gaup"  = "sla+pw+gaup+pbc"   = Gau-PBE
-  !              "vdw-df"= "sla+pw+rpb+vdw1"   = vdW-DF
-  !              "vdw-df2"="sla+pw+rw86+vdw2"  = vdW-DF2
-  !              "vdw-df-c09"="sla+pw+c09x+vdw1"  = vdW-DF-C09
-  !              "vdw-df2-c09"="sla+pw+c09x+vdw2" = vdW-DF2-C09
-  !              "vdw-df3"="sla+pw+obk8+vdw1"  = vdW-DF3
-  !              "vdw-df4"="sla+pw+ob86+vdw1"  = vdW-DF4
-  !              "optb86b-vdw" = same as         vdW-DF4
+  !              "vdw-df"      ="sla+pw+rpb+vdw1"    = vdW-DF
+  !              "vdw-df2"     ="sla+pw+rw86+vdw2"   = vdW-DF2
+  !              "vdw-df-c09"  ="sla+pw+c09x+vdw1"   = vdW-DF-C09
+  !              "vdw-df2-c09" ="sla+pw+c09x+vdw2"   = vdW-DF2-C09
+  !              "vdw-df-cx"   ="sla+pw+cx13+vdW1"   = vdW-DF-cx
+  !              "vdw-df3"     ="sla+pw+obk8+vdw1"   = vdW-DF3
+  !              "vdw-df4"     ="sla+pw+ob86+vdw1"   = vdW-DF4
+  !              "optb86b-vdw" = same as               vdW-DF4
   !
   ! Any nonconflicting combination of the following keywords is acceptable:
   !
@@ -167,6 +168,7 @@ module funct
   !              "ob86"   optB86b exchange               igcx =24
   !              "evx"    Engel-Vosko exchange           igcx =25
   !              "b86r"   revised Becke (b86b)           igcx =26
+  !              "cx13"   consistent exchange            igcx =27
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -229,6 +231,7 @@ module funct
   !                      T. Thonhauser et al., PRB 76, 125112 (2007)
   !              vdw-DF2 Lee et al., Phys. Rev. B 82, 081101 (2010)
   !              rev-vdW-DF2 I. Hamada, Phys. Rev. B 89, 121103(R) (2014)
+  !              vdW-DF-cx K. Berland and P. Hyldgaard, PRB 89, 035412 (2014)
   !              vdw-DF3  Klimes et al, J. Phys. Cond. Matter, 22, 022201 (2010)
   !              vdw-DF4  Klimes et al, Phys. Rev. B, 83, 195131 (2011)
   !              c09x    V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
@@ -282,7 +285,7 @@ module funct
   real(DP):: finite_size_cell_volume = notset
   logical :: discard_input_dft = .false.
   !
-  integer, parameter:: nxc=8, ncc=10, ngcx=26, ngcc=12, nmeta=3, ncnl=3
+  integer, parameter:: nxc=8, ncc=10, ngcx=27, ngcc=12, nmeta=3, ncnl=3
   character (len=4) :: exc, corr, gradx, gradc, meta, nonlocc
   dimension :: exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0:ngcc), &
                meta(0:nmeta), nonlocc (0:ncnl)
@@ -294,7 +297,7 @@ module funct
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
                'xxxx', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
                'xxxx', 'C09X', 'SOX', 'xxxx', 'Q2DX', 'GAUP', 'PW86', 'B86B', &
-               'OBK8', 'OB86', 'EVX', 'B86R' / 
+               'OBK8', 'OB86', 'EVX', 'B86R', 'CX13' / 
 
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'NONE',&
                'B3LP', 'PSC', 'PBE', 'xxxx', 'xxxx', 'Q2DC' / 
@@ -447,6 +450,10 @@ CONTAINS
     else if ('VDW-DF' .EQ. TRIM(dftout)) then
     ! Special case vdW-DF
        dft_defined = set_dft_values(1,4,4,0,1,0)
+
+    else if ('VDW-DF-CX' .EQ. TRIM(dftout)) then
+    ! Special case vdW-DF-CX
+       dft_defined = set_dft_values(1,4,27,0,1,0)
 
     else if ('VDW-DF-C09'  .EQ. TRIM(dftout) ) then
     ! Special case vdW-DF with C09 exchange
@@ -947,6 +954,8 @@ CONTAINS
   if ( inlc_==1) then
      if (iexch_==1.and.icorr_==4.and.igcx_==4.and.igcc_==0) then
         shortname_ = 'VDW-DF'
+     else if (iexch_==1.and.icorr_==4.and.igcx_==27.and.igcc_==0) then
+        shortname_ = 'VDW-DF-CX'
      else if (iexch_==1.and.icorr_==4.and.igcx_==16.and.igcc_==0) then
         shortname_ = 'VDW-DF-C09'
      else if (iexch_==1.and.icorr_==4.and.igcx_==24.and.igcc_==0) then
@@ -1378,6 +1387,8 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call pbex (rho, grho, 7, sx, v1x, v2x)
   elseif (igcx == 26) then ! 'b86r'
      call b86b (rho, grho, 3, sx, v1x, v2x)
+  elseif (igcx == 27) then ! 'cx13'
+     call cx13 (rho, grho, sx, v1x, v2x)
   else
      sx = 0.0_DP
      v1x = 0.0_DP
@@ -1574,7 +1585,7 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
        v2xdw = 0.72_DP * v2xdw
      end if
 
-   elseif (igcx == 11) then ! 'Wu-Cohen'
+  elseif (igcx == 11) then ! 'Wu-Cohen'
      if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
         call wcx (2.0_DP * rhoup, 4.0_DP * grhoup2, sxup, v1xup, v2xup)
      else
@@ -1593,7 +1604,7 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
 
-   elseif (igcx == 21) then ! 'PW86'
+  elseif (igcx == 21) then ! 'PW86'
      if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
         call pw86 (2.0_DP * rhoup, 4.0_DP * grhoup2, sxup, v1xup, v2xup)
      else
@@ -1612,7 +1623,7 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
 
-   elseif (igcx == 22) then ! 'B86B'
+  elseif (igcx == 22) then ! 'B86B'
      if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
         call becke86b (2.0_DP * rhoup, 4.0_DP * grhoup2, sxup, v1xup, v2xup)
      else
@@ -1630,6 +1641,26 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
      sx = 0.5_DP * (sxup + sxdw)
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
+
+  elseif (igcx == 27) then ! 'cx13 for vdw-df-cx'
+     if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
+        call cx13 (2.0_DP * rhoup, 4.0_DP * grhoup2, sxup, v1xup, v2xup)
+     else
+        sxup = 0.0_DP
+        v1xup = 0.0_DP
+        v2xup = 0.0_DP
+     endif
+     if (rhodw > small .and. sqrt (abs (grhodw2) ) > small) then
+        call cx13 (2.0_DP * rhodw, 4.0_DP * grhodw2, sxdw, v1xdw, v2xdw)
+     else
+        sxdw = 0.0_DP
+        v1xdw = 0.0_DP
+        v2xdw = 0.0_DP
+     endif
+     sx = 0.5_DP * (sxup + sxdw)
+     v2xup = 2.0_DP * v2xup
+     v2xdw = 2.0_DP * v2xdw
+
 
   ! case igcx == 5 (HCTH) and 6 (OPTX) not implemented
   ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
@@ -1837,6 +1868,27 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
         endif
         if (rhodw(i) > small .and. sqrt(abs(grhodw2(i))) > small) then
            call becke86b (2.0_DP * rhodw(i), 4.0_DP * grhodw2(i), sxdw(i), v1xdw(i), v2xdw(i))
+        else
+           sxdw(i) = 0.0_DP
+           v1xdw(i) = 0.0_DP
+           v2xdw(i) = 0.0_DP
+        endif
+     end do
+     sx = 0.5_DP * (sxup + sxdw)
+     v2xup = 2.0_DP * v2xup
+     v2xdw = 2.0_DP * v2xdw
+
+  case(27) ! 'cx13 for vdw-df-cx'
+     do i=1,length
+        if (rhoup(i) > small .and. sqrt(abs(grhoup2(i))) > small) then
+           call cx13 (2.0_DP * rhoup(i), 4.0_DP * grhoup2(i), sxup(i), v1xup(i), v2xup(i))
+        else
+           sxup(i) = 0.0_DP
+           v1xup(i) = 0.0_DP
+           v2xup(i) = 0.0_DP
+        endif
+        if (rhodw(i) > small .and. sqrt(abs(grhodw2(i))) > small) then
+           call cx13 (2.0_DP * rhodw(i), 4.0_DP * grhodw2(i), sxdw(i), v1xdw(i), v2xdw(i))
         else
            sxdw(i) = 0.0_DP
            v1xdw(i) = 0.0_DP
