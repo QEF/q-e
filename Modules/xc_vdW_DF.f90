@@ -155,8 +155,7 @@ CONTAINS
     !! stress tensor calcultion and cell relaxation runs are also possible.
     !! --------------------------------------------------------------------------------------------------------
 
-    call errore('xc_vdW_DF','vdW functional not implemented for spin polarized runs', size(rho_valence,2)-1)
-    if (nspin>2) call errore('xc_vdW_DF','vdW functional not implemented for nspin > 2', nspin)
+    if ( nspin > 1 ) call errore ('xc_vdW_DF','vdW-DF functional not implemented for nspin > 1', nspin)
 
     !! --------------------------------------------------------------------------------------------------------
 
@@ -260,6 +259,22 @@ CONTAINS
 #endif
           
           WRITE( stdout, '(5x,"************************************************************************",//)')
+
+          if ( nspin>1  ) then
+             WRITE( stdout, '(5x,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")')
+             WRITE( stdout, '(5x,"!")')
+             WRITE( stdout, '(5x,"! WARNING:")')
+             WRITE( stdout, '(5x,"!")')
+             WRITE( stdout, '(5x,"! You are using vdW-DF in a spin-polarized calculation. vdW-DF has not")')
+             WRITE( stdout, '(5x,"! yet been defined for spin cases and an uncontrolled approximation is")')
+             WRITE( stdout, '(5x,"! currently been used to make this work. Proceed at your own risk!")')
+             WRITE( stdout, '(5x,"!")')
+             WRITE( stdout, '(5x,"! The true spin version of vdW-DF is currently begin developed and")')
+             WRITE( stdout, '(5x,"! implemented and will be available soon.")')
+             WRITE( stdout, '(5x,"!")')
+             WRITE( stdout, '(5x,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")')
+             WRITE( stdout, '(/)')
+          end if 
 
        end if
        
