@@ -631,7 +631,7 @@ CONTAINS
    SUBROUTINE card_kpoints( input_line )
       !
       USE bz_form, ONLY : transform_label_coord
-      USE input_parameters, ONLY : ibrav, celldm, point_label_type
+      USE cell_base, ONLY : cell_base_init, celldm_cb => celldm
       IMPLICIT NONE
       !
       CHARACTER(len=256) :: input_line, buffer
@@ -752,9 +752,12 @@ CONTAINS
                   ENDIF
                ENDDO
             ENDDO
-            IF ( npk_label > 0 ) &
-               CALL transform_label_coord(ibrav, celldm, xkaux, letter, &
+            IF ( npk_label > 0 ) THEN
+               CALL cell_base_init ( ibrav, celldm, a, b, c, cosab, &
+                              cosac, cosbc, trd_ht, rd_ht, cell_units )
+               CALL transform_label_coord(ibrav, celldm_cb, xkaux, letter, &
                     label_list, npk_label, nkstot, k_points, point_label_type )
+            END IF
 
             DEALLOCATE(letter)
             DEALLOCATE(label_list)
