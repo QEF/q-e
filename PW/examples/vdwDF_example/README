@@ -53,8 +53,3 @@ last example by removing the comments from the execution lines (277-280).
 In this example it is shown how to run a BFGS relaxation of the forces 
 for the Argon dimer. Check that the energies and forces agree with those
 in the reference file, and that the final positions are correct.
-
----
-IMPORTANT NOTE: This feature works the most accurately when Revised-PBE 
-(RPB of short-name "revPBE" (Zhang-Yang)) is used as the gradient correction 
-on the exchange part of the XC functional.
