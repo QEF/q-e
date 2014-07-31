@@ -91,7 +91,7 @@ PROGRAM pw2wannier90
   USE io_files,   ONLY : prefix, tmp_dir
   USE noncollin_module, ONLY : noncolin
   USE control_flags,    ONLY : gamma_only, twfcollect
-  USE environment,ONLY : environment_start
+  USE environment,ONLY : environment_start, environment_end
   USE wvfct,      ONLY : ecutwfc
   USE wannier
   !
@@ -116,7 +116,10 @@ PROGRAM pw2wannier90
 #ifdef __MPI
   CALL mp_startup ( )
 #endif
+  !! not sure if this should be called also in 'library' mode or not !!
   CALL environment_start ( 'PW2WANNIER' )
+  !
+  CALL start_clock( 'init_pw2wan' )
   !
   ! Read input on i/o node and broadcast to the rest
   !
@@ -228,6 +231,8 @@ PROGRAM pw2wannier90
      ikstop  = nkstot
      iknum   = nkstot
   END SELECT
+  !
+  CALL stop_clock( 'init_pw2wan' )
   !
   WRITE(stdout,*)
   WRITE(stdout,*) ' Wannier mode is: ',wan_mode
@@ -341,6 +346,16 @@ PROGRAM pw2wannier90
      WRITE(stdout,*) ' *** Stop pp '
      WRITE(stdout,*) ' ------------'
      WRITE(stdout,*)
+     !
+     IF ( ionode ) WRITE( stdout, *  )
+     CALL print_clock( 'init_pw2wan' )
+     IF(write_amn  )  CALL print_clock( 'compute_amn'  )
+     IF(write_mmn  )  CALL print_clock( 'compute_mmn'  )
+     IF(write_unk  )  CALL print_clock( 'write_unk'    )
+     IF(write_unkg )  CALL print_clock( 'write_parity' )
+     !! not sure if this should be called also in 'library' mode or not !!
+     CALL environment_end ( 'PW2WANNIER' )
+     IF ( ionode ) WRITE( stdout, *  )
      CALL stop_pp
      !
   ENDIF
@@ -1037,7 +1052,7 @@ SUBROUTINE compute_mmn
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
    USE constants,       ONLY : tpi
    USE uspp,            ONLY : nkb, vkb
-   USE uspp_param,      ONLY : upf, nh, lmaxq
+   USE uspp_param,      ONLY : upf, nh, lmaxq, nhm
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
    USE mp_global,       ONLY : intra_pool_comm
@@ -1071,6 +1086,9 @@ SUBROUTINE compute_mmn
    INTEGER                  :: istart,iend
    INTEGER                  :: ibnd_n, ibnd_m
 
+
+   CALL start_clock( 'compute_mmn' )
+   
    any_uspp = any(upf(1:ntyp)%tvanp)
 
    IF(any_uspp .and. noncolin) CALL errore('pw2wannier90',&
@@ -1140,7 +1158,7 @@ SUBROUTINE compute_mmn
    IF(any_uspp) THEN
 
       ALLOCATE( ylm(nbt,lmaxq*lmaxq), qgm(nbt) )
-      ALLOCATE( qb (nkb, nkb, ntyp, nbt) )
+      ALLOCATE( qb (nhm, nhm, ntyp, nbt) )
       !
       CALL ylmr2 (lmaxq*lmaxq, nbt, dxk, qg, ylm)
       qg(:) = sqrt(qg(:)) * tpiba
@@ -1159,15 +1177,16 @@ SUBROUTINE compute_mmn
       DEALLOCATE (qg, qgm, ylm )
       !
    ENDIF
-   WRITE (stdout,*) "MMN"
+
+   WRITE(stdout,'(a,i8)') '  MMN: iknum = ',iknum
    !
    ALLOCATE( Mkb(nbnd,nbnd) )
    !
-   WRITE(stdout,'(a,i8)') ' iknum = ',iknum
-
    ind = 0
    DO ik=1,iknum
-      WRITE (stdout,'(i8)') ik
+      WRITE (stdout,'(i8)',advance='no') ik
+      IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
+      CALL flush_unit(stdout)
       ikevc = ik + ikstart - 1
          CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
       CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
@@ -1372,8 +1391,10 @@ SUBROUTINE compute_mmn
        ENDIF
     ENDIF
 !
-   WRITE(stdout,*)
+   WRITE(stdout,'(/)')
    WRITE(stdout,*) ' MMN calculated'
+
+   CALL stop_clock( 'compute_mmn' )
 
    RETURN
 END SUBROUTINE compute_mmn
@@ -1983,6 +2004,8 @@ SUBROUTINE compute_amn
 
    !call read_gf_definition.....>   this is done at the beging
 
+   CALL start_clock( 'compute_amn' )
+
    any_uspp =any (upf(1:ntyp)%tvanp)
 
    IF(any_uspp .and. noncolin) CALL errore('pw2wannier90',&
@@ -1995,8 +2018,8 @@ SUBROUTINE compute_amn
       IF (ionode) OPEN (unit=iun_amn, file=trim(seedname)//".amn",form='formatted')
    ENDIF
 
-   WRITE (stdout,*) "AMN"
-
+   WRITE(stdout,'(a,i8)') '  AMN: iknum = ',iknum
+   !
    IF (wan_mode=='standalone') THEN
       CALL date_and_tim( cdate, ctime )
       header='Created on '//cdate//' at '//ctime
@@ -2013,9 +2036,11 @@ SUBROUTINE compute_amn
       CALL init_us_1
    ENDIF
    !
-   WRITE(stdout,'(a,i8)') ' iknum = ',iknum
+
    DO ik=1,iknum
-      WRITE (stdout,'(i8)') ik
+      WRITE (stdout,'(i8)',advance='no') ik
+      IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
+      CALL flush_unit(stdout)
       ikevc = ik + ikstart - 1
 !      if(noncolin) then
 !         call davcio (evc_nc, 2*nwordwfc, iunwfc, ikevc, -1 )
@@ -2164,7 +2189,7 @@ SUBROUTINE compute_amn
    !
    IF (ionode .and. wan_mode=='standalone') CLOSE (iun_amn)
 
-   WRITE(stdout,*)
+   WRITE(stdout,'(/)')
    WRITE(stdout,*) ' AMN calculated'
 
    RETURN
@@ -2281,6 +2306,9 @@ SUBROUTINE write_band
          ENDIF
       ENDDO
    ENDDO
+
+   CALL stop_clock( 'compute_amn' )
+
    RETURN
 END SUBROUTINE write_band
 
@@ -2318,6 +2346,8 @@ SUBROUTINE write_plot
    ALLOCATE(psic_all(nxxs) )
 #endif
 
+   CALL start_clock( 'write_unk' )
+
    IF(noncolin) CALL errore('pw2wannier90',&
        'write_unk not implemented with ncls',1)
 
@@ -2330,7 +2360,13 @@ SUBROUTINE write_plot
       ALLOCATE(psic_small(n1by2*n2by2*n3by2))
    ENDIF
 
+   WRITE(stdout,'(a,i8)') ' UNK: iknum = ',iknum
+
    DO ik=ikstart,ikstop
+
+      WRITE (stdout,'(i8)',advance='no') ik
+      IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
+      CALL flush_unit(stdout)
 
       ikevc = ik - ikstart + 1
 
@@ -2436,6 +2472,12 @@ SUBROUTINE write_plot
 #ifdef __MPI
    DEALLOCATE( psic_all )
 #endif
+
+   WRITE(stdout,'(/)')
+   WRITE(stdout,*) ' UNK written'
+
+   CALL stop_clock( 'write_unk' )
+
    RETURN
 END SUBROUTINE write_plot
 
@@ -2466,6 +2508,9 @@ SUBROUTINE write_parity
    real(kind=dp),ALLOCATABLE    :: g_abc(:,:),g_abc_pre_gather(:,:,:)
    COMPLEX(kind=dp),ALLOCATABLE :: evc_sub(:,:,:),evc_sub_gathered(:,:)
    COMPLEX(kind=dp)             :: evc_sub_1D(32)
+
+   CALL start_clock( 'write_parity' )
+
    !
    ! getting the ik index corresponding to the Gamma point
    ! ... and the spin channel (fix due to N Poilvert, Feb 2011)
@@ -2838,6 +2883,8 @@ SUBROUTINE write_parity
    DEALLOCATE(evc_sub)
    DEALLOCATE(evc_sub_gathered)
    DEALLOCATE(g_abc_pre_gather)
+
+   CALL stop_clock( 'write_parity' )
 
 END SUBROUTINE write_parity
 
