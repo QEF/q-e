@@ -182,7 +182,7 @@ PROGRAM PAWplot
   USE mp_global,  ONLY : mp_startup
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
-  USE environment,ONLY : environment_start
+  USE environment,ONLY : environment_start, environment_end
   USE lsda_mod,   ONLY : nspin, current_spin
   USE cell_base,  ONLY : bg
   USE gvect,      ONLY : ngm, nl
@@ -213,7 +213,7 @@ PROGRAM PAWplot
 #ifdef __MPI
   CALL mp_startup ( )
 #endif
-  CALL environment_start ( 'POST-PROC' )
+  CALL environment_start ( 'PAW-plot' )
   !
   IF ( ionode )  CALL input_from_file ( )
   !
@@ -336,7 +336,11 @@ PROGRAM PAWplot
   ENDIF
   !
   DEALLOCATE (rhog)
-
+  !
+  CALL environment_end ( 'PAW-plot' )
+  !
+  CALL stop_pp()
+  STOP
 END PROGRAM PAWPLOT
 !
 !-----------------------------------------------------------------------

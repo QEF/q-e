@@ -22,7 +22,7 @@ PROGRAM wannier_plot
   USE mp_world,      ONLY : world_comm
   USE io_global,     ONLY : ionode, stdout
   USE mp_global,     ONLY : mp_startup
-  USE environment,   ONLY : environment_start
+  USE environment,   ONLY : environment_start, environment_end
 
   IMPLICIT NONE
   !
@@ -82,6 +82,8 @@ PROGRAM wannier_plot
   CALL plot_atoms()
 
   CALL stop_pp
+
+  CALL environment_end ( 'WANNIER_PLOT' )
 
   CALL wannier_clean()
 

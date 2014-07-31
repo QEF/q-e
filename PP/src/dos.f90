@@ -28,7 +28,7 @@ PROGRAM do_dos
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
   USE mp_global,     ONLY : mp_startup
-  USE environment,   ONLY : environment_start
+  USE environment,   ONLY : environment_start, environment_end
   !
   IMPLICIT NONE
   !
@@ -158,6 +158,8 @@ PROGRAM do_dos
      CLOSE (unit = 4)
      !
   ENDIF
+  !
+  CALL environment_end ( 'DOS' )
   !
   CALL stop_pp
   !

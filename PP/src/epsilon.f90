@@ -148,7 +148,7 @@ PROGRAM epsilon
   USE wvfct,       ONLY : nbnd
   USE lsda_mod,    ONLY : nspin
   USE mp_global,   ONLY : mp_startup
-  USE environment, ONLY : environment_start
+  USE environment, ONLY : environment_start, environment_end
   !
   IMPLICIT NONE
   !
@@ -311,6 +311,7 @@ PROGRAM epsilon
   IF ( ionode ) WRITE( stdout, *  )
 
   !
+  CALL environment_end ( 'epsilon' )
   !
   CALL stop_pp ()
 

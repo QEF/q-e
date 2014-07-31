@@ -24,7 +24,7 @@ PROGRAM pmw
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
   USE mp_global,  ONLY : mp_startup
-  USE environment,ONLY : environment_start
+  USE environment,ONLY : environment_start, environment_end
   !
   IMPLICIT NONE
   !
@@ -78,6 +78,8 @@ PROGRAM pmw
   CALL openfil_pp ( )
   !
   CALL projection( first_band, last_band)
+  !
+  CALL environment_end ( 'PMW' )
   !
   CALL stop_pp
   !

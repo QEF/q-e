@@ -27,7 +27,7 @@ PROGRAM initial_state
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
   USE mp_global,  ONLY : mp_startup
-  USE environment,ONLY : environment_start
+  USE environment,ONLY : environment_start, environment_end
   !
   IMPLICIT NONE
   !
@@ -89,6 +89,8 @@ PROGRAM initial_state
   !CALL sum_band
   !
   CALL do_initial_state (excite)
+  !
+  CALL environment_end ( 'initstate' )
   !
   CALL stop_pp
   !

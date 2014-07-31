@@ -278,7 +278,7 @@ PROGRAM pw_export
   USE mp_pools,  ONLY : kunit
   USE mp_world,  ONLY: world_comm
   USE mp,        ONLY: mp_bcast
-  USE environment,   ONLY : environment_start
+  USE environment,   ONLY : environment_start, environment_end
   !
   IMPLICIT NONE
   !
@@ -360,6 +360,8 @@ PROGRAM pw_export
 #endif
 
   CALL write_export (pp_file, kunittmp, uspp_spsi, ascii, single_file, raw)
+
+  CALL environment_end ( 'PW_EXPORT' )
 
   CALL stop_pp
   STOP

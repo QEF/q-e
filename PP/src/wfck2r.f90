@@ -31,7 +31,7 @@ PROGRAM wfck2r
   USE gvecs, ONLY : nls
   USE noncollin_module, ONLY : npol, nspin_mag, noncolin
   USE cell_base, ONLY : tpiba2
-  USE environment,ONLY : environment_start
+  USE environment,ONLY : environment_start, environment_end
   USE fft_base,  only : dffts, cgather_smooth
   USE fft_interfaces, ONLY : invfft
 
@@ -161,6 +161,9 @@ PROGRAM wfck2r
 
   if(ionode) close(iuwfcr)
   DEALLOCATE (evc_r)
+
+  CALL environment_end ( 'WFCK2R' )
+
   CALL stop_pp
   STOP
 

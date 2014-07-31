@@ -22,7 +22,7 @@ PROGRAM pp
   !
   USE io_global,  ONLY : ionode
   USE mp_global,  ONLY : mp_startup
-  USE environment,ONLY : environment_start
+  USE environment,ONLY : environment_start, environment_end
 
   !
   IMPLICIT NONE
@@ -42,6 +42,8 @@ PROGRAM pp
   CALL extract (filplot, plot_num)
   !
   CALL chdens (filplot, plot_num)
+  !
+  CALL environment_end ( 'POST-PROC' )
   !
   CALL stop_pp()
   !

@@ -57,7 +57,7 @@ PROGRAM average
   USE io_files,             ONLY : iunpun
   USE scf,                  ONLY : rho
   USE mp_global,            ONLY : mp_startup
-  USE environment,          ONLY : environment_start
+  USE environment,          ONLY : environment_start, environment_end
   !
   IMPLICIT NONE
   !
@@ -337,6 +337,8 @@ PROGRAM average
      DEALLOCATE(funcr)
      !
   ENDIF
+  !
+  CALL environment_end ( 'AVERAGE' )
   !
   CALL stop_pp
   !

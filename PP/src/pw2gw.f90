@@ -23,7 +23,7 @@ PROGRAM pw2gw
   USE mp_world,   ONLY : world_comm, nproc
   USE mp_global,  ONLY : mp_startup
   USE mp_pools,   ONLY : kunit
-  USE environment,ONLY : environment_start
+  USE environment,ONLY : environment_start, environment_end
   USE us,         ONLY : spline_ps
   !
   IMPLICIT NONE
@@ -89,6 +89,8 @@ PROGRAM pw2gw
   ELSE
     CALL write_gmaps ( kunittmp )
   ENDIF
+  !
+  CALL environment_end ( 'PW2GW' )
   !
   CALL stop_pp
 

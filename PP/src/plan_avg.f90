@@ -27,7 +27,7 @@ PROGRAM plan_avg
   USE mp_world,  ONLY : world_comm
   USE mp_global, ONLY : mp_startup
   USE control_flags, ONLY : gamma_only
-  USE environment,   ONLY : environment_start
+  USE environment,   ONLY : environment_start, environment_end
   !
   IMPLICIT NONE
   !
@@ -130,6 +130,8 @@ PROGRAM plan_avg
   !
   DEALLOCATE (plan)
   DEALLOCATE (averag)
+  !
+  CALL environment_end ( 'plan-avg' )
   !
   CALL stop_pp ( )
 

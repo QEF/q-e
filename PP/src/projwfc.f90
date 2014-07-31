@@ -25,7 +25,7 @@ PROGRAM do_projwfc
   USE mp,               ONLY : mp_bcast
   USE mp_world,         ONLY : world_comm
   USE mp_global,        ONLY : mp_startup, nproc_ortho
-  USE environment,      ONLY : environment_start
+  USE environment,      ONLY : environment_start, environment_end
   USE wvfct, ONLY: et, nbnd
   !
   IMPLICIT NONE
@@ -180,6 +180,8 @@ PROGRAM do_projwfc
         ENDIF
      ENDIF
   ENDIF
+  !
+  CALL environment_end ( 'PROJWFC' )
   !
   CALL stop_pp
   !

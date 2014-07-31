@@ -21,7 +21,7 @@ PROGRAM wannier_ham
   USE mp_world,         ONLY : world_comm
   USE read_cards_module, ONLY : read_cards
   USE mp_global,     ONLY : mp_startup
-  USE environment,   ONLY : environment_start
+  USE environment,   ONLY : environment_start, environment_end
 
   IMPLICIT NONE
   !
@@ -78,6 +78,8 @@ PROGRAM wannier_ham
   CALL new_hamiltonian(plot_bands)
 
   IF(u_matrix) CALL wannier_u_matrix(U,J)
+
+  CALL environment_end ( 'WANNIER_HAM')
 
   CALL stop_pp
 

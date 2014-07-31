@@ -17,7 +17,7 @@ PROGRAM do_bands
   USE mp_global, ONLY : npool, nproc_pool, nproc_file, &
                         nproc_pool_file, mp_startup
   USE control_flags, ONLY : twfcollect, gamma_only
-  USE environment,   ONLY : environment_start
+  USE environment,   ONLY : environment_start, environment_end
   USE wvfct,     ONLY : nbnd
   USE klist,     ONLY : nkstot, two_fermi_energies
   USE noncollin_module, ONLY : i_cons
@@ -43,7 +43,6 @@ PROGRAM do_bands
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'BANDS' )
-  CALL start_clock('bands')
   !
   !   set default values for variables in namelist
   !
@@ -127,8 +126,8 @@ PROGRAM do_bands
      IF (lp) CALL write_p_avg(filp,spin_component,firstk,lastk)
   END IF
   !
-  CALL print_clock('bands')
-  CALL stop_clock('bands')
+  CALL environment_end ( 'BANDS' )
+  !
   CALL stop_pp
   STOP
 END PROGRAM do_bands
