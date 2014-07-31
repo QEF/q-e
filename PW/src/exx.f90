@@ -1811,76 +1811,108 @@ MODULE exx
     ! expression in reciprocal space (the G^-2 factor).
     ! It then regularizes it according to the specified recipe
     USE kinds,     ONLY : DP
-    USE cell_base, ONLY : tpiba, at
+    USE cell_base, ONLY : tpiba, at, tpiba2
     USE constants, ONLY : fpi, e2, pi
-    
+    ! 
     IMPLICIT NONE
-    
+    !
     INTEGER,  INTENT(IN)    :: ngm   ! Number of G vectors
     REAL(DP), INTENT(IN)    :: g(3,ngm) ! Cartesian components of G vectors
     REAL(DP), INTENT(IN)    :: xk(3) ! current k vector
     REAL(DP), INTENT(IN)    :: xkq(3) ! current q vector
-    
+    !
     REAL(DP), INTENT(INOUT) :: fac(ngm) ! Calculated convolution
-    
-    
+    !
     !Local variables
     INTEGER :: ig !Counters 
     REAL(DP) :: q(3), qq, x
-    
+    REAL(DP) :: grid_factor_track(ngm), qq_track(ngm)
+    REAL(DP) :: nqhalf_dble(3)
+    LOGICAL :: odg(3)
+    !
+    ! First the types of Coulomb potential that need q(3) and an external call
+    !
+    IF( use_coulomb_vcut_ws ) THEN 
+       DO ig = 1, ngm 
+          q(:)= ( xk(:) - xkq(:) + g(:,ig) ) * tpiba
+          fac(ig) = vcut_get(vcut,q)
+       ENDDO
+       RETURN
+    ENDIF
+    !
+    IF ( use_coulomb_vcut_spheric ) THEN
+       DO ig = 1, ngm 
+          q(:)= ( xk(:) - xkq(:) + g(:,ig) ) * tpiba
+          fac(ig) = vcut_spheric_get(vcut,q)
+       ENDDO
+       RETURN
+    ENDIF
+    !
+    ! Now the Coulomb potential that are computed on the fly
+    !
+    nqhalf_dble(1:3) = (/ DBLE(nq1)*0.5_DP, DBLE(nq2)*0.5_DP, DBLE(nq3)*0.5_DP /) 
+    !
+    ! Set the grid_factor_track and qq_track
+    !
+    IF( x_gamma_extrapolation ) THEN 
+!$omp parallel do default(shared), private(ig,q,x,odg)
+       DO ig = 1, ngm 
+          q(:)= xk(:) - xkq(:) + g(:,ig) 
+          qq_track(ig) = SUM(q(:)**2) * tpiba2
+          x = (q(1)*at(1,1)+q(2)*at(2,1)+q(3)*at(3,1))*nqhalf_dble(1)
+          odg(1) = ABS(x-NINT(x))<eps
+          x = (q(1)*at(1,2)+q(2)*at(2,2)+q(3)*at(3,2))*nqhalf_dble(2)
+          odg(2) = ABS(x-NINT(x))<eps
+          x = (q(1)*at(1,3)+q(2)*at(2,3)+q(3)*at(3,3))*nqhalf_dble(3)
+          odg(3) = ABS(x-NINT(x))<eps
+          IF( ALL ( odg(:) ) ) THEN
+             grid_factor_track(ig) = 0._DP ! on double grid
+          ELSE
+             grid_factor_track(ig) = grid_factor ! not on double grid
+          ENDIF
+       ENDDO
+!$omp end parallel do
+    ELSE
+!$omp parallel do default(shared), private(ig,q)
+       DO ig = 1, ngm 
+          q(:)= xk(:) - xkq(:) + g(:,ig) 
+          qq_track(ig) = SUM(q(:)**2) * tpiba2
+       ENDDO
+!$omp end parallel do
+       grid_factor_track = 1._DP
+    ENDIF
+    !
+    ! The big loop
+    !
+!$omp parallel do default(shared), private(ig,qq)
     DO ig=1,ngm
       !
-      q(:)= xk(:) - xkq(:) + g(:,ig)
+      qq = qq_track(ig) 
       !
-      q = q * tpiba
-      !
-      qq = SUM(q(:)**2) 
-      !
-      IF (x_gamma_extrapolation) THEN
-          on_double_grid = .TRUE.
-          x= 0.5d0/tpiba*(q(1)*at(1,1)+q(2)*at(2,1)+q(3)*at(3,1))*nq1
-          on_double_grid = on_double_grid .AND. (ABS(x-NINT(x))<eps)
-          x= 0.5d0/tpiba*(q(1)*at(1,2)+q(2)*at(2,2)+q(3)*at(3,2))*nq2
-          on_double_grid = on_double_grid .AND. (ABS(x-NINT(x))<eps)
-          x= 0.5d0/tpiba*(q(1)*at(1,3)+q(2)*at(2,3)+q(3)*at(3,3))*nq3
-          on_double_grid = on_double_grid .AND. (ABS(x-NINT(x))<eps)
-      ENDIF
-      
-      IF ( use_coulomb_vcut_ws ) THEN
-          !
-          fac(ig) = vcut_get(vcut,q)
-          !
-      ELSE IF ( use_coulomb_vcut_spheric ) THEN
-          !
-          fac(ig) = vcut_spheric_get(vcut,q)
-          !
-      ELSE IF(gau_scrlen > 0) THEN
-          fac(ig)=e2*((pi/gau_scrlen)**(1.5d0))* &
-                      EXP(-qq/4.d0/gau_scrlen) * grid_factor
-          IF (on_double_grid) fac(ig) = 0._dp
-          !
+      IF(gau_scrlen > 0) THEN
+         fac(ig)=e2*((pi/gau_scrlen)**(1.5_DP))*EXP(-qq/4._DP/gau_scrlen) * grid_factor_track(ig)
+         !
       ELSE IF (qq > eps_qdiv) THEN
-          !
-          IF ( erfc_scrlen > 0  ) THEN
-            fac(ig)=e2*fpi/qq*(1._dp-EXP(-qq/4.d0/erfc_scrlen**2)) * grid_factor
-          ELSEIF( erf_scrlen > 0 ) THEN
-            fac(ig)=e2*fpi/qq*(EXP(-qq/4.d0/erf_scrlen**2)) * grid_factor
-          ELSE
-            fac(ig)=e2*fpi/( qq + yukawa ) * grid_factor ! as HARTREE
-          END IF
-          IF (on_double_grid) fac(ig) = 0._dp
-          !
+         !
+         IF ( erfc_scrlen > 0  ) THEN
+            fac(ig)=e2*fpi/qq*(1._DP-EXP(-qq/4._DP/erfc_scrlen**2)) * grid_factor_track(ig)
+         ELSEIF( erf_scrlen > 0 ) THEN
+            fac(ig)=e2*fpi/qq*(EXP(-qq/4._DP/erf_scrlen**2)) * grid_factor_track(ig)
+         ELSE
+            fac(ig)=e2*fpi/( qq + yukawa ) * grid_factor_track(ig) ! as HARTREE
+         ENDIF
+         !
       ELSE
-          !
-          fac(ig)= - exxdiv ! or rather something ELSE (see F.Gygi)
-          !
-          IF ( yukawa > 0._dp.AND. .NOT. x_gamma_extrapolation ) &
-              fac(ig) = fac(ig) + e2*fpi/( qq + yukawa )
-          IF( erfc_scrlen > 0._dp.AND. .NOT. x_gamma_extrapolation ) fac(ig) = fac(ig) + e2*pi/(erfc_scrlen**2)
-          !
+         !
+         fac(ig)= - exxdiv ! or rather something ELSE (see F.Gygi)
+         !
+         IF ( yukawa > 0._DP.AND. .NOT. x_gamma_extrapolation ) fac(ig) = fac(ig) + e2*fpi/( qq + yukawa )
+         IF( erfc_scrlen > 0._DP.AND. .NOT. x_gamma_extrapolation ) fac(ig) = fac(ig) + e2*pi/(erfc_scrlen**2)
+         !
       ENDIF
       !
     ENDDO
+!$omp end parallel do
   END SUBROUTINE g2_convolution
   !-----------------------------------------------------------------------
   !
