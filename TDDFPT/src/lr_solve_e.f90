@@ -169,7 +169,7 @@ SUBROUTINE compute_d0psi_rs(  n_ipol )
   use io_global,        only : stdout
   USE wvfct,            ONLY : nbnd,npwx,current_k,igk,npw, g2kin
   use klist,            only : xk,nks
-  use lr_variables,     only : evc0,sevc0,d0psi
+  use lr_variables,     only : evc0,sevc0,d0psi, lshift_cell
   use wavefunctions_module, only : psic, evc
   use uspp,             only : okvan
   USE lsda_mod,         ONLY : lsda, isk
@@ -253,6 +253,7 @@ SUBROUTINE compute_d0psi_rs(  n_ipol )
      enddo
      deallocate(gk)
      !
+     if(lshift_cell) call shift_cell(r,n_ipol)
      IF (gamma_only) THEN
         !
         DO ibnd = 1,nbnd,2 
@@ -321,4 +322,48 @@ SUBROUTINE compute_d0psi_rs(  n_ipol )
    !
  END SUBROUTINE compute_d0psi_rs
 !----------------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+  SUBROUTINE shift_cell( r, n_ipol )
+!--------------------------------------------------------------------
+  ! Shift the molecule to the center of the cell for a more proper
+  ! calculation of d0psi in r-space
+  USE fft_base,         ONLY : dfftp
+  use kinds,            only : dp
+  use ions_base,        only : nat, tau
+  USE io_global,            ONLY : stdout
+
+  REAL(dp),intent(inout) :: r(dfftp%nnr,n_ipol)
+  integer,intent(in) :: n_ipol
+  real(dp) ::  mmin(3), mmax(3), center(3), origin(3)
+  integer :: ip, iatm, ir
+
+  WRITE(stdout,'(/,5X,"Wavefunctions are shifted to the center of cell for the calculation of d0psi. ")')
+
+  mmin(:) = 2.d0
+  mmax(:)= -1.d0
+
+  do ip = 1, n_ipol
+    do iatm = 1, nat
+      mmin(ip) = min(mmin(ip), tau(ip,iatm))
+      mmax(ip) = max(mmax(ip), tau(ip,iatm))
+    enddo
+  enddo
+
+  center(:)= 0.5d0*(mmin(:)+mmax(:))
+  origin(:)= center(:)-0.5d0
+  
+  do ir = 1, dfftp%nnr
+    r(ir,:)= r(ir,:) - origin(:)
+    do ip = 1, n_ipol
+      if(r(ir,ip) .lt. 0) r(ir,ip)=r(ir,ip)+1.d0
+      if(r(ir,ip) .gt. 1) r(ir,ip)=r(ir,ip)-1.d0
+    enddo
+  enddo
+
+  return
+  END SUBROUTINE shift_cell
+!----------------------------------------------------------------------------
+
+
 END SUBROUTINE lr_solve_e
