@@ -23,13 +23,12 @@ subroutine set_rhoc
   USE fft_base,  ONLY : dfftp
   USE fft_interfaces,ONLY : invfft
   USE gvect,     ONLY : ngm, nl, nlm, ngl, gl, igtongl
-  USE scf,       ONLY : rho_core, rhog_core
+  USE scf,       ONLY : rho_core, rhog_core, scf_type
   USE lsda_mod,  ONLY : nspin
   USE vlocal,    ONLY : strf
   USE control_flags, ONLY : gamma_only
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
-  USE scf
   !
   implicit none
   !
