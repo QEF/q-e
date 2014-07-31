@@ -109,7 +109,7 @@ module funct
   !              "hse"   = "sla+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof 
   !                                              (HSE 06, see note below)
   !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
-  !              "gaup"  = "sla+pw+gaup+pbc"   = Gau-PBE
+  !              "gaupbe"= "sla+pw+gaup+pbc"   = Gau-PBE (also "gaup")
   !              "vdw-df"      ="sla+pw+rpb+vdw1"    = vdW-DF
   !              "vdw-df2"     ="sla+pw+rw86+vdw2"   = vdW-DF2
   !              "vdw-df-c09"  ="sla+pw+c09x+vdw1"   = vdW-DF-C09
@@ -443,7 +443,7 @@ CONTAINS
     ! special case : HSE
        dft_defined = set_dft_values(1,4,12,4,0,0)
 
-   else if ( 'GAUP' .EQ. TRIM(dftout) ) then
+   else if ( 'GAUP' .EQ. TRIM(dftout) .OR. 'GAUPBE' .EQ. TRIM(dftout) ) then
     ! special case : GAUPBE
        dft_defined = set_dft_values(1,4,20,4,0,0)
        
