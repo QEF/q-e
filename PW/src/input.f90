@@ -800,7 +800,15 @@ SUBROUTINE iosys()
      !
   CASE DEFAULT
      !
-     io_level = 0
+     ! In the scf case, it is usually convenient to write to RAM;
+     ! otherwise it is preferrable to write to disk, since the number
+     ! of k-points can be large, leading to large RAM requirements
+     !
+     IF ( lscf ) THEN
+        io_level = 0
+     ELSE
+        io_level = 1
+     END IF
      !
   END SELECT
   !

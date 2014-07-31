@@ -273,7 +273,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	}
 		
 	var disk_io -type CHARACTER { 
-	    default { 'low' }
+	    default { see below }
 	    info {
                Specifies the amount of disk I/O activity
                'high':   save all data to disk at each SCF step
@@ -288,11 +288,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                          ('scf', 'nscf', 'bands' calculations; some data
                           may be written anyway for other calculations)
 
-               Note that the amount of needed RAM increases as the amount
-               of I/O decreases! IMPORTANT: default has been changed to 'low'.
+               Default is 'low' for the scf case, 'medium' otherwise.
+               Note that the needed RAM increases as disk I/O decreases!
                It is no longer needed to specify 'high' in order to be able
                to restart from an interrupted calculation (see "restart_mode")
-               but you cannot restart from disk_io='none'
+               but you cannot restart in disk_io='none'
 	    }
 	}
 
