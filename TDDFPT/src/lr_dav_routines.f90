@@ -1786,6 +1786,9 @@ contains
     character(len=256) :: filename
 
     write(stdout,'(/,/5x,"Calculating the KS spectrum ..."/)')
+    if ( p_nbnd_occ > nbnd ) p_nbnd_occ = nbnd
+    if ( p_nbnd_virt > nbnd_total-nbnd ) p_nbnd_virt = nbnd_total-nbnd
+
     call lr_dav_cvcouple() ! First calculate the cv couple and sort the energy
                            !difference
 

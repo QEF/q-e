@@ -59,7 +59,7 @@ SUBROUTINE bcast_lr_input
   call mp_bcast (scissor, ionode_id, world_comm)
   CALL mp_bcast (ecutfock, ionode_id, world_comm )
   CALL mp_bcast (d0psi_rs, ionode_id,world_comm )
-  CALL mp_bcast (lshift_cell, ionode_id,world_comm )
+  CALL mp_bcast (lshift_d0psi, ionode_id,world_comm )
   CALL mp_bcast (tddfpt, ionode_id, world_comm )
   CALL plugin_arguments_bcast(ionode_id, world_comm)
 

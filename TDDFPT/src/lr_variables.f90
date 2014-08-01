@@ -188,7 +188,7 @@ MODULE lr_variables
   INTEGER :: itermax_int        ! interpolated number of lanczos steps for Ritz vectors
   LOGICAL :: ltammd             ! Tarn-Darnkhoff approximation
   LOGICAL :: d0psi_rs         ! Calculate d0psi in the real space
-  LOGICAL :: lshift_cell        ! When calculate d0psi in rs, automatically
+  LOGICAL :: lshift_d0psi        ! When calculate d0psi in rs, automatically
                                 ! shift the wavefunctions to the center of the cell
   LOGICAL :: pseudo_hermitian   ! If psedudo hermitian algorithm is used
   LOGICAL :: no_hxc             ! If .true. no hartree exchange correlation corrections will be considered.
