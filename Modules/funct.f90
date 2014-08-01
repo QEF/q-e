@@ -106,18 +106,16 @@ module funct
   !              "m06l"  = "nox+noc+m6lx+m6lc" = M06L Meta-GGA
   !              "tb09"  = "sla+pw+tb09+tb09"  = TB09 Meta-GGA
   !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
-  !              "hse"   = "sla+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof 
-  !                                              (HSE 06, see note below)
+  !              "hse"   = "sla+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof (HSE 06, see note below)
   !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
   !              "gaupbe"= "sla+pw+gaup+pbc"   = Gau-PBE (also "gaup")
-  !              "vdw-df"      ="sla+pw+rpb+vdw1"    = vdW-DF
-  !              "vdw-df2"     ="sla+pw+rw86+vdw2"   = vdW-DF2
-  !              "vdw-df-c09"  ="sla+pw+c09x+vdw1"   = vdW-DF-C09
-  !              "vdw-df2-c09" ="sla+pw+c09x+vdw2"   = vdW-DF2-C09
-  !              "vdw-df-cx"   ="sla+pw+cx13+vdW1"   = vdW-DF-cx
-  !              "vdw-df3"     ="sla+pw+obk8+vdw1"   = vdW-DF3
-  !              "vdw-df4"     ="sla+pw+ob86+vdw1"   = vdW-DF4
-  !              "optb86b-vdw" = same as               vdW-DF4
+  !              "vdw-df"       ="sla+pw+rpb +vdw1"   = vdW-DF
+  !              "vdw-df2"      ="sla+pw+rw86+vdw2"   = vdW-DF2
+  !              "vdw-df-c09"   ="sla+pw+c09x+vdw1"   = vdW-DF-C09
+  !              "vdw-df2-c09"  ="sla+pw+c09x+vdw2"   = vdW-DF2-C09
+  !              "vdw-df-cx"    ="sla+pw+cx13+vdW1"   = vdW-DF-cx
+  !              "vdw-df-obk8"  ="sla+pw+obk8+vdw1"   = vdW-DF-obk8 (optB88-vdW)
+  !              "vdw-df-ob86"  ="sla+pw+ob86+vdw1"   = vdW-DF-ob86 (optB86b-vdW)
   !
   ! Any nonconflicting combination of the following keywords is acceptable:
   !
@@ -227,13 +225,13 @@ module funct
   !                      Heyd, Scuseria, Ernzerhof, J. Chem. Phys. 124, 219906 (2006).
   !              b3lyp   P.J. Stephens,F.J. Devlin,C.F. Chabalowski,M.J. Frisch
   !                      J.Phys.Chem 98, 11623 (1994)
-  !              vdW-DF  M. Dion et al., PRL 92, 246401 (2004)
-  !                      T. Thonhauser et al., PRB 76, 125112 (2007)
-  !              vdw-DF2 Lee et al., Phys. Rev. B 82, 081101 (2010)
-  !              rev-vdW-DF2 I. Hamada, Phys. Rev. B 89, 121103(R) (2014)
-  !              vdW-DF-cx K. Berland and P. Hyldgaard, PRB 89, 035412 (2014)
-  !              vdw-DF3  Klimes et al, J. Phys. Cond. Matter, 22, 022201 (2010)
-  !              vdw-DF4  Klimes et al, Phys. Rev. B, 83, 195131 (2011)
+  !              vdW-DF       M. Dion et al., PRL 92, 246401 (2004)
+  !                           T. Thonhauser et al., PRB 76, 125112 (2007)
+  !              vdw-DF2      Lee et al., Phys. Rev. B 82, 081101 (2010)
+  !              rev-vdW-DF2  I. Hamada, Phys. Rev. B 89, 121103(R) (2014)
+  !              vdW-DF-cx    K. Berland and P. Hyldgaard, PRB 89, 035412 (2014)
+  !              vdW-DF-obk8  Klimes et al, J. Phys. Cond. Matter, 22, 022201 (2010)
+  !              vdW-DF-ob86  Klimes et al, Phys. Rev. B, 83, 195131 (2011)
   !              c09x    V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
   !              tpss    J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria, 
   !                      PRL 91, 146401 (2003)
@@ -459,13 +457,12 @@ CONTAINS
     ! Special case vdW-DF with C09 exchange
        dft_defined = set_dft_values(1,4,16,0,1,0)
        
-    else if ('VDW-DF3' .EQ. TRIM(dftout)) then
-    ! Special case vdW-DF3, or optB88+vdW
+    else if ('VDW-DF-OBK8' .EQ. TRIM(dftout)) then
+    ! Special case vdW-DF-obk8, or optB88-vdW
        dft_defined = set_dft_values(1,4,23,0,1,0)
 
-    else if ('VDW-DF4' .EQ. TRIM(dftout) .OR. &
-             'OPTB86B-VDW' .EQ. TRIM(dftout) ) then
-    ! Special case vdW-DF4, or optB86b+vdW
+    else if ('VDW-DF-OB86' .EQ. TRIM(dftout) ) then
+    ! Special case vdW-DF-ob86, or optB86b-vdW
        dft_defined = set_dft_values(1,4,24,0,1,0)
 
     else if ('VDW-DF2-C09' .EQ. TRIM(dftout) ) then
@@ -959,10 +956,9 @@ CONTAINS
      else if (iexch_==1.and.icorr_==4.and.igcx_==16.and.igcc_==0) then
         shortname_ = 'VDW-DF-C09'
      else if (iexch_==1.and.icorr_==4.and.igcx_==24.and.igcc_==0) then
-        shortname_ = 'VDW-DF4'
-        ! also possible: shortname_ = 'OPTB86B-VDW'
+        shortname_ = 'VDW-DF-OB86'
      else if (iexch_==1.and.icorr_==4.and.igcx_==23.and.igcc_==0) then
-        shortname_ = 'VDW-DF3'
+        shortname_ = 'VDW-DF-OBK8'
      end if
   else if ( inlc_==2) then
      if (iexch_==1.and.icorr_==4.and.igcx_==13.and.igcc_==0) then
