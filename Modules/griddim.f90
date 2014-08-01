@@ -25,7 +25,8 @@
    CONTAINS
 
 
-     SUBROUTINE realspace_grids_init( dfftp, dffts, at, bg, gcutm, gcuts )
+     SUBROUTINE realspace_grids_init( dfftp, dffts, at, bg, gcutm, gcuts, &
+                                      fft_fact )
        !
        USE fft_scalar, only: good_fft_dimension, good_fft_order
        USE io_global, only: stdout
@@ -34,6 +35,7 @@
        !
        REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
        REAL(DP), INTENT(IN) :: gcutm, gcuts
+       INTEGER, INTENT(IN), OPTIONAL :: fft_fact(3)
        TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfftp, dffts
        !
        IF( dfftp%nr1 == 0 .OR. dfftp%nr2 == 0 .OR. dfftp%nr3 == 0 ) THEN
@@ -56,9 +58,15 @@
          WRITE( stdout, '( /, 3X,"Info: using nr1, nr2, nr3 values from input" )' )
        END IF
 
-       dfftp%nr1 = good_fft_order( dfftp%nr1 )
-       dfftp%nr2 = good_fft_order( dfftp%nr2 )
-       dfftp%nr3 = good_fft_order( dfftp%nr3 )
+       IF (PRESENT(fft_fact)) THEN
+          dfftp%nr1 = good_fft_order( dfftp%nr1, fft_fact(1) )
+          dfftp%nr2 = good_fft_order( dfftp%nr2, fft_fact(2) )
+          dfftp%nr3 = good_fft_order( dfftp%nr3, fft_fact(3) )
+       ELSE
+          dfftp%nr1 = good_fft_order( dfftp%nr1 )
+          dfftp%nr2 = good_fft_order( dfftp%nr2 )
+          dfftp%nr3 = good_fft_order( dfftp%nr3 )
+       END IF
 
        dfftp%nr1x  = good_fft_dimension( dfftp%nr1 )
        dfftp%nr2x  = dfftp%nr2
