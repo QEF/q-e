@@ -458,16 +458,16 @@ CONTAINS
        dft_defined = set_dft_values(1,4,16,0,1,0)
        
     else if ('VDW-DF-OBK8' .EQ. TRIM(dftout)) then
-    ! Special case vdW-DF-obk8, or optB88-vdW
+    ! Special case vdW-DF-obk8, or vdW-DF + optB88
        dft_defined = set_dft_values(1,4,23,0,1,0)
+    else if ('VDW-DF3' .EQ. TRIM(dftout) ) then
+       call errore('set_dft_from_name','obsolete XC label, use VDW-DF-OBK8',1)
 
     else if ('VDW-DF-OB86' .EQ. TRIM(dftout) ) then
-    ! Special case vdW-DF-ob86
+    ! Special case vdW-DF-ob86, or vdW-DF + optB86
        dft_defined = set_dft_values(1,4,24,0,1,0)
-
-    else if ('OPTB86B-VDW' .EQ. TRIM(dftout) ) then
-       dft_defined = set_dft_values(1,4,24,0,1,0)
-       call infomsg('set_dft_from_name','OPTB86B-VDW obsolete, use VDW-DF-OB86 instead')
+    else if ('VDW-DF4'.EQ.TRIM(dftout) .OR. 'OPTB86B-VDW'.EQ.TRIM(dftout) ) then
+       call errore('set_dft_from_name','obsolete XC label, use VDW-DF-OB86',1)
 
     else if ('VDW-DF2-C09' .EQ. TRIM(dftout) ) then
     ! Special case vdW-DF2 with C09 exchange
@@ -481,8 +481,7 @@ CONTAINS
     ! Special case vdW-DF2 with B86R
        dft_defined = set_dft_values(1,4,26,0,2,0)
     else if ('REV-VDW-DF2' .EQ. TRIM(dftout) ) then
-       dft_defined = set_dft_values(1,4,26,0,2,0)
-       call infomsg('set_dft_from_name','REV-VDW-DF2 obsolete, use VDW-DF2-B86R instead',1)
+       call errore('set_dft_from_name','obsolete XC label, use VDW-DF2-B86R',1)
 
     else if ('RVV10' .EQ. TRIM(dftout) ) then
     ! Special case rVV10
