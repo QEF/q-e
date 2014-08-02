@@ -1,9 +1,15 @@
 Incompatible changes in 5.1 version:
 
    * Regularization of DFT names for nonlocal functionals:
-     "vdw-df3" replaced by "vdw-df-obk8"
-     "vdw-df4" and "optb86b-vdw" replaced by "vdw-df-ob86"
-     "rev-vdw-df2" replaced by "vdw-df2-b86r"
+       "vdw-df3"                   replaced by "vdw-df-obk8"
+       "vdw-df4" and "optb86b-vdw" replaced by "vdw-df-ob86"
+       "rev-vdw-df2"               replaced by "vdw-df2-b86r"
+     Explanation: We have tried to unify the naming convention of the vdW-DF 
+     family of functionals built on "Dion et al., PRL 92, 246401 (2004)." 
+     Within this family, numbering should be used for different non-local
+     pieces of the functionals, such as vdW-DF2. If functionals only change the
+     (semi)local contribution, the choice of (semi)local functional should be 
+     attached at the end of the name, such as vdW-DF-C09 or vdW-DF-cx.
 
 New in svn version:
 
