@@ -21,7 +21,7 @@
     ecutwfc         = 30.0
     ecutrho         = 180.0
 
-    input_dft  	    = 'vdW-DF4'
+    input_dft  	    = 'vdW-DF-ob86'
 /
 
 &electrons

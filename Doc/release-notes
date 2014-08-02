@@ -1,3 +1,10 @@
+Incompatible changes in 5.1 version:
+
+   * Regularization of DFT names for nonlocal functionals:
+     "vdw-df3" replaced by "vdw-df-obk8"
+     "vdw-df4" and "optb86b-vdw" replaced by "vdw-df-ob86"
+     "rev-vdw-df2" replaced by "vdw-df2-b86r"
+
 New in svn version:
 
    * PW: TB09 meta-GGA functional (requires libxc)
@@ -29,8 +36,8 @@ New in 5.1 version:
      Davidson-like diagonalization added
    * PWCOND with DFT+U
    * New functionals: gau-pbe, PW86 (unrevised), B86B, XDM (exchange-hole 
-     dipole moment) model of dispersions, vdW-DF3, vdW-DF4 (Klimes et al),
-     rVV10, optB86b-vdW, rev-vdW-DF2 
+     dipole moment) model of dispersions, vdW-DF-obk8, vdW-DF-ob86 (Klimes
+     et al), rVV10, vdW-DF2-b86r
    * PHonon: Calculation of phonon dispersions using the finite displacements 
      supercell approach. See subdirectory FD/ in PHonon.
    * dynmat.x can calculate phonon contribution to dielectric tensor

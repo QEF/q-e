@@ -100,7 +100,8 @@ module funct
   !              "olyp"  = "nox+lyp+optx+blyp" = OLYP
   !              "wc"    = "sla+pw+wcx+pbc"    = Wu-Cohen
   !              "sogga" = "sla+pw+sox+pbec"   = SOGGA
-  !              "optbk88"="sla+pw+obk8"       = optB88
+  !              "optbk88"="sla+pw+obk8+p86"   = optB88
+  !              "optb86b"="sla+pw+ob86+p86"   = optB86
   !              "ev93"  = "sla+pw+evx+nogc"   = Engel-Vosko
   !              "tpss"  = "sla+pw+tpss+tpss"  = TPSS Meta-GGA
   !              "m06l"  = "nox+noc+m6lx+m6lc" = M06L Meta-GGA
@@ -116,6 +117,7 @@ module funct
   !              "vdw-df-cx"    ="sla+pw+cx13+vdW1"   = vdW-DF-cx
   !              "vdw-df-obk8"  ="sla+pw+obk8+vdw1"   = vdW-DF-obk8 (optB88-vdW)
   !              "vdw-df-ob86"  ="sla+pw+ob86+vdw1"   = vdW-DF-ob86 (optB86b-vdW)
+  !              "vdw-df2-b86r" ="sla+pw+b86r+vdw2"   = vdW-DF2-B86R (rev-vdw-df2)
   !
   ! Any nonconflicting combination of the following keywords is acceptable:
   !
@@ -340,14 +342,12 @@ CONTAINS
     do l = 1, len
        dftout (l:l) = capital (dft_(l:l) )
     enddo
-
     !
     ! ----------------------------------------------
     ! FIRST WE CHECK ALL THE SHORT NAMES
     ! Note: comparison is done via exact matching
     ! ----------------------------------------------
     !
-
     ! special cases : PZ  (LDA is equivalent to PZ)
     IF (('PZ' .EQ. TRIM(dftout) ).OR.('LDA' .EQ. TRIM(dftout) )) THEN
        dft_defined = set_dft_values(1,1,0,0,0,0)
@@ -385,11 +385,11 @@ CONTAINS
        dft_defined = set_dft_values(1,3,1,3,0,0)
        
     else if ('OPTBK88' .EQ. TRIM(dftout)) then
-    ! Special case optB88 (without vdW)
+    ! Special case optB88
        dft_defined = set_dft_values(1,4,23,1,0,0)
        
     else if ('OPTB86B' .EQ. TRIM(dftout)) then
-    ! Special case optB86b (without vdW)
+    ! Special case optB86b
        dft_defined = set_dft_values(1,4,24,1,0,0)
        
     else if ('PBC'.EQ. TRIM(dftout) ) then
@@ -462,8 +462,12 @@ CONTAINS
        dft_defined = set_dft_values(1,4,23,0,1,0)
 
     else if ('VDW-DF-OB86' .EQ. TRIM(dftout) ) then
-    ! Special case vdW-DF-ob86, or optB86b-vdW
+    ! Special case vdW-DF-ob86
        dft_defined = set_dft_values(1,4,24,0,1,0)
+
+    else if ('OPTB86B-VDW' .EQ. TRIM(dftout) ) then
+       dft_defined = set_dft_values(1,4,24,0,1,0)
+       call infomsg('set_dft_from_name','OPTB86B-VDW obsolete, use VDW-DF-OB86 instead')
 
     else if ('VDW-DF2-C09' .EQ. TRIM(dftout) ) then
     ! Special case vdW-DF2 with C09 exchange
@@ -473,9 +477,12 @@ CONTAINS
     ! Special case vdW-DF2
        dft_defined = set_dft_values(1,4,13,0,2,0)
 
-    else if ('REV-VDW-DF2' .EQ. TRIM(dftout) ) then
-    ! Special case vdW-DF2 with B86R (rev-vdW-DF2)
+    else if ('VDW-DF2-B86R' .EQ. TRIM(dftout) ) then
+    ! Special case vdW-DF2 with B86R
        dft_defined = set_dft_values(1,4,26,0,2,0)
+    else if ('REV-VDW-DF2' .EQ. TRIM(dftout) ) then
+       dft_defined = set_dft_values(1,4,26,0,2,0)
+       call infomsg('set_dft_from_name','REV-VDW-DF2 obsolete, use VDW-DF2-B86R instead',1)
 
     else if ('RVV10' .EQ. TRIM(dftout) ) then
     ! Special case rVV10
@@ -523,15 +530,21 @@ CONTAINS
     ! Back compatibility - TO BE REMOVED
 
     if (igcx == 14) igcx = 3 ! PBE -> PBX
-    if (igcc == 9) igcc = 4  ! PBE -> PBC
+    if (igcc ==  9) igcc = 4 ! PBE -> PBC
 
     if (igcx == 6) &
          call errore('set_dft_from_name','OPTX untested! please test',-igcx)
-         
-    if (iexch <=0 .and. icorr <=0 .and. igcx <= 0 .and. igcc <= 0 .and. &
-        imeta <= 0 .and. inlc <= 0) &
-           call errore('set_dft_from_name','No dft definition was found',0)
 
+    ! check for unrecognized labels
+
+    if ( iexch<=0.and.icorr<=0.and.igcx<=0.and.igcc<= 0.and.imeta<=0 ) then
+        if ( inlc <= 0 .and. trim(dftout) /= 'NOX-NOC') then
+           call errore('set_dft_from_name',trim(dftout)//': unrecognized dft',1)
+        else
+           ! if inlc is the only nonzero index the label is likely wrong
+           call errore('set_dft_from_name',trim(dftout)//': strange dft, please check',inlc)
+        endif
+    endif
     !
     ! Fill variables and exit
     !
@@ -539,7 +552,6 @@ CONTAINS
 
     dftout = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
          &//gradc (igcc) //'-'// nonlocc(inlc)
-
 
     call set_auxiliary_flags
     !
@@ -966,7 +978,7 @@ CONTAINS
      else if (iexch_==1.and.icorr_==4.and.igcx_==16.and.igcc_==0) then
         shortname_ = 'VDW-DF2-C09'
      else if (iexch_==1.and.icorr_==4.and.igcx_==26.and.igcc_==0) then
-        shortname_ = 'REV-VDW-DF2'
+        shortname_ = 'VDW-DF2-B86R'
      else if ( inlc_==3) then
         shortname_ = 'RVV10'
      end if

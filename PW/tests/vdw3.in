@@ -22,7 +22,7 @@
     ecutwfc         = 30.0
     ecutrho         = 180.0
 
-    input_dft  	    = 'vdW-DF3'
+    input_dft  	    = 'vdW-DF-obk8'
 /
 
 &electrons
