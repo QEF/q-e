@@ -71,11 +71,11 @@ SUBROUTINE xsf_fast_datagrid_3d &
   ! origin
   WRITE(ounit,'(3f10.6)') 0.0d0, 0.0d0, 0.0d0
   ! 1st spanning (=lattice) vector
-  WRITE(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,1),i=1,3) ! in ANSTROMS
+  WRITE(ounit,'(3f12.6)') (BOHR_RADIUS_ANGS*alat*at(i,1),i=1,3) ! in ANSTROMS
   ! 2nd spanning (=lattice) vector
-  WRITE(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,2),i=1,3)
+  WRITE(ounit,'(3f12.6)') (BOHR_RADIUS_ANGS*alat*at(i,2),i=1,3)
   ! 3rd spanning (=lattice) vector
-  WRITE(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,3),i=1,3)
+  WRITE(ounit,'(3f12.6)') (BOHR_RADIUS_ANGS*alat*at(i,3),i=1,3)
 
   count=0
   DO i3=0,nr3
