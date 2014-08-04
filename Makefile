@@ -47,6 +47,10 @@ pw : bindir mods liblapack libblas libs libiotk
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
+pw-lib : bindir mods liblapack libblas libs libiotk
+	if test -d PW ; then \
+	( cd PW ; $(MAKE) TLDEPS= pw-lib || exit 1) ; fi
+
 cp : bindir mods liblapack libblas libs libiotk
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi

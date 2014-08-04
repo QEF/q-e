@@ -210,7 +210,7 @@ QEMODS = ../../Modules/libqemod.a
 
 LIBOBJS	= ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
 
-TLDEPS= bindir mods libs pw
+TLDEPS= bindir mods libs pw-lib
 
 all : tldeps libs-ph ph.x dynmat.x matdyn.x q2r.x q2trans.x q2trans_fd.x lambda.x fqha.x q2qstar.x 
 

@@ -8,6 +8,9 @@ all: pw pwtools
 pw:	
 	( cd src ; $(MAKE) all || exit 1 )
 
+pw-lib:
+	( cd src ; $(MAKE) libpw.a || exit 1 )
+
 pwtools: pw
 	( cd tools ; $(MAKE) all || exit 1 )
 
