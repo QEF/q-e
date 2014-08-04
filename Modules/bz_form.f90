@@ -1490,7 +1490,7 @@ ELSEIF (ibz==16) THEN
    CALL find_axis_coordinates(bz_struc)
 
 ELSE
-   CALL errore('init_bz','Brillouin zone type not available init_bz')
+   CALL errore('init_bz','Brillouin zone type not available',1)
 ENDIF
 
 RETURN
@@ -1989,7 +1989,7 @@ DO ifaces=1, bz_struc%nfaces
 ENDDO
 
 RETURN
-END SUBROUTINE 
+END SUBROUTINE find_axis_coordinates
 
 SUBROUTINE inter_plane_line(x0, vect, bplane, xk)
 !
