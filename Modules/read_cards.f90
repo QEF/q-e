@@ -383,8 +383,12 @@ CONTAINS
       sp_pos = 0
       rd_pos = 0.0_DP
       na_inp = 0
+      lsg=.FALSE.
       !
-      IF ( matches( "CRYSTAL", input_line ) ) THEN
+      IF ( matches( "CRYSTAL_SG", input_line ) ) THEN
+         atomic_positions = 'crystal'
+         lsg=.TRUE.
+      ELSEIF ( matches( "CRYSTAL", input_line ) ) THEN
          atomic_positions = 'crystal'
       ELSEIF ( matches( "BOHR", input_line ) ) THEN
          atomic_positions = 'bohr'

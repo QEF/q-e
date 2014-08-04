@@ -223,6 +223,7 @@ CONTAINS
        CALL mp_bcast( sp_vel, ionode_id, intra_image_comm )
        CALL mp_bcast( rd_vel, ionode_id, intra_image_comm )
        CALL mp_bcast( tapos, ionode_id, intra_image_comm )
+       CALL mp_bcast( lsg, ionode_id, intra_image_comm )
        !
     CASE ( 'CONSTRAINTS' )
        CALL mp_bcast( nconstr_inp, ionode_id, intra_image_comm )

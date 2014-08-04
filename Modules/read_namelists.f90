@@ -261,6 +261,11 @@ MODULE read_namelists_module
        esm_debug=.FALSE.
        esm_debug_gpmax=0
        !
+       space_group=0
+       uniqueb = .FALSE.
+       origin_choice = 1
+       rhombohedral = .TRUE.
+       !
        RETURN
        !
      END SUBROUTINE
@@ -817,6 +822,13 @@ MODULE read_namelists_module
        CALL mp_bcast( esm_nfit,           ionode_id, intra_image_comm )
        CALL mp_bcast( esm_debug,          ionode_id, intra_image_comm )
        CALL mp_bcast( esm_debug_gpmax,    ionode_id, intra_image_comm )
+       !
+       ! ... space group information
+       !
+       CALL mp_bcast( space_group,        ionode_id, intra_image_comm )
+       CALL mp_bcast( uniqueb,            ionode_id, intra_image_comm )
+       CALL mp_bcast( origin_choice,      ionode_id, intra_image_comm )
+       CALL mp_bcast( rhombohedral,       ionode_id, intra_image_comm )
 
        RETURN
        !

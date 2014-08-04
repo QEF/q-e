@@ -859,6 +859,7 @@ input.o : pwcom.o
 input.o : realus.o
 input.o : start_k.o
 input.o : symm_base.o
+input.o : wyckoff.o
 input.o : xdm_dispersion.o
 interpolate.o : ../../Modules/control_flags.o
 interpolate.o : ../../Modules/fft_base.o
@@ -2008,6 +2009,8 @@ write_ns.o : ldaU.o
 write_ns.o : pwcom.o
 write_ns.o : scf_mod.o
 wsweight.o : ../../Modules/kind.o
+wyckoff.o : ../../Modules/kind.o
+wyckoff.o : ../../Modules/space_group.o
 xdm_dispersion.o : ../../Modules/atom.o
 xdm_dispersion.o : ../../Modules/cell_base.o
 xdm_dispersion.o : ../../Modules/constants.o

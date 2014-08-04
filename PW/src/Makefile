@@ -243,7 +243,8 @@ wannier_init.o \
 wannier_check.o \
 wannier_clean.o \
 wannier_occ.o \
-wannier_enrg.o 
+wannier_enrg.o \
+wyckoff.o       
 
 QEMODS=../../Modules/libqemod.a
 

@@ -1389,6 +1389,49 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
            }
          }
 
+         var space_group -type INTEGER {
+           default { 0 }
+           info { The number of the space group of the crystal, as given
+                 in the International Tables of Crystallography A (ITA).
+                 This allows to give in input only the inequivalent atomic 
+                 positions. The positions of all the symmetry equivalent atoms
+                 are calculated by the code. Used only when the atomic positions
+                 are of type crystal_sg. 
+           }
+         }
+
+         var uniqueb -type LOGICAL {
+           default { .FALSE. }
+           info { Used only for monoclinic lattices. If .TRUE. the b
+                  unique ibrav (-12 or -13) are used, and symmetry 
+                  equivalent positions are chosen assuming that the
+                  two fold axis or the mirror normal is parallel to the
+                  b axis. If .FALSE. it is parallel to the c axis.
+           }
+
+         }
+
+         var origin_choice -type INTEGER {
+           default { 1 }
+           info { Used only for space groups that in the ITA allow 
+                  the use of two different origins. origin_choice=1,
+                  means the first origin, while origin_choice=2 is the
+                  second origin.
+           }
+
+         }
+
+         var rhombohedral -type LOGICAL {
+           default { .TRUE. }
+           info { Used only for rhombohedral space groups. 
+                  When .TRUE. the coordinates of the inequivalent atoms are
+                  given with respect to the rhombohedral axes, when .FALSE.
+                  the coordinates of the inequivalent atoms are given with
+                  respect to the hexagonal axes. They are converted internally
+                  to the rhombohedral axes and ibrav=5 is used in both cases.
+           }
+         }
+
     }
 
     #
@@ -2068,7 +2111,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
     card ATOMIC_POSITIONS {
 
 	flag atompos_unit -use optional {
-	    enum { alat | bohr | angstrom | crystal }
+	    enum { alat | bohr | angstrom | crystal | crystal_sg }
 	    default { alat (DEPRECATED) }
 	    info {
 	        alat    : atomic positions are in cartesian coordinates, in
@@ -2087,6 +2130,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                           in relative coordinates of the primitive lattice
                           vectors as defined either in card CELL_PARAMETERS
                           or via the ibrav + celldm / a,b,c... variables
+
+                crystal_sg : atomic positions are in crystal coordinates, i.e.
+                          in relative coordinates of the primitive lattice.
+                          This option differs from the previous one because
+                          in this case only the symmetry inequivalent atoms
+                          are given. The variable space_group must indicate
+                          the space group number used to find the symmetry
+                          equivalent atoms. The other variables that control 
+                          this option are uniqueb, origin_choice, and 
+                          rhombohedral.
+
 	    }
 	}
 

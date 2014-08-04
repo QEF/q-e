@@ -85,6 +85,7 @@ read_xml_fields.o \
 recvec.o \
 recvec_subs.o \
 run_info.o \
+space_group.o \
 set_signal.o \
 sic.o \
 splinelib.o \

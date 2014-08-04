@@ -310,6 +310,7 @@ set_signal.o : mp.o
 set_signal.o : mp_world.o
 sic.o : io_global.o
 sic.o : kind.o
+space_group.o : kind.o
 splinelib.o : kind.o
 stick_base.o : io_global.o
 stick_base.o : kind.o

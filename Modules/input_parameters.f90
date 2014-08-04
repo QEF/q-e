@@ -521,6 +521,25 @@ MODULE input_parameters
           ! if esm_debug is .TRUE., calcualte v_hartree and v_local
           ! for abs(gp)<=esm_debug_gpmax (gp is integer and has tpiba unit)
 
+        INTEGER :: space_group = 0
+          ! space group number for coordinates given in crystallographic form
+          !
+        LOGICAL :: uniqueb=.FALSE.
+          ! if .TRUE. for monoclinic lattice choose the b unique primitive 
+          ! vectors
+          !
+        INTEGER :: origin_choice = 1 
+          ! for space groups that have more than one origin choice, choose
+          ! the origin (can be 1 or 2)
+          !
+        LOGICAL :: rhombohedral = .TRUE.
+          !
+          ! if .TRUE. for rhombohedral space groups give the coordinates 
+          ! in rhombohedral axes. If .FALSE. in hexagonal axes, that are
+          ! converted internally in rhombohedral axes.  
+          !
+
+
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, &
              ntyp, nbnd, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,         &
              nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv, use_all_frac,   &
@@ -543,7 +562,8 @@ MODULE input_parameters
              ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,                       &
              xdm, xdm_a1, xdm_a2,                                             &
              step_pen, A_pen, sigma_pen, alpha_pen, no_t_rev,                 &
-             esm_bc, esm_efield, esm_w, esm_nfit, esm_debug, esm_debug_gpmax
+             esm_bc, esm_efield, esm_w, esm_nfit, esm_debug, esm_debug_gpmax, &
+             space_group, uniqueb, origin_choice, rhombohedral
 
 !=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters
@@ -1291,6 +1311,7 @@ MODULE input_parameters
         INTEGER,  ALLOCATABLE :: id_loc(:)
         INTEGER,  ALLOCATABLE :: na_inp(:)
         LOGICAL  :: tapos = .false.
+        LOGICAL  :: lsg   = .false.
         CHARACTER(len=80) :: atomic_positions = 'crystal'
           ! atomic_positions = 'bohr' | 'angstrong' | 'crystal' | 'alat'
           ! select the units for the atomic positions being read from stdin
@@ -1383,11 +1404,13 @@ MODULE input_parameters
 !
       TYPE (wannier_data) :: wan_data(nwanx,2)
 
+
 !  END manual
 ! ----------------------------------------------------------------------
 
       LOGICAL :: xmloutput = .false.
       ! if .true. PW produce an xml output
+
 CONTAINS
 !
 !----------------------------------------------------------------------------
