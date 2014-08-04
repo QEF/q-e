@@ -216,6 +216,7 @@ radial_grids.o : kind.o
 random_numbers.o : kind.o
 read_cards.o : autopilot.o
 read_cards.o : bz_form.o
+read_cards.o : cell_base.o
 read_cards.o : constants.o
 read_cards.o : input_parameters.o
 read_cards.o : io_global.o

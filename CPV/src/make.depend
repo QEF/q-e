@@ -121,6 +121,7 @@ cp_restart.o : ../../Modules/io_global.o
 cp_restart.o : ../../Modules/ions_base.o
 cp_restart.o : ../../Modules/kernel_table.o
 cp_restart.o : ../../Modules/kind.o
+cp_restart.o : ../../Modules/mm_dispersion.o
 cp_restart.o : ../../Modules/mp.o
 cp_restart.o : ../../Modules/mp_bands.o
 cp_restart.o : ../../Modules/mp_diag.o
@@ -134,6 +135,7 @@ cp_restart.o : ../../Modules/parser.o
 cp_restart.o : ../../Modules/qexml.o
 cp_restart.o : ../../Modules/recvec.o
 cp_restart.o : ../../Modules/run_info.o
+cp_restart.o : ../../Modules/tsvdw.o
 cp_restart.o : ../../Modules/uspp.o
 cp_restart.o : ../../Modules/version.o
 cp_restart.o : ../../Modules/xml_io_base.o

@@ -1335,6 +1335,7 @@ pw_restart.o : ../../Modules/io_global.o
 pw_restart.o : ../../Modules/ions_base.o
 pw_restart.o : ../../Modules/kernel_table.o
 pw_restart.o : ../../Modules/kind.o
+pw_restart.o : ../../Modules/mm_dispersion.o
 pw_restart.o : ../../Modules/mp.o
 pw_restart.o : ../../Modules/mp_bands.o
 pw_restart.o : ../../Modules/mp_diag.o
@@ -1348,6 +1349,7 @@ pw_restart.o : ../../Modules/parser.o
 pw_restart.o : ../../Modules/qexml.o
 pw_restart.o : ../../Modules/recvec.o
 pw_restart.o : ../../Modules/run_info.o
+pw_restart.o : ../../Modules/tsvdw.o
 pw_restart.o : ../../Modules/version.o
 pw_restart.o : ../../Modules/wavefunctions.o
 pw_restart.o : ../../Modules/xml_io_base.o

@@ -104,6 +104,7 @@ lr_dav_main.o : ../../Modules/io_global.o
 lr_dav_main.o : ../../Modules/ions_base.o
 lr_dav_main.o : ../../Modules/kind.o
 lr_dav_main.o : ../../Modules/mp_global.o
+lr_dav_main.o : ../../Modules/plugin_flags.o
 lr_dav_main.o : ../../Modules/uspp.o
 lr_dav_main.o : ../../Modules/version.o
 lr_dav_main.o : ../../Modules/wavefunctions.o
@@ -344,12 +345,12 @@ lr_sm1_psi.o : ../../Modules/uspp.o
 lr_sm1_psi.o : ../../PW/src/pwcom.o
 lr_sm1_psi.o : ../../PW/src/realus.o
 lr_sm1_psi.o : lr_variables.o
-lr_solve_e.o : ../../Modules/becmod.o
 lr_solve_e.o : ../../Modules/cell_base.o
 lr_solve_e.o : ../../Modules/control_flags.o
 lr_solve_e.o : ../../Modules/fft_base.o
 lr_solve_e.o : ../../Modules/io_files.o
 lr_solve_e.o : ../../Modules/io_global.o
+lr_solve_e.o : ../../Modules/ions_base.o
 lr_solve_e.o : ../../Modules/kind.o
 lr_solve_e.o : ../../Modules/mp.o
 lr_solve_e.o : ../../Modules/mp_global.o
