@@ -2028,7 +2028,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 			info { 
 			    label of the atom. Acceptable syntax:
 			    chemical symbol X (1 or 2 characters, case-insensitive) 
-			    or "Xn", n=0,..., 9; "X_*", "X-*" (e.g. C1, As_h)
+			    or chemical symbol plus a number or a letter, as in
+                            "Xn" (e.g. Fe1) or "X_*" or "X-*" (e.g. C1, C_h;
+                            max total length cannot exceed 3 characters)
 			}
 		    }
 		    col Mass_X -type REAL {
