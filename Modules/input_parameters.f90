@@ -1313,7 +1313,7 @@ MODULE input_parameters
         LOGICAL  :: tapos = .false.
         LOGICAL  :: lsg   = .false.
         CHARACTER(len=80) :: atomic_positions = 'crystal'
-          ! atomic_positions = 'bohr' | 'angstrong' | 'crystal' | 'alat'
+          ! atomic_positions = 'bohr' | 'angstrom' | 'crystal' | 'alat'
           ! select the units for the atomic positions being read from stdin
 
 !

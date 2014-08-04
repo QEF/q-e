@@ -71,7 +71,7 @@ SUBROUTINE xsf_fast_datagrid_3d &
   ! origin
   WRITE(ounit,'(3f10.6)') 0.0d0, 0.0d0, 0.0d0
   ! 1st spanning (=lattice) vector
-  WRITE(ounit,'(3f12.6)') (BOHR_RADIUS_ANGS*alat*at(i,1),i=1,3) ! in ANSTROMS
+  WRITE(ounit,'(3f12.6)') (BOHR_RADIUS_ANGS*alat*at(i,1),i=1,3) ! in ANGSTROMS
   ! 2nd spanning (=lattice) vector
   WRITE(ounit,'(3f12.6)') (BOHR_RADIUS_ANGS*alat*at(i,2),i=1,3)
   ! 3rd spanning (=lattice) vector
@@ -132,11 +132,11 @@ SUBROUTINE xsf_datagrid_2d (rho, nx, ny, m1, m2, x0, e1, e2, alat, ounit)
   ! number of points in each direction
   WRITE(ounit,*) nx, ny
   ! origin
-  WRITE(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*x0(i),i=1,3) ! in ANSTROMS
+  WRITE(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*x0(i),i=1,3) ! in ANGSTROMS
   ! 1st spanning (=lattice) vector
-  WRITE(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*e1(i)*m1,i=1,3) ! in ANSTROMS
+  WRITE(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*e1(i)*m1,i=1,3) ! in ANGSTROMS
   ! 2nd spanning (=lattice) vector
-  WRITE(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*e2(i)*m2,i=1,3) ! in ANSTROMS
+  WRITE(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*e2(i)*m2,i=1,3) ! in ANGSTROMS
 
   count=0
   DO iy=1,ny
@@ -178,11 +178,11 @@ SUBROUTINE xsf_datagrid_3d &
   ! number of points in each direction
   WRITE(ounit,*) nx, ny, nz
   ! origin
-  WRITE(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*x0(i),i=1,3) ! in ANSTROMS
+  WRITE(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*x0(i),i=1,3) ! in ANGSTROMS
   ! 1st spanning (=lattice) vector
-  WRITE(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*e1(i)*m1,i=1,3) ! in ANSTROMS
+  WRITE(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*e1(i)*m1,i=1,3) ! in ANGSTROMS
   ! 2nd spanning (=lattice) vector
-  WRITE(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*e2(i)*m2,i=1,3) ! in ANSTROMS
+  WRITE(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*e2(i)*m2,i=1,3) ! in ANGSTROMS
   ! 3rd spanning (=lattice) vector
   WRITE(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*e3(i)*m3,i=1,3)
 

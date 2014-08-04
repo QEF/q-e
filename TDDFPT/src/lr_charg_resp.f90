@@ -1349,7 +1349,7 @@ CONTAINS
        ! origin
        WRITE(158,'(3f10.6)') 0.0d0, 0.0d0, 0.0d0
        ! 1st spanning (=lattice) vector
-       WRITE(158,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,1),i=1,3) ! in ANSTROMS
+       WRITE(158,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,1),i=1,3) ! in ANGSTROMS
        ! 2nd spanning (=lattice) vector
        WRITE(158,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,2),i=1,3)
        ! 3rd spanning (=lattice) vector
@@ -1474,7 +1474,7 @@ CONTAINS
     ! origin
     WRITE(158,'(3f10.6)') 0.0d0, 0.0d0, 0.0d0
     ! 1st spanning (=lattice) vector
-    WRITE(158,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,1),i=1,3) ! in ANSTROMS
+    WRITE(158,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,1),i=1,3) ! in ANGSTROMS
     ! 2nd spanning (=lattice) vector
     WRITE(158,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,2),i=1,3)
     ! 3rd spanning (=lattice) vector

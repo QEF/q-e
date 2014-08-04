@@ -131,7 +131,7 @@ subroutine c6_dft (mesh, zed, grid)
    alpha = 0.0d0
 
    open(1, file = 'freq-pol-dft.dat')
-   write (1,'(15x,"    u          alpha(angstrong)       alpha(a.u.)  ",/)')
+   write (1,'(15x,"    u          alpha(angstrom)       alpha(a.u.)  ",/)')
    !
    Nu  = 230
    Nc  = 50

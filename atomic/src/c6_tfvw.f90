@@ -142,7 +142,7 @@ subroutine c6_tfvw (mesh, zed, grid, rho_input)
    alpha = 0.0d0
 
    open(1, file = 'freq-pol.dat')
-   write (1,'(15x,"    u          alpha(angstrong)       alpha(a.u.)  ",/)')
+   write (1,'(15x,"    u          alpha(angstrom)       alpha(a.u.)  ",/)')
    !
    Nu  = 230
    Nc  = 50
