@@ -2060,7 +2060,7 @@ end function allowed
 !    nr  (input) tentative order n of a fft
 !
 !    np  (optional input) if present restrict the search of the order
-!        in the ensamble of multiples of np
+!        in the ensemble of multiples of np
 !
 !    Output: the same if n is a good number
 !         the closest higher number that is good

@@ -516,7 +516,7 @@
             endif
           end do
         else
-          !in the ensamble case the derivative is Sum_ij (<hi|H|Psi_j>+ <Psi_i|H|hj>)*f_ji
+          !in the ensemble case the derivative is Sum_ij (<hi|H|Psi_j>+ <Psi_i|H|hj>)*f_ji
           !     calculation of the kinetic energy x=xmin      
          call calcmt( nrlx, f, z0t, fmat0 )
          do iss = 1, nspin

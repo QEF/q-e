@@ -38,11 +38,11 @@
           REAL(DP)  :: EVDW
           REAL(DP)  :: EBAND
           REAL(DP)  :: EKIN
-          REAL(DP)  :: ATOT     ! Ensamble DFT
-          REAL(DP)  :: ENTROPY  ! Ensamble DFT
-          REAL(DP)  :: EGRAND   ! Ensamble DFT
-          REAL(DP)  :: VAVE   ! Ensamble DFT
-          REAL(DP)  :: EEXTFOR   ! Energy of the external forces
+          REAL(DP)  :: ATOT     ! Ensemble DFT
+          REAL(DP)  :: ENTROPY  ! Ensemble DFT
+          REAL(DP)  :: EGRAND   ! Ensemble DFT
+          REAL(DP)  :: VAVE     ! Ensemble DFT
+          REAL(DP)  :: EEXTFOR  ! Energy of the external forces
         END TYPE
 
         REAL(DP)  :: EHTE = 0.0_DP
