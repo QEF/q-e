@@ -83,7 +83,8 @@ MODULE pw_restart
       !
       USE control_flags,        ONLY : istep, twfcollect, conv_ions, &
                                        lscf, lkpoint_dir, gamma_only, &
-                                       tqr, noinv, do_makov_payne, smallmem
+                                       tqr, noinv, do_makov_payne, smallmem, &
+                                       llondon, lxdm, ts_vdw
       USE realus,               ONLY : real_space
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
@@ -142,6 +143,8 @@ MODULE pw_restart
       USE cellmd,               ONLY : lmovecell, cell_factor 
       USE martyna_tuckerman,    ONLY : do_comp_mt
       USE esm,                  ONLY : do_comp_esm
+      USE london_module,        ONLY : scal6, lon_rcut
+      USE tsvdw_module,         ONLY : vdw_isolated
       
       !
       IMPLICIT NONE
@@ -432,7 +435,10 @@ MODULE pw_restart
                         HUBBARD_J0 = Hubbard_J0, HUBBARD_BETA = Hubbard_beta, &
                         HUBBARD_ALPHA = Hubbard_alpha, &
                         INLC = inlc, VDW_TABLE_NAME = vdw_table_name, &
-                        PSEUDO_DIR = pseudo_dir, DIRNAME = dirname)
+                        PSEUDO_DIR = pseudo_dir, DIRNAME = dirname,   &
+                        LLONDON = llondon, LONDON_S6 = scal6,         &
+                        LONDON_RCUT = lon_rcut, LXDM = lxdm,          &
+                        TS_VDW = ts_vdw, VDW_ISOLATED = vdw_isolated )
 
 
          IF ( dft_is_hybrid() ) CALL qexml_write_exx &
@@ -1849,6 +1855,9 @@ MODULE pw_restart
                             Hubbard_l, Hubbard_U, Hubbard_J, Hubbard_alpha, &
                             Hubbard_J0, Hubbard_beta, U_projection
       USE kernel_table, ONLY : vdw_table_name
+      USE control_flags,ONLY : llondon, lxdm, ts_vdw
+      USE london_module,ONLY : scal6, lon_rcut
+      USE tsvdw_module, ONLY : vdw_isolated
       !
       IMPLICIT NONE
       !
@@ -1869,7 +1878,8 @@ MODULE pw_restart
          CALL qexml_read_xc( dft_name, lda_plus_u, lda_plus_u_kind, U_projection,&
                              Hubbard_lmax, Hubbard_l, nsp_, Hubbard_U, Hubbard_J, &
                              Hubbard_J0, Hubbard_alpha, Hubbard_beta, &
-                             inlc, vdw_table_name,  ierr )
+                             inlc, vdw_table_name, llondon, scal6, &
+                             lon_rcut, lxdm, ts_vdw, vdw_isolated, ierr )
          !
       END IF
       !

@@ -59,8 +59,9 @@ MODULE cp_restart
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, trhow, &
-                                           tksw, twfcollect, do_makov_payne, smallmem
-      USE control_flags,            ONLY : tksw, lwfpbe0nscf, lwfnscf ! Lingzhu Kong
+                                           tksw, twfcollect, do_makov_payne, &
+                                           smallmem, llondon, lxdm, ts_vdw
+      USE control_flags,            ONLY : lwfpbe0nscf, lwfnscf ! Lingzhu Kong
       USE constants,                ONLY : e2
       USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, &
                                            nwordwfc, tmp_dir, diropn
@@ -95,6 +96,8 @@ MODULE cp_restart
       USE cp_main_variables,        ONLY : descla
       USE cp_interfaces,            ONLY : collect_lambda, collect_zmat
       USE kernel_table,             ONLY : vdw_table_name
+      USE london_module,            ONLY : scal6, lon_rcut
+      USE tsvdw_module,             ONLY : vdw_isolated
       !
       IMPLICIT NONE
       !
@@ -372,7 +375,10 @@ MODULE cp_restart
                         HUBBARD_LMAX = Hubbard_lmax,      &
                         HUBBARD_L = Hubbard_l, HUBBARD_U = Hubbard_U, &
                         INLC = inlc, VDW_TABLE_NAME = vdw_table_name, &
-                        PSEUDO_DIR = pseudo_dir, DIRNAME = dirname)
+                        PSEUDO_DIR = pseudo_dir, DIRNAME = dirname,   &
+                        LLONDON = llondon, LONDON_S6 = scal6,         &
+                        LONDON_RCUT = lon_rcut, LXDM = lxdm,          &
+                        TS_VDW = ts_vdw, VDW_ISOLATED = vdw_isolated )
          !
 !-------------------------------------------------------------------------------
 ! ... OCCUPATIONS

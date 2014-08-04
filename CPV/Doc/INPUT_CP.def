@@ -1762,7 +1762,15 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 	syntax {
 	    table atomic_species {
 		rows -start 1 -end ntyp {
-		    col X -type CHARACTER { info { label of the atom } }
+		    col X -type CHARACTER {
+                        info {
+                            label of the atom. Acceptable syntax:
+                            chemical symbol X (1 or 2 characters, case-insensitive)
+                            or chemical symbol plus a number or a letter, as in
+                            "Xn" (e.g. Fe1) or "X_*" or "X-*" (e.g. C1, C_h;
+                            max total length cannot exceed 3 characters)
+                        }
+		    }
 		    col Mass_X -type REAL {
 			info {
 			    mass of the atomic species [amu: mass of C = 12]

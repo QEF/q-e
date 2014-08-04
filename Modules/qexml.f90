@@ -1288,7 +1288,8 @@ CONTAINS
     SUBROUTINE qexml_write_xc( dft, nsp, lda_plus_u, lda_plus_u_kind, U_projection, &
                          Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_J, Hubbard_J0, &
                          Hubbard_beta, Hubbard_alpha,                               &
-                         inlc, vdw_table_name, pseudo_dir, dirname )
+                         inlc, vdw_table_name, pseudo_dir, dirname,  &
+                         llondon, london_s6, london_rcut, lxdm, ts_vdw, vdw_isolated )
       !------------------------------------------------------------------------
       !
       CHARACTER(LEN=*),   INTENT(IN) :: dft
@@ -1303,14 +1304,15 @@ CONTAINS
       INTEGER,  OPTIONAL, INTENT(IN) :: inlc
       CHARACTER(LEN=*), OPTIONAL,   INTENT(IN) :: vdw_table_name, pseudo_dir, dirname
       !
+      LOGICAL,  OPTIONAL, INTENT(IN) :: llondon, lxdm, ts_vdw, vdw_isolated
+      REAL(DP), OPTIONAL, INTENT(IN) :: london_s6, london_rcut
+
       INTEGER            :: i, flen, ierrl
       CHARACTER(LEN=256) :: file_table
       !
       CALL iotk_write_begin( ounit, "EXCHANGE_CORRELATION" )
       !
       CALL iotk_write_dat( ounit, "DFT", dft )
-      !
-      CALL iotk_write_dat( ounit, "LDA_PLUS_U_CALCULATION", lda_plus_u )
       !
       IF ( lda_plus_u ) THEN
          !
@@ -1321,19 +1323,16 @@ CONTAINS
             CALL errore( 'write_xc', &
                          ' variables for LDA+U not present', 1 )
          !
+         CALL iotk_write_dat( ounit, "LDA_PLUS_U_CALCULATION", lda_plus_u )
          CALL iotk_write_dat( ounit, "NUMBER_OF_SPECIES", nsp )
-         !
          CALL iotk_write_dat( ounit, "HUBBARD_LMAX", Hubbard_lmax )
-         !
          CALL iotk_write_dat( ounit, "HUBBARD_L", Hubbard_l(1:nsp) )
-         !
          CALL iotk_write_dat( ounit, "HUBBARD_U", Hubbard_U(1:nsp) )
          !
-         IF ( PRESENT( lda_plus_u_kind ) ) &
-              CALL iotk_write_dat( ounit, "LDA_PLUS_U_KIND", lda_plus_u_kind )
-         !
-         IF ( PRESENT( lda_plus_u_kind ) ) &
-         CALL iotk_write_dat( ounit, "U_PROJECTION_TYPE", trim(U_projection) )
+         IF ( PRESENT( lda_plus_u_kind ) ) THEN
+            CALL iotk_write_dat( ounit, "LDA_PLUS_U_KIND", lda_plus_u_kind )
+            CALL iotk_write_dat( ounit, "U_PROJECTION_TYPE", trim(U_projection) )
+         END IF
          !
          IF ( PRESENT( Hubbard_J ) ) &
               CALL iotk_write_dat( ounit, "HUBBARD_J", Hubbard_J(1:3,1:nsp), COLUMNS = 3)
@@ -1351,36 +1350,62 @@ CONTAINS
       !
       ! Vdw kernel table
       !
-      CALL iotk_write_dat( ounit, "NON_LOCAL_DF", inlc )
-
-      IF ( inlc == 1 .OR. inlc ==2 .OR. inlc == 3 ) THEN
-
-         IF ( .NOT. PRESENT( vdw_table_name ) .OR. &
-              .NOT. PRESENT( pseudo_dir ) .OR. &
-              .NOT. PRESENT( dirname )) &
-            CALL errore( 'write_xc', &
-                         ' variable vdw_table_name not present', 1 )
+      IF ( present(inlc) ) THEN
+         IF ( inlc == 1 .OR. inlc ==2 .OR. inlc == 3 ) THEN
+            IF ( .NOT. PRESENT( vdw_table_name ) .OR. &
+                 .NOT. PRESENT( pseudo_dir ) .OR. &
+                 .NOT. PRESENT( dirname )) &
+               CALL errore( 'write_xc', &
+                            ' variable vdw_table_name not present', 1 )
         
-         CALL iotk_write_dat( ounit, "VDW_KERNEL_NAME", vdw_table_name )
-
-         !
-         ! Copy the file in .save directory
-         !
-         flen = LEN_TRIM( pseudo_dir )
-         IF ( pseudo_dir(flen:flen) /= '/' ) THEN
-             file_table = pseudo_dir(1:flen) // '/' // vdw_table_name
-         ELSE
-             file_table = pseudo_dir(1:flen) // vdw_table_name
-         END IF
-         !
-         CALL qexml_copy_file( TRIM( file_table ), TRIM( dirname ) // "/" // TRIM( vdw_table_name ),ierrl )
-         !
-      END IF
+            CALL iotk_write_dat( ounit, "NON_LOCAL_DF", inlc )
+            CALL iotk_write_dat( ounit, "VDW_KERNEL_NAME", TRIM(vdw_table_name))
+            !
+            ! Copy the file in .save directory
+            !
+            flen = LEN_TRIM( pseudo_dir )
+            IF ( pseudo_dir(flen:flen) /= '/' ) THEN
+               file_table = pseudo_dir(1:flen) // '/' // vdw_table_name
+            ELSE
+               file_table = pseudo_dir(1:flen) // vdw_table_name
+            END IF
+            !
+            CALL qexml_copy_file( TRIM( file_table ), TRIM( dirname ) // "/" // TRIM( vdw_table_name ),ierrl )
+            !
+         ENDIF
+      ENDIF
       !
+      IF ( PRESENT (llondon) ) THEN
+         IF ( llondon ) THEN
+            IF ( .NOT. PRESENT( london_s6 )  .OR. &
+                 .NOT. PRESENT( london_rcut ) ) & 
+               CALL errore( 'write_xc', &
+                            ' variables for DFT+D not present', 1 )
+            CALL iotk_write_begin( ounit, "DFT_D2" )
+            CALL iotk_write_dat( ounit, "SCALING_FACTOR", london_s6 )
+            CALL iotk_write_dat( ounit, "CUTOFF_RADIUS",  london_rcut )
+            CALL iotk_write_end  ( ounit, "DFT_D2" )
+         ENDIF
+      ENDIF
+      !
+      IF ( PRESENT (lxdm) ) THEN
+         IF ( lxdm) CALL iotk_write_dat( ounit, "XDM", lxdm )
+      ENDIF
+      !
+      IF ( PRESENT (ts_vdw) ) THEN
+         IF ( ts_vdw) THEN
+            IF ( .NOT. PRESENT (vdw_isolated) ) &
+               CALL errore( 'write_xc', &
+                            ' variables for TS not present', 1 )
+            CALL iotk_write_begin( ounit, "TKATCHENKO-SCHEFFLER" )
+            CALL iotk_write_dat( ounit, "ISOLATED_SYSTEM", vdw_isolated )
+            CALL iotk_write_end( ounit, "TKATCHENKO-SCHEFFLER" )
+         END IF
+      END IF
       !
       CALL iotk_write_end( ounit, "EXCHANGE_CORRELATION" )
       !
-    END SUBROUTINE qexml_write_xc
+ END SUBROUTINE qexml_write_xc
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexml_write_exx( x_gamma_extrapolation, nqx1, nqx2, nqx3, &
@@ -3280,7 +3305,8 @@ CONTAINS
     SUBROUTINE qexml_read_xc( dft, lda_plus_u, lda_plus_u_kind, U_projection, &
                               Hubbard_lmax, Hubbard_l, nsp, Hubbard_U, Hubbard_J,&
                               Hubbard_J0, Hubbard_alpha, Hubbard_beta, &
-                              inlc, vdw_table_name,  ierr )
+                              inlc, vdw_table_name, llondon, london_s6, &
+                              london_rcut, lxdm, ts_vdw, vdw_isolated, ierr )
       !----------------------------------------------------------------------
       !
       CHARACTER(len=*), OPTIONAL, INTENT(out) :: dft
@@ -3296,6 +3322,8 @@ CONTAINS
       INTEGER,          OPTIONAL, INTENT(out) :: inlc
       CHARACTER(LEN=*), OPTIONAL, INTENT(out) :: U_projection
       CHARACTER(LEN=*), OPTIONAL, INTENT(out) :: vdw_table_name
+      LOGICAL,  OPTIONAL, INTENT(out) :: llondon, lxdm, ts_vdw, vdw_isolated
+      REAL(DP), OPTIONAL, INTENT(out) :: london_s6, london_rcut
       !
       INTEGER,                    INTENT(out) :: ierr
       !
@@ -3305,6 +3333,8 @@ CONTAINS
       INTEGER,    ALLOCATABLE :: Hubbard_l_(:)
       REAL(DP),   ALLOCATABLE :: Hubbard_U_(:), Hubbard_J_(:,:)
       REAL(DP),   ALLOCATABLE :: Hubbard_alpha_(:), Hubbard_J0_(:), Hubbard_beta_(:)
+      LOGICAL                 :: llondon_, lxdm_, ts_vdw_, vdw_isolated_
+      REAL(DP)                :: london_s6_, london_rcut_
       !
       ierr = 0
       !
@@ -3386,6 +3416,27 @@ CONTAINS
          !
       ENDIF
       !
+      CALL iotk_scan_begin( iunit, "DFT_D2", FOUND=found, IERR=ierr )
+      IF ( ierr/=0 ) RETURN
+      llondon_ = found
+      IF ( llondon_ ) THEN
+         CALL iotk_scan_dat( iunit, "SCALING_FACTOR", london_s6_ )
+         CALL iotk_scan_dat( iunit, "CUTOFF_RADIUS",  london_rcut_)
+         CALL iotk_scan_end( iunit, "DFT_D2" )
+      ENDIF
+      !
+      CALL iotk_scan_dat( iunit, "XDM", lxdm_, FOUND = found, IERR=ierr )
+      IF ( ierr/=0 ) RETURN
+      IF (.NOT. found) lxdm_ = .FALSE.
+      !
+      CALL iotk_scan_begin( iunit,"TKATCHENKO-SCHEFFLER", FOUND=found, IERR=ierr )
+      IF ( ierr/=0 ) RETURN
+      ts_vdw_ = found
+      IF ( ts_vdw_ ) THEN
+         CALL iotk_scan_dat( iunit, "ISOLATED_SYSTEM", vdw_isolated_ )
+         CALL iotk_scan_end( iunit, "TKATCHENKO-SCHEFFLER" )
+      END IF
+      !
       CALL iotk_scan_end( iunit, "EXCHANGE_CORRELATION", IERR=ierr )
       IF ( ierr/=0 ) RETURN
       !
@@ -3417,6 +3468,16 @@ CONTAINS
       IF (present(inlc) ) inlc = inlc_
       IF (present( vdw_table_name) )  vdw_table_name =  vdw_table_name_
       !
+      IF (present(llondon) ) THEN
+         llondon = llondon_
+         IF (present(london_s6) )   london_s6   = london_s6_
+         IF (present(london_rcut) ) london_rcut = london_rcut_
+      ELSE IF (present(lxdm) ) THEN
+         lxdm = lxdm_
+      ELSE IF (present(ts_vdw) ) THEN
+         ts_vdw = ts_vdw_
+         IF (present(vdw_isolated) ) vdw_isolated=vdw_isolated_
+      END IF
       !
     END SUBROUTINE qexml_read_xc
     !
