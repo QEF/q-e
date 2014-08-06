@@ -130,7 +130,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
         !
      ENDIF
      !
-     CALL fw_scatter( isgn ) ! forwart scatter from stick to planes
+     CALL fw_scatter( isgn ) ! forward scatter from stick to planes
      !
      IF( use_tg ) THEN
         CALL cft_2xy( f, dfft%tg_npp( me_p ), n1, n2, nx1, nx2, isgn, planes )

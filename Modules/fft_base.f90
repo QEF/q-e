@@ -82,12 +82,15 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
   !        must be received, all the others must be sent to "proc")
   !    Finally one gets the "planes" representation:
   !    processor "me" has npp_(me) complete xy planes
+  !    f_in  contains input columns, is destroyed on output
+  !    f_aux contains output planes
   !
   !  b) From planes to columns (isgn < 0)
   !
-  !  Quite the same in the opposite direction
+  !    Quite the same in the opposite direction
+  !    f_aux contains input planes, is destroyed on output
+  !    f_in  contains output columns
   !
-  !  The output is overwritten on f_in ; f_aux is used as work space
   !
   !  If optional argument "use_tg" is true the subroutines performs
   !  the trasposition using the Task Groups distribution
