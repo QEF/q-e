@@ -73,6 +73,14 @@ get_kernel () {
          $ECHO "kernel table generated in $ESPRESSO_PSEUDO/vdW_kernel_table"
       fi
     fi
+   if test "$1" = "vdw6" ; then
+      if ! test -f $ESPRESSO_PSEUDO/rVV10_kernel_table ; then
+         $ECHO "Generating kernel table - May take several minutes...\c"
+         $PARA_PREFIX $ESPRESSO_ROOT/PW/src/generate_rVV10_kernel_table.x $PARA_POSTFIX
+         mv rVV10_kernel_table $ESPRESSO_PSEUDO/
+         $ECHO "kernel table generated in $ESPRESSO_PSEUDO/rVV10_kernel_table"
+      fi
+    fi
 }
 ########################################################################
 # function to get pseudopotentials from the web if missing
