@@ -7,8 +7,21 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-program generate_kernel
+program generate_kernel_
+  use mp_global,            ONLY : mp_startup, mp_global_end
+  use mp_world,             ONLY : world_comm
+  
+  implicit none  
 
+  call mp_startup ()
+  CALL generate_kernel ( world_comm )
+  call mp_global_end( )
+
+END program generate_kernel_
+
+!----------------------------------------------------------------------------
+SUBROUTINE generate_kernel ( my_comm )
+  !--------------------------------------------------------------------------------------------
 
   !! This is a stand-alone program to generate the file
   !! "vdW_kernel_table" needed for a van der Waals run.  There should be no
@@ -90,17 +103,17 @@ program generate_kernel
   !! Use some PWSCF modules.  In particular, we need the parallelization modules.
   !! --------------------------------------------------------------------------------------------
 
-  use mp,                   ONLY : mp_get, mp_barrier
-  use mp_global,            ONLY : mp_startup, mp_global_end
-  use mp_world,             ONLY : world_comm, nproc, mpime
+  use mp,                   ONLY : mp_get, mp_barrier, mp_size, mp_rank
   use kinds,                ONLY : dp
-  use io_global,            ONLY : ionode, ionode_id
+  use io_global,            ONLY : ionode
   use constants,            ONLY : pi
   
   !! --------------------------------------------------------------------------------------------
   
   implicit none  
   
+  integer, intent (in) :: my_comm
+
   !! These are the user set-able parameters.  
   
   integer, parameter :: Nr_points = 1024         !! The number of radial points (also the number of k points) used in the formation
@@ -284,21 +297,13 @@ program generate_kernel
   !                                                        !! Proc_indices holds the section of the indices array that is assigned to each processor.  
   !                                                        !! This is a Nprocs x 2 array, stored as proc_indices(processor number, starting_index:ending_index)
 
+  integer :: nproc, mpime                                  !! number or procs, rank of curret processor
   integer :: Nper, Nextra, start_q, end_q                  !! Baseline number of jobs per processor, number of processors that get an extra job in case the 
   !                                                        !! number of jobs doesn't split evenly over the number of processors, starting index into the
   !                                                        !! indices array, ending index into the indices array.
 
   integer :: idx, proc_i, kernel_file, my_Nqs
 
-  ! Set up the parallel run using PWSCF methods.
-  ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-  !! Start a parallel run
-
-  call mp_startup ()
-
-
-  ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! The total number of phi_alpha_beta functions that have to be calculated
   Ntotal = (Nqs**2 + Nqs)/2
@@ -326,6 +331,8 @@ program generate_kernel
   ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   ! Figure out the baseline number of functions to be calculated by each processor and how many processors get 1 extra job.
+  nproc = mp_size(my_comm)
+  mpime = mp_rank(my_comm)
   Nper = Ntotal/nproc
   Nextra = mod(Ntotal, nproc)
 
@@ -447,13 +454,10 @@ program generate_kernel
   !! Finally, we write out the results, after letting everybody catch up
   !! -----------------------------------------------------------------------------------------------------
 
-  call mp_barrier( world_comm )
+  call mp_barrier( my_comm )
   call write_kernel_table_file(phi, d2phi_dk2)
 
   !! -----------------------------------------------------------------------------------------------------
-
-  !! Finalize the mpi run using the PWSCF method
-  call mp_global_end( )               
 
   deallocate( phi, d2phi_dk2, indices, proc_indices )
 
@@ -809,7 +813,7 @@ CONTAINS
 
     do proc_i = 1, nproc-1
        
-       call mp_get(phi, phi, mpime, 0, proc_i, 0, world_comm)
+       call mp_get(phi, phi, mpime, 0, proc_i, 0, my_comm)
        
        if (ionode) then
           
@@ -841,7 +845,7 @@ CONTAINS
     
     do proc_i = 1, nproc-1
        
-       call mp_get(d2phi_dk2, d2phi_dk2, mpime, 0, proc_i, 0, world_comm)
+       call mp_get(d2phi_dk2, d2phi_dk2, mpime, 0, proc_i, 0, my_comm)
        
        if (mpime == 0) then
           
@@ -990,7 +994,4 @@ CONTAINS
 
 
 
-end program generate_kernel
-
-
-
+end SUBROUTINE generate_kernel

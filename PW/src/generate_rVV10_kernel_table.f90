@@ -1,28 +1,37 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2013-2014 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-program generate_rVV10_kernel_table 
-
-  
-  !! --------------------------------------------------------------------------------------------
-  use mp,                   ONLY : mp_get, mp_barrier
+program generate_rVV10_kernel_table_
+  !--------------------------------------------------------------------------------------------
   use mp_global,            ONLY : mp_startup, mp_global_end
-  use mp_world,             ONLY : world_comm, nproc, mpime
-  use kinds,                ONLY : dp
-  use io_global,            ONLY : ionode, ionode_id
-  use constants,            ONLY : pi
-  
-  !! --------------------------------------------------------------------------------------------
+  use mp_world,             ONLY : world_comm
   
   implicit none  
-  
+
+  call mp_startup ()
+  CALL generate_rVV10_kernel_table ( world_comm )
+  call mp_global_end( )
+
+END program GENERATE_RVV10_KERNEL_TABLE_
+
+!----------------------------------------------------------------------------
+SUBROUTINE generate_rVV10_kernel_table ( my_comm )
+  !--------------------------------------------------------------------------------------------
   !! These are the user set-able parameters.  
-  
+  use mp,                   ONLY : mp_get, mp_barrier, mp_size, mp_rank
+  use kinds,                ONLY : dp
+  use io_global,            ONLY : ionode
+  use constants,            ONLY : pi  
+  !
+  implicit none
+  !
+  integer, intent (in) :: my_comm
+  !
   integer, parameter :: Nr_points = 1024         !! The number of radial points (also the number of k points) used
   real(dp), parameter :: r_max =100.0D0         !! The value of the maximum radius to use for the real-space kernel functions 
   
@@ -80,14 +89,14 @@ program generate_rVV10_kernel_table
   !! #########################################################################################################
 
 
-  integer  :: q1_i, q2_i, r_i, count                         !! Indexing variables
-  real(dp) :: dr, d1, d2                                     !! Intermediate values
+  integer  :: q1_i, q2_i, r_i, count                       !! Indexing variables
+  real(dp) :: dr, d1, d2                                   !! Intermediate values
   
-  real(dp) :: gamma = 4.0D0*pi/9.0D0                                      !! Multiplicative factor for exponent in the functions called
-  !                                                                       !! "h" in DION
+  real(dp) :: gamma = 4.0D0*pi/9.0D0                       !! Multiplicative factor for exponent in the functions called
+  !                                                        !! "h" in DION
 
-  real(dp), parameter :: small = 1.0D-15                                  !! Number at which to employ special algorithms to avoid numerical
-  !                                                                       !! problems.  This is probably not needed but I like to be careful.
+  real(dp), parameter :: small = 1.0D-15                   !! Number at which to employ special algorithms to avoid numerical
+  !                                                        !! problems.  This is probably not needed but I like to be careful.
 
   !! The following sets up a parallel run.
   !! ------------------------------------------------------------------------------------------------------------------------------------------
@@ -108,28 +117,11 @@ program generate_rVV10_kernel_table
   !                                                        !! indices array, ending index into the indices array.
 
   integer :: index, proc_i, kernel_file, my_Nqs
-  integer :: Nprocs, my_rank, group_id                     !! Variables holding information about the parallel run.  The total number of processors, the rank of
-  !                                                        !! this particular processor, and a group id.  These are given to the mp_global module and its internal
-  !                                                        !! variables are used in most of this code.
-  
-
-  ! Set up the parallel run using PWSCF methods.
-  ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-  !! Start a parallel run
-  call mp_startup ()
-  !call mp_start(Nprocs, my_rank, group_id)                   !! This calls mpoi_init, figures out the total number of processors,
-                                                             !! the index of this particular processor, and a group id for mpi_comm_world
-
-  !call io_global_start(my_rank, 0)                         !! This sets processor 0 to be the input/output node.  This is assumed below during the output stage
-
-  !call mp_global_start(0, my_rank, group_id, Nprocs)       !! Pass parameters to the mp_global module.  Its internal parameters are used hereafter.
-
-  ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  integer :: nproc, Nprocs, mpime                          !! Variables holding information about the parallel run. Available and total number of processors, the rank of
+  !                                                        !! this particular processor
 
   ! The total number of phi_alpha_beta functions that have to be calculated
   Ntotal = (Nqs**2 + Nqs)/2
-
 
   allocate( indices(Ntotal, 2) )
 
@@ -153,6 +145,8 @@ program generate_rVV10_kernel_table
   ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   ! Figure out the baseline number of functions to be calculated by each processor and how many processors get 1 extra job.
+  nproc = mp_size (my_comm)
+  mpime = mp_rank (my_comm)
   Nper = Ntotal/nproc
   Nextra = mod(Ntotal, nproc)
 
@@ -236,14 +230,11 @@ program generate_rVV10_kernel_table
   !! Finally, we write out the results, after letting everybody catch up
   !! -----------------------------------------------------------------------------------------------------
 
-  call mp_barrier(world_comm)
+  call mp_barrier(my_comm)
 
   call write_kernel_table_file(phi, d2phi_dk2)
 
   !! -----------------------------------------------------------------------------------------------------
-
-  !! Finalize the mpi run using the PWSCF method
-  call mp_global_end( )               
 
   deallocate( phi, d2phi_dk2, indices, proc_indices )
 
@@ -397,7 +388,7 @@ CONTAINS
 
     do proc_i = 1, nproc-1
        
-       call mp_get(phi, phi, mpime, 0, proc_i, 0, world_comm)
+       call mp_get(phi, phi, mpime, 0, proc_i, 0, my_comm)
        
        if (ionode) then
           
@@ -429,7 +420,7 @@ CONTAINS
     
     do proc_i = 1, nproc-1
        
-       call mp_get(d2phi_dk2, d2phi_dk2, mpime, 0, proc_i, 0, world_comm)
+       call mp_get(d2phi_dk2, d2phi_dk2, mpime, 0, proc_i, 0, my_comm)
        
        if (mpime == 0) then
           
@@ -558,9 +549,4 @@ CONTAINS
 
   !! ###########################################################################################################
 
-
-
-end program generate_rVV10_kernel_table 
-
-
-
+end subroutine generate_rVV10_kernel_table
