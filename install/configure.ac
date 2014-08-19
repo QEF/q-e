@@ -358,8 +358,9 @@ case "$arch" in
         openf95_version=`$mpif90 -V 2>&1 | grep "^Open64"`
         pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
         g95_version=`$mpif90 -v 2>&1 | grep "g95"`
-        eko_version=`$mpif90 -v 2>&1 | grep "EKOPath"` # obsolescent
-        pathf95_version=`$mpif90 -v 2>&1 | grep "PathScale(TM)"`
+        enzo_version=`$mpif90 -v 2>&1 | grep "PathScale ENZO"`
+        eko_version=`$mpif90 -v 2>&1 | grep "PathScale EKOPath"`
+        pathf95_version=`$mpif90 -v 2>&1 | grep "PathScale"`
         gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
         #
         if test "$ifort_version" != ""
@@ -397,9 +398,13 @@ case "$arch" in
                 version=`echo $pgf_version | awk '{print $2}'`
                 echo "${ECHO_T}pgf90 $version"
                 f90_in_mpif90="pgf90"
+        elif test "$enzo_version" != ""
+        then
+                version=`echo $enzo_version | awk '{print $6}'`
+                echo "${ECHO_T}pathf95 $version"
+                f90_in_mpif90="pathf95"
         elif test "$eko_version" != ""
         then
-# obsolescent
                 version=`echo $eko_version | awk '{print $6}'`
                 echo "${ECHO_T}pathf95 $version"
                 f90_in_mpif90="pathf95"
@@ -448,11 +453,13 @@ f90 | fc | ftn )
         f90_version=openf95
     elif $f90 -V 2>&1 | grep -q "^pgf" ; then
         f90_version=pgf
-    elif $f90 -v 2>&1 | grep -q "EKOPath" ; then # obsolescent
+    elif $f90 -v 2>&1 | grep -q "PathScale ENZO" ; then
+        f90_version=pathf95
+    elif $f90 -v 2>&1 | grep -q "PathScale EKOPath" ; then
         f90_version=pathf95
     elif $f90 -v 2>&1 | grep -q "g95" ; then
         f90_version=g95
-    elif $f90 -version 2>&1 | grep -q "PathScale(TM)" ; then
+    elif $f90 -version 2>&1 | grep -q "PathScale" ; then
         f90_version=pathf95
     elif $f90 -v 2>&1 | grep -q "gcc version" ; then
         f90_version=gfortran
