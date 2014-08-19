@@ -180,6 +180,11 @@ CONTAINS
     NULLIFY( paw%ae_vloc )
     NULLIFY( paw%augmom )
     NULLIFY( paw%oc )
+    paw%raug = 0.0
+    paw%core_energy = 0.0
+    paw%iraug = 0
+    paw%lmax_aug = 0
+    paw%augshape = ''
   END SUBROUTINE nullify_paw_in_upf
 
   SUBROUTINE deallocate_paw_in_upf( paw )
@@ -224,6 +229,39 @@ CONTAINS
     NULLIFY ( upf%gipaw_wfs_rcut )
     NULLIFY ( upf%gipaw_wfs_rcutus )
     NULLIFY ( upf%gipaw_wfs_ps )
+    upf%tvanp = .false.
+    upf%tcoulombp = .false.
+    upf%nlcc = .false.
+    upf%dft = ''
+    upf%zp = 0.0
+    upf%etotps = 0.0
+    upf%ecutwfc = 0.0
+    upf%ecutrho = 0.0
+    upf%nv = ''
+    upf%lmax = 0
+    upf%lmax_rho = 0
+    upf%nwfc = 0
+    upf%nbeta = 0
+    upf%kkbeta = 0
+    upf%mesh = 0
+    upf%xmin = 0.0
+    upf%rmax = 0.0
+    upf%zmesh = 0.0
+    upf%dx = 0.0
+    upf%lloc = 0
+    upf%rcloc = 0.0
+    upf%q_with_l = .false.
+    upf%nqf = 0
+    upf%nqlc = 0
+    upf%qqq_eps = 0.0
+    upf%has_wfc = .false.
+    upf%paw_data_format = 0
+    upf%tpawp = .false.
+    upf%has_gipaw = .false.
+    upf%paw_as_gipaw = .false.
+    upf%gipaw_data_format = 0
+    upf%gipaw_ncore_orbitals = 0
+    upf%gipaw_wfs_nchannels = 0
     RETURN
   END SUBROUTINE nullify_pseudo_upf
 
