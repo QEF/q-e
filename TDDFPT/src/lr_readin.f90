@@ -37,7 +37,7 @@ SUBROUTINE lr_readin
                                   & betapointlist, newd_r 
   USE funct,               ONLY : dft_is_meta
   USE io_global,           ONLY : stdout
-  USE control_flags,       ONLY : tqr, twfcollect, ethr
+  USE control_flags,       ONLY : tqr, twfcollect, ethr, do_makov_payne
   USE iotk_module
   USE charg_resp,          ONLY : w_T_prefix, omeg, w_T_npol, epsil
   USE mp,                  ONLY : mp_bcast
@@ -51,8 +51,9 @@ SUBROUTINE lr_readin
   USE DFUNCT,              ONLY : newd
   USE vlocal,              ONLY : strf
   USE exx,                 ONLY : ecutfock
+  USE martyna_tuckerman,   ONLY : do_comp_mt
+  USE esm,                 ONLY : do_comp_esm
 #ifdef __ENVIRON
-  USE input_parameters,    ONLY : assume_isolated
   USE environ_base,        ONLY : environ_base_init, ir_end
   USE environ_input,       ONLY : read_environ
   USE environ_base,        ONLY : ifdtype, nfdpoint
@@ -258,19 +259,43 @@ SUBROUTINE lr_readin
   ! Copy data read from input file (in subroutine "read_input_file") and
   ! stored in modules input_parameters into internal modules of Environ module
   !
+  !   Set wfc_dir - this is done here because read_file sets wfc_dir = tmp_dir
+  !   FIXME:,if wfcdir is not present in input, wfc_dir is set to "undefined"
+  !   instead of tmp_dir, because of the logic used in the rest of TDDFPT   
+  !
+  wfc_dir = trimcheck ( wfcdir )
+  !
+  !  Make sure all the features used in the PWscf calculation are actually
+  !   supported by TDDFPT.
+  !
+  CALL input_sanity()
+  !
 #ifdef __ENVIRON
+  !
+  ! Self-consistent continuum solvation model
   !
   IF ( use_environ ) THEN
      !
-     !!!!!!!!!!!!!!!!!!!!!!!!!!! Initialisation !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     ! Periodic boundary corrections, which were possibly activated in PW
+     !
+#ifdef __MPI
+  IF (ionode) THEN
+#endif
+     if (do_makov_payne) then
+        assume_isolated = 'makov-payne'
+     elseif (do_comp_mt) then
+        assume_isolated = 'martyna-tuckerman'
+     elseif (do_comp_esm) then
+        assume_isolated = 'esm'
+     else
+        assume_isolated = 'none'
+     endif
+#ifdef __MPI
+  ENDIF
+  CALL mp_bcast(assume_isolated, ionode_id, world_comm)
+#endif
      !
      ! Copied from PW/src/input.f90
-     ! Note: in the routine "environ_base_init" the variable use_environ (from 
-     ! environ_base) is defined according to use_environ (from input_parameters).
-     ! In the Environ code the variable use_environ (from environ_base) is used.
-     !
-     ! Warning: There is something strange with the variable 'assume_isolated'!
-     ! It is not used currently.
      !
      CALL read_environ( nat, nsp, assume_isolated, ibrav )
      !
@@ -303,17 +328,6 @@ SUBROUTINE lr_readin
   ENDIF
   !
 #endif
-  !
-  !   Set wfc_dir - this is done here because read_file sets wfc_dir = tmp_dir
-  !   FIXME:,if wfcdir is not present in input, wfc_dir is set to "undefined"
-  !   instead of tmp_dir, because of the logic used in the rest of TDDFPT   
-  !
-  wfc_dir = trimcheck ( wfcdir )
-  !
-  !  Make sure all the features used in the PWscf calculation are actually
-  !   supported by TDDFPT.
-  !
-  CALL input_sanity()
   !
   !  Deallocate some variables created with read_file but not used in TDDFPT
   !
@@ -454,6 +468,9 @@ CONTAINS
     IF (okvan .AND. dft_is_hybrid()) &
          & CALL errore( ' iosys ', ' Linear response calculation ' // &
          & 'not implemented for EXX+Ultrasoft', 1 )
+    !
+    IF (do_comp_esm) CALL errore( 'lr_readin', ' Effective Screening Medium Method' // &
+         & 'not implemented in TDDFPT', 1 )
     !
     RETURN
     !

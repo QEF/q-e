@@ -108,6 +108,7 @@ lr_dav_main.o : ../../Modules/plugin_flags.o
 lr_dav_main.o : ../../Modules/uspp.o
 lr_dav_main.o : ../../Modules/version.o
 lr_dav_main.o : ../../Modules/wavefunctions.o
+lr_dav_main.o : ../../PW/src/martyna_tuckerman.o
 lr_dav_main.o : ../../PW/src/pwcom.o
 lr_dav_main.o : lr_dav_debug.o
 lr_dav_main.o : lr_dav_routines.o
@@ -237,6 +238,7 @@ lr_main.o : ../../Modules/plugin_flags.o
 lr_main.o : ../../Modules/uspp.o
 lr_main.o : ../../Modules/version.o
 lr_main.o : ../../Modules/wavefunctions.o
+lr_main.o : ../../PW/src/martyna_tuckerman.o
 lr_main.o : ../../PW/src/pwcom.o
 lr_main.o : lr_charg_resp.o
 lr_main.o : lr_lanczos.o
@@ -305,7 +307,9 @@ lr_readin.o : ../../Modules/paw_variables.o
 lr_readin.o : ../../Modules/plugin_flags.o
 lr_readin.o : ../../Modules/recvec.o
 lr_readin.o : ../../Modules/uspp.o
+lr_readin.o : ../../PW/src/esm.o
 lr_readin.o : ../../PW/src/exx.o
+lr_readin.o : ../../PW/src/martyna_tuckerman.o
 lr_readin.o : ../../PW/src/newd.o
 lr_readin.o : ../../PW/src/pwcom.o
 lr_readin.o : ../../PW/src/realus.o

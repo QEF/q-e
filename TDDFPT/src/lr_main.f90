@@ -42,7 +42,7 @@ PROGRAM lr_main
 
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions_module,  ONLY : psic
-  USE control_flags,         ONLY : tddfpt
+  USE control_flags,         ONLY : tddfpt, do_makov_payne
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE funct,                 ONLY : dft_is_hybrid
   USE fft_base,              ONLY : dffts
@@ -235,6 +235,7 @@ CONTAINS
     USE lr_variables, ONLY : no_hxc
     USE uspp,         ONLY : okvan
     USE funct,        only : dft_is_hybrid
+    USE martyna_tuckerman,   ONLY : do_comp_mt
 
     IMPLICIT NONE
 
@@ -249,6 +250,15 @@ CONTAINS
 !    WRITE( stdout, '(/5x,"----------------------------------------")' )
     !
     IF(okvan) WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )
+    !
+    IF (do_comp_mt) THEN
+       WRITE( stdout, '(/5x,"Martyna-Tuckerman periodic-boundary correction is used")' )
+    ELSEIF (do_makov_payne) THEN
+       WRITE( stdout, '(/5x,"WARNING! Makov-Payne periodic-boundary correction was activated in PWscf,",  &
+                      & /5x,"but it is of no use for TDDFPT. It just corrects the total energy in PWscf", &
+                      & /5x,"(post-processing correction) and nothing more, thus no effect on TDDFPT.", &
+                      & /5x,"You can try to use the Martyna-Tuckerman correction scheme instead.")' )
+    ENDIF
     !
     WRITE(stdout,'(/,5X,"Lanczos linear response spectrum calculation")')
     WRITE(stdout,'(5x,"Number of Lanczos iterations = ",i6)') itermax
