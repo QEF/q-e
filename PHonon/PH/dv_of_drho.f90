@@ -17,8 +17,8 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
   USE constants, ONLY : e2, fpi
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY: fwfft, invfft
-  USE gvect,     ONLY : nl, ngm, g,nlm
-  USE cell_base, ONLY : alat, tpiba2
+  USE gvect,     ONLY : nl, ngm, g,nlm, gstart
+  USE cell_base, ONLY : alat, tpiba2, omega
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag, nspin_gga
   USE funct,     ONLY : dft_is_gradient
   USE scf,       ONLY : rho, rho_core
@@ -27,7 +27,8 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
   USE qpoint,    ONLY : xq
   USE gc_ph,     ONLY : grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
   USE control_ph, ONLY : lrpa
-  USE control_flags, only : gamma_only
+  USE control_flags, only : gamma_only, tddfpt
+  USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt
   !OBM: gamma_only is disregarded for phonon calculations, TDDFPT purposes only
 
   implicit none
@@ -53,7 +54,13 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
 
   complex(DP), allocatable :: dvaux (:,:), drhoc (:)
   !  the change of the core charge
-  complex(DP), allocatable :: dvhart (:,:) !required in gamma_only
+  complex(DP), allocatable :: dvhart (:,:) 
+  complex(DP), allocatable :: dvaux_mt(:), rgtot(:)
+  ! auxiliary array for Martyna-Tuckerman correction in TDDFPT
+  ! total response density  
+  real(DP) :: eh_corr
+  ! Correction to response Hartree energy due to Martyna-Tuckerman correction 
+  ! (only TDDFT). Not used.
 
   call start_clock ('dv_of_drho')
   allocate (dvaux( dfftp%nnr,  nspin_mag))
@@ -105,31 +112,87 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
   !
   CALL fwfft ('Dense', dvscf(:,1), dfftp)
   !
-  ! hartree contribution is computed in reciprocal space
+  ! Hartree contribution is computed in reciprocal space
   !
-  if (gamma_only) then
-    allocate(dvhart(dfftp%nnr,nspin_mag))
-    dvhart(:,:) = (0.d0,0.d0)
-    do is = 1, nspin_lsda
+  IF (tddfpt .and. do_comp_mt) THEN
+      !
+      ! TDDFPT plus Martyna-Tuckerman correction
+      ! (gamma_only and general k-points are supported)
+      !
+      allocate(dvhart(dfftp%nnr,nspin_mag))
+      dvhart(:,:) = (0.d0,0.d0)
+      !
+      do is = 1, nspin_lsda
+        do ig = gstart, ngm
+          qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
+          dvhart(nl(ig),is) = e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
+        enddo
+      enddo 
+      !
+      ! Add Martyna-Tuckerman correction to response Hartree potential
+      !
+      allocate( dvaux_mt( ngm ), rgtot(ngm) )
+      !
+      ! Total response density
+      !
       do ig = 1, ngm
+         rgtot(ig) = dvscf(nl(ig),1)
+      enddo
+      !
+      CALL wg_corr_h (omega, ngm, rgtot, dvaux_mt, eh_corr)
+      !
+      do is = 1, nspin_lsda
+        !
+        do ig = 1, ngm
+           dvhart(nl(ig),is)  = dvhart(nl(ig),is)  + dvaux_mt(ig)
+        enddo
+        if (gamma_only) then
+           do ig = 1, ngm
+              dvhart(nlm(ig),is) = conjg(dvhart(nl(ig),is))
+           enddo
+        endif
+        !
+        ! Transform response Hartree potential to real space
+        !
+        CALL invfft ('Dense', dvhart (:,is), dfftp)
+        !
+      enddo
+      !
+      ! At the end the two contributions (Hartree+XC) are added
+      ! 
+      dvscf = dvaux + dvhart
+      !
+      deallocate( dvaux_mt, rgtot ) 
+      deallocate(dvhart)
+      !
+  ELSE
+   !
+   ! PHonon, and TDDFPT (without Martyna-Tuckerman correction)
+   !
+   if (gamma_only) then
+      allocate(dvhart(dfftp%nnr,nspin_mag))
+      dvhart(:,:) = (0.d0,0.d0)
+      !
+      do is = 1, nspin_lsda
+       do ig = 1, ngm
          qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
          if (qg2 > 1.d-8) then
             dvhart(nl(ig),is) = e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
             dvhart(nlm(ig),is)=conjg(dvhart(nl(ig),is))
          endif
+       enddo
+       !
+       !  and transformed back to real space
+       !
+       CALL invfft ('Dense', dvhart (:, is), dfftp)
       enddo
       !
-      !  and transformed back to real space
-      !
-      CALL invfft ('Dense', dvhart (:, is), dfftp)
-    enddo
-    !
-    ! at the end the two contributes are added
-    dvscf  = dvaux  + dvhart
-    !OBM : Again not totally convinced about this trimming.
-    !dvscf (:,:) = cmplx(DBLE(dvscf(:,:)),0.0d0,dp)
-    deallocate(dvhart)
-  else
+      ! at the end the two contributes are added
+      dvscf  = dvaux  + dvhart
+      !OBM : Again not totally convinced about this trimming.
+      !dvscf (:,:) = cmplx(DBLE(dvscf(:,:)),0.0d0,dp)
+      deallocate(dvhart)
+   else
     do is = 1, nspin_lsda
        CALL fwfft ('Dense', dvaux (:, is), dfftp)
        do ig = 1, ngm
@@ -147,7 +210,9 @@ subroutine dv_of_drho (mode, dvscf, add_nlcc)
     !
     ! at the end the two contributes are added
     dvscf (:,:) = dvaux (:,:)
-  endif
+   endif
+   !
+  ENDIF
   !
   if (add_nlcc) deallocate (drhoc)
   deallocate (dvaux)

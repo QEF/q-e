@@ -494,6 +494,7 @@ dv_of_drho.o : ../../Modules/funct.o
 dv_of_drho.o : ../../Modules/kind.o
 dv_of_drho.o : ../../Modules/noncol.o
 dv_of_drho.o : ../../Modules/recvec.o
+dv_of_drho.o : ../../PW/src/martyna_tuckerman.o
 dv_of_drho.o : ../../PW/src/scf_mod.o
 dv_of_drho.o : phcom.o
 dvanqq.o : ../../Modules/cell_base.o
