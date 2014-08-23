@@ -38,7 +38,7 @@ then
 
         case "$arch:$f90" in
 
-        x86_64:pgf* | x86_64:path* | x86_64:openf95 | crayxt*:* )
+        x86_64:path* | x86_64:openf95 | crayxt*:* )
                 # check for acml - note that it contains lapack as well
                 try_libdirs="/opt/acml*/pathscale64/lib/"
                 try_libdirs="$ld_library_path $libdirs $try_libdirs"
@@ -65,6 +65,76 @@ then
                                     have_acml=1 blas_libs="$try_loption $LIBS")                        
                         fi
                         
+                        if test "$ac_cv_search_dgemm" != "no"
+                        then break ; fi
+                done
+                ;;
+
+        x86_64:pgf* )
+                try_libdirs="/opt/acml*/pathscale64/lib/"
+                try_libdirs="$ld_library_path $libdirs $try_libdirs"
+
+                # Check first MKL...
+                for dir in none $try_libdirs
+                do
+                        unset ac_cv_search_dgemm # clear cached value
+                        if test "$dir" = "none"
+                        then
+                               try_loption=
+                        else
+                                echo $ECHO_N "in $dir: " $ECHO_C
+                                try_loption="-L$dir"
+                        fi
+
+                        # Check first MKL...
+                        FFLAGS="$test_fflags"
+                        LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
+                        LIBS="$MKL_LIBS"
+
+                        if test "$use_openmp" -eq 0; then
+                              AC_SEARCH_LIBS(dgemm, mkl_intel_lp64,
+                                 have_blas=1 have_mkl=1
+                                 blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core"
+                                 ldflags="$MKL_FLAGS $ldflags",
+                                 echo "MKL not found",
+                                 -lmkl_sequential -lmkl_core -ldl)
+                        else
+                              AC_SEARCH_LIBS(dgemm, mkl_intel_lp64,
+                                 have_blas=1 have_mkl=1
+                                 blas_libs="$try_loption $LIBS -lmkl_core -lmkl_pgi_thread"
+                                 ldflags="$MKL_FLAGS $ldflags",
+                                 echo "MKL not found",
+                                 -lmkl_sequential -lmkl_core -ldl -lpthread -lm)
+                        fi
+
+                        if test "$ac_cv_search_dgemm" != "no"
+                        then break ; fi
+                done
+
+                # ... then ACML
+                for dir in none $try_libdirs
+                do
+                        unset ac_cv_search_dgemm # clear cached value
+                        if test "$dir" = "none"
+                        then
+                               try_loption=
+                        else
+                                echo $ECHO_N "in $dir: " $ECHO_C
+                                try_loption="-L$dir"
+                        fi
+
+                        FFLAGS="$test_fflags"
+                        LDFLAGS="$test_ldflags $try_loption"
+                        LIBS=""
+
+                        if test "$use_openmp" -eq 0; then
+                                AC_SEARCH_LIBS(dgemm, acml, have_blas=1 have_lapack=1
+                                    have_acml=1 blas_libs="$try_loption $LIBS")
+                        else
+                                AC_SEARCH_LIBS(dgemm, acml_mp, have_blas=1 have_lapack=1
+                                    have_acml=1 blas_libs="$try_loption $LIBS")
+                        fi
+
                         if test "$ac_cv_search_dgemm" != "no"
                         then break ; fi
                 done

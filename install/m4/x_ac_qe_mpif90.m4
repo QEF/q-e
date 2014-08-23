@@ -176,6 +176,8 @@ case "$arch" in
                 version=`echo $pgf_version | awk '{print $2}'`
                 echo "${ECHO_T}pgf90 $version"
                 f90_in_mpif90="pgf90"
+                # flag to test MKL with PGI
+                MKL_FLAGS="-pgf90libs"
         elif test "$enzo_version" != ""
         then
                 version=`echo $enzo_version | awk '{print $6}'`
