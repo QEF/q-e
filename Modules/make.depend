@@ -224,6 +224,7 @@ read_cards.o : kind.o
 read_cards.o : parser.o
 read_cards.o : wannier_new.o
 read_cards.o : wrappers.o
+read_cards.o : wypos.o
 read_input.o : ../iotk/src/iotk_module.o
 read_input.o : input_parameters.o
 read_input.o : io_global.o
@@ -365,6 +366,7 @@ write_upf_v2.o : kind.o
 write_upf_v2.o : pseudo_types.o
 write_upf_v2.o : radial_grids.o
 ws_base.o : kind.o
+wypos.o : kind.o
 xc_rVV10.o : cell_base.o
 xc_rVV10.o : constants.o
 xc_rVV10.o : control_flags.o

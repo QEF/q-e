@@ -29,15 +29,10 @@ CONTAINS
       REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: outco   
 
 
-      ALLOCATE(inco(not_eq,3))
+      ALLOCATE(inco(3,not_eq))
       ALLOCATE(msym_n(not_eq))
      
-      !conversione tra tau e inco
-        DO i=1,not_eq
-            inco(i,1)=tau(1,i)
-            inco(i,2)=tau(2,i)
-            inco(i,3)=tau(3,i)  
-        END DO
+     inco=tau
 
      !conv from uniqueb,rhombohedral,choice to unique
          unique='1'
@@ -53,7 +48,7 @@ CONTAINS
   
      IF (((ibrav==12).or.(ibrav==13)).and.(unique=='2')) ibrav=-ibrav
      
-     ALLOCATE(outco(not_eq,sym_n,3))
+     ALLOCATE(outco(3,sym_n,not_eq))
      
      !make symmetries, convert coordinates, esclusion
      DO i=1,not_eq
@@ -80,9 +75,9 @@ CONTAINS
         END IF
         !
         DO k=1,msym_n(i)
-           tautot(1,k+l)=outco(i,k,1)
-           tautot(2,k+l)=outco(i,k,2)
-           tautot(3,k+l)=outco(i,k,3)
+           tautot(1,k+l)=outco(1,k,i)
+           tautot(2,k+l)=outco(2,k,i)
+           tautot(3,k+l)=outco(3,k,i)
            ityptot(k+l) = ityp(i)
            extfortot(:,k+l) = extfor(:,i)
         END DO
@@ -116,26 +111,26 @@ END SUBROUTINE clean_spacegroup
       CASE (2) !fcc
       DO k=1,not_eq
          DO i=1,sym_n
-            tmpx=outco(k,i,1)
-            tmpy=outco(k,i,2)
-            tmpz=outco(k,i,3)
+            tmpx=outco(1,i,k)
+            tmpy=outco(2,i,k)
+            tmpz=outco(3,i,k)
             
-            outco(k,i,1)=-tmpx-tmpy+tmpz
-            outco(k,i,2)=tmpx+tmpy+tmpz
-            outco(k,i,3)=-tmpx-tmpz+tmpy
+            outco(1,i,k)=-tmpx-tmpy+tmpz
+            outco(2,i,k)=tmpx+tmpy+tmpz
+            outco(3,i,k)=-tmpx-tmpz+tmpy
          END DO
       END DO
 
       CASE (3) !bcc
       DO k=1,not_eq
          DO i=1,sym_n
-            tmpx=outco(k,i,1)
-            tmpy=outco(k,i,2)
-            tmpz=outco(k,i,3)
+            tmpx=outco(1,i,k)
+            tmpy=outco(2,i,k)
+            tmpz=outco(3,i,k)
             
-            outco(k,i,1)=tmpx+tmpz
-            outco(k,i,2)=tmpy-tmpx
-            outco(k,i,3)=tmpz-tmpy
+            outco(1,i,k)=tmpx+tmpz
+            outco(2,i,k)=tmpy-tmpx
+            outco(3,i,k)=tmpz-tmpy
          END DO
       END DO
 
@@ -143,13 +138,13 @@ END SUBROUTINE clean_spacegroup
          IF (unique=='2') THEN
             DO k=1,not_eq
                DO i=1,sym_n
-                  tmpx=outco(k,i,1)
-                  tmpy=outco(k,i,2)
-                  tmpz=outco(k,i,3)
+                  tmpx=outco(1,i,k)
+                  tmpy=outco(2,i,k)
+                  tmpz=outco(3,i,k)
          
-                  outco(k,i,1)=tmpx-tmpy+tmpz
-                  outco(k,i,2)=tmpy+tmpz
-                  outco(k,i,3)=tmpz-tmpx
+                  outco(1,i,k)=tmpx-tmpy+tmpz
+                  outco(2,i,k)=tmpy+tmpz
+                  outco(3,i,k)=tmpz-tmpx
                END DO
             END DO
          END IF   
@@ -157,87 +152,87 @@ END SUBROUTINE clean_spacegroup
       CASE (7) !Body Centred Tetragonal
       DO k=1,not_eq
          DO i=1,sym_n
-            tmpx=outco(k,i,1)
-            tmpy=outco(k,i,2)
-            tmpz=outco(k,i,3)
+            tmpx=outco(1,i,k)
+            tmpy=outco(2,i,k)
+            tmpz=outco(3,i,k)
             
-            outco(k,i,1)=tmpx-tmpy
-            outco(k,i,2)=tmpy+tmpz
-            outco(k,i,3)=tmpz-tmpx
+            outco(1,i,k)=tmpx-tmpy
+            outco(2,i,k)=tmpy+tmpz
+            outco(3,i,k)=tmpz-tmpx
          END DO
       END DO
 
       CASE (9) !Base Centrata ORTHORHOMBIC C
       DO k=1,not_eq
          DO i=1,sym_n
-            tmpx=outco(k,i,1)
-            tmpy=outco(k,i,2)
-            tmpz=outco(k,i,3)
+            tmpx=outco(1,i,k)
+            tmpy=outco(2,i,k)
+            tmpz=outco(3,i,k)
             
-            outco(k,i,1)=tmpx+tmpy
-            outco(k,i,2)=tmpy-tmpx
-            outco(k,i,3)=tmpz
+            outco(1,i,k)=tmpx+tmpy
+            outco(2,i,k)=tmpy-tmpx
+            outco(3,i,k)=tmpz
          END DO
       END DO
 
       CASE (91) !Base Centrata ORTHORHOMBIC A
       DO k=1,not_eq
          DO i=1,sym_n
-            tmpx=outco(k,i,1)
-            tmpy=outco(k,i,2)
-            tmpz=outco(k,i,3)
+            tmpx=outco(1,i,k)
+            tmpy=outco(2,i,k)
+            tmpz=outco(3,i,k)
 
-            outco(k,i,1)=tmpx
-            outco(k,i,2)=tmpy+tmpz
-            outco(k,i,3)=tmpy-tmpz
+            outco(1,i,k)=tmpx
+            outco(2,i,k)=tmpy+tmpz
+            outco(3,i,k)=tmpy-tmpz
          END DO
       END DO
 
       CASE (10) !Tutte le faccie centrate ORTHORHOMBIC
       DO k=1,not_eq
          DO i=1,sym_n
-            tmpx=outco(k,i,1)
-            tmpy=outco(k,i,2)
-            tmpz=outco(k,i,3)
+            tmpx=outco(1,i,k)
+            tmpy=outco(2,i,k)
+            tmpz=outco(3,i,k)
 
-            outco(k,i,1)=tmpx-tmpy+tmpz
-            outco(k,i,2)=tmpx+tmpy-tmpz
-            outco(k,i,3)=-tmpx+tmpy+tmpz
+            outco(1,i,k)=tmpx-tmpy+tmpz
+            outco(2,i,k)=tmpx+tmpy-tmpz
+            outco(3,i,k)=-tmpx+tmpy+tmpz
          END DO
       END DO
       
       CASE (11) !Corpo Centrato ORTHORHOMBIC
       DO k=1,not_eq
          DO i=1,sym_n
-            tmpx=outco(k,i,1)
-            tmpy=outco(k,i,2)
-            tmpz=outco(k,i,3)
+            tmpx=outco(1,i,k)
+            tmpy=outco(2,i,k)
+            tmpz=outco(3,i,k)
             
-            outco(k,i,1)=tmpx+tmpz
-            outco(k,i,2)=tmpy-tmpx
-            outco(k,i,3)=tmpz-tmpy
+            outco(1,i,k)=tmpx+tmpz
+            outco(2,i,k)=tmpy-tmpx
+            outco(3,i,k)=tmpz-tmpy
          END DO
       END DO
 
       CASE (13) !Centrato C unique MONOCLINO
       DO k=1,not_eq
          DO i=1,sym_n
-            tmpx=outco(k,i,1)
-            tmpz=outco(k,i,3)
+            tmpx=outco(1,i,k)
+            tmpz=outco(3,i,k)
 
-            outco(k,i,1)=tmpx-tmpz
-            outco(k,i,3)=tmpz+tmpx
+            outco(1,i,k)=tmpx-tmpz
+            outco(3,i,k)=tmpz+tmpx
          END DO
       END DO
 
       CASE (-13) !Centrato B unique MONOCLINO
       DO k=1,not_eq
          DO i=1,sym_n
-            tmpx=outco(k,i,1)
-            tmpy=outco(k,i,2)
+            tmpx=outco(1,i,k)
+            tmpy=outco(2,i,k)
       
-            outco(k,i,1)=tmpx-tmpy
-            outco(k,i,2)=tmpy+tmpx
+            outco(1,i,k)=tmpx-tmpy
+            outco(2,i,k)=tmpy+tmpx
          END DO
       END DO
       
@@ -252,48 +247,48 @@ END SUBROUTINE clean_spacegroup
       INTEGER :: i
          DO i=1, sym_n
             DO
-            IF (outco(k,i,1)>=1.0_DP) THEN
-               outco(k,i,1)=outco(k,i,1)-1.0_DP
+            IF (outco(1,i,k)>=1.0_DP) THEN
+               outco(1,i,k)=outco(1,i,k)-1.0_DP
             else
                EXIT
             END IF
             END DO
 
             DO
-            IF (outco(k,i,2)>=1.0_DP) THEN
-               outco(k,i,2)=outco(k,i,2)-1.0_DP
+            IF (outco(2,i,k)>=1.0_DP) THEN
+               outco(2,i,k)=outco(2,i,k)-1.0_DP
             else
                EXIT
             END IF
             END DO
 
             DO
-            IF (outco(k,i,3)>=1.0_DP) THEN
-               outco(k,i,3)=outco(k,i,3)-1.0_DP
+            IF (outco(3,i,k)>=1.0_DP) THEN
+               outco(3,i,k)=outco(3,i,k)-1.0_DP
             else
                EXIT
             END IF
             END DO
 
             DO
-            IF (outco(k,i,1)<0.0_DP) THEN
-               outco(k,i,1)=outco(k,i,1)+1.0_DP
+            IF (outco(1,i,k)<0.0_DP) THEN
+               outco(1,i,k)=outco(1,i,k)+1.0_DP
             else
                EXIT
             END IF
             END DO
 
             DO
-            IF (outco(k,i,2)<0.0_DP) THEN
-               outco(k,i,2)=outco(k,i,2)+1.0_DP
+            IF (outco(2,i,k)<0.0_DP) THEN
+               outco(2,i,k)=outco(2,i,k)+1.0_DP
             else
                EXIT
             END IF
             END DO
 
             DO
-            IF (outco(k,i,3)<0.0_DP) THEN
-               outco(k,i,3)=outco(k,i,3)+1.0_DP
+            IF (outco(3,i,k)<0.0_DP) THEN
+               outco(3,i,k)=outco(3,i,k)+1.0_DP
             else
                EXIT
             END IF
@@ -314,7 +309,7 @@ END SUBROUTINE clean_spacegroup
 
       eps=1.D-6
 
-      ALLOCATE(temp(not_eq,sym_n,3))
+      ALLOCATE(temp(3,sym_n,not_eq))
 
       DO k=1,not_eq
          l=0
@@ -322,9 +317,9 @@ END SUBROUTINE clean_spacegroup
             bol=.false.
             i=j+1
             DO while (i<=sym_n)
-               IF ((abs(outco(k,j,1)-outco(k,i,1))<eps).and.&
-                   (abs(outco(k,j,2)-outco(k,i,2))<eps).and.&
-                   (abs(outco(k,j,3)-outco(k,i,3))<eps)) THEN
+               IF ((abs(outco(1,j,k)-outco(1,i,k))<eps).and.&
+                   (abs(outco(2,j,k)-outco(2,i,k))<eps).and.&
+                   (abs(outco(3,j,k)-outco(3,i,k))<eps)) THEN
                   bol=.true.
                END IF
             i=i+1
@@ -332,9 +327,9 @@ END SUBROUTINE clean_spacegroup
          
             IF (.not.bol) THEN
                l=l+1
-               temp(k,l,1)=outco(k,j,1)
-               temp(k,l,2)=outco(k,j,2)
-               temp(k,l,3)=outco(k,j,3)
+               temp(1,l,k)=outco(1,j,k)
+               temp(2,l,k)=outco(2,j,k)
+               temp(3,l,k)=outco(3,j,k)
             END IF
          END DO
          msym_n(k)=l
@@ -348,4 +343,3 @@ END SUBROUTINE clean_spacegroup
 END SUBROUTINE esclusion
 
 END MODULE wyckoff
-   

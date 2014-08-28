@@ -15,10 +15,12 @@ MODULE read_cards_module
    USE kinds,     ONLY : DP
    USE io_global, ONLY : stdout
    USE constants, ONLY : angstrom_au
+   USE wy_pos,    ONLY : wypos
    USE parser,    ONLY : field_count, read_line, get_field, parse_unit
    USE io_global, ONLY : ionode, ionode_id
    !
    USE input_parameters
+   !
    !
    IMPLICIT NONE
    !
@@ -422,7 +424,8 @@ CONTAINS
                CALL errore( 'read_cards', &
                            'ATOMIC_POSITIONS with sic, 8 columns required', 1 )
          !
-         IF ( nfield /= 4 .and. nfield /= 7 .and. nfield /= 8) &
+         IF ( nfield /= 4 .and. nfield /= 7 .and. nfield /= 8 .and. & !Modifica 1
+               nfield/=2 .and. nfield/=6 .and. nfield/=5) &
                CALL errore( 'read_cards', 'wrong number of columns ' // &
                            & 'in ATOMIC_POSITIONS', ia )
 
@@ -433,30 +436,55 @@ CONTAINS
          error_msg = 'Error while parsing atomic position card.'
          ! read field 2 (atom X coordinate)
          CALL get_field(2, field_str, input_line)
-         rd_pos(1,ia) = feval_infix(ierr, field_str )
-         CALL errore('card_atomic_positions', error_msg, ierr)
-         ! read field 2 (atom Y coordinate)
-         CALL get_field(3, field_str, input_line)
-         rd_pos(2,ia) = feval_infix(ierr, field_str )
-         CALL errore('card_atomic_positions', error_msg, ierr)
-         ! read field 2 (atom Z coordinate)
-         CALL get_field(4, field_str, input_line)
-         rd_pos(3,ia) = feval_infix(ierr, field_str )
-         CALL errore('card_atomic_positions', error_msg, ierr)
-               !
-         IF ( nfield >= 7 ) THEN
-            ! read constrains (fields 5-7, if present)
-            CALL get_field(5, field_str, input_line)
-            READ(field_str, *) if_pos(1,ia)
-            CALL get_field(6, field_str, input_line)
-            READ(field_str, *) if_pos(2,ia)
-            CALL get_field(7, field_str, input_line)
-            READ(field_str, *) if_pos(3,ia)
-         ENDIF
-         !
-         IF ( nfield == 8 ) THEN
-            CALL get_field(5, field_str, input_line)
-            READ(field_str, *) id_loc(ia)
+         !     
+         !If the ia position is expressed in wyckoff position.
+         IF (lsg.AND.LEN_TRIM(field_str)<4.AND.&
+              ((IACHAR(field_str(2:2))>64.AND.IACHAR(field_str(2:2))<123)&
+             .OR.(IACHAR(field_str(3:3))>64.AND.&
+                  IACHAR(field_str(3:3))<123))) THEN
+                  !wyckoff position case 
+            CALL wypos(rd_pos(1,ia),field_str,space_group, &
+                 uniqueb,rhombohedral,origin_choice)
+            !
+            IF ( nfield >= 5 ) THEN
+               ! read constrains (fields 3-5, if present)
+               CALL get_field(3, field_str, input_line)
+               READ(field_str, *) if_pos(1,ia)
+               CALL get_field(4, field_str, input_line)
+               READ(field_str, *) if_pos(2,ia)
+               CALL get_field(5, field_str, input_line)
+               READ(field_str, *) if_pos(3,ia)
+            ENDIF
+            !
+            IF ( nfield == 6 ) THEN
+               CALL get_field(6, field_str, input_line)
+               READ(field_str, *) id_loc(ia)
+            ENDIF
+         ELSE
+            rd_pos(1,ia) = feval_infix(ierr, field_str )
+            CALL errore('card_atomic_positions', error_msg, ierr)
+            ! read field 2 (atom Y coordinate)
+            CALL get_field(3, field_str, input_line)
+            rd_pos(2,ia) = feval_infix(ierr, field_str )
+            CALL errore('card_atomic_positions', error_msg, ierr)
+            ! read field 2 (atom Z coordinate)
+            CALL get_field(4, field_str, input_line)
+            rd_pos(3,ia) = feval_infix(ierr, field_str )
+            CALL errore('card_atomic_positions', error_msg, ierr)
+            IF ( nfield >= 7 ) THEN
+               ! read constrains (fields 5-7, if present)
+               CALL get_field(5, field_str, input_line)
+               READ(field_str, *) if_pos(1,ia)
+               CALL get_field(6, field_str, input_line)
+               READ(field_str, *) if_pos(2,ia)
+               CALL get_field(7, field_str, input_line)
+               READ(field_str, *) if_pos(3,ia)
+            ENDIF
+            !
+            IF ( nfield == 8 ) THEN
+               CALL get_field(5, field_str, input_line)
+               READ(field_str, *) id_loc(ia)
+            ENDIF
          ENDIF
          !
          match_label: DO is = 1, ntyp

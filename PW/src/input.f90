@@ -230,7 +230,9 @@ SUBROUTINE iosys()
                                ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,     &
                                xdm, xdm_a1, xdm_a2,                           &
                                one_atom_occupations,                          &
-                               esm_bc, esm_efield, esm_w, esm_nfit
+                               esm_bc, esm_efield, esm_w, esm_nfit,           &
+                               space_group, uniqueb, origin_choice,           &
+                               rhombohedral
   !
   ! ... ELECTRONS namelist
   !
@@ -249,7 +251,8 @@ SUBROUTINE iosys()
                                refold_pos, remove_rigid_rot, upscale,          &
                                pot_extrapolation,  wfc_extrapolation,          &
                                w_1, w_2, trust_radius_max, trust_radius_min,   &
-                               trust_radius_ini, bfgs_ndim
+                               trust_radius_ini, bfgs_ndim, rd_pos, sp_pos, &
+                               rd_for, lsg
   !
   ! ... CELL namelist
   !
@@ -275,14 +278,15 @@ SUBROUTINE iosys()
   USE tsvdw_module,          ONLY : vdw_isolated, vdw_econv_thr
   USE us,                    ONLY : spline_ps_ => spline_ps
   !
-  USE input_parameters,       ONLY : deallocate_input_parameters
+  USE input_parameters,      ONLY : deallocate_input_parameters
+  USE wyckoff,               ONLY : nattot, sup_spacegroup
   !
   IMPLICIT NONE
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   INTEGER, EXTERNAL :: read_config_from_file
   !
-  INTEGER  :: ia, nt, inlc, ierr
+  INTEGER  :: ia, nt, inlc, ibrav_sg, ierr
   LOGICAL  :: exst, parallelfs
   REAL(DP) :: theta, phi
   !
@@ -1222,6 +1226,26 @@ SUBROUTINE iosys()
      vdw_econv_thr= ts_vdw_econv_thr
   END IF
   !
+  !  calculate all the atomic positions if only the inequivalent ones
+  !  have been given.
+  !  NB: ibrav is an output of this routine
+  !
+  IF (lsg) THEN
+     IF (space_group==0) &
+        CALL errore('input','The option crystal_sg requires the space group &
+                                                   &number',1 )
+        
+     CALL sup_spacegroup(rd_pos,sp_pos,rd_for,space_group,nat,uniqueb,&
+              rhombohedral,origin_choice,ibrav_sg)
+     IF (ibrav==-1) THEN
+        ibrav=ibrav_sg
+     ELSEIF (ibrav /= ibrav_sg) THEN
+        CALL errore ('input','Input ibrav not compatible with space group &
+                                                   &number',1 )
+     ENDIF
+     nat_=nattot
+  ENDIF
+  !
   ! QM/MM specific parameters
   !
   IF (.NOT. tqmmm) CALL qmmm_config( mode=-1 )
@@ -1256,11 +1280,13 @@ SUBROUTINE iosys()
   !
   ! ... read following cards
   !
+
   ALLOCATE( ityp( nat_ ) )
   ALLOCATE( tau(    3, nat_ ) )
   ALLOCATE( force(  3, nat_ ) )
   ALLOCATE( if_pos( 3, nat_ ) )
   ALLOCATE( extfor( 3, nat_ ) )
+
   IF ( tfixed_occ ) THEN
      IF ( nspin_ == 4 ) THEN
         ALLOCATE( f_inp( nbnd_, 1 ) )
@@ -1440,13 +1466,16 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   USE kinds,              ONLY : DP
   USE input_parameters,   ONLY : atom_label, atom_pfile, atom_mass, taspc, &
                                  tapos, rd_pos, atomic_positions, if_pos,  &
-                                 sp_pos, f_inp, rd_for, tavel, sp_vel, rd_vel
+                                 sp_pos, f_inp, rd_for, tavel, sp_vel, rd_vel, &
+                                 lsg
   USE dynamics_module,    ONLY : vel
   USE cell_base,          ONLY : at, ibrav
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm, extfor
   USE fixed_occ,          ONLY : tfixed_occ, f_inp_ => f_inp
   USE ions_base,          ONLY : if_pos_ =>  if_pos, amass, fixatom
   USE control_flags,      ONLY : textfor, tv0rd
+  USE wyckoff,            ONLY : nattot, tautot, ityptot, extfortot, &
+                                 clean_spacegroup
   !
   IMPLICIT NONE
   !
@@ -1481,13 +1510,20 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   textfor = .false.
   IF( any( rd_for /= 0.0_DP ) ) textfor = .true.
   !
-  DO ia = 1, nat
-     !
-     tau(:,ia) = rd_pos(:,ia)
-     ityp(ia)  = sp_pos(ia)
-     extfor(:,ia) = rd_for(:,ia)
-     !
-  ENDDO
+  IF (lsg) THEN
+     tau(:,:)=tautot(:,:)
+     ityp(:) = ityptot(:)
+     extfor(:,:) = extfor(:,:)
+     CALL clean_spacegroup()
+  ELSE 
+     DO ia = 1, nat
+        !
+        tau(:,ia) = rd_pos(:,ia)
+        ityp(ia)  = sp_pos(ia)
+        extfor(:,ia) = rd_for(:,ia)
+        !
+     ENDDO
+  ENDIF
   !
   ! ... check for initial velocities read from input file
   !

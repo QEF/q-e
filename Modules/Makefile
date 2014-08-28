@@ -108,6 +108,7 @@ xc_vdW_DF.o \
 xc_rVV10.o \
 xml_input.o \
 xml_io_base.o \
+wypos.o \
 zdotc_wrapper.o \
 zhpev_drv.o 
 
