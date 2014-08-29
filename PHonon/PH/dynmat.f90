@@ -68,9 +68,13 @@ end Module dynamical
 !  lplasma logical    .true. to calculate Gamma-point mode effective plasma 
 !                     frequencies, automatically triggers lperm = .true. 
 !                     (default: lplasma=.false.)
-!  filout  character output file containing frequencies and modes
+!  filout  character output file containing phonon frequencies and normalized
+!                    phonon displacements (i.e. eigenvectors divided by the
+!                    square root of the mass and then normalized; they are
+!                    not orthogonal)
 !                    (default: filout='dynmat.out')
-!  fileig  character output file containing frequencies and eigenvectors
+!  fileig  character output file containing phonon frequencies and eigenvectors
+!                    of the dynamical matrix (they are orthogonal)
 !                    (default: fileig=' ')
 !  filmol  character as above, in a format suitable for 'molden'
 !                    (default: filmol='dynmat.mold')

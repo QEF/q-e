@@ -77,13 +77,12 @@ PROGRAM matdyn
   !     flfrq     output file for frequencies (default: 'matdyn.freq')
   !     flvec     output file for normalized phonon displacements 
   !               (default: 'matdyn.modes'). The normalized phonon displacements
-  !               are the eigenvectors divided by the mass and then normalized.
-  !               As such they are not orthogonal.
-  !              
+  !               are the eigenvectors divided by the square root of the mass,
+  !               then normalized. As such they are not orthogonal.
   !     fleig     output file for phonon eigenvectors (default: 'matdyn.eig')
   !               The phonon eigenvectors are the eigenvectors of the dynamical
-  !               matrix.
-  !     fldyn     output file for dynamical matrix (default: ' ' i.e. does not write)
+  !               matrix. They are orthogonal.
+  !     fldyn     output file for dynamical matrix (default: ' ' i.e. not written)
   !     at        supercell lattice vectors - must form a superlattice of the
   !               original lattice (default: use original cell)
   !     l1,l2,l3  supercell lattice vectors are original cell vectors times
