@@ -13,6 +13,8 @@ Incompatible changes in 5.1 version:
 
 New in svn version:
 
+   * Added vdW-DF-cx, Berland and Hyldgaard, PRB 89, 035412 (2014)
+     (courtesy of Timo Thonhauser)
    * PW: TB09 meta-GGA functional (requires libxc)
    * PW: the code can capture "signals". typically sent by batch queues
      when allowed time is close to expire, and terminate gracefully.
@@ -28,6 +30,8 @@ Fixed in svn version:
      breaking restart and postprocessing (no problem for scf)
    * Strange compilation bug on some IBM machines
    * Minor bug plus OpenMP bug in ESM implementation
+   * Small bug leading to crashes when restarting some type of constrained
+     magnetization calculations (courtesy of Florian Thoele, ETHZ)
 
 New in 5.1 version:
 

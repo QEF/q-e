@@ -859,6 +859,7 @@ input.o : pwcom.o
 input.o : realus.o
 input.o : start_k.o
 input.o : symm_base.o
+input.o : wyckoff.o
 input.o : xdm_dispersion.o
 interpolate.o : ../../Modules/control_flags.o
 interpolate.o : ../../Modules/fft_base.o
