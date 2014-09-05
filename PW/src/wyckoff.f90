@@ -4,24 +4,26 @@ USE space_group, ONLY : sym_brav, find_equivalent_tau
 IMPLICIT NONE
 
 INTEGER :: nattot
-REAL(DP), ALLOCATABLE :: tautot(:,:)
-INTEGER, ALLOCATABLE :: ityptot(:), extfortot(:,:)
+REAL(DP), ALLOCATABLE :: tautot(:,:), extfortot(:,:)
+INTEGER, ALLOCATABLE :: ityptot(:), if_postot(:,:)
 
 SAVE
 PRIVATE
 
-PUBLIC sup_spacegroup, clean_spacegroup, nattot, tautot, ityptot, extfortot
+PUBLIC sup_spacegroup, clean_spacegroup, nattot, tautot, ityptot, extfortot, &
+       if_postot
 
 CONTAINS
 
-   SUBROUTINE sup_spacegroup(tau,ityp,extfor,space_group_number,not_eq,uniqueb,&
-              rhombohedral,choice,ibrav)
+   SUBROUTINE sup_spacegroup(tau,ityp,extfor,if_pos,space_group_number,not_eq,&
+              uniqueb,rhombohedral,choice,ibrav)
       INTEGER, INTENT(IN) :: space_group_number, choice
       LOGICAL, INTENT (IN) :: uniqueb, rhombohedral
       INTEGER, INTENT (INOUT) ::  not_eq
       INTEGER, INTENT(OUT) :: ibrav
       REAL(DP), DIMENSION(:,:), ALLOCATABLE, INTENT(IN) :: tau, extfor
       INTEGER, DIMENSION(:), ALLOCATABLE, INTENT(IN) :: ityp
+      INTEGER, DIMENSION(:,:), ALLOCATABLE, INTENT(IN) :: if_pos
       INTEGER :: i,k,l,n,sym_n
       INTEGER,DIMENSION(:),allocatable :: msym_n 
       character(LEN=1) :: unique
@@ -66,6 +68,7 @@ CONTAINS
      ALLOCATE(tautot(3,nattot))
      ALLOCATE(ityptot(nattot))
      ALLOCATE(extfortot(3,nattot))
+     ALLOCATE(if_postot(3,nattot))
 
      !conversione tra outco e tau
      l=0
@@ -79,6 +82,7 @@ CONTAINS
            tautot(2,k+l)=outco(2,k,i)
            tautot(3,k+l)=outco(3,k,i)
            ityptot(k+l) = ityp(i)
+           if_postot(:,k+l) = if_pos(:,i)
            extfortot(:,k+l) = extfor(:,i)
         END DO
      END DO
@@ -95,6 +99,7 @@ SUBROUTINE clean_spacegroup
 DEALLOCATE(tautot)
 DEALLOCATE(ityptot)
 DEALLOCATE(extfortot)
+DEALLOCATE(if_postot)
 
 RETURN
 END SUBROUTINE clean_spacegroup

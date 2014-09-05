@@ -252,7 +252,7 @@ SUBROUTINE iosys()
                                pot_extrapolation,  wfc_extrapolation,          &
                                w_1, w_2, trust_radius_max, trust_radius_min,   &
                                trust_radius_ini, bfgs_ndim, rd_pos, sp_pos, &
-                               rd_for, lsg
+                               rd_for, rd_if_pos => if_pos, lsg
   !
   ! ... CELL namelist
   !
@@ -1235,8 +1235,8 @@ SUBROUTINE iosys()
         CALL errore('input','The option crystal_sg requires the space group &
                                                    &number',1 )
         
-     CALL sup_spacegroup(rd_pos,sp_pos,rd_for,space_group,nat,uniqueb,&
-              rhombohedral,origin_choice,ibrav_sg)
+     CALL sup_spacegroup(rd_pos,sp_pos,rd_for,rd_if_pos,space_group,nat,&
+              uniqueb,rhombohedral,origin_choice,ibrav_sg)
      IF (ibrav==-1) THEN
         ibrav=ibrav_sg
      ELSEIF (ibrav /= ibrav_sg) THEN
@@ -1475,7 +1475,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   USE ions_base,          ONLY : if_pos_ =>  if_pos, amass, fixatom
   USE control_flags,      ONLY : textfor, tv0rd
   USE wyckoff,            ONLY : nattot, tautot, ityptot, extfortot, &
-                                 clean_spacegroup
+                                 if_postot, clean_spacegroup
   !
   IMPLICIT NONE
   !
@@ -1514,6 +1514,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
      tau(:,:)=tautot(:,:)
      ityp(:) = ityptot(:)
      extfor(:,:) = extfortot(:,:)
+     if_pos_(:,:) = if_postot(:,:)
      CALL clean_spacegroup()
   ELSE 
      DO ia = 1, nat
@@ -1521,6 +1522,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
         tau(:,ia) = rd_pos(:,ia)
         ityp(ia)  = sp_pos(ia)
         extfor(:,ia) = rd_for(:,ia)
+        if_pos_(:,ia) = if_pos(:,ia)
         !
      ENDDO
   ENDIF
@@ -1542,7 +1544,6 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   ! ... if_pos whose value is 0 when the coordinate is to be kept fixed, 1
   ! ... otherwise. 
   !
-  if_pos_(:,:) = if_pos(:,1:nat)
   fixatom = COUNT( if_pos_(1,:)==0 .AND. if_pos_(2,:)==0 .AND. if_pos_(3,:)==0 )
   !
   tau_format = trim( atomic_positions )
