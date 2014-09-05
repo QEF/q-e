@@ -24,7 +24,7 @@ x_gamma_extrapolation=".TRUE."
 exxdiv_treatment="gygi-baldereschi"
 if [ ! -z "$1" ] ; then exxdiv_treatment="$1" ; fi
 if [ "$exxdiv_treatment" = "vcut_ws" ] ; then x_gamma_extrapolation=.FALSE. ; fi
-if [ "$exxdiv_treatment" = "vcut_spheric" ] ; then x_gamma_extrapolation=.FALSE. ; fi
+if [ "$exxdiv_treatment" = "vcut_spherical" ] ; then x_gamma_extrapolation=.FALSE. ; fi
 ecutvcut=0.7
 
 $ECHO
