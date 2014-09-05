@@ -1513,7 +1513,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   IF (lsg) THEN
      tau(:,:)=tautot(:,:)
      ityp(:) = ityptot(:)
-     extfor(:,:) = extfor(:,:)
+     extfor(:,:) = extfortot(:,:)
      CALL clean_spacegroup()
   ELSE 
      DO ia = 1, nat
