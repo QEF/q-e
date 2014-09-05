@@ -59,7 +59,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   ! the point k+q
   ! counter on G vetors
 
-  COMPLEX(DP), ALLOCATABLE :: ps (:,:), hpsi (:,:), spsi (:,:)
+  COMPLEX(DP), allocatable :: ps (:,:), hpsi (:,:), spsi (:,:)
   ! scalar products
   ! the product of the Hamiltonian and h
   ! the product of the S matrix and h
@@ -120,7 +120,6 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   IF(gamma_only) THEN
 
        CALL ch_psi_all_gamma()
-
     ELSE
 
        IF(tddfpt) THEN
@@ -131,10 +130,8 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
        ENDIF
           
        CALL ch_psi_all_k()
-
   ENDIF
-
-
+  
   DEALLOCATE (spsi)
   DEALLOCATE (hpsi)
   DEALLOCATE (ps)
@@ -196,6 +193,7 @@ CONTAINS
           ENDDO
        ENDDO
     END IF
+    return
   END SUBROUTINE ch_psi_all_k
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -206,20 +204,23 @@ CONTAINS
     USE becmod, ONLY : becp,  calbec
     USE realus, ONLY : real_space, real_space_debug, fft_orbital_gamma, &
          bfft_orbital_gamma, calbec_rs_gamma,  s_psir_gamma
-    
+    use gvect,                only : gstart
+
     IMPLICIT NONE
-    
+
     ps (:,:) = 0.d0
     
     IF (noncolin) THEN
        CALL errore('ch_psi_all', 'non collin in gamma point not implemented',1)
     ELSE
-       CALL DGEMM( 'C', 'N', nbnd, m, n, 2.D0,evc, 2*npwx*npol, spsi, 2*npwx*npol, 0.D0, ps, nbnd )
+       CALL DGEMM( 'C', 'N', nbnd, m, 2*n, 2.D0,evc, 2*npwx*npol, spsi, 2*npwx*npol, 0.D0, ps, nbnd )
+       if(gstart==2) CALL DGER(nbnd, m, -1.0_DP, evc, 2*npwx, spsi, 2*npwx, ps, nbnd )
     ENDIF
     ps (:,:) = ps(:,:) * alpha_pv
     CALL mp_sum ( ps, intra_bgrp_comm )
-    
+
     hpsi (:,:) = (0.d0, 0.d0)
+
     IF (noncolin) THEN
        CALL ZGEMM ('N', 'N', npwx*npol, m, nbnd_occ (ik) , (1.d0, 0.d0) , evc, &
             npwx*npol, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx*npol)
@@ -254,6 +255,7 @@ CONTAINS
           ENDDO
        ENDDO
     ENDIF
+    return
   END SUBROUTINE ch_psi_all_gamma
  
 END SUBROUTINE ch_psi_all
