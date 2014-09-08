@@ -40,7 +40,7 @@ SUBROUTINE iosys()
                             nberrycyc_ => nberrycyc, &
                             efield_cart_ => efield_cart
   !
-  USE cell_base,     ONLY : at, alat, omega, &
+  USE cell_base,     ONLY : at, alat, omega, bg, &
                             cell_base_init, init_dofree
   !
   USE ions_base,     ONLY : if_pos, ityp, tau, extfor, &
@@ -1319,12 +1319,6 @@ SUBROUTINE iosys()
      wfc_dir = tmp_dir
   ENDIF
   !
-  ! ... Read atomic positions and unit cell from data file, if needed,
-  ! ... overwriting what has just been read before from input
-  !
-  ierr = 1
-  IF ( startingconfig == 'file' ) ierr = read_config_from_file()
-  !
   ! ... read_config_from_file returns 0 if structure successfully read
   ! ... Atomic positions (tau) must be converted to internal units
   ! ... only if they were read from input, not from file
@@ -1418,6 +1412,11 @@ SUBROUTINE iosys()
      cell_factor_ = 1.D0
      !
   ENDIF
+  !
+  ! ... Read atomic positions and unit cell from data file, if needed,
+  ! ... overwriting what has just been read before from input
+  IF ( startingconfig == 'file' ) &
+    ierr = read_config_from_file(nat, at_old,omega_old, lmovecell, at, bg, omega, tau)
   !
   ! ... allocate arrays for dispersion correction
   !

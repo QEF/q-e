@@ -7,19 +7,24 @@
 !
 !
 !-----------------------------------------------------------------------
-FUNCTION read_config_from_file() RESULT (ierr)
+FUNCTION read_config_from_file(nat, at_old,omega_old, lmovecell, at, bg, omega, tau) RESULT (ierr)
   !-----------------------------------------------------------------------
   !
   USE kinds,          ONLY : DP
   USE io_global,      ONLY : stdout
-  USE ions_base,      ONLY : nat, ityp, tau
-  USE cell_base,      ONLY : at, bg, omega
-  USE cellmd,         ONLY : at_old, omega_old, lmovecell
+!   USE ions_base,      ONLY : nat,  tau
+!   USE cell_base,      ONLY : at, bg, omega
+!   USE cellmd,         ONLY : at_old, omega_old, lmovecell
   USE io_files,       ONLY : tmp_dir, prefix
   USE pw_restart,     ONLY : pw_readfile
   !
   IMPLICIT NONE
   !
+  REAL(DP),INTENT(in)    :: at_old(3,3), omega_old
+  LOGICAL,INTENT(in)     ::lmovecell
+  REAL(DP),INTENT(out)   :: at(3,3), bg(3,3), omega
+  REAL(DP),INTENT(inout) :: tau(3,nat)
+  INTEGER,INTENT(in)     :: nat
   INTEGER :: ierr
   !
   !
