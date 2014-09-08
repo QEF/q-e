@@ -1319,6 +1319,23 @@ SUBROUTINE iosys()
      wfc_dir = tmp_dir
   ENDIF
   !
+!   IF ( lmovecell ) THEN
+  at_old    = at
+  omega_old = omega
+!   ENDIF
+  !
+  ! ... Read atomic positions and unit cell from data file, if needed,
+  ! ... overwriting what has just been read before from input
+  !
+  ierr = 1
+  IF ( startingconfig == 'file' )   ierr = read_config_from_file(nat, at_old,omega_old, lmovecell, at, bg, omega, tau)
+  !
+  ! ... read_config_from_file returns 0 if structure successfully read
+  ! ... Atomic positions (tau) must be converted to internal units
+  ! ... only if they were read from input, not from file
+  !
+  IF ( ierr /= 0 ) CALL convert_tau ( tau_format, nat_, tau)
+  !
   ! ... set up k-points
   !
   CALL init_start_k ( nk1, nk2, nk3, k1, k2, k3, k_points, nkstot, xk, wk )
@@ -1392,9 +1409,9 @@ SUBROUTINE iosys()
   ! ... and initialize a few other variables
   !
   IF ( lmovecell ) THEN
-     !
-     at_old    = at
-     omega_old = omega
+     ! The next two lines have been moved before the call to read_config_from_file:
+     !      at_old    = at
+     !      omega_old = omega
      IF ( cell_factor_ <= 0.D0 ) cell_factor_ = 1.2D0
      !
      IF ( cmass <= 0.D0 ) &
@@ -1406,18 +1423,6 @@ SUBROUTINE iosys()
      cell_factor_ = 1.D0
      !
   ENDIF
-  !
-  ! ... Read atomic positions and unit cell from data file, if needed,
-  ! ... overwriting what has just been read before from input
-  ierr=0
-  IF ( startingconfig == 'file' ) &
-    ierr = read_config_from_file(nat, at_old,omega_old, lmovecell, at, bg, omega, tau)
-  !
-  ! ... read_config_from_file returns 0 if structure successfully read
-  ! ... Atomic positions (tau) must be converted to internal units
-  ! ... only if they were read from input, not from file
-  !
-  IF ( ierr /= 0 ) CALL convert_tau ( tau_format, nat_, tau)
   !
   ! ... allocate arrays for dispersion correction
   !
