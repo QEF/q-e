@@ -305,6 +305,60 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	    }
 	}
 
+	var exx_wf -type LOGICAL {
+	    default { .FALSE. }
+	    info {
+                If .TRUE., EXX calculation is enabled using maximally localized Wannier functions (MLWF).
+                Allowed keywords for calculation: 'cp', 'cp-wf', and 'vc-cp'
+
+                See other EXX related optional parameters which can be used to control the accuracy of EXX calculations: 
+                exx_neigh, exx_dis_cutoff, exx_poisson_eps, exx_ps_rcut_self, exx_ps_rcut_pair, exx_me_rcut_self, 
+                exx_me_rcut_pair, exx_wf_fraction.
+
+                The references for this algorithm are:
+                  (i)  Theory: X. Wu , A. Selloni, and R. Car, Phys. Rev. B 79, 085102 (2009).
+                  (ii) Implementation: H.-Y. Ko, B. Santra, R. A. DiStasio, L. Kong, and R. Car, arxiv.
+
+                The parallelization scheme in this algorithm is based upon the number of electronic states. 
+                In the current implementation, there are certain restrictions on the choice of the number of 
+                MPI tasks. Also slightly different algorithms are employed depending on whether the number of 
+                MPI tasks used in the calculation are greater or less than the number of electronic states.
+                We highly recommend users to follow the notes below.
+                This algorithm can be used most efficiently if the numbers of electronic states are 
+                uniformly distributed over the number of MPI tasks.  For a system having N electronic states,
+                the optimum numbers of MPI tasks (nproc) are the following:
+
+                  a) In case of nproc <= N, the optimum choices are N/m, where m is any positive integer. 
+                     Robustness         : Can be used for odd and even number of electronic states.
+                     OpenMP threads     : Can be used.
+                     Taskgroup          : Only the default value of the task group (-ntg 1) is allowed.
+
+                  b) In case of nproc  > N, the optimum choices are N*m, where m is any positive integer.
+                     Robustness         : Can be used for even number of electronic states.
+                     Largest value of m : As long as nj_max (see output) is greater than 1, however beyond m=8 
+                                          the scaling may become poor. The scaling should be tested by users.
+                     OpenMP threads     : Can be used and highly recommended. We have tested number of threads 
+                                          starting from 2 up to 64. More threads are also allowed. 
+                                          For very large calculations (nproc > 1000 ) efficiency can largely depend 
+                                          on the computer architecture and the balance between the MPI tasks and 
+                                          the OpenMP threads. User should test for an optimal balance.
+                                          Reasonably good scaling can be achieved by using m=6-8 and 
+                                          OpenMP threads=2-16.
+                     Taskgroup          : Can be greater than 1 and users should choose the largest possible value 
+                                          for ntg. To estimate ntg, find the value of nr3x in the output and 
+                                          compute nproc/nr3x and take the integer value. We have tested the value of
+                                          ntg as 2^m, where m is any positive integer. Other values of ntg should be 
+                                          used with caution.
+                     Ndiag              : Use -ndiag X option in the execution of cp.x. Without this option jobs 
+                                          may crash on certain architectures. Set X to any perfect square number 
+                                          which is equal to or less than N.
+
+                DEBUG : The EXX calculations always work when number of MPI tasks = number of electronic states. 
+                        In case of any uncertainty, the EXX energy computed using different numbers of MPI tasks can be 
+                        checked by performing test calculations using number of MPI tasks = number of electronic states. 
+	    }
+	}
+
     }
 
     #
@@ -1396,6 +1450,8 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                shape   = all axis and angles, keeping the volume fixed
                2Dxy    = only x and y components are allowed to change
                2Dshape = as above, keeping the area in xy plane fixed
+               volume  = isotropic variations of v1_x, v2_y, v3_z, keeping
+                         the shape fixed. Should be used only with ibrav=1. 
 	    }
 	}
     }
@@ -1753,7 +1809,80 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
                G-vectors are written to G_PARA or G_SERL.
             }
         }
-    }	
+	var exx_neigh -type INTEGER {
+            default { 60 }
+            info {
+              An initial guess on the maximum number of neighboring (overlapping) Wannier functions. 
+            }
+        }
+
+	var exx_dis_cutoff -type REAL {
+            default { 8.0 }
+            info {
+              Radial cutoff distance (in bohr) for including overlapping Wannier function pairs
+              in EXX calculations.
+            }
+        }
+
+	var exx_poisson_eps -type REAL {
+            default { 1.0D-6 }
+            info {
+              Poisson solver convergence criterion during computation of the EXX potential. 
+            }
+        }
+
+	var exx_ps_rcut_self -type REAL {
+            default { 6.0 }
+            info {
+              Radial cutoff distance (in bohr) to compute the self EXX energy.
+              This distance determines the radius of the Poisson sphere centered at 
+              a given Wannier function center, and should be large enough to cover 
+              the majority of the orbital charge density.
+            }
+        }
+
+	var exx_ps_rcut_pair -type REAL {
+            default { 5.0 }
+            info {
+              Radial cutoff distance (in bohr) to compute the pair EXX energy.
+              This distance determines the radius of the Poisson sphere centered at 
+              the midpoint of two overlapping Wannier functions, and should be 
+              large enough to cover the majority of the orbital overlap charge density.
+              This parameter can generally be chosen as smaller than exx_ps_rcut_self.
+            }
+        }
+
+	var exx_me_rcut_self -type REAL {
+            default { 10.0 }
+            info {
+              Radial cutoff distance (in bohr) for the multipole-expansion sphere 
+              centered at a given Wannier function center.
+              The far-field self EXX potential in this sphere is generated with 
+              multipole expansion of the orbital charge density.
+            }
+        }
+
+	var exx_me_rcut_pair -type REAL {
+            default { 7.0 }
+            info {
+              Radial cutoff distance (in bohr) for the multipole-expansion sphere 
+              centered at the midpoint of two overlapping Wannier functions.
+              The far-field pair EXX potential in this sphere is generated with 
+              a multipole expansion of the orbital overlap charge density.
+              This parameter can generally be chosen as smaller than exx_me_rcut_self.
+            }
+        }
+
+	var exx_wf_fraction -type REAL {
+            default { 0.25 }
+            info {
+              Amount of EXX to be mixed in with GGA exchange.
+              In the case of PBE0, exx_wf_fraction is 0.25.
+            }
+        }
+
+
+    }
 
     #
     # card ATOMIC_SPECIES
@@ -1940,6 +2069,63 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 			        v2(1)  v2(2)  v2(3)    ... 2nd lattice vector
 			        v3(1)  v3(2)  v3(3)    ... 3rd lattice vector
 			}		    
+			row v1
+			row v2
+			row v3
+		    }
+		}
+	    }
+	}
+    }
+
+
+    #
+    # REF_CELL_PARAMETERS
+    #
+    card REF_CELL_PARAMETERS {
+	flag lattice_type -use optional {
+            enum { bohr | angstrom }
+
+            info {
+                bohr / angstrom: reference cell parameters in bohr radii / angstrom.
+
+                To mimic a constant effective planewave kinetic energy (ecfixed) during a 
+                variable-cell calculation, the specified reference cell has to be large enough 
+                such that the individual cell vector lengths of the fluctuating cell do not 
+                exceed the corresponding reference lattice vector lengths during the entire 
+                calculation. The cost of the calculation will increase with the increasing 
+                size of the reference cell. The user must test for the proper reference cell 
+                parameters.
+
+                The reference cell parameters should be used in conjunction with q2sigma, 
+                qcutz, and ecfixed. See q2sigma for more information about mimicking constant 
+                effective planewave kinetic energy (ecfixed) during variable-cell calculations.
+
+                The reference cell parameters should be chosen as an isotropic scaling of the 
+                initial cell of the system. This means that the reference cell should have 
+                the same shape as the initial simulatoin cell. The reference cell parameters should 
+                NOT be changed throughout a given simulatoin. Typically, 2%-10% scaling of 
+                the unit cell vectors are sufficient. However, the cell fluctuations depend on 
+                the system and the thermodynamic conditions. So again user must test for the proper
+                choice of reference cell parameters.
+	    }
+	}
+
+	label {
+	    Optional card, needed only if one wants to do variable cell calculations accurately.
+      The reference cell generates additional buffer planewaves.
+	}
+
+	syntax {
+	    table lattice {
+		cols -start 1 -end 3 {
+		    rowgroup -type REAL {
+			info {
+        REF_CELL_PARAMETERS { bohr | angstrom } 
+        v1(1)  v1(2)  v1(3)    ... 1st reference lattice vector
+        v2(1)  v2(2)  v2(3)    ... 2nd reference lattice vector
+        v3(1)  v3(2)  v3(3)    ... 3rd reference lattice vector
+      }
 			row v1
 			row v2
 			row v3
