@@ -56,6 +56,7 @@ REAL(DP), PUBLIC :: EtsvdW                                   !the TS-vdW energy
 REAL(DP), DIMENSION(:), ALLOCATABLE, PUBLIC :: UtsvdW        !the TS-vdW wavefunction forces (dispersion potential)
 REAL(DP), DIMENSION(:,:), ALLOCATABLE, PUBLIC :: FtsvdW      !the TS-vdW ionic forces (-dE/dR)
 REAL(DP), DIMENSION(:,:), ALLOCATABLE, PUBLIC :: HtsvdW      !the TS-vdW cell forces (dE/dh)
+REAL(DP), DIMENSION(:), ALLOCATABLE, PUBLIC :: VefftsvdW     !the TS-vdW effective Hirshfeld volume
 !
 ! PRIVATE variables 
 !
@@ -171,6 +172,10 @@ PRIVATE :: GetVdWParam
   !
   ALLOCATE(FtsvdW(3,nat)); FtsvdW=0.0_DP
   ALLOCATE(HtsvdW(3,3)); HtsvdW=0.0_DP
+  !
+  ! Initialization of TS-vdW Hirshfeld effective volume public variable ... used in CP print_out.f90
+  !
+  ALLOCATE(VefftsvdW(nat)); VefftsvdW=0.0_DP
   !
   Ndim=MAX(nr1*nr2,dffts%npp(me_bgrp+1)*nr1*nr2)
   ALLOCATE(UtsvdW(Ndim)); UtsvdW=0.0_DP
@@ -1369,6 +1374,8 @@ PRIVATE :: GetVdWParam
   !
   CALL mp_sum(veff,intra_image_comm)
   !
+  VefftsvdW = veff
+  !
   CALL stop_clock('tsvdw_veff')
   !
   RETURN
@@ -2289,6 +2296,7 @@ PRIVATE :: GetVdWParam
   IF (ALLOCATED(UtsvdW))   DEALLOCATE(UtsvdW)
   IF (ALLOCATED(FtsvdW))   DEALLOCATE(FtsvdW)
   IF (ALLOCATED(HtsvdW))   DEALLOCATE(HtsvdW)
+  IF (ALLOCATED(VefftsvdW))DEALLOCATE(VefftsvdW)
   IF (ALLOCATED(vfree))    DEALLOCATE(vfree)
   IF (ALLOCATED(dpfree))   DEALLOCATE(dpfree)
   IF (ALLOCATED(R0free))   DEALLOCATE(R0free)

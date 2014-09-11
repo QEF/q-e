@@ -314,4 +314,31 @@ CONTAINS
     RETURN
   END SUBROUTINE printout_stress
 
+  SUBROUTINE printout_vefftsvdw( iunit, veff, nat, nfi, tps )
+    !
+    USE kinds
+    !
+    INTEGER,   INTENT(IN)           :: iunit, nat
+    REAL(DP), INTENT(IN)           :: veff(nat)
+    INTEGER,   INTENT(IN), OPTIONAL :: nfi
+    REAL(DP), INTENT(IN), OPTIONAL :: tps
+    !
+    INTEGER :: i, j
+    !
+    IF( PRESENT( nfi ) .AND. PRESENT( tps ) ) THEN
+       WRITE( iunit, 30 ) nfi, tps
+    ELSE
+       WRITE( iunit, 40 )
+    END IF
+    !
+    DO i = 1, nat 
+       WRITE( iunit, 100 ) veff(i) 
+    END DO
+    !
+ 30 FORMAT(I7,1X,F11.8)
+ 40 FORMAT(3X,'Veff tsvdw')
+100 FORMAT(F20.10)
+    RETURN
+  END SUBROUTINE printout_vefftsvdw
+
 END MODULE printout_base

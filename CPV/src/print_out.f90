@@ -17,10 +17,11 @@
 
       !
       USE kinds,             ONLY : DP
-      USE control_flags,     ONLY : iprint, textfor, do_makov_payne
+      USE control_flags,     ONLY : iprint, textfor, do_makov_payne, conv_elec
       USE energies,          ONLY : print_energies, dft_energy_type
       USE printout_base,     ONLY : printout_base_open, printout_base_close, &
-                                    printout_pos, printout_cell, printout_stress
+                                    printout_pos, printout_cell, printout_stress, &
+                                    printout_vefftsvdw
       USE constants,         ONLY : au_gpa, bohr_radius_cm, amu_au, &
                                     BOHR_RADIUS_ANGS, pi
       USE ions_base,         ONLY : na, nsp, nat, ind_bck, atm, amass, cdmi, &
@@ -42,7 +43,7 @@
       USE control_flags,     ONLY : lwfpbe0, lwfpbe0nscf  ! exx_wf related
       USE energies,          ONLY : exx  ! exx_wf related 
       USE control_flags,     ONLY : ts_vdw
-      USE tsvdw_module,      ONLY : EtsvdW
+      USE tsvdw_module,      ONLY : EtsvdW, VefftsvdW
       USE input_parameters,  ONLY : tcpbo
       USE wannier_base,      ONLY : exx_wf_fraction ! exx_wf related
       !
@@ -273,17 +274,32 @@
             !
             IF( tfile ) WRITE( 39, 2949 ) nfi,tps,vnhh(3,3),xnhh0(3,3),vnhp(1),xnhp0(1)
             !
-         END IF
+            !print TS-vdW effective Hirshfeld volume of each atom at every iprint steps in .hrs file
+            !
+            IF(tfile.AND.ts_vdw) THEN 
+              !
+              IF (.NOT.tcpbo) THEN
+                !
+                CALL printout_vefftsvdw( 43, VefftsvdW, nat, nfi, tps )
+                !
+              ELSE   
+                !
+                IF (conv_elec) CALL printout_vefftsvdw( 43, VefftsvdW, nat, nfi, tps )
+                !
+              END IF    
+              !
+            END IF
+            !
+         END IF !tprint
          !
-       END IF
-       !
-
-       IF( ionode .AND. tfile .AND. tprint ) THEN
-         !
-         ! ... Close and flush unit 30, ... 40
-         !
-         CALL printout_base_close()
-         !
+      END IF !ionode
+      !
+      IF( ionode .AND. tfile .AND. tprint ) THEN
+        !
+        ! ... Close and flush unit 30, ... 40
+        !
+        CALL printout_base_close()
+        !
       END IF
       !
       IF( ( MOD( nfi, iprint_stdout ) == 0 ) .OR. tfirst )  THEN
