@@ -1,0 +1,84 @@
+
+In this example, we demonstrate how EXX calculations with maximally localized Wannier functions (MLWFs) 
+can be performed for a 32 water periodic simulation box.
+
+Files included
+- 01.input and 02.input are two input files to run electron minimization and NVT MD, respectively. 
+- 01.out   and 02.out   are two corresponding output files. 
+- H_HSCV_PBE-1.0.UPF and O_HSCV_PBE-1.0.UPF are two pseudopotentials used to generate the outputs.
+- example-job-script is an example job submission script. 
+
+----------------------------------------------------
+===== electron minimization of 32 water periodic box using PBE0 xc =====
+----------------------------------------------------
+
+Here, we have performed a PBE0 electron minimization from_scratch
+using damped electron dynamics, keeping ions and cell fixed. 
+
+The input file is 01.input and the corresponding output file is 01.out.
+The exx related keywords are highlighted in the input.
+
+In the output the exx related information is printed as:
+
+   ----------------------------------------------------
+   Exact Exchange Using Wannier Function Initialization
+   ----------------------------------------------------
+ 
+The exx calculation requires MLWFs which are not present when the calculation starts from_scratch.
+So in the beginning, the calculation starts with PBE (no exx) to generate MLWFs.
+When the MLWFs are generated and sufficiently converged the calculation automatically
+switches to PBE0 by turning on exx. See in the output the following message: 
+
+   Exact Exchange is turned on ...
+     EXX fraction changed:   0.25
+
+When exx is activated the quantities related to exx are printed, for example
+
+   nj_max nj_min nj_avg :    12     9 10.23 
+
+The nj_max and nj_min refer to the maximum and minimum number of orbital pairs distributed over
+different MPI tasks. nj_avg is the total number of orbital pairs / number of MPI tasks.
+
+The computed exx energy multiplied with the exx_wf_fraction is also printed in the 5th column of the 
+energy printing line in the output. In this case the value at the final step is -31.505174924742 Hartree.
+The energies are also printed in the .evp file.
+
+At the end of the output file the time required to compute the exx energy is printed as 
+
+     exact_exchan :    980.40s CPU    583.61s WALL (      55 calls) 
+
+For this calculation we have used 
+- 256 MPI tasks which is two times the number of electronic states of the system.
+- 2 OpenMP threads per MPI task
+- 2 task groups
+- ndiag is set to 121 which is the largest perfect square number less or equal to the number of electronic states.
+
+An example job submission script is added which is specific to Edison machine in NERSC. 
+Similar parallelization scheme can be used in other architectures.
+
+For more information on the parallelization of exx calculations see the description of 
+exx_wf input parameter in CPV/Doc/INPUT_CP.html or in CPV/Doc/INPUT_CP.def.
+
+----------------------------------------------------
+===== Molecular dynamics of 32 water periodic box using PBE0 xc =====
+----------------------------------------------------
+Using the minimized wavefunction one can start MD in various (NVE or NVT or NPT) ensembles.
+
+An example NVT input file 02.input and the corresponding output file 02.out are provided.
+The exx related keywords are the same as used in the electron minimization.
+
+For this calculation we have used 
+- 256 MPI tasks which is two times the number of electronic states of the system.
+- 2 OpenMP threads per MPI task
+- 2 task groups
+- ndiag is set to 121 which is the largest perfect square number less or equal to the number of electronic states.
+
+----------------------------------------------------
+===== Questions / Comments =====
+----------------------------------------------------
+
+You may send your queries to 
+
+Biswajit Santra    <bishalya@gmail.com>
+Hsin-Yu Ko         <kosinyj@gmai.com>
+Robert A. DiStasio <robdistasio@gmail.com>

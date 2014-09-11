@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+# example script on NERSC edison
+#
+#PBS -q debug
+#PBS -N EXX_water_32_example
+#PBS -l walltime=0:10:00
+#PBS -l mppwidth=288
+#PBS -V
+#PBS -j oe
+#PBS -e tst.$PBS_JOBID.err
+#PBS -o tst.$PBS_JOBID.out
+
+cd $PBS_O_WORKDIR
+
+CODE_n=<your_cp.x_location>
+
+# example of number of MPI tasks = 2 * number of electronic states
+# using 256 MPI tasks and 2 OpenMP threads per MPI tasks
+# also  256 MPI tasks allow to use task group parallelizion, here -ntg 2 is used
+#
+export OMP_NUM_THREADS=2
+aprun -j 2 -n 256 -d 2 -cc depth  $CODE_n -ntg 2 -ndiag 121 < 01.input > 01.out 
+aprun -j 2 -n 256 -d 2 -cc depth  $CODE_n -ntg 2 -ndiag 121 < 02.input > 02.out 

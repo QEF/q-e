@@ -1,0 +1,1280 @@
+
+     Program CP v.5.1 starts on 11Sep2014 at 15:47:27 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI & OpenMP), running on     512 processor cores
+     Number of MPI processes:               256
+     Threads/MPI process:                     2
+     R & G space division:  proc/nbgrp/npool/nimage =     256
+     wavefunctions fft division:  fft and procs/group =       2    128
+
+   Dumping input parameters
+
+     Waiting for input...
+     Reading input from standard input
+
+   Job Title: (H2O)32 Molecule: CP NVT with Wannier at 300 K (PBE0)
+
+
+   Atomic Pseudopotentials Parameters
+   ----------------------------------
+
+   Reading pseudopotential for specie #  1 from file :
+   ./O_HSCV_PBE-1.0.UPF
+   file type is UPF v.1
+
+   Reading pseudopotential for specie #  2 from file :
+   ./H_HSCV_PBE-1.0.UPF
+   file type is UPF v.1
+
+
+   Main Simulation Parameters (from input)
+   ---------------------------------------
+   Restart Mode       =       1   restart        
+   Number of MD Steps =      10
+   Print out every            1 MD Steps
+   Reads from unit    =      50
+   Writes to unit     =      50
+   MD Simulation time step            =       2.00
+   Electronic fictitious mass (emass) =     100.00
+   emass cut-off                      =      10.00
+
+   Simulation Cell Parameters (from input)
+   external pressure       =            0.00 [KBar]
+   wmass (calculated)      =        88654.67 [AU]
+   ibrav =    1
+   alat  =    18.66550000
+   a1    =    18.66550000    0.00000000    0.00000000
+   a2    =     0.00000000   18.66550000    0.00000000
+   a3    =     0.00000000    0.00000000   18.66550000
+ 
+   b1    =     0.05357478    0.00000000    0.00000000
+   b2    =     0.00000000    0.05357478    0.00000000
+   b3    =     0.00000000    0.00000000    0.05357478
+   omega =    6503.07681696
+
+   Energy Cut-offs
+   ---------------
+   Ecutwfc =   85.0 Ry,      Ecutrho =  340.0 Ry,      Ecuts =  340.0 Ry
+   Gcutwfc =   27.4     ,    Gcutrho =   54.8          Gcuts =   54.8
+   NOTA BENE: refg, mmx =   0.050000  8160
+   Eigenvalues calculated without the kinetic term contribution
+   Orthog. with lagrange multipliers : eps =   0.10E-07,  max =  20
+   Electron dynamics with newton equations
+   Electron dynamics : the temperature is not controlled
+
+   Electronic states
+   -----------------
+   Number of Electron =   256, of States =   128
+   Occupation numbers :
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+
+
+   Exchange and correlations functionals
+   -------------------------------------
+     Exchange-correlation      =  SLA  PW   PBE  PBE ( 1  4  3  4 0 0)
+
+
+   Ions Simulation Parameters
+   --------------------------
+   Ions are allowed to move
+   Ions dynamics with newton equations
+   the temperature is computed for   285 degrees of freedom
+   ion dynamics with fricp =  0.0000 and greasp =  1.0000
+   Ionic position (from input)
+   sorted by specie, and converted to real a.u. coordinates
+   Species   1 atoms =   32 mass =     29166.22 (a.u.),        16.00 (amu) rcmax =   0.50 (a.u.)
+       16.115500   -21.906700    97.672200
+       11.535400   -10.947300    92.713400
+       22.991200   -32.624600    80.239500
+        7.112770   -28.170900    92.139600
+        9.498750   -20.522900    94.523300
+       16.614700   -17.437400    86.715700
+       -0.250940   -32.047100    93.581100
+       17.469200   -24.812800    91.772600
+        9.524150   -34.655800    88.823200
+        8.646670   -23.127000    80.473000
+        3.661560   -29.162100    95.102700
+       20.994300   -22.003300    94.398000
+       13.729200   -21.798100    86.691800
+       15.328800   -31.839300    89.628700
+        4.948030   -32.134500    86.140100
+       19.106100   -28.885300    88.403200
+        5.670910   -20.621000    91.015300
+       12.086300   -41.887700    91.442500
+       12.404700   -26.504100    97.555400
+       10.641400   -15.725800    76.697100
+       10.104400   -19.437800    83.896400
+       16.785300   -25.509200    85.375900
+       17.737300   -33.450200    82.239200
+        8.784620   -34.029400    81.163300
+       20.335500   -22.655000   102.239000
+       14.653500   -29.344700   101.390000
+        3.948620   -24.674200    98.203400
+        2.253850   -34.988000    89.772700
+       24.790200   -21.673500    86.279900
+       15.698800   -16.475400    96.577500
+       26.331200   -26.456600    86.658800
+       10.426000   -30.654900    84.468000
+   Species   2 atoms =   64 mass =      3645.78 (a.u.),         2.00 (amu) rcmax =   0.50 (a.u.)
+       16.323000   -22.057300    99.444200
+       17.805500   -22.052000    96.880900
+       11.264800   -12.795200    93.484300
+       12.783800   -11.097400    91.358800
+       22.615100   -31.097300    78.995100
+       21.289700   -33.353500    80.136300
+        8.874440   -28.650000    92.204500
+        6.738120   -27.809200    90.354400
+       11.025500   -21.181700    93.585400
+       10.053800   -18.739800    94.771200
+       17.089900   -16.687100    85.066300
+       18.243400   -17.453800    87.831500
+        0.771254   -33.440800    92.850400
+       -1.344430   -31.981600    92.151100
+       17.976600   -26.316900    90.895600
+       15.696700   -24.455100    91.412200
+        9.276290   -36.419400    88.523400
+        8.937950   -34.298700    90.486600
+        8.959260   -22.445900    78.616300
+        9.674190   -24.695100    80.326400
+        2.242770   -29.899100    94.126800
+        4.886080   -28.868000    93.774200
+       19.714200   -22.948700    93.611500
+       21.652000   -22.956400    95.845600
+       12.531000   -20.831800    85.599700
+       14.986200   -20.438000    86.854800
+       16.764800   -30.766000    89.014600
+       15.479200   -33.493700    88.721100
+        4.740850   -32.317400    84.322400
+        6.658540   -32.636600    86.497100
+       20.699400   -29.497400    87.624300
+       18.241900   -27.830000    87.234100
+        6.948440   -20.535300    92.366100
+        4.306240   -21.416800    92.137900
+       12.502400   -41.428400    89.550100
+       10.920200   -43.186800    91.345800
+       13.457900   -25.121800    96.981100
+       11.911800   -27.632200    96.098200
+        9.866910   -15.303500    78.580700
+       12.517400   -15.986700    76.917000
+        9.713850   -17.788500    83.136700
+        9.478480   -20.537700    82.608900
+       18.229500   -24.517200    84.674900
+       15.538000   -24.205700    85.935800
+       16.676500   -32.031400    82.501200
+       16.892700   -34.270500    80.756400
+        6.953730   -33.709700    80.944500
+        9.148410   -32.575400    82.290700
+       21.725900   -22.265600   103.388000
+       21.125900   -23.441700   100.747000
+       14.257300   -28.577300    99.627300
+       15.161200   -27.788000   102.229000
+        5.692090   -24.652400    98.808100
+        3.351460   -26.335500    97.706200
+        3.446270   -36.127900    90.536800
+        3.289630   -34.010300    88.610200
+       26.192100   -20.735400    85.692000
+       24.818900   -21.432700    88.079500
+       16.879000   -15.631100    95.272300
+       15.867200   -18.318100    96.720300
+       25.902300   -24.719700    86.187200
+       27.198800   -27.406300    85.341600
+       10.923400   -31.391500    86.097500
+       12.225900   -30.308000    83.613300
+   Ionic position will be re-read from restart file
+
+   All atoms are allowed to move
+   Ionic temperature control via nose thermostat
+
+
+   ion dynamics with nose` temperature control:
+   temperature required      =  300.00000 (kelvin) 
+   NH chain length           =   4
+   active degrees of freedom =    285
+   time steps per nose osc.  =    344
+
+
+   nose` frequency(es)       =      60.000     -1.000     -1.000     -1.000
+
+
+   the requested type of NH chains is     2
+   total number of thermostats used    96 1 0
+   ionic degrees of freedom for each chain    3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3
+   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3
+   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3
+   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3
+   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3   3  96
+
+
+*** The default NH masses are multiplied by atomic masses ***
+
+
+   nose` mass(es) for chain    1 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain    2 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain    3 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain    4 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain    5 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain    6 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain    7 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain    8 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain    9 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   10 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   11 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   12 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   13 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   14 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   15 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   16 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   17 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   18 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   19 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   20 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   21 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   22 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   23 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   24 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   25 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   26 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   27 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   28 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   29 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   30 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   31 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   32 =    1085.363    365.596    365.596    365.596
+
+
+   nose` mass(es) for chain   33 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   34 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   35 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   36 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   37 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   38 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   39 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   40 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   41 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   42 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   43 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   44 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   45 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   46 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   47 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   48 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   49 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   50 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   51 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   52 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   53 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   54 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   55 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   56 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   57 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   58 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   59 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   60 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   61 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   62 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   63 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   64 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   65 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   66 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   67 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   68 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   69 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   70 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   71 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   72 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   73 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   74 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   75 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   76 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   77 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   78 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   79 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   80 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   81 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   82 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   83 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   84 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   85 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   86 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   87 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   88 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   89 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   90 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   91 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   92 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   93 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   94 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   95 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   96 =     135.670     45.700     45.700     45.700
+
+
+   nose` mass(es) for chain   97 =   14623.843    152.332    152.332    152.332
+
+
+   atom i (in sorted order) is assigned to this thermostat :
+   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20
+  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36  37  38  39  40
+  41  42  43  44  45  46  47  48  49  50  51  52  53  54  55  56  57  58  59  60
+  61  62  63  64  65  66  67  68  69  70  71  72  73  74  75  76  77  78  79  80
+  81  82  83  84  85  86  87  88  89  90  91  92  93  94  95  96
+
+
+   Cell Dynamics Parameters (from STDIN)
+   -------------------------------------
+   Starting cell generated from CELLDM
+   Cell parameters will be re-read from restart file
+   Constant VOLUME Molecular dynamics
+   cell parameters are not allowed to move
+
+   Verbosity: iverbosity =  0
+
+
+
+   Simulation dimensions initialization
+   ------------------------------------
+
+   unit vectors of full simulation cell
+   in real space:                         in reciprocal space (units 2pi/alat):
+   1    18.6655    0.0000    0.0000              1.0000    0.0000    0.0000
+   2     0.0000   18.6655    0.0000              0.0000    1.0000    0.0000
+   3     0.0000    0.0000   18.6655              0.0000    0.0000    1.0000
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          36      36      8                 2680     2680     324
+     Max          38      38     10                 2702     2702     358
+     Sum        9425    9425   2361               688245   688245   86407
+     Tot        4713    4713   1181
+ 
+ 
+   Real Mesh
+   ---------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+   120   120   120     120   120     1       1     1   256
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =    120   120   120
+   Local number of cell to store the grid ( nrxx ) =      14400
+   Number of x-y planes for each processors: 
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     1    0    1    0    1    0    1    0    1    0
+   nr3l =     0    0    0    0    0    0    0    0    0    0
+   nr3l =     0    0    0    0    0    0
+ 
+   Smooth Real Mesh
+   ----------------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+   120   120   120     120   120     1       1     1   256
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =    120   120   120
+   Local number of cell to store the grid ( nrxx ) =      14400
+   Number of x-y planes for each processors: 
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     1    0    1    0    1    0    1    0    1    0
+   nr3sl =     0    0    0    0    0    0    0    0    0    0
+   nr3sl =     0    0    0    0    0    0
+ 
+   Reciprocal Space Mesh
+   ---------------------
+   Large Mesh
+     Global(ngm_g)    MinLocal       MaxLocal      Average
+         344123           1340           1351        1344.23
+   Smooth Mesh
+     Global(ngms_g)   MinLocal       MaxLocal      Average
+         344123           1340           1351        1344.23
+   Wave function Mesh
+     Global(ngw_g)    MinLocal       MaxLocal      Average
+          43204            162            179         168.77
+
+
+   System geometry initialization
+   ------------------------------
+   cell parameters read from restart file
+   ibrav =    1       cell parameters 
+
+
+   cell at current step : h(t)
+      18.66550       0.00000       0.00000
+       0.00000      18.66550       0.00000
+       0.00000       0.00000      18.66550
+
+   cell at previous step : h(t-dt)
+      18.66550       0.00000       0.00000
+       0.00000      18.66550       0.00000
+       0.00000       0.00000      18.66550
+ 
+
+   Matrix Multiplication Performances
+   ortho mmul, time for parallel driver      =   0.00055 with  121 procs
+
+   Constraints matrixes will be distributed block like on
+   ortho sub-group =   11*  11 procs
+
+
+
+   Pseudopotentials initialization
+   -------------------------------
+
+
+   Common initialization
+
+   Specie:     1
+   1  indv=  1   ang. mom=  0
+ 
+                        dion 
+   0.2201
+
+   Specie:     2
+ 
+                        dion 
+
+   ----------------------------------------------------
+   Exact Exchange Using Wannier Function Initialization
+   ----------------------------------------------------
+
+   The references for this algorithm are:
+     (i)  theory: X. Wu , A. Selloni, and R. Car, Phys. Rev. B 79, 085102 (2009).
+     (ii) implementation: H.-Y. Ko, B. Santra, R. A. DiStasio, L. Kong, and R. Car, arxiv.
+
+   The parallelization scheme in this algorithm is based upon the number of electronic states. In the current implementation
+   there are certain restrictions on the choice of the number of MPI tasks. Also slightly different algorithms are employed 
+   depending on whether the number of MPI tasks used in the calculation are greater or less than the number of electronic states.
+   We highly recommend users to follow the notes below.
+     This algorithm can be used most efficiently if the numbers of electronic states are uniformly distributed over the number
+     of MPI tasks. For a system having N electronic states the optimum numbers of MPI tasks (nproc) are the following:
+       a) in case of nproc <= N, the optimum choices are N/m, where m is any positive integer.
+            Omp threads : can be used.
+            Taskgroup : here only the default value of the task group (-ntg 1) is allowed.
+       b) in case of nproc  > N, the optimum choices are N*m, where m is any positive integer.
+            Largest value of m : as long as nj_max (see output) is greater than 1, however beyond m=8 the scaling may become poor. The scaling should be tested by users.
+            Omp threads : can be used and highly recommended. We have tested number of threads starting from 2 up to 64.
+               More threads may be used. For very large calculations (nproc > 1000 ) efficiency can largely depend on the
+               computer architecture and the balance between the MPI tasks and the OpenMP threads. User should test for an optimal balance.
+               Reasonablly good scaling can be achieved by using m=6-8 and OpenMP threads=2-16.
+            Taskgroup : can be greater than 1 and users should choose the largest possible value for ntg,
+               to estimate ntg, find the value of nr3x in the output and compute nproc/nr3x and take the integer value,
+               use ntg as 2^m, where m is any positive integer.
+            Ndiag : use -ndiag X option in the execution of cp.x. Without this option jobs may crash on certain architectures.
+               Set X to any perfect square number which is equal to or less than N.
+     DEBUG : The EXX calculations always work when number of MPI tasks = number of electronic states.
+             In case of any uncertainty, the EXX energy computed using different numbers of MPI tasks can be
+             checked by performing test calculations using number of MPI tasks = number of electronic states.
+
+   Parallelization info :
+     electronic states          128
+     MPI tasks                  256
+     omp threads/MPI task         2
+     Taskgroups                   2
+     EXX fraction changed:   0.25
+
+   parameters used in exact exchange calculation
+     radius to compute pairs:   8.0 A.U.   maximum number of neighbors:   60
+
+   parameters used to solve Poisson equation
+     radius for self potential:   6.0 A.U.   radius for pair potential:   5.0 A.U.
+     Poisson solver discretized using   7   points in each dimension
+
+   parameters used for multipole expansion
+     radius for self potential:   9.3 A.U.   radius for pair potential:   7.0 A.U.
+     maximum angular momentum:   6
+
+   number of grid points in Poisson spehere 
+     self potential:  240369   pair potential:  138985
+
+   number of grid points in multipole expansion spehere: 
+     self potential:  895731   pair potential:  381915
+
+   ----------------------------------------------------
+ ------------------------DYNAMICS IN THE WANNIER BASIS--------------------------
+                              DYNAMICS PARAMETERS 
+ FICTITIOUS MASS PARAMETER USED FOR SPREAD OPTIMIZATION            =   500.0
+ TIME STEP USED FOR DAMPED DYNAMICS                                =  4.0000000
+ DAMPING COEFFICIENT USED FOR WANNIER FUNCTION SPREAD OPTIMIZATION =  0.3000000
+          40 STEPS OF DAMPED MOLECULAR DYNAMICS FOR OPTIMIZATION OF THE SPREAD
+ AVERAGE WANNIER FUNCTION SPREAD WRITTEN TO     FORT.24
+ INDIVIDUAL WANNIER FUNCTION SPREAD WRITTEN TO  .//water.spr
+ WANNIER CENTERS WRITTEN TO                     .//water.wfc
+ SOME PERTINENT RUN-TIME INFORMATION WRITTEN TO FORT.27
+ -------------------------------------------------------------------------------
+ 
+ wannier_startup IBRAV SELECTED:           1
+ WANNIER SETUP : check G vectors and weights
+inw = 1:   1   0   0   1.000000
+inw = 2:   0   1   0   1.000000
+inw = 3:   0   0   1   1.000000
+ Translations to be done           3
+ ibrav selected:           1
+ Translation           1 for       43204 G vectors
+ Translation           2 for       43204 G vectors
+ Translation           3 for         175 G vectors
+ 
+
+   Cell parameters from input file are used in electron mass preconditioning
+   init_tpiba2=    0.11331319
+ 
+   Short Legend and Physical Units in the Output
+   ---------------------------------------------
+   NFI    [int]          - step index
+   EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics
+   TEMPH  [K]            - Temperature of the fictitious cell dynamics
+   TEMP   [K]            - Ionic temperature
+   ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)
+   ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
+   ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
+   ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
+ 
+
+   reading restart file: ./water_50.save
+   restart file read in    3.428 sec.
+
+
+   formf: eself=   970.22763
+   formf:     vps(g=0)=  -0.0005816     rhops(g=0)=  -0.0009161
+   formf: sum_g vps(g)=  -2.9639734 sum_g rhops(g)=  -4.3105522
+   formf:     vps(g=0)=  -0.0001219     rhops(g=0)=  -0.0001527
+   formf: sum_g vps(g)=  -1.7276381 sum_g rhops(g)=  -0.7184254
+   Delta V(G=0):   0.030893Ry,    0.840638eV
+   nj_max nj_min nj_avg :    12     8 10.21
+ 
+  nfi     ekinc              temph  tempp          exx               etot               enthal               econs                econt            vnhh    xnhh0   vnhp    xnhp0
+      1    0.000005786688735    0.0    0.01     -31.505186528382    -550.123879560046    -550.123879560046    -550.123873702805    -550.123863614938   0.0000   0.0000  -0.0000   0.0000
+   MLWF step    3  Convergence =  3.426E-07  Generated
+   nj_max nj_min nj_avg :    12     8 10.21
+      2    0.000008163391474    0.0    0.12     -31.505206379609    -550.123933398980    -550.123933398980    -550.123880769839    -550.123868311335   0.0000   0.0000  -0.0000  -0.0000
+   MLWF step    2  Convergence =  1.817E-07  Generated
+   nj_max nj_min nj_avg :    12     8 10.21
+      3    0.000010775899922    0.0    0.32     -31.505205763536    -550.124021432237    -550.124021432237    -550.123875684918    -550.123860646761   0.0000   0.0000  -0.0000  -0.0000
+   MLWF step    5  Convergence =  3.097E-07  Generated
+   nj_max nj_min nj_avg :    12     8 10.21
+      4    0.000015064810158    0.0    0.63     -31.505210116789    -550.124167121890    -550.124167121890    -550.123882612939    -550.123863386710   0.0000   0.0000  -0.0000  -0.0001
+   MLWF step    2  Convergence =  1.527E-07  Generated
+   nj_max nj_min nj_avg :    12     8 10.21
+      5    0.000018651937892    0.0    1.04     -31.505206694007    -550.124352608777    -550.124352608777    -550.123884433208    -550.123861849913   0.0000   0.0000  -0.0000  -0.0001
+   MLWF step    2  Convergence =  1.091E-07  Generated
+   nj_max nj_min nj_avg :    12     8 10.21
+      6    0.000022775974830    0.0    1.54     -31.505211450294    -550.124584070472    -550.124584070472    -550.123887859908    -550.123861592700   0.0000   0.0000  -0.0000  -0.0002
+   MLWF step    2  Convergence =  4.510E-07  Generated
+   nj_max nj_min nj_avg :    12     8 10.21
+      7    0.000027923802166    0.0    2.15     -31.505234893175    -550.124860141646    -550.124860141646    -550.123891720612    -550.123861055822   0.0000   0.0000  -0.0000  -0.0002
+   MLWF step    2  Convergence =  2.647E-07  Generated
+   nj_max nj_min nj_avg :    12     8 10.21
+      8    0.000034210237630    0.0    2.85     -31.505289533095    -550.125181232923    -550.125181232923    -550.123896281931    -550.123860510083   0.0000   0.0000  -0.0000  -0.0003
+   MLWF step    2  Convergence =  4.814E-07  Generated
+   nj_max nj_min nj_avg :    12     8 10.21
+      9    0.000040959260724    0.0    3.65     -31.505384236893    -550.125546729913    -550.125546729913    -550.123900601618    -550.123859826974   0.0000   0.0000  -0.0000  -0.0004
+   MLWF step    4  Convergence =  1.458E-07  Generated
+
+ * Physical Quantities at step:    10
+
+   from rhoofr: total integrated electronic density
+   in g-space =    256.000000   in r-space =   256.000000
+   nj_max nj_min nj_avg :    12     8 10.21
+
+
+                total energy =     -550.12595456492 Hartree a.u.
+              kinetic energy =      404.14351 Hartree a.u.
+        electrostatic energy =     -751.36731 Hartree a.u.
+                         esr =        0.04250 Hartree a.u.
+                       eself =      970.22763 Hartree a.u.
+      pseudopotential energy =     -129.39622 Hartree a.u.
+  n-l pseudopotential energy =       62.31572 Hartree a.u.
+ exchange-correlation energy =     -104.31614 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
+
+
+
+
+                  exx energy =      -31.50552 Hartree a.u.
+       total energy with exx =     -550.12595 Hartree a.u.
+
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00
+   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00
+   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00
+   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00
+   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00
+   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00
+   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00
+   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00
+   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00
+   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00
+   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00
+   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00   -0.00    0.00    0.00    0.00
+    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
+ 
+   Allocated memory (kb) =    182994
+ 
+   CELL_PARAMETERS
+   18.66550000    0.00000000    0.00000000
+    0.00000000   18.66550000    0.00000000
+    0.00000000    0.00000000   18.66550000
+
+   System Density [g/cm^3] :              1.1028478060
+
+
+   System Volume [A.U.^3] :           6503.0768169614
+
+
+   Center of mass square displacement (a.u.):   0.000000
+
+   ATOMIC_POSITIONS
+   O    0.161155E+02 -0.219067E+02  0.976720E+02
+   O    0.115354E+02 -0.109476E+02  0.927136E+02
+   O    0.229910E+02 -0.326244E+02  0.802393E+02
+   O    0.711262E+01 -0.281708E+02  0.921394E+02
+   O    0.949892E+01 -0.205229E+02  0.945233E+02
+   O    0.166149E+02 -0.174374E+02  0.867159E+02
+   O   -0.250780E+00 -0.320473E+02  0.935812E+02
+   O    0.174692E+02 -0.248127E+02  0.917726E+02
+   O    0.952417E+01 -0.346557E+02  0.888231E+02
+   O    0.864677E+01 -0.231270E+02  0.804727E+02
+   O    0.366131E+01 -0.291622E+02  0.951028E+02
+   O    0.209944E+02 -0.220031E+02  0.943981E+02
+   O    0.137292E+02 -0.217980E+02  0.866918E+02
+   O    0.153288E+02 -0.318393E+02  0.896287E+02
+   O    0.494797E+01 -0.321345E+02  0.861401E+02
+   O    0.191063E+02 -0.288854E+02  0.884033E+02
+   O    0.567081E+01 -0.206210E+02  0.910155E+02
+   O    0.120866E+02 -0.418875E+02  0.914422E+02
+   O    0.124046E+02 -0.265043E+02  0.975553E+02
+   O    0.106415E+02 -0.157257E+02  0.766973E+02
+   O    0.101044E+02 -0.194377E+02  0.838965E+02
+   O    0.167852E+02 -0.255092E+02  0.853759E+02
+   O    0.177373E+02 -0.334504E+02  0.822391E+02
+   O    0.878460E+01 -0.340293E+02  0.811633E+02
+   O    0.203355E+02 -0.226550E+02  0.102239E+03
+   O    0.146535E+02 -0.293446E+02  0.101390E+03
+   O    0.394852E+01 -0.246742E+02  0.982034E+02
+   O    0.225381E+01 -0.349880E+02  0.897727E+02
+   O    0.247901E+02 -0.216736E+02  0.862798E+02
+   O    0.156989E+02 -0.164754E+02  0.965774E+02
+   O    0.263312E+02 -0.264567E+02  0.866588E+02
+   O    0.104262E+02 -0.306549E+02  0.844680E+02
+   H    0.163234E+02 -0.220573E+02  0.994451E+02
+   H    0.178048E+02 -0.220519E+02  0.968815E+02
+   H    0.112652E+02 -0.127929E+02  0.934833E+02
+   H    0.127837E+02 -0.110979E+02  0.913591E+02
+   H    0.226163E+02 -0.310987E+02  0.789960E+02
+   H    0.212902E+02 -0.333537E+02  0.801370E+02
+   H    0.887513E+01 -0.286504E+02  0.922045E+02
+   H    0.673844E+01 -0.278092E+02  0.903549E+02
+   H    0.110241E+02 -0.211819E+02  0.935856E+02
+   H    0.100531E+02 -0.187398E+02  0.947716E+02
+   H    0.170900E+02 -0.166871E+02  0.850666E+02
+   H    0.182418E+02 -0.174537E+02  0.878300E+02
+   H    0.771609E+00 -0.334401E+02  0.928507E+02
+   H   -0.134604E+01 -0.319809E+02  0.921501E+02
+   H    0.179767E+02 -0.263171E+02  0.908953E+02
+   H    0.156970E+02 -0.244553E+02  0.914124E+02
+   H    0.927621E+01 -0.364197E+02  0.885235E+02
+   H    0.893782E+01 -0.342988E+02  0.904872E+02
+   H    0.895874E+01 -0.224460E+02  0.786184E+02
+   H    0.967404E+01 -0.246944E+02  0.803267E+02
+   H    0.224292E+01 -0.298989E+02  0.941277E+02
+   H    0.488740E+01 -0.288676E+02  0.937740E+02
+   H    0.197130E+02 -0.229500E+02  0.936105E+02
+   H    0.216523E+02 -0.229566E+02  0.958455E+02
+   H    0.125308E+02 -0.208325E+02  0.855998E+02
+   H    0.149866E+02 -0.204379E+02  0.868551E+02
+   H    0.167644E+02 -0.307665E+02  0.890145E+02
+   H    0.154791E+02 -0.334928E+02  0.887213E+02
+   H    0.474070E+01 -0.323173E+02  0.843226E+02
+   H    0.665884E+01 -0.326366E+02  0.864972E+02
+   H    0.206985E+02 -0.294970E+02  0.876247E+02
+   H    0.182415E+02 -0.278288E+02  0.872329E+02
+   H    0.694898E+01 -0.205352E+02  0.923657E+02
+   H    0.430669E+01 -0.214163E+02  0.921370E+02
+   H    0.125020E+02 -0.414286E+02  0.895520E+02
+   H    0.109186E+02 -0.431884E+02  0.913457E+02
+   H    0.134580E+02 -0.251219E+02  0.969807E+02
+   H    0.119125E+02 -0.276310E+02  0.960989E+02
+   H    0.986787E+01 -0.153042E+02  0.785789E+02
+   H    0.125164E+02 -0.159865E+02  0.769173E+02
+   H    0.971400E+01 -0.177883E+02  0.831368E+02
+   H    0.947841E+01 -0.205389E+02  0.826081E+02
+   H    0.182295E+02 -0.245171E+02  0.846750E+02
+   H    0.155384E+02 -0.242062E+02  0.859355E+02
+   H    0.166760E+02 -0.320301E+02  0.825015E+02
+   H    0.168931E+02 -0.342702E+02  0.807569E+02
+   H    0.695344E+01 -0.337101E+02  0.809438E+02
+   H    0.914925E+01 -0.325755E+02  0.822909E+02
+   H    0.217260E+02 -0.222655E+02  0.103388E+03
+   H    0.211259E+02 -0.234416E+02  0.100747E+03
+   H    0.142574E+02 -0.285782E+02  0.996290E+02
+   H    0.151618E+02 -0.277877E+02  0.102230E+03
+   H    0.569237E+01 -0.246523E+02  0.988078E+02
+   H    0.335207E+01 -0.263357E+02  0.977060E+02
+   H    0.344659E+01 -0.361287E+02  0.905369E+02
+   H    0.328957E+01 -0.340101E+02  0.886098E+02
+   H    0.261930E+02 -0.207346E+02  0.856912E+02
+   H    0.248185E+02 -0.214326E+02  0.880808E+02
+   H    0.168781E+02 -0.156318E+02  0.952735E+02
+   H    0.158674E+02 -0.183178E+02  0.967200E+02
+   H    0.259024E+02 -0.247199E+02  0.861870E+02
+   H    0.271986E+02 -0.274060E+02  0.853419E+02
+   H    0.109230E+02 -0.313914E+02  0.860969E+02
+   H    0.122243E+02 -0.303079E+02  0.836142E+02
+ 
+   ATOMIC_VELOCITIES
+   O    0.426789E-05  0.106320E-05 -0.188461E-04
+   O    0.421513E-05 -0.304068E-04  0.168044E-04
+   O   -0.257148E-04  0.233295E-04 -0.198479E-04
+   O   -0.156284E-04  0.108691E-04 -0.191004E-04
+   O    0.179204E-04  0.659894E-06 -0.299284E-05
+   O    0.224642E-04 -0.112043E-05  0.174833E-04
+   O    0.166391E-04 -0.228014E-04  0.704272E-05
+   O   -0.454641E-05  0.666070E-05  0.454974E-05
+   O    0.236786E-05  0.724360E-05 -0.907068E-05
+   O    0.105219E-04 -0.475260E-05 -0.331452E-04
+   O   -0.257290E-04 -0.753536E-05  0.848746E-05
+   O    0.764388E-05  0.175362E-04  0.940682E-05
+   O   -0.510494E-05  0.122484E-04 -0.232997E-05
+   O    0.340867E-05 -0.423452E-05 -0.504664E-05
+   O   -0.588038E-05 -0.989337E-06 -0.127029E-05
+   O    0.191798E-04 -0.155355E-04  0.844212E-05
+   O   -0.103554E-04 -0.308098E-05  0.192540E-04
+   O    0.317015E-04  0.210996E-04 -0.307794E-04
+   O   -0.613376E-05 -0.164022E-04 -0.833435E-05
+   O    0.682874E-05  0.107994E-04  0.156998E-04
+   O    0.186936E-05  0.893891E-05  0.769561E-05
+   O   -0.777479E-05  0.400516E-06 -0.362011E-06
+   O    0.350114E-05 -0.220298E-04 -0.855342E-05
+   O   -0.197733E-05  0.688298E-05  0.492412E-05
+   O   -0.130088E-05 -0.585816E-06 -0.153218E-05
+   O   -0.376016E-05  0.104166E-04 -0.357150E-04
+   O   -0.107538E-04 -0.506283E-06  0.359020E-05
+   O   -0.397396E-05  0.176137E-05  0.241199E-05
+   O   -0.108909E-04 -0.109583E-04 -0.761458E-05
+   O    0.617008E-05  0.274476E-05 -0.107040E-04
+   O    0.212166E-05 -0.584201E-05  0.395213E-05
+   O    0.198588E-04 -0.165391E-05 -0.103463E-05
+   H    0.454896E-04 -0.136763E-05  0.895649E-04
+   H   -0.772461E-04  0.752417E-05  0.578338E-04
+   H    0.436944E-04  0.237036E-03 -0.101957E-03
+   H   -0.108016E-04 -0.537728E-04  0.324057E-04
+   H    0.131094E-03 -0.151261E-03  0.910706E-04
+   H    0.552287E-04 -0.204922E-04  0.788287E-04
+   H    0.728068E-04 -0.403543E-04  0.356427E-06
+   H    0.331976E-04  0.294166E-05  0.517684E-04
+   H   -0.143434E-03 -0.260246E-04  0.257959E-04
+   H   -0.750360E-04  0.499555E-05  0.458966E-04
+   H    0.107700E-04 -0.456908E-05  0.277679E-04
+   H   -0.173366E-03  0.139213E-04 -0.159368E-03
+   H    0.375701E-04  0.715447E-04  0.338475E-04
+   H   -0.169680E-03  0.714349E-04 -0.105914E-03
+   H    0.129805E-04 -0.235789E-04 -0.276936E-04
+   H    0.302288E-04 -0.209316E-04  0.167279E-04
+   H   -0.889962E-05 -0.287129E-04  0.107063E-04
+   H   -0.135673E-04 -0.122757E-04  0.621202E-04
+   H   -0.548719E-04 -0.115351E-04  0.222457E-03
+   H   -0.159960E-04  0.784532E-04  0.350156E-04
+   H    0.153993E-04  0.216248E-04  0.910893E-04
+   H    0.139141E-03  0.385161E-04 -0.241932E-04
+   H   -0.128801E-03 -0.131834E-03 -0.104240E-03
+   H    0.302535E-04 -0.216514E-04 -0.766701E-05
+   H   -0.167890E-04 -0.714187E-04  0.143183E-04
+   H    0.379128E-04  0.865391E-05  0.295105E-04
+   H   -0.372389E-04 -0.537414E-04 -0.129180E-04
+   H   -0.128699E-04  0.921862E-04  0.171960E-04
+   H   -0.159656E-04  0.758689E-05  0.159962E-04
+   H    0.319048E-04  0.209676E-05  0.120776E-04
+   H   -0.940317E-04  0.414097E-04  0.379357E-04
+   H   -0.421774E-04  0.121868E-03 -0.128467E-03
+   H    0.567119E-04  0.150035E-04 -0.405363E-04
+   H    0.474931E-04  0.512799E-04 -0.904867E-04
+   H   -0.438522E-04 -0.255282E-04  0.203796E-03
+   H   -0.167304E-03 -0.169721E-03 -0.113057E-04
+   H    0.115286E-04 -0.660195E-05 -0.368577E-04
+   H    0.757403E-04  0.126719E-03  0.738044E-04
+   H    0.101207E-03 -0.746797E-04 -0.191933E-03
+   H   -0.108736E-03  0.254382E-04  0.326558E-04
+   H    0.162966E-04  0.159394E-04  0.918319E-05
+   H   -0.673829E-05 -0.122800E-03 -0.822375E-04
+   H    0.238628E-05  0.819784E-05  0.709776E-05
+   H    0.447013E-04 -0.489062E-04 -0.269278E-04
+   H   -0.554699E-04  0.134672E-03  0.321838E-04
+   H    0.445957E-04  0.339648E-04  0.509596E-04
+   H   -0.300472E-04 -0.412773E-04 -0.695754E-04
+   H    0.883391E-04 -0.107166E-04  0.244851E-04
+   H    0.103834E-04  0.107632E-04 -0.106391E-04
+   H    0.390353E-05  0.143349E-04  0.229083E-04
+   H    0.935059E-05 -0.937958E-04  0.177350E-03
+   H    0.587017E-04  0.363414E-04  0.915717E-04
+   H    0.295602E-04  0.821623E-05 -0.266329E-04
+   H    0.638701E-04 -0.232759E-04 -0.239241E-04
+   H    0.339681E-04 -0.790797E-04  0.901712E-05
+   H   -0.665990E-05  0.247985E-04 -0.407388E-04
+   H    0.982335E-04  0.847566E-04 -0.892870E-04
+   H   -0.455879E-04  0.100836E-04  0.132820E-03
+   H   -0.991875E-04 -0.729947E-04  0.124564E-03
+   H    0.221901E-04  0.316463E-04 -0.328749E-04
+   H    0.577704E-05 -0.207253E-04 -0.227074E-04
+   H   -0.213401E-04  0.300577E-04  0.303475E-04
+   H   -0.426493E-04  0.136399E-04 -0.588192E-04
+   H   -0.163507E-03  0.122200E-04  0.971518E-04
+ 
+   Forces acting on atoms (au):
+   O    0.634179E-02  0.166247E-02 -0.285861E-01
+   O    0.648818E-02 -0.466244E-01  0.259643E-01
+   O   -0.397391E-01  0.358834E-01 -0.303930E-01
+   O   -0.239789E-01  0.167108E-01 -0.292548E-01
+   O    0.273323E-01  0.109310E-02 -0.431578E-02
+   O    0.342775E-01 -0.172822E-02  0.268993E-01
+   O    0.251595E-01 -0.350916E-01  0.106999E-01
+   O   -0.706679E-02  0.101858E-01  0.708871E-02
+   O    0.346544E-02  0.111392E-01 -0.137410E-01
+   O    0.159555E-01 -0.733620E-02 -0.507877E-01
+   O   -0.395250E-01 -0.115515E-01  0.130960E-01
+   O    0.112170E-01  0.268296E-01  0.143458E-01
+   O   -0.792504E-02  0.189013E-01 -0.333394E-02
+   O    0.505664E-02 -0.648325E-02 -0.759389E-02
+   O   -0.914312E-02 -0.153192E-02 -0.178076E-02
+   O    0.290393E-01 -0.236223E-01  0.129109E-01
+   O   -0.160049E-01 -0.463047E-02  0.297824E-01
+   O    0.481662E-01  0.319193E-01 -0.470797E-01
+   O   -0.943867E-02 -0.251120E-01 -0.125219E-01
+   O    0.103556E-01  0.167108E-01  0.240538E-01
+   O    0.267024E-02  0.136376E-01  0.117406E-01
+   O   -0.120137E-01  0.618503E-03 -0.537370E-03
+   O    0.511019E-02 -0.335568E-01 -0.129172E-01
+   O   -0.313021E-02  0.106782E-01  0.758606E-02
+   O   -0.212858E-02 -0.842540E-03 -0.221453E-02
+   O   -0.592760E-02  0.161488E-01 -0.546125E-01
+   O   -0.167230E-01 -0.782692E-03  0.568536E-02
+   O   -0.617410E-02  0.268220E-02  0.388338E-02
+   O   -0.166291E-01 -0.166406E-01 -0.114749E-01
+   O    0.924157E-02  0.419495E-02 -0.162259E-01
+   O    0.308137E-02 -0.893678E-02  0.628824E-02
+   O    0.302610E-01 -0.254682E-02 -0.150494E-02
+   H    0.863077E-02 -0.215885E-03  0.167108E-01
+   H   -0.144983E-01  0.142094E-02  0.109279E-01
+   H    0.829238E-02  0.449516E-01 -0.193225E-01
+   H   -0.202498E-02 -0.102505E-01  0.613923E-02
+   H    0.249204E-01 -0.286686E-01  0.172418E-01
+   H    0.103704E-01 -0.396258E-02  0.150454E-01
+   H    0.136133E-01 -0.764265E-02  0.807668E-04
+   H    0.625923E-02  0.597260E-03  0.970129E-02
+   H   -0.271636E-01 -0.502480E-02  0.482309E-02
+   H   -0.143131E-01  0.947407E-03  0.876137E-02
+   H    0.203481E-02 -0.857085E-03  0.526736E-02
+   H   -0.327838E-01  0.263936E-02 -0.301589E-01
+   H    0.719471E-02  0.135670E-01  0.640944E-02
+   H   -0.319640E-01  0.135571E-01 -0.196560E-01
+   H    0.243411E-02 -0.439094E-02 -0.520497E-02
+   H    0.565059E-02 -0.396356E-02  0.318528E-02
+   H   -0.169870E-02 -0.536809E-02  0.207654E-02
+   H   -0.253076E-02 -0.239795E-02  0.116549E-01
+   H   -0.104471E-01 -0.211234E-02  0.421722E-01
+   H   -0.294993E-02  0.147858E-01  0.669130E-02
+   H    0.279329E-02  0.404616E-02  0.172927E-01
+   H    0.262622E-01  0.728258E-02 -0.434487E-02
+   H   -0.240100E-01 -0.247396E-01 -0.195194E-01
+   H    0.571899E-02 -0.410509E-02 -0.150742E-02
+   H   -0.324582E-02 -0.135856E-01  0.272303E-02
+   H    0.712389E-02  0.157757E-02  0.562987E-02
+   H   -0.701161E-02 -0.101699E-01 -0.249981E-02
+   H   -0.246251E-02  0.173979E-01  0.321389E-02
+   H   -0.305947E-02  0.144506E-02  0.303718E-02
+   H    0.594373E-02  0.428646E-03  0.228960E-02
+   H   -0.177023E-01  0.780124E-02  0.713742E-02
+   H   -0.775967E-02  0.229092E-01 -0.240905E-01
+   H    0.107817E-01  0.285943E-02 -0.772446E-02
+   H    0.889138E-02  0.970181E-02 -0.171210E-01
+   H   -0.833447E-02 -0.480694E-02  0.386223E-01
+   H   -0.312027E-01 -0.315407E-01 -0.208768E-02
+   H    0.215149E-02 -0.131537E-02 -0.698019E-02
+   H    0.143471E-01  0.239780E-01  0.138790E-01
+   H    0.192439E-01 -0.141992E-01 -0.365104E-01
+   H   -0.205294E-01  0.482677E-02  0.624346E-02
+   H    0.308906E-02  0.302713E-02  0.174504E-02
+   H   -0.113156E-02 -0.231242E-01 -0.153541E-01
+   H    0.452435E-03  0.157627E-02  0.135965E-02
+   H    0.838156E-02 -0.919159E-02 -0.505637E-02
+   H   -0.102849E-01  0.252797E-01  0.605555E-02
+   H    0.842094E-02  0.642201E-02  0.960963E-02
+   H   -0.563831E-02 -0.786521E-02 -0.132414E-01
+   H    0.167934E-01 -0.211803E-02  0.461340E-02
+   H    0.197285E-02  0.206411E-02 -0.201438E-02
+   H    0.752355E-03  0.271541E-02  0.433204E-02
+   H    0.171654E-02 -0.177836E-01  0.335454E-01
+   H    0.111238E-01  0.670699E-02  0.173544E-01
+   H    0.551859E-02  0.156590E-02 -0.510963E-02
+   H    0.121775E-01 -0.444377E-02 -0.457133E-02
+   H    0.628281E-02 -0.149130E-01  0.160674E-02
+   H   -0.135909E-02  0.465851E-02 -0.767450E-02
+   H    0.183025E-01  0.159026E-01 -0.168241E-01
+   H   -0.870987E-02  0.190002E-02  0.249506E-01
+   H   -0.187471E-01 -0.138225E-01  0.235775E-01
+   H    0.422970E-02  0.597751E-02 -0.625877E-02
+   H    0.106959E-02 -0.390767E-02 -0.432047E-02
+   H   -0.404214E-02  0.568460E-02  0.571554E-02
+   H   -0.811279E-02  0.251447E-02 -0.110305E-01
+   H   -0.310775E-01  0.234495E-02  0.184642E-01
+ 
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   Mean Square Displacement (a.u.)
+        1   1.59E+00     4.7586E-08
+        2   5.96E+00     1.4040E-06
+ 
+  nfi     ekinc              temph  tempp          exx               etot               enthal               econs                econt            vnhh    xnhh0   vnhp    xnhp0
+     10    0.000048511243448    0.0    4.55     -31.505521225103    -550.125954564923    -550.125954564923    -550.123902345163    -550.123856487664   0.0000   0.0000  -0.0000  -0.0005
+   MLWF step    8  Convergence =  3.196E-07  Generated
+
+   writing restart file: ./water_50.save
+   restart file written in    9.031 sec.
+
+
+
+   Averaged Physical Quantities
+                      accumulated      this run
+   ekinc         :      838.32564       0.00002 (AU)
+   ekin          :     7396.90952     404.14276 (AU)
+   epot          :   -17225.68109    -985.07808 (AU)
+   total energy  :    -8926.56765    -550.12465 (AU)
+   temperature   :        1.68521       1.68521 (K )
+   enthalpy      :    -8926.56765    -550.12465 (AU)
+   econs         :    -8926.56689    -550.12389 (AU)
+   pressure      :        0.00000       0.00000 (Gpa)
+   volume        :   113803.84430    6503.07682 (AU)
+
+
+
+     Called by MAIN_LOOP:
+     initialize   :     10.44s CPU      7.89s WALL (       1 calls)
+     main_loop    :    209.23s CPU    125.70s WALL (      10 calls)
+     cpr_total    :    212.96s CPU    135.68s WALL (       1 calls)
+
+     Called by INIT_RUN:
+     init_readfil :      2.80s CPU      3.45s WALL (       1 calls)
+
+     Called by CPR:
+     cpr_md       :    212.96s CPU    135.68s WALL (      10 calls)
+     move_electro :    200.36s CPU    118.11s WALL (      10 calls)
+     wf_close_opt :      0.79s CPU      0.80s WALL (      10 calls)
+
+     Called by WANNIER_MODULES:
+     wf_init      :      6.39s CPU      3.53s WALL (       1 calls)
+     wf_close_opt :      0.79s CPU      0.80s WALL (      10 calls)
+     wf_1         :      0.45s CPU      0.46s WALL (      10 calls)
+     wf_2         :      0.34s CPU      0.34s WALL (      10 calls)
+
+     Called by EXACT_EXCHANGE:
+     exact_exchan :    194.06s CPU    114.87s WALL (      10 calls)
+     getpairv     :    128.76s CPU     64.78s WALL (      10 calls)
+     exx_gs_setup :      0.34s CPU      0.18s WALL (      10 calls)
+     exx_pairs    :      0.04s CPU      0.02s WALL (      10 calls)
+     r_orbital    :      3.81s CPU      2.14s WALL (      10 calls)
+     totalenergy  :     30.07s CPU     27.51s WALL (      10 calls)
+     vl2vg        :      1.77s CPU      1.71s WALL (      10 calls)
+     send_psi     :      6.88s CPU      3.55s WALL (      10 calls)
+     sendv        :     21.27s CPU     13.92s WALL (      10 calls)
+     send_psi_wai :      0.00s CPU      0.00s WALL (      10 calls)
+     getvofr      :    123.23s CPU     61.99s WALL (     100 calls)
+     getvofr_qlm  :      2.61s CPU      1.32s WALL (     100 calls)
+     getvofr_boun :      5.20s CPU      2.61s WALL (     100 calls)
+     getvofr_gete :      0.44s CPU      0.22s WALL (     100 calls)
+     getvofr_hpot :    114.27s CPU     57.48s WALL (     100 calls)
+     exx_cell_der :      1.46s CPU      0.73s WALL (     110 calls)
+
+     Called by move_electrons:
+     rhoofr       :      1.32s CPU      0.68s WALL (      10 calls)
+     vofrho       :      1.54s CPU      0.79s WALL (      10 calls)
+     dforce       :      3.34s CPU      1.71s WALL (     320 calls)
+     calphi       :      0.00s CPU      0.00s WALL (      10 calls)
+     nlfl         :      0.00s CPU      0.00s WALL (      10 calls)
+
+     Called by ortho:
+     ortho_iter   :      0.46s CPU      0.24s WALL (      30 calls)
+     rsg          :      1.73s CPU      0.89s WALL (      30 calls)
+     rhoset       :      0.67s CPU      0.34s WALL (      30 calls)
+     sigset       :      0.38s CPU      0.20s WALL (      30 calls)
+     tauset       :      0.30s CPU      0.15s WALL (      30 calls)
+     ortho        :      3.56s CPU      1.81s WALL (      30 calls)
+     updatc       :      0.47s CPU      0.23s WALL (      30 calls)
+
+     Small boxes:
+
+     Low-level routines:
+     prefor       :      0.00s CPU      0.00s WALL (      41 calls)
+     nlfq         :      0.10s CPU      0.05s WALL (      10 calls)
+     nlsm1        :      0.08s CPU      0.04s WALL (      31 calls)
+     nlsm2        :      0.10s CPU      0.05s WALL (      10 calls)
+     fft          :      1.22s CPU      0.63s WALL (      80 calls)
+     ffts         :      0.14s CPU      0.07s WALL (      20 calls)
+     fftw         :      5.41s CPU      2.77s WALL (    1280 calls)
+     fft_scatter  :      5.75s CPU      2.97s WALL (    1380 calls)
+     betagx       :      0.34s CPU      0.17s WALL (       1 calls)
+     qradx        :      0.00s CPU      0.00s WALL (       1 calls)
+     nlinit       :      0.88s CPU      0.44s WALL (       1 calls)
+     init_dim     :      0.10s CPU      0.11s WALL (       1 calls)
+     newnlinit    :      0.02s CPU      0.01s WALL (       1 calls)
+     from_restart :      0.01s CPU      0.01s WALL (       1 calls)
+     strucf       :      0.03s CPU      0.01s WALL (      11 calls)
+     calbec       :      0.08s CPU      0.04s WALL (      31 calls)
+     ALLTOALL     :      0.14s CPU      0.07s WALL (    1280 calls)
+ 
+ 
+     CP           :  3m43.46s CPU     2m25.13s WALL
+
+ 
+   This run was terminated on:  15:49:53  11Sep2014            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
+Application 7325572 resources: utime ~60995s, stime ~1235s, Rss ~356848, inblocks ~3703630, outblocks ~1450022
