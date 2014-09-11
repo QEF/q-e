@@ -11,7 +11,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !----------------------------------------------------------------------------
   !
   USE kinds,                    ONLY : DP
-  USE constants,                ONLY : bohr_radius_angs, amu_au
+  USE constants,                ONLY : bohr_radius_angs, amu_au, au_gpa
   USE control_flags,            ONLY : iprint, isave, thdyn, tpre, iverbosity, &
                                        tfor, remove_rigid_rot, taurdr, llondon,&
                                        tprnfor, tsdc, lconstrain, lwf,         &
@@ -37,10 +37,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        berry_energy2, pberryel2, pberryion2
   USE ensemble_dft,             ONLY : tens, z0t, gibbsfe
   USE cg_module,                ONLY : tcg,  cg_update, c0old
-  USE gvect,                    ONLY : ngm
+  USE gvect,                    ONLY : ngm, ngm_g
   USE gvecs,                    ONLY : ngms
   USE smallbox_gvec,                    ONLY : ngb
-  USE gvecw,                    ONLY : ngw
+  USE gvecw,                    ONLY : ngw, ngw_g
   USE gvect,       ONLY : gstart, mill, eigts1, eigts2, eigts3
   USE ions_base,                ONLY : na, nat, amass, nax, nsp, rcmax
   USE ions_base,                ONLY : ind_srt, ions_cofmass, ions_kinene, &
@@ -114,10 +114,14 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE mp,                       ONLY : mp_bcast, mp_sum
   USE mp_global,                ONLY : root_bgrp, intra_bgrp_comm, np_ortho, &
                                        me_ortho, ortho_comm, &
-                                       me_bgrp, inter_bgrp_comm, nbgrp
+                                       me_bgrp, inter_bgrp_comm, nbgrp, me_image
   USE ldaU_cp,                  ONLY : lda_plus_u, vupsi
   USE fft_base,                 ONLY : dfftp
   USE london_module,            ONLY : energy_london, force_london, stres_london
+  USE input_parameters,         ONLY : tcpbo,exx_wf
+  USE funct,                    ONLY : set_exx_fraction
+  USE control_flags,            ONLY : lwfpbe0
+  USE wannier_base,             ONLY : exx_wf_fraction
   !
   IMPLICIT NONE
   !
@@ -146,7 +150,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   REAL(DP) :: ekinh, temphc, randy
   REAL(DP) :: delta_etot
   REAL(DP) :: ftmp, enb, enbi
-  INTEGER  :: is, nacc, ia, j, iter, i, isa, ipos, iat
+  INTEGER  :: is, nacc, ia, j, iter, i, isa, ipos, iat, CYCLE_NOSE
   INTEGER  :: k, ii, l, m, iss
   REAL(DP) :: hgamma(3,3), temphh(3,3)
   REAL(DP) :: fcell(3,3)
@@ -163,9 +167,12 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   REAL(DP), ALLOCATABLE :: pmass(:)
   REAL(DP), ALLOCATABLE :: forceh(:,:)
   !
+  CALL start_clock( 'cpr_total' )
+  !
   etot_out = 0.D0
   enow     = 1.D9
   stress   = 0.0D0
+  thstress   = 0.0D0
   !
   tfirst = .TRUE.
   tlast  = .FALSE.
@@ -198,6 +205,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   main_loop: DO
      !
      CALL start_clock( 'main_loop' )
+     CALL start_clock( 'cpr_md' )
      !
      dt2bye   = dt2 / emass
      nfi     = nfi + 1
@@ -346,11 +354,23 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         DEALLOCATE ( usrt_tau0 )
      END IF
      !
+     !======================================================================
+     !
+     ! BS : Additional cycles for the Nose thermostat ... 
+     !
+     CYCLE_NOSE=0
+     !
+     !======================================================================
      IF ( tpre ) THEN
         !
         CALL nlfh( stress, bec_bgrp, dbec, lambda, descla )
         !
-        CALL ions_thermal_stress( stress, pmass, omega, h, vels, nsp, na )
+        CALL ions_thermal_stress( stress, thstress, pmass, omega, h, vels, nsp, na )
+        !
+        IF(MOD(nfi,iprint).EQ.0)  THEN
+          WRITE(stdout,'(5X,"Pressure of Nuclei (GPa)",F20.5,I7)') (thstress(1,1)+thstress(2,2)+thstress(3,3))/3.0_DP * au_gpa, nfi
+          WRITE(stdout,'(5X,"Pressure Total (GPa)",F20.5,I7)') (stress(1,1)+stress(2,2)+stress(3,3))/3.0_DP * au_gpa , nfi
+        END IF
         !
      END IF
      !
@@ -380,9 +400,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
      END IF
      !
-     !======================================================================
      !
-     IF ( tfor ) THEN
+444  IF ( tfor ) THEN
         !
         IF ( lwf ) CALL ef_force( fion, na, nsp, zv )
         !
@@ -477,25 +496,30 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      ! ... if thdyn=true g vectors and pseudopotentials are recalculated for 
      ! ... the new cell parameters
      !
+     !
      IF ( tfor .OR. thdyn ) THEN
         !
-        IF ( thdyn ) THEN
-           !
-           hold = h
-           h    = hnew
-           !
-           IF( nbgrp > 1 ) THEN
-              CALL mp_bcast( h, 0, inter_bgrp_comm )
-           END IF
-           !
-           CALL newinit( h, iverbosity )
-           !
-           CALL newnlinit()
-           !
-        ELSE
-           !
-           hold = h
-           !
+        IF ( CYCLE_NOSE .EQ. 0 ) THEN
+          !
+          IF ( thdyn ) THEN
+             !
+             hold = h
+             h    = hnew
+             !
+             IF( nbgrp > 1 ) THEN
+                CALL mp_bcast( h, 0, inter_bgrp_comm )
+             END IF
+             !
+             CALL newinit( h, iverbosity )
+             !
+             CALL newnlinit()
+             !
+          ELSE
+             !
+             hold = h
+             !
+          END IF
+          !
         END IF
         !
         ! ... phfac calculates eigr
@@ -619,6 +643,12 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      IF ( tnoseh ) CALL cell_noseupd( xnhhp, xnhh0, xnhhm, &
                                       delt, qnh, temphh, temph, vnhh )
      !
+     !=================================================================
+     ! BS : Additional cycles for the Nose thermostat ... 
+     CYCLE_NOSE=CYCLE_NOSE+1
+     IF(tnosep .AND. (CYCLE_NOSE == 1 .OR. CYCLE_NOSE == 2) ) GO TO 444 
+     !=================================================================
+     ! 
      ! ... warning:  thdyn and tcp/tcap are not compatible yet!!!
      !
      IF ( tcp .AND. tfor .AND. .NOT.thdyn ) THEN
@@ -737,7 +767,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
      END IF
      !
-     IF ( thdyn .AND. tfirst ) CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff )
+     !IF ( thdyn .AND. tfirst ) CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff ) ! BS: Possibly not needed
      !
      ekincm = ekinc0
      !  
@@ -817,6 +847,22 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      delta_etot = ABS( epre - enow )
      !
+     !The following criteria is used to turn on exact exchange calculation when
+     !GGA energy is converged up to 100 times of the input etot convergence thereshold  
+     !
+     IF( .NOT.exx_wf.AND.lwfpbe0.AND.tconvthrs%active ) THEN
+       !
+       !IF(delta_etot.LT.tconvthrs%derho*1.E+4_DP) THEN
+       IF(delta_etot.LT.tconvthrs%derho*1.E+2_DP) THEN
+         !
+         WRITE(stdout,'(/,3X,"Exact Exchange is turned on ...")')
+         exx_wf=.TRUE.
+         CALL set_exx_fraction(exx_wf_fraction) 
+         !
+       END IF
+       !
+     END IF
+     !
      tstop = check_stop_now() .OR. tlast
      !
      tconv = .FALSE.
@@ -874,6 +920,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( tstop ) EXIT main_loop
      !
+     CALL stop_clock( 'cpr_md' )
+     !
   END DO main_loop
   !
   !===================== end of main loop of molecular dynamics ===============
@@ -911,6 +959,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   IF (lda_plus_u) DEALLOCATE( forceh )
 
+  !
+  CALL stop_clock( 'cpr_total' ) ! BS
+  !
   RETURN
   !
 END SUBROUTINE cprmain
@@ -924,7 +975,9 @@ SUBROUTINE terminate_run()
   USE cg_module,         ONLY : tcg, print_clock_tcg
   USE ldaU_cp,           ONLY : lda_plus_u
   USE mp,                ONLY : mp_report
+  USE control_flags,     ONLY : lwf, lwfpbe0, lwfpbe0nscf
   USE tsvdw_module,      ONLY : tsvdw_finalize
+  USE exx_module,        ONLY : exx_finalize
   !
   IMPLICIT NONE
   !
@@ -932,21 +985,75 @@ SUBROUTINE terminate_run()
   !
   CALL printacc()
   !
+  !==============================================================
+  WRITE( stdout, '(/5x,"Called by MAIN_LOOP:")' )
+  CALL print_clock( 'total_time' )
   CALL print_clock( 'initialize' )
   CALL print_clock( 'main_loop' )
-  !
-  WRITE( stdout, '(/5x,"Called by main_loop:")' )
-  IF (thdyn) CALL print_clock( 'formf' )
+  CALL print_clock( 'cpr_total' )
+  !==============================================================
+  WRITE( stdout, '(/5x,"Called by INIT_RUN:")' )
+  CALL print_clock( 'init_readfile' )
+  IF( lwf ) CALL print_clock( 'wf_start' )
+  !==============================================================
+  WRITE( stdout, '(/5x,"Called by CPR:")' )
+  CALL print_clock( 'cpr_md' )
   CALL print_clock( 'move_electrons' )
-  IF (tortho) THEN
-     CALL print_clock( 'ortho' )
-     CALL print_clock( 'updatc' )
-  ELSE
-     CALL print_clock( 'gram' )
+  CALL print_clock( 'move_ion' )
+  IF( lwf ) CALL print_clock( 'wf_close_opt' ) ! wf_close_opt = wf_1 + wf_2
+  !==============================================================
+  IF( lwf ) THEN
+    WRITE( stdout, '(/5x,"Called by WANNIER_MODULES:")' )
+    CALL print_clock( 'wf_start' )
+    CALL print_clock( 'wf_init' )
+    CALL print_clock( 'wf_close_opt' ) ! wf_close_opt = wf_1 + wf_2
+    CALL print_clock( 'wf_1' )
+    CALL print_clock( 'wf_2' )
+    CALL print_clock( 'ddyn_u' )
+    CALL print_clock( 'ortho_u' )
   END IF
-  CALL print_clock( 'new_ns' )
-  CALL print_clock( 'strucf' )
-  CALL print_clock( 'calbec' )
+  !==============================================================
+  IF ( lwfpbe0 .or. lwfpbe0nscf ) THEN
+    WRITE( stdout, '(/5x,"Called by EXACT_EXCHANGE:")' )
+    CALL print_clock('exact_exchange')
+    
+    CALL print_clock('self_v')           ! calculation
+    CALL print_clock('getpairv')         ! calculation
+    
+    CALL print_clock('exx_gs_setup')     ! calculation
+    CALL print_clock('exx_pairs')        ! calculation
+    
+    CALL print_clock('r_orbital')        ! communication 
+    CALL print_clock('totalenergy')      ! communication 
+    CALL print_clock('vl2vg')            ! communication
+    
+    CALL print_clock('send_psi')         ! communication
+    CALL print_clock('sendv')            ! communication
+
+    CALL print_clock('send_psi_barrier') ! communication
+    CALL print_clock('send_psi_wait')    ! communication
+    
+    !CALL print_clock('sendv_barrier')    ! communication
+                                         
+    CALL print_clock('getvofr')
+    CALL print_clock('getvofr_qlm')
+    CALL print_clock('getvofr_bound')
+    CALL print_clock('getvofr_geterho')
+    CALL print_clock('getvofr_hpotcg')
+    
+    !CALL print_clock('hpotcg')
+    !CALL print_clock('getqlm')
+    !CALL print_clock('exx_bound')
+    !CALL print_clock('lapmv')
+
+    !HK
+    CALL print_clock('exx_cell_derv')
+  END IF
+  !==============================================================
+  IF (thdyn) THEN 
+    WRITE( stdout, '(/5x,"Called by CELL_DYNAMICS:")' )
+    CALL print_clock( 'formf' )
+  END IF
 
   WRITE( stdout, '(/5x,"Called by move_electrons:")' )
   CALL print_clock( 'rhoofr' )
@@ -962,11 +1069,17 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'dndtau' )
 
   IF (tortho) WRITE( stdout, '(/5x,"Called by ortho:")' )
-  CALL print_clock( 'ortho_iter' )
-  CALL print_clock( 'rsg' )
-  CALL print_clock( 'rhoset' )
-  CALL print_clock( 'sigset' )
-  CALL print_clock( 'tauset' )
+  IF (tortho) THEN
+    CALL print_clock( 'ortho_iter' )
+    CALL print_clock( 'rsg' )
+    CALL print_clock( 'rhoset' )
+    CALL print_clock( 'sigset' )
+    CALL print_clock( 'tauset' )
+    CALL print_clock( 'ortho' )
+    CALL print_clock( 'updatc' )
+  ELSE
+    CALL print_clock( 'gram' )
+  END IF
 
   WRITE( stdout, '(/5x,"Small boxes:")' )
   CALL print_clock( 'rhov' )
@@ -994,29 +1107,10 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'newnlinit' )
   CALL print_clock( 'from_scratch' )
   CALL print_clock( 'from_restart' )
+  CALL print_clock( 'new_ns' )
+  CALL print_clock( 'strucf' )
+  CALL print_clock( 'calbec' )
 !==============================================================
-! Lingzhu Kong
-  CALL print_clock( 'wf' )
-  CALL print_clock( 'wf_1' )
-  CALL print_clock( 'wf_2' )
-  CALL print_clock('rhoiofr')
-  CALL print_clock('wf_close_opt')
-  CALL print_clock('ddyn_u')
-  CALL print_clock('uforce')
-  CALL print_clock('ortho_u')
-  CALL print_clock('ddyn_2')
-  CALL print_clock('ortho_iter')
-  CALL print_clock('getdelta')
-  CALL print_clock('exact_exchange')
-  CALL print_clock('r_orbital')
-  CALL print_clock('hpotcg')
-  CALL print_clock('getqlm')
-  CALL print_clock('exx_bound')
-  CALL print_clock('lapmv')
-  CALL print_clock('send_psi')
-  CALL print_clock('vl2vg')
-  CALL print_clock('getpairv')
-!========================================================================
   IF (ts_vdw) THEN
     WRITE( stdout, '(/5x,"Called by tsvdw:")' )
     CALL print_clock( 'ts_vdw' )

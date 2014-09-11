@@ -55,13 +55,13 @@ MODULE cp_restart
                              vnhp, xnhp0, xnhpm, nhpcl, nhpdim, occ0, occm,  &
                              lambda0,lambdam, xnhe0, xnhem, vnhe, ekincm,    &
                              et, rho, c02, cm2, ctot, iupdwn, nupdwn,        &
-                             iupdwn_tot, nupdwn_tot, mat_z )
+                             iupdwn_tot, nupdwn_tot, wfc, mat_z ) ! BS added wfc
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, trhow, &
                                            tksw, twfcollect, do_makov_payne, &
                                            smallmem, llondon, lxdm, ts_vdw
-      USE control_flags,            ONLY : lwfpbe0nscf, lwfnscf ! Lingzhu Kong
+      USE control_flags,            ONLY : lwfpbe0nscf, lwfnscf, lwf ! Lingzhu Kong
       USE constants,                ONLY : e2
       USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, &
                                            nwordwfc, tmp_dir, diropn
@@ -81,7 +81,7 @@ MODULE cp_restart
       USE gvecw,                    ONLY : ngw, ngw_g, ecutwfc
       USE gvect,                    ONLY : ig_l2g, mill
       USE electrons_base,           ONLY : nspin, nelt, nel, nudx
-      USE cell_base,                ONLY : ibrav, alat, celldm, s_to_r
+      USE cell_base,                ONLY : ibrav, alat, celldm, s_to_r, ainv ! BS added ainv
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            amass, iforce, ind_bck
       USE funct,                    ONLY : get_dft_name, get_inlc
@@ -145,6 +145,7 @@ MODULE cp_restart
       INTEGER,               INTENT(IN) :: nupdwn(:)    ! 
       INTEGER,               INTENT(IN) :: iupdwn_tot(:)! 
       INTEGER,               INTENT(IN) :: nupdwn_tot(:)! 
+      REAL(DP),              INTENT(IN) :: wfc(:,:)     ! BS 
       REAL(DP),    OPTIONAL, INTENT(IN) :: mat_z(:,:,:) ! 
       !
       LOGICAL               :: write_charge_density
@@ -174,6 +175,7 @@ MODULE cp_restart
       LOGICAL               :: exst
       INTEGER               :: inlc
       CHARACTER(iotk_attlenx)  :: attr
+      REAL(DP), ALLOCATABLE :: temp_vec(:), wfc_temp(:,:) ! BS 
       !
       ! ... subroutine body
       !
@@ -819,6 +821,53 @@ MODULE cp_restart
       !
       IF ( ionode ) CALL iotk_write_end( iunpun, "EIGENVECTORS" )
       !
+      !-------------------------------------------------------------------------
+      ! BS : Wannier centers
+      IF ( lwf ) THEN
+         !
+         IF ( ionode ) THEN
+            CALL iotk_write_begin( iunpun, "WANNIER_CENTERS" )
+            !
+            ALLOCATE(temp_vec(3)) 
+            !
+            DO iss = 1, nspin
+               !
+               ALLOCATE( wfc_temp(3,nupdwn(iss)) )
+               !
+               temp_vec=0.0_DP
+               wfc_temp=0.0_DP
+               !
+               j = 1 !wfc_temp count
+               DO i = iupdwn(iss), iupdwn(iss) + nupdwn(iss) -1 
+                     !
+                     temp_vec(:) = MATMUL( ainv(:,:), wfc(:,i) )
+                     !
+                     temp_vec(:) = temp_vec(:) - floor (temp_vec(:))
+                     !
+                     temp_vec(:) = MATMUL( h(:,:), temp_vec(:) )
+                     !
+                     wfc_temp(:, j) = temp_vec(:)
+                     j = j + 1
+                     !
+               END DO
+               !
+               CALL iotk_write_dat(   iunpun, "wanniercentres" // TRIM( iotk_index(iss)),  &
+                                                                     & wfc_temp(1:3,1:nupdwn(iss)),  COLUMNS=3 )
+               !
+               DEALLOCATE(wfc_temp)
+               !
+            ENDDO
+            !
+            DEALLOCATE(temp_vec)
+            !
+            CALL iotk_write_end(   iunpun, "WANNIER_CENTERS" )
+            !
+         ENDIF
+         !
+      END IF
+      ! BS : Wannier centers
+      !-------------------------------------------------------------------------
+      !
       IF ( ionode ) THEN
          !
          CALL qexml_closefile( 'write', IERR=ierr)
@@ -881,10 +930,10 @@ MODULE cp_restart
                             taui, cdmi, stau0, svel0, staum, svelm, force,    &
                             vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ0, occm,      &
                             lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, vnhe, &
-                            ekincm, c02, cm2, mat_z )
+                            ekincm, c02, cm2, wfc, mat_z ) ! added wfc
       !------------------------------------------------------------------------
       !
-      USE control_flags,            ONLY : gamma_only, force_pairing, iverbosity, twfcollect
+      USE control_flags,            ONLY : gamma_only, force_pairing, iverbosity, twfcollect, lwf ! BS added lwf
       USE io_files,                 ONLY : iunpun, xmlpun, iunwfc, nwordwfc, &
                                            tmp_dir, diropn
       USE run_info,                 ONLY : title
@@ -946,6 +995,7 @@ MODULE cp_restart
       REAL(DP),              INTENT(INOUT) :: ekincm       !  
       COMPLEX(DP),           INTENT(INOUT) :: c02(:,:)     ! 
       COMPLEX(DP),           INTENT(INOUT) :: cm2(:,:)     ! 
+      REAL(DP),              INTENT(INOUT) :: wfc(:,:)     ! BS 
       REAL(DP),    OPTIONAL, INTENT(INOUT) :: mat_z(:,:,:) ! 
       !
       CHARACTER(LEN=256)   :: dirname, kdirname, filename
@@ -1613,6 +1663,34 @@ MODULE cp_restart
          !
       END IF
       !
+      !-------------------------------------------------------------------------
+      ! BS : Wannier centers
+      IF ( ionode ) THEN
+         !
+         IF ( lwf ) THEN
+            !
+            CALL iotk_scan_begin( iunpun, "WANNIER_CENTERS" , FOUND=found)
+            !
+            IF (found) THEN
+               !
+               DO iss = 1, nspin
+                  !
+                  CALL iotk_scan_dat(   iunpun, "wanniercentres" // TRIM(iotk_index(iss)), &
+                                                   &wfc(1:3, iupdwn(iss):iupdwn(iss) + nupdwn(iss) -1 ) )
+                  !
+               ENDDO
+               !
+            ELSE
+               WRITE( stdout, * ) 'WARNING wannier centers not read from restart file:'
+            ENDIF
+            !
+            CALL iotk_scan_end(   iunpun, "WANNIER_CENTERS" )
+         END IF
+         !
+      END IF
+      ! BS : Wannier centers
+      !-------------------------------------------------------------------------
+      !
       CALL mp_bcast( qexml_version,      ionode_id, intra_image_comm )
       CALL mp_bcast( qexml_version_init, ionode_id, intra_image_comm )
       !
@@ -1651,6 +1729,11 @@ MODULE cp_restart
 
       CALL mp_bcast( occ0, ionode_id, intra_image_comm )
       CALL mp_bcast( occm, ionode_id, intra_image_comm )
+      !
+      !-------------------------------------------------------------------------
+      ! BS : Wannier centers
+      IF ( lwf ) CALL mp_bcast( wfc, ionode_id, intra_image_comm )
+      !-------------------------------------------------------------------------
       !
       IF ( PRESENT( mat_z ) ) &
          CALL mp_bcast( mat_z(:,:,:), ionode_id, intra_image_comm )

@@ -122,6 +122,7 @@ MODULE read_namelists_module
        lkpoint_dir = .TRUE.
        lecrpa   = .FALSE.   
        tqmmm = .FALSE.
+       exx_wf = .FALSE.
        !
        saverho = .TRUE.
        memory = 'default'
@@ -293,7 +294,7 @@ MODULE read_namelists_module
        electron_maxstep = 100
        scf_must_converge = .true.
        !
-       ! ... ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' | 'diis' )
+       ! ... ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' | 'diis' | 'cp-bo' )
        !
        electron_dynamics = 'none'
        electron_damping = 0.1_DP
@@ -372,6 +373,13 @@ MODULE read_namelists_module
        adaptive_thr   =  .false.
        conv_thr_init  =  0.1E-2_DP
        conv_thr_multi =  0.1_DP
+       !
+       ! ... CP-BO ...
+       tcpbo = .false.
+       emass_emin = 200.0_DP
+       emass_cutoff_emin = 6.0_DP
+       electron_damping_emin = 0.35_DP
+       dt_emin = 4.0_DP
        !
        RETURN
        !
@@ -525,7 +533,7 @@ MODULE read_namelists_module
        cell_dofree = 'all'
        cell_factor = 0.0_DP
        cell_nstepe = 1
-       cell_damping = 0.0_DP
+       cell_damping = 0.1_DP
        press_conv_thr = 0.5_DP
        !
        RETURN
@@ -606,13 +614,16 @@ MODULE read_namelists_module
        wf_q        = 1500.0_DP
        wf_friction = 0.3_DP
 !=======================================================================
-!Lingzhu Kong
-       neigh       = 48
-       vnbsp       = 0
-       poisson_eps = 1.D-6
-       dis_cutoff  = 7.0_DP
-       exx_ps_rcut = 5.0
-       exx_me_rcut = 10.0
+!exx_wf related
+       exx_neigh        =  60 
+       vnbsp            =  0
+       exx_poisson_eps  =  1.E-6_DP
+       exx_dis_cutoff   =  8.0_DP
+       exx_ps_rcut_self =  6.0_DP
+       exx_ps_rcut_pair =  5.0_DP
+       exx_me_rcut_self = 10.0_DP
+       exx_me_rcut_pair =  7.0_DP
+       exx_wf_fraction  =  0.25_DP
 !=======================================================================
        !
        nit    = 10
@@ -693,6 +704,7 @@ MODULE read_namelists_module
        CALL mp_bcast( tqmmm,         ionode_id, intra_image_comm )
        CALL mp_bcast( vdw_table_name,ionode_id, intra_image_comm )
        CALL mp_bcast( memory,        ionode_id, intra_image_comm )
+       CALL mp_bcast( exx_wf,        ionode_id, intra_image_comm )
        !
        RETURN
        !
@@ -939,6 +951,14 @@ MODULE read_namelists_module
        CALL mp_bcast( adaptive_thr,       ionode_id, intra_image_comm )
        CALL mp_bcast( conv_thr_init,      ionode_id, intra_image_comm )
        CALL mp_bcast( conv_thr_multi,     ionode_id, intra_image_comm )
+       !
+       ! ... CP-BO ...
+       CALL mp_bcast( tcpbo,                 ionode_id, intra_image_comm )
+       CALL mp_bcast( emass_emin,            ionode_id, intra_image_comm )
+       CALL mp_bcast( emass_cutoff_emin,     ionode_id, intra_image_comm )
+       CALL mp_bcast( electron_damping_emin, ionode_id, intra_image_comm )
+       CALL mp_bcast( dt_emin,               ionode_id, intra_image_comm )
+       !
        RETURN
        !
      END SUBROUTINE
@@ -1126,6 +1146,17 @@ MODULE read_namelists_module
        CALL mp_bcast( nwf,         ionode_id, intra_image_comm )
        CALL mp_bcast( wffort,      ionode_id, intra_image_comm )
        CALL mp_bcast( writev,      ionode_id, intra_image_comm )
+!=================================================================
+!exx_wf related
+       CALL mp_bcast( exx_neigh,       ionode_id, intra_image_comm )
+       CALL mp_bcast( exx_poisson_eps, ionode_id, intra_image_comm )
+       CALL mp_bcast( exx_dis_cutoff,  ionode_id, intra_image_comm )
+       CALL mp_bcast( exx_ps_rcut_self, ionode_id, intra_image_comm )
+       CALL mp_bcast( exx_ps_rcut_pair, ionode_id, intra_image_comm )
+       CALL mp_bcast( exx_me_rcut_self, ionode_id, intra_image_comm )
+       CALL mp_bcast( exx_me_rcut_pair, ionode_id, intra_image_comm )
+       CALL mp_bcast( exx_wf_fraction, ionode_id, intra_image_comm )
+       CALL mp_bcast( vnbsp,       ionode_id, intra_image_comm )
        !
        RETURN
        !

@@ -221,7 +221,7 @@ MODULE input
         orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr_inp, saverho, tdipole_card, rd_for, assume_isolated, wf_collect,  &
-        memory
+        memory, ref_cell, exx_wf, tcpbo
      !
      IMPLICIT NONE
      !
@@ -284,14 +284,21 @@ MODULE input
      emass_ = emass
      emaec_ = emass_cutoff
 !====================================================================
-!Lingzhu Kong
+!exx_wf related
      lwf = ( TRIM( calculation ) == 'cp-wf'      .OR. &
              TRIM( calculation ) == 'cp-wf-nscf' .OR. &
              TRIM( calculation ) == 'cp-wf-pbe0' .OR. &
              TRIM( calculation ) == 'pbe0-nscf' )
      lwfnscf     = ( TRIM( calculation ) == 'cp-wf-nscf' )
-     lwfpbe0     = ( TRIM( calculation ) == 'cp-wf-pbe0')
-     lwfpbe0nscf = ( TRIM( calculation ) == 'pbe0-nscf' )
+     lwfpbe0     = ( TRIM( calculation ) == 'cp-wf-pbe0' )
+     lwfpbe0nscf = ( TRIM( calculation ) == 'pbe0-nscf'  )
+     !
+     IF( lwfpbe0 .OR. lwfnscf .OR. lwfpbe0nscf ) exx_wf = .TRUE.
+     !
+     IF( exx_wf ) THEN 
+       lwf     = .TRUE. 
+       lwfpbe0 = .TRUE. 
+     END IF
 !====================================================================
 
      !
@@ -749,7 +756,8 @@ MODULE input
            rotation_damping, occupation_damping, occupation_dynamics,         &
            rotation_dynamics, degauss, smearing, nhpcl, nhptyp, ndega,        &
            nhgrp, fnhscl, cell_units, restart_mode, sic_alpha ,               &
-           niter_cold_restart, lambda_cold, rd_for
+           niter_cold_restart, lambda_cold, rd_for, ref_cell, rd_ref_ht,      &
+           ref_cell_units, ref_alat
 
      USE input_parameters, ONLY: nconstr_inp, iprnks, nprnks,                  &
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nbnd,                   &
@@ -763,9 +771,15 @@ MODULE input
                                   adapt, calwf, nwf, wffort, writev,           &
                                   wannier_index
 !===============================================================
-!Lingzhu Kong
-     USE input_parameters, ONLY : neigh, poisson_eps, dis_cutoff, exx_ps_rcut,&
-                                  exx_me_rcut, vnbsp
+!exx_wf related
+     USE input_parameters, ONLY : neigh=>exx_neigh, vnbsp,&  
+                                  poisson_eps=>exx_poisson_eps,&
+                                  dis_cutoff=>exx_dis_cutoff,&
+                                  exx_ps_rcut_s=>exx_ps_rcut_self,&
+                                  exx_me_rcut_s=>exx_me_rcut_self,&
+                                  exx_ps_rcut_p=>exx_ps_rcut_pair,&
+                                  exx_me_rcut_p=>exx_me_rcut_pair,&
+                                  exx_wf_fraction
 !===============================================================
      !
      USE input_parameters, ONLY : abivol, abisur, pvar, fill_vac,     &
@@ -783,6 +797,7 @@ MODULE input
      USE control_flags,    ONLY : lconstrain, tpre, thdyn, tksw
      USE ions_base,        ONLY : zv
      USE cell_base,        ONLY : cell_base_init, cell_dyn_init, at, cell_alat
+     USE cell_base,        ONLY : ref_cell_base_init
      USE cell_nose,        ONLY : cell_nose_init
      USE ions_base,        ONLY : ions_base_init, greasp_ => greasp
      USE sic_module,       ONLY : sic_initval
@@ -841,11 +856,18 @@ MODULE input
      ! ...   Set Values for the cutoff
 
      CALL ecutoffs_setup( ecutwfc, ecutrho, ecfixed, qcutz, q2sigma, refg )
+     !
      if (.not. allocated(xk)) then
        allocate(xk(3,1))
        xk = 0.d0
      endif
-     CALL gcutoffs_setup( alat_ , tk_inp, nkstot, xk )
+     !
+     IF ( ref_cell ) THEN
+       CALL ref_cell_base_init( ref_cell, ref_alat, rd_ref_ht, ref_cell_units )
+       CALL gcutoffs_setup( ref_alat , tk_inp, nkstot, xk )
+     ELSE
+       CALL gcutoffs_setup( alat_ , tk_inp, nkstot, xk )
+     END IF
 
      ! ... 
      
@@ -917,10 +939,11 @@ MODULE input
      lconstrain = ( nconstr_inp > 0 )
      !
 !========================================================================
-!Lingzhu Kong
+!exx_wf related
      CALL wannier_init( wf_efield, wf_switch, sw_len, efx0, efy0, efz0, &
-                        efx1, efy1, efz1, wfsd, wfdt, neigh,poisson_eps,&
-                        dis_cutoff, exx_ps_rcut, exx_me_rcut, vnbsp,    &
+                        efx1, efy1, efz1, wfsd, wfdt, neigh, poisson_eps,&
+                        dis_cutoff, exx_ps_rcut_s, exx_me_rcut_s,&
+                        exx_ps_rcut_p, exx_me_rcut_p, exx_wf_fraction, vnbsp,&
                         maxwfdt, wf_q, &
                         wf_friction, nit, nsd, nsteps, tolw, adapt,     &
                         calwf, nwf, wffort, writev, wannier_index,      &

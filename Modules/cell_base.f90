@@ -42,6 +42,15 @@
     REAL(DP) :: at(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
     REAL(DP) :: bg(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
     !
+    ! parameters for reference cell 
+    REAL(DP) :: ref_tpiba2 = 0.0_DP
+    REAL(DP) :: ref_at(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
+    REAL(DP) :: ref_bg(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
+    !
+    ! parameter to store tpiba2 calculated from the input cell parameter 
+    ! used in emass_preconditioning, required for restarting variable cell calculation correctly in CP
+    REAL(DP) :: init_tpiba2 = 0.0_DP
+    !
 ! -------------------------------------------------------------------------
 ! ...  periodicity box
 ! ...  In the matrix "a" every row is the vector of each side of 
@@ -75,6 +84,7 @@
                                        ! is not allowed to move
         LOGICAL   :: fix_volume = .FALSE.! True if cell volume is kept fixed
         LOGICAL   :: fix_area = .FALSE.  ! True if area in xy plane is kept constant
+        LOGICAL   :: isotropic = .FALSE. ! True if volume option is chosen for cell_dofree 
         REAL(DP) :: wmass = 0.0_DP     ! cell fictitious mass
         REAL(DP) :: press = 0.0_DP     ! external pressure 
 
@@ -247,10 +257,74 @@
   !
   tpiba  = 2.0_DP * pi / alat
   tpiba2 = tpiba * tpiba
+  init_tpiba2 = tpiba2 ! BS : this is used in CPV/src/init_run.f90 
   RETURN
   !
   END SUBROUTINE cell_base_init
+  !
+  SUBROUTINE ref_cell_base_init( ref_cell, ref_alat, rd_ref_ht, ref_cell_units )
+      !
+      ! ... initialize cell_base module variables, set up crystal lattice
+      !
 
+      IMPLICIT NONE
+      LOGICAL, INTENT(IN) :: ref_cell
+      REAL(DP), INTENT(IN) :: rd_ref_ht (3,3)
+      REAL(DP), INTENT(INOUT) :: ref_alat
+      CHARACTER(LEN=*), INTENT(IN) :: ref_cell_units
+
+      REAL(DP) :: units, ref_omega
+      !
+      ! ... reference cell lattice vectors read from REF_CELL_PARAMETERS Card: find units
+      !
+      SELECT CASE ( TRIM( ref_cell_units ) )
+      !
+      CASE ( 'bohr' )
+        units = 1.0_DP
+      CASE ( 'angstrom' )
+        units = 1.0_DP / bohr_radius_angs
+      CASE DEFAULT
+        IF( ref_alat .GT. 0.0_DP ) THEN
+          units = ref_alat 
+        ELSE
+          CALL errore('ref_cell_base_init', 'ref_alat must be set to a positive value (in A.U.) in SYSTEM namelist', 1)
+        END IF
+        !
+      END SELECT
+      !
+      ! ... Beware the transpose operation between matrices ht and at!
+      !
+      ref_at = TRANSPOSE( rd_ref_ht ) * units
+      !
+      ! ... ref_at is in atomic units: find ref_alat, bring ref_at to ref_alat units
+      !
+      ref_alat = SQRT ( ref_at(1,1)**2+ref_at(2,1)**2+ref_at(3,1)**2 )
+      !
+      ref_at(:,:) = ref_at(:,:) / ref_alat
+      !
+      ! ... Generate the reciprocal lattice vectors from the reference cell
+      !
+      CALL recips( ref_at(1,1), ref_at(1,2), ref_at(1,3), ref_bg(1,1), ref_bg(1,2), ref_bg(1,3) )
+      !
+      ref_tpiba2  = (2.0_DP * pi / ref_alat)**2
+      !
+      CALL volume( ref_alat, ref_at(1,1), ref_at(1,2), ref_at(1,3), ref_omega )
+      !
+      WRITE( stdout, * )
+      WRITE( stdout, '(3X,"Reference Cell read from REF_CELL_PARAMETERS Card")' )
+      WRITE( stdout, '(3X,"Reference Cell alat  =",F14.8,1X,"A.U.")' ) ref_alat
+      WRITE( stdout, '(3X,"ref_cell_a1 = ",1X,3f14.8)' ) ref_at(:,1)*ref_alat
+      WRITE( stdout, '(3X,"ref_cell_a2 = ",1X,3f14.8)' ) ref_at(:,2)*ref_alat
+      WRITE( stdout, '(3X,"ref_cell_a3 = ",1X,3f14.8)' ) ref_at(:,3)*ref_alat
+      WRITE( stdout, * )
+      WRITE( stdout, '(3X,"ref_cell_b1 = ",1X,3f14.8)' ) ref_bg(:,1)/ref_alat
+      WRITE( stdout, '(3X,"ref_cell_b2 = ",1X,3f14.8)' ) ref_bg(:,2)/ref_alat
+      WRITE( stdout, '(3X,"ref_cell_b3 = ",1X,3f14.8)' ) ref_bg(:,3)/ref_alat
+      WRITE( stdout, '(3X,"Reference Cell Volume",F16.8,1X,"A.U.")' ) ref_omega 
+      !
+      RETURN
+      !
+  END SUBROUTINE ref_cell_base_init
 !------------------------------------------------------------------------------!
 ! ...     set box
 ! ...     box%m1(i,1) == b1(i)   COLUMN are B vectors
@@ -690,8 +764,16 @@
               fix_area = .true.
 ! 2DSHAPE
             CASE ( 'volume' )
-              CALL errore(' init_dofree ', &
-                 ' cell_dofree = '//TRIM(cell_dofree)//' not yet implemented ', 1 )
+              !CALL errore(' init_dofree ', &
+              !   ' cell_dofree = '//TRIM(cell_dofree)//' not yet implemented ', 1 )
+              IF ( ibrav /= 1 ) THEN
+                CALL errore('cell_dofree', 'Isotropic expansion is only allowed for ibrav=1; i.e. for simple cubic', 1)
+              END IF
+              iforceh      = 0
+              iforceh(1,1) = 1
+              iforceh(2,2) = 1
+              iforceh(3,3) = 1
+              isotropic    = .TRUE.
             CASE ('x')
               iforceh      = 0
               iforceh(1,1) = 1
@@ -807,13 +889,31 @@
     INTEGER,      INTENT(IN) :: iforceh(3,3)
     REAL(DP), INTENT(IN) :: delt
     INTEGER      :: i, j
-    REAL(DP) :: dt2
+    REAL(DP) :: dt2,fiso
     dt2 = delt * delt
-    DO j=1,3
-      DO i=1,3
-        hnew(i,j) = h(i,j) + dt2 * fcell(i,j) * REAL( iforceh(i,j), DP )
+    !
+    IF( isotropic ) THEN
+      !
+      ! Isotropic force on the cell
+      !
+      fiso = (fcell(1,1)+fcell(2,2)+fcell(3,3))/3.0_DP
+      !
+      DO j=1,3
+        DO i=1,3
+          hnew(i,j) = h(i,j) + dt2 * fiso * REAL( iforceh(i,j), DP )
+        ENDDO
       ENDDO
-    ENDDO
+      !
+    ELSE
+      !
+      DO j=1,3
+        DO i=1,3
+          hnew(i,j) = h(i,j) + dt2 * fcell(i,j) * REAL( iforceh(i,j), DP )
+        ENDDO
+      ENDDO
+      !
+    END IF
+    !
     RETURN
   END SUBROUTINE cell_steepest
 
@@ -828,7 +928,7 @@
     LOGICAL,      INTENT(IN) :: tnoseh
 
     REAL(DP) :: htmp(3,3)
-    REAL(DP) :: verl1, verl2, verl3, dt2, ftmp, v1, v2, v3
+    REAL(DP) :: verl1, verl2, verl3, dt2, ftmp, v1, v2, v3, fiso
     INTEGER      :: i, j
   
     dt2 = delt * delt
@@ -846,15 +946,32 @@
     verl3 = dt2 / ( 1.0_DP + ftmp )
     verl1 = verl1 - 1.0_DP
 
-  
-    DO j=1,3
-      DO i=1,3
-        v1 = verl1 * h(i,j)
-        v2 = verl2 * hold(i,j)
-        v3 = verl3 * ( fcell(i,j) - htmp(i,j) )
-        hnew(i,j) = h(i,j) + ( v1 + v2 + v3 ) * REAL( iforceh(i,j), DP )
+    IF( isotropic ) THEN
+      !
+      fiso = (fcell(1,1)+fcell(2,2)+fcell(3,3))/3.0_DP
+      !
+      DO j=1,3
+        DO i=1,3
+          v1 = verl1 * h(i,j)
+          v2 = verl2 * hold(i,j)
+          v3 = verl3 * ( fiso - htmp(i,j) )
+          hnew(i,j) = h(i,j) + ( v1 + v2 + v3 ) * REAL( iforceh(i,j), DP )
+        ENDDO
       ENDDO
-    ENDDO
+      !
+    ELSE
+      !
+      DO j=1,3
+        DO i=1,3
+          v1 = verl1 * h(i,j)
+          v2 = verl2 * hold(i,j)
+          v3 = verl3 * ( fcell(i,j) - htmp(i,j) )
+          hnew(i,j) = h(i,j) + ( v1 + v2 + v3 ) * REAL( iforceh(i,j), DP )
+        ENDDO
+      ENDDO
+      !
+    END IF
+  
     RETURN
   END SUBROUTINE cell_verlet
 

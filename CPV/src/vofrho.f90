@@ -30,11 +30,12 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE gvect,            ONLY: ngm, nl, nlm
       USE cell_base,        ONLY: omega, r_to_s
       USE cell_base,        ONLY: alat, at, tpiba2, h, ainv
+      USE cell_base,        ONLY: ibrav, isotropic  !True if volume option is chosen for cell_dofree
       USE gvect,            ONLY: gstart, gg, g
       USE electrons_base,   ONLY: nspin
       USE constants,        ONLY: pi, fpi, au_gpa, e2
       USE energies,         ONLY: etot, eself, enl, ekin, epseu, esr, eht, &
-                                  exc, eextfor 
+                                  exc, eextfor, exx 
       USE local_pseudo,     ONLY: vps, dvps, rhops
       USE uspp,             ONLY: nlcc_any
       USE smallbox_gvec
@@ -58,6 +59,9 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE tsvdw_module,     ONLY: tsvdw_calculate
       USE tsvdw_module,     ONLY: EtsvdW,UtsvdW,FtsvdW,HtsvdW
       USE mp_global,        ONLY: me_image
+      USE control_flags,    ONLY: lwfpbe0, lwfpbe0nscf  ! exx_wf related 
+      USE wannier_base,     ONLY: exx_wf_fraction ! exx_wf related
+      USE exx_module,       ONLY: dexx_dh         ! exx_wf related
 
       IMPLICIT NONE
 !
@@ -92,6 +96,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       REAL(DP)                 :: ht( 3, 3 )
       REAL(DP)                 :: deht( 6 )
       COMPLEX(DP)              :: screen_coul( 1 )
+      REAL(DP)                 :: dexx(3,3) ! stress tensor from exact exchange exx_wf
 !
       INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
       INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
@@ -605,6 +610,14 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       etot = ekin + eht + epseu + enl + exc + ebac +e_hubbard + eextfor
       !
+      !     Add EXX energy to etot here. 1/4 factor for the PBE0 exchange .. (Lingzhu Kong / BS)
+      !
+      IF (lwfpbe0 .OR. lwfpbe0nscf) THEN
+        !
+        etot = etot - exx_wf_fraction*exx 
+        !
+      END IF
+      !
       !     Add TS-vdW energy to etot here... (RAD)
       !
       IF (ts_vdw)  etot=etot+EtsvdW
@@ -629,7 +642,74 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !
          !     Add TS-vdW cell derivatives to detot here... (RAD)
          !
-         IF (ts_vdw) detot = detot + HtsvdW
+         IF (ts_vdw) THEN
+           !
+           detot = detot + HtsvdW
+           !
+           ! BS / RAD start print ts_vdW pressure ------------- 
+           !
+           IF(MOD(nfi,iprint).EQ.0)  THEN
+             detmp = HtsvdW 
+             detmp = -1.d0 * (MATMUL( detmp(:,:), TRANSPOSE(h) )) / omega
+             detmp = detmp * au_gpa   ! GPa 
+             WRITE( stdout,9013) (detmp(1,1)+detmp(2,2)+detmp(3,3))/3.0_DP , nfi
+             9013  FORMAT (/,5X,'TS-vdW Pressure (GPa)',F15.5,I7)
+           END IF
+           !
+         END IF
+         !
+         ! BS / RAD / HK
+         ! Adding the stress tensor from exact exchange here 
+         !
+         IF (lwfpbe0 .OR. lwfpbe0nscf) THEN
+           !
+           IF (isotropic .and. (ibrav.eq.1)) THEN
+             !
+             ! BS / RAD
+             ! We compute dE/dV; so works only for cubic cells and isotropic change
+             ! in simulation cell while doing variable cell calculation .. 
+             ! dE/dV = -(1/3) * (-exx * 0.25_DP) / V
+             ! dexx(3,3) = dE/dh = (dE/dV) * (dV/dh) = (dE/dV) * V * (Transpose h)^-1
+             !
+             DO k = 1, 6
+               IF(alpha(k) .EQ. beta(k)) THEN
+                 detmp( alpha(k), beta(k) ) = - (1.0_DP/3.0_DP) * (-exx * exx_wf_fraction) 
+               ELSE
+                 detmp( alpha(k), beta(k) ) = 0.0_DP
+               END IF
+               detmp( beta(k), alpha(k) ) = detmp( alpha(k), beta(k) )
+             END DO
+             !
+             dexx = MATMUL( detmp(:,:), TRANSPOSE( ainv(:,:) ) )
+             !
+           ELSE
+             !
+             ! HK: general case is computed in exx_gs.f90
+             !    (notice that the negative sign comes from the definition of
+             !     exchange energy being as positive value)
+             !
+             dexx = -dexx_dh*exx_wf_fraction
+             !
+           END IF
+           !
+           detot = detot + dexx 
+           !
+           IF(MOD(nfi,iprint).EQ.0) WRITE( stdout,9014) (-1.0_DP/3.0_DP)*&
+               (dexx(1,1)+dexx(2,2)+dexx(3,3))*au_gpa , nfi
+           9014  FORMAT (5X,'EXX Pressure (GPa)',F15.5,I7)
+           !
+         END IF  
+         ! BS / RAD : stress tensor from exx ends here ... 
+         !
+         ! BS / RAD start print total electronic pressure ------------- 
+         !
+         IF(MOD(nfi,iprint).EQ.0)  THEN
+           detmp = detot
+           detmp = -1.d0 * (MATMUL( detmp(:,:), TRANSPOSE(h) )) / omega
+           detmp = detmp * au_gpa   ! GPa 
+           WRITE( stdout,9015) (detmp(1,1)+detmp(2,2)+detmp(3,3))/3.0_DP , nfi
+           9015  FORMAT (5X,'Total Electronic Pressure (GPa)',F15.5,I7)
+         END IF 
          !
       END IF
       !

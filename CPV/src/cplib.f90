@@ -162,9 +162,13 @@
         USE gvecs, ONLY: ecuts, gcutms
         use betax, only: mmx, refg
         USE io_global, ONLY: stdout
+        USE input_parameters, ONLY: ref_cell, ref_alat
 
         WRITE( stdout, 100 ) ecutwfc, ecutrho, ecuts, sqrt(gcutw), &
                              sqrt(gcutm), sqrt(gcutms)
+
+        IF(ref_cell) WRITE( stdout,'(3X,"Reference Cell alat is",F14.8,1X,"A.U is used to Compute Gcutoffs:")') ref_alat ! BS : debug
+
         IF( qcutz > 0.0d0 ) THEN
           WRITE( stdout, 150 ) qcutz, q2sigma, ecfixed
         END IF

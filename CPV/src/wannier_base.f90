@@ -23,13 +23,17 @@ MODULE wannier_base
   INTEGER              :: wfsd
   REAL(DP)             :: wfdt
 !==============================================================
-!Lingzhu Kong
+!exx_wf related
   INTEGER              :: neigh
   INTEGER              :: vnbsp 
   REAL(DP)             :: poisson_eps
   REAL(DP)             :: dis_cutoff
-  REAL(DP)             :: exx_ps_rcut
-  REAL(DP)             :: exx_me_rcut
+  REAL(DP)             :: exx_ps_rcut_s
+  REAL(DP)             :: exx_ps_rcut_p
+  REAL(DP)             :: exx_me_rcut_s
+  REAL(DP)             :: exx_me_rcut_p
+  REAL(DP)             :: exx_wf_fraction
+  !!
 !==============================================================
   REAL(DP)             :: maxwfdt
   REAL(DP)             :: wf_q
@@ -61,15 +65,11 @@ MODULE wannier_base
     !
     !------------------------------------------------------------------------
 !=============================================================================
-!Lingzhu Kong
-!   SUBROUTINE wannier_init( wf_efield_, wf_switch_, sw_len_, efx0_, efy0_, &
-!                            efz0_, efx1_, efy1_, efz1_, wfsd_, wfdt_,      &
-!                            maxwfdt_, wf_q_, wf_friction_, nit_, nsd_,     &
-!                            nsteps_, tolw_, adapt_, calwf_, nwf_, wffort_, &
-!                            writev_, iplot_, restart_mode_ )
+!exx_wf related
     SUBROUTINE wannier_init( wf_efield_, wf_switch_, sw_len_, efx0_, efy0_, &
                              efz0_, efx1_, efy1_, efz1_, wfsd_, wfdt_,      &
-                             neigh_, poisson_eps_ ,dis_cutoff_, exx_ps_rcut_, exx_me_rcut_, vnbsp_, &
+                             neigh_, poisson_eps_ ,dis_cutoff_, exx_ps_rcut_s_, exx_me_rcut_s_,&
+                             exx_ps_rcut_p_, exx_me_rcut_p_, exx_wf_fraction_, vnbsp_, &
                              maxwfdt_, wf_q_, wf_friction_, nit_, nsd_,     &
                              nsteps_, tolw_, adapt_, calwf_, nwf_, wffort_, &
                              writev_, iplot_, restart_mode_ )
@@ -86,13 +86,17 @@ MODULE wannier_base
       INTEGER,          INTENT(IN) :: wfsd_
       REAL(DP),         INTENT(IN) :: wfdt_
 !=============================================================================
-! Lingzhu Kong
+!exx_wf related
       INTEGER,          INTENT(IN) :: neigh_
       INTEGER,          INTENT(IN) :: vnbsp_
       REAL(DP),         INTENT(IN) :: poisson_eps_
       REAL(DP),         INTENT(IN) :: dis_cutoff_
-      REAL(DP),         INTENT(IN) :: exx_ps_rcut_
-      REAL(DP),         INTENT(IN) :: exx_me_rcut_
+      REAL(DP),         INTENT(IN) :: exx_ps_rcut_s_
+      REAL(DP),         INTENT(IN) :: exx_me_rcut_s_
+      REAL(DP),         INTENT(IN) :: exx_ps_rcut_p_
+      REAL(DP),         INTENT(IN) :: exx_me_rcut_p_
+      REAL(DP),         INTENT(IN) :: exx_wf_fraction_
+      !!
 !=============================================================================
       REAL(DP),         INTENT(IN) :: maxwfdt_
       REAL(DP),         INTENT(IN) :: wf_q_
@@ -122,13 +126,16 @@ MODULE wannier_base
       wfsd        = wfsd_
       wfdt        = wfdt_
 !==================================================================
-!Lingzhu Kong
+!exx_wf related
       neigh       = neigh_
       vnbsp       = vnbsp_
       poisson_eps = poisson_eps_
       dis_cutoff  = dis_cutoff_
-      exx_ps_rcut = exx_ps_rcut_
-      exx_me_rcut = exx_me_rcut_
+      exx_ps_rcut_s = exx_ps_rcut_s_
+      exx_me_rcut_s = exx_me_rcut_s_
+      exx_ps_rcut_p = exx_ps_rcut_p_
+      exx_me_rcut_p = exx_me_rcut_p_
+      exx_wf_fraction = exx_wf_fraction_
 !==================================================================
       maxwfdt     = maxwfdt_
       wf_q        = wf_q_

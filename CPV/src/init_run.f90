@@ -21,10 +21,10 @@ SUBROUTINE init_run()
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
                                        vels, velsm, velsp, fion, fionm
-  USE gvecw,                    ONLY : ngw, ngw_g, ggp
+  USE gvecw,                    ONLY : ngw, ngw_g, ggp, g2kin_init
   USE smallbox_gvec,            ONLY : ngb
   USE gvecs,                    ONLY : ngms
-  USE gvect,                    ONLY : ngm, gstart
+  USE gvect,                    ONLY : ngm, gstart, gg
   USE fft_base,                 ONLY : dfftp, dffts
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
@@ -74,11 +74,14 @@ SUBROUTINE init_run()
   USE mp,                       ONLY : mp_barrier
   USE wrappers
   USE ldaU_cp
-  USE control_flags,            ONLY : lwfpbe0nscf  ! Lingzhu Kong
-  USE wavefunctions_module,     ONLY : cv0          ! Lingzhu Kong
-  USE wannier_base,             ONLY : vnbsp        ! Lingzhu Kong
-  USE cp_restart,               ONLY : cp_read_wfc_Kong  ! Lingzhu Kong
+  USE control_flags,            ONLY : lwfpbe0nscf, lwfpbe0, lwfpbe0nscf  ! exx_wf related 
+  USE wavefunctions_module,     ONLY : cv0                                ! exx_wf related
+  USE wannier_base,             ONLY : vnbsp                              ! exx_wf related
+  USE cp_restart,               ONLY : cp_read_wfc_Kong                   ! exx_wf related
+  USE input_parameters,         ONLY : ref_cell
+  USE cell_base,                ONLY : ref_tpiba2, init_tpiba2
   USE tsvdw_module,             ONLY : tsvdw_initialize
+  USE exx_module,               ONLY : exx_initialize
   !
   IMPLICIT NONE
   !
@@ -148,6 +151,16 @@ SUBROUTINE init_run()
   !=======================================================================
   !
   IF (ts_vdw) CALL tsvdw_initialize()
+  !
+  !=======================================================================
+  !     Initialization of the exact exchange code (exx_module)
+  !=======================================================================
+  !
+  IF ( lwfpbe0 .or. lwfpbe0nscf ) THEN
+    !
+    CALL exx_initialize()
+    !
+  END IF
   !
   !  initialize wave functions descriptors and allocate wf
   !
@@ -257,7 +270,22 @@ SUBROUTINE init_run()
   !
   ! ... Calculate: ema0bg = ecutmass /  MAX( 1.0d0, (2pi/alat)^2 * |G|^2 )
   !
-  CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff )
+  IF ( ref_cell ) THEN
+    WRITE( stdout,'(/,3X,"Reference cell parameters are used in electron mass preconditioning")' )
+    WRITE( stdout,'(3X,"ref_tpiba2=",F14.8)' ) ref_tpiba2
+    CALL g2kin_init( gg, ref_tpiba2 )
+    CALL emass_precond( ema0bg, ggp, ngw, ref_tpiba2, emass_cutoff ) 
+    WRITE( stdout,'(3X,"current_tpiba2=",F14.8)' ) tpiba2
+    CALL g2kin_init( gg, tpiba2 )
+  ELSE
+    WRITE( stdout,'(/,3X,"Cell parameters from input file are used in electron mass preconditioning")' )
+    WRITE( stdout,'(3X,"init_tpiba2=",F14.8)' ) init_tpiba2
+    CALL g2kin_init( gg, init_tpiba2 )
+    CALL emass_precond( ema0bg, ggp, ngw, init_tpiba2, emass_cutoff ) 
+    !WRITE( stdout,'(3X,"current_tpiba2=",F14.8)' ) tpiba2 !BS : DEBUG
+    CALL g2kin_init( gg, tpiba2 )
+    !CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff ) 
+  END IF
   !
   CALL print_legend( )
   !
@@ -286,12 +314,15 @@ SUBROUTINE init_run()
      ENDIF
      !======================================================================
      i = 1  
+     CALL start_clock( 'init_readfile' )
      CALL readfile( i, h, hold, nfi, c0_bgrp, cm_bgrp, taus,   &
                     tausm, vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, &
                     vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
                     vnhh, velh, fion, tps, z0t, f )
      !
      CALL from_restart( )
+     !
+     CALL stop_clock( 'init_readfile' )
      !
   END IF
   !
@@ -319,7 +350,7 @@ SUBROUTINE init_run()
   !
   IF ( nbeg <= 0 .OR. lwf ) THEN
      !
-     CALL ions_reference_positions( tau0 )
+     CALL ions_reference_positions( tau0 ) ! BS: screws up msd calculation for lwf ...
      !
   END IF
   !

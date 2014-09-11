@@ -177,7 +177,7 @@ MODULE control_flags
     use_SMC =.FALSE., &! if .TRUE. use the Smart Monte Carlo method
     lwf     =.FALSE., &! if .TRUE. the calc. is with wannier functions
     !=================================================================
-    !  Lingzhu Kong 
+    !exx_wf related 
     lwfnscf =.FALSE., &
     lwfpbe0 =.FALSE., &! if .TRUE. the calc. is with wannier functions and with PBE0 functional
     lwfpbe0nscf=.FALSE.,&

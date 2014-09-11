@@ -60,6 +60,11 @@ CONTAINS
       trd_ht = .false.
       rd_ht  = 0.0_DP
       !
+      ! ... Reference Simulation cell from standard input
+      !
+      ref_cell = .false.
+      rd_ref_ht  = 0.0_DP
+      !
       ! ... dipole
       !
       tdipole_card = .false.
@@ -193,6 +198,10 @@ CONTAINS
       ELSEIF ( trim(card) == 'CELL_PARAMETERS' ) THEN
          !
          CALL card_cell_parameters( input_line )
+         !
+      ELSEIF ( trim(card) == 'REF_CELL_PARAMETERS' ) THEN
+         !
+         CALL card_ref_cell_parameters( input_line )
          !
       ELSEIF ( trim(card) == 'ATOMIC_VELOCITIES' ) THEN
          !
@@ -1122,6 +1131,75 @@ CONTAINS
       RETURN
       !
    END SUBROUTINE card_cell_parameters
+   !
+   !
+   !------------------------------------------------------------------------
+   !    BEGIN manual
+   !----------------------------------------------------------------------
+   !
+   ! REF_CELL_PARAMETERS
+   !
+   !   use the specified cell dimensions
+   !
+   ! Syntax:
+   !
+   !    REF_CELL_PARAMETERS (cell_option)
+   !      rd_ref_HT(1,1) rd_ref_HT(1,2) rd_ref_HT(1,3)
+   !      rd_ref_HT(2,1) rd_ref_HT(2,2) rd_ref_HT(2,3)
+   !      rd_ref_HT(3,1) rd_ref_HT(3,2) rd_ref_HT(3,3)
+   !
+   !   cell_option == alat      lattice vectors in units of alat set by ref_alat keyword (default)
+   !   cell_option == bohr      lattice vectors in Bohr
+   !   cell_option == angstrom  lattice vectors in Angstrom
+   !
+   ! Example:
+   !
+   ! REF_CELL_PARAMETERS
+   !    24.50644311    0.00004215   -0.14717844
+   !    -0.00211522    8.12850030    1.70624903
+   !     0.16447787    0.74511792   23.07395418
+   !
+   ! Where:
+   !
+   !      rd_ref_HT(i,j) (real)  cell dimensions ( in a.u. ),
+   !        note the relation with reference lattice vectors:
+   !        rd_ref_HT(1,:) = ref_A1, rd_ref_HT(2,:) = ref_A2, rd_ref_HT(3,:) = re_A3
+   !
+   !----------------------------------------------------------------------
+   !    END manual
+   !------------------------------------------------------------------------
+   !
+   SUBROUTINE card_ref_cell_parameters( input_line )
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(len=256) :: input_line
+      INTEGER            :: i, j
+      LOGICAL, EXTERNAL  :: matches
+      !
+      !
+      IF ( ref_cell ) THEN
+         CALL errore( ' card_reference_cell_parameters ', ' two occurrences', 2 )
+      ENDIF
+      !
+      IF ( matches( "BOHR", input_line ) ) THEN
+         ref_cell_units = 'bohr'
+      ELSEIF ( matches( "ANGSTROM", input_line ) ) THEN
+         ref_cell_units = 'angstrom'
+      ELSE
+         ref_cell_units = 'alat'
+      ENDIF
+      !
+      DO i = 1, 3
+         CALL read_line( input_line )
+         READ(input_line,*) ( rd_ref_ht( i, j ), j = 1, 3 )
+      ENDDO
+      !
+      ref_cell = .true.
+      !
+      RETURN
+      !
+   END SUBROUTINE card_ref_cell_parameters
    !
    !
    !------------------------------------------------------------------------

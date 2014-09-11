@@ -54,10 +54,11 @@
   subroutine ions_nose_init( tempw_ , fnosep_ , nhpcl_ , nhptyp_ , ndega_ , nhgrp_ , fnhscl_)
     use constants,      only: k_boltzmann_au, pi, au_terahertz
     use control_flags,  only: tnosep
-    use ions_base,      only: ndofp, tions_base_init, nsp, nat, na
+    use ions_base,      only: ndofp, tions_base_init, nsp, nat, na, amass, ityp
     real(DP), intent(in)  :: tempw_ , fnosep_(:), fnhscl_(:) 
     integer, intent(in) :: nhpcl_ , nhptyp_ , ndega_ , nhgrp_(:)
     integer :: i, j, iat, is, ia
+    REAL(DP) :: amass_mean
 
     IF( .NOT. tions_base_init ) &
       CALL errore(' ions_nose_init ', ' you should call ions_base_init first ', 1 )
@@ -171,16 +172,76 @@
           endif
         enddo
       endif
+      !
       ! set the NH masses for all the chains
-      do j=1,nhpdim
-         qnp((j-1)*nhpcl+1) = qnp_(1)*gkbt2nhp(j)/gkbt
-         If (nhpcl > 1) then
-            do i=2,nhpcl
-               qnp((j-1)*nhpcl+i) = qnp_(i)
-            enddo
-         endif
-      enddo
-   END IF
+      !
+      IF(nhptyp.EQ.2) THEN 
+        !===============================================================
+        ! BS : *** The default NH masses are multiplied by atomic masses *** for nhptyp = 2
+        ! BS : when nhpend = 1, default NH mass is multiplied by mean_atomic_mass of the system, amass_mean = total atomic mass / number of atoms  
+        !
+        DO j=1,(nhpdim-nhpend)
+          ! 
+          qnp((j-1)*nhpcl+1)=amass(ityp(j))*qnp_(1)*gkbt2nhp(j)/gkbt  
+          !
+          IF(nhpcl.GT.1) THEN
+            !
+            DO i=2,nhpcl
+              !
+              qnp((j-1)*nhpcl+i)=amass(ityp(j))*qnp_(i)
+              !
+            END DO
+            !
+          END IF
+          ! 
+        END DO !j
+        !
+        IF(nhpend.EQ.1) THEN
+          !
+          amass_mean=0.0_DP
+          !
+          DO is=1,nat
+            ! 
+            amass_mean=amass_mean+amass(ityp(is))
+            !
+          END DO
+          !
+          amass_mean=amass_mean/DBLE(nat)
+          !
+          qnp((nhpdim-1)*nhpcl+1)=amass_mean*qnp_(1)*gkbt2nhp(nhpdim)/gkbt
+          !
+          IF(nhpcl.GT.1) THEN
+            !
+            DO i=2,nhpcl
+              !
+              qnp((nhpdim-1)*nhpcl+i)=amass_mean*qnp_(i)
+              !
+            END DO
+            !
+          END IF
+          !
+        END IF
+        !
+        !===============================================================
+        !
+      ELSE
+        !
+        !===============================================================
+        ! Default code : for nhptyp = 1 or 3 
+        DO j=1,nhpdim
+           qnp((j-1)*nhpcl+1) = qnp_(1)*gkbt2nhp(j)/gkbt
+           IF (nhpcl > 1) THEN
+              DO i=2,nhpcl
+                 qnp((j-1)*nhpcl+i) = qnp_(i)
+              END DO
+           END IF
+        END DO
+        ! Default code end 
+        !
+      END IF !nhptyp
+      !
+      !
+   END IF !tnosep
 
 
     !    WRITE( stdout,100)
@@ -322,6 +383,7 @@
         WRITE( stdout,564) (fnosep(i),i=1,nhpcl)
         WRITE( stdout,565) nhptyp, (nhpdim-nhpend), nhpend , nhpbeg, &
              (anum2nhp(j),j=1,nhpdim)
+        IF(nhptyp.EQ.2) WRITE( stdout,'(//,"*** The default NH masses are multiplied by atomic masses ***")') ! BS
         do j=1,nhpdim
            WRITE( stdout,566) j,(qnp((j-1)*nhpcl+i),i=1,nhpcl)
         enddo
@@ -335,8 +397,8 @@
      &       3X,'ion dynamics with nose` temperature control:', /, &
      &       3X,'temperature required      = ', f10.5, ' (kelvin) ', /, &
      &       3X,'NH chain length           = ', i3, /, &
-     &       3X,'active degrees of freedom = ', i3, /, &
-     &       3X,'time steps per nose osc.  = ', i5 )
+     &       3X,'active degrees of freedom = ', i6, /, &
+     &       3X,'time steps per nose osc.  = ', i6 )
  564  format( //, &
      &       3X,'nose` frequency(es)       = ', 20(1X,f10.3) ) 
 ! 565  format( //, &

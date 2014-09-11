@@ -35,8 +35,9 @@
       USE fft_base,               ONLY: dffts
       USE fft_interfaces,         ONLY: fwfft, invfft
       USE mp_global,              ONLY: me_bgrp
-      USE control_flags,          ONLY: lwfpbe0, lwfpbe0nscf  ! Lingzhu Kong
-      USE cp_main_variables,      ONLY: exx_potential         ! Lingzhu Kong
+      USE control_flags,          ONLY: lwfpbe0, lwfpbe0nscf
+      USE exx_module,             ONLY: exx_potential
+      USE input_parameters,       ONLY: exx_wf !if .true., exx calculations using Wannier functions are turned on .. 
 !
       IMPLICIT NONE
 !
@@ -67,10 +68,10 @@
       CALL start_clock( 'dforce' ) 
       !
 !=======================================================================
-!Lingzhu Kong
-      if( lwfpbe0 .or. lwfpbe0nscf )then
-         allocate( exx_a( dffts%nnr ) )
-         allocate( exx_b( dffts%nnr ) )
+!exx_wf related
+      if( exx_wf .or. lwfpbe0 .or. lwfpbe0nscf )then
+         allocate( exx_a( dffts%nnr ) ); exx_a=0.0_DP
+         allocate( exx_b( dffts%nnr ) ); exx_b=0.0_DP
       end if
 !=======================================================================
       IF( dffts%have_task_groups ) THEN
@@ -102,10 +103,12 @@
          IF ( ( idx + i - 1 ) == n ) c( : , idx + i ) = 0.0d0
 
          IF( idx + i - 1 <= n ) THEN
+            !$omp parallel do 
             DO ig=1,ngw
                psi(nlsm(ig)+igoff) = conjg( c(ig,idx+i-1) - ci * c(ig,idx+i) )
                psi(nls(ig)+igoff) =        c(ig,idx+i-1) + ci * c(ig,idx+i)
             END DO
+            !$omp end parallel do 
          END IF
 
          igoff = igoff + dffts%tg_nnr
@@ -127,22 +130,22 @@
       IF( dffts%have_task_groups ) THEN
          !
 !===============================================================================
-         !Lingzhu Kong
-         IF( lwfpbe0 .or. lwfpbe0nscf )THEN
-!$omp parallel do 
+!exx_wf related
+         IF( exx_wf .or. lwfpbe0 .or. lwfpbe0nscf )THEN
+            !$omp parallel do private(tmp1,tmp2) 
             DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
                tmp1 = v(ir,iss1) * DBLE( psi(ir) )+exx_potential(ir,i/nogrp_+1)
                tmp2 = v(ir,iss2) * AIMAG(psi(ir) )+exx_potential(ir,i/nogrp_+2)
                psi(ir) = CMPLX( tmp1, tmp2, kind=DP)
             END DO
-!$omp end parallel do 
+            !$omp end parallel do 
          ELSE
-!$omp parallel do 
+            !$omp parallel do 
             DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
                psi(ir) = CMPLX ( v(ir,iss1) * DBLE( psi(ir) ), &
                                  v(ir,iss2) *AIMAG( psi(ir) ) ,kind=DP)
             END DO
-!$omp end parallel do 
+            !$omp end parallel do 
          ENDIF
 !===============================================================================
          !
@@ -150,37 +153,81 @@
          !
          IF( PRESENT( v1 ) ) THEN
 !===============================================================================
-!Lingzhu Kong
-            IF( lwfpbe0 .or. lwfpbe0nscf )THEN
+!exx_wf related
+            IF( exx_wf .or. lwfpbe0 .or. lwfpbe0nscf )THEN
+               !
                IF ( (mod(n,2).ne.0 ) .and. (i.eq.n) ) THEN
-                  exx_a(:) = exx_potential(:, n)
-                  exx_b(:) = 0.0d0
+                 !
+                 !$omp parallel do 
+                 DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%npp( me_bgrp + 1 )
+                   exx_a(ir) = exx_potential(ir, i)
+                   exx_b(ir) = 0.0_DP
+                 END DO
+                 !$omp end parallel do 
+                 !
                ELSE
-                  exx_a(:) = exx_potential(:, i)
-                  exx_b(:) = exx_potential(:, i+1)
+                 !
+                 !$omp parallel do 
+                 DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%npp( me_bgrp + 1 )
+                   exx_a(ir) = exx_potential(ir, i)
+                   exx_b(ir) = exx_potential(ir, i+1)
+                 END DO
+                 !$omp end parallel do 
+                 !
                ENDIF
-!$omp parallel do 
+               !$omp parallel do private(tmp1,tmp2) 
                DO ir=1,dffts%nnr
                   tmp1 =  v(ir,iss1)* DBLE(psi(ir))+exx_a(ir)
                   tmp2 = v1(ir,iss2)*AIMAG(psi(ir))+exx_b(ir)
                   psi(ir)=CMPLX( tmp1, tmp2, kind=DP )
                END DO
-!$omp end parallel do 
+               !$omp end parallel do 
+               !
             ELSE
-!$omp parallel do 
+               !
+               !$omp parallel do 
                DO ir=1,dffts%nnr
                   psi(ir)=CMPLX ( v(ir,iss1)* DBLE(psi(ir)), &
                                  v1(ir,iss2)*AIMAG(psi(ir)) ,kind=DP)
                END DO
-!$omp end parallel do 
+               !$omp end parallel do 
+               !
             ENDIF
          ELSE
-!$omp parallel do 
-            DO ir=1,dffts%nnr
-               psi(ir)=CMPLX( v(ir,iss1)* DBLE(psi(ir)), &
-                              v(ir,iss2)*AIMAG(psi(ir)) ,kind=DP)
-            END DO
-!$omp end parallel do 
+!===============================================================================
+!exx_wf related
+            IF( exx_wf .or. lwfpbe0 .or. lwfpbe0nscf )THEN
+               IF ( (mod(n,2).ne.0 ) .and. (i.eq.n) ) THEN
+                 !$omp parallel do 
+                 DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%npp( me_bgrp + 1 )
+                   exx_a(ir) = exx_potential(ir, i)
+                   exx_b(ir) = 0.0_DP
+                 END DO
+                 !$omp end parallel do 
+               ELSE
+                 !$omp parallel do 
+                 DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%npp( me_bgrp + 1 )
+                   exx_a(ir) = exx_potential(ir, i)
+                   exx_b(ir) = exx_potential(ir, i+1)
+                 END DO
+                 !$omp end parallel do 
+               ENDIF
+               !$omp parallel do private(tmp1,tmp2) 
+               DO ir=1,dffts%nnr
+                  tmp1 = v(ir,iss1)* DBLE(psi(ir))+exx_a(ir)
+                  tmp2 = v(ir,iss2)*AIMAG(psi(ir))+exx_b(ir)
+                  psi(ir)=CMPLX( tmp1, tmp2, kind=DP )
+               END DO
+               !$omp end parallel do 
+!===============================================================================
+            ELSE
+               !$omp parallel do 
+               DO ir=1,dffts%nnr
+                  psi(ir)=CMPLX( v(ir,iss1)* DBLE(psi(ir)), &
+                                 v(ir,iss2)*AIMAG(psi(ir)) ,kind=DP)
+               END DO
+               !$omp end parallel do 
+            ENDIF
          END IF
          !
       END IF
@@ -325,7 +372,7 @@
          !
       ENDIF
 !
-      if (lwfpbe0 .or. lwfpbe0nscf) DEALLOCATE(exx_a, exx_b) ! Lingzhu Kong
+      IF (exx_wf .or. lwfpbe0 .or. lwfpbe0nscf) DEALLOCATE(exx_a, exx_b)
       DEALLOCATE( psi )
 !
       CALL stop_clock( 'dforce' ) 

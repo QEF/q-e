@@ -96,10 +96,10 @@ MODULE input_parameters
         CHARACTER(len=80) :: calculation = 'none'
           ! Specify the type of the simulation
           ! See below for allowed values
-        CHARACTER(len=80) :: calculation_allowed(15)
+        CHARACTER(len=80) :: calculation_allowed(16)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
           'vc-relax', 'vc-md', 'vc-cp', 'bands', 'neb', 'smd', 'cp-wf', &
-          'cp-wf-nscf','cp-wf-pbe0', 'pbe0-nscf'/   ! Lingzhu Kong
+          'vc-cp-wf', 'cp-wf-nscf','cp-wf-pbe0', 'pbe0-nscf'/
         CHARACTER(len=80) :: verbosity = 'default'
           ! define the verbosity of the code output
         CHARACTER(len=80) :: verbosity_allowed(6)
@@ -270,6 +270,9 @@ MODULE input_parameters
           ! if memory = 'large' then QE tries to use (when implemented) algorithms using more memory
           !                     to enhance performance.
 
+        LOGICAL :: exx_wf = .FALSE.
+          ! if .TRUE., perform exact exchange calculation using Wannier functions (X. Wu et al., Phys. Rev. B. 79, 085102 (2009))
+
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir,   &
           prefix, wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr,      &
@@ -277,7 +280,7 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
           tqmmm, vdw_table_name, lorbm, memory, point_label_type,         &
-          lcalc_z2, z2_m_threshold, z2_z_threshold
+          lcalc_z2, z2_m_threshold, z2_z_threshold, exx_wf
 
 !
 !=----------------------------------------------------------------------------=!
@@ -300,6 +303,9 @@ MODULE input_parameters
         REAL(DP) :: cosac = 0.0_DP
         REAL(DP) :: cosbc = 0.0_DP
           ! Alternate definition of the cell - use either this or celldm
+
+        REAL(DP) :: ref_alat = 0.0_DP
+          ! reference cell alat in a.u. (see REF_CELL_PARAMETERS card) 
 
         INTEGER :: nat = 0
           ! total number of atoms
@@ -552,7 +558,7 @@ MODULE input_parameters
              U_projection_type, input_dft, la2F, assume_isolated,             &
              nqx1, nqx2, nqx3, ecutfock,                                      &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
-             exx_fraction, screening_parameter,                               &
+             exx_fraction, screening_parameter, ref_alat,                     &
              noncolin, lspinorb, starting_spin_angle, lambda, angle1, angle2, &
              report,              &
              constrained_magnetization, B_field, fixed_magnetization,         &
@@ -599,15 +605,15 @@ MODULE input_parameters
         INTEGER :: electron_maxstep = 1000
           ! maximum number of steps in electronic minimization
           ! This parameter apply only when using 'cg' electronic or
-          ! ionic dynamics
+          ! ionic dynamics and electron_dynamics = 'CP-BO'
         LOGICAL :: scf_must_converge = .true.
           ! stop or continue if SCF does not converge
 
         CHARACTER(len=80) :: electron_dynamics = 'none'
           ! set how electrons should be moved
-        CHARACTER(len=80) :: electron_dynamics_allowed(6)
+        CHARACTER(len=80) :: electron_dynamics_allowed(7)
         DATA electron_dynamics_allowed &
-          / 'default', 'sd', 'cg', 'damp', 'verlet', 'none' /
+          / 'default', 'sd', 'cg', 'damp', 'verlet', 'none', 'cp-bo' /
 
         REAL(DP) :: electron_damping = 0.0_DP
           ! meaningful only if " electron_dynamics = 'damp' "
@@ -788,6 +794,7 @@ MODULE input_parameters
         REAL(DP) :: conv_thr = 1.E-6_DP
           ! convergence threshold in electronic ONLY minimizations
           ! used only in PWscf
+          ! used in electron_dynamics = 'CP-BO' in CP and PWscf
 
         INTEGER :: mixing_fixed_ns  = 0
           ! For DFT+U calculations, PWscf only
@@ -871,6 +878,30 @@ MODULE input_parameters
           ! If true perform CP dynamics with constrained occupations
           ! to be used together with penalty functional ...
 
+        !
+        ! ... CP-BO ...
+        LOGICAL :: tcpbo = .FALSE.
+          ! if true perform CP-BO minimization of electron energy
+
+        REAL(DP) :: emass_emin = 0.0_DP
+          ! meaningful only if electron_dynamics = 'CP-BO'
+          ! effective electron mass used in CP-BO electron minimization in
+          ! atomic units ( 1 a.u. of mass = 1/1822.9 a.m.u. = 9.10939 * 10^-31 kg )
+
+        REAL(DP) :: emass_cutoff_emin = 0.0_DP
+          ! meaningful only if electron_dynamics = 'CP-BO'
+          ! mass cut-off (in Rydbergs) for the Fourier acceleration in CP-BO
+          ! electron minimization
+
+        REAL(DP) :: electron_damping_emin = 0.0_DP
+          ! meaningful only if electron_dynamics = 'CP-BO'
+          ! damping parameter utilized in CP-BO electron minimization
+
+        REAL(DP) :: dt_emin = 0.0_DP
+          ! meaningful only if electron_dynamics = 'CP-BO'
+          ! time step for CP-BO electron minimization dynamics, in atomic units
+          ! CP: 1 a.u. of time = 2.4189 * 10^-17 s, PW: twice that much
+
         NAMELIST / electrons / emass, emass_cutoff, orthogonalization, &
           electron_maxstep, scf_must_converge, ortho_eps, ortho_max, electron_dynamics,   &
           electron_damping, electron_velocities, electron_temperature, &
@@ -888,7 +919,9 @@ MODULE input_parameters
           occupation_dynamics, tcg, maxiter, etresh, passop, epol,     &
           efield, epol2, efield2, diago_full_acc,                      &
           occupation_constraints, niter_cg_restart,                    &
-          niter_cold_restart, lambda_cold, efield_cart, real_space
+          niter_cold_restart, lambda_cold, efield_cart, real_space,    &
+          tcpbo,emass_emin, emass_cutoff_emin, electron_damping_emin,  &
+          dt_emin
 
 !
 !=----------------------------------------------------------------------------=!
@@ -1149,7 +1182,7 @@ MODULE input_parameters
         INTEGER   :: cell_nstepe = 1
           ! number of electronic steps for each cell step
 
-        REAL(DP) :: cell_damping = 0.0_DP
+        REAL(DP) :: cell_damping = 0.1_DP
           ! meaningful only if " cell_dynamics = 'damp' "
           ! damping frequency times delta t, optimal values could be
           ! calculated with the formula
@@ -1216,13 +1249,16 @@ MODULE input_parameters
           REAL(DP) :: wf_q
           REAL(DP) :: wf_friction
 !=======================================================================
-!Lingzhu Kong
+!exx_wf related
           INTEGER  :: vnbsp
-          INTEGER  :: neigh
-          REAL(DP) :: poisson_eps
-          REAL(DP) :: dis_cutoff
-          REAL(DP) :: exx_ps_rcut
-          REAL(DP) :: exx_me_rcut
+          INTEGER  :: exx_neigh
+          REAL(DP) :: exx_poisson_eps
+          REAL(DP) :: exx_dis_cutoff
+          REAL(DP) :: exx_ps_rcut_self
+          REAL(DP) :: exx_ps_rcut_pair
+          REAL(DP) :: exx_me_rcut_self
+          REAL(DP) :: exx_me_rcut_pair
+          REAL(DP) :: exx_wf_fraction 
 !=======================================================================
 
           INTEGER :: nit
@@ -1239,10 +1275,11 @@ MODULE input_parameters
           !
           LOGICAL :: writev
 !==============================================================================
-!Lingzhu Kong
+!exx_wf related
           NAMELIST / wannier / wf_efield, wf_switch, sw_len, efx0, efy0, efz0,&
-                               efx1, efy1, efz1, wfsd, wfdt, neigh,poisson_eps,&
-                               dis_cutoff,exx_ps_rcut, exx_me_rcut, vnbsp,    &
+                               efx1, efy1, efz1, wfsd, wfdt,exx_neigh,exx_poisson_eps,&
+                               exx_dis_cutoff,exx_ps_rcut_self, exx_me_rcut_self,   &
+                               exx_ps_rcut_pair, exx_me_rcut_pair, exx_wf_fraction, vnbsp,&
                                maxwfdt, wf_q, wf_friction, nit, nsd, nsteps,  & 
                                tolw, adapt, calwf, nwf, wffort, writev
 !===============================================================================
@@ -1368,6 +1405,13 @@ MODULE input_parameters
        REAL(DP) :: rd_ht(3,3) = 0.0_DP
        CHARACTER(len=80) :: cell_units = 'none'
        LOGICAL   :: trd_ht = .false.
+
+!
+!    REFERENCE_CELL_PARAMETERS
+!
+       REAL(DP) :: rd_ref_ht(3,3) = 0.0_DP
+       CHARACTER(len=80) :: ref_cell_units = 'alat'
+       LOGICAL   :: ref_cell = .false.
 
 !
 !    CONSTRAINTS

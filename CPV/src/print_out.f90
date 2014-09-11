@@ -39,10 +39,12 @@
       USE control_flags,     ONLY : ndw, tdipole
       USE polarization,      ONLY : print_dipole
       USE io_global,         ONLY : ionode, ionode_id, stdout
-      USE control_flags,     ONLY : lwfpbe0, lwfpbe0nscf  ! Lingzhu Kong
-      USE energies,          ONLY : exx  ! Lingzhu Kong
+      USE control_flags,     ONLY : lwfpbe0, lwfpbe0nscf  ! exx_wf related
+      USE energies,          ONLY : exx  ! exx_wf related 
       USE control_flags,     ONLY : ts_vdw
       USE tsvdw_module,      ONLY : EtsvdW
+      USE input_parameters,  ONLY : tcpbo
+      USE wannier_base,      ONLY : exx_wf_fraction ! exx_wf related
       !
       IMPLICIT NONE
       !
@@ -142,7 +144,9 @@
             END DO
             totalmass = totalmass / volume * 11.2061d0 ! AMU_SI * 1000.0 / BOHR_RADIUS_CM**3 
             IF(tstdout) &
-               WRITE( stdout, fmt='(/,3X,"System Density [g/cm^3] : ",F10.4,/)' ) totalmass
+               WRITE( stdout, fmt='(/,3X,"System Density [g/cm^3] : ",F25.10,/)' ) totalmass
+            IF(tstdout) &
+               WRITE( stdout, fmt='(/,3X,"System Volume [A.U.^3] : ",F25.10,/)' ) volume ! BS 
             !
             ! Compute Center of mass displacement since the initialization of step counter
             !
@@ -238,15 +242,41 @@
                IF( tstdout ) WRITE( stdout, 1945 ) is, temps(is), dis(is)
             END DO
             !
-            IF( tfile ) WRITE( 33, 2948 ) nfi, ekinc, temphc, tempp, etot, enthal, &
-                                          econs, econt, volume, out_press, tps
-            IF( tfile ) WRITE( 39, 2949 ) nfi, vnhh(3,3), xnhh0(3,3), vnhp(1), &
-                                          xnhp0(1), tps
+            IF( tfile ) THEN
+              !
+              IF(tcpbo) THEN
+                !
+                WRITE( 33, 29484 ) nfi,tps,tempp,etot,enthal,econs,econt,(-exx*exx_wf_fraction),EtsvdW
+                ! BS: different printing options need to be added ..
+                !
+              ELSE
+                !
+                IF((nfi/iprint).EQ.1) WRITE( 33, 29471 )
+                !
+                IF(lwfpbe0.AND.ts_vdw) THEN
+                  WRITE( 33, 29481 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
+                                    econs,econt,volume,out_press,(-exx*exx_wf_fraction),EtsvdW
+                ELSEIF(ts_vdw) THEN    
+                  WRITE( 33, 29482 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
+                                    econs,econt,volume,out_press,EtsvdW
+                ELSEIF(lwfpbe0) THEN    
+                  WRITE( 33, 29482 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
+                                    econs,econt,volume,out_press,(-exx*exx_wf_fraction)
+                ELSE    
+                  WRITE( 33, 29483 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
+                                    econs,econt,volume,out_press
+                END IF
+                !
+              END IF
+              !
+            END IF
+            !
+            IF( tfile ) WRITE( 39, 2949 ) nfi,tps,vnhh(3,3),xnhh0(3,3),vnhp(1),xnhp0(1)
             !
          END IF
          !
        END IF
-      !
+       !
 
        IF( ionode .AND. tfile .AND. tprint ) THEN
          !
@@ -259,16 +289,28 @@
       IF( ( MOD( nfi, iprint_stdout ) == 0 ) .OR. tfirst )  THEN
          !
          WRITE( stdout, * )
-         !
-         IF (ts_vdw) THEN
-           !
-           WRITE( stdout, 19470)
-           !
+!======================================================
+!printing with better format
+
+         IF(lwfpbe0 .or. lwfpbe0nscf)THEN
+           IF(ts_vdw)THEN
+             IF(tcpbo) THEN
+               WRITE( stdout, 19473 )
+             ELSE
+               WRITE( stdout, 19472 )
+             END IF
+           ELSE
+             WRITE( stdout, 19470 )
+           END IF
          ELSE
-           !
-           WRITE( stdout, 1947)
-           !
+           IF(ts_vdw)THEN
+             WRITE( stdout, 19471 )
+           ELSE
+             WRITE( stdout, 1947 )
+           END IF
          END IF
+
+!======================================================
          !
          IF ( abivol .AND. pvar ) write(stdout,*) 'P = ', P_ext*au_gpa
          !
@@ -289,18 +331,44 @@
 
       IF( .not. tcg ) THEN
          !
-         IF (ts_vdw) THEN
+
+         IF(lwfpbe0 .or. lwfpbe0nscf)THEN
            !
-           WRITE(stdout,19480) nfi, ekinc, temphc, tempp, etot, enthal, &
-                      econs, econt, vnhh(3,3), xnhh0(3,3), vnhp(1), xnhp0(1), EtsvdW
+           IF (ts_vdw) THEN
+             !
+             IF(tcpbo) THEN
+               ! 
+               WRITE(stdout,19483) nfi,tempp,etot,enthal,econs,econt,-exx*exx_wf_fraction,EtsvdW
+               ! 
+             ELSE
+               ! 
+               WRITE(stdout,19482) nfi,ekinc,temphc,tempp,-exx*exx_wf_fraction,etot,enthal,econs, &
+                    econt,vnhh(3,3),xnhh0(3,3),vnhp(1),xnhp0(1),EtsvdW
+               ! 
+             END IF
+             !
+           ELSE
+             !
+             WRITE(stdout, 19480)nfi,ekinc,temphc,tempp,-exx*exx_wf_fraction,etot,enthal,econs, &
+                   econt,vnhh(3,3),xnhh0(3,3),vnhp(1),xnhp0(1)
+             !
+           END IF
            !
          ELSE
-           !
-           WRITE(stdout, 1948) nfi, ekinc, temphc, tempp, etot, enthal, &
-                      econs, econt, vnhh(3,3), xnhh0(3,3), vnhp(1),  xnhp0(1)
-           !
+           IF (ts_vdw) THEN
+             !
+             WRITE(stdout,19481) nfi,ekinc,temphc,tempp,etot,enthal,econs, &
+                  econt,vnhh(3,3),xnhh0(3,3),vnhp(1),xnhp0(1),EtsvdW
+             !
+           ELSE
+             !
+             WRITE(stdout, 1948) nfi, ekinc, temphc, tempp, etot, enthal, &
+                        econs, econt, vnhh(3,3), xnhh0(3,3), vnhp(1),  xnhp0(1)
+             !
+           END IF
          END IF
          !
+
       ELSE
          IF ( MOD( nfi, iprint ) == 0 .OR. tfirst ) THEN
             !
@@ -327,17 +395,31 @@
 1944  FORMAT(//'   Partial temperatures (for each ionic specie) ', &
              /,'   Species  Temp (K)   Mean Square Displacement (a.u.)')
 1945  FORMAT(3X,I6,1X,ES10.2,1X,ES14.4)
-!1947  FORMAT( 2X,'nfi',5X,'ekinc',11X,'temph',7X,'tempp',7X,'etot',12X,'enthal', &
-!           & 10X,'econs',11X,'econt',11X,'vnhh',11X,'xnhh0',10X,'vnhp',11X,'xnhp0' )
-!1948  FORMAT( I5,1X,ES15.5,1X,ES11.1,1X,ES11.1,4(1X,ES15.5),4(1X,ES14.4) )
-1947  FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',11X,'etot',9X,'enthal', &
-           & 10X,'econs',10X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
-19470 FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',11X,'etot',9X,'enthal', &
-           & 10X,'econs',10X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0',5X,'evdw')  ! GGA+TS-vdW
-1948  FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F14.6),4(1X,F7.4) )
-19480 FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F14.5),4(1X,F7.4),2X,F14.5 ) ! GGA+TS-vdW
-2948  FORMAT( I6,1X,ES18.10,1X,ES18.10,1X,ES18.10,4(1X,ES18.10),ES18.10, ES18.10, ES18.10 )
-2949  FORMAT( I6,1X,4(1X,ES18.10), ES18.10 )
+
+1947  FORMAT( 2X,'nfi',5X,'ekinc',14X,'temph',2X,'tempp',5X,'etot',17X,'enthal', &
+           & 15X,'econs',16X,'econt',14X,'vnhh',4X,'xnhh0',3X,'vnhp',4X,'xnhp0')            ! GGA 
+19470  FORMAT(2X,'nfi',5X,'ekinc',14X,'temph',2X,'tempp',10X,'exx',15X,'etot',15X,'enthal', &
+           & 15X,'econs',16X,'econt',12X,'vnhh',4X,'xnhh0',3X,'vnhp',4X,'xnhp0')            ! PBE0
+19471  FORMAT(2X,'nfi',5X,'ekinc',14X,'temph',2X,'tempp',5X,'etot',17X,'enthal', &
+           & 15X,'econs',16X,'econt',16X,'vnhh',4X,'xnhh0',4X,'vnhp',4X,'xnhp0',8X,'evdw')  ! GGA+vdW
+19472  FORMAT(2X,'nfi',5X,'ekinc',14X,'temph',2X,'tempp',10X,'exx',15X,'etot',15X,'enthal', &
+           & 15X,'econs',16X,'econt',16X,'vnhh',4X,'xnhh0',4X,'vnhp',4X,'xnhp0',8X,'evdw')  ! PBE0+vdW
+19473  FORMAT(2X,'nfi',8X,'tempp',15X,'etot',15X,'enthal',15X,'econs', &
+           & 15X,'econt',15X,'exx',15X,'evdw')
+
+1948   FORMAT( I7,1X,F20.15,1X,F6.1,1X,F7.2,4(1X,F20.12),4(1X,F8.4) )  ! GGA 
+19480  FORMAT( I7,1X,F20.15,1X,F6.1,1X,F7.2,5(1X,F20.12),4(1X,F8.4) )  ! PBE0                       
+19481  FORMAT( I7,1X,F20.15,1X,F6.1,1X,F7.2,4(1X,F20.12),4(1X,F8.4),1X,F20.12 ) ! GGA+vdW
+19482  FORMAT( I7,1X,F20.15,1X,F6.1,1X,F7.2,5(1X,F20.12),4(1X,F8.4),1X,F20.12 ) ! PBE0+vdW                        
+19483  FORMAT( I7,1X,F10.5,6(1X,F18.10) )
+
+29471 FORMAT( '#',3X,'nfi',4X,'time(ps)',8X,'ekinc',8X,'T_cell(K)',5X,'Tion(K)',10X,'etot',15X,'enthal',15X,'econs', &
+           & 15X,'econt',10X,'Volume',8X,'Pressure(GPa)',8X,'EXX',15X,'EVDW' )
+29481 FORMAT( I7,4(2X,ES12.6),4(2X,F18.8),2X,ES12.6,2X,F12.5,2(2X,F15.8) )
+29482 FORMAT( I7,4(2X,ES12.6),4(2X,F18.8),2X,ES12.6,2X,F12.5,2X,F15.8 )
+29483 FORMAT( I7,4(2X,ES12.6),4(2X,F18.8),2X,ES12.6,2X,F12.5 )
+29484 FORMAT( I7,2(2X,ES12.6),6(2X,F18.8) )
+2949  FORMAT( I7,2X,ES12.6,4(1X,F15.8) )
       !
       RETURN
    END SUBROUTINE printout_new_x

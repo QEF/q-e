@@ -45,6 +45,9 @@
       USE mp_bands,             ONLY: me_bgrp, root_bgrp, nproc_bgrp, nbgrp, &
                                       my_bgrp_id, intra_bgrp_comm, ntask_groups
       USE uspp,                 ONLY: okvan, nlcc_any
+      USE input_parameters,     ONLY: ref_cell, ref_alat
+      use cell_base,            ONLY: ref_at, ref_bg
+      USE exx_module,           ONLY: h_init
 
       implicit none
 ! 
@@ -76,9 +79,29 @@
       !     bg(:,1), bg(:,2), bg(:,3) are the basis vectors, in
       !     2pi/alat units, generating the reciprocal lattice
 
+      ! Store the cell parameter from the input file. Used in exx_module ...
+      h_init=at*alat
+
       ! ... Initialize FFT real-space grids and small box grid
       !
-      CALL realspace_grids_init( dfftp, dffts, at, bg, gcutm, gcutms)
+      IF ( ref_cell ) THEN
+        !
+        CALL recips( ref_at(1,1), ref_at(1,2), ref_at(1,3), ref_bg(1,1), ref_bg(1,2), ref_bg(1,3) )
+        !
+        WRITE( stdout,'(3X,"Reference Cell is Used to Initialize FFT Real-space Grids")' )
+        WRITE( stdout,'(3X,"Reference Cell alat  =",F14.8,1X,"A.U.")' ) ref_alat
+        WRITE( stdout,'(3X,"ref_cell_a1 =",1X,3f14.8,3x,"ref_cell_b1 =",3f14.8)') ref_at(:,1)*ref_alat,ref_bg(:,1)/ref_alat
+        WRITE( stdout,'(3X,"ref_cell_a2 =",1X,3f14.8,3x,"ref_cell_b2 =",3f14.8)') ref_at(:,2)*ref_alat,ref_bg(:,2)/ref_alat
+        WRITE( stdout,'(3X,"ref_cell_a3 =",1X,3f14.8,3x,"ref_cell_b3 =",3f14.8)') ref_at(:,3)*ref_alat,ref_bg(:,3)/ref_alat
+        !
+        CALL realspace_grids_init( dfftp, dffts, ref_at, ref_bg, gcutm, gcutms)
+        !
+      ELSE
+        !
+        CALL realspace_grids_init( dfftp, dffts, at, bg, gcutm, gcutms)
+        !
+      END IF
+      !
       CALL smallbox_grid_init( dfftp, dfftb )
 
       IF( ionode ) THEN
@@ -130,10 +153,25 @@
       ! ... generate g-space vectors (dense and smooth grid)
       ! ... call to gshells generates gl, igtongl used in vdW-DF functional
       !
-      IF( smallmem ) THEN
-         CALL ggen( gamma_only, at, bg, intra_bgrp_comm, no_global_sort = .TRUE. )
+      IF ( ref_cell ) THEN
+        !
+        WRITE( stdout,'(/,3X,"Reference Cell is Used to Initialize Reciprocal Space Mesh")' )
+        WRITE( stdout,'(3X,"Reference Cell alat  =",F14.8,1X,"A.U.")' ) ref_alat
+        !
+        IF( smallmem ) THEN
+           CALL ggen( gamma_only, ref_at, ref_bg, intra_bgrp_comm, no_global_sort = .TRUE. )
+        ELSE
+           CALL ggen( gamma_only, ref_at, ref_bg )
+        END IF
+        !
       ELSE
-         CALL ggen( gamma_only, at, bg )
+        !
+        IF( smallmem ) THEN
+           CALL ggen( gamma_only, at, bg, intra_bgrp_comm, no_global_sort = .TRUE. )
+        ELSE
+           CALL ggen( gamma_only, at, bg )
+        END IF
+        !
       END IF
 
       CALL gshells (.TRUE.)
@@ -284,9 +322,16 @@
         ht    = TRANSPOSE( velh )
         velh  = ht
 
+        ! BS ... additional printing hold
+        WRITE(stdout, '(3X,"cell parameters read from restart file")')
         WRITE( stdout,344) ibrav
+        WRITE(stdout, '(/,3X,"cell at current step : h(t)")')
         do i=1,3
           WRITE( stdout,345) (h(i,j),j=1,3)
+        enddo
+        WRITE(stdout, '(/,3X,"cell at previous step : h(t-dt)")')
+        do i=1,3
+          WRITE( stdout,345) (hold(i,j),j=1,3)
         enddo
         WRITE( stdout,*)
 
@@ -295,6 +340,7 @@
         !
         ! geometry is set to the cell parameters read from stdin
         !
+        WRITE(stdout, '(3X,"ibrav = ",i4,"       cell parameters read from input file")') ibrav
         do i = 1, 3
             h(i,1) = at(i,1)*alat
             h(i,2) = at(i,2)*alat

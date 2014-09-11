@@ -30,7 +30,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE smallbox_gvec,                    ONLY : npb, nmb, ngb
   USE gvecw,                    ONLY : ngw
   USE gvect,       ONLY : gstart
-  USE control_flags,            ONLY : iverbosity
+  USE control_flags,            ONLY : iverbosity,conv_elec
   USE qgb_mod,                  ONLY : qgb
   USE wannier_base,             ONLY : wfg, nw, weight, indexplus, indexplusz, &
                                        indexminus, indexminusz, tag, tagp,     &
@@ -45,6 +45,9 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE fft_base,                 ONLY : dfftp, dfftb
   USE printout_base,            ONLY : printout_base_open, printout_base_unit, &
                                        printout_base_close
+  USE cp_main_variables,        ONLY : nfi, iprint_stdout
+  USE time_step,                ONLY : tps
+  USE input_parameters,         ONLY : tcpbo
   USE parallel_include
   !
   IMPLICIT NONE
@@ -559,7 +562,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      IF(nspin.EQ.1) THEN
         IF(.NOT.what1) THEN
            IF(wfsd==1) THEN
-              CALL ddyn_u(nbsp,O,Uall) ! Lingzhu Kong
+              CALL ddyn_u(nbsp,O,Uall, 1)
            ELSE IF(wfsd==2) THEN
               CALL wfsteep(nbsp,O,Uall,b1,b2,b3)
            ELSE IF(wfsd==3) THEN
@@ -579,7 +582,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         END DO
         IF(.NOT.what1) THEN
            IF(wfsd==1) THEN
-             CALL ddyn_u(nupdwn(1), Ospin, Uspin) ! Lingzhu Kong
+             CALL ddyn_u(nupdwn(1), Ospin, Uspin, 1)
            ELSE IF (wfsd==2) THEN
              CALL wfsteep(nupdwn(1), Ospin, Uspin,b1,b2,b3)
            ELSE
@@ -602,7 +605,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         END DO
         IF(.NOT.what1) THEN
            IF(wfsd==1) THEN
-              CALL ddyn_u(nupdwn(2), Ospin, Uspin) ! Lingzhu Kong
+              CALL ddyn_u(nupdwn(2), Ospin, Uspin, 2)
            ELSE IF (wfsd==2) THEN
               CALL wfsteep(nupdwn(2), Ospin, Uspin,b1,b2,b3)
            ELSE
@@ -697,8 +700,22 @@ COMB:   DO k=3**nw-1,0,-1
   !
   IF ( ionode ) THEN
      !
-     iunit = printout_base_unit( "wfc" )
-     CALL printout_base_open( "wfc" )
+     ! BS
+     IF (.NOT.tcpbo) THEN
+       IF( ( MOD( nfi, iprint_stdout ) == 0 ) )  THEN
+         iunit = printout_base_unit( "wfc" )
+         CALL printout_base_open( "wfc" )
+         WRITE( iunit, '(I8,f16.8)' )nfi,tps
+       END IF
+     ELSE
+       IF(conv_elec) THEN
+         iunit = printout_base_unit( "wfc" )
+         CALL printout_base_open( "wfc" )
+         WRITE( iunit, '(I8,f16.8)' )nfi,tps
+       END IF
+     END IF
+     ! BS
+     !
      IF ( .NOT. what1 ) THEN
         !
         ! ... pbc are imposed here in the range [0,1]
@@ -711,12 +728,22 @@ COMB:   DO k=3**nw-1,0,-1
            !
            temp_vec(:) = MATMUL( h(:,:), temp_vec(:) )
            !
-           WRITE( iunit, '(3f20.14)' ) temp_vec(:)
+           !WRITE( iunit, '(3f20.14)' ) temp_vec(:)
+           IF (.NOT.tcpbo) THEN
+             IF( ( MOD( nfi, iprint_stdout ) == 0 ) )  WRITE( iunit, '(3f20.14)' ) temp_vec(:) ! BS
+           ELSE
+             IF(conv_elec) WRITE( iunit, '(3f20.14)' ) temp_vec(:) !BS
+           END IF
            !
         END DO
         !
      END IF
-     CALL printout_base_close( "wfc" )
+     !CALL printout_base_close( "wfc" )
+     IF (.NOT.tcpbo) THEN 
+       IF( ( MOD( nfi, iprint_stdout ) == 0 ) )  CALL printout_base_close( "wfc" ) ! BS
+     ELSE 
+       IF(conv_elec) CALL printout_base_close( "wfc" ) ! BS
+     END IF
      !
   END IF
   !
@@ -757,16 +784,19 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   ! ... quantities bec
   !
   USE kinds,            ONLY : DP
-  USE io_global,        ONLY : stdout
+  USE io_global,        ONLY : ionode, stdout
   USE wannier_base,     ONLY : wf_friction, nsteps, tolw, adapt, wf_q, &
                                weight, nw, wfdt
   USE cell_base,        ONLY : alat
   USE constants,        ONLY : tpi, bohr_radius_angs
   USE electrons_base,   ONLY : nbsp
-  USE control_flags,    ONLY : iverbosity
+  USE control_flags,    ONLY : iverbosity,conv_elec
   USE mp_global,        ONLY : me_bgrp
   USE printout_base,    ONLY : printout_base_open, printout_base_unit, &
                                printout_base_close
+  USE cp_main_variables,        ONLY : nfi, iprint_stdout
+  USE time_step,                ONLY : tps
+  USE input_parameters,         ONLY : tcpbo
   USE parallel_include
   !
   IMPLICIT NONE
@@ -843,10 +873,10 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 
      IF(ABS(t0-oldt0).LT.tolw) THEN
         IF(me.EQ.1) THEN
-           WRITE(*,*) "MLWF Generated at Step",ini ! Lingzhu Kong
+           WRITE(stdout,*) "MLWF Generated at Step",ini,"  Convergence = ",ABS(t0-oldt0)
         END IF
         IF( iverbosity > 2) THEN
-           WRITE( stdout, * ) "MLWF Generated at Step",ini
+           WRITE(stdout,*) "MLWF Generated at Step",ini,"  Convergence = ",ABS(t0-oldt0)
         END IF
         GO TO 241
      END IF
@@ -950,10 +980,10 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 
      IF(ABS(t0-oldt0).GE.tolw.AND.ini.GE.nsteps) THEN
         IF(me.EQ.1) THEN
-           WRITE(*,*) "MLWF Not generated after",ini,"Steps." ! Lingzhu Kong
+           WRITE(stdout,*) "MLWF Generated at Step",ini,"  Convergence = ",ABS(t0-oldt0)
         END IF
         IF( iverbosity > 2) THEN
-           WRITE( stdout, * ) "MLWF Not generated after",ini,"Steps." 
+           WRITE(stdout,*) "MLWF Generated at Step",ini,"  Convergence = ",ABS(t0-oldt0)
         END IF
         GO TO 241
      END IF
@@ -964,21 +994,37 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 
 241 DEALLOCATE(wr, W)
 
-  spread=0.0d0
+  !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
+  IF( ( MOD( nfi, iprint_stdout ) == 0 ) )  THEN
+     IF ( ionode ) THEN
+        iunit = printout_base_unit( "spr" )
+        CALL printout_base_open( "spr" )
+        IF (.NOT.tcpbo) THEN
+           WRITE( iunit, '(I8,f16.8)' )nfi,tps
+        ELSE   
+           IF(conv_elec) WRITE( iunit, '(I8,f16.8)' )nfi,tps
+        END IF    
+     END IF    
+  END IF    
 
-!  IF(me.EQ.1) THEN ! Lingzhu Kong
-     iunit = printout_base_unit( "spr" )
-     CALL printout_base_open( "spr" )
-!  END IF ! Lingzhu Kong
+  spread=0.0d0
 
   DO i=1, m
      !
      mt=1.D0-DBLE(Oc(:,i,i)*CONJG(Oc(:,i,i)))
      sp = (alat*bohr_radius_angs/tpi)**2*SUM(mt*weight)
      !
-     IF(me.EQ.1) THEN
-        WRITE(iunit, '(f10.7)') sp
+     !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
+     IF( ( MOD( nfi, iprint_stdout ) == 0 ) ) THEN
+        IF ( ionode ) THEN
+           IF (.NOT.tcpbo) THEN
+              WRITE( iunit, '(f20.14)' ) sp
+           ELSE
+             IF(conv_elec) WRITE( iunit, '(f20.14)' ) sp
+           END IF   
+        END IF   
      END IF
+     !
      IF ( sp < 0.D0 ) &
         CALL errore( 'cp-wf', 'Something wrong WF Spread negative', 1 )
      !
@@ -986,8 +1032,9 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      !
   END DO
 
-  IF(me.EQ.1) THEN
-     CALL printout_base_close( "spr" )
+  !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
+  IF( ( MOD( nfi, iprint_stdout ) == 0 ) ) THEN
+     IF ( ionode ) CALL printout_base_close( "spr" )
   END IF
 
   spread=spread/m
@@ -1047,12 +1094,13 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   INTEGER :: ti1,tj1,tk1
   INTEGER :: me
   !
+  CALL start_clock('wf_init')
 
   me = me_bgrp + 1
   !
-  IF ( nbsp < nproc_bgrp ) &
-     CALL errore( 'cp-wf', &
-                & 'Number of Processors is greater than the number of states', 1 )
+! IF ( nbsp < nproc_bgrp ) &
+!    CALL errore( 'cp-wf', &
+!               & 'Number of Processors is greater than the number of states', 1 )
   !
   ALLOCATE(gnx(3,ngw))
   ALLOCATE(gnn(3,ngw))
@@ -1158,10 +1206,11 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 
   DO inw=1,nw1
      IF(i_1(inw).EQ.0.AND.j_1(inw).EQ.0) THEN
+        IF(gstart.EQ.2) THEN
+           indexminusz(1)=-1
+        END IF
+!$omp parallel do private(ti,tj,tk,ti1,tj1,tk1,err1,err2,err3)
         DO ig=1,ngw
-           IF(gstart.EQ.2) THEN
-              indexminusz(1)=-1
-           END IF
            ti=(gnn(1,ig)+i_1(inw))
            tj=(gnn(2,ig)+j_1(inw))
            tk=(gnn(3,ig)+k_1(inw))
@@ -1209,15 +1258,17 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
            END IF
 223        CONTINUE
         END DO
+!$omp end parallel do
         WRITE( stdout, * ) "Translation", inw, "for", ngw, "G vectors"
      ELSE
 #ifdef __MPI
         IF(me.EQ.1) THEN   
 #endif
+           IF(gstart.EQ.2) THEN
+              indexminus(1,inw)=-1
+           END IF
+!$omp parallel do private(ti,tj,tk,ti1,tj1,tk1,err1,err2,err3)
            DO ig=1,ntot
-              IF(gstart.EQ.2) THEN
-                 indexminus(1,inw)=-1
-              END IF
               ti=(bign(1,ig)+i_1(inw))
               tj=(bign(2,ig)+j_1(inw))
               tk=(bign(3,ig)+k_1(inw))
@@ -1293,6 +1344,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
               END IF
 213           CONTINUE
            END DO
+!$omp end parallel do 
            WRITE( stdout, * ) "Translation", inw, "for", ntot, "G vectors"
 #ifdef __MPI
         END IF
@@ -1316,6 +1368,8 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 
 #endif
   DEALLOCATE(i_1,j_1,k_1)
+
+  CALL stop_clock('wf_init')
 
   RETURN
 END SUBROUTINE wfunc_init
@@ -1909,6 +1963,10 @@ SUBROUTINE tric_wts2( rp1, rp2, rp3, nw, wfg, weight )
      t = abs(S(i)-R(i))
      IF ( t .gt. 1.D-8 ) THEN
         WRITE( stdout, * ) "G vectors do not satisfy the completeness condition",i,t
+        !HK
+        WRITE( stdout, * ) "NOTE: If you are in a variable cell calculation, "
+        WRITE( stdout, * ) " please take a look if your ibrav is consistent with the restarted cell"
+        WRITE( stdout, * ) " use ibrav=0 and CELL_PARAMETERS card."
         STOP
      END IF
   END DO
@@ -2436,14 +2494,17 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   !----------------------------------------------------------------------------
   !
   USE kinds,                  ONLY : DP
-  USE io_global,              ONLY : stdout
+  USE io_global,              ONLY : stdout, ionode
   USE wannier_base,           ONLY : nw, weight, nit, tolw, wfdt, maxwfdt, nsd
-  USE control_flags,          ONLY : iverbosity
+  USE control_flags,          ONLY : iverbosity,conv_elec
   USE cell_base,              ONLY : alat
   USE constants,              ONLY : tpi, bohr_radius_angs
   USE mp_global,              ONLY : me_bgrp
   USE printout_base,          ONLY : printout_base_open, printout_base_unit, &
                                      printout_base_close
+  USE cp_main_variables,      ONLY : nfi, iprint_stdout
+  USE time_step,              ONLY : tps
+  USE input_parameters,         ONLY : tcpbo
   USE parallel_include
   !
   IMPLICIT NONE
@@ -2517,7 +2578,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
 
      IF(ABS(oldt1-t01).LT.tolw) THEN 
         IF(me.EQ.1) THEN
-           WRITE(*,*) "MLWF Generated at Step",k ! Lingzhu Kong
+           WRITE(stdout,*) "MLWF Generated at Step",k
         END IF
         IF( iverbosity > 2 ) THEN
            WRITE( stdout, * ) "MLWF Generated at Step",k
@@ -2738,7 +2799,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
      U3=ZERO
      IF(ABS(t01-oldt1).GE.tolw.AND.k.GE.nit) THEN
         IF(me.EQ.1) THEN
-           WRITE(*,*) "MLWF Not generated after",k,"Steps." ! Lingzhu Kong
+           WRITE(*,*) "MLWF Not generated after",k,"Steps."
         END IF
         IF( iverbosity > 2 ) THEN
            WRITE( stdout, * ) "MLWF Not generated after",k,"Steps."
@@ -2753,32 +2814,50 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   !
   ! calculate the spread
   !
-  !  write(24, *) "spread: (unit \AA^2)"
+  !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
+  IF( ( MOD( nfi, iprint_stdout ) == 0 ) )  THEN
+     IF ( ionode ) THEN
+        iunit = printout_base_unit( "spr" )
+        CALL printout_base_open( "spr" )
+        IF (.NOT.tcpbo) THEN
+           WRITE( iunit, '(I8,f16.8)' )nfi,tps
+        ELSE   
+           IF(conv_elec) WRITE( iunit, '(I8,f16.8)' )nfi,tps
+        END IF    
+     END IF    
+  END IF    
 
-  IF(me.EQ.1) THEN
-     iunit = printout_base_unit( "spr" )
-     CALL printout_base_open( "spr" )
-  END IF
+  spread=0.0_DP
 
   DO i=1, m
      !
      mt=1.D0-DBLE(Oc(:,i,i)*CONJG(Oc(:,i,i)))
      sp = (alat*bohr_radius_angs/tpi)**2*SUM(mt*weight)
      !
-     IF(me.EQ.1) THEN
-        WRITE(iunit, '(f10.7)') sp
+     !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
+     IF( ( MOD( nfi, iprint_stdout ) == 0 ) ) THEN
+        IF ( ionode ) THEN
+           IF (.NOT.tcpbo) THEN
+              WRITE( iunit, '(f20.14)' ) sp
+           ELSE
+             IF(conv_elec) WRITE( iunit, '(f20.14)' ) sp
+           END IF   
+        END IF   
      END IF
+     !
      IF( sp < 0.D0 ) &
         CALL errore( 'cp-wf', 'Something wrong WF Spread negative', 1 )
      !
      spread=spread+sp
      !
   END DO
-  spread=spread/DBLE(m)
 
-  IF(me.EQ.1) THEN
-     CALL printout_base_open( "spr" )
+  !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
+  IF( ( MOD( nfi, iprint_stdout ) == 0 ) ) THEN
+     IF ( ionode ) CALL printout_base_close( "spr" )
   END IF
+
+  spread=spread/DBLE(m)
 
   IF(me.EQ.1) THEN
      WRITE(24, '(f10.7)') spread
@@ -3076,7 +3155,7 @@ SUBROUTINE jacobi_rotation( m, Omat, Umat, b1, b2, b3 )
 END SUBROUTINE jacobi_rotation
 !==============================================================================
 
-    SUBROUTINE ddyn_u(nbsp, O, U)
+    SUBROUTINE ddyn_u(nbsp, O, U, iss)
 
 ! input: the overlap matrix O
 ! ouput: the unitary transformation matrix U
@@ -3089,13 +3168,19 @@ END SUBROUTINE jacobi_rotation
        USE cp_main_variables, ONLY: descla
        USE cp_interfaces,     ONLY: distribute_lambda, collect_lambda
        USE printout_base,     ONLY : printout_base_open, printout_base_unit, printout_base_close
+       USE cp_main_variables, ONLY : nfi, iprint_stdout
+       USE time_step,         ONLY : tps
+       USE input_parameters,  ONLY : tcpbo
+       USE control_flags,     ONLY : conv_elec 
        USE parallel_include
+       USE io_global,         ONLY : ionode, stdout
 
        IMPLICIT NONE
    
        INTEGER ,      INTENT(in)    :: nbsp
        REAL(DP),      INTENT(out)   :: U(nbsp,nbsp)
        COMPLEX(DP),   INTENT(inout) :: O(nw,nbsp,nbsp)
+       INTEGER ,      INTENT(in)    :: iss
    
        INTEGER                      :: ista(0:nproc_image-1),iend(0:nproc_image-1)
        REAL(DP),    ALLOCATABLE,  DIMENSION(:,:) :: identy,Um,Up,U0,Ul,W,X2,X3,tmpr2,tmpi2, tmpr,tmpi
@@ -3105,40 +3190,37 @@ END SUBROUTINE jacobi_rotation
        REAL(DP) :: t0, myt0, fric, t2(nw), mt(nw), oldt0,fric1,spread,sp, eps, wfdt2, fricp, fricm
 
        nlam = 1
-       IF( SIZE( descla ) < 2 ) THEN
-          IF( descla(1)%active_node > 0 ) &
-             nlam = descla(1)%nrcx
-       ELSE
-          IF( ( descla(1)%active_node > 0 ) .OR. ( descla(2)%active_node > 0 ) ) &
-             nlam = MAX( descla(1)%nrcx, descla(2)%nrcx )
-       END IF
+       !IF( SIZE( descla ) < 2 ) THEN
+       !   IF( descla(1)%active_node > 0 ) &
+       !      nlam = descla(1)%nrcx
+       !ELSE
+       !   IF( ( descla(1)%active_node > 0 ) .OR. ( descla(2)%active_node > 0 ) ) &
+       !      nlam = MAX( descla(1)%nrcx, descla(2)%nrcx )
+       !END IF
+       IF ( descla(iss)%active_node > 0) &
+           nlam = descla(iss)%nrcx
    
        ALLOCATE(Oc(nbsp,nbsp, nw), Ocold(nbsp,nbsp,nw), Ol(nlam,nlam,nw))
        ALLOCATE(Up(nlam,nlam), U0(nlam,nlam), Um(nlam,nlam), Ul(nlam,nlam),  X2(nbsp,nbsp), X3(nbsp,nbsp))
        ALLOCATE(W(nlam,nlam), identy(nlam,nlam))
        ALLOCATE(tmpr(nlam,nlam), tmpi(nlam,nlam), tmpr2(nlam,nlam), tmpi2(nlam,nlam))
 
-       IF(me_image.EQ.0) THEN
-          iunit = printout_base_unit( "spr" )
-          CALL printout_base_open( "spr" )
-       END IF
-
        eps=1.0E-13_DP
        nmax=50
        fric=wf_friction
        oldt0=0.D0
       
-       nr = descla(1)%nr
-       nc = descla(1)%nc
-       ir = descla(1)%ir
-       ic = descla(1)%ic
+       nr = descla(iss)%nr
+       nc = descla(iss)%nc
+       ir = descla(iss)%ir
+       ic = descla(iss)%ic
 
        do inw = 1, nw
           X2(:,:) =  REAL(O(inw, :, :))
           X3(:,:) = AIMAG(O(inw, :, :))
      
-          call distribute_lambda(X2, tmpr, descla(1))
-          call distribute_lambda(X3, tmpi, descla(1))
+          call distribute_lambda(X2, tmpr, descla(iss))
+          call distribute_lambda(X3, tmpi, descla(iss))
       
           Oc(:,:,inw) = DCMPLX(X2,X3)
           Ol(:,:,inw) = DCMPLX(tmpr,tmpi)
@@ -3150,7 +3232,7 @@ END SUBROUTINE jacobi_rotation
        DO i=1,nbsp
           X2(i,i)=1.D0
        END DO
-       call distribute_lambda(X2, identy, descla(1))
+       call distribute_lambda(X2, identy, descla(iss))
     
        Ul = identy
     
@@ -3184,8 +3266,8 @@ END SUBROUTINE jacobi_rotation
              END DO
           END DO
     
-          CALL ortho_u(Up,U0,nlam,identy,eps,nmax,nbsp)  
-          CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, Ul, nlam, Up, nlam, 0.0d0, tmpr, nlam, descla(1))  
+          CALL ortho_u(Up,U0,nlam,identy,eps,nmax,nbsp, iss)
+          CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, Ul, nlam, Up, nlam, 0.0d0, tmpr, nlam, descla(iss))  
           Ul = tmpr
 
           Ocold = Oc
@@ -3193,13 +3275,13 @@ END SUBROUTINE jacobi_rotation
              tmpr(:,:)=REAL(Ol(:,:,inw))
              tmpi(:,:)=AIMAG(Ol(:,:,inw))
    
-             CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, Ul, nlam, tmpr, nlam, 0.0d0, tmpr2, nlam, descla(1)) 
-             CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, Ul, nlam, tmpi, nlam, 0.0d0, tmpi2, nlam, descla(1)) 
-             CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, tmpr2, nlam, Ul, nlam, 0.0d0, tmpr, nlam, descla(1)) 
-             CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, tmpi2, nlam, Ul, nlam, 0.0d0, tmpi, nlam, descla(1)) 
+             CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, Ul, nlam, tmpr, nlam, 0.0d0, tmpr2, nlam, descla(iss)) 
+             CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, Ul, nlam, tmpi, nlam, 0.0d0, tmpi2, nlam, descla(iss)) 
+             CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, tmpr2, nlam, Ul, nlam, 0.0d0, tmpr, nlam, descla(iss)) 
+             CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, tmpi2, nlam, Ul, nlam, 0.0d0, tmpi, nlam, descla(iss)) 
    
-             call collect_lambda(X2, tmpr, descla(1) )
-             call collect_lambda(X3, tmpi, descla(1))
+             call collect_lambda(X2, tmpr, descla(iss) )
+             call collect_lambda(X3, tmpi, descla(iss))
    
              Oc(:,:,inw)=CMPLX(X2,X3)
           ENDDO
@@ -3216,15 +3298,16 @@ END SUBROUTINE jacobi_rotation
 #ifdef __MPI
        CALL mpi_allreduce (myt0, t0, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
                            intra_image_comm, ierr)
-#else
-       t0 = myt0
 #endif
-       if(mod(ini,10) == 0)print *, 'spread at ', ini, ' = ', t0
+!      t0 = myt0
+!       if(mod(ini,10) == 0)WRITE(stdout,*), 'spread at ', ini, ' = ', t0
        IF(ABS(t0-oldt0).LT.tolw) THEN
-         WRITE(*,*) "MLWF Generated at Step",ini
+         !WRITE(stdout,*) "MLWF Generated at Step",ini,"  Convergence = ",ABS(t0-oldt0)
+         WRITE(stdout,'(3X,"MLWF step",I5,"  Convergence = ",ES10.3,"  Generated")')ini,ABS(t0-oldt0) ! BS
          exit
        ELSEIF(ini.GE.nsteps) THEN
-         WRITE(*,*) "MLWF Not generated after",ini,"Steps."
+         !WRITE(stdout,*) "MLWF Not generated after",ini,"Steps."
+          WRITE(stdout,'(3X,"MLWF step",I5,"  Convergence = ",ES10.3,"  Not Generated")')ini,ABS(t0-oldt0) ! BS
        END IF
 
        IF(oldt0 .GT. t0) fric=fric/2.D0
@@ -3233,23 +3316,49 @@ END SUBROUTINE jacobi_rotation
 
      END DO !cycl for nsteps
 
+     !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
+     IF( ( MOD( nfi, iprint_stdout ) == 0 ) )  THEN
+        IF ( ionode ) THEN
+           iunit = printout_base_unit( "spr" )
+           CALL printout_base_open( "spr" )
+           IF (.NOT.tcpbo) THEN
+              WRITE( iunit, '(I8,f16.8)' )nfi,tps
+           ELSE   
+              IF(conv_elec) WRITE( iunit, '(I8,f16.8)' )nfi,tps
+           END IF    
+        END IF    
+     END IF    
+
      spread=0.0d0
      DO i=1, nbsp
         mt=1.D0-DBLE(Oc(i,i,:)*CONJG(Oc(i,i,:)))
         sp = (alat*autoaf/tpi)**2*SUM(mt*weight)
-        IF(me_image.EQ.0) WRITE(iunit, '(f10.7)') sp
-        print *, 'sp = ',i, sp
+        !
+        !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
+        IF( ( MOD( nfi, iprint_stdout ) == 0 ) ) THEN
+           IF ( ionode ) THEN
+              IF (.NOT.tcpbo) THEN
+                 WRITE( iunit, '(f20.14)' ) sp
+              ELSE
+                IF(conv_elec) WRITE( iunit, '(f20.14)' ) sp
+              END IF   
+           END IF   
+        END IF
+        !
         IF ( sp < 0.D0 ) &
            CALL errore( 'cp-wf', 'Something wrong WF Spread negative', 1 )  
         spread=spread+sp
      END DO
 
-     IF(me_image.EQ.0) CALL printout_base_close( "spr" )
+     !BS .. to print WANNIER spreads at every iprint steps in .spr file ..    
+     IF( ( MOD( nfi, iprint_stdout ) == 0 ) ) THEN
+        IF ( ionode ) CALL printout_base_close( "spr" )
+     END IF
 
      spread=spread/nbsp
-     IF(me_image.EQ.0) write(*,*) "Average spread = ", spread
+    !IF(me_image.EQ.0) write(*,'(3X,"Average spread =",ES10.3)') spread ! BS
 
-     call collect_lambda(U,Ul,descla(1))
+     call collect_lambda(U,Ul,descla(iss))
 
      do inw = 1, nw
         O(inw,:,:) = Oc(:,:,inw)
@@ -3262,7 +3371,7 @@ END SUBROUTINE jacobi_rotation
 
 !-------------------------------------------------------------------------
 
-      SUBROUTINE  ortho_u(up,u0,nlam,identy,eps,nmax,nbsp)
+      SUBROUTINE  ortho_u(up,u0,nlam,identy,eps,nmax,nbsp, iss)
 !-----------------------------------------------------------------------
 !     input = up (non-unitary), u0 (must be unitary)
 !     output = up (unitary),
@@ -3277,7 +3386,7 @@ END SUBROUTINE jacobi_rotation
  
       IMPLICIT NONE
 
-      INTEGER, INTENT(IN)    :: nlam, nmax, nbsp
+      INTEGER, INTENT(IN)    :: nlam, nmax, nbsp, iss
       REAL(DP),INTENT(INOUT) :: up(nlam,nlam)
       REAL(DP),INTENT(IN)    :: u0(nlam,nlam), identy(nlam,nlam),eps
       REAL(DP) :: delta
@@ -3288,11 +3397,11 @@ END SUBROUTINE jacobi_rotation
       ALLOCATE( tmp(nlam,nlam),tmp2(nlam,nlam),tmp2t(nlam,nlam) )
       ALLOCATE( amat(nlam,nlam),bmat(nlam,nlam))
 
-      nr = descla(1)%nr
-      nc = descla(1)%nc
+      nr = descla(iss)%nr
+      nc = descla(iss)%nc
 
-      CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, up, nlam, up, nlam, 0.0d0, amat, nlam, descla(1))
-      CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, up, nlam, u0, nlam, 0.0d0, bmat, nlam, descla(1))
+      CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, up, nlam, up, nlam, 0.0d0, amat, nlam, descla(iss))
+      CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, up, nlam, u0, nlam, 0.0d0, bmat, nlam, descla(iss))
 
       amat = identy-amat
       bmat = identy-bmat
@@ -3301,10 +3410,10 @@ END SUBROUTINE jacobi_rotation
       delta = 1.0E10_DP
       DO iter = 1,nmax
 
-         CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, bmat, nlam, xloc, nlam, 0.0d0, tmp2, nlam, descla(1))
-         CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, xloc, nlam, xloc, nlam, 0.0d0, tmp, nlam, descla(1))
+         CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, bmat, nlam, xloc, nlam, 0.0d0, tmp2, nlam, descla(iss))
+         CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, xloc, nlam, xloc, nlam, 0.0d0, tmp, nlam, descla(iss))
 
-         CALL sqr_tr_cannon( nbsp, tmp2, nlam, tmp2t, nlam, descla(1) )
+         CALL sqr_tr_cannon( nbsp, tmp2, nlam, tmp2t, nlam, descla(iss) )
 
          do j=1,nc
             do i=1,nr
@@ -3315,10 +3424,10 @@ END SUBROUTINE jacobi_rotation
          IF(iter .GE. 3) THEN
 
             tmp = up         ! upnew = up + u0*xloc
-            CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, u0, nlam, xloc, nlam, 1.0d0, tmp, nlam, descla(1))
+            CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, u0, nlam, xloc, nlam, 1.0d0, tmp, nlam, descla(iss))
 
             tmp2 = identy
-            CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, tmp, nlam, tmp, nlam, -1.0d0, tmp2, nlam, descla(1))
+            CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, tmp, nlam, tmp, nlam, -1.0d0, tmp2, nlam, descla(iss))
             delta = 0.d0
             do j=1,nc
             do i=1,nr

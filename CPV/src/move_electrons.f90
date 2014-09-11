@@ -42,8 +42,9 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
   USE cp_interfaces,        ONLY : rhoofr, compute_stress, vofrho, nlfl_bgrp, prefor, nlfq_bgrp
   USE electrons_module,     ONLY : distribute_c, collect_c, distribute_b
   USE gvect,                ONLY : eigts1, eigts2, eigts3 
-  USE control_flags,        ONLY : lwfpbe0, lwfpbe0nscf  ! Lingzhu Kong
+  USE control_flags,        ONLY : lwfpbe0, lwfpbe0nscf  ! exx_wf related
   USE wavefunctions_module, ONLY : cv0 ! Lingzhu Kong
+  USE input_parameters,     ONLY : exx_wf !if .true., exx calculations using Wannier functions are turned on .. 
   !
   IMPLICIT NONE
   !
@@ -82,6 +83,22 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
      CALL rhoofr( nfi, c0_bgrp, irb, eigrb, bec_bgrp, dbec, becsum, rhor, &
                   drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
      !
+!=================================================================
+!exx_wf related
+     IF ( lwfpbe0 .AND. exx_wf ) THEN
+        !
+        CALL start_clock('exact_exchange')
+        CALL exx_gs(nfi, c0_bgrp)
+        CALL stop_clock('exact_exchange')
+        !
+     ELSEIF( lwfpbe0nscf ) THEN
+        !
+        CALL start_clock('exact_exchange')
+        CALL exx_es(nfi, c0_bgrp, cv0)
+        CALL stop_clock('exact_exchange')
+        !
+     END IF
+!=================================================================
      ! ... put core charge (if present) in rhoc(r)
      !
      IF ( nlcc_any ) CALL set_cc( irb, eigrb, rhoc )

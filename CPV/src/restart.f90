@@ -30,6 +30,7 @@
       USE electrons_module, ONLY: collect_c
       USE descriptors,      ONLY: la_descriptor
       USE gvecw,            ONLY: ngw
+      USE wannier_module,   ONLY : wfc ! BS
 
 !
       implicit none
@@ -95,7 +96,7 @@
           ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus,        &
           vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_f , &
           occ_f , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei,            &
-          rho, c0, cm, ctot, iupdwn, nupdwn, iupdwn, nupdwn, mat_z = mat_z  )
+          rho, c0, cm, ctot, iupdwn, nupdwn, iupdwn, nupdwn, wfc, mat_z = mat_z  ) ! BS added wfc
         !
       ELSE
         ! 
@@ -103,7 +104,7 @@
              ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus,    &
              vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_f,&
              occ_f , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, eitot,     &
-             rho, c0, cm, ctot, iupdwn, nupdwn, iupdwn_tot, nupdwn_tot )
+             rho, c0, cm, ctot, iupdwn, nupdwn, iupdwn_tot, nupdwn_tot, wfc ) ! BS added wfc
         !
       END IF
 
@@ -138,6 +139,7 @@
       USE cp_autopilot,   ONLY : employ_rules
       USE control_flags,  ONLY : ndr
       USE cp_interfaces,  ONLY : c_bgrp_pack
+      USE wannier_module,   ONLY : wfc ! BS
 !
       implicit none
       INTEGER, INTENT(in) :: flag
@@ -185,13 +187,13 @@
                 ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, taus, &
                 vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ_ , &
                 occ_ , lambda, lambdam, b1, b2, b3, &
-                xnhe0, xnhem, vnhe, ekincm, c0, cm, mat_z = mat_z )
+                xnhe0, xnhem, vnhe, ekincm, c0, cm, wfc, mat_z = mat_z ) ! BS added wfc
       ELSE
          CALL cp_readfile( ndr, .TRUE., nfi, tps, acc, nk, xk, wk, &
                 ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, taus, &
                 vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ_ , &
                 occ_ , lambda, lambdam, b1, b2, b3, &
-                xnhe0, xnhem, vnhe, ekincm, c0, cm )
+                xnhe0, xnhem, vnhe, ekincm, c0, cm, wfc ) ! BS added wfc
       END IF
       !
       ! AutoPilot (Dynamic Rules) Implementation

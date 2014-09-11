@@ -121,7 +121,8 @@
       USE cp_interfaces,      ONLY: checkrho, ennl, calrhovan, dennl
       USE cp_main_variables,  ONLY: iprint_stdout, descla
       USE wannier_base,       ONLY: iwf
-      USE cp_main_variables,  ONLY: rhopr ! Lingzhu Kong
+      USE exx_module,         ONLY: rhopr 
+      USE input_parameters,   ONLY: tcpbo ! BS
 !
       IMPLICIT NONE
       INTEGER nfi
@@ -236,26 +237,34 @@
          ALLOCATE( psi( dfftp%nnr ) )
          IF(nspin.EQ.1)THEN
             iss=1
+!$omp parallel do
             DO ir=1,dfftp%nnr
                psi(ir)=CMPLX(rhor(ir,iss),0.d0,kind=DP)
             END DO
+!$omp end parallel do
             CALL fwfft('Dense', psi, dfftp )
+!$omp parallel do
             DO ig=1,ngm
                rhog(ig,iss)=psi(nl(ig))
             END DO
+!$omp end parallel do
          ELSE
             isup=1
             isdw=2
+!$omp parallel do
             DO ir=1,dfftp%nnr
                psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=DP)
             END DO
+!$omp end parallel do
             CALL fwfft('Dense', psi, dfftp )
+!$omp parallel do private(fp,fm)
             DO ig=1,ngm
                fp=psi(nl(ig))+psi(nlm(ig))
                fm=psi(nl(ig))-psi(nlm(ig))
                rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
                rhog(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
             END DO
+!$omp end parallel do
          ENDIF
 
          DEALLOCATE( psi )
@@ -284,18 +293,22 @@
             i = iwf
             !
             psis = 0.D0
+!$omp parallel do
             DO ig=1,ngw
                psis(nlsm(ig))=CONJG(c_bgrp(ig,i))
                psis(nls(ig))=c_bgrp(ig,i)
             END DO
+!$omp end parallel do
             !
             CALL invfft('Wave',psis, dffts )
             !
             iss1=1
             sa1=f_bgrp(i)/omega
+!$omp parallel do
             DO ir=1,dffts%nnr
                rhos(ir,iss1)=rhos(ir,iss1) + sa1*( DBLE(psis(ir)))**2
             END DO
+!$omp end parallel do
             !
          ELSE IF( dffts%have_task_groups ) THEN
             !
@@ -321,10 +334,12 @@
                   sa2  = 0.0d0
                END IF
                !
+!$omp parallel do
                DO ir = 1, dffts%nnr
                   rhos(ir,iss1) = rhos(ir,iss1) + sa1 * ( DBLE(psis(ir)))**2
                   rhos(ir,iss2) = rhos(ir,iss2) + sa2 * (AIMAG(psis(ir)))**2
                END DO
+!$omp end parallel do
                !
             END DO
             !
@@ -342,26 +357,34 @@
          !
          IF(nspin.EQ.1)THEN
             iss=1
+!$omp parallel do
             DO ir=1,dffts%nnr
                psis(ir)=CMPLX(rhos(ir,iss),0.d0,kind=DP)
             END DO
+!$omp end parallel do
             CALL fwfft('Smooth', psis, dffts )
+!$omp parallel do
             DO ig=1,ngms
                rhog(ig,iss)=psis(nls(ig))
             END DO
+!$omp end parallel do
          ELSE
             isup=1
             isdw=2
+!$omp parallel do
              DO ir=1,dffts%nnr
                psis(ir)=CMPLX(rhos(ir,isup),rhos(ir,isdw),kind=DP)
             END DO
+!$omp end parallel do
             CALL fwfft('Smooth',psis, dffts )
+!$omp parallel do private(fp,fm)
             DO ig=1,ngms
                fp= psis(nls(ig)) + psis(nlsm(ig))
                fm= psis(nls(ig)) - psis(nlsm(ig))
                rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
                rhog(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
             END DO
+!$omp end parallel do
          ENDIF
          !
          ALLOCATE( psi( dfftp%nnr ) )
@@ -372,14 +395,18 @@
             ! 
             iss=1
             psi (:) = (0.d0, 0.d0)
+!$omp parallel do
             DO ig=1,ngms
                psi(nlm(ig))=CONJG(rhog(ig,iss))
                psi(nl (ig))=      rhog(ig,iss)
             END DO
+!$omp end parallel do
             CALL invfft('Dense',psi, dfftp )
+!$omp parallel do
             DO ir=1,dfftp%nnr
                rhor(ir,iss)=DBLE(psi(ir))
             END DO
+!$omp end parallel do
             !
          ELSE 
             !
@@ -388,15 +415,19 @@
             isup=1
             isdw=2
             psi (:) = (0.d0, 0.d0)
+!$omp parallel do
             DO ig=1,ngms
                psi(nlm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
                psi(nl(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
             END DO
+!$omp end parallel do
             CALL invfft('Dense',psi, dfftp )
+!$omp parallel do
             DO ir=1,dfftp%nnr
                rhor(ir,isup)= DBLE(psi(ir))
                rhor(ir,isdw)=AIMAG(psi(ir))
             END DO
+!$omp end parallel do
          ENDIF
          !
          IF ( dft_is_meta() ) CALL kedtauofr_meta( c_bgrp, psi, SIZE( psi ), psis, SIZE( psis ) ) ! METAGGA
@@ -424,8 +455,12 @@
 !
 !     here to check the integral of the charge density
 !
+! BS: I have turned off computing and printing integrated electronic density at
+! every iprint_stdout steps during CP-BO calculations ... 
+!     IF( ( iverbosity > 1 ) .OR. ( nfi == 0 ) .OR. &
+!         ( MOD(nfi, iprint_stdout) == 0 ) .AND. ( .NOT. tcg ) ) THEN
       IF( ( iverbosity > 1 ) .OR. ( nfi == 0 ) .OR. &
-          ( MOD(nfi, iprint_stdout) == 0 ) .AND. ( .NOT. tcg ) ) THEN
+          ( MOD(nfi, iprint_stdout) == 0 ) .AND. ( .NOT. tcg ) .AND. (.NOT.tcpbo )) THEN
 
          IF( iverbosity > 1 ) THEN
             CALL checkrho( dfftp%nnr, nspin, rhor, rmin, rmax, rsum, rnegsum )
@@ -520,6 +555,7 @@
             do ig = 1, SIZE(psis)
                psis (ig) = (0.d0, 0.d0)
             end do
+!$omp end do
             !
             !  Loop for all local g-vectors (ngw)
             !  c: stores the Fourier expansion coefficients
@@ -552,6 +588,7 @@
                      psis(nlsm(ig)+eig_offset*dffts%tg_nnr)=conjg(c_bgrp(ig,i+eig_index-1))+ci*conjg(c_bgrp(ig,i+eig_index))
                      psis(nls(ig)+eig_offset*dffts%tg_nnr)=c_bgrp(ig,i+eig_index-1)+ci*c_bgrp(ig,i+eig_index)
                   end do
+!$omp end do
                   !
                   eig_offset = eig_offset + 1
                   !
@@ -624,6 +661,7 @@
                tmp_rhos(ir,iss1) = tmp_rhos(ir,iss1) + sa1*( real(psis(ir)))**2
                tmp_rhos(ir,iss2) = tmp_rhos(ir,iss2) + sa2*(aimag(psis(ir)))**2
             end do
+!$omp end parallel do 
             !
          END DO
 

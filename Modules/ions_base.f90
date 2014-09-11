@@ -602,12 +602,15 @@
 
 !------------------------------------------------------------------------------!
 
-  subroutine ions_thermal_stress( stress, pmass, omega, h, vels, nsp, na )
-    USE constants, ONLY : eps8
-    REAL(DP), intent(inout) :: stress(3,3)
+  subroutine ions_thermal_stress( stress, nstress, pmass, omega, h, vels, nsp, na )
+    USE constants, ONLY : eps8, au_gpa
+    USE io_global, ONLY : stdout
+    REAL(DP), intent(inout) :: stress(3,3),nstress(3,3)
     REAL(DP), intent(in)  :: pmass(:), omega, h(3,3), vels(:,:)
     integer, intent(in) :: nsp, na(:)
     integer :: i, j, is, ia, isa
+
+    nstress = 0.0_DP ! BS
     isa    = 0
     if( omega < eps8 ) call errore(' ions_thermal_stress ', ' omega <= 0 ', 1 )
     do is = 1, nsp
@@ -618,10 +621,18 @@
             stress(i,j) = stress(i,j) + pmass(is) / omega *           &
      &        (  (h(i,1)*vels(1,isa)+h(i,2)*vels(2,isa)+h(i,3)*vels(3,isa)) *  &
                  (h(j,1)*vels(1,isa)+h(j,2)*vels(2,isa)+h(j,3)*vels(3,isa))  )
+
+     ! BS : to print Pressure of Nuclei at each step
+            nstress(i,j) = nstress(i,j) + pmass(is) / omega *           &
+     &        (  (h(i,1)*vels(1,isa)+h(i,2)*vels(2,isa)+h(i,3)*vels(3,isa)) *  &
+                 (h(j,1)*vels(1,isa)+h(j,2)*vels(2,isa)+h(j,3)*vels(3,isa))  )
+     ! BS
+
           enddo
         enddo
       enddo
     enddo
+
     return
   end subroutine ions_thermal_stress
 

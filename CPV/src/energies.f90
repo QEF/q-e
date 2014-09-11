@@ -11,6 +11,7 @@
         USE io_global,  ONLY : stdout
         USE kinds
         USE control_flags, ONLY : lwfpbe0, lwfpbe0nscf ! Lingzhu Kong
+        USE wannier_base,  ONLY : exx_wf_fraction
         IMPLICIT NONE
         SAVE
 
@@ -170,9 +171,9 @@
              WRITE( stdout,100) etot, ekin, eht, esr, eself, epseu, enl, exc, vave
 
 !====================================================================================
-!Lingzhu Kong
+!exx_wf related
              if( lwfpbe0 .or. lwfpbe0nscf) then
-                WRITE( stdout,101) -exx*0.25, etot-exx*0.25
+                WRITE( stdout,101) -exx*exx_wf_fraction, etot
              end if
 !====================================================================================
 
