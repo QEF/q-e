@@ -1053,6 +1053,7 @@ vofrho.o : ../../Modules/xc_vdW_DF.o
 vofrho.o : cp_interfaces.o
 vofrho.o : energies.o
 vofrho.o : ldaU_cp.o
+vofrho.o : mainvar.o
 vofrho.o : modules.o
 vofrho.o : pres_ai_mod.o
 vofrho.o : smallbox_gvec.o

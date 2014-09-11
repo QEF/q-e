@@ -31,6 +31,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE cell_base,        ONLY: omega, r_to_s
       USE cell_base,        ONLY: alat, at, tpiba2, h, ainv
       USE cell_base,        ONLY: ibrav, isotropic  !True if volume option is chosen for cell_dofree
+      USE cp_main_variables, ONLY: iprint_stdout    !print control
       USE gvect,            ONLY: gstart, gg, g
       USE electrons_base,   ONLY: nspin
       USE constants,        ONLY: pi, fpi, au_gpa, e2
@@ -648,7 +649,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
            !
            ! BS / RAD start print ts_vdW pressure ------------- 
            !
-           IF(MOD(nfi,iprint).EQ.0)  THEN
+           IF(MOD(nfi,iprint_stdout).EQ.0)  THEN
              detmp = HtsvdW 
              detmp = -1.d0 * (MATMUL( detmp(:,:), TRANSPOSE(h) )) / omega
              detmp = detmp * au_gpa   ! GPa 
@@ -694,7 +695,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
            !
            detot = detot + dexx 
            !
-           IF(MOD(nfi,iprint).EQ.0) WRITE( stdout,9014) (-1.0_DP/3.0_DP)*&
+           IF(MOD(nfi,iprint_stdout).EQ.0) WRITE( stdout,9014) (-1.0_DP/3.0_DP)*&
                (dexx(1,1)+dexx(2,2)+dexx(3,3))*au_gpa , nfi
            9014  FORMAT (5X,'EXX Pressure (GPa)',F15.5,I7)
            !
@@ -703,7 +704,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !
          ! BS / RAD start print total electronic pressure ------------- 
          !
-         IF(MOD(nfi,iprint).EQ.0)  THEN
+         IF(MOD(nfi,iprint_stdout).EQ.0)  THEN
            detmp = detot
            detmp = -1.d0 * (MATMUL( detmp(:,:), TRANSPOSE(h) )) / omega
            detmp = detmp * au_gpa   ! GPa 
