@@ -645,8 +645,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      !=================================================================
      ! BS : Additional cycles for the Nose thermostat ... 
-     CYCLE_NOSE=CYCLE_NOSE+1
-     IF(tnosep .AND. (CYCLE_NOSE == 1 .OR. CYCLE_NOSE == 2) ) GO TO 444 
+     !      Nose cycle is turned off currently
+!      CYCLE_NOSE=CYCLE_NOSE+1
+!      IF(tnosep .AND. (CYCLE_NOSE == 1 .OR. CYCLE_NOSE == 2) ) GO TO 444 
      !=================================================================
      ! 
      ! ... warning:  thdyn and tcp/tcap are not compatible yet!!!
