@@ -269,7 +269,7 @@ CONTAINS
           !
           WRITE(print_str,'(3X,"EXX calculation error : use -ndiag N option in the execution of cp.x. &
               & Set N to any perfect square number which is equal to or less than the number of electronic states &
-              & ***** Use -ndiag",1X,I7)'),ndiag_n
+              & ***** Use -ndiag",1X,I7)') ndiag_n
           !
           CALL errore('exx_module',print_str,1)
           !
@@ -286,7 +286,7 @@ CONTAINS
           !
           WRITE(print_str,'(3X,"EXX calculation error : use -ndiag N option in the execution of cp.x. &
           & Set N to any perfect square number which is equal to or less than the number of electronic states &
-          & ***** Use -ndiag",1X,I7)'),ndiag_n
+          & ***** Use -ndiag",1X,I7)') ndiag_n
           !
           CALL errore('exx_module',print_str,1)
           !

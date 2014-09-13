@@ -128,7 +128,7 @@ SUBROUTINE exx_index_pair(wannierc, overlap_final, nj_final, nj_max, ndim )
       !
       IF (nj(i) > neigh) THEN
         WRITE(print_str,'(3X,"EXX calculation error : maximum non-unique pairs found",1X,I5,&
-            & "increase the value of exx_neigh at least to",1X,I5)'),nj(i),nj(i) 
+            & "increase the value of exx_neigh at least to",1X,I5)') nj(i),nj(i) 
         !
         CALL errore('exx_pair',print_str,1)
         !
