@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2011 Quantum ESPRESSO group
+! Copyright (C) 2002-2014 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -367,10 +367,12 @@ CONTAINS
       INTEGER            :: ia, k, is, nfield, idx, rep_i
       LOGICAL, EXTERNAL  :: matches
       LOGICAL            :: tend
+      REAL(DP)           :: inp1, inp2
+      INTEGER            :: fieldused
       !
       INTEGER            :: ifield, ierr
       REAL(DP)           :: field_value
-      CHARACTER(len=256) :: field_str, error_msg
+      CHARACTER(len=256) :: field_str, error_msg, wp
       !
       !
       IF ( tapos ) THEN
@@ -433,11 +435,6 @@ CONTAINS
                CALL errore( 'read_cards', &
                            'ATOMIC_POSITIONS with sic, 8 columns required', 1 )
          !
-         IF ( nfield /= 4 .and. nfield /= 7 .and. nfield /= 8 .and. & !Modifica 1
-               nfield/=2 .and. nfield/=6 .and. nfield/=5) &
-               CALL errore( 'read_cards', 'wrong number of columns ' // &
-                           & 'in ATOMIC_POSITIONS', ia )
-
          ! read atom symbol (column 1) and coordinate
          CALL get_field(1, lb_pos, input_line)
          lb_pos = trim(lb_pos)
@@ -448,28 +445,53 @@ CONTAINS
          !     
          !If the ia position is expressed in wyckoff position.
          IF (lsg.AND.LEN_TRIM(field_str)<4.AND.&
-              ((IACHAR(field_str(2:2))>64.AND.IACHAR(field_str(2:2))<123)&
-             .OR.(IACHAR(field_str(3:3))>64.AND.&
-                  IACHAR(field_str(3:3))<123))) THEN
-                  !wyckoff position case 
-            CALL wypos(rd_pos(1,ia),field_str,space_group, &
+              ((IACHAR(field_str(LEN_TRIM(field_str):LEN_TRIM(field_str)))>64.AND.&
+               IACHAR(field_str(LEN_TRIM(field_str):LEN_TRIM(field_str)))<123))) THEN
+            !wyckoff position case
+            !
+            wp=field_str
+            inp1=1.d5
+            inp2=1.d5
+            !
+            IF (nfield>2) THEN
+               ! read field 2 (1st coordinate)
+               CALL get_field(3, field_str, input_line)
+               inp1 = feval_infix(ierr, field_str )
+               CALL errore('card_atomic_positions', error_msg, ierr)
+               !
+               IF (nfield>3) THEN
+                  ! read field 3 (2nd coordinate)
+                  CALL get_field(4, field_str, input_line)
+                  inp2 = feval_infix(ierr, field_str )
+                  CALL errore('card_atomic_positions', error_msg, ierr)
+               ENDIF
+            ENDIF
+            !
+            CALL wypos(rd_pos(1,ia),wp,inp1,inp2,space_group, &
                  uniqueb,rhombohedral,origin_choice)
+            !
+            fieldused=3
+            IF ((rd_pos(1,ia)==inp1).OR.(rd_pos(2,ia)==inp1).OR.(rd_pos(3,ia)==inp1))&
+               fieldused=fieldused+1
+            IF ((rd_pos(2,ia)==inp2).OR.(rd_pos(3,ia)==inp2)) fieldused=fieldused+1
+            !
+            !         
             !
             IF ( nfield >= 5 ) THEN
                ! read constrains (fields 3-5, if present)
-               CALL get_field(3, field_str, input_line)
+               CALL get_field(fieldused, field_str, input_line)
                READ(field_str, *) if_pos(1,ia)
-               CALL get_field(4, field_str, input_line)
+               CALL get_field(fieldused+1, field_str, input_line)
                READ(field_str, *) if_pos(2,ia)
-               CALL get_field(5, field_str, input_line)
+               CALL get_field(fieldused+2, field_str, input_line)
                READ(field_str, *) if_pos(3,ia)
             ENDIF
             !
-            IF ( nfield == 6 ) THEN
-               CALL get_field(6, field_str, input_line)
-               READ(field_str, *) id_loc(ia)
-            ENDIF
          ELSE
+            IF ( nfield /= 4 .and. nfield /= 7 .and. nfield /= 8) &
+            CALL errore( 'read_cards', 'wrong number of columns ' // &
+                           & 'in ATOMIC_POSITIONS', ia )
+
             rd_pos(1,ia) = feval_infix(ierr, field_str )
             CALL errore('card_atomic_positions', error_msg, ierr)
             ! read field 2 (atom Y coordinate)
