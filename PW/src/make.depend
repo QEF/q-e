@@ -1393,13 +1393,10 @@ rdiaghg.o : ../../Modules/kind.o
 rdiaghg.o : ../../Modules/mp.o
 rdiaghg.o : ../../Modules/mp_bands.o
 rdiaghg.o : ../../Modules/mp_diag.o
-read_conf_from_file.o : ../../Modules/cell_base.o
 read_conf_from_file.o : ../../Modules/io_files.o
 read_conf_from_file.o : ../../Modules/io_global.o
-read_conf_from_file.o : ../../Modules/ions_base.o
 read_conf_from_file.o : ../../Modules/kind.o
 read_conf_from_file.o : pw_restart.o
-read_conf_from_file.o : pwcom.o
 read_file.o : ../../Modules/cell_base.o
 read_file.o : ../../Modules/constants.o
 read_file.o : ../../Modules/control_flags.o
