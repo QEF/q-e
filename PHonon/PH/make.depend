@@ -196,6 +196,7 @@ ch_psi_all.o : ../../Modules/kind.o
 ch_psi_all.o : ../../Modules/mp.o
 ch_psi_all.o : ../../Modules/mp_bands.o
 ch_psi_all.o : ../../Modules/noncol.o
+ch_psi_all.o : ../../Modules/recvec.o
 ch_psi_all.o : ../../Modules/uspp.o
 ch_psi_all.o : ../../Modules/wavefunctions.o
 ch_psi_all.o : ../../PW/src/pwcom.o
