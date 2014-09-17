@@ -87,7 +87,6 @@ recvec_subs.o \
 run_info.o \
 space_group.o \
 set_signal.o \
-sic.o \
 splinelib.o \
 stick_base.o \
 stick_set.o \

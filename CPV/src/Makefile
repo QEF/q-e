@@ -84,6 +84,7 @@ qqberry.o \
 restart.o \
 restart_sub.o \
 runcp.o \
+sic.o \
 smallbox.o \
 smallbox_grid.o \
 smallbox_gvec.o \

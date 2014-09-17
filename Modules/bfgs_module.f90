@@ -268,7 +268,6 @@ CONTAINS
       !
       ! ... the bfgs algorithm starts here
       !
-   
       IF ( .NOT. energy_wolfe_condition( energy ) .AND. (scf_iter > 1) ) THEN
          !
          ! ... the previous step is rejected, line search goes on

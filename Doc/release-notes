@@ -1,4 +1,4 @@
-Incompatible changes in 5.1 version:
+Incompatible changes in svn version:
 
    * Regularization of DFT names for nonlocal functionals:
        "vdw-df3"                   replaced by "vdw-df-obk8"
@@ -15,7 +15,7 @@ New in svn version:
 
    * CP: Hybrid functionals with Wannier functions
    * Added possibility to provide structure via space-group number and
-     Wyckoff positions 
+     Wyckoff positions (experimental)
    * Added vdW-DF-cx, Berland and Hyldgaard, PRB 89, 035412 (2014)
      (courtesy of Timo Thonhauser)
    * PW: TB09 meta-GGA functional (requires libxc)

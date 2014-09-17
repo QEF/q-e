@@ -217,7 +217,6 @@ random_numbers.o : kind.o
 read_cards.o : autopilot.o
 read_cards.o : bz_form.o
 read_cards.o : cell_base.o
-read_cards.o : constants.o
 read_cards.o : input_parameters.o
 read_cards.o : io_global.o
 read_cards.o : kind.o
@@ -310,8 +309,6 @@ recvec_subs.o : recvec.o
 set_signal.o : io_global.o
 set_signal.o : mp.o
 set_signal.o : mp_world.o
-sic.o : io_global.o
-sic.o : kind.o
 space_group.o : kind.o
 splinelib.o : kind.o
 stick_base.o : io_global.o

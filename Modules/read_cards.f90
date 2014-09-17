@@ -14,7 +14,6 @@ MODULE read_cards_module
    !
    USE kinds,     ONLY : DP
    USE io_global, ONLY : stdout
-   USE constants, ONLY : angstrom_au
    USE wy_pos,    ONLY : wypos
    USE parser,    ONLY : field_count, read_line, get_field, parse_unit
    USE io_global, ONLY : ionode, ionode_id
