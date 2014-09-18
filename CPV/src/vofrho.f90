@@ -50,7 +50,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE pres_ai_mod,      ONLY: abivol, abisur, v_vol, P_ext, volclu,  &
                                   Surf_t, surfclu
       USE fft_interfaces,   ONLY: fwfft, invfft
-      USE sic_module,       ONLY: self_interaction, sic_epsilon, sic_alpha
+      USE sic_module,       ONLY: self_interaction, sic_alpha
       USE energies,         ONLY: self_exc, self_ehte
       USE cp_interfaces,    ONLY: pseudo_stress, compute_gagb, stress_hartree, &
                                   add_drhoph, stress_local, force_loc, self_vofhar

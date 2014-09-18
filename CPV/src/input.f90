@@ -747,7 +747,7 @@ MODULE input
      USE input_parameters, ONLY: ibrav , celldm , trd_ht, dt,                 &
            rd_ht, a, b, c, cosab, cosac, cosbc, ntyp , nat ,                  &
            na_inp , sp_pos , rd_pos , rd_vel, atom_mass, atom_label, if_pos,  &
-           atomic_positions, id_loc, sic, sic_epsilon, sic_rloc, ecutwfc,     &
+           atomic_positions, sic, sic_epsilon, ecutwfc,                       &
            ecutrho, ecfixed, qcutz, q2sigma, tk_inp, wmass,                   &
            ion_radius, emass, emass_cutoff, temph, fnoseh, nr1b, nr2b, nr3b,  &
            tempw, fnosep, nr1, nr2, nr3, nr1s, nr2s, nr3s, ekincw, fnosee,    &
@@ -910,7 +910,7 @@ MODULE input
      IF( ( TRIM( sic ) /= 'none' ) .and. ( tpre .or. thdyn ) ) &
         CALL errore( ' module setup ', ' Stress is not yet implemented with SIC ', 1 )
      !
-     CALL sic_initval( nat, id_loc, sic, sic_epsilon, sic_alpha, sic_rloc  )
+     CALL sic_initval( nat, sic, sic_epsilon, sic_alpha )
      !
      CALL ks_states_init( nspin, nprnks, iprnks )
      !

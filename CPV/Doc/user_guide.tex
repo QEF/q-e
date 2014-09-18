@@ -652,7 +652,7 @@ This approach is a on-the-fly method to correct the self-interaction
 with the excess charge with itself.
 
 Briefly, both the Hartree and the XC part have been 
-corrected to avoid the interaction of the excess charge with tself.
+corrected to avoid the interaction of the excess charge with itself.
 
 For example, for the Boron atoms, where we have an even number of 
 electrons (valence electrons = 3), the parameters for working with
@@ -660,27 +660,17 @@ the SIC are:
 \begin{verbatim}
            &system
            nbnd= 2,
-           total_magnetization=1,
+           tot_magnetization=1,
            sic_alpha = 1.d0,
            sic_epsilon = 1.0d0,
            sic = 'sic_mac',
            force_pairing = .true.,
-
-           &ions
-           ion_dynamics = 'none',
-           ion_radius(1) = 0.8d0,
-           sic_rloc = 1.0,
-
-           ATOMIC_POSITIONS (bohr)
-           B 0.00 0.00 0.00 0 0 0 1
 \end{verbatim}
 The two main parameters are:
 \begin{quote}
 \texttt{force\_pairing = .true.}, which forces the paired electrons to be the same;\\ 
 \texttt{sic='sic\_mac'}, which instructs the code to use Mauri's correction.
 \end{quote}
-Remember to add an extra-column in ATOMIC\_POSITIONS with "1" to activate
-SIC for those atoms.
 
 {\bf Warning}: 
 This approach has known problems for dissociation mechanism

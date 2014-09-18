@@ -34,7 +34,6 @@ SUBROUTINE deallocate_modules_var()
   USE stick_base,           ONLY : sticks_deallocate
   USE electrons_module,     ONLY : deallocate_electrons
   USE ions_base,            ONLY : deallocate_ions_base
-  USE sic_module,           ONLY : deallocate_sic
   USE polarization,         ONLY : deallocate_polarization
   USE cp_main_variables,    ONLY : deallocate_mainvar
   USE pseudopotential,      ONLY : deallocate_pseudopotential
@@ -84,7 +83,6 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_polarization()
   CALL deallocate_pseudopotential()
   !
-  CALL deallocate_sic()
   CALL deallocate_metagga()
   CALL ions_nose_deallocate()
   CALL ks_states_closeup()

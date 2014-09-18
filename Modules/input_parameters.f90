@@ -1085,19 +1085,6 @@ MODULE input_parameters
 
         REAL(DP)  :: w_1 = 0.5E-1_DP
         REAL(DP)  :: w_2 = 0.5_DP
-
-        REAL(DP)  :: sic_rloc = 0.0_DP
-
-        !
-        ! ... variable for meta-dynamics
-        !
-        INTEGER, PARAMETER :: max_nconstr = 100
-        INTEGER  :: fe_nstep = 100
-        INTEGER  :: sw_nstep = 10
-        INTEGER  :: eq_nstep = 0
-        REAL(DP) :: g_amplitude = 0.005_DP
-        !
-        REAL(DP) :: fe_step( max_nconstr ) = 0.4_DP
         !
         NAMELIST / ions / phase_space, ion_dynamics, ion_radius, ion_damping,  &
                           ion_positions, ion_velocities, ion_temperature,      &
@@ -1106,8 +1093,7 @@ MODULE input_parameters
                           refold_pos, upscale, delta_t, pot_extrapolation,     &
                           wfc_extrapolation, nraise, remove_rigid_rot,         &
                           trust_radius_max, trust_radius_min,                  &
-                          trust_radius_ini, w_1, w_2, bfgs_ndim, sic_rloc,     &
-                          fe_step, fe_nstep, sw_nstep, eq_nstep, g_amplitude
+                          trust_radius_ini, w_1, w_2, bfgs_ndim
 
 
 !=----------------------------------------------------------------------------=!
@@ -1345,7 +1331,6 @@ MODULE input_parameters
         REAL(DP), ALLOCATABLE :: rd_pos(:,:)  ! unsorted positions from input
         INTEGER,  ALLOCATABLE :: sp_pos(:)
         INTEGER,  ALLOCATABLE :: if_pos(:,:)
-        INTEGER,  ALLOCATABLE :: id_loc(:)
         INTEGER,  ALLOCATABLE :: na_inp(:)
         LOGICAL  :: tapos = .false.
         LOGICAL  :: lsg   = .false.
@@ -1492,7 +1477,6 @@ SUBROUTINE reset_input_checks()
     IF ( allocated( rd_pos ) ) DEALLOCATE( rd_pos )
     IF ( allocated( sp_pos ) ) DEALLOCATE( sp_pos )
     IF ( allocated( if_pos ) ) DEALLOCATE( if_pos )
-    IF ( allocated( id_loc ) ) DEALLOCATE( id_loc )
     IF ( allocated( na_inp ) ) DEALLOCATE( na_inp )
     IF ( allocated( rd_vel ) ) DEALLOCATE( rd_vel )
     IF ( allocated( sp_vel ) ) DEALLOCATE( sp_vel )
@@ -1501,7 +1485,6 @@ SUBROUTINE reset_input_checks()
     ALLOCATE( rd_pos( 3, nat ) )
     ALLOCATE( sp_pos( nat)   )
     ALLOCATE( if_pos( 3, nat ) )
-    ALLOCATE( id_loc( nat)   )
     ALLOCATE( na_inp( ntyp)  )
     ALLOCATE( rd_vel( 3, nat ) )
     ALLOCATE( sp_vel( nat)   )
@@ -1510,7 +1493,6 @@ SUBROUTINE reset_input_checks()
     rd_pos = 0.0_DP
     sp_pos = 0
     if_pos = 1
-    id_loc = 0
     na_inp = 0
     rd_vel = 0.0_DP
     sp_vel = 0
@@ -1569,7 +1551,6 @@ SUBROUTINE reset_input_checks()
     IF ( allocated( rd_pos ) ) DEALLOCATE( rd_pos )
     IF ( allocated( sp_pos ) ) DEALLOCATE( sp_pos )
     IF ( allocated( if_pos ) ) DEALLOCATE( if_pos )
-    IF ( allocated( id_loc ) ) DEALLOCATE( id_loc )
     IF ( allocated( na_inp ) ) DEALLOCATE( na_inp )
     IF ( allocated( rd_vel ) ) DEALLOCATE( rd_vel )
     IF ( allocated( sp_vel ) ) DEALLOCATE( sp_vel )

@@ -430,10 +430,6 @@ CONTAINS
          !
          CALL field_count( nfield, input_line )
          !
-         IF ( sic /= 'none' .and. nfield /= 8 ) &
-               CALL errore( 'read_cards', &
-                           'ATOMIC_POSITIONS with sic, 8 columns required', 1 )
-         !
          ! read atom symbol (column 1) and coordinate
          CALL get_field(1, lb_pos, input_line)
          lb_pos = trim(lb_pos)
@@ -487,7 +483,7 @@ CONTAINS
             ENDIF
             !
          ELSE
-            IF ( nfield /= 4 .and. nfield /= 7 .and. nfield /= 8) &
+            IF ( nfield /= 4 .and. nfield /= 7 ) &
             CALL errore( 'read_cards', 'wrong number of columns ' // &
                            & 'in ATOMIC_POSITIONS', ia )
 
@@ -511,10 +507,6 @@ CONTAINS
                READ(field_str, *) if_pos(3,ia)
             ENDIF
             !
-            IF ( nfield == 8 ) THEN
-               CALL get_field(5, field_str, input_line)
-               READ(field_str, *) id_loc(ia)
-            ENDIF
          ENDIF
          !
          match_label: DO is = 1, ntyp

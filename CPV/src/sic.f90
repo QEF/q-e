@@ -40,28 +40,21 @@
       IMPLICIT NONE
       SAVE
 
-      INTEGER, ALLOCATABLE :: ind_localisation(:) 
-      INTEGER :: nat_localisation = 0 
-      LOGICAL :: print_localisation = .FALSE. ! Calculates hartree energy around specified atoms
       INTEGER :: self_interaction = 0 
       REAL(DP) :: sic_epsilon = 0.0_DP
       REAL(DP) :: sic_alpha = 0.0_DP
-      REAL(DP) :: sic_rloc = 0.0_DP
-      REAL(DP), ALLOCATABLE :: pos_localisation(:,:)
 
 !------------------------------------------------------------------------------!
   CONTAINS
 !------------------------------------------------------------------------------!
 
-    SUBROUTINE sic_initval( nat_ , id_loc_ , sic_ ,  sic_epsilon_ , sic_alpha_, sic_rloc_ )
+    SUBROUTINE sic_initval( nat_ ,  sic_ ,  sic_epsilon_ , sic_alpha_ )
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: nat_
-      INTEGER, INTENT(IN) :: id_loc_ (:)
       CHARACTER(LEN=*), INTENT(IN) :: sic_
       REAL(DP), INTENT(IN) :: sic_epsilon_
       REAL(DP), INTENT(IN) :: sic_alpha_
-      REAL(DP), INTENT(IN) :: sic_rloc_
 
       select case ( TRIM( sic_ ) )
         case ( 'sic_mac' )
@@ -71,29 +64,10 @@
       end select
       sic_epsilon     = sic_epsilon_
       sic_alpha       = sic_alpha_
-      sic_rloc        = sic_rloc_
-      ! counting the atoms around which i want to calculate the charge localization
-      IF( ALLOCATED( ind_localisation ) ) DEALLOCATE( ind_localisation )
-      ALLOCATE( ind_localisation( nat_ ) )
-      ind_localisation( 1 : nat_ ) = id_loc_ ( 1 : nat_ )
-      nat_localisation = COUNT( ind_localisation > 0 ) 
-      IF( ALLOCATED( pos_localisation ) ) DEALLOCATE( pos_localisation )
-      ALLOCATE( pos_localisation( 4, MAX( nat_localisation, 1 ) ) )
-      !
-      IF( nat_localisation > 0 ) print_localisation = .TRUE.
       !
       RETURN
     END SUBROUTINE sic_initval
     
-!------------------------------------------------------------------------------!
-
-    SUBROUTINE deallocate_sic()
-      IMPLICIT NONE
-      IF( ALLOCATED( pos_localisation ) ) DEALLOCATE( pos_localisation )
-      IF( ALLOCATED( ind_localisation ) ) DEALLOCATE( ind_localisation )
-      RETURN
-    END SUBROUTINE deallocate_sic
-
 !------------------------------------------------------------------------------!
 
   SUBROUTINE sic_info( )

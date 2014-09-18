@@ -479,16 +479,6 @@ MODULE read_namelists_module
        w_1              = 0.01_DP
        w_2              = 0.50_DP
        !
-       sic_rloc = 0.0_DP
-       !
-       ! ... meta-dynamics defaults
-       !
-       fe_step     = 0.4_DP
-       fe_nstep    = 100
-       sw_nstep    = 10
-       eq_nstep    = 0
-       g_amplitude = 0.005_DP
-       !
        RETURN
        !
      END SUBROUTINE
@@ -1017,14 +1007,6 @@ MODULE read_namelists_module
        CALL mp_bcast( w_1,              ionode_id, intra_image_comm )
        CALL mp_bcast( w_2,              ionode_id, intra_image_comm )
        !
-       CALL mp_bcast( sic_rloc, ionode_id, intra_image_comm )
-       !
-       CALL mp_bcast( fe_step,     ionode_id, intra_image_comm )
-       CALL mp_bcast( fe_nstep,    ionode_id, intra_image_comm )
-       CALL mp_bcast( sw_nstep,    ionode_id, intra_image_comm )
-       CALL mp_bcast( eq_nstep,    ionode_id, intra_image_comm )
-       CALL mp_bcast( g_amplitude, ionode_id, intra_image_comm )
-       !
        RETURN
        !
      END SUBROUTINE
@@ -1491,9 +1473,6 @@ MODULE read_namelists_module
           CALL errore( sub_name,' ion_nstepe out of range ',1)
        IF( ion_maxstep < 0 ) &
           CALL errore( sub_name,' ion_maxstep out of range ',1)
-       !
-       IF (sic /= 'none' .and. sic_rloc == 0.0_DP) &
-          CALL errore( sub_name, ' invalid sic_rloc with sic activated ', 1 )
        !
        RETURN
        !
