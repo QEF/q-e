@@ -16,20 +16,21 @@ PUBLIC wypos
 
 CONTAINS
    SUBROUTINE wypos(tau,wp,inp1,inp2,space_group_number,uniqueb,&
-                                               rhombhoedral,origin_choice)
+                                      rhombohedral,origin_choice)
 
    !-----------------------------------------------------------
-   !Convert the Wycoff positions(multiplicity-letter) in crystall
-   !positions, only for well defined posistion: where the
-   !multiplicity and the Wyckoff letter assigne 3 coordinates.
+   ! Convert atomic positions given in Wyckoff convention:
+   ! multiplicity-letter + parameter(s), to crystal positions
+   !   wp = Wyckoff label (e.g. 8c)
+   !   inp1, inp2 = parameter(s) (if needed)
    !-----------------------------------------------------------
 
-      REAL(DP), DIMENSION(3), INTENT(INOUT) :: tau
+      REAL(DP), DIMENSION(3), INTENT(OUT) :: tau
       REAL(DP), INTENT(IN) :: inp1, inp2
       CHARACTER(LEN=*), INTENT (IN) :: wp
 
       INTEGER, INTENT(IN) :: space_group_number      
-      LOGICAL, INTENT(IN) :: uniqueb, rhombhoedral
+      LOGICAL, INTENT(IN) :: uniqueb, rhombohedral
       INTEGER, INTENT(IN) :: origin_choice
       
       tau=1.d5 
@@ -5168,7 +5169,7 @@ CONTAINS
             ENDIF
 
          CASE (146) !R3
-            IF (rhombhoedral) THEN
+            IF (rhombohedral) THEN
                IF (TRIM(wp)=='1a') THEN
                   tau(1)=inp1
                   tau(2)=inp1
@@ -5211,7 +5212,7 @@ CONTAINS
            
 
          CASE (148) !R-3
-           IF (rhombhoedral) THEN     
+           IF (rhombohedral) THEN     
                IF (TRIM(wp)=='1a') THEN
                   tau(1)=0.0_DP
                   tau(2)=0.0_DP
@@ -5234,7 +5235,7 @@ CONTAINS
                   tau(3)=0.5_DP
                ENDIF
 
-            ELSEIF (.NOT.rhombhoedral) THEN
+            ELSEIF (.NOT.rhombohedral) THEN
                IF (TRIM(wp)=='3a') THEN
                   tau(1)=0.0_DP
                   tau(2)=0.0_DP
@@ -5377,7 +5378,7 @@ CONTAINS
             ENDIF
 
          CASE (155) !R32
-            IF (rhombhoedral) THEN
+            IF (rhombohedral) THEN
                IF (TRIM(wp)=='1a') THEN
                   tau(1)=0.0_DP
                   tau(2)=0.0_DP
@@ -5400,7 +5401,7 @@ CONTAINS
                   tau(3)=-inp1
                ENDIF
 
-            ELSEIF (.NOT.rhombhoedral) THEN
+            ELSEIF (.NOT.rhombohedral) THEN
                IF (TRIM(wp)=='3a') THEN
                   tau(1)=0.0_DP
                   tau(2)=0.0_DP
@@ -5485,7 +5486,7 @@ CONTAINS
             ENDIF        
 
          CASE (160) !R3m
-            IF (rhombhoedral) THEN
+            IF (rhombohedral) THEN
                IF (TRIM(wp)=='1a') THEN
                   tau(1)=inp1
                   tau(2)=inp1
@@ -5496,7 +5497,7 @@ CONTAINS
                   tau(3)=inp2
                ENDIF
 
-            ELSEIF (.NOT.rhombhoedral) THEN
+            ELSEIF (.NOT.rhombohedral) THEN
                IF (TRIM(wp)=='3a') THEN
                   tau(1)=0.0_DP
                   tau(2)=0.0_DP
@@ -5509,14 +5510,14 @@ CONTAINS
             ENDIF
 
          CASE (161) !R3c
-            IF (rhombhoedral) THEN
+            IF (rhombohedral) THEN
                IF (TRIM(wp)=='2a') THEN
                   tau(1)=inp1
                   tau(2)=inp1
                   tau(3)=inp1
                ENDIF
 
-            ELSEIF (.NOT.rhombhoedral) THEN
+            ELSEIF (.NOT.rhombohedral) THEN
                IF (TRIM(wp)=='6a') THEN
                   tau(1)=0.0_DP
                   tau(2)=0.0_DP
@@ -5669,7 +5670,7 @@ CONTAINS
             ENDIF
 
          CASE (166) !R-3m
-           IF (rhombhoedral) THEN
+           IF (rhombohedral) THEN
                IF (TRIM(wp)=='1a') THEN
                   tau(1)=0.0_DP
                   tau(2)=0.0_DP
@@ -5704,7 +5705,7 @@ CONTAINS
                   tau(3)=inp2
                ENDIF
 
-            ELSEIF (.NOT.rhombhoedral) THEN               
+            ELSEIF (.NOT.rhombohedral) THEN               
                IF (TRIM(wp)=='3a') THEN
                   tau(1)=0.0_DP
                   tau(2)=0.0_DP
@@ -5741,7 +5742,7 @@ CONTAINS
             ENDIF
 
          CASE (167) !R-3c
-            IF (rhombhoedral) THEN
+            IF (rhombohedral) THEN
                IF (TRIM(wp)=='2a') THEN
                   tau(1)=0.25_DP
                   tau(2)=0.25_DP
@@ -5764,7 +5765,7 @@ CONTAINS
                   tau(3)=0.25_DP
                ENDIF
               
-            ELSEIF (.NOT.rhombhoedral) THEN
+            ELSEIF (.NOT.rhombohedral) THEN
                IF (TRIM(wp)=='6a') THEN
                   tau(1)=0.0_DP
                   tau(2)=0.0_DP
