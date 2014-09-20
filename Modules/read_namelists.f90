@@ -122,7 +122,6 @@ MODULE read_namelists_module
        lkpoint_dir = .TRUE.
        lecrpa   = .FALSE.   
        tqmmm = .FALSE.
-       exx_wf = .FALSE.
        !
        saverho = .TRUE.
        memory = 'default'
@@ -613,7 +612,6 @@ MODULE read_namelists_module
        exx_ps_rcut_pair =  5.0_DP
        exx_me_rcut_self = 10.0_DP
        exx_me_rcut_pair =  7.0_DP
-       exx_wf_fraction  =  0.25_DP
 !=======================================================================
        !
        nit    = 10
@@ -694,7 +692,6 @@ MODULE read_namelists_module
        CALL mp_bcast( tqmmm,         ionode_id, intra_image_comm )
        CALL mp_bcast( vdw_table_name,ionode_id, intra_image_comm )
        CALL mp_bcast( memory,        ionode_id, intra_image_comm )
-       CALL mp_bcast( exx_wf,        ionode_id, intra_image_comm )
        !
        RETURN
        !
@@ -1137,7 +1134,6 @@ MODULE read_namelists_module
        CALL mp_bcast( exx_ps_rcut_pair, ionode_id, intra_image_comm )
        CALL mp_bcast( exx_me_rcut_self, ionode_id, intra_image_comm )
        CALL mp_bcast( exx_me_rcut_pair, ionode_id, intra_image_comm )
-       CALL mp_bcast( exx_wf_fraction, ionode_id, intra_image_comm )
        CALL mp_bcast( vnbsp,       ionode_id, intra_image_comm )
        !
        RETURN
@@ -1608,9 +1604,19 @@ MODULE read_namelists_module
              IF ( prog == 'PW' ) &
                 CALL errore( sub_name, ' calculation ' // &
                            & TRIM( calculation ) // ' not implemented ', 1 )
+          CASE ( 'vc-cp-wf' )
+             IF( prog == 'CP' ) THEN
+                electron_dynamics = 'verlet'
+                ion_dynamics      = 'verlet'
+                cell_dynamics     = 'pr'
+             ELSE IF( prog == 'PW' ) THEN
+                CALL errore( sub_name, ' calculation ' // &
+                           & TRIM( calculation ) // ' not implemented ', 1 )
+             END IF
+             !
 !=========================================================================
 !Lingzhu Kong
-          CASE ( 'cp-wf-nscf','cp-wf-pbe0','pbe0-nscf' )
+          CASE ( 'cp-wf-nscf' )
              IF( prog == 'CP' ) THEN
                 occupations       = 'fixed'
                 electron_dynamics = 'damp'
@@ -1817,9 +1823,8 @@ MODULE read_namelists_module
                TRIM( calculation ) == 'cp'       .OR. &
                TRIM( calculation ) == 'vc-cp'    .OR. &
                TRIM( calculation ) == 'smd'      .OR. &
-               TRIM( calculation ) == 'cp-wf-nscf' .OR. &   !Lingzhu Kong
-               TRIM( calculation ) == 'cp-wf-pbe0' .OR. &   !Lingzhu Kong
-               TRIM( calculation ) == 'pbe0-nscf'  .OR. &   !Lingzhu Kong
+               TRIM( calculation ) == 'cp-wf-nscf' .OR. &
+               TRIM( calculation ) == 'vc-cp-wf'   .OR. &
                TRIM( calculation ) == 'cp-wf' ) READ( unit_loc, ions, iostat = ios )
   
        END IF
@@ -1839,7 +1844,8 @@ MODULE read_namelists_module
           IF( TRIM( calculation ) == 'vc-relax' .OR. &
               TRIM( calculation ) == 'vc-cp'    .OR. &
               TRIM( calculation ) == 'vc-md'    .OR. &
-              TRIM( calculation ) == 'vc-md' ) THEN
+              TRIM( calculation ) == 'vc-md'    .OR. & 
+              TRIM( calculation ) == 'vc-cp-wf') THEN
              READ( unit_loc, cell, iostat = ios )
           END IF
        END IF
@@ -1871,10 +1877,9 @@ MODULE read_namelists_module
        CALL wannier_defaults( prog )
        ios = 0
        IF( ionode ) THEN
-          IF( TRIM( calculation ) == 'cp-wf'       .OR. & ! Lingzhu Kong
-              TRIM( calculation ) == 'cp-wf-nscf'  .OR. & ! Lingzhu Kong
-              TRIM( calculation ) == 'cp-wf-pbe0'  .OR. & ! Lingzhu Kong
-              TRIM( calculation ) == 'pbe0-nscf' ) THEN   ! Lingzhu Kong
+          IF( TRIM( calculation ) == 'cp-wf'       .OR. &
+              TRIM( calculation ) == 'vc-cp-wf'    .OR. &
+              TRIM( calculation ) == 'cp-wf-nscf') THEN
              READ( unit_loc, wannier, iostat = ios )
           END IF
        END IF

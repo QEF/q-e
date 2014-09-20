@@ -96,10 +96,10 @@ MODULE input_parameters
         CHARACTER(len=80) :: calculation = 'none'
           ! Specify the type of the simulation
           ! See below for allowed values
-        CHARACTER(len=80) :: calculation_allowed(16)
+        CHARACTER(len=80) :: calculation_allowed(14)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
           'vc-relax', 'vc-md', 'vc-cp', 'bands', 'neb', 'smd', 'cp-wf', &
-          'vc-cp-wf', 'cp-wf-nscf','cp-wf-pbe0', 'pbe0-nscf'/
+          'vc-cp-wf', 'cp-wf-nscf'/
         CHARACTER(len=80) :: verbosity = 'default'
           ! define the verbosity of the code output
         CHARACTER(len=80) :: verbosity_allowed(6)
@@ -270,7 +270,6 @@ MODULE input_parameters
           ! if memory = 'large' then QE tries to use (when implemented) algorithms using more memory
           !                     to enhance performance.
 
-        LOGICAL :: exx_wf = .FALSE.
           ! if .TRUE., perform exact exchange calculation using Wannier functions (X. Wu et al., Phys. Rev. B. 79, 085102 (2009))
 
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
@@ -280,7 +279,7 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
           tqmmm, vdw_table_name, lorbm, memory, point_label_type,         &
-          lcalc_z2, z2_m_threshold, z2_z_threshold, exx_wf
+          lcalc_z2, z2_m_threshold, z2_z_threshold
 
 !
 !=----------------------------------------------------------------------------=!
@@ -1244,7 +1243,6 @@ MODULE input_parameters
           REAL(DP) :: exx_ps_rcut_pair
           REAL(DP) :: exx_me_rcut_self
           REAL(DP) :: exx_me_rcut_pair
-          REAL(DP) :: exx_wf_fraction 
 !=======================================================================
 
           INTEGER :: nit
@@ -1265,7 +1263,7 @@ MODULE input_parameters
           NAMELIST / wannier / wf_efield, wf_switch, sw_len, efx0, efy0, efz0,&
                                efx1, efy1, efz1, wfsd, wfdt,exx_neigh,exx_poisson_eps,&
                                exx_dis_cutoff,exx_ps_rcut_self, exx_me_rcut_self,   &
-                               exx_ps_rcut_pair, exx_me_rcut_pair, exx_wf_fraction, vnbsp,&
+                               exx_ps_rcut_pair, exx_me_rcut_pair, vnbsp,&
                                maxwfdt, wf_q, wf_friction, nit, nsd, nsteps,  & 
                                tolw, adapt, calwf, nwf, wffort, writev
 !===============================================================================

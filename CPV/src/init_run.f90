@@ -50,7 +50,7 @@ SUBROUTINE init_run()
   USE electrons_nose,           ONLY : xnhe0, xnhem, vnhe
   USE electrons_base,           ONLY : nbspx_bgrp
   USE cell_nose,                ONLY : xnhh0, xnhhm, vnhh
-  USE funct,                    ONLY : dft_is_meta
+  USE funct,                    ONLY : dft_is_meta, dft_is_hybrid
   USE metagga,                  ONLY : crosstaus, dkedtaus, gradwfc
   !
   USE efcalc,                   ONLY : clear_nbeg
@@ -74,14 +74,14 @@ SUBROUTINE init_run()
   USE mp,                       ONLY : mp_barrier
   USE wrappers
   USE ldaU_cp
-  USE control_flags,            ONLY : lwfpbe0nscf, lwfpbe0, lwfpbe0nscf  ! exx_wf related 
-  USE wavefunctions_module,     ONLY : cv0                                ! exx_wf related
-  USE wannier_base,             ONLY : vnbsp                              ! exx_wf related
-  USE cp_restart,               ONLY : cp_read_wfc_Kong                   ! exx_wf related
+  USE control_flags,            ONLY : lwfpbe0nscf         ! exx_wf related 
+  USE wavefunctions_module,     ONLY : cv0                 ! exx_wf related
+  USE wannier_base,             ONLY : vnbsp               ! exx_wf related
+  USE cp_restart,               ONLY : cp_read_wfc_Kong    ! exx_wf related
   USE input_parameters,         ONLY : ref_cell
   USE cell_base,                ONLY : ref_tpiba2, init_tpiba2
   USE tsvdw_module,             ONLY : tsvdw_initialize
-  USE exx_module,               ONLY : exx_initialize
+  USE exx_module,               ONLY : exx_initialize, exx_wf
   !
   IMPLICIT NONE
   !
@@ -156,7 +156,9 @@ SUBROUTINE init_run()
   !     Initialization of the exact exchange code (exx_module)
   !=======================================================================
   !
-  IF ( lwfpbe0 .or. lwfpbe0nscf ) THEN
+  IF ( dft_is_hybrid() .AND. lwf ) THEN
+    !
+    exx_wf = .TRUE.
     !
     CALL exx_initialize()
     !

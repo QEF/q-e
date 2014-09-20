@@ -44,7 +44,8 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                                   detot6, dekin6, dps6, dh6, dsr6, dxc6, denl6
       USE mp,               ONLY: mp_sum
       USE mp_global,        ONLY: intra_bgrp_comm
-      USE funct,            ONLY: dft_is_meta, dft_is_nonlocc, nlc, get_inlc
+      USE funct,            ONLY: dft_is_meta, dft_is_nonlocc, nlc, get_inlc,&
+                                  dft_is_hybrid
       USE vdW_DF,           ONLY: stress_vdW_DF
       use rVV10,            ONLY: stress_rVV10 
       USE pres_ai_mod,      ONLY: abivol, abisur, v_vol, P_ext, volclu,  &
@@ -60,9 +61,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE tsvdw_module,     ONLY: tsvdw_calculate
       USE tsvdw_module,     ONLY: EtsvdW,UtsvdW,FtsvdW,HtsvdW
       USE mp_global,        ONLY: me_image
-      USE control_flags,    ONLY: lwfpbe0, lwfpbe0nscf  ! exx_wf related 
-      USE wannier_base,     ONLY: exx_wf_fraction ! exx_wf related
-      USE exx_module,       ONLY: dexx_dh         ! exx_wf related
+      USE exx_module,       ONLY: dexx_dh, exxalfa  ! exx_wf related
 
       IMPLICIT NONE
 !
@@ -611,11 +610,11 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       etot = ekin + eht + epseu + enl + exc + ebac +e_hubbard + eextfor
       !
-      !     Add EXX energy to etot here. 1/4 factor for the PBE0 exchange .. (Lingzhu Kong / BS)
+      !     Add EXX energy to etot here. exx_wf related
       !
-      IF (lwfpbe0 .OR. lwfpbe0nscf) THEN
+      IF(dft_is_hybrid()) THEN
         !
-        etot = etot - exx_wf_fraction*exx 
+        etot = etot - exxalfa*exx 
         !
       END IF
       !
@@ -660,21 +659,21 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          END IF
          !
          ! BS / RAD / HK
-         ! Adding the stress tensor from exact exchange here 
+         ! Adding the stress tensor from exact exchange here. exx_wf related
          !
-         IF (lwfpbe0 .OR. lwfpbe0nscf) THEN
+         IF(dft_is_hybrid()) THEN
            !
            IF (isotropic .and. (ibrav.eq.1)) THEN
              !
              ! BS / RAD
-             ! We compute dE/dV; so works only for cubic cells and isotropic change
+             ! This part is dE/dV; so works only for cubic cells and isotropic change
              ! in simulation cell while doing variable cell calculation .. 
              ! dE/dV = -(1/3) * (-exx * 0.25_DP) / V
              ! dexx(3,3) = dE/dh = (dE/dV) * (dV/dh) = (dE/dV) * V * (Transpose h)^-1
              !
              DO k = 1, 6
                IF(alpha(k) .EQ. beta(k)) THEN
-                 detmp( alpha(k), beta(k) ) = - (1.0_DP/3.0_DP) * (-exx * exx_wf_fraction) 
+                 detmp( alpha(k), beta(k) ) = - (1.0_DP/3.0_DP) * (-exx * exxalfa) 
                ELSE
                  detmp( alpha(k), beta(k) ) = 0.0_DP
                END IF
@@ -689,7 +688,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
              !    (notice that the negative sign comes from the definition of
              !     exchange energy being as positive value)
              !
-             dexx = -dexx_dh*exx_wf_fraction
+             dexx = -dexx_dh*exxalfa
              !
            END IF
            !

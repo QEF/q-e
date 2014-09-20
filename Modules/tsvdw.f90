@@ -18,7 +18,6 @@ USE cell_base,          ONLY: h                  !h matrix for converting betwee
 USE cell_base,          ONLY: ainv               !h^-1 matrix for converting between r and s coordinates via s = h^-1 r)
 USE cell_base,          ONLY: omega              !cell volume (in au^3)
 USE constants,          ONLY: pi                 !pi in double-precision
-USE control_flags,      ONLY: lwfpbe0            !if .TRUE. then PBE0 calculation using Wannier orbitals is turned on ... BS 
 USE fft_base,           ONLY: dffts              !FFT derived data type
 USE fft_base,           ONLY: dfftp              !FFT derived data type 
 USE funct,              ONLY: get_iexch          !retrieves type of exchange utilized in functional
@@ -201,8 +200,6 @@ PRIVATE :: GetVdWParam
     CALL errore('tsvdw','TS-vdW sR parameter only available for PBE and PBE0 functionals...',1)
     !
   END IF
-  !
-  IF(lwfpbe0) sR=0.96_DP !RAD/BS: Temporary fix for PBE0 (see RAD/BS flag directly above)...
   !
   WRITE(stdout,'(5X,"sR = ",F9.6)') sR
   !

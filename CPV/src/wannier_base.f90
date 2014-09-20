@@ -32,7 +32,6 @@ MODULE wannier_base
   REAL(DP)             :: exx_ps_rcut_p
   REAL(DP)             :: exx_me_rcut_s
   REAL(DP)             :: exx_me_rcut_p
-  REAL(DP)             :: exx_wf_fraction
   !!
 !==============================================================
   REAL(DP)             :: maxwfdt
@@ -69,7 +68,7 @@ MODULE wannier_base
     SUBROUTINE wannier_init( wf_efield_, wf_switch_, sw_len_, efx0_, efy0_, &
                              efz0_, efx1_, efy1_, efz1_, wfsd_, wfdt_,      &
                              neigh_, poisson_eps_ ,dis_cutoff_, exx_ps_rcut_s_, exx_me_rcut_s_,&
-                             exx_ps_rcut_p_, exx_me_rcut_p_, exx_wf_fraction_, vnbsp_, &
+                             exx_ps_rcut_p_, exx_me_rcut_p_, vnbsp_, &
                              maxwfdt_, wf_q_, wf_friction_, nit_, nsd_,     &
                              nsteps_, tolw_, adapt_, calwf_, nwf_, wffort_, &
                              writev_, iplot_, restart_mode_ )
@@ -95,7 +94,6 @@ MODULE wannier_base
       REAL(DP),         INTENT(IN) :: exx_me_rcut_s_
       REAL(DP),         INTENT(IN) :: exx_ps_rcut_p_
       REAL(DP),         INTENT(IN) :: exx_me_rcut_p_
-      REAL(DP),         INTENT(IN) :: exx_wf_fraction_
       !!
 !=============================================================================
       REAL(DP),         INTENT(IN) :: maxwfdt_
@@ -135,7 +133,6 @@ MODULE wannier_base
       exx_me_rcut_s = exx_me_rcut_s_
       exx_ps_rcut_p = exx_ps_rcut_p_
       exx_me_rcut_p = exx_me_rcut_p_
-      exx_wf_fraction = exx_wf_fraction_
 !==================================================================
       maxwfdt     = maxwfdt_
       wf_q        = wf_q_

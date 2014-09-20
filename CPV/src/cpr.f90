@@ -118,10 +118,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE ldaU_cp,                  ONLY : lda_plus_u, vupsi
   USE fft_base,                 ONLY : dfftp
   USE london_module,            ONLY : energy_london, force_london, stres_london
-  USE input_parameters,         ONLY : tcpbo,exx_wf
-  USE funct,                    ONLY : set_exx_fraction
-  USE control_flags,            ONLY : lwfpbe0
-  USE wannier_base,             ONLY : exx_wf_fraction
+  USE input_parameters,         ONLY : tcpbo
+  USE funct,                    ONLY : dft_is_hybrid, start_exx
+  USE exx_module,               ONLY : exx_wf
   !
   IMPLICIT NONE
   !
@@ -855,14 +854,13 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !The following criteria is used to turn on exact exchange calculation when
      !GGA energy is converged up to 100 times of the input etot convergence thereshold  
      !
-     IF( .NOT.exx_wf.AND.lwfpbe0.AND.tconvthrs%active ) THEN
+     IF( .NOT.exx_wf.AND.dft_is_hybrid().AND.tconvthrs%active ) THEN
        !
-       !IF(delta_etot.LT.tconvthrs%derho*1.E+4_DP) THEN
        IF(delta_etot.LT.tconvthrs%derho*1.E+2_DP) THEN
          !
          WRITE(stdout,'(/,3X,"Exact Exchange is turned on ...")')
          exx_wf=.TRUE.
-         CALL set_exx_fraction(exx_wf_fraction) 
+         CALL start_exx()
          !
        END IF
        !
@@ -980,9 +978,10 @@ SUBROUTINE terminate_run()
   USE cg_module,         ONLY : tcg, print_clock_tcg
   USE ldaU_cp,           ONLY : lda_plus_u
   USE mp,                ONLY : mp_report
-  USE control_flags,     ONLY : lwf, lwfpbe0, lwfpbe0nscf
+  USE control_flags,     ONLY : lwf, lwfpbe0nscf
   USE tsvdw_module,      ONLY : tsvdw_finalize
   USE exx_module,        ONLY : exx_finalize
+  USE exx_module,        ONLY : exx_wf
   !
   IMPLICIT NONE
   !
@@ -1018,7 +1017,7 @@ SUBROUTINE terminate_run()
     CALL print_clock( 'ortho_u' )
   END IF
   !==============================================================
-  IF ( lwfpbe0 .or. lwfpbe0nscf ) THEN
+  IF ( exx_wf ) THEN
     WRITE( stdout, '(/5x,"Called by EXACT_EXCHANGE:")' )
     CALL print_clock('exact_exchange')
     

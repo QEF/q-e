@@ -18,9 +18,10 @@
       USE exx_module,              ONLY  : odtothd_in_sp,  thdtood_in_sp, thdtood, np_in_sp => np_in_sp_s !HK: to be fixed
       USE exx_module,              ONLY  : my_nbspx, my_nbsp, my_nxyz, rk_of_obtl, lindex_of_obtl, index_my_nbsp
       USE exx_module,              ONLY  : exx_setup_nscf, getnpinsp
+      USE exx_module,              ONLY  : exxalfa
       USE constants,               ONLY  : fpi
       USE printout_base,           ONLY  : printout_base_open, printout_base_unit, printout_base_close
-      USE wannier_base,            ONLY  : neigh, dis_cutoff, vnbsp, exx_wf_fraction 
+      USE wannier_base,            ONLY  : neigh, dis_cutoff, vnbsp
       USE control_flags,           ONLY  : lwfpbe0nscf
       USE fft_base,                ONLY  : dffts,dfftp
       USE mp_wave,                 ONLY  : redistwfr
@@ -272,7 +273,7 @@
                call stop_clock('getexxv')
 
                do ir = 1, nnrtot
-                  vpsil(ir,iobtl) = vpsil(ir,iobtl) - exx_wf_fraction*v(ir) * psi_pair(ir,j)
+                  vpsil(ir,iobtl) = vpsil(ir,iobtl) - exxalfa*v(ir) * psi_pair(ir,j)
                end do
 
             END IF

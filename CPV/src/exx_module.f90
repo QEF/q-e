@@ -23,7 +23,6 @@ MODULE exx_module
   USE constants,          ONLY: pi                 !pi in double-precision
   USE constants,          ONLY: fpi                !4.0*pi in double-precision
   USE control_flags,      ONLY: lwfnscf            !
-  USE control_flags,      ONLY: lwfpbe0            !if .TRUE. then PBE0 calculation using Wannier orbitals is turned on ... 
   USE control_flags,      ONLY: lwfpbe0nscf        !non selfconsitent pbe0 calculation for empty bands .. 
   USE control_flags,      ONLY: nbeg               !nbeg<0 in from_scratch calculations ...
   USE control_flags,      ONLY: thdyn              !if .TRUE. then variable cell calculation is turned on ..   
@@ -33,7 +32,8 @@ MODULE exx_module
   USE electrons_base,     ONLY: nupdwn             !number of states with up and down spin 
   USE fft_base,           ONLY: dffts              !FFT derived data type
   USE fft_base,           ONLY: dfftp              !FFT derived data type 
-  USE funct,              ONLY: set_exx_fraction   !subroutine to set exx fraction in hybrid functionals .. 
+!   USE funct,              ONLY: set_exx_fraction   !subroutine to set exx fraction in hybrid functionals .. 
+  USE funct,              ONLY: get_exx_fraction   ! function to get exx_fraction value
   USE input_parameters,   ONLY: exx_wf             !if .true., exx calculations using Wannier functions are turned on .. 
   USE input_parameters,   ONLY: ref_alat           !alat of reference cell ..
   USE input_parameters,   ONLY: ref_cell           !.true. if reference cell parameters are in use, .false. otherwise ... 
@@ -54,12 +54,13 @@ MODULE exx_module
   USE wannier_base,       ONLY: exx_wf_fraction ! fraction of exact exchange ... default is 0.25 
   USE wannier_base,       ONLY: vnbsp 
   !
-  !
   IMPLICIT NONE
   !
   SAVE
   !
   ! PUBLIC variables 
+  !
+  LOGICAL, PUBLIC                     :: exx_wf  ! if .true., exx calculations using Wannier functions are turned on ..
   !
   INTEGER, PARAMETER, PUBLIC          :: lmax=6  ! maximum angular momentum ... 
   INTEGER, PARAMETER, PUBLIC          :: nord1=3 ! order of expansion for first derivatives  ( points on one side) ...
@@ -107,6 +108,7 @@ MODULE exx_module
   REAL(DP), ALLOCATABLE, PUBLIC       :: vwc(:,:)
   REAL(DP), PUBLIC                    :: h_init(3,3)
   REAL(DP), PUBLIC                    :: dexx_dh(3,3)           ! HK: dexx/dhab for vofrho.f90
+  REAL(DP), PUBLIC                    :: exxalfa                ! fraction of exx mixing (locally used in CP)
   !
 #if defined(__OPENMP)
   INTEGER, EXTERNAL                   :: omp_get_max_threads
@@ -164,26 +166,18 @@ CONTAINS
 #endif
       WRITE(stdout,'(5X,"Taskgroups          ",3X,I7)') dffts%nogrp 
       !
-      !set exx_wf and exx fraction in hybrid functionals ... 
-      !should be done only for lwfpbe0?
+      ! the fraction of exact exchange is stored here
       !
-      IF(lwfpbe0) THEN
+      exxalfa = get_exx_fraction()
+      !
+      IF(nbeg.LT.0) THEN
         !
-        IF(nbeg.LT.0) THEN
-          !
-          WRITE(stdout,'(/,3X,"This is an exact exchange calculation from scratch.",/ &
-              &,3X,"To generate Wannier functions, exact exchange will",/ & 
-              &,3X,"be turned off in the beginning ...  ")')
-          !
-          exx_wf=.FALSE.
-          CALL set_exx_fraction(0.0_DP)
-          !
-        ELSE
-          !
-          exx_wf=.TRUE.
-          CALL set_exx_fraction(exx_wf_fraction)
-          !
-        END IF
+        WRITE(stdout,'(/,3X,"This is an exact exchange calculation from scratch.",/ &
+            &,3X,"To generate Wannier functions, exact exchange will",/ & 
+            &,3X,"be turned off in the beginning ...  ")')
+        !
+        exx_wf=.FALSE.
+        CALL stop_exx()
         !
       END IF
       !

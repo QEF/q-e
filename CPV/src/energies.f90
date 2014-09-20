@@ -10,8 +10,7 @@
         
         USE io_global,  ONLY : stdout
         USE kinds
-        USE control_flags, ONLY : lwfpbe0, lwfpbe0nscf ! Lingzhu Kong
-        USE wannier_base,  ONLY : exx_wf_fraction
+        USE exx_module, ONLY : exx_wf,exxalfa
         IMPLICIT NONE
         SAVE
 
@@ -172,8 +171,8 @@
 
 !====================================================================================
 !exx_wf related
-             if( lwfpbe0 .or. lwfpbe0nscf) then
-                WRITE( stdout,101) -exx*exx_wf_fraction, etot
+             if(exx_wf) then
+                WRITE( stdout,101) -exx*exxalfa, etot
              end if
 !====================================================================================
 

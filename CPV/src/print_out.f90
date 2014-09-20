@@ -40,12 +40,12 @@
       USE control_flags,     ONLY : ndw, tdipole
       USE polarization,      ONLY : print_dipole
       USE io_global,         ONLY : ionode, ionode_id, stdout
-      USE control_flags,     ONLY : lwfpbe0, lwfpbe0nscf  ! exx_wf related
+      USE control_flags,     ONLY : lwfpbe0nscf  ! exx_wf related
       USE energies,          ONLY : exx  ! exx_wf related 
       USE control_flags,     ONLY : ts_vdw
       USE tsvdw_module,      ONLY : EtsvdW, VefftsvdW
       USE input_parameters,  ONLY : tcpbo
-      USE wannier_base,      ONLY : exx_wf_fraction ! exx_wf related
+      USE exx_module,        ONLY : exx_wf, exxalfa
       !
       IMPLICIT NONE
       !
@@ -247,22 +247,22 @@
               !
               IF(tcpbo) THEN
                 !
-                WRITE( 33, 29484 ) nfi,tps,tempp,etot,enthal,econs,econt,(-exx*exx_wf_fraction),EtsvdW
+                WRITE( 33, 29484 ) nfi,tps,tempp,etot,enthal,econs,econt,(-exx*exxalfa),EtsvdW
                 ! BS: different printing options need to be added ..
                 !
               ELSE
                 !
                 IF((nfi/iprint).EQ.1) WRITE( 33, 29471 )
                 !
-                IF(lwfpbe0.AND.ts_vdw) THEN
+                IF(exx_wf.AND.ts_vdw) THEN
                   WRITE( 33, 29481 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
-                                    econs,econt,volume,out_press,(-exx*exx_wf_fraction),EtsvdW
+                                    econs,econt,volume,out_press,(-exx*exxalfa),EtsvdW
                 ELSEIF(ts_vdw) THEN    
                   WRITE( 33, 29482 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
                                     econs,econt,volume,out_press,EtsvdW
-                ELSEIF(lwfpbe0) THEN    
+                ELSEIF(exx_wf) THEN
                   WRITE( 33, 29482 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
-                                    econs,econt,volume,out_press,(-exx*exx_wf_fraction)
+                                    econs,econt,volume,out_press,(-exx*exxalfa)
                 ELSE    
                   WRITE( 33, 29483 ) nfi,tps,ekinc,temphc,tempp,etot,enthal, &
                                     econs,econt,volume,out_press
@@ -308,7 +308,7 @@
 !======================================================
 !printing with better format
 
-         IF(lwfpbe0 .or. lwfpbe0nscf)THEN
+         IF(exx_wf) THEN
            IF(ts_vdw)THEN
              IF(tcpbo) THEN
                WRITE( stdout, 19473 )
@@ -347,25 +347,24 @@
 
       IF( .not. tcg ) THEN
          !
-
-         IF(lwfpbe0 .or. lwfpbe0nscf)THEN
+         IF(exx_wf) THEN
            !
            IF (ts_vdw) THEN
              !
              IF(tcpbo) THEN
                ! 
-               WRITE(stdout,19483) nfi,tempp,etot,enthal,econs,econt,-exx*exx_wf_fraction,EtsvdW
+               WRITE(stdout,19483) nfi,tempp,etot,enthal,econs,econt,-exx*exxalfa,EtsvdW
                ! 
              ELSE
                ! 
-               WRITE(stdout,19482) nfi,ekinc,temphc,tempp,-exx*exx_wf_fraction,etot,enthal,econs, &
+               WRITE(stdout,19482) nfi,ekinc,temphc,tempp,-exx*exxalfa,etot,enthal,econs, &
                     econt,vnhh(3,3),xnhh0(3,3),vnhp(1),xnhp0(1),EtsvdW
                ! 
              END IF
              !
            ELSE
              !
-             WRITE(stdout, 19480)nfi,ekinc,temphc,tempp,-exx*exx_wf_fraction,etot,enthal,econs, &
+             WRITE(stdout, 19480)nfi,ekinc,temphc,tempp,-exx*exxalfa,etot,enthal,econs, &
                    econt,vnhh(3,3),xnhh0(3,3),vnhp(1),xnhp0(1)
              !
            END IF

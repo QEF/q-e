@@ -179,7 +179,6 @@ MODULE control_flags
     !=================================================================
     !exx_wf related 
     lwfnscf =.FALSE., &
-    lwfpbe0 =.FALSE., &! if .TRUE. the calc. is with wannier functions and with PBE0 functional
     lwfpbe0nscf=.FALSE.,&
     !=================================================================
     lbands  =.FALSE., &! if .TRUE. the calc. is band structure

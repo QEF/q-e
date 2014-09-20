@@ -5,7 +5,6 @@ SUBROUTINE exx_gs(nfi, c)
     !
     USE kinds,                   ONLY  : DP
     USE constants,               ONLY  : fpi
-    USE control_flags,           ONLY  : lwfpbe0            !if .TRUE. then PBE0 calculation using Wannier orbitals is turned on ... 
     USE fft_base,                ONLY  : dffts, dfftp
     USE mp,                      ONLY  : mp_barrier, mp_sum
     USE mp_global,               ONLY  : nproc_image, me_image, root_image, intra_image_comm, intra_bgrp_comm, me_bgrp
@@ -27,7 +26,7 @@ SUBROUTINE exx_gs(nfi, c)
     USE exx_module,              ONLY  : xx_in_sp,yy_in_sp,zz_in_sp,sc_xx_in_sp,sc_yy_in_sp,sc_zz_in_sp 
     USE energies,                ONLY  : exx
     USE printout_base,           ONLY  : printout_base_open, printout_base_unit, printout_base_close
-    USE wannier_base,            ONLY  : neigh, dis_cutoff, exx_wf_fraction
+    USE wannier_base,            ONLY  : neigh, dis_cutoff
     USE mp_wave,                 ONLY  : redistwfr
     !HK
     USE time_step,               ONLY  : tps                !md time in picoseconds
@@ -38,6 +37,7 @@ SUBROUTINE exx_gs(nfi, c)
     USE printout_base,           ONLY  : printout_base_unit !printout_base_unit
     USE exx_module,              ONLY  : dexx_dh
     USE exx_module,              ONLY  : exx_energy_cell_derivative
+    USE exx_module,              ONLY  : exxalfa
     !HK
     IMPLICIT NONE
     COMPLEX(DP)   c(ngw, nbspx)        ! wave functions at time t
@@ -557,12 +557,12 @@ SUBROUTINE exx_gs(nfi, c)
               !   
             END IF    
             ! 
-            ! update vpsil in the global grid (exx_wf_fraction is 0.25 for PBE0)
+            ! update vpsil in the global grid (exxalfa is 0.25 for PBE0)
             !$omp parallel do private(ir) 
             DO ip = 1, np_in_sp_me_p
               CALL l2goff (ip,ir,tran) ! local is centered at box center; global index is offset by tran
-              vpsil(ir,iobtl) = vpsil(ir,iobtl) - exx_wf_fraction*vl(ip)*psil_pair_recv(ip,j) ! to remain 
-              psil_pair_recv(ip,j) =            - exx_wf_fraction*vl(ip)*psil(ip)             ! to be sent 
+              vpsil(ir,iobtl) = vpsil(ir,iobtl) - exxalfa*vl(ip)*psil_pair_recv(ip,j) ! to remain 
+              psil_pair_recv(ip,j) =            - exxalfa*vl(ip)*psil(ip)             ! to be sent 
             END DO
             !$omp end parallel do
             !
@@ -572,7 +572,7 @@ SUBROUTINE exx_gs(nfi, c)
             !
             IF (.NOT. (isotropic .AND. (ibrav.EQ.1) )) THEN
               !
-              ! HK: EXX cell derivative (note: exx_wf_fraction is included in vofrho.f90 when calculate stress)
+              ! HK: EXX cell derivative (note: exxalfa is included in vofrho.f90 when calculate stress)
               CALL start_clock('exx_cell_derv')
               !
               CALL exx_energy_cell_derivative(np_in_sp_me_p, np_in_sp_p, tran,&
@@ -662,11 +662,11 @@ SUBROUTINE exx_gs(nfi, c)
             !   
           END IF    
           !
-          ! update vpsil in the global grid (exx_wf_fraction is 0.25 for PBE0) 
+          ! update vpsil in the global grid (exxalfa is 0.25 for PBE0) 
           !$omp parallel do private(ir) 
           DO ip = 1, np_in_sp_me_s 
             CALL l2goff (ip,ir,tran) ! local is centered at box center; global index is offset by tran
-            vpsil(ir,iobtl) = vpsil(ir,iobtl) - exx_wf_fraction*vl(ip)*psil(ip) ! PBE0
+            vpsil(ir,iobtl) = vpsil(ir,iobtl) - exxalfa*vl(ip)*psil(ip) ! PBE0
           END DO
           !$omp end parallel do 
           !
@@ -682,7 +682,7 @@ SUBROUTINE exx_gs(nfi, c)
           !
           IF (.NOT. (isotropic .AND. (ibrav.EQ.1))) THEN
             !
-            ! HK: EXX cell derivative (note: need to include exx_wf_fraction later)
+            ! HK: EXX cell derivative (note: need to include exxalfa later)
             CALL start_clock('exx_cell_derv')
             !
             CALL exx_energy_cell_derivative(np_in_sp_me_s, np_in_sp_s, tran,&

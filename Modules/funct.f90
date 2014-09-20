@@ -39,7 +39,6 @@ module funct
 !
   USE io_global, ONLY: stdout
   USE kinds,     ONLY: DP
-  USE control_flags,        ONLY : lwfpbe0, lwfpbe0nscf ! exx_wf related
   IMPLICIT NONE
   PRIVATE
   SAVE
@@ -1052,13 +1051,6 @@ subroutine xc (rho, ex, ec, vx, vc)
   !..exchange
   if (iexch == 1) THEN             !  'sla'
      call slater (rs, ex, vx)
-!==================================================================
-!exx_wf related in CP
-     IF(lwfpbe0 .or. lwfpbe0nscf)THEN 
-         ex = (1.0_DP-exx_fraction) * ex
-         vx = (1.0_DP-exx_fraction) * vx
-     END IF
-!==================================================================
   ELSEIF (iexch == 2) THEN         !  'sl1'
      call slater1(rs, ex, vx)
   ELSEIF (iexch == 3) THEN         !  'rxc'
@@ -1155,14 +1147,6 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
   !..exchange
   IF (iexch == 1) THEN      ! 'sla'
      call slater_spin (rho, zeta, ex, vxup, vxdw)
-!==============================================================
-!exx_wf related in CP
-     IF( lwfpbe0 .or. lwfpbe0nscf )THEN
-          ex   = (1.0_DP-exx_fraction) * ex
-          vxup = (1.0_DP-exx_fraction) * vxup
-          vxdw = (1.0_DP-exx_fraction) * vxdw
-     END IF
-!==============================================================
   ELSEIF (iexch == 2) THEN  ! 'sl1'
      call slater1_spin (rho, zeta, ex, vxup, vxdw)
   ELSEIF (iexch == 3) THEN  ! 'rxc'
@@ -1243,12 +1227,6 @@ subroutine xc_spin_vec (rho, zeta, length, evx, evc)
   select case (iexch)
   case(1)            ! 'sla'
      call slater_spin_vec (rho, zeta, evx, length)
-!=========================================================
-!exx_wf related in CP
-     if (lwfpbe0 .or. lwfpbe0nscf) then
-        evx = (1.0_DP-exx_fraction) * evx
-     end if
-!=========================================================
   case(2)            ! 'sl1'
      do i=1,length
         call slater1_spin (rho(i), zeta(i), evx(i,3), evx(i,1), evx(i,2))
@@ -1352,14 +1330,6 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call ggax (rho, grho, sx, v1x, v2x)
   elseif (igcx == 3) then
      call pbex (rho, grho, 1, sx, v1x, v2x)
-!==============================================================
-!exx_wf related in CP
-     IF( lwfpbe0 .or. lwfpbe0nscf )THEN
-          sx  = (1.0_DP-exx_fraction) * sx
-          v1x = (1.0_DP-exx_fraction) * v1x
-          v2x = (1.0_DP-exx_fraction) * v2x
-     END IF   
-!==============================================================
   elseif (igcx == 4) then
      call pbex (rho, grho, 2, sx, v1x, v2x)
   elseif (igcx == 5 .and. igcc == 5) then
@@ -1573,16 +1543,6 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
        v2xup = (1.0_DP - exx_fraction) * v2xup
        v2xdw = (1.0_DP - exx_fraction) * v2xdw
      end if
-!=============================================================
-!exx_wf related in CP
-     if (igcx == 3 .and. (lwfpbe0 .or. lwfpbe0nscf) ) then
-       sx =    (1.0_DP-exx_fraction) * sx
-       v1xup = (1.0_DP-exx_fraction) * v1xup
-       v1xdw = (1.0_DP-exx_fraction) * v1xdw
-       v2xup = (1.0_DP-exx_fraction) * v2xup
-       v2xdw = (1.0_DP-exx_fraction) * v2xdw
-     end if
-!=============================================================
      if (igcx == 12 .and. exx_started ) then
 
         call pbexsr_lsd (rhoup, rhodw, grhoup2, grhodw2, sxsr,  &
@@ -1822,16 +1782,6 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
         v2xup = (1.0_DP - exx_fraction) * v2xup
         v2xdw = (1.0_DP - exx_fraction) * v2xdw
      end if
-!=============================================================
-!exx_wf related in CP
-     if (igcx == 3 .and. (lwfpbe0 .or. lwfpbe0nscf) ) then
-       sx =    (1.0_DP-exx_fraction) * sx
-       v1xup = (1.0_DP-exx_fraction) * v1xup
-       v1xdw = (1.0_DP-exx_fraction) * v1xdw
-       v2xup = (1.0_DP-exx_fraction) * v2xup
-       v2xdw = (1.0_DP-exx_fraction) * v2xdw
-     end if
-!=============================================================
      if (igcx == 12 .and. exx_started ) then
         ! in this case the subroutine is not really "vector"
         DO i = 1, length

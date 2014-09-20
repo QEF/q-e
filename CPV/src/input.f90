@@ -185,7 +185,7 @@ MODULE input
      USE control_flags, ONLY : iesr
      USE control_flags, ONLY : textfor
      USE control_flags, ONLY : do_makov_payne, twfcollect
-     USE control_flags, ONLY : lwf, lwfnscf, lwfpbe0, lwfpbe0nscf ! Lingzhu Kong
+     USE control_flags, ONLY : lwf, lwfnscf, lwfpbe0nscf
      USE control_flags, ONLY : smallmem
      USE control_flags, ONLY : tconvthrs
      !
@@ -221,8 +221,8 @@ MODULE input
         orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr_inp, saverho, tdipole_card, rd_for, assume_isolated, wf_collect,  &
-        memory, ref_cell, exx_wf, tcpbo
-     USE funct,            ONLY : dft_is_hybrid !HK
+        memory, ref_cell, tcpbo
+     USE funct,              ONLY : dft_is_hybrid
      !
      IMPLICIT NONE
      !
@@ -287,30 +287,17 @@ MODULE input
 !====================================================================
 !exx_wf related
      lwf = ( TRIM( calculation ) == 'cp-wf'      .OR. &
-             TRIM( calculation ) == 'cp-wf-nscf' .OR. &
-             TRIM( calculation ) == 'cp-wf-pbe0' .OR. &
-             TRIM( calculation ) == 'pbe0-nscf' )
+             TRIM( calculation ) == 'vc-cp-wf'   .OR. &
+             TRIM( calculation ) == 'cp-wf-nscf')
      lwfnscf     = ( TRIM( calculation ) == 'cp-wf-nscf' )
-     lwfpbe0     = ( TRIM( calculation ) == 'cp-wf-pbe0' )
-     lwfpbe0nscf = ( TRIM( calculation ) == 'pbe0-nscf'  )
-     !
-     IF( lwfpbe0 .OR. lwfnscf .OR. lwfpbe0nscf ) exx_wf = .TRUE.
-     !
-     !HK: specification from PP or input_dft
-     IF( dft_is_hybrid .AND. lwf ) exx_wf = .TRUE.
-     !
-     IF( exx_wf ) THEN 
-       lwf     = .TRUE. 
-       lwfpbe0 = .TRUE. 
-     END IF
+     lwfpbe0nscf = ( dft_is_hybrid() .AND. lwfnscf  )
 !====================================================================
 
      !
      ! ... set the level of output, the code verbosity 
      !
-     trhor_ = ( TRIM( calculation ) == 'nscf'       .OR. &
-                TRIM( calculation ) == 'cp-wf-nscf' .OR. &
-                TRIM( calculation ) == 'pbe0-nscf'  )    ! Lingzhu Kong
+     trhor_ = ( TRIM( calculation ) == 'nscf'   .OR. &
+                TRIM( calculation ) == 'cp-wf-nscf')
      trhow_ = saverho
      tksw_  = ( TRIM( disk_io ) == 'high' )
      !
@@ -782,8 +769,7 @@ MODULE input
                                   exx_ps_rcut_s=>exx_ps_rcut_self,&
                                   exx_me_rcut_s=>exx_me_rcut_self,&
                                   exx_ps_rcut_p=>exx_ps_rcut_pair,&
-                                  exx_me_rcut_p=>exx_me_rcut_pair,&
-                                  exx_wf_fraction
+                                  exx_me_rcut_p=>exx_me_rcut_pair
 !===============================================================
      !
      USE input_parameters, ONLY : abivol, abisur, pvar, fill_vac,     &
@@ -947,7 +933,7 @@ MODULE input
      CALL wannier_init( wf_efield, wf_switch, sw_len, efx0, efy0, efz0, &
                         efx1, efy1, efz1, wfsd, wfdt, neigh, poisson_eps,&
                         dis_cutoff, exx_ps_rcut_s, exx_me_rcut_s,&
-                        exx_ps_rcut_p, exx_me_rcut_p, exx_wf_fraction, vnbsp,&
+                        exx_ps_rcut_p, exx_me_rcut_p, vnbsp,&
                         maxwfdt, wf_q, &
                         wf_friction, nit, nsd, nsteps, tolw, adapt,     &
                         calwf, nwf, wffort, writev, wannier_index,      &
