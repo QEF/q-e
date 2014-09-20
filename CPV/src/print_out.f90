@@ -21,12 +21,12 @@
       USE energies,          ONLY : print_energies, dft_energy_type
       USE printout_base,     ONLY : printout_base_open, printout_base_close, &
                                     printout_pos, printout_cell, printout_stress, &
-                                    printout_vefftsvdw
+                                    printout_vefftsvdw, printout_wfc
       USE constants,         ONLY : au_gpa, bohr_radius_cm, amu_au, &
                                     BOHR_RADIUS_ANGS, pi
       USE ions_base,         ONLY : na, nsp, nat, ind_bck, atm, amass, cdmi, &
                                     ions_cofmass, ions_displacement, label_srt
-      USE cell_base,         ONLY : s_to_r, get_volume
+      USE cell_base,         ONLY : s_to_r, get_volume, h, ainv
       USE efield_module,     ONLY : tefield, pberryel, pberryion, &
                                     tefield2, pberryel2, pberryion2
       USE cg_module,         ONLY : tcg, itercg
@@ -40,13 +40,15 @@
       USE control_flags,     ONLY : ndw, tdipole
       USE polarization,      ONLY : print_dipole
       USE io_global,         ONLY : ionode, ionode_id, stdout
-      USE control_flags,     ONLY : lwfpbe0nscf  ! exx_wf related
+      USE control_flags,     ONLY : lwf, lwfpbe0nscf  ! exx_wf related
       USE energies,          ONLY : exx  ! exx_wf related 
       USE control_flags,     ONLY : ts_vdw
       USE tsvdw_module,      ONLY : EtsvdW, VefftsvdW
       USE input_parameters,  ONLY : tcpbo
       USE exx_module,        ONLY : exxalfa
       USE funct,             ONLY : dft_is_hybrid, exx_is_active
+      USE wannier_module,    ONLY : wfc
+      USE electrons_base,    ONLY : nbsp, nspin, nupdwn, iupdwn
       !
       IMPLICIT NONE
       !
@@ -73,7 +75,7 @@
       REAL(DP) :: out_press, volume
       REAL(DP) :: totalmass
       INTEGER  :: isa, is, ia, kilobytes
-      REAL(DP), ALLOCATABLE :: tauw(:, :)
+      REAL(DP), ALLOCATABLE :: tauw(:, :), wfc_temp(:,:)
       LOGICAL  :: tsic, tfile
       LOGICAL, PARAMETER :: nice_output_files=.false.
       !
@@ -274,6 +276,48 @@
             END IF
             !
             IF( tfile ) WRITE( 39, 2949 ) nfi,tps,vnhh(3,3),xnhh0(3,3),vnhp(1),xnhp0(1)
+            !
+            !print Wannier centers at every iprint steps in .wfc file
+            !
+            IF(tfile.AND.lwf) THEN 
+              !
+              IF (.NOT.tcpbo) THEN
+                !
+                ALLOCATE( wfc_temp(3,nbsp) ); wfc_temp=0.0_DP
+                !
+                wfc_temp(:,:) = MATMUL( ainv(:,:), wfc(:,:) )
+                !
+                wfc_temp(:,:) = wfc_temp(:,:) - FLOOR (wfc_temp(:,:))
+                !
+                wfc_temp(:,:) = MATMUL( h(:,:), wfc_temp(:,:) )
+                !
+                CALL printout_wfc( 42, wfc_temp(:,1:nupdwn(1)), nupdwn(1), nfi, tps, nspin)
+                IF(nspin.EQ.2)CALL printout_wfc( 42, wfc_temp(:,iupdwn(2):nbsp), nupdwn(2), nfi, tps, nspin )
+                !
+                DEALLOCATE( wfc_temp(3,nbsp) )
+                !
+              ELSE   
+                !
+                IF (conv_elec) THEN
+                  !
+                  ALLOCATE( wfc_temp(3,nbsp) ); wfc_temp=0.0_DP
+                  !
+                  wfc_temp(:,:) = MATMUL( ainv(:,:), wfc(:,:) )
+                  !
+                  wfc_temp(:,:) = wfc_temp(:,:) - FLOOR (wfc_temp(:,:))
+                  !
+                  wfc_temp(:,:) = MATMUL( h(:,:), wfc_temp(:,:) )
+                  !
+                  CALL printout_wfc( 42, wfc_temp(:,1:nupdwn(1)), nupdwn(1), nfi, tps, nspin)
+                  IF(nspin.EQ.2)CALL printout_wfc( 42, wfc_temp(:,iupdwn(2):nbsp), nupdwn(2), nfi, tps, nspin )
+                  !
+                  DEALLOCATE( wfc_temp(3,nbsp) )
+                  !
+                END IF    
+                !
+              END IF    
+              !
+            END IF
             !
             !print TS-vdW effective Hirshfeld volume of each atom at every iprint steps in .hrs file
             !

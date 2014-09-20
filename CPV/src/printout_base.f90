@@ -251,7 +251,7 @@ CONTAINS
  40 FORMAT(3X,'ATOMIC_POSITIONS')
  50 FORMAT(3X,'ATOMIC_VELOCITIES')
  60 FORMAT(3X,'Forces acting on atoms (au):')
-255 FORMAT(3X,A3,3E14.6)
+255 FORMAT(3X,A3,3E25.14)
 252 FORMAT(3E25.14)
     RETURN
   END SUBROUTINE printout_pos
@@ -340,5 +340,33 @@ CONTAINS
 100 FORMAT(F20.10)
     RETURN
   END SUBROUTINE printout_vefftsvdw
+
+  SUBROUTINE printout_wfc( iunit, wfc_temp, nband, nfi, tps, iss )
+    !
+    USE kinds
+    !
+    INTEGER,   INTENT(IN)           :: iunit, nband 
+    REAL(DP), INTENT(IN)           :: wfc_temp(3,nband)
+    INTEGER,   INTENT(IN)           :: nfi
+    REAL(DP), INTENT(IN)           :: tps
+    INTEGER, INTENT(IN), OPTIONAL  :: iss 
+    !
+    INTEGER :: i, j
+    !
+    IF( PRESENT( iss ) ) THEN
+       WRITE( iunit, 40 ) nfi, tps, iss
+    ELSE
+       WRITE( iunit, 30 ) nfi, tps
+    END IF
+    !
+    DO i = 1, nband 
+       WRITE( iunit, 100 ) (wfc_temp(j,i),j=1,3) 
+    END DO
+    !
+ 30 FORMAT(I7,1X,F11.8)
+ 40 FORMAT(I7,1X,F11.8,1X,"spin=",I5)
+100 FORMAT(3E25.14)
+    RETURN
+  END SUBROUTINE printout_wfc
 
 END MODULE printout_base
