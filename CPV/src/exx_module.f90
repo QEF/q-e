@@ -32,9 +32,7 @@ MODULE exx_module
   USE electrons_base,     ONLY: nupdwn             !number of states with up and down spin 
   USE fft_base,           ONLY: dffts              !FFT derived data type
   USE fft_base,           ONLY: dfftp              !FFT derived data type 
-!   USE funct,              ONLY: set_exx_fraction   !subroutine to set exx fraction in hybrid functionals .. 
   USE funct,              ONLY: get_exx_fraction   ! function to get exx_fraction value
-  USE input_parameters,   ONLY: exx_wf             !if .true., exx calculations using Wannier functions are turned on .. 
   USE input_parameters,   ONLY: ref_alat           !alat of reference cell ..
   USE input_parameters,   ONLY: ref_cell           !.true. if reference cell parameters are in use, .false. otherwise ... 
   USE io_global,          ONLY: stdout             !print/write argument for standard output (to output file)
@@ -51,7 +49,6 @@ MODULE exx_module
   USE wannier_base,       ONLY: exx_me_rcut_s ! radius of the ME sphere for self orbital
   USE wannier_base,       ONLY: exx_ps_rcut_p ! radius of the poisson sphere for pair orbital
   USE wannier_base,       ONLY: exx_me_rcut_p ! radius of the ME sphere for pair orbital
-  USE wannier_base,       ONLY: exx_wf_fraction ! fraction of exact exchange ... default is 0.25 
   USE wannier_base,       ONLY: vnbsp 
   !
   IMPLICIT NONE
