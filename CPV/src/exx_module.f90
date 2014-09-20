@@ -155,46 +155,6 @@ CONTAINS
       WRITE(stdout,'(/,3X,"The references for this algorithm are:",/ &
           &,5X,"(i)  theory: X. Wu , A. Selloni, and R. Car, Phys. Rev. B 79, 085102 (2009).",/ &
           &,5X,"(ii) implementation: H.-Y. Ko, B. Santra, R. A. DiStasio, L. Kong, and R. Car, arxiv.")')
-      WRITE(stdout,'(/&
-          &,3X,"The parallelization scheme in this algorithm is based upon the &
-          &number of electronic states. In the current implementation",/ &
-          &,3X,"there are certain restrictions on the choice of the number of MPI tasks. &
-          &Also slightly different algorithms are employed ",/ &
-          &,3X,"depending on whether the number of MPI tasks used in the calculation &
-          &are greater or less than the number of electronic states.",/ &
-          &,3X,"We highly recommend users to follow the notes below.",/ &
-          &,5X,"This algorithm can be used most efficiently if the numbers of electronic &
-          &states are uniformly distributed over the number",/ &
-          &,5X,"of MPI tasks. For a system having N electronic states the optimum numbers of MPI tasks &
-          &(nproc) are the following:",/ &
-          &,7X,"a) in case of nproc <= N, the optimum choices are N/m, where m is any positive integer.",/ &
-          &,7X,"     Omp threads : can be used.",/ &
-          &,7X,"     Taskgroup : here only the default value of the task group (-ntg 1) is allowed.",/ &
-          &,7X,"b) in case of nproc  > N, the optimum choices are N*m, where m is any positive integer.",/ &
-          &,7X,"     Largest value of m : as long as nj_max (see output) is greater than 1, however beyond &
-          &m=8 the scaling may become poor. The scaling should be tested by users.",/ &
-          &,7X,"     Omp threads : can be used and highly recommended. We have tested number of threads &
-          &starting from 2 up to 64.",/ &
-          &,7X,"        More threads may be used. For very large calculations (nproc > 1000 ) &
-          &efficiency can largely depend on the",/ &
-          &,7X,"        computer architecture and the balance between the MPI tasks and the OpenMP threads.&
-          & User should test for an optimal balance.",/ &
-          &,7X,"        Reasonablly good scaling can be achieved by using m=6-8 and OpenMP threads=2-16.",/ &
-          &,7X,"     Taskgroup : can be greater than 1 and users should choose the largest&
-          & possible value for ntg,",/ &
-          &,7X,"        to estimate ntg, find the value of nr3x in the output and compute nproc/nr3x and&
-          & take the integer value,",/ &
-          &,7X,"        use ntg as 2^m, where m is any positive integer.",/ &
-          &,7X,"     Ndiag : use -ndiag X option in the execution of cp.x.&
-          & Without this option jobs may crash on certain architectures.",/ &
-          &,7X,"        Set X to any perfect square number which is equal to or less than N.",/ &
-          &,5X,"DEBUG : The EXX calculations always work when number of MPI tasks = number of&
-          & electronic states.",/ & 
-          &,5X,"        In case of any uncertainty, the EXX energy computed using different numbers of&
-          & MPI tasks can be",/ & 
-          &,5X,"        checked by performing test calculations using number of MPI tasks = number of&
-          & electronic states.") &
-          &        ')
       !
       WRITE(stdout,'(/,3X,"Parallelization info :")')
       WRITE(stdout,'(5X,"electronic states   ",3X,I7)') nbsp

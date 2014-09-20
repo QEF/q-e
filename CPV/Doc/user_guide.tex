@@ -856,6 +856,111 @@ only if the cut-off is too low. Having these small boxes removes the
 charge oscillations problem (at least outside the box) and also offers
 some numerical advantages in going to higher cut-offs." (info by Nicola Marzari)
 
+\subsubsection{Exact-exchange functional with Wannier functions}
+In this section, we illustrate some guidelines for doing linear-scaling of exact exchange (EXX) calculation with Wannier functions. 
+
+The references for this algorithm are:
+\begin{itemize}
+  \item[(i)] Theory: X. Wu , A. Selloni, and R. Car, Phys. Rev. B 79, 085102 (2009).
+  \item[(ii)] Implementation: H.-Y. Ko, B. Santra, R. A. DiStasio, L. Kong, and R. Car, arxiv.
+\end{itemize}
+
+The parallelization scheme in this algorithm is based upon the number of electronic states. 
+In the current implementation, there are certain restrictions on the choice of the number of MPI tasks.
+Also slightly different algorithms are employed depending on whether the number of MPI tasks used in the calculation are greater or less than the number of electronic states.
+We highly recommend users to follow the notes below.
+This algorithm can be used most efficiently if the numbers of electronic states are uniformly distributed over the number of MPI tasks. 
+For a system having N electronic states the optimum numbers of MPI tasks (nproc) are the following:
+
+\begin{itemize}
+  \item[(a)] In case of nproc $\leq$ N, the optimum choices are N/m, where m is any positive integer.
+    \begin{itemize}
+      \item[Robustness:] Can be used for odd and even number of electronic states.
+      \item[OpenMP threads:] Can be used.
+      \item[Taskgroup:] Only the default value of the task group (-ntg 1) is allowed.
+    \end{itemize}
+  \item[(b)] In case of nproc  $>$ N, the optimum choices are N*m, where m is any positive integer.
+    \begin{itemize}
+      \item[Robustness:] Can be used for even number of electronic states.
+      \item[Largest value of m:] As long as nj\_max (see output) is greater than 1, 
+        however beyond m=8 the scaling may become poor. The scaling should be tested by users.
+      \item[OpenMP threads:]Can be used and highly recommended. We have tested number of threads
+        starting from 2 up to 64. More threads are also allowed. 
+        For very large calculations (nproc $>$ 1000 ) efficiency can largely depend on the computer 
+        architecture and the balance between the MPI tasks and the OpenMP threads. 
+        User should test for an optimal balance. Reasonably good scaling can be achieved by using 
+        m=6-8 and OpenMP threads=2-16.
+      \item[Taskgroup:] Can be greater than 1 and users should choose the largest possible value
+        for ntg. To estimate ntg, find the value of nr3x in the output and compute nproc/nr3x and
+        take the integer value. We have tested the value of ntg as $2^m$, where m is any positive integer. 
+        Other values of ntg should be used with caution.
+      \item[Ndiag:] Use -ndiag X option in the execution of cp.x. Without this option jobs
+        may crash on certain architectures. Set X to any perfect square number which is equal to or less than N.
+    \end{itemize}
+  \item[DEBUG:] The EXX calculations always work when number of MPI tasks = number of electronic states.
+    In case of any uncertainty, the EXX energy computed using different numbers of MPI tasks can be
+    checked by performing test calculations using number of MPI tasks = number of electronic states.
+\end{itemize}
+
+An example input is listed as following:
+\begin{verbatim}
+&CONTROL
+  calculation       = 'cp-wf',
+  title             = "(H2O)32 Molecule: electron minimization PBE0",
+  restart_mode      = "from_scratch",
+  pseudo_dir        = './',
+  outdir            = './',
+  prefix            = "water",
+  nstep             = 220,
+  iprint            = 100,
+  isave             = 100,
+  dt                = 4.D0,
+  ekin_conv_thr     = 1.D-5,
+  etot_conv_thr     = 1.D-5,
+  exx_wf            = .TRUE., ! exx related 
+/
+&SYSTEM
+  ibrav             = 1,
+  celldm(1)         = 18.6655, 
+  nat               = 96,
+  ntyp              = 2,
+  ecutwfc           = 85.D0,
+/
+&ELECTRONS
+  emass             = 400.D0,
+  emass_cutoff      = 3.D0,
+  ortho_eps         = 1.D-8,
+  ortho_max         = 300,
+  electron_dynamics = "damp",
+  electron_damping  = 0.1D0,
+/
+&IONS
+  ion_dynamics      = "none", 
+/
+&WANNIER
+  nit               = 60,
+  calwf             = 3,
+  tolw              = 1.D-6,
+  nsteps            = 20,
+  adapt             = .FALSE.
+  wfdt              = 4.D0,
+  wf_q              = 500,
+  wf_friction       = 0.3D0,
+  exx_neigh         = 60,     ! exx related optional
+  exx_dis_cutoff    = 8.0D0,  ! exx related optional
+  exx_ps_rcut_self  = 6.0D0,  ! exx related optional
+  exx_ps_rcut_pair  = 5.0D0,  ! exx related optional
+  exx_me_rcut_self  = 9.3D0,  ! exx related optional
+  exx_me_rcut_pair  = 7.0D0,  ! exx related optional
+  exx_poisson_eps   = 1.D-6,  ! exx related optional
+  exx_wf_fraction   = 0.25D0, ! exx related optional
+/
+ATOMIC_SPECIES
+O 16.0D0 O_HSCV_PBE-1.0.UPF
+H  2.0D0 H_HSCV_PBE-1.0.UPF 
+\end{verbatim}
+
+
 \section{Performances}
 
 % \subsection{Execution time}
