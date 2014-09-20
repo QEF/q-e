@@ -697,57 +697,6 @@ COMB:   DO k=3**nw-1,0,-1
      wfc(3, i) = SUM(mt*weight(:)*gr(:,3))*alat
      !
   END DO
-! !
-! IF ( ionode ) THEN
-!    !
-!    ! BS
-!    IF (.NOT.tcpbo) THEN
-!      IF( ( MOD( nfi, iprint_stdout ) == 0 ) )  THEN
-!        iunit = printout_base_unit( "wfc" )
-!        CALL printout_base_open( "wfc" )
-!        WRITE( iunit, '(I8,f16.8)' )nfi,tps
-!      END IF
-!    ELSE
-!      IF(conv_elec) THEN
-!        iunit = printout_base_unit( "wfc" )
-!        CALL printout_base_open( "wfc" )
-!        WRITE( iunit, '(I8,f16.8)' )nfi,tps
-!      END IF
-!    END IF
-!    ! BS
-!    !
-!    IF ( .NOT. what1 ) THEN
-!       !
-!       ! ... pbc are imposed here in the range [0,1]
-!       !
-!       DO i = 1, nbsp
-!          !
-!          temp_vec(:) = MATMUL( ainv(:,:), wfc(:,i) )
-!          !
-!          temp_vec(:) = temp_vec(:) - floor (temp_vec(:))
-!          !
-!          temp_vec(:) = MATMUL( h(:,:), temp_vec(:) )
-!          !
-!          !WRITE( iunit, '(3f20.14)' ) temp_vec(:)
-!          IF (.NOT.tcpbo) THEN
-!            IF( ( MOD( nfi, iprint_stdout ) == 0 ) )  WRITE( iunit, '(3f20.14)' ) temp_vec(:) ! BS
-!          ELSE
-!            IF(conv_elec) WRITE( iunit, '(3f20.14)' ) temp_vec(:) !BS
-!          END IF
-!          !
-!       END DO
-!       !
-!    END IF
-!    !CALL printout_base_close( "wfc" )
-!    IF (.NOT.tcpbo) THEN 
-!      IF( ( MOD( nfi, iprint_stdout ) == 0 ) )  CALL printout_base_close( "wfc" ) ! BS
-!    ELSE 
-!      IF(conv_elec) CALL printout_base_close( "wfc" ) ! BS
-!    END IF
-!    !
-! END IF
-  !
-  !
   !
   DEALLOCATE( wr, W, gr, EW, f3, f4, mt0, mt )
   !

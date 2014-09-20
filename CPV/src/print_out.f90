@@ -291,7 +291,7 @@
                 !
                 wfc_temp(:,:) = MATMUL( h(:,:), wfc_temp(:,:) )
                 !
-                CALL printout_wfc( 42, wfc_temp(:,1:nupdwn(1)), nupdwn(1), nfi, tps, nspin)
+                CALL printout_wfc( 42, wfc_temp(:,1:nupdwn(1)), nupdwn(1), nfi, tps, 1)
                 IF(nspin.EQ.2)CALL printout_wfc( 42, wfc_temp(:,iupdwn(2):nbsp), nupdwn(2), nfi, tps, nspin )
                 !
                 DEALLOCATE( wfc_temp )
@@ -308,7 +308,7 @@
                   !
                   wfc_temp(:,:) = MATMUL( h(:,:), wfc_temp(:,:) )
                   !
-                  CALL printout_wfc( 42, wfc_temp(:,1:nupdwn(1)), nupdwn(1), nfi, tps, nspin)
+                  CALL printout_wfc( 42, wfc_temp(:,1:nupdwn(1)), nupdwn(1), nfi, tps, 1)
                   IF(nspin.EQ.2)CALL printout_wfc( 42, wfc_temp(:,iupdwn(2):nbsp), nupdwn(2), nfi, tps, nspin )
                   !
                   DEALLOCATE( wfc_temp )
