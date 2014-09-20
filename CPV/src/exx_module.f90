@@ -164,7 +164,7 @@ CONTAINS
       WRITE(stdout,'(5X,"electronic states   ",3X,I7)') nbsp
       WRITE(stdout,'(5X,"MPI tasks           ",3X,I7)') nproc_image 
 #if defined(__OPENMP)
-      WRITE(stdout,'(5X,"omp threads/MPI task",3X,I7)') omp_get_max_threads() 
+      WRITE(stdout,'(5X,"OpenMP threads/MPI task",3X,I4)') omp_get_max_threads() 
 #endif
       WRITE(stdout,'(5X,"Taskgroups          ",3X,I7)') dffts%nogrp 
       !
