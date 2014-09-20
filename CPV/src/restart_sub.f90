@@ -81,7 +81,9 @@ SUBROUTINE from_restart( )
    !
    CALL s_to_r( taus,  tau0, na, nsp, h )
    !
-   CALL s_to_r( tausm, taum, na, nsp, h )
+   !CALL s_to_r( tausm, taum, na, nsp, h )
+   !BS: tausm to taum conversion should use hold in variable cell calculations...
+   CALL s_to_r( tausm, taum, na, nsp, hold )
    !
    IF ( tzeroc ) THEN
       !
