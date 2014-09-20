@@ -9,7 +9,6 @@
   iprint            = 1,
   isave             = 100,
   dt                = 2.D0,
-  exx_wf            = .TRUE., ! exx related 
   tprnfor           = .TRUE.,
 /
 &SYSTEM
@@ -18,6 +17,7 @@
   nat               = 96,
   ntyp              = 2,
   ecutwfc           = 85.D0,
+  input_dft         = 'PBE0',  ! exx related optional
 /
 &ELECTRONS
   electron_dynamics = "verlet",
@@ -49,7 +49,6 @@
   exx_me_rcut_self  = 9.3D0,  ! exx related optional
   exx_me_rcut_pair  = 7.0D0,  ! exx related optional
   exx_poisson_eps   = 1.D-6,  ! exx related optional
-  exx_wf_fraction   = 0.25D0, ! exx related optional
 /
 ATOMIC_SPECIES
 O 16.0D0 O_HSCV_PBE-1.0.UPF
