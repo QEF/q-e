@@ -2,6 +2,11 @@ SUBROUTINE exx_gs(nfi, c)
     !=======================================================================================
     ! Code Version 1.0 (Princeton University, September 2014)
     !=======================================================================================
+    ! Note:  From this code exx_potential is returned after multiplying mixing parameter exxalfa.
+    !        Later the exx_potential is added with GGA potential in forces.f90.
+    !        In the future, full exx_potential should be returned and the mixing parameter exxalfa
+    !        should be multiplied in forces.f90.
+    !=======================================================================================
     !
     USE kinds,                   ONLY  : DP
     USE constants,               ONLY  : fpi
@@ -12,7 +17,7 @@ SUBROUTINE exx_gs(nfi, c)
     USE io_global,               ONLY  : stdout
     USE cell_base,               ONLY  : omega, ainv, h
     USE cell_base,               ONLY  : ibrav
-    USE cell_base,               ONLY  : isotropic  !True if volume option is chosen for cell_dofree !HK
+    USE cell_base,               ONLY  : isotropic  !True if volume option is chosen for cell_dofree
     USE electrons_base,          ONLY  : nbsp, nbspx, nspin
     USE gvecw,                   ONLY  : ngw
     USE wannier_module,          ONLY  : wfc
@@ -28,7 +33,7 @@ SUBROUTINE exx_gs(nfi, c)
     USE printout_base,           ONLY  : printout_base_open, printout_base_unit, printout_base_close
     USE wannier_base,            ONLY  : neigh, dis_cutoff
     USE mp_wave,                 ONLY  : redistwfr
-    !HK
+    !
     USE time_step,               ONLY  : tps                !md time in picoseconds
     USE io_global,               ONLY  : ionode             !logical for I/O node
     USE cp_main_variables,       ONLY  : iprint_stdout      !print control
@@ -38,7 +43,7 @@ SUBROUTINE exx_gs(nfi, c)
     USE exx_module,              ONLY  : dexx_dh
     USE exx_module,              ONLY  : exx_energy_cell_derivative
     USE exx_module,              ONLY  : exxalfa
-    !HK
+    !
     IMPLICIT NONE
     COMPLEX(DP)   c(ngw, nbspx)        ! wave functions at time t
 #ifdef __MPI
@@ -46,7 +51,7 @@ SUBROUTINE exx_gs(nfi, c)
     INTEGER  :: istatus(MPI_STATUS_SIZE)
 #endif
     INTEGER     ir, ip, i, j,nfi, ierr, nnrtot, nr1s,nr2s,nr3s
-    INTEGER     nj_max, iunit !HK
+    INTEGER     nj_max, iunit
     REAl(DP)    sa1,a(3),ha, hb, hc
     REAl(DP)    hcub, centerx, centery, centerz
     REAL(DP)    middle(3,neigh/2)
@@ -59,17 +64,16 @@ SUBROUTINE exx_gs(nfi, c)
     INTEGER   iobtl, gindex_of_iobtl, irank, rk_of_obtl_trcv, rk_of_obtl_tbs
     INTEGER   obtl_tbs, lindex_obtl_tbs, obtl_trcv, lindex_obtl_trcv 
     REAL(DP)  totalenergy, totalenergyg, tot_energy(nbsp)
-    REAL(DP)  total_exx_derv(3,3), total_exx_derv_g(3,3) !HK
+    REAL(DP)  total_exx_derv(3,3), total_exx_derv_g(3,3)
     REAL(DP)  selfe, paire(neigh/2), &
-        self_dexx_dhab(3,3), pair_dexx_dhab(3,3,neigh/2) !HK
+        self_dexx_dhab(3,3), pair_dexx_dhab(3,3,neigh/2)
     !
     INTEGER, allocatable  :: isendreq(:),irecvreq(:,:)
     INTEGER   tran(3), proc, tmp_iobtl, me
-    ! BS
+    !
     INTEGER                  :: k,jj,ii,ia,ib,ic,my_var,my_var2,my_var3,i_fac,va,cgstep
     INTEGER                  :: ndim,nogrp 
     INTEGER,    ALLOCATABLE  :: overlap(:,:),njj(:)
-    REAL(DP),   ALLOCATABLE  :: BS_selfe(:)
     REAl(DP),   ALLOCATABLE  :: wannierc(:,:),wannierc_tmp(:,:)
     REAl(DP),   ALLOCATABLE  :: psil(:),psil_pair_recv(:,:),psil_pair_send(:,:,:)
     REAL(DP),   ALLOCATABLE  :: exx_tmp(:,:),exx_tmp3(:,:)
@@ -77,12 +81,11 @@ SUBROUTINE exx_gs(nfi, c)
     INTEGER,    ALLOCATABLE  :: rdispls(:), recvcount(:)
     INTEGER,    ALLOCATABLE  :: sdispls1(:), sendcount1(:)
     INTEGER,    ALLOCATABLE  :: rdispls1(:), recvcount1(:)
-    ! BS
-    ! HK
+    !
     REAL(DP) :: Jim(3,3)  ! jacobian [d/d x]        [d/d a]
     !                                |d/d y| = [J]  |d/d b|
     !                                [d/d z]        [d/d c]
-    ! HK
+    !
     !=============================================================================================
     !print *, 'entering exx_gs', 'n_exx', n_exx
     ! 
@@ -145,8 +148,6 @@ SUBROUTINE exx_gs(nfi, c)
     ! get ha*d/da, ha^2*d^2/da^2 stencil and cross coefficients
     !   1. for the finite difference coefficients, we follow B. Fornberg in 
     !       Math. Comp. 51 (1988), 699-706
-    !   2. for the cross derivatives please see the following reference for details
-    !       <todo: EXX paper>
     !
     CALL fornberg(nord1, nord2,coe_1st_derv(:,1),coeke(:,1,1),coeke(:,1,2),ierr)
     !
@@ -157,7 +158,7 @@ SUBROUTINE exx_gs(nfi, c)
     END IF
     !
     !RENORMALIZE COEKES WITH RESPECT TO THE GRID SPACING
-    ! HK: first derivative coefficients
+    ! first derivative coefficients
     !
     coe_1st_derv(:,3) = coe_1st_derv(:,1)/hc ! d/dc stencil
     coe_1st_derv(:,2) = coe_1st_derv(:,1)/hb ! d/db stencil
@@ -206,7 +207,7 @@ SUBROUTINE exx_gs(nfi, c)
     coeke(:,2,1) = coeke(:,1,2) ! symmetry of coeke
     coeke(:,3,1) = coeke(:,1,3) ! symmetry of coeke
     !
-    ! HK: a samall check on the shape of user defined cell (if any)
+    ! a samall check on the shape of user defined cell (if any)
     !
     IF ((ibrav.EQ.0).AND.(nfi.EQ.1)) THEN
       WRITE(stdout,*) 'EXX info: If you are using an orthogonal cell without its cell vectors&
@@ -223,7 +224,7 @@ SUBROUTINE exx_gs(nfi, c)
     !
     CALL start_clock('exx_pairs')
     !
-    ndim=MAX(nproc_image, nbsp) !HK: todo issue 1: this value is different when processor number is smaller than bands
+    ndim=MAX(nproc_image, nbsp)
     ALLOCATE (wannierc(3,ndim)); wannierc=0.0_DP 
     ALLOCATE (wannierc_tmp(3,nbsp)); wannierc_tmp=0.0_DP 
     !
@@ -340,24 +341,18 @@ SUBROUTINE exx_gs(nfi, c)
     ! initialize totalenergy and derivatives
     !
     totalenergy = 0.0_DP
-    total_exx_derv(:,:) =0.0_DP !HK
+    total_exx_derv(:,:) =0.0_DP
     !
     ! my_var is the maximum of nbsp or nproc_image
-    !  IF (nproc_image .LE. nbsp) my_var=nbsp ! BS
-    !  IF (nproc_image .GT. nbsp) my_var=nproc_image ! BS
-    my_var = MAX(nproc_image, nbsp) ! HK maybe replaced by this line
+    my_var = MAX(nproc_image, nbsp)
     !
     ! we should use my_nbspx (maxval(my_nbsp(me))) here
     !
-    DO iobtl = 1, my_nbspx ! BS
+    DO iobtl = 1, my_nbspx
       ! 
       CALL start_clock('send_psi')
       ! 
       psil_pair_recv(:,:)=0.0_DP
-      !
-      !CALL start_clock('send_psi_barrier')
-      !CALL mp_barrier( intra_image_comm )
-      !CALL stop_clock('send_psi_barrier')
       !
       !========================================================================
       !
@@ -368,10 +363,10 @@ SUBROUTINE exx_gs(nfi, c)
           ! the global index of the target orbital (iobtl)
           gindex_of_iobtl =  index_my_nbsp(iobtl, irank)
           !
-          IF ( gindex_of_iobtl .LE. my_var) THEN ! BS ! my_var is the maximum of nbsp or nproc_image
+          IF ( gindex_of_iobtl .LE. my_var) THEN ! my_var is the maximum of nbsp or nproc_image
             !
             rk_of_obtl_trcv = irank - 1          ! mpi rank that should receive the target orbital
-            obtl_tbs=overlap(j, gindex_of_iobtl) ! BS ! global band (orbital) index that is paired iobtl (gindex_of_iobtl)
+            obtl_tbs=overlap(j, gindex_of_iobtl) ! global band (orbital) index that is paired iobtl (gindex_of_iobtl)
             ! 
             IF (obtl_tbs .NE. 0) THEN
               !
@@ -384,16 +379,16 @@ SUBROUTINE exx_gs(nfi, c)
                 !
                 ! calculate mid point of two wannier centers
                 CALL getmiddlewc(wannierc(1,gindex_of_iobtl),wannierc(1,obtl_tbs), &
-                    &                h, ainv, middle(1,j) ) !HK
+                    &                h, ainv, middle(1,j) )
                 ! get pair distance
-                CALL get_pair_dist(wannierc(1,gindex_of_iobtl),wannierc(1,obtl_tbs),d_pair(j)) !HK
+                CALL get_pair_dist(wannierc(1,gindex_of_iobtl),wannierc(1,obtl_tbs),d_pair(j))
                 ! calculate translation vector from the center of the box
-                CALL getsftv( nr1s, nr2s, nr3s, h, ainv, middle(1, j), tran) !HK
+                CALL getsftv( nr1s, nr2s, nr3s, h, ainv, middle(1, j), tran)
                 !
                 ! get the localized psi around the mid point of two wannier centers
                 ! note: the psil is centered at the center of the box
                 ! (using the translation vector "tran" from middle of wfc to the center of box)
-                CALL getpsil( nnrtot, np_in_sp_me_p, psi(1, lindex_obtl_tbs), psil_pair_recv(:,j), tran) !HK
+                CALL getpsil( nnrtot, np_in_sp_me_p, psi(1, lindex_obtl_tbs), psil_pair_recv(:,j), tran)
                 ! 
               ELSEIF( me_image .EQ. rk_of_obtl_tbs )THEN
                 !
@@ -414,7 +409,7 @@ SUBROUTINE exx_gs(nfi, c)
                 !
 #ifdef __MPI
                 CALL MPI_SEND( psil_pair_send(1, j, lindex_obtl_tbs), np_in_sp_me_p, MPI_DOUBLE_PRECISION, &
-                    rk_of_obtl_trcv, j*irank, intra_image_comm,ierr ) ! BS
+                    rk_of_obtl_trcv, j*irank, intra_image_comm,ierr )
 #endif
                 ! 
               ELSEIF( me_image .EQ. rk_of_obtl_trcv )THEN
@@ -423,7 +418,7 @@ SUBROUTINE exx_gs(nfi, c)
                 !
 #ifdef __MPI
                 CALL MPI_IRECV( psil_pair_recv(1,j),                  np_in_sp_me_p, MPI_DOUBLE_PRECISION, &
-                    rk_of_obtl_tbs,  j*irank, intra_image_comm, irecvreq(j,me_image),ierr) ! BS
+                    rk_of_obtl_tbs,  j*irank, intra_image_comm, irecvreq(j,me_image),ierr)
 #endif
                 ! note: this part will be waited later in the wait loop using irecvreq(j,me_image)
                 !
@@ -446,10 +441,10 @@ SUBROUTINE exx_gs(nfi, c)
           !
           gindex_of_iobtl =  index_my_nbsp(iobtl, irank)
           ! 
-          IF ( gindex_of_iobtl .LE. my_var) THEN ! BS ! my_var is the maximum of nbsp or nproc_image
+          IF ( gindex_of_iobtl .LE. my_var) THEN
             !
             rk_of_obtl_trcv = irank - 1
-            obtl_tbs=overlap(j, gindex_of_iobtl) ! BS
+            obtl_tbs=overlap(j, gindex_of_iobtl)
             ! 
             IF (obtl_tbs .NE. 0) THEN
               !
@@ -474,7 +469,7 @@ SUBROUTINE exx_gs(nfi, c)
       CALL stop_clock('send_psi_wait')
       CALL stop_clock('send_psi')
       !
-      !HK: printout header for the cgsteps
+      ! printout header for the cgsteps
       !
       IF ((MOD(nfi,iprint_stdout).EQ.0)) THEN
         !   
@@ -500,21 +495,21 @@ SUBROUTINE exx_gs(nfi, c)
       middle(:,:)=0.0_DP
       gindex_of_iobtl = index_my_nbsp(iobtl, me)
       !
-      IF ( gindex_of_iobtl .LE. my_var) THEN ! BS ! my_var is the maximum of nbsp or nproc_image
+      IF ( gindex_of_iobtl .LE. my_var) THEN
         !
         !-- second loop starts: calculate overlapping potential with the j_th orbitals --
         !
         !CALL start_clock('getpairv')
         !
         ! my_var3 is the unique neighbor number for gindex_of_iobtl
-        my_var3=njj( gindex_of_iobtl ) ! BS
+        my_var3=njj( gindex_of_iobtl )
         !
-        do j = 1, my_var3 ! BS
+        do j = 1, my_var3
           !
           ! my_var2 is the global index of the unique pair to gindex_of_iobtl
-          my_var2=overlap(j,gindex_of_iobtl) ! BS
+          my_var2=overlap(j,gindex_of_iobtl)
           !
-          IF (my_var2 .NE. 0) THEN ! BS
+          IF (my_var2 .NE. 0) THEN
             !
             CALL getmiddlewc(wannierc(1,gindex_of_iobtl),wannierc(1,my_var2), &
                 &                h, ainv, middle(1,j) )
@@ -527,10 +522,10 @@ SUBROUTINE exx_gs(nfi, c)
             ! get the localized psi around the mid point of two wannier centers
             ! note: the psil is centered at the center of the box
             ! (using the translation vector "tran" from middle of wfc to the center of box)
-            ALLOCATE ( psil(np_in_sp_me_p) ); psil=0.0_DP ! BS
+            ALLOCATE ( psil(np_in_sp_me_p) ); psil=0.0_DP
             CALL getpsil( nnrtot, np_in_sp_me_p, psi(1, iobtl), psil(1), tran) 
             ! 
-            ! BS: the localized density rhol 
+            ! the localized density rhol 
             ALLOCATE ( rhol(np_in_sp_me_p) ); rhol=0.0_DP
             ALLOCATE ( rho_in_sp(np_in_sp_p) ); rho_in_sp=0.0_DP
             CALL getrhol( np_in_sp_me_p, np_in_sp_p, psil(1), psil_pair_recv(1, j), rhol, rho_in_sp, tran, sa1)
@@ -545,11 +540,11 @@ SUBROUTINE exx_gs(nfi, c)
                 pair_dist(3,j,iobtl),cgstep)
             CALL stop_clock('getvofr')
             !
-            !HK: write cgsteps in the suffix.ncg (unit=44)
+            ! write cgsteps in the suffix.ncg (unit=44)
             !
             IF ((MOD(nfi,iprint_stdout).EQ.0)) THEN
               !   
-              IF (ionode) THEN ! HK maybe not needed for ionode (if one want more information)
+              IF (ionode) THEN ! maybe not needed for ionode (if one want more information)
                 !   
                 WRITE(iunit,'(3X,"(i,j,cgsteps)",3I6)') gindex_of_iobtl, my_var2, cgstep
                 !
@@ -566,13 +561,13 @@ SUBROUTINE exx_gs(nfi, c)
             END DO
             !$omp end parallel do
             !
-            CALL vvprod(np_in_sp_me_p, rhol, vl, paire(j)) ! BS ! dot product of the rho and vl !HK (todo): do we need to do PS+ME ?? rho_in_sp may be enough
+            CALL vvprod(np_in_sp_me_p, rhol, vl, paire(j)) ! dot product of the rho and vl !HK (todo): do we need to do PS+ME ?? rho_in_sp may be enough
             paire(j) = paire(j) * 0.5_DP* hcub             ! volume element hcub and trapezoidal rule prefactor 0.5_DP are included
             totalenergy = totalenergy + 2.0_DP*paire(j)    ! the factor of two comes from the identity of ij and ji pair
             !
             IF (.NOT. (isotropic .AND. (ibrav.EQ.1) )) THEN
               !
-              ! HK: EXX cell derivative (note: exxalfa is included in vofrho.f90 when calculate stress)
+              ! EXX cell derivative (note: exxalfa is included in vofrho.f90 when calculate stress)
               CALL start_clock('exx_cell_derv')
               !
               CALL exx_energy_cell_derivative(np_in_sp_me_p, np_in_sp_p, tran,&
@@ -588,7 +583,7 @@ SUBROUTINE exx_gs(nfi, c)
               !
               CALL stop_clock('exx_cell_derv')
               !
-              ! HK: if isotropic => calculate the stress tensor in vofrho.f90
+              ! if isotropic => calculate the stress tensor in vofrho.f90
               !
             END IF
             !
@@ -648,11 +643,11 @@ SUBROUTINE exx_gs(nfi, c)
           !
           CALL stop_clock('getvofr')
           !
-          !HK: write cgsteps in the suffix.ncg (unit=44)
+          ! write cgsteps in the suffix.ncg (unit=44)
           !
           IF ((MOD(nfi,iprint_stdout).EQ.0)) THEN
             !   
-            IF (ionode) THEN ! HK maybe not needed for ionode (if one want more information)
+            IF (ionode) THEN ! maybe not needed for ionode (if one want more information)
               !   
               WRITE(44,'(3X,"(i,i,cgsteps)",3I6)') gindex_of_iobtl, gindex_of_iobtl, cgstep
               !
@@ -682,7 +677,7 @@ SUBROUTINE exx_gs(nfi, c)
           !
           IF (.NOT. (isotropic .AND. (ibrav.EQ.1))) THEN
             !
-            ! HK: EXX cell derivative (note: need to include exxalfa later)
+            !  EXX cell derivative (note: need to include exxalfa later)
             CALL start_clock('exx_cell_derv')
             !
             CALL exx_energy_cell_derivative(np_in_sp_me_s, np_in_sp_s, tran,&
@@ -698,7 +693,7 @@ SUBROUTINE exx_gs(nfi, c)
             !
             CALL stop_clock('exx_cell_derv')
             !
-            ! HK: if isotropic => calculate the stress tensor in vofrho.f90
+            ! if isotropic => calculate the stress tensor in vofrho.f90
             !
           END IF
           !
@@ -711,25 +706,6 @@ SUBROUTINE exx_gs(nfi, c)
         !
       END IF !iobtl 
       !
-      !!DEBUG
-      !ALLOCATE(BS_selfe(nproc_image)); BS_selfe = 0.0_DP ! BS
-      !CALL MPI_ALLGATHER( totalenergy, 1, MPI_DOUBLE_PRECISION, BS_selfe, 1, MPI_DOUBLE_PRECISION, intra_image_comm, IERR)
-      !WRITE(stdout,'("total selfe mpi allgather",F30.16)') SUM(BS_selfe) 
-      !IF(me_image .EQ. 0) THEN
-      !  WRITE(stdout,'("BS_selfe")')
-      !  DO i = 1,nproc_image
-      !    !WRITE(stdout,'(I5,F30.16)')i,(BS_selfe(i)+BS_selfe(i+nbsp))
-      !    WRITE(stdout,'(I5,F30.16)')i,BS_selfe(i)
-      !  END DO
-      !END IF
-      !IF (ALLOCATED(BS_selfe))        DEALLOCATE(BS_selfe)
-      !
-      !totalenergyg=0.0_DP
-      !CALL MPI_ALLREDUCE(totalenergy, totalenergyg, 1, MPI_DOUBLE_PRECISION, &
-      !&                        MPI_SUM, intra_image_comm, ierr)
-      !WRITE(stdout,'("total selfe ",F30.14)')totalenergyg
-      !!DEBUG
-      !
       !CALL stop_clock('self_v')
       CALL stop_clock('getpairv')
       !
@@ -739,10 +715,6 @@ SUBROUTINE exx_gs(nfi, c)
       !===============================================================================
       !
       CALL start_clock('sendv')
-      !CALL start_clock('sendv_barrier') ! DEBUG
-      !CALL mp_barrier(intra_image_comm) ! DEBUG
-      !CALL stop_clock('sendv_barrier')  ! DEBUG
-      !
       !
       middle(:,:)=0.0_DP
       jj = 0
@@ -753,10 +725,10 @@ SUBROUTINE exx_gs(nfi, c)
           !
           gindex_of_iobtl = index_my_nbsp(iobtl, irank)
           !
-          IF ( gindex_of_iobtl .LE. my_var) THEN ! BS ! my_var is the maximum of nbsp or nproc_image
+          IF ( gindex_of_iobtl .LE. my_var) THEN
             !
             rk_of_obtl_tbs = irank - 1
-            obtl_trcv=overlap(j, gindex_of_iobtl) ! BS
+            obtl_trcv=overlap(j, gindex_of_iobtl)
             ! 
             IF ( obtl_trcv .NE. 0) THEN
               !
@@ -807,7 +779,7 @@ SUBROUTINE exx_gs(nfi, c)
 #ifdef __MPI
                 !
                 CALL MPI_SEND( psil_pair_recv(1,j), np_in_sp_me_p, MPI_DOUBLE_PRECISION, &
-                    rk_of_obtl_trcv, j*irank, intra_image_comm,ierr) ! BS 
+                    rk_of_obtl_trcv, j*irank, intra_image_comm,ierr)
 #endif
                 ! 
               ELSE IF ( me_image .EQ. rk_of_obtl_trcv) THEN
@@ -877,13 +849,13 @@ SUBROUTINE exx_gs(nfi, c)
     exx = totalenergyg
     IF (nspin .EQ. 1) exx = exx + totalenergyg ! if closed shell double the totalenergy
     !
-    !WRITE(stdout, '("EXX Energy",2F30.14," step",I7)')exx,totalenergyg*2.0_DP, nfi  ! BS
+    !WRITE(stdout, '("EXX Energy",2F30.14," step",I7)')exx,totalenergyg*2.0_DP, nfi
     !
     CALL stop_clock('totalenergy')
     !
     CALL start_clock('exx_cell_derv')
     !
-    total_exx_derv_g(:,:) = 0.0_DP !HK! mpi reduction variable initialization
+    total_exx_derv_g(:,:) = 0.0_DP ! mpi reduction variable initialization
     !
 #ifdef __MPI
     IF (.NOT. (isotropic .AND. (ibrav.EQ.1))) THEN
@@ -894,7 +866,7 @@ SUBROUTINE exx_gs(nfi, c)
     END IF
 #endif
     !
-    ! HK: for closed shell case inclued spin factor of 2
+    ! for closed shell case inclued spin factor of 2
     dexx_dh(:,:) = total_exx_derv_g(:,:)
     IF (nspin .EQ. 1) dexx_dh(:,:) = dexx_dh(:,:) + total_exx_derv_g(:,:)
     !

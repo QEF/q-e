@@ -103,11 +103,11 @@ MODULE exx_module
   REAL(DP), ALLOCATABLE, PUBLIC       :: exx_potential(:, :)    ! EXX potential which is passed/added to the DFT-GGA potential ... 
   !
   REAL(DP), ALLOCATABLE, PUBLIC       :: clm(:,:)
-  REAL(DP), ALLOCATABLE, PUBLIC       :: coeke(:,:,:)           ! HK: coeke(neighbor, d/di, d/dj)
-  REAL(DP), ALLOCATABLE, PUBLIC       :: coe_1st_derv(:,:)      ! HK: coe_1st_derv(neighbor, d/di)
+  REAL(DP), ALLOCATABLE, PUBLIC       :: coeke(:,:,:)           ! coeke(neighbor, d/di, d/dj)
+  REAL(DP), ALLOCATABLE, PUBLIC       :: coe_1st_derv(:,:)      ! coe_1st_derv(neighbor, d/di)
   REAL(DP), ALLOCATABLE, PUBLIC       :: vwc(:,:)
   REAL(DP), PUBLIC                    :: h_init(3,3)
-  REAL(DP), PUBLIC                    :: dexx_dh(3,3)           ! HK: dexx/dhab for vofrho.f90
+  REAL(DP), PUBLIC                    :: dexx_dh(3,3)           ! dexx/dhab for vofrho.f90
   REAL(DP), PUBLIC                    :: exxalfa                ! fraction of exx mixing (locally used in CP)
   !
 #if defined(__OPENMP)
@@ -130,12 +130,12 @@ MODULE exx_module
   PUBLIC :: exx_setup 
   PUBLIC :: exx_setup_nscf
   PUBLIC :: fornberg
-  PUBLIC :: exx_energy_cell_derivative !HK
+  PUBLIC :: exx_energy_cell_derivative
   !
   ! PRIVATE subroutines
   !
   PRIVATE :: setclm 
-  PRIVATE :: exx_pot_derivative !HK
+  PRIVATE :: exx_pot_derivative
   !
   !
 CONTAINS
@@ -302,8 +302,8 @@ CONTAINS
       !   coe_1st_derv and coeke are computed by subroutine fornberg
       !   which is called in exx_gs.f90
       !
-      ALLOCATE( coe_1st_derv(-nord1:nord1, 3)) ! HK: coe_1st_derv(neighbor, d/di)
-      ALLOCATE( coeke(-nord2:nord2, 3,3))      ! HK: coeke(neighbor, d/di, d/dj)
+      ALLOCATE( coe_1st_derv(-nord1:nord1, 3)) ! coe_1st_derv(neighbor, d/di)
+      ALLOCATE( coeke(-nord2:nord2, 3,3))      ! coeke(neighbor, d/di, d/dj)
       !
       ! ALLOCATE exx_potential
       !
@@ -516,7 +516,7 @@ CONTAINS
       !
       IF( ALLOCATED( clm )     )        DEALLOCATE( clm)
       IF( ALLOCATED( coeke)    )        DEALLOCATE( coeke)
-      IF( ALLOCATED( coe_1st_derv)   )  DEALLOCATE( coe_1st_derv) !HK
+      IF( ALLOCATED( coe_1st_derv)   )  DEALLOCATE( coe_1st_derv)
       IF( ALLOCATED( exx_potential ) )  DEALLOCATE( exx_potential )
       IF( ALLOCATED( rhopr ) )          DEALLOCATE( rhopr )
       IF( ALLOCATED( vwc)    )          DEALLOCATE( vwc )
@@ -791,7 +791,7 @@ CONTAINS
       REAL(DP) :: centerx,centery,centerz              !coordinate of the center of the simulation box
       REAL(DP) :: hx,hy,hz                             !grid spacing along lattice directions
       REAL(DP) :: Jim(3,3)                             ! [d/d x]        [d/d a]
-      !                                  HK: jacobian    |d/d y| = [J]  |d/d b|
+      !                                      jacobian    |d/d y| = [J]  |d/d b|
       !                                                  [d/d z]        [d/d c]
       ! --------------------------------------------------------------------
       !
@@ -885,7 +885,10 @@ CONTAINS
       endif
       !
       !========================================================================
-      CALL fornberg(nord1,nord2,coe_1st_derv(:,1),coeke(:,1,1),coeke(:,1,2),ierr) ! HK: get hx*d/dx, hx^2*d^2/dx^2 stencil and cross coefficients
+      !
+      ! get hx*d/dx, hx^2*d^2/dx^2 stencil and cross coefficients
+      !
+      CALL fornberg(nord1,nord2,coe_1st_derv(:,1),coeke(:,1,1),coeke(:,1,2),ierr)
       !
       if (ierr .ne. 0) then
         write(6,*) ' ERROR: Wrong parameter in CALL of Fornberg'
@@ -895,7 +898,7 @@ CONTAINS
       !
       !      renormalize coekes with respect to the grid spacing
       !
-      ! HK: first derivative coefficients
+      ! first derivative coefficients
       !
       coe_1st_derv(:,3) = coe_1st_derv(:,1)/hz    ! d/dz stencil
       coe_1st_derv(:,2) = coe_1st_derv(:,1)/hy    ! d/dy stencil
@@ -1098,11 +1101,9 @@ CONTAINS
   !
   !===============================================================
   SUBROUTINE fornberg(norder1,norder2,coe1,coe,coe_cross,ierr)
-      ! HK: add functionality for the general cell
-      !     we follow B. Fornberg in  Math. Comp. 51 (1988), 699-706
       !
-      !     for the cross derivatives please see the following
-      !     reference for details <todo: EXX paper>
+      !     add functionality for the general cell
+      !     we follow B. Fornberg in  Math. Comp. 51 (1988), 699-706
       !
       USE kinds, ONLY : DP
       !
@@ -1115,13 +1116,13 @@ CONTAINS
       !     the maximum order implemented is 20.
       INTEGER, INTENT(IN) :: norder1, norder2
       !
-      !  HK: coe1 - coefficients for the first derivative
+      !  coe1 - coefficients for the first derivative
       REAL(DP), INTENT(OUT) :: coe1(-norder1:norder1)
       !
-      !  HK: coe  - coefficients for the axial derivative (2 nd)
+      !  coe  - coefficients for the axial derivative (2 nd)
       REAL(DP), INTENT(OUT) :: coe(-norder2:norder2)
       !
-      !  HK: coe_cross - coefficients for the cross derivative (2 nd)
+      !  coe_cross - coefficients for the cross derivative (2 nd)
       REAL(DP), INTENT(OUT) :: coe_cross(-norder2:norder2)
       !
       !     ierr - error flag
@@ -1333,7 +1334,7 @@ CONTAINS
 
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE exx_pot_derivative (np_in_sp_me, n, v, dvdr)
-      ! HK:
+      !
       !  To calculate the cell derivatives for the EXX calculation, one needs
       !  the derivatives of the exchange potential.
       !
@@ -1353,14 +1354,14 @@ CONTAINS
       !  derivatives
       !
       !$omp parallel do private(ii,jj,kk,v1,v2,v3)
-      DO i = 1, n !HK: running inside PS sphere
+      DO i = 1, n ! running inside PS sphere
         !
         ii = odtothd_in_sp(1,i)
         jj = odtothd_in_sp(2,i)
         kk = odtothd_in_sp(3,i)
         !
         DO ish = 1, nord1
-          ! HK: since the derivative coeff is odd in parity,
+          ! since the derivative coeff is odd in parity,
           !     we combine neighbors
           v1 = v( thdtood_in_sp( ii+ish, jj,     kk))    - &
               v( thdtood_in_sp( ii-ish, jj,     kk))
@@ -1388,13 +1389,11 @@ CONTAINS
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE exx_energy_cell_derivative (np_in_sp_me, n, tran, &
           vl, ha, hb, hc, rhol, dexx_dhab)
-      !   see the following reference for details
-      !       <todo: EXX paper>
       !
       IMPLICIT NONE
       ! io
       INTEGER , INTENT(IN)  :: np_in_sp_me, n, tran(3)
-      REAL(DP), INTENT(IN)  :: vl(np_in_sp_me), rhol(np_in_sp_me) !HK: rhol pass in side n is good enough
+      REAL(DP), INTENT(IN)  :: vl(np_in_sp_me), rhol(np_in_sp_me) ! rhol pass in side n is good enough
       REAL(DP), INTENT(IN)  :: ha, hb, hc
       REAL(DP), INTENT(OUT) :: dexx_dhab(3,3)
       ! loc
@@ -1417,13 +1416,13 @@ CONTAINS
       !             I_{mn} = \int \dd r \rho(r) r_m v_n (r)
       !
       !$omp parallel do private(i,ii,jj,kk,r_alpha) reduction(+:tmp1,tmp2,tmp3,tmp4,tmp5,tmp6)
-      DO i = 1, n !HK: running inside PS sphere
+      DO i = 1, n ! running inside PS sphere
         !
-        ! Calculate r_m on the fly (HK: need test to see if it is reference indep)
+        ! Calculate r_m on the fly
         !
-        ii = odtothd_in_sp(1,i) - tran(1) !HK: include the l2goff (1d->3d)
-        jj = odtothd_in_sp(2,i) - tran(2) !HK: include the l2goff (1d->3d)
-        kk = odtothd_in_sp(3,i) - tran(3) !HK: include the l2goff (1d->3d)
+        ii = odtothd_in_sp(1,i) - tran(1) ! include the l2goff (1d->3d)
+        jj = odtothd_in_sp(2,i) - tran(2) ! include the l2goff (1d->3d)
+        kk = odtothd_in_sp(3,i) - tran(3) ! include the l2goff (1d->3d)
         !
         r_alpha(1) = DBLE(ii)*ha
         r_alpha(2) = DBLE(jj)*hb

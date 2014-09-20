@@ -52,9 +52,8 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       sizefft=dffts%npp(me)*nr1s*nr2s
     END IF 
     !
-    !write(*,'(10I7)') me, dffts%npp(me), dfftp%npp(me), dffts%tg_npp(me), dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, dffts%nnr, dfftp%nnr, dffts%tg_nnr ! BS
+    !write(*,'(10I7)') me, dffts%npp(me), dfftp%npp(me), dffts%tg_npp(me), dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, dffts%nnr, dfftp%nnr, dffts%tg_nnr
     !
-    ! BS
     IF (nproc_image .LE. nbsp) THEN
       sc_fac = 1
     ELSE
@@ -63,8 +62,8 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
     !
     IF (nproc_image .LE. nbsp) THEN
       !
-      !HK: invfft may encounter overflow when nr3l is not the same throughout all MPI images using psis(sizefft);
-      !    therefore, here we add some buffer as dffts%nnr (which is maxval_images(sizefft))
+      ! invfft may encounter overflow when nr3l is not the same throughout all MPI images using psis(sizefft);
+      ! therefore, here we add some buffer as dffts%nnr (which is maxval_images(sizefft))
       !
       ALLOCATE ( psis(dffts%nnr)    ); psis=0.0_DP
       ALLOCATE ( psis2(sizefft,nbsp)); psis2=0.0_DP
@@ -203,12 +202,15 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         !
       END DO !loop over state i
       !
+      ! the wavefunction is duplicated over number of processors that is integer multiple of bands
+      ! (this part can be improved to distribute wavefunction over any number of processors)
+      !
       DO jj=1,nbsp/nogrp
         DO i=1,sc_fac-1
           ig=jj+(i*nbsp/nogrp)
           !$omp parallel do
           DO ir = 1,dffts%nnr
-            psis2(ir,ig)=psis2(ir,jj) ! BS : ******
+            psis2(ir,ig)=psis2(ir,jj)
           END DO
           !$omp end parallel do 
         END DO

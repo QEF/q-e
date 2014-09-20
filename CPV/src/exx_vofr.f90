@@ -18,9 +18,9 @@ SUBROUTINE getvofr( np_in_sp_me, np_in_sp, &
     !
     IMPLICIT NONE
     !
-    ! HK: test if we are in the case of self interaction
+    ! test if we are in the case of self interaction
     LOGICAL tSelf
-    ! HK: pair distances and extrapolation coefficients
+    ! pair distances and extrapolation coefficients
     REAL(DP) d_cur, d_n, d_o, d_o2, Cex(3)
     INTEGER  np_in_sp_me, np_in_sp
     REAL(DP) hcub
@@ -106,7 +106,7 @@ SUBROUTINE getvofr( np_in_sp_me, np_in_sp, &
         END IF
         !$omp parallel do 
         DO ir = 1, np_in_sp
-          ! HK: Hybrid time and pair-dist extrapolation
+          ! Hybrid time and pair-dist extrapolation
           v_in_sp(ir) = 0.5D0*((2.0D0+Cex(1))*vnew(ir) &
               + (Cex(2)-1.0D0)*vold(ir))
           !
@@ -139,7 +139,7 @@ SUBROUTINE getvofr( np_in_sp_me, np_in_sp, &
         !
         !$omp parallel do 
         DO ir = 1, np_in_sp
-          ! HK: Hybrid time and pair-dist extrapolation
+          ! Hybrid time and pair-dist extrapolation
           v_in_sp(ir) = 0.5D0*((3.D0+Cex(1))*vnew(ir) &
               +(-3.D0+Cex(2))*vold(ir)+(1.D0+Cex(3))*vold2(ir))
           !
@@ -444,12 +444,12 @@ SUBROUTINE geterho(np_in_sp_me, np_in_sp, rho, v_in_sp)
         kpp = thdtood_in_sp( i,     j,     k+ish )
         kpm = thdtood_in_sp( i,     j,     k-ish )
         !
-        IF(ipp .GT. np_in_sp) rho(ip) = rho(ip) - coeke(ish,1,1)*v_in_sp(ipp) !HK: apply finite difference stencil
-        IF(ipm .GT. np_in_sp) rho(ip) = rho(ip) - coeke(ish,1,1)*v_in_sp(ipm) !HK: apply finite difference stencil
-        IF(jpp .GT. np_in_sp) rho(ip) = rho(ip) - coeke(ish,2,2)*v_in_sp(jpp) !HK: apply finite difference stencil
-        IF(jpm .GT. np_in_sp) rho(ip) = rho(ip) - coeke(ish,2,2)*v_in_sp(jpm) !HK: apply finite difference stencil
-        IF(kpp .GT. np_in_sp) rho(ip) = rho(ip) - coeke(ish,3,3)*v_in_sp(kpp) !HK: apply finite difference stencil
-        IF(kpm .GT. np_in_sp) rho(ip) = rho(ip) - coeke(ish,3,3)*v_in_sp(kpm) !HK: apply finite difference stencil
+        IF(ipp .GT. np_in_sp) rho(ip) = rho(ip) - coeke(ish,1,1)*v_in_sp(ipp) ! apply finite difference stencil
+        IF(ipm .GT. np_in_sp) rho(ip) = rho(ip) - coeke(ish,1,1)*v_in_sp(ipm) ! apply finite difference stencil
+        IF(jpp .GT. np_in_sp) rho(ip) = rho(ip) - coeke(ish,2,2)*v_in_sp(jpp) ! apply finite difference stencil
+        IF(jpm .GT. np_in_sp) rho(ip) = rho(ip) - coeke(ish,2,2)*v_in_sp(jpm) ! apply finite difference stencil
+        IF(kpp .GT. np_in_sp) rho(ip) = rho(ip) - coeke(ish,3,3)*v_in_sp(kpp) ! apply finite difference stencil
+        IF(kpm .GT. np_in_sp) rho(ip) = rho(ip) - coeke(ish,3,3)*v_in_sp(kpm) ! apply finite difference stencil
         !
       END DO
       !

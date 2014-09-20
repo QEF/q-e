@@ -190,7 +190,7 @@ SUBROUTINE exx_index_pair(wannierc, overlap_final, nj_final, nj_max, ndim )
     IF (ALLOCATED(overlap))          DEALLOCATE(overlap)
     IF (ALLOCATED(overlap2))         DEALLOCATE(overlap2)
     !
-    ! BS / RAD : for using more processors than number of bands a new overlap matrix, overlap4, is made
+    !  for using more processors than number of bands a new overlap matrix, overlap4, is made
     !  overlap4 contains indices of distributed orbital pairs when number of processors are larger than number of bands (nbsp)  
     !  an example, if orbital 1 is paired with 15 orbitals with following indices 
     !  12   72   94   17  149   87  183  220   11  180   83  223  115  154   92

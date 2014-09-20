@@ -34,10 +34,8 @@ SUBROUTINE hpotcg(np_in_sp_me, n, rho, pot, fullgrid, mvstep)
     ipar(3) = 1
     ipar(4) = lwk
     ipar(5) = 5
-    !ipar(6) = 300
-    ipar(6) = 500 ! BS
-    !     fpar(1) = 1.0D-6
-    fpar(1) = poisson_eps !HK
+    ipar(6) = 500
+    fpar(1) = poisson_eps
     fpar(2) = poisson_eps
     fpar(11) = 0.0D0
     !
@@ -57,7 +55,7 @@ SUBROUTINE hpotcg(np_in_sp_me, n, rho, pot, fullgrid, mvstep)
       CALL stop_clock('lapmv')
       mvstep = mvstep + 1
       fpar(11) = fpar(11) + 74*n
-      !write (iou, *) '# ipar(7) = ', ipar(7),  '   fpar(5) = ', fpar(5), '   cgstep = ', mvstep ! BS 
+      !write (iou, *) '# ipar(7) = ', ipar(7),  '   fpar(5) = ', fpar(5), '   cgstep = ', mvstep
       GOTO 10
       !
     ELSE IF (ipar(1).LE.0) THEN
@@ -85,9 +83,7 @@ SUBROUTINE hpotcg(np_in_sp_me, n, rho, pot, fullgrid, mvstep)
     !     from_scratchwrite (iou, *) ipar(7), DBLE(fpar(6))
     !     write (iou, *) '# ',
     !    +     ipar(7), ' MATVECs   ', DBLE(fpar(11)), ' OPS'
-    ! BS
     !      write (iou, *) '# return code = ', ipar(1),  '   cgstep = ', mvstep
-    ! BS
     !      write (iou, *) 'fpar follows'
     !      write (iou, *) (fpar(i),i=1,7)
     !
@@ -201,7 +197,7 @@ SUBROUTINE lapmvs(np_in_sp_me, n,p,q)
         p3 = p( thdtood_in_sp( ii,     jj,     kk-ish))+ &
             p( thdtood_in_sp( ii,     jj,     kk+ish))
         !
-        q(i) = q(i)+coeke(ish,1,1)*p1+coeke(ish,2,2)*p2+coeke(ish,3,3)*p3 ! HK: stencil on axes
+        q(i) = q(i)+coeke(ish,1,1)*p1+coeke(ish,2,2)*p2+coeke(ish,3,3)*p3 ! stencil on axes
         !
       END DO
       !
@@ -225,7 +221,7 @@ SUBROUTINE lapmvs(np_in_sp_me, n,p,q)
               -p( thdtood_in_sp( ii-ish, jj+ish, kk    )) &
               +p( thdtood_in_sp( ii-ish, jj-ish, kk    ))
           !
-          ! HK: the X stencil for cross derivatives
+          ! the X stencil for cross derivatives
           !
           q(i) = q(i)+coeke(ish,1,2)*p1
           !
@@ -250,7 +246,7 @@ SUBROUTINE lapmvs(np_in_sp_me, n,p,q)
               -p( thdtood_in_sp( ii-ish, jj,     kk+ish)) &
               +p( thdtood_in_sp( ii-ish, jj,     kk-ish))
           !
-          ! HK: the X stencil for cross derivatives
+          ! the X stencil for cross derivatives
           !
           q(i) = q(i)+coeke(ish,1,3)*p2
           !
@@ -275,7 +271,7 @@ SUBROUTINE lapmvs(np_in_sp_me, n,p,q)
               -p( thdtood_in_sp( ii,     jj-ish, kk+ish)) &
               +p( thdtood_in_sp( ii,     jj-ish, kk-ish))
           !
-          ! HK: the X stencil for cross derivatives
+          ! the X stencil for cross derivatives
           !
           q(i) = q(i)+coeke(ish,2,3)*p3
           !

@@ -1,9 +1,14 @@
 
       SUBROUTINE exx_es(nfi, c, cv)
-!===============================================================
-! modified from exact_exchange.f90 written by Zhaofeng and Xifan.
-! Lingzhu Kong
-!===============================================================
+      !===============================================================
+      ! modified from exact_exchange.f90 written by Zhaofeng and Xifan.
+      ! Lingzhu Kong
+      !===============================================================
+      ! Note:  From this code exx_potential is returned after multiplying mixing parameter exxalfa.
+      !        Later the exx_potential is added with GGA potential in forces.f90.
+      !        In the future, full exx_potential should be returned and the mixing parameter exxalfa
+      !        should be multiplied in forces.f90.
+      !===============================================================
 
       USE kinds,                   ONLY  : DP
       USE mp,                      ONLY  : mp_barrier 
