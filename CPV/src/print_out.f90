@@ -26,7 +26,7 @@
                                     BOHR_RADIUS_ANGS, pi
       USE ions_base,         ONLY : na, nsp, nat, ind_bck, atm, amass, cdmi, &
                                     ions_cofmass, ions_displacement, label_srt
-      USE cell_base,         ONLY : s_to_r, get_volume, h, ainv
+      USE cell_base,         ONLY : s_to_r, get_volume, ainv
       USE efield_module,     ONLY : tefield, pberryel, pberryion, &
                                     tefield2, pberryel2, pberryion2
       USE cg_module,         ONLY : tcg, itercg
