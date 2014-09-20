@@ -58,7 +58,7 @@ MODULE exx_module
   !
   ! PUBLIC variables 
   !
-  LOGICAL, PUBLIC                     :: exx_wf  ! if .true., exx calculations using Wannier functions are turned on ..
+  LOGICAL, PUBLIC                     :: exx_wf = .FALSE.           ! if .true., exx calculations using Wannier functions are turned on ..
   !
   INTEGER, PARAMETER, PUBLIC          :: lmax=6  ! maximum angular momentum ... 
   INTEGER, PARAMETER, PUBLIC          :: nord1=3 ! order of expansion for first derivatives  ( points on one side) ...
