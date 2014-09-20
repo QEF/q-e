@@ -315,9 +315,9 @@ electrons_nose.o : ../../Modules/constants.o
 electrons_nose.o : ../../Modules/control_flags.o
 electrons_nose.o : ../../Modules/io_global.o
 electrons_nose.o : ../../Modules/kind.o
+energies.o : ../../Modules/funct.o
 energies.o : ../../Modules/io_global.o
 energies.o : ../../Modules/kind.o
-energies.o : exx_module.o
 ensemble_dft.o : ../../Modules/descriptors.o
 ensemble_dft.o : ../../Modules/io_global.o
 ensemble_dft.o : ../../Modules/kind.o

@@ -10,7 +10,7 @@
         
         USE io_global,  ONLY : stdout
         USE kinds
-        USE exx_module, ONLY : exx_wf,exxalfa
+        USE funct,      ONLY : dft_is_hybrid, get_exx_fraction
         IMPLICIT NONE
         SAVE
 
@@ -171,8 +171,8 @@
 
 !====================================================================================
 !exx_wf related
-             if(exx_wf) then
-                WRITE( stdout,101) -exx*exxalfa, etot
+             if(dft_is_hybrid()) then
+                WRITE( stdout,101) -exx*get_exx_fraction(), etot
              end if
 !====================================================================================
 
