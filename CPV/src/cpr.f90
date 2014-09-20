@@ -354,22 +354,17 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         DEALLOCATE ( usrt_tau0 )
      END IF
      !
-     !======================================================================
-     !
-     ! BS : Additional cycles for the Nose thermostat ... 
-     !
-     CYCLE_NOSE=0
-     !
-     !======================================================================
      IF ( tpre ) THEN
         !
         CALL nlfh( stress, bec_bgrp, dbec, lambda, descla )
         !
         CALL ions_thermal_stress( stress, thstress, pmass, omega, h, vels, nsp, na )
         !
-        IF(MOD(nfi,iprint).EQ.0)  THEN
-          WRITE(stdout,'(5X,"Pressure of Nuclei (GPa)",F20.5,I7)') (thstress(1,1)+thstress(2,2)+thstress(3,3))/3.0_DP * au_gpa, nfi
-          WRITE(stdout,'(5X,"Pressure Total (GPa)",F20.5,I7)') (stress(1,1)+stress(2,2)+stress(3,3))/3.0_DP * au_gpa , nfi
+        IF (tstdout) THEN
+          WRITE(stdout,'(5X,"Pressure of Nuclei (GPa)",F20.5,I7)') &
+              (thstress(1,1)+thstress(2,2)+thstress(3,3))/3.0_DP * au_gpa, nfi
+          WRITE(stdout,'(5X,"Pressure Total (GPa)",F20.5,I7)') &
+              (stress(1,1)+stress(2,2)+stress(3,3))/3.0_DP * au_gpa , nfi
         END IF
         !
      END IF
@@ -400,6 +395,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
      END IF
      !
+     ! BS : Initialization of additional cycles for the Nose thermostat ... 
+     !
+     IF (tnosep) CYCLE_NOSE=0
      !
 444  IF ( tfor ) THEN
         !
@@ -499,7 +497,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( tfor .OR. thdyn ) THEN
         !
-        IF ( CYCLE_NOSE .EQ. 0 ) THEN
+        IF ( .NOT.tnosep .OR. CYCLE_NOSE.EQ.0 ) THEN
           !
           IF ( thdyn ) THEN
              !
@@ -535,44 +533,51 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !                    imposing the orthogonality
      !--------------------------------------------------------------------------
      !
-     IF ( .NOT. tcg ) THEN
-        !
-        IF ( tortho ) THEN
+     ! In case of tnosep = .true., the orthonormality is done only with the most updated 
+     ! atomic coordinates coming out of the CYCLE_NOSE loop
+     !
+     IF ( .NOT.tnosep .OR. CYCLE_NOSE.EQ.2 ) THEN
+       !
+       IF ( .NOT. tcg ) THEN
+         !
+         IF ( tortho ) THEN
            !
            CALL ortho( eigr, cm_bgrp, phi_bgrp, lambda, descla, bigr, iter, ccc, bephi, becp_bgrp )
            !
-        ELSE
+         ELSE
            !
            CALL gram_bgrp( vkb, bec_bgrp, nkb, cm_bgrp, ngw )
            !
            IF ( iverbosity > 2 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
            !
-        END IF
-        !
-        !  correction to displacement of ions
-        !
-        IF ( iverbosity > 1 ) CALL print_lambda( lambda, descla, nbsp, 9, 1.D0 )
-        !
-        IF ( tortho ) THEN
+         END IF
+         !
+         !  correction to displacement of ions
+         !
+         IF ( iverbosity > 1 ) CALL print_lambda( lambda, descla, nbsp, 9, 1.D0 )
+         !
+         IF ( tortho ) THEN
            CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, cm_bgrp, descla )
-        END IF
-        !
-        IF( force_pairing ) THEN
-              c0_bgrp(:,iupdwn(2):nbsp)       =     c0_bgrp(:,1:nupdwn(2))
-              cm_bgrp(:,iupdwn(2):nbsp)       =     cm_bgrp(:,1:nupdwn(2))
-             phi_bgrp(:,iupdwn(2):nbsp)       =    phi_bgrp(:,1:nupdwn(2))
-          lambda(:,:, 2) = lambda(:,:, 1)
-        ENDIF
-        !
-        CALL calbec_bgrp( nvb+1, nsp, eigr, cm_bgrp, bec_bgrp )
-        !
-        IF ( tpre ) THEN
+         END IF
+         !
+         IF( force_pairing ) THEN
+           c0_bgrp(:,iupdwn(2):nbsp)       =     c0_bgrp(:,1:nupdwn(2))
+           cm_bgrp(:,iupdwn(2):nbsp)       =     cm_bgrp(:,1:nupdwn(2))
+           phi_bgrp(:,iupdwn(2):nbsp)       =    phi_bgrp(:,1:nupdwn(2))
+           lambda(:,:, 2) = lambda(:,:, 1)
+         ENDIF
+         !
+         CALL calbec_bgrp( nvb+1, nsp, eigr, cm_bgrp, bec_bgrp )
+         !
+         IF ( tpre ) THEN
            CALL caldbec_bgrp( eigr, cm_bgrp, dbec, descla )
-        END IF
-        !
-        IF ( iverbosity > 1 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
-        !
-     END IF
+         END IF
+         !
+         IF ( iverbosity > 1 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
+         !
+       END IF
+       !
+     END IF !(.NOT.tnosep.OR.CYCLE_NOSE.EQ.2)
      !
      !--------------------------------------------------------------------------
      !                  temperature monitored and controlled
@@ -645,9 +650,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      !=================================================================
      ! BS : Additional cycles for the Nose thermostat ... 
-     !      Nose cycle is turned off currently
-!      CYCLE_NOSE=CYCLE_NOSE+1
-!      IF(tnosep .AND. (CYCLE_NOSE == 1 .OR. CYCLE_NOSE == 2) ) GO TO 444 
+     CYCLE_NOSE=CYCLE_NOSE+1
+     IF(tnosep .AND. (CYCLE_NOSE .LE. 2) ) GO TO 444 
      !=================================================================
      ! 
      ! ... warning:  thdyn and tcp/tcap are not compatible yet!!!

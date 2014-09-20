@@ -175,20 +175,28 @@
       !
       ! set the NH masses for all the chains
       !
-      IF(nhptyp.EQ.2) THEN 
+      IF((nhptyp.EQ.1).OR.(nhptyp.EQ.2)) THEN 
         !===============================================================
-        ! BS : *** The default NH masses are multiplied by atomic masses *** for nhptyp = 2
-        ! BS : when nhpend = 1, default NH mass is multiplied by mean_atomic_mass of the system, amass_mean = total atomic mass / number of atoms  
+        ! for nhptyp = 1 or 2, the default NH masses are multiplied by 
+        ! the atomic masses so that the relative rates of thermostat 
+        ! fluctuations are inversely proportional to the masses of the
+        ! of the particles to which they are coupled (JOURNAL OF PHYSICAL
+        ! CHEMISTRY 97 (49): 12959-12966 DEC 9 1993). Helps in faster
+        ! equipartitioning of thermal energy. When nhpend = 1, the mass
+        ! of the common thermostat is multiplied by mean atomic mass of 
+        ! the system, amass _mean, = total atomic mass / number of atoms  
         !
         DO j=1,(nhpdim-nhpend)
           ! 
-          qnp((j-1)*nhpcl+1)=amass(ityp(j))*qnp_(1)*gkbt2nhp(j)/gkbt  
+          IF(nhptyp.EQ.2) qnp((j-1)*nhpcl+1)=amass(ityp(j))*qnp_(1)*gkbt2nhp(j)/gkbt  
+          IF(nhptyp.EQ.1) qnp((j-1)*nhpcl+1)=amass(j)*qnp_(1)*gkbt2nhp(j)/gkbt  
           !
           IF(nhpcl.GT.1) THEN
             !
             DO i=2,nhpcl
               !
-              qnp((j-1)*nhpcl+i)=amass(ityp(j))*qnp_(i)
+              IF(nhptyp.EQ.2) qnp((j-1)*nhpcl+i)=amass(ityp(j))*qnp_(i)
+              IF(nhptyp.EQ.1) qnp((j-1)*nhpcl+i)=amass(j)*qnp_(i)
               !
             END DO
             !
@@ -383,7 +391,8 @@
         WRITE( stdout,564) (fnosep(i),i=1,nhpcl)
         WRITE( stdout,565) nhptyp, (nhpdim-nhpend), nhpend , nhpbeg, &
              (anum2nhp(j),j=1,nhpdim)
-        IF(nhptyp.EQ.2) WRITE( stdout,'(//,"*** The default NH masses are multiplied by atomic masses ***")') ! BS
+        IF(nhptyp.EQ.1.OR.nhptyp.EQ.2)WRITE( stdout,'(//, &
+          "*** default NH masses are multiplied by atomic masses ***")')
         do j=1,nhpdim
            WRITE( stdout,566) j,(qnp((j-1)*nhpcl+i),i=1,nhpcl)
         enddo
