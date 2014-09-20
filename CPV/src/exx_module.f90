@@ -33,7 +33,7 @@ MODULE exx_module
   USE fft_base,           ONLY: dffts              !FFT derived data type
   USE fft_base,           ONLY: dfftp              !FFT derived data type 
   USE funct,              ONLY: get_exx_fraction   ! function to get exx_fraction value
-  USE funct,              ONLY: stop_exx           ! deactivate exx calculation
+  USE funct,              ONLY: stop_exx, start_exx
   USE input_parameters,   ONLY: ref_alat           !alat of reference cell ..
   USE input_parameters,   ONLY: ref_cell           !.true. if reference cell parameters are in use, .false. otherwise ... 
   USE io_global,          ONLY: stdout             !print/write argument for standard output (to output file)
