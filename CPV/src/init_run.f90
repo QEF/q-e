@@ -81,7 +81,7 @@ SUBROUTINE init_run()
   USE input_parameters,         ONLY : ref_cell
   USE cell_base,                ONLY : ref_tpiba2, init_tpiba2
   USE tsvdw_module,             ONLY : tsvdw_initialize
-  USE exx_module,               ONLY : exx_initialize, exx_wf
+  USE exx_module,               ONLY : exx_initialize
   !
   IMPLICIT NONE
   !
@@ -155,10 +155,8 @@ SUBROUTINE init_run()
   !=======================================================================
   !     Initialization of the exact exchange code (exx_module)
   !=======================================================================
-  !
+  !exx_wf related
   IF ( dft_is_hybrid() .AND. lwf ) THEN
-    !
-    exx_wf = .TRUE.
     !
     CALL exx_initialize()
     !

@@ -714,7 +714,6 @@ move_electrons.o : efield.o
 move_electrons.o : electrons.o
 move_electrons.o : energies.o
 move_electrons.o : ensemble_dft.o
-move_electrons.o : exx_module.o
 move_electrons.o : gvecw.o
 move_electrons.o : ions_positions.o
 move_electrons.o : mainvar.o
@@ -842,6 +841,7 @@ pres_ai_mod.o : ../../Modules/parameters.o
 print_out.o : ../../Modules/cell_base.o
 print_out.o : ../../Modules/constants.o
 print_out.o : ../../Modules/control_flags.o
+print_out.o : ../../Modules/funct.o
 print_out.o : ../../Modules/input_parameters.o
 print_out.o : ../../Modules/io_files.o
 print_out.o : ../../Modules/io_global.o

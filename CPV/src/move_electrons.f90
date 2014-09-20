@@ -44,7 +44,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
   USE gvect,                ONLY : eigts1, eigts2, eigts3 
   USE control_flags,        ONLY : lwfpbe0nscf  ! exx_wf related
   USE wavefunctions_module, ONLY : cv0 ! Lingzhu Kong
-  USE exx_module,           ONLY : exx_wf
+  USE funct,                ONLY : dft_is_hybrid, exx_is_active
   !
   IMPLICIT NONE
   !
@@ -85,17 +85,21 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
      !
 !=================================================================
 !exx_wf related
-     IF ( lwfpbe0nscf ) THEN
+     IF ( dft_is_hybrid().AND.exx_is_active() ) THEN
         !
-        CALL start_clock('exact_exchange')
-        CALL exx_es(nfi, c0_bgrp, cv0)
-        CALL stop_clock('exact_exchange')
-        !
-     ELSEIF( exx_wf ) THEN
-        !
-        CALL start_clock('exact_exchange')
-        CALL exx_gs(nfi, c0_bgrp)
-        CALL stop_clock('exact_exchange')
+        IF ( lwfpbe0nscf ) THEN
+           !
+           CALL start_clock('exact_exchange')
+           CALL exx_es(nfi, c0_bgrp, cv0)
+           CALL stop_clock('exact_exchange')
+           !
+        ELSE
+           !
+           CALL start_clock('exact_exchange')
+           CALL exx_gs(nfi, c0_bgrp)
+           CALL stop_clock('exact_exchange')
+           !
+        END IF
         !
      END IF
 !=================================================================

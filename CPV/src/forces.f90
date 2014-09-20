@@ -31,12 +31,12 @@
       USE gvecw,                  ONLY: ngw, ggp
       USE cell_base,              ONLY: tpiba2
       USE ensemble_dft,           ONLY: tens
-      USE funct,                  ONLY: dft_is_meta
+      USE funct,                  ONLY: dft_is_meta, dft_is_hybrid, exx_is_active
       USE fft_base,               ONLY: dffts
       USE fft_interfaces,         ONLY: fwfft, invfft
       USE mp_global,              ONLY: me_bgrp
       USE control_flags,          ONLY: lwfpbe0nscf
-      USE exx_module,             ONLY: exx_potential, exx_wf
+      USE exx_module,             ONLY: exx_potential
 !
       IMPLICIT NONE
 !
@@ -68,10 +68,10 @@
       !
 !=======================================================================
 !exx_wf related
-      if( exx_wf )then
+      IF(dft_is_hybrid().AND.exx_is_active()) THEN
          allocate( exx_a( dffts%nnr ) ); exx_a=0.0_DP
          allocate( exx_b( dffts%nnr ) ); exx_b=0.0_DP
-      end if
+      END IF
 !=======================================================================
       IF( dffts%have_task_groups ) THEN
          nogrp_ = dffts%nogrp
@@ -130,7 +130,7 @@
          !
 !===============================================================================
 !exx_wf related
-         IF( exx_wf )THEN
+         IF(dft_is_hybrid().AND.exx_is_active()) THEN
             !$omp parallel do private(tmp1,tmp2) 
             DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
                tmp1 = v(ir,iss1) * DBLE( psi(ir) )+exx_potential(ir,i/nogrp_+1)
@@ -153,7 +153,7 @@
          IF( PRESENT( v1 ) ) THEN
 !===============================================================================
 !exx_wf related
-            IF( exx_wf )THEN
+            IF(dft_is_hybrid().AND.exx_is_active()) THEN
                !
                IF ( (mod(n,2).ne.0 ) .and. (i.eq.n) ) THEN
                  !
@@ -195,7 +195,7 @@
          ELSE
 !===============================================================================
 !exx_wf related
-            IF( exx_wf )THEN
+            IF(dft_is_hybrid().AND.exx_is_active()) THEN
                IF ( (mod(n,2).ne.0 ) .and. (i.eq.n) ) THEN
                  !$omp parallel do 
                  DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%npp( me_bgrp + 1 )
@@ -371,7 +371,7 @@
          !
       ENDIF
 !
-      IF (exx_wf ) DEALLOCATE(exx_a, exx_b)
+      IF(dft_is_hybrid().AND.exx_is_active()) DEALLOCATE(exx_a, exx_b)
       DEALLOCATE( psi )
 !
       CALL stop_clock( 'dforce' ) 

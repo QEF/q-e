@@ -119,8 +119,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE fft_base,                 ONLY : dfftp
   USE london_module,            ONLY : energy_london, force_london, stres_london
   USE input_parameters,         ONLY : tcpbo
-  USE funct,                    ONLY : dft_is_hybrid, start_exx
-  USE exx_module,               ONLY : exx_wf
+  USE funct,                    ONLY : dft_is_hybrid, start_exx, exx_is_active
   !
   IMPLICIT NONE
   !
@@ -851,15 +850,16 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      delta_etot = ABS( epre - enow )
      !
+     !exx_wf related
      !The following criteria is used to turn on exact exchange calculation when
      !GGA energy is converged up to 100 times of the input etot convergence thereshold  
      !
-     IF( .NOT.exx_wf.AND.dft_is_hybrid().AND.tconvthrs%active ) THEN
+     IF( .NOT.exx_is_active().AND.dft_is_hybrid().AND.tconvthrs%active ) THEN
        !
        IF(delta_etot.LT.tconvthrs%derho*1.E+2_DP) THEN
          !
          WRITE(stdout,'(/,3X,"Exact Exchange is turned on ...")')
-         exx_wf=.TRUE.
+         ! 
          CALL start_exx()
          !
        END IF
@@ -981,7 +981,7 @@ SUBROUTINE terminate_run()
   USE control_flags,     ONLY : lwf, lwfpbe0nscf
   USE tsvdw_module,      ONLY : tsvdw_finalize
   USE exx_module,        ONLY : exx_finalize
-  USE exx_module,        ONLY : exx_wf
+  USE funct,             ONLY : dft_is_hybrid, exx_is_active
   !
   IMPLICIT NONE
   !
@@ -1017,41 +1017,36 @@ SUBROUTINE terminate_run()
     CALL print_clock( 'ortho_u' )
   END IF
   !==============================================================
-  IF ( exx_wf ) THEN
+  !exx_wf related
+  IF ( dft_is_hybrid().AND.exx_is_active() ) THEN
+    !
     WRITE( stdout, '(/5x,"Called by EXACT_EXCHANGE:")' )
-    CALL print_clock('exact_exchange')
-    
-    CALL print_clock('self_v')           ! calculation
-    CALL print_clock('getpairv')         ! calculation
-    
+    CALL print_clock('exact_exchange')   ! total time for exx
+    CALL print_clock('self_v')           ! calculation self potential
+    CALL print_clock('getpairv')         ! calculation pair potential
     CALL print_clock('exx_gs_setup')     ! calculation
     CALL print_clock('exx_pairs')        ! calculation
-    
     CALL print_clock('r_orbital')        ! communication 
     CALL print_clock('totalenergy')      ! communication 
     CALL print_clock('vl2vg')            ! communication
-    
     CALL print_clock('send_psi')         ! communication
     CALL print_clock('sendv')            ! communication
-
     CALL print_clock('send_psi_barrier') ! communication
     CALL print_clock('send_psi_wait')    ! communication
-    
     !CALL print_clock('sendv_barrier')    ! communication
-                                         
     CALL print_clock('getvofr')
     CALL print_clock('getvofr_qlm')
     CALL print_clock('getvofr_bound')
     CALL print_clock('getvofr_geterho')
     CALL print_clock('getvofr_hpotcg')
-    
     !CALL print_clock('hpotcg')
     !CALL print_clock('getqlm')
     !CALL print_clock('exx_bound')
     !CALL print_clock('lapmv')
-
-    !HK
     CALL print_clock('exx_cell_derv')
+    !
+    CALL exx_finalize() ! deallocate all arrays
+    !
   END IF
   !==============================================================
   IF (thdyn) THEN 

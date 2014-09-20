@@ -12,6 +12,10 @@ MODULE exx_module
   ! Code Version 1.0 (Princeton University, September 2014)
   !
   !----------------------------------------------------------------------------------------------------------------
+  ! For the developers: 
+  ! the related files are exx_cg.f90 exx_es.f90 exx_gs.f90 exx_module.f90 exx_pair.f90 exx_psi.f90 exx_vofr.f90
+  ! to find related changes made in other files look for the string 'exx_wf related'
+  !----------------------------------------------------------------------------------------------------------------
   !
   USE cell_base,          ONLY: h                  !cell at time t (current time step), also used in r = h s
   USE cell_base,          ONLY: ainv               !h^-1 matrix for converting between r and s coordinates via s = h^-1 r)
@@ -57,8 +61,6 @@ MODULE exx_module
   SAVE
   !
   ! PUBLIC variables 
-  !
-  LOGICAL, PUBLIC                     :: exx_wf  ! if .true., exx calculations using Wannier functions are turned on ..
   !
   INTEGER, PARAMETER, PUBLIC          :: lmax=6  ! maximum angular momentum ... 
   INTEGER, PARAMETER, PUBLIC          :: nord1=3 ! order of expansion for first derivatives  ( points on one side) ...
@@ -141,6 +143,8 @@ CONTAINS
   !--------------------------------------------------------------------------------------------------------------
   SUBROUTINE exx_initialize()
       !
+      !exx_initialize is called in init_run
+      !
       IMPLICIT NONE
       !
       INTEGER ::  i, iobtl, gindex_of_iobtl, irank, proc, tmp_iobtl, ndiag_n, ndiag_nx, ndiag_i
@@ -174,12 +178,11 @@ CONTAINS
             &,3X,"To generate Wannier functions, exact exchange will",/ & 
             &,3X,"be turned off in the beginning ...  ")')
         !
-        exx_wf=.FALSE.
-        CALL stop_exx()
+        CALL stop_exx()  ! exx_is_active = .FALSE.
         !
-      ELSE ! exx_initialize() is called under ( dft_is_hybrid() .AND. lwf ) in init_run
+      ELSE 
         !
-        CALL start_exx() ! exx_wf = .TRUE. already set in init_run right before exx_initialize()
+        CALL start_exx() ! exx_is_active = .TRUE.
         !
       END IF
       !

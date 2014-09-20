@@ -45,7 +45,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE mp,               ONLY: mp_sum
       USE mp_global,        ONLY: intra_bgrp_comm
       USE funct,            ONLY: dft_is_meta, dft_is_nonlocc, nlc, get_inlc,&
-                                  dft_is_hybrid
+                                  dft_is_hybrid, exx_is_active
       USE vdW_DF,           ONLY: stress_vdW_DF
       use rVV10,            ONLY: stress_rVV10 
       USE pres_ai_mod,      ONLY: abivol, abisur, v_vol, P_ext, volclu,  &
@@ -96,7 +96,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       REAL(DP)                 :: ht( 3, 3 )
       REAL(DP)                 :: deht( 6 )
       COMPLEX(DP)              :: screen_coul( 1 )
-      REAL(DP)                 :: dexx(3,3) ! stress tensor from exact exchange exx_wf
+      REAL(DP)                 :: dexx(3,3) ! stress tensor from exact exchange exx_wf related
 !
       INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
       INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
@@ -612,7 +612,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       !     Add EXX energy to etot here. exx_wf related
       !
-      IF(dft_is_hybrid()) THEN
+      IF(dft_is_hybrid().AND.exx_is_active()) THEN
         !
         etot = etot - exxalfa*exx 
         !
@@ -661,7 +661,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          ! BS / RAD / HK
          ! Adding the stress tensor from exact exchange here. exx_wf related
          !
-         IF(dft_is_hybrid()) THEN
+         IF(dft_is_hybrid().AND.exx_is_active()) THEN
            !
            IF (isotropic .and. (ibrav.eq.1)) THEN
              !
