@@ -1,4 +1,3 @@
-
 ----------------------------------------------------
 Example calculation of water periodic box using PBE0 xc
 ----------------------------------------------------
@@ -42,13 +41,13 @@ When exx is activated the quantities related to exx are printed, for example
 The nj_max and nj_min refer to the maximum and minimum number of orbital pairs distributed over
 different MPI tasks. nj_avg is the total number of orbital pairs / number of MPI tasks.
 
-The computed exx energy multiplied with the exx_wf_fraction is also printed in the 5th column of the 
-energy printing line in the output. In this case the value at the final step is -31.505174924742 Hartree.
+The computed exx energy multiplied with the exx_fraction is also printed in the 5th column of the 
+energy printing line in the output. In this case the value at the final step is -31.505128874085 Hartree.
 The energies are also printed in the .evp file.
 
 At the end of the output file the time required to compute the exx energy is printed as 
 
-     exact_exchan :    980.40s CPU    583.61s WALL (      55 calls) 
+     exact_exchan :    948.10s CPU    555.95s WALL (      53 calls)
 
 For this calculation we have used 
 - 256 MPI tasks which is two times the number of electronic states of the system.
@@ -60,7 +59,7 @@ An example job submission script is added which is specific to Edison machine in
 Similar parallelization scheme can be used in other architectures.
 
 For more information on the parallelization of exx calculations see the description of 
-exx_wf input parameter in CPV/Doc/INPUT_CP.html or in CPV/Doc/INPUT_CP.def.
+README-Parallelization or the user_guide in CPV/Doc/user_guide.tex.
 
 ----------------------------------------------------
 ===== Molecular dynamics  =====
