@@ -222,6 +222,7 @@ MODULE input
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr_inp, saverho, tdipole_card, rd_for, assume_isolated, wf_collect,  &
         memory, ref_cell, exx_wf, tcpbo
+     USE funct,            ONLY : dft_is_hybrid !HK
      !
      IMPLICIT NONE
      !
@@ -294,6 +295,9 @@ MODULE input
      lwfpbe0nscf = ( TRIM( calculation ) == 'pbe0-nscf'  )
      !
      IF( lwfpbe0 .OR. lwfnscf .OR. lwfpbe0nscf ) exx_wf = .TRUE.
+     !
+     !HK: specification from PP or input_dft
+     IF( dft_is_hybrid .AND. lwf ) exx_wf = .TRUE.
      !
      IF( exx_wf ) THEN 
        lwf     = .TRUE. 
