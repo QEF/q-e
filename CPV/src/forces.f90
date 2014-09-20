@@ -36,7 +36,7 @@
       USE fft_interfaces,         ONLY: fwfft, invfft
       USE mp_global,              ONLY: me_bgrp
       USE control_flags,          ONLY: lwfpbe0nscf
-      USE exx_module,             ONLY: exx_potential,exxalfa
+      USE exx_module,             ONLY: exx_potential
 !
       IMPLICIT NONE
 !
@@ -61,20 +61,13 @@
       COMPLEX(DP) :: fp, fm, ci
       REAL(DP),    ALLOCATABLE :: af( :, : ), aa( :, : )
       COMPLEX(DP), ALLOCATABLE :: psi(:)
-      REAL(DP)    :: tmp1, tmp2                      
-      REAL(DP),    ALLOCATABLE :: exx_a(:), exx_b(:)       
+      REAL(DP)    :: tmp1, tmp2                      ! Lingzhu Kong
+      REAL(DP),    ALLOCATABLE :: exx_a(:), exx_b(:) ! Lingzhu Kong      
       !
       CALL start_clock( 'dforce' ) 
       !
 !=======================================================================
 !exx_wf related
-      !
-      !Note that the mixing parameter exxalfa is multiplied here ...
-      !
-      IF(dft_is_hybrid().AND.exx_is_active()) THEN
-         exx_potential=exx_potential*exxalfa 
-      END IF
-      !
       IF(dft_is_hybrid().AND.exx_is_active()) THEN
          allocate( exx_a( dffts%nnr ) ); exx_a=0.0_DP
          allocate( exx_b( dffts%nnr ) ); exx_b=0.0_DP

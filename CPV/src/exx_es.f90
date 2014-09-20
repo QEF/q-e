@@ -4,8 +4,6 @@
 ! modified from exact_exchange.f90 written by Zhaofeng and Xifan.
 ! Lingzhu Kong
 !===============================================================
-! Note:  mixing parameter exxalfa is multiplied in forces.f90 to add exx_potential with GGA potential
-!=======================================================================================
 
       USE kinds,                   ONLY  : DP
       USE mp,                      ONLY  : mp_barrier 
@@ -20,6 +18,7 @@
       USE exx_module,              ONLY  : odtothd_in_sp,  thdtood_in_sp, thdtood, np_in_sp => np_in_sp_s !HK: to be fixed
       USE exx_module,              ONLY  : my_nbspx, my_nbsp, my_nxyz, rk_of_obtl, lindex_of_obtl, index_my_nbsp
       USE exx_module,              ONLY  : exx_setup_nscf, getnpinsp
+      USE exx_module,              ONLY  : exxalfa
       USE constants,               ONLY  : fpi
       USE printout_base,           ONLY  : printout_base_open, printout_base_unit, printout_base_close
       USE wannier_base,            ONLY  : neigh, dis_cutoff, vnbsp
@@ -274,7 +273,7 @@
                call stop_clock('getexxv')
 
                do ir = 1, nnrtot
-                  vpsil(ir,iobtl) = vpsil(ir,iobtl) - v(ir) * psi_pair(ir,j)
+                  vpsil(ir,iobtl) = vpsil(ir,iobtl) - exxalfa*v(ir) * psi_pair(ir,j)
                end do
 
             END IF
