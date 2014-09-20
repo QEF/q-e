@@ -1,4 +1,8 @@
 
+----------------------------------------------------
+Example calculation of water periodic box using PBE0 xc
+----------------------------------------------------
+
 In this example, we demonstrate how EXX calculations with maximally localized Wannier functions (MLWFs) 
 can be performed for a 32 water periodic simulation box.
 
@@ -9,7 +13,7 @@ Files included
 - example-job-script is an example job submission script. 
 
 ----------------------------------------------------
-===== electron minimization of 32 water periodic box using PBE0 xc =====
+===== electron minimization  =====
 ----------------------------------------------------
 
 Here, we have performed a PBE0 electron minimization from_scratch
@@ -30,7 +34,6 @@ When the MLWFs are generated and sufficiently converged the calculation automati
 switches to PBE0 by turning on exx. See in the output the following message: 
 
    Exact Exchange is turned on ...
-     EXX fraction changed:   0.25
 
 When exx is activated the quantities related to exx are printed, for example
 
@@ -60,7 +63,7 @@ For more information on the parallelization of exx calculations see the descript
 exx_wf input parameter in CPV/Doc/INPUT_CP.html or in CPV/Doc/INPUT_CP.def.
 
 ----------------------------------------------------
-===== Molecular dynamics of 32 water periodic box using PBE0 xc =====
+===== Molecular dynamics  =====
 ----------------------------------------------------
 Using the minimized wavefunction one can start MD in various (NVE or NVT or NPT) ensembles.
 
@@ -74,7 +77,7 @@ For this calculation we have used
 - ndiag is set to 121 which is the largest perfect square number less or equal to the number of electronic states.
 
 ----------------------------------------------------
-===== Questions / Comments =====
+===== Questions / Comments / Feedback =====
 ----------------------------------------------------
 
 You may send your queries to 

@@ -1,0 +1,45 @@
+----------------------------------------------------
+Parallelization scheme:
+----------------------------------------------------
+
+The references for this algorithm are:
+  (i)  Theory: X. Wu , A. Selloni, and R. Car, Phys. Rev. B 79, 085102 (2009).
+  (ii) Implementation: H.-Y. Ko, B. Santra, R. A. DiStasio, L. Kong, and R. Car, arxiv.
+
+The parallelization scheme in this algorithm is based upon the number of electronic states. 
+In the current implementation, there are certain restrictions on the choice of the number of 
+MPI tasks. Also slightly different algorithms are employed depending on whether the number of 
+MPI tasks used in the calculation are greater or less than the number of electronic states.
+We highly recommend users to follow the notes below.
+This algorithm can be used most efficiently if the numbers of electronic states are 
+uniformly distributed over the number of MPI tasks.  For a system having N electronic states,
+the optimum numbers of MPI tasks (nproc) are the following:
+
+  a) In case of nproc <= N, the optimum choices are N/m, where m is any positive integer. 
+     Robustness         : Can be used for odd and even number of electronic states.
+     OpenMP threads     : Can be used.
+     Taskgroup          : Only the default value of the task group (-ntg 1) is allowed.
+
+  b) In case of nproc  > N, the optimum choices are N*m, where m is any positive integer.
+     Robustness         : Can be used for even number of electronic states.
+     Largest value of m : As long as nj_max (see output) is greater than 1, however beyond m=8 
+                          the scaling may become poor. The scaling should be tested by users.
+     OpenMP threads     : Can be used and highly recommended. We have tested number of threads 
+                          starting from 2 up to 64. More threads are also allowed. 
+                          For very large calculations (nproc > 1000 ) efficiency can largely depend 
+                          on the computer architecture and the balance between the MPI tasks and 
+                          the OpenMP threads. User should test for an optimal balance.
+                          Reasonably good scaling can be achieved by using m=6-8 and 
+                          OpenMP threads=2-16.
+     Taskgroup          : Can be greater than 1 and users should choose the largest possible value 
+                          for ntg. To estimate ntg, find the value of nr3x in the output and 
+                          compute nproc/nr3x and take the integer value. We have tested the value of
+                          ntg as 2^m, where m is any positive integer. Other values of ntg should be 
+                          used with caution.
+     Ndiag              : Use -ndiag X option in the execution of cp.x. Without this option jobs 
+                          may crash on certain architectures. Set X to any perfect square number 
+                          which is equal to or less than N.
+
+DEBUG : The EXX calculations always work when number of MPI tasks = number of electronic states. 
+        In case of any uncertainty, the EXX energy computed using different numbers of MPI tasks can be 
+        checked by performing test calculations using number of MPI tasks = number of electronic states. 
