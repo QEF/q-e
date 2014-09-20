@@ -369,4 +369,32 @@ CONTAINS
     RETURN
   END SUBROUTINE printout_wfc
 
+  SUBROUTINE printout_spr( iunit, wfc_spr, nband, nfi, tps, iss )
+    !
+    USE kinds
+    !
+    INTEGER,   INTENT(IN)           :: iunit, nband 
+    REAL(DP), INTENT(IN)           :: wfc_spr(nband)
+    INTEGER,   INTENT(IN)           :: nfi
+    REAL(DP), INTENT(IN)           :: tps
+    INTEGER, INTENT(IN), OPTIONAL  :: iss 
+    !
+    INTEGER :: i, j
+    !
+    IF( PRESENT( iss ) ) THEN
+       WRITE( iunit, 40 ) nfi, tps, iss
+    ELSE
+       WRITE( iunit, 30 ) nfi, tps
+    END IF
+    !
+    DO i = 1, nband 
+       WRITE( iunit, 100 ) wfc_spr(i) 
+    END DO
+    !
+ 30 FORMAT(I7,1X,F11.8)
+ 40 FORMAT(I7,1X,F11.8,1X,"spin=",I5)
+100 FORMAT(E25.14)
+    RETURN
+  END SUBROUTINE printout_spr
+
 END MODULE printout_base

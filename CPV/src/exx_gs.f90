@@ -2,6 +2,8 @@ SUBROUTINE exx_gs(nfi, c)
     !=======================================================================================
     ! Code Version 1.0 (Princeton University, September 2014)
     !=======================================================================================
+    ! Note:  mixing parameter exxalfa is multiplied in forces.f90 to add exx_potential with GGA potential
+    !=======================================================================================
     !
     USE kinds,                   ONLY  : DP
     USE constants,               ONLY  : fpi
@@ -37,7 +39,6 @@ SUBROUTINE exx_gs(nfi, c)
     USE printout_base,           ONLY  : printout_base_unit !printout_base_unit
     USE exx_module,              ONLY  : dexx_dh
     USE exx_module,              ONLY  : exx_energy_cell_derivative
-    USE exx_module,              ONLY  : exxalfa
     !HK
     IMPLICIT NONE
     COMPLEX(DP)   c(ngw, nbspx)        ! wave functions at time t
@@ -557,12 +558,12 @@ SUBROUTINE exx_gs(nfi, c)
               !   
             END IF    
             ! 
-            ! update vpsil in the global grid (exxalfa is 0.25 for PBE0)
+            ! update vpsil in the global grid (note: mixing parameter exxalfa is multiplied in forces.f90 to add with GGA potential)
             !$omp parallel do private(ir) 
             DO ip = 1, np_in_sp_me_p
               CALL l2goff (ip,ir,tran) ! local is centered at box center; global index is offset by tran
-              vpsil(ir,iobtl) = vpsil(ir,iobtl) - exxalfa*vl(ip)*psil_pair_recv(ip,j) ! to remain 
-              psil_pair_recv(ip,j) =            - exxalfa*vl(ip)*psil(ip)             ! to be sent 
+              vpsil(ir,iobtl) = vpsil(ir,iobtl) - vl(ip)*psil_pair_recv(ip,j) ! to remain 
+              psil_pair_recv(ip,j) =            - vl(ip)*psil(ip)             ! to be sent 
             END DO
             !$omp end parallel do
             !
@@ -572,7 +573,7 @@ SUBROUTINE exx_gs(nfi, c)
             !
             IF (.NOT. (isotropic .AND. (ibrav.EQ.1) )) THEN
               !
-              ! HK: EXX cell derivative (note: exxalfa is included in vofrho.f90 when calculate stress)
+              ! HK: EXX cell derivative (note: mixing parameter exxalfa is multiplied in vofrho.f90 to add with GGA stress)
               CALL start_clock('exx_cell_derv')
               !
               CALL exx_energy_cell_derivative(np_in_sp_me_p, np_in_sp_p, tran,&
@@ -662,11 +663,11 @@ SUBROUTINE exx_gs(nfi, c)
             !   
           END IF    
           !
-          ! update vpsil in the global grid (exxalfa is 0.25 for PBE0) 
+          ! update vpsil in the global grid
           !$omp parallel do private(ir) 
           DO ip = 1, np_in_sp_me_s 
             CALL l2goff (ip,ir,tran) ! local is centered at box center; global index is offset by tran
-            vpsil(ir,iobtl) = vpsil(ir,iobtl) - exxalfa*vl(ip)*psil(ip) ! PBE0
+            vpsil(ir,iobtl) = vpsil(ir,iobtl) - vl(ip)*psil(ip)
           END DO
           !$omp end parallel do 
           !
@@ -682,7 +683,7 @@ SUBROUTINE exx_gs(nfi, c)
           !
           IF (.NOT. (isotropic .AND. (ibrav.EQ.1))) THEN
             !
-            ! HK: EXX cell derivative (note: need to include exxalfa later)
+            ! HK: EXX cell derivative (note: mixing parameter exxalfa is multiplied in vofrho.f90 to add with GGA stress)
             CALL start_clock('exx_cell_derv')
             !
             CALL exx_energy_cell_derivative(np_in_sp_me_s, np_in_sp_s, tran,&
