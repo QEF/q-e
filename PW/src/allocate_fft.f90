@@ -17,9 +17,6 @@ SUBROUTINE allocate_fft
   USE gvect,     ONLY : ngm, g, gg, nl, nlm, mill, igtongl
   USE gvecs,   ONLY : ngms, nls, nlsm
   USE fft_base,   ONLY : dfftp, dffts
-! DCC
-!  USE gcoarse,   ONLY : nr1c,nr2c,nr3c,nnr,ngmc, nlc, nlcm
-!  USE ee_mod,    ONLY : do_coarse
   USE ions_base, ONLY : nat
   USE lsda_mod,  ONLY : nspin
   USE spin_orb,  ONLY : domag
@@ -36,10 +33,6 @@ SUBROUTINE allocate_fft
   !
   CALL data_structure( gamma_only )
   !
-! DCC
-!  IF( do_coarse ) CALL data_structure_coarse( gamma_only, nr1,nr2,nr3, ecutwfc )
-  !
-
   IF (dfftp%nnr.lt.ngm) THEN
      WRITE( stdout, '(/,4x," nr1=",i4," nr2= ", i4, " nr3=",i4, &
           &" nrxx = ",i8," ngm=",i8)') dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nnr, ngm
@@ -74,15 +67,10 @@ SUBROUTINE allocate_fft
   ALLOCATE (psic( dfftp%nnr))
   ALLOCATE (vrs( dfftp%nnr, nspin))
 
-! DCC
-!  IF( do_coarse ) THEN
-!     ALLOCATE (nlc( ngmc))
-!     IF (gamma_only) ALLOCATE (nlcm(ngmc))
-!  ENDIF
-
   IF (noncolin) ALLOCATE (psic_nc( dfftp%nnr, npol))
 
-  IF ( ((report.ne.0).or.(i_cons.ne.0)) .and. (noncolin.and.domag) .or. (i_cons.eq.1) .or. nspin==2 ) THEN
+  IF ( ( (report.ne.0).or.(i_cons.ne.0) ) .and. (noncolin.and.domag) &
+                      .or. (i_cons.eq.1) .or. nspin==2 ) THEN
 !
 ! In order to print out local quantities, integrated around the atoms,
 ! we need the following variables
@@ -90,7 +78,7 @@ SUBROUTINE allocate_fft
      ALLOCATE(pointlist(dfftp%nnr))
      ALLOCATE(factlist(dfftp%nnr))
      ALLOCATE(r_loc(nat))
-     CALL make_pointlists
+     CALL make_pointlists ( )
   ENDIF
 
   RETURN

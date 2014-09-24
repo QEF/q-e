@@ -155,7 +155,7 @@ CONTAINS
          !
       ELSEIF ( trim(card) == 'ATOMIC_SPECIES' ) THEN
          !
-         CALL card_atomic_species( input_line, prog )
+         CALL card_atomic_species( input_line )
          !
       ELSEIF ( trim(card) == 'ATOMIC_POSITIONS' ) THEN
          !
@@ -163,7 +163,7 @@ CONTAINS
          !
       ELSEIF ( trim(card) == 'ATOMIC_FORCES' ) THEN
          !
-         CALL card_atomic_forces( input_line, prog )
+         CALL card_atomic_forces( input_line )
          !
       ELSEIF ( trim(card) == 'CONSTRAINTS' ) THEN
          !
@@ -272,12 +272,11 @@ CONTAINS
    !    END manual
    !------------------------------------------------------------------------
    !
-   SUBROUTINE card_atomic_species( input_line, prog )
+   SUBROUTINE card_atomic_species( input_line )
       !
       IMPLICIT NONE
       !
       CHARACTER(len=256) :: input_line
-      CHARACTER(len=2)   :: prog
       INTEGER            :: is, ip, ierr
       CHARACTER(len=4)   :: lb_pos
       CHARACTER(len=256) :: psfile
@@ -570,12 +569,11 @@ CONTAINS
    !    END manual
    !------------------------------------------------------------------------
    !
-   SUBROUTINE card_atomic_forces( input_line, prog )
+   SUBROUTINE card_atomic_forces( input_line )
       !
       IMPLICIT NONE
       !
       CHARACTER(len=256) :: input_line
-      CHARACTER(len=2)   :: prog
       INTEGER            :: ia, k, nfield
       CHARACTER(len=4)   :: lb
       !
