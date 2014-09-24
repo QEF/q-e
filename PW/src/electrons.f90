@@ -688,8 +688,9 @@ SUBROUTINE electrons_scf ( no_printout )
      IF ( lelfield ) etot = etot + en_el
      ! not sure about the HWF functional in the above case
      IF( textfor ) THEN
-        eext =  compute_eextfor()
+        eext = alat*compute_eextfor()
         etot = etot + eext
+        hwf_energy = hwf_energy + eext
      END IF
      IF (llondon) THEN
         etot = etot + elondon
@@ -1046,9 +1047,7 @@ SUBROUTINE electrons_scf ( no_printout )
           IF ( llondon ) WRITE ( stdout , 9074 ) elondon
           IF ( lxdm )    WRITE ( stdout , 9075 ) exdm
           IF ( ts_vdw )  WRITE ( stdout , 9076 ) 2.0d0*EtsvdW
-          !
-          IF ( textfor)             WRITE( stdout, &
-               '(/5x,"Energy of the external Forces = ", F18.8)' ) eext
+          IF ( textfor)  WRITE ( stdout , 9077 ) eext
           IF ( tefield )            WRITE( stdout, 9061 ) etotefield
           IF ( lda_plus_u )         WRITE( stdout, 9065 ) eth
           IF ( ABS (descf) > eps8 ) WRITE( stdout, 9069 ) descf
@@ -1111,6 +1110,7 @@ SUBROUTINE electrons_scf ( no_printout )
 9074 FORMAT( '     Dispersion Correction     =',F17.8,' Ry' )
 9075 FORMAT( '     Dispersion XDM Correction =',F17.8,' Ry' )
 9076 FORMAT( '     Dispersion T-S Correction =',F17.8,' Ry' )
+9077 FORMAT( '     External forces energy    =',F17.8,' Ry' )
 9080 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
             /'     estimated scf accuracy    <',0PF17.8,' Ry' )
