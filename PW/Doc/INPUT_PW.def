@@ -2540,7 +2540,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
     #
 
     card ATOMIC_FORCES { 
-        label { Optional card used to specify external forces acting on atoms }
+        label { Optional card used to specify external forces acting on atoms.
+                BEWARE: if the sum of external forces is not zero, the center
+                of mass of the system will move }
         syntax {
            table atomic_forces {
               rows -start 1 -end nat {
