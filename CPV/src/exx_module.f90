@@ -254,7 +254,7 @@ CONTAINS
       END IF      
       !
       IF((nproc_image.LE.nbsp).AND.(dffts%nogrp.GT.1)) CALL errore('exx_module','EXX calculation error :  &
-          & use taskgroup (-ntg) = 1 when number of MPI tasks is less than the numbar of electronic states',1)
+          & use taskgroup (-ntg) = 1 when number of MPI tasks is less or equal to the numbar of electronic states',1)
       !
       ! to fix this issue. see file exx_psi.f90, exx_gs.f90
       IF(nproc_image.GT.nbsp.AND.MOD(dffts%nnr,dffts%nogrp).NE.0) CALL errore('exx_module','EXX calculation error : &
