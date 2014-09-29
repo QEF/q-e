@@ -58,6 +58,10 @@ SUBROUTINE offset_atom_wfc( Hubbard_only, offset, counter )
                       counter = counter + 2
                  END IF
                  !
+                 IF (hubbard_wfc .AND. hubbard_only) THEN
+                    counter = counter + 2*l + 2
+                 END IF
+                 !
               ELSE
                  !
                  IF (hubbard_wfc) offset(na) = counter
