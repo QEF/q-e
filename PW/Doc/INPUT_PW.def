@@ -2213,6 +2213,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 					which must be either 0 or 1.  Used to keep selected atoms and/or
 					selected components fixed in MD dynamics or
 					structural optimization run.
+                                           
+                                        With crystal_sg atomic coordinates the constraints are copied in all equivalent
+                                        atoms.
 				    }
 				    default { 1 }
 				    

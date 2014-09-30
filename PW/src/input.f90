@@ -1243,6 +1243,9 @@ SUBROUTINE iosys()
   !  have been given.
   !  NB: ibrav is an output of this routine
   !
+  IF (space_group /= 0 .AND. .NOT. lsg ) &
+     CALL errore('input','space_group requires crystal_sg atomic &
+                                                   &coordinates',1 )
   IF (lsg) THEN
      IF (space_group==0) &
         CALL errore('input','The option crystal_sg requires the space group &

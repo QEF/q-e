@@ -2,6 +2,7 @@
 
 #
 # CIF to Quantum Espresso format converter
+#  Date: 30-Set.-2014 -s option added (F. Zadra)
 #  Version 1.0  Date: 15-Mar-2014  First Full conversion
 #  Version 0.5  Date: 02-Oct-2013
 #  Version 0.4  Date: 12 Jun 2013
@@ -20,16 +21,21 @@
 #
 
 version="1.0"
-USAGE="cif2qe.sh Version ${version}\nUsage: cif2qe.sh [-i] File\n    ( -i uses the ibrav of QE. Do not add .cif extension!) -  Requires File.cif\n"
+USAGE="cif2qe.sh Version ${version}\nUsage: cif2qe.sh [-i] [-s] File\n    ( -i uses the ibrav of QE. Do not add .cif extension!) -  Requires File.cif
+    (- s uses CRYSTALL_sg atom position mode)\n"
 if [ $# == 0 -o $# -gt 2 ]; then
  printf "$USAGE"
  exit
 fi
 
 do_ibrav=0
+sg=0
 if [ $# == 2 ]; then
  if [ $1 == "-i" ]; then
   do_ibrav=1
+  shift
+ elif [ $1 == "-s" ]; then
+  sg=2
   shift
  else
   printf "$USAGE"
@@ -42,9 +48,10 @@ if [ ! -f $1.cif ]; then
  exit
 fi
 
-awk -v FILE="$1" -v VERSION="$version" -v do_IBRAV=$do_ibrav '
+awk -v FILE="$1" -v do_IBRAV=$do_ibrav -v SG=$sg '
 
 BEGIN {
+ version = "1.0"
  bohr = 0.52917721092
  nfield=split("H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr " \
               "Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb " \
@@ -91,7 +98,7 @@ BEGIN {
 #
  separation=0.07
  totatom=0
-
+ 
 #
 # International Tables
 #
@@ -190,7 +197,7 @@ function Find_Lattice(a,b,c,alpha,beta,gamma) {
  else  reticolo = "triclinic"
  return reticolo
 }
-
+ 
 function Find_ibrav(spacegroup, reticolo) {
  ibrav=0
  primitive=match(spacegroup, "P")
@@ -238,6 +245,7 @@ function test_Var(test_type) {
 }
 
 # Salta il commento
+ 
 $1 ~ /^\#/||/^\;/ { next }
 
 $1 ~ /loop_/ { loop_switch=1; next }
@@ -343,6 +351,8 @@ END {
  print "! a=" a "  b=" b "  c=" c "  alpha=" alpha "  beta=" beta "  gamma=" gamma
  print "! Found by cif2qe: lattice = " reticolo "    Space group = " Int_Tables[tmptablenumber] "   ibrav = " ibrav
  print "!"
+ if (SG==2)  print "! Using CRYSTALL_sg input position mode"
+ print "!"
  print "! Symmetry found:"
  for (j=0; j<nsymm; j++) {
    printf "! %3i %30s    ", j+1, Array["_symmetry_equiv_pos_as_xyz"][j] 
@@ -365,6 +375,8 @@ END {
  print "                     tprnfor = .true."
  print " /"
  print " &SYSTEM"
+
+ if (SG!=2) {
  if (do_IBRAV == 1 && ibrav != 0) {
    print "                       ibrav = " ibrav
    printf "                   celldm(1) = %19.15f\n", a/bohr
@@ -409,6 +421,17 @@ END {
  } else print "                       ibrav = 0"
  print "                         nat = " totatom
  print "                        ntyp = " ntyp
+ }
+
+if (SG==2) {
+   print "			       space_group = " tmptablenumber
+   print "                            rhombhoedral = .TRUE."
+   print "                                 unique_b=.FALSE."
+   print "                            origin_choice=1"
+   print " 			      nat = " natom
+   print "                          ntyp = " ntyp
+}
+
  print "                     ecutwfc = 50"
  print "                     ecutrho = 400"
  print "                      london = .true."
@@ -431,13 +454,23 @@ END {
  print "\nATOMIC_SPECIES"
  for (i=0; i<ntyp; i++) printf "  %3s  %14.10f  %s.pbe-n-rrkjus_psl.0.1.UPF\n", AtomTyp[i], Atoms[AtomTyp[i]], AtomTyp[i];
 
+if (SG!=2) {
+
  print "\nATOMIC_POSITIONS crystal"
  for (i=0; i<totatom; i++)
    printf "%2s   %19.15f   %19.15f   %19.15f\n", Array["_atom_site_type_symbol"][i % natom], save_X[i], save_Y[i], save_Z[i]
+}
+
+if (SG==2) {
+ print "\nATOMIC_POSITION crystal_sg"
+ for (i=0; i<natom; i++)
+   printf "%2s   %19.15f    %19.15f    %19.15f\n", Array["_atom_site_type_symbol"][i], save_X[i], save_Y[i], save_Z[i]
+}
+
  print "\nK_POINTS automatic"
  print KP_x "  " KP_y "  " KP_z "   0 0 0"
 
- if (do_IBRAV == 0) {
+ if ((do_IBRAV == 0)||(SG==2)) {
    cell_px[0]=a
    cell_py[0]=0.0
    cell_pz[0]=0.0
