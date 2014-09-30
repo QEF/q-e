@@ -863,6 +863,9 @@ MODULE input_parameters
 
         REAL(DP) :: efield_cart(3)
           ! electric field vector in cartesian system of reference
+        
+       CHARACTER(len=80) :: efield_phase='none'
+          ! for Berry's phase electric field selection of string phases
 
        INTEGER  :: epol2 = 3
           ! electric field direction
@@ -920,7 +923,7 @@ MODULE input_parameters
           occupation_constraints, niter_cg_restart,                    &
           niter_cold_restart, lambda_cold, efield_cart, real_space,    &
           tcpbo,emass_emin, emass_cutoff_emin, electron_damping_emin,  &
-          dt_emin
+          dt_emin, efield_phase
 
 !
 !=----------------------------------------------------------------------------=!

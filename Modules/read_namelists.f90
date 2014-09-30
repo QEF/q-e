@@ -366,6 +366,7 @@ MODULE read_namelists_module
        efield_cart(1)=0.d0
        efield_cart(2)=0.d0
        efield_cart(3)=0.d0
+       efield_phase='none'
        !
        occupation_constraints = .false.
        !
@@ -928,6 +929,7 @@ MODULE read_namelists_module
        CALL mp_bcast( epol2,   ionode_id, intra_image_comm )
        CALL mp_bcast( efield2, ionode_id, intra_image_comm )
        CALL mp_bcast( efield_cart,   ionode_id, intra_image_comm )
+       CALL mp_bcast( efield_phase,   ionode_id, intra_image_comm )
        !
        ! ... occupation constraints ...
        !

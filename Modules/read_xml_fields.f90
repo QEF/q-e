@@ -287,6 +287,9 @@ CONTAINS
     CASE ( 'efield_cart' ) 
        CALL iotk_scan_dat_inside( xmlinputunit, efield_cart, ierr = ierr )
        !
+    CASE ( 'efield_phase' )
+       CALL iotk_scan_dat_inside( xmlinputunit, efield_phase, ierr = ierr )
+       !
     CASE ( 'efx0' )
        CALL iotk_scan_dat_inside( xmlinputunit, efx0, ierr = ierr )
        !
