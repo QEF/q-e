@@ -2273,8 +2273,6 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
            }
         }
     }	
-}
-
     #
     # PLOT_WANNIER
     #
@@ -2295,12 +2293,8 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
                                    one index in needed.
                                 }
                             }
-
                        }
                     }
 	}
     }
-
-
-
 }
