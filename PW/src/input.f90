@@ -38,7 +38,8 @@ SUBROUTINE iosys()
                             lorbm_     => lorbm, &
                             efield_    => efield, &
                             nberrycyc_ => nberrycyc, &
-                            efield_cart_ => efield_cart
+                            efield_cart_ => efield_cart, &
+                            phase_control
   !
   USE cell_base,     ONLY : at, alat, omega, bg, &
                             cell_base_init, init_dofree
@@ -201,7 +202,8 @@ SUBROUTINE iosys()
                                gdir, nppstr, wf_collect,lelfield,lorbm,efield, &
                                nberrycyc, lkpoint_dir, efield_cart, lecrpa,    &
                                vdw_table_name, memory, tqmmm,                  &
-                               lcalc_z2, z2_m_threshold, z2_z_threshold
+                               lcalc_z2, z2_m_threshold, z2_z_threshold,       &
+                               efield_phase
 
   !
   ! ... SYSTEM namelist
@@ -1050,6 +1052,17 @@ SUBROUTINE iosys()
   efield_     = efield
   nberrycyc_  = nberrycyc
   efield_cart_ = efield_cart
+  SELECT CASE(efield_phase)
+     CASE( 'none' )
+        phase_control=0
+     CASE ('write')
+        phase_control=1
+     CASE ('read')
+        phase_control=2
+     CASE DEFAULT
+        CALL errore( 'iosys', &
+          'Unknown efield_phase', 1 )
+  END SELECT
   tqr_        = tqr
   real_space_ = real_space
   !

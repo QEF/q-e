@@ -193,7 +193,7 @@ SUBROUTINE forces()
      !
      DO na = 1, nat
         !
-        force(ipol,na) = force(ipol,na) - sumfor / DBLE( nat ) 
+        force(ipol,na) = force(ipol,na) - sumfor / DBLE( nat )  
         !
      END DO
      !

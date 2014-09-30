@@ -24,8 +24,8 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
 
 !  --- Make use of the module with common information ---
    USE kinds,                ONLY : DP
-   USE io_global,            ONLY : stdout
-   USE io_files,             ONLY : iunwfc, nwordwfc
+   USE io_global,            ONLY : stdout, ionode, ionode_id
+   USE io_files,             ONLY : iunwfc, nwordwfc,prefix,tmp_dir
    USE buffers,              ONLY : get_buffer
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
@@ -38,10 +38,10 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    USE klist,                ONLY : nelec, degauss, nks, xk, wk
    USE wvfct,                ONLY : npwx, npw, nbnd, ecutwfc
    USE noncollin_module,     ONLY : noncolin, npol
-   USE bp,                   ONLY : nppstr_3d, mapgm_global, nx_el
+   USE bp,                   ONLY : nppstr_3d, mapgm_global, nx_el,phase_control
    USE fixed_occ
    USE gvect,   ONLY : ig_l2g
-   USE mp,                   ONLY : mp_sum
+   USE mp,                   ONLY : mp_sum, mp_bcast
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp_world,             ONLY : world_comm
    USE becmod,    ONLY : calbec,bec_type,allocate_bec_type,deallocate_bec_type
@@ -145,11 +145,28 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    TYPE(bec_type) :: becp0, becp_bp
    COMPLEX(DP), ALLOCATABLE :: q_dk_so(:,:,:,:)
 
+   COMPLEX(DP), ALLOCATABLE :: zetas(:,:)!string data for phase control
+   INTEGER, EXTERNAL :: find_free_unit
+   INTEGER :: iun_phase
+   INTEGER :: idumm1, idumm2
+   REAL(kind=DP) :: zetam
+   CHARACTER(len=80) :: iun_name
+
 !  -------------------------------------------------------------------------   !
 !                               INITIALIZATIONS
 !  -------------------------------------------------------------------------   !
 
    call start_clock('c_phase_field')
+
+   SELECT CASE( pdir)
+      CASE( 1)
+         iun_name='1'
+      CASE( 2)
+         iun_name='2'
+      CASE( 3)
+         iun_name='3'
+   END SELECT
+
 
    ALLOCATE (psi1(npol*npwx,nbnd))
    ALLOCATE (psi(npol*npwx,nbnd))
@@ -175,6 +192,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
       call allocate_bec_type(nkb,nbnd,becp_bp)
       IF (lspinorb) ALLOCATE(q_dk_so(nhm,nhm,4,ntyp))
    endif
+   
    
    pola=0.d0 !set to 0 electronic polarization   
    zeta_tot=(1.d0,0.d0)
@@ -222,6 +240,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    ALLOCATE(pdl_elec(nstring))
    ALLOCATE(mod_elec(nstring))
 
+   ALLOCATE(zetas(nkort,nspinnc))
 !  -------------------------------------------------------------------------   !
 !           electronic polarization: set values for k-points strings           !
 !  -------------------------------------------------------------------------   !
@@ -319,6 +338,28 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    el_loc=0.d0
    kpoint=0
    zeta=(1.d0,0.d0)
+
+   if(ionode .and. phase_control>0) then
+      iun_phase=find_free_unit()
+      if(phase_control==1) THEN
+         OPEN( iun_phase, file=trim(tmp_dir)//'/'//trim(prefix)//'.phase.data'//trim(iun_name),status='unknown')
+      ELSE
+         OPEN( iun_phase, file=trim(tmp_dir)//'/'//trim(prefix)//'.phase.data'//trim(iun_name),status='OLD')
+         do is=1,nspinnc
+            do kort=1,nkort
+               read(iun_phase,*) idumm1,idumm2,zetas(kort,is)
+               zetam=dble(conjg(zetas(kort,is))*zetas(kort,is))
+               zetam=1.d0/dsqrt(zetam)
+               zetas(kort,is)=conjg(zetam*zetas(kort,is))
+            enddo
+         enddo
+      ENDIF
+   endif
+   if(phase_control==2) then
+      CALL mp_bcast(zetas,   ionode_id, world_comm )
+
+   endif
+
 !  --- Start loop over spin ---
    DO is=1,nspinnc ! Include noncollinear case 
 
@@ -435,7 +476,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
                if(noncolin) aux_2=(0.d0,0.d0)
                DO mb=1,nbnd
                   IF ( .NOT. l_cal(mb) ) THEN
-                     mat(mb,mb)=(1.d0, 0.d0)
+                     mat(mb,mb)=(0.d0, 0.d0)
                   ELSE
                      IF (kpar /= (nppstr_3d(pdir)+1)) THEN
                         DO ig=1,npw1
@@ -479,24 +520,21 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
                ENDDO
                call ZGEMM('C','N',nbnd,nbnd,ngm,(1.d0,0.d0),aux0,ngm,aux,ngm,(0.d0,0.d0),mat,nbnd)
                if(noncolin) call ZGEMM('C','N',nbnd,nbnd,ngm,(1.d0,0.d0),aux0_2,ngm,aux_2,ngm,(1.d0,0.d0),mat,nbnd)
-
-           !    DO nb=1,nbnd
-           !       IF ( l_cal(nb) ) THEN
-           !                aux0=(0.d0,0.d0)
-           !                IF(noncolin) aux0_2=(0.d0,0.d0)
-           !                DO ig=1,npw0
-           !                   aux0(igk0(ig))=psi(ig,nb)
-           !                   IF(noncolin) aux0_2(igk0(ig))=psi(ig+npwx,nb)
-           !                END DO
-! do scalar product
-           !                mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
-           !                IF (noncolin) mat(nb,mb) = mat(nb,mb)+zdotc(ngm,aux0_2,1,aux_2,1)
-           !             END IF                           
-           !          ENDDO
-           !       END IF
-           !    ENDDO
-!
                CALL  mp_sum( mat, intra_bgrp_comm )
+               DO mb=1,nbnd
+                  DO nb=1,nbnd
+                     IF ( .NOT.l_cal(mb) .OR. .NOT.l_cal(nb) ) THEN
+                        IF(mb==nb) THEN
+                           mat(mb,nb)=(1.d0,0.d0)
+                        ELSE
+                           mat(mb,nb)=(0.d0,0.d0)
+                        END IF
+                     ENDIF
+                  ENDDO
+               END DO
+!
+               
+               
 
 !                    --- Calculate the augmented part: ij=KB projectors, ---
 !                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
@@ -556,7 +594,17 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
 
 !        --- End loop over parallel k-points ---
          END DO 
+
+         if(phase_control==1) then
+            if(ionode) write(iun_phase,*) kort,is,zeta_loc
+         else if(phase_control==2) then
+            zeta_loc=zeta_loc*zetas(kort,is)
+         endif
+
          zeta_tot=zeta_tot*(zeta_loc**wstring(istring))
+!uncomment the following line for printing string data
+!         write(stdout,*) 'String :',kort,zeta_loc
+!
          pola=pola+wstring(istring)*aimag(log(zeta_loc))
 
          kpoint=kpoint-1
@@ -577,10 +625,10 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
 !-----calculate polarization
 !-----the factor 2. is because of spin
 !new system for avoiding phases problem
-   pola=aimag(log(zeta_tot))
+!   pola=aimag(log(zeta_tot))
 
    if(nspin==1) pola=pola*2.d0
-   !pola=pola/(gpar(pdir)*tpiba)
+
    call factor_a(pdir,at,dkfact)
 !factor sqrt(2) is the electronic charge in Rydberg units 
    pola=pola*dsqrt(2.d0)/tpiba*dkfact
@@ -608,6 +656,9 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
   fact_pola=dsqrt(2.d0)/tpiba*dkfact
 
 
+  if(ionode .and. phase_control>0) close(iun_phase)
+
+
 !  -------------------------------------------------------------------------   !
 
 !  --- Free memory ---
@@ -624,6 +675,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    DEALLOCATE(aux0)
    DEALLOCATE(psi)
    DEALLOCATE(psi1)
+   DEALLOCATE(zetas)
    IF (ALLOCATED(aux_2)) DEALLOCATE(aux_2)
    IF (ALLOCATED(aux0_2)) DEALLOCATE(aux0_2)
 

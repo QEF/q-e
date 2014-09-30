@@ -714,6 +714,12 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                CALL errore('forces_us_efield','error in zgefa',abs(info))
                CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
 
+               DO nb = 1, nbnd
+                  DO mb = 1, nbnd
+                     if(.not.l_cal(nb).or. .not. l_cal(mb)) mat(mb,nb)=(0.d0,0.d0)
+                  END DO
+               END DO
+
                
 !calculate terms
 

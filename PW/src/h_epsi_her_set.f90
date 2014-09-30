@@ -380,7 +380,7 @@ subroutine h_epsi_her_set(pdir, e_field)
          DO nb=1,nbnd
             DO mb=1,nbnd
                IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
-                  IF ( nb == mb )  mat(nb,mb)=1.d0
+                  IF ( nb == mb )  mat(nb,mb)=0.d0
                ELSE
                   aux=(0.d0,0.d0)
                   aux0=(0.d0,0.d0)
@@ -409,6 +409,9 @@ subroutine h_epsi_her_set(pdir, e_field)
          END DO
          !
          call mp_sum( mat, intra_bgrp_comm )
+         DO nb=1,nbnd
+            IF(.not.l_cal(nb)) mat(nb,nb)=1.d0
+         END DO
          !
          DO nb=1,nbnd
             DO mb=1,nbnd
@@ -457,6 +460,14 @@ subroutine h_epsi_her_set(pdir, e_field)
         ELSE
          mat=matbig(nx_el(ik,pdir),:,:)
         END IF
+
+   
+        DO nb = 1, nbnd
+           DO mb = 1, nbnd
+              if(.not.l_cal(nb).or. .not. l_cal(mb)) mat(mb,nb)=(0.d0,0.d0)
+           END DO
+        END DO
+        
 
 !    mat=S^-1(k,k-1)
          do ig=1,npw0
@@ -647,7 +658,7 @@ subroutine h_epsi_her_set(pdir, e_field)
 
          DO nb=1,nbnd
                IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
-                  IF ( nb == mb )  mat(nb,mb)=1.d0
+                  IF ( nb == mb )  mat(nb,mb)=0.d0
                ELSE
                   if(.not.l_para) then
                      aux=(0.d0,0.d0)
@@ -685,6 +696,10 @@ subroutine h_epsi_her_set(pdir, e_field)
          END DO
          !
          call mp_sum( mat, intra_bgrp_comm )
+         DO nb=1,nbnd
+            IF(.not.l_cal(nb)) mat(nb,nb)=1.d0
+         END DO
+
          !
          DO nb=1,nbnd
             DO mb=1,nbnd
@@ -733,6 +748,13 @@ subroutine h_epsi_her_set(pdir, e_field)
         ELSE
          mat=matbig(nx_el(ik,pdir),:,:)
         END IF
+        
+        DO nb = 1, nbnd
+           DO mb = 1, nbnd
+              if(.not.l_cal(nb).or. .not. l_cal(mb)) mat(mb,nb)=(0.d0,0.d0)
+           END DO
+        END DO
+    
      
 !    mat=S^-1(k,k-1)
         
@@ -917,6 +939,17 @@ subroutine h_epsi_her_set(pdir, e_field)
       !
       call mp_sum( mat, intra_bgrp_comm )
       !
+      DO nb=1,nbnd
+         DO mb=1,nbnd
+            IF(.not.l_cal(nb).or..not.l_cal(mb)) THEN
+               IF(nb==mb) THEN
+                  mat(nb,mb)=(1.d0,0.d0)
+               ELSE
+                  mat(nb,mb)=(0.d0,0.d0)
+               END IF
+            END IF
+         END DO
+      END DO
 
       DO nb=1,nbnd
          DO mb=1,nbnd
@@ -963,6 +996,14 @@ subroutine h_epsi_her_set(pdir, e_field)
    ELSE
       mat=TRANSPOSE(CONJG(matbig(nx_el(ik+1,pdir),:,:)))
    END IF
+!in case of occupations from input set to 0 parts of mat
+
+   DO nb = 1, nbnd
+      DO mb = 1, nbnd
+         if(.not.l_cal(nb).or. .not. l_cal(mb)) mat(mb,nb)=(0.d0,0.d0)
+      END DO
+   END DO
+
 !    mat=S^-1(k,k-1)
       do ig=1,npw0
          gtr(1)=g(1,igk0(ig))
@@ -1150,7 +1191,7 @@ subroutine h_epsi_her_set(pdir, e_field)
 
       DO nb=1,nbnd
             IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
-               IF ( nb == mb )  mat(nb,mb)=1.d0
+               IF ( nb == mb )  mat(nb,mb)=0.d0
             ELSE
                if(.not.l_para) then
                   aux=(0.d0,0.d0)
@@ -1188,6 +1229,10 @@ subroutine h_epsi_her_set(pdir, e_field)
       END DO
       ! 
       call mp_sum( mat, intra_bgrp_comm )
+      DO nb=1,nbnd
+         IF(.not.l_cal(nb)) mat(nb,nb)=1.d0
+      END DO
+
       !
       DO nb=1,nbnd
          DO mb=1,nbnd
@@ -1231,6 +1276,14 @@ subroutine h_epsi_her_set(pdir, e_field)
      ELSE
       mat=TRANSPOSE(CONJG(matbig(nx_el(ik-nppstr_3d(pdir)+1,pdir),:,:)))
    END IF
+
+
+      DO nb = 1, nbnd
+         DO mb = 1, nbnd
+            if(.not.l_cal(nb).or. .not. l_cal(mb)) mat(mb,nb)=(0.d0,0.d0)
+         END DO
+      END DO
+
        
 !    mat=S^-1(k,k-1)
       if(.not.l_para) then

@@ -20,7 +20,7 @@ MODULE bp
            fact_hepsi, bec_evcel, mapgp_global, mapgm_global, nppstr_3d, &
            ion_pol, el_pol, fc_pol, l_el_pol_old, el_pol_old, el_pol_acc, &
            nx_el, l3dstring, efield, efield_cart, efield_cry, transform_el,&
-           mapg_owner
+           mapg_owner, phase_control
   PUBLIC :: lcalc_z2, z2_m_threshold, z2_z_threshold
   PUBLIC :: allocate_bp_efield, deallocate_bp_efield, bp_global_map
   PUBLIC :: pdl_tot
@@ -69,6 +69,7 @@ MODULE bp
   REAL(DP) :: transform_el(3,3)! transformation matrix from cartesian coordinates to normed reciprocal space
   INTEGER, ALLOCATABLE :: mapg_owner(:,:)
   REAL(DP) :: pdl_tot         ! the total phase calculated from bp_c_phase
+  INTEGER  :: phase_control! 0 no control, 1 write, 2 read
 !
 CONTAINS
  
