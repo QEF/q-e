@@ -611,6 +611,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 run, or restarting from an interrupted run.
 		If you fix the magnetization with "tot_magnetization",
 		you should not specify starting_magnetization.
+                In the spin-orbit case starting with zero 
+                starting_magnetization on all atoms imposes time reversal
+                symmetry. The magnetization is never calculated and 
+                kept zero (the internal variable domag is .FALSE.).
 	    }
 	}
 
