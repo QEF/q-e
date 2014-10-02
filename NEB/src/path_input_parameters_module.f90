@@ -58,13 +58,6 @@ MODULE path_input_parameters_module
 !
 ! ... variables added for "path" calculations
 !
-
-!
-! ... these are two auxiliary variables used in read_cards to
-! ... distinguish among neb and smd done in the full phase-space
-! ... or in the coarse-grained phase-space
-!
-  INTEGER :: n_inp_images
   INTEGER :: nat = 1
   REAL(DP) :: alat
   !
@@ -72,9 +65,6 @@ MODULE path_input_parameters_module
   ! specify how to start/restart the simulation
   CHARACTER(len=80) :: restart_mode_allowed(3)
   DATA restart_mode_allowed / 'from_scratch', 'restart', 'reset_counters' /
-  !
-  LOGICAL :: full_phs_path_flag = .false.
-  LOGICAL :: cg_phs_path_flag   = .false.
   !
   INTEGER :: nstep_path
   !
