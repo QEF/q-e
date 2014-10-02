@@ -1,9 +1,3 @@
-berry_phase.o : ../../Modules/io_global.o
-berry_phase.o : ../../Modules/mp.o
-berry_phase.o : ../../Modules/mp_global.o
-berry_phase.o : ../../Modules/mp_world.o
-berry_phase.o : ../../Modules/recvec.o
-berry_phase.o : ../../Modules/stick_base.o
 berryion.o : ../../Modules/cell_base.o
 berryion.o : ../../Modules/constants.o
 berryion.o : ../../Modules/ions_base.o
@@ -267,7 +261,6 @@ dealloc.o : ldaU_cp.o
 dealloc.o : ldaUpen.o
 dealloc.o : mainvar.o
 dealloc.o : modules.o
-dealloc.o : polarization.o
 dealloc.o : pseudopot.o
 dealloc.o : smallbox_gvec.o
 dealloc.o : wannier.o
@@ -514,7 +507,6 @@ init.o : ../../Modules/recvec.o
 init.o : ../../Modules/recvec_subs.o
 init.o : ../../Modules/stick_set.o
 init.o : ../../Modules/uspp.o
-init.o : berry_phase.o
 init.o : cp_interfaces.o
 init.o : cp_restart.o
 init.o : electrons.o
@@ -813,15 +805,6 @@ plugin_initialization.o : ../../Modules/io_files.o
 plugin_initialization.o : ../../Modules/io_global.o
 plugin_initialization.o : ../../Modules/kind.o
 plugin_initialization.o : ../../Modules/plugin_flags.o
-polarization.o : ../../Modules/cell_base.o
-polarization.o : ../../Modules/constants.o
-polarization.o : ../../Modules/io_global.o
-polarization.o : ../../Modules/ions_base.o
-polarization.o : ../../Modules/kind.o
-polarization.o : ../../Modules/mp.o
-polarization.o : ../../Modules/mp_global.o
-polarization.o : ../../Modules/mp_wave.o
-polarization.o : berry_phase.o
 potentials.o : ../../Modules/cell_base.o
 potentials.o : ../../Modules/constants.o
 potentials.o : ../../Modules/control_flags.o
@@ -855,7 +838,6 @@ print_out.o : electrons.o
 print_out.o : energies.o
 print_out.o : exx_module.o
 print_out.o : mainvar.o
-print_out.o : polarization.o
 print_out.o : pres_ai_mod.o
 print_out.o : printout_base.o
 print_out.o : sic.o

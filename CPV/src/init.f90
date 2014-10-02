@@ -38,7 +38,6 @@
       USE fft_scalar,           ONLY: cft_b_omp_init
       USE stick_set,            ONLY: pstickset
       USE control_flags,        ONLY: gamma_only, smallmem
-      USE berry_phase,          ONLY: berry_setup
       USE electrons_module,     ONLY: bmeshset
       USE electrons_base,       ONLY: distribute_bands
       USE problem_size,         ONLY: cpsizes
@@ -181,9 +180,6 @@
       CALL gvecw_init ( ngw_ , intra_bgrp_comm )
       CALL g2kin_init ( gg, tpiba2 )
       ! 
-      !  Allocate index required to compute polarizability - currently disabled
-      ! IF( tdipole ) CALL berry_setup( ngw_ , mill_g )
-      !
       !     global arrays are no more needed
       !
       if( allocated( mill_g ) ) deallocate( mill_g )
