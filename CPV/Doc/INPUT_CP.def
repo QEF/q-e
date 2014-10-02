@@ -1107,6 +1107,21 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
             }
         }
 
+        dimension ion_radius -start 1 -end ntyp -type REAL {
+            default { 0.5 a.u. for all species }
+            info {
+                ion_radius(i): pseudo-atomic radius of the i-th atomic species
+                used in Ewald summation. Typical values: between 0.5 and 2.
+                Results should NOT depend upon such parameters if their values
+                are properly chosen. See also "iesr".
+            }
+        var iesr -type INTEGER {
+            default { 1 }
+            info {
+                The real-space contribution to the Ewald summation is performed
+                on iesr*iesr*iesr cells. Typically iesr=1 is sufficient to have
+                converged results. 
+        }
 
         var ion_nstepe -type INTEGER {
             default { 1 }
@@ -1902,7 +1917,7 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 
 	flag atompos_unit -use optional {
 	    enum { alat | bohr | angstrom | crystal }
-	    default { bohr (DEPRECATED) }
+	    default { (DEPRECATED) bohr }
 	    info {
 	        alat    : atomic positions are in cartesian coordinates,
                           in units of the lattice parameter (either

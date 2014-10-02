@@ -181,7 +181,7 @@ MODULE input
                                forc_maxiter_  => forc_maxiter
      USE control_flags, ONLY : force_pairing_ => force_pairing
      USE control_flags, ONLY : remove_rigid_rot_ => remove_rigid_rot
-     USE control_flags, ONLY : iesr
+     USE control_flags, ONLY : iesr_ => iesr
      USE control_flags, ONLY : textfor
      USE control_flags, ONLY : do_makov_payne, twfcollect
      USE control_flags, ONLY : lwf, lwfnscf, lwfpbe0nscf
@@ -219,7 +219,7 @@ MODULE input
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
         orthogonalization, electron_velocities, nat, if_pos,                   &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
-        iesr_inp, saverho, rd_for, assume_isolated, wf_collect,                &
+        iesr, saverho, rd_for, assume_isolated, wf_collect,                    &
         memory, ref_cell, tcpbo
      USE funct,              ONLY : dft_is_hybrid
      !
@@ -242,7 +242,7 @@ MODULE input
      etot_conv_thr_ = etot_conv_thr
      forc_conv_thr_ = forc_conv_thr
      ekin_maxiter_  = electron_maxstep
-     iesr           = iesr_inp
+     iesr_          = iesr
      remove_rigid_rot_ = remove_rigid_rot
      !
      ! ... define memory- and disk-related internal switches

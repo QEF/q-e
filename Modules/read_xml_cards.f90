@@ -132,7 +132,7 @@ CONTAINS
        !
     CASE ('ESR')
        ! ... not yet implemented in xml reading
-       iesr_inp = 1
+       iesr = 1
        !
     CASE ('ION_VELOCITIES')
        ! ... not yet implemented in xml reading

@@ -939,8 +939,10 @@ MODULE input_parameters
                                     'langevin-smc' /
 
         REAL(DP) :: ion_radius(nsx) = 0.5_DP
-          ! pseudo-atomic radius of the i-th atomic species
-          ! (for Ewald summation), values between 0.5 and 2.0 are usually used.
+          ! pseudo-atomic radius of the i-th atomic species (CP only)
+          ! for Ewald summation: typical values range between 0.5 and 2.0 
+       INTEGER :: iesr = 1
+          ! perform Ewald summation on iesr*iesr*iesr cells - CP only
 
         REAL(DP) :: ion_damping = 0.2_DP
           ! meaningful only if " ion_dynamics = 'damp' "
@@ -1077,7 +1079,7 @@ MODULE input_parameters
         REAL(DP)  :: w_1 = 0.5E-1_DP
         REAL(DP)  :: w_2 = 0.5_DP
         !
-        NAMELIST / ions / ion_dynamics, ion_radius, ion_damping,  &
+        NAMELIST / ions / ion_dynamics, iesr, ion_radius, ion_damping,         &
                           ion_positions, ion_velocities, ion_temperature,      &
                           tempw, fnosep, nhgrp, fnhscl, nhpcl, nhptyp, ndega, tranp,   &
                           amprp, greasp, tolp, ion_nstepe, ion_maxstep,        &
@@ -1309,7 +1311,6 @@ MODULE input_parameters
         LOGICAL   :: tcell = .false.
         LOGICAL   :: tionvel = .false.
         LOGICAL   :: tconstr = .false.
-        LOGICAL   :: tesr = .false.
         LOGICAL   :: tksout = .false.
         LOGICAL   :: ttemplate = .false.
         LOGICAL   :: twannier = .false.
@@ -1362,11 +1363,6 @@ MODULE input_parameters
 !
         REAL(DP), ALLOCATABLE :: f_inp(:,:)
         LOGICAL   :: tf_inp = .false.
-
-!
-!    ESR
-!
-       INTEGER :: iesr_inp = 1
 
 !
 !    CELL_PARAMETERS
@@ -1445,7 +1441,6 @@ SUBROUTINE reset_input_checks()
   tocc = .false.
   tksout = .false.
   tionvel = .false.
-  tesr = .false.
   tcell = .false.
   !
   END SUBROUTINE reset_input_checks

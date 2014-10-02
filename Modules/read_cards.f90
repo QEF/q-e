@@ -73,10 +73,6 @@ CONTAINS
       !
       atom_mass = 0.0_DP
       !
-      ! ... dimension of the real space Ewald summation
-      !
-      iesr_inp = 1
-      !
       ! ... k-points
       !
       k_points = 'gamma'
@@ -171,9 +167,7 @@ CONTAINS
          !
       ELSEIF ( trim(card) == 'ESR' ) THEN
          !
-         CALL card_esr( input_line )
-         IF ( prog == 'PW' .and. ionode ) &
-            WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
+         CALL errore('read_cards','card ESR no longer existing',1)
          !
       ELSEIF ( trim(card) == 'K_POINTS' ) THEN
          !
@@ -974,55 +968,6 @@ CONTAINS
       RETURN
       !
    END SUBROUTINE card_occupations
-   !
-   !------------------------------------------------------------------------
-   !    BEGIN manual
-   !----------------------------------------------------------------------
-   !
-   ! IESR
-   !
-   !   use the specified number of neighbour cells for Ewald summations
-   !
-   ! Syntax:
-   !
-   !   ESR
-   !    iesr
-   !
-   ! Example:
-   !
-   !   ESR
-   !    3
-   !
-   ! Where:
-   !
-   !      iesr (integer)  determines the number of neighbour cells to be
-   !                      considered:
-   !                        iesr = 1 : nearest-neighbour cells (default)
-   !                        iesr = 2 : next-to-nearest-neighbour cells
-   !                        and so on
-   !
-   !----------------------------------------------------------------------
-   !    END manual
-   !------------------------------------------------------------------------
-   !
-   SUBROUTINE card_esr( input_line )
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(len=256) :: input_line
-      !
-      IF ( tesr ) THEN
-         CALL errore( ' card_esr ', ' two occurrences', 2 )
-      ENDIF
-      CALL read_line( input_line )
-      READ(input_line,*) iesr_inp
-      !
-      tesr = .true.
-      !
-      RETURN
-      !
-   END SUBROUTINE card_esr
-   !
    !
    !------------------------------------------------------------------------
    !    BEGIN manual
