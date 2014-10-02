@@ -8,7 +8,6 @@ IFLAGS=
 
 FOBJS = \
 berryion.o \
-berry_phase.o \
 bforceion.o \
 cell_nose.o \
 cg.o \
@@ -70,7 +69,6 @@ ortho.o \
 phasefactor.o \
 plugin_initialization.o \
 plugin_ext_forces.o \
-polarization.o \
 potentials.o \
 pres_ai_mod.o \
 print_out.o \
