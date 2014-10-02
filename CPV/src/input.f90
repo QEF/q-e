@@ -132,7 +132,6 @@ MODULE input
                                tprnsfac_   => tprnsfac, &
                                ampre_      => ampre, &
                                trane_      => trane, &
-                               tdipole_    => tdipole, &
                                nomore_     => nomore, &
                                memchk_     => memchk, &
                                tpre_       => tpre, &
@@ -220,7 +219,7 @@ MODULE input
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
         orthogonalization, electron_velocities, nat, if_pos,                   &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
-        iesr_inp, saverho, tdipole_card, rd_for, assume_isolated, wf_collect,  &
+        iesr_inp, saverho, rd_for, assume_isolated, wf_collect,                &
         memory, ref_cell, tcpbo
      USE funct,              ONLY : dft_is_hybrid
      !
@@ -348,8 +347,6 @@ MODULE input
                       'unknown verbosity ' // TRIM( verbosity ), 1 )
          !
      END SELECT
-     !
-     tdipole_  = tdipole_card
      !
      ! ... set the restart flags
      !

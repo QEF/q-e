@@ -37,7 +37,7 @@
       USE xml_io_base,       ONLY : save_print_counter
       USE cp_main_variables, ONLY : nprint_nfi, iprint_stdout
       USE io_files,          ONLY : tmp_dir
-      USE control_flags,     ONLY : ndw, tdipole
+      USE control_flags,     ONLY : ndw
       USE polarization,      ONLY : print_dipole
       USE io_global,         ONLY : ionode, ionode_id, stdout
       USE control_flags,     ONLY : lwf, lwfpbe0nscf  ! exx_wf related
@@ -128,13 +128,12 @@
             CALL print_eigenvalues( 31, tfile, tstdout, nfi, tps )
             !
             IF(tstdout) WRITE( stdout, * )
-            !
             IF( kilobytes > 0 .AND. tstdout ) &
                WRITE( stdout, fmt="(3X,'Allocated memory (kb) = ', I9 )" ) kilobytes
-            !
             IF(tstdout) WRITE( stdout, * )
-            !
-            IF( tdipole ) CALL print_dipole( 32, tfile, nfi, tps )
+            !  
+            ! Polarization calculation currently disabled
+            ! IF( tdipole ) CALL print_dipole( 32, tfile, nfi, tps )
             !
             IF( tstdout ) CALL printout_cell( stdout, h )
             !

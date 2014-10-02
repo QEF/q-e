@@ -1307,7 +1307,6 @@ MODULE input_parameters
         LOGICAL   :: tforces = .false.
         LOGICAL   :: tocc = .false.
         LOGICAL   :: tcell = .false.
-        LOGICAL   :: tdipole = .false.
         LOGICAL   :: tionvel = .false.
         LOGICAL   :: tconstr = .false.
         LOGICAL   :: tesr = .false.
@@ -1363,11 +1362,6 @@ MODULE input_parameters
 !
         REAL(DP), ALLOCATABLE :: f_inp(:,:)
         LOGICAL   :: tf_inp = .false.
-
-!
-!    DIPOLE
-!
-        LOGICAL :: tdipole_card = .false.
 
 !
 !    ESR
@@ -1452,7 +1446,6 @@ SUBROUTINE reset_input_checks()
   tksout = .false.
   tionvel = .false.
   tesr = .false.
-  tdipole = .false.
   tcell = .false.
   !
   END SUBROUTINE reset_input_checks

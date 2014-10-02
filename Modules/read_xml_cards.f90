@@ -130,9 +130,6 @@ CONTAINS
        CALL allocate_input_iprnks( 0, nspin )
        nprnks  = 0
        !
-    CASE ('DIPOLE')
-       ! ... not yet implemented in xml reading
-       tdipole_card = .FALSE.
     CASE ('ESR')
        ! ... not yet implemented in xml reading
        iesr_inp = 1

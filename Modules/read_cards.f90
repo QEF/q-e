@@ -64,10 +64,6 @@ CONTAINS
       ref_cell = .false.
       rd_ref_ht  = 0.0_DP
       !
-      ! ... dipole
-      !
-      tdipole_card = .false.
-      !
       ! ... Constraints
       !
       nconstr_inp    = 0
@@ -171,9 +167,7 @@ CONTAINS
          !
       ELSEIF ( trim(card) == 'DIPOLE' ) THEN
          !
-         CALL card_dipole( input_line )
-         IF ( prog == 'PW' .and. ionode ) &
-            WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
+         CALL errore('read_cards','card DIPOLE no longer existing',1)
          !
       ELSEIF ( trim(card) == 'ESR' ) THEN
          !
@@ -980,45 +974,6 @@ CONTAINS
       RETURN
       !
    END SUBROUTINE card_occupations
-   !
-   !------------------------------------------------------------------------
-   !    BEGIN manual
-   !----------------------------------------------------------------------
-   !
-   ! DIPOLE
-   !
-   !   calculate polarizability
-   !
-   ! Syntax:
-   !
-   !   DIPOLE
-   !
-   ! Where:
-   !
-   !    no parameters
-   !
-   !----------------------------------------------------------------------
-   !    END manual
-   !------------------------------------------------------------------------
-   !
-   SUBROUTINE card_dipole( input_line )
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(len=256) :: input_line
-      !
-      !
-      IF ( tdipole ) THEN
-         CALL errore( ' card_dipole ', ' two occurrences', 2 )
-      ENDIF
-      !
-      tdipole_card = .true.
-      tdipole = .true.
-      !
-      RETURN
-      !
-   END SUBROUTINE card_dipole
-   !
    !
    !------------------------------------------------------------------------
    !    BEGIN manual
