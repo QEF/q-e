@@ -94,10 +94,10 @@ CONTAINS
   !
   ! set the energy grid
   !
-  alpha = (wmax - wmin) / REAL(nw, DP)
+  alpha = (wmax - wmin) / REAL(nw-1, KIND=DP)
   !
   DO iw = 1, nw
-      wgrid(iw) = wmin + iw * alpha
+      wgrid(iw) = wmin + (iw-1) * alpha
   ENDDO
   !
 END SUBROUTINE grid_build
