@@ -269,7 +269,6 @@ dealloc.o : mainvar.o
 dealloc.o : modules.o
 dealloc.o : polarization.o
 dealloc.o : pseudopot.o
-dealloc.o : sic.o
 dealloc.o : smallbox_gvec.o
 dealloc.o : wannier.o
 dforceb.o : ../../Modules/cell_base.o
@@ -362,7 +361,6 @@ exx_es.o : wannier.o
 exx_es.o : wannier_base.o
 exx_gs.o : ../../Modules/cell_base.o
 exx_gs.o : ../../Modules/constants.o
-exx_gs.o : ../../Modules/control_flags.o
 exx_gs.o : ../../Modules/electrons_base.o
 exx_gs.o : ../../Modules/fft_base.o
 exx_gs.o : ../../Modules/io_global.o
@@ -703,6 +701,7 @@ modules.o : ../../Modules/uspp.o
 move_electrons.o : ../../Modules/cell_base.o
 move_electrons.o : ../../Modules/control_flags.o
 move_electrons.o : ../../Modules/electrons_base.o
+move_electrons.o : ../../Modules/funct.o
 move_electrons.o : ../../Modules/ions_base.o
 move_electrons.o : ../../Modules/kind.o
 move_electrons.o : ../../Modules/recvec.o
