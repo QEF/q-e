@@ -424,11 +424,6 @@ MODULE read_namelists_module
        !
        CHARACTER(LEN=2) :: prog   ! ... specify the calling program
        !
-       !
-       ! ... ( 'full' | 'coarse-grained' )
-       !
-       phase_space = 'full'
-       !
        ! ... ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' | 'bfgs' | 'beeman' )
        !
        ion_dynamics = 'none'
@@ -969,7 +964,6 @@ MODULE read_namelists_module
        !
        IMPLICIT NONE
        !
-       CALL mp_bcast( phase_space,       ionode_id, intra_image_comm )
        CALL mp_bcast( ion_dynamics,      ionode_id, intra_image_comm )
        CALL mp_bcast( ion_radius,        ionode_id, intra_image_comm )
        CALL mp_bcast( ion_damping,       ionode_id, intra_image_comm )
@@ -1444,13 +1438,6 @@ MODULE read_namelists_module
        INTEGER           :: i
        LOGICAL           :: allowed = .FALSE.
        !
-       !
-       DO i = 1, SIZE( phase_space_allowed )
-          IF( TRIM( phase_space ) == phase_space_allowed(i) ) allowed = .TRUE.
-       END DO
-       IF ( .NOT. allowed ) &
-          CALL errore( sub_name, ' phase_space '''// &
-                       & TRIM( phase_space )// ''' not allowed ', 1 )
        !
        allowed = .FALSE.
        DO i = 1, SIZE(ion_dynamics_allowed)

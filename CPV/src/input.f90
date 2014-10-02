@@ -218,7 +218,7 @@ MODULE input
         ortho_eps, ortho_max, ntyp, tolp, calculation, disk_io, dt,            &
         tcg, ndr, ndw, iprint, isave, tstress, k_points, tprnfor, verbosity,   &
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
-        orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
+        orthogonalization, electron_velocities, nat, if_pos,                   &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr_inp, saverho, tdipole_card, rd_for, assume_isolated, wf_collect,  &
         memory, ref_cell, tcpbo

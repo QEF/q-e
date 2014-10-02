@@ -930,17 +930,6 @@ MODULE input_parameters
 !  IONS Namelist Input Parameters
 !=----------------------------------------------------------------------------=!
 !
-        CHARACTER(len=80) :: phase_space = 'full'
-          ! phase_space = 'full' | 'coarse-grained'
-          ! 'full'             the full phase-space is used for the ionic
-          !                    dynamics
-          ! 'coarse-grained'   a coarse-grained phase-space, defined by a set
-          !                    of constraints, is used for the ionic dynamics
-
-!        CHARACTER(len=80) :: phase_space_allowed(2)
-!        DATA phase_space_allowed / 'full', 'coarse-grained' /
-        CHARACTER(len=80) :: phase_space_allowed(1)
-        DATA phase_space_allowed / 'full' /
 
         CHARACTER(len=80) :: ion_dynamics = 'none'
           ! set how ions should be moved
@@ -1088,7 +1077,7 @@ MODULE input_parameters
         REAL(DP)  :: w_1 = 0.5E-1_DP
         REAL(DP)  :: w_2 = 0.5_DP
         !
-        NAMELIST / ions / phase_space, ion_dynamics, ion_radius, ion_damping,  &
+        NAMELIST / ions / ion_dynamics, ion_radius, ion_damping,  &
                           ion_positions, ion_velocities, ion_temperature,      &
                           tempw, fnosep, nhgrp, fnhscl, nhpcl, nhptyp, ndega, tranp,   &
                           amprp, greasp, tolp, ion_nstepe, ion_maxstep,        &

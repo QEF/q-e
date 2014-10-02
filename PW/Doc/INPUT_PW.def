@@ -1727,18 +1727,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    }
 	}
  
-	var phase_space -type CHARACTER { 
-	    default { 'full' }
-	    info {
-		'full' :           the full phase-space is used for the ionic
-                                   dynamics.
-
-		'coarse-grained' : a coarse-grained phase-space, defined by a set
-                                   of constraints, is used for the ionic dynamics
-                                   (used for calculation of free-energy barriers)
-	    }
-	}
-
 	var pot_extrapolation -type CHARACTER { 
 	    default { 'atomic' }
 	    info {

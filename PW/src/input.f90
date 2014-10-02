@@ -248,7 +248,7 @@ SUBROUTINE iosys()
   !
   ! ... IONS namelist
   !
-  USE input_parameters, ONLY : phase_space, ion_dynamics, ion_positions, tolp, &
+  USE input_parameters, ONLY : ion_dynamics, ion_positions, tolp, &
                                tempw, delta_t, nraise, ion_temperature,        &
                                refold_pos, remove_rigid_rot, upscale,          &
                                pot_extrapolation,  wfc_extrapolation,          &
