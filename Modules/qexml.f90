@@ -67,9 +67,7 @@ MODULE qexml_module
   PUBLIC :: qexml_write_header, qexml_write_control, qexml_write_status_cp, qexml_write_cell,  &
             qexml_write_moving_cell, qexml_write_ions, qexml_write_symmetry, qexml_write_efield, &
             qexml_write_planewaves, qexml_write_spin, qexml_write_magnetization, &
-            qexml_write_xc, qexml_write_exx,   &
-            qexml_write_occ, qexml_write_bz, qexml_write_para, &
-            qexml_write_phonon,        &
+            qexml_write_xc, qexml_write_exx, qexml_write_occ, qexml_write_bz, qexml_write_para, &
             qexml_write_bands_pw,qexml_write_bands_cp, qexml_write_bands_info, qexml_write_eig, &
             qexml_write_gk, qexml_write_wfc, qexml_write_rho
   !
@@ -1599,30 +1597,6 @@ CONTAINS
       !
       !
     END SUBROUTINE qexml_write_para
-    !
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE qexml_write_phonon( modenum, xqq, q_units )
-      !------------------------------------------------------------------------
-      !
-      INTEGER,      INTENT(in) :: modenum
-      REAL(DP),    INTENT(in) :: xqq(:)
-      CHARACTER(*), INTENT(in) :: q_units
-      !
-      !
-      CALL iotk_write_begin( ounit, "PHONON" )
-      !
-      CALL iotk_write_dat( ounit, "NUMBER_OF_MODES", modenum )
-      !
-      CALL iotk_write_attr( attr, "UNITS", trim(q_units), FIRST = .true. )
-      CALL iotk_write_empty( ounit, "UNITS_FOR_Q-POINT", attr )
-      !
-      CALL iotk_write_dat( ounit, "Q-POINT", xqq(:), COLUMNS=3 )
-      !
-      CALL iotk_write_end( ounit, "PHONON" )
-      !
-    END SUBROUTINE qexml_write_phonon
-    !
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexml_write_bands_info( num_k_points, natomwfc, &

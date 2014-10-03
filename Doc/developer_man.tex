@@ -1512,7 +1512,6 @@ First-level tags:
   - <EXCHANGE_CORRELATION>
   - <OCCUPATIONS>    (occupancy of the states)
   - <BRILLOUIN_ZONE> (k-points etc)
-  - <PHONON>         (info for phonon calculations)  
   - <PARALLELISM>    (specialized info for parallel runs)
   - <CHARGE-DENSITY>
   - <TIMESTEPS>      (positions, velocities, nose' thermostats)
@@ -1529,12 +1528,13 @@ First-level tags:
   </HEADER>
 
   <CONTROL>
-     <PP_CHECK_FLAG>    (whether the file can be used for post-processing)
+     <PP_CHECK_FLAG>    (whether file is complete and suitable for post-processing)
      <LKPOINT_DIR>      (whether kpt-data are written in sub-directories)
      <Q_REAL_SPACE>     (whether augmentation terms are used in real space)
+     <BETA_REAL_SPACE>  (whether projectors are used in real space, not implemented)
   </CONTROL>
 
-  <STATUS>  (optional)
+  <STATUS>  (optional, written only by CP)
      <STEP>   (number $n of steps performed, i.e. we are at step $n)
      <TIME>   (total simulation time)
      <TITLE>  (a job descriptor)
@@ -1550,6 +1550,7 @@ First-level tags:
   </STATUS>
 
   <CELL>
+     <NON-PERIODIC_CELL_CORRECTION>
      <BRAVAIS_LATTICE>
      <LATTICE_PARAMETER>
      <CELL_DIMENSIONS>  (cell parameters)
@@ -1565,6 +1566,9 @@ First-level tags:
         <b3>
   </CELL>
 
+  <MOVING_CELL> (optional, PW only)
+     <CELL_FACTOR>
+
   <IONS>
      <NUMBER_OF_ATOMS>
      <NUMBER_OF_SPECIES>
@@ -1578,12 +1582,16 @@ First-level tags:
      <PSEUDO_DIR>
      <UNITS_FOR_ATOMIC_POSITIONS>
      For each atom $n of species $X:
-        <ATOM.$n SPECIES="$X">
+        <ATOM.$n SPECIES="$X" INDEX=nt tau=(x,y,z) if_pos=...>
   </IONS>
 
-  <SYMMETRIES>
+  <SYMMETRIES> (optional, PW only)
      <NUMBER_OF_SYMMETRIES>
+     <NUMBER_OF_BRAVAIS_SYMMETRIES>
      <INVERSION_SYMMETRY>
+     <DO_NOT_USE_TIME_REVERSAL>
+     <TIME_REVERSAL_FLAG>
+     <NO_TIME_REV_OPERATIONS>
      <NUMBER_OF_ATOMS>
      <UNITS_FOR_SYMMETRIES>
      For each symmetry $n:
@@ -1593,9 +1601,14 @@ First-level tags:
            <FRACTIONAL_TRANSLATION>
            <EQUIVALENT_IONS>
         </SYMM.$n>
+     For the remaining bravais symmetries:
+        <SYMM.$n>
+           <INFO>
+           <ROTATION>
+        </SYMM.n>
   </SYMMETRIES>
 
-  <ELECTRIC_FIELD>  (optional)
+  <ELECTRIC_FIELD>  (optional, sawtooth field in PW only))
      <HAS_ELECTRIC_FIELD> 
      <HAS_DIPOLE_CORRECTION>
      <FIELD_DIRECTION>
@@ -1613,17 +1626,40 @@ First-level tags:
      <FFT_GRID>
      <GVECT_NUMBER>
      <SMOOTH_FFT_GRID>
-     <SMOOTH_GVECT_NUMBER>
-     <G-VECTORS_FILE>       link to file "gvectors.dat"
-     <SMALLBOX_FFT_GRID>
+    <SMOOTH_GVECT_NUMBER>
+    <G-VECTORS_FILE>       link to file "gvectors.dat"
+    <SMALLBOX_FFT_GRID>
   </PLANE_WAVES>
 
   <SPIN>
      <LSDA>
      <NON-COLINEAR_CALCULATION>
      <SPIN-ORBIT_CALCULATION>
+        <SPINOR_DIM>
      <SPIN-ORBIT_DOMAG>
   </SPIN>
+
+  <MAGNETIZATION_INIT>
+     <CONSTRAINT_MAG>
+     <NUMBER_OF_SPECIES>
+     For each species X:
+        <SPECIE.$n>
+           <STARTING_MAGNETIZATION>
+           <ANGLE1>
+           <ANGLE2>
+           <CONSTRAINT_1,2,3>
+        </SPECIE.$n>
+        <FIXED_MAGNETIZATION_1,2,3>
+        <MAGNETIC_FIELD_1,2,3>
+        <TWO_FERMI_ENERGIES>
+           <UNITS_FOR_ENERGIES>
+           <FIXED_MAGNETIZATION>
+           <ELECTRONS_UP>
+           <ELECTRONS_DOWN>
+           <FERMI_ENERGY_UP>
+           <FERMI_ENERGY_DOWN>
+        <LAMBDA>
+  </MAGNETIZATION_INIT>
 
   <EXCHANGE_CORRELATION>
      <DFT>
@@ -1633,8 +1669,21 @@ First-level tags:
         <HUBBARD_LMAX>
         <HUBBARD_L>
         <HUBBARD_U>
+        <LDA_PLUS_U_KIND>
+        <U_PROJECTION_TYPE>
+        <HUBBARD_J>
+        <HUBBARD_J0>
         <HUBBARD_ALPHA>
+        <HUBBARD_BETA>
      endif
+     if <NON_LOCAL_DF>
+          <VDW_KERNEL_NAME>
+     if <DFT_D2>
+          <SCALING_FACTOR>
+          <CUTOFF_RADIUS>
+     if <XDM>
+     if <TKATCHENKO-SCHEFFLER>
+          <ISOLATED_SYSTEM>
   </EXCHANGE_CORRELATION>
 
   if hybrid functional
@@ -1680,16 +1729,21 @@ First-level tags:
      <MONKHORST_PACK_OFFSET>
      For each k-point $n:
         <K-POINT.$n>
+     <STARTING_F_POINTS>
+     For each starting k-point $n:
+        <K-POINT_START.$n> kx, ky, kz, wk
+     <NORM-OF-Q>
   </BRILLOUIN_ZONE>
-
-  <PHONON> 
-     <NUMBER_OF_MODES>
-     <UNITS_FOR_Q-POINT>
-     <Q-POINT>
-  </PHONON>
 
   <PARALLELISM>
      <GRANULARITY_OF_K-POINTS_DISTRIBUTION>
+     <NUMBER_OF_PROCESSORS>
+     <NUMBER_OF_PROCESSORS_PER_POOL>
+     <NUMBER_OF_PROCESSORS_PER_IMAGE>
+     <NUMBER_OF_PROCESSORS_PER_TASKGROUP>
+     <NUMBER_OF_PROCESSORS_PER_POT>
+     <NUMBER_OF_PROCESSORS_PER_BAND_GROUP>
+     <NUMBER_OF_PROCESSORS_PER_DIAGONALIZATION>
   </PARALLELISM>
 
   <CHARGE-DENSITY>
@@ -1756,7 +1810,7 @@ First-level tags:
                 <WFC.$s>                 link to file "./K$n/evc.dat"
                 <WFCM.$s>                link to file "./K$n/evcm.dat" (optional)
                                          containing wavefunctions at preceding step
-         </K-POINT.$n>
+         </K-POINT.n>
   </EIGENVECTORS>
 \end{verbatim}
 
