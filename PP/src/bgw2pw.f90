@@ -99,6 +99,7 @@ PROGRAM bgw2pw
 #ifdef __MPI
   CALL mp_startup ( )
 #endif
+
   CALL environment_start ( codename )
 
   prefix = 'prefix'
@@ -132,6 +133,13 @@ PROGRAM bgw2pw
   CALL mp_bcast ( rhog_file, ionode_id, world_comm )
 
   CALL read_file ( )
+
+  ! this is needed to compute igk and store in iunigk
+  ! cannot use gk_sort because for some k-points
+  ! gk_sort generates different igk on every call
+  CALL openfil ( )
+  CALL hinit0 ( )
+
   CALL openfil_pp ( )
 
   IF ( wfng_flag ) THEN
@@ -160,7 +168,11 @@ PROGRAM bgw2pw
   IF ( rhog_flag ) CALL print_clock ( 'write_cd' )
 
   CALL environment_end ( codename )
+
   CALL stop_pp ( )
+
+  ! this is needed because openfil is called above
+  CALL close_files ( .false. )
 
   STOP
 
@@ -175,13 +187,14 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
   USE constants, ONLY : eps6
   USE fft_base, ONLY : dfftp
   USE gvect, ONLY : ngm, ngm_g, ig_l2g, mill, g
+  USE io_files, ONLY : iunigk
   USE io_global, ONLY : ionode, ionode_id
   USE ions_base, ONLY : nat
   USE iotk_module, ONLY : iotk_attlenx, iotk_free_unit, iotk_open_write, &
     iotk_write_begin, iotk_write_attr, iotk_write_empty, iotk_write_dat, &
     iotk_write_end, iotk_close_write, iotk_index
   USE kinds, ONLY : DP
-  USE klist, ONLY : xk, nks, nkstot
+  USE klist, ONLY : xk, nks, nkstot, ngk
   USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_bcast, mp_sum, mp_max, mp_barrier
   USE mp_world, ONLY : world_comm, nproc
@@ -192,7 +205,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
 #ifdef __MPI
   USE parallel_include, ONLY : MPI_INTEGER, MPI_DOUBLE_COMPLEX
 #endif
-  USE wvfct, ONLY : npwx, g2kin, ecutwfc
+  USE wvfct, ONLY : npwx, g2kin, ecutwfc, igk
 
   IMPLICIT NONE
 
@@ -212,8 +225,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
   character ( len = 256 ) :: filename
   character ( iotk_attlenx ) :: attr
 
-  integer, allocatable :: itmp ( : )
-  integer, allocatable :: ngk ( : )
+  integer, allocatable :: ngk_g ( : )
   integer, allocatable :: gvec ( :, : )
   integer, allocatable :: igk_buf ( : )
   integer, allocatable :: igk_dist ( :, : )
@@ -307,7 +319,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
   ENDIF
   ngkdist_g = ngkdist_l * nproc
 
-  ALLOCATE ( ngk ( nk ) )
+  ALLOCATE ( ngk_g ( nk ) )
   ALLOCATE ( k ( 3, nk ) )
   ALLOCATE ( en ( nb, nk, ns ) )
   ALLOCATE ( oc ( nb, nk, ns ) )
@@ -328,7 +340,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
     READ ( iu )
     READ ( iu )
     READ ( iu )
-    READ ( iu ) ( ngk ( ik ), ik = 1, nk )
+    READ ( iu ) ( ngk_g ( ik ), ik = 1, nk )
     READ ( iu )
     READ ( iu ) ( ( k ( ir, ik ), ir = 1, 3 ), ik = 1, nk )
     READ ( iu )
@@ -355,7 +367,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
     ENDDO
   ENDIF
 
-  CALL mp_bcast ( ngk, ionode_id, world_comm )
+  CALL mp_bcast ( ngk_g, ionode_id, world_comm )
   CALL mp_bcast ( k, ionode_id, world_comm )
   CALL mp_bcast ( en, ionode_id, world_comm )
   CALL mp_bcast ( oc, ionode_id, world_comm )
@@ -390,7 +402,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
         READ ( iu ) ( ( gk_buf ( ir, jg ), ir = 1, 3 ), jg = ig, ig + ng_irecord - 1 )
         ig = ig + ng_irecord
       ENDDO
-      DO ig = ngk ( ik ) + 1, ngkdist_g
+      DO ig = ngk_g ( ik ) + 1, ngkdist_g
         DO ir = 1, 3
           gk_buf ( ir, ig ) = 0
         ENDDO
@@ -435,15 +447,15 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
         ENDDO
         DO is = 1, ns
           IF ( real_or_complex .EQ. 1 ) THEN
-            DO ig = 1, ngk ( ik )
+            DO ig = 1, ngk_g ( ik )
               wfng_buf ( ig, is ) = CMPLX ( wfngr ( ig, is ), 0.0D0 )
             ENDDO
           ELSE
-            DO ig = 1, ngk ( ik )
+            DO ig = 1, ngk_g ( ik )
               wfng_buf ( ig, is ) = wfngc ( ig, is )
             ENDDO
           ENDIF
-          DO ig = ngk ( ik ) + 1, ngkdist_g
+          DO ig = ngk_g ( ik ) + 1, ngkdist_g
             wfng_buf ( ig, is ) = ( 0.0D0, 0.0D0 )
           ENDDO
         ENDDO
@@ -491,7 +503,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
     DEALLOCATE ( wfngc )
   ENDIF
 
-  CALL mp_bcast ( ngk, ionode_id, world_comm )
+  CALL mp_bcast ( ngk_g, ionode_id, world_comm )
 
   nkbl = nkstot / kunit
   nkl = kunit * ( nkbl / npool )
@@ -502,20 +514,15 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
   ike = iks + nkl - 1
 
   npw_g = 0
-  ALLOCATE ( itmp ( npwx ) )
+  IF ( nks > 1 ) REWIND ( iunigk )
   DO ik = 1, nks
-    DO ig = 1, npwx
-      itmp ( ig ) = 0
-    ENDDO
-    npw = npwx
-    CALL gk_sort ( xk ( 1, ik + iks - 1 ), ngm, g, ecutwfc / tpiba2, &
-      npw, itmp ( 1 ), g2kin )
+    IF ( nks > 1 ) READ ( iunigk ) igk
+    npw = ngk ( ik )
     DO ig = 1, npw
-      igk_l2g = ig_l2g ( itmp ( ig ) )
+      igk_l2g = ig_l2g ( igk ( ig ) )
       IF ( igk_l2g .GT. npw_g ) npw_g = igk_l2g
     ENDDO
   ENDDO
-  DEALLOCATE ( itmp )
   CALL mp_max ( npw_g, world_comm )
 
   CALL create_directory ( output_dir_name )
@@ -546,7 +553,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
 
     IF ( ionode ) THEN
       CALL iotk_open_write ( iu, FILE = TRIM ( filename ), ROOT="GK-VECTORS", BINARY = .TRUE. )
-      CALL iotk_write_dat ( iu, "NUMBER_OF_GK-VECTORS", ngk ( ik ) )
+      CALL iotk_write_dat ( iu, "NUMBER_OF_GK-VECTORS", ngk_g ( ik ) )
       CALL iotk_write_dat ( iu, "MAX_NUMBER_OF_GK-VECTORS", ngkmax )
       CALL iotk_write_dat ( iu, "GAMMA_ONLY", .FALSE. )
       CALL iotk_write_attr ( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
@@ -564,8 +571,8 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
     ENDDO
 #endif
     IF ( ionode ) THEN
-      CALL iotk_write_dat ( iu, "INDEX", igk_buf ( 1 : ngk ( ik ) ) )
-      CALL iotk_write_dat ( iu, "GRID", gvec ( 1 : 3, igk_buf ( 1 : ngk ( ik ) ) ), COLUMNS = 3 )
+      CALL iotk_write_dat ( iu, "INDEX", igk_buf ( 1 : ngk_g ( ik ) ) )
+      CALL iotk_write_dat ( iu, "GRID", gvec ( 1 : 3, igk_buf ( 1 : ngk_g ( ik ) ) ), COLUMNS = 3 )
       CALL iotk_close_write ( iu )
     ENDIF
 
@@ -599,7 +606,7 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
       IF ( ionode ) THEN
         CALL iotk_open_write ( iu, FILE = TRIM ( filename ), ROOT = "WFC", BINARY = .TRUE. )
         CALL iotk_write_attr ( attr, "ngw", npw_g, FIRST = .TRUE. )
-        CALL iotk_write_attr ( attr, "igwx", ngk ( ik ) )
+        CALL iotk_write_attr ( attr, "igwx", ngk_g ( ik ) )
         CALL iotk_write_attr ( attr, "gamma_only", .FALSE. )
         CALL iotk_write_attr ( attr, "nbnd", nb )
         CALL iotk_write_attr ( attr, "ik", ik )
@@ -621,14 +628,14 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
           wfng_buf ( ig, is ) = wfng_dist ( ig, ib, is, ik )
         ENDDO
 #endif
-        IF ( ionode ) CALL iotk_write_dat ( iu, "evc" // iotk_index ( ib ), wfng_buf ( 1 : ngk ( ik ), is ) )
+        IF ( ionode ) CALL iotk_write_dat ( iu, "evc" // iotk_index ( ib ), wfng_buf ( 1 : ngk_g ( ik ), is ) )
       ENDDO
       IF ( ionode ) CALL iotk_close_write ( iu )
 
     ENDDO
   ENDDO
 
-  DEALLOCATE ( ngk )
+  DEALLOCATE ( ngk_g )
   DEALLOCATE ( k )
   DEALLOCATE ( en )
   DEALLOCATE ( oc )

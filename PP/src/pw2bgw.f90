@@ -167,6 +167,7 @@ PROGRAM pw2bgw
 #ifdef __MPI
   CALL mp_startup ( )
 #endif
+
   CALL environment_start ( codename )
 
   prefix = 'prefix'
@@ -285,6 +286,12 @@ PROGRAM pw2bgw
     'with real wavefunctions are not implemented, compute them in ' // &
     'Sigma using VXC.', 7)
 
+  ! this is needed to compute igk and store in iunigk
+  ! cannot use gk_sort because for some k-points
+  ! gk_sort generates different igk on every call
+  CALL openfil ( )
+  CALL hinit0 ( )
+
   CALL openfil_pp ( )
 
   if ( ionode ) WRITE ( 6, '("")' )
@@ -392,7 +399,11 @@ PROGRAM pw2bgw
   ENDIF
 
   CALL environment_end ( codename )
+
   CALL stop_pp ( )
+
+  ! this is needed because openfil is called above
+  CALL close_files ( .false. )
 
   STOP
 
@@ -408,7 +419,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   USE constants, ONLY : pi, tpi, eps6
   USE fft_base, ONLY : dfftp
   USE gvect, ONLY : ngm, ngm_g, ig_l2g, g, mill, ecutrho
-  USE io_files, ONLY : iunwfc, nwordwfc
+  USE io_files, ONLY : iunwfc, nwordwfc, iunigk
   USE io_global, ONLY : ionode, ionode_id
   USE ions_base, ONLY : nat, atm, ityp, tau
   USE kinds, ONLY : DP
@@ -422,7 +433,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE symm_base, ONLY : s, ftau, nsym
   USE wavefunctions_module, ONLY : evc
-  USE wvfct, ONLY : npwx, nbnd, npw, et, wg, g2kin, ecutwfc
+  USE wvfct, ONLY : npwx, nbnd, npw, et, wg, g2kin, ecutwfc, igk
 #ifdef __MPI
   USE parallel_include, ONLY : MPI_DOUBLE_COMPLEX
 #endif
@@ -700,23 +711,17 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
 
   ALLOCATE ( igk_l2g ( npwx, nk_l ) )
 
-  ALLOCATE ( itmp ( npwx ) )
+  IF ( nk_l > 1 ) REWIND ( iunigk )
   DO ik = 1, nk_l
-    DO i = 1, npwx
-      itmp ( i ) = 0
-    ENDDO
-    npw = npwx
-    CALL gk_sort ( xk ( 1, ik + iks - 1 ), ng_l, g, ecutwfc / tpiba2, &
-      npw, itmp ( 1 ), g2kin )
+    IF ( nk_l > 1 ) READ ( iunigk ) igk
+    npw = ngk ( ik )
     DO ig = 1, npw
-      igk_l2g ( ig, ik ) = ig_l2g ( itmp ( ig ) )
+      igk_l2g ( ig, ik ) = ig_l2g ( igk ( ig ) )
     ENDDO
     DO ig = npw + 1, npwx
       igk_l2g ( ig, ik ) = 0
     ENDDO
-    ngk ( ik ) = npw
   ENDDO
-  DEALLOCATE ( itmp )
 
   ALLOCATE ( ngk_g ( nk_g ) )
 
@@ -1429,8 +1434,8 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
   USE gvect, ONLY : ngm, g, nl
-  USE io_files, ONLY : nwordwfc, iunwfc
-  USE klist, ONLY : xk, nkstot
+  USE io_files, ONLY : nwordwfc, iunwfc, iunigk
+  USE klist, ONLY : xk, nkstot, ngk, nks
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum
   USE mp_world, ONLY : world_comm
@@ -1461,10 +1466,11 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
   rho%of_r (:, :) = 0.0D0
 
   ! take psi to R-space, compute rho in R-space
+  IF ( nks > 1 ) REWIND ( iunigk )
   DO ik = iks, ike
     is = isk (ik)
-    CALL gk_sort (xk (1, ik - iks + 1), ngm, g, ecutwfc &
-      / tpiba2, npw, igk, g2kin)
+    IF ( nks > 1 ) READ ( iunigk ) igk
+    npw = ngk ( ik - iks + 1 )
     CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
     DO ib = rhog_nvmin, rhog_nvmax
       psic (:) = (0.0D0, 0.0D0)
@@ -1811,9 +1817,9 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY : invfft
   USE gvect, ONLY : ngm, g, nl
-  USE io_files, ONLY : nwordwfc, iunwfc
+  USE io_files, ONLY : nwordwfc, iunwfc, iunigk
   USE io_global, ONLY : ionode
-  USE klist, ONLY : xk, nkstot
+  USE klist, ONLY : xk, nkstot, nks, ngk
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum
   USE mp_pools, ONLY : kunit, my_pool_id, intra_pool_comm, &
@@ -1891,9 +1897,10 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   ENDIF
   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxcr)
 
+  IF ( nks > 1 ) REWIND ( iunigk )
   DO ik = iks, ike
-    CALL gk_sort (xk (1, ik - iks + 1), ngm, g, ecutwfc &
-      / tpiba2, npw, igk, g2kin)
+    IF ( nks > 1 ) READ ( iunigk ) igk
+    npw = ngk ( ik - iks + 1 )
     CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
     IF (ndiag .GT. 0) THEN
       DO ib = diag_nmin, diag_nmax
@@ -2002,10 +2009,10 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   USE fft_interfaces, ONLY : fwfft, invfft
   USE funct, ONLY : exx_is_active
   USE gvect, ONLY : ngm, g, nl
-  USE io_files, ONLY : nwordwfc, iunwfc
+  USE io_files, ONLY : nwordwfc, iunwfc, iunigk
   USE io_global, ONLY : ionode
   USE kinds, ONLY : DP
-  USE klist, ONLY : xk, nkstot
+  USE klist, ONLY : xk, nkstot, nks, ngk
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum
   USE mp_pools, ONLY : kunit, my_pool_id, intra_pool_comm, &
@@ -2084,9 +2091,10 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   ENDIF
   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxcr)
 
+  IF ( nks > 1 ) REWIND ( iunigk )
   DO ik = iks, ike
-    CALL gk_sort (xk (1, ik - iks + 1), ngm, g, ecutwfc &
-      / tpiba2, npw, igk, g2kin)
+    IF ( nks > 1 ) READ ( iunigk ) igk
+    npw = ngk ( ik - iks + 1 )
     CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
     IF (ndiag .GT. 0) THEN
       DO ib = diag_nmin, diag_nmax
@@ -2423,6 +2431,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   USE constants, ONLY : pi, tpi, eps6
   USE fft_base, ONLY : dfftp
   USE gvect, ONLY : ngm, ngm_g, ig_l2g, g, mill, ecutrho
+  USE io_files, ONLY : iunigk
   USE io_global, ONLY : ionode, ionode_id
   USE ions_base, ONLY : nat, atm, ityp, tau, nsp
   USE kinds, ONLY : DP
@@ -2437,7 +2446,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   USE symm_base, ONLY : s, ftau, nsym
   USE uspp, ONLY : nkb, vkb, deeq
   USE uspp_param, ONLY : nhm, nh
-  USE wvfct, ONLY : npwx, npw, g2kin, ecutwfc
+  USE wvfct, ONLY : npwx, npw, g2kin, ecutwfc, igk
 
   IMPLICIT NONE
 
@@ -2603,18 +2612,14 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   ALLOCATE ( igk_l2g ( npwx, nks ) )
   ngk_g = 0
   igk_l2g = 0
-  ALLOCATE ( itmp ( npwx ) )
+  IF ( nks > 1 ) REWIND ( iunigk )
   DO ik = 1, nks
-    itmp = 0
-    npw = npwx
-    CALL gk_sort ( xk ( 1, ik + iks - 1 ), ngm, g, ecutwfc / tpiba2, &
-      npw, itmp ( 1 ), g2kin )
+    IF ( nks > 1 ) READ ( iunigk ) igk
+    npw = ngk ( ik )
     DO ig = 1, npw
-      igk_l2g ( ig, ik ) = ig_l2g ( itmp ( ig ) )
+      igk_l2g ( ig, ik ) = ig_l2g ( igk ( ig ) )
     ENDDO
-    ngk ( ik ) = npw
   ENDDO
-  DEALLOCATE ( itmp )
   DO ik = 1, nks
     ngk_g ( ik + iks - 1 ) = ngk ( ik )
   ENDDO
@@ -2661,6 +2666,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
 
   ALLOCATE ( igwk ( npwx_g ) )
 
+  IF ( nks > 1 ) REWIND ( iunigk )
   DO i = 1, nkstot
 
     ik = kmap ( i )
@@ -2696,13 +2702,10 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
 
     local_pw = 0
     IF ( ik .GE. iks .AND. ik .LE. ike ) THEN
-      ALLOCATE ( itmp ( npwx ) )
-      npw = npwx
-      CALL gk_sort ( xk ( 1, ik ), ngm, g, ecutwfc / tpiba2, &
-        npw, itmp ( 1 ), g2kin )
-      CALL init_us_2 ( npw, itmp, xk ( 1, ik ), vkb )
-      local_pw = ngk ( ik - iks + 1 )
-      DEALLOCATE ( itmp )
+      IF ( nks > 1 ) READ ( iunigk ) igk
+      npw = ngk ( ik - iks + 1 )
+      CALL init_us_2 ( npw, igk, xk ( 1, ik ), vkb )
+      local_pw = npw
     ENDIF
 
     ALLOCATE ( igwf_l2g ( local_pw ) )
@@ -2766,7 +2769,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
 
       IF ( ionode ) THEN
         WRITE ( unit ) nrecord
-        WRITE ( unit ) igwx
+        WRITE ( unit ) ngk_g ( ik )
         WRITE ( unit ) ( vkb_g ( ig ), ig = 1, igwx )
       ENDIF
 
