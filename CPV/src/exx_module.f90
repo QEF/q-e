@@ -205,6 +205,21 @@ CONTAINS
       !
       ! Error messages for inconsistencies with current version of code...
       !
+      IF(exx_ps_rcut_p.GT.exx_ps_rcut_s) CALL errore('exx_module','EXX calculation error :  &
+          & The exx_ps_rcut_pair should be set smaller than or equal to the exx_ps_rcut_self',1)
+      !
+      IF(exx_ps_rcut_p.GE.exx_me_rcut_p) CALL errore('exx_module','EXX calculation error :  &
+          & The exx_ps_rcut_pair should be set smaller than the exx_me_rcut_pair',1)
+      !
+      IF(exx_ps_rcut_p.GE.exx_me_rcut_s) CALL errore('exx_module','EXX calculation error :  &
+          & The exx_ps_rcut_pair should be set smaller than the exx_me_rcut_self',1)
+      !
+      IF(exx_me_rcut_p.GT.exx_me_rcut_s) CALL errore('exx_module','EXX calculation error :  &
+          & The exx_me_rcut_pair should be set smaller than or equal to the exx_me_rcut_self',1)
+      !
+      IF(exx_ps_rcut_s.GE.exx_me_rcut_s) CALL errore('exx_module','EXX calculation error :  &
+          & The exx_ps_rcut_self should be set smaller than the exx_me_rcut_self',1)
+      !
       IF(nproc_image.GE.nbsp) THEN
         !
         IF(MOD(nproc_image,nbsp).NE.0) CALL errore('exx_module','EXX calculation error :  &
