@@ -117,20 +117,20 @@ CONTAINS
     IF (ionode) THEN
        !
        CALL iotk_scan_attr( attr, 'calculation', dummy, found = found, ierr = ierr )
-       IF ( .not. found ) CALL errore( 'read_xml_cp', 'attribute calculation of root &
+       IF ( .not. found ) CALL errore( 'read_xml_common', 'attribute calculation of root &
             &node is compulsory', abs(ierr) )
        !
-       IF ( ierr /= 0 ) CALL errore( 'read_xml_cp', 'error reading calculation &
+       IF ( ierr /= 0 ) CALL errore( 'read_xml_common', 'error reading calculation &
             &attribute of root node', 1 )
        calculation = trim( dummy )
        !
        CALL iotk_scan_attr( attr, 'prefix', dummy, found = found, ierr = ierr )
-       IF ( ierr /= 0 ) CALL errore( 'read_xml_cp', 'error reading prefix attribute &
+       IF ( ierr /= 0 ) CALL errore( 'read_xml_common', 'error reading prefix attribute &
             &of root node', abs(ierr) )
        IF ( found ) prefix = trim( dummy )
        !
        CALL iotk_scan_attr( attr, 'title', dummy, found = found, ierr = ierr )
-       IF ( ierr /= 0 ) CALL errore( 'read_xml_cp', 'error reading title attribute &
+       IF ( ierr /= 0 ) CALL errore( 'read_xml_common', 'error reading title attribute &
             &of root node', 1 )
        IF ( found ) title = trim( dummy )
        !
@@ -653,8 +653,8 @@ CONTAINS
     !
     RETURN
     !
-9   CALL errore('read_xml_pw', 'error reading begin tag of '//card//' card', ABS( ierr ) )
-10  CALL errore('read_xml_pw', 'error reading end tag of '//card//' card', ABS( ierr ) )
+9   CALL errore('read_xml_cp', 'error reading begin tag of '//card//' card', ABS( ierr ) )
+10  CALL errore('read_xml_cp', 'error reading end tag of '//card//' card', ABS( ierr ) )
     !
     !
   END SUBROUTINE read_xml_cp

@@ -13,7 +13,6 @@
 ! PLOT_WANNIER
 ! WANNIER_AC
 ! DIPOLE
-! ESR
 !
 ! to implement these cards take inspiration from file read_cards.f90
 !
@@ -129,10 +128,6 @@ CONTAINS
        ! ... not yet implemented in xml reading
        CALL allocate_input_iprnks( 0, nspin )
        nprnks  = 0
-       !
-    CASE ('ESR')
-       ! ... not yet implemented in xml reading
-       iesr = 1
        !
     CASE ('ION_VELOCITIES')
        ! ... not yet implemented in xml reading
