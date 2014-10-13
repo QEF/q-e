@@ -276,11 +276,9 @@ CONTAINS
   !                                                                         !
   ! Syntax:                                                                 !
   !                                                                         !
-  !   <cell type="type" sym="sym">                                          !
+  !   <cell type="type">                                                    !
   !       depends on the type                                               !
   !   </cell>                                                               !
-  !                                                                         !
-  !  sym can be cubic or exagonal                                           !
   !                                                                         !
   !  if:                                                                    !
   !                                                                         !
