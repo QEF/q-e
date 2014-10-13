@@ -36,7 +36,7 @@ MODULE read_xml_cards_module
   !
   PRIVATE
   !
-  PUBLIC :: card_xml_atomic_species, card_xml_atomic_list, card_xml_chain, card_xml_cell, &
+  PUBLIC :: card_xml_atomic_species, card_xml_atomic_list, card_xml_cell, &
        card_xml_kpoints, card_xml_occupations, card_xml_constraints, &
        card_xml_plot_wannier, card_default, card_bcast
   !
@@ -69,11 +69,6 @@ CONTAINS
        CALL init_autopilot()
        !
     CASE ('ATOMIC_LIST')
-       !
-       ! ... nothing to initialize
-       ! ... because we don't have nat
-       !
-    CASE ('CHAIN' )
        !
        ! ... nothing to initialize
        ! ... because we don't have nat
@@ -117,9 +112,6 @@ CONTAINS
        nconstr_inp    = 0
        constr_tol_inp = 1.E-6_DP
        !
-    CASE ('CLIMBING_IMAGES')
-       ! ... nothing to initialize
-       !
     CASE ('PLOT_WANNIER')
        !
        !       wannier_index =
@@ -143,10 +135,8 @@ CONTAINS
   END SUBROUTINE card_default
   !
   !
-  !
-  !
   !---------------------------------------------------------------------------!
-  !    This subroutine broadcasts the varibles defined in the various cards;  !
+  !    This subroutine broadcasts the variables defined in the various cards; !
   !    the input string is the name of the card that you want to broadcast    !
   !---------------------------------------------------------------------------!
   SUBROUTINE card_bcast( card )
@@ -815,9 +805,10 @@ CONTAINS
     LOGICAL :: found
     !
     !
-    CALL iotk_scan_begin( xmlinputunit, 'atomic_list', attr, ierr = ierr )
+    CALL iotk_scan_begin( xmlinputunit, 'atomic_list', attr, found = found, ierr = ierr )
     IF ( ierr /= 0 ) CALL errore( 'card_xml_atomic_list', 'error scanning begin &
          &of atomic_list node', abs(ierr) )
+    IF ( .NOT. found) CALL errore( 'card_xml_atomic_list', 'card atomic_list not found', 1)
     !
     CALL iotk_scan_attr( attr, 'units', atomic_positions, found = found, ierr = ierr )
     IF ( ierr /= 0 ) CALL errore( 'card_xml_atomic_list', 'error reading units &
@@ -830,12 +821,12 @@ CONTAINS
             (trim( atomic_positions ) == 'alat') ) THEN
           atomic_positions = trim( atomic_positions )
        ELSE
-          CALL errore( 'car_xml_atom_lists',  &
-               'error in units attribute of atomic_list node, unknow '&
+          CALL errore( 'card_xml_atom_lists',  &
+               'error in units attribute of atomic_list node, unknown '&
                & //trim(atomic_positions)//' units', 1 )
        ENDIF
     ELSE
-       ! ... default value
+       ! ... default value - DEPRECATED
        atomic_positions = 'alat'
     ENDIF
     !
@@ -876,57 +867,7 @@ CONTAINS
   !_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-!
   !                                                                            !
   !                                                                            !
-  ! CHAIN  (used in neb and smd calculation) OBSOLETE, NOT IMPLEMENTED         !
-  !                                                                            !
-  !   set the atomic positions for a chian                                     !
-  !                                                                            !
-  ! Syntax:                                                                    !
-  !                                                                            !
-  !  <chain num_of_images="">                                                  !
-  !     <atomic_list units="units_option" nat="natom" num="1">                 !
-  !        <atom name="label(1)" ifx="mbl(1,1)" ify="mbl(2,1)" ifz="mbl(3,1)"> !
-  !          <position>                                                        !
-  !             <real rank="1" n1="3">                                         !
-  !                 tau(1,1)  tau(2,1)  tau(3,1)                               !
-  !             </real>                                                        !
-  !          </position>
-  !        </atom>                                                             !
-  !        ...                                                                 !
-  !     </atomic_list>                                                         !
-  !     <atomic_list num="2">                                                  !
-  !        ...                                                                 !
-  !     </atomic_list>                                                         !
-  !     ...                                                                    !
-  !  </chain>                                                                  !
-  !                                                                            !
-  !                                                                            !
-  ! Where:                                                                     !
-  !                                                                            !
-  ! notation of atomic_list node is the same of the atomic_list cards.         !
-  ! the difference is that inside the chain card you put more atomic_list node !
-  ! with the attribute num that indicates the number of the image              !
-  !                                                                            !
-  !                                                                            !
-  !_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-!
-  !
-  SUBROUTINE card_xml_chain( )
-    !
-    IMPLICIT NONE
-    !
-    !
-    CHARACTER( LEN = iotk_attlenx ) :: attr
-    LOGICAL :: found,end_of_chain
-    INTEGER :: ierr
-    REAL (DP), DIMENSION( :, :), ALLOCATABLE :: tmp_image
-    !
-    !
-    end_of_chain = .false.
-
-    RETURN
-    !
-  END SUBROUTINE card_xml_chain
-  !
-  ! ... Subroutine that reads a single image inside chain node
+  ! ... Subroutine that reads a single list of atomic positions ("image")
   !
   SUBROUTINE read_image( image, image_pos, image_vel )
     !

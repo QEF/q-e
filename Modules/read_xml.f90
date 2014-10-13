@@ -28,7 +28,7 @@ MODULE read_xml_module
   !
   USE read_xml_fields_module, ONLY : read_xml_fields
   USE read_xml_cards_module, ONLY : card_xml_atomic_species, card_xml_atomic_list, &
-       card_xml_chain, card_xml_cell, card_xml_kpoints, card_xml_occupations, &
+       card_xml_cell, card_xml_kpoints, card_xml_occupations, &
        card_xml_constraints, card_xml_plot_wannier, card_default, card_bcast
   !
   !
@@ -201,10 +201,9 @@ CONTAINS
     LOGICAL :: found_al, found
     !
     !
-    ! ... reading ATOMIC_LIST or CHAIN cards
+    ! ... reading ATOMIC_LIST card
     !
     CALL card_default( 'ATOMIC_LIST' )
-    CALL card_default( 'CHAIN' )
     !
     IF ( ionode ) THEN
        !
@@ -221,33 +220,15 @@ CONTAINS
           CALL card_xml_atomic_list( )
           !
        ELSE
-          ! ... due to a iotk problem with gfortran compiler
-          CALL iotk_rewind( xmlinputunit )
           !
-          CALL iotk_scan_begin( xmlinputunit, 'chain', found = found, ierr = ierr )
-          IF ( ierr /= 0 ) CALL errore( 'read_xml_pw', 'error scanning begin &
-               &of chain card', abs( ierr ) )
+          CALL errore('read_xml_pw',"card atomic_list is missing", 1 )
           !
-          IF ( found ) THEN
-             CALL iotk_scan_end( xmlinputunit, 'chain', ierr = ierr )
-             IF ( ierr /= 0 ) CALL errore( 'read_xml_pw', 'error scanning &
-                  &end of chain card', ABS( ierr ) )
-             CALL card_xml_chain( )
-          ELSE
-             CALL errore('read_xml_pw',"neither atomic_list nor chain found", 1 )
-          ENDIF
        ENDIF
     ENDIF
     !
     CALL mp_bcast( found_al, ionode_id, intra_image_comm)
     !
-    IF (found_al) THEN
-       CALL card_bcast( 'ATOMIC_LIST' )
-    ELSE
-       CALL card_bcast( 'CHAIN' )
-    ENDIF
-    !
-    !
+    CALL card_bcast( 'ATOMIC_LIST' )
     !
     ! ... reading all the FIELDS
     !
@@ -442,11 +423,7 @@ CONTAINS
     !
     IF ( ionode ) THEN
        !
-       IF ( ( trim( calculation ) == 'neb' ) .or. ( trim( calculation ) == 'smd' ) ) THEN
-          CALL card_xml_chain ( )
-       ELSE
-          CALL card_xml_atomic_list ( )
-       END IF
+       CALL card_xml_atomic_list ( )
        !
     END IF
     !
