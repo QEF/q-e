@@ -29,7 +29,7 @@ MODULE read_xml_module
   USE read_xml_fields_module, ONLY : read_xml_fields
   USE read_xml_cards_module, ONLY : card_xml_atomic_species, card_xml_atomic_list, &
        card_xml_chain, card_xml_cell, card_xml_kpoints, card_xml_occupations, &
-       card_xml_constraints, card_xml_climbing_images, card_xml_plot_wannier, card_default, card_bcast
+       card_xml_constraints, card_xml_plot_wannier, card_default, card_bcast
   !
   !
   IMPLICIT NONE
@@ -405,40 +405,6 @@ CONTAINS
     !
     IF ( found ) CALL card_bcast( 'OCCUPATIONS' )
     !
-       !
-    ! ... reading CLIMBING_IMAGES card
-    !
-    card = 'climbing_images'
-    CALL card_default( 'CLIMBING_IMAGES' )
-    !
-    IF ( ionode ) THEN
-       !
-       CALL iotk_scan_begin( xmlinputunit, trim( card ), found = found, ierr = ierr )
-       IF ( ierr /= 0 ) GO TO 9
-       !
-       IF ( found ) THEN
-          !
-          CALL card_xml_climbing_images()
-          !
-          CALL iotk_scan_end( xmlinputunit, trim( card ), ierr = ierr )
-          IF ( ierr /= 0 ) GOTO 10
-          !
-       ELSE
-          !
-          ! ... due to a iotk problem with gfortran compiler
-          CALL iotk_rewind( xmlinputunit )
-          !
-       END IF
-       !
-    END IF
-    !
-    CALL mp_bcast ( found, ionode_id, intra_image_comm )
-    !
-    IF ( found ) CALL card_bcast( 'CLIMBING_IMAGES' )
-    !
-    !
-    !
-    !
     RETURN
     !
 9   CALL errore('read_xml_pw', 'error reading begin tag of '//card//' card', ABS( ierr ) )
@@ -585,40 +551,6 @@ CONTAINS
     CALL mp_bcast ( found, ionode_id, intra_image_comm )
     !
     IF ( found ) CALL card_bcast( 'OCCUPATIONS' )
-    !
-    !
-    ! ... reading CLIMBING_IMAGES card
-    !
-    card = 'climbing_images'
-    CALL card_default( 'CLIMBING_IMAGES' )
-    !
-    IF ( ionode ) THEN
-       !
-       CALL iotk_scan_begin( xmlinputunit, trim( card ), found = found, ierr = ierr )
-       IF ( ierr /= 0 ) GO TO 9
-       !
-       IF ( found ) THEN
-          !
-          CALL card_xml_climbing_images()
-          !
-          CALL iotk_scan_end( xmlinputunit, trim( card ), ierr = ierr )
-          IF ( ierr /= 0 ) GOTO 10
-          !
-       ELSE
-          !
-          ! ... due to a iotk problem with gfortran compiler
-          CALL iotk_rewind( xmlinputunit )
-          !
-       END IF
-       !
-    END IF
-    !
-    CALL mp_bcast ( found, ionode_id, intra_image_comm )
-    !
-    IF ( found ) CALL card_bcast( 'CLIMBING_IMAGES' )
-    !
-    !
-    ! ... reading CLIMBING_IMAGES card
     !
     card = 'plot_wannier'
     CALL card_default( 'PLOT_WANNIER' )

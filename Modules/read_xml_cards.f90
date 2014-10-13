@@ -37,7 +37,7 @@ MODULE read_xml_cards_module
   PRIVATE
   !
   PUBLIC :: card_xml_atomic_species, card_xml_atomic_list, card_xml_chain, card_xml_cell, &
-       card_xml_kpoints, card_xml_occupations, card_xml_constraints, card_xml_climbing_images, &
+       card_xml_kpoints, card_xml_occupations, card_xml_constraints, &
        card_xml_plot_wannier, card_default, card_bcast
   !
   !
@@ -1594,41 +1594,6 @@ CONTAINS
     !
     !
   END SUBROUTINE card_xml_constraints
-  !
-  !
-  !
-  !_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_!
-  !                                                                         !
-  ! CLIMBING_IMAGES (optional) OBSOLETE, NOT IMPLEMENTED                    !
-  !                                                                         !
-  !   Needed to explicitly specify which images have to climb               !
-  !                                                                         !
-  ! Syntax:                                                                 !
-  !                                                                         !
-  !   <climbing_images>                                                     !
-  !      <images>                                                           !
-  !        <integer rank=1 n1="N">                                          !
-  !         index1                                                          !
-  !         index2                                                          !
-  !         ...                                                             !
-  !         indexN                                                          !
-  !        </integer>
-  !      </images>                                                          !
-  !   </climbing_images>                                                    !
-  !                                                                         !
-  !                                                                         !
-  ! Where:                                                                  !
-  !                                                                         !
-  !   index1, ..., indexN are indices of the images that have to climb      !
-  !                                                                         !
-  !                                                                         !
-  !_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_!
-  !
-  SUBROUTINE card_xml_climbing_images( )
-    !
-    RETURN
-    !
-  END SUBROUTINE card_xml_climbing_images
   !
   !
   !_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_!
