@@ -1,4 +1,4 @@
-Incompatible changes in svn version:
+Incompatible changes in 5.1.1 version:
 
    * Regularization of DFT names for nonlocal functionals:
        "vdw-df3"                   replaced by "vdw-df-obk8"
@@ -11,7 +11,7 @@ Incompatible changes in svn version:
      (semi)local contribution, the choice of (semi)local functional should be 
      attached at the end of the name, such as vdW-DF-C09 or vdW-DF-cx.
 
-New in svn version:
+New in 5.1.1 version:
 
    * CP: Hybrid functionals with Wannier functions
    * Added possibility to provide structure via space-group number and
@@ -24,7 +24,7 @@ New in svn version:
      Experimental, to be enabled at compile time (see the user guide)
    * TDDFPT: Implemented a restart option in turbo_Davidson
 
-Fixed in svn version:
+Fixed in 5.1.1 version:
 
    * PWscf: energy related to external forces wasn't correct
    * CP: Wannier functions dynamics with nspin=2 wasn't working
