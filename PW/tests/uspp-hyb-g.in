@@ -1,0 +1,28 @@
+&CONTROL
+                 calculation = 'scf' ,
+                     tprnfor = .true.
+ /
+ &SYSTEM
+                       ibrav = 1,
+                   celldm(1) = 12.0,
+                         nat = 2,
+                        ntyp = 2,
+                     ecutwfc = 25.0,
+                     ecutrho =100.0,
+                        input_dft='hse'
+                        nbnd = 8
+    exxdiv_treatment='gygi-baldereschi'
+    x_gamma_extrapolation = .true.
+ /
+ &ELECTRONS
+    tqr=.true.
+ /
+ &IONS
+ /
+ATOMIC_SPECIES
+  C 16.0  C.pbe-rrkjus.UPF
+  O 16.0  O.pbe-rrkjus.UPF
+ATOMIC_POSITIONS angstrom 
+  C  0.3256  0.3256  0.3256
+  O -0.3256 -0.3256 -0.3256
+K_POINTS gamma
