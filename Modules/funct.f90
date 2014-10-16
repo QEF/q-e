@@ -118,6 +118,7 @@ module funct
   !              "vdw-df-obk8"  ="sla+pw+obk8+vdw1"   = vdW-DF-obk8 (optB88-vdW)
   !              "vdw-df-ob86"  ="sla+pw+ob86+vdw1"   = vdW-DF-ob86 (optB86b-vdW)
   !              "vdw-df2-b86r" ="sla+pw+b86r+vdw2"   = vdW-DF2-B86R (rev-vdw-df2)
+  !              "rvv10" = "sla+pw+rw86+pbc+vv10"     = rVV10
   !
   ! Any nonconflicting combination of the following keywords is acceptable:
   !

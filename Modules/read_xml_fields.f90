@@ -121,11 +121,11 @@ CONTAINS
     !
     ! ... reconstruction of input_dft variable ( parameter used in the old input format )
     !
-    ! ... if one of the parameter is setted
+    ! ... if one of the parameter is set
     IF ( (trim(exchange) /= 'none') .or. (trim(exchange_grad_corr) /= 'none')  &
          .or. (trim(correlation) /= 'none') .or.  (trim(correlation_grad_corr) /= 'none') ) THEN
        !
-       ! ... all the parameter must be setted
+       ! ... all the parameter must be set
        IF ( (trim(exchange) /= 'none') .and. (trim(exchange_grad_corr) /= 'none')  &
             .and. (trim(correlation) /= 'none') .and.  (trim(correlation_grad_corr) /= 'none') ) THEN
 
