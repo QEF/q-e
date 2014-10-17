@@ -386,6 +386,7 @@ SUBROUTINE phq_readin()
   !    reads the q point (just if ldisp = .false.)
   !
   IF (meta_ionode) THEN
+     ios = 0
      IF (qplot) THEN
         READ (5, *, iostat = ios) nqaux
      ELSE
