@@ -120,6 +120,7 @@ PROGRAM lr_dav_main
   ! USPP because we didn't store the S* vector basis. Turn this step on only
   ! in cases of debugging
   ! call check_orth() 
+  if(lplot_drho) call plot_drho()
 
 100 continue
   !   Deallocate pw variables

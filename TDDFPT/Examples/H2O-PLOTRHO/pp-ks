@@ -1,0 +1,36 @@
+#!/bin/bash
+. ~/env.xc
+
+if(($#==0)); then echo "$0: please indicate the config"; exit; fi
+
+prefix=$1  
+outdir="out"
+stdin="./"
+stdout="./"
+
+nat=`awk 'NR==1{print $1}' ${dir_config}/${prefix}.xyz`
+for ((i=1;i<=10;i++))
+do 
+echo "Doing:  ", $i
+cat > ${stdin}/si-pp-${prefix} << EOF
+                &inputPP
+                 prefix="$prefix",
+                 outdir="$outdir"
+                 filplot="orb/$prefix-${i}.orb",
+                 plot_num=7,
+                 kband=$i
+                 lsign=.true.
+                 kpoint=1,
+                /
+                &plot
+                 nfile=1,
+                 iflag=3,
+                 filepp(1)="orb/${prefix}-$i.orb",
+                 fileout="orb/${prefix}-$i.cub",
+                 output_format=6,
+                 nx=70,ny=70,nz=20
+                 /
+EOF
+mpirun.openmpi -np 4 ${dir_rpa}/pp.x < ${stdin}/si-pp-${prefix} | tee ${stdout}/so-$i-pp-${prefix}
+done
+rm orb/*.orb

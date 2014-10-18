@@ -91,6 +91,7 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (max_iter, ionode_id, world_comm )
   CALL mp_bcast (conv_assistant, ionode_id, world_comm )
   CALL mp_bcast (if_dft_spectrum, ionode_id, world_comm )
+  CALL mp_bcast (lplot_drho, ionode_id, world_comm )
   CALL mp_barrier(world_comm)
 
 #endif

@@ -31,7 +31,7 @@ MODULE lr_dav_variables
   logical :: precondition,dav_debug, single_pole,&
              sort_contr,diag_of_h,print_spectrum,if_check_orth,&
              if_random_init,if_check_her,poor_of_ram,poor_of_ram2,&
-             conv_assistant,if_dft_spectrum
+             conv_assistant,if_dft_spectrum,lplot_drho
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !Global Variables

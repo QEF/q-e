@@ -1091,7 +1091,7 @@ contains
       if(message=="END")&
         write(stdout,'(/7x,"! The",I5,1x,"-th eigen state. The transition&
          & energy is: ", 5x, F12.8)') ieign, tr_energy(ia)
-      ! Please see Documentation for the explain of the next four steps
+      ! Please see Documentation for the explaination of the next four steps
       ! In short it gets the right components of X and Y
       ! Apply C to the right eigen state in order to calculate the right omega
       call dgemv('N',num_basis,num_basis,(1.0D0,0.0D0),dble(M_C),&
@@ -1835,6 +1835,106 @@ contains
   CALL print_clock_lr()
   CALL stop_lr( .false. )
 
+  return
   end subroutine dft_spectrum
+  !-------------------------------------------------------------------------------
+
+  subroutine plot_drho()
+    !-------------------------------------------------------------------------------
+    ! Created by X.Ge in Aug. 2013
+    !-------------------------------------------------------------------------------
+    ! This routine generates the plot file for the drho 
+
+    use kinds,                only : dp
+    use lr_variables,         only : evc0, sevc0,R, nbnd_total,evc0_virt,rho_1,rho_1c
+    use lr_dav_variables
+    use wvfct,                only : nbnd
+    use fft_base,             only : dffts,dfftp
+    use io_global,            only : stdout,ionode,ionode_id
+    use mp,                   only : mp_bcast,mp_barrier                  
+    use mp_world,             only : world_comm
+    USE cell_base,  ONLY : bg, ibrav, celldm
+    USE gvect,      ONLY : gcutm, ngm, nl, nlm
+    USE wvfct,      ONLY : ecutwfc
+    USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
+    USE io_global,  ONLY : stdout, ionode,ionode_id
+    USE io_files,   ONLY : tmp_dir
+    USE fft_base,   ONLY : grid_gather
+    USE gvecs,    ONLY : dual
+    USE control_flags,                ONLY : gamma_only
+    use lr_us
+    
+    implicit none
+    integer :: ieign, ir, iunplot, plot_num, ios,ipol,jpol,nt,na
+    complex(dp), allocatable :: rhoc(:)
+    REAL(DP), ALLOCATABLE  :: raux (:)
+    character(len=256) :: filename
+    CHARACTER(len=6), EXTERNAL :: int_to_char
+    integer, external :: find_free_unit
+#if defined (__MPI)
+    ! auxiliary vector for gathering info from multiple cores
+    REAL(DP), ALLOCATABLE :: raux1 (:)
+#endif
+
+    call start_clock('plot_drho')
+    allocate(rhoc(dfftp%nnr))
+    allocate(raux(dfftp%nnr))
+    
+    do ieign = 1, num_eign
+      ! Calc the response density
+      rhoc=0.d0
+      CALL lr_calc_dens( left_full(1,1,1,ieign), .false. )
+      if(gamma_only) then
+        rhoc(:)=cmplx(rho_1(:,1),0.d0,dp)
+      else
+        rhoc(:)=rho_1c(:,1)
+      endif
+      CALL lr_calc_dens( right_full(1,1,1,ieign), .false. )
+      if(gamma_only) then
+        rhoc(:)=rhoc(:)+cmplx(rho_1(:,1),0.d0,dp)
+      else
+        rhoc(:)=rhoc(:)+rho_1c(:,1)
+      endif
+ 
+      ! Convert to plot
+      do ir=1, dfftp%nnr
+        raux(ir)=sign(sqrt(dble(rhoc(ir)*conjg(rhoc(ir)))),dble(rhoc(ir)))
+      end do
+      
+      iunplot = find_free_unit()
+      plot_num = - 1
+      filename="drho-of-eign-"//trim(int_to_char(ieign))
+      IF ( ionode ) THEN 
+        OPEN (unit = iunplot, file = trim(tmp_dir)//trim(filename),&
+           status = 'unknown', err = 100, iostat = ios)  
+100     CALL errore ('plotout', 'opening file', ABS (ios) )
+        REWIND (iunplot)
+        WRITE (iunplot, '(a)') "drho plot"
+        WRITE (iunplot, '(8i8)') dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, dfftp%nr1,&
+                               dfftp%nr2, dfftp%nr3, nat, ntyp
+        WRITE (iunplot, '(i6,6f12.8)') ibrav, celldm
+        WRITE (iunplot, '(3f20.10,i6)') gcutm, dual, ecutwfc, plot_num
+        WRITE (iunplot, '(i4,3x,a2,3x,f5.2)') (nt, atm (nt), zv (nt), nt=1, ntyp)
+        WRITE (iunplot, '(i4,3x,3f14.10,3x,i2)') (na, &
+             (tau (jpol, na), jpol = 1, 3), ityp (na), na = 1, nat)
+      endif
+    
+#ifdef __MPI
+      ALLOCATE (raux1( dfftp%nr1x * dfftp%nr2x * dfftp%nr3x))
+      CALL grid_gather (raux, raux1)
+      IF ( ionode ) WRITE (iunplot, '(5(1pe17.9))') &
+          (raux1 (ir) , ir = 1, dfftp%nr1x * dfftp%nr2x * dfftp%nr3x)
+      DEALLOCATE (raux1)
+#else
+      IF ( ionode ) WRITE (iunplot, '( 5( 1pe17.9 ) )')&
+          (raux (ir) , ir = 1, dfftp%nnr)
+#endif
+      IF (ionode)  CLOSE (unit = iunplot)
+    enddo
+
+    call stop_clock('plot_drho')
+    return
+  end subroutine plot_drho
+  !-------------------------------------------------------------------------------
 
 END MODULE lr_dav_routines
