@@ -45,7 +45,7 @@ CONTAINS
   LOGICAL, intent(out), optional :: lxmlinput
   CHARACTER (len=*), intent(inout), optional :: attr
   !
-  LOGICAL :: lxmlinput_loc,lcheckxml
+  LOGICAL :: lcheckxml
   INTEGER :: ierr, len
   INTEGER :: stdtmp
   CHARACTER(LEN=512) :: dummy
@@ -86,7 +86,6 @@ CONTAINS
 20   CLOSE ( UNIT=stdtmp, STATUS='keep' )
   ENDIF
   !
-  lxmlinput_loc = .false.
   IF (lcheckxml) THEN
     !
     len = LEN_TRIM(input_file)
