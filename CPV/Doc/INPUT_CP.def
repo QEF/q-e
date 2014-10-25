@@ -1107,6 +1107,18 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
             }
         }
 
+        var ion_damping -type REAL {
+          default { 0.2D0 }
+          info {
+            damping frequency times delta t, optimal values could be
+              calculated with the formula :
+              SQRT( 0.5 * LOG( ( E1 - E2 ) / ( E2 - E3 ) ) )
+              where E1, E2, E3 are successive values of the DFT total energy
+              in a steepest descent simulations.
+              meaningful only if " ion_dynamics = 'damp' "
+          }
+        }
+
         dimension ion_radius -start 1 -end ntyp -type REAL {
             default { 0.5 a.u. for all species }
             info {
@@ -1115,12 +1127,15 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                 Results should NOT depend upon such parameters if their values
                 are properly chosen. See also "iesr".
             }
+        }
+
         var iesr -type INTEGER {
             default { 1 }
             info {
                 The real-space contribution to the Ewald summation is performed
                 on iesr*iesr*iesr cells. Typically iesr=1 is sufficient to have
                 converged results. 
+            }
         }
 
         var ion_nstepe -type INTEGER {
@@ -2311,5 +2326,45 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
                        }
                     }
 	}
+    }
+
+    #
+    # AUTOPILOT
+    #
+    card AUTOPILOT {
+
+      label {
+        Optional card, changes some variables on the fly of the calculation.
+
+        Notice that the rules has to be ordered in with time step and the Card has
+        to be terminated with "ENDRULES"
+      }
+
+
+      syntax {
+        table state_index {
+          rows -start 1 -end nevent {
+            col pilot_rule -type RULE {
+              info {
+                To set up a rule, one can add the scheduled steps with on_step and
+                separate the corresponding change in parameters with a column.
+
+                See a simple example bellow:
+
+                AUTOPILOT
+                    on_step =  31  : dt               = 5.0
+                    on_step =  91  : iprint           = 100
+                    on_step =  91  : isave            = 100
+                    on_step = 191  : ion_dynamics     = 'damp'
+                    on_step = 191  : electron_damping = 0.00
+                    on_step = 691  : ion_temperature  = 'nose'
+                    on_step = 691  : tempw            = 150.0
+                ENDRULES
+              }
+            }
+          }
+        }
+      }
+
     }
 }
