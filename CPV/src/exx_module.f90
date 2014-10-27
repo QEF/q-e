@@ -287,6 +287,51 @@ CONTAINS
           & number of electronic states is not integer multiple of two times the number of task groups. &
           & Either change the number of taskgroups or restrict number of MPI tasks up to the number of electronic states.',1)
       !
+      ! to fix this issue. see file exx_psi.f90, exx_gs.f90
+      IF(nproc_image.GT.nbsp) THEN
+        !
+        IF (NINT(2**(LOG(DBLE(INT(nproc_image / dfftp%nr3))) / LOG(2.0))).EQ.1) THEN
+          !
+          write(stdout,*) 
+          write(stdout,*) "**********************************************************************************************"
+          write(stdout,*) "*****************************   EXX PARALLELIZATION SUGGESTION   *****************************"
+          write(stdout,*) "**********************************************************************************************"
+          write(stdout,*) "You may want to use number of MPI tasks = ", CEILING(DBLE(2.0*dfftp%nr3)/DBLE(nbsp))*nbsp,& 
+            & "(combined with -ntg 2)"
+          !
+        ELSE IF (NINT(2**(LOG(DBLE(INT(nproc_image / dfftp%nr3))) / LOG(2.0))).GT.dffts%nogrp) THEN
+          !
+          write(stdout,*) 
+          write(stdout,*) "**********************************************************************************************"
+          write(stdout,*) "*****************************   EXX PARALLELIZATION SUGGESTION   *****************************"
+          write(stdout,*) "**********************************************************************************************"
+          write(stdout,*) "You may want to change number of taskgroups (-ntg) to ", NINT(2**(LOG(DBLE(INT(nproc_image / dfftp%nr3))) / LOG(2.0)))
+        END IF
+        !
+        IF(dffts%nogrp.EQ.1) THEN
+          !
+          write(stdout,*) 
+          write(stdout,*) "**********************************************************************************************"
+          write(stdout,*) "*****************************         Possible Solutions         *****************************"
+          write(stdout,*) "**********************************************************************************************"
+          write(stdout,*) "For the following error printing, we offer the following solutions:"
+          write(stdout,*) " 1. (generic) Use numer of MPI tasks equal to the number of electronic states and -ntg 1"
+          write(stdout,*) " 2. (advance) Tune numer of MPI tasks as integral multiple of the number of electronic states "
+          write(stdout,*) "              such that this number is greater than or equal to the nr3x * (Taskgroups number)"
+          write(stdout,*) "              Notice that the (Taskgroups number) should be at least 2."
+          write(stdout,*) "              (See EXX PARALLELIZATION SUGGESTION above)"
+          !
+          CALL errore('exx_module','EXX calculation error : &
+            & One needs number of task groups =  2^n where n is a positive integer when number of MPI tasks is greater than &
+            & the number of electronic states. See above for Possible Solutions',1)
+        ELSE IF (NINT(2**(LOG(DBLE(dffts%nogrp)) / LOG(2.0))).NE.dffts%nogrp) THEN
+          CALL errore('exx_module','EXX calculation error : &
+            & One needs number of task groups =  2^n where n is a positive integer when number of MPI tasks is greater than &
+            & the number of electronic states.',1)
+        END IF
+        !
+      END IF
+      !
       IF((dffts%nogrp.GT.1).AND.(dfftp%nr3*dffts%nogrp.GT.nproc_image)) CALL errore('exx_module','EXX calculation error : &
           & (nr3x * number of taskgroups) is greater than the number of MPI tasks. Change the number of MPI tasks or the number &
           & of taskgroups or both. To estimate ntg, find the value of nr3x in the output and compute (MPI task/nr3x) and take &
