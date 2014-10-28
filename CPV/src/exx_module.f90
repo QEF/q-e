@@ -156,9 +156,9 @@ CONTAINS
       WRITE(stdout,'(/,3X,"----------------------------------------------------")')
       WRITE(stdout,'(3X,"Exact Exchange Using Wannier Function Initialization")')
       WRITE(stdout,'(3X,"----------------------------------------------------")')
-      WRITE(stdout,'(/,3X,"The references for this algorithm are:",/ &
-          &,5X,"(i)  theory: X. Wu , A. Selloni, and R. Car, Phys. Rev. B 79, 085102 (2009).",/ &
-          &,5X,"(ii) implementation: H.-Y. Ko, B. Santra, R. A. DiStasio, L. Kong, and R. Car, arxiv.")')
+      !WRITE(stdout,'(/,3X,"The references for this algorithm are:",/ &
+      !    &,5X,"(i)  theory: X. Wu , A. Selloni, and R. Car, Phys. Rev. B 79, 085102 (2009).",/ &
+      !    &,5X,"(ii) implementation: H.-Y. Ko, B. Santra, R. A. DiStasio, L. Kong, Z. Li, X. Wu, and R. Car, arxiv.")')
       !
       WRITE(stdout,'(/,3X,"Parallelization info :")')
       WRITE(stdout,'(5X,"electronic states   ",3X,I7)') nbsp
@@ -292,6 +292,8 @@ CONTAINS
         !
         IF (NINT(2**(LOG(DBLE(INT(nproc_image / dfftp%nr3))) / LOG(2.0))).EQ.1) THEN
           !
+          ! NINT(2**(LOG(DBLE(INT(nproc_image / dfftp%nr3))) / LOG(2.0))) is the largest possible task group that one may use in this implementation
+          !
           write(stdout,*) 
           write(stdout,*) "**********************************************************************************************"
           write(stdout,*) "*****************************   EXX PARALLELIZATION SUGGESTION   *****************************"
@@ -324,7 +326,11 @@ CONTAINS
           CALL errore('exx_module','EXX calculation error : &
             & One needs number of task groups =  2^n where n is a positive integer when number of MPI tasks is greater than &
             & the number of electronic states. See above for Possible Solutions',1)
+          !
         ELSE IF (NINT(2**(LOG(DBLE(dffts%nogrp)) / LOG(2.0))).NE.dffts%nogrp) THEN
+          !
+          ! NINT(2**(LOG(DBLE(dffts%nogrp)) / LOG(2.0))) is the largest power of 2 that is smaller or equal to dffts%nogrp
+          !
           CALL errore('exx_module','EXX calculation error : &
             & One needs number of task groups =  2^n where n is a positive integer when number of MPI tasks is greater than &
             & the number of electronic states.',1)
