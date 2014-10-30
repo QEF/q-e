@@ -152,3 +152,6 @@ LIBS           = $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FFT_LIBS) $(BLAS_LIBS) $(MPI
 
 # wget or curl - useful to download from network
 WGET = @wget@
+
+# Install directory 
+PREFIX = @prefix@

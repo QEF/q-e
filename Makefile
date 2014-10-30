@@ -185,6 +185,16 @@ links : bindir
 	done \
 	)
 
+#########################################################
+# 'make install' works based on --with-prefix
+# - If the final directory does not exists it creates it
+#########################################################
+
+install : touch-dummy
+	if test -d bin ; then \
+	mkdir -p $(PREFIX) ; for x in `find . -name *.x -type f` ; do cp $$x $(PREFIX)/ ; done ; \
+	fi
+
 
 #########################################################
 # Other targets: clean up

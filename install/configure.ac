@@ -7,6 +7,9 @@ AC_ARG_VAR(EXTLIB_FLAGS, This variable controls the flags passed to internal BLA
 # options
 # -----------------------------
 
+# set install dir to $INSTALLDIR if '--prefix; not specified
+AC_PREFIX_DEFAULT("\$(INSTALLDIR)")
+
 AC_ARG_ENABLE(parallel,
    [AS_HELP_STRING([--enable-parallel],
        [compile for parallel execution if possible (default: yes)])],
@@ -170,6 +173,7 @@ blacs_dir=$BLACS_LIB          # Where to look for libblacs.a
 ar=$AR                   # ar (shouldn't be needed)
 arflags=$ARFLAGS         # Flags for ar (as above)
 extlib_flags=$EXTLIB_FLAGS # Flags for internal copies of lapack and blas
+
 # configure for current directory by default
 if test "$topdir" = "" ; then topdir="`pwd`" ; fi
 
@@ -2208,6 +2212,9 @@ AC_SUBST(parallel_report)
 AC_SUBST(wget)
 AC_SUBST(topdir)
 AC_SUBST(extlib_flags)
+
+# Maybe not necessary... @prefix@ is a autoconf common keyword
+AC_SUBST(prefix)
 
 AC_CONFIG_HEADERS([include/c_defs.h:include/c_defs.h.in])
 AC_CONFIG_FILES(make.sys)

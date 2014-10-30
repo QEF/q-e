@@ -598,6 +598,7 @@ PACKAGE_VERSION='5.1.svn'
 PACKAGE_STRING='ESPRESSO 5.1.svn'
 PACKAGE_BUGREPORT=''
 
+ac_default_prefix="\$(INSTALLDIR)"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
@@ -1887,6 +1888,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 # options
 # -----------------------------
 
+# set install dir to $INSTALLDIR if '--prefix; not specified
+
+
 # Check whether --enable-parallel was given.
 if test "${enable_parallel+set}" = set; then
   enableval=$enable_parallel; set_use_parallel=1
@@ -2076,6 +2080,7 @@ blacs_dir=$BLACS_LIB          # Where to look for libblacs.a
 ar=$AR                   # ar (shouldn't be needed)
 arflags=$ARFLAGS         # Flags for ar (as above)
 extlib_flags=$EXTLIB_FLAGS # Flags for internal copies of lapack and blas
+
 # configure for current directory by default
 if test "$topdir" = "" ; then topdir="`pwd`" ; fi
 
@@ -11818,6 +11823,9 @@ fi
 
 
 
+
+
+# Maybe not necessary... @prefix@ is a autoconf common keyword
 
 
 ac_config_headers="$ac_config_headers include/c_defs.h:include/c_defs.h.in"
