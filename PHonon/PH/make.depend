@@ -1009,6 +1009,7 @@ phq_init.o : elph.o
 phq_init.o : phcom.o
 phq_readin.o : ../../Modules/control_flags.o
 phq_readin.o : ../../Modules/fft_base.o
+phq_readin.o : ../../Modules/funct.o
 phq_readin.o : ../../Modules/input_parameters.o
 phq_readin.o : ../../Modules/io_files.o
 phq_readin.o : ../../Modules/io_global.o

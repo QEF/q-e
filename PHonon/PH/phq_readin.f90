@@ -29,6 +29,7 @@ SUBROUTINE phq_readin()
   USE ktetra,        ONLY : ltetra
   USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir, io_level, &
                             llondon
+  USE funct,         ONLY : dft_is_nonlocc, dft_is_hybrid
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
@@ -582,6 +583,12 @@ SUBROUTINE phq_readin()
 
   IF (llondon) CALL errore('phq_readin',&
      'The phonon code with DFT-D is not yet available',1)
+
+  IF ( dft_is_nonlocc() ) CALL errore('phq_readin',&
+     'The phonon code with non-local vdW functionals is not yet available',1)
+
+  IF ( dft_is_hybrid() ) CALL errore('phq_readin',&
+     'The phonon code with hybrid functionals is not yet available',1)
 
   IF (okpaw.and.(lraman.or.elop)) CALL errore('phq_readin',&
      'The phonon code with paw and raman or elop is not yet available',1)
