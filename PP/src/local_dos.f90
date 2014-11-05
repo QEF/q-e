@@ -136,9 +136,9 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
      ENDDO
   ENDDO
 
-  IF (npool>1) THEN
+  IF ( iflag == 0 .AND. npool > 1 ) THEN
      CALL xk_pool( kpoint, nkstot, kpoint_pool,  which_pool )
-     IF (kpoint_pool<1 .or. kpoint_pool> nks) &
+     IF ( kpoint_pool < 1 .or. kpoint_pool > nks ) &
         CALL errore('local_dos','problems with xk_pool',1)
      i_am_the_pool=(my_pool_id==which_pool)
   ELSE
