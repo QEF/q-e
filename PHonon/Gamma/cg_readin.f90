@@ -14,7 +14,7 @@ SUBROUTINE cg_readin()
   USE pwcom
   USE cgcom
   USE fft_base,      ONLY : dffts
-  USE control_flags, ONLY : gamma_only
+  USE control_flags, ONLY : gamma_only, llondon
   USE uspp,          ONLY : okvan
   USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, ionode_id
@@ -92,6 +92,8 @@ SUBROUTINE cg_readin()
   !
   IF (.not. gamma_only) CALL errore('cg_readin', &
       'need pw.x data file produced using Gamma tricks',1)
+  IF ( llondon ) CALL errore('cg_readin', &
+      'phonons with DFT-D not implemented',1)
   !
   !   Task groups not used. 
   !
