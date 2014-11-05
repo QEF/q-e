@@ -1,4 +1,5 @@
 !
+
 ! Copyright (C) 2001-2013 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -26,7 +27,8 @@ SUBROUTINE phq_readin()
   USE start_k,       ONLY : reset_grid
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, lgauss
   USE ktetra,        ONLY : ltetra
-  USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir, io_level
+  USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir, io_level, &
+                            llondon
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
@@ -577,6 +579,9 @@ SUBROUTINE phq_readin()
 
   IF (lda_plus_u) CALL errore('phq_readin',&
      'The phonon code with LDA+U is not yet available',1)
+
+  IF (llondon) CALL errore('phq_readin',&
+     'The phonon code with DFT-D is not yet available',1)
 
   IF (okpaw.and.(lraman.or.elop)) CALL errore('phq_readin',&
      'The phonon code with paw and raman or elop is not yet available',1)
