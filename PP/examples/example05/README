@@ -19,3 +19,15 @@ namelist U_projection_type='file' so that the freshly produced Wannier
 functions are used in the projection.
 The outcome of this calculation is an insulating state with d-level
 occupations really close to 0 or 1.
+
+In addition to this, the example shows how to obtain fat bands (i.e., band
+structures "weighted" by the overlap with atomic wave functions) and thereby
+identify which bands have the largest content of, e.g., Fe 3d-character.
+A non-self consistent calculation is used to compute the band structure along
+a path in the Brillouin zone, followed by the calculation of the projections
+onto atomic orbitals (projwfc.x) and the band symmetry analysis (bands.x).
+The small utility plotband.x combines those data and produces band structure
+plots with an additional third column containing the weight on the selected
+wavefunction (or the sum, if more than one is specified). In this case, the
+projections onto the 10 atomic 3d wavefunctions of the two Fe are summed up.
+

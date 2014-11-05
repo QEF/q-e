@@ -23,7 +23,7 @@ $ECHO  LDA+U calculation on FeO. Read file README for more details"
 . ../../../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x pmw.x"
+BIN_LIST="pw.x pmw.x projwfc.x bands.x plotband.x"
 PSEUDO_LIST="O.pz-rrkjus.UPF Fe.pz-nd-rrkjus.UPF"
 
 $ECHO
@@ -75,15 +75,20 @@ done
 
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PROJWFC_COMMAND="$PARA_PREFIX $BIN_DIR/projwfc.x $PARA_POSTFIX"
+BANDS_COMMAND="$PARA_PREFIX $BIN_DIR/bands.x $PARA_POSTFIX"
+PLOTBAND_COMMAND="$BIN_DIR/plotband.x"
 PMW_COMMAND="$PARA_PREFIX $BIN_DIR/pmw.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO "  running pmw.x as: $PMW_COMMAND"
+$ECHO "  running projwfc.x as: $PROJWFC_COMMAND"
+$ECHO "  running bands.x as: $BANDS_COMMAND"
+$ECHO "  running plotband.x as: $PLOTBAND_COMMAND"
 $ECHO
 
 # self-consistent calculation with standard LDA
 cat > feo_LDA.in << EOF
-FeO
 FeO Wustite in LDA
  &control
     calculation = 'scf'
@@ -130,7 +135,154 @@ $PW_COMMAND < feo_LDA.in > feo_LDA.out
 check_failure $?
 $ECHO " done"
 
-$ECHO "  2) running poormanwannier post-processing to build Wannier projectors ...\c"
+# non-self-consistent LDA calculation for band structure plot
+cat > feo_nscf.in << EOF
+FeO Wustite in LDA
+ &control
+    calculation = 'bands'
+    restart_mode='from_scratch',
+    prefix='feo_af-bands',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+    tprnfor = .true., tstress=.true.
+ /
+ &system
+    ibrav=  0, celldm(1)=8.19, nat=  4, ntyp= 3,
+    ecutwfc = 30.0, ecutrho = 240.0, nbnd=25,
+    starting_magnetization(1)= 0.0,
+    starting_magnetization(2)= 0.5,
+    starting_magnetization(3)=-0.5,
+    occupations='smearing', smearing='gauss', degauss=0.01,
+    nspin=2,
+    lda_plus_u=.true.  Hubbard_U(2)=1.d-8, Hubbard_U(3)=1.d-8,
+ /
+ &electrons
+    mixing_mode = 'plain'
+    mixing_beta = 0.3
+    conv_thr =  1.0d-6
+    mixing_fixed_ns = 0
+ /
+CELL_PARAMETERS
+0.50 0.50 1.00
+0.50 1.00 0.50
+1.00 0.50 0.50
+ATOMIC_SPECIES
+ O1   1.  O.pz-rrkjus.UPF
+ Fe1  1.  Fe.pz-nd-rrkjus.UPF
+ Fe2  1.  Fe.pz-nd-rrkjus.UPF
+ATOMIC_POSITIONS {crystal}
+ O1  0.25 0.25 0.25
+ O1  0.75 0.75 0.75
+ Fe1 0.0  0.0  0.0
+ Fe2 0.5  0.5  0.5
+K_POINTS {crystal_b}
+6
+ 0.00      0.00     0.00      15  !G
+ 0.00      0.50     0.00       6  !L
+ 0.34375   0.8125   0.34375   14  !K'
+ 0.50      0.50     0.50       8  !T
+ 0.00      0.00     0.00      16  !G
+ 0.00      0.50     0.50       0  !X
+EOF
+# copy restart directory from SCF run
+test -d $TMP_DIR/feo_af-bands.save && rm -r $TMP_DIR/feo_af-bands.save
+cp -r $TMP_DIR/feo_af.save $TMP_DIR/feo_af-bands.save
+cp -f $TMP_DIR/feo_af.occup $TMP_DIR/feo_af-bands.occup
+#
+$ECHO "  2) running nscf for FeO band structure ...\c"
+$PW_COMMAND < feo_nscf.in > feo_nscf.out
+check_failure $?
+$ECHO " done"
+
+# symmetry analysis of LDA bands
+cat > feo_bands.in << EOF
+ &bands
+    prefix = 'feo_af-bands',
+    outdir = '$TMP_DIR/',
+    lsym = .TRUE.,
+    filband = 'feo_af-bands.dat',
+    spin_component = 1,
+ /
+EOF
+$ECHO "  3) performing symmetry analisys of bands ...\c"
+$BANDS_COMMAND < feo_bands.in > feo_bands.out
+check_failure $?
+$ECHO " done"
+
+# projection onto atomic wave functions
+cat > feo_proj.in << EOF
+ &projwfc
+    prefix = 'feo_af-bands',
+    outdir = '$TMP_DIR/',
+    lsym = .FALSE.,
+    filproj = 'feo_af-proj.dat'
+ /
+EOF
+$ECHO "  4) computing atomic projections of bands ...\c"
+$PROJWFC_COMMAND < feo_proj.in > feo_proj.out
+check_failure $?
+$ECHO " done"
+
+# plotband run using the projection weights from .proj to obtain "fat-bands"
+# automatically extract Fermi energy from SCF calculation
+eFermi=`grep Fermi feo_LDA.out | awk '{print $5}'`
+# make a link to the projection file using the name expected by plotband.x
+ln -s feo_af-proj.dat.up feo_af-bands.dat.proj
+# if feo_af-bands.dat.proj is found, one must supply an additional line with
+# the list of atomic wavefunctions (here, the 3d of both Fe ions)
+cat > feo_plot.in << EOF
+feo_af-bands.dat
+  10 11 12 13 14  16 17 18 19 20
+ -11.0  25.0
+feo_af.bands
+feo_af.bands.ps
+ $eFermi
+ 2.0  $eFermi
+EOF
+$ECHO "  5) using plotband to obtain fat bands for Fe 3d states ...\c"
+$PLOTBAND_COMMAND < feo_plot.in > feo_plot.out
+check_failure $?
+$ECHO " done"
+# merging all bands.?.? files produced by plotband in a single file,
+# but separated by double blank lines (Gnuplot record style): in this
+# way the can be plotted by Gnuplot with one single command
+$ECHO "# Merging feo_af.bands.[0-9].[0-9] files as gnuplot records" > feo_af.bands.all
+for filgnu in feo_af.bands.[0-9].[0-9];
+do
+    cat $filgnu >> feo_af.bands.all
+    $ECHO "\n" >> feo_af.bands.all
+done
+## remove all those files?
+#rm feo_af.bands.[0-9].[0-9]
+# Gnuplot script to plot weighted-bands colored according to the weight
+cat > plot.gnu << EOF
+#!/usr/bin/gnuplot
+
+set xrange [0.0:3.1868]
+unset xtics
+set yrange [-21.0:15.0]
+set ylabel 'E - E_F  (eV)'
+
+set border lw 2
+set style arrow 1 nohead front lw 2 lc rgb 'black'
+set label 'G' at graph 0,graph -0.03 center
+set arrow from 0.8292,graph 0 to 0.8292,graph 1 as 1
+set label 'L' at 0.8292, graph -0.03 center
+set arrow from 1.1223,graph 0 to 1.1223,graph 1 as 1
+set label "K'" at 1.1223,graph -0.03 center
+set arrow from 1.8878,graph 0 to 1.8878,graph 1 as 1
+set label 'T' at 1.8878, graph -0.03 center
+set arrow from 2.3208,graph 0 to 2.3208,graph 1 as 1
+set label 'G' at 2.3208, graph -0.03 center
+set label 'X' at graph 1,graph -0.03 center
+
+plot 'feo_af.bands.all' u 1:(\$2 - $eFermi):3 w l palette lw 2 notitle, \\
+     0.0 lt 1 lw 2 lc rgb 'grey50' notitle
+
+EOF
+
+# build projected-Wannier functions for Fe 3d states
+$ECHO "  6) running poormanwannier post-processing to build Wannier projectors ...\c"
 cat > pmw.in << EOF
  &inputpp
     outdir='$TMP_DIR/',
@@ -144,7 +296,6 @@ $ECHO " done"
 
 # self-consistent calculation with user defined ns + Wannier
 cat > feo_wannier.in << EOF
-FeO
 FeO Wustite whithin LDA+U with user defined ns + Wannier
  &control
     calculation = 'scf'
@@ -188,7 +339,7 @@ ATOMIC_POSITIONS {crystal}
 K_POINTS {automatic}
 2 2 2 0 0 0
 EOF
-$ECHO "  3) running scf for FeO in LDA+U using Wannier projectors...\c"
+$ECHO "  7) running scf for FeO in LDA+U using Wannier projectors...\c"
 $PW_COMMAND < feo_wannier.in > feo_wannier.out
 check_failure $?
 $ECHO " done"
