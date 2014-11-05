@@ -198,8 +198,10 @@ In the following, we will indicate by ${\bf q}$ the phonon wavevectors,
 while ${\bf k}$ will indicate Bloch vectors used for summing over the 
 Brillouin Zone.
 
-The main code \phx\ can be used whenever \PWscf\ can be 
-used, with the exceptions of DFT+U, nonlocal VdW and hybrid functionals. 
+The main code \phx\ can be used whenever \PWscf\ can be used, 
+with the exceptions of: DFT+U, semiempirical VdW corrections,
+nonlocal vdW and hybrid functionals, external electric fields,
+constraints on magnetization, nonperiodic boundary conditions.
 USPP and PAW are not implemented for higher-order response calculations.
 See the header of file \texttt{PHonon/PH/phonon.f90} for a complete and
 updated list of what \PHonon\ can and cannot do.
