@@ -28,7 +28,7 @@ SUBROUTINE phq_readin()
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, lgauss
   USE ktetra,        ONLY : ltetra
   USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir, io_level, &
-                            llondon
+                            llondon, ts_vdw
   USE funct,         ONLY : dft_is_nonlocc, dft_is_hybrid
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
@@ -583,6 +583,9 @@ SUBROUTINE phq_readin()
 
   IF (llondon) CALL errore('phq_readin',&
      'The phonon code with DFT-D is not yet available',1)
+
+  IF (ts_vdw) CALL errore('phq_readin',&
+     'The phonon code with TS-VdW is not yet available',1)
 
   IF ( dft_is_nonlocc() ) CALL errore('phq_readin',&
      'The phonon code with non-local vdW functionals is not yet available',1)
