@@ -112,7 +112,13 @@ SUBROUTINE setup()
      IF ( ANY (upf(1:ntyp)%nlcc) ) CALL infomsg( 'setup ', 'BEWARE:' // &
                & ' nonlinear core correction is not consistent with hybrid XC')
      IF (lmovecell) CALL errore('setup','Variable cell and EXX not tested!',1)
-     IF (noncolin) no_t_rev=.true.
+     IF ( noncolin ) THEN
+        IF ( okvan .OR. okpaw ) THEN
+           CALL errore('setup','Noncolinear EXX calculation for USPP/PAW not implemented',1)
+        ELSE
+           no_t_rev=.true.
+        END IF
+     END IF
   END IF
   !
   ! ... Compute the ionic charge for each atom type and the total ionic charge
