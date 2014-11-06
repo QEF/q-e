@@ -821,9 +821,11 @@ CONTAINS
       !
       istep = istep + 1
       !
-      IF ( istep == 1 ) &
+      IF ( istep == 1 ) THEN
          WRITE( UNIT = stdout, &
                 FMT = '(/,5X,"Damped Dynamics Calculation")' )
+         conv_ions = .FALSE.
+      END IF
       !
       ! ... check if convergence for structural minimization is achieved
       !
