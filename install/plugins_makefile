@@ -231,15 +231,15 @@ uncompress-want: touch-dummy
 	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../WANT; then \
 	(gzip -dc ../archive/$(WANT)-base.tar.gz | (cd ../ ; tar -xvf -)) ; \
-	(cd ../ ; ln -s $(WANT) WANT) ; fi 
+	(cd ../ ; ln -sf $(WANT) WANT) ; fi 
 	touch uncompress-want
 
 configure-want: touch-dummy
 	cd ../WANT ; \
-	./conf/configure \
+	./configure \
 	--with-external-iotk \
-	IOTK_LIBS="-L../../S3DE/iotk/src -liotk" \
-	IOTK_INCLUDE="$(MOD_FLAG)../../S3DE/iotk/src" \
+	IOTK_LIBS="-L../../../S3DE/iotk/src -liotk" \
+	IOTK_INCLUDE="$(MOD_FLAG)../../../S3DE/iotk/src" \
 	CC="$(CC)" \
 	F90="$(F90)" \
 	MPIF90="$(MPIF90)" \
