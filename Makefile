@@ -177,12 +177,18 @@ inst :
 		fi ; \
 	done )
 
+# Contains workaround for name conflicts (dos.x and bands.x) with WANT
 links : bindir
 	( cd bin/ ; \
 	rm -f *.x ; \
 	for exe in ../*/*/*.x ../*/bin/* ; do \
 	    if test ! -L $$exe ; then ln -fs $$exe . ; fi \
-	done \
+	done ; \
+	[ -f ../WANT/wannier/dos.x ] &&  ln -fs ../WANT/wannier/dos.x ../bin/dos_want.x ; \
+	[ -f ../PP/src/dos.x ] &&  ln -fs ../PP/src/dos.x ../bin/dos.x ; \
+	[ -f ../WANT/wannier/bands.x ] &&  ln -fs ../WANT/wannier/bands.x ../bin/bands_want.x ; \
+	[ -f ../PP/src/dos.x ] &&  ln -fs ../PP/src/bands.x ../bin/bands.x ; \
+	[ -f ../W90/wannier90.x ] &&  ln -fs ../W90/wannier90.x ../bin/wannier90.x ; \
 	)
 
 #########################################################
