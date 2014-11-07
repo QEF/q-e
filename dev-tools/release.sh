@@ -1,7 +1,7 @@
 #!/bin/sh -x
 
 tempdir=$HOME/Downloads
-version=5.1
+version=5.1.1
 
 # make sure there is no locale setting creating unneeded differences.
 LC_ALL=C
