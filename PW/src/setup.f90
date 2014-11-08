@@ -108,13 +108,14 @@ SUBROUTINE setup()
 
   IF ( dft_is_hybrid() ) THEN
      IF (.NOT. lscf) CALL errore( 'setup ', &
-                         'HYBRID XC not allowed in non-scf calculations', 1 )
+                         'hybrid XC not allowed in non-scf calculations', 1 )
      IF ( ANY (upf(1:ntyp)%nlcc) ) CALL infomsg( 'setup ', 'BEWARE:' // &
                & ' nonlinear core correction is not consistent with hybrid XC')
-     IF (lmovecell) CALL errore('setup','Variable cell and EXX not tested!',1)
+     IF (lmovecell) CALL errore('setup','Variable cell and hybrid XC not tested',1)
+     IF (okpaw) CALL errore('setup','PAW and hybrid XC not tested',1)
      IF ( noncolin ) THEN
-        IF ( okvan .OR. okpaw ) THEN
-           CALL errore('setup','Noncolinear EXX calculation for USPP/PAW not implemented',1)
+        IF ( okvan ) THEN
+           CALL errore('setup','Noncolinear hybrid XC for USPP not implemented',1)
         ELSE
            no_t_rev=.true.
         END IF
