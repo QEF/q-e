@@ -307,7 +307,8 @@ CONTAINS
           write(stdout,*) "**********************************************************************************************"
           write(stdout,*) "*****************************   EXX PARALLELIZATION SUGGESTION   *****************************"
           write(stdout,*) "**********************************************************************************************"
-          write(stdout,*) "You may want to change number of taskgroups (-ntg) to ", NINT(2**(LOG(DBLE(INT(nproc_image / dfftp%nr3))) / LOG(2.0)))
+          write(stdout,*) "You may want to change number of taskgroups (-ntg) to ", &
+            NINT(2**(LOG(DBLE(INT(nproc_image / dfftp%nr3))) / LOG(2.0)))
         END IF
         !
         IF(dffts%nogrp.EQ.1) THEN
