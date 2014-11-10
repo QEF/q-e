@@ -2557,7 +2557,7 @@ MODULE exx
     USE cell_base,            ONLY : alat, omega, bg, at, tpiba
     USE symm_base,            ONLY : nsym, s
     USE gvect,                ONLY : ngm
-    USE gvecs,                ONLY : nls, nlsm, doublegrid
+    USE gvecs,                ONLY : ngms, nls, nlsm, doublegrid
     USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, current_k
     USE control_flags,        ONLY : gamma_only
     USE wavefunctions_module, ONLY : evc
@@ -2570,6 +2570,7 @@ MODULE exx
     USE mp,                   ONLY : mp_sum 
     USE fft_base,             ONLY : dffts
     USE fft_interfaces,       ONLY : fwfft, invfft
+    USE uspp,                 ONLY : okvan
     !
     ! ---- local variables -------------------------------------------------
     !
@@ -2594,7 +2595,8 @@ MODULE exx
     CALL start_clock ('exx_stress')
 
     IF (npool>1) CALL errore('exx_stress','stress not available with pools',1)
-    IF (noncolin) CALL errore('exx_stress','stress not available with noncolin',1)
+    IF (noncolin) CALL errore('exx_stress','noncolinear stress not implemented',1)
+    IF (okvan) CALL infomsg('exx_stress','USPP stress not tested')
 
     nrxxs = dffts%nnr
     delta = reshape( (/1._dp,0._dp,0._dp, 0._dp,1._dp,0._dp, 0._dp,0._dp,1._dp/), (/3,3/))
