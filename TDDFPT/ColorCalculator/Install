@@ -2,6 +2,7 @@
 cd src 
 javac *.java
 jar cfm ColorCalculator5.jar Manifest.txt *.class org com
+#jar cfm ColorCalculator5.jar Manifest.txt *.class jfreechart-1.0.19.jar com org
 mv ColorCalculator5.jar ..
 cd .. 
 
