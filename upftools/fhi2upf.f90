@@ -264,14 +264,19 @@ SUBROUTINE convert_fhi (upf)
   upf%ecutrho=0.0d0
   upf%ecutwfc=0.0d0
   !
+! 2014/11/11 JM
+! Use lloc (from fhi module) here, otherwise the user input has not effect on the vloc assignment below.
+! In case of a .cpi file (i.e. direct output from Martin Fuchs's FHI98PP code), which does not include information about lloc,
+! a proper conversion could actually never have been achieved in the past.
   PRINT '("Confirm or modify l max, l loc (read:",2i3,") > ",$)', lmax, lloc
-  READ (5,*) lmax, upf%lloc
-
-  IF ( lmax == upf%lloc) THEN
+  READ (5,*) lmax, lloc
+  !
+  IF ( lmax == lloc) THEN
      upf%lmax = lmax-1
   ELSE
      upf%lmax = lmax
   ENDIF
+  upf%lloc = lloc
   upf%lmax_rho = 0
   upf%nwfc  = lmax+1
   !
@@ -352,7 +357,11 @@ SUBROUTINE convert_fhi (upf)
            iv=iv+1
            upf%kbeta(iv)=upf%mesh
            DO ir = upf%mesh,1,-1
-              IF ( abs ( upf%vnl(ir,l,1) - upf%vnl(ir,upf%lloc,1) ) > 1.0E-6 ) THEN
+! 2014/11/11 JM
+! Explicitly use local potential here:
+! Otherwise the IF (lmax == upf%lloc) clause above leads to unnecessary ("maximum") large radial grids for the beta projectors.
+!              IF ( abs ( upf%vnl(ir,l,1) - upf%vnl(ir,upf%lloc,1) ) > 1.0E-6 ) THEN
+              IF ( abs ( upf%vnl(ir,l,1) - upf%vloc(ir) ) > 1.0E-6 ) THEN
                  ! include points up to the last with nonzero value
                  upf%kbeta(iv)=ir+1
                  exit
