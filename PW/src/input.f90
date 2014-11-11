@@ -1037,6 +1037,8 @@ SUBROUTINE iosys()
           'Berry Phase/electric fields not implemented with pools', 1 )
      IF ( lgauss .OR. ltetra ) CALL errore( 'iosys', &
           'Berry Phase/electric fields only for insulators!', 1 )
+     IF ( lmovecell ) CALL errore( 'iosys', &
+          'Berry Phase/electric fields not implemented with variable cell', 1 )
   END IF
   !
   ! ... Copy values from input module to PW internals
