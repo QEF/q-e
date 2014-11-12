@@ -579,7 +579,7 @@ echo using F90... $f90
 
 case "$arch:$f90_version" in
 ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
-        try_fflags="-O2 -assume byterecl -g -traceback -par-report0 -vec-report0"
+        try_fflags="-O2 -assume byterecl -g -traceback"
         if test "$use_debug" -eq 1; then
             try_fflags="$try_fflags -fpe0 -CB"
         fi
