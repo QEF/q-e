@@ -37,6 +37,7 @@ SUBROUTINE move_ions()
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, ldamped, &
                                      lconstrain, conv_ions, use_SMC, &
                                      lmd, llang, history, tr2
+  USE basis,                  ONLY : starting_wfc
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE mp_images,              ONLY : intra_image_comm
@@ -293,6 +294,7 @@ SUBROUTINE move_ions()
      lmd=.FALSE.
      lcheck_mag = .FALSE.
      restart_with_starting_magnetiz = .FALSE.
+     if (trim(starting_wfc) == 'file') starting_wfc = 'atomic+random'
      ! ... conv_ions is set to .FALSE. to perform a final scf cycle
      conv_ions = .FALSE.
      ! ... allow re-calculation of FFT grid
