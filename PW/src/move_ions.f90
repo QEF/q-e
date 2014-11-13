@@ -279,11 +279,14 @@ SUBROUTINE move_ions()
      ! 
      ! ... Variable-cell optimization: once convergence is achieved, 
      ! ... make a final calculation with G-vectors and plane waves
-     ! ... calculated for the final cell (may differ from the curent
+     ! ... calculated for the final cell (may differ from the current
      ! ... result, using G_vectors and PWs for the starting cell)
      !
      WRITE( UNIT = stdout, FMT = 9110 )
      WRITE( UNIT = stdout, FMT = 9120 )
+     !
+     ! ... prepare for a new run, restarted from scratch, not from previous
+     ! ... data (dimensions and file lengths will be different in general)
      !
      CALL clean_pw( .FALSE. )
      CALL close_files(.TRUE.)
