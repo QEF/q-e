@@ -26,6 +26,7 @@ New in 5.1.1 version:
 
 Fixed in 5.1.1 version:
 
+   * PWscf: variable-cell glitches at last scf step 
    * PWscf & PHonon: added several check for unimplemented features
    * PWscf: energy related to external forces wasn't correct
    * CP: Wannier functions dynamics with nspin=2 wasn't working
