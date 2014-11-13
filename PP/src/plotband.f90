@@ -168,7 +168,7 @@ PROGRAM plotband
      CALL field_count( nprojwfc, line )
      DO nwfc = 1,nprojwfc
         CALL get_field(nwfc, field, line)
-        READ(field,'(I)') atwfclst(nwfc)
+        READ(field,*) atwfclst(nwfc)
      ENDDO
 
      sumproj(:,:) = 0.D0
