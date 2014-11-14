@@ -975,6 +975,7 @@ move_ions.o : ../../Modules/kind.o
 move_ions.o : ../../Modules/mp.o
 move_ions.o : ../../Modules/mp_images.o
 move_ions.o : ../../Modules/recvec.o
+move_ions.o : atomic_wfc_mod.o
 move_ions.o : dynamics_module.o
 move_ions.o : newd.o
 move_ions.o : pwcom.o

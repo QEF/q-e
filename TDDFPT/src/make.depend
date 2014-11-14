@@ -115,9 +115,11 @@ lr_dav_main.o : lr_dav_routines.o
 lr_dav_main.o : lr_dav_variables.o
 lr_dav_main.o : lr_variables.o
 lr_dav_routines.o : ../../Modules/cell_base.o
+lr_dav_routines.o : ../../Modules/control_flags.o
 lr_dav_routines.o : ../../Modules/fft_base.o
 lr_dav_routines.o : ../../Modules/io_files.o
 lr_dav_routines.o : ../../Modules/io_global.o
+lr_dav_routines.o : ../../Modules/ions_base.o
 lr_dav_routines.o : ../../Modules/kind.o
 lr_dav_routines.o : ../../Modules/mp.o
 lr_dav_routines.o : ../../Modules/mp_global.o
