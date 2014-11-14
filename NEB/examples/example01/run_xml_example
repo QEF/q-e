@@ -77,10 +77,8 @@ $ECHO " done"
 
 # how to run executables
 NEB_COMMAND="$PARA_PREFIX $BIN_DIR/neb.x $PARA_POSTFIX"
-CP_COMMAND="$PARA_PREFIX $BIN_DIR/cp.x $PARA_POSTFIX"
 $ECHO
-$ECHO "  running Born-Oppenheimer NEB as: $PW_COMMAND"
-$ECHO "  running cp.x as: $CP_COMMAND"
+$ECHO "  running Born-Oppenheimer NEB as: $NEB_COMMAND"
 $ECHO
 
 # clean TMP_DIR
