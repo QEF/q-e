@@ -500,7 +500,7 @@ SUBROUTINE chdens (filplot,plot_num)
 
      ELSEIF (ionode) THEN
         !
-        ! GOPENMOL FORMAT
+        ! GOPENMOL OR XCRYSDEN FORMAT
         !
         IF (fast3d) THEN
 
