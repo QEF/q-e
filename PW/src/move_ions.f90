@@ -18,7 +18,7 @@ SUBROUTINE move_ions()
   ! ... coefficients for potential and wavefunctions extrapolation are
   ! ... also computed here
   !
-  USE constants,              ONLY : e2, eps8, ry_kbar
+  USE constants,              ONLY : e2, eps6, ry_kbar
   USE io_global,              ONLY : stdout
   USE io_files,               ONLY : tmp_dir, iunupdate, seqopn
   USE kinds,                  ONLY : DP
@@ -173,7 +173,7 @@ SUBROUTINE move_ions()
         !
         IF ( conv_ions ) THEN
            !
-           IF ( ( lsda .AND. ( absmag < eps8 ) .AND. lcheck_mag ) ) THEN
+           IF ( ( lsda .AND. ( absmag < eps6 ) .AND. lcheck_mag ) ) THEN
               !
               ! ... lsda relaxation :  a final configuration with zero 
               ! ...                    absolute magnetization has been found.
@@ -321,11 +321,11 @@ SUBROUTINE move_ions()
      ! ... conv_ions is set to .FALSE. to perform a final scf cycle
      conv_ions = .FALSE.
      !
-     ! ... re-initialize the potential and wavefunctions
+     ! ... re-initialize the potential (no need to re-initialize wavefunctions)
      !
      CALL potinit()
      CALL newd()
-     CALL wfcinit()
+     !!! CALL wfcinit()
      !
   END IF
   !
