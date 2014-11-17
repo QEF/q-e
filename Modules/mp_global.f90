@@ -74,7 +74,7 @@ CONTAINS
     END IF
     !
     CALL mp_start_pots  ( npot_, intra_image_comm )
-    CALL mp_start_pools ( npool_, intra_image_comm )
+    CALL mp_start_pools ( npool_, intra_pot_comm )
     CALL mp_start_bands ( nband_, ntg_, intra_pool_comm )
     CALL mp_start_diag  ( ndiag_, intra_bgrp_comm )
     !
