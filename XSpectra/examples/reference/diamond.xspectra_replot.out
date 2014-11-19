@@ -1,35 +1,91 @@
 
-     Program POST-PROC v.4.1CVS starts ...
-     Today is  4Jun2009 at 18: 7: 2 
+     Program XSpectra v.5.1 starts on 14Nov2014 at 11:25:28 
 
-     Parallel version (MPI)
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
 
-     Number of processors in use:       1
+     Parallel version (MPI), running on     1 processors
 
->> Fermi level read from file (Ryd)=    0.98011040
+     -------------------------------------------------------------------------
+                    __  ____                 _
+                    \ \/ / _\_ __   ___  ___| |_ _ __ __ _
+                     \  /\ \| '_ \ / _ \/ __| __| '__/ _` |
+                     /  \_\ \ |_) |  __/ (__| |_| | | (_| |
+                    /_/\_\__/ .__/ \___|\___|\__|_|  \__,_|
+                            |_|
 
- nks= 64
- save file version : 1
- ---------------------------------------------------------
- xkvec read from savefile
- 1. 0. 0.
- xepsilon read from file
- 1. 0. 0.
- ---------------------------------------------------------
- n_lanczos= 1
+     In publications arising from the use of XSpectra, please cite:
+      - Ch. Gougoussis, M. Calandra, A. P. Seitsonen, F. Mauri,
+        Phys. Rev. B 80, 075102 (2009)
+      - M. Taillefumier, D. Cabaret, A. M. Flank, and F. Mauri,
+        Phys. Rev. B 66, 195107 (2002)
 
-CALCULATION XANES SPECTRA
----------------------
+     -------------------------------------------------------------------------
+                                Reading input_file
+     -------------------------------------------------------------------------
 
- Final state angular momentum:   1
- Broadening parameter (in eV):   0.800000000000    
- Nb of energy points:  1000
- Maximum energy (in eV):    30.0000000000    
- Minimum energy (in eV):   -10.0000000000    
- Binding energy of the 1s level (in eV):   -284.200012207    
- xemin(ryd)= 0.24512389205384755
- xemax(ryd)= 3.1850699238384577
- gamma in rydberg= 0.058798920635692205
- End program xanes
-     xanes        :    31.16s CPU time,   34.25s wall time
+     calculation: xanes_dipole
+
+     xonly_plot: TRUE
+        => only the spectrum plot
+
+     main plot parameters:
+        cut_occ_states: TRUE
+        gamma_mode:  constant
+        -> using xgamma [eV]:  0.80
+        xemin [eV]: -10.00
+        xemax [eV]:  30.00
+        xnepoint: 1000
+        energy zero automatically set to the Fermi level
+
+     Fermi level read in x_save_file
+     NB: For an insulator (SCF calculated with occupations="fixed")
+         the Fermi level will be placed at the position of HOMO.
+
+     WARNING: variable ef_r is obsolete
+
+     -------------------------------------------------------------------------
+                               Reading x_save_file
+     -------------------------------------------------------------------------
+
+     x_save_file name: diamond.xspectra.sav
+     x_save_file version:   2
+
+     nspin: 1
+     number of k-points:  64
+
+     final-state angular momentum (xm_r):    1
+      => electric-dipole approximation
+
+     Fermi level [eV]:  13.3353
+     core energy [eV]:   284.200
+
+     xepsilon [Cartesian frame]:   1.000000   0.000000   0.000000
+
+
+     -------------------------------------------------------------------------
+                    Starting the calculation of the spectrum
+     -------------------------------------------------------------------------
+
+     Using the following parameters:
+        energy-zero of the spectrum [eV]:   13.3353
+        the occupied states are cut
+        xemin [eV]: -10.00
+        xemax [eV]:  30.00
+        xnepoint: 1000
+        constant broadening parameter [eV]:    0.800
+        Core level energy [eV]:  -284.2    
+         (from electron binding energy of neutral atoms in X-ray data booklet)
+
+     Cross-section successfully written in xanes.dat
+
+     xanes        :     22.30s CPU     22.46s WALL (       1 calls)
+
+     -------------------------------------------------------------------------
+                                END JOB XSpectra
+     -------------------------------------------------------------------------
 

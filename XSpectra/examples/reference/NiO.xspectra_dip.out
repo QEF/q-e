@@ -1,237 +1,513 @@
 
-     Program POST-PROC v.4.1CVS starts ...
-     Today is  4Jun2009 at 18: 2:24 
+     Program XSpectra v.5.1 starts on 14Nov2014 at 11:30:17 
 
-     Parallel version (MPI)
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
 
-     Number of processors in use:       1
-     file Ni_PBE_TM_2pj.UPF: wavefunction(s)  3S 3P 3D renormalized
-     file Ni_PBE_TM_2pj.UPF: wavefunction(s)  3S 3P 3D renormalized
+     Parallel version (MPI), running on     1 processors
 
-     Planes per process (thick) : nr3 = 54 npp =  54 ncplane = 2916
+     -------------------------------------------------------------------------
+                    __  ____                 _
+                    \ \/ / _\_ __   ___  ___| |_ _ __ __ _
+                     \  /\ \| '_ \ / _ \/ __| __| '__/ _` |
+                     /  \_\ \ |_) |  __/ (__| |_| | | (_| |
+                    /_/\_\__/ .__/ \___|\___|\__|_|  \__,_|
+                            |_|
 
-     Proc/  planes cols     G    planes cols    G      columns  G
-     Pool       (dense grid)       (smooth grid)      (wavefct grid)
-       1     54   1151    19477   54   1151    19477    331     3009
+     In publications arising from the use of XSpectra, please cite:
+      - Ch. Gougoussis, M. Calandra, A. P. Seitsonen, F. Mauri,
+        Phys. Rev. B 80, 075102 (2009)
+      - M. Taillefumier, D. Cabaret, A. M. Flank, and F. Mauri,
+        Phys. Rev. B 66, 195107 (2002)
 
- k-points : nkstot= 16
- -------------- Crystal Structure ------------ 
- celldm(1:6)
-    9.67155000    0.00000000    0.00000000
-    0.83333333    0.00000000    0.00000000
- direct lattice vectors
-    0.28867513    0.00000000   -0.28867513
-   -0.16666667    0.33333333   -0.16666667
-    0.94280904    0.94280904    0.94280904
- reciprocal lattice vectors
-    1.73205081    0.00000000   -1.73205081
-   -1.00000000    2.00000000   -1.00000000
-    0.35355339    0.35355339    0.35355339
- nks= 16  nkstot= 16
-  ----k-point list [units 2*pi/celldm(1)], weight---------
-     1    0.00000000    0.00000000    0.00000000    0.12500000
-     2   -0.86602540   -0.50000000    0.17677670    0.12500000
-     3    0.00000000    1.00000000    0.17677670    0.12500000
-     4   -0.86602540    0.50000000    0.35355339    0.12500000
-     5    0.86602540   -0.50000000    0.17677670    0.12500000
-     6    0.00000000   -1.00000000    0.35355339    0.12500000
-     7    0.86602540    0.50000000    0.35355339    0.12500000
-     8    0.00000000    0.00000000    0.53033009    0.12500000
-     9    0.00000000    0.00000000    0.00000000    0.12500000
-    10   -0.86602540   -0.50000000    0.17677670    0.12500000
-    11    0.00000000    1.00000000    0.17677670    0.12500000
-    12   -0.86602540    0.50000000    0.35355339    0.12500000
-    13    0.86602540   -0.50000000    0.17677670    0.12500000
-    14    0.00000000   -1.00000000    0.35355339    0.12500000
-    15    0.86602540    0.50000000    0.35355339    0.12500000
-    16    0.00000000    0.00000000    0.53033009    0.12500000
- -------------------------------------------------
- --- Polarisation and k vector [cartesian coordinates]----
-xepsilon(:)= 0.28867513 -.16666667 0.94280904
-xkvec(:)= 1.00000000 0.00000000 0.00000000
- xmesh= 1195
- warning, r_paw( 0  ) set to  1.25
- warning, r_paw( 2  ) set to  1.25
- warning, r_paw( 0  ) set to  1.25
- warning, r_paw( 2  ) set to  1.25
+     -------------------------------------------------------------------------
+                                Reading input_file
+     -------------------------------------------------------------------------
 
- ==========================================================
+     calculation: xanes_dipole
 
->> Fermi level from input (Ryd)=    1.01439527
- Calculation dipole matrix element
- There are  2  projectors/channel
- for angular moment  1  and atom type  1
- ----------------------------------------------------------------
-dipole radial matrix element proj. ( 1)=    0.01304913
-dipole radial matrix element proj. ( 2)=    0.01551540
- ----------------------------------------------------------------
-  HUBBARD L FOR TYPE Ni IS  2
-  HUBBARD L FOR TYPE Ni IS  2
-  MAXIMUM HUBBARD L IS  2
+     xepsilon [crystallographic coordinates]:   1.000000   0.000000   0.000000
 
- Starting k-point :  1
- total cpu time spent up to now is      3.75 secs
+     xonly_plot: FALSE
+        => complete calculation: Lanczos + spectrum plot
+
+     filecore (core-wavefunction file): Ni.wfc              
+
+     main plot parameters:
+        cut_occ_states: TRUE
+        gamma_mode:  constant
+        -> using xgamma [eV]:  0.80
+        xemin [eV]: -10.00
+        xemax [eV]:  20.00
+        xnepoint:  300
+        energy zero automatically set to the Fermi level
+
+     Fermi level determined from SCF save directory (NiO.save)
+     NB: For an insulator (SCF calculated with occupations="fixed")
+         the Fermi level will be placed at the position of HOMO.
+
+     WARNING: variable ef_r is obsolete
+
+     -------------------------------------------------------------------------
+                      Reading SCF save directory: NiO.save
+     -------------------------------------------------------------------------
+
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1s, nr2s, nr3s values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      =  SLA  PW   PBX  PBC ( 1  4  3  4 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+               file Ni_PBE_TM_2pj.UPF: wavefunction(s)  3S 3P 3D renormalized
+               file Ni_PBE_TM_2pj.UPF: wavefunction(s)  3S 3P 3D renormalized
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        1151    1151    287                19477    19477    2437
+
+     Generating pointlists ...
+     new r_m :   0.1684 (alat units)  1.6287 (a.u.) for type    1
+     new r_m :   0.1684 (alat units)  1.6287 (a.u.) for type    2
+     new r_m :   0.1684 (alat units)  1.6287 (a.u.) for type    3
+
+     highest occupied level (ev):    13.9509
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        1151    1151    331                19477    19477    3009
+
+     Generating pointlists ...
+
+
+     bravais-lattice index     =            5
+     lattice parameter (alat)  =       9.6715  a.u.
+     unit-cell volume          =     246.2189 (a.u.)^3
+     number of atoms/cell      =            4
+     number of atomic types    =            3
+     number of electrons       =        48.00 (up:  24.00, down:  24.00)
+     number of Kohn-Sham states=           24
+     kinetic-energy cutoff     =      70.0000  Ry
+     charge density cutoff     =     280.0000  Ry
+     Exchange-correlation      =  SLA  PW   PBX  PBC ( 1  4  3  4 0)
+
+     celldm(1)=   9.671550  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.833333  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (   0.288675  -0.166667   0.942809 )  
+               a(2) = (   0.000000   0.333333   0.942809 )  
+               a(3) = (  -0.288675  -0.166667   0.942809 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.732051 -1.000000  0.353553 )  
+               b(2) = (  0.000000  2.000000  0.353553 )  
+               b(3) = ( -1.732051 -1.000000  0.353553 )  
+
+
+     PseudoPot. # 1 for Ni read from file:
+     /home/mas/espresso-5.1/XSpectra/examples/pseudo/Ni_PBE_TM_2pj.UPF
+     MD5 check sum: 3fd375d40f68096c892dcf97f555543a
+     Pseudo is Norm-conserving, Zval = 18.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of 1195 points,  2 beta functions with: 
+                l(1) =   0
+                l(2) =   1
+
+     PseudoPot. # 2 for Ni read from file:
+     /home/mas/espresso-5.1/XSpectra/examples/pseudo/Ni_PBE_TM_2pj.UPF
+     MD5 check sum: 3fd375d40f68096c892dcf97f555543a
+     Pseudo is Norm-conserving, Zval = 18.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of 1195 points,  2 beta functions with: 
+                l(1) =   0
+                l(2) =   1
+
+     PseudoPot. # 3 for O  read from file:
+     /home/mas/espresso-5.1/XSpectra/examples/pseudo/O_PBE_TM.UPF
+     MD5 check sum: 7269e4db10efbd9bf64de7c8e654fab0
+     Pseudo is Norm-conserving, Zval =  6.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of 1095 points,  1 beta functions with: 
+                l(1) =   0
+
+     atomic species   valence    mass     pseudopotential
+        Ni            18.00    58.69340     Ni( 1.00)
+        NiB           18.00    58.69340     Ni( 1.00)
+        O              6.00    15.99940     O ( 1.00)
+
+     Starting magnetic structure 
+     atomic species   magnetization
+        Ni           1.000
+        NiB         -1.000
+        O            0.000
+
+
+     Simplified LDA+U calculation (l_max = 2) with parameters (eV):
+     atomic species    L          U    alpha       J0     beta
+        Ni             2     7.6000   0.0000   0.0000   0.0000
+        NiB            2     7.6000   0.0000   0.0000   0.0000
+
+
+
+     12 Sym. Ops., with inversion, found
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1           Ni  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2           NiB tau(   2) = (   0.0000000   0.6666667   0.4714045  )
+         3           O   tau(   3) = (   0.2886751  -0.1666667   0.2357023  )
+         4           O   tau(   4) = (  -0.2886751   0.1666667  -0.2357023  )
+
+     number of k points=    16
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.1250000
+        k(    2) = (  -0.8660254  -0.5000000   0.1767767), wk =   0.1250000
+        k(    3) = (   0.0000000   1.0000000   0.1767767), wk =   0.1250000
+        k(    4) = (  -0.8660254   0.5000000   0.3535534), wk =   0.1250000
+        k(    5) = (   0.8660254  -0.5000000   0.1767767), wk =   0.1250000
+        k(    6) = (   0.0000000  -1.0000000   0.3535534), wk =   0.1250000
+        k(    7) = (   0.8660254   0.5000000   0.3535534), wk =   0.1250000
+        k(    8) = (   0.0000000   0.0000000   0.5303301), wk =   0.1250000
+        k(    9) = (   0.0000000   0.0000000   0.0000000), wk =   0.1250000
+        k(   10) = (  -0.8660254  -0.5000000   0.1767767), wk =   0.1250000
+        k(   11) = (   0.0000000   1.0000000   0.1767767), wk =   0.1250000
+        k(   12) = (  -0.8660254   0.5000000   0.3535534), wk =   0.1250000
+        k(   13) = (   0.8660254  -0.5000000   0.1767767), wk =   0.1250000
+        k(   14) = (   0.0000000  -1.0000000   0.3535534), wk =   0.1250000
+        k(   15) = (   0.8660254   0.5000000   0.3535534), wk =   0.1250000
+        k(   16) = (   0.0000000   0.0000000   0.5303301), wk =   0.1250000
+
+     Dense  grid:    19477 G-vectors     FFT dimensions: (  54,  54,  54)
+
+     Largest allocated arrays     est. size (Mb)     dimensions
+        Kohn-Sham Wavefunctions         0.90 Mb     (    2454,   24)
+        Atomic Hubbard wavefuncts       0.37 Mb     (    2454,   10)
+        NL pseudopotentials             0.37 Mb     (    2454,   10)
+        Each V/rho on FFT grid          4.81 Mb     (  157464,   2)
+        Each G-vector array             0.15 Mb     (   19477)
+        G-vector shells                 0.01 Mb     (    1293)
+     Largest temporary arrays     est. size (Mb)     dimensions
+        Auxiliary wavefunctions         0.90 Mb     (    2454,   24)
+        Each subspace H/S matrix        0.01 Mb     (      24,   24)
+        Each <psi_i|beta_j> matrix      0.00 Mb     (      10,   24)
+
+     The potential is recalculated from file :
+     /home/mas/espresso-5.1/XSpectra/examples/results/tmp/NiO.save/charge-density.dat
+
+     Number of +U iterations with fixed ns =  0
+     Starting occupations:
+ --- enter write_ns ---
+ LDA+U parameters:
+U( 1)     =  7.60000000
+alpha( 1) =  0.00000000
+U( 2)     =  7.60000000
+alpha( 2) =  0.00000000
+atom    1   Tr[ns(na)] (up, down, total) =   4.69493  3.56013  8.25506
+   spin  1
+    eigenvalues: 
+  0.907  0.907  0.956  0.956  0.970
+    eigenvectors:
+  0.000  0.000  0.000  0.000  1.000
+  0.722  0.044  0.018  0.216  0.000
+  0.044  0.722  0.216  0.018  0.000
+  0.014  0.220  0.707  0.059  0.000
+  0.220  0.014  0.059  0.707  0.000
+    occupations:
+  0.970  0.000  0.000  0.000  0.000
+  0.000  0.918  0.000 -0.000 -0.021
+  0.000  0.000  0.918 -0.021 -0.000
+  0.000 -0.000 -0.021  0.944 -0.000
+  0.000 -0.021 -0.000 -0.000  0.944
+   spin  2
+    eigenvalues: 
+  0.345  0.345  0.952  0.952  0.966
+    eigenvectors:
+  0.000  0.000  0.000  0.000  1.000
+  0.423  0.209  0.017  0.351  0.000
+  0.209  0.423  0.351  0.017  0.000
+  0.122  0.246  0.602  0.029  0.000
+  0.246  0.122  0.029  0.602  0.000
+    occupations:
+  0.966  0.000  0.000  0.000  0.000
+  0.000  0.569  0.000 -0.000 -0.292
+  0.000  0.000  0.569 -0.292  0.000
+  0.000 -0.000 -0.292  0.729 -0.000
+  0.000 -0.292  0.000 -0.000  0.729
+atomic mag. moment =     1.134809
+atom    2   Tr[ns(na)] (up, down, total) =   3.56017  4.69490  8.25507
+   spin  1
+    eigenvalues: 
+  0.345  0.345  0.952  0.952  0.966
+    eigenvectors:
+  0.000  0.000  0.000  0.000  1.000
+  0.424  0.208  0.017  0.350  0.000
+  0.208  0.424  0.350  0.017  0.000
+  0.121  0.246  0.603  0.029  0.000
+  0.246  0.121  0.029  0.603  0.000
+    occupations:
+  0.966  0.000  0.000  0.000  0.000
+  0.000  0.568  0.000 -0.000 -0.292
+  0.000  0.000  0.568 -0.292  0.000
+  0.000 -0.000 -0.292  0.729 -0.000
+  0.000 -0.292  0.000 -0.000  0.729
+   spin  2
+    eigenvalues: 
+  0.907  0.907  0.956  0.956  0.970
+    eigenvectors:
+  0.000  0.000  0.000  0.000  1.000
+  0.721  0.045  0.018  0.216  0.000
+  0.045  0.721  0.216  0.018  0.000
+  0.014  0.221  0.706  0.059  0.000
+  0.221  0.014  0.059  0.706  0.000
+    occupations:
+  0.970  0.000  0.000  0.000  0.000
+  0.000  0.918  0.000 -0.000 -0.021
+  0.000  0.000  0.918 -0.021 -0.000
+  0.000 -0.000 -0.021  0.944 -0.000
+  0.000 -0.021 -0.000 -0.000  0.944
+atomic mag. moment =    -1.134731
+N of occupied +U levels =   16.510133
+ --- exit write_ns ---
  Atomic wfc used for LDA+U Projector are NOT orthogonalized
- norm initial vector= 0.008978117545622893
- Starting lanczos
- Estimated error at iter  50  is  1.2214197706131755
- Estimated error at iter  100  is  0.07237763027983342
- CONVERGED at iter  150  with error= 4.267559946089542E-9
+     Starting wfc are   26 atomic wfcs
 
- Starting k-point :  2
- total cpu time spent up to now is      7.54 secs
- Atomic wfc used for LDA+U Projector are NOT orthogonalized
- norm initial vector= 0.008978211889558005
- Starting lanczos
- Estimated error at iter  50  is  1.2602381501160862
- Estimated error at iter  100  is  0.16687363926350005
- Estimated error at iter  150  is  0.039833118643614315
- CONVERGED at iter  200  with error= 0.00027322657041693006
+     -------------------------------------------------------------------------
+               Reading core wavefunction file for the absorbing atom
+     -------------------------------------------------------------------------
 
- Starting k-point :  3
- total cpu time spent up to now is     12.58 secs
- Atomic wfc used for LDA+U Projector are NOT orthogonalized
- norm initial vector= 0.00897821188955799
- Starting lanczos
- Estimated error at iter  50  is  1.2602381178073208
- Estimated error at iter  100  is  0.16668835429547368
- Estimated error at iter  150  is  0.039866109778035466
- CONVERGED at iter  200  with error= 0.0002732444348766832
+     Ni.wfc successfully read
 
- Starting k-point :  4
- total cpu time spent up to now is     17.62 secs
- Atomic wfc used for LDA+U Projector are NOT orthogonalized
- norm initial vector= 0.008978078867803661
- Starting lanczos
- Estimated error at iter  50  is  1.2340221271298801
- Estimated error at iter  100  is  0.02860307742166912
- CONVERGED at iter  150  with error= 9.698189043642313E-9
+     -------------------------------------------------------------------------
+                              Attributing the PAW radii 
+                     for the absorbing atom [units: Bohr radius]
+     -------------------------------------------------------------------------
 
- Starting k-point :  5
- total cpu time spent up to now is     21.57 secs
- Atomic wfc used for LDA+U Projector are NOT orthogonalized
- norm initial vector= 0.008978232437046808
- Starting lanczos
- Estimated error at iter  50  is  1.2343369490812814
- Estimated error at iter  100  is  0.12503078190499725
- Estimated error at iter  150  is  0.0113688822487192
- CONVERGED at iter  200  with error= 1.695862574466648E-11
+        PAW proj 1: r_paw(l= 0)= 1.88  (1.5*r_cut)
+        PAW proj 2: r_paw(l= 1)= 1.50  (from input file))
+        PAW proj 3: r_paw(l= 2)= 1.88  (1.5*r_cut)
+        PAW proj 4: r_paw(l= 0)= 1.88  (1.5*r_cut)
+        PAW proj 5: r_paw(l= 1)= 1.50  (from input file))
+        PAW proj 6: r_paw(l= 2)= 1.88  (1.5*r_cut)
 
- Starting k-point :  6
- total cpu time spent up to now is     26.60 secs
- Atomic wfc used for LDA+U Projector are NOT orthogonalized
- norm initial vector= 0.008978143241395894
- Starting lanczos
- Estimated error at iter  50  is  1.2291749818878615
- Estimated error at iter  100  is  0.4630439928781138
- CONVERGED at iter  150  with error= 0.0002503198846394293
+        NB: The calculation will not use all these r_paw values.
+            - For a K edge in the electric-dipole approximation,
+              only the r_paw(l=1) values are used.
+            - For a K edge in the electric-quadrupole approximation,
+              only the r_paw(l=2) values are used.
 
- Starting k-point :  7
- total cpu time spent up to now is     30.40 secs
- Atomic wfc used for LDA+U Projector are NOT orthogonalized
- norm initial vector= 0.008978143241395902
- Starting lanczos
- Estimated error at iter  50  is  1.2291749818932292
- Estimated error at iter  100  is  0.4630439965587312
- CONVERGED at iter  150  with error= 0.00025031392847966766
 
- Starting k-point :  8
- total cpu time spent up to now is     34.18 secs
- Atomic wfc used for LDA+U Projector are NOT orthogonalized
- norm initial vector= 0.008978234616964861
- Starting lanczos
- Estimated error at iter  50  is  1.2073465810875696
- Estimated error at iter  100  is  0.11433056105533483
- Estimated error at iter  150  is  0.0014827730850523228
- CONVERGED at iter  200  with error= 5.374796870598624E-11
+     -------------------------------------------------------------------------
+                           Getting the Fermi energy 
+     -------------------------------------------------------------------------
 
- Starting k-point :  9
- total cpu time spent up to now is     39.21 secs
- Atomic wfc used for LDA+U Projector are NOT orthogonalized
- norm initial vector= 0.008978117545622893
- Starting lanczos
- Estimated error at iter  50  is  1.2296877019001282
- Estimated error at iter  100  is  0.07132357368231618
- CONVERGED at iter  150  with error= 4.509814794792007E-9
+     From SCF save directory (spin polarized work):
+        ehomo [eV]:   13.9509 (highest occupied level:max of up and down)
+        No LUMO values in SCF calculation
+        ef    [eV]:   13.9509
 
- Starting k-point :  10
- total cpu time spent up to now is     42.99 secs
- Atomic wfc used for LDA+U Projector are NOT orthogonalized
- norm initial vector= 0.008978211889558005
- Starting lanczos
- Estimated error at iter  50  is  1.2483131101824825
- Estimated error at iter  100  is  0.2417740596846762
- Estimated error at iter  150  is  0.028052506792861497
- CONVERGED at iter  200  with error= 0.0003303011783686472
+     -> ef (in eV) will be written in x_save_file
 
- Starting k-point :  11
- total cpu time spent up to now is     48.03 secs
- Atomic wfc used for LDA+U Projector are NOT orthogonalized
- norm initial vector= 0.00897821188955799
- Starting lanczos
- Estimated error at iter  50  is  1.2483130959873499
- Estimated error at iter  100  is  0.24179202215647777
- Estimated error at iter  150  is  0.028027478424202574
- CONVERGED at iter  200  with error= 0.00033141069269262464
+     -------------------------------------------------------------------------
+                           Energy zero of the spectrum 
+     -------------------------------------------------------------------------
 
- Starting k-point :  12
- total cpu time spent up to now is     53.04 secs
- Atomic wfc used for LDA+U Projector are NOT orthogonalized
- norm initial vector= 0.008978078867803661
- Starting lanczos
- Estimated error at iter  50  is  1.2390008467734372
- Estimated error at iter  100  is  0.028351565743243268
- CONVERGED at iter  150  with error= 2.7026526389023493E-9
+     -> ef will be used as energy zero of the spectrum
 
- Starting k-point :  13
- total cpu time spent up to now is     56.99 secs
- Atomic wfc used for LDA+U Projector are NOT orthogonalized
- norm initial vector= 0.008978232437046808
- Starting lanczos
- Estimated error at iter  50  is  1.2319384971218372
- Estimated error at iter  100  is  0.13665437426616006
- Estimated error at iter  150  is  0.012817518201974984
- CONVERGED at iter  200  with error= 2.0366401993857217E-12
+     -------------------------------------------------------------------------
+                          Starting XANES calculation
+                     in the electric dipole approximation
+     -------------------------------------------------------------------------
 
- Starting k-point :  14
- total cpu time spent up to now is     62.02 secs
- Atomic wfc used for LDA+U Projector are NOT orthogonalized
- norm initial vector= 0.008978143241395894
- Starting lanczos
- Estimated error at iter  50  is  1.2345175714781387
- Estimated error at iter  100  is  0.45755495352814235
- CONVERGED at iter  150  with error= 0.00025047370016710233
+     Method of calculation based on the Lanczos recursion algorithm
+     --------------------------------------------------------------
+        - STEP 1: Construction of a kpoint-dependent Lanczos basis,
+          in which the Hamiltonian is tridiagonal (each 'iter' 
+          corresponds to the calculation of one more Lanczos vector)
+        - STEP 2: Calculation of the cross-section as a continued fraction
+          averaged over the k-points.
 
- Starting k-point :  15
- total cpu time spent up to now is     65.81 secs
- Atomic wfc used for LDA+U Projector are NOT orthogonalized
- norm initial vector= 0.008978143241395902
- Starting lanczos
- Estimated error at iter  50  is  1.2345175714851886
- Estimated error at iter  100  is  0.4575549304675335
- CONVERGED at iter  150  with error= 0.0002505163021638457
+     ... Begin STEP 1 ...
 
- Starting k-point :  16
- total cpu time spent up to now is     69.60 secs
- Atomic wfc used for LDA+U Projector are NOT orthogonalized
- norm initial vector= 0.008978234616964861
- Starting lanczos
- Estimated error at iter  50  is  1.2167232051075103
- Estimated error at iter  100  is  0.11607718274773864
- CONVERGED at iter  150  with error= 0.0002976950677883076
+        Radial transition matrix element(s) used in the calculation of the
+        initial vector of the Lanczos basis (|tilde{phi}_abs> normalized)
+        | For PAW proj. (l=1) #1: radial matrix element =   0.013049133
+        | For PAW proj. (l=1) #2: radial matrix element =   0.015515398
 
-CALCULATION XANES SPECTRA
----------------------
+        |-------------------------------------------------------------
+        ! k-point #   1:  ( 0.0000,  0.0000,  0.0000),  0.1250,   1
+        |-------------------------------------------------------------
+        ! Atomic wfc used for LDA+U Projector are NOT orthogonalized
+        |   Norm of the initial Lanczos vector: 0.89781175E-02
+        |   Estimated error at iter     50:   1.22152240
+        |   Estimated error at iter    100:   0.07240167
+        !   => CONVERGED at iter    150 with error=  0.00000000
+        |-------------------------------------------------------------
+        ! k-point #   2:  (-0.8660, -0.5000,  0.1768),  0.1250,   1
+        |-------------------------------------------------------------
+        ! Atomic wfc used for LDA+U Projector are NOT orthogonalized
+        |   Norm of the initial Lanczos vector: 0.89782119E-02
+        |   Estimated error at iter     50:   1.26044017
+        |   Estimated error at iter    100:   0.16762322
+        |   Estimated error at iter    150:   0.03974471
+        !   => CONVERGED at iter    200 with error=  0.00027227
+        |-------------------------------------------------------------
+        ! k-point #   3:  ( 0.0000,  1.0000,  0.1768),  0.1250,   1
+        |-------------------------------------------------------------
+        ! Atomic wfc used for LDA+U Projector are NOT orthogonalized
+        |   Norm of the initial Lanczos vector: 0.89782119E-02
+        |   Estimated error at iter     50:   1.26044016
+        |   Estimated error at iter    100:   0.16762097
+        |   Estimated error at iter    150:   0.03974615
+        !   => CONVERGED at iter    200 with error=  0.00027227
+        |-------------------------------------------------------------
+        ! k-point #   4:  (-0.8660,  0.5000,  0.3536),  0.1250,   1
+        |-------------------------------------------------------------
+        ! Atomic wfc used for LDA+U Projector are NOT orthogonalized
+        |   Norm of the initial Lanczos vector: 0.89780789E-02
+        |   Estimated error at iter     50:   1.23407976
+        |   Estimated error at iter    100:   0.02853397
+        !   => CONVERGED at iter    150 with error=  0.00000001
+        |-------------------------------------------------------------
+        ! k-point #   5:  ( 0.8660, -0.5000,  0.1768),  0.1250,   1
+        |-------------------------------------------------------------
+        ! Atomic wfc used for LDA+U Projector are NOT orthogonalized
+        |   Norm of the initial Lanczos vector: 0.89782324E-02
+        |   Estimated error at iter     50:   1.23439687
+        |   Estimated error at iter    100:   0.12498088
+        |   Estimated error at iter    150:   0.01132749
+        !   => CONVERGED at iter    200 with error=  0.00000000
+        |-------------------------------------------------------------
+        ! k-point #   6:  ( 0.0000, -1.0000,  0.3536),  0.1250,   1
+        |-------------------------------------------------------------
+        ! Atomic wfc used for LDA+U Projector are NOT orthogonalized
+        |   Norm of the initial Lanczos vector: 0.89781432E-02
+        |   Estimated error at iter     50:   1.22923145
+        |   Estimated error at iter    100:   0.46286193
+        !   => CONVERGED at iter    150 with error=  0.00025196
+        |-------------------------------------------------------------
+        ! k-point #   7:  ( 0.8660,  0.5000,  0.3536),  0.1250,   1
+        |-------------------------------------------------------------
+        ! Atomic wfc used for LDA+U Projector are NOT orthogonalized
+        |   Norm of the initial Lanczos vector: 0.89781432E-02
+        |   Estimated error at iter     50:   1.22923145
+        |   Estimated error at iter    100:   0.46286183
+        !   => CONVERGED at iter    150 with error=  0.00025210
+        |-------------------------------------------------------------
+        ! k-point #   8:  ( 0.0000,  0.0000,  0.5303),  0.1250,   1
+        |-------------------------------------------------------------
+        ! Atomic wfc used for LDA+U Projector are NOT orthogonalized
+        |   Norm of the initial Lanczos vector: 0.89782346E-02
+        |   Estimated error at iter     50:   1.20744342
+        |   Estimated error at iter    100:   0.11444199
+        |   Estimated error at iter    150:   0.00147411
+        !   => CONVERGED at iter    200 with error=  0.00000000
+        |-------------------------------------------------------------
+        ! k-point #   9:  ( 0.0000,  0.0000,  0.0000),  0.1250,   2
+        |-------------------------------------------------------------
+        ! Atomic wfc used for LDA+U Projector are NOT orthogonalized
+        |   Norm of the initial Lanczos vector: 0.89781175E-02
+        |   Estimated error at iter     50:   1.22964280
+        |   Estimated error at iter    100:   0.07129519
+        !   => CONVERGED at iter    150 with error=  0.00000000
+        |-------------------------------------------------------------
+        ! k-point #  10:  (-0.8660, -0.5000,  0.1768),  0.1250,   2
+        |-------------------------------------------------------------
+        ! Atomic wfc used for LDA+U Projector are NOT orthogonalized
+        |   Norm of the initial Lanczos vector: 0.89782119E-02
+        |   Estimated error at iter     50:   1.24852946
+        |   Estimated error at iter    100:   0.23956793
+        |   Estimated error at iter    150:   0.02806339
+        !   => CONVERGED at iter    200 with error=  0.00033028
+        |-------------------------------------------------------------
+        ! k-point #  11:  ( 0.0000,  1.0000,  0.1768),  0.1250,   2
+        |-------------------------------------------------------------
+        ! Atomic wfc used for LDA+U Projector are NOT orthogonalized
+        |   Norm of the initial Lanczos vector: 0.89782119E-02
+        |   Estimated error at iter     50:   1.24852946
+        |   Estimated error at iter    100:   0.23959490
+        |   Estimated error at iter    150:   0.02800429
+        !   => CONVERGED at iter    200 with error=  0.00033078
+        |-------------------------------------------------------------
+        ! k-point #  12:  (-0.8660,  0.5000,  0.3536),  0.1250,   2
+        |-------------------------------------------------------------
+        ! Atomic wfc used for LDA+U Projector are NOT orthogonalized
+        |   Norm of the initial Lanczos vector: 0.89780789E-02
+        |   Estimated error at iter     50:   1.23896496
+        |   Estimated error at iter    100:   0.02828742
+        !   => CONVERGED at iter    150 with error=  0.00000000
+        |-------------------------------------------------------------
+        ! k-point #  13:  ( 0.8660, -0.5000,  0.1768),  0.1250,   2
+        |-------------------------------------------------------------
+        ! Atomic wfc used for LDA+U Projector are NOT orthogonalized
+        |   Norm of the initial Lanczos vector: 0.89782324E-02
+        |   Estimated error at iter     50:   1.23191937
+        |   Estimated error at iter    100:   0.13655564
+        |   Estimated error at iter    150:   0.01281354
+        !   => CONVERGED at iter    200 with error=  0.00000000
+        |-------------------------------------------------------------
+        ! k-point #  14:  ( 0.0000, -1.0000,  0.3536),  0.1250,   2
+        |-------------------------------------------------------------
+        ! Atomic wfc used for LDA+U Projector are NOT orthogonalized
+        |   Norm of the initial Lanczos vector: 0.89781432E-02
+        |   Estimated error at iter     50:   1.23447981
+        |   Estimated error at iter    100:   0.45753260
+        !   => CONVERGED at iter    150 with error=  0.00025138
+        |-------------------------------------------------------------
+        ! k-point #  15:  ( 0.8660,  0.5000,  0.3536),  0.1250,   2
+        |-------------------------------------------------------------
+        ! Atomic wfc used for LDA+U Projector are NOT orthogonalized
+        |   Norm of the initial Lanczos vector: 0.89781432E-02
+        |   Estimated error at iter     50:   1.23447981
+        |   Estimated error at iter    100:   0.45753244
+        !   => CONVERGED at iter    150 with error=  0.00025169
+        |-------------------------------------------------------------
+        ! k-point #  16:  ( 0.0000,  0.0000,  0.5303),  0.1250,   2
+        |-------------------------------------------------------------
+        ! Atomic wfc used for LDA+U Projector are NOT orthogonalized
+        |   Norm of the initial Lanczos vector: 0.89782346E-02
+        |   Estimated error at iter     50:   1.21665682
+        |   Estimated error at iter    100:   0.11606612
+        !   => CONVERGED at iter    150 with error=  0.00029899
 
- Final state angular momentum:   1
- Broadening parameter (in eV):   0.800000000000    
- Nb of energy points:   300
- Maximum energy (in eV):    20.0000000000    
- Minimum energy (in eV):   -10.0000000000    
- Binding energy of the 1s level (in eV):   -8333.00000000    
- xemin(ryd)= 0.27940876205384757
- xemax(ryd)= 2.4843682858923053
- gamma in rydberg= 0.058798920635692205
- End program xanes
-     xanes        :  1m28.69s CPU time,     1m35.31s wall time
+     Results of STEP 1 successfully written in x_save_file
+     x_save_file name: 
+     ->  NiO.xspectra_dip.sav                                             
+     x_save_file version:  2
+
+     ... End STEP 1 ...
+
+     ... Begin STEP 2 ...
+
+     The spectrum is calculated using the following parameters:
+        energy-zero of the spectrum [eV]:   13.9509
+        the occupied states are cut
+        xemin [eV]: -10.00
+        xemax [eV]:  20.00
+        xnepoint:  300
+        constant broadening parameter [eV]:    0.800
+        Core level energy [eV]:  -8333.    
+         (from electron binding energy of neutral atoms in X-ray data booklet)
+
+     Cross-section successfully written in xanes.dat
+
+     ... End STEP 2 ...
+
+     xanes        :     52.48s CPU     54.09s WALL (       1 calls)
+
+     -------------------------------------------------------------------------
+                                END JOB XSpectra
+     -------------------------------------------------------------------------
 

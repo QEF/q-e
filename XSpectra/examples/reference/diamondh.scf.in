@@ -1,7 +1,7 @@
  &control
     calculation='scf',
-    pseudo_dir = '/home/gougouss/O-sesame-uspp-upload/examples/XSpectra_example/pseudo/',
-    outdir='/home/gougouss/O-sesame-uspp-upload/examples/XSpectra_example/results/tmp/',
+    pseudo_dir = '/home/mas/espresso-5.1/XSpectra/examples/pseudo/',
+    outdir='/home/mas/espresso-5.1/XSpectra/examples/results/tmp/',
     prefix='diamondh',
  /
  &system
@@ -9,18 +9,18 @@
     celldm(1) = 6.740256,
     nat=8,
     ntyp=2,
-    nelec=32,
     nbnd=16,
+    tot_charge=+1.0,
     ecutwfc=40.0,
  /
  &electrons
     mixing_beta = 0.3,
  /
 ATOMIC_SPECIES
-Ch 12.0 Ch_PBE_TM_2pj.UPF
+C_h 12.0 Ch_PBE_TM_2pj.UPF
 C 12.0 C_PBE_TM_2pj.UPF
 ATOMIC_POSITIONS crystal
-Ch 0.0 0.0 0.0
+C_h 0.0 0.0 0.0
 C 0.0 0.5 0.5
 C 0.5 0.0 0.5
 C 0.5 0.5 0.0

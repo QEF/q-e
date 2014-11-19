@@ -1,7 +1,7 @@
  &input_xspectra
     calculation='xanes_dipole',
     prefix='diamond',
-    outdir='/home/gougouss/O-sesame-uspp-upload/examples/XSpectra_example/results/tmp/',
+    outdir='/home/mas/espresso-5.1/XSpectra/examples/results/tmp/',
     xniter=1000,
     xcheck_conv=50,
     xepsilon(1)=1.0,
@@ -9,7 +9,6 @@
     xepsilon(3)=0.0,
     xiabs=1,
     x_save_file='diamond.xspectra.sav',
-    ef_r=0.98011040,
     xerror=0.001,
  /
  &plot

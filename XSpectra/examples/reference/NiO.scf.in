@@ -1,7 +1,7 @@
  &control
     calculation='scf',
-    pseudo_dir = '/home/gougouss/O-sesame-uspp-upload/examples/XSpectra_example/pseudo/',
-    outdir='/home/gougouss/O-sesame-uspp-upload/examples/XSpectra_example/results/tmp/',
+    pseudo_dir = '/home/mas/espresso-5.1/XSpectra/examples/pseudo/',
+    outdir='/home/mas/espresso-5.1/XSpectra/examples/results/tmp/',
     prefix='NiO',
  /
  &system
@@ -14,9 +14,7 @@
     ecutwfc = 70.0,
     starting_magnetization(1)=1.0,
     starting_magnetization(2)=-1.0,
-    nelec=48,
-    nelup=24,
-    neldw=24,
+    tot_magnetization = 0.0
     nbnd=24,
     lda_plus_u=.true.,
     Hubbard_U(1)=7.6,
@@ -27,11 +25,11 @@
  /
 ATOMIC_SPECIES
 Ni 58.6934   Ni_PBE_TM_2pj.UPF
-B  58.6934   Ni_PBE_TM_2pj.UPF
+NiB  58.6934   Ni_PBE_TM_2pj.UPF
 O  15.9994   O_PBE_TM.UPF
 ATOMIC_POSITIONS crystal
 Ni  0.0000000000  0.0000000000  0.0000000000
-B  -.5000000000  1.5000000000  -.5000000000
+NiB  -.5000000000  1.5000000000  -.5000000000
 O  0.7500000000  -.2500000000  -.2500000000
 O  -.7500000000  0.2500000000  0.2500000000
 K_POINTS automatic

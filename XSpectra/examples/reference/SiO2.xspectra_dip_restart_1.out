@@ -1,122 +1,347 @@
 
-     Program POST-PROC v.4.1CVS starts ...
-     Today is  4Jun2009 at 17:54:53 
+     Program XSpectra v.5.1 starts on 14Nov2014 at 11:36:42 
 
-     Parallel version (MPI)
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
 
-     Number of processors in use:       1
+     Parallel version (MPI), running on     1 processors
+
+     -------------------------------------------------------------------------
+                    __  ____                 _
+                    \ \/ / _\_ __   ___  ___| |_ _ __ __ _
+                     \  /\ \| '_ \ / _ \/ __| __| '__/ _` |
+                     /  \_\ \ |_) |  __/ (__| |_| | | (_| |
+                    /_/\_\__/ .__/ \___|\___|\__|_|  \__,_|
+                            |_|
+
+     In publications arising from the use of XSpectra, please cite:
+      - Ch. Gougoussis, M. Calandra, A. P. Seitsonen, F. Mauri,
+        Phys. Rev. B 80, 075102 (2009)
+      - M. Taillefumier, D. Cabaret, A. M. Flank, and F. Mauri,
+        Phys. Rev. B 66, 195107 (2002)
+
+     -------------------------------------------------------------------------
+                                Reading input_file
+     -------------------------------------------------------------------------
+
+     calculation: xanes_dipole
+
+     xepsilon [crystallographic coordinates]:   0.000000   0.000000   1.000000
+
+     xonly_plot: FALSE
+        => complete calculation: Lanczos + spectrum plot
+
+     filecore (core-wavefunction file): Si.wfc              
+
+     main plot parameters:
+        cut_occ_states: TRUE
+        gamma_mode:  constant
+        -> using xgamma [eV]:  0.80
+        xemin [eV]: -10.00
+        xemax [eV]: 100.00
+        xnepoint: 1000
+        energy zero automatically set to the Fermi level
+
+     Fermi level determined from SCF save directory (SiO2.save)
+     NB: For an insulator (SCF calculated with occupations="fixed")
+         the Fermi level will be placed at the position of HOMO.
+
+     WARNING: variable ef_r is obsolete
+
+     -------------------------------------------------------------------------
+                      Reading SCF save directory: SiO2.save
+     -------------------------------------------------------------------------
+
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1s, nr2s, nr3s values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      =  SLA  PW   PBE  PBE ( 1  4  3  4 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
      WARNING: atomic wfc #  2 for atom type 1 has zero norm
      WARNING: atomic wfc #  2 for atom type 2 has zero norm
-     file O_PBE_USPP.UPF: wavefunction(s)  2S renormalized
+               file O_PBE_USPP.UPF: wavefunction(s)  2S renormalized
 
-     Planes per process (thick) : nr3 = 40 npp =  40 ncplane = 1600
-     Planes per process (smooth): nr3s= 30 npps=  30 ncplanes=  729
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         889     475    151                23595     9203    1559
 
-     Proc/  planes cols     G    planes cols    G      columns  G
-     Pool       (dense grid)       (smooth grid)      (wavefct grid)
-       1     40    889    23595   30    475     9203    169     2057
 
- k-points : nkstot= 27
- -------------- Crystal Structure ------------ 
- celldm(1:6)
-    9.28630319    0.00000000    1.10010000
-    0.00000000    0.00000000    0.00000000
- direct lattice vectors
-    1.00000000   -0.50000000    0.00000000
-    0.00000000    0.86602540    0.00000000
-    0.00000000    0.00000000    1.10010000
- reciprocal lattice vectors
-    1.00000000    0.00000000    0.00000000
-    0.57735027    1.15470054   -0.00000000
-   -0.00000000    0.00000000    0.90900827
- nks= 27  nkstot= 27
-  ----k-point list [units 2*pi/celldm(1)], weight---------
-     1    0.00000000    0.00000000    0.00000000    0.07407407
-     2    0.00000000    0.00000000    0.30300276    0.07407407
-     3    0.00000000    0.00000000    0.60600551    0.07407407
-     4    0.00000000    0.38490018    0.00000000    0.07407407
-     5    0.00000000    0.38490018    0.30300276    0.07407407
-     6    0.00000000    0.38490018    0.60600551    0.07407407
-     7    0.00000000    0.76980036    0.00000000    0.07407407
-     8    0.00000000    0.76980036    0.30300276    0.07407407
-     9    0.00000000    0.76980036    0.60600551    0.07407407
-    10    0.33333333    0.19245009    0.00000000    0.07407407
-    11    0.33333333    0.19245009    0.30300276    0.07407407
-    12    0.33333333    0.19245009    0.60600551    0.07407407
-    13    0.33333333    0.57735027    0.00000000    0.07407407
-    14    0.33333333    0.57735027    0.30300276    0.07407407
-    15    0.33333333    0.57735027    0.60600551    0.07407407
-    16    0.33333333    0.96225045    0.00000000    0.07407407
-    17    0.33333333    0.96225045    0.30300276    0.07407407
-    18    0.33333333    0.96225045    0.60600551    0.07407407
-    19    0.66666667    0.38490018    0.00000000    0.07407407
-    20    0.66666667    0.38490018    0.30300276    0.07407407
-    21    0.66666667    0.38490018    0.60600551    0.07407407
-    22    0.66666667    0.76980036    0.00000000    0.07407407
-    23    0.66666667    0.76980036    0.30300276    0.07407407
-    24    0.66666667    0.76980036    0.60600551    0.07407407
-    25    0.66666667    1.15470054    0.00000000    0.07407407
-    26    0.66666667    1.15470054    0.30300276    0.07407407
-    27    0.66666667    1.15470054    0.60600551    0.07407407
- -------------------------------------------------
- --- Polarisation and k vector [cartesian coordinates]----
-xepsilon(:)= 0.00000000 0.00000000 1.00000000
-xkvec(:)= 1.00000000 0.00000000 0.00000000
- xmesh= 1141
- warning, r_paw( 0  ) set to  2.4
- warning, r_paw( 0  ) set to  2.4
- warning, r_paw( 2  ) set to  2.
+     the Fermi energy is     6.4758 ev
 
- ==========================================================
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         889     475    169                23595     9203    2057
 
->> Fermi level from input (Ryd)=    0.60294618
+
+
+     bravais-lattice index     =            4
+     lattice parameter (alat)  =       9.2863  a.u.
+     unit-cell volume          =     762.9417 (a.u.)^3
+     number of atoms/cell      =            9
+     number of atomic types    =            3
+     number of electrons       =        48.00
+     number of Kohn-Sham states=           30
+     kinetic-energy cutoff     =      20.0000  Ry
+     charge density cutoff     =     150.0000  Ry
+     Exchange-correlation      =  SLA  PW   PBE  PBE ( 1  4  3  4 0)
+
+     celldm(1)=   9.286303  celldm(2)=   0.000000  celldm(3)=   1.100100
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (   1.000000   0.000000   0.000000 )  
+               a(2) = (  -0.500000   0.866025   0.000000 )  
+               a(3) = (   0.000000   0.000000   1.100100 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.000000  0.577350 -0.000000 )  
+               b(2) = (  0.000000  1.154701  0.000000 )  
+               b(3) = (  0.000000 -0.000000  0.909008 )  
+
+
+     PseudoPot. # 1 for Si read from file:
+     /home/mas/espresso-5.1/XSpectra/examples/pseudo/Si_PBE_USPP.UPF
+     MD5 check sum: 2fb286e7979bc4fe35b54746d77eb429
+     Pseudo is Ultrasoft, Zval =  4.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of 1141 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     PseudoPot. # 2 for Si read from file:
+     /home/mas/espresso-5.1/XSpectra/examples/pseudo/Si_PBE_USPP.UPF
+     MD5 check sum: 2fb286e7979bc4fe35b54746d77eb429
+     Pseudo is Ultrasoft, Zval =  4.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of 1141 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     PseudoPot. # 3 for O  read from file:
+     /home/mas/espresso-5.1/XSpectra/examples/pseudo/O_PBE_USPP.UPF
+     MD5 check sum: 390ba29e75625707450f3bd3f0eb6be9
+     Pseudo is Ultrasoft, Zval =  6.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of 1269 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     atomic species   valence    mass     pseudopotential
+        Sih            4.00    28.08600     Si( 1.00)
+        Si             4.00    28.08600     Si( 1.00)
+        O              6.00    15.99940     O ( 1.00)
+
+      2 Sym. Ops. (no inversion) found
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1           Sih tau(   1) = (   0.4700000   0.0000000   0.0000000  )
+         2           Si  tau(   2) = (  -0.2350000   0.4070319   0.7334000  )
+         3           Si  tau(   3) = (  -0.2350000  -0.4070319   0.3667000  )
+         4           O   tau(   4) = (   0.2792500   0.2318350   0.1308019  )
+         5           O   tau(   5) = (   0.0611500   0.3577551   0.6025981  )
+         6           O   tau(   6) = (  -0.3404000   0.1259201   0.8642019  )
+         7           O   tau(   7) = (  -0.3404000  -0.1259201   0.2358981  )
+         8           O   tau(   8) = (   0.0611500  -0.3577551   0.4975019  )
+         9           O   tau(   9) = (   0.2792500  -0.2318350  -0.1308019  )
+
+     number of k points=    27  Methfessel-Paxton smearing, width (Ry)=  0.0300
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0740741
+        k(    2) = (   0.0000000   0.0000000   0.3030028), wk =   0.0740741
+        k(    3) = (   0.0000000   0.0000000   0.6060055), wk =   0.0740741
+        k(    4) = (   0.0000000   0.3849002   0.0000000), wk =   0.0740741
+        k(    5) = (   0.0000000   0.3849002   0.3030028), wk =   0.0740741
+        k(    6) = (   0.0000000   0.3849002   0.6060055), wk =   0.0740741
+        k(    7) = (   0.0000000   0.7698004   0.0000000), wk =   0.0740741
+        k(    8) = (   0.0000000   0.7698004   0.3030028), wk =   0.0740741
+        k(    9) = (   0.0000000   0.7698004   0.6060055), wk =   0.0740741
+        k(   10) = (   0.3333333   0.1924501   0.0000000), wk =   0.0740741
+        k(   11) = (   0.3333333   0.1924501   0.3030028), wk =   0.0740741
+        k(   12) = (   0.3333333   0.1924501   0.6060055), wk =   0.0740741
+        k(   13) = (   0.3333333   0.5773503   0.0000000), wk =   0.0740741
+        k(   14) = (   0.3333333   0.5773503   0.3030028), wk =   0.0740741
+        k(   15) = (   0.3333333   0.5773503   0.6060055), wk =   0.0740741
+        k(   16) = (   0.3333333   0.9622504   0.0000000), wk =   0.0740741
+        k(   17) = (   0.3333333   0.9622504   0.3030028), wk =   0.0740741
+        k(   18) = (   0.3333333   0.9622504   0.6060055), wk =   0.0740741
+        k(   19) = (   0.6666667   0.3849002   0.0000000), wk =   0.0740741
+        k(   20) = (   0.6666667   0.3849002   0.3030028), wk =   0.0740741
+        k(   21) = (   0.6666667   0.3849002   0.6060055), wk =   0.0740741
+        k(   22) = (   0.6666667   0.7698004   0.0000000), wk =   0.0740741
+        k(   23) = (   0.6666667   0.7698004   0.3030028), wk =   0.0740741
+        k(   24) = (   0.6666667   0.7698004   0.6060055), wk =   0.0740741
+        k(   25) = (   0.6666667   1.1547005   0.0000000), wk =   0.0740741
+        k(   26) = (   0.6666667   1.1547005   0.3030028), wk =   0.0740741
+        k(   27) = (   0.6666667   1.1547005   0.6060055), wk =   0.0740741
+
+     Dense  grid:    23595 G-vectors     FFT dimensions: (  40,  40,  40)
+
+     Smooth grid:     9203 G-vectors     FFT dimensions: (  27,  27,  30)
+
+     Largest allocated arrays     est. size (Mb)     dimensions
+        Kohn-Sham Wavefunctions         0.54 Mb     (    1184,   30)
+        NL pseudopotentials             1.30 Mb     (    1184,   72)
+        Each V/rho on FFT grid          0.98 Mb     (   64000)
+        Each G-vector array             0.18 Mb     (   23595)
+        G-vector shells                 0.01 Mb     (    1138)
+     Largest temporary arrays     est. size (Mb)     dimensions
+        Auxiliary wavefunctions         0.54 Mb     (    1184,   30)
+        Each subspace H/S matrix        0.01 Mb     (      30,   30)
+        Each <psi_i|beta_j> matrix      0.03 Mb     (      72,   30)
+
+     The potential is recalculated from file :
+     /home/mas/espresso-5.1/XSpectra/examples/results/tmp/SiO2.save/charge-density.dat
+
+     Starting wfc are   60 atomic wfcs
+
+     -------------------------------------------------------------------------
+               Reading core wavefunction file for the absorbing atom
+     -------------------------------------------------------------------------
+
+     Si.wfc successfully read
+
+     -------------------------------------------------------------------------
+                              Attributing the PAW radii 
+                     for the absorbing atom [units: Bohr radius]
+     -------------------------------------------------------------------------
+
+        PAW proj 1: r_paw(l= 0)= 3.60  (1.5*r_cut)
+        PAW proj 2: r_paw(l= 0)= 3.60  (1.5*r_cut)
+        PAW proj 3: r_paw(l= 1)= 2.40  (from input file))
+        PAW proj 4: r_paw(l= 1)= 2.40  (from input file))
+        PAW proj 5: r_paw(l= 2)= 3.00  (1.5*r_cut)
+
+        NB: The calculation will not use all these r_paw values.
+            - For a K edge in the electric-dipole approximation,
+              only the r_paw(l=1) values are used.
+            - For a K edge in the electric-quadrupole approximation,
+              only the r_paw(l=2) values are used.
+
 
      init_gipaw_1: projectors nearly linearly dependent:
      ntyp =  1, l/n1/n2 =  1 2 1  0.99554741
 
- Calculation dipole matrix element
- There are  2  projectors/channel
- for angular moment  1  and atom type  1
- ----------------------------------------------------------------
-dipole radial matrix element proj. ( 1)=    0.02669573
-dipole radial matrix element proj. ( 2)=    0.02489393
- ----------------------------------------------------------------
 
- Starting k-point :  1
- total cpu time spent up to now is      3.92 secs
- Hilbert space is saturated
- xniter is set equal to  1155
- Hint: Increase Kinetic Energy cutoff in your SCF simulation
- norm initial vector= 0.014417307871197677
- Starting lanczos
- Estimated error at iter  50  is  1.0027772820829721
- Estimated error at iter  100  is  0.07849776584028383
- Estimated error at iter  150  is  0.021166119943638255
- Estimated error at iter  200  is  0.0056148692515060675
- Estimated error at iter  250  is  0.0012089833233284969
- CONVERGED at iter  300  with error= 0.0005370976235904065
+     -------------------------------------------------------------------------
+                           Getting the Fermi energy 
+     -------------------------------------------------------------------------
 
- Starting k-point :  2
- total cpu time spent up to now is      5.89 secs
- norm initial vector= 0.014419098024709856
- Starting lanczos
- Estimated error at iter  50  is  1.0028353542444892
- Estimated error at iter  100  is  0.0904497655884302
- Estimated error at iter  150  is  0.024217815529570454
- Estimated error at iter  200  is  0.012232655911668961
- Estimated error at iter  250  is  0.0030052691802152824
- Estimated error at iter  300  is  0.0010650803130380269
- CONVERGED at iter  350  with error= 0.00024156524021017343
+     From SCF save directory:
+        ef    [eV]:    6.4758
 
- Starting k-point :  3
- total cpu time spent up to now is      8.20 secs
- norm initial vector= 0.014419098024709849
- Starting lanczos
- Estimated error at iter  50  is  1.0028353542444897
- Estimated error at iter  100  is  0.09044976558842245
- Estimated error at iter  150  is  0.02421452893460694
- Estimated error at iter  200  is  0.012219812963523008
- Estimated error at iter  250  is  0.0030235546793021756
- Estimated error at iter  300  is  0.0011261981618428819
- CONVERGED at iter  350  with error= 0.00023029337860676764
- calculation not finished
+     -> ef (in eV) will be written in x_save_file
+
+     -------------------------------------------------------------------------
+                           Energy zero of the spectrum 
+     -------------------------------------------------------------------------
+
+     -> ef will be used as energy zero of the spectrum
+
+     -------------------------------------------------------------------------
+                          Starting XANES calculation
+                     in the electric dipole approximation
+     -------------------------------------------------------------------------
+
+     Method of calculation based on the Lanczos recursion algorithm
+     --------------------------------------------------------------
+        - STEP 1: Construction of a kpoint-dependent Lanczos basis,
+          in which the Hamiltonian is tridiagonal (each 'iter' 
+          corresponds to the calculation of one more Lanczos vector)
+        - STEP 2: Calculation of the cross-section as a continued fraction
+          averaged over the k-points.
+
+     ... Begin STEP 1 ...
+
+        Radial transition matrix element(s) used in the calculation of the
+        initial vector of the Lanczos basis (|tilde{phi}_abs> normalized)
+        | For PAW proj. (l=1) #1: radial matrix element =   0.026695735
+        | For PAW proj. (l=1) #2: radial matrix element =   0.024893931
+
+        |-------------------------------------------------------------
+        ! k-point #   1:  ( 0.0000,  0.0000,  0.0000),  0.0741,   1
+        |-------------------------------------------------------------
+        |   Hilbert space is saturated
+        |   xniter is set equal to       1155
+        |   Increase kinetic-energy cutoff in your SCF calculation!
+        |   Norm of the initial Lanczos vector: 0.14417308E-01
+        |   Estimated error at iter     50:   1.00277730
+        |   Estimated error at iter    100:   0.07673098
+        |   Estimated error at iter    150:   0.01530988
+        |   Estimated error at iter    200:   0.00555472
+        |   Estimated error at iter    250:   0.00130889
+        !   => CONVERGED at iter    300 with error=  0.00058327
+        |-------------------------------------------------------------
+        ! k-point #   2:  ( 0.0000,  0.0000,  0.3030),  0.0741,   1
+        |-------------------------------------------------------------
+        |   Norm of the initial Lanczos vector: 0.14419098E-01
+        |   Estimated error at iter     50:   1.00283537
+        |   Estimated error at iter    100:   0.09044884
+        |   Estimated error at iter    150:   0.02421012
+        |   Estimated error at iter    200:   0.01221773
+        |   Estimated error at iter    250:   0.00310473
+        |   Estimated error at iter    300:   0.00109989
+        !   => CONVERGED at iter    350 with error=  0.00023208
+        |-------------------------------------------------------------
+        ! k-point #   3:  ( 0.0000,  0.0000,  0.6060),  0.0741,   1
+        |-------------------------------------------------------------
+        |   Norm of the initial Lanczos vector: 0.14419098E-01
+        |   Estimated error at iter     50:   1.00283537
+        |   Estimated error at iter    100:   0.09044884
+        |   Estimated error at iter    150:   0.02420881
+        |   Estimated error at iter    200:   0.01227867
+        |   Estimated error at iter    250:   0.00341201
+        |   Estimated error at iter    300:   0.00113429
+        !   => CONVERGED at iter    350 with error=  0.00023565
+        |-------------------------------------------------------------
+        ! k-point #   4:  ( 0.0000,  0.3849,  0.0000),  0.0741,   1
+        |-------------------------------------------------------------
+        |   Hilbert space is saturated
+        |   xniter is set equal to       1150
+        |   Increase kinetic-energy cutoff in your SCF calculation!
+        |   Norm of the initial Lanczos vector: 0.14419678E-01
+        |   Estimated error at iter     50:   1.00287354
+        |   Estimated error at iter    100:   0.10922284
+        |   Estimated error at iter    150:   0.02157447
+        |   Estimated error at iter    200:   0.00868174
+        |   Estimated error at iter    250:   0.00314069
+        |   Estimated error at iter    300:   0.00123874
+        !   => CONVERGED at iter    350 with error=  0.00057626
+        |-------------------------------------------------------------
+        ! k-point #   5:  ( 0.0000,  0.3849,  0.3030),  0.0741,   1
+        |-------------------------------------------------------------
+     Calculation not finished
+
+     Results of STEP 1 successfully written in x_save_file
+     x_save_file name: 
+     ->  SiO2.xspectra_dip_restart_1.sav                                  
+     x_save_file version:  2
+
+     ... End STEP 1 ...
+
