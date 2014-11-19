@@ -11,24 +11,28 @@ module xspectra
   implicit none
   SAVE
    real(kind=DP) :: &
-        xgamma,     &           ! xanes broadening parameter 
-        xerror,     &           ! error between 2 successive spectra
-        xemax,      &           ! max energy of the xanes window
-        xemin,      &           ! min energy of the xanes window
-        ef_r                    ! Fermi energy in input
+        xgamma,     &     ! xanes broadening parameter 
+        xerror,     &     ! error between 2 successive spectra
+        xemax,      &     ! max energy of the xanes window
+        xemin,      &     ! min energy of the xanes window
+        ef_r,       &     ! Fermi energy in input (obsolete June 2014)
+        xe0,        &     ! Energy zero for the spectrum plot (eV) --> namelist
+        xe0_ry,     &     ! Energy zero for the spectrum plot (Ry)
+        xe0_default=1.d4  ! Absurd default for xe0 (eV)
+                          ! useful if xe0 is not assigned in the input_file 
 
    real(kind=DP) ::  &
-        xkvec(3)        !coordinates of wave vector
+        xkvec(3)          !coordinates of wave vector
 
    real(kind=DP) :: &
-        xepsilon(3)      !epsilon vector used for quadrupole xanes calculation
+        xepsilon(3)       !epsilon vector used for quadrupole xanes calculation
 
    real(kind=DP), allocatable :: xanes_dip(:)      ! The  xanes mat. ele (dipole)
    real(kind=DP), allocatable :: xanes_qua(:)      ! The  xanes mat. ele (quad)
 
    integer :: &
         xnepoint, &        ! # of energy points in the xanes window
-        xniter,   &        ! # of iterations between 2 error-calculations
+        xniter,   &        ! 
         xnitermax,  &      ! # of iterations used for dimension of a and b
         xang_mom,   &      ! angular momentum of the final state
         xiabs,          &  ! Identificateur de l'Atom absorbeur
@@ -106,6 +110,7 @@ module gamma_variable_mod
    real(kind=DP), allocatable :: gamma_tab(:),&    ! to store tabulated values of gamma
                                  gamma_points(:,:)
    character(len=256) :: gamma_mode, gamma_file ! useful for non constant xgamma
+   real(kind=DP) :: gamma_value(2), gamma_energy(2)
 
 end module gamma_variable_mod
 

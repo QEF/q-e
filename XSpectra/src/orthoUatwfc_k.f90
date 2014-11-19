@@ -48,29 +48,35 @@ SUBROUTINE orthoUwfc_k(ik)
   ALLOCATE (wfcatom( npwx*npol, natomwfc),swfcatom(npwx*npol, natomwfc))    
 
   IF ( U_projection == "pseudo" ) THEN
-     WRITE( stdout,*) 'Beta functions used for LDA+U Projector'
+     WRITE(stdout,'(8x,a)') &
+       '! Beta functions used for LDA+U Projector'
      RETURN
   ELSE IF (U_projection=="file") THEN
-     WRITE( stdout,*) 'LDA+U Projector read from file '
+     WRITE(stdout,'(8x,a)') &
+       '! LDA+U Projector read from file '
      RETURN
   ELSE IF (U_projection=="atomic") THEN
      orthogonalize_wfc = .FALSE.
      normalize_only = .FALSE.
-     WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are NOT orthogonalized'
+     WRITE(stdout,'(8x,a)') &
+       '! Atomic wfc used for LDA+U Projector are NOT orthogonalized'
   ELSE IF (U_projection=="ortho-atomic") THEN
      orthogonalize_wfc = .TRUE.
      normalize_only = .FALSE.    
-     WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are orthogonalized'
+     WRITE(stdout,'(8x,a)') &
+        '! Atomic wfc used for LDA+U Projector are orthogonalized'
      IF (gamma_only) CALL errore('orthoatwfc', &
           'Gamma-only calculation for this case not implemented', 1 )
   ELSE IF (U_projection=="norm-atomic") THEN
      orthogonalize_wfc = .TRUE.
      normalize_only = .TRUE.
-     WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are normalized but NOT orthogonalized'
+     WRITE(stdout,'(8x,a)') &
+       '! Atomic wfc used for LDA+U Projector are normalized but NOT orthogonalized'
      IF (gamma_only) CALL errore('orthoatwfc', &
           'Gamma-only calculation for this case not implemented', 1 )
   ELSE
-     WRITE( stdout,*) "U_projection_type =", U_projection
+     WRITE(stdout,'(8x,a)') & 
+        "! U_projection_type =", U_projection
      CALL errore ("orthoatwfc"," this U_projection_type is not valid",1)
   END IF
 
