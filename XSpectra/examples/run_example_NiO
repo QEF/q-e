@@ -179,7 +179,6 @@ cat > NiO.xspectra_dip.in << EOF
     xepsilon(3)=0.0,
     xiabs=1,
     x_save_file='NiO.xspectra_dip.sav',
-    ef_r=1.01439527,
     xerror=0.001,
  /
  &plot
@@ -225,7 +224,6 @@ cat > NiO.xspectra_dip_replot.in << EOF
     xepsilon(3)=0.0,
     xiabs=1,
     x_save_file='NiO.xspectra_dip.sav',
-    ef_r=1.01439527,
     xerror=0.001,
  /
  &plot
@@ -270,7 +268,6 @@ cat > NiO.xspectra_qua.in << EOF
     xkvec(3)=-1.0,
     xiabs=1,
     x_save_file='NiO.xspectra_qua.sav',
-    ef_r=1.01439527,
     xerror=0.001,
  /
  &plot

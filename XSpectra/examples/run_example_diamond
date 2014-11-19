@@ -145,35 +145,6 @@ check_failure $?
 $ECHO " done"
 
 
-$ECHO " #"
-$ECHO "# x-ray absorption spectrum calculation"
-$ECHO "# Fermi level calculation"
-$ECHO "# "
-
-cat > diamond.xspectra_fermi.in << EOF
- &input_xspectra
-    calculation='fermi_level',
-    prefix='diamond',
-    outdir='$TMP_DIR/',
-    xread_wf=.true.,
- /
- &plot
- /
- &pseudos
-    filecore='C.wfc',
- /
- &cut_occ
- /
-4 4 4 0 0 0
-EOF
-$ECHO "  running xspectra.x ...\c"
-$X_COMMAND < diamond.xspectra_fermi.in > diamond.xspectra_fermi.out
-check_failure $?
-$ECHO " done"
-
-FERMI_LEVEL=`grep '>>' diamond.xspectra_fermi.out |awk '{print $6}'`
-$ECHO "Fermi Level is " ${FERMI_LEVEL}
-
 $ECHO " # "
 $ECHO " # x-ray absorption spectrum calculation "
 $ECHO " # including occupied states  " 
@@ -191,7 +162,6 @@ cat > diamond.xspectra.in << EOF
     xepsilon(3)=0.0,
     xiabs=1,
     x_save_file='diamond.xspectra.sav',
-    ef_r=${FERMI_LEVEL},
     xerror=0.001,
  /
  &plot
@@ -236,7 +206,6 @@ cat > diamond.xspectra_replot.in << EOF
     xepsilon(3)=0.0,
     xiabs=1,
     x_save_file='diamond.xspectra.sav',
-    ef_r=${FERMI_LEVEL},
     xerror=0.001,
  /
  &plot
@@ -319,37 +288,9 @@ $PW_COMMAND < diamondh.scf.in > diamondh.scf.out
 check_failure $?
 $ECHO " done"
 
-$ECHO " #"
-$ECHO "# x-ray absorption spectrum calculation"
-$ECHO "# Fermi level calculation with core-hole"
-$ECHO "# "
-
-cat > diamondh.xspectra_fermi.in << EOF
- &input_xspectra
-    calculation='fermi_level',
-    prefix='diamondh',
-    outdir='$TMP_DIR/',
-    xread_wf=.true.,
- /
- &plot
- /
- &pseudos
-    filecore='C.wfc',
- /
- &cut_occ
- /
-4 4 4 0 0 0
-EOF
-$ECHO "  running xspectra.x ...\c"
-$X_COMMAND < diamondh.xspectra_fermi.in > diamondh.xspectra_fermi.out
-check_failure $?
-$ECHO " done"
-
-FERMI_LEVEL=`grep '>>' diamondh.xspectra_fermi.out |awk '{print $6}'`
-$ECHO "Fermi Level is " ${FERMI_LEVEL}
 $ECHO "# "
 $ECHO "# x-ray absorption spectrum calculation"
-$ECHO "# cutting occupied states at " ${FERMI_LEVEL}
+$ECHO "# cutting occupied states"
 $ECHO "# "
 
 cat > diamondh.xspectra.in << EOF
@@ -365,7 +306,6 @@ cat > diamondh.xspectra.in << EOF
     xepsilon(3)=0.0,
     xiabs=1,
     x_save_file='diamondh.xspectra.sav',
-    ef_r=${FERMI_LEVEL},
     xerror=0.001,
  /
  &plot
