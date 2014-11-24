@@ -11,8 +11,8 @@ SUBROUTINE read_file()
   !
   ! Wrapper routine, for compatibility
   !
-  USE io_files,             ONLY : nwordwfc, iunwfc, tmp_dir, wfc_dir
-  USE io_global,            ONLY : stdout
+  USE io_files,             ONLY : nwordwfc, iunwfc, prefix, tmp_dir, wfc_dir
+  USE io_global,            ONLY : stdout, ionode
   USE buffers,              ONLY : open_buffer, close_buffer
   USE wvfct,                ONLY : nbnd, npwx
   USE noncollin_module,     ONLY : npol
@@ -33,6 +33,9 @@ SUBROUTINE read_file()
   LOGICAL :: exst
   !
   ! ... Read the contents of the xml data file
+  !
+  IF ( ionode ) WRITE( stdout, '(/,5x,A,/,5x,A)') &
+     'Reading data from directory:', TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
   !
   CALL read_xml_file ( )
   !
@@ -64,7 +67,7 @@ SUBROUTINE read_file()
   IF ( real_space ) THEN
     CALL betapointlist()
     CALL init_realspace_vars()
-    WRITE(stdout,'(5X,"Real space initialisation completed")')
+    IF( ionode ) WRITE(stdout,'(5x,"Real space initialisation completed")')
   ENDIF
   CALL newd()
   !
