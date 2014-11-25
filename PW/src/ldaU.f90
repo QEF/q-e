@@ -136,21 +136,14 @@ CONTAINS
          CALL errore( 'init_lda_plus_u', 'Hubbard_l should not be > 3 ', 1 )
 
     ! compute index of atomic wfcs used as projectors
-
     IF ( .NOT.allocated(oatwfc)) ALLOCATE ( oatwfc(nat) )
     CALL offset_atom_wfc ( .false., oatwfc, nwfcU )
     ! nwfcU is set to natomwfc by the routine above
     IF ( nwfcU .NE.natomwfc ) &
          CALL errore ('offset_atom_wfc', 'wrong number of wavefunctions', 1)
-   !
+    ! for each atom, compute index of its projectors (among projectors only)
     IF ( .NOT.allocated(offsetU)) ALLOCATE ( offsetU(nat) )
-    ! If reading from file, dimensions and offsets for wfcU and wfcatom 
-    ! coincide; otherwise, they differ
-    IF ( U_projection == 'file' ) THEN
-       offsetU(:) = oatwfc(:)
-    ELSE
-       CALL offset_atom_wfc ( .true., offsetU, nwfcU )
-    END IF
+    CALL offset_atom_wfc ( .true., offsetU, nwfcU )
     !
   END SUBROUTINE init_lda_plus_u
   !

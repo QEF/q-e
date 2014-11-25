@@ -23,8 +23,11 @@ PROGRAM pmw
   USE io_files,   ONLY : prefix, tmp_dir
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
-  USE mp_global,  ONLY : mp_startup
-  USE environment,ONLY : environment_start, environment_end
+  USE mp_global,  ONLY : mp_startup, nproc_pool, nproc_pool_file
+  USE environment, ONLY : environment_start, environment_end
+  USE wvfct,      ONLY : nbnd
+  USE ldaU,       ONLY : lda_plus_U
+  USE noncollin_module, ONLY : noncolin
   !
   IMPLICIT NONE
   !
@@ -33,7 +36,8 @@ PROGRAM pmw
   CHARACTER(len=256) :: outdir
   INTEGER :: ios
   INTEGER :: first_band, last_band
-  NAMELIST / inputpp / outdir, prefix, first_band, last_band
+  LOGICAL :: writepp
+  NAMELIST / inputpp / outdir, prefix, first_band, last_band, writepp
   !
   ! initialise environment
   !
@@ -50,6 +54,7 @@ PROGRAM pmw
   IF ( trim( outdir ) == ' ' ) outdir = './'
   first_band=-1
   last_band=-1
+  writepp = .FALSE.
   !
   ios = 0
   !
@@ -70,14 +75,33 @@ PROGRAM pmw
   CALL mp_bcast( prefix, ionode_id, world_comm )
   CALL mp_bcast( first_band, ionode_id, world_comm )
   CALL mp_bcast( last_band, ionode_id, world_comm )
+  CALL mp_bcast( writepp, ionode_id, world_comm )
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
   CALL read_file ( )
   !
+  ! Here we trap restarts from a different number of nodes.
+  !
+  IF (nproc_pool /= nproc_pool_file)  &
+     CALL errore('pmw', &
+     'pw.x run on a different number of procs/pools', nproc_pool_file)
+  !
+  ! Check on correctness and consistency of the input
+  !
+  IF ( first_band == -1 )  first_band = 1
+  IF ( last_band  == -1 )  last_band  = nbnd
+  IF ( first_band > last_band ) CALL errore ('pmw',' first_band > last_band',1)
+  IF ( first_band < 0 ) CALL errore ('pmw',' first_band < 0 ', first_band)
+  IF ( last_band > nbnd ) CALL errore ('pmw',' last_band > nbnd ', nbnd)
+  ! Check on compatibilities
+  IF ( noncolin ) CALL errore('pmw','non-colinear not implemented / not tested', 1)
+  ! Currently, WF projectors are built for Hubbard species only
+  IF ( .NOT.lda_plus_U ) CALL errore('pmw','Hubbard U calculation required', 1)
+  !
   CALL openfil_pp ( )
   !
-  CALL projection( first_band, last_band)
+  CALL projection( first_band, last_band, writepp)
   !
   CALL environment_end ( 'PMW' )
   !
@@ -86,10 +110,10 @@ PROGRAM pmw
 END PROGRAM pmw
 
 !-----------------------------------------------------------------------
-SUBROUTINE projection (first_band, last_band)
+SUBROUTINE projection (first_band, last_band, iopp)
   !-----------------------------------------------------------------------
   !
-  USE io_global,  ONLY : stdout
+  USE io_global,  ONLY : stdout, ionode
   USE uspp_param, ONLY : upf
   USE ions_base,  ONLY : nat, ityp
   USE basis,      ONLY : natomwfc, swfcatom
@@ -97,30 +121,33 @@ SUBROUTINE projection (first_band, last_band)
   USE constants,  ONLY: rytoev
   USE gvect
   USE klist
-  USE ldaU,       ONLY : lda_plus_u, &
-                         Hubbard_lmax, Hubbard_l, Hubbard_alpha, Hubbard_U
-  USE lsda_mod
-  USE symm_base,  ONLY: nsym, irt, d1, d2, d3
   USE wvfct
+  USE ldaU,       ONLY : is_Hubbard, Hubbard_lmax, Hubbard_l, &
+                         oatwfc, offsetU, nwfcU, wfcU, copy_U_wfc
+  USE lsda_mod
+  USE symm_base
+  USE mp_pools,   ONLY : me_pool, root_pool, my_pool_id, kunit, npool
   USE control_flags, ONLY: gamma_only
   USE uspp,       ONLY: nkb, vkb
   USE becmod,     ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE io_files,   ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, &
-                        iunsat, nwordatwfc, diropn
+                        iunhub, nwordwfcU, nwordatwfc, diropn
   USE wavefunctions_module, ONLY: evc
 
   IMPLICIT NONE
   !
+  INTEGER, EXTERNAL :: find_free_unit
+  !
   ! I/O variables
   !
-  INTEGER :: first_band, last_band
+  INTEGER, INTENT(IN) :: first_band, last_band
+  LOGICAL, INTENT(IN) :: iopp
   !
   ! local variables
   !
   INTEGER :: ik, na, nt, n, m, l, nwfc, lmax_wfc, &
              ldim1, ldim2, lwork, i, j, info, counter, counter_ldau
   LOGICAL :: exst
-  COMPLEX(DP), ALLOCATABLE :: proj (:,:,:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
   !
   COMPLEX(DP), ALLOCATABLE ::  proj0(:,:)
@@ -136,141 +163,129 @@ SUBROUTINE projection (first_band, last_band)
   ! the eigenvalues of pp
   ! workspace for ZGESVD
   REAL (DP) :: capel
+  !!
+  INTEGER :: iun_pp, nks1, nks1tot, nks2, nks2tot, nbase, rest
+  CHARACTER(len=9) :: kptstr
+  INTEGER, ALLOCATABLE :: kstatus(:)
+  !!
   !
-  WRITE( stdout, '(/5x,"Calling projection .... ")')
+  WRITE( stdout, '(/5x,"Calling projection to compute Wannier projectors ... ")')
+  !
   IF ( gamma_only ) WRITE( stdout, '(5x,"gamma-point specific algorithms are used")')
   !
-  nwordatwfc = npwx * natomwfc
-  CALL diropn( iunsat, 'hub', 2*nwordatwfc, exst )
-  !
-  ALLOCATE(proj (natomwfc, nbnd, nkstot) )
-  ALLOCATE(wfcatom (npwx, natomwfc) )
-  ALLOCATE(swfcatom (npwx , natomwfc ) )
-  ! Allocate the array containing <beta|wfcatom>
-  CALL allocate_bec_type ( nkb, natomwfc, becp)
-
-  IF (first_band == -1)  first_band = 1
-  IF (last_band  == -1)  last_band  = nbnd
-  IF (first_band > last_band ) CALL errore ('pmw',' first_band > last_band',1)
-  IF (first_band < 0         ) CALL errore ('pmw',' first_band < 0 ',       1)
-  IF (last_band > nbnd       ) CALL errore ('pmw',' last_band > nbnd ',     1)
-
-
-  counter = 0
-  counter_ldaU = 0
-  DO na = 1, nat
-     nt = ityp (na)
-     DO n = 1, upf(nt)%nwfc
-        IF (upf(nt)%oc (n) >= 0.d0) THEN
-           l = upf(nt)%lchi (n)
-           IF ( (Hubbard_U(nt)/=0.d0 .or. Hubbard_alpha(nt)/=0.d0) .and. &
-                                            l==Hubbard_l(nt) )THEN
-               counter_ldaU = counter_ldaU + 2 * l + 1
-           ENDIF
-           counter = counter + 2 * l + 1
-        ENDIF
-     ENDDO
-  ENDDO
-
-  WRITE( stdout, *) "    NBND = ", nbnd
-  WRITE( stdout, *) "    NATOMWFC =", natomwfc
-  WRITE( stdout, *) "    NKSTOT =", nkstot
-
-  ldim1 = counter_ldaU
+  ! Set dimensions of the problem:
+  ! ldim1 = number of atomic-projectors
+  ! ldim2 = number of KS-bands
+  !! N.B.: ldim1 = nwfcU = size(wfcU,2), in current implementation
+  ldim1 = nwfcU
   ldim2 = last_band + 1 - first_band
-  WRITE( stdout, *) ldim1, ldim2
-
   IF (ldim1 > ldim2 ) CALL errore( 'projection','too few bands',ldim1-ldim2)
-  lwork = 5 * max(ldim1,ldim2)
-  ALLOCATE (pp(ldim1,ldim2), u_m(ldim1,ldim1), w_m(ldim2,ldim2), &
-            work(lwork), ew(ldim1), rwork(lwork))
-  proj   = 0.d0
+  !
+  lmax_wfc = Hubbard_lmax
+  IF (lmax_wfc > 3) CALL errore ('projection', 'l > 3 not yet implemented', 1)
+  !
+  ! write initial summary
+  IF ( ionode ) THEN
+     WRITE( stdout, '(/,6(5x,A,5x,I8,/))') &
+        'number of k-points            ', nkstot, &
+        'number of atomic wfcs with U  ', nwfcU, &
+        'total number of atomic wfcs   ', natomwfc, &
+        'number of Wannier functions   ', ldim1, &
+        'number of bands for projecting', ldim2, &
+        'total number bands            ', nbnd
+  ENDIF
+  !
+  ! initializations needed to get correct output when npool>1
+  ALLOCATE( kstatus(nkstot) )
+  kstatus(:) = -1
+  nks1 = kunit * ( nkstot / kunit / npool )
+  rest = ( nkstot - nks1 * npool ) / kunit
+  IF ( ( my_pool_id + 1 ) <= rest ) nks1 = nks1 + kunit
+  IF ( nks1 .NE. nks ) call errore('projection','problems with nks1',1)
+  nbase = nks * my_pool_id
+  IF ( ( my_pool_id + 1 ) > rest ) nbase = nbase + rest * kunit
+  !
+  ! Delete .hub files (if present) to prevent size mismatch or other problems
+  INQUIRE( UNIT=iunhub, OPENED=exst )
+  IF ( .NOT. exst ) CALL diropn( iunhub, 'hub', 2*nwordwfcU, exst )
+  IF ( ionode .AND. exst ) WRITE( stdout, '(5x,A)' ) '.hub files will be overwritten'
+  CLOSE( UNIT=iunhub, STATUS='delete' )
+  ! Create and open output files to store the projectors
+  CALL diropn( iunhub, 'hub', 2*nwordwfcU, exst )
   !
   ! initialize D_Sl for l=1, l=2 and l=3, for l=0 D_S0 is 1
   !
   CALL d_matrix (d1, d2, d3)
-  WRITE (stdout,*) " Hubbard_lmax = ", Hubbard_lmax, lda_plus_u
-  nwfc=0
-  lmax_wfc = 0
-  DO na = 1, nat
-     nt = ityp (na)
-     DO n = 1, upf(nt)%nwfc
-        IF (upf(nt)%oc (n) >= 0.d0) THEN
-           l = upf(nt)%lchi (n)
-           lmax_wfc = max (lmax_wfc, l )
-           DO m = 1, 2 * l + 1
-              nwfc=nwfc+1
-              WRITE(stdout,*) " ATOMIC WFC #", nwfc,":", na,n,l,m
-           ENDDO
-        ENDIF
-     ENDDO
-  ENDDO
-
-  IF (lmax_wfc > 3) CALL errore ('projection', 'l > 3 not yet implemented', 1)
-  IF (nwfc /= natomwfc) CALL errore ('projection', 'wrong # of atomic wfcs?', 1)
   !
   !    loop on k points
   !
   CALL init_us_1
   CALL init_at_1
   !
+  ! Allocate temporary arrays and workspace
+  !
+  lwork = 5 * max(ldim1,ldim2)
+  ALLOCATE (pp(ldim1,ldim2), u_m(ldim1,ldim1), w_m(ldim2,ldim2), &
+            work(lwork), ew(ldim1), rwork(lwork))
+  pp   = 0.d0
+  ALLOCATE(wfcatom (npwx, natomwfc) )
+  ALLOCATE(swfcatom (npwx , ldim1 ) )
+  ! Allocate the array containing <beta|wfcatom>
+  CALL allocate_bec_type ( nkb, ldim1, becp)
+
+  !
+  ! Main loop (on k-points)
+  !
   DO ik = 1, nks
-     WRITE ( stdout, * ) "KPOINT =", ik
+     !
+     !!DEBUG
+     !WRITE (*,*) "KPOINT =", ik
      CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
 
      CALL atomic_wfc (ik, wfcatom)
 
+     ! select Hubbard wavefunctions and copy then into wfcU (ldaU module)
+     ! (in order to avoid computing S|phi> for non-Hubbard atomic wfcs)
+     CALL copy_U_wfc (wfcatom)
+     !CALL copy_U_wfc (swfcatom, noncolin) ! not yet implemented/tested
+
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
 
-     CALL calbec ( npw, vkb, wfcatom, becp )
+     CALL calbec ( npw, vkb, wfcU, becp )
 
-     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
+     CALL s_psi (npwx, npw, ldim1, wfcU, swfcatom)
      !
-     ! wfcatom = |phi_i> , swfcatom = \hat S |phi_i>
-
+     ! wfcU = |phi_i> , swfcatom = \hat S |phi_i>
      !
-     ! make the projection <psi_i| \hat S | phi_j>
+     ! make the projection <psi_i| \hat S |phi_j>
      !
      IF ( gamma_only ) THEN
-        ALLOCATE(rproj0(natomwfc,nbnd) )
+        ALLOCATE(rproj0(ldim1,nbnd) )
         CALL calbec ( npw, swfcatom, evc, rproj0 )
-        proj(:,:,ik) = cmplx(rproj0(:,:),0.d0,kind=DP)
+        pp(:,:) = cmplx(rproj0(:,first_band:last_band),0.d0,kind=DP)
         DEALLOCATE (rproj0)
      ELSE
-        ALLOCATE(proj0(natomwfc,nbnd) )
+        ALLOCATE(proj0(ldim1,nbnd) )
         CALL calbec ( npw, swfcatom, evc, proj0 )
-        proj(:,:,ik) = proj0(:,:)
+        pp(:,:) = proj0(:,first_band:last_band)
         DEALLOCATE (proj0)
      ENDIF
 
-     counter = 0
-     counter_ldaU = 0
-     DO na = 1, nat
-        nt = ityp (na)
-        DO n = 1, upf(nt)%nwfc
-           IF (upf(nt)%oc (n) >= 0.d0) THEN
-              l = upf(nt)%lchi (n)
-              IF ( (Hubbard_U(nt)/=0.d0.or.Hubbard_alpha(nt)/=0.d0) .and. &
-                                            l==Hubbard_l(nt) )THEN
-                  pp(counter_ldaU+1:counter_ldaU+2*l+1, 1:ldim2) = &
-                      proj(counter+1:counter+2*l+1,first_band:last_band,ik)
-                  counter_ldaU = counter_ldaU + 2 * l + 1
-              ENDIF
-              counter = counter + 2 * l + 1
-           ENDIF
-        ENDDO
-     ENDDO
-     IF (counter_ldaU /= ldim1) CALL errore ('projection','wrong counter',1)
-
+     !
+     ! Use S.V.D. to make the orthonormalization of projectors
+     !
      CALL ZGESVD( 'A', 'A', ldim1, ldim2, pp, ldim1, ew, u_m, ldim1, &
                   w_m, ldim2, work, lwork, rwork, info )
-     CALL errore ('projection','Singular Value Decomposition failed', abs(info))
-     DO i = 1, ldim1
-        WRITE ( stdout, * ) ew(i)
-        WRITE ( stdout, '(8(2f5.2,2x))') u_m(:,i)
-        WRITE ( stdout, '(8(2f5.2,2x))') w_m(i,:)
-     ENDDO
+     IF ( abs(info) .ne. 0 ) kstatus(ik) = -2
+     !CALL errore ('projection','Singular Value Decomposition failed', abs(info))
+     !!DEBUG
+     !DO i = 1, ldim1
+     !   WRITE ( * , * ) ew(i)
+     !   WRITE ( * , '(8(2f5.2,2x))') u_m(:,i)
+     !   WRITE ( * , '(8(2f5.2,2x))') w_m(i,:)
+     !ENDDO
      !
      ! ... use sp_m to store u_m * w_m
      !
@@ -288,50 +303,92 @@ SUBROUTINE projection (first_band, last_band)
         u_m(i,i) = u_m(i,i) +1.d0
      ENDDO
 
-     IF (capel < 1.d-10) THEN
-        WRITE ( stdout, *) " ORTHOGONALITY CHECK PASSED "
-     ELSE
-        WRITE ( stdout, *) " ORTHOGONALITY CHECK FAILED"
-        WRITE ( stdout, *) " CAPEL = ", capel
-        DO i=1,ldim1
-           WRITE ( stdout, '(8(2f5.2,2x))') u_m(:,i)
-        ENDDO
+     IF ( kstatus(ik) == -1 ) THEN 
+        IF ( capel > 1.d-10 ) THEN
+           kstatus(ik) = -3
+           !!DEBUG
+           !WRITE (*,*) " ORTHOGONALITY CHECK FAILED"
+           !WRITE (*,*) " CAPEL = ", capel
+           !DO i=1,ldim1
+           !   WRITE (*, '(8(2f5.2,2x))') u_m(:,i)
+           !ENDDO
+        ELSE
+           kstatus(ik) = 0
+        ENDIF
      ENDIF
-     counter = 0
-     counter_ldaU = 0
-     DO na = 1, nat
-        nt = ityp (na)
-        DO n = 1, upf(nt)%nwfc
-           IF (upf(nt)%oc (n) >= 0.d0) THEN
-              l = upf(nt)%lchi (n)
-              IF ( (Hubbard_U(nt)/=0.d0.or.Hubbard_alpha(nt)/=0.d0) .and. &
-                                            l==Hubbard_l(nt) )THEN
-                  CALL zgemm( 'N', 'C', npw, 2*l+1, ldim2, ONE, &
-                              evc(1,first_band), npwx, &
-                              pp(counter_ldaU+1,1), ldim1, ZERO, &
-                              wfcatom(1,counter+1), npwx )
-                  counter_ldaU = counter_ldaU + 2 * l + 1
-              ENDIF
-              counter = counter + 2 * l + 1
-           ENDIF
+
+     ! ... compute wave functions |ophi_j> for the orthonormalized projectors
+     CALL zgemm( 'N', 'C', npw, ldim1, ldim2, ONE, evc(1,first_band), npwx, &
+                  pp(1,1), ldim1, ZERO, wfcU, npwx )
+
+     CALL calbec ( npw, vkb, wfcU, becp )
+
+     CALL s_psi (npwx, npw, ldim1, wfcU, swfcatom)
+
+     ! write \hat S |ophi_j> into iunhub unit
+     CALL davcio (swfcatom, 2*nwordwfcU, iunhub, ik, 1)
+
+     ! ... write U matrices to disk, if required
+     ! (each k-point into a separate file named <prefix.pp?>)
+     IF ( me_pool == root_pool .AND. iopp ) THEN
+        WRITE(kptstr,'(I9)') nbase + ik
+        iun_pp = find_free_unit()
+        OPEN (unit=iun_pp, file=trim(prefix)//'.pp'//trim(adjustl(kptstr)), &
+           form='formatted')
+
+        DO i = 1,ldim1
+           WRITE(iun_pp,'(2f22.15)') ( pp(i,j), j=1,ldim2 )
+           WRITE(iun_pp,'(/)')
         ENDDO
-     ENDDO
 
-     CALL calbec ( npw, vkb, wfcatom, becp )
-
-     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
-
-     CALL davcio (swfcatom, 2*nwordatwfc, iunsat, ik, 1)
-
+        CLOSE(iun_pp)
+     ENDIF
+     !
      ! on k-points
   ENDDO
+  !
+  ! Check if everything went OK (on all k-points)
+  !
+  CALL ipoolrecover( kstatus, 1, nkstot, nks)
+  IF ( ionode ) WRITE(stdout, '(/,5x,A)') 'Orthogonality check'
+  DO ik = 1,nkstot
+     IF ( ionode ) WRITE(stdout, '(7x,A,I8,A)', advance='no') &
+        'k-point', ik, ' : '
+     SELECT CASE ( kstatus(ik) )
+        CASE (  0 )
+           IF ( ionode ) WRITE( stdout, '(A)' ) 'ok'
+        CASE ( -1 )
+           CALL errore ('projection','kstatus not set?', -1)
+        CASE ( -2 )
+           !IF ( ionode ) WRITE( stdout, '(A)' ) 'Singular Value Dec. *FAILED*'
+           CALL errore ('projection','Singular Value Decomposition failed', -2)
+        CASE ( -3 )
+           !IF ( ionode ) WRITE( stdout, '(A)' ) '*FAILED*'
+           CALL errore ('projection','orthogonality check failed', ik)
+        CASE DEFAULT
+           CALL errore ('projection','invalid kstatus code', kstatus(ik))
+     END SELECT
+  ENDDO
+  !
+  ! if required, write symmetries to disk (into file prefix.pp0)
+  IF ( ionode .AND. iopp ) THEN
+     iun_pp = find_free_unit()
+     OPEN (unit=iun_pp, file=trim(prefix)//".pp0", form='formatted')
+     WRITE(iun_pp,'("# nrot,nsym,nsym_ns,nsym_na",4I4)') nrot, nsym, nsym_ns, nsym_na
+     DO i = 1,nsym
+        WRITE(iun_pp,'("#symm",I3," : ",A)') i, trim(sname(i))
+        WRITE(iun_pp,'(3I3,I7,5x,3F7.2,F9.2)') ( s(j,:,i), ftau(j,i), sr(j,:,i), ft(j,i), j=1,3 )
+        WRITE(iun_pp,'(99I3)') irt(i,1:nat)
+     ENDDO
+     CLOSE(iun_pp)
+  ENDIF
+
   !
   CALL deallocate_bec_type (becp)
   !
   DEALLOCATE (pp, u_m, w_m, work, ew, rwork)
   DEALLOCATE (swfcatom)
   DEALLOCATE (wfcatom)
-  DEALLOCATE (proj)
 
   RETURN
 END SUBROUTINE projection
