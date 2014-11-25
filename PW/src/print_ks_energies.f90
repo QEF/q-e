@@ -137,10 +137,16 @@ SUBROUTINE print_ks_energies()
         !
         IF ( ionode .AND. .NOT. one_atom_occupations ) THEN
            !
-           IF ( nspin == 1 .OR. nspin == 4 ) THEN
+           SELECT CASE( nspin ) 
+           CASE( 1, 4 ) 
               ehomo = MAXVAL( et(ibnd,  1:nkstot) )
-              IF ( nbnd > ibnd ) elumo = MINVAL( et(ibnd+1,1:nkstot) )
-           ELSE
+              IF ( nbnd > ibnd ) THEN
+                 elumo = MINVAL( et(ibnd+1,1:nkstot) )
+                 WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
+              ELSE
+                 WRITE( stdout, 9043 ) ehomo*rytoev
+              ENDIF
+           CASE( 2 )
               IF ( ibnd_up == 0 ) THEN
                  !
                  ehomo = MAXVAL( et(ibnd_dw,1:nkstot/2) )
@@ -155,16 +161,14 @@ SUBROUTINE print_ks_energies()
                               MAXVAL( et(ibnd_dw,nkstot/2+1:nkstot) ) )
                  !
               END IF
-              IF ( nbnd > ibnd ) &
+              IF ( nbnd > ibnd_up .AND. nbnd > ibnd_dw ) THEN
                  elumo = MIN( MINVAL( et(ibnd_up+1,1:nkstot/2) ), &
                               MINVAL( et(ibnd_dw+1,nkstot/2+1:nkstot) ) )
-           END IF
-           !
-           IF ( nbnd > ibnd ) THEN
-              WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
-           ELSE
-              WRITE( stdout, 9043 ) ehomo*rytoev
-           END IF
+                 WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
+              ELSE
+                 WRITE( stdout, 9043 ) ehomo*rytoev
+              ENDIF
+           END SELECT 
            !
         END IF
      END IF
