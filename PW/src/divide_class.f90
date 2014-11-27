@@ -1041,6 +1041,12 @@ a1(3) =-smat(1,2)+smat(2,1)
 
 sint=0.5d0*sqrt(a1(1)**2+a1(2)**2+a1(3)**2)
 IF (sint<eps) CALL errore('angle_rot','problem with the matrix',1)
+IF (ABS(sint)> 1.0_DP+eps) CALL errore('angle_rot','problem with sint',1)
+!
+!  small rounding errors that make |sint|>1.0 produce NaN in the next ASIN
+!  function, so we remove them
+!
+IF (ABS(sint) > 1.0_DP) sint=SIGN(1.0_DP, sint)
 !
 !  The direction of the axis is chosen in such a way that a1(3) is always
 !  positive if non zero. Otherwise a1(2) is positive, or a1(1) respectively
