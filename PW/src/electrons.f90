@@ -139,6 +139,8 @@ SUBROUTINE electrons()
      IF ( stopped_by_user .OR. .NOT. conv_elec ) THEN
         conv_elec=.FALSE.
         IF ( .NOT. first) THEN
+           WRITE(stdout,'(5x,"Calculation (EXX) stopped during iteration #", &
+                        & i6)') iter
            CALL seqopn (iunres, 'restart_e', 'formatted', exst)
            WRITE (iunres, *) iter-1, tr2, dexx
            WRITE (iunres, *) fock0, fock1, fock2
@@ -225,6 +227,8 @@ SUBROUTINE electrons()
      WRITE( stdout,'(/5x,"EXX: now go back to refine exchange calculation")')
      !
      IF ( check_stop_now() ) THEN
+        WRITE(stdout,'(5x,"Calculation (EXX) stopped after iteration #", &
+                        & i6)') iter
         conv_elec=.FALSE.
         CALL seqopn (iunres, 'restart_e', 'formatted', exst)
         WRITE (iunres, *) iter, tr2, dexx

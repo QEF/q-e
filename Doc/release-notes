@@ -1,3 +1,13 @@
+
+Incompatible changes in svn version:
+
+   * XSpectra: variable ef_r, used to eliminate the occupied states
+               from the spectrum, replaced by new variable xe0  
+
+Fixed in svn version:
+
+   * Symmetry printout could lead to error exit in same cases
+
 Incompatible changes in 5.1.1 version:
 
    * Regularization of DFT names for nonlocal functionals:

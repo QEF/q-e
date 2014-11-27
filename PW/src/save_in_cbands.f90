@@ -9,6 +9,7 @@
 SUBROUTINE save_in_cbands (ik, ethr, avg_iter, et)
   !-----------------------------------------------------------------------
   USE kinds,         ONLY: dp
+  USE io_global,     ONLY: stdout
   USE io_files,      ONLY: iunres, seqopn
   USE klist,         ONLY: nks
   USE wvfct,         ONLY: nbnd
@@ -20,6 +21,7 @@ SUBROUTINE save_in_cbands (ik, ethr, avg_iter, et)
   !
   LOGICAL :: exst
   !
+  WRITE(stdout,'(5x,"Calculation stopped in k-point loop, point #",i6)') ik
   CALL seqopn (iunres, 'restart_k', 'formatted', exst)
   WRITE (iunres, *) ik, ethr, avg_iter
   WRITE (iunres, *) et(1:nbnd,1:nks)
@@ -60,8 +62,13 @@ SUBROUTINE restart_in_cbands (ik, ethr, avg_iter, et)
         IF ( ios /= 0 ) THEN
            ik = 0
         ELSE
-           WRITE( stdout, &
-           '(5x,"Calculation restarted from kpoint #",i6)' ) ik + 1
+           IF ( ik == nks ) THEN
+              WRITE( stdout, &
+               '(5x,"Calculation restarted from end of k-point loop")' ) 
+           ELSE
+              WRITE( stdout, &
+               '(5x,"Calculation restarted from kpoint #",i6)' ) ik + 1
+           END IF
            ethr = ethr_
            avg_iter = avg_iter_
            et (:,:) = et_(:,:)

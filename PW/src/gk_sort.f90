@@ -11,7 +11,8 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
    !
    ! ... sorts k+g in order of increasing magnitude, up to ecut
    ! ... NB: this version should yield the same ordering for different ecut
-   ! ...     and the same ordering in all machines
+   ! ...     and the same ordering in all machines AS LONG AS INPUT DATA
+   ! ...     IS EXACTLY THE SAME
    !
    USE kinds,     ONLY : DP
    USE constants, ONLY : eps8
