@@ -7,6 +7,8 @@ Incompatible changes in svn version:
 Fixed in svn version:
 
    * Symmetry printout could lead to error exit in same cases
+   * Restarting from incomplete calculation could lead in some cases
+     to mysterious crashes due to usage of unitialized communicator
 
 Incompatible changes in 5.1.1 version:
 
