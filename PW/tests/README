@@ -9,6 +9,7 @@ name      system   what is tested
 atom       O       occupancies from input, also with spin polarization
                    PBE and spin-polarized PBE
                    PBE and s-PBE stress
+           Ni      atomic occupations: Ni d8s2 and d9s1
 berry     PbTiO3   scf: Q function in real space (tqr=.true.)
                    nscf: Berry phase calculation (with and without empty bands)
 b3lyp-O    O       B3LYP hybrid functional (spin polarized), Gamma
