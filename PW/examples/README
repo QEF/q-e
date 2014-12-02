@@ -67,6 +67,9 @@ To run the examples, you should follow this procedure:
 
                    LIST AND CONTENT OF THE EXAMPLES
 
+For each example, more detailed information is provided by the README file 
+contained in the corresponding directory.
+
 example01:
     This example shows how to use pw.x to calculate the total energy
     and the band structure of four simple systems: Si, Al, Cu, Ni.
@@ -105,7 +108,7 @@ example07:
 
 example08:
     This example shows how to use pw.x to calculate the total energy of FeO
-    using LDA+U approximation. Read file README for more details.
+    using LDA+U approximation.
 
 example09:
     This example shows how to use pw.x to perform TPSS metaGGA calculations
@@ -148,4 +151,4 @@ cluster_example:
 
 vdwDF_example:
     This example shows how to use the vdw-DF functional in pw.x. 
-    Read file README for more details.
+

@@ -165,7 +165,7 @@ SUBROUTINE print_clock_pw()
 #endif
    !
    IF ( lda_plus_U ) THEN
-      WRITE( stdout, '(5X,"Hubbard U routines")' )
+      WRITE( stdout, '(/,5X,"Hubbard U routines")' )
       CALL print_clock( 'new_ns' )
       CALL print_clock( 'vhpsi' )
       CALL print_clock( 'force_hub' )
