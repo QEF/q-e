@@ -11,7 +11,7 @@ PROGRAM neb
   !
   ! ... Nudged Elastic Band / Strings Method algorithm
   !
-  USE io_global,         ONLY : meta_ionode_id
+  USE io_global,         ONLY : meta_ionode, meta_ionode_id
   USE environment,       ONLY : environment_start, environment_end
   USE check_stop,        ONLY : check_stop_init
   USE mp,                ONLY : mp_bcast
@@ -44,6 +44,9 @@ PROGRAM neb
   ! INPUT RELATED
   !
   engine_prefix = "pw_"
+  !
+  IF (meta_ionode) CALL plugin_arguments()
+  CALL plugin_arguments_bcast( meta_ionode_id, world_comm )
   !
   ! ... open input file
   !
