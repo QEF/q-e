@@ -90,11 +90,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    info { Number of iterations used in potential mixing. }
 	}
 
-	var iverbosity -type INTEGER { 
-	    default { 0 }
+	var verbosity -type CHARACTER { 
+	    default { 'default' }
 	    info {
-		0 = short output
-		1 = verbose output
+               'debug', 'high', 'medium'   = verbose output
+               'low', 'default', 'minimal' = short output
 	    }
 	}
 

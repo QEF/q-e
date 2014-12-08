@@ -87,7 +87,7 @@ SUBROUTINE phq_readin()
   REAL(DP) :: amass_input(nsx)
     ! save masses read from input here
   CHARACTER (LEN=256) :: filename
-  !
+  CHARACTER (LEN=8)   :: verbosity
   CHARACTER(LEN=80)          :: card
   CHARACTER(LEN=1), EXTERNAL :: capital
   CHARACTER(LEN=6) :: int_to_char
@@ -104,7 +104,7 @@ SUBROUTINE phq_readin()
   INTEGER :: nqaux, iq
   !
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
-                       nat_todo, iverbosity, outdir, epsil,  &
+                       nat_todo, verbosity, iverbosity, outdir, epsil,  &
                        trans,  zue, zeu, max_seconds, reduce_io, &
                        modenum, prefix, fildyn, fildvscf, fildrho, &
                        ldisp, nq1, nq2, nq3, &
@@ -123,7 +123,7 @@ SUBROUTINE phq_readin()
   ! niter_ph     : maximum number of iterations
   ! nmix_ph      : number of previous iterations used in mixing
   ! nat_todo     : number of atom to be displaced
-  ! iverbosity   : verbosity control
+  ! verbosity    : verbosity control (iverbosity is obsolete)
   ! outdir       : directory where input, output, temporary files reside
   ! epsil        : if true calculate dielectric constant
   ! trans        : if true calculate phonon
@@ -223,7 +223,8 @@ SUBROUTINE phq_readin()
   nmix_ph      = 4
   nat_todo     = 0
   modenum      = 0
-  iverbosity   = 0
+  iverbosity   = 1234567
+  verbosity    = 'default'
   trans        = .TRUE.
   lrpa         = .FALSE.
   lnoloc       = .FALSE.
@@ -295,9 +296,32 @@ SUBROUTINE phq_readin()
   !
   ! ...  reading the namelist inputph
   !
-  IF (meta_ionode) READ( 5, INPUTPH, ERR=30, IOSTAT = ios )
-30  CALL mp_bcast(ios, meta_ionode_id, world_comm )
-  CALL errore( 'phq_readin', 'reading inputph namelist', ABS( ios ) )
+  IF (meta_ionode) THEN
+     READ( 5, INPUTPH, ERR=30, IOSTAT = ios )
+     !
+     ! ...  iverbosity/verbosity hack
+     !
+     IF ( iverbosity == 1234567 ) THEN
+        SELECT CASE( trim( verbosity ) )
+           CASE( 'debug', 'high', 'medium' )
+              iverbosity = 1
+           CASE( 'low', 'default', 'minimal' )
+              iverbosity = 0
+           CASE DEFAULT
+              iverbosity = 0
+         END SELECT
+     ELSE
+        ios == 1234567
+     END IF
+  END IF
+30 CONTINUE
+  CALL mp_bcast(ios, meta_ionode_id, world_comm )
+  IF ( ios == 1234567 ) THEB
+     CALL errore( 'phq_readin' , &
+                 'iverbosity is obsolete, use "verbosity" instead', 1 )
+  ELSE
+     CALL errore( 'phq_readin', 'reading inputph namelist', ABS( ios ) )
+  END IF
   !
   ! ...  broadcast all input variables
   !
