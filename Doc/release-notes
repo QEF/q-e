@@ -3,9 +3,12 @@ Incompatible changes in svn version:
 
    * XSpectra: variable ef_r, used to eliminate the occupied states
                from the spectrum, replaced by new variable xe0  
+   * PHonon: input variable iverbosity => verbosity
 
 Fixed in svn version:
 
+   * Changes made in rev.10251 had broken pw.x -pw2casino when just
+     one k-point per processor was present
    * Symmetry printout could lead to error exit in same cases
    * Restarting from incomplete calculation could lead in some cases
      to mysterious crashes due to usage of unitialized communicator

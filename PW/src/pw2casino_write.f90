@@ -363,11 +363,11 @@ CONTAINS
          DO ik = 1, nk
             ikk = ik + nk*(ispin-1)
             CALL gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-            CALL get_buffer (evc, nwordwfc, iunwfc, ikk )
+            IF( nks > 1 ) CALL get_buffer (evc, nwordwfc, iunwfc, ikk )
             CALL init_us_2 (npw, igk, xk (1, ikk), vkb)
             CALL calbec ( npw, vkb, evc, becp )
             !
-            ! -TS term for metals (ifany)
+            ! -TS term for metals (if any)
             !
             IF( degauss > 0.0_dp)THEN
                DO ibnd = 1, nbnd
