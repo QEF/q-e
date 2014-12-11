@@ -97,6 +97,7 @@ elpa_veryclean:
 	if test -d ../ELPA; then (rm -R -f ../ELPA); fi
 iotk_clean:
 	if test -d ../S3DE; then (cd ../S3DE; $(MAKE) clean); fi
+	if test -d ../iotk; then (rm -R -f ../iotk); fi
 	if test -e ../S3DE/iotk/src/iotk.x; then \
 	rm -f ../S3DE/iotk/src/iotk.x; fi
 	(rm -f ../bin/iotk; \
@@ -104,6 +105,7 @@ iotk_clean:
 	rm -f ../bin/iotk_print_kinds.x)
 iotk_veryclean:
 	if test -d ../S3DE; then (rm -R -f ../S3DE); fi
+	if test -d ../iotk; then (rm -R -f ../iotk); fi
 	if test -e ../S3DE/iotk/src/iotk.x; then (rm -f ../S3DE/iotk/src/iotk.x); fi
 	rm -f ../bin/iotk; \
 	rm -f ../bin/iotk.x; \
