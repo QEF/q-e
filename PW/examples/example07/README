@@ -9,3 +9,14 @@ The calculation proceeds as follows:
 
 2) make a band structure calculation for Pt (input=pt.nscf.in,
    output=pt.nscf.out).
+
+REFERENCES: 
+
+A. Dal Corso and A. Mosca Conte, 
+Spin-orbit coupling with ultrasoft pseudopotentials: application to Au and Pt,
+Phys. Rev. B 71, 115106 (2005)
+
+A. Dal Corso, 
+Projector augmented-wave method with spin-orbit coupling: applications to 
+simple solids and zincblende-type semiconductors, 
+Phys. Rev. B 86, 085135 (2012)
