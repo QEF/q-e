@@ -311,12 +311,12 @@ SUBROUTINE phq_readin()
               iverbosity = 0
          END SELECT
      ELSE
-        ios == 1234567
+        ios = 1234567
      END IF
   END IF
 30 CONTINUE
   CALL mp_bcast(ios, meta_ionode_id, world_comm )
-  IF ( ios == 1234567 ) THEB
+  IF ( ios == 1234567 ) THEN
      CALL errore( 'phq_readin' , &
                  'iverbosity is obsolete, use "verbosity" instead', 1 )
   ELSE
