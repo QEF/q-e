@@ -12,7 +12,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
    USE cell_base, ONLY: omega, alat, tpiba2, at, bg
    USE run_info,  ONLY: title    ! title of the run
-   USE constants, ONLY: tpi, e2
+   USE constants, ONLY: tpi, e2, eps6
    USE ener, ONLY: ewld, ehart, etxc, vtxc, etot, etxcc, demet, ef
    USE fft_base,  ONLY: dfftp
    USE fft_interfaces, ONLY : fwfft
@@ -51,7 +51,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    INTEGER :: jk2(nproc_pool), jspin2(nproc_pool), jbnd2(nproc_pool)
    INTEGER, ALLOCATABLE :: idx(:), igtog(:), gtoig(:)
    LOGICAL :: exst,dowrite
-   REAL(DP) :: ek, eloc, enl
+   REAL(DP) :: ek, eloc, enl, etot_
    INTEGER, EXTERNAL :: atomic_number
    REAL (DP), EXTERNAL :: ewald, w1gauss
 
@@ -455,7 +455,15 @@ CONTAINS
       !
       IF(dft_is_hybrid()) fock2 = 0.5_DP * exxenergy2()
       !
-      etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet+fock2
+      etot_=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet+fock2
+      !
+      IF ( ABS(etot-etot_) > ABS(eps6*etot) ) THEN
+         WRITE (stdout,'(5X,"Etot: ",f15.8," Ry from PWscf vs ", &
+                f15.8," Ry from pw2casino!")') etot, etot_
+         CALL errore("pw2casino","Mismatch in computed energy",1)
+      ELSE
+         etot = etot_
+      END IF
       !
       CALL deallocate_bec_type (becp)
       DEALLOCATE (aux)
