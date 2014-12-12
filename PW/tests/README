@@ -55,6 +55,7 @@ pbeq2d    Cu       Modified PBE functional PBEQ2D
 pbe0-si111 Si      PBE0 hybrid functional, nq=1
 pbe0-si222 Si      PBE0 hybrid functional, nq=2
 pbe0-si444 Si      PBE0 hybrid functional, nq=4
+plugin-pw2casino   interface with CASINO
 relax     CO       forces
                    bfgs and damped dynamics
                    energies, forces, bfgs with saw-like electric field 
