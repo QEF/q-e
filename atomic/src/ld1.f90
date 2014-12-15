@@ -18,7 +18,7 @@ program ld1
   !
   USE mp_global,         ONLY : mp_startup, mp_global_end
   USE environment,       ONLY : environment_start
-  USE ld1inc,            ONLY : iswitch, write_coulomb, grid
+  USE ld1inc,            ONLY : iswitch, write_coulomb, grid, lgipaw_reconstruction
   USE radial_grids,      ONLY : deallocate_radial_grid
   USE command_line_options, ONLY: input_file_
   !
@@ -57,7 +57,7 @@ program ld1
      !
      call all_electron(.false.,1)
      call gener_pseudo ( )
-     call run_test ( )
+     if(.not. lgipaw_reconstruction) call run_test ( )
      call ld1_writeout ( )
      !
   elseif (iswitch.eq.4) then
