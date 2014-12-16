@@ -7,6 +7,8 @@ Incompatible changes in svn version:
 
 Fixed in svn version:
 
+   * atomic: a small bug was preventing the generation of non-PAW 
+     pseudopotentials with GIPAW reconstruction data
    * Changes made in rev.10251 had broken pw.x -pw2casino when just
      one k-point per processor was present
    * Symmetry printout could lead to error exit in same cases
