@@ -766,13 +766,13 @@ USE kinds, ONLY: DP
          outco(k,1,i)=inco(k,i)
          END DO
 
-         IF (unique=='b') THEN
+         IF (unique=='2') THEN
          outco(1,2,i)=-inco(1,i)
          outco(2,2,i)=inco(2,i)
          outco(3,2,i)=-inco(3,i)
          END IF
 
-         IF (unique=='c') THEN
+         IF (unique=='1') THEN
          outco(1,2,i)=-inco(1,i)
          outco(2,2,i)=-inco(2,i)
          outco(3,2,i)=inco(3,i)
@@ -784,13 +784,13 @@ USE kinds, ONLY: DP
          outco(k,1,i)=inco(k,i)
          END DO
 
-         IF (unique=='b') THEN
+         IF (unique=='2') THEN
          outco(1,2,i)=-inco(1,i)
          outco(2,2,i)=inco(2,i)+0.5_DP
          outco(3,2,i)=-inco(3,i)
          END IF
 
-         IF (unique=='c') THEN
+         IF (unique=='1') THEN
          outco(1,2,i)=-inco(1,i)
          outco(2,2,i)=-inco(2,i)
          outco(3,2,i)=inco(3,i)+0.5_DP
@@ -803,13 +803,13 @@ USE kinds, ONLY: DP
          outco(k,1,i)=inco(k,i)
          END DO
          !S=2         
-         IF (unique=='b') THEN
+         IF (unique=='2') THEN
          outco(1,2,i)=-inco(1,i)
          outco(2,2,i)=inco(2,i)
          outco(3,2,i)=-inco(3,i)
          END IF
 
-         IF (unique=='c') THEN
+         IF (unique=='1') THEN
          outco(1,2,i)=-inco(1,i)
          outco(2,2,i)=-inco(2,i)
          outco(3,2,i)=inco(3,i)
@@ -821,13 +821,13 @@ USE kinds, ONLY: DP
          outco(k,1,i)=inco(k,i)
          END DO
          
-         IF (unique=='b') THEN
+         IF (unique=='2') THEN
          outco(1,2,i)=inco(1,i)
          outco(2,2,i)=-inco(2,i)
          outco(3,2,i)=inco(3,i)
          END IF
 
-         IF (unique=='c') THEN
+         IF (unique=='1') THEN
          outco(1,2,i)=inco(1,i)
          outco(2,2,i)=inco(2,i)
          outco(3,2,i)=-inco(3,i)
@@ -839,13 +839,13 @@ USE kinds, ONLY: DP
          outco(k,1,i)=inco(k,i)
          END DO
 
-         IF (unique=='b') THEN
+         IF (unique=='2') THEN
          outco(1,2,i)=inco(1,i)
          outco(2,2,i)=-inco(2,i)
          outco(3,2,i)=0.5_DP+inco(3,i)
          END IF
 
-         IF (unique=='c') THEN
+         IF (unique=='1') THEN
          outco(1,2,i)=inco(1,i)
          outco(2,2,i)=0.5_DP+inco(2,i)
          outco(3,2,i)=-inco(3,i)         
@@ -858,13 +858,13 @@ USE kinds, ONLY: DP
          END DO
          !S=2
 
-         IF (unique=='b') THEN
+         IF (unique=='2') THEN
          outco(1,2,i)=inco(1,i)
          outco(2,2,i)=-inco(2,i)
          outco(3,2,i)=inco(3,i)
          END IF
 
-         IF (unique=='c') THEN
+         IF (unique=='1') THEN
          outco(1,2,i)=inco(1,i)
          outco(2,2,i)=inco(2,i)
          outco(3,2,i)=-inco(3,i)
@@ -877,13 +877,13 @@ USE kinds, ONLY: DP
          END DO
          !S=2
 
-         IF (unique=='b') THEN
+         IF (unique=='2') THEN
          outco(1,2,i)=inco(1,i)
          outco(2,2,i)=-inco(2,i)
          outco(3,2,i)=inco(3,i)+0.5_DP
          END IF
          
-         IF (unique=='c') THEN
+         IF (unique=='1') THEN
          outco(1,2,i)=inco(1,i)
          outco(2,2,i)=inco(2,i)+0.5_DP
          outco(3,2,i)=-inco(3,i)
@@ -897,7 +897,7 @@ USE kinds, ONLY: DP
          outco(k,1,i)=inco(k,i)
          END DO
 
-         IF (unique=='b') THEN
+         IF (unique=='2') THEN
          !S=2
          outco(1,2,i)=inco(1,i)
          outco(2,2,i)=-inco(2,i)
@@ -912,7 +912,7 @@ USE kinds, ONLY: DP
          outco(3,4,i)=-inco(3,i)
          END IF
 
-         IF (unique=='c') THEN
+         IF (unique=='1') THEN
          !S=2
          outco(1,2,i)=inco(1,i)
          outco(2,2,i)=inco(2,i)
@@ -934,7 +934,7 @@ USE kinds, ONLY: DP
          DO k=1,3
          outco(k,1,i)=inco(k,i)
          END DO
-         IF (unique=='b') THEN
+         IF (unique=='2') THEN
          !S=2
          outco(1,2,i)=-inco(1,i)
          outco(2,2,i)=0.5_DP+inco(2,i)
@@ -949,7 +949,7 @@ USE kinds, ONLY: DP
          outco(3,4,i)=inco(3,i)
          END IF
          
-         IF (unique=='c') THEN
+         IF (unique=='1') THEN
          !S=2
          outco(1,2,i)=-inco(1,i)
          outco(2,2,i)=-inco(2,i)
@@ -972,7 +972,7 @@ USE kinds, ONLY: DP
          outco(k,1,i)=inco(k,i)
          END DO
          
-         IF (unique=='b') THEN
+         IF (unique=='2') THEN
          !S=2
          outco(1,2,i)=inco(1,i)
          outco(2,2,i)=-inco(2,i)
@@ -987,7 +987,7 @@ USE kinds, ONLY: DP
          outco(3,4,i)=-inco(3,i)
          END IF
          
-         IF (unique=='c') THEN
+         IF (unique=='1') THEN
          outco(1,2,i)=inco(1,i)
          outco(2,2,i)=inco(2,i)
          outco(3,2,i)=-inco(3,i)
@@ -1009,7 +1009,7 @@ USE kinds, ONLY: DP
          outco(k,1,i)=inco(k,i)
          END DO
 
-         IF (unique=='b') THEN
+         IF (unique=='2') THEN
          !S=2
          outco(1,2,i)=-inco(1,i)
          outco(2,2,i)=inco(2,i)
@@ -1024,7 +1024,7 @@ USE kinds, ONLY: DP
          outco(3,4,i)=0.5_DP+inco(3,i)
          END IF
          
-         IF (unique=='c') THEN
+         IF (unique=='1') THEN
          !S=2
          outco(1,2,i)=-inco(1,i)
          outco(2,2,i)=0.5_DP-inco(2,i)
@@ -1047,7 +1047,7 @@ USE kinds, ONLY: DP
          outco(k,1,i)=inco(k,i)
          END DO
 
-         IF (unique=='b') THEN
+         IF (unique=='2') THEN
          !S=2
          outco(1,2,i)=-inco(1,i)
          outco(2,2,i)=-inco(2,i)
@@ -1062,7 +1062,7 @@ USE kinds, ONLY: DP
          outco(3,4,i)=0.5_DP+inco(3,i)
          END IF
 
-         IF (unique=='c') THEN
+         IF (unique=='1') THEN
          !S=2
          outco(1,2,i)=-inco(1,i)
          outco(2,2,i)=-inco(2,i)
@@ -1085,7 +1085,7 @@ USE kinds, ONLY: DP
          outco(k,1,i)=inco(k,i)
          END DO
          
-         IF (unique=='b') THEN
+         IF (unique=='2') THEN
          !S=2
          outco(1,2,i)=-inco(1,i)
          outco(2,2,i)=inco(2,i)
@@ -1100,7 +1100,7 @@ USE kinds, ONLY: DP
          outco(3,4,i)=0.5_DP+inco(3,i)
          END IF
 
-         IF (unique=='c') THEN
+         IF (unique=='1') THEN
          !S=2
          outco(1,2,i)=-inco(1,i)
          outco(2,2,i)=0.5_DP-inco(2,i)
