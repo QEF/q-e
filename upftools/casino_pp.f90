@@ -601,7 +601,7 @@ CONTAINS
 
        WRITE(6,*) "Converted Pseudopotential in REAL space for ", upf_in%psd
        WRITE(6,*) "Atomic number and pseudo-charge"
-       WRITE(6,"(I3,F5.2)") atomic_number( upf_in%psd ),upf_in%zp
+       WRITE(6,"(I3,F8.2)") atomic_number( upf_in%psd ),upf_in%zp
        WRITE(6,*) "Energy units (rydberg/hartree/ev):"
        WRITE(6,*) "rydberg"
        WRITE(6,*) "Angular momentum of local component (0=s,1=p,2=d..)"

@@ -43,7 +43,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	 Y  Mass_Y  PseudoPot_Y
 	 Z  Mass_Z  PseudoPot_Z
 
-	ATOMIC_POSITIONS { alat | bohr | crystal | angstrom }
+	ATOMIC_POSITIONS { alat | bohr | crystal | angstrom | crystal_sg }
 	  X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
 	  Y 0.5  0.0  0.0
 	  Z O.0  0.2  0.2
