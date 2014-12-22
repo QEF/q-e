@@ -686,6 +686,15 @@ makov_payne.o : ../../Modules/parallel_include.o
 makov_payne.o : gvecw.o
 makov_payne.o : ions_positions.o
 makov_payne.o : mainvar.o
+manycp.o : ../../Modules/check_stop.o
+manycp.o : ../../Modules/command_line_options.o
+manycp.o : ../../Modules/environment.o
+manycp.o : ../../Modules/input_parameters.o
+manycp.o : ../../Modules/io_global.o
+manycp.o : ../../Modules/mp_global.o
+manycp.o : ../../Modules/mp_images.o
+manycp.o : ../../Modules/read_input.o
+manycp.o : input.o
 metaxc.o : ../../Modules/funct.o
 metaxc.o : ../../Modules/kind.o
 modules.o : ../../Modules/kind.o
