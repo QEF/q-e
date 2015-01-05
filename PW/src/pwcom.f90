@@ -104,6 +104,8 @@ MODULE rap_point_group
                                       !  Raman, or infrared+raman modes.
    CHARACTER(len=11) :: gname         ! the name of the group
    CHARACTER(len=5) :: name_class(12) ! the name of the class
+   CHARACTER(len=55) :: elem_name(8,12)=' ' ! the name of each symmetry in 
+                                         !  each class
    !
 END MODULE rap_point_group
 
@@ -125,6 +127,8 @@ MODULE rap_point_group_so
    CHARACTER(len=15) :: name_rap_so(12)  ! the name of the representation
    CHARACTER(len=5) :: name_class_so(24), &  ! the name of the class
                        name_class_so1(24)  ! the name of the class
+   CHARACTER(len=55) :: elem_name_so(12,24)=' ' ! the name of each symmetry in 
+                                               !  each class
    !
 END MODULE rap_point_group_so
 !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2006 Quantum ESPRESSO group
+! Copyright (C) 2006-2014 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -47,15 +47,17 @@ INTEGER :: &
           has_e(12,24), &  ! if -1 the element is multiplied by -E
           which_irr(24)    ! See above 
 
-REAL(DP) :: smat(3,3,nrot), cmat(3,3), ax(3), bx(3)
+REAL(DP) :: smat(3,3,nrot), cmat(3,3), ax(3), bx(3), cx(3)
 REAL(DP) :: smate(3,3,2*nrot)
 COMPLEX(DP) :: d_spin(2,2,48), d_spine(2,2,96), c_spin(2,2)
 
 INTEGER :: done(96), irot, jrot, krot, iclass, i, other, other1
-INTEGER :: tipo_sym, set_e, ipol, axis, axis1, axis2, ts
+INTEGER :: tipo_sym, set_e, ipol, axis, axis1, axis2, ts, nused, iaxis(4), &
+           iax, ibx, icx, aclass, bclass, cclass,  &
+           imax, imbx, imcx, amclass, bmclass, cmclass, ind2(3)  
 REAL(DP), PARAMETER :: eps = 1.d-7
 REAL(DP) :: angle_rot, angle_rot_s, ars, ax_save(3,3:5), angle_vectors
-LOGICAL :: compare_mat_so, is_axis, first, first1, is_parallel
+LOGICAL :: compare_mat_so, is_axis, isok, isok1, is_parallel
 LOGICAL :: done_ax(6)
 !
 ! Divide the group in classes.
@@ -200,20 +202,33 @@ ELSEIF (code_group==8) THEN
 !  D_2  
 !
    IF (nclass /= 5) CALL errore('divide_class_so','Wrong classes for D_2',1)
-   first=.true.
-   DO iclass=2,nclass
+!
+!  first search -E
+!
+   nused=1
+   DO iclass=2, nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==1) THEN
          which_irr(iclass)=2
-         first=.false.
       ELSE
-         if (first) then
-            which_irr(iclass)=iclass+1
-         else
-            which_irr(iclass)=iclass
-         endif
-      END IF
-   ENDDO
+         iaxis(nused)=iclass
+         nused=nused+1
+      ENDIF
+   ENDDO 
+
+   CALL versor(smat(1,1,elem(1,iaxis(1))),ax)
+   CALL which_c2(ax,iax)
+   CALL versor(smat(1,1,elem(1,iaxis(2))),bx)
+   CALL which_c2(bx,ibx)
+   CALL versor(smat(1,1,elem(1,iaxis(3))),cx)
+   CALL which_c2(cx,icx)
+
+   CALL is_d2(iax, ibx, icx, ind2)
+ 
+   which_irr(iaxis(1))=ind2(1)+2
+   which_irr(iaxis(2))=ind2(2)+2
+   which_irr(iaxis(3))=ind2(3)+2
+
 ELSEIF (code_group==9) THEN
 !
 !  D_3 
@@ -250,7 +265,6 @@ ELSEIF (code_group==10) THEN
          IF (axis==0) call errore('divide_class_so','unknown D_4 axis ',1)
       ENDIF
    END DO
-   first=.TRUE.
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==1) THEN
@@ -273,7 +287,6 @@ ELSEIF (code_group==11) THEN
 !  D_6 
 !
    IF (nclass /= 9) CALL errore('divide_class_so','Wrong classes for D_6',1)
-   first=.true.
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==1) THEN
@@ -281,20 +294,22 @@ ELSEIF (code_group==11) THEN
       ELSE IF (ts==3) THEN
          ars=angle_rot(smat(1,1,elem(1,iclass)))
          IF ((ABS(ars-60.d0)<eps).OR.(ABS(ars-300.d0)<eps) ) THEN
-            which_irr(iclass)=set_e(has_e(1,iclass),6)
+            which_irr(iclass)=set_e(has_e(1,iclass),3)
          ELSE
-            which_irr(iclass)=set_e(has_e(1,iclass),4)
+            which_irr(iclass)=set_e(has_e(1,iclass),5)
          ENDIF
       ELSEIF (ts==4) THEN
          CALL versor(smat(1,1,elem(1,iclass)),ax)
          IF (is_axis(ax,3)) THEN
-            which_irr(iclass)=3
+            which_irr(iclass)=7
          ELSE 
-            IF (first) THEN
+            CALL which_c2(ax, iax)
+            IF (iax==1 .OR. iax==10 .OR. iax==11) THEN
                which_irr(iclass)=8
-               first=.false.
-            ELSE
+            ELSEIF (iax==2 .OR. iax==12 .OR. iax==13) THEN
                which_irr(iclass)=9
+            ELSE
+               CALL errore('divide_sym_so','D_6, C_2 axis not recognized',1)
             END IF
          END IF
       ELSE
@@ -306,20 +321,40 @@ ELSEIF (code_group==12) THEN
 !  C_2v 
 !
    IF (nclass /= 5) CALL errore('divide_class_so','Wrong classes for C_2v',1)
-   first=.true.
+   iax=0
+   ibx=0
+   icx=0
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==1) THEN
          which_irr(iclass)=2
       ELSEIF (ts==4) THEN
+         CALL versor(smat(1,1,elem(1,iclass)), ax)
+         CALL which_c2( ax, iax) 
          which_irr(iclass)=3
-      ELSEIF (ts==5.and.first) THEN
-         which_irr(iclass)=4
-         first=.false.
-      ELSE
-         which_irr(iclass)=5
+      ELSEIF (ts==5) THEN
+         IF (ibx==0) THEN
+            CALL mirror_axis(smat(1,1,elem(1,iclass)), bx)
+            CALL which_c2( bx, ibx) 
+            bclass=iclass
+         ELSE
+            CALL mirror_axis(smat(1,1,elem(1,iclass)), bx)
+            CALL which_c2( bx, icx) 
+            cclass=iclass
+         ENDIF
       ENDIF
    ENDDO
+   CALL is_c2v(iax, ibx, icx, isok)
+   IF (isok) THEN
+      which_irr(bclass)=4
+      which_irr(cclass)=5
+   ELSE
+      CALL is_c2v(iax, icx, ibx, isok1)
+      IF (.NOT.isok1) CALL errore('divide_class_so','problem with C_2v',1)
+      which_irr(bclass)=5
+      which_irr(cclass)=4
+   ENDIF
+
 ELSEIF (code_group==13) THEN
 !
 !  C_3v 
@@ -342,7 +377,6 @@ ELSEIF (code_group==14) THEN
 !  C_4v 
 !
    IF (nclass /= 7) CALL errore('divide_class_so','Wrong classes for C_4v',1)
-   first=.true.
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==1) THEN
@@ -351,11 +385,14 @@ ELSEIF (code_group==14) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),3)
       ELSEIF (ts==4) THEN
          which_irr(iclass)=5
-      ELSEIF (ts==5.and.first) THEN
-         which_irr(iclass)=6
-         first=.false.
-      ELSE
-         which_irr(iclass)=7
+      ELSEIF (ts==5) THEN
+         CALL mirror_axis(smat(1,1,elem(1,iclass)), ax)
+         CALL which_c2(ax, iax)
+         IF (iax < 4) THEN 
+            which_irr(iclass)=6
+         ELSE
+            which_irr(iclass)=7
+         ENDIF
       ENDIF
    ENDDO
 
@@ -364,7 +401,6 @@ ELSEIF (code_group==15) THEN
 !  C_6v 
 !
    IF (nclass /= 9) CALL errore('divide_class_so','Wrong classes for C_6v',1)
-   first=.true.
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==1) THEN
@@ -372,17 +408,22 @@ ELSEIF (code_group==15) THEN
       ELSE IF (ts==3) THEN
          ars=angle_rot(smat(1,1,elem(1,iclass)))
          IF ((ABS(ars-60.d0)<eps).OR.(ABS(ars-300.d0)<eps)) THEN
-            which_irr(iclass)=set_e(has_e(1,iclass),6)
+            which_irr(iclass)=set_e(has_e(1,iclass),3)
          ELSE
-            which_irr(iclass)=set_e(has_e(1,iclass),4)
+            which_irr(iclass)=set_e(has_e(1,iclass),5)
          ENDIF
       ELSEIF (ts==4) THEN
-         which_irr(iclass)=3
-      ELSEIF (ts==5.and.first) THEN
-         which_irr(iclass)=8
-         first=.false.
-      ELSE
-         which_irr(iclass)=9
+         which_irr(iclass)=7
+      ELSEIF (ts==5) THEN
+         CALL mirror_axis(smat(1,1,elem(1,iclass)), ax)
+         CALL which_c2(ax,iax)
+         IF (iax==2 .OR. iax==12 .OR. iax==13) THEN
+            which_irr(iclass)=8
+         ELSEIF (iax==1 .OR. iax==10 .OR. iax==11) THEN
+            which_irr(iclass)=9
+         ELSE
+            CALL errore('divide_class_so','C_6v mirror symmetry not recognized',1)
+         ENDIF
       ENDIF
    ENDDO
 ELSEIF (code_group==16) THEN
@@ -397,9 +438,9 @@ ELSEIF (code_group==16) THEN
       ELSEIF (ts==4) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),3)
       ELSEIF (ts==2) THEN
-         which_irr(iclass)=set_e(has_e(1,iclass),7)
-      ELSEIF (ts==5) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),5)
+      ELSEIF (ts==5) THEN
+         which_irr(iclass)=set_e(has_e(1,iclass),7)
       ELSE
          CALL errore('divide_class_so','wrong sym_type',1)
       ENDIF
@@ -504,7 +545,6 @@ ELSEIF (code_group==19) THEN
          CALL errore('divide_class_so','wrong operation',1)
       ENDIF
    ENDDO
-
 ELSEIF (code_group==20) THEN
 !
 !  D_2h 
@@ -512,72 +552,70 @@ ELSEIF (code_group==20) THEN
 !  mirror_axis gives the normal to the mirror plane
 !
    IF (nclass /= 10) CALL errore('divide_class_so','Wrong classes for D_2h',1)
-   done_ax=.TRUE.
-   which_irr(2:nclass)=0
 !
 !  First check if the axis are parallel to x, y or z
 !
+   iax=0
+   ibx=0
+   icx=0
+   imax=0
+   imbx=0
+   imcx=0
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==1) THEN
          which_irr(iclass)=2
-      ELSE IF (ts==4) THEN
+      ELSEIF (ts==4) THEN
          CALL versor(smat(1,1,elem(1,iclass)),ax)
-         IF (is_axis(ax,3)) THEN
-            which_irr(iclass)=3
-            done_ax(1)=.FALSE.
-         ELSE IF (is_axis(ax,2)) THEN
-            which_irr(iclass)=4
-            done_ax(2)=.FALSE.
-         ELSE IF (is_axis(ax,1)) THEN
-            which_irr(iclass)=5
-            done_ax(3)=.FALSE.
-         END IF
-         IF (which_irr(iclass)>0) ax_save(:,which_irr(iclass))=ax(:)
-      ELSEIF (ts==2) THEN
-         IF (has_e(1,iclass)==-1) THEN
-            which_irr(iclass)=7
+         IF (iax==0) THEN
+            CALL which_c2(ax, iax)
+            aclass=iclass
+         ELSEIF (ibx==0) THEN
+            CALL which_c2(ax, ibx)
+            bclass=iclass
+         ELSEIF (icx==0) THEN
+            CALL which_c2(ax, icx)
+            cclass=iclass
          ELSE
-            which_irr(iclass)=6
-         END IF
-      END IF
-   END DO
-!
-!  Otherwise choose the first free axis
-!
-   DO iclass=2,nclass
-      IF (which_irr(iclass)==0) THEN
-         ts=tipo_sym(smat(1,1,elem(1,iclass)))
-         IF (ts==4) THEN
-            DO i=1,3
-               IF (done_ax(i)) THEN
-                  which_irr(iclass)=i+2
-                  done_ax(i)=.FALSE.
-                  GOTO 100
-               END IF
-            END DO
-100         CONTINUE
-            CALL versor(smat(1,1,elem(1,iclass)),ax)
-            ax_save(:,which_irr(iclass))=ax(:)
-         END IF
-      END IF
-   END DO
-!
-!  Finally consider the mirror planes
-!
-   DO iclass=2,nclass
-      IF (which_irr(iclass)==0) THEN
-         ts=tipo_sym(smat(1,1,elem(1,iclass)))
-         IF (ts==5) THEN
-            CALL mirror_axis(smat(1,1,elem(1,iclass)),ax)
-            DO i=3,5
-               IF (is_parallel(ax,ax_save(:,i))) which_irr(iclass)=i+5
-            END DO
-         END IF
-      END IF
-      IF (which_irr(iclass)==0) CALL errore('divide_class_so',&
-                      'something wrong D_2h',1)
+            CALL errore('divide_class_so','D_2h too many C_2 axis',1)
+         ENDIF 
+      ELSEIF (ts==2) THEN
+         which_irr(iclass)=set_e(has_e(1,iclass),6)
+      ELSEIF (ts==5) THEN
+         CALL mirror_axis(smat(1,1,elem(1,iclass)),ax)
+         IF (imax==0) THEN
+            CALL which_c2(ax, imax)
+            amclass=iclass
+         ELSEIF (imbx==0) THEN
+            CALL which_c2(ax, imbx)
+            bmclass=iclass
+         ELSEIF (imcx==0) THEN
+            CALL which_c2(ax, imcx)
+            cmclass=iclass
+         ELSE
+            CALL errore('divide_class_so','D_2h too many mirrors',1)
+         ENDIF 
+      ELSE
+         CALL errore('divide_class_so','D_2h operation not recognized',1)
+      ENDIF
    ENDDO
+
+   CALL is_d2( iax, ibx, icx, ind2)
+
+   which_irr(aclass)=ind2(1)+2
+   which_irr(bclass)=ind2(2)+2
+   which_irr(cclass)=ind2(3)+2
+ 
+   IF (imax==iax) which_irr(amclass) = which_irr(aclass) + 5
+   IF (imax==ibx) which_irr(amclass) = which_irr(bclass) + 5
+   IF (imax==icx) which_irr(amclass) = which_irr(cclass) + 5
+   IF (imbx==iax) which_irr(bmclass) = which_irr(aclass) + 5
+   IF (imbx==ibx) which_irr(bmclass) = which_irr(bclass) + 5
+   IF (imbx==icx) which_irr(bmclass) = which_irr(cclass) + 5
+   IF (imcx==iax) which_irr(cmclass) = which_irr(aclass) + 5
+   IF (imcx==ibx) which_irr(cmclass) = which_irr(bclass) + 5
+   IF (imcx==icx) which_irr(cmclass) = which_irr(cclass) + 5
+
 ELSEIF (code_group==21) THEN
 !
 !  D_3h 
@@ -657,8 +695,6 @@ ELSEIF (code_group==23) THEN
 !  D_6h 
 !
    IF (nclass /= 18) CALL errore('divide_class_so','Wrong classes for D_6h',1)
-   first=.TRUE.
-   first1=.TRUE.
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==1) THEN
@@ -666,64 +702,52 @@ ELSEIF (code_group==23) THEN
       ELSE IF (ts==3) THEN
          ars=angle_rot(smat(1,1,elem(1,iclass)))
          IF ((ABS(ars-60.d0)<eps).OR.(ABS(ars-300.d0)<eps)) THEN
-            which_irr(iclass)=set_e(has_e(1,iclass),6)
+            which_irr(iclass)=set_e(has_e(1,iclass),3)
          ELSE
-            which_irr(iclass)=set_e(has_e(1,iclass),4)
+            which_irr(iclass)=set_e(has_e(1,iclass),5)
          END IF
       ELSE IF (ts==4) THEN
          IF (nelem(iclass)==2) THEN
-            which_irr(iclass)=3
+            which_irr(iclass)=7
          ELSE
-            IF (first.AND.first1) THEN
+            CALL versor(smat(1,1,elem(1,iclass)),ax)
+            CALL which_c2(ax,iax) 
+            IF (iax==1 .OR. iax==10 .OR. iax==11) THEN
                which_irr(iclass)=8
-               other=9
-               CALL versor(smat(1,1,elem(1,iclass)),ax)
-               first=.FALSE.
-            ELSEIF (first) THEN
-               CALL versor(smat(1,1,elem(1,iclass)),bx)
-               IF (MOD(INT(angle_vectors(ax,bx)),60)==0) THEN
-                  which_irr(iclass)=8
-                  other=9
-               ELSE
-                  which_irr(iclass)=9
-                  other=8
-               ENDIF
-               first=.FALSE.
+            ELSEIF (iax==2 .OR. iax==12 .OR. iax==13) THEN
+               which_irr(iclass)=9
             ELSE
-               which_irr(iclass)=other
-            END IF
+               CALL errore('divide_class_so','Problem with C_2 of D_6h',1)
+            ENDIF
          END IF
       ELSE IF (ts==2) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),10)
       ELSE IF (ts==5) THEN
           IF (nelem(iclass)==2) THEN
-             which_irr(iclass)=12
+             which_irr(iclass)=16
           ELSE 
-             IF (first.AND.first1) THEN
+             CALL mirror_axis(smat(1,1,elem(1,iclass)),ax)
+             CALL which_c2(ax, iax)
+             IF (iax==1 .OR. iax==10 .OR. iax==11) THEN
+!
+!   sigma_d
+!
                 which_irr(iclass)=17
-                other1=18
-                CALL mirror_axis(smat(1,1,elem(1,iclass)),ax)
-                first1=.FALSE.
-             ELSEIF (first1) THEN
-                CALL mirror_axis(smat(1,1,elem(1,iclass)),bx)
-                IF (MOD(INT(angle_vectors(ax,bx)),60)==0) THEN
-                   which_irr(iclass)=17
-                   other1=18
-                ELSE
-                   which_irr(iclass)=18
-                   other1=17
-                ENDIF
-                first1=.FALSE.
+             ELSEIF (iax==2 .OR. iax==12 .OR. iax==13) THEN
+!
+!   sigma_v
+!
+                which_irr(iclass)=18
              ELSE
-                which_irr(iclass)=other1
-             END IF
+               CALL errore('divide_class_so','Problem with mirror of D_6h',1)
+             ENDIF
           END IF
       ELSE IF (ts==6) THEN
          ars=angle_rot_s(smat(1,1,elem(1,iclass)))
          IF ((ABS(ars-60.d0)<eps).OR.(ABS(ars-300.d0)<eps)) THEN
-            which_irr(iclass)=set_e(has_e(1,iclass),13)
+            which_irr(iclass)=set_e(has_e(1,iclass),14)
          ELSE
-            which_irr(iclass)=set_e(has_e(1,iclass),15)
+            which_irr(iclass)=set_e(has_e(1,iclass),12)
          END IF
       END IF
    END DO
@@ -737,10 +761,10 @@ ELSEIF (code_group==24) THEN
       IF (ts==1) THEN
           which_irr(iclass)=2
       ELSE IF (ts==6) THEN
-         which_irr(iclass)=set_e(has_e(1,iclass),4)
+         which_irr(iclass)=set_e(has_e(1,iclass),3)
       ELSE IF (ts==4) THEN
          IF (nelem(iclass)==2) THEN
-            which_irr(iclass)=3
+            which_irr(iclass)=5
          ELSE
             which_irr(iclass)=6
          END IF
@@ -762,13 +786,13 @@ ELSEIF (code_group==25) THEN
       ELSEIF (ts==3) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),3)
       ELSE IF (ts==4) THEN
-         which_irr(iclass)=set_e(has_e(1,iclass),11)
+         which_irr(iclass)=set_e(has_e(1,iclass),5)
       ELSE IF (ts==2) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),7)
       ELSE IF (ts==6) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),9)
       ELSE IF (ts==5) THEN
-         which_irr(iclass)=set_e(has_e(1,iclass),5)
+         which_irr(iclass)=set_e(has_e(1,iclass),11)
       ELSE
          CALL errore('divide_class_so','wrong operation',1)
       END IF
@@ -786,9 +810,9 @@ ELSEIF (code_group==26) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),5)
       ELSE IF (ts==6) THEN
          IF (ABS(angle_rot_s(smat(1,1,elem(1,iclass)))-90.d0)<eps) THEN
-            which_irr(iclass)=set_e(has_e(1,iclass),3)
-         ELSE
             which_irr(iclass)=set_e(has_e(1,iclass),7)
+         ELSE
+            which_irr(iclass)=set_e(has_e(1,iclass),3)
          END IF
       ELSE
          CALL errore('divide_class_so','wrong operation',1)
@@ -863,9 +887,9 @@ ELSE IF (code_group==29) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),8)
       ELSE IF (ts==6) THEN
          IF (ABS(angle_rot_s(smat(1,1,elem(1,iclass)))-60.d0)<eps) THEN
-            which_irr(iclass)=set_e(has_e(1,iclass),11)
-         ELSE
             which_irr(iclass)=set_e(has_e(1,iclass),13)
+         ELSE
+            which_irr(iclass)=set_e(has_e(1,iclass),11)
          END IF
       ELSE IF (ts==5) THEN
          which_irr(iclass)=10
@@ -887,9 +911,9 @@ ELSEIF (code_group==30) THEN
       ELSE IF (ts==4) THEN
          which_irr(iclass)=5
       ELSE IF (ts==6) THEN
-         which_irr(iclass)=set_e(has_e(1,iclass),7)
+         which_irr(iclass)=set_e(has_e(1,iclass),6)
       ELSE IF (ts==5) THEN
-         which_irr(iclass)=6
+         which_irr(iclass)=8
       ELSE
          CALL errore('divide_class_so','wrong operation',1)
       END IF
@@ -904,12 +928,16 @@ ELSEIF (code_group==31) THEN
       IF (ts==1) THEN
          which_irr(iclass)=2
       ELSE IF (ts==4) THEN
-         which_irr(iclass)=set_e(has_e(1,iclass),6)
+         IF (nelem(iclass)==3) THEN
+            which_irr(iclass)=5
+         ELSE
+            which_irr(iclass)=8
+         ENDIF
       ELSE IF (ts==3) THEN
          IF (nelem(iclass)==8) THEN
             which_irr(iclass)=set_e(has_e(1,iclass),3)
          ELSE
-            which_irr(iclass)=set_e(has_e(1,iclass),7)
+            which_irr(iclass)=set_e(has_e(1,iclass),6)
          END IF
       ELSE
          CALL errore('divide_class_so','wrong operation',1)
@@ -1144,17 +1172,17 @@ ELSEIF (code_group==5) THEN
 
 ELSEIF (code_group==6) THEN
 !
-! C_4   NB: The signs of the characters of the class C4^3 -C4^2 
+! C_4   NB: The signs of the characters of the class C4^3 -C4^3 
 !            are changed with respect to Koster, Space groups and
 !            their representation. 
 !
    nclass_ref=8
    name_class(3)="C4   "
    name_class(4)="-C4  "
-   name_class(5)="C4^2 "
-   name_class(6)="-C4^2 "
+   name_class(5)="C2   "
+   name_class(6)="-C2  "
    name_class(7)="C4^3 "
-   name_class(8)="-C4^3 "
+   name_class(8)="-C4^3"
 
    nrap_ref=4
 
@@ -1254,68 +1282,67 @@ ELSEIF (code_group==7) THEN
    char_mat(2,11)=CMPLX( sqr3d2, 0.5d0,kind=DP)
    char_mat(2,12)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
 
-   name_rap(3)="G_11 "
+   name_rap(3)="G_9   "
    char_mat(3,2)=(-1.d0, 0.d0)
-   char_mat(3,3)=( 0.d0, 1.d0)
-   char_mat(3,4)=( 0.d0,-1.d0)
-   char_mat(3,5)=(-1.d0, 0.d0)
+   char_mat(3,3)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+   char_mat(3,4)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+   char_mat(3,5)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(3,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
    char_mat(3,7)=( 0.d0,-1.d0)
    char_mat(3,8)=( 0.d0, 1.d0)
-!   char_mat(3,10)=(-1.d0, 0.d0)
-!   char_mat(3,11)=( 0.d0, 1.d0)
-!   char_mat(3,12)=( 0.d0,-1.d0)
-   char_mat(3,9)=(-1.d0, 0.d0)
-   char_mat(3,11)=( 0.d0,-1.d0)
-   char_mat(3,12)=( 0.d0, 1.d0)
-
-   name_rap(4)="G_12  "
-   char_mat(4,2)=(-1.d0, 0.d0)
-   char_mat(4,3)=( 0.d0,-1.d0)
-   char_mat(4,4)=( 0.d0, 1.d0)
-   char_mat(4,5)=(-1.d0, 0.d0)
-   char_mat(4,7)=( 0.d0, 1.d0)
-   char_mat(4,8)=( 0.d0,-1.d0)
-!   char_mat(4,10)=(-1.d0, 0.d0)
-!   char_mat(4,11)=( 0.d0,-1.d0)
-!   char_mat(4,12)=( 0.d0, 1.d0)
-   char_mat(4,9)=(-1.d0, 0.d0)
-   char_mat(4,11)=( 0.d0, 1.d0)
-   char_mat(4,12)=( 0.d0,-1.d0)
-
-   name_rap(5)="G_9   "
-   char_mat(5,2)=(-1.d0, 0.d0)
-   char_mat(5,3)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
-   char_mat(5,4)=CMPLX( sqr3d2, 0.5d0,kind=DP)
-   char_mat(5,5)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-   char_mat(5,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(5,7)=( 0.d0,-1.d0)
-   char_mat(5,8)=( 0.d0, 1.d0)
 !   char_mat(5,9)=CMPLX(-0.5d0, sqr3d2,kind=DP)
 !   char_mat(5,10)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
 !   char_mat(5,11)=CMPLX( sqr3d2,-0.5d0,kind=DP)
 !   char_mat(5,12)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
-   char_mat(5,9)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-   char_mat(5,10)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(5,11)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
-   char_mat(5,12)=CMPLX( sqr3d2,-0.5d0,kind=DP)
+   char_mat(3,9)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,10)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(3,11)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
+   char_mat(3,12)=CMPLX( sqr3d2,-0.5d0,kind=DP)
 
-   name_rap(6)="G_10  "
+   name_rap(4)="G_10  "
+   char_mat(4,2)=(-1.d0, 0.d0)
+   char_mat(4,3)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
+   char_mat(4,4)=CMPLX( sqr3d2,-0.5d0,kind=DP)
+   char_mat(4,5)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(4,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(4,7)=( 0.d0, 1.d0)
+   char_mat(4,8)=( 0.d0,-1.d0)
+!   char_mat(4,9)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(4,10)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(4,11)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+!   char_mat(4,12)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+   char_mat(4,9)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(4,10)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(4,11)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+   char_mat(4,12)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+
+   name_rap(5)="G_11 "
+   char_mat(5,2)=(-1.d0, 0.d0)
+   char_mat(5,3)=( 0.d0, 1.d0)
+   char_mat(5,4)=( 0.d0,-1.d0)
+   char_mat(5,5)=(-1.d0, 0.d0)
+   char_mat(5,7)=( 0.d0,-1.d0)
+   char_mat(5,8)=( 0.d0, 1.d0)
+!   char_mat(5,10)=(-1.d0, 0.d0)
+!   char_mat(5,11)=( 0.d0, 1.d0)
+!   char_mat(5,12)=( 0.d0,-1.d0)
+   char_mat(5,9)=(-1.d0, 0.d0)
+   char_mat(5,11)=( 0.d0,-1.d0)
+   char_mat(5,12)=( 0.d0, 1.d0)
+
+   name_rap(6)="G_12  "
    char_mat(6,2)=(-1.d0, 0.d0)
-   char_mat(6,3)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
-   char_mat(6,4)=CMPLX( sqr3d2,-0.5d0,kind=DP)
-   char_mat(6,5)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-   char_mat(6,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(6,3)=( 0.d0,-1.d0)
+   char_mat(6,4)=( 0.d0, 1.d0)
+   char_mat(6,5)=(-1.d0, 0.d0)
    char_mat(6,7)=( 0.d0, 1.d0)
    char_mat(6,8)=( 0.d0,-1.d0)
-!   char_mat(6,9)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-!   char_mat(6,10)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-!   char_mat(6,11)=CMPLX( sqr3d2, 0.5d0,kind=DP)
-!   char_mat(6,12)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
-   char_mat(6,9)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-   char_mat(6,10)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(6,11)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
-   char_mat(6,12)=CMPLX( sqr3d2, 0.5d0,kind=DP)
-
+!   char_mat(6,10)=(-1.d0, 0.d0)
+!   char_mat(6,11)=( 0.d0,-1.d0)
+!   char_mat(6,12)=( 0.d0, 1.d0)
+   char_mat(6,9)=(-1.d0, 0.d0)
+   char_mat(6,11)=( 0.d0, 1.d0)
+   char_mat(6,12)=( 0.d0,-1.d0)
 
 ELSEIF (code_group==8) THEN
 !
@@ -1494,12 +1521,12 @@ ELSEIF (code_group==15.OR.code_group==11) THEN
 ! C_6v, D_6
 !
    nclass_ref=9
-   name_class(3)=" C2 "
-   name_class1(3)="-C2 "
-   name_class(4)=" 2C3 "
-   name_class(5)="-2C3"
-   name_class(6)=" 2C6"
-   name_class(7)="-2C6"
+   name_class(3)=" 2C6"
+   name_class(4)="-2C6"
+   name_class(5)=" 2C3 "
+   name_class(6)="-2C3"
+   name_class(7)=" C2 "
+   name_class1(7)="-C2 "
    IF (code_group==15) THEN
       name_class(8)=" 3s_v"
       name_class1(8)="-3s_v"
@@ -1517,20 +1544,20 @@ ELSEIF (code_group==15.OR.code_group==11) THEN
    name_rap(1)="G_7  "
    char_mat(1,1)=( 2.d0, 0.d0)
    char_mat(1,2)=(-2.d0, 0.d0)
-   char_mat(1,3)=( 0.d0, 0.d0)
-   char_mat(1,5)=(-1.d0, 0.d0)
-   char_mat(1,6)=CMPLX( sqrt3, 0.d0,kind=DP)
-   char_mat(1,7)=CMPLX(-sqrt3, 0.d0,kind=DP)
+   char_mat(1,3)=CMPLX( sqrt3, 0.d0,kind=DP)
+   char_mat(1,4)=CMPLX(-sqrt3, 0.d0,kind=DP)
+   char_mat(1,6)=(-1.d0, 0.d0)
+   char_mat(1,7)=( 0.d0, 0.d0)
    char_mat(1,8)=( 0.d0, 0.d0)
    char_mat(1,9)=( 0.d0, 0.d0)
 
    name_rap(2)="G_8  "
    char_mat(2,1)=( 2.d0, 0.d0)
    char_mat(2,2)=(-2.d0, 0.d0)
-   char_mat(2,3)=( 0.d0, 0.d0)
-   char_mat(2,5)=(-1.d0, 0.d0)
-   char_mat(2,6)=CMPLX(-sqrt3, 0.d0,kind=DP)
-   char_mat(2,7)=CMPLX( sqrt3, 0.d0,kind=DP)
+   char_mat(2,3)=CMPLX(-sqrt3, 0.d0,kind=DP)
+   char_mat(2,4)=CMPLX( sqrt3, 0.d0,kind=DP)
+   char_mat(2,6)=(-1.d0, 0.d0)
+   char_mat(2,7)=( 0.d0, 0.d0)
    char_mat(2,8)=( 0.d0, 0.d0)
    char_mat(2,9)=( 0.d0, 0.d0)
 
@@ -1538,9 +1565,9 @@ ELSEIF (code_group==15.OR.code_group==11) THEN
    char_mat(3,1)=( 2.d0, 0.d0)
    char_mat(3,2)=(-2.d0, 0.d0)
    char_mat(3,3)=( 0.d0, 0.d0)
-   char_mat(3,4)=(-2.d0, 0.d0)
-   char_mat(3,5)=( 2.d0, 0.d0)
-   char_mat(3,6)=( 0.d0, 0.d0)
+   char_mat(3,4)=( 0.d0, 0.d0)
+   char_mat(3,5)=(-2.d0, 0.d0)
+   char_mat(3,6)=( 2.d0, 0.d0)
    char_mat(3,7)=( 0.d0, 0.d0)
    char_mat(3,8)=( 0.d0, 0.d0)
    char_mat(3,9)=( 0.d0, 0.d0)
@@ -1552,42 +1579,46 @@ ELSEIF (code_group==16) THEN
    nclass_ref=8
    name_class(3)="C2  "
    name_class(4)="-C2 "
-   name_class(5)="s_h "
-   name_class(6)="-s_h"
-   name_class(7)="i   "
-   name_class(8)="-i  "
+   name_class(5)="i   "
+   name_class(6)="-i  "
+   name_class(7)="s_h "
+   name_class(8)="-s_h"
 
    nrap_ref=4
 
    name_rap(1)="G_3+"
    char_mat(1,3)=( 0.d0, 1.d0)
    char_mat(1,4)=( 0.d0,-1.d0)
-   char_mat(1,5)=( 0.d0, 1.d0)
-   char_mat(1,6)=( 0.d0,-1.d0)
-   char_mat(1,8)=(-1.d0, 0.d0)
+   char_mat(1,6)=(-1.d0, 0.d0)
+   char_mat(1,7)=( 0.d0, 1.d0)
+   char_mat(1,8)=( 0.d0,-1.d0)
 
    name_rap(2)="G_4+"
    char_mat(2,3)=( 0.d0,-1.d0)
    char_mat(2,4)=( 0.d0, 1.d0)
-   char_mat(2,5)=( 0.d0,-1.d0)
-   char_mat(2,6)=( 0.d0, 1.d0)
-   char_mat(2,8)=(-1.d0, 0.d0)
+   char_mat(2,6)=(-1.d0, 0.d0)
+   char_mat(2,7)=( 0.d0,-1.d0)
+   char_mat(2,8)=( 0.d0, 1.d0)
 
    name_rap(3)="G_3-"
    char_mat(3,3)=( 0.d0, 1.d0)
    char_mat(3,4)=( 0.d0,-1.d0)
-   char_mat(3,5)=( 0.d0,-1.d0)
-   char_mat(3,6)=( 0.d0, 1.d0)
-   char_mat(3,7)=(-1.d0, 0.d0)
+   char_mat(3,5)=(-1.d0, 0.d0)
+   char_mat(3,7)=( 0.d0,-1.d0)
+   char_mat(3,8)=( 0.d0, 1.d0)
 
    name_rap(4)="G_4- "
    char_mat(4,3)=( 0.d0,-1.d0)
    char_mat(4,4)=( 0.d0, 1.d0)
-   char_mat(4,5)=( 0.d0, 1.d0)
-   char_mat(4,6)=( 0.d0,-1.d0)
-   char_mat(4,7)=(-1.d0, 0.d0)
+   char_mat(4,5)=(-1.d0, 0.d0)
+   char_mat(4,7)=( 0.d0, 1.d0)
+   char_mat(4,8)=( 0.d0,-1.d0)
 
 ELSEIF (code_group==17) THEN
+!
+!     Changed several signs. Now the character table is equal to the table
+!     of C_6 and the signs match the table in Koster, Dimmock, 
+!     Wheeler, Statz, Properties of the 32 point groups.
 !
 ! C_3h
 !
@@ -1609,12 +1640,16 @@ ELSEIF (code_group==17) THEN
    char_mat(1,2)=(-1.d0, 0.d0)
    char_mat(1,3)=CMPLX( 0.5d0, sqr3d2,kind=DP)
    char_mat(1,4)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(1,5)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(1,6)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+!   char_mat(1,5)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+!   char_mat(1,6)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(1,5)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(1,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
    char_mat(1,7)=( 0.d0, 1.d0)
    char_mat(1,8)=( 0.d0,-1.d0)
-   char_mat(1,9)= CMPLX(-sqr3d2, 0.5d0,kind=DP)
-   char_mat(1,10)=CMPLX( sqr3d2,-0.5d0,kind=DP)
+!   char_mat(1,9)= CMPLX(-sqr3d2, 0.5d0,kind=DP)
+!   char_mat(1,10)=CMPLX( sqr3d2,-0.5d0,kind=DP)
+   char_mat(1,9)= CMPLX( sqr3d2,-0.5d0,kind=DP)
+   char_mat(1,10)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
    char_mat(1,11)=CMPLX( sqr3d2, 0.5d0,kind=DP)
    char_mat(1,12)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
 
@@ -1622,12 +1657,16 @@ ELSEIF (code_group==17) THEN
    char_mat(2,2)=(-1.d0, 0.d0)
    char_mat(2,3)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
    char_mat(2,4)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(2,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(2,6)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(2,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(2,6)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(2,5)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(2,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
    char_mat(2,7)=( 0.d0,-1.d0)
    char_mat(2,8)=( 0.d0, 1.d0)
-   char_mat(2,9)= CMPLX(-sqr3d2,-0.5d0,kind=DP)
-   char_mat(2,10)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+!   char_mat(2,9)= CMPLX(-sqr3d2,-0.5d0,kind=DP)
+!   char_mat(2,10)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+   char_mat(2,9)= CMPLX( sqr3d2, 0.5d0,kind=DP)
+   char_mat(2,10)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
    char_mat(2,11)=CMPLX( sqr3d2,-0.5d0,kind=DP)
    char_mat(2,12)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
 
@@ -1635,12 +1674,16 @@ ELSEIF (code_group==17) THEN
    char_mat(3,2)=(-1.d0, 0.d0)
    char_mat(3,3)=CMPLX( 0.5d0, sqr3d2,kind=DP)
    char_mat(3,4)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(3,5)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(3,6)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+!   char_mat(3,5)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+!   char_mat(3,6)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,5)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
    char_mat(3,7)=( 0.d0,-1.d0)
    char_mat(3,8)=( 0.d0, 1.d0)
-   char_mat(3,9)= CMPLX( sqr3d2,-0.5d0,kind=DP)
-   char_mat(3,10)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
+!   char_mat(3,9)= CMPLX( sqr3d2,-0.5d0,kind=DP)
+!   char_mat(3,10)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
+   char_mat(3,9)= CMPLX(-sqr3d2, 0.5d0,kind=DP)
+   char_mat(3,10)=CMPLX( sqr3d2,-0.5d0,kind=DP)
    char_mat(3,11)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
    char_mat(3,12)=CMPLX( sqr3d2, 0.5d0,kind=DP)
 
@@ -1648,36 +1691,54 @@ ELSEIF (code_group==17) THEN
    char_mat(4,2)=(-1.d0, 0.d0)
    char_mat(4,3)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
    char_mat(4,4)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(4,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(4,6)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(4,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(4,6)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(4,5)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(4,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
    char_mat(4,7)=( 0.d0, 1.d0)
    char_mat(4,8)=( 0.d0,-1.d0)
-   char_mat(4,9)= CMPLX( sqr3d2, 0.5d0,kind=DP)
-   char_mat(4,10)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+!   char_mat(4,9)= CMPLX( sqr3d2, 0.5d0,kind=DP)
+!   char_mat(4,10)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+   char_mat(4,9)= CMPLX(-sqr3d2,-0.5d0,kind=DP)
+   char_mat(4,10)=CMPLX( sqr3d2, 0.5d0,kind=DP)
    char_mat(4,11)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
    char_mat(4,12)=CMPLX( sqr3d2,-0.5d0,kind=DP)
 
    name_rap(5)="G_11 "
    char_mat(5,2)=(-1.d0, 0.d0)
    char_mat(5,3)=(-1.d0, 0.d0)
-   char_mat(5,6)=(-1.d0, 0.d0)
-   char_mat(5,7)=( 0.d0, 1.d0)
-   char_mat(5,8)=( 0.d0,-1.d0)
+!   char_mat(5,5)=( 1.d0, 0.d0)
+!   char_mat(5,6)=(-1.d0, 0.d0)
+!   char_mat(5,7)=( 0.d0, 1.d0)
+!   char_mat(5,8)=( 0.d0,-1.d0)
+   char_mat(5,5)=(-1.d0, 0.d0)
+   char_mat(5,6)=( 1.d0, 0.d0)
+   char_mat(5,7)=( 0.d0,-1.d0)
+   char_mat(5,8)=( 0.d0, 1.d0)
    char_mat(5,9)=( 0.d0,-1.d0)
    char_mat(5,10)=( 0.d0, 1.d0)
-   char_mat(5,11)=( 0.d0,-1.d0)
-   char_mat(5,12)=( 0.d0, 1.d0)
+!   char_mat(5,11)=( 0.d0,-1.d0)
+!   char_mat(5,12)=( 0.d0, 1.d0)
+   char_mat(5,11)=( 0.d0, 1.d0)
+   char_mat(5,12)=( 0.d0,-1.d0)
 
    name_rap(6)="G_12 "
    char_mat(6,2)=(-1.d0, 0.d0)
    char_mat(6,3)=(-1.d0, 0.d0)
-   char_mat(6,6)=(-1.d0, 0.d0)
-   char_mat(6,7)=( 0.d0,-1.d0)
-   char_mat(6,8)=( 0.d0, 1.d0)
+!   char_mat(6,5)=( 1.d0, 0.d0)
+!   char_mat(6,6)=(-1.d0, 0.d0)
+!   char_mat(6,7)=( 0.d0,-1.d0)
+!   char_mat(6,8)=( 0.d0, 1.d0)
+   char_mat(6,5)=(-1.d0, 0.d0)
+   char_mat(6,6)=( 1.d0, 0.d0)
+   char_mat(6,7)=( 0.d0, 1.d0)
+   char_mat(6,8)=( 0.d0,-1.d0)
    char_mat(6,9)=( 0.d0, 1.d0)
    char_mat(6,10)=( 0.d0,-1.d0)
-   char_mat(6,11)=( 0.d0, 1.d0)
-   char_mat(6,12)=( 0.d0,-1.d0)
+!   char_mat(6,11)=( 0.d0, 1.d0)
+!   char_mat(6,12)=( 0.d0,-1.d0)
+   char_mat(6,11)=( 0.d0,-1.d0)
+   char_mat(6,12)=( 0.d0, 1.d0)
 
 ELSEIF (code_group==18) THEN
 !
@@ -1689,8 +1750,8 @@ ELSEIF (code_group==18) THEN
    nclass_ref=16
    name_class(3)="C4 "
    name_class(4)="-C4 "
-   name_class(5)="C4^2"
-   name_class(6)="-C4^2"
+   name_class(5)="C2  "
+   name_class(6)="-C2 "
    name_class(7)="C4^3"
    name_class(8)="-C4^3"
    name_class(9)="i "
@@ -1830,6 +1891,7 @@ ELSEIF (code_group==19) THEN
 !           are changed with respect to Koster, Space groups and their 
 !           representation. They match the table in Koster, Dimmock, 
 !           Wheeler, Statz, Properties of the 32 point groups.
+!           They are also consistent with the fact that C_6h=C_6xC_i
 !
    nclass_ref=24
    name_class(3)="C6  "
@@ -1919,117 +1981,119 @@ ELSEIF (code_group==19) THEN
    char_mat(2,23)=CMPLX( sqr3d2, 0.5d0,kind=DP)
    char_mat(2,24)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
 
-   name_rap(3)="G_11+ "
-   char_mat(3,3)=( 0.d0, 1.0d0)
-   char_mat(3,4)=( 0.d0,-1.0d0)
-   char_mat(3,5)=(-1.d0, 0.d0 )
+
+   name_rap(3)="G_9+ "
+   char_mat(3,3)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+   char_mat(3,4)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+   char_mat(3,5)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(3,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
    char_mat(3,7)=( 0.d0,-1.0d0)
    char_mat(3,8)=( 0.d0, 1.0d0)
-!   char_mat(3,10)=(-1.d0, 0.d0 )
-!   char_mat(3,11)=( 0.d0, 1.0d0)
-!   char_mat(3,12)=( 0.d0,-1.0d0)
-   char_mat(3,9)=(-1.d0, 0.d0 )
-   char_mat(3,11)=( 0.d0,-1.0d0)
-   char_mat(3,12)=( 0.d0, 1.0d0)
+!   char_mat(3,9)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+!   char_mat(3,10)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+!   char_mat(3,11)=CMPLX( sqr3d2,-0.5d0,kind=DP)
+!   char_mat(3,12)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
+   char_mat(3,9)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,10)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(3,11)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
+   char_mat(3,12)=CMPLX( sqr3d2,-0.5d0,kind=DP)
    char_mat(3,14)=(-1.0d0, 0.d0)
-   char_mat(3,15)=( 0.d0, 1.0d0)
-   char_mat(3,16)=( 0.d0,-1.0d0)
-   char_mat(3,17)=(-1.0d0, 0.d0)
+   char_mat(3,15)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+   char_mat(3,16)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+   char_mat(3,17)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(3,18)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
    char_mat(3,19)=( 0.d0,-1.0d0)
    char_mat(3,20)=( 0.d0, 1.0d0)
-!   char_mat(3,22)=(-1.0d0, 0.d0)
-!   char_mat(3,23)=( 0.d0, 1.0d0)
-!   char_mat(3,24)=( 0.d0,-1.0d0)
-   char_mat(3,21)=(-1.0d0, 0.d0)
-   char_mat(3,23)=( 0.d0,-1.0d0)
-   char_mat(3,24)=( 0.d0, 1.0d0)
+!   char_mat(3,21)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+!   char_mat(3,22)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+!   char_mat(3,23)=CMPLX( sqr3d2,-0.5d0,kind=DP)
+!   char_mat(3,24)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
+   char_mat(3,21)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,22)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(3,23)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
+   char_mat(3,24)=CMPLX( sqr3d2,-0.5d0,kind=DP)
 
-   name_rap(4)="G_12+ "
-   char_mat(4,3)=( 0.d0,-1.0d0)
-   char_mat(4,4)=( 0.d0, 1.0d0)
-   char_mat(4,5)=(-1.d0, 0.d0 )
+   name_rap(4)="G_10+ "
+   char_mat(4,3)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
+   char_mat(4,4)=CMPLX( sqr3d2,-0.5d0,kind=DP)
+   char_mat(4,5)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(4,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
    char_mat(4,7)=( 0.d0, 1.0d0)
    char_mat(4,8)=( 0.d0,-1.0d0)
-!   char_mat(4,10)=(-1.d0, 0.d0 )
-!   char_mat(4,11)=( 0.d0,-1.0d0)
-!   char_mat(4,12)=( 0.d0, 1.0d0)
-   char_mat(4,9)=(-1.d0, 0.d0 )
-   char_mat(4,11)=( 0.d0, 1.0d0)
-   char_mat(4,12)=( 0.d0,-1.0d0)
+!   char_mat(4,9)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(4,10)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(4,11)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+!   char_mat(4,12)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+   char_mat(4,9)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(4,10)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(4,11)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+   char_mat(4,12)=CMPLX( sqr3d2, 0.5d0,kind=DP)
    char_mat(4,14)=(-1.0d0, 0.d0)
-   char_mat(4,15)=( 0.d0,-1.0d0)
-   char_mat(4,16)=( 0.d0, 1.0d0)
-   char_mat(4,17)=(-1.0d0, 0.d0)
+   char_mat(4,15)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
+   char_mat(4,16)=CMPLX( sqr3d2,-0.5d0,kind=DP)
+   char_mat(4,17)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(4,18)=CMPLX(-0.5d0, sqr3d2,kind=DP)
    char_mat(4,19)=( 0.d0, 1.0d0)
    char_mat(4,20)=( 0.d0,-1.0d0)
-!   char_mat(4,22)=(-1.0d0, 0.d0)
-!   char_mat(4,23)=( 0.d0,-1.0d0)
-!   char_mat(4,24)=( 0.d0, 1.0d0)
-   char_mat(4,21)=(-1.0d0, 0.d0)
-   char_mat(4,23)=( 0.d0, 1.0d0)
-   char_mat(4,24)=( 0.d0,-1.0d0)
+!   char_mat(4,21)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(4,22)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(4,23)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+!   char_mat(4,24)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+   char_mat(4,21)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(4,22)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(4,23)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+   char_mat(4,24)=CMPLX( sqr3d2, 0.5d0,kind=DP)
 
-   name_rap(5)="G_9+ "
-   char_mat(5,3)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
-   char_mat(5,4)=CMPLX( sqr3d2, 0.5d0,kind=DP)
-   char_mat(5,5)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-   char_mat(5,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   name_rap(5)="G_11+ "
+   char_mat(5,3)=( 0.d0, 1.0d0)
+   char_mat(5,4)=( 0.d0,-1.0d0)
+   char_mat(5,5)=(-1.d0, 0.d0 )
    char_mat(5,7)=( 0.d0,-1.0d0)
    char_mat(5,8)=( 0.d0, 1.0d0)
-!   char_mat(5,9)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-!   char_mat(5,10)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-!   char_mat(5,11)=CMPLX( sqr3d2,-0.5d0,kind=DP)
-!   char_mat(5,12)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
-   char_mat(5,9)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-   char_mat(5,10)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(5,11)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
-   char_mat(5,12)=CMPLX( sqr3d2,-0.5d0,kind=DP)
+!   char_mat(5,10)=(-1.d0, 0.d0 )
+!   char_mat(5,11)=( 0.d0, 1.0d0)
+!   char_mat(5,12)=( 0.d0,-1.0d0)
+   char_mat(5,9)=(-1.d0, 0.d0 )
+   char_mat(5,11)=( 0.d0,-1.0d0)
+   char_mat(5,12)=( 0.d0, 1.0d0)
    char_mat(5,14)=(-1.0d0, 0.d0)
-   char_mat(5,15)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
-   char_mat(5,16)=CMPLX( sqr3d2, 0.5d0,kind=DP)
-   char_mat(5,17)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-   char_mat(5,18)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(5,15)=( 0.d0, 1.0d0)
+   char_mat(5,16)=( 0.d0,-1.0d0)
+   char_mat(5,17)=(-1.0d0, 0.d0)
    char_mat(5,19)=( 0.d0,-1.0d0)
    char_mat(5,20)=( 0.d0, 1.0d0)
-!   char_mat(5,21)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-!   char_mat(5,22)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-!   char_mat(5,23)=CMPLX( sqr3d2,-0.5d0,kind=DP)
-!   char_mat(5,24)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
-   char_mat(5,21)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-   char_mat(5,22)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(5,23)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
-   char_mat(5,24)=CMPLX( sqr3d2,-0.5d0,kind=DP)
+!   char_mat(5,22)=(-1.0d0, 0.d0)
+!   char_mat(5,23)=( 0.d0, 1.0d0)
+!   char_mat(5,24)=( 0.d0,-1.0d0)
+   char_mat(5,21)=(-1.0d0, 0.d0)
+   char_mat(5,23)=( 0.d0,-1.0d0)
+   char_mat(5,24)=( 0.d0, 1.0d0)
 
-   name_rap(6)="G_10+ "
-   char_mat(6,3)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
-   char_mat(6,4)=CMPLX( sqr3d2,-0.5d0,kind=DP)
-   char_mat(6,5)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-   char_mat(6,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   name_rap(6)="G_12+ "
+   char_mat(6,3)=( 0.d0,-1.0d0)
+   char_mat(6,4)=( 0.d0, 1.0d0)
+   char_mat(6,5)=(-1.d0, 0.d0 )
    char_mat(6,7)=( 0.d0, 1.0d0)
    char_mat(6,8)=( 0.d0,-1.0d0)
-!   char_mat(6,9)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-!   char_mat(6,10)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-!   char_mat(6,11)=CMPLX( sqr3d2, 0.5d0,kind=DP)
-!   char_mat(6,12)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
-   char_mat(6,9)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-   char_mat(6,10)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(6,11)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
-   char_mat(6,12)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+!   char_mat(6,10)=(-1.d0, 0.d0 )
+!   char_mat(6,11)=( 0.d0,-1.0d0)
+!   char_mat(6,12)=( 0.d0, 1.0d0)
+   char_mat(6,9)=(-1.d0, 0.d0 )
+   char_mat(6,11)=( 0.d0, 1.0d0)
+   char_mat(6,12)=( 0.d0,-1.0d0)
    char_mat(6,14)=(-1.0d0, 0.d0)
-   char_mat(6,15)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
-   char_mat(6,16)=CMPLX( sqr3d2,-0.5d0,kind=DP)
-   char_mat(6,17)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-   char_mat(6,18)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(6,15)=( 0.d0,-1.0d0)
+   char_mat(6,16)=( 0.d0, 1.0d0)
+   char_mat(6,17)=(-1.0d0, 0.d0)
    char_mat(6,19)=( 0.d0, 1.0d0)
    char_mat(6,20)=( 0.d0,-1.0d0)
-!   char_mat(6,21)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-!   char_mat(6,22)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-!   char_mat(6,23)=CMPLX( sqr3d2, 0.5d0,kind=DP)
-!   char_mat(6,24)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
-   char_mat(6,21)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-   char_mat(6,22)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(6,23)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
-   char_mat(6,24)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+!   char_mat(6,22)=(-1.0d0, 0.d0)
+!   char_mat(6,23)=( 0.d0,-1.0d0)
+!   char_mat(6,24)=( 0.d0, 1.0d0)
+   char_mat(6,21)=(-1.0d0, 0.d0)
+   char_mat(6,23)=( 0.d0, 1.0d0)
+   char_mat(6,24)=( 0.d0,-1.0d0)
+
 
    name_rap(7)="G_7- "
    char_mat(7,3)=CMPLX( sqr3d2, 0.5d0,kind=DP)
@@ -2093,117 +2157,119 @@ ELSEIF (code_group==19) THEN
    char_mat(8,23)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
    char_mat(8,24)=CMPLX( sqr3d2, 0.5d0,kind=DP)
 
-   name_rap(9)="G_11-"
-   char_mat(9,3)=( 0.d0, 1.0d0)
-   char_mat(9,4)=( 0.d0,-1.0d0)
-   char_mat(9,5)=(-1.d0, 0.d0 )
+
+   name_rap(9)="G_9- "
+   char_mat(9,3)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+   char_mat(9,4)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+   char_mat(9,5)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(9,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
    char_mat(9,7)=( 0.d0,-1.0d0)
    char_mat(9,8)=( 0.d0, 1.0d0)
-!   char_mat(9,10)=(-1.d0, 0.d0 )
-!   char_mat(9,11)=( 0.d0, 1.0d0)
-!   char_mat(9,12)=( 0.d0,-1.0d0)
-   char_mat(9,9)=(-1.d0, 0.d0 )
-   char_mat(9,11)=( 0.d0,-1.0d0)
-   char_mat(9,12)=( 0.d0, 1.0d0)
+!   char_mat(9,9)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+!   char_mat(9,10)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+!   char_mat(9,11)=CMPLX( sqr3d2,-0.5d0,kind=DP)
+!   char_mat(9,12)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
+   char_mat(9,9)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(9,10)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(9,11)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
+   char_mat(9,12)=CMPLX( sqr3d2,-0.5d0,kind=DP)
    char_mat(9,13)=(-1.0d0, 0.d0)
-   char_mat(9,15)=( 0.d0,-1.0d0)
-   char_mat(9,16)=( 0.d0, 1.0d0)
-   char_mat(9,18)=(-1.0d0, 0.d0)
+   char_mat(9,15)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+   char_mat(9,16)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+   char_mat(9,17)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(9,18)=CMPLX( 0.5d0, sqr3d2,kind=DP)
    char_mat(9,19)=( 0.d0, 1.0d0)
    char_mat(9,20)=( 0.d0,-1.0d0)
-!   char_mat(9,21)=(-1.0d0, 0.d0)
-!   char_mat(9,23)=( 0.d0,-1.0d0)
-!   char_mat(9,24)=( 0.d0, 1.0d0)
-   char_mat(9,22)=(-1.0d0, 0.d0)
-   char_mat(9,23)=( 0.d0, 1.0d0)
-   char_mat(9,24)=( 0.d0,-1.0d0)
+!   char_mat(9,21)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+!   char_mat(9,22)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+!   char_mat(9,23)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
+!   char_mat(9,24)=CMPLX( sqr3d2,-0.5d0,kind=DP)
+   char_mat(9,21)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(9,22)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(9,23)=CMPLX( sqr3d2,-0.5d0,kind=DP)
+   char_mat(9,24)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
 
-   name_rap(10)="G_12-"
-   char_mat(10,3) =( 0.d0,-1.0d0)
-   char_mat(10,4) =( 0.d0, 1.0d0)
-   char_mat(10,5) =(-1.d0, 0.d0 )
-   char_mat(10,7) =( 0.d0, 1.0d0)
-   char_mat(10,8) =( 0.d0,-1.0d0)
-!   char_mat(10,10)=(-1.d0, 0.d0 )
-!   char_mat(10,11)=( 0.d0,-1.0d0)
-!   char_mat(10,12)=( 0.d0, 1.0d0)
-   char_mat(10,9)=(-1.d0, 0.d0 )
-   char_mat(10,11)=( 0.d0, 1.0d0)
-   char_mat(10,12)=( 0.d0,-1.0d0)
+   name_rap(10)="G_10- "
+   char_mat(10,3)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
+   char_mat(10,4)=CMPLX( sqr3d2,-0.5d0,kind=DP)
+   char_mat(10,5)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(10,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(10,7)=( 0.d0, 1.0d0)
+   char_mat(10,8)=( 0.d0,-1.0d0)
+!   char_mat(10,9)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(10,10)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(10,11)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+!   char_mat(10,12)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+   char_mat(10,9)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(10,10)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(10,11)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+   char_mat(10,12)=CMPLX( sqr3d2, 0.5d0,kind=DP)
    char_mat(10,13)=(-1.0d0, 0.d0)
-   char_mat(10,15)=( 0.d0, 1.0d0)
-   char_mat(10,16)=( 0.d0,-1.0d0)
-   char_mat(10,18)=(-1.0d0, 0.d0)
+   char_mat(10,15)=CMPLX( sqr3d2,-0.5d0,kind=DP)
+   char_mat(10,16)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
+   char_mat(10,17)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(10,18)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
    char_mat(10,19)=( 0.d0,-1.0d0)
    char_mat(10,20)=( 0.d0, 1.0d0)
-!   char_mat(10,21)=(-1.0d0, 0.d0)
-!   char_mat(10,23)=( 0.d0, 1.0d0)
-!   char_mat(10,24)=( 0.d0,-1.0d0)
-   char_mat(10,22)=(-1.0d0, 0.d0)
-   char_mat(10,23)=( 0.d0,-1.0d0)
-   char_mat(10,24)=( 0.d0, 1.0d0)
+!   char_mat(10,21)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(10,22)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(10,23)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+!   char_mat(10,24)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+   char_mat(10,21)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(10,22)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(10,23)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+   char_mat(10,24)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
 
-   name_rap(11)="G_9- "
-   char_mat(11,3)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
-   char_mat(11,4)=CMPLX( sqr3d2, 0.5d0,kind=DP)
-   char_mat(11,5)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-   char_mat(11,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   name_rap(11)="G_11-"
+   char_mat(11,3)=( 0.d0, 1.0d0)
+   char_mat(11,4)=( 0.d0,-1.0d0)
+   char_mat(11,5)=(-1.d0, 0.d0 )
    char_mat(11,7)=( 0.d0,-1.0d0)
    char_mat(11,8)=( 0.d0, 1.0d0)
-!   char_mat(11,9)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-!   char_mat(11,10)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-!   char_mat(11,11)=CMPLX( sqr3d2,-0.5d0,kind=DP)
-!   char_mat(11,12)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
-   char_mat(11,9)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-   char_mat(11,10)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(11,11)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
-   char_mat(11,12)=CMPLX( sqr3d2,-0.5d0,kind=DP)
+!   char_mat(11,10)=(-1.d0, 0.d0 )
+!   char_mat(11,11)=( 0.d0, 1.0d0)
+!   char_mat(11,12)=( 0.d0,-1.0d0)
+   char_mat(11,9)=(-1.d0, 0.d0 )
+   char_mat(11,11)=( 0.d0,-1.0d0)
+   char_mat(11,12)=( 0.d0, 1.0d0)
    char_mat(11,13)=(-1.0d0, 0.d0)
-   char_mat(11,15)=CMPLX( sqr3d2, 0.5d0,kind=DP)
-   char_mat(11,16)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
-   char_mat(11,17)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(11,18)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(11,15)=( 0.d0,-1.0d0)
+   char_mat(11,16)=( 0.d0, 1.0d0)
+   char_mat(11,18)=(-1.0d0, 0.d0)
    char_mat(11,19)=( 0.d0, 1.0d0)
    char_mat(11,20)=( 0.d0,-1.0d0)
-!   char_mat(11,21)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-!   char_mat(11,22)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-!   char_mat(11,23)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
-!   char_mat(11,24)=CMPLX( sqr3d2,-0.5d0,kind=DP)
-   char_mat(11,21)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(11,22)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-   char_mat(11,23)=CMPLX( sqr3d2,-0.5d0,kind=DP)
-   char_mat(11,24)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
+!   char_mat(11,21)=(-1.0d0, 0.d0)
+!   char_mat(11,23)=( 0.d0,-1.0d0)
+!   char_mat(11,24)=( 0.d0, 1.0d0)
+   char_mat(11,22)=(-1.0d0, 0.d0)
+   char_mat(11,23)=( 0.d0, 1.0d0)
+   char_mat(11,24)=( 0.d0,-1.0d0)
 
-   name_rap(12)="G_10- "
-   char_mat(12,3)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
-   char_mat(12,4)=CMPLX( sqr3d2,-0.5d0,kind=DP)
-   char_mat(12,5)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-   char_mat(12,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(12,7)=( 0.d0, 1.0d0)
-   char_mat(12,8)=( 0.d0,-1.0d0)
-!   char_mat(12,9)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-!   char_mat(12,10)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-!   char_mat(12,11)=CMPLX( sqr3d2, 0.5d0,kind=DP)
-!   char_mat(12,12)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
-   char_mat(12,9)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-   char_mat(12,10)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(12,11)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
-   char_mat(12,12)=CMPLX( sqr3d2, 0.5d0,kind=DP)
+   name_rap(12)="G_12-"
+   char_mat(12,3) =( 0.d0,-1.0d0)
+   char_mat(12,4) =( 0.d0, 1.0d0)
+   char_mat(12,5) =(-1.d0, 0.d0 )
+   char_mat(12,7) =( 0.d0, 1.0d0)
+   char_mat(12,8) =( 0.d0,-1.0d0)
+!   char_mat(12,10)=(-1.d0, 0.d0 )
+!   char_mat(12,11)=( 0.d0,-1.0d0)
+!   char_mat(12,12)=( 0.d0, 1.0d0)
+   char_mat(12,9)=(-1.d0, 0.d0 )
+   char_mat(12,11)=( 0.d0, 1.0d0)
+   char_mat(12,12)=( 0.d0,-1.0d0)
    char_mat(12,13)=(-1.0d0, 0.d0)
-   char_mat(12,15)=CMPLX( sqr3d2,-0.5d0,kind=DP)
-   char_mat(12,16)=CMPLX(-sqr3d2, 0.5d0,kind=DP)
-   char_mat(12,17)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(12,18)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(12,15)=( 0.d0, 1.0d0)
+   char_mat(12,16)=( 0.d0,-1.0d0)
+   char_mat(12,18)=(-1.0d0, 0.d0)
    char_mat(12,19)=( 0.d0,-1.0d0)
    char_mat(12,20)=( 0.d0, 1.0d0)
-!   char_mat(12,21)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-!   char_mat(12,22)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-!   char_mat(12,23)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
-!   char_mat(12,24)=CMPLX( sqr3d2, 0.5d0,kind=DP)
-   char_mat(12,21)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(12,22)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-   char_mat(12,23)=CMPLX( sqr3d2, 0.5d0,kind=DP)
-   char_mat(12,24)=CMPLX(-sqr3d2,-0.5d0,kind=DP)
+!   char_mat(12,21)=(-1.0d0, 0.d0)
+!   char_mat(12,23)=( 0.d0, 1.0d0)
+!   char_mat(12,24)=( 0.d0,-1.0d0)
+   char_mat(12,22)=(-1.0d0, 0.d0)
+   char_mat(12,23)=( 0.d0,-1.0d0)
+   char_mat(12,24)=( 0.d0, 1.0d0)
+
 
 
 ELSEIF (code_group==20) THEN
@@ -2396,24 +2462,24 @@ ELSEIF (code_group==23) THEN
 ! D_6h
 !
    nclass_ref=18
-   name_class(3)="C2  "
-   name_class1(3)="-C2 "
-   name_class(4)="2C3  "
-   name_class(5)="-2C3 "
-   name_class(6)="2C6 "
-   name_class(7)="-2C6 "
+   name_class(3)="2C6 "
+   name_class(4)="-2C6 "
+   name_class(5)="2C3  "
+   name_class(6)="-2C3 "
+   name_class(7)="C2  "
+   name_class1(7)="-C2 "
    name_class(8)=" 3C2'"
    name_class1(8)="-3C2'"
    name_class(9)="3C2''"
    name_class1(9)="-3C2''"
    name_class(10)=" i "
    name_class(11)="-i "
-   name_class(12)=" s_h"
-   name_class1(12)="-s_h"
-   name_class(13)="2S6"
-   name_class(14)="-2S6"
-   name_class(15)="2S3"
-   name_class(16)="-2S3"
+   name_class(12)="2S3"
+   name_class(13)="-2S3"
+   name_class(14)="2S6"
+   name_class(15)="-2S6"
+   name_class(16)=" s_h"
+   name_class1(16)="-s_h"
    name_class(17)=" 3s_v"
    name_class1(17)="-3s_v"
    name_class(18)=" 3s_d"
@@ -2424,40 +2490,40 @@ ELSEIF (code_group==23) THEN
    name_rap(1)="G_7+ "
    char_mat(1,1)=( 2.d0, 0.d0)
    char_mat(1,2)=(-2.d0, 0.d0)
-   char_mat(1,3)=( 0.d0, 0.d0)
-   char_mat(1,4)=( 1.d0, 0.d0)
-   char_mat(1,5)=(-1.d0, 0.d0)
-   char_mat(1,6)=CMPLX( sqrt3, 0.d0,kind=DP)
-   char_mat(1,7)=CMPLX(-sqrt3, 0.d0,kind=DP)
+   char_mat(1,3)=CMPLX( sqrt3, 0.d0,kind=DP)
+   char_mat(1,4)=CMPLX(-sqrt3, 0.d0,kind=DP)
+   char_mat(1,5)=( 1.d0, 0.d0)
+   char_mat(1,6)=(-1.d0, 0.d0)
+   char_mat(1,7)=( 0.d0, 0.d0)
    char_mat(1,8)=( 0.d0, 0.d0)
    char_mat(1,9)=( 0.d0, 0.d0)
    char_mat(1,10)=( 2.d0, 0.d0)
    char_mat(1,11)=(-2.d0, 0.d0)
-   char_mat(1,12)=( 0.d0, 0.d0)
-   char_mat(1,13)=( 1.d0, 0.d0)
-   char_mat(1,14)=(-1.d0, 0.d0)
-   char_mat(1,15)=CMPLX( sqrt3, 0.d0,kind=DP)
-   char_mat(1,16)=CMPLX(-sqrt3, 0.d0,kind=DP)
+   char_mat(1,12)=CMPLX( sqrt3, 0.d0,kind=DP)
+   char_mat(1,13)=CMPLX(-sqrt3, 0.d0,kind=DP)
+   char_mat(1,14)=( 1.d0, 0.d0)
+   char_mat(1,15)=(-1.d0, 0.d0)
+   char_mat(1,16)=( 0.d0, 0.d0)
    char_mat(1,17)=( 0.d0, 0.d0)
    char_mat(1,18)=( 0.d0, 0.d0)
 
    name_rap(2)="G_8+   "
    char_mat(2,1)=( 2.d0, 0.d0)
    char_mat(2,2)=(-2.d0, 0.d0)
-   char_mat(2,3)=( 0.d0, 0.d0)
-   char_mat(2,4)=( 1.d0, 0.d0)
-   char_mat(2,5)=(-1.d0, 0.d0)
-   char_mat(2,6)=CMPLX(-sqrt3, 0.d0,kind=DP)
-   char_mat(2,7)=CMPLX( sqrt3, 0.d0,kind=DP)
+   char_mat(2,3)=CMPLX(-sqrt3, 0.d0,kind=DP)
+   char_mat(2,4)=CMPLX( sqrt3, 0.d0,kind=DP)
+   char_mat(2,5)=( 1.d0, 0.d0)
+   char_mat(2,6)=(-1.d0, 0.d0)
+   char_mat(2,7)=( 0.d0, 0.d0)
    char_mat(2,8)=( 0.d0, 0.d0)
    char_mat(2,9)=( 0.d0, 0.d0)
    char_mat(2,10)=( 2.d0, 0.d0)
    char_mat(2,11)=(-2.d0, 0.d0)
-   char_mat(2,12)=( 0.d0, 0.d0)
-   char_mat(2,13)=( 1.d0, 0.d0)
-   char_mat(2,14)=(-1.d0, 0.d0)
-   char_mat(2,15)=CMPLX(-sqrt3, 0.d0,kind=DP)
-   char_mat(2,16)=CMPLX( sqrt3, 0.d0,kind=DP)
+   char_mat(2,12)=CMPLX(-sqrt3, 0.d0,kind=DP)
+   char_mat(2,13)=CMPLX( sqrt3, 0.d0,kind=DP)
+   char_mat(2,14)=( 1.d0, 0.d0)
+   char_mat(2,15)=(-1.d0, 0.d0)
+   char_mat(2,16)=( 0.d0, 0.d0)
    char_mat(2,17)=( 0.d0, 0.d0)
    char_mat(2,18)=( 0.d0, 0.d0)
 
@@ -2465,18 +2531,18 @@ ELSEIF (code_group==23) THEN
    char_mat(3,1)=( 2.d0, 0.d0)
    char_mat(3,2)=(-2.d0, 0.d0)
    char_mat(3,3)=( 0.d0, 0.d0)
-   char_mat(3,4)=(-2.d0, 0.d0)
-   char_mat(3,5)=( 2.d0, 0.d0)
-   char_mat(3,6)=( 0.d0, 0.d0)
+   char_mat(3,4)=( 0.d0, 0.d0)
+   char_mat(3,5)=(-2.d0, 0.d0)
+   char_mat(3,6)=( 2.d0, 0.d0)
    char_mat(3,7)=( 0.d0, 0.d0)
    char_mat(3,8)=( 0.d0, 0.d0)
    char_mat(3,9)=( 0.d0, 0.d0)
    char_mat(3,10)=( 2.d0, 0.d0)
    char_mat(3,11)=(-2.d0, 0.d0)
    char_mat(3,12)=( 0.d0, 0.d0)
-   char_mat(3,13)=(-2.d0, 0.d0)
-   char_mat(3,14)=( 2.d0, 0.d0)
-   char_mat(3,15)=( 0.d0, 0.d0)
+   char_mat(3,13)=( 0.d0, 0.d0)
+   char_mat(3,14)=(-2.d0, 0.d0)
+   char_mat(3,15)=( 2.d0, 0.d0)
    char_mat(3,16)=( 0.d0, 0.d0)
    char_mat(3,17)=( 0.d0, 0.d0)
    char_mat(3,18)=( 0.d0, 0.d0)
@@ -2484,40 +2550,40 @@ ELSEIF (code_group==23) THEN
    name_rap(4)="G_7- "
    char_mat(4,1)=( 2.d0, 0.d0)
    char_mat(4,2)=(-2.d0, 0.d0)
-   char_mat(4,3)=( 0.d0, 0.d0)
-   char_mat(4,4)=( 1.d0, 0.d0)
-   char_mat(4,5)=(-1.d0, 0.d0)
-   char_mat(4,6)=CMPLX( sqrt3, 0.d0,kind=DP)
-   char_mat(4,7)=CMPLX(-sqrt3, 0.d0,kind=DP)
+   char_mat(4,3)=CMPLX( sqrt3, 0.d0,kind=DP)
+   char_mat(4,4)=CMPLX(-sqrt3, 0.d0,kind=DP)
+   char_mat(4,5)=( 1.d0, 0.d0)
+   char_mat(4,6)=(-1.d0, 0.d0)
+   char_mat(4,7)=( 0.d0, 0.d0)
    char_mat(4,8)=( 0.d0, 0.d0)
    char_mat(4,9)=( 0.d0, 0.d0)
    char_mat(4,10)=(-2.d0, 0.d0)
    char_mat(4,11)=( 2.d0, 0.d0)
-   char_mat(4,12)=( 0.d0, 0.d0)
-   char_mat(4,13)=(-1.d0, 0.d0)
-   char_mat(4,14)=( 1.d0, 0.d0)
-   char_mat(4,15)=CMPLX(-sqrt3, 0.d0,kind=DP)
-   char_mat(4,16)=CMPLX( sqrt3, 0.d0,kind=DP)
+   char_mat(4,12)=CMPLX(-sqrt3, 0.d0,kind=DP)
+   char_mat(4,13)=CMPLX( sqrt3, 0.d0,kind=DP)
+   char_mat(4,14)=(-1.d0, 0.d0)
+   char_mat(4,15)=( 1.d0, 0.d0)
+   char_mat(4,16)=( 0.d0, 0.d0)
    char_mat(4,17)=( 0.d0, 0.d0)
    char_mat(4,18)=( 0.d0, 0.d0)
 
    name_rap(5)="G_8-   "
    char_mat(5,1)=( 2.d0, 0.d0)
    char_mat(5,2)=(-2.d0, 0.d0)
-   char_mat(5,3)=( 0.d0, 0.d0)
-   char_mat(5,4)=( 1.d0, 0.d0)
-   char_mat(5,5)=(-1.d0, 0.d0)
-   char_mat(5,6)=CMPLX(-sqrt3, 0.d0,kind=DP)
-   char_mat(5,7)=CMPLX( sqrt3, 0.d0,kind=DP)
+   char_mat(5,3)=CMPLX(-sqrt3, 0.d0,kind=DP)
+   char_mat(5,4)=CMPLX( sqrt3, 0.d0,kind=DP)
+   char_mat(5,5)=( 1.d0, 0.d0)
+   char_mat(5,6)=(-1.d0, 0.d0)
+   char_mat(5,7)=( 0.d0, 0.d0)
    char_mat(5,8)=( 0.d0, 0.d0)
    char_mat(5,9)=( 0.d0, 0.d0)
    char_mat(5,10)=(-2.d0, 0.d0)
    char_mat(5,11)=( 2.d0, 0.d0)
-   char_mat(5,12)=( 0.d0, 0.d0)
-   char_mat(5,13)=(-1.d0, 0.d0)
-   char_mat(5,14)=( 1.d0, 0.d0)
-   char_mat(5,15)=CMPLX( sqrt3, 0.d0,kind=DP)
-   char_mat(5,16)=CMPLX(-sqrt3, 0.d0,kind=DP)
+   char_mat(5,12)=CMPLX( sqrt3, 0.d0,kind=DP)
+   char_mat(5,13)=CMPLX(-sqrt3, 0.d0,kind=DP)
+   char_mat(5,14)=(-1.d0, 0.d0)
+   char_mat(5,15)=( 1.d0, 0.d0)
+   char_mat(5,16)=( 0.d0, 0.d0)
    char_mat(5,17)=( 0.d0, 0.d0)
    char_mat(5,18)=( 0.d0, 0.d0)
 
@@ -2525,18 +2591,18 @@ ELSEIF (code_group==23) THEN
    char_mat(6,1)=( 2.d0, 0.d0)
    char_mat(6,2)=(-2.d0, 0.d0)
    char_mat(6,3)=( 0.d0, 0.d0)
-   char_mat(6,4)=(-2.d0, 0.d0)
-   char_mat(6,5)=( 2.d0, 0.d0)
-   char_mat(6,6)=( 0.d0, 0.d0)
+   char_mat(6,4)=( 0.d0, 0.d0)
+   char_mat(6,5)=(-2.d0, 0.d0)
+   char_mat(6,6)=( 2.d0, 0.d0)
    char_mat(6,7)=( 0.d0, 0.d0)
    char_mat(6,8)=( 0.d0, 0.d0)
    char_mat(6,9)=( 0.d0, 0.d0)
    char_mat(6,10)=(-2.d0, 0.d0)
    char_mat(6,11)=( 2.d0, 0.d0)
    char_mat(6,12)=( 0.d0, 0.d0)
-   char_mat(6,13)=( 2.d0, 0.d0)
-   char_mat(6,14)=(-2.d0, 0.d0)
-   char_mat(6,15)=( 0.d0, 0.d0)
+   char_mat(6,13)=( 0.d0, 0.d0)
+   char_mat(6,14)=( 2.d0, 0.d0)
+   char_mat(6,15)=(-2.d0, 0.d0)
    char_mat(6,16)=( 0.d0, 0.d0)
    char_mat(6,17)=( 0.d0, 0.d0)
    char_mat(6,18)=( 0.d0, 0.d0)
@@ -2546,10 +2612,10 @@ ELSEIF (code_group==24) THEN
 ! D_2d
 !
    nclass_ref=7
-   name_class(3)="C2  "
-   name_class1(3)="-C2 "
-   name_class(4)="2S4 "
-   name_class(5)="-2S4"
+   name_class(3)="2S4 "
+   name_class(4)="-2S4"
+   name_class(5)="C2  "
+   name_class1(5)="-C2 "
    name_class(6)="2C2' "
    name_class1(6)="-2C2'"
    name_class(7)="2s_d "
@@ -2560,18 +2626,18 @@ ELSEIF (code_group==24) THEN
    name_rap(1)="G_6  X_6  W_6"
    char_mat(1,1)=( 2.d0, 0.d0)
    char_mat(1,2)=(-2.d0, 0.d0)
-   char_mat(1,3)=( 0.d0, 0.d0)
-   char_mat(1,4)=CMPLX( sqrt2, 0.d0,kind=DP)
-   char_mat(1,5)=CMPLX(-sqrt2, 0.d0,kind=DP)
+   char_mat(1,3)=CMPLX( sqrt2, 0.d0,kind=DP)
+   char_mat(1,4)=CMPLX(-sqrt2, 0.d0,kind=DP)
+   char_mat(1,5)=( 0.d0, 0.d0)
    char_mat(1,6)=( 0.d0, 0.d0)
    char_mat(1,7)=( 0.d0, 0.d0)
 
    name_rap(2)="G_7  X_7  W_7"
    char_mat(2,1)=( 2.d0, 0.d0)
    char_mat(2,2)=(-2.d0, 0.d0)
-   char_mat(2,3)=( 0.d0, 0.d0)
-   char_mat(2,4)=CMPLX(-sqrt2, 0.d0,kind=DP)
-   char_mat(2,5)=CMPLX( sqrt2, 0.d0,kind=DP)
+   char_mat(2,3)=CMPLX(-sqrt2, 0.d0,kind=DP)
+   char_mat(2,4)=CMPLX( sqrt2, 0.d0,kind=DP)
+   char_mat(2,5)=( 0.d0, 0.d0)
    char_mat(2,6)=( 0.d0, 0.d0)
    char_mat(2,7)=( 0.d0, 0.d0)
 
@@ -2582,14 +2648,14 @@ ELSEIF (code_group==25) THEN
    nclass_ref=12
    name_class(3)="2C3 "
    name_class(4)="-2C3"
-   name_class(5)="3s_v "
-   name_class(6)="-3s_v"
+   name_class(5)="3C2'"
+   name_class(6)="-3C2'"
    name_class(7)="i  "
    name_class(8)="-i  "
    name_class(9)="2S6 "
    name_class(10)="-2S6"
-   name_class(11)="3C2'"
-   name_class(12)="-3C2'"
+   name_class(11)="3s_v "
+   name_class(12)="-3s_v"
 
    nrap_ref=6
 
@@ -2669,50 +2735,50 @@ ELSEIF (code_group==26) THEN
 !            Please report any problem that you might find with S_4. 
 !
    nclass_ref=8
-   name_class(3)=" S4 "
-   name_class(4)="-S4 "
+   name_class(3)=" S4^3"
+   name_class(4)="-S4^3"
    name_class(5)=" C2 "
    name_class(6)="-C2 "
-   name_class(7)=" S4^3"
-   name_class(8)="-S4^3"
+   name_class(7)=" S4 "
+   name_class(8)="-S4 "
 
    nrap_ref=4
 
-   name_rap(1)="G_1 "
+   name_rap(1)="G_5 "
    char_mat(1,3)=CMPLX( dsq2, dsq2,kind=DP)
    char_mat(1,4)=CMPLX(-dsq2,-dsq2,kind=DP)
-   char_mat(1,5)=( 0.d0,-1.d0)
-   char_mat(1,6)=( 0.d0, 1.d0)
+   char_mat(1,5)=( 0.d0, 1.d0)
+   char_mat(1,6)=( 0.d0,-1.d0)
 !   char_mat(1,7)=CMPLX(-dsq2, dsq2,kind=DP)
 !   char_mat(1,8)=CMPLX( dsq2,-dsq2,kind=DP)
    char_mat(1,7)=CMPLX( dsq2,-dsq2,kind=DP)
    char_mat(1,8)=CMPLX(-dsq2, dsq2,kind=DP)
 
-   name_rap(2)="G_2 "
+   name_rap(2)="G_6 "
    char_mat(2,3)=CMPLX( dsq2,-dsq2,kind=DP)
    char_mat(2,4)=CMPLX(-dsq2, dsq2,kind=DP)
-   char_mat(2,5)=( 0.d0, 1.d0)
-   char_mat(2,6)=( 0.d0,-1.d0)
+   char_mat(2,5)=( 0.d0,-1.d0)
+   char_mat(2,6)=( 0.d0, 1.d0)
 !   char_mat(2,7)=CMPLX(-dsq2,-dsq2,kind=DP)
 !   char_mat(2,8)=CMPLX( dsq2, dsq2,kind=DP)
    char_mat(2,7)=CMPLX( dsq2, dsq2,kind=DP)
    char_mat(2,8)=CMPLX(-dsq2,-dsq2,kind=DP)
 
-   name_rap(3)="G_3 "
+   name_rap(3)="G_7 "
    char_mat(3,3)=CMPLX(-dsq2,-dsq2,kind=DP)
    char_mat(3,4)=CMPLX( dsq2, dsq2,kind=DP)
-   char_mat(3,5)=( 0.d0,-1.d0)
-   char_mat(3,6)=( 0.d0, 1.d0)
+   char_mat(3,5)=( 0.d0, 1.d0)
+   char_mat(3,6)=( 0.d0,-1.d0)
 !   char_mat(3,7)=CMPLX( dsq2,-dsq2,kind=DP)
 !   char_mat(3,8)=CMPLX(-dsq2, dsq2,kind=DP)
    char_mat(3,7)=CMPLX(-dsq2, dsq2,kind=DP)
    char_mat(3,8)=CMPLX( dsq2,-dsq2,kind=DP)
 
-   name_rap(4)="G_4 "
+   name_rap(4)="G_8 "
    char_mat(4,3)=CMPLX(-dsq2, dsq2,kind=DP)
    char_mat(4,4)=CMPLX( dsq2,-dsq2,kind=DP)
-   char_mat(4,5)=( 0.d0, 1.d0)
-   char_mat(4,6)=( 0.d0,-1.d0)
+   char_mat(4,5)=( 0.d0,-1.d0)
+   char_mat(4,6)=( 0.d0, 1.d0)
 !   char_mat(4,7)=CMPLX( dsq2, dsq2,kind=DP)
 !   char_mat(4,8)=CMPLX(-dsq2,-dsq2,kind=DP)
    char_mat(4,7)=CMPLX(-dsq2,-dsq2,kind=DP)
@@ -2825,6 +2891,12 @@ ELSEIF (code_group==27) THEN
 
 ELSEIF (code_group==28) THEN
 !
+! NB: The signs of the characters of the classes C3 -C3 C3^2 -C3^2 
+!            are changed with respect to Koster, Space groups and 
+!            their representations. They match the table in Koster, 
+!            Dimmock, Wheeler, Statz, Properties of the 32 point groups.
+
+!
 ! T
 !
    nclass_ref=7
@@ -2848,21 +2920,33 @@ ELSEIF (code_group==28) THEN
    char_mat(2,1)=( 2.d0, 0.d0)
    char_mat(2,2)=(-2.d0, 0.d0)
    char_mat(2,3)=( 0.d0, 0.d0)
-   char_mat(2,4)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-   char_mat(2,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(2,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(2,7)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+!   char_mat(2,4)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(2,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(2,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+!   char_mat(2,7)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(2,4)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(2,5)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(2,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(2,7)=CMPLX( 0.5d0, sqr3d2,kind=DP)
 
    name_rap(3)="G_7 "
    char_mat(3,1)=( 2.d0, 0.d0)
    char_mat(3,2)=(-2.d0, 0.d0)
    char_mat(3,3)=( 0.d0, 0.d0)
-   char_mat(3,4)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-   char_mat(3,5)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(3,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(3,7)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(3,4)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+!   char_mat(3,5)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+!   char_mat(3,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(3,7)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(3,4)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,5)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(3,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(3,7)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
 
 ELSEIF (code_group==29) THEN
+! NB: The signs of the characters of the some classes
+!            are changed with respect to Koster, Space groups and 
+!            their representations. They match the table in Koster, 
+!            Dimmock, Wheeler, Statz, Properties of the 32 point groups.
 !
 ! T_h
 !
@@ -2877,10 +2961,10 @@ ELSEIF (code_group==29) THEN
    name_class(9)="-i   "
    name_class(10)=" 3s_h"
    name_class1(10)="-3s_h"
-   name_class(11)="4S6 "
-   name_class(12)="-4S6 "
-   name_class(13)=" 4S6'"
-   name_class(14)="-4S6'"
+   name_class(11)="4S6'"
+   name_class(12)="-4S6'"
+   name_class(13)=" 4S6 "
+   name_class(14)="-4S6 "
 
    nrap_ref=6
 
@@ -2900,33 +2984,49 @@ ELSEIF (code_group==29) THEN
    char_mat(2,1)=( 2.d0, 0.d0)
    char_mat(2,2)=(-2.d0, 0.d0)
    char_mat(2,3)=( 0.d0, 0.d0)
-   char_mat(2,4)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-   char_mat(2,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(2,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(2,7)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+!   char_mat(2,4)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(2,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(2,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+!   char_mat(2,7)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(2,4)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(2,5)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(2,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(2,7)=CMPLX( 0.5d0, sqr3d2,kind=DP)
    char_mat(2,8)=( 2.d0, 0.d0)
    char_mat(2,9)=(-2.d0, 0.d0)
    char_mat(2,10)=( 0.d0, 0.d0)
-   char_mat(2,11)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-   char_mat(2,12)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(2,13)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(2,14)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+!   char_mat(2,11)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(2,12)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(2,13)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+!   char_mat(2,14)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(2,11)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(2,12)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(2,13)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(2,14)=CMPLX( 0.5d0, sqr3d2,kind=DP)
 
    name_rap(3)="G_7+"
    char_mat(3,1)=( 2.d0, 0.d0)
    char_mat(3,2)=(-2.d0, 0.d0)
    char_mat(3,3)=( 0.d0, 0.d0)
-   char_mat(3,4)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-   char_mat(3,5)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(3,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(3,7)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(3,4)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+!   char_mat(3,5)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+!   char_mat(3,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(3,7)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(3,4)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,5)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(3,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(3,7)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
    char_mat(3,8)=( 2.d0, 0.d0)
    char_mat(3,9)=(-2.d0, 0.d0)
    char_mat(3,10)=( 0.d0, 0.d0)
-   char_mat(3,11)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-   char_mat(3,12)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(3,13)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(3,14)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(3,11)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+!   char_mat(3,12)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+!   char_mat(3,13)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(3,14)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(3,11)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,12)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(3,13)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(3,14)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
 
    name_rap(4)="G_5-"
    char_mat(4,1)=( 2.d0, 0.d0)
@@ -2945,33 +3045,49 @@ ELSEIF (code_group==29) THEN
    char_mat(5,1)=( 2.d0, 0.d0)
    char_mat(5,2)=(-2.d0, 0.d0)
    char_mat(5,3)=( 0.d0, 0.d0)
-   char_mat(5,4)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-   char_mat(5,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(5,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(5,7)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+!   char_mat(5,4)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(5,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(5,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+!   char_mat(5,7)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(5,4)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(5,5)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(5,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(5,7)=CMPLX( 0.5d0, sqr3d2,kind=DP)
    char_mat(5,8)=(-2.d0, 0.d0)
    char_mat(5,9)=( 2.d0, 0.d0)
    char_mat(5,10)=( 0.d0, 0.d0)
-   char_mat(5,11)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(5,12)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-   char_mat(5,13)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-   char_mat(5,14)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+!   char_mat(5,11)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(5,12)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(5,13)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+!   char_mat(5,14)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(5,11)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(5,12)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(5,13)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(5,14)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
 
    name_rap(6)="G_7-"
    char_mat(6,1)=( 2.d0, 0.d0)
    char_mat(6,2)=(-2.d0, 0.d0)
    char_mat(6,3)=( 0.d0, 0.d0)
-   char_mat(6,4)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-   char_mat(6,5)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(6,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
-   char_mat(6,7)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(6,4)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+!   char_mat(6,5)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+!   char_mat(6,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(6,7)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(6,4)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(6,5)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(6,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(6,7)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
    char_mat(6,8)=(-2.d0, 0.d0)
    char_mat(6,9)=( 2.d0, 0.d0)
    char_mat(6,10)=( 0.d0, 0.d0)
-   char_mat(6,11)=CMPLX(-0.5d0, sqr3d2,kind=DP)
-   char_mat(6,12)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
-   char_mat(6,13)=CMPLX( 0.5d0, sqr3d2,kind=DP)
-   char_mat(6,14)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+!   char_mat(6,11)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+!   char_mat(6,12)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+!   char_mat(6,13)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+!   char_mat(6,14)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(6,11)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(6,12)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(6,13)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(6,14)=CMPLX(-0.5d0, sqr3d2,kind=DP)
 
 ELSEIF (code_group==30) THEN
 !
@@ -2982,10 +3098,10 @@ ELSEIF (code_group==30) THEN
    name_class(4)="-8C3 "
    name_class(5)=" 3C2 "
    name_class1(5)="-3C2 "
-   name_class(6)="6s_d"
-   name_class1(6)="-6s_d"
-   name_class(7)="6S4 "
-   name_class(8)="-6S4 "
+   name_class(6)="6S4 "
+   name_class(7)="-6S4 "
+   name_class(8)="6s_d"
+   name_class1(8)="-6s_d"
 
    nrap_ref=3
 
@@ -2994,18 +3110,18 @@ ELSEIF (code_group==30) THEN
    char_mat(1,2)=(-2.d0, 0.d0)
    char_mat(1,4)=(-1.d0, 0.d0)
    char_mat(1,5)=( 0.d0, 0.d0)
-   char_mat(1,6)=( 0.d0, 0.d0)
-   char_mat(1,7)=CMPLX( sqrt2, 0.d0,kind=DP)
-   char_mat(1,8)=CMPLX(-sqrt2, 0.d0,kind=DP)
+   char_mat(1,6)=CMPLX( sqrt2, 0.d0,kind=DP)
+   char_mat(1,7)=CMPLX(-sqrt2, 0.d0,kind=DP)
+   char_mat(1,8)=( 0.d0, 0.d0)
 
    name_rap(2)="G_7  P_7"
    char_mat(2,1)=( 2.d0, 0.d0)
    char_mat(2,2)=(-2.d0, 0.d0)
    char_mat(2,4)=(-1.d0, 0.d0)
    char_mat(2,5)=( 0.d0, 0.d0)
-   char_mat(2,6)=( 0.d0, 0.d0)
-   char_mat(2,7)=CMPLX(-sqrt2, 0.d0,kind=DP)
-   char_mat(2,8)=CMPLX( sqrt2, 0.d0,kind=DP)
+   char_mat(2,6)=CMPLX(-sqrt2, 0.d0,kind=DP)
+   char_mat(2,7)=CMPLX( sqrt2, 0.d0,kind=DP)
+   char_mat(2,8)=( 0.d0, 0.d0)
 
    name_rap(3)="G_8  P_8"
    char_mat(3,1)=( 4.d0, 0.d0)
@@ -3026,10 +3142,10 @@ ELSEIF (code_group==31) THEN
    name_class(4)="-8C3 "
    name_class(5)=" 3C2"
    name_class1(5)="-3C2"
-   name_class(6)=" 6C2'"
-   name_class1(6)="-6C2'"
-   name_class(7)="6C4  "
-   name_class(8)="-6C4 "
+   name_class(6)="6C4  "
+   name_class(7)="-6C4 "
+   name_class(8)=" 6C2'"
+   name_class1(8)="-6C2'"
 
    nrap_ref=3
 
@@ -3038,18 +3154,18 @@ ELSEIF (code_group==31) THEN
    char_mat(1,2)=( -2.d0, 0.d0)
    char_mat(1,4)=( -1.d0, 0.d0)
    char_mat(1,5)=(  0.d0, 0.d0)
-   char_mat(1,6)=(  0.d0, 0.d0)
-   char_mat(1,7)=CMPLX( sqrt2, 0.d0,kind=DP)
-   char_mat(1,8)=CMPLX(-sqrt2, 0.d0,kind=DP)
+   char_mat(1,6)=CMPLX( sqrt2, 0.d0,kind=DP)
+   char_mat(1,7)=CMPLX(-sqrt2, 0.d0,kind=DP)
+   char_mat(1,8)=(  0.d0, 0.d0)
 
    name_rap(2)="G_7  "
    char_mat(2,1)=(  2.d0, 0.d0)
    char_mat(2,2)=( -2.d0, 0.d0)
    char_mat(2,4)=( -1.d0, 0.d0)
    char_mat(2,5)=(  0.d0, 0.d0)
-   char_mat(2,6)=(  0.d0, 0.d0)
-   char_mat(2,7)=CMPLX(-sqrt2, 0.d0,kind=DP)
-   char_mat(2,8)=CMPLX( sqrt2, 0.d0,kind=DP)
+   char_mat(2,6)=CMPLX(-sqrt2, 0.d0,kind=DP)
+   char_mat(2,7)=CMPLX( sqrt2, 0.d0,kind=DP)
+   char_mat(2,8)=(  0.d0, 0.d0)
 
    name_rap(3)="G_8  "
    char_mat(3,1)=(  4.d0, 0.d0)
@@ -3244,10 +3360,12 @@ SUBROUTINE write_group_info(flag)
 !
 !
 USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr, &
-                                 char_mat, name_rap, name_class, gname
+                                 char_mat, name_rap, name_class, gname,      &
+                                 elem_name
 USE rap_point_group_so,   ONLY : nrap, nelem_so, elem_so, has_e, &
                                  which_irr_so, char_mat_so, name_rap_so, &
-                                 name_class_so, d_spin, name_class_so1
+                                 name_class_so, d_spin, name_class_so1,  &
+                                 elem_name_so
 USE rap_point_group_is,   ONLY : code_group_is, gname_is
 USE spin_orb,             ONLY : domag
 USE noncollin_module,     ONLY : noncolin
@@ -3255,7 +3373,7 @@ USE io_global,            ONLY : stdout
 
 IMPLICIT NONE
 
-INTEGER :: iclass, irot, i, idx
+INTEGER :: iclass, irot, i, idx, irap
 LOGICAL :: is_complex, is_complex_so, flag
 
 IF (noncolin) THEN
@@ -3319,12 +3437,17 @@ IF (noncolin) THEN
       END IF
    END IF
    IF (flag) THEN
-      WRITE(stdout,'(/5x, "the symmetry operations in each class:")')
-      DO iclass=1,nclass
-         WRITE(stdout,'(5x,2a5,12i5)') &
-                            name_class_so(which_irr_so(iclass)), &
-                            name_class_so1(which_irr_so(iclass)), &
-             (elem_so(i,iclass)*has_e(i,iclass), i=1,nelem_so(iclass))
+      WRITE(stdout,'(/5x, "the symmetry operations in each class and &
+                          &the name of the first element:",/)')
+      DO irap = 1, nclass
+         DO iclass=1,nclass
+            IF ( which_irr_so(iclass) /= irap ) CYCLE
+            WRITE(stdout,'(5x,2a5,12i5)') &
+                              name_class_so(which_irr_so(iclass)), &
+                              name_class_so1(which_irr_so(iclass)), &
+               (elem_so(i,iclass)*has_e(i,iclass), i=1,nelem_so(iclass))
+            WRITE(stdout,'(10x,a)') elem_name_so(1,iclass)
+         END DO
       ENDDO
    ENDIF
 ELSE
@@ -3343,10 +3466,18 @@ ELSE
       ENDDO
    ENDIF
    IF (flag) THEN
-      WRITE(stdout,'(/5x, "the symmetry operations in each class:")')
-      DO iclass=1,nclass
-         WRITE(stdout,'(5x,a5,12i5)') name_class(which_irr(iclass)), &
-           (elem(i,iclass), i=1,nelem(iclass))
+      WRITE(stdout,'(/5x, "the symmetry operations in each class and &
+                           &the name of the first element:",/)')
+      DO irap = 1, nclass
+         DO iclass=1,nclass
+            IF (which_irr(iclass)/=irap) CYCLE
+            WRITE(stdout,'(5x,a5,12i5)') name_class(which_irr(iclass)), &
+               (elem(i,iclass), i=1,nelem(iclass))
+!
+!    The name of the first element of each class is written on output
+!
+            WRITE(stdout,'(10x,a)') elem_name(1,iclass)
+         ENDDO
       ENDDO
    END IF
 END IF
@@ -3519,8 +3650,8 @@ SUBROUTINE check_tgroup(nsym,a,b)
 !
 USE kinds, ONLY : DP
 IMPLICIT NONE
-COMPLEX(DP) :: a(2,2,48), c(2,2), a1(2,2), a2(2,2), a3(2,2)
-REAL(DP) :: b(3,3,48), d(3,3), b1(3,3), b2(3,3), b3(3,3)
+COMPLEX(DP) :: a(2,2,96), c(2,2), a1(2,2), a2(2,2), a3(2,2)
+REAL(DP) :: b(3,3,nsym), d(3,3), b1(3,3), b2(3,3), b3(3,3)
 INTEGER :: nsym, done
 LOGICAL :: compare_mat_so
 
@@ -3547,3 +3678,25 @@ DO i=1,nsym
 END DO 
 RETURN
 END SUBROUTINE check_tgroup
+
+SUBROUTINE set_class_el_name_so(nsym,sname,has_e,nclass,&
+                                     nelem_so,elem_so,elem_name_so)
+
+IMPLICIT NONE
+INTEGER :: nsym
+CHARACTER(LEN=45) :: sname(nsym)
+CHARACTER(LEN=55) :: elem_name_so(12,24)
+INTEGER :: nclass, nelem_so(24), elem_so(12,24), has_e(12,24)
+
+INTEGER :: iclass, ielem
+
+DO iclass=1,nclass
+   DO ielem=1,nelem_so(iclass)
+      elem_name_so(ielem,iclass)=sname(elem_so(ielem,iclass))
+      IF (has_e(ielem,iclass)==-1) elem_name_so(ielem,iclass)=&
+                          TRIM(elem_name_so(ielem,iclass)) // ' E'
+   ENDDO
+ENDDO
+
+RETURN
+END SUBROUTINE set_class_el_name_so
