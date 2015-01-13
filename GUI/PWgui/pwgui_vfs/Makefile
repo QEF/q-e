@@ -29,16 +29,18 @@ copylib:
 	cp -fr $(IWIDGETS_LIBDIR) $(LIBDIR)/
 	if test "$(LIBITCL_SO)" != "" ; then cp $(LIBITCL_SO) $(LIBDIR)/itcl$(ITCL_VERSION)/; fi
 	if test "$(LIBITK_SO)"  != "" ; then cp $(LIBITK_SO)  $(LIBDIR)/itk$(ITK_VERSION)/; fi
+	if test "$(ITCL_pkg)" != "" ; then cp $(ITCL_pkg) $(LIBDIR)/itcl$(ITCL_VERSION)/; fi
+	if test "$(ITK_pkg)"  != "" ; then cp $(ITK_pkg)  $(LIBDIR)/itk$(ITK_VERSION)/; fi
 	-rm -rf $(DELETE_LINKS)
 
 
-# in Debian the Itcl&Itk pkgIndex.tcl contain a hard-coded /usr/lib
-# directory. What a stupidity! Fix it.
+# in Debian the Itcl&Itk pkgIndex.tcl contain a hard-coded directory
+# and the files are scattered in /usr/lib and /usr/share. Fix it.
 
 debian_stupid:
 	for file in $(LIBDIR)/itcl$(ITCL_VERSION)/pkgIndex.tcl $(LIBDIR)/itk$(ITK_VERSION)/pkgIndex.tcl; do \
 	if test -f $$file; then \
-		sed 's/\/usr lib/$$dir/' $$file > /tmp/pkg; cp /tmp/pkg $$file; \
+		sed 's/\/usr lib x86_64-linux-gnu/$$dir/' $$file > /tmp/pkg; cp /tmp/pkg $$file; \
 	fi; done 
 
 starkit:

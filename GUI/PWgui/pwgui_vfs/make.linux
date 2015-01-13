@@ -23,10 +23,15 @@ ITCL_LIBDIR     = $(prefix)/itcl$(ITCL_VERSION)
 ITK_LIBDIR      = $(prefix)/itk$(ITK_VERSION)
 IWIDGETS_LIBDIR = $(prefix)/iwidgets$(IWIDGETS_VERSION)
 
-# define these two vars if libitcl.so and libitk.so needs to be copied
-# separately
-LIBITCL_SO = /usr/lib/libitcl$(ITCL_VERSION).so.1
-LIBITK_SO  = /usr/lib/libitk$(ITK_VERSION).so.1
+# define the following four vars if libitcl.so and libitk.so needs to
+# be copied separately
+libdir=/usr/lib/x86_64-linux-gnu
+LIBITCL_SO = $(libdir)/libitcl$(ITCL_VERSION).so.1
+LIBITK_SO  = $(libdir)/libitk$(ITK_VERSION).so.1
+
+pkgdir=/usr/lib/tcltk/x86_64-linux-gnu
+ITCL_pkg = $(pkgdir)/itcl$(ITCL_VERSION)/pkgIndex.tcl
+ITK_pkg  = $(pkgdir)/itk$(ITK_VERSION)/pkgIndex.tcl
 
 # if we have some dangling links or some files that are not really
 # needed we should delete them ...
