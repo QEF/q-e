@@ -138,6 +138,17 @@ proc ::pwscf::readFilter::logicalFlag {line} {
     return $line
 }
 
+proc ::pwscf::readFilter::verbosityFlag {line} {
+    # PURPOSE
+    # Convert all variants of ph.x's verbosity flag to either 'low' or 'high'
+    set optList {
+	{'high', 'debug', 'medium'}
+	{'low', 'default', 'minimal'}
+    }
+
+    return [replaceVarFlag $line verbosity $optList]
+}
+
 proc ::pwscf::readFilter::purifyCardLine {cardLine} {
     # PURPOSE
     # Purify the card-line, which can hold something like: "ATOMIC_POSITIONS { alat }",
@@ -180,6 +191,9 @@ proc ::pwscf::readFilter::default {moduleObj channel {filterMode logical} {replL
     # mode=logical repleace all possible values of Fortran logical
     #              variables with .true. or .false.
     #
+    # mode=verbosity  replace all possible values of ph.x's verbosity flags with either
+    #                 'low' or 'high'
+    #
     # The value of filterMode is cumulative, i.e., "amass logical" is
     # allowed
     #    
@@ -189,8 +203,10 @@ proc ::pwscf::readFilter::default {moduleObj channel {filterMode logical} {replL
     # 
     set amass   0
     set logical 0
+    set verbosity 0
     if { [string match "*amass*"   $filterMode] } { set amass   1 }
     if { [string match "*logical*" $filterMode] } { set logical 1 }
+    if { [string match "*verbosity*" $filterMode] } { set verbosity 1 }
 
     set maxIndex 0
     set output   {}
@@ -201,6 +217,9 @@ proc ::pwscf::readFilter::default {moduleObj channel {filterMode logical} {replL
 	}
 	if { $logical } {
 	    set _line    [logicalFlag $_line]       
+	}
+	if { $verbosity } {
+	    set _line    [verbosityFlag $_line]
 	}
 	if { $replList != "" } {
 	    foreach repl $replList {
