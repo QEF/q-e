@@ -382,7 +382,7 @@ help disk_io -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>disk_io</b></big>
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Default: </em> 'low'
+<br><li> <em>Default: </em> see below
          </li>
 <br><li> <em>Description:</em>
 </li>
@@ -400,11 +400,11 @@ Specifies the amount of disk I/O activity
           ('scf', 'nscf', 'bands' calculations; some data
            may be written anyway for other calculations)
 
-Note that the amount of needed RAM increases as the amount
-of I/O decreases! IMPORTANT: default has been changed to 'low'.
+Default is 'low' for the scf case, 'medium' otherwise.
+Note that the needed RAM increases as disk I/O decreases!
 It is no longer needed to specify 'high' in order to be able
 to restart from an interrupted calculation (see "restart_mode")
-but you cannot restart from disk_io='none'
+but you cannot restart in disk_io='none'
          </pre></blockquote>
 </ul>      
       
@@ -895,6 +895,10 @@ non-scf calculation, if you are restarting from a previous
 run, or restarting from an interrupted run.
 If you fix the magnetization with "tot_magnetization",
 you should not specify starting_magnetization.
+In the spin-orbit case starting with zero
+starting_magnetization on all atoms imposes time reversal
+symmetry. The magnetization is never calculated and
+kept zero (the internal variable domag is .FALSE.).
          </pre></blockquote>
 </ul>      
       
@@ -1167,10 +1171,11 @@ help occupations -helpfmt helpdoc -helptext {
 
 'fixed' :       for insulators with a gap
 
-'from_input' :  The occupation are read from input file.
-                Requires "nbnd" to be set in input.
-                Occupations should be consistent with the
-                value of "tot_charge".
+'from_input' :  The occupation are read from input file,
+                card OCCUPATIONS. Option valid only for a
+                single k-point, requires "nbnd" to be set
+                in input. Occupations should be consistent
+                with the value of "tot_charge".
          </pre></blockquote>
 </ul>      
       
@@ -1475,7 +1480,27 @@ gygi-baldereschi : appropriate for cubic and quasi-cubic supercells
 vcut_spherical : appropriate for cubic and quasi-cubic supercells
 vcut_ws : appropriate for strongly anisotropic supercells, see also
           ecutvcut.
-none : sets Coulomb potential at G,q=0 to 0.0
+none : sets Coulomb potential at G,q=0 to 0.0 (required for GAU-PBE)
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help x_gamma_extrapolation -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>x_gamma_extrapolation</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .true.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Specific for EXX. If true, extrapolate the G=0 term of the
+potential (see README in examples/EXX_example for more)
+Set this to .false. for GAU-PBE.
          </pre></blockquote>
 </ul>      
       
@@ -1534,8 +1559,8 @@ help lda_plus_u -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Status: </em>
 DFT+U (formerly known as LDA+U) currently works only for
-a few selected elements. Modify PW/set_hubbard_l.f90 and
-PW/tabd.f90 if you plan to use DFT+U with an element that
+a few selected elements. Modify flib/set_hubbard_l.f90 and
+PW/src/tabd.f90 if you plan to use DFT+U with an element that
 is not configured there.
          </li>
 <br><li> <em>Description:</em>
@@ -1686,7 +1711,7 @@ Currently available choices:
 
 'file':         use the information from file "prefix".atwfc that must
                 have been generated previously, for instance by pmw.x
-                (see PP/poormanwannier.f90 for details).
+                (see PP/src/poormanwannier.f90 for details).
 
 'pseudo':       use the pseudopotential projectors. The charge density
                 outside the atomic core radii is excluded.
@@ -1993,21 +2018,8 @@ Currently available choices:
          "Periodic boundary conditions in ab initio
          calculations" , Phys.Rev.B 51, 4014 (1995)
 
-'dcc' :  density counter charge correction CURRENTLY DISABLED
-         The electrostatic problem is solved in open boundary
-         conditions (OBC). This approach provides the correct
-         scf potential and energies (not just a correction to
-         energies as 'mp'). BEWARE: the molecule should be
-         centered around the middle of the cell, not around
-         the origin (0,0,0).
-         Theory described in:
-         I.Dabo, B.Kozinsky, N.E.Singh-Miller and N.Marzari,
-         "Electrostatic periodic boundary conditions and
-         real-space corrections", Phys.Rev.B 77, 115139 (2008)
-
-'martyna-tuckerman', 'm-t', 'mt' : Martyna-Tuckerman correction.
-         As for the dcc correction the scf potential is also
-         corrected. Implementation adapted from:
+'martyna-tuckerman', 'm-t', 'mt' : Martyna-Tuckerman correction
+         to both total energy and scf potential. Adapted from:
          G.J. Martyna, and M.E. Tuckerman,
          "A reciprocal space based method for treating long
          range interactions in ab-initio and force-field-based
@@ -2283,6 +2295,95 @@ PW86PBE.
 For other functionals, see:
    http://gatsby.ucmerced.edu/wiki/XDM_damping_function_parameters
    A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013)
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help space_group -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>space_group</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+The number of the space group of the crystal, as given
+                in the International Tables of Crystallography A (ITA).
+                This allows to give in input only the inequivalent atomic
+                positions. The positions of all the symmetry equivalent atoms
+                are calculated by the code. Used only when the atomic positions
+                are of type crystal_sg.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help uniqueb -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>uniqueb</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Used only for monoclinic lattices. If .TRUE. the b
+                 unique ibrav (-12 or -13) are used, and symmetry
+                 equivalent positions are chosen assuming that the
+                 two fold axis or the mirror normal is parallel to the
+                 b axis. If .FALSE. it is parallel to the c axis.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help origin_choice -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>origin_choice</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 1
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Used only for space groups that in the ITA allow
+                 the use of two different origins. origin_choice=1,
+                 means the first origin, while origin_choice=2 is the
+                 second origin.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help rhombohedral -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>rhombohedral</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .TRUE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Used only for rhombohedral space groups.
+                 When .TRUE. the coordinates of the inequivalent atoms are
+                 given with respect to the rhombohedral axes, when .FALSE.
+                 the coordinates of the inequivalent atoms are given with
+                 respect to the hexagonal axes. They are converted internally
+                 to the rhombohedral axes and ibrav=5 is used in both cases.
          </pre></blockquote>
 </ul>      
       
@@ -2805,29 +2906,6 @@ help ion_positions -helpfmt helpdoc -helptext {
 
 'from_input' : restart the simulation with atomic positions read
               from standard input, even if restarting.
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help phase_space -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>phase_space</b></big>
-</li>
-<br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Default: </em> 'full'
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-'full' :           the full phase-space is used for the ionic
-                   dynamics.
-
-'coarse-grained' : a coarse-grained phase-space, defined by a set
-                   of constraints, is used for the ionic dynamics
-                   (used for calculation of free-energy barriers)
          </pre></blockquote>
 </ul>      
       
@@ -3388,7 +3466,9 @@ help atomic_species -helpfmt helpdoc -helptext {
 <blockquote><pre>
 label of the atom. Acceptable syntax:
 chemical symbol X (1 or 2 characters, case-insensitive)
-or "Xn", n=0,..., 9; "X_*", "X-*" (e.g. C1, As_h)
+or chemical symbol plus a number or a letter, as in
+"Xn" (e.g. Fe1) or "X_*" or "X-*" (e.g. C1, C_h;
+max total length cannot exceed 3 characters)
                   </pre></blockquote>
 </ul><ul>
 <li> <em>Variable: </em><big><b>Mass_X</b></big>
@@ -3445,6 +3525,16 @@ crystal : atomic positions are in crystal coordinates, i.e.
           in relative coordinates of the primitive lattice
           vectors as defined either in card CELL_PARAMETERS
           or via the ibrav + celldm / a,b,c... variables
+
+crystal_sg : atomic positions are in crystal coordinates, i.e.
+          in relative coordinates of the primitive lattice.
+          This option differs from the previous one because
+          in this case only the symmetry inequivalent atoms
+          are given. The variable space_group must indicate
+          the space group number used to find the symmetry
+          equivalent atoms. The other variables that control
+          this option are uniqueb, origin_choice, and
+          rhombohedral.
          </pre>
       
 }
@@ -3488,6 +3578,22 @@ NOTE: each atomic coordinate can also be specified as a simple algebraic express
 
     Please note that this feature is NOT supported by XCrysDen (which will
     display a wrong structure, or nothing at all).
+    When atomic positions are of type crystal_sg coordinates can be given
+    in the following three forms (Wyckoff positions):
+    C  1a
+    C  8g   x
+    C  24m  x y
+    The first form must be used when the Wyckoff letter determines uniquely
+    all three coordinates, the second form when the Wyckoff letter
+    and one coordinate are needed, the third form when one letter and two
+    coordinates are needed.
+    The forms:
+    C 8g  x  x  x
+    C 24m x  x  y
+    are not allowed, but
+    C x x x
+    C x x y
+    are correct.
                         </pre></blockquote>
 </ul><ul>
 <li> <em>Variables: </em><big><b>if_pos(1), if_pos(2), if_pos(3)</b></big>
@@ -3502,6 +3608,9 @@ component i of the force for this atom is multiplied by if_pos(i),
 which must be either 0 or 1.  Used to keep selected atoms and/or
 selected components fixed in MD dynamics or
 structural optimization run.
+
+With crystal_sg atomic coordinates the constraints are copied in all equivalent
+atoms.
                            </pre></blockquote>
 </ul>   
     
@@ -3817,6 +3926,30 @@ For spin-polarized calculations, these are majority spin states.
 Occupations of minority spin states (MAX 10 PER ROW)
 To be specified only for spin-polarized calculations.
                      </pre></blockquote>
+</ul>   
+    
+}
+
+
+# ------------------------------------------------------------------------
+help atomic_forces -helpfmt helpdoc -helptext {
+    <ul>
+<li> <em>Variable: </em><big><b>X</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre> label of the atom as specified in ATOMIC_SPECIES
+                  </pre></blockquote>
+</ul><ul>
+<li> <em>Variables: </em><big><b>fx, fy, fz</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+external force on atom X (cartesian components, Ry/a.u. units)
+                  </pre></blockquote>
 </ul>   
     
 }

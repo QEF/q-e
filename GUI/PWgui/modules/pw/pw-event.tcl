@@ -137,6 +137,7 @@ tracevar how_lattice w {
 	    groupwidget cosABC enable
 	}
     }
+    varset ibrav -value [varvalue ibrav]
 }	    
 
 tracevar ibrav w {
@@ -144,37 +145,50 @@ tracevar ibrav w {
 	"Free lattice"             -
 	"Cubic P (sc)"             -
 	"Cubic F (fcc)"            -
-	"Cubic I (bcc)"           { set uses 1 }
+	"Cubic I (bcc)"           { set uses {1 A} }
 
 	"Hexagonal and Trigonal P" -
 	"Tetragonal P (st)"        -       
-	"Tetragonal I (bct)"      { set uses {1 3} }
+	"Tetragonal I (bct)"      { set uses {1 3   A C} }
 	"Trigonal R, 3fold axis c" -
-	"Trigonal R, 3fold axis <111>" { set uses {1 4} }
+	"Trigonal R, 3fold axis <111>" { set uses {1 4   A cosAB} }
 
 	"Orthorhombic P"                  -
 	"Orthorhombic base-centered(bco)" - 
 	"Orthorhombic face-centered"      -
-	"Orthorhombic body-centered"     { set uses {1 2 3} }
+	"Orthorhombic body-centered"     { set uses {1 2 3   A B C} }
 
 	"Monoclinic P, unique axis c" -
 	"Monoclinic P, unique axis b" -
-	"Monoclinic base-centered" { set uses {1 2 3 4} }
-	"Triclinic P" { set uses { 1 2 3 4 5 6 } }
+	"Monoclinic base-centered" { set uses {1 2 3 4   A B C cosAB} }
+	"Triclinic P" { set uses { 1 2 3 4 5 6   A B C cosAB cosAC cosBC } }
 	default {
 	    set uses {}
 	}
     }
-    for {set i 1} {$i <= 6} {incr i} {
-	if { [lsearch -exact $uses $i] < 0 } {		
 
-	    # the lattice doesn't need the $i-th parameter
-
-	    widget celldm($i) disable 
-	} else {
-	    widget celldm($i) enable 
+    switch -exact -- [varvalue how_lattice] {
+	celldm {
+	    for {set i 1} {$i <= 6} {incr i} {
+		if { [lsearch -exact $uses $i] < 0 } {		
+		    # the lattice doesn't need the $i-th parameter
+		    widget celldm($i) disable 
+		} else {
+		    widget celldm($i) enable 
+		}
+	    }
 	}
-    }    
+	abc {
+	    foreach par {A B C  cosAB cosAC cosBC} {
+		if { [lsearch -exact $uses $par] < 0 } {
+		    # the lattice doesn't need the $par parameter
+		    widget $par disable
+		} else {
+		    widget $par enable
+		}
+	    }
+	}
+    }
 
     if { [vartextvalue ibrav] == "Free lattice" } {
 	groupwidget cards__CELL_PARAMETERS enable
@@ -186,24 +200,26 @@ tracevar ibrav w {
 tracevar nat w {
     set nat [varvalue nat]
     widgetconfigure atomic_coordinates  -rows $nat
-    #widgetconfigure atomic_coordinates_last_image -rows $nat
-    #
-    #set ni [varvalue path_inter_nimages]
-    #if { $ni == "" } { set ni 0 }
-    #for {set i 1} {$i <= $ni} {incr i} {
-    #	widgetconfigure atomic_coordinates_${i}_inter -rows $nat
-    #}
+    widgetconfigure atomic_forces       -rows $nat
+    varset specify_atomic_forces -value [varvalue specify_atomic_forces]
 }
+
 tracevar ntyp w {
     set ntyp [varvalue ntyp]
-    widgetconfigure atomic_species -rows $ntyp
-    widgetconfigure starting_magnetization -end $ntyp
-    widgetconfigure angle1 -end $ntyp
+    widgetconfigure atomic_species -rows $ntyp;
+    
+    widgetconfigure starting_magnetization -end $ntyp; # nspin-dependent
+    varset nspin -value [varvalue nspin]
+
+    widgetconfigure angle1 -end $ntyp; # noncolin
     widgetconfigure angle2 -end $ntyp
-    widgetconfigure Hubbard_U     -end $ntyp
+    varset noncolin -value [varvalue noncolin]
+    
+    widgetconfigure Hubbard_U     -end $ntyp; # lda_plus_u
     widgetconfigure Hubbard_J0    -end $ntyp
     widgetconfigure Hubbard_alpha -end $ntyp
     widgetconfigure Hubbard_beta  -end $ntyp
+    varset lda_plus_u -value [varvalue lda_plus_u]
 }
 
 
@@ -412,14 +428,6 @@ tracevar ion_dynamics w {
     } else {
 	groupwidget bfgs disable
     }
-
-    ## CONSTRAINTS
-    #if { ( $iond == "'constrained-damp'" && $calc == "'relax'" ) \
-    #	     || ( $iond == "'constrained-verlet'" && $calc == "'md'" ) } {
-    #	groupwidget constraints_card enable
-    #} else {
-    #	groupwidget constraints_card disable
-    #}	     
 }
 
 tracevar n_fe_step w {
@@ -439,7 +447,6 @@ tracevar n_fe_step w {
 tracevar K_POINTS_flags w {
     switch -exact -- [varvalue K_POINTS_flags] {
 	tpiba -	crystal - crystal_b - tpiba_b - {} {
-	    #widget nks enable
 	    groupwidget nks_line   enable
 	    groupwidget kmesh_line disable
 	    widget kpoints enable
@@ -458,6 +465,14 @@ tracevar K_POINTS_flags w {
 	    groupwidget kmesh_line disable
 	    widget kpoints disable
 	    widgetconfigure kpoints -cols 4 -rows 0
+	}
+
+	crystal_c - tpiba_c - {} {
+	    varset nks -value 3
+	    groupwidget nks_line   enable
+	    groupwidget kmesh_line disable
+	    widget kpoints enable
+	    widgetconfigure kpoints -cols 4 -rows [varvalue nks]  
 	}
     }
 }
@@ -506,14 +521,21 @@ tracevar assume_isolated w {
     }
 }
 
+tracevar specify_atomic_forces w {
+    if { [vartextvalue specify_atomic_forces] == "Yes" } {
+	groupwidget atomic_forces_specs enable
+    } else {
+	groupwidget atomic_forces_specs disable
+    }
+}
 
 # ------------------------------------------------------------------------
 # POST-PROCESSING: assign default values for "traced" variables, ...
 # ------------------------------------------------------------------------
 postprocess {    
     varset calculation     -value 'scf'
-    varset how_lattice     -value celldm
     varset ibrav           -value {}
+    varset how_lattice     -value celldm
     varset nspin           -value {}
     varset tefield         -value {}
     varset lda_plus_u      -value {}
@@ -530,5 +552,7 @@ postprocess {
 
     # unused variables
     groupwidget unused_1 disable
-    #groupwidget vdw_obsolete disable    
+    #groupwidget vdw_obsolete disable
+
+    varset specify_atomic_forces -value .false.
 }

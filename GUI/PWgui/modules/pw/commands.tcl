@@ -328,6 +328,64 @@ proc ::pwscf::pwLoadKPoints {moduleObj} {
 
 
 # ------------------------------------------------------------------------
+#  ::pwscf::pwLoadAtomicForces --
+# ------------------------------------------------------------------------
+
+proc ::pwscf::pwLoadAtomicForces {moduleObj} {
+    variable pwscf
+
+    if { [info exists pwscf($moduleObj,LASTDIR,atomic_forces)] } {
+	set dir $pwscf($moduleObj,LASTDIR,atomic_forces)
+    } else {
+	set dir pwscf(PWD)	
+    }
+
+    #
+    # query filename
+    #
+    set file [tk_getOpenFile -initialdir [pwd] -title "Load Atomic Forces"]
+    if { $file == "" } {
+	return
+    }
+    set pwscf($moduleObj,LASTDIR,atomic_forces) [file dirname $file]
+    
+    #
+    # read the file
+    #
+    set channel [open $file r]
+
+    # find the ATOMIC_FORCES card
+
+    set ifor 0
+    set _readForces 0
+    
+    while {1} {
+	
+	set _line [_getsNonEmptyLine $channel]
+	
+	if { [string match "ATOMIC_FORCES" $_line] } {
+	    set _readForces 1
+	    continue
+	} 
+	
+	if { $_readForces } {
+	    
+	    incr ifor
+	    
+	    if {[llength $_line] == 4 } {
+		$moduleObj varset atomic_forces($ifor,1)  -value [lindex $_line 0]
+		$moduleObj varset atomic_forces($ifor,2)  -value [lindex $_line 1]
+		$moduleObj varset atomic_forces($ifor,3)  -value [lindex $_line 2]
+		$moduleObj varset atomic_forces($ifor,4)  -value [lindex $_line 3]
+	    } else {
+		# TODO: raise an error
+	    }
+	}
+    }
+}
+
+
+# ------------------------------------------------------------------------
 #  ::pwscf::pwReadFilter --
 #  
 # TODO: check is &SYSTEM exists, if not the input file is not pw.x input
@@ -382,26 +440,6 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 	}
     }
 
-    ##
-    ## count the number of intermediate images
-    ##
-    #seek $channel 0 start
-    #set ni 0
-    #while { ! [eof $channel] } {
-    #	gets $channel _line
-    #	if { [string match "*intermediate_image*" $_line] } {
-    #	    incr ni
-    #	}
-    #}
-    #$moduleObj varset path_inter_nimages -value $ni
-
-    #if { ! [info exists SYSTEM_namelist_content] } {	
-    #	# there is no SYSTEM namlist. The input file is not a pw.x
-    #	# input file	
-    #	$moduleObj readFileError "Input file is not in a pw.x input-file format"
-    #	return
-    #}
-
     foreach record [split $SYSTEM_namelist_content ,\n] {
 	set var [lindex [split $record =] 0]
 	if { [::tclu::stringMatch celldm* $var $::guib::settings(INPUT.nocase)] } {
@@ -441,9 +479,9 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
     #   ATOMIC_SPECIES
     #   ATOMIC_POSITIONS
     #   K_POINTS
-    #   CLIMBING_IMAGES
     #   CONSTRAINTS
-    #   COLLECTIVE_VARS
+    #   OCCUPATIONS
+    #   ATOMIC_FORCES
 
     # The content of OCCUPATIONS card is managed by the "text"
     # keyword, hence we have to store the content of OCCUPATIONS
@@ -475,19 +513,17 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 	} elseif { [string match "OCCUPATIONS*" $_line] } {
 	    set what OCCUPATIONS
 	    set _line [readFilter::purifyCardLine $_line]
-	} elseif { [string match "CLIMBING_IMAGES*" $_line] } {
-	    set what CLIMBING_IMAGES
-	    set _line [readFilter::purifyCardLine $_line]
 	} elseif { [string match "CONSTRAINTS*" $_line] } {
 	    set what CONSTRAINTS
 	    set _line [readFilter::purifyCardLine $_line]
-	} elseif { [string match "COLLECTIVE_VARS*" $_line] } {
-	    set what COLLECTIVE_VARS
+	} elseif { [string match "ATOMIC_FORCES*" $_line] } {
+	    puts stderr "ATOMIC_FORCES record found"
+	    set what ATOMIC_FORCES
 	    set _line [readFilter::purifyCardLine $_line]
 	}
-	
+
 	if { $what == {} } {	    
-	    
+		
 	    #---------------------------------------------
 	    # VARIABLES: handle multiple flags options
 	    #---------------------------------------------
@@ -532,7 +568,7 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 	}
 	set _read 1
     }
-
+    
     # close the old channel
     close $channel
 
@@ -563,17 +599,14 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
     if { [info exists K_POINTS] } {
 	puts $newChannel $K_POINTS
     }
-    # write the CLIMBING_IMAGES
-    if { [info exists CLIMBING_IMAGES] } {
-	puts $newChannel $CLIMBING_IMAGES
-    }
     # write the CONSTRAINTS
     if { [info exists CONSTRAINTS] } {
 	puts $newChannel $CONSTRAINTS
     }
-    # write the COLLECTIVE_VARS
-    if { [info exists COLLECTIVE_VARS] } {
-	puts $newChannel $COLLECTIVE_VARS
+    # write the ATOMIC_FORCES
+    if { [info exists ATOMIC_FORCES] } {
+	$moduleObj varset specify_atomic_forces -value .true.
+	puts $newChannel $ATOMIC_FORCES
     }
 
     # store the OCCUPATIONS record

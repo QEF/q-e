@@ -475,8 +475,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    }
 		}
 		
-		# insert here ...
-
 		separator -label "--- Noncolinear calculation ---"
 
 		var noncolin {
@@ -578,6 +576,12 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    }
 		}
 
+		var x_gamma_extrapolation {
+		    -label "Extrapolate the G=0 term of the potential for EXX (x_gamma_extrapolation):"
+		    -textvalue {No Yes}
+		    -value     {.false.  .true.}
+		    -widget    radiobox
+		}
 		var ecutvcut {
 		    -label "Reciprocal space cutoff for exxdiv_treatment (ecutvcut):"
 		    -validate fortranreal
@@ -768,7 +772,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			var xdm_a1 -label "Damping function parameter a1 (xdm_a1):" -validate fortranreal
 			var xdm_a2 -label "Damping function parameter a1 (xdm_a2):" -validate fortranreal
 		    }
-
+		
 		    group vdw_obsolete -name "Obsolete vdW variables:" -decor normal {
 			
 			var london {
@@ -786,6 +790,40 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			}  
 		    }
 		}
+
+		separator -label "--- Space group: crystal type structure specs ---"
+
+		group spaceGroup {
+		    var space_group {
+			-label "Crystal space group number (space_group):"
+			-validate nonnegint
+		    }
+
+		    var origin_choice {
+			-label "Which choice of origin to use (origin_choice):"
+			-widget radiobox
+			-value  {1 2}
+			-textvalue {"first choice"  "second choice"}
+		    }
+		    
+		    group for_monoclinc -name "For monoclinic lattice:" -decor normal {
+			var uniqueb {
+			    -label "Set the axis b as unique (uniqueb):"
+			    -textvalue {Yes No}
+			    -value     {.true. .false.}
+			    -widget    radiobox
+			}
+		    }
+		    
+		    group for_rhombohedral -name "For rhombohedral lattice:" -decor normal {
+			var rhombohedral {
+			    -label "Specify the coordinates with respect to rhombohedral axes (rhombohedral):"
+			    -textvalue {Yes No}
+			    -value     {.true. .false.}
+			    -widget    radiobox
+			}
+		    }
+		}		    
 
 		separator -label "--- FFT mesh (hard grid) for charge density ---"
 
@@ -1026,18 +1064,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -value { 'default' 'from_input' }
 		}
                 
-                var phase_space {
-		    -label "Type of phase-space (phase_space):"
-                    -textvalue {
-			"The standard configuration space  <full>"
-			"Coarse-grained phase-space defined by few order parameters  <coarse-grained>"
-		    }
-		    -value {
-			'full' 'coarse-grained'
-		    }
-		    -widget optionmenu
-                }
-
 		var pot_extrapolation {
 		    -text "Extrapolation for the potential"
 		    -label "Type of extrapolation (pot_extrapolation):"
@@ -1305,8 +1331,9 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			"Cartesian in BOHR  <bohr>"
 			"Cartesian in ANGSTROMS  <angstroms>"
 			"Internal crystal coordinates  <crystal>"
+			"Internal crystal coordinates of inequivalent atoms <crystal_sg>"
 		    }
-		    -value {alat bohr angstrom crystal}	    
+		    -value {alat bohr angstrom crystal crystal_sg}	    
 		    -widget radiobox
 		    -default "Cartesian in ALAT (i.e. in length units of celldm(1))  <alat>"
 		}
@@ -1354,9 +1381,11 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			"Gamma point only  <gamma>"
 			"Manual \"2pi/a\" specification for band structure plot <tpiba_b>"
 			"Manual \"crystal\" specification for band structure plot <crystal_b>"
+			"Manual \"2pi/a\" specification for band structure contour plot <tpiba_c>"
+			"Manual \"crystal\" specification for band structure contour plot <crystal_c>"
 		    }
 		    -value {
-			tpiba crystal automatic gamma tpiba_b crystal_b
+			tpiba crystal automatic gamma tpiba_b crystal_b tpiba_c crystal_c
 		    }
 		    -widget radiobox
 		    -default "Manual specification in 2pi/a units  <tpiba>"
@@ -1401,7 +1430,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
     ########################################################################
     ##                                                                    ##
-    ##         PAGE: CONSTRAINTS & OCCUPATIONS          ##
+    ##         PAGE: CONSTRAINTS, OCCUPATIONS & ATOMIC_FORCES             ##
     ##                                                                    ##
     ########################################################################
     page otherPage -name "Other Cards" {
@@ -1455,8 +1484,39 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 	    keyword occupations_key OCCUPATIONS\n
 	    text occupations_table \
 		-caption "Syntax for NON-spin polarized case:\n     u(1)  ....   ....   ....  u(10)\n     u(11) .... u(nbnd)\n\nSyntax for spin-polarized case:\n     u(1)  ....   ....   ....  u(10)\n     u(11) .... u(nbnd)\n     d(1)   ....  ....   ....  d(10)\n     d(11) .... d(nbnd)" \
-		-label   "Specify occupation of each state (from 1 to nbnd) such that 10 occupations per are written per line:" \
+		-label   "Specify occupation of each state (from 1 to nbnd) such that 10 occupations are written per line:" \
 		-readvar ::pwscf::pwscf($this,OCCUPATIONS)
+	}
+
+	#
+	# ATOMIC_FORCES
+	#
+
+	group atomic_forces_group -name "Card: ATOMIC_FORCES" -decor normal {
+
+	    auxilvar specify_atomic_forces {
+		-label     "Specify atomic forces:"
+		-widget    radiobox
+		-textvalue { Yes No }	      
+		-value     { .true. .false. }
+	    }
+
+	    group atomic_forces_specs -decor none {
+		keyword atomic_forces_key ATOMIC_FORCES\n
+
+		table atomic_forces {
+		    -caption   "Atomic forces:"
+		    -head      {Atomic-label Fx-component Fy-component Fz-component}
+		    -validate  {string fortranreal fortranreal fortranreal}
+		    -cols      4
+		    -rows      1
+		    -outfmt    {"  %3s" "  %14.9f" %14.9f %14.9f}
+		    -widgets   {entry entry entry entry}
+		}
+		
+		loaddata atomic_forces ::pwscf::pwLoadAtomicForces \
+		    "Load atomic forces from file ..."    
+	    }
 	}
     }
     
