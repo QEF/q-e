@@ -41,9 +41,6 @@ CONTAINS
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: my_world_comm
     INTEGER :: ierr
-
-    INTEGER :: PROVIDED    
-    INTEGER :: MPI_THREAD_FUNNELED
     !
     world_comm = my_world_comm
     !
@@ -53,11 +50,7 @@ CONTAINS
     CALL mpi_initialized ( library_mode, ierr)
     IF (ierr/=0) CALL mp_stop( 8000 )
     IF (.NOT. library_mode ) THEN
-#if defined(__OPENMP)
-       CALL mpi_init_thread(MPI_THREAD_FUNNELED,PROVIDED,ierr)
-#else
        CALL mpi_init(ierr)
-#endif
        IF (ierr/=0) CALL mp_stop( 8001 )
     END IF
 #endif
