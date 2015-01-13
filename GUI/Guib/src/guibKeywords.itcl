@@ -1333,7 +1333,7 @@ itcl::body ::guib::moduleObj::readfilter  {cmd}    { set readFilter $cmd }
 #  DESCRIPTION
 # -- GUIB keyword !!!
 #    Keyword "writefilter" is used for telling the GUIB that when an
-# output is written, it should post-process by the proc specified by
+# output is written, it should be post-processed by the proc specified by
 # "writefilter" keyword, before writting to a file or stdout. A
 # typical usage of writefilter keyword is in situations where GUIB
 # cannot handle well the input-file, and we need some pre-processing
