@@ -1,5 +1,6 @@
 Sample input for the PHONON (ph.x) program 
  &INPUTPH
+ verbosity = 'medium'
                     amass(1) = 1.000000,
                     amass(2) = 2.000000,
                     amass(3) = 3.000000,
