@@ -157,18 +157,18 @@ help nmix_ph -helpfmt helpdoc -helptext {
 
 
 # ------------------------------------------------------------------------
-help iverbosity -helpfmt helpdoc -helptext {
+help verbosity -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>iverbosity</b></big>
+<li> <em>Variable: </em><big><b>verbosity</b></big>
 </li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 0
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'default'
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-0 = short output
-1 = verbose output
+'debug', 'high', 'medium'   = verbose output
+'low', 'default', 'minimal' = short output
          </pre></blockquote>
 </ul>      
       

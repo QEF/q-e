@@ -417,10 +417,10 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 
 		separator -label "--- Misc control options ---"
 
-		var iverbosity {
-		    -label     "Verbosity of output (iverbosity):"
-		    -textvalue {"short output" "verbose output"}
-		    -value     {0 1}
+		var verbosity {
+		    -label     "Verbosity of output (verbosity):"
+		    -textvalue {"low" "high"}
+		    -value     {'low' 'high'}
 		    -widget    optionmenu
 		}
 		var reduce_io {

@@ -19,5 +19,6 @@ proc ::pwscf::phReadFilter {moduleObj channel} {
     if { $status == 0 } {
 	$moduleObj readFileWrongFormat ph.x $errMsg
     }
-    return [readFilter::default $moduleObj $channel {logical amass}]
+
+    return [readFilter::default $moduleObj $channel {logical amass verbosity}]
 }

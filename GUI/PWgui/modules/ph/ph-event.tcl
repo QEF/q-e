@@ -102,13 +102,13 @@ postprocess {
     widget dvscf_star forget
     widget drho_star  forget
 
-    varset ldisp     -value  .false.
-    varset lraman    -value  .false.
-    varset elop      -value  .false.
+    varset ldisp     -value  {}; #.false.
+    varset lraman    -value  {}; #.false.
+    varset elop      -value  {}; #.false.
     varset trans     -value  .true.
-    varset epsil     -value  .false.
-    varset recover   -value  .false.
-    varset fpol      -value  .false.
+    varset epsil     -value  {}; #.false.
+    varset recover   -value  {}; #.false.
+    varset fpol      -value  {}; #.false.
     varset reps_type -value  {}
     varset nat_todo  -value  {}
     varset qplot     -value  {}
