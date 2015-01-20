@@ -211,7 +211,7 @@ c_phase_field.o : ../../Modules/ions_base.o
 c_phase_field.o : ../../Modules/kind.o
 c_phase_field.o : ../../Modules/mp.o
 c_phase_field.o : ../../Modules/mp_bands.o
-c_phase_field.o : ../../Modules/mp_world.o
+c_phase_field.o : ../../Modules/mp_pools.o
 c_phase_field.o : ../../Modules/noncol.o
 c_phase_field.o : ../../Modules/recvec.o
 c_phase_field.o : ../../Modules/uspp.o
@@ -1299,6 +1299,7 @@ pw2blip.o : ../../Modules/mp_pools.o
 pw2casino.o : ../../Modules/control_flags.o
 pw2casino.o : ../../Modules/io_files.o
 pw2casino.o : ../../Modules/kind.o
+pw2casino.o : ../../Modules/mp_bands.o
 pw2casino.o : ../../Modules/mp_images.o
 pw2casino.o : ../../Modules/mp_pools.o
 pw2casino.o : ../../Modules/plugin_flags.o
@@ -1314,6 +1315,7 @@ pw2casino_write.o : ../../Modules/io_global.o
 pw2casino_write.o : ../../Modules/ions_base.o
 pw2casino_write.o : ../../Modules/kind.o
 pw2casino_write.o : ../../Modules/mp.o
+pw2casino_write.o : ../../Modules/mp_bands.o
 pw2casino_write.o : ../../Modules/mp_pools.o
 pw2casino_write.o : ../../Modules/recvec.o
 pw2casino_write.o : ../../Modules/run_info.o

@@ -15,6 +15,7 @@ SUBROUTINE pw2casino()
   USE kinds,         ONLY : DP
   !
   USE mp_images,     ONLY : nimage
+  USE mp_bands,      ONLY : nbgrp
   USE mp_pools,      ONLY : npool
   !
   USE control_flags, ONLY : istep, nstep
@@ -51,8 +52,8 @@ SUBROUTINE pw2casino()
   !
   IF ( use_pw2casino ) THEN
     !
-    IF ( npool > 1 .or. nimage > 1) THEN
-      CALL errore('pw2casino', 'pool or image parallelization not (yet) implemented',1)
+    IF ( npool > 1 .or. nimage > 1 .or. nbgrp > 1 ) THEN
+      CALL errore('pw2casino', 'pool/band/image parallelization not (yet) implemented',1)
     ENDIF
     !
     tmp_unit = find_free_unit()
