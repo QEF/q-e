@@ -292,6 +292,8 @@ openfil_pp.o : ../../Modules/control_flags.o
 openfil_pp.o : ../../Modules/io_files.o
 openfil_pp.o : ../../Modules/kind.o
 openfil_pp.o : ../../Modules/noncol.o
+openfil_pp.o : ../../PW/src/atomic_wfc_mod.o
+openfil_pp.o : ../../PW/src/ldaU.o
 openfil_pp.o : ../../PW/src/pwcom.o
 partialdos.o : ../../Modules/constants.o
 partialdos.o : ../../Modules/io_global.o
@@ -364,7 +366,9 @@ poormanwannier.o : ../../Modules/ions_base.o
 poormanwannier.o : ../../Modules/kind.o
 poormanwannier.o : ../../Modules/mp.o
 poormanwannier.o : ../../Modules/mp_global.o
+poormanwannier.o : ../../Modules/mp_pools.o
 poormanwannier.o : ../../Modules/mp_world.o
+poormanwannier.o : ../../Modules/noncol.o
 poormanwannier.o : ../../Modules/recvec.o
 poormanwannier.o : ../../Modules/uspp.o
 poormanwannier.o : ../../Modules/wavefunctions.o
