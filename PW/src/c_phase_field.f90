@@ -43,7 +43,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    USE gvect,   ONLY : ig_l2g
    USE mp,                   ONLY : mp_sum, mp_bcast
    USE mp_bands,             ONLY : intra_bgrp_comm
-   USE mp_world,             ONLY : world_comm
+   USE mp_pools,             ONLY : intra_pool_comm
    USE becmod,    ONLY : calbec,bec_type,allocate_bec_type,deallocate_bec_type
    USE spin_orb, ONLY: lspinorb
 !  --- Avoid implicit definitions ---
@@ -355,10 +355,11 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
          enddo
       ENDIF
    endif
-   if(phase_control==2) then
-      CALL mp_bcast(zetas,   ionode_id, world_comm )
-
-   endif
+   !
+   ! TODO: not sure which is the proper communicator here
+   !
+   if(phase_control==2) &
+      CALL mp_bcast(zetas,   ionode_id, intra_pool_comm )
 
 !  --- Start loop over spin ---
    DO is=1,nspinnc ! Include noncollinear case 
@@ -499,8 +500,8 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
                            aux_g(mapgm_global(ig_l2g(igk1(ig)),pdir))=psi1(ig,mb)
                            IF(noncolin) aux_g_2(mapgm_global(ig_l2g(igk1(ig)),pdir))=psi1(ig+npwx,mb)
                         ENDDO
-                        CALL mp_sum(aux_g(:),world_comm)
-                        IF (noncolin) CALL mp_sum(aux_g_2(:),world_comm) !non-collinear
+                        CALL mp_sum(aux_g(:),intra_bgrp_comm)
+                        IF (noncolin) CALL mp_sum(aux_g_2(:),intra_bgrp_comm) !non-collinear
                         DO ig=1,ngm
                            aux(ig,mb) = aux_g(ig_l2g(ig))
                            IF (noncolin) aux_2(ig,mb) = aux_g_2(ig_l2g(ig))
