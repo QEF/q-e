@@ -734,7 +734,7 @@ MODULE exx
     USE symm_base,            ONLY : nsym, s, sr, ftau
     USE mp_pools,             ONLY : npool, nproc_pool, me_pool, inter_pool_comm
     USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, init_index_over_band,&
-                                     inter_bgrp_comm, ibnd_start, ibnd_end
+                                     inter_bgrp_comm, ibnd_start, ibnd_end,nbgrp
     USE mp,                   ONLY : mp_sum
     USE funct,                ONLY : get_exx_fraction, start_exx,exx_is_active,&
                                      get_screening_parameter, get_gau_parameter
@@ -765,6 +765,9 @@ MODULE exx
     integer       :: find_current_k
 
     CALL start_clock ('exxinit')
+    !
+    IF ( nbgrp > 1 .AND. okvan ) &
+       CALL errore('exxinit','band parallelization not working with USPP',1)
     !
     !  prepare the symmetry matrices for the spin part
     !
