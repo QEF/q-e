@@ -37,7 +37,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   INTEGER :: v_siz, idx, ioff
   !
-#if defined(__CUDA) && !defined(__DISABLE_CUDA_VLOCPSI) && ( !defined(__PARA) || defined(__USE_3D_FFT) )
+#if defined(__CUDA) && !defined(__DISABLE_CUDA_VLOCPSI) && ( !defined(__MPI) || defined(__USE_3D_FFT) )
   CALL vloc_psi_gamma_gpu ( lda, n, m, psi, v, hpsi )
   RETURN
 #endif
@@ -226,7 +226,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   INTEGER :: v_siz, idx, ioff
   !
-#if defined(__CUDA) && !defined(__DISABLE_CUDA_VLOCPSI) && ( !defined(__PARA) || defined(__USE_3D_FFT) )
+#if defined(__CUDA) && !defined(__DISABLE_CUDA_VLOCPSI) && ( !defined(__MPI) || defined(__USE_3D_FFT) )
   CALL vloc_psi_k_gpu ( lda, n, m, psi, v, hpsi )
   RETURN
 #endif

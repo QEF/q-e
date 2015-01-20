@@ -476,9 +476,7 @@ CONTAINS
            
       end do
 
-#ifdef __PARA
       call mp_sum(  sigma, intra_pool_comm )
-#endif
 
       call dscal (9, 1.d0 / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3), sigma, 1)
 
@@ -557,9 +555,7 @@ CONTAINS
          
       enddo
 
-#ifdef __PARA
       call mp_sum(  sigma, intra_pool_comm )
-#endif
       
       deallocate( dkernel_of_dk )
       
