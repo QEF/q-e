@@ -317,8 +317,8 @@ SUBROUTINE phq_readin()
 30 CONTINUE
   CALL mp_bcast(ios, meta_ionode_id, world_comm )
   IF ( ios == 1234567 ) THEN
-     CALL errore( 'phq_readin' , &
-                 'iverbosity is obsolete, use "verbosity" instead', 1 )
+     CALL infomsg( 'phq_readin' , &
+                 'iverbosity is obsolete, use "verbosity" instead' )
   ELSE
      CALL errore( 'phq_readin', 'reading inputph namelist', ABS( ios ) )
   END IF
