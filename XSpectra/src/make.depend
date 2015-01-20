@@ -1,3 +1,4 @@
+banner_xspectra.o : ../../Modules/io_global.o
 gipaw_module.o : ../../Modules/atom.o
 gipaw_module.o : ../../Modules/cell_base.o
 gipaw_module.o : ../../Modules/constants.o

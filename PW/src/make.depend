@@ -1524,6 +1524,7 @@ save_in_cbands.o : ../../Modules/io_global.o
 save_in_cbands.o : ../../Modules/kind.o
 save_in_cbands.o : pwcom.o
 save_in_electrons.o : ../../Modules/io_files.o
+save_in_electrons.o : ../../Modules/io_global.o
 save_in_electrons.o : ../../Modules/kind.o
 save_in_electrons.o : pwcom.o
 scale_h.o : ../../Modules/cell_base.o

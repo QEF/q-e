@@ -16,8 +16,7 @@ XOBJS = \
 ./orthoUatwfc_k.o \
 ./read_k_points.o \
 ./reset_k_points_and_reinit.o \
-./banner_xspectra.o \
-./print_ef.o
+./banner_xspectra.o
 
 
 GIPAWOBJS=./paw_gipaw.o \
