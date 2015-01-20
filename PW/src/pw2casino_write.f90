@@ -31,6 +31,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE wavefunctions_module, ONLY : evc
    USE funct, ONLY : dft_is_meta
    USE mp_pools, ONLY: inter_pool_comm, intra_pool_comm, nproc_pool, me_pool
+   USE mp_bands, ONLY: intra_bgrp_comm, nbgrp
    USE mp, ONLY: mp_sum, mp_gather, mp_bcast, mp_get
    USE buffers,              ONLY : get_buffer
 
@@ -78,6 +79,8 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    INTEGER,SAVE :: ran_array_idx=-1
    REAL(DP),SAVE :: ran_array(Nran)
 
+   IF ( nbgrp > 1 ) CALL errore('pw2casino', &
+       'to be tested with band parallelization',1)
    dowrite=ionode.or..not.(gather.or.blip)
 
    ALLOCATE (idx (ngm) )
@@ -431,8 +434,8 @@ CONTAINS
       ENDDO
 
 #ifdef __MPI
-      CALL mp_sum( eloc,  intra_pool_comm )
-      CALL mp_sum( ek,    intra_pool_comm )
+      CALL mp_sum( eloc,  intra_bgrp_comm )
+      CALL mp_sum( ek,    intra_bgrp_comm )
       CALL mp_sum( ek,    inter_pool_comm )
       CALL mp_sum( enl,   inter_pool_comm )
       CALL mp_sum( demet, inter_pool_comm )
