@@ -319,7 +319,6 @@ SUBROUTINE phq_readin()
   IF ( ios == 1234567 ) THEN
      CALL infomsg( 'phq_readin' , &
                  'iverbosity is obsolete, use "verbosity" instead' )
-     iverbosity = 0
   ELSE IF ( ABS(ios) /= 0 ) THEN
      CALL errore( 'phq_readin', 'reading inputph namelist', ABS( ios ) )
   END IF
