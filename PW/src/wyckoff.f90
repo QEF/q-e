@@ -147,9 +147,18 @@ END SUBROUTINE clean_spacegroup
                   tmpy=outco(2,i,k)
                   tmpz=outco(3,i,k)
          
-                  outco(1,i,k)=tmpx-tmpy+tmpz
-                  outco(2,i,k)=tmpy+tmpz
-                  outco(3,i,k)=tmpz-tmpx
+!
+!    Original signs (corresponding to reverse trigonal axes)
+!
+!                  outco(1,i,k)=tmpx-tmpy+tmpz
+!                  outco(2,i,k)=tmpy+tmpz
+!                  outco(3,i,k)=tmpz-tmpx
+!
+!   Corrected signs (correspond to obverse trigonal axes as in ITA)
+!
+                  outco(1,i,k)=tmpx-tmpy-tmpz
+                  outco(2,i,k)=tmpy-tmpz
+                  outco(3,i,k)=-tmpz-tmpx
                END DO
             END DO
          END IF   
