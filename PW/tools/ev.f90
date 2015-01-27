@@ -66,7 +66,7 @@ PROGRAM ev
       IMPLICIT NONE
       INTEGER, PARAMETER:: nmaxpar=4, nmaxpt=100, nseek=10000, nmin=4
       INTEGER :: npar,npt,istat, ierr
-      CHARACTER :: bravais*3, au_unit*3, filin*256
+      CHARACTER :: bravais*8, au_unit*3, filin*256
       REAL(DP) :: par(nmaxpar), deltapar(nmaxpar), parmin(nmaxpar), &
              parmax(nmaxpar), v0(nmaxpt), etot(nmaxpt), efit(nmaxpt), &
              fac, emin, chisq, a
@@ -86,18 +86,18 @@ PROGRAM ev
       PRINT '(5x,"Enter type of bravais lattice (fcc, bcc, sc, noncubic) > ",$)'
       READ '(a)',bravais
 !
-      IF(bravais=='fcc'.or.bravais=='FCC') THEN
+      IF(trim(bravais)=='fcc'.or.trim(bravais)=='FCC') THEN
          fac = 0.25d0
-      ELSEIF(bravais=='bcc'.or.bravais=='BCC') THEN
+      ELSEIF(trim(bravais)=='bcc'.or.trim(bravais)=='BCC') THEN
          fac = 0.50d0
-      ELSEIF(bravais=='sc'.or.bravais=='SC') THEN
+      ELSEIF(trim(bravais)=='sc'.or.trim(bravais)=='SC') THEN
          fac = 1.0d0
       ELSEIF(bravais=='noncubic'.or.bravais=='NONCUBIC' .or.  &
-             bravais=='hex'.or.bravais=='HEX' ) THEN
+             trim(bravais)=='hex'.or.trim(bravais)=='HEX' ) THEN
 !         fac = sqrt(3d0)/2d0 ! not used
          fac = 0.0_DP ! not used
       ELSE
-         PRINT '(5x,"ev: unexpected lattice ",a3)', bravais
+         PRINT '(5x,"ev: unexpected lattice <",a,">")', trim(bravais)
          STOP
       ENDIF
 !
