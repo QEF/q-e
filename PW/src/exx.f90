@@ -766,9 +766,6 @@ MODULE exx
 
     CALL start_clock ('exxinit')
     !
-    IF ( nbgrp > 1 .AND. okvan ) &
-       CALL errore('exxinit','band parallelization not working with USPP',1)
-    !
     !  prepare the symmetry matrices for the spin part
     !
     IF (noncolin) THEN
@@ -1043,7 +1040,9 @@ MODULE exx
     IF (npool>1) CALL mp_sum(exxbuff, inter_pool_comm)
     !
     ! compute <beta_I|psi_j,k+q> for the entire de-symmetrized k+q grid
+    !
     CALL compute_becxx()
+    !
     ! CHECKME: probably it's enough that each pool computes its own bec
     !          and then I sum them like exxbuff, but check it. In this case this
     !          call should only act when index_xk(ikq) = current_ik
@@ -1090,10 +1089,11 @@ MODULE exx
     USE fft_interfaces,       ONLY : fwfft
     USE control_flags,        ONLY : gamma_only
     USE us_exx,               ONLY : becxx
+    USE mp_bands,             ONLY : ibnd_start, ibnd_end
 
     IMPLICIT NONE
     !
-    INTEGER  :: npwq, ibnd, i, ikq, j, h_ibnd
+    INTEGER  :: npwq, ibnd, i, ikq, j, h_ibnd, ibnd_loop_start
     REAL(DP) :: gcutwfc
     INTEGER,ALLOCATABLE     :: igkq(:)   ! order of wavefunctions at k+q[+G]
     COMPLEX(DP),ALLOCATABLE :: vkbq(:,:) ! |beta_I> 
@@ -1126,12 +1126,21 @@ MODULE exx
       !
       ! take rotated phi to G space
       IF (gamma_only) THEN
-         h_ibnd=0
-         DO ibnd = 1,nbnd,2
+         !
+         h_ibnd=ibnd_start/2
+         !
+         IF(MOD(ibnd_start,2)==0) THEN
+            h_ibnd=h_ibnd-1
+            ibnd_loop_start=ibnd_start-1
+         ELSE
+            ibnd_loop_start=ibnd_start
+         ENDIF
+
+         DO ibnd = ibnd_loop_start,ibnd_end,2
             h_ibnd = h_ibnd + 1
             phi(:) = exxbuff(:,h_ibnd,ikq)
             CALL fwfft ('Wave', phi, dffts)
-            IF (ibnd < nbnd) THEN
+            IF (ibnd < ibnd_end) THEN
                ! two ffts at the same time
                DO j = 1, npwq
                   fp = (phi (nls(igkq(j))) + phi (nlsm(igkq(j))))*0.5d0
@@ -1146,7 +1155,7 @@ MODULE exx
             ENDIF
          ENDDO
       ELSE
-         DO ibnd = 1,nbnd
+         DO ibnd = ibnd_start,ibnd_end
             phi(:) = exxbuff(:,ibnd,ikq)
             CALL fwfft ('Wave', phi, dffts)
             FORALL(i=1:npwq) evcq(i,ibnd) = phi(nls(igkq(i)))
