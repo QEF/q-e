@@ -1,0 +1,7 @@
+&PROJWFC
+  outdir='/home/guido/InCorso.d/2015.d/MOPDOS.d/2015.01.19_espresso_svn11314.d/tempdir/'
+  prefix       = 'H2B'
+  ngauss       = 0
+  degauss      = 0.00743
+  deltae       = 0.02
+/

@@ -1,0 +1,16 @@
+&INPUTMOPDOS
+xmlfile_full='H2AB.atomic_proj.xml'
+i_atmwfc_beg_full=1,
+i_atmwfc_end_full=2,
+i_bnd_beg_full=1,
+i_bnd_end_full=8,
+xmlfile_part='H2A.atomic_proj.xml'
+i_atmwfc_beg_part=1,
+i_atmwfc_end_part=2,
+i_bnd_beg_part=1,
+i_bnd_end_part=2,
+fileout ='project_AB_onto_A'
+ngauss=0,
+degauss=0.00743,
+DeltaE=0.02,
+/

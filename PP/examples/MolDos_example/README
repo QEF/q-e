@@ -1,0 +1,43 @@
+
+This example shows how to calculate the Density of States (DOS)
+projected onto molecular orbitals.
+
+The calculation proceeds as follows (for the meaning of the cited input
+variables see the appropriate INPUT_* file)
+
+1) make a self-consistent calculation for the full system, which here
+   is made of two H2 molecules. In this example, molecules have
+   different H-H distance to change the splitting between
+   bonding/antibonding orbitals (input=H2AB.scf.in,
+   output=H2AB.scf.out).
+
+2) make a self-consistent calculation for the molecular part, with the
+   same cell / k-point parameters as for the full system. Here we can
+   project on either of the two H2 molecules.
+   (input=H2A.scf.in,H2B.scf.in, output=H2A.scf.out,H2B.scf.out).
+
+3) use projfwc.x to project the crystal wavefunctions on an
+   orthogonalized basis set of atomic orbitals for the full system and
+   the molecular part
+   (input=H2AB.projwfc.in,H2A.projwfc.in,H2B.projwfc.in,
+   output=H2AB.projwfc.out,H2A.projwfc.out,H2B.projwfc.out). The
+   projections are saved in files atomic_proj.xml files to be copied
+   from $TMP_DIR/.
+
+4) identify which wavefunctions of the orthogonalized basis set ot
+   atomic orbitals of the full system correspond to the same set as in
+   the molecular part (i.e., identify the proper range which will be
+   denoted as i_atmwfc_beg_full to i_atmwfc_end_full, see outputs of
+   step 3).
+
+5) run molecularpdos.x providing in input the location of the
+   atomic_proj.xml files for the full system and of the molecular
+   part, and the ranges of atomic orbitals to be used
+   (input=project_AB_onto_A.in,project_AB_onto_B.in,
+   output=project_AB_onto_A.out,project_AB_onto_B.out).
+
+6) if gnuplot is available, results are plotted to file
+   project_AB_onto_A_B.ps which shows projection of the DOS of the
+   combined system on sigma and sigma* orbitals of the two individual
+   H2 molecules (which differ in energy because of different H-H
+   distance).

@@ -63,7 +63,7 @@ LIBOBJS = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src
 all : tldeps average.x bands.x dos.x epsilon.x initial_state.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw_export.x pw2gw.x \
-      wannier_ham.x wannier_plot.x \
+      wannier_ham.x wannier_plot.x molecularpdos.x \
       pw2bgw.x bgw2pw.x wfck2r.x
 
 
@@ -179,6 +179,11 @@ wannier_ham.x : wannier_ham.o libpp.a $(MODULES) $(LIBOBJS)
 wannier_plot.x : wannier_plot.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 	wannier_plot.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+molecularpdos.x : molecularpdos.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		molecularpdos.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 pw2bgw.x : pw2bgw.o libpp.a $(MODULES) $(LIBOBJS)
