@@ -1,0 +1,180 @@
+input_description -distribution {Quantum Espresso} -package PWscf -program molecularpdos.x {
+
+    toc {}
+
+    intro {
+	Purpose of molecularpdos.x: 
+	    Takes the projections onto orthogonalized atomic wavefunctions
+	    as computed by projwfc.x (see outdir/prefix.save/atomic_proj.xml)
+	    to build an LCAO-like representation of the eigenvalues of a system
+	    "full" and "part" of it (each should provide its own atomic_proj.xml file).
+	    Then the eigenvectors of the full system are projected onto the ones
+	    of the part. For example, to decompose the PDOS of an adsorbed molecule
+	    into its molecular orbital, as determined by a gas-phase calculation.
+
+	Structure of the input data:
+	============================
+
+	   &INPUTMOPDOS
+	     ...
+	   /
+    }
+
+    namelist INPUTMOPDOS {
+         
+	vargroup -type CHARACTER {
+	    var xmlfile_full
+	    var xmlfile_part
+	    info {
+		xml files with atomic projections (produced by projwfc.x)
+		for the full system and its molecular part }
+	}
+
+	var i_atmwfc_beg_full -type INTEGER {
+	    default { 1 }
+            info {
+		first atomic wavefunction of the full system
+	        considered for the projection
+            }
+	}       
+
+	var i_atmwfc_end_full -type INTEGER {
+	    default { 0, i.e., all atomic wavefunctions }
+            info {
+		last atomic wavefunction of the full system
+	        considered for the projection
+            }
+	}       
+
+	var i_atmwfc_beg_part -type INTEGER {
+	    default { 1 }
+            info {
+		first atomic wavefunction of the molecular part
+	        considered for the projection
+            }
+	}       
+
+	var i_atmwfc_end_part -type INTEGER {
+	    default { 0, i.e., all atomic wavefunctions }
+            info {
+		first atomic wavefunction of the molecular part
+	        considered for the projection
+            }
+	}       
+
+	var i_bnd_beg_full -type INTEGER {
+	    default { 1 }
+            info {
+		first eigenstate of the full system to be taken
+	        into account for the projection
+            }
+	}       
+
+	var i_bnd_end_full -type INTEGER {
+	    default { 0, i.e., all eigenstates }
+            info {
+		last eigenstate of the full system to be taken
+	        into account for the projection
+            }
+	}       
+
+	var i_bnd_beg_part -type INTEGER {
+	    default { 1 }
+            info {
+		first eigenstate of the molecular part to be taken
+	        into account for the projection
+            }
+	}       
+
+	var i_bnd_end_part -type INTEGER {
+	    default { 0, i.e., all eigenstates }
+            info {
+		last eigenstate of the molecular part to be taken
+	        into account for the projection
+            }
+	}       
+
+	var fileout -type CHARACTER {
+	    info { prefix for output files containing molecular PDOS(E) } 
+	    default { 'molecularpdos' }
+	}
+
+	var ngauss -type INTEGER {
+	    default { 0 }
+	    info {
+		Type of gaussian broadening:
+		    0 ... Simple Gaussian (default)
+		    1 ... Methfessel-Paxton of order 1
+		   -1 ... Marzari-Vanderbilt "cold smearing"
+		  -99 ... Fermi-Dirac function
+	    }
+	}
+	
+	var degauss -type REAL {
+	    default { 0.0 } 
+	    info { gaussian broadening, Ry (not eV!) }
+	}
+
+	vargroup -type REAL {
+	    var Emin
+	    var Emax
+	    info { min & max energy (eV) for DOS plot }
+	    default { (band extrema) }
+	}
+	var DeltaE -type REAL {
+	    default { 0.01 } 
+	    info { energy grid step (eV) }
+	}
+    }
+
+    section -title Notes {
+	subsection -title {Format of output files} {
+	    text {
+	        Projections are written to standard output.
+	        
+	        The molecular projected DOS is written to the file "fileout".mopdos.
+	        
+	        * The format for the spin-unpolarized case is:
+	              index_of_molecular_orbital E MOPDOS(E)
+	              ...
+	        
+	        * The format for the collinear, spin-polarized case is:
+	              index_of_molecular_orbital E MOPDOSup(E) MOPDOSdw(E)
+	              ...
+     	        
+	        The file "fileout".mopdos_tot contains the sum
+		over the molecular orbitals.
+	        
+	        * The format for the spin-unpolarized case is:
+	              E MOPDOS(E)
+	              ...
+	        
+	        * The format for the collinear, spin-polarized case is:
+	              E MOPDOSup(E) MOPDOSdw(E)
+	              ...
+
+		All DOS(E) are in states/eV plotted vs E in eV
+	    }
+	}
+
+	subsection -title {Important notices} {
+	    text {
+
+		* The atomic wavefunctions identified by the ranges
+		  i_atmwfc_beg_full:i_atmwfc_end_full (full system) and
+		  i_atmwfc_beg_part:i_atmwfc_end_part (molecular part)
+		  should correspond to the same atomic states. See the
+		  header of the output of projwfc.x for more information.
+
+		* If using k-points, the same unit cell and the same
+		  k-points should be used in computing the molecular part,
+		  unless you really know what you are doing.
+
+		* The tetrahedron method is presently not implemented.
+		
+		* Gaussian broadening is used in all cases
+		  (with ngauss and degauss values from input).
+	    }
+	}
+    }
+}

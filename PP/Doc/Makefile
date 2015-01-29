@@ -8,7 +8,8 @@ HTMLS = INPUT_PP.html \
 	INPUT_BANDS.html \
 	INPUT_pw_export.html \
         INPUT_pw2bgw.html \
-        INPUT_bgw2pw.html 
+        INPUT_bgw2pw.html \
+	INPUT_molecularpdos.html
 
 PDFS = eps_man.pdf user_guide.pdf
 AUXS = $(PDFS:.pdf=.aux)
@@ -67,7 +68,10 @@ link_on_main_doc:
 	ln -fs ../PP/Doc/INPUT_pw2bgw.txt . ; \
 	ln -fs ../PP/Doc/INPUT_bgw2pw.html . ; \
 	ln -fs ../PP/Doc/INPUT_bgw2pw.xml . ; \
-	ln -fs ../PP/Doc/INPUT_bgw2pw.txt .)
+	ln -fs ../PP/Doc/INPUT_bgw2pw.txt . ; \
+	ln -fs ../PP/Doc/INPUT_molecularpdos.html . ; \
+	ln -fs ../PP/Doc/INPUT_molecularpdos.xml . ; \
+	ln -fs ../PP/Doc/INPUT_molecularpdos.txt .)
 
 user_guide: user_guide.pdf
 	rm -rf user_guide/
