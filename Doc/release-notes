@@ -8,6 +8,9 @@ Incompatible changes in svn version:
    * XSpectra: variable ef_r, used to eliminate the occupied states
                from the spectrum, replaced by new variable xe0  
    * PHonon: input variable iverbosity => verbosity
+   * The (undocumented) *.evp file of CP had changed format in v.5.1.1. 
+     Reverted to original (undocumented!) format in order to prevent
+     breaking of scripts and similar undesired phenomena
 
 Fixed in svn version:
 
@@ -50,7 +53,7 @@ New in 5.1.1 version:
 Fixed in 5.1.1 version:
 
    * PWscf: variable-cell glitches at last scf step 
-   * PWscf & PHonon: added several check for unimplemented features
+   * PWscf & PHonon: added several checks for unimplemented features
    * PWscf: energy related to external forces wasn't correct
    * CP: Wannier functions dynamics with nspin=2 wasn't working
    * PWscf: restart in variable-cell case wasn't working in v.5.1
