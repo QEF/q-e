@@ -103,6 +103,9 @@ IF (test_case_no == 2) THEN
 ENDIF
 !OBM!!! end of debug
 
+  ! Compute d0psi in the real space, will overwrite d0psi calculated before.
+  if (d0psi_rs .eqv. .true.) call compute_d0psi_rs(n_ipol)
+
   ! Writing d0psi for restart
   nwordd0psi = 2 * nbnd * npwx * nks
 
@@ -120,8 +123,6 @@ ENDIF
   ! End of file i/o
   tmp_dir = tmp_dir_saved
   
-  if(d0psi_rs .eqv. .true.) call compute_d0psi_rs(n_ipol)
-
   CALL stop_clock ('lr_solve_e')
   WRITE(stdout,'(5X,"lr_wfcinit_spectrum: finished lr_solve_e")')
   RETURN
