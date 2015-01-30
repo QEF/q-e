@@ -119,8 +119,10 @@ PROGRAM molecularpdos
      !
      !
      ! Read projection files
-     CALL readprojfile(xmlfile_full, nbnd_full, nkstot_full, num_k_points_full, nspin_full, natomwfc_full, xk_full, wk_full, et_full, projs_full)
-     CALL readprojfile(xmlfile_part, nbnd_part, nkstot_part, num_k_points_part, nspin_part, natomwfc_part, xk_part, wk_part, et_part, projs_part)
+     CALL readprojfile(xmlfile_full, nbnd_full, nkstot_full, num_k_points_full,&
+              nspin_full, natomwfc_full, xk_full, wk_full, et_full, projs_full)
+     CALL readprojfile(xmlfile_part, nbnd_part, nkstot_part, num_k_points_part,&
+              nspin_part, natomwfc_part, xk_part, wk_part, et_part, projs_part)
      !
      ! Defaults ranges are maximum ones
      IF (i_atmwfc_end_full<1) i_atmwfc_end_full=natomwfc_full
