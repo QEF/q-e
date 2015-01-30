@@ -56,6 +56,11 @@ PROGRAM molecularpdos
   REAL(DP) :: degauss, Emax, Emin, DeltaE
   INTEGER  :: ngauss
   !
+  NAMELIST / inputmopdos / &
+       xmlfile_full, i_atmwfc_beg_full, i_atmwfc_end_full, i_bnd_beg_full, i_bnd_end_full, &
+       xmlfile_part, i_atmwfc_beg_part, i_atmwfc_end_part, i_bnd_beg_part, i_bnd_end_part, &
+       fileout, Emin, Emax, DeltaE, ngauss, degauss
+  !
   INTEGER  :: nbnd_full, nkstot_full, num_k_points_full, nspin_full, natomwfc_full
   INTEGER  :: nbnd_part, nkstot_part, num_k_points_part, nspin_part, natomwfc_part
   REAL(DP), ALLOCATABLE :: xk_full(:,:), wk_full(:), et_full(:,:), &
@@ -100,11 +105,6 @@ PROGRAM molecularpdos
   DeltaE = 0.01d0
   ngauss = 0
   degauss= 0.d0
-  !
-  NAMELIST / inputmopdos / &
-       xmlfile_full, i_atmwfc_beg_full, i_atmwfc_end_full, i_bnd_beg_full, i_bnd_end_full, &
-       xmlfile_part, i_atmwfc_beg_part, i_atmwfc_end_part, i_bnd_beg_part, i_bnd_end_part, &
-       fileout, Emin, Emax, DeltaE, ngauss, degauss
   !
   ios = 0
   !
