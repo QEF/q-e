@@ -130,5 +130,24 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 		}
 	}
 
+        var td -type CHARACTER {
+            default {'lanczos'}
+            info {
+                 When set to 'lanczos', a calculation of the spectrum is
+                 performed using the Lanczos coefficients.
+                 When set to 'davidson' or 'david', a calculation of the
+                 spectrum is performed using the eigenvalues computed
+                 using the Davidson algorithm. See the variable 'eign_file'.
+                }
+        }
+
+        var eign_file -type CHARACTER {
+            default {'pwscf.eigen'}
+            info {
+                 The name of the file produced by the turbo_davidson.x code,
+                 in which are written the eigenvalues.
+                }
+        }
+
 }
 }				

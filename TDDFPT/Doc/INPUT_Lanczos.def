@@ -35,11 +35,6 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 
 	label { This namelist is always needed ! }
 
-	var title  -type CHARACTER {
-	    info { A string describing the job. }
-	    status { OPTIONAL }
-	}
-
 	var prefix -type CHARACTER { 
 	    default { 'pwscf' }
 	    info {
@@ -71,16 +66,15 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 		When set to .true., turbo_lanczos.x will attempt to restart 
 		from a previous interrupted calculation. (see restart_step 
 		variable).
-
 		Beware, if set to .false. turbo_lanczos.x will OVERWRITE any
 		previous runs.
 	    }
 	}
 
-	var restart -type INTEGER {
+	var restart_step -type INTEGER {
 	    default {itermax}
 	    info {
-		The code writes restart files every restart step iterations.
+		The code writes restart files every restart_step iterations.
 		Restart files are automatically written at the end of 
 		itermax Lanczos steps.
 	    }
@@ -107,7 +101,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 	var itermax -type INTEGER {
 	    default {500}
 	    info {
-		Number of iterations to be performed.
+		Number of Lanczos iterations to be performed.
 		}
 	}
 	
@@ -154,7 +148,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
         var ecutfock -type REAL {
             default { ecutrho }
             info {
-                kinetic energy cutoff (Ry) for the exact exchange operator in 
+                Kinetic energy cutoff (Ry) for the exact exchange operator in 
                 EXX type calculations. By default this is the same as ecutrho
                 but in some EXX calculations significant speed-up can be found
                 by reducing ecutfock, at the expense of some loss in accuracy.
@@ -171,6 +165,44 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 		presence of the card lr post mandatory.
 		}
 	}
+        var pseudo_hermitian -type LOGICAL {
+            default {.true.}
+            info {
+                When set to .true. the pseudo-Hermitian Lanczos
+                algorithm is used. When set to .false. the
+                non-Hermitian Lanczos biorthogonalization algorithm
+                is used (which is two times slower).
+                }
+        }
+        var d0psi_rs -type LOGICAL {
+            default {.false.}
+            info {
+                When set to .true. the dipole is computed in the
+                real space. When set to .false. the dipole is
+                computed in the reciprocal space by computing [H,r].
+                Note, currently the commutator does not contain
+                a contribution for hybrids [V_EXX,r]. See also
+                the variable lshift_d0psi.
+                }
+        }
+        var lshift_d0psi -type LOGICAL {
+            default {.true.}
+            info {
+                This variable is used only when d0psi_rs=.true.
+                a) If a molecule is placed in the corner of the
+                supercell, there is a discontinuity problem for the
+                position operator r, which is not periodic. By setting
+                lshift_d0psi=.true. the discontinuity problem is
+                solved by shifting the position operator r such that
+                it is continuous and well defined.
+                b) If a molecule is placed in the center of the supercell,
+                there is no discontinuity problem for the position operator r,
+                and thus you can set lshift_d0psi=.false. But if you still
+                set it to .true., this will not harm, because the position
+                operator will basically remain as it is, since it is always
+                centered wrt the center of the molecule.
+                }
+        }
     }			
     namelist lr_post {
     	var omeg -type REAL {

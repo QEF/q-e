@@ -111,6 +111,7 @@ PROGRAM lr_calculate_spectrum
   delta_omeg=-1
   omegmax=-1
   td='lanczos'
+  eign_file = 'pwscf.eigen'
   !
   !Other initialisation
   !

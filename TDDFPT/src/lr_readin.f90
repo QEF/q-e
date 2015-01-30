@@ -123,7 +123,7 @@ SUBROUTINE lr_readin
      w_T_npol = 1
      plot_type = 1
      project = .FALSE.
-     max_seconds = 0.D0
+     max_seconds = 1.0E+7_DP
      eig_dir='./'
      scissor = 0.d0
      ecutfock = -1d0
@@ -132,13 +132,13 @@ SUBROUTINE lr_readin
      num_eign=1
      num_init=2
      num_basis_max=20
-     broadening=0.005
+     broadening=0.005d0
      residue_conv_thr=1.0E-4
      close_pre=1.0E-5
      turn2planb=1.0E-3
      precondition=.true.
      dav_debug=.false.
-     reference=0
+     reference=0.0d0
      single_pole=.false.
      sort_contr=.true.
      print_spectrum=.true.
