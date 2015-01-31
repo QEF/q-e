@@ -2,6 +2,8 @@ New in svn version:
 
    * code "molecularpdos.x" computing PDOS on selected molecular orbitals
      separately computed (courtesy of Guido Fratesi)
+   * TDDFPT: a few more options, improved documentation, compatibility
+     with "Environ" plugin
 
 Incompatible changes in svn version:
 
