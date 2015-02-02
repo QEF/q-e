@@ -46,7 +46,7 @@
   \vskip 1cm
   % title
   \Huge Points inside the Brillouin zone \\
-  \Large Notes by Andrea Dal Corso
+  \Large Notes by Andrea Dal Corso (SISSA - Trieste)
 }
 \maketitle
 
@@ -84,7 +84,7 @@ has $25$ {\bf k} points. Greek labels are prefixed by the letter
 $\Sigma$ point etc. Subscripts are written after the label: the point $P_1$ 
 is indicated as \texttt{P1}. In the following section you can find the
 labels of the points defined in each BZ. 
-There are many convention to label high symmetry
+There are many conventions to label high symmetry
 points inside the BZ. The variable \texttt{point\_label\_type} selects the
 set of labels used by QE. The default is \texttt{point\_label\_type='SC'} and
 the labels have been taken from W. Setyawan and S. Curtarolo, Comp. Mat. Sci.
@@ -94,10 +94,9 @@ The names reported in the web pages
 are available for some BZ. You can use them by setting
 (\texttt{point\_label\_type='BI'}), others can be added in the future.
 This option is available only with \texttt{ibrav$\ne$0} and for 
-all positive \texttt{ibrav} with the exception of the simple monoclinic
-(\texttt{ibrav=12}), base centered monoclinic (\texttt{ibrav=13}), and
-triclinic (\texttt{ibrav=14}) lattices. In these cases you have to
-give all the coordinates of the {\bf k}-points.
+all positive \texttt{ibrav} with the exception of the base centered 
+monoclinic (\texttt{ibrav=13}), and triclinic (\texttt{ibrav=14}) lattices. 
+In these cases you have to give all the coordinates of the {\bf k}-points.
 
 \subsection{\texttt{ibrav=1}, simple cubic lattice}
 The primitive vectors of the direct lattice are:
@@ -463,6 +462,7 @@ The direct lattice vectors are:
 {\bf a}_3 &=& {a \over 2} (-1, -{b \over a}, {c \over a}). \nonumber
 \nonumber
 \end{eqnarray}
+while the reciprocal lattice vectors are:
 \begin{eqnarray}
 {\bf b}_1 &=& {2\pi \over a} (1, 0, {a \over c}), \nonumber \\
 {\bf b}_2 &=& {2\pi \over a} (-1, {a \over b}, 0), \nonumber \\
@@ -505,7 +505,47 @@ which $a<b$ and on the right the case in which $b<a$:
 The figures have been obtained with $b/a=1.2$ and $c/a=1.4$ (left part), and
 $b/a=0.8$ and $c/a=1.2$ (right part).
 
-\subsection{\texttt{ibrav=12,13,14}, monoclinic, base centered monoclinic,
+\subsection{\texttt{ibrav=12}, simple monoclinic lattice, c unique}
+The direct lattice vectors are:
+\begin{eqnarray}
+{\bf a}_1 &=& a (1, 0, 0), \nonumber \\
+{\bf a}_2 &=& a ({b \over a} \cos{\gamma}, {b \over a}\sin{\gamma}, 0), \nonumber \\
+{\bf a}_3 &=& a (0, 0, {c \over a}). 
+\nonumber
+\end{eqnarray}
+while the reciprocal lattice vectors are:
+\begin{eqnarray}
+{\bf b}_1 &=& {2\pi \over a} (1, -{\cos{\gamma}\over \sin{\gamma}}, 0), \nonumber \\
+{\bf b}_2 &=& {2\pi \over a} (0, {a \over b \sin{\gamma}}, 0), \nonumber \\
+{\bf b}_3 &=& {2\pi \over a} (0, 0, {a \over c}). \nonumber
+\end{eqnarray}
+The Brillouin zone is: 
+\begin{center}
+\includegraphics[width=7.5cm,angle=0]{images/monoc.png} 
+\end{center}
+The figure has been obtained with $b/a=0.8$, $c/a=1.4$ and $\cos{\gamma}=0.3$.
+
+\subsection{\texttt{ibrav=-12}, simple monoclinic lattice, b unique}
+The direct lattice vectors are:
+\begin{eqnarray}
+{\bf a}_1 &=& a (1, 0, 0), \nonumber \\
+{\bf a}_2 &=& a (0, {b \over a}, 0), \nonumber \\
+{\bf a}_3 &=& a ({c \over a} \cos{\beta}, 0, {c \over a}\sin{\beta}), \nonumber 
+\end{eqnarray}
+while the reciprocal lattice vectors are:
+\begin{eqnarray}
+{\bf b}_1 &=& {2\pi \over a} (1, 0, -{\cos{\beta}\over \sin{\beta}}), \nonumber \\
+{\bf b}_2 &=& {2\pi \over a} (0, {a \over b}, 0), \nonumber \\
+{\bf b}_3 &=& {2\pi \over a} (0, 0, {a \over c \sin{\beta}}). \nonumber
+\end{eqnarray}
+The Brillouin zone is: 
+\begin{center}
+\includegraphics[width=7.5cm,angle=0]{images/monob.png} 
+\end{center}
+The figure has been obtained with $b/a=0.8$, $c/a=1.4$ and $\cos{\beta}=0.3$.
+
+
+\subsection{\texttt{ibrav=13,14}, one-base centered monoclinic,
 triclinic}
 These lattices are not supported by this feature, you have to give
 explicitly the coordinates of the path.
