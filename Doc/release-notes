@@ -1,11 +1,12 @@
-New in svn version:
+New in 5.1.2 version:
 
    * code "molecularpdos.x" computing PDOS on selected molecular orbitals
      separately computed (courtesy of Guido Fratesi)
    * TDDFPT: a few more options, improved documentation, compatibility
      with "Environ" plugin
+   * Added spin-polarized b86r exchange (courtesy of Ikutaro Hamada)
 
-Incompatible changes in svn version:
+Incompatible changes in 5.1.2 version:
 
    * XSpectra: variable ef_r, used to eliminate the occupied states
                from the spectrum, replaced by new variable xe0  
@@ -14,7 +15,7 @@ Incompatible changes in svn version:
      Reverted to original (undocumented!) format in order to prevent
      breaking of scripts and similar undesired phenomena
 
-Fixed in svn version:
+Fixed in 5.1.2 version:
 
    * Bug in space-group generator in the monoclinic case.
    * atomic: a small bug was preventing the generation of non-PAW 

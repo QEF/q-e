@@ -1650,6 +1650,25 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
 
+   elseif (igcx == 26) then ! 'B86R for rev-vdW-DF2'
+     if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
+        call b86b (2.0_DP * rhoup, 4.0_DP * grhoup2, 3, sxup, v1xup, v2xup)
+     else
+        sxup = 0.0_DP
+        v1xup = 0.0_DP
+        v2xup = 0.0_DP
+     endif
+     if (rhodw > small .and. sqrt (abs (grhodw2) ) > small) then
+        call b86b (2.0_DP * rhodw, 4.0_DP * grhodw2, 3, sxdw, v1xdw, v2xdw)
+     else
+        sxdw = 0.0_DP
+        v1xdw = 0.0_DP
+        v2xdw = 0.0_DP
+     endif
+     sx = 0.5_DP * (sxup + sxdw)
+     v2xup = 2.0_DP * v2xup
+     v2xdw = 2.0_DP * v2xdw
+
   elseif (igcx == 27) then ! 'cx13 for vdw-df-cx'
      if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
         call cx13 (2.0_DP * rhoup, 4.0_DP * grhoup2, sxup, v1xup, v2xup)
@@ -1876,6 +1895,27 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
         endif
         if (rhodw(i) > small .and. sqrt(abs(grhodw2(i))) > small) then
            call becke86b (2.0_DP * rhodw(i), 4.0_DP * grhodw2(i), sxdw(i), v1xdw(i), v2xdw(i))
+        else
+           sxdw(i) = 0.0_DP
+           v1xdw(i) = 0.0_DP
+           v2xdw(i) = 0.0_DP
+        endif
+     end do
+     sx = 0.5_DP * (sxup + sxdw)
+     v2xup = 2.0_DP * v2xup
+     v2xdw = 2.0_DP * v2xdw
+
+  case(26) ! 'B86R for rev-vdW-DF2'
+     do i=1,length
+        if (rhoup(i) > small .and. sqrt(abs(grhoup2(i))) > small) then
+           call b86b (2.0_DP * rhoup(i), 4.0_DP * grhoup2(i), 3, sxup(i), v1xup(i), v2xup(i))
+        else
+           sxup(i) = 0.0_DP
+           v1xup(i) = 0.0_DP
+           v2xup(i) = 0.0_DP
+        endif
+        if (rhodw(i) > small .and. sqrt(abs(grhodw2(i))) > small) then
+           call b86b (2.0_DP * rhodw(i), 4.0_DP * grhodw2(i), 3, sxdw(i), v1xdw(i), v2xdw(i))
         else
            sxdw(i) = 0.0_DP
            v1xdw(i) = 0.0_DP
