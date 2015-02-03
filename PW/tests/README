@@ -77,6 +77,7 @@ uspp      Cu fcc   US PP, both single and double grid
                    simple, TF, local-TF mixing, ndim=4,8
                    stress with single and double grid
                    non-scf calculation
+                   hybrid functionals (pbe0/hse, gamma/k, real/G-space)
 uspp1     H2O      old Vanderbilt format for pseudopotentials
                    Fake coulombian (1/r) pseudopotential
 uspp2     Ni fcc   core corrections

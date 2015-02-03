@@ -10,7 +10,6 @@
                      ecutwfc = 25.0,
                      ecutrho =100.0,
                         input_dft='hse'
-                        nbnd = 8
     exxdiv_treatment='gygi-baldereschi'
     x_gamma_extrapolation = .true.
  /

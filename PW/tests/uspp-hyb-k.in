@@ -3,7 +3,7 @@
  /
  &system    
     ibrav=2, a=3.35, nat=2, ntyp=1,
-    ecutwfc=18.0, ecutrho=100.0  nbnd = 8,
+    ecutwfc=18.0, ecutrho=100.0
     input_dft='pbe0', nqx1=2, nqx2=2, nqx3=2, 
     exxdiv_treatment='gygi-baldereschi'
     x_gamma_extrapolation = .true.
