@@ -1032,7 +1032,7 @@ SUBROUTINE iosys()
      iverbosity = 0
   END SELECT
   !
-  IF ( lberry .OR. lelfield ) THEN
+  IF ( lberry .OR. lelfield .OR. lorbm ) THEN
      IF ( npool > 1 ) CALL errore( 'iosys', &
           'Berry Phase/electric fields not implemented with pools', 1 )
      IF ( lgauss .OR. ltetra ) CALL errore( 'iosys', &
