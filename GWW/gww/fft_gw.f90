@@ -422,7 +422,7 @@
 
       end if
 
-#ifdef __PARA
+#ifdef __MPI
       CALL MPI_ALLTOALL( sndbuf, fftd%numrows * fftd%numpw, MPI_DOUBLE_COMPLEX,  &
                          rcvbuf, fftd%numrows * fftd%numpw, MPI_DOUBLE_COMPLEX, world_comm, ierr )
 #else
@@ -660,7 +660,7 @@
 
       enddo
 
-#ifdef __PARA
+#ifdef __MPI
       CALL MPI_ALLTOALL( sndbuf, fftd%numrows * fftd%numpw, MPI_DOUBLE_COMPLEX,  &
                          rcvbuf, fftd%numrows * fftd%numpw, MPI_DOUBLE_COMPLEX, world_comm, ierr )
 #else

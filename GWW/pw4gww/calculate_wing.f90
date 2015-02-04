@@ -237,9 +237,6 @@ end subroutine calculate_wing
    !     replicated data
    INTEGER, ALLOCATABLE :: igsrt(:)
    !
-#ifdef __PARA
-   INTEGER :: m1, m2, mc
-#endif
    INTEGER :: ni, nj, nk, i, j, k, ipol, ng, igl, indsw,ig
    !
    ! counters

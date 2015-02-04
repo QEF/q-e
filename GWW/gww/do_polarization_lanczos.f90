@@ -883,7 +883,7 @@ subroutine solve_lanczos_2(numpw,numt,numl,nbuf,mbuf, alpha,lc, iv0,nbndv,&
 !           call mpi_gatherv(e_mat_ip, lc%numt*nsize,MPI_DOUBLE_PRECISION,e_mat(1,1,iv),recvcounts,displ, MPI_DOUBLE_PRECISION,iproc,world_comm)
         enddo
 
-#ifdef __PARA
+#ifdef __MPI
         if(iproc==mpime) then
            pw_ip(:,:)=pw_ip(:,:)+pw%pw(:,:)
            CALL MPI_REDUCE(pw_ip, pw%pw, pw%numpw*pw%numpw,MPI_DOUBLE_PRECISION,MPI_SUM, iproc,world_comm,ierr)

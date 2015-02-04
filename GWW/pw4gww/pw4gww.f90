@@ -406,7 +406,7 @@ program gwl_punch
   call read_file 
 
 
-#if defined __PARA
+#if defined __MPI
   kunittmp = kunit
 #else
   kunittmp = 1
@@ -706,7 +706,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   
   write(stdout,*)"after wfc waves"
 
-#ifdef __PARA
+#ifdef __MPI
   call poolrecover (et, nbnd, nkstot, nks)
 #endif
  

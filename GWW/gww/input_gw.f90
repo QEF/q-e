@@ -282,7 +282,7 @@
         if(ggwin%l_list) write(stdout,*) 'FROM LIST'
         if(ggwin%l_full) write(stdout,*) 'FULL RELATIVISTIC CALCULATION with:', ggwin%n_full
      endif
-#ifdef __PARA
+#ifdef __MPI
     CALL mp_bcast( outdir,ionode_id, world_comm )
     CALL mp_bcast( tmp_dir,ionode_id, world_comm )
     CALL mp_bcast( prefix,ionode_id, world_comm )

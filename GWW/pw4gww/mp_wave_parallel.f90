@@ -131,7 +131,7 @@
     
 
         
-#elif ! defined __PARA
+#elif ! defined __MPI
 
      DO I = 1, ngwl
         PWT( ig_l2g(i) ) = pw(i,1)
@@ -251,7 +251,7 @@
     
        
 
-#elif ! defined __PARA
+#elif ! defined __MPI
 
       DO I = 1, ngwl
         pw(i,1) = pwt( ig_l2g(i) )

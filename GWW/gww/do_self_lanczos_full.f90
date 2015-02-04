@@ -260,7 +260,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
            factor=2.d0*dble(tf%weights_freq(iw)*exp((0.d0,1.d0)*tf%times(it)*tf%freqs_eff(iw)))/(2.d0*pi)
            pw_tmp(:,:)=pw_tmp(:,:)+pw_mat(:,:,iw-nbegin+1)*factor
         enddo
-#ifdef __PARA
+#ifdef __MPI
 !the distribution of times on procs is the same of that for frequecies
         iproc_time=it/l_blk
 !all processors sums to iproc_time
@@ -433,7 +433,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
                     factor=2.d0*dble(tf%weights_freq_g(iw)*exp_table(it+1,iw-nbegin_g+1))/(2.d0*pi)
                     g_tmp(1:numpw,1:numpw)=g_tmp(1:numpw,1:numpw)+dble(g_mat(1:numpw,1:numpw,iw-nbegin_g+1,ipol))*factor
                  enddo
-#ifdef __PARA
+#ifdef __MPI
 !the distribution of times on procs is the same of that for frequecies
                  iproc_time=it/l_blk
 !all processors sums to iproc_time
@@ -455,7 +455,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
                     factor=-2.d0*dimag(tf%weights_freq_g(iw)*exp_table(it+1,iw-nbegin_g+1))/(2.d0*pi)
                     g_tmp(1:numpw,1:numpw)=g_tmp(1:numpw,1:numpw)+dimag(g_mat(1:numpw,1:numpw,iw-nbegin_g+1,ipol))*factor
                  enddo
-#ifdef __PARA
+#ifdef __MPI
 !the distribution of times on procs is the same of that for frequecies
                  iproc_time=it/l_blk
 !all processors sums to iproc_time

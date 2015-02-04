@@ -203,7 +203,7 @@ CONTAINS
   INTEGER  :: ncplane, nxx
   INTEGER  :: ncplanes, nxxs
 
-#ifdef __PARA
+#ifdef __MPI
   INTEGER, ALLOCATABLE :: st(:,:), sts(:,:)
   ! sticks maps
 
@@ -695,7 +695,7 @@ SUBROUTINE ggent(fc)
    INTEGER, ALLOCATABLE :: igsrt(:)
    !
 
-#ifdef __PARA
+#ifdef __MPI
    INTEGER :: m1, m2, mc
    !
 #endif
@@ -764,7 +764,7 @@ SUBROUTINE ggent(fc)
       j = mill_g(2, ng)
       k = mill_g(3, ng)
 
-#ifdef __PARA
+#ifdef __MPI
       m1 = mod (i, fc%nr1t) + 1
       IF (m1 < 1) m1 = m1 + fc%nr1t
       m2 = mod (j, fc%nr2t) + 1
@@ -819,7 +819,7 @@ SUBROUTINE ggent(fc)
       IF (n1>fc%nr1t .or. n2>fc%nr2t .or. n3>fc%nr3t) &
          CALL errore('ggent','Mesh too small?',ng)
 
-#if defined (__PARA) && !defined (__USE_3D_FFT)
+#if defined (__MPI) && !defined (__USE_3D_FFT)
       fc%nlt (ng) = n3 + ( fc%dfftt%isind (n1 + (n2 - 1) * fc%nrx1t) - 1) * fc%nrx3t
 #else
       fc%nlt (ng) = n1 + (n2 - 1) * fc%nrx1t + (n3 - 1) * fc%nrx1t * fc%nrx2t
@@ -850,7 +850,7 @@ SUBROUTINE ggent(fc)
          CALL errore('ggent meno','Mesh too small?',ng)
       ENDIF
 
-#if defined (__PARA) && !defined (__USE_3D_FFT)
+#if defined (__MPI) && !defined (__USE_3D_FFT)
       fc%nltm(ng) = n3 + (fc%dfftt%isind (n1 + (n2 - 1) * fc%nrx1t) - 1) * fc%nrx3t
      
 #else
@@ -940,7 +940,7 @@ SUBROUTINE cft3t( fc, f, n1, n2, n3, nx1, nx2, nx3, sign )
   INTEGER,     INTENT(IN)    :: n1, n2, n3, nx1, nx2, nx3, sign
 
 
-#if defined (__PARA) && !defined(__USE_3D_FFT)
+#if defined (__MPI) && !defined(__USE_3D_FFT)
 !
   COMPLEX(DP), INTENT(INOUT) :: f( fc%dfftt%nnr )
   !

@@ -346,7 +346,7 @@ subroutine solve_head
                  CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
                       (1.d0,0.d0), evc(1,1), npwx, dvpsi(1,1), npwx, (0.d0,0.d0), &
                       ps(1,1), nbnd )
-#ifdef __PARA
+#ifdef __MPI
            !call reduce (2 * nbnd * nbnd_occ (ik), ps)
                  call mp_sum(ps(1:nbnd_occ (ik),1:nbnd_occ (ik)),world_comm)
 #endif
@@ -472,7 +472,7 @@ subroutine solve_head
         head(first_f+i-1,3)=epsilon_g(3,3,i)
 
 
-#ifdef __PARA
+#ifdef __MPI
         call mp_sum ( pola_charge(:,:,:,i) , inter_pool_comm )
         call psyme (pola_charge(:,:,:,i))
 #else

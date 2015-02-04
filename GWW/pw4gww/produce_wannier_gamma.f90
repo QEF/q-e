@@ -103,7 +103,7 @@
        endif
 
 !setup parallel environment
-#ifndef __PARA
+#ifndef __MPI
          l_pmatrix=.false.
 #endif
 #ifndef __SCALAPACK

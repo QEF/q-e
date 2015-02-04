@@ -1861,7 +1861,7 @@ end subroutine self_basis_lanczos_real
         CALL MPI_BARRIER(gid, IERR)
       END DO
 
-#elif ! defined __PARA
+#elif ! defined __MPI
 
       DO J=1,nn
          DO I = 1, ngwl

@@ -243,7 +243,7 @@ SUBROUTINE collect_cprim_prod(cpp,cppd)
      sndbuf(:)=0.d0
      sndbuf(1:cppd%numpw_para)=cppd%cpmat(1:cppd%numpw_para,ii)
 
-#ifdef __PARA
+#ifdef __MPI
      call MPI_ALLGATHER(sndbuf,l_blk,MPI_DOUBLE_PRECISION,cpp%cpmat(:,ii),l_blk,MPI_DOUBLE_PRECISION,&
           world_comm, ierr)
 

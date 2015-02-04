@@ -18,7 +18,7 @@ subroutine start_pw4gww
   implicit none
   character(len=9) :: code = 'PW4GWW'
   !
-#ifdef __PARA
+#ifdef __MPI
   CALL mp_startup ( )
 #endif
   CALL environment_start ( code )
