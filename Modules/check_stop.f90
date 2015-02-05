@@ -87,7 +87,7 @@ MODULE check_stop
        INTEGER, OPTIONAL, INTENT(IN) :: inunit
        !
        INTEGER            :: unit
-       LOGICAL            :: check_stop_now, tex
+       LOGICAL            :: check_stop_now, tex=.false.
        LOGICAL            :: signaled
        REAL(DP)           :: seconds
        REAL(DP), EXTERNAL :: cclock
