@@ -675,19 +675,19 @@ MODULE pw_restart
           CHARACTER(LEN=256)  :: filename
           INTEGER :: ispin,ik_eff
           !
-          ! ... wavefunctions
+          ! ... wavefunctions - do not read if already in memory (nsk==1)
+          ! ...                 read only if on this pool (iks <= ik <= ike )
+          !
+          IF ( ( nks > 1 ) .AND. ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
+              CALL get_buffer ( evc, nwordwfc, iunwfc, (ik-iks+1) )
+          END IF
           !
           IF ( nspin == 2 ) THEN
              !
-             ! ... beware: with pools, this is correct only on ionode
+             ! ... beware: with pools, isk(ik) has the correct value for 
+             ! ... all k-points only on first pool (ionode proc is ok)
              !
              ispin = isk(ik)
-             !
-             IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
-                !
-                CALL get_buffer ( evc, nwordwfc, iunwfc, (ik-iks+1) )
-                !
-             END IF
              !
              IF ( ionode ) THEN
                 !
@@ -710,6 +710,9 @@ MODULE pw_restart
              ik_eff = ik + num_k_points
              !
              ispin = isk(ik_eff)
+             !
+             ! ... LSDA: now read minority wavefunctions (if not already
+             ! ... in memory and if they are on this pool)
              !
              IF ( ( nks > 1 ) .AND. ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
                 !
@@ -737,12 +740,6 @@ MODULE pw_restart
              !
           ELSE
              !
-             IF ( ( nks > 1 ) .AND. ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
-                !
-                CALL get_buffer( evc, nwordwfc, iunwfc, (ik-iks+1) )
-                !
-             END IF
-             !
              IF ( noncolin ) THEN
                 !
                 DO ipol = 1, npol
@@ -760,7 +757,9 @@ MODULE pw_restart
                       !
                    END IF
                    !
-                   !!! TEMP
+                   ! TEMP  spin-up and spin-down spinor components are written
+                   ! TEMP  to different files, like in LSDA - not a smart way
+                   !
                    nkl=(ipol-1)*npwx+1
                    nkr= ipol   *npwx
                    CALL write_wfc( iunout, ik, nkstot, kunit, ipol, npol,   &

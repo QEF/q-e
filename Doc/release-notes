@@ -17,6 +17,7 @@ Incompatible changes in 5.1.2 version:
 
 Fixed in 5.1.2 version:
 
+   * Option wf_collect wasn't working with LSDA and one k-point per pool
    * Bug in space-group generator in the monoclinic case.
    * atomic: a small bug was preventing the generation of non-PAW 
      pseudopotentials with GIPAW reconstruction data
