@@ -146,7 +146,7 @@ tldeps :
 
 clean :
 	- /bin/rm -f cppp.x *.o *.mod cpver.h *.i core* *.F90 fort* \
-		*.cpp *.d *.L *.a *.s cp.x wfdd.x
-	-/bin/rm -rf ../../bin/cppp.x ../../bin/cp.x ../../bin/wfdd.x
+		*.cpp *.d *.L *.a *.s cp.x manycp.x wfdd.x
+	-/bin/rm -rf ../../bin/manycp.x ../../bin/cppp.x ../../bin/cp.x ../../bin/wfdd.x
 
 include make.depend
