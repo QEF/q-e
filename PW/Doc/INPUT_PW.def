@@ -129,7 +129,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                                   stopped using variable "max_seconds", or 
                                   by user request with an "exit file" (i.e.:
                                   create a file "prefix".EXIT, in directory
-                                  "outdir"; see variables "prefix", "outdir")
+                                  "outdir"; see variables "prefix", "outdir").
+                                  Overrides "startingwfc" and "startingpot".
+
 	    }
 	}
 	

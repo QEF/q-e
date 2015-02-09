@@ -770,7 +770,16 @@ SUBROUTINE iosys()
   CASE( 'restart' )
      !
      restart = .true.
+     IF ( TRIM(startingwfc) /= 'file' ) THEN
+        CALL infomsg('input','Restarting from interrupted run, "startingwfc" overridden')
+        startingwfc = 'file'
+     END IF
+     IF ( TRIM(startingpot) /= 'file' ) THEN
+        CALL infomsg('input','Restarting from interrupted run, "startingpot" overridden')
+        startingpot = 'file'
+     END IF
      IF ( trim( ion_positions ) == 'from_input' ) THEN
+        CALL infomsg('input','Restarting from positions as given in input')
         startingconfig = 'input'
      ELSE
         startingconfig = 'file'
