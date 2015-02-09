@@ -3308,7 +3308,7 @@ CONTAINS
       REAL(DP),   ALLOCATABLE :: Hubbard_U_(:), Hubbard_J_(:,:)
       REAL(DP),   ALLOCATABLE :: Hubbard_alpha_(:), Hubbard_J0_(:), Hubbard_beta_(:)
       LOGICAL                 :: llondon_, lxdm_, ts_vdw_, vdw_isolated_
-      REAL(DP)                :: london_s6_, london_rcut_
+      REAL(DP)                :: london_s6_=0._dp, london_rcut_=0._dp
       !
       ierr = 0
       !
