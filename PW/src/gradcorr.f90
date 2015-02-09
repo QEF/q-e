@@ -15,7 +15,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   USE gvect,                ONLY : nl, ngm, g
   USE lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : omega, alat
-  USE funct,                ONLY : gcxc, gcx_spin, gcc_spin, &
+  USE funct,                ONLY : gcxc, gcx_spin, gcc_spin, igcc_is_lyp, &
                                    gcc_spin_more, dft_is_gradient, get_igcc
   USE spin_orb,             ONLY : domag
   USE noncollin_module,     ONLY : ux
@@ -39,7 +39,6 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
 
   COMPLEX(DP), ALLOCATABLE :: rhogsum(:,:)
   !
-  LOGICAL  :: igcc_is_lyp
   REAL(DP) :: grho2(2), sx, sc, v1x, v2x, v1c, v2c, &
               v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw , &
               etxcgc, vtxcgc, segno, arho, fac, zeta, rh, grh2, amag 
@@ -50,8 +49,6 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   !
   IF ( .NOT. dft_is_gradient() ) RETURN
-
-  igcc_is_lyp = (get_igcc() == 3 .or. get_igcc() == 7)
   !
   etxcgc = 0.D0
   vtxcgc = 0.D0
@@ -170,7 +167,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
         !
         IF ( rh > epsr ) THEN
            !
-           IF ( igcc_is_lyp ) THEN
+           IF ( igcc_is_lyp() ) THEN
               !
               rup = rhoout(k,1)
               rdw = rhoout(k,2)

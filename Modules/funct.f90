@@ -47,7 +47,7 @@ module funct
   PUBLIC  :: enforce_input_dft, write_dft_name, dft_name
   PUBLIC  :: get_dft_name
   PUBLIC  :: get_iexch, get_icorr, get_igcx, get_igcc, get_meta, get_inlc
-  PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid, dft_is_nonlocc
+  PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid, dft_is_nonlocc, igcc_is_lyp
 
   ! additional subroutines/functions for hybrid functionals
   PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
@@ -847,6 +847,12 @@ CONTAINS
      dft_is_hybrid = ishybrid
      return
   end function dft_is_hybrid
+  !-----------------------------------------------------------------------
+  function igcc_is_lyp ()
+     logical :: igcc_is_lyp
+     igcc_is_lyp = (get_igcc() == 3 .or. get_igcc() == 7)
+     return
+  end function igcc_is_lyp
   !-----------------------------------------------------------------------
   function dft_has_finite_size_correction ()
      logical :: dft_has_finite_size_correction

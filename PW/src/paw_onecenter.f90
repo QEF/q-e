@@ -572,16 +572,17 @@ END SUBROUTINE PAW_xc_potential
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!! 
 !!! add gradient correction to v_xc, code mostly adapted from ../atomic/vxcgc.f90
 !!! in order to support non-spherical charges (as Y_lm expansion)
-!!! Note that the first derivative in vxcgc becames a gradient, while the second is a divergence.
-!!! We also have to temporary store some additional Y_lm components in order not to loose
+!!! Note that the first derivative in vxcgc becomes a gradient, while the second is a divergence.
+!!! We also have to temporarily store some additional Y_lm components in order not to loose
 !!! precision during the calculation, even if only the ones up to lmax_rho (the maximum in the
 !!! density of charge) matter when computing \int v * rho 
 SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     USE lsda_mod,               ONLY : nspin
     USE noncollin_module,       ONLY : noncolin, nspin_mag, nspin_gga
     USE atom,                   ONLY : g => rgrid
-    USE constants,              ONLY : sqrtpi, fpi,pi,e2, eps => eps12, eps2 => eps24
-    USE funct,                  ONLY : gcxc, gcx_spin_vec, gcc_spin, gcx_spin
+    USE constants,              ONLY : sqrtpi, fpi,pi,e2
+    USE funct,                  ONLY : gcxc, gcx_spin_vec, gcc_spin, &
+                                       gcc_spin_more, igcc_is_lyp
     USE mp,                     ONLY : mp_sum
     !
     TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
@@ -589,6 +590,8 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     REAL(DP), INTENT(IN)    :: rho_core(i%m)            ! core charge, radial and spherical
     REAL(DP), INTENT(INOUT) :: v_lm(i%m,i%l**2,nspin)   ! potential to be updated
     REAL(DP),OPTIONAL,INTENT(INOUT) :: energy           ! if present, add GC to energy
+    
+    REAL(DP),PARAMETER      :: epsr = 1.e-6_dp, epsg = 1.e-10_dp ! (as in PW/src/gradcorr.f90)
 
     REAL(DP),ALLOCATABLE    :: rho_rad(:,:)! charge density sampled
     REAL(DP),ALLOCATABLE    :: grad(:,:,:) ! gradient
@@ -605,15 +608,15 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     REAL(DP), ALLOCATABLE :: vout_lm(:,:,:)   ! potential as lm components
     REAL(DP), ALLOCATABLE :: segni_rad(:,:)   ! sign of the magnetization
 
-    REAL(DP),ALLOCATABLE    :: e_rad(:)                   ! aux, used to store energy
-    REAL(DP)                :: e, e_gcxc                  ! aux, used to integrate energy
+    REAL(DP),ALLOCATABLE    :: e_rad(:)               ! aux, used to store energy
+    REAL(DP)                :: e, e_gcxc              ! aux, used to integrate energy
 
-    INTEGER  :: k, ix, is, lm                             ! counters on spin and mesh
-    REAL(DP) :: sx,sc,v1x,v2x,v1c,v2c                     ! workspace
-    REAL(DP) :: v1cup, v1cdw                              ! workspace
-    REAL(DP) :: sgn, arho                                 ! workspace
-    REAL(DP) :: co2                                       ! workspace
-    REAL(DP) :: rh, zeta, grh2
+    INTEGER  :: k, ix, is, lm                         ! counters on spin and mesh
+    REAL(DP) :: sx,sc,v1x,v2x,v1c,v2c                 ! workspace
+    REAL(DP) :: v1cup, v1cdw, v2cup, v2cdw, v2cud     ! workspace
+    REAL(DP) :: sgn, arho                             ! workspace
+    REAL(DP) :: co2                                   ! workspace
+    REAL(DP) :: rh, zeta, grh2, grhoup, grhodw, grhoud
     REAL(DP), ALLOCATABLE :: rup_vec(:), rdw_vec(:)
     REAL(DP), ALLOCATABLE :: sx_vec(:)
     REAL(DP), ALLOCATABLE :: v1xup_vec(:), v1xdw_vec(:)
@@ -698,7 +701,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
                arho = ABS(arho)
 
                ! I am using grad(rho)**2 here, so its eps has to be eps**2
-               IF ( (arho>eps) .and. (grad2(k,1)>eps2) ) THEN
+               IF ( (arho>epsr) .and. (grad2(k,1)>epsg) ) THEN
                    CALL gcxc(arho,grad2(k,1), sx,sc,v1x,v2x,v1c,v2c)
                    IF (present(energy)) &
                        e_rad(k)    = sgn *e2* (sx+sc) * g(i%t)%r2(k)
@@ -736,43 +739,66 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
         DO ix = ix_s, ix_e
         !
         CALL PAW_lm2rad(i, ix, rhoout_lm, rho_rad, nspin_gga)
-        CALL PAW_gradient(i, ix, rhoout_lm, rho_rad, rho_core, &
-                          grad2, grad)
+        CALL PAW_gradient(i, ix, rhoout_lm, rho_rad, rho_core,grad2, grad)
         !
         DO k = 1,i%m
             !
             ! Prepare the necessary quantities
             ! rho_core is considered half spin up and half spin down:
-            co2 = rho_core(k)/2._dp
+            co2 = rho_core(k)/2
             ! than I build the real charge dividing by r**2
             rup_vec(k) = rho_rad(k,1)*g(i%t)%rm2(k) + co2
             rdw_vec(k) = rho_rad(k,2)*g(i%t)%rm2(k) + co2
         END DO
-        ! bang!
+        !
         CALL gcx_spin_vec (rup_vec, rdw_vec, grad2(:,1), grad2(:,2), &
                 sx_vec, v1xup_vec, v1xdw_vec, v2xup_vec, v2xdw_vec, i%m)
         DO k = 1,i%m
             rh = rup_vec(k) + rdw_vec(k) ! total charge
-            IF ( rh > eps ) THEN
-                zeta = (rup_vec(k) - rdw_vec(k) ) / rh ! polarization
-                !
-                grh2 =  (grad(k,1,1) + grad(k,1,2))**2 &
-                      + (grad(k,2,1) + grad(k,2,2))**2 &
-                      + (grad(k,3,1) + grad(k,3,2))**2
-                CALL gcc_spin (rh, zeta, grh2, sc, v1cup, v1cdw, v2c)
-            ELSE
+            NON_VANISHING :  &
+            IF ( rh > epsr ) THEN
+                IF(igcc_is_lyp())THEN
+                  grhoup =  grad(k,1,1)**2 + grad(k,2,1)**2 + grad(k,3,1)**2
+                  grhodw =  grad(k,1,2)**2 + grad(k,2,2)**2 + grad(k,3,2)**2
+                  grhoud =  grad(k,1,1)*grad(k,1,2)+ &
+                          + grad(k,2,1)*grad(k,2,2)+ &
+                          + grad(k,3,1)*grad(k,3,2)
+                  CALL gcc_spin_more( rup_vec(k), rdw_vec(k), grhoup, grhodw, grhoud, &
+                                      sc, v1cup, v1cdw, v2cup, v2cdw, v2cud )
+                
+                ELSE
+                  zeta = (rup_vec(k) - rdw_vec(k) ) / rh ! polarization
+                  !
+                  grh2 =  (grad(k,1,1) + grad(k,1,2))**2 &
+                        + (grad(k,2,1) + grad(k,2,2))**2 &
+                        + (grad(k,3,1) + grad(k,3,2))**2
+                  CALL gcc_spin (rh, zeta, grh2, sc, v1cup, v1cdw, v2c)
+                  v2cup = v2c
+                  v2cdw = v2c
+                  v2cud = v2c
+                ENDIF
+            ELSE NON_VANISHING 
                 sc    = 0._dp
                 v1cup = 0._dp
                 v1cdw = 0._dp
                 v2c   = 0._dp
-            ENDIF
+                v2cup = 0._dp
+                v2cdw = 0._dp
+                v2cud = 0._dp
+            ENDIF &
+            NON_VANISHING 
             IF (present(energy)) &
                e_rad(k)    = e2*(sx_vec(k)+sc)* g(i%t)%r2(k)
+
+           ! first term of the gradient correction : D(rho*Exc)/D(rho)
             gc_rad(k,ix,1)  = (v1xup_vec(k)+v1cup)!*g(i%t)%rm2(k)
             gc_rad(k,ix,2)  = (v1xdw_vec(k)+v1cdw)!*g(i%t)%rm2(k)
             !
-            h_rad(k,:,ix,1) =( (v2xup_vec(k)+v2c)*grad(k,:,1)+v2c*grad(k,:,2) )*g(i%t)%r2(k)
-            h_rad(k,:,ix,2) =( (v2xdw_vec(k)+v2c)*grad(k,:,2)+v2c*grad(k,:,1) )*g(i%t)%r2(k)
+            ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
+!             h_rad(k,:,ix,1) =( (v2xup_vec(k)+v2c)*grad(k,:,1)+v2c*grad(k,:,2) )*g(i%t)%r2(k)
+!             h_rad(k,:,ix,2) =( (v2xdw_vec(k)+v2c)*grad(k,:,2)+v2c*grad(k,:,1) )*g(i%t)%r2(k)
+            h_rad(k,:,ix,1) =( (v2xup_vec(k)+v2cup)*grad(k,:,1)+v2cud*grad(k,:,2) )*g(i%t)%r2(k)
+            h_rad(k,:,ix,2) =( (v2xdw_vec(k)+v2cdw)*grad(k,:,2)+v2cud*grad(k,:,1) )*g(i%t)%r2(k)
         ENDDO ! k
         ! integrate energy (if required)
         ! NOTE: this integration is duplicated for every spin, FIXME!
@@ -832,13 +858,13 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
        h_rad(1:i%m,3,ix,1:nspin_gga) = h_rad(1:i%m,3,ix,1:nspin_gga)/&
                                        rad(i%t)%sin_th(ix)
     ENDDO
-    ! We need the gradient of h to calculate the last part of the exchange
+    ! We need the gradient of H to calculate the last part of the exchange
     ! and correlation potential. First we have to convert H to its Y_lm expansion
     CALL PAW_rad2lm3(i, h_rad, h_lm, i%l+rad(i%t)%ladd,nspin_gga)
     !
     ! Compute div(H)
     CALL PAW_divergence(i, h_lm, div_h, i%l+rad(i%t)%ladd, i%l)
-    !                         input max lm --^     ^-- output max lm
+    !                       input max lm --^  output max lm-^
 
     ! Finally sum it back into v_xc
     DO is = 1,nspin_gga
