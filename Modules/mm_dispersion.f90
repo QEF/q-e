@@ -35,7 +35,7 @@ MODULE london_module
   ! r     ( 3 , mxr )     : ordered distance vectors
   ! dist2 ( mxr )         : ordered distances
   !
-  REAL ( DP ) , PUBLIC :: scal6 , lon_rcut
+  REAL ( DP ) , PUBLIC :: scal6=0._dp , lon_rcut=0._dp
   !
   ! scal6    : global scaling factor
   ! lon_rcut : public cut-off radius
