@@ -128,6 +128,8 @@ PROGRAM fpmd_postproc
      END IF
   ELSE IF (output == 'grd') THEN
      fileout = TRIM(fileout) // '.grd'
+  ELSE IF (output == 'xyz') THEN
+     fileout = TRIM(fileout) // '.xyz'
   END IF
 
   np = np1 * np2 * np3
@@ -421,6 +423,11 @@ PROGRAM fpmd_postproc
      ELSE IF( output == 'grd' ) THEN
         ! write data as GRD format
         CALL write_grd( ounit, at, rho_out, ns1, ns2, ns3 )
+     ELSE IF( output == 'xyz' ) THEN
+        ! write data as XYZ format
+        CALL write_xyz( ldynamics, lforces, lcharge, ounit, n, at, &
+                        natoms, ityp, tau_out, force, rho_out, &
+                        ns1, ns2, ns3 )
      END IF
 
   END DO
@@ -861,6 +868,53 @@ SUBROUTINE write_xsf( ldynamics, lforces, lcharge, ounit, n, at, &
 
   RETURN
 END SUBROUTINE write_xsf
+
+
+SUBROUTINE write_xyz( ldynamics, lforces, lcharge, ounit, n, at, &
+                      natoms, ityp, tau, force, rho, nr1, nr2, nr3 )
+  IMPLICIT NONE
+
+  INTEGER, PARAMETER :: DP = KIND(0.0d0)
+
+  LOGICAL, INTENT(in)       :: ldynamics, lforces, lcharge
+  INTEGER, INTENT(in)       :: ounit, n, natoms, ityp(natoms)
+  INTEGER, INTENT(in)       :: nr1, nr2, nr3
+  REAL(DP), INTENT(in) :: at(3, 3), tau(3, natoms), force(3, natoms)
+  REAL(DP), INTENT(in) :: rho(nr1, nr2, nr3)
+  INTEGER :: i, j, ix, iy, iz
+  CHARACTER*2 :: label(103)
+  DATA label /" H", "He", "Li", "Be", " B", " C", " N", " O", " F", "Ne", &
+              "Na", "Mg", "Al", "Si", " P", " S", "Cl", "Ar", " K", "Ca", &
+              "Sc", "Ti", " V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", &
+              "Ga", "Ge", "As", "Se", "Br", "Kr", "Rb", "Sr", " Y", "Zr", &
+              "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "In", "St", &
+              "Sb", "Te", " I", "Xe", "Cs", "Ba", "La", "Ce", "Pr", "Nd", &
+              "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb", &
+              "Lu", "Hf", "Ta", " W", "Re", "Os", "Ir", "Pt", "Au", "Hg", &
+              "Tl", "Pb", "Bi", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Th", &
+              "Pa", " U", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "Es", "Fm", &
+              "Md", "No", "Lr"/
+
+  ! write natoms
+  write(ounit,*) natoms
+
+  ! write cell
+  write(ounit,'(9(F10.4,2X))') at
+
+  ! write atomic coordinates (and forces)
+  DO i = 1, natoms
+     IF (lforces) THEN
+        WRITE (ounit,'(a2,3x,3f15.9,1x,3f12.5)') label(ityp(i)), &
+              (tau(j, i), j=1,3), (force(j, i), j=1,3)
+     ELSE
+        WRITE (ounit,'(a2,3x,3f15.9,1x,3f12.5)') label(ityp(i)), &
+              (tau(j, i), j=1,3)
+     END IF
+  END DO
+
+  RETURN
+END SUBROUTINE write_xyz
+
 
 SUBROUTINE write_grd( ounit, at, rho, nr1, nr2, nr3 )
   IMPLICIT NONE
