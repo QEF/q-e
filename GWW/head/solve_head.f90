@@ -386,7 +386,7 @@ subroutine solve_head
 !invert Hamiltonian
                     z_dl(1:nsteps_lanczos-1)=conjg(f(1:nsteps_lanczos-1,iv))
                     z_du(1:nsteps_lanczos-1)=f(1:nsteps_lanczos-1,iv)
-                    z_d(1:nsteps_lanczos)=d(1:nsteps_lanczos,iv)+dcmplx(-et(first_b+iv-1,ik)-scissor/rytoev,freqs(first_f+i-1))
+                    z_d(1:nsteps_lanczos)=d(1:nsteps_lanczos,iv)+dcmplx(-et(first_b+iv-1,ik)-scissor(1)/rytoev,freqs(first_f+i-1))
                     z_b(:)=(0.d0,0.d0)
                     z_b(1)=dble(omat(1,ipol,iv))
                     call zgtsv(nsteps_lanczos,1,z_dl,z_d,z_du,z_b,nsteps_lanczos,info)

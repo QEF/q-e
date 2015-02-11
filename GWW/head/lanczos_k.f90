@@ -324,6 +324,7 @@ subroutine  h_psi_scissor( ik,lda, n, m, psi, hpsi )
   USE mp, ONLY : mp_sum
   USE mp_world, ONLY : world_comm
   USE control_ph,           ONLY : nbnd_occ
+  USE constants, ONLY : rytoev
 
   implicit none
 
@@ -349,10 +350,10 @@ subroutine  h_psi_scissor( ik,lda, n, m, psi, hpsi )
 
   do jj=1,m
      do ii=1,nbnd_occ(ik)
-        prod(ii,jj)=prod(ii,jj)*scissor
+        prod(ii,jj)=prod(ii,jj)*(scissor(1)-scissor(2))/rytoev
      enddo
   enddo
-  call dgemm('N','N',2*npw,m,nbnd_occ(ik),1.d0,evc,2*npwx,prod,nbnd_occ(ik),1.d0,hpsi,2*lda)
+  call dgemm('N','N',2*npw,m,nbnd_occ(ik),1.d0,evc,2*npwx,prod,nbnd_occ(ik),1.d0+scissor(2)/rytoev,hpsi,2*lda)
 
 
   deallocate(prod)

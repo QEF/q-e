@@ -204,7 +204,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 
        USE uspp, ONLY : okvan
        USE wannier_gw, ONLY : becp_gw, restart_gww,l_whole_s,l_verbose,&
-                               &l_scissor,scissor,num_nbndv
+                               &l_scissor,scissor,num_nbndv,num_nbnds
       ! USE realus,  ONLY : adduspos_gamma_r
        USE wvfct,    ONLY : npwx,npw,nbnd, et,g2kin
        USE wavefunctions_module, ONLY : evc
@@ -289,7 +289,8 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
           enddo
           call mp_sum(et(:,ispin),world_comm)
           if(l_scissor) then
-             et(1:num_nbndv(ispin),ispin)=et(1:num_nbndv(ispin),ispin)+scissor/rytoev
+             et(1:num_nbndv(ispin),ispin)=et(1:num_nbndv(ispin),ispin)+scissor(1)/rytoev
+             et(num_nbndv(ispin)+1:num_nbnds,ispin)=et(num_nbndv(ispin)+1:num_nbnds,ispin)+scissor(2)/rytoev
           endif
 
           if(l_verbose)write(stdout,*) 'ATTENZIONE7'

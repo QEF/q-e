@@ -579,11 +579,9 @@ CONTAINS
 !set up self-energy remainders
 
   allocate(ss%ene_remainder(ss%max_i,1))
-  if(options%remainder == 3 .or. options%remainder == 4) then
-     ss%ene_remainder(:,1)=qp%ene_remainder(:,1)
-  else
-     ss%ene_remainder(:,1)=0.d0
-  endif
+ 
+  ss%ene_remainder(:,1)=0.d0
+  
 
 
   if(.not.options%lvcprim_file .and. .not.options%l_self_beta) then
@@ -733,118 +731,8 @@ CONTAINS
      enddo
   
      call free_memory(vpid)
-!if required add remainder time to negative ones
-     if(options%remainder==1 .or. options%remainder==2) then
-      
-        write(stdout,*) 'enter remainder'
-    
-        call read_data_pw_wp_psi(wp,options%prefix)
 
 
-
-        if(.not.options%l_hf_energies) then
-           if(uu%nums > uu%nums_occ(1)) then
-              offset=-(uu%ene(uu%nums_occ(1)+1,1)+uu%ene(uu%nums_occ(1),1))/2.d0
-           else
-              offset=-uu%ene(uu%nums_occ(1),1)
-           endif
-        else
-           if(uu%nums > uu%nums_occ(1)) then
-              offset=-(qp%ene_hf(uu%nums_occ(1)+1,1)+qp%ene_hf(uu%nums_occ(1),1))/2.d0
-           else
-              offset=-qp%ene_hf(uu%nums_occ(1),1)
-           endif
-        endif
-        
-        call read_green(0,gg,options%debug,.false.)               
-        call read_green(0,gm,options%debug,.true.)
-        
-        do iw=-ss%n,0
-           if(is_my_pola(-iw)) then 
-              write(stdout,*) 'Remainder time:', iw
-              if(ss%whole_s) then
-                 write(stdout,*) 'Routine create_self_ontime: remainder and whole matrix not implemented YET'            
-                 stop
-              else
-                 if(tf%l_fft_timefreq) then
-                    time=dt*real(iw)
-                 else
-                    time=tf%times(iw)
-                 endif
-                 call read_polaw(iw,ww,options%debug,options%l_verbose) 
-                 
-                 do ii=ss%i_min,ss%i_max             
-                    if(options%l_contraction_single_state) then
-                       crs%state=ii
-                       call read_contraction_state(cri,crs,options)
-                    endif
-                    if(.not.options%use_contractions) then        
-                       call self_energy(ii,ii,sene,time,qm,uu,gg,ww)
-                    else
-                       if(.not.options%l_contraction_single_state) then
-                          call self_energy_contraction(ii,ii,sene,time,cr,gg,ww)
-                       else
-                          call self_energy_contraction_state(ii,ii,sene,time,cri,crs,gg,ww)
-                       endif
-                    endif
-                    if(options%remainder==1) then
-                       if(.not.options%l_hf_energies) then
-                          sene=sene*exp((uu%ene(uu%nums,1)+offset)*time)
-                       else
-                          sene=sene*exp((qp%ene_hf(qp%max_i,1)+offset)*time)
-                       endif
-                    endif
-!sene changes sign because we are on the negative axes!!
-
-                    if(iw==0) sene=sene*0.5d0
-                    
-                    ss%diag(ii,iw+ss%n+1,1)=ss%diag(ii,iw+ss%n+1,1)+sene
-                    
-                    write(stdout,*) 'SENE 0', iw, sene
-                    
-                    if(.not.options%use_contractions) then
-                       call self_energy(ii,ii,sene,time,qm,uu,gm,ww)
-                    else
-                      if(.not.options%l_contraction_single_state) then
-                         call self_energy_contraction(ii,ii,sene,time,cr,gg,ww)
-                      else
-                         call self_energy_contraction_state(ii,ii,sene,time,cri,crs,gg,ww)
-                      endif
-                   endif
-                   if(options%remainder==1) then
-                      if(.not.options%l_hf_energies) then
-                         sene=sene*exp((uu%ene(uu%nums,1)+offset)*time)
-                      else
-                         sene=sene*exp((qp%ene_hf(qp%max_i,1)+offset)*time)
-                      endif
-                   endif
-                   if(iw==0) sene=sene*0.5d0
-
-                 
-                   ss%diag(ii,iw+ss%n+1,1)=ss%diag(ii,iw+ss%n+1,1)-sene
-                   write(stdout,*) 'SENE 1', iw, sene
-                   
-                   call self_energy_remainder(ii,sene,time,wp,ww)
-                   if(options%remainder==1) then
-                      if(.not.options%l_hf_energies) then
-                         sene=sene*exp((uu%ene(uu%nums,1)+offset)*time)
-                      else
-                         sene=sene*exp((qp%ene_hf(qp%max_i,1)+offset)*time)
-                      endif
-                   endif
-                   if(iw==0) sene=sene*0.5d0
-                   
-                   ss%diag(ii,iw+ss%n+1,1)=ss%diag(ii,iw+ss%n+1,1)+sene
-                   
-                   write(stdout,*) 'SENE 2', iw, sene
-                   if(options%l_contraction_single_state) &
-                        & call free_memory_contraction_state(crs)
-                enddo
-             endif
-          endif
-       enddo
-       call free_memory(wp)
-    endif
     
     
     if(ss%whole_s) then

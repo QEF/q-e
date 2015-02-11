@@ -2166,10 +2166,11 @@ subroutine  h_psi_scissor( ispin,lda, n, m, psi, hpsi )
 
   do jj=1,m
      do ii=1,num_nbndv(ispin)
-        prod(ii,jj)=prod(ii,jj)*scissor/rytoev
+        prod(ii,jj)=prod(ii,jj)*(scissor(1)-scissor(2))/rytoev
      enddo
   enddo
-  call dgemm('N','N',2*npw,m,num_nbndv(ispin),1.d0,evc,2*npwx,prod,num_nbndv(ispin),1.d0,hpsi,2*lda)
+  call dgemm('N','N',2*npw,m,num_nbndv(ispin),1.d0,evc,2*npwx,prod,num_nbndv(ispin),&
+       &1.d0+scissor(2)/rytoev,hpsi,2*lda)
 
 
   deallocate(prod)

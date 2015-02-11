@@ -35,15 +35,12 @@
       INTEGER :: fit_maxiter=5000 !max number of iterations
       INTEGER :: starting_point=1!defines the starting point: 1-all 2-from polarization 3-from W 4-from Sigma
                                !5-from fit... HAS BEEN CHANGED A BIT
-      INTEGER :: ending_point=7!defines the ending point for faster remainder calculation
+      INTEGER :: ending_point=7!defines the ending point 
       LOGICAL :: use_contractions=.false.!if true perform contraction for calculating the self energy
       LOGICAL :: lnonorthogonal=.false.!if true a non orthogonal basis set is considered
       LOGICAL :: l_hf_energies=.false.! if true uses perturbative HF energies for calculating G and W
       INTEGER :: n_fit!number of time intervals in the positive or negative range to be used for fit
-      INTEGER :: remainder=0!if 0 not remainder if 1,2 our remainders , 3 Chelikowsky COH remainder, 4 Chelikowsky 
-                         !reaminder calculated in PW
       LOGICAL :: lconduction=.true.!if true accurate calculation of self_energy for conduction states
-      LOGICAL :: l_remainder_cutoff=.false.!if true uses the reduced based for the remainder description
       LOGICAL :: l_contraction_single_state=.true.!if true write the contractions on disk state by state for saving memory
 !the following options are for the treatment of time/frequency with user defined grids
 
@@ -142,6 +139,10 @@
       LOGICAL :: l_full=.false.!if true in points 6 calls routine for full relativistic calculations EXPERTS only
       INTEGER :: n_full=0!number of KS states with explicit treatment in G
 
+      LOGICAL :: l_scissor=.false.!if true shifts DFT occupied bands of scissor
+      REAL(kind=DP) :: scissor(2)=0.d0!value for scissor of valence manifold (1) and conduction manifold (2) in eV
+      
+
    END TYPE  input_options
 
   CONTAINS
@@ -198,9 +199,7 @@
        if(ggwin%use_contractions) write(stdout,*) 'Uses contraction'
        if(ggwin%lnonorthogonal) write(stdout,*) 'Ultralocalized generalized Wanniers are assumed'
        if(ggwin%l_hf_energies) write(stdout, *) ' Uses perturbative HF energies for G and W'
-       if(ggwin%remainder == 1) write(stdout, *) ' Uses remainder for self-energy'
        if(ggwin%lconduction) write(stdout, *) 'Accurate treatment of conduction states'
-       if(ggwin%l_remainder_cutoff) write(stdout,*) 'Uses reduced set for remainder'
        if(ggwin%l_contraction_single_state) write(stdout,*) 'Uses contractions on single states'
        if(.not.ggwin%l_fft_timefreq) then
           write(stdout,*) 'Uses no fft grid for time/space integrations'
@@ -281,6 +280,7 @@
         if(ggwin%l_big_system) write(stdout,*) 'USING ONLY LOCAL S VECTORS'
         if(ggwin%l_list) write(stdout,*) 'FROM LIST'
         if(ggwin%l_full) write(stdout,*) 'FULL RELATIVISTIC CALCULATION with:', ggwin%n_full
+        if(ggwin%l_scissor) write(stdout,*) 'USE SCISSOR:', ggwin%scissor
      endif
 #ifdef __MPI
     CALL mp_bcast( outdir,ionode_id, world_comm )
@@ -308,9 +308,7 @@
     call mp_bcast(ggwin%lnonorthogonal, ionode_id,world_comm)
     call mp_bcast(ggwin%n_fit, ionode_id,world_comm)
     call mp_bcast(ggwin%l_hf_energies, ionode_id,world_comm)
-    call mp_bcast(ggwin%remainder, ionode_id,world_comm)
     call mp_bcast(ggwin%lconduction, ionode_id,world_comm)
-    call mp_bcast(ggwin%l_remainder_cutoff, ionode_id,world_comm)
     call mp_bcast(ggwin%l_contraction_single_state, ionode_id,world_comm)
     call mp_bcast(ggwin%l_fft_timefreq, ionode_id,world_comm)
     call mp_bcast(ggwin%grid_time, ionode_id,world_comm)
@@ -381,6 +379,8 @@
     call mp_bcast(ggwin%l_list, ionode_id,world_comm)
     call mp_bcast(ggwin%l_full, ionode_id,world_comm)
     call mp_bcast(ggwin%n_full, ionode_id,world_comm)
+    call mp_bcast(ggwin%l_scissor, ionode_id, world_comm)
+    call mp_bcast(ggwin%scissor, ionode_id, world_comm)
 #endif
 
     return

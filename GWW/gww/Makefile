@@ -43,7 +43,6 @@ lanczos_polarization.o \
 para_gww.o \
 polarization.o \
 read_data_pw.o \
-remainder.o \
 self_energy.o \
 self_energy_storage.o \
 start_end.o \

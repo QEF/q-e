@@ -127,7 +127,8 @@
          
          if(l_scissor) then
             do is=1,nspin
-               et(1:num_nbndv(is),is)=et(1:num_nbndv(is),is)+scissor/rytoev
+               et(1:num_nbndv(is),is)=et(1:num_nbndv(is),is)+scissor(1)/rytoev
+               et(num_nbndv(is)+1:num_nbnds,is)=et(num_nbndv(is)+1:num_nbnds,is)+scissor(2)/rytoev
             enddo
          endif
 

@@ -105,11 +105,7 @@
       call  go_exchange_main( options, qp)
       call write_quasi_particles(qp, options,.false.)
    else
-      if(options%starting_point >= 6 .and. (options%remainder==3 .or. options%remainder==4)) then 
-         call read_quasi_particles(qp,options,.true.)
-      else
-         call read_quasi_particles(qp,options,.false.)
-      endif
+      call read_quasi_particles(qp,options,.false.)
    endif
 
 
@@ -168,14 +164,9 @@
      call go_dressed_w(options)
 
 
-     if(options%remainder==4) call create_dressed_polarization( options)
-
-     if(options%remainder==3 .or. options%remainder==4) then
-        call remainder(options, qp)
-        call write_quasi_particles(qp,options,.true.)
-     else
-        call write_quasi_particles(qp,options,.false.)
-     endif
+  
+     call write_quasi_particles(qp,options,.false.)
+  
 
 
   endif
@@ -186,11 +177,9 @@
   if(options%starting_point<=5  .and. options%ending_point >= 5) then
 
 
-     if(options%remainder==3.or.options%remainder==4) then
-        call read_quasi_particles(qp,options,.true.)
-     else
-        call read_quasi_particles(qp,options,.false.)
-     endif
+     
+     call read_quasi_particles(qp,options,.false.)
+     
      if(.not.  options%l_self_lanczos) then
         write(stdout,*) 'Call FFT'
         call go_fft_para2(tf, options)
@@ -290,7 +279,6 @@
 !Step 7
 ! fit self_energy with a multipole expansion
       call read_self_storage_ondisk(ss, options)
-      !call set_remainder(ss, qp)
       call create_self_energy_fit( tf, se, ss, options,sr,.false.)
       call mp_barrier( world_comm )
       call print_fit_onfile(tf, se,ss)

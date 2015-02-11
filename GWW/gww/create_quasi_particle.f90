@@ -32,7 +32,7 @@
    TYPE(wannier_u) :: uu
    COMPLEX(kind=DP) :: zz, sigmac,dsigmac
    REAL(kind=DP)  :: offset
-   REAL(kind=DP), ALLOCATABLE  :: remainder(:)
+   REAL(kind=DP), ALLOCATABLE  :: delta_ene(:)
 
 
 
@@ -71,13 +71,17 @@
       endif
  !  call free_memory(uu)
 
-!set remainders
+!set scissor if required
 
-      allocate(remainder(options%max_i))
-      if(options%remainder==3 .or.options%remainder==4) then
-         remainder(:)=qp%ene_remainder(:,1)
-      else
-         remainder(:)=0.d0
+      allocate(delta_ene(options%max_i))
+      delta_ene(:)=0.d0
+      if(options%l_scissor) then
+         do ii=1,uu%nums_occ(is)
+            delta_ene(ii)=-options%scissor(1)/RYTOEV
+         enddo
+         do ii=uu%nums_occ(is)+1,uu%nums
+            delta_ene(ii)=-options%scissor(2)/RYTOEV
+         enddo
       endif
 
 
@@ -99,9 +103,9 @@
          zz=(1.d0,0.d0)-dsigmac
          if(.not. options%l_hf_energies) then
             qp%ene_gw(ii,is)=qp%ene_dft_ks(ii,is)+offset +qp%ene_h(ii,is)-qp%ene_dft_h(ii,is)+&
-                 & (sigmac+remainder(ii)+qp%ene_x(ii,is)-qp%ene_dft_xc(ii,is) )/zz
+                 & (sigmac+delta_ene(ii)+qp%ene_x(ii,is)-qp%ene_dft_xc(ii,is) )/zz
          else
-            qp%ene_gw(ii,is)=qp%ene_hf(ii,is)+offset+(sigmac+remainder(ii))/zz
+            qp%ene_gw(ii,is)=qp%ene_hf(ii,is)+offset+(sigmac+delta_ene(ii))/zz
          endif
          write(stdout,*) 'XC-DFT energy',ii,qp%ene_dft_xc(ii,is)
          write(stdout,*) 'H-DFT energy',ii,qp%ene_dft_h(ii,is)*RYTOEV,qp%ene_h(ii,is)*RYTOEV
@@ -110,7 +114,7 @@
 !self-consistency loop
          do it=1,10
             call value_on_frequency_complex(se,ii,qp%ene_gw(ii,is),sigmac,is)
-            sigmac=sigmac+remainder(ii)
+            sigmac=sigmac+delta_ene(ii)
             write(stdout,*) 'Iteration energy',it,sigmac
             if(.not. options%l_hf_energies) then
                qp%ene_gw(ii,is)=qp%ene_dft_ks(ii,is)+offset+sigmac+qp%ene_x(ii,is)-qp%ene_dft_xc(ii,is) &
@@ -124,7 +128,7 @@
       enddo
 
 
-      deallocate(remainder)
+      deallocate(delta_ene)
 
    enddo!spin
    call free_memory(uu)
