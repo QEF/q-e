@@ -24,8 +24,8 @@ MODULE wannier_gw
     !options for grid_freq=5
   INTEGER :: second_grid_n!sub spacing for second grid
   INTEGER :: second_grid_i!max regular step using the second grid
-  LOGICAL :: l_scissor!if true displaces occupied manifold of scissor
-  REAL(kind=DP) :: scissor!see above
+  LOGICAL :: l_scissor!if true displaces occupied manifold of scissor(1) and unoccupied manifold of scissor(2)
+  REAL(kind=DP) :: scissor(2)!see above
   !From pw4gww
   TYPE real_matrix_pointer
      REAL(kind=DP), DIMENSION(:,:), POINTER :: p
@@ -194,8 +194,6 @@ MODULE wannier_gw
   INTEGER :: n_list(2)!number of states in list for the 2 spin channels
   INTEGER, ALLOCATABLE :: i_list(:,:) !list of KS states to be computed 
 
-  !LOGICAL :: l_scissor! if true uses a scissor
-  !REAL(kind=DP) :: scissor!value for scissor in eV
   LOGICAL :: l_full!if true prepare data for further post-processing for a full-relativistic calculation
   INTEGER :: n_full!numeber of proper relativistic states in G of GW
 
