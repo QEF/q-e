@@ -2782,7 +2782,7 @@ USE kinds, ONLY : DP
 IMPLICIT NONE
 REAL(DP), INTENT(IN) :: a(3)
 INTEGER, INTENT(OUT) :: ia
-REAL(DP) :: epsil=1.D-8, sqr3=SQRT(3.0_DP)
+REAL(DP) :: epsil=1.D-7, sqr3=SQRT(3.0_DP)
 LOGICAL :: is_axis
 
 ia=0
