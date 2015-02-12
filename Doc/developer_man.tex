@@ -1245,15 +1245,52 @@ convenient in some cases that the two sets are not the same.
 In particular, it is often convenient to have \texttt{nrx1}=\texttt{nr1}+1
 to reduce memory conflicts.
 
-\section{Parallelization}
+\section{Parallelization (MPI)}
 
-In parallel execution (MPI only), N independent processes are started
-(do not start more than one per processor!) that communicate via calls
-to MPI libraries. Each process has its own set of variables and knows
-nothing about other processes' variables. Variables that take little memory 
-are replicated, those that take a lot of memory (wavefunctions, G-vectors, 
-R-space grid) are distributed.
-    
+In MPI parallelization, a number of independent processes are started
+on as many processors, communicating via calls to MPI libraries
+(the code will work even with more than one process per processor, 
+but this is not a smart thing to do). Each process has its own 
+set of variables and knows nothing about other processes' variables. 
+Variables that take little memory are replicated on all processors, 
+those that take a lot of memory (wavefunctions, G-vectors, R-space grid) 
+are distributed. 
+
+\subsection{General rules}
+
+Calls to MPI libraries should be confined to a few selected places,
+not scattered everywhere into the source code. The vast majority
+of parallel operations consist either in broadcasts from one processor
+to all others, or in global operations: parallel sums and transpose.
+All you need is the MPI communicator (plus the ID of the root processor
+for broadcasts), and the appropriate call to wrapper routines, contained 
+in {\tt espresso/Modules/mp.f90} and {\tt espresso/Modules/mp\_base.f90}. 
+For instance: {\tt mp\_sum} is a wrapper to {\tt mpi\_reduce},
+{\tt mp\_bcast} to {\tt mpi\_bcast}.
+
+For efficiency reasons (latency is very significant), performing many
+parallel operations on a small amount of data each must be avoided. 
+If you can, store a sizable amount of data and transmit it in a single
+MPI call. An example of REALLY BAD code:
+\begin{verbatim}
+   COMPLEX, ALLOCATABLE :: wfc(:,:), swfc(:,:)
+   ALLOCATE (wfc(npwx,m),swfc(npwx,m))
+   DO i=1,m
+      DO j=1,m
+         ps = zdotc(npw,wfc(1,i),1,swfc(1,j)1)
+         CALL mp_sum(ps,intra_bgrp_group)
+      END DO
+   END DO
+\end{verbatim}
+MUCH better code, both for serial and parallel speed:
+\begin{verbatim}
+   COMPLEX, ALLOCATABLE :: ps(:,:), wfc(:,:), swfc(:,:)
+   ALLOCATE (ps(m,m), wfc(npwx,m),swfc(npwx,m))
+   CALL zgemm ('c', 'n', m, m, npw, (1.d0, 0.d0), wfc, &
+               npwx, swfc, npwx, (0.d0, 0.d0), ps, m)
+   CALL mp_sum(ps,intra_bgrp_group)
+\end{verbatim}
+
 \subsubsection{Usage of \#ifdef \_\_MPI}
 
 Calls to MPI libraries require variables contained into a 
@@ -1261,20 +1298,77 @@ Calls to MPI libraries require variables contained into a
 In order to prevent compilation problems on serial machines,
 the following rules {\em must} be followed:
 \begin{itemize}
-\item All direct calls to MPI library routines must either be 
-\#ifdef'ed, or wrapped into calls to routines like those in
-module \texttt{mp.f90}.
-\item Routines that are used only in parallel execution may be either
-called and \#ifdef'ed inside, or not called (via an \#ifdef) and not 
-compiled (via an \#ifdef again) in the serial case. Note that
+\item Direct calls to MPI library routines must be replaced by
+calls to wrapper routines like those in module \texttt{mp.f90}. 
+If this is not possible or not convenient, use \#ifdef \_\_MPI
+to prevent compilation and usage in the serial case. Note that 
 some compilers do not like empty files or modules containing nothing!
-\item Other \#ifdef \_\_MPI may be needed when the flux of parallel
-execution is different from that of the serial case.
-\item All other \#ifdef \_\_MPI are not needed, may be removed if
-already present
-\item \#ifdef \_\_PARA is obsolescent: it should be removed from
-existing code, it must not be used in new developments.
+\item Wrapper routines do not need to be conditionally called:
+there are \#ifdef's inside them. Keep the difference between serial
+and parallel code to a minimum: more \#ifdef \_\_MPI may be needed
+only when the flux of parallel and serial execution differ.
+\item Unneeded \#ifdef \_\_MPI may be removed if already present;
+\#ifdef \_\_PARA is obsolete and must not be used in new developments.
 \end{itemize}
+
+\subsection{Parallelization levels and communicators}
+
+\texttt{mp\_world.f90} is the module containing all processors 
+on which QE is running. \texttt{world\_comm} 
+is the communicator between all such processors. In QE, its usage
+should be confined to parallel environment initialization. It
+should not be used in source code, unless this is used only by
+stand-alone executables that perform simple auxiliary tasks 
+and do not allow for  multiple parallelization levels.
+Unless QE is started from an external code, \texttt{world\_comm}
+will in practice coincides with MPI\_WORLD\_COMM.
+
+\texttt{mp\_image.f90} is the module containing information about 
+``image" parallelization, i.e. division into quasi-independent similar
+calculations, each taking care of a different set of atomic
+positions (NEB, PWscf) or of different irreps/phonon wavevectors
+(PHonon). \texttt{intra\_image\_comm} is the communicator between 
+processors of the same image (most of the action will happen here); 
+\texttt{inter\_image\_comm} is the communicator between processors 
+belonging to different images (should be used only when communication 
+between images is necessary). 
+{\tt intra\_image\_comm} and {\tt world\_comm} coincide if there 
+is just one image running.
+
+\texttt{mp\_pools.f90} is the module containing information about k-point 
+(``pool") parallelization. \texttt{intra\_pool\_comm} is the communicator 
+between processors working on the same group (``pool") of k-points;
+\texttt{inter\_pool\_comm} is the communicator between different 
+k-point pools. Note that:
+\begin{quote}
+\framebox{$\sum_{\bf k}\equiv$ sum over local {\bf k}-points + 
+{\tt mp\_sum} on {\tt inter \_pool\_comm}}
+\end{quote}
+{\tt intra\_pool\_comm} and {\tt intra\_image\_comm} coincide if there 
+is just one k-point pool.
+
+\texttt{mp\_bands.f90} is the module containing information about band
+parallelization. \texttt{intra\_bgrp\_comm} is the communicator between
+processors of the same group of bands; \texttt{inter\_band\_comm} is the 
+communicator between processors belonging to different groups of bands.
+Note that band parallelization is currently implemented only in CP and
+for hybrid functionals in PW. When a sum over all bands is needed:
+\begin{quote}
+\framebox{$\sum_i\equiv$ sum over local bands + {\tt mp\_sum} on 
+{\tt inter\_bgrp\_comm}}
+\end{quote}
+{\tt intra\_bgrp\_comm} and {\tt intra\_pool\_comm} coincide
+if there is just one band group.
+
+Plane waves (${\bf k}+{\bf G}$ or ${\bf G}$ vectors up to the specified 
+kinetic energy cutoff) are distributed across processors of the
+{\tt intra\_bgrp\_comm} communicators. Sums over all plane waves
+or {\bf G}-vectors (as e.g. in scalar products $\langle\phi_i|\phi_j\rangle$) 
+should be performed as follows:
+\begin{quote}
+\framebox{$\sum_{\bf G} \equiv$ {\tt mp\_sum} on {\tt intra\_bgrp\_comm}}
+\end{quote}
+The same holds for real-space FFT's grid.
 
 \subsection{Tricks and pitfalls}
 
