@@ -229,6 +229,14 @@
             deallocate(evc)
                
           else
+             if(l_scissor) then
+                do is=1,nspin
+                   IF (lsda) current_spin  = isk(is)
+                   if(nspin/=1)  CALL davcio(evc,2*nwordwfc,iunwfc,is,-1)!read wfcs for                                                                                                                         
+                   call  energies_xc( npwx, npw, nbnd, evc, e_xc(:,is),e_h(:,is),is )
+                   if( is == nspin) call write_energies_xc(e_xc)
+                enddo
+             endif
              deallocate(evc)
           endif
           write(stdout,*) 'USE RESTART: 1'
