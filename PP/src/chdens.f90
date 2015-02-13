@@ -406,7 +406,7 @@ SUBROUTINE chdens (filplot,plot_num)
         !
      ELSE
         !
-        IF (gamma_only) THEN
+        IF (gamma_only .and. (trim(interpolation) == 'fourier')) THEN
              WRITE(stdout,'(/"BEWARE: plot requiring G-space interpolation",&
                             &" not implemented for Gamma only!",/, &
                             &"SOLUTION: restart this calculation with", &
