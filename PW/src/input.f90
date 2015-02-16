@@ -464,7 +464,7 @@ SUBROUTINE iosys()
             '(5x,"Presently no symmetry can be used with electric field",/)' )
   ENDIF
   IF ( tefield .and. tstress ) THEN
-     tstress = .false.
+     lstres = .false.
      WRITE( stdout, &
             '(5x,"Presently stress not available with electric field",/)' )
   ENDIF
@@ -1302,6 +1302,12 @@ SUBROUTINE iosys()
       do_comp_esm    = .true.
       !
   END SELECT
+  !
+  IF ( ( do_comp_mt .OR. do_comp_esm ) .AND. lstres ) THEN
+     lstres = .false.
+     WRITE( stdout, &
+          '(5x,"Stress calculation not meaningful in isolated systems",/)' )
+  END IF
   !
   CALL plugin_read_input()
   !
