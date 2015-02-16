@@ -1303,7 +1303,7 @@ SUBROUTINE iosys()
       !
   END SELECT
   !
-  IF ( ( do_comp_mt .OR. do_comp_esm ) .AND. lstres ) THEN
+  IF ( do_comp_mt .AND. lstres ) THEN
      lstres = .false.
      WRITE( stdout, &
           '(5x,"Stress calculation not meaningful in isolated systems",/)' )
