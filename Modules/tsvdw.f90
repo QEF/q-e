@@ -2665,6 +2665,36 @@ PRIVATE :: GetVdWParam
   C6=3170.000000_DP
   R0=4.540000_DP
   !
+  CASE ('Y')
+  alpha=126.7370_DP
+  C6=1968.580_DP
+  R0=4.81510_DP
+  !
+  CASE ('Zr')
+  alpha=119.97_DP
+  C6=1677.91_DP
+  R0=4.53_DP
+  !
+  CASE ('Nb')
+  alpha=101.603_DP
+  C6=1263.61_DP
+  R0=4.2365_DP
+  !
+  CASE ('Mo')
+  alpha=88.4225785_DP
+  C6=1028.73_DP
+  R0=4.099_DP
+  !
+  CASE ('Tc')
+  alpha=80.083_DP
+  C6=1390.87_DP
+  R0=4.076_DP
+  !
+  CASE ('Ru')
+  alpha=65.8950_DP
+  C6=609.754_DP
+  R0=3.99530_DP
+  !
   CASE ('Rh')
   alpha=56.1_DP
   C6=469.0_DP
@@ -2685,6 +2715,21 @@ PRIVATE :: GetVdWParam
   C6=452.0_DP
   R0=3.99_DP
   !
+  CASE ('In')
+  alpha=70.22000_DP
+  C6=707.046000_DP
+  R0=4.23198000_DP
+  !
+  CASE ('Sn')
+  alpha=55.9500_DP
+  C6=587.41700_DP
+  R0=4.303000_DP
+  !
+  CASE ('Sb')
+  alpha=43.671970_DP
+  C6=459.322_DP
+  R0=4.2760_DP
+  !
   CASE ('Te')
   alpha=37.65_DP
   C6=396.0_DP
@@ -2700,10 +2745,40 @@ PRIVATE :: GetVdWParam
   C6=285.900000_DP
   R0=4.080000_DP
   !
+  CASE ('Cs')
+  alpha=427.12_DP
+  C6=6582.08_DP
+  R0=3.78_DP
+  !
   CASE ('Ba')
   alpha=275.0_DP
   C6=5727.0_DP
   R0=4.77_DP
+  !
+  CASE ('Hf')
+  alpha=99.52_DP
+  C6=1274.8_DP
+  R0=4.21_DP
+  !
+  CASE ('Ta')
+  alpha=82.53_DP
+  C6=1019.92_DP
+  R0=4.15_DP
+  !
+  CASE ('W')
+  alpha=71.041_DP
+  C6=847.93_DP
+  R0=4.08_DP
+  !
+  CASE ('Re')
+  alpha=63.04_DP
+  C6=710.2_DP
+  R0=4.02_DP
+  !
+  CASE ('Os')
+  alpha=55.055_DP
+  C6=596.67_DP
+  R0=3.84_DP
   !
   CASE ('Ir')
   alpha=42.51_DP
@@ -2725,6 +2800,11 @@ PRIVATE :: GetVdWParam
   C6=392.0_DP
   R0=3.98_DP
   !
+  CASE ('Tl')
+  alpha=69.92_DP
+  C6=717.44_DP
+  R0=3.91_DP
+  !
   CASE ('Pb')
   alpha=61.8_DP
   C6=697.0_DP
@@ -2734,6 +2814,21 @@ PRIVATE :: GetVdWParam
   alpha=49.02_DP
   C6=571.0_DP
   R0=4.32_DP
+  !
+  CASE ('Po')
+  alpha=45.013_DP
+  C6=530.92_DP
+  R0=4.097_DP
+  !
+  CASE ('At')
+  alpha=38.93_DP
+  C6=457.53_DP
+  R0=4.07_DP
+  !
+  CASE ('Rn')
+  alpha=33.54_DP
+  C6=390.63_DP
+  R0=4.23_DP
   !
   CASE DEFAULT
   !
