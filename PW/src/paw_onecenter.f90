@@ -761,8 +761,8 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
                   grhoup =  grad(k,1,1)**2 + grad(k,2,1)**2 + grad(k,3,1)**2
                   grhodw =  grad(k,1,2)**2 + grad(k,2,2)**2 + grad(k,3,2)**2
                   grhoud =  grad(k,1,1)*grad(k,1,2)+ &
-                          + grad(k,2,1)*grad(k,2,2)+ &
-                          + grad(k,3,1)*grad(k,3,2)
+                            grad(k,2,1)*grad(k,2,2)+ &
+                            grad(k,3,1)*grad(k,3,2)
                   CALL gcc_spin_more( rup_vec(k), rdw_vec(k), grhoup, grhodw, grhoud, &
                                       sc, v1cup, v1cdw, v2cup, v2cdw, v2cud )
                 
