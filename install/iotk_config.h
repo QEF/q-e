@@ -96,7 +96,7 @@
 #endif
 
 
-#if defined(__PARA)
+#if defined(__MPI)
 #  define __IOTK_MPI_ABORT
 #endif
 
