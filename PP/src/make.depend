@@ -288,6 +288,14 @@ local_dos_mag.o : ../../Modules/uspp.o
 local_dos_mag.o : ../../Modules/wavefunctions.o
 local_dos_mag.o : ../../PW/src/pwcom.o
 local_dos_mag.o : ../../PW/src/scf_mod.o
+molecularpdos.o : ../../Modules/constants.o
+molecularpdos.o : ../../Modules/environment.o
+molecularpdos.o : ../../Modules/io_global.o
+molecularpdos.o : ../../Modules/kind.o
+molecularpdos.o : ../../Modules/mp.o
+molecularpdos.o : ../../Modules/mp_global.o
+molecularpdos.o : ../../Modules/mp_world.o
+molecularpdos.o : ../../iotk/src/iotk_module.o
 openfil_pp.o : ../../Modules/control_flags.o
 openfil_pp.o : ../../Modules/io_files.o
 openfil_pp.o : ../../Modules/kind.o
