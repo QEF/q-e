@@ -1094,8 +1094,11 @@ The latter should not depend on any module, except for modules
 Subdirectory \texttt{clib/} contains libraries written in C 
 (\texttt{*.c}). There are currently two different ways to 
 ensure that fortran can call C routines. The new and recommanded 
-way use the fortran-95 intrinsic \texttt{iso\_c\_binding} module: 
-see \texttt{flib/wrappers.f90} for an example of usage.
+way uses the fortran-95 intrinsic \texttt{iso\_c\_binding} module.
+See \texttt{Modules/wrappers.f90} for inspiration and examples.
+Reference documentation can be found for instance here:\\
+{\tt 
+https://gcc.gnu.org/onlinedocs/gfortran/Interoperable-Subroutines-and-Functions.html}
 
 The old way uses macros in C routines:
 \begin{enumerate}
