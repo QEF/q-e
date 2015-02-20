@@ -11,9 +11,9 @@ Incompatible changes in 5.1.2 version:
    * XSpectra: variable ef_r, used to eliminate the occupied states
                from the spectrum, replaced by new variable xe0  
    * PHonon: input variable iverbosity => verbosity
-   * The (undocumented) *.evp file of CP had changed format in v.5.1.1. 
-     Reverted to original (undocumented!) format in order to prevent
-     breaking of scripts and similar undesired phenomena
+   * The (undocumented) *.evp file of CP uses a slightly different format
+     (equally undocumented) since v.5.1.1. In order to use original format,
+     compiles with __OLD_FORMAT preprocessing variable on.
 
 Fixed in 5.1.2 version:
 
