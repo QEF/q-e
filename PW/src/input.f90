@@ -771,15 +771,14 @@ SUBROUTINE iosys()
      !
      restart = .true.
      IF ( TRIM(startingwfc) /= 'file' ) THEN
-        CALL infomsg('input','Restarting from interrupted run, "startingwfc" overridden')
-        startingwfc = 'file'
+        CALL infomsg('input','WARNING: "startingwfc" set to '//TRIM(startingwfc)//' may spoil restart')
      END IF
      IF ( TRIM(startingpot) /= 'file' ) THEN
-        CALL infomsg('input','Restarting from interrupted run, "startingpot" overridden')
+        CALL infomsg('input','WARNING: "startingpot" set to '//TRIM(startingpot)//' may spoil restart')
         startingpot = 'file'
      END IF
      IF ( trim( ion_positions ) == 'from_input' ) THEN
-        CALL infomsg('input','Restarting from positions as given in input')
+        CALL infomsg('input','WARNING: restarting from positions as given in input')
         startingconfig = 'input'
      ELSE
         startingconfig = 'file'

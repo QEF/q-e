@@ -19,7 +19,7 @@ Fixed in 5.1.2 version:
 
    * Option wf_collect wasn't working with LSDA and one k-point per pool
    * Restarting from interrupted calculations could be spoiled by options
-     "startingwfc" and "startingpot": they are now overridden when restarting
+     "startingwfc" and "startingpot": warning added
    * Bug in space-group generator in the monoclinic case.
    * atomic: a small bug was preventing the generation of non-PAW 
      pseudopotentials with GIPAW reconstruction data
