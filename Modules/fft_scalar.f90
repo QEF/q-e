@@ -16,10 +16,19 @@
 !--------------------------------------------------------------------------!
 
 #include "fft_defs.h"
+
+#if defined __DFTI
+#include "mkl_dfti.f90"
+#endif
+
 !=----------------------------------------------------------------------=!
    MODULE fft_scalar
 !=----------------------------------------------------------------------=!
        USE kinds
+
+#if defined __DFTI
+       USE MKL_DFTI ! -- this can be found int he MKL include directory
+#endif
 
         IMPLICIT NONE
         SAVE
@@ -77,6 +86,12 @@
 
 #endif
 
+#if defined __DFTI
+        TYPE dfti_descriptor_array
+           TYPE(DFTI_DESCRIPTOR), POINTER :: desc
+        END TYPE
+#endif
+
 !=----------------------------------------------------------------------=!
    CONTAINS
 !=----------------------------------------------------------------------=!
@@ -94,6 +109,10 @@
 !
 
    SUBROUTINE cft_1z(c, nsl, nz, ldz, isign, cout)
+
+#if defined __DFTI
+     USE iso_c_binding
+#endif
 
 !     driver routine for nsl 1d complex fft's of length nz
 !     ldz >= nz is the distance between sequences to be transformed
@@ -141,6 +160,21 @@
 
      C_POINTER, SAVE :: fw_planz( ndims ) = 0
      C_POINTER, SAVE :: bw_planz( ndims ) = 0
+
+#elif defined __DFTI
+
+     !   Intel MKL native FFT driver
+
+     TYPE(DFTI_DESCRIPTOR_ARRAY), SAVE :: hand( ndims )
+     LOGICAL, SAVE :: dfti_first = .TRUE.
+     INTEGER :: dfti_status = 0
+     !
+     IF( dfti_first .EQ. .TRUE. ) THEN
+        DO ip = 1, ndims
+           hand(ip)%desc => NULL()
+        END DO
+        dfti_first = .FALSE.
+     END IF
 
 #elif defined __ESSL || defined __LINUX_ESSL
 
@@ -207,7 +241,6 @@
        !   initialize a new one
 
        ! WRITE( stdout, fmt="('DEBUG cft_1z, reinitializing tables ', I3)" ) icurrent
-
 #if defined __FFTW
 
        IF( fw_planz( icurrent) /= 0 ) CALL DESTROY_PLAN_1D( fw_planz( icurrent) )
@@ -226,6 +259,53 @@
        idir = 1
        CALL dfftw_plan_many_dft( bw_planz( icurrent), 1, nz, nsl, c, &
             (/SIZE(c)/), 1, ldz, cout, (/SIZE(cout)/), 1, ldz, idir, FFTW_ESTIMATE)
+
+#elif defined __DFTI
+
+       if( ASSOCIATED( hand( icurrent )%desc ) ) THEN
+          dfti_status = DftiFreeDescriptor( hand( icurrent )%desc )
+          IF( dfti_status /= 0) THEN
+             WRITE(*,*) "stopped in DftiFreeDescriptor", dfti_status
+             STOP
+          ENDIF
+       END IF
+
+     dfti_status = DftiCreateDescriptor(hand( icurrent )%desc, DFTI_DOUBLE, DFTI_COMPLEX, 1,nz)
+     IF(dfti_status /= 0) THEN
+        WRITE(*,*) "stopped in DftiCreateDescriptor", dfti_status
+        STOP
+     ENDIF
+     dfti_status = DftiSetValue(hand( icurrent )%desc, DFTI_NUMBER_OF_TRANSFORMS,nsl)
+     IF(dfti_status /= 0)THEN
+        WRITE(*,*) "stopped in DFTI_NUMBER_OF_TRANSFORMS", dfti_status
+        STOP
+     ENDIF
+     dfti_status = DftiSetValue(hand( icurrent )%desc,DFTI_INPUT_DISTANCE, ldz )
+     IF(dfti_status /= 0)THEN
+        WRITE(*,*) "stopped in DFTI_INPUT_DISTANCE", dfti_status
+        STOP
+     ENDIF
+     dfti_status = DftiSetValue(hand( icurrent )%desc, DFTI_PLACEMENT, DFTI_INPLACE)
+     IF(dfti_status /= 0)THEN
+        WRITE(*,*) "stopped in DFTI_PLACEMENT", dfti_status
+        STOP
+     ENDIF
+     tscale = 1.0_DP/nz
+     dfti_status = DftiSetValue( hand( icurrent )%desc, DFTI_FORWARD_SCALE, tscale);
+     IF(dfti_status /= 0)THEN
+        WRITE(*,*) "stopped in DFTI_FORWARD_SCALE", dfti_status
+        STOP
+     ENDIF
+     dfti_status = DftiSetValue( hand( icurrent )%desc, DFTI_BACKWARD_SCALE, DBLE(1) );
+     IF(dfti_status /= 0)THEN
+        WRITE(*,*) "stopped in DFTI_BACKWARD_SCALE", dfti_status
+        STOP
+     ENDIF
+     dfti_status = DftiCommitDescriptor(hand( icurrent )%desc)
+     IF(dfti_status /= 0)THEN
+        WRITE(*,*) "stopped in DftiCommitDescriptor", dfti_status
+        STOP
+     ENDIF
 
 #elif defined __ESSL || defined __LINUX_ESSL
 
@@ -286,11 +366,9 @@
           CALL FFT_Z_STICK_SINGLE(fw_planz( ip), c(offset), ldz_t)
        END DO
 !$omp end do
-       tscale = 1.0_DP / nz
-!$omp workshare
-       cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
-!$omp end workshare
 !$omp end parallel
+       tscale = 1.0_DP / nz
+       cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
      ELSE IF (isign > 0) THEN
 !$omp parallel default(none) private(tid,offset,i) shared(c,isign,nsl,bw_planz,ip,cout,ldz) &
 !$omp &        firstprivate(ldz_t)
@@ -328,6 +406,24 @@
         cout( 1 : ldz * nsl ) = cout( 1 : ldz * nsl ) * tscale
      ELSE IF (isign > 0) THEN
         CALL dfftw_execute_dft( bw_planz( ip), c, cout)
+     END IF
+
+#elif defined __DFTI
+
+     IF (isign < 0) THEN
+        dfti_status = DftiComputeForward(hand(ip)%desc, c )
+        cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
+        IF(dfti_status /= 0) THEN
+           WRITE(*,*) "stopped in DftiComputeForward", dfti_status
+           STOP
+        ENDIF
+     ELSE IF (isign > 0) THEN
+        dfti_status = DftiComputeBackward(hand(ip)%desc, c )
+        cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
+        IF(dfti_status /= 0) THEN
+           WRITE(*,*) "stopped in DftiComputeBackward", dfti_status
+           STOP
+        ENDIF
      END IF
 
 #elif defined __SCSL
@@ -415,6 +511,10 @@
 
    SUBROUTINE cft_2xy(r, nzl, nx, ny, ldx, ldy, isign, pl2ix)
 
+#if defined __DFTI
+     USE iso_c_binding
+#endif
+
 !     driver routine for nzl 2d complex fft's of lengths nx and ny
 !     input : r(ldx*ldy)  complex, transform is in-place
 !     ldx >= nx, ldy >= ny are the physical dimensions of the equivalent
@@ -448,10 +548,22 @@
      EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
 
-#if defined __FFTW || defined __FFTW3
+#if defined __DFTI
 
+     TYPE(DFTI_DESCRIPTOR_ARRAY), SAVE :: hand( ndims )
+     LOGICAL, SAVE :: dfti_first = .TRUE.
+     INTEGER :: dfti_status = 0
+
+#elif defined __FFTW || defined __FFTW3
+
+#if defined __FFTW && __FFTW_ALL_XY_PLANES
+     C_POINTER, SAVE :: fw_plan_2d( ndims ) = 0
+     C_POINTER, SAVE :: bw_plan_2d( ndims ) = 0
+#else
      C_POINTER, SAVE :: fw_plan( 2, ndims ) = 0
      C_POINTER, SAVE :: bw_plan( 2, ndims ) = 0
+#endif
+
 
 #elif defined __ESSL || defined __LINUX_ESSL
 
@@ -503,6 +615,14 @@
      !
      !   Here initialize table only if necessary
      !
+#if defined __DFTI
+     IF( dfti_first .EQ. .TRUE. ) THEN
+        DO ip = 1, ndims
+           hand(ip)%desc => NULL()
+        END DO
+        dfti_first = .FALSE.
+     END IF
+#endif
 
      DO ip = 1, ndims
 
@@ -524,8 +644,62 @@
 
        ! WRITE( stdout, fmt="('DEBUG cft_2xy, reinitializing tables ', I3)" ) icurrent
 
-#if defined __FFTW
+#if defined __DFTI
 
+       if( ASSOCIATED( hand( icurrent )%desc ) ) THEN
+          dfti_status = DftiFreeDescriptor( hand( icurrent )%desc )
+          IF( dfti_status /= 0) THEN
+             WRITE(*,*) "stopped in DftiFreeDescriptor", dfti_status
+             STOP
+          ENDIF
+       END IF
+
+       dfti_status = DftiCreateDescriptor(hand( icurrent )%desc, DFTI_DOUBLE, DFTI_COMPLEX, 2,(/nx,ny/))
+       IF(dfti_status /= 0) THEN
+          WRITE(*,*) "stopped in DftiCreateDescriptor", dfti_status
+          STOP
+       ENDIF
+       dfti_status = DftiSetValue(hand( icurrent )%desc, DFTI_NUMBER_OF_TRANSFORMS,nzl)
+       IF(dfti_status /= 0)THEN
+          WRITE(*,*) "stopped in DFTI_NUMBER_OF_TRANSFORMS", dfti_status
+          STOP
+       ENDIF
+       dfti_status = DftiSetValue(hand( icurrent )%desc,DFTI_INPUT_DISTANCE, ldx*ldy )
+       IF(dfti_status /= 0)THEN
+          WRITE(*,*) "stopped in DFTI_INPUT_DISTANCE", dfti_status
+          STOP
+       ENDIF
+       dfti_status = DftiSetValue(hand( icurrent )%desc, DFTI_PLACEMENT, DFTI_INPLACE)
+       IF(dfti_status /= 0)THEN
+          WRITE(*,*) "stopped in DFTI_PLACEMENT", dfti_status
+          STOP
+       ENDIF
+       tscale = 1.0_DP/ (nx * ny )
+       dfti_status = DftiSetValue( hand( icurrent )%desc, DFTI_FORWARD_SCALE, tscale);
+       IF(dfti_status /= 0)THEN
+          WRITE(*,*) "stopped in DFTI_FORWARD_SCALE", dfti_status
+          STOP
+       ENDIF
+       dfti_status = DftiSetValue( hand( icurrent )%desc, DFTI_BACKWARD_SCALE, DBLE(1) );
+       IF(dfti_status /= 0)THEN
+          WRITE(*,*) "stopped in DFTI_BACKWARD_SCALE", dfti_status
+          STOP
+       ENDIF
+       dfti_status = DftiCommitDescriptor(hand( icurrent )%desc)
+       IF(dfti_status /= 0)THEN
+          WRITE(*,*) "stopped in DftiCommitDescriptor", dfti_status
+          STOP
+       ENDIF
+
+
+#elif defined __FFTW
+
+#if defined __FFTW_ALL_XY_PLANES
+       IF( fw_plan_2d( icurrent) /= 0 )  CALL DESTROY_PLAN_2D(fw_plan_2d(icurrent) )
+       IF( bw_plan_2d( icurrent) /= 0 )  CALL DESTROY_PLAN_2D(bw_plan_2d(icurrent) )
+       idir = -1; CALL CREATE_PLAN_2D( fw_plan_2d(icurrent), nx, ny, idir)
+       idir =  1; CALL CREATE_PLAN_2D( bw_plan_2d(icurrent), nx, ny, idir)
+#else
        IF( fw_plan( 2,icurrent) /= 0 )   CALL DESTROY_PLAN_1D( fw_plan( 2,icurrent) )
        IF( bw_plan( 2,icurrent) /= 0 )   CALL DESTROY_PLAN_1D( bw_plan( 2,icurrent) )
        idir = -1; CALL CREATE_PLAN_1D( fw_plan( 2,icurrent), ny, idir)
@@ -535,6 +709,7 @@
        IF( bw_plan( 1,icurrent) /= 0 ) CALL DESTROY_PLAN_1D( bw_plan( 1,icurrent) )
        idir = -1; CALL CREATE_PLAN_1D( fw_plan( 1,icurrent), nx, idir)
        idir =  1; CALL CREATE_PLAN_1D( bw_plan( 1,icurrent), nx, idir)
+#endif
 
 #elif defined __FFTW3
 
@@ -645,9 +820,45 @@
 #endif
 
 
-#if defined __FFTW
+#if defined __DFTI
 
-#if defined __OPENMP
+     IF( isign < 0 ) THEN
+        !
+        dfti_status = DftiComputeForward(hand(ip)%desc, r(:))
+        IF(dfti_status /= 0)THEN
+           WRITE(*,*) "stopped in DftiComputeForward", dfti_status
+           STOP
+        ENDIF
+        !
+     ELSE IF( isign > 0 ) THEN
+        !
+        dfti_status = DftiComputeBackward(hand(ip)%desc, r(:))
+        IF(dfti_status /= 0)THEN
+           WRITE(*,*) "stopped in DftiComputeBackward", dfti_status
+           STOP
+        ENDIF
+        !
+     END IF
+
+
+#elif defined __FFTW
+
+#if defined __FFTW_ALL_XY_PLANES
+
+     IF( isign < 0 ) THEN
+        !
+        tscale = 1.0_DP / ( nx * ny )
+        !
+        CALL fftw_inplace_drv_2d( fw_plan_2d(ip), nzl, r(1), 1, ldx*ldy )
+        CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
+        !
+     ELSE IF( isign > 0 ) THEN
+        !
+        CALL fftw_inplace_drv_2d( bw_plan_2d(ip), nzl, r(1), 1, ldx*ldy )
+        !
+     END IF
+
+#elif defined __OPENMP
 
      nx_t  = nx
      ny_t  = ny
@@ -1980,6 +2191,7 @@ integer function good_fft_dimension (n)
   !
   if (mod (n, 2) ==0) nx = n + 1
   ! for nec vector machines: if n is even increase dimension by 1
+  !
 #endif
   !
   good_fft_dimension = nx
