@@ -52,7 +52,7 @@
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: nat_
-      CHARACTER(LEN=*), INTENT(IN) :: sic_
+      CHARACTER(LEN=80), INTENT(IN) :: sic_
       REAL(DP), INTENT(IN) :: sic_epsilon_
       REAL(DP), INTENT(IN) :: sic_alpha_
 
