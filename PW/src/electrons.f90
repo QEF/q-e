@@ -24,7 +24,7 @@ SUBROUTINE electrons()
                                    elondon, ef_up, ef_dw
   USE scf,                  ONLY : rho, rho_core, rhog_core, v, vltot, vrs, &
                                    kedtau, vnew
-  USE control_flags,        ONLY : tr2, niter, conv_elec, restart
+  USE control_flags,        ONLY : tr2, niter, conv_elec, restart, lmd
   USE io_files,             ONLY : iunwfc, iunmix, nwordwfc, output_drho, &
                                    iunres, iunefield, seqopn
   USE buffers,              ONLY : save_buffer, close_buffer
@@ -62,13 +62,13 @@ SUBROUTINE electrons()
       tr2_final     ! final threshold for exx minimization 
                     ! when using adaptive thresholds.
   LOGICAL :: &
-      first, no_printout, exst
+      first, reduced_printout, exst
   !
   !
   iter = 0
   first = .true.
   tr2_final = tr2
-  no_printout = dft_is_hybrid()
+  reduced_printout = dft_is_hybrid() .OR. lmd  ! print etot, not all energy component
   IF (dft_is_hybrid() .AND. adapt_thr ) tr2= tr2_init
   fock0 = 0.D0
   fock1 = 0.D0
@@ -130,7 +130,7 @@ SUBROUTINE electrons()
      ! ... Self-consistency loop. For hybrid functionals the exchange potential
      ! ... is calculated with the orbitals at previous step (none at first step)
      !
-     CALL electrons_scf ( no_printout )
+     CALL electrons_scf ( reduced_printout )
      !
      IF ( .NOT. dft_is_hybrid() ) RETURN
      !
@@ -261,7 +261,7 @@ SUBROUTINE electrons()
 END SUBROUTINE electrons
 !
 !----------------------------------------------------------------------------
-SUBROUTINE electrons_scf ( no_printout )
+SUBROUTINE electrons_scf ( reduced_printout )
   !----------------------------------------------------------------------------
   !
   ! ... This routine is a driver of the self-consistent cycle.
@@ -269,8 +269,8 @@ SUBROUTINE electrons_scf ( no_printout )
   ! ... Hamiltonian, the routine sum_band to compute the charge density,
   ! ... the routine v_of_rho to compute the new potential and the routine
   ! ... mix_rho to mix input and output charge densities.
-  ! ... It prints on output the total energy and its decomposition in
-  ! ... the separate contributions (unless no_printout is .true.)
+  ! ... It prints on output the total energy and (unless reduced_printout is 
+  ! ... set to .true.) its decomposition into separate contributions
   !
   USE kinds,                ONLY : DP
   USE check_stop,           ONLY : check_stop_now, stopped_by_user
@@ -332,7 +332,7 @@ SUBROUTINE electrons_scf ( no_printout )
   !
   IMPLICIT NONE
   !
-  LOGICAL, INTENT (IN) :: no_printout
+  LOGICAL, INTENT (IN) :: reduced_printout
   !
   ! ... a few local variables
   !
@@ -721,7 +721,7 @@ SUBROUTINE electrons_scf ( no_printout )
      !
      etot = etot + plugin_etot 
      !
-     IF ( .NOT. no_printout ) CALL print_energies ( )
+     CALL print_energies ( reduced_printout )
      !
      IF ( conv_elec ) THEN
         !
@@ -1030,13 +1030,13 @@ SUBROUTINE electrons_scf ( no_printout )
      END FUNCTION calc_pol
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE print_energies ( )
+     SUBROUTINE print_energies ( reduced_printout )
        !-----------------------------------------------------------------------
        !
        USE constants, ONLY : eps8
-       USE control_flags, ONLY : lmd
+       LOGICAL, INTENT (IN) :: reduced_printout
        !
-       IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
+       IF ( ( conv_elec .OR. MOD(iter,iprint) == 0 ) .AND. .NOT. reduced_printout ) THEN
           !
           IF ( dr2 > eps8 ) THEN
              WRITE( stdout, 9081 ) etot, hwf_energy, dr2
@@ -1062,7 +1062,7 @@ SUBROUTINE electrons_scf ( no_printout )
           !
           IF ( lgauss ) WRITE( stdout, 9070 ) demet
           !
-       ELSE IF ( conv_elec .AND. lmd ) THEN
+       ELSE IF ( conv_elec ) THEN
           !
           IF ( dr2 > eps8 ) THEN
              WRITE( stdout, 9081 ) etot, hwf_energy, dr2
