@@ -57,7 +57,8 @@ program ld1
      !
      call all_electron(.false.,1)
      call gener_pseudo ( )
-     if(.not. lgipaw_reconstruction) call run_test ( )
+     !if(.not. lgipaw_reconstruction) 
+     call run_test ( )
      call ld1_writeout ( )
      !
   elseif (iswitch.eq.4) then

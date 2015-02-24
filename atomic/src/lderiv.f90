@@ -50,7 +50,6 @@ SUBROUTINE lderiv
 
   CHARACTER(len=256) :: flld
 
-
   IF (nld == 0 .or. file_logder == ' ') RETURN
   IF (nld > nwfsx) CALL errore('lderiv','nld is too large',1)
 
