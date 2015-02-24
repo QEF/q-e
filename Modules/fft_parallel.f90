@@ -73,7 +73,11 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
   LOGICAL, OPTIONAL, INTENT(in) :: use_task_groups
                                            ! specify if you want to use task groups parallelization
   !
+#if defined(__INTEL_COMPILER)
+#if __INTEL_COMPILER  >= 1300
 !dir$ attributes align: 4096 :: yf, aux
+#endif
+#endif
   INTEGER                    :: me_p
   INTEGER                    :: n1, n2, n3, nx1, nx2, nx3
   COMPLEX(DP), ALLOCATABLE   :: yf(:), aux (:)
