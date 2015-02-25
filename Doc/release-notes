@@ -1,5 +1,6 @@
 New in 5.1.2 version:
 
+   * PW: Hybrid functionals for USPP and PAW still have problems, disabled
    * code "molecularpdos.x" computing PDOS on selected molecular orbitals
      separately computed (courtesy of Guido Fratesi)
    * TDDFPT: a few more options, improved documentation, compatibility
