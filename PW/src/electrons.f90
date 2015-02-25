@@ -56,19 +56,25 @@ SUBROUTINE electrons()
   INTEGER :: &
       idum,         &! dummy counter on iterations
       iter,         &! counter on iterations
+      printout,     &
       ik, ios
   REAL(DP) :: &
       tr2_min,     &! estimated error on energy coming from diagonalization
       tr2_final     ! final threshold for exx minimization 
                     ! when using adaptive thresholds.
-  LOGICAL :: &
-      first, reduced_printout, exst
+  LOGICAL :: first, exst
   !
   !
   iter = 0
   first = .true.
   tr2_final = tr2
-  reduced_printout = dft_is_hybrid() .OR. lmd  ! print etot, not all energy component
+  IF ( dft_is_hybrid() ) THEN
+     printout = 0  ! do not print etot and energy components at each scf step
+  ELSE IF ( lmd ) THEN
+     printout = 1  ! print etot, not energy components at each scf step
+  ELSE
+     printout = 2  ! print etot and energy components at each scf step
+  END IF
   IF (dft_is_hybrid() .AND. adapt_thr ) tr2= tr2_init
   fock0 = 0.D0
   fock1 = 0.D0
@@ -130,7 +136,7 @@ SUBROUTINE electrons()
      ! ... Self-consistency loop. For hybrid functionals the exchange potential
      ! ... is calculated with the orbitals at previous step (none at first step)
      !
-     CALL electrons_scf ( reduced_printout )
+     CALL electrons_scf ( printout )
      !
      IF ( .NOT. dft_is_hybrid() ) RETURN
      !
@@ -261,7 +267,7 @@ SUBROUTINE electrons()
 END SUBROUTINE electrons
 !
 !----------------------------------------------------------------------------
-SUBROUTINE electrons_scf ( reduced_printout )
+SUBROUTINE electrons_scf ( printout )
   !----------------------------------------------------------------------------
   !
   ! ... This routine is a driver of the self-consistent cycle.
@@ -269,8 +275,8 @@ SUBROUTINE electrons_scf ( reduced_printout )
   ! ... Hamiltonian, the routine sum_band to compute the charge density,
   ! ... the routine v_of_rho to compute the new potential and the routine
   ! ... mix_rho to mix input and output charge densities.
-  ! ... It prints on output the total energy and (unless reduced_printout is 
-  ! ... set to .true.) its decomposition into separate contributions
+  ! ... If printout > 0, prints on output the total energy;
+  ! ... if printout > 1, also prints decomposition into energy contributions
   !
   USE kinds,                ONLY : DP
   USE check_stop,           ONLY : check_stop_now, stopped_by_user
@@ -332,7 +338,7 @@ SUBROUTINE electrons_scf ( reduced_printout )
   !
   IMPLICIT NONE
   !
-  LOGICAL, INTENT (IN) :: reduced_printout
+  INTEGER, INTENT (IN) :: printout
   !
   ! ... a few local variables
   !
@@ -721,7 +727,7 @@ SUBROUTINE electrons_scf ( reduced_printout )
      !
      etot = etot + plugin_etot 
      !
-     CALL print_energies ( reduced_printout )
+     CALL print_energies ( printout )
      !
      IF ( conv_elec ) THEN
         !
@@ -1030,13 +1036,14 @@ SUBROUTINE electrons_scf ( reduced_printout )
      END FUNCTION calc_pol
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE print_energies ( reduced_printout )
+     SUBROUTINE print_energies ( printout )
        !-----------------------------------------------------------------------
        !
        USE constants, ONLY : eps8
-       LOGICAL, INTENT (IN) :: reduced_printout
+       INTEGER, INTENT (IN) :: printout
        !
-       IF ( ( conv_elec .OR. MOD(iter,iprint) == 0 ) .AND. .NOT. reduced_printout ) THEN
+       IF ( printout == 0 ) RETURN
+       IF ( ( conv_elec .OR. MOD(iter,iprint) == 0 ) .AND. printout > 1 ) THEN
           !
           IF ( dr2 > eps8 ) THEN
              WRITE( stdout, 9081 ) etot, hwf_energy, dr2
