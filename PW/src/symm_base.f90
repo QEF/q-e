@@ -643,6 +643,8 @@ SUBROUTINE sgam_at_mag ( nat, m_loc, sym )
               t_rev(irot) = 1
            ENDIF
         ENDIF
+        IF ((.NOT. sym(irot)) .AND. (ftau(1,irot) /= 0 .OR. ftau(2,irot) /=0 &
+                     .OR. ftau(3,irot) /=0)) nsym_ns=nsym_ns-1
         !
      ENDIF
      !
