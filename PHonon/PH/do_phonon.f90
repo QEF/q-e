@@ -32,7 +32,7 @@ SUBROUTINE do_phonon(auxdyn)
 
   USE disp,            ONLY : nqs
   USE control_ph,      ONLY : epsil, trans, qplot, only_init, &
-                              only_wfc
+                              only_wfc, rec_code, where_rec
   USE el_phon,         ONLY : elph, elph_mat, elph_simple
 
   IMPLICIT NONE
@@ -55,7 +55,11 @@ SUBROUTINE do_phonon(auxdyn)
      !
      !  If only_wfc=.TRUE. the code computes only the wavefunctions 
      !
-     IF (only_wfc) GOTO 100
+     IF (only_wfc) THEN
+        where_rec='only_wfc'
+        rec_code=-1000
+        GOTO 100
+     ENDIF
      !
      !  Initialize the quantities which do not depend on
      !  the linear response of the system
@@ -69,7 +73,11 @@ SUBROUTINE do_phonon(auxdyn)
      !  IF only_init is .true. the code computes only the 
      !  initialization parts.
      !
-     IF (only_init) GOTO 100
+     IF (only_init) THEN
+        where_rec='only_init'
+        rec_code=-1000
+        GOTO 100
+     ENDIF
      !
      !  phonon perturbation
      !
