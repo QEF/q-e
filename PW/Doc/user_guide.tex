@@ -400,7 +400,8 @@ total magnetization is zero.
 If \texttt{starting\_magnetization} is different from zero, it makes a 
 noncollinear spin polarized calculation with spin-orbit interaction. The 
 final spin magnetization might be zero or different from zero depending 
-on the system. 
+on the system. Note that the code will look only for symmetries that leave
+the starting magnetization unchanged.
 
 Furthermore to make a spin-orbit calculation you must use fully
 relativistic pseudopotentials at least for the atoms in which you
