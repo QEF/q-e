@@ -102,6 +102,8 @@ for dir in $dirs; do
         then
             sed '/@mpi@/d' make.depend > make.depend.tmp
             sed '/@elpa1@/d' make.depend.tmp > make.depend
+            sed '/@mkl_dfti/d' make.depend > make.depend.tmp
+            mv make.depend.tmp make.depend
         fi
 
         if test "$DIR" = "clib"
