@@ -16,7 +16,7 @@ contains
     use wvfct,         only : nbnd, nbndx, et
     use lr_dav_variables, only : vc_couple,num_init,single_pole,energy_dif,&
                                 & energy_dif_order, p_nbnd_occ, p_nbnd_virt,&
-                                & if_dft_spectrum
+                                & if_dft_spectrum, reference
     use lr_variables, only : nbnd_total
     use io_global,    only : stdout
     use lr_dav_debug
@@ -52,7 +52,8 @@ contains
 
     call xc_sort_array_get_order(energy_dif,p_nbnd_occ*p_nbnd_virt,energy_dif_order)
 
-    do ib=1, p_nbnd_occ*p_nbnd_virt
+    !do ib=1, p_nbnd_occ*p_nbnd_virt
+    do ib=1, min(2*num_init,p_nbnd_occ*p_nbnd_virt)
       iv=energy_dif_order(ib)
       vc_couple(1,ib)=((iv-1)/p_nbnd_virt)+1+(nbnd-p_nbnd_occ)
       vc_couple(2,ib)=mod((iv-1),p_nbnd_virt)+nbnd+1
@@ -1584,7 +1585,8 @@ contains
     write(stdout,'(/5x,"Estimating the RAM requirements:")')
     write(stdout,'(10x,"For the basis sets:",5x,F10.2,5x,"M")') ram_vect/1048576
     write(stdout,'(10x,"For the eigenvectors:",5x,F10.2,5x,"M")') ram_eigen/1048576
-    write(stdout,'(10x,"Num_eign =",5x,I5,5x,"Num_basis_max =",5x,I5)') num_eign,num_basis_max
+    write(stdout,'(10x,"Num_eign =",I5,5x,"Num_basis_max =",I5)') num_eign,num_basis_max
+    write(stdout,'(10x,"Reference = ",F5.2, "  Ry")') reference
     write(stdout,'(5x,"Do make sure that you have enough RAM.",/)')
 
     return
@@ -1608,7 +1610,7 @@ contains
     use wvfct,         only : nbnd,npwx
     use klist,             only : nks
     use lr_us
-    use lr_variables,    only : evc0, sevc0
+    use lr_variables,    only : evc0, sevc0, max_res
 
     implicit none
     integer :: ieign,ibr, ieign2,ierr, num_basis_new, nwords, ia,ib,ic
@@ -1662,7 +1664,8 @@ contains
     ! Re-build ortho-normal basis
     num_basis_new=0
     do ieign = 1, 2*num_eign ! Keep only components with large enough singularity values
-      if(sv(ieign) .gt. residue_conv_thr) then
+      !if(sv(ieign) .gt. residue_conv_thr) then  ! XC: wheather to choose?
+      if(sv(ieign) .gt. max_res) then
         ! After this step, the column vectors of (LR_M * U) are normal-orthogonalized
         U(:,ieign)=U(:,ieign)/sqrt(sv(ieign)) 
         num_basis_new=num_basis_new+1
@@ -1697,11 +1700,14 @@ contains
     ! Set s_vec_b if needed
     if(.not. poor_of_ram .and. okvan) then 
       call ZGEMM('N', 'N', nwords, num_basis_new, &
-               num_basis, (1.0D0,0.0d0), vec_b, nwords, &
+               num_basis, (1.0D0,0.0d0), svec_b, nwords, &
                MRZ, num_basis, (0.0D0,0.0D0), vec_b_temp, nwords)
 
       svec_b=cmplx(0.0d0,0.0d0)
       svec_b(:,:,:,1:num_basis_new)=vec_b_temp(:,:,:,1:num_basis_new)
+      do ib = 1, num_basis_new
+        call lr_apply_s(vec_b(:,:,:,ib),svec_b(:,:,:,ib))
+      enddo
     endif
 
 #ifdef __MPI
