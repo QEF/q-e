@@ -100,10 +100,8 @@ for dir in $dirs; do
 
         if test "$DIR" = "Modules"
         then
-            sed '/@mpi@/d' make.depend > make.depend.tmp
-            sed '/@elpa1@/d' make.depend.tmp > make.depend
-            sed '/@mkl_dfti/d' make.depend > make.depend.tmp
-            mv make.depend.tmp make.depend
+            sed '/@mpi@/d;/@elpa1@/d' make.depend > make.depend.tmp
+            sed '/@mkl_dfti/d' make.depend.tmp > make.depend
         fi
 
         if test "$DIR" = "clib"
@@ -114,14 +112,8 @@ for dir in $dirs; do
 
         if test "$DIR" = "PW/src" || test "$DIR" = "TDDFPT/src"
         then
-            sed '/@environ_base@/d'  make.depend > make.depend.tmp
-            sed '/@environ_input@/d' make.depend.tmp > make.depend
-            sed '/@environ_info@/d'  make.depend > make.depend.tmp
-            sed '/@environ_init@/d'  make.depend.tmp > make.depend
-            sed '/@environ_main@/d'  make.depend > make.depend.tmp
-            sed '/@environ_mp@/d'    make.depend.tmp > make.depend
-            sed '/@solvent_tddfpt@/d' make.depend > make.depend.tmp
-            mv make.depend.tmp make.depend
+            sed '/@environ_/d'  make.depend > make.depend.tmp
+            sed '/@solvent_tddfpt@/d' make.depend.tmp > make.depend
         fi
 
         rm -f make.depend.tmp
