@@ -151,6 +151,8 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'fft' )
    CALL print_clock( 'ffts' )
    CALL print_clock( 'fftw' )
+   CALL print_clock( 'fftc' )
+   CALL print_clock( 'fftcw' )
    CALL print_clock( 'interpolate' )
    CALL print_clock( 'davcio' )
    !    

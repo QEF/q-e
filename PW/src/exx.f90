@@ -444,8 +444,6 @@ MODULE exx
       ENDDO
 
     ENDDO
-    WRITE(stdout, '(5x,3a)') "EXX: setup a grid of "//TRIM(int_to_char(nkqs))&
-                           //" q-points centered on each k-point"
     !
     ! allocate and fill the arrays xkq(3,nkqs), index_xk(nkqs) and index_sym(nkqs)
     !
@@ -460,13 +458,17 @@ MODULE exx
     ENDDO
     CALL cryst_to_cart(nkqs, xkq_collect, bg, +1)
 
-!     IF(verbosity='high')THEN
+    IF( nkqs > 1) THEN
+      WRITE(stdout, '(5x,3a)') "EXX: setup a grid of "//TRIM(int_to_char(nkqs))&
+                           //" q-points centered on each k-point"
       WRITE( stdout, '(5x,a)' ) '(k+q)-points:'
       do ik = 1, nkqs
           WRITE( stdout, '(3f12.7,5x,i2,i5)') (xkq_collect (ikq, ik) , ikq = 1, 3) , &
                  index_xk(ik), index_sym(ik)
       enddo
-!    ENDIF
+    ELSE
+      WRITE(stdout, '("EXX: grid of k+q points same as grid of k-points")')
+    ENDIF
     
     ! if nspin == 2, the kpoints are repeated in couples (spin up, spin down)
     IF (nspin_lsda == 2) THEN
