@@ -72,6 +72,7 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (precondition, ionode_id, world_comm )
   CALL mp_bcast (dav_debug, ionode_id, world_comm )
   CALL mp_bcast (reference, ionode_id, world_comm )
+  CALL mp_bcast (vccouple_shift, ionode_id, world_comm )
   CALL mp_bcast (single_pole, ionode_id, world_comm )
   CALL mp_bcast (sort_contr, ionode_id, world_comm )
   CALL mp_bcast (diag_of_h, ionode_id, world_comm )

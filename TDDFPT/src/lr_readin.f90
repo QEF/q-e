@@ -87,7 +87,7 @@ SUBROUTINE lr_readin
   namelist / lr_dav / num_eign, num_init, num_basis_max, residue_conv_thr, precondition,dav_debug, reference,single_pole,&
                           &sort_contr, diag_of_h, close_pre,broadening,print_spectrum,start,finish,step,if_check_orth,&
                           &if_random_init,if_check_her,p_nbnd_occ,p_nbnd_virt,poor_of_ram,poor_of_ram2,max_iter,ecutfock,&
-	                  &conv_assistant,if_dft_spectrum,no_hxc,d0psi_rs,lshift_d0psi,lplot_drho
+	                  &conv_assistant,if_dft_spectrum,no_hxc,d0psi_rs,lshift_d0psi,lplot_drho, vccouple_shift
   !
   auto_rs = .TRUE.
 #ifdef __MPI
@@ -138,7 +138,8 @@ SUBROUTINE lr_readin
      turn2planb=1.0E-3
      precondition=.true.
      dav_debug=.false.
-     reference=0.0d0
+     reference=0.0
+     vccouple_shift=0.0
      single_pole=.false.
      sort_contr=.true.
      print_spectrum=.true.

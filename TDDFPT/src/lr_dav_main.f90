@@ -155,9 +155,16 @@ CONTAINS
     !
     WRITE( stdout, '(/5x,"----------------------------------------")' )
     WRITE( stdout, '(/5x,"Welcome using turbo-davidson. For this moment you can report bugs to",/5x, &
-                    & "Xiaochuan Ge: xiaochuan.ge@sissa.it",/5x, &
-                    & "We appreciate a lot your help to make us improve.")' )
+                    & "Xiaochuan Ge: xge@bnl.gov",/5x, &
+                    & "We appreciate a lot your help to make us improve.",/)' )
+
+    WRITE( stdout, '(/5x,"For the publication using this code, we appreciate if you could cite this article:")')
+    WRITE( stdout, '(/15x,"*****************************************")')
+    WRITE( stdout, '(/15x,"*  Comput. Phys. Commun. 185(2014)2080  *")')
+    WRITE( stdout, '(/15x,"*****************************************")')
     WRITE( stdout, '(/5x,"----------------------------------------",/)' )
+
+    
     IF(okvan) WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )
     
     IF (do_comp_mt) THEN

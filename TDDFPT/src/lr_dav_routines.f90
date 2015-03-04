@@ -614,19 +614,20 @@ contains
     ! As it is self-explained by its name
     ! Sort the array by the distance to the reference
 
-    use lr_dav_variables,  only : reference
+    use lr_dav_variables,  only : reference, vccouple_shift
     implicit none
     integer :: N,ia,ib
-    real*8 :: array(N),temp_ele
+    real*8 :: array(N),temp_ele, ref_
     integer :: sort_order(N), temp_order
 
     do ia=1, N
     sort_order(ia)=ia
     enddo
 
+    ref_=reference+vccouple_shift
     do ia=N, 2, -1
       do ib=1,ia-1
-        if(abs(array(sort_order(ib))-reference)>abs(array(sort_order(ia))-reference)) THEN
+        if(abs(array(sort_order(ib))-ref_)>abs(array(sort_order(ia))-ref_)) THEN
           temp_order=sort_order(ia)
           sort_order(ia)=sort_order(ib)
           sort_order(ib)=temp_order
@@ -1018,8 +1019,9 @@ contains
     minimum=0.0001d0
     do ib = 1, nbnd
       do ia = 1, npw
+        !temp = g2kin(ia)-et(ib,1)
         temp = g2kin(ia)-et(ib,1)-reference
-        if( abs(temp) .lt. minimum ) temp = sign(minimum,temp)
+        !if( abs(temp) .lt. minimum ) temp = sign(minimum,temp)
         vect(ia,ib) = vect(ia,ib)/temp
       enddo
     enddo
@@ -1610,7 +1612,7 @@ contains
     use wvfct,         only : nbnd,npwx
     use klist,             only : nks
     use lr_us
-    use lr_variables,    only : evc0, sevc0, max_res
+    use lr_variables,    only : evc0, sevc0
 
     implicit none
     integer :: ieign,ibr, ieign2,ierr, num_basis_new, nwords, ia,ib,ic
