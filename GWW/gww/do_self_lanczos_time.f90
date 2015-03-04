@@ -630,7 +630,7 @@ subroutine do_self_lanczos_time(ss, tf ,options,l_real_axis,energy)
                     call dgemm('T','N',numl,numt,numt,1.d0,ttl_j%tt_mat,numt,re_e_mat(1,1,iw-nbegin_g+1),numt,0.d0,tmp_mat,numl)
                     call dgemm('N','N',numl,numl,numt,1.d0,tmp_mat,numl,ttl%tt_mat,numt,0.d0,re_g_mat(1,1,iw-nbegin_g+1),numl)
                     call dgemm('T','N',numl,numt,numt,1.d0,ttl_j%tt_mat,numt,im_e_mat(1,1,iw-nbegin_g+1),numt,0.d0,tmp_mat,numl)
-                    call dgemm('N','N',numl,numl,numt,1.d0,tmp_mat,numl,ttl%tt_mat,numt,0.d0,im_g_mat(1,1,iw-nbegin_g+1),numl)        
+                    call dgemm('N','N',numl,numl,numt,1.d0,tmp_mat,numl,ttl%tt_mat,numt,0.d0,im_g_mat(1,1,iw-nbegin_g+1),numl)
                  else
                     do in=0,ndivt-1
                        nbegin_t=in*l_blk_t+1

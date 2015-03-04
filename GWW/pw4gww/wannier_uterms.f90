@@ -259,7 +259,7 @@
           allocate(q2(-n_int_loc+1:n_int_loc))
           allocate(q3(-n_int_loc+1:n_int_loc))
           do ix=-n_int_loc+1,n_int_loc                                                        
-             q1(ix)=(0.5d0*(1.d0/dble(n_int_loc)*(dble(ix-1))+0.5d0/dble(n_int_loc))*bg(1,1)+g(1,ig))**2.d0                                             
+             q1(ix)=(0.5d0*(1.d0/dble(n_int_loc)*(dble(ix-1))+0.5d0/dble(n_int_loc))*bg(1,1)+g(1,ig))**2.d0 
           enddo
           do ix=-n_int_loc+1,n_int_loc
              q2(ix)=(0.5d0*(1.d0/dble(n_int_loc)*(dble(ix-1))+0.5d0/dble(n_int_loc))*bg(2,2)+g(2,ig))**2.d0
