@@ -138,8 +138,8 @@ SUBROUTINE lr_readin
      turn2planb=1.0E-3
      precondition=.true.
      dav_debug=.false.
-     reference=0.0
-     vccouple_shift=0.0
+     reference=0.0d0
+     vccouple_shift=0.0d0
      single_pole=.false.
      sort_contr=.true.
      print_spectrum=.true.
