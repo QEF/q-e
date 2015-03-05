@@ -2692,6 +2692,8 @@ MODULE exx
                       on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
                       x= 0.5d0/tpiba*(q(1)*at(1,3)+q(2)*at(2,3)+q(3)*at(3,3))*nq3
                       on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
+                  ELSE
+                      on_double_grid = .FALSE.
                   ENDIF
 
                   IF (use_coulomb_vcut_ws) THEN
