@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,9 +21,9 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   ! ... where H is an hermitean operator, e is a real scalar,
   ! ... S is an overlap matrix, evc is a complex vector
   !
-  USE kinds,            ONLY : DP
-  USE mp_bands ,        ONLY : intra_bgrp_comm
-  USE mp,               ONLY : mp_sum
+  USE kinds,         ONLY : DP
+  USE mp_bands,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp, nbgrp
+  USE mp,            ONLY : mp_sum, mp_bcast
   !
   IMPLICIT NONE
   !
@@ -364,6 +364,8 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
         conv(1:nvec) = ( ( ABS( ew(1:nvec) - e(1:nvec) ) < empty_ethr ) )
         !
      END WHERE
+     ! ... next line useful for band parallelization of exact exchange
+     IF ( nbgrp > 1 ) CALL mp_bcast(conv,root_bgrp,inter_bgrp_comm)
      !
      notcnv = COUNT( .NOT. conv(:) )
      !
@@ -481,7 +483,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE mp_bands,  ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp, nbgrp
   USE mp_diag,   ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, &
                         leg_ortho
   USE descriptors,      ONLY : la_descriptor, descla_init , descla_local_dims
@@ -844,6 +846,8 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
         conv(1:nvec) = ( ( ABS( ew(1:nvec) - e(1:nvec) ) < empty_ethr ) )
         !
      END WHERE
+     ! ... next line useful for band parallelization of exact exchange
+     IF ( nbgrp > 1 ) CALL mp_bcast(conv,root_bgrp,inter_bgrp_comm)
      !
      notcnv = COUNT( .NOT. conv(:) )
      !
