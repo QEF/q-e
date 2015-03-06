@@ -670,7 +670,8 @@ MODULE realus
       REAL(DP)              :: inv_nr1s, inv_nr2s, inv_nr3s, tau_ia(3), boxradsq_ia
       !
       initialisation_level = initialisation_level + 5
-      IF ( .not. okvan ) RETURN
+      IF ( .not. okvan ) CALL errore &
+                        ('betapointlist','real space routines for USPP only',1)
       !
       !print *, "<<<betapointlist>>>"
       !
