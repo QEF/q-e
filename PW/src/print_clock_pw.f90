@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum ESPRESSO group
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -81,15 +81,11 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'wfcrot' )
    ENDIF
    !
-   IF ( iverbosity > 0)  THEN
+   !IF ( iverbosity > 0)  THEN
       WRITE( stdout, '(/5x,"Called by sum_band:")' )
       CALL print_clock( 'sum_band:becsum' )
       CALL print_clock( 'addusdens' )
-      CALL print_clock( 'addus:qvan2' )
-      CALL print_clock( 'addus:strf' )
-      CALL print_clock( 'addus:aux2' )
-      CALL print_clock( 'addus:aux' )
-   ENDIF
+   !ENDIF
    !
    IF ( isolve == 0 ) THEN
       WRITE( stdout, '(/5x,"Called by *egterg:")' )

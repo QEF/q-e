@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -70,39 +70,28 @@ SUBROUTINE newq_compute(vr,deeq,skip_vltot)
   REAL(kind=dp), intent(out) :: deeq( nhm, nhm, nat, nspin )
   LOGICAL, intent(in) :: skip_vltot !If .false. vltot is added to vr when necessary
   ! INTERNAL
-  INTEGER :: ig, nt, ih, jh, na, is, nht, nb, mb
+  INTEGER :: ig, nt, ih, jh, na, is, ijh, nij, nb, nab
   ! counters on g vectors, atom type, beta functions x 2,
   !   atoms, spin, aux, aux, beta func x2 (again)
-#ifdef __OPENMP
-  INTEGER :: mytid, ntids, omp_get_thread_num, omp_get_num_threads
-#endif
-  COMPLEX(DP), ALLOCATABLE :: aux(:,:), qgm(:), qgm_na(:)
+  COMPLEX(DP), ALLOCATABLE :: vaux(:,:), aux(:,:), qgm(:,:)
     ! work space
-  COMPLEX(DP) :: dtmp
-  REAL(DP), ALLOCATABLE :: ylmk0(:,:), qmod(:)
+  REAL(DP), ALLOCATABLE :: ylmk0(:,:), qmod(:), deeaux(:,:)
     ! spherical harmonics, modulus of G
-  REAL(DP) :: ddot
-  INTEGER :: fact
-
-  IF ( gamma_only ) THEN
-     !
-     fact = 2
-     !
-  ELSE
-     !
-     fact = 1
-     !
-  END IF
+  REAL(DP) :: fact
   !
   CALL start_clock( 'newd' )
   !
-  ALLOCATE( aux( ngm, nspin_mag ),  &
-            qgm( ngm ), qmod( ngm ), ylmk0( ngm, lmaxq*lmaxq ) )
+  IF ( gamma_only ) THEN
+     fact = 2.0_dp
+  ELSE
+     fact = 1.0_dp
+  END IF
   !
   deeq(:,:,:,:) = 0.D0
   !
-  CALL ylmr2( lmaxq * lmaxq, ngm, g, gg, ylmk0 )
+  ALLOCATE( vaux(ngm,nspin_mag), qmod( ngm ), ylmk0( ngm, lmaxq*lmaxq ) )
   !
+  CALL ylmr2( lmaxq * lmaxq, ngm, g, gg, ylmk0 )
   qmod(1:ngm) = SQRT( gg(1:ngm) )
   !
   ! ... fourier transform of the total effective potential
@@ -110,101 +99,105 @@ SUBROUTINE newq_compute(vr,deeq,skip_vltot)
   DO is = 1, nspin_mag
      !
      IF ( (nspin_mag == 4 .AND. is /= 1) .or. skip_vltot ) THEN 
-        !
-        psic(:) = vr(:,is)
-        !
+!$omp parallel do default(shared) private(ig)
+        do ig=1,dfftp%nnr
+           psic(ig) = vr(ig,is)
+        end do
+!$omp end parallel do
      ELSE
-        !
-        psic(:) = vltot(:) + vr(:,is)
-        !
+!$omp parallel do default(shared) private(ig)
+        do ig=1,dfftp%nnr
+           psic(ig) = vltot(ig) + vr(ig,is)
+        end do
+!$omp end parallel do
      END IF
-     !
      CALL fwfft ('Dense', psic, dfftp)
-     !
-     aux(1:ngm,is) = psic( nl(1:ngm) )
+!$omp parallel do default(shared) private(ig)
+        do ig=1,ngm
+           vaux(ig, is) = psic(nl(ig))
+        end do
+!$omp end parallel do
      !
   END DO
-  !
-  ! ... here we compute the integral Q*V for each atom,
-  ! ...       I = sum_G exp(-iR.G) Q_nm v^*
-  !
+
   DO nt = 1, ntyp
      !
      IF ( upf(nt)%tvanp ) THEN
         !
+        ! nij = max number of (ih,jh) pairs per atom type nt
+        !
+        nij = nh(nt)*(nh(nt)+1)/2
+        ALLOCATE ( qgm(ngm,nij) )
+        !
+        ! ... Compute and store Q(G) for this atomic species 
+        ! ... (without structure factor)
+        !
+        ijh = 0
         DO ih = 1, nh(nt)
-           !
            DO jh = ih, nh(nt)
-              !
-              ! ... The Q(r) for this atomic species without structure factor
-              !
-              CALL qvan2( ngm, ih, jh, nt, qmod, qgm, ylmk0 )
-              !
-#ifdef __OPENMP
-!$omp parallel default(shared), private(na,qgm_na,is,dtmp,ig,mytid,ntids)
-              mytid = omp_get_thread_num()  ! take the thread ID
-              ntids = omp_get_num_threads() ! take the number of threads
-#endif
-              ALLOCATE(  qgm_na( ngm ) )
-              !
-              DO na = 1, nat
-                 !
-#ifdef __OPENMP
-                 ! distribute atoms round robin to threads
-                 !
-                 IF( MOD( na, ntids ) /= mytid ) CYCLE
-#endif
-                 !
-                 IF ( ityp(na) == nt ) THEN
-                    !
-                    ! ... The Q(r) for this specific atom
-                    !
-                    qgm_na(1:ngm) = qgm(1:ngm) * eigts1(mill(1,1:ngm),na) &
-                                               * eigts2(mill(2,1:ngm),na) &
-                                               * eigts3(mill(3,1:ngm),na)
-                    !
-                    ! ... and the product with the Q functions
-                    !
-                    DO is = 1, nspin_mag
-                       !
-#ifdef __OPENMP
-                       dtmp = 0.0d0
-                       DO ig = 1, ngm
-                          dtmp = dtmp + aux( ig, is ) * CONJG( qgm_na( ig ) )
-                       END DO
-#else
-                       dtmp = ddot( 2 * ngm, aux(1,is), 1, qgm_na, 1 )
-#endif
-                       deeq(ih,jh,na,is) = fact * omega * DBLE( dtmp )
-                       !
-                       IF ( gamma_only .AND. gstart == 2 ) &
-                           deeq(ih,jh,na,is) = deeq(ih,jh,na,is) - &
-                                           omega * DBLE( aux(1,is) * qgm_na(1) )
-                       !
-                       deeq(jh,ih,na,is) = deeq(ih,jh,na,is)
-                       !
+              ijh = ijh + 1
+              CALL qvan2 ( ngm, ih, jh, nt, qmod, qgm(1,ijh), ylmk0 )
+           END DO
+        END DO
+        !
+        ! count max number of atoms of type nt
+        !
+        nab = 0
+        DO na = 1, nat
+           IF ( ityp(na) == nt ) nab = nab + 1
+        END DO
+        ALLOCATE ( aux (ngm, nab ), deeaux(nij, nab) )
+        !
+        ! ... Compute and store V(G) times the structure factor e^(-iG*tau)
+        !
+        DO is = 1, nspin_mag
+           nb = 0
+           DO na = 1, nat
+              IF ( ityp(na) == nt ) THEN
+                 nb = nb + 1
+!$omp parallel do default(shared) private(ig)
+                 do ig=1,ngm
+                    aux(ig, nb) = vaux(ig,is) * CONJG ( &
+                      eigts1(mill(1,ig),na) * &
+                      eigts2(mill(2,ig),na) * &
+                      eigts3(mill(3,ig),na) )
+                 end do
+!$omp end parallel do
+              END IF
+           END DO
+           !
+           ! ... here we compute the integral Q*V for all atoms of this kind
+           !
+           CALL DGEMM( 'C', 'N', nij, nab, 2*ngm, fact, qgm, 2*ngm, aux, &
+                    2*ngm, 0.0_dp, deeaux, nij )
+           IF ( gamma_only .AND. gstart == 2 ) &
+                CALL DGER(nij, nab,-1.0_dp, qgm, 2*ngm, aux, 2*ngm, deeaux, nij)
+           !
+           nb = 0
+           DO na = 1, nat
+              IF ( ityp(na) == nt ) THEN
+                 nb = nb + 1
+                 ijh = 0
+                 DO ih = 1, nh(nt)
+                    DO jh = ih, nh(nt)
+                       ijh = ijh + 1
+                       deeq(ih,jh,na,is) = omega * deeaux(ijh,nb)
+                       if (jh > ih) deeq(jh,ih,na,is) = deeq(ih,jh,na,is)
                     END DO
-                    !
-                 END IF
-                 !
-              END DO
-              !
-              DEALLOCATE( qgm_na )
-#ifdef __OPENMP
-!$omp end parallel
-#endif
-              !
+                 END DO
+              END IF
            END DO
            !
         END DO
+        !
+        DEALLOCATE ( deeaux, aux, qgm )
         !
      END IF
      !
   END DO
   !
+  DEALLOCATE( qmod, ylmk0, vaux )
   CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), intra_bgrp_comm )
-  !
-  DEALLOCATE( aux, qgm, qmod, ylmk0 )
   !
 END SUBROUTINE newq_compute
 !---------------------------------------
