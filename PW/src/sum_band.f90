@@ -851,8 +851,9 @@ SUBROUTINE sum_band()
       COMPLEX(dp), INTENT(INOUT), OPTIONAL :: becsum_nc(:,:,:,:)
       COMPLEX(dp), ALLOCATABLE :: auxk1(:,:), auxk2(:,:), aux_nc(:,:)
       REAL(dp), ALLOCATABLE :: auxg1(:,:), auxg2(:,:), aux_gk(:,:)
-      INTEGER :: ibnd_loc, ikb, jkb, ijkb0, ih, jh, ijh, na, np, is, js
-      ! counters on beta functions, atoms, atom types
+      INTEGER :: ibnd, ibnd_loc, nbnd_loc  ! counters on bands
+      INTEGER :: ikb, jkb, ijkb0, ih, jh, ijh, na, np, is, js
+      ! counters on beta functions, atoms, atom types, spin
       !
       IF ( .NOT. real_space ) THEN
          ! calbec computes becp = <vkb_i|psi_j>
@@ -877,8 +878,9 @@ SUBROUTINE sum_band()
             ! allocate work space used to perform GEMM operations
             !
             IF ( gamma_only ) THEN
-               ALLOCATE( auxg1( nbnd, nh(np) ), &
-                         auxg2( nbnd, nh(np) ) )
+               nbnd_loc = becp%nbnd_loc
+               ALLOCATE( auxg1( nbnd_loc, nh(np) ), &
+                         auxg2( nbnd_loc, nh(np) ) )
             ELSE
                ALLOCATE( auxk1( nbnd, nh(np)*npol ), &
                          auxk2( nbnd, nh(np)*npol ) )
@@ -917,19 +919,19 @@ SUBROUTINE sum_band()
                      !
                   ELSE IF ( gamma_only ) THEN
                      !
-!$omp parallel do default(shared), private(ih,ikb,ibnd)
+!$omp parallel do default(shared), private(ih,ikb,ibnd,ibnd_loc)
                      DO ih = 1, nh(np)
                         ikb = ijkb0 + ih
-                        DO ibnd_loc = 1, becp%nbnd_loc
+                        DO ibnd_loc = 1, nbnd_loc
                            ibnd = ibnd_loc + becp%ibnd_begin - 1
-                           auxg1(ibnd,ih) = becp%r(ikb,ibnd_loc) 
-                           auxg2(ibnd,ih) = wg(ibnd,ik)*becp%r(ikb,ibnd_loc) 
+                           auxg1(ibnd_loc,ih)= becp%r(ikb,ibnd_loc) 
+                           auxg2(ibnd_loc,ih)= wg(ibnd,ik)*becp%r(ikb,ibnd_loc) 
                         END DO
                      END DO
 !$omp end parallel do
                      !
-                     CALL DGEMM ( 'C', 'N', nh(np), nh(np), nbnd, &
-                          1.0_dp, auxg1, nbnd, auxg2, nbnd, &
+                     CALL DGEMM ( 'C', 'N', nh(np), nh(np), nbnd_loc, &
+                          1.0_dp, auxg1, nbnd_loc, auxg2, nbnd_loc, &
                           0.0_dp, aux_gk, nh(np) )
                      !
                   ELSE
