@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -45,16 +45,11 @@ SUBROUTINE sum_band()
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp
-  USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level,&
-                                    bfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
-  USE wvfct,                ONLY: nbnd
   !
   IMPLICIT NONE
   !
   ! ... local variables
   !
-  INTEGER :: ikb, jkb, ijkb0, ih, jh, ijh, na, np
-    ! counters on beta functions, atoms, pseudopotentials
   INTEGER :: ir, is, ig, ibnd, ik
     ! counter on 3D r points
     ! counter on spin polarizations
@@ -243,7 +238,7 @@ SUBROUTINE sum_band()
        !
        REAL(DP) :: w1, w2
          ! weights
-       INTEGER  :: idx, ioff, incr, v_siz, j, ibnd_loc
+       INTEGER  :: idx, ioff, incr, v_siz, j
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:)
        LOGICAL  :: use_tg
@@ -467,84 +462,7 @@ SUBROUTINE sum_band()
           !
           ! ... If we have a US pseudopotential we compute here the becsum term
           !
-          IF ( .NOT. okvan ) CYCLE k_loop
-          !
-          IF ( real_space  ) then
-            !if (.not. initialisation_level == 15) CALL errore ('sum_band', 'improper initialisation of real space routines' , 4)
-            !print *, "sum band rolling the real space!"
-            do ibnd = 1 , nbnd , 2
-             !call check_fft_orbital_gamma(psi,ibnd,m)
-             call fft_orbital_gamma(evc,ibnd,nbnd) !transform the orbital to real space
-             call calbec_rs_gamma(ibnd,nbnd,becp%r) !(global rbecp is updated)
-            enddo
-          else
-           CALL calbec( npw, vkb, evc, becp )
-          endif
-          !
-          CALL start_clock( 'sum_band:becsum' )
-          !
-          DO ibnd_loc = 1, becp%nbnd_loc
-             !
-             ibnd = ibnd_loc + becp%ibnd_begin - 1
-             !
-             w1 = wg(ibnd,ik)
-             ijkb0 = 0
-             !
-             DO np = 1, ntyp
-                !
-                IF ( upf(np)%tvanp ) THEN
-                   !
-                   DO na = 1, nat
-                      !
-                      IF ( ityp(na) == np ) THEN
-                         !
-                         ijh = 1
-                         !
-                         DO ih = 1, nh(np)
-                            !
-                            ikb = ijkb0 + ih
-                            !
-                            becsum(ijh,na,current_spin) = &
-                                            becsum(ijh,na,current_spin) + &
-                                            w1 *becp%r(ikb,ibnd_loc) *becp%r(ikb,ibnd_loc)
-                            !
-                            ijh = ijh + 1
-                            !
-                            DO jh = ( ih + 1 ), nh(np)
-                               !
-                               jkb = ijkb0 + jh
-                               !
-                               becsum(ijh,na,current_spin) = &
-                                     becsum(ijh,na,current_spin) + &
-                                     w1 * 2.D0 *becp%r(ikb,ibnd_loc) *becp%r(jkb,ibnd_loc)
-                               !
-                               ijh = ijh + 1
-                               !
-                            END DO
-                            !
-                         END DO
-                         !
-                         ijkb0 = ijkb0 + nh(np)
-                         !
-                      END IF
-                      !
-                   END DO
-                   !
-                ELSE
-                   !
-                   DO na = 1, nat
-                      !
-                      IF ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
-                      !
-                   END DO
-                   !
-                END IF
-                !
-             END DO
-             !
-          END DO
-          !
-          CALL stop_clock( 'sum_band:becsum' )
+          IF ( okvan ) CALL sum_bec () 
           !
        END DO k_loop
        !
@@ -570,7 +488,6 @@ SUBROUTINE sum_band()
        !
        ! ... k-points version
        !
-       USE becmod, ONLY : bec_type, becp, calbec
        USE mp_bands,     ONLY : me_bgrp
        USE mp,           ONLY : mp_sum
        !
@@ -582,17 +499,14 @@ SUBROUTINE sum_band()
        ! weights
        COMPLEX(DP), ALLOCATABLE :: becsum_nc(:,:,:,:)
        !
-       INTEGER :: ipol, js
+       INTEGER :: ipol, na, np
        !
        INTEGER  :: idx, ioff, incr, v_siz, j
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_psi_nc(:,:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:), tg_rho_nc(:,:)
        LOGICAL  :: use_tg
-#ifdef __OPENMP
-       INTEGER :: mytid, ntids, omp_get_thread_num, omp_get_num_threads, icnt
-#endif
        !
-       IF (okvan .AND.  noncolin) THEN
+       IF (okvan .AND. noncolin) THEN
           ALLOCATE(becsum_nc(nhm*(nhm+1)/2,nat,npol,npol))
           becsum_nc=(0.d0, 0.d0)
        ENDIF
@@ -604,7 +518,7 @@ SUBROUTINE sum_band()
        !
        use_tg = dffts%have_task_groups
        dffts%have_task_groups = ( dffts%have_task_groups ) .AND. &
-                  ( nbnd >= dffts%nogrp ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
+              ( nbnd >= dffts%nogrp ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
        !
        incr = 1
        !
@@ -886,133 +800,11 @@ SUBROUTINE sum_band()
           !
           ! ... If we have a US pseudopotential we compute here the becsum term
           !
-          IF ( .NOT. okvan ) CYCLE k_loop
-          !
-          CALL calbec( npw, vkb, evc, becp )
-          !
-          CALL start_clock( 'sum_band:becsum' )
-          !
-#ifdef __OPENMP
-!$omp parallel default(shared), private(ibnd,w1,ijkb0,np,na,ijh,ih,jh,ikb,jkb,is,js,mytid,ntids,icnt)
-#endif
-#ifdef __OPENMP
-          mytid = omp_get_thread_num()  ! take the thread ID
-          ntids = omp_get_num_threads() ! take the number of threads
-          icnt  = 0
-#endif
-          !
-          DO ibnd = 1, nbnd
-             !
-             w1 = wg(ibnd,ik)
-             ijkb0 = 0
-             !
-             DO np = 1, ntyp
-                !
-                IF ( upf(np)%tvanp ) THEN
-                   !
-                   DO na = 1, nat
-                      !
-                      IF (ityp(na)==np) THEN
-                         !
-#ifdef __OPENMP
-                         ! distribute atoms round robin to threads
-                         !
-                         icnt = icnt + 1
-                         !
-                         IF( MOD( icnt, ntids ) /= mytid ) THEN
-                            ijkb0 = ijkb0 + nh(np)
-                            CYCLE
-                         END IF
-#endif
-                         !
-                         ijh = 1
-                         !
-                         DO ih = 1, nh(np)
-                            !
-                            ikb = ijkb0 + ih
-                            !
-                            IF (noncolin) THEN
-                               !
-                               DO is=1,npol
-                                  !
-                                  DO js=1,npol
-                                     becsum_nc(ijh,na,is,js) =         &
-                                         becsum_nc(ijh,na,is,js)+w1 *  &
-                                          CONJG(becp%nc(ikb,is,ibnd)) * &
-                                                becp%nc(ikb,js,ibnd)
-                                  END DO
-                                  !
-                               END DO
-                               !
-                            ELSE
-                               !
-                               becsum(ijh,na,current_spin) = &
-                                        becsum(ijh,na,current_spin) + &
-                                        w1 * DBLE( CONJG( becp%k(ikb,ibnd) ) * &
-                                                          becp%k(ikb,ibnd) )
-                               !
-                            END IF
-                            !
-                            ijh = ijh + 1
-                            !
-                            DO jh = ( ih + 1 ), nh(np)
-                               !
-                               jkb = ijkb0 + jh
-                               !
-                               IF (noncolin) THEN
-                                  !
-                                  DO is=1,npol
-                                     !
-                                     DO js=1,npol
-                                        becsum_nc(ijh,na,is,js) =         &
-                                           becsum_nc(ijh,na,is,js) + w1 * &
-                                           CONJG(becp%nc(ikb,is,ibnd)) *  &
-                                                 becp%nc(jkb,js,ibnd)
-                                     END DO
-                                     !
-                                  END DO
-                                  !
-                               ELSE
-                                  !
-                                  becsum(ijh,na,current_spin) = &
-                                     becsum(ijh,na,current_spin) + w1 * 2.D0 * &
-                                     DBLE( CONJG( becp%k(ikb,ibnd) ) * &
-                                                  becp%k(jkb,ibnd) )
-                               ENDIF
-                               !
-                               ijh = ijh + 1
-                               !
-                            END DO
-                            !
-                         END DO
-                         !
-                         ijkb0 = ijkb0 + nh(np)
-                         !
-                      END IF
-                      !
-                   END DO
-                   !
-                ELSE
-                   !
-                   DO na = 1, nat
-                      !
-                      IF ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
-                      !
-                   END DO
-                   !
-                END IF
-                !
-!$omp barrier
-                !
-             END DO
-             !
-          END DO
-          !
-#ifdef __OPENMP
-!$omp end parallel
-#endif
-          !
-          CALL stop_clock( 'sum_band:becsum' )
+          IF ( okvan .AND. noncolin ) THEN
+             CALL sum_bec ( becsum_nc )
+          ELSE IF ( okvan .AND. .NOT.noncolin ) THEN
+             CALL sum_bec ( )
+          END IF
           !
        END DO k_loop
 
@@ -1041,14 +833,190 @@ SUBROUTINE sum_band()
                 END DO
              END IF
           END DO
+          DEALLOCATE( becsum_nc )
        END IF
        !
-       IF ( ALLOCATED (becsum_nc) ) DEALLOCATE( becsum_nc )
        !
        RETURN
        !
      END SUBROUTINE sum_band_k
      !
+     SUBROUTINE sum_bec ( becsum_nc )
+      !
+      USE becmod, ONLY : bec_type, becp, calbec
+      USE realus, ONLY : real_space, fft_orbital_gamma, initialisation_level,&
+                         bfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
+      !
+      IMPLICIT NONE
+      COMPLEX(dp), INTENT(INOUT), OPTIONAL :: becsum_nc(:,:,:,:)
+      COMPLEX(dp), ALLOCATABLE :: auxk1(:,:), auxk2(:,:), aux_nc(:,:)
+      REAL(dp), ALLOCATABLE :: auxg1(:,:), auxg2(:,:), aux_gk(:,:)
+      INTEGER :: ibnd_loc, ikb, jkb, ijkb0, ih, jh, ijh, na, np, is, js
+      ! counters on beta functions, atoms, atom types
+      !
+      IF ( .NOT. real_space ) THEN
+         ! calbec computes becp = <vkb_i|psi_j>
+         CALL calbec( npw, vkb, evc, becp )
+      ELSE
+         do ibnd = 1, nbnd, 2
+            call fft_orbital_gamma(evc,ibnd,nbnd)
+            call calbec_rs_gamma(ibnd,nbnd,becp%r)
+         enddo
+      ENDIF
+      !
+      CALL start_clock( 'sum_band:becsum' )
+      !
+      ! manifold for atom na in <vkb_i|psi_j> at index i=ijkb0+1 to ijkb0+nh(np)
+      !
+      ijkb0 = 0
+      !
+      DO np = 1, ntyp
+         !
+         IF ( upf(np)%tvanp ) THEN
+            !
+            ! allocate work space used to perform GEMM operations
+            !
+            IF ( gamma_only ) THEN
+               ALLOCATE( auxg1( nbnd, nh(np) ), &
+                         auxg2( nbnd, nh(np) ) )
+            ELSE
+               ALLOCATE( auxk1( nbnd, nh(np)*npol ), &
+                         auxk2( nbnd, nh(np)*npol ) )
+            END IF
+            IF ( noncolin ) THEN
+               ALLOCATE ( aux_nc( nh(np)*npol,nh(np)*npol ) ) 
+            ELSE
+               ALLOCATE ( aux_gk( nh(np),nh(np) ) ) 
+            END IF
+            !
+            DO na = 1, nat
+               !
+               IF (ityp(na)==np) THEN
+                  !
+                  ! sum over bands: \sum_k <psi_k|beta_i><beta_j|psi_k> w_k
+                  ! copy into aux1, aux2 the needed data to perform a GEMM
+                  !
+                  IF ( noncolin ) THEN
+                     !
+!$omp parallel do default(shared), private(is,ih,ikb,ibnd)
+                     DO is = 1, npol
+                        DO ih = 1, nh(np)
+                           ikb = ijkb0 + ih
+                           DO ibnd = 1, nbnd
+                              auxk1(ibnd,ih+(is-1)*nh(np))= becp%nc(ikb,is,ibnd)
+                              auxk2(ibnd,ih+(is-1)*nh(np))= wg(ibnd,ik) * &
+                                                            becp%nc(ikb,is,ibnd)
+                           END DO
+                        END DO
+                     END DO
+!$omp end parallel do
+                     !
+                     CALL ZGEMM ( 'C', 'N', npol*nh(np), npol*nh(np), nbnd, &
+                          (1.0_dp,0.0_dp), auxk1, nbnd, auxk2, nbnd, &
+                          (0.0_dp,0.0_dp), aux_nc, npol*nh(np) )
+                     !
+                  ELSE IF ( gamma_only ) THEN
+                     !
+!$omp parallel do default(shared), private(ih,ikb,ibnd)
+                     DO ih = 1, nh(np)
+                        ikb = ijkb0 + ih
+                        DO ibnd_loc = 1, becp%nbnd_loc
+                           ibnd = ibnd_loc + becp%ibnd_begin - 1
+                           auxg1(ibnd,ih) = becp%r(ikb,ibnd_loc) 
+                           auxg2(ibnd,ih) = wg(ibnd,ik)*becp%r(ikb,ibnd_loc) 
+                        END DO
+                     END DO
+!$omp end parallel do
+                     !
+                     CALL DGEMM ( 'C', 'N', nh(np), nh(np), nbnd, &
+                          1.0_dp, auxg1, nbnd, auxg2, nbnd, &
+                          0.0_dp, aux_gk, nh(np) )
+                     !
+                  ELSE
+                     !
+!$omp parallel do default(shared), private(ih,ikb,ibnd)
+                     DO ih = 1, nh(np)
+                        ikb = ijkb0 + ih
+                        DO ibnd = 1, nbnd
+                           auxk1(ibnd,ih) = becp%k(ikb,ibnd) 
+                           auxk2(ibnd,ih) = wg(ibnd,ik)*becp%k(ikb,ibnd) 
+                        END DO
+                     END DO
+!$omp end parallel do
+                     !
+                     ! only the real part is needed
+                     !
+                     CALL DGEMM ( 'C', 'N', nh(np), nh(np), 2*nbnd, &
+                          1.0_dp, auxk1, 2*nbnd, auxk2, 2*nbnd, &
+                          0.0_dp, aux_gk, nh(np) )
+                     !
+                  END IF
+                  !
+                  ! update index ijkb0 for next atom na
+                  !
+                  ijkb0 = ijkb0 + nh(np)
+                  !
+                  ! copy output from GEMM into desired format
+                  !
+                  ijh = 0
+                  DO ih = 1, nh(np)
+                     DO jh = ih, nh(np)
+                        ijh = ijh + 1
+                        !
+                        IF (noncolin) THEN
+                           DO is=1,npol
+                              DO js=1,npol
+                                 becsum_nc(ijh,na,is,js) =         &
+                                      becsum_nc(ijh,na,is,js) +    &
+                                      aux_nc (ih+(is-1)*nh(np),    &
+                                              jh+(js-1)*nh(np))
+                              END DO
+                           END DO
+                        ELSE
+                           !
+                           ! nondiagonal terms summed and collapsed into a
+                           ! single index (matrix is symmetric wrt (ih,jh))
+                           !
+                           IF ( jh == ih ) THEN
+                              becsum(ijh,na,current_spin) = &
+                                 becsum(ijh,na,current_spin) + aux_gk (ih,jh)
+                           ELSE
+                              becsum(ijh,na,current_spin) = &
+                                 becsum(ijh,na,current_spin) + aux_gk(ih,jh)*2.0_dp
+                           END IF
+                        END IF
+                     END DO
+                  END DO
+                  !
+               END IF
+               !
+            END DO
+            !
+            IF ( noncolin ) THEN
+               DEALLOCATE ( aux_nc )
+            ELSE
+               DEALLOCATE ( aux_gk  ) 
+            END IF
+            IF ( gamma_only ) THEN
+               DEALLOCATE( auxg2, auxg1 )
+            ELSE
+               DEALLOCATE( auxk2, auxk1 )
+            END IF
+            !
+         ELSE
+            !
+            ! index must be updated for all atoms, not just USPP/PAW ones!
+            !
+            DO na = 1, nat
+               IF ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
+            END DO
+         END IF
+         !
+      END DO
+      !
+      CALL stop_clock( 'sum_band:becsum' )
+      !
+    END SUBROUTINE sum_bec
      !
      SUBROUTINE get_rho(rho_loc, nrxxs_loc, w1_loc, psic_loc)
 
