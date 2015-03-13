@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
+! define __VERBOSE to print a message after each eigenvalue is computed
 !----------------------------------------------------------------------------
 SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
                      ethr, maxter, reorder, notconv, avg_iter )
@@ -22,6 +22,9 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
   USE gvect,     ONLY : gstart
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
+#ifdef __VERBOSE
+  USE io_global, only : stdout
+#endif
   !
   IMPLICIT NONE
   !
@@ -319,8 +322,9 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
      END DO iterate
      !
 #ifdef __VERBOSE
-     write(6,'("e(",i4,") = ",f12.6," eV  (",i3," iterations)")') &
+     WRITE(stdout,'("e(",i4,") = ",f12.6," eV  (",i3," iterations)")') &
          m, e(m)*13.6058, iter
+     CALL flush_unit (stdout)
 #endif
      IF ( iter >= maxter ) notconv = notconv + 1
      !

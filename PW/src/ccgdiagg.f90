@@ -8,6 +8,7 @@
 !
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
+! define __VERBOSE to print a message after each eigenvalue is computed
 !
 !----------------------------------------------------------------------------
 SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
@@ -24,6 +25,9 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
   USE kinds,            ONLY : DP
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
+#ifdef __VERBOSE
+  USE io_global, only : stdout
+#endif
   !
   IMPLICIT NONE
   !
@@ -310,8 +314,9 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
      END DO iterate
      !
 #ifdef __VERBOSE
-     write(6,'("e(",i4,") = ",f12.6," eV  (",i3," iterations)")') &
+     WRITE(stdout,'("e(",i4,") = ",f12.6," eV  (",i3," iterations)")') &
          m, e(m)*13.6058, iter
+     CALL flush_unit (stdout)
 #endif
      IF ( iter >= maxter ) notconv = notconv + 1
      !
