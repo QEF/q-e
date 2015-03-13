@@ -148,11 +148,7 @@ PROGRAM do_projwfc
   IF ( filpdos == ' ') filpdos = prefix
   !
   IF ( tdosinboxes ) THEN
-     IF( nproc_ortho > 1 ) THEN
-        CALL errore ('do_projwfc', 'nproc_ortho > 1 not yet implemented', 1)
-     ELSE
-        CALL projwave_boxes (filpdos, filproj, n_proj_boxes, irmin, irmax, plotboxes)
-     ENDIF
+     CALL projwave_boxes (filpdos, filproj, n_proj_boxes, irmin, irmax, plotboxes)
   ELSE
      IF (noncolin) THEN
         CALL projwave_nc(filproj, lsym, lwrite_overlaps, lbinary_data )
