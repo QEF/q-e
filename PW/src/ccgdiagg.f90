@@ -309,6 +309,10 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         !
      END DO iterate
      !
+#ifdef __VERBOSE
+     write(6,'("e(",i4,") = ",f12.6," eV  (",i3," iterations)")') &
+         m, e(m)*13.6058, iter
+#endif
      IF ( iter >= maxter ) notconv = notconv + 1
      !
      avg_iter = avg_iter + iter + 1
