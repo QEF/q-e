@@ -743,7 +743,7 @@ MODULE exx
     USE fft_base,             ONLY : cgather_smooth, cscatter_smooth,&
                                      dffts, cgather_custom, cscatter_custom
     USE fft_interfaces,       ONLY : invfft
-    USE becmod,               ONLY : allocate_bec_type, is_allocated_bec_type, bec_type
+    USE becmod,               ONLY : allocate_bec_type, bec_type
     USE uspp,                 ONLY : nkb, okvan
     USE us_exx,               ONLY : becxx
     USE paw_variables,        ONLY : okpaw

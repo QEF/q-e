@@ -10,9 +10,8 @@
 SUBROUTINE sum_band()
   !----------------------------------------------------------------------------
   !
-  ! ... calculates the symmetrized charge density and sum of occupied
-  ! ... eigenvalues.
-  ! ... this version works also for metals (gaussian spreading technique)
+  ! ... Calculates the symmetrized charge density and related quantities
+  ! ... Also computes the occupations and the sum of occupied eigenvalues.
   !
   USE kinds,                ONLY : DP
   USE ener,                 ONLY : eband
@@ -44,7 +43,7 @@ SUBROUTINE sum_band()
   USE paw_symmetry,         ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
-                                   bec_type, becp
+                                   becp
   !
   IMPLICIT NONE
   !
@@ -128,9 +127,7 @@ SUBROUTINE sum_band()
      rho%bec(:,:,:) = becsum(:,:,:) ! becsum is filled in sum_band_{k|gamma}
      ! rho%bec has to be recollected and symmetrized, becsum must not, otherwise
      ! it will break stress routines.
-#ifdef __MPI
      CALL mp_sum(rho%bec, inter_pool_comm )
-#endif
      CALL PAW_symmetrize(rho%bec)
   ENDIF
   !
@@ -157,13 +154,10 @@ SUBROUTINE sum_band()
   !
   CALL mp_sum( eband, inter_pool_comm )
   !
-#if defined (__MPI)
-  !
   ! ... reduce charge density across pools
   !
   CALL mp_sum( rho%of_r, inter_pool_comm )
   if (dft_is_meta() .OR. lxdm) CALL mp_sum( rho%kin_r, inter_pool_comm )
-#endif
   !
   ! ... bring the (unsymmetrized) rho(r) to G-space (use psic as work array)
   !
@@ -228,7 +222,7 @@ SUBROUTINE sum_band()
        !
        ! ... gamma version
        !
-       USE becmod,        ONLY : bec_type, becp, calbec
+       USE becmod,        ONLY : becp
        USE mp_bands,      ONLY : me_bgrp
        USE mp,            ONLY : mp_sum, mp_get_comm_null
        !
@@ -462,7 +456,7 @@ SUBROUTINE sum_band()
           !
           ! ... If we have a US pseudopotential we compute here the becsum term
           !
-          IF ( okvan ) CALL sum_bec () 
+          IF ( okvan ) CALL sum_bec ( ik, current_spin ) 
           !
        END DO k_loop
        !
@@ -497,19 +491,12 @@ SUBROUTINE sum_band()
        !
        REAL(DP) :: w1
        ! weights
-       COMPLEX(DP), ALLOCATABLE :: becsum_nc(:,:,:,:)
-       !
        INTEGER :: ipol, na, np
        !
        INTEGER  :: idx, ioff, incr, v_siz, j
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_psi_nc(:,:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:), tg_rho_nc(:,:)
        LOGICAL  :: use_tg
-       !
-       IF (okvan .AND. noncolin) THEN
-          ALLOCATE(becsum_nc(nhm*(nhm+1)/2,nat,npol,npol))
-          becsum_nc=(0.d0, 0.d0)
-       ENDIF
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -800,11 +787,7 @@ SUBROUTINE sum_band()
           !
           ! ... If we have a US pseudopotential we compute here the becsum term
           !
-          IF ( okvan .AND. noncolin ) THEN
-             CALL sum_bec ( becsum_nc )
-          ELSE IF ( okvan .AND. .NOT.noncolin ) THEN
-             CALL sum_bec ( )
-          END IF
+          IF ( okvan) CALL sum_bec ( ik, current_spin )
           !
        END DO k_loop
 
@@ -818,207 +801,11 @@ SUBROUTINE sum_band()
           END IF
        END IF
        dffts%have_task_groups = use_tg
-
-       IF (noncolin.and.okvan) THEN
-          DO np = 1, ntyp
-             IF ( upf(np)%tvanp ) THEN
-                DO na = 1, nat
-                   IF (ityp(na)==np) THEN
-                      IF (upf(np)%has_so) THEN
-                         CALL transform_becsum_so(becsum_nc,becsum,na)
-                      ELSE
-                         CALL transform_becsum_nc(becsum_nc,becsum,na)
-                      END IF
-                   END IF
-                END DO
-             END IF
-          END DO
-          DEALLOCATE( becsum_nc )
-       END IF
-       !
        !
        RETURN
        !
      END SUBROUTINE sum_band_k
      !
-     SUBROUTINE sum_bec ( becsum_nc )
-      !
-      USE becmod, ONLY : bec_type, becp, calbec
-      USE realus, ONLY : real_space, fft_orbital_gamma, initialisation_level,&
-                         bfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
-      !
-      IMPLICIT NONE
-      COMPLEX(dp), INTENT(INOUT), OPTIONAL :: becsum_nc(:,:,:,:)
-      COMPLEX(dp), ALLOCATABLE :: auxk1(:,:), auxk2(:,:), aux_nc(:,:)
-      REAL(dp), ALLOCATABLE :: auxg1(:,:), auxg2(:,:), aux_gk(:,:)
-      INTEGER :: ibnd, ibnd_loc, nbnd_loc  ! counters on bands
-      INTEGER :: ikb, jkb, ijkb0, ih, jh, ijh, na, np, is, js
-      ! counters on beta functions, atoms, atom types, spin
-      !
-      IF ( .NOT. real_space ) THEN
-         ! calbec computes becp = <vkb_i|psi_j>
-         CALL calbec( npw, vkb, evc, becp )
-      ELSE
-         do ibnd = 1, nbnd, 2
-            call fft_orbital_gamma(evc,ibnd,nbnd)
-            call calbec_rs_gamma(ibnd,nbnd,becp%r)
-         enddo
-      ENDIF
-      !
-      CALL start_clock( 'sum_band:becsum' )
-      !
-      ! manifold for atom na in <vkb_i|psi_j> at index i=ijkb0+1 to ijkb0+nh(np)
-      !
-      ijkb0 = 0
-      !
-      DO np = 1, ntyp
-         !
-         IF ( upf(np)%tvanp ) THEN
-            !
-            ! allocate work space used to perform GEMM operations
-            !
-            IF ( gamma_only ) THEN
-               nbnd_loc = becp%nbnd_loc
-               ALLOCATE( auxg1( nbnd_loc, nh(np) ), &
-                         auxg2( nbnd_loc, nh(np) ) )
-            ELSE
-               ALLOCATE( auxk1( nbnd, nh(np)*npol ), &
-                         auxk2( nbnd, nh(np)*npol ) )
-            END IF
-            IF ( noncolin ) THEN
-               ALLOCATE ( aux_nc( nh(np)*npol,nh(np)*npol ) ) 
-            ELSE
-               ALLOCATE ( aux_gk( nh(np),nh(np) ) ) 
-            END IF
-            !
-            DO na = 1, nat
-               !
-               IF (ityp(na)==np) THEN
-                  !
-                  ! sum over bands: \sum_k <psi_k|beta_i><beta_j|psi_k> w_k
-                  ! copy into aux1, aux2 the needed data to perform a GEMM
-                  !
-                  IF ( noncolin ) THEN
-                     !
-!$omp parallel do default(shared), private(is,ih,ikb,ibnd)
-                     DO is = 1, npol
-                        DO ih = 1, nh(np)
-                           ikb = ijkb0 + ih
-                           DO ibnd = 1, nbnd
-                              auxk1(ibnd,ih+(is-1)*nh(np))= becp%nc(ikb,is,ibnd)
-                              auxk2(ibnd,ih+(is-1)*nh(np))= wg(ibnd,ik) * &
-                                                            becp%nc(ikb,is,ibnd)
-                           END DO
-                        END DO
-                     END DO
-!$omp end parallel do
-                     !
-                     CALL ZGEMM ( 'C', 'N', npol*nh(np), npol*nh(np), nbnd, &
-                          (1.0_dp,0.0_dp), auxk1, nbnd, auxk2, nbnd, &
-                          (0.0_dp,0.0_dp), aux_nc, npol*nh(np) )
-                     !
-                  ELSE IF ( gamma_only ) THEN
-                     !
-!$omp parallel do default(shared), private(ih,ikb,ibnd,ibnd_loc)
-                     DO ih = 1, nh(np)
-                        ikb = ijkb0 + ih
-                        DO ibnd_loc = 1, nbnd_loc
-                           ibnd = ibnd_loc + becp%ibnd_begin - 1
-                           auxg1(ibnd_loc,ih)= becp%r(ikb,ibnd_loc) 
-                           auxg2(ibnd_loc,ih)= wg(ibnd,ik)*becp%r(ikb,ibnd_loc) 
-                        END DO
-                     END DO
-!$omp end parallel do
-                     !
-                     CALL DGEMM ( 'C', 'N', nh(np), nh(np), nbnd_loc, &
-                          1.0_dp, auxg1, nbnd_loc, auxg2, nbnd_loc, &
-                          0.0_dp, aux_gk, nh(np) )
-                     !
-                  ELSE
-                     !
-!$omp parallel do default(shared), private(ih,ikb,ibnd)
-                     DO ih = 1, nh(np)
-                        ikb = ijkb0 + ih
-                        DO ibnd = 1, nbnd
-                           auxk1(ibnd,ih) = becp%k(ikb,ibnd) 
-                           auxk2(ibnd,ih) = wg(ibnd,ik)*becp%k(ikb,ibnd) 
-                        END DO
-                     END DO
-!$omp end parallel do
-                     !
-                     ! only the real part is needed
-                     !
-                     CALL DGEMM ( 'C', 'N', nh(np), nh(np), 2*nbnd, &
-                          1.0_dp, auxk1, 2*nbnd, auxk2, 2*nbnd, &
-                          0.0_dp, aux_gk, nh(np) )
-                     !
-                  END IF
-                  !
-                  ! update index ijkb0 for next atom na
-                  !
-                  ijkb0 = ijkb0 + nh(np)
-                  !
-                  ! copy output from GEMM into desired format
-                  !
-                  ijh = 0
-                  DO ih = 1, nh(np)
-                     DO jh = ih, nh(np)
-                        ijh = ijh + 1
-                        !
-                        IF (noncolin) THEN
-                           DO is=1,npol
-                              DO js=1,npol
-                                 becsum_nc(ijh,na,is,js) =         &
-                                      becsum_nc(ijh,na,is,js) +    &
-                                      aux_nc (ih+(is-1)*nh(np),    &
-                                              jh+(js-1)*nh(np))
-                              END DO
-                           END DO
-                        ELSE
-                           !
-                           ! nondiagonal terms summed and collapsed into a
-                           ! single index (matrix is symmetric wrt (ih,jh))
-                           !
-                           IF ( jh == ih ) THEN
-                              becsum(ijh,na,current_spin) = &
-                                 becsum(ijh,na,current_spin) + aux_gk (ih,jh)
-                           ELSE
-                              becsum(ijh,na,current_spin) = &
-                                 becsum(ijh,na,current_spin) + aux_gk(ih,jh)*2.0_dp
-                           END IF
-                        END IF
-                     END DO
-                  END DO
-                  !
-               END IF
-               !
-            END DO
-            !
-            IF ( noncolin ) THEN
-               DEALLOCATE ( aux_nc )
-            ELSE
-               DEALLOCATE ( aux_gk  ) 
-            END IF
-            IF ( gamma_only ) THEN
-               DEALLOCATE( auxg2, auxg1 )
-            ELSE
-               DEALLOCATE( auxk2, auxk1 )
-            END IF
-            !
-         ELSE
-            !
-            ! index must be updated for all atoms, not just USPP/PAW ones!
-            !
-            DO na = 1, nat
-               IF ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
-            END DO
-         END IF
-         !
-      END DO
-      !
-      CALL stop_clock( 'sum_band:becsum' )
-      !
-    END SUBROUTINE sum_bec
      !
      SUBROUTINE get_rho(rho_loc, nrxxs_loc, w1_loc, psic_loc)
 
@@ -1099,3 +886,210 @@ SUBROUTINE sum_band()
      END SUBROUTINE get_rho_domag
 
 END SUBROUTINE sum_band
+
+!----------------------------------------------------------------------------
+SUBROUTINE sum_bec ( ik, current_spin )
+  !----------------------------------------------------------------------------
+  !
+  ! This routine computes the sum over bands
+  !     \sum_i <\psi_i|\beta_l>w_i<\beta_m|\psi_i>
+  ! for point "ik" and, for LSDA, spin "current_spin" 
+  ! Calls calbec to compute "becp"=<beta_m|psi_i> 
+  ! Output is accumulated (unsymmtrized) into "becsum", module "uspp"
+  !
+  USE kinds,         ONLY : DP
+  USE becmod,        ONLY : becp, calbec
+  USE control_flags, ONLY : gamma_only
+  USE ions_base,     ONLY : nat, ntyp => nsp, ityp
+  USE uspp,          ONLY : nkb, vkb, becsum
+  USE uspp_param,    ONLY : upf, nh, nhm
+  USE wvfct,         ONLY : nbnd, npw, igk, wg
+  USE noncollin_module,     ONLY : noncolin, npol
+  USE wavefunctions_module, ONLY : evc
+  USE realus, ONLY : real_space, fft_orbital_gamma, initialisation_level,&
+                     bfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
+  !
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: ik, current_spin
+  !
+  COMPLEX(DP), ALLOCATABLE :: becsum_nc(:,:,:,:)
+  COMPLEX(dp), ALLOCATABLE :: auxk1(:,:), auxk2(:,:), aux_nc(:,:)
+  REAL(dp), ALLOCATABLE :: auxg(:,:), aux_gk(:,:)
+  INTEGER :: ibnd, ibnd_loc, nbnd_loc  ! counters on bands
+  INTEGER :: ikb, jkb, ijkb0, ih, jh, ijh, na, np, is, js
+  ! counters on beta functions, atoms, atom types, spin
+  !
+  IF ( .NOT. real_space ) THEN
+     ! calbec computes becp = <vkb_i|psi_j>
+     CALL calbec( npw, vkb, evc, becp )
+  ELSE
+     do ibnd = 1, nbnd, 2
+        call fft_orbital_gamma(evc,ibnd,nbnd)
+        call calbec_rs_gamma(ibnd,nbnd,becp%r)
+     enddo
+  ENDIF
+  !
+  CALL start_clock( 'sum_band:becsum' )
+
+  IF (noncolin) THEN
+     ALLOCATE(becsum_nc(nhm*(nhm+1)/2,nat,npol,npol))
+     becsum_nc=(0.d0, 0.d0)
+  ENDIF
+  !
+  ! manifold for atom na in <vkb_i|psi_j> at index i=ijkb0+1 to ijkb0+nh(np)
+  !
+  ijkb0 = 0
+  !
+  DO np = 1, ntyp
+     !
+     IF ( upf(np)%tvanp ) THEN
+        !
+        ! allocate work space used to perform GEMM operations
+        !
+        IF ( gamma_only ) THEN
+           nbnd_loc = becp%nbnd_loc
+           ALLOCATE( auxg( nbnd_loc, nh(np) ) )
+        ELSE
+           ALLOCATE( auxk1( nbnd, nh(np)*npol ), &
+                auxk2( nbnd, nh(np)*npol ) )
+        END IF
+        IF ( noncolin ) THEN
+           ALLOCATE ( aux_nc( nh(np)*npol,nh(np)*npol ) ) 
+        ELSE
+           ALLOCATE ( aux_gk( nh(np),nh(np) ) ) 
+        END IF
+        !
+        DO na = 1, nat
+           !
+           IF (ityp(na)==np) THEN
+              !
+              ! sum over bands: \sum_i <psi_i|beta_l><beta_m|psi_i> w_i
+              ! copy into aux1, aux2 the needed data to perform a GEMM
+              !
+              IF ( noncolin ) THEN
+                 !
+!$omp parallel do default(shared), private(is,ih,ikb,ibnd)
+                 DO is = 1, npol
+                    DO ih = 1, nh(np)
+                       ikb = ijkb0 + ih
+                       DO ibnd = 1, nbnd
+                          auxk1(ibnd,ih+(is-1)*nh(np))= becp%nc(ikb,is,ibnd)
+                          auxk2(ibnd,ih+(is-1)*nh(np))= wg(ibnd,ik) * &
+                               becp%nc(ikb,is,ibnd)
+                       END DO
+                    END DO
+                 END DO
+!$omp end parallel do
+                 !
+                 CALL ZGEMM ( 'C', 'N', npol*nh(np), npol*nh(np), nbnd, &
+                      (1.0_dp,0.0_dp), auxk1, nbnd, auxk2, nbnd, &
+                      (0.0_dp,0.0_dp), aux_nc, npol*nh(np) )
+                 !
+              ELSE IF ( gamma_only ) THEN
+                 !
+!$omp parallel do default(shared), private(ih,ikb,ibnd,ibnd_loc)
+                 DO ih = 1, nh(np)
+                    ikb = ijkb0 + ih
+                    DO ibnd_loc = 1, nbnd_loc
+                       ibnd = ibnd_loc + becp%ibnd_begin - 1
+                       auxg(ibnd_loc,ih)= wg(ibnd,ik)*becp%r(ikb,ibnd_loc) 
+                    END DO
+                 END DO
+!$omp end parallel do
+                 !
+                 CALL DGEMM ( 'N', 'N', nh(np), nh(np), nbnd_loc, &
+                      1.0_dp, becp%r(ijkb0+1,1), nkb, auxg, nbnd_loc, &
+                      0.0_dp, aux_gk, nh(np) )
+                 !
+              ELSE
+                 !
+!$omp parallel do default(shared), private(ih,ikb,ibnd)
+                 DO ih = 1, nh(np)
+                    ikb = ijkb0 + ih
+                    DO ibnd = 1, nbnd
+                       auxk1(ibnd,ih) = becp%k(ikb,ibnd) 
+                       auxk2(ibnd,ih) = wg(ibnd,ik)*becp%k(ikb,ibnd)
+                    END DO
+                 END DO
+!$omp end parallel do
+                 !
+                 ! only the real part is needed
+                 !
+                 CALL DGEMM ( 'C', 'N', nh(np), nh(np), 2*nbnd, &
+                      1.0_dp, auxk1, 2*nbnd, auxk2, 2*nbnd, &
+                      0.0_dp, aux_gk, nh(np) )
+                 !
+              END IF
+              !
+              ! update index ijkb0 for next atom na
+              !
+              ijkb0 = ijkb0 + nh(np)
+              !
+              ! copy output from GEMM into desired format
+              !
+              ijh = 0
+              DO ih = 1, nh(np)
+                 DO jh = ih, nh(np)
+                    ijh = ijh + 1
+                    !
+                    IF (noncolin) THEN
+                       DO is=1,npol
+                          DO js=1,npol
+                             becsum_nc(ijh,na,is,js) =         &
+                                  becsum_nc(ijh,na,is,js) +    &
+                                  aux_nc (ih+(is-1)*nh(np),    &
+                                  jh+(js-1)*nh(np))
+                          END DO
+                       END DO
+                    ELSE
+                       !
+                       ! nondiagonal terms summed and collapsed into a
+                       ! single index (matrix is symmetric wrt (ih,jh))
+                       !
+                       IF ( jh == ih ) THEN
+                          becsum(ijh,na,current_spin) = &
+                               becsum(ijh,na,current_spin) + aux_gk (ih,jh)
+                       ELSE
+                          becsum(ijh,na,current_spin) = &
+                               becsum(ijh,na,current_spin) + aux_gk(ih,jh)*2.0_dp
+                       END IF
+                    END IF
+                 END DO
+              END DO
+              !
+              IF (noncolin .AND. upf(np)%has_so) THEN
+                 CALL transform_becsum_so(becsum_nc,becsum,na)
+              ELSE IF (noncolin .AND. .NOT. upf(np)%has_so) THEN
+                 CALL transform_becsum_nc(becsum_nc,becsum,na)
+              END IF
+           END IF
+           !
+        END DO
+        !
+        IF ( noncolin ) THEN
+           DEALLOCATE ( aux_nc )
+        ELSE
+           DEALLOCATE ( aux_gk  ) 
+        END IF
+        IF ( gamma_only ) THEN
+           DEALLOCATE( auxg )
+        ELSE
+           DEALLOCATE( auxk2, auxk1 )
+        END IF
+        !
+     ELSE
+        !
+        ! index must be updated for all atoms, not just USPP/PAW ones!
+        !
+        DO na = 1, nat
+           IF ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
+        END DO
+     END IF
+     !
+  END DO
+  !
+  IF ( noncolin ) DEALLOCATE ( becsum_nc )
+  !
+  CALL stop_clock( 'sum_band:becsum' )
+  !
+END SUBROUTINE sum_bec
