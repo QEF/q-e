@@ -1027,21 +1027,15 @@ SUBROUTINE sum_bec ( ik, current_spin )
               !
               ! copy output from GEMM into desired format
               !
-              ijh = 0
-              DO ih = 1, nh(np)
-                 DO jh = ih, nh(np)
-                    ijh = ijh + 1
-                    !
-                    IF (noncolin) THEN
-                       DO is=1,npol
-                          DO js=1,npol
-                             becsum_nc(ijh,na,is,js) =         &
-                                  becsum_nc(ijh,na,is,js) +    &
-                                  aux_nc (ih+(is-1)*nh(np),    &
-                                  jh+(js-1)*nh(np))
-                          END DO
-                       END DO
-                    ELSE
+              IF (noncolin .AND. .NOT. upf(np)%has_so) THEN
+                 CALL add_becsum_nc (na, np, aux_nc, becsum )
+              ELSE IF (noncolin .AND. upf(np)%has_so) THEN
+                 CALL add_becsum_so (na, np, aux_nc,becsum )
+              ELSE
+                 ijh = 0
+                 DO ih = 1, nh(np)
+                    DO jh = ih, nh(np)
+                       ijh = ijh + 1
                        !
                        ! nondiagonal terms summed and collapsed into a
                        ! single index (matrix is symmetric wrt (ih,jh))
@@ -1053,14 +1047,9 @@ SUBROUTINE sum_bec ( ik, current_spin )
                           becsum(ijh,na,current_spin) = &
                                becsum(ijh,na,current_spin) + aux_gk(ih,jh)*2.0_dp
                        END IF
-                    END IF
+                    END DO
                  END DO
-              END DO
-              !
-              IF (noncolin .AND. upf(np)%has_so) THEN
-                 CALL transform_becsum_so(becsum_nc,becsum,na)
-              ELSE IF (noncolin .AND. .NOT. upf(np)%has_so) THEN
-                 CALL transform_becsum_nc(becsum_nc,becsum,na)
+                 !
               END IF
            END IF
            !
@@ -1093,3 +1082,134 @@ SUBROUTINE sum_bec ( ik, current_spin )
   CALL stop_clock( 'sum_band:becsum' )
   !
 END SUBROUTINE sum_bec
+!
+!----------------------------------------------------------------------------
+SUBROUTINE add_becsum_nc ( na, np, becsum_nc, becsum )
+!----------------------------------------------------------------------------
+  !
+  ! This routine multiply becsum_nc by the identity and the Pauli
+  ! matrices and saves it in becsum for the calculation of 
+  ! augmentation charge and magnetization.
+  !
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : nat, ntyp => nsp, ityp
+  USE uspp_param,           ONLY : nh, nhm
+  USE lsda_mod,             ONLY : nspin
+  USE noncollin_module,     ONLY : npol, nspin_mag
+  USE spin_orb,             ONLY : domag
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: na, np
+  COMPLEX(DP), INTENT(IN) :: becsum_nc(nh(np),npol,nh(np),npol)
+  REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin_mag)
+  !
+  ! ... local variables
+  !
+  INTEGER :: ih, jh, ijh
+  REAL(dp) :: fac
+  !
+  ijh=0
+  DO ih = 1, nh(np)
+     DO jh = ih, nh(np)
+        ijh=ijh+1
+        IF ( ih == jh ) THEN
+           fac = 1.0_dp
+        ELSE
+           fac = 2.0_dp
+        END IF
+        becsum(ijh,na,1)= becsum(ijh,na,1) + fac * &
+                DBLE( becsum_nc(ih,1,jh,1) + becsum_nc(ih,2,jh,2) )
+        IF (domag) THEN
+           becsum(ijh,na,2)= becsum(ijh,na,2) + fac *  &
+                DBLE( becsum_nc(ih,1,jh,2) + becsum_nc(ih,2,jh,1) )
+           becsum(ijh,na,3)= becsum(ijh,na,3) + fac * DBLE( (0.d0,-1.d0)* &
+               (becsum_nc(ih,1,jh,2) - becsum_nc(ih,2,jh,1)) )
+           becsum(ijh,na,4)= becsum(ijh,na,4) + fac * &
+                DBLE( becsum_nc(ih,1,jh,1) - becsum_nc(ih,2,jh,2) )
+        END IF
+     END DO
+  END DO
+  
+END SUBROUTINE add_becsum_nc
+!
+!----------------------------------------------------------------------------
+SUBROUTINE add_becsum_so( na, np, becsum_nc, becsum )
+  !----------------------------------------------------------------------------
+  !
+  ! This routine multiply becsum_nc by the identity and the Pauli
+  ! matrices, rotate it as appropriate for the spin-orbit case
+  ! and saves it in becsum for the calculation of 
+  ! augmentation charge and magnetization.
+  !
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : nat, ntyp => nsp, ityp
+  USE uspp_param,           ONLY : nh, nhm
+  USE lsda_mod,             ONLY : nspin
+  USE uspp,                 ONLY : ijtoh
+  USE noncollin_module,     ONLY : npol, nspin_mag
+  USE spin_orb,             ONLY : fcoef, domag
+  !
+  IMPLICIT NONE
+  
+  INTEGER, INTENT(IN) :: na, np
+  COMPLEX(DP), INTENT(IN) :: becsum_nc(nh(np),npol,nh(np),npol)
+  REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin_mag)
+  !
+  ! ... local variables
+  !
+  INTEGER :: ih, jh, lh, kh, ijh, is1, is2
+  COMPLEX(DP) :: fac
+  LOGICAL :: same_lj
+  
+  DO ih = 1, nh(np)
+     DO jh = 1, nh(np)
+        ijh=ijtoh(ih,jh,np)
+        DO kh = 1, nh(np)
+           IF (same_lj(kh,ih,np)) THEN
+              DO lh=1,nh(np)
+                 IF (same_lj(lh,jh,np)) THEN
+                    DO is1=1,npol
+                       DO is2=1,npol
+                          fac=becsum_nc(kh,is1,lh,is2)
+                          becsum(ijh,na,1)=becsum(ijh,na,1) + fac * &
+                               (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,1,is2,np) + &
+                               fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,2,is2,np)  )
+                          IF (domag) THEN
+                            becsum(ijh,na,2)=becsum(ijh,na,2)+fac * &
+                                (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,2,is2,np) +&
+                                fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,1,is2,np)  )
+                            becsum(ijh,na,3)=becsum(ijh,na,3)+fac*(0.d0,-1.d0)*&
+                               (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,2,is2,np) - &
+                                fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,1,is2,np)  )
+                           becsum(ijh,na,4)=becsum(ijh,na,4) + fac * &
+                               (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,1,is2,np) - &
+                                fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,2,is2,np)  )
+                        END IF
+                     END DO
+                  END DO
+               END IF
+            END DO
+         END IF
+      END DO
+   END DO
+END DO
+!
+END SUBROUTINE add_becsum_so
+
+FUNCTION same_lj(ih,jh,np)
+
+USE uspp, ONLY : nhtol, nhtoj, indv
+
+IMPLICIT NONE
+
+LOGICAL :: same_lj
+INTEGER :: ih, jh, np
+
+same_lj = ((nhtol(ih,np)==nhtol(jh,np)).AND. &
+           (ABS(nhtoj(ih,np)-nhtoj(jh,np))<1.d8).AND. &
+           (indv(ih,np)==indv(jh,np)) )
+
+RETURN
+END FUNCTION same_lj
+
