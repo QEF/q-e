@@ -1145,8 +1145,7 @@ SUBROUTINE add_becsum_so( na, np, becsum_nc, becsum )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : nh, nhm
-  USE lsda_mod,             ONLY : nspin
-  USE uspp,                 ONLY : ijtoh
+  USE uspp,                 ONLY : ijtoh, nhtol, nhtoj, indv
   USE noncollin_module,     ONLY : npol, nspin_mag
   USE spin_orb,             ONLY : fcoef, domag
   !
@@ -1160,7 +1159,6 @@ SUBROUTINE add_becsum_so( na, np, becsum_nc, becsum )
   !
   INTEGER :: ih, jh, lh, kh, ijh, is1, is2
   COMPLEX(DP) :: fac
-  LOGICAL :: same_lj
   
   DO ih = 1, nh(np)
      DO jh = 1, nh(np)
@@ -1195,21 +1193,14 @@ SUBROUTINE add_becsum_so( na, np, becsum_nc, becsum )
    END DO
 END DO
 !
+CONTAINS
+   LOGICAL FUNCTION same_lj(ih,jh,np)
+   INTEGER :: ih, jh, np
+   !
+   same_lj = ((nhtol(ih,np)==nhtol(jh,np)).AND. &
+             (ABS(nhtoj(ih,np)-nhtoj(jh,np))<1.d8).AND. &
+             (indv(ih,np)==indv(jh,np)) )
+   !
+   END FUNCTION same_lj
+
 END SUBROUTINE add_becsum_so
-
-FUNCTION same_lj(ih,jh,np)
-
-USE uspp, ONLY : nhtol, nhtoj, indv
-
-IMPLICIT NONE
-
-LOGICAL :: same_lj
-INTEGER :: ih, jh, np
-
-same_lj = ((nhtol(ih,np)==nhtol(jh,np)).AND. &
-           (ABS(nhtoj(ih,np)-nhtoj(jh,np))<1.d8).AND. &
-           (indv(ih,np)==indv(jh,np)) )
-
-RETURN
-END FUNCTION same_lj
-
