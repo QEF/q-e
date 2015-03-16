@@ -1087,9 +1087,9 @@ END SUBROUTINE sum_bec
 SUBROUTINE add_becsum_nc ( na, np, becsum_nc, becsum )
 !----------------------------------------------------------------------------
   !
-  ! This routine multiply becsum_nc by the identity and the Pauli
-  ! matrices and saves it in becsum for the calculation of 
-  ! augmentation charge and magnetization.
+  ! This routine multiplies becsum_nc by the identity and the Pauli matrices,
+  ! saves it in becsum for the calculation of augmentation charge and
+  ! magnetization.
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
@@ -1137,10 +1137,9 @@ END SUBROUTINE add_becsum_nc
 SUBROUTINE add_becsum_so( na, np, becsum_nc, becsum )
   !----------------------------------------------------------------------------
   !
-  ! This routine multiply becsum_nc by the identity and the Pauli
-  ! matrices, rotate it as appropriate for the spin-orbit case
-  ! and saves it in becsum for the calculation of 
-  ! augmentation charge and magnetization.
+  ! This routine multiplies becsum_nc by the identity and the Pauli matrices,
+  ! rotates it as appropriate for the spin-orbit case, saves it in becsum
+  ! for the calculation of augmentation charge and magnetization.
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
