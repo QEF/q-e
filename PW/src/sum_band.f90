@@ -901,7 +901,7 @@ SUBROUTINE sum_bec ( ik, current_spin )
   USE becmod,        ONLY : becp, calbec
   USE control_flags, ONLY : gamma_only
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
-  USE uspp,          ONLY : nkb, vkb, becsum
+  USE uspp,          ONLY : nkb, vkb, becsum, indv_ijkb0
   USE uspp_param,    ONLY : upf, nh, nhm
   USE wvfct,         ONLY : nbnd, npw, igk, wg
   USE noncollin_module,     ONLY : noncolin, npol
@@ -916,7 +916,7 @@ SUBROUTINE sum_bec ( ik, current_spin )
   COMPLEX(dp), ALLOCATABLE :: auxk1(:,:), auxk2(:,:), aux_nc(:,:)
   REAL(dp), ALLOCATABLE :: auxg(:,:), aux_gk(:,:)
   INTEGER :: ibnd, ibnd_loc, nbnd_loc  ! counters on bands
-  INTEGER :: ikb, jkb, ijkb0, ih, jh, ijh, na, np, is, js
+  INTEGER :: ikb, jkb, ih, jh, ijh, na, np, is, js
   ! counters on beta functions, atoms, atom types, spin
   !
   IF ( .NOT. real_space ) THEN
@@ -935,10 +935,6 @@ SUBROUTINE sum_bec ( ik, current_spin )
      ALLOCATE(becsum_nc(nhm*(nhm+1)/2,nat,npol,npol))
      becsum_nc=(0.d0, 0.d0)
   ENDIF
-  !
-  ! manifold for atom na in <vkb_i|psi_j> at index i=ijkb0+1 to ijkb0+nh(np)
-  !
-  ijkb0 = 0
   !
   DO np = 1, ntyp
      !
@@ -959,6 +955,9 @@ SUBROUTINE sum_bec ( ik, current_spin )
            ALLOCATE ( aux_gk( nh(np),nh(np) ) ) 
         END IF
         !
+        !   In becp=<vkb_i|psi_j> terms corresponding to atom na of type nt
+        !   run from index i=indv_ijkb0(na)+1 to i=indv_ijkb0(na)+nh(nt)
+        !
         DO na = 1, nat
            !
            IF (ityp(na)==np) THEN
@@ -971,7 +970,7 @@ SUBROUTINE sum_bec ( ik, current_spin )
 !$omp parallel do default(shared), private(is,ih,ikb,ibnd)
                  DO is = 1, npol
                     DO ih = 1, nh(np)
-                       ikb = ijkb0 + ih
+                       ikb = indv_ijkb0(na) + ih
                        DO ibnd = 1, nbnd
                           auxk1(ibnd,ih+(is-1)*nh(np))= becp%nc(ikb,is,ibnd)
                           auxk2(ibnd,ih+(is-1)*nh(np))= wg(ibnd,ik) * &
@@ -989,7 +988,7 @@ SUBROUTINE sum_bec ( ik, current_spin )
                  !
 !$omp parallel do default(shared), private(ih,ikb,ibnd,ibnd_loc)
                  DO ih = 1, nh(np)
-                    ikb = ijkb0 + ih
+                    ikb = indv_ijkb0(na) + ih
                     DO ibnd_loc = 1, nbnd_loc
                        ibnd = ibnd_loc + becp%ibnd_begin - 1
                        auxg(ibnd_loc,ih)= wg(ibnd,ik)*becp%r(ikb,ibnd_loc) 
@@ -998,14 +997,14 @@ SUBROUTINE sum_bec ( ik, current_spin )
 !$omp end parallel do
                  !
                  CALL DGEMM ( 'N', 'N', nh(np), nh(np), nbnd_loc, &
-                      1.0_dp, becp%r(ijkb0+1,1), nkb, auxg, nbnd_loc, &
-                      0.0_dp, aux_gk, nh(np) )
+                      1.0_dp, becp%r(indv_ijkb0(na)+1,1), nkb,    &
+                      auxg, nbnd_loc, 0.0_dp, aux_gk, nh(np) )
                  !
               ELSE
                  !
 !$omp parallel do default(shared), private(ih,ikb,ibnd)
                  DO ih = 1, nh(np)
-                    ikb = ijkb0 + ih
+                    ikb = indv_ijkb0(na) + ih
                     DO ibnd = 1, nbnd
                        auxk1(ibnd,ih) = becp%k(ikb,ibnd) 
                        auxk2(ibnd,ih) = wg(ibnd,ik)*becp%k(ikb,ibnd)
@@ -1013,17 +1012,13 @@ SUBROUTINE sum_bec ( ik, current_spin )
                  END DO
 !$omp end parallel do
                  !
-                 ! only the real part is needed
+                 ! only the real part is computed
                  !
                  CALL DGEMM ( 'C', 'N', nh(np), nh(np), 2*nbnd, &
                       1.0_dp, auxk1, 2*nbnd, auxk2, 2*nbnd, &
                       0.0_dp, aux_gk, nh(np) )
                  !
               END IF
-              !
-              ! update index ijkb0 for next atom na
-              !
-              ijkb0 = ijkb0 + nh(np)
               !
               ! copy output from GEMM into desired format
               !
@@ -1066,13 +1061,6 @@ SUBROUTINE sum_bec ( ik, current_spin )
            DEALLOCATE( auxk2, auxk1 )
         END IF
         !
-     ELSE
-        !
-        ! index must be updated for all atoms, not just USPP/PAW ones!
-        !
-        DO na = 1, nat
-           IF ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
-        END DO
      END IF
      !
   END DO

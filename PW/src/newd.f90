@@ -53,7 +53,6 @@ SUBROUTINE newq_compute(vr,deeq,skip_vltot)
                                    eigts1, eigts2, eigts3, nl
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vltot
-  USE uspp,                 ONLY : okvan, indv
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
@@ -233,7 +232,7 @@ SUBROUTINE newd_g()
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE lsda_mod,             ONLY : nspin
-  USE uspp,                 ONLY : deeq, dvan, deeq_nc, dvan_so, okvan, indv
+  USE uspp,                 ONLY : deeq, dvan, deeq_nc, dvan_so, okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE spin_orb,             ONLY : lspinorb, domag
   USE noncollin_module,     ONLY : noncolin, nspin_mag
