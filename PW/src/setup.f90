@@ -114,7 +114,7 @@ SUBROUTINE setup()
      IF ( ANY (upf(1:ntyp)%nlcc) ) CALL infomsg( 'setup ', 'BEWARE:' // &
                & ' nonlinear core correction is not consistent with hybrid XC')
      IF (lmovecell) CALL errore('setup','Variable cell and hybrid XC not tested',1)
-     IF (okpaw.OR.okvan) CALL errore('setup','PAW and hybrid XC not tested',1)
+     IF (okpaw) CALL errore('setup','PAW and hybrid XC not tested',1)
      IF ( noncolin ) THEN
         IF ( okvan ) THEN
            CALL errore('setup','Noncolinear hybrid XC for USPP not implemented',1)

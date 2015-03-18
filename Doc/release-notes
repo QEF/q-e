@@ -1,3 +1,8 @@
+Fixed in svn version:
+
+   * PW: ordering of beta functions incorrect in USPP + hybrid functionals.
+     This case seems to work and has been enabled again.
+
 New in 5.1.2 version:
 
    * PW: Hybrid functionals for USPP and PAW still have problems, disabled
