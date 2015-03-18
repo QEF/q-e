@@ -33,7 +33,7 @@ SUBROUTINE force_hub(forceh)
    USE mp,                   ONLY : mp_sum
    USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type, &
                                     deallocate_bec_type
-   USE uspp,                 ONLY : nkb, vkb
+   USE uspp,                 ONLY : nkb, vkb, indv_ijkb0
    USE uspp_param,           ONLY : nh
    USE wavefunctions_module, ONLY : evc
    USE klist,                ONLY : nks, xk, ngk
@@ -102,21 +102,7 @@ SUBROUTINE force_hub(forceh)
 
       DO alpha = 1,nat  ! forces are calculated for atom alpha ...
          !
-         ! FIXME: ijkb0 (position of beta functions for atom alpha)
-         ! should be calculated and stored once for all in the main code
-         !
-         ijkb0 = 0
-         DO nt=1,ntyp
-            DO na=1,nat
-               IF ( ityp(na) .EQ. nt ) THEN
-                  IF ( na == alpha ) GO TO 10
-                  ijkb0 = ijkb0 + nh(nt)
-               END IF
-            END DO
-         END DO
-10       IF ( ijkb0 < 0 .OR. ijkb0 > nkb ) &
-              CALL errore('force_hub', 'internal error', 1 )
-         !
+         ijkb0 = indv_ijkb0(alpha) ! positions of beta functions for atom alpha
          DO ipol = 1,3  ! forces are calculated for coordinate ipol ...
             !
             IF ( gamma_only ) THEN

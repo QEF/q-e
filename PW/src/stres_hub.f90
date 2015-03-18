@@ -299,7 +299,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE ldaU,                 ONLY : hubbard_l, is_hubbard, nwfcU, wfcU
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
-   USE uspp,                 ONLY : nkb, vkb, qq
+   USE uspp,                 ONLY : nkb, vkb, qq, indv_ijkb0
    USE uspp_param,           ONLY : upf, nhm, nh
    USE wavefunctions_module, ONLY : evc
    USE becmod,               ONLY : bec_type, becp, calbec
@@ -387,12 +387,12 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ! and here the derivative of the spherical harmonic
    CALL gen_us_dy (ik, xyz(1,ipol), aux1)
 
-   ijkb0 = 0
    DO nt=1,ntyp
       ALLOCATE (dbeta(npwx,nh(nt)), dbetapsi(nh(nt),nbnd), betapsi(nh(nt),nbnd), &
                 wfatbeta(nwfcU,nh(nt)), wfatdbeta(nwfcU,nh(nt)) )
       DO na=1,nat
          IF ( ityp(na) .EQ. nt ) THEN
+            ijkb0 = indv_ijkb0(na)
             DO ih=1,nh(nt)
                ! now we compute the true dbeta function
                DO ig = 1,npw
@@ -436,8 +436,6 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
                END DO
             END DO
             !
-            ijkb0 = ijkb0 + nh(nt)
-            !
             ! dproj(iwf,ibnd) = \sum_ih wfatdbeta(iwf,ih)*betapsi(ih,ibnd) +
             !                           wfatbeta(iwf,ih)*dbetapsi(ih,ibnd) 
             !
@@ -479,7 +477,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE ldaU,                 ONLY : is_hubbard, hubbard_l, nwfcU, wfcU
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
-   USE uspp,                 ONLY : nkb, vkb, qq
+   USE uspp,                 ONLY : nkb, vkb, qq, indv_ijkb0
    USE uspp_param,           ONLY : upf, nhm, nh
    USE wavefunctions_module, ONLY : evc
    USE becmod,               ONLY : bec_type, becp, calbec
@@ -567,12 +565,12 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ! and here the derivative of the spherical harmonic
    CALL gen_us_dy (ik, xyz(1,ipol), aux1)
 
-   ijkb0 = 0
    DO nt=1,ntyp
       ALLOCATE (dbeta(npwx,nh(nt)), dbetapsi(nh(nt),nbnd), betapsi(nh(nt),nbnd), &
                 wfatbeta(nwfcU,nh(nt)), wfatdbeta(nwfcU,nh(nt)) )
       DO na=1,nat
          IF ( ityp(na) .EQ. nt ) THEN
+            ijkb0 = indv_ijkb0(na)
             DO ih=1,nh(nt)
                ! now we compute the true dbeta function
                DO ig = 1,npw
@@ -617,8 +615,6 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ipol, jpol, nb_s, nb_e, mykey, dproj )
                   END DO
                END DO
             END DO
-            !
-            ijkb0 = ijkb0 + nh(nt)
             !
             ! dproj(iwf,ibnd) = \sum_ih wfatdbeta(iwf,ih)*betapsi(ih,ibnd) +
             !                           wfatbeta(iwf,ih)*dbetapsi(ih,ibnd) 

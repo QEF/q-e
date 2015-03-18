@@ -214,14 +214,14 @@ SUBROUTINE new_ns(ns)
     USE ions_base,            ONLY : ntyp => nsp
     USE klist,                ONLY : xk
     USE becmod,               ONLY : becp
-    USE uspp,                 ONLY : nkb, vkb
+    USE uspp,                 ONLY : nkb, vkb, indv_ijkb0
     USE uspp_param,           ONLY : nhm, nh
     !
     IMPLICIT NONE
     REAL(DP), INTENT(IN) :: q(nwfcU,nhm,nat)
     TYPE(bec_type), INTENT(INOUT) :: p
     !
-    INTEGER :: ib, iw, nt, na, ijkb0, ikb, ih
+    INTEGER :: ib, iw, nt, na, ikb, ih
 
     IF ( nkb == 0 ) RETURN
     !
@@ -237,8 +237,6 @@ SUBROUTINE new_ns(ns)
        p%k(:,:) = (0.0_DP,0.0_DP)
     ENDIF
     !
-    ijkb0 = 0
-    !
     DO nt = 1, ntyp
        !
        DO na = 1, nat
@@ -251,7 +249,7 @@ SUBROUTINE new_ns(ns)
                    !
                    DO ih = 1, nh(nt)
                       !
-                      ikb = ijkb0 + ih
+                      ikb = indv_ijkb0(na) + ih
                       DO iw = 1, nwfcU
                          !
                          IF ( gamma_only ) THEN
@@ -267,8 +265,6 @@ SUBROUTINE new_ns(ns)
                 END DO
                 !
              END IF
-             !
-             ijkb0 = ijkb0 + nh(nt)
              !
           END IF
           !

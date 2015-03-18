@@ -2496,7 +2496,7 @@ MODULE realus
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm, nl, nlm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE uspp,                 ONLY : okvan, becsum, nkb, ijtoh
+  USE uspp,                 ONLY : okvan, becsum, nkb, ijtoh, indv_ijkb0
   USE uspp_param,           ONLY : upf, lmaxq, nh
   USE wvfct,                ONLY : wg
   USE control_flags,        ONLY : gamma_only
@@ -2520,7 +2520,7 @@ MODULE realus
   !
 
   INTEGER :: na, nt, nhnt, ir, ih, jh, is , ia, mbia, irb, iqs, sizeqsave
-  INTEGER :: ikb, jkb, ijkb0, np
+  INTEGER :: ikb, jkb, np
   ! counters
 
   ! work space for rho(G,nspin)
@@ -2532,7 +2532,6 @@ MODULE realus
      STOP
   ENDIF
 
-  ijkb0 = 0
   DO is=1,nspin
      !
      DO np = 1, ntyp
@@ -2552,11 +2551,11 @@ MODULE realus
               !
               DO ih = 1, nhnt
                  !
-                 ikb = ijkb0 + ih
+                 ikb = indv_ijkb0(ia) + ih
                  !
                  DO jh = ih, nhnt
                     !
-                    jkb = ijkb0 + jh
+                    jkb = indv_ijkb0(ia) + jh
                     !
                     DO ir = 1, mbia
                        !
@@ -2573,15 +2572,6 @@ MODULE realus
                     ENDDO
                  ENDDO
               ENDDO
-              ijkb0 = ijkb0 + nhnt
-              !
-           ENDDO
-           !
-        ELSE
-           !
-           DO na = 1, nat
-              !
-              IF ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
               !
            ENDDO
            !
@@ -2603,7 +2593,7 @@ MODULE realus
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm, nl, nlm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE uspp,                 ONLY : okvan, becsum, nkb, ijtoh
+  USE uspp,                 ONLY : okvan, becsum, nkb, ijtoh, indv_ijkb0
   USE uspp_param,           ONLY : upf, lmaxq, nh
   USE wvfct,                ONLY : wg
   USE control_flags,        ONLY : gamma_only
@@ -2618,7 +2608,7 @@ MODULE realus
   !     here the local variables
   !
   INTEGER :: na, ia, nt, nhnt, ir, ih, jh, is, mbia, irb, iqs
-  INTEGER :: ikb, jkb, ijkb0, np
+  INTEGER :: ikb, jkb, np
   ! counters
 
   ! work space for rho(G,nspin)
@@ -2626,7 +2616,6 @@ MODULE realus
 
   IF (.not.okvan) RETURN
 
-  ijkb0 = 0
   DO is=1,nspin
      !
      DO np = 1, ntyp
@@ -2646,10 +2635,10 @@ MODULE realus
               !
               DO ih = 1, nhnt
                  !
-                 ikb = ijkb0 + ih
+                 ikb = indv_ijkb0(ia) + ih
                  DO jh = ih, nhnt
                     !
-                    jkb = ijkb0 + jh
+                    jkb = indv_ijkb0(ia) + jh
                     !
                     DO ir = 1, mbia
                        !
@@ -2666,15 +2655,6 @@ MODULE realus
                     ENDDO
                  ENDDO
               ENDDO
-              ijkb0 = ijkb0 + nhnt
-              !
-           ENDDO
-           !
-        ELSE
-           !
-           DO na = 1, nat
-              !
-              IF ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
               !
            ENDDO
            !
@@ -2696,7 +2676,7 @@ MODULE realus
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE gvect,                ONLY : ngm, nl, nlm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE uspp,                 ONLY : okvan, becsum, nkb, qq
+  USE uspp,                 ONLY : okvan, becsum, nkb, qq, indv_ijkb0
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE wvfct,                ONLY : wg
   USE control_flags,        ONLY : gamma_only
@@ -2717,7 +2697,7 @@ MODULE realus
   !
 
   INTEGER :: na, ia, nhnt, nt, ih, jh, is, mbia
-  INTEGER :: ikb, jkb, ijkb0, np
+  INTEGER :: ikb, jkb, np
   ! counters
 
   ! work space for rho(G,nspin)
@@ -2725,7 +2705,6 @@ MODULE realus
 
   IF (.not.okvan) RETURN
 
-  ijkb0 = 0
   DO is=1,nspin
      !
      DO np = 1, ntyp
@@ -2742,10 +2721,10 @@ MODULE realus
               !
               DO ih = 1, nhnt
                  !
-                 ikb = ijkb0 + ih
+                 ikb = indv_ijkb0(ia) + ih
                  DO jh = ih, nhnt
                     !
-                    jkb = ijkb0 + jh
+                    jkb = indv_ijkb0(ia) + jh
                     !
                     sca = sca + qq_op(ih,jh,ia) * becp_iw(ikb)*becp_jw(jkb)
                     !
@@ -2755,15 +2734,6 @@ MODULE realus
                     !
                  ENDDO
               ENDDO
-              ijkb0 = ijkb0 + nhnt
-              !
-           ENDDO
-           !
-        ELSE
-           !
-           DO ia = 1, nat
-              !
-              IF ( ityp(ia) == np ) ijkb0 = ijkb0 + nh(np)
               !
            ENDDO
            !

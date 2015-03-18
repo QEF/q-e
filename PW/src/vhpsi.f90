@@ -29,9 +29,9 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
   complex(DP), intent(in) :: psip (ldap, mps)
   complex(DP), intent(inout) :: hpsi (ldap, mps)
   !
-  integer :: ibnd, na, nt, m1, m2, ldim
+  integer :: na, nt, ldim
   REAL(DP), ALLOCATABLE :: rtemp(:,:)
-  COMPLEX(DP), ALLOCATABLE :: ctemp(:,:)
+  COMPLEX(DP), ALLOCATABLE :: ctemp(:,:), vtemp(:,:)
   type (bec_type) :: proj
 
   CALL start_clock('vhpsi')
@@ -47,7 +47,7 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
         IF  (gamma_only) THEN
            ALLOCATE ( rtemp(ldim,mps) )
         ELSE
-           ALLOCATE ( ctemp(ldim,mps) )
+           ALLOCATE ( ctemp(ldim,mps), vtemp(ldim,ldim) )
         END IF
         DO na = 1, nat  
            IF ( nt == ityp (na) ) THEN
@@ -59,18 +59,10 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
                      wfcU(1,offsetU(na)+1), 2*ldap, rtemp, ldim, &
                      1.0_dp, hpsi, 2*ldap)
               ELSE
-!$omp parallel do default(shared), private(m1,ibnd,m2)
-                 DO m1 = 1,ldim 
-                    DO ibnd = 1, mps  
-                       ctemp(m1,ibnd) = (0.0_dp, 0.0_dp)
-                       DO m2 = 1,ldim 
-                          ctemp(m1,ibnd) = ctemp(m1,ibnd) + &
-                               v%ns(m1,m2,current_spin,na) * &
-                               proj%k(offsetU(na)+m2, ibnd)
-                       ENDDO
-                    ENDDO
-                 ENDDO
-!$omp end parallel do
+                 vtemp(:,:) =  v%ns(1:ldim,1:ldim,current_spin,na)
+                 CALL ZGEMM ('n','n', ldim,mps,ldim, (1.0_dp,0.0_dp), &
+                      vtemp,ldim, proj%k(offsetU(na)+1,1),nwfcU, &
+                      (0.0_dp, 0.0_dp), ctemp, ldim)
                  CALL ZGEMM ('n','n', np, mps, ldim, (1.0_dp,0.0_dp), &
                       wfcU(1,offsetU(na)+1), ldap, ctemp, ldim, &
                       (1.0_dp,0.0_dp), hpsi, ldap)
@@ -80,7 +72,7 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
         IF (gamma_only) THEN
            DEALLOCATE ( rtemp )
         ELSE
-           DEALLOCATE ( ctemp )
+           DEALLOCATE ( vtemp, ctemp )
         ENDIF
      ENDIF
   ENDDO

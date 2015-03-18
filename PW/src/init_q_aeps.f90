@@ -30,7 +30,6 @@ SUBROUTINE init_q_aeps ( )
    ! LOCAL
    INTEGER :: l, m, mb, nb, ndm, cnt, kk, iwfc, jwfc
    INTEGER :: nt, nt_, na, ih, jh, ib, jb, lH, nchiH, nbH
-   !INTEGER :: ijkb0, ikb, jkb
    REAL(DP), ALLOCATABLE :: aux (:), qq_ae(:,:,:), qq_ps(:,:,:)
    REAL(DP) :: psint, aeint, wsgn
    !
@@ -134,14 +133,6 @@ SUBROUTINE init_q_aeps ( )
 
          IF ( nt_ == nt .AND. lH .GE. 0 ) THEN
             !
-            !! we use indv instead of this (should give the same):
-            ! compute offset for beta functions
-            !IF ( nt == 0 ) THEN
-            !   ijkb0 = 0
-            !ELSE
-            !   ijkb0 = SUM(nh(1:nt-1))
-            !ENDIF
-
             !!! DEBUG
             if ( ionode .AND. iverbosity == 1 ) then
                write(*,*) "na, ityp, lH=",na,ityp(na),lH
@@ -151,13 +142,11 @@ SUBROUTINE init_q_aeps ( )
 
             DO jh = 1, nh(nt)
                !
-               !jkb = ijkb0 + jh
                IF (nhtol(jh,nt) .NE. lH) CYCLE
                jb = indv(jh,nt)
                !
                DO ih = 1, nh(nt)
                   !
-                  !ikb = ijkb0 + ih
                   ib = indv(ih,nt)
                   IF (nhtol(ih,nt) .NE. lH) CYCLE
                   IF (ib .NE. nbH) CYCLE
