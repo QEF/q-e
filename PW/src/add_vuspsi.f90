@@ -26,7 +26,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   USE lsda_mod,      ONLY: current_spin
   USE control_flags, ONLY: gamma_only
   USE noncollin_module
-  USE uspp,          ONLY: vkb, nkb, deeq, deeq_nc
+  USE uspp,          ONLY: vkb, nkb, deeq, deeq_nc, indv_ijkb0
   USE uspp_param,    ONLY: nh, nhm
   USE becmod,        ONLY: bec_type, becp
   !
@@ -39,7 +39,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   !
   ! ... here the local variables
   !
-  INTEGER :: jkb, ikb, ih, jh, na, nt, ijkb0, ibnd
+  INTEGER :: jkb, ikb, ih, jh, na, nt, ibnd
     ! counters
   !
   !
@@ -104,9 +104,9 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        ps(:,:) = 0.D0
        !
-       ! ijkb0 points to the manifold of nh(nt) beta functions for atom na
+       !   In becp=<vkb_i|psi_j> terms corresponding to atom na of type nt
+       !   run from index i=indv_ijkb0(na)+1 to i=indv_ijkb0(na)+nh(nt)
        !
-       ijkb0 = 1
        DO nt = 1, ntyp
           !
           DO na = 1, nat
@@ -118,9 +118,8 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
                 !
                 CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
                            deeq(1,1,na,current_spin), nhm, &
-                           becp%r(ijkb0,1), nkb, &
-                           0.0_dp, ps(ijkb0,1), nkb )
-                ijkb0 = ijkb0 + nh(nt)
+                           becp%r(indv_ijkb0(na)+1,1), nkb, 0.0_dp, &
+                               ps(indv_ijkb0(na)+1,1), nkb )
                 !
              END IF
              !
@@ -186,7 +185,6 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
           CALL errore( ' add_vuspsi_k ', ' cannot allocate ps ', ABS( ierr ) )
        ps(:,:) = ( 0.D0, 0.D0 )
        !
-       ijkb0 = 1
        DO nt = 1, ntyp
           !
           ALLOCATE ( deeaux(nh(nt),nh(nt)) )
@@ -198,11 +196,10 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
                 ! a zgemm = simple but sub-optimal solution
                 !
                 deeaux(:,:) = CMPLX(deeq(1:nh(nt),1:nh(nt),na,current_spin),&
-                                    0.0_dp )
-                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeaux, nh(nt), becp%k(ijkb0,1), nkb, &
-                           (0.0_dp,0.0_dp), ps(ijkb0,1), nkb )
-                ijkb0 = ijkb0 + nh(nt)
+                                    0.0_dp, KIND=dp )
+                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), deeaux, nh(nt),&
+                           becp%k(indv_ijkb0(na)+1,1), nkb, (0.0_dp, 0.0_dp), &
+                               ps(indv_ijkb0(na)+1,1), nkb )
                 !
              END IF
              !
@@ -227,7 +224,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        IMPLICIT NONE
        COMPLEX(DP), ALLOCATABLE :: ps (:,:,:)
-       INTEGER :: ierr
+       INTEGER :: ierr, ijkb0
        !
        IF ( nkb == 0 ) RETURN
        !
@@ -237,7 +234,6 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        ps (:,:,:) = (0.d0, 0.d0)
        !
-       ijkb0 = 1
        DO nt = 1, ntyp
           !
           DO na = 1, nat
@@ -253,6 +249,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
                 !                   deeq_nc(ih,jh,na,4)*becp%nc(jkb,2,ibnd) 
                 ! Not sure this is the best solution to use zgemm, though:
                 !
+                ijkb0 = indv_ijkb0(na)+1
                 CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
                            deeq_nc(1,1,na,1), nh(nt), becp%nc(ijkb0,1,1),2*nkb,&
                            (0.0_dp,0.0_dp), ps(ijkb0,1,1), 2*nkb )
@@ -265,7 +262,6 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
                 CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
                            deeq_nc(1,1,na,4), nh(nt), becp%nc(ijkb0,2,1),2*nkb,&
                            (1.0_dp,0.0_dp), ps(ijkb0,2,1), 2*nkb )
-                ijkb0 = ijkb0 + nh(nt)
                 !
              END IF
              !
