@@ -648,7 +648,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      !=================================================================
      ! BS : Additional cycles for the Nose thermostat ... 
-     CYCLE_NOSE=CYCLE_NOSE+1
+     IF(tnosep) CYCLE_NOSE=CYCLE_NOSE+1
      IF(tnosep .AND. (CYCLE_NOSE .LE. 2) ) GO TO 444 
      !=================================================================
      ! 
