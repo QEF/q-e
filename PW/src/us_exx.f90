@@ -151,9 +151,9 @@ MODULE us_exx
             DO na = 1, nat
               IF (ityp(na)==np) THEN
                 !
-                ! NOTE: the next line counts the number of beta in the atoms (not types!) before 
-                ! this one (na) this hack is necessary to minimize the number of calls to qvan2
-                ijkb0 = indv_ijkb0(na) !SUM(nh(ityp(1:na)))-nh(ityp(na)) 
+                ! ijkb0 points to the manifold of beta functions for atom na
+                !
+                ijkb0 = indv_ijkb0(na) 
                 ikb = ijkb0 + ih
                 jkb = ijkb0 + jh
 
@@ -334,8 +334,7 @@ MODULE us_exx
             DO na = 1, nat
               IF (ityp(na)==np) THEN
                 !
-                ! NOTE: see addusxx_g for the next line:
-                ijkb0 = indv_ijkb0(na) !SUM(nh(ityp(1:na)))-nh(ityp(na)) 
+                ijkb0 = indv_ijkb0(na)
                 ikb = ijkb0 + ih
                 jkb = ijkb0 + jh
                 !
@@ -534,7 +533,7 @@ MODULE us_exx
     !  H = H+\sum_I |beta_I> alpha_Ii
     ! 
     USE ions_base,           ONLY : nat, ntyp => nsp, ityp
-    USE uspp,                ONLY : nkb, okvan
+    USE uspp,                ONLY : nkb, okvan,indv_ijkb0
     USE uspp_param,          ONLY : upf, nh
     USE gvecs,               ONLY : nls
     USE wvfct,               ONLY : nbnd, npwx !, ecutwfc
@@ -563,14 +562,13 @@ MODULE us_exx
     !
     CALL init_us_2(npwp, igkp, xkp, vkbp)
     !
-    ijkb0 = 0
     DO np = 1, ntyp
       ONLY_FOR_USPP : &
       IF ( upf(np)%tvanp ) THEN
           DO na = 1, nat
             IF (ityp(na)==np) THEN
               DO ih = 1, nh(np)
-                ikb = ijkb0 + ih
+                ikb = indv_ijkb0(na) + ih
                 !
                 IF(ABS(deexx(ikb))<eps_occ) CYCLE
                 !
@@ -584,13 +582,8 @@ MODULE us_exx
                    ENDDO
                 ENDIF
               ENDDO
-              ijkb0 = ijkb0 + nh(np)
             END IF
           ENDDO ! nat
-      ELSE ONLY_FOR_USPP 
-          DO na = 1, nat
-            IF ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
-          ENDDO
       END IF &
       ONLY_FOR_USPP 
     ENDDO
@@ -645,7 +638,7 @@ MODULE us_exx
       IF ( .not. upf(nt)%tvanp ) CYCLE
         DO ih = 1, nh(nt)
         DO jh = 1, nh(nt)
-            ijkb0 = indv_ijkb0(ia) !SUM(nh(ityp(1:ia)))-nh(ityp(ia)) 
+            ijkb0 = indv_ijkb0(ia)
             ikb = ijkb0 + ih
             jkb = ijkb0 + jh
             !
@@ -705,7 +698,7 @@ MODULE us_exx
       !
       DO ih = 1, nh(nt)
       DO jh = 1, nh(nt)
-          ijkb0 = indv_ijkb0(ia) !SUM(nh(ityp(1:ia)))-nh(ityp(ia)) 
+          ijkb0 = indv_ijkb0(ia)
           ikb = ijkb0 + ih
           jkb = ijkb0 + jh
           !

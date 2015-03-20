@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 QUantum ESPRESSO group
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -193,7 +193,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
              IF ( ityp(na) == nt ) THEN
                 !
                 ! deeq is real: copy it into a complex variable to perform
-                ! a zgemm = simple but sub-optimal solution
+                ! a zgemm - simple but sub-optimal solution
                 !
                 deeaux(:,:) = CMPLX(deeq(1:nh(nt),1:nh(nt),na,current_spin),&
                                     0.0_dp, KIND=dp )
