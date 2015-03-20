@@ -38,7 +38,10 @@ SUBROUTINE force_us( forcenl )
   !
   REAL(DP), INTENT(OUT) :: forcenl(3,nat) ! the nonlocal contribution
   !
+  COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)   ! auxiliary variable contains g*|beta>
+  !
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm )   
+  ALLOCATE( vkb1( npwx, nkb ) )   
   !
   IF ( gamma_only ) THEN
      !
@@ -51,6 +54,23 @@ SUBROUTINE force_us( forcenl )
   END IF  
   !
   CALL deallocate_bec_type ( becp )   
+  DEALLOCATE( vkb1 )
+  !
+  ! ... The total D matrix depends on the ionic position via the
+  ! ... augmentation part \int V_eff Q dr, the term deriving from the 
+  ! ... derivative of Q is added in the routine addusforce
+  !
+  CALL addusforce( forcenl )
+  !
+  !
+  ! ... collect contributions across pools
+  !
+  CALL mp_sum( forcenl, inter_pool_comm )
+  !
+  ! ... Since our summation over k points was only on the irreducible 
+  ! ... BZ we have to symmetrize the forces.
+  !
+  CALL symvector ( nat, forcenl )
   !
   RETURN
   !
@@ -68,8 +88,6 @@ SUBROUTINE force_us( forcenl )
        REAL(DP) :: forcenl(3,nat)
        TYPE(bec_type) :: rdbecp 
        ! auxiliary variable, contains <dbeta|psi>
-       COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)
-       ! auxiliary variable contains g*|beta>
        REAL(DP) :: ps
        INTEGER       :: ik, ipol, ibnd, ibnd_loc, ig, ih, jh, na, nt, ikb, jkb, ijkb0
        ! counters
@@ -83,7 +101,6 @@ SUBROUTINE force_us( forcenl )
        forcenl(:,:) = 0.D0
        !
        CALL allocate_bec_type ( nkb, nbnd, rdbecp, intra_bgrp_comm )   
-       ALLOCATE( vkb1(  npwx, nkb ) ) 
        !   
        IF ( nks > 1 ) REWIND iunigk
        !
@@ -162,25 +179,7 @@ SUBROUTINE force_us( forcenl )
        !
        IF( becp%comm /= mp_get_comm_null() ) CALL mp_sum( forcenl, becp%comm )
        !
-       DEALLOCATE( vkb1 )
        CALL deallocate_bec_type ( rdbecp )   
-       !
-       ! ... The total D matrix depends on the ionic position via the
-       ! ... augmentation part \int V_eff Q dr, the term deriving from the 
-       ! ... derivative of Q is added in the routine addusforce
-       !
-       CALL addusforce( forcenl )
-       !
-       ! ... collect contributions across pools (sum over k-points)
-       !
-       CALL mp_sum( forcenl, inter_pool_comm )
-       !
-       ! ... Since our summation over k points was only on the irreducible 
-       ! ... BZ we have to symmetrize the forces
-       !
-       CALL symvector ( nat, forcenl )
-       !
-       RETURN
        !
      END SUBROUTINE force_us_gamma
      !     
@@ -194,8 +193,6 @@ SUBROUTINE force_us( forcenl )
        REAL(DP) :: forcenl(3,nat)
        COMPLEX(DP), ALLOCATABLE :: dbecp(:,:), dbecp_nc(:,:,:)
        ! auxiliary variable contains <beta|psi> and <dbeta|psi>
-       COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)
-       ! auxiliary variable contains g*|beta>
        COMPLEX(DP) :: psc(2,2), fac
        COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
        REAL(DP), ALLOCATABLE :: deff(:,:,:)
@@ -214,7 +211,6 @@ SUBROUTINE force_us( forcenl )
           ALLOCATE( dbecp( nkb, nbnd ) )    
           ALLOCATE( deff(nhm,nhm,nat) )
        ENDIF
-       ALLOCATE( vkb1( npwx, nkb ) )   
        ! 
        IF ( nks > 1 ) REWIND iunigk
        !
@@ -337,7 +333,6 @@ SUBROUTINE force_us( forcenl )
        !
        CALL mp_sum(  forcenl , intra_bgrp_comm )
        !
-       DEALLOCATE( vkb1 )
        IF (noncolin) THEN
           DEALLOCATE( dbecp_nc )
           DEALLOCATE( deff_nc )
@@ -345,24 +340,6 @@ SUBROUTINE force_us( forcenl )
           DEALLOCATE( dbecp )
           DEALLOCATE( deff )
        ENDIF
-       !
-       ! ... The total D matrix depends on the ionic position via the
-       ! ... augmentation part \int V_eff Q dr, the term deriving from the 
-       ! ... derivative of Q is added in the routine addusforce
-       !
-       CALL addusforce( forcenl )
-       !
-       !
-       ! ... collect contributions across pools
-       !
-       CALL mp_sum( forcenl, inter_pool_comm )
-       !
-       ! ... Since our summation over k points was only on the irreducible 
-       ! ... BZ we have to symmetrize the forces.
-       !
-       CALL symvector ( nat, forcenl )
-       !
-       RETURN
        !
      END SUBROUTINE force_us_k
      !     
