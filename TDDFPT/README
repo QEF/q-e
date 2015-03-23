@@ -19,9 +19,11 @@ Source: JOURNAL OF CHEMICAL PHYSICS   Volume: 127   Issue: 16 Article Number: 16
 Efficient approach to time-dependent density-functional perturbation theory for optical spectroscopy
 Author(s): Walker B, Saitta AM, Gebauer R, et al.
 Source: PHYSICAL REVIEW LETTERS   Volume: 96   Issue: 11 Article Number: 113001   Published: MAR 24 2006
--------------------------------------------------------------------------------
 
-Version BETA 5 (05/2011)
+Electron energy loss and inelastic x-ray scattering cross sections from time-dependent density-functional perturbation theory
+Author(s): I. Timrov, N. Vast, R. Gebauer, and S. Baroni
+Source: PHYSICAL REVIEW B   Volume: 88   Article Number: 064301   Published: AUG 2 2013
+-------------------------------------------------------------------------------
 
 This module uses subroutines from PW and PH along with the general infrasturcture provided by
 Quantum Espresso. 

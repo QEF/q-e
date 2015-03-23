@@ -1,67 +1,178 @@
-!--------------------------------------------------------------
-!OBM This subroutine initialises stuff related to open shell
-! calculations (kpoint > 1 degauss/=0 or nspin/=1)
+!
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 !-------------------------------------------------------------
 SUBROUTINE lr_init_nfo()
-!
-!Created by Osman Baris Malcioglu (2009)
-!
+  !-------------------------------------------------------------
+  !
+  !  This subroutine prepares several variables which are needed in the
+  !  TDDFPT program:
+  !  1) Optical case: initialization of igk_k and npw_k. 
+  !  2) Initialization of ikks, ikqs, and nksq.
+  !  3) EELS: Calculate phases associated with a q vector.
+  !  4) Compute the number of occupied bands for each k point.
+  !  5) Computes alpha_pv (needed in PH/orthogonalize.f90 when lgauss=.true.)
+  !
+  ! Created by Osman Baris Malcioglu (2009)
+  ! Modified by Iurii Timrov (2013)
   !
   USE kinds,                ONLY : DP
-  USE klist,                ONLY : nks,degauss,lgauss,ngauss,xk, nelec
+  USE ions_base,            ONLY : nat, tau
+  USE klist,                ONLY : nks,degauss,lgauss,ngauss,xk,wk,nelec, &
+                                  & two_fermi_energies, nelup, neldw
   USE wvfct,                ONLY : nbnd, et, igk, npw, g2kin
-  USE realus,               ONLY : npw_k, igk_k
-  USE lr_variables,         ONLY : lr_verbosity
+  USE realus,               ONLY : npw_k, igk_k, real_space
+  USE lr_variables,         ONLY : lr_verbosity, eels, lr_periodic, nwordd0psi, &
+                                  & nwordrestart, restart, size_evc
   USE io_global,            ONLY : stdout
-  USE constants,            ONLY : pi, degspin
-  USE noncollin_module,     ONLY : noncolin
+  USE constants,            ONLY : pi, tpi, degspin, eps8
+  USE noncollin_module,     ONLY : noncolin, npol
   USE mp,                   ONLY : mp_max, mp_min
   USE mp_global,            ONLY : inter_pool_comm
   USE gvect,                ONLY : ngm, g
-  USE cell_base,            ONLY : bg, tpiba, tpiba2, omega
-  USE ener,                 ONLY : Ef
+  USE cell_base,            ONLY : at, bg, tpiba, tpiba2, omega
+  USE ener,                 ONLY : ef, ef_up, ef_dw
   USE ktetra,               ONLY : ltetra
-  USE lsda_mod,             ONLY : lsda
-  USE realus,               ONLY : real_space
-  USE control_ph,           ONLY : alpha_pv, nbnd_occ
-  USE wvfct,                ONLY : npwx, ecutwfc
-  USE klist,                ONLY : nks
-  USE io_files,             ONLY : iunigk, seqopn
+  USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
+  USE control_ph,           ONLY : alpha_pv, nbnd_occ, tmp_dir_phq
+  USE wvfct,                ONLY : npwx, ecutwfc, wg
+  USE io_files,             ONLY : iunigk, seqopn, tmp_dir, prefix, &
+                                 & diropn, nwordwfc, wfc_dir
+  USE qpoint,               ONLY : xq, npwq, igkq, ikks, ikqs, nksq, eigqts
+  USE gvecs,                ONLY : doublegrid
+  USE units_ph,             ONLY : iuwfc, lrwfc
+  USE fft_base,             ONLY : dfftp 
+  USE uspp,                 ONLY : okvan
   !
   IMPLICIT NONE
   !
   ! local variables
-  REAL(kind=DP) :: small, emin, emax, xmax, fac, targ
-  INTEGER       :: ik,ibnd, ipol
-  LOGICAL       :: exst
   !
-  ! Open shell related
-  IF ( .not. allocated( igk_k ) )    ALLOCATE(igk_k(npwx,nks))
-  IF ( .not. allocated( npw_k ) )    ALLOCATE(npw_k(nks))
-  !IF ( .not. ALLOCATED( nbnd_occ ) ) allocate (nbnd_occ (nks))
-
-  CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
-
-  IF (.not. real_space) THEN
-  DO ik=1,nks
-      !
-      CALL gk_sort( xk(1,ik), ngm, g, ( ecutwfc / tpiba2 ), npw, igk, g2kin )
-      !
-      npw_k(ik) = npw
-      !
-      igk_k(:,ik) = igk(:)
-      !
-      ! For systems with more than one kpoint, we also write 
-      ! igk to iunigk. This is required by exx_init().
-      IF ( nks > 1 ) WRITE( iunigk ) igk
-      !
-  ENDDO
+  REAL(kind=DP) :: small, emin, emax, xmax, fac, targ, arg
+  INTEGER       :: i, ik, ibnd, ipol, ikk, ikq, ios, isym, na
+  REAL(DP), ALLOCATABLE :: wg_up(:,:), wg_dw(:,:)
+  LOGICAL       :: exst ! logical variable to check file existence
+  !
+  ! 1) Optical case: initialize igk_k and npw_k
+  !    Open shell related
+  !
+  IF (.NOT.eels) THEN
+     !
+     IF ( .not. allocated( igk_k ) )    ALLOCATE(igk_k(npwx,nks))
+     IF ( .not. allocated( npw_k ) )    ALLOCATE(npw_k(nks))
+     !
+     CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
+     !
+     IF (.not. real_space) THEN
+        !
+        DO ik = 1, nks
+           !
+           CALL gk_sort( xk(1,ik), ngm, g, ( ecutwfc / tpiba2 ), npw, igk, g2kin )
+           !
+           npw_k(ik) = npw
+           igk_k(:,ik) = igk(:)
+           !
+           ! S. Binnie: For systems with more than one kpoint, we also write 
+           ! igk to iunigk. This is required by exx_init().
+           !
+           IF ( nks > 1 ) WRITE( iunigk ) igk
+           !
+        ENDDO
+        !
+     ENDIF
+     !
   ENDIF
-  !OBM!! The following part is derived from phonon phq_setup
   !
-  ! 5) Computes the number of occupied bands for each k point
+  ! 2) Initialization of ikks, ikqs, and nksq.
+  !
+  IF (eels) THEN
+     !
+     ! EELS
+     !
+     IF (lr_periodic) THEN
+        nksq = nks
+     ELSE
+        !
+        ! nksq is the number of k-points, NOT including k+q points
+        ! The following block was copied from PH/initialize_ph.f90.
+        !
+        nksq = nks / 2
+        !
+        ALLOCATE(ikks(nksq), ikqs(nksq))
+        !
+        DO ik=1,nksq
+           ikks(ik) = 2 * ik - 1
+           ikqs(ik) = 2 * ik
+        ENDDO
+        !
+     ENDIF
+     !
+  ELSE
+     !
+     ! Optical case
+     !
+     nksq = nks
+     !
+  ENDIF
+  !
+  ! The length of the arrays d0psi, evc1 etc.
+  !
+  nwordd0psi   = 2 * nbnd * npwx * npol * nksq
+  nwordrestart = 2 * nbnd * npwx * npol * nksq
+  nwordwfc     = 2 * nbnd * npwx * npol 
+  !
+  ! Open the file to read the wavefunctions at k and k+q 
+  ! after the nscf calculation.
+  !
+  IF (eels .AND. .NOT.lr_periodic) THEN
+     !
+     iuwfc = 21
+     lrwfc = 2 * nbnd * npwx * npol
+     IF (restart) wfc_dir = tmp_dir_phq
+     CALL diropn (iuwfc, 'wfc', lrwfc, exst)
+     IF (.NOT.exst) THEN
+        CALL errore ('lr_init_nfo', 'file '//trim(prefix)//'.wfc not found', 1)
+     ENDIF
+     !
+     size_evc = nksq * nbnd * npwx * npol 
+     !
+  ENDIF
+  !
+  ! 3) EELS: Calculate phases associated with the q vector
+  !    (needed for Ultrasoft PP's) 
+  !
+  IF (eels .AND. okvan) THEN
+     !
+     ALLOCATE (eigqts(nat))
+     !
+     DO na = 1, nat
+        ! 
+        arg = ( xq(1) * tau(1,na) + &
+                xq(2) * tau(2,na) + &
+                xq(3) * tau(3,na) ) * tpi
+        !
+        eigqts(na) = cmplx(cos(arg), -sin(arg) ,kind=DP)
+        !
+     ENDDO
+     !
+  ENDIF
+  !
+  ! EELS: If restart=.true. recalculate the small group of q.
+  !
+  IF (eels .AND. restart) THEN
+     !
+     CALL lr_smallgq (xq)
+     !
+  ENDIF
+  !
+  ! 4) Compute the number of occupied bands for each k point (PH/phq_setup.f90)
   !
   !if (.not. allocated (nbnd_occ) allocate( nbnd_occ (nks) )
+  !
   IF (lgauss) THEN
      !
      ! discard conduction bands such that w0gauss(x,n) < small
@@ -93,47 +204,129 @@ SUBROUTINE lr_init_nfo()
              ik,  (xk (ipol, ik) , ipol = 1, 3)
      ENDDO
   ELSEIF (ltetra) THEN
-     CALL errore('lr_init_nfo','phonon + tetrahedra not implemented', 1)
+     CALL errore('lr_init_nfo','tddfpt + tetrahedra not implemented', 1)
   ELSE
-     IF (lsda) CALL infomsg('lr_init_nfo','occupation numbers probably wrong')
      IF (noncolin) THEN
         nbnd_occ = nint (nelec)
      ELSE
-        DO ik = 1, nks
-           nbnd_occ (ik) = nint (nelec) / degspin
-        ENDDO
+        IF ( two_fermi_energies ) THEN
+           !
+           ALLOCATE(wg_up(nbnd,nks))
+           ALLOCATE(wg_dw(nbnd,nks))
+           CALL iweights( nks, wk, nbnd, nelup, et, ef_up, wg_up, 1, isk )
+           CALL iweights( nks, wk, nbnd, neldw, et, ef_dw, wg_dw, 2, isk )
+           DO ik = 1, nks
+              DO ibnd=1,nbnd
+                 IF (isk(ik)==1) THEN
+                    IF (wg_up(ibnd,ik) > 0.0_DP) nbnd_occ (ik) = nbnd_occ(ik)+1
+                 ELSE
+                    IF (wg_dw(ibnd,ik) > 0.0_DP) nbnd_occ (ik) = nbnd_occ(ik)+1
+                 ENDIF
+              ENDDO
+           ENDDO
+           !
+           ! the following line to prevent NaN in Ef
+           !
+           ef = ( ef_up + ef_dw ) / 2.0_dp
+           !
+           DEALLOCATE(wg_up)
+           DEALLOCATE(wg_dw)
+        ELSE
+           IF (lsda) call infomsg('lr_init_nfo', &
+                                 'occupation numbers probably wrong')
+           DO ik = 1, nks
+              nbnd_occ (ik) = nint (nelec) / degspin
+           ENDDO
+        ENDIF
      ENDIF
   ENDIF
   !
-  ! 6) Computes alpha_pv
+  ! 5) Computes alpha_pv
   !
-  emin = et (1, 1)
-  DO ik = 1, nks
-     DO ibnd = 1, nbnd
-        emin = min (emin, et (ibnd, ik) )
+  IF (eels) THEN
+     !
+     alpha_pv = 0.0d0
+     !
+  ELSE
+     !
+     emin = et (1, 1)
+     DO ik = 1, nks
+        DO ibnd = 1, nbnd
+           emin = min (emin, et (ibnd, ik) )
+        ENDDO
      ENDDO
-  ENDDO
+     !
 #ifdef __MPI
   ! find the minimum across pools
   CALL mp_min( emin, inter_pool_comm )
 #endif
-  IF (lgauss) THEN
-     emax = targ
-     alpha_pv = emax - emin
-  ELSE
-     emax = et (1, 1)
-     DO ik = 1, nks
-        DO ibnd = 1, nbnd_occ(ik)
-           emax = max (emax, et (ibnd, ik) )
+     !
+     IF (lgauss) THEN
+        emax = targ
+        alpha_pv = emax - emin
+     ELSE
+        emax = et (1, 1)
+        DO ik = 1, nks
+           DO ibnd = 1, nbnd_occ(ik)
+              emax = max (emax, et (ibnd, ik) )
+           ENDDO
         ENDDO
-     ENDDO
+        !
 #ifdef __MPI
      ! find the maximum across pools
      CALL mp_max( emax, inter_pool_comm )
 #endif
-     alpha_pv = 2.d0 * (emax - emin)
+        !
+        alpha_pv = 2.d0 * (emax - emin)
+     ENDIF
+     ! avoid zero value for alpha_pv
+     alpha_pv = max (alpha_pv, 1.0d-2)
+     !
   ENDIF
-  ! avoid zero value for alpha_pv
-  alpha_pv = max (alpha_pv, 1.0d-2)
-RETURN
+  !
+  ! Initialize npw, igk, npwq, igkq.
+  ! Copied from PH/phq_init.f90
+  !
+  ! Open the file with npw, igk and npwq, igkq.
+  ! The igk at a given k and k+q
+  !
+  !iunigk = 24
+  !IF (nksq > 1) CALL seqopn (iunigk, 'igk', 'unformatted', exst)
+  !
+  !IF ( nksq > 1 ) REWIND( iunigk )
+  !
+  !allocate (igkq(npwx))
+  !
+  !DO ik = 1, nksq
+     !
+  !   ikk  = ikks(ik)
+  !   ikq  = ikqs(ik)
+     !
+     ! ... g2kin is used here as work space
+     !
+  !   CALL gk_sort( xk(1,ikk), ngm, g, ( ecutwfc / tpiba2 ), npw, igk, g2kin )
+     !
+     ! ... if there is only one k-point evc, evq, npw, igk stay in memory
+     !
+  !   IF ( nksq > 1 ) WRITE( iunigk ) npw, igk
+     !
+  !   CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), npwq, igkq, g2kin )
+     !
+  !   IF ( nksq > 1 ) WRITE( iunigk ) npwq, igkq
+     !
+     !IF ( ABS( xq(1) - ( xk(1,ikq) - xk(1,ikk) ) ) > eps8 .OR. &
+     !     ABS( xq(2) - ( xk(2,ikq) - xk(2,ikk) ) ) > eps8 .OR. &
+     !     ABS( xq(3) - ( xk(3,ikq) - xk(3,ikk) ) ) > eps8 ) THEN
+     !WRITE( stdout,'(/,5x,"k points #",i6," and ", &
+     !       & i6,5x," total number ",i6)') ikk, ikq, nksq
+     !WRITE( stdout, '(  5x,"Expected q ",3f10.7)')(xq(ipol), ipol=1,3)
+     !WRITE( stdout, '(  5x,"Found      ",3f10.7)')((xk(ipol,ikq) &
+     !                                   -xk(ipol,ikk)), ipol = 1, 3)
+     !CALL errore( 'lr_init_nfo', 'wrong order of k points', 1 )
+     !END IF
+     !
+  !ENDDO
+  !
+  RETURN
+  !
 END SUBROUTINE lr_init_nfo

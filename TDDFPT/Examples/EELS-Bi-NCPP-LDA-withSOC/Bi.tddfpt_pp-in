@@ -1,0 +1,13 @@
+&lr_input
+  prefix='Bi',
+  outdir='./out',
+  eels = .true.
+  itermax0 = 500
+  itermax  = 10000
+  extrapolation="osc"
+  epsil=0.035
+  units=1
+  start=0.0d0
+  increment=0.1d0
+  end=50.0d0
+/

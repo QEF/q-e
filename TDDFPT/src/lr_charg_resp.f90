@@ -1,12 +1,11 @@
 !
-! Copyright (C) 2011-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------
-
 MODULE charg_resp
   !----------------------------------------------------------------------------
   ! This module contains charge response calculation related variables & 
@@ -468,7 +467,7 @@ CONTAINS
     IF (project) THEN
        DO ip=1,w_T_npol
           !
-          chi(LR_polarization,ip)=zdotc(itermax,w_T_zeta_store(ip,:),1,w_T(:),1)
+          chi(LR_polarization,ip)=ZDOTC(itermax,w_T_zeta_store(ip,:),1,w_T(:),1)
           chi(LR_polarization,ip)=chi(LR_polarization,ip)*cmplx(w_T_norm0_store,0.0d0,dp)
           !
           WRITE(stdout,'(5X,"Chi_",I1,"_",I1,"=",2(E15.5,1x))') LR_polarization,ip,chi(LR_polarization,ip)
@@ -1349,7 +1348,7 @@ CONTAINS
        ! origin
        WRITE(158,'(3f10.6)') 0.0d0, 0.0d0, 0.0d0
        ! 1st spanning (=lattice) vector
-       WRITE(158,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,1),i=1,3) ! in ANGSTROMS
+       WRITE(158,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,1),i=1,3) ! in ANSTROMS
        ! 2nd spanning (=lattice) vector
        WRITE(158,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,2),i=1,3)
        ! 3rd spanning (=lattice) vector
@@ -1474,7 +1473,7 @@ CONTAINS
     ! origin
     WRITE(158,'(3f10.6)') 0.0d0, 0.0d0, 0.0d0
     ! 1st spanning (=lattice) vector
-    WRITE(158,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,1),i=1,3) ! in ANGSTROMS
+    WRITE(158,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,1),i=1,3) ! in ANSTROMS
     ! 2nd spanning (=lattice) vector
     WRITE(158,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,2),i=1,3)
     ! 3rd spanning (=lattice) vector

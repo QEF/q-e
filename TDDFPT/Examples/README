@@ -11,12 +11,28 @@ each example can be run separately by running "make" in its designated directory
 make.sys can be edited for parallel executions of tests by editing "RUNNER" variable (i.e. RUNNER=mpirun -np 4)
 
 Examples: 
-Benzene: Benzene molecule, Tests the real_space and tqr implementations
-CH4: Tests Norm Conserving PP implementation
-CH4-PR: Tests charge response algorithm
-SiH4: Tests Ultrasoft PP implementation
+
+turbo_lanczos.x :
+
+Benzene:  Benzene molecule, Tests the real_space and tqr implementations
+CH4:      Tests Norm Conserving PP implementation
+CH4-PR:   Tests charge response algorithm
+SiH4:     Tests Ultrasoft PP implementation
 CH4-BOND: This is an example that shows visual analysis of a softened bond in a set of degenerate bonds. 
-tools: Tools to compare data. 
-CH4-DAV: Example of using davidson algorithm
+CH4-ENVIRON: Example of using the Lanczos algorithm and the Environ module (implicit solvent)
+tools:    Tools to compare data.
+
+turbo_davidson.x :
+
+CH4-DAV:  Example of using Davidson algorithm
+CH4-DAV-ENVIRON: Example of using Davidson algorithm and the Environ module (implicit solvent)
+
+turbo_eels.x :
+
+EELS-Si-NCPP-LDA: Bulk silicon,  Norm-Conserving PP, LDA XC-functional
+EELS-Si-USPP-GGA: Bulk silicon,  Ultrasoft PP,       GGA XC-functional
+EELS-Al-NCPP-LDA: Bulk aluminum, Norm-Conserving PP, LDA XC-functional
+EELS-Bi-NCPP-LDA-withSOC: Bulk bismuth, Norm-Conserving PP, LDA XC-functional, with spin-orbit coupling
+
 
 

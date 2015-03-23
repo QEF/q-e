@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,23 +11,25 @@ SUBROUTINE lr_readin
   !
   !    This routine reads the control variables from standard input (unit 5).
   !    A second routine read_file reads the variables saved to file
-  !    by the self-consistent program.
+  !    by PW scf (and PW nscf for EELS).
   !
   USE lr_variables
   USE lr_dav_variables
   USE kinds,               ONLY : DP
   USE io_files,            ONLY : tmp_dir, prefix, wfc_dir
-  USE lsda_mod,            ONLY : current_spin, nspin
-  USE control_flags,       ONLY : twfcollect,use_para_diag
-  USE scf,                 ONLY : vltot, v, vrs, vnew, rho, &
-                                  & destroy_scf_type
-  USE fft_base,            ONLY : dfftp
+  USE lsda_mod,            ONLY : current_spin, nspin, isk, lsda
+  USE control_flags,       ONLY : twfcollect,use_para_diag, &
+                                  & tqr, lkpoint_dir, gamma_only, &
+                                  & do_makov_payne
+  USE scf,                 ONLY : vltot, v, vrs, vnew, &
+                                  & destroy_scf_type, rho
+  USE fft_base,            ONLY : dfftp, dffts
   USE gvecs,               ONLY : doublegrid
   USE wvfct,               ONLY : nbnd, et, wg, current_k
   USE lsda_mod,            ONLY : isk
   USE ener,                ONLY : ef
-  USE io_global,           ONLY : ionode, ionode_id
-  USE klist,               ONLY : nks, wk, nelec
+  USE io_global,           ONLY : ionode, ionode_id, stdout
+  USE klist,               ONLY : nks, wk, nelec, lgauss
   USE fixed_occ,           ONLY : tfixed_occ
   USE input_parameters,    ONLY : degauss, nosym, wfcdir, outdir,&
                                   & max_seconds
@@ -36,8 +38,6 @@ SUBROUTINE lr_readin
                                   & init_realspace_vars, qpointlist,&
                                   & betapointlist, newd_r 
   USE funct,               ONLY : dft_is_meta
-  USE io_global,           ONLY : stdout
-  USE control_flags,       ONLY : tqr, twfcollect, ethr, do_makov_payne
   USE iotk_module
   USE charg_resp,          ONLY : w_T_prefix, omeg, w_T_npol, epsil
   USE mp,                  ONLY : mp_bcast
@@ -46,13 +46,20 @@ SUBROUTINE lr_readin
                                   & intra_bgrp_comm, nproc_image, &
                                   & nproc_pool, nproc_pool_file, &
                                   & nproc_image_file, nproc_bgrp, &
-                                  & nproc_bgrp_file
-  USE io_global,           ONLY : ionode, ionode_id
+                                  & nproc_bgrp_file, my_image_id
   USE DFUNCT,              ONLY : newd
   USE vlocal,              ONLY : strf
   USE exx,                 ONLY : ecutfock
   USE martyna_tuckerman,   ONLY : do_comp_mt
   USE esm,                 ONLY : do_comp_esm
+  USE qpoint,              ONLY : xq
+  USE save_ph,             ONLY : tmp_dir_save
+  USE control_ph,          ONLY : tmp_dir_phq, lrpa
+  USE xml_io_base,         ONLY : create_directory
+  USE io_rho_xml,          ONLY : write_rho
+  USE noncollin_module,    ONLY : noncolin
+  USE mp_bands,            ONLY : ntask_groups
+  USE constants,           ONLY : eps8
 #ifdef __ENVIRON
   USE environ_base,        ONLY : environ_base_init, ir_end
   USE environ_input,       ONLY : read_environ
@@ -67,37 +74,47 @@ SUBROUTINE lr_readin
   USE mp_bands,            ONLY : me_bgrp
   USE plugin_flags,        ONLY : use_environ
 #endif
+  
 
   IMPLICIT NONE
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   CHARACTER(LEN=256) :: beta_gamma_z_prefix
-          ! fine control of beta_gamma_z file
+  ! Fine control of beta_gamma_z file
   CHARACTER(LEN=80) :: disk_io
-          ! Specify the amount of I/O activities
+  ! Specify the amount of I/O activities
   INTEGER :: ios, iunout, ierr, ipol
   LOGICAL :: auto_rs
-  REAL(kind=dp) :: charge
+  CHARACTER(LEN=6) :: int_to_char
   !
-  NAMELIST / lr_input / restart, restart_step ,lr_verbosity, prefix, outdir, test_case_no, wfcdir, disk_io, max_seconds
-  NAMELIST / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, charge_response, tqr, auto_rs, no_hxc, n_ipol, &
-       & project, scissor, ecutfock, pseudo_hermitian,d0psi_rs, lshift_d0psi
-  NAMELIST / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int
-  namelist / lr_dav / num_eign, num_init, num_basis_max, residue_conv_thr, precondition,dav_debug, reference,single_pole,&
-                          &sort_contr, diag_of_h, close_pre,broadening,print_spectrum,start,finish,step,if_check_orth,&
-                          &if_random_init,if_check_her,p_nbnd_occ,p_nbnd_virt,poor_of_ram,poor_of_ram2,max_iter,ecutfock,&
-	                  &conv_assistant,if_dft_spectrum,no_hxc,d0psi_rs,lshift_d0psi,lplot_drho, vccouple_shift
+  NAMELIST / lr_input /   restart, restart_step ,lr_verbosity, prefix, outdir, &
+                        & test_case_no, wfcdir, disk_io, max_seconds
+  NAMELIST / lr_control / itermax, ipol, ltammd, real_space, real_space_debug,         &
+                        & charge_response, tqr, auto_rs, no_hxc, n_ipol, project,      &
+                        & scissor, ecutfock, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
+                        & q1, q2, q3, lr_periodic, approximation !eps  
+  NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int
+  namelist / lr_dav /     num_eign, num_init, num_basis_max, residue_conv_thr, precondition,         &
+                        & dav_debug, reference,single_pole, sort_contr, diag_of_h, close_pre,        &
+                        & broadening,print_spectrum,start,finish,step,if_check_orth, if_random_init, &
+                        & if_check_her,p_nbnd_occ,p_nbnd_virt,poor_of_ram,poor_of_ram2,max_iter,     &
+                        & ecutfock, conv_assistant,if_dft_spectrum,no_hxc,d0psi_rs,lshift_d0psi,     &
+                        & lplot_drho, vccouple_shift
   !
   auto_rs = .TRUE.
+  !
 #ifdef __MPI
   IF (ionode) THEN
 #endif
      !
-     !   Set default values for variables in namelist
+     ! Checking for the path to the output directory.
      !
      CALL get_env( 'ESPRESSO_TMPDIR', outdir )
      IF ( trim( outdir ) == ' ' ) outdir = './'
+     !
+     ! Set default values for variables in namelist.
+     !
      itermax = 500
      restart = .FALSE.
      restart_step = itermax+1
@@ -110,7 +127,9 @@ SUBROUTINE lr_readin
      pseudo_hermitian=.true.
      ipol = 1
      n_ipol = 1
-     no_hxc = .FALSE.
+     no_hxc = .FALSE.      
+     lrpa = .false.         
+     lr_periodic = .false.  
      real_space = .FALSE.
      real_space_debug = 0
      charge_response = 0
@@ -127,8 +146,18 @@ SUBROUTINE lr_readin
      eig_dir='./'
      scissor = 0.d0
      ecutfock = -1d0
-
-     ! For lr_dav
+     !
+     ! For EELS
+     !
+     q1 = 1.0d0         
+     q2 = 1.0d0         
+     q3 = 1.0d0
+     approximation = 'TDDFT'
+     clfe = .TRUE. 
+     !eps  = .FALSE.         
+     !
+     ! For lr_dav (Davidson program)
+     !
      num_eign=1
      num_init=2
      num_basis_max=20
@@ -158,40 +187,42 @@ SUBROUTINE lr_readin
      if_dft_spectrum=.false.
      lplot_drho=.false.
      !
-     ! ------------------------------------------------------
-     ! Reading possible plugin arguments -environ -plumed ...
-     ! ------------------------------------------------------
+     ! 
+     !   Reading possible plugin arguments (-environ).
+     !
      CALL plugin_arguments()
-     ! ------------------------------------------------------
      !
      !   Reading the namelist lr_input
+     !
      CALL input_from_file( )
      !
      READ (5, lr_input, err = 200, iostat = ios)
 200  CALL errore ('lr_readin', 'reading lr_input namelist', ABS (ios) )
      !
+     !   Reading the namelist lr_dav or lr_control
      !
-     !   Reading the namelist lr_control
-     if(.not. davidson) then
-       READ (5, lr_control, err = 201, iostat = ios)
-201    CALL errore ('lr_readin', 'reading lr_control namelist', ABS (ios) )
-     endif
-
-     if(davidson) then
-       READ (5, lr_dav, err = 299, iostat = ios)
-299    CALL errore ('lr_readin', 'reading lr_dav namelist', ABS (ios) )
-     endif
+     IF (davidson) THEN
+        READ (5, lr_dav, err = 201, iostat = ios)
+201     CALL errore ('lr_readin', 'reading lr_dav namelist', ABS (ios) )
+     ELSE
+        READ (5, lr_control, err = 202, iostat = ios)
+202     CALL errore ('lr_readin', 'reading lr_control namelist', ABS (ios) )
+     ENDIF
      !
+     !   Reading the namelist lr_post (only for optical case)
      !
-     !   Reading the namelist lr_post
-     IF (charge_response == 1) THEN
-        READ (5, lr_post, err = 202, iostat = ios)
-202     CALL errore ('lr_readin', 'reading lr_post namelist', ABS (ios) )
+     IF (charge_response == 1 .AND. .NOT.eels) THEN
+        !
+        READ (5, lr_post, err = 203, iostat = ios)
+203     CALL errore ('lr_readin', 'reading lr_post namelist', ABS (ios) )
+        !
         bgz_suffix = TRIM ( "-stage2.beta_gamma_z." )
         WRITE(stdout,'(/5x,"Prefix of current run is appended by -stage2")')
+        !
         IF ( beta_gamma_z_prefix  == 'undefined' ) THEN
-           beta_gamma_z_prefix=TRIM(prefix)
+             beta_gamma_z_prefix = TRIM(prefix)
         ENDIF
+        !
      ELSE
         bgz_suffix = TRIM ( ".beta_gamma_z." )
      ENDIF
@@ -199,34 +230,62 @@ SUBROUTINE lr_readin
      ! The status of the real space flags should be read manually
      !
      ! Do not mess with already present wfc structure
+     !
      twfcollect = .FALSE.
      !
      ! Set-up all the dir and suffix variables.
      !
      outdir = trimcheck(outdir)
      tmp_dir = outdir
-     w_T_prefix = TRIM( tmp_dir ) // TRIM( beta_gamma_z_prefix ) // & 
-          & ".beta_gamma_z." 
+     !
+     !IF ( .NOT. TRIM( wfcdir ) == 'undefined' ) THEN
+     !   wfc_dir = trimcheck ( wfcdir )
+     !ENDIF
+     !
+     IF (.NOT.eels) THEN
+        w_T_prefix = TRIM( tmp_dir ) // &
+                   & TRIM( beta_gamma_z_prefix ) // ".beta_gamma_z." 
+     ENDIF
      !
      ierr = 0
      !
-     ! Set-up polarization direction(s). 
-     !
-     IF ( ipol==4 ) THEN
+     IF (eels) THEN
         !
-        n_ipol = 3
-        LR_polarization=1
+        IF (n_ipol /= 1) THEN
+           WRITE(stdout,'(5X,"n_ipol /= 1 is not allowed for EELS.")') 
+           WRITE(stdout,'(5X,"Setting n_ipol = 1 ...")') 
+           n_ipol = 1
+        ENDIF
+        IF (ipol /= 1) THEN
+           WRITE(stdout,'(5X,"ipol /= 1 is not allowed for EELS.")') 
+           WRITE(stdout,'(5X,"Setting ipol = 1 ...")')                
+           ipol = 1
+        ENDIF
+        LR_polarization = 1
         !
      ELSE
         !
-        LR_polarization=ipol
+        ! Optics: set up polarization direction(s) 
         !
+        IF ( ipol==4 ) THEN
+           !
+           n_ipol = 3
+           LR_polarization = 1
+           !
+        ELSE
+           !
+           LR_polarization = ipol
+           !
+       ENDIF
+       !
      ENDIF
-     IF (itermax_int < itermax) itermax_int=itermax
+     !
+     IF (itermax_int < itermax) itermax_int = itermax
      !
      ! Limited disk_io support: currently only one setting is supported
      !
      SELECT CASE( TRIM( disk_io ) )
+     !
      CASE ( 'reduced' )
         !
         lr_io_level = -1
@@ -235,8 +294,68 @@ SUBROUTINE lr_readin
      CASE DEFAULT
         !
         lr_io_level = 1
+        !
      END SELECT
-
+     !
+     IF (eels) THEN
+        !
+        ! Level of approximation in turboEELS.
+        !
+        SELECT CASE( trim(approximation) )
+         !
+         CASE ( 'TDDFT' )
+           !
+           no_hxc = .FALSE.
+           lrpa   = .FALSE.
+           clfe   = .TRUE.
+           !
+         CASE ( 'IPA' )
+           !
+           no_hxc = .TRUE.
+           lrpa   = .TRUE.
+           clfe   = .FALSE.
+           !
+         CASE ( 'RPA_with_CLFE' )
+           !
+           no_hxc = .FALSE.
+           lrpa   = .TRUE.
+           clfe   = .TRUE.
+           !
+         !CASE ( 'RPA_without_CLFE' )
+           !
+           !no_hxc = .FALSE.
+           !lrpa   = .TRUE.
+           !clfe   = .FALSE.
+           !
+         CASE DEFAULT
+           !
+           CALL errore( 'lr_readin', 'Approximation ' // &
+                & trim( approximation ) // ' not implemented', 1 )
+           !
+        END SELECT
+        !
+        !IF (eps .AND. trim(approximation)=='RPA_without_CLFE') &
+        !    & CALL errore( 'lr_readin', 'Approximation ' // &
+        !        & trim( approximation ) // ' is not allowed when eps=.true. Try "IPA".', 1 ) 
+        !
+        ! We do this trick because xq is used in PH/dv_of_drho.f90
+        ! in the Hartree term ~1/|xq+k|^2
+        !
+        IF (lr_periodic) THEN
+           xq(1) = 0.0d0
+           xq(2) = 0.0d0
+           xq(3) = 0.0d0
+        ELSE
+           xq(1) = q1
+           xq(2) = q2
+           xq(3) = q3
+        ENDIF
+        !
+        IF ( (q1.le.eps8) .AND. (q2.le.eps8) .AND. (q3.le.eps8) ) &
+           CALL errore( 'lr_readin', 'Vanishing transferred momentum is not supported.', 1 )
+        !
+     ENDIF
+     !
 #ifdef __MPI
   ENDIF
   !
@@ -244,22 +363,45 @@ SUBROUTINE lr_readin
   CALL mp_bcast(auto_rs, ionode_id, world_comm)
 #endif
   !
-  current_k = 1 ! Required for restart runs as this never gets initalised 
+  ! Required for restart runs as this never gets initalized.
+  !
+  current_k = 1     
+  !
   outdir = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
-  IF (auto_rs) CALL read_rs_status( outdir, tqr, real_space, ierr )
-  IF (real_space) real_space_debug=99
-  IF (real_space_debug > 0) real_space=.TRUE.
-  IF (lr_verbosity > 1) THEN
-     WRITE(stdout,'(5x,"Status of real space flags: TQR=", L5 ,& 
-          &"  REAL_SPACE=", L5)') tqr, real_space
+  !
+  IF (.NOT.eels) THEN
+     !
+     IF (auto_rs) CALL read_rs_status( outdir, tqr, real_space, ierr )
+     IF (real_space) real_space_debug=99
+     IF (real_space_debug > 0) real_space=.TRUE.
+     IF (lr_verbosity > 1) THEN
+        WRITE(stdout,'(5x,"Status of real space flags: TQR=", L5 ,& 
+                      &"  REAL_SPACE=", L5)') tqr, real_space
+     ENDIF
+     !
   ENDIF
   !
-  !   Now PWSCF XML file will be read, and various initialisations will be done
+  ! EELS: Create a temporary directory for nscf files, and for
+  ! writing of the turboEELS restart files.
+  ! TODO: Try to change the name "_ph" to something like "_eels".
+  !
+  IF (eels) THEN
+     tmp_dir_save = tmp_dir
+     tmp_dir_phq = TRIM (tmp_dir) // '_ph' // TRIM(int_to_char(my_image_id)) //'/'
+     CALL create_directory(tmp_dir_phq)
+  ENDIF
+  !
+  ! EELS: If restart=.true. read the initial information from the file
+  ! where the turboEELS code saved its own data (including the data about
+  ! the nscf calculation)
+  !
+  IF (eels .AND. restart .AND. .NOT.lr_periodic) tmp_dir = tmp_dir_phq
+  !
+  ! Now PWSCF XML file will be read, and various initialisations will be done.
+  ! I. Timrov: Allocate space for PW scf variables (EELS: for PW nscf files,
+  ! if restart=.true.), read and check them.
   !
   CALL read_file()
-  !
-  ! Copy data read from input file (in subroutine "read_input_file") and
-  ! stored in modules input_parameters into internal modules of Environ module
   !
   !   Set wfc_dir - this is done here because read_file sets wfc_dir = tmp_dir
   !   FIXME:,if wfcdir is not present in input, wfc_dir is set to "undefined"
@@ -267,10 +409,36 @@ SUBROUTINE lr_readin
   !
   wfc_dir = trimcheck ( wfcdir )
   !
-  !  Make sure all the features used in the PWscf calculation are actually
-  !   supported by TDDFPT.
+  IF (eels) THEN
+     !
+     ! Specify the temporary derictory.
+     !
+     tmp_dir = tmp_dir_phq
+     !
+     ! Copy the scf-charge-density to the tmp_dir (PH/check_initial_status.f90).
+     ! Needed for the nscf calculation.
+     !
+     IF (.NOT.restart .AND. .NOT.lr_periodic) CALL write_rho( rho, nspin )
+     !
+     ! If a band structure calculation needs to be done, do not open a file
+     ! for k point (PH/phq_readin.f90)
+     !
+     lkpoint_dir = .FALSE.
+     !
+  ENDIF
+  !
+  ! Make sure all the features used in the PWscf calculation 
+  ! are actually supported by TDDFPT.
   !
   CALL input_sanity()
+  !
+  ! EELS: Task groups are used only in some places (like in PHonon). 
+  ! Activated only in some places, namely where the FFTs create
+  ! a bottleneck of a calculation.
+  !
+  IF (eels) THEN
+     IF (ntask_groups > 1) dffts%have_task_groups = .FALSE.
+  ENDIF
   !
 #ifdef __ENVIRON
   !
@@ -303,7 +471,7 @@ SUBROUTINE lr_readin
      !
      ! Taken from PW/src/init_run.f90
      !
-     ir_end = MIN(dfftp%nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1)) 
+     ir_end = MIN(dfftp%nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
      CALL environ_initbase( dfftp%nnr )
      !
      ! Taken from PW/src/electrons.f90
@@ -311,8 +479,8 @@ SUBROUTINE lr_readin
      CALL environ_initions( dfftp%nnr, nat, nsp, ityp, zv, tau, alat )
      CALL environ_initcell( dfftp%nnr, dfftp%nr1, dfftp%nr2, dfftp%nr3, ibrav, omega, alat, at )
      !
-     ! Compute additional unperturbed potentials due to the presence of the environment
-     ! and add them to the SCF (HXC) potential.
+     ! Compute additional unperturbed potentials due to the presence of the
+     ! environment and add them to the SCF (HXC) potential.
      !
      WRITE( stdout, '(/5x,"Computing and adding the polarization potentials to HXC potential")' )
      !
@@ -336,11 +504,14 @@ SUBROUTINE lr_readin
   DEALLOCATE( strf )
   CALL destroy_scf_type(vnew)
   !
-  !   Re-initialize all needed quantities from the scf run
+  ! Re-initialize all needed quantities from the scf run
+  ! I. Timrov: this was already done in read_file.
+  current_spin = 1
   !
-  current_spin=1
-  !
+  ! I. Timrov: The routine init_us_1 was already called in read_file above.
   CALL init_us_1 ( )
+  !
+  ! I. Timrov: The routine newd was already called in read_file above.
   !
   IF (tqr) THEN
      CALL newd_r()
@@ -348,33 +519,36 @@ SUBROUTINE lr_readin
      CALL newd() !OBM: this is for the ground charge density
   ENDIF
   !
-  IF ( real_space_debug > 0 ) THEN
+  IF ( real_space_debug > 0 .AND. .NOT.eels) THEN
+     !
      WRITE(stdout,'(/5x,"Real space implementation V.1 D190908",1x)')
-     !  !OBM - correct parellism issues
+     ! OBM - correct parellism issues
      CALL init_realspace_vars()
      CALL betapointlist()
      WRITE(stdout,'(5X,"Real space initialisation completed")')
   ENDIF
   !
   ! Now put the potential calculated in read_file into the correct place
-  ! and deallocate the now redundant associated variables
+  ! and deallocate the redundant associated variables.
+  ! Set the total local potential vrs on the smooth mesh 
+  ! adding the scf (Hartree + XC) part and the sum of 
+  ! all the local pseudopotential contributions.
+  ! vrs = vltot + v%of_r
   !
   CALL set_vrs ( vrs, vltot, v%of_r, 0, 0, dfftp%nnr, nspin, doublegrid )
+  !
   DEALLOCATE( vltot )
   CALL destroy_scf_type(v)
   !
   ! Recalculate the weights of the Kohn-Sham orbitals.
-  ! (Should this not be a call to weights() to make this !#!
-  ! less insulator specific?)                            !#!
+  ! (Should this not be a call to weights() to make this 
+  ! less insulator specific?)                            
   !
-  CALL iweights( nks, wk, nbnd, nelec, et, ef, wg, 0, isk)
+  IF (.NOT.eels) CALL iweights( nks, wk, nbnd, nelec, et, ef, wg, 0, isk)
   !
-  IF ( charge_response == 2 ) CALL lr_set_boxes_density()
+  IF ( charge_response == 2 .AND. .NOT.eels) CALL lr_set_boxes_density()
   !
-  !   Checking
-  !
-  !
-  !Scalapack related stuff, 
+  ! Scalapack related stuff.
   !
 #ifdef __MPI
   use_para_diag = .TRUE.
@@ -382,57 +556,71 @@ SUBROUTINE lr_readin
 #else
   use_para_diag = .FALSE.
 #endif
+  !
   RETURN
+  !
 CONTAINS
+  !
   SUBROUTINE input_sanity()
     !-------------------------------------------------------------------------- 
     ! 
-    ! This routine aims to gather together all of the input sanity checks
-    !  (features enabled in PWscf which are unsupported in TDDFPT) together in
-    !   one place.
+    ! This subroutine aims to gather all of the input sanity checks
+    ! (features enabled in PWscf which are unsupported in TDDFPT).
+    ! Written by Simone Binnie 2011
+    ! Modified by Iurii Timrov 2015
     !
-    !--------------------------------------------------------------------------
-    USE fft_base,         ONLY : dffts
     USE paw_variables,    ONLY : okpaw
     USE uspp,             ONLY : okvan
     USE funct,            ONLY : dft_is_hybrid
 
     IMPLICIT NONE
     !
-    !  Charge response mode 1 is the "do Lanczos chains twice, conserve memory"
-    !   scheme
+    !  Charge response mode 1 is the "do Lanczos chains twice, conserve memory" scheme.
     !
-    IF (charge_response == 1 .AND. omeg == 0.D0) & 
-         & CALL errore ('lr_readin', & 
-         & 'omeg must be defined for charge response mode 1', 1 )  
-    IF ( project .AND. charge_response /= 1) &
-         & CALL errore ('lr_readin', &
-         & 'projection is possible only in charge response mode 1', 1 )
+    IF (.NOT.eels) THEN
+       !
+       IF (charge_response == 1 .AND. omeg == 0.D0) &
+           & CALL errore ('lr_readin', &
+           & 'omeg must be defined for charge response mode 1', 1 )
+       !
+       IF ( project .AND. charge_response /= 1) &
+           & CALL errore ('lr_readin', &
+           & 'projection is possible only in charge response mode 1', 1 )
+       !
+    ENDIF
     !
     !  Meta-DFT currently not supported by TDDFPT
     !
     IF (dft_is_meta()) &
-         & CALL errore( ' iosys ', ' Meta DFT ' // 'not implemented yet', 1 )
+         & CALL errore( ' iosys ', ' Meta DFT ' // 'is not implemented yet', 1 )
     !
-    !  Non-insulating systems currently not supported by TDDFPT
+    !  Tetrahedron method and fixed occupations are not implemented.
     !
-    IF ( (ltetra .OR. tfixed_occ .OR. (degauss /= 0.D0)) ) &
-         & CALL errore( ' iosys ', ' Linear response calculation ' // &
-         & 'not implemented for non-insulating systems', 1 )
+    IF (ltetra)                 CALL errore( 'lr_readin', 'ltetra is not implemented', 1 )
+    IF (tfixed_occ)             CALL errore( 'lr_readin', 'tfixed_occ is not implemented', 1 )
     !
-    !  Symmetry not supported
+    ! Some limitations of turboTDDFT (and not of turboEELS).
     !
-    IF ( .NOT. nosym ) &
-         & CALL errore( ' iosys ', ' Linear response calculation ' // &
-         & 'not implemented with symmetry', 1 )
+    IF (.NOT. eels) THEN
+       !
+       !  Non-insulating systems currently not supported by turboTDDFPT, but
+       !  supported by turboEELS.
+       !
+       IF (lgauss) CALL errore( 'lr_readin', 'turboTDDFT is not exteneted to metals', 1 )
+       !
+       ! Symmetry is not supported.
+       !
+       IF (.NOT.nosym ) CALL errore( ' iosys ', 'Linear response calculation' // &
+                                    & 'is not implemented with symmetry', 1 )
+       !
+       ! K-points are implemented but still unsupported (use at your own risk!)
+       !
+       IF (.NOT. gamma_only ) CALL errore(' iosys', 'k-point algorithm is not tested yet',1)
+       !
+    ENDIF
     !
-    !  K-points implemented but still unsupported (use at your own risk!)
-    !
-    IF ( .NOT. gamma_only ) &
-         & CALL errore(' iosys', 'k-point algorithm is not tested yet',1)
-    !
-    !  Check that either we have the same numebr of procs as the inital PWscf 
-    !  run OR that the wavefunctions were gathered into one file at the end of
+    !  Check that either we have the same numebr of procs as the inital PWscf run 
+    !  OR that the wavefunctions were gathered into one file at the end of
     !  the PWscf run.
     !
     IF (nproc_image /= nproc_image_file .AND. .NOT. twfcollect)  &
@@ -456,7 +644,8 @@ CONTAINS
     !
     ! Experimental task groups warning.
     !
-    IF (dffts%have_task_groups) CALL infomsg( 'lr_readin','Usage of task &
+    IF (dffts%have_task_groups) &
+         & CALL infomsg( 'lr_readin','Usage of task &
          &groups with TDDFPT is still experimental. Use at your own risk.' )
     !
     ! No PAW support.
@@ -471,8 +660,52 @@ CONTAINS
          & CALL errore( ' iosys ', ' Linear response calculation ' // &
          & 'not implemented for EXX+Ultrasoft', 1 )
     !
-    IF (do_comp_esm) CALL errore( 'lr_readin', ' Effective Screening Medium Method' // &
-         & 'not implemented in TDDFPT', 1 )
+    ! Spin-polarised case is not implemented, but partially accounted in
+    ! some routines.
+    !
+    IF (lsda) CALL errore( 'lr_readin', 'LSDA is not implemented', 1 )
+    !
+    ! lr_periodic was created for EELS only.
+    !
+    IF (lr_periodic)   CALL errore( 'lr_readin', 'lr_periodic=.true. is not supported.', 1 )
+    !
+    ! EELS-related restrictions
+    !
+    IF (eels) THEN
+       !
+       IF (okvan .AND. noncolin) CALL errore( 'lr_readin', 'Ultrasoft PP + noncolin is not fully implemented', 1 )
+       !
+       ! EELS + gamma_only is allowed only for periodic perturbations q=G (lr_periodic=.true.). 
+       ! The Lanczos recursion has to be done twice: for cos(qr) and sin(qr) [see lr_dvpsi_eels.f90]
+       ! and then the two spectra must be summed up. lr_periodic=.true. was
+       ! implemeted only for testing purposes.
+       !
+       IF (lr_periodic)   CALL errore( 'lr_readin', 'lr_periodic=.true. is disabled.', 1 ) 
+       IF (gamma_only)  CALL errore( 'lr_readin', 'gamma_only is not supported', 1 )
+       !
+       ! Tamm-Dancoff approximation is not recommended to be used with EELS, and
+       ! thus it was not implemented.
+       !
+       IF (ltammd)      CALL errore( 'lr_readin', 'EELS + Tamm-Dancoff approximation is not supported', 1 )
+       !
+       IF (project)     CALL errore( 'lr_readin', 'project is not allowed', 1 )
+       IF (tqr)         CALL errore( 'lr_readin', 'tqr is not supported', 1 )
+       IF (real_space)  CALL errore( 'lr_readin', 'real_space is not supported', 1 )
+       IF (charge_response /= 0) CALL errore( 'lr_readin', 'charge_response /= 0 is not allowed', 1 )
+       IF (dft_is_hybrid())    CALL errore( 'lr_readin', 'EXX is not supported', 1 )
+       IF (do_comp_mt)  CALL errore( 'lr_readin', 'Martyna-Tuckerman PBC is not supported.', 1 )
+       IF (d0psi_rs)    CALL errore( 'lr_readin', 'd0psi_rs is not allowed', 1 )
+       !
+       ! Note, all variables of the turboDavidson code cannot be used by turboEELS.
+       !
+#ifdef __ENVIRON
+       !
+       ! EELS + implicit solvent model is not supported.
+       !
+       IF ( use_environ ) CALL errore( 'lr_readin', 'Implicit solvent model cannot be used.', 1)
+#endif
+       !
+    ENDIF
     !
     RETURN
     !
@@ -482,7 +715,7 @@ CONTAINS
   SUBROUTINE read_rs_status( dirname, tqr, real_space, ierr )
     !------------------------------------------------------------------------
     !
-    ! This subroutine reads the real space control flags from a pwscf punch card
+    ! This subroutine reads the real space control flags from a PWscf punch card
     ! OBM 2009 - FIXME: should be moved to qexml.f90
     !
       USE iotk_module
@@ -531,5 +764,5 @@ CONTAINS
       RETURN
       !
     END SUBROUTINE read_rs_status
-
+ 
 END SUBROUTINE lr_readin

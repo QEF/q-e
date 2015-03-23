@@ -1,4 +1,11 @@
-!!----------------------------------------------------------------------------
+!
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!--------------------------------------------------------------------
 module lr_dav_routines
 !----------------------------------------------------------------------------
 ! Created by Xiaochuan Ge (Oct, 2012)
@@ -1666,7 +1673,7 @@ contains
     ! Re-build ortho-normal basis
     num_basis_new=0
     do ieign = 1, 2*num_eign ! Keep only components with large enough singularity values
-      if(sv(ieign) .gt. residue_conv_thr) then  ! XC: whether to choose?
+      if(sv(ieign) .gt. residue_conv_thr) then  ! XC: wheather to choose?
       !if(sv(ieign) .gt. max_res) then
         ! After this step, the column vectors of (LR_M * U) are normal-orthogonalized
         U(:,ieign)=U(:,ieign)/sqrt(sv(ieign)) 

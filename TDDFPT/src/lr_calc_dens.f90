@@ -1,18 +1,26 @@
+!
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 !-----------------------------------------------------------------------
 SUBROUTINE lr_calc_dens( evc1, response_calc )
   !---------------------------------------------------------------------
-  ! ... calculates response charge density from linear response
-  ! ... orbitals and ground state orbitals
-  !---------------------------------------------------------------------
+  !
+  ! Optical case
+  ! This subroutine calculates the response charge density 
+  ! from linear response orbitals and ground state orbitals.
+  !
+  ! Input : evc1 (qdash etc) 
+  ! Output: rho = 2 * \sum_v ( revc0_v(r) . revc1_v(r,w) )
+  !
+  ! In case of US PP, becsum is also calculated here.
+  ! In case of charge response calculation, the rho_tot is calculated here.
   !
   ! Modified by Osman Baris Malcioglu in 2009
-  !
-  ! Input : evc1 (qdash etc)
-  ! Output: rho_1 (=2*sum_v (revc0_v(r) . revc1_v(r,w) )
-  !  where v:valance state index, r denotes a transformation t
-  !
-  ! In case of US PP, becsum is also calculated here
-  ! In case of charge response calculation, the rho_tot is calculated here
+  ! Modified by Simone Binnie in 2012 
   !
   USE ions_base,              ONLY : ityp, nat, ntyp=>nsp
   USE cell_base,              ONLY : omega
@@ -47,7 +55,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
                                      & lr_dump_rho_tot_xcrys,&
                                      & resonance_condition, epsil,&
                                      & rho_1_tot, rho_1_tot_im
-  USE noncollin_module,       ONLY : nspin_mag
+  USE noncollin_module,       ONLY : nspin_mag, npol
   USE control_flags,          ONLY : tqr
   USE becmod,                 ONLY : becp
   USE lr_exx_kernel,          ONLY : lr_exx_kernel_int, revc_int,&
@@ -57,28 +65,21 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   IMPLICIT NONE
   !
   CHARACTER(len=6), EXTERNAL   :: int_to_char
-  !
-  COMPLEX(kind=dp), INTENT(in) :: evc1(npwx,nbnd,nks)
+  COMPLEX(kind=dp), INTENT(in) :: evc1(npwx*npol,nbnd,nks)
   LOGICAL, INTENT(in)          :: response_calc
-  !
   ! functions
   REAL(kind=dp) :: ddot
   !
-  ! local variables
+  ! Local variables
+  !
   INTEGER       :: ir, ik, ibnd, jbnd, ig, ijkb0, np, na
   INTEGER       :: ijh,ih,jh,ikb,jkb ,ispin 
   INTEGER       :: i, j, k, l
-  REAL(kind=dp) :: w1, w2, scal
-  REAL(kind=dp) :: rho_sum 
-  !
+  REAL(kind=dp) :: w1, w2, scal, rho_sum
   ! These are temporary buffers for the response 
   REAL(kind=dp), ALLOCATABLE :: rho_sum_resp_x(:), rho_sum_resp_y(:),&
                               & rho_sum_resp_z(:)  
-  !
   CHARACTER(len=256) :: tempfile, filename
-  !
-  !OBM DEBUG
-  COMPLEX(kind=dp),EXTERNAL :: lr_dot
   !
   IF (lr_verbosity > 5) THEN
      WRITE(stdout,'("<lr_calc_dens>")')
@@ -86,28 +87,33 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   !
   CALL start_clock('lr_calc_dens')
   !
-  !
   ALLOCATE( psic(dfftp%nnr) )
   psic(:)    = (0.0d0,0.0d0)
-  IF(gamma_only) THEN
+  !
+  IF (gamma_only) THEN
      rho_1(:,:) =  0.0d0
   ELSE
      rho_1c(:,:) =  0.0d0
   ENDIF
   !
-  IF(gamma_only) THEN
-     IF (lr_exx) revc_int=0.0d0
+  IF (gamma_only) THEN
+     !
+     IF (lr_exx) revc_int = 0.0d0
+     !
      CALL lr_calc_dens_gamma()
      !
      ! If a double grid is used, interpolate onto the fine grid
      !
      IF ( doublegrid ) CALL interpolate(rho_1,rho_1,1)
+     !
 #ifdef __MPI
      CALL mp_sum(rho_1, inter_bgrp_comm)
 #endif
      !
   ELSE
-     IF (lr_exx) revc_int_c=(0.0d0,0.d0)
+     !
+     IF (lr_exx) revc_int_c = (0.0d0,0.d0)
+     !
      CALL lr_calc_dens_k()
      !
      ! If a double grid is used, interpolate onto the fine grid
@@ -119,8 +125,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   ! Here we add the Ultrasoft contribution to the charge density
   ! response. 
   !
-  IF(okvan) THEN
-     !
+  IF (okvan) THEN
      IF (tqr) THEN
         CALL addusdens_r(rho_1,.FALSE.)
      ELSE
@@ -129,6 +134,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   ENDIF
   !
   ! The psic workspace can present a memory bottleneck
+  !
   DEALLOCATE ( psic )
   !
 #ifdef __MPI
@@ -145,8 +151,8 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      ! 
      DO ispin = 1, nspin_mag
         !
-        rho_sum=0.0d0
-        rho_sum=SUM(rho_1(:,ispin))
+        rho_sum = 0.0d0
+        rho_sum = SUM(rho_1(:,ispin))
         !
 #ifdef __MPI
         CALL mp_sum(rho_sum, intra_bgrp_comm )
@@ -256,7 +262,9 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      DEALLOCATE( rho_sum_resp_z )
      !
   ENDIF
+  !
   IF (charge_response == 1 .AND. response_calc) THEN
+    !
     IF (LR_iteration < itermax) WRITE(stdout,'(5x,"Calculating total &
          &response charge density")')
     ! the charge response, it is actually equivalent to an element of
@@ -295,23 +303,23 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
        !
        rho_1_tot(1:dfftp%nnr,:) = rho_1_tot(1:dfftp%nnr,:) &
             & +  dble( w_T(LR_iteration) ) * rho_1(1:dfftp%nnr,:)
-       
+       !   
     ENDIF
     !
  ENDIF
  !
- !
  CALL stop_clock('lr_calc_dens')
+ !
  RETURN
  !
 CONTAINS
   !
   SUBROUTINE lr_calc_dens_gamma
     !
-    ! Gamma_only case.
+    ! Gamma_only case
     !
     USE becmod,              ONLY : bec_type, becp, calbec
-    USE lr_variables,        ONLY : becp1, tg_revc0
+    USE lr_variables,        ONLY : becp_1, tg_revc0
     USE io_global,           ONLY : stdout
     USE realus,              ONLY : real_space, fft_orbital_gamma,&
                                     & initialisation_level,&
@@ -319,27 +327,28 @@ CONTAINS
                                     & calbec_rs_gamma,&
                                     & add_vuspsir_gamma, v_loc_psir,&
                                     & real_space_debug 
-    USE mp_global,           ONLY : ibnd_start, ibnd_end, inter_bgrp_comm
+    USE mp_global,           ONLY : ibnd_start, ibnd_end, inter_bgrp_comm, &
+                                    me_bgrp, me_pool
     USE mp,                  ONLY : mp_sum
     USE realus,              ONLY : tg_psic
-    USE mp_global,           ONLY : me_bgrp, me_pool
     USE fft_base,            ONLY : dffts, tg_gather
     USE wvfct,               ONLY : igk
 
-    INTEGER   :: ibnd_start_gamma, ibnd_end_gamma
+    IMPLICIT NONE
+    !
+    INTEGER :: ibnd_start_gamma, ibnd_end_gamma
     LOGICAL :: use_tg
     INTEGER :: v_siz, incr, ioff, idx
-    REAL(DP),    ALLOCATABLE :: tg_rho(:)
-
-    ibnd_start_gamma=ibnd_start
-    IF (MOD(ibnd_start, 2)==0) ibnd_start_gamma = ibnd_start+1
+    REAL(DP), ALLOCATABLE :: tg_rho(:)
+    !
+    ibnd_start_gamma = ibnd_start
+    IF (MOD(ibnd_start, 2)==0) ibnd_start_gamma = ibnd_start + 1
     ibnd_end_gamma = MAX(ibnd_end, ibnd_start_gamma)
     !
-    !
-    use_tg=dffts%have_task_groups
+    use_tg = dffts%have_task_groups
     incr = 2
     !
-    IF( dffts%have_task_groups ) THEN
+    IF ( dffts%have_task_groups ) THEN
        !
        v_siz =  dffts%tg_nnr * dffts%nogrp
        !
@@ -350,23 +359,24 @@ CONTAINS
        !
     ENDIF
     !
-    DO ibnd=ibnd_start_gamma,ibnd_end_gamma,incr
+    DO ibnd = ibnd_start_gamma, ibnd_end_gamma, incr
+       !
+       ! FFT: evc1 -> psic
        !
        CALL fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
        !
-       !
-       IF(dffts%have_task_groups) THEN
+       IF (dffts%have_task_groups) THEN
           !
           ! Now the first proc of the group holds the first two bands
           ! of the 2*dffts%nogrp bands that we are processing at the same time,
           ! the second proc. holds the third and fourth band
-          ! and so on
+          ! and so on.
           !
           ! Compute the proper factor for each band
           !
           DO idx = 1, dffts%nogrp
              IF( dffts%nolist( idx ) == me_bgrp ) EXIT
-          END DO
+          ENDDO
           !
           ! Remember two bands are packed in a single array :
           ! proc 0 has bands ibnd   and ibnd+1
@@ -375,7 +385,7 @@ CONTAINS
           !
           idx = 2 * idx - 1
           !
-          IF( idx + ibnd - 1 < nbnd ) THEN
+          IF ( idx + ibnd - 1 < nbnd ) THEN
 !         IF( idx + ibnd - 1 < ibnd_end_gamma ) THEN
              w1 = wg( idx + ibnd - 1, 1) / omega
              w2 = wg( idx + ibnd    , 1) / omega
@@ -388,45 +398,45 @@ CONTAINS
              w2 = w1
           END IF
           !
-          DO ir=1,dffts%tg_npp( me_bgrp + 1 ) * dffts%nr1x * dffts%nr2x
-             tg_rho(ir)=tg_rho(ir) &
-                  +2.0d0*(w1*real(tg_revc0(ir,ibnd,1),dp)*real(tg_psic(ir),dp)&
-                  +w2*aimag(tg_revc0(ir,ibnd,1))*aimag(tg_psic(ir)))
+          DO ir = 1, dffts%tg_npp( me_bgrp + 1 ) * dffts%nr1x * dffts%nr2x
+             tg_rho(ir) = tg_rho(ir) &
+                  + 2.0d0*(w1*real(tg_revc0(ir,ibnd,1),dp)*real(tg_psic(ir),dp)&
+                  + w2*aimag(tg_revc0(ir,ibnd,1))*aimag(tg_psic(ir)))
           ENDDO
-       else
+          !
+       ELSE
           !
           ! Set weights of the two real bands now in psic
           !
-          w1=wg(ibnd,1)/omega
+          w1 = wg(ibnd,1)/omega
           !
-          IF(ibnd<nbnd) THEN
-             w2=wg(ibnd+1,1)/omega
+          IF (ibnd<nbnd) THEN
+             w2 = wg(ibnd+1,1)/omega
           ELSE
-             w2=0.d0
+             w2 = 0.d0
           ENDIF
           !
-          ! (n'(r,w)=2*sum_v (psi_v(r) . q_v(r,w))
+          ! (n'(r,w) = 2*sum_v (psi_v(r) . q_v(r,w))
           ! where psi are the ground state valance orbitals
           ! and q_v are the standard batch representation (rotated)
-          ! response orbitals
-          ! Here, since the ith iteration is the best approximation we
+          ! response orbitals.
+          ! Here, since the i-th iteration is the best approximation we
           ! have for the most dominant eigenvalues/vectors, an estimate
           ! for the response charge density can be calculated. This is
           ! in no way the final response charge density.  
-          !
           ! The loop is over real space points.
           !
-          DO ir=1,dffts%nnr
-             rho_1(ir,1)=rho_1(ir,1) &
-                  +2.0d0*(w1*real(revc0(ir,ibnd,1),dp)*real(psic(ir),dp)&
-                  +w2*aimag(revc0(ir,ibnd,1))*aimag(psic(ir)))
+          DO ir = 1, dffts%nnr
+             rho_1(ir,1) = rho_1(ir,1) &
+                  + 2.0d0*(w1*real(revc0(ir,ibnd,1),dp)*real(psic(ir),dp)&
+                  + w2*aimag(revc0(ir,ibnd,1))*aimag(psic(ir)))
           ENDDO
           !
           ! OBM - psic now contains the response functions in real space.
           ! Eagerly putting all the real space stuff at this point. 
           !
           ! Notice that betapointlist() is called in lr_readin at the
-          ! very start 
+          ! very beginning.
           !
           IF ( real_space_debug > 6 .AND. okvan) THEN
              ! The rbecp term
@@ -439,8 +449,10 @@ CONTAINS
           IF (lr_exx) CALL lr_exx_kernel_int ( evc1(:,:,1), ibnd, nbnd, 1 )
           !
        ENDIF
+       !
     ENDDO
-    IF(dffts%have_task_groups) THEN
+    !
+    IF (dffts%have_task_groups) THEN
        !
        ! reduce the group charge
        !
@@ -448,7 +460,7 @@ CONTAINS
        !
        ioff = 0
        DO idx = 1, dffts%nogrp
-          IF( me_bgrp == dffts%nolist( idx ) ) EXIT
+          IF ( me_bgrp == dffts%nolist( idx ) ) EXIT
           ioff = ioff + dffts%nr1x * dffts%nr2x * dffts%npp( dffts%nolist( idx ) + 1 )
        END DO
        !
@@ -456,12 +468,11 @@ CONTAINS
        !
        DO ir = 1, dffts%nnr
           rho_1(ir,1) = rho_1(ir,1) + tg_rho(ir+ioff)
-       END DO
+       ENDDO
        !
     ENDIF
     !
-    ! If we have a US pseudopotential we compute here the becsum
-    ! term. 
+    ! If we have a US pseudopotential we compute here the becsum term. 
     ! This corresponds to the right hand side of the formula (36) in
     ! the ultrasoft paper. 
     !
@@ -504,10 +515,10 @@ CONTAINS
                          becsum(ijh,na,current_spin) = &
                               becsum(ijh,na,current_spin) + &
                               2.d0 * w1 * becp%r(ikb,ibnd) *&
-                              & becp1(ikb,ibnd)
+                              & becp_1(ikb,ibnd)
                          !
                          scal = scal + qq(ih,ih,np) *1.d0 *&
-                              &  becp%r(ikb,ibnd) * becp1(ikb,ibnd)
+                              &  becp%r(ikb,ibnd) * becp_1(ikb,ibnd)
                          !
                          ijh = ijh + 1
                          !
@@ -517,14 +528,14 @@ CONTAINS
                             !
                             becsum(ijh,na,current_spin) = &
                                  becsum(ijh,na,current_spin) + &
-                                 w1 * 2.D0 * (becp1(ikb,ibnd) * &
+                                 w1 * 2.D0 * (becp_1(ikb,ibnd) * &
                                  &becp%r(jkb,ibnd) + & 
-                                 becp1(jkb,ibnd) * becp%r(ikb,ibnd))
+                                 becp_1(jkb,ibnd) * becp%r(ikb,ibnd))
                             !
                             scal = scal + qq(ih,jh,np) * 1.d0 *&
                                  & (becp%r(ikb,ibnd) * &
-                                 &becp1(jkb, ibnd) + &
-                                 &becp%r(jkb,ibnd) * becp1(ikb,ibnd))
+                                 &becp_1(jkb, ibnd) + &
+                                 &becp%r(jkb,ibnd) * becp_1(ikb,ibnd))
                             !
                             ijh = ijh + 1
                             !
@@ -556,63 +567,78 @@ CONTAINS
        !
     ENDIF
     !
-    IF( dffts%have_task_groups ) THEN
+    IF ( dffts%have_task_groups ) THEN
        DEALLOCATE( tg_rho )
     END IF
     !   
     RETURN
     !
   END SUBROUTINE lr_calc_dens_gamma
-!-----------------------------------------------------------------------
-  SUBROUTINE lr_calc_dens_k
+!-------------------------------------------------------------------  
+ SUBROUTINE lr_calc_dens_k
+    !
+    ! Generalised k-points case
+    ! I. Timov: Task groups parallelisation is not implemented here.
     !
     USE becmod,              ONLY : bec_type, becp, calbec
     USE lr_variables,        ONLY : becp1_c
+    USE realus,              ONLY : fft_orbital_k
+    !
+    IMPLICIT NONE
     !
     DO ik=1,nks
        DO ibnd=1,nbnd
-          psic(:)=(0.0d0,0.0d0)
+          !
+          ! FFT: evc1(:,:,ik) -> psic(:)
+          !
+          psic(:) = (0.0d0,0.0d0)
+          !
           DO ig=1,npw_k(ik)
              psic(nls(igk_k(ig,ik)))=evc1(ig,ibnd,ik)
           ENDDO
           !
           CALL invfft ('Wave', psic, dffts)
           !
-          w1=wg(ibnd,ik)/omega
+          ! I. Timrov: Try to use fft_orbital_k
+          ! CALL fft_orbital_k(evc1(:,:,ik), ibnd, nbnd, ik)
+          !
+          w1 = wg(ibnd,ik)/omega
           !
           ! loop over real space points
+          !
           DO ir=1,dffts%nnr
-             rho_1c(ir,:)=rho_1c(ir,:) &
-                  +2.0d0*w1*conjg(revc0(ir,ibnd,ik))*psic(ir)
+             rho_1c(ir,:) = rho_1c(ir,:) &
+                  + 2.0d0*w1*conjg(revc0(ir,ibnd,ik))*psic(ir)
           ENDDO
           !
           IF (lr_exx) CALL lr_exx_kernel_int (evc1(:,:,ik), ibnd, nbnd, ik )
           !
        ENDDO
-       !
     ENDDO
     !
-    ! ... If we have a US pseudopotential we compute here the becsum term
+    ! If we have a US pseudopotential we compute here the becsum term
     !
-    IF ( okvan ) THEN
+    IF ( okvan .and. nkb>0 ) THEN
        !
        DO ik =1,nks
+          !
+          ! Calculate the beta-functions vkb
           !
           CALL init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
           !
           scal = 0.0d0
           becsum(:,:,:) = 0.0d0
           !
-          IF ( nkb > 0 .and. okvan ) THEN
-             ! call ccalbec(nkb,npwx,npw_k(ik),nbnd,becp,vkb,evc1)
-             CALL calbec(npw_k(ik),vkb,evc1(:,:,ik),becp)
-          ENDIF
+          ! Calculate the product of beta-functions vkb with the 
+          ! wavefunctions evc1 : becp%k = <vkb|evc1>
+          !
+          CALL calbec(npw_k(ik),vkb,evc1(:,:,ik),becp)
           !
           CALL start_clock( 'becsum' )
           !
           DO ibnd = 1, nbnd
-             scal = 0.0d0
              !
+             scal = 0.0d0
              w1 = wg(ibnd,ik)
              ijkb0 = 0
              !

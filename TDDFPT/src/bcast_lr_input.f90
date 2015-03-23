@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,10 +9,8 @@
 SUBROUTINE bcast_lr_input
   !-----------------------------------------------------------------------
   !
-  !     The first processor sends the input to all the other processors
+  !  ...The first processor sends the input to all the other processors.
   !
-  !
-  ! Modified by Osman Baris Malcioglu in 2009
 #ifdef __MPI
 
   USE lr_variables
@@ -26,6 +24,8 @@ SUBROUTINE bcast_lr_input
   USE mp_global,           ONLY: intra_image_comm
   USE mp_world,            ONLY: world_comm
   USE exx,                 ONLY: ecutfock
+  USE qpoint,              ONLY: xq
+  USE control_ph,          ONLY: lrpa
 
   IMPLICIT NONE
   !
@@ -63,6 +63,18 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (tddfpt, ionode_id, world_comm )
   CALL plugin_arguments_bcast(ionode_id, world_comm)
 
+  ! for EELS
+  call mp_bcast (eels, ionode_id, world_comm )
+  call mp_bcast (q1, ionode_id, world_comm )
+  call mp_bcast (q2, ionode_id, world_comm )
+  call mp_bcast (q3, ionode_id, world_comm )
+  call mp_bcast (xq, ionode_id, world_comm )
+  call mp_bcast (lr_periodic, ionode_id, world_comm )
+  call mp_bcast (approximation, ionode_id, world_comm ) 
+  call mp_bcast (lrpa, ionode_id, world_comm ) 
+  call mp_bcast (clfe, ionode_id, world_comm ) 
+  !call mp_bcast (eps, ionode_id, world_comm ) 
+
   ! for lr_dav
   CALL mp_bcast (davidson, ionode_id, world_comm )
   CALL mp_bcast (num_eign, ionode_id, world_comm )
@@ -94,7 +106,7 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (if_dft_spectrum, ionode_id, world_comm )
   CALL mp_bcast (lplot_drho, ionode_id, world_comm )
   CALL mp_barrier(world_comm)
-
+  
 #endif
   RETURN
 END SUBROUTINE bcast_lr_input

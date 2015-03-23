@@ -1,10 +1,27 @@
+!
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 MODULE lr_lanczos
+
 CONTAINS
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! OBM :
+
+!-------------------------------------------------------------------------------------------!
 !
-! This subroutine handles two interleaved non-hermitian chains for x and y at the same time,
+! There are 2 flavors of the Lanczos algorithm implemented in TDDFPT:
+! - non-Hermitian Lanczos biorthogonalization algorithm
+! - pseudo-Hermitian Lanczos algorithm (twice faster)
+! For details see:
+! - O. Malcioglu, R. Gebauer, D. Rocca, S. Baroni,
+!   Comput. Phys. Commun. 182, 1744 (2011). 
+! - X. Ge, S. Binnie, D. Rocca, R. Gebauer, S. Baroni, 
+!   Comput. Phys. Commun. 185, 2080 (2014). 
 !
+! Non-Hermitian algorithm:
+! This subroutine handles two interleaved non-Hermitian chains for x and y at the same time,
 ! in the beginning
 ! for even steps evc1(:,:,:,1) corresponds to q of y and evc1(:,:,:,2) corresponds to p of x
 ! for odd steps evc1(:,:,:,1) corresponds to q of x and evc1(:,:,:,2) corresponds to p of y
@@ -17,227 +34,361 @@ CONTAINS
 ! Ralph Gebauer, Brent Walker J. Chem. Phys., 127, 164106 (2007)
 !
 ! Modified by Osman Baris Malcioglu (2009)
-! Modified by Xiaochuan Ge to introduce Pseudo Hermitian Algorithm (2013)
-
-  SUBROUTINE one_lanczos_step()
-    !
-    !   Non-Hermitian Lanczos
-    !
+! Modified by Xiaochuan Ge to introduce pseudo-Hermitian algorithm (2013)
+! Modified by Iurii Timrov to introduce EELS (2013)
+!
+!--------------------------------------------------------------------------------------------!
+SUBROUTINE one_lanczos_step()
+    
     USE io_global,                ONLY : ionode, stdout
-    USE kinds,                ONLY : dp
-    USE klist,                ONLY : nks,xk
-    USE lr_variables,         ONLY : n_ipol, ltammd, pseudo_hermitian, itermax,&
-                                     evc1, evc1_new, sevc1_new, evc1_old, sevc1, &
-                                     evc0, sevc0, d0psi, &
-                                     alpha_store, beta_store, gamma_store, zeta_store,&
-                                    charge_response, size_evc, LR_polarization, LR_iteration,&!,real_space
-                                     test_case_no
-    USE uspp,                 ONLY : vkb, nkb, okvan
-    USE wvfct,                ONLY : nbnd, npwx, npw
-    USE control_flags,         ONLY : gamma_only,tqr
-    USE becmod,               ONLY :  bec_type, becp, calbec
-    !use real_beta,           only : ccalbecr_gamma,s_psir,fft_orbital_gamma,bfft_orbital_gamma
-    USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
-                                    bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
-                                    v_loc_psir, s_psir_gamma, igk_k,npw_k, real_space_debug
-    USE lr_variables,   ONLY : lr_verbosity
-    USE charg_resp,               ONLY : w_T_beta_store,w_T,lr_calc_F
-    use lr_us,          only : lr_apply_s
-    !Debugging
-    USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,check_vector_gamma
+    USE kinds,                    ONLY : dp
+    USE klist,                    ONLY : nks,xk
+    USE lr_variables,             ONLY : n_ipol, ltammd, pseudo_hermitian, itermax,  &
+                                         evc1, evc1_new, sevc1_new, evc1_old, sevc1, &
+                                         evc0, sevc0, d0psi, eels, test_case_no, lr_verbosity, &
+                                         alpha_store, beta_store, gamma_store, zeta_store,     &
+                                         charge_response, size_evc, LR_polarization, LR_iteration
+    USE uspp,                     ONLY : vkb, nkb, okvan
+    USE wvfct,                    ONLY : nbnd, npwx, npw
+    USE control_flags,            ONLY : gamma_only, tqr
+    USE becmod,                   ONLY : bec_type, becp, calbec
+    USE realus,                   ONLY : real_space, fft_orbital_gamma, initialisation_level,    &
+                                         bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
+                                         v_loc_psir, s_psir_gamma, igk_k, npw_k, real_space_debug
+    USE charg_resp,               ONLY : w_T_beta_store, w_T, lr_calc_F
+    USE lr_us,                    ONLY : lr_apply_s
+    USE qpoint,                   ONLY : nksq
+    USE noncollin_module,         ONLY : npol
+    ! Debugging
+    USE lr_variables,             ONLY : check_all_bands_gamma, check_density_gamma, check_vector_gamma
+    USE iso_c_binding,            ONLY : c_int
     !
     IMPLICIT NONE
     !
     COMPLEX(kind=dp),EXTERNAL :: lr_dot
-    !
-    !integer,intent(in) :: iter, pol
     INTEGER :: ik, ip, ibnd,ig, pol_index
-    !
     CHARACTER(len=6), EXTERNAL :: int_to_char
     !
-    !   Local variables
+    ! Local variables
     !
-    real(kind=dp) :: alpha, beta, gamma, angle
-    !
+    REAL(kind=dp) :: alpha, beta, gamma, angle
     COMPLEX(kind=dp) :: zeta
-    !
-    !integer :: n
-    !
-
+    INTEGER(kind=c_int) :: kilobytes
     !
     IF (lr_verbosity > 5) THEN
-      WRITE(stdout,'("<lr_lanczos_one_step>")')
-    ENDIF
-    IF (lr_verbosity > 10) THEN
-      PRINT *, "Real space = ", real_space
-      PRINT *, "Real space debug ", real_space_debug
-      PRINT *, "TQR = ", tqr
+       WRITE(stdout,'("<lr_lanczos_one_step>")')
     ENDIF
     !
+    IF (lr_verbosity > 10) THEN
+       PRINT *, "Real space = ", real_space
+       PRINT *, "Real space debug ", real_space_debug
+       PRINT *, "TQR = ", tqr
+    ENDIF
+    !
+    ! Memory usage
+    !
+    !IF (eels) THEN
+    !   CALL memstat( kilobytes )
+    !   IF ( kilobytes > 0 ) WRITE(stdout,'(5X,"lr_lanczos, & 
+    !                      & per-process dynamical memory:",f7.1,"Mb")' ) kilobytes/1000.0
+    !ENDIF
+    !
     CALL start_clock('one_step')
-    pol_index=1
-    IF ( n_ipol /= 1 ) pol_index=LR_polarization
-
-    ! Apply Liouvillian
-    if(.not. ltammd) then
-      if(mod(LR_iteration,2)==0) then
-        CALL lr_apply_liouvillian(evc1(1,1,1,1),evc1_new(1,1,1,1),sevc1_new(1,1,1,1),.true.)
-        if(.not. pseudo_hermitian) &
-          CALL lr_apply_liouvillian(evc1(1,1,1,2),evc1_new(1,1,1,2),sevc1_new(1,1,1,2),.false.)
-      ELSE
-        CALL lr_apply_liouvillian(evc1(1,1,1,1),evc1_new(1,1,1,1),sevc1_new(1,1,1,1),.false.)
-        if(.not. pseudo_hermitian) &
-          CALL lr_apply_liouvillian(evc1(1,1,1,2),evc1_new(1,1,1,2),sevc1_new(1,1,1,2),.true.)
-      ENDIF
+    !
+    pol_index = 1
+    !
+    IF ( n_ipol /= 1 ) pol_index = LR_polarization
+    !
+    ! Application of the Liouvillian superoperator
+    !
+    IF (eels) THEN
+       !
+       ! EELS case
+       !
+       IF (mod(LR_iteration,2)==0) THEN
+          !
+          CALL lr_apply_liouvillian_eels(evc1(1,1,1,1),evc1_new(1,1,1,1),sevc1_new(1,1,1,1),.true.)
+          IF (.NOT.pseudo_hermitian) &
+          CALL lr_apply_liouvillian_eels(evc1(1,1,1,2),evc1_new(1,1,1,2),sevc1_new(1,1,1,2),.false.)
+          !
+       ELSE
+          !
+          CALL lr_apply_liouvillian_eels(evc1(1,1,1,1),evc1_new(1,1,1,1),sevc1_new(1,1,1,1),.false.)
+          IF (.not. pseudo_hermitian) &
+          CALL lr_apply_liouvillian_eels(evc1(1,1,1,2),evc1_new(1,1,1,2),sevc1_new(1,1,1,2),.true.)
+          !
+       ENDIF
+       !
     ELSE
-      CALL lr_apply_liouvillian(evc1(1,1,1,1),evc1_new(1,1,1,1),sevc1_new(1,1,1,1),.true.)
-      if(.not. pseudo_hermitian) then
-        CALL zcopy(size_evc,evc1(1,1,1,1),1,evc1(1,1,1,2),1) !evc1(,1) = evc1(,2)
-        CALL zcopy(size_evc,evc1_new(1,1,1,1),1,evc1_new(1,1,1,2),1) !evc1_new(,1) = evc1_new(,2)
-      endif
+       !
+       ! Optical case
+       !
+       IF (.NOT.ltammd) THEN
+          !
+          ! Normal regime
+          !
+          IF (mod(LR_iteration,2)==0) THEN
+             !
+             CALL lr_apply_liouvillian(evc1(1,1,1,1),evc1_new(1,1,1,1),sevc1_new(1,1,1,1),.true.)
+             IF (.NOT.pseudo_hermitian) &
+             CALL lr_apply_liouvillian(evc1(1,1,1,2),evc1_new(1,1,1,2),sevc1_new(1,1,1,2),.false.)
+             !
+          ELSE
+             !
+             CALL lr_apply_liouvillian(evc1(1,1,1,1),evc1_new(1,1,1,1),sevc1_new(1,1,1,1),.false.)
+             IF (.not. pseudo_hermitian) &
+             CALL lr_apply_liouvillian(evc1(1,1,1,2),evc1_new(1,1,1,2),sevc1_new(1,1,1,2),.true.)
+             !
+          ENDIF
+          !
+       ELSE
+          !
+          ! Tamm-Dancoff approximation
+          !
+          CALL lr_apply_liouvillian(evc1(1,1,1,1),evc1_new(1,1,1,1),sevc1_new(1,1,1,1),.true.)
+          !
+          IF (.not. pseudo_hermitian) THEN
+             CALL zcopy(size_evc,evc1(1,1,1,1),1,evc1(1,1,1,2),1) 
+             CALL zcopy(size_evc,evc1_new(1,1,1,1),1,evc1_new(1,1,1,2),1) 
+             CALL zcopy(size_evc,sevc1_new(1,1,1,1),1,sevc1_new(1,1,1,2),1)
+          ENDIF
+          !
+       ENDIF
+       !
+    ENDIF 
+    !
+    ! I. Timrov: In the case of EELS, the orthogonalization is applied for HXC in the
+    ! routine lr_apply_liouvillian_eels.
+    !
+    IF (.not.eels) THEN
+       DO ik=1, nks
+          CALL lr_ortho(evc1_new(:,:,ik,1), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
+          IF (.not. pseudo_hermitian) &
+          CALL lr_ortho(evc1_new(:,:,ik,2), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
+       ENDDO
     ENDIF
-
-    DO ik=1, nks
-      CALL lr_ortho(evc1_new(:,:,ik,1), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
-      if(.not. pseudo_hermitian) &
-        CALL lr_ortho(evc1_new(:,:,ik,2), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
-    ENDDO
-
-    ! By construction <p|Lq>=0 should be 0, forcing this both conserves resources and increases stability
-    alpha=0.0d0
-    alpha_store(pol_index,LR_iteration)=alpha
-    WRITE(stdout,'(5X,"alpha(",i8.8,")=",e22.15)') LR_iteration,alpha
-
-    ! Apply S* operation
-    if(pseudo_hermitian) then
-      call lr_apply_s(evc1_new(:,:,1,1),sevc1_new(:,:,1,1))
-    else
-      call lr_apply_s(evc1(:,:,1,2),sevc1(:,:,1,2))
-    endif
-
-    ! Orthogonality requirement: <v|\bar{L}|v>=1
-    if(pseudo_hermitian) then
-      beta=dble(lr_dot(evc1(1,1,1,1),sevc1_new(1,1,1,1)))
-    else
-      beta=dble(lr_dot(evc1(1,1,1,1),sevc1(1,1,1,2)))
-      !call lr_apply_s(evc1(:,:,1,1),sevc1(:,:,1,1))
-      !angle=dble(lr_dot(evc1(1,1,1,1),sevc1(1,1,1,1)))*dble(lr_dot(evc1(1,1,1,2),sevc1(1,1,1,2)))
-      !angle=beta/sqrt(angle)
-      !angle = acos(angle)
-      !print *, "Pol: ", LR_polarization, "Iteration: ",LR_iteration, "Angle:", angle
-    endif
-
-    ! Beta is less than 0 is a serious error for pseudo hermitian algorithm
-    if( beta < 0.0d0 .and. pseudo_hermitian) call error_beta()
-    
-    IF ( abs(beta)<1.0d-12 )   WRITE(stdout,'(5x,"lr_lanczos: Left and right Lanczos vectors are orthogonal,&
-                    &this is a violation of oblique projection")')
-    IF ( beta<0.0d0 ) THEN
-       beta=sqrt(-beta)
-       gamma=-beta
-    ELSEIF ( beta>0.0d0 ) THEN ! Actually this is the only case in pseudo hermitian algorithm
-       beta=sqrt(beta)
-       gamma=beta
+    !
+    ! By construction <p|Lq>=0 should be 0, forcing this both conserves 
+    ! resources and increases stability.
+    !
+    alpha = 0.0d0
+    alpha_store(pol_index,LR_iteration) = alpha
+    WRITE(stdout,'(5X,"alpha(",i8.8,")=",f10.6)') LR_iteration, alpha
+    !
+    ! Apply S operator if USPP, otherwise just copy 
+    ! one array into another.
+    !
+    IF (pseudo_hermitian) THEN
+       CALL lr_apply_s(evc1_new(:,:,1,1),sevc1_new(:,:,1,1))
+    ELSE
+       CALL lr_apply_s(evc1(:,:,1,2),sevc1(:,:,1,2))
     ENDIF
-
+    !
+    ! Orthogonality requirement: <v|\bar{L}|v> = 1
+    !
+    IF (pseudo_hermitian) THEN
+       !
+       beta = dble(lr_dot(evc1(1,1,1,1),sevc1_new(1,1,1,1)))
+       !
+    ELSE
+       !
+       beta = dble(lr_dot(evc1(1,1,1,1),sevc1(1,1,1,2)))
+       !
+       !call lr_apply_s(evc1(:,:,1,1),sevc1(:,:,1,1))
+       !angle=dble(lr_dot(evc1(1,1,1,1),sevc1(1,1,1,1)))*dble(lr_dot(evc1(1,1,1,2),sevc1(1,1,1,2)))
+       !angle=beta/sqrt(angle)
+       !angle = acos(angle)
+       !print *, "Pol: ", LR_polarization, "Iteration: ",LR_iteration, "Angle:", angle
+       !
+    ENDIF
+    !
+    ! beta<0 is a serious error for the pseudo-Hermitian algorithm
+    !
+    IF ( beta < 0.0d0 .and. pseudo_hermitian) CALL error_beta()
+    !
+    IF ( abs(beta)<1.0d-12 ) THEN
+       !
+       WRITE(stdout,'(5x,"lr_lanczos: Left and right Lanczos vectors are orthogonal, &
+                      & this is a violation of oblique projection")')
+       !
+    ELSEIF ( beta<0.0d0 ) THEN
+       !
+       beta = sqrt(-beta)
+       gamma = -beta
+       !
+    ELSEIF ( beta>0.0d0 ) THEN 
+       !
+       ! X. Ge: Actually, this is the only case in the pseudo-Hermitian algorithm.
+       !
+       beta = sqrt(beta)
+       gamma = beta
+       !
+    ENDIF
+    !
     beta_store (pol_index,LR_iteration) = beta
     gamma_store(pol_index,LR_iteration) = gamma
-    WRITE(stdout,'(5X,"beta (",i8.8,")=",e22.15)') LR_iteration,beta
-    WRITE(stdout,'(5X,"gamma(",i8.8,")=",e22.15)') LR_iteration,gamma
-
-    ! renormalize q(i) and Lq(i), also p(i) and Lp(i) in non pseudo hermitian case
+    WRITE(stdout,'(5X,"beta (",i8.8,")=",f10.6)') LR_iteration, beta
+    WRITE(stdout,'(5X,"gamma(",i8.8,")=",f10.6)') LR_iteration, gamma
+    !
+    !IF (LR_iteration==1) WRITE(stdout,'(5X,"Norm of initial Lanczos vectors=",1x,f21.15)') beta
+    !
+    ! Analysis of the evolution of the beta coefficients.
+    !
+    IF (lr_verbosity > 3) THEN
+       !
+       IF ( LR_iteration > 6 ) THEN
+          !
+          WRITE(stdout,'(5X,"(oscillatory variation) : ",f6.2,"%")') &
+              & abs(100*(beta_store(pol_index,LR_iteration)- &
+              & (beta_store(pol_index,LR_iteration-6)+beta_store(pol_index,LR_iteration-4)+&
+              & beta_store(pol_index,LR_iteration-2))/3.0)/beta_store(pol_index,LR_iteration))
+          !  
+          WRITE(stdout,'(5X,"(linear variation) : ",f6.2,"%")') &
+              & abs(100*(beta_store(pol_index,LR_iteration)- &
+              & (beta_store(pol_index,LR_iteration-3)+beta_store(pol_index,LR_iteration-2)+&
+              & beta_store(pol_index,LR_iteration-1))/3.0)/beta_store(pol_index,LR_iteration))
+          !
+       ENDIF
+       !
+    ENDIF
+    !
+    ! Renormalize q(i) and Lq(i), also p(i) and Lp(i) in the non-Hermitian case
+    !
     CALL zscal(size_evc,cmplx(1.0d0/beta,0.0d0,kind=dp),evc1(1,1,1,1),1)
     CALL zscal(size_evc,cmplx(1.0d0/beta,0.0d0,kind=dp),evc1_new(1,1,1,1),1)
-    if(.not. pseudo_hermitian) then
-      CALL zscal(size_evc,cmplx(1.0d0/gamma,0.0d0,kind=dp),evc1(1,1,1,2),1)
-      CALL zscal(size_evc,cmplx(1.0d0/gamma,0.0d0,kind=dp),evc1_new(1,1,1,2),1)
-    endif
-
-    ! Calculation of zeta coefficients
-    if (mod(LR_iteration,2)==0) then
-      do ip=1,n_ipol
-        zeta = lr_dot(d0psi(:,:,:,ip),evc1(:,:,:,1)) !Why gamma point dot?
-        zeta_store (pol_index,ip,LR_iteration) = zeta
-        write(stdout,'(5x,"z1= ",1x,i6,2(1x,e22.15))') ip,real(zeta),aimag(zeta)
-      enddo
-      
-       IF (charge_response == 1) THEN
-        CALL lr_calc_dens(evc1(:,:,:,1), .true.)
-        CALL lr_calc_F(evc1(:,:,:,1))
-      ENDIF
-    else
-      do ip = 1, n_ipol
-        zeta = (0.0d0,0.0d0)
-        zeta_store (pol_index,ip,LR_iteration) = zeta
-        write(stdout,'(5x,"z1= ",1x,i6,2(1x,e22.15))') ip,real(zeta),aimag(zeta)
-      enddo
-    endif
-
-    ! XC. Ge : q(i+1)=Lq(i)-beta(i)*q(i-1); renormalization will be done in the
-    ! begining of the next iteration 
-    ! In non pseudo hermitian case, similar operation needs to be done also for p(i)
-    CALL zaxpy(size_evc,-cmplx(gamma,0.0d0,kind=dp),evc1_old(1,1,1,1),1,evc1_new(1,1,1,1),1)
-    if(.not. pseudo_hermitian) &
-      CALL zaxpy(size_evc,-cmplx(beta,0.0d0,kind=dp),evc1_old(1,1,1,2),1,evc1_new(1,1,1,2),1)
-
-    ! To increase stability, apply lr_ortho once more
-    DO ik=1, nks
-      CALL lr_ortho(evc1_new(:,:,ik,1), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
-      if(.not. pseudo_hermitian) &
-        CALL lr_ortho(evc1_new(:,:,ik,2), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
-    ENDDO
-    
-    ! XC. Ge : throw away q(i-1), and make q(i+1) to be the current vector,
-    ! be ready for the next iteration. evc1_new will be free again after this step
-    CALL zcopy(size_evc,evc1(1,1,1,1),1,evc1_old(1,1,1,1),1) !evc1_old = evc1
-    CALL zcopy(size_evc,evc1_new(1,1,1,1),1,evc1(1,1,1,1),1) !evc1 = evc1_new
-    if(.not. pseudo_hermitian) then
-      CALL zcopy(size_evc,evc1(1,1,1,2),1,evc1_old(1,1,1,2),1) !evc1_old = evc1
-      CALL zcopy(size_evc,evc1_new(1,1,1,2),1,evc1(1,1,1,2),1) !evc1 = evc1_new
-    endif
-
-    IF (ionode) THEN
-      IF ( charge_response == 1 .and. lr_verbosity > 0) THEN
-       !print *, "beta=",beta,"w_T_beta_store", w_T_beta_store(LR_iteration)
-        WRITE (stdout,'(5x,"(calc=",e22.15," read=",e22.15,")")') beta, w_T_beta_store(LR_iteration)
-        WRITE (stdout,'(5x,"Weight for this step=",2(e12.5,1x))')  w_T(LR_iteration)
-      ENDIF
+    !
+    IF (.not.pseudo_hermitian) THEN
+       CALL zscal(size_evc,cmplx(1.0d0/gamma,0.0d0,kind=dp),evc1(1,1,1,2),1)
+       CALL zscal(size_evc,cmplx(1.0d0/gamma,0.0d0,kind=dp),evc1_new(1,1,1,2),1)
     ENDIF
-
+    !
+    ! Calculation of zeta coefficients.
+    ! See Eq.(35) in Malcioglu et al., Comput. Phys. Commun. 182, 1744 (2011).
+    !
+    IF (mod(LR_iteration,2)==0) THEN
+       !
+       DO ip = 1, n_ipol
+          !
+          ! In the ultrasoft case, the S operator was already
+          ! applied to d0psi, so we have <S*d0psi|evc1>.
+          !
+          zeta = lr_dot(d0psi(:,:,:,ip),evc1(:,:,:,1)) 
+          zeta_store (pol_index,ip,LR_iteration) = zeta
+          WRITE(stdout,'(5x,"z1= ",1x,i6,2(1x,e22.15))') ip,real(zeta),aimag(zeta)
+          !
+       ENDDO
+       !
+       ! OBM: evc1(:,:,:,1) contains the q of x for even steps, 
+       ! lets calculate the response related observables.
+       ! 
+       IF (charge_response == 1 .and. .not.eels) THEN
+          CALL lr_calc_dens(evc1(:,:,:,1), .true.)
+          CALL lr_calc_F(evc1(:,:,:,1))
+       ENDIF
+       !
+    ELSE
+       !
+       DO ip = 1, n_ipol
+          !
+          zeta = (0.0d0,0.0d0)
+          zeta_store (pol_index,ip,LR_iteration) = zeta
+          WRITE(stdout,'(5x,"z1= ",1x,i6,2(1x,e22.15))') ip,real(zeta),aimag(zeta)
+          !
+       ENDDO
+       !
+    ENDIF
+    !
+    ! X. Ge: q(i+1) = Lq(i) - beta(i)*q(i-1); 
+    ! Renormalization will be done in the begining of the next iteration.
+    ! In the non-Hermitian case, similar operation needs to be done also for p(i).
+    !
+    CALL zaxpy(size_evc,-cmplx(gamma,0.0d0,kind=dp),evc1_old(1,1,1,1),1,evc1_new(1,1,1,1),1)
+    IF (.not. pseudo_hermitian) &
+     CALL zaxpy(size_evc,-cmplx(beta,0.0d0,kind=dp),evc1_old(1,1,1,2),1,evc1_new(1,1,1,2),1)
+    !
+    ! X. Ge: To increase the stability, apply lr_ortho once more.
+    !
+    IF (.not.eels) THEN
+       !
+       DO ik=1, nks
+          CALL lr_ortho(evc1_new(:,:,ik,1), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
+          IF (.not. pseudo_hermitian) &
+          CALL lr_ortho(evc1_new(:,:,ik,2), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
+       ENDDO
+       !
+    ENDIF
+    ! 
+    ! X. Ge: Throw away q(i-1), and make q(i+1) to be the current vector,
+    ! be ready for the next iteration. evc1_new will be free again after this step
+    !
+    CALL zcopy(size_evc,evc1(1,1,1,1),1,evc1_old(1,1,1,1),1)    ! evc1_old = evc1
+    CALL zcopy(size_evc,evc1_new(1,1,1,1),1,evc1(1,1,1,1),1)    ! evc1 = evc1_new
+    !
+    IF (.not.pseudo_hermitian) THEN
+       CALL zcopy(size_evc,evc1(1,1,1,2),1,evc1_old(1,1,1,2),1) ! evc1_old = evc1
+       CALL zcopy(size_evc,evc1_new(1,1,1,2),1,evc1(1,1,1,2),1) ! evc1 = evc1_new
+    ENDIF
+    !
+    IF (ionode) THEN
+       IF ( charge_response == 1 .and. lr_verbosity > 0) THEN
+           WRITE (stdout,'(5x,"(calc=",e22.15," read=",e22.15,")")') &
+                                & beta, w_T_beta_store(LR_iteration)
+           WRITE (stdout,'(5x,"Weight for this step=",2(e12.5,1x))') w_T(LR_iteration)
+       ENDIF
+    ENDIF
+    !
     CALL stop_clock('one_step')
+    !
     RETURN
-!----------------------------------------------------------------------------------------------
-contains
-
-  subroutine error_beta()
-    implicit none
-    integer :: ib,ik
+    !
+CONTAINS
+    !
+ SUBROUTINE error_beta()
+    !
+    ! IT: This subroutine is called when beta<0 in the pseudo-Hermitian
+    ! algorithm. This subroutine prints the response orbitals to
+    ! the file for the analysis of the error. Note, in the parallel
+    ! execution only a part of the information about the response
+    ! orbitals will be written to the file. 
+    !
+    ! Written by X. Ge (2013)
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: ibnd, ig
+    !
     WRITE(stdout,'(5x,"Error: Beta is negative:",5x,e22.15)') beta
-      do ib = 1, nbnd
-        do ik = 1, npwx
-          write(301,*) ib,ik,dble(evc1(ik,ib,1,1)),aimag(evc1(ik,ib,1,1))
-        enddo
-      enddo
-      close(301)
+    !  
+    DO ibnd = 1, nbnd
+       DO ig = 1, npwx
+          WRITE(301,*) ibnd, ig, dble(evc1(ig,ibnd,1,1)), aimag(evc1(ig,ibnd,1,1))
+       ENDDO
+    ENDDO
+    CLOSE(301)
+    !
+    DO ibnd = 1, nbnd
+       DO ig = 1, npwx
+          WRITE(302,*) ibnd, ig, dble(evc1(ig,ibnd,1,2)), aimag(evc1(ig,ibnd,1,2))
+       ENDDO
+    ENDDO
+    CLOSE(302)
+    !
+    DO ibnd = 1, nbnd
+       DO ig = 1, npwx
+          WRITE(303,*) ibnd, ig, dble(sevc1_new(ig,ibnd,1,2)), aimag(evc1(ig,ibnd,1,2))
+       ENDDO
+    ENDDO
+    CLOSE(303)
+    !
+    WRITE (stdout,'(/5x,"!!!WARNING!!! The pseudo-Hermitian Lanczos algorithm is stopping...")') 
+    WRITE (stdout,'(/5x,"Try to use the non-Hermitian Lanczos algorithm.")') 
+    !
+    itermax = LR_iteration-1
+    CALL clean_pw( .FALSE. )
+    CALL stop_lr( .TRUE. )
+    !
+ END SUBROUTINE error_beta
 
-      do ib = 1, nbnd
-        do ik = 1, npwx
-          write(302,*) ib,ik,dble(evc1(ik,ib,1,2)),aimag(evc1(ik,ib,1,2))
-        enddo
-      enddo
-      close(302)
+END SUBROUTINE one_lanczos_step
 
-      do ib = 1, nbnd
-        do ik = 1, npwx
-          write(303,*) ib,ik,dble(sevc1_new(ik,ib,1,2)),aimag(evc1(ik,ib,1,2))
-        enddo
-      enddo
-      close(303)
-
-      stop "Beta is negative"
-  end subroutine error_beta
-
-  END SUBROUTINE one_lanczos_step
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 END MODULE lr_lanczos

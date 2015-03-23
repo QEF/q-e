@@ -1,10 +1,11 @@
-! Copyright (C) 2001-2003 PWSCF group
+!
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-
-
+!
+!---------------------------------------------------------------------------
 MODULE lr_dav_variables
   !--------------------------------------------------------------------------
   ! ... sets the dimensions of the variables required in the

@@ -35,6 +35,11 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 
 	label { This namelist is always needed ! }
 
+	var title  -type CHARACTER {
+	    info { A string describing the job. }
+	    status { OPTIONAL }
+	}
+
 	var prefix -type CHARACTER { 
 	    default { 'pwscf' }
 	    info {
@@ -66,6 +71,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 		When set to .true., turbo_lanczos.x will attempt to restart 
 		from a previous interrupted calculation. (see restart_step 
 		variable).
+
 		Beware, if set to .false. turbo_lanczos.x will OVERWRITE any
 		previous runs.
 	    }
@@ -145,7 +151,15 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 		approximation.
 		}
 	}
-        var ecutfock -type REAL {
+
+        var lrpa -type LOGICAL {
+            default {.false.}
+            info {
+                When set to .true. the Random Phase Approximation
+                is used (no exchange and correlation).
+                }
+        }
+`       var ecutfock -type REAL { 
             default { ecutrho }
             info {
                 Kinetic energy cutoff (Ry) for the exact exchange operator in 
@@ -168,7 +182,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
         var pseudo_hermitian -type LOGICAL {
             default {.true.}
             info {
-                When set to .true. the pseudo-Hermitian Lanczos
+                When set to .true. the pseudo-Hermitian Lanczos 
                 algorithm is used. When set to .false. the
                 non-Hermitian Lanczos biorthogonalization algorithm
                 is used (which is two times slower).
@@ -189,7 +203,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
             default {.true.}
             info {
                 This variable is used only when d0psi_rs=.true.
-                a) If a molecule is placed in the corner of the
+                a) If a molecule is placed in the corner of the 
                 supercell, there is a discontinuity problem for the
                 position operator r, which is not periodic. By setting
                 lshift_d0psi=.true. the discontinuity problem is
@@ -200,9 +214,11 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
                 and thus you can set lshift_d0psi=.false. But if you still
                 set it to .true., this will not harm, because the position
                 operator will basically remain as it is, since it is always
-                centered wrt the center of the molecule.
+                centered wrt the center of the molecule.   
                 }
         }
+    
+
     }			
     namelist lr_post {
     	var omeg -type REAL {

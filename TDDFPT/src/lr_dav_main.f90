@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,7 @@ PROGRAM lr_dav_main
   USE lr_variables,          ONLY : restart, restart_step,&
        evc1,n_ipol, d0psi, &
        no_hxc, nbnd_total, &
-       revc0, lr_io_level, code,davidson
+       revc0, lr_io_level, code1,davidson
   USE io_files,              ONLY : nd_nmbr
   USE global_version,        ONLY : version_number
   USE ions_base,             ONLY : tau,nat,atm,ityp
@@ -54,7 +54,7 @@ PROGRAM lr_dav_main
 #endif
   tddfpt=.TRUE. !Let the phonon routines know that they are doing tddfpt.
   davidson=.true. ! To tell the code that we are using davidson method
-  CALL environment_start ( code )
+  CALL environment_start ( code1 )
   CALL start_clock('lr_dav_main')
 
   !   Reading input file and PWSCF xml, some initialisation
@@ -162,9 +162,8 @@ CONTAINS
     WRITE( stdout, '(/15x,"*****************************************")')
     WRITE( stdout, '(/15x,"*  Comput. Phys. Commun. 185(2014)2080  *")')
     WRITE( stdout, '(/15x,"*****************************************")')
-    WRITE( stdout, '(/5x,"----------------------------------------",/)' )
-
-    
+    WRITE( stdout, '(/5x,"----------------------------------------",/)' )   
+ 
     IF(okvan) WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )
     
     IF (do_comp_mt) THEN
