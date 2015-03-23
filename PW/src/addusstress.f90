@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2012 Quantum ESPRESSO group
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -28,42 +28,23 @@ subroutine addusstres (sigmanlc)
   !
   implicit none
   !
-  real(DP) :: sigmanlc (3, 3)
+  real(DP), INTENT(INOUT) :: sigmanlc (3, 3)
   ! the nonlocal stress
-
-  integer :: ig, nt, ih, jh, ijh, ipol, jpol, is, na
-  ! counter on g vectors
-  ! counter on mesh points
-  ! number of composite nm components
-  ! the atom type
-  ! counter on atomic beta functions
-  ! counter on atomic beta functions
-  ! composite index for beta function
-  ! counter on polarizations
-  ! counter on polarizations
-  ! counter on spin polarizations
-  ! counter on atoms
-  complex(DP), allocatable :: aux(:,:), aux1(:), vg(:), qgm(:)
+  integer :: ig, nt, ih, jh, ijh, ipol, jpol, is, na, nij
+  ! counters
+  complex(DP), allocatable :: aux(:), aux1(:), aux2(:,:), vg(:,:), qgm(:,:)
+  ! work space (complex)
   complex(DP)              :: cfac
-  ! used to contain the potential
-  ! used to compute a product
-  ! used to contain the structure fac
-
   real(DP)               :: ps, ddot, sus(3,3)
-  real(DP) , allocatable :: qmod(:), ylmk0(:,:), dylmk0(:,:)
-  ! the integral
-  ! the ultrasoft part of the stress
-  ! the modulus of G
-  ! the spherical harmonics
-  ! the spherical harmonics derivativ
-  !  of V_eff and dQ
-  ! function which compute the scal.
-
-  allocate ( aux(ngm,nspin), aux1(ngm), vg(dfftp%nnr), qgm(ngm), qmod(ngm) )
-  allocate ( ylmk0(ngm,lmaxq*lmaxq), dylmk0(ngm,lmaxq*lmaxq) )
-
+  ! auxiliary variables
+  real(DP) , allocatable :: qmod(:), ylmk0(:,:), dylmk0(:,:), tbecsum(:,:)
+  ! work space (real)
+  !
   !
   sus(:,:) = 0.d0
+  !
+  allocate ( aux1(ngm), aux2(ngm,nspin), qmod(ngm) )
+  allocate ( ylmk0(ngm,lmaxq*lmaxq), dylmk0(ngm,lmaxq*lmaxq) )
   !
   call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
 !$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig)
@@ -74,21 +55,20 @@ subroutine addusstres (sigmanlc)
   !
   ! fourier transform of the total effective potential
   !
+  allocate ( vg(ngm,nspin))
+  allocate ( aux(dfftp%nnr) )
   do is = 1, nspin
      if ( nspin == 4 .and. is /= 1 ) then
-        !
-        vg(:) = v%of_r(:,is)
-        !
+        aux(:) = v%of_r(:,is)
      ELSE
-        !
-        vg(:) = vltot(:) + v%of_r(:,is)
-        !
+        aux(:) = vltot(:) + v%of_r(:,is)
      END IF
-     CALL fwfft ('Dense', vg, dfftp)
+     CALL fwfft ('Dense', aux, dfftp)
      do ig = 1, ngm
-        aux (ig, is) = vg (nl (ig) )
+        vg (ig, is) = aux (nl (ig) )
      enddo
   enddo
+  deallocate ( aux )
   !
   ! here we compute the integral Q*V for each atom,
   !       I = sum_G i G_a exp(-iR.G) Q_nm v^*
@@ -98,37 +78,45 @@ subroutine addusstres (sigmanlc)
      call dylmr2 (lmaxq * lmaxq, ngm, g, gg, dylmk0, ipol)
      do nt = 1, ntyp
         if ( upf(nt)%tvanp ) then
-           ijh = 1
+           nij = nh(nt)*(nh(nt)+1)/2
+           allocate (qgm(ngm,nij), tbecsum(nij,nspin) )
+           ijh = 0
            do ih = 1, nh (nt)
               do jh = ih, nh (nt)
-                 call dqvan2 (ngm, ih, jh, nt, qmod, qgm, ylmk0, dylmk0, ipol)
-                 do na = 1, nat
-                    if (ityp (na) == nt) then
-                       !
-                       do is = 1, nspin
-                          do jpol = 1, ipol
-!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig, cfac)
-                             do ig = 1, ngm
-                                cfac = aux (ig, is) * &
-                                       CONJG( eigts1 (mill (1,ig), na) * &
-                                              eigts2 (mill (2,ig), na) * &
-                                              eigts3 (mill (3,ig), na) )
-                                aux1 (ig) = cfac * g (jpol, ig)
-                             enddo
-!$OMP END PARALLEL DO
-                             !
-                             !    and the product with the Q functions
-                             !
-                             ps = omega * ddot (2 * ngm, aux1, 1, qgm, 1)
-                             sus (ipol, jpol) = sus (ipol, jpol) - &
-                                                ps * becsum (ijh, na, is)
-                          enddo
-                       enddo
-                    endif
-                 enddo
                  ijh = ijh + 1
-              enddo
+                 call dqvan2 (ngm, ih, jh, nt, qmod, qgm(1,ijh), ylmk0, &
+                      dylmk0, ipol)
+              end do
+           end do
+           !
+           do na = 1, nat
+              if (ityp (na) == nt) then
+                 !
+                 tbecsum(:,:) = becsum(1:nij,na,1:nspin)
+                 !
+                 CALL dgemm( 'N', 'N', 2*ngm, nspin, nij, 1.0_dp, &
+                      qgm, 2*ngm, tbecsum, nij, 0.0_dp, aux2, 2*ngm )
+                 do is = 1, nspin
+                    do jpol = 1, ipol
+!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig, cfac)
+                       do ig = 1, ngm
+                          cfac = vg (ig, is) * &
+                               CONJG( eigts1 (mill (1,ig), na) * &
+                               eigts2 (mill (2,ig), na) * &
+                               eigts3 (mill (3,ig), na) )
+                          aux1 (ig) = cfac * g (jpol, ig)
+                       enddo
+!$OMP END PARALLEL DO
+                       !
+                       !    and the product with the Q functions
+                       !
+                       ps = omega * ddot (2 * ngm, aux1, 1, aux2(1,is), 1)
+                       sus (ipol, jpol) = sus (ipol, jpol) - ps
+                    enddo
+                 enddo
+              endif
            enddo
+           deallocate ( tbecsum, qgm )
         endif
      enddo
 
@@ -140,7 +128,7 @@ subroutine addusstres (sigmanlc)
      sigmanlc(:,:) = sigmanlc(:,:) + sus(:,:)
   end if
   deallocate (ylmk0, dylmk0)
-  deallocate (aux, aux1, vg, qgm, qmod)
+  deallocate (aux1, aux2, vg, qmod)
 
   return
 

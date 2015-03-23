@@ -146,6 +146,7 @@ SUBROUTINE force_us( forcenl )
        !
        !
        DO nt = 1, ntyp
+          IF ( nh(nt) == 0 ) CYCLE
           ALLOCATE ( aux(nh(nt),becp%nbnd_loc) )
           DO na = 1, nat
              IF ( ityp(na) == nt ) THEN
