@@ -322,8 +322,13 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
      END DO iterate
      !
 #ifdef __VERBOSE
-     WRITE(stdout,'("e(",i4,") = ",f12.6," eV  (",i3," iterations)")') &
+     IF ( iter >= maxter ) THEN
+        WRITE(stdout,'("e(",i4,") = ",f12.6," eV  (not converged after ",i3,&
+                     & " iterations)")') m, e(m)*13.6058, iter
+     ELSE
+        WRITE(stdout,'("e(",i4,") = ",f12.6," eV  (",i3," iterations)")') &
          m, e(m)*13.6058, iter
+     END IF
      CALL flush_unit (stdout)
 #endif
      IF ( iter >= maxter ) notconv = notconv + 1
