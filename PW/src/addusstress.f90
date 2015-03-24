@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-subroutine addusstres (sigmanlc)
+SUBROUTINE addusstres (sigmanlc)
   !----------------------------------------------------------------------
   !
   !   This routine computes the part of the atomic force which is due
@@ -26,111 +26,120 @@ subroutine addusstres (sigmanlc)
   USE control_flags, ONLY : gamma_only
   USE fft_interfaces,ONLY : fwfft
   !
-  implicit none
+  IMPLICIT NONE
   !
-  real(DP), INTENT(INOUT) :: sigmanlc (3, 3)
+  REAL(DP), INTENT(inout) :: sigmanlc (3, 3)
   ! the nonlocal stress
-  integer :: ig, nt, ih, jh, ijh, ipol, jpol, is, na, nij
+  INTEGER :: ig, nt, ih, jh, ijh, ipol, jpol, is, na, nij
   ! counters
-  complex(DP), allocatable :: aux(:), aux1(:), aux2(:,:), vg(:,:), qgm(:,:)
+  COMPLEX(DP), ALLOCATABLE :: aux(:), aux1(:,:), aux2(:,:), vg(:,:), qgm(:,:)
   ! work space (complex)
-  complex(DP)              :: cfac
-  real(DP)               :: ps, ddot, sus(3,3)
+  COMPLEX(DP)              :: cfac
+  REAL(dp)                 :: fac(3,nspin), sus(3,3), DDOT
   ! auxiliary variables
-  real(DP) , allocatable :: qmod(:), ylmk0(:,:), dylmk0(:,:), tbecsum(:,:)
+  REAL(DP) , ALLOCATABLE :: qmod(:), ylmk0(:,:), dylmk0(:,:), tbecsum(:,:)
   ! work space (real)
   !
   !
   sus(:,:) = 0.d0
   !
-  allocate ( aux1(ngm), aux2(ngm,nspin), qmod(ngm) )
-  allocate ( ylmk0(ngm,lmaxq*lmaxq), dylmk0(ngm,lmaxq*lmaxq) )
+  ALLOCATE ( aux1(ngm,3), aux2(ngm,nspin), qmod(ngm) )
+  ALLOCATE ( ylmk0(ngm,lmaxq*lmaxq), dylmk0(ngm,lmaxq*lmaxq) )
   !
-  call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
-!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig)
-  do ig = 1, ngm
+  CALL ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
+!$omp parallel do default(shared) private(ig)
+  DO ig = 1, ngm
      qmod (ig) = sqrt (gg (ig) )
-  enddo
-!$OMP END PARALLEL DO
+  ENDDO
+!$omp end parallel do
   !
   ! fourier transform of the total effective potential
   !
-  allocate ( vg(ngm,nspin))
-  allocate ( aux(dfftp%nnr) )
-  do is = 1, nspin
-     if ( nspin == 4 .and. is /= 1 ) then
+  ALLOCATE ( vg(ngm,nspin))
+  ALLOCATE ( aux(dfftp%nnr) )
+  DO is = 1, nspin
+     IF ( nspin == 4 .and. is /= 1 ) THEN
         aux(:) = v%of_r(:,is)
      ELSE
         aux(:) = vltot(:) + v%of_r(:,is)
-     END IF
+     ENDIF
      CALL fwfft ('Dense', aux, dfftp)
-     do ig = 1, ngm
+     DO ig = 1, ngm
         vg (ig, is) = aux (nl (ig) )
-     enddo
-  enddo
-  deallocate ( aux )
+     ENDDO
+  ENDDO
+  DEALLOCATE ( aux )
   !
   ! here we compute the integral Q*V for each atom,
   !       I = sum_G i G_a exp(-iR.G) Q_nm v^*
   ! (no contribution from G=0)
   !
-  do ipol = 1, 3
-     call dylmr2 (lmaxq * lmaxq, ngm, g, gg, dylmk0, ipol)
-     do nt = 1, ntyp
-        if ( upf(nt)%tvanp ) then
+  DO ipol = 1, 3
+     CALL dylmr2 (lmaxq * lmaxq, ngm, g, gg, dylmk0, ipol)
+     DO nt = 1, ntyp
+        IF ( upf(nt)%tvanp ) THEN
            nij = nh(nt)*(nh(nt)+1)/2
-           allocate (qgm(ngm,nij), tbecsum(nij,nspin) )
+           ALLOCATE (qgm(ngm,nij), tbecsum(nij,nspin) )
            ijh = 0
-           do ih = 1, nh (nt)
-              do jh = ih, nh (nt)
+           DO ih = 1, nh (nt)
+              DO jh = ih, nh (nt)
                  ijh = ijh + 1
-                 call dqvan2 (ngm, ih, jh, nt, qmod, qgm(1,ijh), ylmk0, &
+                 CALL dqvan2 (ngm, ih, jh, nt, qmod, qgm(1,ijh), ylmk0, &
                       dylmk0, ipol)
-              end do
-           end do
+              ENDDO
+           ENDDO
            !
-           do na = 1, nat
-              if (ityp (na) == nt) then
+           DO na = 1, nat
+              IF (ityp (na) == nt) THEN
                  !
                  tbecsum(:,:) = becsum(1:nij,na,1:nspin)
                  !
                  CALL dgemm( 'N', 'N', 2*ngm, nspin, nij, 1.0_dp, &
                       qgm, 2*ngm, tbecsum, nij, 0.0_dp, aux2, 2*ngm )
-                 do is = 1, nspin
-                    do jpol = 1, ipol
-!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig, cfac)
-                       do ig = 1, ngm
-                          cfac = vg (ig, is) * &
-                               CONJG( eigts1 (mill (1,ig), na) * &
-                               eigts2 (mill (2,ig), na) * &
-                               eigts3 (mill (3,ig), na) )
-                          aux1 (ig) = cfac * g (jpol, ig)
-                       enddo
-!$OMP END PARALLEL DO
-                       !
-                       !    and the product with the Q functions
-                       !
-                       ps = omega * ddot (2 * ngm, aux1, 1, aux2(1,is), 1)
-                       sus (ipol, jpol) = sus (ipol, jpol) - ps
-                    enddo
-                 enddo
-              endif
-           enddo
-           deallocate ( tbecsum, qgm )
-        endif
-     enddo
+                 !
+!$omp parallel do default(shared) private(is, ig)
+                 DO is = 1, nspin
+                    DO ig = 1, ngm
+                       aux2(ig,is) = aux2(ig,is) * CONJG(vg (ig, is))
+                    END DO
+                 END DO
+!$omp end parallel do
+!$omp parallel do default(shared) private(ig, cfac)
+                 DO ig = 1, ngm
+                    cfac = CONJG( eigts1 (mill (1,ig), na) * &
+                                  eigts2 (mill (2,ig), na) * &
+                                  eigts3 (mill (3,ig), na) )
+                     aux1 (ig,1) = cfac * g (1, ig)
+                     aux1 (ig,2) = cfac * g (2, ig)
+                     aux1 (ig,3) = cfac * g (3, ig)
+                ENDDO
+!$omp end parallel do
+                CALL DGEMM('T','N', 3, nspin, 2*ngm, 1.0_dp, aux1, 2*ngm, &
+                           aux2, 2*ngm, 0.0_dp, fac, 3 )    
+                DO is = 1, nspin
+                   DO jpol = 1, ipol
+                      sus (ipol, jpol) = sus (ipol, jpol) - omega * &
+                          fac (jpol, is)
+              !!!          DDOT ( 2*ngm, aux1(1,jpol), 1, aux2(1,is), 1 )
+                   ENDDO
+                ENDDO
+              ENDIF
+           ENDDO
+           DEALLOCATE ( tbecsum, qgm )
+        ENDIF
+     ENDDO
 
-  enddo
+  ENDDO
 
-  if (gamma_only) then
-     sigmanlc(:,:) = sigmanlc(:,:) + 2.d0*sus(:,:)
-  else
+  IF (gamma_only) THEN
+     sigmanlc(:,:) = sigmanlc(:,:) + 2.0_dp*sus(:,:)
+  ELSE
      sigmanlc(:,:) = sigmanlc(:,:) + sus(:,:)
-  end if
-  deallocate (ylmk0, dylmk0)
-  deallocate (aux1, aux2, vg, qmod)
+  ENDIF
+  DEALLOCATE (ylmk0, dylmk0)
+  DEALLOCATE (aux1, aux2, vg, qmod)
 
-  return
+  RETURN
 
-end subroutine addusstres
+END SUBROUTINE addusstres
 
