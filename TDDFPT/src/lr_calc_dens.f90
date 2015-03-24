@@ -578,7 +578,7 @@ CONTAINS
  SUBROUTINE lr_calc_dens_k
     !
     ! Generalised k-points case
-    ! I. Timov: Task groups parallelisation is not implemented here.
+    ! I. Timrov: Task groups parallelisation is not implemented here.
     !
     USE becmod,              ONLY : bec_type, becp, calbec
     USE lr_variables,        ONLY : becp1_c

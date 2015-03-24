@@ -32,7 +32,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi)
   use cell_base,             only : tpiba2
   USE control_ph,            ONLY : nbnd_occ
   use lsda_mod,              only : current_spin
-  USE io_files,              ONLY : iunigk, nwordwfc, iunwfc, prefix, diropn
+  USE io_files,              ONLY : iunigk, iunwfc, prefix, diropn
   use uspp,                  only : vkb, okvan
   USE phus,                  ONLY : becp1
   USE becmod,                ONLY : calbec

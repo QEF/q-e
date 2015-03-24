@@ -47,7 +47,7 @@ SUBROUTINE lr_read_wf_eels_periodic()
   !
   IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
   !
-  CALL diropn ( iunwfc, 'wfc', nwordwfc, exst)
+  CALL diropn ( iunwfc, 'wfc', 2*nwordwfc, exst)
   !
   IF (.not.exst .and. wfc_dir == 'undefined') &
      & CALL errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
@@ -57,14 +57,14 @@ SUBROUTINE lr_read_wf_eels_periodic()
      WRITE( stdout, '(/5x,"Attempting to read wfc from outdir instead of wfcdir")' )
      CLOSE( UNIT = iunwfc)
      tmp_dir = tmp_dir_saved
-     CALL diropn ( iunwfc, 'wfc', nwordwfc, exst)
+     CALL diropn ( iunwfc, 'wfc', 2*nwordwfc, exst)
      IF (.not.exst) CALL errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
      !
   ENDIF
   !
   DO ik = 1, nksq
      !
-     CALL davcio(evc0(:,:,ik),nwordwfc,iunwfc,ik,-1)
+     CALL davcio(evc0(:,:,ik),2*nwordwfc,iunwfc,ik,-1)
      !
   ENDDO
   !

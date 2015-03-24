@@ -123,7 +123,7 @@ SUBROUTINE lr_init_nfo()
   !
   nwordd0psi   = 2 * nbnd * npwx * npol * nksq
   nwordrestart = 2 * nbnd * npwx * npol * nksq
-  nwordwfc     = 2 * nbnd * npwx * npol 
+  nwordwfc     =     nbnd * npwx * npol 
   !
   ! Open the file to read the wavefunctions at k and k+q 
   ! after the nscf calculation.

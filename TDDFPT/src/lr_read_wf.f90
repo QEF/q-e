@@ -75,7 +75,7 @@ SUBROUTINE lr_read_wf()
   !
   IF ( dft_is_hybrid() ) THEN
      !
-     CALL open_buffer ( iunwfc, 'wfc', nwordwfc/2, io_level, exst ) 
+     CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst ) 
      CALL exx_grid_init()
      CALL exx_div_check()
      CALL exx_restart(.true.)
@@ -133,7 +133,7 @@ SUBROUTINE normal_read()
   !    
   wfc_dir = tmp_dir
   !
-  CALL diropn ( iunwfc, 'wfc', nwordwfc, exst)
+  CALL diropn ( iunwfc, 'wfc', 2*nwordwfc, exst)
   !
   IF (.NOT.exst .AND. wfc_dir == 'undefined') &
       & CALL errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1) 
@@ -143,7 +143,7 @@ SUBROUTINE normal_read()
      WRITE( stdout, '(/5x,"Attempting to read wfc from outdir instead of wfcdir")' ) 
      CLOSE( UNIT = iunwfc)
      tmp_dir = tmp_dir_saved
-     CALL diropn ( iunwfc, 'wfc', nwordwfc, exst)
+     CALL diropn ( iunwfc, 'wfc', 2*nwordwfc, exst)
      IF (.NOT.exst) CALL errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
      !
   ENDIF
@@ -156,7 +156,7 @@ SUBROUTINE normal_read()
   !
   DO ik = 1, nks
      !
-     CALL davcio(evc0(:,:,ik),nwordwfc,iunwfc,ik,-1)
+     CALL davcio(evc0(:,:,ik),2*nwordwfc,iunwfc,ik,-1)
      !
   ENDDO
   !
@@ -350,7 +350,7 @@ SUBROUTINE virt_read()
   !   
   wfc_dir = tmp_dir
   !      
-  CALL diropn ( iunwfc, 'wfc', nwordwfc, exst)
+  CALL diropn ( iunwfc, 'wfc', 2*nwordwfc, exst)
   !  
   IF (.NOT.exst .AND. wfc_dir == 'undefined') &
      & CALL errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
@@ -359,7 +359,7 @@ SUBROUTINE virt_read()
      WRITE( stdout, '(/5x,"Attempting to read from outdir instead of wfcdir")' )
      CLOSE( UNIT = iunwfc)
      tmp_dir = tmp_dir_saved
-     CALL diropn ( iunwfc, 'wfc', nwordwfc, exst)
+     CALL diropn ( iunwfc, 'wfc', 2*nwordwfc, exst)
      IF (.NOT.exst) CALL errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
   ENDIF
   ! 
@@ -373,7 +373,7 @@ SUBROUTINE virt_read()
   ! This is a parallel read, done in wfc_dir.
   !
   DO ik = 1, nks
-     CALL davcio(evc_all(:,:,ik),nwordwfc,iunwfc,ik,-1)
+     CALL davcio(evc_all(:,:,ik),2*nwordwfc,iunwfc,ik,-1)
   ENDDO
   !
   CLOSE( UNIT = iunwfc)
