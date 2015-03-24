@@ -915,8 +915,29 @@ the testing phase can never be ruled out, it is very unlikely
 that this happens on the provided tests and examples. 
 \end{itemize}
 
-% This section requires an update 
+\subsubsection{Intel Xeon Phi}
+For Intel Xeon CPUs with Phi coprocessor, there are three ways of compiling:
+\begin{itemize}
+\item {\em offload} mode, executed on main CPU and offloaded onto coprocessor 
+"automagically";
+\item {\em native} mode, executed completely on coprocessor;
+\item {\em symmetric} mode, requiring creation of both binaries.
+\end{itemize}
+"You can take advantage of the offload mode using the \texttt{libxphi}
+library. This library offloads the BLAS/MKL functions on the Xeon Phi
+platform hiding the latency times due to the communication. You just 
+need to compile this library and then to link it dynamically. The 
+library works with any version of QE. Libxphi is available from
+\texttt{https://github.com/cdahnken/libxphi}. Some documentation is
+ available therein.
+
+Instead, if you want to compile a native version of QE, you just need 
+to add the \texttt{-mmic} flag and cross compile. If you want to use 
+the symmetric mode, you need to compile twice: with and without the 
+\texttt{-mmic} flag." (info by Fabio Affinito, March 2015)
+
 \subsubsection{Cray machines}
+% This section requires an update 
 
 For Cray XE machines:
 \begin{verbatim}
