@@ -1230,10 +1230,14 @@ see Sec.\ref{Sec:para} and in particular Sec.\ref{SubSec:badpara}.
 
 \subsubsection{Mac OS}
 
-Newer Mac OS-X machines (10.4 and later) with Intel CPUs are supported 
+Mac OS-X machines (10.4 and later) with Intel CPUs are supported 
 by \configure,
-with gcc4+g95, gfortran, and the Intel compiler ifort with MKL libraries.
+with gfortran and the Intel compiler ifort with MKL libraries.
 Parallel compilation with OpenMPI also works. 
+
+Gfortran information and binaries for Mac OS-X here:
+\texttt{http://hpc.sourceforge.net/} and 
+\texttt{https://wiki.helsinki.fi/display/HUGG/Installing+the+GNU+compilers+on+Mac+OS+X}.
 
 Mysterious crashes, occurring when \texttt{zdotc} is called, are due
 to the same incompatibility of complex functions with some optimized 
