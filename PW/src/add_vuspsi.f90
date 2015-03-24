@@ -116,10 +116,12 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
                 ! Next operation computes ps(l',i) = \sum_m deeq(l,m) becp(m',i)
                 ! (l'=l+ijkb0, m'=m+ijkb0, indices run from 1 to nh(nt))
                 !
-                CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
+                if(m_loc>0)then
+                  CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
                            deeq(1,1,na,current_spin), nhm, &
                            becp%r(indv_ijkb0(na)+1,1), nkb, 0.0_dp, &
                                ps(indv_ijkb0(na)+1,1), nkb )
+                endif
                 !
              END IF
              !

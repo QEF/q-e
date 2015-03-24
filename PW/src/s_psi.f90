@@ -145,10 +145,12 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
                    ! Next operation computes ps(l',i)=\sum_m qq(l,m) becp(m',i)
                    ! (l'=l+ijkb0, m'=m+ijkb0, indices run from 1 to nh(nt))
                    !
-                   CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
+                   if(m_loc>0)then
+                    CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
                         qq(1,1,nt), nhm, &
                         becp%r(indv_ijkb0(na)+1,1), nkb, 0.0_dp, &
                             ps(indv_ijkb0(na)+1,1), nkb )
+                   endif
                 END IF
              END DO
           END IF
