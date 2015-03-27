@@ -5,8 +5,9 @@ New in svn version:
 
 Fixed in svn version:
 
+   * PP: projwfc.x wasn't working any longer for noncolinear case without
+     spin-orbit in 5.1.x versions
    * PW: ordering of beta functions incorrect in USPP + hybrid functionals.
-     This case seems to work and has been enabled again.
 
 New in 5.1.2 version:
 

@@ -308,19 +308,19 @@ MODULE projections
                      nlmchi(nwfc)%n  =  n
                      nlmchi(nwfc)%l  =  l
                      nlmchi(nwfc)%m  =  m
-                     nlmchi(nwfc)%ind  =  m
-                     nlmchi(nwfc)%jj  =  0.d0
+                     nlmchi(nwfc)%ind=  m
+                     nlmchi(nwfc)%jj =  0.d0
                   ENDDO
                   IF ( noncolin) THEN
                      DO m = 1, 2 * l + 1
-                        nlmchi(nwfc+2*l+1)%na = na
-                        nlmchi(nwfc+2*l+1)%n  =  n
-                        nlmchi(nwfc+2*l+1)%l  =  l
-                        nlmchi(nwfc+2*l+1)%m  =  m
-                        nlmchi(nwfc+2*l+1)%ind  =  m+2*l+1
-                        nlmchi(nwfc+2*l+1)%jj  =  0.d0
+                        nwfc=nwfc+1
+                        nlmchi(nwfc)%na = na
+                        nlmchi(nwfc)%n  =  n
+                        nlmchi(nwfc)%l  =  l
+                        nlmchi(nwfc)%m  =  m
+                        nlmchi(nwfc)%ind=  m+2*l+1
+                        nlmchi(nwfc)%jj =  0.d0
                      END DO
-                     nwfc=nwfc+2*l+1
                   ENDIF
                ENDIF
             ENDIF
