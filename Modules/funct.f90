@@ -761,7 +761,7 @@ CONTAINS
      get_screening_parameter = screening_parameter
      return
   end function get_screening_parameter
-  !-----------------------------------------------------------------------
+  !---------------------------------------------------------------------
   subroutine set_gau_parameter (gauparm_)
      implicit none
      real(DP):: gauparm_

@@ -139,7 +139,7 @@ MODULE pw_restart
                                        get_gau_parameter, &
                                        get_screening_parameter, exx_is_active
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
-                                       exxdiv_treatment, yukawa, ecutvcut
+                                       exxdiv_treatment, yukawa, ecutvcut, ecutfock
       USE cellmd,               ONLY : lmovecell, cell_factor 
       USE martyna_tuckerman,    ONLY : do_comp_mt
       USE esm,                  ONLY : do_comp_esm
@@ -445,7 +445,7 @@ MODULE pw_restart
                        ( x_gamma_extrapolation, nq1, nq2, nq3, &
                          exxdiv_treatment, yukawa, ecutvcut, &
                          get_exx_fraction(), get_gau_parameter(), &
-                         get_screening_parameter(), exx_is_active() )
+                         get_screening_parameter(), exx_is_active(), ecutfock )
          !
 !-------------------------------------------------------------------------------
 ! ... OCCUPATIONS
@@ -2606,7 +2606,7 @@ MODULE pw_restart
       USE funct,                ONLY : set_exx_fraction, set_screening_parameter, &
                                        set_gau_parameter, enforce_input_dft, start_exx
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
-                                       exxdiv_treatment, yukawa, ecutvcut
+                                       exxdiv_treatment, yukawa, ecutvcut, ecutfock
       IMPLICIT NONE
       !
       INTEGER,          INTENT(OUT) :: ierr
@@ -2618,7 +2618,7 @@ MODULE pw_restart
               NQX1=nq1, NQX2=nq2, NQX3=nq3, EXXDIV_TREATMENT=exxdiv_treatment, &
               YUKAWA = yukawa, ECUTVCUT=ecutvcut, EXX_FRACTION=exx_fraction, &
               SCREENING_PARAMETER=screening_parameter, GAU_PARAMETER=gau_parameter, &
-              EXX_IS_ACTIVE=exx_is_active, FOUND=found, IERR=ierr )
+              EXX_IS_ACTIVE=exx_is_active, ECUTFOCK=ecutfock, FOUND=found, IERR=ierr )
          !
       ENDIF
       !
@@ -2640,6 +2640,7 @@ MODULE pw_restart
       CALL mp_bcast( screening_parameter, ionode_id, intra_image_comm )
       CALL mp_bcast( gau_parameter, ionode_id, intra_image_comm )
       CALL mp_bcast( exx_is_active, ionode_id, intra_image_comm )
+      CALL mp_bcast( ecutfock, ionode_id, intra_image_comm )
       !
       CALL set_exx_fraction(exx_fraction)
       CALL set_screening_parameter(screening_parameter)
