@@ -438,7 +438,7 @@ Fortran-95 compiler with MPI and OpenMP libraries bundled with
 the software. Workstations or ``commodity'' machines, using PC 
 hardware, may or may not have the needed software. If not, you need 
 either to buy a commercial product (e.g Portland) or to install
-an open-source compiler like gfortran or g95. 
+an open-source compiler like gfortran from the gcc distribution.
 Note that several commercial compilers are available free of charge
 under some license for academic or personal usage (e.g. Intel, Sun). 
 
@@ -929,12 +929,16 @@ platform hiding the latency times due to the communication. You just
 need to compile this library and then to link it dynamically. The 
 library works with any version of QE. Libxphi is available from
 \texttt{https://github.com/cdahnken/libxphi}. Some documentation is
- available therein.
+available therein.
 
 Instead, if you want to compile a native version of QE, you just need 
 to add the \texttt{-mmic} flag and cross compile. If you want to use 
 the symmetric mode, you need to compile twice: with and without the 
-\texttt{-mmic} flag." (info by Fabio Affinito, March 2015)
+\texttt{-mmic} flag". "[...] everything, i.e. code+libraries, must be 
+cross-compiled with the \texttt{-mmic} flag. In my opinion, it's pretty 
+unlikely that native mode can outperform the execution on the standard 
+Xeon cpu. I strongly suggest to use the Xeon Phi in offload mode, for now"
+(info by Fabio Affinito, March 2015).
 
 \subsubsection{Cray machines}
 % This section requires an update 
@@ -1093,10 +1097,10 @@ GFORTRAN\_UNBUFFERED\_ALL=1 is set. Newer 4.4/4.5 versions
 
 \paragraph{Linux PCs with g95}
 
-g95 v.0.91 and later versions (\texttt{http://www.g95.org}) work. 
-The executables that produce are however slower (let us say 20\% or so) 
-that those produced by gfortran, which in turn are slower 
-(by another 20\% or so) than those produced by ifort.
+g95 v.0.91 and later versions (\texttt{http://www.g95.org}) should
+work, but the executables it produces are noticieably slower than
+those of other compilers. Also notice that the development of g95
+seems to have stopped. 
 
 \paragraph{Linux PCs with Sun Studio compiler}
 
@@ -1231,8 +1235,8 @@ see Sec.\ref{Sec:para} and in particular Sec.\ref{SubSec:badpara}.
 \subsubsection{Mac OS}
 
 Mac OS-X machines (10.4 and later) with Intel CPUs are supported 
-by \configure,
-with gfortran and the Intel compiler ifort with MKL libraries.
+by \configure, both with gfortran and with the Intel compiler ifort
+and MKL libraries.
 Parallel compilation with OpenMPI also works. 
 
 Gfortran information and binaries for Mac OS-X here:
