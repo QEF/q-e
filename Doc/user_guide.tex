@@ -1633,6 +1633,27 @@ For very large \cpx\ runs, you may consider using
 \subsection{Tricks and problems}
 \label{SubSec:badpara}
 
+Many problems in parallel execution derive from the mixup of different 
+MPI libraries and runtime environments. There are two major MPI 
+implementations, OpenMPI and MPICH, coming in various versions, 
+not necessarily compatible; plus vendor-specific implementations
+(e.g. Intel MPI). A parallel machine may have multiple parallel
+compilers (typically, \texttt{mpif90} scripts calling different 
+serial compilers), multiple MPI libraries, multiple launchers
+for parallel codes (different versions of \texttt{mpirun} and/or
+\texttt{mpiexec}). You have to figure out the proper combination
+of all of the above, which may require using command \texttt{module} 
+or manually setting environment variables and execution paths.
+What exactly has to be done depends upon the configuration of your
+machine. You should inquire with your system administrator or user
+support (if available; if not, YOU are the system administrator 
+and user support and YOU have to solve your problems).
+
+Always verify if your executable is actually compiled for
+parallel execution or not: it is declared in the first lines
+of output. Running several instances of a serial code with
+\texttt{mpirun} or \texttt{mpiexec} produces strange crashes.
+
 \paragraph{Trouble with input files}
 Some implementations of the MPI library have problems with input 
 redirection in parallel. This typically shows up under the form of
