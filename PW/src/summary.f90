@@ -478,10 +478,10 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
   USE symm_base,       ONLY : nsym, nsym_ns, nsym_na, invsym, s, sr, &
                               t_rev, ftau, sname
   USE rap_point_group, ONLY : code_group, nclass, nelem, elem, &
-       which_irr, char_mat, name_rap, name_class, gname, ir_ram
+       which_irr, char_mat, name_rap, name_class, gname, ir_ram, elem_name
   USE rap_point_group_so, ONLY : nrap, nelem_so, elem_so, has_e, &
        which_irr_so, char_mat_so, name_rap_so, name_class_so, d_spin, &
-       name_class_so1
+       name_class_so1, elem_name_so
   USE rap_point_group_is, ONLY : nsym_is, sr_is, ftau_is, d_spin_is, &
        gname_is, sname_is, code_group_is
   USE cell_base,       ONLY : at
@@ -585,6 +585,8 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
              has_e,nclass,nelem_so,elem_so,which_irr_so)
         IF (nclass.ne.nclass_ref) CALL errore('summary', &
              'point double group ?',1)
+        CALL set_class_el_name_so(nsym_is,sname_is,has_e,nclass,nelem_so, &
+                                  elem_so,elem_name_so)
      ELSE
         IF (noncolin) THEN
            CALL set_irr_rap_so(code_group,nclass_ref,nrap,char_mat_so, &
@@ -593,11 +595,14 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
                 nelem_so, elem_so,which_irr_so)
            IF (nclass.ne.nclass_ref) CALL errore('summary', &
                 'point double group ?',1)
+           CALL set_class_el_name_so(nsym,sname,has_e,nclass,nelem_so, &
+                                     elem_so,elem_name_so)
         ELSE
            CALL set_irr_rap(code_group,nclass_ref,char_mat,name_rap, &
                 name_class,ir_ram)
            CALL divide_class(code_group,nsym,sr,nclass,nelem,elem,which_irr)
            IF (nclass.ne.nclass_ref) CALL errore('summary','point group ?',1)
+           CALL set_class_el_name(nsym,sname,nclass,nelem,elem,elem_name)
         ENDIF
      ENDIF
      CALL write_group_info(.true.)
