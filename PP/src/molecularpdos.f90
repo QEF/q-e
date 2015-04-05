@@ -154,12 +154,12 @@ PROGRAM molecularpdos
      ALLOCATE (projs_mo_sq(i_bnd_beg_part:i_bnd_end_part, i_bnd_beg_full:i_bnd_end_full, nkstot))
      !
      WRITE( stdout,'(/5x,"Molecular orbitals used for projection")' )
-     WRITE( stdout,'( 5x,"(data for the full system from file ",A,")")' ), TRIM(xmlfile_full)
-     WRITE( stdout,'( 5x,"Atomic wavefunctions used: ",i5," - ",i5/)'), i_atmwfc_beg_full, i_atmwfc_end_full
+     WRITE( stdout,'( 5x,"(data for the full system from file ",A,")")' ) TRIM(xmlfile_full)
+     WRITE( stdout,'( 5x,"Atomic wavefunctions used: ",i5," - ",i5/)') i_atmwfc_beg_full, i_atmwfc_end_full
      !
-     WRITE( stdout,'( 5x,"Projecting onto eigenvectors number: ",i5," - ",i5)'), i_bnd_beg_part, i_bnd_end_part
-     WRITE( stdout,'( 5x,"(of the subsytem described in file ",A,")")' ), TRIM(xmlfile_part)
-     WRITE( stdout,'( 5x,"Atomic wavefunctions used: ",i5," - ",i5/)'), i_atmwfc_beg_part, i_atmwfc_end_part
+     WRITE( stdout,'( 5x,"Projecting onto eigenvectors number: ",i5," - ",i5)') i_bnd_beg_part, i_bnd_end_part
+     WRITE( stdout,'( 5x,"(of the subsytem described in file ",A,")")' ) TRIM(xmlfile_part)
+     WRITE( stdout,'( 5x,"Atomic wavefunctions used: ",i5," - ",i5/)') i_atmwfc_beg_part, i_atmwfc_end_part
      !
      ! Compute the projection of full-system eigenvectors over part-system ones
      DO ik=1,nkstot
