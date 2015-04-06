@@ -50,7 +50,8 @@ exchange_custom.o \
 mp_wave_parallel.o \
 wannier_bse.o\
 hpsi_pw4gww.o \
-cgsolve_all_gamma.o 
+cgsolve_all_gamma.o \
+realus.o 
 
 QEMODS = ../../Modules/libqemod.a
 PWOBJS = ../../PW/src/libpw.a

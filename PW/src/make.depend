@@ -219,6 +219,7 @@ c_phase_field.o : bp_mod.o
 c_phase_field.o : buffers.o
 c_phase_field.o : pwcom.o
 ccgdiagg.o : ../../Modules/constants.o
+ccgdiagg.o : ../../Modules/io_global.o
 ccgdiagg.o : ../../Modules/kind.o
 ccgdiagg.o : ../../Modules/mp.o
 ccgdiagg.o : ../../Modules/mp_bands.o
@@ -275,16 +276,14 @@ close_files.o : buffers.o
 close_files.o : ldaU.o
 close_files.o : pwcom.o
 compute_becsum.o : ../../Modules/becmod.o
-compute_becsum.o : ../../Modules/cell_base.o
 compute_becsum.o : ../../Modules/control_flags.o
 compute_becsum.o : ../../Modules/io_files.o
-compute_becsum.o : ../../Modules/ions_base.o
 compute_becsum.o : ../../Modules/kind.o
 compute_becsum.o : ../../Modules/mp.o
+compute_becsum.o : ../../Modules/mp_bands.o
 compute_becsum.o : ../../Modules/mp_pools.o
 compute_becsum.o : ../../Modules/noncol.o
 compute_becsum.o : ../../Modules/paw_variables.o
-compute_becsum.o : ../../Modules/recvec.o
 compute_becsum.o : ../../Modules/uspp.o
 compute_becsum.o : ../../Modules/wavefunctions.o
 compute_becsum.o : buffers.o
@@ -1383,6 +1382,7 @@ qvan2.o : ../../Modules/kind.o
 qvan2.o : ../../Modules/uspp.o
 qvan2.o : pwcom.o
 rcgdiagg.o : ../../Modules/constants.o
+rcgdiagg.o : ../../Modules/io_global.o
 rcgdiagg.o : ../../Modules/kind.o
 rcgdiagg.o : ../../Modules/mp.o
 rcgdiagg.o : ../../Modules/mp_bands.o
