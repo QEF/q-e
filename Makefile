@@ -24,7 +24,6 @@ default :
 	@echo '  want         Quantum Transport with Wannier functions'
 	@echo '  yambo        electronic excitations with plane waves'
 	@echo '  plumed       Metadynamics plugin for pw or cp'
-	@echo '  epw          Electron-Phonon Coupling with wannier functions, EPW package' 
 	@echo '  gpu          Download the latest QE-GPU package'
 	@echo '  couple       Library interface for coupling to external codes'
 	@echo '  clean        remove executables and objects'
@@ -34,6 +33,9 @@ default :
 	 echo '  tar-gui      create a standalone PWgui tarball from the GUI sources'; fi
 	@echo '  doc          build documentation'
 	@echo '  links        create links to all executables in bin/'
+#	@echo '  epw          Electron-Phonon Coupling with wannier functions, EPW package' 
+gww:
+	@echo '"make gww" is obsolete, use "make gwl" instead '
 
 ###########################################################
 # Main targets
@@ -153,8 +155,8 @@ yambo: touch-dummy
 plumed: touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-epw: touch-dummy
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+#epw: touch-dummy
+#	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 gpu: touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )

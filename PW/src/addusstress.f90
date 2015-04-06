@@ -35,7 +35,7 @@ SUBROUTINE addusstres (sigmanlc)
   COMPLEX(DP), ALLOCATABLE :: aux(:), aux1(:,:), aux2(:,:), vg(:,:), qgm(:,:)
   ! work space (complex)
   COMPLEX(DP)              :: cfac
-  REAL(dp)                 :: fac(3,nspin), sus(3,3), DDOT
+  REAL(dp)                 :: fac(3,nspin), sus(3,3)
   ! auxiliary variables
   REAL(DP) , ALLOCATABLE :: qmod(:), ylmk0(:,:), dylmk0(:,:), tbecsum(:,:)
   ! work space (real)
@@ -120,7 +120,6 @@ SUBROUTINE addusstres (sigmanlc)
                    DO jpol = 1, ipol
                       sus (ipol, jpol) = sus (ipol, jpol) - omega * &
                           fac (jpol, is)
-              !!!          DDOT ( 2*ngm, aux1(1,jpol), 1, aux2(1,is), 1 )
                    ENDDO
                 ENDDO
               ENDIF
