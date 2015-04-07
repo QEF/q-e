@@ -136,8 +136,8 @@ SUBROUTINE addusdens_g(rho)
              ENDDO
            ENDDO
         ENDDO
+        DEALLOCATE (aux2, tbecsum, skk )
      ENDIF
-     DEALLOCATE (aux2, tbecsum, skk )
   ENDDO
   !
   DEALLOCATE (ylmk0)
