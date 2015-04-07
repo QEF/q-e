@@ -7,7 +7,7 @@ include ../../make.sys
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../EE $(MOD_FLAG)../../PW/src $(MOD_FLAG).
+          $(MOD_FLAG)../../PW/src $(MOD_FLAG).
 
 #location of needed libraries
 LIBOBJS= ../../iotk/src/libiotk.a ../../flib/flib.a \
@@ -27,17 +27,17 @@ all : tldeps fd.x fd_ifc.x fd_ef.x
 
 fd_ifc.x : fd_ifc.o libfd.a  $(FDOBJS) $(PWOBJS) $(QEMODS)  
 	$(LD) $(LDFLAGS) -o $@ \
-	fd_ifc.o libfd.a $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+	fd_ifc.o libfd.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/FD/$@ . )
 
 fd.x : fd.o libfd.a  $(FDOBJS) $(PWOBJS) $(QEMODS)  
 	$(LD) $(LDFLAGS) -o $@ \
-	fd.o libfd.a $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+	fd.o libfd.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) 
 	- ( cd ../../bin ; ln -fs ../PHonon/FD/$@ . )
 
 fd_ef.x : fd_ef.o libfd.a  $(FDOBJS) $(PWOBJS) $(QEMODS)  
 	$(LD) $(LDFLAGS) -o $@ \
-	fd_ef.o libfd.a $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+	fd_ef.o libfd.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/FD/$@ . )
 tldeps :
 	if test -n "$(TLDEPS)" ; then \
