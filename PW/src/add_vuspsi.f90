@@ -109,6 +109,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        DO nt = 1, ntyp
           !
+          IF ( nh(nt) == 0 ) CYCLE
           DO na = 1, nat
              !
              IF ( ityp(na) == nt ) THEN
@@ -116,12 +117,12 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
                 ! Next operation computes ps(l',i) = \sum_m deeq(l,m) becp(m',i)
                 ! (l'=l+ijkb0, m'=m+ijkb0, indices run from 1 to nh(nt))
                 !
-                if(m_loc>0)then
+                IF ( m_loc > 0 ) THEN
                   CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
                            deeq(1,1,na,current_spin), nhm, &
                            becp%r(indv_ijkb0(na)+1,1), nkb, 0.0_dp, &
                                ps(indv_ijkb0(na)+1,1), nkb )
-                endif
+                END IF
                 !
              END IF
              !
@@ -189,6 +190,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        DO nt = 1, ntyp
           !
+          IF ( nh(nt) == 0 ) CYCLE
           ALLOCATE ( deeaux(nh(nt),nh(nt)) )
           DO na = 1, nat
              !
@@ -199,9 +201,9 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
                 !
                 deeaux(:,:) = CMPLX(deeq(1:nh(nt),1:nh(nt),na,current_spin),&
                                     0.0_dp, KIND=dp )
-                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), deeaux, nh(nt),&
-                           becp%k(indv_ijkb0(na)+1,1), nkb, (0.0_dp, 0.0_dp), &
-                               ps(indv_ijkb0(na)+1,1), nkb )
+                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
+                           deeaux, nh(nt), becp%k(indv_ijkb0(na)+1,1), nkb, &
+                          (0.0_dp, 0.0_dp), ps(indv_ijkb0(na)+1,1), nkb )
                 !
              END IF
              !
@@ -238,6 +240,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        DO nt = 1, ntyp
           !
+          IF ( nh(nt) == 0 ) CYCLE
           DO na = 1, nat
              !
              IF ( ityp(na) == nt ) THEN
