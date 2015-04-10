@@ -245,28 +245,28 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
              !
              IF ( ityp(na) == nt ) THEN
                 !
-                ! The quantities to be computed are:
-                !  ps(ikb,1,ibnd) = ps(ikb,1,ibnd) +
-                !                   deeq_nc(ih,jh,na,1)*becp%nc(jkb,1,ibnd) + 
-                !                   deeq_nc(ih,jh,na,2)*becp%nc(jkb,2,ibnd) 
-                !  ps(ikb,2,ibnd) = ps(ikb,2,ibnd) + 
-                !                   deeq_nc(ih,jh,na,3)*becp%nc(jkb,1,ibnd) +
-                !                   deeq_nc(ih,jh,na,4)*becp%nc(jkb,2,ibnd) 
-                ! Not sure this is the best solution to use zgemm, though:
-                !
-                ijkb0 = indv_ijkb0(na)+1
-                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeq_nc(1,1,na,1), nh(nt), becp%nc(ijkb0,1,1),2*nkb,&
-                           (0.0_dp,0.0_dp), ps(ijkb0,1,1), 2*nkb )
-                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeq_nc(1,1,na,2), nh(nt), becp%nc(ijkb0,2,1),2*nkb,&
-                           (1.0_dp,0.0_dp), ps(ijkb0,1,1), 2*nkb )
-                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeq_nc(1,1,na,3), nh(nt), becp%nc(ijkb0,1,1),2*nkb,&
-                           (0.0_dp,0.0_dp), ps(ijkb0,2,1), 2*nkb )
-                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeq_nc(1,1,na,4), nh(nt), becp%nc(ijkb0,2,1),2*nkb,&
-                           (1.0_dp,0.0_dp), ps(ijkb0,2,1), 2*nkb )
+                DO ibnd = 1, m
+                   !
+                   DO jh = 1, nh(nt)
+                      !
+                      jkb = indv_ijkb0(na) + jh
+                      !
+                      DO ih = 1, nh(nt)
+                         !
+                         ikb = indv_ijkb0(na) + ih
+                         !
+                         ps(ikb,1,ibnd) = ps(ikb,1,ibnd) +    & 
+                              deeq_nc(ih,jh,na,1)*becp%nc(jkb,1,ibnd)+ & 
+                              deeq_nc(ih,jh,na,2)*becp%nc(jkb,2,ibnd) 
+                         ps(ikb,2,ibnd) = ps(ikb,2,ibnd)  +   & 
+                              deeq_nc(ih,jh,na,3)*becp%nc(jkb,1,ibnd)+&
+                              deeq_nc(ih,jh,na,4)*becp%nc(jkb,2,ibnd) 
+                         !
+                      END DO
+                      !
+                   END DO
+                   !
+                END DO
                 !
              END IF
              !

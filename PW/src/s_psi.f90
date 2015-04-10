@@ -145,12 +145,11 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
                    ! Next operation computes ps(l',i)=\sum_m qq(l,m) becp(m',i)
                    ! (l'=l+ijkb0, m'=m+ijkb0, indices run from 1 to nh(nt))
                    !
-                   if(m_loc>0)then
-                    CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
-                        qq(1,1,nt), nhm, &
-                        becp%r(indv_ijkb0(na)+1,1), nkb, 0.0_dp, &
-                            ps(indv_ijkb0(na)+1,1), nkb )
-                   endif
+                   IF ( m_loc > 0 ) THEN
+                      CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
+                                  qq(1,1,nt), nhm, becp%r(indv_ijkb0(na)+1,1),&
+                                  nkb, 0.0_dp, ps(indv_ijkb0(na)+1,1), nkb )
+                   END IF
                 END IF
              END DO
           END IF
@@ -267,9 +266,9 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        !
        !    here the local variables
        !
-       INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd, ipol, ierr
+       INTEGER :: ikb, jkb, ih, jh, na, nt, ibnd, ipol, ierr
        ! counters
-       COMPLEX (DP), ALLOCATABLE :: ps (:,:,:), qqc(:,:)
+       COMPLEX (DP), ALLOCATABLE :: ps (:,:,:)
        ! the product vkb and psi
        !
        ALLOCATE (ps(nkb,npol,m),STAT=ierr)    
@@ -277,59 +276,38 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
           CALL errore( ' s_psi_nc ', ' cannot allocate memory (ps) ', ABS(ierr) )
        ps(:,:,:) = (0.D0,0.D0)
        !
-       ijkb0 = 1
-       do nt = 1, nsp
-          if ( upf(nt)%tvanp ) then
+       DO nt = 1, nsp
+          !
+          IF ( upf(nt)%tvanp ) THEN
              !
-             IF ( .NOT. lspinorb ) THEN
-                ! qq is real:  copy it into a complex variable to perform
-                ! a zgemm - simple but sub-optimal solution
-                ALLOCATE( qqc(nh(nt),nh(nt)) )
-                qqc(:,:) = CMPLX ( qq(1:nh(nt),1:nh(nt),nt), 0.0_dp, KIND=dp )
-                DO na = 1, nat
-                   IF ( ityp(na) == nt ) THEN
-                      !  ps(ikb,ipol,ibnd) = ps(ikb,ipol,ibnd) + &
-                      !     qq(ih,jh,nt)*becp%nc(jkb,ipol,ibnd)
-                      DO ipol=1,npol
-                         CALL ZGEMM('N','N', nh(nt),m,nh(nt), (1.0_dp,0.0_dp),&
-                              qqc, nh(nt), becp%nc(indv_ijkb0(na)+1,ipol,1),  &
-                              2*nkb,(0.0_dp,0.0_dp), &
-                              ps(indv_ijkb0(na)+1,ipol,1), 2*nkb )
+             DO na = 1, nat
+                IF ( ityp(na) == nt ) THEN
+                   DO ih = 1,nh(nt)
+                      ikb = indv_ijkb0(na) + ih
+                      DO jh = 1, nh (nt)
+                         jkb = indv_ijkb0(na) + jh
+                         IF ( .NOT. lspinorb ) THEN
+                            DO ipol=1,npol
+                               DO ibnd = 1, m
+                                  ps(ikb,ipol,ibnd) = ps(ikb,ipol,ibnd) + &
+                                       qq(ih,jh,nt)*becp%nc(jkb,ipol,ibnd)
+                               END DO
+                            END DO
+                         ELSE
+                            DO ibnd = 1, m
+                               ps(ikb,1,ibnd)=ps(ikb,1,ibnd) + &
+                                    qq_so(ih,jh,1,nt)*becp%nc(jkb,1,ibnd)+ &
+                                    qq_so(ih,jh,2,nt)*becp%nc(jkb,2,ibnd)
+                               ps(ikb,2,ibnd)=ps(ikb,2,ibnd) + &
+                                    qq_so(ih,jh,3,nt)*becp%nc(jkb,1,ibnd)+ &
+                                    qq_so(ih,jh,4,nt)*becp%nc(jkb,2,ibnd)
+                            END DO
+                         END IF
                       END DO
-                      !
-                   END IF
-                END DO
-                DEALLOCATE (qqc)
-             ELSE
-                DO na = 1, nat
-                   IF (ityp (na) == nt) THEN
-                      !
-                      ! The quantities to be computed are:
-                      ! ps(ikb,1,ibnd)=ps(ikb,1,ibnd) + &
-                      !     qq_so(ih,jh,1,nt)*becp%nc(jkb,1,ibnd)+ &
-                      !     qq_so(ih,jh,2,nt)*becp%nc(jkb,2,ibnd)
-                      ! ps(ikb,2,ibnd)=ps(ikb,2,ibnd) + &
-                      !      qq_so(ih,jh,3,nt)*becp%nc(jkb,1,ibnd)+ &
-                      !      qq_so(ih,jh,4,nt)*becp%nc(jkb,2,ibnd)
-                      ! Not sure this is the best solution to use zgemm, though:
-                      !
-                      ijkb0 = indv_ijkb0(na)+1
-                      CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so(1,1,1,nt), nh(nt), becp%nc(ijkb0,1,1),2*nkb,&
-                           (0.0_dp,0.0_dp), ps(ijkb0,1,1), 2*nkb )
-                      CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so(1,1,2,nt), nh(nt), becp%nc(ijkb0,2,1),2*nkb,&
-                           (1.0_dp,0.0_dp), ps(ijkb0,1,1), 2*nkb )
-                      CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so(1,1,3,nt), nh(nt), becp%nc(ijkb0,1,1),2*nkb,&
-                           (0.0_dp,0.0_dp), ps(ijkb0,2,1), 2*nkb )
-                      CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           qq_so(1,1,4,nt), nh(nt), becp%nc(ijkb0,2,1),2*nkb,&
-                           (1.0_dp,0.0_dp), ps(ijkb0,2,1), 2*nkb )
-                   ENDIF
-                END DO
-             END IF
-          ENDIF
+                   END DO
+                END IF
+             END DO
+          END IF
        END DO
 
        call ZGEMM ('N', 'N', n, m*npol, nkb, (1.d0, 0.d0) , vkb, &
