@@ -51,12 +51,6 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'v_xc_meta' )
    END IF
    CALL print_clock( 'newd' )
-   IF ( iverbosity > 0 ) THEN
-      CALL print_clock( 'newd:fftvg' )
-      CALL print_clock( 'newd:qvan2' )
-      CALL print_clock( 'newd:int1' )
-      CALL print_clock( 'newd:int2' )
-   END IF
    CALL print_clock( 'mix_rho' )
 
    CALL print_clock( 'vdW_energy' )
@@ -184,6 +178,8 @@ SUBROUTINE print_clock_pw()
         WRITE( stdout, '(/,5X,"EXX+US routines")' )
         CALL print_clock( 'becxx' )
         CALL print_clock( 'addusxx' )
+        CALL print_clock( 'addusxx:ylmr' )
+        CALL print_clock( 'addusxx:qvan' )
         CALL print_clock( 'newdxx' )
         CALL print_clock( 'nlxx_pot' )
       ENDIF
