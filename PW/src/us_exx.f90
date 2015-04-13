@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2013 Quantum ESPRESSO group
+! Copyright (C) 2013-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,7 +7,8 @@
 !
 ! Written by Lorenzo Paulatto (2012-2013) 
 ! Gamma-only tricks by Simon Binnie
-! G-space code based on addusdens.f90 and compute_becsum.f90 
+! G-space code based on addusdens.f90 and compute_becsum.f90, modified 
+! by Paolo Giannozzi (2015) for speed
 ! Real space code based on realus.f90
 !-----------------------------------------------------------------------
 MODULE us_exx
@@ -24,17 +25,11 @@ MODULE us_exx
   IMPLICIT NONE
   SAVE
   !
-  LOGICAL,PARAMETER :: dovanxx = .true. ! DEBUG option
-  !
   TYPE(bec_type),ALLOCATABLE :: becxx(:) ! <beta_I|phi_j,k>, with the wavefunctions from exxbuff
   ! the visible index is k; while I and J are inside bec_type
 
   COMPLEX(DP),ALLOCATABLE :: becxx_gamma(:,:)  ! gamma only version of becxx%r
                                                ! two bands stored per stripe 
-  ! FIXME: put somewhere else (there is a copy in exx)
-  REAL(DP),PARAMETER :: eps_occ  = 1.d-8 ! skip band where occupation is less than this
-                                          
-
  CONTAINS ! ~~+~~---//--~~~-+
   !
   FUNCTION bexg_merge( w, m,n, imin, imax, i)
@@ -102,7 +97,7 @@ MODULE us_exx
     REAL(DP) :: arg, becfac_r
     LOGICAL :: add_complex, add_real, add_imaginary
     !
-    IF(.not.(okvan .and. dovanxx)) RETURN
+    IF(.not.okvan) RETURN
     CALL start_clock( 'addusxx' )
     !
     add_complex = ( flag=='c' .OR. flag=='C' )
@@ -292,7 +287,7 @@ MODULE us_exx
     REAL(DP) :: arg
     LOGICAL :: add_complex, add_real, add_imaginary
     !
-    IF(.not.(okvan .and. dovanxx)) RETURN
+    IF(.not.okvan) RETURN
     !
     add_complex = ( flag=='c' .OR. flag=='C' )
     add_real    = ( flag=='r' .OR. flag=='R' )
@@ -430,7 +425,7 @@ MODULE us_exx
   !-----------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
-   SUBROUTINE add_nlxx_pot(lda, hpsi, xkp, npwp, igkp, deexx, exxalfa)
+   SUBROUTINE add_nlxx_pot(lda, hpsi, xkp, npwp, igkp, deexx, eps_occ, exxalfa)
     !-----------------------------------------------------------------------
     !
     ! This subroutine computes some sort of EXX contribution to the non-local 
@@ -448,11 +443,12 @@ MODULE us_exx
     IMPLICIT NONE
     !
     ! In input I get a slice of <beta|left> and <beta|right> only for this kpoint and this band
-    INTEGER,INTENT(in)        :: lda              ! leading dimension of hpsi
-    COMPLEX(DP),INTENT(inout) :: hpsi(lda)!*npol)   ! the hamiltonian
-    COMPLEX(DP),INTENT(in)    :: deexx(nkb)       ! \int \sum_J Q_IJ <beta_J|phi_i> d3r
-    REAL(DP),INTENT(in)       :: xkp(3)           ! current k point
-    REAL(DP),INTENT(in)       :: exxalfa       ! fraction of ex. exchange to add
+    INTEGER,INTENT(in)        :: lda        ! leading dimension of hpsi
+    COMPLEX(DP),INTENT(inout) :: hpsi(lda)  ! the hamiltonian times psi
+    COMPLEX(DP),INTENT(in)    :: deexx(nkb) ! \int \sum_J Q_IJ <beta_J|phi_i> d3r
+    REAL(DP),INTENT(in)       :: xkp(3)  ! current k point
+    REAL(DP),INTENT(in)       :: exxalfa ! fraction of ex. exchange to add
+    REAL(DP),INTENT(in)       :: eps_occ ! skip band where occupation is less than this
     INTEGER,INTENT(IN)        :: npwp, igkp(npwp)
     !
     ! ... local variables
@@ -463,7 +459,7 @@ MODULE us_exx
     !
     CALL start_clock( 'nlxx_pot' )
     !
-    IF(.not.(okvan .and. dovanxx)) RETURN
+    IF(.not.okvan) RETURN
     !
     ALLOCATE(vkbp(npwx,nkb))
     !

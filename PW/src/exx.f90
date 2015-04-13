@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2005-2013 Quantum ESPRESSO group
+! Copyright (C) 2005-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,8 +16,6 @@ MODULE exx
   USE io_global,            ONLY : ionode
   USE fft_custom,           ONLY : fft_cus
   !
-  ! FIXME: put in subroutines
-  USE us_exx,  ONLY : dovanxx, eps_occ_usxx => eps_occ
   USE control_flags, ONLY : tqr
 
   IMPLICIT NONE
@@ -72,7 +70,7 @@ MODULE exx
   !
   REAL(DP)         :: eps  = 1.d-6
   REAL(DP)         :: eps_qdiv = 1.d-8 ! |q| > eps_qdiv
-  REAL(DP)         :: eps_occ  = eps_occ_usxx ! skip band where occupation is less than this
+  REAL(DP), PARAMETER :: eps_occ  = 1.d-8 ! skip band with occupation < eps_occ
   REAL(DP)         :: exxdiv = 0._dp
   CHARACTER(32)    :: exxdiv_treatment  = ''
   !
@@ -812,7 +810,7 @@ MODULE exx
     ENDIF
     !
     ! prepare space to keep the <beta_I|phi_j> scalar products (for ultrasoft/paw only)
-    IF(.not. allocated(becxx) .and. okvan .and. dovanxx) THEN 
+    IF(.not. allocated(becxx) .and. okvan) THEN 
         ALLOCATE(becxx(nkqs))
         DO ikq = 1,nkqs
             CALL allocate_bec_type( nkb, nbnd, becxx(ikq))
@@ -1107,7 +1105,7 @@ MODULE exx
     !       this way we are wasting some memory, but the fault is with uspp that should not use global
     !       variables for temporary data (lp-2012-10-03)
     !
-    IF(.not. (okvan  .and. dovanxx) ) RETURN
+    IF(.not. okvan) RETURN
     !
     CALL start_clock('becxx')
     !
@@ -1196,25 +1194,10 @@ MODULE exx
     ! ... output:
     ! ...    hpsi  Vexx*psi
     !
-    USE constants,      ONLY : fpi, e2, pi
-    USE cell_base,      ONLY : omega
-    USE gvect,          ONLY : ngm, g
-    USE gvecs,          ONLY : nls, ngms
-    USE wvfct,          ONLY : npwx, npw, igk, current_k, ecutwfc
-    USE control_flags,  ONLY : gamma_only
-    USE klist,          ONLY : xk, nks, nkstot
-    USE fft_base,       ONLY : dffts
-    USE fft_interfaces, ONLY : fwfft, invfft
     USE becmod,         ONLY : bec_type
-    USE mp_bands,       ONLY : ibnd_start, ibnd_end, inter_bgrp_comm, &
-                               intra_bgrp_comm, my_bgrp_id, nbgrp
-    USE mp,             ONLY : mp_sum, mp_barrier
-    USE uspp,           ONLY : nkb, okvan
+    USE control_flags,  ONLY : gamma_only
+    USE uspp,           ONLY : okvan
     USE paw_variables,  ONLY : okpaw
-    USE us_exx,         ONLY : bexg_merge, becxx, addusxx_g, addusxx_r, &
-                               newdxx_g, newdxx_r, add_nlxx_pot
-    USE paw_exx,        ONLY : dopawxx, PAW_newdxx
-    !
     !
     IMPLICIT NONE
     !
@@ -1308,7 +1291,7 @@ MODULE exx
     ALLOCATE( result(nrxxs), temppsic_dble(nrxxs), temppsic_aimag(nrxxs) )
     !
     ALLOCATE(rhoc(nrxxs), vc(nrxxs))
-    IF(okvan .and. dovanxx) ALLOCATE(deexx(nkb))
+    IF(okvan) ALLOCATE(deexx(nkb))
     !
     current_ik=find_current_k(current_k,nkstot,nks)
     xkp = xk_collect(:,current_ik)
@@ -1338,7 +1321,7 @@ MODULE exx
        !
        LOOP_ON_PSI_BANDS : &
        DO im = 1,m !for each band of psi (the k cycle is outside band)
-          IF(okvan .and. dovanxx) deexx(:) = 0.0_DP
+          IF(okvan) deexx(:) = 0.0_DP
           !
           result = 0.0_DP
           !
@@ -1423,7 +1406,7 @@ MODULE exx
              ! bring rho to G-space
              !
              !   >>>> add augmentation in REAL SPACE here
-             IF(okvan .and. dovanxx .AND. TQR) THEN
+             IF(okvan .AND. tqr) THEN
                 IF(ibnd>=ibnd_start) &
                 CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd)), _CX(becpsi%r(:,im)))
                 IF(ibnd<ibnd_end) &
@@ -1432,7 +1415,7 @@ MODULE exx
              !
              CALL fwfft ('Custom', rhoc, exx_fft_r2g%dfftt)
              !   >>>> add augmentation in G SPACE here
-             IF(okvan .and. dovanxx .AND. .NOT. TQR) THEN
+             IF(okvan .AND. .NOT. TQR) THEN
                 ! contribution from one band added to real (in real space) part of rhoc
                 IF(ibnd>=ibnd_start) &
                    CALL addusxx_g(rhoc, xkq,  xkp, 'r', &
@@ -1456,7 +1439,7 @@ MODULE exx
 !$omp end parallel do
              !
              !   >>>>  compute <psi|H_fock G SPACE here
-             IF(okvan .and. dovanxx .and. .not. TQR) THEN
+             IF(okvan .and. .not. TQR) THEN
                 IF(ibnd>=ibnd_start) &
                 CALL newdxx_g(vc, xkq, xkp, 'r', deexx, becphi_r=x1*becxx(ikq)%r(:,ibnd))
                 IF(ibnd<ibnd_end) &
@@ -1467,7 +1450,7 @@ MODULE exx
              CALL invfft ('Custom', vc, exx_fft_r2g%dfftt) 
              !
              !   >>>>  compute <psi|H_fock REAL SPACE here
-             IF(okvan .and. dovanxx .and. TQR) THEN
+             IF(okvan .and. tqr) THEN
                 IF(ibnd>=ibnd_start) &
                 CALL newdxx_r(vc, CMPLX(x1*becxx(ikq)%r(:,ibnd), 0.0_DP, KIND=DP), deexx)
                 IF(ibnd<ibnd_end) &
@@ -1494,7 +1477,7 @@ MODULE exx
           IBND_LOOP_GAM
           !
           !
-          IF(okvan.and.dovanxx) THEN
+          IF(okvan) THEN
              CALL mp_sum(deexx,intra_bgrp_comm)
              CALL mp_sum(deexx,inter_bgrp_comm)
           ENDIF
@@ -1511,7 +1494,8 @@ MODULE exx
           ENDDO
 !$omp end parallel do
           ! add non-local \sum_I |beta_I> \alpha_Ii (the sum on i is outside)
-          IF(okvan .and. dovanxx) CALL add_nlxx_pot(lda, hpsi(:,im), xkp, npw, igk, deexx, exxalfa)
+          IF(okvan) CALL add_nlxx_pot (lda, hpsi(:,im), xkp, npw, igk, &
+                                       deexx, eps_occ, exxalfa)
        ENDDO &
        LOOP_ON_PSI_BANDS
        !
@@ -1522,7 +1506,7 @@ MODULE exx
     !
     DEALLOCATE(rhoc, vc, fac )
     !
-    IF(okvan .and. dovanxx) DEALLOCATE( deexx )
+    IF(okvan) DEALLOCATE( deexx )
     !
     !-----------------------------------------------------------------------
   END SUBROUTINE vexx_gamma
@@ -1598,7 +1582,7 @@ MODULE exx
     ENDIF
     !
     ALLOCATE(rhoc(nrxxs), vc(nrxxs))
-    IF(okvan .and. dovanxx) ALLOCATE(deexx(nkb))
+    IF(okvan) ALLOCATE(deexx(nkb))
     !
     current_ik=find_current_k(current_k,nkstot,nks)
     xkp = xk_collect(:,current_ik)
@@ -1616,7 +1600,7 @@ MODULE exx
     !
     LOOP_ON_PSI_BANDS : &
     DO im = 1,m !for each band of psi (the k cycle is outside band)
-       IF(okvan .and. dovanxx) deexx = 0.0_DP
+       IF(okvan) deexx = 0.0_DP
        !
        IF (noncolin) THEN
           temppsic_nc = 0._DP
@@ -1690,7 +1674,7 @@ MODULE exx
 !$omp end parallel do
              ENDIF
              !   >>>> add augmentation in REAL space HERE
-             IF(okvan .and. dovanxx .AND. TQR) THEN ! augment the "charge" in real space
+             IF(okvan .AND. tqr) THEN ! augment the "charge" in real space
                 CALL addusxx_r(rhoc, becxx(ikq)%k(:,ibnd), becpsi%k(:,im))
              ENDIF
              !
@@ -1698,7 +1682,7 @@ MODULE exx
              CALL fwfft('Smooth', rhoc, dffts)
              !
              !   >>>> add augmentation in G space HERE
-             IF(okvan .and. dovanxx .AND. .NOT. TQR) THEN
+             IF(okvan .AND. .NOT. tqr) THEN
                 CALL addusxx_g(rhoc, xkq, xkp, 'c', &
                    becphi_c=becxx(ikq)%k(:,ibnd),becpsi_c=becpsi%k(:,im))
              ENDIF
@@ -1714,7 +1698,7 @@ MODULE exx
              !
              ! Add ultrasoft contribution (RECIPROCAL SPACE)
              ! compute alpha_I,j,k+q = \sum_J \int <beta_J|phi_j,k+q> V_i,j,k,q Q_I,J(r) d3r
-             IF(okvan .and. dovanxx .AND. .NOT. TQR) THEN
+             IF(okvan .AND. .NOT. tqr) THEN
                 CALL newdxx_g(vc, xkq, xkp, 'c', deexx, becphi_c=becxx(ikq)%k(:,ibnd))
              ENDIF
              !
@@ -1722,7 +1706,7 @@ MODULE exx
              CALL invfft ('Smooth', vc, dffts)
              !
              ! Add ultrasoft contribution (REAL SPACE)
-             IF(okvan .and. dovanxx .AND. TQR) CALL newdxx_r(vc, becxx(ikq)%k(:,ibnd),deexx)
+             IF(okvan .AND. TQR) CALL newdxx_r(vc, becxx(ikq)%k(:,ibnd),deexx)
              !
              ! Add PAW one-center contribution
              IF(okpaw .and. dopawxx) THEN
@@ -1756,7 +1740,7 @@ MODULE exx
        ENDDO &
        INTERNAL_LOOP_ON_Q
        !
-       IF(okvan.and.dovanxx) THEN
+       IF(okvan) THEN
          CALL mp_sum(deexx,intra_bgrp_comm)
          CALL mp_sum(deexx,inter_bgrp_comm)
        ENDIF
@@ -1799,7 +1783,8 @@ MODULE exx
        ENDIF
        !
        ! add non-local \sum_I |beta_I> \alpha_Ii (the sum on i is outside)
-       IF(okvan .and. dovanxx) CALL add_nlxx_pot(lda, hpsi(:,im), xkp, npw, igk, deexx, exxalfa)
+       IF(okvan) CALL add_nlxx_pot (lda, hpsi(:,im), xkp, npw, igk, &
+                                       deexx, eps_occ, exxalfa)
        !
     ENDDO &
     LOOP_ON_PSI_BANDS
@@ -1812,7 +1797,7 @@ MODULE exx
     !
     DEALLOCATE(rhoc, vc, fac )
     !
-    IF(okvan .and. dovanxx) DEALLOCATE( deexx)
+    IF(okvan) DEALLOCATE( deexx)
     !
     !-----------------------------------------------------------------------
   END SUBROUTINE vexx_k
@@ -1934,31 +1919,7 @@ MODULE exx
   FUNCTION exxenergy2()
     !-----------------------------------------------------------------------
     !
-    USE constants,               ONLY : fpi, e2, pi
-    USE io_files,                ONLY : iunigk,iunwfc, nwordwfc
-    USE buffers,                 ONLY : get_buffer
-    USE cell_base,               ONLY : alat, omega, bg, at, tpiba
-    USE symm_base,               ONLY : nsym, s
-    USE gvect,                   ONLY : ngm, gstart, g, nl
-    USE gvecs,                   ONLY : ngms, nls, nlsm, doublegrid
-    USE wvfct,                   ONLY : nbnd, npwx, npw, igk, wg, ecutwfc
     USE control_flags,           ONLY : gamma_only
-    USE wavefunctions_module,    ONLY : evc
-    USE klist,                   ONLY : xk, ngk, nks, nkstot
-    USE lsda_mod,                ONLY : lsda, current_spin, isk
-    USE mp_pools,                ONLY : inter_pool_comm
-    USE mp_bands,                ONLY : inter_bgrp_comm, intra_bgrp_comm, &
-                                        nbgrp, ibnd_start, ibnd_end
-    USE mp,                      ONLY : mp_sum
-    USE fft_base,                ONLY : dffts
-    USE fft_interfaces,          ONLY : fwfft, invfft
-    USE gvect,                   ONLY : ecutrho
-    USE klist,                   ONLY : wk
-    USE uspp,                    ONLY : okvan,nkb,vkb
-    USE becmod,                  ONLY : bec_type, allocate_bec_type, deallocate_bec_type, calbec
-    USE paw_variables,           ONLY : okpaw
-    USE paw_exx,                 ONLY : dopawxx, PAW_xx_energy
-    USE us_exx,                  ONLY : bexg_merge, becxx, addusxx_g, addusxx_r
     !
     IMPLICIT NONE
     !
@@ -2162,7 +2123,7 @@ MODULE exx
 !$omp end parallel do
                 ENDIF
                 !
-                IF(okvan .and. dovanxx.and.TQR) THEN
+                IF(okvan .and.tqr) THEN
                    IF(ibnd>=ibnd_start) &
                    CALL addusxx_r(rhoc, _CX(becxx(ikq)%r(:,ibnd)), _CX(becpsi%r(:,jbnd)))
                    IF(ibnd<ibnd_end) &
@@ -2172,7 +2133,7 @@ MODULE exx
                 ! bring rhoc to G-space
                 CALL fwfft ('Custom', rhoc, exx_fft_r2g%dfftt)
                 !
-                IF(okvan .and. dovanxx .and..not.TQR) THEN
+                IF(okvan .and..not.tqr) THEN
                    IF(ibnd>=ibnd_start ) &
                       CALL addusxx_g( rhoc, xkq, xkp, 'r', &
                       becphi_r=becxx(ikq)%r(:,ibnd), becpsi_r=becpsi%r(:,jbnd) )
@@ -2385,12 +2346,12 @@ MODULE exx
 !$omp end parallel do
                 ENDIF
                 ! augment the "charge" in real space
-                IF(okvan .and. dovanxx .AND. TQR) CALL addusxx_r(rhoc, becxx(ikq)%k(:,ibnd), becpsi%k(:,jbnd))
+                IF(okvan .AND. tqr) CALL addusxx_r(rhoc, becxx(ikq)%k(:,ibnd), becpsi%k(:,jbnd))
                 !
                 ! bring rhoc to G-space
                 CALL fwfft ('Smooth', rhoc, dffts)
                 ! augment the "charge" in G space
-                IF(okvan .and. dovanxx .AND. .NOT. TQR) & 
+                IF(okvan .AND. .NOT. tqr) & 
                    CALL addusxx_g(rhoc, xkq, xkp, 'c', &
                    becphi_c=becxx(ikq)%k(:,ibnd),becpsi_c=becpsi%k(:,jbnd))
                 !
