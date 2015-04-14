@@ -7,8 +7,8 @@
 !
 ! Written by Lorenzo Paulatto (2012-2013) 
 ! Gamma-only tricks by Simon Binnie
-! G-space code based on addusdens.f90 and compute_becsum.f90, modified 
-! by Paolo Giannozzi (2015) for speed
+! G-space code based on addusdens.f90 and compute_becsum.f90,
+! modified by Paolo Giannozzi (2015) for speed
 ! Real space code based on realus.f90
 !-----------------------------------------------------------------------
 MODULE us_exx
@@ -30,6 +30,8 @@ MODULE us_exx
 
   COMPLEX(DP),ALLOCATABLE :: becxx_gamma(:,:)  ! gamma only version of becxx%r
                                                ! two bands stored per stripe 
+  COMPLEX(DP),ALLOCATABLE :: qgm(:,:)          ! used in addusxx_g and newdxx_g
+
  CONTAINS ! ~~+~~---//--~~~-+
   !
   FUNCTION bexg_merge( w, m,n, imin, imax, i)
@@ -56,6 +58,68 @@ MODULE us_exx
     ENDIF
     RETURN
   END FUNCTION bexg_merge
+
+  !-----------------------------------------------------------------------
+  SUBROUTINE qvan_init ( xkq, xk )
+  !-----------------------------------------------------------------------
+    ! allocate and store augmentation charges in G space Q(G) for USPP
+    !
+    USE ions_base,           ONLY : ntyp => nsp
+    USE uspp_param,          ONLY : upf, nh, lmaxq
+    USE gvect,               ONLY : g
+    USE gvecs,               ONLY : ngms
+    IMPLICIT NONE
+    !
+    REAL(dp),   INTENT(in)    :: xkq(3), xk(3)
+    !
+    REAL(dp), ALLOCATABLE :: ylmk0(:,:), qmod(:), q(:,:), qq(:)
+    INTEGER  :: nij, ijh, ig, nt, ih, jh
+    !
+    CALL start_clock('qvan_init')
+    !
+    ! nij = number of (ih,jh) pairs for all atom types
+    !
+    nij = 0
+    DO nt = 1, ntyp
+       IF ( upf(nt)%tvanp ) nij = nij + nh(nt)*(nh(nt)+1)/2
+    END DO
+    ALLOCATE ( qgm(ngms,nij) )
+    !
+    ALLOCATE( ylmk0(ngms, lmaxq * lmaxq), qmod(ngms) )
+    ALLOCATE( q(3,ngms), qq(ngms) )
+    DO ig = 1, ngms
+       q(:,ig) = xk(:) - xkq(:) + g(:,ig)
+       qq(ig)  = SUM(q(:,ig)**2)
+       qmod(ig)= SQRT(qq(ig))
+    ENDDO
+    CALL ylmr2 (lmaxq * lmaxq, ngms, q, qq, ylmk0)
+    DEALLOCATE(qq, q)
+    !
+    ! ijh = position of (ih,jh) pairs for atom type nt
+    !
+    ijh = 0
+    DO nt = 1, ntyp
+       IF ( upf(nt)%tvanp ) THEN
+          DO ih = 1, nh(nt)
+             DO jh = ih, nh(nt)
+                ijh = ijh + 1
+                CALL qvan2(ngms, ih, jh, nt, qmod, qgm(1,ijh), ylmk0)
+             END DO
+          END DO
+       END IF
+    END DO
+    DEALLOCATE(qmod, ylmk0)
+    CALL stop_clock('qvan_init')
+
+  END SUBROUTINE qvan_init
+
+  !-----------------------------------------------------------------------
+  SUBROUTINE qvan_clean ( )
+  !-----------------------------------------------------------------------
+    !
+    DEALLOCATE (qgm)
+    !
+  END SUBROUTINE qvan_clean
   !
   !-----------------------------------------------------------------------
   SUBROUTINE addusxx_g(rhoc, xkq, xk, flag, becphi_c, becpsi_c, becphi_r, becpsi_r )
@@ -89,9 +153,7 @@ MODULE us_exx
     !
     ! ... local variables
     !
-    REAL(DP),ALLOCATABLE    :: qmod(:), q(:,:), qq(:),  &! the modulus of G
-                               ylmk0(:,:)  ! the spherical harmonics
-    COMPLEX(DP),ALLOCATABLE :: qgm(:,:), aux1(:), aux2(:), eigqts(:)
+    COMPLEX(DP),ALLOCATABLE :: aux1(:), aux2(:), eigqts(:)
     INTEGER :: ikb, jkb, ijkb0, ih, jh, na, nt, ig, nij, ijh
     COMPLEX(DP) :: becfac_c
     REAL(DP) :: arg, becfac_r
@@ -114,43 +176,18 @@ MODULE us_exx
          ( add_imaginary.AND.(.NOT. PRESENT(becphi_r) .OR. .NOT. PRESENT(becpsi_r) ) ) )    &
        CALL errore('addusxx_g', 'called with incorrect arguments', 2 )
     !
-    ALLOCATE(qmod(ngms), aux1(ngms), aux2(ngms) )
-    ALLOCATE(ylmk0(ngms, lmaxq * lmaxq))    
-    ALLOCATE(qq(ngms), q(3,ngm))
-    !
-    DO ig = 1, ngms
-      q(:,ig) = xk(:) - xkq(:) + g(:,ig)
-      qq(ig)  = SUM(q(:,ig)**2)
-      qmod(ig)= SQRT(qq(ig))
-    ENDDO
-    !
-    CALL start_clock('addusxx:ylmr')
-    CALL ylmr2 (lmaxq * lmaxq, ngms, q, qq, ylmk0)
-    CALL stop_clock('addusxx:ylmr')
-    !
-    DEALLOCATE(qq, q)
+    ALLOCATE( aux1(ngms), aux2(ngms) )
     ALLOCATE(eigqts(nat))
+    !
     DO na = 1, nat
       arg = tpi* SUM( (xk(:) - xkq(:))*tau(:,na) )
       eigqts(na) = CMPLX( COS(arg), -SIN(arg), kind=DP)
     END DO
     !
+    nij = 0
     DO nt = 1, ntyp
        !
        IF ( upf(nt)%tvanp ) THEN
-          !
-          ! nij = max number of (ih,jh) pairs per atom type nt
-          !
-          CALL start_clock('addusxx:qvan')
-          nij = nh(nt)*(nh(nt)+1)/2
-          ALLOCATE ( qgm(ngm,nij) )
-          DO ih = 1, nh(nt)
-             DO jh = ih, nh(nt)
-                CALL qvan2(ngms, ih, jh, nt, qmod, qgm(1,ijtoh(ih,jh,nt)), &
-                     ylmk0)
-             END DO
-          END DO
-          CALL stop_clock('addusxx:qvan')
           !
           DO na = 1, nat
              !
@@ -169,27 +206,31 @@ MODULE us_exx
                       IF ( add_complex ) THEN
 !$omp parallel do default(shared) private(ig)
                          DO ig = 1, ngms
-                            aux1(ig) = aux1(ig) + qgm(ig,ijtoh(ih,jh,nt)) * &
+                            aux1(ig) = aux1(ig) + qgm(ig,nij+ijtoh(ih,jh,nt)) * &
                                  becpsi_c(jkb)
                          ENDDO
 !$omp end parallel do
                       ELSE
 !$omp parallel do default(shared) private(ig)
                          DO ig = 1, ngms
-                            aux1(ig) = aux1(ig) + qgm(ig,ijtoh(ih,jh,nt)) * &
+                            aux1(ig) = aux1(ig) + qgm(ig,nij+ijtoh(ih,jh,nt)) * &
                                  becpsi_r(jkb)
                          ENDDO
 !$omp end parallel do
                       END IF
                    END DO
                    IF ( add_complex ) THEN
+!$omp parallel do default(shared) private(ig)
                       DO ig = 1,ngms
                          aux2(ig) = aux2(ig) + aux1(ig) * CONJG(becphi_c(ikb))
                       ENDDO
+!$omp end parallel do
                    ELSE
+!$omp parallel do default(shared) private(ig)
                       DO ig = 1,ngms
                          aux2(ig) = aux2(ig) + aux1(ig) * becphi_r(ikb)
                       ENDDO
+!$omp end parallel do
                    END IF
                 END DO
 !$omp parallel do default(shared) private(ig)
@@ -223,12 +264,13 @@ MODULE us_exx
              ENDIF
           ENDDO   ! nat
           !
+          nij = nij + nh(nt)*(nh(nt)+1)/2
+          !
        END IF
-       DEALLOCATE ( qgm )
        !
     ENDDO   ! nt
     !
-    DEALLOCATE( ylmk0, qmod, eigqts, aux2, aux1)
+    DEALLOCATE( eigqts, aux2, aux1)
     !
     CALL stop_clock( 'addusxx' )
     !
@@ -278,10 +320,7 @@ MODULE us_exx
     REAL(DP) :: fact
     COMPLEX(DP), EXTERNAL :: ZDOTC
     !
-    REAL(DP),ALLOCATABLE    :: qmod (:), q(:,:), qq(:), &
-                               ylmk0 (:,:)  ! the spherical harmonics
-    COMPLEX(DP),ALLOCATABLE :: qgm(:,:), & ! the Q(r) function
-                               auxvc(:), &  ! vc in order of |g|
+    COMPLEX(DP),ALLOCATABLE :: auxvc(:), &  ! vc in order of |g|
                                eigqts(:), aux1(:), aux2(:)
     COMPLEX(DP) :: fp, fm
     REAL(DP) :: arg
@@ -306,20 +345,8 @@ MODULE us_exx
     CALL start_clock( 'newdxx' )
     !
     ALLOCATE(aux1(ngms), aux2(ngms), auxvc( ngms))
-    ALLOCATE(qmod(ngms), ylmk0(ngms, lmaxq**2))    
-    ALLOCATE(qq(ngms), q(3,ngm))
-    !
-    CALL start_clock('addusxx:ylrm')
-    DO ig = 1, ngms
-      q(:,ig) = xk(:) - xkq(:) + g(:,ig)
-      qq(ig)  = SUM(q(:,ig)**2)
-      qmod(ig)= SQRT(qq (ig) )
-    ENDDO
-    CALL ylmr2 (lmaxq * lmaxq, ngms, q, qq, ylmk0)
-    CALL stop_clock('addusxx:ylrm')
-    !
-    DEALLOCATE(qq, q)
     ALLOCATE(eigqts(nat))
+    !
     DO na = 1, nat
       arg = tpi* SUM( (xk(:) - xkq(:))*tau(:,na) )
       eigqts(na) = CMPLX( COS(arg), -SIN(arg), kind=DP)
@@ -349,22 +376,10 @@ MODULE us_exx
        fact=2.0_dp*omega
     END IF 
     !
+    nij = 0
     DO nt = 1, ntyp
        !
        IF ( upf(nt)%tvanp ) THEN
-          !
-          ! nij = max number of (ih,jh) pairs per atom type nt
-          !
-          CALL start_clock('addusxx:qvan')
-          nij = nh(nt)*(nh(nt)+1)/2
-          ALLOCATE ( qgm(ngm,nij) )
-          DO ih = 1, nh(nt)
-             DO jh = ih, nh(nt)
-                CALL qvan2(ngms, ih, jh, nt, qmod, qgm(1,ijtoh(ih,jh,nt)), &
-                     ylmk0)
-             END DO
-          END DO
-          CALL stop_clock('addusxx:qvan')
           !
           DO na = 1, nat
              !
@@ -391,14 +406,14 @@ MODULE us_exx
 !$omp parallel do default(shared) private(ig)
                          DO ig = 1, ngms
                             aux1(ig) = aux1(ig) + becphi_r(jkb) * &
-                                 CONJG( qgm(ig,ijtoh(ih,jh,nt)) )
+                                 CONJG( qgm(ig,nij+ijtoh(ih,jh,nt)) )
                          ENDDO
 !$omp end parallel do
                       ELSE
 !$omp parallel do default(shared) private(ig)
                          DO ig = 1, ngms
                             aux1(ig) = aux1(ig) + becphi_c(jkb) * &
-                                 CONJG( qgm(ig,ijtoh(ih,jh,nt)) )
+                                 CONJG( qgm(ig,nij+ijtoh(ih,jh,nt)) )
                          ENDDO
 !$omp end parallel do
                       END IF
@@ -411,11 +426,13 @@ MODULE us_exx
              ENDIF
              !
           ENDDO  ! nat
-          DEALLOCATE ( qgm )
+          !
+          nij = nij + nh(nt)*(nh(nt)+1)/2
+          !
        END IF
     ENDDO
     !
-    DEALLOCATE( eigqts, ylmk0, qmod, auxvc, aux2, aux1)
+    DEALLOCATE( eigqts, auxvc, aux2, aux1)
     CALL stop_clock( 'newdxx' )
     !
     RETURN
@@ -443,11 +460,11 @@ MODULE us_exx
     IMPLICIT NONE
     !
     ! In input I get a slice of <beta|left> and <beta|right> only for this kpoint and this band
-    INTEGER,INTENT(in)        :: lda        ! leading dimension of hpsi
-    COMPLEX(DP),INTENT(inout) :: hpsi(lda)  ! the hamiltonian times psi
-    COMPLEX(DP),INTENT(in)    :: deexx(nkb) ! \int \sum_J Q_IJ <beta_J|phi_i> d3r
-    REAL(DP),INTENT(in)       :: xkp(3)  ! current k point
-    REAL(DP),INTENT(in)       :: exxalfa ! fraction of ex. exchange to add
+    INTEGER,INTENT(in)        :: lda              ! leading dimension of hpsi
+    COMPLEX(DP),INTENT(inout) :: hpsi(lda)!*npol)   ! the hamiltonian
+    COMPLEX(DP),INTENT(in)    :: deexx(nkb)       ! \int \sum_J Q_IJ <beta_J|phi_i> d3r
+    REAL(DP),INTENT(in)       :: xkp(3)           ! current k point
+    REAL(DP),INTENT(in)       :: exxalfa       ! fraction of ex. exchange to add
     REAL(DP),INTENT(in)       :: eps_occ ! skip band where occupation is less than this
     INTEGER,INTENT(IN)        :: npwp, igkp(npwp)
     !

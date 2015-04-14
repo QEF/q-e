@@ -745,7 +745,7 @@ MODULE exx
     USE uspp,                 ONLY : nkb, okvan
     USE us_exx,               ONLY : becxx
     USE paw_variables,        ONLY : okpaw
-    USE paw_exx,              ONLY : dopawxx, PAW_init_keeq
+    USE paw_exx,              ONLY : PAW_init_keeq
 
     IMPLICIT NONE
     INTEGER :: ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq, ig
@@ -1048,7 +1048,7 @@ MODULE exx
     !          call should only act when index_xk(ikq) = current_ik
     !
     ! Initialize 4-wavefunctions one-center Fock integral \int \psi_a(r)\phi_a(r)\phi_b(r')\psi_b(r')/|r-r'|
-    IF(okpaw.and.dopawxx) CALL PAW_init_keeq()
+    IF(okpaw) CALL PAW_init_keeq()
     !
     DEALLOCATE(tempevc)
     DEALLOCATE(ispresent)
@@ -1180,19 +1180,19 @@ MODULE exx
   !-----------------------------------------------------------------------
   SUBROUTINE vexx(lda, n, m, psi, hpsi, becpsi)
   !-----------------------------------------------------------------------
-    !This routine calculates V_xx \Psi
     !
-    ! ... This routine computes the product of the Hamiltonian
-    ! ... matrix with m wavefunctions contained in psi
+    ! ... Wrapper routine computing V_x\psi, V_x = exchange potential
+    ! ... Calls generic version vexx_k or Gamma-specific one vexx_gamma
     !
     ! ... input:
-    ! ...    lda   leading dimension of arrays psi, spsi, hpsi
-    ! ...    n     true dimension of psi, spsi, hpsi
+    ! ...    lda   leading dimension of arrays psi and hpsi
+    ! ...    n     true dimension of psi and hpsi
     ! ...    m     number of states psi
-    ! ...    psi
+    ! ...    psi   m wavefunctions 
+    ! ..     becpsi <beta|psi>, optional but needed for US and PAW case
     !
     ! ... output:
-    ! ...    hpsi  Vexx*psi
+    ! ...    hpsi  V_x*psi
     !
     USE becmod,         ONLY : bec_type
     USE control_flags,  ONLY : gamma_only
@@ -1204,7 +1204,7 @@ MODULE exx
     INTEGER                  :: lda, n, m
     COMPLEX(DP)              :: psi(lda*npol,m) 
     COMPLEX(DP)              :: hpsi(lda*npol,m)
-    TYPE(bec_type), OPTIONAL :: becpsi ! or call a calbec(...psi) instead
+    TYPE(bec_type), OPTIONAL :: becpsi
     !
     IF ( (okvan.OR.okpaw) .AND. .NOT. PRESENT(becpsi)) &
        CALL errore('vexx','becpsi needed for US/PAW case',1)
@@ -1225,19 +1225,8 @@ MODULE exx
   !-----------------------------------------------------------------------
   SUBROUTINE vexx_gamma(lda, n, m, psi, hpsi, becpsi)
   !-----------------------------------------------------------------------
-    !This routine calculates V_xx \Psi
     !
-    ! ... This routine computes the product of the Hamiltonian
-    ! ... matrix with m wavefunctions contained in psi
-    !
-    ! ... input:
-    ! ...    lda   leading dimension of arrays psi, spsi, hpsi
-    ! ...    n     true dimension of psi, spsi, hpsi
-    ! ...    m     number of states psi
-    ! ...    psi
-    !
-    ! ... output:
-    ! ...    hpsi  Vexx*psi
+    ! ... Gamma-specific version of vexx
     !
     USE constants,      ONLY : fpi, e2, pi
     USE cell_base,      ONLY : omega
@@ -1255,8 +1244,9 @@ MODULE exx
     USE uspp,           ONLY : nkb, okvan
     USE paw_variables,  ONLY : okpaw
     USE us_exx,         ONLY : bexg_merge, becxx, addusxx_g, addusxx_r, &
-                               newdxx_g, newdxx_r, add_nlxx_pot
-    USE paw_exx,        ONLY : dopawxx, PAW_newdxx
+                               newdxx_g, newdxx_r, add_nlxx_pot, &
+                               qvan_init, qvan_clean
+    USE paw_exx,        ONLY : PAW_newdxx
     !
     !
     IMPLICIT NONE
@@ -1318,6 +1308,7 @@ MODULE exx
        !
        ! calculate the 1/|r-r'| (actually, k+q+g) factor and place it in fac
        CALL g2_convolution(exx_fft_r2g%ngmt, exx_fft_r2g%gt, xk(:,current_k), xkq, fac) 
+       IF ( okvan .AND..NOT.tqr ) CALL qvan_init (xkq, xkp)
        !
        LOOP_ON_PSI_BANDS : &
        DO im = 1,m !for each band of psi (the k cycle is outside band)
@@ -1457,7 +1448,7 @@ MODULE exx
                 CALL newdxx_r(vc, CMPLX(0.0_DP,-x2*becxx(ikq)%r(:,ibnd+1), KIND=DP), deexx)
              ENDIF
              !
-             IF(okpaw .and. dopawxx) THEN
+             IF(okpaw) THEN
                 IF(ibnd>=ibnd_start) &
                 CALL PAW_newdxx(x1/nqs, _CX(becxx(ikq)%r(:,ibnd)), _CX(becpsi%r(:,im)), deexx)
                 IF(ibnd<ibnd_end) &
@@ -1498,6 +1489,7 @@ MODULE exx
                                        deexx, eps_occ, exxalfa)
        ENDDO &
        LOOP_ON_PSI_BANDS
+       IF ( okvan .AND..NOT.tqr ) CALL qvan_clean ()
        !
     ENDDO &
     INTERNAL_LOOP_ON_Q
@@ -1515,19 +1507,8 @@ MODULE exx
   !-----------------------------------------------------------------------
   SUBROUTINE vexx_k(lda, n, m, psi, hpsi, becpsi)
   !-----------------------------------------------------------------------
-    !This routine calculates V_xx \Psi
     !
-    ! ... This routine computes the product of the Hamiltonian
-    ! ... matrix with m wavefunctions contained in psi
-    !
-    ! ... input:
-    ! ...    lda   leading dimension of arrays psi, spsi, hpsi
-    ! ...    n     true dimension of psi, spsi, hpsi
-    ! ...    m     number of states psi
-    ! ...    psi
-    !
-    ! ... output:
-    ! ...    hpsi  Vexx*psi
+    ! ... generic, k-point version of vexx
     !
     USE constants,      ONLY : fpi, e2, pi
     USE cell_base,      ONLY : omega
@@ -1545,8 +1526,9 @@ MODULE exx
     USE uspp,           ONLY : nkb, okvan
     USE paw_variables,  ONLY : okpaw
     USE us_exx,         ONLY : bexg_merge, becxx, addusxx_g, addusxx_r, &
-                               newdxx_g, newdxx_r, add_nlxx_pot
-    USE paw_exx,        ONLY : dopawxx, PAW_newdxx
+                               newdxx_g, newdxx_r, add_nlxx_pot, &
+                               qvan_init, qvan_clean
+    USE paw_exx,        ONLY : PAW_newdxx
     !
     !
     IMPLICIT NONE
@@ -1650,6 +1632,7 @@ MODULE exx
           !
           ! calculate the 1/|r-r'| (actually, k+q+g) factor and place it in fac
           CALL g2_convolution(ngms, g, xk(:,current_k), xkq, fac)
+          IF ( okvan .AND..NOT.tqr ) CALL qvan_init (xkq, xkp)
           !
           IBND_LOOP_K : &
           DO ibnd=ibnd_start,ibnd_end !for each band of psi
@@ -1709,7 +1692,7 @@ MODULE exx
              IF(okvan .AND. TQR) CALL newdxx_r(vc, becxx(ikq)%k(:,ibnd),deexx)
              !
              ! Add PAW one-center contribution
-             IF(okpaw .and. dopawxx) THEN
+             IF(okpaw) THEN
                 CALL PAW_newdxx(x_occupation(ibnd,ik)/nqs, becxx(ikq)%k(:,ibnd), becpsi%k(:,im), deexx)
              ENDIF
              !
@@ -1736,6 +1719,7 @@ MODULE exx
              !
           ENDDO &
           IBND_LOOP_K
+          IF ( okvan .AND..NOT.tqr ) CALL qvan_clean ()
           !
        ENDDO &
        INTERNAL_LOOP_ON_Q
@@ -1925,7 +1909,7 @@ MODULE exx
     !
     REAL(DP)   :: exxenergy2
     !
-    CALL start_clock ('exxen2')
+    CALL start_clock ('exxenergy')
     !
     IF( gamma_only ) THEN 
        exxenergy2 = exxenergy2_gamma() 
@@ -1933,7 +1917,7 @@ MODULE exx
        exxenergy2 = exxenergy2_k() 
     ENDIF
     !
-    CALL stop_clock ('exxen2')
+    CALL stop_clock ('exxenergy')
     !
     !-----------------------------------------------------------------------
   END FUNCTION  exxenergy2
@@ -1966,8 +1950,9 @@ MODULE exx
     USE uspp,                    ONLY : okvan,nkb,vkb
     USE becmod,                  ONLY : bec_type, allocate_bec_type, deallocate_bec_type, calbec
     USE paw_variables,           ONLY : okpaw
-    USE paw_exx,                 ONLY : dopawxx, PAW_xx_energy
-    USE us_exx,                  ONLY : bexg_merge, becxx, addusxx_g, addusxx_r
+    USE paw_exx,                 ONLY : PAW_xx_energy
+    USE us_exx,                  ONLY : bexg_merge, becxx, addusxx_g, &
+                                        addusxx_r, qvan_init, qvan_clean
     !
     IMPLICIT NONE
     !
@@ -2033,6 +2018,7 @@ MODULE exx
           !
           CALL g2_convolution(exx_fft_r2g%ngmt, exx_fft_r2g%gt, xk(:,current_ik), xkq, fac) 
           fac(exx_fft_r2g%gstart_t:) = 2 * fac(exx_fft_r2g%gstart_t:)
+          IF ( okvan .AND..NOT.tqr ) CALL qvan_init (xkq, xkp)
           !
           jmax = nbnd 
           DO jbnd = nbnd,1, -1
@@ -2159,7 +2145,7 @@ MODULE exx
                 vc = vc * omega * 0.25_DP / nqs
                 energy = energy - exxalfa * vc * wg(jbnd,ikk)
                 !
-                IF(okpaw.and.dopawxx) THEN
+                IF(okpaw) THEN
                    IF(ibnd>=ibnd_start) &
                    energy = energy +exxalfa*wg(jbnd,ikk)*&
                          x1 * PAW_xx_energy(_CX(becxx(ikq)%r(:,ibnd)),_CX(becpsi%r(:,jbnd)) )
@@ -2172,6 +2158,8 @@ MODULE exx
              IBND_LOOP_GAM
           ENDDO &
           JBND_LOOP
+          IF ( okvan .AND..NOT.tqr ) CALL qvan_clean ( )
+          !
        ENDDO &
        IQ_LOOP
     ENDDO &
@@ -2219,8 +2207,9 @@ MODULE exx
     USE uspp,                    ONLY : okvan,nkb,vkb
     USE becmod,                  ONLY : bec_type, allocate_bec_type, deallocate_bec_type, calbec
     USE paw_variables,           ONLY : okpaw
-    USE paw_exx,                 ONLY : dopawxx, PAW_xx_energy
-    USE us_exx,                  ONLY : bexg_merge, becxx, addusxx_g, addusxx_r
+    USE paw_exx,                 ONLY : PAW_xx_energy
+    USE us_exx,                  ONLY : bexg_merge, becxx, addusxx_g, &
+                                        addusxx_r, qvan_init, qvan_clean
     !
     IMPLICIT NONE
     !
@@ -2322,6 +2311,7 @@ MODULE exx
              xkq = xkq_collect(:,ikq)
              !
              CALL g2_convolution(ngms, g, xk(:,current_ik), xkq, fac)
+             IF ( okvan .AND..NOT.tqr ) CALL qvan_init (xkq, xkp)
              !
              IBND_LOOP_K : &
              DO ibnd = ibnd_start, ibnd_end
@@ -2365,13 +2355,14 @@ MODULE exx
                 ! 
                 energy = energy - exxalfa * vc * wg(jbnd,ikk)
                 !
-                IF(okpaw.and.dopawxx) THEN
+                IF(okpaw) THEN
                    energy = energy +exxalfa*x_occupation(ibnd,ik)/nqs*wg(jbnd,ikk) &
                               *PAW_xx_energy(becxx(ikq)%k(:,ibnd), becpsi%k(:,jbnd))
                 ENDIF
                 !
              ENDDO &
              IBND_LOOP_K 
+             IF ( okvan .AND..NOT.tqr ) CALL qvan_clean ( )
           ENDDO &
           IQ_LOOP
        ENDDO &
