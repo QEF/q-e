@@ -17,7 +17,6 @@ MODULE paw_exx
   END TYPE paw_keeq_type
   TYPE(paw_keeq_type),ALLOCATABLE :: ke(:)
   LOGICAL,PRIVATE :: paw_has_init_keeq = .false.
-  LOGICAL,PARAMETER :: dopawxx = .true. ! DEBUG option
 
   CONTAINS
   !
@@ -48,7 +47,7 @@ MODULE paw_exx
     !
     CALL start_clock( 'PAW_newdxx' )
     !
-    IF(.not.(okpaw .and. dopawxx)) RETURN
+    IF(okpaw) RETURN
     ! Worst possible parallelisation:
     IF(me_image/=0) RETURN
     !
