@@ -118,8 +118,7 @@ SUBROUTINE elphon()
                  celldm_, at, bg, omega, atm, amass, tau, ityp, &
                  m_loc, nqs_)
 
-        IF (ibrav_.NE.ibrav .OR. ABS ( celldm_ (1) - celldm (1) ) > 1.0d-5 &
-             .OR. (nspin_mag_ /= nspin_mag ) ) CALL errore ('elphon', &
+        IF ( nspin_mag_ /= nspin_mag ) CALL errore ('elphon', &
              'inconsistent data', 1)
 
         CALL read_dyn_mat(nat,1,xq,dyn)
