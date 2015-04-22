@@ -606,6 +606,7 @@ MODULE us_exx
     REAL(DP)    :: domega
     COMPLEX(DP) :: aux
     !
+    CALL start_clock( 'newdxx' )
     domega = omega/(dffts%nr1*dffts%nr2*dffts%nr3)
     !
     DO ia = 1, nat
@@ -633,6 +634,7 @@ MODULE us_exx
       !
     ENDDO
     !
+    CALL stop_clock( 'newdxx' )
   !------------------------------------------------------------------------
   END SUBROUTINE newdxx_r
   !------------------------------------------------------------------------

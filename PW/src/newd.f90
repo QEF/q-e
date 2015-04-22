@@ -11,35 +11,7 @@ MODULE dfunct
 CONTAINS
 !---------------------------------------
 
-SUBROUTINE newq(vr,deeq,skip_vltot) 
-  !
-  !   This routine computes the integral of the perturbed potential with
-  !   the Q function 
-  !
-  USE kinds,                ONLY : DP
-  USE fft_base,             ONLY : dfftp
-  USE ions_base,            ONLY : nat
-  USE lsda_mod,             ONLY : nspin
-  USE uspp_param,           ONLY : nhm
-  !
-  IMPLICIT NONE
-  !
-  ! Input: potential , output: contribution to integral
-  REAL(kind=dp), intent(in)  :: vr(dfftp%nnr,nspin)
-  REAL(kind=dp), intent(inout) :: deeq( nhm, nhm, nat, nspin )
-  LOGICAL, intent(in) :: skip_vltot
-  !
-#if defined(__CUDA) && !defined(__DISABLE_CUDA_NEWD)
-  CALL newq_compute_gpu(vr,deeq,skip_vltot)
-#else
-  CALL newq_compute(vr,deeq,skip_vltot)
-#endif
-  !
-  RETURN
-
-END SUBROUTINE newq
-
-SUBROUTINE newq_compute(vr,deeq,skip_vltot)
+SUBROUTINE newq(vr,deeq,skip_vltot)
   !
   !   This routine computes the integral of the perturbed potential with
   !   the Q function
@@ -77,8 +49,6 @@ SUBROUTINE newq_compute(vr,deeq,skip_vltot)
   REAL(DP), ALLOCATABLE :: ylmk0(:,:), qmod(:), deeaux(:,:)
     ! spherical harmonics, modulus of G
   REAL(DP) :: fact
-  !
-  CALL start_clock( 'newd' )
   !
   IF ( gamma_only ) THEN
      fact = 2.0_dp
@@ -198,31 +168,10 @@ SUBROUTINE newq_compute(vr,deeq,skip_vltot)
   DEALLOCATE( qmod, ylmk0, vaux )
   CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), intra_bgrp_comm )
   !
-END SUBROUTINE newq_compute
-!---------------------------------------
-SUBROUTINE newd()
-  USE uspp,          ONLY : deeq
-  USE realus,        ONLY : newd_r
-  USE noncollin_module, ONLY : noncolin
-  USE control_flags, ONLY : tqr
-  USE ldaU,          ONLY : lda_plus_U, U_projection
-  IMPLICIT NONE
+END SUBROUTINE newq
   !
-  IF (tqr) THEN
-     CALL newd_r()
-  ELSE
-     CALL newd_g()
-  END IF
-  !
-  IF (.NOT.noncolin) CALL add_paw_to_deeq(deeq)
-  !
-  IF (lda_plus_U .AND. (U_projection == 'pseudo')) CALL add_vhub_to_deeq(deeq)
-  !
-  RETURN
-  !
-END SUBROUTINE newd
 !----------------------------------------------------------------------------
-SUBROUTINE newd_g()
+SUBROUTINE newd( ) 
   !----------------------------------------------------------------------------
   !
   ! ... This routine computes the integral of the effective potential with
@@ -238,12 +187,15 @@ SUBROUTINE newd_g()
   USE noncollin_module,     ONLY : noncolin, nspin_mag
   USE uspp,                 ONLY : nhtol, nhtolm
   USE scf,                  ONLY : v
+  USE realus,        ONLY : newq_r
+  USE control_flags, ONLY : tqr
+  USE ldaU,          ONLY : lda_plus_U, U_projection
   !
   IMPLICIT NONE
   !
   INTEGER :: ig, nt, ih, jh, na, is, nht, nb, mb
-    ! counters on g vectors, atom type, beta functions x 2,
-    !   atoms, spin, aux, aux, beta func x2 (again)
+  ! counters on g vectors, atom type, beta functions x 2,
+  !   atoms, spin, aux, aux, beta func x2 (again)
   !
   !
   IF ( .NOT. okvan ) THEN
@@ -284,7 +236,18 @@ SUBROUTINE newd_g()
      !
   END IF
   !
-  call newq(v%of_r,deeq,.false.)
+  CALL start_clock( 'newd' )
+  !
+  IF (tqr) THEN
+     CALL newq_r(v%of_r,deeq,.false.)
+  ELSE
+#if defined(__CUDA) && !defined(__DISABLE_CUDA_NEWD)
+     CALL newq_compute_gpu(v%of_r,deeq,.false.)
+#else
+     CALL newq(v%of_r,deeq,.false.)
+#endif
+  END IF
+  !
   IF (noncolin) call add_paw_to_deeq(deeq)
   !
   atoms : &
@@ -320,6 +283,10 @@ SUBROUTINE newd_g()
      END IF if_noncolin
      !
   END DO atoms
+  !
+  IF (.NOT.noncolin) CALL add_paw_to_deeq(deeq)
+  !
+  IF (lda_plus_U .AND. (U_projection == 'pseudo')) CALL add_vhub_to_deeq(deeq)
   !
   CALL stop_clock( 'newd' )
   !
@@ -459,6 +426,6 @@ SUBROUTINE newd_g()
     RETURN
     END SUBROUTINE newd_nc
     !
-END SUBROUTINE newd_g
+END SUBROUTINE newd
 
 END MODULE dfunct

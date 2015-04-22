@@ -36,7 +36,7 @@ SUBROUTINE lr_readin
   USE ktetra,              ONLY : ltetra
   USE realus,              ONLY : real_space, real_space_debug,&
                                   & init_realspace_vars, qpointlist,&
-                                  & betapointlist, newd_r 
+                                  & betapointlist
   USE funct,               ONLY : dft_is_meta
   USE iotk_module
   USE charg_resp,          ONLY : w_T_prefix, omeg, w_T_npol, epsil
@@ -513,11 +513,7 @@ SUBROUTINE lr_readin
   !
   ! I. Timrov: The routine newd was already called in read_file above.
   !
-  IF (tqr) THEN
-     CALL newd_r()
-  ELSE
-     CALL newd() !OBM: this is for the ground charge density
-  ENDIF
+  CALL newd() !OBM: this is for the ground charge density
   !
   IF ( real_space_debug > 0 .AND. .NOT.eels) THEN
      !
