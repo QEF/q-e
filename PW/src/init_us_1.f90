@@ -280,9 +280,8 @@ subroutine init_us_1
                     endif
                     enddo
                     if ( upf(nt)%rinner (l+1) > 0.0_dp) &
-                        call setqf(upf(nt)%qfcoef (1, l+1, nb, mb), &
-                                qtot(1,ijv), rgrid(nt)%r, upf(nt)%nqf, &
-                                l, ilast)
+                        call setqfnew( upf(nt)%nqf,upf(nt)%qfcoef(1,l+1,nb,mb),&
+                                ilast, rgrid(nt)%r, l, 2, qtot(1,ijv) )
                  endif paw
               endif respect_sum_rule
               enddo ! mb

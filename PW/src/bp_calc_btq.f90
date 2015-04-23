@@ -54,9 +54,8 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
                        ENDIF
                     ENDDO
                     IF ( upf(np)%rinner (l+1) > 0.0_dp) &
-                       CALL setqf ( upf(np)%qfcoef(1,l+1,iv,jv), aux(1), &
-                              rgrid(np)%r, upf(np)%nqf, l, ilast )
-
+                       CALL setqfnew( upf(np)%nqf, upf(np)%qfcoef(1,l+1,iv,jv),&
+                                      ilast, rgrid(np)%r, l, 2, aux(1) )
                  ENDIF
                  IF (idbes == 1) THEN
                     !

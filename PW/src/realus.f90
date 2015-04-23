@@ -326,6 +326,8 @@ MODULE realus
          tau_ia(2) = tau(2,ia)
          tau_ia(3) = tau(3,ia)
          !
+         mbia = 0
+         !
          DO ir = 1, dfft%nnr
             !
             ! ... three dimensional indices (i,j,k)
@@ -358,23 +360,22 @@ MODULE realus
             !
             IF ( distsq < boxradsq_ia ) THEN
                !
-               mbia = tabp(ia)%maxbox + 1
-               IF(mbia>roughestimate) THEN
-                  CALL errore( 'qpointlist', 'rough-estimate is too rough', 3 )
-               ENDIF
-               tabp(ia)%maxbox     = mbia
+               mbia = mbia + 1
+               IF( mbia > roughestimate ) &
+                    CALL errore('qpointlist', 'rough-estimate is too rough', 3)
                buffpoints(mbia)    = ir
                boxdist(mbia)       = sqrt( distsq )*alat
                xyz(:,mbia)         = posi(:)*alat
                !
             ENDIF
+            !
          ENDDO
+         !
+         IF ( mbia == 0 ) CYCLE
          !
          ! ... store points in the appropriate place
          !
-         mbia = tabp(ia)%maxbox
-         IF ( mbia == 0 ) CYCLE
-         !
+         tabp(ia)%maxbox = mbia
          ALLOCATE( tabp(ia)%box(mbia) )
          tabp(ia)%box(:) = buffpoints(1:mbia)
          !
@@ -395,12 +396,12 @@ MODULE realus
          !
          nfuncs = nh(nt)*(nh(nt)+1)/2
          ALLOCATE(tabp(ia)%qr(mbia, nfuncs))
-         tabp(ia)%qr=0._dp
+         tabp(ia)%qr(:,:)=0.0_dp
          !
          ! ... compute the spherical harmonics
          !
          ALLOCATE( spher( mbia, lmaxq**2 ) )
-         spher(:,:) = 0.D0
+         spher(:,:) = 0.0_dp
          !
          ALLOCATE( rl2( mbia ) )
          DO ir = 1, mbia
@@ -453,8 +454,8 @@ MODULE realus
                   ENDIF
                   !
                   IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
-                     CALL setqfcorr( upf(nt)%qfcoef(1:,l+1,nb,mb), &
-                        qtot(1,nb,mb), rgrid(nt)%r, upf(nt)%nqf, l, ilast )
+                     CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
+                        ilast, rgrid(nt)%r, l, 0, qtot(1,nb,mb) )
                   !
                   ! ... we save the values in y
                   !
@@ -473,9 +474,9 @@ MODULE realus
                                       second, rgrid(nt)%r(1), upf(nt)%nqf, l )
                   ELSE
                       !
-                      ! ... if we don't have the analitical coefficients, try to do
-                      ! ... the same numerically (note that setting first=0.d0 and
-                      ! ... second=0.d0 makes almost no difference)
+                      ! ... if we don't have the analitical coefficients, try
+                      ! ... the same numerically (note that setting first=0.0
+                      ! ...  and second=0.0 makes almost no difference)
                       !
                       ALLOCATE( d1y(upf(nt)%kkbeta), d2y(upf(nt)%kkbeta) )
                       CALL radial_gradient(ysp(1:upf(nt)%kkbeta), d1y, &
@@ -952,40 +953,6 @@ MODULE realus
       !
     END SUBROUTINE newq_r
     !
-    !------------------------------------------------------------------------
-    SUBROUTINE setqfcorr( qfcoef, rho, r, nqf, ltot, mesh )
-      !-----------------------------------------------------------------------
-      !
-      ! ... This routine compute the first part of the Q function up to rinner.
-      ! ... On output it contains  Q
-      !
-      IMPLICIT NONE
-      !
-      INTEGER,  INTENT(in):: nqf, ltot, mesh
-        ! input: the number of coefficients
-        ! input: the angular momentum
-        ! input: the number of mesh point
-      REAL(DP), INTENT(in) :: r(mesh), qfcoef(nqf)
-        ! input: the radial mesh
-        ! input: the coefficients of Q
-      REAL(DP), INTENT(out) :: rho(mesh)
-        ! output: the function to be computed
-      !
-      INTEGER  :: ir, i
-      REAL(DP) :: rr
-      !
-      DO ir = 1, mesh
-         rr = r(ir)**2
-         rho(ir) = qfcoef(1)
-         DO i = 2, nqf
-            rho(ir) = rho(ir) + qfcoef(i)*rr**(i-1)
-         ENDDO
-         rho(ir) = rho(ir)*r(ir)**ltot
-      ENDDO
-      !
-      RETURN
-      !
-    END SUBROUTINE setqfcorr
     !
     !------------------------------------------------------------------------
     SUBROUTINE setqfcorrpt( qfcoef, rho, r, nqf, ltot )

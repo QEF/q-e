@@ -58,8 +58,8 @@ SUBROUTINE compute_qdipol(dpqq)
                     enddo
                  
                     if ( upf(nt)%rinner(l+1) > 0.0_dp) &
-                        call setqf( upf(nt)%qfcoef (1, l+1, nb, mb), &
-                        qtot(1,nb,mb), rgrid(nt)%r, upf(nt)%nqf, l, ilast)
+                       CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
+                                      ilast, rgrid(nt)%r, l, 2, qtot(1,nb,mb) )
                  endif
               endif
            enddo
