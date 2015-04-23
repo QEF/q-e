@@ -16,7 +16,7 @@ MODULE realus
   ! ... modified by Carlo Sbraccia
   ! ... modified by O. Baris Malcioglu (2008)
   ! ... modified by P. Umari and G. Stenuit (2009)
-  ! ... GWW-specific stuff moved out by P. Giannozzi (2015)
+  ! ... Cleanup, GWW-specific stuff moved out by P. Giannozzi (2015)
   !
   REAL(DP), ALLOCATABLE :: boxrad(:) ! radius of boxes, does not depend on the grid
   ! Beta function in real space
@@ -216,24 +216,19 @@ MODULE realus
       TYPE(fft_dlay_descriptor),INTENT(in)    :: dfft
       TYPE(realsp_augmentation),POINTER,INTENT(inout) :: tabp(:)
       !
-      INTEGER               :: qsdim, ia, mbia, iqs, iqsia, nfuncs
-      INTEGER               :: indm, idimension, &
-                               ih, jh, ijh, lllnbnt, lllmbnt
-      INTEGER               :: roughestimate, goodestimate, lamx2, l, nt
-      INTEGER,  ALLOCATABLE :: buffpoints(:,:)
-      REAL(DP), ALLOCATABLE :: buffdist(:,:)
+      INTEGER               :: ia, mbia, nfuncs
+      INTEGER               :: indm, ih, jh, ijh, lllnbnt, lllmbnt
+      INTEGER               :: roughestimate, nt, l
+      INTEGER,  ALLOCATABLE :: buffpoints(:)
       REAL(DP)              :: distsq, qtot_int, first, second
       INTEGER               :: idx0, idx, ir
       INTEGER               :: i, j, k, ipol, lm, nb, mb, ijv, ilast
       REAL(DP)              :: posi(3)
-      REAL(DP), ALLOCATABLE :: rl(:,:), rl2(:), d1y(:), d2y(:)
-      REAL(DP), ALLOCATABLE :: tempspher(:,:), qtot(:,:,:), &
-                               xsp(:), ysp(:), wsp(:)
+      REAL(DP), ALLOCATABLE :: boxdist(:), xyz(:,:), spher(:,:)
+      REAL(DP), ALLOCATABLE :: rl2(:), d1y(:), d2y(:)
+      REAL(DP), ALLOCATABLE :: qtot(:,:,:), xsp(:), ysp(:), wsp(:)
       REAL(DP)              :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz, aux
       REAL(DP)              :: inv_nr1, inv_nr2, inv_nr3, tau_ia(3), boxradsq_ia
-      !
-      REAL(DP), ALLOCATABLE :: boxdist(:,:), xyz(:,:,:)
-      REAL(DP), ALLOCATABLE :: spher(:,:,:)
       !
       initialisation_level = 3
       IF ( .not. okvan ) RETURN
@@ -243,15 +238,14 @@ MODULE realus
       ! ... tabp is deallocated here to free the memory for the buffers
       !
       IF( associated(tabp) ) THEN
-        DO ia=1,nat
-          IF(allocated(tabp(ia)%qr))  DEALLOCATE(tabp(ia)%qr)
-          IF(allocated(tabp(ia)%box)) DEALLOCATE(tabp(ia)%box)
-        ENDDO
-        DEALLOCATE(tabp)
+         DO ia=1,nat
+            IF(allocated(tabp(ia)%qr))  DEALLOCATE(tabp(ia)%qr)
+            IF(allocated(tabp(ia)%box)) DEALLOCATE(tabp(ia)%box)
+         ENDDO
+         DEALLOCATE(tabp)
       ENDIF
       !
       ALLOCATE(tabp(nat))
-
       !
       IF ( .not. allocated( boxrad ) ) THEN
          !
@@ -300,17 +294,9 @@ MODULE realus
       !
       roughestimate = anint( dble( dmbx*dmby*dmbz ) * pi / 6.D0 )
       !
-      CALL start_clock( 'realus:boxes' )
-      !
-      ALLOCATE( buffpoints( roughestimate, nat ) )
-      ALLOCATE( buffdist(   roughestimate, nat ) )
-      !
-      ALLOCATE( xyz( 3, roughestimate, nat ) )
-      !
-      buffpoints(:,:) = 0
-      buffdist(:,:) = 0.D0
-      !
-      ! ... now we find the points
+      ALLOCATE( buffpoints( roughestimate ) )
+      ALLOCATE( boxdist (   roughestimate ) )
+      ALLOCATE( xyz( 3, roughestimate ) )
       !
 #if defined (__MPI)
       idx0 = dfft%nr1x*dfft%nr2x * sum ( dfft%npp(1:me_bgrp) )
@@ -324,9 +310,15 @@ MODULE realus
       !
       DO ia = 1, nat
          !
-         nt = ityp(ia)
+         CALL start_clock( 'realus:boxes' )
          !
+         nt = ityp(ia)
          IF ( .not. upf(nt)%tvanp ) CYCLE
+         !
+         ! ... here we find the points in the box surrounding atom "ia"
+         !
+         buffpoints(:) = 0
+         boxdist(:) = 0.D0
          !
          boxradsq_ia = boxrad(nt)**2
          !
@@ -371,108 +363,51 @@ MODULE realus
                   CALL errore( 'qpointlist', 'rough-estimate is too rough', 3 )
                ENDIF
                tabp(ia)%maxbox     = mbia
-               buffpoints(mbia,ia) = ir
-               buffdist(mbia,ia)   = sqrt( distsq )*alat
-               xyz(:,mbia,ia)      = posi(:)*alat
+               buffpoints(mbia)    = ir
+               boxdist(mbia)       = sqrt( distsq )*alat
+               xyz(:,mbia)         = posi(:)*alat
                !
             ENDIF
          ENDDO
-      ENDDO
-      !
-      ! ... count the points and store them in a more convenient place
-      !
-      goodestimate = 0
-      DO ia = 1,nat
-        goodestimate = max( goodestimate, tabp(ia)%maxbox )
-        !
-        !IF ( allocated( tabp(ia)%box ) ) DEALLOCATE( tabp(ia)%box )
-        ALLOCATE( tabp(ia)%box(tabp(ia)%maxbox) )
-        tabp(ia)%box(:) = buffpoints(1:tabp(ia)%maxbox,ia)
-      ENDDO
-      !
-      IF ( goodestimate > roughestimate ) &
-         CALL errore( 'qpointlist', 'rough-estimate is too rough', 2 )
-      !
-      ALLOCATE( boxdist( goodestimate, nat ) )
-      !
-      boxdist(:,:) = buffdist(1:goodestimate,:)
-      !
-      DEALLOCATE( buffpoints )
-      DEALLOCATE( buffdist )
-      !
-      CALL stop_clock( 'realus:boxes' )
-      CALL start_clock( 'realus:spher' )
-      !
-      ! ... now it computes the spherical harmonics
-      !
-      lamx2 = lmaxq*lmaxq
-      !
-      IF ( allocated( spher ) ) DEALLOCATE( spher )
-      !
-      ALLOCATE( spher( goodestimate, lamx2, nat ) )
-      !
-      spher(:,:,:) = 0.D0
-      !
-      DO ia = 1, nat
          !
-         nt = ityp(ia)
-         IF ( .not. upf(nt)%tvanp ) CYCLE
-         idimension = tabp(ia)%maxbox
-         ALLOCATE( rl( 3, idimension ), rl2( idimension ) )
-
-         DO ir = 1, idimension
-            rl(:,ir) = xyz(:,ir,ia)
-            rl2(ir) = rl(1,ir)**2 + rl(2,ir)**2 + rl(3,ir)**2
-         ENDDO
-         !
-         ALLOCATE( tempspher( idimension, lamx2 ) )
-         CALL ylmr2( lamx2, idimension, rl, rl2, tempspher )
-         spher(1:idimension,:,ia) = tempspher(:,:)
-         DEALLOCATE( rl, rl2, tempspher )
-         !
-      ENDDO
-      !
-      DEALLOCATE( xyz )
-      !
-      CALL stop_clock( 'realus:spher' )
-      CALL start_clock( 'realus:tabp' )
-      !
-      ! ... let's do the main work
-      !
-      qsdim = 0
-      DO ia = 1, nat
-         mbia = tabp(ia)%maxbox
-         IF ( mbia == 0 ) CYCLE
-         nt = ityp(ia)
-         IF ( .not. upf(nt)%tvanp ) CYCLE
-         DO ih = 1, nh(nt)
-            DO jh = ih, nh(nt)
-               qsdim = qsdim + mbia
-            ENDDO
-         ENDDO
-      ENDDO
-      !
-      ! ... the source is inspired by init_us_1
-      !
-      ! ... we perform two steps: first we compute for each l the qtot
-      ! ... (radial q), then we interpolate it in our mesh, and then we
-      ! ... add it to tabp with the correct spherical harmonics
-      !
-      ! ... Q is read from pseudo and it is divided into two parts:
-      ! ... in the inner radius a polinomial representation is known and so
-      ! ... strictly speaking we do not use interpolation but just compute
-      ! ... the correct value
-      !
-      iqs   = 0
-      iqsia = 0
-      !
-      DO ia = 1, nat
+         ! ... store points in the appropriate place
          !
          mbia = tabp(ia)%maxbox
          IF ( mbia == 0 ) CYCLE
          !
-         nt = ityp(ia)
-         IF ( .not. upf(nt)%tvanp ) CYCLE
+         ALLOCATE( tabp(ia)%box(mbia) )
+         tabp(ia)%box(:) = buffpoints(1:mbia)
+         !
+         CALL stop_clock( 'realus:boxes' )
+         !
+         ! ... now we compute the Q in this box
+         !
+         ! ... we perform two steps: first we compute for each l the qtot
+         ! ... (radial q), then we interpolate it in our mesh, and then we
+         ! ... add it to tabp with the correct spherical harmonics
+         !
+         ! ... Q is read from pseudo and it is divided into two parts:
+         ! ... in the inner radius a polinomial representation is known and so
+         ! ... strictly speaking we do not use interpolation but just compute
+         ! ... the correct value
+         !
+         CALL start_clock( 'realus:tabp' )
+         !
+         nfuncs = nh(nt)*(nh(nt)+1)/2
+         ALLOCATE(tabp(ia)%qr(mbia, nfuncs))
+         tabp(ia)%qr=0._dp
+         !
+         ! ... compute the spherical harmonics
+         !
+         ALLOCATE( spher( mbia, lmaxq**2 ) )
+         spher(:,:) = 0.D0
+         !
+         ALLOCATE( rl2( mbia ) )
+         DO ir = 1, mbia
+            rl2(ir) = xyz(1,ir)**2 + xyz(2,ir)**2 + xyz(3,ir)**2
+         ENDDO
+         CALL ylmr2( lmaxq**2, mbia, xyz, rl2, spher )
+         DEALLOCATE( rl2 )
          !
          ALLOCATE( qtot( upf(nt)%kkbeta, upf(nt)%nbeta, upf(nt)%nbeta ) )
          !
@@ -484,10 +419,6 @@ MODULE realus
          ! ... the radii in x
          !
          xsp(:) = rgrid(nt)%r(1:upf(nt)%kkbeta)
-         !
-         nfuncs = (  nh(nt)**2+nh(nt)  )/2
-         ALLOCATE(tabp(ia)%qr(mbia, nfuncs))
-         tabp(ia)%qr=0._dp
          !
          DO l = 0, upf(nt)%nqlc - 1
             !
@@ -562,19 +493,19 @@ MODULE realus
                   !
                   DO ir = 1, tabp(ia)%maxbox
                      !
-                     IF ( boxdist(ir,ia) < upf(nt)%rinner(l+1) ) THEN
+                     IF ( boxdist(ir) < upf(nt)%rinner(l+1) ) THEN
                         !
                         ! ... if in the inner radius just compute the
                         ! ... polynomial
                         !
                         CALL setqfcorrpt( upf(nt)%qfcoef(1:,l+1,nb,mb), &
-                                   qtot_int, boxdist(ir,ia), upf(nt)%nqf, l )
+                                   qtot_int, boxdist(ir), upf(nt)%nqf, l )
                         !
                      ELSE
                         !
                         ! ... spline interpolation
                         !
-                        qtot_int = splint( xsp, ysp, wsp, boxdist(ir,ia) )
+                        qtot_int = splint( xsp, ysp, wsp, boxdist(ir) )
                         !
                      ENDIF
                      !
@@ -583,7 +514,6 @@ MODULE realus
                      DO ih = 1, nh(nt)
                         DO jh = ih, nh(nt)
                            !
-                           iqs = iqsia + ijh*mbia + ir
                            ijh = ijh + 1
                            !
                            IF ( .not.( nb == indv(ih,nt) .and. &
@@ -591,7 +521,7 @@ MODULE realus
                            !
                            DO lm = l**2+1, (l+1)**2
                               tabp(ia)%qr(ir,ijh) = tabp(ia)%qr(ir,ijh) + &
-                                           qtot_int*spher(ir,lm,ia)*&
+                                           qtot_int*spher(ir,lm)*&
                                            ap(lm,nhtolm(ih,nt),nhtolm(jh,nt))
                            ENDDO
                         ENDDO
@@ -601,19 +531,20 @@ MODULE realus
             ENDDO
          ENDDO
          !
-         iqsia = iqs
-         !
+         DEALLOCATE( spher )
          DEALLOCATE( qtot )
          DEALLOCATE( xsp )
          DEALLOCATE( ysp )
          DEALLOCATE( wsp )
          !
+         CALL stop_clock( 'realus:tabp' )
+         !
       ENDDO
       !
+      DEALLOCATE( xyz )
       DEALLOCATE( boxdist )
-      DEALLOCATE( spher )
+      DEALLOCATE( buffpoints )
       !
-      CALL stop_clock( 'realus:tabp' )
       CALL stop_clock( 'realus' )
       !
     END SUBROUTINE qpointlist
@@ -655,7 +586,7 @@ MODULE realus
       !
       IMPLICIT NONE
       !
-      INTEGER               :: betasdim, ia, it, mbia
+      INTEGER               :: ia, it, mbia
       INTEGER               :: indm, inbrx, idimension, ih
       INTEGER               :: roughestimate, goodestimate, lamx2, nt
       INTEGER,  ALLOCATABLE :: buffpoints(:,:)
@@ -856,17 +787,6 @@ MODULE realus
       CALL start_clock( 'realus:tabp' )
       !
       ! ... let's do the main work
-      !
-      betasdim = 0
-      DO ia = 1, nat
-         mbia = maxbox_beta(ia)
-         IF ( mbia == 0 ) CYCLE
-         nt = ityp(ia)
-         IF ( .not. upf(nt)%tvanp ) CYCLE
-         DO ih = 1, nh(nt)
-            betasdim = betasdim + mbia
-         ENDDO
-      ENDDO
       !
       ALLOCATE( betasave( nat, nhm, goodestimate )  )
       !
