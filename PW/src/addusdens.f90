@@ -107,7 +107,7 @@ SUBROUTINE addusdens_g(rho)
         DO na = 1, nat
            IF ( ityp(na) == nt ) THEN
               nb = nb + 1
-              tbecsum(:,nb,:) = becsum(1:nij,na,:)
+              tbecsum(:,nb,:) = becsum(1:nij,na,1:nspin_mag)
 !$omp parallel do default(shared) private(ig)
               DO ig = 1, ngm
                  skk(ig,nb) = eigts1 (mill (1,ig), na) * &
