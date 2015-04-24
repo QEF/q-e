@@ -33,8 +33,8 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   USE funct,    ONLY : dft_is_meta
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY: npol, noncolin
-  USE realus,   ONLY : real_space, fft_orbital_gamma, initialisation_level, &
-                       bfft_orbital_gamma, calbec_rs_gamma, &
+  USE realus,   ONLY : real_space, invfft_orbital_gamma, initialisation_level, &
+                       fwfft_orbital_gamma, calbec_rs_gamma, &
                        add_vuspsir_gamma, v_loc_psir
   USE fft_base, ONLY : dffts
   USE exx,      ONLY : vexx
@@ -94,17 +94,17 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
         ENDIF
         DO ibnd = 1, m, incr
            ! ... transform psi to real space, saved in temporary memory
-           CALL fft_orbital_gamma(psi,ibnd,m,.true.) 
+           CALL invfft_orbital_gamma(psi,ibnd,m,.true.) 
            ! ... becp%r = < beta|psi> on psi in real space
            CALL calbec_rs_gamma(ibnd,m,becp%r) 
            ! ... psi is now replaced by hpsi ??? WHAT FOR ???
-           CALL fft_orbital_gamma(hpsi,ibnd,m)
+           CALL invfft_orbital_gamma(hpsi,ibnd,m)
            ! ... hpsi -> hpsi + psi*vrs  (psi read from temporary memory)
            CALL v_loc_psir(ibnd,m) 
            ! ... hpsi -> hpsi + vusp
            CALL  add_vuspsir_gamma(ibnd,m)
            ! ... transform back hpsi, clear psi in temporary memory
-           CALL bfft_orbital_gamma(hpsi,ibnd,m,.true.) 
+           CALL fwfft_orbital_gamma(hpsi,ibnd,m,.true.) 
         END DO
         !
      ELSE

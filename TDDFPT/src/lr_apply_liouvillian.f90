@@ -43,9 +43,9 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   USE wavefunctions_module, ONLY : psic
   USE wvfct,                ONLY : nbnd, npwx, igk, g2kin, et
   USE control_flags,        ONLY : gamma_only
-  USE realus,               ONLY : real_space, fft_orbital_gamma,&
+  USE realus,               ONLY : real_space, invfft_orbital_gamma,&
                                    & initialisation_level,&
-                                   & bfft_orbital_gamma,&
+                                   & fwfft_orbital_gamma,&
                                    & calbec_rs_gamma, newq_r, &
                                    & add_vuspsir_gamma, v_loc_psir,   &
                                    & s_psir_gamma, real_space_debug,  &
@@ -513,7 +513,7 @@ CONTAINS
           !
           !   Back to reciprocal space 
           !
-          CALL bfft_orbital_gamma (evc1_new(:,:,1), ibnd, nbnd,.false.)
+          CALL fwfft_orbital_gamma (evc1_new(:,:,1), ibnd, nbnd,.false.)
           !
        ENDDO
        !
@@ -554,9 +554,9 @@ CONTAINS
     !
     IF (real_space_debug > 9 ) THEN
         DO ibnd = 1,nbnd,2
-           CALL fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
+           CALL invfft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
            CALL s_psir_gamma(ibnd,nbnd)
-           CALL bfft_orbital_gamma(spsi1,ibnd,nbnd)
+           CALL fwfft_orbital_gamma(spsi1,ibnd,nbnd)
         ENDDO
     ELSE
        CALL s_psi(npwx,npw_k(1),nbnd,evc1(1,1,1),spsi1)

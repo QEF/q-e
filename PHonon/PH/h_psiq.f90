@@ -186,8 +186,8 @@ SUBROUTINE h_psiq_gamma()
 
     USE becmod, ONLY : becp, calbec
     USE gvect,  ONLY : gstart
-    USE realus, ONLY : real_space, fft_orbital_gamma, &
-                       bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
+    USE realus, ONLY : real_space, invfft_orbital_gamma, &
+                       fwfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
                        v_loc_psir, s_psir_gamma, real_space_debug
     USE uspp,                  ONLY : nkb
 
@@ -213,7 +213,7 @@ SUBROUTINE h_psiq_gamma()
       IF (nkb > 0 .and. real_space_debug>2) THEN
         DO ibnd=1,m,2
 
-           CALL fft_orbital_gamma(psi,ibnd,m,.true.)
+           CALL invfft_orbital_gamma(psi,ibnd,m,.true.)
           !transform the psi real space, saved in temporary memory
 
            CALL calbec_rs_gamma(ibnd,m,becp%r)
@@ -222,10 +222,10 @@ SUBROUTINE h_psiq_gamma()
            CALL s_psir_gamma(ibnd,m)
            !psi -> spsi
 
-           CALL bfft_orbital_gamma(spsi,ibnd,m)
+           CALL fwfft_orbital_gamma(spsi,ibnd,m)
            !return back to real space
 
-           CALL fft_orbital_gamma(hpsi,ibnd,m)
+           CALL invfft_orbital_gamma(hpsi,ibnd,m)
            ! spsi above is now replaced by hpsi
 
            CALL v_loc_psir(ibnd,m)
@@ -234,7 +234,7 @@ SUBROUTINE h_psiq_gamma()
            CALL add_vuspsir_gamma(ibnd,m)
            ! hpsi -> hpsi + vusp
 
-           CALL bfft_orbital_gamma(hpsi,ibnd,m,.true.)
+           CALL fwfft_orbital_gamma(hpsi,ibnd,m,.true.)
            !transform back hpsi, clear psi in temporary memory
 
         ENDDO

@@ -1359,7 +1359,7 @@ contains
     use fft_base,             only : dffts,dfftp
     use uspp,           only : okvan
     use io_global,    only : stdout
-    use realus,              only : fft_orbital_gamma, bfft_orbital_gamma
+    use realus,              only : invfft_orbital_gamma, fwfft_orbital_gamma
     use wavefunctions_module, only : psic
     use cell_base,              only : omega
     use mp,                   only : mp_barrier
@@ -1389,11 +1389,11 @@ contains
 
     wfck(:,1) = evc0(:,v1,1)
 
-    call fft_orbital_gamma(wfck(:,:),1,1)  ! FFT: v1  -> psic
+    call invfft_orbital_gamma(wfck(:,:),1,1)  ! FFT: v1  -> psic
     dvrss(:) = psic(:)                        ! v1 -> dvrss
     
     wfck(:,1) = evc0_virt(:,c1-nbnd,1)
-    call fft_orbital_gamma(wfck(:,:),1,1)  ! FFT: c1 -> psic
+    call invfft_orbital_gamma(wfck(:,:),1,1)  ! FFT: c1 -> psic
     do ir = 1, dffts%nnr
       dvrss(ir) = w1 * dvrss(ir) * psic(ir)         ! drho = 2*v1*c1 -> dvrss
     enddo
@@ -1401,12 +1401,12 @@ contains
     call dv_of_drho(0,dvrss,.false.)       ! calc the potential change 
 
     wfck(:,1) = evc0(:,v2,1)
-    call fft_orbital_gamma(wfck(:,:),1,1)  ! FFT: v2 -> psic
+    call invfft_orbital_gamma(wfck(:,:),1,1)  ! FFT: v2 -> psic
     do ir = 1, dffts%nnr
       psic(ir) = psic(ir) * dvrss(ir)      ! dv*v2 -> psic 
     enddo
     
-    call bfft_orbital_gamma(wfck(:,:),1,1)  ! BFFT: dv*v2 -> wfck
+    call fwfft_orbital_gamma(wfck(:,:),1,1)  ! BFFT: dv*v2 -> wfck
    
     calc_inter = wfc_dot(wfck(:,1),evc0_virt(:,c2-nbnd,1))
   

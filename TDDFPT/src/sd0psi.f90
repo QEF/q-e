@@ -53,7 +53,7 @@ SUBROUTINE lr_sd0psi_optical()
     ! Optical case
     !
     USE control_flags,  ONLY : gamma_only
-    USE realus,         ONLY : real_space, fft_orbital_gamma, bfft_orbital_gamma, &
+    USE realus,         ONLY : real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &
                              & calbec_rs_gamma, v_loc_psir, s_psir_gamma, &
                              & igk_k, npw_k, real_space_debug
  
@@ -68,10 +68,10 @@ SUBROUTINE lr_sd0psi_optical()
           IF (real_space_debug>4) THEN
              !
              DO ibnd=1,nbnd,2
-                CALL fft_orbital_gamma(d0psi(:,:,1,ip),ibnd,nbnd)
+                CALL invfft_orbital_gamma(d0psi(:,:,1,ip),ibnd,nbnd)
                 CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
                 CALL s_psir_gamma(ibnd,nbnd)
-                CALL bfft_orbital_gamma(d0psi(:,:,1,ip),ibnd,nbnd)
+                CALL fwfft_orbital_gamma(d0psi(:,:,1,ip),ibnd,nbnd)
              ENDDO
              !
           ELSE

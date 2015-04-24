@@ -1632,7 +1632,7 @@ MODULE realus
   END SUBROUTINE add_vuspsir_k
 
   !--------------------------------------------------------------------------
-  SUBROUTINE fft_orbital_gamma (orbital, ibnd, nbnd, conserved)
+  SUBROUTINE invfft_orbital_gamma (orbital, ibnd, nbnd, conserved)
   !--------------------------------------------------------------------------
   !
   ! OBM 241008
@@ -1667,7 +1667,7 @@ MODULE realus
 
     !The new task group version based on vloc_psi
     !print *, "->Real space"
-    CALL start_clock( 'fft_orbital' )
+    CALL start_clock( 'invfft_orbital' )
     !
     ! The following is dirty trick to prevent usage of task groups if
     ! the number of bands is smaller than the number of task groups
@@ -1742,13 +1742,13 @@ MODULE realus
 
     dffts%have_task_groups = use_tg
 
-    CALL stop_clock( 'fft_orbital' )
+    CALL stop_clock( 'invfft_orbital' )
 
-  END SUBROUTINE fft_orbital_gamma
+  END SUBROUTINE invfft_orbital_gamma
   !
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE bfft_orbital_gamma (orbital, ibnd, nbnd,conserved)
+  SUBROUTINE fwfft_orbital_gamma (orbital, ibnd, nbnd,conserved)
   !--------------------------------------------------------------------------
   !
   ! OBM 241008
@@ -1785,7 +1785,7 @@ MODULE realus
     !Task groups
     INTEGER :: v_siz
     !print *, "->fourier space"
-    CALL start_clock( 'bfft_orbital' )
+    CALL start_clock( 'fwfft_orbital' )
     !New task_groups versions
     use_tg = dffts%have_task_groups
     dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( nbnd >= dffts%nogrp )
@@ -1849,12 +1849,12 @@ MODULE realus
     ENDIF
     dffts%have_task_groups = use_tg
     !
-    CALL stop_clock( 'bfft_orbital' )
+    CALL stop_clock( 'fwfft_orbital' )
 
-  END SUBROUTINE bfft_orbital_gamma
+  END SUBROUTINE fwfft_orbital_gamma
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE fft_orbital_k (orbital, ibnd, nbnd, ik, conserved)
+  SUBROUTINE invfft_orbital_k (orbital, ibnd, nbnd, ik, conserved)
   !--------------------------------------------------------------------------
   !
   ! OBM 110908
@@ -1885,7 +1885,7 @@ MODULE realus
     INTEGER :: ioff, idx
     LOGICAL :: use_tg
 
-    CALL start_clock( 'fft_orbital' )
+    CALL start_clock( 'invfft_orbital' )
     use_tg = dffts%have_task_groups
     dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( nbnd >= dffts%nogrp )
 
@@ -1931,10 +1931,10 @@ MODULE realus
        !
     ENDIF
     dffts%have_task_groups = use_tg
-    CALL stop_clock( 'fft_orbital' )
-  END SUBROUTINE fft_orbital_k
+    CALL stop_clock( 'invfft_orbital' )
+  END SUBROUTINE invfft_orbital_k
   !--------------------------------------------------------------------------
-  SUBROUTINE bfft_orbital_k (orbital, ibnd, nbnd, ik, conserved)
+  SUBROUTINE fwfft_orbital_k (orbital, ibnd, nbnd, ik, conserved)
     !--------------------------------------------------------------------------
     !
     ! OBM 110908
@@ -1964,7 +1964,7 @@ MODULE realus
     INTEGER :: ioff, idx
     LOGICAL :: use_tg
 
-   CALL start_clock( 'bfft_orbital' )
+   CALL start_clock( 'fwfft_orbital' )
    use_tg = dffts%have_task_groups
    dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( nbnd >= dffts%nogrp )
 
@@ -2002,9 +2002,9 @@ MODULE realus
        ENDIF
     ENDIF
     dffts%have_task_groups = use_tg
-    CALL stop_clock( 'bfft_orbital' )
+    CALL stop_clock( 'fwfft_orbital' )
 
-  END SUBROUTINE bfft_orbital_k
+  END SUBROUTINE fwfft_orbital_k
 
   !--------------------------------------------------------------------------
   SUBROUTINE v_loc_psir (ibnd, nbnd)

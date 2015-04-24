@@ -321,9 +321,9 @@ CONTAINS
     USE becmod,              ONLY : bec_type, becp, calbec
     USE lr_variables,        ONLY : becp_1, tg_revc0
     USE io_global,           ONLY : stdout
-    USE realus,              ONLY : real_space, fft_orbital_gamma,&
+    USE realus,              ONLY : real_space, invfft_orbital_gamma,&
                                     & initialisation_level,&
-                                    & bfft_orbital_gamma,&
+                                    & fwfft_orbital_gamma,&
                                     & calbec_rs_gamma,&
                                     & add_vuspsir_gamma, v_loc_psir,&
                                     & real_space_debug 
@@ -363,7 +363,7 @@ CONTAINS
        !
        ! FFT: evc1 -> psic
        !
-       CALL fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
+       CALL invfft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
        !
        IF (dffts%have_task_groups) THEN
           !
@@ -582,7 +582,7 @@ CONTAINS
     !
     USE becmod,              ONLY : bec_type, becp, calbec
     USE lr_variables,        ONLY : becp1_c
-    USE realus,              ONLY : fft_orbital_k
+    USE realus,              ONLY : invfft_orbital_k
     !
     IMPLICIT NONE
     !
@@ -599,8 +599,8 @@ CONTAINS
           !
           CALL invfft ('Wave', psic, dffts)
           !
-          ! I. Timrov: Try to use fft_orbital_k
-          ! CALL fft_orbital_k(evc1(:,:,ik), ibnd, nbnd, ik)
+          ! I. Timrov: Try to use invfft_orbital_k
+          ! CALL invfft_orbital_k(evc1(:,:,ik), ibnd, nbnd, ik)
           !
           w1 = wg(ibnd,ik)/omega
           !

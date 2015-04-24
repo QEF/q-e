@@ -17,7 +17,7 @@ SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
   USE kinds, ONLY: DP
   USE bp,    ONLY: lelfield
   USE noncollin_module, ONLY: noncolin, npol 
-  USE realus,         ONLY : real_space, fft_orbital_gamma, bfft_orbital_gamma, &
+  USE realus,         ONLY : real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &
                              calbec_rs_gamma, s_psir_gamma, initialisation_level
   
   !
@@ -33,9 +33,9 @@ SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
   !     makes it easier to debug probable errors, please do not "beautify" 
         if (real_space) then
              CALL h_psi( lda, n, 1, psi, hpsi )
-             call fft_orbital_gamma(psi,1,1) !transform the orbital to real space
+             call invfft_orbital_gamma(psi,1,1) !transform the orbital to real space
              call s_psir_gamma(1,1)
-             call bfft_orbital_gamma(spsi,1,1)
+             call fwfft_orbital_gamma(spsi,1,1)
         else   
   CALL h_psi( lda, n, 1, psi, hpsi )
   CALL s_psi( lda, n, 1, psi, spsi )

@@ -177,7 +177,7 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
   USE lr_variables,         ONLY : evc0,sevc0,d0psi,lshift_d0psi
   USE wavefunctions_module, ONLY : psic
   USE uspp,                 ONLY : okvan
-  USE realus,               ONLY : bfft_orbital_gamma,fft_orbital_gamma
+  USE realus,               ONLY : fwfft_orbital_gamma,invfft_orbital_gamma
   !
   IMPLICIT NONE
   !
@@ -244,7 +244,7 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
      !
      wfck(:,1) = evc0(:,ib,1)
      !
-     CALL fft_orbital_gamma(wfck(:,:),1,1)
+     CALL invfft_orbital_gamma(wfck(:,:),1,1)
      !
      psic_temp(:) = psic(:)
      !
@@ -258,7 +258,7 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
        !
        ! Convert to G-space
        !
-       CALL bfft_orbital_gamma(wfck(:,:),1,1) 
+       CALL fwfft_orbital_gamma(wfck(:,:),1,1) 
        !
        d0psi(:,ib,1,ip) = wfck(:,1)
        !

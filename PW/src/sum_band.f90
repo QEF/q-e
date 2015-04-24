@@ -906,8 +906,8 @@ SUBROUTINE sum_bec ( ik, current_spin )
   USE wvfct,         ONLY : nbnd, npw, igk, wg
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
-  USE realus, ONLY : real_space, fft_orbital_gamma, initialisation_level,&
-                     bfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
+  USE realus, ONLY : real_space, invfft_orbital_gamma, initialisation_level,&
+                     fwfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ik, current_spin
@@ -924,7 +924,7 @@ SUBROUTINE sum_bec ( ik, current_spin )
      CALL calbec( npw, vkb, evc, becp )
   ELSE
      do ibnd = 1, nbnd, 2
-        call fft_orbital_gamma(evc,ibnd,nbnd)
+        call invfft_orbital_gamma(evc,ibnd,nbnd)
         call calbec_rs_gamma(ibnd,nbnd,becp%r)
      enddo
   ENDIF

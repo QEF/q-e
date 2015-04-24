@@ -32,8 +32,8 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   USE io_global,            ONLY : ionode
   USE mp,                   ONLY : mp_bcast
   USE mp_world,             ONLY : world_comm
-  USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
-                                   bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
+  USE realus,               ONLY : real_space, invfft_orbital_gamma, initialisation_level, &
+                                   fwfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
                                    v_loc_psir, s_psir_gamma,igk_k,npw_k, &
                                    real_space_debug
   USE fft_base,             ONLY : dfftp
@@ -236,8 +236,8 @@ SUBROUTINE lr_recalc_sevc1_new_optical()
   ! Optical case: 
   ! This subroutine recalculates sevc1_new(:,:,ik,1) and sevc1_new(:,:,ik,2)
   !
-  USE realus,         ONLY : real_space, fft_orbital_gamma, initialisation_level, &
-                             bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
+  USE realus,         ONLY : real_space, invfft_orbital_gamma, initialisation_level, &
+                             fwfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
                              v_loc_psir, s_psir_gamma, real_space_debug
   !
   if (gamma_only) then
@@ -250,10 +250,10 @@ SUBROUTINE lr_recalc_sevc1_new_optical()
            !
            do ibnd=1,nbnd,2
               !
-              call fft_orbital_gamma(evc1_new(:,:,1,1),ibnd,nbnd)
+              call invfft_orbital_gamma(evc1_new(:,:,1,1),ibnd,nbnd)
               call calbec_rs_gamma(ibnd,nbnd,becp%r)
               call s_psir_gamma(ibnd,nbnd)
-              call bfft_orbital_gamma(sevc1_new(:,:,1,1),ibnd,nbnd)
+              call fwfft_orbital_gamma(sevc1_new(:,:,1,1),ibnd,nbnd)
               !
            enddo
            !
@@ -278,10 +278,10 @@ SUBROUTINE lr_recalc_sevc1_new_optical()
            !
            do ibnd=1,nbnd,2
               !
-              call fft_orbital_gamma(evc1_new(:,:,1,2),ibnd,nbnd)
+              call invfft_orbital_gamma(evc1_new(:,:,1,2),ibnd,nbnd)
               call calbec_rs_gamma(ibnd,nbnd,becp%r)
               call s_psir_gamma(ibnd,nbnd)
-              call bfft_orbital_gamma(sevc1_new(:,:,1,2),ibnd,nbnd)
+              call fwfft_orbital_gamma(sevc1_new(:,:,1,2),ibnd,nbnd)
               !  
            enddo
            !

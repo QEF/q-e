@@ -35,8 +35,8 @@ MODULE lr_exx_kernel
   USE gvect,                  ONLY : g, ngm
   USE klist,                  ONLY : xk, wk, nks
   USE lr_variables,           ONLY : gamma_only, lr_verbosity
-  USE realus,                 ONLY : fft_orbital_gamma, bfft_orbital_gamma,&
-                                   & fft_orbital_k, bfft_orbital_k, igk_k, npw_k 
+  USE realus,                 ONLY : invfft_orbital_gamma, fwfft_orbital_gamma,&
+                                   & invfft_orbital_k, fwfft_orbital_k, igk_k, npw_k 
   USE wavefunctions_module,   ONLY : psic
   USE cell_base,              ONLY : omega
   USE exx,                    ONLY : exxalfa, g2_convolution,&
@@ -250,7 +250,7 @@ SUBROUTINE lr_exx_revc0_init(orbital, kpoint)
      !
      DO ibnd=1,nbnd,2
         !
-        CALL fft_orbital_custom_gamma(orbital(:,:,1), ibnd, nbnd,&
+        CALL invfft_orbital_custom_gamma(orbital(:,:,1), ibnd, nbnd,&
              & exx_fft_g2r)
         red_revc0(1:nnr_,ibnd,1)=psic(1:nnr_)
         !
@@ -263,7 +263,7 @@ SUBROUTINE lr_exx_revc0_init(orbital, kpoint)
      !
      DO ibnd=1,nbnd
         !
-        CALL fft_orbital_k ( orbital(:,:,kpoint), ibnd, nbnd, kpoint)
+        CALL invfft_orbital_k ( orbital(:,:,kpoint), ibnd, nbnd, kpoint)
         !
         DO ikq=1,nkqs
            !
@@ -402,7 +402,7 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
      !
      DO ibnd=ibnd_start_gamma,ibnd_end_gamma,2
         !
-        CALL fft_orbital_custom_gamma(evc(:,:,1), ibnd, nbnd,&
+        CALL invfft_orbital_custom_gamma(evc(:,:,1), ibnd, nbnd,&
              & exx_fft_g2r)
         !
         w1=wg(ibnd,1)/omega
@@ -433,7 +433,7 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
         IF (ibnd==nbnd) psic(1:nrxxs)=CMPLX(revc_int(1:nrxxs,ibnd)&
              &,0.d0,dp)
         !
-        CALL bfft_orbital_custom_gamma (int_vect(:,:,1), ibnd, nbnd,&
+        CALL fwfft_orbital_custom_gamma (int_vect(:,:,1), ibnd, nbnd,&
              & exx_fft_g2r) 
         !
      ENDDO
@@ -460,7 +460,7 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
         DO ibnd=1,nbnd,1
            !
            !
-           CALL fft_orbital_k (evc(:,:,ikk), ibnd, nbnd, ikk)
+           CALL invfft_orbital_k (evc(:,:,ikk), ibnd, nbnd, ikk)
            !
 #ifdef __MPI
            psic_all=(0.d0,0.d0)
@@ -538,7 +538,7 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
            !
            psic(:)=revc_int_c(:,ibnd,ik)
            !
-           CALL bfft_orbital_k (int_vect(:,:,ik), ibnd, nbnd, ik)
+           CALL fwfft_orbital_k (int_vect(:,:,ik), ibnd, nbnd, ik)
            !
         ENDDO
         !
@@ -631,7 +631,7 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
   !
   IF( gamma_only ) THEN
      !
-     CALL fft_orbital_custom_gamma( orbital, ibnd, nbnd, exx_fft_g2r )
+     CALL invfft_orbital_custom_gamma( orbital, ibnd, nbnd, exx_fft_g2r )
      !
      w1=wg(ibnd,1)/omega
      !
@@ -661,7 +661,7 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
      !
   ELSE
      !
-     CALL fft_orbital_k (orbital(:,:), ibnd, nbnd, ikk)
+     CALL invfft_orbital_k (orbital(:,:), ibnd, nbnd, ikk)
      !
 #ifdef __MPI
      CALL cgather_smooth(psic, psic_all)
@@ -1052,7 +1052,7 @@ END FUNCTION k2d_term_k
 !! moved somewhere else but for now they live here.
 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE fft_orbital_custom_gamma(orbital, ibnd, nbnd, g2r)
+SUBROUTINE invfft_orbital_custom_gamma(orbital, ibnd, nbnd, g2r)
 
   USE kinds,        ONLY : DP
   USE fft_custom,   ONLY : fft_cus
@@ -1083,9 +1083,9 @@ SUBROUTINE fft_orbital_custom_gamma(orbital, ibnd, nbnd, g2r)
   !
   RETURN
   !
-END SUBROUTINE fft_orbital_custom_gamma
+END SUBROUTINE invfft_orbital_custom_gamma
 
-SUBROUTINE bfft_orbital_custom_gamma(orbital, ibnd, nbnd, g2r)
+SUBROUTINE fwfft_orbital_custom_gamma(orbital, ibnd, nbnd, g2r)
 
   USE kinds,        ONLY : DP
   USE fft_custom,   ONLY : fft_cus
@@ -1121,6 +1121,6 @@ SUBROUTINE bfft_orbital_custom_gamma(orbital, ibnd, nbnd, g2r)
   !
   RETURN
   !
-END SUBROUTINE bfft_orbital_custom_gamma
+END SUBROUTINE fwfft_orbital_custom_gamma
 
 END MODULE lr_exx_kernel

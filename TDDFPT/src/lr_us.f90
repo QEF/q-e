@@ -70,8 +70,8 @@ SUBROUTINE lr_apply_s_optical()
     ! Optical case
     !
     USE control_flags,    ONLY : gamma_only
-    USE realus,           ONLY : real_space, fft_orbital_gamma,             &
-                               & bfft_orbital_gamma, calbec_rs_gamma,       &
+    USE realus,           ONLY : real_space, invfft_orbital_gamma,             &
+                               & fwfft_orbital_gamma, calbec_rs_gamma,       &
                                & v_loc_psir, igk_k,npw_k, real_space_debug, &
                                & s_psir_gamma
     !
@@ -84,10 +84,10 @@ SUBROUTINE lr_apply_s_optical()
           ! Real space implementation
           ! 
           DO ibnd = 1,nbnd,2
-             CALL fft_orbital_gamma(vect(:,:,1),ibnd,nbnd)
+             CALL invfft_orbital_gamma(vect(:,:,1),ibnd,nbnd)
              CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
              CALL s_psir_gamma(ibnd,nbnd)
-             CALL bfft_orbital_gamma(svect(:,:,1),ibnd,nbnd)
+             CALL fwfft_orbital_gamma(svect(:,:,1),ibnd,nbnd)
           ENDDO
           !
        ELSE

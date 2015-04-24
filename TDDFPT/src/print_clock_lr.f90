@@ -91,8 +91,8 @@ SUBROUTINE print_clock_lr()
     CALL print_clock ( 'calbec_rs' )
     CALL print_clock ( 's_psir' )
     CALL print_clock ( 'add_vuspsir' )
-    CALL print_clock ( 'fft_orbital' )
-    CALL print_clock ( 'bfft_orbital' )
+    CALL print_clock ( 'invfft_orbital' )
+    CALL print_clock ( 'fwfft_orbital' )
     CALL print_clock ( 'v_loc_psir' )
    ENDIF
    !

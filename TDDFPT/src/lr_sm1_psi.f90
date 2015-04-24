@@ -92,8 +92,8 @@ CONTAINS
     ! Optical case : gamma_only
     !
     USE becmod,              ONLY : bec_type,becp,calbec
-    USE realus,              ONLY : real_space, fft_orbital_gamma, initialisation_level, &
-                                    bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
+    USE realus,              ONLY : real_space, invfft_orbital_gamma, initialisation_level, &
+                                    fwfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
                                     v_loc_psir, s_psir_gamma, real_space_debug
 
     !
@@ -227,7 +227,7 @@ CONTAINS
     IF (real_space_debug>3) THEN 
        !
        DO ibnd=1,m,2
-          CALL fft_orbital_gamma(psi,ibnd,m)
+          CALL invfft_orbital_gamma(psi,ibnd,m)
           CALL calbec_rs_gamma(ibnd,m,becp%r)
        ENDDO
        !

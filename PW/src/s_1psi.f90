@@ -17,7 +17,7 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
   USE becmod, ONLY : bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only 
   USE noncollin_module, ONLY : noncolin, npol 
-  USE realus,         ONLY : real_space, fft_orbital_gamma, bfft_orbital_gamma, &
+  USE realus,         ONLY : real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &
                              calbec_rs_gamma, s_psir_gamma, initialisation_level
   USE wvfct,                ONLY: nbnd
   !
@@ -32,12 +32,12 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
   IF ( gamma_only  .and.  real_space) then
      do ibnd=1,nbnd,2
         ! transform the orbital to real space
-        call fft_orbital_gamma(psi,ibnd,nbnd) 
+        call invfft_orbital_gamma(psi,ibnd,nbnd) 
         ! global becp%r is updated
         call calbec_rs_gamma(ibnd,nbnd,becp%r) 
      enddo
      call s_psir_gamma(1,1)
-     call bfft_orbital_gamma(spsi,1,1)
+     call fwfft_orbital_gamma(spsi,1,1)
      !
   ELSE
      !

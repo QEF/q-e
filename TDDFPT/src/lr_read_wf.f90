@@ -34,9 +34,9 @@ SUBROUTINE lr_read_wf()
   USE fft_interfaces,       ONLY : invfft
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE becmod,               ONLY : bec_type, becp, calbec
-  USE realus,               ONLY : real_space, fft_orbital_gamma,&
+  USE realus,               ONLY : real_space, invfft_orbital_gamma,&
                                  & initialisation_level,&
-                                 & bfft_orbital_gamma, calbec_rs_gamma,&
+                                 & fwfft_orbital_gamma, calbec_rs_gamma,&
                                  & add_vuspsir_gamma, v_loc_psir,&
                                  & s_psir_gamma, real_space_debug, &
                                  & igk_k,npw_k  
@@ -181,12 +181,12 @@ SUBROUTINE normal_read()
            !
            DO ibnd = 1, nbnd, 2
               !
-              CALL fft_orbital_gamma(evc0(:,:,1),ibnd,nbnd)
+              CALL invfft_orbital_gamma(evc0(:,:,1),ibnd,nbnd)
               CALL calbec_rs_gamma(ibnd,nbnd,becp_1)
               becp%r(:,ibnd) = becp_1(:,ibnd)
               IF (ibnd + 1 <= nbnd) becp%r(:,ibnd+1) = becp_1(:,ibnd+1)
               CALL s_psir_gamma(ibnd,nbnd)
-              CALL bfft_orbital_gamma(sevc0(:,:,1),ibnd,nbnd)
+              CALL fwfft_orbital_gamma(sevc0(:,:,1),ibnd,nbnd)
               !      
            ENDDO
            !
@@ -238,7 +238,7 @@ SUBROUTINE normal_read()
      !
      DO ibnd = 1, nbnd, incr
         !
-        CALL fft_orbital_gamma ( evc0(:,:,1), ibnd, nbnd)
+        CALL invfft_orbital_gamma ( evc0(:,:,1), ibnd, nbnd)
         !
         IF (dffts%have_task_groups) THEN               
            !
@@ -258,7 +258,7 @@ SUBROUTINE normal_read()
      !
   ELSE
      !
-     ! The FFT is done in the same way as in fft_orbital_k 
+     ! The FFT is done in the same way as in invfft_orbital_k 
      ! (where also the task groups is implemented but must be checked).
      !
      DO ik = 1, nks
@@ -396,12 +396,12 @@ SUBROUTINE virt_read()
         IF (real_space_debug>0) THEN
            !
            DO ibnd=1,nbnd,2
-              CALL fft_orbital_gamma(evc_all(:,:,1),ibnd,nbnd)
+              CALL invfft_orbital_gamma(evc_all(:,:,1),ibnd,nbnd)
               CALL calbec_rs_gamma(ibnd,nbnd,becp1_all)
               becp%r(:,ibnd) = becp1_all(:,ibnd)
               IF (ibnd + 1 <= nbnd) becp%r(:,ibnd+1) = becp1_all(:,ibnd+1)
               CALL s_psir_gamma(ibnd,nbnd)
-              CALL bfft_orbital_gamma(sevc_all(:,:,1),ibnd,nbnd)
+              CALL fwfft_orbital_gamma(sevc_all(:,:,1),ibnd,nbnd)
            ENDDO
            !
         ELSE
@@ -445,7 +445,7 @@ SUBROUTINE virt_read()
   !
   IF ( gamma_only ) THEN
      !
-     ! The FFT is done in the same way as in fft_orbital_gamma
+     ! The FFT is done in the same way as in invfft_orbital_gamma
      !
      DO ibnd=1,nbnd,2
         IF (ibnd<nbnd) THEN
@@ -473,7 +473,7 @@ SUBROUTINE virt_read()
      !
   ELSE
      !
-     ! The FFT is done in the same way as in fft_orbital_k
+     ! The FFT is done in the same way as in invfft_orbital_k
      !
      DO ik=1,nks
         DO ibnd=1,nbnd

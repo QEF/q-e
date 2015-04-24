@@ -507,7 +507,7 @@ CONTAINS
     USE uspp_param,               ONLY : upf, nh
     USE becmod,                   ONLY : becp,calbec
     USE ions_base,                ONLY : ityp,nat,ntyp=>nsp
-    USE realus,                   ONLY : npw_k,real_space_debug,fft_orbital_gamma,calbec_rs_gamma
+    USE realus,                   ONLY : npw_k,real_space_debug,invfft_orbital_gamma,calbec_rs_gamma
     USE gvect,                    ONLY : gstart
     USE klist,                    ONLY : nks
     USE lr_variables,             ONLY : lr_verbosity, itermax, LR_iteration, LR_polarization, &
@@ -543,7 +543,7 @@ CONTAINS
        !BECP initialisation for evc1
        IF (real_space_debug >6) THEN
           DO ibnd=1,nbnd,2
-             CALL fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
+             CALL invfft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
              CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
           ENDDO
        ELSE
@@ -653,7 +653,7 @@ CONTAINS
     USE uspp_param,               ONLY : upf, nh
     USE becmod,                   ONLY : becp,calbec
     USE ions_base,                ONLY : ityp,nat,ntyp=>nsp
-    USE realus,                   ONLY : npw_k,real_space_debug,fft_orbital_gamma,calbec_rs_gamma
+    USE realus,                   ONLY : npw_k,real_space_debug,invfft_orbital_gamma,calbec_rs_gamma
     USE gvect,                    ONLY : gstart
     USE klist,                    ONLY : nks
     USE lr_variables,             ONLY : lr_verbosity, itermax, LR_iteration, LR_polarization, &
