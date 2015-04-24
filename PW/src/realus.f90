@@ -225,8 +225,7 @@ MODULE realus
       INTEGER               :: i, j, k, ipol, lm, nb, mb, ijv, ilast
       REAL(DP)              :: posi(3)
       REAL(DP), ALLOCATABLE :: boxdist(:), xyz(:,:), spher(:,:)
-      REAL(DP), ALLOCATABLE :: rl2(:), d1y(:), d2y(:)
-      REAL(DP), ALLOCATABLE :: qtot(:,:,:), xsp(:), ysp(:), wsp(:)
+      REAL(DP), ALLOCATABLE :: qtot(:), rl2(:), dqtot(:), xsp(:), wsp(:)
       REAL(DP)              :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz, aux
       REAL(DP)              :: inv_nr1, inv_nr2, inv_nr3, tau_ia(3), boxradsq_ia
       !
@@ -400,22 +399,21 @@ MODULE realus
          !
          ! ... compute the spherical harmonics
          !
-         ALLOCATE( spher( mbia, lmaxq**2 ) )
-         spher(:,:) = 0.0_dp
+         ALLOCATE( spher(mbia, lmaxq**2) )
+         spher (:,:) = 0.0_dp
          !
          ALLOCATE( rl2( mbia ) )
          DO ir = 1, mbia
             rl2(ir) = xyz(1,ir)**2 + xyz(2,ir)**2 + xyz(3,ir)**2
          ENDDO
-         CALL ylmr2( lmaxq**2, mbia, xyz, rl2, spher )
+         CALL ylmr2 ( lmaxq**2, mbia, xyz, rl2, spher )
          DEALLOCATE( rl2 )
          !
-         ALLOCATE( qtot( upf(nt)%kkbeta, upf(nt)%nbeta, upf(nt)%nbeta ) )
+         ALLOCATE( qtot(upf(nt)%kkbeta), dqtot(upf(nt)%kkbeta) )
          !
          ! ... variables used for spline interpolation
          !
-         ALLOCATE( xsp( upf(nt)%kkbeta ), ysp( upf(nt)%kkbeta ), &
-                   wsp( upf(nt)%kkbeta ) )
+         ALLOCATE( xsp( upf(nt)%kkbeta ), wsp( upf(nt)%kkbeta ) )
          !
          ! ... the radii in x
          !
@@ -438,14 +436,15 @@ MODULE realus
                                l <= lllnbnt + lllmbnt        .and. &
                                mod( l + lllnbnt + lllmbnt, 2 ) == 0 ) ) CYCLE
                   !
+                  ilast = 0 
                   IF( upf(nt)%q_with_l ) THEN
-                      qtot(1:upf(nt)%kkbeta,nb,mb) = &
+                      qtot(1:upf(nt)%kkbeta) = &
                           upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l) &
                            / rgrid(nt)%r(1:upf(nt)%kkbeta)**2
                   ELSE
                       DO ir = 1, upf(nt)%kkbeta
                         IF ( rgrid(nt)%r(ir) >= upf(nt)%rinner(l+1) ) THEN
-                            qtot(ir,nb,mb) = upf(nt)%qfunc(ir,ijv) / &
+                            qtot(ir) = upf(nt)%qfunc(ir,ijv) / &
                                             rgrid(nt)%r(ir)**2
                         ELSE
                             ilast = ir
@@ -455,42 +454,40 @@ MODULE realus
                   !
                   IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
                      CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
-                        ilast, rgrid(nt)%r, l, 0, qtot(1,nb,mb) )
+                        ilast, rgrid(nt)%r, l, 0, qtot )
                   !
-                  ! ... we save the values in y
+                  ! ... compute the first derivative
                   !
-                  ysp(:) = qtot(1:upf(nt)%kkbeta,nb,mb)
+                  ! ... analytical derivative up to r = rinner, numerical beyond
                   !
-                  IF ( upf(nt)%nqf > 0 ) THEN
-                      !
-                      ! ... compute the first derivative in first point
-                      !
-                      CALL setqfcorrptfirst( upf(nt)%qfcoef(1:,l+1,nb,mb), &
-                                      first, rgrid(nt)%r(1), upf(nt)%nqf, l )
-                      !
-                      ! ... compute the second derivative in first point
-                      !
-                      CALL setqfcorrptsecond( upf(nt)%qfcoef(1:,l+1,nb,mb), &
-                                      second, rgrid(nt)%r(1), upf(nt)%nqf, l )
+                  CALL radial_gradient(qtot, dqtot, rgrid(nt)%r, upf(nt)%kkbeta, 1)
+                  IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
+                       CALL setdqf( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb), &
+                       ilast, rgrid(nt)%r(1), l, dqtot  )
+                  !
+                  ! ... we need the first and second derivatives in the first point
+                  !
+                  first = dqtot(1)
+                  IF ( upf(nt)%rinner(l+1) > 0.D0 ) THEN
+                     second = 0.0_dp
+                     DO i = max( 3-l, 1 ), upf(nt)%nqf
+                        second = second + upf(nt)%qfcoef(i,l+1,nb,mb) * &
+                             rgrid(nt)%r(1)**(i-3+l)*(i-1+l)*(i-2+l)
+                     ENDDO
                   ELSE
-                      !
-                      ! ... if we don't have the analitical coefficients, try
-                      ! ... the same numerically (note that setting first=0.0
-                      ! ...  and second=0.0 makes almost no difference)
-                      !
-                      ALLOCATE( d1y(upf(nt)%kkbeta), d2y(upf(nt)%kkbeta) )
-                      CALL radial_gradient(ysp(1:upf(nt)%kkbeta), d1y, &
-                                           rgrid(nt)%r, upf(nt)%kkbeta, 1)
-                      CALL radial_gradient(d1y, d2y, rgrid(nt)%r, upf(nt)%kkbeta, 1)
-                      !
-                      first = d1y(1) ! first derivative in first point
-                      second =d2y(1) ! second derivative in first point
-                      DEALLOCATE( d1y, d2y )
+                     !
+                     ! ... if we don't have the analitical coefficients, try the same
+                     ! ... numerically (note that setting first=0.0 and second=0.0
+                     ! ... makes almost no difference) - wsp is used as work space
+                     !
+                     CALL radial_gradient(dqtot, wsp, rgrid(nt)%r, upf(nt)%kkbeta, 1)
+                     second = wsp(1) ! second derivative in first point
+                     !
                   ENDIF
                   !
-                  ! ... call spline
+                  ! ... call spline for interpolation of Q(r)
                   !
-                  CALL spline( xsp, ysp, first, second, wsp )
+                  CALL spline( xsp, qtot, first, second, wsp )
                   !
                   DO ir = 1, tabp(ia)%maxbox
                      !
@@ -499,14 +496,13 @@ MODULE realus
                         ! ... if in the inner radius just compute the
                         ! ... polynomial
                         !
-                        CALL setqfcorrpt( upf(nt)%qfcoef(1:,l+1,nb,mb), &
-                                   qtot_int, boxdist(ir), upf(nt)%nqf, l )
-                        !
+                        CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
+                             1, boxdist(ir), l, 0, qtot_int )
                      ELSE
                         !
                         ! ... spline interpolation
                         !
-                        qtot_int = splint( xsp, ysp, wsp, boxdist(ir) )
+                        qtot_int = splint( xsp, qtot, wsp, boxdist(ir) )
                         !
                      ENDIF
                      !
@@ -533,9 +529,8 @@ MODULE realus
          ENDDO
          !
          DEALLOCATE( spher )
-         DEALLOCATE( qtot )
+         DEALLOCATE( qtot, dqtot )
          DEALLOCATE( xsp )
-         DEALLOCATE( ysp )
          DEALLOCATE( wsp )
          !
          CALL stop_clock( 'realus:tabp' )
@@ -952,100 +947,6 @@ MODULE realus
       CALL mp_sum(  deeq(:,:,:,1:nspin_mag) , intra_bgrp_comm )
       !
     END SUBROUTINE newq_r
-    !
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE setqfcorrpt( qfcoef, rho, r, nqf, ltot )
-      !------------------------------------------------------------------------
-      !
-      ! ... This routine compute the first part of the Q function at the
-      ! ... point r. On output it contains  Q
-      !
-      IMPLICIT NONE
-      !
-      INTEGER,  INTENT(in):: nqf, ltot
-        ! input: the number of coefficients
-        ! input: the angular momentum
-      REAL(DP), INTENT(in) :: r, qfcoef(nqf)
-        ! input: the radial mesh
-        ! input: the coefficients of Q
-      REAL(DP), INTENT(out) :: rho
-        ! output: the function to be computed
-      !
-      INTEGER  :: i
-      REAL(DP) :: rr
-      !
-      rr = r*r
-      !
-      rho = qfcoef(1)
-      DO i = 2, nqf
-         rho = rho + qfcoef(i)*rr**(i-1)
-      ENDDO
-      rho = rho*r**ltot
-      !
-      RETURN
-      !
-    END SUBROUTINE setqfcorrpt
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE setqfcorrptfirst( qfcoef, rho, r, nqf, ltot )
-      !------------------------------------------------------------------------
-      !
-      ! ... On output it contains  Q'  (probably wrong)
-      !
-      IMPLICIT NONE
-      !
-      INTEGER,  INTENT(in) :: nqf, ltot
-        ! input: the number of coefficients
-        ! input: the angular momentum
-      REAL(DP), INTENT(in) :: r, qfcoef(nqf)
-        ! input: the radial mesh
-        ! input: the coefficients of Q
-      REAL(DP), INTENT(out) :: rho
-        ! output: the function to be computed
-      !
-      INTEGER  :: i
-      REAL(DP) :: rr
-      !
-      rr = r*r
-      rho = 0.D0
-      DO i = max( 1, 2-ltot ), nqf
-         rho = rho + qfcoef(i)*rr**(i-2+ltot)*(i-1+ltot)
-      ENDDO
-      !
-      RETURN
-      !
-    END SUBROUTINE setqfcorrptfirst
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE setqfcorrptsecond( qfcoef, rho, r, nqf, ltot )
-      !------------------------------------------------------------------------
-      !
-      ! ... On output it contains  Q
-      !
-      IMPLICIT NONE
-      !
-      INTEGER,  INTENT(in) :: nqf, ltot
-        ! input: the number of coefficients
-        ! input: the angular momentum
-      REAL(DP), INTENT(in) :: r, qfcoef(nqf)
-        ! input: the radial mesh
-        ! input: the coefficients of Q
-      REAL(DP), INTENT(out) :: rho
-        ! output: the function to be computed
-      !
-      INTEGER  :: i
-      REAL(DP) :: rr
-      !
-      rr = r*r
-      rho = 0.D0
-      DO i = max( 3-ltot, 1 ), nqf
-         rho = rho + qfcoef(i)*rr**(i-3+ltot)*(i-1+ltot)*(i-2+ltot)
-      ENDDO
-      !
-      RETURN
-      !
-    END SUBROUTINE setqfcorrptsecond
     !
     !------------------------------------------------------------------------
     SUBROUTINE addusdens_r(rho_1,rescale)
