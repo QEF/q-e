@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004-2013 Quantum ESPRESSO group
+! Copyright (C) 2004-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,9 @@ MODULE realus
   ! ... modified by O. Baris Malcioglu (2008)
   ! ... modified by P. Umari and G. Stenuit (2009)
   ! ... Cleanup, GWW-specific stuff moved out by P. Giannozzi (2015)
+  ! ... Computation of dQ/dtau_i needed for forces added by P. Giannozzi (2015)
   !
+  IMPLICIT NONE
   REAL(DP), ALLOCATABLE :: boxrad(:) ! radius of boxes, does not depend on the grid
   ! Beta function in real space
   INTEGER,  ALLOCATABLE :: box_beta(:,:), maxbox_beta(:)
@@ -46,17 +48,34 @@ MODULE realus
   !
   ! Contains the augmentation functions and related quantities, in realspace for a single atom
   TYPE realsp_augmentation
-     REAL(DP),ALLOCATABLE :: qr(:,:) 
-        ! (maxbox,number_of_q_funcs) the Q functions sampled over R points
-     INTEGER,ALLOCATABLE  :: box(:) 
-        ! (maxbox) Index of point R in the global order of the R-space grid
      INTEGER :: maxbox = 0
         !  number of R points in the augmentation sphere of this atom
+     INTEGER,ALLOCATABLE  :: box(:) 
+        ! (maxbox) Index of point R in the global order of the R-space grid
+     REAL(DP),ALLOCATABLE :: dist(:) 
+        ! (maxbox) distances |R-tau_i| (box is centered on atom tau_i)
+     REAL(DP),ALLOCATABLE :: xyz(:,:) 
+        ! (3,maxbox) coordinates of R-tau_i
+     REAL(DP),ALLOCATABLE :: qr(:,:) 
+        ! (maxbox,number_of_q_funcs) the Q functions sampled over R points
   END TYPE realsp_augmentation
   ! Augmentation functions on the RHO (HARD) grid for all atoms
   TYPE(realsp_augmentation),POINTER :: tabp(:) => null()
   ! Augmentation functions on the SMOOTH grid for all atoms
   TYPE(realsp_augmentation),POINTER :: tabs(:) => null()
+  !
+  PRIVATE
+  ! variables for real-space Q, followed by routines
+  PUBLIC :: tabp, tabs, boxrad
+  PUBLIC :: generate_qpointlist, qpointlist, addusdens_r, newq_r, &
+       addusforce_r, real_space_dq, deallocate_realsp
+  ! variables for real-space beta, followed by routines
+  PUBLIC :: real_space, initialisation_level, real_space_debug, &
+       npw_k, igk_k, tg_psic, betasave, maxbox_beta, box_beta
+  PUBLIC :: betapointlist, init_realspace_vars, v_loc_psir
+  PUBLIC :: invfft_orbital_gamma, fwfft_orbital_gamma, s_psir_gamma, &
+            calbec_rs_gamma, add_vuspsir_gamma, invfft_orbital_k,    &
+            fwfft_orbital_k, s_psir_k, calbec_rs_k, add_vuspsir_k
   !
   CONTAINS
     !------------------------------------------------------------------------
@@ -145,89 +164,84 @@ MODULE realus
 
     END SUBROUTINE init_realspace_vars
     !------------------------------------------------------------------------
-    SUBROUTINE deallocatenewdreal()
+    SUBROUTINE deallocate_realsp()
       !------------------------------------------------------------------------
       !
-      USE ions_base,  ONLY : nat
       USE gvecs,      ONLY : doublegrid
       IMPLICIT NONE
-      INTEGER :: ia
-      IF ( allocated( boxrad ) )  DEALLOCATE( boxrad )
-      ! ------------ tabp ------------ 
-      IF ( associated( tabp) ) THEN
-        DO ia=1,nat
-          IF(allocated(tabp(ia)%qr))  DEALLOCATE(tabp(ia)%qr)
-          IF(allocated(tabp(ia)%box)) DEALLOCATE(tabp(ia)%box)
-          tabp(ia)%maxbox = 0
-        ENDDO
-        DEALLOCATE(tabp)
-      ENDIF
-      ! ------------ tabs ------------ 
-      IF(doublegrid)THEN
-        IF ( associated( tabs) ) THEN
-          DO ia=1,nat
-            IF(allocated(tabs(ia)%qr))  DEALLOCATE(tabs(ia)%qr)
-            IF(allocated(tabs(ia)%box)) DEALLOCATE(tabs(ia)%box)
-            tabs(ia)%maxbox = 0
-          ENDDO
-          DEALLOCATE(tabs)
-        ENDIF
-      ELSE
-        NULLIFY(tabs)
-      ENDIF
-
       !
-    END SUBROUTINE deallocatenewdreal
+      IF ( allocated( boxrad ) )  DEALLOCATE( boxrad )
+      !      
+      CALL deallocate_realsp_aug ( tabp )
+      IF ( doublegrid ) THEN
+         CALL deallocate_realsp_aug ( tabs )
+      ELSE
+         NULLIFY(tabs)
+      END IF
+      !
+    END SUBROUTINE deallocate_realsp
+
+    !------------------------------------------------------------------------
+    SUBROUTINE deallocate_realsp_aug ( tab )
+      !------------------------------------------------------------------------
+      TYPE(realsp_augmentation), POINTER :: tab(:)
+      INTEGER :: ia
+      !
+      IF ( associated( tabp ) ) THEN
+         DO ia = 1, SIZE(tab)
+            IF(allocated(tab(ia)%qr ))  DEALLOCATE(tab(ia)%qr)
+            IF(allocated(tab(ia)%box))  DEALLOCATE(tab(ia)%box)
+            IF(allocated(tab(ia)%dist)) DEALLOCATE(tab(ia)%dist)
+            IF(allocated(tab(ia)%xyz))  DEALLOCATE(tab(ia)%xyz)
+            tab(ia)%maxbox = 0
+         ENDDO
+         DEALLOCATE(tab)
+      ENDIF
+      !
+    END SUBROUTINE deallocate_realsp_aug
     !
     !------------------------------------------------------------------------
     SUBROUTINE qpointlist(dfft, tabp)
       !------------------------------------------------------------------------
       !
-      ! ... This subroutine is the driver routine of the box system in this
-      ! ... implementation of US in real space.
-      ! ... All the variables common in the module are computed and stored for
-      ! ... reusing.
-      ! ... This routine has to be called every time the atoms are moved and of
-      ! ... course at the beginning.
-      ! ... A set of spherical boxes are computed for each atom.
-      ! ... In boxradius there are the radii of the boxes.
-      ! ... In maxbox the upper limit of leading index, namely the number of
-      ! ... points of the fine mesh contained in each box.
-      ! ... In xyz there are the coordinates of the points with origin in the
-      ! ... centre of atom.
-      ! ... In boxdist the distance from the centre.
-      ! ... In spher the spherical harmonics computed for each box
-      ! ... In tabp the q value interpolated in these boxes.
+      ! ... This subroutine computes and stores into "tabp" the values of Q(r)
+      ! ... on atom-centered boxes in the real-space grid of descriptor "dfft".
+      ! ... Must be called at startup and every time atoms (tau_i) move.
+      ! ... A set of spherical boxes are computed for each atom. The Q functions
+      ! ... Q(r-tau_i) are then interpolated on the real-space grid points.
+      ! ... On output:
+      ! ... - boxrad    contains the radii of the boxes for each atom type
+      ! ... - tabp(nat) contains pointers to structure tabp, each contaning
+      ! ...   % maxbox = number of real-space grid points in the atom-centered box
+      ! ...   % qr(maxbox) = interpolated values of Q(r) on the points of the box
+      ! ...   % box(maxbox)= index of grid points in the real-space grid "dfft"
       !
       ! ... Most of time is spent here; the calling routines are faster.
       !
       USE constants,  ONLY : pi, fpi, eps8, eps16
       USE ions_base,  ONLY : nat, nsp, ityp, tau
       USE cell_base,  ONLY : at, bg, omega, alat
-      USE uspp,       ONLY : okvan, indv, nhtol, nhtolm, ap, nhtoj, lpx, lpl
-      USE uspp_param, ONLY : upf, lmaxq, nh, nhm
+      USE uspp,       ONLY : okvan
+      USE uspp_param, ONLY : upf, nh
       USE atom,       ONLY : rgrid
       USE fft_types,  ONLY : fft_dlay_descriptor
       USE mp_bands,   ONLY : me_bgrp
-      USE splinelib,  ONLY : spline, splint
       !
       IMPLICIT NONE
       !
       TYPE(fft_dlay_descriptor),INTENT(in)    :: dfft
       TYPE(realsp_augmentation),POINTER,INTENT(inout) :: tabp(:)
       !
-      INTEGER               :: ia, mbia, nfuncs
-      INTEGER               :: indm, ih, jh, ijh, lllnbnt, lllmbnt
+      INTEGER               :: ia, mbia
+      INTEGER               :: indm, ih, jh, ijh
       INTEGER               :: roughestimate, nt, l
       INTEGER,  ALLOCATABLE :: buffpoints(:)
-      REAL(DP)              :: distsq, qtot_int, first, second
       INTEGER               :: idx0, idx, ir
-      INTEGER               :: i, j, k, ipol, lm, nb, mb, ijv, ilast
-      REAL(DP)              :: posi(3)
-      REAL(DP), ALLOCATABLE :: boxdist(:), xyz(:,:), spher(:,:)
-      REAL(DP), ALLOCATABLE :: qtot(:), rl2(:), dqtot(:), xsp(:), wsp(:)
+      INTEGER               :: i, j, k, ipol, ijv
+      REAL(DP)              :: distsq, posi(3)
+      REAL(DP), ALLOCATABLE :: boxdist(:), xyz(:,:)
       REAL(DP)              :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz, aux
-      REAL(DP)              :: inv_nr1, inv_nr2, inv_nr3, tau_ia(3), boxradsq_ia
+      REAL(DP)              :: inv_nr1, inv_nr2, inv_nr3, boxradsq_ia
       !
       initialisation_level = 3
       IF ( .not. okvan ) RETURN
@@ -236,13 +250,7 @@ MODULE realus
       !
       ! ... tabp is deallocated here to free the memory for the buffers
       !
-      IF( associated(tabp) ) THEN
-         DO ia=1,nat
-            IF(allocated(tabp(ia)%qr))  DEALLOCATE(tabp(ia)%qr)
-            IF(allocated(tabp(ia)%box)) DEALLOCATE(tabp(ia)%box)
-         ENDDO
-         DEALLOCATE(tabp)
-      ENDIF
+      CALL deallocate_realsp_aug ( tabp )
       !
       ALLOCATE(tabp(nat))
       !
@@ -321,10 +329,6 @@ MODULE realus
          !
          boxradsq_ia = boxrad(nt)**2
          !
-         tau_ia(1) = tau(1,ia)
-         tau_ia(2) = tau(2,ia)
-         tau_ia(3) = tau(3,ia)
-         !
          mbia = 0
          !
          DO ir = 1, dfft%nnr
@@ -348,7 +352,7 @@ MODULE realus
                             dble( k )*inv_nr3*at(ipol,3)
             ENDDO
             !
-            posi(:) = posi(:) - tau_ia(:)
+            posi(:) = posi(:) - tau(:,ia)
             !
             ! ... minimum image convention
             !
@@ -377,173 +381,387 @@ MODULE realus
          tabp(ia)%maxbox = mbia
          ALLOCATE( tabp(ia)%box(mbia) )
          tabp(ia)%box(:) = buffpoints(1:mbia)
-         !
+         ALLOCATE( tabp(ia)%dist(mbia) )
+         tabp(ia)%dist(:) = boxdist(1:mbia)
+         ALLOCATE( tabp(ia)%xyz(3,mbia) )
+         tabp(ia)%xyz(:,:) = xyz(:,1:mbia)
          CALL stop_clock( 'realus:boxes' )
          !
-         ! ... now we compute the Q in this box
+         ! ... compute the Q functions for this box
          !
-         ! ... we perform two steps: first we compute for each l the qtot
-         ! ... (radial q), then we interpolate it in our mesh, and then we
-         ! ... add it to tabp with the correct spherical harmonics
-         !
-         ! ... Q is read from pseudo and it is divided into two parts:
-         ! ... in the inner radius a polinomial representation is known and so
-         ! ... strictly speaking we do not use interpolation but just compute
-         ! ... the correct value
-         !
-         CALL start_clock( 'realus:tabp' )
-         !
-         nfuncs = nh(nt)*(nh(nt)+1)/2
-         ALLOCATE(tabp(ia)%qr(mbia, nfuncs))
-         tabp(ia)%qr(:,:)=0.0_dp
-         !
-         ! ... compute the spherical harmonics
-         !
-         ALLOCATE( spher(mbia, lmaxq**2) )
-         spher (:,:) = 0.0_dp
-         !
-         ALLOCATE( rl2( mbia ) )
-         DO ir = 1, mbia
-            rl2(ir) = xyz(1,ir)**2 + xyz(2,ir)**2 + xyz(3,ir)**2
-         ENDDO
-         CALL ylmr2 ( lmaxq**2, mbia, xyz, rl2, spher )
-         DEALLOCATE( rl2 )
-         !
-         ALLOCATE( qtot(upf(nt)%kkbeta), dqtot(upf(nt)%kkbeta) )
-         !
-         ! ... variables used for spline interpolation
-         !
-         ALLOCATE( xsp( upf(nt)%kkbeta ), wsp( upf(nt)%kkbeta ) )
-         !
-         ! ... the radii in x
-         !
-         xsp(:) = rgrid(nt)%r(1:upf(nt)%kkbeta)
-         !
-         DO l = 0, upf(nt)%nqlc - 1
-            !
-            ! ... first we build for each nb,mb,l the total Q(|r|) function
-            ! ... note that l is the true (combined) angular momentum
-            ! ... and that the arrays have dimensions 1..l+1
-            !
-            DO nb = 1, upf(nt)%nbeta
-               DO mb = nb, upf(nt)%nbeta
-                  ijv = mb * (mb-1) /2 + nb
-                  !
-                  lllnbnt = upf(nt)%lll(nb)
-                  lllmbnt = upf(nt)%lll(mb)
-                  !
-                  IF ( .not. ( l >= abs( lllnbnt - lllmbnt ) .and. &
-                               l <= lllnbnt + lllmbnt        .and. &
-                               mod( l + lllnbnt + lllmbnt, 2 ) == 0 ) ) CYCLE
-                  !
-                  ilast = 0 
-                  IF( upf(nt)%q_with_l ) THEN
-                      qtot(1:upf(nt)%kkbeta) = &
-                          upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l) &
-                           / rgrid(nt)%r(1:upf(nt)%kkbeta)**2
-                  ELSE
-                      DO ir = 1, upf(nt)%kkbeta
-                        IF ( rgrid(nt)%r(ir) >= upf(nt)%rinner(l+1) ) THEN
-                            qtot(ir) = upf(nt)%qfunc(ir,ijv) / &
-                                            rgrid(nt)%r(ir)**2
-                        ELSE
-                            ilast = ir
-                        ENDIF
-                      ENDDO
-                  ENDIF
-                  !
-                  IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
-                     CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
-                        ilast, rgrid(nt)%r, l, 0, qtot )
-                  !
-                  ! ... compute the first derivative
-                  !
-                  ! ... analytical derivative up to r = rinner, numerical beyond
-                  !
-                  CALL radial_gradient(qtot, dqtot, rgrid(nt)%r, upf(nt)%kkbeta, 1)
-                  IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
-                       CALL setdqf( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb), &
-                       ilast, rgrid(nt)%r(1), l, dqtot  )
-                  !
-                  ! ... we need the first and second derivatives in the first point
-                  !
-                  first = dqtot(1)
-                  IF ( upf(nt)%rinner(l+1) > 0.D0 ) THEN
-                     second = 0.0_dp
-                     DO i = max( 3-l, 1 ), upf(nt)%nqf
-                        second = second + upf(nt)%qfcoef(i,l+1,nb,mb) * &
-                             rgrid(nt)%r(1)**(i-3+l)*(i-1+l)*(i-2+l)
-                     ENDDO
-                  ELSE
-                     !
-                     ! ... if we don't have the analitical coefficients, try the same
-                     ! ... numerically (note that setting first=0.0 and second=0.0
-                     ! ... makes almost no difference) - wsp is used as work space
-                     !
-                     CALL radial_gradient(dqtot, wsp, rgrid(nt)%r, upf(nt)%kkbeta, 1)
-                     second = wsp(1) ! second derivative in first point
-                     !
-                  ENDIF
-                  !
-                  ! ... call spline for interpolation of Q(r)
-                  !
-                  CALL spline( xsp, qtot, first, second, wsp )
-                  !
-                  DO ir = 1, tabp(ia)%maxbox
-                     !
-                     IF ( boxdist(ir) < upf(nt)%rinner(l+1) ) THEN
-                        !
-                        ! ... if in the inner radius just compute the
-                        ! ... polynomial
-                        !
-                        CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
-                             1, boxdist(ir), l, 0, qtot_int )
-                     ELSE
-                        !
-                        ! ... spline interpolation
-                        !
-                        qtot_int = splint( xsp, qtot, wsp, boxdist(ir) )
-                        !
-                     ENDIF
-                     !
-                     ijh = 0
-                     !
-                     DO ih = 1, nh(nt)
-                        DO jh = ih, nh(nt)
-                           !
-                           ijh = ijh + 1
-                           !
-                           IF ( .not.( nb == indv(ih,nt) .and. &
-                                       mb == indv(jh,nt) ) ) CYCLE
-                           !
-                           DO lm = l**2+1, (l+1)**2
-                              tabp(ia)%qr(ir,ijh) = tabp(ia)%qr(ir,ijh) + &
-                                           qtot_int*spher(ir,lm)*&
-                                           ap(lm,nhtolm(ih,nt),nhtolm(jh,nt))
-                           ENDDO
-                        ENDDO
-                     ENDDO
-                  ENDDO
-               ENDDO
-            ENDDO
-         ENDDO
-         !
-         DEALLOCATE( spher )
-         DEALLOCATE( qtot, dqtot )
-         DEALLOCATE( xsp )
-         DEALLOCATE( wsp )
-         !
-         CALL stop_clock( 'realus:tabp' )
+         CALL real_space_q( nt, ia, mbia )
          !
       ENDDO
       !
       DEALLOCATE( xyz )
       DEALLOCATE( boxdist )
       DEALLOCATE( buffpoints )
-      !
       CALL stop_clock( 'realus' )
       !
     END SUBROUTINE qpointlist
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE real_space_q( nt, ia, mbia )
+      !------------------------------------------------------------------------
+      !
+      ! ... Compute Q_lm(r-tau_ia) centered around  atom ia of type nt. 
+      ! ... First we compute the radial Q(r) (qtot) for each l; then we
+      ! ... we interpolate it in our mesh (contained in tabp); finally
+      ! ... we multiply by the spherical harmonics and store it into tabp
+      !
+      ! ... Q is read from pseudo and it is divided into two parts:
+      ! ... in the inner radius a polinomial representation is known and so
+      ! ... strictly speaking we do not use interpolation but just compute
+      ! ... the correct value
+      !
+      USE uspp,       ONLY : indv, nhtol, nhtolm, ap, nhtoj
+      USE uspp_param, ONLY : upf, lmaxq, nh
+      USE atom,       ONLY : rgrid
+      USE splinelib,  ONLY : spline, splint
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: ia, nt, mbia
+      !
+      INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ilast, ir, nfuncs, lm, &
+           i, ijh, ih, jh, ipol
+      REAL(dp) :: first, second, qtot_int
+      REAL(dp), ALLOCATABLE :: qtot(:), dqtot(:), xsp(:), wsp(:), &
+           rl2(:), spher(:,:)
+
+      CALL start_clock( 'realus:tabp' )
+      !
+      nfuncs = nh(nt)*(nh(nt)+1)/2
+      ALLOCATE(tabp(ia)%qr(mbia, nfuncs))
+      !
+      ! ... compute the spherical harmonics
+      !
+      ALLOCATE( spher(mbia, lmaxq**2) )
+      spher (:,:) = 0.0_dp
+      !
+      ALLOCATE( rl2( mbia ) )
+      DO ir = 1, mbia
+         rl2(ir) = tabp(ia)%xyz(1,ir)**2 + &
+                   tabp(ia)%xyz(2,ir)**2 + &
+                   tabp(ia)%xyz(3,ir)**2
+      ENDDO
+      CALL ylmr2 ( lmaxq**2, mbia, tabp(ia)%xyz, rl2, spher )
+      DEALLOCATE( rl2 )
+
+      tabp(ia)%qr(:,:)=0.0_dp
+      ALLOCATE( qtot(upf(nt)%kkbeta), dqtot(upf(nt)%kkbeta) )
+      !
+      ! ... variables used for spline interpolation
+      !
+      ALLOCATE( xsp( upf(nt)%kkbeta ), wsp( upf(nt)%kkbeta ) )
+      !
+      ! ... the radii in x
+      !
+      xsp(:) = rgrid(nt)%r(1:upf(nt)%kkbeta)
+      !
+      DO l = 0, upf(nt)%nqlc - 1
+         !
+         ! ... first we build for each nb,mb,l the total Q(|r|) function
+         ! ... note that l is the true (combined) angular momentum
+         ! ... and that the arrays have dimensions 1..l+1
+         !
+         DO nb = 1, upf(nt)%nbeta
+            DO mb = nb, upf(nt)%nbeta
+               ijv = mb * (mb-1) /2 + nb
+               !
+               lllnbnt = upf(nt)%lll(nb)
+               lllmbnt = upf(nt)%lll(mb)
+               !
+               IF ( .not. ( l >= abs( lllnbnt - lllmbnt ) .and. &
+                            l <= lllnbnt + lllmbnt        .and. &
+                            mod( l + lllnbnt + lllmbnt, 2 ) == 0 ) ) CYCLE
+               !
+               ilast = 0 
+               IF( upf(nt)%q_with_l ) THEN
+                  qtot(1:upf(nt)%kkbeta) = &
+                       upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l) &
+                       / rgrid(nt)%r(1:upf(nt)%kkbeta)**2
+               ELSE
+                  DO ir = 1, upf(nt)%kkbeta
+                     IF ( rgrid(nt)%r(ir) >= upf(nt)%rinner(l+1) ) THEN
+                        qtot(ir) = upf(nt)%qfunc(ir,ijv) / &
+                             rgrid(nt)%r(ir)**2
+                     ELSE
+                        ilast = ir
+                     ENDIF
+                  ENDDO
+               ENDIF
+               !
+               IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
+                    CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
+                    ilast, rgrid(nt)%r, l, 0, qtot )
+               !
+               ! ... compute the first derivative
+               !
+               ! ... analytical derivative up to r = rinner, numerical beyond
+               !
+               CALL radial_gradient(qtot, dqtot, rgrid(nt)%r, upf(nt)%kkbeta, 1)
+               IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
+                    CALL setdqf( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb), &
+                    ilast, rgrid(nt)%r(1), l, dqtot  )
+               !
+               ! ... we need the first and second derivatives in the first point
+               !
+               first = dqtot(1)
+               IF ( upf(nt)%rinner(l+1) > 0.D0 ) THEN
+                  second = 0.0_dp
+                  DO i = max( 3-l, 1 ), upf(nt)%nqf
+                     second = second + upf(nt)%qfcoef(i,l+1,nb,mb) * &
+                          rgrid(nt)%r(1)**(i-3+l)*(i-1+l)*(i-2+l)
+                  ENDDO
+               ELSE
+                  !
+                  ! ... if we don't have the analitical coefficients, try the same
+                  ! ... numerically (note that setting first=0.0 and second=0.0
+                  ! ... makes almost no difference) - wsp is used as work space
+                  !
+                  CALL radial_gradient(dqtot, wsp, rgrid(nt)%r, upf(nt)%kkbeta, 1)
+                  second = wsp(1) ! second derivative in first point
+                  !
+               ENDIF
+               !
+               ! ... call spline for interpolation of Q(r)
+               !
+               CALL spline( xsp, qtot, first, second, wsp )
+               !
+               DO ir = 1, tabp(ia)%maxbox
+                  !
+                  IF ( tabp(ia)%dist(ir) < upf(nt)%rinner(l+1) ) THEN
+                     !
+                     ! ... if in the inner radius just compute the
+                     ! ... polynomial
+                     !
+                     CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
+                          1, tabp(ia)%dist(ir), l, 0, qtot_int )
+                     !
+                  ELSE
+                     !
+                     ! ... spline interpolation
+                     !
+                     qtot_int = splint( xsp, qtot, wsp, tabp(ia)%dist(ir) )
+                     !
+                  ENDIF
+                  !
+                  ijh = 0
+                  DO ih = 1, nh(nt)
+                     DO jh = ih, nh(nt)
+                        !
+                        ijh = ijh + 1
+                        !
+                        IF ( .not.( nb == indv(ih,nt) .and. &
+                                    mb == indv(jh,nt) ) ) CYCLE
+                        !
+                        DO lm = l**2+1, (l+1)**2
+                           tabp(ia)%qr(ir,ijh) = tabp(ia)%qr(ir,ijh) + &
+                                        qtot_int*spher(ir,lm)*&
+                                        ap(lm,nhtolm(ih,nt),nhtolm(jh,nt))
+                        ENDDO
+                     ENDDO
+                  ENDDO
+               ENDDO
+               !
+            ENDDO
+         ENDDO
+      ENDDO
+      !
+      DEALLOCATE( qtot, dqtot )
+      DEALLOCATE( wsp, xsp )
+      DEALLOCATE( spher )
+      !
+      CALL stop_clock( 'realus:tabp' )
+      !
+    END SUBROUTINE real_space_q
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE real_space_dq( nt, ia, mbia, nfuncs, dqr )
+      !------------------------------------------------------------------------
+      !
+      ! ... compute dQ(r-tau_i)/dtau_{i,a} using the formula
+      !     dQ(r-tau_i)/dtau_{i,a}= - dq/dr(|r-tau_i|)(r_a-tau_{i,a})/|r-tau_i| 
+      !                               * Y_lm(r-tau_i)
+      !                             - q(|r-tau_i|) * (dY_lm(r-tau_i)/dtau_{i,a})
+      ! ... This routine follows the same logic of real_space_q 
+      !
+      USE uspp,       ONLY : indv, nhtol, nhtolm, ap, nhtoj
+      USE uspp_param, ONLY : upf, lmaxq, nh
+      USE atom,       ONLY : rgrid
+      USE splinelib,  ONLY : spline, splint
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: ia, nt, mbia, nfuncs
+      REAL(dp),INTENT(OUT):: dqr(mbia,nfuncs,3)
+      !
+      INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ilast, ir, lm, &
+           i, ijh, ih, jh, ipol
+      REAL(dp) :: first, second, qtot_int, dqtot_int
+      REAL(dp), ALLOCATABLE :: qtot(:), dqtot(:), xsp(:), wsp(:,:), &
+           rl2(:), spher(:,:), dspher(:,:,:)
+      !
+      CALL start_clock( 'realus:tabp' )
+      !
+      ! ... compute the spherical harmonics
+      !
+      ALLOCATE( spher(mbia, lmaxq**2), dspher(mbia, lmaxq**2, 3) )
+      spher (:,:) = 0.0_dp
+      dspher(:,:,:) = 0.0_dp
+      !
+      ALLOCATE( rl2( mbia ) )
+      DO ir = 1, mbia
+         rl2(ir) = tabp(ia)%xyz(1,ir)**2 + &
+                   tabp(ia)%xyz(2,ir)**2 + &
+                   tabp(ia)%xyz(3,ir)**2
+      ENDDO
+      CALL ylmr2 ( lmaxq**2, mbia, tabp(ia)%xyz, rl2, spher )
+      do ipol = 1, 3
+         CALL dylmr2( lmaxq**2, mbia, tabp(ia)%xyz, rl2, dspher(1,1,ipol),ipol )
+      END DO
+      DEALLOCATE( rl2 )
+
+      dqr(:,:,:)=0.0_dp
+      ALLOCATE( qtot(upf(nt)%kkbeta), dqtot(upf(nt)%kkbeta) )
+      !
+      ! ... variables used for spline interpolation
+      !
+      ALLOCATE( xsp( upf(nt)%kkbeta ), wsp( upf(nt)%kkbeta, 2 ) )
+      !
+      ! ... the radii in x
+      !
+      xsp(:) = rgrid(nt)%r(1:upf(nt)%kkbeta)
+      !
+      DO l = 0, upf(nt)%nqlc - 1
+         !
+         ! ... first we build for each nb,mb,l the total Q(|r|) function
+         ! ... note that l is the true (combined) angular momentum
+         ! ... and that the arrays have dimensions 1..l+1
+         !
+         DO nb = 1, upf(nt)%nbeta
+            DO mb = nb, upf(nt)%nbeta
+               ijv = mb * (mb-1) /2 + nb
+               !
+               lllnbnt = upf(nt)%lll(nb)
+               lllmbnt = upf(nt)%lll(mb)
+               !
+               IF ( .not. ( l >= abs( lllnbnt - lllmbnt ) .and. &
+                            l <= lllnbnt + lllmbnt        .and. &
+                            mod( l + lllnbnt + lllmbnt, 2 ) == 0 ) ) CYCLE
+               !
+               ilast = 0 
+               IF( upf(nt)%q_with_l ) THEN
+                  qtot(1:upf(nt)%kkbeta) = &
+                       upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l) &
+                       / rgrid(nt)%r(1:upf(nt)%kkbeta)**2
+               ELSE
+                  DO ir = 1, upf(nt)%kkbeta
+                     IF ( rgrid(nt)%r(ir) >= upf(nt)%rinner(l+1) ) THEN
+                        qtot(ir) = upf(nt)%qfunc(ir,ijv) / &
+                             rgrid(nt)%r(ir)**2
+                     ELSE
+                        ilast = ir
+                     ENDIF
+                  ENDDO
+               ENDIF
+               !
+               IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
+                    CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
+                    ilast, rgrid(nt)%r, l, 0, qtot )
+               !
+               ! ... compute the first derivative
+               !
+               ! ... analytical derivative up to r = rinner, numerical beyond
+               !
+               CALL radial_gradient(qtot, dqtot, rgrid(nt)%r, upf(nt)%kkbeta, 1)
+               IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
+                    CALL setdqf( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb), &
+                    ilast, rgrid(nt)%r(1), l, dqtot  )
+               !
+               ! ... we need the first and second derivatives in the first point
+               !
+               first = dqtot(1)
+               IF ( upf(nt)%rinner(l+1) > 0.D0 ) THEN
+                  second = 0.0_dp
+                  DO i = max( 3-l, 1 ), upf(nt)%nqf
+                     second = second + upf(nt)%qfcoef(i,l+1,nb,mb) * &
+                          rgrid(nt)%r(1)**(i-3+l)*(i-1+l)*(i-2+l)
+                  ENDDO
+               ELSE
+                  !
+                  ! ... if we don't have the analitical coefficients, try the same
+                  ! ... numerically (note that setting first=0.0 and second=0.0
+                  ! ... makes almost no difference) - wsp is used as work space
+                  !
+                  CALL radial_gradient(dqtot, wsp, rgrid(nt)%r, upf(nt)%kkbeta, 1)
+                  second = wsp(1,1) ! second derivative in first point
+                  !
+               ENDIF
+               !
+               ! ... call spline for interpolation of Q(r)
+               !
+               CALL spline( xsp, qtot, first, second, wsp(:,1) )
+               !
+               ! ... same for dQ/dr (third derivative at first point is set to zero)
+               !
+               CALL spline( xsp, dqtot, second, 0.0_dp, wsp(:,2) )
+               !
+               DO ir = 1, tabp(ia)%maxbox
+                  !
+                  IF ( tabp(ia)%dist(ir) < upf(nt)%rinner(l+1) ) THEN
+                     !
+                     ! ... if in the inner radius just compute the
+                     ! ... polynomial
+                     !
+                     CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
+                          1, tabp(ia)%dist(ir), l, 0, qtot_int )
+                     CALL setdqf( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb), &
+                          1, tabp(ia)%dist(ir), l, dqtot_int)
+                  ELSE
+                     !
+                     ! ... spline interpolation
+                     !
+                     qtot_int = splint( xsp, qtot, wsp(:,1), tabp(ia)%dist(ir) )
+                     dqtot_int= splint( xsp,dqtot, wsp(:,2), tabp(ia)%dist(ir) )
+                     !
+                  ENDIF
+                  !
+                  ijh = 0
+                  DO ih = 1, nh(nt)
+                     DO jh = ih, nh(nt)
+                        !
+                        ijh = ijh + 1
+                        !
+                        IF ( .not.( nb == indv(ih,nt) .and. &
+                                    mb == indv(jh,nt) ) ) CYCLE
+                        !
+                        DO lm = l**2+1, (l+1)**2
+                           DO ipol = 1,3
+                              dqr(ir,ijh,ipol) = &
+                                   dqr(ir,ijh,ipol) - &
+                                   ( qtot_int*dspher(ir,lm,ipol) +  &
+                                     dqtot_int*tabp(ia)%xyz(ipol,ir)/ &
+                                     tabp(ia)%dist(ir)*spher(ir,lm) ) * &
+                                     ap(lm,nhtolm(ih,nt),nhtolm(jh,nt))
+                           END DO
+                        ENDDO
+                     ENDDO
+                  ENDDO
+               ENDDO
+               !
+            ENDDO
+         ENDDO
+      ENDDO
+      !
+      DEALLOCATE( qtot, dqtot )
+      DEALLOCATE( wsp, xsp )
+      DEALLOCATE( dspher, spher )
+      !
+      CALL stop_clock( 'realus:tabp' )
+      !
+    END SUBROUTINE real_space_dq
     !
     !------------------------------------------------------------------------
     SUBROUTINE betapointlist()
@@ -797,7 +1015,6 @@ MODULE realus
       !
       ! We know f_l(r) and Y_lm(r) for certain points,
       ! basically we interpolate the known values to new mesh using splint
-      !      iqs   = 0
       !
       DO ia = 1, nat
          !
@@ -850,8 +1067,6 @@ MODULE realus
                !
                qtot_int = splint( xsp, ysp, wsp, boxdist_beta(ir,ia) ) !the value of f_l(r) in point ir in atom ia
                !
-               !iqs = iqs + 1
-               !
                betasave(ia,ih,ir) = qtot_int*spher_beta(ir,lm,ia) !spher_beta is the Y_lm in point ir for atom ia
                !
             ENDDO
@@ -899,7 +1114,7 @@ MODULE realus
       REAL(DP), ALLOCATABLE :: aux(:)
       !
       INTEGER               :: ia, ih, jh, is, ir, nt
-      INTEGER               :: mbia, nhnt, iqs
+      INTEGER               :: mbia
       !
       IF (tqr .and. .not. associated(tabp)) THEN
          CALL generate_qpointlist()
@@ -917,8 +1132,6 @@ MODULE realus
             aux(:) = vltot(:) + vr(:,is)
          ENDIF
          !
-         iqs = 0
-         !
          DO ia = 1, nat
             !
             mbia = tabp(ia)%maxbox
@@ -927,12 +1140,9 @@ MODULE realus
             nt = ityp(ia)
             IF ( .not. upf(nt)%tvanp ) CYCLE
             !
-            nhnt = nh(nt)
-            !
-            DO ih = 1, nhnt
-               DO jh = ih, nhnt
+            DO ih = 1, nh(nt)
+               DO jh = ih, nh(nt)
                   DO ir = 1, mbia
-                     iqs = iqs + 1
                      deeq(ih,jh,ia,is)= deeq(ih,jh,ia,is) + &
                         tabp(ia)%qr(ir,ijtoh(ih,jh,nt))*aux(tabp(ia)%box(ir))
                   ENDDO
@@ -976,7 +1186,7 @@ MODULE realus
       ! If this is the ground charge density, enable rescaling
       LOGICAL, INTENT(in) :: rescale
       !
-      INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia, nhnt, iqs
+      INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia
       CHARACTER(len=80) :: msg
       REAL(DP) :: charge
       REAL(DP) :: tolerance
@@ -984,16 +1194,13 @@ MODULE realus
       !
       IF ( .not. okvan ) RETURN
       tolerance = 1.d-3
-      IF ( real_space ) tolerance = 1.d-2 !Charge loss in real_space case is even worse.
-      !Final verdict: Mixing of Real Space paradigm and      !Q space paradigm results in fast but not so
-      ! accurate code. Not giving up though, I think
-      ! I can still increase the accuracy a bit...
+      ! Charge loss with real-space betas is worse
+      IF ( real_space ) tolerance = 1.d-2
       !
       CALL start_clock( 'addusdens' )
       !
       DO is = 1, nspin_mag
          !
-         iqs = 0
          DO ia = 1, nat
             !
             mbia = tabp(ia)%maxbox
@@ -1002,14 +1209,12 @@ MODULE realus
             nt = ityp(ia)
             IF ( .not. upf(nt)%tvanp ) CYCLE
             !
-            nhnt = nh(nt)
             ijh = 0
-            DO ih = 1, nhnt
-               DO jh = ih, nhnt
+            DO ih = 1, nh(nt)
+               DO jh = ih, nh(nt)
                   ijh = ijh + 1
                   DO ir = 1, mbia
                      irb = tabp(ia)%box(ir)
-                     iqs = iqs + 1
                      rho_1(irb,is) = rho_1(irb,is) + tabp(ia)%qr(ir,ijh)*becsum(ijh,ia,is)
                   ENDDO
                ENDDO
@@ -1049,6 +1254,86 @@ MODULE realus
       RETURN
       !
     END SUBROUTINE addusdens_r
+    !----------------------------------------------------------------------
+    SUBROUTINE addusforce_r (forcenl)
+      !----------------------------------------------------------------------
+      !
+      !   This routine computes the contribution to atomic forces due
+      !   to the dependence of the Q function on the atomic position.
+      !   F_j,at=-\int sum_lm V^*(r) dQ_lm(r)/dtau_at dr becsum(lm,at)
+      !   where becsum(lm,at) = sum_i <psi_i|beta_l>w_i<beta_m|psi_i>
+      !   On output: the contribution is added to forcenl
+      !
+      USE kinds,      ONLY : DP
+      USE cell_base,  ONLY : omega
+      USE ions_base,  ONLY : nat, ntyp => nsp, ityp
+      USE fft_base,   ONLY : dfftp
+      USE noncollin_module,   ONLY : nspin_mag
+      USE scf,        ONLY : v, vltot
+      USE uspp,       ONLY : becsum, okvan
+      USE uspp_param, ONLY : upf,  nh
+      USE mp_bands,   ONLY : intra_bgrp_comm
+      USE mp,         ONLY : mp_sum
+      !
+      IMPLICIT NONE
+      !
+      REAL(DP), INTENT(INOUT) :: forcenl (3, nat)
+      !
+      INTEGER :: na, nt, ih, jh, ijh, nfuncs, mbia, ir, is, irb
+      REAL(dp), ALLOCATABLE:: dqr(:,:,:), forceq(:,:)
+      REAL(dp) :: dqrforce(3)
+      !
+      IF (.not.okvan) RETURN
+      !
+      ALLOCATE ( forceq(3,nat) )
+      forceq(:,:) = 0.0_dp
+      !
+      DO na = 1, nat
+         nt = ityp(na)
+         IF ( .NOT. upf(nt)%tvanp ) CYCLE
+         !
+         mbia = tabp(na)%maxbox
+         nfuncs = nh(nt)*(nh(nt)+1)/2
+         ALLOCATE ( dqr(mbia,nfuncs,3) )
+         !
+         CALL real_space_dq( nt, na, mbia, nfuncs, dqr )
+         !
+         ijh = 0
+         DO ih = 1, nh(nt)
+            DO jh = ih, nh(nt)
+               ijh = ijh + 1
+               DO is = 1, nspin_mag
+                  dqrforce(:) = 0.0_dp
+                  IF (nspin_mag==4.and.is/=1) THEN
+                     DO ir = 1, mbia
+                        irb = tabp(na)%box(ir)
+                        dqrforce(:) = dqrforce(:) + dqr(ir,ijh,:) * &
+                             v%of_r(irb,is)
+                     ENDDO
+                  ELSE
+                     DO ir = 1, mbia
+                        irb = tabp(na)%box(ir)
+                        dqrforce(:) = dqrforce(:) + dqr(ir,ijh,:) * &
+                             (vltot(irb) + v%of_r(irb,is) )
+                     ENDDO
+                  END IF
+                  forceq(:,na) = forceq(:,na) - dqrforce(:)*becsum(ijh,na,is)
+               ENDDO
+            ENDDO
+         ENDDO
+         DEALLOCATE ( dqr )
+      ENDDO
+      !
+      CALL mp_sum ( forceq, intra_bgrp_comm )
+      !
+      forcenl(:,:) = forcenl(:,:) + forceq(:,:) * &
+           omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
+      !
+      DEALLOCATE (forceq)
+      !
+      RETURN
+    END SUBROUTINE addusforce_r
+    !
     !--------------------------------------------------------------------------
     SUBROUTINE calbec_rs_gamma ( ibnd, m, becp_r )
 
@@ -1075,13 +1360,13 @@ MODULE realus
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
     USE uspp_param,            ONLY : nh, nhm
     USE fft_base,              ONLY : tg_gather, dffts
-    USE mp_bands,              ONLY : me_bgrp, intra_bgrp_comm
+    USE mp_bands,              ONLY : intra_bgrp_comm
     USE mp,        ONLY : mp_sum
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: ibnd, m
-    INTEGER :: iqs, iqsp, ikb, nt, ia, ih, mbia
+    INTEGER :: ikb, nt, ia, ih, mbia
     REAL(DP) :: fac
     REAL(DP), ALLOCATABLE, DIMENSION(:) :: wr, wi
     REAL(DP) :: bcr, bci
@@ -1106,7 +1391,6 @@ MODULE realus
     ! anymore bands, and so the imaginary part equal zero
     !
        !
-       iqs = 1
        ikb = 0
        !
        DO nt = 1, ntyp
@@ -1129,7 +1413,6 @@ MODULE realus
                    ! nh is the number of beta functions, or something similar
                    !
                    ikb = ikb + 1
-                   iqsp = iqs+mbia-1
                    wr(:) = dble ( psic( box_beta(1:mbia,ia) ) )
                    wi(:) = aimag( psic( box_beta(1:mbia,ia) ) )
                    !print *, "betasave check", betasave(ia,ih,:)
@@ -1147,7 +1430,6 @@ MODULE realus
                    ! It is necessary to multiply by fac which to obtain the integral
                    ! in real space
                    !print *, becp_r(ikb,ibnd)
-                   iqs = iqsp + 1
                    !
                 ENDDO
                 !
@@ -1181,12 +1463,11 @@ MODULE realus
     USE uspp_param,            ONLY : nh, nhm
     USE becmod,                ONLY : bec_type, becp
     USE fft_base,              ONLY : tg_gather, dffts
-    USE mp_bands,              ONLY : me_bgrp
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: ibnd, m
-    INTEGER :: iqs, iqsp, ikb, nt, ia, ih, mbia
+    INTEGER :: ikb, nt, ia, ih, mbia
     REAL(DP) :: fac
     REAL(DP), ALLOCATABLE, DIMENSION(:) :: wr, wi
     REAL(DP) :: bcr, bci
@@ -1207,7 +1488,6 @@ MODULE realus
     fac = sqrt(omega) / (dffts%nr1*dffts%nr2*dffts%nr3)
     !
     becp%k(:,ibnd)=0.d0
-       iqs = 1
        ikb = 0
        !
        DO nt = 1, ntyp
@@ -1222,13 +1502,11 @@ MODULE realus
                    ! nh is the number of beta functions, or something similar
                    !
                    ikb = ikb + 1
-                   iqsp = iqs+mbia-1
                    wr(:) = dble ( psic( box_beta(1:mbia,ia) ) )
                    wi(:) = aimag( psic( box_beta(1:mbia,ia) ) )
                    bcr  = ddot( mbia, betasave(ia,ih,:), 1, wr(:) , 1 )
                    bci  = ddot( mbia, betasave(ia,ih,:), 1, wi(:) , 1 )
                    becp%k(ikb,ibnd)   = fac * cmplx( bcr, bci,kind=DP)
-                   iqs = iqsp + 1
                    !
                 ENDDO
                 DEALLOCATE( wr, wi )
@@ -1266,13 +1544,12 @@ MODULE realus
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : tg_gather, dffts
-      USE mp_bands,               ONLY : me_bgrp
       !
       IMPLICIT NONE
       !
       INTEGER, INTENT(in) :: ibnd, m
       !
-      INTEGER :: ih, jh, iqs, jqs, ikb, jkb, nt, ia, ir, mbia
+      INTEGER :: ih, jh, ikb, jkb, nt, ia, ir, mbia
       REAL(DP) :: fac
       REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2
       !
@@ -1287,8 +1564,6 @@ MODULE realus
       fac = sqrt(omega)
       !
       ikb = 0
-      iqs = 0
-      jqs = 0
       !
       DO nt = 1, ntyp
          !
@@ -1317,11 +1592,8 @@ MODULE realus
                DO ih = 1, nh(nt)
                   !
                   DO ir = 1, mbia
-                     iqs = jqs + ir
                      psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + betasave(ia,ih,ir)*cmplx( w1(ih), w2(ih) ,kind=DP)
                   ENDDO
-                  !
-                  jqs = iqs
                   !
                ENDDO
                !
@@ -1355,13 +1627,12 @@ MODULE realus
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
       USE fft_base,               ONLY : tg_gather, dffts
-      USE mp_bands,               ONLY : me_bgrp
       !
       IMPLICIT NONE
       !
       INTEGER, INTENT(in) :: ibnd, m
       !
-      INTEGER :: ih, jh, iqs, jqs, ikb, jkb, nt, ia, ir, mbia
+      INTEGER :: ih, jh, ikb, jkb, nt, ia, ir, mbia
       REAL(DP) :: fac
       COMPLEX(DP) , ALLOCATABLE, DIMENSION(:) :: w1
       !
@@ -1377,8 +1648,6 @@ MODULE realus
       fac = sqrt(omega)
       !
       ikb = 0
-      iqs = 0
-      jqs = 0
       !
       DO nt = 1, ntyp
          !
@@ -1404,12 +1673,9 @@ MODULE realus
                   !
                   DO ir = 1, mbia
                      !
-                     iqs = jqs + ir
                      psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + betasave(ia,ih,ir)*w1(ih)
                      !
                   ENDDO
-                  !
-                  jqs = iqs
                   !
                ENDDO
                !
@@ -1448,13 +1714,12 @@ MODULE realus
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : tg_gather, dffts
-  USE mp_bands,               ONLY : me_bgrp
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: ibnd, m
   !
-  INTEGER :: ih, jh, iqs, jqs, ikb, jkb, nt, ia, ir, mbia
+  INTEGER :: ih, jh, ikb, jkb, nt, ia, ir, mbia
   REAL(DP) :: fac
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2
   !
@@ -1472,8 +1737,6 @@ MODULE realus
    fac = sqrt(omega)
    !
    ikb = 0
-   iqs = 0
-   jqs = 0
    !
    DO nt = 1, ntyp
       !
@@ -1508,14 +1771,11 @@ MODULE realus
                !
                DO ir = 1, mbia
                   !
-                  iqs = jqs + ir
                   psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + &
                        betasave(ia,ih,ir)*cmplx( w1(ih), w2(ih) ,kind=DP)
                   !
                ENDDO
                   !
-               jqs = iqs
-               !
             ENDDO
             !
             DEALLOCATE( w1, w2 )
@@ -1553,13 +1813,12 @@ MODULE realus
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
   USE fft_base,               ONLY : tg_gather, dffts
-  USE mp_bands,               ONLY : me_bgrp
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: ibnd, m
   !
-  INTEGER :: ih, jh, iqs, jqs, ikb, jkb, nt, ia, ir, mbia
+  INTEGER :: ih, jh, ikb, jkb, nt, ia, ir, mbia
   REAL(DP) :: fac
   !
   COMPLEX(DP), ALLOCATABLE, DIMENSION(:) :: w1
@@ -1576,8 +1835,6 @@ MODULE realus
    fac = sqrt(omega)
    !
    ikb = 0
-   iqs = 0
-   jqs = 0
    !
    DO nt = 1, ntyp
       !
@@ -1608,13 +1865,10 @@ MODULE realus
                !
                DO ir = 1, mbia
                   !
-                  iqs = jqs + ir
                   psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + &
                        betasave(ia,ih,ir)*w1(ih)
                   !
                ENDDO
-                  !
-               jqs = iqs
                !
             ENDDO
             !
@@ -1647,7 +1901,6 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts, tg_gather
     USE fft_interfaces,ONLY : invfft
-    USE mp_bands,      ONLY : me_bgrp
 
     IMPLICIT NONE
 
@@ -1869,7 +2122,6 @@ MODULE realus
     USE gvecs,                    ONLY : nls, nlsm, doublegrid
     USE fft_base,                 ONLY : dffts
     USE fft_interfaces,           ONLY : invfft
-    USE mp_bands,                 ONLY : me_bgrp
 
     IMPLICIT NONE
 

@@ -5,9 +5,28 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !----------------------------------------------------------------------
 SUBROUTINE addusforce (forcenl)
+  !----------------------------------------------------------------------
+  !
+  USE kinds,        ONLY : dp
+  USE ions_base,    ONLY : nat
+  USE control_flags,ONLY : tqr
+  USE realus,       ONLY : addusforce_r
+  !
+  IMPLICIT NONE
+  REAL(dp), INTENT(INOUT) :: forcenl (3, nat)
+  !
+  IF ( tqr ) THEN
+     CALL addusforce_r (forcenl)
+  ELSE
+     CALL addusforce_g (forcenl)
+  END IF
+  !
+END SUBROUTINE addusforce
+!
+!----------------------------------------------------------------------
+SUBROUTINE addusforce_g (forcenl)
   !----------------------------------------------------------------------
   !
   !   This routine computes the contribution to atomic forces due
@@ -165,5 +184,4 @@ SUBROUTINE addusforce (forcenl)
   DEALLOCATE (forceq)
 
   RETURN
-END SUBROUTINE addusforce
-
+END SUBROUTINE addusforce_g

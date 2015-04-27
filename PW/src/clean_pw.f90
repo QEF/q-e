@@ -55,7 +55,7 @@ SUBROUTINE clean_pw( lflag )
   USE london_module,        ONLY : dealloca_london
   USE xdm_module,           ONLY : cleanup_xdm
   USE constraints_module,   ONLY : deallocate_constraint
-  USE realus,               ONLY : deallocatenewdreal
+  USE realus,               ONLY : deallocate_realsp
   USE pseudo_types,         ONLY : deallocate_pseudo_upf
   USE bp,                   ONLY : deallocate_bp_efield
   USE exx,                  ONLY : deallocate_exx
@@ -183,7 +183,7 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... arrays for real-space algorithm
   !
-  CALL  deallocatenewdreal()
+  CALL  deallocate_realsp()
   !
   ! for Wannier_ac
   if (use_wannier) CALL wannier_clean()

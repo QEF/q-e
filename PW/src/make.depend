@@ -67,6 +67,7 @@ addusforce.o : ../../Modules/mp_bands.o
 addusforce.o : ../../Modules/noncol.o
 addusforce.o : ../../Modules/recvec.o
 addusforce.o : ../../Modules/uspp.o
+addusforce.o : realus.o
 addusforce.o : scf_mod.o
 addusstress.o : ../../Modules/cell_base.o
 addusstress.o : ../../Modules/control_flags.o

@@ -140,6 +140,7 @@ realus_scatt.o : ../../Modules/cell_base.o
 realus_scatt.o : ../../Modules/constants.o
 realus_scatt.o : ../../Modules/fft_base.o
 realus_scatt.o : ../../Modules/ions_base.o
+realus_scatt.o : ../../Modules/kind.o
 realus_scatt.o : ../../Modules/mp_global.o
 realus_scatt.o : ../../Modules/noncol.o
 realus_scatt.o : ../../Modules/uspp.o

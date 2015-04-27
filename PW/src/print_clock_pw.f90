@@ -38,7 +38,7 @@ SUBROUTINE print_clock_pw()
    IF ( iverbosity > 0 ) THEN
       CALL print_clock( 'realus:boxes' )
       CALL print_clock( 'realus:spher' )
-      CALL print_clock( 'realus:qsave' )
+      CALL print_clock( 'realus:tabp' )
    END IF
    !
    WRITE( stdout, '(/5x,"Called by electrons:")' )
