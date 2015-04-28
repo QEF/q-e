@@ -522,7 +522,7 @@ SUBROUTINE task_groups_init( dffts )
    !C. Bekas...TASK GROUP RELATED. FFT DATA STRUCTURES ARE ALREADY DEFINED ABOVE
    !-------------------------------------------------------------------------------------
    !dfft%nsw(me) holds the number of z-sticks for the current processor per wave-function
-   !We can either send these in the group with an mpi_allgather...or put the
+   !We can either send these in the group with an mpi_allgather...or put them
    !in the PSIS vector (in special positions) and send them with them.
    !Otherwise we can do this once at the beginning, before the loop.
    !we choose to do the latter one.
@@ -594,28 +594,30 @@ SUBROUTINE task_groups_init_first( dffts )
        pgroup( i ) = i - 1
     ENDDO
     !
-    !LIST OF PROCESSORS IN MY ORBITAL GROUP
+    !LIST OF PROCESSORS IN MY ORBITAL GROUP 
+    !     (processors dealing with my same pw's of different orbitals)
     !
     !  processors in these group have contiguous indexes
     !
-    n1 = ( dffts%mype / dffts%nogrp ) * dffts%nogrp - 1
+    n1 = ( dffts%mype / dffts%nogrp ) * dffts%nogrp 
+    ipos = dffts%mype - n1
     DO i = 1, dffts%nogrp
-       dffts%nolist( i ) = pgroup( n1 + i + 1 )
-       IF( dffts%mype == dffts%nolist( i ) ) ipos = i - 1
+       dffts%nolist( i ) = pgroup( n1 + i )
     ENDDO
     !
     !LIST OF PROCESSORS IN MY PLANE WAVE GROUP
+    !     (processors dealing with different pw's of my same orbital)
     !
-    DO I = 1, dffts%npgrp
+    DO i = 1, dffts%npgrp
        dffts%nplist( i ) = pgroup( ipos + ( i - 1 ) * dffts%nogrp + 1 )
     ENDDO
     !
     !SET UP THE GROUPS
     !
-    !
     !CREATE ORBITAL GROUPS
     !
 #if defined __MPI
+    ! processes with the same color are in the same new communicator
     color = dffts%mype / dffts%nogrp
     key   = MOD( dffts%mype , dffts%nogrp )
     CALL MPI_COMM_SPLIT( dffts%comm, color, key, dffts%ogrp_comm, ierr )
@@ -634,6 +636,7 @@ SUBROUTINE task_groups_init_first( dffts )
     !CREATE PLANEWAVE GROUPS
     !
 #if defined __MPI
+    ! processes with the same color are in the same new communicator
     color = MOD( dffts%mype , dffts%nogrp )
     key   = dffts%mype / dffts%nogrp
     CALL MPI_COMM_SPLIT( dffts%comm, color, key, dffts%pgrp_comm, ierr )
