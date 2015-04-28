@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !------------------------------------------------------------------------
-SUBROUTINE setqfnew( nqf, qfcoef, mesh, r, ltot, n, rho )
+SUBROUTINE setqfnew( nqf, qfcoef, mesh, r, l, n, rho )
   !-----------------------------------------------------------------------
   !
   ! ... Computes the Q function from its polynomial expansion (r < rinner)
@@ -14,7 +14,7 @@ SUBROUTINE setqfnew( nqf, qfcoef, mesh, r, ltot, n, rho )
   ! ...    qfcoef(nqf)= the coefficients defining Q
   ! ...          mesh = number of mesh point
   ! ...        r(mesh)= the radial mesh
-  ! ...          ltot = angular momentum
+  ! ...             l = angular momentum
   ! ...             n = additional exponent, result is multiplied by r^n
   ! ... On output:
   ! ...      rho(mesh)= r^n * Q(r)
@@ -23,7 +23,7 @@ SUBROUTINE setqfnew( nqf, qfcoef, mesh, r, ltot, n, rho )
   !
   IMPLICIT NONE
   !
-  INTEGER,  INTENT(in):: nqf, ltot, mesh, n
+  INTEGER,  INTENT(in):: nqf, l, mesh, n
   REAL(dp), INTENT(in) :: r(mesh), qfcoef(nqf)
   REAL(dp), INTENT(out) :: rho(mesh)
   !
@@ -36,7 +36,7 @@ SUBROUTINE setqfnew( nqf, qfcoef, mesh, r, ltot, n, rho )
      DO i = 2, nqf
         rho(ir) = rho(ir) + qfcoef(i)*rr**(i-1)
      ENDDO
-     rho(ir) = rho(ir)*r(ir)**(ltot+n)
+     rho(ir) = rho(ir)*r(ir)**(l+n)
   ENDDO
   !
   RETURN
@@ -44,7 +44,7 @@ SUBROUTINE setqfnew( nqf, qfcoef, mesh, r, ltot, n, rho )
 END SUBROUTINE setqfnew
 !
 !------------------------------------------------------------------------
-SUBROUTINE setdqf( nqf, qfcoef, mesh, r, ltot, drho )
+SUBROUTINE setdqf( nqf, qfcoef, mesh, r, l, drho )
   !-----------------------------------------------------------------------
   !
   ! ... Computes the derivative of the Q function, dQ/dr,
@@ -53,27 +53,25 @@ SUBROUTINE setdqf( nqf, qfcoef, mesh, r, ltot, drho )
   ! ...    qfcoef(nqf)= the coefficients defining Q
   ! ...          mesh = number of mesh point
   ! ...        r(mesh)= the radial mesh
-  ! ...          ltot = angular momentum
+  ! ...             l = angular momentum
   ! ... On output:
-  ! ...      drho(mesh)= r^n * dQ(r)/dr
+  ! ...      drho(mesh)= dQ(r)/dr
   !
   USE kinds, ONLY: dp
   !
   IMPLICIT NONE
   !
-  INTEGER,  INTENT(in):: nqf, ltot, mesh
+  INTEGER,  INTENT(in):: nqf, l, mesh
   REAL(dp), INTENT(in) :: r(mesh), qfcoef(nqf)
   REAL(dp), INTENT(out) :: drho(mesh)
   !
   INTEGER  :: ir, i
-  REAL(dp) :: rr
   !
   DO ir = 1, mesh
      !
-     rr = r(ir)*r(ir)
-     drho(ir) = 0.D0
-     DO i = max( 1, 2-ltot ), nqf
-        drho(ir) = drho(ir) + qfcoef(i)*rr**(i-2+ltot)*(i-1+ltot)
+     drho(ir) = 0.0_dp
+     DO i = max( 1, 2-l ), nqf
+        drho(ir) = drho(ir) + qfcoef(i)*r(ir)**(2*i-3+l)*(2*i-2+l)
      ENDDO
      !
   END DO
