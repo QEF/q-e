@@ -512,8 +512,9 @@ MODULE realus
                   second = 0.0_dp
                   DO i = max( 3-l, 1 ), upf(nt)%nqf
                      second = second + upf(nt)%qfcoef(i,l+1,nb,mb) * &
-                          rgrid(nt)%r(1)**(i-3+l)*(i-1+l)*(i-2+l)
+                          rgrid(nt)%r(1)**(2*i-4+l)*(2*i-2+l)*(2*i-3+l)
                   ENDDO
+                  IF (l==0) second = second + 2.0_dp*upf(nt)%qfcoef(2,l+1,nb,mb) 
                ELSE
                   !
                   ! ... if we don't have the analitical coefficients, try the same
@@ -687,8 +688,9 @@ MODULE realus
                   second = 0.0_dp
                   DO i = max( 3-l, 1 ), upf(nt)%nqf
                      second = second + upf(nt)%qfcoef(i,l+1,nb,mb) * &
-                          rgrid(nt)%r(1)**(i-3+l)*(i-1+l)*(i-2+l)
+                          rgrid(nt)%r(1)**(2*i-4+l)*(2*i-2+l)*(2*i-3+l)
                   ENDDO
+                  IF (l==0) second = second + 2.0_dp*upf(nt)%qfcoef(2,l+1,nb,mb) 
                ELSE
                   !
                   ! ... if we don't have the analitical coefficients, try the same
