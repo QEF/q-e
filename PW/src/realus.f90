@@ -187,7 +187,7 @@ MODULE realus
       TYPE(realsp_augmentation), POINTER :: tab(:)
       INTEGER :: ia
       !
-      IF ( associated( tabp ) ) THEN
+      IF ( associated( tab ) ) THEN
          DO ia = 1, SIZE(tab)
             IF(allocated(tab(ia)%qr ))  DEALLOCATE(tab(ia)%qr)
             IF(allocated(tab(ia)%box))  DEALLOCATE(tab(ia)%box)
