@@ -389,7 +389,7 @@ MODULE realus
          !
          ! ... compute the Q functions for this box
          !
-         CALL real_space_q( nt, ia, mbia )
+         CALL real_space_q( nt, ia, mbia, tabp )
          !
       ENDDO
       !
@@ -401,7 +401,7 @@ MODULE realus
     END SUBROUTINE qpointlist
     !
     !------------------------------------------------------------------------
-    SUBROUTINE real_space_q( nt, ia, mbia )
+    SUBROUTINE real_space_q( nt, ia, mbia, tab )
       !------------------------------------------------------------------------
       !
       ! ... Compute Q_lm(r-tau_ia) centered around  atom ia of type nt. 
@@ -422,6 +422,7 @@ MODULE realus
       IMPLICIT NONE
       !
       INTEGER, INTENT(IN) :: ia, nt, mbia
+      TYPE(realsp_augmentation), INTENT(INOUT), POINTER :: tab(:)
       !
       INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ilast, ir, nfuncs, lm, &
            i, ijh, ih, jh, ipol
@@ -432,7 +433,7 @@ MODULE realus
       CALL start_clock( 'realus:tabp' )
       !
       nfuncs = nh(nt)*(nh(nt)+1)/2
-      ALLOCATE(tabp(ia)%qr(mbia, nfuncs))
+      ALLOCATE(tab(ia)%qr(mbia, nfuncs))
       !
       ! ... compute the spherical harmonics
       !
@@ -441,14 +442,14 @@ MODULE realus
       !
       ALLOCATE( rl2( mbia ) )
       DO ir = 1, mbia
-         rl2(ir) = tabp(ia)%xyz(1,ir)**2 + &
-                   tabp(ia)%xyz(2,ir)**2 + &
-                   tabp(ia)%xyz(3,ir)**2
+         rl2(ir) = tab(ia)%xyz(1,ir)**2 + &
+                   tab(ia)%xyz(2,ir)**2 + &
+                   tab(ia)%xyz(3,ir)**2
       ENDDO
-      CALL ylmr2 ( lmaxq**2, mbia, tabp(ia)%xyz, rl2, spher )
+      CALL ylmr2 ( lmaxq**2, mbia, tab(ia)%xyz, rl2, spher )
       DEALLOCATE( rl2 )
 
-      tabp(ia)%qr(:,:)=0.0_dp
+      tab(ia)%qr(:,:)=0.0_dp
       ALLOCATE( qtot(upf(nt)%kkbeta), dqtot(upf(nt)%kkbeta) )
       !
       ! ... variables used for spline interpolation
@@ -530,21 +531,21 @@ MODULE realus
                !
                CALL spline( xsp, qtot, first, second, wsp )
                !
-               DO ir = 1, tabp(ia)%maxbox
+               DO ir = 1, tab(ia)%maxbox
                   !
-                  IF ( tabp(ia)%dist(ir) < upf(nt)%rinner(l+1) ) THEN
+                  IF ( tab(ia)%dist(ir) < upf(nt)%rinner(l+1) ) THEN
                      !
                      ! ... if in the inner radius just compute the
                      ! ... polynomial
                      !
                      CALL setqfnew( upf(nt)%nqf, upf(nt)%qfcoef(1,l+1,nb,mb),&
-                          1, tabp(ia)%dist(ir), l, 0, qtot_int )
+                          1, tab(ia)%dist(ir), l, 0, qtot_int )
                      !
                   ELSE
                      !
                      ! ... spline interpolation
                      !
-                     qtot_int = splint( xsp, qtot, wsp, tabp(ia)%dist(ir) )
+                     qtot_int = splint( xsp, qtot, wsp, tab(ia)%dist(ir) )
                      !
                   ENDIF
                   !
@@ -558,7 +559,7 @@ MODULE realus
                                     mb == indv(jh,nt) ) ) CYCLE
                         !
                         DO lm = l**2+1, (l+1)**2
-                           tabp(ia)%qr(ir,ijh) = tabp(ia)%qr(ir,ijh) + &
+                           tab(ia)%qr(ir,ijh) = tab(ia)%qr(ir,ijh) + &
                                         qtot_int*spher(ir,lm)*&
                                         ap(lm,nhtolm(ih,nt),nhtolm(jh,nt))
                         ENDDO
