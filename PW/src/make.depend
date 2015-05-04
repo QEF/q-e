@@ -1798,6 +1798,7 @@ summary.o : ../../Modules/run_info.o
 summary.o : ../../Modules/uspp.o
 summary.o : bp_mod.o
 summary.o : esm.o
+summary.o : exx.o
 summary.o : ldaU.o
 summary.o : martyna_tuckerman.o
 summary.o : pwcom.o

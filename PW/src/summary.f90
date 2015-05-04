@@ -51,6 +51,7 @@ SUBROUTINE summary()
   USE esm,             ONLY : do_comp_esm, esm_summary
   USE martyna_tuckerman,ONLY: do_comp_mt
   USE realus,          ONLY : real_space
+  USE exx,             ONLY : ecutfock
   !
   IMPLICIT NONE
   !
@@ -91,7 +92,8 @@ SUBROUTINE summary()
      WRITE( stdout, 102) nelec
   END IF
   WRITE( stdout, 103) nbnd, ecutwfc, ecutrho
-  IF ( lscf) WRITE( stdout, 104) tr2, mixing_beta, nmix, mixing_style
+  IF ( ecutfock /= ecutrho ) WRITE( stdout, 104) ecutfock
+  IF ( lscf) WRITE( stdout, 105) tr2, mixing_beta, nmix, mixing_style
   !
 100 FORMAT( /,/,5X, &
        &     'bravais-lattice index     = ',I12,/,5X, &
@@ -108,6 +110,8 @@ SUBROUTINE summary()
        &     'kinetic-energy cutoff     = ',F12.4,'  Ry',/,5X, &
        &     'charge density cutoff     = ',F12.4,'  Ry')
 104 FORMAT(5X, &
+       &     'cutoff for Fock operator  = ',F12.4,'  Ry')
+105 FORMAT(5X, &
        &     'convergence threshold     = ',1PE12.1,/,5X, &
        &     'mixing beta               = ',0PF12.4,/,5X, &
        &     'number of iterations used = ',I12,2X,A,' mixing')

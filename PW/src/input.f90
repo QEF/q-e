@@ -1142,6 +1142,8 @@ SUBROUTINE iosys()
   nofrac                  = force_symmorphic
   nbnd_                   = nbnd
   !
+  ! hybrid functionals
+  !
   x_gamma_extrapolation_ = x_gamma_extrapolation
   !
   nqx1_ = nqx1
@@ -1151,7 +1153,19 @@ SUBROUTINE iosys()
   exxdiv_treatment_ = trim(exxdiv_treatment)
   yukawa_   = yukawa
   ecutvcut_ = ecutvcut
-  ecutfock_ = ecutfock
+  !
+  IF(ecutfock <= 0.0_DP) THEN
+     ! default case
+     ecutfock_ = 4.0_DP*ecutwfc
+  ELSE
+     IF(ecutfock < ecutwfc .OR. ecutfock > ecutrho) CALL errore('iosys', &
+          'ecutfock can not be < ecutwfc or > ecutrho!', 1) 
+     ecutfock_ = ecutfock
+  END IF
+  !
+  IF (exx_fraction >= 0.0_DP) CALL set_exx_fraction (exx_fraction)
+  IF (screening_parameter >= 0.0_DP) &
+        & CALL set_screening_parameter (screening_parameter)
   !
   vdw_table_name_  = vdw_table_name
   !
@@ -1418,12 +1432,6 @@ SUBROUTINE iosys()
   ! ... read pseudopotentials (also sets DFT)
   !
   CALL readpp ( input_dft )
-  !
-  ! Set variables for hybrid functional HSE
-  !
-  IF (exx_fraction >= 0.0_DP) CALL set_exx_fraction (exx_fraction)
-  IF (screening_parameter >= 0.0_DP) &
-        & CALL set_screening_parameter (screening_parameter)
   !
   ! ... read the vdw kernel table if needed
   !

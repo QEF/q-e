@@ -38,7 +38,7 @@ SUBROUTINE electrons()
                                    lambda, report
   USE uspp,                 ONLY : okvan
   USE exx,                  ONLY : exxinit, exxenergy2, exxbuff, &
-                                   ecutfock, fock0, fock1, fock2, dexx
+                                   fock0, fock1, fock2, dexx
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi
   !
@@ -232,8 +232,6 @@ SUBROUTINE electrons()
      ENDIF
      !
      WRITE( stdout,'(/5x,"EXX: now go back to refine exchange calculation")')
-     IF(ecutfock < ecutrho) &
-        WRITE(stdout,'(5X,"Cutoff for exact exchange = ",F12.4," Ry")') ecutfock
      !
      IF ( check_stop_now() ) THEN
         WRITE(stdout,'(5x,"Calculation (EXX) stopped after iteration #", &

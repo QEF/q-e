@@ -184,14 +184,6 @@ MODULE exx
 
     IMPLICIT NONE
 
-    IF(ecutfock <= 0.0_DP) ecutfock = 4.0_DP*ecutwfc
-    IF(ecutfock < ecutwfc) CALL errore('exx_fft_create', &
-            'ecutfock can not be smaller than ecutwfc!', 1) 
-    IF(ecutfock < ecutrho .AND. .NOT.gamma_only)  CALL infomsg &
-        ('exx_fft_create','Warning: ecutfock implemented only for Gamma')
-    IF(ecutfock < ecutrho .AND. (okvan .OR. okpaw)) CALL errore &
-        ('exx_fft_create','ecutfock not implemented with US or PAW',2)
-
     ! Initalise the g2r grid that allows us to put the wavefunction
     ! onto the new (smaller) grid for rho.
     exx_fft_g2r%ecutt=ecutwfc

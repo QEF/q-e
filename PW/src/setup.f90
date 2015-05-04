@@ -41,7 +41,7 @@ SUBROUTINE setup()
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, omega
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : starting_pot, natomwfc
-  USE gvect,              ONLY : gcutm
+  USE gvect,              ONLY : gcutm, ecutrho
   USE fft_base,           ONLY : dfftp
   USE fft_base,           ONLY : dffts
   USE grid_subroutines,   ONLY : realspace_grids_init
@@ -77,7 +77,7 @@ SUBROUTINE setup()
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
   USE pw_restart,         ONLY : pw_readfile
-  USE exx,                ONLY : exx_grid_init, exx_div_check
+  USE exx,                ONLY : ecutfock, exx_grid_init, exx_div_check
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
   USE cellmd,             ONLY : lmovecell  
@@ -92,7 +92,7 @@ SUBROUTINE setup()
   !
   ! ... okvan/okpaw = .TRUE. : at least one pseudopotential is US/PAW
   !
-  okvan = ANY( upf(:)%tvanp )
+  okvan = ANY( upf(1:ntyp)%tvanp )
   okpaw = ANY( upf(1:ntyp)%tpawp )
   !
   ! ... check for features not implemented with US-PP or PAW
@@ -115,13 +115,16 @@ SUBROUTINE setup()
                & ' nonlinear core correction is not consistent with hybrid XC')
      IF (lmovecell) CALL errore('setup','Variable cell and hybrid XC not tested',1)
      IF (okpaw) CALL errore('setup','PAW and hybrid XC not tested',1)
-     IF ( noncolin ) THEN
-        IF ( okvan ) THEN
-           CALL errore('setup','Noncolinear hybrid XC for USPP not implemented',1)
-        ELSE
-           no_t_rev=.true.
-        END IF
+     IF (okvan) THEN
+        IF (ecutfock /= 4*ecutwfc) CALL infomsg &
+           ('setup','Warning: US/PAW use ecutfock=4*ecutwfc, ecutfock ignored')
+        IF ( noncolin ) CALL errore &
+           ('setup','Noncolinear hybrid XC for USPP not implemented',1)
+     ELSE IF (.NOT. gamma_only) THEN
+        IF( ecutfock < ecutrho)  CALL infomsg &
+          ('setup','Warning: ecutfock ignored, implemented only for Gamma')
      END IF
+     IF ( noncolin ) no_t_rev=.true.
   END IF
   !
   ! ... Compute the ionic charge for each atom type and the total ionic charge
