@@ -744,7 +744,7 @@ MODULE exx
     INTEGER :: h_ibnd
     INTEGER :: ibnd_loop_start, ibnd_buff_start, ibnd_buff_end
     INTEGER :: ipol, jpol
-    COMPLEX(DP),ALLOCATABLE :: temppsic(:),      psic(:), tempevc(:,:)
+    COMPLEX(DP),ALLOCATABLE :: temppsic(:),      psic(:)
     COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:), psic_nc(:,:)
     INTEGER :: nxxs, nrxxs, nr1x,nr2x,nr3x,nr1,nr2,nr3
 #ifdef __MPI
@@ -766,7 +766,7 @@ MODULE exx
        ENDDO
     ENDIF
 
-    ! Beware: not the same as nrxxs in parallel case
+    ! Note that nxxs is not the same as nrxxs in parallel case
     IF(gamma_only) THEN
        CALL exx_fft_create()
        nxxs =exx_fft_g2r%dfftt%nr1x *exx_fft_g2r%dfftt%nr2x *exx_fft_g2r%dfftt%nr3x 
@@ -823,7 +823,6 @@ MODULE exx
     IF (.NOT. allocated(exxbuff)) &
         ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_end, nkqs))
     !
-    ALLOCATE(tempevc( npwx*npol, nbnd ))
     ALLOCATE(ispresent(nsym))
     IF(.NOT. ALLOCATED(rir)) ALLOCATE(rir(nxxs,nsym))
     rir = 0
@@ -894,9 +893,7 @@ MODULE exx
        npw = ngk (ik)
        IF ( nks > 1 ) THEN
           READ( iunigk ) igk
-          CALL get_buffer(tempevc, nwordwfc, iunwfc, ik)
-       ELSE
-          tempevc(1:npwx*npol,1:nbnd) = evc(1:npwx*npol,1:nbnd)
+          CALL get_buffer(evc, nwordwfc, iunwfc, ik)
        ENDIF
        !
        ! only useful for npool>1, but always work
@@ -921,15 +918,15 @@ MODULE exx
              !
              if ( ibnd < ibnd_end ) then
                 DO ig=1,exx_fft_g2r%npwt
-                   temppsic(exx_fft_g2r%nlt(ig))  = tempevc(ig,ibnd)  &
-                        + ( 0._dp, 1._dp ) * tempevc(ig,ibnd+1)
-                   temppsic(exx_fft_g2r%nltm(ig)) = CONJG( tempevc(ig,ibnd) ) &
-                        + ( 0._dp, 1._dp ) * CONJG( tempevc(ig,ibnd+1) )
+                   temppsic(exx_fft_g2r%nlt(ig))  = evc(ig,ibnd)  &
+                        + ( 0._dp, 1._dp ) * evc(ig,ibnd+1)
+                   temppsic(exx_fft_g2r%nltm(ig)) = CONJG( evc(ig,ibnd) ) &
+                        + ( 0._dp, 1._dp ) * CONJG( evc(ig,ibnd+1) )
                 END DO
              else
                 DO ig=1,exx_fft_g2r%npwt
-                   temppsic(exx_fft_g2r%nlt (ig)) = tempevc(ig,ibnd) 
-                   temppsic(exx_fft_g2r%nltm(ig)) = CONJG( tempevc(ig,ibnd) ) 
+                   temppsic(exx_fft_g2r%nlt (ig)) = evc(ig,ibnd) 
+                   temppsic(exx_fft_g2r%nltm(ig)) = CONJG( evc(ig,ibnd) ) 
                 END DO
              end if
 
@@ -960,13 +957,13 @@ MODULE exx
              !
              IF (noncolin) THEN
                 temppsic_nc(:,:) = ( 0._dp, 0._dp )
-                temppsic_nc(nls(igk(1:npw)),1) = tempevc(1:npw,ibnd)
+                temppsic_nc(nls(igk(1:npw)),1) = evc(1:npw,ibnd)
                 CALL invfft ('Wave', temppsic_nc(:,1), dffts)
-                temppsic_nc(nls(igk(1:npw)),2) = tempevc(npwx+1:npwx+npw,ibnd)
+                temppsic_nc(nls(igk(1:npw)),2) = evc(npwx+1:npwx+npw,ibnd)
                 CALL invfft ('Wave', temppsic_nc(:,2), dffts)
              ELSE
                 temppsic(:) = ( 0._dp, 0._dp )
-                temppsic(nls(igk(1:npw))) = tempevc(1:npw,ibnd)
+                temppsic(nls(igk(1:npw))) = evc(1:npw,ibnd)
                 CALL invfft ('Wave', temppsic, dffts)
              ENDIF
              !
@@ -1042,7 +1039,6 @@ MODULE exx
     ! Initialize 4-wavefunctions one-center Fock integral \int \psi_a(r)\phi_a(r)\phi_b(r')\psi_b(r')/|r-r'|
     IF(okpaw) CALL PAW_init_keeq()
     !
-    DEALLOCATE(tempevc)
     DEALLOCATE(ispresent)
     IF (noncolin) THEN
        DEALLOCATE(temppsic_nc, psic_nc)
