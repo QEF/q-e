@@ -77,6 +77,9 @@
   Therefore even when one can take NQS=1 (for large non-metallic system
   this should be ok) hybrid functionals will require at least an order of
   magnitude more resources that a standard calculation.
+  For Gamma-only calculations, some speedup can be obtained by computing
+  auxiliary densities $\rho_q$ on a "custom" FFT grid corresponding to a
+  cutoff (variable "ecutfock") smaller than the usual value 4*ecutwfc.
 
  HOW CAN I CHOSE NQS IN INPUT ?
   In the system namelist there are three variables nqx1,nqx2,nqx3 that 
@@ -136,12 +139,13 @@
        Typical values for ecutvcut range from 0.7 to 2.0.
 
  OTHER LIMITATIONS 
-  So far only NORM-CONSERVING pseudopotentials are implemented.
-  there is no fundamental problem in defining HF for US pseudopotentials
-  but since some density-like object is required one would need to operate
-  on the dense charge-density FFT grid anyway with no computational gain.
-  Maybe this is not true and one can find ways to perform this integrals 
-  more efficently. So far I did not think to much to this point.
+  So far NORM-CONSERVING and ULTRASOFT pseudopotentials are implemented.
+  The latter case requires the computation of density-like objects, in
+  principle defined on the complete FFT grid (cutoff "ecutrho > 4*ecutwfc).
+  In order to spare CPU time, this is done instead on the "smooth" FFT grid
+  (cutoff = 4*ecutwfc) in either G-space (very slow!) or in real space
+  (faster: option "tqr"). Note that "ecutfock" is not currently implemented
+  for US pseudopotentials. Hybrids with PAW are not currently functional.
 
  PARALLEL IMPLEMENTATION ?
   At present, both plane-wave and k-point parallelization have been
@@ -174,9 +178,8 @@
   Running it will generate directory "results" to be compared with directory 
   "reference"
 
-  Please report problems and suggestions to QE developers (in particolar:
+  Please report problems and suggestions to QE developers, in particular:
   Stefano de Gironcoli <degironc@sissa.it>,
-  Paolo Giannozzi <giannozz@democritos.it>,
+  Paolo Giannozzi <paolo.giannozzi@uniud.it>,
   Layla Martin-Samos <marsamos@gmail.com>), 
-  and keep in mind that this feature is still experimental.
-
+  or in general to <q-e-developers@qe-forge.org>
