@@ -42,26 +42,7 @@ MODULE scf
 !       1. rho%bec is mixed, while becsum is not
 !       2. for npool > 1 rho%bec is collected, becsum is not
 !          ( this is necessary to make the stress work)
-#ifdef __STD_F95
-  TYPE scf_type
-     REAL(DP),   POINTER :: of_r(:,:)  ! the charge density in R-space
-     COMPLEX(DP),POINTER :: of_g(:,:)  ! the charge density in G-space
-     REAL(DP),   POINTER :: kin_r(:,:) ! the kinetic energy density in R-space
-     COMPLEX(DP),POINTER :: kin_g(:,:) ! the kinetic energy density in G-space
-     REAL(DP),   POINTER :: ns(:,:,:,:)! the LDA+U occupation matrix
-     COMPLEX(DP),POINTER :: ns_nc(:,:,:,:)!         ---       noncollinear case
-     REAL(DP),   POINTER :: bec(:,:,:) ! the PAW hamiltonian elements
-  END TYPE scf_type
-  !
-  TYPE mix_type
-     COMPLEX(DP), POINTER :: of_g(:,:)  ! the charge density in G-space
-     COMPLEX(DP), POINTER :: kin_g(:,:) ! the charge density in G-space
-     REAL(DP),    POINTER :: ns(:,:,:,:)! the LDA+U occupation matrix 
-     COMPLEX(DP), POINTER :: ns_nc(:,:,:,:)!    ---      noncollinear case 
-     REAL(DP),    POINTER :: bec(:,:,:) ! PAW corrections to hamiltonian
-     REAL(DP)             :: el_dipole  ! electrons dipole
-  END TYPE mix_type
-#else
+
   TYPE scf_type
      REAL(DP),   ALLOCATABLE :: of_r(:,:)  ! the charge density in R-space
      COMPLEX(DP),ALLOCATABLE :: of_g(:,:)  ! the charge density in G-space
@@ -80,10 +61,8 @@ MODULE scf
      REAL(DP),    ALLOCATABLE :: bec(:,:,:) ! PAW corrections to hamiltonian
      REAL(DP)                 :: el_dipole  ! electrons dipole
   END TYPE mix_type
-#endif
 
   type (scf_type) :: rho  ! the charge density and its other components
-
   type (scf_type) :: v    ! the scf potential
   type (scf_type) :: vnew ! used to correct the forces
 
@@ -113,9 +92,6 @@ CONTAINS
    LOGICAL                     :: allocate_becsum        ! PAW hack
    allocate ( rho%of_r( dfftp%nnr, nspin) )
    allocate ( rho%of_g( ngm, nspin ) )
-#ifdef __STD_F95
- nullify (rho%kin_r, rho%kin_g, rho%ns, rho%ns_nc, rho%bec)
-#endif
    if (dft_is_meta() .or. lxdm) then
       allocate ( rho%kin_r( dfftp%nnr, nspin) )
       allocate ( rho%kin_g( ngm, nspin ) )
@@ -144,15 +120,7 @@ CONTAINS
  SUBROUTINE destroy_scf_type ( rho )
    IMPLICIT NONE
    TYPE (scf_type) :: rho
-#ifdef __STD_F95
-   if (ASSOCIATED(rho%of_r))  deallocate(rho%of_r)
-   if (ASSOCIATED(rho%of_g))  deallocate(rho%of_g)
-   if (ASSOCIATED(rho%kin_r)) deallocate(rho%kin_r)
-   if (ASSOCIATED(rho%kin_g)) deallocate(rho%kin_g)
-   if (ASSOCIATED(rho%ns))    deallocate(rho%ns)
-   if (ASSOCIATED(rho%ns_nc))    deallocate(rho%ns_nc)
-   if (ASSOCIATED(rho%bec))   deallocate(rho%bec)
-#else
+
    if (ALLOCATED(rho%of_r))  deallocate(rho%of_r)
    if (ALLOCATED(rho%of_g))  deallocate(rho%of_g)
    if (ALLOCATED(rho%kin_r)) deallocate(rho%kin_r)
@@ -160,7 +128,7 @@ CONTAINS
    if (ALLOCATED(rho%ns))    deallocate(rho%ns)
    if (ALLOCATED(rho%ns_nc))    deallocate(rho%ns_nc)
    if (ALLOCATED(rho%bec))   deallocate(rho%bec)
-#endif
+
    return
  END SUBROUTINE destroy_scf_type
  !
@@ -169,9 +137,6 @@ CONTAINS
    IMPLICIT NONE
    TYPE (mix_type) :: rho
    allocate ( rho%of_g( ngms, nspin ) )
-#ifdef __STD_F95
-   nullify (rho%kin_g, rho%ns, rho%ns_nc, rho%bec)
-#endif
    rho%of_g = 0._dp
    if (dft_is_meta() .or. lxdm) then
       allocate (rho%kin_g( ngms, nspin ) )
@@ -199,19 +164,13 @@ CONTAINS
  SUBROUTINE destroy_mix_type ( rho )
    IMPLICIT NONE
    TYPE (mix_type) :: rho
-#ifdef __STD_F95
-   if (ASSOCIATED(rho%of_g))  deallocate(rho%of_g)
-   if (ASSOCIATED(rho%kin_g)) deallocate(rho%kin_g)
-   if (ASSOCIATED(rho%ns))    deallocate(rho%ns)
-   if (ASSOCIATED(rho%ns_nc))    deallocate(rho%ns_nc)
-   if (ASSOCIATED(rho%bec))   deallocate(rho%bec)
-#else
+
    if (ALLOCATED(rho%of_g))  deallocate(rho%of_g)
    if (ALLOCATED(rho%kin_g)) deallocate(rho%kin_g)
    if (ALLOCATED(rho%ns))    deallocate(rho%ns)
    if (ALLOCATED(rho%ns_nc))    deallocate(rho%ns_nc)
    if (ALLOCATED(rho%bec))   deallocate(rho%bec)
-#endif
+
    return
  END SUBROUTINE destroy_mix_type
  !

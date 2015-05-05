@@ -216,11 +216,8 @@ CONTAINS
   SUBROUTINE lr_alloc_init_gamma()
     !
     IF (nkb > 0) THEN
-#ifdef __STD_F95
-       IF (.not. associated(becp%r)) CALL allocate_bec_type(nkb,nbnd,becp)
-#else
+       !
        IF (.not. allocated(becp%r)) CALL allocate_bec_type(nkb,nbnd,becp)
-#endif
        becp%r(:,:) = 0.0d0
        !
        ALLOCATE(becp_1(nkb,nbnd))
@@ -240,11 +237,8 @@ CONTAINS
   SUBROUTINE lr_alloc_init_k()
     !
     IF (nkb > 0) THEN
-#ifdef __STD_F95
-       IF(.not. associated(becp%k)) CALL allocate_bec_type(nkb,nbnd,becp)
-#else
+       !
        IF(.not. allocated(becp%k)) CALL allocate_bec_type(nkb,nbnd,becp)
-#endif
        becp%k(:,:) = (0.0d0,0.0d0)
        !
        IF (.NOT.eels) THEN

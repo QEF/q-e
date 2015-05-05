@@ -25,12 +25,8 @@ MODULE dfile_star
       dvscf_star   !
 
   TYPE rotated_pattern_repr
-#ifdef __STD_F95
-#define __ALLOCATABLE pointer
-#else
-#define __ALLOCATABLE allocatable
-#endif
-    INTEGER,__ALLOCATABLE ::  npert (:), irgq (:)
+    !
+    INTEGER, ALLOCATABLE ::  npert (:), irgq (:)
     ! output: the dimension of each represe
     ! output: the small group of q
     INTEGER :: nsymq, irotmq, nirr, npertx
@@ -39,19 +35,19 @@ MODULE dfile_star
     ! output: the number of irr. representa
     ! output: the max number of irreps
     !
-    REAL(DP),__ALLOCATABLE :: gi (:,:), gimq (:), eigen(:)
+    REAL(DP), ALLOCATABLE :: gi (:,:), gimq (:), eigen(:)
     ! output: [S(irotq)*q - q]
     ! output: [S(irotmq)*q + q]
     ! output: eigenvalues of the dynmat
     !
-    COMPLEX(DP),__ALLOCATABLE :: u(:,:), t(:,:,:,:), tmq (:,:,:)
+    COMPLEX(DP), ALLOCATABLE :: u(:,:), t(:,:,:,:), tmq (:,:,:)
     ! output: the pattern vectors
     ! output: the symmetry matrices
     ! output: the matrice sending q -> -q+G
     LOGICAL :: minus_q
     ! output: if true one symmetry send q -> -q+G
-    INTEGER,__ALLOCATABLE :: num_rap_mode(:)
-    CHARACTER(len=15),__ALLOCATABLE :: name_rap_mode(:)
+    INTEGER, ALLOCATABLE :: num_rap_mode(:)
+    CHARACTER(len=15), ALLOCATABLE :: name_rap_mode(:)
     ! output: the number of the representation of each mode
     ! output: the name of the representation for each group of modes
   END TYPE rotated_pattern_repr
@@ -61,11 +57,6 @@ SUBROUTINE allocate_rotated_pattern_repr(rpat, nat, npertx)
   TYPE(rotated_pattern_repr),INTENT(inout) :: rpat
   INTEGER,INTENT(in) :: nat, npertx
   !
-#ifdef __STD_F95
-   NULLIFY ( rpat%npert, rpat%irgq, rpat%gi, rpat%gimq, rpat%eigen, &
-             rpat%u, rpat%t, rpat%tmq, rpat%num_rap_mode, rpat%name_rap_mode )
-#endif
-
   ALLOCATE(rpat%npert(3*nat))
   ALLOCATE(rpat%irgq(48))
   ALLOCATE(rpat%gi(3,48))

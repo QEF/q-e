@@ -63,7 +63,6 @@ Additional Features:
       __SOLVENT   For solvent model, under development
       __MS2       For QM-MM, under development
 Hardware/Compiler:
-      __STD_F95   Standard F95: no allocatable in arrays
       __AIX       Ibm rs/6000 machines
       __XLF       xlf compiler (ibm or macintosh with powerpc processor)
       __SX6       Nec sx-6 vector machines (Nec compiler)

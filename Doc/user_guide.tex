@@ -862,9 +862,9 @@ the last written output file to understand why.
 \begin{itemize}
 \item
 Working Fortran-95 and C compilers are needed in order
-to compile \qe. Most ``Fortran-90'' compilers actually
-implement the Fortran-95 standard, but older versions 
-may not be Fortran-95 compliant. Moreover, 
+to compile \qe. Compilers that do not support allocatable 
+arrays in derived types (e.g. old gfortran versions)
+are no longer supported since v.5.1.2.
 C and Fortran compilers must be in your PATH.
 If \configure\ says that you have no working compiler, well,
 you have no working compiler, at least not in your PATH, and
@@ -1045,7 +1045,7 @@ Only recent versions (at least v.4.4) of gfortran properly compile \qe.
 Older versions often produce nonfunctional phonon executables 
 (segmentation faults and the like); other versions miscompile iotk 
 (the executables work but crash with a mysterious iotk
-error when reading from data files). 
+error when reading from data files).
 
 "There is a known incompatibility problem between the calling 
 convention for Fortran functions that return complex values: there is the

@@ -8,6 +8,7 @@
     ntyp = 2,
     nbnd = 4,
     ecutwfc = 80,
+    ecutfock=160,
     input_dft = 'B3LYP'
     exxdiv_treatment = 'gygi-baldereschi'
     x_gamma_extrapolation = .TRUE.

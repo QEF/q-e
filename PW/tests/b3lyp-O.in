@@ -9,6 +9,7 @@
                          nat = 1,
                         ntyp = 1,
                      ecutwfc = 80,
+                     ecutfock=160,
                    input_dft = 'B3LYP'
                        nspin = 2
    starting_magnetization(1) = 0.2,

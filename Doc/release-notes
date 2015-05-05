@@ -1,6 +1,11 @@
+Incompatible changes in svn version:
+
+   * __STD_F95 preprocessing option removed: all compilers that do not allow
+     allocatable arrays in derived types are no longer supported
+
 New in svn version:
 
-   * PW: speedup of USPP
+   * PW: speedup of USPP; real-space USPP contribution to forces implemented
    * PW: Hybrid functionals for USPP now working
 
 Fixed in svn version:
