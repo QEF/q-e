@@ -630,11 +630,9 @@
        !   for this combination of parameters
 
        done = ( ny == dims(1,ip) ) .AND. ( nx == dims(3,ip) )
-#if defined __ESSL || defined __LINUX_ESSL || defined __FFTW3
-        !   The initialization in ESSL and FFTW v.3 depends on all four parameters
        done = done .AND. ( ldx == dims(2,ip) ) .AND.  ( nzl == dims(4,ip) )
-#endif
        IF (done) EXIT
+
      END DO
 
      IF( .NOT. done ) THEN
