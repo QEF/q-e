@@ -233,7 +233,7 @@ SUBROUTINE lr_exx_revc0_init(orbital, kpoint)
   USE mp_global,    ONLY : me_bgrp
   USE exx,          ONLY : rir, nkqs, index_sym, index_xk
   USE exx,          ONLY : exx_fft_g2r
-  USE fft_base,     ONLY : cgather_smooth, cscatter_smooth
+  USE fft_base,     ONLY : gather_grid, cscatter_smooth
   USE symm_base,    ONLY : sname
 
   IMPLICIT NONE
@@ -277,7 +277,7 @@ SUBROUTINE lr_exx_revc0_init(orbital, kpoint)
            ENDIF
            !
 #ifdef __MPI
-           CALL cgather_smooth(psic, psic_all)
+           CALL gather_grid (dffts, psic, psic_all)
            IF ( me_bgrp == 0 ) &
                 temppsic_all(1:nxxs) = psic_all(rir(1:nxxs, isym))
            CALL cscatter_smooth(temppsic_all, temppsic)
@@ -326,7 +326,7 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
   USE mp_global,              ONLY : inter_bgrp_comm, ibnd_start, ibnd_end,&
                                    & me_bgrp
   USE mp,                     ONLY : mp_sum
-  USE fft_base,               ONLY : cgather_smooth, cscatter_smooth
+  USE fft_base,               ONLY : gather_grid, cscatter_smooth
 
   IMPLICIT NONE
   !
@@ -464,7 +464,7 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
            !
 #ifdef __MPI
            psic_all=(0.d0,0.d0)
-           CALL cgather_smooth(psic, psic_all)
+           CALL gather_grid(dffts, psic, psic_all)
 #endif
            !
            ! Now psic_all has the collected band ibnd at kpoint ikk.
@@ -581,7 +581,7 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
   USE cell_base,              ONLY : bg, at
   USE funct,                  ONLY : exx_is_active
   USE mp_global,              ONLY : me_bgrp
-  USE fft_base,               ONLY : cgather_smooth, cscatter_smooth
+  USE fft_base,               ONLY : gather_grid, cscatter_smooth
   USE lr_variables,           ONLY : ltammd
 
   IMPLICIT NONE
@@ -664,7 +664,7 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
      CALL invfft_orbital_k (orbital(:,:), ibnd, nbnd, ikk)
      !
 #ifdef __MPI
-     CALL cgather_smooth(psic, psic_all)
+     CALL gather_grid(dffts, psic, psic_all)
 #endif
      !
      ! Now psic_all has the collected band ibnd at kpoint ikk.

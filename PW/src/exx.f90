@@ -730,8 +730,8 @@ MODULE exx
     USE mp,                   ONLY : mp_sum
     USE funct,                ONLY : get_exx_fraction, start_exx,exx_is_active,&
                                      get_screening_parameter, get_gau_parameter
-    USE fft_base,             ONLY : cgather_smooth, cscatter_smooth,&
-                                     dffts, cgather_custom, cscatter_custom
+    USE fft_base,             ONLY : gather_grid, cscatter_smooth,&
+                                     dffts, cscatter_custom
     USE fft_interfaces,       ONLY : invfft
     USE becmod,               ONLY : allocate_bec_type, bec_type
     USE uspp,                 ONLY : nkb, okvan
@@ -936,7 +936,7 @@ MODULE exx
                 IF (index_xk(ikq) .ne. current_ik) cycle
                 isym = abs(index_sym(ikq) )
 #ifdef __MPI
-                CALL cgather_custom(temppsic,temppsic_all, exx_fft_g2r%dfftt)
+                CALL gather_grid(exx_fft_g2r%dfftt, temppsic,temppsic_all)
                 IF ( me_bgrp == 0 ) &
                 psic_all(1:nxxs) = temppsic_all(rir(1:nxxs,isym))
                 CALL cscatter_custom(psic_all,psic, exx_fft_g2r%dfftt)
@@ -975,7 +975,7 @@ MODULE exx
                 IF (noncolin) THEN ! noncolinear
 #ifdef __MPI
                    DO ipol=1,npol
-                      CALL cgather_smooth(temppsic_nc(:,ipol), temppsic_all_nc(:,ipol))
+                      CALL gather_grid(dffts, temppsic_nc(:,ipol), temppsic_all_nc(:,ipol))
                    ENDDO
                    IF ( me_bgrp == 0 ) THEN
                       psic_all_nc(:,:) = (0.0_DP, 0.0_DP)
@@ -1004,7 +1004,7 @@ MODULE exx
                    exxbuff(nrxxs+1:2*nrxxs,ibnd,ikq)=psic_nc(:,2)
                 ELSE ! noncolinear
 #ifdef __MPI
-                  CALL cgather_smooth(temppsic,temppsic_all)
+                  CALL gather_grid(dffts,temppsic,temppsic_all)
                   IF ( me_bgrp == 0 ) &
                     psic_all(1:nxxs) = temppsic_all(rir(1:nxxs,isym))
                   CALL cscatter_smooth(psic_all,psic)

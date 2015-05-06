@@ -1864,7 +1864,7 @@ contains
     use lr_variables,         only : evc0, sevc0,R, nbnd_total,evc0_virt,rho_1,rho_1c
     use lr_dav_variables
     use wvfct,                only : nbnd
-    use fft_base,             only : dffts,dfftp
+    use fft_base,             only : dffts,dfftp, gather_grid
     use io_global,            only : stdout,ionode,ionode_id
     use mp,                   only : mp_bcast,mp_barrier                  
     use mp_world,             only : world_comm
@@ -1874,7 +1874,6 @@ contains
     USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
     USE io_global,  ONLY : stdout, ionode,ionode_id
     USE io_files,   ONLY : tmp_dir
-    USE fft_base,   ONLY : grid_gather
     USE gvecs,    ONLY : dual
     USE control_flags,                ONLY : gamma_only
     use lr_us
@@ -1936,7 +1935,7 @@ contains
     
 #ifdef __MPI
       ALLOCATE (raux1( dfftp%nr1x * dfftp%nr2x * dfftp%nr3x))
-      CALL grid_gather (raux, raux1)
+      CALL gather_grid (dfftp, raux, raux1)
       IF ( ionode ) WRITE (iunplot, '(5(1pe17.9))') &
           (raux1 (ir) , ir = 1, dfftp%nr1x * dfftp%nr2x * dfftp%nr3x)
       DEALLOCATE (raux1)

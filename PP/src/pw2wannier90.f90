@@ -2323,7 +2323,7 @@ SUBROUTINE write_plot
    USE klist,           ONLY : nkstot, xk
    USE gvect,           ONLY : g, ngm
    USE cell_base,       ONLY : tpiba2
-   USE fft_base,        ONLY : cgather_smooth, dffts
+   USE fft_base,        ONLY : gather_grid, dffts
    USE fft_interfaces,  ONLY : invfft
    USE noncollin_module,ONLY : noncolin
 
@@ -2408,7 +2408,7 @@ SUBROUTINE write_plot
          CALL invfft ('Wave', psic, dffts)
          IF (reduce_unk) pos=0
 #ifdef __MPI
-         CALL cgather_smooth(psic,psic_all)
+         CALL gather_grid(dffts,psic,psic_all)
          IF (reduce_unk) THEN
             DO k=1,dffts%nr3,2
                DO j=1,dffts%nr2,2

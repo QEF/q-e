@@ -224,7 +224,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  use lsda_mod,  only : nspin
  USE mp_global, ONLY : nproc_pool, me_pool, intra_pool_comm
  USE mp,        ONLY : mp_sum
- USE fft_base,  ONLY : dffts, grid_gather, dfftp
+ USE fft_base,  ONLY : dffts, gather_grid, dfftp
  USE cond,      ONLY : ngper, newbg, intw1, intw2, &
                        nl_2ds, nl_2d, korbl, korbr, funz0, kfunl, xyk, ikind, &
                        n2d, kvall
@@ -461,7 +461,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
     call realus_scatt_1(becsum_orig)
     do ipol = 1, nspin
 #ifdef __MPI
-     CALL grid_gather (rho%of_r(:,ipol),spin_mag(:,ipol))
+     CALL gather_grid (dfftp, rho%of_r(:,ipol),spin_mag(:,ipol))
 #else
      do ig = 1, dfftp%nnr
        spin_mag(ig,ipol) = rho%of_r(ig,ipol)

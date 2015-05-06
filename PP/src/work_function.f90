@@ -19,7 +19,7 @@ SUBROUTINE work_function (wf)
   USE scf,       ONLY : rho, vltot, v, rho_core, rhog_core
   USE gvect
   USE cell_base, ONLY : omega, alat
-  USE fft_base,  ONLY : grid_gather, dfftp
+  USE fft_base,  ONLY : gather_grid, dfftp
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm
 
@@ -56,16 +56,16 @@ SUBROUTINE work_function (wf)
 #ifdef __MPI
      ALLOCATE (aux  ( dfftp%nnr))
      aux(:) = rho%of_r(:,current_spin) + rho_core(:)/nspin0
-     CALL grid_gather (aux, raux1)
+     CALL gather_grid (dfftp, aux, raux1)
 #else
      raux1(1:dfftp%nnr) = rho%of_r(1:dfftp%nnr,current_spin) + rho_core(1:dfftp%nnr)/nspin0
 #endif
      !
 #ifdef __MPI
      aux(:) = vltot(:) + v%of_r(:,current_spin)
-     CALL grid_gather (aux, vaux1)
+     CALL gather_grid (dfftp, aux, vaux1)
      aux(:) = aux(:) - vxc(:,current_spin)
-     CALL grid_gather (aux, vaux2)
+     CALL gather_grid (dfftp, aux, vaux2)
 #else
      vaux1(1:dfftp%nnr) = vltot(1:dfftp%nnr) + v%of_r(1:dfftp%nnr,current_spin)
      vaux2(1:dfftp%nnr) = vaux1(1:dfftp%nnr) -vxc(1:dfftp%nnr,current_spin)

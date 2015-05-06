@@ -22,7 +22,7 @@ SUBROUTINE poten(vppot,nrz,z)
   USE mp_world,         ONLY : world_comm
   USE io_global,        ONLY : ionode_id
   USE fft_scalar,       ONLY : cfft3d
-  USE fft_base,         ONLY : grid_gather, dfftp
+  USE fft_base,         ONLY : gather_grid, dfftp
 
   IMPLICIT NONE
 
@@ -114,7 +114,7 @@ DO ispin=1,nspin_eff
 ! To collect the potential from different CPUs
 !
 #ifdef __MPI
-  call grid_gather( auxr, allv )
+  call gather_grid ( dfftp, auxr, allv )
   CALL mp_bcast( allv, ionode_id, world_comm )
   aux(:) = CMPLX(allv(:), 0.d0,kind=DP)
 #else

@@ -21,9 +21,8 @@ SUBROUTINE punch_plot_e()
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
   USE io_global,  ONLY : stdout, ionode
-  USE fft_base,   ONLY : grid_gather
   USE run_info, ONLY : title
-  USE fft_base,   ONLY : dfftp
+  USE fft_base,   ONLY : dfftp, gather_grid
   USE gvect,      ONLY : gcutm
   USE gvecs,    ONLY : dual
   USE cell_base,  ONLY : bg, ibrav, celldm
@@ -124,7 +123,7 @@ SUBROUTINE punch_plot_e()
      !
 #if defined (__MPI)
      ALLOCATE (raux1( dfftp%nr1x * dfftp%nr2x * dfftp%nr3x))
-     CALL grid_gather (raux, raux1)
+     CALL gather_grid (dfftp, raux, raux1)
      IF ( ionode ) WRITE (iunplot, '(5(1pe17.9))') &
           (raux1 (ir) , ir = 1, dfftp%nr1x * dfftp%nr2x * dfftp%nr3x)
      DEALLOCATE (raux1)

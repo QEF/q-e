@@ -24,7 +24,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
   USE run_info,         ONLY : title
   USE extfield,         ONLY : tefield, dipfield
-  USE fft_base,         ONLY : dfftp
+  USE fft_base,         ONLY : dfftp, gather_grid
   USE fft_interfaces,   ONLY : fwfft, invfft
   USE gvect,            ONLY : gcutm
   USE gvecs,            ONLY : dual
@@ -35,7 +35,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE scf,              ONLY : rho, vltot, v
   USE wvfct,            ONLY : npw, nbnd, wg, igk, ecutwfc
   USE noncollin_module, ONLY : noncolin
-  USE fft_base,         ONLY : grid_gather
   USE paw_postproc,     ONLY : PAW_make_ae_charge
 
   IMPLICIT NONE
@@ -287,7 +286,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ENDIF
 
 #ifdef __MPI
-  IF (.not. (plot_num == 5 ) ) CALL grid_gather (raux, raux1)
+  IF (.not. (plot_num == 5 ) ) CALL gather_grid (dfftp, raux, raux1)
   IF ( ionode ) &
      CALL plot_io (filplot, title,  dfftp%nr1x,  dfftp%nr2x,  dfftp%nr3x, &
          dfftp%nr1,  dfftp%nr2,  dfftp%nr3, nat, ntyp, ibrav, celldm, at, &
