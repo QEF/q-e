@@ -94,7 +94,7 @@ SUBROUTINE clean_pw( lflag )
   !
   CALL deallocate_ldaU ( lflag )
   !
-  IF ( ALLOCATED( f_inp ) )      DEALLOCATE( f_inp )
+  IF ( ALLOCATED( f_inp ) .and. lflag )      DEALLOCATE( f_inp )
   IF ( ALLOCATED( tetra ) )      DEALLOCATE( tetra )
   !
   ! ... arrays allocated in ggen.f90
