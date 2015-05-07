@@ -190,6 +190,8 @@ MODULE wannier_gw
   REAL(kind=DP) :: s_bse!threshold for wannier function overlap
   REAL(kind=DP) :: dual_bse!dual factor for bse calculations
 
+  LOGICAL :: l_simple!if true writes on disk polarizability basis on real space for further post-processing
+
   LOGICAL :: l_list !if true uses startegy for large systems from list of states included in s_first_state, s_last_state
   INTEGER :: n_list(2)!number of states in list for the 2 spin channels
   INTEGER, ALLOCATABLE :: i_list(:,:) !list of KS states to be computed 
@@ -203,6 +205,7 @@ MODULE wannier_gw
   INTEGER :: len_head_block_freq!length of blocks on frequency
   INTEGER :: len_head_block_wfc!length of blocks on unperturbed occupied wfcs 
 
+  
 
   INTERFACE free_memory
 
