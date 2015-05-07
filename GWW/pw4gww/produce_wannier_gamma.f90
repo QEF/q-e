@@ -599,8 +599,13 @@
 !NOT_TO_BE_INCLUDED_START
 
           if(restart_gww<=6  .and. l_full) then
-             call write_pola_basis(numw_prod)
+             call write_pola_basis(numw_prod,0)
           endif
+
+          if(restart_gww<=6  .and. l_simple) then
+             call write_pola_basis(numw_prod,1)
+          endif
+
 
           if (l_bse) then
 

@@ -8,7 +8,7 @@
 !
 
 !this subroutine writes polarizability basis in real space on charge grid on disk
-  subroutine write_pola_basis(numpw)
+  subroutine write_pola_basis(numpw, itask)
 
     USE io_global,            ONLY : stdout, ionode, ionode_id
    USE io_files,             ONLY : prefix, tmp_dir, diropn
@@ -30,7 +30,9 @@
     
     implicit none
 
-    INTEGER, INTENT(in) :: numpw!dimesion of polarizability bassis
+    INTEGER, INTENT(in) :: numpw!dimesion of polarizability basis
+    INTEGER, INTENT(in) :: itask!0 writes (v\Phi)  1 writes (\Phi)
+
     COMPLEX(kind=DP), allocatable :: p_basis(:,:)
     INTEGER, external :: find_free_unit
     INTEGER :: iungprod,iw,ii,iun,ig
@@ -47,27 +49,30 @@
     allocate(p_basis_r(dfftp%nnr,2))
     allocate(fac(npw))
 
-    if(l_truncated_coulomb) then
-       do ig=1,max_ngm
+
+    if(itask==0) then
+       if(l_truncated_coulomb) then
+          do ig=1,max_ngm
+             
+             qq = g(1,ig)**2.d0 + g(2,ig)**2.d0 + g(3,ig)**2.d0
+             
           
-          qq = g(1,ig)**2.d0 + g(2,ig)**2.d0 + g(3,ig)**2.d0
-          
-          
-          if (qq > 1.d-8) then
-             fac(ig)=(e2*fpi/(tpiba2*qq))*(1.d0-dcos(dsqrt(qq)*truncation_radius*tpiba))
-          else
-             fac(ig)=e2*fpi*(truncation_radius**2.d0/2.d0)
-          endif
-       enddo
+             if (qq > 1.d-8) then
+                fac(ig)=(e2*fpi/(tpiba2*qq))*(1.d0-dcos(dsqrt(qq)*truncation_radius*tpiba))
+             else
+                fac(ig)=e2*fpi*(truncation_radius**2.d0/2.d0)
+             endif
+          enddo
        
 
-       fac(:)=fac(:)/omega
+          fac(:)=fac(:)/omega
+       else
+          fac(:)=0.d0
+          fac(1:npw)=vg_q(1:npw)
+       endif
     else
-       fac(:)=0.d0
-       fac(1:npw)=vg_q(1:npw)
+       fac=1.d0
     endif
-
-
 
 
     do iw=1,numpw
@@ -79,8 +84,11 @@
     close(iungprod)
     
     iun=find_free_unit()
-    CALL diropn( iun, 'basis2full',dfftp%nnr, exst )
-
+    if(itask==0) then
+       CALL diropn( iun, 'basis2full',dfftp%nnr, exst )
+    else
+       CALL diropn( iun, 'basis2simple',dfftp%nnr, exst )
+    endif
 
     ii=0
     do iw=1,numpw,2

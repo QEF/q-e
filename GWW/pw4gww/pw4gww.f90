@@ -148,7 +148,8 @@ program gwl_punch
                                 l_scissor,&
                                 scissor,&
                                 l_full,&
-                                n_full
+                                n_full,&
+                                l_simple
                  
  
   USE exchange_custom, ONLY : exchange_fast_dual
@@ -185,7 +186,7 @@ program gwl_punch
                                s_last_state,l_selfconsistent,l_whole_s,l_ts_eigen,l_frac_occ,num_nbndv_min,&
                                l_cond_pol_base,l_semicore,n_semicore,l_semicore_read, l_verbose, l_contour,&
                                l_real,exchange_fast_dual,l_bse,s_bse,dual_bse,l_big_system,extra_pw_cutoff,&
-                               l_list,l_scissor,scissor,l_full,n_full
+                               l_list,l_scissor,scissor,l_full,n_full,l_simple
                     
 
   !
@@ -282,6 +283,7 @@ program gwl_punch
   scissor=0.d0
   l_full=.false.
   n_full=0
+  l_simple=.false.
   !
   !    Reading input file
   !
@@ -402,6 +404,7 @@ program gwl_punch
   CALL mp_bcast(scissor, ionode_id, world_comm)
   CALL mp_bcast(l_full, ionode_id, world_comm)
   CALL mp_bcast(n_full, ionode_id, world_comm)
+  CALL mp_bcast(l_simple, ionode_id, world_comm)
 
   call read_file 
 
