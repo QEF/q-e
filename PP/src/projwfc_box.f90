@@ -37,7 +37,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE scf,                  ONLY : rho
   USE projections_ldos,     ONLY : proj
-  USE fft_base,             ONLY : grid_scatter, dfftp
+  USE fft_base,             ONLY : scatter_grid, dfftp
   USE fft_interfaces,       ONLY : invfft
   USE mp_global,            ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
@@ -157,7 +157,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
      ENDIF
      !
 #ifdef __MPI
-     CALL grid_scatter ( thetabox(:), thetathisproc(:,ibox) )
+     CALL scatter_grid ( dfftp, thetabox(:), thetathisproc(:,ibox) )
 #else
      thetathisproc(:,ibox) = thetabox(1:dfftp%nnr)      
 #endif

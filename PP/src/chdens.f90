@@ -26,7 +26,7 @@ SUBROUTINE chdens (filplot,plot_num)
   USE cell_base,  ONLY : at, bg, celldm, ibrav, alat, omega, tpiba, tpiba2
   USE ions_base,  ONLY : nat, ityp, atm, ntyp => nsp, tau, zv
   USE lsda_mod,   ONLY : nspin
-  USE fft_base,   ONLY : grid_scatter, dfftp, dffts
+  USE fft_base,   ONLY : scatter_grid, dfftp, dffts
   USE fft_interfaces,  ONLY : fwfft
   USE grid_subroutines,ONLY : realspace_grids_init
   USE gvect,      ONLY : ngm, nl, g, gcutm
@@ -417,7 +417,7 @@ SUBROUTINE chdens (filplot,plot_num)
      ENDIF
 #ifdef __MPI
      ALLOCATE(aux(dfftp%nnr))
-     CALL grid_scatter(rhor, aux)
+     CALL scatter_grid(dfftp, rhor, aux)
      psic(:) = cmplx(aux(:), 0.d0,kind=DP)
      DEALLOCATE(aux)
 #else

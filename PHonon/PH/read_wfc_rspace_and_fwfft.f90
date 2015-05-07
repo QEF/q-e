@@ -9,7 +9,7 @@ subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , n_plane_waves ,
   use kinds,           ONLY : DP
   use wvfct,       ONLY : npwx, nbnd
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
-  USE fft_base,            ONLY : dffts, cscatter_smooth
+  USE fft_base,            ONLY : dffts, scatter_grid
   USE fft_interfaces,      ONLY : fwfft
   USE gvecs,                ONLY : nls
   USE io_global,             ONLY : ionode_id, ionode
@@ -52,7 +52,7 @@ subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , n_plane_waves ,
      !
      DO is = 1, nspin_mag
         !
-        CALL cscatter_smooth ( dist_evc_r(:,is), evc_r(:,is) )
+        CALL scatter_grid ( dffts, dist_evc_r(:,is), evc_r(:,is) )
         !
      END DO
      !

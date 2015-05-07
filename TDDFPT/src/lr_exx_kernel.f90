@@ -233,7 +233,7 @@ SUBROUTINE lr_exx_revc0_init(orbital, kpoint)
   USE mp_global,    ONLY : me_bgrp
   USE exx,          ONLY : rir, nkqs, index_sym, index_xk
   USE exx,          ONLY : exx_fft_g2r
-  USE fft_base,     ONLY : gather_grid, cscatter_smooth
+  USE fft_base,     ONLY : gather_grid, scatter_grid
   USE symm_base,    ONLY : sname
 
   IMPLICIT NONE
@@ -280,7 +280,7 @@ SUBROUTINE lr_exx_revc0_init(orbital, kpoint)
            CALL gather_grid (dffts, psic, psic_all)
            IF ( me_bgrp == 0 ) &
                 temppsic_all(1:nxxs) = psic_all(rir(1:nxxs, isym))
-           CALL cscatter_smooth(temppsic_all, temppsic)
+           CALL scatter_grid(dffts, temppsic_all, temppsic)
 #else
            temppsic(1:nrxxs) = psic(rir(1:nrxxs, isym))
 #endif
@@ -326,7 +326,7 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
   USE mp_global,              ONLY : inter_bgrp_comm, ibnd_start, ibnd_end,&
                                    & me_bgrp
   USE mp,                     ONLY : mp_sum
-  USE fft_base,               ONLY : gather_grid, cscatter_smooth
+  USE fft_base,               ONLY : gather_grid, scatter_grid
 
   IMPLICIT NONE
   !
@@ -480,7 +480,7 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
 #ifdef __MPI
               IF ( me_bgrp == 0 ) &
                    temppsic_all(1:nxxs) = psic_all(rir(1:nxxs, isym))
-              CALL cscatter_smooth(temppsic_all, temppsic)
+              CALL scatter_grid(dffts, temppsic_all, temppsic)
 #else
 
               temppsic(1:nrxxs) = psic(rir(1:nrxxs, isym))
@@ -581,7 +581,7 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
   USE cell_base,              ONLY : bg, at
   USE funct,                  ONLY : exx_is_active
   USE mp_global,              ONLY : me_bgrp
-  USE fft_base,               ONLY : gather_grid, cscatter_smooth
+  USE fft_base,               ONLY : gather_grid, scatter_grid
   USE lr_variables,           ONLY : ltammd
 
   IMPLICIT NONE
@@ -680,7 +680,7 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
 #ifdef __MPI
         IF ( me_bgrp == 0 ) &
              temppsic_all(1:nxxs) = psic_all(rir(1:nxxs, isym))
-        CALL cscatter_smooth(temppsic_all, temppsic)
+        CALL scatter_grid(dffts, temppsic_all, temppsic)
 #else
         
         temppsic(1:nrxxs) = psic(rir(1:nrxxs, isym))

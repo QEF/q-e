@@ -93,7 +93,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   ! Electron-phonon calculation from data saved in dfile_rot
   !
   USE kinds,            ONLY : DP
-  USE fft_base,         ONLY : dfftp, cgather_sym
+  USE fft_base,         ONLY : dfftp
   USE cell_base,        ONLY : at, bg
   USE ions_base,        ONLY : nat, tau, amass
   USE symm_base,        ONLY : ftau, t_rev
