@@ -64,7 +64,7 @@ all : tldeps average.x bands.x dos.x epsilon.x initial_state.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw_export.x pw2gw.x \
       wannier_ham.x wannier_plot.x molecularpdos.x \
-      pw2bgw.x bgw2pw.x wfck2r.x
+      pw2bgw.x bgw2pw.x wfck2r.x importexport_binary.x
 
 
 libpp.a : $(PPOBJS) 
@@ -128,6 +128,12 @@ xctest.x : xctest.o libpp.a $(MODULES) $(LIBOBJS)
 pp.x : postproc.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		postproc.o libpp.a $(MODULES) \
+		$(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+importexport_binary.x : importexport_binary.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		importexport_binary.o libpp.a $(MODULES) \
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 

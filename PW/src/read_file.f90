@@ -75,8 +75,18 @@ SUBROUTINE read_file()
   !
 END SUBROUTINE read_file
 !
-!----------------------------------------------------------------------------
 SUBROUTINE read_xml_file()
+  ! wrapper routine to call the default behavior
+  call read_xml_file_internal(.true.)
+END SUBROUTINE read_xml_file
+
+SUBROUTINE read_xml_file_nobs()
+  ! wrapper routine to load everything except for the band structure
+  call read_xml_file_internal(.false.)
+END SUBROUTINE read_xml_file_nobs
+
+!----------------------------------------------------------------------------
+SUBROUTINE read_xml_file_internal(withbs)
   !----------------------------------------------------------------------------
   !
   ! ... This routine allocates space for all quantities already computed
@@ -123,6 +133,13 @@ SUBROUTINE read_xml_file()
   USE esm,                  ONLY : do_comp_esm, esm_ggen_2d
   !
   IMPLICIT NONE
+
+  ! Used to specify whether to read the band structure (files 
+  ! K??????/eigenval.xml), so one can skip it if not needed by
+  ! the post-processing tool. 
+  ! Set to True for the 'default' behavior of reading these files.
+  LOGICAL :: withbs
+
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, inlc
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
   REAL(DP) :: sr(3,3,48)
@@ -204,7 +221,11 @@ SUBROUTINE read_xml_file()
   !
   ! ... here we read all the variables defining the system
   !
-  CALL pw_readfile( 'nowave', ierr )
+  if (withbs .eqv. .true.) then
+     CALL pw_readfile( 'nowave', ierr )
+  else 
+     CALL pw_readfile( 'nowavenobs', ierr )
+  end if
   !
   ! ... distribute across pools k-points and related variables.
   ! ... nks is defined by the following routine as the number 
@@ -342,4 +363,4 @@ SUBROUTINE read_xml_file()
       !
     END SUBROUTINE set_dimensions
     !
-END SUBROUTINE read_xml_file
+  END SUBROUTINE read_xml_file_internal

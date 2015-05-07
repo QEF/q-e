@@ -30,7 +30,7 @@ MODULE xml_io_base
   CHARACTER(5),  PARAMETER :: fmt_name = "QEXML"
   CHARACTER(5),  PARAMETER :: fmt_version = "1.4.0"
   !
-  LOGICAL,       PARAMETER :: rho_binary = .TRUE.
+  LOGICAL,       SAVE      :: rho_binary = .TRUE.
   !
   CHARACTER(iotk_attlenx)  :: attr
   !

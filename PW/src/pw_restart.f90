@@ -891,6 +891,20 @@ MODULE pw_restart
          lwfc  = .TRUE.
          need_qexml = .TRUE.
          !
+      CASE( 'nowavenobs' )
+         !
+         lcell   = .TRUE.
+         lpw     = .TRUE.
+         lions   = .TRUE.
+         lspin   = .TRUE.
+         linit_mag   = .TRUE.
+         lxc     = .TRUE.
+         locc    = .TRUE.
+         lbz     = .TRUE.
+         lsymm   = .TRUE.
+         lefield = .TRUE.
+         need_qexml = .TRUE.
+
       CASE( 'nowave' )
          !
          lcell   = .TRUE.
