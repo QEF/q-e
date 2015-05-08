@@ -392,8 +392,8 @@ END SUBROUTINE fft_scatter
 SUBROUTINE gather_real_grid ( dfft, f_in, f_out )
   !----------------------------------------------------------------------------
   !
-  ! ... gathers a distributed real-space FFT grid to the first processor of
-  ! ... input descriptor "dfft" - this version for real arrays
+  ! ... gathers a distributed real-space FFT grid to dfft%root, that is,
+  ! ... the first processor of input descriptor dfft - version for real arrays
   !
   ! ... REAL*8  f_in  = distributed variable (dfft%nnr)
   ! ... REAL*8  f_out = gathered variable (dfft%nr1x*dfft%nr2x*dfft%nr3x)
@@ -410,6 +410,7 @@ SUBROUTINE gather_real_grid ( dfft, f_in, f_out )
 #if defined (__MPI)
   !
   INTEGER :: proc, info
+  ! ... the following are automatic arrays
   INTEGER :: displs(0:dfft%nproc-1), recvcount(0:dfft%nproc-1)
   !
   IF( size( f_in ) < dfft%nnr ) &
@@ -420,18 +421,16 @@ SUBROUTINE gather_real_grid ( dfft, f_in, f_out )
   DO proc = 0, ( dfft%nproc - 1 )
      !
      recvcount(proc) = dfft%nnp * dfft%npp(proc+1)
-     !
      IF ( proc == 0 ) THEN
-        !
         displs(proc) = 0
-        !
      ELSE
-        !
         displs(proc) = displs(proc-1) + recvcount(proc-1)
-        !
      ENDIF
      !
   ENDDO
+  !
+  ! ... the following check should be performed only on processor dfft%root
+  ! ... otherwise f_out must be allocated on all processors even if not used
   !
   info = size( f_out ) - displs( dfft%nproc-1 ) - recvcount( dfft%nproc-1 )
   IF( info < 0 ) &
@@ -459,8 +458,8 @@ END SUBROUTINE gather_real_grid
 SUBROUTINE gather_complex_grid ( dfft, f_in, f_out )
   !----------------------------------------------------------------------------
   !
-  ! ... gathers a distributed real-space FFT grid to the first processor of
-  ! ... input descriptor "dfft" - this version for complex arrays
+  ! ... gathers a distributed real-space FFT grid to dfft%root, that is,
+  ! ... the first processor of input descriptor dfft - complex arrays
   !
   ! ... COMPLEX*16  f_in  = distributed variable (dfft%nnr)
   ! ... COMPLEX*16  f_out = gathered variable (dfft%nr1x*dfft%nr2x*dfft%nr3x)
@@ -477,6 +476,7 @@ SUBROUTINE gather_complex_grid ( dfft, f_in, f_out )
 #if defined (__MPI)
   !
   INTEGER :: proc, info
+  ! ... the following are automatic arrays
   INTEGER :: displs(0:dfft%nproc-1), recvcount(0:dfft%nproc-1)
   !
   IF( 2*size( f_in ) < dfft%nnr ) &
@@ -487,18 +487,16 @@ SUBROUTINE gather_complex_grid ( dfft, f_in, f_out )
   DO proc = 0, ( dfft%nproc - 1 )
      !
      recvcount(proc) = 2*dfft%nnp * dfft%npp(proc+1)
-     !
      IF ( proc == 0 ) THEN
-        !
         displs(proc) = 0
-        !
      ELSE
-        !
         displs(proc) = displs(proc-1) + recvcount(proc-1)
-        !
      ENDIF
      !
   ENDDO
+  !
+  ! ... the following check should be performed only on processor dfft%root
+  ! ... otherwise f_out must be allocated on all processors even if not used
   !
   info = 2*size( f_out ) - displs( dfft%nproc - 1 ) - recvcount( dfft%nproc-1 )
   IF( info < 0 ) &
@@ -526,8 +524,8 @@ END SUBROUTINE gather_complex_grid
 SUBROUTINE scatter_real_grid ( dfft, f_in, f_out )
   !----------------------------------------------------------------------------
   !
-  ! ... scatters a real-space FFT grid from the first processor of
-  ! ... input descriptor "dfft" to all others - opposite of "gather_grid"
+  ! ... scatters a real-space FFT grid from dfft%root, first processor of
+  ! ... input descriptor dfft, to all others - opposite of "gather_grid"
   !
   ! ... REAL*8  f_in  = gathered variable (dfft%nr1x*dfft%nr2x*dfft%nr3x)
   ! ... REAL*8  f_out = distributed variable (dfft%nnr)
@@ -544,6 +542,7 @@ SUBROUTINE scatter_real_grid ( dfft, f_in, f_out )
 #if defined (__MPI)
   !
   INTEGER :: proc, info
+  ! ... the following are automatic arrays
   INTEGER :: displs(0:dfft%nproc-1), sendcount(0:dfft%nproc-1)
   !
   IF( size( f_out ) < dfft%nnr ) &
@@ -554,21 +553,18 @@ SUBROUTINE scatter_real_grid ( dfft, f_in, f_out )
   DO proc = 0, ( dfft%nproc - 1 )
      !
      sendcount(proc) = dfft%nnp * dfft%npp(proc+1)
-     !
      IF ( proc == 0 ) THEN
-        !
         displs(proc) = 0
-        !
      ELSE
-        !
         displs(proc) = displs(proc-1) + sendcount(proc-1)
-        !
      ENDIF
      !
   ENDDO
   !
-  info = size( f_in ) - displs( dfft%nproc - 1 ) - sendcount( dfft%nproc - 1 )
+  ! ... the following check should be performed only on processor dfft%root
+  ! ... otherwise f_in must be allocated on all processors even if not used
   !
+  info = size( f_in ) - displs( dfft%nproc - 1 ) - sendcount( dfft%nproc - 1 )
   IF( info < 0 ) &
      CALL errore( ' scatter_grid ', ' f_in too small ', -info )
   !
@@ -596,8 +592,8 @@ END SUBROUTINE scatter_real_grid
 SUBROUTINE scatter_complex_grid ( dfft, f_in, f_out )
   !----------------------------------------------------------------------------
   !
-  ! ... scatters a real-space FFT grid from the first processor of
-  ! ... input descriptor "dfft" to all others - opposite of "gather_grid"
+  ! ... scatters a real-space FFT grid from dfft%root, first processor of
+  ! ... input descriptor dfft, to all others - opposite of "gather_grid"
   !
   ! ... COMPLEX*16  f_in  = gathered variable (dfft%nr1x*dfft%nr2x*dfft%nr3x)
   ! ... COMPLEX*16  f_out = distributed variable (dfft%nnr)
@@ -614,6 +610,7 @@ SUBROUTINE scatter_complex_grid ( dfft, f_in, f_out )
 #if defined (__MPI)
   !
   INTEGER :: proc, info
+  ! ... the following are automatic arrays
   INTEGER :: displs(0:dfft%nproc-1), sendcount(0:dfft%nproc-1)
   !
   IF( 2*size( f_out ) < dfft%nnr ) &
@@ -624,21 +621,18 @@ SUBROUTINE scatter_complex_grid ( dfft, f_in, f_out )
   DO proc = 0, ( dfft%nproc - 1 )
      !
      sendcount(proc) = 2*dfft%nnp * dfft%npp(proc+1)
-     !
      IF ( proc == 0 ) THEN
-        !
         displs(proc) = 0
-        !
      ELSE
-        !
         displs(proc) = displs(proc-1) + sendcount(proc-1)
-        !
      ENDIF
      !
   ENDDO
   !
-  info = 2*size( f_in ) - displs( dfft%nproc - 1 ) - sendcount( dfft%nproc - 1 )
+  ! ... the following check should be performed only on processor dfft%root
+  ! ... otherwise f_in must be allocated on all processors even if not used
   !
+  info = 2*size( f_in ) - displs( dfft%nproc - 1 ) - sendcount( dfft%nproc - 1 )
   IF( info < 0 ) &
      CALL errore( ' scatter_grid ', ' f_in too small ', -info )
   !
@@ -669,7 +663,9 @@ END SUBROUTINE scatter_complex_grid
 SUBROUTINE cgather_sym( f_in, f_out )
   !-----------------------------------------------------------------------
   !
-  ! ... gather complex data for symmetrization (in phonon code)
+  ! ... gather complex data for symmetrization (used in phonon code)
+  ! ... Differs from gather_grid because mpi_allgatherv is used instead
+  ! ... of mpi_gatherv - all data is gathered on ALL processors
   ! ... COMPLEX*16  f_in  = distributed variable (nrxx)
   ! ... COMPLEX*16  f_out = gathered variable (nr1x*nr2x*nr3x)
   !
@@ -691,15 +687,10 @@ SUBROUTINE cgather_sym( f_in, f_out )
   DO proc = 0, ( dfftp%nproc - 1 )
      !
      recvcount(proc) = 2 * dfftp%nnp * dfftp%npp(proc+1)
-     !
      IF ( proc == 0 ) THEN
-        !
         displs(proc) = 0
-        !
      ELSE
-        !
         displs(proc) = displs(proc-1) + recvcount(proc-1)
-        !
      ENDIF
      !
   ENDDO
@@ -711,8 +702,6 @@ SUBROUTINE cgather_sym( f_in, f_out )
                        dfftp%comm, info )
   !
   CALL errore( 'cgather_sym', 'info<>0', info )
-  !
-!  CALL mp_barrier( dfftp%comm )
   !
   CALL stop_clock( 'cgather' )
   !

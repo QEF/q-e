@@ -1,11 +1,16 @@
 Incompatible changes in svn version:
 
+   * various "gather" and "scatter" routines removes and replaced by two
+     interface routines gather_grid, scatter_grid, valid for all FFT grids
+     and for both real and complex arrays
    * __STD_F95 preprocessing option removed: all compilers that do not allow
      allocatable arrays in derived types are no longer supported
 
 New in svn version:
 
-   * PW: speedup of USPP; real-space USPP contribution to forces implemented
+   * PW: real-space treatment of augmentation charges in USPP and PAW can 
+         be used in (fixed-cell) structural relaxation as well
+   * PW: speedup of USPP with full G-space treatment of augmentation charges
    * PW: Hybrid functionals for USPP now working
 
 Fixed in svn version:
