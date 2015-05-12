@@ -24,7 +24,7 @@ MODULE exx
   ! general purpose vars
   !
   REAL(DP):: exxalfa=0._dp                ! 1 if exx, 0 elsewhere
-  INTEGER :: exx_nwordwfc, ji
+  INTEGER :: ji
   CHARACTER(len=1) :: exx_augmented = 'x' ! r -> real space
                                           ! k -> reciprocal space
                                           ! x -> do not augment
@@ -227,13 +227,13 @@ MODULE exx
     IMPLICIT NONE
     INTEGER :: ikq
     !
-    IF ( allocated(index_xkq) ) DEALLOCATE(index_xkq)
-    IF ( allocated(index_xk ) ) DEALLOCATE(index_xk )
-    IF ( allocated(index_sym) ) DEALLOCATE(index_sym)
-    IF ( ALLOCATED (rir)       ) DEALLOCATE (rir)
-    IF ( allocated(x_occupation) ) DEALLOCATE(x_occupation)
-    IF ( allocated(xkq_collect) )  DEALLOCATE(xkq_collect)
-    IF ( allocated(exxbuff) )      DEALLOCATE(exxbuff)
+    IF ( ALLOCATED(index_xkq) ) DEALLOCATE(index_xkq)
+    IF ( ALLOCATED(index_xk ) ) DEALLOCATE(index_xk )
+    IF ( ALLOCATED(index_sym) ) DEALLOCATE(index_sym)
+    IF ( ALLOCATED(rir)       ) DEALLOCATE(rir)
+    IF ( ALLOCATED(x_occupation) ) DEALLOCATE(x_occupation)
+    IF ( ALLOCATED(xkq_collect) )  DEALLOCATE(xkq_collect)
+    IF ( ALLOCATED(exxbuff) )      DEALLOCATE(exxbuff)
     !
     IF(ALLOCATED(becxx)) THEN
       DO ikq = 1, nkqs
@@ -687,20 +687,18 @@ MODULE exx
   SUBROUTINE exx_restart(l_exx_was_active)
      !------------------------------------------------------------------------
      !This SUBROUTINE is called when restarting an exx calculation
-     USE funct,                ONLY : get_exx_fraction, start_exx, exx_is_active, &
-                                     get_screening_parameter
-     USE fft_base,             ONLY : dffts
+     USE funct,                ONLY : get_exx_fraction, start_exx, &
+                                      exx_is_active, get_screening_parameter
 
      IMPLICIT NONE
      LOGICAL, INTENT(IN) :: l_exx_was_active
 
-     IF (.not. l_exx_was_active ) return ! nothing had happpened yet
+     IF (.not. l_exx_was_active ) return ! nothing had happened yet
      !
-     exx_nwordwfc=2*dffts%nnr
      erfc_scrlen = get_screening_parameter()
      exxdiv = exx_divergence() 
      exxalfa = get_exx_fraction()
-     CALL start_exx
+     CALL start_exx()
      CALL weights()
      CALL exxinit()
      fock0 = exxenergy2()
@@ -716,7 +714,7 @@ MODULE exx
     ! This SUBROUTINE is run before the first H_psi() of each iteration.
     ! It saves the wavefunctions for the right density matrix, in real space
     !
-    USE wavefunctions_module, ONLY : evc  
+    USE wavefunctions_module, ONLY : evc, psic
     USE io_files,             ONLY : nwordwfc, iunwfc, iunigk
     USE buffers,              ONLY : get_buffer
     USE gvecs,                ONLY : nls
@@ -743,7 +741,7 @@ MODULE exx
     INTEGER :: h_ibnd
     INTEGER :: ibnd_loop_start, ibnd_buff_start, ibnd_buff_end
     INTEGER :: ipol, jpol
-    COMPLEX(DP),ALLOCATABLE :: temppsic(:),      psic(:)
+    COMPLEX(DP),ALLOCATABLE :: temppsic(:)
     COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:), psic_nc(:,:)
     INTEGER :: nxxs, nrxxs, nr1x,nr2x,nr3x,nr1,nr2,nr3
 #ifdef __MPI
@@ -789,15 +787,15 @@ MODULE exx
 #ifdef __MPI
     IF (noncolin) THEN
        ALLOCATE(psic_all_nc(nxxs,npol), temppsic_all_nc(nxxs,npol) )
-    ELSE
+    ELSE IF ( .NOT. gamma_only ) THEN
        ALLOCATE(psic_all(nxxs), temppsic_all(nxxs) )
     ENDIF
 #endif
     CALL init_index_over_band(inter_bgrp_comm,nbnd)
     IF (noncolin) THEN
        ALLOCATE(temppsic_nc(nrxxs, npol), psic_nc(nrxxs, npol))
-    ELSE
-       ALLOCATE(temppsic(nrxxs), psic(nrxxs))
+    ELSE IF ( .NOT. gamma_only ) THEN
+       ALLOCATE(temppsic(nrxxs))
     ENDIF
     !
     ! prepare space to keep the <beta_I|phi_j> scalar products (for ultrasoft/paw only)
@@ -822,10 +820,6 @@ MODULE exx
     IF (.NOT. allocated(exxbuff)) &
         ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_end, nkqs))
     !
-    ALLOCATE(ispresent(nsym))
-    IF(.NOT. ALLOCATED(rir)) ALLOCATE(rir(nxxs,nsym))
-    rir = 0
-    exx_nwordwfc=2*nrxxs
     IF (.not.exx_is_active()) THEN 
        !
        erfc_scrlen = get_screening_parameter()
@@ -843,9 +837,12 @@ MODULE exx
       wg_collect = wg
     ENDIF
 
-    IF ( nks > 1 ) REWIND( iunigk )
-
+    IF(.NOT. ALLOCATED(rir)) ALLOCATE(rir(nxxs,nsym))
+    rir = 0
+    ALLOCATE(ispresent(nsym))
     ispresent(1:nsym) = .false.
+
+    IF ( nks > 1 ) REWIND( iunigk )
     DO ikq =1,nkqs
        isym = abs(index_sym(ikq))
        IF (.not. ispresent(isym) ) THEN
@@ -874,6 +871,7 @@ MODULE exx
 
        ENDIF
     ENDDO
+    DEALLOCATE(ispresent)
 
     exxbuff=(0.0_DP,0.0_DP)
     ! set appropriately the x_occupation
@@ -913,40 +911,26 @@ MODULE exx
           DO ibnd = ibnd_loop_start, ibnd_end, 2
              h_ibnd = h_ibnd + 1
              !
-             temppsic(:) = ( 0._dp, 0._dp )
+             psic(:) = ( 0._dp, 0._dp )
              !
              if ( ibnd < ibnd_end ) then
                 DO ig=1,exx_fft_g2r%npwt
-                   temppsic(exx_fft_g2r%nlt(ig))  = evc(ig,ibnd)  &
+                   psic(exx_fft_g2r%nlt(ig))  = evc(ig,ibnd)  &
                         + ( 0._dp, 1._dp ) * evc(ig,ibnd+1)
-                   temppsic(exx_fft_g2r%nltm(ig)) = CONJG( evc(ig,ibnd) ) &
+                   psic(exx_fft_g2r%nltm(ig)) = CONJG( evc(ig,ibnd) ) &
                         + ( 0._dp, 1._dp ) * CONJG( evc(ig,ibnd+1) )
                 END DO
              else
                 DO ig=1,exx_fft_g2r%npwt
-                   temppsic(exx_fft_g2r%nlt (ig)) = evc(ig,ibnd) 
-                   temppsic(exx_fft_g2r%nltm(ig)) = CONJG( evc(ig,ibnd) ) 
+                   psic(exx_fft_g2r%nlt (ig)) = evc(ig,ibnd) 
+                   psic(exx_fft_g2r%nltm(ig)) = CONJG( evc(ig,ibnd) ) 
                 END DO
              end if
 
-             CALL invfft ('CustomWave', temppsic, exx_fft_g2r%dfftt)
+             CALL invfft ('CustomWave', psic, exx_fft_g2r%dfftt)
 
-             DO ikq=1,nkqs
-                IF (index_xk(ikq) .ne. current_ik) cycle
-                isym = abs(index_sym(ikq) )
-#ifdef __MPI
-                CALL gather_grid(exx_fft_g2r%dfftt, temppsic,temppsic_all)
-                IF ( me_bgrp == 0 ) &
-                psic_all(1:nxxs) = temppsic_all(rir(1:nxxs,isym))
-                CALL scatter_grid(exx_fft_g2r%dfftt, psic_all, psic)
-#else
-                psic(1:nrxxs) = temppsic(rir(1:nrxxs,isym))
-#endif
-                IF (index_sym(ikq) < 0 ) &
-                   CALL errore('exxinit','index_sym < 0 with gamma_only (!?)',1)
-
-                exxbuff(1:nrxxs,h_ibnd,ikq)=psic(1:nrxxs)
-             ENDDO
+             exxbuff(1:nrxxs,h_ibnd,ik)=psic(1:nrxxs)
+             
           END DO
           !
        ELSE IF_GAMMA_ONLY 
@@ -1038,14 +1022,13 @@ MODULE exx
     ! Initialize 4-wavefunctions one-center Fock integral \int \psi_a(r)\phi_a(r)\phi_b(r')\psi_b(r')/|r-r'|
     IF(okpaw) CALL PAW_init_keeq()
     !
-    DEALLOCATE(ispresent)
     IF (noncolin) THEN
        DEALLOCATE(temppsic_nc, psic_nc)
 #ifdef __MPI
        DEALLOCATE(temppsic_all_nc, psic_all_nc)
 #endif 
-    ELSE
-       DEALLOCATE(temppsic, psic)
+    ELSE IF ( .NOT. gamma_only ) THEN
+       DEALLOCATE(temppsic)
 #ifdef __MPI
        DEALLOCATE(temppsic_all, psic_all)
 #endif 
