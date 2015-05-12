@@ -737,20 +737,19 @@ MODULE exx
     USE paw_exx,              ONLY : PAW_init_keeq
 
     IMPLICIT NONE
-    INTEGER :: ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq, ig
+    INTEGER :: ik,ibnd, i, j, k, ir, isym, ikq, ig
     INTEGER :: h_ibnd
     INTEGER :: ibnd_loop_start, ibnd_buff_start, ibnd_buff_end
     INTEGER :: ipol, jpol
     COMPLEX(DP),ALLOCATABLE :: temppsic(:)
     COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:), psic_nc(:,:)
-    INTEGER :: nxxs, nrxxs, nr1x,nr2x,nr3x,nr1,nr2,nr3
+    INTEGER :: nxxs, nrxxs
 #ifdef __MPI
     COMPLEX(DP),allocatable  :: temppsic_all(:),      psic_all(:)
     COMPLEX(DP), ALLOCATABLE :: temppsic_all_nc(:,:), psic_all_nc(:,:)
 #endif
     COMPLEX(DP) :: d_spin(2,2,48)
     INTEGER :: current_ik
-    logical, allocatable :: ispresent(:)
     integer       :: find_current_k
 
     CALL start_clock ('exxinit')
@@ -768,21 +767,9 @@ MODULE exx
        CALL exx_fft_create()
        nxxs =exx_fft_g2r%dfftt%nr1x *exx_fft_g2r%dfftt%nr2x *exx_fft_g2r%dfftt%nr3x 
        nrxxs= exx_fft_g2r%dfftt%nnr
-       nr1  = exx_fft_g2r%dfftt%nr1
-       nr2  = exx_fft_g2r%dfftt%nr2
-       nr3  = exx_fft_g2r%dfftt%nr3
-       nr1x = exx_fft_g2r%dfftt%nr1x
-       nr2x = exx_fft_g2r%dfftt%nr2x
-       nr3x = exx_fft_g2r%dfftt%nr3x
     ELSE
        nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
        nrxxs= dffts%nnr
-       nr1  = dffts%nr1
-       nr2  = dffts%nr2
-       nr3  = dffts%nr3
-       nr1x = dffts%nr1x
-       nr2x = dffts%nr2x
-       nr3x = dffts%nr3x
     ENDIF
 #ifdef __MPI
     IF (noncolin) THEN
@@ -791,20 +778,13 @@ MODULE exx
        ALLOCATE(psic_all(nxxs), temppsic_all(nxxs) )
     ENDIF
 #endif
-    CALL init_index_over_band(inter_bgrp_comm,nbnd)
     IF (noncolin) THEN
        ALLOCATE(temppsic_nc(nrxxs, npol), psic_nc(nrxxs, npol))
     ELSE IF ( .NOT. gamma_only ) THEN
        ALLOCATE(temppsic(nrxxs))
     ENDIF
     !
-    ! prepare space to keep the <beta_I|phi_j> scalar products (for ultrasoft/paw only)
-    IF(.not. allocated(becxx) .and. okvan) THEN 
-        ALLOCATE(becxx(nkqs))
-        DO ikq = 1,nkqs
-            CALL allocate_bec_type( nkb, nbnd, becxx(ikq))
-        ENDDO
-    ENDIF
+    CALL init_index_over_band(inter_bgrp_comm,nbnd)
     !
     IF ( gamma_only ) THEN
         ibnd_buff_start = ibnd_start/2
@@ -837,41 +817,7 @@ MODULE exx
       wg_collect = wg
     ENDIF
 
-    IF(.NOT. ALLOCATED(rir)) ALLOCATE(rir(nxxs,nsym))
-    rir = 0
-    ALLOCATE(ispresent(nsym))
-    ispresent(1:nsym) = .false.
-
-    IF ( nks > 1 ) REWIND( iunigk )
-    DO ikq =1,nkqs
-       isym = abs(index_sym(ikq))
-       IF (.not. ispresent(isym) ) THEN
-          ispresent(isym) = .true.
-          IF ( mod(s(2, 1, isym) * nr1, nr2) /= 0 .or. &
-               mod(s(3, 1, isym) * nr1, nr3) /= 0 .or. &
-               mod(s(1, 2, isym) * nr2, nr1) /= 0 .or. &
-               mod(s(3, 2, isym) * nr2, nr3) /= 0 .or. &
-               mod(s(1, 3, isym) * nr3, nr1) /= 0 .or. &
-               mod(s(2, 3, isym) * nr3, nr2) /= 0 ) THEN
-             CALL errore ('exxinit',' EXX smooth grid is not compatible with symmetry: &
-                                    & change ecutfock',isym)
-          ENDIF
-          DO ir=1, nxxs
-             rir(ir,isym) = ir
-          ENDDO
-          DO k = 1, nr3
-             DO j = 1, nr2
-                DO i = 1, nr1
-                   CALL ruotaijk (s(1,1,isym), ftau(1,isym), i,j,k, nr1,nr2,nr3, ri,rj,rk)
-                   ir =   i + ( j-1)*nr1x + ( k-1)*nr1x*nr2x
-                   rir(ir,isym) = ri + (rj-1)*nr1x + (rk-1)*nr1x*nr2x
-                ENDDO
-             ENDDO
-          ENDDO
-
-       ENDIF
-    ENDDO
-    DEALLOCATE(ispresent)
+    IF ( .NOT. gamma_only ) CALL exx_set_symm ( )
 
     exxbuff=(0.0_DP,0.0_DP)
     ! set appropriately the x_occupation
@@ -885,6 +831,7 @@ MODULE exx
     !
     !   This is parallelized over pool. Each pool computes only its k-points
     !
+    IF ( nks > 1 ) REWIND( iunigk )
     KPOINTS_LOOP : &
     DO ik = 1, nks
        npw = ngk (ik)
@@ -1008,20 +955,6 @@ MODULE exx
     ENDDO &
     KPOINTS_LOOP
     !
-    !   All pools must have the complete set of wavefunctions (i.e. from every kpoint)
-    IF (npool>1) CALL mp_sum(exxbuff, inter_pool_comm)
-    !
-    ! compute <beta_I|psi_j,k+q> for the entire de-symmetrized k+q grid
-    !
-    CALL compute_becxx()
-    !
-    ! CHECKME: probably it's enough that each pool computes its own bec
-    !          and then I sum them like exxbuff, but check it. In this case this
-    !          call should only act when index_xk(ikq) = current_ik
-    !
-    ! Initialize 4-wavefunctions one-center Fock integral \int \psi_a(r)\phi_a(r)\phi_b(r')\psi_b(r')/|r-r'|
-    IF(okpaw) CALL PAW_init_keeq()
-    !
     IF (noncolin) THEN
        DEALLOCATE(temppsic_nc, psic_nc)
 #ifdef __MPI
@@ -1033,12 +966,88 @@ MODULE exx
        DEALLOCATE(temppsic_all, psic_all)
 #endif 
     ENDIF
-
+    !
+    !   All pools must have the complete set of wavefunctions (i.e. from every kpoint)
+    IF (npool>1) CALL mp_sum(exxbuff, inter_pool_comm)
+    !
+    ! For US/PAW only: prepare space for <beta_I|phi_j> scalar products
+    !
+    IF(.not. allocated(becxx) .and. okvan) THEN 
+        ALLOCATE(becxx(nkqs))
+        DO ikq = 1,nkqs
+            CALL allocate_bec_type( nkb, nbnd, becxx(ikq))
+        ENDDO
+    ENDIF
+    ! compute <beta_I|psi_j,k+q> for the entire de-symmetrized k+q grid
+    !
+    CALL compute_becxx()
+    !
+    ! CHECKME: probably it's enough that each pool computes its own bec
+    !          and then I sum them like exxbuff, but check it. In this case this
+    !          call should only act when index_xk(ikq) = current_ik
+    !
+    ! Initialize 4-wavefunctions one-center Fock integrals
+    !    \int \psi_a(r)\phi_a(r)\phi_b(r')\psi_b(r')/|r-r'|
+    !
+    IF(okpaw) CALL PAW_init_keeq()
+    !
     CALL stop_clock ('exxinit')  
     !
     !-----------------------------------------------------------------------
   END SUBROUTINE exxinit
   !-----------------------------------------------------------------------
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE exx_set_symm ( )
+    !-----------------------------------------------------------------------
+    !
+    ! Uses nkqs and index_sym from module exx, computes rir
+    !
+    USE fft_base,             ONLY : dffts
+    USE symm_base,            ONLY : nsym, s, sr, ftau
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: nxxs, nr1,nr2,nr3, nr1x,nr2x,nr3x
+    INTEGER :: ikq, isym, i,j,k, ri,rj,rk, ir
+    LOGICAL :: ispresent(nsym)
+    !
+    nr1 = dffts%nr1 ; nr2 = dffts%nr2 ; nr3 = dffts%nr3
+    nr1x= dffts%nr1x; nr2x= dffts%nr2x; nr3x= dffts%nr3x
+    nxxs = nr1x*nr2x*nr3x
+    IF(.NOT. ALLOCATED(rir)) ALLOCATE(rir(nxxs,nsym))
+    rir = 0
+    ispresent(1:nsym) = .false.
+
+    DO ikq =1,nkqs
+       isym = abs(index_sym(ikq))
+       IF (.not. ispresent(isym) ) THEN
+          ispresent(isym) = .true.
+          IF ( mod(s(2, 1, isym) * nr1, nr2) /= 0 .or. &
+               mod(s(3, 1, isym) * nr1, nr3) /= 0 .or. &
+               mod(s(1, 2, isym) * nr2, nr1) /= 0 .or. &
+               mod(s(3, 2, isym) * nr2, nr3) /= 0 .or. &
+               mod(s(1, 3, isym) * nr3, nr1) /= 0 .or. &
+               mod(s(2, 3, isym) * nr3, nr2) /= 0 ) THEN
+             CALL errore ('exxinit',' EXX smooth grid is not compatible with &
+                                    ^ symmetry: change ecutfock',isym)
+          ENDIF
+          DO ir=1, nxxs
+             rir(ir,isym) = ir
+          ENDDO
+          DO k = 1, nr3
+             DO j = 1, nr2
+                DO i = 1, nr1
+                   CALL ruotaijk (s(1,1,isym), ftau(1,isym), i,j,k, nr1,nr2,nr3, ri,rj,rk)
+                   ir =   i + ( j-1)*nr1x + ( k-1)*nr1x*nr2x
+                   rir(ir,isym) = ri + (rj-1)*nr1x + (rk-1)*nr1x*nr2x
+                ENDDO
+             ENDDO
+          ENDDO
+
+       ENDIF
+    ENDDO
+  END SUBROUTINE exx_set_symm
   !
   !-----------------------------------------------------------------------
   SUBROUTINE compute_becxx ( )
