@@ -42,16 +42,6 @@ SUBROUTINE make_pointlists
   ALLOCATE(tau0(3,nat))
   ALLOCATE( distmin(ntyp) )
 
-  ! First, the real-space position of every point ir is needed ...
-
-  ! In the parallel case, find the index-offset to account for the planes
-  ! treated by other procs
-#if defined (__MPI)
-      idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_bgrp+1)
-#else
-      idx0 = 0
-#endif
-
   ! Bring all the atomic positions on the first unit cell
 
   tau0=tau
@@ -117,6 +107,8 @@ SUBROUTINE make_pointlists
   ! Set as well the integration weight
   ! This also works in the parallel case.
 
+  ! idx0 = starting index of real-space FFT arrays for this processor
+  idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_bgrp+1)
   pointlist(:) = 0
   factlist(:) = 0.d0
   DO ir=1,dfftp%nr1x*dfftp%nr2x * dfftp%npl

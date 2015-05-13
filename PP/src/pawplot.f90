@@ -49,7 +49,7 @@ SUBROUTINE PAW_make_ae_charge_ ( rho, flag, nx, r, rhopaw )
    INTEGER                 :: ir               ! counter on grid point
    INTEGER                 :: is               ! spin index
    INTEGER                 :: lm               ! counters on angmom and radial grid
-   INTEGER                 :: j,k,l, idx, idx0
+   INTEGER                 :: j,k,l
    INTEGER                 :: ia
    REAL(DP),ALLOCATABLE    :: wsp_lm(:,:,:), ylm_posi(:,:), d1y(:), d2y(:)
    REAL(DP),ALLOCATABLE    :: rho_lm(:,:,:), rho_lm_ae(:,:,:), rho_lm_ps(:,:,:)

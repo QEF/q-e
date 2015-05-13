@@ -113,19 +113,12 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   ! P_{ele} = \sum_{ijk} \rho_{r_{ijk}} Saw\left( \frac{k}{nr3} \right) 
   !                   \frac{alat}{bmod} \frac{\Omega}{nrxx} \frac{4\pi}{\Omega}
   !
-
   e_dipole  = 0.D0
-  
-  !
-  ! Procedure for parallel summation
-  !
-#if defined (__MPI)
-      idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_bgrp+1)
-#else
-      idx0 = 0
-#endif
   !
   ! Loop in the charge array
+  ! idx0 = starting index of real-space FFT arrays for this processor
+  !
+  idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_bgrp+1)
   !
   DO ir = 1, dfftp%nr1x*dfftp%nr2x * dfftp%npl
      !

@@ -305,11 +305,8 @@ MODULE realus
       ALLOCATE( boxdist (   roughestimate ) )
       ALLOCATE( xyz( 3, roughestimate ) )
       !
-#if defined (__MPI)
-      idx0 = dfft%nr1x*dfft%nr2x * sum ( dfft%npp(1:me_bgrp) )
-#else
-      idx0 = 0
-#endif
+      ! idx0 = starting index of real-space FFT arrays for this processor
+      idx0 = dfft%nr1x*dfft%nr2x * dfft%ipp(me_bgrp+1)
       !
       inv_nr1 = 1.D0 / dble( dfft%nr1 )
       inv_nr2 = 1.D0 / dble( dfft%nr2 )
@@ -882,14 +879,10 @@ MODULE realus
       !
       maxbox_beta(:) = 0
       !
-      ! ... now we find the points
-      !
+      ! idx0 = starting index of real-space FFT arrays for this processor
       ! The beta functions are treated on smooth grid
-#if defined (__MPI)
+      !
       idx0 = dffts%nr1x*dffts%nr2x * dffts%ipp(me_bgrp+1)
-#else
-      idx0 = 0
-#endif
       !
       inv_nr1s = 1.D0 / dble( dffts%nr1 )
       inv_nr2s = 1.D0 / dble( dffts%nr2 )

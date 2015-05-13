@@ -101,11 +101,9 @@ SUBROUTINE PAW_make_ae_charge(rho)
          ENDDO
          DEALLOCATE(d1y, d2y)
          !
-#if defined (__MPI)
+         ! idx0 = starting index of real-space FFT arrays for this processor
          idx0 =  dfftp%nr1x* dfftp%nr2x * dfftp%ipp(me_pool+1)
-#else
-         idx0 = 0
-#endif
+         !
          rsp_point : DO ir = 1, dfftp%nr1x*dfftp%nr2x * dfftp%npl
             !
             ! three dimensional indices (i,j,k)

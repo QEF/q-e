@@ -249,11 +249,7 @@ CONTAINS
        DEALLOCATE(rhocor)
 
        ! define the starting index for each processor
-#ifdef __MPI
-       idx0 = dfftp%nr1x * dfftp%nr2x * SUM(dfftp%npp(1:me_pool))
-#else
-       idx0 = 0
-#endif
+       idx0 = dfftp%nr1x * dfftp%nr2x * dfftp%ipp(me_pool+1)
 
        ! allocate arrays and initialize
        ALLOCATE(b(dfftp%nnr),STAT=ialloc)
@@ -806,11 +802,9 @@ CONTAINS
        ENDDO
        DEALLOCATE(d1y,d2y)
 
-#if defined __MPI
-       idx0 =  dfftp%nr1x* dfftp%nr2x * SUM ( dfftp%npp(1:me_pool) )
-#else
-       idx0 = 0
-#endif
+       ! define the starting index for each processor
+       idx0 = dfftp%nr1x * dfftp%nr2x * dfftp%ipp(me_pool+1)
+
        ALLOCATE(ylm_posi(1,i%l**2))
        rsp_point : DO ir = 1,  dfftp%nnr
           ! three dimensional indices (i,j,k)
@@ -886,11 +880,8 @@ CONTAINS
     integer :: n, idx0, idx, ix, iy, iz
     real(DP) :: x(3), xx(3), r, r2, rrho
 
-#ifdef __MPI
-    idx0 = dfftp%nr1x * dfftp%nr2x * SUM(dfftp%npp(1:me_pool))
-#else
-    idx0 = 0
-#endif
+    ! define the starting index for each processor
+    idx0 = dfftp%nr1x * dfftp%nr2x * dfftp%ipp(me_pool+1)
 
     rhot = 0._DP
     rhoc = 0._DP

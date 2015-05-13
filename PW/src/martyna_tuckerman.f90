@@ -166,13 +166,9 @@ CONTAINS
   gstart = gstart_
   gamma_only = gamma_only_
   !
-  ! Index for parallel summation
+  ! idx0 = starting index of real-space FFT arrays for this processor
   !
-#if defined (__MPI)
-  idx0 = dfftp%nr1x*dfftp%nr2x*dfftp%ipp(me_bgrp+1)
-#else
-  idx0 = 0 
-#endif
+  idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_bgrp+1)
   !
   ALLOCATE (aux(dfftp%nnr))
   aux = CMPLX(0._dp,0._dp)

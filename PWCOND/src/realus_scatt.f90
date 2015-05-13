@@ -53,11 +53,8 @@ MODULE realus_scatt
    IF (ALLOCATED(orig_or_copy)) DEALLOCATE( orig_or_copy )
    ALLOCATE( orig_or_copy( roughestimate, nat ) )
 
-#if defined (__MPI)
+   ! idx0 = starting index of real-space FFT arrays for this processor
    idx0 = dfftp%nr1x*dfftp%nr2x * dfftp%ipp(me_pool+1)
-#else
-   idx0 = 0
-#endif
 
    inv_nr1 = 1.D0 / DBLE( dfftp%nr1 )
    inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
