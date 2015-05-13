@@ -49,7 +49,7 @@ PROGRAM average
   USE gvecs,                ONLY : doublegrid, gcutms, dual
   USE wvfct,                ONLY : ecutwfc
   USE fft_base,             ONLY : dfftp
-  USE grid_subroutines,     ONLY : realspace_grids_init
+  USE grid_subroutines,     ONLY : realspace_grid_init
   USE fft_base,             ONLY : dffts
   USE ions_base,            ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE lsda_mod,             ONLY : nspin
@@ -177,7 +177,8 @@ PROGRAM average
 
      CALL volume (alat, at (1, 1), at (1, 2), at (1, 3), omega)
 
-     CALL realspace_grids_init ( dfftp, dffts, at, bg, gcutm, gcutms )
+     CALL realspace_grid_init ( dfftp, at, bg, gcutm )
+     CALL realspace_grid_init ( dffts, at, bg, gcutms)
 
      CALL allocate_fft ( )
      !

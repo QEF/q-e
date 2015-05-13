@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2010 Quantum ESPRESSO group
+! Copyright (C) 2002-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,101 +20,14 @@
      SAVE
 
      PRIVATE
-     PUBLIC :: realspace_grids_init, realspace_grid_init_custom, realspace_grids_info
+     PUBLIC :: realspace_grid_init, realspace_grids_info
 
    CONTAINS
 
-
-     SUBROUTINE realspace_grids_init( dfftp, dffts, at, bg, gcutm, gcuts, &
-                                      fft_fact )
+     SUBROUTINE realspace_grid_init( dfft, at, bg, gcutm, fft_fact )
        !
-       USE fft_scalar, only: good_fft_dimension, good_fft_order
-       USE io_global, only: stdout
-       !
-       IMPLICIT NONE
-       !
-       REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
-       REAL(DP), INTENT(IN) :: gcutm, gcuts
-       INTEGER, INTENT(IN), OPTIONAL :: fft_fact(3)
-       TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfftp, dffts
-       !
-       IF( dfftp%nr1 == 0 .OR. dfftp%nr2 == 0 .OR. dfftp%nr3 == 0 ) THEN
-         !
-         ! ... calculate the size of the real-space dense grid for FFT
-         ! ... first, an estimate of nr1,nr2,nr3, based on the max values
-         ! ... of n_i indices in:   G = i*b_1 + j*b_2 + k*b_3   
-         ! ... We use G*a_i = n_i => n_i .le. |Gmax||a_i|
-         !
-         dfftp%nr1 = int ( sqrt (gcutm) * &
-               sqrt (at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2) ) + 1
-         dfftp%nr2 = int ( sqrt (gcutm) * &
-               sqrt (at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2) ) + 1
-         dfftp%nr3 = int ( sqrt (gcutm) * &
-               sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
-         !
-         CALL grid_set( bg, gcutm, dfftp%nr1, dfftp%nr2, dfftp%nr3 )
-         !
-       ELSE
-         WRITE( stdout, '( /, 3X,"Info: using nr1, nr2, nr3 values from input" )' )
-       END IF
-
-       IF (PRESENT(fft_fact)) THEN
-          dfftp%nr1 = good_fft_order( dfftp%nr1, fft_fact(1) )
-          dfftp%nr2 = good_fft_order( dfftp%nr2, fft_fact(2) )
-          dfftp%nr3 = good_fft_order( dfftp%nr3, fft_fact(3) )
-       ELSE
-          dfftp%nr1 = good_fft_order( dfftp%nr1 )
-          dfftp%nr2 = good_fft_order( dfftp%nr2 )
-          dfftp%nr3 = good_fft_order( dfftp%nr3 )
-       END IF
-
-       dfftp%nr1x  = good_fft_dimension( dfftp%nr1 )
-       dfftp%nr2x  = dfftp%nr2
-       dfftp%nr3x  = good_fft_dimension( dfftp%nr3 )
-
-       ! ... As above, for the smooth grid
-
-       IF( dffts%nr1 == 0 .OR. dffts%nr2 == 0 .OR. dffts%nr3 == 0 ) THEN
-         !
-         IF ( gcuts == gcutm ) THEN
-            ! ... No double grid, the two grids are the same
-            dffts%nr1 = dfftp%nr1 ; dffts%nr2 = dfftp%nr2 ; dffts%nr3 = dfftp%nr3
-            dffts%nr1x= dfftp%nr1x; dffts%nr2x= dfftp%nr2x; dffts%nr3x= dfftp%nr3x
-            RETURN
-         END IF
-         !
-         dffts%nr1= int (2 * sqrt (gcuts) * &
-               sqrt (at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2) ) + 1
-         dffts%nr2= int (2 * sqrt (gcuts) * &
-               sqrt (at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2) ) + 1
-         dffts%nr3= int (2 * sqrt (gcuts) * &
-               sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
-         !
-         CALL grid_set( bg, gcuts, dffts%nr1, dffts%nr2, dffts%nr3 )
-         !
-       ELSE
-         WRITE( stdout, '( /, 3X,"Info: using nr1s, nr2s, nr3s values from input" )' )
-       END IF
-
-       dffts%nr1 = good_fft_order( dffts%nr1 )
-       dffts%nr2 = good_fft_order( dffts%nr2 )
-       dffts%nr3 = good_fft_order( dffts%nr3 )
-
-       dffts%nr1x = good_fft_dimension(dffts%nr1)
-       dffts%nr2x = dffts%nr2
-       dffts%nr3x = good_fft_dimension(dffts%nr3)
-
-       IF ( dffts%nr1 > dfftp%nr1 .or. dffts%nr2 > dfftp%nr2 .or. dffts%nr3 > dfftp%nr3 ) THEN
-          CALL errore(' realspace_grids_init ', ' smooth grid larger than dense grid?',1)
-       END IF
-
-       RETURN
-
-     END SUBROUTINE realspace_grids_init
-
-!=----------------------------------------------------------------------------=!
-
-     SUBROUTINE realspace_grid_init_custom( dfftp, at, bg, gcutm )
+       ! ... Sets optimal values for dfft%nr[123] and dfft%nr[123]x
+       ! ... If fft_fact is present, force nr[123] to be multiple of fft_fac([123])
        !
        USE fft_scalar, only: good_fft_dimension, good_fft_order
        USE io_global, only: stdout
@@ -123,39 +36,44 @@
        !
        REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
        REAL(DP), INTENT(IN) :: gcutm
-       TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfftp
+       INTEGER, INTENT(IN), OPTIONAL :: fft_fact(3)
+       TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfft
        !
-       IF( dfftp%nr1 == 0 .OR. dfftp%nr2 == 0 .OR. dfftp%nr3 == 0 ) THEN
+       IF( dfft%nr1 == 0 .OR. dfft%nr2 == 0 .OR. dfft%nr3 == 0 ) THEN
          !
          ! ... calculate the size of the real-space dense grid for FFT
          ! ... first, an estimate of nr1,nr2,nr3, based on the max values
-         ! ... of n_i indices in:   G = i*b_1 + j*b_2 + k*b_3   
+         ! ... of n_i indices in:   G = i*b_1 + j*b_2 + k*b_3
          ! ... We use G*a_i = n_i => n_i .le. |Gmax||a_i|
          !
-         dfftp%nr1 = int ( sqrt (gcutm) * &
+         dfft%nr1 = int ( sqrt (gcutm) * &
                sqrt (at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2) ) + 1
-         dfftp%nr2 = int ( sqrt (gcutm) * &
+         dfft%nr2 = int ( sqrt (gcutm) * &
                sqrt (at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2) ) + 1
-         dfftp%nr3 = int ( sqrt (gcutm) * &
+         dfft%nr3 = int ( sqrt (gcutm) * &
                sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
          !
-         CALL grid_set( bg, gcutm, dfftp%nr1, dfftp%nr2, dfftp%nr3 )
+         CALL grid_set( bg, gcutm, dfft%nr1, dfft%nr2, dfft%nr3 )
          !
        ELSE
-         WRITE( stdout, '( /, 3X,"Info: using nr1, nr2, nr3 values from input" )' )
+          WRITE( stdout, '( /, 3X,"Info: using nr1, nr2, nr3 values from input" )' )
        END IF
 
-       dfftp%nr1 = good_fft_order( dfftp%nr1 )
-       dfftp%nr2 = good_fft_order( dfftp%nr2 )
-       dfftp%nr3 = good_fft_order( dfftp%nr3 )
+       IF (PRESENT(fft_fact)) THEN
+          dfft%nr1 = good_fft_order( dfft%nr1, fft_fact(1) )
+          dfft%nr2 = good_fft_order( dfft%nr2, fft_fact(2) )
+          dfft%nr3 = good_fft_order( dfft%nr3, fft_fact(3) )
+       ELSE
+          dfft%nr1 = good_fft_order( dfft%nr1 )
+          dfft%nr2 = good_fft_order( dfft%nr2 )
+          dfft%nr3 = good_fft_order( dfft%nr3 )
+       END IF
 
-       dfftp%nr1x  = good_fft_dimension( dfftp%nr1 )
-       dfftp%nr2x  = dfftp%nr2
-       dfftp%nr3x  = good_fft_dimension( dfftp%nr3 )
+       dfft%nr1x  = good_fft_dimension( dfft%nr1 )
+       dfft%nr2x  = dfft%nr2
+       dfft%nr3x  = good_fft_dimension( dfft%nr3 )
 
-       RETURN
-
-     END SUBROUTINE realspace_grid_init_custom
+     END SUBROUTINE realspace_grid_init
 
 !=----------------------------------------------------------------------------=!
 

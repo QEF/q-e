@@ -44,7 +44,7 @@ SUBROUTINE setup()
   USE gvect,              ONLY : gcutm, ecutrho
   USE fft_base,           ONLY : dfftp
   USE fft_base,           ONLY : dffts
-  USE grid_subroutines,   ONLY : realspace_grids_init
+  USE grid_subroutines,   ONLY : realspace_grid_init
   USE gvecs,              ONLY : doublegrid, gcutms, dual
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
                                  lxkcry, nkstot, &
@@ -396,7 +396,8 @@ SUBROUTINE setup()
   !
   ! ... calculate dimensions of the FFT grid
   !
-  CALL realspace_grids_init ( dfftp, dffts, at, bg, gcutm, gcutms )
+  CALL realspace_grid_init ( dfftp, at, bg, gcutm )
+  CALL realspace_grid_init ( dffts, at, bg, gcutms)
   !
   !  ... generate transformation matrices for the crystal point group
   !  ... First we generate all the symmetry matrices of the Bravais lattice

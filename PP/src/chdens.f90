@@ -28,7 +28,7 @@ SUBROUTINE chdens (filplot,plot_num)
   USE lsda_mod,   ONLY : nspin
   USE fft_base,   ONLY : scatter_grid, dfftp, dffts
   USE fft_interfaces,  ONLY : fwfft
-  USE grid_subroutines,ONLY : realspace_grids_init
+  USE grid_subroutines,ONLY : realspace_grid_init
   USE gvect,      ONLY : ngm, nl, g, gcutm
   USE gvecs,      ONLY : gcutms, doublegrid, dual, ecuts 
   USE recvec_subs,ONLY: ggen 
@@ -273,7 +273,8 @@ SUBROUTINE chdens (filplot,plot_num)
 
      CALL recips (at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
      CALL volume (alat, at(1,1), at(1,2), at(1,3), omega)
-     CALL realspace_grids_init ( dfftp, dffts, at, bg, gcutm, gcutms )
+     CALL realspace_grid_init ( dfftp, at, bg, gcutm )
+     CALL realspace_grid_init ( dffts, at, bg, gcutms)
   ENDIF
 
   ALLOCATE  (rhor(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))

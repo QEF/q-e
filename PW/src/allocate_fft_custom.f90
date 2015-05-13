@@ -16,7 +16,7 @@ SUBROUTINE allocate_fft_custom(fc)
   USE cell_base,          ONLY : at, bg, tpiba2
   USE control_flags,      ONLY : gamma_only
   USE fft_custom,         ONLY : fft_cus, set_custom_grid, ggent
-  USE grid_subroutines,   ONLY : realspace_grid_init_custom
+  USE grid_subroutines,   ONLY : realspace_grid_init
   IMPLICIT NONE
   
   TYPE (fft_cus) :: fc
@@ -27,7 +27,7 @@ SUBROUTINE allocate_fft_custom(fc)
   !
   fc%gcutmt = fc%dual_t*fc%ecutt / tpiba2
   !
-  CALL realspace_grid_init_custom(fc%dfftt, at, bg, fc%gcutmt)
+  CALL realspace_grid_init(fc%dfftt, at, bg, fc%gcutmt)
   !
   CALL data_structure_custom(fc, .TRUE.)
   !

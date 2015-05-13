@@ -2,7 +2,8 @@ Incompatible changes in svn version:
 
    * various "gather" and "scatter" routines removes and replaced by two
      interface routines gather_grid, scatter_grid, valid for all FFT grids
-     and for both real and complex arrays
+     and for both real and complex arrays; realspace_grid_init_custom and
+     realspace_grids_init merged into realspace_grid_init, for each grid
    * __STD_F95 preprocessing option removed: all compilers that do not allow
      allocatable arrays in derived types are no longer supported
 

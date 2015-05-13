@@ -27,10 +27,9 @@ SUBROUTINE move_ions()
   USE ions_base,              ONLY : nat, ityp, tau, if_pos
   USE fft_base,               ONLY : dfftp
   USE fft_base,               ONLY : dffts
-  USE grid_subroutines,       ONLY : realspace_grids_init
+  USE grid_subroutines,       ONLY : realspace_grid_init
   USE gvect,                  ONLY : gcutm
   USE gvecs,                  ONLY : gcutms
-  USE grid_subroutines,       ONLY : realspace_grids_init
   USE symm_base,              ONLY : checkallsym
   USE ener,                   ONLY : etot
   USE force_mod,              ONLY : force, sigma
@@ -303,7 +302,8 @@ SUBROUTINE move_ions()
      ! ... allow re-calculation of FFT grid
      !
      dfftp%nr1=0; dfftp%nr2=0; dfftp%nr3=0; dffts%nr1=0; dffts%nr2=0; dffts%nr3=0
-     CALL realspace_grids_init (dfftp, dffts,at, bg, gcutm, gcutms )
+     CALL realspace_grid_init (dfftp, at, bg, gcutm )
+     CALL realspace_grid_init (dffts, at, bg, gcutms)
      CALL init_run()
      !
   ELSE IF (restart_with_starting_magnetiz) THEN

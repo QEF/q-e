@@ -107,7 +107,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE grid_subroutines,     ONLY : realspace_grids_init
+  USE grid_subroutines,     ONLY : realspace_grid_init
   USE recvec_subs,          ONLY : ggen
   USE gvect,                ONLY : gg, ngm, g, gcutm, &
                                    eigts1, eigts2, eigts3, nl, gstart
@@ -188,8 +188,8 @@ SUBROUTINE read_xml_file_internal(withbs)
   ALLOCATE( tetra( 4, MAX( ntetra, 1 ) ) )
   !
   CALL set_dimensions()
-  CALL realspace_grids_init ( dfftp, dffts, at, bg, gcutm, gcutms )
-
+  CALL realspace_grid_init ( dfftp, at, bg, gcutm )
+  CALL realspace_grid_init ( dffts, at, bg, gcutms)
   !
   ! ... check whether LSDA
   !

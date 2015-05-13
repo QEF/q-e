@@ -26,7 +26,7 @@
       use cell_base,            only: ainv, at, omega, alat
       use small_box,            only: small_box_set
       use smallbox_grid_dim,    only: smallbox_grid_init,smallbox_grid_info
-      USE grid_subroutines,     ONLY: realspace_grids_init, realspace_grids_info
+      USE grid_subroutines,     ONLY: realspace_grid_init, realspace_grids_info
       use ions_base,            only: nat
       USE recvec_subs,          ONLY: ggen
       USE gvect,                ONLY: mill_g, eigts1,eigts2,eigts3, gg, &
@@ -93,11 +93,13 @@
         WRITE( stdout,'(3X,"ref_cell_a2 =",1X,3f14.8,3x,"ref_cell_b2 =",3f14.8)') ref_at(:,2)*ref_alat,ref_bg(:,2)/ref_alat
         WRITE( stdout,'(3X,"ref_cell_a3 =",1X,3f14.8,3x,"ref_cell_b3 =",3f14.8)') ref_at(:,3)*ref_alat,ref_bg(:,3)/ref_alat
         !
-        CALL realspace_grids_init( dfftp, dffts, ref_at, ref_bg, gcutm, gcutms)
+        CALL realspace_grid_init( dfftp, ref_at, ref_bg, gcutm )
+        CALL realspace_grid_init( dffts, ref_at, ref_bg, gcutms)
         !
       ELSE
         !
-        CALL realspace_grids_init( dfftp, dffts, at, bg, gcutm, gcutms)
+        CALL realspace_grid_init( dfftp, at, bg, gcutm )
+        CALL realspace_grid_init( dffts, at, bg, gcutms)
         !
       END IF
       !
