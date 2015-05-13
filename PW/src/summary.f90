@@ -39,7 +39,7 @@ SUBROUTINE summary()
                               tr2, isolve, lmd, lbfgs, iverbosity, tqr
   USE noncollin_module,ONLY : noncolin
   USE spin_orb,        ONLY : domag, lspinorb
-  USE funct,           ONLY : write_dft_name
+  USE funct,           ONLY : write_dft_name, dft_is_hybrid
   USE bp,              ONLY : lelfield, gdir, nppstr_3d, efield, nberrycyc, &
                               l3dstring,efield_cart,efield_cry
   USE fixed_occ,       ONLY : f_inp, tfixed_occ
@@ -92,7 +92,7 @@ SUBROUTINE summary()
      WRITE( stdout, 102) nelec
   END IF
   WRITE( stdout, 103) nbnd, ecutwfc, ecutrho
-  IF ( ecutfock /= ecutrho ) WRITE( stdout, 104) ecutfock
+  IF ( dft_is_hybrid () ) WRITE( stdout, 104) ecutfock
   IF ( lscf) WRITE( stdout, 105) tr2, mixing_beta, nmix, mixing_style
   !
 100 FORMAT( /,/,5X, &
