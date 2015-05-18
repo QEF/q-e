@@ -1918,7 +1918,7 @@ First-level tags:
 \subsection{Programming style (or lack of it)}
 
 There are currently no strict guidelines for developers. You
-should however try to follow at least the following loose ones:
+should however follow at least the following loose ones:
 \begin{itemize}
 \item Preprocessing options should be capitalized and start with 
 two underscores. Examples: \_\_AIX, \_\_LINUX, ...
@@ -1931,8 +1931,8 @@ CALL something( )
 the code. Remember that what is obvious to you may not be obvious to other 
 people. It is especially important to document what a routine does, what
 it needs on input, what it produces on output. A few words of comment
-may save hours of searches into the code for a piece of missing information.
-\item do not use machine-dependent extensions or sloppy syntax. Am example:
+may save hours of searching into the code for a piece of missing information.
+\item do not use machine-dependent extensions or sloppy syntax. An example:
 Standard f90 
 requires that a \& is needed both at end of line AND at the beginning of 
 continuation line if there is a character variable (inside ' ' or " ")
@@ -1957,10 +1957,13 @@ pointers may hinder optimization. Allocatable arrays should be used instead.
 status.
 \item Beware fancy constructs like structures: they look great on paper, 
 but they also have the potential to make a code unreadable, or inefficient,
-or not working because some compiler gets confused.
+or simply unusable because some compiler gets confused. Avoid nested
+structures unless you have a valid reason to use them.
 \item Be careful with F90 array syntax and in particular with
-array sections: the compiler might decide that a copy is needed,
-thus silently increasing the memory footprint.
+array sections. Passing an array section to a routine may look elegant
+but it may turn out to be inefficient: a copy will be silently done
+if the section is not contiguous in memory (or if the compiler
+decides it is the right thing to do), increasing the memory footprint.
 \item Do not pass unallocated arrays as arguments, even in those cases where
 they are not actually used inside the subroutine: some compilers don't
 like it.
