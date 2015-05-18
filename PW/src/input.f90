@@ -1160,6 +1160,8 @@ SUBROUTINE iosys()
   ELSE
      IF(ecutfock < ecutwfc .OR. ecutfock > ecutrho) CALL errore('iosys', &
           'ecutfock can not be < ecutwfc or > ecutrho!', 1) 
+     IF ( lstres )  CALL errore('iosys', &
+          'stress with reduced cutoff not implemented', 1)
      ecutfock_ = ecutfock
   END IF
   !

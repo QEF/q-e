@@ -33,7 +33,7 @@ MODULE exx
   ! used in X BZ integration
   !
   INTEGER :: nq1=1, nq2=1, nq3=1         ! integers defining the X integration mesh
-  INTEGER :: nqs=1                       ! number of points in the q-gridd
+  INTEGER :: nqs=1                       ! number of points in the q-grid
   INTEGER :: nkqs                        ! total number of different k+q
   !
   REAL(DP),    ALLOCATABLE :: xkq_collect(:,:)  ! xkq(3,nkqs) the auxiliary k+q set
