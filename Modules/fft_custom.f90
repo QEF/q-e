@@ -350,10 +350,10 @@ CONTAINS
     
     IF ( gamma_only) CALL index_minusg_custom(fc)
        
-    
     !set npwt,npwxt
-    !This should eventually be calcualted somewhere else with 
+    !This should eventually be calculated somewhere else with 
     !n_plane_waves() but it is good enough for gamma_only
+
     IF(gamma_only) THEN
        fc%npwt=0
        fc%npwxt=0

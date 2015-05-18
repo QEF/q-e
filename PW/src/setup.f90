@@ -120,9 +120,6 @@ SUBROUTINE setup()
            ('setup','Warning: US/PAW use ecutfock=4*ecutwfc, ecutfock ignored')
         IF ( noncolin ) CALL errore &
            ('setup','Noncolinear hybrid XC for USPP not implemented',1)
-     ELSE IF (.NOT. gamma_only) THEN
-        IF( ecutfock < ecutrho)  CALL infomsg &
-          ('setup','Warning: ecutfock ignored, implemented only for Gamma')
      END IF
      IF ( noncolin ) no_t_rev=.true.
   END IF

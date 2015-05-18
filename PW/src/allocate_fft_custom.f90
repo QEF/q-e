@@ -29,11 +29,11 @@ SUBROUTINE allocate_fft_custom(fc)
   !
   CALL realspace_grid_init(fc%dfftt, at, bg, fc%gcutmt)
   !
-  CALL data_structure_custom(fc, .TRUE.)
+  CALL data_structure_custom(fc, gamma_only)
   !
   fc%initalized = .true.
   !
   CALL ggent(fc)
-  
+
   RETURN
 END SUBROUTINE allocate_fft_custom
