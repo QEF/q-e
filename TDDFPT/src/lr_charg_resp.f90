@@ -127,7 +127,7 @@ CONTAINS
   !---------------------------------------------------------------------
   SUBROUTINE lr_project_init()
     !-----------------------------------------------------------------------
-    ! Handles the inital calculation of the oscilator strengths for 
+    ! Handles the initial calculation of the oscilator strengths for 
     ! projection analysis and writes them to stdout.
     !
     USE kinds,         ONLY : DP
@@ -559,7 +559,7 @@ CONTAINS
           !ultrasoft part
           !
           IF (okvan) THEN
-             !initalization
+             !initialization
              scal = 0.0d0
              !
              !Calculation of  qq<evc0|beta><beta|evc1>

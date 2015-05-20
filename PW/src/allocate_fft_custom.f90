@@ -23,7 +23,7 @@ SUBROUTINE allocate_fft_custom(fc)
   
   INTEGER :: ng,n1t,n2t,n3t
   
-  IF(fc%initalized) RETURN
+  IF(fc%initialized) RETURN
   !
   fc%gcutmt = fc%dual_t*fc%ecutt / tpiba2
   !
@@ -31,7 +31,7 @@ SUBROUTINE allocate_fft_custom(fc)
   !
   CALL data_structure_custom(fc, gamma_only)
   !
-  fc%initalized = .true.
+  fc%initialized = .true.
   !
   CALL ggent(fc)
 

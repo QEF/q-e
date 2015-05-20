@@ -33,7 +33,7 @@ MODULE realus
   ! if true perform calculations in real spave
   INTEGER               :: initialisation_level
   ! init_realspace_vars sets this to 3; qpointlist adds 5; betapointlist adds 7
-  ! so the value should be 15 if the real space routine is initalised properly
+  ! so the value should be 15 if the real space routine is initialised properly
 
   INTEGER, ALLOCATABLE :: &
        igk_k(:,:),&       ! The g<->k correspondance for each k point

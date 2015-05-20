@@ -40,7 +40,7 @@ MODULE lr_exx_kernel
   USE wavefunctions_module,   ONLY : psic
   USE cell_base,              ONLY : omega
   USE exx,                    ONLY : exxalfa, g2_convolution,&
-                                   & exx_fft_g2r, exx_fft_r2g, exx_grid_convert
+                                   & exx_fft_g2r, exx_fft_r2g
 
 
   REAL(kind=dp),    PUBLIC, ALLOCATABLE :: revc_int(:,:)

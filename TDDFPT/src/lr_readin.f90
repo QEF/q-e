@@ -363,7 +363,7 @@ SUBROUTINE lr_readin
   CALL mp_bcast(auto_rs, ionode_id, world_comm)
 #endif
   !
-  ! Required for restart runs as this never gets initalized.
+  ! Required for restart runs as this never gets initialized.
   !
   current_k = 1     
   !
@@ -615,7 +615,7 @@ CONTAINS
        !
     ENDIF
     !
-    !  Check that either we have the same numebr of procs as the inital PWscf run 
+    !  Check that either we have the same number of procs as the initial PWscf run 
     !  OR that the wavefunctions were gathered into one file at the end of
     !  the PWscf run.
     !

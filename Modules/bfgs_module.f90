@@ -551,7 +551,7 @@ CONTAINS
    !------------------------------------------------------------------------
    SUBROUTINE reset_bfgs( n )
       !------------------------------------------------------------------------
-      ! ... inv_hess in re-initalized to the initial guess 
+      ! ... inv_hess in re-initialized to the initial guess 
       ! ... defined as the inverse metric 
       !
       INTEGER, INTENT(IN) :: n

@@ -74,7 +74,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   !
   IF ( nimage > 1 ) THEN
      !
-     ! ... vectors pes and grad_pes are initalized to zero for all images on
+     ! ... vectors pes and grad_pes are initialized to zero for all images on
      ! ... all nodes: this is needed for the final mp_sum()
      !
      IF ( my_image_id == root_image ) THEN

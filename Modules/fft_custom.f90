@@ -44,7 +44,7 @@ MODULE fft_custom
      INTEGER,  DIMENSION(:), POINTER :: ig1t,ig2t,ig3t
      INTEGER :: nlgt
      INTEGER :: npwt,npwxt
-     LOGICAL :: initalized = .FALSE.
+     LOGICAL :: initialized = .FALSE.
      
   END TYPE fft_cus
 
@@ -426,13 +426,13 @@ CONTAINS
 
     TYPE(fft_cus) :: fc
 
-    IF(.NOT. fc%initalized) RETURN
+    IF(.NOT. fc%initialized) RETURN
 
     DEALLOCATE(fc%nlt,fc%nltm)
     CALL fft_dlay_deallocate(fc%dfftt)
     DEALLOCATE(fc%ig_l2gt,fc%ggt,fc%gt)
     DEALLOCATE(fc%ig1t,fc%ig2t,fc%ig3t)
-    fc%initalized=.FALSE.
+    fc%initialized=.FALSE.
 
     RETURN
 

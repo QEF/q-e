@@ -1057,7 +1057,7 @@ end subroutine nlfh_x
 subroutine nlinit
   !-----------------------------------------------------------------------
   !
-  !     this routine allocates and initalizes arrays beta, qq, qgb,
+  !     this routine allocates and initializes arrays beta, qq, qgb,
   !     rhocb, and derivatives w.r.t. cell parameters dbeta
   !
   !       beta(ig,l,is) = 4pi/sqrt(omega) y^r(l,q^)

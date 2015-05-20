@@ -117,62 +117,6 @@ MODULE exx
  CONTAINS
 #define _CX(A)  CMPLX(A,0._dp,kind=DP)
 #define _CY(A)  CMPLX(0._dp,-A,kind=DP)
-  !------------------------------------------------------------------------
-  SUBROUTINE exx_grid_convert( psi, npw, fft, psi_t, sign, igkt )
-    !------------------------------------------------------------------------
-    ! 
-    ! This routine reorders the gvectors of the wavefunction psi and
-    ! puts the result in psi_t. This reordering is needed when going
-    ! between two different fft grids.
-    !
-    ! sign > 0 goes from the smooth grid to the grid defined in fft
-    ! sign < 0 goes from the grid defined in fft to the smooth grid 
-    !
-
-    USE mp_bands,   ONLY : me_bgrp, nproc_bgrp, intra_bgrp_comm
-    USE fft_custom, ONLY : reorderwfp_col
-    USE gvect,      ONLY : ig_l2g
-
-    IMPLICIT NONE
-
-    INTEGER, INTENT(IN) :: npw
-    COMPLEX(kind=DP), INTENT(IN) :: psi(npw)
-    COMPLEX(kind=DP), INTENT(INOUT) :: psi_t(:)
-    INTEGER, OPTIONAL, INTENT(INOUT) :: igkt(:)
-    INTEGER, INTENT(IN) :: sign
-    TYPE(fft_cus), INTENT(IN) :: fft
-    
-    INTEGER :: ig
-    
-    CALL start_clock('exx_grid_convert')
-    
-    IF(sign > 0 .AND. PRESENT(igkt) ) THEN
-       DO ig=1, fft%ngmt
-          igkt(ig)=ig
-       ENDDO
-    ENDIF
-
-    
-    IF( fft%dual_t==4.d0) THEN
-       psi_t(1:fft%npwt)=psi(1:fft%npwt)
-    ELSE
-       IF (sign > 0 ) THEN
-          CALL reorderwfp_col ( 1, npw, fft%npwt, psi, psi_t, npw, fft%npwt,&
-               & ig_l2g, fft%ig_l2gt, fft%ngmt_g, me_bgrp, nproc_bgrp,&
-               & intra_bgrp_comm )
-       ELSE
-          CALL reorderwfp_col ( 1, fft%npwt, npw, psi, psi_t, fft%npwt, npw,&
-               & fft%ig_l2gt, ig_l2g, fft%ngmt_g, me_bgrp, nproc_bgrp,&
-               & intra_bgrp_comm )
-       ENDIF
-    ENDIF
-
-    CALL stop_clock('exx_grid_convert')
-
-    RETURN
-    
-  END SUBROUTINE exx_grid_convert
-  !------------------------------------------------------------------------
   !
   !------------------------------------------------------------------------
   SUBROUTINE exx_fft_create ()
@@ -185,7 +129,7 @@ MODULE exx
 
     IMPLICIT NONE
 
-    ! Initalise the g2r grid that allows us to put the wavefunction
+    ! Initialise the g2r grid that allows us to put the wavefunction
     ! onto the new (smaller) grid for rho.
 
     exx_fft_g2r%ecutt=ecutwfc
@@ -205,7 +149,7 @@ MODULE exx
        
     ENDIF
 
-    ! Initalise the r2g grid that we then use when applying the Fock
+    ! Initialise the r2g grid that we then use when applying the Fock
     ! operator in our new restricted space.
     exx_fft_r2g%ecutt=MAX(ecutfock,(sqrt(ecutwfc)+qnorm)**2)/exx_dual
     exx_fft_r2g%dual_t=exx_dual
