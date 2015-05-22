@@ -217,6 +217,12 @@ SUBROUTINE potinit()
      !
   end if
   !
+  ! ... compute the contribution to the potential coming from plugins
+  !
+  CALL plugin_init_ions()
+  CALL plugin_init_cell()
+  CALL plugin_scf_potential(rho,.FALSE.,-1.d0)
+  !
   ! ... compute the potential and store it in v
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
