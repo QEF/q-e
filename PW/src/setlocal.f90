@@ -88,6 +88,10 @@ SUBROUTINE setlocal
   !
   CALL qmmm_add_mm_field()
   !
+  ! ... Save vltot for possible modifications in plugins
+  !
+  CALL plugin_init_potential()
+  !
   DEALLOCATE(aux)
   !
   RETURN
