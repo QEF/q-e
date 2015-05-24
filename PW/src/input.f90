@@ -1,5 +1,5 @@
 
-! Copyright (C) 2002-2011 Quantum ESPRESSO group
+! Copyright (C) 2002-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -1142,34 +1142,6 @@ SUBROUTINE iosys()
   nofrac                  = force_symmorphic
   nbnd_                   = nbnd
   !
-  ! hybrid functionals
-  !
-  x_gamma_extrapolation_ = x_gamma_extrapolation
-  !
-  nqx1_ = nqx1
-  nqx2_ = nqx2
-  nqx3_ = nqx3
-  !
-  exxdiv_treatment_ = trim(exxdiv_treatment)
-  yukawa_   = yukawa
-  ecutvcut_ = ecutvcut
-  !
-  IF(ecutfock <= 0.0_DP) THEN
-     ! default case
-     ecutfock_ = 4.0_DP*ecutwfc
-  ELSE
-     IF(ecutfock < ecutwfc .OR. ecutfock > ecutrho) CALL errore('iosys', &
-          'ecutfock can not be < ecutwfc or > ecutrho!', 1) 
-     IF ( lstres )  CALL errore('iosys', &
-          'stress with reduced cutoff not implemented', 1)
-     ecutfock_ = ecutfock
-  END IF
-  !
-  IF (exx_fraction >= 0.0_DP) CALL set_exx_fraction (exx_fraction)
-  IF (screening_parameter >= 0.0_DP) &
-        & CALL set_screening_parameter (screening_parameter)
-  !
-  vdw_table_name_  = vdw_table_name
   !
   diago_full_acc_ = diago_full_acc
   starting_wfc    = startingwfc
@@ -1435,12 +1407,41 @@ SUBROUTINE iosys()
   !
   CALL readpp ( input_dft )
   !
+  ! ... set parameters of hybrid functionals
+  !
+  x_gamma_extrapolation_ = x_gamma_extrapolation
+  !
+  nqx1_ = nqx1
+  nqx2_ = nqx2
+  nqx3_ = nqx3
+  !
+  exxdiv_treatment_ = trim(exxdiv_treatment)
+  yukawa_   = yukawa
+  ecutvcut_ = ecutvcut
+  !
+  IF(ecutfock <= 0.0_DP) THEN
+     ! default case
+     ecutfock_ = 4.0_DP*ecutwfc
+  ELSE
+     IF(ecutfock < ecutwfc .OR. ecutfock > ecutrho) CALL errore('iosys', &
+          'ecutfock can not be < ecutwfc or > ecutrho!', 1) 
+     IF ( lstres )  CALL errore('iosys', &
+          'stress with reduced cutoff not implemented', 1)
+     ecutfock_ = ecutfock
+  END IF
+  !
+  ! ... must be done AFTER dft is read from PP files and initialized
+  ! ... or else the two following parameters will be overwritten
+  !
+  IF (exx_fraction >= 0.0_DP) CALL set_exx_fraction (exx_fraction)
+  IF (screening_parameter >= 0.0_DP) &
+        & CALL set_screening_parameter (screening_parameter)
+  !
   ! ... read the vdw kernel table if needed
   !
+  vdw_table_name_  = vdw_table_name
   inlc = get_inlc()
-  if (inlc > 0) then
-      call initialize_kernel_table(inlc)
-  endif
+  IF (inlc > 0) CALL initialize_kernel_table(inlc)
   !
   ! ... if DFT finite size corrections are needed, define the appropriate volume
   !
