@@ -81,12 +81,6 @@ SUBROUTINE electrons()
   fock1 = 0.D0
   IF (.NOT. exx_is_active () ) fock2 = 0.D0
   !
-  ! these routines can be used to patch quantities that are dependent
-  ! on the ions and cell parameters
-  !
-  CALL plugin_init_ions()
-  CALL plugin_init_cell()
-  !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%  Iterate hybrid functional  %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

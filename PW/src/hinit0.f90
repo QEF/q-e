@@ -85,6 +85,12 @@ SUBROUTINE hinit0()
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
                    dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
   !
+  ! these routines can be used to patch quantities that are dependent
+  ! on the ions and cell parameters
+  !
+  CALL plugin_init_ions()
+  CALL plugin_init_cell()
+  !
   ! ... calculate the total local potential
   !
   CALL setlocal()
