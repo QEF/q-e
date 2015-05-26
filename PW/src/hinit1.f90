@@ -42,6 +42,16 @@ SUBROUTINE hinit1()
   !
   CALL setlocal()
   !
+  ! these routines can be used to patch quantities that are dependent
+  ! on the ions and cell parameters
+  !
+  CALL plugin_init_ions()
+  CALL plugin_init_cell()
+  !
+  ! ... plugin contribution to local potential
+  !
+  CALL plugin_scf_potential(rho,.FALSE.,-1.d0)
+  !
   ! ... define the total local potential (external+scf)
   !
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
