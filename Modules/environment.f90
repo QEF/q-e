@@ -188,11 +188,13 @@ CONTAINS
     !
 #if defined(__OPENMP)
     INTEGER, EXTERNAL :: omp_get_max_threads
-#endif
     !
-#if defined(__OPENMP)
     WRITE( stdout, '(/5X,"Parallel version (MPI & OpenMP), running on ",&
          &I7," processor cores")' ) nproc * omp_get_max_threads()
+#if defined(__FFTW) || defined(__ESSL)
+#else
+    WRITE( stdout, '(/5X,"BEWARE: you are not using multi-threaded FFTs!")')
+#endif
     !
     WRITE( stdout, '(5X,"Number of MPI processes:           ",I7)' ) nproc
     !
