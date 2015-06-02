@@ -303,7 +303,14 @@ SUBROUTINE move_ions()
      !
      dfftp%nr1=0; dfftp%nr2=0; dfftp%nr3=0; dffts%nr1=0; dffts%nr2=0; dffts%nr3=0
      CALL realspace_grid_init (dfftp, at, bg, gcutm )
-     CALL realspace_grid_init (dffts, at, bg, gcutms)
+     IF ( gcutms == gcutm ) THEN
+        ! ... No double grid, the two grids are the same
+        dffts%nr1 = dfftp%nr1 ; dffts%nr2 = dfftp%nr2 ; dffts%nr3 = dfftp%nr3
+        dffts%nr1x= dfftp%nr1x; dffts%nr2x= dfftp%nr2x; dffts%nr3x= dfftp%nr3x
+     ELSE          
+        CALL realspace_grid_init ( dffts, at, bg, gcutms)
+     END IF
+     !
      CALL init_run()
      !
   ELSE IF (restart_with_starting_magnetiz) THEN
