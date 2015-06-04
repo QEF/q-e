@@ -589,28 +589,29 @@ CONTAINS
   
     do i_grid = 1, dfftp%nnr
           
-     gmod2 = gradient_rho(i_grid,1)**2+gradient_rho(i_grid,2)**2+gradient_rho(i_grid,3)**2
- 
-     !if (total_rho(i_grid) > epsr .and. gmod2 > epsr) cycle
      if (total_rho(i_grid) > epsr) then
-     
+
+      gmod2 = gradient_rho(i_grid,1)**2 + &
+              gradient_rho(i_grid,2)**2 + &
+              gradient_rho(i_grid,3)**2
+ 
        !! Calculate some intermediate values needed to find q
        !! ------------------------------------------------------------------------------------
        mod_grad = sqrt(gmod2)
 
-       wp2= 16.0*pi*total_rho(i_grid)
-       wg2 = 4*C_value * (mod_grad/total_rho(i_grid))**4
+       wp2= 16.0_dp*pi*total_rho(i_grid)
+       wg2 = 4.0_dp*C_value * (mod_grad/total_rho(i_grid))**4
 
-       k = b_value*3.0* pi* ((total_rho(i_grid)/(9.0*pi))**(1.0/6.0))
-       w0 = sqrt( wg2 + wp2/3.0  )
+       k = b_value*3.0_dp*pi* ((total_rho(i_grid)/(9.0_dp*pi))**(1.0_dp/6.0_dp))
+       w0 = sqrt( wg2 + wp2/3.0_dp  )
 
        q = w0 / k 
      
        !! Here, we calculate q0 by saturating q according 
        !! ---------------------------------------------------------------------------------------
 
-       exponent = 0.0D0
-       dq0_dq = 0.0D0
+       exponent = 0.0_dp
+       dq0_dq = 0.0_dp
      
        do index = 1, m_cut
         
@@ -619,7 +620,7 @@ CONTAINS
         
        end do
 
-       q0(i_grid) = q_cut*(1.0D0 - exp(-exponent))
+       q0(i_grid) = q_cut*(1.0_dp - exp(-exponent))
        dq0_dq = dq0_dq * exp(-exponent)
 
        !! ---------------------------------------------------------------------------------------
@@ -630,11 +631,15 @@ CONTAINS
 
        !!---------------------------------Final values---------------------------------  
 
-       dw0_dn = 1.0 / (2.0 * w0 ) * ( 16.0/3.0 * pi  - 4.0 * wg2 / total_rho(i_grid) )                
-       dk_dn = k / ( 6.0 * total_rho(i_grid) )
+       dw0_dn = 1.0_dp/(2.0_dp*w0) * (16.0_dp/3.0_dp*pi - 4.0_dp*wg2 / total_rho(i_grid) )                
+       dk_dn = k / ( 6.0_dp * total_rho(i_grid) )
 
-       dq0_drho(i_grid) = dq0_dq * 1.0 / (k**2.0) * (dw0_dn * k - dk_dn * w0 )   
-       dq0_dgradrho(i_grid) = dq0_dq * 1.0 / ( 2.0 * k * w0 ) * 4.0 * wg2 / (mod_grad**2)
+       dq0_drho(i_grid) = dq0_dq / (k**2) * (dw0_dn * k - dk_dn * w0 )   
+       IF ( gmod2 > epsr) THEN
+          dq0_dgradrho(i_grid) = dq0_dq  / ( 2.0_dp*k*w0 ) * 4.0_dp*wg2 / (mod_grad**2)
+       ELSE
+          dq0_dgradrho(i_grid) = 0.0_dp
+       ENDIF
 
      endif  
  
