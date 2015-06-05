@@ -40,8 +40,10 @@ subroutine scale_h
   !
   call cryst_to_cart (nkstot, xk, at_old, - 1)
   call cryst_to_cart (nkstot, xk, bg, + 1)
-  call cryst_to_cart (nks_start, xk_start, at_old, - 1)
-  call cryst_to_cart (nks_start, xk_start, bg, + 1)
+  IF(nks_start>0)THEN
+    call cryst_to_cart (nks_start, xk_start, at_old, - 1)
+    call cryst_to_cart (nks_start, xk_start, bg, + 1)
+  ENDIF
   IF(k_points/='automatic' .and. k_points/='gamma')THEN
   IF ( iverbosity > 0 .OR. nkstot < 100 ) THEN
      WRITE( stdout, '(5x,a)' ) 'NEW k-points:'
