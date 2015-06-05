@@ -265,38 +265,76 @@ configure-want: touch-dummy
 
 yambo: extlibs uncompress-yambo configure-yambo
 	if test -d ../YAMBO; then \
-	cd ../YAMBO; $(MAKE) all || exit 1; fi
+	cd ../YAMBO; $(MAKE) yambo interfaces ypp || exit 1; fi
 	touch ./make-yambo
 uncompress-yambo: touch-dummy
-	@(if test ! -s ../archive/$(YAMBO).tar.gz && test ! -d ../YAMBO ; then \
-	wget -O ../archive/$(YAMBO).tar.gz $(YAMBO_URL) > /dev/null 2>&1; \
+	@(if test ! -s ../archive/$(YAMBO).tgz && test ! -d ../YAMBO ; then \
+	wget -O ../archive/$(YAMBO).tgz $(YAMBO_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(YAMBO).tar.gz $(YAMBO_URL) > /dev/null 2>&1; \
+	curl -o ../archive/$(YAMBO).tgz $(YAMBO_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	echo "*** Unable to download yambo. Test whether curl or wget is installed and working," ; \
 	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
-	echo "*** $(YAMBO).tar.gz from $(YAMBO_URL)." ; \
+	echo "*** $(YAMBO).tgz from $(YAMBO_URL)." ; \
 	exit 1 ; fi ; fi ; fi) 
 	if test ! -d ../YAMBO; then \
-	(gzip -dc ../archive/$(YAMBO).tar.gz | (cd ../ ; tar -xvf -)) ; \
+	(gzip -dc ../archive/$(YAMBO).tgz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s $(YAMBO) YAMBO) ; fi 
 	touch uncompress-yambo
 
 configure-yambo: touch-dummy
+	@(if test -z "$(F90)" ; then \
+	echo "*** F90 is not defined; please define F90 or edit make.sys" ; exit 1 ; fi)
 	cd ../YAMBO ; \
-	./configure --with-blas="$(BLAS_LIBS)" \
-	--with-lapack="$(LAPACK_LIBS)" \
+	./configure \
+	--with-blas="$(BLAS_LIBS)" \
+	--with-lapack="$(LAPACK_LIBS) $(BLAS_LIBS)" \
 	--with-iotk="$(TOPDIR)/iotk" \
 	PFC="$(MPIF90)" \
-	FC="$(LD)" \
-	FCFLAGS="$(F90FLAGS) $(FDFLAGS) $(IFLAGS) $(MODFLAGS) $(FFLAGS_NOMAIN)"
+	FC="$(MPIF90)" \
+	F90="$(MPIF90)" \
 	F77="$(F77)" \
-	FFLAGS="$(FFLAGS)"
-	AR="$(AR)" \
-	ARFLAGS="$(ARFLAGS)" 
+	CC="$(CC)" \
+	LDFLAGS="$(FFLAGS_NOMAIN)"
 	touch ./configure-yambo
+
+yambo-devel: extlibs uncompress-yambo-devel configure-yambo-devel
+	if test -d ../YAMBO_DEVEL; then \
+	cd ../YAMBO_DEVEL; $(MAKE) yambo interfaces ypp || exit 1; fi
+	touch ./make-yambo-devel
+uncompress-yambo-devel: touch-dummy
+	@(if test ! -s ../archive/$(YAMBO_DEVEL).zip && test ! -d ../YAMBO_DEVEL ; then \
+	wget -O ../archive/$(YAMBO_DEVEL).zip $(YAMBO_DEVEL_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	curl -o ../archive/$(YAMBO_DEVEL).zip $(YAMBO_DEVEL_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	echo "*** Unable to download yambo-devel. Test whether curl or wget is installed and working," ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+	echo "*** $(YAMBO_DEVEL).zip from $(YAMBO_DEVEL_URL)." ; \
+	exit 1 ; fi ; fi ; fi) 
+	if test ! -d ../YAMBO_DEVEL; then \
+	unzip ../archive/$(YAMBO_DEVEL).zip ; mv $(YAMBO_DEVEL) ../ ; \
+	(cd ../ ; ln -s $(YAMBO_DEVEL) YAMBO_DEVEL) ; fi 
+	touch uncompress-yambo-devel
+
+configure-yambo-devel: touch-dummy
+	@(if test -z "$(F90)" ; then \
+	echo "*** F90 is not defined; please define F90 or edit make.sys" ; exit 1 ; fi)
+	cd ../YAMBO_DEVEL ; \
+	./configure --with-blas-libs="$(BLAS_LIBS)" \
+	--with-lapack-libs="$(LAPACK_LIBS) $(BLAS_LIBS)" \
+	--with-iotk-path="$(TOPDIR)/iotk" \
+	--with-fft-libs="$(FFT_LIBS)" \
+	--with-scalapack-libs="$(SCALAPACK_LIBS)" \
+	--with-blacs-libs="$(SCALAPACK_LIBS)" \
+	PFC="$(MPIF90)" \
+	FC="$(F90)" \
+	F77="$(F77)"
+	touch ./configure-yambo-devel
+
 touch-dummy:
 	$(dummy-variable)
+
 ###########################################################
 # plumed
 ###########################################################
@@ -524,24 +562,33 @@ w90_veryclean: w90_clean
 	if test -d ../$(W90); then (rm -R -f ../$(W90)); fi
 	rm -f ../bin/wannier90.x
 	rm -rf ./uncompress-w90
+
 want_clean:
 	if test -d ../WANT; then (cd ../WANT; \
 	$(MAKE) clean); fi
 	- rm -rf ./make-want ./configure-want
-
 want_veryclean: want_clean
 	if test -d ../WANT; then (rm -R -f ../WANT); fi
 	if test -d ../$(WANT); then (rm -R -f ../$(WANT)); fi
 	- rm -rf ./uncompress-want
+
 yambo_clean:
 	if test -d ../YAMBO; then (cd ../YAMBO; \
 	$(MAKE) clean); fi
 	- rm -rf ./make-yambo ./configure-yambo
-
 yambo_veryclean: yambo_clean
 	if test -d ../YAMBO; then (rm -R -f ../YAMBO); fi
 	if test -d ../$(YAMBO); then (rm -R -f ../$(YAMBO)); fi
 	- rm -rf ./uncompress-yambo
+
+yambo-devel_clean:
+	if test -d ../YAMBO_DEVEL; then (cd ../YAMBO_DEVEL; \
+	$(MAKE) clean); fi
+	- rm -rf ./make-yambo-devel ./configure-yambo-devel
+yambo-devel_veryclean: yambo-devel_clean
+	if test -d ../YAMBO_DEVEL; then (rm -R -f ../YAMBO_DEVEL); fi
+	if test -d ../$(YAMBO_DEVEL); then (rm -R -f ../$(YAMBO_DEVEL)); fi
+	- rm -rf ./uncompress-yambo-devel
 
 plumed_clean:
 	if test -d ../PLUMED; then (cd ../PLUMED; \
@@ -580,9 +627,9 @@ gpu_veryclean: gpu_clean
 ##########################################################
 # general cleaning
 ##########################################################
-clean: w90_clean want_clean yambo_clean plumed_clean epw_clean \
+clean: w90_clean want_clean yambo_clean yambo-devel_clean plumed_clean epw_clean \
 	gui_clean phonon_clean tddfpt_clean xspectra_clean neb_clean pwcond_clean \
 	ld1_clean gipaw_clean gpu_clean 
-veryclean: w90_veryclean want_veryclean yambo_veryclean plumed_veryclean epw_veryclean \
+veryclean: w90_veryclean want_veryclean yambo_veryclean yambo-devel_veryclean plumed_veryclean epw_veryclean \
 	gui_veryclean phonon_veryclean tddfpt_veryclean xspectra_veryclean neb_veryclean \
 	pwcond_veryclean ld1_veryclean gipaw_veryclean gpu_veryclean 

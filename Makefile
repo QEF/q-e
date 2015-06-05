@@ -23,6 +23,7 @@ default :
 	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  want         Quantum Transport with Wannier functions'
 	@echo '  yambo        electronic excitations with plane waves'
+	@echo '  yambo-devel  yambo devel version'
 	@echo '  plumed       Metadynamics plugin for pw or cp'
 	@echo '  gpu          Download the latest QE-GPU package'
 	@echo '  couple       Library interface for coupling to external codes'
@@ -150,6 +151,8 @@ want : touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 yambo: touch-dummy
+	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+yambo-devel: touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 plumed: touch-dummy
