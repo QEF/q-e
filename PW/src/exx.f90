@@ -958,7 +958,7 @@ MODULE exx
                mod(s(1, 3, isym) * nr3, nr1) /= 0 .or. &
                mod(s(2, 3, isym) * nr3, nr2) /= 0 ) THEN
              CALL errore ('exxinit',' EXX smooth grid is not compatible with &
-                                    ^ symmetry: change ecutfock',isym)
+                                    & symmetry: change ecutfock',isym)
           ENDIF
           DO ir=1, nxxs
              rir(ir,isym) = ir

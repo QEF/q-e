@@ -460,7 +460,7 @@ CONTAINS
       !
       IF ( ABS(etot-etot_) > ABS(eps6*etot) ) THEN
          WRITE (stdout,'(5X,"Etot: ",f15.8," Ry from PWscf vs ", &
-                f15.8," Ry from pw2casino!")') etot, etot_
+                & f15.8," Ry from pw2casino!")') etot, etot_
          CALL errore("pw2casino","Mismatch in computed energy",1)
       ELSE
          etot = etot_
