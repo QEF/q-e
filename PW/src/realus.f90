@@ -218,7 +218,7 @@ MODULE realus
       !
       ! ... Most of time is spent here; the calling routines are faster.
       !
-      USE constants,  ONLY : pi, fpi, eps8, eps16
+      USE constants,  ONLY : pi, fpi, eps16
       USE ions_base,  ONLY : nat, nsp, ityp, tau
       USE cell_base,  ONLY : at, bg, omega, alat
       USE uspp,       ONLY : okvan
@@ -586,6 +586,7 @@ MODULE realus
       !                             - q(|r-tau_i|) * (dY_lm(r-tau_i)/dtau_{i,a})
       ! ... This routine follows the same logic of real_space_q 
       !
+      USE constants,  ONLY : eps8
       USE uspp,       ONLY : indv, nhtol, nhtolm, ap, nhtoj
       USE uspp_param, ONLY : upf, lmaxq, nh
       USE atom,       ONLY : rgrid
@@ -598,7 +599,7 @@ MODULE realus
       !
       INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ilast, ir, lm, &
            i, ijh, ih, jh, ipol
-      REAL(dp) :: first, second, qtot_int, dqtot_int
+      REAL(dp) :: first, second, qtot_int, dqtot_int, dqxyz(3)
       REAL(dp), ALLOCATABLE :: qtot(:), dqtot(:), xsp(:), wsp(:,:), &
            rl2(:), spher(:,:), dspher(:,:,:)
       !
@@ -728,6 +729,15 @@ MODULE realus
                      !
                   ENDIF
                   !
+                  ! ... prevent floating-point error if dist = 0
+                  !
+                  IF ( tabp(ia)%dist(ir) > eps8 ) THEN
+                     dqxyz(:) = dqtot_int*tabp(ia)%xyz(:,ir) / &
+                                     tabp(ia)%dist(ir)
+                  ELSE
+                     dqxyz(:) = 0.0_dp
+                  ENDIF
+                  !
                   ijh = 0
                   DO ih = 1, nh(nt)
                      DO jh = ih, nh(nt)
@@ -742,8 +752,7 @@ MODULE realus
                               dqr(ir,ijh,ipol) = &
                                    dqr(ir,ijh,ipol) - &
                                    ( qtot_int*dspher(ir,lm,ipol) +  &
-                                     dqtot_int*tabp(ia)%xyz(ipol,ir)/ &
-                                     tabp(ia)%dist(ir)*spher(ir,lm) ) * &
+                                     dqxyz(ipol)*spher(ir,lm) ) * &
                                      ap(lm,nhtolm(ih,nt),nhtolm(jh,nt))
                            END DO
                         ENDDO
@@ -787,7 +796,7 @@ MODULE realus
       !
       ! The source inspired by qsave
       !
-      USE constants,  ONLY : pi, eps8, eps16
+      USE constants,  ONLY : pi
       USE ions_base,  ONLY : nat, nsp, ityp, tau
       USE cell_base,  ONLY : at, bg, omega, alat
       USE uspp,       ONLY : okvan, indv, nhtol, nhtolm, ap
