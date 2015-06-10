@@ -16,7 +16,7 @@ SUBROUTINE iosys()
   ! ...  those in input_parameters, are locally renamed by adding a "_"
   !
   USE kinds,         ONLY : DP
-  USE funct,         ONLY : dft_has_finite_size_correction, &
+  USE funct,         ONLY : dft_is_hybrid, dft_has_finite_size_correction, &
                             set_finite_size_volume, get_inlc 
   USE funct,         ONLY: set_exx_fraction, set_screening_parameter
   USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi
@@ -1425,10 +1425,10 @@ SUBROUTINE iosys()
   ELSE
      IF(ecutfock < ecutwfc .OR. ecutfock > ecutrho) CALL errore('iosys', &
           'ecutfock can not be < ecutwfc or > ecutrho!', 1) 
-     IF ( lstres )  CALL errore('iosys', &
-          'stress with reduced cutoff not implemented', 1)
      ecutfock_ = ecutfock
   END IF
+  IF ( lstres .AND. dft_is_hybrid() .AND. npool > 1 )  CALL errore('iosys', &
+         'stress for hyrbid functionals not available with pools', 1)
   !
   ! ... must be done AFTER dft is read from PP files and initialized
   ! ... or else the two following parameters will be overwritten
