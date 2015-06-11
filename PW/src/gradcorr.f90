@@ -683,6 +683,71 @@ SUBROUTINE ggradient( nrxx, a, ngm, g, nl, ga, gga )
 END SUBROUTINE ggradient
 
 !--------------------------------------------------------------------
+SUBROUTINE laplacian( nrxx, a, ngm, gg, nl, lapla )
+!--------------------------------------------------------------------
+  !
+  ! ... Calculates lapla = \laplace a in R-space (a is also in R-space)
+  !
+  USE constants, ONLY : tpi
+  USE cell_base, ONLY : tpiba2
+  USE kinds,     ONLY : DP
+  USE gvect,     ONLY : nlm, gstart
+  USE control_flags, ONLY : gamma_only
+  USE fft_base,      ONLY : dfftp
+  USE fft_interfaces,ONLY : fwfft, invfft
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN)  :: nrxx
+  INTEGER,  INTENT(IN)  :: ngm, nl(ngm)
+  REAL(DP), INTENT(IN)  :: a(nrxx), gg(ngm)
+  REAL(DP), INTENT(OUT) :: lapla( nrxx )
+  !
+  INTEGER                  :: ig
+  COMPLEX(DP), ALLOCATABLE :: aux(:), laux(:)
+  !
+  !
+  ALLOCATE(  aux( nrxx ) )
+  ALLOCATE( laux( nrxx ) )
+  !
+  aux = CMPLX( a(:), 0.D0 ,kind=DP)
+  !
+  ! ... bring a(r) to G-space, a(G) ...
+  !
+  CALL fwfft ('Dense', aux, dfftp)
+  !
+  ! ... Compute the laplacian
+  !
+  laux(:) = CMPLX(0.d0,0.d0, kind=dp)
+  !
+  DO ig = gstart, ngm
+     !
+     laux(nl(ig)) = -gg(ig)*aux(nl(ig))
+     !
+  END DO
+  !
+  IF ( gamma_only ) THEN
+     !
+     laux(nlm(:)) = CMPLX( REAL(laux(nl(:)) ), -AIMAG(laux(nl(:)) ) ,kind=DP)
+     !
+  ENDIF
+  !
+  ! ... bring back to R-space, (\lapl a)(r) ...
+  !
+  CALL invfft ('Dense', laux, dfftp)
+  !
+  ! ... add the missing factor (2\pi/a)^2 in G
+  !
+  lapla = tpiba2 * DBLE( laux )   
+  !
+  DEALLOCATE( laux )
+  DEALLOCATE( aux )
+  !
+  RETURN
+  !
+END SUBROUTINE laplacian
+
+!--------------------------------------------------------------------
 SUBROUTINE external_gradient( a, grada )
 !--------------------------------------------------------------------
   ! 
@@ -751,4 +816,27 @@ SUBROUTINE external_hessian( a, grada, hessa )
   RETURN
 
 END SUBROUTINE external_hessian
-!----------------------------------------------------------------------------
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+SUBROUTINE external_laplacian( a, lapla )
+!--------------------------------------------------------------------
+  ! 
+  ! Interface for computing laplacian in real space, to be called by 
+  ! an external module
+  !
+  USE kinds,            ONLY : DP
+  USE fft_base,         ONLY : dfftp
+  USE gvect,            ONLY : ngm, nl, gg
+  !
+  IMPLICIT NONE
+  !
+  REAL( DP ), INTENT(IN)   :: a( dfftp%nnr )
+  REAL( DP ), INTENT(OUT)  :: lapla( dfftp%nnr )
+
+! A in real space, lapl(A) in real space
+  CALL laplacian( dfftp%nnr, a, ngm, gg, nl, lapla )
+
+  RETURN
+
+END SUBROUTINE external_laplacian
+!--------------------------------------------------------------------
