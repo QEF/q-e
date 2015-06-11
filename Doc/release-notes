@@ -10,7 +10,7 @@ Incompatible changes in svn version:
 New in svn version:
 
    * PW: Hybrid functionals with reduced cutoff for Vx\psi should now work
-         also with k-points
+         also with k-points and for stress calculation
    * PW: real-space treatment of augmentation charges in USPP and PAW can 
          be used in (fixed-cell) structural relaxation as well
    * PW: speedup of USPP with full G-space treatment of augmentation charges

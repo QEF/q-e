@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{5.1.2}
+\def\version{5.2.0}
 \def\qe{{\sc Quantum ESPRESSO}}
 \def\qeforge{\texttt{qe-forge.org}}
 \textwidth = 17cm
@@ -376,20 +376,8 @@ be reported in the \texttt{Doc/release-notes} file.
 \end{itemize}
 
 \section{Stable releases and development cycle}
-When a sufficient number of new features or improvements are available,
-a stable release is packaged. There is no well-defined procedure or 
-rule to decide when it is time to package a new release: the decision
-is taken after informal discussions of developers on the mailing list. 
-Note what open-source conventional wisdom says: 
-{\em release early, release often}.
-
-When the decision is made, development of new stuff is temporarily
-stopped: nothing new or potentially ''dangerous'' is added, and all 
-attention is dedicated to fix bugs and to stabilize the distribution.
-This phase should last a few weeks or so, a few months at most.
-
-Releases are labelled as $N.M.p$, where $N$=major, $M$=minor, $p$=bugfix.
-The logic goes more or less as follows:
+Stable releases are labelled as $N.M.p$, where $N$=major, $M$=minor, 
+$p$=bugfix. The logic goes more or less as follows:
 \begin{itemize}
 \item {\em Major}: when something really important changes, e.g.
 \begin{enumerate}
@@ -403,10 +391,13 @@ The logic goes more or less as follows:
 gone until now)
 \item {\em Minor}: when some important new functionality is being added
 \item {\em Bugfix}: only bug fixes; occasionally, minor new functionalities
-that don't break any existing one are allowed to sneak into a bugfix release.
+that don't break any existing ones are allowed to sneak into a bugfix release.
 \end{itemize}
 It may be convenient to make a SVN branch at release $N.M.0$: this allows 
 to go on with the development while keeping track of bug fixes. 
+
+Since release 5.2 (June 20, 2015), stable release are packaged at
+fixed dates. The initial schedule is a release every three months.
 
 Releases are stored to \qeforge. Given the size of the complete distribution,
 the release is split into a ``core'' distribution and ``add-ons'',
@@ -414,22 +405,35 @@ additional packages, that can be downloaded and installed on demand
 from the core distribution. ``External'' packages can be independently
 released, as long as there is no compatibility problem.
 
-The automatic downloading of packages from the web suffers a catch-22: 
-the core distribution must know the location of all packages it downloads,
-but these are known only {\em after} packages are uploaded to \qeforge.
+The automatic downloading of packages is implemented in file
+\texttt{install/plugins\_makefile} and configured in file
+\texttt{install/plugins\_list}. For independently released packages,
+it is sufficient to update links. For add-ons packages, not contained
+in the core distribution, there is however a catch-22: 
+the core distribution must know the link to all packages it downloads,
+but these are known only {\em after} such packages are uploaded to 
+\qeforge\ (and the only way to discover the exact link is to go over
+the released package with the mouse).
 The workaround is that the core distribution looks for generic names,
 written in file \texttt{install/plugins\_list}. These names are translated
 by \qeforge\ into specific names. After all packages have been uploaded,
-file \texttt{/var/lib/gforge/archives/index.php}, residing on \qeforge, must be
-edited and links updated. Only the sys.adm. can do this.
+file \texttt{/var/lib/gforge/archives/index.php}, residing on \qeforge,
+must be edited and links updated. This requires system privileges on
+the machine hosting \qeforge.
 
 \paragraph{Preparing a release} 
-{\bf to be written} 
+When the release date approaches, development of new stuff is temporarily
+stopped: nothing new or potentially ''dangerous'' is added, and all 
+attention is dedicated to fix bugs and to stabilize the distribution.
+This manual and the user manual have to be updated.
+
+Edit the script \texttt{dev-tools/release.sh} to make tarballs.
 
 \paragraph{Updating web site} After the release has been uploaded to
 \qeforge, the online documentation must be copied to directory
 \texttt{/var/www/quantum\_wp\_db/wordpress-3.1.4/wp-content/uploads/Doc}
-on the web site (only the sys.adm. can do this).
+on the web site (this requires system privileges on the machine hosting
+the web server).
 
 \section{Structure of the distribution}
 
@@ -449,6 +453,7 @@ Common files and directories in the \texttt{espresso/} directory are:
    Doc/                     environment_variables
    clib/                    flib/
    Modules/                 upftools/
+   COUPLE/
 \end{verbatim}
 Apart from  \texttt{License} and \texttt{README} whose meaning is 
 obvious, the other files and directories are related to
@@ -461,7 +466,9 @@ obvious, the other files and directories are related to
 \item  {\em General documentation} (not package-specific):
 \texttt{Doc/}
 \item {\em  C and Fortran Libraries, modules} (F95):
-\texttt{clib/}, \texttt{flib/}, \texttt{Modules/}
+\texttt{clib/}, \texttt{flib/}, \texttt{Modules/}, \texttt{COUPLE/} 
+(the latter contains code and documentation useful to call \qe\ programs
+ from external codes).
 \end{itemize}
 
 The core distribution also  contains the three package-specific directories
