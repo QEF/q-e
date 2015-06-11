@@ -23,7 +23,6 @@ addusdens.o \
 addusforce.o \
 addusstress.o \
 allocate_fft.o \
-allocate_fft_custom.o \
 allocate_locpot.o \
 allocate_nlpot.o \
 allocate_wfc.o \
