@@ -89,12 +89,6 @@ allocate_fft.o : ../../Modules/recvec.o
 allocate_fft.o : ../../Modules/wavefunctions.o
 allocate_fft.o : pwcom.o
 allocate_fft.o : scf_mod.o
-allocate_fft_custom.o : ../../Modules/cell_base.o
-allocate_fft_custom.o : ../../Modules/control_flags.o
-allocate_fft_custom.o : ../../Modules/fft_custom.o
-allocate_fft_custom.o : ../../Modules/griddim.o
-allocate_fft_custom.o : ../../Modules/kind.o
-allocate_fft_custom.o : ../../Modules/recvec.o
 allocate_locpot.o : ../../Modules/fft_base.o
 allocate_locpot.o : ../../Modules/ions_base.o
 allocate_locpot.o : ../../Modules/recvec.o

@@ -1428,7 +1428,7 @@ SUBROUTINE iosys()
      ecutfock_ = ecutfock
   END IF
   IF ( lstres .AND. dft_is_hybrid() .AND. npool > 1 )  CALL errore('iosys', &
-         'stress for hyrbid functionals not available with pools', 1)
+         'stress for hybrid functionals not available with pools', 1)
   !
   ! ... must be done AFTER dft is read from PP files and initialized
   ! ... or else the two following parameters will be overwritten
@@ -1501,8 +1501,6 @@ SUBROUTINE iosys()
   IF ( TRIM(wfc_dir) /= TRIM(tmp_dir) ) &
      CALL check_tempdir( wfc_dir, exst, parallelfs )
 
-  ! CALL restart_from_file()
-  !
   RETURN
   !
 END SUBROUTINE iosys
