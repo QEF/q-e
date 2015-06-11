@@ -146,12 +146,7 @@ MODULE exx
     CALL ggent(exx_fft)
     exx_fft%initialized = .true.
 
-print '("FFT custom grid: ecut=",F12.6,", dual=",f8.4)',exx_fft%ecutt, &
-                                                        exx_fft%dual_t
-print '("FFT Custom grid: nr1,nr2,nr3=",3i6," ngmt=",i6)', &
-  exx_fft%dfftt%nr1,exx_fft%dfftt%nr2,exx_fft%dfftt%nr3,exx_fft%ngmt
-
-    IF (MAXVAL( ABS(ig_l2g(1:npw)-exx_fft%ig_l2gt(1:npw))) /= 0) &
+    IF (gamma_only .AND. MAXVAL(ABS(ig_l2g(1:npw)-exx_fft%ig_l2gt(1:npw)))/=0) &
        CALL errore('exx_fft_create', ' exx fft grid not compatible with' &
                    //' the smooth fft grid ', 1 )
 
