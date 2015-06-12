@@ -14,6 +14,7 @@ subroutine init_vloc()
   !    potential vloc(ig,it) for each type of atom
   !
   USE atom,       ONLY : msh, rgrid
+  USE m_gth,      ONLY : vloc_gth
   USE kinds,      ONLY : dp
   USE uspp_param, ONLY : upf
   USE ions_base,  ONLY : ntyp => nsp
@@ -34,9 +35,19 @@ subroutine init_vloc()
      !
      IF ( .NOT. ASSOCIATED ( upf(nt)%vloc ) ) THEN
         !
-        ! special case: pseudopotential is coulomb 1/r potential
-        !
-        call vloc_coul (upf(nt)%zp, tpiba2, ngl, gl, omega, vloc (1, nt) )
+        IF ( upf(nt)%is_gth ) THEN
+           !
+           ! special case: GTH pseudopotential
+           !
+           call vloc_gth (nt, upf(nt)%zp, tpiba2, ngl, gl, omega, vloc (1, nt) )
+           !
+        ELSE
+           !
+           ! special case: pseudopotential is coulomb 1/r potential
+           !
+           call vloc_coul (upf(nt)%zp, tpiba2, ngl, gl, omega, vloc (1, nt) )
+           !
+        END IF
         !
      ELSE
         !

@@ -39,6 +39,7 @@ SUBROUTINE clean_pw( lflag )
   USE us,                   ONLY : qrad, tab, tab_at, tab_d2y, spline_ps
   USE uspp,                 ONLY : deallocate_uspp
   USE uspp_param,           ONLY : upf
+  USE m_gth,                ONLY : deallocate_gth
   USE ldaU,                 ONLY : deallocate_ldaU
   USE extfield,             ONLY : forcefield
   USE fft_base,             ONLY : dfftp, dffts  
@@ -151,6 +152,7 @@ SUBROUTINE clean_pw( lflag )
   END IF
   !
   CALL deallocate_uspp() 
+  CALL deallocate_gth() 
   CALL deallocate_noncol() 
   !
   ! ... arrays allocated in init_run.f90 ( and never deallocated )

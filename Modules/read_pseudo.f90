@@ -46,6 +46,7 @@ SUBROUTINE readpp ( input_dft, printout )
   USE upf_module,   ONLY: read_upf
   USE upf_to_internal,  ONLY: set_pseudo_upf
   USE read_uspp_module, ONLY: readvan, readrrkj
+  USE m_gth,            ONLY: readgth
   !
   IMPLICIT NONE
   !
@@ -150,6 +151,7 @@ SUBROUTINE readpp ( input_dft, printout )
      !
      call read_upf(upf(nt), rgrid(nt), isupf, unit=iunps)
      !
+     upf(nt)%is_gth=.false.
      if (isupf ==-1 .OR. isupf== 0) then
         !
         IF( ionode .AND. printout_ ) &
@@ -167,6 +169,7 @@ SUBROUTINE readpp ( input_dft, printout )
         !     The type of the pseudopotential is determined by the file name:
         !    *.vdb or *.van  Vanderbilt US pseudopotential code  pseudo_type=1
         !    *.RRKJ3         Andrea's   US new code              pseudo_type=2
+        !    *.gth           Goedecker-Teter-Hutter NC pseudo    pseudo_type=3
         !    none of the above: PWSCF norm-conserving format     pseudo_type=0
         !
         if ( pseudo_type (psfile (nt) ) == 1 .or. &
@@ -186,6 +189,13 @@ SUBROUTINE readpp ( input_dft, printout )
                  WRITE( stdout, "(3X,'file type is Vanderbilt US PP')")
               CALL readvan (iunps, nt, upf(nt))
            ENDIF
+           CALL set_pseudo_upf (nt, upf(nt), rgrid(nt))
+           !
+        elseif ( pseudo_type (psfile (nt) ) == 3 ) then
+           newpseudo (nt) = .true.
+           !
+           CALL readgth (iunps, nt, upf(nt))
+           !
            CALL set_pseudo_upf (nt, upf(nt), rgrid(nt))
            !
         else
@@ -275,6 +285,7 @@ integer function pseudo_type (psfile)
   pseudo_type = 0
   if (psfile (l - 3:l) .eq.'.vdb'.or.psfile (l - 3:l) .eq.'.van') &
        pseudo_type = 1
+  if (psfile (l - 3:l) .eq.'.gth') pseudo_type = 3
   if (l > 5) then
      if (psfile (l - 5:l) .eq.'.RRKJ3') pseudo_type = 2
   end if

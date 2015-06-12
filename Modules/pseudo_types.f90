@@ -53,6 +53,7 @@ MODULE pseudo_types
      LOGICAL :: tvanp              ! .true. if Ultrasoft
      LOGICAL :: tcoulombp          ! .true. if Coulomb 1/r potential
      LOGICAL :: nlcc               ! Non linear core corrections
+     LOGICAL :: is_gth             ! .true. if Goedecker-Teter-Hutter
      CHARACTER(LEN=25) :: dft      ! Exch-Corr type
      REAL(DP) :: zp                ! z valence
      REAL(DP) :: etotps            ! total energy

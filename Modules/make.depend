@@ -118,6 +118,12 @@ griddim.o : io_global.o
 griddim.o : kind.o
 griddim.o : mp.o
 griddim.o : mp_images.o
+gth.o : cell_base.o
+gth.o : constants.o
+gth.o : funct.o
+gth.o : kind.o
+gth.o : parameters.o
+gth.o : pseudo_types.o
 input_parameters.o : kind.o
 input_parameters.o : parameters.o
 input_parameters.o : wannier_new.o
@@ -247,6 +253,7 @@ read_ncpp.o : pseudo_types.o
 read_pseudo.o : atom.o
 read_pseudo.o : constants.o
 read_pseudo.o : funct.o
+read_pseudo.o : gth.o
 read_pseudo.o : io_files.o
 read_pseudo.o : io_global.o
 read_pseudo.o : ions_base.o

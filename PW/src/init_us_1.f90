@@ -386,6 +386,7 @@ subroutine init_us_1
   call divide (intra_bgrp_comm, nqx, startq, lastq)
   tab (:,:,:) = 0.d0
   do nt = 1, ntyp
+     if ( upf(nt)%is_gth ) cycle
      do nb = 1, upf(nt)%nbeta
         l = upf(nt)%lll (nb)
         do iq = startq, lastq

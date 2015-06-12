@@ -22,6 +22,7 @@ subroutine gen_us_dj (ik, dvkb)
   USE wvfct,      ONLY : npw, npwx, igk
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
   USE us,         ONLY : nqx, tab, tab_d2y, dq, spline_ps
+  USE m_gth,      ONLY : mk_dffnl_gth
   USE splinelib
   USE uspp_param, ONLY : upf, lmaxkb, nbetam, nh
   !
@@ -88,6 +89,10 @@ subroutine gen_us_dj (ik, dvkb)
 
   do nt = 1, ntyp
      do nb = 1, upf(nt)%nbeta
+        if ( upf(nt)%is_gth ) then
+           call mk_dffnl_gth( nt, nb, npw, q, djl(1,nb,nt) )
+           cycle
+        endif
         do ig = 1, npw
            qt = sqrt(q (ig)) * tpiba
            if (spline_ps) then

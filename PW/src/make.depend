@@ -239,6 +239,7 @@ clean_pw.o : ../../Modules/atom.o
 clean_pw.o : ../../Modules/constraints_module.o
 clean_pw.o : ../../Modules/fft_base.o
 clean_pw.o : ../../Modules/fft_types.o
+clean_pw.o : ../../Modules/gth.o
 clean_pw.o : ../../Modules/ions_base.o
 clean_pw.o : ../../Modules/mm_dispersion.o
 clean_pw.o : ../../Modules/noncol.o
@@ -449,6 +450,7 @@ exx.o : ../../Modules/fft_base.o
 exx.o : ../../Modules/fft_custom.o
 exx.o : ../../Modules/fft_interfaces.o
 exx.o : ../../Modules/funct.o
+exx.o : ../../Modules/griddim.o
 exx.o : ../../Modules/io_files.o
 exx.o : ../../Modules/io_global.o
 exx.o : ../../Modules/kind.o
@@ -609,6 +611,7 @@ gen_at_dy.o : ../../Modules/uspp.o
 gen_at_dy.o : pwcom.o
 gen_us_dj.o : ../../Modules/cell_base.o
 gen_us_dj.o : ../../Modules/constants.o
+gen_us_dj.o : ../../Modules/gth.o
 gen_us_dj.o : ../../Modules/ions_base.o
 gen_us_dj.o : ../../Modules/kind.o
 gen_us_dj.o : ../../Modules/recvec.o
@@ -802,6 +805,7 @@ init_us_1.o : ../../Modules/uspp.o
 init_us_1.o : pwcom.o
 init_us_2.o : ../../Modules/cell_base.o
 init_us_2.o : ../../Modules/constants.o
+init_us_2.o : ../../Modules/gth.o
 init_us_2.o : ../../Modules/ions_base.o
 init_us_2.o : ../../Modules/kind.o
 init_us_2.o : ../../Modules/recvec.o
@@ -810,6 +814,7 @@ init_us_2.o : ../../Modules/uspp.o
 init_us_2.o : pwcom.o
 init_vloc.o : ../../Modules/atom.o
 init_vloc.o : ../../Modules/cell_base.o
+init_vloc.o : ../../Modules/gth.o
 init_vloc.o : ../../Modules/ions_base.o
 init_vloc.o : ../../Modules/kind.o
 init_vloc.o : ../../Modules/recvec.o
@@ -1696,6 +1701,7 @@ stres_loc.o : ../../Modules/cell_base.o
 stres_loc.o : ../../Modules/control_flags.o
 stres_loc.o : ../../Modules/fft_base.o
 stres_loc.o : ../../Modules/fft_interfaces.o
+stres_loc.o : ../../Modules/gth.o
 stres_loc.o : ../../Modules/ions_base.o
 stres_loc.o : ../../Modules/kind.o
 stres_loc.o : ../../Modules/mp.o

@@ -12,6 +12,7 @@ subroutine stres_loc (sigmaloc)
   !
   USE kinds,                ONLY : DP
   USE atom,                 ONLY : msh, rgrid
+  USE m_gth,                ONLY : dvloc_gth
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : omega, tpiba2
   USE fft_base,             ONLY : dfftp
@@ -66,11 +67,19 @@ subroutine stres_loc (sigmaloc)
   !
   do nt = 1, ntyp
      IF ( .NOT. ASSOCIATED ( upf(nt)%vloc ) ) THEN
-        !
-        ! special case: pseudopotential is coulomb 1/r potential
-        !
-        call dvloc_coul (upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
-        !
+        IF ( upf(nt)%is_gth ) THEN
+           !
+           ! special case: GTH pseudopotential
+           !
+           call dvloc_gth (nt, upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
+           !
+        ELSE
+           !
+           ! special case: pseudopotential is coulomb 1/r potential
+           !
+           call dvloc_coul (upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
+           !
+        END IF
      ELSE
         !
         ! normal case: dvloc contains dV_loc(G)/dG

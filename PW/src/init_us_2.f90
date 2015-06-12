@@ -25,6 +25,7 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   USE gvect,      ONLY : eigts1, eigts2, eigts3, mill, g
   USE wvfct,      ONLY : npwx
   USE us,         ONLY : nqx, dq, tab, tab_d2y, spline_ps
+  USE m_gth,      ONLY : mk_ffnl_gth
   USE splinelib
   USE uspp,       ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param, ONLY : upf, lmaxkb, nhm, nh
@@ -87,24 +88,28 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   do nt = 1, ntyp
      ! calculate beta in G-space using an interpolation table f_l(q)=\int _0 ^\infty dr r^2 f_l(r) j_l(q.r)
      do nb = 1, upf(nt)%nbeta
-        do ig = 1, npw_
-           if (spline_ps) then
-             vq(ig) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), qg(ig))
-           else
-             px = qg (ig) / dq - int (qg (ig) / dq)
-             ux = 1.d0 - px
-             vx = 2.d0 - px
-             wx = 3.d0 - px
-             i0 = INT( qg (ig) / dq ) + 1
-             i1 = i0 + 1
-             i2 = i0 + 2
-             i3 = i0 + 3
-             vq (ig) = tab (i0, nb, nt) * ux * vx * wx / 6.d0 + &
-                       tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
-                       tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
-                       tab (i3, nb, nt) * px * ux * vx / 6.d0
-           endif
-        enddo
+        if ( upf(nt)%is_gth ) then
+           call mk_ffnl_gth( nt, nb, npw_, qg, vq )
+        else
+           do ig = 1, npw_
+              if (spline_ps) then
+                vq(ig) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), qg(ig))
+              else
+                px = qg (ig) / dq - int (qg (ig) / dq)
+                ux = 1.d0 - px
+                vx = 2.d0 - px
+                wx = 3.d0 - px
+                i0 = INT( qg (ig) / dq ) + 1
+                i1 = i0 + 1
+                i2 = i0 + 2
+                i3 = i0 + 3
+                vq (ig) = tab (i0, nb, nt) * ux * vx * wx / 6.d0 + &
+                          tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
+                          tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
+                          tab (i3, nb, nt) * px * ux * vx / 6.d0
+              endif
+           enddo
+        endif
         ! add spherical harmonic part  (Y_lm(q)*f_l(q)) 
         do ih = 1, nh (nt)
            if (nb.eq.indv (ih, nt) ) then

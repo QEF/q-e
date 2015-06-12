@@ -9,6 +9,8 @@ Incompatible changes in svn version:
 
 New in svn version:
 
+   * Goedecker-Hutter-Teter pseudopotentials directy supported in analytical
+     form (courtesy of Sebastiano Caravati)
    * PW: Hybrid functionals with reduced cutoff for Vx\psi should now work
          also with k-points and for stress calculation
    * PW: real-space treatment of augmentation charges in USPP and PAW can 
