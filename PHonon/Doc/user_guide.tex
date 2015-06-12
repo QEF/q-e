@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{5.1.2}
+\def\version{5.2.0}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -458,6 +458,10 @@ Possible reasons:
 \item For USPP and PAW: the cutoff for the charge density, \texttt{ecutrho}
 \item The {\bf k}-point grid, especially for metallic systems.
 \end{itemize}
+\item For metallic systems: it has been observed that the convergence with
+  respect to the k-point grid and smearing is very slow in presence of
+  semicore states, and for phonon wave-vectors that are not commensurate i
+  with the k-point grid (that is, ${\bf q}\ne {\bf k}_i-{\bf k}_j$)
 \end{itemize}
 Note that ``negative'' frequencies are actually imaginary: the negative
 sign flags eigenvalues of the dynamical matrix for which $\omega^2 <
