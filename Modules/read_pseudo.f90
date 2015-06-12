@@ -388,6 +388,7 @@ END SUBROUTINE check_atwfc_norm
 SUBROUTINE check_order
    ! CP-specific check
    INTEGER :: nt
+   IF ( ANY(upf(1:ntyp)%tpawp) ) CALL errore ('readpp','PAW not implemented',1) 
    DO nt =2, ntyp
       IF ( (.NOT. upf(nt-1)%tvanp) .AND. upf(nt)%tvanp ) THEN
         CALL errore ('readpp', 'ultrasoft PPs must precede norm-conserving',nt)
