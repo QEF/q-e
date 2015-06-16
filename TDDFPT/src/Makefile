@@ -90,7 +90,7 @@ tldeps :
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
-	- /bin/rm -f ../bin/turbo_lanczos.x ../bin/turbo_davidson.x ../bin/turbo_eels.x *.x *.o *~ *.d *.mod *.i work.pc *.a
+	- /bin/rm -f ../bin/turbo_lanczos.x ../bin/turbo_davidson.x ../bin/turbo_eels.x *.x *.o *~ *.d *.mod *.i work.pc *.a *.F90
 
 include make.depend
 

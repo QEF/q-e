@@ -218,7 +218,7 @@ clean : doc_clean
 		CPV Modules PP PW \
 		ACFDT COUPLE GWW XSpectra \
 		clib flib pwtools upftools \
-		dev-tools extlibs Environ \
+		dev-tools extlibs Environ TDDFPT \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
