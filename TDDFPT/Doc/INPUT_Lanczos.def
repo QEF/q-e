@@ -123,7 +123,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
 		}
 	}
 
-	var nipol -type INTEGER {
+	var n_ipol -type INTEGER {
 	    default {
 	    	    1 if ipol < 4;
 		    3 if ipol=4

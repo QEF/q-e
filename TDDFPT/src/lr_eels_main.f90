@@ -267,7 +267,13 @@ SUBROUTINE lr_print_preamble_eels()
     WRITE( stdout, '(/5x,"I. Timrov, N. Vast, R. Gebauer, and S. Baroni,",                       &
                    & /5x,"Electron energy loss and inelastic x-ray scattering cross sections",   &
                    & /5x,"from time-dependent density-functional perturbation theory",           &
-                   & /5x,"Phys. Rev. B 88, 064301 (2013).")' )
+                   & /5x,"Phys. Rev. B 88, 064301 (2013); ibid. 91, 139901 (2015). ")' )
+    WRITE( stdout, '(/5x,"and")' )
+    WRITE( stdout, '(/5x,"I. Timrov, N. Vast, R. Gebauer, and S. Baroni,",                            &
+                   & /5x,"turboEELS - A code for the simulation of the electron energy loss and",     &
+                   & /5x,"inelastic X-ray scattering spectra using the Liouville - Lanczos approach", &
+                   & /5x,"to time-dependent density-functional perturbation theory", &
+                   & /5x,"Comp. Phys. Commun., in press (2015), http://dx.doi.org/10.1016/j.cpc.2015.05.021 ")' )
     WRITE( stdout, '(/5x,"----------------------------------------")' )
     !
     !IF (eps) WRITE( stdout, '(/5x,"Calculation of the dielectric function (not the inverse), because eps=.true.")' )

@@ -577,7 +577,7 @@ PROGRAM lr_calculate_spectrum
       !
       IF (n_ipol==3) THEN
         !
-        ! Calculation of the absorbtion coefficient
+        ! Calculation of the absorption coefficient
         !
         alpha_temp(1) = alpha_temp(2)
         alpha_temp(2) = alpha_temp(3)
