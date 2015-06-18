@@ -59,8 +59,8 @@ MODULE io_dyn_mat
 
     INTEGER, INTENT(IN) :: ityp(nat)
 
-    INTEGER :: ierr, na, nt, kc, ibrav_
-    REAL(DP) :: aux(3,3), celldm_(6)
+    INTEGER :: ierr, na, nt, kc
+    REAL(DP) :: aux(3,3)
     REAL (DP), PARAMETER ::   convfact = BOHR_RADIUS_ANGS**2
 
 
