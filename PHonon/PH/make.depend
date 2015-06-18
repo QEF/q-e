@@ -161,6 +161,7 @@ bcast_ph_input.o : dfile_star.o
 bcast_ph_input.o : elph.o
 bcast_ph_input.o : phcom.o
 bcast_ph_input.o : ramanm.o
+bcast_ph_input.o : yambo.o
 ccg_psi.o : ../../Modules/kind.o
 ccg_psi.o : ../../Modules/noncol.o
 cch_psi_all.o : ../../Modules/becmod.o
@@ -225,6 +226,7 @@ check_initial_status.o : elph.o
 check_initial_status.o : ph_restart.o
 check_initial_status.o : phcom.o
 check_initial_status.o : save_ph_input.o
+check_initial_status.o : yambo.o
 check_q_points_sym.o : ../../Modules/kind.o
 check_restart_recover.o : ../../Modules/io_files.o
 chi_test.o : ../../Modules/fft_base.o
@@ -426,6 +428,7 @@ dielec_test.o : phcom.o
 dielec_test.o : ramanm.o
 do_phonon.o : elph.o
 do_phonon.o : phcom.o
+do_phonon.o : yambo.o
 drho.o : ../../Modules/becmod.o
 drho.o : ../../Modules/cell_base.o
 drho.o : ../../Modules/fft_base.o
@@ -987,6 +990,7 @@ phonon.o : ../../Modules/environment.o
 phonon.o : ../../Modules/mp_global.o
 phonon.o : ph_restart.o
 phonon.o : phcom.o
+phonon.o : yambo.o
 phq_init.o : ../../Modules/atom.o
 phq_init.o : ../../Modules/becmod.o
 phq_init.o : ../../Modules/cell_base.o
@@ -1036,6 +1040,7 @@ phq_readin.o : ph_restart.o
 phq_readin.o : phcom.o
 phq_readin.o : ramanm.o
 phq_readin.o : save_ph_input.o
+phq_readin.o : yambo.o
 phq_recover.o : ../../Modules/io_global.o
 phq_recover.o : ../../Modules/kind.o
 phq_recover.o : ../../PW/src/pwcom.o
@@ -1113,6 +1118,7 @@ prepare_q.o : elph.o
 prepare_q.o : ph_restart.o
 prepare_q.o : phcom.o
 prepare_q.o : ramanm.o
+prepare_q.o : yambo.o
 prepare_sym_analysis.o : ../../Modules/kind.o
 prepare_sym_analysis.o : ../../PW/src/pwcom.o
 print_clock_ph.o : ../../Modules/io_global.o
@@ -1610,6 +1616,16 @@ write_rec.o : ../../Modules/uspp.o
 write_rec.o : ../../PW/src/pwcom.o
 write_rec.o : ph_restart.o
 write_rec.o : phcom.o
+yambo.o : ../../Modules/cell_base.o
+yambo.o : ../../Modules/io_global.o
+yambo.o : ../../Modules/ions_base.o
+yambo.o : ../../Modules/kind.o
+yambo.o : ../../Modules/mp.o
+yambo.o : ../../Modules/mp_images.o
+yambo.o : ../../Modules/xml_io_base.o
+yambo.o : ../../PW/src/pwcom.o
+yambo.o : elph.o
+yambo.o : phcom.o
 zstar_eu.o : ../../Modules/cell_base.o
 zstar_eu.o : ../../Modules/io_files.o
 zstar_eu.o : ../../Modules/ions_base.o
