@@ -89,12 +89,9 @@ MODULE io_dyn_mat
        !
        CALL iotk_write_dat(iunout, "NUMBER_OF_TYPES", ntyp )
        CALL iotk_write_dat(iunout, "NUMBER_OF_ATOMS", nat )
-       ibrav_=0
-       CALL iotk_write_dat(iunout, "BRAVAIS_LATTICE_INDEX", ibrav_ )
+       CALL iotk_write_dat(iunout, "BRAVAIS_LATTICE_INDEX", ibrav )
        CALL iotk_write_dat(iunout, "SPIN_COMPONENTS", nspin_mag )
-       celldm_=0.0_DP
-       celldm_(1)=celldm(1)
-       CALL iotk_write_dat(iunout, "CELL_DIMENSIONS", celldm_ )
+       CALL iotk_write_dat(iunout, "CELL_DIMENSIONS", celldm )
        CALL iotk_write_dat(iunout, "AT", at, COLUMNS=3 )
        CALL iotk_write_dat(iunout, "BG", bg, COLUMNS=3 )
        CALL iotk_write_dat(iunout, "UNIT_CELL_VOLUME_AU", omega )

@@ -46,7 +46,9 @@ PROGRAM phonon
   USE ph_restart,      ONLY : ph_writefile
   USE mp_global,       ONLY : mp_startup
   USE environment,     ONLY : environment_start
-
+  ! YAMBO >
+  USE YAMBO,           ONLY : elph_yambo,dvscf_yambo
+  ! YAMBO <
   !
   IMPLICIT NONE
   !
@@ -79,9 +81,17 @@ PROGRAM phonon
   !
   CALL ph_writefile('status_ph',1,0,ierr)
   !
-  IF (qplot) CALL write_qplot_data(auxdyn)
-  !
-  IF (bands_computed) CALL print_clock_pw()
+  ! YAMBO >
+  IF (.not.elph_yambo.and..not.dvscf_yambo) then
+    ! YAMBO <
+    !
+    IF (qplot) CALL write_qplot_data(auxdyn)
+    !
+    IF (bands_computed) CALL print_clock_pw()
+    !
+    ! YAMBO >
+  ENDIF
+  ! YAMBO <
   !
   CALL stop_smoothly_ph( .TRUE. )
   !

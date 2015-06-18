@@ -28,6 +28,7 @@ allocate_part.o \
 allocate_pert.o \
 allocate_phq.o \
 apply_dpot.o \
+yambo.o \
 bcast_ph_input.o \
 cch_psi_all.o \
 cg_psi.o \
@@ -178,7 +179,7 @@ write_matrix.o \
 write_modes.o \
 write_rec.o \
 zstar_eu.o \
-zstar_eu_us.o
+zstar_eu_us.o 
 
 RAMANOBJS =    \
 cft_wave.o \

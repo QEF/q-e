@@ -34,7 +34,11 @@ SUBROUTINE do_phonon(auxdyn)
   USE control_ph,      ONLY : epsil, trans, qplot, only_init, &
                               only_wfc, rec_code, where_rec
   USE el_phon,         ONLY : elph, elph_mat, elph_simple
-
+  !
+  ! YAMBO >
+  USE YAMBO,           ONLY : elph_yambo
+  ! YAMBO <
+  !
   IMPLICIT NONE
   !
   CHARACTER (LEN=256), INTENT(IN) :: auxdyn
@@ -109,7 +113,9 @@ SUBROUTINE do_phonon(auxdyn)
            CALL elphsum_wannier(iq)
         ELSEIF( elph_simple ) THEN
            CALL elphsum_simple()
-        ELSE
+        ELSEIF( elph_yambo ) THEN
+           CALL elph_yambo_eval_and_IO()
+        ELSE 
            CALL elphsum()
         END IF
         !
@@ -118,7 +124,7 @@ SUBROUTINE do_phonon(auxdyn)
      ! ... cleanup of the variables for the next q point
      !
 100  CALL clean_pw_ph(iq)
-        !
+     !
   END DO
 
 END SUBROUTINE do_phonon

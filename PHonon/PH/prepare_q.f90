@@ -38,6 +38,9 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   USE freq_ph,         ONLY : fpol
   USE output,          ONLY : fildyn, fildvscf
   USE el_phon,         ONLY : elph_mat, wan_index_dyn, auxdvscf
+  ! YAMBO >
+  USE YAMBO,           ONLY : elph_yambo,yambo_elph_file_name,dvscf_yambo
+  ! YAMBO <
   !
   IMPLICIT NONE
   !
@@ -46,6 +49,9 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   CHARACTER (LEN=256), INTENT(IN) :: auxdyn
   CHARACTER (LEN=6), EXTERNAL :: int_to_char
   INTEGER :: irr, ierr
+  ! YAMBO >
+  LOGICAL :: l_exist
+  ! YAMBO <
   !
   do_iq=.TRUE.
   !
@@ -55,6 +61,18 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
      do_iq=.FALSE.
      RETURN
   ENDIF
+  !
+  ! YAMBO >
+  ! Output file
+  write (yambo_elph_file_name,'(a,i6.6)') 'elph_dir/s.dbph_',iq
+  !
+  inquire(file=trim(yambo_elph_file_name),exist=l_exist)
+  !
+  IF ( elph_yambo .and. l_exist ) then
+    do_iq=.FALSE.
+    RETURN
+  ENDIF
+  ! YAMBO <
   !
   WRITE( stdout, '(/,5X,"Calculation of q = ",3F12.7)') x_q(:,iq)
   !
@@ -74,7 +92,9 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !
   tmp_dir_phq=tmp_dir_ph
   !
-  IF ( ldisp ) THEN
+  ! YAMBO>
+  !
+  IF ( ldisp .OR. dvscf_yambo .OR. elph_yambo ) THEN
      !
      ! ... set the q point
      !
@@ -89,6 +109,9 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
      if(elph_mat) then
         fildyn = TRIM( auxdyn ) // TRIM( int_to_char( wan_index_dyn(iq) ) )
         fildvscf = TRIM( auxdvscf ) // TRIM( int_to_char( iq ) ) // '_'
+     else if (dvscf_yambo .OR. elph_yambo ) then
+        fildyn = TRIM( auxdyn ) // TRIM( int_to_char( iq ) )
+        fildvscf = TRIM( auxdvscf ) // TRIM( int_to_char( iq ) ) // '_'
      else
         fildyn = TRIM( auxdyn ) // TRIM( int_to_char( iq ) )
      endif
@@ -98,6 +121,12 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
      IF (.NOT.lgamma.AND.lqdir) &
          tmp_dir_phq= TRIM (tmp_dir_ph) // TRIM(prefix) // '.q_' &
                        & // TRIM(int_to_char(iq))//'/'
+     !
+  ENDIF
+  !
+  ! YAMBO<
+  !
+  IF ( ldisp ) THEN
      !
      IF ( lgamma ) THEN
         !
@@ -139,8 +168,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
         !
         !
      END IF
-  ELSE
-     lgamma=lgamma_iq(iq)
+     ! 
   ENDIF
   !
   !  Save the current status of the run: all the flags, the list of q,
@@ -158,12 +186,15 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !     of q \= 0   we do make first a nscf run
   !
   setup_pw = (.NOT.lgamma .OR. modenum /= 0 .OR. newgrid) 
-!
-! with qplot we redo the bands at gamma if it is not the first point
-! of the list.
-!
+  ! YAMBO >
+  if (qplot.and.elph_yambo) setup_pw=.true.
+  ! YAMBO <
+  !
+  ! with qplot we redo the bands at gamma if it is not the first point
+  ! of the list.
+  !
   IF ((qplot.AND.iq /= 1).OR.always_run) setup_pw=.true.
-
+  !
   do_band=.FALSE.
   DO irr=start_irr, MIN(ABS(last_irr),irr_iq(iq))
      IF (.NOT. done_irr_iq(irr,iq)) THEN
@@ -171,13 +202,12 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
         EXIT
      ENDIF
   ENDDO
-!
-!  If this q has been already calculated we only diagonalize the dynamical 
-!  matrix
-!
-
+  !
+  !  If this q has been already calculated we only diagonalize the dynamical 
+  !  matrix
+  !
   IF ( done_iq(iq) ) do_band=.FALSE.
-
+  !
   RETURN
   !
 END SUBROUTINE prepare_q

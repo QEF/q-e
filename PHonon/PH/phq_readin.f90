@@ -73,6 +73,9 @@ SUBROUTINE phq_readin()
   USE el_phon,       ONLY : elph,elph_mat,elph_simple,elph_nbnd_min, elph_nbnd_max, &
                             el_ph_sigma, el_ph_nsigma, el_ph_ngauss,auxdvscf
   USE dfile_star,    ONLY : drho_star, dvscf_star
+  ! YAMBO >
+  USE YAMBO,         ONLY : elph_yambo,dvscf_yambo
+  ! YAMBO <
   !
   IMPLICIT NONE
   !
@@ -347,8 +350,6 @@ SUBROUTINE phq_readin()
      IF (alpha_mix (iter) .LT.0.D0.OR.alpha_mix (iter) .GT.1.D0) CALL &
           errore ('phq_readin', ' Wrong alpha_mix ', iter)
   ENDDO
-  IF (qplot.AND..NOT.ldisp) CALL errore('phq_readin', &
-                                        'qplot requires ldisp=.true.',1)
   IF (niter_ph.LT.1.OR.niter_ph.GT.maxter) CALL errore ('phq_readin', &
        ' Wrong niter_ph ', 1)
   IF (nmix_ph.LT.1.OR.nmix_ph.GT.5) CALL errore ('phq_readin', ' Wrong &
@@ -378,13 +379,41 @@ SUBROUTINE phq_readin()
      elph=.true.
      elph_mat=.false.
      elph_simple=.false.
+  ! YAMBO >
+  CASE( 'yambo' )
+     elph=.true.
+     elph_mat=.false.
+     elph_simple=.false.
+     elph_yambo=.true.
+     nogg=.true.
+     auxdvscf=trim(fildvscf)
+  CASE( 'dvscf' )
+     elph=.false.
+     elph_mat=.false.
+     elph_simple=.false.
+     elph_yambo=.false.
+     dvscf_yambo=.true.
+     nogg=.true.
+     auxdvscf=trim(fildvscf)
+  ! YAMBO <
   CASE DEFAULT
      elph=.false.
      elph_mat=.false.
      elph_simple=.false.
   END SELECT
-  IF (elph.AND.qplot) &
-     CALL errore('phq_readin', 'qplot and elph not implemented',1)
+  ! YAMBO >
+  IF (.not.elph_yambo) then
+    ! YAMBO <
+    IF (elph.AND.qplot) &
+       CALL errore('phq_readin', 'qplot and elph not implemented',1)
+  ENDIF
+
+  ! YAMBO >
+  IF (.not.elph_yambo.and..not.dvscf_yambo) then
+    ! YAMBO <
+    IF (qplot.AND..NOT.ldisp) CALL errore('phq_readin','qplot requires ldisp=.true.',1)
+    !
+  ENDIF
 
   IF (ldisp.AND.only_init.AND.(.NOT.lqdir)) &
      CALL errore('phq_readin', &
@@ -726,8 +755,10 @@ SUBROUTINE phq_readin()
   IF (tfixed_occ) &
      CALL errore('phq_readin','phonon with arbitrary occupations not tested',1)
   !
-  IF (elph.AND..NOT.lgauss) CALL errore ('phq_readin', 'Electron-&
+  !YAMBO >
+  IF (elph.AND..NOT.lgauss.and..NOT.elph_yambo) CALL errore ('phq_readin', 'Electron-&
        &phonon only for metals', 1)
+  !YAMBO <
   IF (elph.AND.fildvscf.EQ.' ') CALL errore ('phq_readin', 'El-ph needs &
        &a DeltaVscf file', 1)
   !   There might be other variables in the input file which describe

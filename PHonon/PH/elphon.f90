@@ -29,7 +29,7 @@ SUBROUTINE elphon()
   USE modes,  ONLY : npert, nirr, u
   USE uspp_param, ONLY : nhm
   USE control_ph, ONLY : trans, xmldyn
-  USE output,     ONLY : fildyn
+  USE output,     ONLY : fildyn,fildvscf
   USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                          read_dyn_mat, read_dyn_mat_tail
   USE units_ph, ONLY : iudyn, lrdrho, iudvscf, iuint3paw, lint3paw
@@ -63,6 +63,7 @@ SUBROUTINE elphon()
   ! read Delta Vscf and calculate electron-phonon coefficients
   !
   imode0 = 0
+  WRITE (6, '(5x,a)') "Reading dVscf from file "//trim(fildvscf)
   DO irr = 1, nirr
      npe=npert(irr)
      ALLOCATE (dvscfin (dfftp%nnr, nspin_mag , npe) )
@@ -107,6 +108,7 @@ SUBROUTINE elphon()
   !
   IF (.NOT.trans) THEN
      IF (.NOT. xmldyn) THEN
+        WRITE (6, '(5x,a)') "Reading dynamics matrix from file "//trim(fildyn)
         CALL readmat (iudyn, ibrav, celldm, nat, ntyp, &
                       ityp, omega, amass, tau, xq, w2, dyn)
      ELSE
@@ -118,7 +120,8 @@ SUBROUTINE elphon()
                  celldm_, at, bg, omega, atm, amass, tau, ityp, &
                  m_loc, nqs_)
 
-        IF ( nspin_mag_ /= nspin_mag ) CALL errore ('elphon', &
+        IF (ibrav_.NE.ibrav .OR. ABS ( celldm_ (1) - celldm (1) ) > 1.0d-5 &
+             .OR. (nspin_mag_ /= nspin_mag ) ) CALL errore ('elphon', &
              'inconsistent data', 1)
 
         CALL read_dyn_mat(nat,1,xq,dyn)

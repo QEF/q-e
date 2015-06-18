@@ -96,6 +96,9 @@ SUBROUTINE check_initial_status(auxdyn)
   USE xml_io_base,     ONLY : create_directory
   USE mp_global,       ONLY : mp_global_end
   USE el_phon,         ONLY : elph_mat
+  ! YAMBO >
+  USE YAMBO,           ONLY : elph_yambo,dvscf_yambo
+  ! YAMBO <
   !
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der
   !
@@ -128,7 +131,9 @@ SUBROUTINE check_initial_status(auxdyn)
            IF (.NOT. qplot) CALL q_points()
         END IF
         !
-     ELSE
+        ! YAMBO >
+     ELSE IF (.NOT.elph_yambo .AND. .NOT. dvscf_yambo) then
+        ! YAMBO <
         !
         nqs = 1
         last_q = 1

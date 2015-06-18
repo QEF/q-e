@@ -37,6 +37,9 @@ subroutine bcast_ph_input ( )
   USE run_info,   ONLY : title
   USE el_phon,    ONLY : elph_nbnd_min,elph_nbnd_max,el_ph_ngauss, el_ph_nsigma, el_ph_sigma
   USE dfile_star, ONLY : drho_star, dvscf_star
+  ! YAMBO >
+  USE YAMBO,      ONLY : elph_yambo,dvscf_yambo
+  ! YAMBO <
 
   implicit none
   !
@@ -62,6 +65,10 @@ subroutine bcast_ph_input ( )
   call mp_bcast (only_wfc, meta_ionode_id, world_comm )
   call mp_bcast (only_init, meta_ionode_id, world_comm )
   call mp_bcast (search_sym, meta_ionode_id, world_comm)
+  ! YAMBO >
+  call mp_bcast (elph_yambo, meta_ionode_id, world_comm)
+  call mp_bcast (dvscf_yambo, meta_ionode_id, world_comm)
+  ! YAMBO <
   !
   ! integers
   !
