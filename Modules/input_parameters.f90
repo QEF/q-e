@@ -484,8 +484,10 @@ MODULE input_parameters
           ! OBSOLESCENT: same as vdw_corr='grimme-d2'
           ! other DFT-D parameters ( see Modules/mm_dispersion.f90 )
           ! london_s6 = default global scaling parameter for PBE
+          ! london_c6 = user specified atomic C6 coefficients
         REAL ( DP ) :: london_s6   =   0.75_DP , &
-                       london_rcut = 200.00_DP
+                       london_rcut = 200.00_DP , &
+                       london_c6( nsx ) = -1.0_DP
 
         LOGICAL   :: ts_vdw = .false.
           ! OBSOLESCENT: same as vdw_corr='Tkatchenko-Scheffler'
@@ -563,7 +565,7 @@ MODULE input_parameters
              constrained_magnetization, B_field, fixed_magnetization,         &
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
              tot_charge, tot_magnetization, spline_ps, one_atom_occupations,  &
-             vdw_corr, london, london_s6, london_rcut,                        &
+             vdw_corr, london, london_s6, london_rcut, london_c6,             &
              ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,                       &
              xdm, xdm_a1, xdm_a2,                                             &
              step_pen, A_pen, sigma_pen, alpha_pen, no_t_rev,                 &
