@@ -758,13 +758,14 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
 		    var vdw_corr {
 			-label "Type of Van der Waals correction (vdw_corr):"
-			-textvalue {Grimme-D2   XDM   None}
-			-value     {'grimme-d2' 'xdm' ''}
+			-textvalue {Grimme-D2   Tkatchenko-Scheffler XDM   None}
+			-value     {'grimme-d2' 'ts-vdw' 'xdm' ''}
 			-widget    optionmenu
 		    }  
 
 		    group dftdG {
 			var london_s6 -label "Global scaling parameter for DFT-D (london_s6):" -validate fortranposreal
+			dimension london_c6 -label "Atomic C6 coefficient for DFT-D (london_c6):" -start 1 -end 1 -validate fortranposreal
 			var london_rcut -label "Cutoff radius for dispersion interactions \[in a.u.\] (london_rcut):" -validate fortranposreal
 		    }
 

@@ -2165,7 +2165,7 @@ help vdw_corr -helpfmt helpdoc -helptext {
 Type of Van der Waals correction. Allowed values:
 
    'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d': semiempirical Grimme's DFT-D2.
-    Optional variables: "london_s6", "london_rcut"
+    Optional variables: "london_s6", "london_rcut", "london_c6"
     S. Grimme, J. Comp. Chem. 27, 1787 (2006),
     V. Barone et al., J. Comp. Chem. 30, 934 (2009).
 
@@ -2215,6 +2215,27 @@ help london_s6 -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 global scaling parameter for DFT-D. Default is good for PBE.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help london_c6 -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variables: </em><big><b>london_c6(i), i=1,ntyp</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> standard Grimme-D2 values
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+atomic C6 coefficient of each atom type
+
+( if not specified default values from S. Grimme, J. Comp. Chem. 27, 1787 (2006) are used;
+  see file Modules/mm_dispersion.f90 )
          </pre></blockquote>
 </ul>      
       

@@ -219,7 +219,12 @@ tracevar ntyp w {
     widgetconfigure Hubbard_J0    -end $ntyp
     widgetconfigure Hubbard_alpha -end $ntyp
     widgetconfigure Hubbard_beta  -end $ntyp
+
     varset lda_plus_u -value [varvalue lda_plus_u]
+
+    widgetconfigure london_c6 -end $ntyp
+    # hack
+    varset london -value [varvalue london]
 }
 
 
@@ -320,16 +325,11 @@ tracevar assume_isolated w {
 }
 
 tracevar london w {
+    groupwidget dftdG disable
+    groupwidget xdmG  disable 
     if { [vartextvalue london] == "Yes" } { 
-	groupwidget dftdG enable 
-    } else  {
-	groupwidget dftdG disable 
-    }
-}
-
-tracevar london w {
-    if { [vartextvalue london] == "Yes" } { 
-	groupwidget dftdG enable 
+	groupwidget dftdG enable
+	widgetconfigure london_c6 -end [varvalue ntyp]
     } else  {
 	groupwidget dftdG disable 
     }
