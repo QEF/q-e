@@ -302,6 +302,11 @@ yambo-devel: extlibs uncompress-yambo-devel configure-yambo-devel
 	if test -d ../YAMBO_DEVEL; then \
 	cd ../YAMBO_DEVEL; $(MAKE) yambo interfaces ypp || exit 1; fi
 	touch ./make-yambo-devel
+	@echo 
+	@echo "*** YAMBO-DEVEL has been built serially for safety reasons ***"
+	@echo "*** enter the YAMBO-DEVEL folder and reconfigure for a parallel build ***"
+	@echo 
+
 uncompress-yambo-devel: touch-dummy
 	@(if test ! -s ../archive/$(YAMBO_DEVEL).zip && test ! -d ../YAMBO_DEVEL ; then \
 	wget -O ../archive/$(YAMBO_DEVEL).zip $(YAMBO_DEVEL_URL) > /dev/null 2>&1; \
@@ -321,15 +326,17 @@ configure-yambo-devel: touch-dummy
 	@(if test -z "$(F90)" ; then \
 	echo "*** F90 is not defined; please define F90 or edit make.sys" ; exit 1 ; fi)
 	cd ../YAMBO_DEVEL ; \
-	./configure --with-blas-libs="$(BLAS_LIBS)" \
-	--with-lapack-libs="$(LAPACK_LIBS) $(BLAS_LIBS)" \
-	--with-iotk-path="$(TOPDIR)/iotk" \
-	--with-fft-libs="$(FFT_LIBS)" \
-	--with-scalapack-libs="$(SCALAPACK_LIBS)" \
-	--with-blacs-libs="$(SCALAPACK_LIBS)" \
-	PFC="$(MPIF90)" \
-	FC="$(F90)" \
-	F77="$(F77)"
+	./configure \
+	 --without-mpi-libs \
+	 --with-blas-libs="$(BLAS_LIBS)" \
+	 --with-lapack-libs="$(LAPACK_LIBS) $(BLAS_LIBS)" \
+	 --with-iotk-path="$(TOPDIR)/iotk" \
+	 --with-fft-libs="$(FFT_LIBS)" \
+	 --with-scalapack-libs="$(SCALAPACK_LIBS)" \
+	 --with-blacs-libs="$(SCALAPACK_LIBS)" \
+	 PFC="$(MPIF90)" \
+	 FC="$(F90)" \
+	 F77="$(F77)"
 	touch ./configure-yambo-devel
 
 touch-dummy:

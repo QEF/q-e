@@ -6,8 +6,8 @@ URL=http://files.qe-forge.org/index.php?file=
 WANT=want-2.5.1
 WANT_URL=http://qe-forge.org/gf/download/frsrelease/153/618/$(WANT)-base.tar.gz
 #
-YAMBO_DEVEL=yambo-4.0.0-rev.78
-YAMBO_DEVEL_URL=http://qe-forge.org/gf/download/frsrelease/189/786/$(YAMBO_DEVEL).zip
+YAMBO_DEVEL=yambo-4.0.1-rev.89
+YAMBO_DEVEL_URL=http://qe-forge.org/gf/download/frsrelease/194/796/$(YAMBO_DEVEL).zip
 #
 YAMBO=yambo-3.4.1-rev61
 YAMBO_URL=http://qe-forge.org/gf/download/frsrelease/184/723/$(YAMBO).tgz
