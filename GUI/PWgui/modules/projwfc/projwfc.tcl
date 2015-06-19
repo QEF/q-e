@@ -103,24 +103,13 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 		-widget radiobox
 	    }
 
-	    group local_dos {
+	    group local_dos -decor normal {
 		var n_proj_boxes {
 		    -label   "Number of boxes where the local DOS is computed (n_proj_boxes):"
 		    -widget   spinint
-		    -validate nonnegint
-		}	    
-		
-		var irmin {
-		    -label   "First point to be included in the box (irmin):"
-		    -widget   spinint
-		    -validate nonnegint
-		}	    
-		
-		var irmax {
-		    -label   "Last point to be included in the box (irmax):"
-		    -widget   spinint
-		    -validate nonnegint
-		}	    
+		    -validate posint
+		    -default  1
+		}
 		
 		var plotboxes {
 		    -label "Write the boxes into XSF 3D datagrid file (plotboxes):"
@@ -128,6 +117,22 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 		    -textvalue { Yes No }
 		    -widget radiobox
 		}
+		
+		table irmin {
+		    -caption  "First point to be included in the given box (irmin):"
+		    -head     {(1,*) (2,*) (3,*)}
+		    -validate {int int int}
+		    -cols     3
+		    -rows     1
+		}	    
+		
+		table irmax {
+		    -caption  "Last point to be included in the given box (irmax):"
+		    -head     {(1,*) (2,*) (3,*)}
+		    -validate {int int int}
+		    -cols     3
+		    -rows     1
+		}	    
 	    }
 	}
     }

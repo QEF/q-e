@@ -275,12 +275,14 @@ help irmin -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>irmin</b></big>
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 1
+<br><li> <em>Default: </em> 1 for each box
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-first point to be included in the box
+first point of the given box
+
+BEWARE: irmin is a 2D array of the form: irmin(3,n_proj_boxes)
          </pre></blockquote>
 </ul>      
       
@@ -293,12 +295,15 @@ help irmax -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>irmax</b></big>
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 0
+<br><li> <em>Default: </em> 0 for each box
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-last point to be included in the box
+last point of the given box;
+( 0 stands for the last point in the FFT grid )
+
+BEWARE: irmax is a 2D array of the form: irmax(3,n_proj_boxes)
          </pre></blockquote>
 </ul>      
       
