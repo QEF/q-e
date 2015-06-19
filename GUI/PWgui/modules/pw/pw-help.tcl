@@ -92,7 +92,8 @@ help restart_mode -helpfmt helpdoc -helptext {
                   stopped using variable "max_seconds", or
                   by user request with an "exit file" (i.e.:
                   create a file "prefix".EXIT, in directory
-                  "outdir"; see variables "prefix", "outdir")
+                  "outdir"; see variables "prefix", "outdir").
+                  Overrides "startingwfc" and "startingpot".
          </pre></blockquote>
 </ul>      
       
@@ -967,8 +968,9 @@ kinetic energy cutoff (Ry) for the exact exchange operator in
 EXX type calculations. By default this is the same as ecutrho
 but in some EXX calculations significant speed-up can be found
 by reducing ecutfock, at the expense of some loss in accuracy.
-Currently only implemented for the optimized gamma point only
-calculations.
+Must be .gt. ecutwfc. Not implemented for stress calculation.
+Use with care, especially in metals where it may give raise
+to instabilities.
          </pre></blockquote>
 </ul>      
       
