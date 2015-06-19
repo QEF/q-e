@@ -44,7 +44,20 @@ module Bands\#auto -title "PWSCF GUI: module Bands.x" -script {
 		    -widget    radiobox
 		}
 	    }
+	    
+	    var lp {
+		-label "Write matrix elements of the momentum operator p to a file (lp):"
+		-textvalue { Yes No }
+		-value     { .true. .false. }
+		-widget    radiobox		
+	    }
 
+	    var filp {
+		-label "Output file containing matrix elements (filp):"
+                -validate string	
+		file name for matrix elements of p
+	    }
+	   
 	    var lsym {
 		-label "Classify bands according to irreducible representations of small group of k (lsym):"
 		-textvalue { Yes No }

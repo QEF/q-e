@@ -6,6 +6,15 @@ tracevar lsym w {
     }
 }
 
+tracevar lp w {
+    if { [vartextvalue lp] == "Yes" } {
+	widget filp enable
+    } else {
+	widget filp disable
+    }
+}
+
 postprocess {
     varset lsym  -value {}
+    varset lp    -value {}
 }

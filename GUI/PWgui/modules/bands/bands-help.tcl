@@ -97,6 +97,43 @@ values of the spin operator on the spinor wave-functions.
 
 
 # ------------------------------------------------------------------------
+help lp -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>lp</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true. matrix elements of the momentum operator p between
+conduction and valence bands are written to file "filp"
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help filp -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>filp</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'p_avg.dat'
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If "lp" is set to .true., file name for matrix elements of p
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help lsym -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>lsym</b></big>
