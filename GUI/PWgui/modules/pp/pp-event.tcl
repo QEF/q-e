@@ -105,8 +105,8 @@ tracevar iflag w {
 	    widget ny disable
 	    widget nz disable
 	    widget radius disable
-	    if { [string match "XCRYSDEN*" [vartextvalue output_format]] } {
-		varset output_format -textvalue ""
+	    if { [string match "*2D*" [vartextvalue output_format]] || [string match "*3D*" [vartextvalue output_format]] } {
+		varset output_format -textvalue "format suitable for gnuplot (1D)"
 	    }
 	}
 
@@ -120,8 +120,8 @@ tracevar iflag w {
 	    widget ny disable
 	    widget nz disable
 	    widget radius disable
-	    if { [string match "XCRYSDEN*" [vartextvalue output_format]] } {
-		varset output_format -textvalue ""
+	    if { [string match "*2D*" [vartextvalue output_format]] || [string match "*3D*" [vartextvalue output_format]] } {
+		varset output_format -textvalue "format suitable for gnuplot (1D)"
 	    }
 	}
 	
@@ -135,15 +135,20 @@ tracevar iflag w {
 	    widget e3 disable
 	    widget nz disable
 	    widget radius disable
-	    if { [string match "XCRYSDEN's XSF format (whole unit cell)" [vartextvalue output_format]] } {
-		varset output_format -textvalue "XCRYSDEN's XSF format"
+	    if { [string match "*3D*" [vartextvalue output_format]] || [string match "*1D*" [vartextvalue output_format]] } {
+		varset output_format -textvalue "XCRYSDEN's XSF format (2D or 3D)"
 	    }
 	}
 	
 	"3D plot" {
+	    
+	    if { [string match "*1D*" [vartextvalue output_format]] || [string match "*2D*" [vartextvalue output_format]] } {
+		varset output_format -textvalue "XCRYSDEN's XSF format (whole unit cell) (3D)"
+	    }
+	    
 	    switch -exact -- [vartextvalue output_format] {
-		"XCRYSDEN's XSF format (whole unit cell)" -
-		"Gaussian cube-file format" {
+		"XCRYSDEN's XSF format (whole unit cell) (3D)" -
+		"Gaussian cube-file format (3D)" {
 		    widget e1 disable
 		    widget e2 disable
 		    widget e3 disable
@@ -175,7 +180,8 @@ tracevar iflag w {
 	    widget ny enable
 	    widget nz disable
 	    widget radius enable
-	    if { [string match "XCRYSDEN*" [vartextvalue output_format]] } {
+
+	    if { [string match "*1D*" [vartextvalue output_format]] || [string match "*3D*" [vartextvalue output_format]] } {
 		varset output_format -textvalue ""
 	    }	    
 	}
