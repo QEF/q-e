@@ -228,7 +228,7 @@ SUBROUTINE iosys()
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
                                starting_spin_angle, assume_isolated,spline_ps,&
-                               vdw_corr, london, london_s6, london_rcut,      &
+                               vdw_corr, london, london_s6, london_rcut, london_c6, &
                                ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,     &
                                xdm, xdm_a1, xdm_a2,                           &
                                one_atom_occupations,                          &
@@ -275,7 +275,7 @@ SUBROUTINE iosys()
   !
   USE constraints_module,    ONLY : init_constraint
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
-  USE london_module,         ONLY : init_london, lon_rcut, scal6
+  USE london_module,         ONLY : init_london, lon_rcut, scal6, in_c6
   USE xdm_module,            ONLY : init_xdm, a1i, a2i
   USE tsvdw_module,          ONLY : vdw_isolated, vdw_econv_thr
   USE us,                    ONLY : spline_ps_ => spline_ps
@@ -1227,6 +1227,7 @@ SUBROUTINE iosys()
   IF ( llondon) THEN
      lon_rcut    = london_rcut
      scal6       = london_s6
+     in_c6(:)    = london_c6(:)
   END IF
   IF ( lxdm ) THEN
      a1i = xdm_a1
