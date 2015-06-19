@@ -127,16 +127,23 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 	}       
 
 	var irmin -type INTEGER {
-	    default { 1 }
+	    default { 1 for each box }
             info {
-		first point to be included in the box
+		
+		first point of the given box
+
+		BEWARE: irmin is a 2D array of the form: irmin(3,n_proj_boxes)
             }
 	}       
 
 	var irmax -type INTEGER {
-	    default { 0 }
+	    default { 0 for each box }
             info {
-		last point to be included in the box
+		
+		last point of the given box;
+		( 0 stands for the last point in the FFT grid )
+
+		BEWARE: irmax is a 2D array of the form: irmax(3,n_proj_boxes)
             }
 	}       
 
@@ -233,13 +240,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 	subsection -title {Defining boxes for the Local DOS(E)} {
 	    text {
 		Boxes are specified using the variables irmin and irmax:
+		
 		FFT grid points are included from irmin(j,n) to irmax(j,n)
 		for j=1,2,3 and n=1,...,n_proj_boxes
+		
 		irmin and irmax range from 1 to nr1 or nr2 or nr3
+		
 		Values larger than nr1/2/3 or smaller than 1 are folded
 		to the unit cell.
+		
 		If irmax<irmin FFT grid points are included from 1 to irmax
-		and from irmin to nr1/2/3
+		and from irmin to nr1/2/3.
 	    }
 	}
 
