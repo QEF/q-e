@@ -22,6 +22,7 @@ default :
 	@echo '  gipaw        NMR and EPR spectra'
 	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  want         Quantum Transport with Wannier functions'
+	@echo '  west         Many-body perturbation corrections for standard DFT'
 	@echo '  yambo        electronic excitations with plane waves'
 	@echo '  yambo-devel  yambo devel version'
 	@echo '  plumed       Metadynamics plugin for pw or cp'
@@ -156,6 +157,9 @@ yambo-devel: touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 plumed: touch-dummy
+	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
+
+west: pw touch-dummy
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #epw: touch-dummy

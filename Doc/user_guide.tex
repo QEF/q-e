@@ -120,6 +120,7 @@ or patch some \qe\ routines can be installed as {\em plug-ins}:
 \item \texttt{GIPAW} (Gauge-Independent Projector Augmented Waves):
       NMR chemical shifts and EPR g-tensor.
 \item \texttt{GWL}: electronic excitations within GW Approximation.
+\item \texttt{WEST}: Many-body perturbation corrections for standard DFT.
 \end{itemize}
 Documentation on single packages can be found in the \texttt{Doc/} or
 \texttt{doc/} directory of each package. A detailed description of input
@@ -754,6 +755,9 @@ At your choice, you may compile the complete \qe\ suite of programs
                           unpacks it, runs its \configure,
                           produces all \texttt{GIPAW} executables in 
                           \texttt{GIPAW/bin} and in main \texttt{bin} directory.
+\item \texttt{make west} downloads \texttt{WEST} from \texttt{www.west-code.org},
+                          unpacks it, produces all the executables 
+                          in \texttt{West/Wfreq} and \texttt{West/Wstat}. 
 \end{itemize}
 For the setup of the GUI, refer to the \texttt{PWgui-X.Y.Z /INSTALL} file, where
 X.Y.Z stands for the version number of the GUI (should be the same as the

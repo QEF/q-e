@@ -426,6 +426,28 @@ configure-sax: touch-dummy
 	touch ./configure-sax
 
 
+###################################
+# WEST
+###################################
+
+west: extlibs uncompress-west 
+	if test -d ../West; then \
+	cd ../West; $(MAKE) -j1 all || exit 1; fi
+	touch ./make-west
+uncompress-west: touch-dummy
+	@(if test ! -s ../archive/$(WEST).tgz && test ! -d ../West ; then \
+	wget -O ../archive/$(WEST).tar.gz $(WEST_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	curl -o ../archive/$(WEST).tar.gz $(WEST_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	echo "*** Unable to download WEST. Test whether curl or wget is installed and working," ; \
+	echo "*** if you have direct access to internet. If not, copy into archive/ the file" ; \
+	echo "*** $(WEST).tar.gz from http://www.west-code.org ." ; \
+	exit 1 ; fi ; fi ; fi)
+	if test ! -d ../West; then \
+	(gzip -dc ../archive/$(WEST).tar.gz | (cd ../ ; tar -xvf -)) ; fi
+	touch uncompress-west
+
 ##################################
 # extlibs
 ###################################
@@ -619,6 +641,16 @@ sax_veryclean: sax_clean
 	if test -d ../$(SAX); then (rm -R -f ../$(SAX)); fi
 	- rm -rf ./uncompress-sax
 
+west_clean:
+	if test -d ../West; then (cd ../West; \
+	$(MAKE) clean); fi
+	- rm -rf ./make-west ./configure-west
+
+west_veryclean: west_clean
+	if test -d ../West; then (rm -R -f ../West); fi
+	if test -d ../$(WEST); then (rm -R -f ../$(WEST)); fi
+	- rm -rf ./uncompress-west
+
 gui_clean:
 	rm -rf ./make-gui 
 
@@ -636,7 +668,7 @@ gpu_veryclean: gpu_clean
 ##########################################################
 clean: w90_clean want_clean yambo_clean yambo-devel_clean plumed_clean epw_clean \
 	gui_clean phonon_clean tddfpt_clean xspectra_clean neb_clean pwcond_clean \
-	ld1_clean gipaw_clean gpu_clean 
+	ld1_clean gipaw_clean gpu_clean west_clean
 veryclean: w90_veryclean want_veryclean yambo_veryclean yambo-devel_veryclean plumed_veryclean epw_veryclean \
 	gui_veryclean phonon_veryclean tddfpt_veryclean xspectra_veryclean neb_veryclean \
-	pwcond_veryclean ld1_veryclean gipaw_veryclean gpu_veryclean 
+	pwcond_veryclean ld1_veryclean gipaw_veryclean gpu_veryclean west_veryclean

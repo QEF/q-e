@@ -49,3 +49,5 @@ GPU=v14.06.0
 #GPU_URL=$(URL)$(GPU).tar.gz
 GPU_URL=https://github.com/fspiga/QE-GPU/archive/$(GPU).tar.gz
 #
+WEST=West-1.0.1
+WEST_URL=http://www.west-code.org/downloads/$(WEST).tar.gz
