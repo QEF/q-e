@@ -1,7 +1,7 @@
 #!/bin/sh -x
 
 tempdir=$HOME/Downloads
-version=5.1.2
+version=5.2.0
 
 # make sure there is no locale setting creating unneeded differences.
 LC_ALL=C
@@ -11,7 +11,7 @@ mkdir $tempdir
 cd $tempdir
 /bin/rm -rf espresso/ espresso-$version
 # get the svn copy
-svn checkout http://qeforge.qe-forge.org/svn/q-e/trunk/espresso
+svn checkout http://qeforge.qe-forge.org/svn/q-e/tags/QE-5-2-0/espresso
 mv espresso/ espresso-$version/
 
 cd espresso-$version
