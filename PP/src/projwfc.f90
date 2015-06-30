@@ -22,11 +22,12 @@ PROGRAM do_projwfc
   USE klist,      ONLY : degauss, ngauss, lgauss
   USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir
   USE noncollin_module, ONLY : noncolin
-  USE mp,               ONLY : mp_bcast
-  USE mp_world,         ONLY : world_comm
-  USE mp_global,        ONLY : mp_startup, nproc_ortho
-  USE environment,      ONLY : environment_start, environment_end
-  USE wvfct, ONLY: et, nbnd
+  USE mp,         ONLY : mp_bcast
+  USE mp_world,   ONLY : world_comm
+  USE mp_global,  ONLY : mp_startup, nproc_ortho
+  USE environment,ONLY : environment_start, environment_end
+  USE wvfct,      ONLY : et, nbnd
+  USE basis,      ONLY : natomwfc
   !
   IMPLICIT NONE
   !
@@ -150,6 +151,8 @@ PROGRAM do_projwfc
   IF ( tdosinboxes ) THEN
      CALL projwave_boxes (filpdos, filproj, n_proj_boxes, irmin, irmax, plotboxes)
   ELSE
+     IF ( natomwfc <= 0 ) CALL errore &
+        ('do_projwfc', 'Cannot project on zero atomic wavefunctions!', 1)
      IF (noncolin) THEN
         CALL projwave_nc(filproj, lsym, lwrite_overlaps, lbinary_data )
      ELSE
