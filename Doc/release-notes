@@ -1,3 +1,8 @@
+Fixed in svn version:
+
+   * PW: incorrect calculation of maximum number of plane waves could lead 
+     to error exit with hybrid functionals and ultraspft pseudopotentials
+
 Incompatible changes in 5.2.0 version:
 
    * various "gather" and "scatter" routines removes and replaced by two

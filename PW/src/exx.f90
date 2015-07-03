@@ -440,25 +440,30 @@ MODULE exx
   SUBROUTINE exx_n_plane_waves(ecutwfc, tpiba2, g, ngm, npwx)
     !-----------------------------------------------------------------------
     !
-    ! Find number of plane waves for each k-point, keeping in mind that EXX uses
-    ! a larger non-reduced grid of k and k+q points
+    ! Find maximum number of plane waves npwx among the entire grid of k and
+    ! of k+q points - should be called after a previous call to n_plane_waves 
+    ! (for k-points only), providing in input the value of npwx found by
+    ! n_plane_waves, to ensure that the final npwx is the largest of the two
+    !
     USE kinds, ONLY : DP
-    !USE exx,              ONLY : nkqs, xkq_collect,exx_grid_initialized
     USE funct, ONLY : dft_is_hybrid
     USE uspp,  ONLY : okvan
     IMPLICIT NONE
     !
-    integer, intent(in) :: ngm
-    real(DP),intent(in) :: ecutwfc, tpiba2, g (3, ngm)
-    integer, intent(out):: npwx
-    integer,allocatable :: ngkq(:)
-    IF(.not. okvan) RETURN
-    IF(.not.dft_is_hybrid()) RETURN
-    IF(.not.exx_grid_initialized) &
-      CALL errore("exx_n_plane_waves","you must initialize the grid first",1)
+    INTEGER, INTENT(in)  :: ngm
+    REAL(DP),INTENT(in)  :: ecutwfc, tpiba2, g (3, ngm)
+    INTEGER, INTENT(inout) :: npwx
+    INTEGER, ALLOCATABLE :: ngkq(:)
+    INTEGER :: npwx_
+    !
+    IF( .NOT. okvan .OR. .NOT.dft_is_hybrid() ) RETURN
+    IF( .NOT.exx_grid_initialized) &
+        CALL errore("exx_n_plane_waves","you must initialize the grid first",1)
     ALLOCATE(ngkq(nkqs))
-    CALL n_plane_waves (ecutwfc, tpiba2, nkqs, xkq_collect, g, ngm, npwx, ngkq)
+    CALL n_plane_waves (ecutwfc, tpiba2, nkqs, xkq_collect, g, ngm, npwx_, ngkq)
     DEALLOCATE(ngkq)
+    npwx = MAX (npwx, npwx_)
+    !
     RETURN
     !------------------------------------------------------------------------
   END SUBROUTINE exx_n_plane_waves
