@@ -647,9 +647,7 @@ west_clean:
 	- rm -rf ./make-west ./configure-west
 
 west_veryclean: west_clean
-	if test -d ../West; then (rm -R -f ../West); fi
-	if test -d ../$(WEST); then (rm -R -f ../$(WEST)); fi
-	- rm -rf ./uncompress-west
+# dir is not deleted for compatibility with the repository
 
 gui_clean:
 	rm -rf ./make-gui 
