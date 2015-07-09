@@ -519,6 +519,242 @@ CONTAINS
       END SUBROUTINE generate_gradexponential
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
+      SUBROUTINE generate_erfc( nnr, dim, axis, charge, width, spread, pos, rho )
+!----------------------------------------------------------------------
+      !
+      USE kinds,            ONLY : DP
+      USE io_global,        ONLY : stdout
+      USE cell_base,        ONLY : at, bg, alat, omega
+      USE fft_base,         ONLY : dfftp
+      USE mp,               ONLY : mp_sum
+      USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
+      !
+      IMPLICIT NONE
+      !
+      ! ... Declares variables
+      !
+      INTEGER, INTENT(IN)       :: nnr, dim, axis
+      REAL( DP ), INTENT(IN)    :: charge, width, spread
+      REAL( DP ), INTENT(IN)    :: pos( 3 )
+      REAL( DP ), INTENT(INOUT) :: rho( nnr )
+      !
+      ! ... Local variables
+      !
+      INTEGER                   :: i, j, k, ir, ir_end, ip
+      INTEGER                   :: index0, ntot
+      !
+      REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
+      REAL( DP )                :: scale, dist, arg, length, chargeanalytic, chargelocal
+      REAL( DP )                :: f1, f2 
+      REAL( DP )                :: r( 3 ), s( 3 )
+      REAL( DP ), ALLOCATABLE   :: rholocal ( : )
+      !
+      inv_nr1 = 1.D0 / DBLE( dfftp%nr1 )
+      inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
+      inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
+      !
+      index0 = 0
+      ir_end = nnr
+      !
+#if defined (__MPI)
+      DO i = 1, me_bgrp
+        index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
+      END DO
+      ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
+#endif  
+      !
+      ntot = dfftp%nr1 * dfftp%nr2 * dfftp%nr3
+      !
+      IF (axis.LT.1.OR.axis.GT.3) &
+           WRITE(stdout,*)'WARNING: wrong axis in generate_erfc'
+      chargeanalytic = erfcvolume(dim,axis,width,spread,alat,omega,at)
+      scale = charge / chargeanalytic * 0.5D0 
+      !
+      ALLOCATE( rholocal( nnr ) )
+      rholocal = 0.D0
+      !
+      DO ir = 1, ir_end
+         !
+         ! ... three dimensional indexes
+         !
+         i = index0 + ir - 1
+         k = i / (dfftp%nr1x*dfftp%nr2x)
+         i = i - (dfftp%nr1x*dfftp%nr2x)*k
+         j = i / dfftp%nr1x
+         i = i - dfftp%nr1x*j
+         !
+         DO ip = 1, 3
+            r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
+                    DBLE( j )*inv_nr2*at(ip,2) + &
+                    DBLE( k )*inv_nr3*at(ip,3)
+         END DO
+         !
+         r(:) = pos(:) - r(:) 
+         !
+         !  ... possibly 2D or 1D gaussians
+         !
+         IF ( dim .EQ. 1) THEN
+           r(axis) = 0.D0
+         ELSE IF ( dim .EQ. 2 ) THEN
+           DO i = 1, 3
+             IF ( i .NE. axis ) r(i) = 0.D0
+           ENDDO
+         END IF
+         !
+         ! ... minimum image convention
+         !
+         s(:) = MATMUL( r(:), bg(:,:) )
+         s(:) = s(:) - ANINT(s(:))
+         r(:) = MATMUL( at(:,:), s(:) )
+         !
+         dist = SQRT(SUM( r * r )) 
+         arg = ( dist * alat - width ) / spread
+         !
+         rholocal( ir ) = ERFC(arg) 
+         !      
+      END DO
+      !
+      ! ... double check that the integral of the generated charge corresponds to 
+      !     what is expected
+      !
+      chargelocal = SUM(rholocal)*omega/DBLE(ntot)*0.5D0
+      CALL mp_sum(chargelocal,intra_bgrp_comm)
+      IF ( ABS(chargelocal-chargeanalytic)/chargeanalytic .GT. 1.D-4 ) &
+        WRITE(stdout,*)'WARNING: significant discrepancy between the numerical and the expected erfc charge'
+      !
+      ! ... rescale generated charge to obtain the correct integrated total charge
+      !
+      rholocal = rholocal * scale
+      !
+      rho = rho + rholocal
+      DEALLOCATE( rholocal )
+      !
+      RETURN
+      !
+!----------------------------------------------------------------------
+      END SUBROUTINE generate_erfc
+!----------------------------------------------------------------------
+!----------------------------------------------------------------------
+      SUBROUTINE generate_graderfc( nnr, dim, axis, charge, width, spread, pos, gradrho )
+!----------------------------------------------------------------------
+      !
+      USE kinds,            ONLY : DP
+      USE constants,        ONLY : sqrtpi, fpi, pi
+      USE io_global,        ONLY : stdout
+      USE cell_base,        ONLY : at, bg, alat, omega
+      USE fft_base,         ONLY : dfftp
+      USE mp,               ONLY : mp_sum
+      USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
+      !
+      IMPLICIT NONE
+      !
+      ! ... Declares variables
+      !
+      INTEGER, INTENT(IN)       :: nnr, dim, axis
+      REAL( DP ), INTENT(IN)    :: charge, width, spread
+      REAL( DP ), INTENT(IN)    :: pos( 3 )
+      REAL( DP ), INTENT(INOUT) :: gradrho( 3, nnr )
+      !
+      ! ... Local variables
+      !
+      INTEGER                   :: i, j, k, ir, ir_end, ip
+      INTEGER                   :: index0, ntot
+      !
+      REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
+      REAL( DP )                :: scale, dist, arg, length, chargeanalytic, chargelocal
+      REAL( DP )                :: r( 3 ), s( 3 )
+      REAL( DP ), ALLOCATABLE   :: gradrholocal ( :, : )
+      !
+      inv_nr1 = 1.D0 / DBLE( dfftp%nr1 )
+      inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
+      inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
+      !
+      index0 = 0
+      ir_end = nnr
+      !
+#if defined (__MPI)
+      DO i = 1, me_bgrp
+        index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
+      END DO
+      ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
+#endif  
+      !
+      ntot = dfftp%nr1 * dfftp%nr2 * dfftp%nr3
+      !
+      IF (axis.LT.1.OR.axis.GT.3) &
+           WRITE(stdout,*)'WARNING: wrong axis in generate_gaussian'
+      chargeanalytic = erfcvolume(dim,axis,width,spread,alat,omega,at)
+      !
+      ! ... scaling factor, take into account rescaling of generated density
+      !     to obtain the correct integrated total charge  
+      !
+      scale = charge / chargeanalytic / sqrtpi / spread 
+      !
+      ALLOCATE( gradrholocal( 3, nnr ) )
+      gradrholocal = 0.D0
+      chargelocal = 0.D0
+      !
+      DO ir = 1, ir_end
+         !
+         ! ... three dimensional indexes
+         !
+         i = index0 + ir - 1
+         k = i / (dfftp%nr1x*dfftp%nr2x)
+         i = i - (dfftp%nr1x*dfftp%nr2x)*k
+         j = i / dfftp%nr1x
+         i = i - dfftp%nr1x*j
+         !
+         DO ip = 1, 3
+            r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
+                    DBLE( j )*inv_nr2*at(ip,2) + &
+                    DBLE( k )*inv_nr3*at(ip,3)
+         END DO
+         !
+         r(:) = pos(:) - r(:) 
+         !
+         !  ... possibly 2D or 1D erfc
+         !
+         IF ( dim .EQ. 1) THEN
+           r(axis) = 0.D0
+         ELSE IF ( dim .EQ. 2 ) THEN
+           DO i = 1, 3
+             IF ( i .NE. axis ) r(i) = 0.D0
+           ENDDO
+         END IF
+         !
+         ! ... minimum image convention
+         !
+         s(:) = MATMUL( r(:), bg(:,:) )
+         s(:) = s(:) - ANINT(s(:))
+         r(:) = MATMUL( at(:,:), s(:) )
+         !
+         dist = SQRT(SUM( r * r )) 
+         arg = ( dist * alat - width ) / spread
+         !
+         gradrholocal( :, ir ) = EXP( - arg**2 ) * r(:) / dist
+         chargelocal = chargelocal + ERFC(arg) 
+         !      
+      END DO
+      !
+      ! ... double check that the integral of the generated charge corresponds to 
+      !     what is expected
+      !
+      CALL mp_sum( chargelocal, intra_bgrp_comm ) 
+      chargelocal = chargelocal*omega/DBLE(ntot)*0.5D0
+      IF ( ABS(chargelocal-chargeanalytic)/chargeanalytic .GT. 1.D-4 ) &
+        WRITE(stdout,*)'WARNING: significant discrepancy between the numerical and the expected erfc charge'
+      !
+      gradrholocal = gradrholocal * scale
+      !
+      gradrho = gradrho + gradrholocal 
+      DEALLOCATE( gradrholocal )
+      !
+      RETURN
+      !
+!----------------------------------------------------------------------
+      END SUBROUTINE generate_graderfc
+!----------------------------------------------------------------------
+!----------------------------------------------------------------------
    SUBROUTINE generate_axis( nnr, icor, pos, axis )
 !----------------------------------------------------------------------
    USE kinds,            ONLY : DP
@@ -660,6 +896,52 @@ CONTAINS
   !
 !----------------------------------------------------------------------
   END SUBROUTINE generate_distance
+!----------------------------------------------------------------------
+!----------------------------------------------------------------------
+  FUNCTION erfcvolume(dim,axis,width,spread,alat,omega,at)
+!----------------------------------------------------------------------
+    
+    USE constants,        ONLY : sqrtpi, fpi, pi
+    USE io_global,        ONLY : stdout
+    
+    REAL(DP), PARAMETER :: tol = 1.D-6
+
+    REAL(DP) :: erfcvolume
+
+    INTEGER, INTENT(IN) :: dim, axis
+    REAL(DP), INTENT(IN) :: width, spread, alat, omega
+    REAL(DP), DIMENSION(3,3), INTENT(IN) :: at
+
+    REAL(DP) :: f1 = 0.0_DP , f2 = 0.0_DP
+    REAL(DP) :: t, invt
+
+    IF ( spread .LT. tol .OR. width .LT. tol ) THEN
+       WRITE(stdout,*)'ERROR: wrong parameters of erfc function',spread,width
+       STOP
+    ENDIF
+    t = spread / width
+    invt = width / spread
+    f1 = ( 1.D0 + erf(invt) ) / 2.D0     ! f1 is close to one  for t-->0
+    f2 = exp(-(invt)**2) / 2.D0 / sqrtpi ! f2 is close to zero for t-->0
+    SELECT CASE ( dim )
+    CASE ( 0 )
+       ! zero-dimensional erfc, volume is approx the one of the 
+       ! sphere of radius=width 
+       erfcvolume = fpi / 3.D0 * width**3 * &
+         ( ( 1.D0 + 1.5D0 * t**2 ) * f1 + ( 1.D0 + t**2 ) * t * f2 )
+    CASE ( 1 )
+       ! one-dimensional erfc, volume is approx the one of the 
+       ! cylinder of radius=width and lenght=alat*at(axis,axis) 
+       erfcvolume = pi * width**2 * at(axis,axis) * alat * &
+         ( ( 1.D0 + 0.5D0 * t**2 ) * f1  + t * f2 ) 
+    CASE ( 2 ) 
+       ! two-dimensional erfc, volume is exactly the one of the 
+       ! box, does not depend on spread 
+       erfcvolume = width * omega / at(axis,axis) / alat
+    END SELECT
+    
+!----------------------------------------------------------------------
+  END FUNCTION erfcvolume  
 !----------------------------------------------------------------------
 !=----------------------------------------------------------------------=!
 END MODULE generate_function
