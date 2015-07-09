@@ -727,11 +727,11 @@ ENDIF
        WRITE(stdout,'(5x,a,a)') 'From SCF save directory',&
                          ' (spin polarized work):' 
        !
-       IF (abs(ehomo)>1.e-4) THEN ! insulator => HOMO exists
+       IF (abs(ehomo)<1.e+6) THEN ! insulator => HOMO exists
          WRITE(stdout,'(8x,a,f9.4,a)') 'ehomo [eV]: ', ehomo,&
                         ' (highest occupied level:max of up and down)'
          ef=ehomo
-         IF (abs(elumo)>1.e-4) THEN  ! insulator and LUMO exists 
+         IF (abs(elumo)<1.e+6) THEN  ! insulator and LUMO exists 
             WRITE(stdout,'(8x,a,f9.4,a)') 'elumo [eV]: ', elumo,&
                         ' (lowest occupied level:min of up and down)'
          ELSE
@@ -753,11 +753,11 @@ ENDIF
        WRITE(stdout,'(5x,a)') 'From SCF save directory:'
        !
        ef=ef*rytoev
-       IF (abs(ehomo)>1.e-4) THEN ! insulator => HOMO exists
+       IF (abs(ehomo)<1.e+6) THEN ! insulator => HOMO exists
          WRITE(stdout,'(8x,a,f9.4,a)') 'ehomo [eV]: ', ehomo,&
                                       ' (highest occupied level)'
          ef=ehomo
-         IF (abs(elumo)>1.e-4) THEN  ! insulator and LUMO exists 
+         IF (abs(elumo)<1.e+6) THEN  ! insulator and LUMO exists 
            WRITE(stdout,'(8x,a,f9.4,a)') 'elumo [eV]: ', elumo,&
                                       ' (lowest occupied level)'
          ELSE
@@ -1278,7 +1278,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   DEALLOCATE(aux)
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-  !  Counts the projectors for all the atoms
+  !  Determines the index of the first projector of the absorbing atom
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   !
   ipx_0=0
@@ -1308,7 +1308,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
 
      WRITE(stdout,'(8x,a)')&
            '|-------------------------------------------------------------'
-     WRITE(stdout,'(8x,a ,i3,a,3(f7.4,a),f7.4,a,i3)') '! k-point # ',ik, &
+     WRITE(stdout,'(8x,a ,i5,a,3(f7.4,a),f7.4,a,i3)') '! k-point # ',ik, &
         ':  (', xk(1,ik),', ',xk(2,ik),', ',xk(3,ik),'), ',wk(ik),', ', isk(ik)
      WRITE(stdout,'(8x,a)')&
            '|-------------------------------------------------------------'
@@ -1675,7 +1675,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   DEALLOCATE(psi)
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-  ! Counts the projectors for all atoms
+  !  Determines the index of the first projector of the absorbing atom
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
   ipx_0=0
@@ -1709,7 +1709,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
 
      WRITE(stdout,'(8x,a)')&
            '|-------------------------------------------------------------'
-     WRITE(stdout,'(8x,a ,i3,a,3(f7.4,a))') '! k-point # ',ik, &
+     WRITE(stdout,'(8x,a ,i5,a,3(f7.4,a))') '! k-point # ',ik, &
         ':  (', xk(1,ik),', ',xk(2,ik),', ',xk(3,ik),') '
      WRITE(stdout,'(8x,a ,f7.4,a,i3)') '! weight:',wk(ik), &
         ' spin state:', isk(ik)
