@@ -29,7 +29,9 @@
 #if defined __DFTI
        USE MKL_DFTI ! -- this can be found int he MKL include directory
 #endif
-
+#if defined __FFTW3
+ USE, intrinsic ::  iso_c_binding
+#endif
         IMPLICIT NONE
         SAVE
 
@@ -68,9 +70,10 @@
 
         !  Only FFTW_ESTIMATE is actually used
 
-#define  FFTW_MEASURE  0
-#define  FFTW_ESTIMATE 64
+!#define  FFTW_MEASURE  0
+!#define  FFTW_ESTIMATE 64
 
+#include "fftw3.f03"
 #endif
 
 #if defined __FFTW 
@@ -110,7 +113,7 @@
 
    SUBROUTINE cft_1z(c, nsl, nz, ldz, isign, cout)
 
-#if defined __DFTI
+#if defined __DFTI || __FFTW3
      USE iso_c_binding
 #endif
 
@@ -129,7 +132,7 @@
      COMPLEX (DP) :: c(:), cout(:)
 
      REAL (DP)  :: tscale
-     INTEGER    :: i, err, idir, ip
+     INTEGER    :: i, err, idir, ip, void
      INTEGER, SAVE :: zdims( 3, ndims ) = -1
      INTEGER, SAVE :: icurrent = 1
      LOGICAL :: done
@@ -250,6 +253,11 @@
 
 #elif defined __FFTW3
 
+#if defined __OPENMP
+       CALL dfftw_cleanup_threads() 
+       void = fftw_init_threads()
+       CALL dfftw_plan_with_nthreads(omp_get_max_threads())      
+#endif
 
        IF( fw_planz( icurrent) /= 0 ) CALL dfftw_destroy_plan( fw_planz( icurrent) )
        IF( bw_planz( icurrent) /= 0 ) CALL dfftw_destroy_plan( bw_planz( icurrent) )
@@ -511,7 +519,7 @@
 
    SUBROUTINE cft_2xy(r, nzl, nx, ny, ldx, ldy, isign, pl2ix)
 
-#if defined __DFTI
+#if defined __DFTI || defined __FFTW3
      USE iso_c_binding
 #endif
 
@@ -530,7 +538,7 @@
      INTEGER, INTENT(IN) :: isign, ldx, ldy, nx, ny, nzl
      INTEGER, OPTIONAL, INTENT(IN) :: pl2ix(:)
      COMPLEX (DP) :: r( : )
-     INTEGER :: i, k, j, err, idir, ip, kk
+     INTEGER :: i, k, j, err, idir, ip, kk, void
      REAL(DP) :: tscale
      INTEGER, SAVE :: icurrent = 1
      INTEGER, SAVE :: dims( 4, ndims) = -1
@@ -544,8 +552,8 @@
      INTEGER :: offset
      INTEGER :: nx_t, ny_t, nzl_t, ldx_t, ldy_t
      INTEGER  :: itid, mytid, ntids
-     INTEGER  :: omp_get_thread_num, omp_get_num_threads
-     EXTERNAL :: omp_get_thread_num, omp_get_num_threads
+     INTEGER  :: omp_get_thread_num, omp_get_num_threads,omp_get_max_threads
+     EXTERNAL :: omp_get_thread_num, omp_get_num_threads, omp_get_max_threads
 #endif
 
 #if defined __DFTI
@@ -710,6 +718,12 @@
 #endif
 
 #elif defined __FFTW3
+
+#if defined __OPENMP
+       CALL dfftw_cleanup_threads() 
+       void = fftw_init_threads()
+       CALL dfftw_plan_with_nthreads(omp_get_max_threads())      
+#endif
 
        IF ( ldx /= nx .OR. ldy /= ny ) THEN
           IF( fw_plan(2,icurrent) /= 0 )  CALL dfftw_destroy_plan( fw_plan(2,icurrent) )
