@@ -1018,7 +1018,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
                                  indexplusz, indexminusz, tag, tagp, &
                                  wfg, weight, nw
   USE uspp_param,         ONLY : nvb
-  USE mp,                 ONLY : mp_barrier, mp_bcast, mp_gather, mp_set_displs
+  USE mp,                 ONLY : mp_barrier, mp_bcast, mp_gather, mp_set_displs, mp_sum
   USE mp_global,          ONLY : nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
   USE fft_base,           ONLY : dfftp
   USE parallel_include     
@@ -1039,9 +1039,10 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   INTEGER :: igcount,nw1,jj,nw2, in, kk
   INTEGER, ALLOCATABLE :: i_1(:), j_1(:), k_1(:)
   INTEGER :: ti, tj, tk
-  REAL(DP) ::t1, vt, err1, err2, err3
-  INTEGER :: ti1,tj1,tk1
+  REAL(DP) ::t1, vt
   INTEGER :: me
+  INTEGER :: ng_me          !HK: the number of g vector in proc me
+  INTEGER :: g_start, g_end !HK: ig loop range for proc me
   !
   CALL start_clock('wf_init')
 
@@ -1073,15 +1074,8 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 
   CALL mp_set_displs( ngppp, displs, ntot, nproc_bgrp )
 
-  IF(me.EQ.1) THEN
-     ALLOCATE(bigg(3,ntot))
-     ALLOCATE(bign(3,ntot))
-  ELSE
-     ! NOTE: collected array should be allocated anyway 
-     ! with the right first dimensions, otherwise mp_gather will fail
-     ALLOCATE(bigg(3,1))
-     ALLOCATE(bign(3,1))
-  END IF
+  ALLOCATE(bigg(3,ntot))
+  ALLOCATE(bign(3,ntot))
 
 #else
   ntot=ngw
@@ -1136,6 +1130,17 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   !
   CALL mp_gather( gnn, bign, ngppp, displs, root_bgrp, intra_bgrp_comm )
   !
+  CALL mp_bcast( bigg,  root_bgrp, intra_bgrp_comm ) !parallelize wf_init with MPI (serial could be very slow for large system or high cutoff)
+  CALL mp_bcast( bign,  root_bgrp, intra_bgrp_comm ) !parallelization could be done better with MPI_SCATHER and MPI_GATHER (todo)
+  ng_me = ceiling(dble(ntot/nproc_bgrp))
+  g_start = (me-1)*ng_me + 1
+  g_end   = me*ng_me
+  if (g_start.gt.ntot) g_start = ntot+2
+  if (g_end.gt.ntot)   g_end = ntot+1
+  !
+#else
+  g_start = 1
+  g_end   = ntot
 #endif
 
   IF(me.EQ.1) THEN
@@ -1158,49 +1163,34 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
         IF(gstart.EQ.2) THEN
            indexminusz(1)=-1
         END IF
-!$omp parallel do private(ti,tj,tk,ti1,tj1,tk1,err1,err2,err3)
+!$omp parallel do private(ti,tj,tk)
         DO ig=1,ngw
            ti=(gnn(1,ig)+i_1(inw))
            tj=(gnn(2,ig)+j_1(inw))
            tk=(gnn(3,ig)+k_1(inw))
            DO ii=1,ngw
-              err1=ABS(gnx(1,ii)-ti)
-              err2=ABS(gnx(2,ii)-tj)
-              err3=ABS(gnx(3,ii)-tk)
               IF(gnn(1,ii).EQ.ti.AND.gnn(2,ii).EQ.tj.AND.gnn(3,ii).EQ.tk) THEN
                  indexplusz(ig)=ii
                  GO TO 224
-              ELSE
               END IF
            END DO
            indexplusz(ig)=-1
 224        ti=(-gnn(1,ig)+i_1(inw))
            tj=(-gnn(2,ig)+j_1(inw))
            tk=(-gnn(3,ig)+k_1(inw))
-           ti1=-gnn(1,ig)+i_1(inw)
-           tj1=-gnn(2,ig)+j_1(inw)
-           tk1=-gnn(3,ig)+k_1(inw)
-           IF(ti1.LT.0.OR.(ti1.EQ.0.AND.(tj1.LT.0.OR.(tj1.EQ.0.AND.tk1.LT.0)))) THEN
+           IF(ti.LT.0.OR.(ti.EQ.0.AND.(tj.LT.0.OR.(tj.EQ.0.AND.tk.LT.0)))) THEN
               DO ii=1,ngw
-                 err1=ABS(gnx(1,ii)+ti)
-                 err2=ABS(gnx(2,ii)+tj)
-                 err3=ABS(gnx(3,ii)+tk)
                  IF(gnn(1,ii).EQ.-ti.AND.gnn(2,ii).EQ.-tj.AND.gnn(3,ii).EQ.-tk) THEN
                     indexminusz(ig)=ii
                     GO TO 223
-                 ELSE
                  END IF
               END DO
               indexminusz(ig)=-1
            ELSE
               DO ii=1,ngw
-                 err1=ABS(gnx(1,ii)-ti)
-                 err2=ABS(gnx(2,ii)-tj)
-                 err3=ABS(gnx(3,ii)-tk)
                  IF(gnn(1,ii).EQ.ti.AND.gnn(2,ii).EQ.tj.AND.gnn(3,ii).EQ.tk) THEN
                     indexminusz(ig)=ii
                     GO TO 223
-                 ELSE
                  END IF
               END DO
               indexminusz(ig)=-1
@@ -1216,94 +1206,74 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
            IF(gstart.EQ.2) THEN
               indexminus(1,inw)=-1
            END IF
-!$omp parallel do private(ti,tj,tk,ti1,tj1,tk1,err1,err2,err3)
-           DO ig=1,ntot
-              ti=(bign(1,ig)+i_1(inw))
-              tj=(bign(2,ig)+j_1(inw))
-              tk=(bign(3,ig)+k_1(inw))
-              ti1=bign(1,ig)+i_1(inw)
-              tj1=bign(2,ig)+j_1(inw)
-              tk1=bign(3,ig)+k_1(inw)
-              IF(ti1.LT.0.OR.(ti1.EQ.0.AND.(tj1.LT.0.OR.(tj1.EQ.0.AND.tk1.LT.0)))) THEN
-                 DO ii=1,ntot
-                    err1=ABS(bigg(1,ii)+ti)
-                    err2=ABS(bigg(2,ii)+tj)
-                    err3=ABS(bigg(3,ii)+tk)
-                    !              if(err1.lt.vt.and.err2.lt.vt.and.err3.lt.vt) then
-                    IF(bign(1,ii).EQ.-ti.AND.bign(2,ii).EQ.-tj.AND.bign(3,ii).EQ.-tk) THEN
-                       indexplus(ig,inw)=ii
-                       tagp(ig,inw)=1
-                       !                write (6,*) "Found +", ig,ii,inw 
-                       !               write (6,*) "looking for", -ti,-tj,-tk
-                       GO TO 214
-                    ELSE
-                    END IF
-                 END DO
-                 indexplus(ig,inw)=-1
-                 tagp(ig,inw)=1
-              ELSE
-                 DO ii=1,ntot
-                    err1=ABS(bigg(1,ii)-ti)
-                    err2=ABS(bigg(2,ii)-tj)
-                    err3=ABS(bigg(3,ii)-tk)
-                    IF(bign(1,ii).EQ.ti.AND.bign(2,ii).EQ.tj.AND.bign(3,ii).EQ.tk) THEN
-                       indexplus(ig,inw)=ii
-                       tagp(ig,inw)=-1
-                       GO TO 214
-                    ELSE
-                    END IF
-                 END DO
-                 indexplus(ig,inw)=-1
-                 tagp(ig,inw)=-1
-              END IF
-214           ti=(-bign(1,ig)+i_1(inw))
-              tj=(-bign(2,ig)+j_1(inw))
-              tk=(-bign(3,ig)+k_1(inw))
-              ti1=-bign(1,ig)+i_1(inw)
-              tj1=-bign(2,ig)+j_1(inw)
-              tk1=-bign(3,ig)+k_1(inw)
-              IF(ti1.LT.0.OR.(ti1.EQ.0.AND.(tj1.LT.0.OR.(tj1.EQ.0.AND.tk1.LT.0)))) THEN
-                 DO ii=1,ntot
-                    err1=ABS(bigg(1,ii)+ti)
-                    err2=ABS(bigg(2,ii)+tj)
-                    err3=ABS(bigg(3,ii)+tk)
-                    IF(bign(1,ii).EQ.-ti.AND.bign(2,ii).EQ.-tj.AND.bign(3,ii).EQ.-tk) THEN
-                       indexminus(ig,inw)=ii
-                       tag(ig,inw)=1
-                       GO TO 213
-                    ELSE
-                    END IF
-                 END DO
-                 indexminus(ig,inw)=-1
-                 tag(ig,inw)=1
-              ELSE 
-                 DO ii=1,ntot
-                    err1=ABS(bigg(1,ii)-ti)
-                    err2=ABS(bigg(2,ii)-tj)
-                    err3=ABS(bigg(3,ii)-tk)
-                    IF(bign(1,ii).EQ.ti.AND.bign(2,ii).EQ.tj.AND.bign(3,ii).EQ.tk) THEN
-                       indexminus(ig,inw)=ii
-                       tag(ig,inw)=-1
-                       GO TO 213
-                    ELSE
-                    END IF
-                 END DO
-                 indexminus(ig,inw)=-1
-                 tag(ig,inw)=-1
-              END IF
-213           CONTINUE
-           END DO
-!$omp end parallel do 
-           WRITE( stdout, * ) "Translation", inw, "for", ntot, "G vectors"
 #ifdef __MPI
         END IF
 #endif
+!$omp parallel do private(ti,tj,tk)
+        DO ig=g_start,g_end
+           ti=(bign(1,ig)+i_1(inw))
+           tj=(bign(2,ig)+j_1(inw))
+           tk=(bign(3,ig)+k_1(inw))
+           IF(ti.LT.0.OR.(ti.EQ.0.AND.(tj.LT.0.OR.(tj.EQ.0.AND.tk.LT.0)))) THEN
+              DO ii=1,ntot
+                 IF(bign(1,ii).EQ.-ti.AND.bign(2,ii).EQ.-tj.AND.bign(3,ii).EQ.-tk) THEN
+                    indexplus(ig,inw)=ii
+                    tagp(ig,inw)=1
+                    GO TO 214
+                 END IF
+              END DO
+              indexplus(ig,inw)=-1
+              tagp(ig,inw)=1
+           ELSE
+              DO ii=1,ntot
+                 IF(bign(1,ii).EQ.ti.AND.bign(2,ii).EQ.tj.AND.bign(3,ii).EQ.tk) THEN
+                    indexplus(ig,inw)=ii
+                    tagp(ig,inw)=-1
+                    GO TO 214
+                 END IF
+              END DO
+              indexplus(ig,inw)=-1
+              tagp(ig,inw)=-1
+           END IF
+214        ti=-bign(1,ig)+i_1(inw)
+           tj=-bign(2,ig)+j_1(inw)
+           tk=-bign(3,ig)+k_1(inw)
+           IF(ti.LT.0.OR.(ti.EQ.0.AND.(tj.LT.0.OR.(tj.EQ.0.AND.tk.LT.0)))) THEN
+              DO ii=1,ntot
+                 IF(bign(1,ii).EQ.-ti.AND.bign(2,ii).EQ.-tj.AND.bign(3,ii).EQ.-tk) THEN
+                    indexminus(ig,inw)=ii
+                    tag(ig,inw)=1
+                    GO TO 213
+                 END IF
+              END DO
+              indexminus(ig,inw)=-1
+              tag(ig,inw)=1
+           ELSE 
+              DO ii=1,ntot
+                 IF(bign(1,ii).EQ.ti.AND.bign(2,ii).EQ.tj.AND.bign(3,ii).EQ.tk) THEN
+                    indexminus(ig,inw)=ii
+                    tag(ig,inw)=-1
+                    GO TO 213
+                 END IF
+              END DO
+              indexminus(ig,inw)=-1
+              tag(ig,inw)=-1
+           END IF
+213        CONTINUE
+        END DO
+!$omp end parallel do 
+        WRITE( stdout, * ) "Translation", inw, "for", ntot, "G vectors"
      END IF
   END DO
 
 #ifdef __MPI
 
   CALL mp_barrier( intra_bgrp_comm )
+  !
+  CALL mp_sum( indexplus,  intra_bgrp_comm )
+  CALL mp_sum( indexminus, intra_bgrp_comm )
+  CALL mp_sum( tag,        intra_bgrp_comm )
+  CALL mp_sum( tagp,       intra_bgrp_comm )
   !
   CALL mp_bcast( indexplus,  root_bgrp, intra_bgrp_comm )
   CALL mp_bcast( indexminus, root_bgrp, intra_bgrp_comm )
@@ -1313,9 +1283,6 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 #endif
   DEALLOCATE(bigg)
   DEALLOCATE(bign)
-#ifdef __MPI
-
-#endif
   DEALLOCATE(i_1,j_1,k_1)
 
   CALL stop_clock('wf_init')
