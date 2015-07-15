@@ -236,7 +236,7 @@ SUBROUTINE convert_fhi (upf)
   upf%rel = 'scalar'  ! just guessing
   IF (nint(Zatom) > 0) THEN
      upf%psd = atom_name(nint(Zatom))
-     IF (nint(Zatom) > 18) upf%rel = 'no' ! just guessing
+     IF (nint(Zatom) < 18) upf%rel = 'no' ! just guessing
   ELSE
      PRINT '("Atom name > ",$)'
      READ (5,'(a)') upf%psd
