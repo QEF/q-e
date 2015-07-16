@@ -67,6 +67,7 @@ SUBROUTINE esm_ggen_2d()
   !
   n1xh = dfftp%nr1x/2
   n2xh = dfftp%nr2x/2
+  IF ( ALLOCATED( do_mill_2d ) ) DEALLOCATE( do_mill_2d )
   ALLOCATE( do_mill_2d(-n1xh:n1xh,-n2xh:n2xh) )
   do_mill_2d(:,:) = .false.
   
@@ -78,8 +79,9 @@ SUBROUTINE esm_ggen_2d()
   ngm_2d = COUNT( do_mill_2d )
 !*** do_mill_2d(h,k) = .true. means there is an h,k vector on this proc
 !*** ngm_2d = total number of vectors (h,k) on this proc, excluding duplicates
-!*** with different l values
-  
+!*** with different l values  
+  IF ( ALLOCATED( mill_2d ) ) DEALLOCATE( mill_2d )
+  IF ( ALLOCATED( imill_2d ) ) DEALLOCATE( imill_2d )
   ALLOCATE( mill_2d(2,ngm_2d), imill_2d(-n1xh:n1xh,-n2xh:n2xh) )
   mill_2d(:,:) = 0
   imill_2d(:,:) = 0
@@ -102,8 +104,10 @@ SUBROUTINE esm_ggen_2d()
 ! Workaround for initialization of "planes" fw_planz and bw_planz in cft_1z
 ! These planes are shared among OpenMP threads. We need to make a plane outside
 ! OpenMP parallelization to avoid unexpected destroy and generation of planes
-
-  ALLOCATE(vg2_in(dfftp%nr3x),vg2(dfftp%nr3x))
+  IF ( ALLOCATED( vg2_in ) ) DEALLOCATE( vg2_in )
+  ALLOCATE(vg2_in(dfftp%nr3x))
+  IF ( ALLOCATED(vg2) ) DEALLOCATE( vg2 )
+  ALLOCATE(vg2(dfftp%nr3x))
   vg2_in(:) = 0d0
   vg2(:) = 0d0
   CALL cft_1z(vg2_in,1,dfftp%nr3x,dfftp%nr3x,-1,vg2)
@@ -143,6 +147,7 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
   complex(DP)              :: xc, ci, tmp, tmp1, tmp2, tmp3, tmp4, f1, f2, f3, f4, &
                               a0, a1, a2, a3, c_r, c_l, s_r, s_l, rg3
 
+  if ( allocated(rhog3) ) deallocate(rhog3)
   allocate(rhog3(dfftp%nr3,ngm_2d))
 !
 ! Map to FFT mesh (dfftp%nr3,ngm_2d)
@@ -167,6 +172,7 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
   enddo
 ! End mapping
 !
+  if ( allocated( vg3) ) deallocate(vg3)
   allocate(vg3(dfftp%nr3,ngm_2d))
   vg3(:,:)=(0.d0,0.d0)
   L=at(3,3)*alat
@@ -177,7 +183,10 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
 !****For gp!=0 case ********************
 !$omp parallel private( k1, k2, gp2, ipol, t, gp, tmp1, tmp2, vg2, iz, kn, &
 !$omp                   cc, ss, tmp, vg2_in, k3, z, rg3 )
-  allocate(vg2(dfftp%nr3),vg2_in(dfftp%nr3))
+  if ( allocated( vg2_in ) ) deallocate( vg2_in )
+  allocate(vg2_in(dfftp%nr3))
+  if ( allocated(vg2) ) deallocate( vg2 )
+  allocate(vg2(dfftp%nr3))
 !$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
@@ -242,7 +251,11 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
 !****For gp=0 case ********************
   ng_2d = imill_2d(0,0)
   if( ng_2d > 0 ) then
-     allocate(vg2(dfftp%nr3),vg2_in(dfftp%nr3))
+     if ( allocated( vg2_in ) ) deallocate( vg2_in )
+     allocate(vg2_in(dfftp%nr3))
+     if ( allocated(vg2) ) deallocate( vg2 )
+     allocate(vg2(dfftp%nr3))
+ 
      tmp1=(0.d0,0.d0); tmp2=(0.d0,0.d0); tmp3=(0.d0,0.d0); tmp4=(0.d0,0.d0)
      !for smoothing
      f1=(0.d0,0.d0); f2=(0.d0,0.d0); f3=(0.d0,0.d0); f4=(0.d0,0.d0)
@@ -639,7 +652,10 @@ subroutine esm_local (aux)
   z0=L/2.d0
   z1=z0+abs(esm_w)
 
-  allocate(vloc3(dfftp%nr3,ngm_2d),bgauss(nat,1))
+  if ( allocated( vloc3 )) deallocate( vloc3 )
+  allocate(vloc3(dfftp%nr3,ngm_2d))
+  if ( allocated( bgauss)) deallocate( bgauss )
+  allocate(bgauss(nat,1))
   do it=1,nat
      bgauss(it,1)=1.d0
   enddo
@@ -651,7 +667,10 @@ subroutine esm_local (aux)
 !$omp parallel private( k1, k2, gp2, gp, vg2, it, tt, pp, cc, ss, cs, zp, iz, &
 !$omp                   k3, z, cc1, ig, tmp, arg11, arg12, arg21, arg22, t1, t2, &
 !$omp                   cc2, vg2_in )
-  allocate(vg2(dfftp%nr3),vg2_in(dfftp%nr3))
+  if ( allocated( vg2_in ) ) deallocate( vg2_in )
+  allocate(vg2_in(dfftp%nr3))
+  if ( allocated(vg2) ) deallocate( vg2 )
+  allocate(vg2(dfftp%nr3))
 !$omp do
   do ng_2d = 1, ngm_2d
      k1 = mill_2d(1,ng_2d)
@@ -712,7 +731,10 @@ subroutine esm_local (aux)
   
   ng_2d=imill_2d(0,0)
   if( ng_2d > 0 ) then
-     allocate(vg2(dfftp%nr3),vg2_in(dfftp%nr3))
+     if ( allocated( vg2_in ) ) deallocate( vg2_in )
+     allocate(vg2_in(dfftp%nr3))
+     if ( allocated(vg2) ) deallocate( vg2 )
+     allocate(vg2(dfftp%nr3))
 
      vg2(1:dfftp%nr3)=(0.d0,0.d0)
 ! for smoothing
@@ -1100,6 +1122,7 @@ subroutine esm_force_lc ( aux, forcelc )
   argmax=0.9*log(huge(1.d0))
 
 ! Map to FULL FFT mesh (dfftp%nr1x,dfftp%nr2x,dfftp%nr3)
+  if ( allocated( rhog3 )) deallocate( rhog3)
   allocate(rhog3(dfftp%nr3,ngm_2d))
   rhog3(:,:)=(0.d0,0.d0)
   do ng=1,ngm
@@ -1120,7 +1143,10 @@ subroutine esm_force_lc ( aux, forcelc )
   z0=L/2.d0
   z1=z0+abs(esm_w)
 
-  allocate(bgauss(nat,1),for_g(3,nat))
+  if ( allocated( bgauss )) deallocate( bgauss )
+  allocate(bgauss(nat,1))
+  if ( allocated( for_g )) deallocate( for_g )
+  allocate(for_g(3,nat))
   do it=1,nat
      bgauss(it,1)=1.d0
   enddo
@@ -1132,6 +1158,11 @@ subroutine esm_force_lc ( aux, forcelc )
 !$omp                   k3, z, cx1, cy1, cz1, tmp, arg11, arg12, arg21, arg22, &
 !$omp                   t1, t2, cx2, cy2, cz2, vg2_fx, vg2_fy, vg2_fz, vg2, &
 !$omp                   r1, r2, fx1, fy1, fz1, fx2, fy2, fz2, for )
+  if ( allocated( for )) deallocate( for )
+  if ( allocated( vg2 )) deallocate( vg2 )
+  if ( allocated( vg2_fx )) deallocate( vg2_fx )
+  if ( allocated( vg2_fy )) deallocate( vg2_fy )
+  if ( allocated( vg2_fz )) deallocate( vg2_fz )
   allocate(for(3,nat),vg2(dfftp%nr3x),vg2_fx(dfftp%nr3x), &
        vg2_fy(dfftp%nr3x),vg2_fz(dfftp%nr3x))
   for(:,:)=0.d0
@@ -1242,6 +1273,8 @@ subroutine esm_force_lc ( aux, forcelc )
 !***** for gp==0********
   ng_2d = imill_2d(0,0)
   if( ng_2d > 0 ) then
+     if ( allocated( vg2 )) deallocate( vg2 )
+     if ( allocated( vg2_fz )) deallocate( vg2_fz )
      allocate(vg2(dfftp%nr3x),vg2_fz(dfftp%nr3x))
 
      vg2_fz(:)=(0.d0,0.d0)
@@ -1324,10 +1357,10 @@ SUBROUTINE esm_printpot ()
   REAL(DP), ALLOCATABLE   :: work1(:),work2(:,:),work3(:), work4(:,:)
   INTEGER                 :: ix,iy,iz,izz,i,k3
 
-        allocate(work1(dfftp%nnr))
-        allocate(work2(dfftp%nnr,nspin))
-        allocate(work3(dfftp%nnr))
-        allocate(work4(5,dfftp%nr3))
+        if ( .not. allocated(work1) )  allocate(work1(dfftp%nnr))
+        if ( .not. allocated(work2) )  allocate(work2(dfftp%nnr,nspin))
+        if ( .not. allocated(work3) )  allocate(work3(dfftp%nnr))
+        if ( .not. allocated(work4) )  allocate(work4(5,dfftp%nr3))
         work1(:)=0.d0; work2(:,:)=0.d0; work3(:)=0.d0; work4(:,:)=0.d0
         L=alat*at(3,3)
         area=(at(1,1)*at(2,2)-at(2,1)*at(1,2))*alat**2
