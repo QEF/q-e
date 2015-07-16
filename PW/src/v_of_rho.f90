@@ -1190,6 +1190,8 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
   !
   DEALLOCATE(gaux)
   !
+  DEALLOCATE(rhoaux)
+  !
   RETURN
   !
 END SUBROUTINE gradv_h_of_rho_r
