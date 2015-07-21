@@ -1798,7 +1798,7 @@ SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core )
   RETURN
 
 101 FORMAT ( /, 5X, "--------------------------------------------", &
-             /, 5X, "spin    Re Vxc(G=0) [eV]    Im Vxc(G=0) [eV]", &
+             /, 5X, "spin    Re Vxc(G=0) (eV)    Im Vxc(G=0) (eV)", &
              /, 5X, "--------------------------------------------" )
 102 FORMAT ( 5X, I1, 3X, 2F20.15 )
 103 FORMAT ( 5X, "--------------------------------------------", / )
