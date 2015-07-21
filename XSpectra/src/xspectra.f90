@@ -131,7 +131,11 @@ PROGRAM X_Spectra
        wf_collect,&
        U_projection_type,&
        time_limit,&
-       restart_mode   
+       restart_mode,&
+       edge,   &            ! 'K', 'L2' or 'L3'   
+       lplus,   &            !  if true only the l+1 transition is calculated for L23
+       lminus            !  if true only the l-1 transition is calculated for L23
+    
 
   namelist / plot / &
        xnepoint,&
@@ -202,6 +206,10 @@ PROGRAM X_Spectra
   U_projection_type='atomic'
   restart_mode='from_scratch'
   time_limit=1.d8
+  edge='K'
+  lplus=.false.
+  lminus=.false.
+
  
   ! ... Namelist plot
   xnepoint=100
@@ -297,6 +305,9 @@ PROGRAM X_Spectra
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
   CALL mp_bcast( calculation, ionode_id, world_comm )
+  CALL mp_bcast( edge, ionode_id, world_comm )
+  CALL mp_bcast( lplus, ionode_id, world_comm )
+  CALL mp_bcast( lminus, ionode_id, world_comm )
   CALL mp_bcast( tmp_dir, ionode_id, world_comm ) 
   CALL mp_bcast( prefix,  ionode_id, world_comm )
   CALL mp_bcast( outdir,  ionode_id, world_comm ) 
