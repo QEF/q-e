@@ -43,6 +43,10 @@ module xspectra
         xread_wf,   &         ! key word for reading wavefunctions
         xcoordcrys           ! kew word for epsilon and k in crystalline k.
 
+   logical :: lplus,      &         ! if true only the l+1 transition is calculated
+              lminus              ! if true only the l-1 transition is calculated
+             
+   character(LEN=16) :: edge      ! can be 'K', 'L1', 'L2' , 'L3' 
    character(LEN=256) :: x_save_file
    character(LEN=16) :: U_projection_type
 
