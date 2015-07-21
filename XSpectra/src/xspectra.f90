@@ -188,8 +188,9 @@ PROGRAM X_Spectra
   !   xkvec(i)=0.d0
   !   xepsilon(i)=0.d0
   !ENDDO
-  xkvec(1)=1.d0       ! <MCB> Shouldn't we start from orthogonal k and epsilon ? </MCB>
-  xkvec(2:3)=0.d0
+  xkvec(1)=0.d0       
+  xkvec(2)=1.d0
+  xkvec(3)=0.d0
   xepsilon(1)=1.d0
   xepsilon(2:3)=0.d0
   !ef_r=0.d0
