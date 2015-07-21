@@ -10,7 +10,7 @@ module xspectra
   use kinds, only : DP
   implicit none
   SAVE
-   real(kind=DP) :: &
+  real(kind=DP) :: &
         xgamma,     &     ! xanes broadening parameter 
         xerror,     &     ! error between 2 successive spectra
         xemax,      &     ! max energy of the xanes window
@@ -30,6 +30,7 @@ module xspectra
    real(kind=DP), allocatable :: xanes_dip(:)      ! The  xanes mat. ele (dipole)
    real(kind=DP), allocatable :: xanes_qua(:)      ! The  xanes mat. ele (quad)
 
+
    integer :: &
         xnepoint, &        ! # of energy points in the xanes window
         xniter,   &        ! 
@@ -45,8 +46,10 @@ module xspectra
 
    logical :: lplus,      &         ! if true only the l+1 transition is calculated
               lminus              ! if true only the l-1 transition is calculated
-             
+
+   integer, dimension(2) :: nl_init ! determine  n and l quantum numbers for initial  state.             
    character(LEN=16) :: edge      ! can be 'K', 'L1', 'L2' , 'L3' 
+ 
    character(LEN=256) :: x_save_file
    character(LEN=16) :: U_projection_type
 
