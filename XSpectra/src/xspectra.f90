@@ -69,6 +69,7 @@ PROGRAM X_Spectra
                                  gamma_lines, gamma_tab, gamma_points, &
                                  gamma_mode, gamma_file
   USE xspectra_paw_variables, ONLY : xspectra_paw_nhm, init_xspectra_paw_nhm
+  USE edge_energy, ONLY: getE
   !</CG>
 
   IMPLICIT NONE 
@@ -87,7 +88,7 @@ PROGRAM X_Spectra
   REAL (DP) :: rc(ntypx,0:lmaxx),r_paw(0:lmaxx)
   REAL (DP) :: core_wfn(ndmx)
   REAL (DP) :: ehomo, elumo, middle_gap ! in eV 
-  REAL (DP) :: e1s, e1s_ry, mygetK
+  REAL (DP) :: e_core, e_core_ryd
   REAL (DP), ALLOCATABLE :: a(:,:,:),b(:,:,:),xnorm(:,:)      !lanczos vectors
   !REAL (DP), EXTERNAL   :: efermig,efermit
  
@@ -933,19 +934,19 @@ ENDIF
 
         save_file_version = 2 ! adds ef after core_energy
 
-        IF(nl_init(2).EQ.0.AND.xang_mom == 1) THEN
+        IF(nl_init(2).EQ.0.AND.xang_mom .eq. 1) THEN
 
            save_file_kind='xanes_dipole'
            CALL xanes_dipole(a,b,ncalcv,xnorm,core_wfn,&
                              paw_iltonhb,terminator,verbosity)
 
-        ELSEIF(nl_init(2).EQ.0.AND.xang_mom == 2) THEN
+        ELSEIF(nl_init(2).EQ.0.AND.xang_mom .eq. 2) THEN
 
            save_file_kind='xanes_quadrupole'
            CALL xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,&
                                  paw_iltonhb,terminator,verbosity)
 
-        ELSEIF(nl_init(2).EQ.1) then
+        ELSEIF(nl_init(2).EQ.1.AND.xang_mom .eq. 1) then
            call xanes_dipole_general_edge(a,b,ncalcv,nl_init,xnorm,core_wfn,paw_iltonhb,terminator)
         ENDIF
         !
@@ -968,7 +969,7 @@ ENDIF
 
         CALL read_save_file(a,b,xnorm,ncalcv,x_save_file,core_energy)
 
-        IF (save_file_version == 1 .AND. abs(xe0-xe0_default)<1.e-3) THEN
+        IF (save_file_version .eq. 1 .AND. abs(xe0-xe0_default)<1.e-3) THEN
           WRITE(stdout,'(5x,3a)') &
             "STOP: the variable 'xe0' must be assigned in ", &
              'input file', ' (since save_file_version = 1)'
@@ -984,7 +985,7 @@ ENDIF
         WRITE(stdout,'(5x,a)') &
          'The spectrum is calculated using the following parameters:'
         !
-        e1s = mygetK(upf(xiabs)%psd)
+        e_core = getE(upf(xiabs)%psd,edge)
 
      ELSE
         WRITE(stdout,1000) ! return+line
@@ -993,11 +994,11 @@ ENDIF
         WRITE(stdout,1001) !line+return
         WRITE(stdout,'(5x,a)') 'Using the following parameters:'
         !
-        e1s = core_energy
+        e_core = core_energy
         !
      ENDIF
 
-     e1s_ry = e1s/rytoev
+     e_core_ryd = e_core/rytoev
 
      IF (abs(xe0-xe0_default)<1.d-3) THEN ! xe0 not in input_file
         write(stdout,'(8x,a,f9.4,a)') 'energy-zero of the spectrum [eV]: ',&
@@ -1034,14 +1035,17 @@ ENDIF
            WRITE(stdout,'(8x,a)') ' -> finally, constant up to xemax'
         ENDIF
      ENDIF
-     WRITE(stdout,'(8x,"Core level energy [eV]:",1x,g11.4)') -e1s
+     WRITE(stdout,'(8x,"Core level energy [eV]:",1x,g11.4)') -e_core
      WRITE(stdout,'(8x,a,/)') &
      ' (from electron binding energy of neutral atoms in X-ray data booklet)'
      
      IF(xang_mom.EQ.1) THEN
-        CALL plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry)
+        CALL plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e_core_ryd,1)
+        if(two_edges) CALL plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e_core_ryd,2)
      ELSEIF(xang_mom.EQ.2) THEN
-        CALL plot_xanes_quadrupole(a,b,xnorm,ncalcv,terminator,e1s_ry)
+        CALL plot_xanes_quadrupole(a,b,xnorm,ncalcv,terminator,e_core_ryd)
+     ELSEIF(nl_init(2).eq.1) then
+        
      ENDIF
      !
      WRITE(stdout,'(5x,"Cross-section successfully written in ",a,/)') &
@@ -2494,16 +2498,16 @@ END SUBROUTINE read_core_abs
 
 !----------------------------------------------------------------------------
 !----------------------------------------------------------------------------
-SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry)
+SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry,ispectra)
   !--------------------------------------------------------------------------
-  ! Calculates and plots the electric-dipole absorption cross section 
+  ! Calculates and plots the electric-dipole absorption K-edge cross section 
   ! as a continued fraction,
   ! from the a_i and b_i coefficients calculated for each k-point 
   !--------------------------------------------------------------------------
   USE kinds,      ONLY: DP
   USE constants,  ONLY: rytoev, fpi
-  USE xspectra,   ONLY: xang_mom, xemax, xemin, xiabs, xnepoint,&
-                        xgamma, xonly_plot, xnitermax, xe0_ry
+  USE xspectra,   ONLY: xang_mom, xemax, xemin, xiabs, xnepoint,n_lanczos, &
+                        xgamma, xonly_plot, xnitermax, xe0_ry,edge, two_edges
   !*apsi  USE uspp_param, ONLY : psd  !psd(ntypx) label for the atoms 
   USE klist,      ONLY: nkstot, & ! total number of k-points
                         nks,    & ! number of k-points per pool
@@ -2526,15 +2530,15 @@ SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry)
                            b(xnitermax,1,nks),&
                            xnorm(1,nks)
   REAL(dp), INTENT (in) :: e1s_ry 
-  INTEGER,  INTENT (in) :: ncalcv(1,nks)
+  INTEGER,  INTENT (in) :: ncalcv(1,nks), ispectra
   LOGICAL,  INTENT (in) :: terminator
   
   !... Local variables
   INTEGER  :: i,ik,n,icoord           !loops
-  INTEGER  :: lmax
-  INTEGER  :: iestart
+  INTEGER  :: lmax, lanczos_i, lanczos_f
+  INTEGER  :: iestart, i_lanczos
   REAL(dp) :: alpha2
-  REAL(dp) :: energy,de,mod_xgamma,xemax_ry,xemin_ry,xgamma_ry
+  REAL(dp) :: energy,de,mod_xgamma,xemax_ryd,xemin_ryd,xgamma_ryd
   REAL(dp) :: e0 ! in Ry
   REAL(dp) :: tmp_var
   REAL(dp) :: Intensity_coord(1,xnepoint,nspin)
@@ -2557,45 +2561,44 @@ SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry)
   !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
   IF( ionode ) THEN
+     if(.not.two_edges.or.(two_edges.and.ispectra.eq.1)) then
+        OPEN (unit=277,file='xanes.dat',form='formatted',status='unknown')
+        REWIND(277) 
+        !... writes input parameters in file 277
+        WRITE(277,"('# Final state angular momentum:',1x,i3)") xang_mom
 
-     OPEN (unit=277,file='xanes.dat',form='formatted',status='unknown')
-
-     REWIND(277) ! to be at the initial point of file 277
-     !... writes input parameters in file 277
-     WRITE(277,"('# Final state angular momentum:',1x,i3)") xang_mom
-
-     IF (TRIM(ADJUSTL(gamma_mode)).EQ.'constant') THEN
-        WRITE(277,"('# Broadening parameter (in eV):',1x,f8.3)") xgamma
-     ELSE 
-        WRITE(277,'("# Energy-dependent broadening parameter:")')
-        IF (TRIM(ADJUSTL(gamma_mode)).EQ.'file') THEN
-           WRITE(277,"('# -> using gamma_file:',1x,a50)") gamma_file
-        ELSEIF (TRIM(ADJUSTL(gamma_mode)).EQ.'variable') THEN
-           WRITE(277,"('# -> first, constant up to point (',f5.2,a1,f5.2,a)") &
-                 gamma_energy(1),',',gamma_value(1),') [eV]'
-           WRITE(277,"('# -> then, linear up to point (',f5.2,a1,f5.2,a)") &
-                 gamma_energy(2),',',gamma_value(2),') [eV]'
-           WRITE(277,"('# -> finally, constant up to xemax')")
+        IF (TRIM(ADJUSTL(gamma_mode)).EQ.'constant') THEN
+           WRITE(277,"('# Broadening parameter (in eV):',1x,f8.3)") xgamma
+        ELSE 
+           WRITE(277,'("# Energy-dependent broadening parameter:")')
+           IF (TRIM(ADJUSTL(gamma_mode)).EQ.'file') THEN
+              WRITE(277,"('# -> using gamma_file:',1x,a50)") gamma_file
+           ELSEIF (TRIM(ADJUSTL(gamma_mode)).EQ.'variable') THEN
+              WRITE(277,"('# -> first, constant up to point (',f5.2,a1,f5.2,a)") &
+                   gamma_energy(1),',',gamma_value(1),') [eV]'
+              WRITE(277,"('# -> then, linear up to point (',f5.2,a1,f5.2,a)") &
+                   gamma_energy(2),',',gamma_value(2),') [eV]'
+              WRITE(277,"('# -> finally, constant up to xemax')")
+           ENDIF
         ENDIF
-     ENDIF
 
-     WRITE(277,"('# Absorbing atom type (xiabs):',i4)") xiabs
+        WRITE(277,"('# Absorbing atom type (xiabs):',i4)") xiabs
 
-     IF(nspin.GT.1) THEN
-        WRITE(277,"('# Energy (eV)   sigma_tot   sigma_up    sigma_down ')")
-     ELSE
-        WRITE(277,"('# Energy (eV)   sigma')")
-     ENDIF
-
+        IF(nspin.GT.1) THEN
+           WRITE(277,"('# Energy (eV)   sigma_tot   sigma_up    sigma_down ')")
+        ELSE
+           WRITE(277,"('# Energy (eV)   sigma')")
+        ENDIF
+     endif
   ENDIF
 
   !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   !... Converts in Rydberg most of the relevant quantities
   !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-  xemax_ry = xemax/rytoeV + e0
-  xemin_ry = xemin/rytoeV + e0
-  xgamma_ry= xgamma/rytoeV
+  xemax_ryd = xemax/rytoeV + e0
+  xemin_ryd = xemin/rytoeV + e0
+  xgamma_ryd= xgamma/rytoeV
 
   !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   !... Calculates the continued fraction
@@ -2603,178 +2606,344 @@ SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry)
 
   Intensity_coord(:,:,:) = 0.d0
 
-  de = (xemax_ry-xemin_ry) / REAL(xnepoint-1)
+  de = (xemax_ryd-xemin_ryd) / REAL(xnepoint-1)
 
-  !... Considers the two cases of constant and non-constant broadening parameter
-  !... Case 1: gamma is constant
+!<OB>
+  if( .not. two_edges ) then
+     lanczos_i = 1
+     lanczos_f = n_lanczos
+  else
+     if( ispectra == 1 ) then
+        lanczos_i = 1
+        if( edge == 'L23' ) then
+           lanczos_f = 2
+        else if( edge == 'M45' ) then
+           lanczos_f = 4
+        else
+           write(stdout,*) 'Output not yet programmed...'
+        end if
+     else
+        lanczos_f = n_lanczos
+        if( edge == 'L23' ) then
+           lanczos_i = 3
+        else if( edge == 'M45' ) then
+           lanczos_i = 5
+        else
+           write(stdout,*) 'Output not yet programmed...'
+        end if
+     end if
+  end if
+  !<OB>
+  
+
+
   IF (TRIM(gamma_mode).EQ.'constant') THEN
 
      IF(cut_occ_states) THEN
-
         ALLOCATE(memu(cut_nmemu,2))
         ALLOCATE(meml(cut_nmeml,2))
-        iestart = (e0-xemin_ry)/de
+        iestart=(e0-xemin_ryd)/de
+        do i_lanczos = lanczos_i, lanczos_f
+          DO ik=1,nks
 
-        DO ik = 1, nks
-           first = .true.  ! to erase the memory of paste_fermi
-           !<CG>
-           t1 = e0 - desmooth
-           f1 = paste_fermi(t1, e0, a(1,1,ik), b(1,1,ik),&
-                            xgamma_ry, ncalcv(1,ik)-1,   &
-                            terminator, first)
-           df1 = paste_fermi(t1-de, e0, a(1,1,ik), b(1,1,ik),&
-                             xgamma_ry, ncalcv(1,ik)-1,      &
-                             terminator, first)
-           df1 = (f1-df1)/de
-           t2 = e0 + desmooth
-           f2 = continued_fraction(a(1,1,ik), b(1,1,ik),         &
-                                   t2, xgamma_ry, ncalcv(1,ik)-1,&
-                                   terminator)                   &
-                + paste_fermi(t2, e0, a(1,1,ik), b(1,1,ik),      &
-                              xgamma_ry, ncalcv(1,ik)-1,         &
-                              terminator, first)
-           df2 = continued_fraction(a(1,1,ik), b(1,1,ik),             &
-                                    t2+de, xgamma_ry, ncalcv(1,ik)-1, &
-                                    terminator)                       &
-                + paste_fermi(t2+de, e0, a(1,1,ik), b(1,1,ik),        &
-                              xgamma_ry, ncalcv(1,ik)-1,              &
-                              terminator, first)
-           df2 = (df2-f2)/de
-
-           !... Calculates interpolation polynome
-           CALL determine_polycut(t1,t2,f1,f2,df1,df2,poly) 
-
-           DO n = 1, xnepoint
-              energy = xemin_ry + de*(n-1)
-              IF ((energy-e0<desmooth).AND.(energy-e0>-desmooth)) THEN  
-                 ! interpolation 
-                 tmp_var = poly(1) +           &
-                           poly(2)*energy +    &
-                           poly(3)*energy**2 + &
-                           poly(4)*energy**3
-                 tmp_var = tmp_var*xnorm(1,ik)*xnorm(1,ik)
-                 !</CG>
-              ELSE
-                 tmp_var = 0.d0
-                 IF (n > iestart) &
-                   tmp_var = continued_fraction(a(1,1,ik), b(1,1,ik),       &
-                                                energy, xgamma_ry,          &
-                                                ncalcv(1,ik)-1, terminator) &
-                              *xnorm(1,ik)*xnorm(1,ik)
-                 tmp_var = tmp_var +                                     &
-                           paste_fermi(energy, e0, a(1,1,ik), b(1,1,ik), &
-                                        xgamma_ry, ncalcv(1,ik)-1,       &
-                                        terminator, first)               &
-                           *xnorm(1,ik)*xnorm(1,ik)
-              ENDIF
-              Intensity_coord(1,n,isk(ik)) = Intensity_coord(1,n,isk(ik)) &
-                                             + tmp_var*wk(ik)
-           ENDDO
-
-        ENDDO
-
+             first=.true.  ! to erase the memory of paste_fermi
+             !<CG>
+             t1=e0-desmooth
+             f1=paste_fermi(t1,e0,a(1,i_lanczos,ik),b(1,i_lanczos,ik),xgamma_ryd,ncalcv(i_lanczos,ik)-1,terminator, first)
+             df1=paste_fermi(t1-de,e0,a(1,i_lanczos,ik),b(1,i_lanczos,ik),xgamma_ryd,ncalcv(i_lanczos,ik)-1,terminator, first)
+             df1=(f1-df1)/de
+             t2=e0+desmooth
+             f2=continued_fraction(a(1,i_lanczos,ik),b(1,i_lanczos,ik),t2,xgamma_ryd,ncalcv(i_lanczos,ik)-1,terminator)&
+                  +paste_fermi(t2,e0,a(1,i_lanczos,ik),b(1,i_lanczos,ik),xgamma_ryd,ncalcv(i_lanczos,ik)-1,terminator, first)
+             df2=continued_fraction(a(1,i_lanczos,ik),b(1,i_lanczos,ik),t2+de,xgamma_ryd,ncalcv(i_lanczos,ik)-1,terminator)&
+                  +paste_fermi(t2+de,e0,a(1,i_lanczos,ik),b(1,i_lanczos,ik),xgamma_ryd,ncalcv(i_lanczos,ik)-1,terminator, first)
+             df2=(df2-f2)/de
+             CALL determine_polycut(t1,t2,f1,f2,df1,df2,poly) ! calculates interpolation polynome
+  
+             DO n=1,xnepoint
+                energy=xemin_ryd+de*(n-1)
+                IF ((energy-e0<desmooth).AND.(energy-e0>-desmooth)) THEN  ! interpolation 
+                   tmp_var=poly(1)+poly(2)*energy+poly(3)*energy**2+poly(4)*energy**3
+                   tmp_var=tmp_var*xnorm(i_lanczos,ik)*xnorm(i_lanczos,ik)
+                   !</CG>
+                ELSE
+                   tmp_var=0.d0
+                   IF (n>iestart) THEN
+                      tmp_var=  &
+                           continued_fraction(a(1,i_lanczos,ik),b(1,i_lanczos,ik),energy, &
+                           xgamma_ryd,ncalcv(i_lanczos,ik)-1,terminator)*  &
+                           xnorm(i_lanczos,ik)*xnorm(i_lanczos,ik)
+                   ENDIF
+                   tmp_var = tmp_var + paste_fermi(energy,e0,a(1,i_lanczos,ik),&
+                        b(1,i_lanczos,ik),xgamma_ryd,ncalcv(i_lanczos,ik)-1,terminator, first) &
+                        *xnorm(i_lanczos,ik)*xnorm(i_lanczos,ik)
+                ENDIF
+                Intensity_coord(i_lanczos,n,isk(ik)) = Intensity_coord(i_lanczos,n,isk(ik))+tmp_var*wk(ik)
+             ENDDO
+          ENDDO
+        end do
         DEALLOCATE(memu)
         DEALLOCATE(meml)
 
-     ELSE ! if occupied states are not cut
-        DO ik = 1, nks
-           DO n = 1, xnepoint
-              energy = xemin_ry + de*(n-1)
-              tmp_var= continued_fraction(a(1,1,ik), b(1,1,ik), &
-                                          energy, xgamma_ry,    &
-                                          ncalcv(1,ik)-1,       &
-                                          terminator)           &
-                       *xnorm(1,ik)*xnorm(1,ik)
-              Intensity_coord(1,n,isk(ik)) = Intensity_coord(1,n,isk(ik)) &
-                                             + tmp_var*wk(ik)
-           ENDDO
-        ENDDO
+
+     ELSE
+        do i_lanczos = lanczos_i, lanczos_f
+          DO ik=1,nks
+
+             DO n=1,xnepoint
+                energy=xemin_ryd+de*(n-1)
+                tmp_var=  &
+                     continued_fraction(a(1,i_lanczos,ik),b(1,i_lanczos,ik),&
+                     energy,xgamma_ryd,ncalcv(i_lanczos,ik)-1, terminator)*  &
+                     xnorm(i_lanczos,ik)*xnorm(i_lanczos,ik)
+                Intensity_coord(i_lanczos,n,isk(ik)) = Intensity_coord(i_lanczos,n,isk(ik))+tmp_var*wk(ik)
+             ENDDO
+          ENDDO
+        end do
      ENDIF
 
-  !... Case 2: gamma is not constant (energy-dependent)
-  ELSE 
+  ELSE ! nonconstant gamma
 
      IF(cut_occ_states) THEN
-
         ALLOCATE(memu(cut_nmemu,2))
         ALLOCATE(meml(cut_nmeml,2))
-        iestart=(e0-xemin_ry)/de
-        DO ik=1,nks
-           first=.true.  ! to erase the memory of paste_fermi
-           xgamma_ry = gamma_tab(iestart)
-           t1 = e0 - desmooth
-           f1 = paste_fermi(t1, e0, a(1,1,ik), b(1,1,ik), &
-                            xgamma_ry, ncalcv(1,ik)-1,    &
-                            terminator, first)
-           df1 = paste_fermi(t1-de, e0, a(1,1,ik), b(1,1,ik), &
-                             xgamma_ry, ncalcv(1,ik)-1,       &
-                             terminator, first)
-           df1 = (f1-df1)/de
-           t2 = e0 + desmooth
-           f2 = continued_fraction(a(1,1,ik), b(1,1,ik),          &
-                                   t2, xgamma_ry, ncalcv(1,ik)-1, &
-                                   terminator)                    &
-                + paste_fermi(t2, e0, a(1,1,ik), b(1,1,ik),       &
-                              xgamma_ry, ncalcv(1,ik)-1,          &
-                              terminator, first)
-           df2 = continued_fraction(a(1,1,ik), b(1,1,ik),             &
-                                    t2+de, xgamma_ry, ncalcv(1,ik)-1, &
-                                    terminator)                       &
-                 + paste_fermi(t2+de, e0, a(1,1,ik), b(1,1,ik),       &
-                               xgamma_ry, ncalcv(1,ik)-1,             &
-                               terminator, first)
-           df2 = (df2 - f2)/de
-           CALL determine_polycut(t1,t2,f1,f2,df1,df2,poly)
+        iestart=(e0-xemin_ryd)/de
+        do i_lanczos = lanczos_i, lanczos_f 
+          DO ik=1,nks
 
-           DO n=1,xnepoint
-              energy = xemin_ry + de*(n-1)
-              xgamma_ry = gamma_tab(n)
-              IF ((energy-e0<desmooth).AND.(energy-e0>-desmooth)) THEN  
-                 ! interpolation
-                 tmp_var = poly(1) + &
-                           poly(2)*energy + &
-                           poly(3)*energy**2 + &
-                           poly(4)*energy**3
-                 tmp_var = tmp_var*xnorm(1,ik)*xnorm(1,ik)
-              ELSE
-                 tmp_var=0.d0
-                 IF (n>iestart) tmp_var = &
-                                   continued_fraction(a(1,1,ik), b(1,1,ik), &
-                                                      energy, xgamma_ry,    &
-                                                      ncalcv(1,ik)-1,       &
-                                                      terminator)           &
-                                   *xnorm(1,ik)*xnorm(1,ik)
-                 tmp_var = tmp_var + &
-                           paste_fermi(energy, e0, a(1,1,ik), b(1,1,ik),&
-                                       xgamma_ry, ncalcv(1,ik)-1,       &
-                                       terminator, first)               &
-                           *xnorm(1,ik)*xnorm(1,ik)
-              ENDIF
-              Intensity_coord(1,n,isk(ik)) = Intensity_coord(1,n,isk(ik)) &
-                                             + tmp_var*wk(ik)
-           ENDDO
-
-        ENDDO
+             first=.true.  ! to erase the memory of paste_fermi
+  
+  
+             xgamma_ryd=gamma_tab(iestart)
+             t1=e0-desmooth
+             f1=paste_fermi(t1,e0,a(1,i_lanczos,ik),b(1,i_lanczos,ik),xgamma_ryd,ncalcv(i_lanczos,ik)-1,terminator, first)
+             df1=paste_fermi(t1-de,e0,a(1,i_lanczos,ik),b(1,i_lanczos,ik),xgamma_ryd,ncalcv(i_lanczos,ik)-1,terminator, first)
+             df1=(f1-df1)/de
+             t2=e0+desmooth
+             f2=continued_fraction(a(1,i_lanczos,ik),b(1,i_lanczos,ik),t2,xgamma_ryd,ncalcv(i_lanczos,ik)-1,terminator)&
+                  +paste_fermi(t2,e0,a(1,i_lanczos,ik),b(1,i_lanczos,ik),xgamma_ryd,ncalcv(i_lanczos,ik)-1,terminator, first)
+             df2=continued_fraction(a(1,i_lanczos,ik),b(1,i_lanczos,ik),t2+de,xgamma_ryd,ncalcv(i_lanczos,ik)-1,terminator)&
+                  +paste_fermi(t2+de,e0,a(1,i_lanczos,ik),b(1,i_lanczos,ik),xgamma_ryd,ncalcv(i_lanczos,ik)-1,terminator, first)
+             df2=(df2-f2)/de
+             CALL determine_polycut(t1,t2,f1,f2,df1,df2,poly)
+  
+             DO n=1,xnepoint
+                energy=xemin_ryd+de*(n-1)
+                xgamma_ryd=gamma_tab(n)
+                IF ((energy-e0<desmooth).AND.(energy-e0>-desmooth)) THEN  ! interpolation
+                   tmp_var=poly(1)+poly(2)*energy+poly(3)*energy**2+poly(4)*energy**3
+                   tmp_var=tmp_var*xnorm(i_lanczos,ik)*xnorm(i_lanczos,ik)
+                ELSE
+                   tmp_var=0.d0
+                   IF (n>iestart) THEN
+                      tmp_var=  &
+                           continued_fraction(a(1,i_lanczos,ik),b(1,i_lanczos,ik),&
+                           energy,xgamma_ryd,ncalcv(i_lanczos,ik)-1,terminator)*  &
+                           xnorm(i_lanczos,ik)*xnorm(i_lanczos,ik)
+                   ENDIF
+                   tmp_var = tmp_var + paste_fermi(energy,e0,a(1,i_lanczos,ik),&
+                        b(1,i_lanczos,ik),xgamma_ryd,ncalcv(i_lanczos,ik)-1,terminator, first) &
+                        *xnorm(i_lanczos,ik)*xnorm(i_lanczos,ik)
+                ENDIF
+                !            Intensity_tot(n)=Intensity_tot(n)+tmp_var*wk(ik)
+                Intensity_coord(i_lanczos,n,isk(ik)) = Intensity_coord(i_lanczos,n,isk(ik))+tmp_var*wk(ik)
+             ENDDO
+          ENDDO
+        end do
         DEALLOCATE(memu)
         DEALLOCATE(meml)
 
-     ELSE ! if occupied states are not cut
-        DO ik=1,nks
-           DO n=1,xnepoint
-              energy = xemin_ry + de*(n-1)
-              xgamma_ry = gamma_tab(n)
-              tmp_var =  continued_fraction(a(1,1,ik), b(1,1,ik), &
-                                            energy, xgamma_ry,    &
-                                            ncalcv(1,ik)-1,       &
-                                            terminator)           &
-                         *xnorm(1,ik)*xnorm(1,ik)
-              Intensity_coord(1,n,isk(ik)) = Intensity_coord(1,n,isk(ik))&
-                                             + tmp_var*wk(ik)
-           ENDDO
-        ENDDO
+
+     ELSE
+        do i_lanczos = lanczos_i, lanczos_f 
+          DO ik=1,nks
+
+             DO n=1,xnepoint
+                energy=xemin_ryd+de*(n-1)
+                xgamma_ryd=gamma_tab(n)
+                tmp_var=  &
+                     continued_fraction(a(1,i_lanczos,ik),b(1,i_lanczos,ik),&
+                     energy,xgamma_ryd,ncalcv(i_lanczos,ik)-1, terminator)*  &
+                     xnorm(i_lanczos,ik)*xnorm(i_lanczos,ik)
+                Intensity_coord(i_lanczos,n,isk(ik)) = Intensity_coord(i_lanczos,n,isk(ik))+tmp_var*wk(ik)
+             ENDDO
+          ENDDO
+       end do
      ENDIF
 
   ENDIF ! gamma_mode
+
+
+  !... Considers the two cases of constant and non-constant broadening parameter
+  !... Case 1: gamma is constant
+!  IF (TRIM(gamma_mode).EQ.'constant') THEN
+!
+!     IF(cut_occ_states) THEN
+!
+!        ALLOCATE(memu(cut_nmemu,2))
+!        ALLOCATE(meml(cut_nmeml,2))
+!        iestart = (e0-xemin_ry)/de
+!
+!        DO ik = 1, nks
+!           first = .true.  ! to erase the memory of paste_fermi
+!           !<CG>
+!           t1 = e0 - desmooth
+!           f1 = paste_fermi(t1, e0, a(1,1,ik), b(1,1,ik),&
+!                            xgamma_ry, ncalcv(1,ik)-1,   &
+!                            terminator, first)
+!           df1 = paste_fermi(t1-de, e0, a(1,1,ik), b(1,1,ik),&
+!                             xgamma_ry, ncalcv(1,ik)-1,      &
+!                             terminator, first)
+!           df1 = (f1-df1)/de
+!           t2 = e0 + desmooth
+!           f2 = continued_fraction(a(1,1,ik), b(1,1,ik),         &
+!                                   t2, xgamma_ry, ncalcv(1,ik)-1,&
+!                                   terminator)                   &
+!                + paste_fermi(t2, e0, a(1,1,ik), b(1,1,ik),      &
+!                              xgamma_ry, ncalcv(1,ik)-1,         &
+!                              terminator, first)
+!           df2 = continued_fraction(a(1,1,ik), b(1,1,ik),             &
+!                                    t2+de, xgamma_ry, ncalcv(1,ik)-1, &
+!                                    terminator)                       &
+!                + paste_fermi(t2+de, e0, a(1,1,ik), b(1,1,ik),        &
+!                              xgamma_ry, ncalcv(1,ik)-1,              &
+!                              terminator, first)
+!           df2 = (df2-f2)/de
+!
+!           !... Calculates interpolation polynome
+!           CALL determine_polycut(t1,t2,f1,f2,df1,df2,poly) 
+!
+!           DO n = 1, xnepoint
+!              energy = xemin_ry + de*(n-1)
+!              IF ((energy-e0<desmooth).AND.(energy-e0>-desmooth)) THEN  
+!                 ! interpolation 
+!                 tmp_var = poly(1) +           &
+!                           poly(2)*energy +    &
+!                           poly(3)*energy**2 + &
+!                           poly(4)*energy**3
+!                 tmp_var = tmp_var*xnorm(1,ik)*xnorm(1,ik)
+!                 !</CG>
+!              ELSE
+!                 tmp_var = 0.d0
+!                 IF (n > iestart) &
+!                   tmp_var = continued_fraction(a(1,1,ik), b(1,1,ik),       &
+!                                                energy, xgamma_ry,          &
+!                                                ncalcv(1,ik)-1, terminator) &
+!                              *xnorm(1,ik)*xnorm(1,ik)
+!                 tmp_var = tmp_var +                                     &
+!                           paste_fermi(energy, e0, a(1,1,ik), b(1,1,ik), &
+!                                        xgamma_ry, ncalcv(1,ik)-1,       &
+!                                        terminator, first)               &
+!                           *xnorm(1,ik)*xnorm(1,ik)
+!              ENDIF
+!              Intensity_coord(1,n,isk(ik)) = Intensity_coord(1,n,isk(ik)) &
+!                                             + tmp_var*wk(ik)
+!           ENDDO
+!
+!        ENDDO
+!
+!        DEALLOCATE(memu)
+!        DEALLOCATE(meml)
+!
+!     ELSE ! if occupied states are not cut
+!        DO ik = 1, nks
+!           DO n = 1, xnepoint
+!              energy = xemin_ry + de*(n-1)
+!              tmp_var= continued_fraction(a(1,1,ik), b(1,1,ik), &
+!                                          energy, xgamma_ry,    &
+!                                          ncalcv(1,ik)-1,       &
+!                                          terminator)           &
+!                       *xnorm(1,ik)*xnorm(1,ik)
+!              Intensity_coord(1,n,isk(ik)) = Intensity_coord(1,n,isk(ik)) &
+!                                             + tmp_var*wk(ik)
+!           ENDDO
+!        ENDDO
+!     ENDIF
+!
+  !... Case 2: gamma is not constant (energy-dependent)
+!  ELSE 
+!
+!     IF(cut_occ_states) THEN
+!
+!        ALLOCATE(memu(cut_nmemu,2))
+!        ALLOCATE(meml(cut_nmeml,2))
+!        iestart=(e0-xemin_ry)/de
+!        DO ik=1,nks
+!           first=.true.  ! to erase the memory of paste_fermi
+!           xgamma_ry = gamma_tab(iestart)
+!           t1 = e0 - desmooth
+!           f1 = paste_fermi(t1, e0, a(1,1,ik), b(1,1,ik), &
+!                            xgamma_ry, ncalcv(1,ik)-1,    &
+!                            terminator, first)
+!           df1 = paste_fermi(t1-de, e0, a(1,1,ik), b(1,1,ik), &
+!                             xgamma_ry, ncalcv(1,ik)-1,       &
+!                             terminator, first)
+!           df1 = (f1-df1)/de
+!           t2 = e0 + desmooth
+!           f2 = continued_fraction(a(1,1,ik), b(1,1,ik),          &
+!                                   t2, xgamma_ry, ncalcv(1,ik)-1, &
+!                                   terminator)                    &
+!                + paste_fermi(t2, e0, a(1,1,ik), b(1,1,ik),       &
+!                              xgamma_ry, ncalcv(1,ik)-1,          &
+!                              terminator, first)
+!           df2 = continued_fraction(a(1,1,ik), b(1,1,ik),             &
+!                                    t2+de, xgamma_ry, ncalcv(1,ik)-1, &
+!                                    terminator)                       &
+!                 + paste_fermi(t2+de, e0, a(1,1,ik), b(1,1,ik),       &
+!                               xgamma_ry, ncalcv(1,ik)-1,             &
+!                               terminator, first)
+!           df2 = (df2 - f2)/de
+!           CALL determine_polycut(t1,t2,f1,f2,df1,df2,poly)
+!
+!           DO n=1,xnepoint
+!              energy = xemin_ry + de*(n-1)
+!              xgamma_ry = gamma_tab(n)
+!              IF ((energy-e0<desmooth).AND.(energy-e0>-desmooth)) THEN  
+!                 ! interpolation
+!                 tmp_var = poly(1) + &
+!                           poly(2)*energy + &
+!                           poly(3)*energy**2 + &
+!                           poly(4)*energy**3
+!                 tmp_var = tmp_var*xnorm(1,ik)*xnorm(1,ik)
+!              ELSE
+!                 tmp_var=0.d0
+!                 IF (n>iestart) tmp_var = &
+!                                   continued_fraction(a(1,1,ik), b(1,1,ik), &
+!                                                      energy, xgamma_ry,    &
+!                                                      ncalcv(1,ik)-1,       &
+!                                                      terminator)           &
+!                                   *xnorm(1,ik)*xnorm(1,ik)
+!                 tmp_var = tmp_var + &
+!                           paste_fermi(energy, e0, a(1,1,ik), b(1,1,ik),&
+!                                       xgamma_ry, ncalcv(1,ik)-1,       &
+!                                       terminator, first)               &
+!                           *xnorm(1,ik)*xnorm(1,ik)
+!              ENDIF
+!              Intensity_coord(1,n,isk(ik)) = Intensity_coord(1,n,isk(ik)) &
+!                                             + tmp_var*wk(ik)
+!           ENDDO
+!
+!        ENDDO
+!        DEALLOCATE(memu)
+!        DEALLOCATE(meml)
+!
+!     ELSE ! if occupied states are not cut
+!        DO ik=1,nks
+!           DO n=1,xnepoint
+!              energy = xemin_ry + de*(n-1)
+!              xgamma_ry = gamma_tab(n)
+!              tmp_var =  continued_fraction(a(1,1,ik), b(1,1,ik), &
+!                                            energy, xgamma_ry,    &
+!                                            ncalcv(1,ik)-1,       &
+!                                            terminator)           &
+!                         *xnorm(1,ik)*xnorm(1,ik)
+!              Intensity_coord(1,n,isk(ik)) = Intensity_coord(1,n,isk(ik))&
+!                                             + tmp_var*wk(ik)
+!           ENDDO
+!        ENDDO
+!     ENDIF
+!
+!  ENDIF ! gamma_mode
 
   !  CALL poolreduce( nspin*xnepoint, Intensity_coord )
 
@@ -2791,7 +2960,7 @@ SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry)
   IF(ionode) THEN
      IF(nspin == 1) THEN
         DO n=1,xnepoint
-           energy = xemin_ry + de*(n-1)
+           energy = xemin_ryd + de*(n-1)
            Intensity_coord(:,n,:) = Intensity_coord(:,n,:) * &
                                     (energy+e1s_ry) *          &
                                     alpha2 
@@ -2799,7 +2968,7 @@ SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry)
         ENDDO
      ELSEIF(nspin == 2) THEN
         DO n=1,xnepoint
-           energy = xemin_ry + de*(n-1)
+           energy = xemin_ryd + de*(n-1)
            Intensity_coord(:,n,:) = Intensity_coord(:,n,:) * &
                                     (energy+e1s_ry)          * &
                                      alpha2 !
@@ -3792,6 +3961,7 @@ SUBROUTINE write_save_file(a,b,xnorm,ncalcv,x_save_file)
   !*apsi  USE uspp_param, ONLY : psd
   USE lsda_mod,   ONLY: nspin,lsda
   USE uspp_param, ONLY: upf
+  USE edge_energy, ONLY: getE
   !
   IMPLICIT NONE
   ! Arguments
@@ -3808,7 +3978,6 @@ SUBROUTINE write_save_file(a,b,xnorm,ncalcv,x_save_file)
   INTEGER :: calculated_all(n_lanczos,nkstot)
   INTEGER, ALLOCATABLE :: ncalcv_all(:,:)
   REAL(dp), ALLOCATABLE :: a_all(:,:), b_all(:,:), xnorm_all(:,:)
-  REAL(dp) :: mygetK
   CHARACTER(LEN=8) :: dte
 
   IF (ionode)  CALL DATE_AND_TIME(date=dte)
@@ -3833,7 +4002,8 @@ SUBROUTINE write_save_file(a,b,xnorm,ncalcv,x_save_file)
 
   ncalcv_max = 0
   DO j = 1, n_lanczos
-     DO i = 1, nkstot       IF (ncalcv_all(j,i).GT.ncalcv_max) ncalcv_max = ncalcv_all(j,i)
+     DO i = 1, nkstot       
+        IF (ncalcv_all(j,i).GT.ncalcv_max) ncalcv_max = ncalcv_all(j,i)
      ENDDO
   ENDDO
 
