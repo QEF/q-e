@@ -10,12 +10,14 @@ IFLAGS=
 XOBJS = \
 ./xspectra_mod.o \
 ./radin_mod.o \
+./gaunt_mod.o \
 ./mygetK.o \
 ./ipoolscatter.o \
 ./lr_sm1_psi.o \
 ./orthoUatwfc_k.o \
 ./read_k_points.o \
 ./reset_k_points_and_reinit.o \
+./select_nl_init.o \
 ./banner_xspectra.o
 
 

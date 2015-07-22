@@ -300,6 +300,15 @@ PROGRAM X_Spectra
   ENDIF
 
 
+ !  
+ !   lplus and lminus cannot be both positive
+ !
+  if( lplus .and. lminus ) then
+    lplus  = .false.
+    lminus = .false.
+  end if
+
+
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   ! $   Variables broadcasting 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -457,15 +466,22 @@ ENDIF
   ! $   Initialising calculation and clock
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-  IF(TRIM(ADJUSTL(calculation)).EQ.'xanes_dipole') THEN
-     n_lanczos=1
+  IF(edge.EQ.'L1') edge='K'
+
+  IF(TRIM(ADJUSTL(calculation)).EQ.'xanes_dipole'.and.edge.EQ.'K') THEN
+!    n_lanczos=1
      xang_mom=1                    !so it is not necessary to specify xang_mom
      calculation='xanes'
-  ELSEIF(TRIM(ADJUSTL(calculation)).EQ.'xanes_quadrupole') THEN
-     n_lanczos=1
+  ELSEIF(TRIM(ADJUSTL(calculation)).EQ.'xanes_quadrupole'.and.edge.EQ.'K') THEN
+!    n_lanczos=1
      xang_mom=2                    !so it is not necessary to specify xang_mom
      calculation='xanes'
+  ELSEIF(TRIM(ADJUSTL(calculation)).EQ.'xanes'.AND.     &
+          (edge.EQ.'L2'.OR.edge.EQ.'L3'.OR.edge.EQ.'L23')) then
+     calculation='xanes'
   ENDIF
+
+  call select_nl_init(edge, nl_init, two_edges, n_lanczos)     
 
   CALL start_clock( calculation  )
 
@@ -546,38 +562,6 @@ ENDIF
      ENDIF
 
 
-     !<DC> I comment the following lines, already done above
-     !IF(xcoordcrys) CALL cryst_to_cart(1,xepsilon,at,1)
-     !IF(xang_mom.EQ.2) THEN
-     !   IF(xcoordcrys) CALL cryst_to_cart(1,xkvec,at,1)
-     !   norm=DSQRT(xkvec(1)**2+xkvec(2)**2+xkvec(3)**2)
-     !   DO i=1,3
-     !      xkvec(i)=xkvec(i)/norm
-     !   ENDDO
-     !ENDIF
-     !norm=DSQRT(xepsilon(1)**2+xepsilon(2)**2+xepsilon(3)**2)
-     !DO i=1,3
-     !   xepsilon(i)=xepsilon(i)/norm
-     !ENDDO
-     !
-     !!... check orthogonality
-     !
-     !WRITE (stdout,*) '---Polarisation and k vector [cartesian coordinates]---'
-     !WRITE (stdout,'(a,1x,3(f10.8, 1x))') 'xepsilon(:)=', (xepsilon(i),i=1,3)
-     !WRITE (stdout,'(a,1x,3(f10.8, 1x))') 'xkvec(:)=', (xkvec(i),i=1,3)
-     !IF(xang_mom.EQ.2) THEN
-     !   IF ((abs(xkvec(1)*xepsilon(1)+&
-     !            xkvec(2)*xepsilon(2)+&
-     !            xkvec(3)*xepsilon(3))).ge.1.0d-6) THEN
-     !      WRITE(stdout,*) 'WARNING, xkvec and xepsilon are not orthogonal'
-     !      WRITE(stdout,*) 'scalar product=',&
-     !            xkvec(1)*xepsilon(1)+&
-     !            xkvec(2)*xepsilon(2)+&
-     !            xkvec(3)*xepsilon(3)
-     !   ENDIF
-     !ENDIF
-     !</DC>
-
      !... Is the type associated to xiabs existing ?
      
      i=0
@@ -597,7 +581,7 @@ ENDIF
         call set_paw_upf(nt, upf(nt))
      ENDDO
 
-     CALL read_core_abs(filecore,core_wfn)
+     CALL read_core_abs(filecore,core_wfn, nl_init)
 
      WRITE(stdout,'(5x,a," successfully read")') TRIM(ADJUSTL(filecore))
      
@@ -622,6 +606,8 @@ ENDIF
         ENDIF
         DO  j=1,paw_recon(nt)%paw_nbeta
            il=paw_recon(nt)%psphi(j)%label%l
+           ! The change made by DC is wrong, this has to be reset as
+           ! it was before.
            !<DC> changed the following block (writing format)
            !IF(xiabs.EQ.nt.AND.DABS(r_paw(il)).lt.1.d-6) THEN
            !   !*apsi  if(r(kkbeta(nt),nt).GT.1.d-3) THEN
@@ -918,11 +904,14 @@ ENDIF
         WRITE(stdout, 1000) ! line 
         WRITE(stdout,'(5x,a)')&
         '                     Starting XANES calculation'
-        IF (xang_mom==1) WRITE(stdout,'(5x,a)')&
-        '                in the electric dipole approximation'
-        IF (xang_mom==2) WRITE(stdout,'(5x,a)')&
-        '              in the electric quadrupole approximation'
-        WRITE(stdout,1001)  ! line 
+        IF(nl_init(2).eq.0) then
+           IF (xang_mom==1) WRITE(stdout,'(5x,a)')&
+           '                in the electric dipole approximation'
+           IF (xang_mom==2) WRITE(stdout,'(5x,a)')&
+           '              in the electric quadrupole approximation'
+           WRITE(stdout,1001)  ! line 
+        ENDIF
+           
         IF(TRIM(ADJUSTL(restart_mode)).eq.'restart') THEN
           CALL read_header_save_file(x_save_file)
           CALL read_save_file(a,b,xnorm,ncalcv,x_save_file,core_energy)
@@ -943,13 +932,13 @@ ENDIF
 
         save_file_version = 2 ! adds ef after core_energy
 
-        IF(xang_mom == 1) THEN
+        IF(nl_init(2).EQ.0.AND.xang_mom == 1) THEN
 
            save_file_kind='xanes_dipole'
            CALL xanes_dipole(a,b,ncalcv,xnorm,core_wfn,&
                              paw_iltonhb,terminator,verbosity)
 
-        ELSEIF(xang_mom == 2) THEN
+        ELSEIF(nl_init(2).EQ.0.AND.xang_mom == 2) THEN
 
            save_file_kind='xanes_quadrupole'
            CALL xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,&
@@ -2415,29 +2404,76 @@ END FUNCTION continued_fraction
 
 !----------------------------------------------------------------------------
 !----------------------------------------------------------------------------
-SUBROUTINE read_core_abs(filename,core_wfn)
+SUBROUTINE read_core_abs(filename,core_wfn,nl_init)
   !--------------------------------------------------------------------------
   USE kinds,   ONLY: DP
   USE atom,    ONLY: rgrid
   !USE atom,        ONLY : mesh     !mesh(ntypx) number of mesh points
   USE xspectra,ONLY: xiabs
+  USE io_global,       ONLY : ionode, stdout
 
   IMPLICIT NONE
 
-  INTEGER :: i
+  INTEGER :: i, ierr, nbp, iblind
+  INTEGER, dimension(2) :: nl_init
   CHARACTER (LEN=80) :: filename
   REAL(KIND=dp):: x
   REAL(KIND=dp):: core_wfn(*)
 
   !WRITE(6,*) 'xmesh=',rgrid(xiabs)%mesh
-  open(unit=33,file=filename,form='formatted',status='old')
+  open(unit=33,file=filename,form='formatted',iostat=ierr,status='old',err=123)
+
+123   if( ierr == 29 )  then
+          if( ionode ) write(stdout, &
+          '("ERROR: core wavefunction file ",A,&
+         & " does not exist or is not located in the right folder !")') &
+           trim(filename)
+          call stop_xspectra
+        else if( ierr /= 0 ) then
+          if( ionode ) write(stdout, '("ERROR reading the core wavefunction file")')
+          call stop_xspectra
+        else
+          continue
+        end if
+
   rewind(33)
-  READ(33,*)
-  DO i=1, rgrid(xiabs)%mesh
-     !   read(33,'(2f16.8)') x,core_wfn(i)
-     READ(33 ,*) x,core_wfn(i)
+
+  !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+  !<OB>           Brute force identification of the core state:
+  !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+  nbp = rgrid(xiabs)%mesh
+! Determine how many lines to skip before reading the good core function
+  select case( nl_init(1) )
+    case(1)
+      iblind = 1                       !1s
+    case(2)
+      if( nl_init(2) == 0 ) then       !2s
+        iblind = nbp + 2
+      else                             !2p
+        iblind = 2*nbp + 3
+      end if
+    case(3)
+      if( nl_init(2) == 0 ) then       !3s
+        iblind = 3*nbp + 4
+      else if( nl_init(2) == 1 ) then  !3p
+        iblind = 4*nbp + 5
+      else
+        iblind = 5*nbp + 6             !3d
+      end if
+  end select
+
+  do i = 1, iblind
+    READ(33,*) 
+  end do
+
+  DO i=1,nbp
+   READ(33 ,*) x,core_wfn(i)
+   write(277,*) x,core_wfn(i)
   ENDDO
+
   close(33)
+
 END SUBROUTINE read_core_abs
 
 !----------------------------------------------------------------------------

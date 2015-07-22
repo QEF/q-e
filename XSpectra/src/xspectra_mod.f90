@@ -45,7 +45,8 @@ module xspectra
         xcoordcrys           ! kew word for epsilon and k in crystalline k.
 
    logical :: lplus,      &         ! if true only the l+1 transition is calculated
-              lminus              ! if true only the l-1 transition is calculated
+              lminus, &              ! if true only the l-1 transition is calculated
+              two_edges
 
    integer, dimension(2) :: nl_init ! determine  n and l quantum numbers for initial  state.             
    character(LEN=16) :: edge      ! can be 'K', 'L1', 'L2' , 'L3' 
