@@ -8,9 +8,9 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
 IFLAGS=
 
 XOBJS = \
+./gaunt_mod.o \
 ./xspectra_mod.o \
 ./radin_mod.o \
-./gaunt_mod.o \
 ./mygetK.o \
 ./ipoolscatter.o \
 ./lr_sm1_psi.o \
@@ -19,7 +19,8 @@ XOBJS = \
 ./reset_k_points_and_reinit.o \
 ./select_nl_init.o \
 ./xanes_dipole_general_edge.o\
-./banner_xspectra.o
+./banner_xspectra.o 
+
 
 
 GIPAWOBJS=./paw_gipaw.o \
