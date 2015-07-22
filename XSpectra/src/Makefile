@@ -18,6 +18,7 @@ XOBJS = \
 ./read_k_points.o \
 ./reset_k_points_and_reinit.o \
 ./select_nl_init.o \
+./xanes_dipole_general_edge.o\
 ./banner_xspectra.o
 
 

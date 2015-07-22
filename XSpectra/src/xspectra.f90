@@ -315,6 +315,7 @@ PROGRAM X_Spectra
 
   CALL mp_bcast( calculation, ionode_id, world_comm )
   CALL mp_bcast( edge, ionode_id, world_comm )
+  CALL mp_bcast( two_edges, ionode_id, world_comm )
   CALL mp_bcast( lplus, ionode_id, world_comm )
   CALL mp_bcast( lminus, ionode_id, world_comm )
   CALL mp_bcast( tmp_dir, ionode_id, world_comm ) 
@@ -468,16 +469,11 @@ ENDIF
 
   IF(edge.EQ.'L1') edge='K'
 
-  IF(TRIM(ADJUSTL(calculation)).EQ.'xanes_dipole'.and.edge.EQ.'K') THEN
-!    n_lanczos=1
+  IF(TRIM(ADJUSTL(calculation)).EQ.'xanes_dipole') THEN
      xang_mom=1                    !so it is not necessary to specify xang_mom
      calculation='xanes'
-  ELSEIF(TRIM(ADJUSTL(calculation)).EQ.'xanes_quadrupole'.and.edge.EQ.'K') THEN
-!    n_lanczos=1
+  ELSEIF(TRIM(ADJUSTL(calculation)).EQ.'xanes_quadrupole') THEN
      xang_mom=2                    !so it is not necessary to specify xang_mom
-     calculation='xanes'
-  ELSEIF(TRIM(ADJUSTL(calculation)).EQ.'xanes'.AND.     &
-          (edge.EQ.'L2'.OR.edge.EQ.'L3'.OR.edge.EQ.'L23')) then
      calculation='xanes'
   ENDIF
 
@@ -676,14 +672,16 @@ ENDIF
      ENDDO
      WRITE(stdout,*)
      WRITE(stdout,'(8x,a)')&
-           'NB: The calculation will not use all these r_paw values.'
+           'NB: The calculation will not necessary use all these r_paw values.'
      WRITE(stdout,'(8x,a)')&
-           '    - For a K edge in the electric-dipole approximation,'
+           '    - For a edge in the electric-dipole approximation,'
      WRITE(stdout,'(8x,a)')&
            '      only the r_paw(l=1) values are used.'
      WRITE(stdout,'(8x,a)')&
            '    - For a K edge in the electric-quadrupole approximation,'
      WRITE(stdout,'(8x,a,/)')'      only the r_paw(l=2) values are used.'
+     WRITE(stdout,'(8x,a,/)')     '    - For a L2 or L3 edge in the electric-quadrupole approximation,'
+     WRITE(stdout,'(8x,a,/)')'      all projectors (s, p and d) are used.'
 
      !<CG>
      DO nt=1,ntyp
@@ -910,6 +908,9 @@ ENDIF
            IF (xang_mom==2) WRITE(stdout,'(5x,a)')&
            '              in the electric quadrupole approximation'
            WRITE(stdout,1001)  ! line 
+        ELSEIF(nl_init(2).eq.1) then
+           WRITE(stdout,'(5x,a)')&
+                '                in the electric dipole approximation'
         ENDIF
            
         IF(TRIM(ADJUSTL(restart_mode)).eq.'restart') THEN
@@ -943,7 +944,13 @@ ENDIF
            save_file_kind='xanes_quadrupole'
            CALL xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,&
                                  paw_iltonhb,terminator,verbosity)
+
+        ELSEIF(nl_init(2).EQ.1) then
+           call xanes_dipole_general_edge(a,b,ncalcv,nl_init,xnorm,core_wfn,paw_iltonhb,terminator)
         ENDIF
+        !
+        ! write_save_file should be changed for L2,3
+        !
         CALL write_save_file(a,b,xnorm,ncalcv,x_save_file)
         WRITE(stdout,'(/,5x,a)') &
               'Results of STEP 1 successfully written in x_save_file'
@@ -1336,7 +1343,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
      !
      CALL gk_sort(xk (1,ik),ngm,g,ecutwfc/tpiba2,npw,igk,g2kin)  !CHECK
      g2kin=g2kin*tpiba2                                          !CHECK
-
+     
      npw_partial = npw
      CALL mp_sum( npw_partial, intra_pool_comm )
 
@@ -1396,6 +1403,8 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
 
      ENDDO
 
+
+
      !... Calculates the initial state for the Lanczos procedure,
      !    stored in psiwfc.
      !    It includes the radial matrix element, the angular matrix element,
@@ -1436,6 +1445,8 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
 
      !<CG>
      CALL allocate_bec_type(nkb,1,becp)
+
+     write(6,*) 'okvan=',okvan
      IF (okvan) THEN
         ALLOCATE(spsiwfc(npwx))
         spsiwfc(:)=(0.d0,0.d0)
@@ -1444,7 +1455,12 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
         xnorm_partial=zdotc(npw,psiwfc,1,spsiwfc,1)
         DEALLOCATE(spsiwfc)
      ELSE
-        xnorm_partial=zdotc(npw,psiwfc,1,psiwfc,1)
+!        xnorm_partial=0.d0
+!        do ip=1,npw
+!          xnorm_partial=xnorm_partial+conjg(psiwfc(ip))*psiwfc(ip)
+!       enddo
+        xnorm_partial=real(zdotc(npw,psiwfc,1,psiwfc,1),dp)
+
      ENDIF
      !</CG>
 
@@ -1454,7 +1470,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
      WRITE(stdout,'(8x,a,e15.8)') '|   Norm of the initial Lanczos vector:',&
                                      xnorm(1,ik)
      norm=1.d0/xnorm(1,ik)
-
+     
      CALL zdscal(npw,norm,psiwfc,1)
     
      !... Starts the Lanczos procedure
@@ -2019,7 +2035,7 @@ SUBROUTINE lanczos (a,b,psi,ncalcv,terminator)
   !
   ! -- computes the norm of t3
 
-  b(1) = zdotc(npw,hpsi,1,hpsi,1)
+  b(1) = dble(zdotc(npw,hpsi,1,hpsi,1))
   CALL mp_sum( b(1), intra_pool_comm )
   b(1) = SQRT( b(1) )
   !
