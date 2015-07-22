@@ -1127,7 +1127,7 @@ END SUBROUTINE stop_xspectra
 
 !------------------------------------------------------------------------------
 !------------------------------------------------------------------------------
-!  XANES calculation in the electric dipole approximation
+!  XANES K-edge calculation in the electric dipole approximation
 !------------------------------------------------------------------------------
 SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
                         terminator,verbosity)
@@ -3786,7 +3786,7 @@ SUBROUTINE write_save_file(a,b,xnorm,ncalcv,x_save_file)
   USE klist,      ONLY: nks, nkstot
   USE xspectra,   ONLY: xnitermax, xang_mom, xkvec, xepsilon, xiabs, &
                         save_file_version, save_file_kind,           &
-                        n_lanczos, calculated
+                        n_lanczos, calculated, edge
   USE ener,       ONLY: ef
   USE io_global,  ONLY: ionode
   !*apsi  USE uspp_param, ONLY : psd
@@ -3833,8 +3833,7 @@ SUBROUTINE write_save_file(a,b,xnorm,ncalcv,x_save_file)
 
   ncalcv_max = 0
   DO j = 1, n_lanczos
-     DO i = 1, nkstot
-        IF (ncalcv_all(j,i).GT.ncalcv_max) ncalcv_max = ncalcv_all(j,i)
+     DO i = 1, nkstot       IF (ncalcv_all(j,i).GT.ncalcv_max) ncalcv_max = ncalcv_all(j,i)
      ENDDO
   ENDDO
 
@@ -3851,7 +3850,8 @@ SUBROUTINE write_save_file(a,b,xnorm,ncalcv,x_save_file)
      WRITE(10,*) lsda,nspin
      WRITE(10,*) xang_mom,nkstot,xnitermax
      WRITE(10,*) ncalcv_max
-     WRITE(10,*) mygetK(upf(xiabs)%psd), ef ! ef here is in eV
+!     WRITE(10,*) mygetK(upf(xiabs)%psd), ef ! ef here is in eV
+     WRITE(10,*) getE(upf(xiabs)%psd,edge), ef ! ef here is in eV
      WRITE(10,*) (xkvec(i),i=1,3)
      WRITE(10,*) (xepsilon(i),i=1,3)
   ENDIF
