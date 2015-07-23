@@ -36,6 +36,10 @@ SUBROUTINE banner_xspectra()
   WRITE (stdout, '(/,5x,a)')&
   'In publications arising from the use of XSpectra, please cite:'
   WRITE (stdout, '(6x,a)')&
+  '- O. Bunau and M. Calandra,'
+  WRITE (stdout, '(8x,a)')&
+  'Phys. Rev. B 87, 205105 (2013)'
+  WRITE (stdout, '(6x,a)')&
   '- Ch. Gougoussis, M. Calandra, A. P. Seitsonen, F. Mauri,'
   WRITE (stdout, '(8x,a)')&
   'Phys. Rev. B 80, 075102 (2009)'
