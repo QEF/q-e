@@ -1,0 +1,355 @@
+
+     Program XSpectra v.5.2.0 (svn rev. 11610M) starts on 23Jul2015 at 19:13:34 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     -------------------------------------------------------------------------
+                    __  ____                 _
+                    \ \/ / _\_ __   ___  ___| |_ _ __ __ _
+                     \  /\ \| '_ \ / _ \/ __| __| '__/ _` |
+                     /  \_\ \ |_) |  __/ (__| |_| | | (_| |
+                    /_/\_\__/ .__/ \___|\___|\__|_|  \__,_|
+                            |_|
+
+     In publications arising from the use of XSpectra, please cite:
+      - O. Bunau and M. Calandra,
+        Phys. Rev. B 87, 205105 (2013)
+      - Ch. Gougoussis, M. Calandra, A. P. Seitsonen, F. Mauri,
+        Phys. Rev. B 80, 075102 (2009)
+      - M. Taillefumier, D. Cabaret, A. M. Flank, and F. Mauri,
+        Phys. Rev. B 66, 195107 (2002)
+
+     -------------------------------------------------------------------------
+                                Reading input_file
+     -------------------------------------------------------------------------
+
+     calculation: xanes_dipole
+
+     xepsilon  [crystallographic coordinates]:   1.000000   1.000000   1.000000
+
+     xonly_plot: FALSE
+        => complete calculation: Lanczos + spectrum plot
+
+     filecore (core-wavefunction file): Cu.wfc              
+
+     main plot parameters:
+        cut_occ_states: TRUE
+        gamma_mode:  constant
+        -> using xgamma [eV]:  0.50
+        xemin [eV]: -10.00
+        xemax [eV]:  80.00
+        xnepoint: 1000
+        energy zero automatically set to the Fermi level
+
+     Fermi level determined from SCF save directory (Cu_halfh.save)
+     NB: For an insulator (SCF calculated with occupations="fixed")
+         the Fermi level will be placed at the position of HOMO.
+
+     WARNING: variable ef_r is obsolete
+
+     -------------------------------------------------------------------------
+                      Reading SCF save directory: Cu_halfh.save
+     -------------------------------------------------------------------------
+
+
+     Reading data from directory:
+     /Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/results/tmp/Cu_halfh.save
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      =  SLA  PW   PBX  PBC ( 1  4  3  4 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+     WARNING: atomic wfc #  6 for atom type 1 has zero norm
+     WARNING: atomic wfc #  7 for atom type 1 has zero norm
+     WARNING: atomic wfc #  6 for atom type 2 has zero norm
+     WARNING: atomic wfc #  7 for atom type 2 has zero norm
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        2869    1159    295               101549    25821    3215
+
+
+     Check: negative/imaginary core charge=   -0.000111    0.000000
+
+     negative rho (up, down):  3.315E-02 0.000E+00
+
+     the Fermi energy is    11.5554 ev
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        2869    1159    295               101549    25821    3215
+
+
+
+     bravais-lattice index     =            2
+     lattice parameter (alat)  =      20.4146  a.u.
+     unit-cell volume          =    2126.9774 (a.u.)^3
+     number of atoms/cell      =           27
+     number of atomic types    =            2
+     number of electrons       =       297.00
+     number of Kohn-Sham states=          179
+     kinetic-energy cutoff     =      20.0000  Ry
+     charge density cutoff     =     200.0000  Ry
+     Exchange-correlation      =  SLA  PW   PBX  PBC ( 1  4  3  4 0 0)
+
+     celldm(1)=  20.414604  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (  -0.500000   0.000000   0.500000 )  
+               a(2) = (   0.000000   0.500000   0.500000 )  
+               a(3) = (  -0.500000   0.500000   0.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = ( -1.000000 -1.000000  1.000000 )  
+               b(2) = (  1.000000  1.000000  1.000000 )  
+               b(3) = ( -1.000000  1.000000 -1.000000 )  
+
+
+     PseudoPot. # 1 for Cu read from file:
+     /Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/pseudo/Cu_halfh_US_PBE_3pj.UPF
+     MD5 check sum: 8d1ade244524d2e9e9002c5f39bae375
+     Pseudo is Ultrasoft + core correction, Zval = 11.5
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of 1199 points,  6 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+                l(5) =   2
+                l(6) =   2
+     Q(r) pseudized with 0 coefficients 
+
+
+     PseudoPot. # 2 for Cu read from file:
+     /Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/pseudo/Cu_US_PBE_3pj_lowE.UPF
+     MD5 check sum: 12d8352882989a2866661a2a32bec440
+     Pseudo is Ultrasoft + core correction, Zval = 11.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of 1199 points,  6 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+                l(5) =   2
+                l(6) =   2
+     Q(r) pseudized with 0 coefficients 
+
+
+     atomic species   valence    mass     pseudopotential
+        Cuh           11.50     1.00000     Cu( 1.00)
+        Cu            11.00     1.00000     Cu( 1.00)
+
+     48 Sym. Ops., with inversion, found
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1           Cu  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2           Cuh tau(   2) = (  -0.1666667   0.0000000   0.1666667  )
+         3           Cu  tau(   3) = (  -0.1666667   0.1666667   0.0000000  )
+         4           Cu  tau(   4) = (   0.0000000   0.1666667   0.1666667  )
+         5           Cu  tau(   5) = (  -0.3333333   0.1666667   0.1666667  )
+         6           Cu  tau(   6) = (  -0.1666667   0.3333333   0.1666667  )
+         7           Cu  tau(   7) = (  -0.1666667   0.1666667   0.3333333  )
+         8           Cu  tau(   8) = (  -0.3333333   0.0000000   0.3333333  )
+         9           Cu  tau(   9) = (   0.0000000   0.3333333   0.3333333  )
+        10           Cu  tau(  10) = (  -0.3333333   0.3333333   0.0000000  )
+        11           Cu  tau(  11) = (  -0.6666667   0.6666667   0.6666667  )
+        12           Cu  tau(  12) = (  -0.5000000   0.5000000   0.6666667  )
+        13           Cu  tau(  13) = (  -0.6666667   0.5000000   0.5000000  )
+        14           Cu  tau(  14) = (  -0.5000000   0.6666667   0.5000000  )
+        15           Cu  tau(  15) = (  -0.3333333   0.6666667   0.3333333  )
+        16           Cu  tau(  16) = (  -0.3333333   0.5000000   0.5000000  )
+        17           Cu  tau(  17) = (  -0.3333333   0.3333333   0.6666667  )
+        18           Cu  tau(  18) = (  -0.5000000   0.3333333   0.5000000  )
+        19           Cu  tau(  19) = (  -0.6666667   0.3333333   0.3333333  )
+        20           Cu  tau(  20) = (  -0.5000000   0.5000000   0.3333333  )
+        21           Cu  tau(  21) = (  -0.1666667   0.3333333   0.5000000  )
+        22           Cu  tau(  22) = (  -0.3333333   0.1666667   0.5000000  )
+        23           Cu  tau(  23) = (  -0.5000000   0.1666667   0.3333333  )
+        24           Cu  tau(  24) = (  -0.5000000   0.3333333   0.1666667  )
+        25           Cu  tau(  25) = (  -0.3333333   0.5000000   0.1666667  )
+        26           Cu  tau(  26) = (  -0.1666667   0.5000000   0.3333333  )
+        27           Cu  tau(  27) = (  -0.3333333   0.3333333   0.3333333  )
+
+     number of k points=     1  Methfessel-Paxton smearing, width (Ry)=  0.0300
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   2.0000000
+
+     Dense  grid:   101549 G-vectors     FFT dimensions: (  72,  72,  72)
+
+     Smooth grid:    25821 G-vectors     FFT dimensions: (  45,  45,  45)
+
+     Largest allocated arrays     est. size (Mb)     dimensions
+        Kohn-Sham Wavefunctions         8.78 Mb     (    3215,  179)
+        NL pseudopotentials            23.84 Mb     (    3215,  486)
+        Each V/rho on FFT grid          5.70 Mb     (  373248)
+        Each G-vector array             0.77 Mb     (  101549)
+        G-vector shells                 0.01 Mb     (     705)
+     Largest temporary arrays     est. size (Mb)     dimensions
+        Auxiliary wavefunctions         8.78 Mb     (    3215,  179)
+        Each subspace H/S matrix        0.49 Mb     (     179,  179)
+        Each <psi_i|beta_j> matrix      1.33 Mb     (     486,  179)
+
+     Check: negative/imaginary core charge=   -0.000111    0.000000
+
+     The potential is recalculated from file :
+     /Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/results/tmp/Cu_halfh.save/charge-density.dat
+
+
+     negative rho (up, down):  3.315E-02 0.000E+00
+     Starting wfc are  351 atomic wfcs
+
+     -------------------------------------------------------------------------
+               Reading core wavefunction file for the absorbing atom
+     -------------------------------------------------------------------------
+
+     Cu.wfc successfully read
+
+     -------------------------------------------------------------------------
+                              Attributing the PAW radii 
+                     for the absorbing atom [units: Bohr radius]
+     -------------------------------------------------------------------------
+
+        PAW proj 1: r_paw(l= 0)= 2.00  (from input file))
+        PAW proj 2: r_paw(l= 0)= 2.00  (from input file))
+        PAW proj 3: r_paw(l= 1)= 3.60  (1.5*r_cut)
+        PAW proj 4: r_paw(l= 1)= 3.60  (1.5*r_cut)
+        PAW proj 5: r_paw(l= 2)= 2.00  (from input file))
+        PAW proj 6: r_paw(l= 2)= 2.00  (from input file))
+        PAW proj 7: r_paw(l= 2)= 2.00  (from input file))
+
+        NB: The calculation will not necessary use all these r_paw values.
+            - For a edge in the electric-dipole approximation,
+              only the r_paw(l=1) values are used.
+            - For a K edge in the electric-quadrupole approximation,
+              only the r_paw(l=2) values are used.
+
+            - For a L2 or L3 edge in the electric-quadrupole approximation,
+
+              all projectors (s, p and d) are used.
+
+
+     init_gipaw_1: projectors nearly linearly dependent:
+     ntyp =  1, l/n1/n2 =  0 2 1  0.99876032
+     init_gipaw_1: projectors nearly linearly dependent:
+     ntyp =  1, l/n1/n2 =  2 3 2  0.99977665
+
+
+     -------------------------------------------------------------------------
+                           Getting the Fermi energy 
+     -------------------------------------------------------------------------
+
+     From SCF save directory:
+        ef    [eV]:   11.5554
+
+     -> ef (in eV) will be written in x_save_file
+
+     -------------------------------------------------------------------------
+                           Energy zero of the spectrum 
+     -------------------------------------------------------------------------
+
+     -> ef will be used as energy zero of the spectrum
+
+     -------------------------------------------------------------------------
+                          Starting XANES calculation
+                     in the electric dipole approximation
+     Method of calculation based on the Lanczos recursion algorithm
+     --------------------------------------------------------------
+        - STEP 1: Construction of a kpoint-dependent Lanczos basis,
+          in which the Hamiltonian is tridiagonal (each 'iter' 
+          corresponds to the calculation of one more Lanczos vector)
+        - STEP 2: Calculation of the cross-section as a continued fraction
+          averaged over the k-points.
+
+     ... Begin STEP 1 ...
+
+
+ 5
+ There are  3  projectors/channels
+ for angular moment 2  and atom type 1
+ There are  2  projectors/channels
+ for angular moment 0  and atom type 1
+ ----------------------------------------------------------------
+l =  2    Radial matrix element proj. ( 1)=    0.37816371
+l =  2    Radial matrix element proj. ( 2)=    0.08314184
+l =  2    Radial matrix element proj. ( 3)=    0.07116135
+l =  0    Radial matrix element proj. ( 1)=    0.01838539
+l =  0    Radial matrix element proj. ( 2)=    0.01802917
+ ----------------------------------------------------------------
+ The value of the radial integrals for different l cannot be compared.
+          Remember the AE wfc do not have the same norm !
+
+
+ Starting k-point :  1
+ total cpu time spent up to now is     10.24 secs
+ Hilbert space is saturated
+ xniter is set equal to  3215
+ Hint: Increase Kinetic Energy cutoff in your SCF simulation
+ total cpu time spent 1 is     10.27 secs
+ total cpu time spent 3 is     10.28 secs
+ norm initial vector= 0.033974487923153635
+ Starting lanczos
+        |   Estimated error at iter    500:   1.00207263
+        !   => CONVERGED at iter   1000 with error=  0.00000000
+ total cpu time spent 4 is     34.15 secs
+
+ Starting k-point :  1
+ total cpu time spent up to now is     34.17 secs
+ Hilbert space is saturated
+ xniter is set equal to  3215
+ Hint: Increase Kinetic Energy cutoff in your SCF simulation
+ total cpu time spent 1 is     34.19 secs
+ total cpu time spent 3 is     34.19 secs
+ norm initial vector= 0.04804718183762305
+ Starting lanczos
+        |   Estimated error at iter    500:   1.00207263
+        !   => CONVERGED at iter   1000 with error=  0.00000000
+ total cpu time spent 4 is     58.05 secs
+
+     Results of STEP 1 successfully written in x_save_file
+     x_save_file name: 
+     ->  xanes.sav                                                        
+     x_save_file version:  2
+
+     ... End STEP 1 ...
+
+     ... Begin STEP 2 ...
+
+     The spectrum is calculated using the following parameters:
+        energy-zero of the spectrum [eV]:   11.5554
+        the occupied states are cut
+        xemin [eV]: -10.00
+        xemax [eV]:  80.00
+        xnepoint: 1000
+        constant broadening parameter [eV]:    0.500
+        Core level energy [eV]:  -952.3    
+         (from electron binding energy of neutral atoms in X-ray data booklet)
+
+     Cross-section successfully written in xanes.dat
+
+     ... End STEP 2 ...
+
+     xanes        :     61.76s CPU     62.48s WALL (       1 calls)
+
+     -------------------------------------------------------------------------
+                                END JOB XSpectra
+     -------------------------------------------------------------------------
+

@@ -1,0 +1,380 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example tests L2 and L23-edge X-ray absorption spectra calculation"
+$ECHO
+
+# set the needed environment variables
+. ../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x xspectra.x "
+PSEUDO_LIST="Cu_halfh_US_PBE_3pj.UPF Cu_US_PBE_3pj_lowE.UPF"
+PSEUDO_DIR="$EXAMPLE_DIR/pseudo"
+BIN_DIR="$EXAMPLE_DIR/../../bin/"
+TMP_DIR="$EXAMPLE_DIR/results/tmp"
+# TMP_DIR="$EXAMPLE_DIR/results/tmp"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+# clean directory results
+rm -rf ./results/*
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# clean directory results
+rm -rf ./results/*
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        !exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+X_COMMAND="$PARA_PREFIX $BIN_DIR/xspectra.x $PARA_POSTFIX"
+
+
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running xspectra.x as: $X_COMMAND"
+$ECHO
+
+$ECHO
+$ECHO "WARNING : All these calculations are underconverged"
+$ECHO "    (These are simple quick tests)  "
+$ECHO
+$ECHO
+$ECHO
+
+
+$ECHO " #################################################"
+$ECHO " # Cu with no core-hole in the final state       #"
+$ECHO " #################################################"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# extracting core wavefunction
+$ECHO "  extracting core wavefunction from pseudo...\c"
+../../../XSpectra/tools/upf2plotcore.sh $PSEUDO_DIR/Cu_US_PBE_3pj_lowE.UPF > ./Cu.wfc
+$ECHO " done"
+$ECHO "#"
+$ECHO "# self-consistent calculation without hole. "
+$ECHO "# "
+cat > Cu.scf.in << EOF
+ &control
+    calculation='scf',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    prefix='Cu',
+ /
+ &system
+    ibrav=  2,  
+    celldm(1) = 6.8048679, 
+    ecutwfc = 20.,
+    ecutrho = 200.,
+    nat= 1,
+    ntyp= 1,
+    nbnd=20,
+    occupations="smearing",
+    smearing='mp', 
+    degauss=0.03,  
+/
+ &electrons
+    diagonalization='david',
+    mixing_mode = 'plain',
+    conv_thr =  1.0d-6,
+ /&end
+ATOMIC_SPECIES
+Cu  1.0 Cu_US_PBE_3pj_lowE.UPF
+K_POINTS automatic
+3 3 3 0 0 0
+ATOMIC_POSITIONS crystal
+Cu  0.0  0.0  0.0
+EOF
+
+$ECHO "  running pw.x for Cu...\c"
+$PW_COMMAND < Cu.scf.in > Cu.scf.out
+check_failure $?
+$ECHO " done"
+
+$ECHO "#"
+$ECHO "# self-consistent calculation with half hole"
+$ECHO "#          in a 3 x 3 x 3 supercell "
+$ECHO "# "
+cat > Cu_halfh.scf.in << EOF
+ &control
+    calculation='scf',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    prefix='Cu_halfh',
+ /
+ &system
+    ibrav=  2,  
+    celldm(1) = 20.4146037 
+    ecutwfc = 20.,
+    ecutrho = 200.,
+    nat= 27,
+    ntyp= 2,
+    tot_charge = 0.5  
+    occupations="smearing",
+    smearing='mp', 
+    degauss=0.03,  
+/&end
+ &electrons
+    diagonalization='david',
+    mixing_mode = 'plain',
+    mixing_beta = 0.3,
+    conv_thr =  1.0d-6,
+ /&end
+ ATOMIC_SPECIES
+ Cuh 1.0 Cu_halfh_US_PBE_3pj.UPF
+ Cu  1.0 Cu_US_PBE_3pj_lowE.UPF
+ K_POINTS automatic
+ 1 1 1 0 0 0
+ ATOMIC_POSITIONS crystal
+ Cu 0.            0.            0.
+ Cuh  0.3333333333  0.            0.
+ Cu  0.            0.            0.3333333333
+ Cu  0.            0.3333333333  0.
+ Cu  0.3333333333  0.            0.3333333333
+ Cu  0.            0.3333333333  0.3333333333
+ Cu  0.3333333333  0.3333333333  0.
+ Cu  0.6666666666  0.            0.
+ Cu  0.            0.6666666666  0.
+ Cu  0.            0.            0.6666666666
+ Cu  0.6666666666  0.6666666666  0.6666666666
+ Cu  0.6666666666  0.6666666666  0.3333333333
+ Cu  0.6666666666  0.3333333333  0.6666666666
+ Cu  0.3333333333  0.6666666666  0.6666666666
+ Cu  0.            0.6666666666  0.6666666666
+ Cu  0.3333333333  0.6666666666  0.3333333333
+ Cu  0.6666666666  0.6666666666  0.
+ Cu  0.6666666666  0.3333333333  0.3333333333
+ Cu  0.6666666666  0.            0.6666666666
+ Cu  0.3333333333  0.3333333333  0.6666666666
+ Cu  0.3333333333  0.6666666666  0.
+ Cu  0.6666666666  0.3333333333  0.
+ Cu  0.6666666666  0.            0.3333333333
+ Cu  0.3333333333  0.            0.6666666666
+ Cu  0.            0.3333333333  0.6666666666
+ Cu  0.            0.6666666666  0.3333333333
+ Cu  0.3333333333  0.3333333333  0.3333333333
+EOF
+
+$ECHO "  running pw.x for half hole Cu in a supercell...\c"
+$PW_COMMAND < Cu_halfh.scf.in > Cu_halfh.scf.out
+check_failure $?
+$ECHO " done"
+
+$ECHO " #"
+$ECHO "# x-ray absorption spectrum calculation"
+
+cat > Cu_xspectra.in << EOF
+  &input_xspectra
+     calculation='xanes_dipole',
+     edge='L23',
+     verbosity='high',
+     prefix='Cu',
+     outdir='$TMP_DIR/',
+     xniter=5000,
+     xcheck_conv=500,
+     xepsilon(1)=1.0,
+     xepsilon(2)=1.0,
+     xepsilon(3)=1.0,
+     xe0=11.5335,
+     xerror=0.01,
+  /  
+  &plot
+     xnepoint=1000,
+     xgamma=0.5,
+     xemin=-10.,
+     xemax=80.0,
+     terminator=.true.,
+     cut_occ_states=.true.,
+  /   
+  &pseudos
+     filecore='Cu.wfc',
+     r_paw(0) = 2. 
+     r_paw(2) = 2.   
+  /  
+  &cut_occ
+  /
+  3 3 3 0 0 0
+EOF
+$ECHO "  running xspectra.x on the simple cell ...\c"
+$X_COMMAND < Cu_xspectra.in > Cu_xspectra.out
+check_failure $?
+$ECHO " done"
+
+mv xanes.dat Cu_xanes_L2.dat
+mv xanes.sav Cu_xanes_L2.sav
+
+
+cat > Cu_xspectra_lplus.in << EOF
+  &input_xspectra
+     calculation='xanes_dipole',
+     edge='L2',
+     lplus = .true.,
+     verbosity='high',
+     prefix='Cu',
+     outdir='$TMP_DIR/',
+     xniter=5000,
+     xcheck_conv=500,
+     xepsilon(1)=1.0,
+     xepsilon(2)=1.0,
+     xepsilon(3)=1.0,
+     xe0=11.5335,
+     xerror=0.01,
+  /  
+  &plot
+     xnepoint=1000,
+     xgamma=0.5,
+     xemin=-10.,
+     xemax=80.0,
+     terminator=.true.,
+     cut_occ_states=.true.,
+  /   
+  &pseudos
+     filecore='Cu.wfc',
+     r_paw(0) = 2. 
+     r_paw(2) = 2.   
+  /  
+  &cut_occ
+  /
+  3 3 3 0 0 0
+EOF
+$ECHO "  running xspectra.x with \delta_l = 1 rule ...\c"
+$X_COMMAND < Cu_xspectra_lplus.in > Cu_xspectra_lplus.out
+check_failure $?
+$ECHO " done"
+
+mv xanes.dat Cu_xanes_L2_lplus.dat
+mv xanes.sav Cu_xanes_L2_lplus.sav
+
+cat > Cu_halfh_xspectra.in << EOF
+  &input_xspectra
+     calculation='xanes_dipole',
+     edge='L2',
+     verbosity='low',
+     prefix='Cu_halfh',
+     outdir='$TMP_DIR/',
+     xniter=5000,
+     xcheck_conv=500,
+     xepsilon(1)=1.0,
+     xepsilon(2)=1.0,
+     xepsilon(3)=1.0,
+     ef_r=0.98,
+     xerror=0.01,
+  /  
+  &plot
+     xnepoint=1000,
+     xgamma=0.5,
+     xemin=-10.,
+     xemax=80.0,
+     terminator=.true.,
+     cut_occ_states=.true.,
+  /   
+  &pseudos
+     filecore='Cu.wfc',
+     r_paw(0) = 2. 
+     r_paw(2) = 2.   
+  /  
+  &cut_occ
+  /
+  1 1 1 0 0 0
+EOF
+$ECHO "  running xspectra.x on the supercell ...\c"
+$X_COMMAND < Cu_halfh_xspectra.in > Cu_halfh_xspectra.out
+check_failure $?
+$ECHO " done"
+
+mv xanes.dat Cuhalfh_xanes_L2.dat
+mv xanes.sav Cuhalfh_xanes_L2.sav
+
+
+cat > Cu_halfh_xspectra_xonlyplot.in << EOF
+  &input_xspectra
+     calculation='xanes_dipole',
+     edge='L2',
+     verbosity='low',
+     prefix='Cu_halfh',
+     outdir='$TMP_DIR/',
+     xniter=5000,
+     xcheck_conv=500,
+     xepsilon(1)=1.0,
+     xepsilon(2)=1.0,
+     xepsilon(3)=1.0,
+     ef_r=0.98,
+     xerror=0.01,
+     x_save_file='Cuhalfh_xanes_L2.sav',
+     xonly_plot=.true.,
+  /  
+  &plot
+     xnepoint=1000,
+     xgamma=0.5,
+     xemin=-10.,
+     xemax=80.0,
+     terminator=.true.,
+     cut_occ_states=.true.,
+  /   
+  &pseudos
+     filecore='Cu.wfc',
+     r_paw(0) = 2. 
+     r_paw(2) = 2.   
+  /  
+  &cut_occ
+  /
+  1 1 1 0 0 0
+EOF
+$ECHO "  running xspectra.x on the supercell ...\c"
+$X_COMMAND < Cu_halfh_xspectra_xonlyplot.in  > Cu_halfh_xspectra_xonlyplot.out
+check_failure $?
+$ECHO " done"
+
+mv xanes.dat Cuhalfh_xanes_L2_xonlyplot.dat

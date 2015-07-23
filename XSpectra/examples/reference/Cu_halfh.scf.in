@@ -1,0 +1,57 @@
+ &control
+    calculation='scf',
+    pseudo_dir = '/Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/pseudo/',
+    outdir='/Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/results/tmp/',
+    prefix='Cu_halfh',
+ /
+ &system
+    ibrav=  2,  
+    celldm(1) = 20.4146037 
+    ecutwfc = 20.,
+    ecutrho = 200.,
+    nat= 27,
+    ntyp= 2,
+    tot_charge = 0.5  
+    occupations="smearing",
+    smearing='mp', 
+    degauss=0.03,  
+/&end
+ &electrons
+    diagonalization='david',
+    mixing_mode = 'plain',
+    mixing_beta = 0.3,
+    conv_thr =  1.0d-6,
+ /&end
+ ATOMIC_SPECIES
+ Cuh 1.0 Cu_halfh_US_PBE_3pj.UPF
+ Cu  1.0 Cu_US_PBE_3pj_lowE.UPF
+ K_POINTS automatic
+ 1 1 1 0 0 0
+ ATOMIC_POSITIONS crystal
+ Cu 0.            0.            0.
+ Cuh  0.3333333333  0.            0.
+ Cu  0.            0.            0.3333333333
+ Cu  0.            0.3333333333  0.
+ Cu  0.3333333333  0.            0.3333333333
+ Cu  0.            0.3333333333  0.3333333333
+ Cu  0.3333333333  0.3333333333  0.
+ Cu  0.6666666666  0.            0.
+ Cu  0.            0.6666666666  0.
+ Cu  0.            0.            0.6666666666
+ Cu  0.6666666666  0.6666666666  0.6666666666
+ Cu  0.6666666666  0.6666666666  0.3333333333
+ Cu  0.6666666666  0.3333333333  0.6666666666
+ Cu  0.3333333333  0.6666666666  0.6666666666
+ Cu  0.            0.6666666666  0.6666666666
+ Cu  0.3333333333  0.6666666666  0.3333333333
+ Cu  0.6666666666  0.6666666666  0.
+ Cu  0.6666666666  0.3333333333  0.3333333333
+ Cu  0.6666666666  0.            0.6666666666
+ Cu  0.3333333333  0.3333333333  0.6666666666
+ Cu  0.3333333333  0.6666666666  0.
+ Cu  0.6666666666  0.3333333333  0.
+ Cu  0.6666666666  0.            0.3333333333
+ Cu  0.3333333333  0.            0.6666666666
+ Cu  0.            0.3333333333  0.6666666666
+ Cu  0.            0.6666666666  0.3333333333
+ Cu  0.3333333333  0.3333333333  0.3333333333

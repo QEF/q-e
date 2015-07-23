@@ -1,0 +1,31 @@
+  &input_xspectra
+     calculation='xanes_dipole',
+     edge='L2',
+     lplus = .true.,
+     verbosity='high',
+     prefix='Cu',
+     outdir='/Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/results/tmp/',
+     xniter=5000,
+     xcheck_conv=500,
+     xepsilon(1)=1.0,
+     xepsilon(2)=1.0,
+     xepsilon(3)=1.0,
+     xe0=11.5335,
+     xerror=0.01,
+  /  
+  &plot
+     xnepoint=1000,
+     xgamma=0.5,
+     xemin=-10.,
+     xemax=80.0,
+     terminator=.true.,
+     cut_occ_states=.true.,
+  /   
+  &pseudos
+     filecore='Cu.wfc',
+     r_paw(0) = 2. 
+     r_paw(2) = 2.   
+  /  
+  &cut_occ
+  /
+  3 3 3 0 0 0
