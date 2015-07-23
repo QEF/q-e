@@ -34,6 +34,7 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   USE gvecs,           ONLY : doublegrid
   USE mp_global,       ONLY : intra_pool_comm, root_pool, world_comm
   USE mp,              ONLY : mp_sum, mp_bcast, mp_barrier !CG
+  USE mp_pools,        ONLY : npool
   USE io_global,       ONLY : ionode
 
   USE xspectra,        ONLY : edge, n_lanczos, xiabs, xang_mom, xniter, &
@@ -55,7 +56,7 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   REAL (dp)  xnorm(n_lanczos,nks)
   INTEGER :: is,ik,iabso,nr,ip,jp,l,icrd,ip_l,nrc,nt,na,lf, &
              lm, llm, m, lmi, lmf, isg, isgf, mu, ll, mf, mpl, mmi, ms,&
-             lmbd, lmmax, lfmax, no, noj
+             lmbd, lmmax, lfmax, no, noj,jloop
   INTEGER :: ipx,ipx_0,ipy,ipz,nline,nrest,npw_partial
   integer :: l_final_dim, i_lanczos
   integer, dimension(2), intent(in):: nl_init
@@ -138,7 +139,6 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   write(6,*) l_final_dim
   do ll = 1, l_final_dim
      lf = l_final(ll)
-     write(6,*) 'lf=',lf
      if( lf == -1 ) exit      ! state does not exist
      WRITE( stdout,*) 'There are ',paw_recon(xiabs)%paw_nl(lf),' projectors/channels'
      WRITE( stdout,*) 'for angular moment',lf,' and atom type',xiabs
@@ -234,6 +234,13 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
         ENDDO
      ENDDO
   end if
+
+
+  
+
+  IF (npool /= 1) WRITE(stdout,'(a,i5,a,i3)') 'NB: the ', nks,&
+     ' k-point are not all listed below because npool=', npool
+
   
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   ! Beginning the loop over the Lanczos procedures   OB
@@ -245,14 +252,7 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
     ! Beginning the loop over the k-points
     ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
   
-    !*apsi  call set_vrs(vrs,vltot,vr,nrxx,nspin,doublegrid)
-    !<CG>
-     CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,dfftp%nnr,nspin,doublegrid)
-    !</CG>
-     
-     !  CALL newd   ! CG
-  
-!     IF (lda_plus_u) CALL init_xanes_ldau
+     CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,dfftp%nnr,nspin,doublegrid)     
      
      ! Loop on the k points
      DO ik=1,nks
@@ -574,9 +574,9 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
         ! <OB>
         
         ! <OB> for Matteo:  perhaps the 1.d-9 criterion is too strict
-        !  MCB: yes it is, changed d-6
+        !  MCB: not needed
         !
-        if( abs( xnorm(i_lanczos,ik) ) > 1.d-6 ) then
+        if( abs( xnorm(i_lanczos,ik) ) > 1.d-9 ) then
            norm=1.d0/xnorm(i_lanczos,ik)
            
            CALL zdscal(npw,norm,psiwfc,1)
@@ -592,7 +592,7 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
         else
            ncalcv(i_lanczos,ik) = 0
            nocalc(i_lanczos,ik) = .true. 
-        end if
+      end if
         
         !
         !      Then I write small report of the lanczos results
@@ -627,7 +627,13 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
         WRITE( stdout,'(" total cpu time spent 4 is ",F9.2," secs")') timenow
         
      ENDDO  !on k points
-     
+     CALL mp_barrier(world_comm)
+     CALL mp_sum(nunfinished, world_comm)
+
+!     WRITE(6,'(3f16.8)') ((a(jloop,i_lanczos,ik),jloop=1,ncalcv(i_lanczos,ik)),ik=1,1)
+!     write(stdout,*)
+!     WRITE(6,*) ((b(jloop,i_lanczos,ik),jloop=1,ncalcv(i_lanczos,ik)),ik=1,nkstot)
+!     stop
   end do ! on Lanczos
   
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -635,7 +641,8 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
   
   CALL mp_barrier(world_comm)
-  CALL mp_sum(nunfinished, world_comm)
+  
+
   IF (nunfinished >= 1) THEN 
      save_file_kind='unfinished'
      write(stdout,*) 'calculation not finished'
@@ -647,3 +654,5 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   DEALLOCATE (paw_vkb_cplx)
   DEALLOCATE( Mxanes )
 END SUBROUTINE xanes_dipole_general_edge
+
+
