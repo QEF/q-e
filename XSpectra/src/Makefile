@@ -21,7 +21,8 @@ XOBJS = \
 ./lanczos.o \
 ./plot_xanes_cross_sections.o \
 ./xanes_dipole_general_edge.o\
-./banner_xspectra.o 
+./banner_xspectra.o \
+./set_xspectra_namelists_defaults.o  
 
 
 
