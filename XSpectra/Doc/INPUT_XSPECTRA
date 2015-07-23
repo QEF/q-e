@@ -6,28 +6,37 @@ XSPECTRA
 2014: Restyling of I/O, 
  by Delphine Cabaret and Nadejda Mas
 
+2015: L23 edge XAS calculation by O. Bunau and M. Calandra
 -----------------------------------------------------------------------
 
 The theoretical approach on which XSpectra is based was
 described in: 
 
-M. Taillefumier, D. Cabaret, A. M. Flank, and F. Mauri
-"X-ray absorption near-edge structure calculations with the pseudopotentials:
-Application to the K edge in diamond and αalpha-quartz"
-Phys. Rev. B 66, 195107 (2002)
+L23 edges,
+
+O. Bunau and M. Calandra
+Projector augmented wave calculation of x-ray absorption spectra at the L2,3 edges
+Phys. Rev. B 87, 205105 (2013) 
+
+K/L1-edge,
 
 C. Gougoussis, M. Calandra, A. P. Seitsonen, F. Mauri,
 "First principles calculations of X-ray absorption in an ultrasoft 
 pseudopotentials scheme: from $\alpha$-quartz to high-T$_c$ compounds",
 Phys. Rev. B 80, 075102 (2009) 
 
-You should cite these two works in all publications using this software.
+M. Taillefumier, D. Cabaret, A. M. Flank, and F. Mauri
+"X-ray absorption near-edge structure calculations with the pseudopotentials:
+Application to the K edge in diamond and αalpha-quartz"
+Phys. Rev. B 66, 195107 (2002)
+
+You should cite these three works in all publications using this software.
 
 The implementation of the DFT+U approximation and its application to
 K-edge XAS in NiO was performed in:
 
 C. Gougoussis, M. Calandra, A. Seitsonen, Ch. Brouder, A. Shukla, F. Mauri
-" Intrinsic charge transfer gap in NiO from  Ni K -edge x-ray absorption spectroscopy",
+" Intrinsic charge transfer gap in NiO from  Ni K -edge x-ray absorption spectroscopy",
 Phys. Rev. B 79, 045118 (2009)
 
 If you use DFT+U, you should cite this work too.
@@ -41,8 +50,9 @@ Thus a scf calculation needs to be done before running
 xspectra.x.
 
 To simulate core-hole effects, a pseudopotential with a hole in the s
-state (1s for K-edges, 2s for L1-edges,...) needs to be generated 
-for the absorbing atom. Some of these pseudopotentials are available 
+state (1s for K-edges, 2s for L1-edges, 2p1/2 for L2-edges, 2p3/2 for
+L3-edges) needs to be generated for the absorbing atom. 
+Some of these pseudopotentials are available 
 in the XSpectra examples directory, some others are available on 
 the pseudopotential web-page at www.quantum-espresso.org/ with the
 label "*star1s*_gipaw*" for K-edges, "*star2s*_gipaw*" for L1-edges and so on. 
@@ -56,8 +66,8 @@ is enough.
 
 Since xspectra.x uses GIPAW reconstruction of the all electron wavefunction
 the pseudopotential needs to contain information about GIPAW reconstruction.
-There is no limit to the number of GIPAW projector that can be included. Note
-however that two projectors are typically enough to obtain XAS spectra
+There is no limit to the number of GIPAW projector that can be included. 
+Note however that at least two projectors are needed to obtain XAS spectra
 converged up to 30-40 eV from the Fermi level.
 The use of a single projector is discouraged, particularly when semicore
 states are present. If more than two projectors are used, linear independence
@@ -67,13 +77,13 @@ Once the scf charge density has been obtained, the xspectra.x code can be
 used as a post-processing tool. Note that the X-ray absorption spectra
 can be calculated on a larger mesh, different from that used in the 
 PWscf scf run. Convergence need to be tested also for this second mesh.
-XSpectra calculates then the XAS electric dipole or electric quadrupole contributions
+XSpectra calculates then the XAS electric dipole (for K and L edges)
+or electric quadrupole contributions (for K and L1 edges only),
 using the Lanczos method and the continued fraction.
 This approach does not require the explicit calculation of empty states
 and it is consequently very fast (only the charge density is needed).
-The code needs the 1s radial core wavefunction 
-(for the 1s state in the absence of a 
-core-hole) in input. This wavefunction is included in the pseudo
+The code needs the radial core wavefunction of the initial core state
+in input. This wavefunction is included in the pseudo
 and can be extracted using the script upf2plotcore.sh
 in the directory ~/espresso/XSpectra/tools/ .
 Note that this script works only for UPF version 1.
@@ -97,6 +107,24 @@ calculation  	 character (len=8)				  DEFAULT=''
                	 'xanes_quadrupole', Perform quadrupolar 
 		       		      calculation
                  'hpsi', Perform the test H*psi=E*Psi (debug option)
+
+edge             character (len=16)                                 DEFAULT='K',
+                 specifiy the edge to be calculated. 
+                 'K' specify the standard K-edge calculation
+                 'L2' calculates the L2 edge, 
+                 'L3' calculates the L3 edge,
+                 'L23' calculates both.
+                 However, it should be noted that in the single particle
+                 approximation the L3/L2 branching ration is exactly equal two 2.
+                 Thus a calculation of one of the edges is enough.
+
+lplus            logical                                           DEFAULT=.false.
+                 if lpus=.true. only transition 2p ---> d are allowed
+                 in the dipolar cross section for L23 edges.
+                  
+lminus           logical                                           DEFAULT=.false.
+                 if lminus=.true. only transition 2p ---> s are allowed
+                 in the dipolar cross section for L23 edges.
 
 prefix		 character (len=256) 
                	 prefix of the pwscf output files
