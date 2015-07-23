@@ -1393,6 +1393,8 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
      ! Rotational invariance has been checked.
      !*************************************************************************
 
+     
+
      DO ip=1,paw_recon(xiabs)%paw_nl(xang_mom)
 
         ipx=ipx_0+paw_iltonhb(xang_mom,ip,xiabs)
@@ -1472,7 +1474,8 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
 
      xnorm(1,ik)=SQRT(xnorm_partial)
      WRITE(stdout,'(8x,a,e15.8)') '|   Norm of the initial Lanczos vector:',&
-                                     xnorm(1,ik)
+          xnorm(1,ik)
+
      norm=1.d0/xnorm(1,ik)
      
      CALL zdscal(npw,norm,psiwfc,1)
@@ -2489,7 +2492,6 @@ SUBROUTINE read_core_abs(filename,core_wfn,nl_init)
 
   DO i=1,nbp
    READ(33 ,*) x,core_wfn(i)
-   write(277,*) x,core_wfn(i)
   ENDDO
 
   close(33)
@@ -2526,11 +2528,11 @@ SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry,ispectra)
 
   IMPLICIT NONE
 
-  REAL(dp), INTENT (in) :: a(xnitermax,1,nks),&
-                           b(xnitermax,1,nks),&
-                           xnorm(1,nks)
+  REAL(dp), INTENT (in) :: a(xnitermax,n_lanczos,nks),&
+                           b(xnitermax,n_lanczos,nks),&
+                           xnorm(n_lanczos,nks)
   REAL(dp), INTENT (in) :: e1s_ry 
-  INTEGER,  INTENT (in) :: ncalcv(1,nks), ispectra
+  INTEGER,  INTENT (in) :: ncalcv(n_lanczos,nks), ispectra
   LOGICAL,  INTENT (in) :: terminator
   
   !... Local variables
@@ -2541,7 +2543,7 @@ SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry,ispectra)
   REAL(dp) :: energy,de,mod_xgamma,xemax_ryd,xemin_ryd,xgamma_ryd
   REAL(dp) :: e0 ! in Ry
   REAL(dp) :: tmp_var
-  REAL(dp) :: Intensity_coord(1,xnepoint,nspin)
+  REAL(dp) :: Intensity_coord(n_lanczos,xnepoint,nspin)
   REAL(dp) :: continued_fraction 
   REAL(dp) :: paste_fermi, desmooth,t1,t2,f1,f2,df1,df2,poly(4) !CG 
   LOGICAL  :: first
@@ -2645,7 +2647,7 @@ SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry,ispectra)
         iestart=(e0-xemin_ryd)/de
         do i_lanczos = lanczos_i, lanczos_f
           DO ik=1,nks
-
+             
              first=.true.  ! to erase the memory of paste_fermi
              !<CG>
              t1=e0-desmooth
@@ -2963,8 +2965,8 @@ SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry,ispectra)
            energy = xemin_ryd + de*(n-1)
            Intensity_coord(:,n,:) = Intensity_coord(:,n,:) * &
                                     (energy+e1s_ry) *          &
-                                    alpha2 
-           WRITE(277,'(2f14.8)') (energy-e0)*rytoeV, Intensity_coord(1,n,1)
+                                    alpha2
+           WRITE(277,'(2f14.8)') (energy-e0)*rytoeV, sum( Intensity_coord(lanczos_i:lanczos_f,n,1) )
         ENDDO
      ELSEIF(nspin == 2) THEN
         DO n=1,xnepoint
@@ -2972,9 +2974,10 @@ SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry,ispectra)
            Intensity_coord(:,n,:) = Intensity_coord(:,n,:) * &
                                     (energy+e1s_ry)          * &
                                      alpha2 !
+
            WRITE(277,'(4f14.8)') (energy-e0)*rytoev, &
-                Intensity_coord(1,n,1)+Intensity_coord(1,n,2),&
-                Intensity_coord(1,n,1),Intensity_coord(1,n,2)
+                sum( Intensity_coord(lanczos_i:lanczos_f,n,1) )+ sum( Intensity_coord(lanczos_i:lanczos_f,n,2) ),& 
+                sum( Intensity_coord(lanczos_i:lanczos_f,n,1) ), sum( Intensity_coord(lanczos_i:lanczos_f,n,2) )
         ENDDO
      ENDIF
 
