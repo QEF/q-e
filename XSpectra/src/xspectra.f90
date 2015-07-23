@@ -713,7 +713,7 @@ ENDIF
      ENDIF
 
      CALL init_gipaw_1
-
+   
      !
      WRITE(stdout,1000) ! return+line
      WRITE(stdout,'(5x,a)') & 
@@ -947,7 +947,7 @@ ENDIF
                                  paw_iltonhb,terminator,verbosity)
 
         ELSEIF(nl_init(2).EQ.1.AND.xang_mom .eq. 1) then
-           call xanes_dipole_general_edge(a,b,ncalcv,nl_init,xnorm,core_wfn,paw_iltonhb,terminator)
+           call xanes_dipole_general_edge(a,b,ncalcv,nl_init,xnorm,core_wfn,paw_iltonhb,terminator, verbosity)
         ENDIF
         !
         ! write_save_file should be changed for L2,3
