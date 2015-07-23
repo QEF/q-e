@@ -19,6 +19,7 @@ XOBJS = \
 ./reset_k_points_and_reinit.o \
 ./select_nl_init.o \
 ./lanczos.o \
+./plot_xanes_cross_sections.o \
 ./xanes_dipole_general_edge.o\
 ./banner_xspectra.o 
 
