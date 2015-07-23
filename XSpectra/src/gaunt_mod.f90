@@ -298,27 +298,6 @@ contains
     end if
   end function float2int
 
-  character(len=256) function lower2upper(str) 
-
-!   <OB>
-!   Changes a string to upper case
-!   <OB>
-
-    implicit none
-    character(*), intent(in) :: str
-
-    integer ic, i
-
-    character(26), parameter :: upper  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    character(26), parameter :: lower  = 'abcdefghijklmnopqrstuvwxyz'
-    
-    lower2upper = str
-    do i = 1, len_trim(str)
-        ic = INDEX(lower, str(i:i))
-        if (ic > 0) lower2upper(i:i) = upper(ic:ic)
-    end do
-
-  end function lower2upper
 end module f2i
 
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
