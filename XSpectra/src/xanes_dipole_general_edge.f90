@@ -41,7 +41,6 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
                               save_file_kind, lplus, lminus,  two_edges
   USE coef_gaunt
   USE coef_CG
-  USE f2i
   USE atom,            ONLY : rgrid, msh
   USE radin_mod
   USE uspp,   ONLY : vkb, nkb, okvan !CG
@@ -136,13 +135,15 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
 
   ! This has been adapted for the selection rules explained above 
  
-
+  write(6,*) l_final_dim
   do ll = 1, l_final_dim
      lf = l_final(ll)
+     write(6,*) 'lf=',lf
      if( lf == -1 ) exit      ! state does not exist
      WRITE( stdout,*) 'There are ',paw_recon(xiabs)%paw_nl(lf),' projectors/channels'
      WRITE( stdout,*) 'for angular moment',lf,' and atom type',xiabs
   end do
+
   
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   ! Radial Dipole Matrix element
@@ -159,6 +160,8 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
      aux(1:nr)=core_wfn(1:nr)*core_wfn(1:nr)
      WRITE (stdout,'(" norm of core wfc =",1f14.8)') SQRT(para_radin(aux(1:nr),rgrid(xiabs)%r(1:nr),nr))
   ENDIF
+
+
   
   ! <OB>
   ! Calculation of the radial integral
@@ -492,7 +495,7 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
                           if( isg == 1 .and. ik > nkstot/2 ) cycle   ! the up/down is defined by nkstot and  
                           if( isg == 2 .and. ik < nkstot/2+1 ) cycle !             not by nks
                        end if
-                       ms = float2int( mj - isg + 1.5d0 )             ! m of the initial state (int) 
+                       ms = nint( mj - isg + 1.5d0 )             ! m of the initial state (int) 
                        if( .not. q_final(ll) .and. gaunt(lf,m,nl_init(2),ms,1,mu) == 0. ) cycle
                        dl  = dble( nl_init(2) )                       ! ClebschG requires dble input values
                        disg = dble(isg) - 1.5d0                       ! the actual spin

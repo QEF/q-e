@@ -266,42 +266,6 @@ contains
 
 end module coef_gaunt
 
-!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-!<OB>  some useful stuff
-!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-module f2i
-  
-  use kinds, only : dp
-  implicit none
-
-contains
-! transforms float to the nearest integer
-  integer function float2int(x)
-    implicit none
-    real(kind=DP), intent(in):: x
-    integer i
-
-    i = int(x)
-    if( x > 0 ) then
-      if( abs(dble(i) - x) > abs(dble(i+1) - x) ) then
-        float2int = i + 1
-      else
-        float2int = i
-      end if
-    else
-      if( abs(dble(i) - x) < abs(dble(i+1) - x) ) then
-        float2int = i
-      else
-        float2int = i + 1
-      end if
-    end if
-  end function float2int
-
-end module f2i
-
-!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
 
   ! initializes seuilK
   ! Compile par Gwyn Williams,
