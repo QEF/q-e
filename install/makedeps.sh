@@ -101,7 +101,7 @@ for dir in $dirs; do
         if test "$DIR" = "Modules"
         then
             sed '/@mpi@/d;/@elpa1@/d' make.depend > make.depend.tmp
-            sed '/@mkl_dfti/d' make.depend.tmp > make.depend
+            sed '/@mkl_dfti/d;/@fftw3.f03@/d' make.depend.tmp > make.depend
         fi
 
         if test "$DIR" = "clib"
