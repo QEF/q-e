@@ -44,15 +44,20 @@ module xspectra
         xread_wf,   &         ! key word for reading wavefunctions
         xcoordcrys           ! kew word for epsilon and k in crystalline k.
 
+   logical :: terminator, show_status, wf_collect
+
    logical :: lplus,      &         ! if true only the l+1 transition is calculated
               lminus, &              ! if true only the l-1 transition is calculated
               two_edges
 
    integer, dimension(2) :: nl_init ! determine  n and l quantum numbers for initial  state.             
    character(LEN=16) :: edge      ! can be 'K', 'L1', 'L2' , 'L3' 
- 
+   CHARACTER (LEN=256) :: outdir
+   CHARACTER (LEN=25)  :: calculation
+   CHARACTER (LEN=4)   :: verbosity 
    character(LEN=256) :: x_save_file
    character(LEN=16) :: U_projection_type
+   CHARACTER (LEN=256) ::  filecore
 
    integer :: save_file_version          ! versionning of save file
    character (len=32) :: save_file_kind

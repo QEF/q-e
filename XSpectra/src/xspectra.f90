@@ -93,14 +93,11 @@ PROGRAM X_Spectra
   !REAL (DP), EXTERNAL   :: efermig,efermit
  
   LOGICAL :: exst !, loc_set
-  LOGICAL :: terminator, show_status, wf_collect 
   LOGICAL :: found ! input_file found or not ?
 
-  CHARACTER (LEN=256) :: input_file, filerecon(ntypx), filecore 
-  CHARACTER (LEN=256) :: outdir
-  CHARACTER (LEN=25)  :: calculation 
-  CHARACTER (LEN=4)   :: verbosity
+  CHARACTER (LEN=256) :: input_file
   CHARACTER (LEN=10)  :: dummy_char
+  CHARACTER (LEN=256) :: filerecon(ntypx)
   !REAL (DP) :: gamma_energy(2), gamma_value(2)
   REAL (DP) :: xeps_dot_xk ! scalar product between xepsilon and xkvec
   !REAL(dp) :: auxrpol(3,2) non used variable
@@ -168,74 +165,11 @@ PROGRAM X_Spectra
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'XSpectra' )
+
   CALL banner_xspectra()
 
-  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-  ! $   Set default values for some namelist variables
-  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+  CALL set_xspectra_namelists_defaults()
 
-  ! ... Namelist input_xspectra
-  !calculation='xanes'
-  calculation='xanes_dipole'
-  prefix=' '
-  verbosity='low'
-  x_save_file='xanes.sav'
-  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
-  IF ( TRIM( outdir ) == ' ' ) outdir = './'
-  xniter=50
-  xcheck_conv=5
-  xonly_plot=.FALSE.
-  xread_wf=.FALSE.
-  xerror=1.d-2
-  xiabs=1               !identify the adsorbing atom
-  !<DC>
-  !DO i=2,3
-  !   xkvec(i)=0.d0
-  !   xepsilon(i)=0.d0
-  !ENDDO
-  xkvec(1)=0.d0       
-  xkvec(2)=1.d0
-  xkvec(3)=0.d0
-  xepsilon(1)=1.d0
-  xepsilon(2:3)=0.d0
-  !ef_r=0.d0
-  xe0=xe0_default 
-  !</DC>
-  xcoordcrys=.true.
-  show_status=.false.
-  wf_collect=.false.
-  U_projection_type='atomic'
-  restart_mode='from_scratch'
-  time_limit=1.d8
-  edge='K'
-  lplus=.false.
-  lminus=.false.
-
- 
-  ! ... Namelist plot
-  xnepoint=100
-  xemin=0.d0
-  xemax=10.d0
-  xgamma=0.1d0
-  cut_occ_states=.FALSE.
-  terminator=.false.
-  gamma_mode='constant'
-  gamma_file='gamma.dat'
-  
-
-  ! ... Namelist pseudos 
-  filecore='Core.wfc'
-
-  ! ... Namelist cut_occ (for cutting the occupied states, paste_fermi function)
-  cut_ierror=1.d-7
-  cut_stepu=1.d-2
-  cut_stepl=1.d-3
-  cut_startt=1.d0
-  cut_tinf=1.d-6
-  cut_tsup=100.d0
-  cut_desmooth=1.d-2
-  cut_nmemu=100000
-  cut_nmeml=100000
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   ! $   Check if the input is from file or from stdin and read it
