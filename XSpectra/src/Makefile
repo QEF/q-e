@@ -24,7 +24,9 @@ XOBJS = \
 ./banner_xspectra.o \
 ./set_xspectra_namelists_defaults.o \
 ./read_input_and_bcast.o \
-./stdout_routines.o
+./stdout_routines.o \
+./xanes_dipole.o \
+./xanes_quadrupole.o
 
 
 
