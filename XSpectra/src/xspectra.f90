@@ -115,113 +115,7 @@ PROGRAM X_Spectra
 
   CALL read_input_and_bcast(filerecon, r_paw)
 
-  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-  ! $   Writes the relevant parameters of the XSpectra calculation
-  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-  WRITE(stdout, '(5x,a,a,/)') 'calculation: ', TRIM(ADJUSTL(calculation))
-
-!<NM> Write xepsilon and (if needed) xkvec
- IF(.NOT.xonly_plot) THEN
-     IF ( xcoordcrys ) THEN
-         WRITE(stdout,'(5x,a,3(f10.6,1x),/)') &
-         'xepsilon  [crystallographic coordinates]: ', (xepsilon(i),i=1,3)
-     ELSE
-        WRITE(stdout,'(5x,a,3(f10.6,1x),/)') &
-         'xepsilon  [cartesian coordinates]: ', (xepsilon(i),i=1,3)
-     ENDIF
-
-     IF ( TRIM(ADJUSTL(calculation)).EQ.'xanes_quadrupole' )  THEN
-        IF ( xcoordcrys ) THEN
-            WRITE(stdout,'(5x,a,3(f10.6,1x),/)') &
-            'xkvec  [crystallographic coordinates]: ', (xkvec(i),i=1,3)
-        ELSE
-           WRITE(stdout,'(5x,a,3(f10.6,1x),/)') &
-           'xkvec [cartesian coordinates]: ', (xkvec(i),i=1,3)
-        ENDIF
-     ENDIF
-!<NM>
-ENDIF
-
-
-  ! ... Writes xonly_plot, its meaning and plot parameters
- 
-  IF (xonly_plot.EQV..FALSE.) then
-     WRITE(stdout,'(5x,a)') 'xonly_plot: FALSE'
-     WRITE(stdout,'(8x,a,/)') &  
-          '=> complete calculation: Lanczos + spectrum plot'
-     WRITE(stdout,'(5x,a,a20)') 'filecore (core-wavefunction file): ', &
-                                 filecore
-  ELSE
-     WRITE(stdout,'(5x,a)') 'xonly_plot: TRUE'
-     WRITE(stdout,'(8x,a)') & 
-          '=> only the spectrum plot'
-  ENDIF
-  WRITE(stdout,*) 
-
-  WRITE(stdout,'(5x,a)') 'main plot parameters:'
-  IF (cut_occ_states) THEN
-     WRITE(stdout,'(8x,a)') 'cut_occ_states: TRUE'
-  ELSE
-     WRITE(stdout,'(8x,a)') 'cut_occ_states: FALSE'
-  ENDIF
-  WRITE(stdout,'(8x,a,a8)')   'gamma_mode:  ', gamma_mode 
-  IF (TRIM(ADJUSTL(gamma_mode)).EQ.'constant') THEN
-    WRITE(stdout,'(8x,a,f5.2)') '-> using xgamma [eV]: ', xgamma
-  ELSEIF (TRIM(ADJUSTL(gamma_mode)).EQ.'file') THEN
-    WRITE(stdout,'(8x,a,a50)')  '-> using gamma_file: ', gamma_file
-  ELSEIF (TRIM(ADJUSTL(gamma_mode)).EQ.'variable') THEN
-    WRITE(stdout,'(8x,a,f5.2,a1,f5.2,a)') &
-     '-> first, constant up to point (', &
-                                     gamma_energy(1),',',gamma_value(1),') [eV]' 
-    WRITE(stdout,'(8x,a,f5.2,a1,f5.2,a)') &
-     '-> then, linear up to point (',gamma_energy(2),',',gamma_value(2),') [eV]' 
-    WRITE(stdout,'(8x,a)') '-> finally, constant up to xemax'
-  ENDIF
-  WRITE(stdout,'(8x,a,f6.2)') 'xemin [eV]: ', xemin
-  WRITE(stdout,'(8x,a,f6.2)') 'xemax [eV]: ', xemax
-  WRITE(stdout,'(8x,a,i4)')   'xnepoint: ', xnepoint
-  IF (abs(xe0-xe0_default)<1.d-3) THEN
-     WRITE(stdout,'(8x,a,/)') &
-          'energy zero automatically set to the Fermi level'
-     IF (xonly_plot) THEN
-        WRITE(stdout,'(5x,a)') 'Fermi level read in x_save_file'
-     ELSE
-        WRITE(stdout,'(5x,3a)') &
-          'Fermi level determined from SCF save directory (', &
-          trim(prefix)//'.save',')'
-     ENDIF
-     WRITE(stdout,'(5x,a)') &
-         'NB: For an insulator (SCF calculated with occupations="fixed")'
-     WRITE(stdout,'(5x,a)') &
-         '    the Fermi level will be placed at the position of HOMO.'
-  ELSE
-     WRITE(stdout,'(8x,a,f10.6,3a)') 'xe0 [eV]: ', xe0, &
-         ' (energy zero read in ','input file',')'
-  ENDIF
-  WRITE(stdout,*) 
-  WRITE(stdout,'(5x,a)') 'WARNING: variable ef_r is obsolete'
-  !</DC>
-
-  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-  ! $   Writing the status of the code (working features and things to do)
-  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-  IF(show_status) CALL WRITE_status_of_the_code
-
-  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-  ! $   Initialising calculation and clock
-  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-  IF(edge.EQ.'L1') edge='K'
-
-  IF(TRIM(ADJUSTL(calculation)).EQ.'xanes_dipole') THEN
-     xang_mom=1                    !so it is not necessary to specify xang_mom
-     calculation='xanes'
-  ELSEIF(TRIM(ADJUSTL(calculation)).EQ.'xanes_quadrupole') THEN
-     xang_mom=2                    !so it is not necessary to specify xang_mom
-     calculation='xanes'
-  ENDIF
+  call write_sym_param_to_stdout()
 
   call select_nl_init(edge, nl_init, two_edges, n_lanczos)     
 
@@ -241,15 +135,10 @@ ENDIF
      WRITE(stdout,1001) ! line+return
 
      CALL read_file()
-     ehomo=0.d0
-     elumo=0.d0
-     CALL get_homo_lumo(ehomo,elumo)
-     ehomo = ehomo*rytoev
-     elumo = elumo*rytoev
+
+     CALL calculate_and_write_homo_lumo_to_stdout(ehomo,elumo)
 
      call reset_k_points_and_reinit_nscf()
-
- 
 
      IF(xread_wf) THEN
         IF (okvan) THEN
@@ -263,37 +152,37 @@ ENDIF
         ENDIF
      ENDIF
 
- 
-        ! ... normalize xepsilon 
+        ! ... normalize xepsilon
 
      IF ( xcoordcrys ) CALL cryst_to_cart(1,xepsilon,at,1)
      norm=DSQRT(xepsilon(1)**2+xepsilon(2)**2+xepsilon(3)**2)
      DO i=1,3
        xepsilon(i)=xepsilon(i)/norm
-     ENDDO
+    ENDDO
+
+    ! ... If needed normalize xkvec
+    !     and check orthogonality with xepsilon
+    
+    IF(xang_mom.EQ.2) THEN
+       
+       IF ( xcoordcrys ) CALL cryst_to_cart(1,xkvec,at,1)
+       norm=DSQRT(xkvec(1)**2+xkvec(2)**2+xkvec(3)**2)
+       xkvec(:)=xkvec(:)/norm
+       xeps_dot_xk=xkvec(1)*xepsilon(1)+&
+                    xkvec(2)*xepsilon(2)+&
+                    xkvec(3)*xepsilon(3)
+       IF ((ABS(xeps_dot_xk)) >= 1.0d-6) THEN
+          WRITE(stdout,'(5x,a)') &
+               'ERROR: xkvec and xepsilon are not orthogonal'
+          WRITE(stdout,'(12x,a,f10.6,/)') 'scalar product=', xeps_dot_xk
+          WRITE(stdout,'(5x,a)') 'STOP'
+          CALL stop_xspectra ()
+       ENDIF
+       
+    ENDIF
+    
+
  
-     ! ... If needed normalize xkvec 
-     !     and check orthogonality with xepsilon 
-
-     IF(xang_mom.EQ.2) THEN
-     
-        IF ( xcoordcrys ) CALL cryst_to_cart(1,xkvec,at,1)
-        norm=DSQRT(xkvec(1)**2+xkvec(2)**2+xkvec(3)**2)
-        xkvec(:)=xkvec(:)/norm
-        xeps_dot_xk=xkvec(1)*xepsilon(1)+&
-                    xkvec(2)*xepsilon(2)+& 
-                    xkvec(3)*xepsilon(3) 
-        IF ((ABS(xeps_dot_xk)) >= 1.0d-6) THEN
-           WRITE(stdout,'(5x,a)') &
-              'ERROR: xkvec and xepsilon are not orthogonal'
-           WRITE(stdout,'(12x,a,f10.6,/)') 'scalar product=', xeps_dot_xk
-           WRITE(stdout,'(5x,a)') 'STOP'
-           CALL stop_xspectra ()
-        ENDIF
-
-     ENDIF
-
-
      !... Is the type associated to xiabs existing ?
      
      i=0
@@ -448,77 +337,9 @@ ENDIF
      ENDIF
 
      CALL init_gipaw_1
-   
-     !
-     WRITE(stdout,1000) ! return+line
-     WRITE(stdout,'(5x,a)') & 
-     '                      Getting the Fermi energy '
-     WRITE(stdout,1001) ! line+return
-     !
-     IF (lsda) THEN
-       WRITE(stdout,'(5x,a,a)') 'From SCF save directory',&
-                         ' (spin polarized work):' 
-       !
-       IF (abs(ehomo)<1.e+6) THEN ! insulator => HOMO exists
-         WRITE(stdout,'(8x,a,f9.4,a)') 'ehomo [eV]: ', ehomo,&
-                        ' (highest occupied level:max of up and down)'
-         ef=ehomo
-         IF (abs(elumo)<1.e+6) THEN  ! insulator and LUMO exists 
-            WRITE(stdout,'(8x,a,f9.4,a)') 'elumo [eV]: ', elumo,&
-                        ' (lowest occupied level:min of up and down)'
-         ELSE
-            WRITE(stdout,'(8x,a)') 'No LUMO values in SCF calculation'
-         ENDIF
-       ELSE IF (abs(ef)>1.e-4) THEN
-         ef=ef*rytoev !ef in eV
-       ELSE
-         WRITE(stdout,'(8x,a,f9.4)') 'ef_up [eV]: ', ef_up*rytoeV
-         WRITE(stdout,'(8x,a,f9.4)') 'ef_dw [eV]: ', ef_dw*rytoeV
-         ef=max(ef_dw,ef_up)*rytoeV
-         WRITE(stdout,'(8x,a,f9.4)') '-> ef set to the max of ef_up and ef_dw '
-       ENDIF
-       WRITE(stdout,'(8x,a,f9.4)') 'ef    [eV]: ', ef   
-      
-       WRITE(stdout,'(/,5x,a)') &
-          '-> ef (in eV) will be written in x_save_file'
-     ELSE
-       WRITE(stdout,'(5x,a)') 'From SCF save directory:'
-       !
-       ef=ef*rytoev
-       IF (abs(ehomo)<1.e+6) THEN ! insulator => HOMO exists
-         WRITE(stdout,'(8x,a,f9.4,a)') 'ehomo [eV]: ', ehomo,&
-                                      ' (highest occupied level)'
-         ef=ehomo
-         IF (abs(elumo)<1.e+6) THEN  ! insulator and LUMO exists 
-           WRITE(stdout,'(8x,a,f9.4,a)') 'elumo [eV]: ', elumo,&
-                                      ' (lowest occupied level)'
-         ELSE
-           WRITE(stdout,'(8x,a)') 'No LUMO value in SCF calculation'
-         ENDIF
-       ENDIF
-       WRITE(stdout,'(8x,a,f9.4)') 'ef    [eV]: ', ef   
-       
-       WRITE(stdout,'(/,5x,a)') &
-          '-> ef (in eV) will be written in x_save_file'
-     
-     ENDIF
-
-     !
-     WRITE(stdout,1000) ! return+line
-     WRITE(stdout,'(5x,a)') &
-     '                      Energy zero of the spectrum '
-     WRITE(stdout,1001) ! line+return
-     !
-     IF (abs(xe0-xe0_default)<1.d-3) THEN ! no xe0 in input
-          WRITE(stdout,'(5x,a)') &
-          '-> ef will be used as energy zero of the spectrum'
-     ELSE
-          WRITE(stdout,'(5x,a,/,7x,3a)') &  
-          '-> ef will NOT be used as energy zero of the spectrum',&
-          '(because xe0 read in ', 'input file',')'  
-     ENDIF
-    
-
+  
+          
+ 
      !        CALL mp_bcast( ef, ionode_id )  !Why should I need this ?
 
 
@@ -684,9 +505,7 @@ ENDIF
         ELSEIF(nl_init(2).EQ.1.AND.xang_mom .eq. 1) then
            call xanes_dipole_general_edge(a,b,ncalcv,nl_init,xnorm,core_wfn,paw_iltonhb,terminator, verbosity)
         ENDIF
-        !
-        ! write_save_file should be changed for L2,3
-        !
+
         CALL write_save_file(a,b,xnorm,ncalcv,x_save_file)
         WRITE(stdout,'(/,5x,a)') &
               'Results of STEP 1 successfully written in x_save_file'

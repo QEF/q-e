@@ -23,7 +23,8 @@ XOBJS = \
 ./xanes_dipole_general_edge.o\
 ./banner_xspectra.o \
 ./set_xspectra_namelists_defaults.o \
-./read_input_and_bcast.o
+./read_input_and_bcast.o \
+./stdout_routines.o
 
 
 

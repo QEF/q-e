@@ -1,6 +1,7 @@
 subroutine read_input_and_bcast(filerecon, r_paw)
   USE kinds, ONLY : DP
   use xspectra
+  USE cell_base,       ONLY :  at
   USE io_files,      ONLY : prefix, tmp_dir
   USE cut_valence_green, ONLY :&
        cut_ierror, &    ! convergence tolerance for one step in the integral
@@ -25,9 +26,10 @@ subroutine read_input_and_bcast(filerecon, r_paw)
   USE klist, ONLY : nelup, neldw, nelec
 
   IMPLICIT NONE
-  INTEGER :: nargs, ierr, ios
+  INTEGER :: nargs, ierr, ios, i
   INTEGER :: iargc, iiarg
   LOGICAL :: found ! input_file found or not ?
+  REAL(DP) :: norm, xeps_dot_xk
   REAL(DP) :: r_paw(0:lmaxx)
   CHARACTER (LEN=256) :: input_file
   CHARACTER (LEN=256) :: filerecon(ntypx)
@@ -225,6 +227,17 @@ subroutine read_input_and_bcast(filerecon, r_paw)
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 
+  IF(TRIM(ADJUSTL(calculation)).EQ.'xanes_dipole') THEN
+     xang_mom=1                    !so it is not necessary to specify xang_mom
+     calculation='xanes'
+  ELSEIF(TRIM(ADJUSTL(calculation)).EQ.'xanes_quadrupole') THEN
+     xang_mom=2                    !so it is not necessary to specify xang_mom
+     calculation='xanes'
+  ENDIF
+
+
+
+
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   ! $   check on wfcollect
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -235,6 +248,24 @@ subroutine read_input_and_bcast(filerecon, r_paw)
 
   twfcollect=wf_collect
 
+  IF(trim(adjustl(edge)).NE.'K'.AND. &
+       trim(adjustl(edge)).NE.'L1'.AND. &
+       trim(adjustl(edge)).NE.'L2'.AND. &
+       trim(adjustl(edge)).NE.'L3'.AND. &
+       trim(adjustl(edge)).NE.'L23') then
+     write(stdout,*) 'Calculation for this edge not implemented!'
+     write(stdout,*) 'Program is stopped'
+     call stop_xspectra()
+  ENDIF
+
+  IF(xang_mom.eq.2.and.         &
+       (trim(adjustl(edge)).eq.'L2'.or.trim(adjustl(edge)).eq.'L3'&
+       .or.trim(adjustl(edge)).eq.'L23') ) then
+     write(stdout,*) 'Quadrupolar cross section for L23 edges not implemented.'
+     write(stdout,*) 'Program is stopped'
+     call stop_xspectra()
+  ENDIF
+
  ! 
  !   lplus and lminus cannot be both positive
  !
@@ -243,6 +274,7 @@ subroutine read_input_and_bcast(filerecon, r_paw)
     lminus = .false.
   end if
 
+  
 
 
 
