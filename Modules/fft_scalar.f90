@@ -1,18 +1,17 @@
 !
-! Copyright (C) 2001-2012 Quantum ESPRESSO group
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------!
-! FFT scalar drivers Module - contains machine-dependent routines for:     !
-! FFTW, FFTW3, ESSL, LINUX_ESSL, SCSL, SUNPERF, NEC ASL libraries          !
-! (both 3d for serial execution and 1d+2d FFTs for parallel execution,     !
-! excepted NEC ASL, 3d only, no parallel execution)                        !
+! FFT scalar drivers Module - contains machine-dependent routines for      !
+! FFTW, FFTW3, ESSL (both 3d for serial execution and 1d+2d FFTs for       !
+! parallel execution; NEC ASL libraries (3d only, no parallel execution)   !
 ! Written by Carlo Cavazzoni, modified by P. Giannozzi, contributions      !
 ! by Martin Hilgemans, Guido Roma, Pascal Thibaudeau, Stephane Lefranc,    !
-! Nicolas Lacorne, Filippo Spiga - Last update Aug 2012                    !
+! Nicolas Lacorne, Filippo Spiga, Nicola Varini - Last update Jul 2015     !
 !--------------------------------------------------------------------------!
 
 #include "fft_defs.h"
@@ -26,13 +25,12 @@
 !=----------------------------------------------------------------------=!
        USE kinds
 
+       USE, intrinsic ::  iso_c_binding
+       
 #if defined __DFTI
-       USE MKL_DFTI ! -- this can be found int he MKL include directory
+       USE MKL_DFTI ! -- this can be found in the MKL include directory
 #endif
-#if defined __FFTW3
- USE, intrinsic ::  iso_c_binding
-#endif
-        IMPLICIT NONE
+       IMPLICIT NONE
         SAVE
 
         PRIVATE
@@ -52,30 +50,6 @@
         !   in order to avoid multiple copies of the same workspace
         !   lwork:   Dimension of the work space array (if any)
 
-#if ( defined __ESSL || defined __LINUX_ESSL ) && ! ( defined __FFTW || defined __FFTW3 )
-
-        !   ESSL IBM library: see the ESSL manual for DCFT
-
-        INTEGER, PARAMETER :: lwork = 20000 + ( 2*nfftx + 256 ) * 64 + 3*nfftx
-        REAL (DP) :: work( lwork )
-
-#elif defined __SCSL || defined __SUNPERF
-
-        !   SGI scientific library scsl and SUN sunperf
-
-        INTEGER, PARAMETER :: lwork = 2 * nfftx
-        COMPLEX (DP) :: work(lwork)
-
-#elif defined __FFTW3
-
-        !  Only FFTW_ESTIMATE is actually used
-
-!#define  FFTW_MEASURE  0
-!#define  FFTW_ESTIMATE 64
-
-#include "fftw3.f03"
-#endif
-
 #if defined __FFTW 
 
         INTEGER   :: cft_b_dims( 4 )
@@ -87,12 +61,22 @@
         C_POINTER :: cft_b_bw_plany = 0
 !$omp threadprivate (cft_b_bw_plany)
 
-#endif
+#elif defined __FFTW3
 
-#if defined __DFTI
+#include "fftw3.f03"
+
+#elif defined __DFTI
         TYPE dfti_descriptor_array
            TYPE(DFTI_DESCRIPTOR), POINTER :: desc
         END TYPE
+
+#elif ( defined __ESSL || defined __LINUX_ESSL )
+
+        !   ESSL IBM library: see the ESSL manual for DCFT
+
+        INTEGER, PARAMETER :: lwork = 20000 + ( 2*nfftx + 256 ) * 64 + 3*nfftx
+        REAL (DP) :: work( lwork )
+
 #endif
 
 !=----------------------------------------------------------------------=!
@@ -112,10 +96,6 @@
 !
 
    SUBROUTINE cft_1z(c, nsl, nz, ldz, isign, cout)
-
-#if defined __DFTI || __FFTW3
-     USE iso_c_binding
-#endif
 
 !     driver routine for nsl 1d complex fft's of length nz
 !     ldz >= nz is the distance between sequences to be transformed
@@ -187,15 +167,6 @@
      REAL (DP), SAVE :: fw_tablez( ltabl, ndims )
      REAL (DP), SAVE :: bw_tablez( ltabl, ndims )
 
-#elif defined __SCSL
-
-     !   SGI scientific library scsl
-
-     INTEGER, PARAMETER :: ltabl = 2 * nfftx + 256
-     REAL (DP), SAVE :: tablez (ltabl, ndims)
-     REAL (DP)       :: DUMMY
-     INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
-
 #elif defined __SX6
 
      !   NEC MathKeisan
@@ -205,13 +176,6 @@
      REAL (DP)       :: work(4*nz*nsl)
      COMPLEX (DP)    :: DUMMY
      INTEGER, SAVE :: isys = 1
-
-#elif defined __SUNPERF
-
-     !   SUN sunperf library
-
-     INTEGER, PARAMETER :: ltabl = 4 * nfftx + 15
-     REAL (DP), SAVE :: tablez (ltabl, ndims)
 
 #endif
 
@@ -325,20 +289,10 @@
           1.0_DP, bw_tablez(1, icurrent), ltabl, work(1), lwork)
 
 
-#elif defined __SCSL
-
-       CALL ZZFFTM (0, nz, 0, 0.0_DP, DUMMY, 1, DUMMY, 1, &
-                    tablez (1, icurrent), DUMMY, isys)
-
 #elif defined __SX6
 
        CALL ZZFFTM (0, nz, 1, 1.0_DP, DUMMY, ldz, DUMMY, ldz, &
                     tablez (1, icurrent), work, isys)
-
-#elif defined __SUNPERF
-
-       CALL zffti (nz, tablez (1, icurrent) )
-
 #else
 
        CALL errore(' cft_1z ',' no scalar fft driver specified ', 1)
@@ -434,18 +388,6 @@
         ENDIF
      END IF
 
-#elif defined __SCSL
-
-     IF ( isign < 0 ) THEN
-        idir   = -1
-        tscale = 1.0_DP / nz
-     ELSE IF ( isign > 0 ) THEN
-        idir   = 1
-        tscale = 1.0_DP
-     END IF
-     IF (isign /= 0) CALL ZZFFTM (idir, nz, nsl, tscale, c(1), ldz, &
-          cout(1), ldz, tablez (1, ip), work, isys)
-
 #elif defined __SX6
 
      IF ( isign < 0 ) THEN
@@ -473,21 +415,6 @@
         tscale = 1.0_DP
         CALL DCFT (0, c(1), 1, ldz, cout(1), 1, ldz, nz, nsl, idir, &
              tscale, bw_tablez(1, ip), ltabl, work, lwork)
-     END IF
-
-
-#elif defined __SUNPERF
-
-     IF ( isign < 0) THEN
-        DO i = 1, nsl
-           CALL zfftf ( nz, c(1+(i-1)*ldz), tablez ( 1, ip) )
-        END DO
-        cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) / nz
-     ELSE IF( isign > 0 ) THEN
-        DO i = 1, nsl
-           CALL zfftb ( nz, c(1+(i-1)*ldz), tablez ( 1, ip) )
-        enddo
-        cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
      END IF
 
 #else
@@ -518,10 +445,6 @@
 !
 
    SUBROUTINE cft_2xy(r, nzl, nx, ny, ldx, ldy, isign, pl2ix)
-
-#if defined __DFTI || defined __FFTW3
-     USE iso_c_binding
-#endif
 
 !     driver routine for nzl 2d complex fft's of lengths nx and ny
 !     input : r(ldx*ldy)  complex, transform is in-place
@@ -579,14 +502,6 @@
      REAL (DP), SAVE :: fw_tablex( ltabl, ndims ), fw_tabley( ltabl, ndims )
      REAL (DP), SAVE :: bw_tablex( ltabl, ndims ), bw_tabley( ltabl, ndims )
 
-#elif defined __SCSL
-
-     INTEGER, PARAMETER :: ltabl = 2 * nfftx + 256
-     REAL (DP), SAVE :: tablex (ltabl, ndims), tabley(ltabl, ndims)
-     COMPLEX (DP) :: XY(nx+nx*ny)
-     REAL (DP)    :: DUMMY
-     INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
-
 #elif defined __SX6
 
      INTEGER, PARAMETER :: ltabl = 2*nfftx + 64
@@ -596,18 +511,8 @@
      COMPLEX (DP) :: DUMMY
      INTEGER, SAVE :: isys = 1
 
-#elif defined __SUNPERF
-
-     INTEGER, PARAMETER :: ltabl = 4 * nfftx + 15
-     REAL (DP), SAVE :: tablex (ltabl, ndims)
-     REAL (DP), SAVE :: tabley (ltabl, ndims)
-
 #endif
 
-
-#if defined __SCSL
-     isys(0) = 1
-#endif
 
      dofft( 1 : nx ) = .TRUE.
      IF( PRESENT( pl2ix ) ) THEN
@@ -788,15 +693,6 @@
 
 #endif
 
-
-
-#elif defined __SCSL
-
-       CALL ZZFFTMR (0, ny, 0, 0.0_DP, DUMMY, 1, DUMMY, 1,               &
-                     tabley (1, icurrent), DUMMY, isys)
-       CALL ZZFFTM  (0, nx, 0, 0.0_DP, DUMMY, 1, DUMMY, 1,               &
-                     tablex (1, icurrent), DUMMY, isys)
-
 #elif defined __SX6
 
 
@@ -804,12 +700,6 @@
                   tabley (1, icurrent), work, isys)
        CALL ZZFFTM  (0, nx, 1, 1.0_DP, DUMMY, ldx, DUMMY, ldx,           &
                      tablex(1, icurrent), work, isys)
-
-#elif defined __SUNPERF
-
-       CALL zffti (ny, tabley (1, icurrent) )
-       CALL zffti (nx, tablex (1, icurrent) )
-
 #else
 
        CALL errore(' cft_2xy ',' no scalar fft driver specified ', 1)
@@ -1136,107 +1026,6 @@
 
      END IF
 
-#elif defined __SCSL
-
-      IF( isign < 0 ) THEN
-
-       idir = -1
-       tscale = 1.0_DP / (nx * ny)
-       DO k = 0, nzl-1
-          kk = k * ldx * ldy
-! FORWARD: ny FFTs in the X direction
-          CALL ZZFFTM ( idir, nx, ny, tscale, r(kk+1), ldx, r(kk+1), ldx,   &
-                        tablex (1, ip), work(1), isys )
-! FORWARD: nx FFTs in the Y direction
-          DO i = 1, nx
-             IF ( dofft(i) ) THEN
-!DIR$IVDEP
-!DIR$LOOP COUNT (50)
-                DO j = 0, ny-1
-                   XY(j+1) = r(i + (j) * ldx + kk)
-                END DO
-                CALL ZZFFT(idir, ny, 1.0_DP, XY, XY, tabley (1, ip),      &
-                           work(1), isys)
-!DIR$IVDEP
-!DIR$LOOP COUNT (50)
-                DO j = 0, ny-1
-                   r(i + (j) * ldx + kk) = XY(j+1)
-                END DO
-             END IF
-          END DO
-       END DO
-
-     ELSE IF ( isign > 0 ) THEN
-
-       idir = 1
-       tscale = 1.0_DP
-       DO k = 0, nzl-1
-! BACKWARD: nx FFTs in the Y direction
-          kk = (k) * ldx * ldy
-          DO i = 1, nx
-             IF ( dofft(i) ) THEN
-!DIR$IVDEP
-!DIR$LOOP COUNT (50)
-                DO j = 0, ny-1
-                   XY(j+1) = r(i + (j) * ldx + kk)
-                END DO
-                CALL ZZFFT(idir, ny, 1.0_DP, XY, XY, tabley (1, ip),      &
-                           work(1), isys)
-!DIR$IVDEP
-!DIR$LOOP COUNT (50)
-                DO j = 0, ny-1
-                   r(i + (j) * ldx + kk) = XY(j+1)
-                END DO
-             END IF
-          END DO
-! BACKWARD: ny FFTs in the X direction
-          CALL ZZFFTM ( idir, nx, ny, tscale, r(kk+1), ldx, r(kk+1), ldx,   &
-                        tablex (1, ip), work(1), isys )
-       END DO
-
-     END IF
-
-#elif defined __SUNPERF
-
-     IF ( isign < 0 ) THEN
-
-        DO k = 1, ny * nzl
-           kk = 1 + ( k - 1 ) * ldx
-           CALL zfftf ( nx, r (kk), tablex (1, ip) )
-        END DO
-
-        DO i = 1, nx
-           IF ( dofft(i) ) THEN
-              DO j = 1, nzl
-                 kk = (j - 1) * ldx * ny + i
-                 CALL ZCOPY (ny, r (kk), ldx, work, 1)
-                 CALL zfftf (ny, work, tabley (1, ip) )
-                 CALL ZCOPY (ny, work, 1, r (kk), ldx)
-              END DO
-           END IF
-        END DO
-        CALL ZDSCAL ( ldx * ny * nzl, 1.0_DP/(nx * ny), r, 1)
-
-     ELSE IF (isign > 0) THEN
-
-        DO i = 1, nx
-           IF ( dofft(i) ) THEN
-              DO j = 1, nzl
-                 kk = (j - 1) * ldx * ny + i
-                 CALL ZCOPY (ny, r (kk), ldx, work, 1)
-                 CALL zfftb (ny, work, tabley (1, ip) )
-                 CALL ZCOPY (ny, work, 1, r (kk), ldx)
-              END DO
-           END IF
-        END DO
-
-        DO k = 1, ny * nzl
-           kk = 1 + ( k - 1 ) * ldx
-           CALL zfftb ( nx, r (kk), tablex (1, ip) )
-        END DO
-
-     END IF
-
 #else
 
      CALL errore(' cft_2xy ',' no scalar fft driver specified ', 1)
@@ -1291,17 +1080,21 @@
      C_POINTER, save :: fw_plan(ndims) = 0
      C_POINTER, save :: bw_plan(ndims) = 0
 
-#elif defined __SCSL
+#elif defined __DFTI
 
-     INTEGER, PARAMETER :: ltabl = (2 * nfftx + 256)*3
-     REAL (DP), SAVE :: table (ltabl, ndims)
-     REAL (DP)       :: DUMMY
-     INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
+     !   Intel MKL native FFT driver
 
-#elif defined __SUNPERF
-
-     INTEGER, PARAMETER :: ltabl = (4 * nfftx + 15)*3
-     REAL (DP), SAVE :: table (ltabl, ndims)
+     TYPE(DFTI_DESCRIPTOR_ARRAY), SAVE :: hand(ndims)
+     LOGICAL, SAVE :: dfti_first = .TRUE.
+     INTEGER :: dfti_status = 0
+     !
+     IF( dfti_first .EQ. .TRUE. ) THEN
+        DO ip = 1, ndims
+           hand(ip)%desc => NULL()
+        END DO
+ 
+        dfti_first = .FALSE.
+     END IF
 
 #elif defined __SX6
 
@@ -1381,18 +1174,56 @@
        CALL dfftw_plan_dft_3d ( bw_plan(icurrent), nx, ny, nz, f(1:), &
             f(1:), idir, FFTW_ESTIMATE)
 
+#elif defined __DFTI
+
+      if( ASSOCIATED( hand(icurrent)%desc ) ) THEN
+          dfti_status = DftiFreeDescriptor( hand(icurrent)%desc )
+          IF( dfti_status /= 0) THEN
+             WRITE(*,*) "stopped in DftiFreeDescriptor", dfti_status
+             STOP
+          ENDIF
+       END IF
+
+       dfti_status = DftiCreateDescriptor(hand(icurrent)%desc, DFTI_DOUBLE, DFTI_COMPLEX, 3,(/nx,ny,nz/))
+       IF(dfti_status /= 0) THEN
+          WRITE(*,*) "stopped in DftiCreateDescriptor", dfti_status
+          STOP
+       ENDIF
+       dfti_status = DftiSetValue(hand(icurrent)%desc, DFTI_NUMBER_OF_TRANSFORMS,1)
+       IF(dfti_status /= 0)THEN
+          WRITE(*,*) "stopped in DFTI_NUMBER_OF_TRANSFORMS", dfti_status
+          STOP
+       ENDIF
+       dfti_status = DftiSetValue(hand(icurrent)%desc, DFTI_PLACEMENT, DFTI_INPLACE)
+       IF(dfti_status /= 0)THEN
+         WRITE(*,*) "stopped in DFTI_PLACEMENT", dfti_status
+         STOP
+      ENDIF
+       tscale = 1.0_DP/ (nx * ny * nz)
+       dfti_status = DftiSetValue( hand(icurrent)%desc, DFTI_FORWARD_SCALE, tscale);
+       IF(dfti_status /= 0)THEN
+          WRITE(*,*) "stopped in DFTI_FORWARD_SCALE", dfti_status
+          STOP
+       ENDIF
+       tscale = 1.0_DP
+       dfti_status = DftiSetValue( hand(icurrent)%desc, DFTI_BACKWARD_SCALE, tscale );
+       IF(dfti_status /= 0)THEN
+          WRITE(*,*) "stopped in DFTI_BACKWARD_SCALE", dfti_status
+          STOP
+       ENDIF
+
+       dfti_status = DftiCommitDescriptor(hand(icurrent)%desc)
+       IF(dfti_status /= 0) THEN
+          WRITE(*,*) "stopped in DftiCreateDescriptor", dfti_status
+          STOP
+       ENDIF
+
+
+
+
 #elif defined __ESSL || defined __LINUX_ESSL
 
        ! no initialization for 3d FFT's from ESSL
-
-#elif defined __SCSL
-
-       CALL zzfft3d (0, nx, ny, nz, 0.0_DP, DUMMY, 1, 1, DUMMY, 1, 1, &
-                     table(1,icurrent), work(1), isys)
-
-#elif defined __SUNPERF
-
-       CALL zfft3i ( nx, ny, nz, table (1,icurrent) )
 
 #elif defined __SX6
 
@@ -1452,6 +1283,29 @@
 
    END IF
 
+#elif defined __DFTI
+
+     IF( isign < 0 ) THEN
+        !
+        dfti_status = DftiComputeForward(hand(ip)%desc, f(1:))
+        IF(dfti_status /= 0)THEN
+           WRITE(*,*) "stopped in DftiComputeForward", dfti_status
+           STOP
+        ENDIF
+        !
+     ELSE IF( isign > 0 ) THEN
+        !
+        dfti_status = DftiComputeBackward(hand(ip)%desc, f(1:))
+        IF(dfti_status /= 0)THEN
+           WRITE(*,*) "stopped in DftiComputeBackward", dfti_status
+           STOP
+        ENDIF
+        !
+     END IF
+
+
+
+
 #elif defined __ESSL || defined __LINUX_ESSL
 
      IF ( isign < 0 ) THEN
@@ -1464,30 +1318,6 @@
 
      IF( isign /= 0 ) CALL dcft3( f(1), ldx,ldx*ldy, f(1), ldx,ldx*ldy, &
           nx,ny,nz, idir, tscale, work(1), lwork)
-
-#elif defined __SCSL
-
-     IF ( isign /= 0 ) THEN
-        IF ( isign < 0 ) THEN
-           idir = -1
-           tscale = 1.0_DP / DBLE( nx * ny * nz )
-        ELSE IF ( isign > 0 ) THEN
-           idir = 1
-           tscale = 1.0_DP
-        END IF
-        CALL ZZFFT3D ( idir, nx, ny, nz, tscale, f(1), ldx, ldy,   &
-                       f(1), ldx, ldy, table(1,ip), work(1), isys )
-     END IF
-
-#elif defined __SUNPERF
-
-     IF( isign < 0 ) THEN
-        CALL zfft3f ( nx, ny, nz, f(1), ldx, ldy, table(1,ip), ltabl )
-        tscale = 1.0_DP / DBLE( nx * ny * nz )
-        CALL ZDSCAL ( ldx*ldy*ldz, tscale, f(1), 1 )
-     ELSE IF( isign > 0 ) THEN
-        CALL zfft3b ( nx, ny, nz, f(1), ldx, ldy, table(1,ip), ltabl )
-     ENDIF
 
 #elif defined __SX6
 
@@ -1891,15 +1721,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
       real(dp), save :: aux2( ltabl, ndims )
       real(dp), save :: aux1( ltabl, ndims )
 
-#elif defined __SCSL
-
-     INTEGER, PARAMETER :: ltabl = 2 * nfftx + 256
-     real(dp), save :: bw_coeffz( ltabl,  ndims )
-     real(dp), save :: bw_coeffy( ltabl,  ndims )
-     real(dp), save :: bw_coeffx( ltabl,  ndims )
-     REAL(DP)    :: DUMMY
-     INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
-
 #endif
 
       isign = -sgn
@@ -1983,15 +1804,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
               tscale, aux2(1,icurrent), ltabl, work(1), lwork)
          end if
 
-#elif defined __SCSL
-
-         CALL ZZFFT (0, nz, 0.0_DP, DUMMY, 1, bw_coeffz(1, icurrent),    &
-                     work(1), isys)
-         CALL ZZFFT (0, ny, 0.0_DP, DUMMY, 1, bw_coeffy(1, icurrent),    &
-                     work(1), isys)
-         CALL ZZFFT (0, nx, 0.0_DP, DUMMY, 1, bw_coeffx(1, icurrent),    &
-                     work(1), isys)
-
 #else
 
         CALL errore(' cft_b ',' no scalar fft driver specified ', 1)
@@ -2046,21 +1858,9 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
              tscale, aux2(1,ip), ltabl, work(1), lwork)
       END DO
 
-#elif defined __SCSL
-
-      CALL ZZFFTMR (1, nz, ldx*ldy, tscale, f(1), ldx*ldy, f(1),        &
-                     ldx*ldy, bw_coeffz(1, ip), work(1), isys)
-      CALL ZZFFTM (1, nx, ldy*nplanes, tscale, f(nstart), ldx,          &
-                    f(nstart), ldx, bw_coeffx(1, ip), work(1), isys)
-      DO k = imin3, imax3
-        nstart = ( k - 1 ) * ldx * ldy + 1
-        CALL ZZFFTMR (1, ny, ldx, tscale, f(nstart), ldx, f(nstart),    &
-                      ldx, bw_coeffy(1, ip), work(1), isys)
-
-      END DO
-
 #endif
-     RETURN
+
+      RETURN
    END SUBROUTINE cft_b
 
 !
