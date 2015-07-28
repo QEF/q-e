@@ -78,8 +78,7 @@ Parallel execution:
 Libraries:
       __FFTW      FFT routines from internal FFTW library
       __FFTW3     FFT routines from external FFTW v.3 library
-      __SCSL      FFT routines from SGI SCSL scientific library
-      __SUNPERF   FFT routines from SUN sunperf scientific library
+      __DFTI      FFT routines from Intel MKL library
       __ESSL      use blas/lapack/fft routines from IBM ESSL library
       __LINUX_ESSL  use blas/lapack/fft routines from IBM ESSL library
                    (linux version)
@@ -89,7 +88,6 @@ Libraries:
       ASL, MICRO  SX-6 specific libraries
 Timing:
       __HPM        Hardware Performance Monitor (IBM SP)
-      __QK_USER__  for better timing of fftw in cray xt3 (?)
 Signals:
       __PTRACE        Enable traceback
       __TRAP_SIGUSR1  Enable signal trapping (experimental): code will stop
