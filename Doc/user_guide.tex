@@ -627,15 +627,18 @@ when available, optimized vendor-specific libraries should be used: this
 often yields huge performance gains.
 
 \paragraph{BLAS and LAPACK} 
-\qe\ can use the following architecture-specific replacements for BLAS and LAPACK:\\
+\qe\ can use any architecture-optimized BLAS and LAPACK replacements,
+like those contained e.g. in the following libraries:
 \begin{quote}
-MKL for Intel Linux PCs\\
-ACML for AMD Linux PCs\\
+MKL for Intel CPUs\\
+ACML for AMD CPUs\\
 ESSL for IBM machines\\
 SCSL for SGI Altix\\
 SUNperf for Sun
 \end{quote}
-If none of these is available, we suggest that you use the optimized ATLAS library: see \\
+
+If none of these is available, we suggest that you use the optimized ATLAS 
+library: see \\
 \texttt{http://math-atlas.sourceforge.net/}. Note that ATLAS is not
 a complete replacement for LAPACK: it contains all of the BLAS, plus the
 LU code, plus the full storage Cholesky code. Follow the instructions in the
@@ -647,12 +650,11 @@ open-source license: see the GotoBLAS2 page at \\
 \texttt{http://www.tacc.utexas.edu/tacc-software/gotoblas2/}.
 
 \paragraph{FFT}
-\qe\ has an internal copy of an old FFTW version, and it 
-can use the following vendor-specific FFT libraries:
+\qe\ has an internal copy of an old FFTW version. It also supports
+the newer FFTW3 library and the following vendor-specific FFT libraries:
 \begin{quote}
+      Intel DFTI from MKL\\
       IBM ESSL\\
-      SGI SCSL\\
-      SUN sunperf\\
       NEC ASL
 \end{quote}
 \configure\ will first search for vendor-specific FFT libraries;
@@ -665,6 +667,9 @@ linked in MKL distributed with v.12 of the Intel compiler. In earlier
 versions, only sources are distributed: you have to compile them and 
 to modify file \texttt{make.sys} accordingly 
 (MKL must be linked {\em after} the FFTW-MKL interface).
+
+In order to use Intel DFTI from MKL, you need to add \texttt{-D\_\_DFTI}
+to \texttt{DFLAGS} in the \texttt{make.sys} file.
 
 \paragraph{MPI libraries} 
 MPI libraries are usually needed for parallel execution 

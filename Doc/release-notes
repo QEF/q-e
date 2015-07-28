@@ -1,7 +1,7 @@
 Fixed in svn version:
 
    * PW: incorrect calculation of maximum number of plane waves could lead 
-     to error exit with hybrid functionals and ultraspft pseudopotentials
+     to error exit with hybrid functionals and ultrasoft pseudopotentials
 
 Incompatible changes in 5.2.0 version:
 
