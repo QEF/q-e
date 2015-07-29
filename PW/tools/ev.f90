@@ -159,7 +159,7 @@ PROGRAM ev
       parmax(3) = 15.0d0
       parmax(4) = 0.0d0
 !
-      deltapar(1) = 0.1d0
+      deltapar(1) = 1.0d0
       deltapar(2) = 100.d0
       deltapar(3) = 1.0d0
       deltapar(4) = 0.01d0
@@ -325,7 +325,7 @@ PROGRAM ev
                     &f6.2," d2k0 =",f7.3," emin =",f11.5)') &
             (par(1)/fac)**(1d0/3d0), int(par(2)), par(3), par(4), emin
          WRITE(iun,'("# a0 =",f9.5," Ang, k0 =", f6.1," GPa,  V0 = ", &
-                  & f7.3," (a.u.)^3,  V0 =", f7.3," A^3 ",/)') &
+                  & f8.2," (a.u.)^3,  V0 =", f8.2," A^3 ",/)') &
            & (par(1)/fac)**(1d0/3d0)*bohr_radius_angs, par(2)/gpa_kbar, &
              par(1), par(1)*bohr_radius_angs**3
 
