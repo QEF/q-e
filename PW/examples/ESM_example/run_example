@@ -16,7 +16,7 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use ESM to calculate Al(111) and H2O"
+$ECHO "This example shows how to use ESM to calculate H2O and Al(001)"
 $ECHO "using the three available sets of boundary conditions."
 $ECHO
 
@@ -25,7 +25,7 @@ $ECHO
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x"
-PSEUDO_LIST="Al.pbe-rrkj.UPF H.pbe-rrkjus.UPF O.pbe-rrkjus.UPF"
+PSEUDO_LIST="Al.pbe-n-van.UPF H.pbe-van_ak.UPF O.pbe-van_ak.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -82,11 +82,11 @@ $ECHO "  running pw.x     as: $PW_COMMAND"
 $ECHO
 
 # scf calculation for H2O with no ESM
-cat > H2O.noesm.in << EOF
+cat > H2O_pbc.in << EOF
  &control
     calculation='scf',
     restart_mode='from_scratch',
-    prefix='H2O',
+    prefix='H2O_pbc',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/',
     tprnfor = .TRUE.
@@ -95,32 +95,33 @@ cat > H2O.noesm.in << EOF
     ibrav = 6, celldm(1) =20.0, celldm(3) = 1.200 
     nat= 3, ntyp= 2,
     ecutwfc = 25.0, ecutrho = 200.0,
-    occupations='smearing', smearing='gaussian', degauss=0.05,
+    occupations='smearing', smearing='gaussian', degauss=0.03,
     assume_isolated = 'esm', esm_bc='pbc'
  /
  &electrons
-    mixing_beta = 0.5
+    mixing_beta = 0.3
  /
 ATOMIC_SPECIES
- H  1.00794  H.pbe-rrkjus.UPF 
- O  55.847   O.pbe-rrkjus.UPF  
+ H  1.00794  H.pbe-van_ak.UPF 
+ O  55.847   O.pbe-van_ak.UPF  
 ATOMIC_POSITIONS
 O        0.000000000   0.500000000   0.000000000    0   0   0
 H        0.043138813   0.431028632   0.043078297    0   0   0
 H        0.036635422   0.576406407   0.035949164
 K_POINTS gamma
 EOF
-$ECHO "  running the scf calculation for H2O without ESM...\c"
-$PW_COMMAND < H2O.noesm.in > H2O.noesm.out
+$ECHO "  running the calculation for H2O without ESM...\c"
+$PW_COMMAND < H2O_pbc.in > H2O_pbc.out
 check_failure $?
 $ECHO " done"
+mv $TMP_DIR/H2O_pbc.esm1 .
 
 # scf calculation for H2O with ESM bc1 (vacuum-slab-vacuum)
-cat > H2O.bc1.in << EOF
+cat > H2O_bc1.in << EOF
  &control
     calculation='scf',
     restart_mode='from_scratch',
-    prefix='H2O',
+    prefix='H2O_bc1',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/',
     tprnfor = .TRUE.
@@ -129,257 +130,442 @@ cat > H2O.bc1.in << EOF
     ibrav = 6, celldm(1) =20.0, celldm(3) = 1.200 
     nat= 3, ntyp= 2,
     ecutwfc = 25.0, ecutrho = 200.0,
-    occupations='smearing', smearing='gaussian', degauss=0.05,
+    occupations='smearing', smearing='gaussian', degauss=0.03,
     assume_isolated = 'esm', esm_bc='bc1'
  /
  &electrons
-    mixing_beta = 0.5
+    mixing_beta = 0.3
  /
 ATOMIC_SPECIES
- H  1.00794  H.pbe-rrkjus.UPF 
- O  55.847   O.pbe-rrkjus.UPF  
+ H  1.00794  H.pbe-van_ak.UPF 
+ O  55.847   O.pbe-van_ak.UPF  
 ATOMIC_POSITIONS
 O        0.000000000   0.500000000   0.000000000    0   0   0
 H        0.043138813   0.431028632   0.043078297    0   0   0
 H        0.036635422   0.576406407   0.035949164
 K_POINTS gamma
 EOF
-$ECHO "  running the scf calculation for H2O with ESM bc1 (vacuum-slab-vacuum)...\c"
-$PW_COMMAND < H2O.bc1.in > H2O.bc1.out
+$ECHO "  running the calculation for H2O with ESM bc1 (vacuum-slab-vacuum)...\c"
+$PW_COMMAND < H2O_bc1.in > H2O_bc1.out
 check_failure $?
 $ECHO " done"
+mv $TMP_DIR/H2O_bc1.esm1 .
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/H2O*
 $ECHO " done"
 
-# scf calculation for Al(111) with ESM bc2 (metal-slab-metal), no field
-cat > Al111.bc2.in << EOF
+# calculation for Al(001) without ESM
+cat > Al001_pbc.in << EOF
  &control
     calculation='scf',
     restart_mode='from_scratch',
-    prefix='Al111',
+    prefix='Al001_pbc',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/',
     tprnfor = .TRUE.
  /
  &system
-    ibrav = 0, celldm(1) = 7.653393855, 
-    nat= 7, ntyp= 1,
+    ibrav = 0,
+    nat= 4, ntyp= 1,
     ecutwfc = 20.0,
     nosym=.TRUE.
-    occupations='smearing', smearing='mp', degauss=0.05
+    occupations='smearing', smearing='mp', degauss=0.03
+    assume_isolated='esm', esm_bc='pbc'
+ /
+ &electrons
+    mixing_beta = 0.3
+ /
+ &ions
+ /
+ATOMIC_SPECIES
+ Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS bohr
+ 10.82227686   0.00000000   0.00000000
+  0.00000000  10.82227686   0.00000000
+  0.00000000   0.00000000  22.67672253
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000
+Al  5.41113843   0.00000000   0.00000000 
+Al  0.00000000   5.41113843   0.00000000 
+Al  5.41113843   5.41113843   0.00000000 
+ K_POINTS automatic
+ 6 6 1 1 1 0
+EOF
+$ECHO "  running the calculation for Al(001) without ESM\c"
+$PW_COMMAND < Al001_pbc.in > Al001_pbc.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_pbc.esm1 .
+
+# calculation for Al(001) with ESM bc2 (metal-slab-metal), no field
+cat > Al001_bc2.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='Al001_bc2',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    tprnfor = .TRUE.
+ /
+ &system
+    ibrav = 0,
+    nat= 4, ntyp= 1,
+    ecutwfc = 20.0,
+    nosym=.TRUE.
+    occupations='smearing', smearing='mp', degauss=0.03
     assume_isolated='esm', esm_bc='bc2'
  /
  &electrons
-    mixing_beta = 0.5
+    mixing_beta = 0.3
+ /
+ &ions
  /
 ATOMIC_SPECIES
- Al  26.981538   Al.pbe-rrkj.UPF
-CELL_PARAMETERS hexagonal
- 0.707106781    0.000000000  0.000000000
- 0.353553390    0.612372436  0.000000000
- 0.000000000    0.000000000 10.000000000
-ATOMIC_POSITIONS angstrom
-Al 0.00000    0.00000   -7.01481
-Al 0.00000    1.65341   -4.67654
-Al 1.43189    0.82670   -2.33827
-Al 0.00000    0.00000    0.00000
-Al 0.00000    1.65341    2.33827
-Al 1.43189    0.82670    4.67654
-Al 0.00000    0.00000    7.01481
+ Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS bohr
+ 10.82227686   0.00000000   0.00000000
+  0.00000000  10.82227686   0.00000000
+  0.00000000   0.00000000  22.67672253
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000
+Al  5.41113843   0.00000000   0.00000000 
+Al  0.00000000   5.41113843   0.00000000 
+Al  5.41113843   5.41113843   0.00000000 
  K_POINTS automatic
- 8 8 1 0 0 0
+ 6 6 1 1 1 0
 EOF
-$ECHO "  running the scf calculation for Al(111) with ESM bc2 (metal-slab-metal)"
+$ECHO "  running the calculation for Al(001) with ESM bc2 (metal-slab-metal)"
 $ECHO "  (no applied field)...\c"
-$PW_COMMAND < Al111.bc2.in > Al111.bc2.out
+$PW_COMMAND < Al001_bc2.in > Al001_bc2.out
 check_failure $?
 $ECHO " done"
+mv $TMP_DIR/Al001_bc2.esm1 .
 
-# scf calculation for Al(111) with ESM bc2 (metal-slab-metal), with field
-cat > Al111.bc2_efield.in << EOF
+# calculation for Al(001) with ESM bc2 (metal-slab-metal), with field
+cat > Al001_bc2_efield.in << EOF
  &control
     calculation='scf',
     restart_mode='from_scratch',
-    prefix='Al111',
+    prefix='Al001_bc2_efield',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/',
     tprnfor = .TRUE.
  /
  &system
-    ibrav = 0, celldm(1) = 7.653393855, 
-    nat= 7, ntyp= 1,
+    ibrav = 0,
+    nat= 4, ntyp= 1,
     ecutwfc = 20.0,
     nosym=.TRUE.
-    occupations='smearing', smearing='mp', degauss=0.05
+    occupations='smearing', smearing='mp', degauss=0.03
     assume_isolated='esm', esm_bc='bc2', esm_efield=0.00192148511256006
  /
  &electrons
-    mixing_beta = 0.5
+    mixing_beta = 0.3
+ /
+ &ions
  /
 ATOMIC_SPECIES
- Al  26.981538   Al.pbe-rrkj.UPF
-CELL_PARAMETERS hexagonal
- 0.707106781    0.000000000  0.000000000
- 0.353553390    0.612372436  0.000000000
- 0.000000000    0.000000000 10.000000000
-ATOMIC_POSITIONS angstrom
-Al 0.00000    0.00000   -7.01481
-Al 0.00000    1.65341   -4.67654
-Al 1.43189    0.82670   -2.33827
-Al 0.00000    0.00000    0.00000
-Al 0.00000    1.65341    2.33827
-Al 1.43189    0.82670    4.67654
-Al 0.00000    0.00000    7.01481
+ Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS bohr
+ 10.82227686   0.00000000   0.00000000
+  0.00000000  10.82227686   0.00000000
+  0.00000000   0.00000000  22.67672253
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000
+Al  5.41113843   0.00000000   0.00000000 
+Al  0.00000000   5.41113843   0.00000000 
+Al  5.41113843   5.41113843   0.00000000 
  K_POINTS automatic
- 8 8 1 0 0 0
+ 6 6 1 1 1 0
 EOF
-$ECHO "  running the scf calculation for Al(111) with ESM bc2 (metal-slab-metal)"
+$ECHO "  running the calculation for Al(001) with ESM bc2 (metal-slab-metal)"
 $ECHO "  with applied electric field...\c"
-$PW_COMMAND < Al111.bc2_efield.in > Al111.bc2_efield.out
+$PW_COMMAND < Al001_bc2_efield.in > Al001_bc2_efield.out
 check_failure $?
 $ECHO " done"
+mv $TMP_DIR/Al001_bc2_efield.esm1 .
 
-# scf calculation for Al(111) with ESM bc3 (vacuum-slab-metal), uncharged
-cat > Al111.bc3.in << EOF
+# calculation for Al(001) with ESM bc3 (vacuum-slab-metal), uncharged
+cat > Al001_bc3.in << EOF
  &control
     calculation='scf',
     restart_mode='from_scratch',
-    prefix='Al111',
+    prefix='Al001_bc3',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/',
     tprnfor = .TRUE.
  /
  &system
-    ibrav = 0, celldm(1) = 7.653393855, 
-    nat= 7, ntyp= 1,
+    ibrav = 0,
+    nat= 4, ntyp= 1,
     ecutwfc = 20.0,
     nosym=.TRUE.
-    occupations='smearing', smearing='mp', degauss=0.05
+    occupations='smearing', smearing='mp', degauss=0.03
     assume_isolated='esm', esm_bc='bc3'
  /
  &electrons
-    mixing_beta = 0.5
+    mixing_beta = 0.3
+ /
+ &ions
  /
 ATOMIC_SPECIES
- Al  26.981538   Al.pbe-rrkj.UPF
-CELL_PARAMETERS hexagonal
- 0.707106781    0.000000000  0.000000000
- 0.353553390    0.612372436  0.000000000
- 0.000000000    0.000000000 10.000000000
-ATOMIC_POSITIONS angstrom
-Al 0.00000    0.00000   -7.01481
-Al 0.00000    1.65341   -4.67654
-Al 1.43189    0.82670   -2.33827
-Al 0.00000    0.00000    0.00000
-Al 0.00000    1.65341    2.33827
-Al 1.43189    0.82670    4.67654
-Al 0.00000    0.00000    7.01481
+ Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS bohr
+ 10.82227686   0.00000000   0.00000000
+  0.00000000  10.82227686   0.00000000
+  0.00000000   0.00000000  22.67672253
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000
+Al  5.41113843   0.00000000   0.00000000 
+Al  0.00000000   5.41113843   0.00000000 
+Al  5.41113843   5.41113843   0.00000000 
  K_POINTS automatic
- 8 8 1 0 0 0
+ 6 6 1 1 1 0
 EOF
-$ECHO "  running the scf calculation for Al(111) with ESM bc3 (vacuum-slab-metal)"
-$ECHO "  (neutral, uncharged)...\c"
-$PW_COMMAND < Al111.bc3.in > Al111.bc3.out
+$ECHO "  running the calculation for Al(001) with ESM bc3 (vacuum-slab-metal)"
+$ECHO "  (neutrally charged)...\c"
+$PW_COMMAND < Al001_bc3.in > Al001_bc3.out
 check_failure $?
 $ECHO " done"
+mv $TMP_DIR/Al001_bc3.esm1 .
 
-# scf calculation for Al(111) with ESM bc3 (vacuum-slab-metal), - charged
-cat > Al111.bc3_m005.in << EOF
+# calculation for Al(001) with ESM bc3 (vacuum-slab-metal), - charged
+cat > Al001_bc3_m002.in << EOF
  &control
-    calculation='scf',
+    calculation='relax',
     restart_mode='from_scratch',
-    prefix='Al111',
+    prefix='Al001_bc3_m002',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/',
     tprnfor = .TRUE.
  /
  &system
-    ibrav = 0, celldm(1) = 7.653393855, 
-    tot_charge = -0.005,
-    nat= 7, ntyp= 1,
+    ibrav = 0,
+    nat= 4, ntyp= 1,
     ecutwfc = 20.0,
     nosym=.TRUE.
-    occupations='smearing', smearing='mp', degauss=0.05
+    occupations='smearing', smearing='mp', degauss=0.03
     assume_isolated='esm', esm_bc='bc3'
+    tot_charge = -0.02,
  /
  &electrons
-    mixing_beta = 0.5
+    mixing_beta = 0.3
+ /
+ &ions
  /
 ATOMIC_SPECIES
- Al  26.981538   Al.pbe-rrkj.UPF
-CELL_PARAMETERS hexagonal
- 0.707106781    0.000000000  0.000000000
- 0.353553390    0.612372436  0.000000000
- 0.000000000    0.000000000 10.000000000
-ATOMIC_POSITIONS angstrom
-Al 0.00000    0.00000   -7.01481
-Al 0.00000    1.65341   -4.67654
-Al 1.43189    0.82670   -2.33827
-Al 0.00000    0.00000    0.00000
-Al 0.00000    1.65341    2.33827
-Al 1.43189    0.82670    4.67654
-Al 0.00000    0.00000    7.01481
+ Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS bohr
+ 10.82227686   0.00000000   0.00000000
+  0.00000000  10.82227686   0.00000000
+  0.00000000   0.00000000  22.67672253
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000
+Al  5.41113843   0.00000000   0.00000000 
+Al  0.00000000   5.41113843   0.00000000 
+Al  5.41113843   5.41113843   0.00000000 
  K_POINTS automatic
- 8 8 1 0 0 0
+ 6 6 1 1 1 0
 EOF
-$ECHO "  running the scf calculation for Al(111) with ESM bc3 (vacuum-slab-metal)"
-$ECHO "  (-0.005e charged)...\c"
-$PW_COMMAND < Al111.bc3_m005.in > Al111.bc3_m005.out
+$ECHO "  running the calculation for Al(001) with ESM bc3 (vacuum-slab-metal)"
+$ECHO "  (-0.02e charged)...\c"
+$PW_COMMAND < Al001_bc3_m002.in > Al001_bc3_m002.out
 check_failure $?
 $ECHO " done"
+mv $TMP_DIR/Al001_bc3_m002.esm1 .
 
-# scf calculation for Al(111) with ESM bc3 (vacuum-slab-metal), + charged
-cat > Al111.bc3_p005.in << EOF
+# calculation for Al(001) with ESM bc3 (vacuum-slab-metal), + charged
+cat > Al001_bc3_p002.in << EOF
  &control
-    calculation='scf',
+    calculation='relax',
     restart_mode='from_scratch',
-    prefix='Al111',
+    prefix='Al001_bc3_p002',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/',
     tprnfor = .TRUE.
  /
  &system
-    ibrav = 0, celldm(1) = 7.653393855, 
-    tot_charge = 0.005,
-    nat= 7, ntyp= 1,
+    ibrav = 0,
+    nat= 4, ntyp= 1,
     ecutwfc = 20.0,
     nosym=.TRUE.
-    occupations='smearing', smearing='mp', degauss=0.05
+    occupations='smearing', smearing='mp', degauss=0.03
     assume_isolated='esm', esm_bc='bc3'
+    tot_charge = 0.02,
  /
  &electrons
-    mixing_beta = 0.5
+    mixing_beta = 0.3
+ /
+ &ions
  /
 ATOMIC_SPECIES
- Al  26.981538   Al.pbe-rrkj.UPF
-CELL_PARAMETERS hexagonal
- 0.707106781    0.000000000  0.000000000
- 0.353553390    0.612372436  0.000000000
- 0.000000000    0.000000000 10.000000000
-ATOMIC_POSITIONS angstrom
-Al 0.00000    0.00000   -7.01481
-Al 0.00000    1.65341   -4.67654
-Al 1.43189    0.82670   -2.33827
-Al 0.00000    0.00000    0.00000
-Al 0.00000    1.65341    2.33827
-Al 1.43189    0.82670    4.67654
-Al 0.00000    0.00000    7.01481
+ Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS bohr
+ 10.82227686   0.00000000   0.00000000
+  0.00000000  10.82227686   0.00000000
+  0.00000000   0.00000000  22.67672253
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000
+Al  5.41113843   0.00000000   0.00000000 
+Al  0.00000000   5.41113843   0.00000000 
+Al  5.41113843   5.41113843   0.00000000 
  K_POINTS automatic
- 8 8 1 0 0 0
+ 6 6 1 1 1 0
 EOF
-$ECHO "  running the scf calculation for Al(111) with ESM bc3 (vacuum-slab-metal)"
-$ECHO "  (+0.005e charged)...\c"
-$PW_COMMAND < Al111.bc3_p005.in > Al111.bc3_p005.out
+$ECHO "  running the calculation for Al(001) with ESM bc3 (vacuum-slab-metal)"
+$ECHO "  (+0.02e charged)...\c"
+$PW_COMMAND < Al001_bc3_p002.in > Al001_bc3_p002.out
 check_failure $?
 $ECHO " done"
+mv $TMP_DIR/Al001_bc3_p002.esm1 .
+
+# constant-mu calculation for Al(001) with ESM bc3 (vacuum-slab-metal), 
+# target mu = potential of zero charge (neutral surface)
+cat > Al001_bc3_v00.in << EOF
+ &control
+    calculation='relax',
+    restart_mode='from_scratch',
+    prefix='Al001_bc3_v00',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    tprnfor = .TRUE.
+    lfcpopt = .TRUE.
+ /
+ &system
+    ibrav = 0,
+    nat= 4, ntyp= 1,
+    ecutwfc = 20.0,
+    nosym=.TRUE.
+    occupations='smearing', smearing='mp', degauss=0.03
+    assume_isolated='esm', esm_bc='bc3'
+    fcp_mu = -0.312573,
+ /
+ &electrons
+    mixing_beta = 0.3
+ /
+ &ions
+ /
+ATOMIC_SPECIES
+ Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS bohr
+ 10.82227686   0.00000000   0.00000000
+  0.00000000  10.82227686   0.00000000
+  0.00000000   0.00000000  22.67672253
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000
+Al  5.41113843   0.00000000   0.00000000 
+Al  0.00000000   5.41113843   0.00000000 
+Al  5.41113843   5.41113843   0.00000000 
+ K_POINTS automatic
+ 6 6 1 1 1 0
+EOF
+$ECHO "  running the constant-mu calculation for Al(001) with ESM bc3 (vacuum-slab-metal)"
+$ECHO "  (target mu = 0V vs pzc)...\c"
+$PW_COMMAND < Al001_bc3_v00.in > Al001_bc3_v00.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_bc3_v00.esm1 .
+
+# constant-mu calculation for Al(001) with ESM bc3 (vacuum-slab-metal), 
+# target mu = +0.5V vs pzc
+cat > Al001_bc3_vp05.in << EOF
+ &control
+    calculation='relax',
+    restart_mode='from_scratch',
+    prefix='Al001_bc3_vp05',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    tprnfor = .TRUE.
+    lfcpopt = .TRUE.
+ /
+ &system
+    ibrav = 0,
+    nat= 4, ntyp= 1,
+    ecutwfc = 20.0,
+    nosym=.TRUE.
+    occupations='smearing', smearing='mp', degauss=0.03
+    assume_isolated='esm', esm_bc='bc3'
+    fcp_mu = -0.275809,
+ /
+ &electrons
+    mixing_beta = 0.3
+ /
+ &ions
+ /
+ATOMIC_SPECIES
+ Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS bohr
+ 10.82227686   0.00000000   0.00000000
+  0.00000000  10.82227686   0.00000000
+  0.00000000   0.00000000  22.67672253
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000
+Al  5.41113843   0.00000000   0.00000000 
+Al  0.00000000   5.41113843   0.00000000 
+Al  5.41113843   5.41113843   0.00000000 
+ K_POINTS automatic
+ 6 6 1 1 1 0
+EOF
+$ECHO "  running the constant-mu calculation for Al(001) with ESM bc3 (vacuum-slab-metal)"
+$ECHO "  (target mu = +0.5V vs pzc)...\c"
+$PW_COMMAND < Al001_bc3_vp05.in > Al001_bc3_vp05.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_bc3_vp05.esm1 .
+
+# constant-mu calculation for Al(001) with ESM bc3 (vacuum-slab-metal), 
+# target mu = -0.5V vs pzc
+cat > Al001_bc3_vm05.in << EOF
+ &control
+    calculation='relax',
+    restart_mode='from_scratch',
+    prefix='Al001_bc3_vm05',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    tprnfor = .TRUE.
+    lfcpopt = .TRUE.
+ /
+ &system
+    ibrav = 0,
+    nat= 4, ntyp= 1,
+    ecutwfc = 20.0,
+    nosym=.TRUE.
+    occupations='smearing', smearing='mp', degauss=0.03
+    assume_isolated='esm', esm_bc='bc3'
+    fcp_mu = -0.349338,
+ /
+ &electrons
+    mixing_beta = 0.3
+ /
+ &ions
+ /
+ATOMIC_SPECIES
+ Al  26.981538   Al.pbe-n-van.UPF
+CELL_PARAMETERS bohr
+ 10.82227686   0.00000000   0.00000000
+  0.00000000  10.82227686   0.00000000
+  0.00000000   0.00000000  22.67672253
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000
+Al  5.41113843   0.00000000   0.00000000 
+Al  0.00000000   5.41113843   0.00000000 
+Al  5.41113843   5.41113843   0.00000000 
+ K_POINTS automatic
+ 6 6 1 1 1 0
+EOF
+$ECHO "  running the constant-mu calculation for Al(001) with ESM bc3 (vacuum-slab-metal)"
+$ECHO "  (target mu = -0.5V vs pzc)...\c"
+$PW_COMMAND < Al001_bc3_vm05.in > Al001_bc3_vm05.out
+check_failure $?
+$ECHO " done"
+mv $TMP_DIR/Al001_bc3_vm05.esm1 .
+
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/Al111*
+rm -rf $TMP_DIR/Al001*
 $ECHO " done"
-
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

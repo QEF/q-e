@@ -24,14 +24,14 @@ SUBROUTINE move_ions()
   USE kinds,                  ONLY : DP
   USE cell_base,              ONLY : alat, at, bg, omega, cell_force, fix_volume, fix_area
   USE cellmd,                 ONLY : omega_old, at_old, press, lmovecell, calc
-  USE ions_base,              ONLY : nat, ityp, tau, if_pos
+  USE ions_base,              ONLY : nat, ityp, zv, tau, if_pos
   USE fft_base,               ONLY : dfftp
   USE fft_base,               ONLY : dffts
   USE grid_subroutines,       ONLY : realspace_grid_init
   USE gvect,                  ONLY : gcutm
   USE gvecs,                  ONLY : gcutms
   USE symm_base,              ONLY : checkallsym
-  USE ener,                   ONLY : etot
+  USE ener,                   ONLY : etot, ef
   USE force_mod,              ONLY : force, sigma
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, ldamped, &
                                      lconstrain, conv_ions, use_SMC, &
@@ -46,6 +46,10 @@ SUBROUTINE move_ions()
   USE basic_algebra_routines, ONLY : norm
   USE dynamics_module,        ONLY : verlet, langevin_md, proj_verlet
   USE dynamics_module,        ONLY : smart_MC
+  USE fcp                ,    ONLY : fcp_verlet, fcp_line_minimisation
+  USE fcp_variables,          ONLY : lfcpopt, lfcpdyn, fcp_mu, &
+                                     fcp_relax_crit
+  USE klist,                  ONLY : nelec
   USE dfunct,                 only : newd
   !
   IMPLICIT NONE
@@ -61,6 +65,7 @@ SUBROUTINE move_ions()
   REAL(DP)              :: h(3,3), fcell(3,3)=0.d0, epsp1
   INTEGER,  ALLOCATABLE :: fixion(:)
   real(dp) :: tr
+  LOGICAL               :: conv_fcp
   !
   IF (use_SMC) CALL smart_MC()  ! for smart monte carlo method
   !
@@ -156,6 +161,15 @@ SUBROUTINE move_ions()
                    epsf, epsp1,  energy_error, gradient_error, cell_error,  &
                    istep, nstep, step_accepted, conv_ions, lmovecell )
         !
+        ! ... relax for FCP
+        !
+        IF ( lfcpopt ) THEN
+           CALL fcp_line_minimisation( conv_fcp )
+           IF ( .not. conv_fcp .and. istep < nstep ) THEN
+             conv_ions = .FALSE.
+           END IF
+        END IF
+        !
         IF ( lmovecell ) THEN
            ! changes needed only if cell moves
            if (fix_volume) call impose_deviatoric_strain(alat*at, h)
@@ -194,6 +208,16 @@ SUBROUTINE move_ions()
               CALL terminate_bfgs ( etot, epse, epsf, epsp, lmovecell, &
                                     stdout, tmp_dir )
               !
+           END IF
+           !
+           ! ... FCP output
+           !
+           IF ( lfcpopt ) THEN
+             WRITE( stdout, '(/,5X, &
+               "FCP Optimisation : converged ( criteria force < ",ES8.1," )")') &
+               fcp_relax_crit
+             WRITE( stdout, '(5X,"FCP Optimisation : tot_charge =",F12.6,/)') &
+               SUM( zv(ityp(1:nat)) ) - nelec
            END IF
            !
         ELSE
@@ -244,13 +268,39 @@ SUBROUTINE move_ions()
               !
               CALL proj_verlet()
               !
+              ! ... relax for FCP
+              !
+              IF ( lfcpopt ) THEN
+                 CALL fcp_line_minimisation( conv_fcp )
+                 IF ( .not. conv_fcp .and. istep < nstep ) THEN
+                   conv_ions = .FALSE.
+                 END IF
+                 !
+                 ! ... FCP output
+                 !
+                 IF ( conv_ions ) THEN
+                   WRITE( stdout, '(5X,"FCP : converged ( criteria force < ", &
+                     ES8.1," )")')fcp_relax_crit
+                   WRITE( stdout, '(5X,"FCP : final tot_charge =",F12.6,/)') &
+                     SUM( zv(ityp(1:nat)) ) - nelec
+                 END IF
+              END IF
+              !
            ELSE IF ( llang ) THEN
               !
               CALL langevin_md()
               !
+              ! ... dynamics for FCP
+              !
+              IF ( lfcpdyn ) CALL fcp_verlet()
+              !
            ELSE
               !
               CALL verlet()
+              !
+              ! ... dynamics for FCP
+              !
+              IF ( lfcpdyn ) CALL fcp_verlet()
               !
            END IF
            !
@@ -273,6 +323,7 @@ SUBROUTINE move_ions()
 
   CALL mp_bcast(restart_with_starting_magnetiz,ionode_id,intra_image_comm)
   CALL mp_bcast(final_cell_calculation,ionode_id,intra_image_comm)
+  IF ( lfcpopt .or. lfcpdyn ) CALL mp_bcast(nelec,ionode_id,intra_image_comm)
   !
   IF ( final_cell_calculation ) THEN
      ! 

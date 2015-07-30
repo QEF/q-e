@@ -36,11 +36,21 @@ SUBROUTINE ioneb()
                              temp_req_        => temp_req, &
                              path_thr_        => path_thr
   !
+  USE fcp_variables, ONLY : lfcpopt_ => lfcpopt, &
+                            fcp_mu_ => fcp_mu, &
+                            fcp_relax_step_ => fcp_relax_step, &
+                            fcp_relax_crit_ => fcp_relax_crit, &
+                            fcp_tot_charge_first_ => fcp_tot_charge_first, &
+                            fcp_tot_charge_last_ => fcp_tot_charge_last
+  !
   USE path_input_parameters_module, ONLY : restart_mode, nstep_path,   &
                                string_method, num_of_images, path_thr, &
                                CI_scheme, opt_scheme, use_masses,      &
                                first_last_opt, temp_req, k_max, k_min, &
-                               ds, use_freezing, fixed_tan
+                               ds, use_freezing, fixed_tan,            &
+                               lfcpopt, fcp_mu, fcp_relax_step,        &
+                               fcp_relax_crit, fcp_tot_charge_first,   &
+                               fcp_tot_charge_last
   !
   IMPLICIT NONE
   !
@@ -175,6 +185,13 @@ SUBROUTINE ioneb()
   k_max_          = k_max
   k_min_          = k_min
   fixed_tan_      = fixed_tan
+  !
+  lfcpopt_              = lfcpopt
+  fcp_mu_               = fcp_mu
+  fcp_relax_step_       = fcp_relax_step
+  fcp_relax_crit_       = fcp_relax_crit
+  fcp_tot_charge_first_ = fcp_tot_charge_first
+  fcp_tot_charge_last_  = fcp_tot_charge_last
   !
   CALL verify_neb_tmpdir( tmp_dir )
   !

@@ -272,6 +272,9 @@ MODULE input_parameters
 
           ! if .TRUE., perform exact exchange calculation using Wannier functions (X. Wu et al., Phys. Rev. B. 79, 085102 (2009))
 
+        LOGICAL  :: lfcpopt = .FALSE. ! FCP optimisation switch
+        LOGICAL  :: lfcpdyn = .FALSE. ! FCP thermostat enabled if .true.
+
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir,   &
           prefix, wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr,      &
@@ -279,7 +282,7 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
           tqmmm, vdw_table_name, lorbm, memory, point_label_type,         &
-          lcalc_z2, z2_m_threshold, z2_z_threshold
+          lcalc_z2, z2_m_threshold, z2_z_threshold, lfcpopt, lfcpdyn
 
 !
 !=----------------------------------------------------------------------------=!
@@ -518,6 +521,12 @@ MODULE input_parameters
           ! position of effective screening medium from z0=L_z/2 [a.u.]
           ! note: z1 is given by z1=z0+abs(esm_w)
 
+        REAL(DP) :: esm_a = 0.0_DP
+          ! smoothness parameter for smooth-ESM (exp(2a(z-z1)))
+
+        REAL(DP) :: esm_zb = 0.0_DP
+          ! smearing width for Ewald summation (RSUM) in smooth-ESM
+
         INTEGER :: esm_nfit = 4
           ! number of z-grid points for polynomial fitting at cell edge
 
@@ -527,6 +536,17 @@ MODULE input_parameters
         INTEGER :: esm_debug_gpmax = 0
           ! if esm_debug is .TRUE., calcualte v_hartree and v_local
           ! for abs(gp)<=esm_debug_gpmax (gp is integer and has tpiba unit)
+
+        REAL(DP) :: fcp_mu         = 0.0_DP
+          ! target Fermi energy
+        REAL(DP) :: fcp_mass       = 10000.0_DP
+          ! mass for the FCP
+        REAL(DP) :: fcp_tempw      = 300.0_DP
+          ! target temperature for the FCP dynamics
+        REAL(DP) :: fcp_relax_step = 0.5_DP
+          ! step size for steepest descent
+        REAL(DP) :: fcp_relax_crit = 0.001_DP
+          ! threshold for force acting on FCP
 
         INTEGER :: space_group = 0
           ! space group number for coordinates given in crystallographic form
@@ -570,6 +590,8 @@ MODULE input_parameters
              xdm, xdm_a1, xdm_a2,                                             &
              step_pen, A_pen, sigma_pen, alpha_pen, no_t_rev,                 &
              esm_bc, esm_efield, esm_w, esm_nfit, esm_debug, esm_debug_gpmax, &
+             esm_a, esm_zb, fcp_mu, fcp_mass, fcp_tempw, fcp_relax_step,      &
+             fcp_relax_crit,                                                  &
              space_group, uniqueb, origin_choice, rhombohedral
 
 !=----------------------------------------------------------------------------=!

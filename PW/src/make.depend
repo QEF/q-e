@@ -382,6 +382,7 @@ electrons.o : ../../Modules/cell_base.o
 electrons.o : ../../Modules/check_stop.o
 electrons.o : ../../Modules/constants.o
 electrons.o : ../../Modules/control_flags.o
+electrons.o : ../../Modules/fcp_variables.o
 electrons.o : ../../Modules/fft_base.o
 electrons.o : ../../Modules/funct.o
 electrons.o : ../../Modules/io_files.o
@@ -417,21 +418,22 @@ esm.o : ../../Modules/cell_base.o
 esm.o : ../../Modules/constants.o
 esm.o : ../../Modules/control_flags.o
 esm.o : ../../Modules/fft_base.o
-esm.o : ../../Modules/fft_scalar.o
+esm.o : ../../Modules/io_files.o
 esm.o : ../../Modules/io_global.o
 esm.o : ../../Modules/ions_base.o
 esm.o : ../../Modules/kind.o
 esm.o : ../../Modules/mp.o
 esm.o : ../../Modules/mp_bands.o
+esm.o : ../../Modules/mp_global.o
 esm.o : ../../Modules/recvec.o
-esm.o : ../../Modules/uspp.o
+esm.o : esm_cft.o
 esm.o : pwcom.o
 esm.o : scf_mod.o
+esm_cft.o : ../../Modules/kind.o
 ewald.o : ../../Modules/constants.o
 ewald.o : ../../Modules/kind.o
 ewald.o : ../../Modules/mp.o
 ewald.o : ../../Modules/mp_bands.o
-ewald.o : esm.o
 ewald.o : martyna_tuckerman.o
 ewald_dipole.o : ../../Modules/cell_base.o
 ewald_dipole.o : ../../Modules/constants.o
@@ -468,6 +470,19 @@ exx.o : pwcom.o
 exx.o : start_k.o
 exx.o : symm_base.o
 exx.o : us_exx.o
+fcp.o : ../../Modules/cell_base.o
+fcp.o : ../../Modules/constants.o
+fcp.o : ../../Modules/control_flags.o
+fcp.o : ../../Modules/fcp_variables.o
+fcp.o : ../../Modules/input_parameters.o
+fcp.o : ../../Modules/io_files.o
+fcp.o : ../../Modules/io_global.o
+fcp.o : ../../Modules/ions_base.o
+fcp.o : ../../Modules/kind.o
+fcp.o : ../../Modules/random_numbers.o
+fcp.o : dynamics_module.o
+fcp.o : pwcom.o
+fcp.o : symm_base.o
 find_group.o : ../../Modules/kind.o
 force_cc.o : ../../Modules/atom.o
 force_cc.o : ../../Modules/cell_base.o
@@ -504,7 +519,6 @@ force_ew.o : ../../Modules/constants.o
 force_ew.o : ../../Modules/kind.o
 force_ew.o : ../../Modules/mp.o
 force_ew.o : ../../Modules/mp_bands.o
-force_ew.o : esm.o
 force_hub.o : ../../Modules/becmod.o
 force_hub.o : ../../Modules/cell_base.o
 force_hub.o : ../../Modules/control_flags.o
@@ -558,6 +572,7 @@ forces.o : ../../Modules/recvec.o
 forces.o : ../../Modules/tsvdw.o
 forces.o : ../../Modules/uspp.o
 forces.o : bp_mod.o
+forces.o : esm.o
 forces.o : ldaU.o
 forces.o : martyna_tuckerman.o
 forces.o : pwcom.o
@@ -825,6 +840,7 @@ input.o : ../../Modules/cell_base.o
 input.o : ../../Modules/constants.o
 input.o : ../../Modules/constraints_module.o
 input.o : ../../Modules/control_flags.o
+input.o : ../../Modules/fcp_variables.o
 input.o : ../../Modules/fft_base.o
 input.o : ../../Modules/funct.o
 input.o : ../../Modules/input_parameters.o
@@ -965,6 +981,7 @@ move_ions.o : ../../Modules/bfgs_module.o
 move_ions.o : ../../Modules/cell_base.o
 move_ions.o : ../../Modules/constants.o
 move_ions.o : ../../Modules/control_flags.o
+move_ions.o : ../../Modules/fcp_variables.o
 move_ions.o : ../../Modules/fft_base.o
 move_ions.o : ../../Modules/griddim.o
 move_ions.o : ../../Modules/io_files.o
@@ -976,6 +993,7 @@ move_ions.o : ../../Modules/mp_images.o
 move_ions.o : ../../Modules/recvec.o
 move_ions.o : atomic_wfc_mod.o
 move_ions.o : dynamics_module.o
+move_ions.o : fcp.o
 move_ions.o : newd.o
 move_ions.o : pwcom.o
 move_ions.o : symm_base.o
@@ -1598,6 +1616,7 @@ setup.o : ../../Modules/cell_base.o
 setup.o : ../../Modules/constants.o
 setup.o : ../../Modules/control_flags.o
 setup.o : ../../Modules/electrons_base.o
+setup.o : ../../Modules/fcp_variables.o
 setup.o : ../../Modules/fft_base.o
 setup.o : ../../Modules/funct.o
 setup.o : ../../Modules/griddim.o
@@ -1783,6 +1802,7 @@ summary.o : ../../Modules/atom.o
 summary.o : ../../Modules/cell_base.o
 summary.o : ../../Modules/constants.o
 summary.o : ../../Modules/control_flags.o
+summary.o : ../../Modules/fcp_variables.o
 summary.o : ../../Modules/fft_base.o
 summary.o : ../../Modules/funct.o
 summary.o : ../../Modules/io_files.o
@@ -1799,6 +1819,7 @@ summary.o : ../../Modules/uspp.o
 summary.o : bp_mod.o
 summary.o : esm.o
 summary.o : exx.o
+summary.o : fcp.o
 summary.o : ldaU.o
 summary.o : martyna_tuckerman.o
 summary.o : pwcom.o

@@ -115,13 +115,22 @@ MODULE path_input_parameters_module
   !
   REAL (DP)  :: path_thr = 0.05_DP
   !
+  LOGICAL    :: lfcpopt              = .FALSE.
+  REAL(DP)   :: fcp_mu               = 0.0_DP
+  REAL(DP)   :: fcp_relax_step       = 0.1_DP
+  REAL(DP)   :: fcp_relax_crit       = 0.001_DP
+  REAL(DP)   :: fcp_tot_charge_first = 0.0_DP
+  REAL(DP)   :: fcp_tot_charge_last  = 0.0_DP
+  !
   !
   NAMELIST / PATH / &
                     restart_mode, &
                     string_method, nstep_path, num_of_images, & 
                     CI_scheme, opt_scheme, use_masses,    &
                     first_last_opt, ds, k_max, k_min, temp_req,          &
-                    path_thr, fixed_tan, use_freezing, minimum_image
+                    path_thr, fixed_tan, use_freezing, minimum_image, &
+                    lfcpopt, fcp_mu, fcp_relax_step, fcp_relax_crit, &
+                    fcp_tot_charge_first, fcp_tot_charge_last
 !
 !    ATOMIC_POSITIONS
 !

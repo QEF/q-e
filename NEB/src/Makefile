@@ -21,6 +21,7 @@ engine_to_path_pos.o \
 engine_to_path_alat.o \
 engine_to_path_nat.o \
 engine_to_path_fix_atom_pos.o \
+fcp_opt_routines.o \
 input.o \
 path_base.o \
 path_formats.o \

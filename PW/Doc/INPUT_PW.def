@@ -389,6 +389,22 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		(lelfield=.true.)
 	    }
 	}
+
+   var lfcpopt -type LOGICAL {
+       see { fcp_mu }
+       default { .FALSE. }
+       info {
+       If .TRUE. perform a constant bias potential (constant-mu) calculation
+       for a static system with ESM method. See the header of PW/src/fcp.f90 
+       for documentation
+       NB:
+       - The total energy displayed in 'prefix.out' includes the potentiostat
+         contribution (-mu*N).
+       - 'calculation' must be 'relax'. 
+       - assume_isolated = 'esm' and esm_bc = 'bc2' or 'bc3' must be set in 
+         SYSTEM namelist).
+       }
+   }
     }
 
     #
@@ -1264,12 +1280,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                          calculations of charged surfaces and interfaces:
                          A plane-wave nonrepeated slab approach," PRB 73,
                          115407 (2006).
-                         NB: Requires cell with a_3 lattice vector along z,
-                         normal to the xy plane, with the slab centered
-                         around z=0. Also requires symmetry checking to be
-                         disabled along z, either by setting 'nosym' = .TRUE.
-                         or by very slight displacement (i.e., 5e-4 a.u.)
-                         of the slab along z.
+                         NB:
+                         - Two dimensional (xy plane) average charge density
+                           and electrostatic potentials are printed out to
+                           'prefix.esm1'. 
+                         - Requires cell with a_3 lattice vector along z,
+                           normal to the xy plane, with the slab centered
+                           around z=0. Also requires symmetry checking to be
+                           disabled along z, either by setting 'nosym' = .TRUE.
+                           or by very slight displacement (i.e., 5e-4 a.u.)
+                           of the slab along z.
                          See 'esm_bc', 'esm_efield', 'esm_w', 'esm_nfit'.
 	    }
 	}
@@ -1306,7 +1326,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
 
         var esm_efield -type REAL {
-            see { assume_isolated, esm_bc }
+            see { assume_isolated }
             default { 0.d0 }
             info {
                 If assume_isolated = 'esm' and esm_bc = 'bc2', gives the
@@ -1321,6 +1341,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             info {
                 If assume_isolated = 'esm', gives the number of z-grid points
                 for the polynomial fit along the cell edge.
+            }
+        }
+
+        var fcp_mu -type REAL {
+            see { lfcpopt }
+            default { 0.d0 }
+            info {
+                If lfcpopt = .TRUE., gives the target Fermi energy [Ry]. One can start 
+                with appropriate total charge of the system by giving 'tot_charge'.
             }
         }
 

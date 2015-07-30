@@ -130,7 +130,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE control_flags,        ONLY : gamma_only
   USE funct,                ONLY : get_inlc, get_dft_name
   USE kernel_table,         ONLY : initialize_kernel_table
-  USE esm,                  ONLY : do_comp_esm, esm_ggen_2d
+  USE esm,                  ONLY : do_comp_esm, esm_init
   !
   IMPLICIT NONE
 
@@ -277,7 +277,10 @@ SUBROUTINE read_xml_file_internal(withbs)
   CALL pre_init()
   CALL allocate_fft()
   CALL ggen ( gamma_only, at, bg ) 
-  IF (do_comp_esm) CALL esm_ggen_2d ()
+  IF (do_comp_esm) THEN
+    CALL pw_readfile( 'esm', ierr )
+    CALL esm_init()
+  END IF
   CALL gshells ( lmovecell ) 
   !
   ! ... allocate the potential and wavefunctions

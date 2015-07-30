@@ -69,7 +69,7 @@ MODULE qexml_module
             qexml_write_planewaves, qexml_write_spin, qexml_write_magnetization, &
             qexml_write_xc, qexml_write_exx, qexml_write_occ, qexml_write_bz, qexml_write_para, &
             qexml_write_bands_pw,qexml_write_bands_cp, qexml_write_bands_info, qexml_write_eig, &
-            qexml_write_gk, qexml_write_wfc, qexml_write_rho
+            qexml_write_gk, qexml_write_wfc, qexml_write_rho, qexml_write_esm
   !
   PUBLIC :: qexml_read_header, qexml_read_status_cp, qexml_read_cell, qexml_read_moving_cell, qexml_read_ions,      &
             qexml_read_symmetry, qexml_read_efield,                   &
@@ -77,7 +77,7 @@ MODULE qexml_module
             qexml_read_occ, qexml_read_bz, qexml_read_phonon,         &
             qexml_read_bands_pw, qexml_read_bands_cp, qexml_read_bands_info,                  &
             qexml_read_gk, qexml_read_wfc, qexml_read_rho, qexml_read_magnetization, &
-            qexml_read_exx, qexml_read_para
+            qexml_read_exx, qexml_read_para, qexml_read_esm
   
   !
   PUBLIC :: qexml_wfc_filename, qexml_create_directory, qexml_save_history, &
@@ -1434,6 +1434,25 @@ CONTAINS
       CALL iotk_write_end(ounit, "EXACT_EXCHANGE" )
       !
     END SUBROUTINE qexml_write_exx
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE qexml_write_esm( esm_nfit, esm_efield, esm_w, esm_a, esm_bc )
+      !------------------------------------------------------------------------
+      !
+      INTEGER,            INTENT(IN) :: esm_nfit
+      REAL(DP),           INTENT(IN) :: esm_efield, esm_w, esm_a
+      CHARACTER(LEN=*),   INTENT(IN) :: esm_bc
+      !
+      CALL iotk_write_begin(ounit, "ESM" )
+      call iotk_write_dat(ounit, "esm_nfit", esm_nfit)
+      call iotk_write_dat(ounit, "esm_efield", esm_efield)
+      call iotk_write_dat(ounit, "esm_w", esm_w)
+      call iotk_write_dat(ounit, "esm_a", esm_a)
+      call iotk_write_dat(ounit, "esm_bc", esm_bc)
+      CALL iotk_write_end(ounit, "ESM" )
+      !
+    END SUBROUTINE qexml_write_esm
     !
     !
     !------------------------------------------------------------------------
@@ -3026,6 +3045,55 @@ CONTAINS
       found = .TRUE.
       !
     END SUBROUTINE qexml_read_exx
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE qexml_read_esm( esm_nfit, esm_efield, esm_w, esm_a, esm_bc, ierr )
+      !----------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,          OPTIONAL, INTENT(OUT) :: esm_nfit
+      REAL(DP),         OPTIONAL, INTENT(OUT) :: esm_efield, esm_w, esm_a
+      CHARACTER(LEN=*), OPTIONAL, INTENT(OUT) :: esm_bc
+      INTEGER,                    INTENT(out) :: ierr
+      !
+      INTEGER  :: esm_nfit_
+      REAL(DP) :: esm_efield_, esm_w_, esm_a_
+      CHARACTER(LEN=3) :: esm_bc_
+      !
+      !
+      ierr = 0
+      !
+      CALL iotk_scan_begin( iunit, "ESM", IERR=ierr )
+      IF ( ierr /= 0 ) RETURN
+      !
+      call iotk_scan_dat(iunit, "esm_nfit", esm_nfit_, IERR=ierr)
+      IF ( ierr /= 0 ) RETURN
+      !
+      call iotk_scan_dat(iunit, "esm_efield", esm_efield_, IERR=ierr)
+      IF ( ierr /= 0 ) RETURN
+      !
+      call iotk_scan_dat(iunit, "esm_w", esm_w_, IERR=ierr)
+      IF ( ierr /= 0 ) RETURN
+      !
+      call iotk_scan_dat(iunit, "esm_a", esm_a_, IERR=ierr)
+      IF ( ierr /= 0 ) RETURN
+      !
+      call iotk_scan_dat(iunit, "esm_bc", esm_bc_, IERR=ierr)
+      IF ( ierr /= 0 ) RETURN
+      !
+      CALL iotk_scan_end(iunit, "ESM", IERR=ierr)
+      IF ( ierr /= 0 ) RETURN
+      !
+      !
+      IF ( present(esm_nfit) )    esm_nfit    = esm_nfit_
+      IF ( present(esm_efield) )  esm_efield  = esm_efield_
+      IF ( present(esm_w) )       esm_w       = esm_w_
+      IF ( present(esm_a) )       esm_a       = esm_a_
+      IF ( present(esm_bc) )      esm_bc      = esm_bc_
+      !
+    END SUBROUTINE qexml_read_esm
     !
     !
     !------------------------------------------------------------------------

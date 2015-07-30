@@ -64,6 +64,13 @@ MODULE path_read_namelists_module
          k_min          = 0.1_DP
          fixed_tan      = .FALSE.
          nstep_path    = 1
+         !
+         lfcpopt              = .FALSE.
+         fcp_mu               = 0.0_DP
+         fcp_relax_step       = 0.1_DP
+         fcp_relax_crit       = 0.001_DP
+         fcp_tot_charge_first = 0.0_DP
+         fcp_tot_charge_last  = 0.0_DP
        !
        ! for reading ions namelist we need to set calculation=relax
        !
@@ -90,21 +97,27 @@ MODULE path_read_namelists_module
        !
        ! ... "path" variables broadcast
        !
-       CALL mp_bcast ( restart_mode,      ionode_id, world_comm )
-       CALL mp_bcast ( string_method,     ionode_id, world_comm ) 
-       CALL mp_bcast( num_of_images,      ionode_id, world_comm )
-       CALL mp_bcast( first_last_opt,     ionode_id, world_comm )
-       CALL mp_bcast( use_masses,         ionode_id, world_comm )
-       CALL mp_bcast( use_freezing,       ionode_id, world_comm )
-       CALL mp_bcast( fixed_tan,          ionode_id, world_comm )
-       CALL mp_bcast( CI_scheme,          ionode_id, world_comm )
-       CALL mp_bcast( opt_scheme,         ionode_id, world_comm )
-       CALL mp_bcast( temp_req,           ionode_id, world_comm )
-       CALL mp_bcast( ds,                 ionode_id, world_comm )
-       CALL mp_bcast( k_max,              ionode_id, world_comm )
-       CALL mp_bcast( k_min,              ionode_id, world_comm )
-       CALL mp_bcast( path_thr,           ionode_id, world_comm )
-       CALL mp_bcast( nstep_path,         ionode_id, world_comm )
+       CALL mp_bcast( restart_mode,         ionode_id, world_comm )
+       CALL mp_bcast( string_method,        ionode_id, world_comm ) 
+       CALL mp_bcast( num_of_images,        ionode_id, world_comm )
+       CALL mp_bcast( first_last_opt,       ionode_id, world_comm )
+       CALL mp_bcast( use_masses,           ionode_id, world_comm )
+       CALL mp_bcast( use_freezing,         ionode_id, world_comm )
+       CALL mp_bcast( fixed_tan,            ionode_id, world_comm )
+       CALL mp_bcast( CI_scheme,            ionode_id, world_comm )
+       CALL mp_bcast( opt_scheme,           ionode_id, world_comm )
+       CALL mp_bcast( temp_req,             ionode_id, world_comm )
+       CALL mp_bcast( ds,                   ionode_id, world_comm )
+       CALL mp_bcast( k_max,                ionode_id, world_comm )
+       CALL mp_bcast( k_min,                ionode_id, world_comm )
+       CALL mp_bcast( path_thr,             ionode_id, world_comm )
+       CALL mp_bcast( nstep_path,           ionode_id, world_comm )
+       CALL mp_bcast( lfcpopt,              ionode_id, world_comm )
+       CALL mp_bcast( fcp_mu,               ionode_id, world_comm )
+       CALL mp_bcast( fcp_relax_step,       ionode_id, world_comm )
+       CALL mp_bcast( fcp_relax_crit,       ionode_id, world_comm )
+       CALL mp_bcast( fcp_tot_charge_first, ionode_id, world_comm )
+       CALL mp_bcast( fcp_tot_charge_last,  ionode_id, world_comm )
        !
        RETURN
        !

@@ -72,6 +72,7 @@ error_handler.o : io_files.o
 error_handler.o : io_global.o
 error_handler.o : mp.o
 error_handler.o : mp_world.o
+fcp_variables.o : kind.o
 fd_gradient.o : cell_base.o
 fd_gradient.o : fft_base.o
 fd_gradient.o : kind.o
@@ -147,6 +148,7 @@ mm_dispersion.o : ions_base.o
 mm_dispersion.o : kind.o
 mm_dispersion.o : mp.o
 mm_dispersion.o : mp_images.o
+mm_dispersion.o : parameters.o
 mp.o : io_global.o
 mp.o : kind.o
 mp.o : parallel_include.o
@@ -179,6 +181,7 @@ mp_wave.o : kind.o
 mp_wave.o : parallel_include.o
 mp_world.o : io_global.o
 mp_world.o : mp.o
+mp_world.o : parallel_include.o
 noncol.o : kind.o
 noncol.o : parameters.o
 open_close_input_file.o : ../iotk/src/iotk_module.o

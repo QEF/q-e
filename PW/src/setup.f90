@@ -33,7 +33,7 @@ SUBROUTINE setup()
   ! ...    electric-field, LDA+U calculations, and for parallelism
   !
   USE kinds,              ONLY : DP
-  USE constants,          ONLY : eps8, rytoev 
+  USE constants,          ONLY : eps8, rytoev, fpi
   USE parameters,         ONLY : npk
   USE io_global,          ONLY : stdout
   USE io_files,           ONLY : tmp_dir, prefix, xmlpun, delete_if_present
@@ -81,6 +81,8 @@ SUBROUTINE setup()
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
   USE cellmd,             ONLY : lmovecell  
+  USE control_flags,      ONLY : restart
+  USE fcp_variables,      ONLY : lfcpopt, lfcpdyn
   !
   IMPLICIT NONE
   !
@@ -140,6 +142,16 @@ SUBROUTINE setup()
   ! ... set the number of electrons 
   !
   nelec = ionic_charge - tot_charge
+  !
+  IF ( lfcpopt .AND. restart ) THEN
+     CALL pw_readfile( 'fcpopt', ierr )
+     tot_charge = ionic_charge - nelec
+  END IF
+  !
+  IF ( lfcpdyn .AND. restart ) THEN
+     CALL pw_readfile( 'fcpdyn', ierr )
+     tot_charge = ionic_charge - nelec
+  END IF
   !
   ! ... magnetism-related quantities
   !

@@ -27,7 +27,7 @@ SUBROUTINE init_run()
   USE recvec_subs,        ONLY : ggen
   USE wannier_new,        ONLY : use_wannier    
   USE dfunct,             ONLY : newd
-  USE esm,                ONLY : do_comp_esm, esm_ggen_2d
+  USE esm,                ONLY : do_comp_esm, esm_init
   USE mp_bands,           ONLY : intra_bgrp_comm
   USE tsvdw_module,       ONLY : tsvdw_initialize
   !
@@ -55,7 +55,7 @@ SUBROUTINE init_run()
      CALL ggen( gamma_only, at, bg )
   END IF
   !
-  IF (do_comp_esm) CALL esm_ggen_2d ()
+  IF (do_comp_esm) CALL esm_init()
   CALL gshells ( lmovecell )
   !
   ! ... variable initialization for parallel symmetrization

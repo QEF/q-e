@@ -209,6 +209,50 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
 		    are optimised. The other images are kept frozen.
 		}
 	    }
+
+       var lfcpopt -type LOGICAL {
+           see { fcp_mu }
+           default { .FALSE. }
+           info {
+           If .TRUE. perform a constant bias potential (constant-mu)
+           calculation with ESM method (assume_isolated = 'esm' and
+           esm_bc = 'bc2' or 'bc3' must be set in SYSTEM namelist).
+           'fcp_mu' gives the target Fermi energy.
+           See the header of PW/src/fcp.f90 for documentation
+           }
+       }
+
+       var fcp_mu -type REAL {
+           see { lfcpopt }
+           default { 0.d0 }
+           info {
+               If lfcpopt = .TRUE., gives the target Fermi energy [Ry].
+               One can specify the total charge of the system for the first
+               and last image by giving 'fcp_tot_charge_first' and 'fcp_tot_charge_last'
+               so that the Fermi energy of these systems will be the target value,
+               otherwise 'first_last_opt' should be .TRUE. 
+           }
+       }
+
+       var fcp_tot_charge_first -type REAL {
+           see { lfcpopt }
+           default { 0.d0 }
+           info {
+               Total charge of the system ('tot_charge') for the first image.
+               Initial 'tot_charge' for intermediate images will be given by
+               linear interpolation of 'fcp_tot_charge_first' and 'fcp_tot_charge_last'
+           }
+       }
+
+       var fcp_tot_charge_last -type REAL {
+           see { lfcpopt }
+           default { 0.d0 }
+           info {
+               Total charge of the system ('tot_charge') for the last image.
+               Initial 'tot_charge' for intermediate images will be given by
+               linear interpolation of 'fcp_tot_charge_first' and 'fcp_tot_charge_last'
+           }
+       }
 	}
 
 

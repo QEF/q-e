@@ -64,6 +64,14 @@ SUBROUTINE iosys()
                               nraise_     => nraise, &
                               refold_pos_ => refold_pos
   !
+  USE fcp_variables, ONLY : lfcpopt_ => lfcpopt, &
+                            lfcpdyn_ => lfcpdyn, &
+                            fcp_mu_ => fcp_mu, &
+                            fcp_mass_ => fcp_mass, &
+                            fcp_temperature, &
+                            fcp_relax_step_ => fcp_relax_step, &
+                            fcp_relax_crit_ => fcp_relax_crit
+  !
   USE extfield,      ONLY : tefield_  => tefield, &
                             dipfield_ => dipfield, &
                             edir_     => edir, &
@@ -109,7 +117,8 @@ SUBROUTINE iosys()
                            esm_bc_ => esm_bc, &
                            esm_nfit_ => esm_nfit, &
                            esm_efield_ => esm_efield, &
-                           esm_w_ => esm_w
+                           esm_w_ => esm_w, &
+                           esm_a_ => esm_a
   !
   USE a2F,           ONLY : la2F_ => la2F
   !
@@ -232,7 +241,9 @@ SUBROUTINE iosys()
                                ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,     &
                                xdm, xdm_a1, xdm_a2,                           &
                                one_atom_occupations,                          &
-                               esm_bc, esm_efield, esm_w, esm_nfit,           &
+                               esm_bc, esm_efield, esm_w, esm_nfit, esm_a,    &
+                               lfcpopt, lfcpdyn, fcp_mu, fcp_mass, fcp_tempw, & 
+                               fcp_relax_step, fcp_relax_crit,                &
                                space_group, uniqueb, origin_choice,           &
                                rhombohedral
   !
@@ -1171,13 +1182,6 @@ SUBROUTINE iosys()
   w_1_              = w_1
   w_2_              = w_2
   !
-  ! ... ESM
-  !
-  esm_bc_ = esm_bc
-  esm_efield_ = esm_efield
-  esm_w_ = esm_w
-  esm_nfit_ = esm_nfit
-  !
   IF (trim(occupations) /= 'from_input') one_atom_occupations_=.false.
   !
   !  ... initialize variables for vdW (dispersions) corrections
@@ -1296,6 +1300,49 @@ SUBROUTINE iosys()
      WRITE( stdout, &
           '(5x,"Stress calculation not meaningful in isolated systems",/)' )
   END IF
+  !
+  ! ... ESM
+  !
+  esm_bc_ = esm_bc
+  esm_efield_ = esm_efield
+  esm_w_ = esm_w
+  esm_nfit_ = esm_nfit 
+  esm_a_ = esm_a
+  !
+  IF ( esm_bc .EQ. 'bc4' ) THEN
+    IF ( ABS(esm_w) .LT. 1.D-8 ) THEN
+      CALL errore ('iosys','esm_w too small',1)
+    ELSEIF ( esm_w .GT. 0.D0 ) THEN
+      CALL errore ('iosys','positive esm_w not allowed for bc4',1)
+    ENDIF
+    IF ( esm_a .LT. 1.D-4 ) THEN
+      CALL errore ('iosys','smoothness parameter for bc4 too small',1)
+    ELSEIF ( esm_a .GT. 10.D0 ) THEN
+      CALL errore ('iosys','smoothness parameter for bc4 too big',1)
+    ENDIF
+  ENDIF
+  !
+  ! ... FCP
+  !
+  lfcpopt_        = lfcpopt
+  lfcpdyn_        = lfcpdyn
+  fcp_mu_         = fcp_mu
+  fcp_mass_       = fcp_mass
+  fcp_temperature = fcp_tempw
+  !
+  IF ( lfcpopt .or. lfcpdyn ) THEN
+     IF ( .not. do_comp_esm ) THEN
+        CALL errore ('iosys','FCP optimise/dynamics currently not available without ESM',1)
+     ENDIF
+     IF ( trim( calculation ).NE.'relax'.AND.trim( calculation ).NE.'md')THEN
+        CALL errore ('iosys',"FCP optimise/dynamics only available with calculation = 'relax' and 'md'",1)
+     ENDIF
+  ENDIF
+  !
+  IF ( fcp_temperature == 0.0_DP ) &
+     fcp_temperature = temperature
+  fcp_relax_step_ = fcp_relax_step
+  fcp_relax_crit_ = fcp_relax_crit
   !
   CALL plugin_read_input()
   !

@@ -26,8 +26,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE cell_base,        ONLY : bg, alat
   USE gvect,            ONLY : ngm, g, eigts1, eigts2, eigts3
   USE fft_base,         ONLY : dfftp
-  USE ions_base,        ONLY : tau, nat, nsp, ityp
-  USE ener,             ONLY : etot
+  USE ions_base,        ONLY : tau, nat, nsp, ityp, zv
+  USE ener,             ONLY : etot, ef
   USE force_mod,        ONLY : force
   USE io_files,         ONLY : prefix, tmp_dir, wfc_dir,  iunupdate, seqopn, &
                                exit_file, iunexit, delete_if_present
@@ -43,6 +43,9 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum, mp_min
   USE path_io_routines, ONLY : new_image_init, get_new_image, &
                                stop_other_images
+  USE fcp_opt_routines, ONLY : fcp_neb_nelec, fcp_neb_ef
+  USE fcp_variables,    ONLY : lfcpopt
+  USE klist,            ONLY : nelec, tot_charge
   !
   IMPLICIT NONE
   !
@@ -90,6 +93,24 @@ SUBROUTINE compute_scf( fii, lii, stat  )
         !
         pes(fii:lii)        = 0.D0
         grad_pes(:,fii:lii) = 0.D0
+        !
+     END IF
+     !
+     IF ( lfcpopt ) THEN
+        !
+        IF ( my_image_id == root_image ) THEN
+           !
+           FORALL( image = fii:lii, .NOT.frozen(image) )
+              !
+              fcp_neb_ef(image) = 0.D0
+              !
+           END FORALL
+           !
+        ELSE
+           !
+           fcp_neb_ef(fii:lii) = 0.D0
+           !
+        END IF
         !
      END IF
      !
@@ -178,6 +199,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
      !
      CALL mp_sum( pes(fii:lii),        inter_image_comm )
      CALL mp_sum( grad_pes(:,fii:lii), inter_image_comm )
+     IF ( lfcpopt ) CALL mp_sum( fcp_neb_ef(fii:lii), inter_image_comm )
      CALL mp_sum( istat,               inter_image_comm )
      !
   END IF
@@ -289,6 +311,12 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       CALL start_clock('PWSCF')
       CALL setup ()
+      !
+      IF ( lfcpopt ) THEN
+         nelec = fcp_neb_nelec(image)
+         tot_charge = SUM( zv(ityp(1:nat)) ) - nelec
+      ENDIF
+      !
       CALL init_run()
       !
       IF ( ionode ) THEN
@@ -400,6 +428,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       ethr = diago_thr_init
       !
       CALL close_files(.FALSE.)
+      !
+      IF ( lfcpopt ) fcp_neb_ef(image) = ef
       !
       RETURN
       !

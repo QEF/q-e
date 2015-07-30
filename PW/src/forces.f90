@@ -47,6 +47,7 @@ SUBROUTINE forces()
   USE london_module, ONLY : force_london
   USE xdm_module,    ONLY : force_xdm
   USE tsvdw_module,  ONLY : FtsvdW
+  USE esm,           ONLY : do_comp_esm, esm_bc, esm_force_ew
   !
   IMPLICIT NONE
   !
@@ -106,8 +107,12 @@ SUBROUTINE forces()
   !
   ! ... The ionic contribution is computed here
   !
-  CALL force_ew( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
-                 gg, ngm, gstart, gamma_only, gcutm, strf, forceion )
+  IF( do_comp_esm ) THEN
+     CALL esm_force_ew( forceion )
+  ELSE
+     CALL force_ew( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
+                    gg, ngm, gstart, gamma_only, gcutm, strf, forceion )
+  END IF
   !
   ! ... the semi-empirical dispersion correction
   !
@@ -185,17 +190,34 @@ SUBROUTINE forces()
         IF (lelfield)  force(ipol,na) = force(ipol,na) + forces_bp_efield(ipol,na)
         IF (do_comp_mt)force(ipol,na) = force(ipol,na) + force_mt(ipol,na) 
 
-        sumfor = sumfor + force(ipol,na)
+        IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN
+           IF ( ipol .ne. 3 ) sumfor = sumfor + force(ipol,na)
+        ELSE
+           sumfor = sumfor + force(ipol,na)
+        ENDIF
         !
      END DO
      !
-     ! ... impose total force = 0
-     !
-     DO na = 1, nat
+     IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN
         !
-        force(ipol,na) = force(ipol,na) - sumfor / DBLE( nat )  
+        ! ... impose total force along xy = 0
         !
-     END DO
+        DO na = 1, nat
+           !
+           IF ( ipol .ne. 3) force(ipol,na) = force(ipol,na)  &
+                                            - sumfor / DBLE ( nat )
+           !
+        END DO
+     ELSE
+        !
+        ! ... impose total force = 0
+        !
+        DO na = 1, nat
+           !
+           force(ipol,na) = force(ipol,na) - sumfor / DBLE( nat ) 
+           !
+        END DO
+     ENDIF
      !
 #ifdef __MS2
      !

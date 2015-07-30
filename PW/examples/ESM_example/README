@@ -1,6 +1,7 @@
 This example shows how to use the Effective Screening Medium Method (ESM) 
-to calculate the total energy, charge density, force, and potential of a 
-polarized or charged medium.
+and constant bias potential (constant-mu) method to calculate the total energy, 
+charge density, force, and potential of a polarized or charged slab (which
+can be also be molecules and clusters)
 
 ESM screens the electronic charge of a polarized/charged medium along one 
 perpendicular direction by introducing a classical charge model and a local 
@@ -10,53 +11,75 @@ described in detail in M. Otani and O. Sugino, "First-principles calculations
 of charged surfaces and interfaces: A plane-wave nonrepeated slab approach," 
 PRB 73, 115407 (2006).
 
+Using the constant-mu method one can control the Fermi energy, i.e.
+applied bias, during a simulation. The method is described in detail in
+N. Bonnet, T. Morishita, O. Sugino, and M. Otani, "First-Principles Molecular 
+Dynamics at a Constant Electrode Potential", PRL 109, 266101 (2012).
+
 In addition to 'pbc' (ordinary periodic boundary conditions with ESM 
 disabled), the code allows three different sets of boundary conditions 
-perpendicular to the polarized medium:
+perpendicular to the polarized slab:
 
-1) 'bc1' : Immerse the medium between two semi-infinite vacuum regions; 
-2) 'bc2' : Immerse the medium between two semi-infinite metallic electrodes, 
-with optional fixed field applied between them;
-3) 'bc3' : Immerse the medium between one semi-infinite vacuum region and one 
-semi-infinite metallic electrode.
+1) 'bc1' : Immerse the slab between two semi-infinite vacuum regions; 
+2) 'bc2' : Immerse the slab between two semi-infinite metallic electrodes, 
+           with optional fixed field applied between them.
+           Constant-mu method is available for controlling the Fermi energy. 
+3) 'bc3' : Immerse the slab between one semi-infinite vacuum region (left-hand
+           side) and one semi-infinite metallic electrode (right-hand side).
+           Constant-mu method is available for controlling the Fermi energy. 
+
+Two dimensional (xy-plane) average charge density and electrostatic potentials
+are printed out into 'esm1' file.
 
 The example calculation proceeds as follows:
 
 esm_bc = 'bc1':
 
 1) make a self-consistent calculation for H2O with esm_bc = 'pbc' (ESM off)
-   (input=H2O.noesm.in, output=H2O.noesm.out). Using 'pbc' causes the
+   (input=H2O_pbc.in, output=H2O_pbc.out). Using 'pbc' causes the
    code to print out the density and potential (hartree + local) along z, even
    though ESM is disabled. Note that the molecule has a z-oriented dipole.
 
 2) make a self-consistent calculation for H2O with esm_bc = 'bc1'
-   (input=H2O.bc1.in, output=H2O.bc1.out). This simulates the water molecule 
+   (input=H2O_bc1.in, output=H2O_bc1.out). This simulates the water molecule 
    in an infinite vacuum along the z-direction, preventing dipole-dipole 
    interaction between periodic images. 
 
 esm_bc = 'bc2':
 
-3) make a self-consistent calculation for Al(111) with esm_bc = 'bc2',
-   without an applied field (input=Al111.bc2.in, output=Al111.bc2.out). 
+3) make a self-consistent calculation for Al(001) with esm_bc = 'bc2',
+   without an applied field (input=Al001_bc2.in, output=Al001_bc2.out). 
    This simulates the slab sandwiched between two uncharged semi-infinite 
    metal electrodes. 
 
-4) make a self-consistent calculation for Al(111) with esm_bc = 'bc2',
-   this time with an applied field (input=Al111.bc2_efield.in, 
-   output=Al111.bc2_efield.out). The slab polarizes in response.
+4) make a self-consistent calculation for Al(001) with esm_bc = 'bc2',
+   this time with an applied field (input=Al001_bc2_efield.in, 
+   output=Al001_bc2_efield.out). The slab polarizes in response.
 
 esm_bc = 'bc3':
 
-5) make a self-consistent calculation for Al(111) with esm_bc = 'bc3' to 
-   simulate a semi-infinite system in contact with vacuum 
-   (input=Al111.bc3.in, output=Al111.bc3.out).
+5) make a self-consistent calculation for Al(001) with esm_bc = 'bc3' to 
+   simulate a slab in contact with semi-infinite  metal electrode (right-
+   hand side).
+   (input=Al001_bc3.in, output=Al001_bc3.out).
 
-6) make a self-consistent calculation for Al(111) with esm_bc = 'bc3' to 
-   simulate a semi-infinite system in contact with vacuum with a weakly 
-   negative (-0.005e) overall charge (input=Al111.bc3_m005.in, 
-   output=Al111.bc3_m005.out). Note that the charge migrates to the surface/
-   vacuum interface.
+6) make a self-consistent calculation for Al(001) with esm_bc = 'bc3' to 
+   simulate a slab in contact with semi-infinite metal electrode with 
+   a weakly negative (-0.005e) overall charge (input=Al001_bc3_m005.in, 
+   output=Al001_bc3_m005.out). Note that the charge migrates to the right
+   surface of the slab.
 
 7) Repeat #6 but with a weakly positive (+0.005e) overall charge 
-   (input=Al111.bc3_p005.in, output=Al111.bc3_p005.out).
+   (input=Al001_bc3_p005.in, output=Al001_bc3_p005.out).
+
+8) make a 'relax' calculation on both geometory and Fermi energy for Al(001)
+   with esm_bc = 'bc3' (input=Al001_bc3_v00.in, output=Al001_bc3_v00.out).
+   The target Fermi energy is set to that of the neutral surface (#5, Vpzc).
+   (input=Al001_bc3_v00.in, output=Al001_bc3_v00.out)
+   
+9) Repeat #8 but with a higher target Fermi energy (+0.5V vs Vpzc).
+   (input=Al001_bc3_vp05.in, output=Al001_bc3_vp05.out)
+
+10) Repeat #8 but with a lower target Fermi energy (-0.5V vs Vpzc).
+    (input=Al001_bc3_vm05.in, output=Al001_bc3_vm05.out)
 

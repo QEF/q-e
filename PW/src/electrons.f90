@@ -282,13 +282,13 @@ SUBROUTINE electrons_scf ( printout )
   USE gvect,                ONLY : ngm, gstart, nl, nlm, g, gg, gcutm
   USE gvecs,                ONLY : doublegrid, ngms
   USE klist,                ONLY : xk, wk, nelec, ngk, nks, nkstot, lgauss, &
-                                   two_fermi_energies
+                                   two_fermi_energies, tot_charge
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
   USE vlocal,               ONLY : strf
   USE wvfct,                ONLY : nbnd, et, npwx, ecutwfc
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
-                                   elondon, ef_up, ef_dw, exdm
+                                   elondon, ef_up, ef_dw, exdm, ef
   USE scf,                  ONLY : scf_type, scf_type_COPY, bcast_scf_type,&
                                    create_scf_type, destroy_scf_type, &
                                    open_mix_file, close_mix_file, &
@@ -324,7 +324,8 @@ SUBROUTINE electrons_scf ( printout )
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
   USE dfunct,               ONLY : newd
-  USE esm,                  ONLY : do_comp_esm, esm_printpot
+  USE esm,                  ONLY : do_comp_esm, esm_printpot, esm_ewald
+  USE fcp_variables,        ONLY : lfcpopt, lfcpdyn
   USE iso_c_binding,        ONLY : c_int
   !
   USE plugin_variables,     ONLY : plugin_etot
@@ -385,8 +386,12 @@ SUBROUTINE electrons_scf ( printout )
   !
   ! ... calculates the ewald contribution to total energy
   !
-  ewld = ewald( alat, nat, nsp, ityp, zv, at, bg, tau, &
+  IF ( do_comp_esm ) THEN
+     ewld = esm_ewald()
+  ELSE
+     ewld = ewald( alat, nat, nsp, ityp, zv, at, bg, tau, &
                 omega, g, gg, ngm, gcutm, gstart, gamma_only, strf )
+  END IF
   !
   IF ( llondon ) THEN
      elondon = energy_london ( alat , nat , ityp , at ,bg , tau )
@@ -715,6 +720,11 @@ SUBROUTINE electrons_scf ( printout )
         etot = etot + etotefield
         hwf_energy = hwf_energy + etotefield
      END IF
+     !
+     IF ( lfcpopt .or. lfcpdyn ) THEN
+        etot = etot + ef * tot_charge
+        hwf_energy = hwf_energy + ef * tot_charge
+     ENDIF
      !
      ! ... adds possible external contribution from plugins to the energy
      !
@@ -1062,6 +1072,12 @@ SUBROUTINE electrons_scf ( printout )
           !
           IF ( lgauss ) WRITE( stdout, 9070 ) demet
           !
+          ! ... With Fictitious charge particle (FCP), etot is the grand
+          ! ... potential energy Omega = E - muN, -muN is the potentiostat
+          ! ... contribution.
+          !
+          IF ( lfcpopt .or. lfcpdyn ) WRITE( stdout, 9072 ) ef*tot_charge
+          !
        ELSE IF ( conv_elec ) THEN
           !
           IF ( dr2 > eps8 ) THEN
@@ -1110,6 +1126,7 @@ SUBROUTINE electrons_scf ( printout )
 9069 FORMAT( '     scf correction            =',F17.8,' Ry' )
 9070 FORMAT( '     smearing contrib. (-TS)   =',F17.8,' Ry' )
 9071 FORMAT( '     Magnetic field            =',3F12.7,' Ry' )
+9072 FORMAT( '     pot.stat. contrib. (-muN) =',F17.8,' Ry' )
 9073 FORMAT( '     lambda                    =',F11.2,' Ry' )
 9074 FORMAT( '     Dispersion Correction     =',F17.8,' Ry' )
 9075 FORMAT( '     Dispersion XDM Correction =',F17.8,' Ry' )

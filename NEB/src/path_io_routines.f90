@@ -16,7 +16,7 @@ MODULE path_io_routines
   ! ... Written by Carlo Sbraccia ( 2003-2006 )
   !
   USE kinds,      ONLY : DP
-  USE constants,  ONLY : pi, autoev, bohr_radius_angs, eV_to_kelvin
+  USE constants,  ONLY : pi, autoev, bohr_radius_angs, eV_to_kelvin, rytoev
   USE io_global,  ONLY : meta_ionode, meta_ionode_id
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
@@ -48,6 +48,7 @@ MODULE path_io_routines
                                     llangevin
        USE path_formats,     ONLY : summary_fmt
        USE path_io_units_module,         ONLY : iunpath
+       USE fcp_variables,    ONLY : lfcpopt, fcp_mu, fcp_relax_crit
        !
        IMPLICIT NONE
        !
@@ -115,6 +116,15 @@ MODULE path_io_routines
        !
        WRITE( UNIT = iunpath, &
               FMT = '(5X,"path_thr",T35," = ",F9.4," eV / A")' ) path_thr
+       !
+       IF ( lfcpopt ) THEN
+          WRITE( UNIT = iunpath, &
+                 FMT = '(5X,"target Fermi energy",T35," = ",F9.4," eV")') &
+                 fcp_mu*rytoev
+          WRITE( UNIT = iunpath, &
+                 FMT = '(5X,"Fermi_thr",T35," = ",F9.4," V")' ) &
+                 fcp_relax_crit*rytoev
+       END IF
        !
        IF ( CI_scheme == "manual" ) THEN
           !
@@ -373,6 +383,7 @@ MODULE path_io_routines
                                     posold, frozen, lquick_min
        USE path_formats,     ONLY : energy, restart_first, restart_others, &
                                     quick_min
+       USE ions_base,        ONLY : zv, ityp, nat
        !
        IMPLICIT NONE
        !
@@ -773,6 +784,9 @@ MODULE path_io_routines
                                   activation_energy, pes, pos, frozen, &
                                   CI_scheme, Emax_index
        USE path_formats,   ONLY : run_info, run_output
+       USE ions_base,             ONLY : zv, ityp, nat
+       USE fcp_variables,         ONLY : lfcpopt, fcp_mu
+       USE fcp_opt_routines, ONLY : fcp_neb_ef, fcp_neb_nelec
        !
        IMPLICIT NONE
        !
@@ -805,6 +819,19 @@ MODULE path_io_routines
               image, pes(image) * autoev, error(image), frozen(image)
           !
        END DO
+       !
+       IF ( lfcpopt ) THEN
+          WRITE(iunpath,'(/,5X,"image",2X,"Fermi energy (eV)",11X, &
+                        "error (V)",4X,"tot_charge",/)')
+          DO image = 1, num_of_images
+          !
+             WRITE(iunpath,'(5X,I5,9X,F10.6,10X,F10.6,4X,F10.6)') &
+                 image, fcp_neb_ef(image)*rytoev, &
+                 (fcp_mu-fcp_neb_ef(image))*rytoev, &
+                 SUM( zv(ityp(1:nat)) ) - fcp_neb_nelec(image)
+          !
+          END DO
+       END IF
        !
        inter_image_distance = path_length / DBLE( num_of_images - 1 )
        !

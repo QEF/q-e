@@ -18,7 +18,6 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   USE constants, ONLY : tpi, e2
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
-  USE esm,       ONLY : esm_force_ew, do_comp_esm, esm_bc
   implicit none
   !
   !   First the dummy variables
@@ -99,46 +98,38 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   ! G-space sum here
   !
-  IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc') ) THEN
-     ! 
-     ! ... Perform ESM calculation
-     ! 
-     CALL esm_force_ew ( alpha, forceion )
-     !
-  ELSE
-     allocate(aux(ngm))
-     aux(:) = (0.d0, 0.d0)
+  allocate(aux(ngm))
+  aux(:) = (0.d0, 0.d0)
 
-     do nt = 1, ntyp
-        do ig = gstart, ngm
-           aux (ig) = aux (ig) + zv (nt) * CONJG(strf (ig, nt) )
-        enddo
-     enddo
+  do nt = 1, ntyp
      do ig = gstart, ngm
-        aux (ig) = aux (ig) * exp ( - gg (ig) * tpiba2 / alpha / 4.d0) &
-             / (gg (ig) * tpiba2)
+        aux (ig) = aux (ig) + zv (nt) * CONJG(strf (ig, nt) )
      enddo
-     if (gamma_only) then
-        fact = 4.d0
-     else
-        fact = 2.d0
-     end if
-     do na = 1, nat
-        do ig = gstart, ngm
-           arg = tpi * (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
-                + g (3, ig) * tau (3, na) )
-           sumnb = cos (arg) * AIMAG (aux(ig)) - sin (arg) *  DBLE (aux(ig) )
-           forceion (1, na) = forceion (1, na) + g (1, ig) * sumnb
-           forceion (2, na) = forceion (2, na) + g (2, ig) * sumnb
-           forceion (3, na) = forceion (3, na) + g (3, ig) * sumnb
-        enddo
-        do ipol = 1, 3
-           forceion (ipol, na) = - zv (ityp (na) ) * fact * e2 * tpi**2 / &
-                omega / alat * forceion (ipol, na)
-        enddo
+  enddo
+  do ig = gstart, ngm
+     aux (ig) = aux (ig) * exp ( - gg (ig) * tpiba2 / alpha / 4.d0) &
+          / (gg (ig) * tpiba2)
+  enddo
+  if (gamma_only) then
+     fact = 4.d0
+  else
+     fact = 2.d0
+  end if
+  do na = 1, nat
+     do ig = gstart, ngm
+        arg = tpi * (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
+             + g (3, ig) * tau (3, na) )
+        sumnb = cos (arg) * AIMAG (aux(ig)) - sin (arg) *  DBLE (aux(ig) )
+        forceion (1, na) = forceion (1, na) + g (1, ig) * sumnb
+        forceion (2, na) = forceion (2, na) + g (2, ig) * sumnb
+        forceion (3, na) = forceion (3, na) + g (3, ig) * sumnb
      enddo
-     deallocate (aux)
-  ENDIF
+     do ipol = 1, 3
+        forceion (ipol, na) = - zv (ityp (na) ) * fact * e2 * tpi**2 / &
+             omega / alat * forceion (ipol, na)
+     enddo
+  enddo
+  deallocate (aux)
   if (gstart == 1) goto 100
   !
   ! R-space sum here (only for the processor that contains G=0)

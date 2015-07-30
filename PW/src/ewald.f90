@@ -20,7 +20,6 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE martyna_tuckerman, ONLY : wg_corr_ewald, do_comp_mt
-  USE esm,       ONLY : do_comp_esm, esm_bc, esm_ewald
   implicit none
   !
   !   first the dummy variables
@@ -98,42 +97,34 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   ! G-space sum here.
   ! Determine if this processor contains G=0 and set the constant term
   !
-  IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc') ) THEN
-     !
-     ! ... call ESM-specific Ewald routine for G-space sum only
-     !
-     CALL esm_ewald (charge, alpha, ewaldg)
-     !
-  ELSE
-     if (gstart==2) then
-        ewaldg = - charge**2 / alpha / 4.0d0
-     else
-        ewaldg = 0.0d0
-     endif
-     if (gamma_only) then
-        fact = 2.d0
-     else
-        fact = 1.d0
-     end if
-     do ng = gstart, ngm
-        rhon = (0.d0, 0.d0)
-        do nt = 1, ntyp
-           rhon = rhon + zv (nt) * CONJG(strf (ng, nt) )
-        enddo
-        ewaldg = ewaldg + fact * abs (rhon) **2 * exp ( - gg (ng) * tpiba2 / &
-             alpha / 4.d0) / gg (ng) / tpiba2
+  if (gstart==2) then
+     ewaldg = - charge**2 / alpha / 4.0d0
+  else
+     ewaldg = 0.0d0
+  endif
+  if (gamma_only) then
+     fact = 2.d0
+  else
+     fact = 1.d0
+  end if
+  do ng = gstart, ngm
+     rhon = (0.d0, 0.d0)
+     do nt = 1, ntyp
+        rhon = rhon + zv (nt) * CONJG(strf (ng, nt) )
      enddo
-     ewaldg = 2.d0 * tpi / omega * ewaldg
-     !
-     !  Here add the other constant term
-     !
-     if (gstart.eq.2) then
-        do na = 1, nat
-           ewaldg = ewaldg - zv (ityp (na) ) **2 * sqrt (8.d0 / tpi * &
-                alpha)
-        enddo
-     endif
-  ENDIF
+     ewaldg = ewaldg + fact * abs (rhon) **2 * exp ( - gg (ng) * tpiba2 / &
+        alpha / 4.d0) / gg (ng) / tpiba2
+  enddo
+  ewaldg = 2.d0 * tpi / omega * ewaldg
+  !
+  !  Here add the other constant term
+  !
+  if (gstart.eq.2) then
+     do na = 1, nat
+        ewaldg = ewaldg - zv (ityp (na) ) **2 * sqrt (8.d0 / tpi * &
+           alpha)
+     enddo
+  endif
   !
   ! R-space sum here (only for the processor that contains G=0)
   !
