@@ -22,6 +22,9 @@ New in 5.2.0 version:
          be used in (fixed-cell) structural relaxation as well
    * PW: speedup of USPP with full G-space treatment of augmentation charges
    * PW: Hybrid functionals for USPP now working
+   * PW: Improved ESM, works also for NEB and with postprocessing codes;
+     constant-bias potential (constant-mu) calculations (PRL109, 266101, 2012)
+     implemented (courtesy of Minoru Otani)
 
 Fixed in 5.2.0 version:
 
