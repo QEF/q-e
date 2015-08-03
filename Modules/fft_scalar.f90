@@ -63,7 +63,7 @@
 
 #elif defined __FFTW3
 
-#include "fftw3.f03"
+#include "fftw3.f"
 
 #elif defined __DFTI
         TYPE dfti_descriptor_array
