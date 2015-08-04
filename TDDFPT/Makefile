@@ -18,6 +18,14 @@ clean :
 	( cd src ; $(MAKE) clean ; )
 	( cd tools ; $(MAKE) clean ; )
 
+doc:
+	if test -d Doc ; then \
+        ( cd Doc ; $(MAKE) all || exit 1 ) ; fi
+
+doc_clean:
+	if test -d Doc ; then \
+        (cd Doc ; $(MAKE) clean ) ; fi
+
 distclean: clean
 
 

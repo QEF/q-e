@@ -159,7 +159,7 @@ input_description -distribution {Quantum Espresso} -package turboTDDFPT -program
                 is used (no exchange and correlation).
                 }
         }
-`       var ecutfock -type REAL { 
+        var ecutfock -type REAL { 
             default { ecutrho }
             info {
                 Kinetic energy cutoff (Ry) for the exact exchange operator in 
