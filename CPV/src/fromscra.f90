@@ -41,7 +41,7 @@ SUBROUTINE from_scratch( )
                                      tefield2, efield_berry_setup2, berry_energy2
     USE cg_module,            ONLY : tcg
     USE ensemble_dft,         ONLY : tens, compute_entropy
-    USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
+    USE cp_interfaces,        ONLY : runcp_uspp, runcp_new, runcp_uspp_force_pairing, &
                                      strucf, phfacs, nlfh, vofrho, nlfl_bgrp, prefor
     USE cp_interfaces,        ONLY : rhoofr, ortho, wave_rand_init, elec_fakekine
     USE cp_interfaces,        ONLY : compute_stress, dotcsc, calbec_bgrp, caldbec_bgrp
@@ -226,7 +226,11 @@ SUBROUTINE from_scratch( )
          !
       ELSE
          !
+#if defined __FULL_FFT3D_LOOP
+         CALL runcp_new( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, c0_bgrp, fromscra = .TRUE. )
+#else
          CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, c0_bgrp, fromscra = .TRUE. )
+#endif
          !
       ENDIF
       !

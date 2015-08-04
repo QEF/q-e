@@ -56,9 +56,14 @@
       !
       INTEGER     :: iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
       INTEGER     :: ivoff, jvoff, igoff, igno, igrp, ierr
-      INTEGER     :: idx, eig_offset, eig_index, nogrp_
+      INTEGER     :: idx, eig_offset, nogrp_
       REAL(DP)    :: fi, fip, dd, dv
       COMPLEX(DP) :: fp, fm, ci
+#if defined(__INTEL_COMPILER)
+#if __INTEL_COMPILER  >= 1300
+!dir$ attributes align: 4096 :: af, aa, psi, exx_a, exx_b
+#endif
+#endif
       REAL(DP),    ALLOCATABLE :: af( :, : ), aa( :, : )
       COMPLEX(DP), ALLOCATABLE :: psi(:)
       REAL(DP)    :: tmp1, tmp2                      ! Lingzhu Kong
@@ -378,4 +383,157 @@
 !
       RETURN
    END SUBROUTINE dforce_x
+!
+!-------------------------------------------------------------------------
+      SUBROUTINE dforce_new_x ( i, bec, vkb, df, da, ispin, f, n, nspin )
+!-----------------------------------------------------------------------
+!computes: the generalized force df=cmplx(dfr,dfi,kind=DP) acting on the i-th
+!          electron state at the gamma point of the brillouin zone
+!          represented by the vector c=cmplx(cr,ci,kind=DP)
+!
+!     d_n(g) = f_n { 0.5 g^2 c_n(g) + [vc_n](g) +
+!              sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
+!                                 e^-ig.r_i < beta_i,j | c_n >}
+!
+      USE parallel_include
+      USE kinds,                  ONLY: dp
+      USE control_flags,          ONLY: iprint
+      USE gvecs,                  ONLY: nlsm, nls
+      USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq
+      USE uspp_param,             ONLY: nhm, nh, ish
+      USE constants,              ONLY: pi, fpi
+      USE ions_base,              ONLY: nsp, na, nat
+      USE gvecw,                  ONLY: ngw, ggp
+      USE cell_base,              ONLY: tpiba2
+      USE ensemble_dft,           ONLY: tens
+      USE funct,                  ONLY: dft_is_meta, dft_is_hybrid, exx_is_active
+      USE fft_base,               ONLY: dffts
+      USE fft_interfaces,         ONLY: fwfft, invfft
+      USE mp_global,              ONLY: me_bgrp
+      USE control_flags,          ONLY: lwfpbe0nscf
+      USE exx_module,             ONLY: exx_potential
+!
+      IMPLICIT NONE
+!
+      INTEGER,     INTENT(IN)    :: i
+      REAL(DP)                   :: bec(:,:)
+      COMPLEX(DP)                :: vkb(:,:)
+      COMPLEX(DP)                :: df(:), da(:)
+      INTEGER                    :: ispin( : )
+      REAL(DP)                   :: f( : )
+      INTEGER,     INTENT(IN)    :: n, nspin
+      !
+      ! local variables
+      !
+      INTEGER     :: iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
+      INTEGER     :: ivoff, jvoff, igoff, igno, igrp, ierr
+      INTEGER     :: idx, eig_offset, nogrp_
+      REAL(DP)    :: fi, fip, dd, dv
+      COMPLEX(DP) :: fp, fm, ci
+#if defined(__INTEL_COMPILER)
+#if __INTEL_COMPILER  >= 1300
+!dir$ attributes align: 4096 :: af, aa, exx_a, exx_b
+#endif
+#endif
+      REAL(DP),    ALLOCATABLE :: af( :, : ), aa( :, : )
+      REAL(DP)    :: tmp1, tmp2                      ! Lingzhu Kong
+      REAL(DP),    ALLOCATABLE :: exx_a(:), exx_b(:) ! Lingzhu Kong      
+      !
+      CALL start_clock( 'dforce' ) 
+      !
+      IF( dffts%have_task_groups ) THEN
+         nogrp_ = dffts%nogrp
+      ELSE
+         nogrp_ = 1
+      END IF
+      !
+      IF ( i < n ) THEN
+         iss1 = ispin(i)
+         iss2 = ispin(i+1)
+      ELSE
+         iss1 = ispin(i)
+         iss2 = iss1
+      END IF
+      !
+      IF( nhsa > 0 ) THEN
+         !
+         !     aa_i,i,n = sum_j d_i,ij <beta_i,j|c_n>
+         ! 
+         ALLOCATE( af( nhsa, nogrp_ ), aa( nhsa, nogrp_ ) )
 
+         af = 0.0d0
+         aa = 0.0d0
+         !
+!$omp parallel default(none) &
+!$omp          private(iv,jv,ivoff,jvoff,dd,dv,inl,jnl,is,isa,ism,igrp,idx,fi,fip) &
+!$omp          shared( nogrp_ , f, ngw, deeq, bec, af, aa, i, n, nsp, na, nh, dvan, tens, ish, iss1, iss2 )
+         !
+         igrp = 1
+
+         DO idx = 1, 2*nogrp_ , 2
+
+            IF( idx + i - 1 <= n ) THEN
+
+               IF (tens) THEN
+                  fi = 1.0d0
+                  fip= 1.0d0
+               ELSE
+                  fi = f(i+idx-1)
+                  fip= f(i+idx)
+               END IF
+               !
+               DO is = 1, nsp
+                  DO iv = 1, nh(is)
+                        DO jv = 1, nh(is)
+                           isa = 0
+                           DO ism = 1, is-1
+                              isa = isa + na( ism )
+                           END DO
+                           dv = dvan(iv,jv,is)
+                           ivoff = ish(is)+(iv-1)*na(is)
+                           jvoff = ish(is)+(jv-1)*na(is)
+                           IF( i + idx - 1 /= n ) THEN
+!$omp do
+                              DO ia=1,na(is)
+                                 inl = ivoff + ia
+                                 jnl = jvoff + ia
+                                 dd = deeq(iv,jv,isa+ia,iss1) + dv
+                                 af(inl,igrp) = af(inl,igrp) - fi  * dd * bec(jnl,i+idx-1)
+                                 dd = deeq(iv,jv,isa+ia,iss2) + dv
+                                 aa(inl,igrp) = aa(inl,igrp) - fip * dd * bec(jnl,i+idx)
+                              END DO
+                           ELSE
+!$omp do
+                              DO ia=1,na(is)
+                                 inl = ivoff + ia
+                                 jnl = jvoff + ia
+                                 dd = deeq(iv,jv,isa+ia,iss1) + dv
+                                 af(inl,igrp) = af(inl,igrp) - fi * dd * bec(jnl,i+idx-1)
+                              END DO
+                           END IF
+                        END DO
+                  END DO
+               END DO
+
+            END IF
+
+            igrp = igrp + 1
+
+         END DO
+
+!$omp end parallel
+!
+         CALL dgemm ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, af, nhsa, 1.0d0, df, 2*ngw)
+
+         CALL dgemm ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, aa, nhsa, 1.0d0, da, 2*ngw)
+         !
+         DEALLOCATE( aa, af )
+         !
+      ENDIF
+!
+      IF(dft_is_hybrid().AND.exx_is_active()) DEALLOCATE(exx_a, exx_b)
+!
+      CALL stop_clock( 'dforce' ) 
+!
+      RETURN
+   END SUBROUTINE dforce_new_x

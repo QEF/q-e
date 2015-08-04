@@ -112,7 +112,7 @@
       USE constants,          ONLY: pi, fpi
       USE mp,                 ONLY: mp_sum
       USE io_global,          ONLY: stdout, ionode
-      USE mp_global,          ONLY: intra_bgrp_comm, nbgrp, inter_bgrp_comm, me_bgrp
+      USE mp_global,          ONLY: intra_bgrp_comm, nbgrp, inter_bgrp_comm, me_bgrp, nproc_bgrp
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
       USE cp_interfaces,      ONLY: stress_kin, enkin
@@ -148,11 +148,21 @@
       REAL(DP) :: rsumr(2), rsumg(2), sa1, sa2, detmp(6), mtmp(3,3)
       REAL(DP) :: rnegsum, rmin, rmax, rsum
       COMPLEX(DP) :: ci,fp,fm
+#if defined(__INTEL_COMPILER)
+#if __INTEL_COMPILER  >= 1300
+!dir$ attributes align: 4096 :: psi, psis, drhovan
+#endif
+#endif
       COMPLEX(DP), ALLOCATABLE :: psi(:), psis(:)
       REAL(DP), ALLOCATABLE :: drhovan(:,:,:,:,:)
 
       LOGICAL, SAVE :: first = .TRUE.
       LOGICAL :: ttstress
+#if defined __FULL_FFT3D_LOOP
+      LOGICAL :: use_new_loop = .true.
+#else
+      LOGICAL :: use_new_loop = .false.
+#endif
       
       !
       CALL start_clock( 'rhoofr' )
@@ -313,6 +323,10 @@
          ELSE IF( dffts%have_task_groups ) THEN
             !
             CALL loop_over_states_tg()
+            !
+         ELSE IF( use_new_loop ) THEN
+            !
+            CALL new_loop()
             !
          ELSE
             !
@@ -522,6 +536,114 @@
       END SUBROUTINE
 
       !
+      SUBROUTINE new_loop
+         USE fft_scalar, ONLY : cft_1z, cft_2xy
+         use gvecs, only: nlsm, nls
+         USE parallel_include
+         IMPLICIT NONE
+         COMPLEX(DP), ALLOCATABLE :: sndbuf(:)
+         COMPLEX(DP), ALLOCATABLE :: rcvbuf(:)
+         REAL(DP), ALLOCATABLE :: rho(:,:)
+         REAL(DP) :: rsum
+         COMPLEX(DP) :: sa1, sa2
+         complex(DP), parameter :: ci=(0.0d0,1.0d0)
+         INTEGER :: nswx, j, k, l, ierr, nr3, ip, it, mc, nr1, nr2, ioff, ib1, ib2, ig
+         INTEGER :: iss1, iss2, ir
+         LOGICAL :: first 
+         !
+         WRITE( stdout, * ) 'Charge density: using new loop with full 3DFFT'
+         !
+         nswx = MAXVAL( dffts%nsw(:) )
+         nr1  = dffts%nr1
+         nr2  = dffts%nr2
+         nr3  = dffts%nr3
+         !
+         ALLOCATE( sndbuf( MAX( nr1*nr2*nr3, nswx * nr3 * nproc_bgrp ) ) ) 
+         ALLOCATE( rcvbuf(  MAX( nr1*nr2*nr3, nswx * nr3 * nproc_bgrp ) ) ) 
+         ALLOCATE( rho(  MAX( nr1*nr2*nr3, nswx * nr3 * nproc_bgrp ) , nspin ) ) 
+         !
+         first = .true.
+         rho = 0.0d0
+         !
+         DO i = 1, nbsp_bgrp, 2*nproc_bgrp
+            !
+            k = 0
+            DO j = i, MIN( i + 2*nproc_bgrp - 1, nbsp_bgrp ), 2 
+               CALL c2psi( sndbuf(1 + nswx * nr3 * k ), nswx * nr3, c_bgrp( 1, j ), c_bgrp( 1, j+1 ), ngw, 2 )
+               k = k + 1
+            END DO
+
+            CALL MPI_ALLTOALL( sndbuf, nswx * nr3, MPI_DOUBLE_COMPLEX, rcvbuf, nswx * nr3, MPI_DOUBLE_COMPLEX, intra_bgrp_comm, ierr)
+
+            ! now rcvbuf, contains all stick for each bands
+            !
+            DO ip = 1, nproc_bgrp
+               ! set to 0 all data not belonging to fft sticks
+               DO k = dffts%nsw(ip) + 1, nswx
+                   DO l = 1, nr3
+                      rcvbuf( l + ( k - 1 ) * nr3 + ( ip - 1 ) * nr3 * nswx ) = 0.0d0
+                   END DO
+               END DO
+            END DO
+
+            ! trasform all the sticks for my band, and store the result in sndbuf
+            !
+            call cft_1z( rcvbuf, nswx*nproc_bgrp, nr3, nr3, 2, sndbuf)
+
+            rcvbuf = 0.0d0
+
+            DO ip = 1, nproc_bgrp
+              ioff = dffts%iss( ip )
+              DO k = 1, dffts%nsw( ip )
+                 mc = dffts%ismap( k + ioff )
+                 it = ( k - 1 ) * nr3 + ( ip - 1 ) * nr3 * nswx
+                 DO l = 1, nr3
+                    rcvbuf( mc + ( l - 1 ) * nr1 * nr2 ) = sndbuf( l + it )
+                 ENDDO
+              ENDDO
+            ENDDO
+       
+            CALL cft_2xy( rcvbuf, nr3, nr1, nr2, nr1, nr2, 2, dffts%iplw )
+
+            ib1 = i + 2*me_bgrp
+            IF( ib1 .LE. nbsp_bgrp ) THEN
+               iss1 = ispin_bgrp(ib1)
+               sa1  = f_bgrp(ib1) / omega
+               IF ( ib1 .NE. nbsp_bgrp ) THEN
+                  iss2 = ispin_bgrp(ib1+1)
+                  sa2  = f_bgrp(ib1+1) / omega
+               ELSE
+                  iss2 = iss1
+                  sa2  = 0.0d0
+               END IF
+               !
+               DO ir = 1, nr1*nr2*nr3
+                  rho(ir,iss1) = rho(ir,iss1) + sa1 * ( DBLE(rcvbuf(ir)))**2
+                  rho(ir,iss2) = rho(ir,iss2) + sa2 * (AIMAG(rcvbuf(ir)))**2
+               END DO
+
+            END IF
+
+         END DO
+
+         !
+
+         ioff = 0
+         DO ip = 1, nproc_bgrp
+            CALL MPI_REDUCE( rho(1+ioff*nr1*nr2,1), rhos(1,1), dffts%nnr, MPI_DOUBLE_PRECISION, MPI_SUM, ip-1, intra_bgrp_comm, ierr)
+            ioff = ioff + dffts%npp( ip )
+         END DO
+         !
+         IF( nbgrp > 1 ) THEN
+            call mp_sum( rhos, inter_bgrp_comm )
+         END IF
+
+         !
+         DEALLOCATE( rho ) 
+         DEALLOCATE( rcvbuf ) 
+         DEALLOCATE( sndbuf ) 
+         RETURN
+      END SUBROUTINE
       !
 
       SUBROUTINE loop_over_states_tg
@@ -535,6 +657,11 @@
          IMPLICIT NONE
          !
          INTEGER :: from, ii, eig_index, eig_offset
+#if defined(__INTEL_COMPILER)
+#if __INTEL_COMPILER  >= 1300
+!dir$ attributes align: 4096 :: tmp_rhos
+#endif
+#endif
          REAL(DP), ALLOCATABLE :: tmp_rhos(:,:)
 
          ALLOCATE( psis( dffts%tg_nnr * dffts%nogrp ) ) 
@@ -596,7 +723,7 @@
                !
             end do
 !$omp end parallel
-
+            !
             !  2*NOGRP are trasformed at the same time
             !  psis: holds the fourier coefficients of the current proccesor
             !        for eigenstates i and i+2*NOGRP-1
@@ -721,6 +848,11 @@
 ! output
       real(DP) ::    gradr( dfftp%nnr, 3, nspin )
 ! local
+#if defined(__INTEL_COMPILER)
+#if __INTEL_COMPILER  >= 1300
+!dir$ attributes align: 4096 :: v
+#endif
+#endif
       complex(DP), allocatable :: v(:)
       complex(DP) :: ci
       integer     :: iss, ig, ir
@@ -855,6 +987,11 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
      &     isa, ia, ir, ijs
       REAL(DP) :: asumt, dsumt
       COMPLEX(DP) fp, fm, ci
+#if defined(__INTEL_COMPILER)
+#if __INTEL_COMPILER  >= 1300
+!dir$ attributes align: 4096 :: v, dqgbt,qv
+#endif
+#endif
       COMPLEX(DP), ALLOCATABLE :: v(:)
       COMPLEX(DP), ALLOCATABLE:: dqgbt(:,:)
       COMPLEX(DP), ALLOCATABLE :: qv(:)
@@ -1153,6 +1290,11 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       INTEGER     :: isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss, isa, ia, ir, i, j
       REAL(DP)    :: sumrho
       COMPLEX(DP) :: ci, fp, fm, ca
+#if defined(__INTEL_COMPILER)
+#if __INTEL_COMPILER  >= 1300
+!dir$ attributes align: 4096 :: qgbt, v, qv
+#endif
+#endif
       COMPLEX(DP), ALLOCATABLE :: qgbt(:,:)
       COMPLEX(DP), ALLOCATABLE :: v(:)
       COMPLEX(DP), ALLOCATABLE :: qv(:)
