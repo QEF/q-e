@@ -63,7 +63,11 @@
 
 #elif defined __FFTW3
 
+#if defined __OPENMP
+#include "fftw3.f03"
+#else
 #include "fftw3.f"
+#endif
 
 #elif defined __DFTI
         TYPE dfti_descriptor_array
@@ -1707,7 +1711,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
       integer, save :: icurrent = 1
       integer, save :: dims( 4, ndims ) = -1
 
-#if defined __FFTW || __FFTW3
+#if defined __FFTW || __FFTW3 || __DFTI
 
       C_POINTER, save :: bw_planz(  ndims ) = 0
       C_POINTER, save :: bw_planx(  ndims ) = 0
@@ -1777,7 +1781,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
              call DESTROY_PLAN_2D( bw_planxy(icurrent) )
         call CREATE_PLAN_2D( bw_planxy(icurrent), nx, ny, 1 )
 !
-#elif defined __FFTW3
+#elif defined __FFTW3 || defined __DFTI
 
         if ( bw_planz(icurrent) /= 0 ) &
              call dfftw_destroy_plan(bw_planz(icurrent))
@@ -1833,7 +1837,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
         call FFTW_INPLACE_DRV_1D( bw_planx(ip), ny, f((k-1)*ldx*ldy + 1), 1, ldx )
       end do   
 
-#elif defined __FFTW3
+#elif defined __FFTW3 || defined __DFTI
 
       call dfftw_execute_dft(bw_planz(ip), f(1:), f(1:))
       call dfftw_execute_dft(bw_planxy(ip), f(nstart:), f(nstart:))
