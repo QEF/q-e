@@ -744,6 +744,8 @@ SUBROUTINE phq_readin()
         'phq_readin', 'gamma_gamma tricks with nat_todo &
        & not available. Use nogg=.true.', 1)
      !
+     IF (nimage > 1 .AND. lgamma_gamma) CALL errore( &
+        'phq_readin','gamma_gamma tricks with images not implemented',1)
      IF (lgamma) THEN
         nksq = nks
      ELSE
