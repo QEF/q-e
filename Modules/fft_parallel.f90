@@ -125,7 +125,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
         !
      ELSE
         !
-        CALL pack_group_sticks()
+        CALL pack_group_sticks( f, yf, dfft )
         !
         IF( use_tg ) THEN
            CALL cft_1z( yf, dfft%tg_nsw( me_p ), n3, nx3, isgn, aux )
@@ -179,94 +179,23 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
         ELSE
            CALL cft_1z( aux, dfft%nsw( me_p ), n3, nx3, isgn, f )
         ENDIF
-        !
-        CALL unpack_group_sticks()
+        ! 
+        CALL unpack_group_sticks( yf, f, dfft )
         !
      ENDIF
      !
   ENDIF
   !
-  DEALLOCATE( aux )
-  !
   IF( use_tg ) THEN
      DEALLOCATE( yf )
   ENDIF
+
+  DEALLOCATE( aux )
   !
   RETURN
   !
 CONTAINS
   !
-
-  SUBROUTINE pack_group_sticks()
-
-     INTEGER                     :: ierr
-     !
-     IF( .not. use_tg ) RETURN
-     !
-     IF( dfft%tg_rdsp(dfft%nogrp) + dfft%tg_rcv(dfft%nogrp) > size( yf ) ) THEN
-        CALL errore( 'pack_group_sticks' , ' inconsistent size ', 1 )
-     ENDIF
-     IF( dfft%tg_psdsp(dfft%nogrp) + dfft%tg_snd(dfft%nogrp) > size( f ) ) THEN
-        CALL errore( 'pack_group_sticks', ' inconsistent size ', 2 )
-     ENDIF
-
-     CALL start_clock( 'ALLTOALL' )
-     !
-     !  Collect all the sticks of the different states,
-     !  in "yf" processors will have all the sticks of the OGRP
-
-#if defined __MPI
-
-     CALL MPI_ALLTOALLV( f(1), dfft%tg_snd, dfft%tg_psdsp, MPI_DOUBLE_COMPLEX, yf(1), dfft%tg_rcv, &
-      &                     dfft%tg_rdsp, MPI_DOUBLE_COMPLEX, dfft%ogrp_comm, IERR)
-     IF( ierr /= 0 ) THEN
-        CALL errore( 'pack_group_sticks', ' alltoall error 1 ', abs(ierr) )
-     ENDIF
-
-#endif
-
-     CALL stop_clock( 'ALLTOALL' )
-     !
-     !YF Contains all ( ~ NOGRP*dfft%nsw(me) ) Z-sticks
-     !
-     RETURN
-  END SUBROUTINE pack_group_sticks
-
-  !
-
-  SUBROUTINE unpack_group_sticks()
-     !
-     !  Bring pencils back to their original distribution
-     !
-     INTEGER                     :: ierr
-     !
-     IF( .not. use_tg ) RETURN
-     !
-     IF( dfft%tg_usdsp(dfft%nogrp) + dfft%tg_snd(dfft%nogrp) > size( f ) ) THEN
-        CALL errore( 'unpack_group_sticks', ' inconsistent size ', 3 )
-     ENDIF
-     IF( dfft%tg_rdsp(dfft%nogrp) + dfft%tg_rcv(dfft%nogrp) > size( yf ) ) THEN
-        CALL errore( 'unpack_group_sticks', ' inconsistent size ', 4 )
-     ENDIF
-
-     CALL start_clock( 'ALLTOALL' )
-
-#if defined __MPI
-     CALL MPI_Alltoallv( yf(1), &
-          dfft%tg_rcv, dfft%tg_rdsp, MPI_DOUBLE_COMPLEX, f(1), &
-          dfft%tg_snd, dfft%tg_usdsp, MPI_DOUBLE_COMPLEX, dfft%ogrp_comm, IERR)
-     IF( ierr /= 0 ) THEN
-        CALL errore( 'unpack_group_sticks', ' alltoall error 2 ', abs(ierr) )
-     ENDIF
-#endif
-
-     CALL stop_clock( 'ALLTOALL' )
-
-     RETURN
-  END SUBROUTINE unpack_group_sticks
-
-  !
-
   SUBROUTINE fw_scatter( iopt )
 
         !Transpose data for the 2-D FFT on the x-y plane
@@ -339,116 +268,129 @@ END SUBROUTINE tg_cft3s
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE tg_cft3s_z( f, dfft, aux, isgn, use_task_groups )
+SUBROUTINE fw_tg_cft3_z( f_in, dfft, f_out )
   !----------------------------------------------------------------------------
   !
-  USE fft_scalar, ONLY : cft_1z, cft_2xy
-  USE fft_base,   ONLY : fft_scatter
+  USE fft_scalar, ONLY : cft_1z
   USE kinds,      ONLY : DP
   USE fft_types,  ONLY : fft_dlay_descriptor
   USE parallel_include
-
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP), INTENT(inout)    :: f( : )  ! array containing data to be transformed
-  COMPLEX(DP), INTENT(inout)   :: aux (:)
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
-                                           ! descriptor of fft data layout
-  INTEGER, INTENT(in)           :: isgn    ! fft direction
-  LOGICAL, OPTIONAL, INTENT(in) :: use_task_groups
-                                           ! specify if you want to use task groups parallelization
+  COMPLEX(DP), INTENT(inout)    :: f_in( : )  ! INPUT array containing data to be transformed
+  COMPLEX(DP), INTENT(inout)   :: f_out (:)  ! OUTPUT
+  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
   !
-  INTEGER                    :: me_p
-  INTEGER                    :: n1, n2, n3, nx1, nx2, nx3
-  COMPLEX(DP), ALLOCATABLE   :: yf(:)
+  CALL cft_1z( f_in, dfft%tg_nsw( dfft%mype + 1 ), dfft%nr3, dfft%nr3x, 2, f_out )
+  !
+END SUBROUTINE fw_tg_cft3_z
+!
+!----------------------------------------------------------------------------
+SUBROUTINE bw_tg_cft3_z( f_out, dfft, f_in )
+  !----------------------------------------------------------------------------
+  !
+  USE fft_scalar, ONLY : cft_1z
+  USE kinds,      ONLY : DP
+  USE fft_types,  ONLY : fft_dlay_descriptor
+  USE parallel_include
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(inout)    :: f_out( : ) ! OUTPUT
+  COMPLEX(DP), INTENT(inout)   :: f_in (:) ! INPUT array containing data to be transformed
+  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
+  !
+  CALL cft_1z( f_in, dfft%tg_nsw( dfft%mype + 1 ), dfft%nr3, dfft%nr3x, -2, f_out )
+  !
+END SUBROUTINE bw_tg_cft3_z
+!
+!----------------------------------------------------------------------------
+SUBROUTINE fw_tg_cft3_scatter( f, dfft, aux )
+  !----------------------------------------------------------------------------
+  !
+  USE fft_base,   ONLY : fft_scatter
+  USE kinds,      ONLY : DP
+  USE fft_types,  ONLY : fft_dlay_descriptor
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(inout)    :: f( : ), aux( : )  ! array containing data to be transformed
+  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft     ! descriptor of fft data layout
+  !
+  CALL fft_scatter( dfft, aux, dfft%nr3x, dfft%nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, 2, .true. )
+  !
+END SUBROUTINE fw_tg_cft3_scatter
+!
+!----------------------------------------------------------------------------
+SUBROUTINE bw_tg_cft3_scatter( f, dfft, aux )
+  !----------------------------------------------------------------------------
+  !
+  USE fft_base,   ONLY : fft_scatter
+  USE kinds,      ONLY : DP
+  USE fft_types,  ONLY : fft_dlay_descriptor
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(inout)    :: f( : ), aux( : )  ! array containing data to be transformed
+  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft     ! descriptor of fft data layout
+  !
+  CALL fft_scatter( dfft, aux, dfft%nr3x, dfft%nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, -2, .true. )
+  !
+END SUBROUTINE bw_tg_cft3_scatter
+!
+!----------------------------------------------------------------------------
+SUBROUTINE fw_tg_cft3_xy( f, dfft )
+  !----------------------------------------------------------------------------
+  !
+  USE fft_scalar, ONLY : cft_2xy
+  USE kinds,      ONLY : DP
+  USE fft_types,  ONLY : fft_dlay_descriptor
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(inout)    :: f( : ) ! INPUT/OUTPUT array containing data to be transformed
+  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
   INTEGER                    :: planes( dfft%nr1x )
-  LOGICAL                    :: use_tg
   !
+  planes = dfft%iplw
+  CALL cft_2xy( f, dfft%tg_npp( dfft%mype + 1 ), dfft%nr1, dfft%nr2, dfft%nr1x, dfft%nr2x, 2, planes )
   !
-  IF( present( use_task_groups ) ) THEN
-     use_tg = use_task_groups
-  ELSE
-     use_tg = .false.
-  ENDIF
+END SUBROUTINE fw_tg_cft3_xy
+!
+!----------------------------------------------------------------------------
+SUBROUTINE bw_tg_cft3_xy( f, dfft )
+  !----------------------------------------------------------------------------
   !
-  IF( use_tg .and. .not. dfft%have_task_groups ) &
-     CALL errore( ' tg_cft3s_x ', ' call requiring task groups for a descriptor without task groups ', 1 )
+  USE fft_scalar, ONLY : cft_2xy
+  USE kinds,      ONLY : DP
+  USE fft_types,  ONLY : fft_dlay_descriptor
   !
-  n1  = dfft%nr1
-  n2  = dfft%nr2
-  n3  = dfft%nr3
-  nx1 = dfft%nr1x
-  nx2 = dfft%nr2x
-  nx3 = dfft%nr3x
+  IMPLICIT NONE
   !
-  IF( use_tg ) THEN
-     ALLOCATE( YF ( dfft%nogrp * dfft%tg_nnr ) )
-  ENDIF
+  COMPLEX(DP), INTENT(inout)    :: f( : ) ! INPUT/OUTPUT  array containing data to be transformed
+  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft ! descriptor of fft data layout
+  INTEGER                    :: planes( dfft%nr1x )
   !
-  me_p = dfft%mype + 1
+  planes = dfft%iplw
+  CALL cft_2xy( f, dfft%tg_npp( dfft%mype + 1 ), dfft%nr1, dfft%nr2, dfft%nr1x, dfft%nr2x, -2, planes )
   !
-  IF ( isgn > 0 ) THEN
-     !
-     IF ( isgn /= 2 ) THEN
-        !
-        IF( use_tg ) &
-           CALL errore( ' tg_cft3s ', ' task groups on large mesh not implemented ', 1 )
-        !
-        CALL cft_1z( f, dfft%nsp( me_p ), n3, nx3, isgn, aux )
-        !
-     ELSE
-        !
-        CALL pack_group_sticks()
-        !
-        IF( use_tg ) THEN
-           CALL cft_1z( yf, dfft%tg_nsw( me_p ), n3, nx3, isgn, aux )
-        ELSE
-           CALL cft_1z( f, dfft%nsw( me_p ), n3, nx3, isgn, aux )
-        ENDIF
-        !
-     ENDIF
-     !
-  ELSE
-     !
-     IF ( isgn /= -2 ) THEN
-        !
-        IF( use_tg ) &
-           CALL errore( ' tg_cft3s ', ' task groups on large mesh not implemented ', 1 )
-        !
-     ENDIF
+END SUBROUTINE bw_tg_cft3_xy
 
-     IF ( isgn /= -2 ) THEN
-        !
-        CALL cft_1z( aux, dfft%nsp( me_p ), n3, nx3, isgn, f )
-        !
-     ELSE
-        !
-        IF( use_tg ) THEN
-           CALL cft_1z( aux, dfft%tg_nsw( me_p ), n3, nx3, isgn, yf )
-        ELSE
-           CALL cft_1z( aux, dfft%nsw( me_p ), n3, nx3, isgn, f )
-        ENDIF
-        !
-        CALL unpack_group_sticks()
-        !
-     ENDIF
-     !
-  ENDIF
-  !
-  IF( use_tg ) THEN
-     DEALLOCATE( yf )
-  ENDIF
-  !
-  RETURN
-  !
-CONTAINS
-  !
-  SUBROUTINE pack_group_sticks()
 
+!----------------------------------------------------------------------------
+  SUBROUTINE pack_group_sticks( f, yf, dfft )
+
+     USE kinds,      ONLY : DP
+     USE fft_types,  ONLY : fft_dlay_descriptor
+     USE parallel_include
+
+     IMPLICIT NONE
+
+     COMPLEX(DP), INTENT(in)    :: f( : )  ! array containing all bands, and gvecs distributed across processors
+     COMPLEX(DP), INTENT(out)    :: yf( : )  ! array containing bands collected into task groups
+     TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
      INTEGER                     :: ierr
-     !
-     IF( .not. use_tg ) RETURN
      !
      IF( dfft%tg_rdsp(dfft%nogrp) + dfft%tg_rcv(dfft%nogrp) > size( yf ) ) THEN
         CALL errore( 'pack_group_sticks' , ' inconsistent size ', 1 )
@@ -470,6 +412,14 @@ CONTAINS
         CALL errore( 'pack_group_sticks', ' alltoall error 1 ', abs(ierr) )
      ENDIF
 
+#else
+
+     IF( dfft%tg_rcv(dfft%nogrp) /= dfft%tg_snd(dfft%nogrp) ) THEN
+        CALL errore( 'pack_group_sticks', ' inconsistent size ', 3 )
+     ENDIF
+
+     yf( 1 : dfft%tg_rcv(dfft%nogrp) ) =  f( 1 : dfft%tg_snd(dfft%nogrp) )
+
 #endif
 
      CALL stop_clock( 'ALLTOALL' )
@@ -481,13 +431,21 @@ CONTAINS
 
   !
 
-  SUBROUTINE unpack_group_sticks()
+  SUBROUTINE unpack_group_sticks( yf, f, dfft )
+
+     USE kinds,      ONLY : DP
+     USE fft_types,  ONLY : fft_dlay_descriptor
+     USE parallel_include
+
+     IMPLICIT NONE
+
+     COMPLEX(DP), INTENT(out)    :: f( : )  ! array containing all bands, and gvecs distributed across processors
+     COMPLEX(DP), INTENT(in)    :: yf( : )  ! array containing bands collected into task groups
+     TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
      !
      !  Bring pencils back to their original distribution
      !
      INTEGER                     :: ierr
-     !
-     IF( .not. use_tg ) RETURN
      !
      IF( dfft%tg_usdsp(dfft%nogrp) + dfft%tg_snd(dfft%nogrp) > size( f ) ) THEN
         CALL errore( 'unpack_group_sticks', ' inconsistent size ', 3 )
@@ -511,243 +469,5 @@ CONTAINS
 
      RETURN
   END SUBROUTINE unpack_group_sticks
-  !
-END SUBROUTINE tg_cft3s_z
-!
-!
-!----------------------------------------------------------------------------
-SUBROUTINE tg_cft3s_scatter( f, dfft, aux, isgn, use_task_groups )
-  !----------------------------------------------------------------------------
-  !
-  USE fft_scalar, ONLY : cft_1z, cft_2xy
-  USE fft_base,   ONLY : fft_scatter
-  USE kinds,      ONLY : DP
-  USE fft_types,  ONLY : fft_dlay_descriptor
-  USE parallel_include
-
-  !
-  IMPLICIT NONE
-  !
-  COMPLEX(DP), INTENT(inout)    :: f( : ), aux( : )  ! array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
-                                           ! descriptor of fft data layout
-  INTEGER, INTENT(in)           :: isgn    ! fft direction
-  LOGICAL, OPTIONAL, INTENT(in) :: use_task_groups
-                                           ! specify if you want to use task groups parallelization
-  !
-  INTEGER                    :: me_p
-  INTEGER                    :: n1, n2, n3, nx1, nx2, nx3
-  INTEGER                    :: planes( dfft%nr1x )
-  LOGICAL                    :: use_tg
-  !
-  !
-  IF( present( use_task_groups ) ) THEN
-     use_tg = use_task_groups
-  ELSE
-     use_tg = .false.
-  ENDIF
-  !
-  IF( use_tg .and. .not. dfft%have_task_groups ) &
-     CALL errore( ' tg_cft3s ', ' call requiring task groups for a descriptor without task groups ', 1 )
-  !
-  n1  = dfft%nr1
-  n2  = dfft%nr2
-  n3  = dfft%nr3
-  nx1 = dfft%nr1x
-  nx2 = dfft%nr2x
-  nx3 = dfft%nr3x
-  !
-  me_p = dfft%mype + 1
-  !
-  IF ( isgn > 0 ) THEN
-     !
-     IF ( isgn /= 2 ) THEN
-        !
-        IF( use_tg ) &
-           CALL errore( ' tg_cft3s ', ' task groups on large mesh not implemented ', 1 )
-        !
-     ENDIF
-     !
-     CALL fw_scatter( isgn ) ! forwart scatter from stick to planes
-     !
-  ELSE
-     !
-     IF ( isgn /= -2 ) THEN
-        !
-        IF( use_tg ) &
-           CALL errore( ' tg_cft3s ', ' task groups on large mesh not implemented ', 1 )
-        !
-     ENDIF
-     !
-     CALL bw_scatter( isgn )
-     !
-  ENDIF
-  !
-  RETURN
-  !
-CONTAINS
-  !
-  SUBROUTINE fw_scatter( iopt )
-
-        !Transpose data for the 2-D FFT on the x-y plane
-        !
-        !NOGRP*dfft%nnr: The length of aux and f
-        !nr3x: The length of each Z-stick
-        !aux: input - output
-        !f: working space
-        !isgn: type of scatter
-        !dfft%nsw(me) holds the number of Z-sticks proc. me has.
-        !dfft%npp: number of planes per processor
-        !
-     !
-     USE fft_base, ONLY: fft_scatter
-     !
-     INTEGER, INTENT(in) :: iopt
-     !
-     IF( iopt == 2 ) THEN
-        !
-        IF( use_tg ) THEN
-           !
-           CALL fft_scatter( dfft, aux, nx3, dfft%nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg )
-           !
-        ELSE
-           !
-           CALL fft_scatter( dfft, aux, nx3, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
-           !
-        ENDIF
-        !
-     ELSEIF( iopt == 1 ) THEN
-        !
-        CALL fft_scatter( dfft, aux, nx3, dfft%nnr, f, dfft%nsp, dfft%npp, iopt )
-        !
-     ENDIF
-     !
-     RETURN
-  END SUBROUTINE fw_scatter
-
-  !
-
-  SUBROUTINE bw_scatter( iopt )
-     !
-     USE fft_base, ONLY: fft_scatter
-     !
-     INTEGER, INTENT(in) :: iopt
-     !
-     IF( iopt == -2 ) THEN
-        !
-        IF( use_tg ) THEN
-           !
-           CALL fft_scatter( dfft, aux, nx3, dfft%nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg )
-           !
-        ELSE
-           !
-           CALL fft_scatter( dfft, aux, nx3, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
-           !
-        ENDIF
-        !
-     ELSEIF( iopt == -1 ) THEN
-        !
-        CALL fft_scatter( dfft, aux, nx3, dfft%nnr, f, dfft%nsp, dfft%npp, iopt )
-        !
-     ENDIF
-     !
-     RETURN
-  END SUBROUTINE bw_scatter
-  !
-END SUBROUTINE tg_cft3s_scatter
-!
-!----------------------------------------------------------------------------
-SUBROUTINE tg_cft3s_xy( f, dfft, aux, isgn, use_task_groups )
-  !----------------------------------------------------------------------------
-  !
-  USE fft_scalar, ONLY : cft_1z, cft_2xy
-  USE fft_base,   ONLY : fft_scatter
-  USE kinds,      ONLY : DP
-  USE fft_types,  ONLY : fft_dlay_descriptor
-  USE parallel_include
-
-  !
-  IMPLICIT NONE
-  !
-  COMPLEX(DP), INTENT(inout)    :: f( : ), aux( : )  ! array containing data to be transformed
-  TYPE (fft_dlay_descriptor), INTENT(in) :: dfft
-                                           ! descriptor of fft data layout
-  INTEGER, INTENT(in)           :: isgn    ! fft direction
-  LOGICAL, OPTIONAL, INTENT(in) :: use_task_groups
-                                           ! specify if you want to use task groups parallelization
-  !
-  INTEGER                    :: me_p
-  INTEGER                    :: n1, n2, n3, nx1, nx2, nx3
-  COMPLEX(DP), ALLOCATABLE   :: yf(:)
-  INTEGER                    :: planes( dfft%nr1x )
-  LOGICAL                    :: use_tg
-  !
-  !
-  IF( present( use_task_groups ) ) THEN
-     use_tg = use_task_groups
-  ELSE
-     use_tg = .false.
-  ENDIF
-  !
-  IF( use_tg .and. .not. dfft%have_task_groups ) &
-     CALL errore( ' tg_cft3s ', ' call requiring task groups for a descriptor without task groups ', 1 )
-  !
-  n1  = dfft%nr1
-  n2  = dfft%nr2
-  n3  = dfft%nr3
-  nx1 = dfft%nr1x
-  nx2 = dfft%nr2x
-  nx3 = dfft%nr3x
-  !
-  me_p = dfft%mype + 1
-  !
-  IF ( isgn > 0 ) THEN
-     !
-     IF ( isgn /= 2 ) THEN
-        !
-        IF( use_tg ) &
-           CALL errore( ' tg_cft3s ', ' task groups on large mesh not implemented ', 1 )
-        !
-        planes = dfft%iplp
-        !
-     ELSE
-        !
-        planes = dfft%iplw
-        !
-     ENDIF
-     !
-     IF( use_tg ) THEN
-        CALL cft_2xy( f, dfft%tg_npp( me_p ), n1, n2, nx1, nx2, isgn, planes )
-     ELSE
-        CALL cft_2xy( f, dfft%npp( me_p ), n1, n2, nx1, nx2, isgn, planes )
-     ENDIF
-     !
-  ELSE
-     !
-     IF ( isgn /= -2 ) THEN
-        !
-        IF( use_tg ) &
-           CALL errore( ' tg_cft3s ', ' task groups on large mesh not implemented ', 1 )
-        !
-        planes = dfft%iplp
-        !
-     ELSE
-        !
-        planes = dfft%iplw
-        !
-     ENDIF
-
-     IF( use_tg ) THEN
-        CALL cft_2xy( f, dfft%tg_npp( me_p ), n1, n2, nx1, nx2, isgn, planes )
-     ELSE
-        CALL cft_2xy( f, dfft%npp( me_p ), n1, n2, nx1, nx2, isgn, planes)
-     ENDIF
-     !
-  ENDIF
-  !
-  RETURN
-  !
-END SUBROUTINE tg_cft3s_xy
-!
 
 END MODULE fft_parallel
