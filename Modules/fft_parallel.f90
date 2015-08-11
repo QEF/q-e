@@ -125,9 +125,8 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
         !
      ELSE
         !
-        CALL pack_group_sticks( f, yf, dfft )
-        !
         IF( use_tg ) THEN
+           CALL pack_group_sticks( f, yf, dfft )
            CALL cft_1z( yf, dfft%tg_nsw( me_p ), n3, nx3, isgn, aux )
         ELSE
            CALL cft_1z( f, dfft%nsw( me_p ), n3, nx3, isgn, aux )
@@ -176,11 +175,10 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
         !
         IF( use_tg ) THEN
            CALL cft_1z( aux, dfft%tg_nsw( me_p ), n3, nx3, isgn, yf )
+           CALL unpack_group_sticks( yf, f, dfft )
         ELSE
            CALL cft_1z( aux, dfft%nsw( me_p ), n3, nx3, isgn, f )
         ENDIF
-        ! 
-        CALL unpack_group_sticks( yf, f, dfft )
         !
      ENDIF
      !

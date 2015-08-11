@@ -112,7 +112,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
 #ifdef __MPI
 
   INTEGER :: dest, from, k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
-  INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx
+  INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp
   !
   LOGICAL :: use_tg_
 
@@ -170,20 +170,24 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
      offset = 1
 
      DO proc = 1, nprocp
-        from = offset
         IF( use_tg_ ) THEN
            gproc = dfft%nplist(proc)+1
         ELSE
            gproc = proc
         ENDIF
+        !
+        from = offset
         dest = 1 + ( proc - 1 ) * sendsiz
         !
+        kdest = dest - 1
+        kfrom = from - 1
+        !
         DO k = 1, ncp_ (me)
-           kdest = dest + (k - 1) * nppx - 1
-           kfrom = from + (k - 1) * nr3x - 1
            DO i = 1, npp_ ( gproc )
               f_aux ( kdest + i ) =  f_in ( kfrom + i )
            ENDDO
+           kdest = kdest + nppx
+           kfrom = kfrom + nr3x
         ENDDO
         offset = offset + npp_ ( gproc )
      ENDDO
@@ -201,8 +205,6 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
         gcomm = dfft%comm
      ENDIF
 
-     ! CALL mpi_barrier (gcomm, ierr)  ! why barrier? for buggy openmpi over ib
-
      CALL mpi_alltoall (f_aux(1), sendsiz, MPI_DOUBLE_COMPLEX, f_in(1), sendsiz, MPI_DOUBLE_COMPLEX, gcomm, ierr)
 
      IF( abs(ierr) /= 0 ) CALL errore ('fft_scatter', 'info<>0', abs(ierr) )
@@ -213,22 +215,17 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
      !
      IF( isgn == 1 ) THEN
 
-!!$omp parallel default(none) private(ip,ioff,i,mc,it,j) shared(dfft,nppx,sendsiz,me,f_in,f_aux)
-!!$omp do
-
         DO ip = 1, dfft%nproc
            ioff = dfft%iss( ip )
+           it = ( ip - 1 ) * sendsiz
            DO i = 1, dfft%nsp( ip )
               mc = dfft%ismap( i + ioff )
-              it = ( i - 1 ) * nppx + ( ip - 1 ) * sendsiz
               DO j = 1, dfft%npp( me )
                  f_aux( mc + ( j - 1 ) * dfft%nnp ) = f_in( j + it )
               ENDDO
+              it = it + nppx
            ENDDO
         ENDDO
-
-!!$omp end do
-!!$omp end parallel
 
      ELSE
 
@@ -240,37 +237,34 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
            nnp  = dfft%nnp
         ENDIF
         !
-!!$omp parallel default(none) private(ip,ioff,i,mc,it,j,gproc,ii) shared(dfft,nppx,npp,nnp,sendsiz,use_tg_,f_in,f_aux)
-!!$omp do
-        DO ip = 1, dfft%nproc
-
-           IF( use_tg_ ) THEN
-              gproc = ( ip - 1 ) / dfft%nogrp + 1
-              IF( MOD( ip - 1, dfft%nogrp ) == 0 ) ii = 0
-           ELSE
-              gproc = ip
-              ii = 0
-           ENDIF
+        ip = 1
+        !
+        DO gproc = 1, dfft%nproc / dfft%nogrp
            !
-           ioff = dfft%iss( ip )
+           it = ( gproc - 1 ) * sendsiz
            !
-           DO i = 1, dfft%nsw( ip )
+           DO ipp = 1, dfft%nogrp 
               !
-              mc = dfft%ismap( i + ioff )
+              ioff = dfft%iss( ip ) + 1
               !
-              it = ii * nppx + ( gproc - 1 ) * sendsiz
-              !
-              DO j = 1, npp
-                 f_aux( mc + ( j - 1 ) * nnp ) = f_in( j + it )
+              DO i = 1, dfft%nsw( ip )
+                 !
+                 mc = dfft%ismap( ioff )
+                 !
+                 DO j = 1, npp
+                    f_aux( mc + ( j - 1 ) * nnp ) = f_in( j + it )
+                 ENDDO
+                 !
+                 it = it  + nppx
+                 ioff = ioff + 1
+                 !
               ENDDO
               !
-              ii = ii + 1
+              ip = ip + 1
               !
            ENDDO
            !
         ENDDO
-!!$omp end do
-!!$omp end parallel
 
      END IF
 
@@ -282,12 +276,13 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
 
         DO ip = 1, dfft%nproc
            ioff = dfft%iss( ip )
+           it = ( ip - 1 ) * sendsiz
            DO i = 1, dfft%nsp( ip )
               mc = dfft%ismap( i + ioff )
-              it = ( i - 1 ) * nppx + ( ip - 1 ) * sendsiz
               DO j = 1, dfft%npp( me )
                  f_in( j + it ) = f_aux( mc + ( j - 1 ) * dfft%nnp )
               ENDDO
+              it = it + nppx
            ENDDO
         ENDDO
 
@@ -300,30 +295,31 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
            npp  = dfft%npp( me )
            nnp  = dfft%nnp
         ENDIF
-
-        DO ip = 1, dfft%nproc
-
-           IF( use_tg_ ) THEN
-              gproc = ( ip - 1 ) / dfft%nogrp + 1
-              IF( MOD( ip - 1, dfft%nogrp ) == 0 ) ii = 0
-           ELSE
-              gproc = ip
-              ii = 0
-           ENDIF
+        !
+        ip = 1
+        !
+        DO gproc = 1, dfft%nproc / dfft%nogrp
            !
-           ioff = dfft%iss( ip )
+           it = ( gproc - 1 ) * sendsiz
            !
-           DO i = 1, dfft%nsw( ip )
+           DO ipp = 1, dfft%nogrp 
               !
-              mc = dfft%ismap( i + ioff )
+              ioff = dfft%iss( ip ) + 1
               !
-              it = ii * nppx + ( gproc - 1 ) * sendsiz
-              !
-              DO j = 1, npp
-                 f_in( j + it ) = f_aux( mc + ( j - 1 ) * nnp )
+              DO i = 1, dfft%nsw( ip )
+                 !
+                 mc = dfft%ismap( ioff )
+                 !
+                 DO j = 1, npp
+                    f_in( j + it ) = f_aux( mc + ( j - 1 ) * nnp )
+                 ENDDO
+                 !
+                 it = it + nppx
+                 ioff = ioff + 1
+                 !
               ENDDO
               !
-              ii = ii + 1
+              ip = ip + 1
               !
            ENDDO
 
@@ -362,12 +358,15 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
         ENDIF
         dest = 1 + ( proc - 1 ) * sendsiz
         !
+        kdest = dest - 1
+        kfrom = from - 1
+        !
         DO k = 1, ncp_ (me)
-           kdest = dest + (k - 1) * nppx - 1
-           kfrom = from + (k - 1) * nr3x - 1
            DO i = 1, npp_ ( gproc )  
               f_in ( kfrom + i ) = f_aux ( kdest + i )
            ENDDO
+           kdest = kdest + nppx
+           kfrom = kfrom + nr3x
         ENDDO
         offset = offset + npp_ ( gproc )
      ENDDO
