@@ -845,7 +845,7 @@ SUBROUTINE cgather_sym_many( f_in, f_out, nbnd, nbnd_proc, start_nbnd_proc )
   !
   ! ... Written by A. Dal Corso
   !
-  ! ... This routine generalizes cgather_sym, receiveng nbnd complex 
+  ! ... This routine generalizes cgather_sym, receiving nbnd complex 
   ! ... distributed functions and collecting nbnd_proc(dfftp%mype+1) 
   ! ... functions in each processor.
   ! ... start_nbnd_proc(dfftp%mype+1), says where the data for each processor
