@@ -302,8 +302,8 @@ MODULE read_namelists_module
        emass = 400.0_DP
        emass_cutoff = 2.5_DP
        orthogonalization = 'ortho'
-       ortho_eps = 1.E-8_DP
-       ortho_max = 20
+       ortho_eps = 1.E-9_DP
+       ortho_max = 300
        electron_maxstep = 100
        scf_must_converge = .true.
        !

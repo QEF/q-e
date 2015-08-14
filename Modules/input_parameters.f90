@@ -615,15 +615,15 @@ MODULE input_parameters
           !  'Gram-Schmidt'  use Gram-Schmidt algorithm
           !  'ortho'         use iterative algorithm
 
-        REAL(DP) :: ortho_eps = 1.E-8_DP
+        REAL(DP) :: ortho_eps = 1.E-9_DP
           ! meaningful only if orthogonalization = 'ortho'
           ! tolerance for iterative orthonormalization,
           ! a value of 1.d-8 is usually sufficent
 
-        INTEGER   :: ortho_max = 20
+        INTEGER   :: ortho_max = 50
           ! meaningful only if orthogonalization = 'ortho'
           ! maximum number of iterations for orthonormalization
-          ! usually between 15 and 30.
+          ! usually between 20 and 300.
 
         INTEGER :: electron_maxstep = 1000
           ! maximum number of steps in electronic minimization
