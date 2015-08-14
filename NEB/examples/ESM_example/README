@@ -1,0 +1,26 @@
+This example shows how to calculate the minimum energy path (MEP) 
+by using the nudged elastic band (NEB) method in conjunction with 
+the Effective Screening Medium Method (ESM) and constant bias potential 
+(constant-mu) method.
+
+Before starting this example, see also examples for the ESM method in
+pw.x (PW/examples/ESM_example).
+
+The example calculation proceeds as follows:
+
+1) make an NEB calculation for H atom diffusion on Al(001) surface with
+   ordinaly periodic boundary condition (no ESM),
+   (input=Al001+H_pbc.in, output=Al001+H_pbc.out). This calculation 
+   shows the MEP of H atom (Bridge site -> top site -> bridge site).
+   This is a reference calculation for the following ESM calculations.
+
+2) make an NEB calculation for H atom diffusion on Al(001) surface with
+   ESM (bc3), (input=Al001+H_bc3.in, output=Al001+H_bc3.out).
+
+3) repeat #2 under a constant bias potential (constant-mu) condition.
+   The target Fermi energy is set to that for the initial geometory
+   of #2 system. This Fermi energy is the reference of the bias potential.
+
+4) repeat #3 but with a lower target Fermi energy (-0.5V)
+
+5) repeat #3 but with a higher target Fermi energy (+0.5V)

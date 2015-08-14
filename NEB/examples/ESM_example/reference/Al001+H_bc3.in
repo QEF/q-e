@@ -1,0 +1,58 @@
+BEGIN
+BEGIN_PATH_INPUT
+&PATH
+  restart_mode  = 'from_scratch',
+  string_method = 'neb',
+  nstep_path    = 50,
+  opt_scheme    = 'broyden',
+  num_of_images = 5,
+/
+END_PATH_INPUT
+BEGIN_ENGINE_INPUT
+&CONTROL
+  prefix        = 'Al001+H_bc3'
+  outdir        = '/Users/otani/espresso-5.2.0_20150714/tempdir/',
+  pseudo_dir    = '/Users/otani/espresso-5.2.0_20150714/pseudo/',
+/
+&SYSTEM
+  ibrav         = 0,
+  nat           = 5,
+  ntyp          = 2,
+  ecutwfc       = 20.0,
+  occupations   = 'smearing',
+  nosym         = .TRUE.
+  smearing      = 'mp',
+  degauss       = 0.03,
+  assume_isolated='esm',
+  esm_bc='bc3',
+/
+&ELECTRONS
+  mixing_beta = 0.3,
+/
+ATOMIC_SPECIES
+  Al  26.981538   Al.pbe-n-van.UPF
+  H    1.00794    H.pbe-van_ak.UPF
+BEGIN_POSITIONS
+FIRST_IMAGE
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000 0 0 0
+Al  5.41113843   0.00000000   0.00000000 0 0 0
+Al  0.00000000   5.41113843   0.00000000 0 0 0
+Al  5.41113843   5.41113843   0.00000000 0 0 0
+H   0.00000000   0.00000000   3.11055367 0 0 1
+LAST_IMAGE
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000 0 0 0
+Al  5.41113843   0.00000000   0.00000000 0 0 0
+Al  0.00000000   5.41113843   0.00000000 0 0 0
+Al  5.41113843   5.41113843   0.00000000 0 0 0
+H   5.41113843   5.41113843   3.11055367 0 0 1
+END_POSITIONS
+K_POINTS automatic
+6 6 1 1 1 0
+CELL_PARAMETERS bohr
+ 10.82227686   0.00000000   0.00000000
+  0.00000000  10.82227686   0.00000000
+  0.00000000   0.00000000  22.67672253
+END_ENGINE_INPUT
+END

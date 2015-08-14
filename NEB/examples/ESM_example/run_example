@@ -1,0 +1,474 @@
+#!/bin/sh
+
+###############################################################################
+##
+##  ESM EXAMPLE
+##
+###############################################################################
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use neb.x to calculate the"
+$ECHO "minimum energy path (MEP) of the H atom on Al(001) surface"
+$ECHO "with ESM method within Constant-N and Constant-mu modes."
+$ECHO
+$ECHO "!!! Beware: neb.x DOES NOT READ FROM STANDARD INPUT"
+$ECHO "!!! run as 'neb.x -inp input_file_name > output_file_name'"
+$ECHO
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="neb.x"
+PSEUDO_LIST="Al.pbe-n-van.UPF H.pbe-van_ak.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+NEB_COMMAND="$PARA_PREFIX $BIN_DIR/neb.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running Born-Oppenheimer NEB as: $NEB_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# NEB calculation for Al001+H with PBC
+cat > Al001+H_pbc.in << EOF
+BEGIN
+BEGIN_PATH_INPUT
+&PATH
+  restart_mode  = 'from_scratch',
+  string_method = 'neb',
+  nstep_path    = 50,
+  opt_scheme    = 'broyden',
+  num_of_images = 5,
+/
+END_PATH_INPUT
+BEGIN_ENGINE_INPUT
+&CONTROL
+  prefix        = 'Al001+H_pbc'
+  outdir        = '$TMP_DIR/',
+  pseudo_dir    = '$PSEUDO_DIR/',
+/
+&SYSTEM
+  ibrav         = 0,
+  nat           = 5,
+  ntyp          = 2,
+  ecutwfc       = 20.0,
+  occupations   = 'smearing',
+  nosym         = .TRUE.
+  smearing      = 'mp',
+  degauss       = 0.03,
+/
+&ELECTRONS
+  mixing_beta = 0.3,
+/
+ATOMIC_SPECIES
+  Al  26.981538   Al.pbe-n-van.UPF
+  H    1.00794    H.pbe-van_ak.UPF
+BEGIN_POSITIONS
+FIRST_IMAGE
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000 0 0 0
+Al  5.41113843   0.00000000   0.00000000 0 0 0
+Al  0.00000000   5.41113843   0.00000000 0 0 0
+Al  5.41113843   5.41113843   0.00000000 0 0 0
+H   0.00000000   0.00000000   3.11055367 0 0 1
+LAST_IMAGE
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000 0 0 0
+Al  5.41113843   0.00000000   0.00000000 0 0 0
+Al  0.00000000   5.41113843   0.00000000 0 0 0
+Al  5.41113843   5.41113843   0.00000000 0 0 0
+H   5.41113843   5.41113843   3.11055367 0 0 1
+END_POSITIONS
+K_POINTS automatic
+6 6 1 1 1 0
+CELL_PARAMETERS bohr
+ 10.82227686   0.00000000   0.00000000
+  0.00000000  10.82227686   0.00000000
+  0.00000000   0.00000000  22.67672253
+END_ENGINE_INPUT
+END
+EOF
+$ECHO "  running NEB calculation for Al001+H without ESM"
+$NEB_COMMAND -inp Al001+H_pbc.in > Al001+H_pbc.out
+check_failure $?
+$ECHO " done"
+# clean current dir & $TMP_DIR
+$ECHO "  cleaning ./ & $TMP_DIR...\c"
+rm -rf neb.dat pw_1.in pw_2.in
+rm -rf $TMP_DIR/Al001+H_pbc.* $TMP_DIR/Al001+H_pbc_*/Al001+H_pbc.save
+rm -rf $TMP_DIR/Al001+H_pbc_*/Al001+H_pbc.update
+rm -rf $TMP_DIR/Al001+H_pbc_*/Al001+H_pbc.wfc* $TMP_DIR/Al001+H_pbc_*/PW.out
+mv $TMP_DIR/Al001+H_pbc_* .
+
+# NEB calculation for Al001+H with bc3 (vacuum-slab-metal),
+cat > Al001+H_bc3.in << EOF
+BEGIN
+BEGIN_PATH_INPUT
+&PATH
+  restart_mode  = 'from_scratch',
+  string_method = 'neb',
+  nstep_path    = 50,
+  opt_scheme    = 'broyden',
+  num_of_images = 5,
+/
+END_PATH_INPUT
+BEGIN_ENGINE_INPUT
+&CONTROL
+  prefix        = 'Al001+H_bc3'
+  outdir        = '$TMP_DIR/',
+  pseudo_dir    = '$PSEUDO_DIR/',
+/
+&SYSTEM
+  ibrav         = 0,
+  nat           = 5,
+  ntyp          = 2,
+  ecutwfc       = 20.0,
+  occupations   = 'smearing',
+  nosym         = .TRUE.
+  smearing      = 'mp',
+  degauss       = 0.03,
+  assume_isolated='esm',
+  esm_bc='bc3',
+/
+&ELECTRONS
+  mixing_beta = 0.3,
+/
+ATOMIC_SPECIES
+  Al  26.981538   Al.pbe-n-van.UPF
+  H    1.00794    H.pbe-van_ak.UPF
+BEGIN_POSITIONS
+FIRST_IMAGE
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000 0 0 0
+Al  5.41113843   0.00000000   0.00000000 0 0 0
+Al  0.00000000   5.41113843   0.00000000 0 0 0
+Al  5.41113843   5.41113843   0.00000000 0 0 0
+H   0.00000000   0.00000000   3.11055367 0 0 1
+LAST_IMAGE
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000 0 0 0
+Al  5.41113843   0.00000000   0.00000000 0 0 0
+Al  0.00000000   5.41113843   0.00000000 0 0 0
+Al  5.41113843   5.41113843   0.00000000 0 0 0
+H   5.41113843   5.41113843   3.11055367 0 0 1
+END_POSITIONS
+K_POINTS automatic
+6 6 1 1 1 0
+CELL_PARAMETERS bohr
+ 10.82227686   0.00000000   0.00000000
+  0.00000000  10.82227686   0.00000000
+  0.00000000   0.00000000  22.67672253
+END_ENGINE_INPUT
+END
+EOF
+$ECHO "  running NEB calculation for Al001+H with ESM (constant-N)"
+$NEB_COMMAND -inp Al001+H_bc3.in > Al001+H_bc3.out
+check_failure $?
+$ECHO " done"
+# clean current dir & $TMP_DIR
+$ECHO "  cleaning ./ & $TMP_DIR...\c"
+rm -rf neb.dat pw_1.in pw_2.in
+rm -rf $TMP_DIR/Al001+H_bc3.* $TMP_DIR/Al001+H_bc3_*/Al001+H_bc3.save
+rm -rf $TMP_DIR/Al001+H_bc3_*/Al001+H_bc3.update
+rm -rf $TMP_DIR/Al001+H_bc3_*/Al001+H_bc3.wfc* $TMP_DIR/Al001+H_bc3_*/PW.out
+mv $TMP_DIR/Al001+H_bc3_* .
+
+# NEB calculation for Al001+H with bc3 (vacuum-slab-metal),
+# target mu = -4.5239V
+cat > Al001+H_fcp0.in << EOF
+BEGIN
+BEGIN_PATH_INPUT
+&PATH
+  restart_mode  = 'from_scratch',
+  string_method = 'neb',
+  nstep_path    = 50,
+  opt_scheme    = 'broyden',
+  num_of_images = 5,
+  lfcpopt       = .TRUE.
+  fcp_mu        = -0.332504
+/
+END_PATH_INPUT
+BEGIN_ENGINE_INPUT
+&CONTROL
+  prefix        = 'Al001+H_fcp0'
+  outdir        = '$TMP_DIR/',
+  pseudo_dir    = '$PSEUDO_DIR/',
+/
+&SYSTEM
+  ibrav         = 0,
+  nat           = 5,
+  ntyp          = 2,
+  ecutwfc       = 20.0,
+  occupations   = 'smearing',
+  nosym         = .TRUE.
+  smearing      = 'mp',
+  degauss       = 0.03,
+  assume_isolated='esm',
+  esm_bc='bc3',
+/
+&ELECTRONS
+  mixing_beta = 0.3,
+/
+ATOMIC_SPECIES
+  Al  26.981538   Al.pbe-n-van.UPF
+  H    1.00794    H.pbe-van_ak.UPF
+BEGIN_POSITIONS
+FIRST_IMAGE
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000 0 0 0
+Al  5.41113843   0.00000000   0.00000000 0 0 0
+Al  0.00000000   5.41113843   0.00000000 0 0 0
+Al  5.41113843   5.41113843   0.00000000 0 0 0
+H   0.00000000   0.00000000   3.11055367 0 0 1
+LAST_IMAGE
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000 0 0 0
+Al  5.41113843   0.00000000   0.00000000 0 0 0
+Al  0.00000000   5.41113843   0.00000000 0 0 0
+Al  5.41113843   5.41113843   0.00000000 0 0 0
+H   5.41113843   5.41113843   3.11055367 0 0 1
+END_POSITIONS
+K_POINTS automatic
+6 6 1 1 1 0
+CELL_PARAMETERS bohr
+ 10.82227686   0.00000000   0.00000000
+  0.00000000  10.82227686   0.00000000
+  0.00000000   0.00000000  22.67672253
+END_ENGINE_INPUT
+END
+EOF
+$ECHO "  running NEB calculation for Al001+H with ESM+constant-mu"
+$ECHO "  (target mu = -4.5220V)...\c"
+$NEB_COMMAND -inp Al001+H_fcp0.in > Al001+H_fcp0.out
+check_failure $?
+$ECHO " done"
+# clean current dir & $TMP_DIR
+$ECHO "  cleaning ./ & $TMP_DIR...\c"
+rm -rf neb.dat pw_1.in pw_2.in
+rm -rf $TMP_DIR/Al001+H_fcp0.* $TMP_DIR/Al001+H_fcp0_*/Al001+H_fcp0.save
+rm -rf $TMP_DIR/Al001+H_fcp0_*/Al001+H_fcp0.update
+rm -rf $TMP_DIR/Al001+H_fcp0_*/Al001+H_fcp0.wfc* $TMP_DIR/Al001+H_fcp0_*/PW.out
+mv $TMP_DIR/Al001+H_fcp0_* .
+
+# NEB calculation for Al001+H with bc3 (vacuum-slab-metal),
+# target mu = -5.0239V
+cat > Al001+H_fcp1.in << EOF
+BEGIN
+BEGIN_PATH_INPUT
+&PATH
+  restart_mode  = 'from_scratch',
+  string_method = 'neb',
+  nstep_path    = 50,
+  opt_scheme    = 'broyden',
+  num_of_images = 5,
+  lfcpopt       = .TRUE.
+  fcp_mu        = -0.369253
+  fcp_tot_charge_first = 0.021755
+  fcp_tot_charge_last  = 0.022195
+/
+END_PATH_INPUT
+BEGIN_ENGINE_INPUT
+&CONTROL
+  prefix        = 'Al001+H_fcp1'
+  outdir        = '$TMP_DIR/',
+  pseudo_dir    = '$PSEUDO_DIR/',
+/
+&SYSTEM
+  ibrav         = 0,
+  nat           = 5,
+  ntyp          = 2,
+  ecutwfc       = 20.0,
+  occupations   = 'smearing',
+  nosym         = .TRUE.
+  smearing      = 'mp',
+  degauss       = 0.03,
+  assume_isolated='esm',
+  esm_bc='bc3',
+/
+&ELECTRONS
+  mixing_beta = 0.3,
+/
+ATOMIC_SPECIES
+  Al  26.981538   Al.pbe-n-van.UPF
+  H    1.00794    H.pbe-van_ak.UPF
+BEGIN_POSITIONS
+FIRST_IMAGE
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000 0 0 0
+Al  5.41113843   0.00000000   0.00000000 0 0 0
+Al  0.00000000   5.41113843   0.00000000 0 0 0
+Al  5.41113843   5.41113843   0.00000000 0 0 0
+H   0.00000000   0.00000000   3.11055367 0 0 1
+LAST_IMAGE
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000 0 0 0
+Al  5.41113843   0.00000000   0.00000000 0 0 0
+Al  0.00000000   5.41113843   0.00000000 0 0 0
+Al  5.41113843   5.41113843   0.00000000 0 0 0
+H   5.41113843   5.41113843   3.11055367 0 0 1
+END_POSITIONS
+K_POINTS automatic
+6 6 1 1 1 0
+CELL_PARAMETERS bohr
+ 10.82227686   0.00000000   0.00000000
+  0.00000000  10.82227686   0.00000000
+  0.00000000   0.00000000  22.67672253
+END_ENGINE_INPUT
+END
+EOF
+$ECHO "  running NEB calculation for Al001+H with ESM+constant-mu"
+$ECHO "  (target mu = -5.0220V)...\c"
+$NEB_COMMAND -inp Al001+H_fcp1.in > Al001+H_fcp1.out
+check_failure $?
+$ECHO " done"
+# clean current dir & $TMP_DIR
+$ECHO "  cleaning ./ & $TMP_DIR...\c"
+rm -rf neb.dat pw_1.in pw_2.in
+rm -rf $TMP_DIR/Al001+H_fcp1.* $TMP_DIR/Al001+H_fcp1_*/Al001+H_fcp1.save
+rm -rf $TMP_DIR/Al001+H_fcp1_*/Al001+H_fcp1.update
+rm -rf $TMP_DIR/Al001+H_fcp1_*/Al001+H_fcp1.wfc* $TMP_DIR/Al001+H_fcp1_*/PW.out
+mv $TMP_DIR/Al001+H_fcp1_* .
+
+# NEB calculation for Al001+H with bc3 (vacuum-slab-metal),
+# target mu = -4.0239V
+cat > Al001+H_fcp2.in << EOF
+BEGIN
+BEGIN_PATH_INPUT
+&PATH
+  restart_mode  = 'from_scratch',
+  string_method = 'neb',
+  nstep_path    = 50,
+  opt_scheme    = 'broyden',
+  num_of_images = 5,
+  lfcpopt       = .TRUE.
+  fcp_mu        = -0.295755,
+  fcp_tot_charge_first = -0.021744,
+  fcp_tot_charge_last  = -0.021744,
+/
+END_PATH_INPUT
+BEGIN_ENGINE_INPUT
+&CONTROL
+  prefix        = 'Al001+H_fcp2'
+  outdir        = '$TMP_DIR/',
+  pseudo_dir    = '$PSEUDO_DIR/',
+/
+&SYSTEM
+  ibrav         = 0,
+  nat           = 5,
+  ntyp          = 2,
+  ecutwfc       = 20.0,
+  occupations   = 'smearing',
+  nosym         = .TRUE.
+  smearing      = 'mp',
+  degauss       = 0.03,
+  assume_isolated='esm',
+  esm_bc='bc3',
+/
+&ELECTRONS
+  mixing_beta = 0.3,
+/
+ATOMIC_SPECIES
+  Al  26.981538   Al.pbe-n-van.UPF
+  H    1.00794    H.pbe-van_ak.UPF
+BEGIN_POSITIONS
+FIRST_IMAGE
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000 0 0 0
+Al  5.41113843   0.00000000   0.00000000 0 0 0
+Al  0.00000000   5.41113843   0.00000000 0 0 0
+Al  5.41113843   5.41113843   0.00000000 0 0 0
+H   0.00000000   0.00000000   3.11055367 0 0 1
+LAST_IMAGE
+ATOMIC_POSITIONS bohr
+Al  0.00000000   0.00000000   0.00000000 0 0 0
+Al  5.41113843   0.00000000   0.00000000 0 0 0
+Al  0.00000000   5.41113843   0.00000000 0 0 0
+Al  5.41113843   5.41113843   0.00000000 0 0 0
+H   5.41113843   5.41113843   3.11055367 0 0 1
+END_POSITIONS
+K_POINTS automatic
+6 6 1 1 1 0
+CELL_PARAMETERS bohr
+ 10.82227686   0.00000000   0.00000000
+  0.00000000  10.82227686   0.00000000
+  0.00000000   0.00000000  22.67672253
+END_ENGINE_INPUT
+END
+EOF
+$ECHO "  running NEB calculation for Al001+H with ESM+constant-mu"
+$ECHO "  (target mu = -4.0220V)...\c"
+$NEB_COMMAND -inp Al001+H_fcp2.in > Al001+H_fcp2.out
+check_failure $?
+$ECHO " done"
+# clean current dir & $TMP_DIR
+$ECHO "  cleaning ./ & $TMP_DIR...\c"
+rm -rf neb.dat pw_1.in pw_2.in
+rm -rf $TMP_DIR/Al001+H_fcp2.* $TMP_DIR/Al001+H_fcp2_*/Al001+H_fcp2.save
+rm -rf $TMP_DIR/Al001+H_fcp2_*/Al001+H_fcp2.update
+rm -rf $TMP_DIR/Al001+H_fcp2_*/Al001+H_fcp2.wfc* $TMP_DIR/Al001+H_fcp2_*/PW.out
+mv $TMP_DIR/Al001+H_fcp2_* .
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"
