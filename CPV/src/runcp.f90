@@ -445,7 +445,10 @@
            k = k + 1
         END DO
 
+        ! Serial compilation is broken here
+#if defined (__PARA)
         CALL MPI_ALLTOALL( sndbuf, nswx * nr3, MPI_DOUBLE_COMPLEX, rcvbuf, nswx * nr3, MPI_DOUBLE_COMPLEX, intra_bgrp_comm, ierr)
+#endif
 
         ! now rcvbuf, contains all stick for each bands, now clear extra elements (if any)
         !
@@ -504,7 +507,10 @@
 
         call cft_1z( sndbuf, nswx*nproc_bgrp, nr3, nr3, -2, rcvbuf)
 
+        ! Serial compilation is broken here
+#if defined(__PARA)
         CALL MPI_ALLTOALL( rcvbuf, nswx * nr3, MPI_DOUBLE_COMPLEX, sndbuf, nswx * nr3, MPI_DOUBLE_COMPLEX, intra_bgrp_comm, ierr)
+#endif
 
         k    = 0
 

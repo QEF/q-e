@@ -226,7 +226,7 @@ SUBROUTINE from_scratch( )
          !
       ELSE
          !
-#if defined __FULL_FFT3D_LOOP
+#if defined(__FULL_FFT3D_LOOP) && defined(__PARA)
          CALL runcp_new( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, c0_bgrp, fromscra = .TRUE. )
 #else
          CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, c0_bgrp, fromscra = .TRUE. )
