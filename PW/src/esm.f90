@@ -59,6 +59,7 @@ MODULE esm
 
   INTEGER, ALLOCATABLE :: mill_2d(:,:), imill_2d(:,:)
   INTEGER              :: ngm_2d = 0
+  real(DP), external   :: qe_erf, qe_erfc
   !
   interface
      subroutine esm_hartree_interface( rhog, ehart, aux )
@@ -1384,7 +1385,7 @@ FUNCTION esm_ewald()
      alpha = alpha - 0.1d0
      if (alpha.le.0.d0) call errore ('esm_ewald', 'optimal alpha not found', 1)
      upperbound = 2.d0 * charge**2 * sqrt (2.d0 * alpha / tpi) * &
-        esm_erfc ( sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
+        qe_erfc ( sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
      if ( upperbound < 1.0d-7 ) exit
   end do
 
@@ -1476,7 +1477,7 @@ SUBROUTINE esm_ewaldr_pbc ( alpha_g, ewr )
         !
         do nr=1,nrm
            rr=sqrt(r2(nr))*alat
-           ew=ew+fac*esm_erfc(tmp*rr)/rr
+           ew=ew+fac*qe_erfc(tmp*rr)/rr
         enddo
      enddo
 !$omp end do
@@ -1620,7 +1621,7 @@ SUBROUTINE esm_ewaldr_bc4 ( alpha_g, ewr )
               !
               do nr=1,nrm
                  rr=sqrt(r2(nr))*alat
-                 ew=ew+fac*esm_erfc(tmp*rr)/rr
+                 ew=ew+fac*qe_erfc(tmp*rr)/rr
               enddo
            elseif ( zp < z1 ) then ! z in I, zp in I
               call esm_rgen_2d(dtau,rmax,mxr,at,bg,r,r2,nrm)
@@ -1774,7 +1775,7 @@ SUBROUTINE esm_ewaldg_bc1 ( alpha_g, ewg )
      ! bc1
      arg001=-tmp**2*(z-zp)**2
      arg101= tmp*(z-zp)
-     kk1=0.5d0*(-(z-zp)*esm_erf(arg101)-exp(arg001)/tmp/sqrt(pi))
+     kk1=0.5d0*(-(z-zp)*qe_erf(arg101)-exp(arg001)/tmp/sqrt(pi))
      kk2=0.d0
 
      cc1=0.d0
@@ -1861,7 +1862,7 @@ SUBROUTINE esm_ewaldg_bc2 ( alpha_g, ewg )
      ! bc2
      arg001=-tmp**2*(z-zp)**2
      arg101= tmp*(z-zp)
-     kk1=0.5d0*(-(z-zp)*esm_erf(arg101)-exp(arg001)/tmp/sqrt(pi))
+     kk1=0.5d0*(-(z-zp)*qe_erf(arg101)-exp(arg001)/tmp/sqrt(pi))
      kk2=0.5d0*(z1-z*zp/z1)
 
      cc1=0.d0
@@ -1953,7 +1954,7 @@ SUBROUTINE esm_ewaldg_bc3 ( alpha_g, ewg )
      ! bc3
      arg001=-tmp**2*(z-zp)**2
      arg101= tmp*(z-zp)
-     kk1=0.5d0*(-(z-zp)*esm_erf(arg101)-exp(arg001)/tmp/sqrt(pi))
+     kk1=0.5d0*(-(z-zp)*qe_erf(arg101)-exp(arg001)/tmp/sqrt(pi))
      kk2=0.5d0*(2.d0*z1-z-zp)
 
      cc1=0.d0
@@ -2053,7 +2054,7 @@ SUBROUTINE esm_ewaldg_bc4 ( alpha_g, ewg )
      arg104= aaa/tmp+tmp*(z-zp)
      arg106= aaa/tmp+tmp*(z1-zp)
      if (z < z1) then
-        t1=-(z-zp)*esm_erf(arg101)+(0.5d0/aaa+z1-zp)*esm_erf(arg102)
+        t1=-(z-zp)*qe_erf(arg101)+(0.5d0/aaa+z1-zp)*qe_erf(arg102)
         t2=0.5d0/aaa*exp_erfc(arg006,arg106)
         t3=0.5d0/aaa-(z-z1)+exp(arg002)/tmp/sqrt(pi) &
            -exp(arg001)/tmp/sqrt(pi)
@@ -2251,19 +2252,19 @@ SUBROUTINE esm_local_bc1 (aux)
            ! bc1
            arg001=-tmp**2*(z-zp)**2
            arg101= tmp*(z-zp)
-           cc1=0.5d0*(-(z-zp)*esm_erf(arg101)-exp(arg001)/tmp/sqrt(pi))
+           cc1=0.5d0*(-(z-zp)*qe_erf(arg101)-exp(arg001)/tmp/sqrt(pi))
            cc2=(0.d0,0.d0)
 
            vg_r(iz) = vg_r(iz)+tt*(cc1+cc2)*e2 ! factor e2: hartree -> Ry.
         enddo
      ! smoothing cell edge potential (avoiding unphysical oscillation)
         ! bc1
-        f1=f1+tt*0.5d0*(-(z_r-zp)*esm_erf(tmp*(z_r-zp)) &
+        f1=f1+tt*0.5d0*(-(z_r-zp)*qe_erf(tmp*(z_r-zp)) &
            -exp(-tmp**2*(z_r-zp)**2)/tmp/sqrt(pi))
-        f2=f2+tt*0.5d0*(-(z_l-zp)*esm_erf(tmp*(z_l-zp)) &
+        f2=f2+tt*0.5d0*(-(z_l-zp)*qe_erf(tmp*(z_l-zp)) &
            -exp(-tmp**2*(z_l-zp)**2)/tmp/sqrt(pi))
-        f3=f3-tt*0.5d0*esm_erf(tmp*(z_r-zp))
-        f4=f4-tt*0.5d0*esm_erf(tmp*(z_l-zp))
+        f3=f3-tt*0.5d0*qe_erf(tmp*(z_r-zp))
+        f4=f4-tt*0.5d0*qe_erf(tmp*(z_l-zp))
      enddo
      ! for smoothing
      ! factor e2: hartree -> Ry.
@@ -2434,19 +2435,19 @@ SUBROUTINE esm_local_bc2 (aux)
            ! bc2
            arg001=-tmp**2*(z-zp)**2
            arg101= tmp*(z-zp)
-           cc1=0.5d0*(-(z-zp)*esm_erf(arg101)-exp(arg001)/tmp/sqrt(pi))
+           cc1=0.5d0*(-(z-zp)*qe_erf(arg101)-exp(arg001)/tmp/sqrt(pi))
            cc2=0.5d0*(z1-z*zp/z1)
 
            vg_r(iz) = vg_r(iz)+tt*(cc1+cc2)*e2 ! factor e2: hartree -> Ry.
         enddo
      ! smoothing cell edge potential (avoiding unphysical oscillation)
         ! bc2
-        f1=f1+tt*0.5d0*(-(z_r-zp)*esm_erf(tmp*(z_r-zp)) &
+        f1=f1+tt*0.5d0*(-(z_r-zp)*qe_erf(tmp*(z_r-zp)) &
            -exp(-tmp**2*(z_r-zp)**2)/tmp/sqrt(pi))
-        f2=f2+tt*0.5d0*(-(z_l-zp)*esm_erf(tmp*(z_l-zp)) &
+        f2=f2+tt*0.5d0*(-(z_l-zp)*qe_erf(tmp*(z_l-zp)) &
            -exp(-tmp**2*(z_l-zp)**2)/tmp/sqrt(pi))
-        f3=f3-tt*0.5d0*esm_erf(tmp*(z_r-zp))
-        f4=f4-tt*0.5d0*esm_erf(tmp*(z_l-zp))
+        f3=f3-tt*0.5d0*qe_erf(tmp*(z_r-zp))
+        f4=f4-tt*0.5d0*qe_erf(tmp*(z_l-zp))
         f1=f1+tt*0.5d0*(z1-z_r*zp/z1)
         f2=f2+tt*0.5d0*(z1-z_l*zp/z1)
         f3=f3+tt*(-0.5d0*(zp/z1))
@@ -2601,19 +2602,19 @@ SUBROUTINE esm_local_bc3 (aux)
            ! bc3
            arg001=-tmp**2*(z-zp)**2
            arg101= tmp*(z-zp)
-           cc1=0.5d0*(-(z-zp)*esm_erf(arg101)-exp(arg001)/tmp/sqrt(pi))
+           cc1=0.5d0*(-(z-zp)*qe_erf(arg101)-exp(arg001)/tmp/sqrt(pi))
            cc2=0.5d0*(2.d0*z1-z-zp)
 
            vg_r(iz) = vg_r(iz)+tt*(cc1+cc2)*e2 ! factor e2: hartree -> Ry.
         enddo
      ! smoothing cell edge potential (avoiding unphysical oscillation)
         ! bc3
-        f1=f1+tt*0.5d0*(-(z_r-zp)*esm_erf(tmp*(z_r-zp)) &
+        f1=f1+tt*0.5d0*(-(z_r-zp)*qe_erf(tmp*(z_r-zp)) &
            -exp(-tmp**2*(z_r-zp)**2)/tmp/sqrt(pi))
-        f2=f2+tt*0.5d0*(-(z_l-zp)*esm_erf(tmp*(z_l-zp)) &
+        f2=f2+tt*0.5d0*(-(z_l-zp)*qe_erf(tmp*(z_l-zp)) &
            -exp(-tmp**2*(z_l-zp)**2)/tmp/sqrt(pi))
-        f3=f3-tt*0.5d0*esm_erf(tmp*(z_r-zp))
-        f4=f4-tt*0.5d0*esm_erf(tmp*(z_l-zp))
+        f3=f3-tt*0.5d0*qe_erf(tmp*(z_r-zp))
+        f4=f4-tt*0.5d0*qe_erf(tmp*(z_l-zp))
         f1=f1+tt*0.5d0*(2.d0*z1-z_r-zp)
         f2=f2+tt*0.5d0*(2.d0*z1-z_l-zp)
         f3=f3-tt*0.5d0
@@ -2811,7 +2812,7 @@ SUBROUTINE esm_local_bc4 (aux)
            arg104= aaa/tmp+tmp*(z-zp)
            arg106= aaa/tmp+tmp*(z1-zp)
            if (z < z1) then
-              t1=-(z-zp)*esm_erf(arg101)+(0.5d0/aaa+z1-zp)*esm_erf(arg102)
+              t1=-(z-zp)*qe_erf(arg101)+(0.5d0/aaa+z1-zp)*qe_erf(arg102)
               t2=0.5d0/aaa*exp_erfc(arg006,arg106)
               t3=0.5d0/aaa-(z-z1)+exp(arg002)/tmp/sqrt(pi) &
                  -exp(arg001)/tmp/sqrt(pi)
@@ -2842,17 +2843,17 @@ SUBROUTINE esm_local_bc4 (aux)
         t2= exp_erfc(arg006,arg104)/aaa
         t3= exp(arg005)/aaa
         f1=f1+tt*((t1+t2)/2.d0+t3)/2.d0
-        f3=f3-tt*0.5d0*exp(arg005)*(1.d0+esm_erf(arg101))
+        f3=f3-tt*0.5d0*exp(arg005)*(1.d0+qe_erf(arg101))
         !-left only
         arg001=-tmp**2*(z_l-zp)**2
         arg101= tmp*(z_l-zp)
         !--
-        t1=-(z_l-zp)*esm_erf(arg101)+(0.5d0/aaa+z1-zp)*esm_erf(arg102)
+        t1=-(z_l-zp)*qe_erf(arg101)+(0.5d0/aaa+z1-zp)*qe_erf(arg102)
         t2=0.5d0/aaa*exp_erfc(arg006,arg106)
         t3=0.5d0/aaa-(z_l-z1)+exp(arg002)/tmp/sqrt(pi) &
            -exp(arg001)/tmp/sqrt(pi)
         f2=f2+tt*(t1+t2+t3)/2.d0
-        f4=f4-tt*0.5d0*(1.d0+esm_erf(arg101))
+        f4=f4-tt*0.5d0*(1.d0+qe_erf(arg101))
      enddo
      ! for smoothing
      ! factor e2: hartree -> Ry.
@@ -2936,7 +2937,7 @@ SUBROUTINE esm_force_ew( forceion )
         call errore ('esm_force_ew', 'optimal alpha not found', 1)
      end if
      upperbound = e2 * charge**2 * sqrt (2.d0 * alpha / tpi) * &
-        esm_erfc ( sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
+        qe_erfc ( sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
      if( upperbound < 1.0d-7) exit
   end do
   !write(*,'(5X,A,F5.2)')'alpha used in esm ewald force :',alpha
@@ -3015,7 +3016,7 @@ SUBROUTINE esm_force_ewr_pbc ( alpha_g, forceion )
         do nr=1,nrm
            rr=sqrt(r2(nr))*alat
            force(:,na)=force(:,na) &
-              -fac/rr**2*(esm_erfc(tmp*rr)/rr+2.d0*tmp/sqrt(pi) &
+              -fac/rr**2*(qe_erfc(tmp*rr)/rr+2.d0*tmp/sqrt(pi) &
               *exp(-tmp**2*rr**2))*r(:,nr)*alat
         enddo
      enddo
@@ -3158,7 +3159,7 @@ SUBROUTINE esm_force_ewr_bc4 ( alpha_g, forceion )
                  rr=sqrt(r2(nr))*alat
                  do ipol=1,3
                     force(ipol,na)=force(ipol,na) &
-                       -fac/rr**2*(esm_erfc(tmp*rr)/rr+2.d0*tmp/sqrt(pi) &
+                       -fac/rr**2*(qe_erfc(tmp*rr)/rr+2.d0*tmp/sqrt(pi) &
                        *exp(-tmp**2*rr**2))*r(ipol,nr)*alat
                  enddo
               enddo
@@ -3361,7 +3362,7 @@ SUBROUTINE esm_force_ewg_bc1 ( alpha_g, forceion )
      endif
      t2_for=zv(ityp(it1))*zv(ityp(it2))*fpi/sa
      ! bc1
-     kk1_for=0.5d0*esm_erf(tmp*(z-zp))
+     kk1_for=0.5d0*qe_erf(tmp*(z-zp))
      kk2_for=0.d0
 
      c1_for(:)=0.d0; c2_for(:)=0.d0
@@ -3459,7 +3460,7 @@ SUBROUTINE esm_force_ewg_bc2 ( alpha_g, forceion )
      endif
      t2_for=zv(ityp(it1))*zv(ityp(it2))*fpi/sa
      ! bc2
-     kk1_for=0.5d0*esm_erf(tmp*(z-zp))
+     kk1_for=0.5d0*qe_erf(tmp*(z-zp))
      kk2_for=-0.5d0*(z/z1)
 
      c1_for(:)=0.d0; c2_for(:)=0.d0
@@ -3566,7 +3567,7 @@ SUBROUTINE esm_force_ewg_bc3 ( alpha_g, forceion )
      endif
      t2_for=zv(ityp(it1))*zv(ityp(it2))*fpi/sa
      ! bc3
-     kk1_for=0.5d0*esm_erf(tmp*(z-zp))
+     kk1_for=0.5d0*qe_erf(tmp*(z-zp))
      kk2_for=-0.5d0
 
      c1_for(:)=0.d0; c2_for(:)=0.d0
@@ -3688,18 +3689,18 @@ SUBROUTINE esm_force_ewg_bc4 ( alpha_g, forceion )
      arg106= aaa/tmp+tmp*(z1-zp)
      if (z < z1)then  ! factor 1/2 <- non-reciprocality
         if (zp < z1)then
-           kk1_for= 0.5d0*(esm_erf(arg101)-esm_erf(arg102))/2.d0 &
+           kk1_for= 0.5d0*(qe_erf(arg101)-qe_erf(arg102))/2.d0 &
               -0.5d0*exp_erfc(arg006,arg106)/2.d0
-           kk2_for=-0.5d0*esm_erfc(arg101)/2.d0
+           kk2_for=-0.5d0*qe_erfc(arg101)/2.d0
         else
-           kk1_for= 0.5d0*(esm_erf(arg101)-esm_erf(arg102))/2.d0 &
+           kk1_for= 0.5d0*(qe_erf(arg101)-qe_erf(arg102))/2.d0 &
               -0.5d0*exp_erfc(arg006,arg106)/2.d0
            kk2_for=-0.5d0*exp_erfc(arg004,arg101)/2.d0
         endif
      else
         if ( zp < z1 )then
            kk1_for=-0.5d0*exp_erfc(arg006,arg104)/2.d0
-           kk2_for=-0.5d0*esm_erfc(arg101)/2.d0
+           kk2_for=-0.5d0*qe_erfc(arg101)/2.d0
         else
            kk1_for=-0.5d0*exp_erfc(arg006,arg104)/2.d0
            kk2_for=-0.5d0*exp_erfc(arg004,arg101)/2.d0
@@ -4018,7 +4019,7 @@ SUBROUTINE esm_force_lc_bc1 ( aux, forcelc )
            if (k3.gt.dfftp%nr3/2) k3=iz-dfftp%nr3-1
            z=dble(k3)/dble(dfftp%nr3)*L
            ! bc1
-           cc1=0.5d0*esm_erf(tmp*(z-zp))
+           cc1=0.5d0*qe_erf(tmp*(z-zp))
            cc2=(0.d0,0.d0)
 
            vg_f_r(iz,1) = tt*(cc1+cc2)
@@ -4201,7 +4202,7 @@ SUBROUTINE esm_force_lc_bc2 ( aux, forcelc )
            if (k3.gt.dfftp%nr3/2) k3=iz-dfftp%nr3-1
            z=dble(k3)/dble(dfftp%nr3)*L
            ! bc2
-           cc1=0.5d0*esm_erf(tmp*(z-zp))
+           cc1=0.5d0*qe_erf(tmp*(z-zp))
            cc2=-0.5d0*(z/z1)
            vg_f_r(iz,1) = tt*(cc1+cc2)
         enddo
@@ -4375,7 +4376,7 @@ SUBROUTINE esm_force_lc_bc3 ( aux, forcelc )
            if (k3.gt.dfftp%nr3/2) k3=iz-dfftp%nr3-1
            z=dble(k3)/dble(dfftp%nr3)*L
            ! bc3
-           cc1=0.5d0*esm_erf(tmp*(z-zp))
+           cc1=0.5d0*qe_erf(tmp*(z-zp))
            cc2=-0.5d0
            vg_f_r(iz,1) = tt*(cc1+cc2)
         enddo
@@ -4603,7 +4604,7 @@ SUBROUTINE esm_force_lc_bc4 ( aux, forcelc )
            arg104= aaa/tmp+tmp*(z-zp)
            arg106= aaa/tmp+tmp*(z1-zp)
            if (z < z1)then
-              cc1= 0.5d0*(esm_erf(arg101)-esm_erf(arg102))
+              cc1= 0.5d0*(qe_erf(arg101)-qe_erf(arg102))
               cc2=-0.5d0*exp_erfc(arg006,arg106)
            else
               cc1= 0.d0
@@ -5841,81 +5842,6 @@ real(8) FUNCTION dbesj1(x)
    dbesj1 = y
 END FUNCTION dbesj1
 
-! Error function by J. W. Cody(1969)'s algorithm
-real(8) function esm_erf(x)
-   implicit none
-   real(8), intent(in) :: x
-   real(8)             :: ax, x2, nume, deno
-   real(8), parameter  :: p(0:3) = (/ &
-      2.4266795523053175d2,  2.1979261618294152d1, &
-      6.9963834886191355d0, -3.5609843701815385d-2 /)
-   real(8), parameter  :: q(0:3) = (/ &
-      2.1505887586986120d2, 9.1164905404514901d1, &
-      1.5082797630407787d1, 1.0000000000000000d0 /)
-
-   ax = abs(x)
-   if ( ax > 6.0d0 ) then  
-      esm_erf = sign( 1.0d0, x ) 
-   else if( ax > 0.47d0 ) then
-      esm_erf = 1d0 - esm_erfc(x)
-   else
-      x2 = x ** 2
-      nume = ( ( p(3) * x2 + p(2) ) * x2 + p(1) ) * x2 + p(0)
-      deno = ( ( q(3) * x2 + q(2) ) * x2 + q(1) ) * x2 + q(0)
-      esm_erf = x * nume / deno
-   end if
-   
-   return
-end function esm_erf
-
-real(8) function esm_erfc(x)
-   implicit none
-   real(8), intent(in) :: x
-   real(8)             :: nume, deno, ax, xm, xm2
-   real(8), parameter  :: rtpim = 0.564189583547756279d0 ! 1 / sqrt(PI)
-   real(8), parameter  :: p(0:7) = (/ &
-      3.004592610201616005d2,   4.519189537118729422d2, &
-      3.393208167343436870d2,   1.529892850469404039d2, &
-      4.316222722205673530d1,   7.211758250883093659d0, &
-      5.641955174789739711d-1, -1.368648573827167067d-7 /)
-   real(8), parameter  :: q(0:7) = (/ &
-      3.004592609569832933d2,  7.909509253278980272d2, &
-      9.313540948506096211d2,  6.389802644656311665d2, &
-      2.775854447439876434d2,  7.700015293522947295d1, &
-      1.278272731962942351d1,  1.000000000000000000d0 /)
-   real(8), parameter  :: r(0:4) = (/ &
-      -2.99610707703542174d-3, -4.94730910623250734d-2, &
-      -2.26956593539686930d-1, -2.78661308609647788d-1, &
-      -2.23192459734184686d-2 /)
-   real(8), parameter  :: s(0:4) = (/ &
-      1.06209230528467918d-2, 1.91308926107829841d-1, &
-      1.05167510706793207d0,  1.98733201817135256d0,  &
-      1.00000000000000000d0 /)
-   
-   ax = abs(x)
-   if( ax > 26.0d0 ) then  
-      esm_erfc = 0.0d0
-   else if( ax > 4.0d0 ) then
-      xm  = 1d0 / ax
-      xm2 = xm ** 2
-      nume =( ( ( r(4) * xm2 + r(3) ) * xm2 + r(2) ) * xm2 + r(1) ) * xm2 + r(0)
-      deno =( ( ( s(4) * xm2 + s(3) ) * xm2 + s(2) ) * xm2 + s(1) ) * xm2 + s(0)
-      esm_erfc = exp(-x**2) * xm * ( rtpim + xm2 * nume / deno )
-   else if( ax > 0.47d0 ) then
-      nume = ( ( ( p(7) * ax + p(6) ) * ax + p(5) ) * ax + p(4) ) * ax + p(3)
-      nume =   ( ( nume * ax + p(2) ) * ax + p(1) ) * ax + p(0)
-      deno = ( ( ( q(7) * ax + q(6) ) * ax + q(5) ) * ax + q(4) ) * ax + q(3)
-      deno =   ( ( deno * ax + q(2) ) * ax + q(1) ) * ax + q(0)
-      esm_erfc = exp(-x**2) * nume / deno
-   else
-      esm_erfc = 1.0d0 - esm_erf(ax)
-   end if
-   
-   if( x < 0d0 ) esm_erfc = 2.0d0 - esm_erfc
-   
-   return
-end function esm_erfc
-
 ! exp(x) * erfc(y)
 ! This function is to avoid INFINITY * ZERO for large positive x and y.
 real(8) function exp_erfc (x, y)
@@ -5933,7 +5859,7 @@ real(8) function exp_erfc (x, y)
       1.00000000000000000d0 /)
    
    if( x < 709.0d0 .or. y < 4.0d0 ) then
-      exp_erfc = exp(x) * esm_erfc(y)
+      exp_erfc = exp(x) * qe_erfc(y)
    else
       ym  = 1d0 / y
       ym2 = ym ** 2
