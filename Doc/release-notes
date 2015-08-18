@@ -2,6 +2,7 @@ Fixed in svn version:
 
    * PW: incorrect calculation of maximum number of plane waves could lead 
      to error exit with hybrid functionals and ultrasoft pseudopotentials
+   * PW: cell_dofree = '2Dshape' wasn't working as expected
 
 Incompatible changes in 5.2.0 version:
 

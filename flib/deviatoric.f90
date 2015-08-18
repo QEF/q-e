@@ -56,7 +56,7 @@ SUBROUTINE impose_deviatoric_strain_2d ( at_old, at )
         IF (j==3) THEN
            at(i,j) = at(i,j) ! DON'T CHANGE IN z- DIRECTION IF 2DSHAPE
         ELSE
-           at(i,j) = at(i,j) * (omega_old / omega)**(1.d0/3.d0)
+           at(i,j) = at(i,j) * (omega_old / omega)**(1.d0/2.d0)
         ENDIF
      ENDDO
   ENDDO
