@@ -65,6 +65,7 @@ chargedensity.o : ../../Modules/control_flags.o
 chargedensity.o : ../../Modules/electrons_base.o
 chargedensity.o : ../../Modules/fft_base.o
 chargedensity.o : ../../Modules/fft_interfaces.o
+chargedensity.o : ../../Modules/fft_parallel.o
 chargedensity.o : ../../Modules/funct.o
 chargedensity.o : ../../Modules/input_parameters.o
 chargedensity.o : ../../Modules/io_files.o
@@ -420,6 +421,7 @@ forces.o : ../../Modules/constants.o
 forces.o : ../../Modules/control_flags.o
 forces.o : ../../Modules/fft_base.o
 forces.o : ../../Modules/fft_interfaces.o
+forces.o : ../../Modules/fft_parallel.o
 forces.o : ../../Modules/funct.o
 forces.o : ../../Modules/ions_base.o
 forces.o : ../../Modules/kind.o
@@ -954,9 +956,12 @@ restart_sub.o : ions_nose.o
 restart_sub.o : ions_positions.o
 restart_sub.o : mainvar.o
 restart_sub.o : printout_base.o
+runcp.o : ../../Modules/cell_base.o
 runcp.o : ../../Modules/control_flags.o
 runcp.o : ../../Modules/electrons_base.o
 runcp.o : ../../Modules/fft_base.o
+runcp.o : ../../Modules/fft_interfaces.o
+runcp.o : ../../Modules/fft_scalar.o
 runcp.o : ../../Modules/kind.o
 runcp.o : ../../Modules/mp.o
 runcp.o : ../../Modules/mp_global.o
