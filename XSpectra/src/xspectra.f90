@@ -204,14 +204,6 @@ PROGRAM X_Spectra
      !        CALL mp_bcast( ef, ionode_id )  !Why should I need this ?
 
 
-     !... Allocation of variables for paw projectors
-     !... and initialization of Vanderbilt and Paw projectors
-     !
-     ! CG : becp allocated in the xanes_dipole and xanes_quadrupole subroutines
-     !     call allocate_bec_type ( nkb, nbnd, becp )
-
-     !CALL init_gipaw_1 ! Already called above
-
      !...  Definition of a specific indexation to avoid M. Profeta's crazy one 
      CALL init_xspectra_paw_nhm
 
@@ -269,21 +261,6 @@ PROGRAM X_Spectra
 
   xnitermax=xniter
 
-  !<DC> Block moved below into the previous "if xonlyplot" block
-  !IF(xonly_plot) THEN
-  !   CALL read_header_save_file(x_save_file)
-  !   nks = nkstot
-  !   WRITE(6,*) 'nks=',nks
-  !   IF(lsda) THEN
-  !      isk(1:nkstot/2)=1
-  !      isk(nkstot/2+1:nkstot)=2
-  !      wk(1:nkstot)=2.d0/nkstot
-  !   ELSEIF(.NOT.lsda) THEN
-  !      isk(1:nkstot)=1
-  !      wk(1:nkstot)=2.d0/nkstot
-  !   ENDIF
-  !   CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
-  !ENDIF
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   ! $  Checks PAW relations between pseudo partial waves and projector 
@@ -317,37 +294,13 @@ PROGRAM X_Spectra
 
   IF(TRIM(calculation).EQ.'xanes') THEN
      IF(.NOT.xonly_plot) THEN ! complte calculation
-        WRITE(stdout, 1000) ! line 
-        WRITE(stdout,'(5x,a)')&
-        '                     Starting XANES calculation'
-        IF(nl_init(2).eq.0) then
-           IF (xang_mom==1) WRITE(stdout,'(5x,a)')&
-           '                in the electric dipole approximation'
-           IF (xang_mom==2) WRITE(stdout,'(5x,a)')&
-           '              in the electric quadrupole approximation'
-           WRITE(stdout,1001)  ! line 
-        ELSEIF(nl_init(2).eq.1) then
-           WRITE(stdout,'(5x,a)')&
-                '                in the electric dipole approximation'
-        ENDIF
-           
+
+        call write_calculation_type(xang_mom, nl_init)
+
         IF(TRIM(ADJUSTL(restart_mode)).eq.'restart') THEN
           CALL read_header_save_file(x_save_file)
           CALL read_save_file(a,b,xnorm,ncalcv,x_save_file,core_energy)
         ENDIF
-
-        !...  Writes information about the method
-
-        WRITE(stdout,'(7(5x,a,/))') &
-        "Method of calculation based on the Lanczos recursion algorithm",&
-        "--------------------------------------------------------------",&
-        "   - STEP 1: Construction of a kpoint-dependent Lanczos basis,",&
-        "     in which the Hamiltonian is tridiagonal (each 'iter' ",&
-        "     corresponds to the calculation of one more Lanczos vector)",&
-        "   - STEP 2: Calculation of the cross-section as a continued fraction",&
-        "     averaged over the k-points."
-
-        WRITE(stdout,'(5x,"... Begin STEP 1 ...",/)')
 
         save_file_version = 2 ! adds ef after core_energy
 
@@ -368,13 +321,6 @@ PROGRAM X_Spectra
         ENDIF
 
         CALL write_save_file(a,b,xnorm,ncalcv,x_save_file)
-        WRITE(stdout,'(/,5x,a)') &
-              'Results of STEP 1 successfully written in x_save_file'
-        WRITE(stdout,'(5x,a18,/,5x,a2,2x,a65)') 'x_save_file name: ',&
-                      '->', x_save_file 
-        WRITE(stdout,'(5x,a21,i2)') 'x_save_file version: ', save_file_version
-
-        WRITE(stdout,'(/,5x,"... End STEP 1 ...",/)')
 
      ELSE ! only the spectrum plot
         WRITE(stdout,1000) ! return+line
@@ -1263,6 +1209,7 @@ END SUBROUTINE read_header_save_file
 SUBROUTINE write_save_file(a,b,xnorm,ncalcv,x_save_file)
   !----------------------------------------------------------------------------
   USE kinds,      ONLY: DP
+  USE io_global,       ONLY : stdout
   USE constants,  ONLY: rytoev
   USE klist,      ONLY: nks, nkstot
   USE xspectra,   ONLY: xnitermax, xang_mom, xkvec, xepsilon, xiabs, &
@@ -1357,6 +1304,15 @@ SUBROUTINE write_save_file(a,b,xnorm,ncalcv,x_save_file)
      ENDIF
   ENDDO
   CLOSE(10)
+
+  WRITE(stdout,'(/,5x,a)') &
+       'Results of STEP 1 successfully written in x_save_file'
+  WRITE(stdout,'(5x,a18,/,5x,a2,2x,a65)') 'x_save_file name: ',&
+       '->', x_save_file 
+  WRITE(stdout,'(5x,a21,i2)') 'x_save_file version: ', save_file_version
+  
+  WRITE(stdout,'(/,5x,"... End STEP 1 ...",/)')
+
 
   DEALLOCATE(a_all)
   DEALLOCATE(b_all)

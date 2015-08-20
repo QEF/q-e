@@ -221,3 +221,47 @@ subroutine calculate_and_write_homo_lumo_to_stdout(ehomo,elumo)
   /)
   
 end subroutine calculate_and_write_homo_lumo_to_stdout
+
+subroutine write_calculation_type(xang_mom, nl_init)
+  USE io_global,       ONLY : stdout
+  !internal
+  integer, intent(in) :: xang_mom
+  
+  WRITE(stdout, 1000) ! line 
+  WRITE(stdout,'(5x,a)')&
+       '                     Starting XANES calculation'
+  IF(nl_init(2).eq.0) then
+     IF (xang_mom==1) WRITE(stdout,'(5x,a)')&
+          '                in the electric dipole approximation'
+     IF (xang_mom==2) WRITE(stdout,'(5x,a)')&
+          '              in the electric quadrupole approximation'
+     WRITE(stdout,1001)  ! line 
+  ELSEIF(nl_init(2).eq.1) then
+     WRITE(stdout,'(5x,a)')&
+          '                in the electric dipole approximation'
+  ENDIF
+  
+  !...  Writes information about the method
+  
+  WRITE(stdout,'(7(5x,a,/))') &
+       "Method of calculation based on the Lanczos recursion algorithm",&
+       "--------------------------------------------------------------",&
+       "   - STEP 1: Construction of a kpoint-dependent Lanczos basis,",&
+       "     in which the Hamiltonian is tridiagonal (each 'iter' ",&
+       "     corresponds to the calculation of one more Lanczos vector)",&
+       "   - STEP 2: Calculation of the cross-section as a continued fraction",&
+       "     averaged over the k-points."
+  
+  WRITE(stdout,'(5x,"... Begin STEP 1 ...",/)')
+  
+  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+  ! Formats 
+  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+  
+1000 FORMAT(/,5x,&
+          '-------------------------------------------------------------------------')
+1001 FORMAT(5x,&
+          '-------------------------------------------------------------------------',&
+          /)
+  
+end subroutine write_calculation_type
