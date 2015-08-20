@@ -72,7 +72,6 @@ MODULE cp_restart
                                            my_bgrp_id, intra_bgrp_comm, &
                                            inter_bgrp_comm, root_bgrp, &
                                            ntask_groups
-      USE mp_pots,                  ONLY : nproc_pot
       USE mp_diag,                  ONLY : nproc_ortho
       USE mp_world,                 ONLY : world_comm, nproc
       USE run_info,                 ONLY : title
@@ -402,8 +401,8 @@ MODULE cp_restart
 !-------------------------------------------------------------------------------
          !
          !
-         CALL qexml_write_para( kunit, nproc, nproc_pool, nproc_image, ntask_groups, &
-                          nproc_pot, nproc_bgrp, nproc_ortho )
+         CALL qexml_write_para( kunit, nproc, nproc_pool, nproc_image, &
+                                ntask_groups, nproc_bgrp, nproc_ortho )
          !
       END IF
       !

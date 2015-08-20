@@ -1362,7 +1362,6 @@ pw_restart.o : ../../Modules/mp_diag.o
 pw_restart.o : ../../Modules/mp_global.o
 pw_restart.o : ../../Modules/mp_images.o
 pw_restart.o : ../../Modules/mp_pools.o
-pw_restart.o : ../../Modules/mp_pots.o
 pw_restart.o : ../../Modules/mp_world.o
 pw_restart.o : ../../Modules/noncol.o
 pw_restart.o : ../../Modules/parser.o

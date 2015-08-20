@@ -54,7 +54,6 @@ mp_base.o \
 mp_diag.o \
 mp_global.o \
 mp_images.o \
-mp_pots.o \
 mp_pools.o \
 mp_wave.o \
 mp_world.o \

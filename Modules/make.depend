@@ -167,7 +167,6 @@ mp_global.o : mp_bands.o
 mp_global.o : mp_diag.o
 mp_global.o : mp_images.o
 mp_global.o : mp_pools.o
-mp_global.o : mp_pots.o
 mp_global.o : mp_world.o
 mp_global.o : parallel_include.o
 mp_images.o : io_global.o
@@ -175,8 +174,6 @@ mp_images.o : mp.o
 mp_images.o : parallel_include.o
 mp_pools.o : mp.o
 mp_pools.o : parallel_include.o
-mp_pots.o : mp.o
-mp_pots.o : parallel_include.o
 mp_wave.o : kind.o
 mp_wave.o : parallel_include.o
 mp_world.o : io_global.o

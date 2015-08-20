@@ -20,7 +20,6 @@ MODULE mp_global
   USE mp_world, ONLY: mp_world_start, mp_world_end
   USE mp_images
   USE mp_pools
-  USE mp_pots
   USE mp_bands
   USE mp_diag
   !
@@ -32,7 +31,6 @@ MODULE mp_global
   INTEGER :: nproc_file = 1
   INTEGER :: nproc_image_file = 1
   INTEGER :: nproc_pool_file  = 1
-  INTEGER :: nproc_pot_file = 1
   INTEGER :: nproc_ortho_file = 1
   INTEGER :: nproc_bgrp_file  = 1
   INTEGER :: ntask_groups_file= 1
@@ -50,7 +48,7 @@ CONTAINS
     ! ... groups and parallelization levels
     !
     USE command_line_options, ONLY : get_command_line, &
-        nimage_, npool_, npot_, ndiag_, nband_, ntg_
+        nimage_, npool_, ndiag_, nband_, ntg_
     USE parallel_include
     !
     IMPLICIT NONE
@@ -73,8 +71,7 @@ CONTAINS
        CALL mp_init_image ( world_comm  )
     END IF
     !
-    CALL mp_start_pots  ( npot_, intra_image_comm )
-    CALL mp_start_pools ( npool_, intra_pot_comm )
+    CALL mp_start_pools ( npool_, intra_image_comm )
     CALL mp_start_bands ( nband_, ntg_, intra_pool_comm )
     CALL mp_start_diag  ( ndiag_, intra_bgrp_comm )
     !
@@ -89,8 +86,6 @@ CONTAINS
     USE mp, ONLY : mp_comm_free
     !
     CALL clean_ortho_group ( )
-    CALL mp_comm_free ( intra_pot_comm )
-    CALL mp_comm_free ( inter_pot_comm )
     CALL mp_comm_free ( intra_bgrp_comm )
     CALL mp_comm_free ( inter_bgrp_comm )
     CALL mp_comm_free ( intra_pool_comm )

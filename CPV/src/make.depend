@@ -125,7 +125,6 @@ cp_restart.o : ../../Modules/mp_diag.o
 cp_restart.o : ../../Modules/mp_global.o
 cp_restart.o : ../../Modules/mp_images.o
 cp_restart.o : ../../Modules/mp_pools.o
-cp_restart.o : ../../Modules/mp_pots.o
 cp_restart.o : ../../Modules/mp_world.o
 cp_restart.o : ../../Modules/parameters.o
 cp_restart.o : ../../Modules/parser.o

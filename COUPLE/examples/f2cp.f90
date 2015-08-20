@@ -15,12 +15,11 @@ PROGRAM qecouple
   INCLUDE 'mpif.h'
   !
   INTEGER :: i, exit_status, ierr, ncpu, me, key, new_comm, nargs
-  INTEGER :: nimage, npots, npools, ntg, nband, ndiag, nres
+  INTEGER :: nimage, npools, ntg, nband, ndiag, nres
   CHARACTER(LEN=80) :: input_file, arg
   !
   ! set defaults
   nimage = 1
-  npots  = 1
   npools = 1 
   ntg    = 1
   nband  = 1 
@@ -52,10 +51,6 @@ PROGRAM qecouple
       CASE ( '-ni', '-nimage', '-nimages' ) 
           CALL getarg(i, arg)
           READ ( arg, *, ERR = 15, END = 15) nimage
-          i = i + 1
-      CASE ( '-npot', '-npots' ) 
-          CALL getarg(i, arg)
-          READ ( arg, *, ERR = 15, END = 15) npots
           i = i + 1
       CASE ( '-nk', '-npool', '-npools') 
           CALL getarg(i, arg)
@@ -90,7 +85,7 @@ PROGRAM qecouple
   CALL mpi_comm_split(MPI_COMM_WORLD, key, me, new_comm, ierr)
 
   IF (new_comm /= MPI_COMM_NULL) THEN
-      CALL f2libcpv(new_comm,nimage,npots,npools,ntg,nband,ndiag, &
+      CALL f2libcpv(new_comm,nimage,npools,ntg,nband,ndiag, &
             exit_status, input_file)
       PRINT *, 'Call to libcpv finished with exit status', exit_status
   ELSE

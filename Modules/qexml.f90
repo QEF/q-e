@@ -1590,11 +1590,11 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexml_write_para( kunit, nproc, nproc_pool, nproc_image, &
-                    ntask_groups, nproc_pot, nproc_bgrp, nproc_ortho ) 
+                    ntask_groups, nproc_bgrp, nproc_ortho ) 
       !------------------------------------------------------------------------
       !
       INTEGER,  INTENT(IN) :: kunit, nproc, nproc_pool, nproc_image, &
-                              ntask_groups, nproc_pot, nproc_bgrp, nproc_ortho 
+                              ntask_groups, nproc_bgrp, nproc_ortho 
       !
       !
       CALL iotk_write_begin( ounit, "PARALLELISM" )
@@ -1607,8 +1607,6 @@ CONTAINS
                               "NUMBER_OF_PROCESSORS_PER_IMAGE", nproc_image )
       CALL iotk_write_dat( ounit, "NUMBER_OF_PROCESSORS_PER_TASKGROUP", &
                                               ntask_groups )
-      CALL iotk_write_dat( ounit, "NUMBER_OF_PROCESSORS_PER_POT", &
-                                              nproc_pot )
       CALL iotk_write_dat( ounit, "NUMBER_OF_PROCESSORS_PER_BAND_GROUP", &
                                               nproc_bgrp )
       CALL iotk_write_dat( ounit, "NUMBER_OF_PROCESSORS_PER_DIAGONALIZATION", &
@@ -3825,16 +3823,16 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexml_read_para( kunit, nproc, nproc_pool, nproc_image, &
-                    ntask_groups, nproc_pot, nproc_bgrp, nproc_ortho, found, ierr )
+                    ntask_groups, nproc_bgrp, nproc_ortho, found, ierr )
       !------------------------------------------------------------------------
       !
       INTEGER, OPTIONAL, INTENT(OUT) :: kunit, nproc, nproc_pool, nproc_image, &
-           ntask_groups, nproc_pot, nproc_bgrp, nproc_ortho
+           ntask_groups, nproc_bgrp, nproc_ortho
       LOGICAL, INTENT(OUT) :: found
       INTEGER, INTENT(OUT) :: ierr
       !
       INTEGER :: kunit_, nproc_, nproc_pool_, nproc_image_, ntask_groups_, &
-           nproc_pot_, nproc_bgrp_, nproc_ortho_
+           nproc_bgrp_, nproc_ortho_
       !
       LOGICAL :: found2
       !
@@ -3860,10 +3858,6 @@ CONTAINS
                                               ntask_groups_, FOUND=found2 )
       IF ( .NOT. found2) ntask_groups_=1 ! compatibility
       !
-      CALL iotk_scan_dat( iunit, "NUMBER_OF_PROCESSORS_PER_POT", &
-                                              nproc_pot_, FOUND=found2 )
-      IF ( .NOT. found2) nproc_pot_=1 ! compatibility
-      !
       CALL iotk_scan_dat( iunit, "NUMBER_OF_PROCESSORS_PER_BAND_GROUP", &
                                               nproc_bgrp_, FOUND=found2 )
       IF ( .NOT. found2) nproc_bgrp_=1 ! compatibility
@@ -3880,7 +3874,6 @@ CONTAINS
       IF (present(nproc_pool)) nproc_pool = nproc_pool_
       IF (present(nproc_image)) nproc_image = nproc_image_
       IF (present(ntask_groups)) ntask_groups = ntask_groups_
-      IF (present(nproc_pot)) nproc_pot = nproc_pot_
       IF (present(nproc_bgrp)) nproc_bgrp = nproc_bgrp_
       IF (present(nproc_ortho)) nproc_ortho = nproc_ortho_
       !

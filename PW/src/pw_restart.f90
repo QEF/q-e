@@ -133,7 +133,6 @@ MODULE pw_restart
       USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, root_bgrp, &
                                        intra_bgrp_comm, inter_bgrp_comm, &
                                        nbgrp, ntask_groups
-      USE mp_pots,              ONLY : nproc_pot
       USE mp_diag,              ONLY : nproc_ortho
       USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
                                        get_gau_parameter, &
@@ -475,8 +474,8 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          !
-         CALL qexml_write_para( kunit, nproc, nproc_pool, nproc_image, ntask_groups,&
-                          nproc_pot, nproc_bgrp, nproc_ortho )
+         CALL qexml_write_para( kunit, nproc, nproc_pool, nproc_image, &
+                                ntask_groups, nproc_bgrp, nproc_ortho )
          !
 !-------------------------------------------------------------------------------
 ! ... CHARGE DENSITY
@@ -1236,8 +1235,7 @@ MODULE pw_restart
       USE mp_pools,         ONLY : kunit
       USE mp_global,        ONLY : nproc_file, nproc_pool_file, &
                                    nproc_image_file, ntask_groups_file, &
-                                   nproc_pot_file, nproc_bgrp_file, &
-                                   nproc_ortho_file
+                                   nproc_bgrp_file, nproc_ortho_file
       !
       IMPLICIT NONE
       !
@@ -1296,7 +1294,7 @@ MODULE pw_restart
          !
          CALL qexml_read_para( KUNIT=kunit, NPROC=nproc_file, NPROC_POOL=nproc_pool_file, &
               NPROC_IMAGE=nproc_image_file, NTASK_GROUPS = ntask_groups_file, &
-              NPROC_POT=nproc_pot_file, NPROC_BGRP=nproc_bgrp_file, NPROC_ORTHO=nproc_ortho_file, FOUND=found, IERR=ierr )
+              NPROC_BGRP=nproc_bgrp_file, NPROC_ORTHO=nproc_ortho_file, FOUND=found, IERR=ierr )
          IF ( ierr /= 0) GOTO 100
          !
          IF ( .NOT. found ) THEN
@@ -1306,7 +1304,6 @@ MODULE pw_restart
             nproc_pool_file=1
             nproc_image_file=1
             ntask_groups_file=1
-            nproc_pot_file=1
             nproc_bgrp_file=1
             nproc_ortho_file=1
             !
@@ -1345,7 +1342,6 @@ MODULE pw_restart
       CALL mp_bcast( nproc_pool_file,    ionode_id, intra_image_comm )
       CALL mp_bcast( nproc_image_file,   ionode_id, intra_image_comm )
       CALL mp_bcast( ntask_groups_file,  ionode_id, intra_image_comm )
-      CALL mp_bcast( nproc_pot_file,     ionode_id, intra_image_comm )
       CALL mp_bcast( nproc_bgrp_file,    ionode_id, intra_image_comm )
       CALL mp_bcast( nproc_ortho_file,   ionode_id, intra_image_comm )
       !
