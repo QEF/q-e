@@ -332,7 +332,7 @@ CONTAINS
              it = ityp(iat)
              nn = msh(it)
              taub = tau(:,iat) * alat
-             DO n = 1, dfftp%nnr
+             DO n = 1, dfftp%nr1x*dfftp%nr2x * dfftp%npl
                 idx = idx0 + n - 1
 
                 iz = idx / (dfftp%nr1x*dfftp%nr2x)
@@ -806,7 +806,7 @@ CONTAINS
        idx0 = dfftp%nr1x * dfftp%nr2x * dfftp%ipp(me_pool+1)
 
        ALLOCATE(ylm_posi(1,i%l**2))
-       rsp_point : DO ir = 1,  dfftp%nnr
+       rsp_point : DO ir = 1, dfftp%nr1x*dfftp%nr2x * dfftp%npl
           ! three dimensional indices (i,j,k)
           idx   = idx0 + ir - 1
           k     = idx / ( dfftp%nr1x* dfftp%nr2x)

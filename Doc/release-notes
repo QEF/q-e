@@ -1,8 +1,15 @@
+Incompatible changes in 5.2.0 version:
+
+   * "pot" parallelization level, no longer used, removed   
+
 Fixed in svn version:
 
    * PW: incorrect calculation of maximum number of plane waves could lead 
      to error exit with hybrid functionals and ultrasoft pseudopotentials
    * PW: cell_dofree = '2Dshape' wasn't working as expected
+   * PW: a few do loops included more FFT planes than physical ones in real
+     space, leading to inaccuracies in real-space augmentation charge and xdm,
+     only if the number of processors nproc_bgrp was not a divisor of nr3
 
 Incompatible changes in 5.2.0 version:
 

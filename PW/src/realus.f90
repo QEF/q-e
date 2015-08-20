@@ -328,7 +328,9 @@ MODULE realus
          !
          mbia = 0
          !
-         DO ir = 1, dfft%nnr
+         ! ... The do loop includes only planes that belong to this processor
+         !
+         DO ir = 1, dfft%nr1x*dfft%nr2x * dfft%npl
             !
             ! ... three dimensional indices (i,j,k)
             !
@@ -339,9 +341,9 @@ MODULE realus
             idx   = idx - dfft%nr1x*j
             i     = idx
             !
-            ! ... do not include points outside the physical range!
+            ! ... do not include points outside the physical range 
             !
-            IF ( i >= dfft%nr1 .or. j >= dfft%nr2 .or. k >= dfft%nr3 ) CYCLE
+            IF ( i >= dfft%nr1 .OR. j >= dfft%nr2 .OR. k >= dfft%nr3 ) CYCLE
             !
             DO ipol = 1, 3
                posi(ipol) = dble( i )*inv_nr1*at(ipol,1) + &
