@@ -26,7 +26,8 @@ XOBJS = \
 ./read_input_and_bcast.o \
 ./stdout_routines.o \
 ./xanes_dipole.o \
-./xanes_quadrupole.o
+./check_orthogonality_k_epsilon.o \
+./xanes_quadrupole.o 
 
 
 
