@@ -76,7 +76,6 @@ PROGRAM X_Spectra
   !
   ! ... local variables
   !
-  !<DC> clean the declarations
   INTEGER :: nargs,iiarg,ierr,ios,il,ibnd,ibnd_up,ibnd_dw !,xm_r,nc_r,ncomp_max
   INTEGER :: iargc
   !INTEGER :: nt,nb,na,i,j,k,nrest,nline
@@ -99,7 +98,6 @@ PROGRAM X_Spectra
   !REAL (DP) :: gamma_energy(2), gamma_value(2)
   REAL (DP) :: xeps_dot_xk ! scalar product between xepsilon and xkvec
   !REAL(dp) :: auxrpol(3,2) non used variable
-  !</DC>
 
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -210,7 +208,6 @@ PROGRAM X_Spectra
           CALL read_recon ( filerecon(xiabs), xiabs, paw_recon(xiabs) ) !*apsi
 
      !... Assign paw radii to species (this will become soon obsolete)
-     ! <DC> Why? </DC>
      !
      !  read recon should be parallelized
      !
@@ -227,72 +224,40 @@ PROGRAM X_Spectra
         ENDIF
         DO  j=1,paw_recon(nt)%paw_nbeta
            il=paw_recon(nt)%psphi(j)%label%l
-           ! The change made by DC is wrong, this has to be reset as
-           ! it was before.
-           !<DC> changed the following block (writing format)
-           !IF(xiabs.EQ.nt.AND.DABS(r_paw(il)).lt.1.d-6) THEN
-           !   !*apsi  if(r(kkbeta(nt),nt).GT.1.d-3) THEN
-           !   !*apsi     rc(nt,il)=  r(kkbeta(nt),nt)
-           !   !*apsi  ELSE
-           !   !*apsi     WRITE(stdout,*) 'Warning-no-kkbeta r_paw(',il,')=1.0'
-           !   !*apsi     rc(nt,il)=1.0
-           !   !*apsi  ENDIF
-           !   !<CG>  to be verified
-           !   IF (paw_recon(nt)%psphi(j)%label%rc > 1.d-3) THEN
-           !      WRITE(stdout,*) 'warning, r_paw(', il,' ) set to ', &
-           !           paw_recon(nt)%psphi(j)%label%rc
-           !      rc(nt, il)= paw_recon(nt)%psphi(j)%label%rc*3.0/2.0
-           !   ELSE
-           !      WRITE(stdout,*) 'Warning, no rc'
-           !      WRITE(stdout,*) 'warning, r_paw(', il,' ) set to 1.5'
-           !      rc(nt, il)= 1.5d0
-           !   ENDIF
-           !   !</CG>
-           !ELSEIF(xiabs.EQ.nt.AND.DABS(r_paw(il)).GT.1.d-6) THEN
-           !   rc(nt,il)=r_paw(il)
-           !ELSEIF(nt.NE.xiabs) THEN
-           !   !*apsi  IF(r(kkbeta(nt),nt).GT.1.d-3) THEN
-           !   !*apsi     rc(nt,il)=r(kkbeta(nt),nt)
-           !   !*apsi  ELSE
-           !   !*apsi     rc(nt,il)=1.0
-           !   !*apsi  ENDIF
-           !   !<CG> to be verified
-           !   IF(paw_recon(nt)%psphi(j)%label%rc.GT.1.d-3) THEN
-           !      rc(nt,il)=paw_recon(nt)%psphi(j)%label%rc*3.0/2.0
-           !   ELSE
-           !      rc(nt,il)=1.5
-           !   ENDIF
-           !   !</CG> 
-           !ENDIF
-           !... assigns rc for the absorbing atom
-           IF ( xiabs.EQ.nt ) then
-              IF ( DABS(r_paw(il)) > 1.d-6 ) THEN
-                 rc(nt,il)=r_paw(il)
-                 WRITE(stdout,'(8x,a,i2,a,i2,a,f5.2,3a)') &
-                 'PAW proj', j,': r_paw(l=',il,')=',rc(nt,il), &
-                 '  (from ','input file)',')'
-              ELSE
-                 !<CG>  to be verified
-                 IF (paw_recon(nt)%psphi(j)%label%rc > 1.d-3) THEN
-                    rc(nt, il)= paw_recon(nt)%psphi(j)%label%rc*3.0/2.0
-                    WRITE(stdout,'(8x,a,i2,a,i2,a,f5.2,a)') &
-                    'PAW proj', j,': r_paw(l=',il,')=',rc(nt,il),'  (1.5*r_cut)'
-                 ELSE
-                    rc(nt, il)= 1.5d0
-                    WRITE(stdout,'(8x,a,i2,a,i2,a,f5.2,a)') &
-                    'PAW proj',j,': r_paw(l=',il,')=',rc(nt,il),'  (set to 1.5)'
-                 ENDIF
-                 !</CG>
-              ENDIF
-           !... assigns rc for the other atoms (not further used)
-           ELSE
+           IF(xiabs.EQ.nt.AND.DABS(r_paw(il)).lt.1.d-6) THEN
+              !*apsi  if(r(kkbeta(nt),nt).GT.1.d-3) THEN
+              !*apsi     rc(nt,il)=  r(kkbeta(nt),nt)
+              !*apsi  ELSE
+              !*apsi     WRITE(stdout,*) 'Warning-no-kkbeta r_paw(',il,')=1.0'
+              !*apsi     rc(nt,il)=1.0
+              !*apsi  ENDIF
+              !<CG>  to be verified
               IF (paw_recon(nt)%psphi(j)%label%rc > 1.d-3) THEN
-                 rc(nt,il)=paw_recon(nt)%psphi(j)%label%rc*3.0d0/2.0d0
+                 rc(nt, il)= paw_recon(nt)%psphi(j)%label%rc*3.0/2.0
+                 WRITE(stdout,'(8x,a,i2,a,i2,a,f5.2,a)') &
+                      'PAW proj', j,': r_paw(l=',il,')=',rc(nt,il),'  (1.5*r_cut)'
               ELSE
-                 rc(nt,il)=1.5d0
+                 rc(nt, il)= 1.5d0
+                 WRITE(stdout,'(8x,a,i2,a,i2,a,f5.2,a)') &
+                      'PAW proj',j,': r_paw(l=',il,')=',rc(nt,il),'  (set to 1.5)'
               ENDIF
+           ELSEIF(xiabs.EQ.nt.AND.DABS(r_paw(il)).GT.1.d-6) THEN
+              rc(nt,il)=r_paw(il)
+           ELSEIF(nt.NE.xiabs) THEN
+              !*apsi  IF(r(kkbeta(nt),nt).GT.1.d-3) THEN
+              !*apsi     rc(nt,il)=r(kkbeta(nt),nt)
+              !*apsi  ELSE
+              !*apsi     rc(nt,il)=1.0
+              !*apsi  ENDIF
+              !<CG> to be verified
+              IF(paw_recon(nt)%psphi(j)%label%rc.GT.1.d-3) THEN
+                 rc(nt,il)=paw_recon(nt)%psphi(j)%label%rc*3.0/2.0
+              ELSE
+                 rc(nt,il)=1.5
+              ENDIF
+              !</CG> 
            ENDIF
-           !</DC>
+           
         ENDDO
      ENDDO
      WRITE(stdout,*)
