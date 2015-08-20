@@ -13,8 +13,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   USE radial_grids,    ONLY: ndmx
   USE ions_base,       ONLY: nat, ntyp => nsp, ityp
   USE wvfct,           ONLY: npwx,nbndx,nbnd,npw,igk,&
-       !g2kin,et, current_k, ecutwfc
-                              g2kin,et, ecutwfc
+       g2kin,et, current_k, ecutwfc
   !       ,igk_l2g
   USE lsda_mod,        ONLY: nspin,lsda,isk,current_spin
   USE cell_base,       ONLY: tpiba2, bg
@@ -223,7 +222,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
      WRITE(stdout,'(8x, "| Total cpu time spent up to now is ",F9.2," s")')&
            timenow
 
-     !<DC> current_k=ik </DC>
+     current_k=ik 
      
      IF(lsda) current_spin=isk(ik)
 

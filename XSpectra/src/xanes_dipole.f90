@@ -13,8 +13,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   USE radial_grids,    ONLY : ndmx
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp
   USE wvfct,           ONLY : npwx, nbndx, nbnd, npw, igk, g2kin, et,&
-                              !current_k, ecutwfc
-                              ecutwfc
+                              current_k, ecutwfc
   USE symm_base,       ONLY : d1,d2,d3
   USE noncollin_module,ONLY : noncolin
   USE lsda_mod,        ONLY : nspin,lsda,isk,current_spin
@@ -209,7 +208,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
        WRITE(stdout,'(8x,"|   Total cpu time spent up to now: ",F9.2," s")')&
              timenow 
 
-     ! <DC> current_k=ik </DC>
+     current_k=ik 
 
      IF(lsda) current_spin=isk(ik)
 
