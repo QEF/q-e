@@ -1,5 +1,5 @@
 
-     Program XSpectra v.5.1 starts on 14Nov2014 at 11:25:28 
+     Program XSpectra v.5.2.0 (svn rev. 11610M) starts on 20Aug2015 at 16:32: 9 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -19,6 +19,8 @@
                             |_|
 
      In publications arising from the use of XSpectra, please cite:
+      - O. Bunau and M. Calandra,
+        Phys. Rev. B 87, 205105 (2013)
       - Ch. Gougoussis, M. Calandra, A. P. Seitsonen, F. Mauri,
         Phys. Rev. B 80, 075102 (2009)
       - M. Taillefumier, D. Cabaret, A. M. Flank, and F. Mauri,
@@ -83,7 +85,7 @@
 
      Cross-section successfully written in xanes.dat
 
-     xanes        :     22.30s CPU     22.46s WALL (       1 calls)
+     xanes        :     18.29s CPU     18.30s WALL (       1 calls)
 
      -------------------------------------------------------------------------
                                 END JOB XSpectra

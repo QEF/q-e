@@ -1,7 +1,7 @@
  &input_xspectra
     calculation='xanes_dipole',
     prefix='diamond',
-    outdir='/home/mas/espresso-5.1/XSpectra/examples/results/tmp/',
+    outdir='/Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/results/tmp/',
     xonly_plot=.true.,
     xniter=1000,
     xcheck_conv=50,
@@ -10,6 +10,7 @@
     xepsilon(3)=0.0,
     xiabs=1,
     x_save_file='diamond.xspectra.sav',
+    ef_r=,
     xerror=0.001,
  /
  &plot

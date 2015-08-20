@@ -1,7 +1,7 @@
  &input_xspectra
     calculation='fermi_level',
     prefix='diamond',
-    outdir='/home/gougouss/O-sesame-uspp-upload/examples/XSpectra_example/results/tmp/',
+    outdir='/Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/results/tmp/',
     xread_wf=.true.,
  /
  &plot

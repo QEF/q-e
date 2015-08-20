@@ -1,59 +1,285 @@
 
-     Program POST-PROC v.4.1CVS starts ...
-     Today is  4Jun2009 at 18: 7:57 
+     Program XSpectra v.5.2.0 (svn rev. 11610M) starts on 20Aug2015 at 16:32:34 
 
-     Parallel version (MPI)
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
 
-     Number of processors in use:       1
+     Parallel version (MPI), running on     1 processors
 
-     Planes per process (thick) : nr3 = 30 npp =  30 ncplane =  900
+     -------------------------------------------------------------------------
+                    __  ____                 _
+                    \ \/ / _\_ __   ___  ___| |_ _ __ __ _
+                     \  /\ \| '_ \ / _ \/ __| __| '__/ _` |
+                     /  \_\ \ |_) |  __/ (__| |_| | | (_| |
+                    /_/\_\__/ .__/ \___|\___|\__|_|  \__,_|
+                            |_|
 
-     Proc/  planes cols     G    planes cols    G      columns  G
-     Pool       (dense grid)       (smooth grid)      (wavefct grid)
-       1     30    577    10443   30    577    10443    185     1863
+     In publications arising from the use of XSpectra, please cite:
+      - O. Bunau and M. Calandra,
+        Phys. Rev. B 87, 205105 (2013)
+      - Ch. Gougoussis, M. Calandra, A. P. Seitsonen, F. Mauri,
+        Phys. Rev. B 80, 075102 (2009)
+      - M. Taillefumier, D. Cabaret, A. M. Flank, and F. Mauri,
+        Phys. Rev. B 66, 195107 (2002)
 
-  
- Approx. ram memory needed per proc in MB =  0.065136
+     -------------------------------------------------------------------------
+                                Reading input_file
+     -------------------------------------------------------------------------
 
- k-points : nkstot= 10
- -------------- Crystal Structure ------------ 
- celldm(1:6)
-    6.74025600    0.00000000    0.00000000
-    0.00000000    0.00000000    0.00000000
- direct lattice vectors
-    1.00000000    0.00000000    0.00000000
-    0.00000000    1.00000000    0.00000000
-    0.00000000    0.00000000    1.00000000
- reciprocal lattice vectors
-    1.00000000    0.00000000    0.00000000
-    0.00000000    1.00000000    0.00000000
-    0.00000000    0.00000000    1.00000000
- nks= 10  nkstot= 10
-  ----k-point list [units 2*pi/celldm(1)], weight---------
-     1    0.00000000    0.00000000    0.00000000    0.03125000
-     2    0.00000000    0.00000000    0.25000000    0.18750000
-     3    0.00000000    0.00000000   -0.50000000    0.09375000
-     4    0.00000000    0.25000000    0.25000000    0.37500000
-     5    0.00000000    0.25000000   -0.50000000    0.37500000
-     6    0.00000000   -0.50000000   -0.50000000    0.09375000
-     7    0.25000000    0.25000000    0.25000000    0.25000000
-     8    0.25000000    0.25000000   -0.50000000    0.37500000
-     9    0.25000000   -0.50000000   -0.50000000    0.18750000
-    10   -0.50000000   -0.50000000   -0.50000000    0.03125000
- -------------------------------------------------
- --- Polarisation and k vector [cartesian coordinates]----
-xepsilon(:)= 1.00000000 0.00000000 0.00000000
-xkvec(:)= 1.00000000 0.00000000 0.00000000
- xmesh= 1073
- warning, r_paw( 0  ) set to  1.5
- warning, r_paw( 0  ) set to  1.5
- warning, r_paw( 1  ) set to  1.5
- warning, r_paw( 1  ) set to  1.5
+     xepsilon  [crystallographic coordinates]:   1.000000   0.000000   0.000000
 
- ==========================================================
+     xonly_plot: FALSE
+        => complete calculation: Lanczos + spectrum plot
 
- Insulating case:
+     filecore (core-wavefunction file): C.wfc               
 
->> Fermi level (Ryd) =     0.94038416
+     main plot parameters:
+        cut_occ_states: FALSE
+        gamma_mode:  constant
+        -> using xgamma [eV]:  0.10
+        xemin [eV]:   0.00
+        xemax [eV]:  10.00
+        xnepoint:  100
+        energy zero automatically set to the Fermi level
 
- ============================================================
+     Fermi level determined from SCF save directory (diamondh.save)
+     NB: For an insulator (SCF calculated with occupations="fixed")
+         the Fermi level will be placed at the position of HOMO.
+
+     WARNING: variable ef_r is obsolete
+
+     -------------------------------------------------------------------------
+                      Reading SCF save directory: diamondh.save
+     -------------------------------------------------------------------------
+
+
+     Reading data from directory:
+     /Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/results/tmp/diamondh.save
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      =  SLA  PW   PBX  PBC ( 1  4  3  4 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         577     577    185                10443    10443    1863
+
+
+     highest occupied level (ev):    12.7945
+
+     -------------------------------------------------------------------------
+                           Getting the Fermi energy 
+     -------------------------------------------------------------------------
+
+     From SCF save directory:
+        ehomo [eV]:   12.7945 (highest occupied level)
+        No LUMO value in SCF calculation
+        ef    [eV]:   12.7945
+
+     -> ef (in eV) will be written in x_save_file
+
+     -------------------------------------------------------------------------
+                           Energy zero of the spectrum 
+     -------------------------------------------------------------------------
+
+     -> ef will be used as energy zero of the spectrum
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         577     577    213                10443    10443    2205
+
+
+
+     bravais-lattice index     =            1
+     lattice parameter (alat)  =       6.7403  a.u.
+     unit-cell volume          =     306.2169 (a.u.)^3
+     number of atoms/cell      =            8
+     number of atomic types    =            2
+     number of electrons       =        32.00
+     number of Kohn-Sham states=           16
+     kinetic-energy cutoff     =      40.0000  Ry
+     charge density cutoff     =     160.0000  Ry
+     Exchange-correlation      =  SLA  PW   PBX  PBC ( 1  4  3  4 0 0)
+
+     celldm(1)=   6.740256  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (   1.000000   0.000000   0.000000 )  
+               a(2) = (   0.000000   1.000000   0.000000 )  
+               a(3) = (   0.000000   0.000000   1.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.000000  0.000000  0.000000 )  
+               b(2) = (  0.000000  1.000000  0.000000 )  
+               b(3) = (  0.000000  0.000000  1.000000 )  
+
+
+     PseudoPot. # 1 for C  read from file:
+     /Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/pseudo/Ch_PBE_TM_2pj.UPF
+     MD5 check sum: ef0cb3dee31bd9e4ba2a832a2c716264
+     Pseudo is Norm-conserving, Zval =  5.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of 1073 points,  1 beta functions with: 
+                l(1) =   0
+
+     PseudoPot. # 2 for C  read from file:
+     /Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/pseudo/C_PBE_TM_2pj.UPF
+     MD5 check sum: e8858615eb0a4b79f05373b4879fdf67
+     Pseudo is Norm-conserving, Zval =  4.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of 1073 points,  1 beta functions with: 
+                l(1) =   0
+
+     atomic species   valence    mass     pseudopotential
+        C_h            5.00    12.00000     C ( 1.00)
+        C              4.00    12.00000     C ( 1.00)
+
+     24 Sym. Ops. (no inversion) found
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1           C_h tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2           C   tau(   2) = (   0.0000000   0.5000000   0.5000000  )
+         3           C   tau(   3) = (   0.5000000   0.0000000   0.5000000  )
+         4           C   tau(   4) = (   0.5000000   0.5000000   0.0000000  )
+         5           C   tau(   5) = (   0.7500000   0.7500000   0.2500000  )
+         6           C   tau(   6) = (   0.7500000   0.2500000   0.7500000  )
+         7           C   tau(   7) = (   0.2500000   0.7500000   0.7500000  )
+         8           C   tau(   8) = (   0.2500000   0.2500000   0.2500000  )
+
+     number of k points=    64
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0312500
+        k(    2) = (   0.0000000   0.0000000   0.2500000), wk =   0.0312500
+        k(    3) = (   0.0000000   0.0000000   0.5000000), wk =   0.0312500
+        k(    4) = (   0.0000000   0.0000000   0.7500000), wk =   0.0312500
+        k(    5) = (   0.0000000   0.2500000   0.0000000), wk =   0.0312500
+        k(    6) = (   0.0000000   0.2500000   0.2500000), wk =   0.0312500
+        k(    7) = (   0.0000000   0.2500000   0.5000000), wk =   0.0312500
+        k(    8) = (   0.0000000   0.2500000   0.7500000), wk =   0.0312500
+        k(    9) = (   0.0000000   0.5000000   0.0000000), wk =   0.0312500
+        k(   10) = (   0.0000000   0.5000000   0.2500000), wk =   0.0312500
+        k(   11) = (   0.0000000   0.5000000   0.5000000), wk =   0.0312500
+        k(   12) = (   0.0000000   0.5000000   0.7500000), wk =   0.0312500
+        k(   13) = (   0.0000000   0.7500000   0.0000000), wk =   0.0312500
+        k(   14) = (   0.0000000   0.7500000   0.2500000), wk =   0.0312500
+        k(   15) = (   0.0000000   0.7500000   0.5000000), wk =   0.0312500
+        k(   16) = (   0.0000000   0.7500000   0.7500000), wk =   0.0312500
+        k(   17) = (   0.2500000   0.0000000   0.0000000), wk =   0.0312500
+        k(   18) = (   0.2500000   0.0000000   0.2500000), wk =   0.0312500
+        k(   19) = (   0.2500000   0.0000000   0.5000000), wk =   0.0312500
+        k(   20) = (   0.2500000   0.0000000   0.7500000), wk =   0.0312500
+        k(   21) = (   0.2500000   0.2500000   0.0000000), wk =   0.0312500
+        k(   22) = (   0.2500000   0.2500000   0.2500000), wk =   0.0312500
+        k(   23) = (   0.2500000   0.2500000   0.5000000), wk =   0.0312500
+        k(   24) = (   0.2500000   0.2500000   0.7500000), wk =   0.0312500
+        k(   25) = (   0.2500000   0.5000000   0.0000000), wk =   0.0312500
+        k(   26) = (   0.2500000   0.5000000   0.2500000), wk =   0.0312500
+        k(   27) = (   0.2500000   0.5000000   0.5000000), wk =   0.0312500
+        k(   28) = (   0.2500000   0.5000000   0.7500000), wk =   0.0312500
+        k(   29) = (   0.2500000   0.7500000   0.0000000), wk =   0.0312500
+        k(   30) = (   0.2500000   0.7500000   0.2500000), wk =   0.0312500
+        k(   31) = (   0.2500000   0.7500000   0.5000000), wk =   0.0312500
+        k(   32) = (   0.2500000   0.7500000   0.7500000), wk =   0.0312500
+        k(   33) = (   0.5000000   0.0000000   0.0000000), wk =   0.0312500
+        k(   34) = (   0.5000000   0.0000000   0.2500000), wk =   0.0312500
+        k(   35) = (   0.5000000   0.0000000   0.5000000), wk =   0.0312500
+        k(   36) = (   0.5000000   0.0000000   0.7500000), wk =   0.0312500
+        k(   37) = (   0.5000000   0.2500000   0.0000000), wk =   0.0312500
+        k(   38) = (   0.5000000   0.2500000   0.2500000), wk =   0.0312500
+        k(   39) = (   0.5000000   0.2500000   0.5000000), wk =   0.0312500
+        k(   40) = (   0.5000000   0.2500000   0.7500000), wk =   0.0312500
+        k(   41) = (   0.5000000   0.5000000   0.0000000), wk =   0.0312500
+        k(   42) = (   0.5000000   0.5000000   0.2500000), wk =   0.0312500
+        k(   43) = (   0.5000000   0.5000000   0.5000000), wk =   0.0312500
+        k(   44) = (   0.5000000   0.5000000   0.7500000), wk =   0.0312500
+        k(   45) = (   0.5000000   0.7500000   0.0000000), wk =   0.0312500
+        k(   46) = (   0.5000000   0.7500000   0.2500000), wk =   0.0312500
+        k(   47) = (   0.5000000   0.7500000   0.5000000), wk =   0.0312500
+        k(   48) = (   0.5000000   0.7500000   0.7500000), wk =   0.0312500
+        k(   49) = (   0.7500000   0.0000000   0.0000000), wk =   0.0312500
+        k(   50) = (   0.7500000   0.0000000   0.2500000), wk =   0.0312500
+        k(   51) = (   0.7500000   0.0000000   0.5000000), wk =   0.0312500
+        k(   52) = (   0.7500000   0.0000000   0.7500000), wk =   0.0312500
+        k(   53) = (   0.7500000   0.2500000   0.0000000), wk =   0.0312500
+        k(   54) = (   0.7500000   0.2500000   0.2500000), wk =   0.0312500
+        k(   55) = (   0.7500000   0.2500000   0.5000000), wk =   0.0312500
+        k(   56) = (   0.7500000   0.2500000   0.7500000), wk =   0.0312500
+        k(   57) = (   0.7500000   0.5000000   0.0000000), wk =   0.0312500
+        k(   58) = (   0.7500000   0.5000000   0.2500000), wk =   0.0312500
+        k(   59) = (   0.7500000   0.5000000   0.5000000), wk =   0.0312500
+        k(   60) = (   0.7500000   0.5000000   0.7500000), wk =   0.0312500
+        k(   61) = (   0.7500000   0.7500000   0.0000000), wk =   0.0312500
+        k(   62) = (   0.7500000   0.7500000   0.2500000), wk =   0.0312500
+        k(   63) = (   0.7500000   0.7500000   0.5000000), wk =   0.0312500
+        k(   64) = (   0.7500000   0.7500000   0.7500000), wk =   0.0312500
+
+     Dense  grid:    10443 G-vectors     FFT dimensions: (  27,  27,  27)
+
+     Largest allocated arrays     est. size (Mb)     dimensions
+        Kohn-Sham Wavefunctions         0.33 Mb     (    1357,   16)
+        NL pseudopotentials             0.17 Mb     (    1357,    8)
+        Each V/rho on FFT grid          0.30 Mb     (   19683)
+        Each G-vector array             0.08 Mb     (   10443)
+        G-vector shells                 0.00 Mb     (     156)
+     Largest temporary arrays     est. size (Mb)     dimensions
+        Auxiliary wavefunctions         0.33 Mb     (    1357,   16)
+        Each subspace H/S matrix        0.00 Mb     (      16,   16)
+        Each <psi_i|beta_j> matrix      0.00 Mb     (       8,   16)
+
+     The potential is recalculated from file :
+     /Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/results/tmp/diamondh.save/charge-density.dat
+
+     Starting wfc are   64 atomic wfcs
+
+     Approx. ram memory needed per proc in MB =   0.065136
+
+
+     -------------------------------------------------------------------------
+               Reading core wavefunction file for the absorbing atom
+     -------------------------------------------------------------------------
+
+     C.wfc successfully read
+
+     -------------------------------------------------------------------------
+                              Attributing the PAW radii 
+                     for the absorbing atom [units: Bohr radius]
+     -------------------------------------------------------------------------
+
+        PAW proj 1: r_paw(l= 0)= 2.25  (1.5*r_cut)
+        PAW proj 2: r_paw(l= 0)= 2.25  (1.5*r_cut)
+        PAW proj 3: r_paw(l= 1)= 2.25  (1.5*r_cut)
+        PAW proj 4: r_paw(l= 1)= 2.25  (1.5*r_cut)
+
+        NB: The calculation will not necessary use all these r_paw values.
+            - For a edge in the electric-dipole approximation,
+              only the r_paw(l=1) values are used.
+            - For a K edge in the electric-quadrupole approximation,
+              only the r_paw(l=2) values are used.
+
+            - For a L2 or L3 edge in the electric-quadrupole approximation,
+
+              all projectors (s, p and d) are used.
+
+     fermi_level  :      0.71s CPU      0.78s WALL (       1 calls)
+
+     -------------------------------------------------------------------------
+                                END JOB XSpectra
+     -------------------------------------------------------------------------
+
