@@ -1,7 +1,7 @@
  &input_xspectra
     calculation='xanes_quadrupole',
     prefix='NiO',
-    outdir='/home/mas/espresso-5.1/XSpectra/examples/results/tmp/',
+    outdir='/Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/results/tmp/',
     xniter=1000,
     xcheck_conv=50,
     xepsilon(1)=1.0,
@@ -12,6 +12,7 @@
     xkvec(3)=-1.0,
     xiabs=1,
     x_save_file='NiO.xspectra_qua.sav',
+    ef_r=1.01439527,
     xerror=0.001,
  /
  &plot
