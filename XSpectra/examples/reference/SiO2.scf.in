@@ -1,8 +1,8 @@
  &control
     calculation='scf',
     restart_mode='from_scratch',
-    pseudo_dir = '/home/mas/espresso-5.1/XSpectra/examples/pseudo/',
-    outdir='/home/mas/espresso-5.1/XSpectra/examples/results/tmp/',
+    pseudo_dir = '/Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/pseudo/',
+    outdir='/Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/results/tmp/',
     prefix='SiO2',
     verbosity = 'high',
     wf_collect=.true.,
