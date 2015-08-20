@@ -27,6 +27,7 @@ XOBJS = \
 ./stdout_routines.o \
 ./xanes_dipole.o \
 ./check_orthogonality_k_epsilon.o \
+./assign_paw_radii_to_species.o \
 ./xanes_quadrupole.o 
 
 
