@@ -225,7 +225,9 @@ end subroutine calculate_and_write_homo_lumo_to_stdout
 subroutine write_calculation_type(xang_mom, nl_init)
   USE io_global,       ONLY : stdout
   !internal
+  implicit none
   integer, intent(in) :: xang_mom
+  integer, intent(in), dimension(2) :: nl_init
   
   WRITE(stdout, 1000) ! line 
   WRITE(stdout,'(5x,a)')&
