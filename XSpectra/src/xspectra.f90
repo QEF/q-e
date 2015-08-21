@@ -238,7 +238,6 @@ PROGRAM X_Spectra
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
   !<MCB> THIS MUST BE CHANGED
-  !<DC> why ? </DC>
 
   IF (TRIM(gamma_mode).EQ.'file') THEN
      CALL read_gamma_file
@@ -372,33 +371,7 @@ PROGRAM X_Spectra
         xe0_ry=xe0/rytoev
      ENDIF
 
-     IF (cut_occ_states) THEN
-        WRITE(stdout,'(8x,a)') 'the occupied states are cut'
-     ELSE
-        WRITE(stdout,'(8x,a)') 'the occupied states are NOT cut'
-     ENDIF
-     WRITE(stdout,'(8x,a,f6.2)') 'xemin [eV]: ', xemin
-     WRITE(stdout,'(8x,a,f6.2)') 'xemax [eV]: ', xemax
-     WRITE(stdout,'(8x,a,i4)')   'xnepoint: ', xnepoint
-     IF (TRIM(ADJUSTL(gamma_mode)).EQ.'constant') THEN
-        WRITE(stdout,'(8x,a,f8.3)')'constant broadening parameter [eV]: ', xgamma
-     ELSE
-        WRITE(stdout,'(8x,a)') 'energy-dependent broadening parameter:'
-        IF (TRIM(ADJUSTL(gamma_mode)).EQ.'file') THEN
-           WRITE(stdout,'(8x,a,a30)')' -> using gamma_file: ', gamma_file
-        ELSEIF (TRIM(ADJUSTL(gamma_mode)).EQ.'variable') THEN
-           WRITE(stdout,'(8x,a,f5.2,a1,f5.2,a)')                     &
-                 ' -> first, constant up to point (', gamma_energy(1), &
-                 ',', gamma_value(1), ') [eV]'
-           WRITE(stdout,'(8x,a,f5.2,a1,f5.2,a)')                     &
-                 ' -> then, linear up to point (', gamma_energy(2),   &
-                 ',', gamma_value(2), ') [eV]'
-           WRITE(stdout,'(8x,a)') ' -> finally, constant up to xemax'
-        ENDIF
-     ENDIF
-     WRITE(stdout,'(8x,"Core level energy [eV]:",1x,g11.4)') -e_core
-     WRITE(stdout,'(8x,a,/)') &
-     ' (from electron binding energy of neutral atoms in X-ray data booklet)'
+     call write_report_cut_occ_states(cut_occ_states, e_core)
      
      IF(xang_mom.EQ.1) THEN
         CALL plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e_core_ryd,1)

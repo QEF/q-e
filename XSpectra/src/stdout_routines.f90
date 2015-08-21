@@ -267,3 +267,46 @@ subroutine write_calculation_type(xang_mom, nl_init)
           /)
   
 end subroutine write_calculation_type
+
+
+subroutine write_report_cut_occ_states(cut_occ_states, e_core)
+  USE kinds, ONLY : DP
+  USE io_global,       ONLY : stdout
+  USE xspectra,  ONLY: xemin, xemax,xnepoint, xgamma
+  USE gamma_variable_mod, ONLY : gamma_value, gamma_energy, &
+       gamma_lines, gamma_tab, gamma_points, &
+       gamma_mode, gamma_file
+  !internal
+  implicit none
+  LOGICAL, INTENT(in) :: cut_occ_states
+  REAL (DP) :: e_core
+
+  IF (cut_occ_states) THEN
+     WRITE(stdout,'(8x,a)') 'the occupied states are elimintate from the spectrum'
+  ELSE
+     WRITE(stdout,'(8x,a)') 'the occupied states are NOT elimintated from the spectrum'
+  ENDIF
+  WRITE(stdout,'(8x,a,f6.2)') 'xemin [eV]: ', xemin
+  WRITE(stdout,'(8x,a,f6.2)') 'xemax [eV]: ', xemax
+  WRITE(stdout,'(8x,a,i4)')   'xnepoint: ', xnepoint
+  IF (TRIM(ADJUSTL(gamma_mode)).EQ.'constant') THEN
+     WRITE(stdout,'(8x,a,f8.3)')'constant broadening parameter [eV]: ', xgamma
+  ELSE
+     WRITE(stdout,'(8x,a)') 'energy-dependent broadening parameter:'
+     IF (TRIM(ADJUSTL(gamma_mode)).EQ.'file') THEN
+        WRITE(stdout,'(8x,a,a30)')' -> using gamma_file: ', gamma_file
+     ELSEIF (TRIM(ADJUSTL(gamma_mode)).EQ.'variable') THEN
+        WRITE(stdout,'(8x,a,f5.2,a1,f5.2,a)')                     &
+             ' -> first, constant up to point (', gamma_energy(1), &
+             ',', gamma_value(1), ') [eV]'
+        WRITE(stdout,'(8x,a,f5.2,a1,f5.2,a)')                     &
+             ' -> then, linear up to point (', gamma_energy(2),   &
+             ',', gamma_value(2), ') [eV]'
+        WRITE(stdout,'(8x,a)') ' -> finally, constant up to xemax'
+     ENDIF
+  ENDIF
+  WRITE(stdout,'(8x,"Core level energy [eV]:",1x,g11.4)') -e_core
+  WRITE(stdout,'(8x,a,/)') &
+       ' (from electron binding energy of neutral atoms in X-ray data booklet)'
+  
+end subroutine write_report_cut_occ_states
