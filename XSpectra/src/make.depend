@@ -56,6 +56,14 @@ init_gipaw_2.o : ../../Modules/recvec.o
 init_gipaw_2.o : ../../Modules/splinelib.o
 init_gipaw_2.o : ../../PW/src/pwcom.o
 init_gipaw_2.o : paw_gipaw.o
+io_routines.o : ../../Modules/atom.o
+io_routines.o : ../../Modules/constants.o
+io_routines.o : ../../Modules/io_global.o
+io_routines.o : ../../Modules/kind.o
+io_routines.o : ../../Modules/uspp.o
+io_routines.o : ../../PW/src/pwcom.o
+io_routines.o : gaunt_mod.o
+io_routines.o : xspectra_mod.o
 ipoolscatter.o : ../../Modules/kind.o
 ipoolscatter.o : ../../Modules/mp.o
 ipoolscatter.o : ../../Modules/mp_global.o
