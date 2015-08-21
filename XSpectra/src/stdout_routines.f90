@@ -284,7 +284,7 @@ subroutine write_report_cut_occ_states(cut_occ_states, e_core)
   IF (cut_occ_states) THEN
      WRITE(stdout,'(8x,a)') 'the occupied states are elimintate from the spectrum'
   ELSE
-     WRITE(stdout,'(8x,a)') 'the occupied states are NOT elimintated from the spectrum'
+     WRITE(stdout,'(8x,a)') 'the occupied states are NOT eliminated from the spectrum'
   ENDIF
   WRITE(stdout,'(8x,a,f6.2)') 'xemin [eV]: ', xemin
   WRITE(stdout,'(8x,a,f6.2)') 'xemax [eV]: ', xemax
