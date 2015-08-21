@@ -186,7 +186,7 @@ SUBROUTINE lanczos (a,b,psi,ncalcv,terminator)
                    xgamma_ry,xnepoint,xerror,terminator) 
      WRITE(stdout,'(8x,a,i6,a)') '!   XANES not converged after', i-1,&
                                  ' iterations'
-     WRITE(stdout,'(8x,a,i6,a,l4)') '!   Estimated final error after ',&
+     WRITE(stdout,'(8x,a,i6,a,f12.8)') '!   Estimated final error after ',&
           i-1,'iterations: ', error
      ncalcv=i-1
   ENDIF
