@@ -1,4 +1,14 @@
+assign_paw_radii_to_species.o : ../../Modules/io_global.o
+assign_paw_radii_to_species.o : ../../Modules/ions_base.o
+assign_paw_radii_to_species.o : ../../Modules/kind.o
+assign_paw_radii_to_species.o : ../../Modules/parameters.o
+assign_paw_radii_to_species.o : paw_gipaw.o
+assign_paw_radii_to_species.o : xspectra_mod.o
 banner_xspectra.o : ../../Modules/io_global.o
+check_orthogonality_k_epsilon.o : ../../Modules/cell_base.o
+check_orthogonality_k_epsilon.o : ../../Modules/io_global.o
+check_orthogonality_k_epsilon.o : ../../Modules/kind.o
+check_orthogonality_k_epsilon.o : xspectra_mod.o
 gaunt_mod.o : ../../Modules/kind.o
 gipaw_module.o : ../../Modules/atom.o
 gipaw_module.o : ../../Modules/cell_base.o
