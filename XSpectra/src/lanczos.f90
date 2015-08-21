@@ -28,6 +28,7 @@ SUBROUTINE lanczos (a,b,psi,ncalcv,terminator)
   COMPLEX(dp), DIMENSION (npwx),   INTENT(INOUT) :: psi
   INTEGER, INTENT(INOUT) ::  ncalcv
   LOGICAL, INTENT(IN)    :: terminator
+  LOGICAL                :: ldummy
 
   !... Local variables
   LOGICAL  :: converge
@@ -181,12 +182,12 @@ SUBROUTINE lanczos (a,b,psi,ncalcv,terminator)
   ENDDO
 
   IF(.NOT.iconv) THEN
+     ldummy=converge(a,b,i-1,comp,error,xemin_ry,xemax_ry,&
+                   xgamma_ry,xnepoint,xerror,terminator) 
      WRITE(stdout,'(8x,a,i6,a)') '!   XANES not converged after', i-1,&
                                  ' iterations'
      WRITE(stdout,'(8x,a,i6,a,l4)') '!   Estimated final error after ',&
-          i-1,'iterations: ', &
-          converge(a,b,i-1,comp,error,xemin_ry,xemax_ry,&
-                   xgamma_ry,xnepoint,xerror,terminator)
+          i-1,'iterations: ', error
      ncalcv=i-1
   ENDIF
 
