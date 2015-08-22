@@ -1792,6 +1792,97 @@ MODULE exx
   END SUBROUTINE g2_convolution
   !-----------------------------------------------------------------------
   !
+
+
+  !-----------------------------------------------------------------------
+  FUNCTION exxenergy ()
+    !-----------------------------------------------------------------------
+    ! 
+    ! NB: This function is meant to give the SAME RESULT as exxenergy2.
+    !     It is worth keeping it in the repository because in spite of being 
+    !     slower it is a simple driver using vexx potential routine so it is 
+    !     good, from time to time, to replace exxenergy2 with it to check that 
+    !     everything is ok and energy and potential are consistent as they should.
+    !
+    USE io_files,               ONLY : iunigk,iunwfc, nwordwfc
+    USE buffers,                ONLY : get_buffer
+    USE wvfct,                  ONLY : nbnd, npwx, npw, igk, wg, current_k
+    USE control_flags,          ONLY : gamma_only
+    USE gvect,                  ONLY : gstart
+    USE wavefunctions_module,   ONLY : evc
+    USE lsda_mod,               ONLY : lsda, current_spin, isk
+    USE klist,                  ONLY : ngk, nks, xk
+    USE mp_pools,               ONLY : inter_pool_comm
+    USE mp_bands,               ONLY : intra_bgrp_comm, intra_bgrp_comm, nbgrp
+    USE mp,                     ONLY : mp_sum
+    USE becmod,                 ONLY : bec_type, allocate_bec_type, deallocate_bec_type, calbec
+    USE uspp,                   ONLY : okvan,nkb,vkb
+
+    IMPLICIT NONE
+
+    TYPE(bec_type) :: becpsi
+    REAL(DP)       :: exxenergy,  energy
+    INTEGER        :: ibnd, ik
+    COMPLEX(DP)    :: vxpsi ( npwx*npol, nbnd ), psi(npwx*npol,nbnd)
+    COMPLEX(DP),EXTERNAL :: ZDOTC
+    !
+    exxenergy=0._dp
+    
+    CALL start_clock ('exxenergy')
+
+    IF(okvan) CALL allocate_bec_type( nkb, nbnd, becpsi)
+    energy = 0._dp
+    
+    IF ( nks > 1 ) REWIND( iunigk )
+    DO ik=1,nks
+       current_k = ik
+       IF ( lsda ) current_spin = isk(ik)
+       npw = ngk (ik)
+       IF ( nks > 1 ) THEN
+          READ( iunigk ) igk
+          CALL get_buffer(psi, nwordwfc, iunwfc, ik)
+       ELSE
+          psi(1:npwx*npol,1:nbnd) = evc(1:npwx*npol,1:nbnd)
+       END IF
+       !
+       IF(okvan)THEN
+          ! prepare the |beta> function at k+q
+          CALL init_us_2(npw, igk, xk(:,ik), vkb)
+          ! compute <beta_I|psi_j> at this k+q point, for all band and all projectors
+          CALL calbec(npw, vkb, psi, becpsi, nbnd)
+       ENDIF
+       !
+       vxpsi(:,:) = (0._dp, 0._dp)
+       CALL vexx(npwx,npw,nbnd,psi,vxpsi,becpsi)
+       !
+       DO ibnd=1,nbnd
+          energy = energy + DBLE(wg(ibnd,ik) * ZDOTC(npw,psi(1,ibnd),1,vxpsi(1,ibnd),1))
+          IF (noncolin) energy = energy + &
+                            DBLE(wg(ibnd,ik) * ZDOTC(npw,psi(npwx+1,ibnd),1,vxpsi(npwx+1,ibnd),1))
+          !
+       ENDDO
+       IF (gamma_only .and. gstart == 2) THEN
+           DO ibnd=1,nbnd
+              energy = energy - &
+                       DBLE(0.5_dp * wg(ibnd,ik) * CONJG(psi(1,ibnd)) * vxpsi(1,ibnd))
+           ENDDO
+       ENDIF
+    END DO
+    !
+    IF (gamma_only) energy = 2 * energy
+
+    CALL mp_sum( energy, intra_bgrp_comm)
+    CALL mp_sum( energy, inter_pool_comm )
+    IF(okvan)  CALL deallocate_bec_type(becpsi)
+    ! 
+    exxenergy = energy
+    !
+    CALL stop_clock ('exxenergy')
+    !-----------------------------------------------------------------------
+  END FUNCTION exxenergy
+  !-----------------------------------------------------------------------
+
+
   !-----------------------------------------------------------------------
   FUNCTION exxenergy2()
     !-----------------------------------------------------------------------
