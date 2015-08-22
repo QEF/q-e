@@ -13,6 +13,7 @@ MODULE acfdt_ener
   !
   USE kinds, ONLY : DP
   !
+  LOGICAL  :: acfdt_in_pw 
   REAL(DP) :: acfdt_eband                    
   !
 END MODULE acfdt_ener
