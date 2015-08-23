@@ -259,6 +259,12 @@ subroutine read_input_and_bcast(filerecon, r_paw)
      call stop_xspectra()
   ENDIF
 
+  IF(trim(adjustl(edge)).eq.'L23') then
+     write(stdout,*) 'Calculation of either L2 or L3'
+     write(stdout,*) 'Please choose the one you want'
+     call stop_xspectra()
+  ENDIF
+
   IF(xang_mom.eq.2.and.         &
        (trim(adjustl(edge)).eq.'L2'.or.trim(adjustl(edge)).eq.'L3'&
        .or.trim(adjustl(edge)).eq.'L23') ) then
