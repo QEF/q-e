@@ -1,6 +1,6 @@
   &input_xspectra
      calculation='xanes_dipole',
-     edge='L23',
+     edge='L2',
      verbosity='high',
      prefix='Cu',
      outdir='/Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/results/tmp/',

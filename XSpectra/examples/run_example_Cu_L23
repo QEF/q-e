@@ -218,7 +218,7 @@ $ECHO "# x-ray absorption spectrum calculation"
 cat > Cu_xspectra.in << EOF
   &input_xspectra
      calculation='xanes_dipole',
-     edge='L23',
+     edge='L2',
      verbosity='high',
      prefix='Cu',
      outdir='$TMP_DIR/',
@@ -251,7 +251,7 @@ $ECHO "  running xspectra.x on the simple cell ...\c"
 $X_COMMAND < Cu_xspectra.in > Cu_xspectra.out
 check_failure $?
 $ECHO " done"
-
+exit
 mv xanes.dat Cu_xanes_L2.dat
 mv xanes.sav Cu_xanes_L2.sav
 
