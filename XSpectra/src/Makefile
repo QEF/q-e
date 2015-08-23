@@ -38,6 +38,8 @@ GIPAWOBJS=./paw_gipaw.o \
 ./init_gipaw_1.o \
 ./init_gipaw_2.o
 
+MANIP_XS_OBJ=./gaunt_mod.o 
+             
 QEMODS = ../../Modules/libqemod.a
 PWOBJS = ../../PW/src/libpw.a 
 
@@ -46,11 +48,16 @@ LIBOBJS = ../../iotk/src/libiotk.a ../../flib/flib.a \
 
 TLDEPS = bindir libs pw
 
-all : tldeps xspectra.x 
+all : tldeps xspectra.x spectra_manipulation.x
 
 xspectra.x :   xspectra.o $(XOBJS) $(GIPAWOBJS) $(QEMODS) $(PWOBJS)
 	$(MPIF90) -o $@  xspectra.o $(XOBJS) $(GIPAWOBJS) \
 		$(PWOBJS) $(QEMODS) $(LDFLAGS) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../XSpectra/src/$@ . )
+
+spectra_manipulation.x : spectra_manipulation.o $(MANIP_XS_OBJ) $(QEMODS) $(PWOBJS)
+	$(MPIF90) -o $@  spectra_manipulation.o $(MANIP_XS_OBJ) $(PWOBJS) $(QEMODS) \
+                $(LDFLAGS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../XSpectra/src/$@ . )
 
 tldeps : 
