@@ -1,5 +1,9 @@
+! To be added:
+!   atan broadening
+!   lorentzian broadening
+!   gaussian broadening
 !
-! Spectra manipulation tool by Matteo Calandra, Agust 2015
+! Spectra manipulation tool by Oana Bunau and Matteo Calandra, Agust 2015
 !
 !   This small code allows to
 !
@@ -61,7 +65,7 @@ Program manip_spectra
   LOGICAL                    :: found
   INTEGER                    :: i
   INTEGER                    :: nargs, iiarg, iargc, ierr, ios
-  INTEGER                    :: nenergy, istart
+  INTEGER                    :: nenergy, istart, i0_l2
   REAL(kind=dp)              :: el2, el3, so_splitting
   REAL(kind=DP), ALLOCATABLE :: cross_section_in(:), energy_in(:)
   REAL(kind=DP), ALLOCATABLE :: cross_section_out(:), energy_out(:)
@@ -182,62 +186,70 @@ Program manip_spectra
      deallocate(cross_section_out)
      deallocate(energy_out)
   ELSEIF(option.eq.'add_L2_L3') then
+     !L3=2*L2
+     !L3 is at lower energies than L2
+
      allocate(cross_section_L3(nenergy))
      allocate(energy_L3(nenergy))
 
      cross_section_L3=2.d0*cross_section_in
-
+     
      el2=getE(element,'L2')
      el3=getE(element,'L3')
      so_splitting=el2-el3
 
+
      write(6,*) 'Energy of L2 edge (eV) = ',el2
      write(6,*) 'Energy of L3 edge (eV) = ',el3
-
+     write(6,*) 'SO splitting           = ',so_splitting
      
-     energy_L3=energy_in+so_splitting
+     energy_L3=energy_in-so_splitting
 
-     if(energy_L3(1).gt.energy_in(nenergy)) then
+     if(energy_L3(nenergy).lt.energy_in(1)) then
 
-     OPEN (unit=20,file=trim(adjustl(cross_section_file))//'.L23',&
+       OPEN (unit=20,file=trim(adjustl(cross_section_file))//'.L23',&
             form='formatted',status='unknown')
 
-     rewind(20)
+       rewind(20)
 
-     write(20,*)
-     write(20,*)
-     write(20,*)
-     write(20,*)
+       write(20,*)
+       write(20,*)
+       write(20,*)
+       write(20,*)
 
-     do i=1,nenergy
-        write(20,*) energy_in(i), cross_section_in(i)
-     enddo
-     do i=1,nenergy
-        write(20,*) energy_L3(i), cross_section_L3(i)
-     enddo
+       do i=1,nenergy
+          write(20,*) energy_L3(i), cross_section_L3(i)
+       enddo
+       write(20,*)
+       do i=1,nenergy
+          write(20,*) energy_in(i), cross_section_in(i)
+       enddo
      
-     close(20)
+       close(20)
 
      else
+       write(6,*)  'case B'
+       allocate(cross_section_out(nenergy))
 
-        allocate(cross_section_out(nenergy))
-
-        cross_section_out=0.d0
+       cross_section_out=0.d0
 
         !
         ! determine the first overlap point
         !
   
-        do i=1,nenergy-1
-           if(energy_in(i).lt.energy_L3(1).and.energy_in(i+1).gt.energy_L3(1)) istart=i
-        enddo
+       do i=1,nenergy-1
+          if(energy_L3(i).lt.energy_in(1).and.energy_L3(i+1).gt.energy_in(1)) istart=i
+       enddo
 
-        do i=1,istart
-           cross_section_out(i)=cross_section_in(i)
-        enddo
-        do i=istart+1, nenergy
-           cross_section_out(i)=cross_section_in(i)+cross_section_L3(i-istart)
-        enddo 
+       write(6,*) 'istart=',istart
+
+       do i=1,istart
+          cross_section_out(i)=cross_section_L3(i)
+       enddo
+
+       do i=istart+1, nenergy
+          cross_section_out(i)=cross_section_L3(i)+cross_section_in(i-istart)
+       enddo 
         
         OPEN (unit=20,file=trim(adjustl(cross_section_file))//'.L23',&
            form='formatted',status='unknown')
@@ -250,7 +262,7 @@ Program manip_spectra
         write(20,*)
 
         do i=1,nenergy
-           write(20,*) energy_in(i), cross_section_out(i)
+           write(20,*) energy_L3(i), cross_section_out(i)
         enddo
 
         close(20)
