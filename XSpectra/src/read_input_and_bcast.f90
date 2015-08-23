@@ -175,6 +175,7 @@ subroutine read_input_and_bcast(filerecon, r_paw)
   CALL mp_bcast( xemin,  ionode_id, world_comm )
   CALL mp_bcast( xemax,  ionode_id, world_comm )
   CALL mp_bcast( show_status, ionode_id, world_comm)
+  CALL mp_bcast( verbosity, ionode_id, world_comm)
 
   CALL mp_bcast( xkvec,  ionode_id, world_comm )
   CALL mp_bcast( xepsilon,  ionode_id, world_comm )
