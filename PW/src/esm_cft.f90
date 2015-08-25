@@ -105,7 +105,7 @@ SUBROUTINE esm_cft_1z_init(nsl, nz, ldz)
   INTEGER, INTENT(IN) :: nsl, nz, ldz
   REAL (DP)  :: tscale
   INTEGER    :: idir, nth
-#if defined __FFTW3
+#if defined __FFTW3 || defined __ESSL || defined __LINUX_ESSL
   COMPLEX(DP), ALLOCATABLE :: c(:), cout(:)
 #endif
 #if defined __OPENMP
@@ -133,6 +133,11 @@ SUBROUTINE esm_cft_1z_init(nsl, nz, ldz)
   nth = OMP_GET_MAX_THREADS()
 #endif
 
+#if defined __FFTW3 || defined __ESSL || defined __LINUX_ESSL
+  ALLOCATE ( c( ldz*nsl ) )
+  ALLOCATE ( cout( ldz*nsl ) )
+#endif
+
 #if defined __FFTW
 
   IF( fw_planz /= 0 ) CALL DESTROY_PLAN_1D( fw_planz )
@@ -142,8 +147,6 @@ SUBROUTINE esm_cft_1z_init(nsl, nz, ldz)
 
 #elif defined __FFTW3
 
-  ALLOCATE ( c( ldz*nsl ) )
-  ALLOCATE ( cout( ldz*nsl ) )
   IF( fw_planz /= 0 ) CALL dfftw_destroy_plan( fw_planz )
   IF( bw_planz /= 0 ) CALL dfftw_destroy_plan( bw_planz )
   idir = -1
@@ -185,6 +188,11 @@ SUBROUTINE esm_cft_1z_init(nsl, nz, ldz)
   CALL zffti (nz, tablez )
   
 #else
+
+#if defined __FFTW3 || defined __ESSL || defined __LINUX_ESSL
+  IF( ALLOCATED( c ) ) DEALLOCATE( c )
+  IF( ALLOCATED( cout ) ) DEALLOCATE( cout )
+#endif
 
   CALL errore(' esm_cft_1z_init ',' no scalar fft driver specified ', 1)
 
