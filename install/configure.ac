@@ -204,7 +204,7 @@ then
                 *-ibm-aix* )            arch=aix    ;;
                 sparc-sun-* )           arch=sparc  ;;
                 i386-pc-solaris* )      arch=solaris;;
-                i*86-apple-darwin* )    arch=mac686 ;;
+                *-apple-darwin* )       arch=mac686 ;;
                 *-pc-cygwin )           arch=cygwin ;;
                 sx*-nec* )              arch=necsx  ;;
                 powerpc64-*-linux-gnu ) arch=ppc64  ;;
