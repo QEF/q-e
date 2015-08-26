@@ -548,7 +548,8 @@
                   !
                   !  The  eig_index loop is executed only ONCE when NOGRP=1.
                   !
-                  CALL c2psi( aux(eig_offset*dffts%tg_nnr+1), dffts%tg_nnr, c_bgrp( 1, i+eig_index-1 ), c_bgrp( 1, i+eig_index ), ngw, 2 )
+                  CALL c2psi( aux(eig_offset*dffts%tg_nnr+1), dffts%tg_nnr, &
+                        c_bgrp( 1, i+eig_index-1 ), c_bgrp( 1, i+eig_index ), ngw, 2 )
                   !
                   eig_offset = eig_offset + 1
                   !
