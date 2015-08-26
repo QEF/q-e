@@ -71,7 +71,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !
   ! local variables
   !
-  INTEGER :: index0, i, j, k
+  INTEGER :: idx0, idx,  i, j, k
   INTEGER :: ir, na, ipol
   REAL(DP) :: length, vamp, value, sawarg, e_dipole, ion_dipole
   REAL(DP) :: tot_dipole, bmod
@@ -221,30 +221,27 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !          
   !---------------------
 
-  ! Index for parallel summation
-  !
-  index0 = 0
-#if defined (__MPI)
-  !
-  DO i = 1, me_bgrp
-     index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
-  END DO
-  !
-#endif
   !
   ! Loop in the charge array
+  ! idx0 = starting index of real-space FFT arrays for this processor
   !
-
-  DO ir = 1, dfftp%nnr
+  idx0 = dfftp%nr1x*dfftp%nr2x*dfftp%ipp(me_bgrp+1)
+  !
+  DO ir = 1, dfftp%nr1x*dfftp%nr2x*dfftp%npl
      !
      ! ... three dimensional indexes
      !
-     i = index0 + ir - 1
-     k = i / (dfftp%nr1x*dfftp%nr2x)
-     i = i - (dfftp%nr1x*dfftp%nr2x)*k
-     j = i / dfftp%nr1x
-     i = i - dfftp%nr1x*j
-     
+     idx = idx0 + ir - 1
+     k   = idx / (dfftp%nr1x*dfftp%nr2x)
+     idx = idx - (dfftp%nr1x*dfftp%nr2x)*k
+     j   = idx / dfftp%nr1x
+     idx = idx - dfftp%nr1x*j
+     i   = idx
+
+     ! ... do not include points outside the physical range
+
+     IF ( i >= dfftp%nr1 .OR. j >= dfftp%nr2 .OR. k >= dfftp%nr3 ) CYCLE
+ 
      if (edir.eq.1) sawarg = DBLE(i)/DBLE(dfftp%nr1)
      if (edir.eq.2) sawarg = DBLE(j)/DBLE(dfftp%nr2)
      if (edir.eq.3) sawarg = DBLE(k)/DBLE(dfftp%nr3)
