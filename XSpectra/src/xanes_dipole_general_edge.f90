@@ -136,12 +136,9 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
 
   ! This has been adapted for the selection rules explained above 
  
-  write(6,*) l_final_dim
   do ll = 1, l_final_dim
      lf = l_final(ll)
      if( lf == -1 ) exit      ! state does not exist
-     WRITE( stdout,*) 'There are ',paw_recon(xiabs)%paw_nl(lf),' projectors/channels'
-     WRITE( stdout,*) 'for angular moment',lf,' and atom type',xiabs
   end do
 
   
@@ -149,16 +146,26 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   ! Radial Dipole Matrix element
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
+
   !  I compute the radial part, 
   !          <\phi_n|r|\psi_i>=int r^3 \phi_n \psi_i dr.
   !  Here only ps and ae wavefunctions from XX.recon
+
+
+  !
+  WRITE(stdout,'(8x,a)') &
+       'Radial transition matrix element(s) used in the calculation of the'
+  WRITE(stdout,'(8x,a)') &
+       'initial vector of the Lanczos basis (|tilde{phi}_abs> normalized)'
+
   !
   ! I check that the core wf is correctly normalized
   
   nr=msh(xiabs)  ! extended up to all the NON ZERO points in the mesh.
   IF(TRIM(verbosity).EQ.'high') THEN
      aux(1:nr)=core_wfn(1:nr)*core_wfn(1:nr)
-     WRITE (stdout,'(" norm of core wfc =",1f14.8)') SQRT(para_radin(aux(1:nr),rgrid(xiabs)%r(1:nr),nr))
+     WRITE (stdout,'(8x,"Norm of core wfc = ",f10.6)') &
+          SQRT(para_radin(aux(1:nr),rgrid(xiabs)%r(1:nr),nr))
   ENDIF
 
 
@@ -198,9 +205,9 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
         ENDIF
      ENDDO
   end do
+
   
   
-  WRITE(stdout,*) '----------------------------------------------------------------'
   do ll = 1, l_final_dim
      lf = l_final(ll)
      if( lf == -1 ) exit
@@ -209,16 +216,9 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
              lf, ip, Mxanes(ip,lf**2+1)
      ENDDO
   end do
-  WRITE(stdout,*) '----------------------------------------------------------------'
+
   DEALLOCATE(aux)
   
-  ! <OB>
-  if( ll > 1 ) then
-     write(stdout,*) 'The value of the radial integrals for different l cannot be compared.' 
-     write(stdout,*) "         Remember the AE wfc do not have the same norm !"
-     write(stdout,*)
-  end if
-  ! <OB>
   
   !
   !  We count the projectors for all the atoms
@@ -251,11 +251,23 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
     ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     ! Beginning the loop over the k-points
     ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
-  
+
+     write(stdout,*)
+     write(stdout,*) '              Lanczos Number      ', i_lanczos, ' of ', n_lanczos
+     write(stdout,*)
+
      CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,dfftp%nnr,nspin,doublegrid)     
      
      ! Loop on the k points
      DO ik=1,nks
+        
+        WRITE(stdout,'(8x,a)')&
+             '|-------------------------------------------------------------'
+        WRITE(stdout,'(8x,a ,i5,a,3(f7.4,a),f7.4,a,i3)') '! k-point # ',ik, &
+             ':  (', xk(1,ik),', ',xk(2,ik),', ',xk(3,ik),'), ',wk(ik),', ', isk(ik)
+        WRITE(stdout,'(8x,a)')&
+             '|-------------------------------------------------------------'
+        
         
         IF (calculated(i_lanczos,ik).EQ.1) CYCLE
         
@@ -267,9 +279,9 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
            EXIT
         ENDIF
         
-        WRITE(stdout,*)
-        WRITE(stdout,*) 'Starting k-point : ', ik
-        WRITE( stdout,'(" total cpu time spent up to now is ",F9.2," secs")') timenow
+        IF (verbosity.eq.'high') &
+             WRITE(stdout,'(8x,"|   Total cpu time spent up to now: ",F9.2," s")')&
+             timenow 
         
         current_k=ik
   
@@ -284,9 +296,10 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
         
         IF(xniter.ge.npw_partial) THEN
            xniter = npw_partial
-           WRITE(stdout,*) 'Hilbert space is saturated'
-           WRITE(stdout,*) 'xniter is set equal to ',npw_partial
-           WRITE(stdout,*) 'Hint: Increase Kinetic Energy cutoff in your SCF simulation'
+           WRITE(stdout,'(8x,a)') '|   Hilbert space is saturated'
+           WRITE(stdout,'(8x,a,i10)') '|   xniter is set equal to ',npw_partial
+           WRITE(stdout,'(8x,a)') &
+                '|   Increase kinetic-energy cutoff in your SCF calculation!'
         ENDIF
         
         
@@ -295,9 +308,6 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
         !</CG>
         IF (.NOT.lda_plus_u) CALL init_us_2(npw,igk,xk(1,ik),vkb)
         IF (lda_plus_u) CALL orthoUwfc_k(ik)
-        
-        timenow=get_clock( 'xanes' ) 
-        WRITE( stdout,'(" total cpu time spent 1 is ",F9.2," secs")') timenow
         
         
         ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -536,8 +546,6 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
         end do
         
         
-        timenow=get_clock( 'xanes' ) 
-        WRITE( stdout,'(" total cpu time spent 3 is ",F9.2," secs")') timenow
         
         ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
         ! Starting Lanczos
@@ -565,7 +573,9 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
         CALL mp_sum( xnorm_partial, intra_pool_comm )
         
         xnorm(i_lanczos,ik)=SQRT(xnorm_partial)
-        WRITE( stdout,*) 'norm initial vector=',xnorm(i_lanczos,ik)
+
+        WRITE(stdout,'(8x,a,e15.8)') '|   Norm of the initial Lanczos vector:',&
+             xnorm(1,ik)
         
         ! <OB> in the spin unpolarized case at the L3 (M5) edges, the contribution of one of the initial states is null
         !      at all k, if nspin=2, half of the k points should not give any signal
@@ -583,7 +593,7 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
            !
            !      Then I call the lanczos routine
            !
-           WRITE(stdout,*) 'Starting lanczos'
+
            IF (okvan) THEN
               CALL lanczos_uspp(a(:,i_lanczos,ik),b(:,i_lanczos,ik),psiwfc,ncalcv(i_lanczos,ik), terminator)
            ELSE
@@ -594,31 +604,6 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
            nocalc(i_lanczos,ik) = .true. 
       end if
         
-        !
-        !      Then I write small report of the lanczos results
-        !
-        
-        IF(TRIM(verbosity).EQ.'high') THEN
-           WRITE( stdout,*) '-----------------------------------------'
-           WRITE( stdout,'(a,i4)' ) 'k-point number =',ik
-           WRITE( stdout,'(a,3f12.6,1i2)') 'k-point coordinate, isk', xk(1,ik),xk(2,ik),xk(3,ik),isk(ik)
-           WRITE( stdout,'(a,f12.9,a,i1)') 'Norm of the initial vector = ',xnorm(i_lanczos,ik),' for state = ', i_lanczos
-           WRITE( stdout,'(a,i3,a,i1)' ) 'Number of iterations = ',ncalcv(i_lanczos,ik),' for state = ', i_lanczos
-           
-           !        nline=ncalcv(icrd,ik)/6
-           !        nrest=ncalcv(icrd,ik)-nline*6
-           !        WRITE( stdout,*) 'a vectors:'
-           !        DO ip=1,nline
-           !           WRITE( stdout,"(6(f10.6,3x))") (a((ip-1)*6+j,icrd,ik),j=1,6)
-           !        ENDDO
-           !        WRITE( stdout,"(6(f10.6,3x))") (a(nline*6+j,icrd,ik),j=1,nrest)
-           !        WRITE( stdout,*) 'b vectors:'
-           !        DO ip=1,nline
-           !           WRITE( stdout,"(6(f10.6,3x))") (b((ip-1)*6+j,icrd,ik),j=1,6)
-           !        ENDDO
-           !        WRITE( stdout,"(6(f10.6,3x))") (b(nline*6+j,icrd,ik),j=1,nrest)
-           WRITE( stdout,*) '-----------------------------------------'
-        ENDIF
         
         CALL deallocate_bec_type ( becp ) ! CG
         calculated(i_lanczos,ik)=1
