@@ -1,3 +1,7 @@
+New in svn version:
+
+   * XSpectra: various improvements
+
 Incompatible changes in 5.2.0 version:
 
    * "pot" parallelization level, no longer used, removed   
@@ -10,6 +14,8 @@ Fixed in svn version:
    * PW: a few do loops included more FFT planes than physical ones in real
      space, leading to inaccuracies in real-space augmentation charge and xdm,
      only if the number of processors nproc_bgrp was not a divisor of nr3
+   * XSpectra: v.5.1.2 and 5.2.0 contained a bug in parallelization that could
+     lead to incorrect results     
 
 Incompatible changes in 5.2.0 version:
 
