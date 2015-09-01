@@ -223,9 +223,9 @@ subroutine read_input_and_bcast(filerecon, r_paw)
   /)
 
 
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-! $ check on input variables          $
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+  ! $ check on input variables          $
+  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 
   IF(TRIM(ADJUSTL(calculation)).EQ.'xanes_dipole') THEN
