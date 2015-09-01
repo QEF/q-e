@@ -34,7 +34,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
                                    write_charge_and_exit, ef_tune
   USE ensemble_dft,         ONLY : compute_entropy2
   USE efield_module,        ONLY : berry_energy, berry_energy2
-  USE cp_interfaces,        ONLY : runcp_uspp, runcp_new, runcp_uspp_force_pairing, &
+  USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
                                    interpolate_lambda
   USE gvecw,                ONLY : ngw
   USE orthogonalize_base,   ONLY : calphi_bgrp
@@ -165,11 +165,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
         !
      ELSE
         !
-#if defined(__FULL_FFT3D_LOOP) && defined(__PARA)
-        CALL runcp_new( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, cm_bgrp )
-#else
         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, cm_bgrp )
-#endif
         !
      ENDIF
      !

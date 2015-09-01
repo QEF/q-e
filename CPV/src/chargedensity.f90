@@ -158,11 +158,6 @@
 
       LOGICAL, SAVE :: first = .TRUE.
       LOGICAL :: ttstress
-#if defined __FULL_FFT3D_LOOP
-      LOGICAL :: use_new_loop = .true.
-#else
-      LOGICAL :: use_new_loop = .false.
-#endif
       
       !
       CALL start_clock( 'rhoofr' )

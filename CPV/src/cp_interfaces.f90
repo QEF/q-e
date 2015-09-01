@@ -15,7 +15,6 @@
    PRIVATE
 
    PUBLIC :: dforce
-   PUBLIC :: dforce_new
 
    PUBLIC :: pseudopotential_indexes
    PUBLIC :: compute_dvan
@@ -40,7 +39,6 @@
    PUBLIC :: readfile
 
    PUBLIC :: runcp_uspp
-   PUBLIC :: runcp_new
    PUBLIC :: runcp_uspp_force_pairing
 
    PUBLIC :: eigs
@@ -131,20 +129,6 @@
          INTEGER,     INTENT(IN)    :: n, nspin
          REAL(DP),    OPTIONAL      :: v1( ldv, * )
       END SUBROUTINE dforce_x
-   END INTERFACE
-
-   INTERFACE dforce_new
-      SUBROUTINE dforce_new_x( i, bec, vkb, df, da, ispin, f, n, nspin )
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         INTEGER,     INTENT(IN)    :: i
-         REAL(DP)                   :: bec(:,:)
-         COMPLEX(DP)                :: vkb(:,:)
-         COMPLEX(DP)                :: df(:), da(:)
-         INTEGER                    :: ispin( : )
-         REAL(DP)                   :: f( : )
-         INTEGER,     INTENT(IN)    :: n, nspin
-      END SUBROUTINE dforce_new_x
    END INTERFACE
 
 
@@ -355,22 +339,6 @@
 
    INTERFACE runcp_uspp
       SUBROUTINE runcp_uspp_x &
-         ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, cm_bgrp, fromscra, restart )
-         USE kinds,             ONLY: DP
-         IMPLICIT NONE
-         integer, intent(in) :: nfi
-         real(DP) :: fccc, ccc
-         real(DP) :: ema0bg(:), dt2bye
-         real(DP) :: rhos(:,:)
-         real(DP) :: bec_bgrp(:,:)
-         complex(DP) :: c0_bgrp(:,:), cm_bgrp(:,:)
-         logical, optional, intent(in) :: fromscra
-         logical, optional, intent(in) :: restart
-      END SUBROUTINE
-   END INTERFACE
-
-   INTERFACE runcp_new
-      SUBROUTINE runcp_new_x &
          ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, cm_bgrp, fromscra, restart )
          USE kinds,             ONLY: DP
          IMPLICIT NONE
