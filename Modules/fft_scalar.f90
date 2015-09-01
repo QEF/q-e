@@ -1781,7 +1781,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
              call DESTROY_PLAN_2D( bw_planxy(icurrent) )
         call CREATE_PLAN_2D( bw_planxy(icurrent), nx, ny, 1 )
 !
-#elif defined __FFTW3 || defined __DFTI
+#elif defined __FFTW3
 
         if ( bw_planz(icurrent) /= 0 ) &
              call dfftw_destroy_plan(bw_planz(icurrent))
