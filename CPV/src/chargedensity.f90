@@ -517,9 +517,10 @@
             !  The size of psis is nnr: which is equal to the total number
             !  of local fourier coefficients.
             !
-            do ig = 1, SIZE(psis)
-               aux (ig) = (0.d0, 0.d0)
-            end do
+
+#ifdef __MPI
+
+            aux = (0.d0, 0.d0)
             !
             !  Loop for all local g-vectors (ngw)
             !  ci_bgrp: stores the Fourier expansion coefficients
@@ -563,6 +564,15 @@
             CALL fw_tg_cft3_z( psis, dffts, aux )
             CALL fw_tg_cft3_scatter( psis, dffts, aux )
             CALL fw_tg_cft3_xy( psis, dffts )
+#else
+
+            psis = (0.d0, 0.d0)
+
+            CALL c2psi( psis, dffts%nnr, c_bgrp( 1, i ), c_bgrp( 1, i+1 ), ngw, 2 )
+
+            CALL invfft('Wave',psis, dffts )
+
+#endif
             !
             ! Now the first proc of the group holds the first two bands
             ! of the 2*nogrp bands that we are processing at the same time,

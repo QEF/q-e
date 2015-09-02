@@ -88,6 +88,8 @@
       !
       ci = ( 0.0d0, 1.0d0 )
       !
+#ifdef __MPI
+
       aux( : ) = (0.d0, 0.d0)
 
       igoff = 0
@@ -123,6 +125,16 @@
       CALL fw_tg_cft3_scatter( psi, dffts, aux )
       CALL fw_tg_cft3_xy( psi, dffts )
 
+#else
+
+      psi = 0.0d0
+      DO ig=1,ngw
+         psi(nlsm(ig)) = conjg( c(ig,i) - ci * c(ig,i+1) )
+         psi(nls(ig)) =  c(ig,i) + ci * c(ig,i+1)
+      END DO
+      CALL invfft( 'Wave', psi, dffts )
+
+#endif
       !
       ! the following avoids a potential out-of-bounds error
       !
@@ -239,11 +251,16 @@
          !
       END IF
       !
+#ifdef __MPI
       CALL bw_tg_cft3_xy( psi, dffts )
       CALL bw_tg_cft3_scatter( psi, dffts, aux )
       CALL bw_tg_cft3_z( psi, dffts, aux )
 
       CALL unpack_group_sticks( psi, aux, dffts )
+#else
+      CALL fwfft( 'Wave', psi, dffts )
+      aux = psi
+#endif
       !
       !   note : the factor 0.5 appears 
       !       in the kinetic energy because it is defined as 0.5*g**2
