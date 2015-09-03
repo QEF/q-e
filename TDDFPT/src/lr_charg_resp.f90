@@ -199,6 +199,8 @@ CONTAINS
     LOGICAL :: exst
     INTEGER :: iter_restart,i,j
     CHARACTER(len=256) :: filename
+    REAL(KIND=DP) :: discard
+    
 
     CALL start_clock( 'post-processing' )
     IF (lr_verbosity > 5) WRITE(stdout,'("<read_wT_beta_gamma_z>")')
@@ -230,6 +232,13 @@ CONTAINS
        IF (.not. allocated(w_T_beta_store))  ALLOCATE(w_T_beta_store(iter_restart))
        IF (.not. allocated(w_T_gamma_store))  ALLOCATE(w_T_gamma_store(iter_restart))
        READ(158,*,end=301,err=303) w_T_norm0_store
+       READ(158,*,end=301,err=303) discard
+       READ(158,*,end=301,err=303) discard
+       READ(158,*,end=301,err=303) discard
+       READ(158,*,end=301,err=303) discard
+       READ(158,*,end=301,err=303) discard
+       READ(158,*,end=301,err=303) discard
+       READ(158,*,end=301,err=303) discard
        !print *, discard
        !
        !write(stdout,'("--------------Lanczos Matrix-------------------")')
@@ -276,7 +285,7 @@ CONTAINS
     !
     USE lr_variables,         ONLY : itermax,beta_store,gamma_store, &
          LR_polarization,charge_response, n_ipol, &
-         itermax_int,project
+         itermax_int,project,sum_rule
     USE fft_base,             ONLY : dfftp
     USE noncollin_module,     ONLY : nspin_mag
 
@@ -299,22 +308,144 @@ CONTAINS
     IF (lr_verbosity > 5) THEN
        WRITE(stdout,'("<lr_calc_w_T>")')
     ENDIF
-    IF (omeg == 0.D0) THEN
-       CALL stop_clock( 'post-processing' )
-       RETURN
-    END IF
+    !IF (omeg == 0.D0) THEN
+    !   CALL stop_clock( 'post-processing' )
+    !   RETURN
+    !END IF
     !
     ALLOCATE(a(itermax_int))
     ALLOCATE(b(itermax_int))
     ALLOCATE(c(itermax_int))
     ALLOCATE(r(itermax_int))
-    !
     a(:) = (0.0d0,0.0d0)
     b(:) = (0.0d0,0.0d0)
     c(:) = (0.0d0,0.0d0)
     w_T(:) = (0.0d0,0.0d0)
     !
     WRITE(stdout,'(/,5X,"Calculating response coefficients")')
+     
+    if (sum_rule == -2 ) THEN
+    WRITE(stdout,'(/,5X,"S - 2 will be attempted")')
+    resonance_condition=.true.
+    IF (allocated(rho_1_tot)) DEALLOCATE (rho_1_tot)
+    IF (.not. allocated(rho_1_tot_im)) ALLOCATE(rho_1_tot_im(dfftp%nnr,nspin_mag))
+    rho_1_tot_im(:,:)=cmplx(0.0d0,0.0d0,dp)
+    !
+    !
+    !
+    ! prepare tridiagonal (w-L) for the given polarization
+    !
+    omeg=0
+    w_t(:)=(0.0d0,0.0d0)
+    do while (omeg < 100) 
+    omeg=omeg+0.01
+    a(:) = cmplx(omeg,epsil,dp)
+    !
+       !Read the actual iterations
+       DO i=1,itermax
+          !
+          !b(i)=-w_T_beta_store(i)
+          !c(i)=-w_T_gamma_store(i)
+          b(i)=cmplx(-w_T_beta_store(i),0.0d0,dp)
+          c(i)=cmplx(-w_T_gamma_store(i),0.0d0,dp)
+          !
+       ENDDO
+       IF (itermax_int>itermax .and. itermax > 151) THEN
+          !calculation of the average
+          !OBM: (I am using the code from tddfpt_pp, I am not very confortable
+          ! with the mechanism discarding the "bad" points.
+          average=0.d0
+          av_amplitude=0.d0
+          counter=0
+          skip=.false.
+          !
+          DO i=151,itermax
+             !
+             IF (skip .eqv. .true.) THEN
+                skip=.false.
+                CYCLE
+             ENDIF
+             !
+             IF (mod(i,2)==1) THEN
+                !
+                IF ( i/=151 .and. abs( w_T_beta_store(i)-average/counter ) > 2.d0 ) THEN
+                   !
+                   !if ( i.ne.151 .and. counter == 0) counter = 1
+                   skip=.true.
+                   !
+                ELSE
+                   !
+                   average=average+w_T_beta_store(i)
+                   av_amplitude=av_amplitude+w_T_beta_store(i)
+                   counter=counter+1
+                   !print *, "t1 ipol",ip,"av_amp",av_amplitude(ip)
+                   !
+                ENDIF
+                !
+             ELSE
+                !
+                IF ( i/=151 .and. abs( w_T_beta_store(i)-average/counter ) > 2.d0 ) THEN
+                   !
+                   !if ( i.ne.151 .and. counter == 0) counter = 1
+                   skip=.true.
+                   !
+                ELSE
+                   !
+                   average=average+w_T_beta_store(i)
+                   av_amplitude=av_amplitude-w_T_beta_store(i)
+                   counter=counter+1
+                   !print *, "t2 ipol",ip,"av_amp",av_amplitude(ip)
+                   !
+                ENDIF
+                !
+             ENDIF
+             !
+             !
+          ENDDO
+          average=average/counter
+          av_amplitude=av_amplitude/counter
+          !
+          !
+          !extrapolated part of b and c
+          DO i=itermax,itermax_int
+             !
+             IF (mod(i,2)==1) THEN
+                !
+                b(i)=cmplx((-average-av_amplitude),0.0d0,dp)
+                c(i)=b(i)
+                !
+             ELSE
+                !
+                b(i)=cmplx((-average+av_amplitude),0.0d0,dp)
+                c(i)=b(i)
+                !
+             ENDIF
+             !
+          ENDDO
+
+    ENDIF
+    !
+    r(:) =(0.0d0,0.0d0)
+    r(1)=(1.0d0,0.0d0)
+    !
+    ! solve the equation
+    !
+    CALL zgtsv(itermax_int,1,b,a,c,r(:),itermax_int,info)
+    IF(info /= 0) CALL errore ('calc_w_T', 'unable to solve tridiagonal system', 1 )
+    !
+    !Check if we are close to a resonance
+    !
+    norm=sum(abs(aimag(r(:))/dble(r(:))))
+    norm=norm/(1.0d0*itermax_int)
+    ! Is this a correct way to find imaginary part?
+    IF (abs(norm) > 0.1) THEN
+         w_t(:)=w_t(:)+r(:)/omeg
+    END IF
+    !print *,"norm",norm
+    !
+    !
+    END DO
+    ELSE IF (sum_rule == -99 ) THEN
     !
     !
     !
@@ -472,6 +603,7 @@ CONTAINS
           !
           WRITE(stdout,'(5X,"Chi_",I1,"_",I1,"=",2(E15.5,1x))') LR_polarization,ip,chi(LR_polarization,ip)
        ENDDO
+    ENDIF
     ENDIF
     !
     !

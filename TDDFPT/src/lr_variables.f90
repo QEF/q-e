@@ -162,6 +162,7 @@ MODULE lr_variables
   ! lr_post
   !
   INTEGER :: plot_type          ! dumps rho as: 1=xyzd 2=xsf 3=cube
+  INTEGER :: sum_rule           ! currently supported sum rules : -2 for alpha(w->0)
   !
   ! I. Timrov's comment: It is not a proper place for debugging subroutines
   !

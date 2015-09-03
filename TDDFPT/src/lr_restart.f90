@@ -24,8 +24,8 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   USE lr_variables,         ONLY : itermax,evc1, evc1_new, sevc1_new,evc1_old, &
                                    restart, nwordrestart, iunrestart,project,nbnd_total,F, &
                                    bgz_suffix, beta_store, gamma_store, zeta_store, norm0, &
-                                   lr_verbosity, charge_response, LR_polarization, n_ipol, eels
-  USE charg_resp,           ONLY : resonance_condition, rho_1_tot, rho_1_tot_im
+                                   lr_verbosity, charge_response, LR_polarization, n_ipol, eels, sum_rule
+  USE charg_resp,           ONLY : resonance_condition, rho_1_tot,rho_1_tot_im
   USE wvfct,                ONLY : npw, igk, nbnd, g2kin, npwx
   USE becmod,               ONLY : bec_type, becp, calbec
   USE uspp,                 ONLY : vkb, nkb, okvan
@@ -202,17 +202,17 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   !
   ! Optical case: read the response charge density
   !
-  IF (charge_response == 1 .and. .not.eels) THEN
+  IF (charge_response == 1 .and. .not. (eels )) THEN
      IF (resonance_condition) THEN
-         CALL diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*dfftp%nnr, exst)
-         CALL davcio(rho_1_tot_im(:,:),2*dfftp%nnr*nspin_mag,iunrestart,1,-1)
-         CLOSE( unit = iunrestart)
-     ELSE
-         CALL diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*dfftp%nnr, exst)
-         CALL davcio(rho_1_tot(:,:),2*dfftp%nnr*nspin_mag,iunrestart,1,-1)
-         CLOSE( unit = iunrestart)
-     ENDIF
-  ENDIF
+         CALL diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*dfftp%nnr*nspin_mag, exst)
+        CALL davcio(rho_1_tot_im(:,:),2*dfftp%nnr*nspin_mag,iunrestart,1,-1)
+        CLOSE( unit = iunrestart)
+    ELSE
+        CALL diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*dfftp%nnr*nspin_mag, exst)
+        CALL davcio(rho_1_tot(:,:),2*dfftp%nnr*nspin_mag,iunrestart,1,-1)
+        CLOSE( unit = iunrestart)
+    ENDIF
+ ENDIF
   !
   ! End of all file I/O for restart.
   !

@@ -34,6 +34,7 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (itermax, ionode_id, world_comm )
   CALL mp_bcast (itermax_int, ionode_id, world_comm )
   CALL mp_bcast (charge_response, ionode_id, world_comm )
+  CALL mp_bcast (sum_rule, ionode_id, world_comm )
   CALL mp_bcast (project, ionode_id, world_comm )
   CALL mp_bcast (restart, ionode_id, world_comm )
   CALL mp_bcast (restart_step, ionode_id, world_comm )

@@ -21,7 +21,7 @@ SUBROUTINE lr_write_restart()
                                    LR_polarization, LR_iteration, n_ipol,F,project,&
                                    evc1,evc1_new,evc1_old,iunrestart, nwordrestart, &
                                    nbnd_total, charge_response,lr_verbosity,&
-                                   bgz_suffix, eels, q1, q2, q3
+                                   bgz_suffix, eels, q1, q2, q3, sum_rule
   USE charg_resp,           ONLY : resonance_condition, rho_1_tot, rho_1_tot_im
   USE wvfct,                ONLY : nbnd, npwx, npw
   USE fft_base,             ONLY : dfftp
@@ -192,6 +192,14 @@ SUBROUTINE lr_write_restart()
        ENDIF
        !
     ENDIF
+    IF (sum_rule == -2 .AND. .NOT.eels) THEN
+       !
+       CALL diropn ( iunrestart, 'restart_lanczos-sum-2.'//trim(int_to_char(LR_polarization)), 2*dfftp%nnr*nspin_mag, exst)
+       CALL davcio(rho_1_tot_im(:,:),2*dfftp%nnr*nspin_mag,iunrestart,1,1)
+       CLOSE( unit = iunrestart)
+       !
+    ENDIF
+
     !
     RETURN
     !

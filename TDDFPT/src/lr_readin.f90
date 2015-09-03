@@ -94,7 +94,7 @@ SUBROUTINE lr_readin
                         & charge_response, tqr, auto_rs, no_hxc, n_ipol, project,      &
                         & scissor, ecutfock, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
                         & q1, q2, q3, lr_periodic, approximation !eps  
-  NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int
+  NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int,sum_rule
   namelist / lr_dav /     num_eign, num_init, num_basis_max, residue_conv_thr, precondition,         &
                         & dav_debug, reference,single_pole, sort_contr, diag_of_h, close_pre,        &
                         & broadening,print_spectrum,start,finish,step,if_check_orth, if_random_init, &
@@ -133,6 +133,7 @@ SUBROUTINE lr_readin
      real_space = .FALSE.
      real_space_debug = 0
      charge_response = 0
+     sum_rule = -99
      test_case_no = 0
      tqr = .FALSE.
      auto_rs = .TRUE.
@@ -575,7 +576,7 @@ CONTAINS
     !
     IF (.NOT.eels) THEN
        !
-       IF (charge_response == 1 .AND. omeg == 0.D0) &
+       IF (charge_response == 1 .AND. ( omeg == 0.D0 .AND. sum_rule == -99 ) ) &
            & CALL errore ('lr_readin', &
            & 'omeg must be defined for charge response mode 1', 1 )
        !
