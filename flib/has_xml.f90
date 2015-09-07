@@ -20,6 +20,10 @@ LOGICAL, EXTERNAL :: matches
 
 has_xml=.FALSE.
 leng=LEN_TRIM(inp_string)
+
+!cannot match xml if it is only 1 or 2 chars long
+IF(leng<3) RETURN
+
 start=MAX(leng-3,1)
 aux=inp_string(start:leng)
 
