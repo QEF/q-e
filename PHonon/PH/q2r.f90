@@ -129,7 +129,6 @@ PROGRAM q2r
      !
   IF (flfrc == ' ')  CALL errore ('q2r',' bad flfrc',1)
      !
-  xmldyn=has_xml(fildyn)
 
   IF (ionode) THEN
      OPEN (unit=1, file=TRIM(fildyn)//'0', status='old', form='formatted', &
@@ -149,6 +148,9 @@ PROGRAM q2r
         CLOSE (unit=1, status='keep')
      END IF
   ENDIF
+
+  xmldyn=has_xml(fildyn)
+
   CALL mp_bcast(nr1, ionode_id, world_comm)
   CALL mp_bcast(nr2, ionode_id, world_comm)
   CALL mp_bcast(nr3, ionode_id, world_comm)
@@ -176,6 +178,7 @@ PROGRAM q2r
      !
      ! Force constants in reciprocal space read from file
      !
+     NFILE_LOOP : &
      DO ifile=1,nfile
         IF (lnogridinfo) THEN
            IF (ionode) READ(5,'(a)') filin
@@ -234,6 +237,7 @@ PROGRAM q2r
            & 'file with dyn.mat. at q=0 should be first of the list',ifile)
         !
         WRITE (stdout,*) ' nqs= ',nqs
+        NQ_LOOP : &
         DO nq = 1,nqs
            WRITE(stdout,'(a,3f12.8)') ' q= ',(q(i,nq),i=1,3)
            lq = .TRUE.
@@ -261,9 +265,11 @@ PROGRAM q2r
               WRITE (stdout,'(3i4)') (m(i),i=1,3)
               CALL errore('init',' nc already filled: wrong q grid or wrong nr',1)
            END IF
-        END DO
+        END DO &
+        NQ_LOOP
         IF (xmldyn) DEALLOCATE(phiq)
-     END DO
+     END DO &
+     NFILE_LOOP
      !
      ! Check grid dimension
      !
