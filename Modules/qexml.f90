@@ -1349,12 +1349,11 @@ CONTAINS
       ! Vdw kernel table
       !
       IF ( present(inlc) ) THEN
-         IF ( inlc == 1 .OR. inlc ==2 .OR. inlc == 3 ) THEN
+         IF ( inlc > 0 ) THEN
             IF ( .NOT. PRESENT( vdw_table_name ) .OR. &
-                 .NOT. PRESENT( pseudo_dir ) .OR. &
-                 .NOT. PRESENT( dirname )) &
-               CALL errore( 'write_xc', &
-                            ' variable vdw_table_name not present', 1 )
+                 .NOT. PRESENT( pseudo_dir )     .OR. &
+                 .NOT. PRESENT( dirname ))            &
+                 CALL errore( 'write_xc', ' variable vdw_table_name not present', 1 )
         
             CALL iotk_write_dat( ounit, "NON_LOCAL_DF", inlc )
             CALL iotk_write_dat( ounit, "VDW_KERNEL_NAME", TRIM(vdw_table_name))
@@ -3453,8 +3452,7 @@ CONTAINS
       CALL iotk_scan_dat( iunit, "NON_LOCAL_DF", inlc_, FOUND = found )
       IF ( found ) THEN
          !
-         IF ( inlc_ == 1 .OR. inlc_ == 2 .OR. inlc_ == 3 ) &
-            CALL iotk_scan_dat( iunit, "VDW_KERNEL_NAME", vdw_table_name_ )
+         IF ( inlc_ > 0 ) CALL iotk_scan_dat( iunit, "VDW_KERNEL_NAME", vdw_table_name_ )
          !
       ELSE
          !

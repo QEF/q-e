@@ -30,14 +30,12 @@ subroutine stres_nonloc_dft( rho, rho_core, nspin, sigma_nonloc_dft )
   sigma_nonloc_dft(:,:) = 0.d0
   inlc = get_inlc()
 
-  if (inlc==1 .or. inlc==2) then
-     if (nspin>2) call errore('stres_vdW_DF', &
-                  'vdW+DF non implemented in spin polarized calculations',1)
+  if ( inlc==1 .or. inlc==2 .or. inlc==4 .or. inlc==5 .or. inlc==6 ) then
+     if ( nspin>1 ) call errore ('stres_vdW_DF',   'vdW stress not implemented for nspin > 1',1)
      CALL stress_vdW_DF(rho, rho_core, nspin, sigma_nonloc_dft)
-  elseif (inlc == 3) then
-      if (nspin>2) call errore('stress_rVV10', &
-                   'rVV10 non implemented with nspin>2',1)
-      CALL stress_rVV10(rho, rho_core, nspin, sigma_nonloc_dft)
+  elseif ( inlc == 3 ) then
+     if ( nspin>2 ) call errore ('stress_rVV10', 'rVV10 stress not implemented for nspin > 2',1)
+     CALL stress_rVV10(rho, rho_core, nspin, sigma_nonloc_dft)
   end if
 
   return

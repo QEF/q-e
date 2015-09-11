@@ -1,5 +1,6 @@
 New in svn version:
 
+   * svdW-DF - a proper spin version of vdW-DF (courtesy of Timo Thonhauser)
    * XSpectra: various improvements
 
 Incompatible changes in 5.2.0 version:
