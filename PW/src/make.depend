@@ -1055,16 +1055,6 @@ non_scf.o : ../../Modules/wavefunctions.o
 non_scf.o : bp_mod.o
 non_scf.o : buffers.o
 non_scf.o : pwcom.o
-nonloccorr.o : ../../Modules/cell_base.o
-nonloccorr.o : ../../Modules/constants.o
-nonloccorr.o : ../../Modules/fft_base.o
-nonloccorr.o : ../../Modules/fft_interfaces.o
-nonloccorr.o : ../../Modules/funct.o
-nonloccorr.o : ../../Modules/kind.o
-nonloccorr.o : ../../Modules/noncol.o
-nonloccorr.o : ../../Modules/recvec.o
-nonloccorr.o : ../../Modules/wavefunctions.o
-nonloccorr.o : pwcom.o
 ns_adj.o : ../../Modules/io_global.o
 ns_adj.o : ../../Modules/ions_base.o
 ns_adj.o : ../../Modules/kind.o

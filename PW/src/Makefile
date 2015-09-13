@@ -132,7 +132,6 @@ n_plane_waves.o \
 new_ns.o \
 new_occ.o \
 ns_adj.o \
-nonloccorr.o \
 non_scf.o \
 offset_atom_wfc.o \
 openfil.o \
