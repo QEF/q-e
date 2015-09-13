@@ -1206,7 +1206,11 @@ CONTAINS
   do icar = 1,3
 
      h(:) = CMPLX( h_prefactor(:) * grad_rho(:,icar), 0.0_DP )
-     h(:) = h(:) /  SQRT( grad_rho(:,1)**2 + grad_rho(:,2)**2 + grad_rho(:,3)**2 )
+     do i_grid=1,dfftp%nnr
+        if ( grad_rho(i_grid,1)**2 + grad_rho(i_grid,2)**2 + grad_rho(i_grid,3)**2 > 0.0_dp ) then
+           h(i_grid) = h(i_grid) / SQRT( grad_rho(i_grid,1)**2 + grad_rho(i_grid,2)**2 + grad_rho(i_grid,3)**2 )
+        end if
+     end do
      CALL fwfft ('Dense', h, dfftp)
      h(nl(:)) = CMPLX(0.0_DP,1.0_DP) * tpiba * g(icar,:) * h(nl(:))
      if (gamma_only) h(nlm(:)) = CONJG(h(nl(:)))
