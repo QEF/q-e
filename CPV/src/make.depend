@@ -955,12 +955,9 @@ restart_sub.o : ions_nose.o
 restart_sub.o : ions_positions.o
 restart_sub.o : mainvar.o
 restart_sub.o : printout_base.o
-runcp.o : ../../Modules/cell_base.o
 runcp.o : ../../Modules/control_flags.o
 runcp.o : ../../Modules/electrons_base.o
 runcp.o : ../../Modules/fft_base.o
-runcp.o : ../../Modules/fft_interfaces.o
-runcp.o : ../../Modules/fft_scalar.o
 runcp.o : ../../Modules/kind.o
 runcp.o : ../../Modules/mp.o
 runcp.o : ../../Modules/mp_global.o
