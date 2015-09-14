@@ -603,7 +603,7 @@ CONTAINS
        !  Non-insulating systems currently not supported by turboTDDFPT, but
        !  supported by turboEELS.
        !
-       IF (lgauss) CALL errore( 'lr_readin', 'turboTDDFT is not exteneted to metals', 1 )
+       IF (lgauss) CALL errore( 'lr_readin', 'turboTDDFT is not extended to metals', 1 )
        !
        ! Symmetry is not supported.
        !
