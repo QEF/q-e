@@ -397,7 +397,7 @@ CONTAINS
           WRITE (stdout,'("# i        V             Vfree           M1             M2             M3")')
           DO iat = 1, nat
              it = ityp(iat)
-             WRITE (stdout,'(I3,1p,5(X,E14.6))') iat, avol(iat), afree(it), ml(1:3,iat)
+             WRITE (stdout,'(I3,1p,5(1X,E14.6))') iat, avol(iat), afree(it), ml(1:3,iat)
           END DO
           WRITE (stdout,*)
        END IF
@@ -427,7 +427,7 @@ CONTAINS
              rvdw(i,j) = a1 * rc + a2
              rvdw(j,i) = rvdw(i,j)
 
-             WRITE (stdout,'(I3,X,I3,1p,5(X,E14.6))') i, j, cx(i,j,2), cx(i,j,3), cx(i,j,4), rc, rvdw(i,j)
+             WRITE (stdout,'(I3,1X,I3,1p,5(1X,E14.6))') i, j, cx(i,j,2), cx(i,j,3), cx(i,j,4), rc, rvdw(i,j)
           END DO
        END DO
 
@@ -546,14 +546,14 @@ CONTAINS
        WRITE (stdout,'("  Evdw(C8,Ry)      = ",1p,E20.12)') ehadd(8)
        WRITE (stdout,'("  Evdw(C10,Ry)     = ",1p,E20.12)') ehadd(10)
        DO i = 1, nat
-          WRITE (stdout,'("  Fvdw (",I3.3,",Ry/bohr) = ",1p,3(E20.12,X))') i, for(:,i)
+          WRITE (stdout,'("  Fvdw (",I3.3,",Ry/bohr) = ",1p,3(E20.12,1X))') i, for(:,i)
        END DO
-       WRITE (stdout,'("  sigma_vdw (Ry/bohr**3) = ",1p,3(E20.12,X)," ")') sigma(1,:)
-       WRITE (stdout,'("                           ",1p,3(E20.12,X)," ")') sigma(2,:)
-       WRITE (stdout,'("                           ",1p,3(E20.12,X)," ")') sigma(3,:)
-       WRITE (stdout,'("  sigma_vdw (GPa) = ",1p,3(E20.12,X)," ")') 0.5_DP*sigma(1,:)*au_gpa
-       WRITE (stdout,'("                    ",1p,3(E20.12,X)," ")') 0.5_DP*sigma(2,:)*au_gpa
-       WRITE (stdout,'("                    ",1p,3(E20.12,X)," ")') 0.5_DP*sigma(3,:)*au_gpa
+       WRITE (stdout,'("  sigma_vdw (Ry/bohr**3) = ",1p,3(E20.12,1X)," ")') sigma(1,:)
+       WRITE (stdout,'("                           ",1p,3(E20.12,1X)," ")') sigma(2,:)
+       WRITE (stdout,'("                           ",1p,3(E20.12,1X)," ")') sigma(3,:)
+       WRITE (stdout,'("  sigma_vdw (GPa) = ",1p,3(E20.12,1X)," ")') 0.5_DP*sigma(1,:)*au_gpa
+       WRITE (stdout,'("                    ",1p,3(E20.12,1X)," ")') 0.5_DP*sigma(2,:)*au_gpa
+       WRITE (stdout,'("                    ",1p,3(E20.12,1X)," ")') 0.5_DP*sigma(3,:)*au_gpa
        WRITE (stdout,*)
     END IF
 

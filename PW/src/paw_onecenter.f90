@@ -1286,12 +1286,12 @@ SUBROUTINE PAW_rad2lm3(i, F_rad, F_lm, lmax_loc, nspin)
     TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
     INTEGER,  INTENT(IN) :: lmax_loc  ! in some cases I have to keep higher angular components
                                       ! than the default ones (=lmaxq =the ones present in rho)
+    INTEGER, INTENT(IN)  :: nspin
     REAL(DP), INTENT(OUT):: F_lm(i%m, 3, lmax_loc**2, nspin) ! lm component of F up to lmax_loc
     REAL(DP), INTENT(IN) :: F_rad(i%m, 3, rad(i%t)%nx, nspin)! radial samples of F
     !
     REAL(DP)             :: aux(i%m) ! optimization
 
-    INTEGER, INTENT(IN)  :: nspin
     INTEGER              :: ix    ! counter for integration
     INTEGER              :: lm    ! counter for angmom
     INTEGER              :: ispin ! counter for spin

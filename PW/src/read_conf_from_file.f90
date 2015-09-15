@@ -20,11 +20,11 @@ FUNCTION read_config_from_file(nat, at_old,omega_old, lmovecell, at, bg, omega, 
   !
   IMPLICIT NONE
   !
-  REAL(DP),INTENT(inout) :: at_old(3,3), omega_old
   LOGICAL,INTENT(in)     :: lmovecell
+  INTEGER,INTENT(in)     :: nat
+  REAL(DP),INTENT(inout) :: at_old(3,3), omega_old
   REAL(DP),INTENT(inout) :: at(3,3), bg(3,3), omega
   REAL(DP),INTENT(inout) :: tau(3,nat)
-  INTEGER,INTENT(in)     :: nat
   INTEGER :: ierr
   !
   !

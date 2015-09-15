@@ -789,14 +789,14 @@ SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,rtau,xq,t)
     USE uspp_param,        ONLY : nh, upf
     USE io_global,         ONLY : stdout, ionode
 
+    INTEGER, INTENT(IN) :: npe, irr, npertx, nsymq
+    REAL(DP), INTENT(IN) :: rtau(3,48,nat), xq(3)
+    COMPLEX(DP), INTENT(IN) :: t(npertx, npertx, 48, 3*nat)
     COMPLEX(DP), INTENT(INOUT) :: dbecsum(nhm*(nhm+1)/2,nat,nspin_mag,npe)! cross band occupations
 
     COMPLEX(DP)                :: becsym(nhm*(nhm+1)/2,nat,nspin_mag,npe)! symmetrized becsum
     REAL(DP) :: pref, usym
 
-    INTEGER, INTENT(IN) :: npe, irr, npertx, nsymq
-    REAL(DP), INTENT(IN) :: rtau(3,48,nat), xq(3)
-    COMPLEX(DP), INTENT(IN) :: t(npertx, npertx, 48, 3*nat)
     INTEGER :: ia, mykey,ia_s,ia_e   ! atoms counters and indexes
     INTEGER :: is, nt       ! counters on spin, atom-type
     INTEGER :: ma           ! atom symmetric to na
@@ -1076,15 +1076,15 @@ SUBROUTINE PAW_dumqsymmetrize(dbecsum,npe,irr,npertx,isymq,rtau,xq,tmq)
     USE uspp_param,        ONLY : nh, upf
     USE io_global,         ONLY : stdout, ionode
 
-    COMPLEX(DP), INTENT(INOUT) :: dbecsum(nhm*(nhm+1)/2,nat,nspin_mag,npe)! cross band occupations
-
-    COMPLEX(DP)                :: becsym(nhm*(nhm+1)/2,nat,nspin_mag,npe)! symmetrized becsum
-    REAL(DP), INTENT(IN) :: rtau(3,48,nat), xq(3)
-    REAL(DP) :: pref
-
     INTEGER, INTENT(IN) :: npe, irr, npertx
     INTEGER, INTENT(IN) :: isymq         ! counter for symmetry operation
     COMPLEX(DP), INTENT(IN) :: tmq(npertx, npertx, 3*nat)
+    COMPLEX(DP), INTENT(INOUT) :: dbecsum(nhm*(nhm+1)/2,nat,nspin_mag,npe)! cross band occupations
+    REAL(DP), INTENT(IN) :: rtau(3,48,nat), xq(3)
+
+    COMPLEX(DP)                :: becsym(nhm*(nhm+1)/2,nat,nspin_mag,npe)! symmetrized becsum
+    REAL(DP) :: pref
+
     INTEGER :: ia, mykey,ia_s,ia_e   ! atoms counters and indexes
     INTEGER :: is, nt       ! counters on spin, atom-type
     INTEGER :: ma           ! atom symmetric to na

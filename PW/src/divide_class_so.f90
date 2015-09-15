@@ -3650,9 +3650,12 @@ SUBROUTINE check_tgroup(nsym,a,b)
 !
 USE kinds, ONLY : DP
 IMPLICIT NONE
-COMPLEX(DP) :: a(2,2,96), c(2,2), a1(2,2), a2(2,2), a3(2,2)
-REAL(DP) :: b(3,3,nsym), d(3,3), b1(3,3), b2(3,3), b3(3,3)
-INTEGER :: nsym, done
+INTEGER, INTENT(IN) :: nsym
+COMPLEX(DP), INTENT(IN) :: a(2,2,96)
+REAL(DP), INTENT(IN) :: b(3,3,nsym)
+REAL(DP) ::   d(3,3), b1(3,3), b2(3,3), b3(3,3)
+COMPLEX(dp):: c(2,2), a1(2,2), a2(2,2), a3(2,2)
+INTEGER :: done
 LOGICAL :: compare_mat_so
 
 INTEGER :: i, j, k

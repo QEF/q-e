@@ -20,11 +20,11 @@ subroutine stres_nonloc_dft( rho, rho_core, nspin, sigma_nonloc_dft )
   !
   IMPLICIT NONE
   !
+  integer, intent(in) ::nspin
   real(DP), intent(in)     :: rho (dfftp%nnr, nspin), rho_core (dfftp%nnr)
   real(DP), intent(inout)  :: sigma_nonloc_dft (3, 3)
-  integer ::nspin, inlc
 
-  integer :: l, m
+  integer :: l, m, inlc
 
 
   sigma_nonloc_dft(:,:) = 0.d0
