@@ -1,13 +1,15 @@
-New in svn version:
+New in 5.2.1 version:
 
    * svdW-DF - a proper spin version of vdW-DF (courtesy of Timo Thonhauser)
-   * XSpectra: various improvements
+   * XSpectra: various improvements, extension to L_23 edges
+   * ESM: various improvements, constant-bias (PRL 109, 266101 (2012))
+     calculations for both pw.x and neb.x (courtesy of Minoru Otani)
 
-Incompatible changes in 5.2.0 version:
+Incompatible changes in 5.2.1 version:
 
    * "pot" parallelization level, no longer used, removed   
 
-Fixed in svn version:
+Fixed in 5.2.1 version:
 
    * PW: incorrect calculation of maximum number of plane waves could lead 
      to error exit with hybrid functionals and ultrasoft pseudopotentials
@@ -17,6 +19,7 @@ Fixed in svn version:
      only if the number of processors nproc_bgrp was not a divisor of nr3
    * XSpectra: v.5.1.2 and 5.2.0 contained a bug in parallelization that could
      lead to incorrect results     
+   * TDDFPT: mismatch between actual and expected format of save file
 
 Incompatible changes in 5.2.0 version:
 
