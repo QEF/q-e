@@ -54,8 +54,7 @@
       DO I=1,na+1
          DO J=1,nb+1
             DO K=1,nc+1
-               write(9,'(3f12.6,f6.2)') rijk(i,j,k,1),rijk(i,j,k,2), &
-                  & rijk(i,j,k,3), wk
+               write(9,'(3f12.6,f6.2)') rijk(i,j,k,1),rijk(i,j,k,2),rijk(i,j,k,3), wk
             END DO
          END DO
       END DO
