@@ -26,7 +26,8 @@
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 #
 ESPRESSO_ROOT=`cd ../.. ; pwd`
-ESPRESSO_TMPDIR=$ESPRESSO_ROOT/CPV/tmp/
+#ESPRESSO_TMPDIR=$ESPRESSO_ROOT/CPV/tmp/
+ESPRESSO_TMPDIR=$TMP_DIR
 ESPRESSO_PSEUDO=$ESPRESSO_ROOT/pseudo/
 
 # no need to specify outdir and pseudo_dir in all *.in files

@@ -275,7 +275,12 @@ SUBROUTINE invfft_b( grid_type, f, dfft, ia )
   IMPLICIT NONE
   
   TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
-  INTEGER, OPTIONAL, INTENT(IN) :: ia
+! Removed the 'OPTIONAL' attribute. When present, the specific interfaces
+! 'invfft_x' and 'invfft_b' cannot be disambiguated when the generic interface
+! call is made. This is a violation the Fortran standard. The Cray compiler
+! errors out on this, while the Intel only issues a warning. --rbw
+! INTEGER, OPTIONAL, INTENT(IN) :: ia
+  INTEGER, INTENT(IN) :: ia
   CHARACTER(LEN=*), INTENT(IN) :: grid_type
   COMPLEX(DP) :: f(:)
   !
