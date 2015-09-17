@@ -235,7 +235,7 @@ module funct
   !              b3lyp   P.J. Stephens,F.J. Devlin,C.F. Chabalowski,M.J. Frisch
   !                      J.Phys.Chem 98, 11623 (1994)
   !              vdW-DF       M. Dion et al., PRL 92, 246401 (2004)
-  !                           T. Thonhauser et al., PRB 76, 125112 (2007)
+  !                           T. Thonhauser et al., PRL, in print (2015), arXiv:1509.03759
   !              vdW-DF2      Lee et al., Phys. Rev. B 82, 081101 (2010)
   !              rev-vdW-DF2  I. Hamada, Phys. Rev. B 89, 121103(R) (2014)
   !              vdW-DF-cx    K. Berland and P. Hyldgaard, PRB 89, 035412 (2014)
