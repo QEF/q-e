@@ -10,12 +10,12 @@ subroutine grad_log(v,dv,rm1,dx,nx,method)
   use kinds, only : DP
   implicit none
   ! input/output variables
+  integer, intent(in) :: nx, method
+  ! dimensions, method used
   real(DP), intent(in) :: v(nx), rm1(nx), dx
   ! function, 1/r, dx (step of the log. mesh)
   real(DP), intent(out) :: dv(nx)
   ! derivative
-  integer :: nx, method
-  ! dimensions, method used
 
   integer :: i
 

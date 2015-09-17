@@ -39,10 +39,10 @@ subroutine write_results
   !
   !
   dft_name = get_dft_name()
-  write(stdout,'(5x,27(''-''),'' All-electron run '',28(''-''),/)')
+  write(stdout,"(5x,27('-'),' All-electron run ',28('-'),/)")
   write(stdout,1150) title
-  if(rel.eq.1) write(stdout,'(5x,''scalar relativistic calculation'')')
-  if(rel.eq.2) write(stdout,'(5x,''dirac relativistic calculation'')')
+  if(rel.eq.1) write(stdout,"(5x,'scalar relativistic calculation')")
+  if(rel.eq.2) write(stdout,"(5x,'dirac relativistic calculation')")
 1150 format(5x,a75)
   if (zed.ne.0.0) write(stdout,1250) zed
 1250 format(/5x,'atomic number is',f6.2)
@@ -53,9 +53,9 @@ subroutine write_results
   write(stdout,1270) grid%mesh,grid%r(grid%mesh),grid%xmin,grid%dx
 1270 format(5x,'mesh =',i4,' r(mesh) =',f10.5,' a.u. xmin =',f6.2,' dx =',f8.5)
   if (rel==0 .and. .not.relpert) then
-     write(stdout,'(5x "1 Ry = ",f12.8, " eV" )') rytoev_fact
+     write(stdout,'(5x,"1 Ry = ",f12.8, " eV" )') rytoev_fact
   else
-     write(stdout,'(5x "1 Ry = ",f12.8, " eV, c = ",f12.8 )') rytoev_fact, &
+     write(stdout,'(5x,"1 Ry = ",f12.8, " eV, c = ",f12.8 )') rytoev_fact, &
                                                             cau_fact
   endif
   if (rel.lt.2) then
@@ -226,8 +226,8 @@ subroutine write_results
       enddo
       write(stdout,'(5x,"The valence states are: ", a60,/)') vstates 
   endif    
-  if (print_fc) write(6,'(5x,"Total energy of the atom:",/)')
-  write(stdout,'(5x,''Etot ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+  if (print_fc) write(6,"(5x,'Total energy of the atom:',/)")
+  write(stdout,"(5x,'Etot =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')") &
        etot, etot*0.5_dp, etot*rytoev_fact
   if (lsd.eq.1) then
      mm=0.d0
@@ -237,69 +237,58 @@ subroutine write_results
            if (isw(n).eq.2) mm=mm-oc(n)
         endif
      enddo
-     write(stdout,'(5x,''Total magnetization:'',f8.2,'' Bohr mag. '')') mm
+     write(stdout,"(5x,'Total magnetization:',f8.2,' Bohr mag. ')") mm
   endif
   if (print_fc) write(stdout,'(/,5x,"Kinetic energy:")')
-  write(stdout,'(/,5x,''Ekin ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')')&
+  write(stdout,"(/,5x,'Ekin =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')")&
        ekin, ekin*0.5_dp,  ekin*rytoev_fact
   if (print_fc) then
-     write(stdout,'(5x,''Ekinc='',f15.6,'' Ry,'',f15.6,'' Ha,''&
-                                 &,f15.6,'' eV'')')&
+     write(stdout,"(5x,'Ekinc=',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')")&
                    ekinc, ekinc*0.5_dp,  ekinc*rytoev_fact
-     write(stdout,'(5x,''Ekinv='',f15.6,'' Ry,'',f15.6,'' Ha,''&
-                                 &,f15.6,'' eV'')')&
+     write(stdout,"(5x,'Ekinv=',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')")&
                    ekinv, ekinv*0.5_dp,  ekinv*rytoev_fact
      write(stdout,*)
   endif
   if (print_fc) write(6,'(/,5x,"Interaction between the nucleus and &
                                        &the electrons:",/)')
-  write(stdout,'(5x,''Encl ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')')&
+  write(stdout,"(5x,'Encl =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')")&
        encl, encl*0.5_dp, encl*rytoev_fact
   if (print_fc) then
-     write(stdout,&
-       '(5x,''Enclc='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+     write(stdout, "(5x,'Enclc=',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')") &
        enclc, enclc*0.5_dp, enclc*rytoev_fact
-     write(stdout,&
-       '(5x,''Enclv='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+     write(stdout, "(5x,'Enclv=',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')") &
        enclv, enclv*0.5_dp, enclv*rytoev_fact
      write(stdout,*)
   endif   
   if (print_fc) write(6,'(/,5x,"Hartree energy:",/)')
-  write(stdout,'(5x,''Eh   ='',f15.6,'' Ry,'',f15.6, '' Ha,'',f15.6,'' eV'')') &
+  write(stdout,"(5x,'Eh   =',f15.6,' Ry,',f15.6, ' Ha,',f15.6,' eV')") &
        ehrt, ehrt*0.5_dp, ehrt*rytoev_fact
   if (print_fc) then
-     write(stdout,&
-       '(5x,''Ehcc ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+     write(stdout, "(5x,'Ehcc =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')") &
        ehrtcc, ehrtcc*0.5_dp, ehrtcc*rytoev_fact
-     write(stdout,&
-       '(5x,''Ehcv ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+     write(stdout, "(5x,'Ehcv =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')") &
        ehrtcv, ehrtcv*0.5_dp, ehrtcv*rytoev_fact
-     write(stdout,&
-       '(5x,''Ehvv ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+     write(stdout,"(5x,'Ehvv =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')") &
        ehrtvv, ehrtvv*0.5_dp, ehrtvv*rytoev_fact
      write(stdout,*)
   endif
-  if (print_fc) write(stdout, '(/,5x,''Exchange and correlation energy:'',/)') 
-  write(stdout,&
-       '(5x,''Exc  ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+  if (print_fc) write(stdout, "(/,5x,'Exchange and correlation energy:',/)") 
+  write(stdout,"(5x,'Exc  =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')") &
        ecxc, ecxc*0.5_dp, ecxc*rytoev_fact
   if (print_fc)  write(stdout,*)
   if (ABS(evxt)>0.0_DP) then
      if (verbosity=='high') &
-          write(stdout, '(/,5x,''Interaction with the external potential:'')') 
-     write(stdout,&
-       '(5x,''Evxt ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+          write(stdout,"(/,5x,'Interaction with the external potential:')") 
+     write(stdout, "(5x,'Evxt =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')") &
        evxt, evxt*0.5_dp, evxt*rytoev_fact
   endif
   if (print_fc) then
-     write(stdout, '(/,5x,''Estimated frozen-core energy from all-electron calculation:'')') 
-     write(stdout, '(5x,''Efc = Ekinv + Enclv + Ehvv + Ehcv + Exc'')') 
-     write(stdout, '(5x,''Ed = Etot - Efc'',/)') 
-     write(stdout,&
-       '(5x,''Efc  ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+     write(stdout, "(/,5x,'Estimated frozen-core energy from all-electron calculation:')") 
+     write(stdout, "(5x,'Efc = Ekinv + Enclv + Ehvv + Ehcv + Exc')") 
+     write(stdout, "(5x,'Ed = Etot - Efc',/)") 
+     write(stdout, "(5x,'Efc  =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')") &
        ae_fc_energy, ae_fc_energy*0.5_dp, ae_fc_energy*rytoev_fact
-     write(stdout,&
-       '(5x,''Ed   ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+     write(stdout, "(5x,'Ed   =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')") &
       etot-ae_fc_energy, (etot-ae_fc_energy)*0.5_dp, (etot-ae_fc_energy)*rytoev_fact
   endif
 
@@ -449,7 +438,7 @@ subroutine write_results
      endif
   endif
 
-  write(stdout,'(/,5x,24(''-''), '' End of All-electron run '',24(''-''),/)')
+  write(stdout,"(/,5x,24('-'), ' End of All-electron run ',24('-'),/)")
 
   return
 end subroutine write_results

@@ -159,10 +159,10 @@ function compute_log(j1,rj,dx)
        deriv_7pts,  &
        dx,          &
        j1(7),       &
-       rj(2)    
+       rj
 
   !      compute_log=(j1(2)-j1(1))*2.0_dp/( (rj(2)-rj(1))*(j1(2)+j1(1)) )
-  compute_log=deriv_7pts(j1,4,rj(1),dx)/j1(4)
+  compute_log=deriv_7pts(j1,4,rj,dx)/j1(4)
 
   return
 end function compute_log
