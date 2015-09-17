@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{5.2.0}
+\def\version{5.2.1}
 \def\qe{{\sc Quantum ESPRESSO}}
 \def\qeforge{\texttt{qe-forge.org}}
 \textwidth = 17cm
@@ -1976,10 +1976,18 @@ they are not actually used inside the subroutine: some compilers don't
 like it.
 \item Do not use any construct that is susceptible to be flagged as 
 out-of-bounds error, even if no actual out-of-bound error takes place.
-\item Always use IMPLICIT NONE and define all local variables.
-All variables passed as arguments to a routine should be defined as 
+\item Always use IMPLICIT NONE and declare all local variables.
+All variables passed as arguments to a routine should be declared as 
 INTENT (IN), (OUT), or (INOUT). All variables from modules should be
-explicitly specified via USE module, ONLY : variable
+explicitly specified via USE module, ONLY : variable. Variables used
+in an array declaration must be declared first, as in the following
+sxample:
+\begin{verbatim}
+    INTEGER, INTENT(IN)   :: N 
+    REAL(dp), INTENT(OUT) :: A(N) 
+\end{verbatim}
+in this order (some compilers complain if you put the second line 
+before the first).
 \end{itemize}
 
 \subsection{Adding or modifying input variables}
