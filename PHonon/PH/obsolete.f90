@@ -1730,15 +1730,12 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
   USE rap_point_group_is, ONLY : gname_is
   IMPLICIT NONE
 
-  CHARACTER(15), INTENT(OUT) :: name_rap_mode( 3 * nat )
-  INTEGER, INTENT(OUT) :: num_rap_mode ( 3 * nat )
-  INTEGER, INTENT(IN) :: nspin_mag
-
   INTEGER, INTENT(IN) ::             &
        nat,         &
        nsym,        &
        flag,        &
        ntyp,        &
+       nspin_mag,   &
        ityp(nat),   &
        irt(48,nat)
 
@@ -1757,6 +1754,9 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
   LOGICAL, INTENT(IN) :: lri      ! if .true. print the Infrared/Raman flag
   LOGICAL, INTENT(IN) :: lmolecule ! if .true. these are eigenvalues of an
                                    ! isolated system
+
+  CHARACTER(15), INTENT(OUT) :: name_rap_mode( 3 * nat )
+  INTEGER, INTENT(OUT) :: num_rap_mode ( 3 * nat )
 
   REAL(DP), PARAMETER :: eps=1.d-5
 

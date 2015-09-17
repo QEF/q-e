@@ -19,7 +19,7 @@ SUBROUTINE io_pattern (nat,fildrho,nirr,npert,u,xq,directory,iflag)
 !
 !   the i/o variables first
 !
-  INTEGER :: nirr, npert(3*nat), iflag, nat
+  INTEGER :: nirr, iflag, nat, npert(3*nat)
   COMPLEX(DP) :: u(3*nat,3*nat)
   REAL(DP) :: xq(3)
   CHARACTER (len=256),INTENT(in)::  directory ! where to read/write the file

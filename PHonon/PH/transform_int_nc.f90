@@ -125,12 +125,12 @@ USE phus,                 ONLY : int3_nc
 !
 IMPLICIT NONE
 
-INTEGER :: na
+INTEGER :: na, npert
 COMPLEX(DP) :: int3(nhm,nhm,npert,nat,nspin_mag)
 !
 ! ... local variables
 !
-INTEGER :: ih, jh, ipol, np, npert
+INTEGER :: ih, jh, ipol, np
 
 np=ityp(na)
 DO ih = 1, nh(np)

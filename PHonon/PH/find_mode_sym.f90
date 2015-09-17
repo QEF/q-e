@@ -27,8 +27,6 @@ SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, sr, irt, xq,    &
   USE rap_point_group_is, ONLY : gname_is
   IMPLICIT NONE
 
-  INTEGER, INTENT(OUT) :: num_rap_mode ( 3 * nat )
-
   INTEGER, INTENT(IN) ::             &
        nat,         &     ! number of atoms
        nsym,        &     ! number of symmetries
@@ -36,6 +34,7 @@ SUBROUTINE find_mode_sym_new (u, w2, tau, nat, nsym, sr, irt, xq,    &
        ntyp,        &     ! number of atomic types
        ityp(nat),   &     ! the type of each atom
        irt(48,nat)        ! the rotated of each atom
+  INTEGER, INTENT(OUT) :: num_rap_mode ( 3 * nat )
 
   INTEGER, INTENT(OUT) :: ierr ! 0 if the routine determined mode symmetry
 
