@@ -168,7 +168,7 @@ SUBROUTINE new_hamiltonian(plot_bands)
               ! Hoping integrals
               hamh(i,j,current_spin) = hamh(i,j,current_spin) + &
                  pp(i,n)*cmplx(et(n,ik),0.d0,kind=DP)*conjg(pp(j,n))*wk(ik)*&
-                 cdexp( (0.d0,1.d0)*tpi* (xk(1,ik)*hoping(1) + &
+                 exp( (0.d0,1.d0)*tpi* (xk(1,ik)*hoping(1) + &
                      xk(2,ik)*hoping(2) + xk(3,ik)*hoping(3)) )
               ! Current k-point hamiltonian
               hamk(i,j,ik) = hamk(i,j,ik) + pp(i,n)*conjg(pp(j,n))* &

@@ -275,7 +275,7 @@ SUBROUTINE compute_gw( use_gmaps )
         IF (t_single) THEN
            WRITE (io) (((float(s(i,j,k)),j=1,3),i=1,3),k=1,nsym)
         ELSE
-           WRITE (io) (((dfloat(s(i,j,k)),j=1,3),i=1,3),k=1,nsym)
+           WRITE (io) (((dble(s(i,j,k)),j=1,3),i=1,3),k=1,nsym)
         ENDIF
         IF (ii(3) == 1) THEN
            ! READ (10,1020) ((VOFFSET(I,J),I=1,3),J=1,NOP)

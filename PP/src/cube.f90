@@ -93,8 +93,8 @@ SUBROUTINE write_cubefile_new (alat, nat, tau, atm, ityp, x0, &
   USE io_global, ONLY : stdout
   USE cell_base, ONLY : at
   implicit none
-  real(dp), intent(in) :: alat, tau(3,nat)
   integer, intent(in)  :: nat, ityp(nat), ounit, nx, ny, nz
+  real(dp), intent(in) :: alat, tau(3,nat)
   character(len=3)     :: atm(*)
   real(dp), intent(in) :: m1, m2, m3, x0(3), e1(3), e2(3), e3(3), carica(nx,ny,nz)
   integer              :: ia, i, j, k, at_num

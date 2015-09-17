@@ -51,27 +51,25 @@ SUBROUTINE u4ind(u,rcl,l)
    LOGICAL sw3
    EXTERNAL cgk
 
-   INTRINSIC dfloat
-
    mmax=2*l+1
-   xl=dfloat(l)
+   xl=dble(l)
 
    CALL dinit(uc,7*7*7*7)
 
    DO k = 0, 2*l, 2
       k2p1 = k/2 + 1
-      xk = dfloat(k)
+      xk = dble(k)
       cgk0 =  cgk(xl,0.d0,xk,0.d0,xl,0.d0)
       DO ms1 = 1,mmax
-         xm1 = dfloat(ms1-l-1)
+         xm1 = dble(ms1-l-1)
          DO ms2 = 1,mmax
-            xm2 = dfloat(ms2-l-1)
+            xm2 = dble(ms2-l-1)
             DO ms3 = 1,mmax
-               xm3 = dfloat(ms3-l-1)
+               xm3 = dble(ms3-l-1)
                xm  = xm1 - xm3
                DO ms4 = 1,mmax
                   IF ((ms1+ms2-ms3-ms4)/=0) CYCLE
-                  xm4 = dfloat(ms4-l-1)
+                  xm4 = dble(ms4-l-1)
                   cgk1 =  cgk(xl,xm3,xk,xm,xl,xm1)
                   cgk2 =  cgk(xl,xm2,xk,xm,xl,xm4)
                   uc(ms1,ms2,ms3,ms4) = uc(ms1,ms2,ms3,ms4) +         &
