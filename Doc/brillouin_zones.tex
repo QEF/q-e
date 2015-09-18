@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{5.1.0}
+\def\version{5.2.1}
 \def\qe{{\sc Quantum ESPRESSO}}
 \def\qeforge{\texttt{qe-forge.org}}
 \textwidth = 17cm
@@ -7,27 +7,15 @@
 \topmargin =-1 cm
 \oddsidemargin = 0 cm
 
-%\usepackage{html}
 
 % BEWARE: don't revert from graphicx for epsfig, because latex2html
 % doesn't handle epsfig commands !!!
 \usepackage{graphicx}
 \usepackage{amssymb}
 
-
-% \def\htmladdnormallink#1#2{#1}
-
 \def\configure{\texttt{configure}}
 \def\configurac{\texttt{configure.ac}}
 \def\autoconf{\texttt{autoconf}}
-
-\def\qeImage{../../Doc/quantum_espresso.pdf}
-\def\democritosImage{../../Doc/democritos.pdf}
-
-%\begin{htmlonly}
-%\def\qeImage{../../Doc/quantum_espresso.png}
-%\def\democritosImage{../../Doc/democritos.png}
-%\end{htmlonly}
 
 \def\pwx{\texttt{pw.x}}
 \def\phx{\texttt{ph.x}}
@@ -36,13 +24,10 @@
 \def\PHonon{\texttt{PHonon}}
 \def\make{\texttt{make}}
 
-
 \begin{document} 
 \author{}
 \date{}
 \title{
-%  \includegraphics[width=5cm]{\qeImage} \hskip 2cm
-%  \includegraphics[width=6cm]{\democritosImage}\\
   \vskip 1cm
   % title
   \Huge Points inside the Brillouin zone \\
