@@ -13,9 +13,6 @@
 % doesn't handle epsfig commands !!!
 \usepackage{graphicx}
 
-
-% \def\htmladdnormallink#1#2{#1}
-
 \def\configure{\texttt{configure}}
 \def\configurac{\texttt{configure.ac}}
 \def\autoconf{\texttt{autoconf}}
@@ -23,22 +20,14 @@
 \def\Makefile{\texttt{Makefile}}
 
 \def\qeImage{quantum_espresso.pdf}
-\def\democritosImage{democritos.pdf}
-
-\begin{htmlonly}
-\def\qeImage{quantum_espresso.png}
-\def\democritosImage{democritos.png}
-\end{htmlonly}
 
 \begin{document} 
 \author{}
 \date{}
 \title{
-  \includegraphics[width=5cm]{\qeImage} \hskip 2cm
-  \includegraphics[width=6cm]{\democritosImage}\\
-  \vskip 1cm
+  \includegraphics[width=5cm]{\qeImage} \\
   % title
-  \Huge Developer's Manual for \qe (v.\version) \smallskip
+  \Huge Developer's Manual for \\ \qe\ (v.\version) 
 }
 \maketitle
 
@@ -1981,7 +1970,7 @@ All variables passed as arguments to a routine should be declared as
 INTENT (IN), (OUT), or (INOUT). All variables from modules should be
 explicitly specified via USE module, ONLY : variable. Variables used
 in an array declaration must be declared first, as in the following
-sxample:
+example:
 \begin{verbatim}
     INTEGER, INTENT(IN)   :: N 
     REAL(dp), INTENT(OUT) :: A(N) 

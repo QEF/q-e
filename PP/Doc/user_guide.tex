@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{5.2.0}
+\def\version{5.2.1}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -22,7 +22,7 @@
 \def\PHonon{\texttt{PHonon}}
 \def\CP{\texttt{CP}}
 \def\PostProc{\texttt{PostProc}}
-\def\NEB{\texttt{PWneb}} % to be decided
+\def\NEB{\texttt{PWneb}}
 \def\make{\texttt{make}}
 
 \begin{document} 
@@ -30,32 +30,12 @@
 \date{}
 
 \def\qeImage{../../Doc/quantum_espresso.pdf}
-\def\democritosImage{../../Doc/democritos.pdf}
-
-\begin{htmlonly}
-\def\qeImage{quantum_espresso.png}
-\def\democritosImage{democritos.png}
-\end{htmlonly}
 
 \title{
-  \includegraphics[width=5cm]{\qeImage} \hskip 2cm
-  \includegraphics[width=6cm]{\democritosImage}\\
-  \vskip 1cm
+  \includegraphics[width=5cm]{\qeImage} \\
   % title
-  \Huge User's Guide for \PostProc\
-  \Large (version \version)
+  \Huge \PostProc\ User's Guide (v.\version) 
 }
-%\endhtmlonly
-
-%\latexonly
-%\title{
-% \epsfig{figure=quantum_espresso.png,width=5cm}\hskip 2cm
-% \epsfig{figure=democritos.png,width=6cm}\vskip 1cm
-%  % title
-%  \Huge User's Guide for \qe \smallskip
-%  \Large (version \version)
-%}
-%\endlatexonly
 
 \maketitle
 
