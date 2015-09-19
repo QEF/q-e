@@ -76,8 +76,7 @@ PROGRAM X_Spectra
   !
   ! ... local variables
   !
-  INTEGER :: nargs,iiarg,ierr,ios,il,ibnd,ibnd_up,ibnd_dw !,xm_r,nc_r,ncomp_max
-  INTEGER :: iargc
+  INTEGER :: il,ibnd,ibnd_up,ibnd_dw !,xm_r,nc_r,ncomp_max
   !INTEGER :: nt,nb,na,i,j,k,nrest,nline
   INTEGER :: nt,na,i,j,k !nrest,nline
   INTEGER, ALLOCATABLE :: ncalcv(:,:)
