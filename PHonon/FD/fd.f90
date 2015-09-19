@@ -23,6 +23,7 @@ program fd
   USE kinds,      ONLY : dp 
   USE wvfct,      ONLY : ecutwfc
   USE gvect,     ONLY : ecutrho
+  USE wrappers,  ONLY : f_mkdir_safe
 
   USE symm_base
   USE symme
@@ -104,7 +105,7 @@ program fd
     prefix=trim(fd_prefix)
     outdir=trim(fd_outdir)
     tmp_dir = trimcheck( outdir )
-    call system('mkdir '//trim(fd_outfile_dir))
+    ios = f_mkdir_safe( TRIM( fd_outfile_dir ) )
   endif
 
   CALL mp_bcast( outdir, ionode_id, world_comm )

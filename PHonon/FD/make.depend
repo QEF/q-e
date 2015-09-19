@@ -10,6 +10,7 @@ fd.o : ../../Modules/mp.o
 fd.o : ../../Modules/mp_global.o
 fd.o : ../../Modules/mp_world.o
 fd.o : ../../Modules/recvec.o
+fd.o : ../../Modules/wrappers.o
 fd.o : ../../PW/src/pwcom.o
 fd.o : ../../PW/src/symm_base.o
 fd.o : ../../PW/src/symme.o
