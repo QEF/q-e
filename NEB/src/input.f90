@@ -56,8 +56,6 @@ SUBROUTINE ioneb()
   !
   INTEGER  :: ia, image, nt
   REAL(DP) :: theta, phi
-  INTEGER  :: iiarg, nargs, iargc, ierr
-  CHARACTER (len=50) :: arg
   !
   !
   SELECT CASE(trim( string_method ))
