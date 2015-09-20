@@ -9,6 +9,9 @@ SUBROUTINE get_env ( variable_name, variable_value )
   !
   ! Wrapper for intrinsic getenv - all machine-dependent stuff here
   !
+#if defined(__NAG)
+  USE F90_UNIX_ENV, ONLY : getenv
+#endif
   CHARACTER (LEN=*)  :: variable_name, variable_value
   !
   CALL getenv ( variable_name, variable_value)
