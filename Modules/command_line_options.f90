@@ -30,7 +30,8 @@ MODULE command_line_options
   USE mp_world,  ONLY : root, world_comm
   USE io_global, ONLY : meta_ionode
   !
-  IMPLICIT NONE 
+  IMPLICIT NONE
+  !
   SAVE
   !
   ! ... Number of arguments in command line
@@ -47,12 +48,16 @@ MODULE command_line_options
 CONTAINS
   !
   SUBROUTINE get_command_line ( input_command_line )
-
+#if defined(__NAG)
+     USE F90_UNIX_ENV, ONLY : iargc, getarg
+#endif
      IMPLICIT NONE
      CHARACTER(LEN=*), OPTIONAL :: input_command_line 
      INTEGER :: narg
+#if !defined(__NAG)
+     INTEGER  :: iargc
      ! Do not define iargc as external: gfortran doesn't like it
-     INTEGER :: iargc 
+#endif
      LOGICAL :: read_string
      CHARACTER(LEN=256) :: arg 
      CHARACTER(LEN=6), EXTERNAL :: int_to_char

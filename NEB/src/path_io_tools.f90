@@ -13,18 +13,18 @@ FUNCTION input_images_getarg( ) RESULT(input_images)
   ! return N (0 if not found)
   !
   USE kinds,         ONLY : DP
+#if defined(__NAG)
+  USE F90_UNIX_ENV, ONLY : iargc, getarg
+#endif
   !
   IMPLICIT NONE
   !
   INTEGER :: input_images
   CHARACTER(len=256) ::  myname
-  INTEGER  :: iiarg, nargs, iargc, i, i0
-  !
-  !
-#if defined(__ABSOFT)
-#   define getarg getarg_
-#   define iargc  iargc_
+#if !defined(__NAG)
+  INTEGER :: iargc
 #endif
+  INTEGER :: iiarg, nargs, i, i0
   !
   nargs = iargc()
   input_images = 0

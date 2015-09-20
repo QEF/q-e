@@ -110,7 +110,9 @@ Program manip_spectra
   USE kinds, ONLY     : DP
   USE constants,       ONLY : pi
   USE edge_energy, ONLY: getE
-  IMPLICIT NONE
+#if defined(__NAG)
+  USE F90_UNIX_ENV, ONLY : iargc, getarg
+#endif
 ! Input
   LOGICAL             :: shift_spectrum
   REAL(kind=dp)       :: xe0
@@ -121,7 +123,10 @@ Program manip_spectra
 
   LOGICAL                    :: found
   INTEGER                    :: i, j
-  INTEGER                    :: nargs, iiarg, iargc, ierr, ios
+#if !defined(__NAG)
+  INTEGER                    :: iargc
+#endif
+  INTEGER                    :: nargs, iiarg, ierr, ios
   INTEGER                    :: nenergy, istart, i0_l2, nenergy_conv
   REAL(kind=dp)              :: el2, el3, so_splitting, emin_conv, emax_conv, de
   REAL(kind=dp)              :: Ectr, gamma_hole, gamma_max, ee

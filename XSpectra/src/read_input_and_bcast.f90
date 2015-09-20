@@ -24,10 +24,16 @@ subroutine read_input_and_bcast(filerecon, r_paw)
   USE parameters,      ONLY : ntypx,lmaxx,lqmax
   USE control_flags, ONLY : twfcollect
   USE klist, ONLY : nelup, neldw, nelec
+#if defined(__NAG)
+  USE F90_UNIX_ENV, ONLY : iargc, getarg
+#endif
 
   IMPLICIT NONE
-  INTEGER :: nargs, ierr, ios, i
-  INTEGER :: iargc, iiarg
+
+#if !defined(__NAG)
+  INTEGER :: iargc
+#endif
+  INTEGER :: nargs, iiarg, ierr, ios, i
   LOGICAL :: found ! input_file found or not ?
   REAL(DP) :: norm, xeps_dot_xk
   REAL(DP) :: r_paw(0:lmaxx)

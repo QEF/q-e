@@ -5,12 +5,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#if defined(__ABSOFT)
-#  define getarg getarg_
-#  define iargc  iargc_
-#endif
-!
 PROGRAM sumpdos
+  !
+#if defined(__NAG)
+  USE F90_UNIX_ENV, ONLY : iargc, getarg
+#endif
+  !
   IMPLICIT NONE
   !
   ! AUTHOR: Andrea Ferretti
@@ -21,8 +21,9 @@ PROGRAM sumpdos
   ! file names are read from stdin
   ! USAGE: sumpdos <file1> ... <fileN>
   !
+#if !defined(__NAG)
   INTEGER             :: iargc              ! function giving no of arguments
-
+#endif
   INTEGER             :: ngrid              ! dimension of the energy grid
   INTEGER             :: nfile              ! number of files to sum
   INTEGER             :: nspin              ! number of spin_component

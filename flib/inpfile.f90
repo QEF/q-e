@@ -5,12 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#if defined(__ABSOFT)
-#  define getenv getenv_
-#  define getarg getarg_
-#  define iargc  iargc_
-#endif
-!
 SUBROUTINE get_env ( variable_name, variable_value )
   !
   ! Wrapper for intrinsic getenv - all machine-dependent stuff here
@@ -24,7 +18,11 @@ END SUBROUTINE get_env
 SUBROUTINE input_from_file( )
   !
   ! This subroutine checks command-line arguments for -i[nput] "file name"
-  ! if "file nname" is present, attach input unit 5 to the specified file
+  ! if "file name" is present, attach input unit 5 to the specified file
+  !
+#if defined(__NAG)
+  USE F90_UNIX_ENV, ONLY : iargc, getarg
+#endif
   !
   IMPLICIT NONE
   !
@@ -32,10 +30,11 @@ SUBROUTINE input_from_file( )
   CHARACTER (LEN=256) :: input_file
   LOGICAL             :: found
   !
-  INTEGER :: iiarg, nargs
+#if !defined(__NAG)
+  INTEGER  :: iargc
   ! Do not define iargc as external: gfortran doesn't like it
-  INTEGER :: iargc
-  !
+#endif
+  INTEGER :: iiarg, nargs
   !
   nargs = iargc()
   found = .FALSE.

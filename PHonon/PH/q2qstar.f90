@@ -47,7 +47,9 @@ PROGRAM Q2QSTAR
   USE io_dyn_mat,         ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                                  read_dyn_mat, read_dyn_mat_tail, &
                                  write_dyn_mat_header
-
+#if defined(__NAG)
+   USE F90_UNIX_ENV, ONLY : iargc, getarg
+#endif
   !
   IMPLICIT NONE
   !
@@ -63,7 +65,9 @@ PROGRAM Q2QSTAR
   !
   COMPLEX(DP),ALLOCATABLE :: phi(:,:,:,:), d2(:,:)
   INTEGER :: i,j, icar,jcar, na,nb
+#if !defined(__NAG)
   INTEGER :: iargc ! intrinsic function
+#endif
   !
   NAMELIST / input / fildyn
   !

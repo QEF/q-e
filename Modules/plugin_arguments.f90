@@ -19,19 +19,18 @@ SUBROUTINE plugin_arguments()
   USE io_global,     ONLY : stdout
   !
   USE plugin_flags
-  !
+#if defined(__NAG)
+  USE F90_UNIX_ENV, ONLY : iargc, getarg
+#endif
   !
   IMPLICIT NONE
   !
-  INTEGER  :: iiarg, nargs, iargc, i, i0
+#if !defined(__NAG)
+  INTEGER  :: iargc
+#endif
+  INTEGER  :: iiarg, nargs, i, i0
   CHARACTER (len=1), EXTERNAL ::  lowercase
   CHARACTER (len=256) :: arg
-  !
-  !
-#if defined(__ABSOFT)
-#   define getarg getarg_
-#   define iargc  iargc_
-#endif
   !
   nargs = iargc()
   ! add here more plugins
