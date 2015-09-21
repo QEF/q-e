@@ -19,27 +19,22 @@ SUBROUTINE plugin_arguments()
   USE io_global,     ONLY : stdout
   !
   USE plugin_flags
-#if defined(__NAG)
-  USE F90_UNIX_ENV, ONLY : iargc, getarg
-#endif
   !
   IMPLICIT NONE
   !
-#if !defined(__NAG)
-  INTEGER  :: iargc
-#endif
+  INTEGER, EXTERNAL :: i_argc
   INTEGER  :: iiarg, nargs, i, i0
   CHARACTER (len=1), EXTERNAL ::  lowercase
   CHARACTER (len=256) :: arg
   !
-  nargs = iargc()
+  nargs = i_argc()
   ! add here more plugins
   use_plumed = .false.
   use_pw2casino = .false.
   use_environ = .false.
   !
   DO iiarg = 1, nargs 
-    CALL getarg( iiarg, plugin_name)
+    CALL get_arg( iiarg, plugin_name)
     IF ( plugin_name(1:1) == '-') THEN
        i0 = 1
        IF ( plugin_name(2:2) == '-') i0 = 2

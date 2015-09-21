@@ -169,7 +169,7 @@ pw_export.x : pw_export.o libpp.a $(MODULES) $(LIBOBJS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 sumpdos.x : sumpdos.o 
-	$(LD) $(LDFLAGS) -o $@ sumpdos.o
+	$(LD) $(LDFLAGS) -o $@ sumpdos.o $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 epsilon.x : epsilon.o libpp.a $(MODULES) $(LIBOBJS)

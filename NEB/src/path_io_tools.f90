@@ -13,30 +13,25 @@ FUNCTION input_images_getarg( ) RESULT(input_images)
   ! return N (0 if not found)
   !
   USE kinds,         ONLY : DP
-#if defined(__NAG)
-  USE F90_UNIX_ENV, ONLY : iargc, getarg
-#endif
   !
   IMPLICIT NONE
   !
   INTEGER :: input_images
   CHARACTER(len=256) ::  myname
-#if !defined(__NAG)
-  INTEGER :: iargc
-#endif
+  INTEGER, EXTERNAL :: i_argc
   INTEGER :: iiarg, nargs, i, i0
   !
-  nargs = iargc()
+  nargs = i_argc()
   input_images = 0
   !
   DO iiarg = 1, nargs
      !
-     CALL getarg( iiarg, myname)
+     CALL get_arg( iiarg, myname)
      !
      IF ( TRIM( myname ) == '-input_images' .OR. &
           TRIM( myname ) == '--input_images' ) THEN
         !
-        CALL getarg( ( iiarg + 1 ) , myname )
+        CALL get_arg( ( iiarg + 1 ) , myname )
         !
         READ(myname,*) input_images
         RETURN

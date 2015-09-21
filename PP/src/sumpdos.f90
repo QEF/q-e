@@ -7,10 +7,6 @@
 !
 PROGRAM sumpdos
   !
-#if defined(__NAG)
-  USE F90_UNIX_ENV, ONLY : iargc, getarg
-#endif
-  !
   IMPLICIT NONE
   !
   ! AUTHOR: Andrea Ferretti
@@ -21,9 +17,7 @@ PROGRAM sumpdos
   ! file names are read from stdin
   ! USAGE: sumpdos <file1> ... <fileN>
   !
-#if !defined(__NAG)
-  INTEGER             :: iargc              ! function giving no of arguments
-#endif
+  INTEGER, EXTERNAL   :: i_argc             ! function giving no of arguments
   INTEGER             :: ngrid              ! dimension of the energy grid
   INTEGER             :: nfile              ! number of files to sum
   INTEGER             :: nspin              ! number of spin_component
@@ -52,13 +46,13 @@ efermi = 0.0d0
 !
 ! get the number of arguments (i.e. the number of files)
 !
-   nfile = iargc ()
+   nfile = i_argc ()
    IF ( nfile == 0 ) THEN
       WRITE(0,"( 'No file to sum' )")
       STOP
    ENDIF
 
-   CALL getarg ( 1, str1 )
+   CALL get_arg ( 1, str1 )
    !
    SELECT CASE ( trim(str1) )
    CASE ( "-h" )
@@ -79,7 +73,7 @@ efermi = 0.0d0
       !
       ! read file names from file
       !
-      CALL getarg ( 2, filein )
+      CALL get_arg ( 2, filein )
       IF ( len_trim(filein) == 0 ) CALL errore('sumpdos','provide filein name',2)
 
       INQUIRE( FILE=trim(filein), EXIST=exist )
@@ -126,7 +120,7 @@ efermi = 0.0d0
       ALLOCATE( file(nfile), STAT=ierr )
       IF (ierr/=0) CALL errore('sumpdos','allocating FILE',abs(ierr))
       DO iarg = 1, nfile
-         CALL getarg ( iarg, file(iarg) )
+         CALL get_arg ( iarg, file(iarg) )
       ENDDO
 
    END SELECT

@@ -5,27 +5,40 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! Wrappers for intrinsic iargc, getarg, getenv - machine-dependent stuff here
+!
+INTEGER FUNCTION i_argc ( )
+#if defined(__NAG)
+  USE F90_UNIX_ENV, ONLY : iargc
+#else
+  ! do not declare it external: gfortran doesn't like it
+  INTEGER :: iargc
+#endif
+  i_argc = iargc ( )
+END FUNCTION i_argc
+  !
 SUBROUTINE get_env ( variable_name, variable_value )
-  !
-  ! Wrapper for intrinsic getenv - all machine-dependent stuff here
-  !
 #if defined(__NAG)
   USE F90_UNIX_ENV, ONLY : getenv
 #endif
   CHARACTER (LEN=*)  :: variable_name, variable_value
-  !
   CALL getenv ( variable_name, variable_value)
-  !
 END SUBROUTINE get_env
+!
+SUBROUTINE get_arg ( iarg, arg )
+#if defined(__NAG)
+  USE F90_UNIX_ENV, ONLY : getarg
+#endif
+  INTEGER, INTENT(IN) :: iarg
+  CHARACTER (LEN=*), INTENT(OUT) :: arg
+  CALL getarg ( iarg, arg )
+END SUBROUTINE get_arg
+!
 !----------------------------------------------------------------------------
 SUBROUTINE input_from_file( )
   !
   ! This subroutine checks command-line arguments for -i[nput] "file name"
   ! if "file name" is present, attach input unit 5 to the specified file
-  !
-#if defined(__NAG)
-  USE F90_UNIX_ENV, ONLY : iargc, getarg
-#endif
   !
   IMPLICIT NONE
   !
@@ -33,26 +46,23 @@ SUBROUTINE input_from_file( )
   CHARACTER (LEN=256) :: input_file
   LOGICAL             :: found
   !
-#if !defined(__NAG)
-  INTEGER  :: iargc
-  ! Do not define iargc as external: gfortran doesn't like it
-#endif
+  INTEGER, EXTERNAL   :: i_argc
   INTEGER :: iiarg, nargs
   !
-  nargs = iargc()
+  nargs = i_argc()
   found = .FALSE.
   input_file = ' '
   !
   DO iiarg = 1, ( nargs - 1 )
      !
-     CALL getarg( iiarg, input_file )
+     CALL get_arg( iiarg, input_file )
      !
      IF ( TRIM( input_file ) == '-i'     .OR. &
           TRIM( input_file ) == '-in'    .OR. &
           TRIM( input_file ) == '-inp'   .OR. &
           TRIM( input_file ) == '-input' ) THEN
         !
-        CALL getarg( ( iiarg + 1 ) , input_file )
+        CALL get_arg( ( iiarg + 1 ) , input_file )
         found =.TRUE.
         EXIT
         !
@@ -94,11 +104,11 @@ SUBROUTINE get_file( input_file )
   !
   CHARACTER (LEN=256) :: prgname
   INTEGER             :: nargs
-  INTEGER             :: iargc
   LOGICAL             :: exst
+  INTEGER, EXTERNAL   :: i_argc
   !
-  nargs = iargc()
-  CALL getarg (0,prgname)
+  nargs = i_argc()
+  CALL get_arg (0,prgname)
   !
   IF ( nargs == 0 ) THEN
 10   PRINT  '("Input file > ",$)'
@@ -110,7 +120,7 @@ SUBROUTINE get_file( input_file )
         GO TO 10
      END IF
   ELSE IF ( nargs == 1 ) then
-     CALL getarg (1,input_file)
+     CALL get_arg (1,input_file)
   ELSE
      PRINT  '(A,": too many arguments ",i4)', TRIM(prgname), nargs
   END IF

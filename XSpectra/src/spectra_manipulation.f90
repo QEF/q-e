@@ -110,9 +110,6 @@ Program manip_spectra
   USE kinds, ONLY     : DP
   USE constants,       ONLY : pi
   USE edge_energy, ONLY: getE
-#if defined(__NAG)
-  USE F90_UNIX_ENV, ONLY : iargc, getarg
-#endif
 ! Input
   LOGICAL             :: shift_spectrum
   REAL(kind=dp)       :: xe0
@@ -123,9 +120,7 @@ Program manip_spectra
 
   LOGICAL                    :: found
   INTEGER                    :: i, j
-#if !defined(__NAG)
-  INTEGER                    :: iargc
-#endif
+  INTEGER, EXTERNAL          :: i_argc
   INTEGER                    :: nargs, iiarg, ierr, ios
   INTEGER                    :: nenergy, istart, i0_l2, nenergy_conv
   REAL(kind=dp)              :: el2, el3, so_splitting, emin_conv, emax_conv, de
@@ -168,19 +163,19 @@ Program manip_spectra
   ! Read namelist
   !
   
-  nargs = iargc()
+  nargs = i_argc()
   found = .FALSE.
   input_file = ' '
   
   DO iiarg = 1, (nargs-1)
      !
-     CALL getarg( iiarg, input_file )
+     CALL get_arg( iiarg, input_file )
      IF ( TRIM( input_file ) == '-input' .OR. &
           TRIM( input_file ) == '-inp'   .OR. &
           TRIM( input_file ) == '-in'    .OR. &
           TRIM( input_file ) == '-i' ) THEN
         !
-        CALL getarg( ( iiarg + 1 ) , input_file )
+        CALL get_arg( ( iiarg + 1 ) , input_file )
         found = .TRUE.
         EXIT
      ENDIF

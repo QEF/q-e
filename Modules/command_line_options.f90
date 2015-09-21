@@ -48,19 +48,13 @@ MODULE command_line_options
 CONTAINS
   !
   SUBROUTINE get_command_line ( input_command_line )
-#if defined(__NAG)
-     USE F90_UNIX_ENV, ONLY : iargc, getarg
-#endif
      IMPLICIT NONE
      CHARACTER(LEN=*), OPTIONAL :: input_command_line 
      INTEGER :: narg
-#if !defined(__NAG)
-     INTEGER  :: iargc
-     ! Do not define iargc as external: gfortran doesn't like it
-#endif
      LOGICAL :: read_string
      CHARACTER(LEN=256) :: arg 
      CHARACTER(LEN=6), EXTERNAL :: int_to_char
+     INTEGER, EXTERNAL :: i_argc
      !
      command_line = ' '
      read_string = PRESENT ( input_command_line )
@@ -71,7 +65,7 @@ CONTAINS
      IF (read_string) THEN
         nargs = my_iargc ( input_command_line )
      ELSE
-        nargs = iargc()
+        nargs = i_argc()
      ENDIF
      CALL mp_bcast ( nargs, root, world_comm )
      !
@@ -85,7 +79,7 @@ CONTAINS
         IF (read_string) THEN
            CALL my_getarg ( input_command_line, narg, arg )
         ELSE
-           CALL getarg ( narg, arg )
+           CALL get_arg ( narg, arg )
         ENDIF
         narg = narg + 1
         SELECT CASE ( TRIM(arg) )
@@ -93,7 +87,7 @@ CONTAINS
            IF (read_string) THEN
               CALL my_getarg ( input_command_line, narg, input_file_ )
            ELSE
-              CALL getarg ( narg, input_file_ )
+              CALL get_arg ( narg, input_file_ )
            ENDIF
               IF ( TRIM (input_file_) == ' ' ) GO TO 15
               narg = narg + 1
@@ -101,7 +95,7 @@ CONTAINS
               IF (read_string) THEN
                  CALL my_getarg ( input_command_line, narg, arg )
               ELSE
-                 CALL getarg ( narg, arg )
+                 CALL get_arg ( narg, arg )
               ENDIF
               READ ( arg, *, ERR = 15, END = 15) nimage_
               narg = narg + 1
@@ -109,7 +103,7 @@ CONTAINS
               IF (read_string) THEN
                  CALL my_getarg ( input_command_line, narg, arg )
               ELSE
-                 CALL getarg ( narg, arg )
+                 CALL get_arg ( narg, arg )
               ENDIF
               READ ( arg, *, ERR = 15, END = 15) npool_
               narg = narg + 1
@@ -117,7 +111,7 @@ CONTAINS
               IF (read_string) THEN
                  CALL my_getarg ( input_command_line, narg, arg )
               ELSE
-                 CALL getarg ( narg, arg )
+                 CALL get_arg ( narg, arg )
               ENDIF
               READ ( arg, *, ERR = 15, END = 15) ntg_
               narg = narg + 1
@@ -125,7 +119,7 @@ CONTAINS
               IF (read_string) THEN
                  CALL my_getarg ( input_command_line, narg, arg )
               ELSE
-                 CALL getarg ( narg, arg )
+                 CALL get_arg ( narg, arg )
               ENDIF
               READ ( arg, *, ERR = 15, END = 15) nband_
               narg = narg + 1
@@ -133,7 +127,7 @@ CONTAINS
               IF (read_string) THEN
                  CALL my_getarg ( input_command_line, narg, arg )
               ELSE
-                 CALL getarg ( narg, arg )
+                 CALL get_arg ( narg, arg )
               ENDIF
               READ ( arg, *, ERR = 15, END = 15) ndiag_
               narg = narg + 1

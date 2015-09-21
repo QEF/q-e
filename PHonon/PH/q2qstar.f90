@@ -47,9 +47,6 @@ PROGRAM Q2QSTAR
   USE io_dyn_mat,         ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                                  read_dyn_mat, read_dyn_mat_tail, &
                                  write_dyn_mat_header
-#if defined(__NAG)
-   USE F90_UNIX_ENV, ONLY : iargc, getarg
-#endif
   !
   IMPLICIT NONE
   !
@@ -65,19 +62,17 @@ PROGRAM Q2QSTAR
   !
   COMPLEX(DP),ALLOCATABLE :: phi(:,:,:,:), d2(:,:)
   INTEGER :: i,j, icar,jcar, na,nb
-#if !defined(__NAG)
-  INTEGER :: iargc ! intrinsic function
-#endif
+  INTEGER, EXTERNAL :: i_argc ! wrapper for iargc
   !
   NAMELIST / input / fildyn
   !
   CALL mp_startup()
   CALL environment_start(CODE)
   !
-  nargs = iargc()
+  nargs = i_argc()
   IF(nargs < 1) CALL errore(CODE, 'Argument is missing! Syntax: "q2qstar dynfile [outfile]"', 1)
   !
-  CALL getarg(1, fildyn)
+  CALL get_arg(1, fildyn)
   CALL mp_bcast(fildyn, ionode_id,world_comm)
   !
   ! check input
@@ -86,7 +81,7 @@ PROGRAM Q2QSTAR
   !
   ! set up output
   IF (nargs > 1) THEN
-    CALL getarg(2, filout)
+    CALL get_arg(2, filout)
   ELSE
       filout = TRIM(fildyn)//".rot"
   ENDIF

@@ -24,15 +24,10 @@ subroutine read_input_and_bcast(filerecon, r_paw)
   USE parameters,      ONLY : ntypx,lmaxx,lqmax
   USE control_flags, ONLY : twfcollect
   USE klist, ONLY : nelup, neldw, nelec
-#if defined(__NAG)
-  USE F90_UNIX_ENV, ONLY : iargc, getarg
-#endif
 
   IMPLICIT NONE
 
-#if !defined(__NAG)
-  INTEGER :: iargc
-#endif
+  INTEGER, EXTERNAL :: i_argc
   INTEGER :: nargs, iiarg, ierr, ios, i
   LOGICAL :: found ! input_file found or not ?
   REAL(DP) :: norm, xeps_dot_xk
@@ -105,19 +100,19 @@ subroutine read_input_and_bcast(filerecon, r_paw)
 
      ! This part is similar to subroutine input_from_file (in flib/inpfile.f90)
 
-     nargs = iargc()
+     nargs = i_argc()
      found = .FALSE.
      input_file = ' '
     
      DO iiarg = 1, (nargs-1)
        !
-       CALL getarg( iiarg, input_file )
+       CALL get_arg( iiarg, input_file )
        IF ( TRIM( input_file ) == '-input' .OR. &
             TRIM( input_file ) == '-inp'   .OR. &
             TRIM( input_file ) == '-in'    .OR. &
             TRIM( input_file ) == '-i' ) THEN
           !
-          CALL getarg( ( iiarg + 1 ) , input_file )
+          CALL get_arg( ( iiarg + 1 ) , input_file )
           found = .TRUE.
           EXIT
        ENDIF
