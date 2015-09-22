@@ -268,7 +268,7 @@
             alpha=alpha+1
             do ipol = 1,3
                call dndtau(alpha_a,alpha_s,becwfc,spsi,bp,dbp,wdb,          &
-                           offset,wfcU,eigr,betae,proj,ipol,nb_s,nb_e,mykey,&
+                           offset,wfcU,eigr,proj,ipol,nb_s,nb_e,mykey,&
                            dns)
                iat=0
                do is = 1, nsp
@@ -398,8 +398,7 @@
 !
 !-------------------------------------------------------------------------
       subroutine dndtau(alpha_a,alpha_s,becwfc,spsi,bp,dbp,wdb,         &
-                        offset,wfcU,eigr,betae, proj,ipol,nb_s,nb_e,mykey,&
-                        dns)
+                        offset,wfcU,eigr,proj,ipol,nb_s,nb_e,mykey,dns)
 !-----------------------------------------------------------------------
 !
 ! This routine computes the derivative of the ns with respect to the ionic
@@ -421,11 +420,9 @@
       integer,      intent(in) :: offset(nsp,nat)
       integer,      intent(in) :: alpha_a,alpha_s,ipol
       INTEGER,      INTENT(in) :: nb_s, nb_e, mykey
-      real(DP),     intent(in) :: wfcU(ngw,nwfcU),                &
-     &                            eigr(2,ngw,nat),betae(2,ngw,nhsa),    &
-     &                            becwfc(nhsa,nwfcU),            &
-     &                            bp(nhsa,n), dbp(nhsa,nx,3),           &
-                                  wdb(nhsa,nwfcU,3)
+      COMPLEX(dp),  INTENT(in) :: wfcU(ngw,nwfcU), eigr(ngw,nat)
+      REAL(dp),     INTENT(IN) :: becwfc(nhsa,nwfcU), bp(nhsa,n), &
+                                  dbp(nhsa,nx,3), wdb(nhsa,nwfcU,3)
       real(DP),     intent(in) :: proj(nwfcU,n)
       complex (DP), intent(in) :: spsi(ngw,n)
 ! output
@@ -513,9 +510,9 @@
        complex (DP), intent(in) :: spsi(ngw,n),                     &
      &                   eigr(ngw,nat)
 ! input: S|evc>, structure factors
-       real(DP), intent(in) ::becwfc(nhsa,nwfcU),            &
-     &                          wfcU(2,ngw,nwfcU),           &
+       real(DP), intent(in) ::becwfc(nhsa,nwfcU), &
      &            bp(nhsa,n), dbp(nhsa,nx,3), wdb(nhsa,nwfcU,3)
+       COMPLEX(dp), INTENT(IN) :: wfcU(ngw,nwfcU)
        real(DP), intent(out) :: dproj(nwfcU,nb_s:nb_e)
 ! output: the derivative of the projection
 !
@@ -544,8 +541,8 @@
          do ig=1,ngw
             gvec = g(ipol,ig)*tpiba 
             do m1=1,ldim
-               dwfc(ig,m1) = CMPLX (gvec*wfcU(2,ig,offset+m1),      &
-     &                             -gvec*wfcU(1,ig,offset+m1), kind=dp )
+               dwfc(ig,m1) = CMPLX (gvec*AIMAG(wfcU(ig,offset+m1)),      &
+     &                             -gvec* DBLE(wfcU(ig,offset+m1)), kind=dp )
             end do
          end do
          !
