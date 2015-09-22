@@ -5,10 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !  
-#if defined(__XLF) || defined(__ABSOFT)
-   #define flush flush_
-#endif
-!
 !----------------------------------------------------------------------------
 SUBROUTINE flush_unit( unit_tobeflushed )
   !----------------------------------------------------------------------------
@@ -21,7 +17,15 @@ SUBROUTINE flush_unit( unit_tobeflushed )
   !
   INQUIRE( UNIT = unit_tobeflushed, OPENED = opnd )
   !
+#if defined(__XLF)
+  IF ( opnd ) CALL flush_( unit_tobeflushed )
+#else
+#if defined(__NAG)
+  IF ( opnd ) FLUSH( unit_tobeflushed )
+#else
   IF ( opnd ) CALL flush( unit_tobeflushed )
+#endif
+#endif
   !
   RETURN
   !

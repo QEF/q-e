@@ -889,7 +889,7 @@ SUBROUTINE check_paw_projectors(xiabs)
            ENDDO
         ENDIF
         WRITE(stdout,*)
-        call flush(stdout)
+        call flush_unit(stdout)
         DEALLOCATE(s,e,v)
      ENDIF
   ENDDO
