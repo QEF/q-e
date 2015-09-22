@@ -473,8 +473,8 @@ CONTAINS
     INTEGER, INTENT(IN) :: nproc ! number of procs in the communicator
     INTEGER, INTENT(IN) :: comm  ! communicator
 
-    INTEGER, INTENT(IN) :: ig_l2g1(ngwl1),ig_l2g2(ngwl2)
     INTEGER, INTENT(IN) :: ngwl1,ngwl2
+    INTEGER, INTENT(IN) :: ig_l2g1(ngwl1),ig_l2g2(ngwl2)
     ! Global maximum number of G vectors for both grids
     INTEGER, INTENT(in) :: n_g
 

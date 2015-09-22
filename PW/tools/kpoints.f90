@@ -48,47 +48,47 @@ program special_points
      nshift(i)=0
   enddo
   !
-  write(*,'(5x,a,$)') 'bravais lattice  >> '
+  write(*,'(5x,a)', advance="no") 'bravais lattice  >> '
   read(*,*) ibrav
   !   
-  write(*,'(5x,a,$)') 'filout [mesh_k]  >> '
+  write(*,'(5x,a)',advance="no") 'filout [mesh_k]  >> '
   read(*,'(a)') filout
   if (filout.eq.' ') filout='mesh_k'
   open(unit=1,file=filout,status='unknown')
   open(unit=2,file='info',status='unknown')
   !
   if(ibrav.eq.4 .or. ibrav.gt.5) then
-     write(*,'(5x,a,$)') 'enter celldm(3)  >> '
+     write(*,'(5x,a)',advance="no") 'enter celldm(3)  >> '
      read(*,*) celldm(3)
   end if
   if(ibrav.ge.8) then
-     write(*,'(5x,a,$)') 'enter celldm(2)  >> '
+     write(*,'(5x,a)',advance="no") 'enter celldm(2)  >> '
      read(*,*) celldm(2)
   end if
   if(ibrav.eq.5 .or. ibrav.ge.12) then
-     write(*,'(5x,a,$)') 'enter celldm(4)  >> '
+     write(*,'(5x,a)',advance="no") 'enter celldm(4)  >> '
      read(*,*) celldm(4)
   end if
   if(ibrav.eq.14) then
      write(*,'(5x,a)')   'enter celldm(5)  >> cos(ac)'
-     write(*,'(5x,a,$)') 'enter celldm(5)  >> '
+     write(*,'(5x,a)',advance="no") 'enter celldm(5)  >> '
      read(*,*) celldm(5)
      write(*,'(5x,a)')   'enter celldm(6)  >> cos(ab)'
-     write(*,'(5x,a,$)') 'enter celldm(6)  >> '
+     write(*,'(5x,a)',advance="no") 'enter celldm(6)  >> '
      read(*,*) celldm(6)
   end if
   !
-  write(*,'(5x,a,$)') 'mesh: n1 n2 n3   >> '
+  write(*,'(5x,a)',advance="no") 'mesh: n1 n2 n3   >> '
   read(*,*) nmax
   nptot=nmax(1)*nmax(2)*nmax(3)
   if(nptot.gt.nptx) then
      write(*,'(5x,i6)') nptx
      call errore('kpoints','nptx too small for this mesh',1)
   endif
-  write(*,'(5x,a,$)') 'mesh: k1 k2 k3 (0 no shift, 1 shifted)  >> '
+  write(*,'(5x,a)',advance="no") 'mesh: k1 k2 k3 (0 no shift, 1 shifted) >> '
   read(*,*) nshift(1), nshift(2), nshift(3)
   !
-  write(*,'(5x,a,$)') 'write all k? [f] >> '
+  write(*,'(5x,a)',advance="no") 'write all k? [f] >> '
   read(*,'(a1)') answer
   aflag= answer.eq.'t'.or.answer.eq.'T' .or.                        &
          answer.eq.'y'.or.answer.eq.'Y' .or.                        &
@@ -173,7 +173,7 @@ program special_points
      endif
   enddo
   !
-  write(*,'(/5x,a,$)') '# of k-points   == '
+  write(*,'(/5x,a)',advance="no") '# of k-points   == '
   write(*,'(i5,a5,i5)') nk,'  of ',n
   write(*,'(2x)')
   !

@@ -18,7 +18,7 @@ program fqha
   character(len=256) :: filename
   !
   !
-  write (*,"('File containing the dos >>> ',$)")
+  write (*,"('File containing the dos >>> ')",advance="no")
   read(*,'(a)') filename
   open(unit=1,file=filename,status='old')
   !
@@ -50,8 +50,8 @@ program fqha
   F0 = F0 / 8065.5d0 / 13.6058d0
   ! normalization check: \sum g(omega) d\omega = 3*Nat
   norm = sum (dos(1:ndiv)) * de
-  write(*,"('Check: 3*Nat = ',f8.4,5x'zero-point energy (Ry)=',f15.8)") norm,F0
-  write (*,"('Output file for the Free energy >>> ',$)")
+  write(*,"('Check: 3*Nat = ',f8.4,5x,'zero-point energy (Ry)=',f15.8)") norm,F0
+  write (*,"('Output file for the Free energy >>> ')",advance="no")
   read(*,'(a)') filename
   if ( filename == ' ') then
      filename = 'fqha.out'
@@ -60,7 +60,7 @@ program fqha
   open(unit=1,file=filename,status='unknown')
   !
 1 continue
-  write (*,"('Temperature (K) >>> ',$)")
+  write (*,"('Temperature (K) >>> ')",advance="no")
   read (*,*,end=20,err=20) T
   if ( T < 0d0 ) then
      write(*,"('Incorrect T < 0, stopping')")

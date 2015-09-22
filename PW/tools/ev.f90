@@ -78,12 +78,12 @@ PROGRAM ev
   !
   IF ( ionode ) THEN
 
-      PRINT '(5x,"Lattice parameter or Volume are in (au, Ang) > ",$)'
+      PRINT '(5x,"Lattice parameter or Volume are in (au, Ang) > "), advance="NO"'
       READ '(a)', au_unit
       in_angstrom = au_unit=='Ang' .or. au_unit=='ANG' .or. &
                     au_unit=='ang'
       IF (in_angstrom) PRINT '(5x,"Assuming Angstrom")'
-      PRINT '(5x,"Enter type of bravais lattice (fcc, bcc, sc, noncubic) > ",$)'
+      PRINT '(5x,"Enter type of bravais lattice (fcc, bcc, sc, noncubic) > "), advance="NO"' 
       READ '(a)',bravais
 !
       IF(trim(bravais)=='fcc'.or.trim(bravais)=='FCC') THEN
@@ -102,7 +102,7 @@ PROGRAM ev
       ENDIF
 !
       PRINT '(5x,"Enter type of equation of state :"/&
-             &5x,"1=birch1, 2=birch2, 3=keane, 4=murnaghan > ",$)'
+             &5x,"1=birch1, 2=birch2, 3=keane, 4=murnaghan > "), advance="NO"'
       READ *,istat
       IF(istat==1 .or. istat==4) THEN
          npar=3
@@ -112,7 +112,7 @@ PROGRAM ev
          PRINT '(5x,"Unexpected eq. of state ",i2)', istat
          STOP
       ENDIF
-      PRINT '(5x,"Input file > ",$)'
+      PRINT '(5x,"Input file > "), advance="NO"'
       READ '(a)',filin
       OPEN(unit=2,file=filin,status='old',form='formatted',iostat=ierr)
       IF (ierr/=0) THEN
@@ -272,7 +272,7 @@ PROGRAM ev
       INTEGER :: i, iun
       LOGICAL :: exst
 
-      PRINT '(5x,"Output file > ",$)'
+      PRINT '(5x,"Output file > "), advance="NO"' 
       READ '(a)',filout
       IF(filout/=' ') THEN
          iun=8

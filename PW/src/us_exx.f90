@@ -41,9 +41,9 @@ MODULE us_exx
     !         w(i)          if i==imax
     !         iw(i+1)       if i==imin-1
     !         0             otherwise
+    INTEGER,INTENT(in)  :: m, n, imin, imax, i
     COMPLEX(DP) :: bexg_merge(m)
     !
-    INTEGER,INTENT(in)  :: m,n, imin, imax, i
     REAL(DP),INTENT(in) :: w(m,n)
     !
     bexg_merge = (0._dp, 0._dp)

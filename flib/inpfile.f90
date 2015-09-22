@@ -111,7 +111,7 @@ SUBROUTINE get_file( input_file )
   CALL get_arg (0,prgname)
   !
   IF ( nargs == 0 ) THEN
-10   PRINT  '("Input file > ",$)'
+10   PRINT  '("Input file > "), advance="NO"'     
      READ (5,'(a)', end = 20, err=20) input_file
      IF ( input_file == ' ') GO TO 10
      INQUIRE ( FILE = input_file, EXIST = exst )
