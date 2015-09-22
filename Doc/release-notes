@@ -1,6 +1,7 @@
 New in 5.2.1 version:
 
-   * svdW-DF - a proper spin version of vdW-DF (courtesy of Timo Thonhauser)
+   * svdW-DF, a proper spin version of vdW-DF (PRL 115, 136402 (2015);
+     courtesy of Timo Thonhauser)
    * XSpectra: various improvements, extension to L_23 edges
    * ESM: various improvements, constant-bias (PRL 109, 266101 (2012))
      calculations for both pw.x and neb.x (courtesy of Minoru Otani)

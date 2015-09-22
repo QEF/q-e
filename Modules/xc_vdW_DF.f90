@@ -25,7 +25,7 @@ MODULE vdW_DF
 ! The proper spin extension of vdW-DF, i.e. svdW-DF, is derived in
 !
 !    T. Thonhauser, S. Zuluaga, C.A. Arter, K. Berland, E. Schroder,
-!    and P. Hyldgaard, Phys. Rev. Lett., in print (2015), arXiv:1509.03759.
+!    and P. Hyldgaard, Phys. Rev. Lett. 115, 136402 (2015).
 !
 ! henceforth referred to as THONHAUSER.
 !
@@ -2074,7 +2074,7 @@ CONTAINS
   WRITE(stdout,'(5x,"% Please cite the following two papers that made this development      %")')
   WRITE(stdout,'(5x,"% possible and the two reviews that describe the various versions:     %")')
   WRITE(stdout,'(5x,"%                                                                      %")')
-  WRITE(stdout,'(5x,"%   T. Thonhauser et al., PRL, in print (2015), arXiv:1509.03759.      %")')
+  WRITE(stdout,'(5x,"%   T. Thonhauser et al., PRL 115, 136402 (2015).                      %")')
   WRITE(stdout,'(5x,"%   T. Thonhauser et al., PRB 76, 125112 (2007).                       %")')
   WRITE(stdout,'(5x,"%   K. Berland et al., Rep. Prog. Phys. 78, 066501 (2015).             %")')
   WRITE(stdout,'(5x,"%   D.C. Langreth et al., J. Phys.: Condens. Matter 21, 084203 (2009). %")')
