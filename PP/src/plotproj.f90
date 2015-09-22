@@ -112,7 +112,7 @@ PROGRAM plotproj
   ENDDO
   CLOSE(1)
 
-  PRINT '("output file > ",$)'
+  PRINT '("output file > "), advance="NO"'
   READ(5,'(a)', END=25, ERR=25)  filename
 
   IF (filename == ' ' ) THEN

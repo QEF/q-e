@@ -302,10 +302,10 @@ PROGRAM molecularpdos
         !
         DO ie=0,ne
            etev = Emin + ie * DeltaE
-           WRITE(12,'(i11," ",$)') ibnd_part
-           WRITE(12,'(f7.3,$)') etev*rytoev
+           WRITE(12,'(i11," "), advance="NO"') ibnd_part
+           WRITE(12,'(f7.3), advance="NO"') etev*rytoev
            DO is=1,nspin
-              WRITE(12,'(e11.3,$)') mopdos(ibnd_part,ie,is)
+              WRITE(12,'(e11.3), advance="NO"') mopdos(ibnd_part,ie,is)
            END DO
            WRITE(12,'()')
         END DO
@@ -335,9 +335,9 @@ PROGRAM molecularpdos
      END IF
      DO ie=0,ne
         etev = Emin + ie * DeltaE
-        WRITE(13,'(f7.3,$)') etev*rytoev
+        WRITE(13,'(f7.3), advance="NO"') etev*rytoev
         DO is=1,nspin
-           WRITE(13,'(e11.3,$)') mopdostot(ie,is)
+           WRITE(13,'(e11.3), advance="NO"') mopdostot(ie,is)
         END DO
         WRITE(13,'()')
      END DO

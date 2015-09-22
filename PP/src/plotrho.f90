@@ -65,7 +65,7 @@ PROGRAM plotrho
   WRITE( stdout, '("read",i4," atomic positions")') nat
   !      WRITE( stdout,'("Atomic positions:")')
   !      WRITE( stdout,'(3f8.4)') ( (tau(j,na),j=1,3),na=1,nat)
-  WRITE( stdout, '("output file > ",$)')
+  WRITE( stdout, '("output file > "), advance="NO"')
 
   READ (5, '(a)') fileout
 
@@ -74,7 +74,7 @@ PROGRAM plotrho
   !
   ! interpolation implemented only for ESSL routines ...
   !
-  WRITE( stdout, '("nx, ny (output) > ",$)')
+  WRITE( stdout, '("nx, ny (output) > "), advance="NO"')
   READ (5, * ) nx, ny
 #else
   nx = nxi
@@ -102,7 +102,7 @@ PROGRAM plotrho
   rhomax = maxval (rhoo(0:nx, 0:ny))
 
   IF (rhomin > 0.d0) THEN
-     WRITE( stdout,'("Logarithmic scale (y/n)? > ",$)')
+     WRITE( stdout,'("Logarithmic scale (y/n)? > "), advance="NO"')
      READ (5, '(a)') ans
      logarithmic_scale = ans/='n'.and.ans/='N'
   ELSE
@@ -110,7 +110,7 @@ PROGRAM plotrho
   ENDIF
 10 CONTINUE
   WRITE( stdout, '("Bounds: ",2f12.6)') rhomin, rhomax
-  WRITE( stdout, '("min, max, # of levels > ",$)')
+  WRITE( stdout, '("min, max, # of levels > "), advance="NO"')
   READ (5, * ) rhoomin, rhoomax, nlevels
   IF ( rhoomax <= rhoomin .or. &
        rhoomin >= rhomax .or. rhoomax <= rhomin ) THEN
@@ -304,7 +304,7 @@ SUBROUTINE conrec (imax, iub, jmax, jub, x, y, d, nc, z)
   CALL hatch (xx, xx + dx, y (0), y (jub) )
   DO k = 0, nc
      yy = y (jub) - k * dy
-     WRITE (1, '(8f6.1,$)') xx * cm, yy * cm, (xx + dx) * cm, yy * cm, &
+     WRITE (1, '(8f6.1), advance="NO"') xx * cm, yy * cm, (xx + dx) * cm, yy * cm, &
           (xx + dx) * cm, (yy - dy) * cm, xx * cm, (yy - dy) * cm
      IF (k < 10) THEN
         WRITE (triangle (k) , '(" t",i1,1x)') k

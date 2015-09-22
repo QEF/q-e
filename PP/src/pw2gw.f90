@@ -1134,8 +1134,8 @@ subroutine gen_us_djl (ik,npw,djl,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   !
   implicit none
   !
-  real(DP), intent(inout) ::djl(1:npw)
   integer, intent(in) :: ik, npw
+  real(DP), intent(inout) ::djl(1:npw)
   integer, intent(in) :: size_tab
   real(DP), intent(in) :: vec_tab(1:size_tab)
   real(DP), intent(in) :: vec_tab_d2y(1:size_tab)
@@ -1221,8 +1221,8 @@ subroutine gen_us_vkb0 (ik,npw,vkb0,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   !
   implicit none
   !
-  real(DP), intent(inout) ::vkb0(1:npw)
   integer, intent(in) :: ik, npw
+  real(DP), intent(inout) ::vkb0(1:npw)
   integer, intent(in) :: size_tab
   real(DP), intent(in) :: vec_tab(1:size_tab)
   real(DP), intent(in) :: vec_tab_d2y(1:size_tab)

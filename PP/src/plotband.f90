@@ -163,7 +163,7 @@ PROGRAM plotband
   !!!
   IF (exist_proj) THEN
      atwfclst(:) = -1
-     PRINT '("List of atomic wavefunctions: ",$)'
+     PRINT '("List of atomic wavefunctions: "), advance="NO"'
      READ (5,'(A)') line
      CALL field_count( nprojwfc, line )
      DO nwfc = 1,nprojwfc
@@ -246,7 +246,7 @@ PROGRAM plotband
         emax = max(emax, e(i,n))
      ENDDO
   ENDDO
-  PRINT '("Range:",2f10.4,"eV  Emin, Emax > ",$)', emin, emax
+  PRINT '("Range:",2f10.4,"eV  Emin, Emax > "), advance="NO"', emin, emax
   READ(5,*) emin, emax
 !
 !  Since the minimum and miximum energies are given in input we can
@@ -306,7 +306,7 @@ PROGRAM plotband
      ENDIF
   ENDDO
   !
-  PRINT '("output file (xmgr) > ",$)'
+  PRINT '("output file (xmgr) > "), advance="NO"'
   READ(5,'(a)', end=25, err=25)  filename
   IF (filename == ' ' ) THEN
      PRINT '("skipping ...")'
@@ -502,7 +502,7 @@ PROGRAM plotband
      DEALLOCATE(sumproj)
      DEALLOCATE(p_rap)
   ENDIF
-  PRINT '("output file (ps) > ",$)'
+  PRINT '("output file (ps) > "), advance="NO"'
   READ(5,'(a)',end=30,err=30)  filename
   IF (filename == ' ' ) THEN
      PRINT '("stopping ...")'
@@ -510,9 +510,9 @@ PROGRAM plotband
   ENDIF
   OPEN (unit=1,file=TRIM(filename),form='formatted',status='unknown',&
        iostat=ios)
-  PRINT '("Efermi > ",$)'
+  PRINT '("Efermi > "), advance="NO"'
   READ(5,*) Ef
-  PRINT '("deltaE, reference E (for tics) ",$)'
+  PRINT '("deltaE, reference E (for tics) "), advance="NO"'
   READ(5,*) deltaE, eref
   !
   WRITE (1,'(a)') '%! PS-Adobe-1.0'
