@@ -9,6 +9,7 @@ New in 5.2.1 version:
 Incompatible changes in 5.2.1 version:
 
    * "pot" parallelization level, no longer used, removed   
+   * Obsolete calls to SCSL and SUNPERF library FFTs removed
 
 Fixed in 5.2.1 version:
 
@@ -21,6 +22,7 @@ Fixed in 5.2.1 version:
    * XSpectra: v.5.1.2 and 5.2.0 contained a bug in parallelization that could
      lead to incorrect results     
    * TDDFPT: mismatch between actual and expected format of save file
+   * Various fixes for compilation on NAG compiler
 
 Incompatible changes in 5.2.0 version:
 
