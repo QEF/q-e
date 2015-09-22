@@ -77,7 +77,7 @@ PROGRAM interpolate
   !
   is=2
   PRINT '('' Read the pseudo to be converted '')'
-  PRINT '('' Input PP file in UPF format > '',$)'
+  PRINT '('' Input PP file in UPF format > ''), advance="NO"'
   READ (5, '(a)', end = 20, err = 20) filein(is)
   OPEN(unit=iunps,file=filein(is),status='old',form='formatted',iostat=ios)
   IF (ios/=0) STOP
@@ -88,7 +88,7 @@ PROGRAM interpolate
   !
 10 CONTINUE
   PRINT '('' radial mesh : r(i) = exp ( xmin + (i-1) *dx )/ Z_ion '')'
-  WRITE(*,'(a,$)') " xmin, dx [typical values -7.0, 0.0125 ] > "
+  WRITE(*,'(a), advance="NO"') " xmin, dx [typical values -7.0, 0.0125 ] > "
   READ (*,*) xmin, dx
 
   CALL interpolate_ps(filein,xmin,dx)
@@ -217,7 +217,7 @@ SUBROUTINE interpolate_ps(filein,xmin,dx)
   !pp_nlcc
   ALLOCATE( upf_rho_atc(upf_mesh) )
   IF (interpolate) THEN
-     WRITE (*,'(a,$)') "interpolate rho_atc"
+     WRITE (*,'(a), advance="NO"') "interpolate rho_atc"
      aux2(1,1:mesh(2)) = rho_atc(1:mesh(2),2)
      CALL dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
      rho_atc(1:upf_mesh,2) = aux1(1,1:upf_mesh)
@@ -228,7 +228,7 @@ SUBROUTINE interpolate_ps(filein,xmin,dx)
   !pp_local
   ALLOCATE( upf_vloc0(upf_mesh) )
   IF (interpolate) THEN
-     WRITE (*,'(a,$)') " interpolate vloc0"
+     WRITE (*,'(a), advance="NO"') " interpolate vloc0"
      aux2(1,1:mesh(2)) =  vloc0(1:mesh(2),2)
 
      CALL dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
@@ -259,7 +259,7 @@ SUBROUTINE interpolate_ps(filein,xmin,dx)
   DO i=1,nbeta(2)
      ib  = ib + 1
      IF (interpolate) THEN
-     WRITE (*,'(a,$)') " interpolate betar"
+     WRITE (*,'(a), advance="NO"') " interpolate betar"
         aux2(1,1:mesh(2)) = betar(1:mesh(2),i,2)
         CALL dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
         betar(1:upf_mesh,i,2) = aux1(1,1:upf_mesh)
@@ -303,7 +303,7 @@ SUBROUTINE interpolate_ps(filein,xmin,dx)
      DO j=1,nbeta(2)
         upf_qqq(i,j) = qqq(i, j, 2)
         IF (interpolate) THEN
-     WRITE (*,'(a,$)') " interpolate qfunc"
+     WRITE (*,'(a), advance="NO"') " interpolate qfunc"
            aux2(1,1:mesh(2) ) = qfunc(1:mesh(2),i,j,2)
            CALL dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
            qfunc(1:upf_mesh,i,j,2) = aux1(1,1:upf_mesh)
@@ -329,7 +329,7 @@ SUBROUTINE interpolate_ps(filein,xmin,dx)
 
   DO i=1,ntwfc(2)
      IF (interpolate) THEN
-        WRITE (*,'(a,$)') " interpolate chi"
+        WRITE (*,'(a), advance="NO"') " interpolate chi"
         aux2(1,1:mesh(2)) = chi(1:mesh(2),i,2)
         CALL dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
         chi(1:upf_mesh,i,2) = aux1(1,1:upf_mesh)
@@ -343,7 +343,7 @@ SUBROUTINE interpolate_ps(filein,xmin,dx)
 
   ALLOCATE (upf_rho_at(upf_mesh) )
   IF (interpolate) THEN
-     WRITE (*,'(a,$)') " interpolate rho_at"
+     WRITE (*,'(a), advance="NO"') " interpolate rho_at"
      aux2(1,1:mesh(2)) = rho_at(1:mesh(2),2)
      CALL dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
      rho_at(1:upf_mesh,2) = aux1(1,1:upf_mesh)

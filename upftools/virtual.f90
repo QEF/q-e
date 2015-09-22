@@ -89,7 +89,7 @@ PROGRAM virtual
   PRINT '('' '')'
   !
   DO is=1,2
-     PRINT '(''  Input PP file # '',i2,'' in UPF format > '',$)', is
+     PRINT '(''  Input PP file # '',i2,'' in UPF format > ''), advance="NO"', is
      READ (5, '(a)', end = 20, err = 20) filein(is)
      OPEN(unit=iunps,file=filein(is),status='old',form='formatted',iostat=ios)
      IF (ios/=0) STOP
@@ -100,7 +100,7 @@ PROGRAM virtual
   ENDDO
   PRINT '('' New Pseudo = x '',a,'' + (1-x) '',a)', (trim(filein(is)), is=1,2)
 10 CONTINUE
-  PRINT '('' mixing parameter x [0<x<1] = '',$)'
+  PRINT '('' mixing parameter x [0<x<1] = ''), advance="NO"'
   READ (5,*) x
   IF (x<0.d0 .or. x>1)  GOTO 10
 

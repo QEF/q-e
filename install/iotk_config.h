@@ -36,7 +36,7 @@
 !    #define __IOTK_REAL2 selected_real_kind(14,200)
 ! so we use explicit kinds
 
-! Something from an acirnt past that probably is not valid anymore...
+! Something from an ancient past that probably is not valid anymore...
 ! #if defined(__NAG)
 ! #   define __IOTK_REAL1 1
 ! #   define __IOTK_REAL2 2

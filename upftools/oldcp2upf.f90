@@ -132,7 +132,7 @@ SUBROUTINE convert_oldcp
   ALLOCATE(lchi(nwfs), nns(nwfs) )
   ALLOCATE(rcut (nwfs), rcutus (nwfs))
   DO i=1, nwfs
-     PRINT '("Wavefunction # ",i1,": label, occupancy > ",$)', i
+     PRINT '("Wavefunction # ",i1,": label, occupancy > "), advance="NO"', i
      READ (5,*) els(i), oc(i)
      nns (i)  = 0
      lchi(i)  = i-1

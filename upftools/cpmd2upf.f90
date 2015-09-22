@@ -379,10 +379,10 @@ SUBROUTINE convert_cpmd(upf)
      lloc = -3
      rcloc=0.0
   ELSE
-     PRINT '("max L to use ( <= ",I1," ) > ",$)', lmax
+     PRINT '("max L to use ( <= ",I1," ) > "), advance="NO"', lmax
      READ (5,*) my_lmax
      IF ((my_lmax <= lmax) .and. (my_lmax >= 0)) lmax = my_lmax
-     PRINT '("local L ( <= ",I1," ), Rc for local pot (au) > ",$)', lmax
+     PRINT '("local L ( <= ",I1," ), Rc for local pot (au) > "), advance="NO"', lmax
      READ (5,*) lloc, rcloc
   ENDIF
   !
@@ -436,7 +436,7 @@ SUBROUTINE convert_cpmd(upf)
   ELSEIF (ixc==55) THEN
      upf%dft='HCTH'
   ELSE
-     PRINT '("Unknown DFT ixc=",i4,". Please provide a DFT name > ",$)', ixc
+     PRINT '("Unknown DFT ixc=",i4,". Please provide a DFT name > "), advance="NO"', ixc
      READ *, upf%dft
   ENDIF
   PRINT '("Assuming DFT: ",A," . Please check this is what you want")', &
@@ -464,7 +464,7 @@ SUBROUTINE convert_cpmd(upf)
   ALLOCATE( upf%rcutus_chi(upf%nwfc) )
 
   DO i=1, upf%nwfc
-10   PRINT '("Wavefunction # ",i1,": label (e.g. 4s), occupancy > ",$)', i
+10   PRINT '("Wavefunction # ",i1,": label (e.g. 4s), occupancy > "), advance="NO"', i
      READ (5,*) label, upf%oc(i)
      READ (label(1:1),*, err=10) l
      upf%els(i)  = label
