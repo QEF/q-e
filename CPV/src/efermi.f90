@@ -154,10 +154,6 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
         
   USE kinds, ONLY : DP
 
-#if defined (__NAG)
-  USE f90_unix_proc
-#endif
-
   implicit none
  
   INTEGER, INTENT(IN) :: nel, nbands, nkpts
@@ -483,7 +479,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
   ENDDO
   IF(J >= JMAX) THEN
      WRITE(*,*) 'CANNOT BISECT FOREVER, CAN I ?'
-     CALL EXIT
+     stop
   ENDIF
   EF = RTBIS
  
