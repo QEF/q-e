@@ -46,6 +46,8 @@ New in 5.2.0 version:
    * PW: Improved ESM, works also for NEB and with postprocessing codes;
      constant-bias potential (constant-mu) calculations (PRL109, 266101, 2012)
      implemented (courtesy of Minoru Otani)
+   * TDDFPT contains now the turboEELS code for the calculation of the
+     Electron Energy Loss and Inelastic X-ray Scattering Spectra
 
 Fixed in 5.2.0 version:
 
