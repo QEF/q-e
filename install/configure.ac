@@ -1,4 +1,4 @@
-AC_INIT(ESPRESSO, 5.2.0, , espresso)
+AC_INIT(ESPRESSO, 5.2.1, , espresso)
 # ----------------------------
 # Non-standard precious variables
 # ----------------------------
