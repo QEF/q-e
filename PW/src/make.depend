@@ -1279,6 +1279,7 @@ print_clock_pw.o : ../../Modules/funct.o
 print_clock_pw.o : ../../Modules/io_global.o
 print_clock_pw.o : ../../Modules/paw_variables.o
 print_clock_pw.o : ../../Modules/uspp.o
+print_clock_pw.o : bp_mod.o
 print_clock_pw.o : ldaU.o
 print_clock_pw.o : realus.o
 print_ks_energies.o : ../../Modules/constants.o

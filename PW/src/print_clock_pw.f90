@@ -19,6 +19,7 @@ SUBROUTINE print_clock_pw()
    USE realus,             ONLY : real_space
    USE ldaU,               ONLY : lda_plus_U
    USE funct,              ONLY : dft_is_hybrid
+   USE bp,                 ONLY : lelfield
    !
    IMPLICIT NONE
    !
@@ -210,9 +211,12 @@ SUBROUTINE print_clock_pw()
       ENDIF
    END IF
 
-   call print_clock('h_epsi_set')
-   call print_clock('h_epsi_apply')
-   call print_clock('c_phase_field')
+   IF ( lelfield ) THEN
+      WRITE( stdout, '(/,5X,"Electric-field routines")' )
+      call print_clock('h_epsi_set')
+      call print_clock('h_epsi_apply')
+      call print_clock('c_phase_field')
+   END IF
    !
    CALL plugin_clock()
    !

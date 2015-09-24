@@ -80,10 +80,6 @@ MODULE cp_autopilot
         &  event_dt, event_emass, event_electron_dynamics, event_electron_damping, &
         &  event_ion_dynamics, event_ion_damping, event_ion_temperature, event_tempw 
 
-#if defined (__NAG)
-  USE f90_unix_proc
-#endif
-
   IMPLICIT NONE
   SAVE
 
