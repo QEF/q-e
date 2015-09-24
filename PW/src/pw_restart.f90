@@ -17,6 +17,10 @@ MODULE pw_restart
   !
   USE iotk_module
   !
+#ifdef __XSD
+  USE qexml_xsd_module, ONLY : qexml_init_schema, qexml_openschema, qexml_closeschema, qexml_write_convergence_info, qexml_write_output
+  USE qexml_xsd_module, ONLY : convergence_info_type, output_type, scf_conv_type
+#endif
   USE qexml_module,ONLY : qexml_init,qexml_openfile, qexml_closefile, &
                           qexml_write_header, qexml_write_control ,   &
                           qexml_write_cell, qexml_write_moving_cell,  &
@@ -39,8 +43,15 @@ MODULE pw_restart
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : e2, PI
-  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
+
+#ifdef __XSD
+  USE io_files,  ONLY : tmp_dir, prefix, iunpun, iunpun_xsd, xmlpun, xmlpun_schema, & 
+                        delete_if_present, qexml_version, qexml_version_init, pseudo_dir
+#else
+  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &                        
                         qexml_version, qexml_version_init, pseudo_dir
+#endif
+
   USE io_global, ONLY : ionode, ionode_id
   USE mp_images, ONLY : intra_image_comm
   USE mp_pools,  ONLY : my_pool_id
@@ -58,6 +69,9 @@ MODULE pw_restart
   PRIVATE
   !
   PUBLIC :: pw_writefile, pw_readfile
+#ifdef __XSD
+  PUBLIC :: pw_write_schema
+#endif
   !
   INTEGER, PRIVATE :: iunout
   !
@@ -77,6 +91,165 @@ MODULE pw_restart
   !
   CONTAINS
     !
+#ifdef __XSD
+    !------------------------------------------------------------------------
+    SUBROUTINE pw_write_schema( what )
+      !------------------------------------------------------------------------
+      !
+      USE control_flags,        ONLY : istep, twfcollect, conv_ions, &
+                                       lscf, lkpoint_dir, gamma_only, &
+                                       tqr, noinv, do_makov_payne, smallmem, &
+                                       llondon, lxdm, ts_vdw
+      USE realus,               ONLY : real_space
+      USE global_version,       ONLY : version_number
+      USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
+                                       ibrav, celldm
+      USE gvect,                ONLY : ig_l2g
+      USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, if_pos
+      USE noncollin_module,     ONLY : noncolin, npol
+      USE io_files,             ONLY : nwordwfc, iunwfc, iunigk, psfile
+      USE buffers,              ONLY : get_buffer
+      USE wavefunctions_module, ONLY : evc
+      USE klist,                ONLY : nks, nkstot, xk, ngk, wk, qnorm, &
+                                       lgauss, ngauss, degauss, nelec, &
+                                       two_fermi_energies, nelup, neldw
+      USE start_k,              ONLY : nk1, nk2, nk3, k1, k2, k3, &
+                                       nks_start, xk_start, wk_start
+      USE ktetra,               ONLY : ntetra, tetra, ltetra
+      USE gvect,                ONLY : ngm, ngm_g, g, mill
+      USE fft_base,             ONLY : dfftp
+      USE basis,                ONLY : natomwfc
+      USE gvecs,                ONLY : ngms_g, dual
+      USE fft_base,             ONLY : dffts
+      USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, &
+                                       igk, nbnd, ecutwfc
+      USE ener,                 ONLY : ef, ef_up, ef_dw
+      USE fixed_occ,            ONLY : tfixed_occ, f_inp
+      USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, U_projection, &
+                                       Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_J, &
+                                       Hubbard_alpha, Hubbard_J0, Hubbard_beta
+      USE spin_orb,             ONLY : lspinorb, domag
+      USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
+                                       t_rev, sname, time_reversal, no_t_rev
+      USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization
+      USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, &
+                                       lambda
+      USE ions_base,            ONLY : amass
+      USE funct,                ONLY : get_dft_name, get_inlc
+      USE kernel_table,         ONLY : vdw_table_name
+      USE scf,                  ONLY : rho
+      USE extfield,             ONLY : tefield, dipfield, edir, &
+                                       emaxpos, eopreg, eamp
+      USE io_rho_xml,           ONLY : write_rho
+      USE mp_world,             ONLY : nproc
+      USE mp_images,            ONLY : nproc_image
+      USE mp_pools,             ONLY : kunit, nproc_pool, me_pool, root_pool, &
+                                       intra_pool_comm, inter_pool_comm
+      USE mp_bands,             ONLY : nproc_bgrp, me_bgrp, root_bgrp, &
+                                       intra_bgrp_comm, inter_bgrp_comm, &
+                                       nbgrp, ntask_groups
+      USE mp_diag,              ONLY : nproc_ortho
+      USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
+                                       get_gau_parameter, &
+                                       get_screening_parameter, exx_is_active
+      USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
+                                       exxdiv_treatment, yukawa, ecutvcut, ecutfock
+      USE cellmd,               ONLY : lmovecell, cell_factor 
+      USE martyna_tuckerman,    ONLY : do_comp_mt
+      USE esm,                  ONLY : do_comp_esm, esm_nfit, esm_efield, esm_w, &
+                                       esm_a, esm_bc
+      USE london_module,        ONLY : scal6, lon_rcut
+      USE tsvdw_module,         ONLY : vdw_isolated
+      
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN) :: what
+      !
+      CHARACTER(LEN=20)     :: dft_name
+      CHARACTER(LEN=256)    :: dirname, filename
+      INTEGER               :: i, ig, ik, ngg, ierr, ipol, num_k_points
+      INTEGER               :: npool, nkbl, nkl, nkr, npwx_g
+      INTEGER               :: ike, iks, npw_g, ispin, inlc
+      INTEGER,  ALLOCATABLE :: ngk_g(:)
+      INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
+      LOGICAL               :: lwfc, lrho, lxsd
+      CHARACTER(iotk_attlenx)  :: attr
+      !
+      ! the following variables are just to test the new xml output
+      !
+      TYPE(output_type) :: output
+      !
+      TYPE(convergence_info_type) :: convergence_info
+      !
+      TYPE(scf_conv_type) :: scf_conv
+      !
+      scf_conv%n_scf_steps=8
+      scf_conv%scf_error=0.0000001
+      convergence_info%scf_conv=scf_conv
+      output%convergence_info=convergence_info
+      !
+      IF ( ionode ) THEN
+         !
+         ! ... look for an empty unit (only ionode needs it)
+         !
+         CALL iotk_free_unit( iunout, ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      CALL errore( 'pw_writefile ', &
+                   'no free units to write wavefunctions', ierr )
+      !
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
+      !
+      ! ... create the main restart directory
+      !
+      !
+      IF ( ionode ) THEN
+         !
+         ! ... open XML descriptor
+         !
+         CALL qexml_init_schema( iunpun_xsd )
+         ierr=0
+         !
+      END IF
+      !
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      CALL errore( 'pw_write_schema ', &
+                   'cannot open restart file for writing', ierr )
+      !
+      IF ( ionode ) THEN  
+         !
+         ! ... here we start writing the punch-file
+         !
+!-------------------------------------------------------------------------------
+! ... HEADER
+!-------------------------------------------------------------------------------
+         !
+         CALL qexml_openschema(TRIM( dirname ) // '/' // TRIM( xmlpun_schema ))
+         !
+         
+         CALL qexml_write_output(output)
+!-------------------------------------------------------------------------------
+! ... CLOSING
+!-------------------------------------------------------------------------------
+         !
+         CALL qexml_closeschema()
+         !
+         CALL errore( 'pw_write_schema ', &
+                     'cannot write schema', ierr )
+         !
+      END IF
+      !
+      RETURN
+       !
+    END SUBROUTINE pw_write_schema
+    !
+#endif
     !------------------------------------------------------------------------
     SUBROUTINE pw_writefile( what )
       !------------------------------------------------------------------------
@@ -158,7 +331,7 @@ MODULE pw_restart
       INTEGER               :: ike, iks, npw_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
-      LOGICAL               :: lwfc, lrho
+      LOGICAL               :: lwfc, lrho, lxsd
       CHARACTER(iotk_attlenx)  :: attr
       !
       !
@@ -343,6 +516,7 @@ MODULE pw_restart
          IF (.NOT.(lkpoint_dir)) &
             CALL iotk_open_write( iunout, FILE = TRIM( dirname ) // '/' // &
                     & TRIM( xmlpun )//'.eig', BINARY = .FALSE., IERR = ierr )
+         !
       END IF
       !
       !

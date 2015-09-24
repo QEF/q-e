@@ -17,6 +17,9 @@ SUBROUTINE punch( what )
   USE control_flags,        ONLY : io_level, twfcollect
   USE klist,                ONLY : nks
   USE pw_restart,           ONLY : pw_writefile
+#ifdef __XSD
+  USE pw_restart,           ONLY : pw_write_schema
+#endif
   USE a2F,                  ONLY : la2F, a2Fsave
   USE wavefunctions_module, ONLY : evc
   !
@@ -38,6 +41,10 @@ SUBROUTINE punch( what )
   iunpun = 4
   !
   CALL pw_writefile( TRIM( what ) )
+#ifdef __XSD
+!   write(6,*) "pw_write_schema"
+  CALL pw_write_schema( TRIM( what ) )
+#endif
   !
   IF ( la2F ) CALL a2Fsave()
   !
