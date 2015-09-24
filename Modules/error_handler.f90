@@ -28,7 +28,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
   USE mp_world,  ONLY : mpime, world_comm
   USE io_global, ONLY : stdout
   USE io_files,  ONLY : crash_file
-#if defined(__PTRACE) && defined(__INTEL)
+#if defined(__PTRACE) && defined(__INTEL_COMPILER)
   USE ifcore,    ONLY : tracebackqq
 #endif
  !
@@ -73,7 +73,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
   FLUSH( stdout )
   !
 #ifdef __PTRACE
-#ifdef __INTEL
+#ifdef __INTEL_COMPILER
   call tracebackqq(user_exit_code=-1)
 #elif __GFORTRAN
 #if (__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8))

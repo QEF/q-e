@@ -9,11 +9,10 @@
 #include "c_defs.h"
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef __INTEL
 
 #include <sys/resource.h>
 
-void F77_FUNC_(remove_stack_limit,REMOVE_STACK_LIMIT) (void) {
+void remove_stack_limit_(void) {
  
   struct rlimit rlim = { RLIM_INFINITY, RLIM_INFINITY };
 
@@ -29,8 +28,3 @@ void F77_FUNC_(remove_stack_limit,REMOVE_STACK_LIMIT) (void) {
     }
   }
 }
-
-#else
-void F77_FUNC_(remove_stack_limit,REMOVE_STACK_LIMIT) (void) {
-}
-#endif

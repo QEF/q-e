@@ -68,8 +68,6 @@ Hardware/Compiler:
       __SX6       Nec sx-6 vector machines (Nec compiler)
       __PGI       Portland Group compiler (workarounds for compiler bugs)
       __GFORTRAN  gnu gfortran (workarounds for compiler bugs)
-      __INTEL     Intel ifc and ifort compilers (workaround for compiler 
-                  bugs and for insufficient stack size)
 OS:
 Parallel execution:
       __PARA      Parallel execution - should be replaced by:

@@ -46,11 +46,14 @@ CONTAINS
     INTEGER :: ios, crashunit
     INTEGER, EXTERNAL :: find_free_unit
 
-    ! ... Intel compilers v .ge.8 allocate a lot of stack space
+    ! ... The Intel compiler allocates a lot of stack space
     ! ... Stack limit is often small, thus causing SIGSEGV and crash
-  
+    ! ... One may use "ulimit -s unlimited" but it doesn't always work
+    ! ... The following call does the same and always works
+    !
+#ifdef __INTEL_COMPILER
     CALL remove_stack_limit ( )
-
+#endif
     ! ... use ".FALSE." to disable all clocks except the total cpu time clock
     ! ... use ".TRUE."  to enable clocks
 
