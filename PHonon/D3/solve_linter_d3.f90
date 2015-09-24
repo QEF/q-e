@@ -317,7 +317,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   WRITE( stdout, '(//,5x," thresh=",e10.3," total cpu time : ",f8.1, &
        &      " s   av.# it.: ",f5.1)') thresh, tcpu, averlt
   !
-  CALL flush_unit( stdout )
+  FLUSH( stdout )
   !
   deallocate (h_diag)
   if (degauss /= 0.d0) deallocate (dpsiaux)

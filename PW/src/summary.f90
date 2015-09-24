@@ -384,7 +384,7 @@ SUBROUTINE summary()
      END IF
   END IF
   !
-  CALL flush_unit( stdout )
+  FLUSH( stdout )
   !
   RETURN
   !

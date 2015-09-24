@@ -206,12 +206,12 @@
                IF (lsda) current_spin  = isk(is)
                if(nspin/=1)  CALL davcio(evc,2*nwordwfc,iunwfc,is,-1)!read wfcs for 
                if(l_verbose) write(stdout,*) 'ATT1'
-               call flush_unit(stdout)
+               FLUSH(stdout)
                CALL wfc_gamma_real(0,is)
-               call flush_unit(stdout)
+               FLUSH(stdout)
                call  energies_xc( npwx, npw, nbnd, evc, e_xc(:,is),e_h(:,is),is )
                if( is == nspin) call write_energies_xc(e_xc)
-               CALL flush_unit( stdout )
+               FLUSH( stdout )
                call go_wannier(iunwfc,1.d-9,40,num_nbndv(is), 0, is)
                call wfc_gamma_real(0,is)
 !if required save MLWF for plotting
@@ -240,7 +240,7 @@
              deallocate(evc)
           endif
           write(stdout,*) 'USE RESTART: 1'
-          call flush_unit(stdout)
+          FLUSH(stdout)
 
           if(restart_gww <= 1) then
 !read coulomb potential   for PBC                   
@@ -267,7 +267,7 @@
 !fake conduction states
                 if (pmat_type==3 .or. pmat_type==4) then
                    if(l_verbose) write(stdout,*) 'Before fake_conduction_wannier' !ATTENZIONE
-                   call flush_unit(stdout)
+                   FLUSH(stdout)
                    !nullify(fcw_state)
                    !call fake_conduction_wannier(fcw_number,fcw_state,fcw_mat,pmat_cutoff,s_pmat)!,n_fast_pmat,off_fast_pmat,l_fast_pola)
                    call start_clock('f_conduction')
@@ -287,7 +287,7 @@
                    endif
                    call stop_clock('f_conduction')
                    if(l_verbose) write(stdout,*) 'After fake_conduction_wannier' !ATTENZIONE
-                   call flush_unit(stdout)
+                   FLUSH(stdout)
                    call print_clock('f_conduction')
                    call print_clock('mpsum')
                    call print_clock('fc_optimal')
@@ -310,18 +310,18 @@
                 write(stdout,*) 'NUMW_PROD_ALL', numw_prod_all!DEBUG
 !calculate array of valence states in real space
                 if(l_verbose) write(stdout,*) 'Call evc_to_real'
-                call flush_unit(stdout)
+                FLUSH(stdout)
                 if(pmat_type==0 .or. pmat_type == 1 .or. pmat_type == 2) call evc_to_real(num_nbndv(1), v_states)
 
 !allocate and set trial product with random number
                 if(l_verbose) write(stdout,*) 'Call o_basis_init'
-                call flush_unit(stdout)
+                FLUSH(stdout)
                 !nullify(fcw_state)
                 if(pmat_type==0 .or.pmat_type == 1 .or. pmat_type == 2) call o_basis_init(numw_prod,&
              &   o_basis,num_nbndv(1),v_states,pmat_cutoff,pmat_type,fcw_number,fcw_state,fcw_mat,pmat_ethr)
 !diagonalize products
                 if(l_verbose) write(stdout,*) 'Call o_bands'
-                call flush_unit(stdout)
+                FLUSH(stdout)
                 call start_clock('o_bands')
 !note: v_states is relevant only for pmat_type ==  0,1,2
                 call o_bands(num_nbndv(1), v_states,numw_prod,o_basis,pmat_ethr,pmat_cutoff,pmat_type)
@@ -331,7 +331,7 @@
                    call v_basis(numw_prod,o_basis,v_cutoff)
                 endif
                 if(l_verbose) write(stdout,*) 'Call o_bands write'
-                call flush_unit(stdout)
+                FLUSH(stdout)
 !if PBC add also the last one the G=0 element
 !NOTE for PBC that numpw BECOMES numpw+1 AT THIS POINT, FOLLOWING ROUTINE
 !if required add plane waves to the basis obtained till now
@@ -345,7 +345,7 @@
                 deallocate(evc)
                 if(.not.l_zero) then
                    call wannier_uterms(nset,.false.,.false.,2, ecutoff_global)
-                    CALL flush_unit( stdout )
+                    FLUSH( stdout )
                     allocate(uterms(numw_prod,numw_prod))
                     if(ionode) then
                        iunuterms =  find_free_unit()
@@ -364,14 +364,14 @@
                     if(ionode)    close(iunuterms)
                     if(ionode) call write_vpot_matrix(uterms,0)
                     deallocate(uterms)
-                    CALL flush_unit( stdout )
+                    FLUSH( stdout )
                 else
                    write(stdout,*) 'NOT LZERO NOT IMPLEMENTED'
-                   call flush_unit(stdout)
+                   FLUSH(stdout)
                    stop
                 endif
                 if(l_verbose) write(stdout,*) 'OUT OF RESTART_GWW1',numw_prod
-                call flush_unit(stdout)
+                FLUSH(stdout)
                 call mp_barrier( world_comm )
 
              endif
@@ -379,7 +379,7 @@
           if(restart_gww <= 2 ) then
 !read coulomb potential   for PBC                                               
               write(stdout,*) 'USE RESTART: 2 LANCZOS RESTART:0'
-              call flush_unit(stdout)
+              FLUSH(stdout)
 
             if(.not.l_truncated_coulomb) call read_vg0
 
@@ -462,7 +462,7 @@
                    call stop_clock('pola_basis')
                 endif
                 write(stdout,*) 'USE RESTART: 2 LANCZOS_RESTART:1'
-                call flush_unit(stdout)
+                FLUSH(stdout)
               
            
                 if(lanczos_restart <= 1) then
@@ -473,7 +473,7 @@
                    call stop_clock('global_pola')
                 endif
                 write(stdout,*) 'USE RESTART: 2 LANCZOS_RESTART:2'
-                call flush_unit(stdout)
+                FLUSH(stdout)
 
                 if(lanczos_restart <= 2) then
                    call start_clock('self_basis')
@@ -493,16 +493,16 @@
                    call print_clock('sl_mpbcast')
                    call print_clock('sl_merge')
                 endif
-                CALL flush_unit( stdout )
+                FLUSH( stdout )
            !  ALLOCATE( evc( npwx, nbnd ) )
               !  deallocate(evc)
                 write(stdout,*) 'USE RESTART: 2 LANCZOS_RESTART:3'
-                call flush_unit(stdout)
+                FLUSH(stdout)
 
                 if(lanczos_restart <= 3) then
             !    CALL davcio(evc,2*nwordwfc,iunwfc,1,-1)
             !    CALL dft_exchange(num_nbndv,num_nbnds,nset,e_x)
-            !    CALL flush_unit( stdout )
+            !    FLUSH( stdout )
                    call mp_barrier( world_comm )
                    call davcio(evc,2*nwordwfc,iunwfc,is,-1)
                    call start_clock('global_self')
@@ -534,21 +534,21 @@
      
            
           write(stdout,*) 'USE RESTART: 3 LANCZOS_RESTART /=2,3'
-          call flush_unit(stdout)
+          FLUSH(stdout)
 
           if(restart_gww <= 3 .and. lanczos_restart /=3 .and. lanczos_restart /=2 ) then !ATTENZIONE RESTART lanczos_restart never been here!
 !read coulomb potential   for PBC                                                          
              if(.not.l_truncated_coulomb) call read_vg0
 
              if(.not.l_truncated_coulomb) call calculate_wing(nset,2)
-             CALL flush_unit( stdout )
+             FLUSH( stdout )
              ALLOCATE( evc( npwx, nbnd ) )
              do is=1,nspin
                 CALL davcio(evc,2*nwordwfc,iunwfc,is,-1)
                 ks_wfcs(1:npw,1:nbnd,is)=evc(1:npw,1:nbnd)
              enddo
              CALL dft_exchange(num_nbndv,num_nbnds,nset,e_x,ks_wfcs)
-             CALL flush_unit( stdout )
+             FLUSH( stdout )
 !DEBUG TEST
              if(l_verbose) then
                 if(nspin==1) then
@@ -559,17 +559,17 @@
                 CALL  setup_exx_cus(nspin,num_nbndv_max,num_nbndv,evc, exx_cus, 1.d0, 40.d0, truncation_radius)
                 CALL dft_exchange_fast(1,num_nbnds,ks_wfcs(:,:,1),exx_cus)
                 write(stdout,*) 'BEFORE periodic_dft_exchange'
-                call flush_unit(stdout)
+                FLUSH(stdout)
                 !CALL  periodic_dft_exchange(exx_cus)
                 write(stdout,*) 'AFTER periodic_dft_exchange'
-                call flush_unit(stdout)
+                FLUSH(stdout)
 
                 call free_memory_exx_cus(exx_cus)
              endif
            deallocate(evc)
           endif
           write(stdout,*) 'USE RESTART: 4 LANCZOS_RESTART /=2,3'
-          call flush_unit(stdout)
+          FLUSH(stdout)
 
           if(restart_gww <= 4 .and. l_semicore .and. lanczos_restart /=3 .and. lanczos_restart /=2) then
 !NOT_TO_BE_INCLUDED_START
@@ -582,7 +582,7 @@
 !NOT_TO_BE_INCLUDED_END
           endif
           write(stdout,*) 'USE RESTART: 5 LANCZOS_RESTART /=2,3'
-          call flush_unit(stdout)
+          FLUSH(stdout)
 
           if(restart_gww <= 5 .and. l_semicore_read .and. lanczos_restart /=3 .and. lanczos_restart /=2) then
 !NOT_TO_BE_INCLUDED_START
@@ -652,6 +652,6 @@
           call print_clock('mpsum')
           call print_clock('global_self')
           call print_clock('lanczos_state')
-          call flush_unit(stdout)
+          FLUSH(stdout)
           return
   END SUBROUTINE produce_wannier_gamma

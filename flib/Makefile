@@ -15,7 +15,6 @@ dost.o \
 erf.o \
 expint.o \
 find_free_unit.o \
-flush_unit.o \
 functionals.o \
 generate_k_along_lines.o \
 lsda_functionals.o \

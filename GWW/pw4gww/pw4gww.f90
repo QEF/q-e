@@ -195,7 +195,7 @@ program gwl_punch
   !   set default values for variables in namelist
   !
   prefix='export'
-  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+  CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   pp_file= ' '
   uspp_spsi = .FALSE.
@@ -456,17 +456,17 @@ program gwl_punch
 ! -----------------------------------------------------
 
   if(l_verbose) write(stdout,*) 'To check, we print the KS eigenvalues:'
-  CALL flush_unit( stdout )
+  FLUSH( stdout )
   !
   CALL print_ks_energies()
   !
 
 !  IF(l_head .and. .not.gamma_only) THEN
 !     write(stdout,*) 'BEFORE calculate_head'
-!     CALL flush_unit( stdout )
+!     FLUSH( stdout )
 !     CALL calculate_head
 !     write(stdout,*) 'AFTER calculate_head'
-!     CALL flush_unit( stdout )
+!     FLUSH( stdout )
 !  ENDIF
   !
 
@@ -479,10 +479,10 @@ program gwl_punch
       CALL weights  ( )
       !
       if(l_verbose) write(stdout,*) 'BEFORE dft_exchange_k'
-      CALL flush_unit( stdout )
+      FLUSH( stdout )
       !call dft_exchange_k(num_nbndv,num_nbnds,ecutoff_global)
       if(l_verbose) write(stdout,*) 'AFTER dft_exchange_k'
-      CALL flush_unit( stdout )
+      FLUSH( stdout )
     ENDIF
   ENDIF
 
@@ -490,10 +490,10 @@ program gwl_punch
  
 
   if(l_verbose) write(stdout,*) 'BEFORE produce_wannier_gamma'
-  CALL flush_unit( stdout )
+  FLUSH( stdout )
   CALL produce_wannier_gamma
   if(l_verbose) write(stdout,*) 'AFTER produce_wannier_gamma'
-  CALL flush_unit( stdout )
+  FLUSH( stdout )
 !     ENDIF
  
 !

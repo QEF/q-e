@@ -43,7 +43,7 @@ SUBROUTINE optimal_driver(num_in,wfcs,lda,options,num_out, info)
      
   case default
      write(stdout,*) 'optimal driver: NOT IMPLEMENTED YET'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      stop
   end select
 

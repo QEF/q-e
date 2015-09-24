@@ -109,7 +109,7 @@ MODULE exchange_custom
       INTEGER :: offset
 
       !write(stdout,*) 'periodic_fock'
-      !call flush_unit(stdout)
+      !FLUSH(stdout)
     
       CALL start_clock('periodic_fock')
    
@@ -431,7 +431,7 @@ MODULE exchange_custom
                         enddo
                      else
                         write(stdout,*) 'to be implmented yet'
-                        call flush_unit(stdout)
+                        FLUSH(stdout)
                         stop
                      endif
                      CALL stop_clock('pf_product')
@@ -1107,7 +1107,7 @@ MODULE exchange_custom
          call mp_sum(sca,world_comm)
          sca=sca/dble(exx_cus%fft_g2r%nr1t*exx_cus%fft_g2r%nr2t*exx_cus%fft_g2r%nr3t)
          write(stdout,*) 'PERIODIC EXCHANGE', iv, sca
-         call flush_unit(stdout)
+         FLUSH(stdout)
       !end loop
       enddo
       deallocate(r2s_xy,r2s_z)
@@ -1181,18 +1181,18 @@ MODULE exchange_custom
       exx_cus%fft_g2r%dual_t=dual
       call mp_barrier( world_comm )
       write(stdout,*) 'Before initialize_fft_custom',exx_cus%fft_g2r%ecutt,exx_cus%fft_g2r%dual_t
-      call flush_unit(stdout)
+      FLUSH(stdout)
       call initialize_fft_custom(exx_cus%fft_g2r)
       write(stdout,*) "GRID G to R", exx_cus%fft_g2r%nr1t, exx_cus%fft_g2r%nr2t, exx_cus%fft_g2r%nr3t
       write(stdout,*) "GRID G to R",exx_cus%fft_g2r%npwt
-      call flush_unit(stdout)
+      FLUSH(stdout)
 
       exx_cus%fft_r2g%ecutt=cutoff
       exx_cus%fft_r2g%dual_t=ecutwfc*dual/cutoff
       call initialize_fft_custom(exx_cus%fft_r2g)
       write(stdout,*) "GRID R to G", exx_cus%fft_r2g%nr1t, exx_cus%fft_r2g%nr2t, exx_cus%fft_r2g%nr3t
       write(stdout,*) "GRID R to G",exx_cus%fft_r2g%npwt
-      call flush_unit(stdout)
+      FLUSH(stdout)
       
       if(l_exchange_turbo) then
   !setup small grid
@@ -1744,7 +1744,7 @@ MODULE exchange_custom
          call mp_sum(sca,world_comm)
          write(stdout,*) 'EXCHANGE FAST',ii, sca
       enddo
-      call flush_unit(stdout)
+      FLUSH(stdout)
       deallocate(xpsi)
       return
     end subroutine dft_exchange_fast

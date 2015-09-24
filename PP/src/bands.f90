@@ -47,7 +47,7 @@ PROGRAM do_bands
   !   set default values for variables in namelist
   !
   prefix = 'pwscf'
-  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+  CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
   IF ( trim( outdir ) == ' ' ) outdir = './'
   filband = 'bands.out'
   lsym=.false.

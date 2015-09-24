@@ -309,7 +309,7 @@ SUBROUTINE PAW_init_onecenter()
                 ENDIF
             ENDIF
             !
-            !CALL get_environment_variable('LMAX', env)
+            !CALL get_environment_variableironment_variable('LMAX', env)
             !READ(env, '(i)'), lmax_safe
             !lmax_safe=max(lmax_safe, upf(nt)%lmax_rho)
             CALL PAW_rad_init(lmax_safe, lmax_add, rad(nt))

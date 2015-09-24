@@ -1665,7 +1665,7 @@
    alpha=1.d0/sqrt(sca)
    
    write(stdout,*) 'ALPHA :', alpha
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
 !calculate elements 0',0'   0',i   i,O'
    dtmp(ww%numpw+1,:)=0.d0
@@ -1740,23 +1740,23 @@
 !inverse zmat
 
    write(stdout,*) 'Before inversion'
-   call flush_unit(stdout)
+   FLUSH(stdout)
    call dgetrf(ww%numpw+1,ww%numpw+1,dtmp,ww%numpw+1,ipiv,info)
    if(info /= 0) then
      write(stdout,*) 'Routine calculate_w: problem with dgetrf :', info
      stop
    endif
    write(stdout,*) 'Before inversion2'
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
    call dgetri(ww%numpw+1,dtmp,ww%numpw+1,ipiv,workd,-1,info)
    write(stdout,*) 'Dimension', workd,ww%numpw,info!ATTENZIONE
-   call flush_unit(stdout)
+   FLUSH(stdout)
    allocate(work(int(workd)))
    call dgetri(ww%numpw+1,dtmp,ww%numpw+1,ipiv,work,int(workd),info)
 
    write(stdout,*) 'Out of dgetri'
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
 
    if(info /= 0) then
@@ -1797,7 +1797,7 @@
    endif
 
    write(stdout,*) 'INV EPSI G=0,G=0', inv_epsi, dtmp(ww%numpw+1,ww%numpw+1)
-   call flush_unit(stdout)
+   FLUSH(stdout)
    if(l_symm_epsilon .and.l_head_epsilon) then!ATTENZIONE
 !take away the G=0,G=0 term
 ! terms i,j
@@ -1886,7 +1886,7 @@
           do iv=1,uu%nums_occ(1)
  !loop on v
              write(stdout,*) 'STATE', iv
-             call flush_unit(stdout)
+             FLUSH(stdout)
 
 !set table of exponentials
 
@@ -2146,7 +2146,7 @@
          j=qm%wp(iw)%ij(2,ip)!valence and conduction
          if(i>uu%nums_occ(1)) then
             write(stdout,*) 'create_polarization_beta ERROR'
-            call flush_unit(stdout)
+            FLUSH(stdout)
             stop
          endif
 !only valence*conduction products are required
@@ -2249,7 +2249,7 @@
           do iv=1,uu%nums_occ(1)
  !loop on v
              write(stdout,*) 'STATE', iv
-             call flush_unit(stdout)
+             FLUSH(stdout)
 
 !set table of exponentials
 
@@ -2379,7 +2379,7 @@
    allocate(pw_save(pp%numpw,pp%numpw))
    do ipol=1,3
       if(l_verbose) write(stdout,*) 'MAX P:', maxval(pp%pw(:,:)), 'MIN P:', minval(pp%pw(:,:))
-      call flush_unit(stdout)
+      FLUSH(stdout)
       if(ipol==1) then
          pw_save(:,:)=pp%pw(:,:)
       else
@@ -2439,23 +2439,23 @@
       if(l_verbose) write(stdout,*) 'MAX D:', maxval(dtmp(:,:)), 'MIN D', minval(dtmp(:,:))
 
       if(l_verbose) write(stdout,*) 'Before inversion'
-      call flush_unit(stdout)
+      FLUSH(stdout)
       call dgetrf(ww%numpw,ww%numpw,dtmp,ww%numpw,ipiv,info)
       if(info /= 0) then
          write(stdout,*) 'Routine calculate_w: problem with dgetrf :', info
          stop
       endif
       if(l_verbose) write(stdout,*) 'Before inversion2'
-      call flush_unit(stdout)
+      FLUSH(stdout)
 
       call dgetri(ww%numpw,dtmp,ww%numpw,ipiv,workd,-1,info)
       if(l_verbose) write(stdout,*) 'Dimension', workd,ww%numpw,info!ATTENZIONE
-      call flush_unit(stdout)
+      FLUSH(stdout)
       allocate(work(int(workd(1))))
       call dgetri(ww%numpw,dtmp,ww%numpw,ipiv,work,int(workd(1)),info)
 
       if(l_verbose) write(stdout,*) 'Out of dgetri'
-      call flush_unit(stdout)
+      FLUSH(stdout)
 
       if(l_verbose)  write(stdout,*) 'MAX D1:', maxval(dtmp(:,:)), 'MIN D1:', minval(dtmp(:,:))
 
@@ -2479,7 +2479,7 @@
       inv_epsi=dtmp(ww%numpw,ww%numpw)
       
       write(stdout,*) 'INV EPSI G=0,G=0', inv_epsi, head_v
-      call flush_unit(stdout)
+      FLUSH(stdout)
       
       vp%vmat(vp%numpw,vp%numpw)=head_v
       dtmp(ww%numpw,1:ww%numpw-1)=0.d0
@@ -2494,7 +2494,7 @@
 
 !DEBUG
       if(l_verbose) write(stdout,*) 'MAX D2:', maxval(dtmp(:,:)), 'MIN D2:', minval(dtmp(:,:))
-      call flush_unit(stdout)
+      FLUSH(stdout)
 
 !calculates v^1/2 (e-1-1)v^1/2
       call dgemm('N','N',ww%numpw,ww%numpw,ww%numpw,1.d0,&
@@ -2503,7 +2503,7 @@
            & pp%pw,ww%numpw,vp%vmat,ww%numpw,1.d0,ww%pw,ww%numpw)
   
       if(l_verbose) write(stdout,*) 'MAX W:', maxval(ww%pw(:,:)), 'MIN W:', minval(ww%pw(:,:))
-      call flush_unit(stdout)
+      FLUSH(stdout)
    
 
       deallocate(work)
@@ -2515,7 +2515,7 @@
    ww%factor=(1.d0,0.d0)
 
    if(l_verbose) write(stdout,*) 'MAX:', maxval(ww%pw(:,:)), 'MIN:', minval(ww%pw(:,:))
-   call flush_unit(stdout)
+   FLUSH(stdout)
    
 
    deallocate(dtmp,ipiv)

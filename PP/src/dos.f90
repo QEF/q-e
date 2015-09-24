@@ -54,7 +54,7 @@ PROGRAM do_dos
      !
      !   set default values for variables in namelist
      !
-     CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+     CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
      IF ( trim( outdir ) == ' ' ) outdir = './'
      prefix ='pwscf'
      fildos =' '

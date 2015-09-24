@@ -378,12 +378,12 @@ MODULE contour
                    wp%b(mm,jj,ii,is)=cmplx((0.5d0)*real(mm)*(-1.d0)**real(mm),-0.01d0)
                 enddo
                 write(stdout,*) 'Call fit_multipole'
-                call flush_unit(stdout)
+                FLUSH(stdout)
                 
                 call fit_multipole(we%n,wp%n_multipoles,z,s,wp%a_0(jj,ii,is),&
                      &wp%a(:,jj,ii,is),wp%b(:,jj,ii,is),1.d0,options%fit_thres,options%fit_maxiter)
                 write(stdout,*) 'Done'
-                call flush_unit(stdout)
+                FLUSH(stdout)
 
                 a_0_old=wp%a_0(jj,ii,is)
                 do mm=1,wp%n_multipoles
@@ -392,7 +392,7 @@ MODULE contour
                 enddo
 
 
-                call flush_unit(stdout)
+                FLUSH(stdout)
                 call fit_multipole_minpack(we%n,wp%n_multipoles,z,s,wp%a_0(jj,ii,is),&
                         &wp%a(:,jj,ii,is),wp%b(:,jj,ii,is),options%fit_thres, options%n_max_minpack, chi)
      
@@ -402,7 +402,7 @@ MODULE contour
                    write(stdout,*) 'FIT    a:',mm,wp%a(mm,jj,ii,is)
                    write(stdout,*) 'FIT    b:',mm,wp%b(mm,jj,ii,is)
                 enddo
-                call flush_unit(stdout)
+                FLUSH(stdout)
           
                 
              endif

@@ -79,7 +79,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
 
   if(ptype==0.or.ptype==1.or.ptype==2) then
      write(stdout,*) 'PTYPE = 1 or 2 NOT IMPLEMENTED YET'
-     call flush_unit(stdout)
+     FLUSH(stdout)
     ! stop
 !#ifdef __NOTIMPLEMENTED
 
@@ -89,7 +89,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
 
 
      write(stdout,*) 'setting preconditioning'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 !the following is for colling h_1psi routine
    !  ALLOCATE( becp%r( nkb, 1) )
@@ -140,7 +140,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
         if(isolve==1) then
   
         write(stdout,*) 'call o_rcgdiagg',max_cg_iter
-        call flush_unit(stdout)
+        FLUSH(stdout)
      !precondition(:)=hdiag(:)
         do il=1,50
            
@@ -190,7 +190,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
 
      enddo
 
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      deallocate(precondition)
      deallocate(psi_test)
@@ -212,13 +212,13 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
      if(numpw>fcw_number) then
         numpw=fcw_number
         write(stdout,*) 'Set polarizability basis dimension:', numpw
-        call flush_unit(stdout)
+        FLUSH(stdout)
      endif
 
      allocate(ovec(fcw_number,numpw))
 
      write(stdout,*) 'ATT1', fcw_number
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      l_blk= (fcw_number)/nproc
      if(l_blk*nproc < (fcw_number)) l_blk = l_blk+1
@@ -228,7 +228,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
      nsize=nend-nbegin+1
 
      write(stdout,*) 'ATT2', fcw_number
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      if(nsize>0) then
         allocate(fcw_mat(fcw_number,nsize))
@@ -238,7 +238,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
      allocate(fcw_state(npw,fcw_number))
 
      write(stdout,*) 'ATT3', fcw_number
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      iunfcw = find_free_unit()
      CALL diropn( iunfcw, 'fcw', npw*2, exst )
@@ -248,7 +248,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
      close(iunfcw)
 
      write(stdout,*) 'ATT4', fcw_number
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 
      CALL diropn( iunfcw, 'fmat',fcw_number, exst )
@@ -258,7 +258,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
      close(iunfcw)
 
      write(stdout,*) 'ATT5', fcw_number
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 
      if(ptype==3) then
@@ -303,7 +303,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
         do iw=1,numpw
            write(stdout,*) 'POLARIZABILITY eigen:', iw, o_values(iw)
         enddo
-        call flush_unit(stdout)
+        FLUSH(stdout)
      endif
      call dgemm('N','N',2*npw,numpw,fcw_number,1.d0,fcw_state,2*npw,ovec,fcw_number,0.d0,o_basis,2*npw)
 
@@ -326,7 +326,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
      write(stdout,*) 'Number of G states', num_fc
      if(num_fc>numpw) then 
         write(stdout,*) 'numw_prod too small:', num_fc
-        call flush_unit(stdout)
+        FLUSH(stdout)
         stop
      endif
      numpw=num_fc
@@ -348,7 +348,7 @@ SUBROUTINE o_bands(numv, v_states,numpw,o_basis,ethr,cutoff,ptype)
      enddo
      if(ii/=num_fc) then
         write(stdout,*) 'ERRORE G STATES',ii
-        call flush_unit(stdout)
+        FLUSH(stdout)
         stop
         return
      endif
@@ -422,7 +422,7 @@ subroutine o_extra_pw( p_basis, numwp, numwp_max,cutoff)
   enddo
   if(ii/=num_fc+numwp) then
      write(stdout,*) 'ERRORE G STATES',ii
-     call flush_unit(stdout)
+     FLUSH(stdout)
      stop
      return
   endif
@@ -437,7 +437,7 @@ subroutine o_extra_pw( p_basis, numwp, numwp_max,cutoff)
   write(stdout,*) 'UPDATED DIMESION OF POLARIZABILITY BASIS: ', numwp
   if(info/=0) then
      write(stdout,*) 'PROBLEM WITH OPTIMAL_DRIVER'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      stop
      return
   endif

@@ -552,7 +552,7 @@ SUBROUTINE c_bands_efield ( iter )
      !
      !...set up electric field hermitean operator
      !
-     call flush_unit(stdout)
+     FLUSH(stdout)
      if(.not.l3dstring) then
         CALL h_epsi_her_set (gdir, efield)
      else
@@ -560,7 +560,7 @@ SUBROUTINE c_bands_efield ( iter )
            CALL h_epsi_her_set(ipol, efield_cry(ipol))
         enddo
      endif
-     call flush_unit(stdout)
+     FLUSH(stdout)
      !
      CALL c_bands( iter )
      !
@@ -702,7 +702,7 @@ SUBROUTINE c_bands_nscf( )
      !
      IF ( iverbosity > 0 ) THEN
         WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
-        CALL flush_unit( stdout )
+        FLUSH( stdout )
      ENDIF
      !
   END DO k_loop

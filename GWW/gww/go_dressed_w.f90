@@ -52,7 +52,7 @@
 
 !read coulomb potential
    if(options%l_verbose) write(stdout,*) 'ATTEZNIONE1'
-   call flush_unit(stdout)
+   FLUSH(stdout)
    if(options%w_divergence==2) then
       call read_data_pw_v(vp,options%prefix,options%debug,0,.false.)
    else
@@ -60,7 +60,7 @@
    endif
    
     if(options%l_verbose) write(stdout,*) 'ATTEZNIONE2'
-    call flush_unit(stdout)
+    FLUSH(stdout)
 
 !read in orthonormalization matrix
 
@@ -69,13 +69,13 @@
       call orthonormalize_vpot_para(op,vp)
    endif
    if(options%l_verbose) write(stdout,*) 'ATTEZNIONE2.5'
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
 !if symmetric do symmetrize
       if(options%l_symm_epsilon) call square_root_polaw(vp%vmat,vp%numpw)
   
     if(options%l_verbose) write(stdout,*) 'ATTEZNIONE3'
-    call flush_unit(stdout)
+    FLUSH(stdout)
 
    allocate(agz(vp%numpw))
    allocate(awing(vp%numpw,3))
@@ -86,7 +86,7 @@
    endif
 
    if(options%l_verbose) write(stdout,*) 'ATTEZNIONE4'
-    call flush_unit(stdout)
+    FLUSH(stdout)
 
    if(options%w_divergence == 2) then
       l_divergence=.true.
@@ -101,13 +101,13 @@
    do iw=0,options%n
       if(is_my_pola(iw)) then
          write(stdout,*) iw!ATTENZIONE
-         call flush_unit(stdout)
+         FLUSH(stdout)
          call read_polaw(iw,pp,options%debug,options%l_verbose)
          if(options%lnonorthogonal) then
             call orthonormalize(op,pp)
          endif
           write(stdout,*) 'call calculate_w',iw!ATTENZIONE
-          call flush_unit(stdout)
+          FLUSH(stdout)
 
           if(options%l_symm_epsilon .and. options%l_head_epsilon) then
 
@@ -136,7 +136,7 @@
              awing_c(:,:)=0.d0
           endif
           if(options%l_verbose) write(stdout,*) 'call calculate_w2'!ATTENZIONE
-          call flush_unit(stdout)
+          FLUSH(stdout)
          if(options%w_divergence==0) then
             call calculate_w(vp,pp,ww,options%xc_together,options%l_symm_epsilon,options%l_head_epsilon, &
                  agz, dumhead,l_divergence,inv_epsi(iw+1), options%l_wing_epsilon,awing(:,1),options%l_verbose)
@@ -156,7 +156,7 @@
          endif
 
          if(options%l_verbose) write(stdout,*) 'calculated w'!ATTENZIONE
-         call flush_unit(stdout)
+         FLUSH(stdout)
          if(options%lnonorthogonal) then
             call orthonormalize_inverse(op,ww)
          endif

@@ -342,7 +342,7 @@
           
              do icyc=1,options%cyc_minpack
                 write(stdout,*) 'Call fit_multipole'                                                               
-                call flush_unit(stdout)
+                FLUSH(stdout)
                 if(.not.l_real_axis) then
                    n_sample=options%n_fit
                 else
@@ -352,7 +352,7 @@
                 call fit_multipole(n_sample,options%n_multipoles,z,s,se%a_0(ii,is),&
                      &se%a(:,ii,is),se%b(:,ii,is),1.d0,options%fit_thres,options%fit_maxiter)
                 write(stdout,*) 'Done'
-                call flush_unit(stdout)
+                FLUSH(stdout)
 
                 a_0_old=se%a_0(ii,is)
                 do jj=1,options%n_multipoles
@@ -363,12 +363,12 @@
                 
                 if(options%n_max_minpack /= 0) then
                    write(stdout,*) 'Calling minpack'!ATTENZIONE
-                   call flush_unit(stdout)
+                   FLUSH(stdout)
                    call fit_multipole_minpack(n_sample,options%n_multipoles,z,s,se%a_0(ii,is),&
                         &se%a(:,ii,is),se%b(:,ii,is),options%fit_thres, options%n_max_minpack, chi)
                                
                    write(stdout,*) 'Done'!ATTENZIONE                                                   
-                   call flush_unit(stdout)
+                   FLUSH(stdout)
 
                 endif
 
@@ -400,7 +400,7 @@
                 write(stdout,*) 'FIT    a:',jj,se%a(jj,ii,is)
                 write(stdout,*) 'FIT    b:',jj,se%b(jj,ii,is)
              enddo
-             call flush_unit(stdout)
+             FLUSH(stdout)
           endif
        enddo
        call mp_sum(se%a_0(:,is),world_comm)
@@ -445,7 +445,7 @@
 
                       if(options%n_max_minpack /= 0) then
                          write(stdout,*) 'Calling minpack'!ATTENZIONE
-                         call flush_unit(stdout)
+                         FLUSH(stdout)
                          call fit_multipole_minpack(options%n_fit,options%n_multipoles,z,s,&
     &se%a_0_off(kk,ii,is),se%a_off(:,kk,ii,is),se%b_off(:,kk,ii,is),options%fit_thres, options%n_max_minpack, chi)
 
@@ -479,7 +479,7 @@
                       write(stdout,*) 'FIT    a:',jj,se%a_off(jj,kk,ii,is)
                       write(stdout,*) 'FIT    b:',jj,se%b_off(jj,kk,ii,is)
                    enddo
-                   call flush_unit(stdout)
+                   FLUSH(stdout)
                 endif
              enddo
 
@@ -500,7 +500,7 @@
 
     call mp_barrier( world_comm )
     write(stdout,*) 'Out of create_self_energy_fit'
-    call flush_unit(stdout)
+    FLUSH(stdout)
 
     return
   END SUBROUTINE create_self_energy_fit

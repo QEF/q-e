@@ -92,7 +92,7 @@ SUBROUTINE diago_cg_g(ndim,omat,smat,maxter,max_state,e,ovec,cutoff,ethr,found_s
   ! ... every eigenfunction is calculated separately
   !
   write(stdout,*) 'ATTENZIONE1'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   l_blk= (ndim)/nproc
   if(l_blk*nproc < ndim) l_blk = l_blk+1
@@ -139,16 +139,16 @@ SUBROUTINE diago_cg_g(ndim,omat,smat,maxter,max_state,e,ovec,cutoff,ethr,found_s
   END DO
 
   write(stdout,*) 'ATTENZIONE2'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   call mp_sum(hr(:,:,1),world_comm)
   call mp_sum(sr(:,:),world_comm)
   write(stdout,*) 'Call rdiaghg'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   CALL rdiaghg( max_state, max_state, hr, sr, max_state, en, hr(1,1,2) )
   write(stdout,*) 'Done'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   e(1:max_state) = en(1:max_state)
 
@@ -181,7 +181,7 @@ SUBROUTINE diago_cg_g(ndim,omat,smat,maxter,max_state,e,ovec,cutoff,ethr,found_s
 
 
   write(stdout,*) 'ATTENZIONE3'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
 
 
@@ -192,7 +192,7 @@ SUBROUTINE diago_cg_g(ndim,omat,smat,maxter,max_state,e,ovec,cutoff,ethr,found_s
 states:  DO m = 1, max_state
     
    write(stdout,*) 'ATTENZIONE4',m
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
     
      !
@@ -413,7 +413,7 @@ states:  DO m = 1, max_state
         !
         IF ( ABS( e(m) - e0 ) < ethr ) THEN
            write(stdout,*) 'State:',m,'Iterations:',iter,e(m)
-           call flush_unit(stdout)
+           FLUSH(stdout)
           
            EXIT iterate
         ELSE
@@ -441,7 +441,7 @@ states:  DO m = 1, max_state
         !
         IF ( e(m) - e(m-1) < - 2.D0 * ethr ) THEN
            write(stdout,*) 'DO REORDER:',m
-           call flush_unit(stdout)
+           FLUSH(stdout)
            !
            ! ... if the last calculated eigenvalue is not the largest...
            !

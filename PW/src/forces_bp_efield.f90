@@ -263,7 +263,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
    ALLOCATE(pdl_elec(nstring))
    ALLOCATE(mod_elec(nstring))
 
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
 
 !  -------------------------------------------------------------------------   !

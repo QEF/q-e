@@ -656,7 +656,7 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   allocate(igk_(npwx), igkq_(npwx))
   allocate (psi_scratch ( dffts%nnr) )
   allocate (phase(dffts%nnr))
-  call flush_unit (6)
+  FLUSH (6)
 
   g_scra=g
 

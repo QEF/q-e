@@ -124,7 +124,7 @@
             endif
          enddo
          qp%ene_gw(ii,is)= qp%ene_gw(ii,is)-offset
-         call flush_unit(stdout)
+         FLUSH(stdout)
       enddo
 
 
@@ -169,7 +169,7 @@
          call  self_on_real_value(sr,ii,is,energy,sigmac,ierr)
          if(ierr/=0) then
             write(stdout,*) 'OUT OF RANGE:self_on_real_value',energy
-            call flush_unit(stdout)
+            FLUSH(stdout)
             !stop!ATTENZIONE
          endif
          write(stdout,*) 'Iteration energy 0', dble(qp%ene_gw(ii,is))
@@ -181,11 +181,11 @@
             call  self_on_real_value(sr,ii,is, qp%ene_gw(ii,is),sigmac,ierr)
             if(ierr/=0) then
                write(stdout,*) 'OUT OF RANGE:self_on_real_value',it,qp%ene_gw(ii,is)
-               call flush_unit(stdout)
+               FLUSH(stdout)
                !stop!ATTENZIONE
             endif
             write(stdout,*) 'Iteration energy',it,sigmac,dble(qp%ene_gw(ii,is))
-            call flush_unit(stdout)
+            FLUSH(stdout)
             qp%ene_gw(ii,is)=qp%ene_dft_ks(ii,is)+sigmac+qp%ene_x(ii,is)-qp%ene_dft_xc(ii,is) 
          enddo
       enddo

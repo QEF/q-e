@@ -37,7 +37,7 @@
   iter = 1
   !
   WRITE( stdout, 9002 )
-  CALL flush_unit( stdout )
+  FLUSH( stdout )
   !
   IF ( lelfield) THEN
      !

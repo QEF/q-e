@@ -54,7 +54,7 @@ subroutine calculate_wing(n_set, orthonorm)
 !read file .e_head
 
   write(stdout,*) 'Routine calculate_wing'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   allocate(fact(ngm))
   allocate(k2g_ig_l2g(ngm))
 
@@ -70,7 +70,7 @@ subroutine calculate_wing(n_set, orthonorm)
   call ktogamma_ig_l2g ( k2g_ig_l2g, at, bg )
 
   write(stdout,*) 'ATT0.1'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   
   
@@ -92,7 +92,7 @@ subroutine calculate_wing(n_set, orthonorm)
    endif
 
   write(stdout,*) 'ATT0.2'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
 
    call mp_bcast(freqs(:), ionode_id,world_comm)
@@ -111,12 +111,12 @@ subroutine calculate_wing(n_set, orthonorm)
     if(ionode) close(iun)
 
    write(stdout,*) 'ATT1'
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
    deallocate(e_head_g0)
 !loop on n_set groups
    write(stdout,*) 'ATT2'
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
 
    allocate(tmpspacei(max_ngm,n_set))
@@ -144,7 +144,7 @@ subroutine calculate_wing(n_set, orthonorm)
 
 
       write(stdout,*) 'ATT3'
-      call flush_unit(stdout)
+      FLUSH(stdout)
 
 
  !loop on states
@@ -167,7 +167,7 @@ subroutine calculate_wing(n_set, orthonorm)
    enddo
 
     write(stdout,*) 'ATT4'
-   call flush_unit(stdout)
+   FLUSH(stdout)
    
 
 !write terms on file

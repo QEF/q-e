@@ -50,7 +50,7 @@ SUBROUTINE wfc_gamma_real(itask,ispin)
   REAL(kind=DP), ALLOCATABLE :: tmpreal(:)
 
   if(l_verbose) write(stdout,*) 'FUNCTION WFC_REAL' !ATTENZIONE
-    call flush_unit(stdout)
+    FLUSH(stdout)
 
     allocate(tmpreal(dffts%nnr))
 
@@ -88,7 +88,7 @@ SUBROUTINE wfc_gamma_real(itask,ispin)
 
   DO ibnd = 1, nbnd, 2
       if(l_verbose) write(stdout,*) 'IBND:',ibnd
-     call flush_unit(stdout)
+     FLUSH(stdout)
      !
      psic(:) = ( 0.D0, 0.D0 )
         !
@@ -109,7 +109,7 @@ SUBROUTINE wfc_gamma_real(itask,ispin)
      END IF
              !
       if(l_verbose) write(stdout,*) 'before'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      CALL invfft ('Wave', psic, dffts)
                     !
@@ -119,7 +119,7 @@ SUBROUTINE wfc_gamma_real(itask,ispin)
              !
      
      if(l_verbose) write(stdout,*) 'after'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      tmpreal(:)= DBLE(psic(:))
      CALL davcio( tmpreal,dffts%nnr,iunwfcreal,ibnd+(ispin-1)*nbnd,1)

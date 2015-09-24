@@ -131,7 +131,7 @@ CONTAINS
 
     job = ' '
     prefix = 'pwscf'
-    CALL get_env( 'ESPRESSO_TMPDIR', tmp_dir )
+    CALL get_environment_variable( 'ESPRESSO_TMPDIR', tmp_dir )
     IF ( TRIM( tmp_dir ) == ' ' ) tmp_dir = './scratch/'
     conv_threshold = 1e-14_dp
     q_gipaw = 0.01_dp
@@ -223,7 +223,7 @@ CONTAINS
     USE io_global,     ONLY : stdout
     IMPLICIT NONE
 
-    CALL flush_unit( stdout )
+    FLUSH( stdout )
   END SUBROUTINE gipaw_summary
 
 

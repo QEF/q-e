@@ -242,7 +242,7 @@ SUBROUTINE electrons()
   END DO
   !
   WRITE( stdout, 9120 ) iter
-  CALL flush_unit( stdout )
+  FLUSH( stdout )
   !
   RETURN
   !
@@ -382,7 +382,7 @@ SUBROUTINE electrons_scf ( printout )
   !
   CALL start_clock( 'electrons' )
   !
-  CALL flush_unit( stdout )
+  FLUSH( stdout )
   !
   ! ... calculates the ewald contribution to total energy
   !
@@ -402,7 +402,7 @@ SUBROUTINE electrons_scf ( printout )
   call create_scf_type ( rhoin )
   !
   WRITE( stdout, 9002 )
-  CALL flush_unit( stdout )
+  FLUSH( stdout )
   !
   CALL open_mix_file( iunmix, 'mix', exst )
   !
@@ -421,7 +421,7 @@ SUBROUTINE electrons_scf ( printout )
      !
      WRITE( stdout, 9010 ) iter, ecutwfc, mixing_beta
      !
-     CALL flush_unit( stdout )
+     FLUSH( stdout )
      !
      ! ... Convergence threshold for iterative diagonalization is
      ! ... automatically updated during self consistency
@@ -766,7 +766,7 @@ SUBROUTINE electrons_scf ( printout )
   WRITE( stdout, 9101 )
   WRITE( stdout, 9120 ) iter
   !
-10  CALL flush_unit( stdout )
+10  FLUSH( stdout )
   !
   ! ... exiting: write (unless disables) the charge density to file
   ! ... (also write ldaU ns coefficients and PAW becsum)
@@ -1107,7 +1107,7 @@ SUBROUTINE electrons_scf ( printout )
        IF ( i_cons /= 0 .AND. i_cons < 4 ) &
             WRITE( stdout, 9073 ) lambda
        !
-       CALL flush_unit( stdout )
+       FLUSH( stdout )
        !
        RETURN
        !

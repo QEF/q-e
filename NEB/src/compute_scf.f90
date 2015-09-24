@@ -69,7 +69,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   istep = istep_path
   istat = 0
   !
-  CALL flush_unit( iunpath )
+  FLUSH( iunpath )
   !
   ALLOCATE( tauold( 3, nat, 3 ) )
   !

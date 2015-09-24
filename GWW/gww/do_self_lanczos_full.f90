@@ -103,7 +103,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
      l_single=.false.
   endif
   write(stdout,*) 'Routine do_self_lanczos_time'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
 
   if(options%l_big_system) then
@@ -229,7 +229,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
  !read polarizability matrices     
   
      if( options%l_verbose) write(stdout,*) 'Read Pgreek'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      do iw=nbegin,nend
         call read_polaw(iw,ww,options%debug,options%l_verbose)
@@ -245,7 +245,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
 
 
      write(stdout,*) 'Fourier trasform Pgreek'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 
      allocate(pw_tmp(numpw,numpw))
@@ -312,7 +312,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
         call read_data_pw_lanczos_chain(lc, i_list(i_cycles,is), options%prefix, .false.,is)
      endif
      write(stdout,*) 'Lanczos dimensions', lc%numt,lc%num_steps,is
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 
   
@@ -361,7 +361,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
 
      do ii=i_min_cycles,i_max_cycles
         write(stdout,*) 'Loop on KS:',ii, is
-        call flush_unit(stdout)
+        FLUSH(stdout)
         
 
 
@@ -394,7 +394,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
            allocate(tmp_mat(numpw,nums))
            do iw=nbegin_g,nend_g
               if( options%l_verbose) write(stdout,*) 'Doing dgemms',nums,numpw,l_blk,iw
-              call flush_unit(stdout)
+              FLUSH(stdout)
               
               do ipol=1,2
                 
@@ -413,7 +413,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
            deallocate(tmp_mat)
  
            write(stdout,*) 'Fourier trasform:'
-           call flush_unit(stdout)
+           FLUSH(stdout)
 
 
 
@@ -421,7 +421,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
            allocate(g_tmp(numpw,numpw))
            allocate(g_dumm(numpw,numpw))
            if( options%l_verbose) write(stdout,*) 'ATT1'
-           call flush_unit(stdout)
+           FLUSH(stdout)
            
            do ipol=1,2
 !loop on time
@@ -480,7 +480,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
            deallocate(g_tmp,g_dumm)
           
            if( options%l_verbose) write(stdout,*) 'done'
-           call flush_unit(stdout)
+           FLUSH(stdout)
 
 
    
@@ -489,7 +489,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
 
      
            write(stdout,*) 'Products in imaginary time:'
-           call flush_unit(stdout)
+           FLUSH(stdout)
 
            
           
@@ -579,7 +579,7 @@ subroutine do_self_lanczos_full(ss, tf ,options,l_real_axis,energy)
            deallocate(tmp_mat,tmp_vec)
            
            if( options%l_verbose) write(stdout,*) 'done'
-           call flush_unit(stdout)
+           FLUSH(stdout)
 
 
 

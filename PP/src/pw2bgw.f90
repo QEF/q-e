@@ -171,7 +171,7 @@ PROGRAM pw2bgw
   CALL environment_start ( codename )
 
   prefix = 'prefix'
-  CALL get_env ( 'ESPRESSO_TMPDIR', outdir )
+  CALL get_environment_variable ( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM ( outdir ) == ' ' ) outdir = './'
   real_or_complex = 2
   symm_type = 'cubic'

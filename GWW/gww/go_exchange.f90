@@ -48,7 +48,7 @@
 
 
    if(options%l_verbose) write(stdout,*) 'Routine go_exchange main1'
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
    !read U matrix
    call read_data_pw_u(uu,options%prefix)
@@ -57,7 +57,7 @@
  !  call read_data_pw_q(qm,options%prefix,options%l_self_from_pola)
 
      if(options%l_verbose) write(stdout,*) 'Routine go_exchange main2'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
   if(is_my_time(0)) then
      call create_green_part(gg,uu,0.d0, options%debug,.false.,.false.,dumm)

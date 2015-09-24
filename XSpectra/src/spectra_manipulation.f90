@@ -120,7 +120,6 @@ Program manip_spectra
 
   LOGICAL                    :: found
   INTEGER                    :: i, j
-  INTEGER, EXTERNAL          :: i_argc
   INTEGER                    :: nargs, iiarg, ierr, ios
   INTEGER                    :: nenergy, istart, i0_l2, nenergy_conv
   REAL(kind=dp)              :: el2, el3, so_splitting, emin_conv, emax_conv, de
@@ -163,19 +162,19 @@ Program manip_spectra
   ! Read namelist
   !
   
-  nargs = i_argc()
+  nargs = command_argument_count()
   found = .FALSE.
   input_file = ' '
   
   DO iiarg = 1, (nargs-1)
      !
-     CALL get_arg( iiarg, input_file )
+     CALL get_command_argument( iiarg, input_file )
      IF ( TRIM( input_file ) == '-input' .OR. &
           TRIM( input_file ) == '-inp'   .OR. &
           TRIM( input_file ) == '-in'    .OR. &
           TRIM( input_file ) == '-i' ) THEN
         !
-        CALL get_arg( ( iiarg + 1 ) , input_file )
+        CALL get_command_argument( ( iiarg + 1 ) , input_file )
         found = .TRUE.
         EXIT
      ENDIF

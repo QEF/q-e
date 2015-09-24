@@ -303,7 +303,7 @@ PROGRAM pw_export
   !   set default values for variables in namelist
   !
   prefix='export'
-  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+  CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
   IF ( trim( outdir ) == ' ' ) outdir = './'
   pp_file= ' '
   uspp_spsi = .false.

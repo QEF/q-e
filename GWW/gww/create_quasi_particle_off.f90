@@ -115,7 +115,7 @@
 !            call ZGEEV('N','V',qp%max_i,hmat,qp%max_i,hval,hvec,qp%max_i,hvec,qp%max_i,work,-1,rwork,info)
 !            if(info/=0) then
 !               write(stdout,*) 'Problems with ZGEEV:', info
-!               call flush_unit(stdout)
+!               FLUSH(stdout)
 !               stop
 !            endif
 !            lwork=int(work(1))
@@ -124,7 +124,7 @@
 !            call ZGEEV('N','V',qp%max_i,hmat,qp%max_i,hval,hvec,qp%max_i,hvec,qp%max_i,work,lwork,rwork,info)
 !            if(info/=0) then
 !               write(stdout,*) 'Problems with ZGEEV:', info
-!               call flush_unit(stdout)
+!               FLUSH(stdout)
 !               stop
 !            endif
 !           deallocate(work)
@@ -138,7 +138,7 @@
                  &abnrm,rconde,rcondv,work,-1,rwork,info)
             if(info/=0) then                                                                                               
                write(stdout,*) 'Problems with ZGEEVX:', info
-               call flush_unit(stdout)                                                                                     
+               FLUSH(stdout)                                                                                     
                stop                                                                                                        
             endif                                                                                                          
             lwork=int(work(1))                                                                                             
@@ -148,7 +148,7 @@
                  &abnrm,rconde,rcondv,work,lwork,rwork,info)
             if(info/=0) then
                write(stdout,*) 'Problems with ZGEEVX:', info
-                call flush_unit(stdout)
+                FLUSH(stdout)
                 stop                                                                                                      
             endif                                                                                                          
             deallocate(work)
@@ -161,7 +161,7 @@
             do jj=1,qp%max_i
                write(stdout,*) 'COMPLEX EN:',jj,is,it,hval(jj)
             enddo
-            call flush_unit(stdout)
+            FLUSH(stdout)
 
 
 !find the vector most close to the previous one 

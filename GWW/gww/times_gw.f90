@@ -629,11 +629,11 @@
         endif
         write(stdout,*) 'N:', tf%n,tf%n_g
         write(stdout,*) 'Omega:', tf%omega,tf%omega_g
-        call flush_unit(stdout)
+        FLUSH(stdout)
         do i=-tf%n,tf%n
            write(stdout,*)'freq:',i, tf%freqs(i),tf%freqs_g(i)
            write(stdout,*)'weight:',i, tf%weights_freq(i),tf%weights_freq_g(i)
-           call flush_unit(stdout)   
+           FLUSH(stdout)   
         enddo
 
         return

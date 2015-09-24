@@ -646,7 +646,7 @@ CONTAINS
 
     !IF( ionode ) write(*,*) '  Number of rules: ', n_rules
 
-    CALL flush_unit(6)
+    FLUSH(6)
 
 20  CONTINUE
 

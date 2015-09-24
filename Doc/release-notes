@@ -1,3 +1,9 @@
+Incompatible changes in svn version:
+
+   * Standard F2003 calls to: get_environment_variable, get_command_argument, 
+     command_argument_count, flush, are used everywhere instead of wrappers.
+     Some old versions of compilers may no longer work.
+
 New in 5.2.1 version:
 
    * svdW-DF, a proper spin version of vdW-DF (PRL 115, 136402 (2015);

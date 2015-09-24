@@ -55,7 +55,7 @@ PROGRAM wfck2r
   CALL environment_start ( 'WFCK2R' )
 
   prefix = 'pwscf'
-  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+  CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
 
   IF ( npool > 1 ) CALL errore('bands','pools not implemented',npool)

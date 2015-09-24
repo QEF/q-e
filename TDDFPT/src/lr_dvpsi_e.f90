@@ -127,7 +127,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
        & " linter: root not converged ",e10.3)') &
        ik, ibnd, anorm
   !
-  CALL flush_unit( stdout )
+  FLUSH( stdout )
   !
   ! we have now obtained P_c x |psi>.
   ! In the case of USPP this quantity is needed for the Born

@@ -57,7 +57,7 @@ PROGRAM do_projwfc
   !   set default values for variables in namelist
   !
   prefix = 'pwscf'
-  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+  CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
   IF ( trim( outdir ) == ' ' ) outdir = './'
   filproj= ' '
   filpdos= ' '
@@ -203,11 +203,11 @@ SUBROUTINE get_et_from_gww ( nbnd, et )
   !
   INQUIRE ( file='bands.dat', EXIST=lex )
   WRITE(stdout,*) 'lex=', lex
-  CALL flush_unit(stdout)
+  FLUSH(stdout)
   !
   IF(lex) THEN
      WRITE(stdout,*) 'Read the file bands.dat => GWA Eigenvalues used.'
-     CALL flush_unit(stdout)
+     FLUSH(stdout)
      iun = find_free_unit()
      OPEN(unit=iun, file='bands.dat', status='unknown', form='formatted', &
           IOSTAT=ios)
@@ -219,7 +219,7 @@ SUBROUTINE get_et_from_gww ( nbnd, et )
   ELSE
      WRITE(stdout,*) 'The file bands.dat does not exist.'
      WRITE(stdout,*) 'Eigenergies are not modified'
-     CALL flush_unit(stdout)
+     FLUSH(stdout)
   ENDIF
 END SUBROUTINE get_et_from_gww
 !

@@ -386,7 +386,7 @@ SUBROUTINE solve_e_vdw ( iu )
      WRITE( stdout, "(5x,' thresh=',e10.3, ' al_mix_vdw = ',f6.3, &
           &      ' |ddv_scf|^2 = ',e10.3 )") thresh, al_mix_vdw (kter), dr2
 #ifdef FLUSH
-     CALL flush_unit (6)
+     FLUSH (6)
 #endif
 
 !     call seqopn (iunrec, 'recover', 'unformatted', exst)

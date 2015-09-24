@@ -57,7 +57,7 @@ subroutine pola_partial(numpw,ispin)
    fc%dual_t=dual_vt
    
    write(stdout,*) 'Call initialize_fft_custom'
-   call flush_unit(stdout)
+   FLUSH(stdout)
    call initialize_fft_custom(fc)
    allocate(evc_g(fc%ngmt_g))
 
@@ -159,7 +159,7 @@ subroutine pola_partial(numpw,ispin)
 
      if(ionode) close(iun)
      write(stdout,*) 'Call deallocate_fft_custom'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      deallocate(evc_g,p_basis,p_basis_t)
      deallocate(evc_t,evc_r)
      deallocate(prod_r,prod_g)

@@ -243,22 +243,22 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 !if required calculates also the KS energies
  !     if(restart_gww==-1) then
          if(l_verbose) write(stdout,*) 'ATTENZIONE1'
-         call flush_unit(stdout)
+         FLUSH(stdout)
          !allocate( becp%r( nkb, nbnd ) )
          call allocate_bec_type ( nkb, nbnd, becp)
          if(l_verbose) write(stdout,*) 'ATTENZIONE2'
-         call flush_unit(stdout)
+         FLUSH(stdout)
 
          IF ( nkb > 0 )  CALL init_us_2( npw, igk, xk(1,1), vkb )
          !call ccalbec( nkb, npwx, npw, nbnd, becp%r, vkb, evc )
         !if(nkb> 0)CALL calbec ( npw, vkb, psi, becp, nbnd)
 
         if(l_verbose)write(stdout,*) 'ATTENZIONE3'
-         call flush_unit(stdout)
+         FLUSH(stdout)
 
          allocate(hpsi(npwx,nbnd))
          if(l_verbose)write(stdout,*) 'ATTENZIONE4'
-         call flush_unit(stdout)
+         FLUSH(stdout)
 
          g2kin(1:npw) = ( ( xk(1,1) + g(1,igk(1:npw)) )**2 + &
               ( xk(2,1) + g(2,igk(1:npw)) )**2 + &
@@ -266,7 +266,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 
 
          if(l_verbose)write(stdout,*) 'ATTENZIONE5'
-          call flush_unit(stdout)
+          FLUSH(stdout)
 
 
  !         exxalfa=0.d0!ATTENZIONE
@@ -274,7 +274,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
          et(:,ispin)=0.d0
          if(l_verbose)write(stdout,*) 'ATTENZIONE6'
          if(l_verbose)write(stdout,*) 'EXXALFA', exxalfa
-         call flush_unit(stdout)
+         FLUSH(stdout)
 
           do ibnd=1,nbnd
 
@@ -294,7 +294,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
           endif
 
           if(l_verbose)write(stdout,*) 'ATTENZIONE7'
-          call flush_unit(stdout)
+          FLUSH(stdout)
 !if required calculate Hubbard U contribution to eigen-energies
          e_hub(:)=0.d0
          if ( lda_plus_u ) then
@@ -314,13 +314,13 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
             do ibnd=1,nbnd
                write(stdout,*) 'Hubbard U energy:',ibnd,e_hub(ibnd)*rytoev
             enddo
-            call flush_unit(stdout)
+            FLUSH(stdout)
 
          endif
           do ibnd=1,nbnd
              write(stdout,*) 'KS energy:',ibnd,et(ibnd,ispin)*rytoev
           enddo
-          call flush_unit(stdout)
+          FLUSH(stdout)
 
 !in case of hybrid functionals and HF we have to calculated also the exact exchange part
 

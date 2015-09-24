@@ -229,7 +229,7 @@
       !
       !   Flush stdout
       !
-      CALL flush_unit( stdout )
+      FLUSH( stdout )
       !
       CALL stop_clock( 'init_dim' )
       !

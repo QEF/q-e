@@ -292,7 +292,7 @@ subroutine d3_summary
   enddo
   WRITE( stdout, '(/20x,"**   Complex  Version    **")')
   !
-  CALL flush_unit( stdout )
+  FLUSH( stdout )
   !
   return
 end subroutine d3_summary

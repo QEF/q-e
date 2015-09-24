@@ -176,7 +176,7 @@
 
     if(ttl%ii /= vtl%ii) then
        write(stdout,*) 'Routine do_compact_q_lanczos: state v not equal'
-       call flush_unit(stdout)
+       FLUSH(stdout)
        stop
     else
        cql%ii=ttl%ii

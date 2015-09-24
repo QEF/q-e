@@ -187,7 +187,7 @@ subroutine init_gipaw_1
                             "projectors linearly dependent:", &
                             "ntyp =", nt, ", l/n1/n2 = ", l, ih, jh, &
                             s(ih,jh)
-                       call flush_unit ( stdout )
+                       FLUSH ( stdout )
                        CALL errore ( "init_gipaw_1", &
                             "two projectors are linearly dependent", +1 )
                     ELSE IF ( ABS ( ABS ( s(ih,jh) ) - 1.0_dp ) < 1.e-2_dp ) &
@@ -200,7 +200,7 @@ subroutine init_gipaw_1
                             "init_gipaw_1: ", &
                             "projectors nearly linearly dependent:", &
                             "ntyp =", nt, ", l/n1/n2 = ", l, ih, jh, s(ih,jh)
-                       call flush_unit ( stdout )
+                       FLUSH ( stdout )
                     END IF
                  END IF
                  !</apsi>

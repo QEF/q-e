@@ -37,7 +37,7 @@ subroutine calculate_compact_pola_lanczos(options,ispin)
   call initialize_compact_q_lanczos(cql)
 
   write(stdout,*) 'Routine calculate_compact_pola_lanczos'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 !
 !read U matrix
   call read_data_pw_u(uu,options%prefix)
@@ -141,11 +141,11 @@ subroutine solve_lanczos(nbuf, alpha,e_mat,lc, l_verbose)
            o_mat(:,:,:)=lc%o_mat(:,:,1:nsize)
         endif
         if(l_verbose) write(stdout,*) 'proc:', iproc, lc%numt,lc%num_steps,l_blk,nsize
-        if(l_verbose)call flush_unit(stdout)
+        if(l_verbose)FLUSH(stdout)
 
         call mp_bcast(o_mat, iproc, world_comm)
         if(l_verbose) write(stdout,*) 'mp_bcast done'
-        if(l_verbose)call flush_unit(stdout)
+        if(l_verbose)FLUSH(stdout)
       
  
         do iv=1,nbuf
@@ -160,14 +160,14 @@ subroutine solve_lanczos(nbuf, alpha,e_mat,lc, l_verbose)
               call zgtsv(lc%num_steps,1,dl,d,du,t,lc%num_steps,info)
               if(info /= 0) then
                  write(stdout,*) 'ZGTSV info:', info
-                 call flush_unit(stdout)
+                 FLUSH(stdout)
                  stop
               endif
 !!calculate term
               tr(:,io-nbegin+1)=dble(t(:))
            enddo
            if(l_verbose) write(stdout,*) 'zgtsv done'
-           if(l_verbose) call flush_unit(stdout)
+           if(l_verbose) FLUSH(stdout)
 
            do io=nbegin,nend
           
@@ -176,7 +176,7 @@ subroutine solve_lanczos(nbuf, alpha,e_mat,lc, l_verbose)
           !   call dgemm('N','N',lc%numt,1,lc%num_steps,1.d0,o_mat(1,1,io-nbegin+1),lc%numt,tr(1,io-nbegin+1),lc%num_steps,1.d0,e_mat(1,io,iv),lc%numt)
            enddo
            if(l_verbose) write(stdout,*) 'dgemv done'
-           if(l_verbose) call flush_unit(stdout)
+           if(l_verbose) FLUSH(stdout)
 
         enddo!on iv
      end if
@@ -223,7 +223,7 @@ subroutine solve_lanczos_fake(lc,l_verbose)
            o_mat(:,:,:)=lc%o_mat(:,:,1:nsize)
         endif
         if(l_verbose) write(stdout,*) 'proc:', iproc, lc%numt,lc%num_steps,l_blk,nsize
-        if(l_verbose) call flush_unit(stdout)
+        if(l_verbose) FLUSH(stdout)
         call mp_bcast(o_mat, iproc,world_comm)
      endif
   enddo
@@ -301,7 +301,7 @@ subroutine do_polarization_lanczos(tf,options,ispin)
 
 
    write(stdout,*) 'Routine: do_polarization_lanczos'
-   call flush_unit(stdout)
+   FLUSH(stdout)
    call initialize_memory(vtl)
    call initialize_memory(ttl)
    call initialize_memory(po)
@@ -460,7 +460,7 @@ subroutine do_polarization_lanczos(tf,options,ispin)
 
 
          write(stdout,*) 'do_polarization_lanczos1', iw, l_do_restart
-         call flush_unit(stdout)
+         FLUSH(stdout)
 
 !!set up polaw descriptor
 !if required read polaw from disk
@@ -480,7 +480,7 @@ subroutine do_polarization_lanczos(tf,options,ispin)
 !!loop on valence states v
          do iv=iv_begin,uu%nums_occ(ispin),n_bufv       
             write(stdout,*) 'do_polarization_lanczos iv', iv
-            call flush_unit(stdout)
+            FLUSH(stdout)
 
 
 !!!solve tridiagonal problem for -E_v+i\omega
@@ -499,7 +499,7 @@ subroutine do_polarization_lanczos(tf,options,ispin)
                endif
             enddo
             if(options%l_verbose) write(stdout,*) 'Call solve_lanczos'
-            if(options%l_verbose) call flush_unit(stdout)
+            if(options%l_verbose) FLUSH(stdout)
             if(iv==1.and.ispin/=2) then
 !                if(options%l_t_wannier) then
 !                   pw%numpw=cql%numpw
@@ -519,7 +519,7 @@ subroutine do_polarization_lanczos(tf,options,ispin)
     &cql_save,pw,n_dim,options%l_t_wannier,vtl_save,ttl_save,l_reduce_memory,uu%nspin,occ,options%l_verbose)
            
              if(options%l_verbose) write(stdout,*) 'Done'
-             if(options%l_verbose) call flush_unit(stdout)
+             if(options%l_verbose) FLUSH(stdout)
          
    
 #ifdef __OPENMP
@@ -808,7 +808,7 @@ subroutine solve_lanczos_2(numpw,numt,numl,nbuf,mbuf, alpha,lc, iv0,nbndv,&
               call zgtsv(lc%num_steps,1,dl,d,du,t,lc%num_steps,info)
               if(info /= 0) then
                  write(stdout,*) 'ZGTSV info:', info
-                 call flush_unit(stdout)
+                 FLUSH(stdout)
                  stop
               endif
 !!calculate term
@@ -818,7 +818,7 @@ subroutine solve_lanczos_2(numpw,numt,numl,nbuf,mbuf, alpha,lc, iv0,nbndv,&
 !           deallocate(dl,du,d,t)
 !$OMP END PARALLEL
            if(l_verbose) write(stdout,*) 'zgtsv done'
-           if(l_verbose) call flush_unit(stdout)
+           if(l_verbose) FLUSH(stdout)
 
            if(.not.l_qo) then
               do io=nbegin,nend
@@ -828,7 +828,7 @@ subroutine solve_lanczos_2(numpw,numt,numl,nbuf,mbuf, alpha,lc, iv0,nbndv,&
               enddo
            endif
            if(l_verbose) write(stdout,*) 'dgemv done',nsize
-           if(l_verbose) call flush_unit(stdout)
+           if(l_verbose) FLUSH(stdout)
 
            if(nbegin <= lc%numt) then
               if(l_t_wannier) then
@@ -839,7 +839,7 @@ subroutine solve_lanczos_2(numpw,numt,numl,nbuf,mbuf, alpha,lc, iv0,nbndv,&
                        call dgemm('N','N',numpw,nsize,numt,1.d0,qlm_tmp(1,1,1),numpw,e_mat_ip,lc%numt,0.d0,tmp_mat,numpw)
                     endif
                     if(l_verbose) write(stdout,*) 'dgemm1 done'
-                    if(l_verbose) call flush_unit(stdout)
+                    if(l_verbose) FLUSH(stdout)
                  else
                     do io=nbegin,nend
                        call dgemv( 'N', numpw,lc%num_steps,1.d0, qo_mat(1,1,io-nbegin+1,iv), &
@@ -854,17 +854,17 @@ subroutine solve_lanczos_2(numpw,numt,numl,nbuf,mbuf, alpha,lc, iv0,nbndv,&
                     call dgemm('N','T',numpw,numpw,nsize,factor*occ(iv),tmp_mat,numpw,qlm_tmp(1,nbegin,1),numpw,1.d0,pw_ip,numpw)
                  endif
                  if(l_verbose) write(stdout,*) 'dgemm2 done', pw%numpw, numpw,ierr
-                 if(l_verbose) call flush_unit(stdout)
+                 if(l_verbose) FLUSH(stdout)
               else
                  call dgemm('T','N',numl,nsize,numt,1.d0,ttl_tmp(1,1,iv),numt,e_mat_ip,numt,0.d0,tmp_mat1,numl)
                  if(l_verbose) write(stdout,*) 'dgemm1 done'
-                 if(l_verbose) call flush_unit(stdout)
+                 if(l_verbose) FLUSH(stdout)
                  call dgemm('N','N',numpw,nsize,numl,1.d0,vtl_tmp(1,1,iv),numpw,tmp_mat1,numl,0.d0,tmp_mat2,numpw)
                  if(l_verbose) write(stdout,*) 'dgemm2 done'
-                 if(l_verbose) call flush_unit(stdout)
+                 if(l_verbose) FLUSH(stdout)
                  call dgemm('N','N', numpw,numl,nsize,1.d0,tmp_mat2,numpw,ttl_tmp(nbegin,1,iv),numt,0.d0,tmp_mat3,numpw)
                  if(l_verbose)write(stdout,*) 'dgemm3 done'
-                 if(l_verbose) call flush_unit(stdout)
+                 if(l_verbose) FLUSH(stdout)
                  call dgemm('N','T', numpw,numpw,numl,factor*occ(iv),tmp_mat3,numpw,vtl_tmp(1,1,iv),numpw,1.d0,pw_ip,numpw)
 
                  
@@ -893,7 +893,7 @@ subroutine solve_lanczos_2(numpw,numt,numl,nbuf,mbuf, alpha,lc, iv0,nbndv,&
         endif
 
         if(l_verbose) write(stdout,*) 'mpi_reduce done'
-        if(l_verbose) call flush_unit(stdout)
+        if(l_verbose) FLUSH(stdout)
 #else
         pw%pw(:,:)=pw%pw(:,:)+pw_ip(:,:)
 #endif

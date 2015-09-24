@@ -216,7 +216,7 @@ SUBROUTINE dvpsi_e_vdw (kpoint, ipol)
        kpoint, ibnd, anorm
   !
 #ifdef FLUSH
-  CALL flush_unit (6)
+  FLUSH (6)
 #endif
   !
   ! we have now obtained P_c x |psi>.

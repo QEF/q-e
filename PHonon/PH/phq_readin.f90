@@ -246,7 +246,7 @@ SUBROUTINE phq_readin()
   max_seconds  =  1.E+7_DP
   reduce_io    = .FALSE.
   IF ( TRIM(outdir) == './') THEN
-     CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+     CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
      IF ( TRIM( outdir ) == ' ' ) outdir = './'
   ENDIF
   prefix       = 'pwscf'
@@ -285,7 +285,7 @@ SUBROUTINE phq_readin()
   drho_star%basis = 'modes'
   drho_star%pat  = .TRUE.
   drho_star%ext = 'drho'
-  CALL get_env( 'ESPRESSO_FILDRHO_DIR', drho_star%dir)
+  CALL get_environment_variable( 'ESPRESSO_FILDRHO_DIR', drho_star%dir)
   IF ( TRIM( drho_star%dir ) == ' ' ) &
       drho_star%dir = TRIM(outdir)//"/Rotated_DRHO/"
   !
@@ -293,7 +293,7 @@ SUBROUTINE phq_readin()
   dvscf_star%basis = 'modes'
   dvscf_star%pat  = .FALSE.
   dvscf_star%ext = 'dvscf'
-  CALL get_env( 'ESPRESSO_FILDVSCF_DIR', dvscf_star%dir)
+  CALL get_environment_variable( 'ESPRESSO_FILDVSCF_DIR', dvscf_star%dir)
   IF ( TRIM( dvscf_star%dir ) == ' ' ) &
       dvscf_star%dir = TRIM(outdir)//"/Rotated_DVSCF/"
   !

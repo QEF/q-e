@@ -132,7 +132,7 @@ PROGRAM pw2wannier90
      !
      !   set default values for variables in namelist
      !
-     CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+     CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
      IF ( trim( outdir ) == ' ' ) outdir = './'
      prefix = ' '
      seedname = 'wannier'
@@ -1186,7 +1186,7 @@ SUBROUTINE compute_mmn
    DO ik=1,iknum
       WRITE (stdout,'(i8)',advance='no') ik
       IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
-      CALL flush_unit(stdout)
+      FLUSH(stdout)
       ikevc = ik + ikstart - 1
          CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
       CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
@@ -2040,7 +2040,7 @@ SUBROUTINE compute_amn
    DO ik=1,iknum
       WRITE (stdout,'(i8)',advance='no') ik
       IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
-      CALL flush_unit(stdout)
+      FLUSH(stdout)
       ikevc = ik + ikstart - 1
 !      if(noncolin) then
 !         call davcio (evc_nc, 2*nwordwfc, iunwfc, ikevc, -1 )
@@ -2366,7 +2366,7 @@ SUBROUTINE write_plot
 
       WRITE (stdout,'(i8)',advance='no') ik
       IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
-      CALL flush_unit(stdout)
+      FLUSH(stdout)
 
       ikevc = ik - ikstart + 1
 

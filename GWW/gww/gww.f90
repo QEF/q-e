@@ -86,13 +86,13 @@
    endif
 #endif
 
-   call flush_unit(stdout)
+   FLUSH(stdout)
    if(options%grid_freq/=5.and.options%grid_freq/=6) then
       call setup_para_gww(options%n, options%max_i, options%i_min, options%i_max)
    else
       call setup_para_gww(options%n+(1+2*options%second_grid_i)*options%second_grid_n, options%max_i, options%i_min, options%i_max)
    endif
-   call flush_unit(stdout)
+   FLUSH(stdout)
 ! setup time/frequency grid if required
    call setup_timefreq(tf,options)
 

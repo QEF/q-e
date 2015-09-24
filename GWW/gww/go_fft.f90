@@ -244,7 +244,7 @@
       call initialize_polaw( pw )
 
        write(stdout,*) 'Routine go_fft_para2'!ATTENZIONE
-       call flush_unit(stdout)
+       FLUSH(stdout)
 
       ipown = 0
       if( mpime == ipown ) then
@@ -290,7 +290,7 @@
          CALL create_fft_data2( tf, firstr, lastr, options%tau, options%n, fftd, options%debug )
 
          write(stdout,*) 'Transform'!ATTENZIONE
-         call flush_unit(stdout)
+         FLUSH(stdout)
 
          if( options%l_fft_timefreq ) then
             call transform_fft_data( fftd )
@@ -299,7 +299,7 @@
          endif
 
          write(stdout,*) 'Save'!ATTENZIONE
-         call flush_unit(stdout)
+         FLUSH(stdout)
          call save_fft_data2( tf, fftd, options%debug )
          
       end do

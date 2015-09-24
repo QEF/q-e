@@ -409,7 +409,7 @@ may break them. Use \texttt{export LC\_ALL=C} (sh/bash) or
 \texttt{setenv LC\_ALL C} (csh/tcsh) to prevent any problem 
 when running scripts (including installation scripts).
 
-Second, you need C and Fortran-95 compilers. For parallel 
+Second, you need C and Fortran-90/95/2003 compilers. For parallel 
 execution, you will also need MPI libraries and a parallel
 (i.e. MPI-aware) compiler. For massively parallel machines, or 
 for simple multicore parallelization, an OpenMP-aware compiler
@@ -417,7 +417,7 @@ and libraries are also required.
 
 Big machines with
 specialized hardware (e.g. IBM SP, CRAY, etc) typically have a
-Fortran-95 compiler with MPI and OpenMP libraries bundled with 
+Fortran compiler with MPI and OpenMP libraries bundled with 
 the software. Workstations or ``commodity'' machines, using PC 
 hardware, may or may not have the needed software. If not, you need 
 either to buy a commercial product (e.g Portland) or to install
@@ -490,8 +490,8 @@ Some environment variables that are relevant to \configure\ are:
 
 \begin{tabular}{ll}
 \texttt{ARCH}& label identifying the machine type (see below)\\
-\texttt{F90, F77, CC} &names of Fortran 95, Fortran 77, and C compilers\\
-\texttt{MPIF90} &       name of parallel Fortran 95 compiler (using MPI)\\
+\texttt{F90, F77, CC} &names of Fortran 90, Fortran 77, and C compilers\\
+\texttt{MPIF90} &       name of parallel Fortran 90 compiler (using MPI)\\
 \texttt{CPP} &          source file preprocessor (defaults to \$CC -E)\\
 \texttt{LD} &           linker (defaults to \$MPIF90)\\
 \texttt{(C,F,F90,CPP,LD)FLAGS}& compilation/preprocessor/loader flags\\
@@ -499,10 +499,10 @@ Some environment variables that are relevant to \configure\ are:
 \end{tabular}\\
 For example, the following command line:
 \begin{verbatim}
-     ./configure MPIF90=mpf90 FFLAGS="-O2 -assume byterecl" \
+     ./configure MPIF90=mpif90 FFLAGS="-O2 -assume byterecl" \
                   CC=gcc CFLAGS=-O3 LDFLAGS=-static
 \end{verbatim}
-instructs \configure\ to use \texttt{mpf90} as Fortran 95 compiler 
+instructs \configure\ to use \texttt{mpif90} as Fortran 90 compiler 
 with flags \texttt{-O2 -assume byterecl}, \texttt{gcc} as C compiler with 
 flags \texttt{-O3}, and to link with flag \texttt{-static}. 
 Note that the value of \texttt{FFLAGS} must be quoted, because it contains
@@ -852,10 +852,16 @@ the last written output file to understand why.
 \subsubsection{All architectures}
 \begin{itemize}
 \item
-Working Fortran-95 and C compilers are needed in order
-to compile \qe. Compilers that do not support allocatable 
-arrays in derived types (e.g. old gfortran versions)
-are no longer supported since v.5.1.2.
+Working Fortran and C compilers are needed in order
+to compile \qe. Most recent Fortran compiles will do
+the job, but earlier Fortran-90 compilers that do not 
+support allocatable arrays in derived types (e.g. old 
+gfortran versions) are no longer supported since v.5.1.2.
+Also, compilers that do not support intrinsic calls
+\texttt{flush}, \texttt{get\_environment\_variable},
+\texttt{get\_command\_argument}, \texttt{command\_argument\_count}
+will no longer be supported after v.5.2.1.
+
 C and Fortran compilers must be in your PATH.
 If \configure\ says that you have no working compiler, well,
 you have no working compiler, at least not in your PATH, and
@@ -1196,7 +1202,7 @@ Unfortunately this not always happens. In fact:
   place with a logical name,  but if it has a strange names or it is
   located  in a strange location, you will have to instruct \configure\ 
   to find it. Note that in many PC clusters (Beowulf), there is no
-  parallel Fortran-95 compiler in default installations:  you have to
+  parallel Fortran compiler in default installations:  you have to
   configure an appropriate script, such as mpif90. 
 \item \configure\ tries to locate libraries (both mathematical and
   parallel libraries) in the usual places with usual names, but if
@@ -1213,7 +1219,7 @@ Unfortunately this not always happens. In fact:
 Apart from such problems, \qe\ compiles and works on all non-buggy, properly
 configured hardware and software combinations. In some cases you may have to
 recompile MPI libraries: not all MPI installations contain support for
-the fortran-90 compiler of your choice (or for any fortran-90 compiler
+the Fortran compiler of your choice (or for any Fortran compiler
 at all!). 
 
 If \qe\ does not work for some reason on a PC cluster,

@@ -165,13 +165,13 @@ CONTAINS
   write(stdout,*) 'Call initialize_fft_custom'
   CALL memstat( kilobytes )
   if(l_verbose) write(stdout,*) 'memory0', kilobytes
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   call initialize_fft_custom(fc)
 
   CALL memstat( kilobytes )
   if(l_verbose) write(stdout,*) 'memory0.0', kilobytes
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   ! this is for compatibility
 
@@ -225,7 +225,7 @@ CONTAINS
   CALL memstat( kilobytes )
   if(l_verbose)  write(stdout,*) 'memory0.1', kilobytes, ' new kb = ', &
        &(SIZE( state_fc )*16 + SIZE( igkt )*4)/1024
-  call flush_unit(stdout)
+  FLUSH(stdout)
   
   ii=0
   do ip=0,nproc-1
@@ -250,12 +250,12 @@ CONTAINS
 
   if(ii/=num_fc) then 
      write(stdout,*) 'ERRORE FAKE CONDUCTION',ii
-     call flush_unit(stdout)
+     FLUSH(stdout)
      stop
     return
   endif
   if(l_verbose)  write(stdout,*) 'FAKE1'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   
   if(nspin==2) state_fc(:,1:num_fc,2)=state_fc(:,1:num_fc,1)
   do is=1,nspin
@@ -306,7 +306,7 @@ CONTAINS
 !for the moment finds all the first fcw_fast_n eigenstates
      
      if(l_verbose)  write(stdout,*) 'CASE ORTHONORMALIZATION ONLY'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      
 !if required orthonormalize the projected plane_waves or read from disk
 
@@ -326,7 +326,7 @@ CONTAINS
 
      if(l_do_optimal) then
         if(l_verbose) write(stdout,*) 'Call optimal driver'
-        call flush_unit(stdout)
+        FLUSH(stdout)
         options%l_complete=.true.
         options%idiago=0
         do is=1,nspin
@@ -338,7 +338,7 @@ CONTAINS
      endif
         CALL memstat( kilobytes )
         if(l_verbose)  write(stdout,*) 'memory0.3', kilobytes
-        call flush_unit(stdout)
+        FLUSH(stdout)
         
        
      
@@ -367,7 +367,7 @@ CONTAINS
 
   else
      if(l_verbose) write(stdout,*) 'Read OAP from disk'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      iun_oap = find_free_unit()
      CALL diropn( iun_oap, 'oap', fc%npwt*2, exst )
      do ii=1,num_fc_eff(1)
@@ -405,7 +405,7 @@ CONTAINS
 
   CALL memstat( kilobytes )
   if(l_verbose)  write(stdout,*) 'memory0.4', kilobytes, ' new kb = ', (SIZE( state_fc_t ))/64
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
 !set maximum number of valence states for both spin channels
   if(nspin==1) then
@@ -431,7 +431,7 @@ CONTAINS
 
   CALL memstat( kilobytes )
   if(l_verbose) write(stdout,*) 'memory0.5', kilobytes, ' new kb = ', (SIZE( evc_t ))/64
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
 !cycle on v 
 !! product in real space with wannier
@@ -500,14 +500,14 @@ CONTAINS
      write(stdout,*) 'FK state:', iv,fc%nrxxt,fc%npwt,num_fc
      CALL memstat( kilobytes )
      if(l_verbose)  write(stdout,*) 'memory1', kilobytes
-     call flush_unit(stdout)
+     FLUSH(stdout)
      
 
      call mp_barrier( world_comm )
      CALL memstat( kilobytes )
      if(l_verbose) write(stdout,*) 'memory2', kilobytes, ' new kb = ', &
                      (SIZE(wv_real)+SIZE(state_real)+SIZE(state_real2)+SIZE(state_g)*2)/128
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      num_fc_spin=0
      do is=1,nspin
@@ -520,13 +520,13 @@ CONTAINS
            call mp_barrier( world_comm )
            CALL memstat( kilobytes )
            if(l_verbose) write(stdout,*) 'memory3', kilobytes
-           call flush_unit(stdout)
+           FLUSH(stdout)
 
            CALL cft3t( fc, psic, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t, 2 )
            call mp_barrier( world_comm )
            CALL memstat( kilobytes )
            if(l_verbose) write(stdout,*) 'memory4', kilobytes
-           call flush_unit(stdout)
+           FLUSH(stdout)
 
      
            wv_real(1:fc%nrxxt)= DBLE(psic(1:fc%nrxxt))
@@ -535,7 +535,7 @@ CONTAINS
            endif
 !loop on fake conduction states
            if(l_verbose) write(stdout,*) 'Start FFTs part'
-           call flush_unit(stdout)
+           FLUSH(stdout)
            do ii=1,num_fc_eff(is),2
 !fourier transform each state to real space
               if(.not.l_iter_algorithm) then
@@ -591,12 +591,12 @@ CONTAINS
      call mp_barrier( world_comm )
      CALL memstat( kilobytes )
      if(l_verbose) write(stdout,*) 'memory5', kilobytes
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 !if not first valence wannier project the products out of partial orthonormal basis
 
      if(l_verbose) write(stdout,*) 'Start Projection part'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      if(iv/=1) then
         ! build overlap matrix
@@ -635,12 +635,12 @@ CONTAINS
      CALL memstat( kilobytes )
      if(l_verbose) write(stdout,*) 'memory6', kilobytes
      if(l_verbose) write(stdout,*) 'End Projection part'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 !calculate overlap matrix
 
      if(l_verbose) write(stdout,*) 'FK2'!ATTENZIONE
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      max_state=max(300,num_fc/20)
      if(max_state > num_fc) max_state=num_fc/2
@@ -670,7 +670,7 @@ CONTAINS
 
         CALL memstat( kilobytes )
         if(l_verbose) write(stdout,*) 'memory6.1', kilobytes, ' new kb = ', (SIZE(omat)+SIZE(omat2))/128
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
         if(.not.l_diago_para) then
            call dgemm('T','N',num_fc_spin,num_fc_spin,2*fc%npwt,2.d0,state_g,2*fc%npwt,state_g,2*fc%npwt,0.d0,omat,num_fc_spin)
@@ -714,7 +714,7 @@ CONTAINS
 
         CALL memstat( kilobytes )
         if(l_verbose) write(stdout,*) 'memory6.2', kilobytes
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 !solve eigenvalues problem
         allocate(eigen(num_fc_spin))
@@ -760,7 +760,7 @@ CONTAINS
               eigen(:)=0.d0
            endif
            if(l_verbose) write(stdout,*) 'FK3'!ATTENZIONE
-           call flush_unit(stdout)
+           FLUSH(stdout)
          
            if(l_dsyevr) then
               call mp_sum(n_out,world_comm)
@@ -774,20 +774,20 @@ CONTAINS
            call mp_sum(eigen(:),world_comm)
         else
            if(l_verbose) write(stdout,*) 'Before diago_cg',max_state
-           call flush_unit(stdout)
+           FLUSH(stdout)
            if(l_diago_para) then
               call diago_cg(num_fc_spin,omat,1000,max_state,eigen,omat2,s_cutoff,0.000001d0*s_cutoff,n_out,.true.)
            else
               call diago_cg(num_fc_spin,omat,1000,max_state,eigen,omat2,s_cutoff,0.000001d0*s_cutoff,n_out,.false.)
            endif
            if(l_verbose) write(stdout,*) 'After diago_cg'
-           call flush_unit(stdout)
+           FLUSH(stdout)
          
         endif
 
         CALL memstat( kilobytes )
         if(l_verbose) write(stdout,*) 'memory6.3', kilobytes, ' new kb = ', SIZE(eigen)/128
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
         !if first valence state construct first basis
 
@@ -811,7 +811,7 @@ CONTAINS
            endif
 
            if(l_verbose) write(stdout,*) 'FK orthonormal states:', n_out, num_fc_spin
-           call flush_unit(stdout)
+           FLUSH(stdout)
 
            
            if(.not.(l_dsyevr.or.l_diago_cg)) then
@@ -842,11 +842,11 @@ CONTAINS
               call dgemm('N','N',2*fc%npwt,n_out,num_fc_spin,1.d0,state_g,2*fc%npwt,omat2(1,1),num_fc_spin,0.d0,fcw_state,2*fc%npwt)
            endif
            if(l_verbose) write(stdout,*) 'FK4'!ATTENZIONE
-           call flush_unit(stdout)
+           FLUSH(stdout)
 
            CALL memstat( kilobytes )
            if(l_verbose) write(stdout,*) 'memory6.3.0', kilobytes, ' new kb = ', SIZE( fcw_state ) / 64
-           call flush_unit(stdout)
+           FLUSH(stdout)
 
  !write restart on file
            iunfsr = find_free_unit()
@@ -869,7 +869,7 @@ CONTAINS
            endif
 
            if(l_verbose) write(stdout,*) 'FK orthonormal states:', n_out
-           call flush_unit(stdout)
+           FLUSH(stdout)
 
          
            if(.not.(l_dsyevr.or.l_diago_cg)) then
@@ -896,7 +896,7 @@ CONTAINS
 
            CALL memstat( kilobytes )
            if(l_verbose) write(stdout,*) 'memory6.3.1', kilobytes, ' new kb = ', ( kb_new - kb_old )/64
-           call flush_unit(stdout)
+           FLUSH(stdout)
 
            if(.not.(l_dsyevr.or.l_diago_cg)) then
               call dgemm('N','N',2*fc%npwt,n_out,num_fc_spin,1.d0,state_g,2*fc%npwt,&
@@ -908,7 +908,7 @@ CONTAINS
 
            CALL memstat( kilobytes )
            if(l_verbose) write(stdout,*) 'memory6.3.2', kilobytes
-           call flush_unit(stdout)
+           FLUSH(stdout)
 
  !write restart on file
            iunfsr = find_free_unit()
@@ -923,14 +923,14 @@ CONTAINS
 
         CALL memstat( kilobytes )
         if(l_verbose) write(stdout,*) 'memory6.4', kilobytes
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 
         ! if iv is not the last save a copy of the basis
 
         if(iv/=num_nbndv_max) then
            if(l_verbose) write(stdout,*) 'FK5'!ATTENZIONE
-           call flush_unit(stdout)
+           FLUSH(stdout)
            
            kb_old = 0
            if( iv/=1 .and. allocated( fcw_state_old ) ) then 
@@ -950,14 +950,14 @@ CONTAINS
 
            CALL memstat( kilobytes )
            if(l_verbose) write(stdout,*) 'memory6.4.1', kilobytes, ' new kb = ', (kb_new-kb_old)/64
-           call flush_unit(stdout)
+           FLUSH(stdout)
 
            fcw_number_old=fcw_number
 
         endif
 
         if(l_verbose) write(stdout,*) 'FK6'!ATTENZIONE
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
         kb_old = SIZE( omat ) + SIZE( eigen )
         deallocate( omat, eigen )
@@ -969,17 +969,17 @@ CONTAINS
         !deallocate( wv_real, state_real, state_real2, state_g )
         
         if(l_verbose) write(stdout,*) 'FK7'!ATTENZIONE
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
         CALL memstat( kilobytes )
         if(l_verbose) write(stdout,*) 'memory6.5', kilobytes, ' old kb = ', kb_old / 128
-        call flush_unit(stdout)
+        FLUSH(stdout)
     
      else  ! -------------------------iter algorithm 
 
         CALL memstat( kilobytes )
         if(l_verbose) write(stdout,*) 'memory6.6', kilobytes
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
         !uses iterative algorithm
         !allocate max number of new states
@@ -1038,7 +1038,7 @@ CONTAINS
         CALL memstat( kilobytes )
         if(l_verbose) write(stdout,*) 'memory6.7', kilobytes
         write(stdout,*) 'FK GS', num_built
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 
         !opportune basis
@@ -1088,7 +1088,7 @@ CONTAINS
 
      CALL memstat( kilobytes )
      if(l_verbose) write(stdout,*) 'memory6.8', kilobytes
-     call flush_unit(stdout)
+     FLUSH(stdout)
      iunrestart0 =  find_free_unit()
      open( unit= iunrestart0, file=trim(tmp_dir)//trim(prefix)//'.restart_fk0_status', status='unknown')
      write(iunrestart0,*) iv
@@ -1103,7 +1103,7 @@ CONTAINS
   if(l_verbose) write(stdout,*) 'FK8'
   CALL memstat( kilobytes )
   if(l_verbose) write(stdout,*) 'memory7', kilobytes
-  call flush_unit(stdout)
+  FLUSH(stdout)
   
   if(num_nbndv(1)/=1 ) deallocate(fcw_state_old)
  
@@ -1125,7 +1125,7 @@ CONTAINS
   fcw_mat(:,:)=0.d0
 
   if(l_verbose) write(stdout,*) 'FK9'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   allocate(wv_real_all(fc%nrxxt,num_nbndv_max))
 
@@ -1139,7 +1139,7 @@ CONTAINS
   allocate(tmp_mat(fcw_number,num_nbndv_max))
 
   write(stdout,*) 'Calculate FK matrix'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   do is=1,nspin
      do iv=1,num_nbndv(is)
@@ -1258,7 +1258,7 @@ CONTAINS
         CALL memstat( kilobytes )
         if(l_verbose) write(stdout,*) 'memory10', kilobytes
         if(l_verbose) write(stdout,*) 'TOTAL NUMBER OF FCW STATES:', fcw_number,ii,dfftp%nnr,fc%nrxxt,wg(1,is)
-        call flush_unit(stdout)
+        FLUSH(stdout)
         call mp_barrier( world_comm )
      
 !calculate contribution to D matrix
@@ -1327,7 +1327,7 @@ CONTAINS
   close(iunfcw)
 
   if(l_verbose) write(stdout,*) 'Call deallocate_fft_custom'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   call deallocate_fft_custom(fc)
 
 
@@ -1391,7 +1391,7 @@ CONTAINS
   if(l_verbose) write(stdout,*) 'memory12', kilobytes
   if(l_verbose) write(stdout,*) 'memory fcw_state = ',  SIZE( fcw_state ) / 64 , ' kb'
   if(l_verbose) write(stdout,*) 'memory fcw_mat   = ',  SIZE( fcw_mat   ) / 64 , ' kb'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   return
 
@@ -1544,13 +1544,13 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
   write(stdout,*) 'Call initialize_fft_custom'
   CALL memstat( kilobytes )
   write(stdout,*) 'memory0', kilobytes
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   call initialize_fft_custom(fc)
 
   CALL memstat( kilobytes )
   write(stdout,*) 'memory0.0', kilobytes
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   ! this is for compatibility
 
@@ -1582,7 +1582,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
   write(stdout,*) "Number of fake conduction states:", num_fc
   CALL memstat( kilobytes )
   write(stdout,*) 'memory0.1', kilobytes, ' new kb = ', (SIZE( state_fc )*16 + SIZE( evc_g )*16 + SIZE( igkt )*4)/1024
-  call flush_unit(stdout)
+  FLUSH(stdout)
   
   ii=0
   do ip=0,nproc-1
@@ -1607,12 +1607,12 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
 
   if(ii/=num_fc) then 
      write(stdout,*) 'ERRORE FAKE CONDUCTION',ii
-     call flush_unit(stdout)
+     FLUSH(stdout)
      stop
     return
   endif
   write(stdout,*) 'FAKE1'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
 !!project out of valence space
   do ii=1,num_fc
@@ -1630,7 +1630,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
 !for the moment finds all the first fcw_fast_n eigenstates
      
      write(stdout,*) 'CASE ORTHONORMALIZATION ONLY'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      
      options%l_complete=.true.
      options%idiago=0
@@ -1638,7 +1638,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
       
   CALL memstat( kilobytes )
   write(stdout,*) 'memory0.3', kilobytes
-  call flush_unit(stdout)
+  FLUSH(stdout)
         
        
      
@@ -1671,7 +1671,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
 
   CALL memstat( kilobytes )
   write(stdout,*) 'memory0.4', kilobytes, ' new kb = ', (SIZE( state_fc_t ))/64
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
 !now valence wavefunctions are put on the ordering of the reduced grid
   allocate(evc_t(fc%npwt,num_nbndv(1)))
@@ -1686,7 +1686,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
 
   CALL memstat( kilobytes )
   write(stdout,*) 'memory0.5', kilobytes, ' new kb = ', (SIZE( evc_t ))/64
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
 !cycle on v 
 !! product in real space with wannier
@@ -1718,7 +1718,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
      write(stdout,*) 'FK state:', iv,fc%nrxxt,fc%npwt,num_fc
      CALL memstat( kilobytes )
      write(stdout,*) 'memory1', kilobytes
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 
      
@@ -1729,7 +1729,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
      CALL memstat( kilobytes )
      write(stdout,*) 'memory2', kilobytes, ' new kb = ', &
                      (SIZE(wv_real))/128
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      psic(:)=(0.d0,0.d0)
      psic(fc%nlt(igkt(1:fc%npwt)))  = evc_t(1:fc%npwt,iv)
@@ -1738,13 +1738,13 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
      call mp_barrier( world_comm )
      CALL memstat( kilobytes )
      write(stdout,*) 'memory3', kilobytes
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
     CALL cft3t( fc, psic, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t, 2 )
     call mp_barrier( world_comm )
      CALL memstat( kilobytes )
      write(stdout,*) 'memory4', kilobytes
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      
      wv_real(:)= DBLE(psic(:))
@@ -1765,7 +1765,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
      enddo
 
      write(stdout,*) 'Start products',n_loc,fc%nrxxt,loc_to_g(n_loc)
-     call flush_unit(stdout)
+     FLUSH(stdout)
     
      do ir=1,n_loc
         wv_real_loc(ir)=wv_real(loc_to_g(ir))
@@ -1784,7 +1784,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
      call mp_barrier( world_comm )
      CALL memstat( kilobytes )
      write(stdout,*) 'memory5', kilobytes
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 !if not first valence wannier project the products out of partial orthonormal basis
 
@@ -1896,10 +1896,10 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
      deallocate(fcw_state_r_loc)
      deallocate(state_loc)
 
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      write(stdout,*) 'memory6.8', kilobytes
-     call flush_unit(stdout)
+     FLUSH(stdout)
   end do FIRST_LOOP
  
 
@@ -1907,7 +1907,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
   write(stdout,*) 'FK8'
   CALL memstat( kilobytes )
   write(stdout,*) 'memory7', kilobytes
-  call flush_unit(stdout)
+  FLUSH(stdout)
   
 
  
@@ -1929,7 +1929,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
   fcw_mat(:,:)=0.d0
 
   write(stdout,*) 'FK9'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
  
 
@@ -2001,7 +2001,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
         CALL memstat( kilobytes )
         write(stdout,*) 'memory10', kilobytes
         write(stdout,*) 'TOTAL NUMBER OF FCW STATES:', fcw_number,ii,dfftp%nnr,fc%nrxxt,n_loc
-        call flush_unit(stdout)
+        FLUSH(stdout)
         if(nsize>0) then
            call dgemm('N','T',fcw_number,nend-nbegin+1,nmod,1.d0,tmp_mat,fcw_number,&
      &tmp_mat(nbegin:nend,1:nmod),nend-nbegin+1,1.d0,fcw_mat,fcw_number)
@@ -2041,12 +2041,12 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
   
 
   !write(stdout,*) 'Att0'
-  !   call flush_unit(stdout)
+  !   FLUSH(stdout)
   call mp_barrier( world_comm )
   
   CALL memstat( kilobytes )
   write(stdout,*) 'memory9', kilobytes
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
 !if required put fcw_state on normconserving ordering
 
@@ -2090,7 +2090,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
   close(iunfcw)
 
   write(stdout,*) 'Call deallocate_fft_custom'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   call deallocate_fft_custom(fc)
 
 
@@ -2144,7 +2144,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
   write(stdout,*) 'memory12', kilobytes
   write(stdout,*) 'memory fcw_state = ',  SIZE( fcw_state ) / 64 , ' kb'
   write(stdout,*) 'memory fcw_mat   = ',  SIZE( fcw_mat   ) / 64 , ' kb'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   return
 !NOT_TO_BE_INCLUDED_END
@@ -2299,13 +2299,13 @@ end subroutine fake_conduction_wannier_real
   write(stdout,*) 'Call initialize_fft_custom'
   CALL memstat( kilobytes )
   if(l_verbose) write(stdout,*) 'memory0', kilobytes
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   call initialize_fft_custom(fc)
 
   CALL memstat( kilobytes )
   if(l_verbose) write(stdout,*) 'memory0.0', kilobytes
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   ! this is for compatibility
 
@@ -2357,7 +2357,7 @@ end subroutine fake_conduction_wannier_real
   CALL memstat( kilobytes )
   if(l_verbose)  write(stdout,*) 'memory0.1', kilobytes, ' new kb = ', &
        &(SIZE( state_fc )*16 + SIZE( evc_g )*16 + SIZE( igkt )*4)/1024
-  call flush_unit(stdout)
+  FLUSH(stdout)
   
   ii=0
   do ip=0,nproc-1
@@ -2384,12 +2384,12 @@ end subroutine fake_conduction_wannier_real
 
   if(ii/=num_fc) then 
      write(stdout,*) 'ERRORE FAKE CONDUCTION',ii
-     call flush_unit(stdout)
+     FLUSH(stdout)
      stop
     return
   endif
   if(l_verbose)  write(stdout,*) 'FAKE1'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   
   if(nspin==2) state_fc(:,1:num_fc,2)=state_fc(:,1:num_fc,1)
   do is=1,nspin
@@ -2436,7 +2436,7 @@ end subroutine fake_conduction_wannier_real
 !for the moment finds all the first fcw_fast_n eigenstates
      
      if(l_verbose)  write(stdout,*) 'CASE ORTHONORMALIZATION ONLY'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      
 !if required orthonormalize the projected plane_waves or read from disk
 
@@ -2456,7 +2456,7 @@ end subroutine fake_conduction_wannier_real
 
      if(l_do_optimal) then
         if(l_verbose) write(stdout,*) 'Call optimal driver'
-        call flush_unit(stdout)
+        FLUSH(stdout)
         options%l_complete=.true.
         options%idiago=0
         call start_clock('fc_optimal')
@@ -2470,7 +2470,7 @@ end subroutine fake_conduction_wannier_real
      endif
         CALL memstat( kilobytes )
         if(l_verbose)  write(stdout,*) 'memory0.3', kilobytes
-        call flush_unit(stdout)
+        FLUSH(stdout)
         
        
      
@@ -2505,7 +2505,7 @@ end subroutine fake_conduction_wannier_real
 
   else
      if(l_verbose) write(stdout,*) 'Read OAP from disk'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      iun_oap = find_free_unit()
      CALL diropn( iun_oap, 'oap', fc%npwt*2, exst )
      do ii=1,num_fc_eff(1)
@@ -2538,7 +2538,7 @@ end subroutine fake_conduction_wannier_real
 
   CALL memstat( kilobytes )
   if(l_verbose)  write(stdout,*) 'memory0.4', kilobytes, ' new kb = ', (SIZE( state_fc_t ))/64
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
 !set maximum number of valence states for both spin channels
   if(nspin==1) then
@@ -2567,7 +2567,7 @@ end subroutine fake_conduction_wannier_real
 
   CALL memstat( kilobytes )
   if(l_verbose) write(stdout,*) 'memory0.5', kilobytes, ' new kb = ', (SIZE( evc_t ))/64
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
 !cycle on v 
 !! product in real space with wannier
@@ -2636,13 +2636,13 @@ end subroutine fake_conduction_wannier_real
      write(stdout,*) 'FK state:', iv,fc%nrxxt,fc%npwt,num_fc
      CALL memstat( kilobytes )
      if(l_verbose)  write(stdout,*) 'memory1', kilobytes
-     call flush_unit(stdout)
+     FLUSH(stdout)
      
 
      CALL memstat( kilobytes )
      if(l_verbose) write(stdout,*) 'memory2', kilobytes, ' new kb = ', &
                      (SIZE(wv_real)+SIZE(state_real)+SIZE(state_real2)+SIZE(state_g))/128
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      num_fc_spin=0
      do is=1,nspin
@@ -2654,12 +2654,12 @@ end subroutine fake_conduction_wannier_real
 
            CALL memstat( kilobytes )
            if(l_verbose) write(stdout,*) 'memory3', kilobytes
-           call flush_unit(stdout)
+           FLUSH(stdout)
 
            CALL cft3t( fc, psic, fc%nr1t, fc%nr2t, fc%nr3t, fc%nrx1t, fc%nrx2t, fc%nrx3t, 2 )
            CALL memstat( kilobytes )
            if(l_verbose) write(stdout,*) 'memory4', kilobytes
-           call flush_unit(stdout)
+           FLUSH(stdout)
 
      
            wv_real(:)= DBLE(psic(:))
@@ -2668,7 +2668,7 @@ end subroutine fake_conduction_wannier_real
            endif
 !loop on fake conduction states
 
-           call flush_unit(stdout)
+           FLUSH(stdout)
            do ii=1,num_fc_eff(is)
               state_g(1:fc%nrxxt, ii+num_fc_spin)=state_fc_r(1:fc%nrxxt,ii,is)*wv_real(1:fc%nrxxt)
            enddo
@@ -2680,12 +2680,12 @@ end subroutine fake_conduction_wannier_real
 
      CALL memstat( kilobytes )
      if(l_verbose) write(stdout,*) 'memory5', kilobytes
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 !if not first valence wannier project the products out of partial orthonormal basis
 
      if(l_verbose) write(stdout,*) 'Start Projection part'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      if(iv/=1) then
         ! build overlap matrix
@@ -2723,12 +2723,12 @@ end subroutine fake_conduction_wannier_real
      CALL memstat( kilobytes )
      if(l_verbose) write(stdout,*) 'memory6', kilobytes
      if(l_verbose) write(stdout,*) 'End Projection part'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 !calculate overlap matrix
 
      if(l_verbose) write(stdout,*) 'FK2'!ATTENZIONE
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      max_state=max(300,num_fc/20)
      if(max_state > num_fc) max_state=num_fc/2
@@ -2746,7 +2746,7 @@ end subroutine fake_conduction_wannier_real
 
      CALL memstat( kilobytes )
      if(l_verbose) write(stdout,*) 'memory6.6', kilobytes
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
         !uses iterative algorithm
         !allocate max number of new states
@@ -2819,7 +2819,7 @@ end subroutine fake_conduction_wannier_real
      CALL memstat( kilobytes )
      if(l_verbose) write(stdout,*) 'memory6.7', kilobytes
      write(stdout,*) 'FK GS', num_built
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 
         !opportune basis
@@ -2869,7 +2869,7 @@ end subroutine fake_conduction_wannier_real
 
      CALL memstat( kilobytes )
      if(l_verbose) write(stdout,*) 'memory6.8', kilobytes
-     call flush_unit(stdout)
+     FLUSH(stdout)
      iunrestart0 =  find_free_unit()
      open( unit= iunrestart0, file=trim(tmp_dir)//trim(prefix)//'.restart_fk0_status', status='unknown')
      write(iunrestart0,*) iv
@@ -2884,7 +2884,7 @@ end subroutine fake_conduction_wannier_real
   if(l_verbose) write(stdout,*) 'FK8'
   CALL memstat( kilobytes )
   if(l_verbose) write(stdout,*) 'memory7', kilobytes
-  call flush_unit(stdout)
+  FLUSH(stdout)
   
   if(num_nbndv(1)/=1 ) deallocate(fcw_state_old_r)
  
@@ -2906,7 +2906,7 @@ end subroutine fake_conduction_wannier_real
   fcw_mat(:,:)=0.d0
 
   if(l_verbose) write(stdout,*) 'FK9'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   allocate(wv_real_all(fc%nrxxt,num_nbndv_max))
 
@@ -2920,7 +2920,7 @@ end subroutine fake_conduction_wannier_real
   allocate(tmp_mat(fcw_number,num_nbndv_max))
 
   write(stdout,*) 'Calculate FK matrix'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   do is=1,nspin
      do iv=1,num_nbndv(is)
@@ -2995,7 +2995,7 @@ end subroutine fake_conduction_wannier_real
         CALL memstat( kilobytes )
         if(l_verbose) write(stdout,*) 'memory10', kilobytes
         if(l_verbose) write(stdout,*) 'TOTAL NUMBER OF FCW STATES:', fcw_number,ii,dfftp%nnr,fc%nrxxt,wg(1,is)
-        call flush_unit(stdout)
+        FLUSH(stdout)
             
 !calculate contribution to D matrix
         if(nsize>0) then
@@ -3070,7 +3070,7 @@ end subroutine fake_conduction_wannier_real
   close(iunfcw)
 
   if(l_verbose) write(stdout,*) 'Call deallocate_fft_custom'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   call deallocate_fft_custom(fc)
 
 
@@ -3134,7 +3134,7 @@ end subroutine fake_conduction_wannier_real
   if(l_verbose) write(stdout,*) 'memory12', kilobytes
   if(l_verbose) write(stdout,*) 'memory fcw_state = ',  SIZE( fcw_state ) / 64 , ' kb'
   if(l_verbose) write(stdout,*) 'memory fcw_mat   = ',  SIZE( fcw_mat   ) / 64 , ' kb'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   return
 !NOT_TO_BE_INCLUDED_END

@@ -79,7 +79,7 @@ PROGRAM fpmd_postproc
   !  initialize mpi
   CALL mp_startup  ( )
   !
-  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+  CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   prefix    = 'cp'
   fileout   = 'out'

@@ -94,7 +94,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
    TYPE(fft_cus) :: fc
 
    write(stdout,*) 'Routine self_basis_lanczos'
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
 
    if(s_first_state==0) then
@@ -147,7 +147,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
    if(l_verbose) write(stdout,*) 'Call initialize_fft_custom'
    fc%ecutt=ecutwfc
    fc%dual_t=dual_vs
-   call flush_unit(stdout)
+   FLUSH(stdout)
    call initialize_fft_custom(fc)
    !allocate(evc_g(fc%ngmt_g))
 
@@ -250,7 +250,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
 
 
    if(l_verbose) write(stdout,*) 'self_basis_lanczos 1'
-   call flush_unit(stdout)
+   FLUSH(stdout)
    nbuf=min(5,nproc) 
    allocate(wp_prod(fc%npwt,numpw,nbuf))
 
@@ -280,7 +280,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
             CALL diropn( iunrprod, 'wiwjwfc_red_r', dfftp%nnr, exst )
          endif
          if(l_verbose) write(stdout,*) 'do fft'
-         call flush_unit(stdout)
+         FLUSH(stdout)
 
          do ii=offset+1,numpw,2
 !!read n_set w^P'_i from disk
@@ -331,7 +331,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
 
 
          if(l_verbose) write(stdout,*) 'calculate omat'
-         call flush_unit(stdout)
+         FLUSH(stdout)
 
          if(.not.l_reduce_io) close(iunrprod)
 !!calculate overlap matrix
@@ -359,7 +359,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
       
 
      if(l_verbose) write(stdout,*) 'solve eig'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      do iv=ivv,min(ivv+nbuf-1,last_state)
         if(iv-ivv==mpime) then
            if(.not.l_dsyevr) then
@@ -379,7 +379,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
          !do iw=1,numpw
          !   write(stdout,*) 'EIGEN:',iv,iw, eigen(iw)
          !enddo
-         !call flush_unit(stdout)
+         !FLUSH(stdout)
            else
               allocate(eigen(numpw-offset))
               allocate(vectors(numpw-offset,nstates))
@@ -410,7 +410,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
               do iw=1,nstates, nstates-1
                  write(stdout,*) 'EIGEN S LOCAL:',iv,iw, eigen(iw)
               enddo
-              call flush_unit(stdout)
+              FLUSH(stdout)
 
            endif
            t_mat_hold(:,:)=0.d0
@@ -450,7 +450,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
 !
 
       if(l_verbose) write(stdout,*) 'write on file'
-      call flush_unit(stdout)
+      FLUSH(stdout)
       allocate(eigen(nstates))
       do iv=ivv,min(ivv+nbuf-1,last_state)
         if(iv-ivv == mpime) then
@@ -506,7 +506,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
 !put the correct order
 
         if(l_verbose) write(stdout,*) 'do merge split',iv,ivv
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
         if(fc%dual_t==4.d0) then
            wp_g(:,:)=wp_g_t(:,:)
@@ -520,7 +520,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
         endif
 
         if(l_verbose) write(stdout,*) 'do davcio'
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 
   !!write on disk
@@ -540,10 +540,10 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
   close(iungresult)
   deallocate(wv_real,wp_prod)
   if(l_verbose) write(stdout,*) 'Exiting self_basis_lanczos'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   deallocate(p_basis_t)
   if(l_verbose) write(stdout,*) 'Call deallocate_fft_custom'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   call deallocate_fft_custom(fc)
   deallocate(t_eigen_hold)
   if(l_reduce_io) deallocate(p_basis)
@@ -814,7 +814,7 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
 !if required turn the basis to a more diagonal form
 !a)calculate overlaps <t_i|\Psi_'>
      if(l_verbose) write(stdout,*) 'GREENT 1'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      allocate(o_t_psi(nglobal,nbnd))
      call dgemm('T','N',nglobal,nbnd,2*npw,2.d0,old_basis,2*npw,evc,2*npwx,0.d0,o_t_psi,nglobal)
      if(gstart==2) then
@@ -827,7 +827,7 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
       call mp_sum(o_t_psi(:,:),world_comm)
       offset=(et(num_nbndv(1)+1,1)-et(num_nbndv(1),1))/2.d0
       if(l_verbose) write(stdout,*) 'GREENT 2'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 !b)calculate matrix G^T_ij=<t_i|Psi_i'><Psi_i'|t_j>/(E_i'+offset)
       allocate(gtrail(nglobal,nglobal))
@@ -841,7 +841,7 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
          enddo
       enddo
       if(l_verbose) write(stdout,*) 'GREENT 3'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      deallocate(o_t_psi)
 !c)diagonalize
@@ -863,7 +863,7 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
         eigen(:)=0.d0
      endif
      if(l_verbose) write(stdout,*) 'GREENT 4'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      
      do ii=1,nglobal
         !call mp_bcast(gtrail(:,ii), ionode_id,world_comm)
@@ -875,7 +875,7 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
      do ii=1,nglobal
         if(l_verbose) write(stdout,*) 'EIGEN GTRAIL:',ii, eigen(ii)
      enddo
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 !d)calculate t_i' eigen states of G^T
    allocate(new_basis(npw,nglobal))
@@ -892,7 +892,7 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
    enddo
  !  old_basis(:,:)=new_basis(:,:)
    write(stdout,*) 'NUMBER T STATES:',nglobal
-   call flush_unit(stdout)
+   FLUSH(stdout)
      
    
    deallocate(eigen)
@@ -905,7 +905,7 @@ endif
 !re-orthonormalized them it should be important in large systems
   if(l_reortho.and.  .not.l_big_system) then
      if(l_verbose) write(stdout,*) 'Call optimal driver'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      options%l_complete=.true.
      options%idiago=0
      call optimal_driver(nglobal,old_basis,npw,options,idumm, info)
@@ -947,12 +947,12 @@ endif
      
   else
      if(l_verbose) write(stdout,*) 'Doing restart iuns'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      nglobal=721!RESTART here put te value from the ouputfile
 
      write(stdout,*) 'Total number of s vectors:', nglobal
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      allocate(old_basis(npw,nglobal))
 
@@ -1055,10 +1055,10 @@ endif
 
   if(l_test) then
      write(stdout,*) 'TEST1'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      allocate(t_mat(nglobal,nglobal))
      write(stdout,*) 'TEST2'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      call dgemm('T','N',nglobal,nglobal,2*npw,2.d0,old_basis,2*npw,old_basis,2*npw,0.d0,t_mat,nglobal)
      if(gstart==2) then
@@ -1069,7 +1069,7 @@ endif
         enddo
      endif
      write(stdout,*) 'TEST3'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      call mp_sum(t_mat(:,:),world_comm)
 !!write diagonal terms
@@ -1079,7 +1079,7 @@ endif
            if(ii/=jj) sca=sca+abs(t_mat(ii,jj))
         enddo
         write(stdout,*) 'Diagonal',ii,t_mat(ii,ii),sca
-        call flush_unit(stdout)
+        FLUSH(stdout)
      enddo
      deallocate(t_mat)
      allocate(t_mat(nglobal,1))
@@ -1138,11 +1138,11 @@ endif
 !         do ii=1,nglobal,50
 !            write(stdout,*) 'Q terms',iv,iw,ii, t_mat(ii,1)
 !         enddo
-           call flush_unit(stdout)
+           FLUSH(stdout)
         enddo
      enddo
      write(stdout,*) 'Average projection', proj_tot/dble(numpw*2)
-     call flush_unit(stdout)
+     FLUSH(stdout)
      deallocate(t_mat)
      deallocate(wv_real,tmp_g,tmp_r,wp_prod)
      close(iungprod)
@@ -1237,7 +1237,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
    TYPE(fft_cus) :: fc
 
    write(stdout,*) 'Routine self_basis_lanczos'
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
 
    if(s_first_state==0) then
@@ -1290,7 +1290,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
    if(l_verbose) write(stdout,*) 'Call initialize_fft_custom'
    fc%ecutt=ecutwfc
    fc%dual_t=dual_vs
-   call flush_unit(stdout)
+   FLUSH(stdout)
    call initialize_fft_custom(fc)
    allocate(evc_g(fc%ngmt_g*nproc))
 
@@ -1378,7 +1378,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
 
 
    if(l_verbose) write(stdout,*) 'self_basis_lanczos 1'
-   call flush_unit(stdout)
+   FLUSH(stdout)
    !nbuf=min(5,nproc) ATTENZIONE iera cussi
    nbuf=nproc
    allocate(wp_prod(fc%nrxxt,numpw,nbuf))
@@ -1407,7 +1407,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
 
         
          if(l_verbose) write(stdout,*) 'do fft'
-         call flush_unit(stdout)
+         FLUSH(stdout)
 
          do ii=offset+1,numpw
             wp_prod(1:fc%nrxxt, ii,iv-ivv+1)=p_basis_r(1:fc%nrxxt,ii)*wv_real(1:fc%nrxxt)
@@ -1415,7 +1415,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
 
 
          if(l_verbose) write(stdout,*) 'calculate omat'
-         call flush_unit(stdout)
+         FLUSH(stdout)
 
          
 !!calculate overlap matrix
@@ -1439,7 +1439,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
       
 
      if(l_verbose) write(stdout,*) 'solve eig'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      do iv=ivv,min(ivv+nbuf-1,last_state)
         if(iv-ivv==mpime) then
            call start_clock('sl_dsyevX')
@@ -1460,7 +1460,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
          !do iw=1,numpw
          !   write(stdout,*) 'EIGEN:',iv,iw, eigen(iw)
          !enddo
-         !call flush_unit(stdout)
+         !FLUSH(stdout)
            else
               allocate(eigen(numpw-offset))
               allocate(vectors(numpw-offset,nstates))
@@ -1489,7 +1489,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
               !do iw=1,nstates
               !write(stdout,*) 'EIGEN:',iv,iw, eigen(iw)
               !enddo
-              !call flush_unit(stdout)
+              !FLUSH(stdout)
 
            endif
            call stop_clock('sl_dsyevX')
@@ -1530,7 +1530,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
 !
 
       if(l_verbose) write(stdout,*) 'write on file'
-      call flush_unit(stdout)
+      FLUSH(stdout)
       allocate(eigen(nstates))
       do iv=ivv,min(ivv+nbuf-1,last_state)
         if(iv-ivv == mpime) then
@@ -1591,7 +1591,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
 !put the correct order
         psic=(0.d0,0.d0)
         write(stdout,*) 'do merge split',iv,ivv
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
         call start_clock('sl_merge')
     
@@ -1630,7 +1630,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
           call stop_clock('sl_merge')
           deallocate(wp_g_t2)
         if(l_verbose) write(stdout,*) 'do davcio'
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 
   !!write on disk
@@ -1650,10 +1650,10 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
   close(iungresult)
   deallocate(wv_real,wp_prod)
   if(l_verbose) write(stdout,*) 'Exiting self_basis_lanczos'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   deallocate(p_basis_t,evc_g)
   if(l_verbose) write(stdout,*) 'Call deallocate_fft_custom'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   call deallocate_fft_custom(fc)
   deallocate(t_eigen_hold)
   deallocate(p_basis)

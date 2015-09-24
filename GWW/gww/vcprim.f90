@@ -114,7 +114,7 @@ SUBROUTINE add_vcprim_conduction(cpp, uu, up, vp)
   if(cpp%cprim <= cpp%nums_occ) return
   if(cpp%numpw_para /= vp%numpw_para) then
      write(stdout,*) 'add_vcprim_conduction NOT CORRESPONDING'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      stop
   endif
 
@@ -224,7 +224,7 @@ SUBROUTINE collect_cprim_prod(cpp,cppd)
   
   if(.not.cppd%is_parallel) then
      write(stdout,*) 'collect_cprim_prod: NOT CORRESPONDING'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      stop
   endif
 

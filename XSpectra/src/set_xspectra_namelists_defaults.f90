@@ -29,7 +29,7 @@ subroutine set_xspectra_namelists_defaults()
   prefix=' '
   verbosity='low'
   x_save_file='xanes.sav'
-  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+  CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   xniter=50
   xcheck_conv=5

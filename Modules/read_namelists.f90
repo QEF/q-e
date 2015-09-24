@@ -87,16 +87,16 @@ MODULE read_namelists_module
        ! ... use the path specified as outdir and the filename prefix
        ! ... to store output data
        !
-       CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+       CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
        IF ( TRIM( outdir ) == ' ' ) outdir = './'
        IF( prog == 'PW' ) prefix = 'pwscf'
        IF( prog == 'CP' ) prefix = 'cp'
        !
        ! ... directory containing the pseudopotentials
        !
-       CALL get_env( 'ESPRESSO_PSEUDO', pseudo_dir )
+       CALL get_environment_variable( 'ESPRESSO_PSEUDO', pseudo_dir )
        IF ( TRIM( pseudo_dir ) == ' ') THEN
-          CALL get_env( 'HOME', pseudo_dir )
+          CALL get_environment_variable( 'HOME', pseudo_dir )
           pseudo_dir = TRIM( pseudo_dir ) // '/espresso/pseudo/'
        END IF
        !

@@ -117,7 +117,7 @@ subroutine wannier_bse(ispin,w_wfcs,o_mat)
      enddo
    enddo
 
-   call flush_unit(stdout)
+   FLUSH(stdout)
 ! write it on disk
    if(ionode) then 
      iunu = find_free_unit()
@@ -202,7 +202,7 @@ subroutine wannier_bse(ispin,w_wfcs,o_mat)
 
   write(stdout,*) 'max_ngm=',max_ngm  
   write(stdout,*) 'npw=',npw  
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   close(iungprod)
 ! read polarization basis

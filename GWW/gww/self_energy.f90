@@ -362,7 +362,7 @@
    endif
 
     write(stdout,*) 'Self-energy 0',gf%factor,ww%factor
-    call flush_unit(stdout)
+    FLUSH(stdout)
 
    allocate( qg ( cri%numpw, cri%nums) )
    allocate( qg_t( cri%nums, cri%numpw ) )
@@ -392,7 +392,7 @@
    DEALLOCATE( qg_t, gf_t )
 
    write(stdout,*) 'Self-energy 1'
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
    sene=(0.d0,0.d0)
 
@@ -445,7 +445,7 @@
    enddo
 
     write(stdout,*) 'Self-energy 3', gf%factor,ww%factor
-    call flush_unit(stdout)
+    FLUSH(stdout)
 
    deallocate(crsq_t)
 

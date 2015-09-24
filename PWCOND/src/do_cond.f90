@@ -77,7 +77,7 @@ SUBROUTINE do_cond(done)
 !
 !   set default values for variables in namelist
 !
-  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+  CALL get_environment_variable( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   prefixt = ' '
   prefixl = ' '

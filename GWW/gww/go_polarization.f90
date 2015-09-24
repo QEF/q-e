@@ -46,7 +46,7 @@
 !read in overlap matrix
 
    write(stdout,*) 'GO POLARIZATION' !ATTENZIONE
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
    if(.not. options%lpola_file) then
 

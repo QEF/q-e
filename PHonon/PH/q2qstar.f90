@@ -62,17 +62,16 @@ PROGRAM Q2QSTAR
   !
   COMPLEX(DP),ALLOCATABLE :: phi(:,:,:,:), d2(:,:)
   INTEGER :: i,j, icar,jcar, na,nb
-  INTEGER, EXTERNAL :: i_argc ! wrapper for iargc
   !
   NAMELIST / input / fildyn
   !
   CALL mp_startup()
   CALL environment_start(CODE)
   !
-  nargs = i_argc()
+  nargs = command_argument_count()
   IF(nargs < 1) CALL errore(CODE, 'Argument is missing! Syntax: "q2qstar dynfile [outfile]"', 1)
   !
-  CALL get_arg(1, fildyn)
+  CALL get_command_argument(1, fildyn)
   CALL mp_bcast(fildyn, ionode_id,world_comm)
   !
   ! check input
@@ -81,7 +80,7 @@ PROGRAM Q2QSTAR
   !
   ! set up output
   IF (nargs > 1) THEN
-    CALL get_arg(2, filout)
+    CALL get_command_argument(2, filout)
   ELSE
       filout = TRIM(fildyn)//".rot"
   ENDIF

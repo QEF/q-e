@@ -669,14 +669,14 @@
       maxl=cri%nums
 
       write(stdout,*) 'routine do_contraction_state_index allocate dimension', cri%nums,maxl,max_i
-      call flush_unit(stdout)
+      FLUSH(stdout)
       allocate(cri%numl(cri%numpw))
       allocate(cri%l(maxl,cri%numpw))
 
       allocate(crs%q(cri%numpw,maxl))
 
       write(stdout,*) 'DO CONT INDEX 1'
-      call flush_unit(stdout)
+      FLUSH(stdout)
 !set index descriptor
 
 !do contractions

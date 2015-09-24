@@ -681,7 +681,7 @@ END SUBROUTINE fit_multipole_verlet2
    allocate(ipvt(np))
    allocate(fjac(n,np))
    write(stdout,*) 'Allocated'
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
    omegas(1:n)=aimag(z(1:n))
 
@@ -698,7 +698,7 @@ END SUBROUTINE fit_multipole_verlet2
  !  write(*,*) 'z,s' , z(1),s(1),func(z(1))
  !  write(*,*) 'z,s' , z(n),s(n),func(z(n))
    write(stdout,*) 'Chi0 initial:', chi0
-   call flush_unit(stdout)
+   FLUSH(stdout)
 !set in variables
    variables(1)=real(a_0)
    variables(2)=aimag(a_0)

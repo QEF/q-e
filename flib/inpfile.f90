@@ -5,35 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! Wrappers for intrinsic iargc, getarg, getenv - machine-dependent stuff here
-!
-INTEGER FUNCTION i_argc ( )
-#if defined(__NAG)
-  USE F90_UNIX_ENV, ONLY : iargc
-#else
-  ! do not declare it external: gfortran doesn't like it
-  INTEGER :: iargc
-#endif
-  i_argc = iargc ( )
-END FUNCTION i_argc
-  !
-SUBROUTINE get_env ( variable_name, variable_value )
-#if defined(__NAG)
-  USE F90_UNIX_ENV, ONLY : getenv
-#endif
-  CHARACTER (LEN=*)  :: variable_name, variable_value
-  CALL getenv ( variable_name, variable_value)
-END SUBROUTINE get_env
-!
-SUBROUTINE get_arg ( iarg, arg )
-#if defined(__NAG)
-  USE F90_UNIX_ENV, ONLY : getarg
-#endif
-  INTEGER, INTENT(IN) :: iarg
-  CHARACTER (LEN=*), INTENT(OUT) :: arg
-  CALL getarg ( iarg, arg )
-END SUBROUTINE get_arg
-!
 !----------------------------------------------------------------------------
 SUBROUTINE input_from_file( )
   !
@@ -46,23 +17,22 @@ SUBROUTINE input_from_file( )
   CHARACTER (LEN=256) :: input_file
   LOGICAL             :: found
   !
-  INTEGER, EXTERNAL   :: i_argc
   INTEGER :: iiarg, nargs
   !
-  nargs = i_argc()
+  nargs = command_argument_count()
   found = .FALSE.
   input_file = ' '
   !
   DO iiarg = 1, ( nargs - 1 )
      !
-     CALL get_arg( iiarg, input_file )
+     CALL get_command_argument( iiarg, input_file )
      !
      IF ( TRIM( input_file ) == '-i'     .OR. &
           TRIM( input_file ) == '-in'    .OR. &
           TRIM( input_file ) == '-inp'   .OR. &
           TRIM( input_file ) == '-input' ) THEN
         !
-        CALL get_arg( ( iiarg + 1 ) , input_file )
+        CALL get_command_argument( ( iiarg + 1 ) , input_file )
         found =.TRUE.
         EXIT
         !
@@ -105,10 +75,9 @@ SUBROUTINE get_file( input_file )
   CHARACTER (LEN=256) :: prgname
   INTEGER             :: nargs
   LOGICAL             :: exst
-  INTEGER, EXTERNAL   :: i_argc
   !
-  nargs = i_argc()
-  CALL get_arg (0,prgname)
+  nargs = command_argument_count()
+  CALL get_command_argument (0,prgname)
   !
   IF ( nargs == 0 ) THEN
 10   PRINT  '("Input file > "), advance="NO"'     
@@ -120,7 +89,7 @@ SUBROUTINE get_file( input_file )
         GO TO 10
      END IF
   ELSE IF ( nargs == 1 ) then
-     CALL get_arg (1,input_file)
+     CALL get_command_argument (1,input_file)
   ELSE
      PRINT  '(A,": too many arguments ",i4)', TRIM(prgname), nargs
   END IF

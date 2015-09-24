@@ -315,7 +315,7 @@ subroutine phq_summary
   endif
   write(stdout,'(/)')
   !
-  CALL flush_unit( stdout )
+  FLUSH( stdout )
   !
   return
 end subroutine phq_summary

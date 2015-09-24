@@ -237,7 +237,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
                   if(l_whole_s) then
 !NOT_TO_BE_INCLUDED_START
                      write(stdout,*) 'Call complete X operator part',iv
-                     call flush_unit(stdout)
+                     FLUSH(stdout)
                      do ks=1,nbnd_s,1
                         c_exc=(0.d0,0.d0)
                         do ig=1,ngm

@@ -123,7 +123,7 @@ subroutine solve_lanczos_complex(nbuf,alpha,e_mat,lc)
         call zgtsv(lc%num_steps,1,dl,d,du,t,lc%num_steps,info)
         if(info /= 0) then
            write(stdout,*) 'ZGTSV info:', info
-           call flush_unit(stdout)
+           FLUSH(stdout)
            stop
         endif
      !ATTENZIONE
@@ -328,7 +328,7 @@ subroutine do_self_lanczos(ss, tf ,options)
    write(stdout,*) 'Lanczos first tri', lc%f(1,1),lc%f(lc%num_steps-1,1)
    write(stdout,*) 'Lanczos last tri', lc%f(1,lc%numt),lc%f(lc%num_steps-1,lc%numt)
 
-   call flush_unit(stdout)
+   FLUSH(stdout)
    call initialize_lanczos_matrix(lm)
    lm%numt=lc%numt
    allocate(lm%e_mat(lm%numt,lm%numt))
@@ -361,7 +361,7 @@ subroutine do_self_lanczos(ss, tf ,options)
       do ix=nbegin_freq,nbegin_freq+l_blk_freq-1
          if(ix<=ss%n) then
             write(stdout,*) 'Exp table:', ix
-            call flush_unit(stdout)
+            FLUSH(stdout)
             do jw=-tf%n,tf%n
                do iw=-tf%n,tf%n
                   do it=-tf%n,tf%n
@@ -410,10 +410,10 @@ subroutine do_self_lanczos(ss, tf ,options)
  
      if(n_dim > 0) then
          write(stdout,*) 'Doing solve_lanczos_complex',iw
-         call flush_unit(stdout)
+         FLUSH(stdout)
          call solve_lanczos_complex(n_dim,af,e_mat_tmp,lc)
          write(stdout,*) 'Done'
-         call flush_unit(stdout)
+         FLUSH(stdout)
          do il=1,n_dim
             lm%iw=iw+il-1
             lm%e_mat(:,:)=e_mat_tmp(:,:,il)
@@ -476,11 +476,11 @@ subroutine do_self_lanczos(ss, tf ,options)
 !      do ii=options%i_min,options%i_max
       do ii=ii_begin,ii_end
          write(stdout,*) 'KS STATE', ii
-         call flush_unit(stdout)
+         FLUSH(stdout)
 
 !!read in Q^i
          write(stdout,*) 'Call read_compact_q_lanczos'
-         call flush_unit(stdout)
+         FLUSH(stdout)
          if(.not.l_direct) then
             call read_compact_q_lanczos(cql(ii-ii_begin+1), ii)
          else
@@ -488,7 +488,7 @@ subroutine do_self_lanczos(ss, tf ,options)
             call  read_data_pw_tt_mat_lanczos(ttl(ii-ii_begin+1), ii, options%prefix, .false.,1)
          endif
          write(stdout,*) 'Done'
-         call flush_unit(stdout)
+         FLUSH(stdout)
       enddo
 
      
@@ -501,7 +501,7 @@ subroutine do_self_lanczos(ss, tf ,options)
          iw_min=-tf%n+options%n_set*(iiw-1)
          iw_max=min(iw_min+options%n_set-1,tf%n)
          write(stdout,*) 'Solve'
-         call flush_unit(stdout)
+         FLUSH(stdout)
          iw_tot=iw_max-iw_min+1
          l_blk_iw= (iw_tot)/nproc
          if(l_blk_iw*nproc < (iw_tot)) l_blk_iw = l_blk_iw+1
@@ -537,10 +537,10 @@ subroutine do_self_lanczos(ss, tf ,options)
             !af = dcmplx(offset,-tf%freqs(iw))
             !call solve_lanczos_complex(af,lm%e_mat,lc)
             write(stdout,*) 'Reading lanczos matrix',iw
-            call flush_unit(stdout)
+            FLUSH(stdout)
             call read_lanczos_matrix(lm,iw)
             write(stdout,*) 'Done'
-            call flush_unit(stdout)
+            FLUSH(stdout)
             
 !!calculate C^i_lm matrix    
                re_e_mat(:,:)=dble(lm%e_mat(:,:))
@@ -555,7 +555,7 @@ subroutine do_self_lanczos(ss, tf ,options)
                   
                   do ii=ii_begin,ii_end
                      ipos=ii-ii_begin+1
-                     call flush_unit(stdout)
+                     FLUSH(stdout)
                      call dgemm('N','N',cql(ipos)%numpw,cql(ipos)%numt,cql(ipos)%numt,&
    &1.d0,cql(ipos)%qlm,cql(ipos)%numpw,re_e_mat,lc%numt,0.d0,tmp_mat,cql(ipos)%numpw)
                      call dgemm('N','T',cql(ipos)%numpw,cql(ipos)%numpw,cql(ipos)%numt,&
@@ -568,66 +568,66 @@ subroutine do_self_lanczos(ss, tf ,options)
 
                   enddo
                   write(stdout,*) 'Done'
-                  call flush_unit(stdout)
+                  FLUSH(stdout)
                   deallocate(tmp_mat)
 
                else
                   write(stdout,*) 'Doing dgemms',ttl(1)%numl,ttl(1)%numt,vtl(1)%numl,vtl(1)%numpw
-                  call flush_unit(stdout)
+                  FLUSH(stdout)
                   allocate(tmp_mat(ttl(1)%numl,ttl(1)%numt))
                   allocate(tmp_mat1(ttl(1)%numl,ttl(1)%numl))
                   allocate(tmp_mat2(numpw,ttl(1)%numl))
                   do ii=ii_begin,ii_end
                      ipos=ii-ii_begin+1
                      write(stdout,*) 'ATTENZIONE1', ttl(ipos)%numl,ttl(ipos)%numt,vtl(ipos)%numl,vtl(ipos)%numpw
-                     call flush_unit(stdout)
+                     FLUSH(stdout)
 
                      call dgemm('T','N',ttl(ipos)%numl,ttl(ipos)%numt,ttl(ipos)%numt,1.d0,ttl(ipos)%tt_mat,ttl(ipos)%numt,&
                           &re_e_mat,lc%numt,0.d0,tmp_mat,ttl(ipos)%numl)
 
                      write(stdout,*) 'ATTENZIONE2', ii
-                     call flush_unit(stdout)
+                     FLUSH(stdout)
 
                      call dgemm('N','N',ttl(ipos)%numl,ttl(ipos)%numl,ttl(ipos)%numt,1.d0,tmp_mat,ttl(ipos)%numl,&
                           ttl(ipos)%tt_mat,ttl(ipos)%numt,0.d0,tmp_mat1,ttl(ipos)%numl)
 
                      write(stdout,*) 'ATTENZIONE3', ii, vtl(ipos)%numpw,vtl(ipos)%numl,vtl(ipos)%numl
                      write(stdout,*) 'ATTENZIONE3', size(vtl(ipos)%vt_mat(:,1)), size(vtl(ipos)%vt_mat(1,:)), ttl(1)%numl, numpw
-                     call flush_unit(stdout)
+                     FLUSH(stdout)
                      
                      call dgemm('N','N',vtl(ipos)%numpw,vtl(ipos)%numl,vtl(ipos)%numl,1.d0,vtl(ipos)%vt_mat,vtl(ipos)%numpw,&
                           &tmp_mat1,vtl(ipos)%numl,0.d0,tmp_mat2,numpw)
 
                      write(stdout,*) 'ATTENZIONE4', ii
-                     call flush_unit(stdout)
+                     FLUSH(stdout)
 
                    
                      call dgemm('N','T',vtl(ipos)%numpw,vtl(ipos)%numpw,vtl(ipos)%numl,1.d0,tmp_mat2,numpw,vtl(ipos)%vt_mat,&
                           vtl(ipos)%numpw,0.d0,re_c_mat(:,:,ipos,iw-nbegin_iw+1),numpw)
 
                      write(stdout,*) 'ATTENZIONE5', ii
-                     call flush_unit(stdout)
+                     FLUSH(stdout)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 
                      call dgemm('T','N',ttl(ipos)%numl,ttl(ipos)%numt,ttl(ipos)%numt,1.d0,ttl(ipos)%tt_mat,ttl(ipos)%numt,&
                           &im_e_mat,lc%numt,0.d0,tmp_mat,ttl(ipos)%numl)
                      
                      write(stdout,*) 'ATTENZIONE6', ii
-                     call flush_unit(stdout)
+                     FLUSH(stdout)
 
 
                      call dgemm('N','N',ttl(ipos)%numl,ttl(ipos)%numl,ttl(ipos)%numt,1.d0,tmp_mat,ttl(ipos)%numl,&
                           ttl(ipos)%tt_mat,ttl(ipos)%numt,0.d0,tmp_mat1,ttl(ipos)%numl)
 
                      write(stdout,*) 'ATTENZIONE7', ii
-                     call flush_unit(stdout)
+                     FLUSH(stdout)
 
 
                      call dgemm('N','N',vtl(ipos)%numpw,vtl(ipos)%numl,vtl(ipos)%numl,1.d0,vtl(ipos)%vt_mat,vtl(ipos)%numpw,&
                           &tmp_mat1,vtl(ipos)%numl,0.d0,tmp_mat2,numpw)
 
                      write(stdout,*) 'ATTENZIONE8', ii
-                     call flush_unit(stdout)
+                     FLUSH(stdout)
 
 
                   
@@ -636,17 +636,17 @@ subroutine do_self_lanczos(ss, tf ,options)
                      
 
                      write(stdout,*) 'ATTENZIONE9', ii
-                     call flush_unit(stdout)
+                     FLUSH(stdout)
 
                    
                  enddo
                    write(stdout,*) 'Done'
-                  call flush_unit(stdout)
+                  FLUSH(stdout)
                   deallocate(tmp_mat,tmp_mat1,tmp_mat2)
                endif
             enddo
             write(stdout,*) 'Done'
-            call flush_unit(stdout)
+            FLUSH(stdout)
 
 !!!loop on w' parallelized
             if(.not.l_half) then
@@ -682,7 +682,7 @@ subroutine do_self_lanczos(ss, tf ,options)
 !         do jw=nbegin,nbegin+l_blk-1
                if(jw <= tf%n) then
                   write(stdout,*) 'FREQ', jw
-                  call flush_unit(stdout)
+                  FLUSH(stdout)
                   if(.not.options%l_reduce_io) then
                      call read_polaw(jw, ww,options%debug,options%l_verbose)
                   else

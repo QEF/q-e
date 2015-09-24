@@ -64,14 +64,14 @@
 !  read in input structure
 
    call read_input_gww(options)
-   call flush_unit(stdout)
+   FLUSH(stdout)
    call setup_para_gww(options%n, options%max_i, options%i_min, options%i_max)
 ! setup time/frequency grid if required
    
    
 
    call setup_timefreq(tf,options)
-   call flush_unit(stdout)
+   FLUSH(stdout)
 !  call test_fft(tf)
 
 !read in LDA and HF energies from bands.dat

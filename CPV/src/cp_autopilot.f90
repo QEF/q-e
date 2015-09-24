@@ -342,7 +342,7 @@ CONTAINS
             WRITE(*,*) '****************************************************'
             WRITE(*,*) '  Autopilot: Mailbox found at nfi=', current_nfi
           END IF
-          call flush_unit(6)
+          FLUSH(6)
 
           ! Open the mailbox
           IF ( ionode ) OPEN( UNIT = pilot_unit, FILE = TRIM( mbfile ) )

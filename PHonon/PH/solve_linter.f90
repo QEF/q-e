@@ -548,7 +548,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !
      !    Here we save the information for recovering the run from this poin
      !
-     CALL flush_unit( stdout )
+     FLUSH( stdout )
      !
      rec_code=10
      IF (okpaw) THEN

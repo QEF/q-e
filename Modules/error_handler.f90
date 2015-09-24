@@ -70,7 +70,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !
   WRITE( *, '("     stopping ...")' )
   !
-  CALL flush_unit( stdout )
+  FLUSH( stdout )
   !
 #ifdef __PTRACE
 #ifdef __INTEL

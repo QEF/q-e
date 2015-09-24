@@ -233,7 +233,7 @@ SUBROUTINE lr_summary
   !
   WRITE(stdout,'(/)')
   !
-  CALL flush_unit( stdout )
+  FLUSH( stdout )
   !
   CALL stop_clock ('lr_summary')
   !

@@ -129,7 +129,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
 
 
   write(stdout,*) 'MATRIX BIG1'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   iunwfcreal2=find_free_unit()
   CALL diropn( iunwfcreal2, 'real_whole', dffts%nnr, exst )
@@ -204,11 +204,11 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   nbnd_eff=num_nbndv(ispin)
 
   write(stdout,*) 'MATRIX BIG2'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   do iiw=1,nbnd_eff/n_set+1
      write(stdout,*) 'MATRIX IIW',iiw
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      do iw=(iiw-1)*n_set+1,min(iiw*n_set,nbnd_eff)
 !read from disk wfc on coarse grid
@@ -217,7 +217,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
 !read in iw wfcs
      do jjw=iiw,nbnd_eff/n_set+1
         write(stdout,*) 'MATRIX JJW',jjw
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
         do jw=(jjw-1)*n_set+1,min(jjw*n_set,nbnd_eff)
            CALL davcio( tmprealjs(:,jw-(jjw-1)*n_set),dffts%nnr,iunwfcreal2,jw+(ispin-1)*nbnd,-1)
@@ -268,7 +268,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   deallocate(tmpexp2)
 
   write(stdout,*) 'Calculate US'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   if(okvan) then
     allocate(tmpexp(dfftp%nnr))
     allocate(expgsave(maxval(nh),maxval(nh),nat,3))

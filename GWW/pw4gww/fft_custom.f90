@@ -229,7 +229,7 @@ CONTAINS
 
   call mp_barrier( world_comm )
   write(stdout,*) 'ATT1.0'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   
   
   tk = .false.
@@ -247,7 +247,7 @@ CONTAINS
   ncplanes = fc%nrx1t * fc%nrx2t
   call mp_barrier( world_comm )
   write(stdout,*) 'ATT1.1'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   !
   ! check the number of plane per process
@@ -266,7 +266,7 @@ CONTAINS
   !
   call mp_barrier( world_comm )
   write(stdout,*) 'ATT1.2'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   n1 = fc%nr1t + 1
   n2 = fc%nr2t + 1
@@ -287,12 +287,12 @@ CONTAINS
 !
   call mp_barrier( world_comm )
   write(stdout,*) 'ATT1.3'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   CALL sticks_maps( tk, ub, lb, fc%bg_t(:,1), fc%bg_t(:,2), fc%bg_t(:,3), fc%gcutmt, gkcut, fc%gcutmt, st, &
        &stw, sts ,me_pool,nproc_pool,intra_pool_comm)
   write(stdout,*) 'ATT1.3.1'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   
   nct  = count( st  > 0 )
@@ -324,7 +324,7 @@ CONTAINS
 ! ...     ncts counts columns contaning G-vectors for the smooth grid
 !
   write(stdout,*) 'ATT1.5'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
 
   CALL sticks_countg( tk, ub, lb, st, stw, sts, in1, in2, ngc, ngkc, ngcs )
@@ -338,7 +338,7 @@ CONTAINS
           ncp, nkcp, ncps, ngp, ngkp, ngps, st, stw, sts ,nproc_pool)
 
   write(stdout,*) 'ATT1.6'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   !  set the total number of G vectors
 
@@ -595,23 +595,23 @@ SUBROUTINE initialize_fft_custom(fc)
 
   call mp_barrier( world_comm )
   write(stdout,*) 'ATT1'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   call  set_custom_grid(fc)
 
   call mp_barrier( world_comm )
   write(stdout,*) 'ATT2'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   call data_structure_custom(fc)
 
   call mp_barrier( world_comm )
   write(stdout,*) 'ATT3'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   
   allocate(fc%nlt(fc%ngmt))
   allocate(fc%nltm(fc%ngmt))
   write(stdout,*) 'ATT4'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   
   call ggent(fc)
   
@@ -648,23 +648,23 @@ SUBROUTINE initialize_fft_custom_cell(fc)
 
   call mp_barrier( world_comm )
   write(stdout,*) 'ATT1'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   call  set_custom_grid(fc)
 
   call mp_barrier( world_comm )
   write(stdout,*) 'ATT2'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   call data_structure_custom(fc)
 
   call mp_barrier( world_comm )
   write(stdout,*) 'ATT3'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   
   allocate(fc%nlt(fc%ngmt))
   allocate(fc%nltm(fc%ngmt))
   write(stdout,*) 'ATT4'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   
   call ggent(fc)
   

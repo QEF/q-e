@@ -321,7 +321,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         WRITE(stdout,'("e(",i4,") = ",f12.6," eV  (",i3," iterations)")') &
          m, e(m)*13.6058, iter
      END IF
-     CALL flush_unit (stdout)
+     FLUSH (stdout)
 #endif
      IF ( iter >= maxter ) notconv = notconv + 1
      !

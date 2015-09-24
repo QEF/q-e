@@ -74,10 +74,10 @@ SUBROUTINE o_rinitcgg( npwx, npw, nstart, numwp, psi, o_evc, e, numv, v_states,h
      !CALL h_1psi( npwx, npw, psi(1,m), aux(1,1), aux(1,2) )
    
      write(stdout,*) 'Call o_1psi_gamma',m,nstart
-     call flush_unit(stdout)
+     FLUSH(stdout)
      call o_1psi_gamma( numv, v_states, psi(1,m), aux(1,1),.false.,hdiag,ptype,fcw_number,fcw_state,fcw_mat,ethr) 
      write(stdout,*) 'Done'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      !call o_1psi_gamma_real( numv, v_states, psi(1,m), aux(1,1))
      aux(:,2)=psi(:,m)
@@ -114,11 +114,11 @@ SUBROUTINE o_rinitcgg( npwx, npw, nstart, numwp, psi, o_evc, e, numv, v_states,h
   ! ... diagonalize
   !
   write(stdout,*) 'Call rdiaghg'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   CALL rdiaghg( nstart, numwp, hr, sr, nstart, en, hr(1,1,2) )
   write(stdout,*) 'Done'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
  !
   e(1:numwp) = en(1:numwp)

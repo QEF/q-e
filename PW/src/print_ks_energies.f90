@@ -86,7 +86,7 @@ SUBROUTINE print_ks_energies()
   !
   IF ( .NOT. lbands ) CALL get_homo_lumo (ehomo, elumo)
   !
-  CALL flush_unit( stdout )
+  FLUSH( stdout )
   !
   RETURN
   !

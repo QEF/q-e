@@ -216,7 +216,7 @@ subroutine solve_e2
      write (6, "(5x,' thresh=',es10.3, ' alpha_mix = ',f6.3, &
           &      ' |ddv_scf|^2 = ',es10.3 )") thresh, alpha_mix (kter), dr2
      !
-     CALL flush_unit( stdout )
+     FLUSH( stdout )
      !
      ! rec_code: state of the calculation
      ! rec_code=-10  to -19 Raman

@@ -113,7 +113,7 @@ subroutine dvpsi_e (ik, ipol)
        & " linter: root not converged ",es10.3)') &
        ik, ibnd, anorm
   !
-  CALL flush_unit( stdout )
+  FLUSH( stdout )
   deallocate (h_diag)
   !
   ! we have now obtained P_c x |psi>.

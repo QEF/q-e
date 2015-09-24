@@ -126,7 +126,7 @@
     do ii=1,num_nbnds_sc-n_semicore!as they are written
        do iv=1,n_semicore
           write(stdout,*) 'Reading state:', ii,iv
-          call flush_unit(stdout)
+          FLUSH(stdout)
           if(ionode) read(iun) tmp_g(1:npwx_g_sc)
           call splitwf(tmp_wfc,tmp_g,npw,ig_l2g,mpime,nproc,ionode_id,intra_pool_comm)
 !check for consistency

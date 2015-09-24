@@ -81,13 +81,13 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
    TYPE(fft_cus) :: fc
 
    write(stdout,*) 'Routine pola_basis_lanczos'
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
    fc%ecutt=ecutwfc
    fc%dual_t=dual_vt
 
    if(l_verbose) write(stdout,*) 'Call initialize_fft_custom'
-   call flush_unit(stdout)
+   FLUSH(stdout)
    call initialize_fft_custom(fc)
    allocate(evc_g(fc%ngmt_g))
 
@@ -139,7 +139,7 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
   
 
    if(l_verbose) write(stdout,*) 'pola_basis_lanczos 1'
-   call flush_unit(stdout)
+   FLUSH(stdout)
    
 !now polarizability basis  are put on the ordering of the redueced grid, if required
   allocate(p_basis_t(fc%npwt,numpw))
@@ -214,14 +214,14 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
     !  allocate(tmp_r(fc%nrxxt))
 
          if(l_verbose) write(stdout,*) 'do fft'
-         call flush_unit(stdout)
+         FLUSH(stdout)
 
          do ii=1,numpw,2
 !!read n_set w^P'_i from disk
             if(.not.l_reduce_io) then
                call davcio(tmp_r,dfftp%nnr,iunrprod,ii,-1)
                write(stdout,*) 'ERROR l_reduce_io must be true'
-               call flush_unit(stdout)
+               FLUSH(stdout)
                stop
             endif
 
@@ -247,11 +247,11 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
             
          enddo
          if(l_verbose) write(stdout,*) 'do pc_operator'
-         call flush_unit(stdout)
+         FLUSH(stdout)
         call pc_operator_t_m(numpw,wp_prod(1,1,iv-ivv+1),evc_t,ispin, fc) 
 
          if(l_verbose) write(stdout,*) 'calculate omat'
-         call flush_unit(stdout)
+         FLUSH(stdout)
 
 
     
@@ -286,13 +286,13 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
 !!
       
      if(l_verbose)  write(stdout,*) 'solve eig'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
     
-      call flush_unit(stdout)
+      FLUSH(stdout)
       do iv=ivv,min(ivv+nbuf-1,num_nbndv(ispin))
          if(l_verbose) write(stdout,*) 'solve eig', iv
-         call flush_unit(stdout)
+         FLUSH(stdout)
          if(iv-ivv==mpime) then
             
             if(.not.l_dsyevr) then
@@ -313,16 +313,16 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
              !  do iw=1,numpw
              !     write(stdout,*) 'EIGEN:',iv,iw, eigen(iw)
              !  enddo
-             !  call flush_unit(stdout)
+             !  FLUSH(stdout)
             else
                if(l_verbose) write(stdout,*) 'ATT1'
-               call flush_unit(stdout)
+               FLUSH(stdout)
                allocate(eigen(numpw))
                allocate(vectors(numpw,nstates))
                allocate(isuppz(2*nstates))
                allocate(work(1),iwork(1))
                if(l_verbose)  write(stdout,*) 'ATT2'
-                call flush_unit(stdout)
+                FLUSH(stdout)
                call DSYEVR('V','I','U',numpw,omat_hold,numpw,0.d0,0.d0,numpw-nstates+1,numpw,0.d0,n_found,eigen,&
                     & vectors,numpw,isuppz,work, -1,iwork,-1, info)
                lwork=work(1)
@@ -331,7 +331,7 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
                allocate(work(lwork))
                allocate(iwork(liwork))
                if(l_verbose)  write(stdout,*) 'ATT3',numpw,nstates,size(omat_hold(:,1)),size(omat_hold(1,:)),lwork,liwork
-               call flush_unit(stdout)
+               FLUSH(stdout)
                vl=0.d0
                vu=0.d0
                il=numpw-nstates+1
@@ -343,14 +343,14 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
                   stop
                endif
                if(l_verbose)  write(stdout,*) 'ATT4'
-               call flush_unit(stdout)
+               FLUSH(stdout)
                deallocate(isuppz)
                deallocate(work,iwork)
         
                do iw=1,nstates,nstates-1
                   write(stdout,*) 'EIGEN T LOCAL:',iv,iw, eigen(iw)
                enddo
-               call flush_unit(stdout)
+               FLUSH(stdout)
 
             endif
       
@@ -358,7 +358,7 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
 !!find transformation matrix and write on disk
 !
         if(l_verbose) write(stdout,*) 'pola_basis_lanczos t_mat'
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 
       
@@ -459,7 +459,7 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
 
 
         if(l_verbose) write(stdout,*) 'pola_basis update wp_g'
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 
 !!find liner dependent products
@@ -472,12 +472,12 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
 
 
         if(l_verbose) write(stdout,*) 'pola_basis update wp_g dgemm'
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
         call dgemm('N','N',2*fc%npwt,nstates,numpw,1.d0,wp_prod(1,1,iv-ivv+1),2*fc%npwt,t_mat,numpw,0.d0,wp_g_t,2*fc%npwt)
 
         write(stdout,*) 'pola_basis update merge-split',iv,ivv
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 !put the correct order
 
@@ -492,7 +492,7 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
            !enddo
         endif
         if(l_verbose) write(stdout,*) 'pola_basis update davcio',iv
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 
   !!write on disk
@@ -501,7 +501,7 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
         enddo
 
         if(l_verbose) write(stdout,*) 'pola_basis update done'
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 
        
@@ -517,13 +517,13 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
   deallocate(t_eigen_hold)
   
   if(l_verbose) write(stdout,*) 'Exiting pola_basis_lanczos'
-  call flush_unit(stdout)
+  FLUSH(stdout)
    
   if(l_reduce_io) deallocate(p_basis)
   deallocate(p_basis_t,evc_t)
   
   if(l_verbose) write(stdout,*) 'Call deallocate_fft_custom'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   deallocate(evc_g)
   call deallocate_fft_custom(fc)
    
@@ -748,7 +748,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
 
      
      write(stdout,*) 'lanczos_state:', istate,ispin
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      
 !calculate H|\phi_i>
@@ -805,7 +805,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
      call mp_sum(d(1,nbegin_ip:nend_ip), world_comm)
 
      if(l_verbose) write(stdout,*) 'Lanczos Diagonal 1', d(1,nbegin_ip:nend_ip)
-     call flush_unit(stdout)
+     FLUSH(stdout)
   
 !calculate f
 
@@ -819,7 +819,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
      call mp_sum(f(1,nbegin_ip:nend_ip), world_comm)
 
      if(l_verbose) write(stdout,*) 'ATTENZIONE1'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 !calculate overlaps and write on output file
      if(omat_div) then
@@ -848,7 +848,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
            enddo
         endif
         if(l_verbose) write(stdout,*) 'ATTENZIONE2'
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
         do ii=1,nstates
            call mp_sum(omat(:,ii), world_comm)
@@ -890,7 +890,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
      endif
   
      if(l_verbose) write(stdout,*) 'ATTENZIONE3'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 
 !calculate second overlap
@@ -921,7 +921,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
            enddo
         endif
         if(l_verbose) write(stdout,*) 'ATTENZIONE4'
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
         do ii=1,nstates
            call mp_sum(omat(:,ii), world_comm)
@@ -936,7 +936,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
 !do iterate
      do it=2,nsteps
         if(l_verbose) write(stdout,*) 'lanczos h_psi'
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 !calculate H|\phi_i+1>
         call h_psi( npw, npw, nsize_ip,psi_2(1,1), u_1 )
@@ -944,7 +944,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
         if(l_scissor) call h_psi_scissor( ispin,npw, npw, nsize_ip,psi_2(1,1), u_1 )
 
         if(l_verbose) write(stdout,*) 'lanczos alfa beta gamma'
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 
 
@@ -1000,7 +1000,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
         enddo
 
         if(l_verbose) write(stdout,*) 'lanczos d f omat'
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 
 !calculate d
@@ -1166,7 +1166,7 @@ subroutine orthonormalize_two_manifolds( state1, n1,state2, n2, threshold, state
  
 !buid overlap matrix
   if(l_verbose) write(stdout,*) 'orthonormalize dgemm'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   allocate(omat(n1+n2,n1+n2))
   omat(:,:)=0.d0
@@ -1183,13 +1183,13 @@ subroutine orthonormalize_two_manifolds( state1, n1,state2, n2, threshold, state
      enddo
   endif
   if(l_verbose) write(stdout,*) 'orthonormalize mp_sum'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   do ii=1,n2
      call mp_sum(tmp_mat(:,ii), world_comm)
   enddo
   if(l_verbose) write(stdout,*) 'orthonormalize copy array'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   omat(1:n1,n1+1:n1+n2)=tmp_mat(1:n1,1:n2)
   deallocate(tmp_mat)
@@ -1198,7 +1198,7 @@ subroutine orthonormalize_two_manifolds( state1, n1,state2, n2, threshold, state
 
    allocate(eigen(n1+n2))
    if(l_verbose) write(stdout,*) 'orthonormalize dsyev'
-   call flush_unit(stdout)
+   FLUSH(stdout)
   
    if(ionode) then
       allocate(work(1))
@@ -1217,7 +1217,7 @@ subroutine orthonormalize_two_manifolds( state1, n1,state2, n2, threshold, state
       omat(:,:)=0.d0
    endif
    if(l_verbose) write(stdout,*) 'orthonormalize mp_bcast now mp_sum'
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
    do ii=1,n1+n2
       !call mp_bcast(omat(:,ii), ionode_id,world_comm)
@@ -1229,9 +1229,9 @@ subroutine orthonormalize_two_manifolds( state1, n1,state2, n2, threshold, state
    do ii=1,n1+n2
       if(l_verbose) write(stdout,*) 'EIGEN:',ii, eigen(ii)
    enddo
-   call flush_unit(stdout)
+   FLUSH(stdout)
    if(l_verbose) write(stdout,*) 'orthonormalize copy'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
 !construct orthonormal basis set 
  !  state_out(:,:)=(0.d0,0.d0)
@@ -1270,7 +1270,7 @@ subroutine orthonormalize_two_manifolds( state1, n1,state2, n2, threshold, state
 !   enddo
 
    write(stdout,*) 'orthonormalize_two_manifolds: basis dimension:', n_out
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
   deallocate (omat)
   return
@@ -1422,7 +1422,7 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
 !!calculate basis
      nglobal_old=nglobal
      if(l_verbose) write(stdout,*) 'Call orthonormalize_two_manifolds'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      if(.not.l_pmatrix) then
         !call orthonormalize_two_manifolds( old_basis, nglobal_old,v_basis, nstates, threshold, new_basis, nglobal)
         call orthonormalize_two_manifolds_prj( old_basis, nglobal_old,v_basis, nstates_eff, threshold, new_basis, nglobal,&
@@ -1431,7 +1431,7 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
         call orthonormalize_two_manifolds_scalapack(old_basis, nglobal_old,v_basis, nstates_eff, threshold, new_basis, nglobal) 
      endif
      if(l_verbose) write(stdout,*) 'Done orthonormalize_two_manifolds',ispin
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
 
 !!set arrays for next iteration
@@ -1494,10 +1494,10 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
      deallocate(t_mat)
   if(l_test) then
      write(stdout,*) 'TEST1'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      allocate(t_mat(nglobal,nglobal))
      write(stdout,*) 'TEST2'
-     call flush_unit(stdout)
+     FLUSH(stdout)
      
      call dgemm('T','N',nglobal,nglobal,2*npw,2.d0,old_basis,2*npw,old_basis,2*npw,0.d0,t_mat,nglobal)
      if(gstart==2) then
@@ -1508,7 +1508,7 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
         enddo
      endif
      write(stdout,*) 'TEST3'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
      call mp_sum(t_mat(:,:), world_comm)
 !!write diagonal terms
@@ -1518,7 +1518,7 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
            if(ii/=jj) sca=sca+abs(t_mat(ii,jj))
         enddo
         write(stdout,*) 'Diagonal',ii,t_mat(ii,ii),sca
-        call flush_unit(stdout)
+        FLUSH(stdout)
      enddo
      deallocate(t_mat)
      allocate(t_mat(nglobal,1))
@@ -1576,11 +1576,11 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
 !         do ii=1,nglobal,50
 !            write(stdout,*) 'Q terms',iv,iw,ii, t_mat(ii,1)
 !         enddo
-           call flush_unit(stdout)
+           FLUSH(stdout)
         enddo
      enddo
      write(stdout,*) 'Average projection', proj_tot/dble(numpw*2)
-     call flush_unit(stdout)
+     FLUSH(stdout)
      deallocate(t_mat)
      deallocate(wv_real,tmp_g,tmp_r,wp_prod)
      close(iungprod)
@@ -1657,7 +1657,7 @@ subroutine orthonormalize_two_manifolds_scalapack( state1, n1,state2, n2, thresh
 
   
   write(stdout,*) 'orthonormalize para1'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   do ii=1,n1
      do jj=1,n2
@@ -1707,7 +1707,7 @@ subroutine orthonormalize_two_manifolds_scalapack( state1, n1,state2, n2, thresh
   allocate(eigen(n))
 
   write(stdout,*) 'orthonormalize para2'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   call pdsyev('V','U',n,omat,1,1,desc_a,eigen,tmp_mat,1,1,desc_b,work,-1,info)
   lwork=work(1)
@@ -1721,12 +1721,12 @@ subroutine orthonormalize_two_manifolds_scalapack( state1, n1,state2, n2, thresh
   endif
    
   write(stdout,*) 'orthonormalize para3'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
    do ii=1,n,n
       write(stdout,*) 'EIGEN:',ii, eigen(ii)
    enddo
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
 
    state_out(:,:)=(0.d0,0.d0)
@@ -1762,10 +1762,10 @@ subroutine orthonormalize_two_manifolds_scalapack( state1, n1,state2, n2, thresh
       endif
    enddo
    write(stdout,*) 'orthonormalize para4'
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
    write(stdout,*) 'orthonormalize_two_manifolds: basis dimension:', n_out
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
   deallocate (omat,tmp_mat,eigen)
 #endif
@@ -1809,7 +1809,7 @@ subroutine orthonormalize_two_manifolds_prj( state1, n1,state2, n2, threshold, s
 
 !buid overlap matrix
   if(l_verbose) write(stdout,*) 'orthonormalize dgemm'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   allocate(tmp_mat(n1,n2))
   call dgemm('T','N',n1,n2,2*npw,2.d0,state1,2*npw,state2,2*npw,0.d0,tmp_mat,n1)
@@ -1822,7 +1822,7 @@ subroutine orthonormalize_two_manifolds_prj( state1, n1,state2, n2, threshold, s
   endif
 
   if(l_verbose) write(stdout,*) 'orthonormalize mp_sum'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   do ii=1,n2
      call mp_sum(tmp_mat(:,ii), world_comm)
@@ -1852,7 +1852,7 @@ subroutine orthonormalize_two_manifolds_prj( state1, n1,state2, n2, threshold, s
   endif
 
   if(l_verbose) write(stdout,*) 'orthonormalize mp_sum'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   do ii=1,n2
      call mp_sum(omat(:,ii), world_comm)
@@ -1863,7 +1863,7 @@ subroutine orthonormalize_two_manifolds_prj( state1, n1,state2, n2, threshold, s
 
    allocate(eigen(n2))
    if(l_verbose) write(stdout,*) 'orthonormalize dsyev'
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
    if(ionode) then
       allocate(work(1))
@@ -1884,7 +1884,7 @@ subroutine orthonormalize_two_manifolds_prj( state1, n1,state2, n2, threshold, s
       omat(:,:)=0.d0
    endif
    if(l_verbose) write(stdout,*) 'orthonormalize mp_bcast now mp_sum'
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
    do ii=1,n2
       !call mp_bcast(omat(:,ii), ionode_id,world_comm)
@@ -1897,9 +1897,9 @@ subroutine orthonormalize_two_manifolds_prj( state1, n1,state2, n2, threshold, s
    do ii=1,n2,n2-1
       write(stdout,*) 'EIGEN GLOBAL:',ii, eigen(ii)
    enddo
-   call flush_unit(stdout)
+   FLUSH(stdout)
    if(l_verbose) write(stdout,*) 'orthonormalize copy'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
 !construct orthonormal basis set
  !  state_out(:,:)=(0.d0,0.d0)
@@ -1924,7 +1924,7 @@ subroutine orthonormalize_two_manifolds_prj( state1, n1,state2, n2, threshold, s
    n_out=n_out+n1
 
    write(stdout,*) 'orthonormalize_two_manifolds: basis dimension:', n_out
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
   deallocate (omat,eigen)
   return
@@ -2252,13 +2252,13 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
    TYPE(fft_cus) :: fc
 
    write(stdout,*) 'Routine pola_basis_lanczos_real'
-   call flush_unit(stdout)
+   FLUSH(stdout)
 
    fc%ecutt=ecutwfc
    fc%dual_t=dual_vt
 
    if(l_verbose) write(stdout,*) 'Call initialize_fft_custom'
-   call flush_unit(stdout)
+   FLUSH(stdout)
    call initialize_fft_custom(fc)
 !   allocate(evc_g(fc%ngmt_g))
 !   allocate(wv_real(dfftp%nnr))
@@ -2292,7 +2292,7 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
   
 
    if(l_verbose) write(stdout,*) 'pola_basis_lanczos 1'
-   call flush_unit(stdout)
+   FLUSH(stdout)
    
 !now polarizability basis  are put on the ordering of the redueced grid, if required
   allocate(p_basis_t(fc%npwt,numpw))
@@ -2379,7 +2379,7 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
     !  allocate(tmp_r(fc%nrxxt))
 
          if(l_verbose) write(stdout,*) 'do fft',fc%nrxxt, numpw,iv-ivv+1
-         call flush_unit(stdout)
+         FLUSH(stdout)
          do ii=1,numpw
             wp_prod(1:fc%nrxxt, ii,iv-ivv+1)=p_basis_r(1:fc%nrxxt,ii)*wv_real(1:fc%nrxxt) 
          enddo
@@ -2388,7 +2388,7 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
          call pc_operator_t_r(numpw,wp_prod(1,1,iv-ivv+1),evc_r,ispin, fc)
 
          if(l_verbose) write(stdout,*) 'calculate omat'
-         call flush_unit(stdout)
+         FLUSH(stdout)
 
 
     
@@ -2417,13 +2417,13 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
 !!
       
      if(l_verbose)  write(stdout,*) 'solve eig'
-     call flush_unit(stdout)
+     FLUSH(stdout)
 
     
-      call flush_unit(stdout)
+      FLUSH(stdout)
       do iv=ivv,min(ivv+nbuf-1,num_nbndv(ispin))
          if(l_verbose) write(stdout,*) 'solve eig', iv
-         call flush_unit(stdout)
+         FLUSH(stdout)
          if(iv-ivv==mpime) then
             
             if(.not.l_dsyevr) then
@@ -2444,16 +2444,16 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
              !  do iw=1,numpw
              !     write(stdout,*) 'EIGEN:',iv,iw, eigen(iw)
              !  enddo
-             !  call flush_unit(stdout)
+             !  FLUSH(stdout)
             else
                if(l_verbose) write(stdout,*) 'ATT1'
-               call flush_unit(stdout)
+               FLUSH(stdout)
                allocate(eigen(numpw))
                allocate(vectors(numpw,nstates))
                allocate(isuppz(2*nstates))
                allocate(work(1),iwork(1))
                if(l_verbose)  write(stdout,*) 'ATT2'
-                call flush_unit(stdout)
+                FLUSH(stdout)
                call DSYEVR('V','I','U',numpw,omat_hold,numpw,0.d0,0.d0,numpw-nstates+1,numpw,0.d0,n_found,eigen,&
                     & vectors,numpw,isuppz,work, -1,iwork,-1, info)
                lwork=work(1)
@@ -2462,7 +2462,7 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
                allocate(work(lwork))
                allocate(iwork(liwork))
                if(l_verbose)  write(stdout,*) 'ATT3',numpw,nstates,size(omat_hold(:,1)),size(omat_hold(1,:)),lwork,liwork
-               call flush_unit(stdout)
+               FLUSH(stdout)
                vl=0.d0
                vu=0.d0
                il=numpw-nstates+1
@@ -2474,14 +2474,14 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
                   stop
                endif
                if(l_verbose)  write(stdout,*) 'ATT4'
-               call flush_unit(stdout)
+               FLUSH(stdout)
                deallocate(isuppz)
                deallocate(work,iwork)
         
                do iw=1,nstates
                   write(stdout,*) 'EIGEN:',iv,iw, eigen(iw)
                enddo
-               call flush_unit(stdout)
+               FLUSH(stdout)
 
             endif
       
@@ -2489,7 +2489,7 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
 !!find transformation matrix and write on disk
 !
         if(l_verbose) write(stdout,*) 'pola_basis_lanczos t_mat'
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 
       
@@ -2594,7 +2594,7 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
 
 
         if(l_verbose) write(stdout,*) 'pola_basis update wp_g'
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 
 !!find liner dependent products
@@ -2607,12 +2607,12 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
 
 
         if(l_verbose) write(stdout,*) 'pola_basis update wp_g dgemm'
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
         call dgemm('N','N',fc%nrxxt,nstates,numpw,1.d0,wp_prod(1,1,iv-ivv+1),fc%nrxxt,t_mat,numpw,0.d0,wp_g_t,fc%nrxxt)
 
         write(stdout,*) 'pola_basis update merge-split',iv,ivv
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 !put the correct order
        
@@ -2654,7 +2654,7 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
 
         deallocate(wp_g_t2)
         if(l_verbose) write(stdout,*) 'pola_basis update davcio',iv
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 
   !!write on disk
@@ -2663,7 +2663,7 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
         enddo
 
         if(l_verbose) write(stdout,*) 'pola_basis update done'
-        call flush_unit(stdout)
+        FLUSH(stdout)
 
 
        
@@ -2680,13 +2680,13 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
   deallocate(t_eigen_hold)
   
   if(l_verbose) write(stdout,*) 'Exiting pola_basis_lanczos'
-  call flush_unit(stdout)
+  FLUSH(stdout)
    
   deallocate(p_basis)
   deallocate(p_basis_t,evc_t)
   
   if(l_verbose) write(stdout,*) 'Call deallocate_fft_custom'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   !deallocate(evc_g)
   call deallocate_fft_custom(fc)
    

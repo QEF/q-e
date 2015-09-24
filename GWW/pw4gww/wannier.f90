@@ -83,7 +83,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, ispin)
 !transfrom to real wfcs:
   
   write(stdout,*) 'Transform to real wfcs'
-  call flush_unit(stdout)
+  FLUSH(stdout)
 
   if(nbndv<0 .OR. nbndv > nbnd) call errore('go_wannier','nbndv: illegal value',1)
   !if(mod(nbndv,2) /= 0 ) call errore('go_wannier','nbndv, odd',1) 
@@ -108,7 +108,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, ispin)
   endif
 
   write(stdout,*) 'Out of matrix_wannier_gamma_big'
-  call  flush_unit(stdout)
+  FLUSH(stdout)
 
 
 ! set weights 
@@ -163,7 +163,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, ispin)
   enddo
   
   write(stdout ,*) 'LOCALIZING WANNIER FUNCTIONS:'
-  call flush_unit(stdout)
+  FLUSH(stdout)
   
 
 ! Start Iteration =====================================================
@@ -233,7 +233,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, ispin)
    
  
      write(stdout,*) 'Spread', omg1,omg0
-     call flush_unit(stdout)
+     FLUSH(stdout)
      if(abs(omg1-omg0).lt.tresh ) EXIT
      omg0=omg1
 
@@ -251,7 +251,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, ispin)
   do i=1,nbndv
      write(stdout,*) 'Center Wannier:', wannier_centers(1,i,1)*alat,wannier_centers(3,i,1)*alat,wannier_centers(3,i,1)*alat
   enddo
-  call flush_unit(stdout)
+  FLUSH(stdout)
 !---now conduction subspace
 
 

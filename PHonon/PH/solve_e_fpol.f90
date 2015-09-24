@@ -345,7 +345,7 @@ subroutine solve_e_fpol ( iw )
      WRITE( stdout, "(5x,' thresh=',es10.3, ' alpha_mix = ',f6.3, &
           &      ' |ddv_scf|^2 = ',es10.3 )") thresh, alpha_mix (kter), dr2
      !
-     CALL flush_unit( stdout )
+     FLUSH( stdout )
      !
      ! restart NOT IMPLEMENTED
      !

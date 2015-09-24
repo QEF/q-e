@@ -27,7 +27,6 @@ subroutine read_input_and_bcast(filerecon, r_paw)
 
   IMPLICIT NONE
 
-  INTEGER, EXTERNAL :: i_argc
   INTEGER :: nargs, iiarg, ierr, ios, i
   LOGICAL :: found ! input_file found or not ?
   REAL(DP) :: norm, xeps_dot_xk
@@ -100,19 +99,19 @@ subroutine read_input_and_bcast(filerecon, r_paw)
 
      ! This part is similar to subroutine input_from_file (in flib/inpfile.f90)
 
-     nargs = i_argc()
+     nargs = command_argument_count()
      found = .FALSE.
      input_file = ' '
     
      DO iiarg = 1, (nargs-1)
        !
-       CALL get_arg( iiarg, input_file )
+       CALL get_command_argument( iiarg, input_file )
        IF ( TRIM( input_file ) == '-input' .OR. &
             TRIM( input_file ) == '-inp'   .OR. &
             TRIM( input_file ) == '-in'    .OR. &
             TRIM( input_file ) == '-i' ) THEN
           !
-          CALL get_arg( ( iiarg + 1 ) , input_file )
+          CALL get_command_argument( ( iiarg + 1 ) , input_file )
           found = .TRUE.
           EXIT
        ENDIF

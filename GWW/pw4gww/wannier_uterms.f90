@@ -247,7 +247,7 @@
    write(stdout,*)'BG2', bg(1:3,2)
     write(stdout,*)'BG3', bg(1:3,3)
     if(bg(2,1)==0.d0 .and. bg(3,1)==0.d0 .and.bg(1,2)==0.d0 .and.bg(3,2)==0.d0 .and. bg(1,3)==0.d0 .and.bg(2,3)==0.d0 ) then
-       call flush_unit(stdout)
+       FLUSH(stdout)
        do ig=1,npw
           vg_q(ig)=0.d0
           if(ig==1 .and. gstart==2) then

@@ -242,7 +242,7 @@ vstart=20000
      CALL start_clock ('ite_veff')
      !
 !write (stdout,*) ' enter ite_veff_nhpsi'
-!CALL flush_unit( stdout )
+!FLUSH( stdout )
      s2 = 0.d0
      DO ir = 1, dfftp%nnr
         S(ir) = psi_smooth(ir) * DBLE (aux(ir)) + vv(ir,1)*psi_smooth(ir)

@@ -18,20 +18,19 @@ FUNCTION input_images_getarg( ) RESULT(input_images)
   !
   INTEGER :: input_images
   CHARACTER(len=256) ::  myname
-  INTEGER, EXTERNAL :: i_argc
   INTEGER :: iiarg, nargs, i, i0
   !
-  nargs = i_argc()
+  nargs = command_argument_count()
   input_images = 0
   !
   DO iiarg = 1, nargs
      !
-     CALL get_arg( iiarg, myname)
+     CALL get_command_argument( iiarg, myname)
      !
      IF ( TRIM( myname ) == '-input_images' .OR. &
           TRIM( myname ) == '--input_images' ) THEN
         !
-        CALL get_arg( ( iiarg + 1 ) , myname )
+        CALL get_command_argument( ( iiarg + 1 ) , myname )
         !
         READ(myname,*) input_images
         RETURN

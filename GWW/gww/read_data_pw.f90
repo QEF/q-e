@@ -55,7 +55,7 @@
     do is=1,wu%nspin
        if(ionode)   read(iunu) wu%nums_occ(is)
        !write(stdout,*) 'DEBUG:', wu%nspin,wu%nums,wu%nums_occ(is)
-       !call flush_unit(stdout)
+       !FLUSH(stdout)
 
        call mp_bcast(wu%nums_occ(is), ionode_id, world_comm)
       
