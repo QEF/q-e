@@ -39,7 +39,7 @@ PROGRAM read_upf_tofile
   TYPE (pseudo_upf) :: upf
   TYPE (radial_grid_type) :: grid
   !
-  WRITE(6,'("Name of the upf file > "), advance="NO"')
+  WRITE(6,'("Name of the upf file > ")', advance="NO")
   READ(5,'(a)') file_pseudo
 
   !  nullify objects as soon as they are instantiated

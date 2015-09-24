@@ -163,21 +163,21 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
              status='unknown')
 
         IF (kresolveddos) THEN
-           WRITE (4,'("# ik   "), advance="NO"')
+           WRITE (4,'("# ik   ")', advance="NO")
         ELSE
-           WRITE (4,'("#"), advance="NO"')
+           WRITE (4,'("#")', advance="NO")
         ENDIF
         IF (nspin == 1) THEN
-           WRITE (4,'(" E (eV)   ldos(E)  "), advance="NO"')
+           WRITE (4,'(" E (eV)   ldos(E)  ")', advance="NO")
         ELSE
-           WRITE (4,'(" E (eV)  ldosup(E)  ldosdw(E)"), advance="NO"')
+           WRITE (4,'(" E (eV)  ldosup(E)  ldosdw(E)")', advance="NO")
         ENDIF
         DO m=1,2 * nlmchi(nwfc)%l + 1
            IF (nspin == 1) THEN
-              WRITE(4,'(" pdos(E)   "), advance="NO"')
+              WRITE(4,'(" pdos(E)   ")', advance="NO")
            ELSE
-              WRITE(4,'(" pdosup(E) "), advance="NO"')
-              WRITE(4,'(" pdosdw(E) "), advance="NO"')
+              WRITE(4,'(" pdosup(E) ")', advance="NO")
+              WRITE(4,'(" pdosdw(E) ")', advance="NO")
            ENDIF
         ENDDO
         WRITE(4,*)
@@ -197,7 +197,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
         DO ik=1,nkseff
            DO ie= 0, ne
               IF (kresolveddos) THEN
-                 WRITE (4,'(i5," "), advance="NO"') ik
+                 WRITE (4,'(i5," ")', advance="NO") ik
               ENDIF
               etev = Emin + ie * DeltaE
               WRITE (4,'(f7.3,2e11.3,14e11.3)') etev*rytoev,  &
@@ -213,9 +213,9 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
   fileout = trim(filpdos)//".pdos_tot"
   OPEN (4,file=fileout,form='formatted', status='unknown')
   IF (kresolveddos) THEN
-     WRITE (4,'("# ik   "), advance="NO"')
+     WRITE (4,'("# ik   ")', advance="NO")
   ELSE
-     WRITE (4,'("#"), advance="NO"')
+     WRITE (4,'("#")', advance="NO")
   ENDIF
   IF (nspin == 1) THEN
      WRITE (4,'(" E (eV)  dos(E)    pdos(E)")')
@@ -225,7 +225,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
   DO ik=1,nkseff
      DO ie= 0, ne
         IF (kresolveddos) THEN
-           WRITE (4,'(i5," "), advance="NO"') ik
+           WRITE (4,'(i5," ")', advance="NO") ik
         ENDIF
         etev = Emin + ie * DeltaE
         WRITE (4,'(f7.3,4e11.3)') etev*rytoev, (dostot(ie,is,ik), is=1,nspin), &
@@ -414,14 +414,14 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
              status='unknown')
 
         IF (kresolveddos) THEN
-           WRITE (4,'("# ik   "), advance="NO"')
+           WRITE (4,'("# ik   ")', advance="NO")
         ELSE
-           WRITE (4,'("#"), advance="NO"')
+           WRITE (4,'("#")', advance="NO")
         ENDIF
         IF (nspin0 == 1) THEN
-           WRITE (4,'(" E(eV)   ldos(E)   "), advance="NO"')
+           WRITE (4,'(" E(eV)   ldos(E)   ")', advance="NO")
         ELSE
-           WRITE (4,'(" E(eV)  ldosup(E)  ldosdw(E)"), advance="NO"')
+           WRITE (4,'(" E(eV)  ldosup(E)  ldosdw(E)")', advance="NO")
         ENDIF
         IF (lspinorb) THEN
            ind = 0
@@ -430,13 +430,13 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
               fact(2) = spinor(nlmchi(nwfc)%l,nlmchi(nwfc)%jj,m,2)
               IF (abs(fact(1))>1.d-8.or.abs(fact(2))>1.d-8) THEN
                  ind = ind + 1
-                 WRITE(4,'("pdos(E)_",i1,"   "), advance="NO"') ind
+                 WRITE(4,'("pdos(E)_",i1,"   ")', advance="NO") ind
               ENDIF
            ENDDO
         ELSE
            DO ind=1,2 * nlmchi(nwfc)%l + 1
-              WRITE(4,'(" pdosup(E) "), advance="NO"')
-              WRITE(4,'(" pdosdw(E) "), advance="NO"')
+              WRITE(4,'(" pdosup(E) ")', advance="NO")
+              WRITE(4,'(" pdosdw(E) ")', advance="NO")
            ENDDO
         ENDIF
         WRITE(4,*)
@@ -461,7 +461,7 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
            DO ik=1,nkseff
               DO ie= 0, ne
                  IF (kresolveddos) THEN
-                    WRITE (4,'(i5," "), advance="NO"') ik
+                    WRITE (4,'(i5," ")', advance="NO") ik
                  ENDIF
                  etev = Emin + ie * DeltaE
                  IF (abs(nlmchi(nwfc)%jj-nlmchi(nwfc)%l-0.5d0)<1.d-8) THEN
@@ -487,7 +487,7 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
            DO ik=1,nkseff
               DO ie= 0, ne
                  IF (kresolveddos) THEN
-                    WRITE (4,'(i5," "), advance="NO"') ik
+                    WRITE (4,'(i5," ")', advance="NO") ik
                  ENDIF
                  etev = Emin + ie * DeltaE
                  WRITE (4,'(f7.3,2e11.3,14e11.3)') etev*rytoev,  &
@@ -504,9 +504,9 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
   fileout = trim(filpdos)//".pdos_tot"
   OPEN (4,file=fileout,form='formatted', status='unknown')
   IF (kresolveddos) THEN
-     WRITE (4,'("# ik   "), advance="NO"')
+     WRITE (4,'("# ik   ")', advance="NO")
   ELSE
-     WRITE (4,'("#"), advance="NO"')
+     WRITE (4,'("#")', advance="NO")
   ENDIF
   IF (nspin0 == 1) THEN
      WRITE (4,'(" E (eV)  dos(E)    pdos(E)")')
@@ -516,7 +516,7 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
   DO ik=1,nkseff
      DO ie= 0, ne
         IF (kresolveddos) THEN
-           WRITE (4,'(i5," "), advance="NO"') ik
+           WRITE (4,'(i5," ")', advance="NO") ik
         ENDIF
         etev = Emin + ie * DeltaE
         WRITE (4,'(f7.3,4e11.3)') etev*rytoev, dostot(ie,ik), &
