@@ -274,6 +274,9 @@ MODULE input_parameters
 
         LOGICAL  :: lfcpopt = .FALSE. ! FCP optimisation switch
         LOGICAL  :: lfcpdyn = .FALSE. ! FCP thermostat enabled if .true.
+        !
+        ! location of xml input according to xsd schema
+        CHARACTER(len=256) :: input_xml_schema_file = './'
 
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir,   &
@@ -282,8 +285,8 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
           tqmmm, vdw_table_name, lorbm, memory, point_label_type,         &
-          lcalc_z2, z2_m_threshold, z2_z_threshold, lfcpopt, lfcpdyn
-
+          lcalc_z2, z2_m_threshold, z2_z_threshold, lfcpopt, lfcpdyn,     &
+          input_xml_schema_file                                                  
 !
 !=----------------------------------------------------------------------------=!
 !  SYSTEM Namelist Input Parameters

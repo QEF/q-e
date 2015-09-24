@@ -35,6 +35,9 @@ MODULE read_namelists_module
        press_ai_bcast, wannier_bcast, wannier_ac_bcast, control_checkin, &
        system_checkin, electrons_checkin, ions_checkin, cell_checkin, &
        wannier_checkin, wannier_ac_checkin, fixval
+#ifdef __XSD
+  PUBLIC :: xsd_defaults
+#endif
   !
   !  ... end of module-scope declarations
   !
@@ -48,6 +51,17 @@ MODULE read_namelists_module
      !
      !=-----------------------------------------------------------------------=!
      !
+#ifdef __XSD
+     !-----------------------------------------------------------------------
+     SUBROUTINE xsd_defaults( prog )
+     !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       !
+     END SUBROUTINE
+#endif
      !-----------------------------------------------------------------------
      SUBROUTINE control_defaults( prog )
        !-----------------------------------------------------------------------
@@ -128,6 +142,8 @@ MODULE read_namelists_module
        !
        lfcpopt = .FALSE.
        lfcpdyn = .FALSE.
+       !
+       input_xml_schema_file=''
        !
        RETURN
        !
@@ -648,6 +664,22 @@ MODULE read_namelists_module
      !
      !=----------------------------------------------------------------------=!
      !
+#ifdef __XSD
+     !-----------------------------------------------------------------------
+     SUBROUTINE xsd_bcast()
+     !-----------------------------------------------------------------------
+       !
+       USE io_global, ONLY : ionode_id
+       USE mp,        ONLY : mp_bcast
+       USE mp_images, ONLY : intra_image_comm
+       !
+       IMPLICIT NONE
+       !
+       CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )
+       !
+     END SUBROUTINE
+#endif
+     !
      !-----------------------------------------------------------------------
      SUBROUTINE control_bcast()
        !-----------------------------------------------------------------------
@@ -704,6 +736,7 @@ MODULE read_namelists_module
        CALL mp_bcast( memory,        ionode_id, intra_image_comm )
        CALL mp_bcast( lfcpopt,       ionode_id, intra_image_comm )
        CALL mp_bcast( lfcpdyn,       ionode_id, intra_image_comm )
+       CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )
        !
        RETURN
        !
@@ -1768,6 +1801,9 @@ MODULE read_namelists_module
        !
        IF( prog == 'PW' .OR. prog == 'CP') THEN
          CALL control_defaults( prog )
+#ifdef __XSD
+         CALL xsd_defaults(prog)
+#endif
          CALL system_defaults( prog )
          CALL electrons_defaults( prog )
          CALL ions_defaults( prog )
@@ -1775,6 +1811,7 @@ MODULE read_namelists_module
        ENDIF
        !
        ! ... Here start reading standard input file
+       !
        !
        ! ... CONTROL namelist
        !

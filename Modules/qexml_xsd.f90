@@ -5,8 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+
+#ifdef __XSD
 !----------------------------------------------------------------------------
-MODULE qexml_module
+MODULE qexml_xsd_module
   !----------------------------------------------------------------------------
   !
   ! This module contains some common subroutines used to read and write
@@ -46,6 +48,7 @@ MODULE qexml_module
   !
   CHARACTER(256)   :: datadir_in, datadir_out
   INTEGER          :: iunit, ounit
+  INTEGER          :: iun_schema
   !
   ! vars to manage back compatibility
   !
@@ -56,13 +59,12 @@ MODULE qexml_module
   !
   CHARACTER(iotk_attlenx) :: attr
   !
-  !
   ! end of declarations
   !
   PUBLIC :: qexml_current_version, qexml_default_version
   PUBLIC :: qexml_current_version_init
   !
-  PUBLIC :: qexml_init,  qexml_openfile, qexml_closefile
+  PUBLIC :: qexml_init_schema,  qexml_openschema, qexml_closeschema, qexml_write_convergence_info, qexml_write_output
   !
   PUBLIC :: qexml_write_header, qexml_write_control, qexml_write_status_cp, qexml_write_cell,  &
             qexml_write_moving_cell, qexml_write_ions, qexml_write_symmetry, qexml_write_efield, &
@@ -83,6 +85,45 @@ MODULE qexml_module
   PUBLIC :: qexml_wfc_filename, qexml_create_directory, qexml_save_history, &
             qexml_kpoint_dirname, qexml_restart_dirname
   !
+  INTERFACE cp_line_by_line
+      !
+      module procedure cp_line_by_line_x
+      !
+  END INTERFACE
+  !
+  ! TYPES in XSD schema
+  !
+  TYPE :: scf_conv_type
+    !
+    INTEGER :: n_scf_steps
+    REAL(DP) :: scf_error
+    !
+  END TYPE scf_conv_type
+    !
+  TYPE :: convergence_info_type
+    !
+     TYPE(scf_conv_type) :: scf_conv
+    !
+  END TYPE convergence_info_type
+  !
+  TYPE :: optconv_type
+    !
+    CHARACTER(len=20) :: tagname
+    INTEGER :: n_opt_steps
+    REAL(DP) :: grad_norm
+    !
+  END TYPE optconv_type
+  !
+  !
+  TYPE :: output_type
+    !
+    CHARACTER(len=20) :: tagname
+    TYPE(convergence_info_type) :: convergence_info
+    !
+  END TYPE output_type
+  !
+  PUBLIC :: convergence_info_type, output_type, scf_conv_type
+  !
 CONTAINS
 !
 !-------------------------------------------
@@ -90,8 +131,8 @@ CONTAINS
 !-------------------------------------------
 !
     !------------------------------------------------------------------------
-    SUBROUTINE qexml_init( unit_in, unit_out, dir, dir_in, dir_out, &
-                           datafile, datafile_in, datafile_out )
+    SUBROUTINE qexml_init_schema( unit_in, unit_out, dir, dir_in, dir_out, &
+                           datafile, datafile_xsd, datafile_in, datafile_out ) !added: datafile_xsd
       !------------------------------------------------------------------------
       !
       ! just init module data
@@ -102,7 +143,7 @@ CONTAINS
       CHARACTER(*), OPTIONAL, INTENT(in) :: dir
       CHARACTER(*), OPTIONAL, INTENT(in) :: dir_in, dir_out
       CHARACTER(*), OPTIONAL, INTENT(in) :: datafile
-      CHARACTER(*), OPTIONAL, INTENT(in) :: datafile_in, datafile_out
+      CHARACTER(*), OPTIONAL, INTENT(in) :: datafile_in, datafile_out, datafile_xsd
       !
       iunit       = unit_in
       ounit       = unit_in
@@ -137,7 +178,7 @@ CONTAINS
           !
       ENDIF
       !
-      ! the presence of directories overwrites any info
+      ! the presence of directories overwirtes any info
       ! about datafiles
       !
       IF ( present( dir ) ) THEN
@@ -153,61 +194,61 @@ CONTAINS
           datadir_out  = trim(dir_out)
       ENDIF
       !
-    END SUBROUTINE qexml_init
+    END SUBROUTINE qexml_init_schema
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexml_openfile( filename, action, binary, ierr)
-      !------------------------------------------------------------------------
-      !
-      ! open data file
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(*),       INTENT(in)  :: filename
-      CHARACTER(*),       INTENT(in)  :: action      ! ("read"|"write")
-      LOGICAL, OPTIONAL,  INTENT(in)  :: binary
-      INTEGER,            INTENT(out) :: ierr
-      !
-      LOGICAL :: binary_
-
-      ierr = 0
-      binary_ = .false.
-      IF ( present(binary) ) binary_ = binary
-      !
-      SELECT CASE ( trim(action) )
-      !
-      CASE ( "read", "READ" )
-          !
-          CALL iotk_open_read ( iunit, FILE = trim(filename), IERR=ierr )
-          IF ( ierr/=0 ) RETURN
-          !
-          CALL qexml_read_header( FORMAT_VERSION=qexml_current_version, IERR=ierr )
-          IF ( ierr/=0 ) qexml_current_version = trim( qexml_default_version )
-          !
-          !
-      CASE ( "write", "WRITE" )
-          !
-          CALL iotk_open_write( iunit, FILE = trim(filename), BINARY=binary_, IERR=ierr )
-          IF ( ierr/=0 ) RETURN
-          !
-          qexml_current_version = trim( qexml_default_version )
-          !
-      CASE DEFAULT
-          ierr = 1
-      END SELECT
-      !
-      ! init logical variables for versioning
-      !
-      qexml_version_before_1_4_0 = .false.
-      !
-      IF ( trim( qexml_version_compare( qexml_current_version, "1.4.0" )) == "older" ) &
-         qexml_version_before_1_4_0 = .true.
-      !
-      qexml_current_version_init = .true.
-      !
-      !
-    END SUBROUTINE qexml_openfile
+!     SUBROUTINE qexml_openfile( filename, action, binary, ierr, skip_head, skip_root)
+!       !------------------------------------------------------------------------
+!       !
+!       ! open data file
+!       !
+!       IMPLICIT NONE
+!       !
+!       CHARACTER(*),       INTENT(in)  :: filename
+!       CHARACTER(*),       INTENT(in)  :: action      ! ("read"|"write")
+!       LOGICAL, OPTIONAL,  INTENT(in)  :: binary, skip_head, skip_root
+!       INTEGER,            INTENT(out) :: ierr
+!       !
+!       LOGICAL :: binary_
+! 
+!       ierr = 0
+!       binary_ = .false.
+!       IF ( present(binary) ) binary_ = binary
+!       !
+!       SELECT CASE ( trim(action) )
+!       CASE ( "read", "READ" )
+!           !
+!           CALL iotk_open_read ( iunit, FILE = trim(filename), IERR=ierr )
+!           IF ( ierr/=0 ) RETURN
+!           !
+!           CALL qexml_read_header( FORMAT_VERSION=qexml_current_version, IERR=ierr )
+!           IF ( ierr/=0 ) qexml_current_version = trim( qexml_default_version )
+!           !
+!           !
+!       CASE ( "write", "WRITE" )
+!           !
+!           CALL iotk_open_write( iunit, FILE = trim(filename), BINARY=binary_, IERR=ierr, skip_head=skip_head, skip_root=skip_root )
+!           IF ( ierr/=0 ) RETURN
+!           !
+!           qexml_current_version = trim( qexml_default_version )
+!           !
+!       CASE DEFAULT
+!           ierr = 1
+!       END SELECT
+!       !
+!       ! init logical variables for versioning
+!       !
+!       qexml_version_before_1_4_0 = .false.
+!       !
+!       IF ( trim( qexml_version_compare( qexml_current_version, "1.4.0" )) == "older" ) &
+!          qexml_version_before_1_4_0 = .true.
+!       !
+!       qexml_current_version_init = .true.
+!       !
+!       !
+!     END SUBROUTINE qexml_openfile
+    !
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexml_closefile( action, ierr)
@@ -669,6 +710,198 @@ CONTAINS
 ! ... write subroutines
 !-------------------------------------------
 !
+! *** schema-implementation ***
+    !------------------------------------------------------------------------
+    SUBROUTINE qexml_openschema( filename )
+      !------------------------------------------------------------------------
+      !
+      USE io_files, ONLY : xmlpun_schema, iunpun_xsd
+      USE input_parameters, ONLY : input_xml_schema_file
+      IMPLICIT NONE
+      !
+      CHARACTER(iotk_attlenx)  :: attr
+      CHARACTER(len=*), INTENT(IN) :: filename
+      CHARACTER(len=16) :: subname = 'qexml_openschema'
+      INTEGER :: ierr
+      !
+      CALL iotk_free_unit(iun_schema)
+      !
+      CALL iotk_write_attr(attr,"xmlns:qes","http://www.quantum-espresso.org/ns/qes/qes-1.0",FIRST=.true.) ! we need a qes-version number here
+      !
+      CALL iotk_write_attr(attr,"xmlns:xsi","http://www.w3.org/2001/XMLSchema-instance",newline=.true.) ! we need a schema location number (put a string in fortran-input)?
+      !
+      CALL iotk_write_attr(attr,"xsi:schemaLocation","http://www.quantum-espresso.org/ns/qes/qes-1.0 espresso.xsd",newline=.true.)!
+      !
+      CALL iotk_open_write(iunpun_xsd,FILE=filename , root="qes:espresso",attr=attr,binary=.false.,skip_head=.true.,IERR=ierr)
+      !
+      IF (ierr /= 0) call errore(subname, 'error opening xml input file', ierr)
+      !
+      CALL cp_line_by_line(iunpun_xsd,input_xml_schema_file, spec_tag="input")
+      !
+    END SUBROUTINE qexml_openschema
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE qexml_closeschema()
+      !------------------------------------------------------------------------
+      !
+      USE io_files, ONLY : xmlpun_schema, iunpun_xsd
+      USE input_parameters, ONLY : input_xml_schema_file
+      IMPLICIT NONE
+      !
+      CHARACTER(len=17) :: subname = 'qexml_closeschema'
+      INTEGER :: ierr
+      !
+      CALL iotk_close_write(iunpun_xsd, IERR=ierr)
+      !
+      CALL errore('qexml_closeschema', 'error closing xml input file', ierr)
+      !
+    END SUBROUTINE qexml_closeschema
+
+    !------------------------------------------------------------------------
+    SUBROUTINE qexml_write_output(output)
+      !------------------------------------------------------------------------
+      !
+      USE io_files, ONLY : xmlpun_schema, iunpun_xsd
+      USE input_parameters, ONLY : input_xml_schema_file
+      IMPLICIT NONE
+      !
+      TYPE(OUTPUT_TYPE), INTENT(IN) :: output 
+      !
+      CHARACTER(len=28) :: subname = 'qexml_write_output'
+      CHARACTER(len=16) :: tagname = 'output'
+      INTEGER :: ierr
+      !
+      CALL iotk_write_begin(iunpun_xsd, tagname, ierr=ierr)
+         !
+         CALL qexml_write_convergence_info(output%convergence_info)
+         !
+      CALL iotk_write_end(iunpun_xsd, tagname, ierr=ierr)
+      !
+      CALL errore(subname, 'error writing tag', ierr)
+      !
+    END SUBROUTINE qexml_write_output
+
+    !------------------------------------------------------------------------
+    SUBROUTINE qexml_write_convergence_info(convergence_info)
+      !------------------------------------------------------------------------
+      !
+      USE io_files, ONLY : xmlpun_schema, iunpun_xsd
+      USE input_parameters, ONLY : input_xml_schema_file
+      IMPLICIT NONE
+      !
+      TYPE(CONVERGENCE_INFO_TYPE), INTENT(IN) :: convergence_info 
+      !
+      CHARACTER(len=16) :: tagname = 'convergence_info'
+      CHARACTER(len=100) :: subname
+      INTEGER :: ierr
+      subname = 'qexml_write_' // tagname
+      !
+      CALL iotk_write_begin(iunpun_xsd, tagname, ierr=ierr)
+         !
+         CALL qexml_write_scf_conv(convergence_info%scf_conv)
+         !
+      CALL iotk_write_end(iunpun_xsd, tagname, ierr=ierr)
+      !
+      CALL errore(TRIM(subname), 'error writing tag', ierr)
+      !
+    END SUBROUTINE qexml_write_convergence_info
+
+    !------------------------------------------------------------------------
+    SUBROUTINE qexml_write_scf_conv(scf_conv)
+      !------------------------------------------------------------------------
+      !
+      USE io_files, ONLY : xmlpun_schema, iunpun_xsd
+      USE input_parameters, ONLY : input_xml_schema_file
+      !
+      IMPLICIT NONE
+      !
+      TYPE(scf_conv_type) :: scf_conv
+      !
+      CHARACTER(len=16) :: tagname = 'scf_conv'
+      CHARACTER(len=100) :: subname 
+      INTEGER :: ierr
+      !
+      subname = 'qexml_write_' // tagname
+      !
+      CALL iotk_write_begin(iunpun_xsd, tagname, ierr=ierr)
+      !
+         CALL iotk_write_begin(iunpun_xsd, 'n_scf_steps', ierr=ierr)
+         !
+         write(iunpun_xsd,'(I)'), scf_conv%n_scf_steps
+         !
+         CALL iotk_write_end(iunpun_xsd, 'n_scf_steps', ierr=ierr)
+     !
+     !     
+         CALL iotk_write_begin(iunpun_xsd, 'scf_error', ierr=ierr)
+         !
+         write(iunpun_xsd,'(E20.7E2)'), scf_conv%scf_error
+         !
+         CALL iotk_write_end(iunpun_xsd, 'scf_error', ierr=ierr)
+      !
+      CALL iotk_write_end(iunpun_xsd, tagname, ierr=ierr)
+      !
+      CALL errore(TRIM(subname), 'error writing tag', ierr)
+      !
+    END SUBROUTINE qexml_write_scf_conv
+
+   !==========================================
+   SUBROUTINE cp_line_by_line_x(ounit,filename,spec_tag)
+   !==========================================
+   use iotk_module
+   implicit none
+   !
+   integer,      intent(in) :: ounit
+   character(*), intent(in) :: filename
+   character(*), optional, intent(in) :: spec_tag
+   !
+   integer :: iunit, ierr
+   character(256) :: str
+   logical :: icopy
+
+   call iotk_free_unit(iunit)
+   !
+   open(iunit,FILE=trim(filename),status="old")
+   !
+   icopy=.false.
+   copy_loop: do
+      !
+      read(iunit,"(a256)",iostat=ierr) str
+      if (ierr<0) exit copy_loop
+      if (present(spec_tag)) then
+         !
+         if (index(str,"<"//trim(adjustl(spec_tag))//">")/=0) then
+            !
+            icopy=.true.
+            !
+         endif
+         !
+      else
+         !
+         icopy=.true.
+         !
+      endif
+      ! 
+      ! filtering
+      ! 
+      if ( index(str,"<Root>")/=0 .or. index(str,"<Root>")/=0 .or. &
+            index(str,"<?")/=0 .or. icopy==.false.) then
+         cycle copy_loop
+      endif
+      !
+      write(ounit,"(a)") trim(str)
+      !
+      if (present(spec_tag)) then
+         if (index(str,"</input>")/=0) then
+            icopy=.false.
+         endif
+      endif
+      ! 
+   enddo copy_loop
+   !
+   close(iunit)
+   ! 
+   END SUBROUTINE
+
     !------------------------------------------------------------------------
     SUBROUTINE qexml_write_header( creator_name, creator_version )
       !------------------------------------------------------------------------
@@ -4530,4 +4763,22 @@ CONTAINS
     END SUBROUTINE qexml_read_rho
     !
     !
-END MODULE qexml_module
+END MODULE qexml_xsd_module
+
+#else
+! 
+MODULE qexml_xsd_module
+
+  USE iotk_module
+  USE kinds, ONLY : DP
+  IMPLICIT NONE
+
+  CONTAINS
+
+  subroutine dummy()
+
+  end subroutine dummy
+
+END MODULE qexml_xsd_module
+! 
+#endif
