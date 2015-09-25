@@ -143,7 +143,7 @@ MODULE read_namelists_module
        lfcpopt = .FALSE.
        lfcpdyn = .FALSE.
        !
-       input_xml_schema_file=''
+       CALL get_environment_variable( 'QEXML', input_xml_schema_file )
        !
        RETURN
        !
