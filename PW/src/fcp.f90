@@ -7,12 +7,12 @@
 !
 ! Original version by Minoru Otani (AIST) and Nicephore Bonnet (AIST).
 !
-! This module controls the Fictitious Charge Particle (FCP) for constnat-mu
+! This module controls the Fictitious Charge Particle (FCP) for constant-mu
 ! method developed by N. Bonnet, T. Morishita, O. Sugino, and M. Otani
 ! (see PRL 109, 266101 [2012]).
 !
 ! Constant-mu scheme with the boundary condition 'bc2' and 'bc3' enables
-! description of the system is connected to a potentiaostat which preserves
+! description of the system connected to a potentiostat which preserves
 ! the Fermi energy of the system as the target Fermi energy (mu).
 !
 !----------------------------------------------------------------------------
