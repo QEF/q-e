@@ -35,9 +35,6 @@ MODULE read_namelists_module
        press_ai_bcast, wannier_bcast, wannier_ac_bcast, control_checkin, &
        system_checkin, electrons_checkin, ions_checkin, cell_checkin, &
        wannier_checkin, wannier_ac_checkin, fixval
-#ifdef __XSD
-  PUBLIC :: xsd_defaults
-#endif
   !
   !  ... end of module-scope declarations
   !
@@ -51,17 +48,6 @@ MODULE read_namelists_module
      !
      !=-----------------------------------------------------------------------=!
      !
-#ifdef __XSD
-     !-----------------------------------------------------------------------
-     SUBROUTINE xsd_defaults( prog )
-     !-----------------------------------------------------------------------
-       !
-       IMPLICIT NONE
-       !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
-       !
-     END SUBROUTINE
-#endif
      !-----------------------------------------------------------------------
      SUBROUTINE control_defaults( prog )
        !-----------------------------------------------------------------------
@@ -143,6 +129,7 @@ MODULE read_namelists_module
        lfcpopt = .FALSE.
        lfcpdyn = .FALSE.
        !
+       input_xml_schema_file='./'
        CALL get_environment_variable( 'QEXML', input_xml_schema_file )
        !
        RETURN
@@ -1801,9 +1788,6 @@ MODULE read_namelists_module
        !
        IF( prog == 'PW' .OR. prog == 'CP') THEN
          CALL control_defaults( prog )
-#ifdef __XSD
-         CALL xsd_defaults(prog)
-#endif
          CALL system_defaults( prog )
          CALL electrons_defaults( prog )
          CALL ions_defaults( prog )

@@ -856,11 +856,17 @@ CONTAINS
    !
    integer :: iunit, ierr
    character(256) :: str
-   logical :: icopy
+   logical :: icopy, exists
 
    call iotk_free_unit(iunit)
    !
-   open(iunit,FILE=trim(filename),status="old")
+   INQUIRE(FILE=trim(filename), EXIST=exists)
+   !
+   IF(.not.exists) THEN
+      CALL errore('cp_line_by_line@qexml_xsd', 'unable to find input xml file to copy', 1)
+   ENDIF
+   !
+   open(iunit,FILE=trim(filename),status="old", IOSTAT=ierr)
    !
    icopy=.false.
    copy_loop: do
