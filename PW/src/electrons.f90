@@ -768,7 +768,7 @@ SUBROUTINE electrons_scf ( printout )
   !
 10  FLUSH( stdout )
   !
-  ! ... exiting: write (unless disables) the charge density to file
+  ! ... exiting: write (unless disabled) the charge density to file
   ! ... (also write ldaU ns coefficients and PAW becsum)
   !
   IF ( io_level > -1 ) CALL write_rho( rho, nspin )
