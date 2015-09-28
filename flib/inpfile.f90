@@ -75,26 +75,27 @@ SUBROUTINE get_file( input_file )
   CHARACTER (LEN=256) :: prgname
   INTEGER             :: nargs
   LOGICAL             :: exst
+  INTEGER             :: stdin = 5, stdout = 6, stderr = 6
   !
   nargs = command_argument_count()
   CALL get_command_argument (0,prgname)
   !
   IF ( nargs == 0 ) THEN
-10   PRINT  '("Input file > "), advance="NO"'     
-     READ (5,'(a)', end = 20, err=20) input_file
+10   WRITE(stdout,'(5x,"Input file > ")', advance="NO")
+     READ (stdin,'(a)', end = 20, err=20) input_file
      IF ( input_file == ' ') GO TO 10
      INQUIRE ( FILE = input_file, EXIST = exst )
      IF ( .NOT. exst) THEN
-        PRINT  '(A,": file not found")', TRIM(input_file)
+        WRITE(stderr,'(A,": file not found")') TRIM(input_file)
         GO TO 10
      END IF
   ELSE IF ( nargs == 1 ) then
      CALL get_command_argument (1,input_file)
   ELSE
-     PRINT  '(A,": too many arguments ",i4)', TRIM(prgname), nargs
+     WRITE(stderr,'(A,": too many arguments ",i4)') TRIM(prgname), nargs
   END IF
   RETURN
-20 PRINT  '(A,": reading file name ",A)', TRIM(prgname), TRIM(input_file)
+20 WRITE(stdout,'(A,": reading file name ",A)') TRIM(prgname), TRIM(input_file)
   !
 END SUBROUTINE get_file
 

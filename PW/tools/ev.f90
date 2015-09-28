@@ -78,13 +78,13 @@ PROGRAM ev
   !
   IF ( ionode ) THEN
 
-      PRINT '(5x,"Lattice parameter or Volume are in (au, Ang) > "), advance="NO"'
-      READ '(a)', au_unit
+      WRITE(*,'(5x,"Lattice parameter or Volume are in (au, Ang) > ")', advance="NO")
+      READ(5,'(a)') au_unit
       in_angstrom = au_unit=='Ang' .or. au_unit=='ANG' .or. &
                     au_unit=='ang'
-      IF (in_angstrom) PRINT '(5x,"Assuming Angstrom")'
-      PRINT '(5x,"Enter type of bravais lattice (fcc, bcc, sc, noncubic) > "), advance="NO"' 
-      READ '(a)',bravais
+      IF (in_angstrom) WRITE(*,'(5x,"Assuming Angstrom")')
+      WRITE(*,'(5x,"Enter type of bravais lattice (fcc, bcc, sc, noncubic) > ")', advance="NO")
+      READ(6,'(a)') bravais
 !
       IF(trim(bravais)=='fcc'.or.trim(bravais)=='FCC') THEN
          fac = 0.25d0
@@ -97,23 +97,23 @@ PROGRAM ev
 !         fac = sqrt(3d0)/2d0 ! not used
          fac = 0.0_DP ! not used
       ELSE
-         PRINT '(5x,"ev: unexpected lattice <",a,">")', trim(bravais)
+         WRITE(*,'(5x,"ev: unexpected lattice <",a,">")') trim(bravais)
          STOP
       ENDIF
 !
-      PRINT '(5x,"Enter type of equation of state :"/&
-             &5x,"1=birch1, 2=birch2, 3=keane, 4=murnaghan > "), advance="NO"'
-      READ *,istat
+      WRITE(*,'(5x,"Enter type of equation of state :"/&
+            &  5x,"1=birch1, 2=birch2, 3=keane, 4=murnaghan > ")', advance="NO")
+      READ(5,*) istat
       IF(istat==1 .or. istat==4) THEN
          npar=3
       ELSEIF(istat==2 .or. istat==3) THEN
          npar=4
       ELSE
-         PRINT '(5x,"Unexpected eq. of state ",i2)', istat
+         WRITE(*,'(5x,"Unexpected eq. of state ",i2)') istat
          STOP
       ENDIF
-      PRINT '(5x,"Input file > "), advance="NO"'
-      READ '(a)',filin
+      WRITE(*,'(5x,"Input file > ")', advance="NO")
+      READ(5,'(a)') filin
       OPEN(unit=2,file=filin,status='old',form='formatted',iostat=ierr)
       IF (ierr/=0) THEN
          ierr= 1 
@@ -272,12 +272,12 @@ PROGRAM ev
       INTEGER :: i, iun
       LOGICAL :: exst
 
-      PRINT '(5x,"Output file > "), advance="NO"' 
-      READ '(a)',filout
+      WRITE(*,'(5x,"Output file > ")', advance="NO")
+      READ (5,'(a)') filout
       IF(filout/=' ') THEN
          iun=8
          INQUIRE(file=filout,exist=exst)
-         IF (exst) PRINT '(5x,"Beware: file ",A," will be overwritten")',&
+         IF (exst) WRITE(*,'(5x,"Beware: file ",A," will be overwritten")')&
                   trim(filout)
          OPEN(unit=iun,file=filout,form='formatted',status='unknown', &
               iostat=ierr)
