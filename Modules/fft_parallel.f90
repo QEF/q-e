@@ -77,7 +77,10 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
   !
 #if defined(__INTEL_COMPILER)
 #if __INTEL_COMPILER  >= 1300
+  ! the following is a workaround for Intel 12.1 bug
+#if __INTEL_COMPILER  < 9999
 !dir$ attributes align: 4096 :: yf, aux
+#endif
 #endif
 #endif
   INTEGER                    :: me_p
