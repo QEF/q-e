@@ -415,15 +415,21 @@ execution, you will also need MPI libraries and a parallel
 for simple multicore parallelization, an OpenMP-aware compiler
 and libraries are also required.
 
+As a rule, \qe\ tries to keep compatibility with older compilers,
+avoiding nonstandard extensions and newer features that
+are not widespread or stabilized. No warranty, however, if
+your compiler is older than say 5 years or so. The same applies to 
+mathematical and MPI libraries.
+
 Big machines with
 specialized hardware (e.g. IBM SP, CRAY, etc) typically have a
 Fortran compiler with MPI and OpenMP libraries bundled with 
 the software. Workstations or ``commodity'' machines, using PC 
 hardware, may or may not have the needed software. If not, you need 
-either to buy a commercial product (e.g Portland) or to install
-an open-source compiler like gfortran from the gcc distribution.
-Note that several commercial compilers are available free of charge
-under some license for academic or personal usage (e.g. Intel, Sun). 
+either to buy a commercial product (e.g Intel, NAG, Portland) or to 
+use an open-source compiler like gfortran from the gcc distribution.
+Note that several commercial compilers (e.g. Intel, Sun) are available 
+free of charge under some license for academic or personal usage.
 
 \subsection{\configure}
 
@@ -642,10 +648,11 @@ if none is found, it will fall back to the internal  copy of FFTW.
 
 If you have recent versions (v.10 or later) of MKL installed, you 
 may use the FFTW3 interface provided with MKL. This can be directly
-linked in MKL distributed with v.12 of the Intel compiler. In earlier 
-versions, only sources are distributed: you have to compile them and 
-to modify file \texttt{make.sys} accordingly 
-(MKL must be linked {\em after} the FFTW-MKL interface).
+linked in MKL distributed with v.12 and later of the Intel compiler. 
+% Following is obsolete:
+% In earlier versions, only sources are distributed: you have to compile
+%  them and to modify file \texttt{make.sys} accordingly 
+% (MKL must be linked {\em after} the FFTW-MKL interface).
 
 In order to use Intel DFTI from MKL, you need to add \texttt{-D\_\_DFTI}
 to \texttt{DFLAGS} in the \texttt{make.sys} file.
