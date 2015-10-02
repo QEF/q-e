@@ -960,7 +960,9 @@ Since QE 5.1 restarting from an arbitrary point of the code is no more supported
 The code must terminate properly in order for restart to be possible. A clean stop can be triggered by one the following three conditions:
 \begin{enumerate}
 \item The amount of time specified by the input variable max\_seconds is reached
-\item A file named "\$prefix.EXIT" is found in the execution directory, \$prefix is the prefix specified in the control namelist
+\item The user creates a file named "\$prefix.EXIT" either in the working
+directory or in output directory "\$outdir" 
+(variables \$outdir and \$prefix as specified in the control namelist)
 \item (experimental) The code is compiled with signal-trapping support and one of the trapped signals is received (see the next section for details).
 \end{enumerate}
 
@@ -1019,8 +1021,7 @@ Possible reasons:
 If you get error messages in the example scripts -- i.e. not errors in
 the codes -- on a parallel machine, such as e.g.: 
 {\em run example: -n: command not found}
-you may have forgotten 
-the " " in the definitions of PARA\_PREFIX and PARA\_POSTFIX.
+you may have forgotten to properly define PARA\_PREFIX and PARA\_POSTFIX.
 
 \paragraph{pw.x prints the first few lines and then nothing happens
   (parallel execution)} 
