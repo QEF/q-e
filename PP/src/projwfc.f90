@@ -24,10 +24,11 @@ PROGRAM do_projwfc
   USE noncollin_module, ONLY : noncolin
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
-  USE mp_global,  ONLY : mp_startup, nproc_ortho
+  USE mp_global,  ONLY : mp_startup, nproc_ortho, nproc_pool, nproc_pool_file
   USE environment,ONLY : environment_start, environment_end
   USE wvfct,      ONLY : et, nbnd
   USE basis,      ONLY : natomwfc
+  USE control_flags, ONLY: twfcollect
   !
   IMPLICIT NONE
   !
@@ -124,6 +125,10 @@ PROGRAM do_projwfc
   CALL read_file ( )
   !
   IF(lgww) CALL get_et_from_gww ( nbnd, et )
+  !
+  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
+     CALL errore('projwfc',&
+     'pw.x run with a different number of procs/pools. Use wf_collect=.true.',1)
   !
   CALL openfil_pp ( )
   !
@@ -1566,7 +1571,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc
   USE spin_orb, ONLY: lspinorb
   USE mp,       ONLY: mp_bcast
-  USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
+  USE mp_global,        ONLY : npool, me_pool, root_pool, &
                                intra_pool_comm, me_image, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id, &
                                leg_ortho
