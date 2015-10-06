@@ -736,6 +736,8 @@ CONTAINS
       !
       IF (ierr /= 0) call errore(subname, 'error opening xml input file', ierr)
       !
+      IF ( input_xml_schema_file == ' ' ) &
+         CALL get_environment_VARIABLE ( 'QEXML', input_xml_schema_file )
       CALL cp_line_by_line(iunpun_xsd,input_xml_schema_file, spec_tag="input")
       !
     END SUBROUTINE qexml_openschema
@@ -863,7 +865,8 @@ CONTAINS
    INQUIRE(FILE=trim(filename), EXIST=exists)
    !
    IF(.not.exists) THEN
-      CALL errore('cp_line_by_line@qexml_xsd', 'unable to find input xml file to copy', 1)
+      CALL errore('cp_line_by_line@qexml_xsd', 'input xml file "' // & 
+     &             TRIM(filename) // '" not found', 1)
    ENDIF
    !
    open(iunit,FILE=trim(filename),status="old", IOSTAT=ierr)
@@ -4788,3 +4791,4 @@ MODULE qexml_xsd_module
 END MODULE qexml_xsd_module
 ! 
 #endif
+

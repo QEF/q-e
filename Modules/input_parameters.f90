@@ -276,7 +276,7 @@ MODULE input_parameters
         LOGICAL  :: lfcpdyn = .FALSE. ! FCP thermostat enabled if .true.
         !
         ! location of xml input according to xsd schema
-        CHARACTER(len=256) :: input_xml_schema_file = './'
+        CHARACTER(len=256) :: input_xml_schema_file = ' '
 
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir,   &
