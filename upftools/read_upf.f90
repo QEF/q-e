@@ -71,7 +71,7 @@ PROGRAM read_ps
   CHARACTER (len=256) :: filein
   !
   is = 0
-10 PRINT '(''  Input PP file # '',i2,'' in UPF format > ''),advance="NO"', is+1
+10 WRITE(*,'("  Input PP file # ",i2," in UPF format > ")',advance="NO") is+1
   READ (5, '(a)', end = 20, err = 20) filein
   OPEN(unit=iunps,file=filein,status='old',form='formatted',iostat=ios)
   IF (ios/=0) STOP

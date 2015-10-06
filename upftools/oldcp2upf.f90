@@ -28,7 +28,7 @@ PROGRAM oldcp2upf
   CALL convert_oldcp
 
   fileout=trim(filein)//'.UPF'
-  PRINT '(''Output PP file in UPF format :  '',a)', fileout
+  PRINT '("Output PP file in UPF format :  ",a)', fileout
 
   OPEN(unit=2,file=fileout,status='unknown',form='formatted')
   CALL write_upf_v1(2)
@@ -132,7 +132,7 @@ SUBROUTINE convert_oldcp
   ALLOCATE(lchi(nwfs), nns(nwfs) )
   ALLOCATE(rcut (nwfs), rcutus (nwfs))
   DO i=1, nwfs
-     PRINT '("Wavefunction # ",i1,": label, occupancy > "), advance="NO"', i
+     WRITE(*,'("Wavefunction # ",i1,": label, occupancy > ")', advance="NO") i
      READ (5,*) els(i), oc(i)
      nns (i)  = 0
      lchi(i)  = i-1

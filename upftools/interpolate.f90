@@ -71,30 +71,30 @@ PROGRAM interpolate
   INTEGER :: is, ios, iunps = 4
   real (8) :: xmin, dx
   CHARACTER (len=256) :: filein(2), fileout
-  PRINT '('' '')'
-  PRINT '('' Interpolate an UPF pseudopotential to a different radial mesh'')'
-  PRINT '('' '')'
+  PRINT '(" ")'
+  PRINT '(" Interpolate an UPF pseudopotential to a different radial mesh")'
+  PRINT '(" ")'
   !
   is=2
-  PRINT '('' Read the pseudo to be converted '')'
-  PRINT '('' Input PP file in UPF format > ''), advance="NO"'
+  PRINT '(" Read the pseudo to be converted ")'
+  WRITE(*,'(" Input PP file in UPF format > ")', advance="NO")
   READ (5, '(a)', end = 20, err = 20) filein(is)
   OPEN(unit=iunps,file=filein(is),status='old',form='formatted',iostat=ios)
   IF (ios/=0) STOP
   WRITE (*,*) " IOS= ", ios, is, iunps
   CALL read_pseudo(is, iunps)
   CLOSE (unit=iunps)
-  PRINT '('' '')'
+  PRINT '(" ")'
   !
 10 CONTINUE
-  PRINT '('' radial mesh : r(i) = exp ( xmin + (i-1) *dx )/ Z_ion '')'
-  WRITE(*,'(a), advance="NO"') " xmin, dx [typical values -7.0, 0.0125 ] > "
+  PRINT '(" radial mesh : r(i) = exp ( xmin + (i-1) *dx )/ Z_ion ")'
+  WRITE(*,'(" xmin, dx [typical values -7.0, 0.0125 ] > ")', advance="NO") 
   READ (*,*) xmin, dx
 
   CALL interpolate_ps(filein,xmin,dx)
 
   fileout='NewPseudo.UPF'
-  PRINT '(''Output PP file in UPF format :  '',a)', fileout
+  PRINT '("Output PP file in UPF format :  ",a)', fileout
 
   OPEN(unit=2,file=fileout,status='unknown',form='formatted')
   CALL write_upf_v1(2)

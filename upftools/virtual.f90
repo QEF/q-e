@@ -83,31 +83,31 @@ PROGRAM virtual
   INTEGER :: is, ios, iunps = 4
   real (8) :: x
   CHARACTER (len=256) :: filein(2), fileout
-  PRINT '('' '')'
-  PRINT '('' Generate the UPF pseudopotential for a virtual atom '')'
-  PRINT '('' combining two pseudopootentials in UPF format '')'
-  PRINT '('' '')'
+  PRINT '(" ")'
+  PRINT '(" Generate the UPF pseudopotential for a virtual atom ")'
+  PRINT '(" combining two pseudopootentials in UPF format ")'
+  PRINT '(" ")'
   !
   DO is=1,2
-     PRINT '(''  Input PP file # '',i2,'' in UPF format > ''), advance="NO"', is
+     WRITE(*,'("  Input PP file # ",i2," in UPF format > ")', advance="NO") is
      READ (5, '(a)', end = 20, err = 20) filein(is)
      OPEN(unit=iunps,file=filein(is),status='old',form='formatted',iostat=ios)
      IF (ios/=0) STOP
      WRITE (*,*) " IOS= ", ios, is, iunps
      CALL read_pseudo(is, iunps)
      CLOSE (unit=iunps)
-     PRINT '('' '')'
+     PRINT '(" ")'
   ENDDO
-  PRINT '('' New Pseudo = x '',a,'' + (1-x) '',a)', (trim(filein(is)), is=1,2)
+  PRINT '(" New Pseudo = x ",a," + (1-x) ",a)', (trim(filein(is)), is=1,2)
 10 CONTINUE
-  PRINT '('' mixing parameter x [0<x<1] = ''), advance="NO"'
+  WRITE(*,'(" mixing parameter x [0<x<1] = ")', advance="NO")
   READ (5,*) x
   IF (x<0.d0 .or. x>1)  GOTO 10
 
   CALL compute_virtual(x,filein)
 
   fileout='NewPseudo.UPF'
-  PRINT '(''Output PP file in UPF format :  '',a)', fileout
+  PRINT '("Output PP file in UPF format :  ",a)', fileout
 
   OPEN(unit=2,file=fileout,status='unknown',form='formatted')
   CALL write_upf_v1(2)

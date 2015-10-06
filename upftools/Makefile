@@ -65,7 +65,7 @@ interpolate.x : interpolate.o $(OBJS) $(QEMODS) $(LIBOBJS)
 
 tldeps:
 	if test -n "$(TLDEPS)" ; then \
-	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
+	( cd ../ ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
 	- /bin/rm -f  *.x *.o *~ *.F90 *.mod *.d *.i *.L
