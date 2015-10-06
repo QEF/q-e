@@ -7,13 +7,12 @@
     outdir='./out'
  /
  &system
-    ibrav= 2,
-    celldm(1)= 10.263048,
-    nat= 2,
-    ntyp= 1,
-    ecutwfc= 16.0,
-    nosym=.false.
-    noinv=.false.
+    ibrav = 2,
+    celldm(1) = 10.26,
+    nat = 2,
+    ntyp = 1,
+    ecutwfc = 16.0,
+    ecutrho = 128.0,
  /
  &electrons
     diagonalization='david'
