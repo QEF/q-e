@@ -81,18 +81,21 @@ void get_md5(const char *file, char *md5, int err)
      md5_byte_t digest[16];
      
      if(file==NULL) { 
+        strcpy(md5,"Not computed, file name is empty\n");
 	err = 1;
         return;
      }
 
      fp=fopen(file,"rb");
      if(fp==NULL) {
+        strcpy(md5,"Not computed, couldn't open file\n");
 	err = 2;
 	return;
      }
 
      data=readFile(fp);
      if(data==NULL) {
+        strcpy(md5,"Not computed, file is empty     \n");
 	err = 3;
 	return;
      }
