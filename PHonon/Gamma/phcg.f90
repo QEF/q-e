@@ -541,6 +541,7 @@ SUBROUTINE newscf
   !
   CALL openfil
   !
+  CALL extrapolate_charge( 1 )
   CALL hinit1
   CALL electrons ( )
   !
