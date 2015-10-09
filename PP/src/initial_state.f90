@@ -79,7 +79,6 @@ PROGRAM initial_state
   CALL read_file
   CALL openfil_pp
   CALL hinit0
-  CALL hinit1
   IF ( nks == 1 ) THEN
      ik = 1
      CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )

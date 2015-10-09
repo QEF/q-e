@@ -33,11 +33,6 @@ SUBROUTINE hinit1()
   IMPLICIT NONE
   !
   !
-  ! ... update the wavefunctions, charge density, potential
-  ! ... update_pot initializes structure factor array as well
-  !
-  CALL update_pot()
-  !
   ! ... calculate the total local potential
   !
   CALL setlocal()

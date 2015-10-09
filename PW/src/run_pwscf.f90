@@ -156,7 +156,18 @@ SUBROUTINE run_pwscf ( exit_status )
      ! ... terms of the hamiltonian depending upon nuclear positions
      ! ... are reinitialized here
      !
-     IF ( lmd .OR. lbfgs ) CALL hinit1()
+     IF ( lmd .OR. lbfgs ) THEN
+        !
+        ! ... update the wavefunctions, charge density, potential
+        ! ... update_pot initializes structure factor array as well
+        !
+        CALL update_pot()
+        !
+        ! ... re-initialize atomic position-dependent quantities
+        !
+        CALL hinit1()
+        !
+     END IF
      !
   END DO main_loop
   !
