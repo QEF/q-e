@@ -1,10 +1,11 @@
 Fixed in svn version:
 
-    * projwfc,x: When pw.x was run on a different number of processors and
-      twfcollect was not true, projwfc.x was silently giving wrong results.
-      Thanks to Hande Toffoli for reporting.
-    * Usage of "~" in pseudo_dir is sometimes acceptable by fortran but not 
-      by C. If so, a message is printed instead of weird characters in MD5.
+   * projwfc,x: When pw.x was run on a different number of processors and
+     twfcollect was not true, projwfc.x was silently giving wrong results.
+     Thanks to Hande Toffoli for reporting.
+   * Usage of "~" in pseudo_dir is sometimes acceptable by fortran but not 
+     by C. If so, a message is printed instead of weird characters in MD5.
+   * PHonon: Gamma-specific code segfaulting with GGA
 
 Incompatible changes in svn version:
 
