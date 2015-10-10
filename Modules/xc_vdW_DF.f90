@@ -1702,7 +1702,7 @@ CONTAINS
      q_hi  = Nqs
      grad2 = sqrt( grad_rho(i_grid,1)**2 + grad_rho(i_grid,2)**2 + grad_rho(i_grid,3)**2 )
 
-
+     if ( grad2 == 0.0_dp ) cycle
      ! -----------------------------------------------------------------
      ! Figure out which bin our value of q0 is in the q_mesh.
 

@@ -10,6 +10,8 @@ SUBROUTINE hinit1()
   !----------------------------------------------------------------------------
   !
   ! ... Atomic configuration dependent hamiltonian initialization
+  ! ... Important note: does not recompute structure factors,
+  ! ... they must be computed before this routine is called
   !
   USE ions_base,     ONLY : nat, nsp, ityp, tau
   USE cell_base,     ONLY : at, bg, omega, tpiba2
