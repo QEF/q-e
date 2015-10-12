@@ -199,11 +199,6 @@ CONTAINS
     !
     WRITE( stdout, '(5X,"Threads/MPI process:               ",I7)' ) &
          omp_get_max_threads()
-#if defined(__FFTW) || defined(__ESSL)
-#else
-    IF ( omp_get_max_threads() > 1 ) &
-       WRITE( stdout, '(5X,"BEWARE: you are not using multi-threaded FFTs!")')
-#endif
 #else
     WRITE( stdout, '(/5X,"Parallel version (MPI), running on ",&
          &I5," processors")' ) nproc 
