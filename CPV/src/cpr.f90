@@ -295,6 +295,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      IF ( ( tfor .OR. tfirst ) .AND. tefield ) CALL efield_update( eigr )
      IF ( ( tfor .OR. tfirst ) .AND. tefield2 ) CALL efield_update2( eigr )
      !
+     ! ... pass ions information to plugins
+     !
+     CALL plugin_init_ions( tau0 )
+     !
      IF ( lda_plus_u ) then
         ! forceh    ! Forces on ions due to Hubbard U 
         forceh=0.0d0
@@ -801,6 +805,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            IF ( tefield )  CALL efield_update( eigr )
            IF ( tefield2 ) CALL efield_update2( eigr )
            !
+           CALL plugin_init_ions( tau0 )
+           !
            lambdam = lambda
            !
            CALL move_electrons( nfi, tfirst, tlast, bg(:,1), bg(:,2), bg(:,3),&
@@ -1127,6 +1133,8 @@ SUBROUTINE terminate_run()
   IF (tcg) call print_clock_tcg()
   !
   CALL print_clock( 'ALLTOALL' )
+  !
+  CALL plugin_clock()
   !
   CALL mp_report()
   !

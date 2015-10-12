@@ -419,5 +419,9 @@
       !
       call gcalb ( )
       !
+      !   pass new cell parameters to plugins
+      !
+      CALL plugin_init_cell( )
+      !
       return
     end subroutine newinit_x

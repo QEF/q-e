@@ -116,6 +116,10 @@ SUBROUTINE from_scratch( )
        CALL phbox( taub, iverbosity, eigrb )
     END IF
     !
+    !     pass ions informations to plugins
+    !
+    CALL plugin_init_ions( tau0 )
+    !
     !     wfc initialization with random numbers
     !     
     CALL wave_rand_init( cm_bgrp )

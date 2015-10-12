@@ -117,6 +117,10 @@ SUBROUTINE init_run()
   !
   CALL init_dimensions()
   !
+  ! ... initialization of plugin variables and arrays
+  !
+  CALL plugin_init_base() 
+  ! 
   ! ... initialize atomic positions and cell
   !
   CALL init_geometry()

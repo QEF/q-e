@@ -155,6 +155,8 @@ SUBROUTINE from_restart( )
    IF ( tefield  ) CALL efield_berry_setup( eigr, tau0 )
    IF ( tefield2 ) CALL efield_berry_setup2( eigr, tau0 )
    !
+   CALL plugin_init_ions( tau0 )
+   !
    edft%eself = eself
    !
    IF( tzerop .or. tzeroe .or. tzeroc ) THEN

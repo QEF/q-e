@@ -708,6 +708,11 @@ MODULE input
       ! force pairing
 
       force_pairing_ = force_pairing
+
+      ! ... having set all input keywords, read plugins' input file(s)
+
+      CALL plugin_read_input()
+
       !
       ! ... the 'ATOMIC_SPECIES' card must be present, check it
 
@@ -1132,6 +1137,8 @@ MODULE input
       IF( thdyn .AND. tnoseh ) CALL cell_nose_info (delt)
       !
       !   CALL sic_info()  ! maybe useful
+      !
+      CALL plugin_print_info( )
       !
       IF(tefield) call efield_info( ) 
       IF(tefield2) call efield_info2( )

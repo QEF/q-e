@@ -197,6 +197,8 @@
              IF( textfor ) WRITE( stdout, 16 ) eextfor
           END IF
           !
+          CALL plugin_print_energies()
+          !
 1         FORMAT(6X,'                total energy = ',F18.10,' Hartree a.u.')
 2         FORMAT(6X,'              kinetic energy = ',F18.10,' Hartree a.u.')
 3         FORMAT(6X,'        electrostatic energy = ',F18.10,' Hartree a.u.')

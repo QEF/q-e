@@ -62,6 +62,8 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE tsvdw_module,     ONLY: EtsvdW,UtsvdW,FtsvdW,HtsvdW
       USE mp_global,        ONLY: me_image
       USE exx_module,       ONLY: dexx_dh, exxalfa  ! exx_wf related
+      
+      USE plugin_variables, ONLY: plugin_etot
 
       IMPLICIT NONE
 !
@@ -142,6 +144,16 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 !     ab-initio pressure and surface tension contributions to the potential
 !
       if (abivol.or.abisur) call vol_clu(rhor,rhog,sfac,nfi)
+      !
+      !     compute plugin contributions to the potential, add it later
+      !
+      CALL plugin_get_potential(rhor,nfi)
+      !
+      !     compute plugin contributions to the energy
+      !
+      plugin_etot = 0.0_dp
+      !
+      CALL plugin_energy(rhor,plugin_etot)
       !
       ttsic = ( ABS( self_interaction ) /= 0 )
       !
@@ -413,6 +425,11 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
         END IF
         !
       END IF
+      !
+      !     add plugin contributions to potential here... 
+      !
+      CALL plugin_add_potential( rhor )
+      !
 !
 !     rhor contains the xc potential in r-space
 !
@@ -499,6 +516,11 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
             fion = fion + fion1
             !fion=fion+FtsvdW
          END IF
+         !
+         !     plugin patches on internal forces
+         !
+         CALL plugin_int_forces(fion)
+
       END IF
 
       DEALLOCATE( fion1 )
@@ -624,6 +646,10 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       if (abivol) etot = etot + P_ext*volclu
       if (abisur) etot = etot + Surf_t*surfclu
+      !
+      !     Add possible external contribution from plugins to the energy
+      !
+      etot = etot + plugin_etot 
       !
       IF( tpre ) THEN
          !
