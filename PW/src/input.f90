@@ -1477,6 +1477,8 @@ SUBROUTINE iosys()
   END IF
   IF ( lstres .AND. dft_is_hybrid() .AND. npool > 1 )  CALL errore('iosys', &
          'stress for hybrid functionals not available with pools', 1)
+  IF ( lmovecell.AND. dft_is_hybrid() ) CALL errore('iosys',&
+         'Variable cell and hybrid XC not tested',1)
   !
   ! ... must be done AFTER dft is read from PP files and initialized
   ! ... or else the two following parameters will be overwritten

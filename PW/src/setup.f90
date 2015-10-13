@@ -80,7 +80,6 @@ SUBROUTINE setup()
   USE exx,                ONLY : ecutfock, exx_grid_init, exx_div_check
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
-  USE cellmd,             ONLY : lmovecell  
   USE control_flags,      ONLY : restart
   USE fcp_variables,      ONLY : lfcpopt, lfcpdyn
   !
@@ -115,7 +114,6 @@ SUBROUTINE setup()
                          'hybrid XC not allowed in non-scf calculations', 1 )
      IF ( ANY (upf(1:ntyp)%nlcc) ) CALL infomsg( 'setup ', 'BEWARE:' // &
                & ' nonlinear core correction is not consistent with hybrid XC')
-     IF (lmovecell) CALL errore('setup','Variable cell and hybrid XC not tested',1)
      IF (okpaw) CALL errore('setup','PAW and hybrid XC not tested',1)
      IF (okvan) THEN
         IF (ecutfock /= 4*ecutwfc) CALL infomsg &
