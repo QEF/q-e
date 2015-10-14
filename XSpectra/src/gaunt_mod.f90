@@ -615,16 +615,16 @@ contains
     integer :: i
   
     do i = 1, Size_tab
-       if (symbol.eq.seuilK1_tab(i)%name .and. edge.eq.'K1' ) then
+       if (symbol.eq.trim(adjustl(seuilK1_tab(i)%name)) .and. edge.eq.'K1' ) then
           getE = seuilK1_tab(i)%seuil_en
           return
-       else if (symbol.eq.seuilL1_tab(i)%name .and. edge.eq.'L1' ) then
+       else if (symbol.eq.trim(adjustl(seuilL1_tab(i)%name)) .and. edge.eq.'L1' ) then
           getE = seuilL1_tab(i)%seuil_en
           return 
-       else if (symbol.eq.seuilL2_tab(i)%name .and. edge.eq.'L2' ) then
+       else if (symbol.eq.trim(adjustl(seuilL2_tab(i)%name)) .and. edge.eq.'L2' ) then
           getE = seuilL2_tab(i)%seuil_en
           return 
-       else if (symbol.eq.seuilL3_tab(i)%name .and. edge.eq.'L3' ) then
+       else if (symbol.eq.trim(adjustl(seuilL3_tab(i)%name)) .and. edge.eq.'L3' ) then
           getE = seuilL3_tab(i)%seuil_en
           return 
        end if
