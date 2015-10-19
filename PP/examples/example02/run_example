@@ -16,7 +16,7 @@ $ECHO "This example shows how to use PostProc codes to calculate the DOS of Ni."
 . ../../../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x dos.x projwfc.x kvecs_FS.x bands_FS.x"
+BIN_LIST="pw.x dos.x projwfc.x fs.x"
 PSEUDO_LIST="Ni.pz-nd-rrkjus.UPF"
 
 $ECHO
@@ -79,15 +79,13 @@ $ECHO " done"
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 DOS_COMMAND="$PARA_PREFIX $BIN_DIR/dos.x $PARA_POSTFIX"
 PROJWFC_COMMAND="$PARA_PREFIX $BIN_DIR/projwfc.x $PARA_POSTFIX"
-KVECS_COMMAND="$BIN_DIR/kvecs_FS.x "
-BANDS_COMMAND="$BIN_DIR/bands_FS.x "
+FS_COMMAND="$BIN_DIR/fs.x "
 $ECHO
 $ECHO "  running pw.x as:      $PW_COMMAND"
 $ECHO "  running dos.x as:     $DOS_COMMAND"
 $ECHO "  running projwfc.x as: $PROJWFC_COMMAND"
 $ECHO "  running gnuplot as:   $GP_COMMAND"
-$ECHO "  running kvecs_FS.x as:  $KVECS_COMMAND"
-$ECHO "  running bands_FS.x as:  $BANDS_COMMAND"
+$ECHO "  running fs.x as:      $FS_COMMAND"
 $ECHO
  
 # self-consistent calculation
@@ -488,37 +486,12 @@ $PW_COMMAND < ni.scf_SP.in > ni.scf0.SP.out
 check_failure $?
 $ECHO " done"
 
-#
-# prepare input file ni.fs_SP.in
-#
-Sysname='ni'
-nabc=' 16 16 16 '
-n_start=3
-n_last=6
-#
-E_Fermi=`grep Fermi ni.scf0.SP.out | cut -c 26-36` 
-a1=`grep 'b(1)' ni.scf0.SP.out | cut -c 24-54`
-a2=`grep 'b(2)' ni.scf0.SP.out | cut -c 24-54`
-a3=`grep 'b(3)' ni.scf0.SP.out | cut -c 24-54`
-
-cat > kvecs_FS.in <<EOF
-$a1
-$a2
-$a3
-$nabc
-$Sysname
-EOF
-
-$KVECS_COMMAND < kvecs_FS.in > kvecs_FS.out
-check_failure $?
-
 cat > ni.fs_SP.in << EOF
  &control
-    calculation='bands'
+    calculation='nscf'
     prefix='ni',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
-    verbosity='high'
  /
  &system
     ibrav=2, 
@@ -530,9 +503,9 @@ cat > ni.fs_SP.in << EOF
     nbnd=8
     nspin=2, 
     starting_magnetization(1)=0.8
+    occupations='tetrahedra'
  /
  &electrons
-    diagonalization='cg'
     conv_thr = 1.0e-10
     mixing_beta = 0.7 
  /
@@ -540,35 +513,27 @@ ATOMIC_SPECIES
  Ni 58.69 Ni.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS
  Ni 0.0 0.0 0.0
-K_POINTS
+K_POINTS {automatic}
+16 16 16 0 0 0 
 EOF
 
-cat  kvecs_$Sysname >> ni.fs_SP.in
-
-# input file ni.fs.in ready
 $ECHO "  running the Fermi Surface calculation ... \c"
-$PW_COMMAND   < ni.fs_SP.in > ni.fs.SP.out 
+$PW_COMMAND   < ni.fs_SP.in > ni.fs_SP.out 
 check_failure $?
 $ECHO " done"
 
-# prepare input data (input_FS, Bands.out) for bands_FS
-
-mv ni.fs.SP.out Bands_SP.out
-
-cat > input_FS <<EOF
-$n_start  $n_last
-$E_Fermi
-$Sysname
-$nabc
-$a1
-$a2
-$a3
+cat > FS.in <<EOF
+&fermi
+    outdir='$TMP_DIR/'
+    prefix='ni'
+/
 EOF
-
-$BANDS_COMMAND <Bands_SP.out  > bands_fs.out
+$FS_COMMAND < FS.in > FS.out
 check_failure $?
-mv Bands_FS_up.bxsf    $Sysname.fs_up.bxsf 
-mv Bands_FS_down.bxsf  $Sysname.fs_down.bxsf 
+
+$ECHO
+$ECHO "  Fermi surface: use 'xcrysden --bxsf ni_fsXX.bxsf', XX=up,dw to plot ...\c"
+$ECHO " done"
 
 ##################
 
@@ -608,36 +573,12 @@ $PW_COMMAND < ni.scf_NSP.in > ni.scf0.NSP.out
 check_failure $?
 $ECHO " done"
 
-#
-# prepare input file ni.fs.in
-#
-Sysname='ni'
-nabc=' 16 16 16 '
-n_start=3
-n_last=6
-#
-E_Fermi=`grep Fermi ni.scf0.NSP.out | cut -c 26-36` 
-a1=`grep 'b(1)' ni.scf0.NSP.out | cut -c 24-54`
-a2=`grep 'b(2)' ni.scf0.NSP.out | cut -c 24-54`
-a3=`grep 'b(3)' ni.scf0.NSP.out | cut -c 24-54`
-
-cat > kvecs_FS.in <<EOF
-$a1
-$a2
-$a3
-$nabc
-$Sysname
-EOF
-
-$KVECS_COMMAND < kvecs_FS.in > kvecs_FS.out
-
 cat > ni.fs_NSP.in << EOF
  &control
-    calculation='bands'
+    calculation='nscf'
     prefix='ni',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
-    verbosity='high'
  /
  &system
     ibrav=2, 
@@ -647,9 +588,9 @@ cat > ni.fs_NSP.in << EOF
     ecutwfc = 24.0, 
     ecutrho = 288.0, 
     nbnd=8
+    occupations='tetrahedra'
  /
  &electrons
-    diagonalization='cg'
     conv_thr = 1.0e-10
     mixing_beta = 0.7 
  /
@@ -657,37 +598,27 @@ ATOMIC_SPECIES
  Ni 58.69 Ni.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS
  Ni 0.0 0.0 0.0
-K_POINTS
+K_POINTS automatic
+16 16 16 0 0 0 
 EOF
 
-cat  kvecs_$Sysname >> ni.fs_NSP.in
-
-# input file ni.fs.in ready
 $ECHO "  running the Fermi Surface calculation ... \c"
 $PW_COMMAND   < ni.fs_NSP.in > ni.fs_NSP.out 
 check_failure $?
 $ECHO " done"
 
-# prepare input data (input_FS, Bands.out) for bands_FS
-
-mv ni.fs_NSP.out Bands_NSP.out
-
-cat > input_FS <<EOF
-$n_start  $n_last
-$E_Fermi
-$Sysname
-$nabc
-$a1
-$a2
-$a3
+cat > FS.in <<EOF
+&fermi
+    outdir='$TMP_DIR/'
+    prefix='ni'
+/
 EOF
-
-$BANDS_COMMAND < Bands_NSP.out > bands_fs.out
+$FS_COMMAND < FS.in > FS.out
 check_failure $?
-mv Bands_FS.bxsf  ni.fs_NSP.bxsf 
+
 
 $ECHO
-$ECHO "  Fermi surface plot: use 'xcrysden --bxsf ni.fs_NSP.bxsf' to plot ...\c"
+$ECHO "  Fermi surface plot: use 'xcrysden --bxsf ni.fs.bxsf' to plot ...\c"
 $ECHO " done"
 
 $ECHO "  cleaning $TMP_DIR...\c"

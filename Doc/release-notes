@@ -13,6 +13,8 @@ Incompatible changes in svn version:
    * Standard F2003 calls to: get_environment_variable, get_command_argument, 
      command_argument_count, flush, are used everywhere instead of wrappers.
      Some old versions of compilers may no longer work.
+   * Old Fermi Surface plotting tools kvecs_FS.f, bands_FS.f90, in PW/tools/,
+     replaced by new code PP/src/fermisurface.f90
 
 New in 5.2.1 version:
 

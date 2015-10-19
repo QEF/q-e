@@ -60,7 +60,7 @@ TLDEPS= bindir mods libs pw
 
 LIBOBJS = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
 
-all : tldeps average.x bands.x dos.x epsilon.x initial_state.x \
+all : tldeps average.x bands.x dos.x epsilon.x initial_state.x fs.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw_export.x pw2gw.x \
       wannier_ham.x wannier_plot.x molecularpdos.x \
@@ -200,6 +200,11 @@ pw2bgw.x : pw2bgw.o libpp.a $(MODULES) $(LIBOBJS)
 bgw2pw.x : bgw2pw.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		bgw2pw.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+fs.x : fermisurface.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		fermisurface.o libpp.a $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 tldeps :

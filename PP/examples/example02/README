@@ -26,49 +26,18 @@ variables see the appropriate INPUT_* file)
    and 'ni.pdos_atm#1(Ni)_wfc#2(d)' respectively).  (input=ni.pdos.in,
    output=ni.pdos.in)
 
-5) Fermi Surface plot, courtesy of
-      Eyvaz Isaev
-      Theoretical Physics Department
-      Moscow State Institute of Steel and Alloys
-      (eyvaz_isaev@yahoo.com, e.isaev@misis.ru)
-   First, one generates a  grid of k-points (all of them, not only those
-   in the Irreducible Brilloin Zone) using auxiliary code kvecs_FS.x
-   Then, the non-scf calculation is performed
-   Then, auxiliary code bands_FS.x collects the data and produces a
-   file ni.fs.bxsf that can be read by XCrySDen (www.xcrysden.org) as:
-      xcrysden --bxsf ni.fs.bxsf 
-   Additional info for customization of the script:
-#
-# A user has to edit so-called "user part" in order to define some required 
-# parameters.
-# 
-# Sysname   - a nickname for your system
-# Calc_Type - The Fermi Surface calculations (FS) or band-structure
-#             calculations (Band) which will be included later. 
-#             Presently band-structure calculations could be carried out 
-#             by means of plotband.x from PP (postprocessing) directory 
-#             or a little package distributed by E.Isaev (posted to pw_forum). 
-# nabc      - a number for dividing of each edge of a parallelepiped.
-#             Be careful, the total number of generated k-points is
-#             (na+1)*(nb+1)*(nc+1), i.e. including \Gamma-point.
-# n_start   - starting band's number for the Fermi Surface calculations.
-#             It is obvious, we have to deal with the bands crossing the
-#             Fermi level.
-# n_last    - last band's number for FS calculations
-#
-# That's all!!! Present values in the script (may be edited):
-Sysname='ni'
-Calc_Type='FS'
-nabc=' 16 16 16 '
-n_start=2
-n_last=5
-#
-#
-# Nota Bene : You can take more bands and then choose from a XCrySDen menu
-#             only those bands which cross the Fermi level   
-# Nota Bene : If you have mistaken choosing bands to be considered for the
-#             FS construction, you do not need to restart all calculations.
-#             Just edit "bands_FS" file and restart "bands_FS.x" manually.
-#             It will read Bands.out and result Bands.bxsf which you can
-#             rename as you like.
-#  
+5) Fermi Surface plot (updated version of the tools by Eyvaz Isaev):
+   make again a self-consistent calculation,
+   followed by a non-scf calculation ('nscf') with tetrahedra (smearing is
+   also OK as long as the Fermi energy s computed) and a dense automatic
+   (Monkhorst-Pack) unshifted grid, using 
+   K_POINTS automatic
+   24 24 24 0 0 0
+   Finally, run the "fs.x" utility, specifying in namelist &fermi the correct
+   "outdir" and "prefix", optionally the output filename "filfermi" and
+   "DeltaE" (see below). The code will select bands that cross the Fermi
+   energy Ef+/-1eV (or Ef+/-DeltaE if specified) and write them into file,
+   "filfermi"_fs.bxsf for spin-unpolarized, "filfermi"_fsup.bxsf and
+   "filfermi"_fsdw.bxsf for spin-polarized calculations (filfermi=prefix
+   is not specified). Plot these files using "xcrysden --bxsf"
+    
