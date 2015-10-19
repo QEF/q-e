@@ -87,9 +87,6 @@ SUBROUTINE iosys()
   !
   USE force_mod,     ONLY : lforce, lstres, force
   !
-  USE gvecs,         ONLY : dual
-  USE gvect,         ONLY : ecutrho_ => ecutrho
-  !
   USE fft_base, ONLY : dfftp
   USE fft_base, ONLY : dffts
   !
@@ -162,7 +159,6 @@ SUBROUTINE iosys()
   USE control_flags, ONLY: scf_must_converge_ => scf_must_converge
   !
   USE wvfct,         ONLY : nbnd_ => nbnd, &
-                            ecutwfc_ => ecutwfc, &
                             ecfixed_ => ecfixed, &
                             qcutz_   => qcutz, &
                             q2sigma_ => q2sigma
@@ -301,7 +297,7 @@ SUBROUTINE iosys()
   !
   INTEGER  :: ia, nt, inlc, ibrav_sg, ierr
   LOGICAL  :: exst, parallelfs
-  REAL(DP) :: theta, phi
+  REAL(DP) :: theta, phi, ecutwfc_pp, ecutrho_pp
   !
   !
   ! ... various initializations of control variables
@@ -755,19 +751,6 @@ SUBROUTINE iosys()
      !
   ENDIF
   !
-  IF ( ecutrho <= 0.D0 ) THEN
-     !
-     dual = 4.D0
-     ecutrho = dual*ecutwfc
-     !
-  ELSE
-     !
-     dual = ecutrho / ecutwfc
-     IF ( dual <= 1.D0 ) &
-        CALL errore( 'iosys', 'invalid dual?', 1 )
-     !
-  ENDIF
-  !
   SELECT CASE( trim( restart_mode ) )
   CASE( 'from_scratch' )
      !
@@ -1108,8 +1091,6 @@ SUBROUTINE iosys()
   dfftp%nr1     = nr1
   dfftp%nr2     = nr2
   dfftp%nr3     = nr3
-  ecutrho_ = ecutrho
-  ecutwfc_ = ecutwfc
   ecfixed_ = ecfixed
   qcutz_   = qcutz
   q2sigma_ = q2sigma
@@ -1451,9 +1432,11 @@ SUBROUTINE iosys()
   !
   CALL init_dofree ( cell_dofree )
   !
-  ! ... read pseudopotentials (also sets DFT)
+  ! ... read pseudopotentials (also sets DFT and a few more variables)
+  ! ... returns values read from PP files into ecutwfc_pp, ecutrho_pp
   !
-  CALL readpp ( input_dft )
+  CALL readpp ( input_dft, .FALSE., ecutwfc_pp, ecutrho_pp )
+  CALL set_cutoff ( ecutwfc, ecutrho, ecutwfc_pp, ecutrho_pp )
   !
   ! ... set parameters of hybrid functionals
   !
@@ -1554,6 +1537,40 @@ SUBROUTINE iosys()
   RETURN
   !
 END SUBROUTINE iosys
+!
+SUBROUTINE set_cutoff ( ecutwfc_in, ecutrho_in, ecutwfc_pp, ecutrho_pp )
+  !
+  ! Copy to modules the cutoffs, either read from input or from PP files
+  ! Values of ecutwfc and ecutrho are returned in ecutwfc_in, ecutrho_in
+  !
+  USE kinds, ONLY : dp
+  USE gvecs, ONLY : dual
+  USE gvect, ONLY : ecutrho
+  USE wvfct, ONLY : ecutwfc
+  !
+  IMPLICIT NONE
+  REAL(dp), INTENT(INOUT) :: ecutwfc_in, ecutrho_in
+  REAL(dp), INTENT(IN   ) :: ecutwfc_pp, ecutrho_pp
+  !
+  IF( ecutwfc_in <= 0.0_dp ) ecutwfc_in = ecutwfc_pp
+  IF( ecutwfc_in <= 0.0_DP ) THEN
+     CALL errore( 'set_cutoff' ,' ecutwfc not set ',1)
+  ELSE
+     ecutwfc = ecutwfc_in
+  END IF
+  IF( ecutrho_in <= 0.0_dp ) ecutrho_in = ecutrho_pp
+  IF( ecutrho_in <= 0.0_dp ) THEN
+     dual = 4.D0
+     ecutrho = dual*ecutwfc
+     ecutrho_in = ecutrho
+  ELSE
+     ecutrho = ecutrho_in
+     dual = ecutrho / ecutwfc
+     IF ( dual <= 1.D0 ) &
+        CALL errore( 'set_cutoff', 'invalid dual?', 1 )
+  ENDIF
+  !
+END SUBROUTINE set_cutoff
 !
 !----------------------------------------------------------------------------
 SUBROUTINE read_cards_pw ( psfile, tau_format )

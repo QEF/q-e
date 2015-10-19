@@ -1343,7 +1343,7 @@ MODULE read_namelists_module
        IF( nspin < 1 .OR. nspin > 4 .OR. nspin == 3 ) &
           CALL errore( sub_name ,' nspin out of range ', MAX(nspin, 1 ) )
        !
-       IF( ecutwfc <= 0.0_DP ) &
+       IF( ecutwfc < 0.0_DP ) &
           CALL errore( sub_name ,' ecutwfc out of range ',1)
        IF( ecutrho < 0.0_DP ) &
           CALL errore( sub_name ,' ecutrho out of range ',1)
