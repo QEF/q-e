@@ -213,9 +213,8 @@ SUBROUTINE move_ions()
            ! ... FCP output
            !
            IF ( lfcpopt ) THEN
-             WRITE( stdout, '(/,5X, &
-               "FCP Optimisation : converged ( criteria force < ",ES8.1," )")') &
-               fcp_relax_crit
+             WRITE( stdout, '(/,5X, "FCP Optimisation : converged ", &
+               & "( criteria force < ",ES8.1," )")') fcp_relax_crit
              WRITE( stdout, '(5X,"FCP Optimisation : tot_charge =",F12.6,/)') &
                SUM( zv(ityp(1:nat)) ) - nelec
            END IF
@@ -279,8 +278,8 @@ SUBROUTINE move_ions()
                  ! ... FCP output
                  !
                  IF ( conv_ions ) THEN
-                   WRITE( stdout, '(5X,"FCP : converged ( criteria force < ", &
-                     ES8.1," )")')fcp_relax_crit
+                   WRITE( stdout, '(5X,"FCP : converged ", &
+                    & "( criteria force < ", ES8.1," )")') fcp_relax_crit
                    WRITE( stdout, '(5X,"FCP : final tot_charge =",F12.6,/)') &
                      SUM( zv(ityp(1:nat)) ) - nelec
                  END IF
