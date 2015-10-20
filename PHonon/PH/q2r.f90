@@ -81,6 +81,7 @@ PROGRAM q2r
   CHARACTER(len=256) :: fildyn, filin, filj, filf, flfrc
   CHARACTER(len=3)   :: atm(ntypx)
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  CHARACTER(len=4) :: post=''
   !
   LOGICAL :: lq, lrigid, lrigid1, lnogridinfo, xmldyn
   CHARACTER (LEN=10) :: zasr
@@ -129,27 +130,28 @@ PROGRAM q2r
      !
   IF (flfrc == ' ')  CALL errore ('q2r',' bad flfrc',1)
      !
-
+  xmldyn=has_xml(fildyn)
+  IF(xmldyn) post='.xml'
   IF (ionode) THEN
-     OPEN (unit=1, file=TRIM(fildyn)//'0', status='old', form='formatted', &
+    
+     OPEN (unit=1, file=TRIM(fildyn)//'0'//post, status='old', form='formatted', &
           iostat=ierr)
      lnogridinfo = ( ierr /= 0 )
      IF (lnogridinfo) THEN
         WRITE (stdout,*)
-        WRITE (stdout,*) ' file ',TRIM(fildyn)//'0', ' not found'
+        WRITE (stdout,*) ' file ',TRIM(fildyn)//'0'//post, ' not found'
         WRITE (stdout,*) ' reading grid info from input'
         READ (5, *) nr1, nr2, nr3
         READ (5, *) nfile
      ELSE
         WRITE (stdout,'(/,4x," reading grid info from file ",a)') &
-                                                          TRIM(fildyn)//'0'
+                                                          TRIM(fildyn)//'0'//post
         READ (1, *) nr1, nr2, nr3
         READ (1, *) nfile
         CLOSE (unit=1, status='keep')
      END IF
   ENDIF
 
-  xmldyn=has_xml(fildyn)
 
   CALL mp_bcast(nr1, ionode_id, world_comm)
   CALL mp_bcast(nr2, ionode_id, world_comm)
