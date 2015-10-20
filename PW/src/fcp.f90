@@ -541,16 +541,14 @@ CONTAINS
       IF ( .NOT. ionode ) RETURN
       !
       IF ( lfcpopt ) THEN
-         WRITE( UNIT = stdout, FMT  = '(5x, &
-                  "-->FCP optimiser activated<--")' )
+         WRITE( UNIT = stdout, FMT  = '(5x,"-->FCP optimiser activated<--")' )
          WRITE( UNIT = stdout, FMT = 9056 ) fcp_mu*rytoev, fcp_mu
          WRITE( UNIT = stdout, FMT = 9057 ) tot_charge
          WRITE( UNIT = stdout, FMT = 9058 ) fcp_relax_step
          WRITE( UNIT = stdout, FMT = 9059 ) fcp_relax_crit*rytoev, &
                                          fcp_relax_crit
       ELSE IF ( lfcpdyn ) THEN
-         WRITE( UNIT = stdout, FMT  = '(5x, &
-                  "-->FCP optimiser activated<--")' )
+         WRITE( UNIT = stdout, FMT  = '(5x,"-->FCP optimiser activated<--")' )
          WRITE( UNIT = stdout, FMT = 9056 ) fcp_mu*rytoev, fcp_mu
          WRITE( UNIT = stdout, FMT = 9057 ) tot_charge
       END IF
