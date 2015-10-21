@@ -84,8 +84,6 @@ SUBROUTINE forces()
   forceh(:,:)   = 0.D0
   force (:,:)   = 0.D0
   !
-  WRITE( stdout, '(/,5x,"Forces acting on atoms (Ry/au):", / )')
-  !
   ! ... The nonlocal contribution is computed here
   !
   CALL force_us( forcenl )
@@ -247,6 +245,8 @@ SUBROUTINE forces()
   CALL plugin_ext_forces()
   !
   ! ... write on output the forces
+  !
+  WRITE( stdout, '(/,5x,"Forces acting on atoms (Ry/au):", / )')
   !
   DO na = 1, nat
      !
