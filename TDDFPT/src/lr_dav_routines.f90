@@ -1577,6 +1577,7 @@ contains
     use io_global,     only : stdout
     use wvfct,         only : nbnd,npwx
     use klist,             only : nks
+    USE mp_world,        ONLY : nproc
 
     implicit none
     real(dp) :: ram_vect, ram_eigen
@@ -1592,8 +1593,8 @@ contains
     ram_eigen=2.0d0*sizeof(ram_eigen)*nbnd*npwx*nks*num_eign*4
 
     write(stdout,'(/5x,"Estimating the RAM requirements:")')
-    write(stdout,'(10x,"For the basis sets:",5x,F10.2,5x,"M")') ram_vect/1048576
-    write(stdout,'(10x,"For the eigenvectors:",5x,F10.2,5x,"M")') ram_eigen/1048576
+    write(stdout,'(10x,"For the basis sets:",5x,F10.2,5x,"M")') nproc*ram_vect/1048576
+    write(stdout,'(10x,"For the eigenvectors:",5x,F10.2,5x,"M")') nproc*ram_eigen/1048576
     write(stdout,'(10x,"Num_eign =",I5,5x,"Num_basis_max =",I5)') num_eign,num_basis_max
     write(stdout,'(10x,"Reference = ",F5.2, "  Ry")') reference
     write(stdout,'(5x,"Do make sure that you have enough RAM.",/)')
