@@ -222,14 +222,14 @@ PROGRAM lr_calculate_spectrum
      !
      IF ( units /= 0 .and. verbosity > 4) THEN
         WRITE(stdout,'(5x,"Such a high verbosity is not supported when &
-                          non-default units are used")')
+                        & non-default units are used")')
         verbosity = 4
      ENDIF
      !
      IF (omeg>0 .or. omegmax>0 .or. delta_omeg>0) THEN
         !
         WRITE(stdout,'(5x,"Warning, omeg, omegmax and delta_omeg depreciated, &
-                           use start,end,increment instead")')
+                        &  use start,end,increment instead")')
         ! 
         start = omeg
         end = omegmax
@@ -594,7 +594,7 @@ PROGRAM lr_calculate_spectrum
         IF (verbosity > 0 ) THEN
            IF ( is_peak(omega(3),alpha_temp(3))) &
                WRITE(stdout,'(5x,"Possible peak at ",F15.8," Ry; &
-                                        Intensity=",E11.2)') omega(1),alpha_temp(1)
+                                  & Intensity=",E11.2)') omega(1),alpha_temp(1)
                !
                ! f-sum rule
                !
@@ -694,7 +694,7 @@ PROGRAM lr_calculate_spectrum
         !
         WRITE(stdout,'(/5x,"The f-sum rule is given by Eq.(60) in PRB 88, 064301 (2013).")') 
         WRITE(stdout,'(5x,"Integration in the range from",1x,f6.2,1x,"to",1x,f6.2,1x,"eV."/, &
-                       5x,"The number of valence (and semicore) electrons in the unit cell:",1x,f6.2)') start_save, end, f_sum
+                     & 5x,"The number of valence (and semicore) electrons in the unit cell:",1x,f6.2)') start_save, end, f_sum
         WRITE(stdout,'(5x,"The exact number of electrons:",1x,f6.2)') nelec
         WRITE(stdout,'(5x,"The violation of the f-sum rule:",1x,f6.2,1x,"%")') 100*abs(f_sum-nelec)/nelec
         !     
