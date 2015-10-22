@@ -71,11 +71,9 @@ PROGRAM fpmd_postproc
   ! default values
 
   dunit = 14
-
-  ! ... Intel compilers v .ge.8 allocate a lot of stack space
-  ! ... Stack limit is often small, thus causing SIGSEGV and crash
+#ifdef __INTEL_COMPILER
   CALL remove_stack_limit ( )
-
+#endif
   !  initialize mpi
   CALL mp_startup  ( )
   !
