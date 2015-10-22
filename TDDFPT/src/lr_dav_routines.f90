@@ -42,7 +42,7 @@ contains
     if(single_pole) then
       write(stdout,'(/5x,"Single Pole Approximation is used to generate the initial vectors",/)')
       write(stdout,'(/5x,"At this moment, this movement is only valid for NC PPs, and ecut_rho=4*ecut_wfc.",/5x, &
-            "Please make sure that you are using the correct input",/)')
+          & "Please make sure that you are using the correct input",/)')
     endif
 
     ib=0
@@ -146,8 +146,7 @@ contains
       write(stdout,'(5x,"poor_of_ram2 is set to .false.. This means that you &
                      &would like to increase the speed ",/5x,"by storing the D_basis&
                      & and C_basis vectors which will cause three time of the memory cost.",&
-                     /5x,"Switch it to .true. if you need &
-                     &to save memory.",/)')
+                   & /5x,"Switch it to .true. if you need to save memory.",/)')
       allocate(D_vec_b(npwx,nbnd,nks,num_basis_max),stat=ierr)
       IF (ierr /= 0) call errore('lr_dav_alloc_init',"no enough memory",ierr)
 
@@ -161,8 +160,8 @@ contains
     if ( p_nbnd_occ*p_nbnd_virt .lt. num_init .and. .not. if_random_init) then
       write(stdout,'(/5X,"Initial vectors are forced to be chosen &
                &randomly because no enough particle-hole pairs are available.",/5x, &
-               "You may want to try to calculate more virtual states or include more occupied states by changing &
-               p_nbnd_occ in the input.",/)')
+             & "You may want to try to calculate more virtual states or include more occupied states by changing &
+             & p_nbnd_occ in the input.",/)')
       if_random_init=.true. ! The only way to set initial state when there's no virtual state.
     endif
 
@@ -732,7 +731,7 @@ contains
     if(num_basis+toadd .gt. num_basis_max) then
       if(discharged) &
         call errore('lr_discharge',"The num_basis_max is too small that even discharge &
-                    cannot work. Please increase its value in the input.",1)
+                  & cannot work. Please increase its value in the input.",1)
       discharged = .true.
       call lr_discharge()
       goto 110
@@ -1266,7 +1265,7 @@ contains
     OPEN(17,file=filename,status="unknown")
 
     write(17,'("#",2x,"Energy(Ry)",10x,"total",13x,"X",13x,"Y",13x,"Z")') 
-    write(17,'("#  Broadening is: ",5x,F10.7,5x"Ry")') broadening
+    write(17,'("#  Broadening is: ",5x,F10.7,5x,"Ry")') broadening
     
     nstep=(finish-start)/step+1
     allocate(absorption(nstep,5)) ! Column 1: Energy; 2: Toal; 3,4,5: X,Y,Z

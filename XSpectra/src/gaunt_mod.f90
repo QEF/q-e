@@ -612,19 +612,22 @@ contains
         seuil('Pa', 16733.0),&
         seuil('U' , 17166.0) /)
   
+   character (len=2) :: sym1
     integer :: i
+    
+    sym1 = trim(adjustl(symbol))
   
     do i = 1, Size_tab
-       if (symbol.eq.trim(adjustl(seuilK1_tab(i)%name)) .and. edge.eq.'K1' ) then
+       if (sym1.eq.trim(adjustl(seuilK1_tab(i)%name)) .and. edge.eq.'K1' ) then
           getE = seuilK1_tab(i)%seuil_en
           return
-       else if (symbol.eq.trim(adjustl(seuilL1_tab(i)%name)) .and. edge.eq.'L1' ) then
+       else if (sym1.eq.trim(adjustl(seuilL1_tab(i)%name)) .and. edge.eq.'L1' ) then
           getE = seuilL1_tab(i)%seuil_en
           return 
-       else if (symbol.eq.trim(adjustl(seuilL2_tab(i)%name)) .and. edge.eq.'L2' ) then
+       else if (sym1.eq.trim(adjustl(seuilL2_tab(i)%name)) .and. edge.eq.'L2' ) then
           getE = seuilL2_tab(i)%seuil_en
           return 
-       else if (symbol.eq.trim(adjustl(seuilL3_tab(i)%name)) .and. edge.eq.'L3' ) then
+       else if (sym1.eq.trim(adjustl(seuilL3_tab(i)%name)) .and. edge.eq.'L3' ) then
           getE = seuilL3_tab(i)%seuil_en
           return 
        end if

@@ -47,8 +47,8 @@ contains
     enddo
     
     inner_err=inner_err/(num_basis*num_basis)
-    write(stdout,'(/5x,"The error of the orthonalization of the basis &
-          is:",5x,E20.12)') inner_err
+    write(stdout,'(/5x,"The error of the orthonalization of the basis is:",&
+            & 5x,E20.12)') inner_err
     call check("inner_matrix")
     return
   end subroutine check_orth

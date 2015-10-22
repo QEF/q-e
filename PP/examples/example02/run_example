@@ -532,7 +532,7 @@ $FS_COMMAND < FS.in > FS.out
 check_failure $?
 
 $ECHO
-$ECHO "  Fermi surface: use 'xcrysden --bxsf ni_fsXX.bxsf', XX=up,dw to plot ...\c"
+$ECHO "  Use 'xcrysden --bxsf results/ni_fsXX.bxsf', XX=up,dw to plot the Fermi Surface\c"
 $ECHO " done"
 
 ##################
@@ -618,7 +618,7 @@ check_failure $?
 
 
 $ECHO
-$ECHO "  Fermi surface plot: use 'xcrysden --bxsf ni.fs.bxsf' to plot ...\c"
+$ECHO "  Use 'xcrysden --bxsf results/ni_fs.bxsf' to plot the Fermi Surface\c"
 $ECHO " done"
 
 $ECHO "  cleaning $TMP_DIR...\c"

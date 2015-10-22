@@ -247,11 +247,8 @@ SUBROUTINE forces()
   ! ... write on output the forces
   !
   WRITE( stdout, '(/,5x,"Forces acting on atoms (Ry/au):", / )')
-  !
   DO na = 1, nat
-     !
      WRITE( stdout, 9035) na, ityp(na), force(:,na)
-     !
   END DO
   !
   ! ... forces on fixed coordinates are set to zero ( C.S. 15/10/2003 )
