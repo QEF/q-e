@@ -56,7 +56,7 @@ CONTAINS
     IF (ierr/=0) CALL mp_stop( 8000 )
     IF (.NOT. library_mode ) THEN
 #if defined(__OPENMP) 	 
-       CALL MPI_Init_thread(MPI_THREAD_MULTIPLE, PROVIDED, ierr)
+       CALL MPI_Init_thread(MPI_THREAD_FUNNELED, PROVIDED, ierr)
 #else 	 
        CALL MPI_Init(ierr)
 #endif
