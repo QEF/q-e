@@ -112,7 +112,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
 #ifdef __MPI
 
   INTEGER :: dest, from, k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
-  INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp
+  INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
   !
   LOGICAL :: use_tg_
 
@@ -236,27 +236,36 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
            npp  = dfft%npp( me )
            nnp  = dfft%nnp
         ENDIF
+
+        IF( use_tg_ ) THEN
+           nblk = dfft%nproc / dfft%nogrp
+           nsiz = dfft%nogrp
+        ELSE
+           nblk = dfft%nproc 
+           nsiz = 1
+        END IF
         !
         ip = 1
         !
-        DO gproc = 1, dfft%nproc / dfft%nogrp
+        DO gproc = 1, nblk
            !
-           it = ( gproc - 1 ) * sendsiz
+           ii = 0
            !
-           DO ipp = 1, dfft%nogrp 
+           DO ipp = 1, nsiz
               !
-              ioff = dfft%iss( ip ) + 1
+              ioff = dfft%iss( ip )
               !
               DO i = 1, dfft%nsw( ip )
                  !
-                 mc = dfft%ismap( ioff )
+                 mc = dfft%ismap( i + ioff )
+                 !
+                 it = ii * nppx + ( gproc - 1 ) * sendsiz
                  !
                  DO j = 1, npp
                     f_aux( mc + ( j - 1 ) * nnp ) = f_in( j + it )
                  ENDDO
                  !
-                 it = it  + nppx
-                 ioff = ioff + 1
+                 ii = ii + 1
                  !
               ENDDO
               !
@@ -295,34 +304,43 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn, use_tg
            npp  = dfft%npp( me )
            nnp  = dfft%nnp
         ENDIF
+
+        IF( use_tg_ ) THEN
+           nblk = dfft%nproc / dfft%nogrp
+           nsiz = dfft%nogrp
+        ELSE
+           nblk = dfft%nproc 
+           nsiz = 1
+        END IF
         !
         ip = 1
         !
-        DO gproc = 1, dfft%nproc / dfft%nogrp
+        DO gproc = 1, nblk
            !
-           it = ( gproc - 1 ) * sendsiz
+           ii = 0
            !
-           DO ipp = 1, dfft%nogrp 
+           DO ipp = 1, nsiz
               !
-              ioff = dfft%iss( ip ) + 1
+              ioff = dfft%iss( ip )
               !
               DO i = 1, dfft%nsw( ip )
                  !
-                 mc = dfft%ismap( ioff )
+                 mc = dfft%ismap( i + ioff )
+                 !
+                 it = ii * nppx + ( gproc - 1 ) * sendsiz
                  !
                  DO j = 1, npp
                     f_in( j + it ) = f_aux( mc + ( j - 1 ) * nnp )
                  ENDDO
                  !
-                 it = it + nppx
-                 ioff = ioff + 1
+                 ii = ii + 1
                  !
               ENDDO
               !
               ip = ip + 1
               !
            ENDDO
-
+           !
         ENDDO
 
      END IF
@@ -845,7 +863,7 @@ SUBROUTINE cgather_sym_many( f_in, f_out, nbnd, nbnd_proc, start_nbnd_proc )
   !
   ! ... Written by A. Dal Corso
   !
-  ! ... This routine generalizes cgather_sym, receiving nbnd complex 
+  ! ... This routine generalizes cgather_sym, receiveng nbnd complex 
   ! ... distributed functions and collecting nbnd_proc(dfftp%mype+1) 
   ! ... functions in each processor.
   ! ... start_nbnd_proc(dfftp%mype+1), says where the data for each processor
