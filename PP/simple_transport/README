@@ -1,0 +1,37 @@
+This is a collection of routines which compute transport coefficients
+(Conductivity and Seebeck) using Boltzmann transport theory.
+
+--------------------------------------------------------------------------
+Description of main programs:
+
+* ef: Computation of Fermi Level for an insulating system with a given
+      doping level. 
+
+* dos: Computation of density of states using an adaptive smearing method.
+       Captures Van-Hove singularities better compared to constant 
+       smearing.
+
+* fermi_int_0: Computation of transport coefficients using constant 
+               scattering rate and for a range of chemical potentials.
+               
+
+* fermi_int_1: Computation of transport coefficients using constant
+               scattering rate for a given Fermi Energy. Uses a 
+               grid reduction algorithm (reducegrid.f90) to speed
+               up the transport integrals.
+
+--------------------------------------------------------------------------
+Capabilities and things to do:
+
+* The code uses finite differences to compute band velocities. For systems
+  with a fairly simple band structure, this poses no issue. For more
+  complicated with structures with lots of band crossings, finite
+  differences would fail. For such systems, use of packages like 
+  BoltzTrap and Boltzwann are recommended. 
+
+* The code is not tested for spin-polarized systems and with k-point
+  grids that are not Gamma centered. It works for noncollinear 
+  non-spin-polarized band structures. 
+
+* The code will be extended to include calculation of transport 
+  integrals using model scattering rates. 
