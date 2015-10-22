@@ -392,7 +392,7 @@
         WRITE( stdout,565) nhptyp, (nhpdim-nhpend), nhpend , nhpbeg, &
              (anum2nhp(j),j=1,nhpdim)
         IF(nhptyp.EQ.1.OR.nhptyp.EQ.2)WRITE( stdout,'(//, &
-          "*** default NH masses are multiplied by atomic masses ***")')
+        & "*** default NH masses are multiplied by atomic masses ***")')
         do j=1,nhpdim
            WRITE( stdout,566) j,(qnp((j-1)*nhpcl+i),i=1,nhpcl)
         enddo
