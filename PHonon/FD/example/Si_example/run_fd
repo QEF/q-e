@@ -3,7 +3,7 @@
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
-MY_QE='/Users/marco/Programs/SVN/espresso/bin'
+MY_QE='../../../../bin/'
 OUTDIR='./fd_files/'
 IN_DIR='./fd_files/'
 FORCEDIR='./fd_files/'
