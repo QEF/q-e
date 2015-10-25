@@ -12,8 +12,10 @@ YAMBO_DEVEL_URL=http://qe-forge.org/gf/download/frsrelease/194/796/$(YAMBO_DEVEL
 YAMBO=yambo-3.4.1-rev61
 YAMBO_URL=http://qe-forge.org/gf/download/frsrelease/184/723/$(YAMBO).tgz
 #
-W90=wannier90-1.2
-W90_URL=$(URL)$(W90).tar.gz
+#W90=wannier90-1.2
+#W90_URL=$(URL)$(W90).tar.gz
+W90=wannier90-2.0.1
+W90_URL=http://www.wannier.org/code/wannier90-2.0.1.tar.gz
 #
 SAX=sax-2.0.3
 SAX_URL=$(URL)$(SAX).tar.gz
