@@ -646,13 +646,8 @@ the newer FFTW3 library and the following vendor-specific FFT libraries:
 if none is found, it will search for an external FFTW v.3 library;
 if none is found, it will fall back to the internal  copy of FFTW.
 
-If you have recent versions (v.10 or later) of MKL installed, you 
-may use the FFTW3 interface provided with MKL. This can be directly
-linked in MKL distributed with v.12 and later of the Intel compiler. 
-% Following is obsolete:
-% In earlier versions, only sources are distributed: you have to compile
-%  them and to modify file \texttt{make.sys} accordingly 
-% (MKL must be linked {\em after} the FFTW-MKL interface).
+If you have MKL libraries, you may use the provided FFTW3 interface 
+(v.10 and later), or directly link FFTW3 from MKL (v.12 and later).
 
 In order to use Intel DFTI from MKL, you need to add \texttt{-D\_\_DFTI}
 to \texttt{DFLAGS} in the \texttt{make.sys} file.
@@ -763,14 +758,6 @@ and try \texttt{make} again. Also see Sec.(\ref{SubSec:Download}).
 \subsection{Running tests and examples}
 \label{SubSec:Examples}
 
-% You should first of all ensure that you have downloaded 
-% and correctly unpacked the package containing examples (since v.4.1 in a
-% separate package):
-% \begin{verbatim}
-%      tar -zxvf /path/to/package/espresso-X.Y.Z-examples.tar.gz
-% \end{verbatim}
-% will unpack several subdirectories into \texttt{espresso-X.Y.Z/}. 
-
 As a final check that compilation was successful, you may want to run some or
 all of the examples. There are two different types of examples: 
 \begin{itemize}
@@ -867,7 +854,7 @@ gfortran versions) are no longer supported since v.5.1.2.
 Also, compilers that do not support intrinsic calls
 \texttt{flush}, \texttt{get\_environment\_variable},
 \texttt{get\_command\_argument}, \texttt{command\_argument\_count}
-will no longer be supported after v.5.2.1.
+are no longer supported since v.5.2.1.
 
 C and Fortran compilers must be in your PATH.
 If \configure\ says that you have no working compiler, well,
@@ -1006,42 +993,17 @@ Beware: the default integer type for 64-bit machine is typically
 but it is not guaranteed to work and will not give 
 any advantage anyway.
 
-Currently the following compilers are supported by \configure:
-Intel (ifort), Portland (pgf90), gfortran, g95, Pathscale (pathf95), 
-Sun Studio (sunf95),  AMD Open64 (openf95). The ordering approximately
-reflects the quality of support. Both Intel MKL and AMD acml mathematical
-libraries are supported. Some combinations of compilers and of libraries
-may however require manual editing of \texttt{make.sys}.
+Currently, \configure\ supports Intel (ifort), NAG (nagfor), and gfortran 
+compilers. Support for other compilers: g95, Portland (pgf90), Pathscale 
+(pathf95), Sun Studio (sunf95), AMD Open64 (openf95), added in the past,
+is still there, but it might have become obsolete.
+Both Intel MKL and AMD acml mathematical libraries are supported, the
+former much better than the latter.
 
 It is usually convenient to create semi-statically linked executables (with only
 libc, libm, libpthread dynamically linked). If you want to produce a binary
 that runs on different machines, compile it on the oldest machine you have
 (i.e. the one with the oldest version of the operating system).
-
-If you get errors like {\em IPO Error: unresolved : \_\_svml\_cos2}
-at the linking stage, your compiler is optimized to use the SSE
-version of sine, cosine etc. contained in the SVML library. Append
-\texttt{-lsvml} to the list of libraries in your \texttt{make.sys} 
-file (info by Axel Kohlmeyer, oct.2007). 
-
-\paragraph{Linux PCs with Portland compiler (pgf90)}
-
-\qe\ does not work reliably, or not at all, with many old
-versions ($< 6.1$) of the Portland Group compiler (pgf90).
- Use the latest version of each 
-release of the compiler, with patches if available (see
-the Portland Group web site, \texttt{http://www.pgroup.com/}).
-
-\paragraph{Linux PCs with Pathscale compiler}
-
-Version 3.1 and version 4 (open source!) of the Pathscale EKO compiler
-work (info by Cezary Sliwa, April 2011, and Carlo Nervi, June 2011).
-In case of mysterious errors while compiling \texttt{iotk},
-remove all lines like:
-\begin{verbatim}
-# 1 "iotk_base.spp"
-\end{verbatim}
-from all \texttt{iotk} source files.
 
 \paragraph{Linux PCs with gfortran}
 
@@ -1081,30 +1043,23 @@ not \texttt{-lmkl\_intel\_lp64}, and the like for other architectures.
 Since v.5.1, you may use the following workaround:
 add preprocessing option \texttt{-Dzdotc=zdotc\_wrapper} to \texttt{DFLAGS}.
 
-If you experience problems in reading files produced by previous versions
-of \qe: ``gfortran used 64-bit record markers to allow writing of records 
-larger than 2 GB. Before with 32-bit record markers only records $<$2GB 
-could be written. However, this caused problems with older files and 
-inter-compiler operability. This was solved in GCC 4.2 by using 32-bit 
-record markers but such that one can still store $>$2GB records (following 
-the implementation of Intel). Thus this issue should be gone. See 4.2 
-release notes (item ``Fortran") at 
-\texttt{http://gcc.gnu.org/gcc-4.2/changes.html}."
-(Info by Tobias Burnus, March 2010).
-
-``Using gfortran v.4.4 (after May 27, 2009) and 4.5 (after May 5, 2009) can 
-produce wrong results, unless the environment variable
-GFORTRAN\_UNBUFFERED\_ALL=1 is set. Newer 4.4/4.5 versions
-(later than April 2010) should be OK. See\\
-\texttt{http://gcc.gnu.org/bugzilla/show\_bug.cgi?id=43551}."
-(Info by Tobias Burnus, March 2010).
-
 \paragraph{Linux PCs with g95}
 
 g95 v.0.91 and later versions (\texttt{http://www.g95.org}) should
 work, but the executables it produces are noticeably slower than
 those of other compilers. Also notice that the development of g95
 seems to have stopped. 
+
+\paragraph{Linux PCs with Pathscale compiler}
+
+Version 3.1 and version 4 (open source!) of the Pathscale EKO compiler
+work (info by Cezary Sliwa, April 2011, and Carlo Nervi, June 2011).
+In case of mysterious errors while compiling \texttt{iotk},
+remove all lines like:
+\begin{verbatim}
+# 1 "iotk_base.spp"
+\end{verbatim}
+from all \texttt{iotk} source files.
 
 \paragraph{Linux PCs with Sun Studio compiler}
 
@@ -1152,10 +1107,8 @@ the directory containing the compiler executable -- in your
 initialization files. Consult the documentation provided by Intel. 
     
 The warning: {\em feupdateenv is not implemented and will always fail}, 
-showing up in recent versions, can be safely ignored. Warnings on
-"bad preprocessing option" when compiling iotk
-and complains about ``recommanded formats''
-should also be ignored.
+can be safely ignored. Warnings on "bad preprocessing option" when compiling 
+iotk and complains about ``recommanded formats'' may also be ignored.
 
 {\bf ifort v.12}: release 12.0.0 miscompiles iotk, leading to 
 mysterious errors when reading data files. Workaround: increase 
@@ -1170,18 +1123,16 @@ with ifort 11.1.056 and MKL 10.2.2.025 (Carlo Nervi, Oct. 2009).
 
 \paragraph{Linux PCs with MKL libraries}
 On Intel CPUs it is very convenient to use Intel MKL libraries.
-They can be also used for AMD CPU, selecting the appropriate machine-optimized
-libraries, and also together with non-Intel compilers. Note however
-that recent versions of MKL (10.2 and following) do not perform
-well on AMD machines.
+Recent versions also contain optimized FFT routines and a FFTW 
+interface. MKL libraries can be used also with non-Intel compilers.
+They work also for AMD CPU, selecting the appropriate machine-optimized
+libraries, but with reduced performances.
 
 \configure\ should recognize properly installed MKL libraries.
 By default the non-threaded version of MKL is linked, unless option
 \texttt{configure --with-openmp} is specified. In case of trouble,
 refer to the following web page to find the correct way to link MKL:\\
 \texttt{http://software.intel.com/en-us/articles/intel-mkl-link-line-advisor/}.
-
-Recent MKL versions also contain optimized FFT routines and a FFTW interface.
 
 For parallel (MPI) execution on multiprocessor (SMP) machines, set the
 environmental variable OMP\_NUM\_THREADS to 1 unless you know what you 
