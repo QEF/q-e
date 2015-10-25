@@ -48,6 +48,7 @@ test -e ./install/make.sys       && rm ./install/make.sys
 test -e ./install/configure.msg  && rm ./install/configure.msg
 
 ./install/configure "$@"
+#./install/configure-new "$@"
 
 #
 # copy make.sys in the home dir

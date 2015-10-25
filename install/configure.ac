@@ -236,7 +236,7 @@ try_dflags=""
 # candidate compilers and flags based on architecture
 case $arch in
 ia32 | ia64 | x86_64 )
-        try_f90="ifort pgf90 pathf95 sunf95 openf95 $try_f90"
+        try_f90="ifort pgf90 pathf95 sunf95 openf95 nagfor $try_f90"
         ;;
 arm )
         try_f90="$try_f90"
@@ -366,6 +366,7 @@ case "$arch" in
         eko_version=`$mpif90 -v 2>&1 | grep "PathScale EKOPath"`
         pathf95_version=`$mpif90 -v 2>&1 | grep "PathScale"`
         gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
+        nagfor_version=`$mpif90 -v 2>&1 | grep "NAG Fortran"`
         #
         if test "$ifort_version" != ""
         then
@@ -429,6 +430,12 @@ case "$arch" in
                 version=`echo $gfortran_version | awk '{print $3}'`
                 echo "${ECHO_T}gfortran $version"
                 f90_in_mpif90="gfortran"
+        elif test "$nagfor_version" != ""
+        then
+                # NAG 6.0 has the codename attached to version number... annoying
+                version=`echo $nagfor_version | awk '{print $5}'`
+                echo "${ECHO_T}nagfor $version"
+                f90_in_mpif90="nagfor"
         else
                 echo "${ECHO_T}unknown, assuming gfortran"
                 f90_in_mpif90="gfortran"
@@ -471,6 +478,8 @@ f90 | fc | ftn )
         f90_version=gfortran
     elif $f90 -V 2>&1 | grep -q "Cray Fortran" ; then
         f90_version=crayftn
+    elif $f90 -version 2>&1 | grep -q "NAG Fortran" ; then
+        f90_version=nagfor
     else
         echo $ECHO_N "unknown, leaving as... $ECHO_C"
         f90_version=$f90
@@ -583,7 +592,7 @@ ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
         if test "$use_debug" -eq 1; then
             try_fflags="$try_fflags -fpe0 -CB"
         fi
-	    try_fflags_nomain="-nofor_main"
+	      try_fflags_nomain="-nofor_main"
         try_fflags_openmp="-openmp"
         try_f90flags="\$(FFLAGS) -nomodule"
         try_fflags_noopt="-O0 -assume byterecl -g -traceback"
@@ -593,8 +602,24 @@ ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
         try_dflags="$try_dflags -D__INTEL"
         pre_fdflags="-fpp "
         ;;
+x86_64:nagfor* )
+        try_fflags="-O3 -kind=byte -dcfuns -mismatch"
+        if test "$use_debug" -eq 1; then
+            try_fflags="$try_fflags -g"
+        fi
+        try_fflags_nomain=""
+        try_fflags_openmp="-openmp"
+        try_f90flags="-O3 -kind=byte -dcfuns -mismatch"
+        try_fflags_noopt="-O0 -kind=byte -dcfuns -mismatch"
+        try_ldflags=""
+        try_ldflags_static="-unsharedrts"
+        try_ldflags_openmp="-openmp"
+        # -D__GFORTRAN needed
+        try_dflags="$try_dflags -D__NAG -D__GFORTRAN"
+        have_cpp=0
+        ;;
 ia32:pgf* | ia64:pgf* | x86_64:pgf* )
-	    try_fflags_nomain="-Mnomain"
+	      try_fflags_nomain="-Mnomain"
         try_fflags="-fast -r8"
         try_fflags_openmp="-mp"
         try_f90flags="-fast -r8 -Mcache_align"
@@ -2086,16 +2111,21 @@ if test "$use_openmp" -eq 1 ; then try_dflags="$try_dflags -D__OPENMP" ; fi
 # preprocessing flag for signal trapping (experimental)
 if test "$use_signals" -eq 1 ; then try_dflags="$try_dflags -D__TRAP_SIGUSR1" ; fi
 
-#OBM - This is yet another variable for internal copy of BLAS/LAPACK
-if test "$extlib_flags" = "" ; then 
-       case "$arch" in
-        ppc64 )
+
+# Internal BLAS/LAPACK sometimes have to be handled differently...
+if test "$extlib_flags" = "" ; then
+  case "$arch:$f90_version" in
+  x86_64:nagfor* )
+    extlib_flags="-O2 -kind=byte -dcfuns -mismatch"      
+    ;;
+  ppc64:* )
 		extlib_flags="-q64 -qthreaded"
-		echo setting extlib_flags ... $extlib_flags
-        ;;
-       esac
+    ;;
+  * )
+    extlib_flags="-O2"
+  ;;
+  esac
 fi
-##
 
 
 if test "$dflags" = "" ; then dflags="$try_dflags" ; fi

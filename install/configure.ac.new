@@ -96,7 +96,6 @@ echo setting DFLAGS... $dflags
 if test "$iflags" = "" ; then iflags="$try_iflags" ; fi
 echo setting IFLAGS... $iflags
 
-
 # export sdditional ettings to generated files
 AC_SUBST(dflags)
 AC_SUBST(fdflags)

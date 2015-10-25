@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2014 Quantum ESPRESSO Foundation
+# Copyright (C) 2001-2016 Quantum ESPRESSO Foundation
 
 AC_DEFUN([X_AC_QE_F90], [
 
@@ -38,7 +38,7 @@ ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
         if test "$use_debug" -eq 1; then
             try_fflags="$try_fflags -fpe0 -CB"
         fi
-	    try_fflags_nomain="-nofor_main"
+  	    try_fflags_nomain="-nofor_main"
         try_fflags_openmp="-openmp"
         try_f90flags="\$(FFLAGS) -nomodule"
         try_fflags_noopt="-O0 -assume byterecl -g -traceback"
@@ -47,6 +47,22 @@ ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
         try_ldflags_openmp="-openmp"
         try_dflags="$try_dflags -D__INTEL"
         pre_fdflags="-fpp "
+        ;;
+x86_64:nagfor* )
+        try_fflags="-O3 -kind=byte -dcfuns -mismatch"
+        if test "$use_debug" -eq 1; then
+            try_fflags="$try_fflags -g"
+        fi
+        try_fflags_nomain=""
+        try_fflags_openmp="-openmp"
+        try_f90flags="-O3 -kind=byte -dcfuns -mismatch"
+        try_fflags_noopt="-O0 -kind=byte -dcfuns -mismatch"
+        try_ldflags=""
+        try_ldflags_static="-unsharedrts"
+        try_ldflags_openmp="-openmp"
+        # -D__GFORTRAN needed
+        try_dflags="$try_dflags -D__NAG -D__GFORTRAN"
+        have_cpp=0
         ;;
 ia32:pgf* | ia64:pgf* | x86_64:pgf* )
 	    try_fflags_nomain="-Mnomain"

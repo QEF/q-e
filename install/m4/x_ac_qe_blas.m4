@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2014 Quantum ESPRESSO Foundation
+# Copyright (C) 2001-2016 Quantum ESPRESSO Foundation
 
 AC_DEFUN([X_AC_QE_BLAS], [
 
@@ -10,15 +10,15 @@ have_atlas=0
 have_essl=0
 have_mkl=0
   
- AC_ARG_WITH(internal-blas,
-   [AS_HELP_STRING([--with-internal-blas],
-       [compile with internal blas (default: no)])],
-    [if   test "$withval" = "yes" ; then
-      use_internal_blas=1
-   else
-      use_internal_blas=0
-   fi],
-   [use_internal_blas=0])
+AC_ARG_WITH(internal-blas,
+  [AS_HELP_STRING([--with-internal-blas],
+      [compile with internal blas (default: no)])],
+   [if   test "$withval" = "yes" ; then
+     use_internal_blas=1
+  else
+     use_internal_blas=0
+  fi],
+  [use_internal_blas=0])
    
 # check for blas
 # supported vendor replacements:
@@ -599,23 +599,29 @@ else
     blas_libs_switch="external"
 fi
 
+# Internal BLAS/LAPACK sometimes have to be handled differently...
 if test "$extlib_flags" = "" ; then
-       case "$arch" in
-        ppc64 )
-                extlib_flags="-q64 -qthreaded"
-                echo setting extlib_flags ... $extlib_flags
-        ;;
-       esac
+  case "$arch:$f90_version" in
+  x86_64:nagfor* )
+    extlib_flags="-O2 -kind=byte -dcfuns -mismatch"
+    ;;
+  ppc64:* )
+    extlib_flags="-q64 -qthreaded"
+    ;;
+  * )
+    extlib_flags="-O2"
+  ;;
+  esac
 fi
 
-  blas_line="BLAS_LIBS=$blas_libs" 
-  echo setting BLAS_LIBS... $blas_libs
+blas_line="BLAS_LIBS=$blas_libs" 
+echo setting BLAS_LIBS... $blas_libs
   
-  AC_SUBST(blas_libs)
-  AC_SUBST(blas_libs_switch)
-  AC_SUBST(blas_line)
+AC_SUBST(blas_libs)
+AC_SUBST(blas_libs_switch)
+AC_SUBST(blas_line)
   
-  AC_CONFIG_FILES(install/make_blas.inc)
+AC_CONFIG_FILES(install/make_blas.inc)
   
-  ]
+]
 )

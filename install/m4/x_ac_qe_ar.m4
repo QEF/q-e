@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2014 Quantum ESPRESSO Foundation
+# Copyright (C) 2001-2016 Quantum ESPRESSO Foundation
 
 AC_DEFUN([X_AC_QE_AR], [
 
