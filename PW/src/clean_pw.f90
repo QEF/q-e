@@ -86,12 +86,13 @@ SUBROUTINE clean_pw( lflag )
      IF ( ALLOCATED( forcefield ) ) DEALLOCATE( forcefield )
      IF ( ALLOCATED( irt ) )        DEALLOCATE( irt )
      !
-     CALL deallocate_bp_efield()
      CALL dealloca_london()
      CALL cleanup_xdm()
      CALL deallocate_constraint()
      !
   END IF
+  !
+  CALL deallocate_bp_efield()
   !
   CALL deallocate_ldaU ( lflag )
   !
