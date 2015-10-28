@@ -650,7 +650,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      gr(inw, :)=wfg(inw,1)*b1(:)+wfg(inw,2)*b2(:)+wfg(inw,3)*b3(:)
   END DO
   !
-  ! set up a matrix with the element (i,j) is G_i·G_j·weight(j)
+  ! set up a matrix with the element (i,j) is G_i G_j weight(j)
   ! to check the correctness of choices on G vectors
   !
   DO i=1, nw
@@ -1074,8 +1074,8 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 
   CALL mp_set_displs( ngppp, displs, ntot, nproc_bgrp )
 
-  ALLOCATE(bigg(3,ntot))
-  ALLOCATE(bign(3,ntot))
+  ALLOCATE(bigg(3,ntot)); bigg = 0._DP
+  ALLOCATE(bign(3,ntot)); bign= 0
 
 #else
   ntot=ngw
@@ -1132,11 +1132,10 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   !
   CALL mp_bcast( bigg,  root_bgrp, intra_bgrp_comm ) !parallelize wf_init with MPI (serial could be very slow for large system or high cutoff)
   CALL mp_bcast( bign,  root_bgrp, intra_bgrp_comm ) !parallelization could be done better with MPI_SCATHER and MPI_GATHER (todo)
-  ng_me = ceiling(dble(ntot/nproc_bgrp))
+  ng_me = ceiling(dble(ntot)/dble(nproc_bgrp))
   g_start = (me-1)*ng_me + 1
   g_end   = me*ng_me
-  if (g_start.gt.ntot) g_start = ntot+2
-  if (g_end.gt.ntot)   g_end = ntot+1
+  if (g_end.gt.ntot)   g_end = ntot !HK: truncate upper bound to ntot
   !
 #else
   g_start = 1
