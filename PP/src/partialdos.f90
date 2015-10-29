@@ -10,7 +10,6 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
   !-----------------------------------------------------------------------
   !
   USE io_global,  ONLY : stdout
-  USE basis, ONLY : natomwfc
   USE ions_base, ONLY : ityp, atm
   USE klist, ONLY: wk, nkstot, degauss, ngauss, lgauss
   USE lsda_mod, ONLY: nspin, isk, current_spin
@@ -28,13 +27,16 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
   CHARACTER (len=256):: fileout
   CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/)
   !
-  INTEGER :: ik, ibnd,  m, &
+  INTEGER :: nproj, ik, ibnd,  m, &
        c_tab, nwfc, ne, ie_mid, ie_delta, ie, is, nkseff, ikeff
   REAL(DP) :: etev, delta, Elw, Eup, wkeff
   REAL(DP), ALLOCATABLE :: dostot(:,:,:), pdos(:,:,:,:), pdostot(:,:,:), &
        ldos(:,:,:)
   REAL(DP), EXTERNAL :: w0gauss
   !
+  ! this can be either natomwfc or nkb, depending upon the projection
+  !
+  nproj = SIZE(proj,1)
   !
   ! find band extrema
   !
@@ -63,7 +65,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
      nkseff=1
   ENDIF
   !
-  ALLOCATE (pdos(0:ne,natomwfc,nspin,nkseff))
+  ALLOCATE (pdos(0:ne,nproj,nspin,nkseff))
   ALLOCATE (dostot(0:ne,nspin,nkseff), pdostot(0:ne,nspin,nkseff), ldos(0:ne,nspin,nkseff) )
   pdos(:,:,:,:) = 0.d0
   dostot(:,:,:) = 0.d0
@@ -102,7 +104,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
            !                      projected over atomic wfc "nwfc"
            !                      for k-point "ik" (or summed over all kp)
            !
-           DO nwfc = 1, natomwfc
+           DO nwfc = 1, nproj
               pdos(ie,nwfc,current_spin,ikeff) = pdos(ie,nwfc,current_spin,ikeff) + &
                    wkeff * delta * proj (nwfc, ibnd, ik)
            ENDDO
@@ -126,7 +128,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
      ENDDO
   ENDDO
 
-  DO nwfc = 1, natomwfc
+  DO nwfc = 1, nproj
      IF (nlmchi(nwfc)%m == 1) THEN
         filextension='.pdos_atm#'
         !             12345678901

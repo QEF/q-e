@@ -426,6 +426,7 @@ postproc.o : ../../Modules/noncol.o
 postproc.o : ../../Modules/paw_variables.o
 postproc.o : ../../Modules/recvec.o
 postproc.o : ../../PW/src/pwcom.o
+projwfc.o : ../../Modules/atom.o
 projwfc.o : ../../Modules/becmod.o
 projwfc.o : ../../Modules/cell_base.o
 projwfc.o : ../../Modules/constants.o
@@ -441,6 +442,7 @@ projwfc.o : ../../Modules/mp.o
 projwfc.o : ../../Modules/mp_global.o
 projwfc.o : ../../Modules/mp_world.o
 projwfc.o : ../../Modules/noncol.o
+projwfc.o : ../../Modules/paw_variables.o
 projwfc.o : ../../Modules/ptoolkit.o
 projwfc.o : ../../Modules/recvec.o
 projwfc.o : ../../Modules/run_info.o
