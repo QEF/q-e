@@ -1366,7 +1366,8 @@ MODULE realus
     USE wavefunctions_module,  ONLY : psic
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
     USE uspp_param,            ONLY : nh, nhm
-    USE fft_base,              ONLY : tg_gather, dffts
+    USE fft_base,              ONLY : dffts
+    USE fft_parallel,          ONLY : tg_gather
     USE mp_bands,              ONLY : intra_bgrp_comm
     USE mp,        ONLY : mp_sum
     !
@@ -1469,7 +1470,8 @@ MODULE realus
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
     USE uspp_param,            ONLY : nh, nhm
     USE becmod,                ONLY : bec_type, becp
-    USE fft_base,              ONLY : tg_gather, dffts
+    USE fft_base,              ONLY : dffts
+    USE fft_parallel,          ONLY : tg_gather
     !
     IMPLICIT NONE
     !
@@ -1550,7 +1552,8 @@ MODULE realus
       USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
-      USE fft_base,               ONLY : tg_gather, dffts
+      USE fft_base,               ONLY : dffts
+      USE fft_parallel,           ONLY : tg_gather
       !
       IMPLICIT NONE
       !
@@ -1633,7 +1636,8 @@ MODULE realus
       USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
-      USE fft_base,               ONLY : tg_gather, dffts
+      USE fft_base,               ONLY : dffts
+      USE fft_parallel,           ONLY : tg_gather
       !
       IMPLICIT NONE
       !
@@ -1720,7 +1724,8 @@ MODULE realus
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
-  USE fft_base,               ONLY : tg_gather, dffts
+  USE fft_base,               ONLY : dffts
+  USE fft_parallel,           ONLY : tg_gather
   !
   IMPLICIT NONE
   !
@@ -1819,7 +1824,8 @@ MODULE realus
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
-  USE fft_base,               ONLY : tg_gather, dffts
+  USE fft_base,               ONLY : dffts
+  USE fft_parallel,           ONLY : tg_gather
   !
   IMPLICIT NONE
   !
@@ -1906,7 +1912,8 @@ MODULE realus
     USE wavefunctions_module,     ONLY : psic
     USE gvecs,                  ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
-    USE fft_base,      ONLY : dffts, tg_gather
+    USE fft_base,      ONLY : dffts
+    USE fft_parallel,  ONLY : tg_gather
     USE fft_interfaces,ONLY : invfft
 
     IMPLICIT NONE
@@ -2023,7 +2030,8 @@ MODULE realus
     USE wavefunctions_module,     ONLY : psic
     USE gvecs,                  ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
-    USE fft_base,      ONLY : dffts, tg_gather
+    USE fft_base,      ONLY : dffts
+    USE fft_parallel,  ONLY : tg_gather
     USE fft_interfaces,ONLY : fwfft
     USE mp_bands,      ONLY : me_bgrp
 
@@ -2275,7 +2283,8 @@ MODULE realus
     USE wavefunctions_module,     ONLY : psic
     USE gvecs,       ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
-    USE fft_base,      ONLY : dffts, tg_gather
+    USE fft_base,      ONLY : dffts
+    USE fft_parallel,  ONLY : tg_gather
     USE mp_bands,      ONLY : me_bgrp
     USE scf,           ONLY : vrs
     USE lsda_mod,      ONLY : current_spin

@@ -16,7 +16,8 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
   USE noncollin_module, ONLY : nspin_mag
   USE modes,     ONLY : nsymq, minus_q
   USE mp_bands,  ONLY : me_bgrp
-  USE fft_base,  ONLY : dfftp, cgather_sym
+  USE fft_base,  ONLY : dfftp
+  USE scatter_mod,  ONLY : cgather_sym
   !
   IMPLICIT NONE
   !
@@ -47,7 +48,7 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
 
   DO iper = 1, nper
      DO is = 1, nspin_mag
-        CALL cgather_sym (dvtosym (:, is, iper), ddvtosym (:, is, iper) )
+        CALL cgather_sym (dfftp, dvtosym (:, is, iper), ddvtosym (:, is, iper) )
      ENDDO
 
   ENDDO

@@ -16,7 +16,8 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   ! ... isw = -1 : reads data from a single file and distributes them
   !
   USE kinds,     ONLY : DP
-  USE fft_base,  ONLY : dfftp, gather_grid, scatter_grid
+  USE fft_base,  ONLY : dfftp
+  USE scatter_mod,  ONLY : gather_grid, scatter_grid
   USE io_global, ONLY : ionode, ionode_id
   USE mp_pools,  ONLY : inter_pool_comm, me_pool
   USE mp_images, ONLY : intra_image_comm

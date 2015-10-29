@@ -462,6 +462,7 @@ exx.o : ../../Modules/mp_pools.o
 exx.o : ../../Modules/noncol.o
 exx.o : ../../Modules/paw_variables.o
 exx.o : ../../Modules/recvec.o
+exx.o : ../../Modules/scatter_mod.o
 exx.o : ../../Modules/uspp.o
 exx.o : ../../Modules/wavefunctions.o
 exx.o : buffers.o
@@ -1447,6 +1448,7 @@ realus.o : ../../Modules/constants.o
 realus.o : ../../Modules/control_flags.o
 realus.o : ../../Modules/fft_base.o
 realus.o : ../../Modules/fft_interfaces.o
+realus.o : ../../Modules/fft_parallel.o
 realus.o : ../../Modules/fft_types.o
 realus.o : ../../Modules/funct.o
 realus.o : ../../Modules/io_global.o
@@ -1935,6 +1937,7 @@ vloc_of_g.o : ../../Modules/kind.o
 vloc_of_g.o : esm.o
 vloc_psi.o : ../../Modules/fft_base.o
 vloc_psi.o : ../../Modules/fft_interfaces.o
+vloc_psi.o : ../../Modules/fft_parallel.o
 vloc_psi.o : ../../Modules/kind.o
 vloc_psi.o : ../../Modules/mp_bands.o
 vloc_psi.o : ../../Modules/noncol.o

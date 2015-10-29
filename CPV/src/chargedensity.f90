@@ -117,7 +117,7 @@
       USE cg_module,          ONLY: tcg
       USE cp_interfaces,      ONLY: stress_kin, enkin
       USE fft_interfaces,     ONLY: fwfft, invfft
-      USE fft_base,           ONLY: dffts, dfftp
+      USE fft_base,           ONLY: dffts, dfftp, dfft3d
       USE cp_interfaces,      ONLY: checkrho, ennl, calrhovan, dennl
       USE cp_main_variables,  ONLY: iprint_stdout, descla
       USE wannier_base,       ONLY: iwf
@@ -487,6 +487,7 @@
          !
          USE parallel_include
          USE fft_parallel,           ONLY: pack_group_sticks, fw_tg_cft3_z, fw_tg_cft3_scatter, fw_tg_cft3_xy
+         USE fft_scalar, ONLY: cfft3ds
          !
          !        MAIN LOOP OVER THE EIGENSTATES
          !           - This loop is also parallelized within the task-groups framework
@@ -495,7 +496,7 @@
          IMPLICIT NONE
          !
          INTEGER :: from, ii, eig_index, eig_offset
-
+         !
 #if defined(__INTEL_COMPILER)
 #if __INTEL_COMPILER  >= 1300
 !dir$ attributes align: 4096 :: tmp_rhos, aux
@@ -510,6 +511,7 @@
          ALLOCATE( tmp_rhos ( dffts%nr1x * dffts%nr2x * dffts%tg_npp( me_bgrp + 1 ), nspin ) )
          !
          tmp_rhos = 0_DP
+
 
          do i = 1, nbsp_bgrp, 2*dffts%nogrp
             !
@@ -559,11 +561,19 @@
             !
             !  now redistribute data
             !
-            CALL pack_group_sticks( aux, psis, dffts )
             !
-            CALL fw_tg_cft3_z( psis, dffts, aux )
-            CALL fw_tg_cft3_scatter( psis, dffts, aux )
-            CALL fw_tg_cft3_xy( psis, dffts )
+            !IF( dffts%nogrp == dffts%nproc ) THEN
+            !   CALL pack_group_sticks( aux, psis, dffts, dfft3d )
+            !   CALL cfft3ds( psis, dfft3d%nr1, dfft3d%nr2, dfft3d%nr3, &
+            !                 dfft3d%nr1x,dfft3d%nr2x,dfft3d%nr3x, 1, dfft3d%isind, dfft3d%iplw )
+            !ELSE
+               !
+               CALL pack_group_sticks( aux, psis, dffts )
+               CALL fw_tg_cft3_z( psis, dffts, aux )
+               CALL fw_tg_cft3_scatter( psis, dffts, aux )
+               CALL fw_tg_cft3_xy( psis, dffts )
+
+            !END IF
 #else
 
             psis = (0.d0, 0.d0)
@@ -665,6 +675,7 @@
          DEALLOCATE( tmp_rhos )
          DEALLOCATE( aux ) 
          DEALLOCATE( psis ) 
+!call errore('stop','qui',1) ! debug
 
          RETURN
       END SUBROUTINE loop_over_states

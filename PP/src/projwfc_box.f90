@@ -37,7 +37,8 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE scf,                  ONLY : rho
   USE projections_ldos,     ONLY : proj
-  USE fft_base,             ONLY : scatter_grid, dfftp
+  USE fft_base,             ONLY : dfftp
+  USE scatter_mod,          ONLY : scatter_grid
   USE fft_interfaces,       ONLY : invfft
   USE mp_global,            ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum

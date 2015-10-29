@@ -22,7 +22,8 @@ SUBROUTINE poten(vppot,nrz,z)
   USE mp_world,         ONLY : world_comm
   USE io_global,        ONLY : ionode_id
   USE fft_scalar,       ONLY : cfft3d
-  USE fft_base,         ONLY : gather_grid, dfftp
+  USE fft_base,         ONLY : dfftp
+  USE scatter_mod,      ONLY : gather_grid
 
   IMPLICIT NONE
 

@@ -131,6 +131,7 @@ poten.o : ../../Modules/io_global.o
 poten.o : ../../Modules/mp.o
 poten.o : ../../Modules/mp_world.o
 poten.o : ../../Modules/noncol.o
+poten.o : ../../Modules/scatter_mod.o
 poten.o : ../../PW/src/scf_mod.o
 poten.o : condcom.o
 print_clock_pwcond.o : ../../Modules/io_global.o
@@ -171,6 +172,7 @@ scat_states_plot.o : ../../Modules/kind.o
 scat_states_plot.o : ../../Modules/mp.o
 scat_states_plot.o : ../../Modules/mp_global.o
 scat_states_plot.o : ../../Modules/noncol.o
+scat_states_plot.o : ../../Modules/scatter_mod.o
 scat_states_plot.o : ../../Modules/splinelib.o
 scat_states_plot.o : ../../Modules/uspp.o
 scat_states_plot.o : ../../PW/src/pwcom.o

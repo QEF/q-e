@@ -197,7 +197,7 @@
         !   for this combination of parameters
 
         done = ( nz == zdims(1,ip) )
-#if defined __ESSL || defined __LINUX_ESSL || defined __FFTW3
+#if defined __ESSL || defined __LINUX_ESSL || defined __FFTW3 || __DFTI
 
         !   The initialization in ESSL and FFTW v.3 depends on all three parameters
 
@@ -238,50 +238,7 @@
 
 #elif defined __DFTI
 
-       if( ASSOCIATED( hand( icurrent )%desc ) ) THEN
-          dfti_status = DftiFreeDescriptor( hand( icurrent )%desc )
-          IF( dfti_status /= 0) THEN
-             WRITE(*,*) "stopped in DftiFreeDescriptor", dfti_status
-             STOP
-          ENDIF
-       END IF
-
-     dfti_status = DftiCreateDescriptor(hand( icurrent )%desc, DFTI_DOUBLE, DFTI_COMPLEX, 1,nz)
-     IF(dfti_status /= 0) THEN
-        WRITE(*,*) "stopped in DftiCreateDescriptor", dfti_status
-        STOP
-     ENDIF
-     dfti_status = DftiSetValue(hand( icurrent )%desc, DFTI_NUMBER_OF_TRANSFORMS,nsl)
-     IF(dfti_status /= 0)THEN
-        WRITE(*,*) "stopped in DFTI_NUMBER_OF_TRANSFORMS", dfti_status
-        STOP
-     ENDIF
-     dfti_status = DftiSetValue(hand( icurrent )%desc,DFTI_INPUT_DISTANCE, ldz )
-     IF(dfti_status /= 0)THEN
-        WRITE(*,*) "stopped in DFTI_INPUT_DISTANCE", dfti_status
-        STOP
-     ENDIF
-     dfti_status = DftiSetValue(hand( icurrent )%desc, DFTI_PLACEMENT, DFTI_INPLACE)
-     IF(dfti_status /= 0)THEN
-        WRITE(*,*) "stopped in DFTI_PLACEMENT", dfti_status
-        STOP
-     ENDIF
-     tscale = 1.0_DP/nz
-     dfti_status = DftiSetValue( hand( icurrent )%desc, DFTI_FORWARD_SCALE, tscale);
-     IF(dfti_status /= 0)THEN
-        WRITE(*,*) "stopped in DFTI_FORWARD_SCALE", dfti_status
-        STOP
-     ENDIF
-     dfti_status = DftiSetValue( hand( icurrent )%desc, DFTI_BACKWARD_SCALE, DBLE(1) );
-     IF(dfti_status /= 0)THEN
-        WRITE(*,*) "stopped in DFTI_BACKWARD_SCALE", dfti_status
-        STOP
-     ENDIF
-     dfti_status = DftiCommitDescriptor(hand( icurrent )%desc)
-     IF(dfti_status /= 0)THEN
-        WRITE(*,*) "stopped in DftiCommitDescriptor", dfti_status
-        STOP
-     ENDIF
+       CALL qe_dfti_init()
 
 #elif defined __ESSL || defined __LINUX_ESSL
 
@@ -378,18 +335,14 @@
 
      IF (isign < 0) THEN
         dfti_status = DftiComputeForward(hand(ip)%desc, c )
+        IF(dfti_status /= 0) &
+           CALL errore(' cft_1z ',' stopped in DftiComputeForward ', dfti_status )
         cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
-        IF(dfti_status /= 0) THEN
-           WRITE(*,*) "stopped in DftiComputeForward", dfti_status
-           STOP
-        ENDIF
      ELSE IF (isign > 0) THEN
         dfti_status = DftiComputeBackward(hand(ip)%desc, c )
+        IF(dfti_status /= 0) &
+           CALL errore(' cft_1z ',' stopped in DftiComputeBackward ', dfti_status )
         cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
-        IF(dfti_status /= 0) THEN
-           WRITE(*,*) "stopped in DftiComputeBackward", dfti_status
-           STOP
-        ENDIF
      END IF
 
 #elif defined __SX6
@@ -432,6 +385,58 @@
 #endif
 
      RETURN
+
+
+   CONTAINS
+
+     SUBROUTINE dummy_init()
+        RETURN
+     END SUBROUTINE dummy_init
+
+#ifdef __DFTI
+     SUBROUTINE qe_dfti_init()
+
+       if( ASSOCIATED( hand( icurrent )%desc ) ) THEN
+          dfti_status = DftiFreeDescriptor( hand( icurrent )%desc )
+          IF( dfti_status /= 0) THEN
+             WRITE(*,*) "stopped in DftiFreeDescriptor", dfti_status
+             STOP
+          ENDIF
+       END IF
+
+     dfti_status = DftiCreateDescriptor(hand( icurrent )%desc, DFTI_DOUBLE, DFTI_COMPLEX, 1,nz)
+     IF(dfti_status /= 0)  &
+       CALL errore(' cft_1z ',' stopped in DftiCreateDescriptor ', dfti_status )
+
+     dfti_status = DftiSetValue(hand( icurrent )%desc, DFTI_NUMBER_OF_TRANSFORMS,nsl)
+     IF(dfti_status /= 0) &
+       CALL errore(' cft_1z ',' stopped in DFTI_NUMBER_OF_TRANSFORMS ', dfti_status )
+
+     dfti_status = DftiSetValue(hand( icurrent )%desc,DFTI_INPUT_DISTANCE, ldz )
+     IF(dfti_status /= 0) &
+       CALL errore(' cft_1z ',' stopped in DFTI_INPUT_DISTANCE ', dfti_status )
+
+     dfti_status = DftiSetValue(hand( icurrent )%desc, DFTI_PLACEMENT, DFTI_INPLACE)
+     IF(dfti_status /= 0) &
+       CALL errore(' cft_1z ',' stopped in DFTI_PLACEMENT ', dfti_status )
+
+     tscale = 1.0_DP/nz
+     dfti_status = DftiSetValue( hand( icurrent )%desc, DFTI_FORWARD_SCALE, tscale);
+     IF(dfti_status /= 0) &
+       CALL errore(' cft_1z ',' stopped in DFTI_FORWARD_SCALE ', dfti_status )
+
+     dfti_status = DftiSetValue( hand( icurrent )%desc, DFTI_BACKWARD_SCALE, DBLE(1) );
+     IF(dfti_status /= 0) &
+       CALL errore(' cft_1z ',' stopped in DFTI_BACKWARD_SCALE ', dfti_status )
+
+     dfti_status = DftiCommitDescriptor(hand( icurrent )%desc)
+     IF(dfti_status /= 0) &
+       CALL errore(' cft_1z ',' stopped in DftiCommitDescriptor ', dfti_status )
+
+     END SUBROUTINE qe_dfti_init
+#endif
+
+
    END SUBROUTINE cft_1z
 
 !

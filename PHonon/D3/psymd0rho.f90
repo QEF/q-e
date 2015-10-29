@@ -20,7 +20,8 @@ subroutine psymd0rho (nper, irr, dvtosym)
   USE phcom
   USE d3com
   USE mp_global, ONLY : me_pool
-  USE fft_base,  ONLY : dfftp, cgather_sym
+  USE fft_base,  ONLY : dfftp
+  USE scatter_mod,  ONLY : cgather_sym
 
   IMPLICIT NONE
 
@@ -49,7 +50,7 @@ subroutine psymd0rho (nper, irr, dvtosym)
 
   npp0 = npp0 * dfftp%nnp + 1
   do iper = 1, nper
-     call cgather_sym (dvtosym (:, iper), ddvtosym (:, iper) )
+     call cgather_sym (dfftp, dvtosym (:, iper), ddvtosym (:, iper) )
   enddo
 
   call symd0rho (npertx, nper, irr, ddvtosym, s, ftau, nsymg0, irgq, tg0, &

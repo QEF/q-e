@@ -22,7 +22,8 @@ SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
   USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, me_pool, root_pool
   USE mp,        ONLY : mp_bcast, mp_barrier
   USE mp_world,  ONLY : world_comm
-  USE fft_base,  ONLY : dfftp, gather_grid
+  USE fft_base,  ONLY : dfftp
+  USE scatter_mod,  ONLY : gather_grid
   !
   IMPLICIT NONE
   !

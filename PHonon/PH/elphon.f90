@@ -258,7 +258,8 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   !      Original routine written by Francesco Mauri
   !
   USE kinds, ONLY : DP
-  USE fft_base, ONLY : dffts, tg_cgather
+  USE fft_base, ONLY : dffts
+  USE fft_parallel, ONLY : tg_cgather
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: iunigk
   USE buffers,  ONLY : get_buffer

@@ -1864,7 +1864,8 @@ contains
     use lr_variables,         only : evc0, sevc0,R, nbnd_total,evc0_virt,rho_1,rho_1c
     use lr_dav_variables
     use wvfct,                only : nbnd
-    use fft_base,             only : dffts,dfftp, gather_grid
+    use fft_base,             only : dffts,dfftp
+    use scatter_mod,          only : gather_grid
     use io_global,            only : stdout,ionode,ionode_id
     use mp,                   only : mp_bcast,mp_barrier                  
     use mp_world,             only : world_comm

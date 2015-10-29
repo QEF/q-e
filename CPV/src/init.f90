@@ -34,7 +34,7 @@
       use gvecs,                only: gcutms, gvecs_init
       use gvecw,                only: gkcut, gvecw_init, g2kin_init
       USE smallbox_subs,        ONLY: ggenb
-      USE fft_base,             ONLY: dfftp, dffts, dfftb
+      USE fft_base,             ONLY: dfftp, dffts, dfftb, dfft3d
       USE fft_scalar,           ONLY: cft_b_omp_init
       USE stick_set,            ONLY: pstickset
       USE control_flags,        ONLY: gamma_only, smallmem
@@ -95,11 +95,13 @@
         !
         CALL realspace_grid_init( dfftp, ref_at, ref_bg, gcutm )
         CALL realspace_grid_init( dffts, ref_at, ref_bg, gcutms)
+        CALL realspace_grid_init( dfft3d, ref_at, ref_bg, gcutms)
         !
       ELSE
         !
         CALL realspace_grid_init( dfftp, at, bg, gcutm )
         CALL realspace_grid_init( dffts, at, bg, gcutms)
+        CALL realspace_grid_init( dfft3d, at, bg, gcutms)
         !
       END IF
       !
@@ -136,7 +138,7 @@
 
       CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
         dfftp, dffts, ngw_ , ngm_ , ngs_ , me_bgrp, root_bgrp, &
-        nproc_bgrp, intra_bgrp_comm, ntask_groups )
+        nproc_bgrp, intra_bgrp_comm, ntask_groups, dfft3d )
       !
       !
       ! ... Initialize reciprocal space local and global dimensions

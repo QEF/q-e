@@ -26,7 +26,8 @@ SUBROUTINE chdens (filplot,plot_num)
   USE cell_base,  ONLY : at, bg, celldm, ibrav, alat, omega, tpiba, tpiba2
   USE ions_base,  ONLY : nat, ityp, atm, ntyp => nsp, tau, zv
   USE lsda_mod,   ONLY : nspin
-  USE fft_base,   ONLY : scatter_grid, dfftp, dffts
+  USE fft_base,   ONLY : dfftp, dffts
+  USE scatter_mod,   ONLY : scatter_grid
   USE fft_interfaces,  ONLY : fwfft
   USE grid_subroutines,ONLY : realspace_grid_init
   USE gvect,      ONLY : ngm, nl, g, gcutm

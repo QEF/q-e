@@ -131,7 +131,9 @@ CONTAINS
     desc%me_pgrp = 0
     !
     IF( MOD( nproc, MAX( 1, nogrp ) ) /= 0 ) &
-       CALL errore( " fft_dlay_allocate ", "the number of task groups should be a divisor of nproc ", 1 )
+       CALL errore( " fft_dlay_allocate ", "the number of task groups should be a divisor of the number of MPI task ", 1 )
+    IF( nogrp > nproc ) &
+       CALL errore( " fft_dlay_allocate ", "the number of task groups should be less than the number of MPI task ", 1 )
 
     desc%nogrp = MAX( 1, nogrp )
     desc%npgrp = nproc / MAX( 1, nogrp )

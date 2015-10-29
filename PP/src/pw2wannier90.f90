@@ -2323,7 +2323,8 @@ SUBROUTINE write_plot
    USE klist,           ONLY : nkstot, xk
    USE gvect,           ONLY : g, ngm
    USE cell_base,       ONLY : tpiba2
-   USE fft_base,        ONLY : gather_grid, dffts
+   USE fft_base,        ONLY : dffts
+   USE scatter_mod,     ONLY : gather_grid
    USE fft_interfaces,  ONLY : invfft
    USE noncollin_module,ONLY : noncolin
 

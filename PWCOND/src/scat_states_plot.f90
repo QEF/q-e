@@ -224,7 +224,8 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  use lsda_mod,  only : nspin
  USE mp_global, ONLY : nproc_pool, me_pool, intra_pool_comm
  USE mp,        ONLY : mp_sum
- USE fft_base,  ONLY : dffts, gather_grid, dfftp
+ USE fft_base,  ONLY : dffts, dfftp
+ USE scatter_mod, ONLY : gather_grid
  USE cond,      ONLY : ngper, newbg, intw1, intw2, &
                        nl_2ds, nl_2d, korbl, korbr, funz0, kfunl, xyk, ikind, &
                        n2d, kvall

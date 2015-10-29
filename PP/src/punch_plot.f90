@@ -24,7 +24,8 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
   USE run_info,         ONLY : title
   USE extfield,         ONLY : tefield, dipfield
-  USE fft_base,         ONLY : dfftp, gather_grid
+  USE fft_base,         ONLY : dfftp
+  USE scatter_mod,      ONLY : gather_grid
   USE fft_interfaces,   ONLY : fwfft, invfft
   USE gvect,            ONLY : gcutm
   USE gvecs,            ONLY : dual

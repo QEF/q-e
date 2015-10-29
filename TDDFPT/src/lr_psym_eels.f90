@@ -20,7 +20,8 @@ SUBROUTINE lr_psym_eels (dvtosym)
   USE noncollin_module, ONLY : nspin_mag
   USE modes,            ONLY : nsymq, minus_q
   USE mp_global,        ONLY : me_bgrp
-  USE fft_base,         ONLY : dfftp, cgather_sym
+  USE fft_base,         ONLY : dfftp
+  USE scatter_mod,      ONLY : cgather_sym
   !
   IMPLICIT NONE
   !
@@ -52,7 +53,7 @@ SUBROUTINE lr_psym_eels (dvtosym)
   !
   DO is = 1, nspin_mag
        !
-       CALL cgather_sym ( dvtosym(:,is), ddvtosym(:,is) )
+       CALL cgather_sym ( dfftp, dvtosym(:,is), ddvtosym(:,is) )
        !
   ENDDO
   !

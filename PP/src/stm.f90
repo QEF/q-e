@@ -22,7 +22,8 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
   USE constants, ONLY: tpi, rytoev
   USE io_global, ONLY : stdout
   USE cell_base, ONLY: tpiba2, tpiba, omega, at
-  USE fft_base,  ONLY: dfftp, gather_grid
+  USE fft_base,  ONLY: dfftp
+  USE scatter_mod,  ONLY: gather_grid
   USE fft_interfaces, ONLY : fwfft, invfft
   USE gvect, ONLY: ngm, g, nl, nlm
   USE klist, ONLY: xk, lgauss, degauss, ngauss, wk, nks, nelec

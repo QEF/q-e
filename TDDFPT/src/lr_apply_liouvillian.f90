@@ -328,7 +328,7 @@ CONTAINS
     USE lr_variables,             ONLY : becp_1, tg_revc0
     USE realus,                   ONLY : tg_psic
     USE mp_global,                ONLY : me_bgrp
-    USE fft_base,                 ONLY : tg_gather
+    USE fft_parallel,             ONLY : tg_gather
     USE mp_global,                ONLY : ibnd_start, ibnd_end, inter_bgrp_comm
     USE mp,                       ONLY : mp_sum
     USE lr_exx_kernel,            ONLY : lr_exx_sum_int

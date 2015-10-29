@@ -179,6 +179,7 @@ davcio_drho2.o : ../../Modules/kind.o
 davcio_drho2.o : ../../Modules/mp.o
 davcio_drho2.o : ../../Modules/mp_global.o
 davcio_drho2.o : ../../Modules/mp_world.o
+davcio_drho2.o : ../../Modules/scatter_mod.o
 davcio_drho2.o : ../../PHonon/PH/phcom.o
 davcio_drho2.o : ../../PW/src/pwcom.o
 dpsi_corr.o : ../../Modules/kind.o
@@ -290,6 +291,7 @@ psymd0rho.o : ../../Modules/fft_base.o
 psymd0rho.o : ../../Modules/ions_base.o
 psymd0rho.o : ../../Modules/kind.o
 psymd0rho.o : ../../Modules/mp_global.o
+psymd0rho.o : ../../Modules/scatter_mod.o
 psymd0rho.o : ../../PHonon/PH/phcom.o
 psymd0rho.o : ../../PW/src/pwcom.o
 psymd0rho.o : ../../PW/src/symm_base.o

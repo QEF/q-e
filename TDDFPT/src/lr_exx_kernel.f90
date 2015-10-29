@@ -228,7 +228,7 @@ SUBROUTINE lr_exx_revc0_init(orbital, kpoint)
   USE mp_global,    ONLY : me_bgrp
   USE exx,          ONLY : rir, nkqs, index_sym, index_xk
   USE exx,          ONLY : exx_fft
-  USE fft_base,     ONLY : gather_grid, scatter_grid
+  USE scatter_mod,  ONLY : gather_grid, scatter_grid
   USE symm_base,    ONLY : sname
 
   IMPLICIT NONE
@@ -321,7 +321,7 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
   USE mp_global,              ONLY : inter_bgrp_comm, ibnd_start, ibnd_end,&
                                    & me_bgrp
   USE mp,                     ONLY : mp_sum
-  USE fft_base,               ONLY : gather_grid, scatter_grid
+  USE scatter_mod,            ONLY : gather_grid, scatter_grid
 
   IMPLICIT NONE
   !
@@ -576,7 +576,7 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
   USE cell_base,              ONLY : bg, at
   USE funct,                  ONLY : exx_is_active
   USE mp_global,              ONLY : me_bgrp
-  USE fft_base,               ONLY : gather_grid, scatter_grid
+  USE scatter_mod,            ONLY : gather_grid, scatter_grid
   USE lr_variables,           ONLY : ltammd
 
   IMPLICIT NONE

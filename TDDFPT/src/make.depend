@@ -39,6 +39,7 @@ lr_apply_liouvillian.o : ../../Modules/cell_base.o
 lr_apply_liouvillian.o : ../../Modules/control_flags.o
 lr_apply_liouvillian.o : ../../Modules/fft_base.o
 lr_apply_liouvillian.o : ../../Modules/fft_interfaces.o
+lr_apply_liouvillian.o : ../../Modules/fft_parallel.o
 lr_apply_liouvillian.o : ../../Modules/io_global.o
 lr_apply_liouvillian.o : ../../Modules/ions_base.o
 lr_apply_liouvillian.o : ../../Modules/kind.o
@@ -60,6 +61,7 @@ lr_apply_liouvillian_eels.o : ../../Modules/constants.o
 lr_apply_liouvillian_eels.o : ../../Modules/control_flags.o
 lr_apply_liouvillian_eels.o : ../../Modules/fft_base.o
 lr_apply_liouvillian_eels.o : ../../Modules/fft_interfaces.o
+lr_apply_liouvillian_eels.o : ../../Modules/fft_parallel.o
 lr_apply_liouvillian_eels.o : ../../Modules/funct.o
 lr_apply_liouvillian_eels.o : ../../Modules/io_files.o
 lr_apply_liouvillian_eels.o : ../../Modules/io_global.o
@@ -80,6 +82,7 @@ lr_calc_dens.o : ../../Modules/constants.o
 lr_calc_dens.o : ../../Modules/control_flags.o
 lr_calc_dens.o : ../../Modules/fft_base.o
 lr_calc_dens.o : ../../Modules/fft_interfaces.o
+lr_calc_dens.o : ../../Modules/fft_parallel.o
 lr_calc_dens.o : ../../Modules/io_files.o
 lr_calc_dens.o : ../../Modules/io_global.o
 lr_calc_dens.o : ../../Modules/ions_base.o
@@ -189,6 +192,7 @@ lr_dav_routines.o : ../../Modules/mp.o
 lr_dav_routines.o : ../../Modules/mp_global.o
 lr_dav_routines.o : ../../Modules/mp_world.o
 lr_dav_routines.o : ../../Modules/recvec.o
+lr_dav_routines.o : ../../Modules/scatter_mod.o
 lr_dav_routines.o : ../../Modules/uspp.o
 lr_dav_routines.o : ../../Modules/wavefunctions.o
 lr_dav_routines.o : ../../PW/src/g_psi_mod.o
@@ -296,6 +300,7 @@ lr_exx_kernel.o : ../../Modules/kind.o
 lr_exx_kernel.o : ../../Modules/mp.o
 lr_exx_kernel.o : ../../Modules/mp_global.o
 lr_exx_kernel.o : ../../Modules/recvec.o
+lr_exx_kernel.o : ../../Modules/scatter_mod.o
 lr_exx_kernel.o : ../../Modules/wavefunctions.o
 lr_exx_kernel.o : ../../PW/src/exx.o
 lr_exx_kernel.o : ../../PW/src/pwcom.o
@@ -378,6 +383,7 @@ lr_psym_eels.o : ../../Modules/fft_base.o
 lr_psym_eels.o : ../../Modules/kind.o
 lr_psym_eels.o : ../../Modules/mp_global.o
 lr_psym_eels.o : ../../Modules/noncol.o
+lr_psym_eels.o : ../../Modules/scatter_mod.o
 lr_psym_eels.o : ../../PHonon/PH/phcom.o
 lr_read_d0psi.o : ../../Modules/io_files.o
 lr_read_d0psi.o : ../../Modules/io_global.o

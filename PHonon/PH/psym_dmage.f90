@@ -15,7 +15,8 @@ SUBROUTINE psym_dmage (dvtosym)
   USE kinds,     ONLY : DP
   USE lsda_mod,   ONLY : nspin
   USE mp_bands,  ONLY : me_bgrp
-  USE fft_base,  ONLY : dfftp, cgather_sym
+  USE fft_base,  ONLY : dfftp
+  USE scatter_mod,  ONLY : cgather_sym
   !
   IMPLICIT NONE
   !
@@ -39,7 +40,7 @@ SUBROUTINE psym_dmage (dvtosym)
   ENDDO
   DO iper = 1, 3
      DO is = 1, nspin
-        CALL cgather_sym (dvtosym (:, is, iper), ddvtosym (:, is, iper) )
+        CALL cgather_sym (dfftp,dvtosym (:, is, iper), ddvtosym (:, is, iper) )
      ENDDO
   ENDDO
 

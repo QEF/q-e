@@ -14,7 +14,8 @@ subroutine psyme2 (dvtosym)
 
   use kinds, only : DP
   USE mp_bands, ONLY: me_bgrp
-  USE fft_base,  ONLY: dfftp, cgather_sym
+  USE fft_base,  ONLY: dfftp
+  USE scatter_mod,  ONLY: cgather_sym
   implicit none
 
   complex(DP) :: dvtosym (dfftp%nnr, 6)
@@ -35,7 +36,7 @@ subroutine psyme2 (dvtosym)
   enddo
   npp0 = npp0 * dfftp%nnp + 1
   do iper = 1, 6
-     call cgather_sym (dvtosym (:, iper), ddvtosym (:, iper) )
+     call cgather_sym (dfftp, dvtosym (:, iper), ddvtosym (:, iper) )
   enddo
 
   call syme2 (ddvtosym)

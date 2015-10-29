@@ -352,6 +352,7 @@ davcio_drho.o : ../../Modules/mp.o
 davcio_drho.o : ../../Modules/mp_images.o
 davcio_drho.o : ../../Modules/mp_pools.o
 davcio_drho.o : ../../Modules/noncol.o
+davcio_drho.o : ../../Modules/scatter_mod.o
 deallocate_part.o : elph.o
 deallocate_part.o : phcom.o
 deallocate_phq.o : ../../Modules/becmod.o
@@ -674,6 +675,7 @@ elph.o : ../../Modules/kind.o
 elphon.o : ../../Modules/cell_base.o
 elphon.o : ../../Modules/constants.o
 elphon.o : ../../Modules/fft_base.o
+elphon.o : ../../Modules/fft_parallel.o
 elphon.o : ../../Modules/io_files.o
 elphon.o : ../../Modules/io_global.o
 elphon.o : ../../Modules/ions_base.o
@@ -1138,23 +1140,28 @@ psym_dmag.o : ../../Modules/fft_base.o
 psym_dmag.o : ../../Modules/kind.o
 psym_dmag.o : ../../Modules/mp_bands.o
 psym_dmag.o : ../../Modules/noncol.o
+psym_dmag.o : ../../Modules/scatter_mod.o
 psym_dmag.o : phcom.o
 psym_dmage.o : ../../Modules/fft_base.o
 psym_dmage.o : ../../Modules/kind.o
 psym_dmage.o : ../../Modules/mp_bands.o
+psym_dmage.o : ../../Modules/scatter_mod.o
 psym_dmage.o : ../../PW/src/pwcom.o
 psymdvscf.o : ../../Modules/fft_base.o
 psymdvscf.o : ../../Modules/kind.o
 psymdvscf.o : ../../Modules/mp_bands.o
 psymdvscf.o : ../../Modules/noncol.o
+psymdvscf.o : ../../Modules/scatter_mod.o
 psymdvscf.o : phcom.o
 psyme.o : ../../Modules/fft_base.o
 psyme.o : ../../Modules/kind.o
 psyme.o : ../../Modules/mp_bands.o
 psyme.o : ../../Modules/noncol.o
+psyme.o : ../../Modules/scatter_mod.o
 psyme2.o : ../../Modules/fft_base.o
 psyme2.o : ../../Modules/kind.o
 psyme2.o : ../../Modules/mp_bands.o
+psyme2.o : ../../Modules/scatter_mod.o
 punch_plot_e.o : ../../Modules/cell_base.o
 punch_plot_e.o : ../../Modules/fft_base.o
 punch_plot_e.o : ../../Modules/io_global.o
@@ -1163,6 +1170,7 @@ punch_plot_e.o : ../../Modules/kind.o
 punch_plot_e.o : ../../Modules/noncol.o
 punch_plot_e.o : ../../Modules/recvec.o
 punch_plot_e.o : ../../Modules/run_info.o
+punch_plot_e.o : ../../Modules/scatter_mod.o
 punch_plot_e.o : ../../PW/src/pwcom.o
 punch_plot_e.o : phcom.o
 q2qstar.o : ../../Modules/cell_base.o
@@ -1273,6 +1281,7 @@ read_wfc_rspace_and_fwfft.o : ../../Modules/mp.o
 read_wfc_rspace_and_fwfft.o : ../../Modules/mp_pools.o
 read_wfc_rspace_and_fwfft.o : ../../Modules/noncol.o
 read_wfc_rspace_and_fwfft.o : ../../Modules/recvec.o
+read_wfc_rspace_and_fwfft.o : ../../Modules/scatter_mod.o
 read_wfc_rspace_and_fwfft.o : ../../PW/src/pwcom.o
 rigid.o : ../../Modules/constants.o
 rigid.o : ../../Modules/kind.o
@@ -1392,6 +1401,7 @@ smallgq.o : phcom.o
 solve_e.o : ../../Modules/cell_base.o
 solve_e.o : ../../Modules/check_stop.o
 solve_e.o : ../../Modules/fft_base.o
+solve_e.o : ../../Modules/fft_parallel.o
 solve_e.o : ../../Modules/io_files.o
 solve_e.o : ../../Modules/io_global.o
 solve_e.o : ../../Modules/ions_base.o
@@ -1460,6 +1470,7 @@ solve_linter.o : ../../Modules/cell_base.o
 solve_linter.o : ../../Modules/check_stop.o
 solve_linter.o : ../../Modules/constants.o
 solve_linter.o : ../../Modules/fft_base.o
+solve_linter.o : ../../Modules/fft_parallel.o
 solve_linter.o : ../../Modules/io_files.o
 solve_linter.o : ../../Modules/io_global.o
 solve_linter.o : ../../Modules/ions_base.o

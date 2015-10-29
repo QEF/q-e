@@ -523,7 +523,8 @@ SUBROUTINE rotate_all_psi(psic,evcr,s,ftau,gk)
   USE constants, ONLY : tpi
   USE gvect,     ONLY : ngm, nl
   USE wvfct,     ONLY : nbnd, npwx, npw, igk
-  USE fft_base,  ONLY : cgather_sym_many, cscatter_sym_many, dfftp
+  USE fft_base,  ONLY : dfftp
+  USE scatter_mod,  ONLY : cgather_sym_many, cscatter_sym_many
   USE fft_interfaces, ONLY : fwfft, invfft
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
@@ -577,7 +578,7 @@ SUBROUTINE rotate_all_psi(psic,evcr,s,ftau,gk)
   ALLOCATE (psic_collect(nr1x*nr2x*nr3x, my_nbnd_proc))
   ALLOCATE (psir_collect(nr1x*nr2x*nr3x))
   !
-  CALL cgather_sym_many( psic, psic_collect, nbnd, nbnd_proc, start_band_proc)
+  CALL cgather_sym_many( dfftp, psic, psic_collect, nbnd, nbnd_proc, start_band_proc)
   !
   DO ibnd = 1, my_nbnd_proc
      psir_collect=(0.d0,0.d0)
@@ -612,7 +613,7 @@ SUBROUTINE rotate_all_psi(psic,evcr,s,ftau,gk)
   ENDDO
   !
   DO ibnd=1, nbnd
-     CALL cscatter_sym_many( psic_collect, psir, ibnd, nbnd, &
+     CALL cscatter_sym_many( dfftp, psic_collect, psir, ibnd, nbnd, &
                                                  nbnd_proc, start_band_proc )
      !
      CALL fwfft ('Dense', psir, dfftp)
@@ -872,7 +873,8 @@ SUBROUTINE rotate_all_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk)
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : tpi
-  USE fft_base,  ONLY : cgather_sym_many, cscatter_sym_many, dfftp
+  USE fft_base,  ONLY : dfftp
+  USE scatter_mod,  ONLY : cgather_sym_many, cscatter_sym_many
   USE fft_interfaces, ONLY : fwfft, invfft
   USE gvect,     ONLY : ngm, nl
   USE wvfct,     ONLY : nbnd, npwx, npw, igk
@@ -942,7 +944,7 @@ SUBROUTINE rotate_all_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk)
 #if defined  (__MPI)
      !
      !
-     CALL cgather_sym_many( psic, psic_collect, nbnd, nbnd_proc, &
+     CALL cgather_sym_many( dfftp, psic, psic_collect, nbnd, nbnd_proc, &
                                                        start_band_proc  )
      !
      psir_collect=(0.d0,0.d0)
@@ -978,7 +980,7 @@ SUBROUTINE rotate_all_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk)
      ENDDO
      DO ibnd=1,nbnd
         !
-        CALL cscatter_sym_many(psic_collect, psir, ibnd, nbnd, nbnd_proc, &
+        CALL cscatter_sym_many(dfftp, psic_collect, psir, ibnd, nbnd, nbnd_proc, &
                                start_band_proc)
         CALL fwfft ('Dense', psir, dfftp)
         !

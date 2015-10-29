@@ -331,7 +331,8 @@ CONTAINS
                                     me_bgrp, me_pool
     USE mp,                  ONLY : mp_sum
     USE realus,              ONLY : tg_psic
-    USE fft_base,            ONLY : dffts, tg_gather
+    USE fft_base,            ONLY : dffts
+    USE fft_parallel,        ONLY : tg_gather
     USE wvfct,               ONLY : igk
 
     IMPLICIT NONE

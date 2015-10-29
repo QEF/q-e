@@ -66,6 +66,7 @@ chargedensity.o : ../../Modules/electrons_base.o
 chargedensity.o : ../../Modules/fft_base.o
 chargedensity.o : ../../Modules/fft_interfaces.o
 chargedensity.o : ../../Modules/fft_parallel.o
+chargedensity.o : ../../Modules/fft_scalar.o
 chargedensity.o : ../../Modules/funct.o
 chargedensity.o : ../../Modules/input_parameters.o
 chargedensity.o : ../../Modules/io_files.o
@@ -1014,6 +1015,7 @@ restart_sub.o : printout_base.o
 runcp.o : ../../Modules/control_flags.o
 runcp.o : ../../Modules/electrons_base.o
 runcp.o : ../../Modules/fft_base.o
+runcp.o : ../../Modules/fft_parallel.o
 runcp.o : ../../Modules/kind.o
 runcp.o : ../../Modules/mp.o
 runcp.o : ../../Modules/mp_global.o

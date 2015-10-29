@@ -32,7 +32,8 @@
 !=----------------------------------------------------------------------=
 
       SUBROUTINE pstickset( gamma_only, bg, gcut, gkcut, gcuts, &
-          dfftp, dffts, ngw, ngm, ngs, mype, root, nproc, comm, nogrp_ )
+          dfftp, dffts, ngw, ngm, ngs, mype, root, nproc, comm, nogrp_ , &
+          dfft3d )
 
           LOGICAL, INTENT(in) :: gamma_only
 ! ...     bg(:,1), bg(:,2), bg(:,3) reciprocal space base vectors.
@@ -43,6 +44,8 @@
 
           INTEGER, INTENT(IN) :: mype, root, nproc, comm
           INTEGER, INTENT(IN) :: nogrp_
+
+          TYPE(fft_dlay_descriptor), OPTIONAL, INTENT(inout) :: dfft3d
 
 
           LOGICAL :: tk
@@ -196,6 +199,14 @@
             ub, lb, idx, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
           CALL fft_dlay_set( dffts, tk, nsts, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, &
             ub, lb, idx, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
+
+          IF( PRESENT( dfft3d ) ) THEN
+             DEALLOCATE( stw )
+             ALLOCATE( stw( lb(2) : ub(2), lb(3) : ub(3) ) )
+             CALL sticks_maps_scalar( (.not.tk), ub, lb, bg(:,1),bg(:,2),bg(:,3), gcut, gkcut, gcuts, stw, ngm_ , ngs_ )
+             CALL fft_dlay_allocate( dfft3d, mype, root, nproc, comm, 1, max(dffts%nr1x, dffts%nr3x), dffts%nr2x )
+             CALL fft_dlay_scalar( dfft3d, ub, lb, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, stw )
+          END IF
 
 #else
 
@@ -592,22 +603,36 @@ SUBROUTINE task_groups_init_first( dffts )
        pgroup( i ) = i - 1
     ENDDO
     !
+#ifdef __TASK_GROUP_WAVE_ORDER
+    n1 = ( dffts%mype / dffts%npgrp ) * dffts%npgrp 
+    ipos = dffts%mype - n1
+#else
+    n1 = ( dffts%mype / dffts%nogrp ) * dffts%nogrp 
+    ipos = dffts%mype - n1
+#endif
+    !
     !LIST OF PROCESSORS IN MY ORBITAL GROUP 
     !     (processors dealing with my same pw's of different orbitals)
     !
     !  processors in these group have contiguous indexes
     !
-    n1 = ( dffts%mype / dffts%nogrp ) * dffts%nogrp 
-    ipos = dffts%mype - n1
     DO i = 1, dffts%nogrp
+#ifdef __TASK_GROUP_WAVE_ORDER
+       dffts%nolist( i ) = pgroup( ipos + ( i - 1 ) * dffts%npgrp + 1 )
+#else
        dffts%nolist( i ) = pgroup( n1 + i )
+#endif
     ENDDO
     !
     !LIST OF PROCESSORS IN MY PLANE WAVE GROUP
     !     (processors dealing with different pw's of my same orbital)
     !
     DO i = 1, dffts%npgrp
+#ifdef __TASK_GROUP_WAVE_ORDER
+       dffts%nplist( i ) = pgroup( n1 + i )
+#else
        dffts%nplist( i ) = pgroup( ipos + ( i - 1 ) * dffts%nogrp + 1 )
+#endif
     ENDDO
     !
     !SET UP THE GROUPS
@@ -616,8 +641,16 @@ SUBROUTINE task_groups_init_first( dffts )
     !
 #if defined __MPI
     ! processes with the same color are in the same new communicator
+
+#ifdef __TASK_GROUP_WAVE_ORDER
+    color = MOD( dffts%mype , dffts%npgrp )
+    key   = dffts%mype / dffts%npgrp
+#else
     color = dffts%mype / dffts%nogrp
     key   = MOD( dffts%mype , dffts%nogrp )
+#endif
+
+
     CALL MPI_COMM_SPLIT( dffts%comm, color, key, dffts%ogrp_comm, ierr )
     if( ierr /= 0 ) &
          CALL errore( ' task_groups_init_first ', ' creating ogrp_comm ', ABS(ierr) )
@@ -635,8 +668,15 @@ SUBROUTINE task_groups_init_first( dffts )
     !
 #if defined __MPI
     ! processes with the same color are in the same new communicator
+
+#ifdef __TASK_GROUP_WAVE_ORDER
+    color = dffts%mype / dffts%npgrp
+    key   = MOD( dffts%mype , dffts%npgrp )
+#else
     color = MOD( dffts%mype , dffts%nogrp )
     key   = dffts%mype / dffts%nogrp
+#endif
+
     CALL MPI_COMM_SPLIT( dffts%comm, color, key, dffts%pgrp_comm, ierr )
     if( ierr /= 0 ) &
          CALL errore( ' task_groups_init_first ', ' creating pgrp_comm ', ABS(ierr) )

@@ -78,9 +78,9 @@ fd_gradient.o : fft_base.o
 fd_gradient.o : kind.o
 fd_gradient.o : mp.o
 fd_gradient.o : mp_bands.o
+fd_gradient.o : scatter_mod.o
 fft_base.o : fft_types.o
 fft_base.o : kind.o
-fft_base.o : mp.o
 fft_base.o : parallel_include.o
 fft_custom.o : cell_base.o
 fft_custom.o : constants.o
@@ -95,11 +95,11 @@ fft_interfaces.o : fft_parallel.o
 fft_interfaces.o : fft_scalar.o
 fft_interfaces.o : fft_types.o
 fft_interfaces.o : kind.o
-fft_parallel.o : fft_base.o
 fft_parallel.o : fft_scalar.o
 fft_parallel.o : fft_types.o
 fft_parallel.o : kind.o
 fft_parallel.o : parallel_include.o
+fft_parallel.o : scatter_mod.o
 fft_scalar.o : kind.o
 fft_types.o : io_global.o
 funct.o : io_global.o
@@ -317,6 +317,10 @@ recvec_subs.o : fft_base.o
 recvec_subs.o : kind.o
 recvec_subs.o : mp.o
 recvec_subs.o : recvec.o
+scatter_mod.o : fft_types.o
+scatter_mod.o : kind.o
+scatter_mod.o : mp.o
+scatter_mod.o : parallel_include.o
 set_signal.o : io_global.o
 set_signal.o : mp.o
 set_signal.o : mp_world.o

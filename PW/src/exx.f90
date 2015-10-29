@@ -644,7 +644,7 @@ MODULE exx
     USE mp,                   ONLY : mp_sum
     USE funct,                ONLY : get_exx_fraction, start_exx,exx_is_active,&
                                      get_screening_parameter, get_gau_parameter
-    USE fft_base,             ONLY : gather_grid, scatter_grid
+    USE scatter_mod,          ONLY : gather_grid, scatter_grid
     USE fft_interfaces,       ONLY : invfft
     USE becmod,               ONLY : allocate_bec_type, bec_type
     USE uspp,                 ONLY : nkb, okvan

@@ -18,7 +18,8 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, sevc1_new, interaction )
   !
   USE ions_base,            ONLY : ityp, nat, ntyp=>nsp
   USE cell_base,            ONLY : tpiba2
-  USE fft_base,             ONLY : dfftp, dffts, tg_cgather
+  USE fft_base,             ONLY : dfftp, dffts
+  USE fft_parallel,         ONLY : tg_cgather
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvecs,                ONLY : nls, nlsm, ngms, doublegrid
   USE gvect,                ONLY : nl, nlm, ngm, g, gg

@@ -29,7 +29,8 @@
       USE mp_global,           ONLY : me_bgrp, &
                                       my_bgrp_id, nbgrp, inter_bgrp_comm
       USE mp,                  ONLY : mp_sum
-      USE fft_base,            ONLY : dffts, tg_gather
+      USE fft_base,            ONLY : dffts
+      USE fft_parallel,        ONLY : tg_gather
       use wave_base,           only : wave_steepest, wave_verlet
       use control_flags,       only : lwf, tsde
       use uspp,                only : deeq, vkb

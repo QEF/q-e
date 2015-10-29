@@ -22,7 +22,8 @@ SUBROUTINE punch_plot_e()
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
   USE io_global,  ONLY : stdout, ionode
   USE run_info, ONLY : title
-  USE fft_base,   ONLY : dfftp, gather_grid
+  USE fft_base,   ONLY : dfftp
+  USE scatter_mod,   ONLY : gather_grid
   USE gvect,      ONLY : gcutm
   USE gvecs,    ONLY : dual
   USE cell_base,  ONLY : bg, ibrav, celldm

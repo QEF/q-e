@@ -152,11 +152,12 @@ CONTAINS
             !
             IF ( gamma_only .and. i == 0 .and. j == 0 .and. k < 0) CYCLE kloop
             t(:) = i * bg (:,1) + j * bg (:,2) + k * bg (:,3)
-            tt = sum(t(:)**2)
+            !tt = sum(t(:)**2)
+            tt = t(1)**2+t(2)**2+t(3)**2
             IF (tt <= gcutm) THEN
                ngm = ngm + 1
                IF (tt <= gcutms) ngms = ngms + 1
-               IF (ngm > ngm_max) CALL errore ('ggen', 'too many g-vectors', ngm)
+               IF (ngm > ngm_max) CALL errore ('ggen 1', 'too many g-vectors', ngm)
                mill_unsorted( :, ngm ) = (/ i,j,k /)
                IF ( tt > eps8 ) THEN
                   g2sort_g(ngm) = tt
@@ -233,7 +234,7 @@ CONTAINS
       gg (ngm) = sum(g (1:3, ngm)**2)
 
       IF (gg (ngm) <= gcutms) ngms = ngms + 1
-      IF (ngm > ngm_save) CALL errore ('ggen', 'too many g-vectors', ngm)
+      IF (ngm > ngm_save) CALL errore ('ggen 2', 'too many g-vectors', ngm)
    ENDDO ngloop
 
    IF (ngm /= ngm_save) &
