@@ -334,15 +334,13 @@
 #elif defined __DFTI
 
      IF (isign < 0) THEN
-        dfti_status = DftiComputeForward(hand(ip)%desc, c )
+        dfti_status = DftiComputeForward(hand(ip)%desc, c, cout )
         IF(dfti_status /= 0) &
            CALL errore(' cft_1z ',' stopped in DftiComputeForward ', dfti_status )
-        cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
      ELSE IF (isign > 0) THEN
-        dfti_status = DftiComputeBackward(hand(ip)%desc, c )
+        dfti_status = DftiComputeBackward(hand(ip)%desc, c, cout )
         IF(dfti_status /= 0) &
            CALL errore(' cft_1z ',' stopped in DftiComputeBackward ', dfti_status )
-        cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
      END IF
 
 #elif defined __SX6
@@ -416,9 +414,13 @@
      IF(dfti_status /= 0) &
        CALL errore(' cft_1z ',' stopped in DFTI_INPUT_DISTANCE ', dfti_status )
 
-     dfti_status = DftiSetValue(hand( icurrent )%desc, DFTI_PLACEMENT, DFTI_INPLACE)
+     dfti_status = DftiSetValue(hand( icurrent )%desc, DFTI_PLACEMENT, DFTI_NOT_INPLACE)
      IF(dfti_status /= 0) &
        CALL errore(' cft_1z ',' stopped in DFTI_PLACEMENT ', dfti_status )
+
+     dfti_status = DftiSetValue(hand( icurrent )%desc,DFTI_OUTPUT_DISTANCE, ldz )
+     IF(dfti_status /= 0) &
+       CALL errore(' cft_1z ',' stopped in DFTI_OUTPUT_DISTANCE ', dfti_status )
 
      tscale = 1.0_DP/nz
      dfti_status = DftiSetValue( hand( icurrent )%desc, DFTI_FORWARD_SCALE, tscale);
