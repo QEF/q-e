@@ -90,7 +90,7 @@ SUBROUTINE lr_readin
   !
   NAMELIST / lr_input /   restart, restart_step ,lr_verbosity, prefix, outdir, &
                         & test_case_no, wfcdir, disk_io, max_seconds
-  NAMELIST / lr_control / itermax, ipol, ltammd, real_space, real_space_debug,         &
+  NAMELIST / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, lrpa,   &
                         & charge_response, tqr, auto_rs, no_hxc, n_ipol, project,      &
                         & scissor, ecutfock, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
                         & q1, q2, q3, lr_periodic, approximation !eps  

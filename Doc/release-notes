@@ -10,6 +10,8 @@ Fixed in svn version:
      FFT arrays is larger than the true ones and arrays are paded with zeros
    * pw.x: "task-group" parallelization wasn't working properly when the number
      of bands was smaller than the number of task groups. Also affects v.5.2.1
+   * TDDFPT: lrpa (Random Phase Approximation) keaword was not present in 
+     the namelist for turbo_lanczos.x code. 
 
 Incompatible changes in svn version:
 
