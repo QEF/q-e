@@ -1,3 +1,7 @@
+New in svn version:
+
+   * projwfc.x: PDOS with PAW projectors and all-electron basis functions
+
 Fixed in svn version:
 
    * projwfc.x: When pw.x was run on a different number of processors and
@@ -9,8 +13,8 @@ Fixed in svn version:
    * NaN's in stress with nonlocal functionals when the physical dimensions of
      FFT arrays is larger than the true ones and arrays are paded with zeros
    * pw.x: "task-group" parallelization wasn't working properly when the number
-     of bands was smaller than the number of task groups. Also affects v.5.2.1
-   * TDDFPT: lrpa (Random Phase Approximation) keaword was not present in 
+     of bands was smaller than the number of task groups. Affects v.5.2.1.
+   * TDDFPT: lrpa (Random Phase Approximation) keyword was not present in 
      the namelist for turbo_lanczos.x code. 
 
 Incompatible changes in svn version:
@@ -20,6 +24,10 @@ Incompatible changes in svn version:
      Some old compilers may no longer work and must be considered unsupported.
    * Old Fermi Surface plotting tools kvecs_FS.f, bands_FS.f90, in PW/tools/,
      replaced by new code PP/src/fermisurface.f90
+   * Reshuffling of FFT-related modules: 
+     "gather"  routines moved from module fft_base to fft_parallel
+     "scatter" routines moved from module fft_base to scatter_mod
+
 
 New in 5.2.1 version:
 

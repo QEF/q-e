@@ -73,11 +73,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 	var pawproj -type LOGICAL {
 	    default { .false. }
 	    info {
-                if true, use projectors instead of atomic wavefunctions to 
-                calculate weight factors for the partial densities of states.
-                Following Bloechl, PRB 50, 17953 (1994), Eq. (4 & 6), the 
-                weight factors thus approximate the real charge
-                within the augmentation sphere of each atom.
+                if true, use PAW projectors and all-electron PAW basis
+                functions to calculate weight factors for the partial 
+                densities of states. Following Bloechl, PRB 50, 17953 (1994), 
+                Eq. (4 & 6), the weight factors thus approximate the real
+                charge within the augmentation sphere of each atom.
                 Only for PAW, not implemented in the noncolinear case
 	    }
 	}
