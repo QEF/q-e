@@ -25,8 +25,7 @@ Incompatible changes in svn version:
    * Old Fermi Surface plotting tools kvecs_FS.f, bands_FS.f90, in PW/tools/,
      replaced by new code PP/src/fermisurface.f90
    * Reshuffling of FFT-related modules: 
-     "gather"  routines moved from module fft_base to fft_parallel
-     "scatter" routines moved from module fft_base to scatter_mod
+     "gather_*"  and "scatter_*" routines moved from module fft_base to scatter_mod
 
 
 New in 5.2.1 version:
