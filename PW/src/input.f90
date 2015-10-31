@@ -1550,25 +1550,32 @@ SUBROUTINE set_cutoff ( ecutwfc_in, ecutrho_in, ecutwfc_pp, ecutrho_pp )
   !
   IMPLICIT NONE
   REAL(dp), INTENT(INOUT) :: ecutwfc_in, ecutrho_in
-  REAL(dp), INTENT(IN   ) :: ecutwfc_pp, ecutrho_pp
+  REAL(dp), INTENT(IN)    :: ecutwfc_pp, ecutrho_pp
   !
-  IF( ecutwfc_in <= 0.0_dp ) ecutwfc_in = ecutwfc_pp
-  IF( ecutwfc_in <= 0.0_DP ) THEN
-     CALL errore( 'set_cutoff' ,' ecutwfc not set ',1)
+  IF( ecutwfc_in <= 0.0_dp ) THEN
+     IF( ecutwfc_pp <= 0.0_DP ) THEN
+        CALL errore( 'set_cutoff' ,' ecutwfc not set ',1)
+     ELSE
+        ecutwfc = ecutwfc_pp
+     END IF
   ELSE
      ecutwfc = ecutwfc_in
   END IF
-  IF( ecutrho_in <= 0.0_dp ) ecutrho_in = ecutrho_pp
   IF( ecutrho_in <= 0.0_dp ) THEN
-     dual = 4.D0
-     ecutrho = dual*ecutwfc
-     ecutrho_in = ecutrho
+     IF( ecutwfc_in > 0.0_dp ) THEN
+        ecutrho = 4.0_dp*ecutwfc_in
+     ELSE IF( ecutrho_pp > 0.0_dp ) THEN
+        ecutrho = ecutrho_pp
+     ELSE IF( ecutwfc_pp > 0.0_dp ) THEN
+        ecutrho = 4.0_dp*ecutwfc_pp
+     END IF
   ELSE
      ecutrho = ecutrho_in
-     dual = ecutrho / ecutwfc
-     IF ( dual <= 1.D0 ) &
-        CALL errore( 'set_cutoff', 'invalid dual?', 1 )
   ENDIF
+  ecutwfc_in = ecutwfc
+  ecutrho_in = ecutrho
+  dual = ecutrho / ecutwfc
+  IF ( dual <= 1.0_dp ) CALL errore( 'set_cutoff', 'ecutrho <= ecutwfc?!?', 1 )
   !
 END SUBROUTINE set_cutoff
 !
