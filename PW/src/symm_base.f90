@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2010-2011 Quantum ESPRESSO group
+! Copyright (C) 2010-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -427,7 +427,7 @@ SUBROUTINE sgam_at ( nat, tau, ityp, nr1, nr2, nr3, sym )
   real(DP) , ALLOCATABLE :: xau (:,:), rau (:,:)
   ! atomic coordinates in crystal axis
   LOGICAL :: fractional_translations
-  real(DP) :: ft_(3), ft1, ft2, ft3
+  real(DP) :: ft_(3), ftaux(3)
   !
   ALLOCATE(xau(3,nat))
   ALLOCATE(rau(3,nat))
@@ -449,26 +449,25 @@ SUBROUTINE sgam_at ( nat, tau, ityp, nr1, nr2, nr3, sym )
   irot = 1
   !
   fractional_translations = .not. nofrac
-  DO na = 2, nat
-     IF ( fractional_translations ) THEN
+  IF ( fractional_translations ) THEN
+     DO na = 2, nat
         IF (ityp (nb) == ityp (na) ) THEN
+           !
            ft_(:) = xau(:,na) - xau(:,nb) - nint( xau(:,na) - xau(:,nb) )
-           !
            sym(irot) = checksym ( irot, nat, ityp, xau, xau, ft_ )
-           !
-           IF ( sym (irot) .and. &
-               (abs (ft_(1) **2 + ft_(2) **2 + ft_(3) **2) < 1.d-8) ) &
-               CALL errore ('sgam_at', 'overlapping atoms', na)
            IF (sym (irot) ) THEN
               fractional_translations = .false.
               WRITE( stdout, '(5x,"Found symmetry operation: I + (",&
              &   3f8.4, ")",/,5x,"This is a supercell,", &
              &   " fractional translations are disabled")') ft_
+              GOTO 10
            ENDIF
+           !
         ENDIF
-     ENDIF
-  ENDDO
+     ENDDO
+  ENDIF
   !
+10 CONTINUE
   nsym_ns = 0
   DO irot = 1, nrot
      !
@@ -484,7 +483,7 @@ SUBROUTINE sgam_at ( nat, tau, ityp, nr1, nr2, nr3, sym )
         WRITE( stdout, '(5x,"warning: symmetry operation # ",i2, &
              &         " not compatible with FFT grid. ")') irot
         WRITE( stdout, '(3i4)') ( (s (i, j, irot) , j = 1, 3) , i = 1, 3)
-        GOTO 100
+        GOTO 20
      ENDIF
 
      DO na = 1, nat
@@ -507,22 +506,35 @@ SUBROUTINE sgam_at ( nat, tau, ityp, nr1, nr2, nr3, sym )
         DO na = 1, nat
            IF (ityp (nb) == ityp (na) ) THEN
               !
-              !      second attempt: check all possible fractional translations
+              !    second attempt: check all possible fractional translations
               !
               ft_ (:) = rau(:,na) - xau(:,nb) - nint( rau(:,na) - xau(:,nb) )
+              !
+              !    ft_ is in crystal axis and is a valid fractional translation
+              !    only if ft_(i)=0 or ft_(i)=1/n, with n=2,3,4,6
+              !    The check below is less strict: n must be integer
+              !
+              DO i=1,3
+                 IF ( ABS (ft_(i)) > eps2 ) THEN
+                    ftaux(i) = ABS (1.0_dp/ft_(i) - NINT(1.0_dp/ft_(i)) ) 
+                 ELSE
+                    ftaux(i) = 0.0_dp
+                 END IF
+              END DO
+              IF ( ANY ( ftaux(:) > eps2 ) ) CYCLE
               !
               sym(irot) = checksym ( irot, nat, ityp, xau, rau, ft_ )
               !
               IF (sym (irot) ) THEN
                  nsym_ns = nsym_ns + 1
                  ft (:,irot) = ft_(:)
-                 GOTO 100
+                 GOTO 20
               ENDIF
            ENDIF
         ENDDO
 
      ENDIF
-100  CONTINUE
+20   CONTINUE
   ENDDO
   !
   ! convert ft to FFT coordinates, check if compatible with FFT grid
@@ -531,15 +543,15 @@ SUBROUTINE sgam_at ( nat, tau, ityp, nr1, nr2, nr3, sym )
   nsym_na = 0
   DO irot =1, nrot
      IF ( sym(irot) .and. .not. allfrac ) THEN
-        ft1 = ft(1,irot) * nr1
-        ft2 = ft(2,irot) * nr2
-        ft3 = ft(3,irot) * nr3
+        ftaux(1) = ft(1,irot) * nr1
+        ftaux(2) = ft(2,irot) * nr2
+        ftaux(3) = ft(3,irot) * nr3
         ! check if the fractional translations are commensurate
         ! with the FFT grid, discard sym.op. if not
         ! (needed because ph.x symmetrizes in real space)
-        IF (abs (ft1 - nint (ft1) ) / nr1 > eps2 .or. &
-            abs (ft2 - nint (ft2) ) / nr2 > eps2 .or. &
-            abs (ft3 - nint (ft3) ) / nr3 > eps2 ) THEN
+        IF (abs (ftaux(1) - nint (ftaux(1)) ) / nr1 > eps2 .or. &
+            abs (ftaux(2) - nint (ftaux(2)) ) / nr2 > eps2 .or. &
+            abs (ftaux(3) - nint (ftaux(3)) ) / nr3 > eps2 ) THEN
             !     WRITE( stdout, '(5x,"warning: symmetry operation", &
             !          &     " # ",i2," not allowed.   fractional ", &
             !          &     "translation:"/5x,3f11.7,"  in crystal", &
@@ -548,9 +560,7 @@ SUBROUTINE sgam_at ( nat, tau, ityp, nr1, nr2, nr3, sym )
             nsym_na = nsym_na + 1
             nsym_ns = nsym_ns - 1
          ENDIF
-         ftau (1, irot) = nint (ft1)
-         ftau (2, irot) = nint (ft2)
-         ftau (3, irot) = nint (ft3)
+         ftau (:, irot) = nint (ftaux(:))
       ENDIF
   ENDDO
   !
@@ -812,21 +822,23 @@ LOGICAL FUNCTION checksym ( irot, nat, ityp, xau, rau, ft_ )
   !
   DO na = 1, nat
      DO nb = 1, nat
-        checksym = ( ityp (na) == ityp (nb) .and. &
-                     eqvect (rau (1, na), xau (1, nb), ft_ , accep) )
-        IF ( checksym ) THEN
-           !
-           ! the rotated atom does coincide with one of the like atoms
-           ! keep track of which atom the rotated atom coincides with
-           !
-           irt (irot, na) = nb
-           GOTO 10
+        IF( ityp (nb) == ityp (na) ) THEN
+           checksym =  eqvect (rau (1, na), xau (1, nb), ft_ , accep) 
+           IF ( checksym ) THEN
+              !
+              ! the rotated atom does coincide with one of the like atoms
+              ! keep track of which atom the rotated atom coincides with
+              !
+              irt (irot, na) = nb
+              GOTO 10
+           ENDIF
         ENDIF
      ENDDO
      !
      ! the rotated atom does not coincide with any of the like atoms
      ! s(ir) + ft is not a symmetry operation
      !
+     checksym=.FALSE.
      RETURN
 10   CONTINUE
   ENDDO
@@ -1033,7 +1045,7 @@ SUBROUTINE sgam_at_ifc ( nat, tau, ityp, sym )
   real(DP) , ALLOCATABLE :: xau (:,:), rau (:,:)
   ! atomic coordinates in crystal axis
   LOGICAL :: fractional_translations
-  real(DP) :: ft_(3), ft1, ft2, ft3
+  real(DP) :: ft_(3)
   !
   ALLOCATE(xau(3,nat))
   ALLOCATE(rau(3,nat))
