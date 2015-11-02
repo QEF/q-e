@@ -61,8 +61,8 @@ MODULE esm
   INTEGER              :: ngm_2d = 0
   real(DP), external   :: qe_erf, qe_erfc
   !
-  interface
-     subroutine esm_hartree_interface( rhog, ehart, aux )
+  CONTAINS
+     subroutine esm_hartree( rhog, ehart, aux )
         USE kinds,    ONLY : DP
         USE gvect,    ONLY : ngm
         USE lsda_mod, ONLY : nspin
@@ -71,64 +71,145 @@ MODULE esm
         real(DP)    :: ehart             !  Hartree energy
         complex(DP) :: rhog(ngm,nspin)   !  n(G)
         complex(DP) :: aux(dfftp%nnr)    !  v_h(G)
-     end subroutine esm_hartree_interface
 
-     SUBROUTINE esm_ewaldr_interface( alpha_g, ewr )
+        if( esm_bc == 'pbc' ) then
+           call esm_hartree_pbc ( rhog, ehart, aux )
+        else if ( esm_bc == 'bc1' ) then
+           call esm_hartree_bc1 ( rhog, ehart, aux )
+        else if ( esm_bc == 'bc2' ) then
+           call esm_hartree_bc2 ( rhog, ehart, aux )
+        else if ( esm_bc == 'bc3' ) then
+           call esm_hartree_bc3 ( rhog, ehart, aux )
+        else if ( esm_bc == 'bc4' ) then
+           call esm_hartree_bc4 ( rhog, ehart, aux )
+        end if
+
+ 
+     end subroutine esm_hartree
+
+     SUBROUTINE esm_ewaldr( alpha_g, ewr )
         USE kinds,    ONLY : DP
         implicit none
         real(DP), intent(in)  :: alpha_g
         real(DP), intent(out) :: ewr
-     END SUBROUTINE esm_ewaldr_interface
 
-     SUBROUTINE esm_ewaldg_interface( alpha_g, ewg )
+        if( esm_bc == 'pbc' ) then
+           call esm_ewaldr_pbc ( alpha_g, ewr )
+        else if ( esm_bc == 'bc1' ) then
+           call esm_ewaldr_pbc ( alpha_g, ewr )
+        else if ( esm_bc == 'bc2' ) then
+           call esm_ewaldr_pbc ( alpha_g, ewr )
+        else if ( esm_bc == 'bc3' ) then
+           call esm_ewaldr_pbc ( alpha_g, ewr )
+        else if ( esm_bc == 'bc4' ) then
+           call esm_ewaldr_bc4 ( alpha_g, ewr )
+        end if
+
+     END SUBROUTINE esm_ewaldr
+
+     SUBROUTINE esm_ewaldg( alpha_g, ewg )
         USE kinds,    ONLY : DP
         implicit none
         real(DP), intent(in)  :: alpha_g
         real(DP), intent(out) :: ewg
-     END SUBROUTINE esm_ewaldg_interface
 
-     SUBROUTINE esm_local_interface( aux )
+        if( esm_bc == 'pbc' ) then
+           call esm_ewaldg_pbc ( alpha_g, ewg )
+        else if ( esm_bc == 'bc1' ) then
+           call esm_ewaldg_bc1 ( alpha_g, ewg )
+        else if ( esm_bc == 'bc2' ) then
+           call esm_ewaldg_bc2 ( alpha_g, ewg )
+        else if ( esm_bc == 'bc3' ) then
+           call esm_ewaldg_bc3 ( alpha_g, ewg )
+        else if ( esm_bc == 'bc4' ) then
+           call esm_ewaldg_bc4 ( alpha_g, ewg )
+        end if
+
+     END SUBROUTINE esm_ewaldg
+
+     SUBROUTINE esm_local( aux )
         USE kinds,    ONLY : DP
         USE fft_base, ONLY : dfftp
         implicit none
         complex(DP), intent(inout) :: aux( dfftp%nnr )
-     END SUBROUTINE esm_local_interface
+
+        if( esm_bc == 'pbc' ) then
+           call esm_local_pbc ( aux )
+        else if ( esm_bc == 'bc1' ) then
+           call esm_local_bc1 ( aux )
+        else if ( esm_bc == 'bc2' ) then
+           call esm_local_bc2 ( aux )
+        else if ( esm_bc == 'bc3' ) then
+           call esm_local_bc3 ( aux )
+        else if ( esm_bc == 'bc4' ) then
+           call esm_local_bc4 ( aux )
+        end if
+
+     END SUBROUTINE esm_local
      
-     SUBROUTINE esm_force_ewr_interface( alpha_g, forceion ) 
+     SUBROUTINE esm_force_ewr( alpha_g, forceion ) 
         USE kinds,     ONLY : DP
         USE ions_base, ONLY : nat
         implicit none
         real(DP),intent(in)    :: alpha_g
         real(DP),intent(inout) :: forceion(3,nat) 
-     END SUBROUTINE esm_force_ewr_interface
 
-     SUBROUTINE esm_force_ewg_interface( alpha_g, forceion )
+        if( esm_bc == 'pbc' ) then
+           call esm_force_ewr_pbc ( alpha_g, forceion )
+        else if ( esm_bc == 'bc1' ) then
+           call esm_force_ewr_pbc ( alpha_g, forceion )
+        else if ( esm_bc == 'bc2' ) then
+           call esm_force_ewr_pbc ( alpha_g, forceion )
+        else if ( esm_bc == 'bc3' ) then
+           call esm_force_ewr_pbc ( alpha_g, forceion )
+        else if ( esm_bc == 'bc4' ) then
+           call esm_force_ewr_bc4 ( alpha_g, forceion )
+        end if
+
+     END SUBROUTINE esm_force_ewr
+
+     SUBROUTINE esm_force_ewg( alpha_g, forceion )
         USE kinds,     ONLY : DP
         USE ions_base, ONLY : nat
         implicit none
         real(DP), intent(in)    :: alpha_g
         real(DP), intent(out)   :: forceion(3,nat) 
-     END SUBROUTINE esm_force_ewg_interface
 
-     SUBROUTINE esm_force_lc_interface( aux, forcelc )
+        if( esm_bc == 'pbc' ) then
+           call esm_force_ewg_pbc ( alpha_g, forceion )
+        else if ( esm_bc == 'bc1' ) then
+           call esm_force_ewg_bc1 ( alpha_g, forceion )
+        else if ( esm_bc == 'bc2' ) then
+           call esm_force_ewg_bc2 ( alpha_g, forceion )
+        else if ( esm_bc == 'bc3' ) then
+           call esm_force_ewg_bc3 ( alpha_g, forceion )
+        else if ( esm_bc == 'bc4' ) then
+           call esm_force_ewg_bc4 ( alpha_g, forceion )
+        end if
+
+     END SUBROUTINE esm_force_ewg
+
+     SUBROUTINE esm_force_lc( aux, forcelc )
         USE kinds,     ONLY : DP
         USE ions_base, ONLY : nat
         USE fft_base,  ONLY : dfftp
         implicit none
         complex(DP), intent(in)    :: aux(dfftp%nnr) ! aux contains n(G) (input)
         real(DP)   , intent(inout) :: forcelc(3,nat)
-     END SUBROUTINE esm_force_lc_interface
-  end interface
 
-  procedure(esm_hartree_interface    ), pointer :: esm_hartree   => NULL()
-  procedure(esm_ewaldr_interface     ), pointer :: esm_ewaldr    => NULL()
-  procedure(esm_ewaldg_interface     ), pointer :: esm_ewaldg    => NULL()
-  procedure(esm_local_interface      ), pointer :: esm_local     => NULL()
-  procedure(esm_force_ewr_interface  ), pointer :: esm_force_ewr => NULL()
-  procedure(esm_force_ewg_interface  ), pointer :: esm_force_ewg => NULL()
-  procedure(esm_force_lc_interface   ), pointer :: esm_force_lc  => NULL()
+        if( esm_bc == 'pbc' ) then
+           call esm_force_lc_pbc ( aux, forcelc )
+        else if ( esm_bc == 'bc1' ) then
+           call esm_force_lc_bc1 ( aux, forcelc )
+        else if ( esm_bc == 'bc2' ) then
+           call esm_force_lc_bc2 ( aux, forcelc )
+        else if ( esm_bc == 'bc3' ) then
+           call esm_force_lc_bc3 ( aux, forcelc )
+        else if ( esm_bc == 'bc4' ) then
+           call esm_force_lc_bc4 ( aux, forcelc )
+        end if
 
-CONTAINS
+     END SUBROUTINE esm_force_lc
 
 SUBROUTINE esm_rgen_2d ( dtau, rmax, mxr, at, bg, r, r2, nrm)
   !-----------------------------------------------------------------------
@@ -228,48 +309,6 @@ SUBROUTINE esm_init()
    
    call esm_ggen_2d()
    call esm_cft_1z_init(1,dfftp%nr3,dfftp%nr3)
-   
-   if( esm_bc == 'pbc' ) then
-      esm_hartree   => esm_hartree_pbc
-      esm_ewaldr    => esm_ewaldr_pbc
-      esm_ewaldg    => esm_ewaldg_pbc
-      esm_local     => esm_local_pbc
-      esm_force_ewr => esm_force_ewr_pbc
-      esm_force_ewg => esm_force_ewg_pbc
-      esm_force_lc  => esm_force_lc_pbc
-   else if( esm_bc == 'bc1' ) then
-      esm_hartree   => esm_hartree_bc1
-      esm_ewaldr    => esm_ewaldr_pbc
-      esm_ewaldg    => esm_ewaldg_bc1
-      esm_local     => esm_local_bc1
-      esm_force_ewr => esm_force_ewr_pbc
-      esm_force_ewg => esm_force_ewg_bc1
-      esm_force_lc  => esm_force_lc_bc1
-   else if( esm_bc == 'bc2' ) then
-      esm_hartree   => esm_hartree_bc2
-      esm_ewaldr    => esm_ewaldr_pbc
-      esm_ewaldg    => esm_ewaldg_bc2
-      esm_local     => esm_local_bc2
-      esm_force_ewr => esm_force_ewr_pbc
-      esm_force_ewg => esm_force_ewg_bc2
-      esm_force_lc  => esm_force_lc_bc2
-   else if( esm_bc == 'bc3' ) then
-      esm_hartree   => esm_hartree_bc3
-      esm_ewaldr    => esm_ewaldr_pbc
-      esm_ewaldg    => esm_ewaldg_bc3
-      esm_local     => esm_local_bc3
-      esm_force_ewr => esm_force_ewr_pbc
-      esm_force_ewg => esm_force_ewg_bc3
-      esm_force_lc  => esm_force_lc_bc3
-   else if( esm_bc == 'bc4' ) then
-      esm_hartree   => esm_hartree_bc4
-      esm_ewaldr    => esm_ewaldr_bc4
-      esm_ewaldg    => esm_ewaldg_bc4
-      esm_local     => esm_local_bc4
-      esm_force_ewr => esm_force_ewr_bc4
-      esm_force_ewg => esm_force_ewg_bc4
-      esm_force_lc  => esm_force_lc_bc4
-   end if
 
 END SUBROUTINE esm_init
 
