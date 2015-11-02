@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2015 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -143,6 +143,9 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
               pref = (0.d0, -1.d0) **nhtol (ih, nt) * phase
               do ig = 1, npw_
                  vkb_(ig, jkb) = vkb1 (ig,ih) * sk (ig) * pref
+              enddo
+              do ig = npw_+1, npwx
+                 vkb_(ig, jkb) = (0.0_dp, 0.0_dp)
               enddo
            enddo
         endif
