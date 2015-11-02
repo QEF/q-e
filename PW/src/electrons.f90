@@ -25,7 +25,8 @@ SUBROUTINE electrons()
                                    elondon, ef_up, ef_dw
   USE scf,                  ONLY : rho, rho_core, rhog_core, v, vltot, vrs, &
                                    kedtau, vnew
-  USE control_flags,        ONLY : tr2, niter, conv_elec, restart, lmd
+  USE control_flags,        ONLY : tr2, niter, conv_elec, restart, lmd, &
+                                   do_makov_payne
   USE io_files,             ONLY : iunwfc, iunmix, nwordwfc, output_drho, &
                                    iunres, iunefield, seqopn
   USE buffers,              ONLY : save_buffer, close_buffer
@@ -213,6 +214,7 @@ SUBROUTINE electrons()
         WRITE( stdout, 9064 ) 0.5D0*fock2
         !
         IF ( dexx < tr2_final ) THEN
+           IF ( do_makov_payne ) CALL makov_payne( etot )
            WRITE( stdout, 9101 )
            RETURN
         END IF
@@ -735,8 +737,9 @@ SUBROUTINE electrons_scf ( printout )
      IF ( conv_elec ) THEN
         !
         ! ... if system is charged add a Makov-Payne correction to the energy
+        ! ... (not in case of hybrid functionals: it is added at the end)
         !
-        IF ( do_makov_payne ) CALL makov_payne( etot )
+        IF ( do_makov_payne .AND. printout/= 0 ) CALL makov_payne( etot )
         !
         ! ... print out ESM potentials if desired
         !
