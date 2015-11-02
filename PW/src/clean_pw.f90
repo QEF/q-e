@@ -13,7 +13,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... if lflag=.TRUE.  all arrays are deallocated (end of calculation)
   ! ... if lflag=.FALSE. ion-related variables and arrays allocated
   ! ... at the very beginning of the calculation (routines iosys, read_file,
-  ! ... setup, read_pseudo) are not deallocated; all others arrayes are.
+  ! ... setup, read_pseudo) are not deallocated; all others arrays are.
   ! ... This is used when a new calculation has to be performed (e.g. in neb,
   ! ... phonon, vc-relax). Beware: the new calculation should not call any
   ! ... of the routines mentioned above
