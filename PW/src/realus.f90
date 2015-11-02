@@ -66,7 +66,7 @@ MODULE realus
   !
   PRIVATE
   ! variables for real-space Q, followed by routines
-  PUBLIC :: tabp, tabs, boxrad
+  PUBLIC :: tabp, tabs, boxrad, realsp_augmentation
   PUBLIC :: generate_qpointlist, qpointlist, addusdens_r, newq_r, &
        addusforce_r, real_space_dq, deallocate_realsp
   ! variables for real-space beta, followed by routines
