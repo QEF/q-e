@@ -59,7 +59,7 @@ SUBROUTINE summary()
   !
   ! ... declaration of the local variables
   !
-  INTEGER :: i, ipol, apol, na, isym, ik, nt, ibnd, ngmtot
+  INTEGER :: i, ipol, apol, na, ik, nt, ibnd, ngmtot
     ! counter on the celldm elements
     ! counter on polarizations
     ! counter on direct or reciprocal lattice vect
@@ -400,9 +400,9 @@ SUBROUTINE print_ps_info
   USE atom,            ONLY : rgrid
   USE uspp_param,      ONLY : upf
   USE funct,           ONLY : dft_is_gradient
-
+  IMPLICIT NONE
   !
-  INTEGER :: nt, lmax
+  INTEGER :: nt, ib, i
   CHARACTER :: ps*35
   !
   DO nt = 1, ntyp
