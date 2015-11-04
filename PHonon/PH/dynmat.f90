@@ -167,7 +167,6 @@ end Module dynamical
                  m_loc, nqs, lrigid, eps0, zstar, lraman, dchi_dtau)
          IF (nqs /= 1) CALL errore('dynmat','only q=0 matrix allowed',1)
          a0=celldm(1) ! define alat
-         at = at / a0 !  bring at in units of alat
          ALLOCATE (dyn(3,3,nat,nat) )
          CALL read_dyn_mat(nat,1,q_,dyn(:,:,:,:))
          CALL read_dyn_mat_tail(nat)
