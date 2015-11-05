@@ -1,9 +1,0 @@
-set encoding iso_8859_15
-set terminal postscript enhanced solid color "Helvetica" 20
-set output "alas.phdos.ps"
-#
-set key off
-set xrange [0:450]
-set xlabel "frequency (cm^{-1})"
-set ylabel "DOS"
-plot 'alas.phdos' u 1:2 w l lw 3 
