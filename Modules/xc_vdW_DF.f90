@@ -57,7 +57,7 @@ USE kinds,             ONLY : dp
 USE constants,         ONLY : pi, e2
 USE kernel_table,      ONLY : q_mesh, Nr_points, Nqs, r_max, q_cut, q_min, kernel, d2phi_dk2, dk
 USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier
-USE mp_pools,          ONLY : me_pool, nproc_pool, intra_pool_comm, root_pool
+USE mp_bands,          ONLY : intra_bgrp_comm
 USE io_global,         ONLY : stdout, ionode
 USE fft_base,          ONLY : dfftp
 USE fft_interfaces,    ONLY : fwfft, invfft
@@ -318,7 +318,7 @@ CONTAINS
   etxc = etxc + Ec_nl
 
   if (iverbosity > 0) then
-     call mp_sum(Ec_nl, intra_pool_comm)
+     call mp_sum(Ec_nl, intra_bgrp_comm)
      if (ionode) then
         write(stdout,'(/ / A)')       "     -----------------------------------------------"
         write(stdout,'(A, F15.8, A)') "     Non-local corr. energy    =  ", Ec_nl, " Ry"
@@ -512,7 +512,7 @@ CONTAINS
   etxc = etxc + Ec_nl
 
   if (iverbosity > 0) then
-     call mp_sum(Ec_nl, intra_pool_comm)
+     call mp_sum(Ec_nl, intra_bgrp_comm)
      if (ionode) then
         write(stdout,'(/ / A)')       "     -----------------------------------------------"
         write(stdout,'(A, F15.8, A)') "     Non-local corr. energy    =  ", Ec_nl, " Ry"
@@ -1751,7 +1751,7 @@ CONTAINS
   end do
 
 #ifdef __MPI
-  call mp_sum(  sigma, intra_pool_comm )
+  call mp_sum(  sigma, intra_bgrp_comm )
 #endif
 
   call dscal (9, 1.d0 / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3), sigma, 1)
@@ -1836,7 +1836,7 @@ CONTAINS
   enddo
 
 #ifdef __MPI
-  call mp_sum(  sigma, intra_pool_comm )
+  call mp_sum(  sigma, intra_bgrp_comm )
 #endif
 
   deallocate( dkernel_of_dk )

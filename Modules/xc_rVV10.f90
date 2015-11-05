@@ -13,7 +13,7 @@ MODULE rVV10
   USE constants,         ONLY : pi, e2
   USE kernel_table,      ONLY : q_mesh, Nr_points, Nqs, r_max
   USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier
-  USE mp_global,         ONLY : me_pool, nproc_pool, intra_pool_comm, root_pool
+  USE mp_bands,          ONLY : intra_bgrp_comm
   USE io_global,         ONLY : ionode
   USE fft_base,          ONLY : dfftp
   USE fft_interfaces,    ONLY : fwfft, invfft 
@@ -166,7 +166,7 @@ CONTAINS
     !!
     if (iverbosity > 1) then
 
-       call mp_sum(Ec_nl,intra_pool_comm)
+       call mp_sum(Ec_nl,intra_bgrp_comm)
        if (ionode) write(*,'(/ / A /)') "     ----------------------------------------------------------------"
        if (ionode) write(*,'(A, F22.15 /)') "     Non-local correlation energy =         ", Ec_nl
        if (ionode) write(*,'(A /)') "     ----------------------------------------------------------------"
@@ -476,7 +476,7 @@ CONTAINS
            
       end do
 
-      call mp_sum(  sigma, intra_pool_comm )
+      call mp_sum(  sigma, intra_bgrp_comm )
 
       call dscal (9, 1.d0 / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3), sigma, 1)
 
@@ -555,7 +555,7 @@ CONTAINS
          
       enddo
 
-      call mp_sum(  sigma, intra_pool_comm )
+      call mp_sum(  sigma, intra_bgrp_comm )
       
       deallocate( dkernel_of_dk )
       
