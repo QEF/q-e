@@ -6,7 +6,8 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	Input data format: { } = optional, [ ] = it depends, | = or
 	
 	All quantities whose dimensions are not explicitly specified are in
-	HARTREE ATOMIC UNITS
+	HARTREE ATOMIC UNITS. Charge is "number" charge (i.e. not multiplied 
+        by e); potentials are in energy units (i.e. they are multiplied by e)
 
         BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE
         Comment lines in namelists can be introduced by a "!", exactly as in
@@ -51,7 +52,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	  Y 0.5  0.0  0.0
 	  Z O.0  0.2  0.2
 
-	[ CELL_PARAMETERS { bohr | angstrom }
+	[ CELL_PARAMETERS { alat | bohr | angstrom }
 	   v1(1) v1(2) v1(3)
 	   v2(1) v2(2) v2(3)
 	   v3(1) v3(2) v3(3) ]
@@ -335,7 +336,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	    info {
                 Bravais-lattice index. If ibrav /= 0, specify EITHER
                 [ celldm(1)-celldm(6) ] OR [ A,B,C,cosAB,cosAC,cosBC ]
-                but NOT both. The lattice parameter alat is set to
+                but NOT both. The lattice parameter "alat" is set to
                 alat = celldm(1) (in a.u.) or alat = A (in Angstrom);
                 see below for the other parameters.
                 For ibrav=0 specify the lattice vectors in CELL_PARAMETER,
@@ -391,7 +392,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                                                            celldm(3)=c/a
                     v1 = (a/2, b/2,0),  v2 = (-a/2,b/2,0),  v3 = (0,0,c)
                -9          as 9, alternate description
-                    v1 = (a/2,-b/2,0),  v2 = (a/2,-b/2,0),  v3 = (0,0,c)
+                    v1 = (a/2,-b/2,0),  v2 = (a/2, b/2,0),  v3 = (0,0,c)
 
                10          Orthorhombic face-centered      celldm(2)=b/a
                                                            celldm(3)=c/a
@@ -409,7 +410,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
               -12          Monoclinic P, unique axis b     celldm(2)=b/a
                                                            celldm(3)=c/a,
                                                            celldm(5)=cos(ac)
-                    v1 = (a,0,0), v2 = (0,b,0), v3 = (c*sin(beta),0,c*cos(beta))
+                    v1 = (a,0,0), v2 = (0,b,0), v3 = (c*cos(beta),0,c*sin(beta))
                     where beta is the angle between axis a and c
 
                13          Monoclinic base-centered        celldm(2)=b/a
@@ -442,9 +443,9 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	    dimension celldm -start 1 -end 6 -type REAL {
 		see  { ibrav }
 		info {
-                    Crystallographic constants - see description of ibrav variable.
+                    Crystallographic constants - see the "ibrav" variable.
                     Specify either these OR A,B,C,cosAB,cosBC,cosAC NOT both.
-                    Only needed celldm (depending on ibrav) must be specified
+                    Only needed values (depending on "ibrav") must be specified
                     alat = celldm(1) is the lattice parameter "a" (in BOHR)
                     If ibrav=0, only celldm(1) is used if present;
                     cell vectors are read from card CELL_PARAMETERS
@@ -465,9 +466,9 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                       cosAB = cosine of the angle between axis a and b (gamma)
                       cosAC = cosine of the angle between axis a and c (beta)
                       cosBC = cosine of the angle between axis b and c (alpha)
-                    The axis are chosen according to the value of ibrav.
-                    Specify either these OR celldm but NOT both.
-                    Only needed values (depending on ibrav) must be specified
+                    The axis are chosen according to the value of "ibrav".
+                    Specify either these OR "celldm" but NOT both.
+                    Only needed values (depending on "ibrav") must be specified
                     The lattice parameter alat = A (in ANGSTROM )
                     If ibrav = 0, only A is used if present;
                     cell vectors are read from card CELL_PARAMETERS
