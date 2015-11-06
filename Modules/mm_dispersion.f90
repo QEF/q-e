@@ -384,11 +384,18 @@ MODULE london_module
           DO nr = 1 , nrm
             !
             dist  = alat * sqrt ( dist2 ( nr ) )
-            dist6 = dist ** 6
+            dist6 = beta*( dist / ( R_sum( ityp(atb), ityp(ata) ) ) - 1.0_dp )
             !
-            f_damp = 1.d0 / ( 1.d0 + &
-            exp ( -beta * ( dist / ( R_sum ( ityp (atb) , ityp (ata) ) ) - 1 )))
+            ! dist6 is used here as temporary variable to avoid computing
+            ! e^-x for too large x (for x=40, e^-x=4*10^-18)
             !
+            IF ( dist6 < 40.0_dp ) THEN
+               f_damp = 1.0_dp / ( 1.d0 + exp ( -dist6 ) )
+            ELSE
+               f_damp = 1.0_dp
+            END IF
+            !
+            dist6 = dist**6
             energy_london = energy_london - &
                   ( C6_ij ( ityp ( atb ) , ityp ( ata ) ) / dist6 ) * &
                   f_damp
