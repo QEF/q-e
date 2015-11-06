@@ -100,13 +100,13 @@ SUBROUTINE lr_alloc_init()
   ALLOCATE(evc1(npwx*npol,nbnd,nksq,2))
   ALLOCATE(evc1_new(npwx*npol,nbnd,nksq,2))
   !
-  !if(pseudo_hermitian) then
-    ALLOCATE(sevc1_new(npwx*npol,nbnd,nksq,2))
-    sevc1_new(:,:,:,:) = (0.0d0,0.0d0)
-  !else
+  ALLOCATE(sevc1_new(npwx*npol,nbnd,nksq,2))
+  sevc1_new(:,:,:,:) = (0.0d0,0.0d0)
+  !
+  if (.not. pseudo_hermitian) then
     ALLOCATE(sevc1(npwx*npol,nbnd,nksq,2))
     sevc1(:,:,:,:) = (0.0d0,0.0d0)
-  !endif
+  endif
   !
   ALLOCATE(d0psi(npwx*npol,nbnd,nksq,n_ipol))
   !
