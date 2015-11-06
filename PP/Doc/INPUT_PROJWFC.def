@@ -67,6 +67,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 	    default { .true. }
 	    info {
 		if true the projections are symmetrized
+                if false partial density of state cannot be computed
 	    }
 	}
 
