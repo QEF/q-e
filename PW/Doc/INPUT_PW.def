@@ -474,7 +474,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                                                            celldm(3)=c/a
                     v1 = (a/2, b/2,0),  v2 = (-a/2,b/2,0),  v3 = (0,0,c)
                -9          as 9, alternate description
-                    v1 = (a/2,-b/2,0),  v2 = (a/2,-b/2,0),  v3 = (0,0,c)
+                    v1 = (a/2,-b/2,0),  v2 = (a/2, b/2,0),  v3 = (0,0,c)
 
                10          Orthorhombic face-centered      celldm(2)=b/a
                                                            celldm(3)=c/a
